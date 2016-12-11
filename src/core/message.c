@@ -109,7 +109,7 @@ chunk_grow(chunk_t *ch, size_t newsz, size_t headwanted)
 	if (newsz > ch->ch_cap) {
 		/* Enough space at end, so just use it. */
 		if (ch->ch_ptr == NULL) {
-			ch->ch_ptr = ch->ch_buf;
+			ch->ch_ptr = ch->ch_buf + headwanted;
 		}
 		return (0);
 
@@ -121,7 +121,7 @@ chunk_grow(chunk_t *ch, size_t newsz, size_t headwanted)
 	ch->ch_buf = newbuf;
 	ch->ch_cap = newsz;
 	if (ch->ch_ptr == NULL) {
-		ch->ch_ptr = ch->ch_buf;
+		ch->ch_ptr = ch->ch_buf + headwanted;
 	}
 	return (0);
 }
@@ -195,8 +195,6 @@ static int
 chunk_prepend(chunk_t *ch, const char *data, size_t len)
 {
 	int rv;
-	char *newbuf;
-	size_t headroom = 0;
 
 	if (ch->ch_ptr == NULL) {
 		ch->ch_ptr = ch->ch_buf;
@@ -229,14 +227,94 @@ chunk_prepend(chunk_t *ch, const char *data, size_t len)
 	return (0);
 }
 
-#if 0
-NNG_DECL int nng_msg_alloc(nng_msg_t *, size_t);
-NNG_DECL void nng_msg_free(nng_msg_t);
-NNG_DECL int nng_msg_realloc(nng_mst_t, size_t);
-NNG_DECL void *nng_msg_header(nng_msg_t, size_t *);
-NNG_DECL void *nng_msg_body(nng_msg_t, size_t *);
-NNG_DECL int nng_msg_port(nng_msg_t, nng_pipe_t *);
+int
+nng_msg_alloc(nng_msg_t *mp, size_t sz)
+{
+	nng_msg_t m;
+	int rv;
 
+	if ((m = nni_alloc(sizeof (*m))) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	/*
+	 * 64-bytes of header, including room for 32 bytes
+	 * of headroom and 32 bytes of trailer.
+	 */
+	if ((rv = chunk_grow(&m->m_header, 32, 32)) != 0) {
+		nni_free(m, sizeof (*m));
+		return (rv);
+	}
+
+	/*
+	 * If the message is less than 1024 bytes, or is not power
+	 * of two aligned, then we insert a 32 bytes of headroom
+	 * to allow for inlining backtraces, etc.  We also allow the
+	 * amount of space at the end for the same reason.  Large aligned
+	 * allocations are unmolested to avoid excessive overallocation.
+	 */
+	if ((sz < 1024) || ((sz & (sz-1)) != 0)) {
+		rv = chunk_grow(&m->m_body, sz + 32, 32);
+	} else {
+		rv = chunk_grow(&m->m_body, sz, 0);
+	}
+	if (rv != 0) {
+		chunk_free(&m->m_header);
+		nni_free(m, sizeof (*m));
+	}
+	if ((rv = chunk_append(&m->m_body, NULL, sz)) != 0) {
+		/* Should not happen since we just grew it to fit. */
+		nni_panic("chunk_append failed");
+	}
+
+	*mp = m;
+	return (0);
+}
+
+void
+nng_msg_free(nng_msg_t m)
+{
+	chunk_free(&m->m_header);
+	chunk_free(&m->m_body);
+	nni_free(m, sizeof (*m));
+}
+
+int
+nng_msg_realloc(nng_msg_t m, size_t sz)
+{
+	int rv = 0;
+	if (m->m_body.ch_len < sz) {
+		rv = chunk_append(&m->m_body, NULL, sz - m->m_body.ch_len);
+		if (rv != 0) {
+			return (rv);
+		}
+	} else {
+		/* "Shrinking", just mark bytes at end usable again. */
+		chunk_trunc(&m->m_body, m->m_body.ch_len - sz);
+	}
+	return (0);
+}
+
+void *
+nng_msg_header(nng_msg_t m, size_t *szp)
+{
+	if (szp != NULL) {
+		*szp = m->m_header.ch_len;
+	}
+	return (m->m_header.ch_ptr);
+}
+
+void *
+nng_msg_body(nng_msg_t m, size_t *szp)
+{
+	if (szp != NULL) {
+		*szp = m->m_body.ch_len;
+	}
+	return (m->m_body.ch_ptr);
+}
+
+#if 0
+NNG_DECL int nng_msg_port(nng_msg_t, nng_pipe_t *);
 NNG_DECL int nng_msg_append(nng_msg_t, const char *, size_t);
 NNG_DECL int nng_msg_prepend(nng_msg_t, const char *, size_t);
 NNG_DECL int nng_msg_trim(nng_msg_t, size_t);

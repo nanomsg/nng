@@ -55,9 +55,9 @@ extern "C" {
  */
 typedef struct nng_socket *nng_socket_t;
 typedef struct nng_endpt *nng_endpt_t;
-typedef struct nn_pipe *nng_pipe_t;
-typedef struct nn_msg *nng_msg_t;
-typedef struct nn_event *nng_event_t;
+typedef struct nng_pipe *nng_pipe_t;
+typedef struct nng_msg *nng_msg_t;
+typedef struct nng_event *nng_event_t;
 typedef struct nng_notify *nng_notify_t;
 typedef struct nng_snapshot *nng_snapshot_t;
 typedef struct nng_stat *nng_stat_t;
