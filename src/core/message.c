@@ -35,8 +35,8 @@
 typedef struct {
 	size_t		ch_cap;		/* allocated size */
 	size_t		ch_len;		/* length in use */
-	char		*ch_buf;	/* underlying buffer */
-	char		*ch_ptr;	/* pointer to actual data */
+	uint8_t		*ch_buf;	/* underlying buffer */
+	uint8_t		*ch_ptr;	/* pointer to actual data */
 } chunk_t;
 
 /* Underlying message chunk. */
@@ -63,7 +63,7 @@ static int
 chunk_grow(chunk_t *ch, size_t newsz, size_t headwanted)
 {
 	size_t headroom = 0;
-	char *newbuf;
+	uint8_t *newbuf;
 
 	/*
 	 * We assume that if the pointer is a valid pointer, and inside
@@ -167,7 +167,7 @@ chunk_trim(chunk_t *ch, size_t len)
  * uninitialized.
  */
 static int
-chunk_append(chunk_t *ch, const char *data, size_t len)
+chunk_append(chunk_t *ch, const void *data, size_t len)
 {
 	int rv;
 	if (len == 0) {
@@ -192,7 +192,7 @@ chunk_append(chunk_t *ch, const char *data, size_t len)
  * data region will have "grown" in the beginning, with uninitialized data.
  */
 static int
-chunk_prepend(chunk_t *ch, const char *data, size_t len)
+chunk_prepend(chunk_t *ch, const void *data, size_t len)
 {
 	int rv;
 
@@ -313,15 +313,57 @@ nng_msg_body(nng_msg_t m, size_t *szp)
 	return (m->m_body.ch_ptr);
 }
 
-#if 0
-NNG_DECL int nng_msg_port(nng_msg_t, nng_pipe_t *);
-NNG_DECL int nng_msg_append(nng_msg_t, const char *, size_t);
-NNG_DECL int nng_msg_prepend(nng_msg_t, const char *, size_t);
-NNG_DECL int nng_msg_trim(nng_msg_t, size_t);
-NNG_DECL int nng_msg_trunc(nng_msg_t, size_t);
+int
+nng_msg_append(nng_msg_t m, const void *data, size_t len)
+{
+	return (chunk_append(&m->m_body, data, len));
+}
 
-NNG_DECL int nng_msg_append_header(nng_msg_t, const char *, size_t);
-NNG_DECL int nng_msg_prepend_header(nng_msg_t, const char *, size_t);
-NNG_DECL int nng_msg_trim_header(nng_msg_t, size_t);
-NNG_DECL int nng_msg_trunc_header(nng_msg_t, size_t);
-#endif
+int
+nng_msg_prepend(nng_msg_t m, const void *data, size_t len)
+{
+	return (chunk_prepend(&m->m_body, data, len));
+}
+
+int
+nng_msg_trim(nng_msg_t m, size_t len)
+{
+	return (chunk_trim(&m->m_body, len));
+}
+
+int
+nng_msg_trunc(nng_msg_t m, size_t len)
+{
+	return (chunk_trunc(&m->m_body, len));
+}
+
+int
+nng_msg_append_header(nng_msg_t m, const void *data, size_t len)
+{
+	return (chunk_append(&m->m_header, data, len));
+}
+
+int
+nng_msg_prepend_header(nng_msg_t m, const void *data, size_t len)
+{
+	return (chunk_prepend(&m->m_header, data, len));
+}
+
+int
+nng_msg_trim_header(nng_msg_t m, size_t len)
+{
+	return (chunk_trim(&m->m_header, len));
+}
+
+int
+nng_msg_trunc_header(nng_msg_t m, size_t len)
+{
+	return (chunk_trunc(&m->m_header, len));
+}
+
+int
+nng_msg_pipe(nng_msg_t m, nng_pipe_t *pp)
+{
+	*pp = m->m_pipe;
+	return (0);
+}

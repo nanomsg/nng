@@ -235,11 +235,18 @@ NNG_DECL int nng_recvmsg(nng_socket_t, nng_msg_t *, int);
  */
 NNG_DECL int nng_msg_alloc(nng_msg_t *, size_t);
 NNG_DECL void nng_msg_free(nng_msg_t);
-NNG_DECL const char *nng_msg_data(nng_msg_t);
 NNG_DECL int nng_msg_realloc(nng_msg_t, size_t);
 NNG_DECL void *nng_msg_header(nng_msg_t, size_t *);
 NNG_DECL void *nng_msg_body(nng_msg_t, size_t *);
-NNG_DECL int nng_msg_port(nng_msg_t, nng_pipe_t *);
+NNG_DECL int nng_msg_pipe(nng_msg_t, nng_pipe_t *);
+NNG_DECL int nng_msg_append(nng_msg_t, const void *, size_t);
+NNG_DECL int nng_msg_prepend(nng_msg_t, const void *, size_t);
+NNG_DECL int nng_msg_trim(nng_msg_t, size_t);
+NNG_DECL int nng_msg_trunc(nng_msg_t, size_t);
+NNG_DECL int nng_msg_append_header(nng_msg_t, const void *, size_t);
+NNG_DECL int nng_msg_prepend_header(nng_msg_t, const void *, size_t);
+NNG_DECL int nng_msg_trim_header(nng_msg_t, size_t);
+NNG_DECL int nng_msg_trunc_header(nng_msg_t, size_t);
 
 /*
  * Pipe API. Generally pipes are only "observable" to applications, but
