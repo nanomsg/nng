@@ -1,0 +1,20 @@
+nng - nanomsg-NG
+================
+
+This repository represents a work in progress rewrite of the SP protocol
+library called "libnanomsg".  The work is being done by Garrett D'Amore,
+and at this juncture he is *not* soliciting assistance.
+
+This is a work in progress, and is *not* for general use or publication.
+When the library is ready for broader consumption, an announcement will
+be posted on the nanomsg mailing list and website.
+
+If you are looking for the current production version of nanomsg, please
+see the https://github.com/nanomsg/nanomsg site.
+
+Note that commit histories here are subject to change in the future --
+once the production reaches a point that we are ready to start using
+issue tracking and so forth, we will compress the existing deltas into
+a single commit.  This is probably some number of weeks in the future.
+
+	- Garrett D'Amore (Dec. 9, 2016)
