@@ -42,16 +42,16 @@ show_backtrace(void)
 #if NNG_HAVE_BACKTRACE
 	void *frames[50];
 	int nframes;
-	char *lines;
+	char **lines;
 	int i;
 
 	nframes = backtrace(frames, sizeof (frames) / sizeof (frames[0]));
 	if (nframes > 1) {
-		lines = backtrace_symbols(frames, nframes -1);
+		lines = backtrace_symbols(frames, nframes);
 		if (lines == NULL) {
 			return;
 		}
-		for (i = 0; i < nframes; i++) {
+		for (i = 1; i < nframes; i++) {
 			nni_debug_out(lines[i]);
 		}
 	}
