@@ -26,6 +26,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdarg.h>
+#include <string.h>
 
 /*
  * These are the APIs that a platform must implement to support nng.
@@ -95,22 +96,19 @@ void nni_cond_destroy(nni_cond_t);
  * nni_cond_broadcast wakes all waiters on the condition.  This should be
  * called with the lock held.
  */
-int nni_cond_broadcast(nni_cond_t);
+void nni_cond_broadcast(nni_cond_t);
 
 /*
  * nni_cond_signal wakes a signal waiter.
  */
-int nni_cond_signal(nni_cond_t);
+void nni_cond_signal(nni_cond_t);
 
 /*
  * nni_condwait waits for a wake up on the condition variable.  The
  * associated lock is atomically released and reacquired upon wake up.
- * Callers can be spuriously woken. The return value is 0 on success,
- * or an error code.  (Most implementations should never return an error.)
- * Most callers will ignore the return value.  The associated lock must
- * be held.
+ * Callers can be spuriously woken.  The associated lock must be held.
  */
-int nni_cond_wait(nni_cond_t);
+void nni_cond_wait(nni_cond_t);
 
 /*
  * nni_cond_timedwait waits for a wakeup on the condition variable, just

@@ -32,6 +32,7 @@
  */
 
 #include <pthread.h>
+#include <time.h>
 
 struct nni_mutex {
 	pthread_mutex_t	mx;
@@ -140,4 +141,64 @@ nni_cond_destroy(nni_cond_t c)
 		nni_panic("pthread_cond_destroy failed");
 	}
 	nni_free(c, sizeof (*c));
+}
+
+void
+nni_cond_signal(nni_cond_t c)
+{
+	if (pthread_cond_signal(&c->cv) != 0) {
+		nni_panic("pthread_cond_signal failed");
+	}
+}
+
+void
+nni_cond_broadcast(nni_cond_t c)
+{
+	if (pthread_cond_broadcast(&c->cv) != 0) {
+		nni_panic("pthread_cond_broadcast failed");
+	}
+}
+
+void
+nni_cond_wait(nni_cond_t c)
+{
+	if (pthread_cond_wait(&c->cv, c->mx) != 0) {
+		nni_panic("pthread_cond_wait failed");
+	}
+}
+
+int
+nni_cond_timedwait(nni_cond_t c, int msec)
+{
+	struct timespec ts;
+	int rv;
+	/* POSIX says clock_gettime exists since SUSv2 at least. */
+
+	rv = clock_gettime(CLOCK_REALTIME, &ts);
+	if (rv != 0) {
+		/*
+		 * If the clock_gettime() is not working, its a problem with
+		 * the platform. Arguably we could use gettimeofday instead,
+		 * but for now we just panic().  We can fix this when someone
+		 * finds a platform that returns ENOSYS here.
+		 */
+		nni_panic("clock_gettime failed: %s", strerror(errno));
+	}
+
+	ts.tv_nsec += (msec * 1000000);
+
+	/* Normalize -- its not clear if this is strictly necessary. */
+	while (ts.tv_nsec > 1000000000) {
+		ts.tv_nsec -= 1000000000;
+		ts.tv_sec++;
+	}
+
+	if ((rv = pthread_cond_timedwait(&c->cv, c->mx, &ts)) != 0) {
+		if (rv == ETIMEDOUT) {
+			return (NNG_ETIMEDOUT);
+		} else {
+			nni_panic("pthread_cond_timedwait returned %d", rv);
+		}
+	}
+	return (0);
 }
