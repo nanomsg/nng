@@ -95,6 +95,7 @@ void nni_mutex_destroy(nni_mutex_t);
 void nni_mutex_enter(nni_mutex_t);
 void nni_mutex_exit(nni_mutex_t);
 int nni_mutex_tryenter(nni_mutex_t);
+
 int nni_cond_create(nni_cond_t *, nni_mutex_t);
 void nni_cond_destroy(nni_cond_t);
 
@@ -127,6 +128,20 @@ void nni_cond_wait(nni_cond_t);
  */
 int nni_cond_timedwait(nni_cond_t, uint64_t);
 
+typedef struct nni_thread *nni_thread_t;
+/*
+ * nni_thread_creates a thread that runs the given function. The thread
+ * receives a single argument.
+ */
+int nni_thread_create(nni_thread_t *, void (*fn)(void *), void *);
+
+/*
+ * nni_thread_reap waits for the thread to exit, and then releases any
+ * resources associated with the thread.  After this returns, it
+ * is an error to reference the thread in any further way.
+ */
+void nni_thread_reap(nni_thread_t);
+
 /*
  * nn_clock returns a number of microseconds since some arbitrary time
  * in the past.  The values returned by nni_clock may be used with
@@ -138,5 +153,23 @@ uint64_t nni_clock(void);
  * nni_usleep sleeps for the specified number of microseconds (at least).
  */
 void nni_usleep(uint64_t);
+
+/*
+ * nni_init is called to allow the platform the chance to
+ * do any necessary initialization.  This routine MUST be idempotent,
+ * and threadsafe, and will be called before any other API calls, and
+ * may be called at any point thereafter.  It is permitted to return
+ * an error if some critical failure inializing the platform occurs,
+ * but once this succeeds, all future calls must succeed as well, unless
+ * nni_fini has been called.
+ */
+int nni_platform_init(void);
+
+/*
+ * nni_platform_fini is called to clean up resources.  It is intended to
+ * be called as the last thing executed in the library, and no other functions
+ * will be called until nni_platform_init is called.
+ */
+void nni_fini(void);
 
 #endif /* CORE_PLATFORM_H */

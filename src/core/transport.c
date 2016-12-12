@@ -20,22 +20,43 @@
  * IN THE SOFTWARE.
  */
 
-/*
- * This is more of a direct #include of a .c rather than .h file.
- * But having it be a .h makes compiler rules work out properly.  Do
- * not include this more than once into your program, or you will
- * get multiple symbols defined.
- *
- * The file itself pulls in POSIX implementations for platform specific
- * functionality.
- */
+#include "core/nng_impl.h"
 
-#ifdef	PLATFORM_POSIX
-#include "platform/posix/posix_config.h"
-#include "platform/posix/posix_debug.h"
-#include "platform/posix/posix_alloc.h"
-#include "platform/posix/posix_clock.h"
-#include "platform/posix/posix_synch.h"
-#include "platform/posix/posix_thread.h"
-#include "platform/posix/posix_vsnprintf.h"
-#endif
+/*
+ * For now the list of transports is hard-wired.  Adding new transports
+ * to the system dynamically is something that might be considered later.
+ */
+extern struct nni_transport_ops	nni_inproc_tran_ops;
+
+static struct nni_transport_ops *transports[] = {
+	&nni_inproc_tran_ops,
+	NULL
+};
+
+/*
+ * nni_transport_init initializes the entire transport subsystem, including
+ * each individual transport.
+ */
+void
+nni_transport_init(void)
+{
+	int i;
+	struct nni_transport_ops *ops;
+
+	for (i = 0; (ops = transports[i]) != NULL; i++) {
+		ops->tran_init();
+	}
+}
+
+void
+nni_transport_fork(int prefork)
+{
+	int i;
+	struct nni_transport_ops *ops;
+
+	for (i = 0; (ops = transports[i]) != NULL; i++) {
+		if (ops->tran_fork != NULL) {
+			ops->tran_fork(prefork);
+		}
+	}
+}

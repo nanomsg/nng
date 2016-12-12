@@ -75,7 +75,30 @@ struct inproc_ep {
  */
 static inproc_global_t inproc;
 
-void
+static int
+inproc_init(void)
+{
+	int rv;
+	if ((rv = nni_mutex_create(&inproc.mx)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_cond_create(&inproc.cv, inproc.mx)) != 0) {
+		nni_mutex_destroy(inproc.mx);
+		return (rv);
+	}
+	NNI_LIST_INIT(&inproc.eps, struct inproc_ep, node);
+
+	return (0);
+}
+
+static void
+inproc_fini(void)
+{
+	nni_cond_destroy(inproc.cv);
+	nni_mutex_destroy(inproc.mx);
+}
+
+static void
 inproc_pipe_close(void *arg)
 {
 	inproc_pipe_t	pipe = arg;
@@ -102,7 +125,7 @@ inproc_pair_destroy(inproc_pair_t pair)
 	nni_free(pair, sizeof (*pair));
 }
 
-void
+static void
 inproc_pipe_destroy(void *arg)
 {
 	inproc_pipe_t	pipe = arg;
@@ -121,7 +144,7 @@ inproc_pipe_destroy(void *arg)
 	}
 }
 
-int
+static int
 inproc_pipe_send(void *arg, nng_msg_t msg)
 {
 	inproc_pipe_t pipe = arg;
@@ -133,7 +156,7 @@ inproc_pipe_send(void *arg, nng_msg_t msg)
 	return (nni_msgqueue_put(pipe->wq, msg, -1));
 }
 
-int
+static int
 inproc_pipe_recv(void *arg, nng_msg_t *msgp)
 {
 	inproc_pipe_t pipe = arg;
@@ -141,7 +164,7 @@ inproc_pipe_recv(void *arg, nng_msg_t *msgp)
 	return (nni_msgqueue_get(pipe->rq, msgp, -1));
 }
 
-uint16_t
+static uint16_t
 inproc_pipe_peer(void *arg)
 {
 	inproc_pipe_t pipe = arg;
@@ -149,7 +172,7 @@ inproc_pipe_peer(void *arg)
 	return (pipe->peer);
 }
 
-int
+static int
 inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 {
 	inproc_pipe_t pipe = arg;
@@ -170,7 +193,7 @@ inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 	return (NNG_ENOTSUP);
 }
 
-int
+static int
 inproc_ep_create(void **epp, const char *url, uint16_t proto)
 {
 	inproc_ep_t	ep;
@@ -191,13 +214,13 @@ inproc_ep_create(void **epp, const char *url, uint16_t proto)
 	return (0);
 }
 
-void
+static void
 inproc_ep_destroy(void *arg)
 {
 	NNI_ARG_UNUSED(arg);
 }
 
-void
+static void
 inproc_ep_close(void *arg)
 {
 	inproc_ep_t	ep = arg;
@@ -210,7 +233,8 @@ inproc_ep_close(void *arg)
 	}
 	nni_mutex_exit(inproc.mx);
 }
-int
+
+static int
 inproc_ep_dial(void *arg, void **pipep)
 {
 	inproc_ep_t ep = arg;
@@ -255,7 +279,7 @@ inproc_ep_dial(void *arg, void **pipep)
 	return (ep->closed ? NNG_ECLOSED : 0);
 }
 
-int
+static int
 inproc_ep_listen(void *arg)
 {
 	inproc_ep_t ep = arg;
@@ -285,7 +309,7 @@ inproc_ep_listen(void *arg)
 	return (0);
 }
 
-int
+static int
 inproc_ep_accept(void *arg, void **pipep)
 {
 	inproc_ep_t ep = arg;
@@ -343,27 +367,6 @@ inproc_ep_accept(void *arg, void **pipep)
 	return (0);
 }
 
-int
-nni_inproc_init(void)
-{
-	int rv;
-	if ((rv = nni_mutex_create(&inproc.mx)) != 0) {
-		return (rv);
-	}
-	if ((rv = nni_cond_create(&inproc.cv, inproc.mx)) != 0) {
-		nni_mutex_destroy(inproc.mx);
-		return (rv);
-	}
-	NNI_LIST_INIT(&inproc.eps, struct inproc_ep, node);
-	/* XXX: nni_register_transport(); */
-	return (0);
-}
-
-void
-nni_inproc_term(void)
-{
-}
-
 static struct nni_pipe_ops inproc_pipe_ops = {
 	inproc_pipe_destroy,
 	inproc_pipe_send,
@@ -384,8 +387,11 @@ static struct nni_endpt_ops inproc_ep_ops = {
 	NULL,	/* inproc_ep_getopt */
 };
 
-struct nni_transport_ops inproc_tran_ops = {
+struct nni_transport_ops nni_inproc_tran_ops = {
 	"inproc",		/* tran_scheme */
 	&inproc_ep_ops,
 	&inproc_pipe_ops,
+	inproc_init,		/* tran_init */
+	inproc_fini,		/* tran_fini */
+	NULL,			/* tran_fork */
 };

@@ -118,7 +118,6 @@ nni_mutex_tryenter(nni_mutex_t m)
 	return (0);
 }
 
-
 int
 cond_attr(pthread_condattr_t **attrpp)
 {

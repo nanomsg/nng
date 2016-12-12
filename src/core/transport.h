@@ -43,6 +43,28 @@ struct nni_transport_ops {
 	 * tran_pipe_ops links our pipe operations.
 	 */
 	const struct nni_pipe_ops *tran_pipe_ops;
+
+	/*
+	 * tran_init, if not NULL, is called once during library
+	 * initialization.
+	 */
+	int (*tran_init)(void);
+
+	/*
+	 * tran_fini, if not NULL, is called during library deinitialization.
+	 * It should release any global resources.
+	 */
+	void (*tran_fini)(void);
+
+	/*
+	 * tran_fork, if not NULL, is called just before fork
+	 * (e.g. during pthread_atfork() for the prefork phase),
+	 * and again just after returning in the parent.  There is
+	 * nothing called for the child.  If the transport does not
+	 * create any threads of its own, this can be NULL.  (The
+	 * intended use is to prevent O_CLOEXEC races.)
+	 */
+	void (*tran_fork)(int prefork);
 };
 
 struct nni_endpt_ops {

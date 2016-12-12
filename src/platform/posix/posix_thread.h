@@ -25,17 +25,43 @@
  * But having it be a .h makes compiler rules work out properly.  Do
  * not include this more than once into your program, or you will
  * get multiple symbols defined.
- *
- * The file itself pulls in POSIX implementations for platform specific
- * functionality.
  */
 
-#ifdef	PLATFORM_POSIX
-#include "platform/posix/posix_config.h"
-#include "platform/posix/posix_debug.h"
-#include "platform/posix/posix_alloc.h"
-#include "platform/posix/posix_clock.h"
-#include "platform/posix/posix_synch.h"
-#include "platform/posix/posix_thread.h"
-#include "platform/posix/posix_vsnprintf.h"
-#endif
+/*
+ * POSIX threads.
+ */
+
+#include <pthread.h>
+#include <time.h>
+#include <string.h>
+
+struct nni_thread {
+	pthread_t	tid;
+};
+
+int
+nni_thread_create(nni_thread_t *tp, void (*fn)(void *), void *arg)
+{
+	nni_thread_t thr;
+	int rv;
+
+	if ((thr = nni_alloc(sizeof (*thr))) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = pthread_create(&thr->tid, NULL, (void *)fn, arg)) != 0) {
+		nni_free(thr, sizeof (*thr));
+		return (NNG_ENOMEM);
+	}
+	*tp = thr;
+	return (0);
+}
+
+void
+nni_thread_reap(nni_thread_t thr)
+{
+	int rv;
+	if ((rv = pthread_join(thr->tid, NULL)) != 0) {
+		nni_panic("pthread_thread: %s", strerror(errno));
+	}
+	nni_free(thr, sizeof (*thr));
+}
