@@ -20,8 +20,6 @@
  * IN THE SOFTWARE.
  */
 
-#include "../nng.h"
-
 #include "nng_impl.h"
 
 /*

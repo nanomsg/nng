@@ -20,17 +20,16 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdlib.h>
+#ifndef CORE_SNPRINTF_H
+#define CORE_SNPRINTF_H
 
-#include "core/nng_impl.h"
+#include <stddef.h>
 
-void
-nni_snprintf(char *dst, size_t sz, const char *fmt, ...)
-{
-	va_list va;
-	va_start(va, fmt);
-	nni_vsnprintf(dst, sz, fmt, va);
-	va_end(va);
-}
+/*
+ * We have our own snprintf, because some platforms lack this, while
+ * others need special handling.  Ours just calls the vsnprintf version
+ * from the platform.
+ */
+extern void nni_snprintf(char *, size_t, const char *, ...);
+
+#endif	/* CORE_SNPRINTF_H */

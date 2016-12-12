@@ -20,17 +20,18 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdlib.h>
+#ifndef CORE_PANIC_H
+#define CORE_PANIC_H
 
-#include "core/nng_impl.h"
+/*
+ * nni_panic is used to terminate the process with prejudice, and
+ * should only be called in the face of a critical programming error,
+ * or other situation where it would be unsafe to attempt to continue.
+ * As this crashes the program, it should never be used when factors outside
+ * the program can cause it, such as receiving protocol errors, or running
+ * out of memory.  Its better in those cases to return an error to the
+ * program and let the caller handle the error situation.
+ */
+extern void nni_panic(const char *, ...);
 
-void
-nni_snprintf(char *dst, size_t sz, const char *fmt, ...)
-{
-	va_list va;
-	va_start(va, fmt);
-	nni_vsnprintf(dst, sz, fmt, va);
-	va_end(va);
-}
+#endif	/* CORE_PANIC_H */

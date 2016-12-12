@@ -23,9 +23,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "../nng.h"
-
-#include "nng_impl.h"
+#include "core/nng_impl.h"
 
 /*
  * Message API.

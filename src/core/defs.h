@@ -20,17 +20,14 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdlib.h>
+#ifndef CORE_DEFS_H
+#define CORE_DEFS_H
 
-#include "core/nng_impl.h"
+/*
+ * C compilers may get unhappy when named arguments are not used.  While
+ * there are things like __attribute__((unused)) which are arguably
+ * superior, support for such are not universal.
+ */
+#define	NNI_ARG_UNUSED(x)	((void)x);
 
-void
-nni_snprintf(char *dst, size_t sz, const char *fmt, ...)
-{
-	va_list va;
-	va_start(va, fmt);
-	nni_vsnprintf(dst, sz, fmt, va);
-	va_end(va);
-}
+#endif	/* NNG_IMPL_H */

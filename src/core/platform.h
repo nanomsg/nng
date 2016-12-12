@@ -20,8 +20,8 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef PLATFORM_H
-#define PLATFORM_H
+#ifndef CORE_PLATFORM_H
+#define CORE_PLATFORM_H
 
 /*
  * We require some standard C header files.  The only one of these that might
@@ -139,4 +139,4 @@ uint64_t nni_clock(void);
  */
 void nni_usleep(uint64_t);
 
-#endif /* PLATFORM_H */
+#endif /* CORE_PLATFORM_H */

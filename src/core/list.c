@@ -31,12 +31,12 @@
  */
 
 #define	NODE(list, item)	\
-	(nni_list_node_t)(void *)(((char *)item) + list->ll_offset)
+	(nni_list_node_t *)(void *)(((char *)item) + list->ll_offset)
 #define	ITEM(list, node)	\
 	(void *)(((char *)node) - list->ll_offset)
 
 void
-nni_list_init_offset(nni_list_t list, size_t offset)
+nni_list_init_offset(nni_list_t *list, size_t offset)
 {
 	list->ll_offset = offset;
 	list->ll_head.ln_next = &list->ll_head;
@@ -44,9 +44,9 @@ nni_list_init_offset(nni_list_t list, size_t offset)
 }
 
 void *
-nni_list_first(nni_list_t list)
+nni_list_first(nni_list_t *list)
 {
-	nni_list_node_t node = list->ll_head.ln_next;
+	nni_list_node_t *node = list->ll_head.ln_next;
 	if (node == &list->ll_head) {
 		return (NULL);
 	}
@@ -54,9 +54,9 @@ nni_list_first(nni_list_t list)
 }
 
 void *
-nni_list_last(nni_list_t list)
+nni_list_last(nni_list_t *list)
 {
-	nni_list_node_t node = list->ll_head.ln_prev;
+	nni_list_node_t *node = list->ll_head.ln_prev;
 	if (node == &list->ll_head) {
 		return (NULL);
 	}
@@ -64,9 +64,9 @@ nni_list_last(nni_list_t list)
 }
 
 void
-nni_list_append(nni_list_t list, void *item)
+nni_list_append(nni_list_t *list, void *item)
 {
-	nni_list_node_t node = NODE(list, item);
+	nni_list_node_t *node = NODE(list, item);
 
 	node->ln_prev = list->ll_head.ln_prev;
 	node->ln_next = &list->ll_head;
@@ -74,9 +74,9 @@ nni_list_append(nni_list_t list, void *item)
 	node->ln_prev->ln_next = node;
 }
 void
-nni_list_prepend(nni_list_t list, void *item)
+nni_list_prepend(nni_list_t *list, void *item)
 {
-	nni_list_node_t node = NODE(list, item);
+	nni_list_node_t *node = NODE(list, item);
 
 	node->ln_next = list->ll_head.ln_next;
 	node->ln_prev = &list->ll_head;
@@ -85,9 +85,9 @@ nni_list_prepend(nni_list_t list, void *item)
 }
 
 void *
-nni_list_next(nni_list_t list, void *item)
+nni_list_next(nni_list_t *list, void *item)
 {
-	nni_list_node_t node = NODE(list, item);
+	nni_list_node_t *node = NODE(list, item);
 
 	if ((node = node->ln_next) == &list->ll_head) {
 		return (NULL);
@@ -96,9 +96,9 @@ nni_list_next(nni_list_t list, void *item)
 }
 
 void *
-nni_list_prev(nni_list_t list, void *item)
+nni_list_prev(nni_list_t *list, void *item)
 {
-	nni_list_node_t node = NODE(list, item);
+	nni_list_node_t *node = NODE(list, item);
 
 	if ((node = node->ln_prev) == &list->ll_head) {
 		return (NULL);
@@ -107,16 +107,16 @@ nni_list_prev(nni_list_t list, void *item)
 }
 
 void
-nni_list_remove(nni_list_t list, void *item)
+nni_list_remove(nni_list_t *list, void *item)
 {
-	nni_list_node_t node = NODE(list, item);
+	nni_list_node_t *node = NODE(list, item);
 	node->ln_prev->ln_next = node->ln_next;
 	node->ln_next->ln_prev = node->ln_prev;
 }
 
 void
-nni_list_node_init(nni_list_t list, void *item)
+nni_list_node_init(nni_list_t *list, void *item)
 {
-	nni_list_node_t	node = NODE(list, item);
+	nni_list_node_t	*node = NODE(list, item);
 	node->ln_prev = node->ln_next = NULL;
 }
