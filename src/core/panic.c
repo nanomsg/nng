@@ -28,8 +28,6 @@
 #include <execinfo.h>
 #endif
 
-#include "nng.h"
-
 #include "nng_impl.h"
 
 /*

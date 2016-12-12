@@ -20,22 +20,21 @@
  * IN THE SOFTWARE.
  */
 
+#include "../nng.h"
+
+#include "nng_impl.h"
+
 /*
- * This is more of a direct #include of a .c rather than .h file.
- * But having it be a .h makes compiler rules work out properly.  Do
- * not include this more than once into your program, or you will
- * get multiple symbols defined.
- *
- * The file itself pulls in POSIX implementations for platform specific
- * functionality.
+ * Socket implementation.
  */
 
-#ifdef	PLATFORM_POSIX
-#include "platform/posix/posix_config.h"
-#include "platform/posix/posix_debug.h"
-#include "platform/posix/posix_alloc.h"
-#include "platform/posix/posix_clock.h"
-#include "platform/posix/posix_synch.h"
-/* #include "platform/posix/posix_thread.h" */
-#include "platform/posix/posix_vsnprintf.h"
-#endif
+struct nng_socket {
+	int		s_proto;
+	nni_mutex_t	s_mx;
+
+	/* uwq */
+	/* urq */
+	/* options */
+	/* pipes */
+	/* endpoints */
+};

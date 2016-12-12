@@ -23,10 +23,16 @@
 #ifndef PLATFORM_H
 #define PLATFORM_H
 
-#include <stdlib.h>
-#include <stdint.h>
+/*
+ * We require some standard C header files.  The only one of these that might
+ * be problematic is <stdint.h>, which is required for C99.  Older versions
+ * of the Windows compilers might not have this.  However, latest versions of
+ * MS Studio have a functional <stdint.h>.  If this impacts you, just upgrade
+ * your tool chain.
+ */
 #include <stdarg.h>
-#include <string.h>
+#include <stddef.h>
+#include <stdint.h>
 
 /*
  * These are the APIs that a platform must implement to support nng.
@@ -113,11 +119,24 @@ void nni_cond_wait(nni_cond_t);
 /*
  * nni_cond_timedwait waits for a wakeup on the condition variable, just
  * as with nni_condwait, but it will also wake after the given number of
- * milliseconds has passed.  (This is a relative timed wait.)  Early
+ * microseconds has passed.  (This is a relative timed wait.)  Early
  * wakeups are permitted, and the caller must take care to double check any
  * conditions.  The return value is 0 on success, or an error code, which
- * can be NNG_ETIMEDOUT.
+ * can be NNG_ETIMEDOUT.  Note that it is permissible to wait for longer
+ * than the timeout based on the resolution of your system clock.
  */
-int nnp_cond_timedwait(nni_cond_t, int);
+int nni_cond_timedwait(nni_cond_t, uint64_t);
+
+/*
+ * nn_clock returns a number of microseconds since some arbitrary time
+ * in the past.  The values returned by nni_clock may be used with
+ * nni_cond_timedwait.
+ */
+uint64_t nni_clock(void);
+
+/*
+ * nni_usleep sleeps for the specified number of microseconds (at least).
+ */
+void nni_usleep(uint64_t);
 
 #endif /* PLATFORM_H */

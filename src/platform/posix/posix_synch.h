@@ -28,7 +28,8 @@
  */
 
 /*
- * POSIX synchronization (mutexes and condition variables).
+ * POSIX synchronization (mutexes and condition variables).  This uses
+ * pthreads.
  */
 
 #include <pthread.h>
@@ -117,19 +118,73 @@ nni_mutex_tryenter(nni_mutex_t m)
 	return (0);
 }
 
+
+int
+cond_attr(pthread_condattr_t **attrpp)
+{
+#if defined(NNG_USE_GETTIMEOFDAY) || NNG_USE_CLOCKID == CLOCK_REALTIME
+	*attrpp = NULL;
+	return (0);
+#else
+	/* In order to make this fast, avoid reinitializing attrs. */
+	static pthread_condattr_t attr;
+	static pthread_mutex_t mx = PTHREAD_MUTEX_INITIALIZER;
+	static int init = 0;
+	int rv;
+
+	/*
+	 * For efficiency's sake, we try to reuse the same attr for the
+	 * life of the library.  This avoids many reallocations.  Technically
+	 * this means that we will leak the attr on exit(), but this is
+	 * preferable to constantly allocating and reallocating it.
+	 */
+	if (init) {
+		*attrpp = &attr;
+		return (0);
+	}
+
+	(void) pthread_mutex_lock(&mx);
+	while (!init) {
+		if ((rv = pthread_condattr_init(&attr)) != 0) {
+			(void) pthread_mutex_unlock(&mx);
+			return (NNG_ENOMEM);
+		}
+		rv = pthread_condattr_setclock(&attr, NNG_USE_CLOCKID);
+		if (rv != 0) {
+			nni_panic("condattr_setclock: %s", strerror(rv));
+		}
+		init = 1;
+	}
+	(void) pthread_mutex_unlock(&mx);
+	*attrpp = &attr;
+	return (0);
+#endif
+}
+
 int
 nni_cond_create(nni_cond_t *cvp, nni_mutex_t mx)
 {
+	/*
+	 * By preference, we use a CLOCK_MONOTONIC version of condition
+	 * variables, which insulates us from changes to the system time.
+	 */
 	struct nni_cond *c;
+	pthread_condattr_t *attrp;
+	int rv;
+
+	if ((rv = cond_attr(&attrp)) != 0) {
+		return (rv);
+	}
 	if ((c = nni_alloc(sizeof (*c))) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	c->mx = &mx->mx;
-	if (pthread_cond_init(&c->cv, NULL) != 0) {
+	if (pthread_cond_init(&c->cv, attrp) != 0) {
 		/* In theory could be EAGAIN, but handle like ENOMEM */
 		nni_free(c, sizeof (*c));
 		return (NNG_ENOMEM);
 	}
+
 	*cvp = c;
 	return (0);
 }
@@ -168,30 +223,15 @@ nni_cond_wait(nni_cond_t c)
 }
 
 int
-nni_cond_timedwait(nni_cond_t c, int msec)
+nni_cond_timedwait(nni_cond_t c, uint64_t usec)
 {
 	struct timespec ts;
 	int rv;
-	/* POSIX says clock_gettime exists since SUSv2 at least. */
 
-	rv = clock_gettime(CLOCK_REALTIME, &ts);
-	if (rv != 0) {
-		/*
-		 * If the clock_gettime() is not working, its a problem with
-		 * the platform. Arguably we could use gettimeofday instead,
-		 * but for now we just panic().  We can fix this when someone
-		 * finds a platform that returns ENOSYS here.
-		 */
-		nni_panic("clock_gettime failed: %s", strerror(errno));
-	}
+	usec += nni_clock();
 
-	ts.tv_nsec += (msec * 1000000);
-
-	/* Normalize -- its not clear if this is strictly necessary. */
-	while (ts.tv_nsec > 1000000000) {
-		ts.tv_nsec -= 1000000000;
-		ts.tv_sec++;
-	}
+	ts.tv_sec = usec / 1000000;
+	ts.tv_nsec = (usec % 10000) * 1000;
 
 	if ((rv = pthread_cond_timedwait(&c->cv, c->mx, &ts)) != 0) {
 		if (rv == ETIMEDOUT) {
