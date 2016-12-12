@@ -80,9 +80,6 @@ extern int nni_msgqueue_create(nni_msgqueue_t *, int);
  */
 extern void nni_msgqueue_destroy(nni_msgqueue_t);
 
-extern int nni_msgqueue_len(nni_msgqueue_t);
-extern int nni_msgqueue_cap(nni_msgqueue_t);
-
 /*
  * nni_msgqueue_put attempts to put a message to the queue.  It will wait
  * for the timeout (us), if the value is positive.  If the value is negative
@@ -101,5 +98,12 @@ extern int nni_msgqueue_put(nni_msgqueue_t, nng_msg_t, int);
  * like nni_msgqueue_put.
  */
 extern int nni_msgqueue_get(nni_msgqueue_t, nng_msg_t *, int);
+
+/*
+ * nni_msgqueue_close closes the queue.  After this all operates on the
+ * message queue will return NNG_ECLOSED.  Messages inside the queue
+ * are freed.  Unlike closing a go channel, this operation is idempotent.
+ */
+extern void nni_msgqueue_close(nni_msgqueue_t);
 
 #endif	/* NNG_IMPL_H */

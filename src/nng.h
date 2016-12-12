@@ -427,6 +427,8 @@ NNG_DECL int nng_device(nng_socket_t, nng_socket_t);
 #define	NNG_EBUSY		(-4)
 #define	NNG_ETIMEDOUT		(-5)
 #define	NNG_ECONNREFUSED	(-6)
+#define	NNG_ECLOSED		(-7)
+#define	NNG_EAGAIN		(-8)
 
 #ifdef __cplusplus
 }
