@@ -387,7 +387,7 @@ static struct nni_endpt_ops inproc_ep_ops = {
 	NULL,	/* inproc_ep_getopt */
 };
 
-struct nni_transport_ops nni_inproc_tran_ops = {
+struct nni_transport nni_inproc_transport = {
 	"inproc",		/* tran_scheme */
 	&inproc_ep_ops,
 	&inproc_pipe_ops,

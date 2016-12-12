@@ -44,6 +44,7 @@
 #include "core/panic.h"
 #include "core/snprintf.h"
 #include "core/platform.h"
+#include "core/protocol.h"
 #include "core/transport.h"
 
 #endif	/* CORE_NNG_IMPL_H */

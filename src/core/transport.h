@@ -28,7 +28,7 @@
  * interfaces in this file.
  */
 
-struct nni_transport_ops {
+struct nni_transport {
 	/*
 	 * tran_scheme is the transport scheme, such as "tcp" or "inproc".
 	 */

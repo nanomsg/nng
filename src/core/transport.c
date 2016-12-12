@@ -26,10 +26,10 @@
  * For now the list of transports is hard-wired.  Adding new transports
  * to the system dynamically is something that might be considered later.
  */
-extern struct nni_transport_ops	nni_inproc_tran_ops;
+extern struct nni_transport	nni_inproc_transport;
 
-static struct nni_transport_ops *transports[] = {
-	&nni_inproc_tran_ops,
+static struct nni_transport *transports[] = {
+	&nni_inproc_transport,
 	NULL
 };
 
@@ -41,7 +41,7 @@ void
 nni_transport_init(void)
 {
 	int i;
-	struct nni_transport_ops *ops;
+	struct nni_transport *ops;
 
 	for (i = 0; (ops = transports[i]) != NULL; i++) {
 		ops->tran_init();
@@ -52,7 +52,7 @@ void
 nni_transport_fork(int prefork)
 {
 	int i;
-	struct nni_transport_ops *ops;
+	struct nni_transport *ops;
 
 	for (i = 0; (ops = transports[i]) != NULL; i++) {
 		if (ops->tran_fork != NULL) {
