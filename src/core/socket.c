@@ -27,14 +27,13 @@
  */
 
 struct nng_socket {
-	int		s_proto;
 	nni_mutex_t	s_mx;
 
 	nni_msgqueue_t	s_uwq;	/* Upper write queue. */
 	nni_msgqueue_t	s_urq;	/* Upper read queue. */
 
-	/* uwq */
-	/* urq */
+	struct nni_protocol s_ops;
+
 	/* options */
 	/* pipes */
 	/* endpoints */
@@ -42,6 +41,22 @@ struct nng_socket {
 	int		s_besteffort;	/* Best effort mode delivery. */
 	int		s_senderr;	/* Protocol state machine use. */
 };
+
+/*
+ * nni_socket_sendq and nni_socket_recvq are called by the protocol
+ * to obtain the upper read and write queues.
+ */
+nni_msgqueue_t
+nng_socket_sendq(nng_socket_t s)
+{
+	return (s->s_uwq);
+}
+
+nni_msgqueue_t
+nni_socket_recvq(nng_socket_t s)
+{
+	return (s->s_urq);
+}
 
 int
 nng_socket_create(nng_socket_t *sockp, int proto)

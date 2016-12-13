@@ -24,12 +24,16 @@
 
 /*
  * This file contains functions relating to pipes.
+ *
+ * Operations on pipes (to the transport) are generally blocking operations,
+ * performed in the context of the protocol.
  */
 
 struct nng_pipe {
         uint32_t                p_id;
         struct nni_pipe_ops     p_ops;
         void                    *p_tran;
+        nni_list_node_t         p_node;
 };
 
 /* nni_pipe_id returns the 32-bit pipe id, which can be used in backtraces. */
@@ -51,8 +55,19 @@ nni_pipe_recv(nng_pipe_t p, nng_msg_t *msgp)
         return (p->p_ops.p_recv(p->p_tran, msgp));
 }
 
+/*
+ * nni_pipe_close closes the underlying connection.  It is expected that
+ * subsequent attempts receive or send (including any waiting receive) will
+ * simply return NNG_ECLOSED.
+ */
+void
+nni_pipe_close(nng_pipe_t p)
+{
+        return (p->p_ops.p_close(p->p_tran));
+}
+
 uint16_t
-nni_pipe_peer_proto(nng_pipe_t p)
+nni_pipe_peer(nng_pipe_t p)
 {
         return (p->p_ops.p_peer(p->p_tran));
 }

@@ -67,6 +67,12 @@ struct nni_transport {
 	void (*tran_fork)(int prefork);
 };
 
+/*
+ * Endpoint operations are called by the socket in a protocol-independent
+ * fashion.  The socket makes individual calls, which are expected to block
+ * if appropriate (except for destroy). Endpoints are unable to call back
+ * into the socket, to prevent recusive entry and deadlock.
+ */
 struct nni_endpt_ops {
 	/*
 	 * ep_create creates a vanilla endpoint. The value created is
@@ -116,23 +122,57 @@ struct nni_endpt_ops {
 	int (*ep_getopt)(void *, int, void *, size_t *);
 };
 
+/*
+ * Pipe operations are entry points called by the socket. These may be called
+ * with socket locks held, so it is forbidden for the transport to call
+ * back into the socket at this point.  (Which is one reason pointers back
+ * to socket or even enclosing pipe state, are not provided.)
+ */
 struct nni_pipe_ops {
-	/* p_destroy destroys the pipe */
+	/*
+	 * p_destroy destroys the pipe.  This should clean up all local resources,
+	 * including closing files and freeing memory, used by the pipe.  After
+	 * this call returns, the system will not make further calls on the same
+	 * pipe.
+	 */
 	void (*p_destroy)(void *);
 
-	/* p_send sends the message */
+	/*
+	 * p_send sends the message.  If the message cannot be received, then
+	 * the caller may try again with the same message (or free it).  If the
+	 * call succeeds, then the transport has taken ownership of the message,
+	 * and the caller may not use it again.  The transport will have the
+	 * responsibility to free the message (nng_msg_free()) when it is
+	 * finished with it.
+	 */
 	int (*p_send)(void *, nng_msg_t);
 
-	/* p_recv recvs the message */
+	/*
+	 * p_recv recvs the message. This is a blocking operation, and a read
+	 * will be performed even for cases where no data is expected.  This
+	 * allows the socket to detect a closed socket, by the returned error
+	 * NNG_ECLOSED. Note that the closed socket condition can arise as either
+	 * a result of a remote peer closing the connection, or a synchronous
+	 * call to p_close.
+	 */
 	int (*p_recv)(void *, nng_msg_t *);
 
-	/* p_close closes the pipe */
+	/*
+	 * p_close closes the pipe.  Further recv or send operations should
+	 * return back NNG_ECLOSED.
+	 */
 	void (*p_close)(void *);
 
-	/* p_proto returns the peer protocol */
-	uint16_t (*p_proto)(void *);
+	/*
+	 * p_peer returns the peer protocol. This may arrive in whatever
+	 * transport specific manner is appropriate.
+	 */
+	uint16_t (*p_peer)(void *);
 
-	/* p_getopt gets an pipe (transport-specific) property */
+	/*
+	 * p_getopt gets an pipe (transport-specific) property.  These values
+	 * may not be changed once the pipe is created.
+	 */
 	int (*p_getopt)(void *, int, void *, size_t *);
 };
 
