@@ -64,6 +64,20 @@ extern int nni_msgqueue_put(nni_msgqueue_t, nng_msg_t, int);
 extern int nni_msgqueue_get(nni_msgqueue_t, nng_msg_t *, int);
 
 /*
+ * The following two functions are interruptible versions of msgqueue_get
+ * and msgqueue_put.  The signal argument (pointer) must be initialized
+ * to zero.  Then, we can raise a signal, by calling nni_msgqueue_signal
+ * on the same object.  The signal flag will remain raised until it is
+ * cleared to zero.  If a routine is interrupted, it will return NNG_EINTR.
+ * Note that only threads using the signal object will be interrupted;
+ * this has no effect on other threads that may be waiting on the msgqueue
+ * as well.
+ */
+extern int nni_msgqueue_put_sig(nni_msgqueue_t, nng_msg_t, int, int *);
+extern int nni_msgqueue_get_sig(nni_msgqueue_t, nng_msg_t *, int, int *);
+extern void nni_msgqueue_signal(nni_msgqueue_t, int *);
+
+/*
  * nni_msgqueue_close closes the queue.  After this all operates on the
  * message queue will return NNG_ECLOSED.  Messages inside the queue
  * are freed.  Unlike closing a go channel, this operation is idempotent.

@@ -422,6 +422,7 @@ NNG_DECL int nng_device(nng_socket_t, nng_socket_t);
  * Error codes.  These may happen to align to errnos used on your platform,
  * but do not count on this.
  */
+#define NNG_EINTR		(-1)
 #define	NNG_ENOMEM		(-2)
 #define	NNG_EINVAL		(-3)
 #define	NNG_EBUSY		(-4)
