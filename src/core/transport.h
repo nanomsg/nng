@@ -173,4 +173,12 @@ struct nni_pipe_ops {
 	int (*p_getopt)(void *, int, void *, size_t *);
 };
 
+/*
+ * These APIs are used by the framework internally, and not for use by
+ * transport implementations.
+ */
+extern struct nni_transport *nni_transport_find(const char *);
+extern void nni_transport_init(void);
+extern void nni_transport_fini(void);
+
 #endif /* CORE_TRANSPORT_H */

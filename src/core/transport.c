@@ -20,6 +20,8 @@
  * IN THE SOFTWARE.
  */
 
+#include <string.h>
+
 #include "core/nng_impl.h"
 
 /*
@@ -32,6 +34,27 @@ static struct nni_transport *transports[] = {
 	&nni_inproc_transport,
 	NULL
 };
+
+struct nni_transport *
+nni_transport_find(const char *addr)
+{
+	/* address is of the form "<scheme>://blah..." */
+	const char *end;
+	int len;
+	int i;
+	struct nni_transport *ops;
+
+	if ((end = strstr(addr, "://")) == NULL) {
+		return (NULL);
+	}
+	len = (int)(end - addr);
+	for (i = 0; (ops = transports[i]) != NULL; i++) {
+		if (strncmp(addr, ops->tran_scheme, len) == 0) {
+			return (ops);
+		}
+	}
+	return (NULL);
+}
 
 /*
  * nni_transport_init initializes the entire transport subsystem, including
