@@ -217,7 +217,11 @@ inproc_ep_create(void **epp, const char *url, uint16_t proto)
 static void
 inproc_ep_destroy(void *arg)
 {
-	NNI_ARG_UNUSED(arg);
+	inproc_ep_t ep = arg;
+	if (!ep->closed) {
+		nni_panic("inproc_ep_destroy while not closed!");
+	}
+	nni_free(ep, sizeof (*free));
 }
 
 static void
