@@ -37,6 +37,7 @@ set (NNG_SOURCES
     core/pipe.c
     core/platform.c
     core/platform.h
+    core/protocol.c
     core/protocol.h
     core/snprintf.c
     core/snprintf.h

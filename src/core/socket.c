@@ -34,6 +34,7 @@ struct nng_socket {
 
 	struct nni_protocol s_ops;
 
+	void		*s_data; /* Protocol private. */
 	/* options */
 	/* pipes */
 	/* endpoints */
@@ -61,7 +62,24 @@ nni_socket_recvq(nng_socket_t s)
 int
 nng_socket_create(nng_socket_t *sockp, uint16_t proto)
 {
-	return (NNG_EAGAIN);	/* XXX: IMPLEMENT ME */
+        nng_socket_t sock;
+        struct nni_protocol *ops;
+        int rv;
+
+        if ((ops = nni_protocol_find(proto)) == NULL) {
+        	return (NNG_ENOTSUP);
+        }
+        if ((sock = nni_alloc(sizeof (*sock))) == NULL) {
+        	return (NNG_ENOMEM);
+        }
+        sock->s_ops = *ops;
+        if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
+        	nni_free(sock, sizeof (*sock));
+        	return (rv);
+
+        }
+        *sockp = sock;
+	return (0);
 }
 
 int

@@ -270,9 +270,11 @@ NNG_DECL int nng_pipe_close(nng_pipe_t);
  * assigned in the lower 4 bits.
  *
  * There are gaps in the list, which are obsolete or unsupported protocols.
- * For now we assume that protocol numbers are never more than 16 bits.
+ * Protocol numbers are never more than 16 bits.  Also, there will never be
+ * a valid protocol numbered 0 (NNG_PROTO_NONE).
  */
 #define	NNG_PROTO(major, minor)	(((major) * 16) + (minor))
+#define NNG_PROTO_NONE		NNG_PROTO(0, 0)
 #define	NNG_PROTO_PAIR		NNG_PROTO(1, 0)
 #define	NNG_PROTO_PUB		NNG_PROTO(2, 0)
 #define	NNG_PROTO_SUB		NNG_PROTO(2, 1)

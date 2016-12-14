@@ -252,6 +252,7 @@ pair_getopt(void *arg, int opt, void *buf, size_t *szp)
 struct nni_protocol nni_pair_protocol = {
         NNG_PROTO_PAIR,         /* proto_self */
         NNG_PROTO_PAIR,         /* proto_peer */
+        "pair",
         pair_create,
         pair_destroy,
         pair_shutdown,
