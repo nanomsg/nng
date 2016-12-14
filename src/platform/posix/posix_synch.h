@@ -85,11 +85,6 @@ nni_mutex_destroy(nni_mutex_t m)
 	if (pthread_mutex_destroy(&m->mx) != 0) {
 		nni_panic("pthread_mutex_destroy failed");
 	}
-	/*
-	 * If destroy fails for some reason, we can't really do
-	 * anything about it.  This would actually represent a programming
-	 * bug, and the right thing to do here would be to panic.
-	 */
 	nni_free(m, sizeof (*m));
 }
 
@@ -183,7 +178,6 @@ nni_cond_create(nni_cond_t *cvp, nni_mutex_t mx)
 		nni_free(c, sizeof (*c));
 		return (NNG_ENOMEM);
 	}
-
 	*cvp = c;
 	return (0);
 }
@@ -232,12 +226,12 @@ nni_cond_timedwait(nni_cond_t c, uint64_t usec)
 	ts.tv_sec = usec / 1000000;
 	ts.tv_nsec = (usec % 10000) * 1000;
 
-	if ((rv = pthread_cond_timedwait(&c->cv, c->mx, &ts)) != 0) {
-		if (rv == ETIMEDOUT) {
-			return (NNG_ETIMEDOUT);
-		} else {
-			nni_panic("pthread_cond_timedwait returned %d", rv);
-		}
+	rv = pthread_cond_timedwait(&c->cv, c->mx, &ts);
+
+	if (rv == ETIMEDOUT) {
+		return (NNG_ETIMEDOUT);
+	} else if (rv != 0) {
+		nni_panic("pthread_cond_timedwait returned %d", rv);
 	}
 	return (0);
 }

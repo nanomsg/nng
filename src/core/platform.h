@@ -39,6 +39,23 @@
  */
 
 /*
+ * A word about fork-safety: This library is *NOT* fork safe, in that
+ * functions may not be called in the child process without an intervening
+ * exec().  The library attempts to detect this situation, and crashes the
+ * process with an error message if it encounters it.  (See nn_platform_init
+ * below.)
+ *
+ * Additionally, some file descriptors may leak across fork even to
+ * child processes.  We make every reasonable effort to ensure that this
+ * does not occur, but on some platforms there are unavoidable race
+ * conditions between file creation and marking the file close-on-exec.
+ *
+ * Forkers should use posix_spawn() if possible, and as much as possible
+ * arrange for file close on exec by posix_spawn, or close the descriptors
+ * they do not need in the child.
+ */
+
+/*
  * nni_abort crashes the system; it should do whatever is appropriate
  * for abnormal programs on the platform, such as calling abort().
  */
@@ -155,7 +172,7 @@ uint64_t nni_clock(void);
 void nni_usleep(uint64_t);
 
 /*
- * nni_init is called to allow the platform the chance to
+ * nni_platform_init is called to allow the platform the chance to
  * do any necessary initialization.  This routine MUST be idempotent,
  * and threadsafe, and will be called before any other API calls, and
  * may be called at any point thereafter.  It is permitted to return
@@ -170,6 +187,6 @@ int nni_platform_init(void);
  * be called as the last thing executed in the library, and no other functions
  * will be called until nni_platform_init is called.
  */
-void nni_fini(void);
+void nni_platform_fini(void);
 
 #endif /* CORE_PLATFORM_H */

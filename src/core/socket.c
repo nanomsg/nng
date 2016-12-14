@@ -43,8 +43,8 @@ struct nng_socket {
 };
 
 /*
- * nni_socket_sendq and nni_socket_recvq are called by the protocol
- * to obtain the upper read and write queues.
+ * nni_socket_sendq and nni_socket_recvq are called by the protocol to obtain
+ * the upper read and write queues.
  */
 nni_msgqueue_t
 nng_socket_sendq(nng_socket_t s)
@@ -112,8 +112,8 @@ nng_socket_sendmsg(nng_socket_t sock, nng_msg_t msg, int tmout)
 
 	if (besteffort) {
 		/*
-		 * BestEffort mode -- if we cannot handle the message due
-		 * to backpressure, we just throw it away, and don't complain.
+                 * BestEffort mode -- if we cannot handle the message due to
+                 * backpressure, we just throw it away, and don't complain.
 		 */
 		tmout = 0;
 	}

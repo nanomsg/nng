@@ -37,7 +37,22 @@
 
 struct nni_thread {
 	pthread_t	tid;
+	void *arg;
+	void (*func)(void *);
 };
+
+static pthread_mutex_t plat_lock = PTHREAD_MUTEX_INITIALIZER;
+static int plat_init = 0;
+static int plat_fork = 0;
+
+static void *
+thrfunc(void *arg)
+{
+	nni_thread_t thr = arg;
+
+	thr->func(thr->arg);
+	return (NULL);
+}
 
 int
 nni_thread_create(nni_thread_t *tp, void (*fn)(void *), void *arg)
@@ -48,7 +63,10 @@ nni_thread_create(nni_thread_t *tp, void (*fn)(void *), void *arg)
 	if ((thr = nni_alloc(sizeof (*thr))) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = pthread_create(&thr->tid, NULL, (void *)fn, arg)) != 0) {
+	thr->func = fn;
+	thr->arg = arg;
+
+	if ((rv = pthread_create(&thr->tid, thr, thrfunc, arg)) != 0) {
 		nni_free(thr, sizeof (*thr));
 		return (NNG_ENOMEM);
 	}
@@ -64,4 +82,40 @@ nni_thread_reap(nni_thread_t thr)
 		nni_panic("pthread_thread: %s", strerror(errno));
 	}
 	nni_free(thr, sizeof (*thr));
+}
+
+void
+atfork_child(void)
+{
+	plat_fork = 1;
+}
+
+int
+nni_platform_init(void)
+{
+	if (plat_fork) {
+		nni_panic("nng is fork-reentrant safe");
+	}
+	if (plat_init) {
+		return (0);	/* fast path */
+	}
+	pthread_mutex_lock(&plat_lock);
+	if (plat_init) {	/* check again under the lock to be sure */
+		pthread_mutex_unlock(&plat_lock);
+		return (0);
+	}
+	if (pthread_atfork(NULL, NULL, atfork_child) != 0) {
+		pthread_mutex_unlock(&plat_lock);
+		return (NNG_ENOMEM);
+	}
+	plat_init = 1;
+	pthread_mutex_unlock(&plat_lock);
+
+	return (0);
+}
+
+void
+nni_platform_fini(void)
+{
+	/* XXX: NOTHING *YET* */
 }

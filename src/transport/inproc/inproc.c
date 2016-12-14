@@ -393,5 +393,4 @@ struct nni_transport nni_inproc_transport = {
 	&inproc_pipe_ops,
 	inproc_init,		/* tran_init */
 	inproc_fini,		/* tran_fini */
-	NULL,			/* tran_fork */
 };

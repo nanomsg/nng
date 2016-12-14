@@ -52,19 +52,16 @@ struct nni_transport {
 
 	/*
 	 * tran_fini, if not NULL, is called during library deinitialization.
-	 * It should release any global resources.
+	 * It should release any global resources, close any open files, etc.
+	 *
+	 * There will be no locks held, and no other threads running in the
+	 * library.
+	 *
+	 * It is invalid to use any mutexes, condition variables, or
+	 * threading routines.  Mutexes and condition variables may be
+	 * safely destroyed.
 	 */
 	void (*tran_fini)(void);
-
-	/*
-	 * tran_fork, if not NULL, is called just before fork
-	 * (e.g. during pthread_atfork() for the prefork phase),
-	 * and again just after returning in the parent.  There is
-	 * nothing called for the child.  If the transport does not
-	 * create any threads of its own, this can be NULL.  (The
-	 * intended use is to prevent O_CLOEXEC races.)
-	 */
-	void (*tran_fork)(int prefork);
 };
 
 /*

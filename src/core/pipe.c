@@ -63,6 +63,8 @@ nni_pipe_recv(nng_pipe_t p, nng_msg_t *msgp)
 void
 nni_pipe_close(nng_pipe_t p)
 {
+        /* XXX: we need to unregister from the parent socket. */
+        /* XXX: also unregister from the protocol. */
         return (p->p_ops.p_close(p->p_tran));
 }
 

@@ -25,7 +25,20 @@
 
 /*
  * Protocol implementation details.  Protocols must implement the
- * interfaces in this file.
+ * interfaces in this file.  Note that implementing new protocols is
+ * not necessarily intended to be a trivial task.  The protocol developer
+ * must understand the nature of nng, as they are responsible for handling
+ * most of the logic.  The protocol generally does most of the work for
+ * locking, and calls into the transport's pipe functions to do actual
+ * work, and the pipe functions generally assume no locking is needed.
+ * As a consequence, most of the concurrency in nng exists in the protocol
+ * implementations.
+ *
+ * A special exception to this is nni_pipe_close(), which actually does
+ * call back into the socket, which will then call the protocol's add
+ * pipe methods.  Its therefore important that no locks are held by the
+ * protocol during nni_pipe_close().  (Generally, its preferred that the
+ * protocol do not hold locks across calls to any pipe functions.)
  */
 
 struct nni_protocol {

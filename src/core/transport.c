@@ -49,14 +49,14 @@ nni_transport_init(void)
 }
 
 void
-nni_transport_fork(int prefork)
+nni_transport_fini(void)
 {
 	int i;
 	struct nni_transport *ops;
 
 	for (i = 0; (ops = transports[i]) != NULL; i++) {
-		if (ops->tran_fork != NULL) {
-			ops->tran_fork(prefork);
+		if (ops->tran_fini != NULL) {
+			ops->tran_fini();
 		}
 	}
 }
