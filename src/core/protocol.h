@@ -34,11 +34,10 @@
  * As a consequence, most of the concurrency in nng exists in the protocol
  * implementations.
  *
- * A special exception to this is nni_pipe_close(), which actually does
- * call back into the socket, which will then call the protocol's add
- * pipe methods.  Its therefore important that no locks are held by the
- * protocol during nni_pipe_close().  (Generally, its preferred that the
- * protocol do not hold locks across calls to any pipe functions.)
+ * Pipe operations may block, or even reenter the protoccol entry points
+ * (for example nni_pipe_close() causes the protocols proto_remove_pipe
+ * entry point to be called), so it is very important that protocols do
+ * not hold any locks across calls to pipe functions.
  */
 
 struct nni_protocol {
@@ -77,7 +76,7 @@ struct nni_protocol {
 	 * Option manipulation.  These may be NULL.
 	 */
 	int (*proto_setopt)(void *, int, const void *, size_t);
-	int (*proto_getopt)(void *, int, void **, size_t *);
+	int (*proto_getopt)(void *, int, void *, size_t *);
 
 	/*
 	 * Receive filter.  This may be NULL, but if it isn't, then

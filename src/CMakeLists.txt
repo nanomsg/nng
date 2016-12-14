@@ -53,6 +53,8 @@ set (NNG_SOURCES
     platform/posix/posix_thread.h
     platform/posix/posix_vsnprintf.h
 
+    protocol/pair/pair.c
+
     transport/inproc/inproc.c
 )
 

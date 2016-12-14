@@ -47,7 +47,7 @@ struct nng_socket {
  * the upper read and write queues.
  */
 nni_msgqueue_t
-nng_socket_sendq(nng_socket_t s)
+nni_socket_sendq(nng_socket_t s)
 {
 	return (s->s_uwq);
 }
