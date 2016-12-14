@@ -42,6 +42,7 @@
 #include "core/list.h"
 #include "core/msgqueue.h"
 #include "core/panic.h"
+#include "core/pipe.h"
 #include "core/snprintf.h"
 #include "core/platform.h"
 #include "core/protocol.h"

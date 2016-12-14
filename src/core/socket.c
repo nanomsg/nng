@@ -35,9 +35,11 @@ struct nng_socket {
 	struct nni_protocol s_ops;
 
 	void		*s_data; /* Protocol private. */
+
 	/* options */
-	/* pipes */
-	/* endpoints */
+
+	nni_list_t	s_eps;
+	nni_list_t	s_pipes;
 
 	int		s_besteffort;	/* Best effort mode delivery. */
 	int		s_senderr;	/* Protocol state machine use. */
@@ -73,6 +75,10 @@ nng_socket_create(nng_socket_t *sockp, uint16_t proto)
         	return (NNG_ENOMEM);
         }
         sock->s_ops = *ops;
+
+        nni_pipe_list_init(&sock->s_pipes);
+        //NNI_LIST_INIT(&sock->s_eps, nng_endpt_t, ep_node);
+
         if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
         	nni_free(sock, sizeof (*sock));
         	return (rv);

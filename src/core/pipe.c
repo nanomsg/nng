@@ -73,3 +73,16 @@ nni_pipe_peer(nng_pipe_t p)
 {
         return (p->p_ops.p_peer(p->p_tran));
 }
+
+void
+nni_pipe_destroy(nng_pipe_t p)
+{
+	p->p_ops.p_destroy(p->p_tran);
+	nni_free(p, sizeof (*p));
+}
+
+void
+nni_pipe_list_init(nni_list_t *list)
+{
+	NNI_LIST_INIT(list, struct nng_pipe, p_node);
+}

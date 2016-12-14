@@ -35,6 +35,7 @@ set (NNG_SOURCES
     core/panic.c
     core/panic.h
     core/pipe.c
+    core/pipe.h
     core/platform.c
     core/platform.h
     core/protocol.c
