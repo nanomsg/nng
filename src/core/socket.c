@@ -59,7 +59,7 @@ nni_socket_recvq(nng_socket_t s)
 }
 
 int
-nng_socket_create(nng_socket_t *sockp, int proto)
+nng_socket_create(nng_socket_t *sockp, uint16_t proto)
 {
 	return (NNG_EAGAIN);	/* XXX: IMPLEMENT ME */
 }
@@ -124,4 +124,10 @@ nng_socket_sendmsg(nng_socket_t sock, nng_msg_t msg, int tmout)
 		return (0);
 	}
 	return (rv);
+}
+
+uint16_t
+nng_socket_protocol(nng_socket_t sock)
+{
+        return (sock->s_ops.proto_self);
 }

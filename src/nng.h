@@ -67,7 +67,7 @@ typedef struct nng_stat *nng_stat_t;
  * error code on failure, or zero on success.  The socket starts in cooked
  * mode.
  */
-NNG_DECL int nng_socket_create(nng_socket_t *, int proto);
+NNG_DECL int nng_socket_create(nng_socket_t *, uint16_t proto);
 
 /*
  * nng_socket_close closes the socket, terminating all activity and
@@ -78,6 +78,12 @@ NNG_DECL int nng_socket_create(nng_socket_t *, int proto);
  * with the socket.
  */
 NNG_DECL int nng_socket_close(nng_socket_t);
+
+/*
+ * nng_socket_protocol returns the protocol number the socket was created
+ * with.
+ */
+uint16_t nng_socket_protocol(nng_socket_t);
 
 /*
  * nng_socket_setopt sets an option for a specific socket.
