@@ -40,6 +40,7 @@
 
 #include "core/defs.h"
 #include "core/list.h"
+#include "core/init.h"
 #include "core/message.h"
 #include "core/msgqueue.h"
 #include "core/panic.h"

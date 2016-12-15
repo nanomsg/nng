@@ -34,4 +34,13 @@
  */
 extern void nni_panic(const char *, ...);
 
+/*
+ * nni_println is used to print output to a debug console.  This should only
+ * be used in the most dire of circumstances -- such as during an assertion
+ * failure that is going to cause the program to crash.  After the string is
+ * emitted, a new line character is emitted, so the string should not
+ * include one.
+ */
+extern void nni_println(const char *);
+
 #endif	/* CORE_PANIC_H */

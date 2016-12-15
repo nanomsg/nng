@@ -26,8 +26,10 @@
 
 #include "core/nng_impl.h"
 
+#if 0
 #if defined(PLATFORM_POSIX)
 #include "platform/posix/posix_impl.h"
 #else
 #error "unknown platform"
+#endif
 #endif

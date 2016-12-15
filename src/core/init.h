@@ -20,11 +20,22 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdarg.h>
-#include <stdio.h>
+#ifndef CORE_INIT_H
+#define CORE_INIT_H
 
-void
-nni_vsnprintf(char *dst, size_t sz, const char *fmt, va_list va)
-{
-	(void) vsnprintf(dst, sz, fmt, va);
-}
+#include "core/nng_impl.h"
+
+/*
+ * nni_init is called each time the user enters the library.  It ensures that
+ * the library is initlialized properly, and also deals with checks such as
+ * whether the process has forked since last initialization.
+ */
+extern int nni_init(void);
+
+/*
+ * nni_fini tears everything down.  In the future it may be used to ensure
+ * that all resources used by the library are released back to the system.
+ */
+extern void nni_fini(void);
+
+#endif /* CORE_INIT_H */

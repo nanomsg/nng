@@ -56,32 +56,23 @@
  */
 
 /*
- * nni_abort crashes the system; it should do whatever is appropriate
+ * nni_plat_abort crashes the system; it should do whatever is appropriate
  * for abnormal programs on the platform, such as calling abort().
  */
-void nni_abort(void);
+extern void nni_plat_abort(void);
 
 /*
- * nni_vnsprintf is exactly like its POSIX counterpart.
+ * nni_plat_vnsprintf is exactly like its POSIX counterpart.
  * Some platforms (Windows!) need a special version of this.
  */
-void nni_vsnprintf(char *, size_t, const char *, va_list);
+extern void nni_plat_vsnprintf(char *, size_t, const char *, va_list);
 
 /*
- * nni_debug_output is used to emit debug messages.  Typically this is used
+ * nni_plat_println is used to emit debug messages.  Typically this is used
  * during core debugging, or to emit panic messages.  Message content will
  * not contain newlines, but the output will add them.
  */
-void nni_debug_out(const char *);
-
-/*
- * nni_set_debug_output is used to redirect debug output; for example an
- * application could replace the default output routine with one that sends
- * it's output to syslog.  If NULL is specified, then a default handler
- * used instead.  The handler should add any newlines to the output as
- * required.  The default handler writes to standard error.
- */
-void nni_set_debug_out(void (*)(const char *));
+extern void nni_plat_println(const char *);
 
 /*
  * nni_alloc allocates memory.  In most cases this can just be malloc().
@@ -89,7 +80,7 @@ void nni_set_debug_out(void (*)(const char *));
  * possible to use a slab allocator or somesuch.  It is permissible for this
  * to return NULL if memory cannot be allocated.
  */
-void *nni_alloc(size_t);
+extern void *nni_alloc(size_t);
 
 /*
  * nni_free frees memory allocated with nni_alloc. It takes a size because
@@ -99,7 +90,7 @@ void *nni_alloc(size_t);
  * This routine does nothing if supplied with a NULL pointer and zero size.
  * Most implementations can just call free() here.
  */
-void nni_free(void *, size_t);
+extern void nni_free(void *, size_t);
 
 typedef struct nni_mutex *nni_mutex_t;
 typedef struct nni_cond *nni_cond_t;
@@ -107,32 +98,32 @@ typedef struct nni_cond *nni_cond_t;
 /*
  * Mutex handling.
  */
-int nni_mutex_create(nni_mutex_t *);
-void nni_mutex_destroy(nni_mutex_t);
-void nni_mutex_enter(nni_mutex_t);
-void nni_mutex_exit(nni_mutex_t);
-int nni_mutex_tryenter(nni_mutex_t);
+extern int nni_mutex_create(nni_mutex_t *);
+extern void nni_mutex_destroy(nni_mutex_t);
+extern void nni_mutex_enter(nni_mutex_t);
+extern void nni_mutex_exit(nni_mutex_t);
+extern int nni_mutex_tryenter(nni_mutex_t);
 
-int nni_cond_create(nni_cond_t *, nni_mutex_t);
-void nni_cond_destroy(nni_cond_t);
+extern int nni_cond_create(nni_cond_t *, nni_mutex_t);
+extern void nni_cond_destroy(nni_cond_t);
 
 /*
  * nni_cond_broadcast wakes all waiters on the condition.  This should be
  * called with the lock held.
  */
-void nni_cond_broadcast(nni_cond_t);
+extern void nni_cond_broadcast(nni_cond_t);
 
 /*
  * nni_cond_signal wakes a signal waiter.
  */
-void nni_cond_signal(nni_cond_t);
+extern void nni_cond_signal(nni_cond_t);
 
 /*
  * nni_condwait waits for a wake up on the condition variable.  The
  * associated lock is atomically released and reacquired upon wake up.
  * Callers can be spuriously woken.  The associated lock must be held.
  */
-void nni_cond_wait(nni_cond_t);
+extern void nni_cond_wait(nni_cond_t);
 
 /*
  * nni_cond_timedwait waits for a wakeup on the condition variable, just
@@ -143,33 +134,33 @@ void nni_cond_wait(nni_cond_t);
  * can be NNG_ETIMEDOUT.  Note that it is permissible to wait for longer
  * than the timeout based on the resolution of your system clock.
  */
-int nni_cond_timedwait(nni_cond_t, uint64_t);
+extern int nni_cond_timedwait(nni_cond_t, uint64_t);
 
 typedef struct nni_thread *nni_thread_t;
 /*
  * nni_thread_creates a thread that runs the given function. The thread
  * receives a single argument.
  */
-int nni_thread_create(nni_thread_t *, void (*fn)(void *), void *);
+extern int nni_thread_create(nni_thread_t *, void (*fn)(void *), void *);
 
 /*
  * nni_thread_reap waits for the thread to exit, and then releases any
  * resources associated with the thread.  After this returns, it
  * is an error to reference the thread in any further way.
  */
-void nni_thread_reap(nni_thread_t);
+extern void nni_thread_reap(nni_thread_t);
 
 /*
  * nn_clock returns a number of microseconds since some arbitrary time
  * in the past.  The values returned by nni_clock may be used with
  * nni_cond_timedwait.
  */
-uint64_t nni_clock(void);
+extern uint64_t nni_clock(void);
 
 /*
  * nni_usleep sleeps for the specified number of microseconds (at least).
  */
-void nni_usleep(uint64_t);
+extern void nni_usleep(uint64_t);
 
 /*
  * nni_platform_init is called to allow the platform the chance to
@@ -178,15 +169,27 @@ void nni_usleep(uint64_t);
  * may be called at any point thereafter.  It is permitted to return
  * an error if some critical failure inializing the platform occurs,
  * but once this succeeds, all future calls must succeed as well, unless
- * nni_fini has been called.
+ * nni_plat_fini has been called.
+ *
+ * The function argument should be called if the platform has not initialized
+ * (i.e. exactly once please), and its result passed back to the caller.
  */
-int nni_platform_init(void);
+extern int nni_plat_init(int (*)(void));
 
 /*
  * nni_platform_fini is called to clean up resources.  It is intended to
  * be called as the last thing executed in the library, and no other functions
  * will be called until nni_platform_init is called.
  */
-void nni_platform_fini(void);
+extern void nni_plat_fini(void);
+
+/*
+ * Actual platforms we support.
+ */
+#if defined(PLATFORM_POSIX)
+#include "platform/posix/posix_impl.h"
+#else
+#error "unknown platform"
+#endif
 
 #endif /* CORE_PLATFORM_H */

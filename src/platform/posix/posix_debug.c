@@ -20,23 +20,23 @@
  * IN THE SOFTWARE.
  */
 
-#include <stdarg.h>
-#include <stdint.h>
-#include <stdlib.h>
-
 #include "core/nng_impl.h"
 
+#ifdef PLATFORM_POSIX_DEBUG
+
+#include <stdlib.h>
+#include <stdio.h>
+
 void
-nni_snprintf(char *dst, size_t sz, const char *fmt, ...)
+nni_plat_abort(void)
 {
-	va_list va;
-	va_start(va, fmt);
-	nni_vsnprintf(dst, sz, fmt, va);
-	va_end(va);
+	abort();
 }
 
 void
-nni_vsnprintf(char *dst, size_t sz, const char *fmt, va_list va)
+nni_plat_println(const char *message)
 {
-	nni_plat_vsnprintf(dst, sz, fmt, va);
+	(void) fprintf(stderr, "%s\n", message);
 }
+
+#endif /* PLATFORM_POSIX_DEBUG */

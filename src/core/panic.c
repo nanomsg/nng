@@ -50,7 +50,7 @@ show_backtrace(void)
 			return;
 		}
 		for (i = 1; i < nframes; i++) {
-			nni_debug_out(lines[i]);
+			nni_println(lines[i]);
 		}
 	}
 #endif
@@ -75,10 +75,17 @@ nni_panic(const char *fmt, ...)
 	(void) nni_vsnprintf(buf, sizeof (buf), fbuf, va);
 	va_end(va);
 
-	nni_debug_out(buf);
-	nni_debug_out("This message is indicative of a BUG.");
-	nni_debug_out("Report this at http://github.com/nanomsg/nanomsg");
+	nni_println(buf);
+	nni_println("This message is indicative of a BUG.");
+	nni_println("Report this at http://github.com/nanomsg/nanomsg");
 
 	show_backtrace();
-	nni_abort();
+	nni_plat_abort();
+}
+
+void
+nni_println(const char *msg)
+{
+	/* TODO: support redirection of this later. */
+	nni_plat_println(msg);
 }

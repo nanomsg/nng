@@ -32,6 +32,10 @@
  * pthreads.
  */
 
+#include "core/nng_impl.h"
+
+#ifdef PLATFORM_POSIX_SYNCH
+
 #include <pthread.h>
 #include <time.h>
 
@@ -235,3 +239,5 @@ nni_cond_timedwait(nni_cond_t c, uint64_t usec)
 	}
 	return (0);
 }
+
+#endif

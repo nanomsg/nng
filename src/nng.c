@@ -36,21 +36,27 @@
 int
 nng_socket_create(nng_socket_t *s, uint16_t proto)
 {
-	nni_platform_init();
+	int rv;
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
 	return (nni_socket_create(s, proto));
 }
 
 int
 nng_socket_close(nng_socket_t s)
 {
-	nni_platform_init();
+	int rv;
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
 	return (nni_socket_close(s));
 }
 
 uint16_t
 nng_socket_protocol(nng_socket_t s)
 {
-	nni_platform_init();
+	nni_init();
 	return (nni_socket_protocol(s));
 }
 
@@ -61,6 +67,7 @@ nng_socket_protocol(nng_socket_t s)
 const char *
 nng_strerror(int num)
 {
+	nni_init();
 	switch (num) {
 	case 0:
 		return ("Hunky dory");	/* what did you expect? */
@@ -96,13 +103,16 @@ nng_strerror(int num)
 int
 nng_msg_alloc(nng_msg_t *msgp, size_t size)
 {
-        nni_platform_init();
+	int rv;
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
         return (nni_msg_alloc(msgp, size));
 }
 
 void
 nng_msg_free(nng_msg_t msg)
 {
-        nni_platform_init();
+        nni_init();
         return (nni_msg_free(msg));
 }

@@ -28,6 +28,8 @@ set (NNG_SOURCES
     nng.h
 
     core/defs.h
+    core/init.c
+    core/init.h
     core/list.c
     core/list.h
     core/message.c
@@ -50,14 +52,15 @@ set (NNG_SOURCES
     core/transport.c
     core/transport.h
 
-    platform/posix/posix_alloc.h
-    platform/posix/posix_clock.h
-    platform/posix/posix_config.h
-    platform/posix/posix_debug.h
     platform/posix/posix_impl.h
-    platform/posix/posix_synch.h
-    platform/posix/posix_thread.h
-    platform/posix/posix_vsnprintf.h
+    platform/posix/posix_config.h
+
+    platform/posix/posix_alloc.c
+    platform/posix/posix_clock.c
+    platform/posix/posix_debug.c
+    platform/posix/posix_synch.c
+    platform/posix/posix_thread.c
+    platform/posix/posix_vsnprintf.c
 
     protocol/pair/pair.c
 

@@ -110,8 +110,8 @@ nni_socket_close(nni_socket_t sock)
 	 */
 
 	/* XXX: close remaining pipes */
-	while ((pipe = nni_list_first(&sock->nn_pipes)) != NULL) {
-		nni_list_remove(&sock->nn_pipes, pipe);
+	while ((pipe = nni_list_first(&sock->s_pipes)) != NULL) {
+		nni_list_remove(&sock->s_pipes, pipe);
 		/* XXX: call nni_pipe_close, then nni_pipe_destroy */
 	}
 

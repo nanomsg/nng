@@ -30,6 +30,9 @@
 /*
  * POSIX clock stuff.
  */
+#include "core/nng_impl.h"
+
+#ifdef PLATFORM_POSIX_CLOCK
 
 #include <time.h>
 #include <errno.h>
@@ -147,3 +150,5 @@ nni_usleep(uint64_t usec)
 }
 
 #endif	/* NNG_USE_GETTIMEOFDAY */
+
+#endif	/* PLATFORM_POSIX_CLOCK */

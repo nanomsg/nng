@@ -20,26 +20,17 @@
  * IN THE SOFTWARE.
  */
 
-/*
- * This is more of a direct #include of a .c rather than .h file.
- * But having it be a .h makes compiler rules work out properly.  Do
- * not include this more than once into your program, or you will
- * get multiple symbols defined.
- */
+#include "core/nng_impl.h"
 
-/*
- * POSIX memory allocation.  This is pretty much standard C.
- */
+#ifdef PLATFORM_POSIX_VSNPRINTF
 
-void *
-nni_alloc(size_t size)
-{
-	return (malloc(size));
-}
+#include <stdarg.h>
+#include <stdio.h>
 
 void
-nni_free(void *ptr, size_t size)
+nni_plat_vsnprintf(char *dst, size_t sz, const char *fmt, va_list va)
 {
-	NNI_ARG_UNUSED(size);
-	free(ptr);
+	(void) vsnprintf(dst, sz, fmt, va);
 }
+
+#endif

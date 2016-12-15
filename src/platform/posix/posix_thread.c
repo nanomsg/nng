@@ -31,6 +31,10 @@
  * POSIX threads.
  */
 
+#include "core/nng_impl.h"
+
+#ifdef PLATFORM_POSIX_THREAD
+
 #include <pthread.h>
 #include <time.h>
 #include <string.h>
@@ -66,7 +70,7 @@ nni_thread_create(nni_thread_t *tp, void (*fn)(void *), void *arg)
 	thr->func = fn;
 	thr->arg = arg;
 
-	if ((rv = pthread_create(&thr->tid, thr, thrfunc, arg)) != 0) {
+	if ((rv = pthread_create(&thr->tid, NULL, thrfunc, thr)) != 0) {
 		nni_free(thr, sizeof (*thr));
 		return (NNG_ENOMEM);
 	}
@@ -91,8 +95,9 @@ atfork_child(void)
 }
 
 int
-nni_platform_init(void)
+nni_plat_init(int (*helper)(void))
 {
+	int rv;
 	if (plat_fork) {
 		nni_panic("nng is fork-reentrant safe");
 	}
@@ -108,14 +113,18 @@ nni_platform_init(void)
 		pthread_mutex_unlock(&plat_lock);
 		return (NNG_ENOMEM);
 	}
-	plat_init = 1;
+	if ((rv = helper()) == 0) {
+		plat_init = 1;
+	}
 	pthread_mutex_unlock(&plat_lock);
 
-	return (0);
+	return (rv);
 }
 
 void
-nni_platform_fini(void)
+nni_plat_fini(void)
 {
 	/* XXX: NOTHING *YET* */
 }
+
+#endif

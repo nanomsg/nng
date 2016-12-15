@@ -20,29 +20,25 @@
  * IN THE SOFTWARE.
  */
 
+#include "core/nng_impl.h"
 #include <stdlib.h>
 #include <stdio.h>
 
-void (*debug_out)(const char *line);
-
-void
-nni_abort(void)
+static int
+init_helper(void)
 {
-	abort();
+	/* This would be where we would initialize transports, etc. */
+	return (0);
+}
+
+int
+nni_init(void)
+{
+	return (nni_plat_init(init_helper));
 }
 
 void
-nni_debug_out(const char *message)
+nni_fini(void)
 {
-	if (debug_out != NULL) {
-		debug_out(message);
-	} else {
-		(void) fprintf(stderr, "%s\n", message);
-	}
-}
-
-void
-nni_set_debug_out(void (*out)(const char *))
-{
-	debug_out = out;
+	nni_plat_fini();
 }

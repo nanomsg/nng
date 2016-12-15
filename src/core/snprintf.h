@@ -31,5 +31,6 @@
  * from the platform.
  */
 extern void nni_snprintf(char *, size_t, const char *, ...);
+extern void nni_vsnprintf(char *, size_t, const char *, va_list);
 
 #endif	/* CORE_SNPRINTF_H */

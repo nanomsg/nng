@@ -31,11 +31,12 @@
  */
 
 #ifdef	PLATFORM_POSIX
+#define PLATFORM_POSIX_ALLOC
+#define PLATFORM_POSIX_DEBUG
+#define PLATFORM_POSIX_CLOCK
+#define PLATFORM_POSIX_SYNCH
+#define PLATFORM_POSIX_THREAD
+#define PLATFORM_POSIX_VSNPRINTF
+
 #include "platform/posix/posix_config.h"
-#include "platform/posix/posix_debug.h"
-#include "platform/posix/posix_alloc.h"
-#include "platform/posix/posix_clock.h"
-#include "platform/posix/posix_synch.h"
-#include "platform/posix/posix_thread.h"
-#include "platform/posix/posix_vsnprintf.h"
 #endif
