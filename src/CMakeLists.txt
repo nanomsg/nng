@@ -24,11 +24,14 @@
 #
 
 set (NNG_SOURCES
+    nng.c
     nng.h
+
     core/defs.h
     core/list.c
     core/list.h
     core/message.c
+    core/message.h
     core/msgqueue.c
     core/msgqueue.h
     core/nng_impl.h
@@ -43,6 +46,7 @@ set (NNG_SOURCES
     core/snprintf.c
     core/snprintf.h
     core/socket.c
+    core/socket.h
     core/transport.c
     core/transport.h
 

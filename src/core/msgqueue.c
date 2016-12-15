@@ -87,7 +87,7 @@ nni_msgqueue_create(nni_msgqueue_t *mqp, int cap)
 void
 nni_msgqueue_destroy(nni_msgqueue_t mq)
 {
-	nng_msg_t msg;
+	nni_msg_t msg;
 
 	nni_cond_destroy(mq->mq_writeable);
 	nni_cond_destroy(mq->mq_readable);
@@ -101,7 +101,7 @@ nni_msgqueue_destroy(nni_msgqueue_t mq)
 			mq->mq_get = 0;
 		}
 		mq->mq_len--;
-		nng_msg_free(msg);
+		nni_msg_free(msg);
 	}
 
 	nni_free(mq->mq_msgs, mq->mq_cap * sizeof (nng_msg_t));
@@ -127,7 +127,7 @@ nni_msgqueue_signal(nni_msgqueue_t mq, int *signal)
 }
 
 int
-nni_msgqueue_put_sig(nni_msgqueue_t mq, nng_msg_t msg, int tmout, int *signal)
+nni_msgqueue_put_sig(nni_msgqueue_t mq, nni_msg_t msg, int tmout, int *signal)
 {
 	uint64_t expire, now;
 
@@ -186,7 +186,7 @@ nni_msgqueue_put_sig(nni_msgqueue_t mq, nng_msg_t msg, int tmout, int *signal)
 }
 
 int
-nni_msgqueue_get_sig(nni_msgqueue_t mq, nng_msg_t *msgp, int tmout, int *signal)
+nni_msgqueue_get_sig(nni_msgqueue_t mq, nni_msg_t *msgp, int tmout, int *signal)
 {
 	uint64_t expire, now;
 
@@ -247,14 +247,14 @@ nni_msgqueue_get_sig(nni_msgqueue_t mq, nng_msg_t *msgp, int tmout, int *signal)
 }
 
 int
-nni_msgqueue_get(nni_msgqueue_t mq, nng_msg_t *msgp, int tmout)
+nni_msgqueue_get(nni_msgqueue_t mq, nni_msg_t *msgp, int tmout)
 {
 	int nosig = 0;
 	return (nni_msgqueue_get_sig(mq, msgp, tmout, &nosig));
 }
 
 int
-nni_msgqueue_put(nni_msgqueue_t mq, nng_msg_t msg, int tmout)
+nni_msgqueue_put(nni_msgqueue_t mq, nni_msg_t msg, int tmout)
 {
 	int nosig = 0;
 	return (nni_msgqueue_put_sig(mq, msg, tmout, &nosig));
@@ -263,7 +263,7 @@ nni_msgqueue_put(nni_msgqueue_t mq, nng_msg_t msg, int tmout)
 void
 nni_msgqueue_close(nni_msgqueue_t mq)
 {
-	nng_msg_t msg;
+	nni_msg_t msg;
 
 	nni_mutex_enter(mq->mq_lock);
 	mq->mq_closed = 1;
@@ -278,7 +278,7 @@ nni_msgqueue_close(nni_msgqueue_t mq)
 			mq->mq_get = 0;
 		}
 		mq->mq_len--;
-		nng_msg_free(msg);
+		nni_msg_free(msg);
 	}
 	nni_mutex_exit(mq->mq_lock);
 }

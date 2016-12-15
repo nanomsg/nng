@@ -27,11 +27,11 @@
  * This file contains definitions for endpoints.
  */
 
-int nni_endpt_create(nng_endpt_t *, nng_socket_t, const char  *);
-void nni_endpt_destroy(nng_endpt_t);
-int nni_endpt_dial(nng_endpt_t, nng_pipe_t *);
-int nni_endpt_listen(nng_endpt_t);
-int nni_endpt_accept(nng_endpt_t, nng_pipe_t *);
-int nni_endpt_close(nng_endpt_t);
+int nni_endpt_create(nni_endpt_t *, nni_socket_t, const char  *);
+void nni_endpt_destroy(nni_endpt_t);
+int nni_endpt_dial(nni_endpt_t, nni_pipe_t *);
+int nni_endpt_listen(nni_endpt_t);
+int nni_endpt_accept(nni_endpt_t, nni_pipe_t *);
+int nni_endpt_close(nni_endpt_t);
 
 #endif /* CORE_ENDPT_H */

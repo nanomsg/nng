@@ -52,7 +52,7 @@ struct nni_protocol {
 	/*
 	 * Create protocol instance data, which will be stored on the socket.
 	 */
-	int (*proto_create)(void **, nng_socket_t);
+	int (*proto_create)(void **, nni_socket_t);
 
 	/*
 	 * Destroy the protocol instance.
@@ -70,8 +70,8 @@ struct nni_protocol {
 	 * Add and remove pipes.  These are called as connections are
 	 * created or destroyed.
 	 */
-	int (*proto_add_pipe)(void *, nng_pipe_t);
-	int (*proto_remove_pipe)(void *, nng_pipe_t);
+	int (*proto_add_pipe)(void *, nni_pipe_t);
+	int (*proto_remove_pipe)(void *, nni_pipe_t);
 
 	/*
 	 * Option manipulation.  These may be NULL.
@@ -86,14 +86,14 @@ struct nni_protocol {
 	 * the protocol should return NULL, otherwise the message
 	 * (possibly modified).
 	 */
-	nng_msg_t (*proto_recv_filter)(void *, nng_msg_t);
+	nng_msg_t (*proto_recv_filter)(void *, nni_msg_t);
 
 	/*
 	 * Send filter.  This may be NULL, but if it isn't, then
 	 * messages here are filtered just after they come from the 
 	 * application.
 	 */
-	nng_msg_t (*proto_send_filter)(void *, nng_msg_t);
+	nng_msg_t (*proto_send_filter)(void *, nni_msg_t);
 };
 
 /*
@@ -106,20 +106,20 @@ struct nni_protocol {
  * recieve messages from this, and place them on the appropriate
  * pipe.
  */
-extern nni_msgqueue_t nni_socket_sendq(nng_socket_t);
+extern nni_msgqueue_t nni_socket_sendq(nni_socket_t);
 
 /*
  * nni_socket_recvq obtains the upper readq.  The protocol should
  * inject incoming messages from pipes to it.
  */
-extern nni_msgqueue_t nni_socket_recvq(nng_socket_t);
+extern nni_msgqueue_t nni_socket_recvq(nni_socket_t);
 
 /*
  * nni_socket_recv_err sets an error code to be returned to clients
  * rather than waiting for a message.  Set it to 0 to resume normal
  * receive operation.
  */
-extern void nni_socket_recv_err(nng_socket_t, int);
+extern void nni_socket_recv_err(nni_socket_t, int);
 
 /*
  * nni_socket_send_err sets an error code to be returned to clients
@@ -127,15 +127,7 @@ extern void nni_socket_recv_err(nng_socket_t, int);
  * for their message to be accepted for send. Set it to 0 to resume
  * normal send operations.
  */
-extern void nni_socket_send_err(nng_socket_t, int);
-
-/*
- * Pipe operations that protocols use.
- */
-extern int nni_pipe_recv(nng_pipe_t, nng_msg_t *);
-extern int nni_pipe_send(nng_pipe_t, nng_msg_t);
-extern uint32_t nni_pipe_id(nng_pipe_t);
-extern void nni_pipe_close(nng_pipe_t);
+extern void nni_socket_send_err(nni_socket_t, int);
 
 /*
  * These functions are not used by protocols, but rather by the socket

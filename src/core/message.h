@@ -20,34 +20,27 @@
  * IN THE SOFTWARE.
  */
 
-#ifndef CORE_NNG_IMPL_H
-#define CORE_NNG_IMPL_H
-
-#include "nng.h"
+#ifndef CORE_MESSAGE_H
+#define CORE_MESSAGE_H
 
 /*
- * Internal implementation things for NNG, common definitions, etc.
- * All internal modules wind up including this file to avoid having
- * to figure out which header(s) to include.
- *
- * Hopefully it should be clear by the name that this file and its contents
- * are *NOT* for use outside of this library.
- *
- * Symbols that are private to the library begin with the nni_ prefix, whereas
- * those starting with nng_ are intended for external consumption.  The latter
- * symbols should be found in the toplevel nng.h header.
+ * Internally used message API.  Again, this stuff is not part of our public
+ * API.
  */
 
-#include "core/defs.h"
-#include "core/list.h"
-#include "core/message.h"
-#include "core/msgqueue.h"
-#include "core/panic.h"
-#include "core/pipe.h"
-#include "core/snprintf.h"
-#include "core/platform.h"
-#include "core/protocol.h"
-#include "core/socket.h"
-#include "core/transport.h"
+extern int nni_msg_alloc(nni_msg_t *, size_t);
+extern void nni_msg_free(nni_msg_t);
+extern int nni_msg_realloc(nni_msg_t, size_t);
+extern void *nni_msg_header(nni_msg_t, size_t *);
+extern void *nni_msg_body(nni_msg_t, size_t *);
+extern int nni_msg_append(nni_msg_t, const void *, size_t);
+extern int nni_msg_prepend(nni_msg_t, const void *, size_t);
+extern int nni_msg_append_header(nni_msg_t, const void *, size_t);
+extern int nni_msg_prepend_header(nni_msg_t, const void *, size_t);
+extern int nni_msg_trim(nni_msg_t, size_t);
+extern int nni_msg_trunc(nni_msg_t, size_t);
+extern int nni_msg_trim_header(nni_msg_t, size_t);
+extern int nni_msg_trunc_header(nni_msg_t, size_t);
+extern int nni_msg_pipe(nni_msg_t, nni_pipe_t *);
 
-#endif	/* CORE_NNG_IMPL_H */
+#endif	/* CORE_SOCKET_H */

@@ -88,7 +88,7 @@ uint16_t nng_socket_protocol(nng_socket_t);
 /*
  * nng_socket_setopt sets an option for a specific socket.
  */
-NNG_DECL int nng_socket_setopt(nng_socket_t, int, void *, size_t);
+NNG_DECL int nng_socket_setopt(nng_socket_t, int, const void *, size_t);
 
 /*
  * nng_socket_getopt obtains the option for a socket.

@@ -30,4 +30,12 @@
  */
 #define	NNI_ARG_UNUSED(x)	((void)x);
 
-#endif	/* NNG_IMPL_H */
+/*
+ * These types are common but have names shared with user space.
+ */
+typedef struct nng_socket *nni_socket_t;
+typedef struct nng_pipe *nni_pipe_t;
+typedef struct nng_msg *nni_msg_t;
+typedef struct nng_endpt *nni_endpt_t;
+
+#endif	/* CORE_DEFS_H */

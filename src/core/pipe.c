@@ -34,23 +34,24 @@ struct nng_pipe {
         struct nni_pipe_ops     p_ops;
         void                    *p_tran;
         nni_list_node_t         p_node;
+        nni_socket_t		p_sock;
 };
 
 /* nni_pipe_id returns the 32-bit pipe id, which can be used in backtraces. */
 uint32_t
-nni_pipe_id(nng_pipe_t p)
+nni_pipe_id(nni_pipe_t p)
 {
         return (p->p_id);
 }
 
 int
-nni_pipe_send(nng_pipe_t p, nng_msg_t msg)
+nni_pipe_send(nni_pipe_t p, nng_msg_t msg)
 {
         return (p->p_ops.p_send(p->p_tran, msg));
 }
 
 int
-nni_pipe_recv(nng_pipe_t p, nng_msg_t *msgp)
+nni_pipe_recv(nni_pipe_t p, nng_msg_t *msgp)
 {
         return (p->p_ops.p_recv(p->p_tran, msgp));
 }
@@ -61,21 +62,22 @@ nni_pipe_recv(nng_pipe_t p, nng_msg_t *msgp)
  * simply return NNG_ECLOSED.
  */
 void
-nni_pipe_close(nng_pipe_t p)
+nni_pipe_close(nni_pipe_t p)
 {
         /* XXX: we need to unregister from the parent socket. */
         /* XXX: also unregister from the protocol. */
-        return (p->p_ops.p_close(p->p_tran));
+        p->p_ops.p_close(p->p_tran);
+        // XXX: nni_sock_remove_pipe(sock, p);
 }
 
 uint16_t
-nni_pipe_peer(nng_pipe_t p)
+nni_pipe_peer(nni_pipe_t p)
 {
         return (p->p_ops.p_peer(p->p_tran));
 }
 
 void
-nni_pipe_destroy(nng_pipe_t p)
+nni_pipe_destroy(nni_pipe_t p)
 {
 	p->p_ops.p_destroy(p->p_tran);
 	nni_free(p, sizeof (*p));

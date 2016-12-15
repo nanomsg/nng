@@ -42,7 +42,7 @@ struct nng_msg {
 	chunk_t		m_header;
 	chunk_t		m_body;
 	int64_t		m_expire;	/* Unix usec */
-	nng_pipe_t	m_pipe;		/* Pipe message was received on */
+	nni_pipe_t	m_pipe;		/* Pipe message was received on */
 };
 
 /*
@@ -226,9 +226,9 @@ chunk_prepend(chunk_t *ch, const void *data, size_t len)
 }
 
 int
-nng_msg_alloc(nng_msg_t *mp, size_t sz)
+nni_msg_alloc(nni_msg_t *mp, size_t sz)
 {
-	nng_msg_t m;
+	nni_msg_t m;
 	int rv;
 
 	if ((m = nni_alloc(sizeof (*m))) == NULL) {
@@ -270,7 +270,7 @@ nng_msg_alloc(nng_msg_t *mp, size_t sz)
 }
 
 void
-nng_msg_free(nng_msg_t m)
+nni_msg_free(nni_msg_t m)
 {
 	chunk_free(&m->m_header);
 	chunk_free(&m->m_body);
@@ -278,7 +278,7 @@ nng_msg_free(nng_msg_t m)
 }
 
 int
-nng_msg_realloc(nng_msg_t m, size_t sz)
+nni_msg_realloc(nni_msg_t m, size_t sz)
 {
 	int rv = 0;
 	if (m->m_body.ch_len < sz) {
@@ -294,7 +294,7 @@ nng_msg_realloc(nng_msg_t m, size_t sz)
 }
 
 void *
-nng_msg_header(nng_msg_t m, size_t *szp)
+nni_msg_header(nni_msg_t m, size_t *szp)
 {
 	if (szp != NULL) {
 		*szp = m->m_header.ch_len;
@@ -303,7 +303,7 @@ nng_msg_header(nng_msg_t m, size_t *szp)
 }
 
 void *
-nng_msg_body(nng_msg_t m, size_t *szp)
+nni_msg_body(nni_msg_t m, size_t *szp)
 {
 	if (szp != NULL) {
 		*szp = m->m_body.ch_len;
@@ -312,55 +312,55 @@ nng_msg_body(nng_msg_t m, size_t *szp)
 }
 
 int
-nng_msg_append(nng_msg_t m, const void *data, size_t len)
+nni_msg_append(nni_msg_t m, const void *data, size_t len)
 {
 	return (chunk_append(&m->m_body, data, len));
 }
 
 int
-nng_msg_prepend(nng_msg_t m, const void *data, size_t len)
+nni_msg_prepend(nni_msg_t m, const void *data, size_t len)
 {
 	return (chunk_prepend(&m->m_body, data, len));
 }
 
 int
-nng_msg_trim(nng_msg_t m, size_t len)
+nni_msg_trim(nni_msg_t m, size_t len)
 {
 	return (chunk_trim(&m->m_body, len));
 }
 
 int
-nng_msg_trunc(nng_msg_t m, size_t len)
+nni_msg_trunc(nni_msg_t m, size_t len)
 {
 	return (chunk_trunc(&m->m_body, len));
 }
 
 int
-nng_msg_append_header(nng_msg_t m, const void *data, size_t len)
+nni_msg_append_header(nni_msg_t m, const void *data, size_t len)
 {
 	return (chunk_append(&m->m_header, data, len));
 }
 
 int
-nng_msg_prepend_header(nng_msg_t m, const void *data, size_t len)
+nni_msg_prepend_header(nni_msg_t m, const void *data, size_t len)
 {
 	return (chunk_prepend(&m->m_header, data, len));
 }
 
 int
-nng_msg_trim_header(nng_msg_t m, size_t len)
+nni_msg_trim_header(nni_msg_t m, size_t len)
 {
 	return (chunk_trim(&m->m_header, len));
 }
 
 int
-nng_msg_trunc_header(nng_msg_t m, size_t len)
+nni_msg_trunc_header(nni_msg_t m, size_t len)
 {
 	return (chunk_trunc(&m->m_header, len));
 }
 
 int
-nng_msg_pipe(nng_msg_t m, nng_pipe_t *pp)
+nni_msg_pipe(nni_msg_t m, nni_pipe_t *pp)
 {
 	*pp = m->m_pipe;
 	return (0);

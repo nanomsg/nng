@@ -50,21 +50,21 @@ struct nng_socket {
  * the upper read and write queues.
  */
 nni_msgqueue_t
-nni_socket_sendq(nng_socket_t s)
+nni_socket_sendq(nni_socket_t s)
 {
 	return (s->s_uwq);
 }
 
 nni_msgqueue_t
-nni_socket_recvq(nng_socket_t s)
+nni_socket_recvq(nni_socket_t s)
 {
 	return (s->s_urq);
 }
 
 int
-nng_socket_create(nng_socket_t *sockp, uint16_t proto)
+nni_socket_create(nni_socket_t *sockp, uint16_t proto)
 {
-        nng_socket_t sock;
+        nni_socket_t sock;
         struct nni_protocol *ops;
         int rv;
 
@@ -77,7 +77,7 @@ nng_socket_create(nng_socket_t *sockp, uint16_t proto)
         sock->s_ops = *ops;
 
         nni_pipe_list_init(&sock->s_pipes);
-        //NNI_LIST_INIT(&sock->s_eps, nng_endpt_t, ep_node);
+        //NNI_LIST_INIT(&sock->s_eps, nni_endpt_t, ep_node);
 
         if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
         	nni_free(sock, sizeof (*sock));
@@ -89,7 +89,7 @@ nng_socket_create(nng_socket_t *sockp, uint16_t proto)
 }
 
 int
-nng_socket_close(nng_socket_t sock)
+nni_socket_close(nni_socket_t sock)
 {
 	nni_msgqueue_close(sock->s_urq);
 	/* XXX: drain this? */
@@ -107,7 +107,7 @@ nng_socket_close(nng_socket_t sock)
 }
 
 int
-nng_socket_sendmsg(nng_socket_t sock, nng_msg_t msg, int tmout)
+nni_socket_sendmsg(nni_socket_t sock, nni_msg_t msg, int tmout)
 {
 	int rv;
 	int besteffort;
@@ -128,7 +128,7 @@ nng_socket_sendmsg(nng_socket_t sock, nng_msg_t msg, int tmout)
 #if 0
 	if (s.ops.p_sendhook != NULL) {
 		if ((rv = s.ops.p_sendhook(sock->s_proto, msg)) != 0) {
-			nng_msg_free(msg);
+			nni_msg_free(msg);
 			return (0);
 		}
 	}
@@ -144,14 +144,14 @@ nng_socket_sendmsg(nng_socket_t sock, nng_msg_t msg, int tmout)
 	rv = nni_msgqueue_put(sock->s_uwq, msg, tmout);
 	if (besteffort && (rv == NNG_EAGAIN)) {
 		/* Pretend this worked... it didn't, but pretend. */
-		nng_msg_free(msg);
+		nni_msg_free(msg);
 		return (0);
 	}
 	return (rv);
 }
 
 uint16_t
-nng_socket_protocol(nng_socket_t sock)
+nni_socket_protocol(nni_socket_t sock)
 {
         return (sock->s_ops.proto_self);
 }

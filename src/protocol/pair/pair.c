@@ -37,15 +37,15 @@ typedef struct pairpipe *pairpipe_t;
  * to create separate data structures for diferent pipe instances.
  */
 struct pair {
-        nng_socket_t    sock;
+        nni_socket_t    sock;
         nni_mutex_t     mx;
-        nng_pipe_t      pipe;
+        nni_pipe_t      pipe;
         nni_msgqueue_t  uwq;
         nni_msgqueue_t  urq;
 };
 
 struct pairpipe {
-	nng_pipe_t	pipe;
+	nni_pipe_t	pipe;
 	pair_t		pair;
 	int		good;
         nni_thread_t	sthr;
@@ -57,7 +57,7 @@ static void pair_receiver(void *);
 static void pair_sender(void *);
 
 static int
-pair_create(void **pairp, nng_socket_t sock)
+pair_create(void **pairp, nni_socket_t sock)
 {
 	pair_t pair;
 	int rv;
@@ -88,7 +88,7 @@ static void
 pair_shutdown(void *arg, uint64_t usec)
 {
 	pair_t pair = arg;
-	nng_pipe_t pipe;
+	nni_pipe_t pipe;
 
         NNI_ARG_UNUSED(usec);
 
@@ -106,7 +106,7 @@ pair_shutdown(void *arg, uint64_t usec)
 }
 
 static int
-pair_add_pipe(void *arg, nng_pipe_t pipe)
+pair_add_pipe(void *arg, nni_pipe_t pipe)
 {
         pair_t pair = arg;
         pairpipe_t pp;
@@ -141,7 +141,7 @@ pair_add_pipe(void *arg, nng_pipe_t pipe)
 }
 
 static int
-pair_remove_pipe(void *arg, nng_pipe_t pipe)
+pair_remove_pipe(void *arg, nni_pipe_t pipe)
 {
 	pairpipe_t pp = arg;
 	pair_t pair = pp->pair;
@@ -168,8 +168,8 @@ pair_sender(void *arg)
 	pair_t pair = pp->pair;
 	nni_msgqueue_t uwq = pair->uwq;
 	nni_msgqueue_t urq = pair->urq;
-	nng_pipe_t pipe = pp->pipe;
-	nng_msg_t msg;
+	nni_pipe_t pipe = pp->pipe;
+	nni_msg_t msg;
 	int rv;
 
 	nni_mutex_enter(pair->mx);
@@ -188,7 +188,7 @@ pair_sender(void *arg)
 		}
 		rv = nni_pipe_send(pipe, msg);
 		if (rv != 0) {
-			nng_msg_free(msg);
+			nni_msg_free(msg);
 			(void) nni_pipe_close(pipe);
 			/* signal the other side */
 			nni_msgqueue_signal(urq, &pp->sigclose);
@@ -204,8 +204,8 @@ pair_receiver(void *arg)
 	pair_t pair = pp->pair;
 	nni_msgqueue_t urq = pair->urq;
 	nni_msgqueue_t uwq = pair->uwq;
-	nng_pipe_t pipe = pp->pipe;
-	nng_msg_t msg;
+	nni_pipe_t pipe = pp->pipe;
+	nni_msg_t msg;
 	int rv;
 
 	nni_mutex_enter(pair->mx);
@@ -218,7 +218,7 @@ pair_receiver(void *arg)
 	for (;;) {
 		rv = nni_pipe_recv(pipe, &msg);
 		if (rv != 0) {
-			nng_msg_free(msg);
+			nni_msg_free(msg);
 			(void) nni_pipe_close(pipe);
 			/* signal the other side */
 			nni_msgqueue_signal(uwq, &pp->sigclose);
