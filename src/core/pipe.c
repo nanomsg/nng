@@ -29,14 +29,6 @@
  * performed in the context of the protocol.
  */
 
-struct nng_pipe {
-        uint32_t                p_id;
-        struct nni_pipe_ops     p_ops;
-        void                    *p_tran;
-        nni_list_node_t         p_node;
-        nni_socket_t		p_sock;
-};
-
 /* nni_pipe_id returns the 32-bit pipe id, which can be used in backtraces. */
 uint32_t
 nni_pipe_id(nni_pipe_t p)
@@ -64,10 +56,7 @@ nni_pipe_recv(nni_pipe_t p, nng_msg_t *msgp)
 void
 nni_pipe_close(nni_pipe_t p)
 {
-        /* XXX: we need to unregister from the parent socket. */
-        /* XXX: also unregister from the protocol. */
         p->p_ops.p_close(p->p_tran);
-        // XXX: nni_sock_remove_pipe(sock, p);
 }
 
 uint16_t
@@ -81,10 +70,4 @@ nni_pipe_destroy(nni_pipe_t p)
 {
 	p->p_ops.p_destroy(p->p_tran);
 	nni_free(p, sizeof (*p));
-}
-
-void
-nni_pipe_list_init(nni_list_t *list)
-{
-	NNI_LIST_INIT(list, struct nng_pipe, p_node);
 }

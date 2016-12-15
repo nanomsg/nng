@@ -183,18 +183,17 @@ pair_sender(void *arg)
 	for (;;) {
 		rv = nni_msgqueue_get_sig(uwq, &msg, -1, &pp->sigclose);
 		if (rv != 0) {
-			(void) nni_pipe_close(pipe);
-			return;
+			break;
 		}
 		rv = nni_pipe_send(pipe, msg);
 		if (rv != 0) {
 			nni_msg_free(msg);
-			(void) nni_pipe_close(pipe);
-			/* signal the other side */
-			nni_msgqueue_signal(urq, &pp->sigclose);
-			return;
+			break;
 		}
 	}
+	nni_msgqueue_signal(urq, &pp->sigclose);
+	nni_pipe_close(pipe);
+	nni_socket_remove_pipe(pair->sock, pipe);
 }
 
 static void
@@ -218,18 +217,17 @@ pair_receiver(void *arg)
 	for (;;) {
 		rv = nni_pipe_recv(pipe, &msg);
 		if (rv != 0) {
-			nni_msg_free(msg);
-			(void) nni_pipe_close(pipe);
-			/* signal the other side */
-			nni_msgqueue_signal(uwq, &pp->sigclose);
-			return;
+			break;
 		}
 		rv = nni_msgqueue_put_sig(urq, msg, -1, &pp->sigclose);
 		if (rv != 0) {
-			(void) nni_pipe_close(pipe);
-			return;
+			nni_msg_free(msg);
+			break;
 		}
 	}
+	nni_msgqueue_signal(uwq, &pp->sigclose);
+	nni_pipe_close(pipe);
+	nni_socket_remove_pipe(pair->sock, pipe);
 }
 
 static int

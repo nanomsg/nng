@@ -24,6 +24,25 @@
 #define CORE_PIPE_H
 
 /*
+ * NB: This structure is supplied here for use by the CORE. Use of this library
+ * OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
+ * TRANSPORTS.
+ */
+
+#include "core/transport.h"
+
+struct nng_pipe {
+        uint32_t                p_id;
+        struct nni_pipe_ops     p_ops;
+        void                    *p_tran;
+        nni_list_node_t         p_sock_node;
+        nni_socket_t		p_sock;
+        nni_list_node_t         p_ep_node;
+        nni_endpt_t		p_ep;
+};
+
+
+/*
  * Pipe operations that protocols use.
  */
 extern int nni_pipe_recv(nni_pipe_t, nng_msg_t *);
@@ -35,7 +54,6 @@ extern void nni_pipe_close(nni_pipe_t);
  * Used only by the socket core - as we don't wish to expose the details
  * of the pipe structure outside of pipe.c.
  */
-extern void nni_pipe_list_init(nni_list_t *);
 extern int nni_pipe_create(nni_pipe_t *, struct nni_transport *);
 extern void nni_pipe_destroy(nni_pipe_t);
 
