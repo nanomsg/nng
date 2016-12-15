@@ -44,11 +44,14 @@
 #include "core/message.h"
 #include "core/msgqueue.h"
 #include "core/panic.h"
-#include "core/pipe.h"
 #include "core/snprintf.h"
 #include "core/platform.h"
 #include "core/protocol.h"
-#include "core/socket.h"
 #include "core/transport.h"
+
+/* These have to come after the others - particularly transport.h */
+#include "core/pipe.h"
+#include "core/socket.h"
+#include "core/endpt.h"
 
 #endif	/* CORE_NNG_IMPL_H */
