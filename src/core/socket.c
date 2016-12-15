@@ -91,6 +91,8 @@ nni_socket_create(nni_socket_t *sockp, uint16_t proto)
 int
 nni_socket_close(nni_socket_t sock)
 {
+	nni_pipe_t pipe;
+
 	nni_msgqueue_close(sock->s_urq);
 	/* XXX: drain this? */
 	nni_msgqueue_close(sock->s_uwq);
@@ -99,7 +101,19 @@ nni_socket_close(nni_socket_t sock)
 
 	/* XXX: protocol shutdown */
 
+	/*
+	 * Paths to pipe close:
+	 *
+	 * - user calls nng_pipe_close()
+	 * - protocol calls pipe_close() after underlying close
+	 * - socket calls pipe close due to socket_close (here)
+	 */
+
 	/* XXX: close remaining pipes */
+	while ((pipe = nni_list_first(&sock->nn_pipes)) != NULL) {
+		nni_list_remove(&sock->nn_pipes, pipe);
+		/* XXX: call nni_pipe_close, then nni_pipe_destroy */
+	}
 
 	/* XXX: wait for workers to cease activity */
 
@@ -125,14 +139,12 @@ nni_socket_sendmsg(nni_socket_t sock, nni_msg_t msg, int tmout)
 	besteffort = sock->s_besteffort;
 	nni_mutex_exit(sock->s_mx);
 
-#if 0
-	if (s.ops.p_sendhook != NULL) {
-		if ((rv = s.ops.p_sendhook(sock->s_proto, msg)) != 0) {
-			nni_msg_free(msg);
+	if (sock->s_ops.proto_send_filter != NULL) {
+		msg = sock->s_ops.proto_send_filter(sock->s_data, msg);
+		if (msg == NULL) {
 			return (0);
 		}
 	}
-#endif
 
 	if (besteffort) {
 		/*
