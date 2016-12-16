@@ -205,6 +205,8 @@ endif ()
 
 add_subdirectory (src)
 
+add_subdirectory (tests)
+
 #  Build the tools
 
 if (NNG_ENABLE_NNGCAT)
@@ -302,93 +304,6 @@ if (NNG_ENABLE_DOC)
 
     add_custom_target (man ALL DEPENDS ${NNG_MANS})
     add_custom_target (html ALL DEPENDS ${NNG_HTMLS})
-
-endif ()
-
-#  Build unit tests.
-
-if (NNG_TESTS)
-
-    enable_testing ()
-    set (all_tests "")
-
-    set (TEST_PORT 12100)
-    macro (add_libnng_test NAME TIMEOUT)
-        list (APPEND all_tests ${NAME})
-        add_executable (${NAME} tests/${NAME}.c)
-        target_link_libraries (${NAME} ${PROJECT_NAME})
-        add_test (NAME ${NAME} COMMAND ${NAME} ${TEST_PORT})
-        set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
-        math (EXPR TEST_PORT "${TEST_PORT}+10")
-    endmacro (add_libnng_test)
-
-    #  Transport tests.
-    #add_libnng_test (inproc 5)
-    #add_libnng_test (inproc_shutdown 5)
-    #add_libnng_test (ipc 5)
-    #add_libnng_test (ipc_shutdown 30)
-    #add_libnng_test (ipc_stress 5)
-    #add_libnng_test (tcp 5)
-    #add_libnng_test (tcp_shutdown 120)
-    #add_libnng_test (ws 5)
-
-    #  Protocol tests.
-    #add_libnng_test (pair 5)
-    #add_libnng_test (pubsub 5)
-    #add_libnng_test (reqrep 5)
-    #add_libnng_test (pipeline 5)
-    #add_libnng_test (survey 5)
-    #add_libnng_test (bus 5)
-
-    #  Feature tests.
-    #add_libnng_test (async_shutdown 30)
-    #add_libnng_test (block 5)
-    #add_libnng_test (term 5)
-    #add_libnng_test (timeo 5)
-    #add_libnng_test (iovec 5)
-    #add_libnng_test (msg 5)
-    #add_libnng_test (prio 5)
-    #add_libnng_test (poll 5)
-    #add_libnng_test (device 5)
-    #add_libnng_test (device4 5)
-    #add_libnng_test (device5 5)
-    #add_libnng_test (device6 5)
-    #add_libnng_test (device7 30)
-    #add_libnng_test (emfile 5)
-    #add_libnng_test (domain 5)
-    #add_libnng_test (trie 5)
-    #add_libnng_test (list 5)
-    #add_libnng_test (hash 5)
-    #add_libnng_test (stats 5)
-    #add_libnng_test (symbol 5)
-    #add_libnng_test (separation 5)
-    #add_libnng_test (zerocopy 5)
-    #add_libnng_test (shutdown 5)
-    #add_libnng_test (cmsg 5)
-    #add_libnng_test (bug328 5)
-    #add_libnng_test (bug777 5)
-    #add_libnng_test (ws_async_shutdown 5)
-    #add_libnng_test (reqttl 10)
-    #add_libnng_test (surveyttl 10)
-
-    # Platform-specific tests
-    #if (WIN32)
-    #    add_libnng_test (win_sec_attr 5)
-    #endif()
-
-    #  Build the performance tests.
-
-    macro (add_libnng_perf NAME)
-        add_executable (${NAME} perf/${NAME}.c)
-        target_link_libraries (${NAME} ${PROJECT_NAME})
-    endmacro (add_libnng_perf)
-
-    #add_libnng_perf (inproc_lat)
-    #add_libnng_perf (inproc_thr)
-    #add_libnng_perf (local_lat)
-    #add_libnng_perf (remote_lat)
-    #add_libnng_perf (local_thr)
-    #add_libnng_perf (remote_thr)
 
 endif ()
 
