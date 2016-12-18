@@ -7,6 +7,7 @@ test_main("Things work", {
 	x = 1;
 	y = 2;
 	test_convey("X is one", {
+		test_debugf("A logged message.");
 		test_assert(x == 1);
 	});
 	test_convey("Y is two", {
@@ -38,7 +39,7 @@ test_main("Things work", {
 		});
 		test_convey("Middle (Skip?)", {
 			test_so(9 - 1 == 8);
-			test_skip();
+			test_skip("forced skip");
 			test_so(0 == 1);
 		});
 		test_convey("Ending", {
