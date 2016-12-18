@@ -28,9 +28,6 @@
 
 if (NNG_TESTS)
 
-    enable_testing ()
-    set (all_tests "")
-
     set (TEST_PORT 12100)
     macro (add_nng_test NAME TIMEOUT)
         list (APPEND all_tests ${NAME})

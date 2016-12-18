@@ -205,7 +205,11 @@ endif ()
 
 add_subdirectory (src)
 
-add_subdirectory (tests)
+if (NNG_TESTS)
+	enable_testing()
+	set(all_tests, "")
+	add_subdirectory (tests)
+endif()
 
 #  Build the tools
 
