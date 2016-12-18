@@ -26,6 +26,8 @@
 
 #  Build unit tests.
 
+include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src)
+
 if (NNG_TESTS)
 
     set (TEST_PORT 12100)
@@ -51,3 +53,4 @@ else ()
 endif ()
 
 add_nng_test(demo 5)
+add_nng_test(list 5)
