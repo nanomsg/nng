@@ -30,6 +30,7 @@
 #include <stdio.h>
 #include <setjmp.h>
 #include <stdarg.h>
+#include <sys/time.h>
 
 /*
  * This test framework allows one to write tests as a form of assertion,
@@ -68,109 +69,141 @@
  * is a version for C programs.
  */
 
+/*
+ * This structure has to be exposed in order to expose the buffer used for
+ * setjmp.  It's members should never be accessed directly.  These should be
+ * allocated statically in the routine(s) that need custom contexts.  The
+ * framework creates a context automatically for each convey scope.
+ */
 typedef struct test_ctx {
-	const char *T_name;
 	jmp_buf T_jmp;
-	void (*T_cleanup_fn)(void *);
-	void *T_cleanup_arg;
-	int T_fail;
-	int T_fatal;
-	int T_skip;
-	int T_asserts;
-	int T_good;
-	int T_bad;
-	int T_done;
-	int T_root;
-	int T_level;
-	int T_printed;
-	struct test_ctx *T_parent;
+	void 	*T_data;
 } test_ctx_t;
 
 extern test_ctx_t *T_C;
 
-#define test_ctx_do(T_xparent, T_xname, T_xcode)			\
+/* These functions are not for use by tests -- they are used internally. */
+extern int test_ctx_init(test_ctx_t *, test_ctx_t *, const char *);
+extern int test_ctx_loop(test_ctx_t *, int);
+extern void test_ctx_fini(test_ctx_t *, int *);
+extern void test_assert_pass(test_ctx_t *, const char *, const char *, int);
+extern void test_assert_skip(test_ctx_t *, const char *, const char *, int);
+extern void test_assert_fail(test_ctx_t *, const char *, const char *, int);
+extern void test_assert_fatal(test_ctx_t *, const char *, const char *, int);
+
+
+/*
+ * test_ctx_do is a helper function not to be called directly by user
+ * code.  It has to be here exposed, in order for setjmp() to work.  Do
+ * not call it directly, instead use one of the other macros.
+ */
+#define test_ctx_do(T_xparent, T_xname, T_xcode, T_rvp)			\
 do {									\
 	static test_ctx_t T_ctx;					\
-	T_ctx.T_name = T_xname;						\
-	T_ctx.T_parent = T_xparent;					\
-	if (T_xparent != NULL) {					\
-		T_ctx.T_level = T_xparent->T_level + 1;			\
-		T_ctx.T_root = 0;					\
-	} else {							\
-		T_ctx.T_root = 1;					\
-		T_ctx.T_level = 0;					\
-	}								\
-	if (T_ctx.T_done) {						\
-		test_ctx_print_result(&T_ctx);				\
+	int T_jumped;							\
+	if (test_ctx_init(&T_ctx, T_xparent, T_xname) != 0) {		\
 		break;							\
 	}								\
-	if (setjmp(T_ctx.T_jmp) != 0) {					\
-		if (T_ctx.T_cleanup_fn != NULL) {			\
-			T_ctx.T_cleanup_fn(T_ctx.T_cleanup_arg);	\
-		}							\
-		if (!T_ctx.T_root) {					\
-			longjmp(T_ctx.T_parent->T_jmp, 1);		\
-		}							\
-		if (T_ctx.T_done) {					\
-			test_ctx_print_result(&T_ctx);			\
-			break;						\
-		}							\
+	T_jumped = setjmp(T_ctx.T_jmp);					\
+	if (test_ctx_loop(&T_ctx, T_jumped) != 0) {			\
+		break;							\
 	}								\
-	test_ctx_print_start(&T_ctx);					\
 	do {								\
-		T_C = &T_ctx;						\
-		{ T_xcode }						\
-		T_ctx.T_done = 1;					\
+		T_xcode							\
 	} while (0);							\
-	longjmp(T_ctx.T_jmp, 1);					\
-} while (0);
+	test_ctx_fini(&T_ctx, T_rvp);					\
+} while (0)
 
+/*
+ * test_ctx_convey creates a "convey" using a custom parent context.
+ * The idea is that this new context creates a new "root" context,
+ * which can be useful for running tests in separate threads, or for
+ * passing context around explicitly.  It should rarely be needed.
+ */
+#define test_ctx_convey(T_xparent, T_xname, T_xcode)			\
+	test_ctx_do(T_xparent, T_xname, T_xcode, NULL)
+
+/*
+ * test_main is used to wrap the top-level of your test suite, and is
+ * used in lieu of a normal main() function.
+ */
 #define test_main(name, code)						\
 int test_main_impl(void) {						\
 	static test_ctx_t ctx;						\
-	test_ctx_t *T_null = NULL;					\
-	ctx.T_root = 1;							\
-	test_ctx_t *T_xctx = &ctx;					\
-	test_ctx_do(T_null, name, code);				\
-	return (ctx.T_fatal ? 2 : ctx.T_fail ? 1 : 0);			\
+	int rv;								\
+	test_ctx_do(NULL, name, code, &rv);				\
+	return (rv);							\
 }
 
-#define test_ctx_convey(T_xparent, T_xname, T_xcode)			\
-{									\
-	test_ctx_do( T_xparent, T_xname, T_xcode); 		\
-}
-
-#define	test_convey(T_xname, T_xcode)	test_ctx_convey(T_C, T_xname, T_xcode)
-
-
+/*
+ * test_ctx_assert and test_ctx_so allow you to run assertions against
+ * an explicit context.  You shouldn't need these.
+ */
 #define	test_ctx_assert(T_xctx, T_cond)					\
 	if (!(T_cond)) {						\
-		T_xctx->T_bad++;					\
-		test_ctx_fatal(T_xctx, "%s: %d: Assertion failed: %s",	\
-			__FILE__, __LINE__, #T_cond);			\
+		test_assert_fatal(T_xctx, #T_cond, __FILE__, __LINE__);	\
 	} else {							\
-		printf(".");						\
-		T_xctx->T_good++;					\
+		test_assert_pass(T_xctx, #T_cond, __FILE__, __LINE__);	\
 	}
-
-#define	test_assert(T_cond)	test_ctx_assert(T_C, T_cond)
 
 #define test_ctx_so(T_xctx, T_cond)					\
 	if (!(T_cond)) {						\
-		printf("X");						\
-		T_xctx->T_bad++;					\
+		test_assert_fail(T_xctx, #T_cond, __FILE__, __LINE__);	\
 	} else {							\
-		printf(".");						\
-		T_xctx->T_good++;					\
+		test_assert_pass(T_xctx, #T_cond, __FILE__, __LINE__);	\
 	}
 
-#define test_so(T_cond)	test_ctx_so(T_C, T_cond)
+/*
+ * test_ctx_skip can be used to skip further processing in the context.
+ */
+extern void test_ctx_skip(test_ctx_t *);
 
+/*
+ * These are convenience versions that use the "global" context.
+ * Note that normally convey() will create its own contexts.  These
+ * are the macros you should use.
+ */
+
+/*
+ * test_convey(name, <code>) starts a convey context, with <code> as
+ * the body.  The <code> is its scope, and may be called repeatedly
+ * within the body of a loop.
+ */
+#define	test_convey(T_xn, T_xc)	test_ctx_convey(T_C, T_xn, T_xc)
+
+/*
+ * test_assert is just like assert(3), but applies to the context.
+ * Failures in these are treated as "fatal" failures; and get higher
+ * alerting than other other kinds of failures.  The entire test run
+ * all the way to the root context is aborted.  (Other root contexts
+ * can run, however.)
+ */
 #define	test_assert(T_cond)	test_ctx_assert(T_C, T_cond)
 
-extern void test_ctx_print_start(test_ctx_t *);
-extern void test_ctx_print_result(test_ctx_t *);
-extern void test_ctx_fatal(test_ctx_t *ctx, const char *fmt, ...);
-extern int test_main_impl(void);
+/*
+ * test_so() is like test_assert, but failures here only abort the current
+ * test.
+ */
+#define test_so(T_cond)		test_ctx_so(T_C, T_cond)
+
+/*
+ * test_skip() just stops processing of the rest of the current context,
+ * and records that processing was skipped.
+ */
+#define	test_skip()		test_ctx_skip(T_C)
+
+/*
+ * test_skip_assert() is used to skip processing of a single assertion.
+ * Further processing in the same context continues.
+ */
+#define	test_skip_assert(T_cnd)	test_assert_skip(T_C, T_cnd)
+
+/*
+ * test_skip_convey() is used to skip a convey context.  This is intended
+ * to permit changing "test_convey", to "test_skip_convey".  This is logged,
+ * and the current convey context continues processing.
+ */
+#define	test_skip_convey(X_n, X_c)	/* TBD */
+
 
 #endif	/* TEST_TEST_H */
