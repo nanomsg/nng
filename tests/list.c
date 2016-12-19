@@ -21,7 +21,7 @@
  */
 
 #include "core/list.c"
-#include "test.h"
+#include "convey.h"
 
 typedef struct {
 	int pad[2];
@@ -29,76 +29,76 @@ typedef struct {
 	nni_list_node_t nodeb;
 } mystruct;
 
-test_main("Linked Lists", {
-	test_convey("Given a couple lists", {
+TestMain("Linked Lists", {
+	Convey("Given a couple lists", {
 		nni_list_t alist;
 		nni_list_t blist;
 
 		NNI_LIST_INIT(&alist, mystruct, nodea);
 		NNI_LIST_INIT(&blist, mystruct, nodeb);
 
-		test_so(alist.ll_offset == 8);
-		test_so(blist.ll_offset == (8 + sizeof (nni_list_node_t)));
+		So(alist.ll_offset == 8);
+		So(blist.ll_offset == (8 + sizeof (nni_list_node_t)));
 
-		test_convey("The list starts empty", {
-			test_so(nni_list_first(&alist) == NULL);
-			test_so(nni_list_last(&blist) == NULL);
+		Convey("The list starts empty", {
+			So(nni_list_first(&alist) == NULL);
+			So(nni_list_last(&blist) == NULL);
 		});
 
-		test_convey("And we can add an item", {
+		Convey("And we can add an item", {
 			mystruct item;
 			nni_list_append(&alist, &item);
 
-			test_convey("It is the first item", {
-				test_so(nni_list_first(&alist) == &item);
+			Convey("It is the first item", {
+				So(nni_list_first(&alist) == &item);
 			});
-			test_convey("It is the last item", {
-				test_so(nni_list_last(&alist) == &item);
+			Convey("It is the last item", {
+				So(nni_list_last(&alist) == &item);
 			});
-			test_convey("It is the only item", {
-				test_so(nni_list_next(&alist, &item) == NULL);
-				test_so(nni_list_prev(&alist, &item) == NULL);
+			Convey("It is the only item", {
+				So(nni_list_next(&alist, &item) == NULL);
+				So(nni_list_prev(&alist, &item) == NULL);
 			});
-			test_convey("It isn't on the other list", {
-				test_so(nni_list_first(&blist) == NULL);
-				test_so(nni_list_last(&blist) == NULL);
+			Convey("It isn't on the other list", {
+				So(nni_list_first(&blist) == NULL);
+				So(nni_list_last(&blist) == NULL);
 			});
-			test_convey("We can remove it", {
+			Convey("We can remove it", {
 				nni_list_remove(&alist, &item);
-				test_so(nni_list_first(&alist) == NULL);
-				test_so(nni_list_last(&alist) == NULL);
+				So(nni_list_first(&alist) == NULL);
+				So(nni_list_last(&alist) == NULL);
 			});
 		});
 
-		test_convey("We can add two items", {
+		Convey("We can add two items", {
 			mystruct item1;
 			mystruct item2;
 
 			nni_list_append(&alist, &item1);
 			nni_list_append(&alist, &item2);
 
-			test_so(nni_list_first(&alist) == &item1);
-			test_so(nni_list_last(&alist) == &item2);
-			test_so(nni_list_next(&alist, &item1) == &item2);
-			test_so(nni_list_prev(&alist, &item2) == &item1);
+			So(nni_list_first(&alist) == &item1);
+			So(nni_list_last(&alist) == &item2);
+			So(nni_list_next(&alist, &item1) == &item2);
+			So(nni_list_prev(&alist, &item2) == &item1);
 
-			test_so(nni_list_next(&alist, &item2) == NULL);
-			test_so(nni_list_prev(&alist, &item1) == NULL);
+			So(nni_list_next(&alist, &item2) == NULL);
+			So(nni_list_prev(&alist, &item1) == NULL);
 
-			test_convey("Removing the first works", {
+			Convey("Removing the first works", {
 				nni_list_remove(&alist, &item1);
-				test_so(nni_list_first(&alist) == &item2);
-				test_so(nni_list_last(&alist) == &item2);
-				test_so(nni_list_next(&alist, &item2) == NULL);
-				test_so(nni_list_prev(&alist, &item2) == NULL);
+				So(nni_list_first(&alist) == &item2);
+				So(nni_list_last(&alist) == &item2);
+				So(nni_list_next(&alist, &item2) == NULL);
+				So(nni_list_prev(&alist, &item2) == NULL);
 			});
 
-			test_convey("Removing the second works", {
+			Convey("Removing the second works", {
 				nni_list_remove(&alist, &item2);
-				test_so(nni_list_first(&alist) == &item1);
-				test_so(nni_list_last(&alist) == &item1);
-				test_so(nni_list_next(&alist, &item1) == NULL);
-				test_so(nni_list_prev(&alist, &item1) == NULL);
+				So(nni_list_first(&alist) == &item1);
+				So(nni_list_last(&alist) == &item1);
+				So(nni_list_next(&alist, &item1) == NULL);
+				So(nni_list_prev(&alist, &item1) == NULL);
 			});
 		});
 	});
