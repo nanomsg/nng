@@ -20,6 +20,28 @@
  * IN THE SOFTWARE.
  */
 
+/*
+ * This contains some of the guts of the testing framework.  It is in a single
+ * file in order to simplify use and minimize external dependencies.
+ *
+ * If you use this with threads, you need to either have pthreads (and link
+ * your test program against the threading library), or you need Windows.
+ * Support for C11 threading is not implemented yet.
+ *
+ * For timing, this code needs a decent timer.  It will use clock_gettime
+ * if it appears to be present, or the Win32 QueryPerformanceCounter, or
+ * gettimeofday() if neither of those are available.
+ *
+ * This code is unlikely to function at all on anything that isn't a UNIX
+ * or Windows system.  As we think its unlikely that you'd want to use this
+ * to run testing inside an embedded device or something, we think this is a
+ * reasonable limitation.
+ *
+ * Note that we expect that on Windows, you have a reasonably current
+ * version of MSVC.  (Specifically we need a few C99-isms that Microsoft
+ * only added late -- like in 2010.  Specifically uint32_t and uint64_t).
+ */
+
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,11 +49,22 @@
 #include <setjmp.h>
 #include <stdarg.h>
 #include <string.h>
+
+#ifdef _WIN32
+#include <windows.h>
+
+#else
+
+#include <time.h>
 #include <locale.h>
 #include <langinfo.h>
 #include <unistd.h>
-#include <time.h>
+
+#ifndef NO_THREADS
 #include <pthread.h>
+#endif
+
+#endif
 
 #include "test.h"
 
@@ -78,12 +111,6 @@ typedef struct tctx {
 	int		t_done;
 	int		t_started;
 	jmp_buf		*t_jmp;
-
-	void		(*t_cleanup)(void *);
-	void		*t_cleanup_arg;
-
-	int		t_nloops;
-
 	int		t_fatal;
 	int		t_fail;
 	int		t_skip;
@@ -260,9 +287,6 @@ test_i_loop(test_ctx_t *ctx, int unwind)
 		return (1);
 	}
 	if (unwind) {
-		if (t->t_cleanup != NULL) {
-			t->t_cleanup(t->t_cleanup_arg);
-		}
 		if ((t->t_parent != t) && (t->t_parent != NULL)) {
 			longjmp(*t->t_parent->t_jmp, 1);
 		}
@@ -503,7 +527,7 @@ read_perfcnt(tperfcnt_t *pc, int *secp, int *usecp)
 
 /*
  * Thread-specific data.  Pthreads uses one way, Win32 another.  If you
- * lack threads, just #define NO_THREADS
+ * lack threads, just #define NO_THREADS.  C11 thread support is pending.
  */
 
 #ifdef NO_THREADS
@@ -529,7 +553,31 @@ get_specific(void)
 }
 #elif defined(_WIN32)
 
-#error "Win32 TLS API missing"
+static DWORD keyctx;
+
+static int
+init_specific(void)
+{
+	if ((keyctx = TlsAlloc()) == TLS_OUT_OF_INDEXES) {
+		return (-1);
+	}
+	return (0):
+}
+
+static int
+set_specific(void *v)
+{
+	if (!TlsSetValue(keyctx, v)) {
+		return (-1);
+	}
+	return (0);
+}
+
+static void *
+get_specific(void)
+{
+	return ((void *)TlsGetValue(keyctx));
+}
 
 #else
 
