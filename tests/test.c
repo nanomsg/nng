@@ -537,7 +537,7 @@ init_specific(void)
 	if ((keyctx = TlsAlloc()) == TLS_OUT_OF_INDEXES) {
 		return (-1);
 	}
-	return (0):
+	return (0);
 }
 
 static int
