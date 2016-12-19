@@ -403,30 +403,6 @@ test_i_assert_skip(const char *cond, const char *file, int line)
 		t->t_name, file, line);
 }
 
-void
-test_i_assert_fatal(const char *cond, const char *file, int line)
-{
-	tctx_t *t = get_ctx();
-	nasserts++;
-	if (verbose) {
-		(void) printf("%s%s%s", color_red, sym_fail, color_none);
-	}
-	if (t->t_root != t) {
-		t->t_root->t_fatal++;
-	}
-	color_asserts = color_red;
-	t->t_fail++;
-	t->t_done = 1;	/* This forces an end */
-	log_printf(t->t_fatallog, "* %s (Fatal Assertion Failed)\n", t->t_name);
-	log_printf(t->t_fatallog, "File: %s\n", file);
-	log_printf(t->t_fatallog, "Line: %d\n", line);
-	log_printf(t->t_fatallog, "Test: %s\n\n", cond);
-	log_printf(t->t_debuglog, "* %s (%s:%d) (FAILED)\n",
-		t->t_name, file, line);
-
-	longjmp(*t->t_jmp, 1);
-}
-
 /*
  * Performance counters.  Really we just want to start and stop timers, to
  * measure elapsed time in usec.

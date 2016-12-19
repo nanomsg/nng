@@ -89,7 +89,6 @@ extern int test_i_main(int, char **);
 extern void test_i_assert_pass(const char *, const char *, int);
 extern void test_i_assert_skip(const char *, const char *, int);
 extern void test_i_assert_fail(const char *, const char *, int);
-extern void test_i_assert_fatal(const char *, const char *, int);
 extern void test_i_skip(const char *, int, const char *);
 extern void test_i_fail(const char *, int, const char *);
 extern void test_i_fatal(const char *, int, const char *);
@@ -175,21 +174,13 @@ extern void test_i_fatal(const char *, int, const char *);
  * memory in the test framework, and anything else indicates a
  * an error or failure in the code being tested.
  */
-#define test_block(T_name, T_code)	test_i_run(T_name, T_code, NULL)
+#define test_block(T_name, T_code, T_rvp)	\
+	test_i_run(T_name, T_code, T_rvp)
 
 /*
  * test_assert and test_so allow you to run assertions.
  */
 #define	test_assert(T_cond)						\
-	do {								\
-		if (!(T_cond)) {					\
-			test_i_assert_fatal(#T_cond, __FILE__, __LINE__);\
-		} else {						\
-			test_i_assert_pass(#T_cond, __FILE__, __LINE__);\
-		}							\
-	} while (0)
-
-#define test_so(T_cond)							\
 	do {								\
 		if (!(T_cond)) {					\
 			test_i_assert_fail(#T_cond, __FILE__, __LINE__);\
@@ -198,6 +189,7 @@ extern void test_i_fatal(const char *, int, const char *);
 		}							\
 	} while (0)
 
+#define test_so(T_cond)		test_assert(T_cond)
 
 /*
  * test_convey(name, <code>) starts a convey context, with <code> as
@@ -216,10 +208,11 @@ extern void test_i_fatal(const char *, int, const char *);
 #define test_fatal(reason)	test_i_fatal(__FILE__, __LINE__, reason)
 
 /*
- * test_skip_assert() is used to skip processing of a single assertion.
+ * test_skip_so() is used to skip processing of a single assertion.
  * Further processing in the same context continues.
  */
-#define	test_skip_assert(T_cnd)	test_i_assert_skip(T_cnd)
+#define	test_skip_so(T_cnd)	\
+	test_i_assert_skip(T_cnd, __FILE__, __LINE__)
 
 /*
  * test_skip_convey() is used to skip a convey context.  This is intended
@@ -227,7 +220,7 @@ extern void test_i_fatal(const char *, int, const char *);
  * and the current convey context continues processing.
  */
 #define	test_skip_convey(T_name, T_code)	\
-	test_convey(T_name, test_skip())
+	test_convey(T_name, test_skip("Skipped"))
 
 /*
  * test_reset establishes a reset for the current block.  This code will
