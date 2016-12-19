@@ -54,8 +54,11 @@ test_main_group({
 
 	test_group("Second group", {
 		int x = 1;
+		static int y  =1;
 		test_convey("x is 1", {
-			sleep(2);
+#ifndef	_WIN32
+			sleep(1);
+#endif
 			test_so(x == 1);
 		});
 	});

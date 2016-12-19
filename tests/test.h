@@ -80,10 +80,8 @@ typedef struct test_ctx {
 	void 	*T_data;
 } test_ctx_t;
 
-#define T_C	test_get_context()
-
 /* These functions are not for use by tests -- they are used internally. */
-extern int test_i_start(test_ctx_t *, test_ctx_t *, const char *);
+extern int test_i_start(test_ctx_t *, const char *);
 extern int test_i_loop(test_ctx_t *, int);
 extern void test_i_finish(test_ctx_t *, int *);
 extern int test_i_main(int, char **);
@@ -102,11 +100,11 @@ extern void test_i_fatal(const char *, int, const char *);
  * code.  It has to be here exposed, in order for setjmp() to work.
  * and for the code block to be inlined.
  */
-#define test_i_run(T_parent, T_name, T_code, T_reset, T_rvp)		\
+#define test_i_run(T_name, T_code, T_reset, T_rvp)			\
 	do {								\
 		static test_ctx_t T_ctx;				\
 		int T_unwind;						\
-		if (test_i_start(&T_ctx, T_parent, T_name) != 0) {	\
+		if (test_i_start(&T_ctx, T_name) != 0) {		\
 			break;						\
 		}							\
 		T_unwind = setjmp(T_ctx.T_jmp);				\
@@ -132,7 +130,7 @@ extern void test_i_fatal(const char *, int, const char *);
 #define test_main(T_name, T_code)					\
 	int test_main_impl(void) {					\
 		int T_rv;						\
-		test_i_run(NULL, T_name, T_code, /*NOP*/, &T_rv);	\
+		test_i_run(T_name, T_code, /*NOP*/, &T_rv);		\
 		return (T_rv);						\
 	}								\
 	int main(int argc, char **argv) {				\
@@ -161,7 +159,7 @@ extern void test_i_fatal(const char *, int, const char *);
 #define	test_group_reset(T_name, T_code, T_reset)			\
 	do {								\
 		int T_rv;						\
-		test_i_run(NULL, T_name, T_code, T_reset, &T_rv);	\
+		test_i_run(T_name, T_code, T_reset, &T_rv);		\
 		if (T_rv > test_main_rv) {				\
 			test_main_rv = T_rv;				\
 		}							\
@@ -183,7 +181,7 @@ extern void test_i_fatal(const char *, int, const char *);
  * an error or failure in the code being tested.
  */
 #define test_block(T_name, T_code, T_reset)				\
-	test_i_run(NULL, T_name, T_code, T_reset, NULL)
+	test_i_run(T_name, T_code, T_reset, NULL)
 
 /*
  * test_assert and test_so allow you to run assertions.
@@ -218,7 +216,7 @@ extern void test_i_fatal(const char *, int, const char *);
  * within the body of a loop.
  */
 #define	test_convey(T_name, T_code)		\
-	test_i_run(T_C, T_name, T_code, /*NOP*/, NULL)
+	test_i_run(T_name, T_code, /*NOP*/, NULL)
 
 /*
  * test_convey_reset is like convey, but offers the ability to specify
@@ -228,7 +226,7 @@ extern void test_i_fatal(const char *, int, const char *);
  * another way to clean up code just once.)
  */
 #define test_convey_reset(T_name, T_code, T_reset)	\
-	test_i_run(T_C, T_name, T_code, T_reset, NULL)
+	test_i_run(T_name, T_code, T_reset, NULL)
 
 /*
  * test_skip() just stops processing of the rest of the current context,

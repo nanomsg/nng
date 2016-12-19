@@ -135,11 +135,9 @@ print_result(tctx_t *t)
 {
 	int secs, usecs;
 
-	stop_perfcnt(&t->t_perfcnt);	/* This is idempotent */
-
 	if (t->t_root == t) {
+		stop_perfcnt(&t->t_perfcnt);	/* This is idempotent */
 
-		stop_perfcnt(&t->t_perfcnt);
 		read_perfcnt(&t->t_perfcnt, &secs, &usecs);
 
 		log_dump(t->t_fatallog, "Errors:", color_red);
@@ -147,19 +145,16 @@ print_result(tctx_t *t)
 		if (debug) {
 			log_dump(t->t_debuglog, "Log:", color_none);
 		}
-		if (!verbose) {
-			(void) printf("%-8s%-52s%4d.%03ds\n",
-				t->t_fatal ? "FATAL" :
-				t->t_fail ? "FAIL" : "ok",
-				t->t_name, secs, usecs / 1000);
-		} else {
-			printf("\n\n%s%d assertions thus far%s",
+		if (verbose) {
+			(void) printf("\n\n%s%d assertions thus far%s",
 				color_asserts, nasserts, color_none);
 			if (nskips) {
-				printf(" %s(one or more sections skipped)%s",
-					color_yellow, color_none);
+				(void) printf(" %s%s%s",
+					color_yellow,
+					"(one or more sections skipped)",
+					color_none);
 			}
-			printf("\n\n--- %s: %s (%d.%02d)\n",
+			(void) printf("\n\n--- %s: %s (%d.%02d)\n",
 				t->t_fatal ? "FATAL" :
 				t->t_fail ? "FAIL" :
 				"PASS", t->t_name, secs, usecs / 10000);
@@ -191,10 +186,11 @@ print_result(tctx_t *t)
  * and it should be skipped.  Otherwise, it needs to be done.
  */
 int
-test_i_start(test_ctx_t *ctx, test_ctx_t *parent, const char *name)
+test_i_start(test_ctx_t *ctx, const char *name)
 {
-	tctx_t *t;
+	tctx_t *t, *parent;
 
+	parent = get_ctx();
 
 	if ((t = ctx->T_data) != NULL) {
 		if (t->t_done) {
@@ -211,7 +207,7 @@ test_i_start(test_ctx_t *ctx, test_ctx_t *parent, const char *name)
 
 	(void) snprintf(t->t_name, sizeof(t->t_name)-1, "%s", name);
 	if (parent != NULL) {
-		t->t_parent = parent->T_data;
+		t->t_parent = parent;
 		t->t_root = t->t_parent->t_root;
 		t->t_level = t->t_parent->t_level + 1;
 		/* unified logging against the root context */
@@ -280,14 +276,14 @@ test_i_loop(test_ctx_t *ctx, int unwind)
 
 		if (verbose) {
 			if (t->t_root == t) {
-				printf("=== RUN: %s\n", t->t_name);
+				(void) printf("=== RUN: %s\n", t->t_name);
 			} else {
-				printf("\n");
+				(void) printf("\n");
 				for (i = 0; i < t->t_level; i++) {
-					printf("  ");
+					(void) printf("  ");
 				}
-				printf("%s ", t->t_name);
-				fflush(stdout);
+				(void) printf("%s ", t->t_name);
+				(void) fflush(stdout);
 			}
 		}
 
@@ -295,7 +291,7 @@ test_i_loop(test_ctx_t *ctx, int unwind)
 		start_perfcnt(&t->t_perfcnt);
 	}
 	/* Reset TC for the following code. */
-	set_specific(ctx);
+	set_specific(t);
 	return (0);
 }
 
@@ -564,16 +560,10 @@ get_specific(void)
 }
 #endif
 
-test_ctx_t *
-test_get_context(void)
-{
-	return (get_specific());
-}
-
 static tctx_t *
 get_ctx(void)
 {
-	return (test_get_context()->T_data);
+	return (get_specific());
 }
 
 /*
