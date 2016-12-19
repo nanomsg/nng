@@ -121,21 +121,6 @@ extern void test_i_fatal(const char *, int, const char *);
 	} while (0)
 
 /*
- * test_main is used to wrap the top-level of your test suite, and is
- * used in lieu of a normal main() function.  This is the usual case where
- * the executable only contains a single top level test group.
- */
-#define test_main(T_name, T_code)					\
-	int test_main_impl(void) {					\
-		int T_rv;						\
-		test_i_run(T_name, T_code, &T_rv);			\
-		return (T_rv);						\
-	}								\
-	int main(int argc, char **argv) {				\
-		return (test_i_main(argc, argv));			\
-	}
-
-/*
  * If you want multiple top-level tests in your test suite, the test
  * code should create a test_main_group(), with multiple calls to
  * test_group() in the intervening section.  This will cause a new main
@@ -161,6 +146,17 @@ extern void test_i_fatal(const char *, int, const char *);
 			test_main_rv = T_rv;				\
 		};							\
 	} while (0)
+
+/*
+ * test_main is used to wrap the top-level of your test suite, and is
+ * used in lieu of a normal main() function.  This is the usual case where
+ * the executable only contains a single top level test group.
+ */
+#define test_main(T_name, T_code)					\
+	test_main_group({						\
+		test_group(T_name, T_code);				\
+	})
+
 
 /*
  * If you don't want to use the test framework's main routine, but
