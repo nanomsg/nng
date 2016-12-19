@@ -50,6 +50,12 @@ static int nasserts = 0;
 static int nskips = 0;
 static const char *color_asserts = "";
 
+#define	TEXIT_OK	0
+#define	TEXIT_USAGE	1
+#define	TEXIT_FAIL	2
+#define	TEXIT_FATAL	3
+#define	TEXIT_NOMEM	4
+
 typedef struct tperfcnt {
 	uint64_t	pc_base;
 	uint64_t	pc_count;
@@ -66,7 +72,8 @@ typedef struct tlog {
 typedef struct tctx {
 	char		t_name[256];
 	struct tctx	*t_parent;
-	struct tctx	*t_root;
+	struct tctx	*t_root;	/* the root node on the list */
+	struct tctx	*t_next;	/* root list only, for cleanup */
 	int		t_level;
 	int		t_done;
 	int		t_started;
@@ -82,9 +89,9 @@ typedef struct tctx {
 	int		t_skip;
 	int		t_printed;
 	tperfcnt_t	t_perfcnt;
-	tlog_t		t_fatallog;
-	tlog_t		t_faillog;
-	tlog_t		t_debuglog;
+	tlog_t		*t_fatallog;
+	tlog_t		*t_faillog;
+	tlog_t		*t_debuglog;
 } tctx_t;
 
 #define		PARENT(t)	((t_ctx_t *)(t->t_parent->t_data))
@@ -110,29 +117,35 @@ static tctx_t *get_ctx(void);
 static void log_vprintf(tlog_t *, const char *, va_list);
 static void log_printf(tlog_t *, const char *, ...);
 static void log_dump(tlog_t *, const char *, const char *);
+static void log_free(tlog_t *);
+static tlog_t *log_alloc(void);
 
 /*
- * test_i_print prints the test results.  It prints more verbose information
+ * print_result prints the test results.  It prints more verbose information
  * in verbose mode.  Note that its possible for assertion checks done at
  * a given block to be recorded in a deeper block, since we can't easily
  * go back up to the old line and print it.
+ *
+ * We also leverage this point to detect completion of a root context, and
+ * deallocate the child contexts.  The root context should never be reentered
+ * here.
  */
-void 
+static void
 print_result(tctx_t *t)
 {
 	int secs, usecs;
 
-	if ((t->t_root == t) && !t->t_printed) {
+	stop_perfcnt(&t->t_perfcnt);	/* This is idempotent */
 
-		t->t_printed = 1;
+	if (t->t_root == t) {
 
 		stop_perfcnt(&t->t_perfcnt);
 		read_perfcnt(&t->t_perfcnt, &secs, &usecs);
 
-		log_dump(&t->t_fatallog, "Errors:", color_red);
-		log_dump(&t->t_faillog, "Failures:", color_yellow);
+		log_dump(t->t_fatallog, "Errors:", color_red);
+		log_dump(t->t_faillog, "Failures:", color_yellow);
 		if (debug) {
-			log_dump(&t->t_debuglog, "Log:", color_none);
+			log_dump(t->t_debuglog, "Log:", color_none);
 		}
 		if (!verbose) {
 			(void) printf("%-8s%-52s%4d.%03ds\n",
@@ -152,7 +165,19 @@ print_result(tctx_t *t)
 				"PASS", t->t_name, secs, usecs / 10000);
 		}
 
-		/* XXX: EMIT LOGS */
+		/* Remove the context, because we cannot reenter here */
+		set_specific(NULL);
+
+		while (t != NULL) {
+			tctx_t *freeit = t;
+			if (t->t_root == t) {
+				log_free(t->t_debuglog);
+				log_free(t->t_faillog);
+				log_free(t->t_fatallog);
+			}
+			t = t->t_next;
+			free(freeit);
+		}
 	}
 }
 
@@ -170,6 +195,7 @@ test_i_start(test_ctx_t *ctx, test_ctx_t *parent, const char *name)
 {
 	tctx_t *t;
 
+
 	if ((t = ctx->T_data) != NULL) {
 		if (t->t_done) {
 			print_result(t);
@@ -179,8 +205,7 @@ test_i_start(test_ctx_t *ctx, test_ctx_t *parent, const char *name)
 	}
 	ctx->T_data = (t = calloc(1, sizeof (tctx_t)));
 	if (t == NULL) {
-		/* PANIC */
-		return (1);
+		goto allocfail;
 	}
 	t->t_jmp = &ctx->T_jmp;
 
@@ -189,11 +214,35 @@ test_i_start(test_ctx_t *ctx, test_ctx_t *parent, const char *name)
 		t->t_parent = parent->T_data;
 		t->t_root = t->t_parent->t_root;
 		t->t_level = t->t_parent->t_level + 1;
+		/* unified logging against the root context */
+		t->t_debuglog = t->t_root->t_debuglog;
+		t->t_faillog = t->t_root->t_faillog;
+		t->t_fatallog = t->t_root->t_fatallog;
+		t->t_next = t->t_root->t_next;
+		t->t_root->t_next = t;
 	} else {
 		t->t_parent = t;
 		t->t_root = t;
+		if (((t->t_fatallog = log_alloc()) == NULL) ||
+		    ((t->t_faillog = log_alloc()) == NULL) ||
+		    ((t->t_debuglog = log_alloc()) == NULL)) {
+			goto allocfail;
+		}
 	}
 	return (0);
+allocfail:
+	if (t != NULL) {
+		log_free(t->t_fatallog);
+		log_free(t->t_debuglog);
+		log_free(t->t_faillog);
+		free(t);
+		ctx->T_data = NULL;
+		return (1);
+	}
+	if (parent != NULL) {
+		test_fatal("Unable to allocate context");
+	}
+	return (1);
 }
 
 /*
@@ -231,7 +280,7 @@ test_i_loop(test_ctx_t *ctx, int unwind)
 
 		if (verbose) {
 			if (t->t_root == t) {
-				printf("\n=== RUN: %s\n", t->t_name);
+				printf("=== RUN: %s\n", t->t_name);
 			} else {
 				printf("\n");
 				for (i = 0; i < t->t_level; i++) {
@@ -255,6 +304,8 @@ test_i_finish(test_ctx_t *ctx, int *rvp)
 {
 	tctx_t *t;
 	if ((t = ctx->T_data) == NULL) {
+		/* allocation failure */
+		*rvp = 4;
 		return;
 	}
 	t->t_done = 1;
@@ -278,7 +329,7 @@ test_i_skip(const char *file, int line, const char *reason)
 	if (verbose) {
 		(void) printf("%s%s%s", color_yellow, sym_skip, color_none);
 	}
-	log_printf(&t->t_root->t_debuglog, "* Skipping rest of %s: %s: %d: %s",
+	log_printf(t->t_debuglog, "* Skipping rest of %s: %s: %d: %s",
 		t->t_name, file, line, reason);
 	t->t_done = 1;	/* This forces an end */
 	nskips++;
@@ -299,12 +350,11 @@ test_i_assert_fail(const char *cond, const char *file, int line)
 	color_asserts = color_yellow;
 	t->t_fail++;
 	t->t_done = 1;	/* This forces an end */
-	log_printf(&t->t_root->t_faillog, "* %s (Assertion Failed)\n",
-		t->t_name);
-	log_printf(&t->t_root->t_faillog, "File: %s\n", file);
-	log_printf(&t->t_root->t_faillog, "Line: %d\n", line);
-	log_printf(&t->t_root->t_faillog, "Test: %s\n\n", cond);
-	log_printf(&t->t_root->t_debuglog, "* %s (%s:%d) (FAILED)\n",
+	log_printf(t->t_faillog, "* %s (Assertion Failed)\n", t->t_name);
+	log_printf(t->t_faillog, "File: %s\n", file);
+	log_printf(t->t_faillog, "Line: %d\n", line);
+	log_printf(t->t_faillog, "Test: %s\n\n", cond);
+	log_printf(t->t_debuglog, "* %s (%s:%d) (FAILED)\n",
 		t->t_name, file, line);
 	longjmp(*t->t_jmp, 1);
 }
@@ -317,7 +367,7 @@ test_i_assert_pass(const char *cond, const char *file, int line)
 	if (verbose) {
 		(void) printf("%s%s%s", color_green, sym_pass, color_none);
 	}
-	log_printf(&t->t_root->t_debuglog, "* %s (%s:%d) (Passed)\n",
+	log_printf(t->t_debuglog, "* %s (%s:%d) (Passed)\n",
 		t->t_name, file, line);
 }
 
@@ -329,7 +379,7 @@ test_i_assert_skip(const char *cond, const char *file, int line)
 	if (verbose) {
 		(void) printf("%s%s%s", color_yellow, sym_pass, color_none);
 	}
-	log_printf(&t->t_root->t_debuglog, "* %s (%s:%d) (SKIPPED)\n",
+	log_printf(t->t_debuglog, "* %s (%s:%d) (SKIPPED)\n",
 		t->t_name, file, line);
 }
 
@@ -347,12 +397,11 @@ test_i_assert_fatal(const char *cond, const char *file, int line)
 	color_asserts = color_red;
 	t->t_fail++;
 	t->t_done = 1;	/* This forces an end */
-	log_printf(&t->t_root->t_fatallog, "* %s (Fatal Assertion Failed)\n",
-		t->t_name);
-	log_printf(&t->t_root->t_fatallog, "File: %s\n", file);
-	log_printf(&t->t_root->t_fatallog, "Line: %d\n", line);
-	log_printf(&t->t_root->t_fatallog, "Test: %s\n\n", cond);
-	log_printf(&t->t_root->t_debuglog, "* %s (%s:%d) (FAILED)\n",
+	log_printf(t->t_fatallog, "* %s (Fatal Assertion Failed)\n", t->t_name);
+	log_printf(t->t_fatallog, "File: %s\n", file);
+	log_printf(t->t_fatallog, "Line: %d\n", line);
+	log_printf(t->t_fatallog, "Test: %s\n\n", cond);
+	log_printf(t->t_debuglog, "* %s (%s:%d) (FAILED)\n",
 		t->t_name, file, line);
 
 	longjmp(*t->t_jmp, 1);
@@ -584,6 +633,23 @@ log_dump(tlog_t *log, const char *header, const char *color)
 	}
 }
 
+static void
+log_free(tlog_t *log)
+{
+	if (log != NULL) {
+		if (log->l_size != 0) {
+			free(log->l_buf);
+		}
+		free(log);
+	}
+}
+
+static tlog_t *
+log_alloc(void)
+{
+	return (calloc(1, sizeof (tlog_t)));
+}
+
 /*
  * test_init initializes some common global stuff.   Call it from main(),
  * if you don't use the framework provided main.
@@ -616,7 +682,7 @@ test_debugf(const char *fmt, ...)
 	tctx_t *ctx = get_ctx()->t_root;
 
 	va_start(va, fmt);
-	log_vprintf(&ctx->t_debuglog, fmt, va);
+	log_vprintf(ctx->t_debuglog, fmt, va);
 	va_end(va);
 }
 
@@ -624,9 +690,8 @@ void
 test_i_fail(const char *file, int line, const char *reason)
 {
 	tctx_t *t = get_ctx()->t_root;
-	tlog_t *faillog = &t->t_root->t_faillog;
-	tlog_t *debuglog = &t->t_root->t_debuglog;
-	char buffer[1024];
+	tlog_t *faillog = t->t_faillog;
+	tlog_t *debuglog = t->t_debuglog;
 
 	log_printf(debuglog, "* %s (%s:%d) (Failed): %s\n",
 		t->t_name, file, line, reason);
@@ -648,8 +713,8 @@ void
 test_i_fatal(const char *file, int line, const char *reason)
 {
 	tctx_t *t = get_ctx()->t_root;
-	tlog_t *faillog = &t->t_root->t_fatallog;
-	tlog_t *debuglog = &t->t_root->t_debuglog;
+	tlog_t *faillog = t->t_fatallog;
+	tlog_t *debuglog = t->t_debuglog;
 
 	log_printf(debuglog, "* %s (%s:%d) (Error): %s\n",
 		t->t_name, file, line, reason);
@@ -705,6 +770,16 @@ int
 test_i_main(int argc, char **argv)
 {
 	int i;
+	const char *status;
+	const char *prog;
+	tperfcnt_t pc;
+	int secs, usecs;
+
+	if ((argc > 0) && (argv[0] != NULL)) {
+		prog = argv[0];
+	} else {
+		prog = "<unknown>";
+	}
 
 	/*
 	 * Poor man's getopt.  Very poor. We should add a way for tests
@@ -722,8 +797,40 @@ test_i_main(int argc, char **argv)
 		}
 	}
 	if (test_init() != 0) {
-		fprintf(stderr, "Cannot initialize test framework\n");
-		exit(1);
+		(void) fprintf(stderr, "Cannot initialize test framework\n");
+		exit(TEXIT_NOMEM);
 	}
-	return (test_main_impl());
+
+	init_perfcnt(&pc);
+	start_perfcnt(&pc);
+	i = test_main_impl();
+	stop_perfcnt(&pc);
+
+	switch (i) {
+	case TEXIT_NOMEM:
+		(void) fprintf(stderr, "Cannot initialize root test context\n");
+		exit(TEXIT_NOMEM);
+	case TEXIT_OK:
+		if (verbose) {
+			(void) printf("PASS\n");
+		}
+		status = "ok";
+		break;
+	case TEXIT_FAIL:
+		status = "FAIL";
+		if (verbose) {
+			(void) printf("FAIL\n");
+		}
+		break;
+	default:
+		status = "FATAL";
+		if (verbose) {
+			(void) printf("FATAL\n");
+		}
+		break;
+	}
+
+	read_perfcnt(&pc, &secs, &usecs);
+	(void) printf("%-8s%-52s%4d.%03ds\n", status, prog, secs, usecs / 1000);
+	exit(i);
 }

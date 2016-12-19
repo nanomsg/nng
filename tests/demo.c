@@ -1,7 +1,10 @@
 #include <stdio.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include "test.h"
 
-test_main("Things work", {
+test_main_group({
+	test_group("Things work", {
 	int x;
 	int y;
 	x = 1;
@@ -47,4 +50,13 @@ test_main("Things work", {
 		});
 	});
 
+	});
+
+	test_group("Second group", {
+		int x = 1;
+		test_convey("x is 1", {
+			sleep(2);
+			test_so(x == 1);
+		});
+	});
 })

@@ -102,64 +102,109 @@ extern void test_i_fatal(const char *, int, const char *);
  * code.  It has to be here exposed, in order for setjmp() to work.
  * and for the code block to be inlined.
  */
-#define test_i_run(T_xparent, T_xname, T_code, T_rvp)			\
-do {									\
-	static test_ctx_t T_ctx;					\
-	int T_unwind;							\
-	if (test_i_start(&T_ctx, T_xparent, T_xname) != 0) {		\
-		break;							\
-	}								\
-	T_unwind = setjmp(T_ctx.T_jmp);					\
-	if (test_i_loop(&T_ctx, T_unwind) != 0) {			\
-		break;							\
-	}								\
+#define test_i_run(T_parent, T_name, T_code, T_reset, T_rvp)		\
 	do {								\
-		T_code							\
-	} while (0);							\
-	test_i_finish(&T_ctx, T_rvp);					\
-} while (0)
+		static test_ctx_t T_ctx;				\
+		int T_unwind;						\
+		if (test_i_start(&T_ctx, T_parent, T_name) != 0) {	\
+			break;						\
+		}							\
+		T_unwind = setjmp(T_ctx.T_jmp);				\
+		if (T_unwind) {						\
+			do {						\
+				T_reset					\
+			} while (0);					\
+		}							\
+		if (test_i_loop(&T_ctx, T_unwind) != 0) {		\
+			break;						\
+		}							\
+		do {							\
+			T_code						\
+		} while (0);						\
+		test_i_finish(&T_ctx, T_rvp);				\
+	} while (0)
 
 /*
  * test_main is used to wrap the top-level of your test suite, and is
- * used in lieu of a normal main() function.
+ * used in lieu of a normal main() function.  This is the usual case where
+ * the executable only contains a single top level test group.
  */
 #define test_main(T_name, T_code)					\
-int test_main_impl(void) {						\
-	int T_rv;							\
-	test_i_run(NULL, T_name, T_code, &T_rv);			\
-	return (T_rv);							\
-}									\
-int main(int argc, char **argv) {					\
-	return (test_i_main(argc, argv));				\
-}
+	int test_main_impl(void) {					\
+		int T_rv;						\
+		test_i_run(NULL, T_name, T_code, /*NOP*/, &T_rv);	\
+		return (T_rv);						\
+	}								\
+	int main(int argc, char **argv) {				\
+		return (test_i_main(argc, argv));			\
+	}
 
 /*
- * test_block declares an enclosing test block.  The block is inlined,
- * and a new context is created.  The purpose is to create a new block
- * in a thread, or other function, instead of using main().  Note that
- * tests that run concurrently may lead to confused output.  A suitable
- * parent context can be obtained with test_get_context().  If NULL is
- * supplied instead, then a new root context is created.
+ * If you want multiple top-level tests in your test suite, the test
+ * code should create a test_main_group(), with multiple calls to
+ * test_group() in the intervening section.  This will cause a new main
+ * to be emitted that runs all the main groups.  If a rest for the group
+ * is required, it can be supplied with test_group_reset.
  */
-#define test_block(T_parent, T_name, T_code)				\
-	test_i_run(T_parent, T_name, T_code, NULL)
+#define	test_main_group(T_code)						\
+	static int test_main_rv;					\
+	int test_main_impl(void) {					\
+		do {							\
+			T_code						\
+		} while (0);						\
+		return (test_main_rv);					\
+	}								\
+	int main(int argc, char **argv) {				\
+		return (test_i_main(argc, argv));			\
+	}
+
+#define	test_group_reset(T_name, T_code, T_reset)			\
+	do {								\
+		int T_rv;						\
+		test_i_run(NULL, T_name, T_code, T_reset, &T_rv);	\
+		if (T_rv > test_main_rv) {				\
+			test_main_rv = T_rv;				\
+		}							\
+	} while (0)
+
+#define	test_group(T_name, T_code)	\
+	test_group_reset(T_name, T_code, /*NOP*/)
+
+/*
+ * If you don't want to use the test framework's main routine, but
+ * prefer (or need, because of threading for example) to have your
+ * test code driven separately, you can use inject test_block() in
+ * your function.  It works like test_main().  These must not be
+ * nested within test_main, test_main_group, or test_block itself:
+ * results are undefined if you try that.  The final T_rvp pointer may
+ * be NULL, or is a pointer to an integer to receive the an integer
+ * result from the test. (0 is success, 4 indicates a failure to allocate
+ * memory in the test framework, and anything else indicates a
+ * an error or failure in the code being tested.
+ */
+#define test_block(T_name, T_code, T_reset)				\
+	test_i_run(NULL, T_name, T_code, T_reset, NULL)
 
 /*
  * test_assert and test_so allow you to run assertions.
  */
 #define	test_assert(T_cond)						\
-	if (!(T_cond)) {						\
-		test_i_assert_fatal(#T_cond, __FILE__, __LINE__);	\
-	} else {							\
-		test_i_assert_pass(#T_cond, __FILE__, __LINE__);	\
-	}
+	do {								\
+		if (!(T_cond)) {					\
+			test_i_assert_fatal(#T_cond, __FILE__, __LINE__);\
+		} else {						\
+			test_i_assert_pass(#T_cond, __FILE__, __LINE__);\
+		}							\
+	} while (0)
 
 #define test_so(T_cond)							\
-	if (!(T_cond)) {						\
-		test_i_assert_fail(#T_cond, __FILE__, __LINE__);	\
-	} else {							\
-		test_i_assert_pass(#T_cond, __FILE__, __LINE__);	\
-	}
+	do {								\
+		if (!(T_cond)) {					\
+			test_i_assert_fail(#T_cond, __FILE__, __LINE__);\
+		} else {						\
+			test_i_assert_pass(#T_cond, __FILE__, __LINE__);\
+		}							\
+	} while (0)
 
 /*
  * These are convenience versions that use the "global" context.
@@ -172,7 +217,18 @@ int main(int argc, char **argv) {					\
  * the body.  The <code> is its scope, and may be called repeatedly
  * within the body of a loop.
  */
-#define	test_convey(T_name, T_code)	test_i_run(T_C, T_name, T_code, NULL)
+#define	test_convey(T_name, T_code)		\
+	test_i_run(T_C, T_name, T_code, /*NOP*/, NULL)
+
+/*
+ * test_convey_reset is like convey, but offers the ability to specify
+ * a reset block of code, which will run to clean up after each nested
+ * convey, or when the code completes.  (Note that any code placed *after*
+ * conveys is executed as part of the current context, which can be
+ * another way to clean up code just once.)
+ */
+#define test_convey_reset(T_name, T_code, T_reset)	\
+	test_i_run(T_C, T_name, T_code, T_reset, NULL)
 
 /*
  * test_skip() just stops processing of the rest of the current context,
@@ -198,8 +254,8 @@ int main(int argc, char **argv) {					\
 
 /*
  * test_get_context obtains the current context.  It uses thread local
- * storage in the event that threading is in use, allowing concurrent threads
- * to "sort" of work.
+ * storage in the event that threading is in use.  This means by default
+ * conveys started in new threads will have their own root contexts.
  */
 extern test_ctx_t *test_get_context(void);
 
