@@ -171,6 +171,7 @@ print_result(tctx_t *t)
 				log_free(t->t_fatallog);
 			}
 			t = t->t_next;
+			memset(freeit, 0, sizeof (*freeit));
 			free(freeit);
 		}
 	}
@@ -270,7 +271,6 @@ test_i_loop(test_ctx_t *ctx, int unwind)
 			return (1);
 		}
 	}
-
 	if (!t->t_started) {
 		t->t_started = 1;
 
@@ -617,9 +617,9 @@ log_dump(tlog_t *log, const char *header, const char *color)
 		return;
 	}
 
-	printf("\n\n%s%s%s\n\n", color, header, color_none);
+	(void) printf("\n\n%s%s%s\n\n", color, header, color_none);
 	for (s = STRTOK(log->l_buf, "\n"); s != NULL; s = STRTOK(NULL, "\n")) {
-		printf("  %s%s%s\n", color, s, color_none);
+		(void) printf("  %s%s%s\n", color, s, color_none);
 	}
 }
 

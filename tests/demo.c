@@ -62,4 +62,33 @@ test_main_group({
 			test_so(x == 1);
 		});
 	});
+
+	test_group("Reset group", {
+		static int x = 0;
+		static int y = 0;
+		test_reset({
+			x = 20;
+		});
+		test_convey("Add one to both y and x", {
+			x++;
+			y++;
+			test_so(x == 1);	/* no reset yet */
+			test_so(y == 1);
+		});
+		test_convey("Again", {
+			x++;
+			y++;
+			test_so(x == 21);
+			test_so(y == 2);
+		});
+		test_convey("Third time", {
+			x++;
+			y++;
+			test_so(x == 21);
+			test_so(y == 3);
+		});
+
+		test_so(x == 20);
+		test_so(y == 3);
+	});
 })

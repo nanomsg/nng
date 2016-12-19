@@ -100,25 +100,24 @@ extern void test_i_fatal(const char *, int, const char *);
  * code.  It has to be here exposed, in order for setjmp() to work.
  * and for the code block to be inlined.
  */
-#define test_i_run(T_name, T_code, T_reset, T_rvp)			\
+#define test_i_run(T_name, T_code, T_rvp)				\
 	do {								\
 		static test_ctx_t T_ctx;				\
 		int T_unwind;						\
+		int T_break = 0;					\
 		if (test_i_start(&T_ctx, T_name) != 0) {		\
 			break;						\
 		}							\
 		T_unwind = setjmp(T_ctx.T_jmp);				\
-		if (T_unwind) {						\
-			do {						\
-				T_reset					\
-			} while (0);					\
-		}							\
 		if (test_i_loop(&T_ctx, T_unwind) != 0) {		\
 			break;						\
 		}							\
 		do {							\
 			T_code						\
 		} while (0);						\
+		if (T_break) {						\
+			break;						\
+		}							\
 		test_i_finish(&T_ctx, T_rvp);				\
 	} while (0)
 
@@ -130,7 +129,7 @@ extern void test_i_fatal(const char *, int, const char *);
 #define test_main(T_name, T_code)					\
 	int test_main_impl(void) {					\
 		int T_rv;						\
-		test_i_run(T_name, T_code, /*NOP*/, &T_rv);		\
+		test_i_run(T_name, T_code, &T_rv);			\
 		return (T_rv);						\
 	}								\
 	int main(int argc, char **argv) {				\
@@ -141,8 +140,7 @@ extern void test_i_fatal(const char *, int, const char *);
  * If you want multiple top-level tests in your test suite, the test
  * code should create a test_main_group(), with multiple calls to
  * test_group() in the intervening section.  This will cause a new main
- * to be emitted that runs all the main groups.  If a rest for the group
- * is required, it can be supplied with test_group_reset.
+ * to be emitted that runs all the main groups.
  */
 #define	test_main_group(T_code)						\
 	static int test_main_rv;					\
@@ -156,17 +154,14 @@ extern void test_i_fatal(const char *, int, const char *);
 		return (test_i_main(argc, argv));			\
 	}
 
-#define	test_group_reset(T_name, T_code, T_reset)			\
+#define	test_group(T_name, T_code)					\
 	do {								\
 		int T_rv;						\
-		test_i_run(T_name, T_code, T_reset, &T_rv);		\
+		test_i_run(T_name, T_code, &T_rv);			\
 		if (T_rv > test_main_rv) {				\
 			test_main_rv = T_rv;				\
-		}							\
+		};							\
 	} while (0)
-
-#define	test_group(T_name, T_code)	\
-	test_group_reset(T_name, T_code, /*NOP*/)
 
 /*
  * If you don't want to use the test framework's main routine, but
@@ -180,8 +175,7 @@ extern void test_i_fatal(const char *, int, const char *);
  * memory in the test framework, and anything else indicates a
  * an error or failure in the code being tested.
  */
-#define test_block(T_name, T_code, T_reset)				\
-	test_i_run(T_name, T_code, T_reset, NULL)
+#define test_block(T_name, T_code)	test_i_run(T_name, T_code, NULL)
 
 /*
  * test_assert and test_so allow you to run assertions.
@@ -204,29 +198,14 @@ extern void test_i_fatal(const char *, int, const char *);
 		}							\
 	} while (0)
 
-/*
- * These are convenience versions that use the "global" context.
- * Note that normally convey() will create its own contexts.  These
- * are the macros you should use.
- */
 
 /*
  * test_convey(name, <code>) starts a convey context, with <code> as
  * the body.  The <code> is its scope, and may be called repeatedly
  * within the body of a loop.
  */
-#define	test_convey(T_name, T_code)		\
-	test_i_run(T_name, T_code, /*NOP*/, NULL)
+#define	test_convey(T_name, T_code)	test_i_run(T_name, T_code, NULL)
 
-/*
- * test_convey_reset is like convey, but offers the ability to specify
- * a reset block of code, which will run to clean up after each nested
- * convey, or when the code completes.  (Note that any code placed *after*
- * conveys is executed as part of the current context, which can be
- * another way to clean up code just once.)
- */
-#define test_convey_reset(T_name, T_code, T_reset)	\
-	test_i_run(T_name, T_code, T_reset, NULL)
 
 /*
  * test_skip() just stops processing of the rest of the current context,
@@ -251,11 +230,35 @@ extern void test_i_fatal(const char *, int, const char *);
 	test_convey(T_name, test_skip())
 
 /*
- * test_get_context obtains the current context.  It uses thread local
- * storage in the event that threading is in use.  This means by default
- * conveys started in new threads will have their own root contexts.
+ * test_reset establishes a reset for the current block.  This code will
+ * be executed every time the current block is unwinding.  This means that
+ * the code will be executed each time a child convey exits.  It is also
+ * going to be executed once more, for the final pass, which doesn't actually
+ * execute any convey blocks.  (This final pass is required in order to
+ * learn that all convey's, as well as any code beyond them, are complete.)
+ *
+ * The way this works is by overriding the existing block's jump buffer.
+ *
+ * Unlike with GoConvey, this must be registered before any children
+ * convey blocks; the logic only affects convey blocks that follow this
+ * one, within the same scope.
+ *
+ * It is possible to have a subsequent reset at the same convey scope
+ * override a prior reset.  Normally you should avoid this, and just
+ * use lower level convey blocks.
  */
-extern test_ctx_t *test_get_context(void);
+#define	test_reset(T_reset_code)					\
+	T_unwind = setjmp(T_ctx.T_jmp);					\
+	if (T_unwind) {							\
+		do {							\
+			T_reset_code					\
+		} while (0);						\
+	}								\
+	if (test_i_loop(&T_ctx, T_unwind) != 0) {			\
+		T_break = 1;						\
+		break;							\
+	}
+
 
 /*
  * test_init sets up initial things required for testing.  If you don't
