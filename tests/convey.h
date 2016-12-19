@@ -89,7 +89,7 @@
  * scopes.  This emits a main function, and can only be used once.
  * It also cannot be used with TestMain.
  */
-#define Main(code)		test_main_group(name, code)
+#define Main(code)		test_main_group(code)
 
 /*
  * Test creates a top-level test scope.
