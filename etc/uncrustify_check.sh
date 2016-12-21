@@ -1,10 +1,14 @@
 #!/bin/sh
 
+mydir=`dirname $0`
+srcdir=${mydir}/../src
+uncrustify --version
 PATH=${PATH}:/opt/pkg/bin export PATH
 stat=0
-find src -name '*.[ch]' -print | while read file 
+
+find ${srcdir} -name '*.[ch]' -print | while read file 
 do
-	uncrustify -c etc/uncrustify.cfg -lC -f $file | colordiff -u $file -
+	uncrustify -c "${mydir}/uncrustify.cfg" -lC -f $file | colordiff -u $file -
 	if [ $? -ne 0 ]
 	then
 		stat=1
