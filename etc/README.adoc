@@ -1,0 +1,22 @@
+About This Directory
+====================
+
+This directory contains support files that I use for developing this
+project.  I recommend others consider doing the same.
+
+I'm using Sublime Text as my development IDE, and so I've set things up
+for that.
+
+The project coding style is automatically checked by the Uncrustify
+configuration, and there is a shell script here that will validate it.
+Uncrustify is not (for now) enforced outside of src/  (in particular it
+will probably choke on the stuff in ./tests).  I may fix that one day.
+
+I have the arranged in my Uncrustify Sublime package to configure both
+the location of the binary, and the location of the configuration, so that
+Alt-U will autoformat my buffer.  I've also arranged for Sublime text to
+understand that .h is C, not C++ (this is important!)
+
+If/when Sublime Text gets better support for storing project-specific
+settings for things like package settings, then I'll post the relevant
+settings file(s) here.
