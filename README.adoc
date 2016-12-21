@@ -1,6 +1,11 @@
 nng - nanomsg-NG
 ================
 
+image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
+image:https://img.shields.io/travis/nanomsg/nng/master.svg?label=linux[Linux Status,link="https://travis-ci.org/nanomsg/nng"]
+image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/nanomsg/nng"]
+
+
 This repository represents a work in progress rewrite of the SP protocol
 library called "libnanomsg".  The work is being done by Garrett D'Amore,
 and at this juncture he is *not* soliciting assistance.
