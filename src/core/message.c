@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 #include <stdlib.h>
@@ -31,18 +18,18 @@
 
 /* Message chunk, internal to the message implementation. */
 typedef struct {
-	size_t		ch_cap;		/* allocated size */
-	size_t		ch_len;		/* length in use */
-	uint8_t		*ch_buf;	/* underlying buffer */
-	uint8_t		*ch_ptr;	/* pointer to actual data */
+	size_t		ch_cap;         /* allocated size */
+	size_t		ch_len;         /* length in use */
+	uint8_t *	ch_buf;         /* underlying buffer */
+	uint8_t *	ch_ptr;         /* pointer to actual data */
 } chunk_t;
 
 /* Underlying message chunk. */
 struct nng_msg {
 	chunk_t		m_header;
 	chunk_t		m_body;
-	int64_t		m_expire;	/* Unix usec */
-	nni_pipe_t	m_pipe;		/* Pipe message was received on */
+	int64_t		m_expire;       /* Unix usec */
+	nni_pipe_t	m_pipe;         /* Pipe message was received on */
 };
 
 /*
@@ -76,8 +63,7 @@ chunk_grow(chunk_t *ch, size_t newsz, size_t headwanted)
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
-
-		headroom = (size_t)(ch->ch_ptr - ch->ch_buf);
+		headroom = (size_t) (ch->ch_ptr - ch->ch_buf);
 		if (((newsz + headwanted) < ch->ch_cap) &&
 		    (headwanted <= headroom)) {
 			/* We have enough space at the ends already. */
@@ -110,7 +96,6 @@ chunk_grow(chunk_t *ch, size_t newsz, size_t headwanted)
 			ch->ch_ptr = ch->ch_buf + headwanted;
 		}
 		return (0);
-
 	} else if ((newbuf = nni_alloc(newsz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -124,6 +109,7 @@ chunk_grow(chunk_t *ch, size_t newsz, size_t headwanted)
 	return (0);
 }
 
+
 static void
 chunk_free(chunk_t *ch)
 {
@@ -136,6 +122,7 @@ chunk_free(chunk_t *ch)
 	ch->ch_cap = 0;
 }
 
+
 /* chunk_trunc truncates the number of bytes from the end of the chunk. */
 static int
 chunk_trunc(chunk_t *ch, size_t len)
@@ -146,6 +133,7 @@ chunk_trunc(chunk_t *ch, size_t len)
 	ch->ch_len -= len;
 	return (0);
 }
+
 
 /* chunk_trim removes the number of bytes from the beginning of the chunk. */
 static int
@@ -159,6 +147,7 @@ chunk_trim(chunk_t *ch, size_t len)
 	return (0);
 }
 
+
 /*
  * chunk_append appends the data to the chunk, growing the size as necessary.
  * If the data pointer is NULL, then the chunk data region is allocated, but
@@ -168,6 +157,7 @@ static int
 chunk_append(chunk_t *ch, const void *data, size_t len)
 {
 	int rv;
+
 	if (len == 0) {
 		return (0);
 	}
@@ -183,6 +173,7 @@ chunk_append(chunk_t *ch, const void *data, size_t len)
 	ch->ch_len += len;
 	return (0);
 }
+
 
 /*
  * chunk_prepend prepends data to the chunk, as efficiently as possible.
@@ -200,18 +191,15 @@ chunk_prepend(chunk_t *ch, const void *data, size_t len)
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap)) &&
-	    (len <= (size_t)(ch->ch_ptr - ch->ch_buf))) {
+	    (len <= (size_t) (ch->ch_ptr - ch->ch_buf))) {
 		/* There is already enough room at the beginning. */
 		ch->ch_ptr -= len;
-
 	} else if ((ch->ch_len + len) <= ch->ch_cap) {
 		/* We had enough capacity, just shuffle data down. */
 		memmove(ch->ch_ptr + len, ch->ch_ptr, ch->ch_len);
-
 	} else if ((rv = chunk_grow(ch, 0, len)) == 0) {
 		/* We grew the chunk, so adjust. */
 		ch->ch_ptr -= len;
-
 	} else {
 		/* Couldn't grow the chunk either.  Error. */
 		return (rv);
@@ -224,6 +212,7 @@ chunk_prepend(chunk_t *ch, const void *data, size_t len)
 
 	return (0);
 }
+
 
 int
 nni_msg_alloc(nni_msg_t *mp, size_t sz)
@@ -269,6 +258,7 @@ nni_msg_alloc(nni_msg_t *mp, size_t sz)
 	return (0);
 }
 
+
 void
 nni_msg_free(nni_msg_t m)
 {
@@ -277,10 +267,12 @@ nni_msg_free(nni_msg_t m)
 	nni_free(m, sizeof (*m));
 }
 
+
 int
 nni_msg_realloc(nni_msg_t m, size_t sz)
 {
 	int rv = 0;
+
 	if (m->m_body.ch_len < sz) {
 		rv = chunk_append(&m->m_body, NULL, sz - m->m_body.ch_len);
 		if (rv != 0) {
@@ -293,6 +285,7 @@ nni_msg_realloc(nni_msg_t m, size_t sz)
 	return (0);
 }
 
+
 void *
 nni_msg_header(nni_msg_t m, size_t *szp)
 {
@@ -301,6 +294,7 @@ nni_msg_header(nni_msg_t m, size_t *szp)
 	}
 	return (m->m_header.ch_ptr);
 }
+
 
 void *
 nni_msg_body(nni_msg_t m, size_t *szp)
@@ -311,11 +305,13 @@ nni_msg_body(nni_msg_t m, size_t *szp)
 	return (m->m_body.ch_ptr);
 }
 
+
 int
 nni_msg_append(nni_msg_t m, const void *data, size_t len)
 {
 	return (chunk_append(&m->m_body, data, len));
 }
+
 
 int
 nni_msg_prepend(nni_msg_t m, const void *data, size_t len)
@@ -323,11 +319,13 @@ nni_msg_prepend(nni_msg_t m, const void *data, size_t len)
 	return (chunk_prepend(&m->m_body, data, len));
 }
 
+
 int
 nni_msg_trim(nni_msg_t m, size_t len)
 {
 	return (chunk_trim(&m->m_body, len));
 }
+
 
 int
 nni_msg_trunc(nni_msg_t m, size_t len)
@@ -335,11 +333,13 @@ nni_msg_trunc(nni_msg_t m, size_t len)
 	return (chunk_trunc(&m->m_body, len));
 }
 
+
 int
 nni_msg_append_header(nni_msg_t m, const void *data, size_t len)
 {
 	return (chunk_append(&m->m_header, data, len));
 }
+
 
 int
 nni_msg_prepend_header(nni_msg_t m, const void *data, size_t len)
@@ -347,17 +347,20 @@ nni_msg_prepend_header(nni_msg_t m, const void *data, size_t len)
 	return (chunk_prepend(&m->m_header, data, len));
 }
 
+
 int
 nni_msg_trim_header(nni_msg_t m, size_t len)
 {
 	return (chunk_trim(&m->m_header, len));
 }
 
+
 int
 nni_msg_trunc_header(nni_msg_t m, size_t len)
 {
 	return (chunk_trunc(&m->m_header, len));
 }
+
 
 int
 nni_msg_pipe(nni_msg_t m, nni_pipe_t *pp)

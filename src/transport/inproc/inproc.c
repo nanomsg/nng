@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 #include <stdlib.h>
@@ -30,9 +17,9 @@
  * peer to another.
  */
 
-typedef struct inproc_pair *inproc_pair_t;
-typedef struct inproc_pipe *inproc_pipe_t;
-typedef struct inproc_ep *inproc_ep_t;
+typedef struct inproc_pair *	inproc_pair_t;
+typedef struct inproc_pipe *	inproc_pipe_t;
+typedef struct inproc_ep *	inproc_ep_t;
 
 typedef struct {
 	nni_mutex_t	mx;
@@ -41,7 +28,7 @@ typedef struct {
 } inproc_global_t;
 
 struct inproc_pipe {
-	const char	*addr;
+	const char *	addr;
 	inproc_pair_t	pair;
 	nni_msgqueue_t	rq;
 	nni_msgqueue_t	wq;
@@ -60,14 +47,14 @@ struct inproc_ep {
 	char		addr[NNG_MAXADDRLEN];
 	int		mode;
 	int		closed;
-	nni_list_node_t	node;
+	nni_list_node_t node;
 	uint16_t	proto;
-	void		*cpipe;	/* connected pipe (DIAL only) */
+	void *		cpipe;  /* connected pipe (DIAL only) */
 };
 
-#define	INPROC_EP_IDLE		0
-#define	INPROC_EP_DIAL		1
-#define	INPROC_EP_LISTEN	2
+#define INPROC_EP_IDLE		0
+#define INPROC_EP_DIAL		1
+#define INPROC_EP_LISTEN	2
 
 /*
  * Global inproc state - this contains the list of active endpoints
@@ -79,6 +66,7 @@ static int
 inproc_init(void)
 {
 	int rv;
+
 	if ((rv = nni_mutex_create(&inproc.mx)) != 0) {
 		return (rv);
 	}
@@ -91,6 +79,7 @@ inproc_init(void)
 	return (0);
 }
 
+
 static void
 inproc_fini(void)
 {
@@ -98,14 +87,16 @@ inproc_fini(void)
 	nni_mutex_destroy(inproc.mx);
 }
 
+
 static void
 inproc_pipe_close(void *arg)
 {
-	inproc_pipe_t	pipe = arg;
+	inproc_pipe_t pipe = arg;
 
 	nni_msgqueue_close(pipe->rq);
 	nni_msgqueue_close(pipe->wq);
 }
+
 
 static void
 inproc_pair_destroy(inproc_pair_t pair)
@@ -125,11 +116,12 @@ inproc_pair_destroy(inproc_pair_t pair)
 	nni_free(pair, sizeof (*pair));
 }
 
+
 static void
 inproc_pipe_destroy(void *arg)
 {
-	inproc_pipe_t	pipe = arg;
-	inproc_pair_t	pair = pipe->pair;
+	inproc_pipe_t pipe = arg;
+	inproc_pair_t pair = pipe->pair;
 
 	/* We could assert the pipe closed... */
 
@@ -144,6 +136,7 @@ inproc_pipe_destroy(void *arg)
 	}
 }
 
+
 static int
 inproc_pipe_send(void *arg, nng_msg_t msg)
 {
@@ -156,6 +149,7 @@ inproc_pipe_send(void *arg, nng_msg_t msg)
 	return (nni_msgqueue_put(pipe->wq, msg, -1));
 }
 
+
 static int
 inproc_pipe_recv(void *arg, nng_msg_t *msgp)
 {
@@ -164,6 +158,7 @@ inproc_pipe_recv(void *arg, nng_msg_t *msgp)
 	return (nni_msgqueue_get(pipe->rq, msgp, -1));
 }
 
+
 static uint16_t
 inproc_pipe_peer(void *arg)
 {
@@ -171,6 +166,7 @@ inproc_pipe_peer(void *arg)
 
 	return (pipe->peer);
 }
+
 
 static int
 inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
@@ -193,10 +189,11 @@ inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 	return (NNG_ENOTSUP);
 }
 
+
 static int
 inproc_ep_create(void **epp, const char *url, uint16_t proto)
 {
-	inproc_ep_t	ep;
+	inproc_ep_t ep;
 
 	if (strlen(url) > NNG_MAXADDRLEN-1) {
 		return (NNG_EINVAL);
@@ -214,20 +211,23 @@ inproc_ep_create(void **epp, const char *url, uint16_t proto)
 	return (0);
 }
 
+
 static void
 inproc_ep_destroy(void *arg)
 {
 	inproc_ep_t ep = arg;
+
 	if (!ep->closed) {
 		nni_panic("inproc_ep_destroy while not closed!");
 	}
 	nni_free(ep, sizeof (*free));
 }
 
+
 static void
 inproc_ep_close(void *arg)
 {
-	inproc_ep_t	ep = arg;
+	inproc_ep_t ep = arg;
 
 	nni_mutex_enter(inproc.mx);
 	if (!ep->closed) {
@@ -238,18 +238,19 @@ inproc_ep_close(void *arg)
 	nni_mutex_exit(inproc.mx);
 }
 
+
 static int
 inproc_ep_dial(void *arg, void **pipep)
 {
 	inproc_ep_t ep = arg;
 	inproc_ep_t srch;
 	nni_list_t *list = &inproc.eps;
-	
+
 	if (ep->mode != INPROC_EP_IDLE) {
 		return (NNG_EINVAL);
 	}
 	nni_mutex_enter(inproc.mx);
-	NNI_LIST_FOREACH(list, srch) {
+	NNI_LIST_FOREACH (list, srch) {
 		if (srch->mode != INPROC_EP_LISTEN) {
 			continue;
 		}
@@ -283,6 +284,7 @@ inproc_ep_dial(void *arg, void **pipep)
 	return (ep->closed ? NNG_ECLOSED : 0);
 }
 
+
 static int
 inproc_ep_listen(void *arg)
 {
@@ -298,7 +300,7 @@ inproc_ep_listen(void *arg)
 		nni_mutex_exit(inproc.mx);
 		return (NNG_ECLOSED);
 	}
-	NNI_LIST_FOREACH(list, srch) {
+	NNI_LIST_FOREACH (list, srch) {
 		if (srch->mode != INPROC_EP_LISTEN) {
 			continue;
 		}
@@ -312,6 +314,7 @@ inproc_ep_listen(void *arg)
 	nni_mutex_exit(inproc.mx);
 	return (0);
 }
+
 
 static int
 inproc_ep_accept(void *arg, void **pipep)
@@ -332,7 +335,7 @@ inproc_ep_accept(void *arg, void **pipep)
 			nni_mutex_exit(inproc.mx);
 			return (NNG_ECLOSED);
 		}
-		NNI_LIST_FOREACH(list, srch) {
+		NNI_LIST_FOREACH (list, srch) {
 			if (srch->mode != INPROC_EP_DIAL) {
 				continue;
 			}
@@ -365,11 +368,12 @@ inproc_ep_accept(void *arg, void **pipep)
 	srch->cpipe = &pair->pipe[0];
 	*pipep = &pair->pipe[1];
 	nni_cond_broadcast(inproc.cv);
-	
+
 	nni_mutex_exit(inproc.mx);
 
 	return (0);
 }
+
 
 static struct nni_pipe_ops inproc_pipe_ops = {
 	inproc_pipe_destroy,
@@ -387,14 +391,14 @@ static struct nni_endpt_ops inproc_ep_ops = {
 	inproc_ep_listen,
 	inproc_ep_accept,
 	inproc_ep_close,
-	NULL,	/* inproc_ep_setopt */
-	NULL,	/* inproc_ep_getopt */
+	NULL,                   /* inproc_ep_setopt */
+	NULL,                   /* inproc_ep_getopt */
 };
 
 struct nni_transport nni_inproc_transport = {
-	"inproc",		/* tran_scheme */
+	"inproc",        /* tran_scheme */
 	&inproc_ep_ops,
 	&inproc_pipe_ops,
-	inproc_init,		/* tran_init */
-	inproc_fini,		/* tran_fini */
+	inproc_init,            /* tran_init */
+	inproc_fini,            /* tran_fini */
 };

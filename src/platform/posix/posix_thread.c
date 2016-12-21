@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 /*
@@ -41,8 +28,8 @@
 
 struct nni_thread {
 	pthread_t	tid;
-	void *arg;
-	void (*func)(void *);
+	void *		arg;
+	void		(*func)(void *);
 };
 
 static pthread_mutex_t plat_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -57,6 +44,7 @@ thrfunc(void *arg)
 	thr->func(thr->arg);
 	return (NULL);
 }
+
 
 int
 nni_thread_create(nni_thread_t *tp, void (*fn)(void *), void *arg)
@@ -78,15 +66,18 @@ nni_thread_create(nni_thread_t *tp, void (*fn)(void *), void *arg)
 	return (0);
 }
 
+
 void
 nni_thread_reap(nni_thread_t thr)
 {
 	int rv;
+
 	if ((rv = pthread_join(thr->tid, NULL)) != 0) {
 		nni_panic("pthread_thread: %s", strerror(errno));
 	}
 	nni_free(thr, sizeof (*thr));
 }
+
 
 void
 atfork_child(void)
@@ -94,18 +85,20 @@ atfork_child(void)
 	plat_fork = 1;
 }
 
+
 int
 nni_plat_init(int (*helper)(void))
 {
 	int rv;
+
 	if (plat_fork) {
 		nni_panic("nng is fork-reentrant safe");
 	}
 	if (plat_init) {
-		return (0);	/* fast path */
+		return (0);     /* fast path */
 	}
 	pthread_mutex_lock(&plat_lock);
-	if (plat_init) {	/* check again under the lock to be sure */
+	if (plat_init) {        /* check again under the lock to be sure */
 		pthread_mutex_unlock(&plat_lock);
 		return (0);
 	}
@@ -121,10 +114,12 @@ nni_plat_init(int (*helper)(void))
 	return (rv);
 }
 
+
 void
 nni_plat_fini(void)
 {
 	/* XXX: NOTHING *YET* */
 }
+
 
 #endif

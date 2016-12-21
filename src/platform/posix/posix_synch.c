@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 /*
@@ -40,12 +27,12 @@
 #include <time.h>
 
 struct nni_mutex {
-	pthread_mutex_t	mx;
+	pthread_mutex_t mx;
 };
 
 struct nni_cond {
-	pthread_cond_t	cv;
-	pthread_mutex_t	*mx;
+	pthread_cond_t		cv;
+	pthread_mutex_t *	mx;
 };
 
 int
@@ -83,6 +70,7 @@ nni_mutex_create(nni_mutex_t *mp)
 	return (0);
 }
 
+
 void
 nni_mutex_destroy(nni_mutex_t m)
 {
@@ -92,6 +80,7 @@ nni_mutex_destroy(nni_mutex_t m)
 	nni_free(m, sizeof (*m));
 }
 
+
 void
 nni_mutex_enter(nni_mutex_t m)
 {
@@ -100,6 +89,7 @@ nni_mutex_enter(nni_mutex_t m)
 	}
 }
 
+
 void
 nni_mutex_exit(nni_mutex_t m)
 {
@@ -107,6 +97,7 @@ nni_mutex_exit(nni_mutex_t m)
 		nni_panic("pthread_mutex_unlock failed");
 	}
 }
+
 
 int
 nni_mutex_tryenter(nni_mutex_t m)
@@ -117,12 +108,14 @@ nni_mutex_tryenter(nni_mutex_t m)
 	return (0);
 }
 
+
 int
 cond_attr(pthread_condattr_t **attrpp)
 {
 #if defined(NNG_USE_GETTIMEOFDAY) || NNG_USE_CLOCKID == CLOCK_REALTIME
 	*attrpp = NULL;
 	return (0);
+
 #else
 	/* In order to make this fast, avoid reinitializing attrs. */
 	static pthread_condattr_t attr;
@@ -156,8 +149,10 @@ cond_attr(pthread_condattr_t **attrpp)
 	(void) pthread_mutex_unlock(&mx);
 	*attrpp = &attr;
 	return (0);
+
 #endif
 }
+
 
 int
 nni_cond_create(nni_cond_t *cvp, nni_mutex_t mx)
@@ -186,6 +181,7 @@ nni_cond_create(nni_cond_t *cvp, nni_mutex_t mx)
 	return (0);
 }
 
+
 void
 nni_cond_destroy(nni_cond_t c)
 {
@@ -195,6 +191,7 @@ nni_cond_destroy(nni_cond_t c)
 	nni_free(c, sizeof (*c));
 }
 
+
 void
 nni_cond_signal(nni_cond_t c)
 {
@@ -202,6 +199,7 @@ nni_cond_signal(nni_cond_t c)
 		nni_panic("pthread_cond_signal failed");
 	}
 }
+
 
 void
 nni_cond_broadcast(nni_cond_t c)
@@ -211,6 +209,7 @@ nni_cond_broadcast(nni_cond_t c)
 	}
 }
 
+
 void
 nni_cond_wait(nni_cond_t c)
 {
@@ -218,6 +217,7 @@ nni_cond_wait(nni_cond_t c)
 		nni_panic("pthread_cond_wait failed");
 	}
 }
+
 
 int
 nni_cond_timedwait(nni_cond_t c, uint64_t usec)
@@ -239,5 +239,6 @@ nni_cond_timedwait(nni_cond_t c, uint64_t usec)
 	}
 	return (0);
 }
+
 
 #endif

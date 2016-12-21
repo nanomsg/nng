@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 #include "core/nng_impl.h"
@@ -36,38 +23,40 @@ nni_socket_sendq(nni_socket_t s)
 	return (s->s_uwq);
 }
 
+
 nni_msgqueue_t
 nni_socket_recvq(nni_socket_t s)
 {
 	return (s->s_urq);
 }
 
+
 int
 nni_socket_create(nni_socket_t *sockp, uint16_t proto)
 {
-        nni_socket_t sock;
-        struct nni_protocol *ops;
-        int rv;
+	nni_socket_t sock;
+	struct nni_protocol *ops;
+	int rv;
 
-        if ((ops = nni_protocol_find(proto)) == NULL) {
-        	return (NNG_ENOTSUP);
-        }
-        if ((sock = nni_alloc(sizeof (*sock))) == NULL) {
-        	return (NNG_ENOMEM);
-        }
-        sock->s_ops = *ops;
+	if ((ops = nni_protocol_find(proto)) == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	if ((sock = nni_alloc(sizeof (*sock))) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	sock->s_ops = *ops;
 
-        NNI_LIST_INIT(&sock->s_pipes, struct nng_pipe, p_sock_node);
-        //NNI_LIST_INIT(&sock->s_eps, nni_endpt_t, ep_node);
+	NNI_LIST_INIT(&sock->s_pipes, struct nng_pipe, p_sock_node);
+	//NNI_LIST_INIT(&sock->s_eps, nni_endpt_t, ep_node);
 
-        if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
-        	nni_free(sock, sizeof (*sock));
-        	return (rv);
-
-        }
-        *sockp = sock;
+	if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
+		nni_free(sock, sizeof (*sock));
+		return (rv);
+	}
+	*sockp = sock;
 	return (0);
 }
+
 
 int
 nni_socket_close(nni_socket_t sock)
@@ -80,16 +69,16 @@ nni_socket_close(nni_socket_t sock)
 	nni_msgqueue_close(sock->s_uwq);
 
 	nni_mutex_enter(sock->s_mx);
-	NNI_LIST_FOREACH(&sock->s_eps, ep) {
-		#if 0
+	NNI_LIST_FOREACH (&sock->s_eps, ep) {
+#if 0
 		nni_ep_stop(ep);
 		// OR....
 		nni_mutex_enter(ep->ep_mx);
 		ep->ep_stop = 1;
 		nni_cond_broadcast(ep->ep_cond);
 		nni_mutex_exit(ep->ep_mx);
-		#endif
-		break;	/* REMOVE ME */
+#endif
+		break;  /* REMOVE ME */
 	}
 	nni_mutex_exit(sock->s_mx);
 	/* XXX: close endpoints - no new pipes made... */
@@ -119,6 +108,7 @@ nni_socket_close(nni_socket_t sock)
 	return (0);
 }
 
+
 int
 nni_socket_sendmsg(nni_socket_t sock, nni_msg_t msg, int tmout)
 {
@@ -147,8 +137,8 @@ nni_socket_sendmsg(nni_socket_t sock, nni_msg_t msg, int tmout)
 
 	if (besteffort) {
 		/*
-                 * BestEffort mode -- if we cannot handle the message due to
-                 * backpressure, we just throw it away, and don't complain.
+		 * BestEffort mode -- if we cannot handle the message due to
+		 * backpressure, we just throw it away, and don't complain.
 		 */
 		tmout = 0;
 	}
@@ -161,11 +151,13 @@ nni_socket_sendmsg(nni_socket_t sock, nni_msg_t msg, int tmout)
 	return (rv);
 }
 
+
 uint16_t
 nni_socket_protocol(nni_socket_t sock)
 {
-        return (sock->s_ops.proto_self);
+	return (sock->s_ops.proto_self);
 }
+
 
 void
 nni_socket_remove_pipe(nni_socket_t sock, nni_pipe_t pipe)
@@ -174,6 +166,7 @@ nni_socket_remove_pipe(nni_socket_t sock, nni_pipe_t pipe)
 	if (pipe->p_sock != sock) {
 		nni_mutex_exit(sock->s_mx);
 	}
+
 	/*
 	 * Remove the pipe from the protocol.  Protocols may
 	 * keep lists of pipes for managing their topologies.
@@ -191,10 +184,12 @@ nni_socket_remove_pipe(nni_socket_t sock, nni_pipe_t pipe)
 	nni_mutex_exit(sock->s_mx);
 }
 
+
 int
 nni_socket_add_pipe(nni_socket_t sock, nni_pipe_t pipe)
 {
 	int rv;
+
 	nni_mutex_enter(sock->s_mx);
 	if ((rv = sock->s_ops.proto_add_pipe(sock->s_data, pipe)) != 0) {
 		nni_mutex_exit(sock->s_mx);

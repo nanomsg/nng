@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 #ifndef NNG_H
@@ -46,21 +33,21 @@ extern "C" {
  * as a DLL, but instead linking it statically for your projects
  * to minimize questions about link dependencies later.)
  */
-#ifndef	NNG_DECL
-#define	NNG_DECL extern
+#ifndef NNG_DECL
+#define NNG_DECL    extern
 #endif
 
 /*
  * Types common to nng.
  */
-typedef struct nng_socket *nng_socket_t;
-typedef struct nng_endpt *nng_endpt_t;
-typedef struct nng_pipe *nng_pipe_t;
-typedef struct nng_msg *nng_msg_t;
-typedef struct nng_event *nng_event_t;
-typedef struct nng_notify *nng_notify_t;
-typedef struct nng_snapshot *nng_snapshot_t;
-typedef struct nng_stat *nng_stat_t;
+typedef struct nng_socket *	nng_socket_t;
+typedef struct nng_endpt *	nng_endpt_t;
+typedef struct nng_pipe *	nng_pipe_t;
+typedef struct nng_msg *	nng_msg_t;
+typedef struct nng_event *	nng_event_t;
+typedef struct nng_notify *	nng_notify_t;
+typedef struct nng_snapshot *	nng_snapshot_t;
+typedef struct nng_stat *	nng_stat_t;
 
 /*
  * nng_socket simply creates a socket of the given class. It returns an
@@ -103,7 +90,7 @@ NNG_DECL int nng_socket_getopt(nng_socket_t, int, void *, size_t *);
  * recursion.
  */
 NNG_DECL nng_notify_t nng_notify_register(nng_socket_t, int,
-    void (*)(nng_socket_t, nng_event_t, void *), void *);
+void (*)(nng_socket_t, nng_event_t, void *), void *);
 NNG_DECL int nng_notify_unregister(nng_socket_t, nng_notify_t);
 
 /*
@@ -123,14 +110,14 @@ NNG_DECL int nng_notify_unregister(nng_socket_t, nng_notify_t);
  * NNG_EVENT_ENDPT_RM	- An endpoint is removed from the socket.
  *			  The argument is an nn_endpt_t.
  */
-#define	NNG_EVENT_BIT(x)	(1U << (x))
-#define	NNG_EVENT_RECV		NNG_EVENT_BIT(0)
-#define	NNG_EVENT_SEND		NNG_EVENT_BIT(1)
-#define	NNG_EVENT_ERROR		NNG_EVENT_BIT(2)
-#define	NNG_EVENT_PIPE_ADD	NNG_EVENT_BIT(3)
-#define	NNG_EVENT_PIPE_RM	NNG_EVENT_BIT(4)
-#define	NNG_EVENT_ENDPT_ADD	NNG_EVENT_BIT(5)
-#define	NNG_EVENT_ENDPT_RM	NNG_EVENT_BIT(6)
+#define NNG_EVENT_BIT(x)    (1U << (x))
+#define NNG_EVENT_RECV		NNG_EVENT_BIT(0)
+#define NNG_EVENT_SEND		NNG_EVENT_BIT(1)
+#define NNG_EVENT_ERROR		NNG_EVENT_BIT(2)
+#define NNG_EVENT_PIPE_ADD	NNG_EVENT_BIT(3)
+#define NNG_EVENT_PIPE_RM	NNG_EVENT_BIT(4)
+#define NNG_EVENT_ENDPT_ADD	NNG_EVENT_BIT(5)
+#define NNG_EVENT_ENDPT_RM	NNG_EVENT_BIT(6)
 
 /*
  * The following functions return more detailed information about the event.
@@ -210,7 +197,7 @@ NNG_DECL const char *nng_strerror(int);
 NNG_DECL int nng_send(nng_socket_t, const void *, size_t, int);
 
 /*
- * nng_recv receives message data into the socket, up to the supplied size. 
+ * nng_recv receives message data into the socket, up to the supplied size.
  * The actual size of the message data will be written to the value pointed
  * to by size.  The flags may include NNG_FLAG_NONBLOCK and NNG_FLAG_ALLOC.
  * If NNG_FLAG_ALLOC is supplied then the library will allocate memory for
@@ -273,19 +260,19 @@ NNG_DECL int nng_pipe_close(nng_pipe_t);
  * Protocol numbers are never more than 16 bits.  Also, there will never be
  * a valid protocol numbered 0 (NNG_PROTO_NONE).
  */
-#define	NNG_PROTO(major, minor)	(((major) * 16) + (minor))
+#define NNG_PROTO(major, minor)    (((major) * 16) + (minor))
 #define NNG_PROTO_NONE		NNG_PROTO(0, 0)
-#define	NNG_PROTO_PAIR		NNG_PROTO(1, 0)
-#define	NNG_PROTO_PUB		NNG_PROTO(2, 0)
-#define	NNG_PROTO_SUB		NNG_PROTO(2, 1)
-#define	NNG_PROTO_REQ		NNG_PROTO(3, 0)
-#define	NNG_PROTO_REP		NNG_PROTO(3, 1)
-#define	NNG_PROTO_PUSH		NNG_PROTO(5, 0)
-#define	NNG_PROTO_PULL		NNG_PROTO(5, 1)
-#define	NNG_PROTO_SURVEYOR	NNG_PROTO(6, 2)
-#define	NNG_PROTO_RESPONDENT	NNG_PROTO(6, 3)
-#define	NNG_PROTO_BUS		NNG_PROTO(7, 0)
-#define	NNG_PROTO_STAR		NNG_PROTO(100, 0)
+#define NNG_PROTO_PAIR		NNG_PROTO(1, 0)
+#define NNG_PROTO_PUB		NNG_PROTO(2, 0)
+#define NNG_PROTO_SUB		NNG_PROTO(2, 1)
+#define NNG_PROTO_REQ		NNG_PROTO(3, 0)
+#define NNG_PROTO_REP		NNG_PROTO(3, 1)
+#define NNG_PROTO_PUSH		NNG_PROTO(5, 0)
+#define NNG_PROTO_PULL		NNG_PROTO(5, 1)
+#define NNG_PROTO_SURVEYOR	NNG_PROTO(6, 2)
+#define NNG_PROTO_RESPONDENT	NNG_PROTO(6, 3)
+#define NNG_PROTO_BUS		NNG_PROTO(7, 0)
+#define NNG_PROTO_STAR		NNG_PROTO(100, 0)
 
 /*
  * Options. We encode option numbers as follows:
@@ -295,29 +282,29 @@ NNG_DECL int nng_pipe_close(nng_pipe_t);
  * <code>	- specific value (16 bits)
  *
  */
-#define	NNG_OPT_SOCKET(c)	(c)
-#define	NNG_OPT_TRANSPORT_OPT(t, c)	(0x10000 | ((p) << 16) | (c))
+#define NNG_OPT_SOCKET(c)		(c)
+#define NNG_OPT_TRANSPORT_OPT(t, c)	(0x10000 | ((p) << 16) | (c))
 
-#define	NNG_OPT_RAW		NNG_OPT_SOCKET(0)
-#define	NNG_OPT_LINGER		NNG_OPT_SOCKET(1)
-#define	NNG_OPT_RCVBUF		NNG_OPT_SOCKET(2)
-#define	NNG_OPT_SNDBUF		NNG_OPT_SOCKET(3)
-#define	NNG_OPT_RCVTIMEO	NNG_OPT_SOCKET(4)
-#define	NNG_OPT_SNDTIMEO	NNG_OPT_SOCKET(5)
-#define	NNG_OPT_RECONN_TIME	NNG_OPT_SOCKET(6)
-#define	NNG_OPT_RECONN_MAXTIME	NNG_OPT_SOCKET(7)
-#define	NNG_OPT_RCVMAXSZ	NNG_OPT_SOCKET(8)
-#define	NNG_OPT_MAXTTL		NNG_OPT_SOCKET(9)
-#define	NNG_OPT_PROTOCOL	NNG_OPT_SOCKET(10)
-#define	NNG_OPT_SUBSCRIBE	NNG_OPT_SOCKET(11)
-#define	NNG_OPT_UNSUBSCRIBE	NNG_OPT_SOCKET(12)
-#define	NNG_OPT_SURVEYTIME	NNG_OPT_SOCKET(13)
-#define	NNG_OPT_RESENDTIME	NNG_OPT_SOCKET(14)
-#define	NNG_OPT_TRANSPORT	NNG_OPT_SOCKET(15)
-#define	NNG_OPT_LOCALADDR	NNG_OPT_SOCKET(16)
-#define	NNG_OPT_REMOTEADDR	NNG_OPT_SOCKET(17)
-#define	NNG_OPT_RECVFD		NNG_OPT_SOCKET(18)
-#define	NNG_OPT_SENDFD		NNG_OPT_SOCKET(19)
+#define NNG_OPT_RAW			NNG_OPT_SOCKET(0)
+#define NNG_OPT_LINGER			NNG_OPT_SOCKET(1)
+#define NNG_OPT_RCVBUF			NNG_OPT_SOCKET(2)
+#define NNG_OPT_SNDBUF			NNG_OPT_SOCKET(3)
+#define NNG_OPT_RCVTIMEO		NNG_OPT_SOCKET(4)
+#define NNG_OPT_SNDTIMEO		NNG_OPT_SOCKET(5)
+#define NNG_OPT_RECONN_TIME		NNG_OPT_SOCKET(6)
+#define NNG_OPT_RECONN_MAXTIME		NNG_OPT_SOCKET(7)
+#define NNG_OPT_RCVMAXSZ		NNG_OPT_SOCKET(8)
+#define NNG_OPT_MAXTTL			NNG_OPT_SOCKET(9)
+#define NNG_OPT_PROTOCOL		NNG_OPT_SOCKET(10)
+#define NNG_OPT_SUBSCRIBE		NNG_OPT_SOCKET(11)
+#define NNG_OPT_UNSUBSCRIBE		NNG_OPT_SOCKET(12)
+#define NNG_OPT_SURVEYTIME		NNG_OPT_SOCKET(13)
+#define NNG_OPT_RESENDTIME		NNG_OPT_SOCKET(14)
+#define NNG_OPT_TRANSPORT		NNG_OPT_SOCKET(15)
+#define NNG_OPT_LOCALADDR		NNG_OPT_SOCKET(16)
+#define NNG_OPT_REMOTEADDR		NNG_OPT_SOCKET(17)
+#define NNG_OPT_RECVFD			NNG_OPT_SOCKET(18)
+#define NNG_OPT_SENDFD			NNG_OPT_SOCKET(19)
 
 /* XXX: TBD: priorities, socket names, ipv4only */
 
@@ -380,8 +367,8 @@ NNG_DECL const char *nng_stat_name(nng_stat_t);
  * user as is.
  */
 NNG_DECL int nng_stat_type(nng_stat_t);
-#define	NNG_STAT_LEVEL		0
-#define	NNG_STAT_COUNTER	1
+#define NNG_STAT_LEVEL		0
+#define NNG_STAT_COUNTER	1
 
 /*
  * nng_stat_unit provides information about the unit for the statistic,
@@ -390,12 +377,12 @@ NNG_DECL int nng_stat_type(nng_stat_t);
  * returned.
  */
 NNG_DECL int nng_stat_unit(nng_stat_t);
-#define	NNG_UNIT_NONE		0
-#define	NNG_UNIT_BYTES		1
-#define	NNG_UNIT_MESSAGES	2
-#define	NNG_UNIT_BOOLEAN	3
-#define	NNG_UNIT_MILLIS		4
-#define	NNG_UNIT_EVENTS		5
+#define NNG_UNIT_NONE		0
+#define NNG_UNIT_BYTES		1
+#define NNG_UNIT_MESSAGES	2
+#define NNG_UNIT_BOOLEAN	3
+#define NNG_UNIT_MILLIS		4
+#define NNG_UNIT_EVENTS		5
 
 /*
  * nng_stat_value returns returns the actual value of the statistic.
@@ -431,21 +418,21 @@ NNG_DECL int nng_device(nng_socket_t, nng_socket_t);
  * but do not count on this.
  */
 #define NNG_EINTR		(-1)
-#define	NNG_ENOMEM		(-2)
-#define	NNG_EINVAL		(-3)
-#define	NNG_EBUSY		(-4)
-#define	NNG_ETIMEDOUT		(-5)
-#define	NNG_ECONNREFUSED	(-6)
-#define	NNG_ECLOSED		(-7)
-#define	NNG_EAGAIN		(-8)
-#define	NNG_ENOTSUP		(-9)
-#define	NNG_EADDRINUSE		(-10)
+#define NNG_ENOMEM		(-2)
+#define NNG_EINVAL		(-3)
+#define NNG_EBUSY		(-4)
+#define NNG_ETIMEDOUT		(-5)
+#define NNG_ECONNREFUSED	(-6)
+#define NNG_ECLOSED		(-7)
+#define NNG_EAGAIN		(-8)
+#define NNG_ENOTSUP		(-9)
+#define NNG_EADDRINUSE		(-10)
 
 /*
  * Maximum length of a socket address.  This includes the terminating NUL.
  * This limit is built into other implementations, so do not change it.
  */
-#define	NNG_MAXADDRLEN		(128)
+#define NNG_MAXADDRLEN		(128)
 
 #ifdef __cplusplus
 }

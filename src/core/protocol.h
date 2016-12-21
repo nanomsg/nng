@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 #ifndef CORE_PROTOCOL_H
@@ -41,59 +28,58 @@
  */
 
 struct nni_protocol {
+        /*
+         * Protocol information.
+         */
+        uint16_t        proto_self;     /* our 16-bit protocol ID */
+        uint16_t        proto_peer;     /* who we peer with (protocol ID) */
+        const char *    proto_name;     /* string version of our name */
 
-	/*
-	 * Protocol information.
-	 */
-	uint16_t	proto_self;	/* our 16-bit protocol ID */
-	uint16_t	proto_peer;	/* who we peer with (protocol ID) */
-        const char      *proto_name;    /* string version of our name */
+        /*
+         * Create protocol instance data, which will be stored on the socket.
+         */
+        int             (*proto_create)(void **, nni_socket_t);
 
-	/*
-	 * Create protocol instance data, which will be stored on the socket.
-	 */
-	int (*proto_create)(void **, nni_socket_t);
+        /*
+         * Destroy the protocol instance.
+         */
+        void            (*proto_destroy)(void *);
 
-	/*
-	 * Destroy the protocol instance.
-	 */
-	void (*proto_destroy)(void *);
+        /*
+         * Shutdown the protocol instance, including giving time to
+         * drain any outbound frames (linger).  The protocol is not
+         * required to honor the linger.
+         */
+        void            (*proto_shutdown)(void *, uint64_t);
 
-	/*
-	 * Shutdown the protocol instance, including giving time to
-	 * drain any outbound frames (linger).  The protocol is not
-	 * required to honor the linger.
-	 */
-	void (*proto_shutdown)(void *, uint64_t);
+        /*
+         * Add and remove pipes.  These are called as connections are
+         * created or destroyed.
+         */
+        int             (*proto_add_pipe)(void *, nni_pipe_t);
+        int             (*proto_remove_pipe)(void *, nni_pipe_t);
 
-	/*
-	 * Add and remove pipes.  These are called as connections are
-	 * created or destroyed.
-	 */
-	int (*proto_add_pipe)(void *, nni_pipe_t);
-	int (*proto_remove_pipe)(void *, nni_pipe_t);
+        /*
+         * Option manipulation.  These may be NULL.
+         */
+        int             (*proto_setopt)(void *, int, const void *, size_t);
+        int             (*proto_getopt)(void *, int, void *, size_t *);
 
-	/*
-	 * Option manipulation.  These may be NULL.
-	 */
-	int (*proto_setopt)(void *, int, const void *, size_t);
-	int (*proto_getopt)(void *, int, void *, size_t *);
+        /*
+         * Receive filter.  This may be NULL, but if it isn't, then
+         * messages coming into the system are routed here just before
+         * being delivered to the application.  To drop the message,
+         * the protocol should return NULL, otherwise the message
+         * (possibly modified).
+         */
+        nng_msg_t       (*proto_recv_filter)(void *, nni_msg_t);
 
-	/*
-	 * Receive filter.  This may be NULL, but if it isn't, then
-	 * messages coming into the system are routed here just before
-	 * being delivered to the application.  To drop the message,
-	 * the protocol should return NULL, otherwise the message
-	 * (possibly modified).
-	 */
-	nng_msg_t (*proto_recv_filter)(void *, nni_msg_t);
-
-	/*
-	 * Send filter.  This may be NULL, but if it isn't, then
-	 * messages here are filtered just after they come from the 
-	 * application.
-	 */
-	nng_msg_t (*proto_send_filter)(void *, nni_msg_t);
+        /*
+         * Send filter.  This may be NULL, but if it isn't, then
+         * messages here are filtered just after they come from the
+         * application.
+         */
+        nng_msg_t       (*proto_send_filter)(void *, nni_msg_t);
 };
 
 /*

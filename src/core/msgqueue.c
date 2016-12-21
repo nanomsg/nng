@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 #include "nng_impl.h"
@@ -38,7 +25,7 @@ struct nni_msgqueue {
 	int		mq_get;
 	int		mq_put;
 	int		mq_closed;
-	nng_msg_t	*mq_msgs;
+	nng_msg_t *	mq_msgs;
 };
 
 int
@@ -84,6 +71,7 @@ nni_msgqueue_create(nni_msgqueue_t *mqp, int cap)
 	return (0);
 }
 
+
 void
 nni_msgqueue_destroy(nni_msgqueue_t mq)
 {
@@ -108,6 +96,7 @@ nni_msgqueue_destroy(nni_msgqueue_t mq)
 	nni_free(mq, sizeof (*mq));
 }
 
+
 /*
  * nni_msgqueue_signal raises a signal on the signal object. This allows a
  * waiter to be signaled, so that it can be woken e.g. due to a pipe closing.
@@ -118,6 +107,7 @@ nni_msgqueue_signal(nni_msgqueue_t mq, int *signal)
 {
 	nni_mutex_enter(mq->mq_lock);
 	*signal = 1;
+
 	/*
 	 * We have to wake everyone.
 	 */
@@ -125,6 +115,7 @@ nni_msgqueue_signal(nni_msgqueue_t mq, int *signal)
 	nni_cond_broadcast(mq->mq_writeable);
 	nni_mutex_exit(mq->mq_lock);
 }
+
 
 int
 nni_msgqueue_put_sig(nni_msgqueue_t mq, nni_msg_t msg, int tmout, int *signal)
@@ -142,7 +133,7 @@ nni_msgqueue_put_sig(nni_msgqueue_t mq, nni_msg_t msg, int tmout, int *signal)
 			nni_mutex_exit(mq->mq_lock);
 			return (NNG_EAGAIN);
 		}
-	
+
 		if (tmout < 0) {
 			(void) nni_cond_wait(mq->mq_writeable);
 			continue;
@@ -185,6 +176,7 @@ nni_msgqueue_put_sig(nni_msgqueue_t mq, nni_msg_t msg, int tmout, int *signal)
 	return (0);
 }
 
+
 int
 nni_msgqueue_get_sig(nni_msgqueue_t mq, nni_msg_t *msgp, int tmout, int *signal)
 {
@@ -201,7 +193,7 @@ nni_msgqueue_get_sig(nni_msgqueue_t mq, nni_msg_t *msgp, int tmout, int *signal)
 			nni_mutex_exit(mq->mq_lock);
 			return (NNG_EAGAIN);
 		}
-	
+
 		if (tmout < 0) {
 			(void) nni_cond_wait(mq->mq_readable);
 			continue;
@@ -243,22 +235,26 @@ nni_msgqueue_get_sig(nni_msgqueue_t mq, nni_msg_t *msgp, int tmout, int *signal)
 	}
 	nni_mutex_exit(mq->mq_lock);
 	return (0);
-
 }
+
 
 int
 nni_msgqueue_get(nni_msgqueue_t mq, nni_msg_t *msgp, int tmout)
 {
 	int nosig = 0;
+
 	return (nni_msgqueue_get_sig(mq, msgp, tmout, &nosig));
 }
+
 
 int
 nni_msgqueue_put(nni_msgqueue_t mq, nni_msg_t msg, int tmout)
 {
 	int nosig = 0;
+
 	return (nni_msgqueue_put_sig(mq, msg, tmout, &nosig));
 }
+
 
 void
 nni_msgqueue_close(nni_msgqueue_t mq)

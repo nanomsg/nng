@@ -1,23 +1,10 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
 #ifndef CORE_TRANSPORT_H
@@ -32,23 +19,23 @@ struct nni_transport {
 	/*
 	 * tran_scheme is the transport scheme, such as "tcp" or "inproc".
 	 */
-	const char *tran_scheme;
+	const char *			tran_scheme;
 
 	/*
 	 * tran_ep_ops links our endpoint operations.
 	 */
-	const struct nni_endpt_ops *tran_ep_ops;
+	const struct nni_endpt_ops *	tran_ep_ops;
 
 	/*
 	 * tran_pipe_ops links our pipe operations.
 	 */
-	const struct nni_pipe_ops *tran_pipe_ops;
+	const struct nni_pipe_ops *	tran_pipe_ops;
 
 	/*
 	 * tran_init, if not NULL, is called once during library
 	 * initialization.
 	 */
-	int (*tran_init)(void);
+	int				(*tran_init)(void);
 
 	/*
 	 * tran_fini, if not NULL, is called during library deinitialization.
@@ -61,7 +48,7 @@ struct nni_transport {
 	 * threading routines.  Mutexes and condition variables may be
 	 * safely destroyed.
 	 */
-	void (*tran_fini)(void);
+	void				(*tran_fini)(void);
 };
 
 /*
@@ -75,13 +62,13 @@ struct nni_endpt_ops {
 	 * ep_create creates a vanilla endpoint. The value created is
 	 * used for the first argument for all other endpoint functions.
 	 */
-	int (*ep_create)(void **, const char *, uint16_t);
+	int	(*ep_create)(void **, const char *, uint16_t);
 
 	/*
 	 * ep_destroy frees the resources associated with the endpoint.
 	 * The endpoint will already have been closed.
 	 */
-	void (*ep_destroy)(void *);
+	void	(*ep_destroy)(void *);
 
 	/*
 	 * ep_dial starts dialing, and creates a new pipe,
@@ -89,7 +76,7 @@ struct nni_endpt_ops {
 	 * NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR, NNG_ECONNFAILED,
 	 * NNG_ETIMEDOUT, and NNG_EPROTO.
 	 */
-	int (*ep_dial)(void *, void **);
+	int	(*ep_dial)(void *, void **);
 
 	/*
 	 * ep_listen just does the bind() and listen() work,
@@ -98,25 +85,25 @@ struct nni_endpt_ops {
 	 * taken.  It can also return NNG_EBADADDR for an unsuitable
 	 * address, or NNG_EACCESS for permission problems.
 	 */
-	int (*ep_listen)(void *);
+	int	(*ep_listen)(void *);
 
 	/*
 	 * ep_accept accepts an inbound connection, and creates
 	 * a transport pipe, which is returned in the final argument.
 	 */
-	int (*ep_accept)(void *, void **);
+	int	(*ep_accept)(void *, void **);
 
 	/*
 	 * ep_close stops the endpoint from operating altogether.  It does
 	 * not affect pipes that have already been created.
 	 */
-	void (*ep_close)(void *);
+	void	(*ep_close)(void *);
 
 	/* ep_setopt sets an endpoint (transport-specific) option */
-	int (*ep_setopt)(void *, int, const void *, size_t);
+	int	(*ep_setopt)(void *, int, const void *, size_t);
 
 	/* ep_getopt gets an endpoint (transport-specific) option */
-	int (*ep_getopt)(void *, int, void *, size_t *);
+	int	(*ep_getopt)(void *, int, void *, size_t *);
 };
 
 /*
@@ -132,7 +119,7 @@ struct nni_pipe_ops {
 	 * this call returns, the system will not make further calls on the same
 	 * pipe.
 	 */
-	void (*p_destroy)(void *);
+	void		(*p_destroy)(void *);
 
 	/*
 	 * p_send sends the message.  If the message cannot be received, then
@@ -142,7 +129,7 @@ struct nni_pipe_ops {
 	 * responsibility to free the message (nng_msg_free()) when it is
 	 * finished with it.
 	 */
-	int (*p_send)(void *, nng_msg_t);
+	int		(*p_send)(void *, nng_msg_t);
 
 	/*
 	 * p_recv recvs the message. This is a blocking operation, and a read
@@ -152,25 +139,25 @@ struct nni_pipe_ops {
 	 * a result of a remote peer closing the connection, or a synchronous
 	 * call to p_close.
 	 */
-	int (*p_recv)(void *, nng_msg_t *);
+	int		(*p_recv)(void *, nng_msg_t *);
 
 	/*
 	 * p_close closes the pipe.  Further recv or send operations should
 	 * return back NNG_ECLOSED.
 	 */
-	void (*p_close)(void *);
+	void		(*p_close)(void *);
 
 	/*
 	 * p_peer returns the peer protocol. This may arrive in whatever
 	 * transport specific manner is appropriate.
 	 */
-	uint16_t (*p_peer)(void *);
+	uint16_t	(*p_peer)(void *);
 
 	/*
 	 * p_getopt gets an pipe (transport-specific) property.  These values
 	 * may not be changed once the pipe is created.
 	 */
-	int (*p_getopt)(void *, int, void *, size_t *);
+	int		(*p_getopt)(void *, int, void *, size_t *);
 };
 
 /*
