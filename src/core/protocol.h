@@ -28,58 +28,58 @@
  */
 
 struct nni_protocol {
-        /*
-         * Protocol information.
-         */
-        uint16_t        proto_self;     /* our 16-bit protocol ID */
-        uint16_t        proto_peer;     /* who we peer with (protocol ID) */
-        const char *    proto_name;     /* string version of our name */
+	/*
+	 * Protocol information.
+	 */
+	uint16_t	proto_self;     /* our 16-bit protocol ID */
+	uint16_t	proto_peer;     /* who we peer with (protocol ID) */
+	const char *	proto_name;     /* string version of our name */
 
-        /*
-         * Create protocol instance data, which will be stored on the socket.
-         */
-        int             (*proto_create)(void **, nni_socket_t);
+	/*
+	 * Create protocol instance data, which will be stored on the socket.
+	 */
+	int		(*proto_create)(void **, nni_socket_t);
 
-        /*
-         * Destroy the protocol instance.
-         */
-        void            (*proto_destroy)(void *);
+	/*
+	 * Destroy the protocol instance.
+	 */
+	void		(*proto_destroy)(void *);
 
-        /*
-         * Shutdown the protocol instance, including giving time to
-         * drain any outbound frames (linger).  The protocol is not
-         * required to honor the linger.
-         */
-        void            (*proto_shutdown)(void *, uint64_t);
+	/*
+	 * Shutdown the protocol instance, including giving time to
+	 * drain any outbound frames (linger).  The protocol is not
+	 * required to honor the linger.
+	 */
+	void		(*proto_shutdown)(void *, uint64_t);
 
-        /*
-         * Add and remove pipes.  These are called as connections are
-         * created or destroyed.
-         */
-        int             (*proto_add_pipe)(void *, nni_pipe_t);
-        int             (*proto_remove_pipe)(void *, nni_pipe_t);
+	/*
+	 * Add and remove pipes.  These are called as connections are
+	 * created or destroyed.
+	 */
+	int		(*proto_add_pipe)(void *, nni_pipe_t);
+	int		(*proto_remove_pipe)(void *, nni_pipe_t);
 
-        /*
-         * Option manipulation.  These may be NULL.
-         */
-        int             (*proto_setopt)(void *, int, const void *, size_t);
-        int             (*proto_getopt)(void *, int, void *, size_t *);
+	/*
+	 * Option manipulation.  These may be NULL.
+	 */
+	int		(*proto_setopt)(void *, int, const void *, size_t);
+	int		(*proto_getopt)(void *, int, void *, size_t *);
 
-        /*
-         * Receive filter.  This may be NULL, but if it isn't, then
-         * messages coming into the system are routed here just before
-         * being delivered to the application.  To drop the message,
-         * the protocol should return NULL, otherwise the message
-         * (possibly modified).
-         */
-        nng_msg_t       (*proto_recv_filter)(void *, nni_msg_t);
+	/*
+	 * Receive filter.  This may be NULL, but if it isn't, then
+	 * messages coming into the system are routed here just before
+	 * being delivered to the application.  To drop the message,
+	 * the protocol should return NULL, otherwise the message
+	 * (possibly modified).
+	 */
+	nng_msg_t	(*proto_recv_filter)(void *, nni_msg_t);
 
-        /*
-         * Send filter.  This may be NULL, but if it isn't, then
-         * messages here are filtered just after they come from the
-         * application.
-         */
-        nng_msg_t       (*proto_send_filter)(void *, nni_msg_t);
+	/*
+	 * Send filter.  This may be NULL, but if it isn't, then
+	 * messages here are filtered just after they come from the
+	 * application.
+	 */
+	nng_msg_t	(*proto_send_filter)(void *, nni_msg_t);
 };
 
 /*

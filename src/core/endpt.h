@@ -19,16 +19,16 @@
  */
 
 struct nng_endpt {
-	struct nni_endpt_ops ep_ops;
-	void *ep_tran;
-	nni_list_node_t ep_sock_node;
-	nni_socket_t ep_sock;
-	const char *ep_addr;
-	nni_thread_t ep_dialer;
-	nni_thread_t ep_listener;
-	int ep_close;
-	nni_mutex_t ep_mx;
-	nni_cond_t ep_cv;
+	struct nni_endpt_ops	ep_ops;
+	void *			ep_tran;
+	nni_list_node_t		ep_sock_node;
+	nni_socket_t		ep_sock;
+	const char *		ep_addr;
+	nni_thread_t		ep_dialer;
+	nni_thread_t		ep_listener;
+	int			ep_close;
+	nni_mutex_t		ep_mx;
+	nni_cond_t		ep_cv;
 };
 
 /*

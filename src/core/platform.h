@@ -79,13 +79,14 @@ extern void *nni_alloc(size_t);
  */
 extern void nni_free(void *, size_t);
 
-typedef struct nni_mutex *nni_mutex_t;
-typedef struct nni_cond *nni_cond_t;
+typedef struct nni_mutex *	nni_mutex_t;
+typedef struct nni_cond *	nni_cond_t;
 
 /*
  * Mutex handling.
  */
 extern int nni_mutex_create(nni_mutex_t *);
+
 extern void nni_mutex_destroy(nni_mutex_t);
 extern void nni_mutex_enter(nni_mutex_t);
 extern void nni_mutex_exit(nni_mutex_t);
@@ -123,7 +124,8 @@ extern void nni_cond_wait(nni_cond_t);
  */
 extern int nni_cond_timedwait(nni_cond_t, uint64_t);
 
-typedef struct nni_thread *nni_thread_t;
+typedef struct nni_thread * nni_thread_t;
+
 /*
  * nni_thread_creates a thread that runs the given function. The thread
  * receives a single argument.

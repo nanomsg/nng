@@ -41,4 +41,4 @@
 #include "core/socket.h"
 #include "core/endpt.h"
 
-#endif	/* CORE_NNG_IMPL_H */
+#endif  /* CORE_NNG_IMPL_H */

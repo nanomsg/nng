@@ -90,7 +90,7 @@ NNG_DECL int nng_socket_getopt(nng_socket_t, int, void *, size_t *);
  * recursion.
  */
 NNG_DECL nng_notify_t nng_notify_register(nng_socket_t, int,
-void (*)(nng_socket_t, nng_event_t, void *), void *);
+    void (*)(nng_socket_t, nng_event_t, void *), void *);
 NNG_DECL int nng_notify_unregister(nng_socket_t, nng_notify_t);
 
 /*
@@ -367,6 +367,7 @@ NNG_DECL const char *nng_stat_name(nng_stat_t);
  * user as is.
  */
 NNG_DECL int nng_stat_type(nng_stat_t);
+
 #define NNG_STAT_LEVEL		0
 #define NNG_STAT_COUNTER	1
 
@@ -377,6 +378,7 @@ NNG_DECL int nng_stat_type(nng_stat_t);
  * returned.
  */
 NNG_DECL int nng_stat_unit(nng_stat_t);
+
 #define NNG_UNIT_NONE		0
 #define NNG_UNIT_BYTES		1
 #define NNG_UNIT_MESSAGES	2
