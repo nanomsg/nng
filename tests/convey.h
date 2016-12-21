@@ -1,39 +1,21 @@
 /*
  * Copyright 2016 Garrett D'Amore <garrett@damore.org>
  *
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"),
- * to deal in the Software without restriction, including without limitation
- * the rights to use, copy, modify, merge, publish, distribute, sublicense,
- * and/or sell copies of the Software, and to permit persons to whom
- * the Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included
- * in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
- * THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
- * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
- * IN THE SOFTWARE.
+ * This software is supplied under the terms of the MIT License, a
+ * copy of which should be located in the distribution where this
+ * file was obtained (LICENSE.txt).  A copy of the license may also be
+ * found online at https://opensource.org/licenses/MIT.
  */
 
-#ifndef TESTS_CONVEY_H
+#ifndef CONVEY_H
 
-#define TESTS_CONVEY_H
+#define	CONVEY_H
 
-#include "test.h"
-
-/*
- * This header file provides a friendlier API to the test-convey framework.
- * It basically provides some "friendly" names for symbols to use instead of
- * the test_xxx symbols.  Basically we pollute your namespace, for your
- * benefit.  Don't like the pollution?  Use test.h instead.
- */
-
-
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <setjmp.h>
+#include <stdarg.h>
 
 /*
  * This test framework allows one to write tests as a form of assertion,
@@ -41,7 +23,7 @@
  *
  * The test framework provides a main() function.
  *
- * To use this call the test_main() macro, and embed test_convey() references.
+ * To use this call the Main() macro, and embed Test() and Convey() blocks.
  * These can be nested, and after each convey the entire stack is popped so
  * that execution can continue from the beginning, giving each test section
  * the same environment.
@@ -51,112 +33,285 @@
  *
  * Here's a sample file:
  *
- * TestMain("Integer Tests", {
- *	int x = 1; int y = 2;
- *	Convey("Addition works", func() {
- *		So(y == 2);
- *		So(y + x == 3);
- *		So(x + y == 3);
- *		Convey("Even big numbers", func() {
- *			y = 100;
- *			So(x + y == 101);
- *		});
- *		Convey("Notice y is still 2 in this context", func() {
+ * Main({
+ *	Test({"Integer Tests", {
+ *		int x = 1; int y = 2;
+ *		Convey("Addition works", func() {
  *			So(y == 2);
- *		});
- * 	});
+ *			So(y + x == 3);
+ *			So(x + y == 3);
+ *			Convey("Even big numbers", {
+ *				y = 100;
+ *				So(x + y == 101);
+ *			});
+ *			Convey("Notice y is still 2 in this context", {
+ *				So(y == 2);
+ *			});
+ * 		});
+ *	});
  * })
- * 
- * There are other macros, but this is a work in progress.  The inspiration
- * for this is from GoConvey -- github.com/smartystreets/goconvey - but this
- * is a version for C programs.
  *
- * In addition to the names listed here, your test code should avoid using
- * names beginning with "test_" or "T_" as we use those names internally
- * in macros, which may collide or do other bad things with your names.
- */
-
-/*
- * TestMain is used to generate a main() function that runs your code,
- * and is appropriate when your entire program consists of one test.
- * This is equivalent to doing Main() with just a single Test(), but it
- * may spare you a level of indentation.
- */
-#define	TestMain(name, code)	test_main(name, code)
-
-/*
- * Main() wraps zero or more Tests, which will then contain Convey
- * scopes.  This emits a main function, and can only be used once.
- * It also cannot be used with TestMain.
- */
-#define Main(code)		test_main_group(code)
-
-/*
- * Test creates a top-level test scope.
- */
-#define	Test(name, code)	test_group(name, code)
-
-/*
- * Convey starts a new test scope.  These can be nested.  The code is
- * executed, including new scopes, but each time a new scope is encountered,
- * the stack is unwound to give the code a fresh start to work with.
- */
-#define	Convey(name, code)	test_convey(name, code)
-
-/*
- * So is to be used like assert(), except that it always is checked,
- * and records results in the current scope.  If the assertion fails,
- * then no further processing in the same scope (other than possible
- * reset logic) is performed.  Additional tests at higher scopes, or
- * in sibling scopes, may be executed.
- */
-#define So(condition)		test_so(condition)
-
-/*
- * Skip ceases further processing the current scope (Convey).  The
- * reason is a string that will be emitted to the log.
- */
-#define Skip(reason)		test_skip(reason)
-
-/*
- * Fail records a test failure, and is much like So, except that
- * no condition is recorded, and instead you may supply your own
- * reason.
- */
-#define Fail(reason)		test_fail(reason)
-
-
-/*
- * SkipSo is a way to skip a check.  The fact that it was skipped
- * will be noted.
- */
-#define SkipSo(condition)	test_skip_so(condition)
-
-/*
- * SkipConvey is a way to skip an entire Convey scope.  The fact
- * will be noted.
- */
-#define	SkipConvey(name, code)	test_skip_convey(name, code)
-
-
-/*
- * Reset is establishes a block of code to be reset when exiting from
- * Convey blocks, or even when finishing the current scope.  It only
- * affects the following code, and it is possible to override a prior
- * Reset block with a new one in the same scope.  Unlike with GoConvey,
- * you must put this *before* other Convey blocks you wish to cover.
- */
-#define	Reset(code)		test_reset(code)
-
-/*
- * Printf is like printf, but it sends its output to the test debug
- * log, which is emitted only after the test is finished.  The system
- * injects events in the debug log as well, which makes this useful for
- * debugging flow of execution.
+ * This was inspired by GoConvey -- github.com/smartystreets/goconvey - but
+ * there are differences of course -- C is not Go!
  *
- * NB: We avoid variadic macros since some systems don't support them.
+ * Pleaes note that we abuse the C preprocessor and setjmp fairly heavily,
+ * and as a result of the magic we have to do, a lot of these guts must be
+ * exposed in this header file.  HOWEVER, only symbols beginning with a
+ * capital letter are intended for consumers.  All others are for internal
+ * use only.  Otherwise, welcome to the sausage factory.
+ *
+ * Please see the documentation at github.com/gdamore/c-convey for more
+ * details about how to use this.
  */
-#define	Printf			test_debugf
+
+/*
+ * This structure has to be exposed in order to expose the buffer used for
+ * setjmp.  It's members should never be accessed directly.  These should be
+ * allocated statically in the routine(s) that need custom contexts.  The
+ * framework creates a context automatically for each convey scope.
+ */
+typedef struct {
+	jmp_buf cs_jmp;
+	void 	*cs_data;
+} conveyScope;
+
+/* These functions are not for use by tests -- they are used internally. */
+extern int conveyStart(conveyScope *, const char *);
+extern int conveyLoop(conveyScope *, int);
+extern void conveyFinish(conveyScope *, int *);
+extern int conveyMain(int, char **);
+
+extern void conveyAssertPass(const char *, const char *, int);
+extern void conveyAssertSkip(const char *, const char *, int);
+extern void conveyAssertFail(const char *, const char *, int);
+extern void conveySkip(const char *, int, const char *, ...);
+extern void conveyFail(const char *, int, const char *, ...);
+extern void conveyError(const char *, int, const char *, ...);
+extern void conveyPrintf(const char *, int, const char *, ...);
+
+/*
+ * conveyRun is a helper macro not to be called directly by user
+ * code.  It has to be here exposed, in order for setjmp() to work.
+ * and for the code block to be inlined.  Becuase this inlines user
+ * code, we have to be *very* careful with symbol names.
+ */
+#define	conveyRun(convey_name, convey_code, convey_resultp)		\
+	do {								\
+		static conveyScope convey_scope;			\
+		int convey_unwind;					\
+		int convey_break = 0;					\
+		if (conveyStart(&convey_scope, convey_name) != 0) {	\
+			break;						\
+		}							\
+		convey_unwind = setjmp(convey_scope.cs_jmp);		\
+		if (conveyLoop(&convey_scope, convey_unwind) != 0) {	\
+			break;						\
+		}							\
+		do {							\
+			convey_code					\
+		} while (0);						\
+		if (convey_break) {					\
+			break;						\
+		}							\
+		conveyFinish(&convey_scope, convey_resultp);		\
+	} while (0);
+
+/*
+ * ConveyRset establishes a reset for the current scope.  This code will
+ * be executed every time the current scope is unwinding.  This means that
+ * the code will be executed each time a child convey exits.  It is also
+ * going to be executed once more, for the final pass, which doesn't actually
+ * execute any convey blocks.  (This final pass is required in order to
+ * learn that all convey's, as well as any code beyond them, are complete.)
+ *
+ * The way this works is by overriding the existing scope's jump buffer.
+ *
+ * Unlike with GoConvey, this must be registered before any children
+ * convey blocks; the logic only affects convey blocks that follow this
+ * one, within the same scope.
+ *
+ * This must be in a conveyRun scope (i.e. part of a Convey() or a
+ * top level Test() or it will not compile.
+ *
+ * It is possible to have a subsequent reset at the same convey scope
+ * override a prior reset.  Normally you should avoid this, and just
+ * use lower level convey blocks.
+ */
+#define	ConveyReset(convey_reset_code)					\
+	convey_unwind = setjmp(convey_scope.cs_jmp);			\
+	if (convey_unwind) {						\
+		do {							\
+			convey_reset_code				\
+		} while (0);						\
+	}								\
+	if (conveyLoop(&convey_scope, convey_unwind) != 0) {		\
+		convey_break = 1;					\
+		break;							\
+	}
+
+/*
+ * ConveyMain is the outer most scope that most test programs use, unless they
+ * use the short-cut ConveyTestMain.  This creates a main() routine that
+ * sets up the program, parses options, and then executes the tests nested
+ * within it.
+ */
+#define	ConveyMain(code)						\
+	static int convey_main_rv;					\
+	int conveyMainImpl(void) {					\
+		do {							\
+			code						\
+		} while (0);						\
+		return (convey_main_rv);				\
+	}								\
+	int main(int argc, char **argv) {				\
+		return (conveyMain(argc, argv));			\
+	}
+
+/*
+ * ConveyTest creates a top-level test instance, which can contain multiple
+ * Convey blocks.
+ */
+#define	ConveyTest(name, code)						\
+	do {								\
+		int convey_rv;						\
+		conveyRun(name, code, &convey_rv);			\
+		if (convey_rv > convey_main_rv) {			\
+			convey_main_rv = convey_rv;			\
+		};							\
+	} while (0);
+
+/*
+ * ConveyTestMain is used to wrap the top-level of your test suite, and is
+ * used in lieu of a normal main() function.  This is the usual case where
+ * the executable only contains a single top level test group.  It
+ * is the same as using Main with just a single Test embedded, but saves
+ * some typing and probably a level of indentation.
+ */
+#define	ConveyTestMain(name, code)					\
+	ConveyMain(ConveyTest(name, code))
+
+/*
+ * EXPERIMENTAL:
+ * If you don't want to use the test framework's main routine, but
+ * prefer (or need, because of threading for example) to have your
+ * test code driven separately, you can use inject ConveyBlock() in
+ * your function.  It works like ConveyMain().  These must not be
+ * nested within other Conveys, Tests, or Blocks (or Main).  The
+ * results are undefined if you try that.  The final result pointer may
+ * be NULL, or a pointer to an integer to receive the an integer
+ * result from the test. (0 is success, 4 indicates a failure to allocate
+ * memory in the test framework, and anything else indicates a
+ * an error or failure in the code being tested.
+ *
+ * Blocks do not contain Tests, rather they contain Conveys only.  The
+ * Block takes the place of both Main() and Test().  It is to be hoped
+ * that you will not need this.
+ */
+#define	ConveyBlock(name, code, resultp)	conveyRun(name, code, resultp)
+
+/*
+ * ConveyAssert and ConveySo allow you to run assertions.
+ */
+#define	ConveyAssert(truth)						\
+	do {								\
+		if (!(truth)) {						\
+			conveyAssertFail(#truth, __FILE__, __LINE__);	\
+		} else {						\
+			conveyAssertPass(#truth, __FILE__, __LINE__);	\
+		}							\
+	} while (0)
+
+#define	ConveySo(truth)		ConveyAssert(truth)
+
+/*
+ * Convey(name, <code>) starts a convey context, with <code> as
+ * the body.  The <code> is its scope, and may be called repeatedly
+ * within the body of a loop.
+ */
+#define	Convey(name, code)	conveyRun(name, code, NULL)
+
+/*
+ * ConveySkip() just stops processing of the rest of the current context,
+ * and records that processing was skipped.
+ */
+
+/*
+ * If your preprocessor doesn't understand C99 variadics, indicate it
+ * with CONVEY_NO_VARIADICS.  In that case you lose support for printf-style
+ * format specifiers.
+ */
+#ifdef CONVEY_NO_VARIADICS
+#define	ConveySkip(reason)	conveySkip(__FILE__, __LINE__, reason)
+#define	ConveyFail(reason)	conveyFail(__FILE__, __LINE__, reason)
+#define	ConveyError(reason)	conveyError(__FILE__, __LINE__, reason)
+#define	ConveyPrintf(reason)	conveyPrintf(__FILE__, __LINE__, reason)
+#else
+#define	ConveySkip(...)		conveySkip(__FILE__, __LINE__, __VA_ARGS__)
+#define	ConveyFail(...)		conveyFail(__FILE__, __LINE__, __VA_ARGS__)
+#define	ConveyError(...)	conveyError(__FILE__, __LINE__, __VA_ARGS__)
+#define	ConveyPrintf(...)	conveyPrintf(__FILE__, __LINE__, __VA_ARGS__)
+#endif
+
+/*
+ * ConveySkipSo() is used to skip processing of a single assertion.
+ * Further processing in the same context continues.
+ */
+#define	ConveySkipAssert(truth)	\
+	conveyAssertSkip(truth, __FILE__, __LINE__)
+#define	ConveySkipSo(truth)	ConveySkipAssert(truth)
+
+/*
+ * ConveySkipConvey() is used to skip a convey context.  This is intended
+ * to permit changing "Convey", to "SkipConvey".  This is logged,
+ * and the current convey context continues processing.
+ */
+#define	ConveySkipConvey(name, code)	\
+	Convey(name, ConveySkip("Skipped"))
 
 
-#endif	/* TEST_CONVEY_H */
+/*
+ * ConveyInit sets up initial things required for testing.  If you don't
+ * use ConveyMain(), then you need to call this somewhere early in your
+ * main routine.  If it returns non-zero, then you can't use the framework.
+ */
+extern int ConveyInit(void);
+
+/*
+ * ConveySetVerbose sets verbose mode.  You shouldn't set this normally,
+ * as the main() wrapper looks at argv, and does if -v is supplied.
+ */
+extern void ConveySetVerbose(void);
+
+/*
+ * These are some public macros intended to make the API more friendly.
+ * The user is welcome to #undefine any of these he wishes not to
+ * use, or he can simply avoid the pollution altogether by defining
+ * CONVEY_NAMESPACE_CLEAN before including this header file.  Any
+ * of these names are already defined using the Convey prefix, with
+ * the sole exception of Convey() itself, which you cannot undefine.
+ * (We don't define a ConveyConvey()... that's just silly.)  Most of the
+ * time you won't need this, because its test code that you control, and
+ * you're writing to Convey(), so you can trivially avoid the conflicts and
+ * benefit from the friendlier names.  This is why this is the default.
+ *
+ * There are some other less often used functions that we haven't aliased,
+ * like ConveyBlock() and ConveySetVerbose().  Aliases for those offer
+ * little benefit for the extra pollution they would create.
+ */
+#ifndef CONVEY_NAMESPACE_CLEAN
+
+#define	TestMain	ConveyTestMain
+#define	Test		ConveyTest
+#define	Main		ConveyMain
+#define	So		ConveySo
+#define	Skip		ConveySkip
+#define	Fail		ConveyFail
+#define	Error		ConveyError
+#define	SkipConvey	ConveySkipConvey
+#define	SkipSo		ConveySkipSo
+#define	Reset		ConveyReset
+#define	Printf		ConveyPrintf
+
+#endif	/* CONVEY_NAMESPACE_CLEAN */
+
+#endif	/* CONVEY_H */
