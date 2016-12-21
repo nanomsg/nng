@@ -30,4 +30,5 @@ script:
   - cmake ..
   - cmake --build . -- -j4
   - ctest --output-on-failure -C Debug -j4
-  - etc/uncrustify_check.sh
+  - cd ..
+  - ./etc/uncrustify_check.sh

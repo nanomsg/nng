@@ -11,6 +11,7 @@
 #define CORE_SNPRINTF_H
 
 #include <stddef.h>
+#include <stdarg.h>
 
 /*
  * We have our own snprintf, because some platforms lack this, while
