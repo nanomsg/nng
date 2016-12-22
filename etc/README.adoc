@@ -4,6 +4,10 @@ About This Directory
 This directory contains support files that I use for developing this
 project.  I recommend others consider doing the same.
 
+
+Coding Style & Uncrustify
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
 I'm using Sublime Text as my development IDE, and so I've set things up
 for that.
 
@@ -12,11 +16,60 @@ configuration, and there is a shell script here that will validate it.
 Uncrustify is not (for now) enforced outside of src/  (in particular it
 will probably choke on the stuff in ./tests).  I may fix that one day.
 
+I am running this using Uncrustify version 0.60 -- and I know Trusty Tahr
+has 0.59 which also seems to work.  Older versions seem to generate different
+ugly output, and I have not tested the new versions.  Until updated otherwise,
+the coding style is as enforced by this config with Uncrustify 0.60.
+
+
+Sublime Text
+~~~~~~~~~~~~
+
+I have a custom version of the Sublime Uncrustify package, which understands
+project-specific settings.  (I also have submitted an upstream PR for those
+chaanges here: https://github.com/obxyann/Sublime-Uncrustify/pulls so
+hopefully this functionality will be available to others.)  The Sublime
+project file here takes care of seting this up (nng.sublime-project)
+
 I have the arranged in my Uncrustify Sublime package to configure both
 the location of the binary, and the location of the configuration, so that
 Alt-U will autoformat my buffer.  I've also arranged for Sublime text to
 understand that .h is C, not C++ (this is important!)
 
-If/when Sublime Text gets better support for storing project-specific
-settings for things like package settings, then I'll post the relevant
-settings file(s) here.
+Configuring Uncrustify without these enhancements is a little tricker, and
+will be specific to your setup.
+
+ISO Standard C
+~~~~~~~~~~~~~~
+
+I've decided, after some gnashing of teeth, to finally accept that C99
+is here to stay.  Therefore, I'm *not* spending any effort into supporting
+older C89/C90 compilers.  That said I do understand that compiler support
+for C99 is not always complete.  I will stick to the mainstream features,
+like <stdint.h>, the ability to use variadic macros, // comments, and perhaps
+the occasional use of for() locally scoped variables.
+
+Naming Conventions
+~~~~~~~~~~~~~~~~~~
+
+Because not everyone wants to deal with CMake all the time, I anticipate that
+there will be folks who in the future want to just create one monster .c
+file that contains all these things, or even a .h that they just inline into
+their programmer.  As vile as this idea seems to me, I can understand the
+motivations for it.  In order to facilitate those cases, its important that
+all global symbols use names prefixed with nni_ or nng_ (or NNI_ or NNG_ for
+macro names).  This is true even for static symbols that won't show up in
+a more conventional symbol table.
+
+We use nng_ (and NNG_) for symbols that are intended to be expoed to consumers.
+These symbols form part of our public API.
+
+We use nni_ and NNI_ for symbols that are *NOT* part of our public API and
+should not be used by users.
+
+Note that for the most part we try to avoid exposing structures directly to
+users so that they don't get baked into binaries -- preferring instead to
+dynamically allocate and give back an opaque pointer to the API.  Any
+exceptions to this case need to be VERY carefully reviewed to make sure
+that the thing is unlikely to change (in any way whatsoever) in the future,
+or that adequate provisions for versioning have been made.

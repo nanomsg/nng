@@ -1,0 +1,14 @@
+{
+	"folders":
+	[
+		{
+			"path": ".."
+		}
+	],
+	"settings":
+        {
+                "tab_size": 8,
+                "translate_tabs_to_spaces": false,
+                "uncrustify_config": "${project_dir}/uncrustify.cfg"
+        }
+}
