@@ -42,54 +42,6 @@ nni_mutex_fini(nni_mutex *mp)
 }
 
 
-// XXX: REMOVE THIS FUNCTION
-int
-nni_mutex_create(nni_mutex_t *mp)
-{
-	struct nni_mutex *m;
-	pthread_mutexattr_t attr;
-	int rv;
-
-	if ((m = nni_alloc(sizeof (*m))) == NULL) {
-		return (NNG_ENOMEM);
-	}
-
-	// We ask for more error checking...
-	if (pthread_mutexattr_init(&attr) != 0) {
-		nni_free(m, sizeof (*m));
-		return (NNG_ENOMEM);
-	}
-
-	if (pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_ERRORCHECK) != 0) {
-		nni_panic("pthread_mutexattr_settype failed");
-	}
-
-	rv = pthread_mutex_init(&m->mx, &attr);
-
-	if (pthread_mutexattr_destroy(&attr) != 0) {
-		nni_panic("pthread_mutexattr_destroy failed");
-	}
-
-	if (rv != 0) {
-		nni_free(m, sizeof (*m));
-		return (NNG_ENOMEM);
-	}
-	*mp = m;
-	return (0);
-}
-
-
-// XXX: REMOVE THIS FUNCTION
-void
-nni_mutex_destroy(nni_mutex_t m)
-{
-	if (pthread_mutex_destroy(&m->mx) != 0) {
-		nni_panic("pthread_mutex_destroy failed");
-	}
-	nni_free(m, sizeof (*m));
-}
-
-
 void
 nni_mutex_enter(nni_mutex *m)
 {
@@ -140,55 +92,6 @@ nni_cond_fini(nni_cond *c)
 }
 
 
-// XXXX: REMOVE THIS FUNCTION
-static int
-nni_cond_attr(pthread_condattr_t **attrpp)
-{
-	*attrpp = NULL;
-	return (0);
-}
-
-
-// XXX: REMOVE THIS FUNCTION
-int
-nni_cond_create(nni_cond **cvp, nni_mutex *mx)
-{
-	/*
-	 * By preference, we use a CLOCK_MONOTONIC version of condition
-	 * variables, which insulates us from changes to the system time.
-	 */
-	struct nni_cond *c;
-	pthread_condattr_t *attrp;
-	int rv;
-
-	if ((rv = nni_cond_attr(&attrp)) != 0) {
-		return (rv);
-	}
-	if ((c = nni_alloc(sizeof (*c))) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	c->mx = &mx->mx;
-	if (pthread_cond_init(&c->cv, attrp) != 0) {
-		/* In theory could be EAGAIN, but handle like ENOMEM */
-		nni_free(c, sizeof (*c));
-		return (NNG_ENOMEM);
-	}
-	*cvp = c;
-	return (0);
-}
-
-
-// XXX: REMOVE THIS FUNCTION
-void
-nni_cond_destroy(nni_cond *c)
-{
-	if (pthread_cond_destroy(&c->cv) != 0) {
-		nni_panic("pthread_cond_destroy failed");
-	}
-	nni_free(c, sizeof (*c));
-}
-
-
 void
 nni_cond_signal(nni_cond *c)
 {
@@ -236,17 +139,5 @@ nni_cond_waituntil(nni_cond *c, uint64_t usec)
 	}
 	return (0);
 }
-
-
-int
-nni_cond_timedwait(nni_cond *c, int usec)
-{
-	if (usec < 0) {
-		nni_cond_wait(c);
-		return (0);
-	}
-	return (nni_cond_waituntil(c, ((uint64_t) usec) + nni_clock()));
-}
-
 
 #endif

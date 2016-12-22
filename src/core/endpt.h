@@ -24,8 +24,8 @@ struct nng_endpt {
 	nni_thread_t		ep_dialer;
 	nni_thread_t		ep_listener;
 	int			ep_close;
-	nni_mutex_t		ep_mx;
-	nni_cond_t		ep_cv;
+	nni_mutex		ep_mx;
+	nni_cond		ep_cv;
 };
 
 int nni_endpt_create(nni_endpt **, nni_socket *, const char *);

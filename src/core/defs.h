@@ -10,6 +10,8 @@
 #ifndef CORE_DEFS_H
 #define CORE_DEFS_H
 
+#include <stdint.h>
+
 // C compilers may get unhappy when named arguments are not used.  While
 // there are things like __attribute__((unused)) which are arguably
 // superior, support for such are not universal.
@@ -31,5 +33,13 @@ typedef struct nni_endpt_ops	nni_endpt_ops;
 typedef struct nni_pipe_ops	nni_pipe_ops;
 
 typedef struct nni_protocol	nni_protocol;
+
+typedef int		nni_signal;     // Used as a turnstile/wakeup channel.
+typedef uint64_t	nni_time;       // An absolute time in microseconds.
+typedef int		nni_duration;   // A relative time in microseconds.
+
+// Some default timing things.
+#define NNI_TIME_NEVER		((nni_time) 0xffffffffull)
+#define NNI_TIME_ZERO		((nni_time) 0)
 
 #endif  // CORE_DEFS_H

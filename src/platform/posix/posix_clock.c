@@ -19,11 +19,11 @@
 #ifndef NNG_USE_GETTIMEOFDAY
 
 // Use POSIX realtime stuff
-uint64_t
+nni_time
 nni_clock(void)
 {
 	struct timespec ts;
-	uint64_t usec;
+	nni_time usec;
 
 	if (clock_gettime(NNG_USE_CLOCKID, &ts) != 0) {
 		/* This should never ever occur. */
@@ -38,7 +38,7 @@ nni_clock(void)
 
 
 void
-nni_usleep(uint64_t usec)
+nni_usleep(nni_duration usec)
 {
 	struct timespec ts;
 
@@ -67,10 +67,10 @@ nni_usleep(uint64_t usec)
 #include <sys/time.h>
 #include <poll.h>
 
-uint64_t
+nni_time
 nni_clock(void)
 {
-	uint64_t usec;
+	nni_time usec;
 
 	struct timeval tv;
 
@@ -86,7 +86,7 @@ nni_clock(void)
 
 
 void
-nni_usleep(uint64_t usec)
+nni_usleep(nni_duration usec)
 {
 	// So probably there is no nanosleep.  We could in theory use
 	// pthread condition variables, but that means doing memory
@@ -97,8 +97,8 @@ nni_usleep(uint64_t usec)
 	// So we can use poll() instead, which is rather coarse, but
 	// pretty much guaranteed to work.
 	struct pollfd pfd;
-	uint64_t now;
-	uint64_t expire;
+	nni_time now;
+	nni_time expire;
 
 	// Possibly we could pass NULL instead of pfd, but passing a valid
 	// pointer ensures that if the system dereferences the pointer it

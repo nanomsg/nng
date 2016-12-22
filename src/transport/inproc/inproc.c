@@ -142,7 +142,7 @@ nni_inproc_pipe_send(void *arg, nni_msg *msg)
 
 	// TODO: look at the message expiration and use that to set up
 	// the timeout.  (And if it expired already, throw it away.)
-	return (nni_msgqueue_put(pipe->wq, msg, -1));
+	return (nni_msgqueue_put(pipe->wq, msg));
 }
 
 
@@ -151,7 +151,7 @@ nni_inproc_pipe_recv(void *arg, nni_msg **msgp)
 {
 	nni_inproc_pipe *pipe = arg;
 
-	return (nni_msgqueue_get(pipe->rq, msgp, -1));
+	return (nni_msgqueue_get(pipe->rq, msgp));
 }
 
 

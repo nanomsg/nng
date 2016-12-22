@@ -33,8 +33,8 @@ typedef struct nni_pair_pipe {
 	nni_pipe *	pipe;
 	nni_pair_sock * pair;
 	int		good;
-	nni_thread_t	sthr;
-	nni_thread_t	rthr;
+	nni_thread *	sthr;
+	nni_thread *	rthr;
 	int		sigclose;
 } nni_pair_pipe;
 
@@ -162,8 +162,8 @@ nni_pair_sender(void *arg)
 {
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
-	nni_msgqueue_t uwq = pair->uwq;
-	nni_msgqueue_t urq = pair->urq;
+	nni_msgqueue *uwq = pair->uwq;
+	nni_msgqueue *urq = pair->urq;
 	nni_pipe *pipe = pp->pipe;
 	nni_msg *msg;
 	int rv;
@@ -177,7 +177,7 @@ nni_pair_sender(void *arg)
 
 
 	for (;;) {
-		rv = nni_msgqueue_get_sig(uwq, &msg, -1, &pp->sigclose);
+		rv = nni_msgqueue_get_sig(uwq, &msg, &pp->sigclose);
 		if (rv != 0) {
 			break;
 		}
@@ -198,8 +198,8 @@ nni_pair_receiver(void *arg)
 {
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
-	nni_msgqueue_t urq = pair->urq;
-	nni_msgqueue_t uwq = pair->uwq;
+	nni_msgqueue *urq = pair->urq;
+	nni_msgqueue *uwq = pair->uwq;
 	nni_pipe *pipe = pp->pipe;
 	nni_msg *msg;
 	int rv;
@@ -216,7 +216,7 @@ nni_pair_receiver(void *arg)
 		if (rv != 0) {
 			break;
 		}
-		rv = nni_msgqueue_put_sig(urq, msg, -1, &pp->sigclose);
+		rv = nni_msgqueue_put_sig(urq, msg, &pp->sigclose);
 		if (rv != 0) {
 			nni_msg_free(msg);
 			break;
@@ -226,6 +226,7 @@ nni_pair_receiver(void *arg)
 	nni_pipe_close(pipe);
 	nni_socket_rem_pipe(pair->sock, pipe);
 }
+
 
 // TODO: probably we could replace these with NULL, since we have no
 // protocol specific options?

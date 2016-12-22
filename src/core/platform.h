@@ -62,13 +62,6 @@ extern void nni_free(void *, size_t);
 
 typedef struct nni_mutex	nni_mutex;
 typedef struct nni_cond		nni_cond;
-// XXX: REMOVE THESE
-typedef struct nni_mutex *	nni_mutex_t;
-typedef struct nni_cond *	nni_cond_t;
-extern int nni_mutex_create(nni_mutex_t *);
-extern void nni_mutex_destroy(nni_mutex_t);
-extern int nni_cond_create(nni_cond_t *, nni_mutex_t);
-extern void nni_cond_destroy(nni_cond_t);
 
 // Mutex handling.
 
@@ -104,30 +97,21 @@ extern void nni_cond_fini(nni_cond *);
 
 // nni_cond_broadcast wakes all waiters on the condition.  This should be
 // called with the lock held.
-extern void nni_cond_broadcast(nni_cond_t);
+extern void nni_cond_broadcast(nni_cond *);
 
 // nni_cond_signal wakes a signal waiter.
-extern void nni_cond_signal(nni_cond_t);
+extern void nni_cond_signal(nni_cond *);
 
 // nni_cond_wait waits for a wake up on the condition variable.  The
 // associated lock is atomically released and reacquired upon wake up.
 // Callers can be spuriously woken.  The associated lock must be held.
-extern void nni_cond_wait(nni_cond_t);
-
-// nni_cond_timedwait waits for a wakeup on the condition variable, just
-// as with nni_condwait, but it will also wake after the given number of
-// microseconds has passed.  (This is a relative timed wait.)  Early
-// wakeups are permitted, and the caller must take care to double check any
-// conditions.  The return value is 0 on success, or an error code, which
-// can be NNG_ETIMEDOUT.  Note that it is permissible to wait for longer
-// than the timeout based on the resolution of your system clock.
-extern int nni_cond_timedwait(nni_cond_t, int);
+extern void nni_cond_wait(nni_cond *);
 
 // nni_cond_waituntil waits for a wakeup on the condition variable, or
 // until the system time reaches the specified absolute time.  (It is an
 // absolute form of nni_cond_timedwait.)  Early wakeups are possible, so
 // check the condition.  It will return either NNG_ETIMEDOUT, or 0.
-extern int nni_cond_waituntil(nni_cond_t, uint64_t);
+extern int nni_cond_waituntil(nni_cond *, nni_time);
 
 typedef struct nni_thread * nni_thread_t;
 typedef struct nni_thread nni_thread;
@@ -142,12 +126,15 @@ extern int nni_thread_create(nni_thread **, void (*fn)(void *), void *);
 extern void nni_thread_reap(nni_thread *);
 
 // nn_clock returns a number of microseconds since some arbitrary time
-// in the past.  The values returned by nni_clock may be used with
-// nni_cond_timedwait.
-extern uint64_t nni_clock(void);
+// in the past.  The values returned by nni_clock must use the same base
+// as the times used in nni_cond_waituntil.  The nni_clock() must return
+// values > 0, and must return values smaller than 2^63.  (We could relax
+// this last constraint, but there is no reason to, and leaves us the option
+// of using negative values for other purposes in the future.)
+extern nni_time nni_clock(void);
 
 // nni_usleep sleeps for the specified number of microseconds (at least).
-extern void nni_usleep(uint64_t);
+extern void nni_usleep(nni_duration);
 
 // nni_platform_init is called to allow the platform the chance to
 // do any necessary initialization.  This routine MUST be idempotent,
@@ -158,8 +145,9 @@ extern void nni_usleep(uint64_t);
 // nni_plat_fini has been called.
 //
 // The function argument should be called if the platform has not initialized
-// (i.e. exactly once please), and its result passed back to the caller.
-//
+// (i.e. exactly once), and its result passed back to the caller.  If it
+// does not return 0 (success), then it may be called again to try to
+// initialize the platform again at a later date.
 extern int nni_plat_init(int (*)(void));
 
 // nni_platform_fini is called to clean up resources.  It is intended to
@@ -167,7 +155,8 @@ extern int nni_plat_init(int (*)(void));
 // will be called until nni_platform_init is called.
 extern void nni_plat_fini(void);
 
-// Actual platforms we support.
+// Actual platforms we support.  This is included up front so that we can
+// get the specific types that are supplied by the platform.
 #if defined(PLATFORM_POSIX)
 #include "platform/posix/posix_impl.h"
 #else

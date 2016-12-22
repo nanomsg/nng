@@ -14,24 +14,25 @@
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
 struct nng_socket {
-	nni_mutex_t		s_mx;
-	nni_cond_t		s_cv;
+	nni_mutex	s_mx;
+	nni_cond	s_cv;
 
-	nni_msgqueue_t		s_uwq;  // Upper write queue
-	nni_msgqueue_t		s_urq;  // Upper read queue
+	nni_msgqueue *	s_uwq;          // Upper write queue
+	nni_msgqueue *	s_urq;          // Upper read queue
 
-	struct nni_protocol	s_ops;
+	nni_protocol	s_ops;
 
-	void *			s_data; // Protocol private
+	void *		s_data;         // Protocol private
 
 	// XXX: options
 
-	nni_list_t		s_eps;
-	nni_list_t		s_pipes;
+	nni_list_t	s_eps;
+	nni_list_t	s_pipes;
 
-	int			s_closing;	// Socket is closing
-	int			s_besteffort;   // Best effort mode delivery
-	int			s_senderr;      // Protocol state machine use
+	int		s_closing;              // Socket is closing
+	int		s_besteffort;           // Best effort mode delivery
+	int		s_senderr;              // Protocol state machine use
+	int		s_recverr;		// Protocol state machine use
 };
 
 extern int nni_socket_create(nni_socket **, uint16_t);
