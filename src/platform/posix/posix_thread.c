@@ -28,7 +28,7 @@ static int plat_init = 0;
 static int plat_fork = 0;
 
 static void *
-thrfunc(void *arg)
+nni_thrfunc(void *arg)
 {
 	nni_thread_t thr = arg;
 
@@ -49,7 +49,7 @@ nni_thread_create(nni_thread_t *tp, void (*fn)(void *), void *arg)
 	thr->func = fn;
 	thr->arg = arg;
 
-	if ((rv = pthread_create(&thr->tid, NULL, thrfunc, thr)) != 0) {
+	if ((rv = pthread_create(&thr->tid, NULL, nni_thrfunc, thr)) != 0) {
 		nni_free(thr, sizeof (*thr));
 		return (NNG_ENOMEM);
 	}

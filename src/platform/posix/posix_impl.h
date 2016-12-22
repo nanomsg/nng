@@ -10,6 +10,13 @@
 #ifndef PLATFORM_POSIX_IMPL_H
 #define PLATFORM_POSIX_IMPL_H
 
+// Some dependency notes:
+//
+// PLATFORM_POSIX_THREAD and PLATFORM_POSIX_SYNCH depend on each other,
+// and they both depend on PLATFORM_POSIX_CLOCK.  Furthermore, note that
+// when using PLATFORM_POSIX_CLOCK, your condition variable timeouts need
+// to use the same base clock values.  Normally all three should be used
+// together.
 #ifdef  PLATFORM_POSIX
 #define PLATFORM_POSIX_ALLOC
 #define PLATFORM_POSIX_DEBUG

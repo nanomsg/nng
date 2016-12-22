@@ -1,23 +1,14 @@
-/*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
- *
- * This software is supplied under the terms of the MIT License, a
- * copy of which should be located in the distribution where this
- * file was obtained (LICENSE.txt).  A copy of the license may also be
- * found online at https://opensource.org/licenses/MIT.
- */
+//
+// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
-/*
- * This is more of a direct #include of a .c rather than .h file.
- * But having it be a .h makes compiler rules work out properly.  Do
- * not include this more than once into your program, or you will
- * get multiple symbols defined.
- */
-
-/*
- * POSIX synchronization (mutexes and condition variables).  This uses
- * pthreads.
- */
+// POSIX synchronization (mutexes and condition variables).  This uses
+// pthreads.
 
 #include "core/nng_impl.h"
 
@@ -51,6 +42,7 @@ nni_mutex_fini(nni_mutex *mp)
 }
 
 
+// XXX: REMOVE THIS FUNCTION
 int
 nni_mutex_create(nni_mutex_t *mp)
 {
@@ -62,7 +54,7 @@ nni_mutex_create(nni_mutex_t *mp)
 		return (NNG_ENOMEM);
 	}
 
-	/* We ask for more error checking... */
+	// We ask for more error checking...
 	if (pthread_mutexattr_init(&attr) != 0) {
 		nni_free(m, sizeof (*m));
 		return (NNG_ENOMEM);
@@ -87,6 +79,7 @@ nni_mutex_create(nni_mutex_t *mp)
 }
 
 
+// XXX: REMOVE THIS FUNCTION
 void
 nni_mutex_destroy(nni_mutex_t m)
 {
@@ -98,7 +91,7 @@ nni_mutex_destroy(nni_mutex_t m)
 
 
 void
-nni_mutex_enter(nni_mutex_t m)
+nni_mutex_enter(nni_mutex *m)
 {
 	if (pthread_mutex_lock(&m->mx) != 0) {
 		nni_panic("pthread_mutex_lock failed");
@@ -107,7 +100,7 @@ nni_mutex_enter(nni_mutex_t m)
 
 
 void
-nni_mutex_exit(nni_mutex_t m)
+nni_mutex_exit(nni_mutex *m)
 {
 	if (pthread_mutex_unlock(&m->mx) != 0) {
 		nni_panic("pthread_mutex_unlock failed");
@@ -116,7 +109,7 @@ nni_mutex_exit(nni_mutex_t m)
 
 
 int
-nni_mutex_tryenter(nni_mutex_t m)
+nni_mutex_tryenter(nni_mutex *m)
 {
 	if (pthread_mutex_trylock(&m->mx) != 0) {
 		return (NNG_EBUSY);
@@ -125,51 +118,40 @@ nni_mutex_tryenter(nni_mutex_t m)
 }
 
 
-static int
-nni_cond_attr(pthread_condattr_t **attrpp)
+int
+nni_cond_init(nni_cond *c, nni_mutex *m)
 {
-#if defined(NNG_USE_GETTIMEOFDAY) || NNG_USE_CLOCKID == CLOCK_REALTIME
-	*attrpp = NULL;
-	return (0);
-
-#else
-	/* In order to make this fast, avoid reinitializing attrs. */
-	static pthread_condattr_t attr;
-	static pthread_mutex_t mx = PTHREAD_MUTEX_INITIALIZER;
-	static int init = 0;
-	int rv;
-
-	 // For efficiency's sake, we try to reuse the same attr for the
-	 // life of the library.  This avoids many reallocations.  Technically
-	 // this means that we will leak the attr on exit(), but this is
-	 // preferable to constantly allocating and reallocating it.
-	if (init) {
-		*attrpp = &attr;
-		return (0);
+	if (pthread_cond_init(&c->cv, &nni_condattr) != 0) {
+		// In theory could be EAGAIN, but handle like ENOMEM
+		nni_free(c, sizeof (*c));
+		return (NNG_ENOMEM);
 	}
-
-	(void) pthread_mutex_lock(&mx);
-	while (!init) {
-		if ((rv = pthread_condattr_init(&attr)) != 0) {
-			(void) pthread_mutex_unlock(&mx);
-			return (NNG_ENOMEM);
-		}
-		rv = pthread_condattr_setclock(&attr, NNG_USE_CLOCKID);
-		if (rv != 0) {
-			nni_panic("condattr_setclock: %s", strerror(rv));
-		}
-		init = 1;
-	}
-	(void) pthread_mutex_unlock(&mx);
-	*attrpp = &attr;
+	c->mx = &m->mx;
 	return (0);
-
-#endif
 }
 
 
+void
+nni_cond_fini(nni_cond *c)
+{
+	if (pthread_cond_destroy(&c->cv) != 0) {
+		nni_panic("pthread_cond_destroy failed");
+	}
+}
+
+
+// XXXX: REMOVE THIS FUNCTION
+static int
+nni_cond_attr(pthread_condattr_t **attrpp)
+{
+	*attrpp = NULL;
+	return (0);
+}
+
+
+// XXX: REMOVE THIS FUNCTION
 int
-nni_cond_create(nni_cond_t *cvp, nni_mutex_t mx)
+nni_cond_create(nni_cond **cvp, nni_mutex *mx)
 {
 	/*
 	 * By preference, we use a CLOCK_MONOTONIC version of condition
@@ -196,8 +178,9 @@ nni_cond_create(nni_cond_t *cvp, nni_mutex_t mx)
 }
 
 
+// XXX: REMOVE THIS FUNCTION
 void
-nni_cond_destroy(nni_cond_t c)
+nni_cond_destroy(nni_cond *c)
 {
 	if (pthread_cond_destroy(&c->cv) != 0) {
 		nni_panic("pthread_cond_destroy failed");
@@ -207,7 +190,7 @@ nni_cond_destroy(nni_cond_t c)
 
 
 void
-nni_cond_signal(nni_cond_t c)
+nni_cond_signal(nni_cond *c)
 {
 	if (pthread_cond_signal(&c->cv) != 0) {
 		nni_panic("pthread_cond_signal failed");
@@ -216,7 +199,7 @@ nni_cond_signal(nni_cond_t c)
 
 
 void
-nni_cond_broadcast(nni_cond_t c)
+nni_cond_broadcast(nni_cond *c)
 {
 	if (pthread_cond_broadcast(&c->cv) != 0) {
 		nni_panic("pthread_cond_broadcast failed");
@@ -225,7 +208,7 @@ nni_cond_broadcast(nni_cond_t c)
 
 
 void
-nni_cond_wait(nni_cond_t c)
+nni_cond_wait(nni_cond *c)
 {
 	if (pthread_cond_wait(&c->cv, c->mx) != 0) {
 		nni_panic("pthread_cond_wait failed");
@@ -234,7 +217,7 @@ nni_cond_wait(nni_cond_t c)
 
 
 int
-nni_cond_timedwait(nni_cond_t c, uint64_t usec)
+nni_cond_waituntil(nni_cond *c, uint64_t usec)
 {
 	struct timespec ts;
 	int rv;
@@ -252,6 +235,17 @@ nni_cond_timedwait(nni_cond_t c, uint64_t usec)
 		nni_panic("pthread_cond_timedwait returned %d", rv);
 	}
 	return (0);
+}
+
+
+int
+nni_cond_timedwait(nni_cond *c, int usec)
+{
+	if (usec < 0) {
+		nni_cond_wait(c);
+		return (0);
+	}
+	return (nni_cond_waituntil(c, ((uint64_t) usec) + nni_clock()));
 }
 
 

@@ -61,22 +61,46 @@ extern void *nni_alloc(size_t);
 extern void nni_free(void *, size_t);
 
 typedef struct nni_mutex	nni_mutex;
+typedef struct nni_cond		nni_cond;
+// XXX: REMOVE THESE
 typedef struct nni_mutex *	nni_mutex_t;
 typedef struct nni_cond *	nni_cond_t;
-
-// Mutex handling.
-extern int nni_mutex_init(nni_mutex *);
-extern void nni_mutex_fini(nni_mutex *);
-
 extern int nni_mutex_create(nni_mutex_t *);
-
 extern void nni_mutex_destroy(nni_mutex_t);
-extern void nni_mutex_enter(nni_mutex *);
-extern void nni_mutex_exit(nni_mutex *);
-extern int nni_mutex_tryenter(nni_mutex *);
-
 extern int nni_cond_create(nni_cond_t *, nni_mutex_t);
 extern void nni_cond_destroy(nni_cond_t);
+
+// Mutex handling.
+
+// nni_mutex_init initializes a mutex structure.  This may require dynamic
+// allocation, depending on the platform.  It can return NNG_ENOMEM if that
+// fails.
+extern int nni_mutex_init(nni_mutex *);
+
+// nni_mutex_fini destroys the mutex and releases any resources allocated for
+// it's use.
+extern void nni_mutex_fini(nni_mutex *);
+
+// nni_mutex_enter locks the mutex.  This is not recursive -- a mutex can only
+// be entered once.
+extern void nni_mutex_enter(nni_mutex *);
+
+// nni_mutex_exit unlocks the mutex.  This can only be performed by the thread
+// that owned the mutex.
+extern void nni_mutex_exit(nni_mutex *);
+
+// nni_mutex_tryenter tries to lock the mutex.  If it can't, it may return
+// NNG_EBUSY.
+extern int nni_mutex_tryenter(nni_mutex *);
+
+// nni_cond_init initializes a condition variable.  We require a mutex be
+// supplied with it, and that mutex must always be held when performing any
+// operations on the condition variable (other than fini.)  This may require
+// dynamic allocation, and if so this operation may fail with NNG_ENOMEM.
+extern int nni_cond_init(nni_cond *, nni_mutex *);
+
+// nni_cond_fini releases all resources associated with condition variable.
+extern void nni_cond_fini(nni_cond *);
 
 // nni_cond_broadcast wakes all waiters on the condition.  This should be
 // called with the lock held.
@@ -97,7 +121,13 @@ extern void nni_cond_wait(nni_cond_t);
 // conditions.  The return value is 0 on success, or an error code, which
 // can be NNG_ETIMEDOUT.  Note that it is permissible to wait for longer
 // than the timeout based on the resolution of your system clock.
-extern int nni_cond_timedwait(nni_cond_t, uint64_t);
+extern int nni_cond_timedwait(nni_cond_t, int);
+
+// nni_cond_waituntil waits for a wakeup on the condition variable, or
+// until the system time reaches the specified absolute time.  (It is an
+// absolute form of nni_cond_timedwait.)  Early wakeups are possible, so
+// check the condition.  It will return either NNG_ETIMEDOUT, or 0.
+extern int nni_cond_waituntil(nni_cond_t, uint64_t);
 
 typedef struct nni_thread * nni_thread_t;
 typedef struct nni_thread nni_thread;
