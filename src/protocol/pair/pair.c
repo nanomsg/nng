@@ -20,7 +20,7 @@
 typedef struct nni_pair_sock {
 	nni_socket *	sock;
 	nni_pipe *	pipe;
-	nni_mutex_t	mx;
+	nni_mutex	mx;
 	nni_msgqueue_t	uwq;
 	nni_msgqueue_t	urq;
 } nni_pair_sock;
@@ -50,7 +50,7 @@ nni_pair_create(void **pairp, nni_socket *sock)
 	if ((pair = nni_alloc(sizeof (*pair))) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mutex_create(&pair->mx)) != 0) {
+	if ((rv = nni_mutex_init(&pair->mx)) != 0) {
 		nni_free(pair, sizeof (*pair));
 		return (rv);
 	}
@@ -71,7 +71,7 @@ nni_pair_destroy(void *arg)
 	// this wold be the time to shut them all down.  We don't, because
 	// the socket already shut us down, and we don't have any other
 	// threads that run.
-	nni_mutex_destroy(pair->mx);
+	nni_mutex_fini(&pair->mx);
 	nni_free(pair, sizeof (*pair));
 }
 
@@ -90,10 +90,10 @@ nni_pair_shutdown(void *arg)
 	// to notice the failure, and ultimately call back into the socket
 	// to unregister them.  The socket can use this to wait for a clean
 	// shutdown of all pipe workers.
-	nni_mutex_enter(pair->mx);
+	nni_mutex_enter(&pair->mx);
 	pipe = pair->pipe;
 	pair->pipe = NULL;
-	nni_mutex_exit(pair->mx);
+	nni_mutex_exit(&pair->mx);
 
 	nni_pipe_close(pipe);
 }
@@ -113,24 +113,24 @@ nni_pair_add_pipe(void *arg, nni_pipe *pipe)
 	pp->sthr = NULL;
 	pp->rthr = NULL;
 
-	nni_mutex_enter(pair->mx);
+	nni_mutex_enter(&pair->mx);
 	if (pair->pipe != NULL) {
 		// Already have a peer, denied.
-		nni_mutex_exit(pair->mx);
+		nni_mutex_exit(&pair->mx);
 		nni_free(pp, sizeof (*pp));
 		return (NNG_EBUSY);
 	}
 	if ((rv = nni_thread_create(&pp->rthr, nni_pair_receiver, pp)) != 0) {
-		nni_mutex_exit(pair->mx);
+		nni_mutex_exit(&pair->mx);
 		return (rv);
 	}
 	if ((rv = nni_thread_create(&pp->sthr, nni_pair_sender, pp)) != 0) {
-		nni_mutex_exit(pair->mx);
+		nni_mutex_exit(&pair->mx);
 		return (rv);
 	}
 	pp->good = 1;
 	pair->pipe = pipe;
-	nni_mutex_exit(pair->mx);
+	nni_mutex_exit(&pair->mx);
 	return (NNG_EINVAL);
 }
 
@@ -147,12 +147,12 @@ nni_pair_rem_pipe(void *arg, nni_pipe *pipe)
 	if (pp->rthr) {
 		(void) nni_thread_reap(pp->rthr);
 	}
-	nni_mutex_enter(pair->mx);
+	nni_mutex_enter(&pair->mx);
 	if (pair->pipe != pipe) {
-		nni_mutex_exit(pair->mx);
+		nni_mutex_exit(&pair->mx);
 		return (NNG_EINVAL);
 	}
-	nni_mutex_exit(pair->mx);
+	nni_mutex_exit(&pair->mx);
 	return (NNG_EINVAL);
 }
 
@@ -168,12 +168,12 @@ nni_pair_sender(void *arg)
 	nni_msg *msg;
 	int rv;
 
-	nni_mutex_enter(pair->mx);
+	nni_mutex_enter(&pair->mx);
 	if (!pp->good) {
-		nni_mutex_exit(pair->mx);
+		nni_mutex_exit(&pair->mx);
 		return;
 	}
-	nni_mutex_exit(pair->mx);
+	nni_mutex_exit(&pair->mx);
 
 
 	for (;;) {
@@ -204,12 +204,12 @@ nni_pair_receiver(void *arg)
 	nni_msg *msg;
 	int rv;
 
-	nni_mutex_enter(pair->mx);
+	nni_mutex_enter(&pair->mx);
 	if (!pp->good) {
-		nni_mutex_exit(pair->mx);
+		nni_mutex_exit(&pair->mx);
 		return;
 	}
-	nni_mutex_exit(pair->mx);
+	nni_mutex_exit(&pair->mx);
 
 	for (;;) {
 		rv = nni_pipe_recv(pipe, &msg);

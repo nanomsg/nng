@@ -22,14 +22,17 @@
 
 // Define types that this platform uses.
 #ifdef PLATFORM_POSIX_SYNCH
+
+#include <pthread.h>
+
 struct nni_mutex {
 	pthread_mutex_t mx;
-}
+};
 
-struct nni_condvar {
+struct nni_cond {
 	pthread_cond_t		cv;
 	pthread_mutex_t *	mx;
-}
+};
 #endif
 
 #endif // PLATFORM_POSIX_IMPL_H

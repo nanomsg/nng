@@ -25,12 +25,15 @@
 
 #include <pthread.h>
 #include <time.h>
+#include <string.h>
+
+extern pthread_condattr_t nni_condattr;
+extern pthread_mutexattr_t nni_mutexattr;
 
 int
 nni_mutex_init(nni_mutex *mp)
 {
-	// pthrad_mutex_attr_t attr;
-	if (pthread_mutex_init(&mp->mx, NULL) != NULL) {
+	if (pthread_mutex_init(&mp->mx, &nni_mutexattr) != 0) {
 		return (NNG_ENOMEM);
 	}
 	return (0);
@@ -42,7 +45,7 @@ nni_mutex_fini(nni_mutex *mp)
 {
 	int rv;
 
-	if ((rv = pthread_mutex_destroy(&mp-- > mx)) != 0) {
+	if ((rv = pthread_mutex_destroy(&mp->mx)) != 0) {
 		nni_panic("pthread_mutex_destroy failed: %s", strerror(rv));
 	}
 }
@@ -136,12 +139,10 @@ nni_cond_attr(pthread_condattr_t **attrpp)
 	static int init = 0;
 	int rv;
 
-	/*
-	 * For efficiency's sake, we try to reuse the same attr for the
-	 * life of the library.  This avoids many reallocations.  Technically
-	 * this means that we will leak the attr on exit(), but this is
-	 * preferable to constantly allocating and reallocating it.
-	 */
+	 // For efficiency's sake, we try to reuse the same attr for the
+	 // life of the library.  This avoids many reallocations.  Technically
+	 // this means that we will leak the attr on exit(), but this is
+	 // preferable to constantly allocating and reallocating it.
 	if (init) {
 		*attrpp = &attr;
 		return (0);
@@ -178,7 +179,7 @@ nni_cond_create(nni_cond_t *cvp, nni_mutex_t mx)
 	pthread_condattr_t *attrp;
 	int rv;
 
-	if ((rv = cond_attr(&attrp)) != 0) {
+	if ((rv = nni_cond_attr(&attrp)) != 0) {
 		return (rv);
 	}
 	if ((c = nni_alloc(sizeof (*c))) == NULL) {

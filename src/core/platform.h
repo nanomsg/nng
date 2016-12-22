@@ -60,6 +60,7 @@ extern void *nni_alloc(size_t);
 // Most implementations can just call free() here.
 extern void nni_free(void *, size_t);
 
+typedef struct nni_mutex	nni_mutex;
 typedef struct nni_mutex *	nni_mutex_t;
 typedef struct nni_cond *	nni_cond_t;
 
@@ -70,9 +71,9 @@ extern void nni_mutex_fini(nni_mutex *);
 extern int nni_mutex_create(nni_mutex_t *);
 
 extern void nni_mutex_destroy(nni_mutex_t);
-extern void nni_mutex_enter(nni_mutex_t);
-extern void nni_mutex_exit(nni_mutex_t);
-extern int nni_mutex_tryenter(nni_mutex_t);
+extern void nni_mutex_enter(nni_mutex *);
+extern void nni_mutex_exit(nni_mutex *);
+extern int nni_mutex_tryenter(nni_mutex *);
 
 extern int nni_cond_create(nni_cond_t *, nni_mutex_t);
 extern void nni_cond_destroy(nni_cond_t);
