@@ -49,8 +49,10 @@ struct nni_protocol {
 	 * Shutdown the protocol instance, including giving time to
 	 * drain any outbound frames (linger).  The protocol is not
 	 * required to honor the linger.
+	 * XXX: This is probably redundant -- protocol should notice
+	 * drain by getting NNG_ECLOSED on the upper write queue.
 	 */
-	void		(*proto_shutdown)(void *, uint64_t);
+	void		(*proto_shutdown)(void *);
 
 	/*
 	 * Add and remove pipes.  These are called as connections are

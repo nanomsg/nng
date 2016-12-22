@@ -47,7 +47,7 @@ uint16_t
 nng_socket_protocol(nng_socket_t s)
 {
 	nni_init();
-	return (nni_socket_protocol(s));
+	return (nni_socket_proto(s));
 }
 
 

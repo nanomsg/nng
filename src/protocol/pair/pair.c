@@ -12,9 +12,9 @@
 
 #include "core/nng_impl.h"
 
-//
 // Pair protocol.  The PAIR protocol is a simple 1:1 messaging pattern.
-//
+// While a peer is connected to the server, all other peer connection
+// attempts are discarded.
 
 // An nni_pair_sock is our per-socket protocol private structure.
 typedef struct nni_pair_sock {
@@ -67,23 +67,29 @@ nni_pair_destroy(void *arg)
 {
 	nni_pair_sock *pair = arg;
 
+	// If we had any worker threads that we have not unregistered,
+	// this wold be the time to shut them all down.  We don't, because
+	// the socket already shut us down, and we don't have any other
+	// threads that run.
 	nni_mutex_destroy(pair->mx);
 	nni_free(pair, sizeof (*pair));
 }
 
 
 static void
-nni_pair_shutdown(void *arg, uint64_t usec)
+nni_pair_shutdown(void *arg)
 {
 	nni_pair_sock *pair = arg;
 	nni_pipe_t pipe;
 
-	NNI_ARG_UNUSED(usec);
-
-	// XXX: correct implementation here is to set a draining flag,
-	// and wait a bit for the sender to finish draining (linger),
-	// then reap the pipe.  For now we just act a little more harshly.
-
+	// This just causes the protocol to close its various pipes.
+	// The draining logic, if any, will have been performed in the
+	// upper layer socket.
+	//
+	// Closing the pipes is intended to cause the receiver on them
+	// to notice the failure, and ultimately call back into the socket
+	// to unregister them.  The socket can use this to wait for a clean
+	// shutdown of all pipe workers.
 	nni_mutex_enter(pair->mx);
 	pipe = pair->pipe;
 	pair->pipe = NULL;
@@ -183,7 +189,7 @@ nni_pair_sender(void *arg)
 	}
 	nni_msgqueue_signal(urq, &pp->sigclose);
 	nni_pipe_close(pipe);
-	nni_socket_remove_pipe(pair->sock, pipe);
+	nni_socket_rem_pipe(pair->sock, pipe);
 }
 
 
@@ -218,7 +224,7 @@ nni_pair_receiver(void *arg)
 	}
 	nni_msgqueue_signal(uwq, &pp->sigclose);
 	nni_pipe_close(pipe);
-	nni_socket_remove_pipe(pair->sock, pipe);
+	nni_socket_rem_pipe(pair->sock, pipe);
 }
 
 

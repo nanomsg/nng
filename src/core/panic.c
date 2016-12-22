@@ -18,9 +18,7 @@
 
 #include "core/nng_impl.h"
 
-//
 // Panic handling.
-//
 static void
 nni_show_backtrace(void)
 {
@@ -44,13 +42,11 @@ nni_show_backtrace(void)
 }
 
 
-//
 // nni_panic shows a panic message, a possible stack bracktrace, then aborts
 // the process/program.  This should only be called when a condition arises
 // that should not be possible, e.g. a programming assertion failure. It should
 // not be called in situations such as ENOMEM, as nni_panic is fairly rude
 // to any application it may be called from within.
-//
 void
 nni_panic(const char *fmt, ...)
 {
@@ -75,6 +71,6 @@ nni_panic(const char *fmt, ...)
 void
 nni_println(const char *msg)
 {
-	/* TODO: support redirection of this later. */
+	// TODO: support redirection of this later.
 	nni_plat_println(msg);
 }
