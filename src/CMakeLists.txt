@@ -45,8 +45,6 @@ set (NNG_SOURCES
     core/platform.h
     core/protocol.c
     core/protocol.h
-    core/snprintf.c
-    core/snprintf.h
     core/socket.c
     core/socket.h
     core/transport.c
@@ -60,7 +58,6 @@ set (NNG_SOURCES
     platform/posix/posix_debug.c
     platform/posix/posix_synch.c
     platform/posix/posix_thread.c
-    platform/posix/posix_vsnprintf.c
 
     protocol/pair/pair.c
 

@@ -1,15 +1,16 @@
-/*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
- *
- * This software is supplied under the terms of the MIT License, a
- * copy of which should be located in the distribution where this
- * file was obtained (LICENSE.txt).  A copy of the license may also be
- * found online at https://opensource.org/licenses/MIT.
- */
+//
+// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #ifdef  NNG_HAVE_BACKTRACE
 #include <execinfo.h>
@@ -17,11 +18,11 @@
 
 #include "core/nng_impl.h"
 
-/*
- * Panic handling.
- */
+//
+// Panic handling.
+//
 static void
-show_backtrace(void)
+nni_show_backtrace(void)
 {
 #if NNG_HAVE_BACKTRACE
 	void *frames[50];
@@ -43,13 +44,13 @@ show_backtrace(void)
 }
 
 
-/*
- * nni_panic shows a panic message, a possible stack bracktrace, then aborts
- * the process/program.  This should only be called when a condition arises
- * that should not be possible, e.g. a programming assertion failure. It should
- * not be called in situations such as ENOMEM, as nni_panic is fairly rude
- * to any application it may be called from within.
- */
+//
+// nni_panic shows a panic message, a possible stack bracktrace, then aborts
+// the process/program.  This should only be called when a condition arises
+// that should not be possible, e.g. a programming assertion failure. It should
+// not be called in situations such as ENOMEM, as nni_panic is fairly rude
+// to any application it may be called from within.
+//
 void
 nni_panic(const char *fmt, ...)
 {
@@ -58,15 +59,15 @@ nni_panic(const char *fmt, ...)
 	va_list va;
 
 	va_start(va, fmt);
-	(void) nni_snprintf(fbuf, sizeof (buf), "panic: %s", fmt);
-	(void) nni_vsnprintf(buf, sizeof (buf), fbuf, va);
+	(void) snprintf(fbuf, sizeof (fbuf), "panic: %s", fmt);
+	(void) vsnprintf(buf, sizeof (buf), fbuf, va);
 	va_end(va);
 
 	nni_println(buf);
 	nni_println("This message is indicative of a BUG.");
 	nni_println("Report this at http://github.com/nanomsg/nanomsg");
 
-	show_backtrace();
+	nni_show_backtrace();
 	nni_plat_abort();
 }
 

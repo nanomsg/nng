@@ -49,6 +49,13 @@ for C99 is not always complete.  I will stick to the mainstream features,
 like <stdint.h>, the ability to use variadic macros, // comments, and perhaps
 the occasional use of for() locally scoped variables.
 
+We also insist that you have working vsnprintf, snprintf.  Microsoft famously
+did not, or worse, had broken ones (that didn't guarantee NULL termination).
+Visual Studio 2015 reportedly fixes this.  Building with older versions of
+Visual Studio for Microsoft platforms may leave you with some brittle code
+that could break in some bad ways -- use the latest to avoid this issue.
+(I'm not aware of any other platform with this kind of brain damage.)
+
 Naming Conventions
 ~~~~~~~~~~~~~~~~~~
 
