@@ -1,52 +1,50 @@
-/*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
- *
- * This software is supplied under the terms of the MIT License, a
- * copy of which should be located in the distribution where this
- * file was obtained (LICENSE.txt).  A copy of the license may also be
- * found online at https://opensource.org/licenses/MIT.
- */
+//
+// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 #include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
 
-/*
- * Pair protocol.  The PAIR protocol is a simple 1:1 messaging pattern.
- */
+//
+// Pair protocol.  The PAIR protocol is a simple 1:1 messaging pattern.
+//
 
-typedef struct pair *		pair_t;
-typedef struct pairpipe *	pairpipe_t;
-
-/*
- * Note that pair can only have a single pipe, so we don't need
- * to create separate data structures for diferent pipe instances.
- */
-struct pair {
+// An nni_pair_sock is our per-socket protocol private structure.
+typedef struct nni_pair_sock {
 	nni_socket_t	sock;
 	nni_mutex_t	mx;
 	nni_pipe_t	pipe;
 	nni_msgqueue_t	uwq;
 	nni_msgqueue_t	urq;
-};
+} nni_pair_sock;
 
-struct pairpipe {
+// An nni_pair_pipe is our per-pipe protocol private structure.  We keep
+// one of these even though in theory we'd only have a single underlying
+// pipe.  The separate data structure is more like other protocols that do
+// manage multiple pipes.
+typedef struct nni_pair_pipe {
 	nni_pipe_t	pipe;
-	pair_t		pair;
+	nni_pair_sock * pair;
 	int		good;
 	nni_thread_t	sthr;
 	nni_thread_t	rthr;
 	int		sigclose;
-};
+} nni_pair_pipe;
 
-static void pair_receiver(void *);
-static void pair_sender(void *);
+static void nni_pair_receiver(void *);
+static void nni_pair_sender(void *);
 
 static int
-pair_create(void **pairp, nni_socket_t sock)
+nni_pair_create(void **pairp, nni_socket_t sock)
 {
-	pair_t pair;
+	nni_pair_sock *pair;
 	int rv;
 
 	if ((pair = nni_alloc(sizeof (*pair))) == NULL) {
@@ -65,9 +63,9 @@ pair_create(void **pairp, nni_socket_t sock)
 
 
 static void
-pair_destroy(void *arg)
+nni_pair_destroy(void *arg)
 {
-	pair_t pair = arg;
+	nni_pair_sock *pair = arg;
 
 	nni_mutex_destroy(pair->mx);
 	nni_free(pair, sizeof (*pair));
@@ -75,18 +73,17 @@ pair_destroy(void *arg)
 
 
 static void
-pair_shutdown(void *arg, uint64_t usec)
+nni_pair_shutdown(void *arg, uint64_t usec)
 {
-	pair_t pair = arg;
+	nni_pair_sock *pair = arg;
 	nni_pipe_t pipe;
 
 	NNI_ARG_UNUSED(usec);
 
-	/*
-	 * XXX: correct implementation here is to set a draining flag,
-	 * and wait a bit for the sender to finish draining (linger),
-	 * then reap the pipe.  For now we just act a little more harshly.
-	 */
+	// XXX: correct implementation here is to set a draining flag,
+	// and wait a bit for the sender to finish draining (linger),
+	// then reap the pipe.  For now we just act a little more harshly.
+
 	nni_mutex_enter(pair->mx);
 	pipe = pair->pipe;
 	pair->pipe = NULL;
@@ -97,10 +94,10 @@ pair_shutdown(void *arg, uint64_t usec)
 
 
 static int
-pair_add_pipe(void *arg, nni_pipe_t pipe)
+nni_pair_add_pipe(void *arg, nni_pipe_t pipe)
 {
-	pair_t pair = arg;
-	pairpipe_t pp;
+	nni_pair_sock *pair = arg;
+	nni_pair_pipe *pp;
 	int rv;
 
 	pp = nni_alloc(sizeof (*pp));
@@ -112,16 +109,16 @@ pair_add_pipe(void *arg, nni_pipe_t pipe)
 
 	nni_mutex_enter(pair->mx);
 	if (pair->pipe != NULL) {
-		/* Already have a peer, denied. */
+		// Already have a peer, denied.
 		nni_mutex_exit(pair->mx);
 		nni_free(pp, sizeof (*pp));
 		return (NNG_EBUSY);
 	}
-	if ((rv = nni_thread_create(&pp->rthr, pair_receiver, pp)) != 0) {
+	if ((rv = nni_thread_create(&pp->rthr, nni_pair_receiver, pp)) != 0) {
 		nni_mutex_exit(pair->mx);
 		return (rv);
 	}
-	if ((rv = nni_thread_create(&pp->sthr, pair_sender, pp)) != 0) {
+	if ((rv = nni_thread_create(&pp->sthr, nni_pair_sender, pp)) != 0) {
 		nni_mutex_exit(pair->mx);
 		return (rv);
 	}
@@ -133,10 +130,10 @@ pair_add_pipe(void *arg, nni_pipe_t pipe)
 
 
 static int
-pair_remove_pipe(void *arg, nni_pipe_t pipe)
+nni_pair_rem_pipe(void *arg, nni_pipe_t pipe)
 {
-	pairpipe_t pp = arg;
-	pair_t pair = pp->pair;
+	nni_pair_pipe *pp = arg;
+	nni_pair_sock *pair = pp->pair;
 
 	if (pp->sthr) {
 		(void) nni_thread_reap(pp->sthr);
@@ -155,10 +152,10 @@ pair_remove_pipe(void *arg, nni_pipe_t pipe)
 
 
 static void
-pair_sender(void *arg)
+nni_pair_sender(void *arg)
 {
-	pairpipe_t pp = arg;
-	pair_t pair = pp->pair;
+	nni_pair_pipe *pp = arg;
+	nni_pair_sock *pair = pp->pair;
 	nni_msgqueue_t uwq = pair->uwq;
 	nni_msgqueue_t urq = pair->urq;
 	nni_pipe_t pipe = pp->pipe;
@@ -191,10 +188,10 @@ pair_sender(void *arg)
 
 
 static void
-pair_receiver(void *arg)
+nni_pair_receiver(void *arg)
 {
-	pairpipe_t pp = arg;
-	pair_t pair = pp->pair;
+	nni_pair_pipe *pp = arg;
+	nni_pair_sock *pair = pp->pair;
 	nni_msgqueue_t urq = pair->urq;
 	nni_msgqueue_t uwq = pair->uwq;
 	nni_pipe_t pipe = pp->pipe;
@@ -226,35 +223,32 @@ pair_receiver(void *arg)
 
 
 static int
-pair_setopt(void *arg, int opt, const void *buf, size_t sz)
+nni_pair_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	return (NNG_ENOTSUP);
 }
 
 
 static int
-pair_getopt(void *arg, int opt, void *buf, size_t *szp)
+nni_pair_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	return (NNG_ENOTSUP);
 }
 
 
-/*
- * Global inproc state - this contains the list of active endpoints
- * which we use for coordinating rendezvous.
- */
-
+// This is the global protocol structure -- our linkage to the core.
+// This should be the only global non-static symbol in this file.
 struct nni_protocol nni_pair_protocol = {
-	NNG_PROTO_PAIR,         /* proto_self */
-	NNG_PROTO_PAIR,         /* proto_peer */
+	NNG_PROTO_PAIR,         // proto_self
+	NNG_PROTO_PAIR,         // proto_peer
 	"pair",
-	pair_create,
-	pair_destroy,
-	pair_shutdown,
-	pair_add_pipe,
-	pair_remove_pipe,
-	pair_setopt,
-	pair_getopt,
-	NULL,                   /* proto_recvfilter */
-	NULL,                   /* proto_sendfilter */
+	nni_pair_create,
+	nni_pair_destroy,
+	nni_pair_shutdown,
+	nni_pair_add_pipe,
+	nni_pair_rem_pipe,
+	nni_pair_setopt,
+	nni_pair_getopt,
+	NULL,                   // proto_recvfilter
+	NULL,                   // proto_sendfilter
 };
