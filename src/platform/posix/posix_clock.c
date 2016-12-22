@@ -78,6 +78,7 @@ nni_usleep(uint64_t usec)
 
 #include <pthread.h>
 #include <sys/time.h>
+#include <poll.h>
 
 uint64_t
 nni_clock(void)
