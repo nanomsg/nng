@@ -18,9 +18,9 @@
 
 // An nni_pair_sock is our per-socket protocol private structure.
 typedef struct nni_pair_sock {
-	nni_socket_t	sock;
+	nni_socket *	sock;
+	nni_pipe *	pipe;
 	nni_mutex_t	mx;
-	nni_pipe_t	pipe;
 	nni_msgqueue_t	uwq;
 	nni_msgqueue_t	urq;
 } nni_pair_sock;
@@ -30,7 +30,7 @@ typedef struct nni_pair_sock {
 // pipe.  The separate data structure is more like other protocols that do
 // manage multiple pipes.
 typedef struct nni_pair_pipe {
-	nni_pipe_t	pipe;
+	nni_pipe *	pipe;
 	nni_pair_sock * pair;
 	int		good;
 	nni_thread_t	sthr;
@@ -42,7 +42,7 @@ static void nni_pair_receiver(void *);
 static void nni_pair_sender(void *);
 
 static int
-nni_pair_create(void **pairp, nni_socket_t sock)
+nni_pair_create(void **pairp, nni_socket *sock)
 {
 	nni_pair_sock *pair;
 	int rv;
@@ -100,7 +100,7 @@ nni_pair_shutdown(void *arg)
 
 
 static int
-nni_pair_add_pipe(void *arg, nni_pipe_t pipe)
+nni_pair_add_pipe(void *arg, nni_pipe *pipe)
 {
 	nni_pair_sock *pair = arg;
 	nni_pair_pipe *pp;
@@ -136,7 +136,7 @@ nni_pair_add_pipe(void *arg, nni_pipe_t pipe)
 
 
 static int
-nni_pair_rem_pipe(void *arg, nni_pipe_t pipe)
+nni_pair_rem_pipe(void *arg, nni_pipe *pipe)
 {
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
@@ -164,8 +164,8 @@ nni_pair_sender(void *arg)
 	nni_pair_sock *pair = pp->pair;
 	nni_msgqueue_t uwq = pair->uwq;
 	nni_msgqueue_t urq = pair->urq;
-	nni_pipe_t pipe = pp->pipe;
-	nni_msg_t msg;
+	nni_pipe *pipe = pp->pipe;
+	nni_msg *msg;
 	int rv;
 
 	nni_mutex_enter(pair->mx);
@@ -200,8 +200,8 @@ nni_pair_receiver(void *arg)
 	nni_pair_sock *pair = pp->pair;
 	nni_msgqueue_t urq = pair->urq;
 	nni_msgqueue_t uwq = pair->uwq;
-	nni_pipe_t pipe = pp->pipe;
-	nni_msg_t msg;
+	nni_pipe *pipe = pp->pipe;
+	nni_msg *msg;
 	int rv;
 
 	nni_mutex_enter(pair->mx);
@@ -227,7 +227,8 @@ nni_pair_receiver(void *arg)
 	nni_socket_rem_pipe(pair->sock, pipe);
 }
 
-
+// TODO: probably we could replace these with NULL, since we have no
+// protocol specific options?
 static int
 nni_pair_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
@@ -245,16 +246,16 @@ nni_pair_getopt(void *arg, int opt, void *buf, size_t *szp)
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
 struct nni_protocol nni_pair_protocol = {
-	NNG_PROTO_PAIR,         // proto_self
-	NNG_PROTO_PAIR,         // proto_peer
-	"pair",
-	nni_pair_create,
-	nni_pair_destroy,
-	nni_pair_shutdown,
-	nni_pair_add_pipe,
-	nni_pair_rem_pipe,
-	nni_pair_setopt,
-	nni_pair_getopt,
-	NULL,                   // proto_recvfilter
-	NULL,                   // proto_sendfilter
+	.proto_self		= NNG_PROTO_PAIR,
+	.proto_peer		= NNG_PROTO_PAIR,
+	.proto_name		= "pair",
+	.proto_create		= nni_pair_create,
+	.proto_destroy		= nni_pair_destroy,
+	.proto_shutdown		= nni_pair_shutdown,
+	.proto_add_pipe		= nni_pair_add_pipe,
+	.proto_rem_pipe		= nni_pair_rem_pipe,
+	.proto_setopt		= nni_pair_setopt,
+	.proto_getopt		= nni_pair_getopt,
+	.proto_recv_filter	= NULL,
+	.proto_send_filter	= NULL,
 };

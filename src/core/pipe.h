@@ -23,26 +23,22 @@ struct nng_pipe {
 	struct nni_pipe_ops	p_ops;
 	void *			p_tran;
 	nni_list_node_t		p_sock_node;
-	nni_socket_t		p_sock;
+	nni_socket *		p_sock;
 	nni_list_node_t		p_ep_node;
-	nni_endpt_t		p_ep;
+	nni_endpt *		p_ep;
 };
 
 
-/*
- * Pipe operations that protocols use.
- */
-extern int nni_pipe_recv(nni_pipe_t, nng_msg_t *);
-extern int nni_pipe_send(nni_pipe_t, nng_msg_t);
-extern uint32_t nni_pipe_id(nni_pipe_t);
-extern void nni_pipe_close(nni_pipe_t);
+ // Pipe operations that protocols use.
+extern int nni_pipe_recv(nni_pipe *, nng_msg_t *);
+extern int nni_pipe_send(nni_pipe *, nng_msg_t);
+extern uint32_t nni_pipe_id(nni_pipe *);
+extern void nni_pipe_close(nni_pipe *);
 
-/*
- * Used only by the socket core - as we don't wish to expose the details
- * of the pipe structure outside of pipe.c.
- */
-extern int nni_pipe_create(nni_pipe_t *, struct nni_transport *);
+// Used only by the socket core - as we don't wish to expose the details
+// of the pipe structure outside of pipe.c.
+extern int nni_pipe_create(nni_pipe **, struct nni_transport *);
 
-extern void nni_pipe_destroy(nni_pipe_t);
+extern void nni_pipe_destroy(nni_pipe *);
 
 #endif /* CORE_PIPE_H */

@@ -8,13 +8,6 @@
  */
 
 /*
- * This is more of a direct #include of a .c rather than .h file.
- * But having it be a .h makes compiler rules work out properly.  Do
- * not include this more than once into your program, or you will
- * get multiple symbols defined.
- */
-
-/*
  * POSIX clock stuff.
  */
 #include "core/nng_impl.h"

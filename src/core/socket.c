@@ -14,14 +14,14 @@
 // nni_socket_sendq and nni_socket_recvq are called by the protocol to obtain
 // the upper read and write queues.
 nni_msgqueue_t
-nni_socket_sendq(nni_socket_t s)
+nni_socket_sendq(nni_socket *s)
 {
 	return (s->s_uwq);
 }
 
 
 nni_msgqueue_t
-nni_socket_recvq(nni_socket_t s)
+nni_socket_recvq(nni_socket *s)
 {
 	return (s->s_urq);
 }
@@ -29,9 +29,9 @@ nni_socket_recvq(nni_socket_t s)
 
 // nn_socket_create creates the underlying socket.
 int
-nni_socket_create(nni_socket_t *sockp, uint16_t proto)
+nni_socket_create(nni_socket **sockp, uint16_t proto)
 {
-	nni_socket_t sock;
+	nni_socket *sock;
 	struct nni_protocol *ops;
 	int rv;
 
@@ -69,10 +69,10 @@ nni_socket_create(nni_socket_t *sockp, uint16_t proto)
 
 // nni_socket_close closes the underlying socket.
 int
-nni_socket_close(nni_socket_t sock)
+nni_socket_close(nni_socket *sock)
 {
-	nni_pipe_t pipe;
-	nni_endpt_t ep;
+	nni_pipe *pipe;
+	nni_endpt *ep;
 
 
 	nni_mutex_enter(sock->s_mx);
@@ -86,7 +86,9 @@ nni_socket_close(nni_socket_t sock)
 		// XXX: Question: block for them now, or wait further down?
 		// Probably we can simply just watch for the first list...
 		// stopping EPs should be *dead* easy, and never block.
-		nni_ep_stop(ep);  or nni_ep_shutdown(ep);
+		nni_ep_stop(ep);
+		or nni_ep_shutdown(ep);
+
 #endif
 		break;  /* REMOVE ME */
 	}
@@ -142,14 +144,14 @@ nni_socket_close(nni_socket_t sock)
 
 
 int
-nni_socket_sendmsg(nni_socket_t sock, nni_msg_t msg, int tmout)
+nni_socket_sendmsg(nni_socket *sock, nni_msg *msg, int tmout)
 {
 	int rv;
 	int besteffort;
 
-	 // Senderr is typically set by protocols when the state machine
-	 // indicates that it is no longer valid to send a message.  E.g.
-	 // a REP socket with no REQ pending.
+	// Senderr is typically set by protocols when the state machine
+	// indicates that it is no longer valid to send a message.  E.g.
+	// a REP socket with no REQ pending.
 	nni_mutex_enter(sock->s_mx);
 	if ((rv = sock->s_senderr) != 0) {
 		nni_mutex_exit(sock->s_mx);
@@ -166,8 +168,8 @@ nni_socket_sendmsg(nni_socket_t sock, nni_msg_t msg, int tmout)
 	}
 
 	if (besteffort) {
-		 // BestEffort mode -- if we cannot handle the message due to
-		 // backpressure, we just throw it away, and don't complain.
+		// BestEffort mode -- if we cannot handle the message due to
+		// backpressure, we just throw it away, and don't complain.
 		tmout = 0;
 	}
 	rv = nni_msgqueue_put(sock->s_uwq, msg, tmout);
@@ -182,15 +184,16 @@ nni_socket_sendmsg(nni_socket_t sock, nni_msg_t msg, int tmout)
 
 // nni_socket_protocol returns the socket's 16-bit protocol number.
 uint16_t
-nni_socket_proto(nni_socket_t sock)
+nni_socket_proto(nni_socket *sock)
 {
 	return (sock->s_ops.proto_self);
 }
 
-// nni_socket_remove_pipe removes the pipe from the socket.  This is often
+
+// nni_socket_rem_pipe removes the pipe from the socket.  This is often
 // called by the protocol when a pipe is removed due to close.
 void
-nni_socket_rem_pipe(nni_socket_t sock, nni_pipe_t pipe)
+nni_socket_rem_pipe(nni_socket *sock, nni_pipe *pipe)
 {
 	nni_mutex_enter(sock->s_mx);
 	if (pipe->p_sock != sock) {
@@ -199,7 +202,7 @@ nni_socket_rem_pipe(nni_socket_t sock, nni_pipe_t pipe)
 
 	// Remove the pipe from the protocol.  Protocols may
 	// keep lists of pipes for managing their topologies.
-	sock->s_ops.proto_remove_pipe(sock->s_data, pipe);
+	sock->s_ops.proto_rem_pipe(sock->s_data, pipe);
 
 	// Now remove it from our own list.
 	nni_list_remove(&sock->s_pipes, pipe);
@@ -219,7 +222,7 @@ nni_socket_rem_pipe(nni_socket_t sock, nni_pipe_t pipe)
 
 
 int
-nni_socket_add_pipe(nni_socket_t sock, nni_pipe_t pipe)
+nni_socket_add_pipe(nni_socket *sock, nni_pipe *pipe)
 {
 	int rv;
 

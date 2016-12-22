@@ -64,6 +64,9 @@ typedef struct nni_mutex *	nni_mutex_t;
 typedef struct nni_cond *	nni_cond_t;
 
 // Mutex handling.
+extern int nni_mutex_init(nni_mutex *);
+extern void nni_mutex_fini(nni_mutex *);
+
 extern int nni_mutex_create(nni_mutex_t *);
 
 extern void nni_mutex_destroy(nni_mutex_t);
@@ -96,15 +99,16 @@ extern void nni_cond_wait(nni_cond_t);
 extern int nni_cond_timedwait(nni_cond_t, uint64_t);
 
 typedef struct nni_thread * nni_thread_t;
+typedef struct nni_thread nni_thread;
 
 // nni_thread_creates a thread that runs the given function. The thread
 // receives a single argument.
-extern int nni_thread_create(nni_thread_t *, void (*fn)(void *), void *);
+extern int nni_thread_create(nni_thread **, void (*fn)(void *), void *);
 
 // nni_thread_reap waits for the thread to exit, and then releases any
 // resources associated with the thread.  After this returns, it
 // is an error to reference the thread in any further way.
-extern void nni_thread_reap(nni_thread_t);
+extern void nni_thread_reap(nni_thread *);
 
 // nn_clock returns a number of microseconds since some arbitrary time
 // in the past.  The values returned by nni_clock may be used with

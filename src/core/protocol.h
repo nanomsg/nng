@@ -59,7 +59,7 @@ struct nni_protocol {
 	 * created or destroyed.
 	 */
 	int		(*proto_add_pipe)(void *, nni_pipe_t);
-	int		(*proto_remove_pipe)(void *, nni_pipe_t);
+	int		(*proto_rem_pipe)(void *, nni_pipe_t);
 
 	/*
 	 * Option manipulation.  These may be NULL.

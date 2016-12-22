@@ -44,4 +44,4 @@
 #else
 #define NNG_USE_CLOCKID		CLOCK_REALTIME
 #endif
-#endif  /* CLOCK_REALTIME */
+#endif  // CLOCK_REALTIME

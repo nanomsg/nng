@@ -26,14 +26,27 @@
 #include <pthread.h>
 #include <time.h>
 
-struct nni_mutex {
-	pthread_mutex_t mx;
-};
+int
+nni_mutex_init(nni_mutex *mp)
+{
+	// pthrad_mutex_attr_t attr;
+	if (pthread_mutex_init(&mp->mx, NULL) != NULL) {
+		return (NNG_ENOMEM);
+	}
+	return (0);
+}
 
-struct nni_cond {
-	pthread_cond_t		cv;
-	pthread_mutex_t *	mx;
-};
+
+void
+nni_mutex_fini(nni_mutex *mp)
+{
+	int rv;
+
+	if ((rv = pthread_mutex_destroy(&mp-- > mx)) != 0) {
+		nni_panic("pthread_mutex_destroy failed: %s", strerror(rv));
+	}
+}
+
 
 int
 nni_mutex_create(nni_mutex_t *mp)
@@ -109,8 +122,8 @@ nni_mutex_tryenter(nni_mutex_t m)
 }
 
 
-int
-cond_attr(pthread_condattr_t **attrpp)
+static int
+nni_cond_attr(pthread_condattr_t **attrpp)
 {
 #if defined(NNG_USE_GETTIMEOFDAY) || NNG_USE_CLOCKID == CLOCK_REALTIME
 	*attrpp = NULL;

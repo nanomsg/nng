@@ -377,31 +377,31 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 
 
 static struct nni_pipe_ops nni_inproc_pipe_ops = {
-	nni_inproc_pipe_destroy,
-	nni_inproc_pipe_send,
-	nni_inproc_pipe_recv,
-	nni_inproc_pipe_close,
-	nni_inproc_pipe_peer,
-	nni_inproc_pipe_getopt,
+	.p_destroy	= nni_inproc_pipe_destroy,
+	.p_send		= nni_inproc_pipe_send,
+	.p_recv		= nni_inproc_pipe_recv,
+	.p_close	= nni_inproc_pipe_close,
+	.p_peer		= nni_inproc_pipe_peer,
+	.p_getopt	= nni_inproc_pipe_getopt,
 };
 
 static struct nni_endpt_ops nni_inproc_ep_ops = {
-	nni_inproc_ep_create,
-	nni_inproc_ep_destroy,
-	nni_inproc_ep_dial,
-	nni_inproc_ep_listen,
-	nni_inproc_ep_accept,
-	nni_inproc_ep_close,
-	NULL,                   // inproc_ep_setopt
-	NULL,                   // inproc_ep_getopt
+	.ep_create	= nni_inproc_ep_create,
+	.ep_destroy	= nni_inproc_ep_destroy,
+	.ep_dial	= nni_inproc_ep_dial,
+	.ep_listen	= nni_inproc_ep_listen,
+	.ep_accept	= nni_inproc_ep_accept,
+	.ep_close	= nni_inproc_ep_close,
+	.ep_setopt	= NULL,
+	.ep_getopt	= NULL,
 };
 
 // This is the inproc transport linkage, and should be the only global
 // symbol in this entire file.
 struct nni_transport nni_inproc_transport = {
-	"inproc",               // tran_scheme
-	&nni_inproc_ep_ops,     // tran_ep_ops
-	&nni_inproc_pipe_ops,   // tran_pipe_ops
-	nni_inproc_init,        // tran_init
-	nni_inproc_fini,        // tran_fini
+	.tran_scheme	= "inproc",
+	.tran_ep_ops	= &nni_inproc_ep_ops,
+	.tran_pipe_ops	= &nni_inproc_pipe_ops,
+	.tran_init	= nni_inproc_init,
+	.tran_fini	= nni_inproc_fini,
 };

@@ -1,22 +1,13 @@
-/*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
- *
- * This software is supplied under the terms of the MIT License, a
- * copy of which should be located in the distribution where this
- * file was obtained (LICENSE.txt).  A copy of the license may also be
- * found online at https://opensource.org/licenses/MIT.
- */
+//
+// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
-/*
- * This is more of a direct #include of a .c rather than .h file.
- * But having it be a .h makes compiler rules work out properly.  Do
- * not include this more than once into your program, or you will
- * get multiple symbols defined.
- */
-
-/*
- * POSIX threads.
- */
+// POSIX threads.
 
 #include "core/nng_impl.h"
 
@@ -95,10 +86,10 @@ nni_plat_init(int (*helper)(void))
 		nni_panic("nng is fork-reentrant safe");
 	}
 	if (plat_init) {
-		return (0);     /* fast path */
+		return (0);     // fast path
 	}
 	pthread_mutex_lock(&plat_lock);
-	if (plat_init) {        /* check again under the lock to be sure */
+	if (plat_init) {        // check again under the lock to be sure
 		pthread_mutex_unlock(&plat_lock);
 		return (0);
 	}
@@ -118,7 +109,7 @@ nni_plat_init(int (*helper)(void))
 void
 nni_plat_fini(void)
 {
-	/* XXX: NOTHING *YET* */
+	// XXX: NOTHING *YET*
 }
 
 
