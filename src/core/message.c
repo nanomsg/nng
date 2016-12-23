@@ -186,10 +186,10 @@ nni_chunk_prepend(nni_chunk *ch, const void *data, size_t len)
 		// We had enough capacity, just shuffle data down.
 		memmove(ch->ch_ptr + len, ch->ch_ptr, ch->ch_len);
 	} else if ((rv = nni_chunk_grow(ch, 0, len)) == 0) {
-		// We grew the chunk, so adjust. 
+		// We grew the chunk, so adjust.
 		ch->ch_ptr -= len;
 	} else {
-		// Couldn't grow the chunk either.  Error. 
+		// Couldn't grow the chunk either.  Error.
 		return (rv);
 	}
 

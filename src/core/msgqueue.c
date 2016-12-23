@@ -20,12 +20,12 @@ struct nni_msgqueue {
 	nni_cond	mq_writeable;
 	nni_cond	mq_drained;
 	int		mq_cap;
-	int		mq_alloc;	// alloc is cap + 2... 
+	int		mq_alloc;       // alloc is cap + 2...
 	int		mq_len;
 	int		mq_get;
 	int		mq_put;
 	int		mq_closed;
-	int		mq_rwait;	// readers waiting (unbuffered)
+	int		mq_rwait;       // readers waiting (unbuffered)
 	nni_msg **	mq_msgs;
 };
 
@@ -146,12 +146,14 @@ nni_msgqueue_put_impl(nni_msgqueue *mq, nni_msg *msg,
 		}
 
 		// room in the queue?
-		if (mq->mq_len < mq->mq_cap)
+		if (mq->mq_len < mq->mq_cap) {
 			break;
+		}
 
 		// unbuffered, room for one, and a reader waiting?
-		if (mq->mq_rwait && (mq->mq_len == mq->mq_cap))
+		if (mq->mq_rwait && (mq->mq_len == mq->mq_cap)) {
 			break;
+		}
 
 		// interrupted?
 		if (*signal) {

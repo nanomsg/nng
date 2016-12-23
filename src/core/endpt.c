@@ -20,7 +20,7 @@ struct nng_endpt {
 	void *			ep_data;
 	nni_list_node_t		ep_sock_node;
 	nni_socket *		ep_sock;
-	char 			ep_addr[NNG_MAXADDRLEN];
+	char			ep_addr[NNG_MAXADDRLEN];
 	nni_thread *		ep_dialer;
 	nni_thread *		ep_listener;
 	int			ep_close;
@@ -77,6 +77,7 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 	return (0);
 }
 
+
 void
 nni_endpt_destroy(nni_endpt *ep)
 {
@@ -96,10 +97,12 @@ nni_endpt_destroy(nni_endpt *ep)
 	nni_free(ep, sizeof (*ep));
 }
 
+
 void
 nni_endpt_close(nni_endpt *ep)
 {
 	nni_pipe *pipe;
+
 	nni_mutex_enter(&ep->ep_mx);
 	if (ep->ep_close) {
 		nni_mutex_exit(&ep->ep_mx);
@@ -115,6 +118,7 @@ nni_endpt_close(nni_endpt *ep)
 	nni_mutex_exit(&ep->ep_mx);
 }
 
+
 int
 nni_endpt_listen(nni_endpt *ep)
 {
@@ -123,6 +127,7 @@ nni_endpt_listen(nni_endpt *ep)
 	}
 	return (ep->ep_ops.ep_listen(ep->ep_data));
 }
+
 
 int
 nni_endpt_dial(nni_endpt *ep, nni_pipe **pp)
@@ -144,6 +149,7 @@ nni_endpt_dial(nni_endpt *ep, nni_pipe **pp)
 	*pp = pipe;
 	return (0);
 }
+
 
 int
 nni_endpt_accept(nni_endpt *ep, nni_pipe **pp)

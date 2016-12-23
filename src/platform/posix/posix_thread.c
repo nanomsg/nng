@@ -33,11 +33,13 @@ uint32_t
 nni_plat_nextid(void)
 {
 	uint32_t id;
+
 	pthread_mutex_lock(&nni_plat_lock);
 	id = nni_plat_next++;
 	pthread_mutex_unlock(&nni_plat_lock);
 	return (id);
 }
+
 
 static void *
 nni_thrfunc(void *arg)
@@ -71,7 +73,7 @@ nni_thread_create(nni_thread **tp, void (*fn)(void *), void *arg)
 
 
 void
-nni_thread_reap(nni_thread * thr)
+nni_thread_reap(nni_thread *thr)
 {
 	int rv;
 
@@ -138,9 +140,9 @@ nni_plat_init(int (*helper)(void))
 		uint16_t xsub[3];
 		nni_time now = nni_clock();
 
-		xsub[0] = (uint16_t)now;
-		xsub[1] = (uint16_t)(now >> 16);
-		xsub[2] = (uint16_t)(now >> 24);
+		xsub[0] = (uint16_t) now;
+		xsub[1] = (uint16_t) (now >> 16);
+		xsub[2] = (uint16_t) (now >> 24);
 		nni_plat_next = nrand48(xsub);
 	}
 #endif
@@ -169,5 +171,6 @@ nni_plat_fini(void)
 	}
 	pthread_mutex_unlock(&nni_plat_lock);
 }
+
 
 #endif

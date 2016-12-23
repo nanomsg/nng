@@ -25,7 +25,7 @@ struct nng_pipe {
 	nni_endpt *		p_ep;
 };
 
- // Pipe operations that protocols use.
+// Pipe operations that protocols use.
 extern int nni_pipe_recv(nni_pipe *, nng_msg **);
 extern int nni_pipe_send(nni_pipe *, nng_msg *);
 extern uint32_t nni_pipe_id(nni_pipe *);
