@@ -46,33 +46,31 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 	size_t headroom = 0;
 	uint8_t *newbuf;
 
-	/*
-	 * We assume that if the pointer is a valid pointer, and inside
-	 * the backing store, then the entire data length fits.  In this
-	 * case we perform a logical realloc, except we don't copy any
-	 * unreferenced data.  We do preserve the headroom of the previous
-	 * use, since that may be there for a reason.
-	 *
-	 * The test below also covers the case where the pointers are both
-	 * NULL, or the capacity is zero.
-	 */
+	// We assume that if the pointer is a valid pointer, and inside
+	// the backing store, then the entire data length fits.  In this
+	// case we perform a logical realloc, except we don't copy any
+	// unreferenced data.  We do preserve the headroom of the previous
+	// use, since that may be there for a reason.
+	//
+	// The test below also covers the case where the pointers are both
+	// NULL, or the capacity is zero.
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
 		headroom = (size_t) (ch->ch_ptr - ch->ch_buf);
 		if (((newsz + headwanted) < ch->ch_cap) &&
 		    (headwanted <= headroom)) {
-			/* We have enough space at the ends already. */
+			// We have enough space at the ends already.
 			return (0);
 		}
 		if (headwanted < headroom) {
-			/* We never shrink... headroom either. */
+			// We never shrink... headroom either.
 			headwanted = headroom;
 		}
 		if ((newbuf = nni_alloc(newsz + headwanted)) == NULL) {
 			return (NNG_ENOMEM);
 		}
-		/* Copy all the data, but not header or trailer. */
+		// Copy all the data, but not header or trailer.
 		memcpy(newbuf + headwanted, ch->ch_buf + headroom, ch->ch_len);
 		nni_free(ch->ch_buf, ch->ch_cap);
 		ch->ch_buf = newbuf;
@@ -81,13 +79,11 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 		return (0);
 	}
 
-	/*
-	 * We either don't have a data pointer yet, or it doesn't reference
-	 * the backing store.  In this case, we just check against the
-	 * allocated capacity and grow, or don't grow.
-	 */
+	// We either don't have a data pointer yet, or it doesn't reference
+	// the backing store.  In this case, we just check against the
+	// allocated capacity and grow, or don't grow.
 	if (newsz > ch->ch_cap) {
-		/* Enough space at end, so just use it. */
+		// Enough space at end, so just use it.
 		if (ch->ch_ptr == NULL) {
 			ch->ch_ptr = ch->ch_buf + headwanted;
 		}
@@ -184,16 +180,16 @@ nni_chunk_prepend(nni_chunk *ch, const void *data, size_t len)
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap)) &&
 	    (len <= (size_t) (ch->ch_ptr - ch->ch_buf))) {
-		/* There is already enough room at the beginning. */
+		// There is already enough room at the beginning.
 		ch->ch_ptr -= len;
 	} else if ((ch->ch_len + len) <= ch->ch_cap) {
-		/* We had enough capacity, just shuffle data down. */
+		// We had enough capacity, just shuffle data down.
 		memmove(ch->ch_ptr + len, ch->ch_ptr, ch->ch_len);
 	} else if ((rv = nni_chunk_grow(ch, 0, len)) == 0) {
-		/* We grew the chunk, so adjust. */
+		// We grew the chunk, so adjust. 
 		ch->ch_ptr -= len;
 	} else {
-		/* Couldn't grow the chunk either.  Error. */
+		// Couldn't grow the chunk either.  Error. 
 		return (rv);
 	}
 
