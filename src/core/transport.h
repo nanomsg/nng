@@ -15,21 +15,18 @@
 
 struct nni_transport {
 	// tran_scheme is the transport scheme, such as "tcp" or "inproc".
-	const char *			tran_scheme;
+	const char *		tran_scheme;
 
 	// tran_ep_ops links our endpoint operations.
-	const struct nni_endpt_ops *	tran_ep_ops;
-
-	// tran_pipe_ops links our pipe operations.
-	const struct nni_pipe_ops *	tran_pipe_ops;
+	const nni_endpt_ops *	tran_ep_ops;
 
 	// tran_init, if not NULL, is called once during library
 	// initialization.
-	int				(*tran_init)(void);
+	int			(*tran_init)(void);
 
 	// tran_fini, if not NULL, is called during library deinitialization.
 	// It should release any global resources, close any open files, etc.
-	void				(*tran_fini)(void);
+	void			(*tran_fini)(void);
 };
 
 
@@ -40,38 +37,44 @@ struct nni_transport {
 struct nni_endpt_ops {
 	// ep_create creates a vanilla endpoint. The value created is
 	// used for the first argument for all other endpoint functions.
-	int	(*ep_create)(void **, const char *, uint16_t);
+	int			(*ep_create)(void **, const char *,
+	    uint16_t);
 
 	// ep_destroy frees the resources associated with the endpoint.
 	// The endpoint will already have been closed.
-	void	(*ep_destroy)(void *);
+	void			(*ep_destroy)(void *);
 
 	// ep_dial starts dialing, and creates a new pipe,
 	// which is returned in the final argument.  It can return errors
 	// NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR, NNG_ECONNFAILED,
 	// NNG_ETIMEDOUT, and NNG_EPROTO.
-	int	(*ep_dial)(void *, void **);
+	int			(*ep_dial)(void *, void **);
 
 	// ep_listen just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
 	// It should return NNG_EADDRINUSE if the address is already
 	// taken.  It can also return NNG_EBADADDR for an unsuitable
 	// address, or NNG_EACCESS for permission problems.
-	int	(*ep_listen)(void *);
+	int			(*ep_listen)(void *);
 
 	// ep_accept accepts an inbound connection, and creates
 	// a transport pipe, which is returned in the final argument.
-	int	(*ep_accept)(void *, void **);
+	int			(*ep_accept)(void *, void **);
 
 	// ep_close stops the endpoint from operating altogether.  It does
 	// not affect pipes that have already been created.
-	void	(*ep_close)(void *);
+	void			(*ep_close)(void *);
 
 	// ep_setopt sets an endpoint (transport-specific) option.
-	int	(*ep_setopt)(void *, int, const void *, size_t);
+	int			(*ep_setopt)(void *, int, const void *,
+	    size_t);
 
 	// ep_getopt gets an endpoint (transport-specific) option.
-	int	(*ep_getopt)(void *, int, void *, size_t *);
+	int			(*ep_getopt)(void *, int, void *,
+	    size_t *);
+
+	// ep_pipe_ops links our pipe operations.
+	const nni_pipe_ops *	ep_pipe_ops;
 };
 
 // Pipe operations are entry points called by the socket. These may be called

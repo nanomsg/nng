@@ -16,7 +16,7 @@
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS
 // OR TRANSPORTS.
 struct nng_endpt {
-	struct nni_endpt_ops	ep_ops;
+	nni_endpt_ops		ep_ops;
 	void *			ep_data;	// Transport private
 	nni_list_node		ep_sock_node;	// Per socket list
 	nni_socket *		ep_sock;

@@ -109,15 +109,42 @@ nni_endpt_close(nni_endpt *ep)
 		return;
 	}
 	ep->ep_close = 1;
+	ep->ep_ops.ep_close(ep->ep_data);
 	nni_cond_broadcast(&ep->ep_cv);
 	nni_mutex_exit(&ep->ep_mx);
-	ep->ep_ops.ep_close(ep->ep_data);
 }
 
+int
+nni_endpt_listen(nni_endpt *ep)
+{
+	if (ep->ep_close) {
+		return (NNG_ECLOSED);
+	}
+	return (ep->ep_ops.ep_listen(ep->ep_data));
+}
+
+int
+nni_endpt_dial(nni_endpt *ep, nni_pipe **pp)
+{
+	nni_pipe *pipe;
+	int rv;
+
+	if (ep->ep_close) {
+		return (NNG_ECLOSED);
+	}
+	if ((rv = nni_pipe_create(&pipe, ep->ep_ops.ep_pipe_ops)) != 0) {
+		return (rv);
+	}
+	if ((rv = ep->ep_ops.ep_dial(ep->ep_data, &pipe->p_data)) != 0) {
+		nni_pipe_destroy(pipe);
+		return (rv);
+	}
+	*pp = pipe;
+	return (0);
+}
 
 #if 0
 int nni_endpt_dial(nni_endpt *, nni_pipe **);
 int nni_endpt_listen(nni_endpt *);
 int nni_endpt_accept(nni_endpt *, nni_pipe **);
-int nni_endpt_close(nni_endpt *);
 #endif

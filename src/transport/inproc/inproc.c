@@ -393,6 +393,7 @@ static struct nni_endpt_ops nni_inproc_ep_ops = {
 	.ep_listen	= nni_inproc_ep_listen,
 	.ep_accept	= nni_inproc_ep_accept,
 	.ep_close	= nni_inproc_ep_close,
+	.ep_pipe_ops	= &nni_inproc_pipe_ops,
 	.ep_setopt	= NULL,
 	.ep_getopt	= NULL,
 };
@@ -402,7 +403,6 @@ static struct nni_endpt_ops nni_inproc_ep_ops = {
 struct nni_transport nni_inproc_transport = {
 	.tran_scheme	= "inproc",
 	.tran_ep_ops	= &nni_inproc_ep_ops,
-	.tran_pipe_ops	= &nni_inproc_pipe_ops,
 	.tran_init	= nni_inproc_init,
 	.tran_fini	= nni_inproc_fini,
 };

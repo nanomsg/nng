@@ -135,7 +135,7 @@ extern nni_time nni_clock(void);
 // nni_usleep sleeps for the specified number of microseconds (at least).
 extern void nni_usleep(nni_duration);
 
-// nni_platform_init is called to allow the platform the chance to
+// nni_plat_init is called to allow the platform the chance to
 // do any necessary initialization.  This routine MUST be idempotent,
 // and threadsafe, and will be called before any other API calls, and
 // may be called at any point thereafter.  It is permitted to return
@@ -149,10 +149,17 @@ extern void nni_usleep(nni_duration);
 // initialize the platform again at a later date.
 extern int nni_plat_init(int (*)(void));
 
-// nni_platform_fini is called to clean up resources.  It is intended to
+// nni_plat_fini is called to clean up resources.  It is intended to
 // be called as the last thing executed in the library, and no other functions
 // will be called until nni_platform_init is called.
 extern void nni_plat_fini(void);
+
+// nni_plat_nextid is used to generate a new pipe ID.  This should be an
+// increasing value, taken from a random starting point.  (The randomness
+// helps ensure we don't confuse pipe IDs from other connections.)  The
+// value must be obtained in a threadsafe way (e.g. via an atomic counter
+// or under a lock protection.)
+extern uint32_t nni_plat_nextid(void);
 
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.

@@ -33,6 +33,8 @@ struct nng_socket {
 	int		s_besteffort;           // Best effort mode delivery
 	int		s_senderr;              // Protocol state machine use
 	int		s_recverr;		// Protocol state machine use
+
+	uint32_t	s_nextid;		// Next Pipe ID.
 };
 
 extern int nni_socket_create(nni_socket **, uint16_t);

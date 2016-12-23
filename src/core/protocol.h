@@ -30,13 +30,6 @@ struct nni_protocol {
 	// Destroy the protocol instance.
 	void		(*proto_destroy)(void *);
 
-	// Shutdown the protocol instance, including giving time to
-	// drain any outbound frames (linger).  The protocol is not
-	// required to honor the linger.
-	// XXX: This is probably redundant -- protocol should notice
-	// drain by getting NNG_ECLOSED on the upper write queue.
-	void		(*proto_shutdown)(void *);
-
 	// Add and remove pipes.  These are called as connections are
 	// created or destroyed.
 	int		(*proto_add_pipe)(void *, nni_pipe *);

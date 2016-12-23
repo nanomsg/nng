@@ -16,6 +16,7 @@
 #include <pthread.h>
 #include <time.h>
 #include <string.h>
+#include <stdlib.h>
 
 struct nni_thread {
 	pthread_t	tid;
@@ -26,6 +27,17 @@ struct nni_thread {
 static pthread_mutex_t nni_plat_lock = PTHREAD_MUTEX_INITIALIZER;
 static int nni_plat_inited = 0;
 static int nni_plat_forked = 0;
+static int nni_plat_next = 0;
+
+uint32_t
+nni_plat_nextid(void)
+{
+	uint32_t id;
+	pthread_mutex_lock(&nni_plat_lock);
+	id = nni_plat_next++;
+	pthread_mutex_unlock(&nni_plat_lock);
+	return (id);
+}
 
 static void *
 nni_thrfunc(void *arg)
@@ -118,6 +130,20 @@ nni_plat_init(int (*helper)(void))
 		return (NNG_ENOMEM);
 	}
 
+	// Generate a starting ID (used for Pipe IDs)
+#ifdef NNG_HAVE_ARC4RANDOM
+	nni_plat_next = arc4random();
+#else
+	while (nni_plat_next == 0) {
+		uint16_t xsub[3];
+		nni_time now = nni_clock();
+
+		xsub[0] = (uint16_t)now;
+		xsub[1] = (uint16_t)(now >> 16);
+		xsub[2] = (uint16_t)(now >> 24);
+		nni_plat_next = nrand48(xsub);
+	}
+#endif
 
 	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
@@ -143,6 +169,5 @@ nni_plat_fini(void)
 	}
 	pthread_mutex_unlock(&nni_plat_lock);
 }
-
 
 #endif

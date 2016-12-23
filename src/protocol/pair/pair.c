@@ -76,29 +76,6 @@ nni_pair_destroy(void *arg)
 }
 
 
-static void
-nni_pair_shutdown(void *arg)
-{
-	nni_pair_sock *pair = arg;
-	nni_pipe_t pipe;
-
-	// This just causes the protocol to close its various pipes.
-	// The draining logic, if any, will have been performed in the
-	// upper layer socket.
-	//
-	// Closing the pipes is intended to cause the receiver on them
-	// to notice the failure, and ultimately call back into the socket
-	// to unregister them.  The socket can use this to wait for a clean
-	// shutdown of all pipe workers.
-	nni_mutex_enter(&pair->mx);
-	pipe = pair->pipe;
-	pair->pipe = NULL;
-	nni_mutex_exit(&pair->mx);
-
-	nni_pipe_close(pipe);
-}
-
-
 static int
 nni_pair_add_pipe(void *arg, nni_pipe *pipe)
 {
@@ -252,7 +229,6 @@ struct nni_protocol nni_pair_protocol = {
 	.proto_name		= "pair",
 	.proto_create		= nni_pair_create,
 	.proto_destroy		= nni_pair_destroy,
-	.proto_shutdown		= nni_pair_shutdown,
 	.proto_add_pipe		= nni_pair_add_pipe,
 	.proto_rem_pipe		= nni_pair_rem_pipe,
 	.proto_setopt		= nni_pair_setopt,
