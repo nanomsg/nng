@@ -18,7 +18,7 @@
 // Pretty much every function calls the nni_platform_init to check against
 // fork related activity.
 int
-nng_socket_create(nng_socket **s, uint16_t proto)
+nng_open(nng_socket **s, uint16_t proto)
 {
 	int rv;
 
@@ -30,7 +30,7 @@ nng_socket_create(nng_socket **s, uint16_t proto)
 
 
 int
-nng_socket_close(nng_socket *s)
+nng_close(nng_socket *s)
 {
 	int rv;
 
@@ -42,7 +42,7 @@ nng_socket_close(nng_socket *s)
 
 
 uint16_t
-nng_socket_protocol(nng_socket *s)
+nng_protocol(nng_socket *s)
 {
 	nni_init();
 	return (nni_socket_proto(s));
@@ -53,18 +53,33 @@ int
 nng_recvmsg(nng_socket *s, nng_msg **msgp, int flags)
 {
 	int rv;
-	nni_duration expire;
+	nni_time expire;
 
 	if ((rv = nni_init()) != 0) {
 		return (rv);
 	}
-	if (flags == NNG_FLAG_NONBLOCK) {
-		expire = 0;
+
+	if ((flags == NNG_FLAG_NONBLOCK) || (s->s_rcvtimeo == 0)) {
+		expire = NNI_TIME_ZERO;
+	} else if (s->s_rcvtimeo < 0) {
+		expire = NNI_TIME_NEVER;
 	} else {
-		// XXX: revise this timeout from socket option!!
-		expire = 1000000;
+		expire = nni_clock() + s->s_rcvtimeo;
 	}
+
 	return (nni_socket_recvmsg(s, msgp, expire));
+}
+
+
+int
+nng_setopt(nng_socket *s, int opt, const void *val, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_socket_setopt(s, opt, val, sz));
 }
 
 
@@ -75,7 +90,7 @@ nng_strerror(int num)
 	nni_init();
 	switch (num) {
 	case 0:
-		return ("Hunky dory");  /* what did you expect? */
+		return ("Hunky dory");  // What did you expect?
 
 	case NNG_EINTR:
 		return ("Interrupted");

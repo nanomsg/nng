@@ -9,6 +9,8 @@
 
 #include "core/nng_impl.h"
 
+#include <string.h>
+
 // Socket implementation.
 
 // nni_socket_sendq and nni_socket_recvq are called by the protocol to obtain
@@ -42,7 +44,11 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		return (NNG_ENOMEM);
 	}
 	sock->s_ops = *ops;
-	sock->s_linger = NNG_LINGER_DEFAULT;
+	sock->s_linger = 0;
+	sock->s_sndtimeo = -1;
+	sock->s_rcvtimeo = -1;
+	sock->s_reconn = NNI_SECOND;
+	sock->s_reconnmax = NNI_SECOND;
 
 	if ((rv = nni_mutex_init(&sock->s_mx)) != 0) {
 		nni_free(sock, sizeof (*sock));
@@ -174,19 +180,10 @@ nni_socket_close(nni_socket *sock)
 
 
 int
-nni_socket_sendmsg(nni_socket *sock, nni_msg *msg, nni_duration tmout)
+nni_socket_sendmsg(nni_socket *sock, nni_msg *msg, nni_time expire)
 {
 	int rv;
 	int besteffort;
-	nni_time expire;
-
-	if (tmout > 0) {
-		expire = nni_clock() + tmout;
-	} else if (tmout < 0) {
-		expire = NNI_TIME_NEVER;
-	} else {
-		expire = NNI_TIME_ZERO;
-	}
 
 	// Senderr is typically set by protocols when the state machine
 	// indicates that it is no longer valid to send a message.  E.g.
@@ -226,12 +223,12 @@ nni_socket_sendmsg(nni_socket *sock, nni_msg *msg, nni_duration tmout)
 
 
 int
-nni_socket_recvmsg(nni_socket *sock, nni_msg **msgp, nni_duration tmout)
+nni_socket_recvmsg(nni_socket *sock, nni_msg **msgp, nni_time expire)
 {
 	int rv;
-	nni_time expire;
 	nni_msg *msg;
 
+#if 0
 	if (tmout > 0) {
 		expire = nni_clock() + tmout;
 	} else if (tmout < 0) {
@@ -239,6 +236,7 @@ nni_socket_recvmsg(nni_socket *sock, nni_msg **msgp, nni_duration tmout)
 	} else {
 		expire = NNI_TIME_ZERO;
 	}
+#endif
 
 	nni_mutex_enter(&sock->s_mx);
 	if (sock->s_closing) {
@@ -549,5 +547,59 @@ out:
 	nni_mutex_exit(&ep->ep_mx);
 	nni_mutex_exit(&sock->s_mx);
 
+	return (rv);
+}
+
+
+static int
+nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
+{
+	nni_duration dur;
+
+	if (size != sizeof (*ptr)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(&dur, val, sizeof (dur));
+	if (dur < -1) {
+		return (-EINVAL);
+	}
+	*ptr = dur;
+	return (0);
+}
+
+
+int
+nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
+{
+	size_t rsz;
+	void *ptr;
+	int rv = ENOTSUP;
+
+	nni_mutex_enter(&sock->s_mx);
+	if (sock->s_ops.proto_setopt != NULL) {
+		rv = sock->s_ops.proto_setopt(sock->s_data, opt, val, size);
+		if (rv != NNG_ENOTSUP) {
+			nni_mutex_exit(&sock->s_mx);
+			return (rv);
+		}
+	}
+	switch (opt) {
+	case NNG_OPT_LINGER:
+		rv = nni_setopt_duration(&sock->s_linger, val, size);
+		break;
+	case NNG_OPT_SNDTIMEO:
+		rv = nni_setopt_duration(&sock->s_sndtimeo, val, size);
+		break;
+	case NNG_OPT_RCVTIMEO:
+		rv = nni_setopt_duration(&sock->s_rcvtimeo, val, size);
+		break;
+	case NNG_OPT_RECONN_TIME:
+		rv = nni_setopt_duration(&sock->s_reconn, val, size);
+		break;
+	case NNG_OPT_RECONN_MAXTIME:
+		rv = nni_setopt_duration(&sock->s_reconnmax, val, size);
+		break;
+	}
+	nni_mutex_exit(&sock->s_mx);
 	return (rv);
 }

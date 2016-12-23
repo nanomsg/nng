@@ -25,7 +25,11 @@ struct nng_socket {
 	void *		s_data;         // Protocol private
 
 	// XXX: options
-	nni_duration	s_linger;
+	nni_duration	s_linger;               // linger time
+	nni_duration	s_sndtimeo;             // send timeout
+	nni_duration	s_rcvtimeo;             // receive timeout
+	nni_duration	s_reconn;               // reconnect time
+	nni_duration	s_reconnmax;            // max reconnect time
 
 	nni_list	s_eps;                  // active endpoints
 	nni_list	s_pipes;                // pipes for this socket
@@ -45,6 +49,7 @@ extern void nni_socket_rem_pipe(nni_socket *, nni_pipe *);
 extern uint16_t nni_socket_proto(nni_socket *);
 extern int nni_socket_setopt(nni_socket *, int, const void *, size_t);
 extern int nni_socket_getopt(nni_socket *, int, void *, size_t *);
-extern int nni_socket_recvmsg(nni_socket *, nni_msg **, int);
+extern int nni_socket_recvmsg(nni_socket *, nni_msg **, nni_time);
+extern int nni_socket_sendmsg(nni_socket *, nni_msg *, nni_time);
 
 #endif  // CORE_SOCKET_H

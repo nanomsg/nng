@@ -36,10 +36,11 @@ typedef struct nni_protocol	nni_protocol;
 
 typedef int			nni_signal;     // Turnstile/wakeup channel.
 typedef uint64_t		nni_time;       // Absolute time (usec).
-typedef int			nni_duration;   // Relative time (usec).
+typedef int64_t			nni_duration;   // Relative time (usec).
 
 // Some default timing things.
 #define NNI_TIME_NEVER		((nni_time) 0xffffffffull)
 #define NNI_TIME_ZERO		((nni_time) 0)
+#define NNI_SECOND		(1000000)
 
 #endif  // CORE_DEFS_H

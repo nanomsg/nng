@@ -43,36 +43,45 @@ typedef struct nng_notify	nng_notify;
 typedef struct nng_snapshot	nng_snapshot;
 typedef struct nng_stat		nng_stat;
 
-// nng_socket simply creates a socket of the given class. It returns an
+// nng_open simply creates a socket of the given class. It returns an
 // error code on failure, or zero on success.  The socket starts in cooked
 // mode.
-NNG_DECL int nng_socket_create(nng_socket **, uint16_t proto);
+NNG_DECL int nng_open(nng_socket **, uint16_t proto);
 
-// nng_socket_close closes the socket, terminating all activity and
+// nng_close closes the socket, terminating all activity and
 // closing any underlying connections and releasing any associated
 // resources. Memory associated with the socket is freed, so it is an
 // error to reference the socket in any way after this is called. Likewise,
 // it is an error to reference any resources such as endpoints or
 // pipes associated with the socket.
-NNG_DECL int nng_socket_close(nng_socket *);
+NNG_DECL int nng_close(nng_socket *);
 
-// nng_socket_protocol returns the protocol number of the socket.
-uint16_t nng_socket_protocol(nng_socket *);
+// nng_protocol returns the protocol number of the socket.
+uint16_t nng_protocol(nng_socket *);
 
-// nng_socket_setopt sets an option for a specific socket.
-NNG_DECL int nng_socket_setopt(nng_socket *, int, const void *, size_t);
+// nng_setopt sets an option for a specific socket.
+NNG_DECL int nng_setopt(nng_socket *, int, const void *, size_t);
 
 // nng_socket_getopt obtains the option for a socket.
-NNG_DECL int nng_socket_getopt(nng_socket *, int, void *, size_t *);
+NNG_DECL int nng_getopt(nng_socket *, int, void *, size_t *);
 
-// nng_notify_register sets a notification callback.  The callback will be
-// called for any of the requested events.  The callback can be deregistered
-// by calling nng_notify_unregister with the same handle.  These notification
-// callbacks are executed on a separate thread, to avoid potential lock
-// recursion.
-NNG_DECL nng_notify *nng_notify_register(nng_socket *, int,
-    void (*)(nng_event *, void *), void *);
-NNG_DECL int nng_notify_unregister(nng_socket *, nng_notify *);
+// nng_notify_func is a user function that is executed upon certain
+// events.  See below.
+typedef void (*nng_notify_func)(nng_event *, void *);
+
+// nng_setnotify sets a notification callback.  The callback will be
+// called for any of the requested events, and will be executed on a
+// separate thread.  Event delivery is not guaranteed, and can fail
+// if events occur more quickly than the callback can handle, or
+// if memory or other resources are scarce.
+NNG_DECL nng_notify *nng_setnotify(nng_socket *, int, nng_notify_func, void *);
+
+// nng_unsetnotify unregisters a previously registered notification callback.
+// Once this returns, the associated callback will not be executed any longer.
+// If the callback is running when this called, then it will wait until that
+// callback completes.  (The caller of this function should not hold any
+// locks acqured by the callback, in order to avoid a deadlock.)
+NNG_DECL int nng_unsetnotify(nng_socket *, nng_notify *);
 
 // Event types.  Sockets can have multiple different kind of events.
 // Note that these are edge triggered -- therefore the status indicated
@@ -103,20 +112,20 @@ NNG_DECL nng_endpt *nng_event_endpt(nng_event *);
 NNG_DECL nng_pipe *nng_event_pipe(nng_event *);
 NNG_DECL const char *nng_event_reason(nng_event *);
 
-// nng_socket_listen creates a listening endpoint with no special options,
+// nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy
 // nn_bind(). The underlying endpoint is returned back to the caller.
-NNG_DECL int nng_socket_listen(nng_endpt **, nng_socket *, const char *);
+NNG_DECL int nng_listen(nng_endpt **, nng_socket *, const char *);
 
-// nng_socket_dial creates a dialing endpoint, with no special options,
-// and starts it dialing.  Dialers have at most one active connection at a
-// time.  This is similar to the legacy nn_connect().  The underlying endpoint
+// nng_dial creates a dialing endpoint, with no special options, and
+// starts it dialing.  Dialers have at most one active connection at a time
+// This is similar to the legacy nn_connect().  The underlying endpoint
 // is returned back to the caller.
-NNG_DECL int nng_socket_dial(nng_endpt **, nng_socket *, const char *);
+NNG_DECL int nng_dial(nng_endpt **, nng_socket *, const char *);
 
-// nng_socket_endpt creates an endpoint on the socket, but does not
+// nng_endpt_create creates an endpoint on the socket, but does not
 // start it either dialing or listening.
-NNG_DECL int nng_socket_endpt(nng_endpt **, nng_socket *, const char *);
+NNG_DECL int nng_endpt_create(nng_endpt **, nng_socket *, const char *);
 
 // nng_endpt_dial starts the endpoint dialing.  This is only possible if
 // the endpoint is not already dialing or listening.
@@ -349,11 +358,6 @@ NNG_DECL int nng_device(nng_socket *, nng_socket *);
 // Maximum length of a socket address.  This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
 #define NNG_MAXADDRLEN    (128)
-
-// Default linger time in microseconds.  The framework will wait up until
-// this long for outgoing message queues to drain before closing underlying
-// connections, when closing the socket itself.
-#define NNG_LINGER_DEFAULT    (1000000)
 
 #ifdef __cplusplus
 }

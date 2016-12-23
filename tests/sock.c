@@ -16,24 +16,35 @@ TestMain("Socket Operations", {
 		int rv;
 		nng_socket *sock = NULL;
 
-		rv = nng_socket_create(&sock, NNG_PROTO_PAIR);
+		rv = nng_open(&sock, NNG_PROTO_PAIR);
 		So(rv == 0);
 		So(sock != NULL);
 
 		Convey("And we can close it", {
-			rv = nng_socket_close(sock);
+			rv = nng_close(sock);
 			So(rv == 0);
 		})
 
 		Convey("It's type is still proto", {
-			So(nng_socket_protocol(sock) == NNG_PROTO_PAIR);
+			So(nng_protocol(sock) == NNG_PROTO_PAIR);
 		})
 
-		Convey("Recv on with no pipes times out", {
+		Convey("Recv with no pipes times out correctly", {
 			nng_msg *msg = NULL;
+			int64_t when = 500000;
+			uint64_t now;
+
+			extern uint64_t nni_clock(void);
+			now = nni_clock();
+
+			rv = nng_setopt(sock, NNG_OPT_RCVTIMEO, &when,
+				sizeof (when));
+			So(rv == 0);
 			rv = nng_recvmsg(sock, &msg, 0);
 			So(rv == NNG_ETIMEDOUT);
 			So(msg == NULL);
+			So(nni_clock() > (now + 500000));
+			So(nni_clock() < (now + 1000000));
 		})
 
 		Convey("Recv nonblock with no pipes gives EAGAIN", {
