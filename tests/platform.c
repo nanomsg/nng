@@ -49,7 +49,7 @@ TestMain("Platform Operations", {
 		Convey("usleep works", {
 			nni_usleep(100000);
 
-			So((getms() - now) > 100);	// cannot be *shorter*!!
+			So((getms() - now) >= 100);	// cannot be *shorter*!!
 			So((getms() - now) < 150);	// crummy clock resolution?
 		})
 		Convey("times work", {
@@ -66,7 +66,7 @@ TestMain("Platform Operations", {
 			So(msend > now);
 			usdelta = (int)((usend - usnow) / 1000);
 			msdelta = (int)((msend - now));
-			So(usdelta > 200);
+			So(usdelta >= 200);
 			So(usdelta < 220);
 			So(abs(msdelta - usdelta) < 20);
 		})
