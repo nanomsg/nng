@@ -16,17 +16,19 @@
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS
 // OR TRANSPORTS.
 struct nng_endpt {
-	nni_endpt_ops		ep_ops;
-	void *			ep_data;	// Transport private
-	nni_list_node		ep_sock_node;	// Per socket list
-	nni_socket *		ep_sock;
-	char			ep_addr[NNG_MAXADDRLEN];
-	nni_thread *		ep_dialer;
-	nni_thread *		ep_listener;
-	int			ep_close;
-	nni_mutex		ep_mx;
-	nni_cond		ep_cv;
-	nni_list		ep_pipes;	// Active list of pipes
+	nni_endpt_ops	ep_ops;
+	void *		ep_data;                // Transport private
+	nni_list_node	ep_sock_node;           // Per socket list
+	nni_socket *	ep_sock;
+	char		ep_addr[NNG_MAXADDRLEN];
+	nni_thread *	ep_dialer;
+	nni_thread *	ep_listener;
+	int		ep_stop;                // thread exits before start
+	int		ep_start;               // start thread running
+	int		ep_close;               // full shutdown
+	nni_mutex	ep_mx;
+	nni_cond	ep_cv;
+	nni_pipe *	ep_pipe;        // Connected pipe (dialers only)
 };
 
 extern int nni_endpt_create(nni_endpt **, nni_socket *, const char *);

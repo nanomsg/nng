@@ -24,7 +24,6 @@ struct nng_pipe {
 	void *			p_data;
 	nni_list_node		p_sock_node;
 	nni_socket *		p_sock;
-	nni_list_node		p_ep_node;
 	nni_endpt *		p_ep;
 };
 

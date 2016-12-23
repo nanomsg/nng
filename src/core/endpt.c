@@ -49,6 +49,8 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 	ep->ep_dialer = NULL;
 	ep->ep_listener = NULL;
 	ep->ep_close = 0;
+	ep->ep_start = 0;
+	ep->ep_pipe = NULL;
 	if ((rv = nni_mutex_init(&ep->ep_mx)) != 0) {
 		nni_free(ep, sizeof (*ep));
 		return (NNG_ENOMEM);
@@ -71,7 +73,6 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 		nni_free(ep, sizeof (*ep));
 		return (rv);
 	}
-	NNI_LIST_INIT(&ep->ep_pipes, nni_pipe, p_ep_node);
 	*epp = ep;
 	return (0);
 }
@@ -81,17 +82,12 @@ nni_endpt_destroy(nni_endpt *ep)
 {
 	// We should already have been closed at this point, so this
 	// should proceed very quickly.
-	if (ep->ep_dialer) {
+	if (ep->ep_dialer != NULL) {
 		nni_thread_reap(ep->ep_dialer);
 	}
-	if (ep->ep_listener) {
+	if (ep->ep_listener != NULL) {
 		nni_thread_reap(ep->ep_listener);
 	}
-	nni_mutex_enter(&ep->ep_mx);
-	while (nni_list_first(&ep->ep_pipes) != NULL) {
-		nni_cond_wait(&ep->ep_cv);
-	}
-	nni_mutex_exit(&ep->ep_mx);
 
 	ep->ep_ops.ep_destroy(ep->ep_data);
 
@@ -103,6 +99,7 @@ nni_endpt_destroy(nni_endpt *ep)
 void
 nni_endpt_close(nni_endpt *ep)
 {
+	nni_pipe *pipe;
 	nni_mutex_enter(&ep->ep_mx);
 	if (ep->ep_close) {
 		nni_mutex_exit(&ep->ep_mx);
@@ -110,6 +107,10 @@ nni_endpt_close(nni_endpt *ep)
 	}
 	ep->ep_close = 1;
 	ep->ep_ops.ep_close(ep->ep_data);
+	if ((pipe = ep->ep_pipe) != NULL) {
+		pipe->p_ep = NULL;
+		ep->ep_pipe = NULL;
+	}
 	nni_cond_broadcast(&ep->ep_cv);
 	nni_mutex_exit(&ep->ep_mx);
 }
@@ -144,6 +145,23 @@ nni_endpt_dial(nni_endpt *ep, nni_pipe **pp)
 	return (0);
 }
 
-#if 0
-int nni_endpt_accept(nni_endpt *, nni_pipe **);
-#endif
+int
+nni_endpt_accept(nni_endpt *ep, nni_pipe **pp)
+{
+	nni_pipe *pipe;
+	int rv;
+
+	if (ep->ep_close) {
+		return (NNG_ECLOSED);
+	}
+	if ((rv = nni_pipe_create(&pipe, ep->ep_ops.ep_pipe_ops)) != 0) {
+		return (rv);
+	}
+	if ((rv = ep->ep_ops.ep_accept(ep->ep_data, &pipe->p_data)) != 0) {
+		nni_pipe_destroy(pipe);
+		return (rv);
+	}
+	pipe->p_ep = ep;
+	*pp = pipe;
+	return (0);
+}
