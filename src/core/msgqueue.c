@@ -42,7 +42,7 @@ nni_msgqueue_create(nni_msgqueue **mqp, int cap)
 
 	// We allocate 2 extra cells in the fifo.  One to accommodate a
 	// waiting writer when cap == 0. (We can "briefly" move the message
-	// through.  This lets us behave the same as unbuffered Go channels.
+	// through.)  This lets us behave the same as unbuffered Go channels.
 	// The second cell is to permit pushback later, e.g. for REQ to stash
 	// a message back at the end to do a retry.
 	alloc = cap + 2;

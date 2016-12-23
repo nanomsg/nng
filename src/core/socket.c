@@ -59,7 +59,7 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 
 	if (((rv = nni_msgqueue_create(&sock->s_uwq, 0)) != 0) ||
 	    ((rv = nni_msgqueue_create(&sock->s_urq, 0)) != 0)) {
-	    	goto fail;
+		goto fail;
 	}
 
 	if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
@@ -67,6 +67,7 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 	}
 	*sockp = sock;
 	return (0);
+
 fail:
 	if (sock->s_urq != NULL) {
 		nni_msgqueue_destroy(sock->s_urq);
@@ -98,9 +99,17 @@ nni_socket_close(nni_socket *sock)
 	NNI_LIST_FOREACH (&sock->s_eps, ep) {
 		nni_endpt_close(ep);
 	}
+
+	// Special optimization; if there are no pipes connected,
+	// then there is no reason to linger since there's nothing that
+	// could possibly send this data out.
+	if (nni_list_first(&sock->s_pipes) == NULL) {
+		linger = NNI_TIME_ZERO;
+	} else {
+		linger = nni_clock() + sock->s_linger;
+	}
 	nni_mutex_exit(&sock->s_mx);
 
-	linger = nni_clock() + sock->s_linger;
 
 	// We drain the upper write queue.  This is just like closing it,
 	// except that the protocol gets a chance to get the messages and
