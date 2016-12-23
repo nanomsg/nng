@@ -1,11 +1,11 @@
-/*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
- *
- * This software is supplied under the terms of the MIT License, a
- * copy of which should be located in the distribution where this
- * file was obtained (LICENSE.txt).  A copy of the license may also be
- * found online at https://opensource.org/licenses/MIT.
- */
+//
+// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 #include "core/nng_impl.h"
 #include <stdlib.h>
@@ -14,7 +14,7 @@
 static int
 init_helper(void)
 {
-	/* This would be where we would initialize transports, etc. */
+	nni_transport_init();
 	return (0);
 }
 
@@ -29,5 +29,6 @@ nni_init(void)
 void
 nni_fini(void)
 {
+	nni_transport_fini();
 	nni_plat_fini();
 }

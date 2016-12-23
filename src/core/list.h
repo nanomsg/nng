@@ -24,9 +24,6 @@ typedef struct nni_list {
 	size_t			ll_offset;
 } nni_list;
 
-typedef nni_list	nni_list_t;
-typedef nni_list_node	nni_list_node_t;
-
 extern void nni_list_init_offset(nni_list *list, size_t offset);
 
 #define NNI_LIST_INIT(list, type, field) \
@@ -43,4 +40,4 @@ extern void nni_list_node_init(nni_list *, void *);
 #define NNI_LIST_FOREACH(l, it)	\
 	for (it = nni_list_first(l); it != NULL; it = nni_list_next(l, it))
 
-#endif  /* CORE_LIST_H */
+#endif  // CORE_LIST_H

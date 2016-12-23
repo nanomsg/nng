@@ -24,7 +24,7 @@ typedef struct nni_inproc_ep		nni_inproc_ep;
 typedef struct {
 	nni_mutex	mx;
 	nni_cond	cv;
-	nni_list_t	eps;
+	nni_list	eps;
 } nni_inproc_global;
 
 // nni_inproc_pipe represents one half of a connection.
@@ -50,7 +50,7 @@ struct nni_inproc_ep {
 	char		addr[NNG_MAXADDRLEN+1];
 	int		mode;
 	int		closed;
-	nni_list_node_t node;
+	nni_list_node	node;
 	uint16_t	proto;
 	void *		cpipe;  // connected pipe (DIAL only)
 };
@@ -238,7 +238,7 @@ nni_inproc_ep_dial(void *arg, void **pipep)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *srch;
-	nni_list_t *list = &nni_inproc.eps;
+	nni_list *list = &nni_inproc.eps;
 
 	if (ep->mode != NNI_INPROC_EP_IDLE) {
 		return (NNG_EINVAL);
@@ -284,7 +284,7 @@ nni_inproc_ep_listen(void *arg)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *srch;
-	nni_list_t *list = &nni_inproc.eps;
+	nni_list *list = &nni_inproc.eps;
 
 	if (ep->mode != NNI_INPROC_EP_IDLE) {
 		return (NNG_EINVAL);
@@ -316,7 +316,7 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *srch;
 	nni_inproc_pair *pair;
-	nni_list_t *list = &nni_inproc.eps;
+	nni_list *list = &nni_inproc.eps;
 	int rv;
 
 	if (ep->mode != NNI_INPROC_EP_LISTEN) {

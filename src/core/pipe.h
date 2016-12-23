@@ -1,20 +1,18 @@
-/*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
- *
- * This software is supplied under the terms of the MIT License, a
- * copy of which should be located in the distribution where this
- * file was obtained (LICENSE.txt).  A copy of the license may also be
- * found online at https://opensource.org/licenses/MIT.
- */
+//
+// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 #ifndef CORE_PIPE_H
 #define CORE_PIPE_H
 
-/*
- * NB: This structure is supplied here for use by the CORE. Use of this library
- * OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
- * TRANSPORTS.
- */
+// NB: This structure is supplied here for use by the CORE. Use of this
+// OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
+// TRANSPORTS.
 
 #include "core/transport.h"
 
@@ -39,4 +37,4 @@ extern int nni_pipe_create(nni_pipe **, const nni_pipe_ops *);
 
 extern void nni_pipe_destroy(nni_pipe *);
 
-#endif /* CORE_PIPE_H */
+#endif // CORE_PIPE_H

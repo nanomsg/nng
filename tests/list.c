@@ -1,31 +1,31 @@
-/*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
- *
- * This software is supplied under the terms of the MIT License, a
- * copy of which should be located in the distribution where this
- * file was obtained (LICENSE.txt).  A copy of the license may also be
- * found online at https://opensource.org/licenses/MIT.
- */
+//
+// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 #include "core/list.c"
 #include "convey.h"
 
 typedef struct {
 	int pad[2];
-	nni_list_node_t nodea;
-	nni_list_node_t nodeb;
+	nni_list_node nodea;
+	nni_list_node nodeb;
 } mystruct;
 
 TestMain("Linked Lists", {
 	Convey("Given a couple lists", {
-		nni_list_t alist;
-		nni_list_t blist;
+		nni_list alist;
+		nni_list blist;
 
 		NNI_LIST_INIT(&alist, mystruct, nodea);
 		NNI_LIST_INIT(&blist, mystruct, nodeb);
 
 		So(alist.ll_offset == 8);
-		So(blist.ll_offset == (8 + sizeof (nni_list_node_t)));
+		So(blist.ll_offset == (8 + sizeof (nni_list_node)));
 
 		Convey("The list starts empty", {
 			So(nni_list_first(&alist) == NULL);
