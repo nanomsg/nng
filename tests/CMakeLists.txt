@@ -53,3 +53,4 @@ else ()
 endif ()
 
 add_nng_test(list 5)
+add_nng_test(sock 5)

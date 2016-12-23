@@ -35,7 +35,6 @@ void
 nni_mutex_fini(nni_mutex *mp)
 {
 	int rv;
-
 	if ((rv = pthread_mutex_destroy(&mp->mx)) != 0) {
 		nni_panic("pthread_mutex_destroy failed: %s", strerror(rv));
 	}

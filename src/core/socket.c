@@ -57,14 +57,27 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_sock_node);
 	NNI_LIST_INIT(&sock->s_eps, nni_endpt, ep_sock_node);
 
+	if (((rv = nni_msgqueue_create(&sock->s_uwq, 1)) != 0) ||
+	    ((rv = nni_msgqueue_create(&sock->s_urq, 1)) != 0)) {
+	    	goto fail;
+	}
+
 	if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
-		nni_cond_fini(&sock->s_cv);
-		nni_mutex_fini(&sock->s_mx);
-		nni_free(sock, sizeof (*sock));
-		return (rv);
+		goto fail;
 	}
 	*sockp = sock;
 	return (0);
+fail:
+	if (sock->s_urq != NULL) {
+		nni_msgqueue_destroy(sock->s_urq);
+	}
+	if (sock->s_uwq != NULL) {
+		nni_msgqueue_destroy(sock->s_uwq);
+	}
+	nni_cond_fini(&sock->s_cv);
+	nni_mutex_fini(&sock->s_mx);
+	nni_free(sock, sizeof (*sock));
+	return (rv);
 }
 
 
@@ -75,7 +88,6 @@ nni_socket_close(nni_socket *sock)
 	nni_pipe *pipe;
 	nni_endpt *ep;
 	nni_time linger;
-
 
 	nni_mutex_enter(&sock->s_mx);
 	// Mark us closing, so no more EPs or changes can occur.
@@ -117,7 +129,6 @@ nni_socket_close(nni_socket *sock)
 	nni_msgqueue_close(sock->s_urq);
 
 	// Go through and close all the pipes.
-	nni_mutex_enter(&sock->s_mx);
 	NNI_LIST_FOREACH (&sock->s_pipes, pipe) {
 		nni_pipe_close(pipe);
 	}
@@ -142,15 +153,13 @@ nni_socket_close(nni_socket *sock)
 	nni_mutex_exit(&sock->s_mx);
 
 	// At this point nothing else should be referencing us.
-
 	// The protocol needs to clean up its state.
-	sock->s_ops.proto_destroy(&sock->s_data);
+	sock->s_ops.proto_destroy(sock->s_data);
 
 	// And we need to clean up *our* state.
 	nni_cond_fini(&sock->s_cv);
 	nni_mutex_fini(&sock->s_mx);
 	nni_free(sock, sizeof (*sock));
-
 	return (0);
 }
 
