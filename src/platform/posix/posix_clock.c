@@ -47,7 +47,9 @@ nni_usleep(nni_duration usec)
 
 	/* Do this in a loop, so that interrupts don't actually wake us. */
 	while (ts.tv_sec || ts.tv_nsec) {
-		(void) nanosleep(&ts, &ts);
+		if (nanosleep(&ts, &ts) == 0) {
+			break;
+		}
 	}
 }
 

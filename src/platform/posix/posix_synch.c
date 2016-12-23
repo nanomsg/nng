@@ -75,7 +75,6 @@ nni_cond_init(nni_cond *c, nni_mutex *m)
 {
 	if (pthread_cond_init(&c->cv, &nni_cvattr) != 0) {
 		// In theory could be EAGAIN, but handle like ENOMEM
-		nni_free(c, sizeof (*c));
 		return (NNG_ENOMEM);
 	}
 	c->mx = &m->mx;

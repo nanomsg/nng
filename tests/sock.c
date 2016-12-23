@@ -11,7 +11,6 @@
 #include "nng.h"
 
 TestMain("Socket Operations", {
-	ConveySetVerbose();
 	Convey("We are able to open a PAIR socket", {
 		int rv;
 		nng_socket *sock = NULL;
@@ -34,6 +33,7 @@ TestMain("Socket Operations", {
 			int64_t when = 500000;
 			uint64_t now;
 
+			// We cheat to get access to the core's clock.
 			extern uint64_t nni_clock(void);
 			now = nni_clock();
 
