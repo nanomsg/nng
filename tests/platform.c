@@ -15,7 +15,9 @@
 #include <sys/time.h>
 #endif
 
-uint64_t getms(void) {
+uint64_t
+getms(void)
+{
 #ifdef	_WIN32
 	return (GetTickCount())	;
 #else
@@ -35,6 +37,33 @@ uint64_t getms(void) {
 	tv.tv_sec -= epoch;
 	return (((uint64_t)(tv.tv_sec ) * 1000) + (tv.tv_usec / 1000));
 #endif
+}
+
+// Add is for testing threads.
+void
+add(void *arg)
+{
+	*(int *)arg += 1;
+}
+
+// Notify tests for verifying condvars.
+struct notifyarg {
+	int did;
+	int when;
+	nni_mutex mx;
+	nni_cond cv;
+};
+
+void
+notifyafter(void *arg)
+{
+	struct notifyarg *na = arg;
+
+	nni_usleep(na->when);
+	nni_mutex_enter(&na->mx);
+	na->did = 1;
+	nni_cond_signal(&na->cv);
+	nni_mutex_exit(&na->mx);
 }
 
 TestMain("Platform Operations", {
@@ -96,6 +125,66 @@ TestMain("Platform Operations", {
 		})
 		Convey("We can finalize it", {
 			nni_mutex_fini(&mx);
+		})
+	})
+
+	Convey("Threads work", {
+		nni_thread *thr;
+		int val = 0;
+		int rv;
+
+		Convey("We can create threads", {
+			rv = nni_thread_create(&thr, add, &val);
+			So(rv == 0);
+			So(thr != NULL);
+
+			Convey("It ran", {
+				nni_usleep(50000);	// for context switch
+				So(val == 1);
+			})
+			Convey("We can reap it", {
+				nni_thread_reap(thr);
+			})
+		})
+	})
+	Convey("Condition variables work", {
+		struct notifyarg arg;
+		nni_thread *thr = NULL;
+
+		So(nni_mutex_init(&arg.mx) == 0);
+		So(nni_cond_init(&arg.cv, &arg.mx) == 0);
+		Reset({
+			if (thr != NULL) {
+				nni_thread_reap(thr);
+				thr = NULL;
+			}
+			nni_cond_fini(&arg.cv);
+			nni_mutex_fini(&arg.mx);
+		});
+
+		Convey("Notification works", {
+			arg.did = 0;
+			arg.when = 10000;
+			So(nni_thread_create(&thr, notifyafter, &arg) == 0);
+
+			nni_mutex_enter(&arg.mx);
+			if (!arg.did) {
+				nni_cond_wait(&arg.cv);
+			}
+			nni_mutex_exit(&arg.mx);
+			So(arg.did == 1);
+		})
+
+		Convey("Timeout works", {
+			arg.did = 0;
+			arg.when = 200000;
+			So(nni_thread_create(&thr, notifyafter, &arg) == 0);
+			nni_mutex_enter(&arg.mx);
+			if (!arg.did) {
+				nni_cond_waituntil(&arg.cv, nni_clock() + 10000);
+			}
+			So(arg.did == 0);
+			nni_mutex_exit(&arg.mx);
 		})
 	})
 })
