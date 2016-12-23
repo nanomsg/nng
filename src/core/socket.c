@@ -26,7 +26,6 @@ nni_socket_recvq(nni_socket *s)
 	return (s->s_urq);
 }
 
-
 // nn_socket_create creates the underlying socket.
 int
 nni_socket_create(nni_socket **sockp, uint16_t proto)
@@ -42,6 +41,7 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		return (NNG_ENOMEM);
 	}
 	sock->s_ops = *ops;
+	sock->s_linger = NNG_DEFAULT_LINGER;
 
 	if ((rv = nni_mutex_init(&sock->s_mx)) != 0) {
 		nni_free(sock, sizeof (*sock));
@@ -55,7 +55,6 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_sock_node);
 	NNI_LIST_INIT(&sock->s_eps, nni_endpt, ep_sock_node);
-	NNI_LIST_INIT(&sock->s_reap_eps, nni_endpt, ep_sock_node);
 
 	if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
 		nni_cond_fini(&sock->s_cv);
@@ -88,8 +87,7 @@ nni_socket_close(nni_socket *sock)
 	}
 	nni_mutex_exit(&sock->s_mx);
 
-	// XXX: TODO: add socket linger timeout to this, from socket option.
-	linger = nni_clock();
+	linger = nni_clock() + sock->s_linger;
 
 	// We drain the upper write queue.  This is just like closing it,
 	// except that the protocol gets a chance to get the messages and
@@ -131,10 +129,14 @@ nni_socket_close(nni_socket *sock)
 		nni_cond_wait(&sock->s_cv);
 	}
 
-	// We signaled the endpoints to shutdown and cleanup.  We just
-	// need to wait for them to finish.
+	// We already told the endpoints to shutdown.  We just
+	// need to reap them now.
 	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
-		nni_cond_wait(&sock->s_cv);
+		nni_list_remove(&sock->s_eps, ep);
+		nni_mutex_exit(&sock->s_eps);
+
+		nni_endpt_destroy(ep);
+		nni_mutex_enter(&sock->s_eps);
 	}
 	nni_mutex_exit(&sock->s_mx);
 

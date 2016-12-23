@@ -346,6 +346,11 @@ NNG_DECL int nng_device(nng_socket *, nng_socket *);
 // This limit is built into other implementations, so do not change it.
 #define NNG_MAXADDRLEN    (128)
 
+// Default linger time in microseconds.  The framework will wait up until
+// this long for outgoing message queues to drain before closing underlying
+// connections, when closing the socket itself.
+#define NNG_LINGER_DEFAULT	(1000000)
+
 #ifdef __cplusplus
 }
 #endif

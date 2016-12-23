@@ -25,10 +25,10 @@ struct nng_socket {
 	void *		s_data;         // Protocol private
 
 	// XXX: options
+	nni_duration	s_linger;
 
 	nni_list_t	s_eps;                  // active endpoints
 	nni_list_t	s_pipes;                // pipes for this socket
-	nni_list_t	s_reap_eps;             // endpoint deathrow
 
 	int		s_closing;              // Socket is closing
 	int		s_besteffort;           // Best effort mode delivery
