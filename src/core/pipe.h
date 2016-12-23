@@ -22,16 +22,16 @@ struct nng_pipe {
 	uint32_t		p_id;
 	struct nni_pipe_ops	p_ops;
 	void *			p_tran;
-	nni_list_node_t		p_sock_node;
+	nni_list_node		p_sock_node;
 	nni_socket *		p_sock;
-	nni_list_node_t		p_ep_node;
+	nni_list_node		p_ep_node;
 	nni_endpt *		p_ep;
 };
 
 
  // Pipe operations that protocols use.
-extern int nni_pipe_recv(nni_pipe *, nng_msg_t *);
-extern int nni_pipe_send(nni_pipe *, nng_msg_t);
+extern int nni_pipe_recv(nni_pipe *, nng_msg **);
+extern int nni_pipe_send(nni_pipe *, nng_msg *);
 extern uint32_t nni_pipe_id(nni_pipe *);
 extern void nni_pipe_close(nni_pipe *);
 

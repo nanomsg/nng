@@ -15,8 +15,18 @@
 // Message queues.  Message queues work in some ways like Go channels;
 // they are a thread-safe way to pass messages between subsystems.  They
 // do have additional capabilities though.
-typedef struct nni_msgqueue * nni_msgqueue_t;
-typedef struct nni_msgqueue nni_msgqueue;
+//
+// A closed message queue cannot be written to, but if there are messages
+// still in it, it can be read from.  (This allows them to play a role in
+// draining/lingering.)
+//
+// Message queues can be closed many times safely.
+//
+// Readers & writers in a message queue can be woken either by a timeout
+// or by a specific signal (arranged by the caller).
+//
+// TODO: Add message queue growing, and pushback.
+typedef struct nni_msgqueue   nni_msgqueue;
 
 // nni_msgqueue_create creates a message queue with the given capacity,
 // which must be a positive number.  It returns NNG_EINVAL if the capacity

@@ -21,8 +21,8 @@ typedef struct nni_pair_sock {
 	nni_socket *	sock;
 	nni_pipe *	pipe;
 	nni_mutex	mx;
-	nni_msgqueue_t	uwq;
-	nni_msgqueue_t	urq;
+	nni_msgqueue *	uwq;
+	nni_msgqueue *	urq;
 } nni_pair_sock;
 
 // An nni_pair_pipe is our per-pipe protocol private structure.  We keep

@@ -28,6 +28,7 @@ set (NNG_SOURCES
     nng.h
 
     core/defs.h
+    core/endpt.c
     core/init.c
     core/init.h
     core/list.c

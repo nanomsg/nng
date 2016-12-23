@@ -113,7 +113,6 @@ extern void nni_cond_wait(nni_cond *);
 // check the condition.  It will return either NNG_ETIMEDOUT, or 0.
 extern int nni_cond_waituntil(nni_cond *, nni_time);
 
-typedef struct nni_thread * nni_thread_t;
 typedef struct nni_thread nni_thread;
 
 // nni_thread_creates a thread that runs the given function. The thread

@@ -1,26 +1,24 @@
-/*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
- *
- * This software is supplied under the terms of the MIT License, a
- * copy of which should be located in the distribution where this
- * file was obtained (LICENSE.txt).  A copy of the license may also be
- * found online at https://opensource.org/licenses/MIT.
- */
+//
+// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 #include "core/nng_impl.h"
 
-/*
- * This file provides the "public" API.  This is a thin wrapper around
- * internal API functions.  We use the public prefix instead of internal,
- * to indicate that these interfaces are intended for applications to use
- * directly.
- *
- * Anything not defined in this file, applications have no business using.
- * Pretty much every function calls the nni_platform_init to check against
- * fork related activity.
- */
+// This file provides the "public" API.  This is a thin wrapper around
+// internal API functions.  We use the public prefix instead of internal,
+// to indicate that these interfaces are intended for applications to use
+// directly.
+//
+// Anything not defined in this file, applications have no business using.
+// Pretty much every function calls the nni_platform_init to check against
+// fork related activity.
 int
-nng_socket_create(nng_socket_t *s, uint16_t proto)
+nng_socket_create(nng_socket **s, uint16_t proto)
 {
 	int rv;
 
@@ -32,7 +30,7 @@ nng_socket_create(nng_socket_t *s, uint16_t proto)
 
 
 int
-nng_socket_close(nng_socket_t s)
+nng_socket_close(nng_socket *s)
 {
 	int rv;
 
@@ -44,16 +42,14 @@ nng_socket_close(nng_socket_t s)
 
 
 uint16_t
-nng_socket_protocol(nng_socket_t s)
+nng_socket_protocol(nng_socket *s)
 {
 	nni_init();
 	return (nni_socket_proto(s));
 }
 
 
-/*
- * Misc.
- */
+// Misc.
 const char *
 nng_strerror(int num)
 {
@@ -98,11 +94,9 @@ nng_strerror(int num)
 }
 
 
-/*
- * Message handling.
- */
+// Message handling.
 int
-nng_msg_alloc(nng_msg_t *msgp, size_t size)
+nng_msg_alloc(nng_msg **msgp, size_t size)
 {
 	int rv;
 
@@ -114,7 +108,7 @@ nng_msg_alloc(nng_msg_t *msgp, size_t size)
 
 
 void
-nng_msg_free(nng_msg_t msg)
+nng_msg_free(nng_msg *msg)
 {
 	nni_init();
 	return (nni_msg_free(msg));

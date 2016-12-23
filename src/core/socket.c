@@ -13,14 +13,14 @@
 
 // nni_socket_sendq and nni_socket_recvq are called by the protocol to obtain
 // the upper read and write queues.
-nni_msgqueue_t
+nni_msgqueue *
 nni_socket_sendq(nni_socket *s)
 {
 	return (s->s_uwq);
 }
 
 
-nni_msgqueue_t
+nni_msgqueue *
 nni_socket_recvq(nni_socket *s)
 {
 	return (s->s_urq);
@@ -53,8 +53,8 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		return (rv);
 	}
 
-	NNI_LIST_INIT(&sock->s_pipes, struct nng_pipe, p_sock_node);
-	// TODO: NNI_LIST_INIT(&sock->s_eps, nni_endpt_t, ep_node);
+	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_sock_node);
+	NNI_LIST_INIT(&sock->s_eps, nni_endpt, ep_sock_node);
 
 	if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
 		nni_cond_fini(&sock->s_cv);
@@ -83,14 +83,7 @@ nni_socket_close(nni_socket *sock)
 	// Stop all EPS.  We're going to do this first, since we know
 	// we're closing.
 	NNI_LIST_FOREACH (&sock->s_eps, ep) {
-#if 0
-		// XXX: Question: block for them now, or wait further down?
-		// Probably we can simply just watch for the first list...
-		// stopping EPs should be *dead* easy, and never block.
-		nni_ep_stop(ep);
-		or nni_ep_shutdown(ep);
-
-#endif
+		nni_endpt_close(ep);
 	}
 	nni_mutex_exit(&sock->s_mx);
 
@@ -133,9 +126,18 @@ nni_socket_close(nni_socket *sock)
 	}
 
 	// Wait to make sure endpoint listeners have shutdown and exited
-	// as well.  They should have done so *long* ago.
-	while (nni_list_first(&sock->s_eps) != NULL) {
-		nni_cond_wait(&sock->s_cv);
+	// as well.  They should have done so *long* ago.  Because this
+	// requires waiting for threads to finish, which *could* in theory
+	// overlap with this, we must drop the socket lock.
+	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
+
+		// TODO: This looks like it should happen as an endpt_remove
+		// operation?
+		nni_list_remove(&sock->s_eps, ep);
+		nni_mutex_exit(&sock->s_mx);
+
+		nni_endpt_destroy(ep);
+		nni_mutex_enter(&sock->s_mx);
 	}
 
 	nni_mutex_exit(&sock->s_mx);
@@ -244,7 +246,6 @@ nni_socket_proto(nni_socket *sock)
 	return (sock->s_ops.proto_self);
 }
 
-
 // nni_socket_rem_pipe removes the pipe from the socket.  This is often
 // called by the protocol when a pipe is removed due to close.
 void
@@ -265,8 +266,10 @@ nni_socket_rem_pipe(nni_socket *sock, nni_pipe *pipe)
 	// XXX: TODO: Redial
 	// XXX: also publish event...
 	// if (pipe->p_ep != NULL) {
-	//	nn_endpt_remove_pipe(pipe->p_ep, pipe)
+	//	nn_endpt_rem_pipe(pipe->p_ep, pipe)
 	// }
+
+	nni_pipe_destroy(pipe);
 
 	// If we're closing, wake the socket if we finished draining.
 	if (sock->s_closing && (nni_list_first(&sock->s_pipes) == NULL)) {
