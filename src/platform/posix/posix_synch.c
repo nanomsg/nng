@@ -125,10 +125,8 @@ nni_cond_waituntil(nni_cond *c, uint64_t usec)
 	struct timespec ts;
 	int rv;
 
-	usec += nni_clock();
-
 	ts.tv_sec = usec / 1000000;
-	ts.tv_nsec = (usec % 10000) * 1000;
+	ts.tv_nsec = (usec % 1000000) * 1000;
 
 	rv = pthread_cond_timedwait(&c->cv, c->mx, &ts);
 
