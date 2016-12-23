@@ -18,6 +18,12 @@ mydir=`dirname $0`
 srcdir=${mydir}/../src
 failed=
 
+uncrustify --version > /dev/null
+if [ $? -ne 0 ]; then
+	echo "Uncrustify not found.  Skipping checks."
+	exit 0
+fi
+
 for file in `find ${srcdir} -name '*.[ch]' -print`
 do
 	uncrustify -c "${mydir}/uncrustify.cfg" -q -lC $file
@@ -25,7 +31,11 @@ do
 		echo "Cannot run uncrustify??" 1>&2
 		exit 2
 	fi
-	colordiff -u $file $file.uncrustify
+	if [ -t 1 ]; then
+		colordiff -u $file $file.uncrustify
+	else
+		diff -u $file $file.uncrustify
+	fi
 	if [ $? -ne 0 ]; then
 		failed=1
 	fi
