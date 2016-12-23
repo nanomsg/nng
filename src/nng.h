@@ -193,6 +193,10 @@ NNG_DECL int nng_msg_trunc_header(nng_msg *, size_t);
 NNG_DECL int nng_pipe_getopt(nng_pipe *, int, void *, size_t *);
 NNG_DECL int nng_pipe_close(nng_pipe *);
 
+// Flags.
+#define NNG_FLAG_ALLOC		1       // Recv to allocate receive buffer.
+#define NNG_FLAG_NONBLOCK	2       // Non-block send/recv.
+
 // Protocol numbers.  These are to be used with nng_socket_create().
 // These values are used on the wire, so must not be changed.  The major
 // number of the protocol is shifted left by 4 bits, and a subprotocol is
@@ -349,7 +353,7 @@ NNG_DECL int nng_device(nng_socket *, nng_socket *);
 // Default linger time in microseconds.  The framework will wait up until
 // this long for outgoing message queues to drain before closing underlying
 // connections, when closing the socket itself.
-#define NNG_LINGER_DEFAULT	(1000000)
+#define NNG_LINGER_DEFAULT    (1000000)
 
 #ifdef __cplusplus
 }

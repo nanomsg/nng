@@ -45,5 +45,6 @@ extern void nni_socket_rem_pipe(nni_socket *, nni_pipe *);
 extern uint16_t nni_socket_proto(nni_socket *);
 extern int nni_socket_setopt(nni_socket *, int, const void *, size_t);
 extern int nni_socket_getopt(nni_socket *, int, void *, size_t *);
+extern int nni_socket_recvmsg(nni_socket *, nni_msg **, int);
 
 #endif  // CORE_SOCKET_H

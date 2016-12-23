@@ -48,6 +48,22 @@ nng_socket_protocol(nng_socket *s)
 	return (nni_socket_proto(s));
 }
 
+int
+nng_recvmsg(nng_socket *s, nng_msg **msgp, int flags)
+{
+	int rv;
+	nni_duration expire;
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	if (flags == NNG_FLAG_NONBLOCK) {
+		expire = 0;
+	} else {
+		// XXX: revise this timeout from socket option!!
+		expire = 1000000;
+	}
+	return (nni_socket_recvmsg(s, msgp, expire));
+}
 
 // Misc.
 const char *

@@ -27,5 +27,19 @@ TestMain("Socket Operations", {
 		Convey("It's type is still proto", {
 			So(nng_socket_protocol(sock) == NNG_PROTO_PAIR);
 		})
+
+		Convey("Recv on with no pipes times out", {
+			nng_msg *msg = NULL;
+			rv = nng_recvmsg(sock, &msg, 0);
+			So(rv == NNG_ETIMEDOUT);
+			So(msg == NULL);
+		})
+
+		Convey("Recv nonblock with no pipes gives EAGAIN", {
+			nng_msg *msg = NULL;
+			rv = nng_recvmsg(sock, &msg, NNG_FLAG_NONBLOCK);
+			So(rv == NNG_EAGAIN);
+			So(msg == NULL);
+		})
 	})
 })

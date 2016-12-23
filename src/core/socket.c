@@ -57,8 +57,8 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_sock_node);
 	NNI_LIST_INIT(&sock->s_eps, nni_endpt, ep_sock_node);
 
-	if (((rv = nni_msgqueue_create(&sock->s_uwq, 1)) != 0) ||
-	    ((rv = nni_msgqueue_create(&sock->s_urq, 1)) != 0)) {
+	if (((rv = nni_msgqueue_create(&sock->s_uwq, 0)) != 0) ||
+	    ((rv = nni_msgqueue_create(&sock->s_urq, 0)) != 0)) {
 	    	goto fail;
 	}
 
