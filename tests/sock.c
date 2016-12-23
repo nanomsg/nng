@@ -11,6 +11,7 @@
 #include "nng.h"
 
 TestMain("Socket Operations", {
+	ConveySetVerbose();
 	Convey("We are able to open a PAIR socket", {
 		int rv;
 		nng_socket *sock = NULL;

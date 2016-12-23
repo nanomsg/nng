@@ -91,8 +91,8 @@ nni_atfork_child(void)
 }
 
 
-pthread_condattr_t nni_condattr;
-pthread_mutexattr_t nni_mutexattr;
+pthread_condattr_t nni_cvattr;
+pthread_mutexattr_t nni_mxattr;
 
 int
 nni_plat_init(int (*helper)(void))
@@ -110,24 +110,24 @@ nni_plat_init(int (*helper)(void))
 		pthread_mutex_unlock(&nni_plat_lock);
 		return (0);
 	}
-	if (pthread_condattr_init(&nni_condattr) != 0) {
+	if (pthread_condattr_init(&nni_cvattr) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
 		return (NNG_ENOMEM);
 	}
 #if !defined(NNG_USE_GETTIMEOFDAY) && NNG_USE_CLOCKID != CLOCK_REALTIME
-	if (pthread_condattr_setclock(&nni_condattr, NNG_USE_CLOCKID) != 0) {
+	if (pthread_condattr_setclock(&nni_cvattr, NNG_USE_CLOCKID) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
 		return (NNG_ENOMEM);
 	}
 #endif
 
-	if (pthread_mutexattr_init(&nni_mutexattr) != 0) {
+	if (pthread_mutexattr_init(&nni_mxattr) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
 		return (NNG_ENOMEM);
 	}
 
-	if (pthread_mutexattr_settype(&nni_mutexattr,
-	    PTHREAD_MUTEX_ERRORCHECK) != 0) {
+	rv = pthread_mutexattr_settype(&nni_mxattr, PTHREAD_MUTEX_ERRORCHECK);
+	if (rv != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
 		return (NNG_ENOMEM);
 	}
@@ -165,8 +165,8 @@ nni_plat_fini(void)
 {
 	pthread_mutex_lock(&nni_plat_lock);
 	if (nni_plat_inited) {
-		pthread_mutexattr_destroy(&nni_mutexattr);
-		pthread_condattr_destroy(&nni_condattr);
+		pthread_mutexattr_destroy(&nni_mxattr);
+		pthread_condattr_destroy(&nni_cvattr);
 		nni_plat_inited = 0;
 	}
 	pthread_mutex_unlock(&nni_plat_lock);

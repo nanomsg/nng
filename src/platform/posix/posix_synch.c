@@ -18,13 +18,13 @@
 #include <time.h>
 #include <string.h>
 
-extern pthread_condattr_t nni_condattr;
-extern pthread_mutexattr_t nni_mutexattr;
+extern pthread_condattr_t nni_cvattr;
+extern pthread_mutexattr_t nni_mxattr;
 
 int
 nni_mutex_init(nni_mutex *mp)
 {
-	if (pthread_mutex_init(&mp->mx, &nni_mutexattr) != 0) {
+	if (pthread_mutex_init(&mp->mx, &nni_mxattr) != 0) {
 		return (NNG_ENOMEM);
 	}
 	return (0);
@@ -73,7 +73,7 @@ nni_mutex_tryenter(nni_mutex *m)
 int
 nni_cond_init(nni_cond *c, nni_mutex *m)
 {
-	if (pthread_cond_init(&c->cv, &nni_condattr) != 0) {
+	if (pthread_cond_init(&c->cv, &nni_cvattr) != 0) {
 		// In theory could be EAGAIN, but handle like ENOMEM
 		nni_free(c, sizeof (*c));
 		return (NNG_ENOMEM);
