@@ -139,12 +139,11 @@ nni_endpt_dial(nni_endpt *ep, nni_pipe **pp)
 		nni_pipe_destroy(pipe);
 		return (rv);
 	}
+	pipe->p_ep = ep;
 	*pp = pipe;
 	return (0);
 }
 
 #if 0
-int nni_endpt_dial(nni_endpt *, nni_pipe **);
-int nni_endpt_listen(nni_endpt *);
 int nni_endpt_accept(nni_endpt *, nni_pipe **);
 #endif

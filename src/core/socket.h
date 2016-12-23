@@ -26,15 +26,16 @@ struct nng_socket {
 
 	// XXX: options
 
-	nni_list_t	s_eps;
-	nni_list_t	s_pipes;
+	nni_list_t	s_eps;                  // active endpoints
+	nni_list_t	s_pipes;                // pipes for this socket
+	nni_list_t	s_reap_eps;             // endpoint deathrow
 
 	int		s_closing;              // Socket is closing
 	int		s_besteffort;           // Best effort mode delivery
 	int		s_senderr;              // Protocol state machine use
-	int		s_recverr;		// Protocol state machine use
+	int		s_recverr;              // Protocol state machine use
 
-	uint32_t	s_nextid;		// Next Pipe ID.
+	uint32_t	s_nextid;               // Next Pipe ID.
 };
 
 extern int nni_socket_create(nni_socket **, uint16_t);
