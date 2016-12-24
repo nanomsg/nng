@@ -83,6 +83,18 @@ nng_setopt(nng_socket *s, int opt, const void *val, size_t sz)
 }
 
 
+int
+nng_getopt(nng_socket *s, int opt, void *val, size_t *szp)
+{
+	int rv;
+
+	if ((rv == nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_socket_getopt(s, opt, val, szp));
+}
+
+
 // Misc.
 const char *
 nng_strerror(int num)

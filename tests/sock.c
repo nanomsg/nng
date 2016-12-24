@@ -53,5 +53,31 @@ TestMain("Socket Operations", {
 			So(rv == NNG_EAGAIN);
 			So(msg == NULL);
 		})
+
+		Convey("We can set and get options", {
+			int64_t when = 1234;
+			int64_t check = 0;
+			size_t sz;
+			rv = nng_setopt(sock, NNG_OPT_SNDTIMEO, &when,
+				sizeof (when));
+			So(rv == 0);
+			sz = sizeof (check);
+			Convey("Short size is not copied", {
+				sz = 0;
+				rv = nng_getopt(sock, NNG_OPT_SNDTIMEO,
+					&check, &sz);
+				So(rv == 0);
+				So(sz == sizeof (check));
+				So(check == 0);
+			})
+			Convey("Correct size is copied", {
+				sz = sizeof (check);
+				rv = nng_getopt(sock, NNG_OPT_SNDTIMEO, &check,
+					&sz);
+				So(rv == 0);
+				So(sz == sizeof (check));
+				So(check == 1234);
+			})
+		})
 	})
 })

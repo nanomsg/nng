@@ -228,16 +228,6 @@ nni_socket_recvmsg(nni_socket *sock, nni_msg **msgp, nni_time expire)
 	int rv;
 	nni_msg *msg;
 
-#if 0
-	if (tmout > 0) {
-		expire = nni_clock() + tmout;
-	} else if (tmout < 0) {
-		expire = NNI_TIME_NEVER;
-	} else {
-		expire = NNI_TIME_ZERO;
-	}
-#endif
-
 	nni_mutex_enter(&sock->s_mx);
 	if (sock->s_closing) {
 		nni_mutex_exit(&sock->s_mx);
@@ -567,6 +557,18 @@ nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
 	return (0);
 }
 
+static int
+nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
+{
+	size_t sz = sizeof (nni_duration);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof (nni_duration);
+	memcpy(val, ptr, sz);
+	return (0);
+}
 
 int
 nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
@@ -603,3 +605,41 @@ nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
 	nni_mutex_exit(&sock->s_mx);
 	return (rv);
 }
+
+int
+nni_socket_getopt(nni_socket *sock, int opt, void *val, size_t *sizep)
+{
+	size_t rsz;
+	void *ptr;
+	int rv = ENOTSUP;
+
+	nni_mutex_enter(&sock->s_mx);
+	if (sock->s_ops.proto_getopt != NULL) {
+		rv = sock->s_ops.proto_getopt(sock->s_data, opt, val, sizep);
+		if (rv != NNG_ENOTSUP) {
+			nni_mutex_exit(&sock->s_mx);
+			return (rv);
+		}
+	}
+	switch (opt) {
+	case NNG_OPT_LINGER:
+		rv = nni_getopt_duration(&sock->s_linger, val, sizep);
+		break;
+	case NNG_OPT_SNDTIMEO:
+		rv = nni_getopt_duration(&sock->s_sndtimeo, val, sizep);
+		break;
+	case NNG_OPT_RCVTIMEO:
+		rv = nni_getopt_duration(&sock->s_rcvtimeo, val, sizep);
+		break;
+	case NNG_OPT_RECONN_TIME:
+		rv = nni_getopt_duration(&sock->s_reconn, val, sizep);
+		break;
+	case NNG_OPT_RECONN_MAXTIME:
+		rv = nni_getopt_duration(&sock->s_reconnmax, val, sizep);
+		break;
+	}
+	nni_mutex_exit(&sock->s_mx);
+	return (rv);
+}
+
+
