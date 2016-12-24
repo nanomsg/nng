@@ -25,6 +25,7 @@ extern int nni_msg_trim(nni_msg *, size_t);
 extern int nni_msg_trunc(nni_msg *, size_t);
 extern int nni_msg_trim_header(nni_msg *, size_t);
 extern int nni_msg_trunc_header(nni_msg *, size_t);
-extern int nni_msg_pipe(nni_msg *, nni_pipe **);
+extern int nni_msg_setopt(nni_msg *, int, const void *, size_t);
+extern int nni_msg_getopt(nni_msg *, int, void *, size_t *);
 
 #endif  // CORE_SOCKET_H

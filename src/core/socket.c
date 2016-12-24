@@ -557,6 +557,7 @@ nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
 	return (0);
 }
 
+
 static int
 nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
 {
@@ -569,6 +570,7 @@ nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
 	memcpy(val, ptr, sz);
 	return (0);
 }
+
 
 int
 nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
@@ -606,6 +608,7 @@ nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
 	return (rv);
 }
 
+
 int
 nni_socket_getopt(nni_socket *sock, int opt, void *val, size_t *sizep)
 {
@@ -641,5 +644,3 @@ nni_socket_getopt(nni_socket *sock, int opt, void *val, size_t *sizep)
 	nni_mutex_exit(&sock->s_mx);
 	return (rv);
 }
-
-

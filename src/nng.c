@@ -70,6 +70,7 @@ nng_recvmsg(nng_socket *s, nng_msg **msgp, int flags)
 	return (nni_socket_recvmsg(s, msgp, expire));
 }
 
+
 int
 nng_sendmsg(nng_socket *s, nng_msg *msg, int flags)
 {
@@ -179,4 +180,16 @@ nng_msg_free(nng_msg *msg)
 {
 	nni_init();
 	return (nni_msg_free(msg));
+}
+
+
+int
+nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_getopt(msg, opt, ptr, szp));
 }

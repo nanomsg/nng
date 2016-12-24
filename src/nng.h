@@ -185,7 +185,6 @@ NNG_DECL void nng_msg_free(nng_msg *);
 NNG_DECL int nng_msg_realloc(nng_msg *, size_t);
 NNG_DECL void *nng_msg_header(nng_msg *, size_t *);
 NNG_DECL void *nng_msg_body(nng_msg *, size_t *);
-NNG_DECL int nng_msg_pipe(nng_msg *, nng_pipe **);
 NNG_DECL int nng_msg_append(nng_msg *, const void *, size_t);
 NNG_DECL int nng_msg_prepend(nng_msg *, const void *, size_t);
 NNG_DECL int nng_msg_trim(nng_msg *, size_t);
@@ -194,6 +193,7 @@ NNG_DECL int nng_msg_append_header(nng_msg *, const void *, size_t);
 NNG_DECL int nng_msg_prepend_header(nng_msg *, const void *, size_t);
 NNG_DECL int nng_msg_trim_header(nng_msg *, size_t);
 NNG_DECL int nng_msg_trunc_header(nng_msg *, size_t);
+NNG_DECL int nng_msg_getopt(nng_msg *, int, void *, size_t *);
 
 // Pipe API. Generally pipes are only "observable" to applications, but
 // we do permit an application to close a pipe. This can be useful, for
