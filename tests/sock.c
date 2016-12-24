@@ -54,6 +54,27 @@ TestMain("Socket Operations", {
 			So(msg == NULL);
 		})
 
+		Convey("Send with no pipes times out correctly", {
+			nng_msg *msg = NULL;
+			int64_t when = 500000;
+			uint64_t now;
+
+			// We cheat to get access to the core's clock.
+			So(nng_msg_alloc(&msg, 0) == 0);
+			So(msg != NULL);
+			extern uint64_t nni_clock(void);
+			now = nni_clock();
+
+			rv = nng_setopt(sock, NNG_OPT_SNDTIMEO, &when,
+				sizeof (when));
+			So(rv == 0);
+			rv = nng_sendmsg(sock, msg, 0);
+			So(rv == NNG_ETIMEDOUT);
+			So(nni_clock() > (now + 500000));
+			So(nni_clock() < (now + 1000000));
+			nng_msg_free(msg);
+		})
+
 		Convey("We can set and get options", {
 			int64_t when = 1234;
 			int64_t check = 0;

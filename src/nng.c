@@ -70,6 +70,27 @@ nng_recvmsg(nng_socket *s, nng_msg **msgp, int flags)
 	return (nni_socket_recvmsg(s, msgp, expire));
 }
 
+int
+nng_sendmsg(nng_socket *s, nng_msg *msg, int flags)
+{
+	int rv;
+	nni_time expire;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+
+	if ((flags == NNG_FLAG_NONBLOCK) || (s->s_sndtimeo == 0)) {
+		expire = NNI_TIME_ZERO;
+	} else if (s->s_sndtimeo < 0) {
+		expire = NNI_TIME_NEVER;
+	} else {
+		expire = nni_clock() + s->s_sndtimeo;
+	}
+
+	return (nni_socket_sendmsg(s, msg, expire));
+}
+
 
 int
 nng_setopt(nng_socket *s, int opt, const void *val, size_t sz)
