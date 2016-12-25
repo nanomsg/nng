@@ -266,3 +266,72 @@ nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 	NNI_INIT_INT();
 	return (nni_msg_getopt(msg, opt, ptr, szp));
 }
+
+
+int
+nng_snapshot_create(nng_snapshot **snapp)
+{
+	// Stats TBD.
+	NNI_INIT_INT();
+	return (NNG_ENOTSUP);
+}
+
+
+void
+nng_snapshot_destroy(nng_snapshot *snap)
+{
+	NNI_INIT_VOID();
+	// Stats TBD.
+}
+
+
+int
+nng_snapshot_update(nng_socket *sock, nng_snapshot *snap)
+{
+	// Stats TBD.
+	NNI_INIT_INT();
+	return (NNG_ENOTSUP);
+}
+
+
+int
+nng_snapshot_next(nng_snapshot *snap, nng_stat **statp)
+{
+	// Stats TBD.
+	NNI_INIT_INT();
+	*statp = NULL;
+	return (NNG_ENOTSUP);
+}
+
+
+const char *
+nng_stat_name(nng_stat *stat)
+{
+	// Stats TBD.
+	return (NULL);
+}
+
+
+int
+nng_stat_type(nng_stat *stat)
+{
+	// Stats TBD.
+	return (0);
+}
+
+
+int64_t
+nng_stat_value(nng_stat *stat)
+{
+	// Stats TBD.
+	return (0);
+}
+
+
+int
+nng_device(nng_socket *sock1, nng_socket *sock2)
+{
+	// Device TBD.
+	NNI_INIT_INT();
+	return (NNG_ENOTSUP);
+}

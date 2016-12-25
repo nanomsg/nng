@@ -280,7 +280,7 @@ NNG_DECL void nng_snapshot_free(nng_snapshot *);
 // sockets.
 NNG_DECL int nng_snapshot_update(nng_socket *, nng_snapshot *);
 
-// nng_snapshot_iterate is used to iterate over the individual statistic
+// nng_snapshot_next is used to iterate over the individual statistic
 // objects inside the snapshot. Note that the statistic object, and the
 // meta-data for the object (name, type, units) is fixed, and does not
 // change for the entire life of the snapshot.  Only the value
@@ -289,7 +289,7 @@ NNG_DECL int nng_snapshot_update(nng_socket *, nng_snapshot *);
 // Iteration begins by providing NULL in the value referenced. Successive
 // calls will update this value, returning NULL when no more statistics
 // are available in the snapshot.
-NNG_DECL nng_stat *nng_snapshot_iterate(nng_snapshot *, nng_stat *);
+NNG_DECL int nng_snapshot_next(nng_snapshot *, nng_stat **);
 
 // nng_stat_name is used to determine the name of the statistic.
 // This is a human readable name.  Statistic names, as well as the presence
