@@ -183,6 +183,118 @@ nng_msg_free(nng_msg *msg)
 }
 
 
+void *
+nng_msg_body(nng_msg *msg, size_t *szp)
+{
+	nni_init();
+	return (nni_msg_body(msg, szp));
+}
+
+
+void *
+nng_msg_header(nng_msg *msg, size_t *szp)
+{
+	nni_init();
+	return (nni_msg_header(msg, szp));
+}
+
+
+int
+nng_msg_append(nng_msg *msg, const void *data, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_append(msg, data, sz));
+}
+
+
+int
+nng_msg_prepend(nng_msg *msg, const void *data, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_prepend(msg, data, sz));
+}
+
+
+int
+nng_msg_append_header(nng_msg *msg, const void *data, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_append_header(msg, data, sz));
+}
+
+
+int
+nng_msg_prepend_header(nng_msg *msg, const void *data, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_prepend_header(msg, data, sz));
+}
+
+
+int
+nng_msg_trim(nng_msg *msg, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_trim(msg, sz));
+}
+
+
+int
+nng_msg_trunc(nng_msg *msg, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_trunc(msg, sz));
+}
+
+
+int
+nng_msg_trim_header(nng_msg *msg, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_trim_header(msg, sz));
+}
+
+
+int
+nng_msg_trunc_header(nng_msg *msg, size_t sz)
+{
+	int rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_trunc_header(msg, sz));
+}
+
+
 int
 nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 {
