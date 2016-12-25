@@ -74,6 +74,7 @@ nni_pipe_create(nni_pipe **pp, const nni_pipe_ops *ops)
 	p->p_data = NULL;
 	p->p_ops = *ops;
 	p->p_id = nni_plat_nextid();
+	*pp = p;
 	return (0);
 }
 
