@@ -235,7 +235,7 @@ nni_inproc_ep_close(void *arg)
 
 
 static int
-nni_inproc_ep_dial(void *arg, void **pipep)
+nni_inproc_ep_connect(void *arg, void **pipep)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *srch;
@@ -281,7 +281,7 @@ nni_inproc_ep_dial(void *arg, void **pipep)
 
 
 static int
-nni_inproc_ep_listen(void *arg)
+nni_inproc_ep_bind(void *arg)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *srch;
@@ -390,8 +390,8 @@ static struct nni_pipe_ops nni_inproc_pipe_ops = {
 static struct nni_endpt_ops nni_inproc_ep_ops = {
 	.ep_create	= nni_inproc_ep_create,
 	.ep_destroy	= nni_inproc_ep_destroy,
-	.ep_dial	= nni_inproc_ep_dial,
-	.ep_listen	= nni_inproc_ep_listen,
+	.ep_connect	= nni_inproc_ep_connect,
+	.ep_bind	= nni_inproc_ep_bind,
 	.ep_accept	= nni_inproc_ep_accept,
 	.ep_close	= nni_inproc_ep_close,
 	.ep_pipe_ops	= &nni_inproc_pipe_ops,

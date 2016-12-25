@@ -102,6 +102,7 @@ nng_dial(nng_socket *s, const char *addr, nng_endpt **epp, int flags)
 	return (nni_socket_dial(s, addr, epp, flags));
 }
 
+
 int
 nng_setopt(nng_socket *s, int opt, const void *val, size_t sz)
 {
@@ -166,6 +167,7 @@ int
 nng_pipe_getopt(nng_pipe *pipe, int opt, void *val, size_t *sizep)
 {
 	int rv;
+
 	NNI_INIT_INT();
 	rv = nni_pipe_getopt(pipe, opt, val, sizep);
 	if (rv == ENOTSUP) {

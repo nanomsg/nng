@@ -106,12 +106,12 @@ nni_endpt_close(nni_endpt *ep)
 
 
 int
-nni_endpt_listen(nni_endpt *ep)
+nni_endpt_bind(nni_endpt *ep)
 {
 	if (ep->ep_close) {
 		return (NNG_ECLOSED);
 	}
-	return (ep->ep_ops.ep_listen(ep->ep_data));
+	return (ep->ep_ops.ep_bind(ep->ep_data));
 }
 
 
@@ -132,7 +132,7 @@ nni_dial_once(nni_endpt *ep)
 	if ((rv = nni_pipe_create(&pipe, ep->ep_ops.ep_pipe_ops)) != 0) {
 		return (rv);
 	}
-	if ((rv = ep->ep_ops.ep_dial(ep->ep_data, &pipe->p_data)) != 0) {
+	if ((rv = ep->ep_ops.ep_connect(ep->ep_data, &pipe->p_data)) != 0) {
 		nni_pipe_destroy(pipe);
 		return (rv);
 	}

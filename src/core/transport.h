@@ -44,18 +44,18 @@ struct nni_endpt_ops {
 	// The endpoint will already have been closed.
 	void			(*ep_destroy)(void *);
 
-	// ep_dial starts dialing, and creates a new pipe,
+	// ep_connect establishes a connection, and creates a new pipe,
 	// which is returned in the final argument.  It can return errors
 	// NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR, NNG_ECONNFAILED,
 	// NNG_ETIMEDOUT, and NNG_EPROTO.
-	int			(*ep_dial)(void *, void **);
+	int			(*ep_connect)(void *, void **);
 
-	// ep_listen just does the bind() and listen() work,
+	// ep_bind just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
 	// It should return NNG_EADDRINUSE if the address is already
 	// taken.  It can also return NNG_EBADADDR for an unsuitable
 	// address, or NNG_EACCESS for permission problems.
-	int			(*ep_listen)(void *);
+	int			(*ep_bind)(void *);
 
 	// ep_accept accepts an inbound connection, and creates
 	// a transport pipe, which is returned in the final argument.
