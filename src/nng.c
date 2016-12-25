@@ -158,8 +158,14 @@ nng_strerror(int num)
 int
 nng_pipe_getopt(nng_pipe *pipe, int opt, void *val, size_t *sizep)
 {
+	int rv;
 	NNI_INIT_INT();
-	return (nni_pipe_getopt(pipe, opt, val, sizep));
+	rv = nni_pipe_getopt(pipe, opt, val, sizep);
+	if (rv == ENOTSUP) {
+		// Maybe its a generic socket option.
+		rv = nni_socket_getopt(pipe->p_sock, opt, val, sizep);
+	}
+	return (rv);
 }
 
 
