@@ -100,5 +100,15 @@ TestMain("Socket Operations", {
 				So(check == 1234);
 			})
 		})
+
+		Convey("Dialing bogus address not supported", {
+			rv = nng_dial(sock, "bogus://somewhere", NULL, 0);
+			So(rv == NNG_ENOTSUP);
+		})
+
+		Convey("Dialing synch can get refused", {
+			rv = nng_dial(sock, "inproc://notthere", NULL, NNG_FLAG_SYNCH);
+			So(rv == NNG_ECONNREFUSED);
+		})
 	})
 })

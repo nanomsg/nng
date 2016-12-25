@@ -33,9 +33,9 @@ struct nng_endpt {
 
 extern int nni_endpt_create(nni_endpt **, nni_socket *, const char *);
 extern void nni_endpt_destroy(nni_endpt *);
-extern int nni_endpt_dial(nni_endpt *, nni_pipe **);
 extern int nni_endpt_listen(nni_endpt *);
 extern int nni_endpt_accept(nni_endpt *, nni_pipe **);
 extern void nni_endpt_close(nni_endpt *);
+extern int nni_endpt_dial(nni_endpt *, int);
 
 #endif // CORE_ENDPT_H

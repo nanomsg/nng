@@ -51,5 +51,7 @@ extern int nni_socket_setopt(nni_socket *, int, const void *, size_t);
 extern int nni_socket_getopt(nni_socket *, int, void *, size_t *);
 extern int nni_socket_recvmsg(nni_socket *, nni_msg **, nni_time);
 extern int nni_socket_sendmsg(nni_socket *, nni_msg *, nni_time);
+extern int nni_socket_dial(nni_socket *, const char *, nni_endpt **, int);
+extern int nni_socket_listen(nni_socket *, const char *, nni_endpt **, int);
 
 #endif  // CORE_SOCKET_H

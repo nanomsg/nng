@@ -114,14 +114,21 @@ NNG_DECL const char *nng_event_reason(nng_event *);
 
 // nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy
-// nn_bind(). The underlying endpoint is returned back to the caller.
-NNG_DECL int nng_listen(nng_endpt **, nng_socket *, const char *);
+// nn_bind(). The underlying endpoint is returned back to the caller in the
+// endpt pointer, if it is not NULL.  The flags may be NNG_FLAG_SYNCH to
+// indicate that a failure setting the socket up should return an error
+// back to the caller immediately.
+NNG_DECL int nng_listen(nng_socket *, const char *, nng_endpt **, int);
 
 // nng_dial creates a dialing endpoint, with no special options, and
 // starts it dialing.  Dialers have at most one active connection at a time
 // This is similar to the legacy nn_connect().  The underlying endpoint
-// is returned back to the caller.
-NNG_DECL int nng_dial(nng_endpt **, nng_socket *, const char *);
+// is returned back to the caller in the endpt pointer, if it is not NULL.
+// The flags may be NNG_FLAG_SYNCH to indicate that the first attempt to
+// dial will be made synchronously, and a failure condition returned back
+// to the caller.  (If the connection is dropped, it will still be
+// reconnected in the background -- only the initial connect is synchronous.)
+NNG_DECL int nng_dial(nng_socket *, const char *, nng_endpt **, int);
 
 // nng_endpt_create creates an endpoint on the socket, but does not
 // start it either dialing or listening.
@@ -129,11 +136,11 @@ NNG_DECL int nng_endpt_create(nng_endpt **, nng_socket *, const char *);
 
 // nng_endpt_dial starts the endpoint dialing.  This is only possible if
 // the endpoint is not already dialing or listening.
-NNG_DECL int nng_endpt_dial(nng_endpt *);
+NNG_DECL int nng_endpt_dial(nng_endpt *, int);
 
 // nng_endpt_listen starts the endpoint listening.  This is only possible if
 // the endpoint is not already dialing or listening.
-NNG_DECL int nng_endpt_listen(nng_endpt *);
+NNG_DECL int nng_endpt_listen(nng_endpt *, int);
 
 // nng_endpt_close closes the endpt, shutting down all underlying
 // connections and releasing all associated resources.  It is an error to
@@ -205,6 +212,7 @@ NNG_DECL int nng_pipe_close(nng_pipe *);
 // Flags.
 #define NNG_FLAG_ALLOC		1       // Recv to allocate receive buffer.
 #define NNG_FLAG_NONBLOCK	2       // Non-block send/recv.
+#define NNG_FLAG_SYNCH		4       // Synchronous dial / listen
 
 // Protocol numbers.  These are to be used with nng_socket_create().
 // These values are used on the wire, so must not be changed.  The major

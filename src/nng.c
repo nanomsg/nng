@@ -96,6 +96,13 @@ nng_sendmsg(nng_socket *s, nng_msg *msg, int flags)
 
 
 int
+nng_dial(nng_socket *s, const char *addr, nng_endpt **epp, int flags)
+{
+	NNI_INIT_INT();
+	return (nni_socket_dial(s, addr, epp, flags));
+}
+
+int
 nng_setopt(nng_socket *s, int opt, const void *val, size_t sz)
 {
 	NNI_INIT_INT();
