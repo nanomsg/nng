@@ -17,6 +17,8 @@
 #include <time.h>
 #include <string.h>
 #include <stdlib.h>
+#include <sys/types.h>
+#include <unistd.h>
 
 struct nni_thread {
 	pthread_t	tid;
@@ -139,10 +141,14 @@ nni_plat_init(int (*helper)(void))
 	while (nni_plat_next == 0) {
 		uint16_t xsub[3];
 		nni_time now = nni_clock();
+		pid_t pid = getpid();
 
 		xsub[0] = (uint16_t) now;
 		xsub[1] = (uint16_t) (now >> 16);
 		xsub[2] = (uint16_t) (now >> 24);
+		xsub[0] ^= (uint16_t) pid;
+		xsub[1] ^= (uint16_t) (pid >> 16);
+		xsub[2] ^= (uint16_t) (pid >> 24);
 		nni_plat_next = nrand48(xsub);
 	}
 #endif
