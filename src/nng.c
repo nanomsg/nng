@@ -175,6 +175,18 @@ nng_msg_alloc(nng_msg **msgp, size_t size)
 }
 
 
+int
+nng_msg_realloc(nng_msg *msg, size_t sz)
+{
+	int rv;
+
+	if ((rv == nni_init()) != 0) {
+		return (rv);
+	}
+	return (nni_msg_realloc(msg, sz));
+}
+
+
 void
 nng_msg_free(nng_msg *msg)
 {
