@@ -200,6 +200,7 @@ nni_inproc_ep_create(void **epp, const char *url, uint16_t proto)
 	ep->closed = 0;
 	ep->proto = proto;
 	nni_list_node_init(&nni_inproc.eps, ep);
+	nni_list_append(&nni_inproc.eps, ep);
 	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
 	*epp = ep;
 	return (0);
