@@ -76,3 +76,14 @@ nni_pipe_create(nni_pipe **pp, const nni_pipe_ops *ops)
 	p->p_id = nni_plat_nextid();
 	return (0);
 }
+
+
+int
+nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)
+{
+	/*  This should only be called with the mutex held... */
+	if (p->p_ops.p_getopt == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	return (p->p_ops.p_getopt(p->p_data, opt, val, szp));
+}

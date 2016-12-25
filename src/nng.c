@@ -155,6 +155,23 @@ nng_strerror(int num)
 }
 
 
+int
+nng_pipe_getopt(nng_pipe *pipe, int opt, void *val, size_t *sizep)
+{
+	NNI_INIT_INT();
+	return (nni_pipe_getopt(pipe, opt, val, sizep));
+}
+
+
+int
+nng_pipe_close(nng_pipe *pipe)
+{
+	NNI_INIT_INT();
+	nni_pipe_close(pipe);
+	return (0);
+}
+
+
 // Message handling.
 int
 nng_msg_alloc(nng_msg **msgp, size_t size)

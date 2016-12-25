@@ -37,4 +37,6 @@ extern int nni_pipe_create(nni_pipe **, const nni_pipe_ops *);
 
 extern void nni_pipe_destroy(nni_pipe *);
 
+extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
+
 #endif // CORE_PIPE_H
