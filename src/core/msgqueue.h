@@ -90,4 +90,8 @@ extern void nni_msgqueue_close(nni_msgqueue *);
 // has expired.  Any messages still in the queue at the timeout are freed.
 extern void nni_msgqueue_drain(nni_msgqueue *, nni_time);
 
+extern int nni_msgqueue_resize(nni_msgqueue *, int);
+extern int nni_msgqueue_cap(nni_msgqueue *mq);
+extern int nni_msgqueue_len(nni_msgqueue *mq);
+
 #endif  // CORE_MSQUEUE_H

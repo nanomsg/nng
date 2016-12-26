@@ -447,6 +447,38 @@ nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
 }
 
 
+static int
+nni_setopt_buf(nni_msgqueue *mq, const void *val, size_t sz)
+{
+	int len;
+
+	if (sz < sizeof (len)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(&len, val, sizeof (len));
+	if (len < 0) {
+		return (NNG_EINVAL);
+	}
+	return (nni_msgqueue_resize(mq, len));
+}
+
+
+static int
+nni_getopt_buf(nni_msgqueue *mq, void *val, size_t *sizep)
+{
+	int len = nni_msgqueue_cap(mq);
+
+	int sz = *sizep;
+
+	if (sz > sizeof (len)) {
+		sz = sizeof (len);
+	}
+	memcpy(val, &len, sz);
+	*sizep = sizeof (len);
+	return (0);
+}
+
+
 int
 nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
 {
@@ -477,6 +509,12 @@ nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
 		break;
 	case NNG_OPT_RECONN_MAXTIME:
 		rv = nni_setopt_duration(&sock->s_reconnmax, val, size);
+		break;
+	case NNG_OPT_SNDBUF:
+		rv = nni_setopt_buf(sock->s_uwq, val, size);
+		break;
+	case NNG_OPT_RCVBUF:
+		rv = nni_setopt_buf(sock->s_urq, val, size);
 		break;
 	}
 	nni_mutex_exit(&sock->s_mx);
@@ -514,6 +552,12 @@ nni_socket_getopt(nni_socket *sock, int opt, void *val, size_t *sizep)
 		break;
 	case NNG_OPT_RECONN_MAXTIME:
 		rv = nni_getopt_duration(&sock->s_reconnmax, val, sizep);
+		break;
+	case NNG_OPT_SNDBUF:
+		rv = nni_getopt_buf(sock->s_uwq, val, sizep);
+		break;
+	case NNG_OPT_RCVBUF:
+		rv = nni_getopt_buf(sock->s_urq, val, sizep);
 		break;
 	}
 	nni_mutex_exit(&sock->s_mx);

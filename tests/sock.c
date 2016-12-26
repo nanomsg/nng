@@ -139,5 +139,22 @@ TestMain("Socket Operations", {
 				nng_close(sock2);
 			})
 		})
+
+		Convey("We can send and receive messages", {
+			nng_socket *sock2 = NULL;
+			int len = 1;
+			rv = nng_open(&sock2, NNG_PROTO_PAIR);
+			So(rv == 0);
+
+			rv = nng_setopt(sock, NNG_OPT_RCVBUF, &len, sizeof (len));
+			So(rv == 0);
+			rv = nng_setopt(sock, NNG_OPT_SNDBUF, &len, sizeof (len));
+			So(rv == 0);
+
+			rv = nng_setopt(sock2, NNG_OPT_RCVBUF, &len, sizeof (len));
+			So(rv == 0);
+			rv = nng_setopt(sock2, NNG_OPT_SNDBUF, &len, sizeof (len));
+			So(rv == 0);
+		})
 	})
 })
