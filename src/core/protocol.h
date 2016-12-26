@@ -32,8 +32,8 @@ struct nni_protocol {
 
 	// Add and remove pipes.  These are called as connections are
 	// created or destroyed.
-	int		(*proto_add_pipe)(void *, nni_pipe *);
-	int		(*proto_rem_pipe)(void *, nni_pipe *);
+	int		(*proto_add_pipe)(void *, nni_pipe *, void **);
+	void		(*proto_rem_pipe)(void *, void *);
 
 	// Option manipulation.  These may be NULL.
 	int		(*proto_setopt)(void *, int, const void *, size_t);

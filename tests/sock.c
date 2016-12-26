@@ -24,6 +24,10 @@ TestMain("Socket Operations", {
 			So(rv == 0);
 		})
 
+		Reset({
+			nng_close(sock);
+		})
+
 		Convey("It's type is still proto", {
 			So(nng_protocol(sock) == NNG_PROTO_PAIR);
 		})
@@ -101,14 +105,39 @@ TestMain("Socket Operations", {
 			})
 		})
 
-		Convey("Dialing bogus address not supported", {
-			rv = nng_dial(sock, "bogus://somewhere", NULL, 0);
-			So(rv == NNG_ENOTSUP);
+		Convey("Bogus URLs not supported", {
+			Convey("Dialing fails properly", {
+				rv = nng_dial(sock, "bogus://somewhere", NULL, 0);
+				So(rv == NNG_ENOTSUP);
+			})
+			Convey("Listening fails properly", {
+				rv = nng_listen(sock, "bogus://elsewhere", NULL, 0);
+				So(rv == NNG_ENOTSUP);
+			})
 		})
 
 		Convey("Dialing synch can get refused", {
 			rv = nng_dial(sock, "inproc://notthere", NULL, NNG_FLAG_SYNCH);
 			So(rv == NNG_ECONNREFUSED);
+		})
+
+		Convey("Listening works", {
+			rv = nng_listen(sock, "inproc://here", NULL, NNG_FLAG_SYNCH);
+			So(rv == 0);
+
+			Convey("Second listen fails ADDRINUSE", {
+				rv = nng_listen(sock, "inproc://here", NULL, NNG_FLAG_SYNCH);
+				So(rv == NNG_EADDRINUSE);
+			})
+
+			Convey("We can connect to it", {
+				nng_socket *sock2 = NULL;
+				rv = nng_open(&sock2, NNG_PROTO_PAIR);
+				So(rv == 0);
+				rv = nng_dial(sock2, "inproc://here", NULL, NNG_FLAG_SYNCH);
+				So(rv == 0);
+				nng_close(sock2);
+			})
 		})
 	})
 })

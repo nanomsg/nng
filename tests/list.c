@@ -34,6 +34,10 @@ TestMain("Linked Lists", {
 
 		Convey("And we can add an item", {
 			mystruct item;
+
+			NNI_LIST_NODE_INIT(&item.nodea);
+			NNI_LIST_NODE_INIT(&item.nodeb);
+
 			nni_list_append(&alist, &item);
 
 			Convey("It is the first item", {
@@ -60,6 +64,11 @@ TestMain("Linked Lists", {
 		Convey("We can add two items", {
 			mystruct item1;
 			mystruct item2;
+
+			NNI_LIST_NODE_INIT(&item1.nodea);
+			NNI_LIST_NODE_INIT(&item1.nodeb);
+			NNI_LIST_NODE_INIT(&item2.nodea);
+			NNI_LIST_NODE_INIT(&item2.nodeb);
 
 			nni_list_append(&alist, &item1);
 			nni_list_append(&alist, &item2);

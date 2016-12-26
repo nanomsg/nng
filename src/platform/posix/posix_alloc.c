@@ -17,7 +17,7 @@
 void *
 nni_alloc(size_t size)
 {
-	return (malloc(size));
+	return (calloc(1, size));
 }
 
 

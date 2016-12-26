@@ -58,6 +58,9 @@ nni_list_append(nni_list *list, void *item)
 {
 	nni_list_node *node = NODE(list, item);
 
+	if ((node->ln_next != NULL) || (node->ln_prev != NULL)) {
+		nni_panic("appending node already on a list or not inited");
+	}
 	node->ln_prev = list->ll_head.ln_prev;
 	node->ln_next = &list->ll_head;
 	node->ln_next->ln_prev = node;
@@ -70,6 +73,9 @@ nni_list_prepend(nni_list *list, void *item)
 {
 	nni_list_node *node = NODE(list, item);
 
+	if ((node->ln_next != NULL) || (node->ln_prev != NULL)) {
+		nni_panic("prepending node already on a list or not inited");
+	}
 	node->ln_next = list->ll_head.ln_next;
 	node->ln_prev = &list->ll_head;
 	node->ln_next->ln_prev = node;
@@ -108,13 +114,6 @@ nni_list_remove(nni_list *list, void *item)
 
 	node->ln_prev->ln_next = node->ln_next;
 	node->ln_next->ln_prev = node->ln_prev;
-}
-
-
-void
-nni_list_node_init(nni_list *list, void *item)
-{
-	nni_list_node *node = NODE(list, item);
-
-	node->ln_prev = node->ln_next = NULL;
+	node->ln_next = NULL;
+	node->ln_prev = NULL;
 }

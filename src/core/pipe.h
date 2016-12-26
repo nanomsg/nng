@@ -19,10 +19,13 @@
 struct nng_pipe {
 	uint32_t		p_id;
 	struct nni_pipe_ops	p_ops;
-	void *			p_data;
-	nni_list_node		p_sock_node;
+	void *			p_trandata;
+	void *			p_protdata;
+	nni_list_node		p_node;
 	nni_socket *		p_sock;
 	nni_endpt *		p_ep;
+	int			p_reap;
+	int			p_active;
 };
 
 // Pipe operations that protocols use.
@@ -33,7 +36,7 @@ extern void nni_pipe_close(nni_pipe *);
 
 // Used only by the socket core - as we don't wish to expose the details
 // of the pipe structure outside of pipe.c.
-extern int nni_pipe_create(nni_pipe **, const nni_pipe_ops *);
+extern int nni_pipe_create(nni_pipe **, nni_endpt *);
 
 extern void nni_pipe_destroy(nni_pipe *);
 

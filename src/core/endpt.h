@@ -18,7 +18,7 @@
 struct nng_endpt {
 	nni_endpt_ops	ep_ops;
 	void *		ep_data;                // Transport private
-	nni_list_node	ep_sock_node;           // Per socket list
+	nni_list_node	ep_node;                // Per socket list
 	nni_socket *	ep_sock;
 	char		ep_addr[NNG_MAXADDRLEN];
 	nni_thread *	ep_dialer;
@@ -26,6 +26,7 @@ struct nng_endpt {
 	int		ep_stop;                // thread exits before start
 	int		ep_start;               // start thread running
 	int		ep_close;               // full shutdown
+	int		ep_bound;               // true if we bound locally
 	nni_mutex	ep_mx;
 	nni_cond	ep_cv;
 	nni_pipe *	ep_pipe;        // Connected pipe (dialers only)
@@ -33,9 +34,9 @@ struct nng_endpt {
 
 extern int nni_endpt_create(nni_endpt **, nni_socket *, const char *);
 extern void nni_endpt_destroy(nni_endpt *);
-extern int nni_endpt_listen(nni_endpt *);
 extern int nni_endpt_accept(nni_endpt *, nni_pipe **);
 extern void nni_endpt_close(nni_endpt *);
 extern int nni_endpt_dial(nni_endpt *, int);
+extern int nni_endpt_listen(nni_endpt *, int);
 
 #endif // CORE_ENDPT_H

@@ -45,8 +45,10 @@ nni_mutex_fini(nni_mutex *mp)
 void
 nni_mutex_enter(nni_mutex *m)
 {
-	if (pthread_mutex_lock(&m->mx) != 0) {
-		nni_panic("pthread_mutex_lock failed");
+	int rv;
+
+	if ((rv = pthread_mutex_lock(&m->mx)) != 0) {
+		nni_panic("pthread_mutex_lock failed: %s", strerror(rv));
 	}
 }
 

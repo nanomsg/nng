@@ -80,7 +80,7 @@ nni_thread_reap(nni_thread *thr)
 	int rv;
 
 	if ((rv = pthread_join(thr->tid, NULL)) != 0) {
-		nni_panic("pthread_thread: %s", strerror(errno));
+		nni_panic("pthread_thread: %s", strerror(rv));
 	}
 	nni_free(thr, sizeof (*thr));
 }

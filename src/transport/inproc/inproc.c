@@ -199,8 +199,7 @@ nni_inproc_ep_create(void **epp, const char *url, uint16_t proto)
 	ep->mode = NNI_INPROC_EP_IDLE;
 	ep->closed = 0;
 	ep->proto = proto;
-	nni_list_node_init(&nni_inproc.eps, ep);
-	nni_list_append(&nni_inproc.eps, ep);
+	NNI_LIST_NODE_INIT(&ep->node);
 	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
 	*epp = ep;
 	return (0);
@@ -227,7 +226,10 @@ nni_inproc_ep_close(void *arg)
 	nni_mutex_enter(&nni_inproc.mx);
 	if (!ep->closed) {
 		ep->closed = 1;
-		nni_list_remove(&nni_inproc.eps, ep);
+		if ((ep->mode == NNI_INPROC_EP_LISTEN) ||
+		    (ep->mode == NNI_INPROC_EP_DIAL)) {
+			nni_list_remove(&nni_inproc.eps, ep);
+		}
 		nni_cond_broadcast(&nni_inproc.cv);
 	}
 	nni_mutex_exit(&nni_inproc.mx);
@@ -273,7 +275,6 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 		nni_cond_wait(&nni_inproc.cv);
 	}
 	// NB: The acceptor or closer removes us from the list.
-	ep->mode = NNI_INPROC_EP_IDLE;
 	*pipep = ep->cpipe;
 	nni_mutex_exit(&nni_inproc.mx);
 	return (ep->closed ? NNG_ECLOSED : 0);
@@ -333,7 +334,7 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 		return (rv);
 	}
 	if (((rv = nni_msgqueue_create(&pair->q[0], 4)) != 0) ||
-	    ((rv = nni_msgqueue_create(&pair->q[0], 4)) != 0)) {
+	    ((rv = nni_msgqueue_create(&pair->q[1], 4)) != 0)) {
 		nni_inproc_pair_destroy(pair);
 		return (rv);
 	}
@@ -360,6 +361,9 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 		}
 		nni_cond_wait(&nni_inproc.cv);
 	}
+
+	nni_list_remove(&nni_inproc.eps, srch);
+	srch->mode = NNI_INPROC_EP_IDLE;
 	(void) snprintf(pair->addr, sizeof (pair->addr), "%s", ep->addr);
 	pair->pipe[0].rq = pair->pipe[1].wq = pair->q[0];
 	pair->pipe[1].rq = pair->pipe[0].wq = pair->q[1];

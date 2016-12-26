@@ -34,6 +34,9 @@ struct nng_socket {
 	nni_list	s_eps;                  // active endpoints
 	nni_list	s_pipes;                // pipes for this socket
 
+	nni_list	s_reaps;                // pipes to reap
+	nni_thread *	s_reaper;
+
 	int		s_closing;              // Socket is closing
 	int		s_besteffort;           // Best effort mode delivery
 	int		s_senderr;              // Protocol state machine use
@@ -44,8 +47,7 @@ struct nng_socket {
 
 extern int nni_socket_create(nni_socket **, uint16_t);
 extern int nni_socket_close(nni_socket *);
-extern int nni_socket_add_pipe(nni_socket *, nni_pipe *, int);
-extern void nni_socket_rem_pipe(nni_socket *, nni_pipe *);
+extern int nni_socket_add_pipe(nni_socket *, nni_pipe *);
 extern uint16_t nni_socket_proto(nni_socket *);
 extern int nni_socket_setopt(nni_socket *, int, const void *, size_t);
 extern int nni_socket_getopt(nni_socket *, int, void *, size_t *);

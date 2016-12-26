@@ -28,6 +28,10 @@ extern void nni_list_init_offset(nni_list *list, size_t offset);
 
 #define NNI_LIST_INIT(list, type, field) \
 	nni_list_init_offset(list, offsetof(type, field))
+
+#define NNI_LIST_NODE_INIT(node) \
+	{ (node)->ln_prev = (node)->ln_next = 0; }
+
 extern void *nni_list_first(nni_list *);
 extern void *nni_list_last(nni_list *);
 extern void nni_list_append(nni_list *, void *);
@@ -35,7 +39,6 @@ extern void nni_list_prepend(nni_list *, void *);
 extern void *nni_list_next(nni_list *, void *);
 extern void *nni_list_prev(nni_list *, void *);
 extern void nni_list_remove(nni_list *, void *);
-extern void nni_list_node_init(nni_list *, void *);
 
 #define NNI_LIST_FOREACH(l, it)	\
 	for (it = nni_list_first(l); it != NULL; it = nni_list_next(l, it))
