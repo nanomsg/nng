@@ -90,7 +90,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 	// We either don't have a data pointer yet, or it doesn't reference
 	// the backing store.  In this case, we just check against the
 	// allocated capacity and grow, or don't grow.
-	if (newsz > ch->ch_cap) {
+	if (newsz < ch->ch_cap) {
 		// Enough space at end, so just use it.
 		if (ch->ch_ptr == NULL) {
 			ch->ch_ptr = ch->ch_buf + headwanted;
