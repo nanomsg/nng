@@ -121,17 +121,28 @@ nni_cond_wait(nni_cond *c)
 
 
 int
-nni_cond_waituntil(nni_cond *c, uint64_t usec)
+nni_cond_waituntil(nni_cond *c, nni_time usec)
 {
 	struct timespec ts;
 	int rv;
+	nni_duration delta = usec - nni_clock();
 
-	ts.tv_sec = usec / 1000000;
-	ts.tv_nsec = (usec % 1000000) * 1000;
 
-	rv = pthread_cond_timedwait(&c->cv, c->mx, &ts);
+	if (usec != NNI_TIME_NEVER) {
+		ts.tv_sec = usec / 1000000;
+		ts.tv_nsec = (usec % 1000000) * 1000;
+
+		rv = pthread_cond_timedwait(&c->cv, c->mx, &ts);
+	} else {
+		rv = pthread_cond_wait(&c->cv, c->mx);
+	}
 
 	if (rv == ETIMEDOUT) {
+		if (nni_clock() < usec) {
+			// This only happens if the implementation
+			// is buggy.
+			nni_panic("Premature wakupe!");
+		}
 		return (NNG_ETIMEDOUT);
 	} else if (rv != 0) {
 		nni_panic("pthread_cond_timedwait returned %d", rv);

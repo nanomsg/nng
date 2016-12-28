@@ -38,12 +38,17 @@
 
 #include <time.h>
 
+// MacOS X used to lack CLOCK_MONOTONIC.  Now it has it, but its
+// buggy, condition variables set to use it wake early.
+#ifdef __APPLE__
+#define NNG_USE_CLOCKID		CLOCK_REALTIME
+#endif // __APPLE__
+
+#define NNG_USE_CLOCKID		CLOCK_REALTIME
 #ifndef CLOCK_REALTIME
 #define NNG_USE_GETTIMEOFDAY
 #elif !defined(NNG_USE_CLOCKID)
-#ifdef  CLOCK_MONOTONIC
 #define NNG_USE_CLOCKID		CLOCK_MONOTONIC
 #else
 #define NNG_USE_CLOCKID		CLOCK_REALTIME
-#endif
 #endif  // CLOCK_REALTIME
