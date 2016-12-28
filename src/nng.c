@@ -63,13 +63,13 @@ nng_recvmsg(nng_socket *s, nng_msg **msgp, int flags)
 	nni_time expire;
 
 	NNI_INIT_INT();
-
 	if ((flags == NNG_FLAG_NONBLOCK) || (s->s_rcvtimeo == 0)) {
 		expire = NNI_TIME_ZERO;
 	} else if (s->s_rcvtimeo < 0) {
 		expire = NNI_TIME_NEVER;
 	} else {
-		expire = nni_clock() + s->s_rcvtimeo;
+		expire = nni_clock();
+		expire += s->s_rcvtimeo;
 	}
 
 	return (nni_socket_recvmsg(s, msgp, expire));
@@ -88,7 +88,8 @@ nng_sendmsg(nng_socket *s, nng_msg *msg, int flags)
 	} else if (s->s_sndtimeo < 0) {
 		expire = NNI_TIME_NEVER;
 	} else {
-		expire = nni_clock() + s->s_sndtimeo;
+		expire = nni_clock();
+		expire += s->s_sndtimeo;
 	}
 
 	return (nni_socket_sendmsg(s, msg, expire));

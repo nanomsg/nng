@@ -10,6 +10,8 @@
 #include "convey.h"
 #include "nng.h"
 
+#include <string.h>
+
 TestMain("Socket Operations", {
 	Convey("We are able to open a PAIR socket", {
 		int rv;
@@ -47,8 +49,8 @@ TestMain("Socket Operations", {
 			rv = nng_recvmsg(sock, &msg, 0);
 			So(rv == NNG_ETIMEDOUT);
 			So(msg == NULL);
-			So(nni_clock() > (now + 500000));
-			So(nni_clock() < (now + 1000000));
+			So(nni_clock() >= (now + when));
+			So(nni_clock() < (now + (when * 2)));
 		})
 
 		Convey("Recv nonblock with no pipes gives EAGAIN", {
@@ -143,6 +145,11 @@ TestMain("Socket Operations", {
 		Convey("We can send and receive messages", {
 			nng_socket *sock2 = NULL;
 			int len = 1;
+			nng_msg *msg;
+			size_t sz;
+			char *ptr;
+			uint64_t second = 1000000;
+
 			rv = nng_open(&sock2, NNG_PROTO_PAIR);
 			So(rv == 0);
 
@@ -155,6 +162,42 @@ TestMain("Socket Operations", {
 			So(rv == 0);
 			rv = nng_setopt(sock2, NNG_OPT_SNDBUF, &len, sizeof (len));
 			So(rv == 0);
+
+			rv = nng_setopt(sock, NNG_OPT_SNDTIMEO, &second, sizeof (second));
+			So(rv == 0);
+			rv = nng_setopt(sock, NNG_OPT_RCVTIMEO, &second, sizeof (second));
+			So(rv == 0);
+			rv = nng_setopt(sock2, NNG_OPT_SNDTIMEO, &second, sizeof (second));
+			So(rv == 0);
+			rv = nng_setopt(sock2, NNG_OPT_RCVTIMEO, &second, sizeof (second));
+			So(rv == 0);
+
+			rv = nng_listen(sock, "inproc://test1", NULL, NNG_FLAG_SYNCH);
+			So(rv == 0);
+			rv = nng_dial(sock2, "inproc://test1", NULL, 0);
+			So(rv == 0);
+
+			rv = nng_msg_alloc(&msg, 3);
+			So(rv == 0);
+			ptr = nng_msg_body(msg, &sz);
+			So(ptr != NULL);
+			So(sz == 3);
+
+			memcpy(ptr, "abc", 3);
+
+			rv = nng_sendmsg(sock, msg, 0);
+			So(rv == 0);
+
+			msg = NULL;
+			rv = nng_recvmsg(sock2, &msg, 0);
+			So(rv == 0);
+			So(msg != NULL);
+			ptr = nng_msg_body(msg, &sz);
+			So(ptr != NULL);
+			So(sz == 3);
+			So(memcmp(ptr, "abc", 3) == 0);
+			nng_msg_free(msg);
+			nng_close(sock2);
 		})
 	})
 })

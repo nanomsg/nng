@@ -61,7 +61,8 @@ nni_reaper(void *arg)
 			// If pipe was a connected (dialer) pipe,
 			// then let the endpoint know so it can try to
 			// reestablish the connection.
-			if ((ep = pipe->p_ep) != NULL) {
+			if (((ep = pipe->p_ep) != NULL) &&
+			    ((ep->ep_pipe == pipe))) {
 				ep->ep_pipe = NULL;
 				pipe->p_ep = NULL;
 				nni_mutex_enter(&ep->ep_mx);
@@ -318,7 +319,9 @@ nni_socket_recvmsg(nni_socket *sock, nni_msg **msgp, nni_time expire)
 		if (rv != 0) {
 			return (rv);
 		}
-		msg = sock->s_ops.proto_recv_filter(sock->s_data, msg);
+		if (sock->s_ops.proto_recv_filter != NULL) {
+			msg = sock->s_ops.proto_recv_filter(sock->s_data, msg);
+		}
 		if (msg != NULL) {
 			break;
 		}

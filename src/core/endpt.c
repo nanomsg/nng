@@ -197,7 +197,10 @@ nni_dialer(void *arg)
 		nni_mutex_enter(&ep->ep_mx);
 		while (!ep->ep_close) {
 			// We need a different condvar...
-			nni_cond_waituntil(&ep->ep_cv, cooldown);
+			rv = nni_cond_waituntil(&ep->ep_cv, cooldown);
+			if (rv == NNG_ETIMEDOUT) {
+				break;
+			}
 		}
 		nni_mutex_exit(&ep->ep_mx);
 	}
@@ -312,8 +315,11 @@ nni_listener(void *arg)
 				cooldown = 10000;
 				cooldown += nni_clock();
 				while (!ep->ep_close) {
-					nni_cond_waituntil(&ep->ep_cv,
+					rv = nni_cond_waituntil(&ep->ep_cv,
 					    cooldown);
+					if (rv == NNG_ETIMEDOUT) {
+						break;
+					}
 				}
 			}
 		}
@@ -338,9 +344,13 @@ nni_listener(void *arg)
 			// time for the system to reclaim resources.
 			cooldown = 100000;      // 100ms
 		}
+		cooldown += nni_clock();
 		nni_mutex_enter(&ep->ep_mx);
-		if (!ep->ep_close) {
-			nni_cond_waituntil(&ep->ep_cv, cooldown);
+		while (!ep->ep_close) {
+			rv = nni_cond_waituntil(&ep->ep_cv, cooldown);
+			if (rv == NNG_ETIMEDOUT) {
+				break;
+			}
 		}
 		nni_mutex_exit(&ep->ep_mx);
 	}
