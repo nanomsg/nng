@@ -45,6 +45,12 @@ extern void nni_msgqueue_destroy(nni_msgqueue *);
 // the caller is not permitted to access it further.
 extern int nni_msgqueue_put(nni_msgqueue *, nni_msg *);
 
+// nni_msgqueue_putback returns a message to the head of the queue.
+// This is a non-blocking operation, and it returns EAGAIN if there
+// is no room.  There is always at least room for one putback after
+// a message is retried with nni_msgqueue_get.
+extern int nni_msgqueue_putback(nni_msgqueue *, nni_msg *);
+
 // nni_msgqueue_get gets the message from the queue.  It blocks until a
 // message is available, or the queue is closed, returning either 0 on
 // success or NNG_ECLOSED if the queue was closed.  If a message is
