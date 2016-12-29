@@ -61,6 +61,8 @@ set (NNG_SOURCES
 
     protocol/pair/pair.c
 
+    protocol/reqrep/req.c
+
     transport/inproc/inproc.c
 )
 

@@ -197,8 +197,7 @@ nni_socket_close(nni_socket *sock)
 
 	// Generally, unless the protocol is blocked trying to perform
 	// writes (e.g. a slow reader on the other side), it should be
-	// trying to shut things down -- the normal flow is for it to
-	// close pipes and call nni_sock_rem_pipe().  We wait to give it
+	// trying to shut things down.  We wait to give it
 	// a chance to do so gracefully.
 	nni_mutex_enter(&sock->s_mx);
 	while (nni_list_first(&sock->s_pipes) != NULL) {
@@ -419,7 +418,7 @@ nni_socket_listen(nni_socket *sock, const char *addr, nni_endpt **epp,
 }
 
 
-static int
+int
 nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
 {
 	nni_duration dur;
@@ -429,25 +428,50 @@ nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
 	}
 	memcpy(&dur, val, sizeof (dur));
 	if (dur < -1) {
-		return (-EINVAL);
+		return (NNG_EINVAL);
 	}
 	*ptr = dur;
 	return (0);
 }
 
 
-static int
+int
+nni_setopt_int(int *ptr, const void *val, size_t size)
+{
+	if (size != sizeof (*ptr)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(ptr, val, sizeof (*ptr));
+	return (0);
+}
+
+
+int
 nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
 {
-	size_t sz = sizeof (nni_duration);
+	size_t sz = sizeof (*ptr);
 
 	if (sz > *sizep) {
 		sz = *sizep;
 	}
-	*sizep = sizeof (nni_duration);
+	*sizep = sizeof (*ptr);
 	memcpy(val, ptr, sz);
 	return (0);
 }
+
+int
+nni_getopt_int(int *ptr, void *val, size_t *sizep)
+{
+	size_t sz = sizeof (*ptr);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof (*ptr);
+	memcpy(val, ptr, sz);
+	return (0);
+}
+
 
 
 static int
