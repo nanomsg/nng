@@ -15,6 +15,7 @@
 extern int nni_msg_alloc(nni_msg **, size_t);
 extern void nni_msg_free(nni_msg *);
 extern int nni_msg_realloc(nni_msg *, size_t);
+extern int nni_msg_dup(nni_msg **, const nni_msg *);
 extern void *nni_msg_header(nni_msg *, size_t *);
 extern void *nni_msg_body(nni_msg *, size_t *);
 extern int nni_msg_append(nni_msg *, const void *, size_t);

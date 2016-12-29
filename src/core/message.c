@@ -148,6 +148,23 @@ nni_chunk_trim(nni_chunk *ch, size_t len)
 }
 
 
+// nni_chunk_dup allocates storage for a new chunk, and copies
+// the contents of the source to the destination.  The new chunk will
+// have the same size, headroom, and capacity as the original.
+static int
+nni_chunk_dup(nni_chunk *dst, const nni_chunk *src)
+{
+	if ((dst->ch_buf = nni_alloc(src->ch_cap)) != 0) {
+		return (NNG_ENOMEM);
+	}
+	dst->ch_cap = src->ch_cap;
+	dst->ch_len = src->ch_len;
+	dst->ch_ptr = dst->ch_buf + (src->ch_ptr - src->ch_buf);
+	memcpy(dst->ch_ptr, src->ch_ptr, dst->ch_len);
+	return (0);
+}
+
+
 // nni_chunk_append appends the data to the chunk, growing as necessary.
 // If the data pointer is NULL, then the chunk data region is allocated,
 // but uninitialized.
@@ -248,6 +265,29 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 
 	NNI_LIST_INIT(&m->m_options, nni_msgopt, mo_node);
 	*mp = m;
+	return (0);
+}
+
+
+int
+nni_msg_dup(nni_msg **dup, const nni_msg *src)
+{
+	nni_msg *m;
+	int rv;
+
+	if ((m = nni_alloc(sizeof (*m))) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_chunk_dup(&m->m_header, &src->m_header)) != 0) {
+		nni_free(m, sizeof (*m));
+		return (rv);
+	}
+	if ((rv = nni_chunk_dup(&m->m_body, &src->m_body)) != 0) {
+		nni_chunk_free(&m->m_header);
+		nni_free(m, sizeof (*m));
+		return (rv);
+	}
+	*dup = m;
 	return (0);
 }
 
