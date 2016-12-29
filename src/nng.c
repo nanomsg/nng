@@ -169,6 +169,9 @@ nng_strerror(int num)
 	case NNG_ESTATE:
 		return ("Incorrect state");
 
+	case NNG_ENOENT:
+		return ("Entry not found");
+
 	default:
 		return ("Unknown error");
 	}
