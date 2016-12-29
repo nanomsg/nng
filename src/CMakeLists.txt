@@ -40,6 +40,8 @@ set (NNG_SOURCES
     core/msgqueue.c
     core/msgqueue.h
     core/nng_impl.h
+    core/options.c
+    core/options.h
     core/panic.c
     core/panic.h
     core/pipe.c

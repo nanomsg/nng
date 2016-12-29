@@ -27,6 +27,7 @@
 #include "core/init.h"
 #include "core/message.h"
 #include "core/msgqueue.h"
+#include "core/options.h"
 #include "core/panic.h"
 #include "core/platform.h"
 #include "core/protocol.h"

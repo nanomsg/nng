@@ -264,7 +264,7 @@ nni_req_setopt(void *arg, int opt, const void *buf, size_t sz)
 		break;
 	case NNG_OPT_RAW:
 		nni_mutex_enter(&req->mx);
-		rv = nni_setopt_int(&req->raw, buf, sz);
+		rv = nni_setopt_int(&req->raw, buf, sz, 0, 1);
 		nni_mutex_exit(&req->mx);
 		break;
 	default:
