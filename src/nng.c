@@ -166,6 +166,9 @@ nng_strerror(int num)
 	case NNG_EADDRINUSE:
 		return ("Address in use");
 
+	case NNG_ESTATE:
+		return ("Incorrect state");
+
 	default:
 		return ("Unknown error");
 	}

@@ -362,6 +362,7 @@ NNG_DECL int nng_device(nng_socket *, nng_socket *);
 #define NNG_EAGAIN		(-8)
 #define NNG_ENOTSUP		(-9)
 #define NNG_EADDRINUSE		(-10)
+#define NNG_ESTATE		(-11)
 
 // Maximum length of a socket address.  This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
