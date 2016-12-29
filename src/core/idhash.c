@@ -113,7 +113,7 @@ nni_hash_resize(nni_idhash *h)
 
 
 int
-nni_hash_remove(nni_idhash *h, uint32_t id)
+nni_idhash_remove(nni_idhash *h, uint32_t id)
 {
 	uint32_t index = id & (h->ih_cap - 1);
 
@@ -138,7 +138,7 @@ nni_hash_remove(nni_idhash *h, uint32_t id)
 
 
 int
-nni_hash_insert(nni_idhash *h, uint32_t id, void *val)
+nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
 {
 	uint32_t index;
 
@@ -149,10 +149,13 @@ nni_hash_insert(nni_idhash *h, uint32_t id, void *val)
 	}
 	index = id & (h->ih_cap - 1);
 	for (;;) {
-		if (h->ih_entries[index].ihe_val == NULL) {
+		if ((h->ih_entries[index].ihe_val == NULL) ||
+		    (h->ih_entries[index].ihe_key == id)) {
+			if (h->ih_entries[index].ihe_val == NULL) {
+				h->ih_count++;
+			}
 			h->ih_entries[index].ihe_key = id;
 			h->ih_entries[index].ihe_val = val;
-			h->ih_count++;
 			return (0);
 		}
 		index = NNI_IDHASH_NEXTPROBE(h, index);
