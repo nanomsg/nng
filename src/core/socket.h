@@ -61,4 +61,10 @@ extern int nni_getopt_duration(nni_duration *, void *, size_t *);
 extern int nni_setopt_int(int *, const void *, size_t);
 extern int nni_getopt_int(int *, void *, size_t *);
 
+// Set error codes for applications.  These are only ever
+// called from the filter functions in protocols, and thus
+// already have the socket lock held.
+extern void nni_socket_recverr(nni_socket *, int);
+extern void nni_socket_senderr(nni_socket *, int);
+
 #endif  // CORE_SOCKET_H

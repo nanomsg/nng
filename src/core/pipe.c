@@ -89,7 +89,6 @@ nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 	p->p_trandata = NULL;
 	p->p_protdata = NULL;
 	p->p_ops = *ep->ep_ops.ep_pipe_ops;
-	p->p_id = nni_plat_nextid();
 	p->p_ep = ep;
 	p->p_sock = ep->ep_sock;
 	if (ep->ep_dialer != NULL) {

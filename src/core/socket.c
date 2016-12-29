@@ -344,12 +344,31 @@ int
 nni_socket_add_pipe(nni_socket *sock, nni_pipe *pipe)
 {
 	int rv;
+	int collide;
 
 	nni_mutex_enter(&sock->s_mx);
 	if (sock->s_closing) {
 		nni_mutex_exit(&sock->s_mx);
 		return (NNG_ECLOSED);
 	}
+
+	do {
+		// We generate a new pipe ID, but we make sure it does not
+		// collide with any we already have.  This can only normally
+		// happen if we wrap -- i.e. we've had 4 billion or so pipes.
+		// XXX: consider making this a hash table!!
+		nni_pipe *check;
+		pipe->p_id = nni_plat_nextid() & 0x7FFFFFFF;
+		collide = 0;
+		NNI_LIST_FOREACH (&sock->s_pipes, check) {
+			if (check->p_id == pipe->p_id) {
+				collide = 1;
+				break;
+			}
+		}
+	} while (collide);
+
+	pipe->p_id = nni_plat_nextid();
 	rv = sock->s_ops.proto_add_pipe(sock->s_data, pipe, &pipe->p_protdata);
 	if (rv != 0) {
 		pipe->p_reap = 1;
@@ -418,6 +437,20 @@ nni_socket_listen(nni_socket *sock, const char *addr, nni_endpt **epp,
 }
 
 
+void
+nni_socket_recverr(nni_socket *sock, int err)
+{
+	sock->s_recverr = err;
+}
+
+
+void
+nni_socket_senderr(nni_socket *sock, int err)
+{
+	sock->s_senderr = err;
+}
+
+
 int
 nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
 {
@@ -459,6 +492,7 @@ nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
 	return (0);
 }
 
+
 int
 nni_getopt_int(int *ptr, void *val, size_t *sizep)
 {
@@ -471,7 +505,6 @@ nni_getopt_int(int *ptr, void *val, size_t *sizep)
 	memcpy(val, ptr, sz);
 	return (0);
 }
-
 
 
 static int
