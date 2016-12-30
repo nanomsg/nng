@@ -130,12 +130,11 @@ nni_endpt_connect(nni_endpt *ep, nni_pipe **pp)
 static int
 nni_dial_once(nni_endpt *ep)
 {
-	nni_socket *sock = ep->ep_sock;
 	nni_pipe *pipe;
 	int rv;
 
 	if (((rv = nni_endpt_connect(ep, &pipe)) == 0) &&
-	    ((rv = nni_socket_add_pipe(sock, pipe)) == 0)) {
+	    ((rv = nni_pipe_start(pipe)) == 0)) {
 		return (0);
 	}
 
@@ -281,7 +280,6 @@ static void
 nni_listener(void *arg)
 {
 	nni_endpt *ep = arg;
-	nni_socket *sock = ep->ep_sock;
 	nni_pipe *pipe;
 	int rv;
 
@@ -332,7 +330,7 @@ nni_listener(void *arg)
 		pipe = NULL;
 
 		if (((rv = nni_endpt_accept(ep, &pipe)) == 0) &&
-		    ((rv = nni_socket_add_pipe(sock, pipe)) == 0)) {
+		    ((rv = nni_pipe_start(pipe)) == 0)) {
 			continue;
 		}
 		if (rv == NNG_ECLOSED) {

@@ -53,9 +53,9 @@ nni_reaper(void *arg)
 			// keep lists of pipes for managing their topologies.
 			// Note that if a protocol has rejected the pipe, it
 			// won't have any data.
-			if (pipe->p_protdata != NULL) {
+			if (pipe->p_active) {
 				sock->s_ops.proto_rem_pipe(sock->s_data,
-				    pipe->p_protdata);
+				    pipe->p_pdata);
 			}
 
 			// If pipe was a connected (dialer) pipe,
@@ -217,7 +217,6 @@ nni_socket_close(nni_socket *sock)
 	// Go through and schedule close on all pipes.
 	while ((pipe = nni_list_first(&sock->s_pipes)) != NULL) {
 		nni_list_remove(&sock->s_pipes, pipe);
-		pipe->p_active = 0;
 		pipe->p_reap = 1;
 		nni_list_append(&sock->s_reaps, pipe);
 	}
@@ -337,52 +336,6 @@ uint16_t
 nni_socket_proto(nni_socket *sock)
 {
 	return (sock->s_ops.proto_self);
-}
-
-
-int
-nni_socket_add_pipe(nni_socket *sock, nni_pipe *pipe)
-{
-	int rv;
-	int collide;
-
-	nni_mutex_enter(&sock->s_mx);
-	if (sock->s_closing) {
-		nni_mutex_exit(&sock->s_mx);
-		return (NNG_ECLOSED);
-	}
-
-	do {
-		// We generate a new pipe ID, but we make sure it does not
-		// collide with any we already have.  This can only normally
-		// happen if we wrap -- i.e. we've had 4 billion or so pipes.
-		// XXX: consider making this a hash table!!
-		nni_pipe *check;
-		pipe->p_id = nni_plat_nextid() & 0x7FFFFFFF;
-		collide = 0;
-		NNI_LIST_FOREACH (&sock->s_pipes, check) {
-			if (check->p_id == pipe->p_id) {
-				collide = 1;
-				break;
-			}
-		}
-	} while (collide);
-
-	pipe->p_id = nni_plat_nextid();
-	rv = sock->s_ops.proto_add_pipe(sock->s_data, pipe, &pipe->p_protdata);
-	if (rv != 0) {
-		pipe->p_reap = 1;
-		nni_list_append(&sock->s_reaps, pipe);
-		nni_cond_broadcast(&sock->s_cv);
-		nni_mutex_exit(&sock->s_mx);
-		return (rv);
-	}
-	nni_list_append(&sock->s_pipes, pipe);
-	pipe->p_active = 1;
-
-	// XXX: Publish event
-	nni_mutex_exit(&sock->s_mx);
-	return (0);
 }
 
 

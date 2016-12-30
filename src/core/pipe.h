@@ -20,12 +20,20 @@ struct nng_pipe {
 	uint32_t		p_id;
 	struct nni_pipe_ops	p_ops;
 	void *			p_trandata;
-	void *			p_protdata;
+	void *			p_pdata;	// protocol specific data
+	size_t			p_psize;	// size of protocol data
 	nni_list_node		p_node;
 	nni_socket *		p_sock;
 	nni_endpt *		p_ep;
 	int			p_reap;
 	int			p_active;
+	int			p_abort;
+	nni_mutex		p_mx;
+	nni_cond		p_cv;
+	void			(*p_send)(void *);
+	void			(*p_recv)(void *);
+	nni_thread *		p_send_thr;
+	nni_thread *		p_recv_thr;
 };
 
 // Pipe operations that protocols use.
@@ -40,6 +48,7 @@ extern int nni_pipe_create(nni_pipe **, nni_endpt *);
 
 extern void nni_pipe_destroy(nni_pipe *);
 
+extern int nni_pipe_start(nni_pipe *);
 extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
 
 #endif // CORE_PIPE_H

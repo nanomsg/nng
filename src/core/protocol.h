@@ -20,9 +20,10 @@
 // As a consequence, most of the concurrency in nng exists in the protocol
 // implementations.
 struct nni_protocol {
-	uint16_t	proto_self;     // our 16-bit protocol ID
-	uint16_t	proto_peer;     // who we peer with (protocol ID)
-	const char *	proto_name;     // string version of our name
+	uint16_t	proto_self;             // our 16-bit protocol ID
+	uint16_t	proto_peer;             // who we peer with (ID)
+	const char *	proto_name;             // string version of our name
+	size_t		proto_pipe_size;        // pipe private data size
 
 	//Create protocol instance, which will be stored on the socket.
 	int		(*proto_create)(void **, nni_socket *);
@@ -32,11 +33,17 @@ struct nni_protocol {
 
 	// Add and remove pipes.  These are called as connections are
 	// created or destroyed.
-	int		(*proto_add_pipe)(void *, nni_pipe *, void **);
+	int		(*proto_add_pipe)(void *, nni_pipe *, void *);
 	void		(*proto_rem_pipe)(void *, void *);
 
+	// Thread functions for processing send & receive sides of
+	// protocol pipes.  Send may be NULL, but recv should should not.
+	// (Recv needs to detect a closed pipe, if nothing else.)
+	void            (*proto_pipe_send)(void *);
+	void		(*proto_pipe_recv)(void *);
+
 	// Option manipulation.  These may be NULL.
-	int		(*proto_setopt)(void *, int, const void *, size_t);
+	int (*proto_setopt)(void *, int, const void *, size_t);
 	int		(*proto_getopt)(void *, int, void *, size_t *);
 
 	// Receive filter.  This may be NULL, but if it isn't, then
