@@ -30,8 +30,9 @@ extern int nni_getopt_duration(nni_duration *, void *, size_t *);
 // nni_setopt_int sets an integer, which must be between the minimum and
 // maximum values (inclusive).
 extern int nni_setopt_int(int *, const void *, size_t, int, int);
-#define NNI_MAXINT ((int)2147483647)
-#define	NNI_MININT ((int)-2147483648)
+
+#define NNI_MAXINT	((int) 2147483647)
+#define NNI_MININT	((int) -2147483648)
 
 // nni_getopt_int gets an integer.
 extern int nni_getopt_int(int *, void *, size_t *);
