@@ -87,7 +87,10 @@ nni_pair_add_pipe(void *arg, nni_pipe *pipe, void **datap)
 	nni_pair_pipe *pp;
 	int rv;
 
-	pp = nni_alloc(sizeof (*pp));
+	if ((pp = nni_alloc(sizeof (*pp))) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
 	pp->pipe = pipe;
 	pp->good = 0;
 	pp->sigclose = 0;
@@ -97,24 +100,31 @@ nni_pair_add_pipe(void *arg, nni_pipe *pipe, void **datap)
 
 	nni_mutex_enter(&pair->mx);
 	if (pair->pipe != NULL) {
-		// Already have a peer, denied.
-		nni_mutex_exit(&pair->mx);
-		nni_free(pp, sizeof (*pp));
-		return (NNG_EBUSY);
+		rv = NNG_EBUSY;         // Already have a peer, denied.
+		goto fail;
 	}
 	if ((rv = nni_thread_create(&pp->rthr, nni_pair_receiver, pp)) != 0) {
-		nni_mutex_exit(&pair->mx);
-		return (rv);
+		goto fail;
 	}
 	if ((rv = nni_thread_create(&pp->sthr, nni_pair_sender, pp)) != 0) {
-		nni_mutex_exit(&pair->mx);
-		return (rv);
+		goto fail;
 	}
 	pp->good = 1;
 	pair->pipe = pp;
 	*datap = pp;
 	nni_mutex_exit(&pair->mx);
 	return (0);
+
+fail:
+	nni_mutex_exit(&pair->mx);
+	if (pp->rthr != NULL) {
+		nni_thread_reap(pp->rthr);
+	}
+	if (pp->sthr != NULL) {
+		nni_thread_reap(pp->sthr);
+	}
+	nni_free(pp, sizeof (*pp));
+	return (rv);
 }
 
 

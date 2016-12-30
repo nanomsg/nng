@@ -121,7 +121,9 @@ nni_req_add_pipe(void *arg, nni_pipe *pipe, void **datap)
 	nni_req_pipe *rp;
 	int rv;
 
-	rp = nni_alloc(sizeof (*rp));
+	if ((rp = nni_alloc(sizeof (*rp))) == NULL) {
+		return (NNG_ENOMEM);
+	}
 	rp->pipe = pipe;
 	rp->good = 0;
 	rp->sigclose = 0;
@@ -131,18 +133,26 @@ nni_req_add_pipe(void *arg, nni_pipe *pipe, void **datap)
 
 	nni_mutex_enter(&req->mx);
 	if ((rv = nni_thread_create(&rp->rthr, nni_req_receiver, rp)) != 0) {
-		nni_mutex_exit(&req->mx);
-		return (rv);
+		goto fail;
 	}
 	if ((rv = nni_thread_create(&rp->sthr, nni_req_sender, rp)) != 0) {
-		nni_mutex_exit(&req->mx);
-		return (rv);
+		goto fail;
 	}
 	rp->good = 1;
 	nni_list_append(&req->pipes, rp);
 	*datap = rp;
 	nni_mutex_exit(&req->mx);
 	return (0);
+fail:
+	nni_mutex_exit(&req->mx);
+	if (rp->rthr) {
+		nni_thread_reap(rp->rthr);
+	}
+	if (rp->sthr) {
+		nni_thread_reap(rp->sthr);
+	}
+	nni_free(rp, sizeof (*rp));
+	return (rv);
 }
 
 
