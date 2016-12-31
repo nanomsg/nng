@@ -22,4 +22,8 @@ once the production reaches a point that we are ready to start using
 issue tracking and so forth, we will compress the existing deltas into
 a single commit.  This is probably some number of weeks in the future.
 
-	- Garrett D'Amore (Dec. 9, 2016)
+If you want to build and test yourself, you need CMake version 3.1, and
+you can use standard CMake build recipes.  At present only POSIX systems
+(Linux and MacOS) will build.  Win32 is still outstanding.
+
+	- Garrett D'Amore (Dec. 31, 2016)
