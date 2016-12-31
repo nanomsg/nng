@@ -115,6 +115,7 @@ nni_endpt_connect(nni_endpt *ep, nni_pipe **pp)
 		return (rv);
 	}
 	ep->ep_pipe = pipe;
+	pipe->p_ep = ep;
 	*pp = pipe;
 	return (0);
 }
