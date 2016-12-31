@@ -116,9 +116,6 @@ nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 	p->p_sock = sock;
 	p->p_ops = *ep->ep_ops.ep_pipe_ops;
 	p->p_ep = ep;
-	if (ep->ep_dialer != NULL) {
-		ep->ep_pipe = p;
-	}
 	NNI_LIST_NODE_INIT(&p->p_node);
 	*pp = p;
 	return (0);

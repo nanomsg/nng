@@ -108,6 +108,7 @@ nni_endpt_connect(nni_endpt *ep, nni_pipe **pp)
 		nni_pipe_destroy(pipe);
 		return (rv);
 	}
+	ep->ep_pipe = pipe;
 	*pp = pipe;
 	return (0);
 }
