@@ -98,7 +98,11 @@ nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 	if ((p = nni_alloc(sizeof (*p))) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	p->p_send_thr = NULL;
+	p->p_recv_thr = NULL;
 	p->p_trandata = NULL;
+	p->p_active = 0;
+	p->p_abort = 0;
 	if ((rv = nni_cond_init(&p->p_cv, &sock->s_mx)) != 0) {
 		nni_free(p, sizeof (*p));
 		return (rv);
@@ -112,8 +116,6 @@ nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 	p->p_sock = sock;
 	p->p_ops = *ep->ep_ops.ep_pipe_ops;
 	p->p_ep = ep;
-	p->p_active = 0;
-	p->p_abort = 0;
 	if (ep->ep_dialer != NULL) {
 		ep->ep_pipe = p;
 	}
@@ -207,7 +209,7 @@ nni_pipe_start(nni_pipe *pipe)
 	if (rv != 0) {
 		goto fail;
 	}
-	rv = nni_thread_create(&pipe->p_send_thr, nni_pipe_receiver, pipe);
+	rv = nni_thread_create(&pipe->p_recv_thr, nni_pipe_receiver, pipe);
 	if (rv != 0) {
 		goto fail;
 	}
