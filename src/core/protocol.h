@@ -39,11 +39,11 @@ struct nni_protocol {
 	// Thread functions for processing send & receive sides of
 	// protocol pipes.  Send may be NULL, but recv should should not.
 	// (Recv needs to detect a closed pipe, if nothing else.)
-	void            (*proto_pipe_send)(void *);
+	void		(*proto_pipe_send)(void *);
 	void		(*proto_pipe_recv)(void *);
 
 	// Option manipulation.  These may be NULL.
-	int (*proto_setopt)(void *, int, const void *, size_t);
+	int		(*proto_setopt)(void *, int, const void *, size_t);
 	int		(*proto_getopt)(void *, int, void *, size_t *);
 
 	// Receive filter.  This may be NULL, but if it isn't, then

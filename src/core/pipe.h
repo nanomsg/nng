@@ -20,8 +20,8 @@ struct nng_pipe {
 	uint32_t		p_id;
 	struct nni_pipe_ops	p_ops;
 	void *			p_trandata;
-	void *			p_pdata;	// protocol specific data
-	size_t			p_psize;	// size of protocol data
+	void *			p_pdata;        // protocol specific data
+	size_t			p_psize;        // size of protocol data
 	nni_list_node		p_node;
 	nni_socket *		p_sock;
 	nni_endpt *		p_ep;

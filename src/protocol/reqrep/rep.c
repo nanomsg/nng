@@ -138,6 +138,7 @@ nni_rep_rem_pipe(void *arg, void *data)
 	nni_msgqueue_destroy(rp->sendq);
 }
 
+
 // nni_rep_topsender watches for messages from the upper write queue,
 // extracts the destination pipe, and forwards it to the appropriate
 // destination pipe via a separate queue.  This prevents a single bad
@@ -176,7 +177,7 @@ nni_rep_topsender(void *arg)
 		nni_msg_trim_header(msg, 4);
 
 		nni_mutex_enter(&rep->mx);
-		if (nni_idhash_find(rep->pipes, id, (void **)&rp) != 0) {
+		if (nni_idhash_find(rep->pipes, id, (void **) &rp) != 0) {
 			nni_mutex_exit(&rep->mx);
 			nni_msg_free(msg);
 			continue;
@@ -192,6 +193,7 @@ nni_rep_topsender(void *arg)
 		nni_mutex_exit(&rep->mx);
 	}
 }
+
 
 static void
 nni_rep_sender(void *arg)
@@ -342,7 +344,6 @@ nni_rep_getopt(void *arg, int opt, void *buf, size_t *szp)
 	}
 	return (rv);
 }
-
 
 
 static nni_msg *
