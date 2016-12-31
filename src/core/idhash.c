@@ -91,6 +91,7 @@ nni_hash_resize(nni_idhash *h)
 	uint32_t oldsize;
 	nni_idhash_entry *newents;
 	nni_idhash_entry *oldents;
+	int i;
 
 	if ((h->ih_load < h->ih_maxload) && (h->ih_load >= h->ih_minload)) {
 		// No resize needed.
@@ -126,7 +127,7 @@ nni_hash_resize(nni_idhash *h)
 		h->ih_minload = 0;
 		h->ih_maxload = 5;
 	}
-	for (int i = 0; i < oldsize; i++) {
+	for (i = 0; i < oldsize; i++) {
 		uint32_t index;
 		if (oldents[i].ihe_val == NULL) {
 			continue;
