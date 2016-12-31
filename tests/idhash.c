@@ -95,8 +95,9 @@ Main({
 		int expect[1024];
 		int actual[1024];
 		int rv;
+		int i;
 
-		for (int i = 0; i < 1024; i++) {
+		for (i = 0; i < 1024; i++) {
 			expect[i] = i;
 		}
 		Convey("Given an id hash", {
@@ -114,7 +115,7 @@ Main({
 
 			Convey("We can insert 1024 items", {
 				uint32_t count;
-				for (int i = 0; i < 1024; i++) {
+				for (i = 0; i < 1024; i++) {
 					nni_idhash_insert(h, i, &expect[i]);
 				}
 				So(nni_idhash_count(h, &count) == 0);
