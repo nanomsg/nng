@@ -185,7 +185,6 @@ nni_dialer(void *arg)
 			break;
 		default:
 			// XXX: THIS NEEDS TO BE A PROPER BACKOFF.
-			printf("COOLING DOWN!!\n");
 			cooldown = 1000000;
 			break;
 		}
