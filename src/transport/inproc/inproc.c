@@ -294,7 +294,7 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 	}
 	*pipep = ep->cpipe;
 	nni_mutex_exit(&nni_inproc.mx);
-	return (ep->closed ? NNG_ECLOSED : 0);
+	return (0);
 }
 
 

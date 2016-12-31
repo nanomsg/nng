@@ -44,6 +44,12 @@ nni_reaper(void *arg)
 		nni_mutex_enter(&sock->s_mx);
 		if ((pipe = nni_list_first(&sock->s_reaps)) != NULL) {
 			nni_list_remove(&sock->s_reaps, pipe);
+
+			if (((ep = pipe->p_ep) != NULL) &&
+			    ((ep->ep_pipe == pipe))) {
+				ep->ep_pipe = NULL;
+				nni_cond_broadcast(&ep->ep_cv);
+			}
 			nni_mutex_exit(&sock->s_mx);
 
 			// This should already have been done.
@@ -56,18 +62,6 @@ nni_reaper(void *arg)
 			if (pipe->p_active) {
 				sock->s_ops.proto_rem_pipe(sock->s_data,
 				    pipe->p_pdata);
-			}
-
-			// If pipe was a connected (dialer) pipe,
-			// then let the endpoint know so it can try to
-			// reestablish the connection.
-			if (((ep = pipe->p_ep) != NULL) &&
-			    ((ep->ep_pipe == pipe))) {
-				ep->ep_pipe = NULL;
-				pipe->p_ep = NULL;
-				nni_mutex_enter(&ep->ep_mx);
-				nni_cond_signal(&ep->ep_cv);
-				nni_mutex_exit(&ep->ep_mx);
 			}
 
 			// XXX: also publish event...
@@ -174,8 +168,11 @@ nni_socket_close(nni_socket *sock)
 
 	// Stop all EPS.  We're going to do this first, since we know
 	// we're closing.
-	NNI_LIST_FOREACH (&sock->s_eps, ep) {
+	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
+		nni_list_remove(&sock->s_eps, ep);
+		nni_mutex_exit(&sock->s_mx);
 		nni_endpt_close(ep);
+		nni_mutex_enter(&sock->s_mx);
 	}
 
 	// Special optimization; if there are no pipes connected,
@@ -225,16 +222,6 @@ nni_socket_close(nni_socket *sock)
 	reaper = sock->s_reaper;
 	sock->s_reaper = NULL;
 	nni_cond_broadcast(&sock->s_cv);
-
-	// We already told the endpoints to shutdown.  We just
-	// need to reap them now.
-	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
-		nni_list_remove(&sock->s_eps, ep);
-		nni_mutex_exit(&sock->s_mx);
-
-		nni_endpt_destroy(ep);
-		nni_mutex_enter(&sock->s_mx);
-	}
 	nni_mutex_exit(&sock->s_mx);
 
 	// Wait for the reaper to exit.
@@ -351,7 +338,6 @@ nni_socket_dial(nni_socket *sock, const char *addr, nni_endpt **epp, int flags)
 	rv = nni_endpt_dial(ep, flags);
 	if (rv != 0) {
 		nni_endpt_close(ep);
-		nni_endpt_destroy(ep);
 	} else {
 		if (epp != NULL) {
 			*epp = ep;
@@ -377,7 +363,6 @@ nni_socket_listen(nni_socket *sock, const char *addr, nni_endpt **epp,
 	rv = nni_endpt_listen(ep, flags);
 	if (rv != 0) {
 		nni_endpt_close(ep);
-		nni_endpt_destroy(ep);
 	} else {
 		if (epp != NULL) {
 			*epp = ep;

@@ -23,17 +23,15 @@ struct nng_endpt {
 	char		ep_addr[NNG_MAXADDRLEN];
 	nni_thread *	ep_dialer;
 	nni_thread *	ep_listener;
-	int		ep_stop;                // thread exits before start
-	int		ep_start;               // start thread running
-	int		ep_close;               // full shutdown
-	int		ep_bound;               // true if we bound locally
-	nni_mutex	ep_mx;
+	int		ep_stop;        // thread exits before start
+	int		ep_start;       // start thread running
+	int		ep_close;       // full shutdown
+	int		ep_bound;       // true if we bound locally
 	nni_cond	ep_cv;
 	nni_pipe *	ep_pipe;        // Connected pipe (dialers only)
 };
 
 extern int nni_endpt_create(nni_endpt **, nni_socket *, const char *);
-extern void nni_endpt_destroy(nni_endpt *);
 extern int nni_endpt_accept(nni_endpt *, nni_pipe **);
 extern void nni_endpt_close(nni_endpt *);
 extern int nni_endpt_dial(nni_endpt *, int);
