@@ -124,7 +124,7 @@ Main({
 				So(h->ih_count == 1024);
 
 				Convey("We can remove them", {
-					for (int i = 0; i < 1024; i++) {
+					for (i = 0; i < 1024; i++) {
 						nni_idhash_remove(h, i);
 					}
 					So(h->ih_count == 0);
