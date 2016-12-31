@@ -116,7 +116,8 @@ nni_endpt_connect(nni_endpt *ep, nni_pipe **pp)
 	if ((rv = nni_pipe_create(&pipe, ep)) != 0) {
 		return (rv);
 	}
-	if ((rv = ep->ep_ops.ep_connect(ep->ep_data, &pipe->p_trandata)) != 0) {
+	rv = ep->ep_ops.ep_connect(ep->ep_data, &pipe->p_trandata);
+	if (rv != 0) {
 		nni_pipe_destroy(pipe);
 		return (rv);
 	}
@@ -306,18 +307,17 @@ nni_listener(void *arg)
 
 			if (rv == 0) {
 				ep->ep_bound = 1;
-			} else {
-				// Invalid address? Out of memory?  Who knows.
-				// Try again in a bit (10ms).
-				// XXX: PROPER BACKOFF NEEDED
-				cooldown = 10000;
-				cooldown += nni_clock();
-				while (!ep->ep_close) {
-					rv = nni_cond_waituntil(&ep->ep_cv,
-					    cooldown);
-					if (rv == NNG_ETIMEDOUT) {
-						break;
-					}
+				break;
+			}
+			// Invalid address? Out of memory?  Who knows.
+			// Try again in a bit (10ms).
+			// XXX: PROPER BACKOFF NEEDED
+			cooldown = 10000;
+			cooldown += nni_clock();
+			while (!ep->ep_close) {
+				rv = nni_cond_waituntil(&ep->ep_cv, cooldown);
+				if (rv == NNG_ETIMEDOUT) {
+					break;
 				}
 			}
 		}
