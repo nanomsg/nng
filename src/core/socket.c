@@ -169,7 +169,6 @@ nni_socket_close(nni_socket *sock)
 	// Stop all EPS.  We're going to do this first, since we know
 	// we're closing.
 	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
-		nni_list_remove(&sock->s_eps, ep);
 		nni_mutex_exit(&sock->s_mx);
 		nni_endpt_close(ep);
 		nni_mutex_enter(&sock->s_mx);
@@ -342,9 +341,6 @@ nni_socket_dial(nni_socket *sock, const char *addr, nni_endpt **epp, int flags)
 		if (epp != NULL) {
 			*epp = ep;
 		}
-		nni_mutex_enter(&sock->s_mx);
-		nni_list_append(&sock->s_eps, ep);
-		nni_mutex_exit(&sock->s_mx);
 	}
 	return (rv);
 }
@@ -367,9 +363,6 @@ nni_socket_listen(nni_socket *sock, const char *addr, nni_endpt **epp,
 		if (epp != NULL) {
 			*epp = ep;
 		}
-		nni_mutex_enter(&sock->s_mx);
-		nni_list_append(&sock->s_eps, ep);
-		nni_mutex_exit(&sock->s_mx);
 	}
 	return (rv);
 }

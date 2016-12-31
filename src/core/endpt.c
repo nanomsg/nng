@@ -55,6 +55,11 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 		nni_free(ep, sizeof (*ep));
 		return (rv);
 	}
+
+	nni_mutex_enter(&sock->s_mx);
+	nni_list_append(&sock->s_eps, ep);
+	nni_mutex_exit(&sock->s_mx);
+
 	*epp = ep;
 	return (0);
 }
@@ -78,6 +83,7 @@ nni_endpt_close(nni_endpt *ep)
 		ep->ep_pipe = NULL;
 	}
 	nni_cond_broadcast(&ep->ep_cv);
+	nni_list_remove(&ep->ep_sock->s_eps, ep);
 	nni_mutex_exit(mx);
 
 	if (ep->ep_dialer != NULL) {
