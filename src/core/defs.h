@@ -18,10 +18,6 @@
 #define NNI_ARG_UNUSED(x)    ((void) x);
 
 // These types are common but have names shared with user space.
-typedef struct nng_socket *	nni_socket_t;
-typedef struct nng_pipe *	nni_pipe_t;
-typedef struct nng_msg *	nni_msg_t;
-
 typedef struct nng_socket	nni_socket;
 typedef struct nng_endpt	nni_endpt;
 typedef struct nng_pipe		nni_pipe;
