@@ -23,7 +23,7 @@ typedef struct nni_pair_sock	nni_pair_sock;
 struct nni_pair_sock {
 	nni_socket *	sock;
 	nni_pair_pipe * pipe;
-	nni_mutex	mx;
+	nni_mtx		mx;
 	nni_msgqueue *	uwq;
 	nni_msgqueue *	urq;
 };
@@ -50,7 +50,7 @@ nni_pair_create(void **pairp, nni_socket *sock)
 	if ((pair = nni_alloc(sizeof (*pair))) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mutex_init(&pair->mx)) != 0) {
+	if ((rv = nni_mtx_init(&pair->mx)) != 0) {
 		nni_free(pair, sizeof (*pair));
 		return (rv);
 	}
@@ -72,7 +72,7 @@ nni_pair_destroy(void *arg)
 	// this wold be the time to shut them all down.  We don't, because
 	// the socket already shut us down, and we don't have any other
 	// threads that run.
-	nni_mutex_fini(&pair->mx);
+	nni_mtx_fini(&pair->mx);
 	nni_free(pair, sizeof (*pair));
 }
 
@@ -88,18 +88,14 @@ nni_pair_add_pipe(void *arg, nni_pipe *pipe, void *data)
 	pp->sigclose = 0;
 	pp->pair = pair;
 
-	nni_mutex_enter(&pair->mx);
+	nni_mtx_lock(&pair->mx);
 	if (pair->pipe != NULL) {
-		rv = NNG_EBUSY;         // Already have a peer, denied.
-		goto fail;
+		nni_mtx_unlock(&pair->mx);
+		return (NNG_EBUSY);      // Already have a peer, denied.
 	}
 	pair->pipe = pp;
-	nni_mutex_exit(&pair->mx);
+	nni_mtx_unlock(&pair->mx);
 	return (0);
-
-fail:
-	nni_mutex_exit(&pair->mx);
-	return (rv);
 }
 
 
@@ -109,13 +105,11 @@ nni_pair_rem_pipe(void *arg, void *data)
 	nni_pair_sock *pair = arg;
 	nni_pair_pipe *pp = data;
 
-	nni_mutex_enter(&pair->mx);
-	if (pair->pipe != pp) {
-		nni_mutex_exit(&pair->mx);
-		return;
+	nni_mtx_lock(&pair->mx);
+	if (pair->pipe == pp) {
+		pair->pipe = NULL;
 	}
-	pair->pipe = NULL;
-	nni_mutex_exit(&pair->mx);
+	nni_mtx_unlock(&pair->mx);
 }
 
 

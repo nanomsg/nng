@@ -27,13 +27,8 @@ struct nng_pipe {
 	nni_endpt *		p_ep;
 	int			p_reap;
 	int			p_active;
-	int			p_abort;
-	nni_mutex		p_mx;
-	nni_cond		p_cv;
-	void			(*p_send)(void *);
-	void			(*p_recv)(void *);
-	nni_thread *		p_send_thr;
-	nni_thread *		p_recv_thr;
+	nni_thr			p_send_thr;
+	nni_thr			p_recv_thr;
 };
 
 // Pipe operations that protocols use.

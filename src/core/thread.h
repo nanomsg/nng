@@ -27,7 +27,7 @@ typedef struct {
 	nni_plat_mtx	mtx;
 	nni_plat_cv	cv;
 	nni_thr_func	fn;
-	void		*arg;
+	void *		arg;
 	int		start;
 	int		stop;
 	int		done;

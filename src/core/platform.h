@@ -63,9 +63,9 @@ extern void nni_free(void *, size_t);
 typedef struct nni_mutex	nni_mutex;
 typedef struct nni_cond		nni_cond;
 
-typedef struct nni_plat_mtx nni_plat_mtx;
-typedef struct nni_plat_cv nni_plat_cv;
-typedef struct nni_plat_thr nni_plat_thr;
+typedef struct nni_plat_mtx	nni_plat_mtx;
+typedef struct nni_plat_cv	nni_plat_cv;
+typedef struct nni_plat_thr	nni_plat_thr;
 
 // Mutex handling.
 

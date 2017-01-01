@@ -54,8 +54,8 @@ struct nni_plat_thr {
 };
 
 struct nni_plat_cv {
-	pthread_cond_t	cv;
-	pthread_mutex_t *mtx;
+	pthread_cond_t		cv;
+	pthread_mutex_t *	mtx;
 };
 
 #endif

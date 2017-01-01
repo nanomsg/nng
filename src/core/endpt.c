@@ -111,7 +111,7 @@ nni_endpt_connect(nni_endpt *ep, nni_pipe **pp)
 	}
 	rv = ep->ep_ops.ep_connect(ep->ep_data, &pipe->p_trandata);
 	if (rv != 0) {
-		nni_pipe_destroy(pipe);
+		nni_pipe_close(pipe);
 		return (rv);
 	}
 	ep->ep_pipe = pipe;
@@ -179,6 +179,7 @@ nni_dialer(void *arg)
 			break;
 		case NNG_ECLOSED:
 			return;
+
 		default:
 			// XXX: THIS NEEDS TO BE A PROPER BACKOFF.
 			cooldown = 1000000;
@@ -265,7 +266,7 @@ nni_endpt_accept(nni_endpt *ep, nni_pipe **pp)
 		return (rv);
 	}
 	if ((rv = ep->ep_ops.ep_accept(ep->ep_data, &pipe->p_trandata)) != 0) {
-		nni_pipe_destroy(pipe);
+		nni_pipe_close(pipe);
 		return (rv);
 	}
 	*pp = pipe;

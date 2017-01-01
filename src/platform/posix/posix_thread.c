@@ -175,6 +175,7 @@ nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 	return (0);
 }
 
+
 void
 nni_plat_cv_wake(nni_plat_cv *cv)
 {
@@ -185,6 +186,7 @@ nni_plat_cv_wake(nni_plat_cv *cv)
 	}
 }
 
+
 void
 nni_plat_cv_wait(nni_plat_cv *cv)
 {
@@ -194,6 +196,7 @@ nni_plat_cv_wait(nni_plat_cv *cv)
 		nni_panic("pthread_cond_wait: %s", strerror(rv));
 	}
 }
+
 
 int
 nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
@@ -217,8 +220,8 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 		nni_panic("pthread_cond_timedwait: %d", rv);
 	}
 	return (0);
-
 }
+
 
 void
 nni_plat_cv_fini(nni_plat_cv *cv)
@@ -229,6 +232,7 @@ nni_plat_cv_fini(nni_plat_cv *cv)
 		nni_panic("pthread_cond_destroy: %s", strerror(rv));
 	}
 }
+
 
 int
 nni_plat_thr_init(nni_plat_thr *thr, void (*fn)(void *), void *arg)
@@ -260,7 +264,6 @@ nni_atfork_child(void)
 {
 	nni_plat_forked = 1;
 }
-
 
 
 int

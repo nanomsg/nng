@@ -53,7 +53,9 @@ nni_reaper(void *arg)
 			nni_mutex_exit(&sock->s_mx);
 
 			// This should already have been done.
-			pipe->p_ops.p_close(pipe->p_trandata);
+			if (pipe->p_trandata != NULL) {
+				pipe->p_ops.p_close(pipe->p_trandata);
+			}
 
 			// Remove the pipe from the protocol.  Protocols may
 			// keep lists of pipes for managing their topologies.
