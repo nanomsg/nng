@@ -41,6 +41,23 @@ struct nni_cond {
 	pthread_cond_t		cv;
 	pthread_mutex_t *	mx;
 };
+
+// These types are provided for here, to permit them to be directly inlined
+// elsewhere.
+
+struct nni_plat_mtx {
+	pthread_mutex_t mtx;
+};
+
+struct nni_plat_thr {
+	pthread_t tid;
+};
+
+struct nni_plat_cv {
+	pthread_cond_t	cv;
+	pthread_mutex_t *mtx;
+};
+
 #endif
 
 #endif // PLATFORM_POSIX_IMPL_H

@@ -50,8 +50,8 @@ add(void *arg)
 struct notifyarg {
 	int did;
 	int when;
-	nni_mutex mx;
-	nni_cond cv;
+	nni_mtx mx;
+	nni_cv cv;
 };
 
 void
@@ -60,10 +60,10 @@ notifyafter(void *arg)
 	struct notifyarg *na = arg;
 
 	nni_usleep(na->when);
-	nni_mutex_enter(&na->mx);
+	nni_mtx_lock(&na->mx);
 	na->did = 1;
-	nni_cond_signal(&na->cv);
-	nni_mutex_exit(&na->mx);
+	nni_cv_wake(&na->cv);
+	nni_mtx_unlock(&na->mx);
 }
 
 TestMain("Platform Operations", {
@@ -101,90 +101,100 @@ TestMain("Platform Operations", {
 		})
 	})
 	Convey("Mutexes work", {
-		nni_mutex mx;
+		nni_mtx mx;
 		int rv;
 
-		rv = nni_mutex_init(&mx);
+		rv = nni_mtx_init(&mx);
 		So(rv == 0);
 
 		Convey("We can lock a mutex", {
-			nni_mutex_enter(&mx);
+			nni_mtx_lock(&mx);
 			So(1);
 			Convey("And cannot recursively lock", {
-				rv = nni_mutex_tryenter(&mx);
+				rv = nni_mtx_trylock(&mx);
 				So(rv != 0);
 			})
 			Convey("And we can unlock it", {
-				nni_mutex_exit(&mx);
+				nni_mtx_unlock(&mx);
 				So(1);
 				Convey("And then lock it again", {
-					rv = nni_mutex_tryenter(&mx);
+					rv = nni_mtx_trylock(&mx);
 					So(rv == 0);
 				})
 			})
 		})
 		Convey("We can finalize it", {
-			nni_mutex_fini(&mx);
+			nni_mtx_fini(&mx);
 		})
 	})
 
 	Convey("Threads work", {
-		nni_thread *thr;
+		nni_thr thr;
 		int val = 0;
 		int rv;
 
 		Convey("We can create threads", {
-			rv = nni_thread_create(&thr, add, &val);
+			rv = nni_thr_init(&thr, add, &val);
 			So(rv == 0);
-			So(thr != NULL);
+			nni_thr_run(&thr);
 
 			Convey("It ran", {
 				nni_usleep(50000);	// for context switch
 				So(val == 1);
 			})
 			Convey("We can reap it", {
-				nni_thread_reap(thr);
+				nni_thr_fini(&thr);
 			})
 		})
 	})
 	Convey("Condition variables work", {
 		struct notifyarg arg;
-		nni_thread *thr = NULL;
+		nni_thr thr;
 
-		So(nni_mutex_init(&arg.mx) == 0);
-		So(nni_cond_init(&arg.cv, &arg.mx) == 0);
+		So(nni_mtx_init(&arg.mx) == 0);
+		So(nni_cv_init(&arg.cv, &arg.mx) == 0);
+		So(nni_thr_init(&thr, notifyafter, &arg) == 0);
+
 		Reset({
-			if (thr != NULL) {
-				nni_thread_reap(thr);
-				thr = NULL;
-			}
-			nni_cond_fini(&arg.cv);
-			nni_mutex_fini(&arg.mx);
+			nni_thr_fini(&thr);
+			nni_cv_fini(&arg.cv);
+			nni_mtx_fini(&arg.mx);
 		});
 
 		Convey("Notification works", {
 			arg.did = 0;
 			arg.when = 10000;
-			So(nni_thread_create(&thr, notifyafter, &arg) == 0);
+			nni_thr_run(&thr);
 
-			nni_mutex_enter(&arg.mx);
+			nni_mtx_lock(&arg.mx);
 			if (!arg.did) {
-				nni_cond_wait(&arg.cv);
+				nni_cv_wait(&arg.cv);
 			}
-			nni_mutex_exit(&arg.mx);
+			nni_mtx_unlock(&arg.mx);
 			So(arg.did == 1);
 		})
 
 		Convey("Timeout works", {
 			arg.did = 0;
 			arg.when = 200000;
-			So(nni_thread_create(&thr, notifyafter, &arg) == 0);
-			nni_mutex_enter(&arg.mx);
+			nni_thr_run(&thr);
+			nni_mtx_lock(&arg.mx);
 			if (!arg.did) {
-				nni_cond_waituntil(&arg.cv, nni_clock() + 10000);
+				nni_cv_until(&arg.cv, nni_clock() + 10000);
 			}
 			So(arg.did == 0);
-			nni_mutex_exit(&arg.mx);
+			nni_mtx_unlock(&arg.mx);
+		})
+
+		Convey("Not running works", {
+			arg.did = 0;
+			arg.when = 1;
+			nni_mtx_lock(&arg.mx);
+			if (!arg.did) {
+				nni_cv_until(&arg.cv, nni_clock() + 10000);
+			}
+			So(arg.did == 0);
+			nni_mtx_unlock(&arg.mx);
 		})
 	})
 })
