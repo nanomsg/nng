@@ -178,7 +178,7 @@ nni_dialer(void *arg)
 			cooldown = 1000000;
 			break;
 		case NNG_ECLOSED:
-			break;
+			return;
 		default:
 			// XXX: THIS NEEDS TO BE A PROPER BACKOFF.
 			cooldown = 1000000;
