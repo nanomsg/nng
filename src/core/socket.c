@@ -231,6 +231,8 @@ nni_socket_close(nni_socket *sock)
 	sock->s_ops.proto_destroy(sock->s_data);
 
 	// And we need to clean up *our* state.
+	nni_msgqueue_destroy(sock->s_urq);
+	nni_msgqueue_destroy(sock->s_uwq);
 	nni_cond_fini(&sock->s_cv);
 	nni_mutex_fini(&sock->s_mx);
 	nni_free(sock, sizeof (*sock));
