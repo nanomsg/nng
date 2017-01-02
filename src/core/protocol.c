@@ -16,18 +16,18 @@
 // The list of protocols is hardwired.  This is reasonably unlikely to
 // change, as adding new protocols is not something intended to be done
 // outside of the core.
-extern nni_protocol nni_pair_protocol;
+extern nni_proto nni_pair_proto;
 
-static nni_protocol *protocols[] = {
-	&nni_pair_protocol,
+static nni_proto *protocols[] = {
+	&nni_pair_proto,
 	NULL
 };
 
-nni_protocol *
-nni_protocol_find(uint16_t num)
+nni_proto *
+nni_proto_find(uint16_t num)
 {
 	int i;
-	nni_protocol *p;
+	nni_proto *p;
 
 	for (i = 0; (p = protocols[i]) != NULL; i++) {
 		if (p->proto_self == num) {
@@ -39,11 +39,11 @@ nni_protocol_find(uint16_t num)
 
 
 const char *
-nni_protocol_name(uint16_t num)
+nni_proto_name(uint16_t num)
 {
-	nni_protocol *p;
+	nni_proto *p;
 
-	if ((p = nni_protocol_find(num)) == NULL) {
+	if ((p = nni_proto_find(num)) == NULL) {
 		return (NULL);
 	}
 	return (p->proto_name);
@@ -51,9 +51,9 @@ nni_protocol_name(uint16_t num)
 
 
 uint16_t
-nni_protocol_number(const char *name)
+nni_proto_number(const char *name)
 {
-	nni_protocol *p;
+	nni_proto *p;
 	int i;
 
 	for (i = 0; (p = protocols[i]) != NULL; i++) {
@@ -63,3 +63,15 @@ nni_protocol_number(const char *name)
 	}
 	return (NNG_PROTO_NONE);
 }
+
+uint16_t
+nni_proto_peer(uint16_t num)
+{
+	nni_proto *p;
+
+	if ((p = nni_proto_find(num)) == NULL) {
+		return (NNG_PROTO_NONE);
+	}
+	return (p->proto_peer);
+}
+

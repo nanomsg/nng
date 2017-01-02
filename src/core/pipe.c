@@ -76,8 +76,8 @@ nni_pipe_destroy(nni_pipe *p)
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.pipe_destroy(p->p_tran_data);
 	}
-	if (p->p_pdata != NULL) {
-		nni_free(p->p_pdata, p->p_psize);
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_fini(p->p_proto_data);
 	}
 	NNI_FREE_STRUCT(p);
 }
@@ -88,7 +88,8 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep)
 {
 	nni_pipe *p;
 	nni_sock *sock = ep->ep_sock;
-	nni_protocol *proto = &sock->s_ops;
+	nni_proto *proto = &sock->s_proto;
+	const nni_proto_pipe *pops = proto->proto_pipe;
 	int rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
@@ -96,32 +97,34 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep)
 	}
 	p->p_sock = sock;
 	p->p_tran_data = NULL;
+	p->p_proto_data = NULL;
 	p->p_active = 0;
-	p->p_psize = proto->proto_pipe_size;
 	NNI_LIST_NODE_INIT(&p->p_node);
 
 	// Make a copy of the transport ops.  We can override entry points
 	// and we avoid an extra dereference on hot code paths.
 	p->p_tran_ops = *ep->ep_tran->tran_pipe;
 
-	if ((p->p_pdata = nni_alloc(p->p_psize)) == NULL) {
-		NNI_FREE_STRUCT(p);
-		return (NNG_ENOMEM);
-	}
-	rv = nni_thr_init(&p->p_recv_thr, proto->proto_pipe_recv, p->p_pdata);
-	if (rv != 0) {
-		nni_free(p->p_pdata, p->p_psize);
+	// Make a copy of the protocol ops.  Same rationale.
+	p->p_proto_ops = *pops;
+
+	if ((rv = pops->pipe_init(&p->p_proto_data, p, sock->s_data)) != 0) {
 		NNI_FREE_STRUCT(p);
 		return (rv);
 	}
-	rv = nni_thr_init(&p->p_send_thr, proto->proto_pipe_send, p->p_pdata);
+	rv = nni_thr_init(&p->p_recv_thr, pops->pipe_recv, p->p_proto_data);
+	if (rv != 0) {
+		pops->pipe_fini(&p->p_proto_data);
+		NNI_FREE_STRUCT(p);
+		return (rv);
+	}
+	rv = nni_thr_init(&p->p_send_thr, pops->pipe_send, p->p_proto_data);
 	if (rv != 0) {
 		nni_thr_fini(&p->p_recv_thr);
-		nni_free(p->p_pdata, p->p_psize);
+		pops->pipe_fini(&p->p_proto_data);
 		NNI_FREE_STRUCT(p);
 		return (rv);
 	}
-	p->p_psize = sock->s_ops.proto_pipe_size;
 	nni_mtx_lock(&sock->s_mx);
 	nni_list_append(&sock->s_pipes, p);
 	nni_mtx_unlock(&sock->s_mx);
@@ -171,9 +174,11 @@ nni_pipe_start(nni_pipe *pipe)
 		}
 	} while (collide);
 
-	rv = sock->s_ops.proto_add_pipe(sock->s_data, pipe, pipe->p_pdata);
+	rv = pipe->p_proto_ops.pipe_add(pipe->p_proto_data);
 	if (rv != 0) {
-		goto fail;
+		nni_mtx_unlock(&sock->s_mx);
+		nni_pipe_close(pipe);
+		return (rv);
 	}
 	nni_thr_run(&pipe->p_send_thr);
 	nni_thr_run(&pipe->p_recv_thr);
@@ -183,10 +188,4 @@ nni_pipe_start(nni_pipe *pipe)
 
 	nni_mtx_unlock(&sock->s_mx);
 	return (0);
-
-fail:
-	pipe->p_reap = 1;
-	nni_mtx_unlock(&sock->s_mx);
-	nni_pipe_close(pipe);
-	return (rv);
 }

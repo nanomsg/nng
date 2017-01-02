@@ -23,7 +23,6 @@ typedef struct nni_pair_sock	nni_pair_sock;
 struct nni_pair_sock {
 	nni_sock *	sock;
 	nni_pair_pipe * pipe;
-	nni_mtx		mx;
 	nni_msgq *	uwq;
 	nni_msgq *	urq;
 };
@@ -42,17 +41,13 @@ static void nni_pair_receiver(void *);
 static void nni_pair_sender(void *);
 
 static int
-nni_pair_create(void **pairp, nni_sock *sock)
+nni_pair_init(void **pairp, nni_sock *sock)
 {
 	nni_pair_sock *pair;
 	int rv;
 
 	if ((pair = NNI_ALLOC_STRUCT(pair)) == NULL) {
 		return (NNG_ENOMEM);
-	}
-	if ((rv = nni_mtx_init(&pair->mx)) != 0) {
-		NNI_FREE_STRUCT(pair);
-		return (rv);
 	}
 	pair->sock = sock;
 	pair->pipe = NULL;
@@ -64,7 +59,7 @@ nni_pair_create(void **pairp, nni_sock *sock)
 
 
 static void
-nni_pair_destroy(void *arg)
+nni_pair_fini(void *arg)
 {
 	nni_pair_sock *pair = arg;
 
@@ -72,49 +67,61 @@ nni_pair_destroy(void *arg)
 	// this wold be the time to shut them all down.  We don't, because
 	// the socket already shut us down, and we don't have any other
 	// threads that run.
-	nni_mtx_fini(&pair->mx);
 	NNI_FREE_STRUCT(pair);
 }
 
 
 static int
-nni_pair_add_pipe(void *arg, nni_pipe *pipe, void *data)
+nni_pair_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 {
-	nni_pair_sock *pair = arg;
-	nni_pair_pipe *pp = data;
-	int rv;
+	nni_pair_pipe *pp;
 
+	if ((pp = NNI_ALLOC_STRUCT(pp)) == NULL) {
+		return (NNG_ENOMEM);
+	}
 	pp->pipe = pipe;
 	pp->sigclose = 0;
-	pp->pair = pair;
-
-	nni_mtx_lock(&pair->mx);
-	if (pair->pipe != NULL) {
-		nni_mtx_unlock(&pair->mx);
-		return (NNG_EBUSY);      // Already have a peer, denied.
-	}
-	pair->pipe = pp;
-	nni_mtx_unlock(&pair->mx);
+	pp->pair = psock;
+	*ppp = pp;
 	return (0);
 }
 
 
 static void
-nni_pair_rem_pipe(void *arg, void *data)
+nni_pair_pipe_fini(void *arg)
 {
-	nni_pair_sock *pair = arg;
-	nni_pair_pipe *pp = data;
+	nni_pair_pipe *pp = arg;
+	NNI_FREE_STRUCT(pp);
+}
 
-	nni_mtx_lock(&pair->mx);
-	if (pair->pipe == pp) {
-		pair->pipe = NULL;
+static int
+nni_pair_pipe_add(void *arg)
+{
+	nni_pair_pipe *pp = arg;
+	nni_pair_sock *pair = pp->pair;
+
+	if (pair->pipe != NULL) {
+		return (NNG_EBUSY);      // Already have a peer, denied.
 	}
-	nni_mtx_unlock(&pair->mx);
+	pair->pipe = pp;
+	return (0);
 }
 
 
 static void
-nni_pair_sender(void *arg)
+nni_pair_pipe_rem(void *arg)
+{
+	nni_pair_pipe *pp = arg;
+	nni_pair_sock *pair = pp->pair;
+
+	if (pair->pipe == pp) {
+		pair->pipe = NULL;
+	}
+}
+
+
+static void
+nni_pair_pipe_send(void *arg)
 {
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
@@ -141,7 +148,7 @@ nni_pair_sender(void *arg)
 
 
 static void
-nni_pair_receiver(void *arg)
+nni_pair_pipe_recv(void *arg)
 {
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
@@ -185,17 +192,23 @@ nni_pair_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
-struct nni_protocol nni_pair_protocol = {
+
+static nni_proto_pipe nni_pair_proto_pipe = {
+	.pipe_init	= nni_pair_pipe_init,
+	.pipe_fini	= nni_pair_pipe_fini,
+	.pipe_add	= nni_pair_pipe_add,
+	.pipe_rem	= nni_pair_pipe_rem,
+	.pipe_send	= nni_pair_pipe_send,
+	.pipe_recv	= nni_pair_pipe_recv,
+};
+
+nni_proto nni_pair_proto = {
 	.proto_self		= NNG_PROTO_PAIR,
 	.proto_peer		= NNG_PROTO_PAIR,
 	.proto_name		= "pair",
-	.proto_create		= nni_pair_create,
-	.proto_destroy		= nni_pair_destroy,
-	.proto_add_pipe		= nni_pair_add_pipe,
-	.proto_rem_pipe		= nni_pair_rem_pipe,
-	.proto_pipe_size	= sizeof (nni_pair_pipe),
-	.proto_pipe_send	= nni_pair_sender,
-	.proto_pipe_recv	= nni_pair_receiver,
+	.proto_pipe		= &nni_pair_proto_pipe,
+	.proto_init		= nni_pair_init,
+	.proto_fini		= nni_pair_fini,
 	.proto_setopt		= nni_pair_setopt,
 	.proto_getopt		= nni_pair_getopt,
 	.proto_recv_filter	= NULL,

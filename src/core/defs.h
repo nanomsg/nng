@@ -28,7 +28,8 @@ typedef struct nni_tran		nni_tran;
 typedef struct nni_tran_ep	nni_tran_ep;
 typedef struct nni_tran_pipe	nni_tran_pipe;
 
-typedef struct nni_protocol	nni_protocol;
+typedef struct nni_proto_pipe   nni_proto_pipe;
+typedef struct nni_proto	nni_proto;
 
 typedef int			nni_signal;     // Turnstile/wakeup channel.
 typedef uint64_t		nni_time;       // Absolute time (usec).

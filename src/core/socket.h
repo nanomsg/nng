@@ -20,7 +20,7 @@ struct nng_socket {
 	nni_msgq *	s_uwq;          // Upper write queue
 	nni_msgq *	s_urq;          // Upper read queue
 
-	nni_protocol	s_ops;
+	nni_proto	s_proto;
 
 	void *		s_data;         // Protocol private
 
