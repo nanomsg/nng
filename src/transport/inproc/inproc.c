@@ -234,7 +234,7 @@ nni_inproc_ep_close(void *arg)
 		if (ep->mode == NNI_INPROC_EP_LISTEN) {
 			nni_list_remove(&nni_inproc.servers, ep);
 			for (;;) {
-				// Notify our clients that we are closed.
+				// Notify waiting clients that we are closed.
 				nni_inproc_ep *client;
 				client = nni_list_first(&ep->clients);
 				if (client == NULL) {
@@ -284,6 +284,9 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 			nni_mtx_unlock(&nni_inproc.mx);
 			return (NNG_ECONNREFUSED);
 		}
+
+		// XXX check protocol peer validity...
+
 		ep->mode = NNI_INPROC_EP_DIAL;
 		nni_list_append(&server->clients, ep);
 		nni_cv_wake(&server->cv);
@@ -294,6 +297,7 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 		}
 	}
 	*pipep = ep->cpipe;
+	ep->cpipe = NULL;
 	nni_mtx_unlock(&nni_inproc.mx);
 	return (0);
 }
