@@ -178,7 +178,7 @@ nni_inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 
 
 static int
-nni_inproc_ep_create(void **epp, const char *url, uint16_t proto)
+nni_inproc_ep_init(void **epp, const char *url, uint16_t proto)
 {
 	nni_inproc_ep *ep;
 	int rv;
@@ -207,7 +207,7 @@ nni_inproc_ep_create(void **epp, const char *url, uint16_t proto)
 
 
 static void
-nni_inproc_ep_destroy(void *arg)
+nni_inproc_ep_fini(void *arg)
 {
 	nni_inproc_ep *ep = arg;
 
@@ -391,23 +391,22 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 }
 
 
-static struct nni_pipe_ops nni_inproc_pipe_ops = {
-	.p_destroy	= nni_inproc_pipe_destroy,
-	.p_send		= nni_inproc_pipe_send,
-	.p_recv		= nni_inproc_pipe_recv,
-	.p_close	= nni_inproc_pipe_close,
-	.p_peer		= nni_inproc_pipe_peer,
-	.p_getopt	= nni_inproc_pipe_getopt,
+static nni_tran_pipe nni_inproc_pipe_ops = {
+	.pipe_destroy	= nni_inproc_pipe_destroy,
+	.pipe_send	= nni_inproc_pipe_send,
+	.pipe_recv	= nni_inproc_pipe_recv,
+	.pipe_close	= nni_inproc_pipe_close,
+	.pipe_peer	= nni_inproc_pipe_peer,
+	.pipe_getopt	= nni_inproc_pipe_getopt,
 };
 
-static struct nni_endpt_ops nni_inproc_ep_ops = {
-	.ep_create	= nni_inproc_ep_create,
-	.ep_destroy	= nni_inproc_ep_destroy,
+static nni_tran_ep nni_inproc_ep_ops = {
+	.ep_init	= nni_inproc_ep_init,
+	.ep_fini	= nni_inproc_ep_fini,
 	.ep_connect	= nni_inproc_ep_connect,
 	.ep_bind	= nni_inproc_ep_bind,
 	.ep_accept	= nni_inproc_ep_accept,
 	.ep_close	= nni_inproc_ep_close,
-	.ep_pipe_ops	= &nni_inproc_pipe_ops,
 	.ep_setopt	= NULL,
 	.ep_getopt	= NULL,
 };
@@ -416,7 +415,8 @@ static struct nni_endpt_ops nni_inproc_ep_ops = {
 // symbol in this entire file.
 struct nni_tran nni_inproc_tran = {
 	.tran_scheme	= "inproc",
-	.tran_ep_ops	= &nni_inproc_ep_ops,
+	.tran_ep	= &nni_inproc_ep_ops,
+	.tran_pipe	= &nni_inproc_pipe_ops,
 	.tran_init	= nni_inproc_init,
 	.tran_fini	= nni_inproc_fini,
 };

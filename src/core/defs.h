@@ -25,9 +25,6 @@ typedef struct nng_msg		nni_msg;
 
 // REMOVE THESE
 typedef struct nng_endpt	nni_endpt;
-typedef struct nni_transport	nni_transport;
-typedef struct nni_endpt_ops	nni_endpt_ops;
-typedef struct nni_pipe_ops	nni_pipe_ops;
 
 // These are our own names.
 typedef struct nni_tran		nni_tran;

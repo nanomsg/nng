@@ -36,6 +36,12 @@ nni_endpt_create(nni_endpt **epp, nni_sock *sock, const char *addr)
 	ep->ep_close = 0;
 	ep->ep_bound = 0;
 	ep->ep_pipe = NULL;
+	ep->ep_tran = tran;
+
+	// Make a copy of the endpoint operations.  This allows us to
+	// modify them (to override NULLs for example), and avoids an extra
+	// dereference on hot paths.
+	ep->ep_ops = *tran->tran_ep;
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 
 	if ((rv = nni_cv_init(&ep->ep_cv, &ep->ep_sock->s_mx)) != 0) {
@@ -45,9 +51,8 @@ nni_endpt_create(nni_endpt **epp, nni_sock *sock, const char *addr)
 
 	// Could safely use strcpy here, but this avoids discussion.
 	(void) snprintf(ep->ep_addr, sizeof (ep->ep_addr), "%s", addr);
-	ep->ep_ops = *tran->tran_ep_ops;
 
-	rv = ep->ep_ops.ep_create(&ep->ep_data, addr, nni_sock_proto(sock));
+	rv = ep->ep_ops.ep_init(&ep->ep_data, addr, nni_sock_proto(sock));
 	if (rv != 0) {
 		nni_cv_fini(&ep->ep_cv);
 		NNI_FREE_STRUCT(ep);
@@ -88,7 +93,7 @@ nni_endpt_close(nni_endpt *ep)
 		nni_thr_fini(&ep->ep_thr);
 	}
 
-	ep->ep_ops.ep_destroy(ep->ep_data);
+	ep->ep_ops.ep_fini(ep->ep_data);
 
 	nni_cv_fini(&ep->ep_cv);
 	NNI_FREE_STRUCT(ep);

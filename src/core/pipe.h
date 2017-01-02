@@ -18,18 +18,18 @@
 #include "core/transport.h"
 
 struct nng_pipe {
-	uint32_t		p_id;
-	struct nni_pipe_ops	p_tran_ops;
-	void *			p_tran_data;
-	void *			p_pdata;        // protocol specific data
-	size_t			p_psize;        // size of protocol data
-	nni_list_node		p_node;
-	nni_sock *		p_sock;
-	nni_endpt *		p_ep;
-	int			p_reap;
-	int			p_active;
-	nni_thr			p_send_thr;
-	nni_thr			p_recv_thr;
+	uint32_t	p_id;
+	nni_tran_pipe	p_tran_ops;
+	void *		p_tran_data;
+	void *		p_pdata;                // protocol specific data
+	size_t		p_psize;                // size of protocol data
+	nni_list_node	p_node;
+	nni_sock *	p_sock;
+	nni_endpt *	p_ep;
+	int		p_reap;
+	int		p_active;
+	nni_thr		p_send_thr;
+	nni_thr		p_recv_thr;
 };
 
 // Pipe operations that protocols use.

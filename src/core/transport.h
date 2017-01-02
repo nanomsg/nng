@@ -17,8 +17,11 @@ struct nni_tran {
 	// tran_scheme is the transport scheme, such as "tcp" or "inproc".
 	const char *		tran_scheme;
 
-	// tran_ep_ops links our endpoint operations.
-	const nni_endpt_ops *	tran_ep_ops;
+	// tran_ep links our endpoint-specific operations.
+	const nni_tran_ep *	tran_ep;
+
+	// tran_pipe links our pipe-specific operations.
+	const nni_tran_pipe *	tran_pipe;
 
 	// tran_init, if not NULL, is called once during library
 	// initialization.
@@ -34,59 +37,53 @@ struct nni_tran {
 // fashion.  The socket makes individual calls, which are expected to block
 // if appropriate (except for destroy). Endpoints are unable to call back
 // into the socket, to prevent recusive entry and deadlock.
-struct nni_endpt_ops {
-	// ep_create creates a vanilla endpoint. The value created is
+struct nni_tran_ep {
+	// ep_init creates a vanilla endpoint. The value created is
 	// used for the first argument for all other endpoint functions.
-	int			(*ep_create)(void **, const char *,
-	    uint16_t);
+	int	(*ep_init)(void **, const char *, uint16_t);
 
-	// ep_destroy frees the resources associated with the endpoint.
+	// ep_fini frees the resources associated with the endpoint.
 	// The endpoint will already have been closed.
-	void			(*ep_destroy)(void *);
+	void	(*ep_fini)(void *);
 
 	// ep_connect establishes a connection, and creates a new pipe,
 	// which is returned in the final argument.  It can return errors
 	// NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR, NNG_ECONNFAILED,
 	// NNG_ETIMEDOUT, and NNG_EPROTO.
-	int			(*ep_connect)(void *, void **);
+	int	(*ep_connect)(void *, void **);
 
 	// ep_bind just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
 	// It should return NNG_EADDRINUSE if the address is already
 	// taken.  It can also return NNG_EBADADDR for an unsuitable
 	// address, or NNG_EACCESS for permission problems.
-	int			(*ep_bind)(void *);
+	int	(*ep_bind)(void *);
 
 	// ep_accept accepts an inbound connection, and creates
 	// a transport pipe, which is returned in the final argument.
-	int			(*ep_accept)(void *, void **);
+	int	(*ep_accept)(void *, void **);
 
 	// ep_close stops the endpoint from operating altogether.  It does
 	// not affect pipes that have already been created.
-	void			(*ep_close)(void *);
+	void	(*ep_close)(void *);
 
 	// ep_setopt sets an endpoint (transport-specific) option.
-	int			(*ep_setopt)(void *, int, const void *,
-	    size_t);
+	int	(*ep_setopt)(void *, int, const void *, size_t);
 
 	// ep_getopt gets an endpoint (transport-specific) option.
-	int			(*ep_getopt)(void *, int, void *,
-	    size_t *);
-
-	// ep_pipe_ops links our pipe operations.
-	const nni_pipe_ops *	ep_pipe_ops;
+	int	(*ep_getopt)(void *, int, void *, size_t *);
 };
 
 // Pipe operations are entry points called by the socket. These may be called
 // with socket locks held, so it is forbidden for the transport to call
 // back into the socket at this point.  (Which is one reason pointers back
 // to socket or even enclosing pipe state, are not provided.)
-struct nni_pipe_ops {
+struct nni_tran_pipe {
 	// p_destroy destroys the pipe.  This should clean up all local
 	// resources, including closing files and freeing memory, used by
 	// the pipe.  After this call returns, the system will not make
 	// further calls on the same pipe.
-	void		(*p_destroy)(void *);
+	void		(*pipe_destroy)(void *);
 
 	// p_send sends the message.  If the message cannot be received, then
 	// the caller may try again with the same message (or free it).  If
@@ -94,7 +91,7 @@ struct nni_pipe_ops {
 	// message, and the caller may not use it again.  The transport will
 	// have the responsibility to free the message (nng_msg_free()) when
 	// it is finished with it.
-	int		(*p_send)(void *, nni_msg *);
+	int		(*pipe_send)(void *, nni_msg *);
 
 	// p_recv recvs the message. This is a blocking operation, and a read
 	// will be performed even for cases where no data is expected.  This
@@ -102,19 +99,19 @@ struct nni_pipe_ops {
 	// NNG_ECLOSED. Note that the closed socket condition can arise as
 	// either a result of a remote peer closing the connection, or a
 	// synchronous call to p_close.
-	int		(*p_recv)(void *, nng_msg **);
+	int		(*pipe_recv)(void *, nng_msg **);
 
 	// p_close closes the pipe.  Further recv or send operations should
 	// return back NNG_ECLOSED.
-	void		(*p_close)(void *);
+	void		(*pipe_close)(void *);
 
 	// p_peer returns the peer protocol. This may arrive in whatever
 	// transport specific manner is appropriate.
-	uint16_t	(*p_peer)(void *);
+	uint16_t	(*pipe_peer)(void *);
 
 	// p_getopt gets an pipe (transport-specific) property.  These values
 	// may not be changed once the pipe is created.
-	int		(*p_getopt)(void *, int, void *, size_t *);
+	int		(*pipe_getopt)(void *, int, void *, size_t *);
 };
 
 // These APIs are used by the framework internally, and not for use by
