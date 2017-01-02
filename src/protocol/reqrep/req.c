@@ -118,6 +118,7 @@ nni_req_pipe_init(void **rpp, nni_pipe *pipe, void *rsock)
 	rp->pipe = pipe;
 	rp->sigclose = 0;
 	rp->req = rsock;
+	*rpp = rp;
 	return (0);
 }
 
@@ -414,7 +415,7 @@ static nni_proto_pipe nni_req_proto_pipe = {
 	.pipe_recv	= nni_req_pipe_recv,
 };
 
-nni_proto nni_req_protocol = {
+nni_proto nni_req_proto = {
 	.proto_self		= NNG_PROTO_REQ,
 	.proto_peer		= NNG_PROTO_REP,
 	.proto_name		= "req",

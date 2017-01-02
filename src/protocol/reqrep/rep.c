@@ -312,6 +312,7 @@ again:
 		}
 	}
 	nni_msgq_signal(uwq, &rp->sigclose);
+	nni_msgq_signal(rp->sendq, &rp->sigclose);
 	nni_pipe_close(pipe);
 }
 
@@ -452,7 +453,7 @@ static nni_proto_pipe nni_rep_proto_pipe = {
 	.pipe_recv	= nni_rep_pipe_recv,
 };
 
-nni_proto nni_rep_protocol = {
+nni_proto nni_rep_proto = {
 	.proto_self		= NNG_PROTO_REP,
 	.proto_peer		= NNG_PROTO_REQ,
 	.proto_name		= "rep",

@@ -361,6 +361,13 @@ nni_sock_proto(nni_sock *sock)
 }
 
 
+uint16_t
+nni_sock_peer(nni_sock *sock)
+{
+	return (sock->s_proto.proto_peer);
+}
+
+
 int
 nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 {

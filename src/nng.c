@@ -57,6 +57,14 @@ nng_protocol(nng_socket *s)
 }
 
 
+uint16_t
+nng_peer(nng_socket *s)
+{
+	NNI_INIT_VOID();
+	return (nni_sock_peer(s));
+}
+
+
 int
 nng_recvmsg(nng_socket *s, nng_msg **msgp, int flags)
 {

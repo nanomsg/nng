@@ -59,6 +59,9 @@ NNG_DECL int nng_close(nng_socket *);
 // nng_protocol returns the protocol number of the socket.
 uint16_t nng_protocol(nng_socket *);
 
+// nng_peer returns the protocol number for the socket's peer.
+uint16_t nng_peer(nng_socket *);
+
 // nng_setopt sets an option for a specific socket.
 NNG_DECL int nng_setopt(nng_socket *, int, const void *, size_t);
 
