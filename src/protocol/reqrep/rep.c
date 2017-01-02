@@ -417,7 +417,7 @@ nni_rep_recvfilter(void *arg, nni_msg *msg)
 		return (NULL);
 	}
 	rep->btrace_len = len;
-	memcpy(rep->btrace, 0, len);
+	memcpy(rep->btrace, header, len);
 	nni_msg_trim_header(msg, len);
 	nni_mtx_unlock(&rep->mx);
 	return (msg);
