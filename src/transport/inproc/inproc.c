@@ -22,7 +22,7 @@ typedef struct nni_inproc_pipe		nni_inproc_pipe;
 typedef struct nni_inproc_ep		nni_inproc_ep;
 
 typedef struct {
-	nni_mutex	mx;
+	nni_mtx		mx;
 	nni_list	servers;
 } nni_inproc_global;
 
@@ -38,7 +38,7 @@ struct nni_inproc_pipe {
 // nni_inproc_pair represents a pair of pipes.  Because we control both
 // sides of the pipes, we can allocate and free this in one structure.
 struct nni_inproc_pair {
-	nni_mutex	mx;
+	nni_mtx		mx;
 	int		refcnt;
 	nni_msgqueue *	q[2];
 	nni_inproc_pipe pipe[2];
@@ -51,7 +51,7 @@ struct nni_inproc_ep {
 	int		closed;
 	nni_list_node	node;
 	uint16_t	proto;
-	nni_cond	cv;
+	nni_cv		cv;
 	nni_list	clients;
 	void *		cpipe;  // connected pipe (DIAL only)
 };
@@ -69,10 +69,11 @@ nni_inproc_init(void)
 {
 	int rv;
 
-	if ((rv = nni_mutex_init(&nni_inproc.mx)) != 0) {
+	NNI_LIST_INIT(&nni_inproc.servers, nni_inproc_ep, node);
+
+	if ((rv = nni_mtx_init(&nni_inproc.mx)) != 0) {
 		return (rv);
 	}
-	NNI_LIST_INIT(&nni_inproc.servers, nni_inproc_ep, node);
 
 	return (0);
 }
@@ -81,7 +82,7 @@ nni_inproc_init(void)
 static void
 nni_inproc_fini(void)
 {
-	nni_mutex_fini(&nni_inproc.mx);
+	nni_mtx_fini(&nni_inproc.mx);
 }
 
 
@@ -106,7 +107,7 @@ nni_inproc_pair_destroy(nni_inproc_pair *pair)
 	if (pair->q[1]) {
 		nni_msgqueue_destroy(pair->q[1]);
 	}
-	nni_mutex_fini(&pair->mx);
+	nni_mtx_fini(&pair->mx);
 	nni_free(pair, sizeof (*pair));
 }
 
@@ -120,13 +121,13 @@ nni_inproc_pipe_destroy(void *arg)
 	// We could assert the pipe closed...
 
 	// If we are the last peer, then toss the pair structure.
-	nni_mutex_enter(&pair->mx);
+	nni_mtx_lock(&pair->mx);
 	pair->refcnt--;
 	if (pair->refcnt == 0) {
-		nni_mutex_exit(&pair->mx);
+		nni_mtx_unlock(&pair->mx);
 		nni_inproc_pair_destroy(pair);
 	} else {
-		nni_mutex_exit(&pair->mx);
+		nni_mtx_unlock(&pair->mx);
 	}
 }
 
@@ -192,7 +193,7 @@ nni_inproc_ep_create(void **epp, const char *url, uint16_t proto)
 	if ((ep = nni_alloc(sizeof (*ep))) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_cond_init(&ep->cv, &nni_inproc.mx)) != 0) {
+	if ((rv = nni_cv_init(&ep->cv, &nni_inproc.mx)) != 0) {
 		nni_free(ep, sizeof (*ep));
 		return (rv);
 	}
@@ -217,7 +218,7 @@ nni_inproc_ep_destroy(void *arg)
 	if (!ep->closed) {
 		nni_panic("inproc_ep_destroy while not closed!");
 	}
-	nni_cond_fini(&ep->cv);
+	nni_cv_fini(&ep->cv);
 	nni_free(ep, sizeof (*free));
 }
 
@@ -227,7 +228,7 @@ nni_inproc_ep_close(void *arg)
 {
 	nni_inproc_ep *ep = arg;
 
-	nni_mutex_enter(&nni_inproc.mx);
+	nni_mtx_lock(&nni_inproc.mx);
 	if (!ep->closed) {
 		ep->closed = 1;
 		if (ep->mode == NNI_INPROC_EP_LISTEN) {
@@ -241,12 +242,12 @@ nni_inproc_ep_close(void *arg)
 				}
 				nni_list_remove(&ep->clients, client);
 				client->mode = NNI_INPROC_EP_IDLE;
-				nni_cond_broadcast(&client->cv);
+				nni_cv_wake(&client->cv);
 			}
 		}
-		nni_cond_broadcast(&ep->cv);
+		nni_cv_wake(&ep->cv);
 	}
-	nni_mutex_exit(&nni_inproc.mx);
+	nni_mtx_unlock(&nni_inproc.mx);
 }
 
 
@@ -258,13 +259,13 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 	if (ep->mode != NNI_INPROC_EP_IDLE) {
 		return (NNG_EINVAL);
 	}
-	nni_mutex_enter(&nni_inproc.mx);
+	nni_mtx_lock(&nni_inproc.mx);
 	for (;;) {
 		nni_inproc_ep *server;
 		nni_list *list;
 
 		if (ep->closed) {
-			nni_mutex_exit(&nni_inproc.mx);
+			nni_mtx_unlock(&nni_inproc.mx);
 			return (NNG_ECLOSED);
 		}
 		if (ep->cpipe != NULL) {
@@ -280,20 +281,20 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 			}
 		}
 		if (server == NULL) {
-			nni_mutex_exit(&nni_inproc.mx);
+			nni_mtx_unlock(&nni_inproc.mx);
 			return (NNG_ECONNREFUSED);
 		}
 		ep->mode = NNI_INPROC_EP_DIAL;
 		nni_list_append(&server->clients, ep);
-		nni_cond_broadcast(&server->cv);
-		nni_cond_wait(&ep->cv);
+		nni_cv_wake(&server->cv);
+		nni_cv_wait(&ep->cv);
 		if (ep->mode == NNI_INPROC_EP_DIAL) {
 			ep->mode = NNI_INPROC_EP_IDLE;
 			nni_list_remove(&server->clients, ep);
 		}
 	}
 	*pipep = ep->cpipe;
-	nni_mutex_exit(&nni_inproc.mx);
+	nni_mtx_unlock(&nni_inproc.mx);
 	return (0);
 }
 
@@ -308,9 +309,9 @@ nni_inproc_ep_bind(void *arg)
 	if (ep->mode != NNI_INPROC_EP_IDLE) {
 		return (NNG_EINVAL);
 	}
-	nni_mutex_enter(&nni_inproc.mx);
+	nni_mtx_lock(&nni_inproc.mx);
 	if (ep->closed) {
-		nni_mutex_exit(&nni_inproc.mx);
+		nni_mtx_unlock(&nni_inproc.mx);
 		return (NNG_ECLOSED);
 	}
 	NNI_LIST_FOREACH (list, srch) {
@@ -318,13 +319,13 @@ nni_inproc_ep_bind(void *arg)
 			continue;
 		}
 		if (strcmp(srch->addr, ep->addr) == 0) {
-			nni_mutex_exit(&nni_inproc.mx);
+			nni_mtx_unlock(&nni_inproc.mx);
 			return (NNG_EADDRINUSE);
 		}
 	}
 	ep->mode = NNI_INPROC_EP_LISTEN;
 	nni_list_append(list, ep);
-	nni_mutex_exit(&nni_inproc.mx);
+	nni_mtx_unlock(&nni_inproc.mx);
 	return (0);
 }
 
@@ -345,7 +346,7 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 	if ((pair = nni_alloc(sizeof (*pair))) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mutex_init(&pair->mx)) != 0) {
+	if ((rv = nni_mtx_init(&pair->mx)) != 0) {
 		nni_free(pair, sizeof (*pair));
 		return (rv);
 	}
@@ -355,19 +356,19 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 		return (rv);
 	}
 
-	nni_mutex_enter(&nni_inproc.mx);
+	nni_mtx_lock(&nni_inproc.mx);
 	for (;;) {
 		if (ep->closed) {
 			// This is the only possible error path from the
 			// time we acquired the lock.
-			nni_mutex_exit(&nni_inproc.mx);
+			nni_mtx_unlock(&nni_inproc.mx);
 			nni_inproc_pair_destroy(pair);
 			return (NNG_ECLOSED);
 		}
 		if ((client = nni_list_first(&ep->clients)) != NULL) {
 			break;
 		}
-		nni_cond_wait(&ep->cv);
+		nni_cv_wait(&ep->cv);
 	}
 
 	nni_list_remove(&ep->clients, client);
@@ -382,9 +383,9 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 	pair->refcnt = 2;
 	client->cpipe = &pair->pipe[0];
 	*pipep = &pair->pipe[1];
-	nni_cond_broadcast(&client->cv);
+	nni_cv_wake(&client->cv);
 
-	nni_mutex_exit(&nni_inproc.mx);
+	nni_mtx_unlock(&nni_inproc.mx);
 
 	return (0);
 }
