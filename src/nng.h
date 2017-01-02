@@ -35,7 +35,7 @@ extern "C" {
 
 // Types common to nng.
 typedef struct nng_socket	nng_socket;
-typedef struct nng_endpt	nng_endpt;
+typedef struct nng_endpoint	nng_endpoint;
 typedef struct nng_pipe		nng_pipe;
 typedef struct nng_msg		nng_msg;
 typedef struct nng_event	nng_event;
@@ -91,68 +91,68 @@ NNG_DECL int nng_unsetnotify(nng_socket *, nng_notify *);
 // NNG_EVENT_SEND	- A message can be sent.
 // NNG_EVENT_ERROR	- An error condition on the socket occurred.
 // NNG_EVENT_PIPE_ADD	- A new pipe (connection) is added to the socket.
-// NNG_EVENT_PIPE_RM	- A pipe (connection) is removed from the socket.
+// NNG_EVENT_PIPE_REM	- A pipe (connection) is removed from the socket.
 // NNG_EVENT_ENDPT_ADD	- An endpoint is added to the socket.
-// NNG_EVENT_ENDPT_RM	- An endpoint is removed from the socket.
+// NNG_EVENT_ENDPT_REM	- An endpoint is removed from the socket.
 #define NNG_EVENT_BIT(x)    (1U << (x))
 #define NNG_EVENT_RECV		NNG_EVENT_BIT(0)
 #define NNG_EVENT_SEND		NNG_EVENT_BIT(1)
 #define NNG_EVENT_ERROR		NNG_EVENT_BIT(2)
 #define NNG_EVENT_PIPE_ADD	NNG_EVENT_BIT(3)
-#define NNG_EVENT_PIPE_RM	NNG_EVENT_BIT(4)
-#define NNG_EVENT_ENDPT_ADD	NNG_EVENT_BIT(5)
-#define NNG_EVENT_ENDPT_RM	NNG_EVENT_BIT(6)
+#define NNG_EVENT_PIPE_REM	NNG_EVENT_BIT(4)
+#define NNG_EVENT_ENDPOINT_ADD	NNG_EVENT_BIT(5)
+#define NNG_EVENT_ENDPOINT_REM	NNG_EVENT_BIT(6)
 
 // The following functions return more detailed information about the event.
 // Some of the values will not make sense for some event types, in which case
 // the value returned will be NULL.
 NNG_DECL int nng_event_type(nng_event *);
 NNG_DECL nng_socket *nng_event_socket(nng_event *);
-NNG_DECL nng_endpt *nng_event_endpt(nng_event *);
+NNG_DECL nng_endpoint *nng_event_endpoint(nng_event *);
 NNG_DECL nng_pipe *nng_event_pipe(nng_event *);
 NNG_DECL const char *nng_event_reason(nng_event *);
 
 // nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy
 // nn_bind(). The underlying endpoint is returned back to the caller in the
-// endpt pointer, if it is not NULL.  The flags may be NNG_FLAG_SYNCH to
+// endpoint pointer, if it is not NULL.  The flags may be NNG_FLAG_SYNCH to
 // indicate that a failure setting the socket up should return an error
 // back to the caller immediately.
-NNG_DECL int nng_listen(nng_socket *, const char *, nng_endpt **, int);
+NNG_DECL int nng_listen(nng_socket *, const char *, nng_endpoint **, int);
 
 // nng_dial creates a dialing endpoint, with no special options, and
 // starts it dialing.  Dialers have at most one active connection at a time
 // This is similar to the legacy nn_connect().  The underlying endpoint
-// is returned back to the caller in the endpt pointer, if it is not NULL.
+// is returned back to the caller in the endpoint pointer, if it is not NULL.
 // The flags may be NNG_FLAG_SYNCH to indicate that the first attempt to
 // dial will be made synchronously, and a failure condition returned back
 // to the caller.  (If the connection is dropped, it will still be
 // reconnected in the background -- only the initial connect is synchronous.)
-NNG_DECL int nng_dial(nng_socket *, const char *, nng_endpt **, int);
+NNG_DECL int nng_dial(nng_socket *, const char *, nng_endpoint **, int);
 
-// nng_endpt_create creates an endpoint on the socket, but does not
+// nng_endpoint_create creates an endpoint on the socket, but does not
 // start it either dialing or listening.
-NNG_DECL int nng_endpt_create(nng_endpt **, nng_socket *, const char *);
+NNG_DECL int nng_endpoint_create(nng_endpoint **, nng_socket *, const char *);
 
-// nng_endpt_dial starts the endpoint dialing.  This is only possible if
+// nng_endpoint_dial starts the endpoint dialing.  This is only possible if
 // the endpoint is not already dialing or listening.
-NNG_DECL int nng_endpt_dial(nng_endpt *, int);
+NNG_DECL int nng_endpoint_dial(nng_endpoint *, int);
 
-// nng_endpt_listen starts the endpoint listening.  This is only possible if
+// nng_endpoint_listen starts the endpoint listening.  This is only possible if
 // the endpoint is not already dialing or listening.
-NNG_DECL int nng_endpt_listen(nng_endpt *, int);
+NNG_DECL int nng_endpoint_listen(nng_endpoint *, int);
 
-// nng_endpt_close closes the endpt, shutting down all underlying
+// nng_endpoint_close closes the endpointt, shutting down all underlying
 // connections and releasing all associated resources.  It is an error to
 // refer to the endpoint after this is called.
-NNG_DECL int nng_endpt_close(nng_endpt *);
+NNG_DECL int nng_endpoint_close(nng_endpoint *);
 
-// nng_endpt_setopt sets an option for a specific endpoint.  Note
+// nng_endpoint_setopt sets an option for a specific endpoint.  Note
 // endpoint options may not be altered on a running endpoint.
-NNG_DECL int nng_endpt_setopt(nng_endpt *, int, void *, size_t);
+NNG_DECL int nng_endpoint_setopt(nng_endpoint *, int, void *, size_t);
 
-// nng_endpt_getopt obtains the option for an endpoint.
-NNG_DECL int nng_endpt_getopt(nng_endpt *, int, void *, size_t *);
+// nng_endpoint_getopt obtains the option for an endpoint.
+NNG_DECL int nng_endpoint_getopt(nng_endpoint *, int, void *, size_t *);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.

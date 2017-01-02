@@ -19,12 +19,9 @@
 
 // These types are common but have names shared with user space.
 typedef struct nng_socket	nni_sock;
-typedef struct nng_endpt	nni_ep;
+typedef struct nng_endpoint	nni_ep;
 typedef struct nng_pipe		nni_pipe;
 typedef struct nng_msg		nni_msg;
-
-// REMOVE THESE
-typedef struct nng_endpt	nni_endpt;
 
 // These are our own names.
 typedef struct nni_tran		nni_tran;

@@ -84,7 +84,7 @@ nni_pipe_destroy(nni_pipe *p)
 
 
 int
-nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
+nni_pipe_create(nni_pipe **pp, nni_ep *ep)
 {
 	nni_pipe *p;
 	nni_sock *sock = ep->ep_sock;

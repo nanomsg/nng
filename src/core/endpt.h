@@ -15,7 +15,7 @@
 // NB: This structure is supplied here for use by the CORE. Use of this
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS
 // OR TRANSPORTS.
-struct nng_endpt {
+struct nng_endpoint {
 	nni_tran_ep	ep_ops;
 	nni_tran	*ep_tran;
 	void *		ep_data;                // Transport private
@@ -34,10 +34,10 @@ struct nng_endpt {
 #define NNI_EP_MODE_DIAL	1
 #define NNI_EP_MODE_LISTEN	2
 
-extern int nni_endpt_create(nni_endpt **, nni_sock *, const char *);
-extern int nni_endpt_accept(nni_endpt *, nni_pipe **);
-extern void nni_endpt_close(nni_endpt *);
-extern int nni_endpt_dial(nni_endpt *, int);
-extern int nni_endpt_listen(nni_endpt *, int);
+extern int nni_ep_create(nni_ep **, nni_sock *, const char *);
+extern int nni_ep_accept(nni_ep *, nni_pipe **);
+extern void nni_ep_close(nni_ep *);
+extern int nni_ep_dial(nni_ep *, int);
+extern int nni_ep_listen(nni_ep *, int);
 
 #endif // CORE_ENDPT_H

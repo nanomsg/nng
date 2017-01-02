@@ -97,7 +97,7 @@ nng_sendmsg(nng_socket *s, nng_msg *msg, int flags)
 
 
 int
-nng_dial(nng_socket *s, const char *addr, nng_endpt **epp, int flags)
+nng_dial(nng_socket *s, const char *addr, nng_endpoint **epp, int flags)
 {
 	NNI_INIT_INT();
 	return (nni_sock_dial(s, addr, epp, flags));
@@ -105,7 +105,7 @@ nng_dial(nng_socket *s, const char *addr, nng_endpt **epp, int flags)
 
 
 int
-nng_listen(nng_socket *s, const char *addr, nng_endpt **epp, int flags)
+nng_listen(nng_socket *s, const char *addr, nng_endpoint **epp, int flags)
 {
 	NNI_INIT_INT();
 	return (nni_sock_listen(s, addr, epp, flags));

@@ -52,8 +52,8 @@ extern int nni_sock_setopt(nni_sock *, int, const void *, size_t);
 extern int nni_sock_getopt(nni_sock *, int, void *, size_t *);
 extern int nni_sock_recvmsg(nni_sock *, nni_msg **, nni_time);
 extern int nni_sock_sendmsg(nni_sock *, nni_msg *, nni_time);
-extern int nni_sock_dial(nni_sock *, const char *, nni_endpt **, int);
-extern int nni_sock_listen(nni_sock *, const char *, nni_endpt **, int);
+extern int nni_sock_dial(nni_sock *, const char *, nni_ep **, int);
+extern int nni_sock_listen(nni_sock *, const char *, nni_ep **, int);
 
 // Set error codes for applications.  These are only ever
 // called from the filter functions in protocols, and thus

@@ -39,7 +39,7 @@ nni_reaper(void *arg)
 
 	for (;;) {
 		nni_pipe *pipe;
-		nni_endpt *ep;
+		nni_ep *ep;
 
 		nni_mtx_lock(&sock->s_mx);
 		if ((pipe = nni_list_first(&sock->s_reaps)) != NULL) {
@@ -102,7 +102,7 @@ nni_sock_open(nni_sock **sockp, uint16_t proto)
 	sock->s_reconnmax = NNI_SECOND;
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_reaps, nni_pipe, p_node);
-	NNI_LIST_INIT(&sock->s_eps, nni_endpt, ep_node);
+	NNI_LIST_INIT(&sock->s_eps, nni_ep, ep_node);
 
 	if ((rv = nni_mtx_init(&sock->s_mx)) != 0) {
 		NNI_FREE_STRUCT(sock);
@@ -157,7 +157,7 @@ int
 nni_sock_close(nni_sock *sock)
 {
 	nni_pipe *pipe;
-	nni_endpt *ep;
+	nni_ep *ep;
 	nni_time linger;
 
 	nni_mtx_lock(&sock->s_mx);
@@ -168,7 +168,7 @@ nni_sock_close(nni_sock *sock)
 	// we're closing.
 	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
 		nni_mtx_unlock(&sock->s_mx);
-		nni_endpt_close(ep);
+		nni_ep_close(ep);
 		nni_mtx_lock(&sock->s_mx);
 	}
 
@@ -323,17 +323,17 @@ nni_sock_proto(nni_sock *sock)
 
 
 int
-nni_sock_dial(nni_sock *sock, const char *addr, nni_endpt **epp, int flags)
+nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 {
-	nni_endpt *ep;
+	nni_ep *ep;
 	int rv;
 
-	if ((rv = nni_endpt_create(&ep, sock, addr)) != 0) {
+	if ((rv = nni_ep_create(&ep, sock, addr)) != 0) {
 		return (rv);
 	}
-	rv = nni_endpt_dial(ep, flags);
+	rv = nni_ep_dial(ep, flags);
 	if (rv != 0) {
-		nni_endpt_close(ep);
+		nni_ep_close(ep);
 	} else {
 		if (epp != NULL) {
 			*epp = ep;
@@ -344,18 +344,17 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_endpt **epp, int flags)
 
 
 int
-nni_sock_listen(nni_sock *sock, const char *addr, nni_endpt **epp,
-    int flags)
+nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 {
-	nni_endpt *ep;
+	nni_ep *ep;
 	int rv;
 
-	if ((rv = nni_endpt_create(&ep, sock, addr)) != 0) {
+	if ((rv = nni_ep_create(&ep, sock, addr)) != 0) {
 		return (rv);
 	}
-	rv = nni_endpt_listen(ep, flags);
+	rv = nni_ep_listen(ep, flags);
 	if (rv != 0) {
-		nni_endpt_close(ep);
+		nni_ep_close(ep);
 	} else {
 		if (epp != NULL) {
 			*epp = ep;

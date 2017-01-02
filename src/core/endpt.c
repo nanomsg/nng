@@ -16,10 +16,10 @@
 // Functionality realited to end points.
 
 int
-nni_endpt_create(nni_endpt **epp, nni_sock *sock, const char *addr)
+nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 {
 	nni_tran *tran;
-	nni_endpt *ep;
+	nni_ep *ep;
 	int rv;
 
 	if ((tran = nni_tran_find(addr)) == NULL) {
@@ -69,7 +69,7 @@ nni_endpt_create(nni_endpt **epp, nni_sock *sock, const char *addr)
 
 
 void
-nni_endpt_close(nni_endpt *ep)
+nni_ep_close(nni_ep *ep)
 {
 	nni_pipe *pipe;
 	nni_mtx *mx = &ep->ep_sock->s_mx;
@@ -101,7 +101,7 @@ nni_endpt_close(nni_endpt *ep)
 
 
 static int
-nni_endpt_connect(nni_endpt *ep, nni_pipe **pp)
+nni_ep_connect(nni_ep *ep, nni_pipe **pp)
 {
 	nni_pipe *pipe;
 	int rv;
@@ -124,12 +124,12 @@ nni_endpt_connect(nni_endpt *ep, nni_pipe **pp)
 // nni_dial_once just does a single dial call, so it can be used
 // for synchronous dialing.
 static int
-nni_dial_once(nni_endpt *ep)
+nni_dial_once(nni_ep *ep)
 {
 	nni_pipe *pipe;
 	int rv;
 
-	if (((rv = nni_endpt_connect(ep, &pipe)) == 0) &&
+	if (((rv = nni_ep_connect(ep, &pipe)) == 0) &&
 	    ((rv = nni_pipe_start(pipe)) == 0)) {
 		return (0);
 	}
@@ -142,7 +142,7 @@ nni_dial_once(nni_endpt *ep)
 static void
 nni_dialer(void *arg)
 {
-	nni_endpt *ep = arg;
+	nni_ep *ep = arg;
 	nni_pipe *pipe;
 	int rv;
 	nni_time cooldown;
@@ -194,7 +194,7 @@ nni_dialer(void *arg)
 
 
 int
-nni_endpt_dial(nni_endpt *ep, int flags)
+nni_ep_dial(nni_ep *ep, int flags)
 {
 	int rv = 0;
 	nni_mtx *mx = &ep->ep_sock->s_mx;
@@ -234,7 +234,7 @@ nni_endpt_dial(nni_endpt *ep, int flags)
 
 
 int
-nni_endpt_accept(nni_endpt *ep, nni_pipe **pp)
+nni_ep_accept(nni_ep *ep, nni_pipe **pp)
 {
 	nni_pipe *pipe;
 	int rv;
@@ -258,7 +258,7 @@ nni_endpt_accept(nni_endpt *ep, nni_pipe **pp)
 static void
 nni_listener(void *arg)
 {
-	nni_endpt *ep = arg;
+	nni_ep *ep = arg;
 	nni_pipe *pipe;
 	int rv;
 	nni_mtx *mx = &ep->ep_sock->s_mx;
@@ -299,7 +299,7 @@ nni_listener(void *arg)
 
 		pipe = NULL;
 
-		if (((rv = nni_endpt_accept(ep, &pipe)) == 0) &&
+		if (((rv = nni_ep_accept(ep, &pipe)) == 0) &&
 		    ((rv = nni_pipe_start(pipe)) == 0)) {
 			continue;
 		}
@@ -326,7 +326,7 @@ nni_listener(void *arg)
 
 
 int
-nni_endpt_listen(nni_endpt *ep, int flags)
+nni_ep_listen(nni_ep *ep, int flags)
 {
 	int rv = 0;
 	nni_mtx *mx = &ep->ep_sock->s_mx;

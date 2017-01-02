@@ -25,7 +25,7 @@ struct nng_pipe {
 	size_t		p_psize;                // size of protocol data
 	nni_list_node	p_node;
 	nni_sock *	p_sock;
-	nni_endpt *	p_ep;
+	nni_ep *	p_ep;
 	int		p_reap;
 	int		p_active;
 	nni_thr		p_send_thr;
@@ -40,7 +40,7 @@ extern void nni_pipe_close(nni_pipe *);
 
 // Used only by the socket core - as we don't wish to expose the details
 // of the pipe structure outside of pipe.c.
-extern int nni_pipe_create(nni_pipe **, nni_endpt *);
+extern int nni_pipe_create(nni_pipe **, nni_ep *);
 
 extern void nni_pipe_destroy(nni_pipe *);
 
