@@ -45,50 +45,6 @@ nni_plat_nextid(void)
 	return (id);
 }
 
-
-static void *
-nni_thrfunc(void *arg)
-{
-	nni_thread *thr = arg;
-
-	thr->func(thr->arg);
-	return (NULL);
-}
-
-
-int
-nni_thread_create(nni_thread **tp, void (*fn)(void *), void *arg)
-{
-	nni_thread *thr;
-	int rv;
-
-	if ((thr = nni_alloc(sizeof (*thr))) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	thr->func = fn;
-	thr->arg = arg;
-
-	if ((rv = pthread_create(&thr->tid, NULL, nni_thrfunc, thr)) != 0) {
-		nni_free(thr, sizeof (*thr));
-		return (NNG_ENOMEM);
-	}
-	*tp = thr;
-	return (0);
-}
-
-
-void
-nni_thread_reap(nni_thread *thr)
-{
-	int rv;
-
-	if ((rv = pthread_join(thr->tid, NULL)) != 0) {
-		nni_panic("pthread_thread: %s", strerror(rv));
-	}
-	nni_free(thr, sizeof (*thr));
-}
-
-
 int
 nni_plat_mtx_init(nni_plat_mtx *mtx)
 {

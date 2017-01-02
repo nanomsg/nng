@@ -14,8 +14,8 @@
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
 struct nng_socket {
-	nni_mutex	s_mx;
-	nni_cond	s_cv;
+	nni_mtx		s_mx;
+	nni_cv		s_cv;
 
 	nni_msgqueue *	s_uwq;          // Upper write queue
 	nni_msgqueue *	s_urq;          // Upper read queue

@@ -60,84 +60,65 @@ extern void *nni_alloc(size_t);
 // Most implementations can just call free() here.
 extern void nni_free(void *, size_t);
 
-typedef struct nni_mutex	nni_mutex;
-typedef struct nni_cond		nni_cond;
-
-typedef struct nni_plat_mtx	nni_plat_mtx;
-typedef struct nni_plat_cv	nni_plat_cv;
-typedef struct nni_plat_thr	nni_plat_thr;
+typedef struct nni_plat_mtx nni_plat_mtx;
+typedef struct nni_plat_cv nni_plat_cv;
+typedef struct nni_plat_thr nni_plat_thr;
 
 // Mutex handling.
 
-// nni_mutex_init initializes a mutex structure.  This may require dynamic
+// nni_plat_mtx_init initializes a mutex structure.  This may require dynamic
 // allocation, depending on the platform.  It can return NNG_ENOMEM if that
 // fails.
 extern int nni_plat_mtx_init(nni_plat_mtx *);
-extern int nni_mutex_init(nni_mutex *);
 
-// nni_mutex_fini destroys the mutex and releases any resources allocated for
-// it's use.
-extern void nni_mutex_fini(nni_mutex *);
+// nni_plat_mtx_fini destroys the mutex and releases any resources allocated
+// for it's use.
 extern void nni_plat_mtx_fini(nni_plat_mtx *);
 
-// nni_mutex_enter locks the mutex.  This is not recursive -- a mutex can only
-// be entered once.
-extern void nni_mutex_enter(nni_mutex *);
+// nni_plat_mtx_lock locks the mutex.  This is not recursive -- a mutex can
+// only be entered once.
 extern void nni_plat_mtx_lock(nni_plat_mtx *);
 
-// nni_mutex_exit unlocks the mutex.  This can only be performed by the thread
-// that owned the mutex.
-extern void nni_mutex_exit(nni_mutex *);
+// nni_plat_mtx_unlock unlocks the mutex.  This can only be performed by the
+// threadthat owned the mutex.
 extern void nni_plat_mtx_unlock(nni_plat_mtx *);
 
-// nni_mutex_tryenter tries to lock the mutex.  If it can't, it may return
-// NNG_EBUSY.
-extern int nni_mutex_tryenter(nni_mutex *);
+// nni_plat_mtx_tryenter tries to lock the mutex.  If it can't, it may return
+// NNG_EBUSY if the mutex is already owned.
 extern int nni_plat_mtx_trylock(nni_plat_mtx *);
 
-// nni_cond_init initializes a condition variable.  We require a mutex be
+// nni_plat_cv_init initializes a condition variable.  We require a mutex be
 // supplied with it, and that mutex must always be held when performing any
 // operations on the condition variable (other than fini.)  This may require
 // dynamic allocation, and if so this operation may fail with NNG_ENOMEM.
-extern int nni_cond_init(nni_cond *, nni_mutex *);
 extern int nni_plat_cv_init(nni_plat_cv *, nni_plat_mtx *);
 
-// nni_cond_fini releases all resources associated with condition variable.
-extern void nni_cond_fini(nni_cond *);
+// nni_plat_cv_fini releases all resources associated with condition variable.
 extern void nni_plat_cv_fini(nni_plat_cv *);
 
-// nni_cond_broadcast wakes all waiters on the condition.  This should be
+// nni_plat_cv_wake wakes all waiters on the condition.  This should be
 // called with the lock held.
-extern void nni_cond_broadcast(nni_cond *);
 extern void nni_plat_cv_wake(nni_plat_cv *);
 
-// nni_cond_signal wakes a signal waiter.
-extern void nni_cond_signal(nni_cond *);
-
-// nni_cond_wait waits for a wake up on the condition variable.  The
+// nni_plat_cv_wait waits for a wake up on the condition variable.  The
 // associated lock is atomically released and reacquired upon wake up.
 // Callers can be spuriously woken.  The associated lock must be held.
-extern void nni_cond_wait(nni_cond *);
 extern void nni_plat_cv_wait(nni_plat_cv *);
 
-// nni_cond_waituntil waits for a wakeup on the condition variable, or
+// nni_plat_cv_until waits for a wakeup on the condition variable, or
 // until the system time reaches the specified absolute time.  (It is an
 // absolute form of nni_cond_timedwait.)  Early wakeups are possible, so
 // check the condition.  It will return either NNG_ETIMEDOUT, or 0.
-extern int nni_cond_waituntil(nni_cond *, nni_time);
 extern int nni_plat_cv_until(nni_plat_cv *, nni_time);
 
-typedef struct nni_thread   nni_thread;
-
-// nni_thread_creates a thread that runs the given function. The thread
-// receives a single argument.
-extern int nni_thread_create(nni_thread **, void (*fn)(void *), void *);
+// nni_plat_thr_init creates a thread that runs the given function. The
+// thread receives a single argument.  The thread starts execution
+// immediately.
 extern int nni_plat_thr_init(nni_plat_thr *, void (*)(void *), void *);
 
 // nni_thread_reap waits for the thread to exit, and then releases any
 // resources associated with the thread.  After this returns, it
 // is an error to reference the thread in any further way.
-extern void nni_thread_reap(nni_thread *);
 extern void nni_plat_thr_fini(nni_plat_thr *);
 
 // nn_clock returns a number of microseconds since some arbitrary time

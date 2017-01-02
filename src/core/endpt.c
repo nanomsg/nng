@@ -38,7 +38,7 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 	ep->ep_pipe = NULL;
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 
-	if ((rv = nni_cond_init(&ep->ep_cv, &ep->ep_sock->s_mx)) != 0) {
+	if ((rv = nni_cv_init(&ep->ep_cv, &ep->ep_sock->s_mx)) != 0) {
 		nni_free(ep, sizeof (*ep));
 		return (NNG_ENOMEM);
 	}
@@ -49,14 +49,14 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 
 	rv = ep->ep_ops.ep_create(&ep->ep_data, addr, nni_socket_proto(sock));
 	if (rv != 0) {
-		nni_cond_fini(&ep->ep_cv);
+		nni_cv_fini(&ep->ep_cv);
 		nni_free(ep, sizeof (*ep));
 		return (rv);
 	}
 
-	nni_mutex_enter(&sock->s_mx);
+	nni_mtx_lock(&sock->s_mx);
 	nni_list_append(&sock->s_eps, ep);
-	nni_mutex_exit(&sock->s_mx);
+	nni_mtx_unlock(&sock->s_mx);
 
 	*epp = ep;
 	return (0);
@@ -67,11 +67,11 @@ void
 nni_endpt_close(nni_endpt *ep)
 {
 	nni_pipe *pipe;
-	nni_mutex *mx = &ep->ep_sock->s_mx;
+	nni_mtx *mx = &ep->ep_sock->s_mx;
 
-	nni_mutex_enter(mx);
+	nni_mtx_lock(mx);
 	if (ep->ep_close) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		return;
 	}
 	ep->ep_close = 1;
@@ -80,9 +80,9 @@ nni_endpt_close(nni_endpt *ep)
 		pipe->p_ep = NULL;
 		ep->ep_pipe = NULL;
 	}
-	nni_cond_broadcast(&ep->ep_cv);
+	nni_cv_wake(&ep->ep_cv);
 	nni_list_remove(&ep->ep_sock->s_eps, ep);
-	nni_mutex_exit(mx);
+	nni_mtx_unlock(mx);
 
 	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
 		nni_thr_fini(&ep->ep_thr);
@@ -90,7 +90,7 @@ nni_endpt_close(nni_endpt *ep)
 
 	ep->ep_ops.ep_destroy(ep->ep_data);
 
-	nni_cond_fini(&ep->ep_cv);
+	nni_cv_fini(&ep->ep_cv);
 	nni_free(ep, sizeof (*ep));
 }
 
@@ -141,18 +141,18 @@ nni_dialer(void *arg)
 	nni_pipe *pipe;
 	int rv;
 	nni_time cooldown;
-	nni_mutex *mx = &ep->ep_sock->s_mx;
+	nni_mtx *mx = &ep->ep_sock->s_mx;
 
 	for (;;) {
-		nni_mutex_enter(mx);
+		nni_mtx_lock(mx);
 		while ((!ep->ep_close) && (ep->ep_pipe != NULL)) {
-			nni_cond_wait(&ep->ep_cv);
+			nni_cv_wait(&ep->ep_cv);
 		}
 		if (ep->ep_close) {
-			nni_mutex_exit(mx);
+			nni_mtx_unlock(mx);
 			break;
 		}
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 
 		rv = nni_dial_once(ep);
 		switch (rv) {
@@ -175,15 +175,15 @@ nni_dialer(void *arg)
 		// wait even longer, since the system needs time to
 		// release resources.
 		cooldown += nni_clock();
-		nni_mutex_enter(mx);
+		nni_mtx_lock(mx);
 		while (!ep->ep_close) {
 			// We need a different condvar...
-			rv = nni_cond_waituntil(&ep->ep_cv, cooldown);
+			rv = nni_cv_until(&ep->ep_cv, cooldown);
 			if (rv == NNG_ETIMEDOUT) {
 				break;
 			}
 		}
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 	}
 }
 
@@ -192,38 +192,37 @@ int
 nni_endpt_dial(nni_endpt *ep, int flags)
 {
 	int rv = 0;
-	nni_thread *reap = NULL;
-	nni_mutex *mx = &ep->ep_sock->s_mx;
+	nni_mtx *mx = &ep->ep_sock->s_mx;
 
-	nni_mutex_enter(mx);
+	nni_mtx_lock(mx);
 	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		return (NNG_EBUSY);
 	}
 	if (ep->ep_close) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		return (NNG_ECLOSED);
 	}
 
 	if ((rv = nni_thr_init(&ep->ep_thr, nni_dialer, ep)) != 0) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		return (rv);
 	}
 	ep->ep_mode = NNI_EP_MODE_DIAL;
 
 	if (flags & NNG_FLAG_SYNCH) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		rv = nni_dial_once(ep);
 		if (rv != 0) {
 			nni_thr_fini(&ep->ep_thr);
 			ep->ep_mode = NNI_EP_MODE_IDLE;
 			return (rv);
 		}
-		nni_mutex_enter(mx);
+		nni_mtx_lock(mx);
 	}
 
 	nni_thr_run(&ep->ep_thr);
-	nni_mutex_exit(mx);
+	nni_mtx_unlock(mx);
 
 	return (rv);
 }
@@ -256,19 +255,19 @@ nni_listener(void *arg)
 	nni_endpt *ep = arg;
 	nni_pipe *pipe;
 	int rv;
-	nni_mutex *mx = &ep->ep_sock->s_mx;
+	nni_mtx *mx = &ep->ep_sock->s_mx;
 
 	for (;;) {
 		nni_time cooldown;
-		nni_mutex_enter(mx);
+		nni_mtx_lock(mx);
 
 		// If we didn't bind synchronously, do it now.
 		while (!ep->ep_bound && !ep->ep_close) {
 			int rv;
 
-			nni_mutex_exit(mx);
+			nni_mtx_unlock(mx);
 			rv = ep->ep_ops.ep_bind(ep->ep_data);
-			nni_mutex_enter(mx);
+			nni_mtx_lock(mx);
 
 			if (rv == 0) {
 				ep->ep_bound = 1;
@@ -280,17 +279,17 @@ nni_listener(void *arg)
 			cooldown = 10000;
 			cooldown += nni_clock();
 			while (!ep->ep_close) {
-				rv = nni_cond_waituntil(&ep->ep_cv, cooldown);
+				rv = nni_cv_until(&ep->ep_cv, cooldown);
 				if (rv == NNG_ETIMEDOUT) {
 					break;
 				}
 			}
 		}
 		if (ep->ep_close) {
-			nni_mutex_exit(mx);
+			nni_mtx_unlock(mx);
 			break;
 		}
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 
 		pipe = NULL;
 
@@ -308,14 +307,14 @@ nni_listener(void *arg)
 			cooldown = 100000;      // 100ms
 		}
 		cooldown += nni_clock();
-		nni_mutex_enter(mx);
+		nni_mtx_lock(mx);
 		while (!ep->ep_close) {
-			rv = nni_cond_waituntil(&ep->ep_cv, cooldown);
+			rv = nni_cv_until(&ep->ep_cv, cooldown);
 			if (rv == NNG_ETIMEDOUT) {
 				break;
 			}
 		}
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 	}
 }
 
@@ -324,41 +323,40 @@ int
 nni_endpt_listen(nni_endpt *ep, int flags)
 {
 	int rv = 0;
-	nni_thread *reap = NULL;
-	nni_mutex *mx = &ep->ep_sock->s_mx;
+	nni_mtx *mx = &ep->ep_sock->s_mx;
 
-	nni_mutex_enter(mx);
+	nni_mtx_lock(mx);
 	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		return (NNG_EBUSY);
 	}
 
 	if (ep->ep_close) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		return (NNG_ECLOSED);
 	}
 
 	if ((rv = nni_thr_init(&ep->ep_thr, nni_listener, ep)) != 0) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		return (rv);
 	}
 
 	ep->ep_mode = NNI_EP_MODE_LISTEN;
 
 	if (flags & NNG_FLAG_SYNCH) {
-		nni_mutex_exit(mx);
+		nni_mtx_unlock(mx);
 		rv = ep->ep_ops.ep_bind(ep->ep_data);
 		if (rv != 0) {
 			nni_thr_fini(&ep->ep_thr);
 			ep->ep_mode = NNI_EP_MODE_IDLE;
 			return (rv);
 		}
-		nni_mutex_enter(mx);
+		nni_mtx_lock(mx);
 		ep->ep_bound = 1;
 	}
 
 	nni_thr_run(&ep->ep_thr);
-	nni_mutex_exit(mx);
+	nni_mtx_unlock(mx);
 
 	return (0);
 }

@@ -48,15 +48,15 @@ nni_pipe_close(nni_pipe *p)
 		p->p_ops.p_close(p->p_trandata);
 	}
 
-	nni_mutex_enter(&sock->s_mx);
+	nni_mtx_lock(&sock->s_mx);
 	if (!p->p_reap) {
 		// schedule deferred reap/close
 		p->p_reap = 1;
 		nni_list_remove(&sock->s_pipes, p);
 		nni_list_append(&sock->s_reaps, p);
-		nni_cond_broadcast(&sock->s_cv);
+		nni_cv_wake(&sock->s_cv);
 	}
-	nni_mutex_exit(&sock->s_mx);
+	nni_mtx_unlock(&sock->s_mx);
 }
 
 
@@ -119,9 +119,9 @@ nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 		return (rv);
 	}
 	p->p_psize = sock->s_ops.proto_pipe_size;
-	nni_mutex_enter(&sock->s_mx);
+	nni_mtx_lock(&sock->s_mx);
 	nni_list_append(&sock->s_pipes, p);
-	nni_mutex_exit(&sock->s_mx);
+	nni_mtx_unlock(&sock->s_mx);
 
 	*pp = p;
 	return (0);
@@ -146,9 +146,9 @@ nni_pipe_start(nni_pipe *pipe)
 	int collide;
 	nni_socket *sock = pipe->p_sock;
 
-	nni_mutex_enter(&sock->s_mx);
+	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
-		nni_mutex_exit(&sock->s_mx);
+		nni_mtx_unlock(&sock->s_mx);
 		return (NNG_ECLOSED);
 	}
 
@@ -178,12 +178,12 @@ nni_pipe_start(nni_pipe *pipe)
 
 	// XXX: Publish event
 
-	nni_mutex_exit(&sock->s_mx);
+	nni_mtx_unlock(&sock->s_mx);
 	return (0);
 
 fail:
 	pipe->p_reap = 1;
-	nni_mutex_exit(&sock->s_mx);
+	nni_mtx_unlock(&sock->s_mx);
 	nni_pipe_close(pipe);
 	return (rv);
 }

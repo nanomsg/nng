@@ -25,7 +25,7 @@ struct nng_endpt {
 	int		ep_mode;
 	int		ep_close;       // full shutdown
 	int		ep_bound;       // true if we bound locally
-	nni_cond	ep_cv;
+	nni_cv		ep_cv;
 	nni_pipe *	ep_pipe;        // Connected pipe (dialers only)
 };
 
