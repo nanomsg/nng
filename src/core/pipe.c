@@ -25,14 +25,14 @@ nni_pipe_id(nni_pipe *p)
 int
 nni_pipe_send(nni_pipe *p, nng_msg *msg)
 {
-	return (p->p_ops.p_send(p->p_trandata, msg));
+	return (p->p_tran_ops.p_send(p->p_tran_data, msg));
 }
 
 
 int
 nni_pipe_recv(nni_pipe *p, nng_msg **msgp)
 {
-	return (p->p_ops.p_recv(p->p_trandata, msgp));
+	return (p->p_tran_ops.p_recv(p->p_tran_data, msgp));
 }
 
 
@@ -44,8 +44,8 @@ nni_pipe_close(nni_pipe *p)
 {
 	nni_sock *sock = p->p_sock;
 
-	if (p->p_trandata != NULL) {
-		p->p_ops.p_close(p->p_trandata);
+	if (p->p_tran_data != NULL) {
+		p->p_tran_ops.p_close(p->p_tran_data);
 	}
 
 	nni_mtx_lock(&sock->s_mx);
@@ -63,7 +63,7 @@ nni_pipe_close(nni_pipe *p)
 uint16_t
 nni_pipe_peer(nni_pipe *p)
 {
-	return (p->p_ops.p_peer(p->p_trandata));
+	return (p->p_tran_ops.p_peer(p->p_tran_data));
 }
 
 
@@ -73,8 +73,8 @@ nni_pipe_destroy(nni_pipe *p)
 	nni_thr_fini(&p->p_send_thr);
 	nni_thr_fini(&p->p_recv_thr);
 
-	if (p->p_trandata != NULL) {
-		p->p_ops.p_destroy(p->p_trandata);
+	if (p->p_tran_data != NULL) {
+		p->p_tran_ops.p_destroy(p->p_tran_data);
 	}
 	if (p->p_pdata != NULL) {
 		nni_free(p->p_pdata, p->p_psize);
@@ -95,8 +95,8 @@ nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 		return (NNG_ENOMEM);
 	}
 	p->p_sock = sock;
-	p->p_ops = *ep->ep_ops.ep_pipe_ops;
-	p->p_trandata = NULL;
+	p->p_tran_ops = *ep->ep_ops.ep_pipe_ops;
+	p->p_tran_data = NULL;
 	p->p_active = 0;
 	p->p_psize = proto->proto_pipe_size;
 	NNI_LIST_NODE_INIT(&p->p_node);
@@ -132,10 +132,10 @@ int
 nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)
 {
 	/*  This should only be called with the mutex held... */
-	if (p->p_ops.p_getopt == NULL) {
+	if (p->p_tran_ops.p_getopt == NULL) {
 		return (NNG_ENOTSUP);
 	}
-	return (p->p_ops.p_getopt(p->p_trandata, opt, val, szp));
+	return (p->p_tran_ops.p_getopt(p->p_tran_data, opt, val, szp));
 }
 
 

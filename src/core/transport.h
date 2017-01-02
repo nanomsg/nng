@@ -13,7 +13,7 @@
 // Transport implementation details.  Transports must implement the
 // interfaces in this file.
 
-struct nni_transport {
+struct nni_tran {
 	// tran_scheme is the transport scheme, such as "tcp" or "inproc".
 	const char *		tran_scheme;
 
@@ -119,8 +119,8 @@ struct nni_pipe_ops {
 
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
-extern nni_transport *nni_transport_find(const char *);
-extern void nni_transport_init(void);
-extern void nni_transport_fini(void);
+extern nni_tran *nni_tran_find(const char *);
+extern void nni_tran_init(void);
+extern void nni_tran_fini(void);
 
 #endif // CORE_TRANSPORT_H

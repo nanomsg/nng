@@ -18,11 +18,11 @@
 int
 nni_endpt_create(nni_endpt **epp, nni_sock *sock, const char *addr)
 {
-	nni_transport *tran;
+	nni_tran *tran;
 	nni_endpt *ep;
 	int rv;
 
-	if ((tran = nni_transport_find(addr)) == NULL) {
+	if ((tran = nni_tran_find(addr)) == NULL) {
 		return (NNG_ENOTSUP);
 	}
 	if (strlen(addr) >= NNG_MAXADDRLEN) {
@@ -104,7 +104,7 @@ nni_endpt_connect(nni_endpt *ep, nni_pipe **pp)
 	if ((rv = nni_pipe_create(&pipe, ep)) != 0) {
 		return (rv);
 	}
-	rv = ep->ep_ops.ep_connect(ep->ep_data, &pipe->p_trandata);
+	rv = ep->ep_ops.ep_connect(ep->ep_data, &pipe->p_tran_data);
 	if (rv != 0) {
 		nni_pipe_close(pipe);
 		return (rv);
@@ -240,7 +240,8 @@ nni_endpt_accept(nni_endpt *ep, nni_pipe **pp)
 	if ((rv = nni_pipe_create(&pipe, ep)) != 0) {
 		return (rv);
 	}
-	if ((rv = ep->ep_ops.ep_accept(ep->ep_data, &pipe->p_trandata)) != 0) {
+	rv = ep->ep_ops.ep_accept(ep->ep_data, &pipe->p_tran_data);
+	if (rv != 0) {
 		nni_pipe_close(pipe);
 		return (rv);
 	}

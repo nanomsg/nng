@@ -414,7 +414,7 @@ static struct nni_endpt_ops nni_inproc_ep_ops = {
 
 // This is the inproc transport linkage, and should be the only global
 // symbol in this entire file.
-struct nni_transport nni_inproc_transport = {
+struct nni_tran nni_inproc_tran = {
 	.tran_scheme	= "inproc",
 	.tran_ep_ops	= &nni_inproc_ep_ops,
 	.tran_init	= nni_inproc_init,

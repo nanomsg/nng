@@ -12,9 +12,9 @@
 #include <stdio.h>
 
 static int
-init_helper(void)
+nni_init_helper(void)
 {
-	nni_transport_init();
+	nni_tran_init();
 	return (0);
 }
 
@@ -22,13 +22,13 @@ init_helper(void)
 int
 nni_init(void)
 {
-	return (nni_plat_init(init_helper));
+	return (nni_plat_init(nni_init_helper));
 }
 
 
 void
 nni_fini(void)
 {
-	nni_transport_fini();
+	nni_tran_fini();
 	nni_plat_fini();
 }

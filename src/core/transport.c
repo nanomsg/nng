@@ -13,29 +13,30 @@
 
 // For now the list of transports is hard-wired.  Adding new transports
 // to the system dynamically is something that might be considered later.
-extern nni_transport nni_inproc_transport;
+extern nni_tran nni_inproc_tran;
 
-static nni_transport *transports[] = {
-	&nni_inproc_transport,
+static nni_tran *transports[] = {
+	&nni_inproc_tran,
 	NULL
 };
 
-nni_transport *
-nni_transport_find(const char *addr)
+nni_tran *
+nni_tran_find(const char *addr)
 {
 	// address is of the form "<scheme>://blah..."
 	const char *end;
 	int len;
 	int i;
-	nni_transport *ops;
+	nni_tran *tran;
 
 	if ((end = strstr(addr, "://")) == NULL) {
 		return (NULL);
 	}
 	len = (int) (end - addr);
-	for (i = 0; (ops = transports[i]) != NULL; i++) {
-		if (strncmp(addr, ops->tran_scheme, len) == 0) {
-			return (ops);
+	for (i = 0; (tran = transports[i]) != NULL; i++) {
+		if ((strncmp(addr, tran->tran_scheme, len) == 0) &&
+		    (tran->tran_scheme[len] == '\0')) {
+			return (tran);
 		}
 	}
 	return (NULL);
@@ -45,26 +46,26 @@ nni_transport_find(const char *addr)
 // nni_transport_init initializes the entire transport subsystem, including
 // each individual transport.
 void
-nni_transport_init(void)
+nni_tran_init(void)
 {
 	int i;
-	nni_transport *ops;
+	nni_tran *tran;
 
-	for (i = 0; (ops = transports[i]) != NULL; i++) {
-		ops->tran_init();
+	for (i = 0; (tran = transports[i]) != NULL; i++) {
+		tran->tran_init();
 	}
 }
 
 
 void
-nni_transport_fini(void)
+nni_tran_fini(void)
 {
 	int i;
-	nni_transport *ops;
+	nni_tran *tran;
 
-	for (i = 0; (ops = transports[i]) != NULL; i++) {
-		if (ops->tran_fini != NULL) {
-			ops->tran_fini();
+	for (i = 0; (tran = transports[i]) != NULL; i++) {
+		if (tran->tran_fini != NULL) {
+			tran->tran_fini();
 		}
 	}
 }

@@ -14,12 +14,13 @@
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
 
+#include "core/defs.h"
 #include "core/transport.h"
 
 struct nng_pipe {
 	uint32_t		p_id;
-	struct nni_pipe_ops	p_ops;
-	void *			p_trandata;
+	struct nni_pipe_ops	p_tran_ops;
+	void *			p_tran_data;
 	void *			p_pdata;        // protocol specific data
 	size_t			p_psize;        // size of protocol data
 	nni_list_node		p_node;

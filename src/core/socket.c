@@ -52,11 +52,6 @@ nni_reaper(void *arg)
 			}
 			nni_mtx_unlock(&sock->s_mx);
 
-			// This should already have been done.
-			if (pipe->p_trandata != NULL) {
-				pipe->p_ops.p_close(pipe->p_trandata);
-			}
-
 			// Remove the pipe from the protocol.  Protocols may
 			// keep lists of pipes for managing their topologies.
 			// Note that if a protocol has rejected the pipe, it
@@ -215,9 +210,9 @@ nni_sock_close(nni_sock *sock)
 
 	// Go through and schedule close on all pipes.
 	while ((pipe = nni_list_first(&sock->s_pipes)) != NULL) {
-		nni_list_remove(&sock->s_pipes, pipe);
-		pipe->p_reap = 1;
-		nni_list_append(&sock->s_reaps, pipe);
+		nni_mtx_unlock(&sock->s_mx);
+		nni_pipe_close(pipe);
+		nni_mtx_lock(&sock->s_mx);
 	}
 
 	nni_cv_wake(&sock->s_cv);
