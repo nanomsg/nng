@@ -156,7 +156,6 @@ TestMain("Platform Operations", {
 		So(nni_thr_init(&thr, notifyafter, &arg) == 0);
 
 		Reset({
-			nni_thr_fini(&thr);
 			nni_cv_fini(&arg.cv);
 			nni_mtx_fini(&arg.mx);
 		});
@@ -171,6 +170,7 @@ TestMain("Platform Operations", {
 				nni_cv_wait(&arg.cv);
 			}
 			nni_mtx_unlock(&arg.mx);
+			nni_thr_fini(&thr);
 			So(arg.did == 1);
 		})
 
@@ -184,6 +184,7 @@ TestMain("Platform Operations", {
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
+			nni_thr_fini(&thr);
 		})
 
 		Convey("Not running works", {
@@ -195,6 +196,7 @@ TestMain("Platform Operations", {
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
+			nni_thr_fini(&thr);
 		})
 	})
 })
