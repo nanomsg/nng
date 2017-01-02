@@ -22,14 +22,15 @@ typedef struct nni_req_sock	nni_req_sock;
 // An nni_req_sock is our per-socket protocol private structure.
 struct nni_req_sock {
 	nni_socket *	sock;
-	nni_mutex	mx;
-	nni_cond	cv;
+	nni_mtx		mx;
+	nni_cv		cv;
 	nni_msgqueue *	uwq;
 	nni_msgqueue *	urq;
 	nni_duration	retry;
 	nni_time	resend;
-	nni_thread *	resender;
+	nni_thr		resender;
 	int		raw;
+	int		closing;
 	nni_list	pipes;
 	nni_msg *	reqmsg;
 	uint32_t	nextid;         // next id
@@ -57,12 +58,12 @@ nni_req_create(void **reqp, nni_socket *sock)
 	if ((req = nni_alloc(sizeof (*req))) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mutex_init(&req->mx)) != 0) {
+	if ((rv = nni_mtx_init(&req->mx)) != 0) {
 		nni_free(req, sizeof (*req));
 		return (rv);
 	}
-	if ((rv = nni_cond_init(&req->cv, &req->mx)) != 0) {
-		nni_mutex_fini(&req->mx);
+	if ((rv = nni_cv_init(&req->cv, &req->mx)) != 0) {
+		nni_mtx_fini(&req->mx);
 		nni_free(req, sizeof (*req));
 		return (rv);
 	}
@@ -79,13 +80,14 @@ nni_req_create(void **reqp, nni_socket *sock)
 	req->urq = nni_socket_recvq(sock);
 	*reqp = req;
 	nni_socket_recverr(sock, NNG_ESTATE);
-	rv = nni_thread_create(&req->resender, nni_req_resender, req);
+	rv = nni_thr_init(&req->resender, nni_req_resender, req);
 	if (rv != 0) {
-		nni_cond_fini(&req->cv);
-		nni_mutex_fini(&req->mx);
+		nni_cv_fini(&req->cv);
+		nni_mtx_fini(&req->mx);
 		nni_free(req, sizeof (*req));
 		return (rv);
 	}
+	nni_thr_run(&req->resender);
 	return (0);
 }
 
@@ -94,19 +96,17 @@ static void
 nni_req_destroy(void *arg)
 {
 	nni_req_sock *req = arg;
-	nni_thread *resender;
 
 	// Shut down the resender.  We request it to exit by clearing
 	// its old value, then kick it.
-	nni_mutex_enter(&req->mx);
-	resender = req->resender;
-	req->resender = NULL;
-	nni_cond_broadcast(&req->cv);
-	nni_mutex_exit(&req->mx);
+	nni_mtx_lock(&req->mx);
+	req->closing = 1;
+	nni_cv_wake(&req->cv);
+	nni_mtx_unlock(&req->mx);
 
-	nni_thread_reap(resender);
-	nni_cond_fini(&req->cv);
-	nni_mutex_fini(&req->mx);
+	nni_thr_fini(&req->resender);
+	nni_cv_fini(&req->cv);
+	nni_mtx_fini(&req->mx);
 	nni_free(req, sizeof (*req));
 }
 
@@ -122,9 +122,9 @@ nni_req_add_pipe(void *arg, nni_pipe *pipe, void *data)
 	rp->sigclose = 0;
 	rp->req = req;
 
-	nni_mutex_enter(&req->mx);
+	nni_mtx_lock(&req->mx);
 	nni_list_append(&req->pipes, rp);
-	nni_mutex_exit(&req->mx);
+	nni_mtx_unlock(&req->mx);
 	return (0);
 }
 
@@ -135,9 +135,9 @@ nni_req_rem_pipe(void *arg, void *data)
 	nni_req_sock *req = arg;
 	nni_req_pipe *rp = data;
 
-	nni_mutex_enter(&req->mx);
+	nni_mtx_lock(&req->mx);
 	nni_list_remove(&req->pipes, rp);
-	nni_mutex_exit(&req->mx);
+	nni_mtx_unlock(&req->mx);
 }
 
 
@@ -221,14 +221,14 @@ nni_req_setopt(void *arg, int opt, const void *buf, size_t sz)
 
 	switch (opt) {
 	case NNG_OPT_RESENDTIME:
-		nni_mutex_enter(&req->mx);
+		nni_mtx_lock(&req->mx);
 		rv = nni_setopt_duration(&req->retry, buf, sz);
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		break;
 	case NNG_OPT_RAW:
-		nni_mutex_enter(&req->mx);
+		nni_mtx_lock(&req->mx);
 		rv = nni_setopt_int(&req->raw, buf, sz, 0, 1);
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		break;
 	default:
 		rv = NNG_ENOTSUP;
@@ -245,14 +245,14 @@ nni_req_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 	switch (opt) {
 	case NNG_OPT_RESENDTIME:
-		nni_mutex_enter(&req->mx);
+		nni_mtx_lock(&req->mx);
 		rv = nni_getopt_duration(&req->retry, buf, szp);
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		break;
 	case NNG_OPT_RAW:
-		nni_mutex_enter(&req->mx);
+		nni_mtx_lock(&req->mx);
 		rv = nni_getopt_int(&req->raw, buf, szp);
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		break;
 	default:
 		rv = NNG_ENOTSUP;
@@ -268,17 +268,17 @@ nni_req_resender(void *arg)
 	int rv;
 
 	for (;;) {
-		nni_mutex_enter(&req->mx);
-		if (req->resender == NULL) {
-			nni_mutex_exit(&req->mx);
+		nni_mtx_lock(&req->mx);
+		if (req->closing) {
+			nni_mtx_unlock(&req->mx);
 			return;
 		}
 		if (req->reqmsg == NULL) {
-			nni_cond_wait(&req->cv);
-			nni_mutex_exit(&req->mx);
+			nni_cv_wait(&req->cv);
+			nni_mtx_unlock(&req->mx);
 			continue;
 		}
-		rv = nni_cond_waituntil(&req->cv, req->resend);
+		rv = nni_cv_until(&req->cv, req->resend);
 		if ((rv == NNG_ETIMEDOUT) && (req->reqmsg != NULL)) {
 			nni_msg *dup;
 			// XXX: check for final timeout on this?
@@ -289,7 +289,7 @@ nni_req_resender(void *arg)
 			}
 			req->resend = nni_clock() + req->retry;
 		}
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 	}
 }
 
@@ -301,11 +301,11 @@ nni_req_sendfilter(void *arg, nni_msg *msg)
 	uint32_t id;
 	uint8_t buf[4];
 
-	nni_mutex_enter(&req->mx);
+	nni_mtx_lock(&req->mx);
 	if (req->raw) {
 		// No automatic retry, and the request ID must
 		// be in the header coming down.
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		return (msg);
 	}
 
@@ -322,7 +322,7 @@ nni_req_sendfilter(void *arg, nni_msg *msg)
 
 	if (nni_msg_append_header(msg, buf, 4) != 0) {
 		// Should be ENOMEM.
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		nni_msg_free(msg);
 		return (NULL);
 	}
@@ -335,18 +335,18 @@ nni_req_sendfilter(void *arg, nni_msg *msg)
 
 	// Make a duplicate message... for retries.
 	if (nni_msg_dup(&req->reqmsg, msg) != 0) {
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		nni_msg_free(msg);
 		return (NULL);
 	}
 
 	// Schedule the next retry
 	req->resend = nni_clock() + req->retry;
-	nni_cond_signal(&req->cv);
+	nni_cv_wake(&req->cv);
 
 	// Clear the error condition.
 	nni_socket_recverr(req->sock, 0);
-	nni_mutex_exit(&req->mx);
+	nni_mtx_unlock(&req->mx);
 
 	return (msg);
 }
@@ -359,29 +359,29 @@ nni_req_recvfilter(void *arg, nni_msg *msg)
 	char *header;
 	size_t len;
 
-	nni_mutex_enter(&req->mx);
+	nni_mtx_lock(&req->mx);
 	if (req->raw) {
 		// Pass it unmolested
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		return (msg);
 	}
 
 	header = nni_msg_header(msg, &len);
 	if (len < 4) {
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		nni_msg_free(msg);
 		return (NULL);
 	}
 
 	if (req->reqmsg == NULL) {
 		// We had no outstanding request.
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		nni_msg_free(msg);
 		return (NULL);
 	}
 	if (memcmp(header, req->reqid, 4) != 0) {
 		// Wrong request id
-		nni_mutex_exit(&req->mx);
+		nni_mtx_unlock(&req->mx);
 		nni_msg_free(msg);
 		return (NULL);
 	}
@@ -389,8 +389,8 @@ nni_req_recvfilter(void *arg, nni_msg *msg)
 	nni_socket_recverr(req->sock, NNG_ESTATE);
 	nni_msg_free(req->reqmsg);
 	req->reqmsg = NULL;
-	nni_cond_signal(&req->cv);
-	nni_mutex_exit(&req->mx);
+	nni_cv_wake(&req->cv);
+	nni_mtx_unlock(&req->mx);
 	return (msg);
 }
 
