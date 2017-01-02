@@ -29,7 +29,7 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 		return (NNG_EINVAL);
 	}
 
-	if ((ep = nni_alloc(sizeof (*ep))) == NULL) {
+	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	ep->ep_sock = sock;
@@ -39,7 +39,7 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 
 	if ((rv = nni_cv_init(&ep->ep_cv, &ep->ep_sock->s_mx)) != 0) {
-		nni_free(ep, sizeof (*ep));
+		NNI_FREE_STRUCT(ep);
 		return (NNG_ENOMEM);
 	}
 
@@ -50,7 +50,7 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 	rv = ep->ep_ops.ep_create(&ep->ep_data, addr, nni_socket_proto(sock));
 	if (rv != 0) {
 		nni_cv_fini(&ep->ep_cv);
-		nni_free(ep, sizeof (*ep));
+		NNI_FREE_STRUCT(ep);
 		return (rv);
 	}
 
@@ -91,7 +91,7 @@ nni_endpt_close(nni_endpt *ep)
 	ep->ep_ops.ep_destroy(ep->ep_data);
 
 	nni_cv_fini(&ep->ep_cv);
-	nni_free(ep, sizeof (*ep));
+	NNI_FREE_STRUCT(ep);
 }
 
 

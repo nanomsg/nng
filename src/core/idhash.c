@@ -32,12 +32,12 @@ nni_idhash_create(nni_idhash **hp)
 {
 	nni_idhash *h;
 
-	if ((h = nni_alloc(sizeof (*h))) == NULL) {
+	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	h->ih_entries = nni_alloc(8 * sizeof (nni_idhash_entry));
 	if (h->ih_entries == NULL) {
-		nni_free(h, sizeof (*h));
+		NNI_FREE_STRUCT(h);
 		return (NNG_ENOMEM);
 	}
 	(void) memset(h->ih_entries, 0, (8 * sizeof (nni_idhash_entry)));
@@ -56,7 +56,7 @@ void
 nni_idhash_destroy(nni_idhash *h)
 {
 	nni_free(h->ih_entries, h->ih_cap * sizeof (nni_idhash_entry));
-	nni_free(h, sizeof (*h));
+	NNI_FREE_STRUCT(h);
 }
 
 
