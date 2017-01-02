@@ -60,6 +60,7 @@ extern int nni_sock_listen(nni_sock *, const char *, nni_endpt **, int);
 // already have the socket lock held.
 extern void nni_sock_recverr(nni_sock *, int);
 extern void nni_sock_senderr(nni_sock *, int);
+
 // These are socket methods that protocol operations can expect to call.
 // Note that each of these should be called without any locks held, since
 // the socket can reenter the protocol.
