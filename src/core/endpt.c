@@ -33,13 +33,11 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 		return (NNG_ENOMEM);
 	}
 	ep->ep_sock = sock;
-	ep->ep_dialer = NULL;
-	ep->ep_listener = NULL;
 	ep->ep_close = 0;
-	ep->ep_start = 0;
 	ep->ep_bound = 0;
 	ep->ep_pipe = NULL;
 	NNI_LIST_NODE_INIT(&ep->ep_node);
+
 	if ((rv = nni_cond_init(&ep->ep_cv, &ep->ep_sock->s_mx)) != 0) {
 		nni_free(ep, sizeof (*ep));
 		return (NNG_ENOMEM);
@@ -86,11 +84,8 @@ nni_endpt_close(nni_endpt *ep)
 	nni_list_remove(&ep->ep_sock->s_eps, ep);
 	nni_mutex_exit(mx);
 
-	if (ep->ep_dialer != NULL) {
-		nni_thread_reap(ep->ep_dialer);
-	}
-	if (ep->ep_listener != NULL) {
-		nni_thread_reap(ep->ep_listener);
+	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
+		nni_thr_fini(&ep->ep_thr);
 	}
 
 	ep->ep_ops.ep_destroy(ep->ep_data);
@@ -148,16 +143,6 @@ nni_dialer(void *arg)
 	nni_time cooldown;
 	nni_mutex *mx = &ep->ep_sock->s_mx;
 
-	nni_mutex_enter(mx);
-	while ((!ep->ep_start) && (!ep->ep_close) && (!ep->ep_stop)) {
-		nni_cond_wait(&ep->ep_cv);
-	}
-	if (ep->ep_stop || ep->ep_close) {
-		nni_mutex_exit(mx);
-		return;
-	}
-	nni_mutex_exit(mx);
-
 	for (;;) {
 		nni_mutex_enter(mx);
 		while ((!ep->ep_close) && (ep->ep_pipe != NULL)) {
@@ -211,43 +196,34 @@ nni_endpt_dial(nni_endpt *ep, int flags)
 	nni_mutex *mx = &ep->ep_sock->s_mx;
 
 	nni_mutex_enter(mx);
-	if ((ep->ep_dialer != NULL) || (ep->ep_listener != NULL)) {
-		rv = NNG_EBUSY;
-		goto out;
+	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
+		nni_mutex_exit(mx);
+		return (NNG_EBUSY);
 	}
 	if (ep->ep_close) {
-		rv = NNG_ECLOSED;
-		goto out;
+		nni_mutex_exit(mx);
+		return (NNG_ECLOSED);
 	}
 
-	ep->ep_stop = 0;
-	ep->ep_start = (flags & NNG_FLAG_SYNCH) ? 0 : 1;
-	if (nni_thread_create(&ep->ep_dialer, nni_dialer, ep) != 0) {
-		rv = NNG_ENOMEM;
-		goto out;
+	if ((rv = nni_thr_init(&ep->ep_thr, nni_dialer, ep)) != 0) {
+		nni_mutex_exit(mx);
+		return (rv);
 	}
-	if ((rv == 0) && (flags & NNG_FLAG_SYNCH)) {
+	ep->ep_mode = NNI_EP_MODE_DIAL;
+
+	if (flags & NNG_FLAG_SYNCH) {
 		nni_mutex_exit(mx);
 		rv = nni_dial_once(ep);
-		nni_mutex_enter(mx);
-
-		if (rv == 0) {
-			ep->ep_start = 1;
-		} else {
-			// This will cause the thread to exit instead of
-			// starting.
-			ep->ep_stop = 1;
-			reap = ep->ep_dialer;
-			ep->ep_dialer = NULL;
+		if (rv != 0) {
+			nni_thr_fini(&ep->ep_thr);
+			ep->ep_mode = NNI_EP_MODE_IDLE;
+			return (rv);
 		}
-		nni_cond_signal(&ep->ep_cv);
+		nni_mutex_enter(mx);
 	}
-out:
-	nni_mutex_exit(mx);
 
-	if (reap != NULL) {
-		nni_thread_reap(reap);
-	}
+	nni_thr_run(&ep->ep_thr);
+	nni_mutex_exit(mx);
 
 	return (rv);
 }
@@ -282,15 +258,6 @@ nni_listener(void *arg)
 	int rv;
 	nni_mutex *mx = &ep->ep_sock->s_mx;
 
-	nni_mutex_enter(mx);
-	while ((!ep->ep_start) && (!ep->ep_close) && (!ep->ep_stop)) {
-		nni_cond_wait(&ep->ep_cv);
-	}
-	if (ep->ep_stop || ep->ep_close) {
-		nni_mutex_exit(mx);
-		return;
-	}
-	nni_mutex_exit(mx);
 	for (;;) {
 		nni_time cooldown;
 		nni_mutex_enter(mx);
@@ -361,43 +328,37 @@ nni_endpt_listen(nni_endpt *ep, int flags)
 	nni_mutex *mx = &ep->ep_sock->s_mx;
 
 	nni_mutex_enter(mx);
-	if ((ep->ep_dialer != NULL) || (ep->ep_listener != NULL)) {
-		rv = NNG_EBUSY;
-		goto out;
-	}
-	if (ep->ep_close) {
-		rv = NNG_ECLOSED;
-		goto out;
+	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
+		nni_mutex_exit(mx);
+		return (NNG_EBUSY);
 	}
 
-	ep->ep_stop = 0;
-	ep->ep_start = (flags & NNG_FLAG_SYNCH) ? 0 : 1;
-	if (nni_thread_create(&ep->ep_listener, nni_listener, ep) != 0) {
-		rv = NNG_ENOMEM;
-		goto out;
+	if (ep->ep_close) {
+		nni_mutex_exit(mx);
+		return (NNG_ECLOSED);
 	}
-	if ((rv == 0) && (flags & NNG_FLAG_SYNCH)) {
+
+	if ((rv = nni_thr_init(&ep->ep_thr, nni_listener, ep)) != 0) {
+		nni_mutex_exit(mx);
+		return (rv);
+	}
+
+	ep->ep_mode = NNI_EP_MODE_LISTEN;
+
+	if (flags & NNG_FLAG_SYNCH) {
 		nni_mutex_exit(mx);
 		rv = ep->ep_ops.ep_bind(ep->ep_data);
-		nni_mutex_enter(mx);
-		if (rv == 0) {
-			ep->ep_bound = 1;
-			ep->ep_start = 1;
-		} else {
-			// This will cause the thread to exit instead of
-			// starting.
-			ep->ep_stop = 1;
-			reap = ep->ep_listener;
-			ep->ep_listener = NULL;
+		if (rv != 0) {
+			nni_thr_fini(&ep->ep_thr);
+			ep->ep_mode = NNI_EP_MODE_IDLE;
+			return (rv);
 		}
-		nni_cond_broadcast(&ep->ep_cv);
+		nni_mutex_enter(mx);
+		ep->ep_bound = 1;
 	}
-out:
+
+	nni_thr_run(&ep->ep_thr);
 	nni_mutex_exit(mx);
 
-	if (reap != NULL) {
-		nni_thread_reap(reap);
-	}
-
-	return (rv);
+	return (0);
 }

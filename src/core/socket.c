@@ -74,7 +74,7 @@ nni_reaper(void *arg)
 		if ((sock->s_closing) &&
 		    (nni_list_first(&sock->s_reaps) == NULL) &&
 		    (nni_list_first(&sock->s_pipes) == NULL)) {
-		    	nni_mutex_exit(&sock->s_mx);
+			nni_mutex_exit(&sock->s_mx);
 			break;
 		}
 
@@ -132,7 +132,7 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		nni_mutex_fini(&sock->s_mx);
 		nni_free(sock, sizeof (*sock));
 		return (rv);
-	} 
+	}
 	if ((rv = nni_msgqueue_create(&sock->s_urq, 0)) != 0) {
 		nni_msgqueue_destroy(sock->s_uwq);
 		nni_thr_fini(&sock->s_reaper);
