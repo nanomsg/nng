@@ -48,7 +48,7 @@ nni_msgqueue_create(nni_msgqueue **mqp, int cap)
 	// a message back at the end to do a retry.
 	alloc = cap + 2;
 
-	if ((mq = nni_alloc(sizeof (*mq))) == NULL) {
+	if ((mq = NNI_ALLOC_STRUCT(mq)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_mtx_init(&mq->mq_lock)) != 0) {
@@ -113,7 +113,7 @@ nni_msgqueue_destroy(nni_msgqueue *mq)
 	}
 
 	nni_free(mq->mq_msgs, mq->mq_alloc * sizeof (nng_msg *));
-	nni_free(mq, sizeof (*mq));
+	NNI_FREE_STRUCT(mq);
 }
 
 

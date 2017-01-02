@@ -39,4 +39,8 @@ typedef int64_t			nni_duration;   // Relative time (usec).
 #define NNI_TIME_ZERO		((nni_time) 0)
 #define NNI_SECOND		(1000000)
 
+// Structure allocation conveniences.
+#define NNI_ALLOC_STRUCT(s)	nni_alloc(sizeof (*(s)))
+#define NNI_FREE_STRUCT(s)	nni_free((s), sizeof (*(s)))
+
 #endif  // CORE_DEFS_H

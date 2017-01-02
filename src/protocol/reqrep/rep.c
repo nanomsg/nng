@@ -51,11 +51,11 @@ nni_rep_create(void **repp, nni_socket *sock)
 	nni_rep_sock *rep;
 	int rv;
 
-	if ((rep = nni_alloc(sizeof (*rep))) == NULL) {
+	if ((rep = NNI_ALLOC_STRUCT(rep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_mtx_init(&rep->mx)) != 0) {
-		nni_free(rep, sizeof (*rep));
+		NNI_FREE_STRUCT(rep);
 		return (rv);
 	}
 	rep->ttl = 8;   // Per RFC
@@ -65,7 +65,7 @@ nni_rep_create(void **repp, nni_socket *sock)
 	rep->btrace_len = 0;
 	if ((rv = nni_idhash_create(&rep->pipes)) != 0) {
 		nni_mtx_fini(&rep->mx);
-		nni_free(rep, sizeof (*rep));
+		NNI_FREE_STRUCT(rep);
 		return (rv);
 	}
 
@@ -76,7 +76,7 @@ nni_rep_create(void **repp, nni_socket *sock)
 	if (rv != 0) {
 		nni_idhash_destroy(rep->pipes);
 		nni_mtx_fini(&rep->mx);
-		nni_free(rep, sizeof (*rep));
+		NNI_FREE_STRUCT(rep);
 		return (rv);
 	}
 	*repp = rep;
@@ -97,7 +97,7 @@ nni_rep_destroy(void *arg)
 	if (rep->btrace != NULL) {
 		nni_free(rep->btrace, rep->btrace_len);
 	}
-	nni_free(rep, sizeof (*rep));
+	NNI_FREE_STRUCT(rep);
 }
 
 

@@ -79,7 +79,7 @@ nni_pipe_destroy(nni_pipe *p)
 	if (p->p_pdata != NULL) {
 		nni_free(p->p_pdata, p->p_psize);
 	}
-	nni_free(p, sizeof (*p));
+	NNI_FREE_STRUCT(p);
 }
 
 
@@ -91,7 +91,7 @@ nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 	nni_protocol *proto = &sock->s_ops;
 	int rv;
 
-	if ((p = nni_alloc(sizeof (*p))) == NULL) {
+	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	p->p_sock = sock;
@@ -102,20 +102,20 @@ nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 	NNI_LIST_NODE_INIT(&p->p_node);
 
 	if ((p->p_pdata = nni_alloc(p->p_psize)) == NULL) {
-		nni_free(p, sizeof (*p));
+		NNI_FREE_STRUCT(p);
 		return (NNG_ENOMEM);
 	}
 	rv = nni_thr_init(&p->p_recv_thr, proto->proto_pipe_recv, p->p_pdata);
 	if (rv != 0) {
 		nni_free(p->p_pdata, p->p_psize);
-		nni_free(p, sizeof (*p));
+		NNI_FREE_STRUCT(p);
 		return (rv);
 	}
 	rv = nni_thr_init(&p->p_send_thr, proto->proto_pipe_send, p->p_pdata);
 	if (rv != 0) {
 		nni_thr_fini(&p->p_recv_thr);
 		nni_free(p->p_pdata, p->p_psize);
-		nni_free(p, sizeof (*p));
+		NNI_FREE_STRUCT(p);
 		return (rv);
 	}
 	p->p_psize = sock->s_ops.proto_pipe_size;

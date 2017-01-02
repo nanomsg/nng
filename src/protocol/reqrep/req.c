@@ -55,16 +55,16 @@ nni_req_create(void **reqp, nni_socket *sock)
 	nni_req_sock *req;
 	int rv;
 
-	if ((req = nni_alloc(sizeof (*req))) == NULL) {
+	if ((req = NNI_ALLOC_STRUCT(req)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_mtx_init(&req->mx)) != 0) {
-		nni_free(req, sizeof (*req));
+		NNI_FREE_STRUCT(req);
 		return (rv);
 	}
 	if ((rv = nni_cv_init(&req->cv, &req->mx)) != 0) {
 		nni_mtx_fini(&req->mx);
-		nni_free(req, sizeof (*req));
+		NNI_FREE_STRUCT(req);
 		return (rv);
 	}
 	// this is "semi random" start for request IDs.
@@ -84,7 +84,7 @@ nni_req_create(void **reqp, nni_socket *sock)
 	if (rv != 0) {
 		nni_cv_fini(&req->cv);
 		nni_mtx_fini(&req->mx);
-		nni_free(req, sizeof (*req));
+		NNI_FREE_STRUCT(req);
 		return (rv);
 	}
 	nni_thr_run(&req->resender);
@@ -107,7 +107,7 @@ nni_req_destroy(void *arg)
 	nni_thr_fini(&req->resender);
 	nni_cv_fini(&req->cv);
 	nni_mtx_fini(&req->mx);
-	nni_free(req, sizeof (*req));
+	NNI_FREE_STRUCT(req);
 }
 
 

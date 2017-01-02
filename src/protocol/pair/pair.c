@@ -47,11 +47,11 @@ nni_pair_create(void **pairp, nni_socket *sock)
 	nni_pair_sock *pair;
 	int rv;
 
-	if ((pair = nni_alloc(sizeof (*pair))) == NULL) {
+	if ((pair = NNI_ALLOC_STRUCT(pair)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_mtx_init(&pair->mx)) != 0) {
-		nni_free(pair, sizeof (*pair));
+		NNI_FREE_STRUCT(pair);
 		return (rv);
 	}
 	pair->sock = sock;
@@ -73,7 +73,7 @@ nni_pair_destroy(void *arg)
 	// the socket already shut us down, and we don't have any other
 	// threads that run.
 	nni_mtx_fini(&pair->mx);
-	nni_free(pair, sizeof (*pair));
+	NNI_FREE_STRUCT(pair);
 }
 
 

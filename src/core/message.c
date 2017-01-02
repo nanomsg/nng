@@ -233,14 +233,14 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 	nni_msg *m;
 	int rv;
 
-	if ((m = nni_alloc(sizeof (*m))) == NULL) {
+	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 
 	// 64-bytes of header, including room for 32 bytes
 	// of headroom and 32 bytes of trailer.
 	if ((rv = nni_chunk_grow(&m->m_header, 32, 32)) != 0) {
-		nni_free(m, sizeof (*m));
+		NNI_FREE_STRUCT(m);
 		return (rv);
 	}
 
@@ -256,7 +256,7 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 	}
 	if (rv != 0) {
 		nni_chunk_free(&m->m_header);
-		nni_free(m, sizeof (*m));
+		NNI_FREE_STRUCT(m);
 	}
 	if ((rv = nni_chunk_append(&m->m_body, NULL, sz)) != 0) {
 		// Should not happen since we just grew it to fit.
@@ -270,23 +270,39 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 
 
 int
-nni_msg_dup(nni_msg **dup, const nni_msg *src)
+nni_msg_dup(nni_msg **dup, nni_msg *src)
 {
 	nni_msg *m;
+	nni_msgopt *mo;
+	nni_msgopt *newmo;
 	int rv;
 
-	if ((m = nni_alloc(sizeof (*m))) == NULL) {
+	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_chunk_dup(&m->m_header, &src->m_header)) != 0) {
-		nni_free(m, sizeof (*m));
+		NNI_FREE_STRUCT(m);
 		return (rv);
 	}
 	if ((rv = nni_chunk_dup(&m->m_body, &src->m_body)) != 0) {
 		nni_chunk_free(&m->m_header);
-		nni_free(m, sizeof (*m));
+		NNI_FREE_STRUCT(m);
 		return (rv);
 	}
+
+	NNI_LIST_FOREACH (&src->m_options, mo) {
+		newmo = nni_alloc(sizeof (*newmo) + mo->mo_sz);
+		if (newmo == NULL) {
+			nni_msg_free(m);
+			return (NNG_ENOMEM);
+		}
+		newmo->mo_val = ((char *) newmo + sizeof (*newmo));
+		newmo->mo_sz = mo->mo_sz;
+		newmo->mo_num = mo->mo_num;
+		memcpy(newmo->mo_val, mo->mo_val, mo->mo_sz);
+		nni_list_append(&m->m_options, newmo);
+	}
+
 	*dup = m;
 	return (0);
 }
@@ -303,7 +319,7 @@ nni_msg_free(nni_msg *m)
 		nni_list_remove(&m->m_options, mo);
 		nni_free(mo, sizeof (*mo) + mo->mo_sz);
 	}
-	nni_free(m, sizeof (*m));
+	NNI_FREE_STRUCT(m);
 }
 
 

@@ -95,7 +95,7 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 	if ((ops = nni_protocol_find(proto)) == NULL) {
 		return (NNG_ENOTSUP);
 	}
-	if ((sock = nni_alloc(sizeof (*sock))) == NULL) {
+	if ((sock = NNI_ALLOC_STRUCT(sock)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	sock->s_ops = *ops;
@@ -110,19 +110,19 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 	NNI_LIST_INIT(&sock->s_eps, nni_endpt, ep_node);
 
 	if ((rv = nni_mtx_init(&sock->s_mx)) != 0) {
-		nni_free(sock, sizeof (*sock));
+		NNI_FREE_STRUCT(sock);
 		return (rv);
 	}
 	if ((rv = nni_cv_init(&sock->s_cv, &sock->s_mx)) != 0) {
 		nni_mtx_fini(&sock->s_mx);
-		nni_free(sock, sizeof (*sock));
+		NNI_FREE_STRUCT(sock);
 		return (rv);
 	}
 
 	if ((rv = nni_thr_init(&sock->s_reaper, nni_reaper, sock)) != 0) {
 		nni_cv_fini(&sock->s_cv);
 		nni_mtx_fini(&sock->s_mx);
-		nni_free(sock, sizeof (*sock));
+		NNI_FREE_STRUCT(sock);
 		return (rv);
 	}
 
@@ -130,7 +130,7 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		nni_thr_fini(&sock->s_reaper);
 		nni_cv_fini(&sock->s_cv);
 		nni_mtx_fini(&sock->s_mx);
-		nni_free(sock, sizeof (*sock));
+		NNI_FREE_STRUCT(sock);
 		return (rv);
 	}
 	if ((rv = nni_msgqueue_create(&sock->s_urq, 0)) != 0) {
@@ -138,7 +138,7 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		nni_thr_fini(&sock->s_reaper);
 		nni_cv_fini(&sock->s_cv);
 		nni_mtx_fini(&sock->s_mx);
-		nni_free(sock, sizeof (*sock));
+		NNI_FREE_STRUCT(sock);
 		return (rv);
 	}
 
@@ -148,7 +148,7 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		nni_thr_fini(&sock->s_reaper);
 		nni_cv_fini(&sock->s_cv);
 		nni_mtx_fini(&sock->s_mx);
-		nni_free(sock, sizeof (*sock));
+		NNI_FREE_STRUCT(sock);
 		return (rv);
 	}
 	nni_thr_run(&sock->s_reaper);
@@ -235,7 +235,7 @@ nni_socket_close(nni_socket *sock)
 	nni_msgqueue_destroy(sock->s_uwq);
 	nni_cv_fini(&sock->s_cv);
 	nni_mtx_fini(&sock->s_mx);
-	nni_free(sock, sizeof (*sock));
+	NNI_FREE_STRUCT(sock);
 	return (0);
 }
 

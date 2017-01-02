@@ -108,7 +108,7 @@ nni_inproc_pair_destroy(nni_inproc_pair *pair)
 		nni_msgqueue_destroy(pair->q[1]);
 	}
 	nni_mtx_fini(&pair->mx);
-	nni_free(pair, sizeof (*pair));
+	NNI_FREE_STRUCT(pair);
 }
 
 
@@ -190,11 +190,11 @@ nni_inproc_ep_create(void **epp, const char *url, uint16_t proto)
 	if (strlen(url) > NNG_MAXADDRLEN-1) {
 		return (NNG_EINVAL);
 	}
-	if ((ep = nni_alloc(sizeof (*ep))) == NULL) {
+	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_cv_init(&ep->cv, &nni_inproc.mx)) != 0) {
-		nni_free(ep, sizeof (*ep));
+		NNI_FREE_STRUCT(ep);
 		return (rv);
 	}
 
@@ -219,7 +219,7 @@ nni_inproc_ep_destroy(void *arg)
 		nni_panic("inproc_ep_destroy while not closed!");
 	}
 	nni_cv_fini(&ep->cv);
-	nni_free(ep, sizeof (*free));
+	NNI_FREE_STRUCT(ep);
 }
 
 
@@ -347,11 +347,11 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 	}
 
 	// Preallocate the pair, so we don't do it while holding a lock
-	if ((pair = nni_alloc(sizeof (*pair))) == NULL) {
+	if ((pair = NNI_ALLOC_STRUCT(pair)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_mtx_init(&pair->mx)) != 0) {
-		nni_free(pair, sizeof (*pair));
+		NNI_FREE_STRUCT(pair);
 		return (rv);
 	}
 	if (((rv = nni_msgqueue_create(&pair->q[0], 4)) != 0) ||
