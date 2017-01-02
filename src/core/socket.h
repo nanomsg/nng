@@ -35,7 +35,7 @@ struct nng_socket {
 	nni_list	s_pipes;                // pipes for this socket
 
 	nni_list	s_reaps;                // pipes to reap
-	nni_thread *	s_reaper;
+	nni_thr		s_reaper;
 
 	int		s_closing;              // Socket is closing
 	int		s_besteffort;           // Best effort mode delivery

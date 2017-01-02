@@ -71,8 +71,10 @@ nni_reaper(void *arg)
 			continue;
 		}
 
-		if (sock->s_reaper == NULL) {
-			nni_mutex_exit(&sock->s_mx);
+		if ((sock->s_closing) &&
+		    (nni_list_first(&sock->s_reaps) == NULL) &&
+		    (nni_list_first(&sock->s_pipes) == NULL)) {
+		    	nni_mutex_exit(&sock->s_mx);
 			break;
 		}
 
@@ -103,6 +105,9 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 	sock->s_closing = 0;
 	sock->s_reconn = NNI_SECOND;
 	sock->s_reconnmax = NNI_SECOND;
+	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
+	NNI_LIST_INIT(&sock->s_reaps, nni_pipe, p_node);
+	NNI_LIST_INIT(&sock->s_eps, nni_endpt, ep_node);
 
 	if ((rv = nni_mutex_init(&sock->s_mx)) != 0) {
 		nni_free(sock, sizeof (*sock));
@@ -114,44 +119,41 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		return (rv);
 	}
 
-	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
-	NNI_LIST_INIT(&sock->s_reaps, nni_pipe, p_node);
-	NNI_LIST_INIT(&sock->s_eps, nni_endpt, ep_node);
-
-	if ((rv = nni_thread_create(&sock->s_reaper, nni_reaper, sock)) != 0) {
-		goto fail;
+	if ((rv = nni_thr_init(&sock->s_reaper, nni_reaper, sock)) != 0) {
+		nni_cond_fini(&sock->s_cv);
+		nni_mutex_fini(&sock->s_mx);
+		nni_free(sock, sizeof (*sock));
+		return (rv);
 	}
 
-	if (((rv = nni_msgqueue_create(&sock->s_uwq, 0)) != 0) ||
-	    ((rv = nni_msgqueue_create(&sock->s_urq, 0)) != 0)) {
-		goto fail;
+	if ((rv = nni_msgqueue_create(&sock->s_uwq, 0)) != 0) {
+		nni_thr_fini(&sock->s_reaper);
+		nni_cond_fini(&sock->s_cv);
+		nni_mutex_fini(&sock->s_mx);
+		nni_free(sock, sizeof (*sock));
+		return (rv);
+	} 
+	if ((rv = nni_msgqueue_create(&sock->s_urq, 0)) != 0) {
+		nni_msgqueue_destroy(sock->s_uwq);
+		nni_thr_fini(&sock->s_reaper);
+		nni_cond_fini(&sock->s_cv);
+		nni_mutex_fini(&sock->s_mx);
+		nni_free(sock, sizeof (*sock));
+		return (rv);
 	}
 
 	if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
-		goto fail;
+		nni_msgqueue_destroy(sock->s_urq);
+		nni_msgqueue_destroy(sock->s_uwq);
+		nni_thr_fini(&sock->s_reaper);
+		nni_cond_fini(&sock->s_cv);
+		nni_mutex_fini(&sock->s_mx);
+		nni_free(sock, sizeof (*sock));
+		return (rv);
 	}
+	nni_thr_run(&sock->s_reaper);
 	*sockp = sock;
 	return (0);
-
-fail:
-	if (sock->s_urq != NULL) {
-		nni_msgqueue_destroy(sock->s_urq);
-	}
-	if (sock->s_uwq != NULL) {
-		nni_msgqueue_destroy(sock->s_uwq);
-	}
-	if (sock->s_reaper != NULL) {
-		nni_thread *reap = sock->s_reaper;
-		nni_mutex_enter(&sock->s_mx);
-		sock->s_reaper = NULL;
-		nni_cond_broadcast(&sock->s_cv);
-		nni_mutex_exit(&sock->s_mx);
-		nni_thread_reap(reap);
-	}
-	nni_cond_fini(&sock->s_cv);
-	nni_mutex_fini(&sock->s_mx);
-	nni_free(sock, sizeof (*sock));
-	return (rv);
 }
 
 
@@ -219,14 +221,11 @@ nni_socket_close(nni_socket *sock)
 		nni_list_append(&sock->s_reaps, pipe);
 	}
 
-	// Tell the reaper it's done once it finishes. Also kick it off.
-	reaper = sock->s_reaper;
-	sock->s_reaper = NULL;
 	nni_cond_broadcast(&sock->s_cv);
 	nni_mutex_exit(&sock->s_mx);
 
 	// Wait for the reaper to exit.
-	nni_thread_reap(reaper);
+	nni_thr_fini(&sock->s_reaper);
 
 	// At this point nothing else should be referencing us.
 	// The protocol needs to clean up its state.
