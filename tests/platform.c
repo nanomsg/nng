@@ -141,8 +141,12 @@ TestMain("Platform Operations", {
 			Convey("It ran", {
 				nni_usleep(50000);	// for context switch
 				So(val == 1);
+				nni_thr_fini(&thr);
 			})
 			Convey("We can reap it", {
+				nni_thr_fini(&thr);
+			})
+			Reset({
 				nni_thr_fini(&thr);
 			})
 		})
@@ -196,6 +200,10 @@ TestMain("Platform Operations", {
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
+			nni_thr_fini(&thr);
+		})
+
+		Reset({
 			nni_thr_fini(&thr);
 		})
 	})
