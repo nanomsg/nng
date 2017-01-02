@@ -20,12 +20,6 @@
 #include <sys/types.h>
 #include <unistd.h>
 
-struct nni_thread {
-	pthread_t	tid;
-	void *		arg;
-	void		(*func)(void *);
-};
-
 static pthread_mutex_t nni_plat_lock = PTHREAD_MUTEX_INITIALIZER;
 static int nni_plat_inited = 0;
 static int nni_plat_forked = 0;
@@ -44,6 +38,7 @@ nni_plat_nextid(void)
 	pthread_mutex_unlock(&nni_plat_lock);
 	return (id);
 }
+
 
 int
 nni_plat_mtx_init(nni_plat_mtx *mtx)

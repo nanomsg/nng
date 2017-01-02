@@ -101,7 +101,7 @@ TestMain("Platform Operations", {
 		})
 	})
 	Convey("Mutexes work", {
-		nni_mtx mx;
+		static nni_mtx mx;
 		int rv;
 
 		rv = nni_mtx_init(&mx);
@@ -129,7 +129,7 @@ TestMain("Platform Operations", {
 	})
 
 	Convey("Threads work", {
-		nni_thr thr;
+		static nni_thr thr;
 		int val = 0;
 		int rv;
 
@@ -148,8 +148,8 @@ TestMain("Platform Operations", {
 		})
 	})
 	Convey("Condition variables work", {
-		struct notifyarg arg;
-		nni_thr thr;
+		static struct notifyarg arg;
+		static nni_thr thr;
 
 		So(nni_mtx_init(&arg.mx) == 0);
 		So(nni_cv_init(&arg.cv, &arg.mx) == 0);
