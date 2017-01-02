@@ -30,8 +30,8 @@ typedef struct {
 struct nni_inproc_pipe {
 	const char *		addr;
 	nni_inproc_pair *	pair;
-	nni_msgqueue *		rq;
-	nni_msgqueue *		wq;
+	nni_msgq *		rq;
+	nni_msgq *		wq;
 	uint16_t		peer;
 };
 
@@ -40,7 +40,7 @@ struct nni_inproc_pipe {
 struct nni_inproc_pair {
 	nni_mtx		mx;
 	int		refcnt;
-	nni_msgqueue *	q[2];
+	nni_msgq *	q[2];
 	nni_inproc_pipe pipe[2];
 	char		addr[NNG_MAXADDRLEN+1];
 };
@@ -91,8 +91,8 @@ nni_inproc_pipe_close(void *arg)
 {
 	nni_inproc_pipe *pipe = arg;
 
-	nni_msgqueue_close(pipe->rq);
-	nni_msgqueue_close(pipe->wq);
+	nni_msgq_close(pipe->rq);
+	nni_msgq_close(pipe->wq);
 }
 
 
@@ -101,12 +101,8 @@ nni_inproc_pipe_close(void *arg)
 static void
 nni_inproc_pair_destroy(nni_inproc_pair *pair)
 {
-	if (pair->q[0]) {
-		nni_msgqueue_destroy(pair->q[0]);
-	}
-	if (pair->q[1]) {
-		nni_msgqueue_destroy(pair->q[1]);
-	}
+	nni_msgq_fini(pair->q[0]);
+	nni_msgq_fini(pair->q[1]);
 	nni_mtx_fini(&pair->mx);
 	NNI_FREE_STRUCT(pair);
 }
@@ -137,7 +133,7 @@ nni_inproc_pipe_send(void *arg, nni_msg *msg)
 {
 	nni_inproc_pipe *pipe = arg;
 
-	return (nni_msgqueue_put(pipe->wq, msg));
+	return (nni_msgq_put(pipe->wq, msg));
 }
 
 
@@ -146,7 +142,7 @@ nni_inproc_pipe_recv(void *arg, nni_msg **msgp)
 {
 	nni_inproc_pipe *pipe = arg;
 
-	return (nni_msgqueue_get(pipe->rq, msgp));
+	return (nni_msgq_get(pipe->rq, msgp));
 }
 
 
@@ -354,8 +350,8 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 		NNI_FREE_STRUCT(pair);
 		return (rv);
 	}
-	if (((rv = nni_msgqueue_create(&pair->q[0], 4)) != 0) ||
-	    ((rv = nni_msgqueue_create(&pair->q[1], 4)) != 0)) {
+	if (((rv = nni_msgq_init(&pair->q[0], 4)) != 0) ||
+	    ((rv = nni_msgq_init(&pair->q[1], 4)) != 0)) {
 		nni_inproc_pair_destroy(pair);
 		return (rv);
 	}

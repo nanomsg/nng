@@ -14,7 +14,7 @@
 // differences and improvements.  For example, these can grow, and either
 // side can close, and they may be closed more than once.
 
-struct nni_msgqueue {
+struct nni_msgq {
 	nni_mtx		mq_lock;
 	nni_cv		mq_readable;
 	nni_cv		mq_writeable;
@@ -31,9 +31,9 @@ struct nni_msgqueue {
 };
 
 int
-nni_msgqueue_create(nni_msgqueue **mqp, int cap)
+nni_msgq_init(nni_msgq **mqp, int cap)
 {
-	struct nni_msgqueue *mq;
+	struct nni_msgq *mq;
 	int rv;
 	int alloc;
 
@@ -92,10 +92,13 @@ nni_msgqueue_create(nni_msgqueue **mqp, int cap)
 
 
 void
-nni_msgqueue_destroy(nni_msgqueue *mq)
+nni_msgq_fini(nni_msgq *mq)
 {
 	nni_msg *msg;
 
+	if (mq == NULL) {
+		return;
+	}
 	nni_cv_fini(&mq->mq_drained);
 	nni_cv_fini(&mq->mq_writeable);
 	nni_cv_fini(&mq->mq_readable);
@@ -117,11 +120,11 @@ nni_msgqueue_destroy(nni_msgqueue *mq)
 }
 
 
-// nni_msgqueue_signal raises a signal on the signal object. This allows a
+// nni_msgq_signal raises a signal on the signal object. This allows a
 // waiter to be signaled, so that it can be woken e.g. due to a pipe closing.
 // Note that the signal object must be *zero* if no signal is raised.
 void
-nni_msgqueue_signal(nni_msgqueue *mq, int *signal)
+nni_msgq_signal(nni_msgq *mq, int *signal)
 {
 	nni_mtx_lock(&mq->mq_lock);
 	*signal = 1;
@@ -134,8 +137,7 @@ nni_msgqueue_signal(nni_msgqueue *mq, int *signal)
 
 
 int
-nni_msgqueue_put_impl(nni_msgqueue *mq, nni_msg *msg,
-    nni_time expire, nni_signal *signal)
+nni_msgq_put_(nni_msgq *mq, nni_msg *msg, nni_time expire, nni_signal *sig)
 {
 	int rv;
 
@@ -161,7 +163,7 @@ nni_msgqueue_put_impl(nni_msgqueue *mq, nni_msg *msg,
 		}
 
 		// interrupted?
-		if (*signal) {
+		if (*sig) {
 			nni_mtx_unlock(&mq->mq_lock);
 			return (NNG_EINTR);
 		}
@@ -198,11 +200,11 @@ nni_msgqueue_put_impl(nni_msgqueue *mq, nni_msg *msg,
 }
 
 
-// nni_msgqueue_putback will attempt to put a single message back
+// nni_msgq_putback will attempt to put a single message back
 // to the head of the queue.  It never blocks.  Message queues always
 // have room for at least one putback.
 int
-nni_msgqueue_putback(nni_msgqueue *mq, nni_msg *msg)
+nni_msgq_putback(nni_msgq *mq, nni_msg *msg)
 {
 	nni_mtx_lock(&mq->mq_lock);
 
@@ -234,8 +236,7 @@ nni_msgqueue_putback(nni_msgqueue *mq, nni_msg *msg)
 
 
 static int
-nni_msgqueue_get_impl(nni_msgqueue *mq, nni_msg **msgp,
-    nni_time expire, nni_signal *signal)
+nni_msgq_get_(nni_msgq *mq, nni_msg **msgp, nni_time expire, nni_signal *sig)
 {
 	int rv;
 
@@ -254,7 +255,7 @@ nni_msgqueue_get_impl(nni_msgqueue *mq, nni_msg **msgp,
 			nni_mtx_unlock(&mq->mq_lock);
 			return (NNG_EAGAIN);
 		}
-		if (*signal) {
+		if (*sig) {
 			nni_mtx_unlock(&mq->mq_lock);
 			return (NNG_EINTR);
 		}
@@ -288,57 +289,57 @@ nni_msgqueue_get_impl(nni_msgqueue *mq, nni_msg **msgp,
 
 
 int
-nni_msgqueue_get(nni_msgqueue *mq, nni_msg **msgp)
+nni_msgq_get(nni_msgq *mq, nni_msg **msgp)
 {
 	nni_signal nosig = 0;
 
-	return (nni_msgqueue_get_impl(mq, msgp, NNI_TIME_NEVER, &nosig));
+	return (nni_msgq_get_(mq, msgp, NNI_TIME_NEVER, &nosig));
 }
 
 
 int
-nni_msgqueue_get_sig(nni_msgqueue *mq, nni_msg **msgp, nni_signal *signal)
+nni_msgq_get_sig(nni_msgq *mq, nni_msg **msgp, nni_signal *signal)
 {
-	return (nni_msgqueue_get_impl(mq, msgp, NNI_TIME_NEVER, signal));
+	return (nni_msgq_get_(mq, msgp, NNI_TIME_NEVER, signal));
 }
 
 
 int
-nni_msgqueue_get_until(nni_msgqueue *mq, nni_msg **msgp, nni_time expire)
-{
-	nni_signal nosig = 0;
-
-	return (nni_msgqueue_get_impl(mq, msgp, expire, &nosig));
-}
-
-
-int
-nni_msgqueue_put(nni_msgqueue *mq, nni_msg *msg)
+nni_msgq_get_until(nni_msgq *mq, nni_msg **msgp, nni_time expire)
 {
 	nni_signal nosig = 0;
 
-	return (nni_msgqueue_put_impl(mq, msg, NNI_TIME_NEVER, &nosig));
+	return (nni_msgq_get_(mq, msgp, expire, &nosig));
 }
 
 
 int
-nni_msgqueue_put_sig(nni_msgqueue *mq, nni_msg *msg, nni_signal *signal)
-{
-	return (nni_msgqueue_put_impl(mq, msg, NNI_TIME_NEVER, signal));
-}
-
-
-int
-nni_msgqueue_put_until(nni_msgqueue *mq, nni_msg *msg, nni_time expire)
+nni_msgq_put(nni_msgq *mq, nni_msg *msg)
 {
 	nni_signal nosig = 0;
 
-	return (nni_msgqueue_put_impl(mq, msg, expire, &nosig));
+	return (nni_msgq_put_(mq, msg, NNI_TIME_NEVER, &nosig));
+}
+
+
+int
+nni_msgq_put_sig(nni_msgq *mq, nni_msg *msg, nni_signal *signal)
+{
+	return (nni_msgq_put_(mq, msg, NNI_TIME_NEVER, signal));
+}
+
+
+int
+nni_msgq_put_until(nni_msgq *mq, nni_msg *msg, nni_time expire)
+{
+	nni_signal nosig = 0;
+
+	return (nni_msgq_put_(mq, msg, expire, &nosig));
 }
 
 
 void
-nni_msgqueue_drain(nni_msgqueue *mq, nni_time expire)
+nni_msgq_drain(nni_msgq *mq, nni_time expire)
 {
 	nni_mtx_lock(&mq->mq_lock);
 	mq->mq_closed = 1;
@@ -363,7 +364,7 @@ nni_msgqueue_drain(nni_msgqueue *mq, nni_time expire)
 
 
 void
-nni_msgqueue_close(nni_msgqueue *mq)
+nni_msgq_close(nni_msgq *mq)
 {
 	nni_mtx_lock(&mq->mq_lock);
 	mq->mq_closed = 1;
@@ -384,7 +385,7 @@ nni_msgqueue_close(nni_msgqueue *mq)
 
 
 int
-nni_msgqueue_len(nni_msgqueue *mq)
+nni_msgq_len(nni_msgq *mq)
 {
 	int rv;
 
@@ -396,7 +397,7 @@ nni_msgqueue_len(nni_msgqueue *mq)
 
 
 int
-nni_msgqueue_cap(nni_msgqueue *mq)
+nni_msgq_cap(nni_msgq *mq)
 {
 	int rv;
 
@@ -408,7 +409,7 @@ nni_msgqueue_cap(nni_msgqueue *mq)
 
 
 int
-nni_msgqueue_resize(nni_msgqueue *mq, int cap)
+nni_msgq_resize(nni_msgq *mq, int cap)
 {
 	int alloc;
 	nni_msg *msg;

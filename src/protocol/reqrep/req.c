@@ -24,8 +24,8 @@ struct nni_req_sock {
 	nni_socket *	sock;
 	nni_mtx		mx;
 	nni_cv		cv;
-	nni_msgqueue *	uwq;
-	nni_msgqueue *	urq;
+	nni_msgq *	uwq;
+	nni_msgq *	urq;
 	nni_duration	retry;
 	nni_time	resend;
 	nni_thr		resender;
@@ -146,14 +146,14 @@ nni_req_sender(void *arg)
 {
 	nni_req_pipe *rp = arg;
 	nni_req_sock *req = rp->req;
-	nni_msgqueue *uwq = req->uwq;
-	nni_msgqueue *urq = req->urq;
+	nni_msgq *uwq = req->uwq;
+	nni_msgq *urq = req->urq;
 	nni_pipe *pipe = rp->pipe;
 	nni_msg *msg;
 	int rv;
 
 	for (;;) {
-		rv = nni_msgqueue_get_sig(uwq, &msg, &rp->sigclose);
+		rv = nni_msgq_get_sig(uwq, &msg, &rp->sigclose);
 		if (rv != 0) {
 			break;
 		}
@@ -163,7 +163,7 @@ nni_req_sender(void *arg)
 			break;
 		}
 	}
-	nni_msgqueue_signal(urq, &rp->sigclose);
+	nni_msgq_signal(urq, &rp->sigclose);
 	nni_pipe_close(pipe);
 }
 
@@ -173,8 +173,8 @@ nni_req_receiver(void *arg)
 {
 	nni_req_pipe *rp = arg;
 	nni_req_sock *req = rp->req;
-	nni_msgqueue *urq = req->urq;
-	nni_msgqueue *uwq = req->uwq;
+	nni_msgq *urq = req->urq;
+	nni_msgq *uwq = req->uwq;
 	nni_pipe *pipe = rp->pipe;
 	nni_msg *msg;
 	int rv;
@@ -202,13 +202,13 @@ nni_req_receiver(void *arg)
 			// This should never happen - could be an assert.
 			nni_panic("Failed to trim REQ header from body");
 		}
-		rv = nni_msgqueue_put_sig(urq, msg, &rp->sigclose);
+		rv = nni_msgq_put_sig(urq, msg, &rp->sigclose);
 		if (rv != 0) {
 			nni_msg_free(msg);
 			break;
 		}
 	}
-	nni_msgqueue_signal(uwq, &rp->sigclose);
+	nni_msgq_signal(uwq, &rp->sigclose);
 	nni_pipe_close(pipe);
 }
 
@@ -283,7 +283,7 @@ nni_req_resender(void *arg)
 			nni_msg *dup;
 			// XXX: check for final timeout on this?
 			if (nni_msg_dup(&dup, req->reqmsg) != 0) {
-				if (nni_msgqueue_putback(req->uwq, dup) != 0) {
+				if (nni_msgq_putback(req->uwq, dup) != 0) {
 					nni_msg_free(dup);
 				}
 			}

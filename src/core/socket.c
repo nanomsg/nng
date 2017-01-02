@@ -15,14 +15,14 @@
 
 // nni_socket_sendq and nni_socket_recvq are called by the protocol to obtain
 // the upper read and write queues.
-nni_msgqueue *
+nni_msgq *
 nni_socket_sendq(nni_socket *s)
 {
 	return (s->s_uwq);
 }
 
 
-nni_msgqueue *
+nni_msgq *
 nni_socket_recvq(nni_socket *s)
 {
 	return (s->s_urq);
@@ -126,15 +126,15 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 		return (rv);
 	}
 
-	if ((rv = nni_msgqueue_create(&sock->s_uwq, 0)) != 0) {
+	if ((rv = nni_msgq_init(&sock->s_uwq, 0)) != 0) {
 		nni_thr_fini(&sock->s_reaper);
 		nni_cv_fini(&sock->s_cv);
 		nni_mtx_fini(&sock->s_mx);
 		NNI_FREE_STRUCT(sock);
 		return (rv);
 	}
-	if ((rv = nni_msgqueue_create(&sock->s_urq, 0)) != 0) {
-		nni_msgqueue_destroy(sock->s_uwq);
+	if ((rv = nni_msgq_init(&sock->s_urq, 0)) != 0) {
+		nni_msgq_fini(sock->s_uwq);
 		nni_thr_fini(&sock->s_reaper);
 		nni_cv_fini(&sock->s_cv);
 		nni_mtx_fini(&sock->s_mx);
@@ -143,8 +143,8 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 	}
 
 	if ((rv = sock->s_ops.proto_create(&sock->s_data, sock)) != 0) {
-		nni_msgqueue_destroy(sock->s_urq);
-		nni_msgqueue_destroy(sock->s_uwq);
+		nni_msgq_fini(sock->s_urq);
+		nni_msgq_fini(sock->s_uwq);
 		nni_thr_fini(&sock->s_reaper);
 		nni_cv_fini(&sock->s_cv);
 		nni_mtx_fini(&sock->s_mx);
@@ -192,7 +192,7 @@ nni_socket_close(nni_socket *sock)
 	// except that the protocol gets a chance to get the messages and
 	// push them down to the transport.  This operation can *block*
 	// until the linger time has expired.
-	nni_msgqueue_drain(sock->s_uwq, linger);
+	nni_msgq_drain(sock->s_uwq, linger);
 
 	// Generally, unless the protocol is blocked trying to perform
 	// writes (e.g. a slow reader on the other side), it should be
@@ -211,7 +211,7 @@ nni_socket_close(nni_socket *sock)
 
 	// Close the upper read queue immediately.  This can happen
 	// safely while we hold the lock.
-	nni_msgqueue_close(sock->s_urq);
+	nni_msgq_close(sock->s_urq);
 
 	// Go through and schedule close on all pipes.
 	while ((pipe = nni_list_first(&sock->s_pipes)) != NULL) {
@@ -231,8 +231,8 @@ nni_socket_close(nni_socket *sock)
 	sock->s_ops.proto_destroy(sock->s_data);
 
 	// And we need to clean up *our* state.
-	nni_msgqueue_destroy(sock->s_urq);
-	nni_msgqueue_destroy(sock->s_uwq);
+	nni_msgq_fini(sock->s_urq);
+	nni_msgq_fini(sock->s_uwq);
 	nni_cv_fini(&sock->s_cv);
 	nni_mtx_fini(&sock->s_mx);
 	NNI_FREE_STRUCT(sock);
@@ -273,7 +273,7 @@ nni_socket_sendmsg(nni_socket *sock, nni_msg *msg, nni_time expire)
 		// backpressure, we just throw it away, and don't complain.
 		expire = NNI_TIME_ZERO;
 	}
-	rv = nni_msgqueue_put_until(sock->s_uwq, msg, expire);
+	rv = nni_msgq_put_until(sock->s_uwq, msg, expire);
 	if (besteffort && (rv == NNG_EAGAIN)) {
 		// Pretend this worked... it didn't, but pretend.
 		nni_msg_free(msg);
@@ -301,7 +301,7 @@ nni_socket_recvmsg(nni_socket *sock, nni_msg **msgp, nni_time expire)
 	nni_mtx_unlock(&sock->s_mx);
 
 	for (;;) {
-		rv = nni_msgqueue_get_until(sock->s_urq, &msg, expire);
+		rv = nni_msgq_get_until(sock->s_urq, &msg, expire);
 		if (rv != 0) {
 			return (rv);
 		}

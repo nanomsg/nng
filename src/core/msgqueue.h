@@ -24,80 +24,89 @@
 //
 // Readers & writers in a message queue can be woken either by a timeout
 // or by a specific signal (arranged by the caller).
-//
-// TODO: Add message queue growing, and pushback.
-typedef struct nni_msgqueue   nni_msgqueue;
+typedef struct nni_msgq   nni_msgq;
 
-// nni_msgqueue_create creates a message queue with the given capacity,
+// nni_msgq_init creates a message queue with the given capacity,
 // which must be a positive number.  It returns NNG_EINVAL if the capacity
 // is invalid, or NNG_ENOMEM if resources cannot be allocated.
-extern int nni_msgqueue_create(nni_msgqueue **, int);
+extern int nni_msgq_init(nni_msgq **, int);
 
-// nni_msgqueue_destroy destroys a message queue.  It will also free any
+// nni_msgq_fini destroys a message queue.  It will also free any
 // messages that may be in the queue.
-extern void nni_msgqueue_destroy(nni_msgqueue *);
+extern void nni_msgq_fini(nni_msgq *);
 
-// nni_msgqueue_put puts the message to the queue.  It blocks until it
+// nni_msgq_put puts the message to the queue.  It blocks until it
 // was able to do so, or the queue is closed, returning either 0 on
 // success or NNG_ECLOSED if the queue was closed.  If NNG_ECLOSED is
 // returned, the caller is responsible for freeing the message with
 // nni_msg_free(), otherwise the message is "owned" by the queue, and
 // the caller is not permitted to access it further.
-extern int nni_msgqueue_put(nni_msgqueue *, nni_msg *);
+extern int nni_msgq_put(nni_msgq *, nni_msg *);
 
-// nni_msgqueue_putback returns a message to the head of the queue.
+// nni_msgq_putback returns a message to the head of the queue.
 // This is a non-blocking operation, and it returns EAGAIN if there
 // is no room.  There is always at least room for one putback after
-// a message is retried with nni_msgqueue_get.
-extern int nni_msgqueue_putback(nni_msgqueue *, nni_msg *);
+// a message is retried with nni_msgq_get.
+extern int nni_msgq_putback(nni_msgq *, nni_msg *);
 
-// nni_msgqueue_get gets the message from the queue.  It blocks until a
+// nni_msgq_get gets the message from the queue.  It blocks until a
 // message is available, or the queue is closed, returning either 0 on
 // success or NNG_ECLOSED if the queue was closed.  If a message is
 // provided, the caller is assumes ownership of the message and must
 // call nni_msg_free() when it is finished with it.
-extern int nni_msgqueue_get(nni_msgqueue *, nni_msg **);
+extern int nni_msgq_get(nni_msgq *, nni_msg **);
 
-// nni_msgqueue_put_until is like nni_msgqueue_put, except that if the
+// nni_msgq_put_until is like nni_msgq_put, except that if the
 // system clock reaches the specified time without being able to place
 // the message in the queue, it will return NNG_ETIMEDOUT.
-extern int nni_msgqueue_put_until(nni_msgqueue *, nni_msg *, nni_time);
+extern int nni_msgq_put_until(nni_msgq *, nni_msg *, nni_time);
 
-// nni_msgqueue_get_until is like nni_msgqueue_put, except that if the
+// nni_msgq_get_until is like nni_msgq_put, except that if the
 // system clock reaches the specified time without being able to retrieve
 // a message from the queue, it will return NNG_ETIMEDOUT.
-extern int nni_msgqueue_get_until(nni_msgqueue *, nni_msg **, nni_time);
+extern int nni_msgq_get_until(nni_msgq *, nni_msg **, nni_time);
 
-// nni_msgqueue_put_sig is an enhanced version of nni_msgqueue_put, but it
+// nni_msgq_put_sig is an enhanced version of nni_msgq_put, but it
 // can be interrupted by nni_msgqueue_signal using the same final pointer,
 // which can be thought of as a turnstile.  If interrupted it returns EINTR.
 // The turnstile should be initialized to zero.
-extern int nni_msgqueue_put_sig(nni_msgqueue *, nni_msg *, nni_signal *);
+extern int nni_msgq_put_sig(nni_msgq *, nni_msg *, nni_signal *);
 
-// nni_msgqueue_get_sig is an enhanced version of nni_msgqueue_get_t, but it
-// can be interrupted by nni_msgqueue_signal using the same final pointer,
+// nni_msgq_get_sig is an enhanced version of nni_msgq_get_t, but it
+// can be interrupted by nni_msgq_signal using the same final pointer,
 // which can be thought of as a turnstile.  If interrupted it returns EINTR.
 // The turnstile should be initialized to zero.
-extern int nni_msgqueue_get_sig(nni_msgqueue *, nni_msg **, nni_signal *);
+extern int nni_msgq_get_sig(nni_msgq *, nni_msg **, nni_signal *);
 
-// nni_msgqueue_signal delivers a signal / interrupt to waiters blocked in
-// the msgqueue, if they have registered an interest in the same turnstile.
+// nni_msgq_signal delivers a signal / interrupt to waiters blocked in
+// the msgq, if they have registered an interest in the same turnstile.
 // It modifies the turnstile's value under the lock to a non-zero value.
-extern void nni_msgqueue_signal(nni_msgqueue *, nni_signal *);
+extern void nni_msgq_signal(nni_msgq *, nni_signal *);
 
-// nni_msgqueue_close closes the queue.  After this all operates on the
+// nni_msgq_close closes the queue.  After this all operates on the
 // message queue will return NNG_ECLOSED.  Messages inside the queue
 // are freed.  Unlike closing a go channel, this operation is idempotent.
-extern void nni_msgqueue_close(nni_msgqueue *);
+extern void nni_msgq_close(nni_msgq *);
 
-// nni_msgqueue_drain is like nng_msgqueue_close, except that reads
+// nni_msgq_drain is like nng_msgq_close, except that reads
 // against the queue are permitted for up to the time limit.  The
 // operation blocks until either the queue is empty, or the timeout
 // has expired.  Any messages still in the queue at the timeout are freed.
-extern void nni_msgqueue_drain(nni_msgqueue *, nni_time);
+extern void nni_msgq_drain(nni_msgq *, nni_time);
 
-extern int nni_msgqueue_resize(nni_msgqueue *, int);
-extern int nni_msgqueue_cap(nni_msgqueue *mq);
-extern int nni_msgqueue_len(nni_msgqueue *mq);
+// nni_msgq_resize resizes the message queue; messages already in the queue
+// will be preserved as long as there is room.  Messages that are dropped
+// due to no room are taken from the most recent.  (Oldest messages are
+// preserved.)
+extern int nni_msgq_resize(nni_msgq *, int);
+
+// nni_msgq_cap returns the "capacity" of the message queue.  This does not
+// include the extra room for pushback, nor the extra slot reserved to make
+// zero-length message queues possible.  As a consequence, it is possible
+// for the message queue to contain up to 2 more messages than the capacity.
+extern int nni_msgq_cap(nni_msgq *mq);
+
+// nni_msgq_len returns the number of messages currently in the queue.
+extern int nni_msgq_len(nni_msgq *mq);
 
 #endif  // CORE_MSQUEUE_H

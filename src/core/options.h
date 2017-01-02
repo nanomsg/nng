@@ -15,10 +15,10 @@
 // variable sized options.
 
 // nni_setopt_buf sets the queue size for the message queue.
-extern int nni_setopt_buf(nni_msgqueue *, const void *, size_t);
+extern int nni_setopt_buf(nni_msgq *, const void *, size_t);
 
 // nni_getopt_buf gets the queue size for the message queue.
-extern int nni_getopt_buf(nni_msgqueue *, void *, size_t *);
+extern int nni_getopt_buf(nni_msgq *, void *, size_t *);
 
 // nni_setopt_duration sets the duration.  Durations must be legal,
 // either a positive value, 0, or -1 to indicate forever.

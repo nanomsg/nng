@@ -24,8 +24,8 @@ struct nni_pair_sock {
 	nni_socket *	sock;
 	nni_pair_pipe * pipe;
 	nni_mtx		mx;
-	nni_msgqueue *	uwq;
-	nni_msgqueue *	urq;
+	nni_msgq *	uwq;
+	nni_msgq *	urq;
 };
 
 // An nni_pair_pipe is our per-pipe protocol private structure.  We keep
@@ -118,14 +118,14 @@ nni_pair_sender(void *arg)
 {
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
-	nni_msgqueue *uwq = pair->uwq;
-	nni_msgqueue *urq = pair->urq;
+	nni_msgq *uwq = pair->uwq;
+	nni_msgq *urq = pair->urq;
 	nni_pipe *pipe = pp->pipe;
 	nni_msg *msg;
 	int rv;
 
 	for (;;) {
-		rv = nni_msgqueue_get_sig(uwq, &msg, &pp->sigclose);
+		rv = nni_msgq_get_sig(uwq, &msg, &pp->sigclose);
 		if (rv != 0) {
 			break;
 		}
@@ -135,7 +135,7 @@ nni_pair_sender(void *arg)
 			break;
 		}
 	}
-	nni_msgqueue_signal(urq, &pp->sigclose);
+	nni_msgq_signal(urq, &pp->sigclose);
 	nni_pipe_close(pipe);
 }
 
@@ -145,8 +145,8 @@ nni_pair_receiver(void *arg)
 {
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
-	nni_msgqueue *urq = pair->urq;
-	nni_msgqueue *uwq = pair->uwq;
+	nni_msgq *urq = pair->urq;
+	nni_msgq *uwq = pair->uwq;
 	nni_pipe *pipe = pp->pipe;
 	nni_msg *msg;
 	int rv;
@@ -156,13 +156,13 @@ nni_pair_receiver(void *arg)
 		if (rv != 0) {
 			break;
 		}
-		rv = nni_msgqueue_put_sig(urq, msg, &pp->sigclose);
+		rv = nni_msgq_put_sig(urq, msg, &pp->sigclose);
 		if (rv != 0) {
 			nni_msg_free(msg);
 			break;
 		}
 	}
-	nni_msgqueue_signal(uwq, &pp->sigclose);
+	nni_msgq_signal(uwq, &pp->sigclose);
 	nni_pipe_close(pipe);
 }
 

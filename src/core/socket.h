@@ -17,8 +17,8 @@ struct nng_socket {
 	nni_mtx		s_mx;
 	nni_cv		s_cv;
 
-	nni_msgqueue *	s_uwq;          // Upper write queue
-	nni_msgqueue *	s_urq;          // Upper read queue
+	nni_msgq *	s_uwq;          // Upper write queue
+	nni_msgq *	s_urq;          // Upper read queue
 
 	nni_protocol	s_ops;
 

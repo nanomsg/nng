@@ -77,7 +77,7 @@ nni_getopt_int(int *ptr, void *val, size_t *sizep)
 
 
 int
-nni_setopt_buf(nni_msgqueue *mq, const void *val, size_t sz)
+nni_setopt_buf(nni_msgq *mq, const void *val, size_t sz)
 {
 	int len;
 
@@ -94,14 +94,14 @@ nni_setopt_buf(nni_msgqueue *mq, const void *val, size_t sz)
 		// size could be quite large indeed in this case.
 		return (NNG_EINVAL);
 	}
-	return (nni_msgqueue_resize(mq, len));
+	return (nni_msgq_resize(mq, len));
 }
 
 
 int
-nni_getopt_buf(nni_msgqueue *mq, void *val, size_t *sizep)
+nni_getopt_buf(nni_msgq *mq, void *val, size_t *sizep)
 {
-	int len = nni_msgqueue_cap(mq);
+	int len = nni_msgq_cap(mq);
 
 	int sz = *sizep;
 

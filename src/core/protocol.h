@@ -63,11 +63,11 @@ struct nni_protocol {
 
 // nni_socket_sendq obtains the upper writeq.  The protocol should
 // recieve messages from this, and place them on the appropriate pipe.
-extern nni_msgqueue *nni_socket_sendq(nni_socket *);
+extern nni_msgq *nni_socket_sendq(nni_socket *);
 
 // nni_socket_recvq obtains the upper readq.  The protocol should
 // inject incoming messages from pipes to it.
-extern nni_msgqueue *nni_socket_recvq(nni_socket *);
+extern nni_msgq *nni_socket_recvq(nni_socket *);
 
 // nni_socket_recv_err sets an error code to be returned to clients
 // rather than waiting for a message.  Set it to 0 to resume normal
