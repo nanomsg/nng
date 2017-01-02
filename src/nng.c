@@ -37,7 +37,7 @@ nng_open(nng_socket **s, uint16_t proto)
 	if ((rv = nni_init()) != 0) {
 		return (rv);
 	}
-	return (nni_socket_create(s, proto));
+	return (nni_sock_open(s, proto));
 }
 
 
@@ -45,7 +45,7 @@ int
 nng_close(nng_socket *s)
 {
 	NNI_INIT_INT();
-	return (nni_socket_close(s));
+	return (nni_sock_close(s));
 }
 
 
@@ -53,7 +53,7 @@ uint16_t
 nng_protocol(nng_socket *s)
 {
 	NNI_INIT_VOID();
-	return (nni_socket_proto(s));
+	return (nni_sock_proto(s));
 }
 
 
@@ -72,7 +72,7 @@ nng_recvmsg(nng_socket *s, nng_msg **msgp, int flags)
 		expire += s->s_rcvtimeo;
 	}
 
-	return (nni_socket_recvmsg(s, msgp, expire));
+	return (nni_sock_recvmsg(s, msgp, expire));
 }
 
 
@@ -92,7 +92,7 @@ nng_sendmsg(nng_socket *s, nng_msg *msg, int flags)
 		expire += s->s_sndtimeo;
 	}
 
-	return (nni_socket_sendmsg(s, msg, expire));
+	return (nni_sock_sendmsg(s, msg, expire));
 }
 
 
@@ -100,7 +100,7 @@ int
 nng_dial(nng_socket *s, const char *addr, nng_endpt **epp, int flags)
 {
 	NNI_INIT_INT();
-	return (nni_socket_dial(s, addr, epp, flags));
+	return (nni_sock_dial(s, addr, epp, flags));
 }
 
 
@@ -108,7 +108,7 @@ int
 nng_listen(nng_socket *s, const char *addr, nng_endpt **epp, int flags)
 {
 	NNI_INIT_INT();
-	return (nni_socket_listen(s, addr, epp, flags));
+	return (nni_sock_listen(s, addr, epp, flags));
 }
 
 
@@ -116,7 +116,7 @@ int
 nng_setopt(nng_socket *s, int opt, const void *val, size_t sz)
 {
 	NNI_INIT_INT();
-	return (nni_socket_setopt(s, opt, val, sz));
+	return (nni_sock_setopt(s, opt, val, sz));
 }
 
 
@@ -124,7 +124,7 @@ int
 nng_getopt(nng_socket *s, int opt, void *val, size_t *szp)
 {
 	NNI_INIT_INT();
-	return (nni_socket_getopt(s, opt, val, szp));
+	return (nni_sock_getopt(s, opt, val, szp));
 }
 
 
@@ -187,7 +187,7 @@ nng_pipe_getopt(nng_pipe *pipe, int opt, void *val, size_t *sizep)
 	rv = nni_pipe_getopt(pipe, opt, val, sizep);
 	if (rv == ENOTSUP) {
 		// Maybe its a generic socket option.
-		rv = nni_socket_getopt(pipe->p_sock, opt, val, sizep);
+		rv = nni_sock_getopt(pipe->p_sock, opt, val, sizep);
 	}
 	return (rv);
 }

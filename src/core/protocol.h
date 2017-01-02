@@ -26,7 +26,7 @@ struct nni_protocol {
 	size_t		proto_pipe_size;        // pipe private data size
 
 	//Create protocol instance, which will be stored on the socket.
-	int		(*proto_create)(void **, nni_socket *);
+	int		(*proto_create)(void **, nni_sock *);
 
 	// Destroy the protocol instance.
 	void		(*proto_destroy)(void *);
@@ -56,29 +56,6 @@ struct nni_protocol {
 	// here are filtered just after they come from the application.
 	nni_msg *	(*proto_send_filter)(void *, nni_msg *);
 };
-
-// These are socket methods that protocol operations can expect to call.
-// Note that each of these should be called without any locks held, since
-// the socket can reenter the protocol.
-
-// nni_socket_sendq obtains the upper writeq.  The protocol should
-// recieve messages from this, and place them on the appropriate pipe.
-extern nni_msgq *nni_socket_sendq(nni_socket *);
-
-// nni_socket_recvq obtains the upper readq.  The protocol should
-// inject incoming messages from pipes to it.
-extern nni_msgq *nni_socket_recvq(nni_socket *);
-
-// nni_socket_recv_err sets an error code to be returned to clients
-// rather than waiting for a message.  Set it to 0 to resume normal
-// receive operation.
-extern void nni_socket_recv_err(nni_socket *, int);
-
-// nni_socket_send_err sets an error code to be returned to clients
-// when they try to send, so that they don't have to timeout waiting
-// for their message to be accepted for send. Set it to 0 to resume
-// normal send operations.
-extern void nni_socket_send_err(nni_socket *, int);
 
 // These functions are not used by protocols, but rather by the socket
 // core implementation. The lookups can be used by transports as well.

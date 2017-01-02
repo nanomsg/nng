@@ -13,17 +13,17 @@
 
 // Socket implementation.
 
-// nni_socket_sendq and nni_socket_recvq are called by the protocol to obtain
+// nni_sock_sendq and nni_sock_recvq are called by the protocol to obtain
 // the upper read and write queues.
 nni_msgq *
-nni_socket_sendq(nni_socket *s)
+nni_sock_sendq(nni_sock *s)
 {
 	return (s->s_uwq);
 }
 
 
 nni_msgq *
-nni_socket_recvq(nni_socket *s)
+nni_sock_recvq(nni_sock *s)
 {
 	return (s->s_urq);
 }
@@ -35,7 +35,7 @@ nni_socket_recvq(nni_socket *s)
 static void
 nni_reaper(void *arg)
 {
-	nni_socket *sock = arg;
+	nni_sock *sock = arg;
 
 	for (;;) {
 		nni_pipe *pipe;
@@ -84,11 +84,11 @@ nni_reaper(void *arg)
 }
 
 
-// nn_socket_create creates the underlying socket.
+// nn_sock_open creates the underlying socket.
 int
-nni_socket_create(nni_socket **sockp, uint16_t proto)
+nni_sock_open(nni_sock **sockp, uint16_t proto)
 {
-	nni_socket *sock;
+	nni_sock *sock;
 	nni_protocol *ops;
 	int rv;
 
@@ -157,9 +157,9 @@ nni_socket_create(nni_socket **sockp, uint16_t proto)
 }
 
 
-// nni_socket_close closes the underlying socket.
+// nni_sock_close closes the underlying socket.
 int
-nni_socket_close(nni_socket *sock)
+nni_sock_close(nni_sock *sock)
 {
 	nni_pipe *pipe;
 	nni_endpt *ep;
@@ -241,7 +241,7 @@ nni_socket_close(nni_socket *sock)
 
 
 int
-nni_socket_sendmsg(nni_socket *sock, nni_msg *msg, nni_time expire)
+nni_sock_sendmsg(nni_sock *sock, nni_msg *msg, nni_time expire)
 {
 	int rv;
 	int besteffort;
@@ -284,7 +284,7 @@ nni_socket_sendmsg(nni_socket *sock, nni_msg *msg, nni_time expire)
 
 
 int
-nni_socket_recvmsg(nni_socket *sock, nni_msg **msgp, nni_time expire)
+nni_sock_recvmsg(nni_sock *sock, nni_msg **msgp, nni_time expire)
 {
 	int rv;
 	nni_msg *msg;
@@ -319,16 +319,16 @@ nni_socket_recvmsg(nni_socket *sock, nni_msg **msgp, nni_time expire)
 }
 
 
-// nni_socket_protocol returns the socket's 16-bit protocol number.
+// nni_sock_protocol returns the socket's 16-bit protocol number.
 uint16_t
-nni_socket_proto(nni_socket *sock)
+nni_sock_proto(nni_sock *sock)
 {
 	return (sock->s_ops.proto_self);
 }
 
 
 int
-nni_socket_dial(nni_socket *sock, const char *addr, nni_endpt **epp, int flags)
+nni_sock_dial(nni_sock *sock, const char *addr, nni_endpt **epp, int flags)
 {
 	nni_endpt *ep;
 	int rv;
@@ -349,7 +349,7 @@ nni_socket_dial(nni_socket *sock, const char *addr, nni_endpt **epp, int flags)
 
 
 int
-nni_socket_listen(nni_socket *sock, const char *addr, nni_endpt **epp,
+nni_sock_listen(nni_sock *sock, const char *addr, nni_endpt **epp,
     int flags)
 {
 	nni_endpt *ep;
@@ -371,21 +371,21 @@ nni_socket_listen(nni_socket *sock, const char *addr, nni_endpt **epp,
 
 
 void
-nni_socket_recverr(nni_socket *sock, int err)
+nni_sock_recverr(nni_sock *sock, int err)
 {
 	sock->s_recverr = err;
 }
 
 
 void
-nni_socket_senderr(nni_socket *sock, int err)
+nni_sock_senderr(nni_sock *sock, int err)
 {
 	sock->s_senderr = err;
 }
 
 
 int
-nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
+nni_sock_setopt(nni_sock *sock, int opt, const void *val, size_t size)
 {
 	size_t rsz;
 	void *ptr;
@@ -428,7 +428,7 @@ nni_socket_setopt(nni_socket *sock, int opt, const void *val, size_t size)
 
 
 int
-nni_socket_getopt(nni_socket *sock, int opt, void *val, size_t *sizep)
+nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 {
 	size_t rsz;
 	void *ptr;

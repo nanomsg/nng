@@ -21,7 +21,7 @@ typedef struct nni_req_sock	nni_req_sock;
 
 // An nni_req_sock is our per-socket protocol private structure.
 struct nni_req_sock {
-	nni_socket *	sock;
+	nni_sock *	sock;
 	nni_mtx		mx;
 	nni_cv		cv;
 	nni_msgq *	uwq;
@@ -50,7 +50,7 @@ static void nni_req_sender(void *);
 static void nni_req_resender(void *);
 
 static int
-nni_req_create(void **reqp, nni_socket *sock)
+nni_req_create(void **reqp, nni_sock *sock)
 {
 	nni_req_sock *req;
 	int rv;
@@ -76,10 +76,10 @@ nni_req_create(void **reqp, nni_socket *sock)
 	req->resend = NNI_TIME_ZERO;
 	NNI_LIST_INIT(&req->pipes, nni_req_pipe, node);
 
-	req->uwq = nni_socket_sendq(sock);
-	req->urq = nni_socket_recvq(sock);
+	req->uwq = nni_sock_sendq(sock);
+	req->urq = nni_sock_recvq(sock);
 	*reqp = req;
-	nni_socket_recverr(sock, NNG_ESTATE);
+	nni_sock_recverr(sock, NNG_ESTATE);
 	rv = nni_thr_init(&req->resender, nni_req_resender, req);
 	if (rv != 0) {
 		nni_cv_fini(&req->cv);
@@ -345,7 +345,7 @@ nni_req_sendfilter(void *arg, nni_msg *msg)
 	nni_cv_wake(&req->cv);
 
 	// Clear the error condition.
-	nni_socket_recverr(req->sock, 0);
+	nni_sock_recverr(req->sock, 0);
 	nni_mtx_unlock(&req->mx);
 
 	return (msg);
@@ -386,7 +386,7 @@ nni_req_recvfilter(void *arg, nni_msg *msg)
 		return (NULL);
 	}
 
-	nni_socket_recverr(req->sock, NNG_ESTATE);
+	nni_sock_recverr(req->sock, NNG_ESTATE);
 	nni_msg_free(req->reqmsg);
 	req->reqmsg = NULL;
 	nni_cv_wake(&req->cv);

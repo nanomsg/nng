@@ -21,7 +21,7 @@ typedef struct nni_pair_sock	nni_pair_sock;
 
 // An nni_pair_sock is our per-socket protocol private structure.
 struct nni_pair_sock {
-	nni_socket *	sock;
+	nni_sock *	sock;
 	nni_pair_pipe * pipe;
 	nni_mtx		mx;
 	nni_msgq *	uwq;
@@ -42,7 +42,7 @@ static void nni_pair_receiver(void *);
 static void nni_pair_sender(void *);
 
 static int
-nni_pair_create(void **pairp, nni_socket *sock)
+nni_pair_create(void **pairp, nni_sock *sock)
 {
 	nni_pair_sock *pair;
 	int rv;
@@ -56,8 +56,8 @@ nni_pair_create(void **pairp, nni_socket *sock)
 	}
 	pair->sock = sock;
 	pair->pipe = NULL;
-	pair->uwq = nni_socket_sendq(sock);
-	pair->urq = nni_socket_recvq(sock);
+	pair->uwq = nni_sock_sendq(sock);
+	pair->urq = nni_sock_recvq(sock);
 	*pairp = pair;
 	return (0);
 }

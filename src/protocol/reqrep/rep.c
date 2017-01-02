@@ -21,7 +21,7 @@ typedef struct nni_rep_sock	nni_rep_sock;
 
 // An nni_rep_sock is our per-socket protocol private structure.
 struct nni_rep_sock {
-	nni_socket *	sock;
+	nni_sock *	sock;
 	nni_mtx		mx;
 	nni_msgq *	uwq;
 	nni_msgq *	urq;
@@ -46,7 +46,7 @@ static void nni_rep_sender(void *);
 static void nni_rep_topsender(void *);
 
 static int
-nni_rep_create(void **repp, nni_socket *sock)
+nni_rep_create(void **repp, nni_sock *sock)
 {
 	nni_rep_sock *rep;
 	int rv;
@@ -69,8 +69,8 @@ nni_rep_create(void **repp, nni_socket *sock)
 		return (rv);
 	}
 
-	rep->uwq = nni_socket_sendq(sock);
-	rep->urq = nni_socket_recvq(sock);
+	rep->uwq = nni_sock_sendq(sock);
+	rep->urq = nni_sock_recvq(sock);
 
 	rv = nni_thr_init(&rep->sender, nni_rep_topsender, rep);
 	if (rv != 0) {
@@ -80,7 +80,7 @@ nni_rep_create(void **repp, nni_socket *sock)
 		return (rv);
 	}
 	*repp = rep;
-	nni_socket_senderr(sock, NNG_ESTATE);
+	nni_sock_senderr(sock, NNG_ESTATE);
 	nni_thr_run(&rep->sender);
 	return (0);
 }
@@ -360,7 +360,7 @@ nni_rep_sendfilter(void *arg, nni_msg *msg)
 	}
 
 	// Cannot send again until a receive is done...
-	nni_socket_senderr(rep->sock, NNG_ESTATE);
+	nni_sock_senderr(rep->sock, NNG_ESTATE);
 
 	// If we have a stored backtrace, append it to the header...
 	// if we don't have a backtrace, discard the message.
@@ -404,7 +404,7 @@ nni_rep_recvfilter(void *arg, nni_msg *msg)
 		return (msg);
 	}
 
-	nni_socket_senderr(rep->sock, 0);
+	nni_sock_senderr(rep->sock, 0);
 	header = nni_msg_header(msg, &len);
 	if (rep->btrace != NULL) {
 		nni_free(rep->btrace, rep->btrace_len);

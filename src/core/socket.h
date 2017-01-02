@@ -45,20 +45,32 @@ struct nng_socket {
 	uint32_t	s_nextid;               // Next Pipe ID.
 };
 
-extern int nni_socket_create(nni_socket **, uint16_t);
-extern int nni_socket_close(nni_socket *);
-extern uint16_t nni_socket_proto(nni_socket *);
-extern int nni_socket_setopt(nni_socket *, int, const void *, size_t);
-extern int nni_socket_getopt(nni_socket *, int, void *, size_t *);
-extern int nni_socket_recvmsg(nni_socket *, nni_msg **, nni_time);
-extern int nni_socket_sendmsg(nni_socket *, nni_msg *, nni_time);
-extern int nni_socket_dial(nni_socket *, const char *, nni_endpt **, int);
-extern int nni_socket_listen(nni_socket *, const char *, nni_endpt **, int);
+extern int nni_sock_open(nni_sock **, uint16_t);
+extern int nni_sock_close(nni_sock *);
+extern uint16_t nni_sock_proto(nni_sock *);
+extern int nni_sock_setopt(nni_sock *, int, const void *, size_t);
+extern int nni_sock_getopt(nni_sock *, int, void *, size_t *);
+extern int nni_sock_recvmsg(nni_sock *, nni_msg **, nni_time);
+extern int nni_sock_sendmsg(nni_sock *, nni_msg *, nni_time);
+extern int nni_sock_dial(nni_sock *, const char *, nni_endpt **, int);
+extern int nni_sock_listen(nni_sock *, const char *, nni_endpt **, int);
 
 // Set error codes for applications.  These are only ever
 // called from the filter functions in protocols, and thus
 // already have the socket lock held.
-extern void nni_socket_recverr(nni_socket *, int);
-extern void nni_socket_senderr(nni_socket *, int);
+extern void nni_sock_recverr(nni_sock *, int);
+extern void nni_sock_senderr(nni_sock *, int);
+// These are socket methods that protocol operations can expect to call.
+// Note that each of these should be called without any locks held, since
+// the socket can reenter the protocol.
+
+// nni_socket_sendq obtains the upper writeq.  The protocol should
+// recieve messages from this, and place them on the appropriate pipe.
+extern nni_msgq *nni_sock_sendq(nni_sock *);
+
+// nni_socket_recvq obtains the upper readq.  The protocol should
+// inject incoming messages from pipes to it.
+extern nni_msgq *nni_sock_recvq(nni_sock *);
+
 
 #endif  // CORE_SOCKET_H

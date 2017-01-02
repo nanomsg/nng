@@ -19,7 +19,7 @@ struct nng_endpt {
 	nni_endpt_ops	ep_ops;
 	void *		ep_data;                // Transport private
 	nni_list_node	ep_node;                // Per socket list
-	nni_socket *	ep_sock;
+	nni_sock *	ep_sock;
 	char		ep_addr[NNG_MAXADDRLEN];
 	nni_thr		ep_thr;
 	int		ep_mode;
@@ -33,7 +33,7 @@ struct nng_endpt {
 #define NNI_EP_MODE_DIAL	1
 #define NNI_EP_MODE_LISTEN	2
 
-extern int nni_endpt_create(nni_endpt **, nni_socket *, const char *);
+extern int nni_endpt_create(nni_endpt **, nni_sock *, const char *);
 extern int nni_endpt_accept(nni_endpt *, nni_pipe **);
 extern void nni_endpt_close(nni_endpt *);
 extern int nni_endpt_dial(nni_endpt *, int);

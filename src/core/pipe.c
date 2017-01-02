@@ -42,7 +42,7 @@ nni_pipe_recv(nni_pipe *p, nng_msg **msgp)
 void
 nni_pipe_close(nni_pipe *p)
 {
-	nni_socket *sock = p->p_sock;
+	nni_sock *sock = p->p_sock;
 
 	if (p->p_trandata != NULL) {
 		p->p_ops.p_close(p->p_trandata);
@@ -87,7 +87,7 @@ int
 nni_pipe_create(nni_pipe **pp, nni_endpt *ep)
 {
 	nni_pipe *p;
-	nni_socket *sock = ep->ep_sock;
+	nni_sock *sock = ep->ep_sock;
 	nni_protocol *proto = &sock->s_ops;
 	int rv;
 
@@ -144,7 +144,7 @@ nni_pipe_start(nni_pipe *pipe)
 {
 	int rv;
 	int collide;
-	nni_socket *sock = pipe->p_sock;
+	nni_sock *sock = pipe->p_sock;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {

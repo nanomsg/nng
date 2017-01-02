@@ -16,7 +16,7 @@
 // Functionality realited to end points.
 
 int
-nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
+nni_endpt_create(nni_endpt **epp, nni_sock *sock, const char *addr)
 {
 	nni_transport *tran;
 	nni_endpt *ep;
@@ -47,7 +47,7 @@ nni_endpt_create(nni_endpt **epp, nni_socket *sock, const char *addr)
 	(void) snprintf(ep->ep_addr, sizeof (ep->ep_addr), "%s", addr);
 	ep->ep_ops = *tran->tran_ep_ops;
 
-	rv = ep->ep_ops.ep_create(&ep->ep_data, addr, nni_socket_proto(sock));
+	rv = ep->ep_ops.ep_create(&ep->ep_data, addr, nni_sock_proto(sock));
 	if (rv != 0) {
 		nni_cv_fini(&ep->ep_cv);
 		NNI_FREE_STRUCT(ep);
@@ -133,7 +133,7 @@ nni_dial_once(nni_endpt *ep)
 }
 
 
-// nni_socket_dialer is the thread worker that dials in the background.
+// nni_dialer is the thread worker that dials in the background.
 static void
 nni_dialer(void *arg)
 {
