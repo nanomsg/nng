@@ -52,10 +52,33 @@ typedef int64_t			nni_duration;   // Relative time (usec).
 		ptr[3] = (uint8_t)((uint32_t)u);		\
 	} while (0)
 
+#define	NNI_PUT64(ptr, u)					\
+	do {							\
+		ptr[0] = (uint8_t)(((uint64_t)u) >> 56);	\
+		ptr[1] = (uint8_t)(((uint64_t)u) >> 48);	\
+		ptr[2] = (uint8_t)(((uint64_t)u) >> 40);	\
+		ptr[3] = (uint8_t)(((uint64_t)u) >> 32);	\
+		ptr[4] = (uint8_t)(((uint64_t)u) >> 24);	\
+		ptr[5] = (uint8_t)(((uint64_t)u) >> 16);	\
+		ptr[6] = (uint8_t)(((uint64_t)u) >> 8);		\
+		ptr[7] = (uint8_t)((uint64_t)u);		\
+	} while (0)
+
 #define NNI_GET32(ptr, v)					\
 	v = (((uint32_t)((uint8_t)ptr[0])) << 24) +		\
 	    (((uint32_t)((uint8_t)ptr[1])) << 16) +		\
 	    (((uint32_t)((uint8_t)ptr[2])) << 8) +		\
 	    (((uint32_t)(uint8_t)ptr[3]))
+
+#define NNI_GET64(ptr, v)					\
+	v = (((uint64_t)((uint8_t)ptr[0])) << 56) +		\
+	    (((uint64_t)((uint8_t)ptr[1])) << 48) +		\
+	    (((uint64_t)((uint8_t)ptr[2])) << 40) +		\
+	    (((uint64_t)((uint8_t)ptr[3])) << 32) +		\
+	    (((uint64_t)((uint8_t)ptr[4])) << 24) +		\
+	    (((uint64_t)((uint8_t)ptr[5])) << 16) +		\
+	    (((uint64_t)((uint8_t)ptr[6])) << 8) +		\
+	    (((uint64_t)(uint8_t)ptr[7]))
+
 
 #endif  // CORE_DEFS_H
