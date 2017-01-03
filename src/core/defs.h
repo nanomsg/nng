@@ -44,4 +44,18 @@ typedef int64_t			nni_duration;   // Relative time (usec).
 #define NNI_ALLOC_STRUCT(s)	nni_alloc(sizeof (*s))
 #define NNI_FREE_STRUCT(s)	nni_free((s), sizeof (*s))
 
+#define	NNI_PUT32(ptr, u)					\
+	do {							\
+		ptr[0] = (uint8_t)(((uint32_t)u) >> 24);	\
+		ptr[1] = (uint8_t)(((uint32_t)u) >> 16);	\
+		ptr[2] = (uint8_t)(((uint32_t)u) >> 8);		\
+		ptr[3] = (uint8_t)((uint32_t)u);		\
+	} while (0)
+
+#define NNI_GET32(ptr, v)					\
+	v = (((uint32_t)((uint8_t)ptr[0])) << 24) +		\
+	    (((uint32_t)((uint8_t)ptr[1])) << 16) +		\
+	    (((uint32_t)((uint8_t)ptr[2])) << 8) +		\
+	    (((uint32_t)(uint8_t)ptr[3]))
+
 #endif  // CORE_DEFS_H

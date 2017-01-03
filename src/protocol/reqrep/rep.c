@@ -185,13 +185,7 @@ nni_rep_topsender(void *arg)
 			nni_msg_free(msg);
 			continue;
 		}
-		id = header[0];
-		id <<= 8;
-		id += header[1];
-		id <<= 8;
-		id += header[2];
-		id <<= 8;
-		id += header[3];
+		NNI_GET32(header, id);
 		nni_msg_trim_header(msg, 4);
 
 		nni_mtx_lock(&rep->mx);
@@ -256,10 +250,7 @@ nni_rep_pipe_recv(void *arg)
 	uint8_t idbuf[4];
 	uint32_t id = nni_pipe_id(pipe);
 
-	idbuf[0] = (uint8_t) (id >> 24);
-	idbuf[1] = (uint8_t) (id >> 16);
-	idbuf[2] = (uint8_t) (id >> 8);
-	idbuf[3] = (uint8_t) (id);
+	NNI_PUT32(idbuf, id);
 
 	for (;;) {
 		size_t len;

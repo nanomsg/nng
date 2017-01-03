@@ -326,10 +326,7 @@ nni_req_sendfilter(void *arg, nni_msg *msg)
 	id = (req->nextid++) | 0x80000000u;
 
 	// Request ID is in big endian format.
-	req->reqid[0] = (uint8_t) (id >> 24);
-	req->reqid[1] = (uint8_t) (id >> 16);
-	req->reqid[2] = (uint8_t) (id >> 8);
-	req->reqid[3] = (uint8_t) (id);
+	NNI_PUT32(req->reqid, id);
 
 	if (nni_msg_append_header(msg, req->reqid, 4) != 0) {
 		// Should be ENOMEM.
