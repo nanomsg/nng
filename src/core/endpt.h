@@ -17,7 +17,7 @@
 // OR TRANSPORTS.
 struct nng_endpoint {
 	nni_tran_ep	ep_ops;
-	nni_tran	*ep_tran;
+	nni_tran *	ep_tran;
 	void *		ep_data;                // Transport private
 	nni_list_node	ep_node;                // Per socket list
 	nni_sock *	ep_sock;

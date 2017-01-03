@@ -30,7 +30,7 @@ nni_list_init_offset(nni_list *list, size_t offset)
 
 
 void *
-nni_list_first(nni_list *list)
+nni_list_first(const nni_list *list)
 {
 	nni_list_node *node = list->ll_head.ln_next;
 
@@ -42,7 +42,7 @@ nni_list_first(nni_list *list)
 
 
 void *
-nni_list_last(nni_list *list)
+nni_list_last(const nni_list *list)
 {
 	nni_list_node *node = list->ll_head.ln_prev;
 
@@ -84,7 +84,7 @@ nni_list_prepend(nni_list *list, void *item)
 
 
 void *
-nni_list_next(nni_list *list, void *item)
+nni_list_next(const nni_list *list, void *item)
 {
 	nni_list_node *node = NODE(list, item);
 
@@ -96,7 +96,7 @@ nni_list_next(nni_list *list, void *item)
 
 
 void *
-nni_list_prev(nni_list *list, void *item)
+nni_list_prev(const nni_list *list, void *item)
 {
 	nni_list_node *node = NODE(list, item);
 

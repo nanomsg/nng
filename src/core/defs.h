@@ -28,7 +28,7 @@ typedef struct nni_tran		nni_tran;
 typedef struct nni_tran_ep	nni_tran_ep;
 typedef struct nni_tran_pipe	nni_tran_pipe;
 
-typedef struct nni_proto_pipe   nni_proto_pipe;
+typedef struct nni_proto_pipe	nni_proto_pipe;
 typedef struct nni_proto	nni_proto;
 
 typedef int			nni_signal;     // Turnstile/wakeup channel.
@@ -41,7 +41,7 @@ typedef int64_t			nni_duration;   // Relative time (usec).
 #define NNI_SECOND		(1000000)
 
 // Structure allocation conveniences.
-#define NNI_ALLOC_STRUCT(s)	nni_alloc(sizeof (*(s)))
-#define NNI_FREE_STRUCT(s)	nni_free((s), sizeof (*(s)))
+#define NNI_ALLOC_STRUCT(s)	nni_alloc(sizeof (*s))
+#define NNI_FREE_STRUCT(s)	nni_free((s), sizeof (*s))
 
 #endif  // CORE_DEFS_H

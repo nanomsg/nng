@@ -98,13 +98,13 @@ NNG_DECL int nng_unsetnotify(nng_socket *, nng_notify *);
 // NNG_EVENT_ENDPT_ADD	- An endpoint is added to the socket.
 // NNG_EVENT_ENDPT_REM	- An endpoint is removed from the socket.
 #define NNG_EVENT_BIT(x)    (1U << (x))
-#define NNG_EVENT_RECV		NNG_EVENT_BIT(0)
-#define NNG_EVENT_SEND		NNG_EVENT_BIT(1)
-#define NNG_EVENT_ERROR		NNG_EVENT_BIT(2)
-#define NNG_EVENT_PIPE_ADD	NNG_EVENT_BIT(3)
-#define NNG_EVENT_PIPE_REM	NNG_EVENT_BIT(4)
-#define NNG_EVENT_ENDPOINT_ADD	NNG_EVENT_BIT(5)
-#define NNG_EVENT_ENDPOINT_REM	NNG_EVENT_BIT(6)
+#define NNG_EVENT_RECV			NNG_EVENT_BIT(0)
+#define NNG_EVENT_SEND			NNG_EVENT_BIT(1)
+#define NNG_EVENT_ERROR			NNG_EVENT_BIT(2)
+#define NNG_EVENT_PIPE_ADD		NNG_EVENT_BIT(3)
+#define NNG_EVENT_PIPE_REM		NNG_EVENT_BIT(4)
+#define NNG_EVENT_ENDPOINT_ADD		NNG_EVENT_BIT(5)
+#define NNG_EVENT_ENDPOINT_REM		NNG_EVENT_BIT(6)
 
 // The following functions return more detailed information about the event.
 // Some of the values will not make sense for some event types, in which case

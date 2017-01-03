@@ -132,7 +132,17 @@ static int
 nni_inproc_pipe_send(void *arg, nni_msg *msg)
 {
 	nni_inproc_pipe *pipe = arg;
+	char *h;
+	size_t l;
 
+	// We need to move any header data to the body, because the other
+	// side won't know what to do otherwise.
+	h = nni_msg_header(msg, &l);
+	if (nni_msg_prepend(msg, h, l) != 0) {
+		nni_msg_free(msg);
+		return (0);     // Pretend we sent it.
+	}
+	nni_msg_trim_header(msg, l);
 	return (nni_msgq_put(pipe->wq, msg));
 }
 

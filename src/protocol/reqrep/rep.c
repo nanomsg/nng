@@ -263,7 +263,7 @@ nni_rep_pipe_recv(void *arg)
 
 	for (;;) {
 		size_t len;
-		char *body;
+		uint8_t *body;
 		int hops;
 
 again:
@@ -299,6 +299,7 @@ again:
 				goto again;
 			}
 			nni_msg_trim(msg, 4);
+			body = nni_msg_body(msg, &len);
 			if (end) {
 				break;
 			}

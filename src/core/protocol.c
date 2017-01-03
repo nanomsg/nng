@@ -68,6 +68,7 @@ nni_proto_number(const char *name)
 	return (NNG_PROTO_NONE);
 }
 
+
 uint16_t
 nni_proto_peer(uint16_t num)
 {
@@ -78,4 +79,3 @@ nni_proto_peer(uint16_t num)
 	}
 	return (p->proto_peer);
 }
-

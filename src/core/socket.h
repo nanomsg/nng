@@ -48,6 +48,7 @@ struct nng_socket {
 extern int nni_sock_open(nni_sock **, uint16_t);
 extern int nni_sock_close(nni_sock *);
 extern uint16_t nni_sock_proto(nni_sock *);
+extern uint16_t nni_sock_peer(nni_sock *);
 extern int nni_sock_setopt(nni_sock *, int, const void *, size_t);
 extern int nni_sock_getopt(nni_sock *, int, void *, size_t *);
 extern int nni_sock_recvmsg(nni_sock *, nni_msg **, nni_time);

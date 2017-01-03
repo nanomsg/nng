@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 
 #include "core/nng_impl.h"
 
@@ -36,6 +37,55 @@ typedef struct {
 	void *		mo_val;
 	nni_list_node	mo_node;
 } nni_msgopt;
+
+static void
+nni_chunk_dump(const nni_chunk *chunk, char *prefix)
+{
+	int i, j;
+	uint8_t x;
+	char buf[128];
+
+	(void) snprintf(buf, sizeof (buf),
+	    " %s (cap %d, len %d, offset %d ptr %p):", prefix,
+	    (int) chunk->ch_cap, (int) chunk->ch_len,
+	    (int) (chunk->ch_ptr - chunk->ch_buf), chunk->ch_ptr);
+	nni_println(buf);
+
+	buf[0] = 0;
+	for (i = 0, j = 0; i < chunk->ch_len; i++) {
+		if ((i % 16) == 0) {
+			if (j > 0) {
+				buf[j++] = '\0';
+				nni_println(buf);
+				j = 0;
+			}
+			snprintf(buf, sizeof (buf), " %4x: ", i);
+			j += strlen(buf);
+		}
+		buf[j++] = ' ';
+		x = (chunk->ch_ptr[i] >> 4);
+		buf[j++] = x > 9 ? ('A' + (x - 10)) : '0' + x;
+		x = (chunk->ch_ptr[i] & 0x0f);
+		buf[j++] = x > 9 ? ('A' + (x - 10)) : '0' + x;
+	}
+	if (j > 0) {
+		buf[j++] = '\0';
+		nni_println(buf);
+	}
+}
+
+
+void
+nni_msg_dump(const char *banner, const nni_msg *msg)
+{
+	char buf[128];
+
+	(void) snprintf(buf, sizeof (buf), "--- %s BEGIN ---", banner);
+	nni_println(buf);
+	nni_chunk_dump(&msg->m_header, "HEADER");
+	nni_chunk_dump(&msg->m_body, "BODY");
+	nni_println("--- END ---");
+}
 
 
 // nni_chunk_grow increases the underlying space for a chunk.  It ensures
@@ -66,20 +116,19 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
 		headroom = (size_t) (ch->ch_ptr - ch->ch_buf);
+		if (headwanted < headroom) {
+			headwanted = headroom; // Never shrink this.
+		}
 		if (((newsz + headwanted) < ch->ch_cap) &&
 		    (headwanted <= headroom)) {
 			// We have enough space at the ends already.
 			return (0);
 		}
-		if (headwanted < headroom) {
-			// We never shrink... headroom either.
-			headwanted = headroom;
-		}
 		if ((newbuf = nni_alloc(newsz + headwanted)) == NULL) {
 			return (NNG_ENOMEM);
 		}
 		// Copy all the data, but not header or trailer.
-		memcpy(newbuf + headwanted, ch->ch_buf + headroom, ch->ch_len);
+		memcpy(newbuf + headwanted, ch->ch_ptr, ch->ch_len);
 		nni_free(ch->ch_buf, ch->ch_cap);
 		ch->ch_buf = newbuf;
 		ch->ch_ptr = newbuf + headwanted;
@@ -90,22 +139,16 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 	// We either don't have a data pointer yet, or it doesn't reference
 	// the backing store.  In this case, we just check against the
 	// allocated capacity and grow, or don't grow.
-	if (newsz < ch->ch_cap) {
-		// Enough space at end, so just use it.
-		if (ch->ch_ptr == NULL) {
-			ch->ch_ptr = ch->ch_buf + headwanted;
+	if ((newsz + headwanted) >= ch->ch_cap) {
+		if ((newbuf = nni_alloc(newsz + headwanted)) == NULL) {
+			return (NNG_ENOMEM);
 		}
-		return (0);
-	} else if ((newbuf = nni_alloc(newsz)) == NULL) {
-		return (NNG_ENOMEM);
+		nni_free(ch->ch_buf, ch->ch_cap);
+		ch->ch_cap = newsz + headwanted;
+		ch->ch_buf = newbuf;
 	}
 
-	nni_free(ch->ch_buf, ch->ch_cap);
-	ch->ch_buf = newbuf;
-	ch->ch_cap = newsz;
-	if (ch->ch_ptr == NULL) {
-		ch->ch_ptr = ch->ch_buf + headwanted;
-	}
+	ch->ch_ptr = ch->ch_buf + headwanted;
 	return (0);
 }
 
@@ -154,7 +197,7 @@ nni_chunk_trim(nni_chunk *ch, size_t len)
 static int
 nni_chunk_dup(nni_chunk *dst, const nni_chunk *src)
 {
-	if ((dst->ch_buf = nni_alloc(src->ch_cap)) != 0) {
+	if ((dst->ch_buf = nni_alloc(src->ch_cap)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	dst->ch_cap = src->ch_cap;
@@ -270,7 +313,7 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 
 
 int
-nni_msg_dup(nni_msg **dup, nni_msg *src)
+nni_msg_dup(nni_msg **dup, const nni_msg *src)
 {
 	nni_msg *m;
 	nni_msgopt *mo;
@@ -280,6 +323,10 @@ nni_msg_dup(nni_msg **dup, nni_msg *src)
 	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	memset(m, 0, sizeof (*m));
+	NNI_LIST_INIT(&m->m_options, nni_msgopt, mo_node);
+
+
 	if ((rv = nni_chunk_dup(&m->m_header, &src->m_header)) != 0) {
 		NNI_FREE_STRUCT(m);
 		return (rv);

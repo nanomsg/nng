@@ -308,7 +308,6 @@ nni_req_sendfilter(void *arg, nni_msg *msg)
 {
 	nni_req_sock *req = arg;
 	uint32_t id;
-	uint8_t buf[4];
 
 	nni_mtx_lock(&req->mx);
 	if (req->raw) {
@@ -329,7 +328,7 @@ nni_req_sendfilter(void *arg, nni_msg *msg)
 	req->reqid[2] = (uint8_t) (id >> 8);
 	req->reqid[3] = (uint8_t) (id);
 
-	if (nni_msg_append_header(msg, buf, 4) != 0) {
+	if (nni_msg_append_header(msg, req->reqid, 4) != 0) {
 		// Should be ENOMEM.
 		nni_mtx_unlock(&req->mx);
 		nni_msg_free(msg);

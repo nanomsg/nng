@@ -15,9 +15,9 @@
 
 // POSIX memory allocation.  This is pretty much standard C.
 void *
-nni_alloc(size_t size)
+nni_alloc(size_t sz)
 {
-	return (calloc(1, size));
+	return (calloc(1, sz));
 }
 
 

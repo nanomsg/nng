@@ -91,8 +91,10 @@ static void
 nni_pair_pipe_fini(void *arg)
 {
 	nni_pair_pipe *pp = arg;
+
 	NNI_FREE_STRUCT(pp);
 }
+
 
 static int
 nni_pair_pipe_add(void *arg)
