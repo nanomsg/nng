@@ -115,6 +115,7 @@ Main({
 				body = nng_msg_body(ping, &len);
 				So(len == 5);
 				So(memcmp(body, "pong", 5) == 0);
+				nng_msg_free(ping);
 			})
 		})
 	})

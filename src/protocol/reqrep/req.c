@@ -103,6 +103,9 @@ nni_req_fini(void *arg)
 	nni_thr_fini(&req->resender);
 	nni_cv_fini(&req->cv);
 	nni_mtx_fini(&req->mx);
+	if (req->reqmsg != NULL) {
+		nni_msg_free(req->reqmsg);
+	}
 	NNI_FREE_STRUCT(req);
 }
 
