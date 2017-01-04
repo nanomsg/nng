@@ -137,7 +137,6 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 		if (rv > resid) {
 			nni_panic("writev says it wrote too much!");
 		}
-
 		resid -= rv;
 		while (rv) {
 			if (iov[i].iov_len <= rv) {
@@ -366,6 +365,7 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 	}
 
 	nni_plat_tcp_setopts(fd);
+
 	s->fd = fd;
 	return (0);
 }

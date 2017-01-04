@@ -401,7 +401,7 @@ nni_tcp_ep_accept(void *arg, void **pipep)
 	int rv;
 
 
-	if ((pipe = NNI_ALLOC_STRUCT(pipe)) != NULL) {
+	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	pipe->proto = ep->proto;
