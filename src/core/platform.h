@@ -63,6 +63,7 @@ extern void nni_free(void *, size_t);
 typedef struct nni_plat_mtx	nni_plat_mtx;
 typedef struct nni_plat_cv	nni_plat_cv;
 typedef struct nni_plat_thr	nni_plat_thr;
+typedef struct nni_plat_tcpsock nni_plat_tcpsock;
 
 // Mutex handling.
 
@@ -165,6 +166,43 @@ extern uint32_t nni_plat_nextid(void);
 // after the call returns.  (If necessary, thread-local storage can be
 // used.)
 extern const char *nni_plat_strerror(int);
+
+// nni_plat_lookup_host looks up a hostname in DNS, or the local hosts
+// file, or whatever.  If your platform lacks support for naming, it must
+// at least cope with converting IP addresses in string form.  The final
+// flags may include NNI_FLAG_IPV4ONLY to prevent IPv6 names from being
+// returned on dual stack machines.
+extern int nni_plat_lookup_host(const char *, nni_sockaddr *, int);
+
+// nni_plat_tcp_close just closes a TCP socket.
+extern void nni_plat_tcp_close(nni_plat_tcpsock *);
+
+// nni_plat_tcp_listen creates a TCP socket in listening mode, bound
+// to the specified address.  Note that nni_plat_tcpsock should be defined
+// to whatever your platform uses.  For most systems its just "int".
+extern int nni_plat_tcp_listen(nni_plat_tcpsock *, const nni_sockaddr *);
+
+// nni_plat_tcp_accept does the accept to accept an inbound connection.
+// The tcpsock used for the server will have been set up with the
+// nni_plat_tcp_listen.
+extern int nni_plat_tcp_accept(nni_plat_tcpsock *, nni_plat_tcpsock *);
+
+// nni_plat_tcp_connect is the client side.  Two addresses are supplied,
+// as the client may specify a local address to which to bind.  This
+// second address may be NULL to use ephemeral ports, which is the
+// usual default.
+extern int nni_plat_tcp_connect(nni_plat_tcpsock *, const nni_sockaddr *,
+    const nni_sockaddr *);
+
+// nni_plat_tcp_send sends data to the remote side.  The platform is
+// responsible for attempting to send all of the data.  The iov count
+// will never be larger than 4.  THe platform may modify the iovs.
+extern int nni_plat_tcp_send(nni_plat_tcpsock *, nni_iov *, int);
+
+// nni_plat_tcp_recv recvs data into the buffers provided by the
+// iovs.  The implementation does not return until the iovs are completely
+// full, or an error condition occurs.
+extern int nni_plat_tcp_recv(nni_plat_tcpsock *, nni_iov *, int);
 
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.

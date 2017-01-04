@@ -102,6 +102,9 @@ nni_pair_pipe_add(void *arg)
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
 
+	if (nni_pipe_peer(pp->pipe) != NNG_PROTO_PAIR) {
+		return (NNG_EPROTO);
+	}
 	if (pair->pipe != NULL) {
 		return (NNG_EBUSY);      // Already have a peer, denied.
 	}

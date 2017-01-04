@@ -138,9 +138,10 @@ nni_req_pipe_fini(void *arg)
 static int
 nni_req_pipe_add(void *arg)
 {
-	// We have nothing to do, since we don't need to maintain a global
-	// list of related pipes.
-	NNI_ARG_UNUSED(arg);
+	nni_req_pipe *rp = arg;
+	if (nni_pipe_peer(rp->pipe) != NNG_PROTO_REP) {
+		return (NNG_EPROTO);
+	}
 	return (0);
 }
 

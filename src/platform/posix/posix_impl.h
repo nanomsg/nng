@@ -32,8 +32,11 @@ extern int nni_plat_errno(int);
 
 #endif
 
+
 #ifdef PLATFORM_POSIX_NET
-typedef int   nni_plat_tcpsock;
+struct nni_plat_tcpsock {
+	int fd;
+};
 #endif
 
 // Define types that this platform uses.

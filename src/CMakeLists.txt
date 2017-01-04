@@ -71,6 +71,8 @@ set (NNG_SOURCES
     protocol/reqrep/req.c
 
     transport/inproc/inproc.c
+
+    transport/tcp/tcp.c
 )
 
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src)

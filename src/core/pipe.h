@@ -44,6 +44,8 @@ extern int nni_pipe_create(nni_pipe **, nni_ep *);
 
 extern void nni_pipe_destroy(nni_pipe *);
 
+extern uint16_t nni_pipe_proto(nni_pipe *);
+extern uint16_t nni_pipe_peer(nni_pipe *);
 extern int nni_pipe_start(nni_pipe *);
 extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
 

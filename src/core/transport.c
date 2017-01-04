@@ -14,9 +14,11 @@
 // For now the list of transports is hard-wired.  Adding new transports
 // to the system dynamically is something that might be considered later.
 extern nni_tran nni_inproc_tran;
+extern nni_tran nni_tcp_tran;
 
 static nni_tran *transports[] = {
 	&nni_inproc_tran,
+	&nni_tcp_tran,
 	NULL
 };
 

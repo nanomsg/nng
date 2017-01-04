@@ -137,6 +137,9 @@ nni_rep_pipe_add(void *arg)
 	nni_rep_sock *rep = rp->rep;
 	int rv;
 
+	if (nni_pipe_peer(rp->pipe) != NNG_PROTO_REQ) {
+		return (NNG_EPROTO);
+	}
 	nni_mtx_lock(&rep->mx);
 	rv = nni_idhash_insert(rep->pipes, nni_pipe_id(rp->pipe), rp);
 	nni_mtx_unlock(&rep->mx);
