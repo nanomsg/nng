@@ -355,22 +355,84 @@ NNG_DECL int nng_device(nng_socket *, nng_socket *);
 
 // Error codes.  These may happen to align to errnos used on your platform,
 // but do not count on this.
-#define NNG_EINTR		(-1)
-#define NNG_ENOMEM		(-2)
-#define NNG_EINVAL		(-3)
-#define NNG_EBUSY		(-4)
-#define NNG_ETIMEDOUT		(-5)
-#define NNG_ECONNREFUSED	(-6)
-#define NNG_ECLOSED		(-7)
-#define NNG_EAGAIN		(-8)
-#define NNG_ENOTSUP		(-9)
-#define NNG_EADDRINUSE		(-10)
-#define NNG_ESTATE		(-11)
-#define NNG_ENOENT		(-12)
+#define NNG_EINTR		(1)
+#define NNG_ENOMEM		(2)
+#define NNG_EINVAL		(3)
+#define NNG_EBUSY		(4)
+#define NNG_ETIMEDOUT		(5)
+#define NNG_ECONNREFUSED	(6)
+#define NNG_ECLOSED		(7)
+#define NNG_EAGAIN		(8)
+#define NNG_ENOTSUP		(9)
+#define NNG_EADDRINUSE		(10)
+#define NNG_ESTATE		(11)
+#define NNG_ENOENT		(12)
+#define NNG_EPROTO		(13)
+#define NNG_EUNREACHABLE	(14)
+#define NNG_EADDRINVAL		(15)
+#define NNG_EPERM		(16)
+
+// NNG_SYSERR is a special code, which allows us to wrap errors from the
+// underlyuing operating system.  We generally prefer to map errors to one
+// of the above, but if we cannot, then we just encode an error this way.
+// The bit is large enough to accommodate all known UNIX and Win32 error
+// codes.  We try hard to match things semantically to one of our standard
+// errors.  For example, a connection reset or aborted we treat as a
+// closed connection, because that's basically what it means.  (The remote
+// peer closed the connection.)  For certain kinds of resource exhaustion
+// we treat it the same as memory.  But for files, etc. that's OS-specific,
+// and we use the generic below.  Some of the above error codes we use
+// internally, and the application should never see (e.g. NNG_EINTR).
+#define NNG_ESYSERR    (0x10000000)
 
 // Maximum length of a socket address.  This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
 #define NNG_MAXADDRLEN    (128)
+
+// Some address details.  This is in some ways like a traditional sockets
+// sockaddr, but we have our own to cope with our unique families, etc.
+// The details of this structure are directly exposed to applications.
+// These structures can be obtained via property lookups, etc.
+struct nng_sockaddr_path {
+	uint16_t	sa_family;
+	uint8_t		sa_path[NNG_MAXADDRLEN];
+};
+typedef struct nng_sockaddr_path	nng_sockaddr_path;
+typedef struct nng_sockaddr_path	nng_sockaddr_ipc;
+typedef struct nng_sockaddr_path	nng_sockaddr_inproc;
+
+struct nng_sockaddr_in6 {
+	uint16_t	sa_family;
+	uint16_t	sa_port;
+	uint8_t		sa_addr[16];
+};
+typedef struct nng_sockaddr_in6		nng_sockaddr_in6;
+typedef struct nng_sockaddr_in6		nng_sockaddr_udp6;
+typedef struct nng_sockaddr_in6		nng_sockaddr_tcp6;
+
+struct nng_sockaddr_in {
+	uint16_t	sa_family;
+	uint16_t	sa_port;
+	uint32_t	sa_addr;
+};
+typedef struct nng_sockaddr_in		nng_sockaddr_in;
+typedef struct nng_sockaddr_in		nng_sockaddr_udp;
+typedef struct nng_sockaddr_in		nng_sockaddr_tcp;
+
+typedef struct nng_sockaddr {
+	union {
+		uint16_t		s_family;
+		nng_sockaddr_path	s_path;
+		nng_sockaddr_in6	s_in6;
+		nng_sockaddr_in		s_in;
+	} s_un;
+} nng_sockaddr;
+
+#define NNG_AF_UNSPEC		0
+#define NNG_AF_INPROC		1
+#define NNG_AF_IPC		2
+#define NNG_AF_INET		3
+#define NNG_AF_INET6		4
 
 #ifdef __cplusplus
 }

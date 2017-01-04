@@ -158,6 +158,14 @@ extern void nni_plat_fini(void);
 // or under a lock protection.)
 extern uint32_t nni_plat_nextid(void);
 
+// nni_plat_strerror allows the platform to use additional error messages
+// for additional error codes.  The err code passed in should be the
+// equivalent of errno or GetLastError, without the NNG_ESYSERR component.
+// The platform should make sure that the returned value will be valid
+// after the call returns.  (If necessary, thread-local storage can be
+// used.)
+extern const char *nni_plat_strerror(int);
+
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.
 #if defined(PLATFORM_POSIX)

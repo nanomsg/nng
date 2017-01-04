@@ -12,35 +12,34 @@
 
 // Some dependency notes:
 //
-// PLATFORM_POSIX_THREAD and PLATFORM_POSIX_SYNCH depend on each other,
-// and they both depend on PLATFORM_POSIX_CLOCK.  Furthermore, note that
+// PLATFORM_POSIX_THREAD depends on PLATFORM_POSIX_CLOCK.  Furthermore,
 // when using PLATFORM_POSIX_CLOCK, your condition variable timeouts need
-// to use the same base clock values.  Normally all three should be used
-// together.
+// to use the same base clock values.  Normally these should be used
+// together.  Almost everything depends on PLATFORM_POSIX_DEBUG.
 #ifdef  PLATFORM_POSIX
 #define PLATFORM_POSIX_ALLOC
 #define PLATFORM_POSIX_DEBUG
 #define PLATFORM_POSIX_CLOCK
+#define PLATFORM_POSIX_NET
 #define PLATFORM_POSIX_RANDOM
-#define PLATFORM_POSIX_SYNCH
 #define PLATFORM_POSIX_THREAD
 
 #include "platform/posix/posix_config.h"
 #endif
 
+#ifdef PLATFORM_POSIX_DEBUG
+extern int nni_plat_errno(int);
+
+#endif
+
+#ifdef PLATFORM_POSIX_NET
+typedef int   nni_plat_tcpsock;
+#endif
+
 // Define types that this platform uses.
-#ifdef PLATFORM_POSIX_SYNCH
+#ifdef PLATFORM_POSIX_THREAD
 
 #include <pthread.h>
-
-struct nni_mutex {
-	pthread_mutex_t mx;
-};
-
-struct nni_cond {
-	pthread_cond_t		cv;
-	pthread_mutex_t *	mx;
-};
 
 // These types are provided for here, to permit them to be directly inlined
 // elsewhere.

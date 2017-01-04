@@ -180,9 +180,24 @@ nng_strerror(int num)
 	case NNG_ENOENT:
 		return ("Entry not found");
 
-	default:
-		return ("Unknown error");
+	case NNG_EPROTO:
+		return ("Protocol error");
+
+	case NNG_EUNREACHABLE:
+		return ("Destination unreachable");
+
+	case NNG_EADDRINVAL:
+		return ("Address invalid");
+
+	case NNG_EPERM:
+		return ("Permission denied");
 	}
+
+	if (num & NNG_ESYSERR) {
+		return (nni_plat_strerror(num & ~NNG_ESYSERR));
+	}
+
+	return ("Unknown error");
 }
 
 
