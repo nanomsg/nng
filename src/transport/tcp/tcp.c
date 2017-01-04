@@ -288,7 +288,7 @@ nni_tcp_negotiate(nni_tcp_pipe *pipe)
 		return (NNG_EPROTO);
 	}
 
-	NNI_GET16((&buf[4]), pipe->peer);
+	NNI_GET16(&buf[4], pipe->peer);
 	return (0);
 }
 
@@ -310,7 +310,7 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	char *rempart;
 
 	flag = ep->ipv4only ? NNI_FLAG_IPV4ONLY : 0;
-	snprintf(addr, sizeof (addr), "%s", ep->addr);
+	snprintf(addr, sizeof (addr), "%s", ep->addr + strlen("tcp://"));
 
 	if ((rempart = strchr(addr, ';')) != NULL) {
 		*rempart = '\0';
@@ -331,6 +331,9 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	}
 
 	if ((rv = nni_parseaddr(rempart, &host, &port)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_plat_lookup_host(host, &remaddr, flag)) != 0) {
 		return (rv);
 	}
 
