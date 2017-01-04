@@ -65,6 +65,19 @@ trantest_conn_refused(trantest *tt)
 }
 
 void
+trantest_duplicate_listen(trantest *tt)
+{
+	Convey("Duplicate listen rejected", {
+		nng_endpoint *ep;
+		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
+		So(ep != NULL);
+		ep = NULL;
+		So(nng_listen(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) == NNG_EADDRINUSE);
+		So(ep == NULL);
+	})
+}
+
+void
 trantest_test_all(const char *addr)
 {
 	trantest tt;
@@ -78,5 +91,6 @@ trantest_test_all(const char *addr)
 
 		trantest_scheme(&tt);
 		trantest_conn_refused(&tt);
+		trantest_duplicate_listen(&tt);
 	})
 }

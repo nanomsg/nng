@@ -55,7 +55,7 @@ typedef struct {
 #define NNI_PUT16(ptr, u)				      \
 	do {						      \
 		(ptr)[0] = (uint8_t) (((uint16_t) (u)) >> 8); \
-		(ptr)[0] = (uint8_t) ((uint16_t) (u));	      \
+		(ptr)[1] = (uint8_t) ((uint16_t) (u));	      \
 	}						      \
 	while (0)
 

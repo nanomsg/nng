@@ -386,7 +386,7 @@ nni_tcp_ep_bind(void *arg)
 	}
 	baddr.s_un.s_in.sa_port = port;
 
-	if ((rv == nni_plat_tcp_listen(&ep->fd, &baddr)) != 0) {
+	if ((rv = nni_plat_tcp_listen(&ep->fd, &baddr)) != 0) {
 		return (rv);
 	}
 	return (0);
