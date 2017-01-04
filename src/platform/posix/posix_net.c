@@ -86,9 +86,10 @@ nni_plat_lookup_host(const char *host, nni_sockaddr *addr, int flags)
 	struct addrinfo *ai;
 
 	memset(&hint, 0, sizeof (hint));
-	hint.ai_flags = AI_DEFAULT | AI_PASSIVE;
+	hint.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
 	hint.ai_family = PF_UNSPEC;
 	hint.ai_socktype = SOCK_STREAM;
+	hint.ai_protocol = IPPROTO_TCP;
 	if (flags & NNI_FLAG_IPV4ONLY) {
 		hint.ai_family = PF_INET;
 	}
