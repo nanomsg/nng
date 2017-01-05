@@ -83,6 +83,38 @@ nni_list_prepend(nni_list *list, void *item)
 }
 
 
+void
+nni_list_insert_before(nni_list *list, void *item, void *before)
+{
+	nni_list_node *node = NODE(list, item);
+	nni_list_node *where = NODE(list, before);
+
+	if ((node->ln_next != NULL) || (node->ln_prev != NULL)) {
+		nni_panic("prepending node already on a list or not inited");
+	}
+	node->ln_next = where;
+	node->ln_prev = where->ln_prev;
+	node->ln_next->ln_prev = node;
+	node->ln_prev->ln_next = node;
+}
+
+
+void
+nni_list_insert_after(nni_list *list, void *item, void *after)
+{
+	nni_list_node *node = NODE(list, item);
+	nni_list_node *where = NODE(list, after);
+
+	if ((node->ln_next != NULL) || (node->ln_prev != NULL)) {
+		nni_panic("prepending node already on a list or not inited");
+	}
+	node->ln_prev = where;
+	node->ln_next = where->ln_next;
+	node->ln_next->ln_prev = node;
+	node->ln_prev->ln_next = node;
+}
+
+
 void *
 nni_list_next(const nni_list *list, void *item)
 {

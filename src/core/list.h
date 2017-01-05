@@ -36,6 +36,8 @@ extern void *nni_list_first(const nni_list *);
 extern void *nni_list_last(const nni_list *);
 extern void nni_list_append(nni_list *, void *);
 extern void nni_list_prepend(nni_list *, void *);
+extern void nni_list_insert_before(nni_list *, void *, void *);
+extern void nni_list_insert_after(nni_list *, void *, void *);
 extern void *nni_list_next(const nni_list *, void *);
 extern void *nni_list_prev(const nni_list *, void *);
 extern void nni_list_remove(nni_list *, void *);

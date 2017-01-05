@@ -67,6 +67,8 @@ set (NNG_SOURCES
 
     protocol/pair/pair.c
 
+    protocol/pubsub/sub.c
+
     protocol/reqrep/rep.c
     protocol/reqrep/req.c
 
