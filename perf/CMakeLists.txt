@@ -41,3 +41,5 @@ endif ()
 
 add_nng_perf(remote_lat)
 add_nng_perf(local_lat)
+add_nng_perf(local_thr)
+add_nng_perf(remote_thr)
