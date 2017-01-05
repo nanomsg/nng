@@ -69,7 +69,7 @@ static void
 nni_sub_fini(void *arg)
 {
 	nni_sub_sock *sub = arg;
-	nni_topic *topic;
+	nni_sub_topic *topic;
 
 	while ((topic = nni_list_first(&sub->topics)) != NULL) {
 		nni_list_remove(&sub->topics, topic);
