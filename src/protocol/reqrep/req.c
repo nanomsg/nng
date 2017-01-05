@@ -139,6 +139,7 @@ static int
 nni_req_pipe_add(void *arg)
 {
 	nni_req_pipe *rp = arg;
+
 	if (nni_pipe_peer(rp->pipe) != NNG_PROTO_REP) {
 		return (NNG_EPROTO);
 	}

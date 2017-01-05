@@ -231,11 +231,34 @@ nni_plat_tcp_setopts(int fd)
 
 
 void
-nni_plat_tcp_close(nni_plat_tcpsock *s)
+nni_plat_tcp_init(nni_plat_tcpsock *s)
 {
-	(void) close(s->fd);
 	s->fd = -1;
 }
+
+
+void
+nni_plat_tcp_fini(nni_plat_tcpsock *s)
+{
+	if (s->fd != -1) {
+		(void) close(s->fd);
+		s->fd = -1;
+	}
+}
+
+
+void
+nni_plat_tcp_shutdown(nni_plat_tcpsock *s)
+{
+	if (s->fd != -1) {
+		(void) shutdown(s->fd, SHUT_RDWR);
+		// This causes the equivalent of a close.  Hopefully waking
+		// up anything that didn't get the hint with the shutdown.
+		// (macOS does not see the shtudown).
+		(void) dup2(nni_plat_devnull, s->fd);
+	}
+}
+
 
 // nni_plat_tcp_bind creates a file descriptor bound to the given address.
 // This basically does the equivalent of socket, bind, and listen.  We have
@@ -257,7 +280,7 @@ nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
 	}
 
 #ifdef SOCK_CLOEXEC
-	fd = socket(ss.ss_family, SOCK_STREAM, SOCK_CLOEXEC);
+	fd = socket(ss.ss_family, SOCK_STREAM | SOCK_CLOEXEC, 0);
 #else
 	fd = socket(ss.ss_family, SOCK_STREAM, 0);
 #endif
@@ -305,7 +328,7 @@ nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
 	}
 
 #ifdef  SOCK_CLOEXEC
-	fd = socket(ss.ss_family, SOCK_STREAM, SOCK_CLOEXEC);
+	fd = socket(ss.ss_family, SOCK_STREAM | SOCK_CLOEXEC, 0);
 #else
 	fd = socket(ss.ss_family, SOCK_STREAM, 0);
 #endif
@@ -346,9 +369,9 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 
 	for (;;) {
 #ifdef NNG_USE_ACCEPT4
-		fd = accept4(server, NULL, NULL, SOCK_CLOEXEC);
+		fd = accept4(server->fd, NULL, NULL, SOCK_CLOEXEC);
 		if ((fd < 0) && ((errrno == ENOSYS) || (errno == ENOTSUP))) {
-			fd = accept(server, NULL, NULL);
+			fd = accept(server->fd, NULL, NULL);
 		}
 #else
 		fd = accept(server->fd, NULL, NULL);
@@ -357,6 +380,9 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 		if (fd < 0) {
 			if ((errno == EINTR) || (errno == ECONNABORTED)) {
 				// These are not fatal errors, keep trying
+				continue;
+			}
+			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
 				continue;
 			}
 			return (nni_plat_errno(errno));

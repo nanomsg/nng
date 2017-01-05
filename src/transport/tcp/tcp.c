@@ -55,7 +55,7 @@ nni_tcp_pipe_close(void *arg)
 {
 	nni_tcp_pipe *pipe = arg;
 
-	nni_plat_tcp_close(&pipe->fd);
+	nni_plat_tcp_shutdown(&pipe->fd);
 }
 
 
@@ -64,6 +64,7 @@ nni_tcp_pipe_destroy(void *arg)
 {
 	nni_tcp_pipe *pipe = arg;
 
+	nni_plat_tcp_fini(&pipe->fd);
 	NNI_FREE_STRUCT(pipe);
 }
 
@@ -176,6 +177,7 @@ nni_tcp_ep_init(void **epp, const char *url, uint16_t proto)
 	ep->closed = 0;
 	ep->proto = proto;
 	ep->ipv4only = 0;
+	nni_plat_tcp_init(&ep->fd);
 
 	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
 
@@ -189,6 +191,7 @@ nni_tcp_ep_fini(void *arg)
 {
 	nni_tcp_ep *ep = arg;
 
+	nni_plat_tcp_fini(&ep->fd);
 	NNI_FREE_STRUCT(ep);
 }
 
@@ -198,7 +201,7 @@ nni_tcp_ep_close(void *arg)
 {
 	nni_tcp_ep *ep = arg;
 
-	nni_plat_tcp_close(&ep->fd);
+	nni_plat_tcp_shutdown(&ep->fd);
 }
 
 
@@ -340,6 +343,7 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	nni_plat_tcp_init(&pipe->fd);
 	pipe->proto = ep->proto;
 
 	// Port is in the same place for both v4 and v6.
@@ -353,7 +357,8 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	}
 
 	if ((rv = nni_tcp_negotiate(pipe)) != 0) {
-		nni_plat_tcp_close(&pipe->fd);
+		nni_plat_tcp_shutdown(&pipe->fd);
+		nni_plat_tcp_fini(&pipe->fd);
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
@@ -405,13 +410,15 @@ nni_tcp_ep_accept(void *arg, void **pipep)
 		return (NNG_ENOMEM);
 	}
 	pipe->proto = ep->proto;
+	nni_plat_tcp_init(&pipe->fd);
 
 	if ((rv = nni_plat_tcp_accept(&pipe->fd, &ep->fd)) != 0) {
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
 	if ((rv = nni_tcp_negotiate(pipe)) != 0) {
-		nni_plat_tcp_close(&pipe->fd);
+		nni_plat_tcp_shutdown(&pipe->fd);
+		nni_plat_tcp_fini(&pipe->fd);
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}

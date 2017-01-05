@@ -35,12 +35,15 @@ extern int nni_plat_errno(int);
 
 #ifdef PLATFORM_POSIX_NET
 struct nni_plat_tcpsock {
-	int fd;
+	int	fd;
+	int	devnull; // used for shutting down blocking accept()
 };
 #endif
 
 // Define types that this platform uses.
 #ifdef PLATFORM_POSIX_THREAD
+
+extern int nni_plat_devnull;    // open descriptor on /dev/null
 
 #include <pthread.h>
 

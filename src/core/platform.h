@@ -60,10 +60,10 @@ extern void *nni_alloc(size_t);
 // Most implementations can just call free() here.
 extern void nni_free(void *, size_t);
 
-typedef struct nni_plat_mtx	nni_plat_mtx;
-typedef struct nni_plat_cv	nni_plat_cv;
-typedef struct nni_plat_thr	nni_plat_thr;
-typedef struct nni_plat_tcpsock nni_plat_tcpsock;
+typedef struct nni_plat_mtx		nni_plat_mtx;
+typedef struct nni_plat_cv		nni_plat_cv;
+typedef struct nni_plat_thr		nni_plat_thr;
+typedef struct nni_plat_tcpsock		nni_plat_tcpsock;
 
 // Mutex handling.
 
@@ -174,8 +174,19 @@ extern const char *nni_plat_strerror(int);
 // returned on dual stack machines.
 extern int nni_plat_lookup_host(const char *, nni_sockaddr *, int);
 
-// nni_plat_tcp_close just closes a TCP socket.
-extern void nni_plat_tcp_close(nni_plat_tcpsock *);
+// nni_plat_tcp_init initializes the socket, for example it can
+// set underlying file descriptors to -1, etc.
+extern void nni_plat_tcp_init(nni_plat_tcpsock *);
+
+// nni_plat_tcp_fini just closes a TCP socket, and releases any related
+// resources.
+extern void nni_plat_tcp_fini(nni_plat_tcpsock *);
+
+// nni_plat_tcp_shutdown performs a shutdown of the socket.  For
+// BSD sockets, this closes both sides of the TCP connection gracefully,
+// but the underlying file descriptor is left open.  (This part is critical
+// to prevention of close() related races.)
+extern void nni_plat_tcp_shutdown(nni_plat_tcpsock *);
 
 // nni_plat_tcp_listen creates a TCP socket in listening mode, bound
 // to the specified address.  Note that nni_plat_tcpsock should be defined

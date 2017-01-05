@@ -19,6 +19,7 @@
 #include <stdlib.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 static pthread_mutex_t nni_plat_lock = PTHREAD_MUTEX_INITIALIZER;
 static int nni_plat_inited = 0;
@@ -27,6 +28,11 @@ static int nni_plat_next = 0;
 
 pthread_condattr_t nni_cvattr;
 pthread_mutexattr_t nni_mxattr;
+
+// We open a /dev/null file descriptor so that we can dup2() it to
+// cause MacOS X to wakeup.  This gives us a "safe" close semantic.
+
+int nni_plat_devnull = -1;
 
 uint32_t
 nni_plat_nextid(void)
@@ -228,30 +234,39 @@ nni_plat_init(int (*helper)(void))
 	if (nni_plat_inited) {
 		return (0);     // fast path
 	}
+
+	if ((nni_plat_devnull = open("/dev/null", O_RDONLY)) < 0) {
+		return (nni_plat_errno(errno));
+	}
 	pthread_mutex_lock(&nni_plat_lock);
 	if (nni_plat_inited) {        // check again under the lock to be sure
 		pthread_mutex_unlock(&nni_plat_lock);
+		(void) close(nni_plat_devnull);
 		return (0);
 	}
 	if (pthread_condattr_init(&nni_cvattr) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
+		(void) close(nni_plat_devnull);
 		return (NNG_ENOMEM);
 	}
 #if !defined(NNG_USE_GETTIMEOFDAY) && NNG_USE_CLOCKID != CLOCK_REALTIME
 	if (pthread_condattr_setclock(&nni_cvattr, NNG_USE_CLOCKID) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
+		(void) close(nni_plat_devnull);
 		return (NNG_ENOMEM);
 	}
 #endif
 
 	if (pthread_mutexattr_init(&nni_mxattr) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
+		(void) close(nni_plat_devnull);
 		return (NNG_ENOMEM);
 	}
 
 	rv = pthread_mutexattr_settype(&nni_mxattr, PTHREAD_MUTEX_ERRORCHECK);
 	if (rv != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
+		(void) close(nni_plat_devnull);
 		return (NNG_ENOMEM);
 	}
 
@@ -276,6 +291,7 @@ nni_plat_init(int (*helper)(void))
 
 	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
+		(void) close(nni_plat_devnull);
 		return (NNG_ENOMEM);
 	}
 	if ((rv = helper()) == 0) {
@@ -294,6 +310,8 @@ nni_plat_fini(void)
 	if (nni_plat_inited) {
 		pthread_mutexattr_destroy(&nni_mxattr);
 		pthread_condattr_destroy(&nni_cvattr);
+		(void) close(nni_plat_devnull);
+		nni_plat_devnull = -1;
 		nni_plat_inited = 0;
 	}
 	pthread_mutex_unlock(&nni_plat_lock);
