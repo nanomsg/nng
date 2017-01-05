@@ -79,7 +79,6 @@ main(int argc, char **argv)
 	} else if ((strcmp(prog, "remote_thr") == 0) ||
 	    (strcmp(prog, "throughput_client") == 0)) {
 		do_remote_thr(argc, argv);
-
 	} else {
 		die("Unknown program mode? Use -m <mode>.");
 	}
@@ -280,7 +279,7 @@ void
 throughput_server(const char *addr, int msgsize, int count)
 {
 	nng_socket *s;
-	nng_msg **msgs;
+	nng_msg *msg;
 	int rv;
 	int i;
 	size_t len;
@@ -298,41 +297,27 @@ throughput_server(const char *addr, int msgsize, int count)
 		die("nng_listen: %s", nng_strerror(rv));
 	}
 
-	// Preallocate holding area for messages.  Otherwise we are
-	// benchmarking the allocator free(), which is less useful.
-	// Note that recycling messages would help a lot here.
-	if ((msgs = calloc(count, sizeof (nng_msg *))) == NULL) {
-		die("calloc: %s", strerror(errno));
-	}
-
 	// Receive first synchronization message.
-	if ((rv = nng_recvmsg(s, &msgs[0], 0)) != 0) {
+	if ((rv = nng_recvmsg(s, &msg, 0)) != 0) {
 		die("nng_recvmsg: %s", nng_strerror(rv));
 	}
-	nni_msg_free(msgs[0]);
+	nni_msg_free(msg);
 	start = nni_clock();
 
 	for (i = 0; i < count; i++) {
-		if ((rv = nng_recvmsg(s, &msgs[i], 0)) != 0) {
+		if ((rv = nng_recvmsg(s, &msg, 0)) != 0) {
 			die("nng_recvmsg: %s", nng_strerror(rv));
 		}
-		if (i == 0) {
-			start = nni_clock();
-		} else {
-			size_t len;
-			nng_msg_body(msgs[i], &len);
-			if (len != msgsize) {
-				die("wrong message size: %d != %d", len,
-				    msgsize);
-			}
+		size_t len;
+		nng_msg_body(msg, &len);
+		if (len != msgsize) {
+			die("wrong message size: %d != %d", len,
+			    msgsize);
 		}
+		nni_msg_free(msg);
 	}
 	end = nni_clock();
 	nng_close(s);
-	for (i = 0; i < count; i++) {
-		nng_msg_free(msgs[i]);
-	}
-	free(msgs);
 	total = (end - start) / 1.0;
 	msgpersec = count * 1000000 / total;
 	mbps = (count * 8.0 * msgsize);
@@ -349,7 +334,7 @@ void
 throughput_client(const char *addr, int msgsize, int count)
 {
 	nng_socket *s;
-	nng_msg **msgs;
+	nng_msg *msg;
 	int rv;
 	int i;
 
@@ -367,18 +352,19 @@ throughput_client(const char *addr, int msgsize, int count)
 		die("nng_dial: %s", nng_strerror(rv));
 	}
 
-	// Preallocate the messages.  Otherwise we are benchmarking the
-	// allocator, which is less useful.
-	if ((msgs = calloc(count, sizeof (nng_msg *))) == NULL) {
-		die("calloc: %s", strerror(errno));
+	if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
+		die("nng_msg_alloc: %s", nng_strerror(rv));
 	}
+	if ((rv = nng_sendmsg(s, msg, 0)) != 0) {
+		die("nng_sendmsg: %s", nng_strerror(rv));
+	}
+
 	for (i = 0; i < count; i++) {
-		if ((rv = nng_msg_alloc(&msgs[i], i ? msgsize : 0)) != 0) {
+		if ((rv = nng_msg_alloc(&msg, msgsize)) != 0) {
 			die("nng_msg_alloc: %s", nng_strerror(rv));
 		}
-	}
-	for (i = 0; i < count; i++) {
-		if ((rv = nng_sendmsg(s, msgs[i], 0)) != 0) {
+
+		if ((rv = nng_sendmsg(s, msg, 0)) != 0) {
 			die("nng_sendmsg: %s", nng_strerror(rv));
 		}
 	}
@@ -386,5 +372,4 @@ throughput_client(const char *addr, int msgsize, int count)
 	// Wait 100msec for pipes to drain.
 	nng_close(s);
 	nni_usleep(100000);
-	free(msgs);
 }
