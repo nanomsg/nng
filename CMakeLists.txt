@@ -210,6 +210,7 @@ if (NNG_TESTS)
 	enable_testing()
 	set(all_tests, "")
 	add_subdirectory (tests)
+    add_subdirectory (perf)
 endif()
 
 #  Build the tools
