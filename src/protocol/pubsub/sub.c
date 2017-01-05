@@ -69,8 +69,13 @@ static void
 nni_sub_fini(void *arg)
 {
 	nni_sub_sock *sub = arg;
+	nni_topic *topic;
 
-	// XXX: free subscriptions...
+	while ((topic = nni_list_first(&sub->topics)) != NULL) {
+		nni_list_remove(&sub->topics, topic);
+		nni_free(topic->buf, topic->len);
+		NNI_FREE_STRUCT(topic);
+	}
 	nni_mtx_fini(&sub->mx);
 	NNI_FREE_STRUCT(sub);
 }
