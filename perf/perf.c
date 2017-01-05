@@ -284,10 +284,15 @@ throughput_server(const char *addr, int msgsize, int count)
 	int i;
 	size_t len;
 	uint64_t start, end;
-	float msgpersec, mbps, total;
+	double msgpersec, mbps, total;
 
 	if ((rv = nng_open(&s, NNG_PROTO_PAIR)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
+	}
+	len = 128;
+	rv = nng_setopt(s, NNG_OPT_RCVBUF, &len, sizeof (len));
+	if (rv != 0) {
+		die("nng_setopt(NNG_OPT_RCVBUF): %s", nng_strerror(rv));
 	}
 
 	// XXX: set no delay
@@ -319,7 +324,7 @@ throughput_server(const char *addr, int msgsize, int count)
 	end = nni_clock();
 	nng_close(s);
 	total = (end - start) / 1.0;
-	msgpersec = count * 1000000 / total;
+	msgpersec = (count * 1000000.0) / total;
 	mbps = (count * 8.0 * msgsize);
 	mbps /= total;
 	printf("total time: %.3f [s]\n", total / 1000000.0);
@@ -337,6 +342,7 @@ throughput_client(const char *addr, int msgsize, int count)
 	nng_msg *msg;
 	int rv;
 	int i;
+	int len;
 
 	// We send one extra zero length message to start the timer.
 	count++;
@@ -347,6 +353,12 @@ throughput_client(const char *addr, int msgsize, int count)
 
 	// XXX: set no delay
 	// XXX: other options (TLS in the future?, Linger?)
+
+	len = 128;
+	rv = nng_setopt(s, NNG_OPT_SNDBUF, &len, sizeof (len));
+	if (rv != 0) {
+		die("nng_setopt(NNG_OPT_SNDBUF): %s", nng_strerror(rv));
+	}
 
 	if ((rv = nng_dial(s, addr, NULL, NNG_FLAG_SYNCH)) != 0) {
 		die("nng_dial: %s", nng_strerror(rv));
@@ -370,6 +382,6 @@ throughput_client(const char *addr, int msgsize, int count)
 	}
 
 	// Wait 100msec for pipes to drain.
-	nng_close(s);
 	nni_usleep(100000);
+	nng_close(s);
 }
