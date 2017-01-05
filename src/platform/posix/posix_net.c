@@ -184,6 +184,9 @@ nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 			}
 			return (nni_plat_errno(errno));
 		}
+		if (rv == 0) {
+			return (NNG_ECLOSED);
+		}
 		if (rv > resid) {
 			nni_panic("readv says it read too much!");
 		}
@@ -370,7 +373,7 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 	for (;;) {
 #ifdef NNG_USE_ACCEPT4
 		fd = accept4(server->fd, NULL, NULL, SOCK_CLOEXEC);
-		if ((fd < 0) && ((errrno == ENOSYS) || (errno == ENOTSUP))) {
+		if ((fd < 0) && ((errno == ENOSYS) || (errno == ENOTSUP))) {
 			fd = accept(server->fd, NULL, NULL);
 		}
 #else
