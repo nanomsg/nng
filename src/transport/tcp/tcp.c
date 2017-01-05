@@ -102,6 +102,7 @@ nni_tcp_pipe_recv(void *arg, nni_msg **msgp)
 	uint8_t buf[sizeof (len)];
 	nni_iov iov[1];
 	int rv;
+	size_t sz;
 
 	iov[0].iov_buf = buf;
 	iov[0].iov_len = sizeof (buf);
@@ -109,7 +110,6 @@ nni_tcp_pipe_recv(void *arg, nni_msg **msgp)
 		return (rv);
 	}
 	NNI_GET64(buf, len);
-	// Check MAXRCVSIZE...
 	if (len > pipe->rcvmax) {
 		return (NNG_EPROTO);
 	}
@@ -118,7 +118,8 @@ nni_tcp_pipe_recv(void *arg, nni_msg **msgp)
 		return (rv);
 	}
 
-	iov[0].iov_buf = nng_msg_body(msg, &iov[0].iov_len);
+	iov[0].iov_len = len;
+	iov[0].iov_buf = nng_msg_body(msg, &sz);
 
 	if ((rv = nni_plat_tcp_recv(&pipe->fd, iov, 1)) == 0) {
 		*msgp = msg;
@@ -177,6 +178,7 @@ nni_tcp_ep_init(void **epp, const char *url, uint16_t proto)
 	ep->closed = 0;
 	ep->proto = proto;
 	ep->ipv4only = 0;
+	ep->rcvmax = 1024 * 1024;       // XXX: fix this
 	nni_plat_tcp_init(&ep->fd);
 
 	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
@@ -345,6 +347,7 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	}
 	nni_plat_tcp_init(&pipe->fd);
 	pipe->proto = ep->proto;
+	pipe->rcvmax = ep->rcvmax;
 
 	// Port is in the same place for both v4 and v6.
 	remaddr.s_un.s_in.sa_port = port;
@@ -410,6 +413,7 @@ nni_tcp_ep_accept(void *arg, void **pipep)
 		return (NNG_ENOMEM);
 	}
 	pipe->proto = ep->proto;
+	pipe->rcvmax = ep->rcvmax;
 	nni_plat_tcp_init(&pipe->fd);
 
 	if ((rv = nni_plat_tcp_accept(&pipe->fd, &ep->fd)) != 0) {

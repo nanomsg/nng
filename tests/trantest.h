@@ -82,14 +82,59 @@ trantest_listen_accept(trantest *tt)
 {
 	Convey("Listen and accept" ,{
 		nng_endpoint *ep;
+		ep = NULL;
 		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
 		So(ep != NULL);
 
+		ep = NULL;
 		So(nng_dial(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
 		So(ep != NULL);
 	})
 }
 
+void
+trantest_send_recv(trantest *tt)
+{
+	Convey("Send and recv", {
+		nng_endpoint *ep = NULL;
+		nng_msg *send;
+		nng_msg *recv;
+		char *body;
+		size_t len;
+
+		ep = NULL;
+		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
+		So(ep != NULL);
+		ep = NULL;
+		So(nng_dial(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
+		So(ep != NULL);
+
+		send = NULL;
+		So(nng_msg_alloc(&send, 0) == 0);
+		So(send != NULL);
+		So(nng_msg_append(send, "ping", 5) == 0);
+
+		So(nng_sendmsg(tt->reqsock, send, 0) == 0);
+		recv = NULL;
+		So(nng_recvmsg(tt->repsock, &recv, 0) == 0);
+		So(recv != NULL);
+		So((body = nng_msg_body(recv, &len)) != NULL);
+		So(len == 5);
+		So(strcmp(body, "ping") == 0);
+		nng_msg_free(recv);
+
+		len = strlen("acknowledge");
+		So(nng_msg_alloc(&send, 0) == 0);
+		So(nng_msg_append(send, "acknowledge", len) == 0);
+		So(nng_sendmsg(tt->repsock, send, 0) == 0);
+		So(nng_recvmsg(tt->reqsock, &recv, 0) == 0);
+		So(recv != NULL);
+		So((body = nng_msg_body(recv, &len)) != NULL);
+		So(len == strlen("acknowledge"));
+		So(strcmp(body, "acknowledge") == 0);
+		nng_msg_free(recv);
+	})
+}
 void
 trantest_test_all(const char *addr)
 {
@@ -106,5 +151,6 @@ trantest_test_all(const char *addr)
 		trantest_conn_refused(&tt);
 		trantest_duplicate_listen(&tt);
 		trantest_listen_accept(&tt);
+		trantest_send_recv(&tt);
 	})
 }
