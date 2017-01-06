@@ -118,5 +118,58 @@ Main({
 				nng_msg_free(ping);
 			})
 		})
+
+		Convey("Request cancellation works", {
+			nng_msg *abc;
+			nng_msg *def;
+			nng_msg *cmd;
+			nng_msg *nvm;
+			char *body;
+			size_t len;
+			uint64_t retry = 100000;	// 100 ms
+
+			nng_socket *req;
+			nng_socket *rep;
+
+			So(nng_open(&rep, NNG_PROTO_REP) == 0);
+			So(rep != NULL);
+
+			So(nng_open(&req, NNG_PROTO_REQ) == 0);
+			So(req != NULL);
+
+			Reset({
+				nng_close(rep);
+				nng_close(req);
+			})
+
+			So(nng_setopt(req, NNG_OPT_RESENDTIME, &retry, sizeof (retry)) == 0);
+			len = 16;
+			So(nng_setopt(req, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
+
+			So(nng_msg_alloc(&abc, 0) == 0);
+			So(nng_msg_append(abc, "abc", 4) == 0);
+			So(nng_msg_alloc(&def, 0) == 0);
+			So(nng_msg_append(def, "def", 4) == 0);
+
+			So(nng_dial(req, addr, NULL, 0) == 0);
+
+			So(nng_sendmsg(req, abc, 0) == 0);
+			So(nng_sendmsg(req, def, 0) == 0);
+
+			So(nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH) == 0);
+
+			So(nng_recvmsg(rep, &cmd, 0) == 0);
+			So(cmd != NULL);
+			So(nng_sendmsg(rep, cmd, 0) == 0);
+			So(nng_recvmsg(rep, &cmd, 0) == 0);
+			So(nng_sendmsg(rep, cmd, 0) == 0);
+
+			So(nng_recvmsg(req, &cmd, 0) == 0);
+
+			body = nng_msg_body(cmd, &len);
+			So(len == 4);
+			So(memcmp(body, "def", 4) == 0);
+			nng_msg_free(cmd);
+		})
 	})
 })
