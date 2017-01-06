@@ -323,6 +323,15 @@ nni_msgq_put(nni_msgq *mq, nni_msg *msg)
 
 
 int
+nni_msgq_tryput(nni_msgq *mq, nni_msg *msg)
+{
+	nni_signal nosig = 0;
+
+	return (nni_msgq_put_(mq, msg, NNI_TIME_ZERO, &nosig));
+}
+
+
+int
 nni_msgq_put_sig(nni_msgq *mq, nni_msg *msg, nni_signal *signal)
 {
 	return (nni_msgq_put_(mq, msg, NNI_TIME_NEVER, signal));

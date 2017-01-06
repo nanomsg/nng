@@ -19,12 +19,14 @@
 extern nni_proto nni_pair_proto;
 extern nni_proto nni_rep_proto;
 extern nni_proto nni_req_proto;
+extern nni_proto nni_pub_proto;
 extern nni_proto nni_sub_proto;
 
 static nni_proto *protocols[] = {
 	&nni_pair_proto,
 	&nni_rep_proto,
 	&nni_req_proto,
+	&nni_pub_proto,
 	&nni_sub_proto,
 	NULL
 };

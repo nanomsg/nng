@@ -43,8 +43,12 @@ extern void nni_msgq_fini(nni_msgq *);
 // the caller is not permitted to access it further.
 extern int nni_msgq_put(nni_msgq *, nni_msg *);
 
+// nni_msgq_tryput is like nni_msgq_put, except that it does not block,
+// if there is no room to put the message it simply returns NNG_EAGAIN.
+extern int nni_msgq_tryput(nni_msgq *, nni_msg *);
+
 // nni_msgq_putback returns a message to the head of the queue.
-// This is a non-blocking operation, and it returns EAGAIN if there
+// This is a non-blocking operation, and it returns NNG_EAGAIN if there
 // is no room.  There is always at least room for one putback after
 // a message is retried with nni_msgq_get.
 extern int nni_msgq_putback(nni_msgq *, nni_msg *);
