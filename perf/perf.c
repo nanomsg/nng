@@ -29,6 +29,8 @@ static void do_remote_lat(int argc, char **argv);
 static void do_local_lat(int argc, char **argv);
 static void do_remote_thr(int argc, char **argv);
 static void do_local_thr(int argc, char **argv);
+static void do_inproc_thr(int argc, char **argv);
+static void do_inproc_lat(int argc, char **argv);
 static void die(const char *, ...);
 
 // perf implements the same performance tests found in the standard
@@ -79,6 +81,10 @@ main(int argc, char **argv)
 	} else if ((strcmp(prog, "remote_thr") == 0) ||
 	    (strcmp(prog, "throughput_client") == 0)) {
 		do_remote_thr(argc, argv);
+	} else if ((strcmp(prog, "inproc_thr") == 0)) {
+		do_inproc_thr(argc, argv);
+	} else if ((strcmp(prog, "inproc_lat") == 0)) {
+		do_inproc_lat(argc, argv);
 	} else {
 		die("Unknown program mode? Use -m <mode>.");
 	}
@@ -133,8 +139,8 @@ do_local_lat(int argc, char **argv)
 void
 do_remote_lat(int argc, char **argv)
 {
-	long int msgsize;
-	long int trips;
+	int msgsize;
+	int trips;
 
 	if (argc != 3) {
 		die("Usage: remote_lat <connect-to> <msg-size> <roundtrips>");
@@ -150,8 +156,8 @@ do_remote_lat(int argc, char **argv)
 void
 do_local_thr(int argc, char **argv)
 {
-	long int msgsize;
-	long int trips;
+	int msgsize;
+	int trips;
 
 	if (argc != 3) {
 		die("Usage: local_thr <listen-addr> <msg-size> <count>");
@@ -167,8 +173,8 @@ do_local_thr(int argc, char **argv)
 void
 do_remote_thr(int argc, char **argv)
 {
-	long int msgsize;
-	long int trips;
+	int msgsize;
+	int trips;
 
 	if (argc != 3) {
 		die("Usage: remote_thr <connect-to> <msg-size> <count>");
@@ -178,6 +184,76 @@ do_remote_thr(int argc, char **argv)
 	trips = parse_int(argv[2], "count");
 
 	throughput_client(argv[0], msgsize, trips);
+}
+
+
+struct inproc_args {
+	int		count;
+	int		msgsize;
+	const char *	addr;
+	void		(*func)(const char *, int, int);
+};
+
+static void
+do_inproc(void *args)
+{
+	struct inproc_args *ia = args;
+
+	ia->func(ia->addr, ia->msgsize, ia->count);
+}
+
+
+void
+do_inproc_lat(int argc, char **argv)
+{
+	nni_thr thr;
+	struct inproc_args ia;
+	int rv;
+
+	nni_init();
+	if (argc != 2) {
+		die("Usage: inproc_lat <msg-size> <count>");
+	}
+
+	ia.addr = "inproc://latency_test";
+	ia.msgsize = parse_int(argv[0], "message size");
+	ia.count = parse_int(argv[1], "count");
+	ia.func = latency_server;
+
+
+	if ((rv = nni_thr_init(&thr, do_inproc, &ia)) != 0) {
+		die("Cannot create thread: %s", nng_strerror(rv));
+	}
+	nni_thr_run(&thr);
+	latency_client("inproc://latency_test", ia.msgsize, ia.count);
+	nni_thr_fini(&thr);
+}
+
+
+void
+do_inproc_thr(int argc, char **argv)
+{
+	nni_thr thr;
+	struct inproc_args ia;
+	int rv;
+
+	nni_init();
+	if (argc != 2) {
+		die("Usage: inproc_thr <msg-size> <count>");
+	}
+
+	ia.addr = "inproc://tput_test";
+	ia.msgsize = parse_int(argv[0], "message size");
+	ia.count = parse_int(argv[1], "count");
+	ia.func = throughput_client;
+
+
+	if ((rv = nni_thr_init(&thr, do_inproc, &ia)) != 0) {
+		die("Cannot create thread: %s", nng_strerror(rv));
+	}
+	nni_thr_run(&thr);
+	throughput_server("inproc://tput_test", ia.msgsize, ia.count);
+	nni_thr_fini(&thr);
 }
 
 
@@ -330,7 +406,7 @@ throughput_server(const char *addr, int msgsize, int count)
 	printf("total time: %.3f [s]\n", total / 1000000.0);
 	printf("message size: %d [B]\n", msgsize);
 	printf("message count: %d\n", count);
-	printf("throughput: %.3f [msg/s]\n", msgpersec);
+	printf("throughput: %.f [msg/s]\n", msgpersec);
 	printf("throughput: %.3f [Mb/s]\n", mbps);
 }
 
