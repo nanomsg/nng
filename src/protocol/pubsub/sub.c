@@ -173,6 +173,7 @@ nni_sub_subscribe(nni_sub_sock *sub, const void *buf, size_t sz)
 
 	NNI_LIST_FOREACH (&sub->topics, topic) {
 		int rv;
+
 		if (topic->len >= sz) {
 			rv = memcmp(topic->buf, buf, sz);
 		} else {
@@ -201,6 +202,8 @@ nni_sub_subscribe(nni_sub_sock *sub, const void *buf, size_t sz)
 	newtopic->len = sz;
 	if (topic != NULL) {
 		nni_list_insert_before(&sub->topics, newtopic, topic);
+	} else {
+		nni_list_append(&sub->topics, newtopic);
 	}
 	return (0);
 }
