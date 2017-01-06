@@ -174,7 +174,6 @@ nni_rep_topsender(void *arg)
 
 	for (;;) {
 		uint8_t *header;
-		size_t size;
 		uint32_t id;
 		nni_rep_pipe *rp;
 		int rv;
@@ -183,11 +182,11 @@ nni_rep_topsender(void *arg)
 			break;
 		}
 		// We yank the outgoing pipe id from the header
-		header = nni_msg_header(msg, &size);
-		if (size < 4) {
+		if (nni_msg_header_len(msg) < 4) {
 			nni_msg_free(msg);
 			continue;
 		}
+		header = nni_msg_header(msg);
 		NNI_GET32(header, id);
 		nni_msg_trim_header(msg, 4);
 
@@ -281,11 +280,11 @@ again:
 				nni_msg_free(msg);
 				goto again;
 			}
-			body = nni_msg_body(msg, &len);
-			if (len < 4) {
+			if (nni_msg_len(msg) < 4) {
 				nni_msg_free(msg);
 				goto again;
 			}
+			body = nni_msg_body(msg);
 			end = (body[0] & 0x80) ? 1 : 0;
 			rv = nni_msg_append_header(msg, body, 4);
 			if (rv != 0) {
@@ -293,7 +292,6 @@ again:
 				goto again;
 			}
 			nni_msg_trim(msg, 4);
-			body = nni_msg_body(msg, &len);
 			if (end) {
 				break;
 			}
@@ -384,8 +382,7 @@ nni_rep_sendfilter(void *arg, nni_msg *msg)
 	}
 
 	// drop anything else in the header...
-	(void) nni_msg_header(msg, &len);
-	nni_msg_trim_header(msg, len);
+	nni_msg_trunc_header(msg, nni_msg_header_len(msg));
 
 	if (nni_msg_append_header(msg, rep->btrace, rep->btrace_len) != 0) {
 		nni_free(rep->btrace, rep->btrace_len);
@@ -418,7 +415,8 @@ nni_rep_recvfilter(void *arg, nni_msg *msg)
 	}
 
 	nni_sock_senderr(rep->sock, 0);
-	header = nni_msg_header(msg, &len);
+	len = nni_msg_header_len(msg);
+	header = nni_msg_header(msg);
 	if (rep->btrace != NULL) {
 		nni_free(rep->btrace, rep->btrace_len);
 		rep->btrace = NULL;
@@ -431,7 +429,7 @@ nni_rep_recvfilter(void *arg, nni_msg *msg)
 	}
 	rep->btrace_len = len;
 	memcpy(rep->btrace, header, len);
-	nni_msg_trim_header(msg, len);
+	nni_msg_trunc_header(msg, len);
 	nni_mtx_unlock(&rep->mx);
 	return (msg);
 }

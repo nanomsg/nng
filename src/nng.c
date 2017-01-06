@@ -237,7 +237,7 @@ nng_pipe_close(nng_pipe *pipe)
 int
 nng_msg_alloc(nng_msg **msgp, size_t size)
 {
-	NNI_INIT_INT();
+	NNI_INIT_VOID();
 	return (nni_msg_alloc(msgp, size));
 }
 
@@ -245,7 +245,6 @@ nng_msg_alloc(nng_msg **msgp, size_t size)
 int
 nng_msg_realloc(nng_msg *msg, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_realloc(msg, sz));
 }
 
@@ -253,31 +252,41 @@ nng_msg_realloc(nng_msg *msg, size_t sz)
 void
 nng_msg_free(nng_msg *msg)
 {
-	NNI_INIT_VOID();
 	return (nni_msg_free(msg));
 }
 
 
 void *
-nng_msg_body(nng_msg *msg, size_t *szp)
+nng_msg_body(nng_msg *msg)
 {
-	NNI_INIT_VOID();
-	return (nni_msg_body(msg, szp));
+	return (nni_msg_body(msg));
+}
+
+
+size_t
+nng_msg_len(nng_msg *msg)
+{
+	return (nni_msg_len(msg));
 }
 
 
 void *
-nng_msg_header(nng_msg *msg, size_t *szp)
+nng_msg_header(nng_msg *msg)
 {
-	NNI_INIT_VOID();
-	return (nni_msg_header(msg, szp));
+	return (nni_msg_header(msg));
+}
+
+
+size_t
+nng_msg_header_len(nng_msg *msg)
+{
+	return (nni_msg_header_len(msg));
 }
 
 
 int
 nng_msg_append(nng_msg *msg, const void *data, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_append(msg, data, sz));
 }
 
@@ -285,7 +294,6 @@ nng_msg_append(nng_msg *msg, const void *data, size_t sz)
 int
 nng_msg_prepend(nng_msg *msg, const void *data, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_prepend(msg, data, sz));
 }
 
@@ -293,7 +301,6 @@ nng_msg_prepend(nng_msg *msg, const void *data, size_t sz)
 int
 nng_msg_append_header(nng_msg *msg, const void *data, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_append_header(msg, data, sz));
 }
 
@@ -301,7 +308,6 @@ nng_msg_append_header(nng_msg *msg, const void *data, size_t sz)
 int
 nng_msg_prepend_header(nng_msg *msg, const void *data, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_prepend_header(msg, data, sz));
 }
 
@@ -309,7 +315,6 @@ nng_msg_prepend_header(nng_msg *msg, const void *data, size_t sz)
 int
 nng_msg_trim(nng_msg *msg, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_trim(msg, sz));
 }
 
@@ -317,7 +322,6 @@ nng_msg_trim(nng_msg *msg, size_t sz)
 int
 nng_msg_trunc(nng_msg *msg, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_trunc(msg, sz));
 }
 
@@ -325,7 +329,6 @@ nng_msg_trunc(nng_msg *msg, size_t sz)
 int
 nng_msg_trim_header(nng_msg *msg, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_trim_header(msg, sz));
 }
 
@@ -333,7 +336,6 @@ nng_msg_trim_header(nng_msg *msg, size_t sz)
 int
 nng_msg_trunc_header(nng_msg *msg, size_t sz)
 {
-	NNI_INIT_INT();
 	return (nni_msg_trunc_header(msg, sz));
 }
 
@@ -341,7 +343,6 @@ nng_msg_trunc_header(nng_msg *msg, size_t sz)
 int
 nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 {
-	NNI_INIT_INT();
 	return (nni_msg_getopt(msg, opt, ptr, szp));
 }
 

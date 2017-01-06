@@ -91,30 +91,25 @@ Main({
 			Convey("They can REQ/REP exchange", {
 				nng_msg *ping;
 				nng_msg *pong;
-				char *body;
-				size_t len;
 
 				So(nng_msg_alloc(&ping, 0) == 0);
 				So(nng_msg_append(ping, "ping", 5) == 0);
-				body = nng_msg_body(ping, &len);
-				So(len == 5);
-				So(memcmp(body, "ping", 5) == 0);
+				So(nng_msg_len(ping) == 5);
+				So(memcmp(nng_msg_body(ping), "ping", 5) == 0);
 				So(nng_sendmsg(req, ping, 0) == 0);
 				pong = NULL;
 				So(nng_recvmsg(rep, &pong, 0) == 0);
 				So(pong != NULL);
-				body = nng_msg_body(pong, &len);
-				So(len == 5);
-				So(memcmp(body, "ping", 5) == 0);
+				So(nng_msg_len(pong) == 5);
+				So(memcmp(nng_msg_body(pong), "ping", 5) == 0);
 				nng_msg_trim(pong, 5);
 				So(nng_msg_append(pong, "pong", 5) == 0);
 				So(nng_sendmsg(rep, pong, 0) == 0);
 				ping = 0;
 				So(nng_recvmsg(req, &ping, 0) == 0);
 				So(ping != NULL);
-				body = nng_msg_body(ping, &len);
-				So(len == 5);
-				So(memcmp(body, "pong", 5) == 0);
+				So(nng_msg_len(ping) == 5);
+				So(memcmp(nng_msg_body(ping), "pong", 5) == 0);
 				nng_msg_free(ping);
 			})
 		})
@@ -124,9 +119,8 @@ Main({
 			nng_msg *def;
 			nng_msg *cmd;
 			nng_msg *nvm;
-			char *body;
-			size_t len;
 			uint64_t retry = 100000;	// 100 ms
+			size_t len;
 
 			nng_socket *req;
 			nng_socket *rep;
@@ -166,9 +160,8 @@ Main({
 
 			So(nng_recvmsg(req, &cmd, 0) == 0);
 
-			body = nng_msg_body(cmd, &len);
-			So(len == 4);
-			So(memcmp(body, "def", 4) == 0);
+			So(nng_msg_len(cmd) == 4);
+			So(memcmp(nng_msg_body(cmd), "def", 4) == 0);
 			nng_msg_free(cmd);
 		})
 	})

@@ -148,8 +148,6 @@ TestMain("Socket Operations", {
 			nng_socket *sock2 = NULL;
 			int len = 1;
 			nng_msg *msg;
-			size_t sz;
-			char *ptr;
 			uint64_t second = 1000000;
 
 			rv = nng_open(&sock2, NNG_PROTO_PAIR);
@@ -181,11 +179,9 @@ TestMain("Socket Operations", {
 
 			rv = nng_msg_alloc(&msg, 3);
 			So(rv == 0);
-			ptr = nng_msg_body(msg, &sz);
-			So(ptr != NULL);
-			So(sz == 3);
-
-			memcpy(ptr, "abc", 3);
+			So(nng_msg_len(msg) == 3);
+			So(nng_msg_body(msg) != NULL);
+			memcpy(nng_msg_body(msg), "abc", 3);
 
 			rv = nng_sendmsg(sock, msg, 0);
 			So(rv == 0);
@@ -194,10 +190,8 @@ TestMain("Socket Operations", {
 			rv = nng_recvmsg(sock2, &msg, 0);
 			So(rv == 0);
 			So(msg != NULL);
-			ptr = nng_msg_body(msg, &sz);
-			So(ptr != NULL);
-			So(sz == 3);
-			So(memcmp(ptr, "abc", 3) == 0);
+			So(nng_msg_len(msg) == 3);
+			So(memcmp(nng_msg_body(msg), "abc", 3) == 0);
 			nng_msg_free(msg);
 			nng_close(sock2);
 		})

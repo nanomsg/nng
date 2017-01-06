@@ -80,8 +80,10 @@ nni_tcp_pipe_send(void *arg, nni_msg *msg)
 
 	iov[0].iov_buf = buf;
 	iov[0].iov_len = sizeof (buf);
-	iov[1].iov_buf = nni_msg_header(msg, &iov[1].iov_len);
-	iov[2].iov_buf = nni_msg_body(msg, &iov[2].iov_len);
+	iov[1].iov_buf = nni_msg_header(msg);
+	iov[1].iov_len = nni_msg_header_len(msg);
+	iov[2].iov_buf = nni_msg_body(msg);
+	iov[2].iov_len = nni_msg_len(msg);
 
 	len = (uint64_t) iov[1].iov_len + (uint64_t) iov[2].iov_len;
 	NNI_PUT64(buf, len);
@@ -102,7 +104,6 @@ nni_tcp_pipe_recv(void *arg, nni_msg **msgp)
 	uint8_t buf[sizeof (len)];
 	nni_iov iov[1];
 	int rv;
-	size_t sz;
 
 	iov[0].iov_buf = buf;
 	iov[0].iov_len = sizeof (buf);
@@ -118,8 +119,8 @@ nni_tcp_pipe_recv(void *arg, nni_msg **msgp)
 		return (rv);
 	}
 
-	iov[0].iov_len = len;
-	iov[0].iov_buf = nng_msg_body(msg, &sz);
+	iov[0].iov_len = nng_msg_len(msg);
+	iov[0].iov_buf = nng_msg_body(msg);
 
 	if ((rv = nni_plat_tcp_recv(&pipe->fd, iov, 1)) == 0) {
 		*msgp = msg;

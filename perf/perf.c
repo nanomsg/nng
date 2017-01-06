@@ -314,7 +314,6 @@ latency_server(const char *addr, int msgsize, int trips)
 	nng_msg *msg;
 	int rv;
 	int i;
-	size_t len;
 
 	if ((rv = nng_open(&s, NNG_PROTO_PAIR)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
@@ -331,9 +330,9 @@ latency_server(const char *addr, int msgsize, int trips)
 		if ((rv = nng_recvmsg(s, &msg, 0)) != 0) {
 			die("nng_recvmsg: %s", nng_strerror(rv));
 		}
-		nng_msg_body(msg, &len);
-		if (len != msgsize) {
-			die("wrong message size: %d != %d", len, msgsize);
+		if (nng_msg_len(msg) != msgsize) {
+			die("wrong message size: %d != %d", nng_msg_len(msg),
+			    msgsize);
 		}
 		if ((rv = nng_sendmsg(s, msg, 0)) != 0) {
 			die("nng_sendmsg: %s", nng_strerror(rv));
@@ -389,10 +388,8 @@ throughput_server(const char *addr, int msgsize, int count)
 		if ((rv = nng_recvmsg(s, &msg, 0)) != 0) {
 			die("nng_recvmsg: %s", nng_strerror(rv));
 		}
-		size_t len;
-		nng_msg_body(msg, &len);
-		if (len != msgsize) {
-			die("wrong message size: %d != %d", len,
+		if (nng_msg_len(msg) != msgsize) {
+			die("wrong message size: %d != %d", nng_msg_len(msg),
 			    msgsize);
 		}
 		nni_msg_free(msg);

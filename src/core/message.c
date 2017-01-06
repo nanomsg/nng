@@ -185,8 +185,11 @@ nni_chunk_trim(nni_chunk *ch, size_t len)
 	if (ch->ch_len < len) {
 		return (NNG_EINVAL);
 	}
-	ch->ch_ptr += len;
 	ch->ch_len -= len;
+	// Don't advance the pointer if we are just removing the whole content
+	if (ch->ch_len != 0) {
+		ch->ch_ptr += len;
+	}
 	return (0);
 }
 
@@ -442,22 +445,30 @@ nni_msg_realloc(nni_msg *m, size_t sz)
 
 
 void *
-nni_msg_header(nni_msg *m, size_t *szp)
+nni_msg_header(nni_msg *m)
 {
-	if (szp != NULL) {
-		*szp = m->m_header.ch_len;
-	}
 	return (m->m_header.ch_ptr);
 }
 
 
-void *
-nni_msg_body(nni_msg *m, size_t *szp)
+size_t
+nni_msg_header_len(nni_msg *m)
 {
-	if (szp != NULL) {
-		*szp = m->m_body.ch_len;
-	}
+	return (m->m_header.ch_len);
+}
+
+
+void *
+nni_msg_body(nni_msg *m)
+{
 	return (m->m_body.ch_ptr);
+}
+
+
+size_t
+nni_msg_len(nni_msg *m)
+{
+	return (m->m_body.ch_len);
 }
 
 

@@ -99,7 +99,6 @@ trantest_send_recv(trantest *tt)
 		nng_endpoint *ep = NULL;
 		nng_msg *send;
 		nng_msg *recv;
-		char *body;
 		size_t len;
 
 		ep = NULL;
@@ -118,9 +117,8 @@ trantest_send_recv(trantest *tt)
 		recv = NULL;
 		So(nng_recvmsg(tt->repsock, &recv, 0) == 0);
 		So(recv != NULL);
-		So((body = nng_msg_body(recv, &len)) != NULL);
-		So(len == 5);
-		So(strcmp(body, "ping") == 0);
+		So(nng_msg_len(recv) == 5);
+		So(strcmp(nng_msg_body(recv), "ping") == 0);
 		nng_msg_free(recv);
 
 		len = strlen("acknowledge");
@@ -129,9 +127,8 @@ trantest_send_recv(trantest *tt)
 		So(nng_sendmsg(tt->repsock, send, 0) == 0);
 		So(nng_recvmsg(tt->reqsock, &recv, 0) == 0);
 		So(recv != NULL);
-		So((body = nng_msg_body(recv, &len)) != NULL);
-		So(len == strlen("acknowledge"));
-		So(strcmp(body, "acknowledge") == 0);
+		So(nng_msg_len(recv) == strlen("acknowledge"));
+		So(strcmp(nng_msg_body(recv), "acknowledge") == 0);
 		nng_msg_free(recv);
 	})
 }

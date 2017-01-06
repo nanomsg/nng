@@ -206,20 +206,17 @@ nni_req_pipe_recv(void *arg)
 	int rv;
 
 	for (;;) {
-		size_t len;
-		char *body;
 		rv = nni_pipe_recv(pipe, &msg);
 		if (rv != 0) {
 			break;
 		}
 		// We yank 4 bytes of body, and move them to the header.
-		body = nni_msg_body(msg, &len);
-		if (len < 4) {
+		if (nni_msg_len(msg) < 4) {
 			// Not enough data, just toss it.
 			nni_msg_free(msg);
 			continue;
 		}
-		if (nni_msg_append_header(msg, body, 4) != 0) {
+		if (nni_msg_append_header(msg, nni_msg_body(msg), 4) != 0) {
 			// Should be NNG_ENOMEM
 			nni_msg_free(msg);
 			continue;
@@ -375,8 +372,6 @@ static nni_msg *
 nni_req_recvfilter(void *arg, nni_msg *msg)
 {
 	nni_req_sock *req = arg;
-	char *header;
-	size_t len;
 
 	nni_mtx_lock(&req->mx);
 	if (req->raw) {
@@ -385,8 +380,7 @@ nni_req_recvfilter(void *arg, nni_msg *msg)
 		return (msg);
 	}
 
-	header = nni_msg_header(msg, &len);
-	if (len < 4) {
+	if (nni_msg_header_len(msg) < 4) {
 		nni_mtx_unlock(&req->mx);
 		nni_msg_free(msg);
 		return (NULL);
@@ -398,7 +392,7 @@ nni_req_recvfilter(void *arg, nni_msg *msg)
 		nni_msg_free(msg);
 		return (NULL);
 	}
-	if (memcmp(header, req->reqid, 4) != 0) {
+	if (memcmp(nni_msg_header(msg), req->reqid, 4) != 0) {
 		// Wrong request id
 		nni_mtx_unlock(&req->mx);
 		nni_msg_free(msg);

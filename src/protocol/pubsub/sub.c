@@ -303,7 +303,8 @@ nni_sub_recvfilter(void *arg, nni_msg *msg)
 		return (msg);
 	}
 
-	body = nni_msg_body(msg, &len);
+	body = nni_msg_body(msg);
+	len = nni_msg_len(msg);
 
 	// Check to see if the message matches one of our subscriptions.
 	NNI_LIST_FOREACH (&sub->topics, topic) {
