@@ -148,6 +148,19 @@ nni_thr_run(nni_thr *thr)
 
 
 void
+nni_thr_wait(nni_thr *thr)
+{
+	nni_plat_mtx_lock(&thr->mtx);
+	thr->stop = 1;
+	nni_plat_cv_wake(&thr->cv);
+	while (!thr->done) {
+		nni_plat_cv_wait(&thr->cv);
+	}
+	nni_plat_mtx_unlock(&thr->mtx);
+}
+
+
+void
 nni_thr_fini(nni_thr *thr)
 {
 	nni_plat_mtx_lock(&thr->mtx);

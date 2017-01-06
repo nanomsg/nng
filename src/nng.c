@@ -42,10 +42,18 @@ nng_open(nng_socket **s, uint16_t proto)
 
 
 int
-nng_close(nng_socket *s)
+nng_shutdown(nng_socket *s)
 {
 	NNI_INIT_INT();
-	return (nni_sock_close(s));
+	return (nni_sock_shutdown(s));
+}
+
+
+void
+nng_close(nng_socket *s)
+{
+	NNI_INIT_VOID();
+	nni_sock_close(s);
 }
 
 

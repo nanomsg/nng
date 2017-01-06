@@ -59,10 +59,6 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 		return (rv);
 	}
 
-	nni_mtx_lock(&sock->s_mx);
-	nni_list_append(&sock->s_eps, ep);
-	nni_mtx_unlock(&sock->s_mx);
-
 	*epp = ep;
 	return (0);
 }

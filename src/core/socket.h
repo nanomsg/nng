@@ -37,6 +37,7 @@ struct nng_socket {
 	nni_list	s_reaps;                // pipes to reap
 	nni_thr		s_reaper;
 
+	int		s_ep_pend;              // EP dial/listen in progress
 	int		s_closing;              // Socket is closing
 	int		s_besteffort;           // Best effort mode delivery
 	int		s_senderr;              // Protocol state machine use
@@ -46,7 +47,8 @@ struct nng_socket {
 };
 
 extern int nni_sock_open(nni_sock **, uint16_t);
-extern int nni_sock_close(nni_sock *);
+extern void nni_sock_close(nni_sock *);
+extern int nni_sock_shutdown(nni_sock *);
 extern uint16_t nni_sock_proto(nni_sock *);
 extern uint16_t nni_sock_peer(nni_sock *);
 extern int nni_sock_setopt(nni_sock *, int, const void *, size_t);

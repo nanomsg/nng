@@ -21,9 +21,11 @@ TestMain("Socket Operations", {
 		So(rv == 0);
 		So(sock != NULL);
 
-		Convey("And we can close it", {
-			rv = nng_close(sock);
+		Convey("And we can shut it down", {
+			rv = nng_shutdown(sock);
 			So(rv == 0);
+			rv = nng_shutdown(sock);
+			So(rv == NNG_ECLOSED);
 		})
 
 		Reset({

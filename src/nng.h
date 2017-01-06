@@ -54,7 +54,14 @@ NNG_DECL int nng_open(nng_socket **, uint16_t proto);
 // error to reference the socket in any way after this is called. Likewise,
 // it is an error to reference any resources such as endpoints or
 // pipes associated with the socket.
-NNG_DECL int nng_close(nng_socket *);
+NNG_DECL void nng_close(nng_socket *);
+
+// nng_shutdown shuts down the socket.  This causes any threads doing
+// work for the socket or blocked in socket functions to be woken (and
+// return NNG_ECLOSED).  The socket resources are still present, so it
+// is safe to call other functions; they will just return NNG_ECLOSED.
+// A call to nng_close is still required to release the resources.
+NNG_DECL int nng_shutdown(nng_socket *);
 
 // nng_protocol returns the protocol number of the socket.
 uint16_t nng_protocol(nng_socket *);
