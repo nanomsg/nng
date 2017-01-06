@@ -200,6 +200,7 @@ nni_sub_subscribe(nni_sub_sock *sub, const void *buf, size_t sz)
 	}
 	NNI_LIST_NODE_INIT(&newtopic->node);
 	newtopic->len = sz;
+	memcpy(newtopic->buf, buf, sz);
 	if (topic != NULL) {
 		nni_list_insert_before(&sub->topics, newtopic, topic);
 	} else {
@@ -306,6 +307,7 @@ nni_sub_recvfilter(void *arg, nni_msg *msg)
 	body = nni_msg_body(msg);
 	len = nni_msg_len(msg);
 
+	match = 0;
 	// Check to see if the message matches one of our subscriptions.
 	NNI_LIST_FOREACH (&sub->topics, topic) {
 		if (len >= topic->len) {
@@ -329,7 +331,7 @@ nni_sub_recvfilter(void *arg, nni_msg *msg)
 		nni_msg_free(msg);
 		return (NULL);
 	}
-	return (0);
+	return (msg);
 }
 
 

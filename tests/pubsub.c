@@ -12,6 +12,10 @@
 
 #include <string.h>
 
+#define	APPENDSTR(m, s)	nng_msg_append(m, s, strlen(s))
+#define CHECKSTR(m, s)	So(nng_msg_len(m) == strlen(s));\
+			So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
+
 Main({
 	int rv;
 	const char *addr = "inproc://test";
@@ -20,8 +24,7 @@ Main({
 		Convey("We can create a PUB socket", {
 			nng_socket *pub;
 
-			rv = nng_open(&pub, NNG_PROTO_PUB);
-			So(rv == 0);
+			So(nng_open(&pub, NNG_PROTO_PUB) == 0);
 			So(pub != NULL);
 
 			Reset({
@@ -35,15 +38,13 @@ Main({
 
 			Convey("Recv fails", {
 				nng_msg *msg;
-				rv = nng_recvmsg(pub, &msg, 0);
-				So(rv == NNG_ENOTSUP);
+				So(nng_recvmsg(pub, &msg, 0) == NNG_ENOTSUP);
 			})
 		})
 
 		Convey("We can create a SUB socket", {
 			nng_socket *sub;
-			rv = nng_open(&sub, NNG_PROTO_SUB);
-			So(rv == 0);
+			So(nng_open(&sub, NNG_PROTO_SUB) == 0);
 			So(sub != NULL);
 
 			Reset({
@@ -57,10 +58,8 @@ Main({
 
 			Convey("Send fails", {
 				nng_msg *msg;
-				rv = nng_msg_alloc(&msg, 0);
-				So(rv == 0);
-				rv = nng_sendmsg(sub, msg, 0);
-				So(rv == NNG_ENOTSUP);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				So(nng_sendmsg(sub, msg, 0) == NNG_ENOTSUP);
 				nng_msg_free(msg);
 			})
 		})
@@ -98,92 +97,69 @@ Main({
 			Convey("Pub cannot subscribe", {
 				So(nng_setopt(pub, NNG_OPT_SUBSCRIBE, "", 0) == NNG_ENOTSUP);
 			})
-#if 0
-			Convey("They can REQ/REP exchange", {
-				nng_msg *ping;
-				nng_msg *pong;
-				char *body;
-				size_t len;
 
-				So(nng_msg_alloc(&ping, 0) == 0);
-				So(nng_msg_append(ping, "ping", 5) == 0);
-				body = nng_msg_body(ping, &len);
-				So(len == 5);
-				So(memcmp(body, "ping", 5) == 0);
-				So(nng_sendmsg(req, ping, 0) == 0);
-				pong = NULL;
-				So(nng_recvmsg(rep, &pong, 0) == 0);
-				So(pong != NULL);
-				body = nng_msg_body(pong, &len);
-				So(len == 5);
-				So(memcmp(body, "ping", 5) == 0);
-				nng_msg_trim(pong, 5);
-				So(nng_msg_append(pong, "pong", 5) == 0);
-				So(nng_sendmsg(rep, pong, 0) == 0);
-				ping = 0;
-				So(nng_recvmsg(req, &ping, 0) == 0);
-				So(ping != NULL);
-				body = nng_msg_body(ping, &len);
-				So(len == 5);
-				So(memcmp(body, "pong", 5) == 0);
-				nng_msg_free(ping);
-			})
-#endif
-		})
+			Convey("Subs can receive from pubs", {
+				nng_msg *msg;
+				uint64_t rtimeo;
 
-#if 0
-		Convey("Request cancellation works", {
-			nng_msg *abc;
-			nng_msg *def;
-			nng_msg *cmd;
-			nng_msg *nvm;
-			char *body;
-			size_t len;
-			uint64_t retry = 100000;	// 100 ms
 
-			nng_socket *req;
-			nng_socket *rep;
+				So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "/some/", strlen("/some/")) == 0);
+				rtimeo = 50000; // 50ms
+				So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
 
-			So(nng_open(&rep, NNG_PROTO_REP) == 0);
-			So(rep != NULL);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "/some/like/it/hot");
+				So(nng_sendmsg(pub, msg, 0) == 0);
+				So(nng_recvmsg(sub, &msg, 0) == 0);
+				CHECKSTR(msg, "/some/like/it/hot");
+				nng_msg_free(msg);
 
-			So(nng_open(&req, NNG_PROTO_REQ) == 0);
-			So(req != NULL);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "/somewhere/over/the/rainbow");
+				CHECKSTR(msg, "/somewhere/over/the/rainbow");
 
-			Reset({
-				nng_close(rep);
-				nng_close(req);
+				So(nng_sendmsg(pub, msg, 0) == 0);
+				So(nng_recvmsg(sub, &msg, 0) == NNG_ETIMEDOUT);
+
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "/some/day/some/how");
+				CHECKSTR(msg, "/some/day/some/how");
+
+				So(nng_sendmsg(pub, msg, 0) == 0);
+				So(nng_recvmsg(sub, &msg, 0) == 0);
+				CHECKSTR(msg, "/some/day/some/how");
+				nng_msg_free(msg);
 			})
 
-			So(nng_setopt(req, NNG_OPT_RESENDTIME, &retry, sizeof (retry)) == 0);
-			len = 16;
-			So(nng_setopt(req, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
+			Convey("Subs without subsciptions don't receive", {
 
-			So(nng_msg_alloc(&abc, 0) == 0);
-			So(nng_msg_append(abc, "abc", 4) == 0);
-			So(nng_msg_alloc(&def, 0) == 0);
-			So(nng_msg_append(def, "def", 4) == 0);
+				uint64_t rtimeo = 50000; // 50ms
+				nng_msg *msg;
+				So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
 
-			So(nng_dial(req, addr, NULL, 0) == 0);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "/some/don't/like/it");
+				So(nng_sendmsg(pub, msg, 0) == 0);
+				So(nng_recvmsg(sub, &msg, 0) == NNG_ETIMEDOUT);
+			})
 
-			So(nng_sendmsg(req, abc, 0) == 0);
-			So(nng_sendmsg(req, def, 0) == 0);
+			Convey("Subs in raw receive", {
 
-			So(nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH) == 0);
+				uint64_t rtimeo = 50000; // 50ms
+				int raw = 1;
+				nng_msg *msg;
 
-			So(nng_recvmsg(rep, &cmd, 0) == 0);
-			So(cmd != NULL);
-			So(nng_sendmsg(rep, cmd, 0) == 0);
-			So(nng_recvmsg(rep, &cmd, 0) == 0);
-			So(nng_sendmsg(rep, cmd, 0) == 0);
+				So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
+				So(nng_setopt(sub, NNG_OPT_RAW, &raw, sizeof (raw)) == 0);
 
-			So(nng_recvmsg(req, &cmd, 0) == 0);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "/some/like/it/raw");
+				So(nng_sendmsg(pub, msg, 0) == 0);
+				So(nng_recvmsg(sub, &msg, 0) == 0);
+				CHECKSTR(msg, "/some/like/it/raw");
+				nng_msg_free(msg);
+			})
 
-			body = nng_msg_body(cmd, &len);
-			So(len == 4);
-			So(memcmp(body, "def", 4) == 0);
-			nng_msg_free(cmd);
 		})
-#endif
 	})
 })

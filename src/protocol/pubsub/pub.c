@@ -121,7 +121,6 @@ nni_pub_pipe_add(void *arg)
 {
 	nni_pub_pipe *pp = arg;
 	nni_pub_sock *pub = pp->pub;
-	int rv;
 
 	if (nni_pipe_peer(pp->pipe) != NNG_PROTO_SUB) {
 		return (NNG_EPROTO);
@@ -130,7 +129,7 @@ nni_pub_pipe_add(void *arg)
 	nni_list_append(&pub->pipes, pp);
 	nni_mtx_unlock(&pub->mx);
 
-	return (rv);
+	return (0);
 }
 
 
@@ -173,7 +172,7 @@ nni_pub_broadcast(void *arg)
 			} else {
 				dup = msg;
 			}
-			if ((rv = nni_msgq_tryput(pp->sendq, msg)) != 0) {
+			if ((rv = nni_msgq_tryput(pp->sendq, dup)) != 0) {
 				nni_msg_free(dup);
 			}
 		}
