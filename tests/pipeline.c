@@ -67,13 +67,16 @@ Main({
 		Convey("We can create a linked PUSH/PULL pair", {
 			nng_socket *push;
 			nng_socket *pull;
+			nng_socket *what;
 
 			So(nng_open(&push, NNG_PROTO_PUSH) == 0);
 			So(nng_open(&pull, NNG_PROTO_PULL) == 0);
+			So(nng_open(&what, NNG_PROTO_PUSH) == 0);
 
 			Reset({
 				nng_close(push);
 				nng_close(pull);
+				nng_close(what);
 			})
 
 			// Its important to avoid a startup race that the
@@ -81,6 +84,8 @@ Main({
 			// since the server accept is really asynchronous.
 			So(nng_listen(pull, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(push, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(what, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_shutdown(what) == 0);
 
 			Convey("Push can send messages, and pull can recv", {
 				nng_msg *msg;
