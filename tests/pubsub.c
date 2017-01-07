@@ -104,7 +104,7 @@ Main({
 
 
 				So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "/some/", strlen("/some/")) == 0);
-				rtimeo = 50000; // 50ms
+				rtimeo = 500000; // 500ms
 				So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
 
 				So(nng_msg_alloc(&msg, 0) == 0);
