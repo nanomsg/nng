@@ -79,8 +79,14 @@ Main({
 				nng_close(sub);
 			})
 
-			So(nng_listen(pub, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(sub, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			// Most consumers will usually have the pub listen,
+			// and the sub dial.  However, this creates a problem
+			// for our tests, since we can wind up trying to push
+			// data before the pipe is fully registered (the
+			// accept runs in an asynch thread.)  Doing the reverse
+			// here ensures that we won't lose data.
+			So(nng_listen(sub, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(pub, addr, NULL, NNG_FLAG_SYNCH) == 0);
 
 			Convey("Sub can subscribe", {
 				So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "ABC", 3) == 0);
@@ -104,7 +110,7 @@ Main({
 
 
 				So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "/some/", strlen("/some/")) == 0);
-				rtimeo = 500000; // 500ms
+				rtimeo = 50000; // 50ms
 				So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
 
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -133,7 +139,7 @@ Main({
 
 			Convey("Subs without subsciptions don't receive", {
 
-				uint64_t rtimeo = 500000; // 50ms
+				uint64_t rtimeo = 50000; // 50ms
 				nng_msg *msg;
 				So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
 
@@ -145,7 +151,7 @@ Main({
 
 			Convey("Subs in raw receive", {
 
-				uint64_t rtimeo = 500000; // 50ms
+				uint64_t rtimeo = 50000; // 500ms
 				int raw = 1;
 				nng_msg *msg;
 
