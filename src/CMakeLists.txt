@@ -67,6 +67,9 @@ set (NNG_SOURCES
 
     protocol/pair/pair.c
 
+    protocol/pipeline/pull.c
+    protocol/pipeline/push.c
+
     protocol/pubsub/pub.c
     protocol/pubsub/sub.c
 

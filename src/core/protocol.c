@@ -21,6 +21,8 @@ extern nni_proto nni_rep_proto;
 extern nni_proto nni_req_proto;
 extern nni_proto nni_pub_proto;
 extern nni_proto nni_sub_proto;
+extern nni_proto nni_push_proto;
+extern nni_proto nni_pull_proto;
 
 static nni_proto *protocols[] = {
 	&nni_pair_proto,
@@ -28,6 +30,8 @@ static nni_proto *protocols[] = {
 	&nni_req_proto,
 	&nni_pub_proto,
 	&nni_sub_proto,
+	&nni_push_proto,
+	&nni_pull_proto,
 	NULL
 };
 
