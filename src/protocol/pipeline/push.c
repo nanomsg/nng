@@ -66,6 +66,7 @@ nni_push_init(void **pushp, nni_sock *sock)
 	push->raw = 0;
 	push->npipes = 0;
 	push->wantw = 0;
+	push->nextpipe = NULL;
 	push->uwq = nni_sock_sendq(sock);
 	*pushp = push;
 	nni_sock_recverr(sock, NNG_ENOTSUP);
@@ -143,12 +144,11 @@ nni_push_pipe_add(void *arg)
 	}
 	// Wake the sender since we have a new pipe.
 	nni_mtx_lock(&push->mx);
-	if (push->nextpipe) {
-		// Inject us right before the next pipe, so that we're next.
-		nni_list_insert_before(&push->pipes, pp, push);
-	} else {
-		nni_list_append(&push->pipes, pp);
-	}
+
+	// Turns out it should not really matter where we stick this.
+	// The end makes our test cases easier.
+	nni_list_append(&push->pipes, pp);
+
 	// Wake the top sender, as we can accept a job.
 	push->npipes++;
 	nni_cv_wake(&push->cv);

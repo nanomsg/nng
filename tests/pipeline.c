@@ -129,6 +129,7 @@ Main({
 			So(nng_dial(pull1, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(pull2, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(pull3, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_shutdown(pull3) == 0);
 
 			// So pull3 might not be done accepting yet, but pull1
 			// and pull2 definitely are, because otherwise the
@@ -148,7 +149,6 @@ Main({
 			nng_msg_free(abc);
 			nng_msg_free(def);
 
-			So(nng_recvmsg(pull3, &abc, 0) == NNG_ETIMEDOUT);
 			So(nng_recvmsg(pull1, &abc, 0) == NNG_ETIMEDOUT);
 			So(nng_recvmsg(pull2, &abc, 0) == NNG_ETIMEDOUT);
 		})
