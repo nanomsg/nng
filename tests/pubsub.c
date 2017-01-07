@@ -133,7 +133,7 @@ Main({
 
 			Convey("Subs without subsciptions don't receive", {
 
-				uint64_t rtimeo = 50000; // 50ms
+				uint64_t rtimeo = 500000; // 50ms
 				nng_msg *msg;
 				So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
 
@@ -145,7 +145,7 @@ Main({
 
 			Convey("Subs in raw receive", {
 
-				uint64_t rtimeo = 50000; // 50ms
+				uint64_t rtimeo = 500000; // 50ms
 				int raw = 1;
 				nng_msg *msg;
 
