@@ -310,6 +310,7 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	char addr[NNG_MAXADDRLEN+1];
 	nni_sockaddr lcladdr;
 	nni_sockaddr remaddr;
+	nni_sockaddr *bindaddr;
 	int rv;
 
 	char *lclpart;
@@ -353,8 +354,8 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	// Port is in the same place for both v4 and v6.
 	remaddr.s_un.s_in.sa_port = port;
 
-	rv = nni_plat_tcp_connect(&pipe->fd, &remaddr,
-		lclpart == NULL ? NULL : &lcladdr);
+	bindaddr = lclpart == NULL ? NULL : &lcladdr;
+	rv = nni_plat_tcp_connect(&pipe->fd, &remaddr, bindaddr);
 	if (rv != 0) {
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
