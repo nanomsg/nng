@@ -44,5 +44,8 @@ done
 if [ -n "$failed" ]
 then
 	echo "Uncrustify differences found!" 1>&2
-	exit 2
+	# Sadly, there are different versions of Uncrustify, and they don't
+	# seem to universally agree.  So let's not trigger a build error on
+	# this -- but instead just emit it to standard output.
+	exit 0
 fi
