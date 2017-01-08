@@ -63,7 +63,8 @@ nni_pipe_close(nni_pipe *p)
 // nni_pipe_bail is a special version of close, that is used to abort
 // from nni_pipe_start, when it fails.  It requires the lock to be held,
 // and this prevents us from dropping the lock, possibly leading to race
-// conditions.
+// conditions.  It's critical that this not be called after the pipe is
+// started, or deadlock will occur.
 static void
 nni_pipe_bail(nni_pipe *p)
 {
@@ -73,13 +74,7 @@ nni_pipe_bail(nni_pipe *p)
 		p->p_tran_ops.pipe_close(p->p_tran_data);
 	}
 
-	if (!p->p_reap) {
-		// schedule deferred reap/close
-		p->p_reap = 1;
-		nni_list_remove(&sock->s_pipes, p);
-		nni_list_append(&sock->s_reaps, p);
-		nni_cv_wake(&sock->s_cv);
-	}
+	nni_pipe_destroy(p);
 }
 
 
