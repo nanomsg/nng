@@ -61,6 +61,10 @@ nni_reaper(void *arg)
 			nni_mtx_unlock(&sock->s_mx);
 
 			// XXX: also publish event...
+
+			// There should be no references left to this pipe.
+			// The various threads will have shutdown, except
+			// the threads that this waits for.
 			nni_pipe_destroy(pipe);
 			continue;
 		}
@@ -324,15 +328,20 @@ nni_sock_shutdown(nni_sock *sock)
 	// the protocol a chance to flush its write side.  Now its time
 	// to be a little more insistent.
 
-	// Close the upper read queue immediately.  This can happen
+	// Close the upper queues immediately.  This can happen
 	// safely while we hold the lock.
 	nni_msgq_close(sock->s_urq);
+	nni_msgq_close(sock->s_uwq);
 
-	// Go through and schedule close on all pipes.
+	// For each pipe, close the underlying transport, and move it to
+	// deathrow (the reaplist).
 	while ((pipe = nni_list_first(&sock->s_pipes)) != NULL) {
-		nni_mtx_unlock(&sock->s_mx);
-		nni_pipe_close(pipe);
-		nni_mtx_lock(&sock->s_mx);
+		if (pipe->p_tran_data != NULL) {
+			pipe->p_tran_ops.pipe_close(pipe->p_tran_data);
+		}
+		pipe->p_reap = 1;
+		nni_list_remove(&sock->s_pipes, pipe);
+		nni_list_append(&sock->s_reaps, pipe);
 	}
 
 	sock->s_sock_ops.sock_close(sock->s_data);
