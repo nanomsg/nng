@@ -197,7 +197,6 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		return (rv);
 	}
 
-
 	if ((rv = nni_thr_init(&sock->s_reaper, nni_reaper, sock)) != 0) {
 		nni_cv_fini(&sock->s_cv);
 		nni_mtx_fini(&sock->s_mx);
@@ -376,6 +375,8 @@ nni_sock_close(nni_sock *sock)
 
 	// And we need to clean up *our* state.
 	nni_thr_fini(&sock->s_reaper);
+	nni_thr_fini(&sock->s_sender);
+	nni_thr_fini(&sock->s_recver);
 	nni_msgq_fini(sock->s_urq);
 	nni_msgq_fini(sock->s_uwq);
 	nni_cv_fini(&sock->s_cv);
