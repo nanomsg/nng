@@ -76,6 +76,8 @@ set (NNG_SOURCES
     protocol/reqrep/rep.c
     protocol/reqrep/req.c
 
+    protocol/survey/respond.c
+
     transport/inproc/inproc.c
 
     transport/tcp/tcp.c
