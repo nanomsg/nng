@@ -68,6 +68,7 @@ static void
 nni_pipe_bail(nni_pipe *p)
 {
 	nni_sock *sock = p->p_sock;
+
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.pipe_close(p->p_tran_data);
 	}

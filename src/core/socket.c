@@ -138,6 +138,8 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	nni_sock *sock;
 	nni_proto *proto;
 	int rv;
+	nni_proto_sock_ops *sops;
+	nni_proto_pipe_ops *pops;
 
 	if ((proto = nni_proto_find(pnum)) == NULL) {
 		return (NNG_ENOTSUP);
@@ -160,27 +162,29 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	NNI_LIST_INIT(&sock->s_eps, nni_ep, ep_node);
 
 	sock->s_sock_ops = *proto->proto_sock_ops;
-	if (sock->s_sock_ops.sock_sfilter == NULL) {
-		sock->s_sock_ops.sock_sfilter = nni_sock_nullfilter;
+	sops = &sock->s_sock_ops;
+	if (sops->sock_sfilter == NULL) {
+		sops->sock_sfilter = nni_sock_nullfilter;
 	}
-	if (sock->s_sock_ops.sock_rfilter == NULL) {
-		sock->s_sock_ops.sock_rfilter = nni_sock_nullfilter;
+	if (sops->sock_rfilter == NULL) {
+		sops->sock_rfilter = nni_sock_nullfilter;
 	}
-	if (sock->s_sock_ops.sock_getopt == NULL) {
-		sock->s_sock_ops.sock_getopt = nni_sock_nullgetopt;
+	if (sops->sock_getopt == NULL) {
+		sops->sock_getopt = nni_sock_nullgetopt;
 	}
-	if (sock->s_sock_ops.sock_setopt == NULL) {
-		sock->s_sock_ops.sock_setopt = nni_sock_nullsetopt;
+	if (sops->sock_setopt == NULL) {
+		sops->sock_setopt = nni_sock_nullsetopt;
 	}
-	if (sock->s_sock_ops.sock_close == NULL) {
-		sock->s_sock_ops.sock_close = nni_sock_nullop;
+	if (sops->sock_close == NULL) {
+		sops->sock_close = nni_sock_nullop;
 	}
 	sock->s_pipe_ops = *proto->proto_pipe_ops;
-	if (sock->s_pipe_ops.pipe_add == NULL) {
-		sock->s_pipe_ops.pipe_add = nni_sock_nulladdpipe;
+	pops = &sock->s_pipe_ops;
+	if (pops->pipe_add == NULL) {
+		pops->pipe_add = nni_sock_nulladdpipe;
 	}
-	if (sock->s_pipe_ops.pipe_rem == NULL) {
-		sock->s_pipe_ops.pipe_rem = nni_sock_nullop;
+	if (pops->pipe_rem == NULL) {
+		pops->pipe_rem = nni_sock_nullop;
 	}
 
 	if ((rv = nni_mtx_init(&sock->s_mx)) != 0) {
@@ -217,7 +221,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		return (rv);
 	}
 
-	if ((rv = sock->s_sock_ops.sock_init(&sock->s_data, sock)) != 0) {
+	if ((rv = sops->sock_init(&sock->s_data, sock)) != 0) {
 		nni_msgq_fini(sock->s_urq);
 		nni_msgq_fini(sock->s_uwq);
 		nni_thr_fini(&sock->s_reaper);
@@ -229,11 +233,10 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 
 	// NB: If these functions are NULL, the thread initialization is
 	// largely a NO-OP.  The system won't actually create the threads.
-	rv = nni_thr_init(&sock->s_sender, sock->s_sock_ops.sock_send,
-		sock->s_data);
+	rv = nni_thr_init(&sock->s_sender, sops->sock_send, sock->s_data);
 	if (rv != 0) {
 		nni_thr_wait(&sock->s_reaper);
-		sock->s_sock_ops.sock_fini(&sock->s_data);
+		sops->sock_fini(&sock->s_data);
 		nni_msgq_fini(sock->s_urq);
 		nni_msgq_fini(sock->s_uwq);
 		nni_thr_fini(&sock->s_reaper);
@@ -241,11 +244,10 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		nni_mtx_fini(&sock->s_mx);
 		NNI_FREE_STRUCT(sock);
 	}
-	rv = nni_thr_init(&sock->s_recver, sock->s_sock_ops.sock_recv,
-		sock->s_data);
+	rv = nni_thr_init(&sock->s_recver, sops->sock_recv, sock->s_data);
 	if (rv != 0) {
 		nni_thr_wait(&sock->s_sender);
-		sock->s_sock_ops.sock_fini(&sock->s_data);
+		sops->sock_fini(&sock->s_data);
 		nni_msgq_fini(sock->s_urq);
 		nni_msgq_fini(sock->s_uwq);
 		nni_thr_fini(&sock->s_sender);
