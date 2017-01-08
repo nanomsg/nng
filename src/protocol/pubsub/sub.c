@@ -29,7 +29,6 @@ struct nni_sub_topic {
 // An nni_rep_sock is our per-socket protocol private structure.
 struct nni_sub_sock {
 	nni_sock *	sock;
-	nni_mtx		mx;
 	nni_list	topics;
 	nni_msgq *	urq;
 	int		raw;
@@ -42,17 +41,13 @@ struct nni_sub_pipe {
 };
 
 static int
-nni_sub_init(void **subp, nni_sock *sock)
+nni_sub_sock_init(void **subp, nni_sock *sock)
 {
 	nni_sub_sock *sub;
 	int rv;
 
 	if ((sub = NNI_ALLOC_STRUCT(sub)) == NULL) {
 		return (NNG_ENOMEM);
-	}
-	if ((rv = nni_mtx_init(&sub->mx)) != 0) {
-		NNI_FREE_STRUCT(sub);
-		return (rv);
 	}
 	NNI_LIST_INIT(&sub->topics, nni_sub_topic, node);
 	sub->sock = sock;
@@ -66,7 +61,7 @@ nni_sub_init(void **subp, nni_sock *sock)
 
 
 static void
-nni_sub_fini(void *arg)
+nni_sub_sock_fini(void *arg)
 {
 	nni_sub_sock *sub = arg;
 	nni_sub_topic *topic;
@@ -76,7 +71,6 @@ nni_sub_fini(void *arg)
 		nni_free(topic->buf, topic->len);
 		NNI_FREE_STRUCT(topic);
 	}
-	nni_mtx_fini(&sub->mx);
 	NNI_FREE_STRUCT(sub);
 }
 
@@ -103,32 +97,6 @@ nni_sub_pipe_fini(void *arg)
 	nni_sub_pipe *sp = arg;
 
 	NNI_FREE_STRUCT(sp);
-}
-
-
-static int
-nni_sub_pipe_add(void *arg)
-{
-	nni_sub_pipe *sp = arg;
-
-	if (nni_pipe_peer(sp->pipe) != NNG_PROTO_PUB) {
-		return (NNG_EPROTO);
-	}
-	return (0);
-}
-
-
-static void
-nni_sub_pipe_rem(void *arg)
-{
-	NNI_ARG_UNUSED(arg);
-}
-
-
-static void
-nni_sub_pipe_send(void *arg)
-{
-	NNI_ARG_UNUSED(arg);
 }
 
 
@@ -242,26 +210,20 @@ nni_sub_unsubscribe(nni_sub_sock *sub, const void *buf, size_t sz)
 
 
 static int
-nni_sub_setopt(void *arg, int opt, const void *buf, size_t sz)
+nni_sub_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_sub_sock *sub = arg;
 	int rv;
 
 	switch (opt) {
 	case NNG_OPT_RAW:
-		nni_mtx_lock(&sub->mx);
 		rv = nni_setopt_int(&sub->raw, buf, sz, 0, 1);
-		nni_mtx_unlock(&sub->mx);
 		break;
 	case NNG_OPT_SUBSCRIBE:
-		nni_mtx_lock(&sub->mx);
 		rv = nni_sub_subscribe(sub, buf, sz);
-		nni_mtx_unlock(&sub->mx);
 		break;
 	case NNG_OPT_UNSUBSCRIBE:
-		nni_mtx_lock(&sub->mx);
 		rv = nni_sub_unsubscribe(sub, buf, sz);
-		nni_mtx_unlock(&sub->mx);
 		break;
 	default:
 		rv = NNG_ENOTSUP;
@@ -271,16 +233,14 @@ nni_sub_setopt(void *arg, int opt, const void *buf, size_t sz)
 
 
 static int
-nni_sub_getopt(void *arg, int opt, void *buf, size_t *szp)
+nni_sub_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_sub_sock *sub = arg;
 	int rv;
 
 	switch (opt) {
 	case NNG_OPT_RAW:
-		nni_mtx_lock(&sub->mx);
 		rv = nni_getopt_int(&sub->raw, buf, szp);
-		nni_mtx_unlock(&sub->mx);
 		break;
 	default:
 		rv = NNG_ENOTSUP;
@@ -290,7 +250,7 @@ nni_sub_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 
 static nni_msg *
-nni_sub_recvfilter(void *arg, nni_msg *msg)
+nni_sub_sock_rfilter(void *arg, nni_msg *msg)
 {
 	nni_sub_sock *sub = arg;
 	nni_sub_topic *topic;
@@ -298,9 +258,7 @@ nni_sub_recvfilter(void *arg, nni_msg *msg)
 	size_t len;
 	int match;
 
-	nni_mtx_lock(&sub->mx);
 	if (sub->raw) {
-		nni_mtx_unlock(&sub->mx);
 		return (msg);
 	}
 
@@ -326,7 +284,6 @@ nni_sub_recvfilter(void *arg, nni_msg *msg)
 			break;
 		}
 	}
-	nni_mtx_unlock(&sub->mx);
 	if (!match) {
 		nni_msg_free(msg);
 		return (NULL);
@@ -337,23 +294,31 @@ nni_sub_recvfilter(void *arg, nni_msg *msg)
 
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
-static nni_proto_pipe nni_sub_proto_pipe = {
+static nni_proto_pipe_ops nni_sub_pipe_ops = {
 	.pipe_init	= nni_sub_pipe_init,
 	.pipe_fini	= nni_sub_pipe_fini,
-	.pipe_add	= nni_sub_pipe_add,
-	.pipe_rem	= nni_sub_pipe_rem,
-	.pipe_send	= nni_sub_pipe_send,
+	.pipe_add	= NULL,
+	.pipe_rem	= NULL,
+	.pipe_send	= NULL,
 	.pipe_recv	= nni_sub_pipe_recv,
 };
 
+static nni_proto_sock_ops nni_sub_sock_ops = {
+	.sock_init	= nni_sub_sock_init,
+	.sock_fini	= nni_sub_sock_fini,
+	.sock_close	= NULL,
+	.sock_setopt	= nni_sub_sock_setopt,
+	.sock_getopt	= nni_sub_sock_getopt,
+	.sock_rfilter	= nni_sub_sock_rfilter,
+	.sock_sfilter	= NULL,
+	.sock_send	= NULL,
+	.sock_recv	= NULL,
+};
+
 nni_proto nni_sub_proto = {
-	.proto_self		= NNG_PROTO_SUB,
-	.proto_peer		= NNG_PROTO_PUB,
-	.proto_name		= "sub",
-	.proto_pipe		= &nni_sub_proto_pipe,
-	.proto_init		= nni_sub_init,
-	.proto_fini		= nni_sub_fini,
-	.proto_setopt		= nni_sub_setopt,
-	.proto_getopt		= nni_sub_getopt,
-	.proto_recv_filter	= nni_sub_recvfilter,
+	.proto_self	= NNG_PROTO_SUB,
+	.proto_peer	= NNG_PROTO_PUB,
+	.proto_name	= "sub",
+	.proto_sock_ops = &nni_sub_sock_ops,
+	.proto_pipe_ops = &nni_sub_pipe_ops,
 };

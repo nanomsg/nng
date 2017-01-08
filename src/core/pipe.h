@@ -21,7 +21,6 @@ struct nng_pipe {
 	uint32_t	p_id;
 	nni_tran_pipe	p_tran_ops;
 	void *		p_tran_data;
-	nni_proto_pipe	p_proto_ops;
 	void *		p_proto_data;
 	nni_list_node	p_node;
 	nni_sock *	p_sock;

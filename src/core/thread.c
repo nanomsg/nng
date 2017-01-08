@@ -128,6 +128,10 @@ nni_thr_init(nni_thr *thr, nni_thr_func fn, void *arg)
 		nni_plat_mtx_fini(&thr->mtx);
 		return (rv);
 	}
+	if (fn == NULL) {
+		thr->done = 1;
+		return (0);
+	}
 	if ((rv = nni_plat_thr_init(&thr->thr, nni_thr_wrap, thr)) != 0) {
 		nni_plat_cv_fini(&thr->cv);
 		nni_plat_mtx_fini(&thr->mtx);
@@ -170,7 +174,9 @@ nni_thr_fini(nni_thr *thr)
 		nni_plat_cv_wait(&thr->cv);
 	}
 	nni_plat_mtx_unlock(&thr->mtx);
-	nni_plat_thr_fini(&thr->thr);
+	if (thr->fn != NULL) {
+		nni_plat_thr_fini(&thr->thr);
+	}
 	nni_plat_cv_fini(&thr->cv);
 	nni_plat_mtx_fini(&thr->mtx);
 }

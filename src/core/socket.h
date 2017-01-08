@@ -14,36 +14,42 @@
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
 struct nng_socket {
-	nni_mtx		s_mx;
-	nni_cv		s_cv;
+	nni_mtx			s_mx;
+	nni_cv			s_cv;
 
-	nni_msgq *	s_uwq;          // Upper write queue
-	nni_msgq *	s_urq;          // Upper read queue
+	nni_msgq *		s_uwq;  // Upper write queue
+	nni_msgq *		s_urq;  // Upper read queue
 
-	nni_proto	s_proto;
+	uint16_t		s_protocol;
+	uint16_t		s_peer;
 
-	void *		s_data;         // Protocol private
+	nni_proto_pipe_ops	s_pipe_ops;
+	nni_proto_sock_ops	s_sock_ops;
+
+	void *			s_data; // Protocol private
 
 	// XXX: options
-	nni_duration	s_linger;               // linger time
-	nni_duration	s_sndtimeo;             // send timeout
-	nni_duration	s_rcvtimeo;             // receive timeout
-	nni_duration	s_reconn;               // reconnect time
-	nni_duration	s_reconnmax;            // max reconnect time
+	nni_duration		s_linger;       // linger time
+	nni_duration		s_sndtimeo;     // send timeout
+	nni_duration		s_rcvtimeo;     // receive timeout
+	nni_duration		s_reconn;       // reconnect time
+	nni_duration		s_reconnmax;    // max reconnect time
 
-	nni_list	s_eps;                  // active endpoints
-	nni_list	s_pipes;                // pipes for this socket
+	nni_list		s_eps;          // active endpoints
+	nni_list		s_pipes;        // pipes for this socket
 
-	nni_list	s_reaps;                // pipes to reap
-	nni_thr		s_reaper;
+	nni_list		s_reaps;        // pipes to reap
+	nni_thr			s_reaper;
+	nni_thr			s_sender;
+	nni_thr			s_recver;
 
-	int		s_ep_pend;              // EP dial/listen in progress
-	int		s_closing;              // Socket is closing
-	int		s_besteffort;           // Best effort mode delivery
-	int		s_senderr;              // Protocol state machine use
-	int		s_recverr;              // Protocol state machine use
+	int			s_ep_pend;      // EP dial/listen in progress
+	int			s_closing;      // Socket is closing
+	int			s_besteffort;   // Best effort mode delivery
+	int			s_senderr;      // Protocol state machine use
+	int			s_recverr;      // Protocol state machine use
 
-	uint32_t	s_nextid;               // Next Pipe ID.
+	uint32_t		s_nextid;       // Next Pipe ID.
 };
 
 extern int nni_sock_open(nni_sock **, uint16_t);
@@ -76,5 +82,12 @@ extern nni_msgq *nni_sock_sendq(nni_sock *);
 // inject incoming messages from pipes to it.
 extern nni_msgq *nni_sock_recvq(nni_sock *);
 
+// nni_sock_mtx obtains the socket mutex.  This is for protocols to use
+// from separate threads; they must not hold the lock for extended periods.
+// Additionally, this can only be acquired from separate threads.  The
+// synchronous entry points (excluding the send/recv thread workers) will
+// be called with this lock already held.  We expose the mutex directly
+// here so that protocols can use it to initialize condvars.
+extern nni_mtx *nni_sock_mtx(nni_sock *);
 
 #endif  // CORE_SOCKET_H

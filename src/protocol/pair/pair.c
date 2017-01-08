@@ -41,7 +41,7 @@ static void nni_pair_receiver(void *);
 static void nni_pair_sender(void *);
 
 static int
-nni_pair_init(void **pairp, nni_sock *sock)
+nni_pair_sock_init(void **pairp, nni_sock *sock)
 {
 	nni_pair_sock *pair;
 	int rv;
@@ -59,7 +59,7 @@ nni_pair_init(void **pairp, nni_sock *sock)
 
 
 static void
-nni_pair_fini(void *arg)
+nni_pair_sock_fini(void *arg)
 {
 	nni_pair_sock *pair = arg;
 
@@ -102,9 +102,6 @@ nni_pair_pipe_add(void *arg)
 	nni_pair_pipe *pp = arg;
 	nni_pair_sock *pair = pp->pair;
 
-	if (nni_pipe_peer(pp->pipe) != NNG_PROTO_PAIR) {
-		return (NNG_EPROTO);
-	}
 	if (pair->pipe != NULL) {
 		return (NNG_EBUSY);      // Already have a peer, denied.
 	}
@@ -182,14 +179,14 @@ nni_pair_pipe_recv(void *arg)
 // TODO: probably we could replace these with NULL, since we have no
 // protocol specific options?
 static int
-nni_pair_setopt(void *arg, int opt, const void *buf, size_t sz)
+nni_pair_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	return (NNG_ENOTSUP);
 }
 
 
 static int
-nni_pair_getopt(void *arg, int opt, void *buf, size_t *szp)
+nni_pair_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	return (NNG_ENOTSUP);
 }
@@ -198,7 +195,7 @@ nni_pair_getopt(void *arg, int opt, void *buf, size_t *szp)
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
 
-static nni_proto_pipe nni_pair_proto_pipe = {
+static nni_proto_pipe_ops nni_pair_pipe_ops = {
 	.pipe_init	= nni_pair_pipe_init,
 	.pipe_fini	= nni_pair_pipe_fini,
 	.pipe_add	= nni_pair_pipe_add,
@@ -207,15 +204,22 @@ static nni_proto_pipe nni_pair_proto_pipe = {
 	.pipe_recv	= nni_pair_pipe_recv,
 };
 
+static nni_proto_sock_ops nni_pair_sock_ops = {
+	.sock_init	= nni_pair_sock_init,
+	.sock_fini	= nni_pair_sock_fini,
+	.sock_close	= NULL,
+	.sock_setopt	= nni_pair_sock_setopt,
+	.sock_getopt	= nni_pair_sock_getopt,
+	.sock_rfilter	= NULL,
+	.sock_sfilter	= NULL,
+	.sock_send	= NULL,
+	.sock_recv	= NULL,
+};
+
 nni_proto nni_pair_proto = {
-	.proto_self		= NNG_PROTO_PAIR,
-	.proto_peer		= NNG_PROTO_PAIR,
-	.proto_name		= "pair",
-	.proto_pipe		= &nni_pair_proto_pipe,
-	.proto_init		= nni_pair_init,
-	.proto_fini		= nni_pair_fini,
-	.proto_setopt		= nni_pair_setopt,
-	.proto_getopt		= nni_pair_getopt,
-	.proto_recv_filter	= NULL,
-	.proto_send_filter	= NULL,
+	.proto_self	= NNG_PROTO_PAIR,
+	.proto_peer	= NNG_PROTO_PAIR,
+	.proto_name	= "pair",
+	.proto_sock_ops = &nni_pair_sock_ops,
+	.proto_pipe_ops = &nni_pair_pipe_ops,
 };

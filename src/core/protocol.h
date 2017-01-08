@@ -1,5 +1,5 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -21,7 +21,7 @@
 // implementations.
 
 // nni_proto_pipe contains protocol-specific per-pipe operations.
-struct nni_proto_pipe {
+struct nni_proto_pipe_ops {
 	// pipe_init creates the protocol-specific per pipe data structure.
 	// The last argument is the per-socket protocol private data.
 	int	(*pipe_init)(void **, nni_pipe *, void *);
@@ -55,32 +55,52 @@ struct nni_proto_pipe {
 	void	(*pipe_recv)(void *);
 };
 
-struct nni_proto {
-	uint16_t		proto_self;     // our 16-bit protocol ID
-	uint16_t		proto_peer;     // who we peer with (ID)
-	const char *		proto_name;     // string version of our name
-	const nni_proto_pipe *	proto_pipe;     // Per-pipe operations.
+struct nni_proto_sock_ops {
+	// sock_initf creates the protocol instance, which will be stored on
+	// the socket. This is run without the sock lock held, and allocates
+	// storage or other resources for the socket.
+	int		(*sock_init)(void **, nni_sock *);
 
-	// Create protocol instance, which will be stored on the socket.
-	int			(*proto_init)(void **, nni_sock *);
+	// sock_fini destroys the protocol instance.  This is run without the
+	// socket lock held, and is intended to release resources.  It may
+	// block as needed.
+	void		(*sock_fini)(void *);
 
-	// Destroy the protocol instance.
-	void			(*proto_fini)(void *);
+	// Close the protocol instance.  This is run with the lock held,
+	// and intended to initiate closure of the socket.  For example,
+	// it can signal the socket worker threads to exit.
+	void		(*sock_close)(void *);
 
 	// Option manipulation.  These may be NULL.
-	int			(*proto_setopt)(void *, int, const void *,
-	    size_t);
-	int			(*proto_getopt)(void *, int, void *, size_t *);
+	int		(*sock_setopt)(void *, int, const void *, size_t);
+	int		(*sock_getopt)(void *, int, void *, size_t *);
+
+	// sock_send is a send worker.  It can really be anything, but it
+	// is run in a separate thread (if it is non-NULL).
+	void		(*sock_send)(void *);
+
+	// sock_recv is a receive worker.  As with send it can really be
+	// anything, its just a thread that runs for the duration of the
+	// socket.
+	void		(*sock_recv)(void *);
 
 	// Receive filter.  This may be NULL, but if it isn't, then
 	// messages coming into the system are routed here just before being
 	// delivered to the application.  To drop the message, the prtocol
 	// should return NULL, otherwise the message (possibly modified).
-	nni_msg *		(*proto_recv_filter)(void *, nni_msg *);
+	nni_msg *	(*sock_rfilter)(void *, nni_msg *);
 
 	// Send filter.  This may be NULL, but if it isn't, then messages
 	// here are filtered just after they come from the application.
-	nni_msg *		(*proto_send_filter)(void *, nni_msg *);
+	nni_msg *	(*sock_sfilter)(void *, nni_msg *);
+};
+
+struct nni_proto {
+	uint16_t			proto_self;     // our 16-bit D
+	uint16_t			proto_peer;     // who we peer with (ID)
+	const char *			proto_name;     // Our name
+	const nni_proto_sock_ops *	proto_sock_ops; // Per-socket opeations
+	const nni_proto_pipe_ops *	proto_pipe_ops; // Per-pipe operations.
 };
 
 // These functions are not used by protocols, but rather by the socket

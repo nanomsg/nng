@@ -18,24 +18,25 @@
 #define NNI_ARG_UNUSED(x)    ((void) x);
 
 // These types are common but have names shared with user space.
-typedef struct nng_socket	nni_sock;
-typedef struct nng_endpoint	nni_ep;
-typedef struct nng_pipe		nni_pipe;
-typedef struct nng_msg		nni_msg;
-typedef struct nng_sockaddr	nni_sockaddr;
+typedef struct nng_socket		nni_sock;
+typedef struct nng_endpoint		nni_ep;
+typedef struct nng_pipe			nni_pipe;
+typedef struct nng_msg			nni_msg;
+typedef struct nng_sockaddr		nni_sockaddr;
 
 // These are our own names.
-typedef struct nni_tran		nni_tran;
-typedef struct nni_tran_ep	nni_tran_ep;
-typedef struct nni_tran_pipe	nni_tran_pipe;
+typedef struct nni_tran			nni_tran;
+typedef struct nni_tran_ep		nni_tran_ep;
+typedef struct nni_tran_pipe		nni_tran_pipe;
 
-typedef struct nni_proto_pipe	nni_proto_pipe;
-typedef struct nni_proto	nni_proto;
+typedef struct nni_proto_sock_ops	nni_proto_sock_ops;
+typedef struct nni_proto_pipe_ops	nni_proto_pipe_ops;
+typedef struct nni_proto		nni_proto;
 
 
-typedef int			nni_signal;     // Turnstile/wakeup channel.
-typedef uint64_t		nni_time;       // Absolute time (usec).
-typedef int64_t			nni_duration;   // Relative time (usec).
+typedef int				nni_signal;     // Wakeup channel.
+typedef uint64_t			nni_time;       // Abs. time (usec).
+typedef int64_t				nni_duration;   // Rel. time (usec).
 
 // Used by transports for scatter gather I/O.
 typedef struct {
