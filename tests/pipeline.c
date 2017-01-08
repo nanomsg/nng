@@ -97,6 +97,7 @@ Main({
 				So(nng_recvmsg(pull, &msg, 0) == 0);
 				So(msg != NULL);
 				CHECKSTR(msg, "hello");
+				nng_msg_free(msg);
 			})
 		})
 
