@@ -297,22 +297,15 @@ nni_sub_sock_rfilter(void *arg, nni_msg *msg)
 static nni_proto_pipe_ops nni_sub_pipe_ops = {
 	.pipe_init	= nni_sub_pipe_init,
 	.pipe_fini	= nni_sub_pipe_fini,
-	.pipe_add	= NULL,
-	.pipe_rem	= NULL,
-	.pipe_send	= NULL,
-	.pipe_recv	= nni_sub_pipe_recv,
+	.pipe_worker	= { nni_sub_pipe_recv },
 };
 
 static nni_proto_sock_ops nni_sub_sock_ops = {
 	.sock_init	= nni_sub_sock_init,
 	.sock_fini	= nni_sub_sock_fini,
-	.sock_close	= NULL,
 	.sock_setopt	= nni_sub_sock_setopt,
 	.sock_getopt	= nni_sub_sock_getopt,
 	.sock_rfilter	= nni_sub_sock_rfilter,
-	.sock_sfilter	= NULL,
-	.sock_send	= NULL,
-	.sock_recv	= NULL,
 };
 
 nni_proto nni_sub_proto = {

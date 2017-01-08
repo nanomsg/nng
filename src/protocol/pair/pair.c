@@ -200,20 +200,15 @@ static nni_proto_pipe_ops nni_pair_pipe_ops = {
 	.pipe_fini	= nni_pair_pipe_fini,
 	.pipe_add	= nni_pair_pipe_add,
 	.pipe_rem	= nni_pair_pipe_rem,
-	.pipe_send	= nni_pair_pipe_send,
-	.pipe_recv	= nni_pair_pipe_recv,
+	.pipe_worker	= { nni_pair_pipe_send,
+			    nni_pair_pipe_recv },
 };
 
 static nni_proto_sock_ops nni_pair_sock_ops = {
 	.sock_init	= nni_pair_sock_init,
 	.sock_fini	= nni_pair_sock_fini,
-	.sock_close	= NULL,
 	.sock_setopt	= nni_pair_sock_setopt,
 	.sock_getopt	= nni_pair_sock_getopt,
-	.sock_rfilter	= NULL,
-	.sock_sfilter	= NULL,
-	.sock_send	= NULL,
-	.sock_recv	= NULL,
 };
 
 nni_proto nni_pair_proto = {

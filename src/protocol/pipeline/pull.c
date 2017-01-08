@@ -139,22 +139,14 @@ nni_pull_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 static nni_proto_pipe_ops nni_pull_pipe_ops = {
 	.pipe_init	= nni_pull_pipe_init,
 	.pipe_fini	= nni_pull_pipe_fini,
-	.pipe_add	= NULL,
-	.pipe_rem	= NULL,
-	.pipe_send	= NULL,
-	.pipe_recv	= nni_pull_pipe_recv,
+	.pipe_worker	= { nni_pull_pipe_recv },
 };
 
 static nni_proto_sock_ops nni_pull_sock_ops = {
 	.sock_init	= nni_pull_sock_init,
 	.sock_fini	= nni_pull_sock_fini,
-	.sock_close	= NULL,
 	.sock_setopt	= nni_pull_sock_setopt,
 	.sock_getopt	= nni_pull_sock_getopt,
-	.sock_send	= NULL,
-	.sock_recv	= NULL,
-	.sock_rfilter	= NULL,
-	.sock_sfilter	= NULL,
 };
 
 nni_proto nni_pull_proto = {

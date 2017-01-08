@@ -26,7 +26,6 @@ struct nni_rep_sock {
 	nni_msgq *	urq;
 	int		raw;
 	int		ttl;
-	nni_thr		sender;
 	nni_idhash *	pipes;
 	char *		btrace;
 	size_t		btrace_len;
@@ -395,20 +394,18 @@ static nni_proto_pipe_ops nni_rep_pipe_ops = {
 	.pipe_fini	= nni_rep_pipe_fini,
 	.pipe_add	= nni_rep_pipe_add,
 	.pipe_rem	= nni_rep_pipe_rem,
-	.pipe_send	= nni_rep_pipe_send,
-	.pipe_recv	= nni_rep_pipe_recv,
+	.pipe_worker	= { nni_rep_pipe_send,
+			    nni_rep_pipe_recv },
 };
 
 static nni_proto_sock_ops nni_rep_sock_ops = {
 	.sock_init	= nni_rep_sock_init,
 	.sock_fini	= nni_rep_sock_fini,
-	.sock_close	= NULL,
 	.sock_setopt	= nni_rep_sock_setopt,
 	.sock_getopt	= nni_rep_sock_getopt,
 	.sock_rfilter	= nni_rep_sock_rfilter,
 	.sock_sfilter	= nni_rep_sock_sfilter,
-	.sock_send	= nni_rep_sock_send,
-	.sock_recv	= NULL,
+	.sock_worker	= { nni_rep_sock_send },
 };
 
 nni_proto nni_rep_proto = {

@@ -257,20 +257,16 @@ static nni_proto_pipe_ops nni_pub_pipe_ops = {
 	.pipe_fini	= nni_pub_pipe_fini,
 	.pipe_add	= nni_pub_pipe_add,
 	.pipe_rem	= nni_pub_pipe_rem,
-	.pipe_send	= nni_pub_pipe_send,
-	.pipe_recv	= nni_pub_pipe_recv,
+	.pipe_worker	= { nni_pub_pipe_send,
+			    nni_pub_pipe_recv },
 };
 
 nni_proto_sock_ops nni_pub_sock_ops = {
 	.sock_init	= nni_pub_sock_init,
 	.sock_fini	= nni_pub_sock_fini,
-	.sock_close	= NULL,
 	.sock_setopt	= nni_pub_sock_setopt,
 	.sock_getopt	= nni_pub_sock_getopt,
-	.sock_send	= nni_pub_sock_send,
-	.sock_recv	= NULL,
-	.sock_rfilter	= NULL,
-	.sock_sfilter	= NULL,
+	.sock_worker	= { nni_pub_sock_send },
 };
 
 nni_proto nni_pub_proto = {

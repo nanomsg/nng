@@ -27,8 +27,7 @@ struct nng_pipe {
 	nni_ep *	p_ep;
 	int		p_reap;
 	int		p_active;
-	nni_thr		p_send_thr;
-	nni_thr		p_recv_thr;
+	nni_thr		p_worker_thr[NNI_MAXWORKERS];
 };
 
 // Pipe operations that protocols use.

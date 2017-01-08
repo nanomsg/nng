@@ -24,35 +24,31 @@
 struct nni_proto_pipe_ops {
 	// pipe_init creates the protocol-specific per pipe data structure.
 	// The last argument is the per-socket protocol private data.
-	int	(*pipe_init)(void **, nni_pipe *, void *);
+	int		(*pipe_init)(void **, nni_pipe *, void *);
 
 	// pipe_fini releases any pipe data structures.  This is called after
 	// the pipe has been removed from the protocol, and the generic
 	// pipe threads have been stopped.
-	void	(*pipe_fini)(void *);
+	void		(*pipe_fini)(void *);
 
 	// pipe_add is called to register a pipe with the protocol.  The
 	// protocol can reject this, for example if another pipe is already
 	// active on a 1:1 protocol.  The protocol may not block during this,
 	// as the socket lock is held.
-	int	(*pipe_add)(void *);
+	int		(*pipe_add)(void *);
 
 	// pipe_rem is called to unregister a pipe from the protocol.
 	// Threads may still acccess data structures, so the protocol
 	// should not free anything yet.  This is called with the socket
 	// lock held, so the protocol may not call back into the socket, and
 	// must not block.
-	void	(*pipe_rem)(void *);
+	void		(*pipe_rem)(void *);
 
-	// pipe_send is a function run in a thread per pipe, to process
-	// send activity.  This can be NULL.
-	void	(*pipe_send)(void *);
-
-	// pipe_recv is a function run in a thread per pipe, to process
-	// receive activity.  While this can be NULL, it should NOT be, as
-	// otherwise the protocol may not be able to discover the closure of
-	// the underlying transport (such as a remote disconnect).
-	void	(*pipe_recv)(void *);
+	// Worker functions.  If non-NULL, each worker is executed and
+	// given the protocol pipe data as a argument.  All workers are
+	// started, or none are started.  The pipe_fini function is obliged
+	// to ensure that workers have exited.
+	nni_worker	pipe_worker[NNI_MAXWORKERS];
 };
 
 struct nni_proto_sock_ops {
@@ -75,15 +71,6 @@ struct nni_proto_sock_ops {
 	int		(*sock_setopt)(void *, int, const void *, size_t);
 	int		(*sock_getopt)(void *, int, void *, size_t *);
 
-	// sock_send is a send worker.  It can really be anything, but it
-	// is run in a separate thread (if it is non-NULL).
-	void		(*sock_send)(void *);
-
-	// sock_recv is a receive worker.  As with send it can really be
-	// anything, its just a thread that runs for the duration of the
-	// socket.
-	void		(*sock_recv)(void *);
-
 	// Receive filter.  This may be NULL, but if it isn't, then
 	// messages coming into the system are routed here just before being
 	// delivered to the application.  To drop the message, the prtocol
@@ -93,6 +80,12 @@ struct nni_proto_sock_ops {
 	// Send filter.  This may be NULL, but if it isn't, then messages
 	// here are filtered just after they come from the application.
 	nni_msg *	(*sock_sfilter)(void *, nni_msg *);
+
+	// Worker functions.  If non-NULL, each worker is executed and given
+	// the protocol socket data as an argument.  These will all be started
+	// at about the same time, and all will be started, or none will be
+	// started.  They are obliged to exit in response to sock_close.
+	nni_worker	sock_worker[NNI_MAXWORKERS];
 };
 
 struct nni_proto {

@@ -288,8 +288,8 @@ static nni_proto_pipe_ops nni_push_pipe_ops = {
 	.pipe_fini	= nni_push_pipe_fini,
 	.pipe_add	= nni_push_pipe_add,
 	.pipe_rem	= nni_push_pipe_rem,
-	.pipe_send	= nni_push_pipe_send,
-	.pipe_recv	= nni_push_pipe_recv,
+	.pipe_worker	= { nni_push_pipe_send,
+			    nni_push_pipe_recv },
 };
 
 static nni_proto_sock_ops nni_push_sock_ops = {
@@ -298,10 +298,7 @@ static nni_proto_sock_ops nni_push_sock_ops = {
 	.sock_close	= nni_push_sock_close,
 	.sock_setopt	= nni_push_sock_setopt,
 	.sock_getopt	= nni_push_sock_getopt,
-	.sock_send	= nni_push_sock_send,
-	.sock_recv	= NULL,
-	.sock_rfilter	= NULL,
-	.sock_sfilter	= NULL,
+	.sock_worker	= { nni_push_sock_send },
 };
 
 nni_proto nni_push_proto = {

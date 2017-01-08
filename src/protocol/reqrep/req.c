@@ -13,7 +13,7 @@
 #include "core/nng_impl.h"
 
 // Request protocol.  The REQ protocol is the "request" side of a
-// request-reply pair.  This is useful for bulding RPC clients, for
+// request-reply pair.  This is useful for building RPC clients, for
 // example.
 
 typedef struct nni_req_pipe	nni_req_pipe;
@@ -27,7 +27,6 @@ struct nni_req_sock {
 	nni_msgq *	urq;
 	nni_duration	retry;
 	nni_time	resend;
-	nni_thr		resender;
 	int		raw;
 	int		closing;
 	nni_msg *	reqmsg;
@@ -41,7 +40,6 @@ struct nni_req_pipe {
 	nni_pipe *	pipe;
 	nni_req_sock *	req;
 	int		sigclose;
-	nni_list_node	node;
 };
 
 static void nni_req_resender(void *);
@@ -72,13 +70,6 @@ nni_req_sock_init(void **reqp, nni_sock *sock)
 	req->urq = nni_sock_recvq(sock);
 	*reqp = req;
 	nni_sock_recverr(sock, NNG_ESTATE);
-	rv = nni_thr_init(&req->resender, nni_req_resender, req);
-	if (rv != 0) {
-		nni_cv_fini(&req->cv);
-		NNI_FREE_STRUCT(req);
-		return (rv);
-	}
-	nni_thr_run(&req->resender);
 	return (0);
 }
 
@@ -100,7 +91,6 @@ nni_req_sock_fini(void *arg)
 {
 	nni_req_sock *req = arg;
 
-	nni_thr_fini(&req->resender);
 	nni_cv_fini(&req->cv);
 	if (req->reqmsg != NULL) {
 		nni_msg_free(req->reqmsg);
@@ -275,7 +265,7 @@ nni_req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 
 static void
-nni_req_resender(void *arg)
+nni_req_sock_resend(void *arg)
 {
 	nni_req_sock *req = arg;
 	nni_mtx *mx = nni_sock_mtx(req->sock);
@@ -395,8 +385,8 @@ static nni_proto_pipe_ops nni_req_pipe_ops = {
 	.pipe_fini	= nni_req_pipe_fini,
 	.pipe_add	= nni_req_pipe_add,
 	.pipe_rem	= nni_req_pipe_rem,
-	.pipe_send	= nni_req_pipe_send,
-	.pipe_recv	= nni_req_pipe_recv,
+	.pipe_worker	= { nni_req_pipe_send,
+			    nni_req_pipe_recv },
 };
 
 static nni_proto_sock_ops nni_req_sock_ops = {
@@ -407,8 +397,7 @@ static nni_proto_sock_ops nni_req_sock_ops = {
 	.sock_getopt	= nni_req_sock_getopt,
 	.sock_rfilter	= nni_req_sock_rfilter,
 	.sock_sfilter	= nni_req_sock_sfilter,
-	.sock_send	= NULL,
-	.sock_recv	= NULL,
+	.sock_worker	= { nni_req_sock_resend },
 };
 
 nni_proto nni_req_proto = {

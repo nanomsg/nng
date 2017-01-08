@@ -19,26 +19,23 @@
 typedef struct nni_resp_pipe	nni_resp_pipe;
 typedef struct nni_resp_sock	nni_resp_sock;
 
-// An nni_rep_sock is our per-socket protocol private structure.
+// An nni_resp_sock is our per-socket protocol private structure.
 struct nni_resp_sock {
 	nni_sock *	sock;
 	int		raw;
 	int		ttl;
-	nni_thr		sender;
 	nni_idhash *	pipes;
 	char *		btrace;
 	size_t		btrace_len;
 };
 
-// An nni_rep_pipe is our per-pipe protocol private structure.
+// An nni_resp_pipe is our per-pipe protocol private structure.
 struct nni_resp_pipe {
 	nni_pipe *	pipe;
 	nni_resp_sock * resp;
 	nni_msgq *	sendq;
 	int		sigclose;
 };
-
-static void nni_rep_topsender(void *);
 
 static int
 nni_resp_sock_init(void **respp, nni_sock *sock)
@@ -388,8 +385,7 @@ static nni_proto_pipe_ops nni_resp_pipe_ops = {
 	.pipe_fini	= nni_resp_pipe_fini,
 	.pipe_add	= nni_resp_pipe_add,
 	.pipe_rem	= nni_resp_pipe_rem,
-	.pipe_send	= nni_resp_pipe_send,
-	.pipe_recv	= nni_resp_pipe_recv,
+	.pipe_worker	= { nni_resp_pipe_send,nni_resp_pipe_recv    },
 };
 
 static nni_proto_sock_ops nni_resp_sock_ops = {
@@ -400,8 +396,7 @@ static nni_proto_sock_ops nni_resp_sock_ops = {
 	.sock_getopt	= nni_resp_sock_getopt,
 	.sock_rfilter	= nni_resp_sock_rfilter,
 	.sock_sfilter	= nni_resp_sock_sfilter,
-	.sock_send	= nni_resp_sock_send,
-	.sock_recv	= NULL,
+	.sock_worker	= { nni_resp_sock_send },
 };
 
 nni_proto nni_respondent_proto = {
