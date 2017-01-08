@@ -152,13 +152,6 @@ extern int nni_plat_init(int (*)(void));
 // will be called until nni_platform_init is called.
 extern void nni_plat_fini(void);
 
-// nni_plat_nextid is used to generate a new pipe ID.  This should be an
-// increasing value, taken from a random starting point.  (The randomness
-// helps ensure we don't confuse pipe IDs from other connections.)  The
-// value must be obtained in a threadsafe way (e.g. via an atomic counter
-// or under a lock protection.)
-extern uint32_t nni_plat_nextid(void);
-
 // nni_plat_strerror allows the platform to use additional error messages
 // for additional error codes.  The err code passed in should be the
 // equivalent of errno or GetLastError, without the NNG_ESYSERR component.
@@ -214,6 +207,12 @@ extern int nni_plat_tcp_send(nni_plat_tcpsock *, nni_iov *, int);
 // iovs.  The implementation does not return until the iovs are completely
 // full, or an error condition occurs.
 extern int nni_plat_tcp_recv(nni_plat_tcpsock *, nni_iov *, int);
+
+// nni_plat_seed_prng seeds the PRNG subsystem.  The specified number
+// of bytes of entropy should be stashed.  When possible, cryptographic
+// quality entropy sources should be used.  Note that today we prefer
+// to seed up to 256 bytes of data.
+extern void nni_plat_seed_prng(void *, size_t);
 
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.

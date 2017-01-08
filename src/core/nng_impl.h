@@ -31,6 +31,7 @@
 #include "core/panic.h"
 #include "core/platform.h"
 #include "core/protocol.h"
+#include "core/random.h"
 #include "core/thread.h"
 #include "core/transport.h"
 

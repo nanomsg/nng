@@ -49,6 +49,8 @@ set (NNG_SOURCES
     core/platform.h
     core/protocol.c
     core/protocol.h
+    core/random.c
+    core/random.h
     core/socket.c
     core/socket.h
     core/thread.c
@@ -63,6 +65,7 @@ set (NNG_SOURCES
     platform/posix/posix_clock.c
     platform/posix/posix_debug.c
     platform/posix/posix_net.c
+    platform/posix/posix_rand.c
     platform/posix/posix_thread.c
 
     protocol/pair/pair.c

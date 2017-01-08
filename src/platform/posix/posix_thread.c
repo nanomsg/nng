@@ -24,7 +24,6 @@
 static pthread_mutex_t nni_plat_lock = PTHREAD_MUTEX_INITIALIZER;
 static int nni_plat_inited = 0;
 static int nni_plat_forked = 0;
-static int nni_plat_next = 0;
 
 pthread_condattr_t nni_cvattr;
 pthread_mutexattr_t nni_mxattr;
@@ -33,18 +32,6 @@ pthread_mutexattr_t nni_mxattr;
 // cause MacOS X to wakeup.  This gives us a "safe" close semantic.
 
 int nni_plat_devnull = -1;
-
-uint32_t
-nni_plat_nextid(void)
-{
-	uint32_t id;
-
-	pthread_mutex_lock(&nni_plat_lock);
-	id = nni_plat_next++;
-	pthread_mutex_unlock(&nni_plat_lock);
-	return (id);
-}
-
 
 int
 nni_plat_mtx_init(nni_plat_mtx *mtx)
@@ -269,25 +256,6 @@ nni_plat_init(int (*helper)(void))
 		(void) close(nni_plat_devnull);
 		return (NNG_ENOMEM);
 	}
-
-	// Generate a starting ID (used for Pipe IDs)
-#ifdef NNG_HAVE_ARC4RANDOM
-	nni_plat_next = arc4random();
-#else
-	while (nni_plat_next == 0) {
-		uint16_t xsub[3];
-		nni_time now = nni_clock();
-		pid_t pid = getpid();
-
-		xsub[0] = (uint16_t) now;
-		xsub[1] = (uint16_t) (now >> 16);
-		xsub[2] = (uint16_t) (now >> 24);
-		xsub[0] ^= (uint16_t) pid;
-		xsub[1] ^= (uint16_t) (pid >> 16);
-		xsub[2] ^= (uint16_t) (pid >> 24);
-		nni_plat_next = nrand48(xsub);
-	}
-#endif
 
 	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);

@@ -58,7 +58,7 @@ nni_req_sock_init(void **reqp, nni_sock *sock)
 		return (rv);
 	}
 	// this is "semi random" start for request IDs.
-	req->nextid = (nni_clock() >> 32) ^ (nni_clock() & 0xffffffff);
+	req->nextid = nni_random();
 	req->retry = NNI_SECOND * 60;
 	req->sock = sock;
 	req->reqmsg = NULL;

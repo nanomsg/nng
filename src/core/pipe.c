@@ -190,7 +190,7 @@ nni_pipe_start(nni_pipe *pipe)
 		// happen if we wrap -- i.e. we've had 4 billion or so pipes.
 		// XXX: consider making this a hash table!!
 		nni_pipe *check;
-		pipe->p_id = nni_plat_nextid() & 0x7FFFFFFF;
+		pipe->p_id = nni_random() & 0x7FFFFFFF;
 		collide = 0;
 		NNI_LIST_FOREACH (&sock->s_pipes, check) {
 			if ((pipe != check) && (check->p_id == pipe->p_id)) {

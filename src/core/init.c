@@ -14,6 +14,11 @@
 static int
 nni_init_helper(void)
 {
+	int rv;
+
+	if ((rv = nni_random_init()) != 0) {
+		return (rv);
+	}
 	nni_tran_init();
 	return (0);
 }
@@ -30,5 +35,6 @@ void
 nni_fini(void)
 {
 	nni_tran_fini();
+	nni_random_fini();
 	nni_plat_fini();
 }

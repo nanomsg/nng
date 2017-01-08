@@ -54,8 +54,7 @@ nni_surv_sock_init(void **sp, nni_sock *nsock)
 		return (rv);
 	}
 	NNI_LIST_INIT(&psock->pipes, nni_surv_pipe, node);
-	// this is "semi random" start for request IDs.
-	psock->nextid = (nni_clock() >> 32) ^ (nni_clock() & 0xffffffff);
+	psock->nextid = nni_random();
 	psock->nsock = nsock;
 	psock->raw = 0;
 	psock->survtime = NNI_SECOND * 60;

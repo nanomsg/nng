@@ -27,22 +27,37 @@
 //	is defined.  Platforms that don't use POSIX clocks will probably
 //	ignore any setting here.
 //
-// #define NNG_HAVE_ARC4RANDOM
-//	This indicates that the platform has the superior arc4random function
-//	for getting entropy.
-//
 // #define NNG_HAVE_BACKTRACE
 //	If your system has a working backtrace(), and backtrace_symbols(),
 //	along with <execinfo.h>, you can define this to get richer backtrace
 //	information for debugging.
+//
+// #define NNG_USE_GETRANDOM
+// #define NNG_USE_GETENTROPY
+// #define NNG_USE_ARC4RANDOM
+// #define NNG_USE_DEVURANDOM
+//	Thesse are options for obtaining entropy to seed the pRNG.
+//	All known modern UNIX variants can support NNG_USE_DEVURANDOM,
+//	but the other options are better still, but not portable.
 
 #include <time.h>
 
+// These are things about systems we know about.
+#ifdef __APPLE__
 // MacOS X used to lack CLOCK_MONOTONIC.  Now it has it, but its
 // buggy, condition variables set to use it wake early.
-#ifdef __APPLE__
 #define NNG_USE_CLOCKID		CLOCK_REALTIME
+// macOS 10.12 has getentropy(), but arc4random() is good enough
+// and works on older releases.
+#define NNG_USE_ARC4RANDOM	1
 #endif // __APPLE__
+
+// It should never hurt to use DEVURANDOM, since if the device does not
+// exist then we won't open it.  (Provided: it would be bad if the device
+// exists but has somehow very very different semantics.  We don't know
+// of any such concerns.)  This won't be used if any of the other options
+// are defined and work.
+#define NNG_USE_DEVURANDOM	1
 
 #define NNG_USE_CLOCKID		CLOCK_REALTIME
 #ifndef CLOCK_REALTIME
