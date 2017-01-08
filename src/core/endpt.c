@@ -107,7 +107,7 @@ nni_ep_connect(nni_ep *ep, nni_pipe **pp)
 	}
 	rv = ep->ep_ops.ep_connect(ep->ep_data, &pipe->p_tran_data);
 	if (rv != 0) {
-		nni_pipe_close(pipe);
+		nni_pipe_destroy(pipe);
 		return (rv);
 	}
 	ep->ep_pipe = pipe;
@@ -243,7 +243,7 @@ nni_ep_accept(nni_ep *ep, nni_pipe **pp)
 	}
 	rv = ep->ep_ops.ep_accept(ep->ep_data, &pipe->p_tran_data);
 	if (rv != 0) {
-		nni_pipe_close(pipe);
+		nni_pipe_destroy(pipe);
 		return (rv);
 	}
 	*pp = pipe;
