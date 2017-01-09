@@ -254,7 +254,7 @@ NNG_DECL int nng_pipe_close(nng_pipe *);
 // <type>	- zero (socket), or transport (8 bits)
 // <code>	- specific value (16 bits)
 #define NNG_OPT_SOCKET(c)		(c)
-#define NNG_OPT_TRANSPORT_OPT(t, c)	(0x10000 | ((p) << 16) | (c))
+#define NNG_OPT_TRANSPORT_OPT(t, c)	(0x10000 | ((t) << 16) | (c))
 
 #define NNG_OPT_RAW			NNG_OPT_SOCKET(0)
 #define NNG_OPT_LINGER			NNG_OPT_SOCKET(1)

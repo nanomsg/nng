@@ -228,7 +228,6 @@ again:
 		if (rv != 0) {
 			break;
 		}
-
 		// Store the pipe id in the header, first thing.
 		rv = nni_msg_append_header(msg, idbuf, 4);
 		if (rv != 0) {

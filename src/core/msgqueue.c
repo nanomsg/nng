@@ -25,6 +25,8 @@ struct nni_msgq {
 	int		mq_get;
 	int		mq_put;
 	int		mq_closed;
+	int		mq_puterr;
+	int		mq_geterr;
 	int		mq_rwait;       // readers waiting (unbuffered)
 	int		mq_wwait;
 	nni_msg **	mq_msgs;
@@ -120,6 +122,44 @@ nni_msgq_fini(nni_msgq *mq)
 }
 
 
+void
+nni_msgq_set_put_error(nni_msgq *mq, int error)
+{
+	nni_mtx_lock(&mq->mq_lock);
+	mq->mq_puterr = error;
+	if (error) {
+		nni_cv_wake(&mq->mq_writeable);
+	}
+	nni_mtx_unlock(&mq->mq_lock);
+}
+
+
+void
+nni_msgq_set_get_error(nni_msgq *mq, int error)
+{
+	nni_mtx_lock(&mq->mq_lock);
+	mq->mq_geterr = error;
+	if (error) {
+		nni_cv_wake(&mq->mq_readable);
+	}
+	nni_mtx_unlock(&mq->mq_lock);
+}
+
+
+void
+nni_msgq_set_error(nni_msgq *mq, int error)
+{
+	nni_mtx_lock(&mq->mq_lock);
+	mq->mq_geterr = error;
+	mq->mq_puterr = error;
+	if (error) {
+		nni_cv_wake(&mq->mq_readable);
+		nni_cv_wake(&mq->mq_writeable);
+	}
+	nni_mtx_unlock(&mq->mq_lock);
+}
+
+
 // nni_msgq_signal raises a signal on the signal object. This allows a
 // waiter to be signaled, so that it can be woken e.g. due to a pipe closing.
 // Note that the signal object must be *zero* if no signal is raised.
@@ -148,6 +188,11 @@ nni_msgq_put_(nni_msgq *mq, nni_msg *msg, nni_time expire, nni_signal *sig)
 		if (mq->mq_closed) {
 			nni_mtx_unlock(&mq->mq_lock);
 			return (NNG_ECLOSED);
+		}
+
+		if ((rv = mq->mq_puterr) != 0) {
+			nni_mtx_unlock(&mq->mq_lock);
+			return (rv);
 		}
 
 		// room in the queue?
@@ -185,7 +230,6 @@ nni_msgq_put_(nni_msgq *mq, nni_msg *msg, nni_time expire, nni_signal *sig)
 	}
 
 	// Writeable!  Yay!!
-
 	mq->mq_msgs[mq->mq_put] = msg;
 	mq->mq_put++;
 	if (mq->mq_put == mq->mq_alloc) {
@@ -250,6 +294,10 @@ nni_msgq_get_(nni_msgq *mq, nni_msg **msgp, nni_time expire, nni_signal *sig)
 		if (mq->mq_closed) {
 			nni_mtx_unlock(&mq->mq_lock);
 			return (NNG_ECLOSED);
+		}
+		if ((rv = mq->mq_geterr) != 0) {
+			nni_mtx_unlock(&mq->mq_lock);
+			return (rv);
 		}
 		if (expire == NNI_TIME_ZERO) {
 			nni_mtx_unlock(&mq->mq_lock);

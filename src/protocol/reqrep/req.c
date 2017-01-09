@@ -79,8 +79,6 @@ nni_req_sock_close(void *arg)
 {
 	nni_req_sock *req = arg;
 
-	// Shut down the resender.  We request it to exit by clearing
-	// its old value, then kick it.
 	req->closing = 1;
 	nni_cv_wake(&req->cv);
 }
