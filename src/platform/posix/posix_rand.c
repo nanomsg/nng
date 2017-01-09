@@ -62,7 +62,7 @@ nni_plat_seed_prng(void *buf, size_t bufsz)
 	int fd;
 
 	if ((fd = open("/dev/urandom", O_RDONLY)) >= 0) {
-		(void) read(fd, buf, buffz);
+		(void) read(fd, buf, bufsz);
 		(void) close(fd);
 	}
 #endif
