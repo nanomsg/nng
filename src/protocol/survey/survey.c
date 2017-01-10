@@ -205,7 +205,7 @@ nni_surv_pipe_receiver(void *arg)
 		}
 	}
 	nni_msgq_signal(uwq, &ppipe->sigclose);
-	nni_msgq_set_error(ppipe->sendq, NNG_ECLOSED);
+	nni_msgq_signal(ppipe->sendq, &ppipe->sigclose);
 	nni_pipe_close(npipe);
 }
 
