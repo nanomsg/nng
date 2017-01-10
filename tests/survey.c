@@ -117,7 +117,6 @@ Main({
 				So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
 
 				Convey("And goes to non-survey state", {
-					printf("WAITING HERE");
 					rtimeo = 50000;
 					So(nng_setopt(surv, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
 					rv = nng_recvmsg(surv, &msg, 0);

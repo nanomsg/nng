@@ -92,7 +92,7 @@ Main({
 				So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "ABC", 3) == 0);
 				So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "", 0) == 0);
 				Convey("Unsubscribe works", {
-					rv = nng_setopt(sub, NNG_OPT_UNSUBSCRIBE, "ABC", 3);
+					So(nng_setopt(sub, NNG_OPT_UNSUBSCRIBE, "ABC", 3) == 0);
 					So(nng_setopt(sub, NNG_OPT_UNSUBSCRIBE, "", 0) == 0);
 
 					So(nng_setopt(sub, NNG_OPT_UNSUBSCRIBE, "", 0) == NNG_ENOENT);
