@@ -87,6 +87,10 @@ nni_msgq_init(nni_msgq **mqp, int cap)
 	mq->mq_get = 0;
 	mq->mq_put = 0;
 	mq->mq_closed = 0;
+	mq->mq_puterr = 0;
+	mq->mq_geterr = 0;
+	mq->mq_wwait = 0;
+	mq->mq_rwait = 0;
 	*mqp = mq;
 
 	return (0);
