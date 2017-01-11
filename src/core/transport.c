@@ -15,10 +15,12 @@
 // to the system dynamically is something that might be considered later.
 extern nni_tran nni_inproc_tran;
 extern nni_tran nni_tcp_tran;
+extern nni_tran nni_ipc_tran;
 
 static nni_tran *transports[] = {
 	&nni_inproc_tran,
 	&nni_tcp_tran,
+	&nni_ipc_tran,
 	NULL
 };
 

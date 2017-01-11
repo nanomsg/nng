@@ -171,7 +171,7 @@ nni_tcp_ep_init(void **epp, const char *url, uint16_t proto)
 	int rv;
 
 	if (strlen(url) > NNG_MAXADDRLEN-1) {
-		return (NNG_EINVAL);
+		return (NNG_EADDRINVAL);
 	}
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);

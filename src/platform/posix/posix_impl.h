@@ -20,6 +20,7 @@
 #define PLATFORM_POSIX_ALLOC
 #define PLATFORM_POSIX_DEBUG
 #define PLATFORM_POSIX_CLOCK
+#define PLATFORM_POSIX_IPC
 #define PLATFORM_POSIX_NET
 #define PLATFORM_POSIX_RANDOM
 #define PLATFORM_POSIX_THREAD
@@ -37,6 +38,14 @@ extern int nni_plat_errno(int);
 struct nni_plat_tcpsock {
 	int	fd;
 	int	devnull; // used for shutting down blocking accept()
+};
+#endif
+
+#ifdef PLATFORM_POSIX_IPC
+struct nni_plat_ipcsock {
+	int	fd;
+	int	devnull;        // used for shutting down blocking accept()
+	char *	unlink;         // path to unlink at termination
 };
 #endif
 

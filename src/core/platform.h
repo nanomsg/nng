@@ -64,6 +64,7 @@ typedef struct nni_plat_mtx		nni_plat_mtx;
 typedef struct nni_plat_cv		nni_plat_cv;
 typedef struct nni_plat_thr		nni_plat_thr;
 typedef struct nni_plat_tcpsock		nni_plat_tcpsock;
+typedef struct nni_plat_ipcsock		nni_plat_ipcsock;
 
 // Mutex handling.
 
@@ -207,6 +208,43 @@ extern int nni_plat_tcp_send(nni_plat_tcpsock *, nni_iov *, int);
 // iovs.  The implementation does not return until the iovs are completely
 // full, or an error condition occurs.
 extern int nni_plat_tcp_recv(nni_plat_tcpsock *, nni_iov *, int);
+
+// nni_plat_ipc_init initializes the socket, for example it can
+// set underlying file descriptors to -1, etc.
+extern void nni_plat_ipc_init(nni_plat_ipcsock *);
+
+// nni_plat_ipc_fini just closes an IPC socket, and releases any related
+// resources.
+extern void nni_plat_ipc_fini(nni_plat_ipcsock *);
+
+// nni_plat_ipc_shutdown performs a shutdown of the socket.  For
+// BSD sockets, this closes both sides of the IPC connection gracefully,
+// but the underlying file descriptor is left open.  (This part is critical
+// to prevention of close() related races.)
+extern void nni_plat_ipc_shutdown(nni_plat_ipcsock *);
+
+// nni_plat_tcp_listen creates an IPC socket in listening mode, bound
+// to the specified path.  Note that nni_plat_ipcsock should be defined
+// to whatever your platform uses.  For most systems its just "int".
+extern int nni_plat_ipc_listen(nni_plat_ipcsock *, const char *);
+
+// nni_plat_ipc_accept does the accept to accept an inbound connection.
+// The ipcsock used for the server will have been set up with the
+// nni_plat_ipc_listen.
+extern int nni_plat_ipc_accept(nni_plat_ipcsock *, nni_plat_ipcsock *);
+
+// nni_plat_ipc_connect is the client side.
+extern int nni_plat_ipc_connect(nni_plat_ipcsock *, const char *);
+
+// nni_plat_ipc_send sends data to the peer.  The platform is responsible
+// for attempting to send all of the data.  The iov count will never be
+// larger than 4.  The platform may modify the iovs.
+extern int nni_plat_ipc_send(nni_plat_ipcsock *, nni_iov *, int);
+
+// nni_plat_ipc_recv recvs data into the buffers provided by the
+// iovs.  The implementation does not return until the iovs are completely
+// full, or an error condition occurs.
+extern int nni_plat_ipc_recv(nni_plat_ipcsock *, nni_iov *, int);
 
 // nni_plat_seed_prng seeds the PRNG subsystem.  The specified number
 // of bytes of entropy should be stashed.  When possible, cryptographic

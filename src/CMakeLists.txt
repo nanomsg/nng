@@ -64,6 +64,7 @@ set (NNG_SOURCES
     platform/posix/posix_alloc.c
     platform/posix/posix_clock.c
     platform/posix/posix_debug.c
+    platform/posix/posix_ipc.c
     platform/posix/posix_net.c
     platform/posix/posix_rand.c
     platform/posix/posix_thread.c
@@ -85,6 +86,8 @@ set (NNG_SOURCES
     protocol/survey/survey.c
 
     transport/inproc/inproc.c
+
+    transport/ipc/ipc.c
 
     transport/tcp/tcp.c
 )
