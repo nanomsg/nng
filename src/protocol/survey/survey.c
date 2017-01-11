@@ -143,11 +143,9 @@ static void
 nni_surv_pipe_sender(void *arg)
 {
 	nni_surv_pipe *ppipe = arg;
-	nni_surv_sock *psock = ppipe->psock;
 	nni_pipe *npipe = ppipe->npipe;
 	nni_msgq *uwq = ppipe->sendq;
-	nni_msgq *urq = nni_sock_recvq(psock->nsock);
-	nni_mtx *mx = nni_sock_mtx(psock->nsock);
+	nni_msgq *urq = nni_sock_recvq(ppipe->psock->nsock);
 	nni_msg *msg;
 	int rv;
 

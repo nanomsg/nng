@@ -37,8 +37,6 @@ struct nni_pub_pipe {
 	int		sigclose;
 };
 
-static void nni_pub_sock_send(void *);
-
 static int
 nni_pub_sock_init(void **pubp, nni_sock *sock)
 {
