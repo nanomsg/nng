@@ -51,7 +51,6 @@ nni_bus_sock_init(void **sp, nni_sock *nsock)
 	psock->raw = 0;
 
 	*sp = psock;
-	nni_sock_recverr(nsock, NNG_ESTATE);
 	return (0);
 }
 

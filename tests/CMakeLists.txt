@@ -52,6 +52,7 @@ else ()
     endmacro (add_nng_perf)
 endif ()
 
+add_nng_test(bus 5)
 add_nng_test(idhash 5)
 add_nng_test(inproc 5)
 add_nng_test(list 5)
