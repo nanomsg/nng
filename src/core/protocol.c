@@ -16,6 +16,7 @@
 // The list of protocols is hardwired.  This is reasonably unlikely to
 // change, as adding new protocols is not something intended to be done
 // outside of the core.
+extern nni_proto nni_bus_proto;
 extern nni_proto nni_pair_proto;
 extern nni_proto nni_rep_proto;
 extern nni_proto nni_req_proto;
@@ -27,6 +28,7 @@ extern nni_proto nni_surveyor_proto;
 extern nni_proto nni_respondent_proto;
 
 static nni_proto *protocols[] = {
+	&nni_bus_proto,
 	&nni_pair_proto,
 	&nni_rep_proto,
 	&nni_req_proto,

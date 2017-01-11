@@ -68,6 +68,8 @@ set (NNG_SOURCES
     platform/posix/posix_rand.c
     platform/posix/posix_thread.c
 
+    protocol/bus/bus.c
+
     protocol/pair/pair.c
 
     protocol/pipeline/pull.c
