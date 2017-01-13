@@ -64,7 +64,9 @@ struct nni_plat_mtx {
 };
 
 struct nni_plat_thr {
-	pthread_t tid;
+	pthread_t	tid;
+	void		(*func)(void *);
+	void *		arg;
 };
 
 struct nni_plat_cv {

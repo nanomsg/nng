@@ -20,6 +20,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <signal.h>
 
 static pthread_mutex_t nni_plat_lock = PTHREAD_MUTEX_INITIALIZER;
 static int nni_plat_inited = 0;
@@ -178,13 +179,33 @@ nni_plat_cv_fini(nni_plat_cv *cv)
 }
 
 
+static void *
+nni_plat_thr_main(void *arg)
+{
+	nni_plat_thr *thr = arg;
+	sigset_t set;
+
+	// Suppress (block) SIGPIPE for this thread.
+	sigemptyset(&set);
+	sigaddset(&set, SIGPIPE);
+	(void) pthread_sigmask(SIG_BLOCK, &set, NULL);
+
+	thr->func(thr->arg);
+	return (NULL);
+}
+
+
 int
 nni_plat_thr_init(nni_plat_thr *thr, void (*fn)(void *), void *arg)
 {
 	int rv;
 
+	thr->func = fn;
+	thr->arg = arg;
+
 	// POSIX wants functions to return a void *, but we don't care.
-	if ((rv = pthread_create(&thr->tid, NULL, (void *) fn, arg)) != 0) {
+	rv = pthread_create(&thr->tid, NULL, nni_plat_thr_main, thr);
+	if (rv != 0) {
 		//nni_printf("pthread_create: %s", strerror(rv));
 		return (NNG_ENOMEM);
 	}
