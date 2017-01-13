@@ -77,6 +77,7 @@ Main({
 		Convey("We can create a linked survey pair", {
 			nng_socket *surv;
 			nng_socket *resp;
+			nng_socket *sock;
 			uint64_t expire;
 
 			So((rv = nng_open(&surv, NNG_PROTO_SURVEYOR)) == 0);
@@ -85,16 +86,25 @@ Main({
 			So((rv = nng_open(&resp, NNG_PROTO_RESPONDENT)) == 0);
 			So(resp != NULL);
 
+
 			Reset({
 				nng_close(surv);
 				nng_close(resp);
 			})
 
-			expire = 10000;
+			expire = 40000;
 			So(nng_setopt(surv, NNG_OPT_SURVEYTIME, &expire, sizeof (expire)) == 0);
 
 			So(nng_listen(surv, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(resp, addr, NULL, NNG_FLAG_SYNCH) == 0);
+
+			// We dial another socket as that will force the
+			// earlier dial to have completed *fully*.  This is a
+			// hack that only works because our listen logic is
+			// single threaded.
+			So((rv = nng_open(&sock, NNG_PROTO_RESPONDENT)) == 0);
+			So(nng_dial(sock, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			nng_close(sock);
 
 			Convey("Survey works", {
 				nng_msg *msg;
