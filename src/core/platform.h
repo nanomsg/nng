@@ -256,6 +256,8 @@ extern void nni_plat_seed_prng(void *, size_t);
 // get the specific types that are supplied by the platform.
 #if defined(PLATFORM_POSIX)
 #include "platform/posix/posix_impl.h"
+#elif defined(PLATFORM_WINDOWS)
+#include "platform/windows/win_impl.h"
 #else
 #error "unknown platform"
 #endif
