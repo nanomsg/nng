@@ -49,10 +49,6 @@ extern void nni_mtx_lock(nni_mtx *mtx);
 // owned by the calling thread.
 extern void nni_mtx_unlock(nni_mtx *mtx);
 
-// nni_mtx_trylock attempts to acquire the given mutex.  It returns
-// NNG_EBUSY if the mutex is locked.
-extern int nni_mtx_trylock(nni_mtx *mtx);
-
 // nni_cv_init initializes the condition variable.  The mutex supplied
 // must always be locked with the condition variable.
 extern int nni_cv_init(nni_cv *cv, nni_mtx *);

@@ -126,7 +126,7 @@ void
 nni_plat_ipc_fini(nni_plat_ipcsock *s)
 {
 	if (s->p != INVALID_HANDLE_VALUE) {
-		(void) CloseHandle(s->fd);
+		(void) CloseHandle(s->p);
 		s->p = INVALID_HANDLE_VALUE;
 	}
 }

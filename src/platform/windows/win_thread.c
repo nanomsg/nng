@@ -13,11 +13,28 @@
 
 #ifdef PLATFORM_WINDOWS
 
+void *
+nni_alloc(size_t sz)
+{
+	void *v;
+
+	v = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sz);
+	return (v);
+}
+
+
+void
+nni_free(void *b, size_t z)
+{
+	NNI_ARG_UNUSED(z);
+	HeapFree(GetProcessHeap(), 0, b);
+}
+
+
 int
 nni_plat_mtx_init(nni_plat_mtx *mtx)
 {
-	InitializeCritialSection(&mtx->cs);
-	mtx->owner = 0;
+	InitializeCriticalSection(&mtx->cs);
 	return (0);
 }
 
@@ -25,9 +42,6 @@ nni_plat_mtx_init(nni_plat_mtx *mtx)
 void
 nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
-	if (mtx->owner != 0) {
-		nni_panic("cannot delete critical section: mutex owned!")
-	}
 	DeleteCriticalSection(&mtx->cs);
 }
 
@@ -36,38 +50,13 @@ void
 nni_plat_mtx_lock(nni_plat_mtx *mtx)
 {
 	EnterCriticalSection(&mtx->cs);
-	if (mtx->owner != 0) {
-		nni_panic("recursive mutex entry!");
-	}
-	mtx->owner = GetCurrentThreadId();
 }
 
 
 void
 nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 {
-	if (mtx->owner != GetCurrentThreadId()) {
-		nni_panic("cannot unlock mutex: not owner!");
-	}
-	self->owner = 0;
 	LeaveCriticalSection(&mtx->cs);
-}
-
-
-int
-nni_plat_mtx_trylock(nni_plat_mtx *mtx)
-{
-	BOOL ok;
-
-	ok = TryEnterCriticalSection(&mtx->cs);
-	if (!ok) {
-		return (NNG_EBUSY);
-	}
-	if (mtx->owner != 0) {
-		nni_panic("recursive trymutex entry?!?")
-	}
-	mtx->owner = GetCurrentThreadId();
-	return (0);
 }
 
 
@@ -83,18 +72,14 @@ nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 void
 nni_plat_cv_wake(nni_plat_cv *cv)
 {
-	int rv;
-
-	if ((rv = pthread_cond_broadcast(&cv->cv)) != 0) {
-		nni_panic("pthread_cond_broadcast: %s", strerror(rv));
-	}
+	WakeAllConditionVariable(&cv->cv);
 }
 
 
 void
 nni_plat_cv_wait(nni_plat_cv *cv)
 {
-	(void) SleepConditionVariable(&cv->cv, &cv->cs, INFINITE);
+	(void) SleepConditionVariableCS(&cv->cv, cv->cs, INFINITE);
 }
 
 
@@ -113,7 +98,7 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 		msec = (until - now)/1000;
 	}
 
-	ok = SleepConditionVariable(&cv->cv, &cv->cs, msec);
+	ok = SleepConditionVariableCS(&cv->cv, cv->cs, msec);
 	return (ok ? 0 : NNG_ETIMEDOUT);
 }
 
@@ -125,7 +110,7 @@ nni_plat_cv_fini(nni_plat_cv *cv)
 
 
 static unsigned int __stdcall
-nni_plat_thread_main(void *arg)
+nni_plat_thr_main(void *arg)
 {
 	nni_plat_thr *thr = arg;
 
@@ -164,7 +149,6 @@ nni_plat_thr_fini(nni_plat_thr *thr)
 int
 nni_plat_init(int (*helper)(void))
 {
-	int rv;
 	LONG old;
 	static LONG initing = 0;
 	static LONG inited = 0;
@@ -178,16 +162,16 @@ nni_plat_init(int (*helper)(void))
 	// and the other will be put to sleep briefly so that the first
 	// can complete.  This is a poor man's singleton initializer, since
 	// we can't statically initialize critical sections.
-	while ((old = InterlockedTestExchange(&initing, 0, 1)) != 0) {
+	while ((old = InterlockedCompareExchange(&initing, 0, 1)) != 0) {
 		Sleep(1);
 	}
 	if (!inited) {
 		helper();
 		inited = 1;
 	}
-	InterlockExchange(&initing, 0);
+	InterlockedExchange(&initing, 0);
 
-	return (rv);
+	return (0);
 }
 
 

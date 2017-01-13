@@ -87,21 +87,6 @@ nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 
 
 int
-nni_plat_mtx_trylock(nni_plat_mtx *mtx)
-{
-	int rv;
-
-	if ((rv = pthread_mutex_trylock(&mtx->mtx)) == EBUSY) {
-		return (NNG_EBUSY);
-	}
-	if (rv != 0) {
-		nni_panic("pthread_mutex_trylock: %s", strerror(rv));
-	}
-	return (0);
-}
-
-
-int
 nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 {
 	int rv;

@@ -38,13 +38,6 @@ nni_mtx_unlock(nni_mtx *mtx)
 
 
 int
-nni_mtx_trylock(nni_mtx *mtx)
-{
-	return (nni_plat_mtx_trylock(&mtx->mtx));
-}
-
-
-int
 nni_cv_init(nni_cv *cv, nni_mtx *mtx)
 {
 	return (nni_plat_cv_init(&cv->cv, &mtx->mtx));
@@ -85,7 +78,7 @@ nni_cv_until(nni_cv *cv, nni_time until)
 void
 nni_cv_wake(nni_cv *cv)
 {
-	return (nni_plat_cv_wake(&cv->cv));
+	nni_plat_cv_wake(&cv->cv);
 }
 
 

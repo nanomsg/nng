@@ -30,8 +30,16 @@ extern "C" {
 // as a DLL, but instead linking it statically for your projects
 // to minimize questions about link dependencies later.)
 #ifndef NNG_DECL
-#define NNG_DECL    extern
-#endif
+#if defined(_WIN32) && !defined(NNG_STATIC_LIB)
+#if defined(NNG_SHARED_LIB)
+#define NNG_DECL	__declspec(dllexport)
+#else
+#define NNG_DECL	__declspec(dllimport)
+#endif // NNG_SHARED_LIB
+#else
+#define NNG_DECL	extern
+#endif // _WIN32 && !NNG_STATIC_LIB
+#endif // NNG_DECL
 
 // Types common to nng.
 typedef struct nng_socket	nng_socket;
@@ -64,10 +72,10 @@ NNG_DECL void nng_close(nng_socket *);
 NNG_DECL int nng_shutdown(nng_socket *);
 
 // nng_protocol returns the protocol number of the socket.
-uint16_t nng_protocol(nng_socket *);
+NNG_DECL uint16_t nng_protocol(nng_socket *);
 
 // nng_peer returns the protocol number for the socket's peer.
-uint16_t nng_peer(nng_socket *);
+NNG_DECL uint16_t nng_peer(nng_socket *);
 
 // nng_setopt sets an option for a specific socket.
 NNG_DECL int nng_setopt(nng_socket *, int, const void *, size_t);

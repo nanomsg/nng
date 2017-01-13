@@ -32,7 +32,7 @@ struct nni_plat_tcpsock {
 
 struct nni_plat_ipcsock {
 	HANDLE p;
-}
+};
 
 struct nni_plat_thr {
 	void (__stdcall *func)(void *);
@@ -47,11 +47,8 @@ struct nni_plat_mtx {
 
 struct nni_plat_cv {
 	CONDITION_VARIABLE	cv;
-	CRITICAL_SECTION	cs;
+	CRITICAL_SECTION	*cs;
 };
-
-#define	nni_alloc(s)	calloc(1, (s))
-#define	nni_free(s, z)	free(s)
 
 #endif  // PLATFORM_WINDOWS
 

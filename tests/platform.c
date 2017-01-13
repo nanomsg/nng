@@ -110,16 +110,14 @@ TestMain("Platform Operations", {
 		Convey("We can lock a mutex", {
 			nni_mtx_lock(&mx);
 			So(1);
-			Convey("And cannot recursively lock", {
-				rv = nni_mtx_trylock(&mx);
-				So(rv != 0);
-			})
 			Convey("And we can unlock it", {
 				nni_mtx_unlock(&mx);
 				So(1);
 				Convey("And then lock it again", {
-					rv = nni_mtx_trylock(&mx);
-					So(rv == 0);
+					nni_mtx_lock(&mx);
+					So(1);
+					nni_mtx_unlock(&mx);
+					So(1);
 				})
 			})
 		})
@@ -138,16 +136,13 @@ TestMain("Platform Operations", {
 			So(rv == 0);
 			nni_thr_run(&thr);
 
+			Reset({
+				nni_thr_fini(&thr);
+			})
+
 			Convey("It ran", {
 				nni_usleep(50000);	// for context switch
 				So(val == 1);
-				nni_thr_fini(&thr);
-			})
-			Convey("We can reap it", {
-				nni_thr_fini(&thr);
-			})
-			Reset({
-				nni_thr_fini(&thr);
 			})
 		})
 	})
@@ -162,6 +157,7 @@ TestMain("Platform Operations", {
 		Reset({
 			nni_cv_fini(&arg.cv);
 			nni_mtx_fini(&arg.mx);
+			nni_thr_fini(&thr);
 		});
 
 		Convey("Notification works", {
@@ -174,7 +170,7 @@ TestMain("Platform Operations", {
 				nni_cv_wait(&arg.cv);
 			}
 			nni_mtx_unlock(&arg.mx);
-			nni_thr_fini(&thr);
+			nni_thr_wait(&thr);
 			So(arg.did == 1);
 		})
 
@@ -188,7 +184,7 @@ TestMain("Platform Operations", {
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
-			nni_thr_fini(&thr);
+			nni_thr_wait(&thr);
 		})
 
 		Convey("Not running works", {
@@ -200,11 +196,6 @@ TestMain("Platform Operations", {
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
-			nni_thr_fini(&thr);
-		})
-
-		Reset({
-			nni_thr_fini(&thr);
 		})
 	})
 })

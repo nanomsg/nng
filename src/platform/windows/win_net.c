@@ -16,10 +16,10 @@ static struct {
 	int	nng_err;
 }
 nni_plat_wsa_errnos[] = {
-	{ WSAECONNABORTED,	 NNG_ECONNABORTED },
+	{ WSAECONNABORTED,	 NNG_ECLOSED	  },
 	{ WSAEINTR,		 NNG_EINTR	  },
-	{ WSAEFAULT,		 NNG_EFAULT	  },
-	{ WSAECONNRESET,	 NNG_ECONNRESET	  },
+	// REVIEW THESE!!!
+	{ WSAECONNRESET,	 NNG_ECONNREFUSED },
 	{ WSAEMSGSIZE,		 NNG_EINVAL	  },
 	{ WSAENETDOWN,		 NNG_EUNREACHABLE },
 	{ WSAENETRESET,		 NNG_ECLOSED	  },
@@ -30,7 +30,7 @@ nni_plat_wsa_errnos[] = {
 	{ WSA_INVALID_HANDLE,	 NNG_ECLOSED	  },
 	{ WSA_NOT_ENOUGH_MEMORY, NNG_ENOMEM	  },
 	{ WSA_INVALID_PARAMETER, NNG_EINVAL	  },
-	{ WSAEACCESS,		 NNG_EPERM	  },
+	{ WSAEACCES,		 NNG_EPERM	  },
 	{		      0,		0 }, // MUST BE LAST
 };
 
@@ -38,13 +38,15 @@ nni_plat_wsa_errnos[] = {
 static int
 nni_plat_wsa_last_error(void)
 {
-	errnum = WSAGetLastError();
+	int errnum = WSAGetLastError();
+	int i;
+
 	if (errnum == 0) {
 		return (0);
 	}
 	for (i = 0; nni_plat_wsa_errnos[i].nng_err != 0; i++) {
 		if (errnum == nni_plat_wsa_errnos[i].wsa_err) {
-			return (nni_plat_errnos[i].nng_err);
+			return (nni_plat_wsa_errnos[i].nng_err);
 		}
 	}
 	// Other system errno.
@@ -53,7 +55,7 @@ nni_plat_wsa_last_error(void)
 
 
 static int
-nni_plat_to_sockaddr(struct SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
+nni_plat_to_sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 {
 	struct sockaddr_in *sin;
 	struct sockaddr_in6 *sin6;
@@ -109,7 +111,7 @@ int
 nni_plat_lookup_host(const char *host, nni_sockaddr *addr, int flags)
 {
 	ADDRINFO hint;
-	ADDIRINFO *ai;
+	ADDRINFO *ai;
 
 	memset(&hint, 0, sizeof (hint));
 	hint.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
@@ -209,18 +211,19 @@ nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 
 static void
-nni_plat_tcp_setopts(int fd)
+nni_plat_tcp_setopts(SOCKET fd)
 {
-	int one;
+	BOOL yes;
 
 	// Don't inherit the handle (CLOEXEC really).
-	SetHandleInformation(s->s, HANDLE_FLAG_INHERIT, 0);
+	SetHandleInformation((HANDLE) fd, HANDLE_FLAG_INHERIT, 0);
 
 	// Also disable Nagle.  We are careful to group data with WSASend,
 	// and latency is king for most of our users.  (Consider adding
 	// a method to enable this later.)
-	one = 1;
-	(void) setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof (one));
+	yes = 1;
+	(void) setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, (char *) &yes,
+	    sizeof (yes));
 }
 
 
@@ -245,7 +248,7 @@ void
 nni_plat_tcp_shutdown(nni_plat_tcpsock *s)
 {
 	if (s->s != INVALID_SOCKET) {
-		(void) shutdown(s->fd, SHUT_RDWR);
+		(void) shutdown(s->s, SD_BOTH);
 	}
 }
 
@@ -260,9 +263,9 @@ int
 nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
 {
 	int len;
-	struct sockaddr_storage ss;
+	SOCKADDR_STORAGE ss;
 	int rv;
-	ULONG one;
+	BOOL yes;
 
 	len = nni_plat_to_sockaddr(&ss, addr);
 	if (len < 0) {
@@ -279,9 +282,9 @@ nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
 
 	// Make sure that we use the address exclusively.  Windows lets
 	// others hijack us by default.
-	one = 1;
-	if (setsocket(s->s, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, &one,
-	    sizeof (one)) == SOCKET_ERROR) {
+	yes = 1;
+	if (setsockopt(s->s, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char *) &yes,
+	    sizeof (yes)) == SOCKET_ERROR) {
 		rv = nni_plat_wsa_last_error();
 		(void) closesocket(s->s);
 		s->s = INVALID_SOCKET;
@@ -315,8 +318,8 @@ nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
     const nni_sockaddr *bindaddr)
 {
 	int len;
-	struct sockaddr_storage ss;
-	struct sockaddr_storage bss;
+	SOCKADDR_STORAGE ss;
+	SOCKADDR_STORAGE bss;
 	int rv;
 
 	len = nni_plat_to_sockaddr(&ss, addr);
@@ -342,7 +345,7 @@ nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
 			return (NNG_EADDRINVAL);
 		}
 		if (bind(s->s, (struct sockaddr *) &bss, len) < 0) {
-			rv = nni_plat_wsa_last_error(errno);
+			rv = nni_plat_wsa_last_error();
 			(void) closesocket(s->s);
 			s->s = INVALID_SOCKET;
 			return (rv);
@@ -372,7 +375,7 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 
 		if (fd == INVALID_SOCKET) {
 			err = WSAGetLastError();
-			if (err == WSAECONNRESET || err == WSAEWOULDBLOCK) {
+			if ((err == WSAECONNRESET) || (err == WSAEWOULDBLOCK)) {
 				continue;
 			}
 			return (nni_plat_wsa_last_error());

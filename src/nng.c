@@ -252,7 +252,7 @@ nng_msg_realloc(nng_msg *msg, size_t sz)
 void
 nng_msg_free(nng_msg *msg)
 {
-	return (nni_msg_free(msg));
+	nni_msg_free(msg);
 }
 
 
