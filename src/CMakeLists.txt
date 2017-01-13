@@ -28,6 +28,9 @@ set (NNG_SOURCES
     nng.h
 
     core/defs.h
+
+    core/clock.c
+    core/clock.h
     core/endpt.c
     core/idhash.c
     core/idhash.h

@@ -20,7 +20,7 @@
 
 // Use POSIX realtime stuff
 nni_time
-nni_clock(void)
+nni_plat_clock(void)
 {
 	struct timespec ts;
 	nni_time usec;
@@ -38,7 +38,7 @@ nni_clock(void)
 
 
 void
-nni_usleep(nni_duration usec)
+nni_plat_usleep(nni_duration usec)
 {
 	struct timespec ts;
 
@@ -70,7 +70,7 @@ nni_usleep(nni_duration usec)
 #include <poll.h>
 
 nni_time
-nni_clock(void)
+nni_plat_clock(void)
 {
 	nni_time usec;
 
@@ -88,7 +88,7 @@ nni_clock(void)
 
 
 void
-nni_usleep(nni_duration usec)
+nni_plat_usleep(nni_duration usec)
 {
 	// So probably there is no nanosleep.  We could in theory use
 	// pthread condition variables, but that means doing memory

@@ -123,16 +123,16 @@ extern int nni_plat_thr_init(nni_plat_thr *, void (*)(void *), void *);
 // is an error to reference the thread in any further way.
 extern void nni_plat_thr_fini(nni_plat_thr *);
 
-// nn_clock returns a number of microseconds since some arbitrary time
+// nn_plat_clock returns a number of microseconds since some arbitrary time
 // in the past.  The values returned by nni_clock must use the same base
-// as the times used in nni_cond_waituntil.  The nni_clock() must return
-// values > 0, and must return values smaller than 2^63.  (We could relax
+// as the times used in nni_plat_cond_waituntil.  The nni_plat_clock() must
+// returnvalues > 0, and must return values smaller than 2^63.  (We could relax
 // this last constraint, but there is no reason to, and leaves us the option
 // of using negative values for other purposes in the future.)
-extern nni_time nni_clock(void);
+extern nni_time nni_plat_clock(void);
 
-// nni_usleep sleeps for the specified number of microseconds (at least).
-extern void nni_usleep(nni_duration);
+// nni_plat_usleep sleeps for the specified number of microseconds (at least).
+extern void nni_plat_usleep(nni_duration);
 
 // nni_plat_init is called to allow the platform the chance to
 // do any necessary initialization.  This routine MUST be idempotent,

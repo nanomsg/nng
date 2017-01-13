@@ -104,6 +104,7 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions (-DPLATFORM_WINDOWS)
     set (NNG_HAVE_WINSOCK 1)
     add_definitions (-D_CRT_SECURE_NO_WARNINGS)
+    add_definitions (-D_CRT_RAND_S)
 
     # Target Windows Vista and later
     add_definitions (-D_WIN32_WINNT=0x0600)

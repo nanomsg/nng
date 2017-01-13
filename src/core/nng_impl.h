@@ -22,9 +22,11 @@
 // those starting with nng_ are intended for external consumption.  The latter
 // symbols should be found in the toplevel nng.h header.
 #include "core/defs.h"
-#include "core/list.h"
+
+#include "core/clock.h"
 #include "core/idhash.h"
 #include "core/init.h"
+#include "core/list.h"
 #include "core/message.h"
 #include "core/msgqueue.h"
 #include "core/options.h"
