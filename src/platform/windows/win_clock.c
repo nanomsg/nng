@@ -14,17 +14,8 @@
 nni_time
 nni_plat_clock(void)
 {
-	LARGE_INTEGER freq;
-	LARGE_INTEGER count;
-	double rate;
-
-	QueryPerformanceFrequency(&freq);
-	QueryPerformanceCounter(&count);
-
-	// convert to ticks per us
-	rate = (double) freq.QuadPart / 1000000.0;
-
-	return ((nni_time) (count.QuadPart / rate));
+	// We are limited by the system clock, but that is ok.
+	return (GetTickCount64()*1000);
 }
 
 

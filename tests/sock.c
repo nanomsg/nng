@@ -12,6 +12,34 @@
 
 #include <string.h>
 
+#ifndef	_WIN32
+#include <sys/time.h>
+#endif
+
+uint64_t
+getms(void)
+{
+#ifdef	_WIN32
+	return (GetTickCount64())	;
+#else
+	static time_t epoch;
+	struct timeval tv;
+
+	if (epoch == 0) {
+		epoch = time(NULL);
+	}
+	gettimeofday(&tv, NULL);
+
+	if (tv.tv_sec < epoch) {
+		// Broken clock.
+		// This will force all other timing tests to fail
+		return (0);
+	}
+	tv.tv_sec -= epoch;
+	return (((uint64_t)(tv.tv_sec ) * 1000) + (tv.tv_usec / 1000));
+#endif
+}
+
 TestMain("Socket Operations", {
 	Convey("We are able to open a PAIR socket", {
 		int rv;
@@ -41,9 +69,7 @@ TestMain("Socket Operations", {
 			int64_t when = 500000;
 			uint64_t now;
 
-			// We cheat to get access to the core's clock.
-			extern uint64_t nni_clock(void);
-			now = nni_clock();
+			now = getms();
 
 			rv = nng_setopt(sock, NNG_OPT_RCVTIMEO, &when,
 				sizeof (when));
@@ -51,8 +77,8 @@ TestMain("Socket Operations", {
 			rv = nng_recvmsg(sock, &msg, 0);
 			So(rv == NNG_ETIMEDOUT);
 			So(msg == NULL);
-			So(nni_clock() >= (now + when));
-			So(nni_clock() < (now + (when * 2)));
+			So(getms() >= (now + (when/1000)));
+			So(getms() < (now + ((when/1000) * 2)));
 		})
 
 		Convey("Recv nonblock with no pipes gives EAGAIN", {
@@ -70,16 +96,15 @@ TestMain("Socket Operations", {
 			// We cheat to get access to the core's clock.
 			So(nng_msg_alloc(&msg, 0) == 0);
 			So(msg != NULL);
-			extern uint64_t nni_clock(void);
-			now = nni_clock();
+			now = getms();
 
 			rv = nng_setopt(sock, NNG_OPT_SNDTIMEO, &when,
 				sizeof (when));
 			So(rv == 0);
 			rv = nng_sendmsg(sock, msg, 0);
 			So(rv == NNG_ETIMEDOUT);
-			So(nni_clock() > (now + 500000));
-			So(nni_clock() < (now + 1000000));
+			So(getms() >= (now + (when/1000)));
+			So(getms() < (now + ((when/1000) * 2)));
 			nng_msg_free(msg);
 		})
 

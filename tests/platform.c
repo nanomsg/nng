@@ -19,7 +19,7 @@ uint64_t
 getms(void)
 {
 #ifdef	_WIN32
-	return (GetTickCount())	;
+	return (GetTickCount64())	;
 #else
 	static time_t epoch;
 	struct timeval tv;
