@@ -27,7 +27,16 @@
 // elsewhere.
 
 struct nni_plat_tcpsock {
-	SOCKET s;
+	SOCKET		s;
+
+	WSAOVERLAPPED	recv_olpd;
+	WSAOVERLAPPED	send_olpd;
+	WSAOVERLAPPED	conn_olpd; // Use for both connect and accept
+
+	// We have to lookup some function pointers using ioctls.  Winsock,
+	// gotta love it.
+	LPFN_CONNECTEX	connectex;
+	LPFN_ACCEPTEX	acceptex;
 };
 
 struct nni_plat_ipcsock {
@@ -47,7 +56,7 @@ struct nni_plat_mtx {
 
 struct nni_plat_cv {
 	CONDITION_VARIABLE	cv;
-	CRITICAL_SECTION	*cs;
+	CRITICAL_SECTION *	cs;
 };
 
 #endif  // PLATFORM_WINDOWS

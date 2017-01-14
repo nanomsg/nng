@@ -40,26 +40,24 @@ nni_plat_strerror(int errnum)
 }
 
 
-#define NNI_ERR(x, y)    { x, y },
-
 // Win32 has its own error codes, but these ones it shares with POSIX.
 static struct {
 	int	sys_err;
 	int	nng_err;
 }
 nni_plat_errnos[] = {
-	NNI_ERR(ENOENT, NNG_ENOENT)
-	NNI_ERR(EINTR, NNG_EINTR)
-	NNI_ERR(EINVAL, NNG_EINVAL)
-	NNI_ERR(ENOMEM, NNG_ENOMEM)
-	NNI_ERR(EACCES, NNG_EPERM)
-	NNI_ERR(EAGAIN, NNG_EAGAIN)
-	NNI_ERR(EBADF, NNG_ECLOSED)
-	NNI_ERR(EBUSY, NNG_EBUSY)
-	NNI_ERR(ENAMETOOLONG, NNG_EINVAL)
-	NNI_ERR(EPERM, NNG_EPERM)
-	NNI_ERR(EPIPE, NNG_ECLOSED)
-	NNI_ERR(0, 0)                   // must be last
+	{ ENOENT,	NNG_ENOENT  },
+	{ EINTR,	NNG_EINTR   },
+	{ EINVAL,	NNG_EINVAL  },
+	{ ENOMEM,	NNG_ENOMEM  },
+	{ EACCES,	NNG_EPERM   },
+	{ EAGAIN,	NNG_EAGAIN  },
+	{ EBADF,	NNG_ECLOSED },
+	{ EBUSY,	NNG_EBUSY   },
+	{ ENAMETOOLONG, NNG_EINVAL  },
+	{ EPERM,	NNG_EPERM   },
+	{ EPIPE,	NNG_ECLOSED },
+	{	     0,		  0 } // must be last
 };
 
 int

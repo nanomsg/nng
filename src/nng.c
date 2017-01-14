@@ -199,6 +199,15 @@ nng_strerror(int num)
 
 	case NNG_EPERM:
 		return ("Permission denied");
+
+	case NNG_EMSGSIZE:
+		return ("Message too large");
+
+	case NNG_ECONNRESET:
+		return ("Connection reset");
+
+	case NNG_ECONNABORTED:
+		return ("Connection aborted");
 	}
 
 	if (num & NNG_ESYSERR) {

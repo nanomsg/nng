@@ -115,10 +115,11 @@ nni_plat_ipc_recv(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 }
 
 
-void
+int
 nni_plat_ipc_init(nni_plat_ipcsock *s)
 {
 	s->p = INVALID_HANDLE_VALUE;
+	return (0);
 }
 
 
@@ -136,7 +137,7 @@ void
 nni_plat_ipc_shutdown(nni_plat_ipcsock *s)
 {
 	if (s->p != INVALID_HANDLE_VALUE) {
-#if 0		
+#if 0
 		(void) shutdown(s->fd, SHUT_RDWR);
 		// This causes the equivalent of a close.  Hopefully waking
 		// up anything that didn't get the hint with the shutdown.
@@ -209,7 +210,7 @@ nni_plat_ipc_listen(nni_plat_ipcsock *s, const char *path)
 		return (rv);
 	}
 	s->fd = fd;
-#endif	
+#endif
 	return (NNG_ENOTSUP);
 }
 
@@ -244,7 +245,7 @@ nni_plat_ipc_connect(nni_plat_ipcsock *s, const char *path)
 		return (rv);
 	}
 	s->fd = fd;
-#endif	
+#endif
 	return (NNG_ENOTSUP);
 }
 
@@ -275,7 +276,7 @@ nni_plat_ipc_accept(nni_plat_ipcsock *s, nni_plat_ipcsock *server)
 	nni_plat_ipc_setopts(fd);
 
 	s->fd = fd;
-#endif	
+#endif
 	return (NNG_ENOTSUP);
 }
 

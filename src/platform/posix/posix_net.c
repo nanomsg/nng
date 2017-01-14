@@ -23,6 +23,12 @@
 #include <unistd.h>
 #include <netdb.h>
 
+#ifdef  SOCK_CLOEXEC
+#define NNI_TCP_SOCKTYPE	(SOCK_STREAM | SOCK_CLOEXEC)
+#else
+#define NNI_TCP_SOCKTYPE	SOCK_STREAM
+#endif
+
 static int
 nni_plat_to_sockaddr(struct sockaddr_storage *ss, const nni_sockaddr *sa)
 {
@@ -128,7 +134,7 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 	i = 0;
 	while (resid) {
-		rv = writev(s->fd, iov, cnt);
+		rv = writev(s->fd, &iov[i], cnt);
 		if (rv < 0) {
 			if (rv == EINTR) {
 				continue;
@@ -177,7 +183,7 @@ nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 	i = 0;
 	while (resid) {
-		rv = readv(s->fd, iov, cnt);
+		rv = readv(s->fd, &iov[i], cnt);
 		if (rv < 0) {
 			if (errno == EINTR) {
 				continue;
@@ -233,10 +239,11 @@ nni_plat_tcp_setopts(int fd)
 }
 
 
-void
+int
 nni_plat_tcp_init(nni_plat_tcpsock *s)
 {
 	s->fd = -1;
+	return (0);
 }
 
 
@@ -282,12 +289,7 @@ nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
 		return (NNG_EADDRINVAL);
 	}
 
-#ifdef SOCK_CLOEXEC
-	fd = socket(ss.ss_family, SOCK_STREAM | SOCK_CLOEXEC, 0);
-#else
-	fd = socket(ss.ss_family, SOCK_STREAM, 0);
-#endif
-	if (fd < 0) {
+	if ((fd = socket(ss.ss_family, NNI_TCP_SOCKTYPE, 0)) < 0) {
 		return (nni_plat_errno(errno));
 	}
 
@@ -330,12 +332,7 @@ nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
 		return (NNG_EADDRINVAL);
 	}
 
-#ifdef  SOCK_CLOEXEC
-	fd = socket(ss.ss_family, SOCK_STREAM | SOCK_CLOEXEC, 0);
-#else
-	fd = socket(ss.ss_family, SOCK_STREAM, 0);
-#endif
-	if (fd < 0) {
+	if ((fd = socket(ss.ss_family, NNI_TCP_SOCKTYPE, 0)) < 0) {
 		return (nni_plat_errno(errno));
 	}
 
@@ -381,13 +378,6 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 #endif
 
 		if (fd < 0) {
-			if ((errno == EINTR) || (errno == ECONNABORTED)) {
-				// These are not fatal errors, keep trying
-				continue;
-			}
-			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-				continue;
-			}
 			return (nni_plat_errno(errno));
 		} else {
 			break;

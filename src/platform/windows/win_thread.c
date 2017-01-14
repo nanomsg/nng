@@ -125,8 +125,11 @@ nni_plat_thr_init(nni_plat_thr *thr, void (*fn)(void *), void *arg)
 	thr->func = fn;
 	thr->arg = arg;
 
-	thr->handle = (HANDLE) _beginthreadex(NULL, 0,
-		nni_plat_thr_main, thr, 0, NULL);
+	// We could probably even go down to 8k... but crypto for some
+	// protocols might get bigger than this.  1MB is waaay too big.
+	thr->handle = (HANDLE) _beginthreadex(NULL, 16384,
+		nni_plat_thr_main, thr, STACK_SIZE_PARAM_IS_A_RESERVATION,
+		NULL);
 	if (thr->handle == NULL) {
 		return (NNG_ENOMEM);    // Best guess...
 	}
@@ -166,6 +169,17 @@ nni_plat_init(int (*helper)(void))
 		Sleep(1);
 	}
 	if (!inited) {
+		WSADATA data;
+		WORD ver;
+		ver = MAKEWORD(2, 2);
+		if (WSAStartup(MAKEWORD(2, 2), &data) != 0) {
+			InterlockedExchange(&initing, 0);
+			if ((LOBYTE(data.wVersion) != 2) ||
+			    (HIBYTE(data.wVersion) != 2)) {
+				nni_panic("got back wrong winsock ver");
+			}
+			return (NNG_ENOMEM);
+		}
 		helper();
 		inited = 1;
 	}
@@ -178,6 +192,7 @@ nni_plat_init(int (*helper)(void))
 void
 nni_plat_fini(void)
 {
+	WSACleanup();
 }
 
 

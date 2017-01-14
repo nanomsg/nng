@@ -17,13 +17,14 @@ void
 nni_plat_seed_prng(void *buf, size_t bufsz)
 {
 	unsigned val;
+
 	// The rand_s routine uses RtlGenRandom to get high quality
 	// pseudo random numbers (i.e. numbers that should be good enough
 	// for use with crypto keying.)
 	while (bufsz > sizeof (val)) {
 		rand_s(&val);
 		memcpy(buf, &val, sizeof (val));
-		buf = (((char *)buf) + sizeof (val));
+		buf = (((char *) buf) + sizeof (val));
 		bufsz -= sizeof (val);
 	}
 }

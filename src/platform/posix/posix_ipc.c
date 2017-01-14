@@ -73,7 +73,7 @@ nni_plat_ipc_send(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 
 	i = 0;
 	while (resid) {
-		rv = writev(s->fd, iov, cnt);
+		rv = writev(s->fd, &iov[i], cnt);
 		if (rv < 0) {
 			if (rv == EINTR) {
 				continue;
@@ -121,7 +121,7 @@ nni_plat_ipc_recv(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 	}
 	i = 0;
 	while (resid) {
-		rv = readv(s->fd, iov, cnt);
+		rv = readv(s->fd, &iov[i], cnt);
 		if (rv < 0) {
 			if (errno == EINTR) {
 				continue;
@@ -171,10 +171,11 @@ nni_plat_ipc_setopts(int fd)
 }
 
 
-void
+int
 nni_plat_ipc_init(nni_plat_ipcsock *s)
 {
 	s->fd = -1;
+	return (0);
 }
 
 

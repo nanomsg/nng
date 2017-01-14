@@ -297,16 +297,32 @@ nni_listener(void *arg)
 
 		if (((rv = nni_ep_accept(ep, &pipe)) == 0) &&
 		    ((rv = nni_pipe_start(pipe)) == 0)) {
+			// Success! Loop around for the next one.
 			continue;
 		}
-		if (rv == NNG_ECLOSED) {
+
+		switch (rv) {
+		case NNG_ECLOSED:
+			// This indicates the listening socket got closed.
+			// We just bail.
+			return;
+
+		case NNG_ECONNABORTED:
+		case NNG_ECONNRESET:
+			// These are remote conditions, no cool down.
+			cooldown = 0;
 			break;
-		}
-		cooldown = 1000;        // 1 ms cooldown
-		if (rv == NNG_ENOMEM) {
-			// For out of memory, we need to give more
-			// time for the system to reclaim resources.
-			cooldown = 100000;      // 100ms
+		case NNG_ENOMEM:
+			// We're running low on memory, so its best to wait
+			// a whole second to give the system a chance to
+			// recover memory.
+			cooldown = 1000000;
+			break;
+		default:
+			// Other cases we sleep just a tiny bit to avoid
+			// burning the cpu (e.g. out of files).
+			cooldown = 1000;        // 1 msec
+			break;
 		}
 		cooldown += nni_clock();
 		nni_mtx_lock(mx);

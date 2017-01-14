@@ -170,7 +170,7 @@ extern int nni_plat_lookup_host(const char *, nni_sockaddr *, int);
 
 // nni_plat_tcp_init initializes the socket, for example it can
 // set underlying file descriptors to -1, etc.
-extern void nni_plat_tcp_init(nni_plat_tcpsock *);
+extern int nni_plat_tcp_init(nni_plat_tcpsock *);
 
 // nni_plat_tcp_fini just closes a TCP socket, and releases any related
 // resources.
@@ -211,7 +211,7 @@ extern int nni_plat_tcp_recv(nni_plat_tcpsock *, nni_iov *, int);
 
 // nni_plat_ipc_init initializes the socket, for example it can
 // set underlying file descriptors to -1, etc.
-extern void nni_plat_ipc_init(nni_plat_ipcsock *);
+extern int nni_plat_ipc_init(nni_plat_ipcsock *);
 
 // nni_plat_ipc_fini just closes an IPC socket, and releases any related
 // resources.

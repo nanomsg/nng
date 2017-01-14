@@ -38,8 +38,8 @@ extern "C" {
 #endif // NNG_SHARED_LIB
 #else
 #define NNG_DECL	extern
-#endif // _WIN32 && !NNG_STATIC_LIB
-#endif // NNG_DECL
+#endif  // _WIN32 && !NNG_STATIC_LIB
+#endif  // NNG_DECL
 
 // Types common to nng.
 typedef struct nng_socket	nng_socket;
@@ -388,6 +388,9 @@ NNG_DECL int nng_device(nng_socket *, nng_socket *);
 #define NNG_EUNREACHABLE	(14)
 #define NNG_EADDRINVAL		(15)
 #define NNG_EPERM		(16)
+#define NNG_EMSGSIZE		(17)
+#define NNG_ECONNABORTED	(18)
+#define NNG_ECONNRESET		(19)
 
 // NNG_SYSERR is a special code, which allows us to wrap errors from the
 // underlyuing operating system.  We generally prefer to map errors to one

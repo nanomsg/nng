@@ -28,6 +28,7 @@ static int nni_plat_forked = 0;
 
 pthread_condattr_t nni_cvattr;
 pthread_mutexattr_t nni_mxattr;
+static pthread_attr_t nni_pthread_attr;
 
 // We open a /dev/null file descriptor so that we can dup2() it to
 // cause MacOS X to wakeup.  This gives us a "safe" close semantic.
@@ -189,7 +190,8 @@ nni_plat_thr_init(nni_plat_thr *thr, void (*fn)(void *), void *arg)
 	thr->arg = arg;
 
 	// POSIX wants functions to return a void *, but we don't care.
-	rv = pthread_create(&thr->tid, NULL, nni_plat_thr_main, thr);
+	rv = pthread_create(&thr->tid, &nni_pthread_attr,
+		nni_plat_thr_main, thr);
 	if (rv != 0) {
 		//nni_printf("pthread_create: %s", strerror(rv));
 		return (NNG_ENOMEM);
@@ -263,9 +265,27 @@ nni_plat_init(int (*helper)(void))
 		return (NNG_ENOMEM);
 	}
 
+	rv = pthread_attr_init(&nni_pthread_attr);
+	if (rv != 0) {
+		pthread_mutex_unlock(&nni_plat_lock);
+		(void) close(nni_plat_devnull);
+		pthread_mutexattr_destroy(&nni_mxattr);
+		pthread_condattr_destroy(&nni_cvattr);
+		return (NNG_ENOMEM);
+	}
+
+	// We don't force this, but we want to have it small... we could
+	// probably get by with even just 8k, but Linux usually wants 16k
+	// as a minimum.  If this fails, its not fatal, just we won't be
+	// as scalable / thrifty with our use of VM.
+	(void) pthread_attr_setstacksize(&nni_pthread_attr, 16384);
+
 	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
 		(void) close(nni_plat_devnull);
+		pthread_mutexattr_destroy(&nni_mxattr);
+		pthread_condattr_destroy(&nni_cvattr);
+		pthread_attr_destroy(&nni_pthread_attr);
 		return (NNG_ENOMEM);
 	}
 	if ((rv = helper()) == 0) {
@@ -284,6 +304,7 @@ nni_plat_fini(void)
 	if (nni_plat_inited) {
 		pthread_mutexattr_destroy(&nni_mxattr);
 		pthread_condattr_destroy(&nni_cvattr);
+		pthread_attr_destroy(&nni_pthread_attr);
 		(void) close(nni_plat_devnull);
 		nni_plat_devnull = -1;
 		nni_plat_inited = 0;

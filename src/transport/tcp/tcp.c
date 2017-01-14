@@ -180,7 +180,11 @@ nni_tcp_ep_init(void **epp, const char *url, uint16_t proto)
 	ep->proto = proto;
 	ep->ipv4only = 0;
 	ep->rcvmax = 1024 * 1024;       // XXX: fix this
-	nni_plat_tcp_init(&ep->fd);
+
+	if ((rv = nni_plat_tcp_init(&ep->fd)) != 0) {
+		NNI_FREE_STRUCT(ep);
+		return (rv);
+	}
 
 	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
 
@@ -347,7 +351,10 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_plat_tcp_init(&pipe->fd);
+	if ((rv = nni_plat_tcp_init(&pipe->fd)) != 0) {
+		NNI_FREE_STRUCT(pipe);
+		return (rv);
+	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
 
@@ -357,6 +364,7 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	bindaddr = lclpart == NULL ? NULL : &lcladdr;
 	rv = nni_plat_tcp_connect(&pipe->fd, &remaddr, bindaddr);
 	if (rv != 0) {
+		nni_plat_tcp_fini(&pipe->fd);
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
@@ -416,9 +424,13 @@ nni_tcp_ep_accept(void *arg, void **pipep)
 	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
-	nni_plat_tcp_init(&pipe->fd);
+
+	if ((rv = nni_plat_tcp_init(&pipe->fd)) != 0) {
+		NNI_FREE_STRUCT(pipe);
+	}
 
 	if ((rv = nni_plat_tcp_accept(&pipe->fd, &ep->fd)) != 0) {
+		nni_plat_tcp_fini(&pipe->fd);
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}

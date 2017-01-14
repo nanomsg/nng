@@ -190,7 +190,10 @@ nni_ipc_ep_init(void **epp, const char *url, uint16_t proto)
 	ep->closed = 0;
 	ep->proto = proto;
 	ep->rcvmax = 1024 * 1024;       // XXX: fix this
-	nni_plat_ipc_init(&ep->fd);
+	if ((rv = nni_plat_ipc_init(&ep->fd)) != 0) {
+		NNI_FREE_STRUCT(ep);
+		return (rv);
+	}
 
 	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
 
@@ -273,12 +276,16 @@ nni_ipc_ep_connect(void *arg, void **pipep)
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_plat_ipc_init(&pipe->fd);
+	if ((rv = nni_plat_ipc_init(&pipe->fd)) != 0) {
+		NNI_FREE_STRUCT(pipe);
+		return (rv);
+	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
 
 	rv = nni_plat_ipc_connect(&pipe->fd, path);
 	if (rv != 0) {
+		nni_plat_ipc_fini(&pipe->fd);
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
@@ -327,9 +334,13 @@ nni_ipc_ep_accept(void *arg, void **pipep)
 	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
-	nni_plat_ipc_init(&pipe->fd);
+	if ((rv = nni_plat_ipc_init(&pipe->fd)) != 0) {
+		NNI_FREE_STRUCT(pipe);
+		return (rv);
+	}
 
 	if ((rv = nni_plat_ipc_accept(&pipe->fd, &ep->fd)) != 0) {
+		nni_plat_ipc_fini(&pipe->fd);
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
