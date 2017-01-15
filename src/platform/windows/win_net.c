@@ -19,77 +19,68 @@ static struct {
 	int	nng_err;
 }
 nni_plat_wsa_errnos[] = {
-	{ WSA_INVALID_HANDLE,	    NNG_ECLOSED				 },
-	{ WSA_NOT_ENOUGH_MEMORY,    NNG_ENOMEM				 },
-	{ WSA_INVALID_PARAMETER,    NNG_EINVAL				 },
-	{ WSA_OPERATION_ABORTED,    NNG_ECLOSED				 },
-	{ WSA_IO_INCOMPLETE,	    NNG_EAGAIN				 },
+	{ WSA_INVALID_HANDLE,	  NNG_ECLOSED			       },
+	{ WSA_NOT_ENOUGH_MEMORY,  NNG_ENOMEM			       },
+	{ WSA_INVALID_PARAMETER,  NNG_EINVAL			       },
+	{ WSA_OPERATION_ABORTED,  NNG_ECLOSED			       },
+	{ WSA_IO_INCOMPLETE,	  NNG_EAGAIN			       },
 
-	{ WSAEINTR,		    NNG_EINTR				 },
-	{ WSAEBADF,		    NNG_ECLOSED				 },
-	{ WSAEACCES,		    NNG_EPERM				 },
-	{ WSAEFAULT,		    NNG_ESYSERR + WSAEFAULT		 },
-	{ WSAEWOULDBLOCK,	    NNG_EAGAIN				 },
-	{ WSAEINPROGRESS,	    NNG_EAGAIN				 },
-	{ WSAEALREADY,		    NNG_ESYSERR + WSAEALREADY		 },
-	{ WSAENOTSOCK,		    NNG_ECLOSED				 },
-	{ WSAEMSGSIZE,		    NNG_EMSGSIZE			 },
-	{ WSAEPROTOTYPE,	    NNG_ESYSERR + WSAEPROTOTYPE		 },
-	{ WSAENOPROTOOPT,	    NNG_ENOTSUP				 },
-	{ WSAEPROTONOSUPPORT,	    NNG_ENOTSUP				 },
-	{ WSAEPROTONOSUPPORT,	    NNG_ENOTSUP				 },
-	{ WSAEADDRINUSE,	    NNG_EADDRINUSE			 },
-	{ WSAEADDRNOTAVAIL,	    NNG_EADDRINVAL			 },
-	{ WSAENETDOWN,		    NNG_EUNREACHABLE			 },
-	{ WSAENETUNREACH,	    NNG_EUNREACHABLE			 },
-	{ WSAECONNABORTED,	    NNG_ETIMEDOUT			 },
-	{ WSAECONNRESET,	    NNG_ECLOSED				 },
-	{ WSAENOBUFS,		    NNG_ENOMEM				 },
-	{ WSAEISCONN,		    NNG_ESYSERR + WSAEISCONN		 },
-	{ WSAENOTCONN,		    NNG_ECLOSED				 },
-	{ WSAESHUTDOWN,		    NNG_ECLOSED				 },
-	{ WSAETOOMANYREFS,	    NNG_ESYSERR + WSAETOOMANYREFS	 },
-	{ WSAETIMEDOUT,		    NNG_ETIMEDOUT			 },
-	{ WSAECONNREFUSED,	    NNG_ECONNREFUSED			 },
-	{ WSAELOOP,		    NNG_ESYSERR + WSAELOOP		 },
-	{ WSAENAMETOOLONG,	    NNG_ESYSERR + WSAENAMETOOLONG	 },
-	{ WSAEHOSTDOWN,		    NNG_EUNREACHABLE			 },
-	{ WSAEHOSTUNREACH,	    NNG_EUNREACHABLE			 },
-	{ WSAENOTEMPTY,		    NNG_ESYSERR + WSAENOTEMPTY		 },
-	{ WSAEPROCLIM,		    NNG_ESYSERR + WSAEPROCLIM		 },
-	{ WSAEUSERS,		    NNG_ESYSERR + WSAEUSERS		 },
-	{ WSAEDQUOT,		    NNG_ESYSERR + WSAEDQUOT		 },
-	{ WSAESTALE,		    NNG_ESYSERR + WSAESTALE		 },
-	{ WSAEREMOTE,		    NNG_ESYSERR + WSAEREMOTE		 },
-	{ WSASYSNOTREADY,	    NNG_ESYSERR + WSASYSNOTREADY	 },
-	{ WSAVERNOTSUPPORTED,	    NNG_ENOTSUP				 },
-	{ WSANOTINITIALISED,	    NNG_ESYSERR + WSANOTINITIALISED	 },
-	{ WSAEDISCON,		    NNG_ECLOSED				 },
-	{ WSAENOMORE,		    NNG_ESYSERR + WSAENOMORE		 },
-	{ WSAECANCELLED,	    NNG_ESYSERR + WSAECANCELLED		 },
-	{ WSAEINVALIDPROVIDER,	    NNG_ESYSERR + WSAEINVALIDPROVIDER	 },
-	{ WSAEPROVIDERFAILEDINIT,   NNG_ESYSERR + WSAEPROVIDERFAILEDINIT },
-	{ WSASYSCALLFAILURE,	    NNG_ESYSERR + WSASYSCALLFAILURE	 },
-	{ WSASERVICE_NOT_FOUND,	    NNG_ESYSERR + WSASERVICE_NOT_FOUND	 },
-	{ WSATYPE_NOT_FOUND,	    NNG_ESYSERR + WSATYPE_NOT_FOUND	 },
-	{ WSA_E_CANCELLED,	    NNG_ESYSERR + WSA_E_CANCELLED	 },
-	{ WSAEREFUSED,		    NNG_ESYSERR + WSAEREFUSED		 },
-	{ WSAHOST_NOT_FOUND,	    NNG_EADDRINVAL			 },
-	{ WSATRY_AGAIN,		    NNG_EAGAIN				 },
-	{ WSANO_RECOVERY,	    NNG_ESYSERR + WSANO_RECOVERY	 },
-	{ WSANO_DATA,		    NNG_EADDRINVAL			 },
+	{ WSAEINTR,		  NNG_EINTR			       },
+	{ WSAEBADF,		  NNG_ECLOSED			       },
+	{ WSAEACCES,		  NNG_EPERM			       },
+	{ WSAEFAULT,		  NNG_ESYSERR + WSAEFAULT	       },
+	{ WSAEWOULDBLOCK,	  NNG_EAGAIN			       },
+	{ WSAEINPROGRESS,	  NNG_EAGAIN			       },
+	{ WSAEALREADY,		  NNG_ESYSERR + WSAEALREADY	       },
+	{ WSAENOTSOCK,		  NNG_ECLOSED			       },
+	{ WSAEMSGSIZE,		  NNG_EMSGSIZE			       },
+	{ WSAEPROTOTYPE,	  NNG_ESYSERR + WSAEPROTOTYPE	       },
+	{ WSAENOPROTOOPT,	  NNG_ENOTSUP			       },
+	{ WSAEPROTONOSUPPORT,	  NNG_ENOTSUP			       },
+	{ WSAEPROTONOSUPPORT,	  NNG_ENOTSUP			       },
+	{ WSAEADDRINUSE,	  NNG_EADDRINUSE		       },
+	{ WSAEADDRNOTAVAIL,	  NNG_EADDRINVAL		       },
+	{ WSAENETDOWN,		  NNG_EUNREACHABLE		       },
+	{ WSAENETUNREACH,	  NNG_EUNREACHABLE		       },
+	{ WSAECONNABORTED,	  NNG_ETIMEDOUT			       },
+	{ WSAECONNRESET,	  NNG_ECLOSED			       },
+	{ WSAENOBUFS,		  NNG_ENOMEM			       },
+	{ WSAEISCONN,		  NNG_ESYSERR + WSAEISCONN	       },
+	{ WSAENOTCONN,		  NNG_ECLOSED			       },
+	{ WSAESHUTDOWN,		  NNG_ECLOSED			       },
+	{ WSAETOOMANYREFS,	  NNG_ESYSERR + WSAETOOMANYREFS	       },
+	{ WSAETIMEDOUT,		  NNG_ETIMEDOUT			       },
+	{ WSAECONNREFUSED,	  NNG_ECONNREFUSED		       },
+	{ WSAELOOP,		  NNG_ESYSERR + WSAELOOP	       },
+	{ WSAENAMETOOLONG,	  NNG_ESYSERR + WSAENAMETOOLONG	       },
+	{ WSAEHOSTDOWN,		  NNG_EUNREACHABLE		       },
+	{ WSAEHOSTUNREACH,	  NNG_EUNREACHABLE		       },
+	{ WSAENOTEMPTY,		  NNG_ESYSERR + WSAENOTEMPTY	       },
+	{ WSAEPROCLIM,		  NNG_ESYSERR + WSAEPROCLIM	       },
+	{ WSAEUSERS,		  NNG_ESYSERR + WSAEUSERS	       },
+	{ WSAEDQUOT,		  NNG_ESYSERR + WSAEDQUOT	       },
+	{ WSAESTALE,		  NNG_ESYSERR + WSAESTALE	       },
+	{ WSAEREMOTE,		  NNG_ESYSERR + WSAEREMOTE	       },
+	{ WSASYSNOTREADY,	  NNG_ESYSERR + WSASYSNOTREADY	       },
+	{ WSAVERNOTSUPPORTED,	  NNG_ENOTSUP			       },
+	{ WSANOTINITIALISED,	  NNG_ESYSERR + WSANOTINITIALISED      },
+	{ WSAEDISCON,		  NNG_ECLOSED			       },
+	{ WSAENOMORE,		  NNG_ESYSERR + WSAENOMORE	       },
+	{ WSAECANCELLED,	  NNG_ESYSERR + WSAECANCELLED	       },
+	{ WSAEINVALIDPROVIDER,	  NNG_ESYSERR + WSAEINVALIDPROVIDER    },
+	{ WSAEPROVIDERFAILEDINIT, NNG_ESYSERR + WSAEPROVIDERFAILEDINIT },
+	{ WSASYSCALLFAILURE,	  NNG_ESYSERR + WSASYSCALLFAILURE      },
+	{ WSASERVICE_NOT_FOUND,	  NNG_ESYSERR + WSASERVICE_NOT_FOUND   },
+	{ WSATYPE_NOT_FOUND,	  NNG_ESYSERR + WSATYPE_NOT_FOUND      },
+	{ WSA_E_CANCELLED,	  NNG_ESYSERR + WSA_E_CANCELLED	       },
+	{ WSAEREFUSED,		  NNG_ESYSERR + WSAEREFUSED	       },
+	{ WSAHOST_NOT_FOUND,	  NNG_EADDRINVAL		       },
+	{ WSATRY_AGAIN,		  NNG_EAGAIN			       },
+	{ WSANO_RECOVERY,	  NNG_ESYSERR + WSANO_RECOVERY	       },
+	{ WSANO_DATA,		  NNG_EADDRINVAL		       },
 	// Eliding all the QoS related errors.
-
-#if 0
-	// REVIEW THESE!!!
-	{ ERROR_BROKEN_PIPE,	    NNG_ECLOSED				 },
-	{ ERROR_CONNECTION_REFUSED, NNG_ECONNREFUSED			 },
-	{ ERROR_NOT_CONNECTED,	    NNG_ECLOSED				 },
-	{ ERROR_PIPE_NOT_CONNECTED, NNG_ECLOSED				 },
-	{ ERROR_NO_DATA,	    NNG_ECLOSED				 },
-#endif
 	// Must be Last!!
-	{			 0,				       0 },
+	{		       0,				     0 },
 };
 
 
@@ -222,11 +213,10 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 			if ((rv = WSAGetLastError()) != WSA_IO_PENDING) {
 				return (nni_winsock_error(rv));
 			}
-			flags = 0;
-			if (!WSAGetOverlappedResult(s->s, olp, &nsent,
-			    TRUE, &flags)) {
-				return (nni_winsock_error(WSAGetLastError()));
-			}
+		}
+		flags = 0;
+		if (!WSAGetOverlappedResult(s->s, olp, &nsent, TRUE, &flags)) {
+			return (nni_winsock_error(WSAGetLastError()));
 		}
 
 		if (nsent > resid) {
@@ -280,11 +270,10 @@ nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 			if ((rv = WSAGetLastError()) != WSA_IO_PENDING) {
 				return (nni_winsock_error(rv));
 			}
-			flags = 0;
-			if (!WSAGetOverlappedResult(s->s, olp, &nrecv,
-			    TRUE, &flags)) {
-				return (nni_winsock_error(WSAGetLastError()));
-			}
+		}
+		flags = 0;
+		if (!WSAGetOverlappedResult(s->s, olp, &nrecv, TRUE, &flags)) {
+			return (nni_winsock_error(WSAGetLastError()));
 		}
 
 		if (nrecv > resid) {
@@ -329,7 +318,28 @@ nni_plat_tcp_setopts(SOCKET fd)
 int
 nni_plat_tcp_init(nni_plat_tcpsock *s)
 {
+	int rv;
+
+	ZeroMemory(s, sizeof (*s));
 	s->s = INVALID_SOCKET;
+	s->recv_olpd.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (s->recv_olpd.hEvent == INVALID_HANDLE_VALUE) {
+		rv = GetLastError();
+		return (NNG_ESYSERR+rv);
+	}
+	s->send_olpd.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (s->send_olpd.hEvent == INVALID_HANDLE_VALUE) {
+		rv = GetLastError();
+		CloseHandle(s->recv_olpd.hEvent);
+		return (NNG_ESYSERR+rv);
+	}
+	s->conn_olpd.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (s->conn_olpd.hEvent == INVALID_HANDLE_VALUE) {
+		rv = GetLastError();
+		CloseHandle(s->send_olpd.hEvent);
+		CloseHandle(s->recv_olpd.hEvent);
+		return (NNG_ESYSERR+rv);
+	}
 	return (0);
 }
 
@@ -342,7 +352,6 @@ nni_plat_tcp_open(nni_plat_tcpsock *s)
 	GUID guid1 = WSAID_CONNECTEX;
 	GUID guid2 = WSAID_ACCEPTEX;
 
-	ZeroMemory(s, sizeof (*s));
 	s->s = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0,
 		WSA_FLAG_NO_HANDLE_INHERIT|WSA_FLAG_OVERLAPPED);
 	if (s->s == INVALID_SOCKET) {
@@ -395,6 +404,9 @@ nni_plat_tcp_fini(nni_plat_tcpsock *s)
 		(void) CancelIoEx((HANDLE) fd, &s->send_olpd);
 		(void) closesocket(fd);
 	}
+	CloseHandle(s->recv_olpd.hEvent);
+	CloseHandle(s->send_olpd.hEvent);
+	CloseHandle(s->conn_olpd.hEvent);
 }
 
 
@@ -499,14 +511,12 @@ nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
 		return (nni_winsock_error(rv));
 	}
 
-	if (s->connectex(s->s, (struct sockaddr *) &ss, len, NULL, 0, NULL,
+	if (!s->connectex(s->s, (struct sockaddr *) &ss, len, NULL, 0, NULL,
 	    olp)) {
-		// Immediate completion?
-		return (0);
-	}
-	if ((rv = WSAGetLastError()) != ERROR_IO_PENDING) {
-		nni_plat_tcp_close(s);
-		return (nni_winsock_error(rv));
+		if ((rv = WSAGetLastError()) != ERROR_IO_PENDING) {
+			nni_plat_tcp_close(s);
+			return (nni_winsock_error(rv));
+		}
 	}
 	nbytes = flags = 0;
 	if (!WSAGetOverlappedResult(s->s, olp, &nbytes, TRUE, &flags)) {
@@ -533,18 +543,14 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 
 	// 256 > (sizeof (SOCKADDR_STORAGE) + 16)
 	nbytes = 0;
-	if (s->acceptex(server->s, s->s, ainfo, 0, 256, 256, &nbytes, olp)) {
-		// Immediate completion?
-		return (0);
-	}
-	if ((rv = WSAGetLastError()) != ERROR_IO_PENDING) {
-		nni_plat_tcp_close(s);
-		return (nni_winsock_error(rv));
+	if (!s->acceptex(server->s, s->s, ainfo, 0, 256, 256, &nbytes, olp)) {
+		if ((rv = WSAGetLastError()) != ERROR_IO_PENDING) {
+			return (nni_winsock_error(rv));
+		}
 	}
 	nbytes = flags = 0;
 	if (!WSAGetOverlappedResult(server->s, olp, &nbytes, TRUE, &flags)) {
 		rv = WSAGetLastError();
-		nni_plat_tcp_close(s);
 		return (nni_winsock_error(rv));
 	}
 	return (0);
