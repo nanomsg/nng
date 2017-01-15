@@ -40,7 +40,15 @@ struct nni_plat_tcpsock {
 };
 
 struct nni_plat_ipcsock {
-	HANDLE p;
+	HANDLE			p;
+
+	char			path[256];
+	WSAOVERLAPPED		recv_olpd;
+	WSAOVERLAPPED		send_olpd;
+	WSAOVERLAPPED		conn_olpd; // Use for both connect and accept
+	CRITICAL_SECTION	cs;
+
+	int			server;
 };
 
 struct nni_plat_thr {
