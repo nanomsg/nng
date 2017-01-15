@@ -125,4 +125,9 @@ nni_plat_usleep(nni_duration usec)
 
 #endif  // NNG_USE_GETTIMEOFDAY
 
+#else
+
+// Suppress empty symbols warnings in ranlib.
+int nni_posix_clock_not_used = 0;
+
 #endif  // PLATFORM_POSIX_CLOCK

@@ -340,4 +340,9 @@ nni_plat_ipc_accept(nni_plat_ipcsock *s, nni_plat_ipcsock *server)
 }
 
 
+#else
+
+// Suppress empty symbols warnings in ranlib.
+int nni_posix_ipc_not_used = 0;
+
 #endif // PLATFORM_POSIX_IPC

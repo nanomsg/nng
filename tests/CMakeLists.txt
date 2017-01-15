@@ -2,7 +2,7 @@
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
-#   Copyright 2016 Garrett D'Amore <garrett@damore.org>
+#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -30,11 +30,20 @@ include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src)
 
 if (NNG_TESTS)
 
+    if (THREADS_HAVE_PTHREAD_ARG)
+        add_definitions (-pthread)
+    endif()
+
     set (TEST_PORT 12100)
     macro (add_nng_test NAME TIMEOUT)
         list (APPEND all_tests ${NAME})
         add_executable (${NAME} ${NAME}.c convey.c)
-        target_link_libraries (${NAME} ${PROJECT_NAME})
+        target_link_libraries (${NAME} ${PROJECT_NAME}_static)
+        target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
+        if (CMAKE_THREAD_LIBS_INIT)
+            target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
+        endif()
+
         add_test (NAME ${NAME} COMMAND ${NAME} -v ${TEST_PORT})
         set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
         math (EXPR TEST_PORT "${TEST_PORT}+10")
@@ -42,7 +51,11 @@ if (NNG_TESTS)
 
      macro (add_nng_perf NAME)
         add_executable (${NAME} perf/${NAME}.c)
-        target_link_libraries (${NAME} ${PROJECT_NAME})
+        target_link_libraries (${NAME} ${PROJECT_NAME}_static)
+        target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
+        if (CMAKE_THREAD_LIBS_INIT)
+            target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
+        endif()
     endmacro (add_nng_perf)
 
 else ()

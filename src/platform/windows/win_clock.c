@@ -26,4 +26,9 @@ nni_plat_usleep(nni_duration usec)
 }
 
 
+#else
+
+// Suppress empty symbols warnings in ranlib.
+int nni_win_clock_not_used = 0;
+
 #endif  // PLATFORM_WINDOWS

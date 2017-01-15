@@ -30,4 +30,9 @@ nni_plat_seed_prng(void *buf, size_t bufsz)
 }
 
 
+#else
+
+// Suppress empty symbols warnings in ranlib.
+int nni_win_rand_not_used = 0;
+
 #endif  // PLATFORM_WINDOWS

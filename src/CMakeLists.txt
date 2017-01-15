@@ -2,7 +2,7 @@
 #   Copyright (c) 2012-2013 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
-#   Copyright 2016 Garrett D'Amore <garrett@damore.org>
+#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -121,18 +121,22 @@ foreach (f ${NNG_SOURCES})
     source_group ("${SRC_GROUP}" FILES ${f})
 endforeach ()
 
-if (NNG_STATIC_LIB)
-    add_library (${PROJECT_NAME} STATIC ${NNG_SOURCES})
-else ()
-    add_library (${PROJECT_NAME} SHARED ${NNG_SOURCES})
-    add_definitions (-DNNG_SHARED_LIB)
-    #set_target_properties (${PROJECT_NAME} PROPERTIES SOVERSION "${NNG_ABI_VERSION}")
-endif ()
+# Static libary
+add_library (${PROJECT_NAME}_static STATIC ${NNG_SOURCES})
+
+# Shared library
+add_library (${PROJECT_NAME} SHARED ${NNG_SOURCES})
+target_compile_definitions(${PROJECT_NAME} PRIVATE -DNNG_SHARED_LIB)
+#set_target_properties (${PROJECT_NAME} PROPERTIES SOVERSION "${NNG_ABI_VERSION}")
 
 # Set library outputs same as top-level project binary outputs
 set_target_properties (${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set_target_properties (${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 set_target_properties (${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+
+set_target_properties (${PROJECT_NAME}_static PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties (${PROJECT_NAME}_static PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties (${PROJECT_NAME}_static PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
 target_link_libraries (${PROJECT_NAME} ${NNG_REQUIRED_LIBRARIES})
 if( THREADS_HAVE_PTHREAD_ARG)
@@ -152,7 +156,7 @@ endif()
 #install (
 #    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
 #    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
-install (TARGETS ${PROJECT_NAME}
+install (TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_static
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}

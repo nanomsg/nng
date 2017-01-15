@@ -78,4 +78,9 @@ nni_plat_errno(int errnum)
 }
 
 
+#else
+
+// Suppress empty symbols warnings in ranlib.
+int nni_win_debug_not_used = 0;
+
 #endif // PLATFORM_WINDOWS

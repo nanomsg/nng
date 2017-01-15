@@ -29,4 +29,9 @@ nni_free(void *ptr, size_t size)
 }
 
 
+#else
+
+// Suppress empty symbols warnings in ranlib.
+int nni_posix_alloc_not_used = 0;
+
 #endif

@@ -557,4 +557,9 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 }
 
 
+#else
+
+// Suppress empty symbols warnings in ranlib.
+int nni_win_net_not_used = 0;
+
 #endif // PLATFORM_WINDOWS

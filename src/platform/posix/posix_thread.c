@@ -313,4 +313,9 @@ nni_plat_fini(void)
 }
 
 
+#else
+
+// Suppress empty symbols warnings in ranlib.
+int nni_posix_thread_not_used = 0;
+
 #endif

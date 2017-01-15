@@ -85,7 +85,7 @@ endif()
 
 # User-defined options.
 
-option (NNG_STATIC_LIB "Build static library instead of shared library." OFF)
+#option (NNG_STATIC_LIB "Build static library instead of shared library." OFF)
 option (NNG_ENABLE_DOC "Enable building documentation." ON)
 option (NNG_TESTS "Build and run nanomsg tests" ON)
 option (NNG_TOOLS "Build nanomsg tools" OFF)
@@ -175,33 +175,28 @@ else ()
     nng_check_lib (nsl gethostbyname NNG_HAVE_LIBNSL)
     nng_check_lib (socket socket NNG_HAVE_LIBSOCKET)
 
-    nng_check_sym (atomic_cas_32 atomic.h NNG_HAVE_ATOMIC_SOLARIS)
+#    nng_check_sym (atomic_cas_32 atomic.h NNG_HAVE_ATOMIC_SOLARIS)
     nng_check_sym (AF_UNIX sys/socket.h NNG_HAVE_UNIX_SOCKETS)
     nng_check_sym (backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
     nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
-    if (NNG_HAVE_SEMAPHORE_RT OR NNG_HAVE_SEMAPHORE_PTHREAD)
-        add_definitions (-DNNG_HAVE_SEMAPHORE)
-    endif ()
+#    if (NNG_HAVE_SEMAPHORE_RT OR NNG_HAVE_SEMAPHORE_PTHREAD)
+#        add_definitions (-DNNG_HAVE_SEMAPHORE)
+#    endif ()
 endif ()
 
-
-if (NOT NNG_ENABLE_GETADDRINFO_A)
-    add_definitions (-DNNG_DISABLE_GETADDRINFO_A)
-endif ()
-
-check_c_source_compiles ("
-    #include <stdint.h>
-    int main()
-    {
-        volatile uint32_t n = 0;
-        __sync_fetch_and_add (&n, 1);
-        __sync_fetch_and_sub (&n, 1);
-        return 0;
-    }
-" NNG_HAVE_GCC_ATOMIC_BUILTINS)
-if (NNG_HAVE_GCC_ATOMIC_BUILTINS)
-    add_definitions (-DNNG_HAVE_GCC_ATOMIC_BUILTINS)
-endif ()
+#check_c_source_compiles ("
+#    #include <stdint.h>
+#    int main()
+#    {
+#        volatile uint32_t n = 0;
+#        __sync_fetch_and_add (&n, 1);
+#        __sync_fetch_and_sub (&n, 1);
+#        return 0;
+#    }
+#" NNG_HAVE_GCC_ATOMIC_BUILTINS)
+#if (NNG_HAVE_GCC_ATOMIC_BUILTINS)
+#    add_definitions (-DNNG_HAVE_GCC_ATOMIC_BUILTINS)
+#endif ()
 
 add_subdirectory (src)
 
