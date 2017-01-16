@@ -3,6 +3,7 @@ environment:
   global:
     ASCIIDOCTOR_VER: 1.5.4
     CFLAGS: /MP
+    TERM: xterm
   matrix:
     # array of all environments used to test builds
     # Note that we require relatively modern Visual Studio, in order to pick
