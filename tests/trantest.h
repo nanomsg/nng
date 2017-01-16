@@ -45,7 +45,7 @@ void
 trantest_scheme(trantest *tt)
 {
 	Convey("Scheme is correct", {
-		int l = strlen(tt->tran->tran_scheme);
+		size_t l = strlen(tt->tran->tran_scheme);
 		So(strncmp(tt->addr, tt->tran->tran_scheme, l) == 0);
 		So(strncmp(tt->addr + l, "://", 3) == 0);
 	})

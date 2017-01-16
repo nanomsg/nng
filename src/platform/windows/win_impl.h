@@ -52,7 +52,7 @@ struct nni_plat_ipcsock {
 };
 
 struct nni_plat_thr {
-	void (__stdcall *func)(void *);
+	void	(*func)(void *);
 	void *	arg;
 	HANDLE	handle;
 };

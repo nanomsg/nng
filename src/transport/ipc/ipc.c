@@ -126,7 +126,7 @@ nni_ipc_pipe_recv(void *arg, nni_msg **msgp)
 		return (NNG_EPROTO);
 	}
 
-	if ((rv = nng_msg_alloc(&msg, len)) != 0) {
+	if ((rv = nng_msg_alloc(&msg, (size_t) len)) != 0) {
 		return (rv);
 	}
 

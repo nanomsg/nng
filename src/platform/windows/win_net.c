@@ -201,7 +201,7 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 	for (i = 0, resid = 0; i < cnt; resid += iov[i].len, i++) {
 		iov[i].buf = iovs[i].iov_buf;
-		iov[i].len = (DWORD)iovs[i].iov_len;
+		iov[i].len = (DWORD) iovs[i].iov_len;
 	}
 
 	i = 0;
@@ -257,7 +257,7 @@ nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 	for (i = 0, resid = 0; i < cnt; resid += iov[i].len, i++) {
 		iov[i].buf = iovs[i].iov_buf;
-		iov[i].len = (DWORD)iovs[i].iov_len;
+		iov[i].len = (DWORD) iovs[i].iov_len;
 	}
 
 	i = 0;

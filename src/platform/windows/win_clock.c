@@ -22,7 +22,7 @@ nni_plat_clock(void)
 void
 nni_plat_usleep(nni_duration usec)
 {
-	Sleep((DWORD)((usec + 999) / 1000));
+	Sleep((DWORD) ((usec + 999) / 1000));
 }
 
 

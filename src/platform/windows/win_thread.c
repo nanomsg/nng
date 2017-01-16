@@ -95,7 +95,7 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 		msec = 0;
 	} else {
 		// times are in usec, but win32 wants millis
-		msec = (DWORD)(((until - now) + 999)/1000);
+		msec = (DWORD) (((until - now) + 999)/1000);
 	}
 
 	ok = SleepConditionVariableCS(&cv->cv, cv->cs, msec);
