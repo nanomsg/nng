@@ -9,7 +9,7 @@
 
 #include "convey.h"
 #include "nng.h"
-
+#include "core/nng_impl.h"
 #include <string.h>
 
 #define	APPENDSTR(m, s)	nng_msg_append(m, s, strlen(s))
@@ -104,6 +104,7 @@ Main({
 			nng_msg *abc;
 			nng_msg *def;
 			uint64_t usecs;
+			int len;
 			nng_socket *push;
 			nng_socket *pull1;
 			nng_socket *pull2;
@@ -120,6 +121,22 @@ Main({
 				nng_close(pull2);
 				nng_close(pull3);
 			})
+
+			// We need to increase the buffer from zero, because
+			// there is no guarantee that the various listeners
+			// will be present, which means that they will push
+			// back during load balancing.  Adding a small buffer
+			// ensures that we can write to each stream, even if
+			// the listeners are not running yet.
+			len = 4;
+			So(nng_setopt(push, NNG_OPT_RCVBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(push, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(pull1, NNG_OPT_RCVBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(pull1, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(pull2, NNG_OPT_RCVBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(pull2, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(pull3, NNG_OPT_RCVBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(pull3, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
 
 			So(nng_msg_alloc(&abc, 0) == 0);
 			APPENDSTR(abc, "abc");
@@ -139,7 +156,9 @@ Main({
 			// So pull3 might not be done accepting yet, but pull1
 			// and pull2 definitely are, because otherwise the
 			// server couldn't have gotten to the accept.  (The
-			// accept logic is single threaded.)
+			// accept logic is single threaded.)  Let's wait a bit
+			// though, to ensure that stuff has settled.
+			nni_usleep(100000);
 
 			So(nng_sendmsg(push, abc, 0) == 0);
 			So(nng_sendmsg(push, def, 0) == 0);
