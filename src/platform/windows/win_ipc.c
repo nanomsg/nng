@@ -11,6 +11,8 @@
 
 #ifdef PLATFORM_WINDOWS
 
+#include <stdio.h>
+
 // Windows has infinite numbers of error codes it seems.  We only bother
 // with the ones that are relevant to us (we think).
 static struct {
@@ -73,7 +75,7 @@ nni_plat_ipc_send(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 	OVERLAPPED *olp = &s->send_olpd;
 
 	NNI_ASSERT(cnt <= 4);
-	for (i = 0, resid = 0; i < cnt; resid += iov[i].iov_len, i++) {
+	for (i = 0, resid = 0; i < cnt; resid += (DWORD) iov[i].iov_len, i++) {
 		iov[i].iov_len = iovs[i].iov_len;
 		iov[i].iov_buf = iovs[i].iov_buf;
 	}
@@ -84,7 +86,8 @@ nni_plat_ipc_send(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 		nsent = 0;
 		// We limit ourselves to writing 16MB at a time.  Named Pipes
 		// on Windows have limits of between 31 and 64MB.
-		len = iov[i].iov_len > 0x1000000 ? 0x1000000 : iov[i].iov_len;
+		len = iov[i].iov_len > 0x1000000 ? 0x1000000 :
+		    (DWORD) iov[i].iov_len;
 		buf = iov[i].iov_buf;
 
 		if (!WriteFile(s->p, buf, len, NULL, olp)) {
@@ -123,7 +126,7 @@ nni_plat_ipc_recv(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 	OVERLAPPED *olp = &s->recv_olpd;
 
 	NNI_ASSERT(cnt <= 4);
-	for (i = 0, resid = 0; i < cnt; resid += iov[i].iov_len, i++) {
+	for (i = 0, resid = 0; i < cnt; resid += (DWORD) iov[i].iov_len, i++) {
 		iov[i].iov_len = iovs[i].iov_len;
 		iov[i].iov_buf = iovs[i].iov_buf;
 	}
@@ -134,7 +137,8 @@ nni_plat_ipc_recv(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 		nrecv = 0;
 		// We limit ourselves to writing 16MB at a time.  Named Pipes
 		// on Windows have limits of between 31 and 64MB.
-		len = iov[i].iov_len > 0x1000000 ? 0x1000000 : iov[i].iov_len;
+		len = iov[i].iov_len > 0x1000000 ? 0x1000000 :
+		    (DWORD) iov[i].iov_len;
 		buf = iov[i].iov_buf;
 
 		if (!ReadFile(s->p, buf, len, NULL, olp)) {
@@ -262,7 +266,6 @@ nni_plat_ipc_accept(nni_plat_ipcsock *s, nni_plat_ipcsock *server)
 {
 	int rv;
 	OVERLAPPED *olp = &s->conn_olpd;
-	HANDLE newp;
 	DWORD nbytes;
 
 	s->server = 1;

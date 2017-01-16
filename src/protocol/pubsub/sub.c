@@ -44,7 +44,6 @@ static int
 nni_sub_sock_init(void **subp, nni_sock *sock)
 {
 	nni_sub_sock *sub;
-	int rv;
 
 	if ((sub = NNI_ALLOC_STRUCT(sub)) == NULL) {
 		return (NNG_ENOMEM);
@@ -79,7 +78,6 @@ static int
 nni_sub_pipe_init(void **spp, nni_pipe *pipe, void *ssock)
 {
 	nni_sub_pipe *sp;
-	int rv;
 
 	if ((sp = NNI_ALLOC_STRUCT(sp)) == NULL) {
 		return (NNG_ENOMEM);

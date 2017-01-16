@@ -8,37 +8,10 @@
 //
 
 #include "convey.h"
+#include "stubs.h"
 #include "nng.h"
 
 #include <string.h>
-
-#ifndef	_WIN32
-#include <sys/time.h>
-#endif
-
-uint64_t
-getms(void)
-{
-#ifdef	_WIN32
-	return (GetTickCount64())	;
-#else
-	static time_t epoch;
-	struct timeval tv;
-
-	if (epoch == 0) {
-		epoch = time(NULL);
-	}
-	gettimeofday(&tv, NULL);
-
-	if (tv.tv_sec < epoch) {
-		// Broken clock.
-		// This will force all other timing tests to fail
-		return (0);
-	}
-	tv.tv_sec -= epoch;
-	return (((uint64_t)(tv.tv_sec ) * 1000) + (tv.tv_usec / 1000));
-#endif
-}
 
 TestMain("Socket Operations", {
 	Convey("We are able to open a PAIR socket", {

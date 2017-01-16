@@ -227,7 +227,6 @@ nni_ipc_negotiate(nni_ipc_pipe *pipe)
 	int rv;
 	nni_iov iov;
 	uint8_t buf[8];
-	uint16_t peer;
 
 	// First send our header..
 	buf[0] = 0;

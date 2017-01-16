@@ -41,7 +41,6 @@ static int
 nni_pub_sock_init(void **pubp, nni_sock *sock)
 {
 	nni_pub_sock *pub;
-	int rv;
 
 	if ((pub = NNI_ALLOC_STRUCT(pub)) == NULL) {
 		return (NNG_ENOMEM);

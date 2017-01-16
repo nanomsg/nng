@@ -224,7 +224,6 @@ nni_rep_pipe_recv(void *arg)
 	NNI_PUT32(idbuf, id);
 
 	for (;;) {
-		size_t len;
 		uint8_t *body;
 		int hops;
 
@@ -323,7 +322,6 @@ static nni_msg *
 nni_rep_sock_sfilter(void *arg, nni_msg *msg)
 {
 	nni_rep_sock *rep = arg;
-	size_t len;
 
 	if (rep->raw) {
 		return (msg);

@@ -9,6 +9,7 @@
 
 #include "core/idhash.c"
 #include "convey.h"
+#include "stubs.h"
 
 Main({
 	Test("General ID Hash", {
@@ -93,7 +94,6 @@ Main({
 
 	Test("Resize ID Hash", {
 		int expect[1024];
-		int actual[1024];
 		int rv;
 		int i;
 

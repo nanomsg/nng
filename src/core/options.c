@@ -103,7 +103,7 @@ nni_getopt_buf(nni_msgq *mq, void *val, size_t *sizep)
 {
 	int len = nni_msgq_cap(mq);
 
-	int sz = *sizep;
+	size_t sz = *sizep;
 
 	if (sz > sizeof (len)) {
 		sz = sizeof (len);

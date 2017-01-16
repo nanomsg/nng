@@ -41,7 +41,6 @@ static int
 nni_bus_sock_init(void **sp, nni_sock *nsock)
 {
 	nni_bus_sock *psock;
-	int rv;
 
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);

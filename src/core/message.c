@@ -41,7 +41,7 @@ typedef struct {
 static void
 nni_chunk_dump(const nni_chunk *chunk, char *prefix)
 {
-	int i, j;
+	size_t i, j;
 	uint8_t x;
 	char buf[128];
 
@@ -59,7 +59,7 @@ nni_chunk_dump(const nni_chunk *chunk, char *prefix)
 				nni_println(buf);
 				j = 0;
 			}
-			snprintf(buf, sizeof (buf), " %4x: ", i);
+			snprintf(buf, sizeof (buf), " %4x: ", (unsigned) i);
 			j += strlen(buf);
 		}
 		buf[j++] = ' ';
@@ -413,7 +413,7 @@ nni_msg_getopt(nni_msg *m, int opt, void *val, size_t *szp)
 
 	NNI_LIST_FOREACH (&m->m_options, mo) {
 		if (mo->mo_num == opt) {
-			int sz = *szp;
+			size_t sz = *szp;
 			if (sz > mo->mo_sz) {
 				sz = mo->mo_sz;
 				memcpy(val, mo->mo_val, sz);

@@ -240,7 +240,6 @@ nni_push_sock_send(void *arg)
 	nni_msgq *uwq = push->uwq;
 	nni_msg *msg = NULL;
 	nni_mtx *mx = nni_sock_mtx(push->sock);
-	int rv;
 	int i;
 
 	for (;;) {

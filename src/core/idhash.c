@@ -91,7 +91,7 @@ nni_hash_resize(nni_idhash *h)
 	uint32_t oldsize;
 	nni_idhash_entry *newents;
 	nni_idhash_entry *oldents;
-	int i;
+	uint32_t i;
 
 	if ((h->ih_load < h->ih_maxload) && (h->ih_load >= h->ih_minload)) {
 		// No resize needed.
@@ -231,7 +231,7 @@ nni_idhash_count(nni_idhash *h, uint32_t *countp)
 int
 nni_idhash_walk(nni_idhash *h, nni_idhash_walkfn fn, void *arg)
 {
-	int i, rv;
+	uint32_t i, rv;
 
 	for (i = 0; i < h->ih_cap; i++) {
 		nni_idhash_entry *ent = &h->ih_entries[i];

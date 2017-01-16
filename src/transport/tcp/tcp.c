@@ -270,7 +270,6 @@ nni_tcp_negotiate(nni_tcp_pipe *pipe)
 	int rv;
 	nni_iov iov;
 	uint8_t buf[8];
-	uint16_t peer;
 
 	// First send our header..
 	buf[0] = 0;

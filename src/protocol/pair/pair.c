@@ -45,7 +45,6 @@ static int
 nni_pair_sock_init(void **sp, nni_sock *nsock)
 {
 	nni_pair_sock *psock;
-	int rv;
 
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);

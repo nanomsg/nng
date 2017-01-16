@@ -20,6 +20,17 @@
 // API, so don't be lazy like this!  All nni_ symbols are subject to
 // change without notice, and not part of the stable API or ABI.
 #include "core/nng_impl.h"
+#include "core/thread.c"
+#include "core/clock.c"
+#include "platform/posix/posix_impl.h"
+#include "platform/posix/posix_alloc.c"
+#include "platform/posix/posix_clock.c"
+#include "platform/posix/posix_debug.c"
+#include "platform/posix/posix_thread.c"
+#include "platform/windows/win_impl.h"
+#include "platform/windows/win_clock.c"
+#include "platform/windows/win_debug.c"
+#include "platform/windows/win_thread.c"
 
 static void latency_client(const char *, int, int);
 static void latency_server(const char *, int, int);
@@ -90,6 +101,17 @@ main(int argc, char **argv)
 	}
 }
 
+int
+nop(void)
+{
+	return (0);
+}
+
+int
+nni_init(void)
+{
+	return (nni_plat_init(nop));
+}
 
 static void
 die(const char *fmt, ...)
@@ -298,7 +320,7 @@ latency_client(const char *addr, int msgsize, int trips)
 	nni_msg_free(msg);
 	nng_close(s);
 
-	total = (end - start) / 1.0;
+	total = (float)(end - start);
 	latency = (total / (trips * 2));
 	printf("total time: %.3f [s]\n", total / 1000000.0);
 	printf("message size: %d [B]\n", msgsize);

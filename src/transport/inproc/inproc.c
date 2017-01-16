@@ -269,7 +269,6 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 	nni_mtx_lock(&nni_inproc.mx);
 	for (;;) {
 		nni_inproc_ep *server;
-		nni_list *list;
 
 		if (ep->closed) {
 			nni_mtx_unlock(&nni_inproc.mx);

@@ -66,9 +66,16 @@ notifyafter(void *arg)
 	nni_mtx_unlock(&na->mx);
 }
 
+int
+nop(void)
+{
+	return (0);
+}
+
 TestMain("Platform Operations", {
 
-	int rv = nni_init();	// This is required for anything else to work
+	// This is required for anything else to work
+	int rv = nni_plat_init(nop);
 	Convey("Platform init worked", {
 		So(rv == 0);
 	})

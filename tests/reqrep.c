@@ -118,7 +118,6 @@ Main({
 			nng_msg *abc;
 			nng_msg *def;
 			nng_msg *cmd;
-			nng_msg *nvm;
 			uint64_t retry = 100000;	// 100 ms
 			size_t len;
 

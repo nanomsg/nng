@@ -9,6 +9,7 @@
 
 #include "core/list.c"
 #include "convey.h"
+#include "stubs.h"
 
 typedef struct {
 	int pad[2];

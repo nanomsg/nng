@@ -139,7 +139,6 @@ static void
 nni_dialer(void *arg)
 {
 	nni_ep *ep = arg;
-	nni_pipe *pipe;
 	int rv;
 	nni_time cooldown;
 	nni_mtx *mx = &ep->ep_sock->s_mx;

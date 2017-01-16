@@ -190,7 +190,6 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 	WSABUF iov[4];    // We never have more than 3 at present
 	int i;
 	int rv;
-	DWORD offset;
 	DWORD nsent;
 	DWORD resid;
 	DWORD flags;
@@ -202,7 +201,7 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 	for (i = 0, resid = 0; i < cnt; resid += iov[i].len, i++) {
 		iov[i].buf = iovs[i].iov_buf;
-		iov[i].len = iovs[i].iov_len;
+		iov[i].len = (DWORD)iovs[i].iov_len;
 	}
 
 	i = 0;
@@ -247,7 +246,6 @@ nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 	WSABUF iov[4];    // We never have more than 3 at present
 	int i;
 	int rv;
-	DWORD offset;
 	DWORD resid;
 	DWORD nrecv;
 	DWORD flags;
@@ -259,7 +257,7 @@ nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 	for (i = 0, resid = 0; i < cnt; resid += iov[i].len, i++) {
 		iov[i].buf = iovs[i].iov_buf;
-		iov[i].len = iovs[i].iov_len;
+		iov[i].len = (DWORD)iovs[i].iov_len;
 	}
 
 	i = 0;
@@ -352,8 +350,7 @@ nni_plat_tcp_open(nni_plat_tcpsock *s)
 	GUID guid1 = WSAID_CONNECTEX;
 	GUID guid2 = WSAID_ACCEPTEX;
 
-	s->s = WSASocket(AF_INET, SOCK_STREAM, IPPROTO_TCP, NULL, 0,
-		WSA_FLAG_NO_HANDLE_INHERIT|WSA_FLAG_OVERLAPPED);
+	s->s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (s->s == INVALID_SOCKET) {
 		rv = WSAGetLastError();
 		return (nni_winsock_error(rv));
@@ -478,7 +475,6 @@ nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
 	SOCKADDR_STORAGE ss;
 	SOCKADDR_STORAGE bss;
 	WSAOVERLAPPED *olp = &s->conn_olpd;
-	BOOL ok;
 	DWORD nbytes;
 	DWORD flags;
 	int rv;

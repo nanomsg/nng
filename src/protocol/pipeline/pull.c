@@ -33,7 +33,6 @@ static int
 nni_pull_sock_init(void **pullp, nni_sock *sock)
 {
 	nni_pull_sock *pull;
-	int rv;
 
 	if ((pull = NNI_ALLOC_STRUCT(pull)) == NULL) {
 		return (NNG_ENOMEM);
@@ -59,7 +58,6 @@ static int
 nni_pull_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 {
 	nni_pull_pipe *pp;
-	int rv;
 
 	if ((pp = NNI_ALLOC_STRUCT(pp)) == NULL) {
 		return (NNG_ENOMEM);
