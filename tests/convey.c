@@ -91,42 +91,42 @@ static int convey_nassert = 0;
 static int convey_nskip = 0;
 static const char *convey_assert_color = "";
 
-#define	CONVEY_EXIT_OK		0
-#define	CONVEY_EXIT_USAGE	1
-#define	CONVEY_EXIT_FAIL	2
-#define	CONVEY_EXIT_FATAL	3
-#define	CONVEY_EXIT_NOMEM	4
+#define CONVEY_EXIT_OK		0
+#define CONVEY_EXIT_USAGE	1
+#define CONVEY_EXIT_FAIL	2
+#define CONVEY_EXIT_FATAL	3
+#define CONVEY_EXIT_NOMEM	4
 
 struct convey_timer {
-	uint64_t		timer_base;
-	uint64_t		timer_count;
-	uint64_t		timer_rate;
-	int			timer_running;
+	uint64_t	timer_base;
+	uint64_t	timer_count;
+	uint64_t	timer_rate;
+	int		timer_running;
 };
 
 struct convey_log {
-	char			*log_buf;
-	size_t			log_size;
-	size_t			log_length;
+	char *	log_buf;
+	size_t	log_size;
+	size_t	log_length;
 };
 
 struct convey_ctx {
 	char			ctx_name[256];
-	struct convey_ctx	*ctx_parent;
-	struct convey_ctx	*ctx_root;	/* the root node on the list */
-	struct convey_ctx	*ctx_next;	/* root list only, cleanup */
+	struct convey_ctx *	ctx_parent;
+	struct convey_ctx *	ctx_root;       /* the root node on the list */
+	struct convey_ctx *	ctx_next;       /* root list only, cleanup */
 	int			ctx_level;
 	int			ctx_done;
 	int			ctx_started;
-	jmp_buf			*ctx_jmp;
+	jmp_buf *		ctx_jmp;
 	int			ctx_fatal;
 	int			ctx_fail;
 	int			ctx_skip;
 	int			ctx_printed;
 	struct convey_timer	ctx_timer;
-	struct convey_log	*ctx_errlog;
-	struct convey_log	*ctx_faillog;
-	struct convey_log	*ctx_dbglog;
+	struct convey_log *	ctx_errlog;
+	struct convey_log *	ctx_faillog;
+	struct convey_log *	ctx_dbglog;
 };
 
 static void convey_print_result(struct convey_ctx *);
@@ -145,6 +145,55 @@ static void convey_log_emit(struct convey_log *, const char *, const char *);
 static void convey_log_free(struct convey_log *);
 static struct convey_log *convey_log_alloc(void);
 static char *convey_nextline(char **);
+static void convey_emit_color(const char *);
+
+/*
+ * convey_emit_color just changes the output text to the color
+ * requested.  It is Windows console aware.
+ */
+static void
+convey_emit_color(const char *color)
+{
+#if defined(_WIN32)
+	static WORD baseattr;
+	static HANDLE hStdout;
+	WORD attr;
+
+	// This covers the case of mingw style terminals.
+	(void) fputs(color, stdout);
+
+	if (baseattr == 0) {
+		CONSOLE_SCREEN_BUFFER_INFO info;
+
+		hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
+		if (!GetConsoleScreenBufferInfo(hStdout, &info)) {
+			return;
+		}
+		baseattr = info.wAttributes;
+	}
+	attr = baseattr &
+	    ~(FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED|
+	    FOREGROUND_INTENSITY);
+
+	if (color == convey_nocolor) {
+		attr = baseattr;
+	} else if (color == convey_yellow) {
+		attr |= FOREGROUND_GREEN | FOREGROUND_RED |
+		    FOREGROUND_INTENSITY;
+	} else if (color == convey_green) {
+		attr |= FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+	} else if (color == convey_red) {
+		attr |= FOREGROUND_RED | FOREGROUND_INTENSITY;
+	} else {
+		return;
+	}
+	SetConsoleTextAttribute(hStdout, attr);
+
+#else
+	(void) fputs(color, stdout);
+#endif
+}
+
 
 /*
  * convey_print_result prints the test results.  It prints more information
@@ -162,7 +211,7 @@ convey_print_result(struct convey_ctx *t)
 	int secs, usecs;
 
 	if (t->ctx_root == t) {
-		convey_stop_timer(&t->ctx_timer);	/* This is idempotent */
+		convey_stop_timer(&t->ctx_timer);       /* This is idempotent */
 
 		convey_read_timer(&t->ctx_timer, &secs, &usecs);
 
@@ -173,7 +222,7 @@ convey_print_result(struct convey_ctx *t)
 		    "PASS", t->ctx_name, secs, usecs / 10000);
 
 		if (convey_verbose) {
-			(void) printf("\n");
+			(void) puts("");
 		}
 		convey_log_emit(t->ctx_errlog, "Errors:", convey_red);
 		convey_log_emit(t->ctx_faillog, "Failures:", convey_yellow);
@@ -181,15 +230,18 @@ convey_print_result(struct convey_ctx *t)
 			convey_log_emit(t->ctx_dbglog, "Log:", convey_nocolor);
 		}
 		if (convey_verbose) {
-			(void) printf("\n\n%s%d assertions thus far%s",
-			    convey_assert_color,
-			    convey_nassert,
-			    convey_nocolor);
+			(void) puts("");
+			(void) puts("");
+			convey_emit_color(convey_assert_color);
+			(void) printf("%d assertions thus far", convey_nassert);
+			convey_emit_color(convey_nocolor);
+
 			if (convey_nskip) {
-				(void) printf(" %s%s%s",
-				    convey_yellow,
-				    "(one or more sections skipped)",
-				    convey_nocolor);
+				(void) fputs(" ", stdout);
+				convey_emit_color(convey_yellow);
+				(void) fputs("(one or more sections skipped)",
+				    stdout);
+				convey_emit_color(convey_nocolor);
 			}
 			(void) printf("\n\n--- %s: %s (%d.%02ds)\n",
 			    t->ctx_fatal ? "FATAL" :
@@ -214,6 +266,7 @@ convey_print_result(struct convey_ctx *t)
 	}
 }
 
+
 /*
  * conveyStart is called when the context starts, before any call to
  * setjmp is made.  If the context isn't initialized already, that is
@@ -233,9 +286,9 @@ conveyStart(conveyScope *scope, const char *name)
 	if ((t = scope->cs_data) != NULL) {
 		if (t->ctx_done) {
 			convey_print_result(t);
-			return (1);	/* all done, skip */
+			return (1);     /* all done, skip */
 		}
-		return (0);	/* continue onward */
+		return (0);             /* continue onward */
 	}
 	scope->cs_data = (t = calloc(1, sizeof (struct convey_ctx)));
 	if (t == NULL) {
@@ -266,6 +319,7 @@ conveyStart(conveyScope *scope, const char *name)
 		    "Test Started: %s\n", t->ctx_name);
 	}
 	return (0);
+
 allocfail:
 	if (t != NULL) {
 		convey_log_free(t->ctx_errlog);
@@ -280,9 +334,10 @@ allocfail:
 	return (1);
 }
 
+
 /*
- * conveyLoop is called right after setjmp.  The jumped being true indicates
- * that setjmp returned true, and we are popping the stack.  In that case
+ * conveyLoop is called right after setjmp.  If unwind is true it indicates
+ * that setjmp returned true, and we are unwinding the stack.  In that case
  * we perform a local cleanup and keep popping back up the stack.  We
  * always come through this, even if the test finishes successfully, so
  * that we can do this stack unwind.  If we are unwinding, and we are
@@ -294,6 +349,7 @@ conveyLoop(conveyScope *scope, int unwind)
 {
 	struct convey_ctx *t;
 	int i;
+
 	if ((t = scope->cs_data) == NULL) {
 		return (1);
 	}
@@ -313,9 +369,9 @@ conveyLoop(conveyScope *scope, int unwind)
 			if (t->ctx_root == t) {
 				(void) printf("=== RUN: %s\n", t->ctx_name);
 			} else {
-				(void) printf("\n");
+				(void) puts("");
 				for (i = 0; i < t->ctx_level; i++) {
-					(void) printf("  ");
+					(void) fputs("  ", stdout);
 				}
 				(void) printf("%s ", t->ctx_name);
 				(void) fflush(stdout);
@@ -330,10 +386,12 @@ conveyLoop(conveyScope *scope, int unwind)
 	return (0);
 }
 
+
 void
 conveyFinish(conveyScope *scope, int *rvp)
 {
 	struct convey_ctx *t;
+
 	if ((t = scope->cs_data) == NULL) {
 		/* allocation failure */
 		*rvp = CONVEY_EXIT_NOMEM;
@@ -353,41 +411,47 @@ conveyFinish(conveyScope *scope, int *rvp)
 	longjmp(*t->ctx_jmp, 1);
 }
 
+
 void
 conveySkip(const char *file, int line, const char *fmt, ...)
 {
 	va_list ap;
 	struct convey_ctx *t = convey_get_ctx();
 	struct convey_log *dlog = t->ctx_dbglog;
+
 	if (convey_verbose) {
-		(void) printf("%s%s%s",
-		    convey_yellow, convey_sym_skip, convey_nocolor);
+		convey_emit_color(convey_yellow);
+		(void) fputs(convey_sym_skip, stdout);
+		convey_emit_color(convey_nocolor);
 	}
 	convey_logf(dlog, "* %s (%s:%d) (Skip): ",
 	    t->ctx_name, file, line);
 	va_start(ap, fmt);
 	convey_vlogf(dlog, fmt, ap, 1);
 	va_end(ap);
-	t->ctx_done = 1;	/* This forces an end */
+	t->ctx_done = 1;        /* This forces an end */
 	convey_nskip++;
 	longjmp(*t->ctx_jmp, 1);
 }
+
 
 void
 conveyAssertFail(const char *cond, const char *file, int line)
 {
 	struct convey_ctx *t = convey_get_ctx();
+
 	convey_nassert++;
 	if (convey_verbose) {
-		(void) printf("%s%s%s",
-		    convey_yellow, convey_sym_fail, convey_nocolor);
+		convey_emit_color(convey_yellow);
+		(void) fputs(convey_sym_fail, stdout);
+		convey_emit_color(convey_nocolor);
 	}
 	if (t->ctx_root != t) {
 		t->ctx_root->ctx_fail++;
 	}
 	convey_assert_color = convey_yellow;
 	t->ctx_fail++;
-	t->ctx_done = 1;	/* This forces an end */
+	t->ctx_done = 1;        /* This forces an end */
 	convey_logf(t->ctx_faillog, "* %s (Assertion Failed)\n",
 	    t->ctx_name);
 	convey_logf(t->ctx_faillog, "File: %s\n", file);
@@ -398,42 +462,49 @@ conveyAssertFail(const char *cond, const char *file, int line)
 	longjmp(*t->ctx_jmp, 1);
 }
 
+
 void
 conveyAssertPass(const char *cond, const char *file, int line)
 {
 	struct convey_ctx *t = convey_get_ctx();
+
 	convey_nassert++;
 	if (convey_verbose) {
-		(void) printf("%s%s%s",
-		    convey_green, convey_sym_pass, convey_nocolor);
+		convey_emit_color(convey_green);
+		(void) fputs(convey_sym_pass, stdout);
+		convey_emit_color(convey_nocolor);
 	}
 	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Passed): %s\n",
 	    t->ctx_name, file, line, cond);
 }
 
+
 void
 conveyAssertSkip(const char *cond, const char *file, int line)
 {
 	struct convey_ctx *t = convey_get_ctx();
+
 	convey_nskip++;
 	if (convey_verbose) {
-		(void) printf("%s%s%s",
-		    convey_yellow, convey_sym_pass, convey_nocolor);
+		convey_emit_color(convey_yellow);
+		(void) fputs(convey_sym_pass, stdout);
+		convey_emit_color(convey_nocolor);
 	}
 	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Skip): %s\n",
 	    t->ctx_name, file, line, cond);
 }
 
+
 /*
  * Performance counters.  Really we just want to start and stop timers, to
  * measure elapsed time in usec.
  */
-
 static void
 convey_init_timer(struct convey_timer *pc)
 {
 	memset(pc, 0, sizeof (*pc));
 }
+
 
 static void
 convey_start_timer(struct convey_timer *pc)
@@ -466,6 +537,7 @@ convey_start_timer(struct convey_timer *pc)
 	pc->timer_running = 1;
 }
 
+
 static void
 convey_stop_timer(struct convey_timer *pc)
 {
@@ -497,6 +569,7 @@ convey_stop_timer(struct convey_timer *pc)
 	} while (0);
 }
 
+
 static void
 convey_read_timer(struct convey_timer *pc, int *secp, int *usecp)
 {
@@ -515,12 +588,13 @@ convey_read_timer(struct convey_timer *pc, int *secp, int *usecp)
 	usec = (delta * 1000000) / rate;
 
 	if (secp) {
-		*secp = (int)sec;
+		*secp = (int) sec;
 	}
 	if (usecp) {
-		*usecp = (int)usec;
+		*usecp = (int) usec;
 	}
 }
+
 
 /*
  * Thread-specific data.  Pthreads uses one way, Win32 another.  If you
@@ -536,6 +610,7 @@ convey_tls_init(void)
 	return (0);
 }
 
+
 static int
 convey_tls_set(void *v)
 {
@@ -543,11 +618,14 @@ convey_tls_set(void *v)
 	return (0);
 }
 
+
 static void *
 convey_tls_get(void)
 {
 	return (convey_tls_key);
 }
+
+
 #elif defined(_WIN32)
 
 static DWORD convey_tls_key;
@@ -561,6 +639,7 @@ convey_tls_init(void)
 	return (0);
 }
 
+
 static int
 convey_tls_set(void *v)
 {
@@ -570,11 +649,13 @@ convey_tls_set(void *v)
 	return (0);
 }
 
+
 static void *
 convey_tls_get(void)
 {
-	return ((void *)TlsGetValue(convey_tls_key));
+	return ((void *) TlsGetValue(convey_tls_key));
 }
+
 
 #else
 
@@ -589,6 +670,7 @@ convey_tls_init(void)
 	return (0);
 }
 
+
 static int
 convey_tls_set(void *v)
 {
@@ -598,11 +680,14 @@ convey_tls_set(void *v)
 	return (0);
 }
 
+
 static void *
 convey_tls_get(void)
 {
 	return (pthread_getspecific(convey_tls_key));
 }
+
+
 #endif
 
 static struct convey_ctx *
@@ -610,6 +695,7 @@ convey_get_ctx(void)
 {
 	return (convey_tls_get());
 }
+
 
 /*
  * Log stuff.
@@ -619,7 +705,7 @@ convey_vlogf(struct convey_log *log, const char *fmt, va_list va, int addnl)
 {
 	/* Grow the log buffer if we need to */
 	while ((log->log_size - log->log_length) < 256) {
-		size_t newsz = log->log_size + 2000;
+		int newsz = log->log_size + 2000;
 		char *ptr = malloc(newsz);
 		if (ptr == NULL) {
 			return;
@@ -635,34 +721,47 @@ convey_vlogf(struct convey_log *log, const char *fmt, va_list va, int addnl)
 	(void) vsnprintf(log->log_buf + log->log_length,
 	    log->log_size - (log->log_length + 2), fmt, va);
 	log->log_length += strlen(log->log_buf + log->log_length);
-	if (addnl && log->log_buf[log->log_length-1] != '\n') {
+	if (addnl && (log->log_buf[log->log_length-1] != '\n')) {
 		log->log_buf[log->log_length++] = '\n';
 	}
 }
+
 
 static void
 convey_logf(struct convey_log *log, const char *fmt, ...)
 {
 	va_list va;
+
 	va_start(va, fmt);
 	convey_vlogf(log, fmt, va, 0);
 	va_end(va);
 }
+
 
 static void
 convey_log_emit(struct convey_log *log, const char *header, const char *color)
 {
 	char *s;
 	char *last = log->log_buf;
+
 	if (log->log_length == 0) {
 		return;
 	}
 
-	(void) printf("\n\n%s%s%s\n\n", color, header, convey_nocolor);
+	(void) fputs("\n\n", stdout);
+	convey_emit_color(color);
+	(void) fputs(header, stdout);
+	convey_emit_color(convey_nocolor);
+	(void) fputs("\n\n", stdout);
 	while ((s = convey_nextline(&last)) != NULL) {
-		(void) printf("  %s%s%s\n", color, s, convey_nocolor);
+		(void) fputs("  ", stdout);
+		convey_emit_color(color);
+		(void) fputs(s, stdout);
+		convey_emit_color(convey_nocolor);
+		(void) fputs("\n", stdout);
 	}
 }
+
 
 static void
 convey_log_free(struct convey_log *log)
@@ -675,11 +774,13 @@ convey_log_free(struct convey_log *log)
 	}
 }
 
+
 static struct convey_log *
 convey_log_alloc(void)
 {
 	return (calloc(1, sizeof (struct convey_log)));
 }
+
 
 /*
  * ConveyInit initializes some common global stuff.   Call it from main(),
@@ -700,11 +801,13 @@ ConveyInit(void)
 	return (0);
 }
 
+
 void
 ConveySetVerbose(void)
 {
 	convey_verbose = 1;
 }
+
 
 void
 conveyFail(const char *file, int line, const char *fmt, ...)
@@ -732,9 +835,10 @@ conveyFail(const char *file, int line, const char *fmt, ...)
 	}
 	convey_assert_color = convey_yellow;
 	t->ctx_fail++;
-	t->ctx_done = 1;	/* This forces an end */
+	t->ctx_done = 1;        /* This forces an end */
 	longjmp(*t->ctx_jmp, 1);
 }
+
 
 void
 conveyError(const char *file, int line, const char *fmt, ...)
@@ -762,9 +866,10 @@ conveyError(const char *file, int line, const char *fmt, ...)
 	}
 	convey_assert_color = convey_red;
 	t->ctx_fail++;
-	t->ctx_done = 1;	/* This forces an end */
+	t->ctx_done = 1;        /* This forces an end */
 	longjmp(*t->ctx_jmp, 1);
 }
+
 
 void
 conveyPrintf(const char *file, int line, const char *fmt, ...)
@@ -779,15 +884,17 @@ conveyPrintf(const char *file, int line, const char *fmt, ...)
 	va_end(ap);
 }
 
+
 extern int conveyMainImpl(void);
 
 static void
 convey_init_term(void)
 {
+	const char *term;
+
 #ifndef _WIN32
 	/* Windows console doesn't do Unicode (consistently). */
 	const char *codeset;
-	const char *term;
 
 	(void) setlocale(LC_ALL, "");
 	codeset = nl_langinfo(CODESET);
@@ -797,21 +904,29 @@ convey_init_term(void)
 		convey_sym_fatal = "🔥";
 		convey_sym_skip = "⚠";
 	}
+#endif
 
 	term = getenv("TERM");
-	if (isatty(1) && (term != NULL)) {
+
+#ifndef _WIN32
+	if (!isatty(1)) {
+		term = NULL;
+	}
+#endif
+
+	if (term != NULL) {
 		if ((strstr(term, "xterm") != NULL) ||
 		    (strstr(term, "ansi") != NULL) ||
 		    (strstr(term, "color") != NULL)) {
-			convey_nocolor = "\e[0m";
-			convey_green = "\e[32m";
-			convey_yellow = "\e[33m";
-			convey_red = "\e[31m";
-			convey_assert_color = convey_green;
+			convey_nocolor = "\033[0m";
+			convey_green = "\033[32m";
+			convey_yellow = "\033[33m";
+			convey_red = "\033[31m";
 		}
 	}
-#endif
+	convey_assert_color = convey_green;
 }
+
 
 /*
  * This function exists because strtok isn't safe, and strtok_r and
@@ -836,6 +951,7 @@ convey_nextline(char **next)
 			return (line);
 		}
 	}
+
 	/*
 	 * If the last character in the file is a newline, treat it as
 	 * the end.  (This will appear as a blank last line.)
@@ -846,6 +962,7 @@ convey_nextline(char **next)
 	*next = NULL;
 	return (line);
 }
+
 
 int
 conveyMain(int argc, char **argv)
@@ -878,7 +995,7 @@ conveyMain(int argc, char **argv)
 		}
 	}
 	if (ConveyInit() != 0) {
-		(void) fprintf(stderr, "Cannot initialize test framework\n");
+		(void) fputs("Cannot initialize test framework\n", stderr);
 		exit(CONVEY_EXIT_NOMEM);
 	}
 
@@ -889,24 +1006,24 @@ conveyMain(int argc, char **argv)
 
 	switch (i) {
 	case CONVEY_EXIT_NOMEM:
-		(void) fprintf(stderr, "Cannot initialize root test context\n");
+		(void) fputs("Cannot initialize root test context\n", stderr);
 		exit(CONVEY_EXIT_NOMEM);
 	case CONVEY_EXIT_OK:
 		if (convey_verbose) {
-			(void) printf("PASS\n");
+			(void) puts("PASS");
 		}
 		status = "ok";
 		break;
 	case CONVEY_EXIT_FAIL:
 		status = "FAIL";
 		if (convey_verbose) {
-			(void) printf("FAIL\n");
+			(void) puts("FAIL");
 		}
 		break;
 	default:
 		status = "FATAL";
 		if (convey_verbose) {
-			(void) printf("FATAL\n");
+			(void) puts("FATAL");
 		}
 		break;
 	}
