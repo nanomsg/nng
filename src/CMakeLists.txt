@@ -123,6 +123,7 @@ endforeach ()
 
 # Static libary
 add_library (${PROJECT_NAME}_static STATIC ${NNG_SOURCES})
+target_compile_definitions(${PROJECT_NAME}_static PUBLIC -DNNG_STATIC_LIB)
 
 # Shared library
 add_library (${PROJECT_NAME} SHARED ${NNG_SOURCES})

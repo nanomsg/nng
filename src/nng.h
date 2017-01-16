@@ -160,7 +160,7 @@ NNG_DECL int nng_endpoint_dial(nng_endpoint *, int);
 // the endpoint is not already dialing or listening.
 NNG_DECL int nng_endpoint_listen(nng_endpoint *, int);
 
-// nng_endpoint_close closes the endpointt, shutting down all underlying
+// nng_endpoint_close closes the endpoint, shutting down all underlying
 // connections and releasing all associated resources.  It is an error to
 // refer to the endpoint after this is called.
 NNG_DECL int nng_endpoint_close(nng_endpoint *);
