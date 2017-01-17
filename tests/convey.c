@@ -91,6 +91,11 @@ static int convey_nassert = 0;
 static int convey_nskip = 0;
 static const char *convey_assert_color = "";
 
+#if defined(_WIN32)
+static WORD convey_defattr;
+static HANDLE convey_console;
+#endif
+
 #define CONVEY_EXIT_OK		0
 #define CONVEY_EXIT_USAGE	1
 #define CONVEY_EXIT_FAIL	2
@@ -155,40 +160,31 @@ static void
 convey_emit_color(const char *color)
 {
 #if defined(_WIN32)
-	static WORD baseattr;
-	static HANDLE hStdout;
-	WORD attr;
 
-	// This covers the case of mingw style terminals.
-	(void) fputs(color, stdout);
+	if (convey_console != INVALID_HANDLE_VALUE) {
+		WORD attr;
 
-	if (baseattr == 0) {
-		CONSOLE_SCREEN_BUFFER_INFO info;
+		attr = convey_defattr &
+		    ~(FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED|
+		    FOREGROUND_INTENSITY);
 
-		hStdout = GetStdHandle(STD_OUTPUT_HANDLE);
-		if (!GetConsoleScreenBufferInfo(hStdout, &info)) {
+		if (color == convey_nocolor) {
+			attr = convey_defattr;
+		} else if (color == convey_yellow) {
+			attr |= FOREGROUND_GREEN | FOREGROUND_RED |
+			    FOREGROUND_INTENSITY;
+		} else if (color == convey_green) {
+			attr |= FOREGROUND_GREEN | FOREGROUND_INTENSITY;
+		} else if (color == convey_red) {
+			attr |= FOREGROUND_RED | FOREGROUND_INTENSITY;
+		} else {
 			return;
 		}
-		baseattr = info.wAttributes;
-	}
-	attr = baseattr &
-	    ~(FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED|
-	    FOREGROUND_INTENSITY);
-
-	if (color == convey_nocolor) {
-		attr = baseattr;
-	} else if (color == convey_yellow) {
-		attr |= FOREGROUND_GREEN | FOREGROUND_RED |
-		    FOREGROUND_INTENSITY;
-	} else if (color == convey_green) {
-		attr |= FOREGROUND_GREEN | FOREGROUND_INTENSITY;
-	} else if (color == convey_red) {
-		attr |= FOREGROUND_RED | FOREGROUND_INTENSITY;
+		(void) fflush(stdout);
+		SetConsoleTextAttribute(convey_console, attr);
 	} else {
-		return;
+		(void) fputs(color, stdout);
 	}
-	SetConsoleTextAttribute(hStdout, attr);
-
 #else
 	(void) fputs(color, stdout);
 #endif
@@ -904,15 +900,29 @@ convey_init_term(void)
 		convey_sym_fatal = "🔥";
 		convey_sym_skip = "⚠";
 	}
-#endif
-
 	term = getenv("TERM");
-
-#ifndef _WIN32
-	if (!isatty(1)) {
+	if (!isatty(fileno(stdin))) {
 		term = NULL;
 	}
+
+#else
+	CONSOLE_SCREEN_BUFFER_INFO info;
+
+	convey_console = GetStdHandle(STD_OUTPUT_HANDLE);
+	if (!GetConsoleScreenBufferInfo(convey_console, &info)) {
+		convey_console = INVALID_HANDLE_VALUE;
+	} else {
+		convey_defattr = info.wAttributes;
+		// Values probably don't matter, just need to be
+		// different!
+		convey_nocolor = "\033[0m";
+		convey_green = "\033[32m";
+		convey_yellow = "\033[33m";
+		convey_red = "\033[31m";
+	}
+	term = getenv("TERM");
 #endif
+
 
 	if (term != NULL) {
 		if ((strstr(term, "xterm") != NULL) ||
