@@ -13,7 +13,7 @@
 #include <string.h>
 
 int
-nni_event_init(nni_event *event, int type, nni_sock *sock)
+nni_ev_init(nni_event *event, int type, nni_sock *sock)
 {
 	int rv;
 
@@ -29,15 +29,26 @@ nni_event_init(nni_event *event, int type, nni_sock *sock)
 
 
 void
-nni_event_fini(nni_event *event)
+nni_ev_fini(nni_event *event)
 {
 	nni_cv_fini(&event->e_cv);
 }
 
 
 void
-nni_event_submit(nni_sock *sock, nni_event *event)
+nni_ev_submit(nni_event *event)
 {
+	nni_sock *sock = event->e_sock;
+
+	// If nobody is listening, don't bother submitting anything.
+	// This reduces pressure on the socket locks & condvars, in the
+	// typical case.
+	if (nni_list_first(&sock->s_notify) == NULL) {
+		event->e_pending = 0;
+		event->e_done = 1;
+		return;
+	}
+
 	// Call with socket mutex owned!
 	if (event->e_pending == 0) {
 		event->e_pending = 1;
@@ -49,7 +60,7 @@ nni_event_submit(nni_sock *sock, nni_event *event)
 
 
 void
-nni_event_wait(nni_sock *sock, nni_event *event)
+nni_ev_wait(nni_event *event)
 {
 	// Call with socket mutex owned!
 	// Note that the socket mutex is dropped during the call.
@@ -60,7 +71,7 @@ nni_event_wait(nni_sock *sock, nni_event *event)
 
 
 void
-nni_event_notifier(void *arg)
+nni_notifier(void *arg)
 {
 	nni_sock *sock = arg;
 	nni_event *event;

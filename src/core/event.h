@@ -32,4 +32,10 @@ struct nng_notify {
 	int		n_mask;
 };
 
+extern void nni_notifier(void *);
+extern int nni_ev_init(nni_event *, int, nni_sock *);
+extern void nni_ev_fini(nni_event *);
+extern void nni_ev_submit(nni_event *);         // call holding sock lock
+extern void nni_ev_wait(nni_event *);           // call holding sock lock
+
 #endif // CORE_EVENT_H

@@ -44,7 +44,7 @@ struct nng_socket {
 
 	nni_list		s_reaps;        // pipes to reap
 	nni_thr			s_reaper;
-	nni_thr			s_notify_thr;
+	nni_thr			s_notifier;
 	nni_thr			s_worker_thr[NNI_MAXWORKERS];
 
 	int			s_ep_pend;      // EP dial/listen in progress
