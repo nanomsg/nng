@@ -95,7 +95,7 @@ nni_notifier(void *arg)
 					// No interest.
 					continue;
 				}
-				notify->n_func(event, &notify->n_arg);
+				notify->n_func(event, notify->n_arg);
 			}
 			nni_mtx_unlock(&sock->s_notify_mx);
 
@@ -111,4 +111,34 @@ nni_notifier(void *arg)
 		nni_cv_wait(&sock->s_notify_cv);
 	}
 	nni_mtx_unlock(&sock->s_mx);
+}
+
+
+nni_notify *
+nni_add_notify(nni_sock *sock, int mask, nng_notify_func fn, void *arg)
+{
+	nni_notify *notify;
+
+	if ((notify = NNI_ALLOC_STRUCT(notify)) == NULL) {
+		return (NULL);
+	}
+	notify->n_func = fn;
+	notify->n_arg = arg;
+	notify->n_mask = mask;
+	NNI_LIST_NODE_INIT(&notify->n_node);
+
+	nni_mtx_lock(&sock->s_notify_mx);
+	nni_list_append(&sock->s_notify, notify);
+	nni_mtx_unlock(&sock->s_notify_mx);
+	return (notify);
+}
+
+
+void
+nni_rem_notify(nni_sock *sock, nni_notify *notify)
+{
+	nni_mtx_lock(&sock->s_notify_mx);
+	nni_list_remove(&sock->s_notify, notify);
+	nni_mtx_unlock(&sock->s_notify_mx);
+	NNI_FREE_STRUCT(notify);
 }

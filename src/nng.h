@@ -99,27 +99,27 @@ NNG_DECL nng_notify *nng_setnotify(nng_socket *, int, nng_notify_func, void *);
 // If the callback is running when this called, then it will wait until that
 // callback completes.  (The caller of this function should not hold any
 // locks acqured by the callback, in order to avoid a deadlock.)
-NNG_DECL int nng_unsetnotify(nng_socket *, nng_notify *);
+NNG_DECL void nng_unsetnotify(nng_socket *, nng_notify *);
 
 // Event types.  Sockets can have multiple different kind of events.
 // Note that these are edge triggered -- therefore the status indicated
 // may have changed since the notification occurred.
 //
-// NNG_EVENT_RECV	- A message is ready for receive.
-// NNG_EVENT_SEND	- A message can be sent.
-// NNG_EVENT_ERROR	- An error condition on the socket occurred.
-// NNG_EVENT_PIPE_ADD	- A new pipe (connection) is added to the socket.
-// NNG_EVENT_PIPE_REM	- A pipe (connection) is removed from the socket.
-// NNG_EVENT_ENDPT_ADD	- An endpoint is added to the socket.
-// NNG_EVENT_ENDPT_REM	- An endpoint is removed from the socket.
-#define NNG_EVENT_BIT(x)    (1U << (x))
-#define NNG_EVENT_RECV			NNG_EVENT_BIT(0)
-#define NNG_EVENT_SEND			NNG_EVENT_BIT(1)
-#define NNG_EVENT_ERROR			NNG_EVENT_BIT(2)
-#define NNG_EVENT_PIPE_ADD		NNG_EVENT_BIT(3)
-#define NNG_EVENT_PIPE_REM		NNG_EVENT_BIT(4)
-#define NNG_EVENT_ENDPOINT_ADD		NNG_EVENT_BIT(5)
-#define NNG_EVENT_ENDPOINT_REM		NNG_EVENT_BIT(6)
+// NNG_EV_CAN_RECV	- A message is ready for receive.
+// NNG_EV_CAN_SEND	- A message can be sent.
+// NNG_EV_ERROR		- An error condition on the socket occurred.
+// NNG_EV_PIPE_ADD	- A new pipe (connection) is added to the socket.
+// NNG_EV_PIPE_REM	- A pipe (connection) is removed from the socket.
+// NNG_EV_ENDPT_ADD	- An endpoint is added to the socket.
+// NNG_EV_ENDPT_REM	- An endpoint is removed from the socket.
+#define NNG_EV_BIT(x)    (1U << (x))
+#define NNG_EV_CAN_RECV		NNG_EV_BIT(0)
+#define NNG_EV_CAN_SEND		NNG_EV_BIT(1)
+#define NNG_EV_ERROR		NNG_EV_BIT(2)
+#define NNG_EV_PIPE_ADD		NNG_EV_BIT(3)
+#define NNG_EV_PIPE_REM		NNG_EV_BIT(4)
+#define NNG_EV_ENDPT_ADD	NNG_EV_BIT(5)
+#define NNG_EV_ENDPT_REM	NNG_EV_BIT(6)
 
 // The following functions return more detailed information about the event.
 // Some of the values will not make sense for some event types, in which case

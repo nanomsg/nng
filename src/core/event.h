@@ -37,5 +37,7 @@ extern int nni_ev_init(nni_event *, int, nni_sock *);
 extern void nni_ev_fini(nni_event *);
 extern void nni_ev_submit(nni_event *);         // call holding sock lock
 extern void nni_ev_wait(nni_event *);           // call holding sock lock
+extern nni_notify *nni_add_notify(nni_sock *, int, nng_notify_func, void *);
+extern void nni_rem_notify(nni_sock *, nni_notify *);
 
 #endif // CORE_EVENT_H

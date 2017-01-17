@@ -705,7 +705,7 @@ convey_vlogf(struct convey_log *log, const char *fmt, va_list va, int addnl)
 {
 	/* Grow the log buffer if we need to */
 	while ((log->log_size - log->log_length) < 256) {
-		int newsz = log->log_size + 2000;
+		size_t newsz = log->log_size + 2000;
 		char *ptr = malloc(newsz);
 		if (ptr == NULL) {
 			return;

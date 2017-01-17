@@ -144,6 +144,36 @@ nng_getopt(nng_socket *s, int opt, void *val, size_t *szp)
 }
 
 
+nng_notify *
+nng_setnotify(nng_socket *sock, int mask, nng_notify_func fn, void *arg)
+{
+	NNI_INIT_VOID();
+	return (nni_add_notify(sock, mask, fn, arg));
+}
+
+
+void
+nng_unsetnotify(nng_socket *sock, nng_notify *notify)
+{
+	NNI_INIT_VOID();
+	nni_rem_notify(sock, notify);
+}
+
+
+nng_socket *
+nng_event_socket(nng_event *ev)
+{
+	return (ev->e_sock);
+}
+
+
+int
+nng_event_type(nng_event *ev)
+{
+	return (ev->e_type);
+}
+
+
 // Misc.
 const char *
 nng_strerror(int num)

@@ -232,8 +232,12 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		goto fail;
 	}
 
-	if (((rv = nni_ev_init(&sock->s_recv_ev, NNG_EVENT_RECV, sock)) != 0) ||
-	    ((rv = nni_ev_init(&sock->s_send_ev, NNG_EVENT_SEND, sock)) != 0)) {
+	rv = nni_ev_init(&sock->s_recv_ev, NNG_EV_CAN_RECV, sock);
+	if (rv != 0) {
+		goto fail;
+	}
+	rv = nni_ev_init(&sock->s_send_ev, NNG_EV_CAN_SEND, sock);
+	if (rv != 0) {
 		goto fail;
 	}
 
