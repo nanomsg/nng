@@ -20,9 +20,27 @@ nni_plat_clock(void)
 
 
 void
-nni_plat_usleep(nni_duration usec)
+nni_plat_usleep(nni_duration dur)
 {
-	Sleep((DWORD) ((usec + 999) / 1000));
+	uint64_t exp;
+
+
+	// Convert duration to msec, rounding up.
+	dur += 999;
+	dur /= 1000;
+
+	exp = (uint64_t) GetTickCount64() + dur;
+
+	// Sleep() would be our preferred API, if it didn't have a nasty
+	// feature where it rounds *down*.  We always want to sleep *at
+	// least* the requested amount of time, and never ever less.
+	// If we wind up sleeping less, then we will sleep(1) in the hope
+	// of waiting until the next clock tick.
+
+	Sleep((DWORD) dur);
+	while ((uint64_t) GetTickCount64() < exp) {
+		Sleep(1);
+	}
 }
 
 
