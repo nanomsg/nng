@@ -59,7 +59,9 @@ nni_bus_sock_fini(void *arg)
 {
 	nni_bus_sock *psock = arg;
 
-	NNI_FREE_STRUCT(psock);
+	if (psock != NULL) {
+		NNI_FREE_STRUCT(psock);
+	}
 }
 
 
@@ -91,7 +93,9 @@ nni_bus_pipe_fini(void *arg)
 {
 	nni_bus_pipe *ppipe = arg;
 
-	NNI_FREE_STRUCT(ppipe);
+	if (ppipe != NULL) {
+		NNI_FREE_STRUCT(ppipe);
+	}
 }
 
 

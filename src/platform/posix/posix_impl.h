@@ -60,6 +60,7 @@ extern int nni_plat_devnull;    // open descriptor on /dev/null
 // elsewhere.
 
 struct nni_plat_mtx {
+	int		init;
 	pthread_mutex_t mtx;
 };
 

@@ -50,6 +50,7 @@ nni_plat_mtx_init(nni_plat_mtx *mtx)
 			nni_panic("pthread_mutex_init: %s", strerror(rv));
 		}
 	}
+	mtx->init = 1;
 	return (0);
 }
 
@@ -59,9 +60,13 @@ nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
 	int rv;
 
+	if (!mtx->init) {
+		return;
+	}
 	if ((rv = pthread_mutex_destroy(&mtx->mtx)) != 0) {
 		nni_panic("pthread_mutex_fini: %s", strerror(rv));
 	}
+	mtx->init = 0;
 }
 
 
@@ -159,9 +164,13 @@ nni_plat_cv_fini(nni_plat_cv *cv)
 {
 	int rv;
 
+	if (cv->mtx == NULL) {
+		return;
+	}
 	if ((rv = pthread_cond_destroy(&cv->cv)) != 0) {
 		nni_panic("pthread_cond_destroy: %s", strerror(rv));
 	}
+	cv->mtx = NULL;
 }
 
 

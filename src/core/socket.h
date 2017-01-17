@@ -37,9 +37,14 @@ struct nng_socket {
 
 	nni_list		s_eps;          // active endpoints
 	nni_list		s_pipes;        // pipes for this socket
+	nni_list		s_events;       // pending events
+	nni_list		s_notify;       // event watchers
+	nni_cv			s_notify_cv;    // wakes notify thread
+	nni_mtx			s_notify_mx;    // protects s_notify list
 
 	nni_list		s_reaps;        // pipes to reap
 	nni_thr			s_reaper;
+	nni_thr			s_notify_thr;
 	nni_thr			s_worker_thr[NNI_MAXWORKERS];
 
 	int			s_ep_pend;      // EP dial/listen in progress
@@ -47,6 +52,9 @@ struct nng_socket {
 	int			s_besteffort;   // Best effort mode delivery
 	int			s_senderr;      // Protocol state machine use
 	int			s_recverr;      // Protocol state machine use
+
+	nni_event		s_recv_ev;      // Event for readability
+	nni_event		s_send_ev;      // Event for sendability
 
 	uint32_t		s_nextid;       // Next Pipe ID.
 };

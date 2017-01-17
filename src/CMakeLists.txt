@@ -32,6 +32,7 @@ set (NNG_SOURCES
     core/clock.c
     core/clock.h
     core/endpt.c
+    core/event.c
     core/idhash.c
     core/idhash.h
     core/init.c

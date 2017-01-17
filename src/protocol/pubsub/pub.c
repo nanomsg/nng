@@ -62,7 +62,9 @@ nni_pub_sock_fini(void *arg)
 {
 	nni_pub_sock *pub = arg;
 
-	NNI_FREE_STRUCT(pub);
+	if (pub != NULL) {
+		NNI_FREE_STRUCT(pub);
+	}
 }
 
 
@@ -93,8 +95,10 @@ nni_pub_pipe_fini(void *arg)
 {
 	nni_pub_pipe *pp = arg;
 
-	nni_msgq_fini(pp->sendq);
-	NNI_FREE_STRUCT(pp);
+	if (pp != NULL) {
+		nni_msgq_fini(pp->sendq);
+		NNI_FREE_STRUCT(pp);
+	}
 }
 
 

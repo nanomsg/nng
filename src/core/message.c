@@ -363,13 +363,15 @@ nni_msg_free(nni_msg *m)
 {
 	nni_msgopt *mo;
 
-	nni_chunk_free(&m->m_header);
-	nni_chunk_free(&m->m_body);
-	while ((mo = nni_list_first(&m->m_options)) != NULL) {
-		nni_list_remove(&m->m_options, mo);
-		nni_free(mo, sizeof (*mo) + mo->mo_sz);
+	if (m != NULL) {
+		nni_chunk_free(&m->m_header);
+		nni_chunk_free(&m->m_body);
+		while ((mo = nni_list_first(&m->m_options)) != NULL) {
+			nni_list_remove(&m->m_options, mo);
+			nni_free(mo, sizeof (*mo) + mo->mo_sz);
+		}
+		NNI_FREE_STRUCT(m);
 	}
-	NNI_FREE_STRUCT(m);
 }
 
 

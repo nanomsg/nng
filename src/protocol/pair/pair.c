@@ -64,7 +64,9 @@ nni_pair_sock_fini(void *arg)
 {
 	nni_pair_sock *psock = arg;
 
-	NNI_FREE_STRUCT(psock);
+	if (psock != NULL) {
+		NNI_FREE_STRUCT(psock);
+	}
 }
 
 
@@ -89,7 +91,9 @@ nni_pair_pipe_fini(void *arg)
 {
 	nni_pair_pipe *ppipe = arg;
 
-	NNI_FREE_STRUCT(ppipe);
+	if (ppipe != NULL) {
+		NNI_FREE_STRUCT(ppipe);
+	}
 }
 
 

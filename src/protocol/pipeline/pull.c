@@ -50,7 +50,9 @@ nni_pull_sock_fini(void *arg)
 {
 	nni_pull_sock *pull = arg;
 
-	NNI_FREE_STRUCT(pull);
+	if (pull != NULL) {
+		NNI_FREE_STRUCT(pull);
+	}
 }
 
 
@@ -74,7 +76,9 @@ nni_pull_pipe_fini(void *arg)
 {
 	nni_pull_pipe *pp = arg;
 
-	NNI_FREE_STRUCT(pp);
+	if (pp != NULL) {
+		NNI_FREE_STRUCT(pp);
+	}
 }
 
 

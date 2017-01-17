@@ -35,6 +35,7 @@ int
 nni_plat_mtx_init(nni_plat_mtx *mtx)
 {
 	InitializeCriticalSection(&mtx->cs);
+	mtx->init = 1;
 	return (0);
 }
 
@@ -42,7 +43,10 @@ nni_plat_mtx_init(nni_plat_mtx *mtx)
 void
 nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
-	DeleteCriticalSection(&mtx->cs);
+	if (mtx->init) {
+		DeleteCriticalSection(&mtx->cs);
+		mtx->init = 0;
+	}
 }
 
 

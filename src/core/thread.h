@@ -31,6 +31,7 @@ typedef struct {
 	int		start;
 	int		stop;
 	int		done;
+	int		init;
 } nni_thr;
 
 // nni_mtx_init initializes the mutex.  (Win32 programmers take note;

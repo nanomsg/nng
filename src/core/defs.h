@@ -27,6 +27,8 @@ typedef struct nng_endpoint		nni_ep;
 typedef struct nng_pipe			nni_pipe;
 typedef struct nng_msg			nni_msg;
 typedef struct nng_sockaddr		nni_sockaddr;
+typedef struct nng_event		nni_event;
+typedef struct nng_notify		nni_notify;
 
 // These are our own names.
 typedef struct nni_tran			nni_tran;

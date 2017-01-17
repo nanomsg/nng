@@ -55,8 +55,10 @@ nni_idhash_create(nni_idhash **hp)
 void
 nni_idhash_destroy(nni_idhash *h)
 {
-	nni_free(h->ih_entries, h->ih_cap * sizeof (nni_idhash_entry));
-	NNI_FREE_STRUCT(h);
+	if (h != NULL) {
+		nni_free(h->ih_entries, h->ih_cap * sizeof (nni_idhash_entry));
+		NNI_FREE_STRUCT(h);
+	}
 }
 
 

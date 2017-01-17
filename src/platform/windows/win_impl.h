@@ -60,6 +60,7 @@ struct nni_plat_thr {
 struct nni_plat_mtx {
 	CRITICAL_SECTION	cs;
 	DWORD			owner;
+	int			init;
 };
 
 struct nni_plat_cv {

@@ -89,14 +89,16 @@ nni_req_sock_fini(void *arg)
 {
 	nni_req_sock *req = arg;
 
-	nni_cv_fini(&req->cv);
-	if (req->reqmsg != NULL) {
-		nni_msg_free(req->reqmsg);
+	if (req != NULL) {
+		nni_cv_fini(&req->cv);
+		if (req->reqmsg != NULL) {
+			nni_msg_free(req->reqmsg);
+		}
+		if (req->retrymsg != NULL) {
+			nni_msg_free(req->retrymsg);
+		}
+		NNI_FREE_STRUCT(req);
 	}
-	if (req->retrymsg != NULL) {
-		nni_msg_free(req->retrymsg);
-	}
-	NNI_FREE_STRUCT(req);
 }
 
 
@@ -121,7 +123,9 @@ nni_req_pipe_fini(void *arg)
 {
 	nni_req_pipe *rp = arg;
 
-	NNI_FREE_STRUCT(rp);
+	if (rp != NULL) {
+		NNI_FREE_STRUCT(rp);
+	}
 }
 
 

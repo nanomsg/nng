@@ -84,8 +84,10 @@ nni_push_sock_fini(void *arg)
 {
 	nni_push_sock *push = arg;
 
-	nni_cv_fini(&push->cv);
-	NNI_FREE_STRUCT(push);
+	if (push != NULL) {
+		nni_cv_fini(&push->cv);
+		NNI_FREE_STRUCT(push);
+	}
 }
 
 
@@ -116,8 +118,10 @@ nni_push_pipe_fini(void *arg)
 {
 	nni_push_pipe *pp = arg;
 
-	nni_msgq_fini(pp->mq);
-	NNI_FREE_STRUCT(pp);
+	if (pp != NULL) {
+		nni_msgq_fini(pp->mq);
+		NNI_FREE_STRUCT(pp);
+	}
 }
 
 

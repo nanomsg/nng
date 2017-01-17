@@ -82,8 +82,10 @@ nni_surv_sock_fini(void *arg)
 {
 	nni_surv_sock *psock = arg;
 
-	nni_cv_fini(&psock->cv);
-	NNI_FREE_STRUCT(psock);
+	if (psock != NULL) {
+		nni_cv_fini(&psock->cv);
+		NNI_FREE_STRUCT(psock);
+	}
 }
 
 
@@ -114,7 +116,9 @@ nni_surv_pipe_fini(void *arg)
 {
 	nni_surv_pipe *sp = arg;
 
-	NNI_FREE_STRUCT(sp);
+	if (sp != NULL) {
+		NNI_FREE_STRUCT(sp);
+	}
 }
 
 

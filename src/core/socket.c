@@ -165,6 +165,8 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_reaps, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_eps, nni_ep, ep_node);
+	NNI_LIST_INIT(&sock->s_notify, nni_notify, n_node);
+	NNI_LIST_INIT(&sock->s_events, nni_event, e_node);
 
 	sock->s_sock_ops = *proto->proto_sock_ops;
 	sops = &sock->s_sock_ops;
@@ -192,47 +194,24 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		pops->pipe_rem = nni_sock_nullop;
 	}
 
-	if ((rv = nni_mtx_init(&sock->s_mx)) != 0) {
-		NNI_FREE_STRUCT(sock);
-		return (rv);
-	}
-	if ((rv = nni_cv_init(&sock->s_cv, &sock->s_mx)) != 0) {
-		nni_mtx_fini(&sock->s_mx);
-		NNI_FREE_STRUCT(sock);
-		return (rv);
+	if (((rv = nni_mtx_init(&sock->s_mx)) != 0) ||
+	    ((rv = nni_mtx_init(&sock->s_notify_mx)) != 0) ||
+	    ((rv = nni_cv_init(&sock->s_cv, &sock->s_mx)) != 0) ||
+	    ((rv = nni_cv_init(&sock->s_notify_cv, &sock->s_mx)) != 0)) {
+		goto fail;
 	}
 
 	if ((rv = nni_thr_init(&sock->s_reaper, nni_reaper, sock)) != 0) {
-		nni_cv_fini(&sock->s_cv);
-		nni_mtx_fini(&sock->s_mx);
-		NNI_FREE_STRUCT(sock);
-		return (rv);
+		goto fail;
 	}
 
-	if ((rv = nni_msgq_init(&sock->s_uwq, 0)) != 0) {
-		nni_thr_fini(&sock->s_reaper);
-		nni_cv_fini(&sock->s_cv);
-		nni_mtx_fini(&sock->s_mx);
-		NNI_FREE_STRUCT(sock);
-		return (rv);
-	}
-	if ((rv = nni_msgq_init(&sock->s_urq, 0)) != 0) {
-		nni_msgq_fini(sock->s_uwq);
-		nni_thr_fini(&sock->s_reaper);
-		nni_cv_fini(&sock->s_cv);
-		nni_mtx_fini(&sock->s_mx);
-		NNI_FREE_STRUCT(sock);
-		return (rv);
+	if (((rv = nni_msgq_init(&sock->s_uwq, 0)) != 0) ||
+	    ((rv = nni_msgq_init(&sock->s_urq, 0)) != 0)) {
+		goto fail;
 	}
 
 	if ((rv = sops->sock_init(&sock->s_data, sock)) != 0) {
-		nni_msgq_fini(sock->s_urq);
-		nni_msgq_fini(sock->s_uwq);
-		nni_thr_fini(&sock->s_reaper);
-		nni_cv_fini(&sock->s_cv);
-		nni_mtx_fini(&sock->s_mx);
-		NNI_FREE_STRUCT(sock);
-		return (rv);
+		goto fail;
 	}
 
 	// NB: If worker functions are null, then the thread initialization
@@ -241,16 +220,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		nni_worker fn = sops->sock_worker[i];
 		rv = nni_thr_init(&sock->s_worker_thr[i], fn, sock->s_data);
 		if (rv != 0) {
-			while (i > 0) {
-				i--;
-				nni_thr_fini(&sock->s_worker_thr[i]);
-			}
-			sops->sock_fini(&sock->s_data);
-			nni_msgq_fini(sock->s_urq);
-			nni_msgq_fini(sock->s_uwq);
-			nni_cv_fini(&sock->s_cv);
-			nni_mtx_fini(&sock->s_mx);
-			NNI_FREE_STRUCT(sock);
+			goto fail;
 		}
 	}
 
@@ -261,6 +231,23 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	nni_thr_run(&sock->s_reaper);
 	*sockp = sock;
 	return (0);
+
+fail:
+	sock->s_sock_ops.sock_fini(sock->s_data);
+
+	// And we need to clean up *our* state.
+	for (i = 0; i < NNI_MAXWORKERS; i++) {
+		nni_thr_fini(&sock->s_worker_thr[i]);
+	}
+	nni_thr_fini(&sock->s_reaper);
+	nni_msgq_fini(sock->s_urq);
+	nni_msgq_fini(sock->s_uwq);
+	nni_cv_fini(&sock->s_notify_cv);
+	nni_cv_fini(&sock->s_cv);
+	nni_mtx_fini(&sock->s_notify_mx);
+	nni_mtx_fini(&sock->s_mx);
+	NNI_FREE_STRUCT(sock);
+	return (rv);
 }
 
 
@@ -388,7 +375,9 @@ nni_sock_close(nni_sock *sock)
 	nni_thr_fini(&sock->s_reaper);
 	nni_msgq_fini(sock->s_urq);
 	nni_msgq_fini(sock->s_uwq);
+	nni_cv_fini(&sock->s_notify_cv);
 	nni_cv_fini(&sock->s_cv);
+	nni_mtx_fini(&sock->s_notify_mx);
 	nni_mtx_fini(&sock->s_mx);
 	NNI_FREE_STRUCT(sock);
 }

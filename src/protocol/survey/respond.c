@@ -67,11 +67,13 @@ nni_resp_sock_fini(void *arg)
 {
 	nni_resp_sock *psock = arg;
 
-	nni_idhash_destroy(psock->pipes);
-	if (psock->btrace != NULL) {
-		nni_free(psock->btrace, psock->btrace_len);
+	if (psock != NULL) {
+		nni_idhash_destroy(psock->pipes);
+		if (psock->btrace != NULL) {
+			nni_free(psock->btrace, psock->btrace_len);
+		}
+		NNI_FREE_STRUCT(psock);
 	}
-	NNI_FREE_STRUCT(psock);
 }
 
 
@@ -101,8 +103,10 @@ nni_resp_pipe_fini(void *arg)
 {
 	nni_resp_pipe *ppipe = arg;
 
-	nni_msgq_fini(ppipe->sendq);
-	NNI_FREE_STRUCT(ppipe);
+	if (ppipe != NULL) {
+		nni_msgq_fini(ppipe->sendq);
+		NNI_FREE_STRUCT(ppipe);
+	}
 }
 
 

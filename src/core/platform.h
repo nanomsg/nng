@@ -70,11 +70,11 @@ typedef struct nni_plat_ipcsock		nni_plat_ipcsock;
 
 // nni_plat_mtx_init initializes a mutex structure.  This may require dynamic
 // allocation, depending on the platform.  It can return NNG_ENOMEM if that
-// fails.
+// fails.  An initialized mutex must be distinguishable from zeroed memory.
 extern int nni_plat_mtx_init(nni_plat_mtx *);
 
 // nni_plat_mtx_fini destroys the mutex and releases any resources allocated
-// for it's use.
+// for it's use.  If the mutex is zeroed memory, this should do nothing.
 extern void nni_plat_mtx_fini(nni_plat_mtx *);
 
 // nni_plat_mtx_lock locks the mutex.  This is not recursive -- a mutex can
@@ -93,9 +93,13 @@ extern int nni_plat_mtx_trylock(nni_plat_mtx *);
 // supplied with it, and that mutex must always be held when performing any
 // operations on the condition variable (other than fini.)  This may require
 // dynamic allocation, and if so this operation may fail with NNG_ENOMEM.
+// As with mutexes, an initialized mutex should be distinguishable from
+// zeroed memory.
 extern int nni_plat_cv_init(nni_plat_cv *, nni_plat_mtx *);
 
 // nni_plat_cv_fini releases all resources associated with condition variable.
+// If the cv points to just zeroed memory (was never initialized), it does
+// nothing.
 extern void nni_plat_cv_fini(nni_plat_cv *);
 
 // nni_plat_cv_wake wakes all waiters on the condition.  This should be
