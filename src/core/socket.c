@@ -408,6 +408,7 @@ void
 nni_sock_close(nni_sock *sock)
 {
 	int i;
+	nni_notify *notify;
 
 	// Shutdown everything if not already done.  This operation
 	// is idempotent.
@@ -426,6 +427,10 @@ nni_sock_close(nni_sock *sock)
 	// And we need to clean up *our* state.
 	for (i = 0; i < NNI_MAXWORKERS; i++) {
 		nni_thr_fini(&sock->s_worker_thr[i]);
+	}
+	while ((notify = nni_list_first(&sock->s_notify)) != NULL) {
+		nni_list_remove(&sock->s_notify, notify);
+		NNI_FREE_STRUCT(notify);
 	}
 	nni_thr_fini(&sock->s_notifier);
 	nni_thr_fini(&sock->s_reaper);
