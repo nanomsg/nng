@@ -77,7 +77,7 @@ nni_reaper(void *arg)
 			continue;
 		}
 
-		if ((sock->s_closing) &&
+		if ((sock->s_reapexit) &&
 		    (nni_list_first(&sock->s_reaps) == NULL) &&
 		    (nni_list_first(&sock->s_pipes) == NULL)) {
 			nni_mtx_unlock(&sock->s_mx);
@@ -198,6 +198,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	sock->s_closing = 0;
 	sock->s_reconn = NNI_SECOND;
 	sock->s_reconnmax = NNI_SECOND;
+	sock->s_reapexit = 0;
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_reaps, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_eps, nni_ep, ep_node);
@@ -382,6 +383,7 @@ nni_sock_shutdown(nni_sock *sock)
 
 	sock->s_sock_ops.sock_close(sock->s_data);
 
+	sock->s_reapexit = 1;
 	nni_cv_wake(&sock->s_notify_cv);
 	nni_cv_wake(&sock->s_cv);
 	nni_mtx_unlock(&sock->s_mx);

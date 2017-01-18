@@ -19,6 +19,7 @@
 #include <unistd.h>
 #include <sys/utsname.h>
 #include <fcntl.h>
+#include <string.h>
 
 #ifdef NNG_USE_GETRANDOM
 #include <linux/random.h>

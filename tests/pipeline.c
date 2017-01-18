@@ -66,9 +66,9 @@ Main({
 		})
 
 		Convey("We can create a linked PUSH/PULL pair", {
-			nng_socket *push;
-			nng_socket *pull;
-			nng_socket *what;
+			nng_socket *push = NULL;
+			nng_socket *pull = NULL;
+			nng_socket *what = NULL;
 
 			So(nng_open(&push, NNG_PROTO_PUSH) == 0);
 			So(nng_open(&pull, NNG_PROTO_PULL) == 0);
