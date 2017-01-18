@@ -121,6 +121,7 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep)
 	p->p_tran_data = NULL;
 	p->p_proto_data = NULL;
 	p->p_active = 0;
+	p->p_id = 0;
 	NNI_LIST_NODE_INIT(&p->p_node);
 
 	// Make a copy of the transport ops.  We can override entry points
@@ -168,7 +169,6 @@ nni_pipe_start(nni_pipe *pipe)
 {
 	int rv;
 	int i;
-	int collide;
 	nni_sock *sock = pipe->p_sock;
 
 	nni_mtx_lock(&sock->s_mx);
@@ -184,23 +184,16 @@ nni_pipe_start(nni_pipe *pipe)
 		return (NNG_EPROTO);
 	}
 
-	do {
-		// We generate a new pipe ID, but we make sure it does not
-		// collide with any we already have.  This can only normally
-		// happen if we wrap -- i.e. we've had 4 billion or so pipes.
-		// XXX: consider making this a hash table!!
-		nni_pipe *check;
-		pipe->p_id = nni_random() & 0x7FFFFFFF;
-		collide = 0;
-		NNI_LIST_FOREACH (&sock->s_pipes, check) {
-			if ((pipe != check) && (check->p_id == pipe->p_id)) {
-				collide = 1;
-				break;
-			}
-		}
-	} while (collide);
+	rv = nni_idhash_alloc(sock->s_pipes_by_id, &pipe->p_id, pipe);
+	if (rv != 0) {
+		nni_pipe_bail(pipe);
+		nni_mtx_unlock(&sock->s_mx);
+		return (rv);
+	}
 
 	if ((rv = sock->s_pipe_ops.pipe_add(pipe->p_proto_data)) != 0) {
+		nni_idhash_remove(sock->s_pipes_by_id, pipe->p_id);
+		pipe->p_id = 0;
 		nni_pipe_bail(pipe);
 		nni_mtx_unlock(&sock->s_mx);
 		return (rv);
