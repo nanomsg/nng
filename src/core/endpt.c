@@ -38,6 +38,14 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	ep->ep_pipe = NULL;
 	ep->ep_tran = tran;
 
+	nni_mtx_lock(nni_idlock);
+	rv = nni_idhash_alloc(nni_endpoints, &ep->ep_id, ep);
+	nni_mtx_unlock(nni_idlock);
+	if (rv != 0) {
+		NNI_FREE_STRUCT(ep);
+		return (rv);
+	}
+
 	// Make a copy of the endpoint operations.  This allows us to
 	// modify them (to override NULLs for example), and avoids an extra
 	// dereference on hot paths.
@@ -45,6 +53,9 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 
 	if ((rv = nni_cv_init(&ep->ep_cv, &ep->ep_sock->s_mx)) != 0) {
+		nni_mtx_lock(nni_idlock);
+		nni_idhash_remove(nni_endpoints, ep->ep_id);
+		nni_mtx_unlock(nni_idlock);
 		NNI_FREE_STRUCT(ep);
 		return (NNG_ENOMEM);
 	}
@@ -54,6 +65,9 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 
 	rv = ep->ep_ops.ep_init(&ep->ep_data, addr, nni_sock_proto(sock));
 	if (rv != 0) {
+		nni_mtx_lock(nni_idlock);
+		nni_idhash_remove(nni_endpoints, ep->ep_id);
+		nni_mtx_unlock(nni_idlock);
 		nni_cv_fini(&ep->ep_cv);
 		NNI_FREE_STRUCT(ep);
 		return (rv);
@@ -92,6 +106,10 @@ nni_ep_close(nni_ep *ep)
 	ep->ep_ops.ep_fini(ep->ep_data);
 
 	nni_cv_fini(&ep->ep_cv);
+	nni_mtx_lock(nni_idlock);
+	nni_idhash_remove(nni_endpoints, ep->ep_id);
+	nni_mtx_unlock(nni_idlock);
+
 	NNI_FREE_STRUCT(ep);
 }
 

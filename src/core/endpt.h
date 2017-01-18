@@ -15,11 +15,12 @@
 // NB: This structure is supplied here for use by the CORE. Use of this
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS
 // OR TRANSPORTS.
-struct nng_endpoint {
-	nni_tran_ep	ep_ops;
-	nni_tran *	ep_tran;
-	void *		ep_data;                // Transport private
-	nni_list_node	ep_node;                // Per socket list
+struct nni_ep {
+	nni_tran_ep	ep_ops;         // transport ops
+	nni_tran *	ep_tran;        // transport pointer
+	void *		ep_data;        // transport private
+	uint32_t	ep_id;          // endpoint id
+	nni_list_node	ep_node;        // per socket list
 	nni_sock *	ep_sock;
 	char		ep_addr[NNG_MAXADDRLEN];
 	nni_thr		ep_thr;

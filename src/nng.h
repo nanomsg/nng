@@ -43,8 +43,8 @@ extern "C" {
 
 // Types common to nng.
 typedef struct nng_socket	nng_socket;
-typedef struct nng_endpoint	nng_endpoint;
-typedef struct nng_pipe		nng_pipe;
+typedef uint32_t		nng_endpoint;
+typedef uint32_t		nng_pipe;
 typedef struct nng_msg		nng_msg;
 typedef struct nng_event	nng_event;
 typedef struct nng_notify	nng_notify;
@@ -126,8 +126,8 @@ NNG_DECL void nng_unsetnotify(nng_socket *, nng_notify *);
 // the value returned will be NULL.
 NNG_DECL int nng_event_type(nng_event *);
 NNG_DECL nng_socket *nng_event_socket(nng_event *);
-NNG_DECL nng_endpoint *nng_event_endpoint(nng_event *);
-NNG_DECL nng_pipe *nng_event_pipe(nng_event *);
+NNG_DECL nng_endpoint nng_event_endpoint(nng_event *);
+NNG_DECL nng_pipe nng_event_pipe(nng_event *);
 NNG_DECL const char *nng_event_reason(nng_event *);
 
 // nng_listen creates a listening endpoint with no special options,
@@ -136,7 +136,7 @@ NNG_DECL const char *nng_event_reason(nng_event *);
 // endpoint pointer, if it is not NULL.  The flags may be NNG_FLAG_SYNCH to
 // indicate that a failure setting the socket up should return an error
 // back to the caller immediately.
-NNG_DECL int nng_listen(nng_socket *, const char *, nng_endpoint **, int);
+NNG_DECL int nng_listen(nng_socket *, const char *, nng_endpoint *, int);
 
 // nng_dial creates a dialing endpoint, with no special options, and
 // starts it dialing.  Dialers have at most one active connection at a time
@@ -146,31 +146,31 @@ NNG_DECL int nng_listen(nng_socket *, const char *, nng_endpoint **, int);
 // dial will be made synchronously, and a failure condition returned back
 // to the caller.  (If the connection is dropped, it will still be
 // reconnected in the background -- only the initial connect is synchronous.)
-NNG_DECL int nng_dial(nng_socket *, const char *, nng_endpoint **, int);
+NNG_DECL int nng_dial(nng_socket *, const char *, nng_endpoint *, int);
 
 // nng_endpoint_create creates an endpoint on the socket, but does not
 // start it either dialing or listening.
-NNG_DECL int nng_endpoint_create(nng_endpoint **, nng_socket *, const char *);
+NNG_DECL int nng_endpoint_create(nng_endpoint *, nng_socket *, const char *);
 
 // nng_endpoint_dial starts the endpoint dialing.  This is only possible if
 // the endpoint is not already dialing or listening.
-NNG_DECL int nng_endpoint_dial(nng_endpoint *, int);
+NNG_DECL int nng_endpoint_dial(nng_endpoint, int);
 
 // nng_endpoint_listen starts the endpoint listening.  This is only possible if
 // the endpoint is not already dialing or listening.
-NNG_DECL int nng_endpoint_listen(nng_endpoint *, int);
+NNG_DECL int nng_endpoint_listen(nng_endpoint, int);
 
 // nng_endpoint_close closes the endpoint, shutting down all underlying
 // connections and releasing all associated resources.  It is an error to
 // refer to the endpoint after this is called.
-NNG_DECL int nng_endpoint_close(nng_endpoint *);
+NNG_DECL int nng_endpoint_close(nng_endpoint);
 
 // nng_endpoint_setopt sets an option for a specific endpoint.  Note
 // endpoint options may not be altered on a running endpoint.
-NNG_DECL int nng_endpoint_setopt(nng_endpoint *, int, void *, size_t);
+NNG_DECL int nng_endpoint_setopt(nng_endpoint, int, void *, size_t);
 
 // nng_endpoint_getopt obtains the option for an endpoint.
-NNG_DECL int nng_endpoint_getopt(nng_endpoint *, int, void *, size_t *);
+NNG_DECL int nng_endpoint_getopt(nng_endpoint, int, void *, size_t *);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.
@@ -226,8 +226,8 @@ NNG_DECL int nng_msg_getopt(nng_msg *, int, void *, size_t *);
 // we do permit an application to close a pipe. This can be useful, for
 // example during a connection notification, to disconnect a pipe that
 // is associated with an invalid or untrusted remote peer.
-NNG_DECL int nng_pipe_getopt(nng_pipe *, int, void *, size_t *);
-NNG_DECL int nng_pipe_close(nng_pipe *);
+NNG_DECL int nng_pipe_getopt(nng_pipe, int, void *, size_t *);
+NNG_DECL int nng_pipe_close(nng_pipe);
 
 // Flags.
 #define NNG_FLAG_ALLOC		1       // Recv to allocate receive buffer.

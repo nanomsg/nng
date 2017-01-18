@@ -113,18 +113,34 @@ nng_sendmsg(nng_socket *s, nng_msg *msg, int flags)
 
 
 int
-nng_dial(nng_socket *s, const char *addr, nng_endpoint **epp, int flags)
+nng_dial(nng_socket *s, const char *addr, nng_endpoint *epp, int flags)
 {
+	nni_ep *ep;
+	int rv;
+
 	NNI_INIT_INT();
-	return (nni_sock_dial(s, addr, epp, flags));
+	if ((rv = nni_sock_dial(s, addr, &ep, flags)) == 0) {
+		if (epp != NULL) {
+			*epp = ep->ep_id;
+		}
+	}
+	return (rv);
 }
 
 
 int
-nng_listen(nng_socket *s, const char *addr, nng_endpoint **epp, int flags)
+nng_listen(nng_socket *s, const char *addr, nng_endpoint *epp, int flags)
 {
+	nni_ep *ep;
+	int rv;
+
 	NNI_INIT_INT();
-	return (nni_sock_listen(s, addr, epp, flags));
+	if ((rv = nni_sock_listen(s, addr, &ep, flags)) == 0) {
+		if (epp != NULL) {
+			*epp = ep->ep_id;
+		}
+	}
+	return (rv);
 }
 
 
@@ -248,6 +264,7 @@ nng_strerror(int num)
 }
 
 
+#if 0
 int
 nng_pipe_getopt(nng_pipe *pipe, int opt, void *val, size_t *sizep)
 {
@@ -270,6 +287,9 @@ nng_pipe_close(nng_pipe *pipe)
 	nni_pipe_close(pipe);
 	return (0);
 }
+
+
+#endif
 
 
 // Message handling.

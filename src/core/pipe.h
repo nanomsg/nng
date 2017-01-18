@@ -17,7 +17,7 @@
 #include "core/defs.h"
 #include "core/transport.h"
 
-struct nng_pipe {
+struct nni_pipe {
 	uint32_t	p_id;
 	nni_tran_pipe	p_tran_ops;
 	void *		p_tran_data;
