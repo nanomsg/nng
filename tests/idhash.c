@@ -7,9 +7,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/idhash.c"
 #include "convey.h"
 #include "stubs.h"
+#include "core/idhash.c"
 
 Main({
 	Test("General ID Hash", {
@@ -130,6 +130,39 @@ Main({
 					So(h->ih_count == 0);
 					So(h->ih_cap == 8);
 				})
+			})
+		})
+	})
+
+	Test("Dynamic ID generation", {
+		Convey("Given a small ID hash", {
+			nni_idhash *h;
+			int expect[5];
+			uint32_t id;
+			int i;
+			So(nni_idhash_create(&h) == 0);
+			Reset({
+				nni_idhash_destroy(h);
+			})
+			nni_idhash_set_limits(h, 10, 13, 10);
+			So(1);
+			Convey("We can fill the table", {
+				for (i = 0; i < 4; i++) {
+					So(nni_idhash_alloc(h, &id, &expect[i]) == 0);
+					So(id == (i + 10));
+				}
+				Convey("Adding another fails", {
+					So(nni_idhash_alloc(h, &id, &expect[5]) == NNG_ENOMEM);
+				})
+				Convey("Deleting one lets us reinsert", {
+					nni_idhash_remove(h, 11);
+					So(nni_idhash_alloc(h, &id, &expect[5]) == 0);
+					So(id == 11);
+				})
+			})
+			Convey("We cannot insert bogus values", {
+				So(nni_idhash_insert(h, 1, &expect[0]) == NNG_EINVAL);
+				So(nni_idhash_insert(h, 100, &expect[0]) == NNG_EINVAL);
 			})
 		})
 	})

@@ -24,6 +24,9 @@ struct nni_idhash {
 	uint32_t		ih_minload; // considers placeholders
 	uint32_t		ih_maxload;
 	uint32_t		ih_walkers;
+	uint32_t		ih_minval;
+	uint32_t		ih_maxval;
+	uint32_t		ih_dynval;
 	nni_idhash_entry *	ih_entries;
 };
 
@@ -31,6 +34,7 @@ int
 nni_idhash_create(nni_idhash **hp)
 {
 	nni_idhash *h;
+	int rv;
 
 	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
 		return (NNG_ENOMEM);
@@ -47,8 +51,24 @@ nni_idhash_create(nni_idhash **hp)
 	h->ih_maxload = 5;
 	h->ih_minload = 0; // never shrink below this
 	h->ih_walkers = 0;
+	h->ih_minval = 0;
+	h->ih_maxval = 0xffffffff;
+	h->ih_dynval = 0;
 	*hp = h;
 	return (0);
+}
+
+
+void
+nni_idhash_set_limits(nni_idhash *h, uint32_t minval, uint32_t maxval,
+    uint32_t start)
+{
+	h->ih_minval = minval;
+	h->ih_maxval = maxval;
+	h->ih_dynval = start;
+	NNI_ASSERT(minval < maxval);
+	NNI_ASSERT(start >= minval);
+	NNI_ASSERT(start <= maxval);
 }
 
 
@@ -199,6 +219,10 @@ nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
 {
 	uint32_t index;
 
+	if ((id < h->ih_minval) || (id > h->ih_maxval)) {
+		return (NNG_EINVAL);
+	}
+
 	// Try to resize.  If we can't, but we still have room, go ahead
 	// and store it.
 	if ((nni_hash_resize(h) != 0) && (h->ih_count >= (h->ih_cap - 1))) {
@@ -219,6 +243,47 @@ nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
 		ent->ihe_skips++;
 		index = NNI_IDHASH_NEXTPROBE(h, index);
 	}
+
+	// If this was the old dynamic value, just bump it.
+	if (h->ih_dynval == id) {
+		h->ih_dynval++;
+		// Roll over...
+		if (h->ih_dynval == h->ih_maxval) {
+			h->ih_dynval = h->ih_minval;
+		}
+	}
+}
+
+
+int
+nni_idhash_alloc(nni_idhash *h, uint32_t *idp, void *val)
+{
+	uint32_t id, index;
+	void *scrap;
+	int rv;
+
+	if (h->ih_count > (h->ih_maxval - h->ih_minval)) {
+		// Really more like ENOSPC.. the table is filled to max.
+		return (NNG_ENOMEM);
+	}
+
+	for (;;) {
+		id = h->ih_dynval;
+		h->ih_dynval++;
+		if (h->ih_dynval > h->ih_maxval) {
+			h->ih_dynval = h->ih_minval;
+		}
+
+		if (nni_idhash_find(h, id, &scrap) == NNG_ENOENT) {
+			break;
+		}
+	}
+
+	rv = nni_idhash_insert(h, id, val);
+	if (rv == 0) {
+		*idp = id;
+	}
+	return (rv);
 }
 
 
