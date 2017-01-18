@@ -14,5 +14,7 @@
 // Inproc tests.
 
 TestMain("TCP Transport", {
+	nni_init();
 	trantest_test_all("tcp://127.0.0.1:4450");
+	nni_fini();
 })

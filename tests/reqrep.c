@@ -15,6 +15,7 @@
 Main({
 	int rv;
 	const char *addr = "inproc://test";
+	nni_init();
 
 	Test("REQ/REP pattern", {
 		Convey("We can create a REQ socket", {
@@ -164,4 +165,6 @@ Main({
 			nng_msg_free(cmd);
 		})
 	})
+
+	nni_fini();
 })

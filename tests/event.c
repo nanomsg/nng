@@ -69,6 +69,8 @@ bump(nng_event *ev, void *arg)
 Main({
 	const char *addr = "inproc://test";
 
+	nni_init();
+
 	Test("Event Handling", {
 		Convey("Given a connected pair of pair sockets", {
 			nng_socket *sock1;
@@ -129,4 +131,6 @@ Main({
 			})
 		})
 	})
+
+	nni_fini();
 })

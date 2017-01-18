@@ -9,6 +9,7 @@
 
 #include "convey.h"
 #include "nng.h"
+#include "core/nng_impl.h"
 
 #include <string.h>
 
@@ -19,6 +20,7 @@
 Main({
 	int rv;
 	const char *addr = "inproc://test";
+	nni_init();
 
 	Test("BUS pattern", {
 		Convey("We can create a BUS socket", {
@@ -101,4 +103,6 @@ Main({
 			})
 		})
 	})
+
+	nni_fini();
 })

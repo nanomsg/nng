@@ -10,10 +10,15 @@
 #include "convey.h"
 #include "stubs.h"
 #include "nng.h"
+#include "core/nng_impl.h"
 
 #include <string.h>
 
-TestMain("Socket Operations", {
+Main({
+	nni_init();
+
+	Test("Socket Operations", {
+
 	Convey("We are able to open a PAIR socket", {
 		int rv;
 		nng_socket *sock = NULL;
@@ -194,4 +199,7 @@ TestMain("Socket Operations", {
 			nng_close(sock2);
 		})
 	})
+	})
+
+	nni_fini();
 })

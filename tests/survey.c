@@ -20,6 +20,8 @@ Main({
 	int rv;
 	const char *addr = "inproc://test";
 
+	nni_init();
+
 	Test("SURVEY pattern", {
 		Convey("We can create a SURVEYOR socket", {
 			nng_socket *surv;
@@ -135,4 +137,6 @@ Main({
 			})
 		})
 	})
+
+	nni_fini();
 })

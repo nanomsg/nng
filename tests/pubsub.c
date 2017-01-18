@@ -19,6 +19,7 @@
 Main({
 	int rv;
 	const char *addr = "inproc://test";
+	nni_init();
 
 	Test("PUB/SUB pattern", {
 		Convey("We can create a PUB socket", {
@@ -168,4 +169,6 @@ Main({
 
 		})
 	})
+
+	nni_fini();
 })

@@ -19,6 +19,8 @@
 Main({
 	const char *addr = "inproc://test";
 
+	nni_init();
+
 	Test("PIPELINE (PUSH/PULL) pattern", {
 		Convey("We can create a PUSH socket", {
 			nng_socket *push;
@@ -177,4 +179,6 @@ Main({
 			So(nng_recvmsg(pull2, &abc, 0) == NNG_ETIMEDOUT);
 		})
 	})
+
+	nni_fini();
 })

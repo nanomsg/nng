@@ -12,6 +12,8 @@
 #include "core/idhash.c"
 
 Main({
+	nni_init();
+
 	Test("General ID Hash", {
 		int rv;
 
@@ -166,4 +168,6 @@ Main({
 			})
 		})
 	})
+
+	nni_fini();
 })

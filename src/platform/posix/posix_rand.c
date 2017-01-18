@@ -45,6 +45,8 @@ nni_plat_seed_prng(void *buf, size_t bufsz)
 	struct nni_plat_prng_x x;
 	int i;
 
+	memset(buf, 0, bufsz);
+
 #if defined(NNG_USE_GETRANDOM)
 	// Latest Linux has a nice API here.
 	(void) getrandom(buf, bufsz, 0);
@@ -72,6 +74,7 @@ nni_plat_seed_prng(void *buf, size_t bufsz)
 	// limited of systems, we have at least *some* level of randomness.
 	// The mixing is done in a way to avoid diminishing entropy we may
 	// have already collected.
+	memset(&x, 0, sizeof (x)); // satisfy valgrind
 	x.now = nni_clock();
 	x.pid = getpid();
 	x.uid = getuid();

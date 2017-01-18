@@ -72,13 +72,12 @@ nop(void)
 	return (0);
 }
 
-TestMain("Platform Operations", {
+Main({
+	nni_init();
+
+	Test("Platform Operations", {
 
 	// This is required for anything else to work
-	int rv = nni_plat_init(nop);
-	Convey("Platform init worked", {
-		So(rv == 0);
-	})
 	Convey("The clock works", {
 		uint64_t now = getms();
 
@@ -205,4 +204,6 @@ TestMain("Platform Operations", {
 			nni_mtx_unlock(&arg.mx);
 		})
 	})
+	})
+	nni_fini();
 })
