@@ -34,7 +34,6 @@ int
 nni_idhash_create(nni_idhash **hp)
 {
 	nni_idhash *h;
-	int rv;
 
 	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
 		return (NNG_ENOMEM);
@@ -258,7 +257,7 @@ nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
 int
 nni_idhash_alloc(nni_idhash *h, uint32_t *idp, void *val)
 {
-	uint32_t id, index;
+	uint32_t id;
 	void *scrap;
 	int rv;
 

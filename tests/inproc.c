@@ -9,6 +9,7 @@
 
 #include "convey.h"
 #include "trantest.h"
+#include "core/nng_impl.h"
 
 
 // Inproc tests.

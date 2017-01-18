@@ -8,7 +8,7 @@
 //
 
 #include "convey.h"
-#include "stubs.h"
+#include "core/nng_impl.h"
 #include "core/idhash.c"
 
 Main({

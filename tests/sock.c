@@ -8,7 +8,6 @@
 //
 
 #include "convey.h"
-#include "stubs.h"
 #include "nng.h"
 #include "core/nng_impl.h"
 
@@ -47,7 +46,7 @@ Main({
 			int64_t when = 500000;
 			uint64_t now;
 
-			now = getms();
+			now = nni_clock();
 
 			rv = nng_setopt(sock, NNG_OPT_RCVTIMEO, &when,
 				sizeof (when));
@@ -55,8 +54,8 @@ Main({
 			rv = nng_recvmsg(sock, &msg, 0);
 			So(rv == NNG_ETIMEDOUT);
 			So(msg == NULL);
-			So(getms() >= (now + (when/1000)));
-			So(getms() < (now + ((when/1000) * 2)));
+			So(nni_clock() >= (now + when));
+			So(nni_clock() < (now + (when * 2)));
 		})
 
 		Convey("Recv nonblock with no pipes gives EAGAIN", {
@@ -74,15 +73,15 @@ Main({
 			// We cheat to get access to the core's clock.
 			So(nng_msg_alloc(&msg, 0) == 0);
 			So(msg != NULL);
-			now = getms();
+			now = nni_clock();
 
 			rv = nng_setopt(sock, NNG_OPT_SNDTIMEO, &when,
 				sizeof (when));
 			So(rv == 0);
 			rv = nng_sendmsg(sock, msg, 0);
 			So(rv == NNG_ETIMEDOUT);
-			So(getms() >= (now + (when/1000)));
-			So(getms() < (now + ((when/1000) * 2)));
+			So(nni_clock() >= (now + when));
+			So(nni_clock() < (now + (when * 2)));
 			nng_msg_free(msg);
 		})
 

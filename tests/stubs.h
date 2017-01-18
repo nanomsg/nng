@@ -7,13 +7,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-#include <string.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdarg.h>
+#ifndef STUBS_H
+#define STUBS_H
 
+#include <stdint.h>
 #ifdef	_WIN32
 #include <windows.h>
 #else
@@ -46,3 +43,5 @@ getms(void)
 	return (((uint64_t)(tv.tv_sec ) * 1000) + (tv.tv_usec / 1000));
 #endif
 }
+
+#endif // STUBS_H
