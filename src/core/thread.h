@@ -12,17 +12,15 @@
 
 #include "core/nng_impl.h"
 
-typedef struct {
+struct nni_mtx {
 	nni_plat_mtx mtx;
-} nni_mtx;
+};
 
-typedef struct {
+struct nni_cv {
 	nni_plat_cv cv;
-} nni_cv;
+};
 
-typedef void (*nni_thr_func)(void *);
-
-typedef struct {
+struct nni_thr {
 	nni_plat_thr	thr;
 	nni_plat_mtx	mtx;
 	nni_plat_cv	cv;
@@ -32,7 +30,7 @@ typedef struct {
 	int		stop;
 	int		done;
 	int		init;
-} nni_thr;
+};
 
 // nni_mtx_init initializes the mutex.  (Win32 programmers take note;
 // our mutexes are actually CriticalSections on Win32.)

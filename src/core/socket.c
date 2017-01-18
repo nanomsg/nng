@@ -48,8 +48,9 @@ nni_reaper(void *arg)
 		if ((pipe = nni_list_first(&sock->s_reaps)) != NULL) {
 			nni_list_remove(&sock->s_reaps, pipe);
 			if (pipe->p_id != 0) {
-				nni_idhash_remove(sock->s_pipes_by_id,
-				    pipe->p_id);
+				nni_mtx_lock(nni_idlock);
+				nni_idhash_remove(nni_pipes, pipe->p_id);
+				nni_mtx_unlock(nni_idlock);
 			}
 
 			if (((ep = pipe->p_ep) != NULL) &&
@@ -236,15 +237,6 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		goto fail;
 	}
 
-	if ((rv = nni_idhash_create(&sock->s_pipes_by_id)) != 0) {
-		goto fail;
-	}
-	// Pipe IDs are always positive values with the upper bit clear.
-	// Start the IDs at a random place to minimize chances of PIPE ID
-	// reuse improperly.
-	nni_idhash_set_limits(sock->s_pipes_by_id, 1, 0x7FFFFFFF,
-	    nni_random() & 0x7FFFFFFF);
-
 	rv = nni_ev_init(&sock->s_recv_ev, NNG_EV_CAN_RECV, sock);
 	if (rv != 0) {
 		goto fail;
@@ -303,7 +295,6 @@ fail:
 	nni_ev_fini(&sock->s_recv_ev);
 	nni_msgq_fini(sock->s_urq);
 	nni_msgq_fini(sock->s_uwq);
-	nni_idhash_destroy(sock->s_pipes_by_id);
 	nni_cv_fini(&sock->s_notify_cv);
 	nni_cv_fini(&sock->s_cv);
 	nni_mtx_fini(&sock->s_notify_mx);
@@ -442,7 +433,6 @@ nni_sock_close(nni_sock *sock)
 	nni_msgq_fini(sock->s_uwq);
 	nni_ev_fini(&sock->s_send_ev);
 	nni_ev_fini(&sock->s_recv_ev);
-	nni_idhash_destroy(sock->s_pipes_by_id);
 	nni_cv_fini(&sock->s_notify_cv);
 	nni_cv_fini(&sock->s_cv);
 	nni_mtx_fini(&sock->s_notify_mx);

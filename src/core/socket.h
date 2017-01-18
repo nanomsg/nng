@@ -42,8 +42,6 @@ struct nng_socket {
 	nni_cv			s_notify_cv;    // wakes notify thread
 	nni_mtx			s_notify_mx;    // protects s_notify list
 
-	nni_idhash *		s_pipes_by_id;  // pipes by id
-
 	nni_list		s_reaps;        // pipes to reap
 	nni_thr			s_reaper;
 	nni_thr			s_notifier;

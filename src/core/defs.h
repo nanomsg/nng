@@ -39,6 +39,11 @@ typedef struct nni_proto_sock_ops	nni_proto_sock_ops;
 typedef struct nni_proto_pipe_ops	nni_proto_pipe_ops;
 typedef struct nni_proto		nni_proto;
 
+typedef struct nni_mtx			nni_mtx;
+typedef struct nni_cv			nni_cv;
+typedef struct nni_idhash		nni_idhash;
+typedef struct nni_thr			nni_thr;
+typedef void (*nni_thr_func)(void *);
 
 typedef int				nni_signal;     // Wakeup channel.
 typedef uint64_t			nni_time;       // Abs. time (usec).

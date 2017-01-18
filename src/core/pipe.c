@@ -184,7 +184,9 @@ nni_pipe_start(nni_pipe *pipe)
 		return (NNG_EPROTO);
 	}
 
-	rv = nni_idhash_alloc(sock->s_pipes_by_id, &pipe->p_id, pipe);
+	nni_mtx_lock(nni_idlock);
+	rv = nni_idhash_alloc(nni_pipes, &pipe->p_id, pipe);
+	nni_mtx_unlock(nni_idlock);
 	if (rv != 0) {
 		nni_pipe_bail(pipe);
 		nni_mtx_unlock(&sock->s_mx);
@@ -192,7 +194,9 @@ nni_pipe_start(nni_pipe *pipe)
 	}
 
 	if ((rv = sock->s_pipe_ops.pipe_add(pipe->p_proto_data)) != 0) {
-		nni_idhash_remove(sock->s_pipes_by_id, pipe->p_id);
+		nni_mtx_lock(nni_idlock);
+		nni_idhash_remove(nni_pipes, pipe->p_id);
+		nni_mtx_unlock(nni_idlock);
 		pipe->p_id = 0;
 		nni_pipe_bail(pipe);
 		nni_mtx_unlock(&sock->s_mx);
