@@ -547,25 +547,14 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	nni_ep *ep;
 	int rv;
 
-	nni_mtx_lock(&sock->s_mx);
-	if (sock->s_closing) {
-		nni_mtx_unlock(&sock->s_mx);
-		return (NNG_ECLOSED);
-	}
 	if ((rv = nni_ep_create(&ep, sock, addr)) != 0) {
-		nni_mtx_unlock(&sock->s_mx);
 		return (rv);
 	}
-	nni_list_append(&sock->s_eps, ep);
-	nni_mtx_unlock(&sock->s_mx);
 
-	rv = nni_ep_dial(ep, flags);
-	if (rv != 0) {
+	if ((rv = nni_ep_dial(ep, flags)) != 0) {
 		nni_ep_close(ep);
-	} else {
-		if (epp != NULL) {
-			*epp = ep;
-		}
+	} else if (epp != NULL) {
+		*epp = ep;
 	}
 
 	return (rv);
@@ -578,26 +567,14 @@ nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	nni_ep *ep;
 	int rv;
 
-	nni_mtx_lock(&sock->s_mx);
-	if (sock->s_closing) {
-		nni_mtx_unlock(&sock->s_mx);
-		return (NNG_ECLOSED);
-	}
-
 	if ((rv = nni_ep_create(&ep, sock, addr)) != 0) {
-		nni_mtx_unlock(&sock->s_mx);
 		return (rv);
 	}
-	nni_list_append(&sock->s_eps, ep);
-	nni_mtx_unlock(&sock->s_mx);
 
-	rv = nni_ep_listen(ep, flags);
-	if (rv != 0) {
+	if ((rv = nni_ep_listen(ep, flags)) != 0) {
 		nni_ep_close(ep);
-	} else {
-		if (epp != NULL) {
-			*epp = ep;
-		}
+	} else if (epp != NULL) {
+		*epp = ep;
 	}
 
 	return (rv);
