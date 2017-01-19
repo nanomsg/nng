@@ -14,6 +14,8 @@
 // Inproc tests.
 
 TestMain("TCP Transport", {
+	int rv;
+
 	nni_init();
 	trantest_test_all("tcp://127.0.0.1:4450");
 
@@ -37,8 +39,9 @@ TestMain("TCP Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		})
-		So(nng_listen(s1, "tcp://*:5599", NULL, NNG_FLAG_SYNCH) == 0);
-		So(nng_dial(s2, "tcp://127.0.0.1:5599", NULL, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(s1, "tcp://*:5771", NULL, NNG_FLAG_SYNCH) == 0);
+		So(nng_dial(s2, "tcp://127.0.0.1:5771", NULL, NNG_FLAG_SYNCH) == 0);
+		fflush(stdout);
 	})
 	nni_fini();
 

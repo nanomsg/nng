@@ -32,6 +32,7 @@ struct nni_plat_tcpsock {
 	WSAOVERLAPPED	recv_olpd;
 	WSAOVERLAPPED	send_olpd;
 	WSAOVERLAPPED	conn_olpd; // Use for both connect and accept
+	int		family;
 
 	// We have to lookup some function pointers using ioctls.  Winsock,
 	// gotta love it.

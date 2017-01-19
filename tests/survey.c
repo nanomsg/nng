@@ -18,7 +18,6 @@
 			So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
 
 Main({
-	int rv;
 	const char *addr = "inproc://test";
 
 	nni_init();
@@ -47,7 +46,6 @@ Main({
 			Convey("Survey without responder times out", {
 				uint64_t expire = 50000;
 				nng_msg *msg;
-				int rv;
 
 				So(nng_setopt(surv, NNG_OPT_SURVEYTIME, &expire, sizeof (expire)) == 0);
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -84,10 +82,10 @@ Main({
 			nng_socket *sock;
 			uint64_t expire;
 
-			So((rv = nng_open(&surv, NNG_PROTO_SURVEYOR)) == 0);
+			So(nng_open(&surv, NNG_PROTO_SURVEYOR) == 0);
 			So(surv != NULL);
 
-			So((rv = nng_open(&resp, NNG_PROTO_RESPONDENT)) == 0);
+			So(nng_open(&resp, NNG_PROTO_RESPONDENT) == 0);
 			So(resp != NULL);
 
 
@@ -106,7 +104,7 @@ Main({
 			// earlier dial to have completed *fully*.  This is a
 			// hack that only works because our listen logic is
 			// single threaded.
-			So((rv = nng_open(&sock, NNG_PROTO_RESPONDENT)) == 0);
+			So(nng_open(&sock, NNG_PROTO_RESPONDENT) == 0);
 			So(nng_dial(sock, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			nng_close(sock);
 
@@ -133,8 +131,7 @@ Main({
 				Convey("And goes to non-survey state", {
 					rtimeo = 200000;
 					So(nng_setopt(surv, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
-					rv = nng_recvmsg(surv, &msg, 0);
-					So(rv== NNG_ESTATE);
+					So(nng_recvmsg(surv, &msg, 0) == NNG_ESTATE);
 				})
 			})
 		})

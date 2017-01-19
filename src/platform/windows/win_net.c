@@ -120,7 +120,7 @@ nni_plat_to_sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 
 	case NNG_AF_INET6:
 		sin6 = (void *) ss;
-		memset(&sin6, 0, sizeof (sin6));
+		memset(sin6, 0, sizeof (*sin6));
 		sin6->sin6_family = PF_INET6;
 		sin6->sin6_port = sa->s_un.s_in6.sa_port;
 		memcpy(sin6->sin6_addr.s6_addr, sa->s_un.s_in6.sa_addr, 16);
@@ -162,19 +162,31 @@ nni_plat_lookup_host(const char *host, nni_sockaddr *addr, int flags)
 	ADDRINFO hint;
 	ADDRINFO *ai;
 
-	memset(&hint, 0, sizeof (hint));
-	hint.ai_flags = AI_PASSIVE | AI_ADDRCONFIG | AI_NUMERICSERV;
-	hint.ai_family = PF_UNSPEC;
+	ZeroMemory(&hint, sizeof (hint));
+	hint.ai_flags = AI_PASSIVE | AI_ALL;
 	hint.ai_socktype = SOCK_STREAM;
 	hint.ai_protocol = IPPROTO_TCP;
+
+	// XXX: For some reason, using IPv6 (AF_INET6) leads to surprising
+	// results, particularly for the AI_PASSIVE NULL host, where the
+	// documented behavior is that a single zeroed address works.  That
+	// does not seem to be what we get back, and attempts to bind to that
+	// specifically also seem to fail.  Investigation is called for.
+	// For now we juse use AF_INET if HOST == NULL.
 	if (flags & NNI_FLAG_IPV4ONLY) {
-		hint.ai_family = PF_INET;
+		hint.ai_family = AF_INET;
+	} else {
+		hint.ai_family = AF_UNSPEC;
+	}
+	if (host == NULL) {
+		// See above about why we had to do this terrible thing.
+		// We need to remove this before 1.0.
+		hint.ai_family = AF_INET;
 	}
 
 	if (getaddrinfo(host, "1", &hint, &ai) != 0) {
 		return (NNG_EADDRINVAL);
 	}
-
 	if (nni_plat_from_sockaddr(addr, ai->ai_addr) < 0) {
 		freeaddrinfo(ai);
 		return (NNG_EADDRINVAL);
@@ -300,9 +312,14 @@ static void
 nni_plat_tcp_setopts(SOCKET fd)
 {
 	BOOL yes;
+	DWORD no;
 
 	// Don't inherit the handle (CLOEXEC really).
 	SetHandleInformation((HANDLE) fd, HANDLE_FLAG_INHERIT, 0);
+
+	no = 0;
+	(void) setsockopt(fd, IPPROTO_IPV6, IPV6_V6ONLY, (char *) &no,
+	    sizeof (no));
 
 	// Also disable Nagle.  We are careful to group data with WSASend,
 	// and latency is king for most of our users.  (Consider adding
@@ -343,14 +360,14 @@ nni_plat_tcp_init(nni_plat_tcpsock *s)
 
 
 static int
-nni_plat_tcp_open(nni_plat_tcpsock *s)
+nni_plat_tcp_open(nni_plat_tcpsock *s, int fam)
 {
 	int rv;
 	DWORD nbytes;
 	GUID guid1 = WSAID_CONNECTEX;
 	GUID guid2 = WSAID_ACCEPTEX;
 
-	s->s = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+	s->s = socket(fam, SOCK_STREAM, IPPROTO_TCP);
 	if (s->s == INVALID_SOCKET) {
 		rv = WSAGetLastError();
 		return (nni_winsock_error(rv));
@@ -368,6 +385,7 @@ nni_plat_tcp_open(nni_plat_tcpsock *s)
 	}
 
 	nni_plat_tcp_setopts(s->s);
+	s->family = fam;
 
 	return (0);
 }
@@ -433,7 +451,7 @@ nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = nni_plat_tcp_open(s)) != 0) {
+	if ((rv = nni_plat_tcp_open(s, ss.ss_family)) != 0) {
 		return (rv);
 	}
 
@@ -451,6 +469,7 @@ nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
 		nni_plat_tcp_close(s);
 		return (nni_winsock_error(rv));
 	}
+
 
 	// Listen -- 128 depth is probably sufficient.  If it isn't, other
 	// bad things are going to happen.
@@ -496,7 +515,7 @@ nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
 		bss.ss_family = ss.ss_family;
 	}
 
-	if ((rv = nni_plat_tcp_open(s)) != 0) {
+	if ((rv = nni_plat_tcp_open(s, ss.ss_family)) != 0) {
 		return (rv);
 	}
 
@@ -533,7 +552,7 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 	char ainfo[512];
 	int rv;
 
-	if ((rv = nni_plat_tcp_open(s)) != 0) {
+	if ((rv = nni_plat_tcp_open(s, server->family)) != 0) {
 		return (rv);
 	}
 
