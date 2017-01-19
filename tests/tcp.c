@@ -16,5 +16,31 @@
 TestMain("TCP Transport", {
 	nni_init();
 	trantest_test_all("tcp://127.0.0.1:4450");
+
+
+	Convey("We cannot connect to wild cards", {
+		nng_socket *s;
+
+		So(nng_open(&s, NNG_PROTO_PAIR) == 0);
+		Reset({
+			nng_close(s);
+		})
+		So(nng_dial(s, "tcp://*:5555", NULL, NNG_FLAG_SYNCH) == NNG_EADDRINVAL);
+	})
+
+	Convey("We can bind to wild card", {
+		nng_socket *s1;
+		nng_socket *s2;
+		So(nng_open(&s1, NNG_PROTO_PAIR) == 0);
+		So(nng_open(&s2, NNG_PROTO_PAIR) == 0);
+		Reset({
+			nng_close(s2);
+			nng_close(s1);
+		})
+		So(nng_listen(s1, "tcp://*:5599", NULL, NNG_FLAG_SYNCH) == 0);
+		So(nng_dial(s2, "tcp://127.0.0.1:5599", NULL, NNG_FLAG_SYNCH) == 0);
+	})
 	nni_fini();
+
+
 })

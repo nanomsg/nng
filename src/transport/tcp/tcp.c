@@ -343,6 +343,9 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 	if ((rv = nni_parseaddr(rempart, &host, &port)) != 0) {
 		return (rv);
 	}
+	if (host == NULL) {
+		return (NNG_EADDRINVAL);
+	}
 	if ((rv = nni_plat_lookup_host(host, &remaddr, flag)) != 0) {
 		return (rv);
 	}

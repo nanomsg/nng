@@ -163,7 +163,7 @@ nni_plat_lookup_host(const char *host, nni_sockaddr *addr, int flags)
 	ADDRINFO *ai;
 
 	memset(&hint, 0, sizeof (hint));
-	hint.ai_flags = AI_PASSIVE | AI_ADDRCONFIG;
+	hint.ai_flags = AI_PASSIVE | AI_ADDRCONFIG | AI_NUMERICSERV;
 	hint.ai_family = PF_UNSPEC;
 	hint.ai_socktype = SOCK_STREAM;
 	hint.ai_protocol = IPPROTO_TCP;
@@ -171,7 +171,7 @@ nni_plat_lookup_host(const char *host, nni_sockaddr *addr, int flags)
 		hint.ai_family = PF_INET;
 	}
 
-	if (getaddrinfo(host, NULL, &hint, &ai) != 0) {
+	if (getaddrinfo(host, "1", &hint, &ai) != 0) {
 		return (NNG_EADDRINVAL);
 	}
 
