@@ -466,7 +466,7 @@ nni_msgq_drain(nni_msgq *mq, nni_time expire)
 	nni_cv_wake(&mq->mq_writeable);
 	nni_cv_wake(&mq->mq_readable);
 	while (mq->mq_len > 0) {
-		if (nni_cv_until(&mq->mq_drained, expire) == NNG_ETIMEDOUT) {
+		if (nni_cv_until(&mq->mq_drained, expire) != 0) {
 			break;
 		}
 	}

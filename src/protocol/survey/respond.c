@@ -392,14 +392,13 @@ nni_resp_sock_rfilter(void *arg, nni_msg *msg)
 }
 
 
-// This is the global protocol structure -- our linkage to the core.
-// This should be the only global non-static symbol in this file.
 static nni_proto_pipe_ops nni_resp_pipe_ops = {
 	.pipe_init	= nni_resp_pipe_init,
 	.pipe_fini	= nni_resp_pipe_fini,
 	.pipe_add	= nni_resp_pipe_add,
 	.pipe_rem	= nni_resp_pipe_rem,
-	.pipe_worker	= { nni_resp_pipe_send,nni_resp_pipe_recv    },
+	.pipe_worker	= { nni_resp_pipe_send,
+			    nni_resp_pipe_recv },
 };
 
 static nni_proto_sock_ops nni_resp_sock_ops = {

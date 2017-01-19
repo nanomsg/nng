@@ -9,6 +9,7 @@
 
 #include "convey.h"
 #include "nng.h"
+#include "core/nng_impl.h"
 
 #include <string.h>
 
@@ -44,8 +45,9 @@ Main({
 			})
 
 			Convey("Survey without responder times out", {
-				uint64_t expire = 1000;
+				uint64_t expire = 50000;
 				nng_msg *msg;
+				int rv;
 
 				So(nng_setopt(surv, NNG_OPT_SURVEYTIME, &expire, sizeof (expire)) == 0);
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -94,7 +96,7 @@ Main({
 				nng_close(resp);
 			})
 
-			expire = 40000;
+			expire = 50000;
 			So(nng_setopt(surv, NNG_OPT_SURVEYTIME, &expire, sizeof (expire)) == 0);
 
 			So(nng_listen(surv, addr, NULL, NNG_FLAG_SYNCH) == 0);
@@ -129,7 +131,7 @@ Main({
 				So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
 
 				Convey("And goes to non-survey state", {
-					rtimeo = 50000;
+					rtimeo = 200000;
 					So(nng_setopt(surv, NNG_OPT_RCVTIMEO, &rtimeo, sizeof (rtimeo)) == 0);
 					rv = nng_recvmsg(surv, &msg, 0);
 					So(rv== NNG_ESTATE);
