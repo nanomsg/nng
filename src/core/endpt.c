@@ -93,10 +93,7 @@ nni_ep_close(nni_ep *ep)
 	nni_mtx *mx = &ep->ep_sock->s_mx;
 
 	nni_mtx_lock(mx);
-	if (ep->ep_close) {
-		nni_mtx_unlock(mx);
-		return;
-	}
+	NNI_ASSERT(ep->ep_close == 0);
 	ep->ep_close = 1;
 	ep->ep_ops.ep_close(ep->ep_data);
 	if ((pipe = ep->ep_pipe) != NULL) {
@@ -104,20 +101,17 @@ nni_ep_close(nni_ep *ep)
 		ep->ep_pipe = NULL;
 	}
 	nni_cv_wake(&ep->ep_cv);
-	nni_list_remove(&ep->ep_sock->s_eps, ep);
 	nni_mtx_unlock(mx);
 
-	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
-		nni_thr_fini(&ep->ep_thr);
-	}
-
+	nni_thr_fini(&ep->ep_thr);
 	ep->ep_ops.ep_fini(ep->ep_data);
 
-	nni_cv_fini(&ep->ep_cv);
 	nni_mtx_lock(nni_idlock);
+	nni_list_remove(&ep->ep_sock->s_eps, ep);
 	nni_idhash_remove(nni_endpoints, ep->ep_id);
 	nni_mtx_unlock(nni_idlock);
 
+	nni_cv_fini(&ep->ep_cv);
 	NNI_FREE_STRUCT(ep);
 }
 
