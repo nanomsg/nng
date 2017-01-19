@@ -146,11 +146,6 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 
 	rv = pthread_cond_timedwait(&cv->cv, cv->mtx, &ts);
 	if (rv == ETIMEDOUT) {
-		if (nni_clock() < until) {
-			// Buggy pthreads implementation!!  Seen with
-			// CLOCK_MONOTONIC on macOS Sierra.
-			nni_panic("nni_plat_cv_until: Premature wake up!");
-		}
 		return (NNG_ETIMEDOUT);
 	} else if (rv != 0) {
 		nni_panic("pthread_cond_timedwait: %d", rv);
