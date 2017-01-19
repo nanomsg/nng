@@ -114,10 +114,11 @@ nni_surv_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 static void
 nni_surv_pipe_fini(void *arg)
 {
-	nni_surv_pipe *sp = arg;
+	nni_surv_pipe *ppipe = arg;
 
-	if (sp != NULL) {
-		NNI_FREE_STRUCT(sp);
+	if (ppipe != NULL) {
+		nni_msgq_fini(ppipe->sendq);
+		NNI_FREE_STRUCT(ppipe);
 	}
 }
 
