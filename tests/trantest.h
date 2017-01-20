@@ -19,8 +19,8 @@
 
 typedef struct {
 	char addr[NNG_MAXADDRLEN+1];
-	nng_socket *reqsock;
-	nng_socket *repsock;
+	nng_socket reqsock;
+	nng_socket repsock;
 	nni_tran *tran;
 } trantest;
 

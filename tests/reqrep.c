@@ -20,11 +20,9 @@ Main({
 
 	Test("REQ/REP pattern", {
 		Convey("We can create a REQ socket", {
-			nng_socket *req;
+			nng_socket req;
 
-			rv = nng_open(&req, NNG_PROTO_REQ);
-			So(rv == 0);
-			So(req != NULL);
+			So(nng_open(&req, NNG_PROTO_REQ) == 0);
 
 			Reset({
 				nng_close(req);
@@ -43,10 +41,8 @@ Main({
 		})
 
 		Convey("We can create a REP socket", {
-			nng_socket *rep;
-			rv = nng_open(&rep, NNG_PROTO_REP);
-			So(rv == 0);
-			So(rep != NULL);
+			nng_socket rep;
+			So(nng_open(&rep, NNG_PROTO_REP) == 0);
 
 			Reset({
 				nng_close(rep);
@@ -68,27 +64,20 @@ Main({
 		})
 
 		Convey("We can create a linked REQ/REP pair", {
-			nng_socket *req;
-			nng_socket *rep;
+			nng_socket req;
+			nng_socket rep;
 
-			rv = nng_open(&rep, NNG_PROTO_REP);
-			So(rv == 0);
-			So(rep != NULL);
+			So(nng_open(&rep, NNG_PROTO_REP) == 0);
 
-			rv = nng_open(&req, NNG_PROTO_REQ);
-			So(rv == 0);
-			So(req != NULL);
+			So(nng_open(&req, NNG_PROTO_REQ) == 0);
 
 			Reset({
 				nng_close(rep);
 				nng_close(req);
 			})
 
-			rv = nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH);
-			So(rv == 0);
-
-			rv = nng_dial(req, addr, NULL, NNG_FLAG_SYNCH);
-			So(rv == 0);
+			So(nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(req, addr, NULL, NNG_FLAG_SYNCH) == 0);
 
 			Convey("They can REQ/REP exchange", {
 				nng_msg *ping;
@@ -123,14 +112,12 @@ Main({
 			uint64_t retry = 100000;	// 100 ms
 			size_t len;
 
-			nng_socket *req;
-			nng_socket *rep;
+			nng_socket req;
+			nng_socket rep;
 
 			So(nng_open(&rep, NNG_PROTO_REP) == 0);
-			So(rep != NULL);
 
 			So(nng_open(&req, NNG_PROTO_REQ) == 0);
-			So(req != NULL);
 
 			Reset({
 				nng_close(rep);

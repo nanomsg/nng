@@ -18,16 +18,14 @@
 			So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
 
 Main({
-	int rv;
 	const char *addr = "inproc://test";
 	nni_init();
 
 	Test("BUS pattern", {
 		Convey("We can create a BUS socket", {
-			nng_socket *bus;
+			nng_socket bus;
 
 			So(nng_open(&bus, NNG_PROTO_BUS) == 0);
-			So(bus != NULL);
 
 			Reset({
 				nng_close(bus);
@@ -40,20 +38,15 @@ Main({
 		})
 
 		Convey("We can create a linked BUS topology", {
-			nng_socket *bus1;
-			nng_socket *bus2;
-			nng_socket *bus3;
+			nng_socket bus1;
+			nng_socket bus2;
+			nng_socket bus3;
 			uint64_t rtimeo;
 
-			So((rv = nng_open(&bus1, NNG_PROTO_BUS)) == 0);
-			So(bus1 != NULL);
-
-			So((rv = nng_open(&bus2, NNG_PROTO_BUS)) == 0);
-			So(bus2 != NULL);
-
-			So((rv = nng_open(&bus3, NNG_PROTO_BUS)) == 0);
-			So(bus3 != NULL);
-
+			So(nng_open(&bus1, NNG_PROTO_BUS) == 0);
+			So(nng_open(&bus2, NNG_PROTO_BUS) == 0);
+			So(nng_open(&bus3, NNG_PROTO_BUS) == 0);
+		
 			Reset({
 				nng_close(bus1);
 				nng_close(bus2);

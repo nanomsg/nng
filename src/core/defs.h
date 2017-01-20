@@ -22,13 +22,13 @@
 		nni_panic("%s: %d: assert err: %s", __FILE__, __LINE__, # x)
 
 // These types are common but have names shared with user space.
-typedef struct nng_socket		nni_sock;
 typedef struct nng_msg			nni_msg;
 typedef struct nng_sockaddr		nni_sockaddr;
 typedef struct nng_event		nni_event;
 typedef struct nng_notify		nni_notify;
 
 // These are our own names.
+typedef struct nni_socket		nni_sock;
 typedef struct nni_ep			nni_ep;
 typedef struct nni_pipe			nni_pipe;
 typedef struct nni_tran			nni_tran;

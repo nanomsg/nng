@@ -21,7 +21,7 @@ TestMain("TCP Transport", {
 
 
 	Convey("We cannot connect to wild cards", {
-		nng_socket *s;
+		nng_socket s;
 
 		So(nng_open(&s, NNG_PROTO_PAIR) == 0);
 		Reset({
@@ -31,8 +31,8 @@ TestMain("TCP Transport", {
 	})
 
 	Convey("We can bind to wild card", {
-		nng_socket *s1;
-		nng_socket *s2;
+		nng_socket s1;
+		nng_socket s2;
 		So(nng_open(&s1, NNG_PROTO_PAIR) == 0);
 		So(nng_open(&s2, NNG_PROTO_PAIR) == 0);
 		Reset({

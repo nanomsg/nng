@@ -73,8 +73,8 @@ Main({
 
 	Test("Event Handling", {
 		Convey("Given a connected pair of pair sockets", {
-			nng_socket *sock1;
-			nng_socket *sock2;
+			nng_socket sock1;
+			nng_socket sock2;
 			struct evcnt evcnt1;
 			struct evcnt evcnt2;
 			nng_notify *notify1;

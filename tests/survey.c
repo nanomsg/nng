@@ -24,7 +24,7 @@ Main({
 
 	Test("SURVEY pattern", {
 		Convey("We can create a SURVEYOR socket", {
-			nng_socket *surv;
+			nng_socket surv;
 
 			So(nng_open(&surv, NNG_PROTO_SURVEYOR) == 0);
 			So(surv != NULL);
@@ -55,7 +55,7 @@ Main({
 		})
 
 		Convey("We can create a RESPONDENT socket", {
-			nng_socket *resp;
+			nng_socket resp;
 			So(nng_open(&resp, NNG_PROTO_RESPONDENT) == 0);
 			So(resp != NULL);
 
@@ -77,9 +77,9 @@ Main({
 		})
 
 		Convey("We can create a linked survey pair", {
-			nng_socket *surv;
-			nng_socket *resp;
-			nng_socket *sock;
+			nng_socket surv;
+			nng_socket resp;
+			nng_socket sock;
 			uint64_t expire;
 
 			So(nng_open(&surv, NNG_PROTO_SURVEYOR) == 0);

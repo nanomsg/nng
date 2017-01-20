@@ -13,9 +13,12 @@
 // NB: This structure is supplied here for use by the CORE. Use of this library
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
-struct nng_socket {
+struct nni_socket {
 	nni_mtx			s_mx;
 	nni_cv			s_cv;
+
+	uint32_t		s_id;
+	uint32_t		s_refcnt;
 
 	nni_msgq *		s_uwq;  // Upper write queue
 	nni_msgq *		s_urq;  // Upper read queue
@@ -60,6 +63,8 @@ struct nng_socket {
 	uint32_t		s_nextid;       // Next Pipe ID.
 };
 
+extern int nni_sock_hold(nni_sock **, uint32_t);
+extern void nni_sock_rele(nni_sock *);
 extern int nni_sock_open(nni_sock **, uint16_t);
 extern void nni_sock_close(nni_sock *);
 extern int nni_sock_shutdown(nni_sock *);
@@ -71,6 +76,7 @@ extern int nni_sock_recvmsg(nni_sock *, nni_msg **, nni_time);
 extern int nni_sock_sendmsg(nni_sock *, nni_msg *, nni_time);
 extern int nni_sock_dial(nni_sock *, const char *, nni_ep **, int);
 extern int nni_sock_listen(nni_sock *, const char *, nni_ep **, int);
+extern uint32_t nni_sock_id(nni_sock *);
 
 // Set error codes for applications.  These are only ever
 // called from the filter functions in protocols, and thus

@@ -37,6 +37,7 @@ nni_init_helper(void)
 	}
 	nni_idhash_set_limits(nni_pipes, 1, 0x7fffffff,
 	    nni_random() & 0x7fffffff);
+	nni_idhash_set_limits(nni_sockets, 1, 0xffffffff, 1);
 	nni_idlock = &nni_idlock_x;
 	nni_tran_init();
 	return (0);

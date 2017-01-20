@@ -20,7 +20,7 @@ Main({
 
 	Convey("We are able to open a PAIR socket", {
 		int rv;
-		nng_socket *sock = NULL;
+		nng_socket sock = NULL;
 
 		rv = nng_open(&sock, NNG_PROTO_PAIR);
 		So(rv == 0);
@@ -147,7 +147,7 @@ Main({
 		})
 
 		Convey("We can send and receive messages", {
-			nng_socket *sock2 = NULL;
+			nng_socket sock2 = NULL;
 			int len = 1;
 			nng_msg *msg;
 			uint64_t second = 1000000;

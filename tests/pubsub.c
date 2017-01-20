@@ -24,7 +24,7 @@ Main({
 
 	Test("PUB/SUB pattern", {
 		Convey("We can create a PUB socket", {
-			nng_socket *pub;
+			nng_socket pub;
 
 			So(nng_open(&pub, NNG_PROTO_PUB) == 0);
 			So(pub != NULL);
@@ -45,7 +45,7 @@ Main({
 		})
 
 		Convey("We can create a SUB socket", {
-			nng_socket *sub;
+			nng_socket sub;
 			So(nng_open(&sub, NNG_PROTO_SUB) == 0);
 			So(sub != NULL);
 
@@ -67,8 +67,8 @@ Main({
 		})
 
 		Convey("We can create a linked PUB/SUB pair", {
-			nng_socket *pub;
-			nng_socket *sub;
+			nng_socket pub;
+			nng_socket sub;
 
 			So((rv = nng_open(&pub, NNG_PROTO_PUB)) == 0);
 			So(pub != NULL);

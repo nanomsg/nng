@@ -42,7 +42,7 @@ extern "C" {
 #endif  // NNG_DECL
 
 // Types common to nng.
-typedef struct nng_socket	nng_socket;
+typedef uint32_t		nng_socket;
 typedef uint32_t		nng_endpoint;
 typedef uint32_t		nng_pipe;
 typedef struct nng_msg		nng_msg;
@@ -54,7 +54,7 @@ typedef struct nng_stat		nng_stat;
 // nng_open simply creates a socket of the given class. It returns an
 // error code on failure, or zero on success.  The socket starts in cooked
 // mode.
-NNG_DECL int nng_open(nng_socket **, uint16_t proto);
+NNG_DECL int nng_open(nng_socket *, uint16_t proto);
 
 // nng_close closes the socket, terminating all activity and
 // closing any underlying connections and releasing any associated
@@ -62,26 +62,26 @@ NNG_DECL int nng_open(nng_socket **, uint16_t proto);
 // error to reference the socket in any way after this is called. Likewise,
 // it is an error to reference any resources such as endpoints or
 // pipes associated with the socket.
-NNG_DECL void nng_close(nng_socket *);
+NNG_DECL int nng_close(nng_socket);
 
 // nng_shutdown shuts down the socket.  This causes any threads doing
 // work for the socket or blocked in socket functions to be woken (and
 // return NNG_ECLOSED).  The socket resources are still present, so it
 // is safe to call other functions; they will just return NNG_ECLOSED.
 // A call to nng_close is still required to release the resources.
-NNG_DECL int nng_shutdown(nng_socket *);
+NNG_DECL int nng_shutdown(nng_socket);
 
 // nng_protocol returns the protocol number of the socket.
-NNG_DECL uint16_t nng_protocol(nng_socket *);
+NNG_DECL uint16_t nng_protocol(nng_socket);
 
 // nng_peer returns the protocol number for the socket's peer.
-NNG_DECL uint16_t nng_peer(nng_socket *);
+NNG_DECL uint16_t nng_peer(nng_socket);
 
 // nng_setopt sets an option for a specific socket.
-NNG_DECL int nng_setopt(nng_socket *, int, const void *, size_t);
+NNG_DECL int nng_setopt(nng_socket, int, const void *, size_t);
 
 // nng_socket_getopt obtains the option for a socket.
-NNG_DECL int nng_getopt(nng_socket *, int, void *, size_t *);
+NNG_DECL int nng_getopt(nng_socket, int, void *, size_t *);
 
 // nng_notify_func is a user function that is executed upon certain
 // events.  See below.
@@ -92,14 +92,14 @@ typedef void (*nng_notify_func)(nng_event *, void *);
 // separate thread.  Event delivery is not guaranteed, and can fail
 // if events occur more quickly than the callback can handle, or
 // if memory or other resources are scarce.
-NNG_DECL nng_notify *nng_setnotify(nng_socket *, int, nng_notify_func, void *);
+NNG_DECL nng_notify *nng_setnotify(nng_socket, int, nng_notify_func, void *);
 
 // nng_unsetnotify unregisters a previously registered notification callback.
 // Once this returns, the associated callback will not be executed any longer.
 // If the callback is running when this called, then it will wait until that
 // callback completes.  (The caller of this function should not hold any
 // locks acqured by the callback, in order to avoid a deadlock.)
-NNG_DECL void nng_unsetnotify(nng_socket *, nng_notify *);
+NNG_DECL void nng_unsetnotify(nng_socket, nng_notify *);
 
 // Event types.  Sockets can have multiple different kind of events.
 // Note that these are edge triggered -- therefore the status indicated
@@ -125,7 +125,7 @@ NNG_DECL void nng_unsetnotify(nng_socket *, nng_notify *);
 // Some of the values will not make sense for some event types, in which case
 // the value returned will be NULL.
 NNG_DECL int nng_event_type(nng_event *);
-NNG_DECL nng_socket *nng_event_socket(nng_event *);
+NNG_DECL nng_socket nng_event_socket(nng_event *);
 NNG_DECL nng_endpoint nng_event_endpoint(nng_event *);
 NNG_DECL nng_pipe nng_event_pipe(nng_event *);
 NNG_DECL const char *nng_event_reason(nng_event *);
@@ -136,7 +136,7 @@ NNG_DECL const char *nng_event_reason(nng_event *);
 // endpoint pointer, if it is not NULL.  The flags may be NNG_FLAG_SYNCH to
 // indicate that a failure setting the socket up should return an error
 // back to the caller immediately.
-NNG_DECL int nng_listen(nng_socket *, const char *, nng_endpoint *, int);
+NNG_DECL int nng_listen(nng_socket, const char *, nng_endpoint *, int);
 
 // nng_dial creates a dialing endpoint, with no special options, and
 // starts it dialing.  Dialers have at most one active connection at a time
@@ -146,11 +146,11 @@ NNG_DECL int nng_listen(nng_socket *, const char *, nng_endpoint *, int);
 // dial will be made synchronously, and a failure condition returned back
 // to the caller.  (If the connection is dropped, it will still be
 // reconnected in the background -- only the initial connect is synchronous.)
-NNG_DECL int nng_dial(nng_socket *, const char *, nng_endpoint *, int);
+NNG_DECL int nng_dial(nng_socket, const char *, nng_endpoint *, int);
 
 // nng_endpoint_create creates an endpoint on the socket, but does not
 // start it either dialing or listening.
-NNG_DECL int nng_endpoint_create(nng_endpoint *, nng_socket *, const char *);
+NNG_DECL int nng_endpoint_create(nng_endpoint *, nng_socket, const char *);
 
 // nng_endpoint_dial starts the endpoint dialing.  This is only possible if
 // the endpoint is not already dialing or listening.
@@ -181,7 +181,7 @@ NNG_DECL const char *nng_strerror(int);
 // received the data.  The return value will be zero to indicate that the
 // socket has accepted the entire data for send, or an errno to indicate
 // failure.  The flags may include NNG_FLAG_NONBLOCK.
-NNG_DECL int nng_send(nng_socket *, const void *, size_t, int);
+NNG_DECL int nng_send(nng_socket, const void *, size_t, int);
 
 // nng_recv receives message data into the socket, up to the supplied size.
 // The actual size of the message data will be written to the value pointed
@@ -190,19 +190,19 @@ NNG_DECL int nng_send(nng_socket *, const void *, size_t, int);
 // the caller.  In that case the pointer to the allocated will be stored
 // instead of the data itself.  The caller is responsible for freeing the
 // associated memory with free().
-NNG_DECL int nng_recv(nng_socket *, void *, size_t *, int);
+NNG_DECL int nng_recv(nng_socket, void *, size_t *, int);
 
 // nng_sendmsg is like nng_send, but offers up a message structure, which
 // gives the ability to provide more control over the message, including
 // providing backtrace information.  It also can take a message that was
 // obtain via nn_recvmsg, allowing for zero copy forwarding.
-NNG_DECL int nng_sendmsg(nng_socket *, nng_msg *, int);
+NNG_DECL int nng_sendmsg(nng_socket, nng_msg *, int);
 
 // nng_recvmsg is like nng_recv, but is used to obtain a message structure
 // as well as the data buffer.  This can be used to obtain more information
 // about where the message came from, access raw headers, etc.  It also
 // can be passed off directly to nng_sendmsg.
-NNG_DECL int nng_recvmsg(nng_socket *, nng_msg **, int);
+NNG_DECL int nng_recvmsg(nng_socket, nng_msg **, int);
 
 // Message API.
 NNG_DECL int nng_msg_alloc(nng_msg **, size_t);
@@ -306,7 +306,7 @@ NNG_DECL void nng_snapshot_free(nng_snapshot *);
 // relevant to a particular socket.  All prior values are overwritten.
 // It is acceptable to use the same snapshot object with different
 // sockets.
-NNG_DECL int nng_snapshot_update(nng_socket *, nng_snapshot *);
+NNG_DECL int nng_snapshot_update(nng_socket, nng_snapshot *);
 
 // nng_snapshot_next is used to iterate over the individual statistic
 // objects inside the snapshot. Note that the statistic object, and the
@@ -356,7 +356,7 @@ NNG_DECL int64_t nng_stat_value(nng_stat *);
 
 // Device functionality.  This connects two sockets together in a device,
 // which means that messages from one side are forwarded to the other.
-NNG_DECL int nng_device(nng_socket *, nng_socket *);
+NNG_DECL int nng_device(nng_socket, nng_socket);
 
 // Pollset functionality.  TBD.  (Note that I'd rather avoid this
 // altogether, because I believe that the notification mechanism I've

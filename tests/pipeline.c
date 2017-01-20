@@ -23,7 +23,7 @@ Main({
 
 	Test("PIPELINE (PUSH/PULL) pattern", {
 		Convey("We can create a PUSH socket", {
-			nng_socket *push;
+			nng_socket push;
 
 			So(nng_open(&push, NNG_PROTO_PUSH) == 0);
 			So(push != NULL);
@@ -44,7 +44,7 @@ Main({
 		})
 
 		Convey("We can create a PULL socket", {
-			nng_socket *pull;
+			nng_socket pull;
 			So(nng_open(&pull, NNG_PROTO_PULL) == 0);
 			So(pull != NULL);
 
@@ -66,9 +66,9 @@ Main({
 		})
 
 		Convey("We can create a linked PUSH/PULL pair", {
-			nng_socket *push = NULL;
-			nng_socket *pull = NULL;
-			nng_socket *what = NULL;
+			nng_socket push = NULL;
+			nng_socket pull = NULL;
+			nng_socket what = NULL;
 
 			So(nng_open(&push, NNG_PROTO_PUSH) == 0);
 			So(nng_open(&pull, NNG_PROTO_PULL) == 0);
@@ -107,10 +107,10 @@ Main({
 			nng_msg *def;
 			uint64_t usecs;
 			int len;
-			nng_socket *push;
-			nng_socket *pull1;
-			nng_socket *pull2;
-			nng_socket *pull3;
+			nng_socket push;
+			nng_socket pull1;
+			nng_socket pull2;
+			nng_socket pull3;
 
 			So(nng_open(&push, NNG_PROTO_PUSH) == 0);
 			So(nng_open(&pull1, NNG_PROTO_PULL) == 0);

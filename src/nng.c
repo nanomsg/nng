@@ -30,156 +30,237 @@
 	(void) nni_init()
 
 int
-nng_open(nng_socket **s, uint16_t proto)
+nng_open(nng_socket *sidp, uint16_t proto)
 {
 	int rv;
+	nni_sock *sock;
 
-	if ((rv = nni_init()) != 0) {
+	if ((rv = nni_sock_open(&sock, proto)) != 0) {
 		return (rv);
 	}
-	return (nni_sock_open(s, proto));
+	*sidp = nni_sock_id(sock);
+	nni_sock_rele(sock);
+	return (0);
 }
 
 
 int
-nng_shutdown(nng_socket *s)
+nng_shutdown(nng_socket sid)
 {
-	NNI_INIT_INT();
-	return (nni_sock_shutdown(s));
-}
-
-
-void
-nng_close(nng_socket *s)
-{
-	NNI_INIT_VOID();
-	nni_sock_close(s);
-}
-
-
-uint16_t
-nng_protocol(nng_socket *s)
-{
-	NNI_INIT_VOID();
-	return (nni_sock_proto(s));
-}
-
-
-uint16_t
-nng_peer(nng_socket *s)
-{
-	NNI_INIT_VOID();
-	return (nni_sock_peer(s));
-}
-
-
-int
-nng_recvmsg(nng_socket *s, nng_msg **msgp, int flags)
-{
-	nni_time expire;
-
-	NNI_INIT_INT();
-	if ((flags == NNG_FLAG_NONBLOCK) || (s->s_rcvtimeo == 0)) {
-		expire = NNI_TIME_ZERO;
-	} else if (s->s_rcvtimeo < 0) {
-		expire = NNI_TIME_NEVER;
-	} else {
-		expire = nni_clock();
-		expire += s->s_rcvtimeo;
-	}
-
-	return (nni_sock_recvmsg(s, msgp, expire));
-}
-
-
-int
-nng_sendmsg(nng_socket *s, nng_msg *msg, int flags)
-{
-	nni_time expire;
-
-	NNI_INIT_INT();
-
-	if ((flags == NNG_FLAG_NONBLOCK) || (s->s_sndtimeo == 0)) {
-		expire = NNI_TIME_ZERO;
-	} else if (s->s_sndtimeo < 0) {
-		expire = NNI_TIME_NEVER;
-	} else {
-		expire = nni_clock();
-		expire += s->s_sndtimeo;
-	}
-
-	return (nni_sock_sendmsg(s, msg, expire));
-}
-
-
-int
-nng_dial(nng_socket *s, const char *addr, nng_endpoint *epp, int flags)
-{
-	nni_ep *ep;
 	int rv;
+	nni_sock *sock;
 
-	NNI_INIT_INT();
-	if ((rv = nni_sock_dial(s, addr, &ep, flags)) == 0) {
-		if (epp != NULL) {
-			*epp = ep->ep_id;
-		}
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
 	}
+	rv = nni_sock_shutdown(sock);
+	nni_sock_rele(sock);
 	return (rv);
 }
 
 
 int
-nng_listen(nng_socket *s, const char *addr, nng_endpoint *epp, int flags)
+nng_close(nng_socket sid)
 {
-	nni_ep *ep;
 	int rv;
+	nni_sock *sock;
 
-	NNI_INIT_INT();
-	if ((rv = nni_sock_listen(s, addr, &ep, flags)) == 0) {
-		if (epp != NULL) {
-			*epp = ep->ep_id;
-		}
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
 	}
+	// No release -- close releases it.
+	nni_sock_close(sock);
+	return (rv);
+}
+
+
+uint16_t
+nng_protocol(nng_socket sid)
+{
+	int rv;
+	uint16_t pnum;
+	nni_sock *sock;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
+	}
+	pnum = nni_sock_proto(sock);
+	nni_sock_rele(sock);
+	return (pnum);
+}
+
+
+uint16_t
+nng_peer(nng_socket sid)
+{
+	int rv;
+	uint16_t pnum;
+	nni_sock *sock;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
+	}
+	pnum = nni_sock_peer(sock);
+	nni_sock_rele(sock);
+	return (pnum);
+}
+
+
+int
+nng_recvmsg(nng_socket sid, nng_msg **msgp, int flags)
+{
+	nni_time expire;
+	int rv;
+	nni_sock *sock;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
+	}
+	if ((flags == NNG_FLAG_NONBLOCK) || (sock->s_rcvtimeo == 0)) {
+		expire = NNI_TIME_ZERO;
+	} else if (sock->s_rcvtimeo < 0) {
+		expire = NNI_TIME_NEVER;
+	} else {
+		expire = nni_clock();
+		expire += sock->s_rcvtimeo;
+	}
+
+	rv = nni_sock_recvmsg(sock, msgp, expire);
+	nni_sock_rele(sock);
 	return (rv);
 }
 
 
 int
-nng_setopt(nng_socket *s, int opt, const void *val, size_t sz)
+nng_sendmsg(nng_socket sid, nng_msg *msg, int flags)
 {
-	NNI_INIT_INT();
-	return (nni_sock_setopt(s, opt, val, sz));
+	nni_time expire;
+	int rv;
+	nni_sock *sock;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
+	}
+	if ((flags == NNG_FLAG_NONBLOCK) || (sock->s_sndtimeo == 0)) {
+		expire = NNI_TIME_ZERO;
+	} else if (sock->s_sndtimeo < 0) {
+		expire = NNI_TIME_NEVER;
+	} else {
+		expire = nni_clock();
+		expire += sock->s_sndtimeo;
+	}
+
+	rv = nni_sock_sendmsg(sock, msg, expire);
+	nni_sock_rele(sock);
+	return (rv);
 }
 
 
 int
-nng_getopt(nng_socket *s, int opt, void *val, size_t *szp)
+nng_dial(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 {
-	NNI_INIT_INT();
-	return (nni_sock_getopt(s, opt, val, szp));
+	nni_ep *ep;
+	int rv;
+	nni_sock *sock;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_sock_dial(sock, addr, &ep, flags)) == 0) {
+		if (epp != NULL) {
+			*epp = ep->ep_id;
+		}
+	}
+	nni_sock_rele(sock);
+	return (rv);
+}
+
+
+int
+nng_listen(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
+{
+	nni_ep *ep;
+	int rv;
+	nni_sock *sock;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_sock_listen(sock, addr, &ep, flags)) == 0) {
+		if (epp != NULL) {
+			*epp = ep->ep_id;
+		}
+	}
+	nni_sock_rele(sock);
+	return (rv);
+}
+
+
+int
+nng_setopt(nng_socket sid, int opt, const void *val, size_t sz)
+{
+	nni_sock *sock;
+	int rv;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
+	}
+	rv = nni_sock_setopt(sock, opt, val, sz);
+	nni_sock_rele(sock);
+	return (rv);
+}
+
+
+int
+nng_getopt(nng_socket sid, int opt, void *val, size_t *szp)
+{
+	nni_sock *sock;
+	int rv;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (rv);
+	}
+	rv = nni_sock_getopt(sock, opt, val, szp);
+	nni_sock_rele(sock);
+	return (rv);
 }
 
 
 nng_notify *
-nng_setnotify(nng_socket *sock, int mask, nng_notify_func fn, void *arg)
+nng_setnotify(nng_socket sid, int mask, nng_notify_func fn, void *arg)
 {
-	NNI_INIT_VOID();
-	return (nni_add_notify(sock, mask, fn, arg));
+	nni_sock *sock;
+	nng_notify *notify;
+	int rv;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return (NULL);
+	}
+	notify = nni_add_notify(sock, mask, fn, arg);
+	nni_sock_rele(sock);
+	return (notify);
 }
 
 
 void
-nng_unsetnotify(nng_socket *sock, nng_notify *notify)
+nng_unsetnotify(nng_socket sid, nng_notify *notify)
 {
-	NNI_INIT_VOID();
+	nni_sock *sock;
+	int rv;
+
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+		return;
+	}
 	nni_rem_notify(sock, notify);
+	nni_sock_rele(sock);
 }
 
 
-nng_socket *
+nng_socket
 nng_event_socket(nng_event *ev)
 {
-	return (ev->e_sock);
+	// FOR NOW....  maybe evnet should contain socket Id instead?
+	return (nni_sock_id(ev->e_sock));
 }
 
 
@@ -424,7 +505,7 @@ nng_snapshot_destroy(nng_snapshot *snap)
 
 
 int
-nng_snapshot_update(nng_socket *sock, nng_snapshot *snap)
+nng_snapshot_update(nng_socket sock, nng_snapshot *snap)
 {
 	// Stats TBD.
 	NNI_INIT_INT();
@@ -467,7 +548,7 @@ nng_stat_value(nng_stat *stat)
 
 
 int
-nng_device(nng_socket *sock1, nng_socket *sock2)
+nng_device(nng_socket sock1, nng_socket sock2)
 {
 	// Device TBD.
 	NNI_INIT_INT();
