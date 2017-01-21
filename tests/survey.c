@@ -27,7 +27,6 @@ Main({
 			nng_socket surv;
 
 			So(nng_open(&surv, NNG_PROTO_SURVEYOR) == 0);
-			So(surv != NULL);
 
 			Reset({
 				nng_close(surv);
@@ -57,7 +56,6 @@ Main({
 		Convey("We can create a RESPONDENT socket", {
 			nng_socket resp;
 			So(nng_open(&resp, NNG_PROTO_RESPONDENT) == 0);
-			So(resp != NULL);
 
 			Reset({
 				nng_close(resp);
@@ -83,11 +81,7 @@ Main({
 			uint64_t expire;
 
 			So(nng_open(&surv, NNG_PROTO_SURVEYOR) == 0);
-			So(surv != NULL);
-
 			So(nng_open(&resp, NNG_PROTO_RESPONDENT) == 0);
-			So(resp != NULL);
-
 
 			Reset({
 				nng_close(surv);

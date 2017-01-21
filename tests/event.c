@@ -16,7 +16,7 @@
 #define CHECKSTR(m, s)	So(nng_msg_len(m) == strlen(s));\
 			So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
 struct evcnt {
-	nng_socket *sock;
+	nng_socket sock;
 	int readable;
 	int writeable;
 	int pipeadd;

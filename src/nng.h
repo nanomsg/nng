@@ -150,7 +150,7 @@ NNG_DECL int nng_dial(nng_socket, const char *, nng_endpoint *, int);
 
 // nng_endpoint_create creates an endpoint on the socket, but does not
 // start it either dialing or listening.
-NNG_DECL int nng_endpoint_create(nng_endpoint *, nng_socket, const char *);
+NNG_DECL int nng_endpoint_create(nng_socket, const char *, nng_endpoint *);
 
 // nng_endpoint_dial starts the endpoint dialing.  This is only possible if
 // the endpoint is not already dialing or listening.
@@ -296,7 +296,7 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 // object must be deallocated expressly by the user, and may persist beyond
 // the lifetime of any socket object used to update it.  Note that the
 // values of the statistics are initially unset.
-NNG_DECL int nng_snapshot_create(nng_snapshot **);
+NNG_DECL int nng_snapshot_create(nng_socket, nng_snapshot **);
 
 // nng_snapshot_free frees a snapshot object.  All statistic objects
 // contained therein are destroyed as well.
@@ -304,9 +304,7 @@ NNG_DECL void nng_snapshot_free(nng_snapshot *);
 
 // nng_snapshot_update updates a snapshot of all the statistics
 // relevant to a particular socket.  All prior values are overwritten.
-// It is acceptable to use the same snapshot object with different
-// sockets.
-NNG_DECL int nng_snapshot_update(nng_socket, nng_snapshot *);
+NNG_DECL int nng_snapshot_update(nng_snapshot *);
 
 // nng_snapshot_next is used to iterate over the individual statistic
 // objects inside the snapshot. Note that the statistic object, and the

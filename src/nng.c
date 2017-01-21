@@ -18,17 +18,6 @@
 // Pretty much every function calls the nni_platform_init to check against
 // fork related activity.
 
-#define NNI_INIT_INT()			     \
-	do {				     \
-		if (nni_init() != 0) {	     \
-			return (NNG_ENOMEM); \
-		}			     \
-	}				     \
-	while (0)
-
-#define NNI_INIT_VOID()	\
-	(void) nni_init()
-
 int
 nng_open(nng_socket *sidp, uint16_t proto)
 {
@@ -351,7 +340,6 @@ nng_pipe_getopt(nng_pipe *pipe, int opt, void *val, size_t *sizep)
 {
 	int rv;
 
-	NNI_INIT_INT();
 	rv = nni_pipe_getopt(pipe, opt, val, sizep);
 	if (rv == ENOTSUP) {
 		// Maybe its a generic socket option.
@@ -364,7 +352,6 @@ nng_pipe_getopt(nng_pipe *pipe, int opt, void *val, size_t *sizep)
 int
 nng_pipe_close(nng_pipe *pipe)
 {
-	NNI_INIT_INT();
 	nni_pipe_close(pipe);
 	return (0);
 }
@@ -377,7 +364,6 @@ nng_pipe_close(nng_pipe *pipe)
 int
 nng_msg_alloc(nng_msg **msgp, size_t size)
 {
-	NNI_INIT_VOID();
 	return (nni_msg_alloc(msgp, size));
 }
 
@@ -488,10 +474,9 @@ nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 
 
 int
-nng_snapshot_create(nng_snapshot **snapp)
+nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)
 {
 	// Stats TBD.
-	NNI_INIT_INT();
 	return (NNG_ENOTSUP);
 }
 
@@ -499,16 +484,14 @@ nng_snapshot_create(nng_snapshot **snapp)
 void
 nng_snapshot_destroy(nng_snapshot *snap)
 {
-	NNI_INIT_VOID();
 	// Stats TBD.
 }
 
 
 int
-nng_snapshot_update(nng_socket sock, nng_snapshot *snap)
+nng_snapshot_update(nng_snapshot *snap)
 {
 	// Stats TBD.
-	NNI_INIT_INT();
 	return (NNG_ENOTSUP);
 }
 
@@ -517,7 +500,6 @@ int
 nng_snapshot_next(nng_snapshot *snap, nng_stat **statp)
 {
 	// Stats TBD.
-	NNI_INIT_INT();
 	*statp = NULL;
 	return (NNG_ENOTSUP);
 }
@@ -551,6 +533,5 @@ int
 nng_device(nng_socket sock1, nng_socket sock2)
 {
 	// Device TBD.
-	NNI_INIT_INT();
 	return (NNG_ENOTSUP);
 }

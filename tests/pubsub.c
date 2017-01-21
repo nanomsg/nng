@@ -27,7 +27,6 @@ Main({
 			nng_socket pub;
 
 			So(nng_open(&pub, NNG_PROTO_PUB) == 0);
-			So(pub != NULL);
 
 			Reset({
 				nng_close(pub);
@@ -47,7 +46,6 @@ Main({
 		Convey("We can create a SUB socket", {
 			nng_socket sub;
 			So(nng_open(&sub, NNG_PROTO_SUB) == 0);
-			So(sub != NULL);
 
 			Reset({
 				nng_close(sub);
@@ -70,11 +68,9 @@ Main({
 			nng_socket pub;
 			nng_socket sub;
 
-			So((rv = nng_open(&pub, NNG_PROTO_PUB)) == 0);
-			So(pub != NULL);
+			So(nng_open(&pub, NNG_PROTO_PUB) == 0);
 
-			So((rv = nng_open(&sub, NNG_PROTO_SUB)) == 0);
-			So(sub != NULL);
+			So(nng_open(&sub, NNG_PROTO_SUB) == 0);
 
 			Reset({
 				nng_close(pub);

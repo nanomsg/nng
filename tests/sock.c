@@ -20,11 +20,9 @@ Main({
 
 	Convey("We are able to open a PAIR socket", {
 		int rv;
-		nng_socket sock = NULL;
+		nng_socket sock;
 
-		rv = nng_open(&sock, NNG_PROTO_PAIR);
-		So(rv == 0);
-		So(sock != NULL);
+		So(nng_open(&sock, NNG_PROTO_PAIR) == 0);
 
 		Reset({
 			nng_close(sock);
@@ -137,9 +135,8 @@ Main({
 			})
 
 			Convey("We can connect to it", {
-				nng_socket *sock2 = NULL;
-				rv = nng_open(&sock2, NNG_PROTO_PAIR);
-				So(rv == 0);
+				nng_socket sock2;
+				So(nng_open(&sock2, NNG_PROTO_PAIR) == 0);
 				rv = nng_dial(sock2, "inproc://here", NULL, NNG_FLAG_SYNCH);
 				So(rv == 0);
 				nng_close(sock2);
@@ -147,13 +144,12 @@ Main({
 		})
 
 		Convey("We can send and receive messages", {
-			nng_socket sock2 = NULL;
+			nng_socket sock2;
 			int len = 1;
 			nng_msg *msg;
 			uint64_t second = 1000000;
 
-			rv = nng_open(&sock2, NNG_PROTO_PAIR);
-			So(rv == 0);
+			So(nng_open(&sock2, NNG_PROTO_PAIR) == 0);
 
 			rv = nng_setopt(sock, NNG_OPT_RCVBUF, &len, sizeof (len));
 			So(rv == 0);

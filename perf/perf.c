@@ -282,7 +282,7 @@ do_inproc_thr(int argc, char **argv)
 void
 latency_client(const char *addr, int msgsize, int trips)
 {
-	nng_socket *s;
+	nng_socket s;
 	nng_msg *msg;
 	nni_time start, end;
 	int rv;
@@ -332,7 +332,7 @@ latency_client(const char *addr, int msgsize, int trips)
 void
 latency_server(const char *addr, int msgsize, int trips)
 {
-	nng_socket *s;
+	nng_socket s;
 	nng_msg *msg;
 	int rv;
 	int i;
@@ -375,7 +375,7 @@ latency_server(const char *addr, int msgsize, int trips)
 void
 throughput_server(const char *addr, int msgsize, int count)
 {
-	nng_socket *s;
+	nng_socket s;
 	nng_msg *msg;
 	int rv;
 	int i;
@@ -433,7 +433,7 @@ throughput_server(const char *addr, int msgsize, int count)
 void
 throughput_client(const char *addr, int msgsize, int count)
 {
-	nng_socket *s;
+	nng_socket s;
 	nng_msg *msg;
 	int rv;
 	int i;
