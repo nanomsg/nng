@@ -146,51 +146,32 @@ Main({
 		Convey("We can send and receive messages", {
 			nng_socket sock2;
 			int len = 1;
-			nng_msg *msg;
-			uint64_t second = 1000000;
+			size_t sz;
+			uint64_t second = 3000000;
+			char *buf;
 
 			So(nng_open(&sock2, NNG_PROTO_PAIR) == 0);
 
-			rv = nng_setopt(sock, NNG_OPT_RCVBUF, &len, sizeof (len));
-			So(rv == 0);
-			rv = nng_setopt(sock, NNG_OPT_SNDBUF, &len, sizeof (len));
-			So(rv == 0);
+			So(nng_setopt(sock, NNG_OPT_RCVBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(sock, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
 
-			rv = nng_setopt(sock2, NNG_OPT_RCVBUF, &len, sizeof (len));
-			So(rv == 0);
-			rv = nng_setopt(sock2, NNG_OPT_SNDBUF, &len, sizeof (len));
-			So(rv == 0);
+			So(nng_setopt(sock2, NNG_OPT_RCVBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(sock2, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
 
-			rv = nng_setopt(sock, NNG_OPT_SNDTIMEO, &second, sizeof (second));
-			So(rv == 0);
-			rv = nng_setopt(sock, NNG_OPT_RCVTIMEO, &second, sizeof (second));
-			So(rv == 0);
-			rv = nng_setopt(sock2, NNG_OPT_SNDTIMEO, &second, sizeof (second));
-			So(rv == 0);
-			rv = nng_setopt(sock2, NNG_OPT_RCVTIMEO, &second, sizeof (second));
-			So(rv == 0);
+			So(nng_setopt(sock, NNG_OPT_SNDTIMEO, &second, sizeof (second)) == 0);
+			So(nng_setopt(sock, NNG_OPT_RCVTIMEO, &second, sizeof (second)) == 0);
+			So(nng_setopt(sock2, NNG_OPT_SNDTIMEO, &second, sizeof (second)) == 0);
+			So(nng_setopt(sock2, NNG_OPT_RCVTIMEO, &second, sizeof (second)) == 0);
 
-			rv = nng_listen(sock, "inproc://test1", NULL, NNG_FLAG_SYNCH);
-			So(rv == 0);
-			rv = nng_dial(sock2, "inproc://test1", NULL, 0);
-			So(rv == 0);
+			So(nng_listen(sock, "inproc://test1", NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(sock2, "inproc://test1", NULL, 0) == 0);
 
-			rv = nng_msg_alloc(&msg, 3);
-			So(rv == 0);
-			So(nng_msg_len(msg) == 3);
-			So(nng_msg_body(msg) != NULL);
-			memcpy(nng_msg_body(msg), "abc", 3);
-
-			rv = nng_sendmsg(sock, msg, 0);
-			So(rv == 0);
-
-			msg = NULL;
-			rv = nng_recvmsg(sock2, &msg, 0);
-			So(rv == 0);
-			So(msg != NULL);
-			So(nng_msg_len(msg) == 3);
-			So(memcmp(nng_msg_body(msg), "abc", 3) == 0);
-			nng_msg_free(msg);
+			So(nng_send(sock, "abc", 4, 0) == 0);
+			So(nng_recv(sock2 , &buf, &sz, NNG_FLAG_ALLOC) == 0);
+			So(buf != NULL);
+			So(sz == 4);
+			So(memcmp(buf, "abc", 4) == 0);
+			nng_free(buf, sz);
 			nng_close(sock2);
 		})
 	})

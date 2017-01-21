@@ -180,8 +180,11 @@ NNG_DECL const char *nng_strerror(int);
 // this function may (will!) return before any receiver has actually
 // received the data.  The return value will be zero to indicate that the
 // socket has accepted the entire data for send, or an errno to indicate
-// failure.  The flags may include NNG_FLAG_NONBLOCK.
-NNG_DECL int nng_send(nng_socket, const void *, size_t, int);
+// failure.  The flags may include NNG_FLAG_NONBLOCK or NNG_FLAG_ALLOC.
+// If the flag includes NNG_FLAG_ALLOC, then the function will call
+// nng_free() on the supplied pointer & size on success. (If the call
+// fails then the memory is not freed.)
+NNG_DECL int nng_send(nng_socket, void *, size_t, int);
 
 // nng_recv receives message data into the socket, up to the supplied size.
 // The actual size of the message data will be written to the value pointed
@@ -189,7 +192,7 @@ NNG_DECL int nng_send(nng_socket, const void *, size_t, int);
 // If NNG_FLAG_ALLOC is supplied then the library will allocate memory for
 // the caller.  In that case the pointer to the allocated will be stored
 // instead of the data itself.  The caller is responsible for freeing the
-// associated memory with free().
+// associated memory with nng_free().
 NNG_DECL int nng_recv(nng_socket, void *, size_t *, int);
 
 // nng_sendmsg is like nng_send, but offers up a message structure, which
@@ -203,6 +206,19 @@ NNG_DECL int nng_sendmsg(nng_socket, nng_msg *, int);
 // about where the message came from, access raw headers, etc.  It also
 // can be passed off directly to nng_sendmsg.
 NNG_DECL int nng_recvmsg(nng_socket, nng_msg **, int);
+
+// nng_alloc is used to allocate memory.  It's intended purpose is for
+// allocating memory suitable for message buffers with nng_send().
+// Applications that need memory for other purposes should use their platform
+// specific API.
+NNG_DECL void *nng_alloc(size_t);
+
+// nng_free is used to free memory allocated with nng_alloc, which includes
+// memory allocated by nng_recv() when the NNG_FLAG_ALLOC message is supplied.
+// As the application is required to keep track of the size of memory, this
+// is probably less convenient for general uses than the C library malloc and
+// calloc.
+NNG_DECL void nng_free(void *, size_t);
 
 // Message API.
 NNG_DECL int nng_msg_alloc(nng_msg **, size_t);

@@ -18,6 +18,8 @@
 // Pretty much every function calls the nni_platform_init to check against
 // fork related activity.
 
+#include <string.h>
+
 int
 nng_open(nng_socket *sidp, uint16_t proto)
 {
@@ -96,6 +98,43 @@ nng_peer(nng_socket sid)
 
 
 int
+nng_recv(nng_socket sid, void *buf, size_t *szp, int flags)
+{
+	nng_msg *msg;
+	int rv;
+
+	// Note that while it would be nice to make this a zero copy operation,
+	// its not normally possible if a size was specified.
+	if ((rv = nng_recvmsg(sid, &msg, flags & ~(NNG_FLAG_ALLOC))) != 0) {
+		return (rv);
+	}
+	if (!(flags & NNG_FLAG_ALLOC)) {
+		memcpy(buf, nng_msg_body(msg),
+		    *szp > nng_msg_len(msg) ? nng_msg_len(msg) : *szp);
+		*szp = nng_msg_len(msg);
+	} else {
+		// We'd really like to avoid a separate data copy, but since
+		// we have allocated messages with headroom, we can't really
+		// make free() work on the base pointer.  We'd have to have
+		// some other API for this.  Folks that want zero copy had
+		// better use nng_recvmsg() instead.
+		void *nbuf;
+
+		if ((nbuf = nni_alloc(nng_msg_len(msg))) == NULL) {
+			nng_msg_free(msg);
+			return (NNG_ENOMEM);
+		}
+
+		*(void **) buf = nbuf;
+		memcpy(nbuf, nni_msg_body(msg), nni_msg_len(msg));
+		*szp = nng_msg_len(msg);
+	}
+	nni_msg_free(msg);
+	return (0);
+}
+
+
+int
 nng_recvmsg(nng_socket sid, nng_msg **msgp, int flags)
 {
 	nni_time expire;
@@ -117,6 +156,39 @@ nng_recvmsg(nng_socket sid, nng_msg **msgp, int flags)
 	rv = nni_sock_recvmsg(sock, msgp, expire);
 	nni_sock_rele(sock);
 	return (rv);
+}
+
+
+int
+nng_send(nng_socket sid, void *buf, size_t len, int flags)
+{
+	nng_msg *msg;
+	int rv;
+
+	if ((rv = nng_msg_alloc(&msg, len)) != 0) {
+		return (rv);
+	}
+	memcpy(nng_msg_body(msg), buf, len);
+	if ((rv = nng_sendmsg(sid, msg, flags)) != 0) {
+		nng_msg_free(msg);
+	} else if (flags & NNG_FLAG_ALLOC) {
+		nni_free(buf, len);
+	}
+	return (rv);
+}
+
+
+void *
+nng_alloc(size_t sz)
+{
+	return (nni_alloc(sz));
+}
+
+
+void
+nng_free(void *buf, size_t sz)
+{
+	nni_free(buf, sz);
 }
 
 
