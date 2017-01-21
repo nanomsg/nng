@@ -47,6 +47,8 @@ nni_sock_hold(nni_sock **sockp, uint32_t id)
 	}
 	nni_mtx_lock(nni_idlock);
 	rv = nni_idhash_find(nni_sockets, id, (void **) &sock);
+	nni_mtx_unlock(nni_idlock);
+
 	if (rv == 0) {
 		if (sock->s_closing) {
 			rv = NNG_ECLOSED;
@@ -57,8 +59,6 @@ nni_sock_hold(nni_sock **sockp, uint32_t id)
 			*sockp = sock;
 		}
 	}
-	nni_mtx_unlock(nni_idlock);
-
 	if (rv == NNG_ENOENT) {
 		rv = NNG_ECLOSED;
 	}
@@ -494,6 +494,10 @@ nni_sock_close(nni_sock *sock)
 	// ensure that any active consumers have been stopped, but if
 	// user code attempts to utilize the socket *after* this point,
 	// the results may be tragic.
+
+	nni_mtx_lock(nni_idlock);
+	nni_idhash_remove(nni_sockets, sock->s_id);
+	nni_mtx_unlock(nni_idlock);
 
 	// The protocol needs to clean up its state.
 	sock->s_sock_ops.sock_fini(sock->s_data);
