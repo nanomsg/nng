@@ -87,31 +87,59 @@ endif()
 
 #option (NNG_STATIC_LIB "Build static library instead of shared library." OFF)
 option (NNG_ENABLE_DOC "Enable building documentation." ON)
-option (NNG_TESTS "Build and run nanomsg tests" ON)
-option (NNG_TOOLS "Build nanomsg tools" OFF)
+option (NNG_TESTS "Build and run tests" ON)
+option (NNG_TOOLS "Build extra tools" OFF)
 option (NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
 
 #  Platform checks.
 
-find_package (Threads REQUIRED)
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+    find_package (Threads REQUIRED)
     add_definitions (-DPLATFORM_POSIX)
+
 elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+    find_package (Threads REQUIRED)
     add_definitions (-DPLATFORM_POSIX)
-    # XXX OVERRIDE THIS?
+    # macOS 10.12 and later have getentropy, but the older releases
+    # have ARC4_RANDOM, and that is sufficient to our needs.
+    add_definitions (-DNNG_USE_ARC4_RANDOM)
+
+    # macOS added some of CLOCK_MONOTONIC, but the implementation is
+    # broken and unreliable, so don't use it.
+    add_definitions (-DNNG_USE_CLOCKID=CLOCK_REALTIME)
+
+elseif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
+    find_package (Threads REQUIRED)
+    add_definitions (-DPLATFORM_POSIX)
+
+elseif (CMAKE_SYSTEM_NAME MATCHES "NetBSD")
+    find_package (Threads REQUIRED)
+    add_definitions (-DPLATFORM_POSIX)
+
+elseif (CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
+    find_package (Threads REQUIRED)
+    add_definitions (-DPLATFORM_POSIX)
+
+elseif (CMAKE_SYSTEM_NAME MATCHES "SunOS")
+    find_package (Threads REQUIRED)
+    add_definitions (-DPLATFORM_POSIX)
+
 elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions (-DPLATFORM_WINDOWS)
-    set (NNG_HAVE_WINSOCK 1)
     add_definitions (-D_CRT_SECURE_NO_WARNINGS)
     add_definitions (-D_CRT_RAND_S)
 
     # Target Windows Vista and later
     add_definitions (-D_WIN32_WINNT=0x0600)
     list (APPEND CMAKE_REQUIRED_DEFINITIONS -D_WIN32_WINNT=0x0600)
+
 else ()
     message (AUTHOR_WARNING "WARNING: This platform may or may not be supported: ${CMAKE_SYSTEM_NAME}")
     message (AUTHOR_WARNING "${ISSUE_REPORT_MSG}")
+    # blithely hope for POSIX t work
+    find_package (Threads REQUIRED)
+    add_definitions (-DPLATFORM_POSIX)
 endif ()
 
 if (NNG_STATIC_LIB)
@@ -153,13 +181,14 @@ if (WIN32)
     set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} mswsock)
     set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} advapi32)
     nng_check_sym (InitializeConditionVariable windows.h NNG_HAVE_CONDVAR)
-    if (NOT NNG_HAVE_CONDVAR)
+    nng_check_sym (snprintf stdio.h NNG_HAVE_SNPRINTF)
+    if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF)
         message (FATAL_ERROR
 	    "Modern Windows API support is missing. "
 	    "Versions of Windows prior to Vista are not supported.  "
 	    "Further, the 32-bit MinGW environment is not supported. "
 	    "Ensure you have at least Windows Vista or newer, and are "
-	    "using either Visual Studio 2010 or newer or MinGW-W64.")
+	    "using either Visual Studio 2013 or newer or MinGW-W64.")
     endif()
 else ()
     # Unconditionally declare the following feature test macros.  These are
@@ -179,9 +208,6 @@ else ()
     nng_check_sym (AF_UNIX sys/socket.h NNG_HAVE_UNIX_SOCKETS)
     nng_check_sym (backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
     nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
-#    if (NNG_HAVE_SEMAPHORE_RT OR NNG_HAVE_SEMAPHORE_PTHREAD)
-#        add_definitions (-DNNG_HAVE_SEMAPHORE)
-#    endif ()
 endif ()
 
 #check_c_source_compiles ("

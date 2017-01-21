@@ -8,22 +8,17 @@ image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Wi
 
 This repository represents a work in progress rewrite of the SP protocol
 library called "libnanomsg".  The work is being done by Garrett D'Amore,
-and at this juncture he is *not* soliciting assistance.
+and at this juncture he is *not* soliciting implementation assistance.
+Review and testing feedback is appreciated however.
 
-This is a work in progress, and is *not* for general use or publication.
-When the library is ready for broader consumption, an announcement will
-be posted on the nanomsg mailing list and website.
+This is a work in progress, and is *not* for suitable for product use or
+publication.  When the library is ready for broader consumption, an
+announcement will be posted on the nanomsg mailing list and website.
 
 If you are looking for the current production version of nanomsg, please
 see the https://github.com/nanomsg/nanomsg site.
 
-Note that commit histories here are subject to change in the future --
-once the production reaches a point that we are ready to start using
-issue tracking and so forth, we will compress the existing deltas into
-a single commit.  This is probably some number of weeks in the future.
-
 If you want to build and test yourself, you need CMake version 3.1, and
-you can use standard CMake build recipes.  At present only POSIX systems
-(Linux and MacOS) will build.  Win32 is still outstanding.
+you can use standard CMake build recipes.
 
-	- Garrett D'Amore (Dec. 31, 2016)
+	- Garrett D'Amore (Jan. 21, 2016)

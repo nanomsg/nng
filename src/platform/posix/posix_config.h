@@ -42,16 +42,6 @@
 
 #include <time.h>
 
-// These are things about systems we know about.
-#ifdef __APPLE__
-// MacOS X used to lack CLOCK_MONOTONIC.  Now it has it, but its
-// buggy, condition variables set to use it wake early.
-#define NNG_USE_CLOCKID		CLOCK_REALTIME
-// macOS 10.12 has getentropy(), but arc4random() is good enough
-// and works on older releases.
-#define NNG_USE_ARC4RANDOM	1
-#endif // __APPLE__
-
 // It should never hurt to use DEVURANDOM, since if the device does not
 // exist then we won't open it.  (Provided: it would be bad if the device
 // exists but has somehow very very different semantics.  We don't know
