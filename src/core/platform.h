@@ -266,15 +266,15 @@ extern void nni_plat_seed_prng(void *, size_t);
 // just provide the same value twice.
 extern int nni_plat_pipe_open(int *, int *);
 
-// nni_plat_pipe_push pushses a notification to the pipe.  Usually this
+// nni_plat_pipe_raise pushes a notification to the pipe.  Usually this
 // will just be a non-blocking attempt to write a single byte.  It may
 // however use any other underlying system call that is appropriate.
-extern void nni_plat_pipe_push(int);
+extern void nni_plat_pipe_raise(int);
 
-// nni_plat_pipe_pull pulls a notification from the pipe.  Usually this
-// will just be a non-blocking read.  (The pull should attempt to read
-// all data on the pipe.)
-extern void nni_plat_pipe_pull(int);
+// nni_plat_pipe_clear clears all notifications from the pipe.  Usually this
+// will just be a non-blocking read.  (The call should attempt to read
+// all data on a pipe, for example.)
+extern void nni_plat_pipe_clear(int);
 
 // nni_plat_pipe_close closes both pipes that were provided by the open
 // routine.

@@ -92,7 +92,7 @@ struct nni_proto {
 	uint16_t			proto_self;     // our 16-bit D
 	uint16_t			proto_peer;     // who we peer with (ID)
 	const char *			proto_name;     // Our name
-	uint16_t			proto_flags;    // Protocol flags
+	uint32_t			proto_flags;    // Protocol flags
 	const nni_proto_sock_ops *	proto_sock_ops; // Per-socket opeations
 	const nni_proto_pipe_ops *	proto_pipe_ops; // Per-pipe operations.
 };

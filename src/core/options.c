@@ -112,3 +112,60 @@ nni_getopt_buf(nni_msgq *mq, void *val, size_t *sizep)
 	*sizep = sizeof (len);
 	return (0);
 }
+
+
+static void
+nni_notifyfd_push(struct nng_event *ev, void *arg)
+{
+	nni_notifyfd *fd = arg;
+
+	NNI_ARG_UNUSED(ev);
+
+	nni_plat_pipe_raise(fd->sn_wfd);
+}
+
+
+int
+nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
+{
+	int rv;
+
+	if ((*szp < sizeof (int))) {
+		return (NNG_EINVAL);
+	}
+
+	switch (mask) {
+	case NNG_EV_CAN_SEND:
+		if ((s->s_flags & NNI_PROTO_FLAG_SEND) == 0) {
+			return (NNG_ENOTSUP);
+		}
+		break;
+	case NNG_EV_CAN_RECV:
+		if ((s->s_flags & NNI_PROTO_FLAG_RECV) == 0) {
+			return (NNG_ENOTSUP);
+		}
+		break;
+	default:
+		return (NNG_ENOTSUP);
+	}
+
+	// If we already inited this, just give back the same file descriptor.
+	if (fd->sn_init) {
+		memcpy(val, &fd->sn_rfd, sizeof (int));
+		*szp = sizeof (int);
+		return (0);
+	}
+
+	if ((rv = nni_plat_pipe_open(&fd->sn_wfd, &fd->sn_rfd)) != 0) {
+		return (rv);
+	}
+
+	if (nni_add_notify(s, mask, nni_notifyfd_push, fd) == NULL) {
+		nni_plat_pipe_close(fd->sn_wfd, fd->sn_rfd);
+		return (NNG_ENOMEM);
+	}
+
+	*szp = sizeof (int);
+	memcpy(val, &fd->sn_rfd, sizeof (int));
+	return (0);
+}

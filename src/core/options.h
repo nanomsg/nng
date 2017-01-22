@@ -10,6 +10,12 @@
 #ifndef CORE_OPTIONS_H
 #define CORE_OPTIONS_H
 
+struct nni_notifyfd {
+	int	sn_wfd; // written to in order to flag an event
+	int	sn_rfd; // read from in order to clear an event
+	int	sn_init;
+};
+
 // Option helpers.  These can be called from protocols or transports
 // in their own option handling, centralizing the logic for dealing with
 // variable sized options.
@@ -36,5 +42,8 @@ extern int nni_setopt_int(int *, const void *, size_t, int, int);
 
 // nni_getopt_int gets an integer.
 extern int nni_getopt_int(int *, void *, size_t *);
+
+// nni_getopt_fd obtains a notification file descriptor.
+extern int nni_getopt_fd(nni_sock *, nni_notifyfd *, int, void *, size_t *);
 
 #endif  // CORE_OPTIONS_H

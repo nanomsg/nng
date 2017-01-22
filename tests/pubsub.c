@@ -18,7 +18,6 @@
 			So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
 
 Main({
-	int rv;
 	const char *addr = "inproc://test";
 	nni_init();
 

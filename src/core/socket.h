@@ -10,6 +10,7 @@
 #ifndef CORE_SOCKET_H
 #define CORE_SOCKET_H
 
+
 // NB: This structure is supplied here for use by the CORE. Use of this library
 // OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
@@ -26,6 +27,7 @@ struct nni_socket {
 
 	uint16_t		s_protocol;
 	uint16_t		s_peer;
+	uint32_t		s_flags;
 
 	nni_proto_pipe_ops	s_pipe_ops;
 	nni_proto_sock_ops	s_sock_ops;
@@ -61,6 +63,9 @@ struct nni_socket {
 
 	nni_event		s_recv_ev;      // Event for readability
 	nni_event		s_send_ev;      // Event for sendability
+
+	nni_notifyfd		s_send_fd;
+	nni_notifyfd		s_recv_fd;
 
 	uint32_t		s_nextid;       // Next Pipe ID.
 };

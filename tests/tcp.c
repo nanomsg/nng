@@ -14,7 +14,6 @@
 // Inproc tests.
 
 TestMain("TCP Transport", {
-	int rv;
 
 	trantest_test_all("tcp://127.0.0.1:4450");
 
