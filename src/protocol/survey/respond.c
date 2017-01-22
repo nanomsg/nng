@@ -416,6 +416,7 @@ nni_proto nni_respondent_proto = {
 	.proto_self	= NNG_PROTO_RESPONDENT,
 	.proto_peer	= NNG_PROTO_SURVEYOR,
 	.proto_name	= "respondent",
+	.proto_flags	= NNI_PROTO_FLAG_SENDRECV,
 	.proto_sock_ops = &nni_resp_sock_ops,
 	.proto_pipe_ops = &nni_resp_pipe_ops,
 };

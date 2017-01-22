@@ -313,6 +313,7 @@ nni_proto nni_push_proto = {
 	.proto_self	= NNG_PROTO_PUSH,
 	.proto_peer	= NNG_PROTO_PULL,
 	.proto_name	= "push",
+	.proto_flags	= NNI_PROTO_FLAG_SEND,
 	.proto_pipe_ops = &nni_push_pipe_ops,
 	.proto_sock_ops = &nni_push_sock_ops,
 };

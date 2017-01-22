@@ -274,6 +274,7 @@ nni_proto nni_pub_proto = {
 	.proto_self	= NNG_PROTO_PUB,
 	.proto_peer	= NNG_PROTO_SUB,
 	.proto_name	= "pub",
+	.proto_flags	= NNI_PROTO_FLAG_SEND,
 	.proto_sock_ops = &nni_pub_sock_ops,
 	.proto_pipe_ops = &nni_pub_pipe_ops,
 };

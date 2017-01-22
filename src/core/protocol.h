@@ -92,9 +92,17 @@ struct nni_proto {
 	uint16_t			proto_self;     // our 16-bit D
 	uint16_t			proto_peer;     // who we peer with (ID)
 	const char *			proto_name;     // Our name
+	uint16_t			proto_flags;	// Protocol flags
 	const nni_proto_sock_ops *	proto_sock_ops; // Per-socket opeations
 	const nni_proto_pipe_ops *	proto_pipe_ops; // Per-pipe operations.
 };
+
+// These flags determine which operations make sense.  We use them so that
+// we can reject attempts to create notification fds for operations that make
+// no sense.
+#define	NNI_PROTO_FLAG_RECV	1	// Protocol can receive
+#define	NNI_PROTO_FLAG_SEND	2	// Protocol can send
+#define	NNI_PROTO_FLAG_SENDRECV	3	// Protocol can both send & recv
 
 // These functions are not used by protocols, but rather by the socket
 // core implementation. The lookups can be used by transports as well.
