@@ -135,13 +135,13 @@ nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 	}
 
 	switch (mask) {
-	case NNG_EV_CAN_SEND:
-		if ((s->s_flags & NNI_PROTO_FLAG_SEND) == 0) {
+	case NNG_EV_CAN_SND:
+		if ((s->s_flags & NNI_PROTO_FLAG_SND) == 0) {
 			return (NNG_ENOTSUP);
 		}
 		break;
-	case NNG_EV_CAN_RECV:
-		if ((s->s_flags & NNI_PROTO_FLAG_RECV) == 0) {
+	case NNG_EV_CAN_RCV:
+		if ((s->s_flags & NNI_PROTO_FLAG_RCV) == 0) {
 			return (NNG_ENOTSUP);
 		}
 		break;

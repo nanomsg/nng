@@ -84,8 +84,8 @@ nni_plat_pipe_open(int *wfd, int *rfd)
 	if (pipe(fds) < 0) {
 		return (nni_plat_errno(errno));
 	}
-	*wfd = fds[0];
-	*rfd = fds[1];
+	*wfd = fds[1];
+	*rfd = fds[0];
 
 	(void) fcntl(fds[0], F_SETFD, FD_CLOEXEC);
 	(void) fcntl(fds[1], F_SETFD, FD_CLOEXEC);
@@ -101,7 +101,7 @@ nni_plat_pipe_raise(int wfd)
 {
 	char c = 1;
 
-	write(wfd, &c, 1);
+	(void) write(wfd, &c, 1);
 }
 
 
@@ -109,6 +109,7 @@ void
 nni_plat_pipe_clear(int rfd)
 {
 	char buf[32];
+	int rv;
 
 	for (;;) {
 		// Completely drain the pipe, but don't wait.  This coalesces

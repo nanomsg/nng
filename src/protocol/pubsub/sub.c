@@ -314,7 +314,7 @@ nni_proto nni_sub_proto = {
 	.proto_self	= NNG_PROTO_SUB,
 	.proto_peer	= NNG_PROTO_PUB,
 	.proto_name	= "sub",
-	.proto_flags	= NNI_PROTO_FLAG_RECV,
+	.proto_flags	= NNI_PROTO_FLAG_RCV,
 	.proto_sock_ops = &nni_sub_sock_ops,
 	.proto_pipe_ops = &nni_sub_pipe_ops,
 };

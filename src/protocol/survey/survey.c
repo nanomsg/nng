@@ -427,7 +427,7 @@ nni_proto nni_surveyor_proto = {
 	.proto_self	= NNG_PROTO_SURVEYOR,
 	.proto_peer	= NNG_PROTO_RESPONDENT,
 	.proto_name	= "surveyor",
-	.proto_flags	= NNI_PROTO_FLAG_SENDRECV,
+	.proto_flags	= NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_surv_sock_ops,
 	.proto_pipe_ops = &nni_surv_pipe_ops,
 };

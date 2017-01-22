@@ -33,28 +33,28 @@ bump(nng_event *ev, void *arg)
 
 	assert(nng_event_socket(ev) == cnt->sock);
 	switch (nng_event_type(ev)) {
-	case NNG_EV_CAN_SEND:
-		cnt->writeable++;
+	case NNG_EV_CAN_SND:
+		cnt->writeable = 1;
 		break;
 
-	case NNG_EV_CAN_RECV:
-		cnt->readable++;
+	case NNG_EV_CAN_RCV:
+		cnt->readable = 1;
 		break;
 
 	case NNG_EV_PIPE_ADD:
-		cnt->pipeadd++;
+		cnt->pipeadd = 1;
 		break;
 
 	case NNG_EV_PIPE_REM:
-		cnt->piperem++;
+		cnt->piperem = 1;
 		break;
 
 	case NNG_EV_ENDPT_ADD:
-		cnt->epadd++;
+		cnt->epadd = 1;
 		break;
 
 	case NNG_EV_ENDPT_REM:
-		cnt->eprem++;
+		cnt->eprem = 1;
 		break;
 
 	default:
@@ -95,8 +95,8 @@ Main({
 			nng_usleep(100000);
 
 			Convey("We can register callbacks", {
-				So((notify1 = nng_setnotify(sock1, NNG_EV_CAN_SEND, bump, &evcnt1)) != NULL);
-				So((notify2 = nng_setnotify(sock2, NNG_EV_CAN_RECV, bump, &evcnt2)) != NULL);
+				So((notify1 = nng_setnotify(sock1, NNG_EV_CAN_SND, bump, &evcnt1)) != NULL);
+				So((notify2 = nng_setnotify(sock2, NNG_EV_CAN_RCV, bump, &evcnt2)) != NULL);
 
 				Convey("They are called", {
 					nng_msg *msg;
@@ -105,6 +105,7 @@ Main({
 					APPENDSTR(msg, "abc");
 
 					So(nng_sendmsg(sock1, msg, 0) == 0);
+					//nng_usleep(20000);
 					So(nng_recvmsg(sock2, &msg, 0) == 0);
 
 					CHECKSTR(msg, "abc");

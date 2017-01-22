@@ -225,6 +225,8 @@ do_inproc_lat(int argc, char **argv)
 	ia.count = parse_int(argv[1], "count");
 	ia.func = latency_server;
 
+	// Sleep a bit.
+	nng_usleep(100000);
 
 	if ((rv = nni_thr_init(&thr, do_inproc, &ia)) != 0) {
 		die("Cannot create thread: %s", nng_strerror(rv));

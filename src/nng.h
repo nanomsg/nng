@@ -105,16 +105,16 @@ NNG_DECL void nng_unsetnotify(nng_socket, nng_notify *);
 // Note that these are edge triggered -- therefore the status indicated
 // may have changed since the notification occurred.
 //
-// NNG_EV_CAN_RECV	- A message is ready for receive.
-// NNG_EV_CAN_SEND	- A message can be sent.
+// NNG_EV_CAN_RCV	- A message is ready for receive.
+// NNG_EV_CAN_SND	- A message can be sent.
 // NNG_EV_ERROR		- An error condition on the socket occurred.
 // NNG_EV_PIPE_ADD	- A new pipe (connection) is added to the socket.
 // NNG_EV_PIPE_REM	- A pipe (connection) is removed from the socket.
 // NNG_EV_ENDPT_ADD	- An endpoint is added to the socket.
 // NNG_EV_ENDPT_REM	- An endpoint is removed from the socket.
 #define NNG_EV_BIT(x)    (1U << (x))
-#define NNG_EV_CAN_RECV		NNG_EV_BIT(0)
-#define NNG_EV_CAN_SEND		NNG_EV_BIT(1)
+#define NNG_EV_CAN_RCV		NNG_EV_BIT(0)
+#define NNG_EV_CAN_SND		NNG_EV_BIT(1)
 #define NNG_EV_ERROR		NNG_EV_BIT(2)
 #define NNG_EV_PIPE_ADD		NNG_EV_BIT(3)
 #define NNG_EV_PIPE_REM		NNG_EV_BIT(4)
@@ -298,8 +298,8 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 #define NNG_OPT_TRANSPORT		NNG_OPT_SOCKET(15)
 #define NNG_OPT_LOCALADDR		NNG_OPT_SOCKET(16)
 #define NNG_OPT_REMOTEADDR		NNG_OPT_SOCKET(17)
-#define NNG_OPT_RECVFD			NNG_OPT_SOCKET(18)
-#define NNG_OPT_SENDFD			NNG_OPT_SOCKET(19)
+#define NNG_OPT_RCVFD			NNG_OPT_SOCKET(18)
+#define NNG_OPT_SNDFD			NNG_OPT_SOCKET(19)
 
 // XXX: TBD: priorities, socket names, ipv4only
 

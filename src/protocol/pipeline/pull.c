@@ -155,7 +155,7 @@ nni_proto nni_pull_proto = {
 	.proto_self	= NNG_PROTO_PULL,
 	.proto_peer	= NNG_PROTO_PUSH,
 	.proto_name	= "pull",
-	.proto_flags	= NNI_PROTO_FLAG_RECV,
+	.proto_flags	= NNI_PROTO_FLAG_RCV,
 	.proto_pipe_ops = &nni_pull_pipe_ops,
 	.proto_sock_ops = &nni_pull_sock_ops,
 };

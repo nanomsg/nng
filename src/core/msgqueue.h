@@ -140,6 +140,6 @@ typedef void (*nni_msgq_notify_fn)(nni_msgq *, int, void *);
 // queue state changes.  It notifies that the queue is readable, or writeable.
 // Only one function can be registered (for simplicity), and it is called
 // outside of the queue's lock.
-extern void nni_msgq_notify(nni_msgq *, nni_msgq_notify_fn, void *);
+extern int nni_msgq_notify(nni_msgq *, nni_msgq_notify_fn, void *);
 
 #endif  // CORE_MSQUEUE_H

@@ -414,7 +414,7 @@ nni_proto nni_rep_proto = {
 	.proto_self	= NNG_PROTO_REP,
 	.proto_peer	= NNG_PROTO_REQ,
 	.proto_name	= "rep",
-	.proto_flags	= NNI_PROTO_FLAG_SENDRECV,
+	.proto_flags	= NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_rep_sock_ops,
 	.proto_pipe_ops = &nni_rep_pipe_ops,
 };

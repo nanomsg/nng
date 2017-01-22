@@ -9,6 +9,7 @@
 
 #include "core/nng_impl.h"
 
+#include <stdio.h>
 // Windows named pipes won't work for us; we *MUST* use sockets.  This is
 // a real sadness, but what can you do.  We use an anonymous socket bound
 // to localhost and a connected peer.
@@ -34,12 +35,13 @@ nni_plat_pipe_open(int *wfdp, int *rfdp)
 	// ephemeral port.
 	addr.sin_family = AF_INET;
 	addr.sin_port = 0;
-	addr.sin_addr.s_addr = INADDR_LOOPBACK;
+	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	afd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if (afd == INVALID_SOCKET) {
 		goto fail;
 	}
+
 
 	// Make sure we have exclusive address use...
 	one = 1;
@@ -47,6 +49,7 @@ nni_plat_pipe_open(int *wfdp, int *rfdp)
 	    (char *) (&one), sizeof (one)) != 0) {
 		goto fail;
 	}
+
 	alen = sizeof (addr);
 	if (bind(afd, (struct sockaddr *) &addr, alen) != 0) {
 		goto fail;
@@ -65,7 +68,6 @@ nni_plat_pipe_open(int *wfdp, int *rfdp)
 	if (afd == INVALID_SOCKET) {
 		goto fail;
 	}
-
 	if (connect(rfd, (struct sockaddr *) &addr, alen) != 0) {
 		goto fail;
 	}
@@ -105,7 +107,7 @@ fail:
 		closesocket(wfd);
 	}
 
-	return (0);
+	return (rv);
 }
 
 

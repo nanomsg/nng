@@ -321,11 +321,11 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		goto fail;
 	}
 
-	rv = nni_ev_init(&sock->s_recv_ev, NNG_EV_CAN_RECV, sock);
+	rv = nni_ev_init(&sock->s_recv_ev, NNG_EV_CAN_RCV, sock);
 	if (rv != 0) {
 		goto fail;
 	}
-	rv = nni_ev_init(&sock->s_send_ev, NNG_EV_CAN_SEND, sock);
+	rv = nni_ev_init(&sock->s_send_ev, NNG_EV_CAN_SND, sock);
 	if (rv != 0) {
 		goto fail;
 	}
@@ -364,12 +364,22 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		}
 	}
 
+	// XXX: This kills performance.  Look at moving this to
+	// be conditional - if nobody has callbacks because their code is
+	// also threaded, then we don't need to jump through these hoops.
+	rv = nni_msgq_notify(sock->s_urq, nni_sock_urq_notify, sock);
+	if (rv != 0) {
+		goto fail;
+	}
+	rv = nni_msgq_notify(sock->s_uwq, nni_sock_uwq_notify, sock);
+	if (rv != 0) {
+		goto fail;
+	}
+
 	for (i = 0; i < NNI_MAXWORKERS; i++) {
 		nni_thr_run(&sock->s_worker_thr[i]);
 	}
 
-	nni_msgq_notify(sock->s_urq, nni_sock_urq_notify, sock);
-	nni_msgq_notify(sock->s_uwq, nni_sock_uwq_notify, sock);
 
 	nni_thr_run(&sock->s_reaper);
 	nni_thr_run(&sock->s_notifier);
@@ -808,12 +818,12 @@ nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 	case NNG_OPT_RCVBUF:
 		rv = nni_getopt_buf(sock->s_urq, val, sizep);
 		break;
-	case NNG_OPT_SENDFD:
-		rv = nni_getopt_fd(sock, &sock->s_send_fd, NNG_EV_CAN_SEND,
+	case NNG_OPT_SNDFD:
+		rv = nni_getopt_fd(sock, &sock->s_send_fd, NNG_EV_CAN_SND,
 			val, sizep);
 		break;
-	case NNG_OPT_RECVFD:
-		rv = nni_getopt_fd(sock, &sock->s_recv_fd, NNG_EV_CAN_RECV,
+	case NNG_OPT_RCVFD:
+		rv = nni_getopt_fd(sock, &sock->s_recv_fd, NNG_EV_CAN_RCV,
 			val, sizep);
 		break;
 	}
