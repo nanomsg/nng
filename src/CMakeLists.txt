@@ -71,6 +71,7 @@ set (NNG_SOURCES
     platform/posix/posix_debug.c
     platform/posix/posix_ipc.c
     platform/posix/posix_net.c
+    platform/posix/posix_pipe.c
     platform/posix/posix_rand.c
     platform/posix/posix_thread.c
 
@@ -79,6 +80,7 @@ set (NNG_SOURCES
     platform/windows/win_debug.c
     platform/windows/win_ipc.c
     platform/windows/win_net.c
+    platform/windows/win_pipe.c
     platform/windows/win_rand.c
     platform/windows/win_thread.c
 

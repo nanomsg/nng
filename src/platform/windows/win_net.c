@@ -84,7 +84,7 @@ nni_plat_wsa_errnos[] = {
 };
 
 
-static int
+int
 nni_winsock_error(int werr)
 {
 	int i;

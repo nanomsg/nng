@@ -40,6 +40,5 @@ TestMain("TCP Transport", {
 		})
 		So(nng_listen(s1, "tcp://*:5771", NULL, NNG_FLAG_SYNCH) == 0);
 		So(nng_dial(s2, "tcp://127.0.0.1:5771", NULL, NNG_FLAG_SYNCH) == 0);
-		fflush(stdout);
 	})
 })

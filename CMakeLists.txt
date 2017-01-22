@@ -97,6 +97,7 @@ option (NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     find_package (Threads REQUIRED)
     add_definitions (-DPLATFORM_POSIX)
+    add_definitions (-DNNG_USE_EVENTFD)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     find_package (Threads REQUIRED)

@@ -69,6 +69,8 @@ struct nni_plat_cv {
 	CRITICAL_SECTION *	cs;
 };
 
+extern int nni_winsock_error(int);
+
 #endif  // PLATFORM_WINDOWS
 
 #endif  // PLATFORM_WIN_IMPL_H

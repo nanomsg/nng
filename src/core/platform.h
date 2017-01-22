@@ -256,6 +256,30 @@ extern int nni_plat_ipc_recv(nni_plat_ipcsock *, nni_iov *, int);
 // to seed up to 256 bytes of data.
 extern void nni_plat_seed_prng(void *, size_t);
 
+// nni_plat_pipe creates a pair of linked file descriptors that are
+// suitable for notification via SENDFD/RECVFD.  These are platform
+// specific and exposed to applications for integration into event loops.
+// The first pipe is written to by nng to notify, and the second pipe is
+// generally read from to clear the event.   The implementation is not
+// obliged to provide two pipes -- for example eventfd can be used with
+// just a single file descriptor.  In such a case the implementation may
+// just provide the same value twice.
+extern int nni_plat_pipe_open(int *, int *);
+
+// nni_plat_pipe_push pushses a notification to the pipe.  Usually this
+// will just be a non-blocking attempt to write a single byte.  It may
+// however use any other underlying system call that is appropriate.
+extern void nni_plat_pipe_push(int);
+
+// nni_plat_pipe_pull pulls a notification from the pipe.  Usually this
+// will just be a non-blocking read.  (The pull should attempt to read
+// all data on the pipe.)
+extern void nni_plat_pipe_pull(int);
+
+// nni_plat_pipe_close closes both pipes that were provided by the open
+// routine.
+extern void nni_plat_pipe_close(int, int);
+
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.
 #if defined(PLATFORM_POSIX)
