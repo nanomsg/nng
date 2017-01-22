@@ -79,7 +79,6 @@ Main({
 
 	Test("Resize ID Hash", {
 		int expect[1024];
-		int rv;
 		int i;
 
 		for (i = 0; i < 1024; i++) {
@@ -96,7 +95,6 @@ Main({
 			})
 
 			Convey("We can insert 1024 items", {
-				uint32_t count;
 				for (i = 0; i < 1024; i++) {
 					nni_idhash_insert(&h, i, &expect[i]);
 				}

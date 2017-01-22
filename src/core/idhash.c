@@ -106,8 +106,8 @@ nni_idhash_find(nni_idhash *h, uint32_t id, void **valp)
 static int
 nni_hash_resize(nni_idhash *h)
 {
-	uint32_t newsize;
-	uint32_t oldsize;
+	size_t newsize;
+	size_t oldsize;
 	nni_idhash_entry *newents;
 	nni_idhash_entry *oldents;
 	uint32_t i;
