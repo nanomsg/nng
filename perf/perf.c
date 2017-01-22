@@ -20,17 +20,6 @@
 // API, so don't be lazy like this!  All nni_ symbols are subject to
 // change without notice, and not part of the stable API or ABI.
 #include "core/nng_impl.h"
-#include "core/thread.c"
-#include "core/clock.c"
-#include "platform/posix/posix_impl.h"
-#include "platform/posix/posix_alloc.c"
-#include "platform/posix/posix_clock.c"
-#include "platform/posix/posix_debug.c"
-#include "platform/posix/posix_thread.c"
-#include "platform/windows/win_impl.h"
-#include "platform/windows/win_clock.c"
-#include "platform/windows/win_debug.c"
-#include "platform/windows/win_thread.c"
 
 static void latency_client(const char *, int, int);
 static void latency_server(const char *, int, int);
@@ -105,12 +94,6 @@ int
 nop(void)
 {
 	return (0);
-}
-
-int
-nni_init(void)
-{
-	return (nni_plat_init(nop));
 }
 
 static void

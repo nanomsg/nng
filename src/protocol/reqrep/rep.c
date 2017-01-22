@@ -26,7 +26,7 @@ struct nni_rep_sock {
 	nni_msgq *	urq;
 	int		raw;
 	int		ttl;
-	nni_idhash *	pipes;
+	nni_idhash	pipes;
 	char *		btrace;
 	size_t		btrace_len;
 };
@@ -53,7 +53,7 @@ nni_rep_sock_init(void **repp, nni_sock *sock)
 	rep->raw = 0;
 	rep->btrace = NULL;
 	rep->btrace_len = 0;
-	if ((rv = nni_idhash_create(&rep->pipes)) != 0) {
+	if ((rv = nni_idhash_init(&rep->pipes)) != 0) {
 		NNI_FREE_STRUCT(rep);
 		return (rv);
 	}
@@ -73,7 +73,7 @@ nni_rep_sock_fini(void *arg)
 	nni_rep_sock *rep = arg;
 
 	if (rep != NULL) {
-		nni_idhash_destroy(rep->pipes);
+		nni_idhash_fini(&rep->pipes);
 		if (rep->btrace != NULL) {
 			nni_free(rep->btrace, rep->btrace_len);
 		}
@@ -121,7 +121,7 @@ nni_rep_pipe_add(void *arg)
 	nni_rep_pipe *rp = arg;
 	nni_rep_sock *rep = rp->rep;
 
-	return (nni_idhash_insert(rep->pipes, nni_pipe_id(rp->pipe), rp));
+	return (nni_idhash_insert(&rep->pipes, nni_pipe_id(rp->pipe), rp));
 }
 
 
@@ -131,7 +131,7 @@ nni_rep_pipe_rem(void *arg)
 	nni_rep_pipe *rp = arg;
 	nni_rep_sock *rep = rp->rep;
 
-	nni_idhash_remove(rep->pipes, nni_pipe_id(rp->pipe));
+	nni_idhash_remove(&rep->pipes, nni_pipe_id(rp->pipe));
 }
 
 
@@ -166,7 +166,7 @@ nni_rep_sock_send(void *arg)
 		nni_msg_trim_header(msg, 4);
 
 		nni_mtx_lock(mx);
-		if (nni_idhash_find(rep->pipes, id, (void **) &rp) != 0) {
+		if (nni_idhash_find(&rep->pipes, id, (void **) &rp) != 0) {
 			nni_mtx_unlock(mx);
 			nni_msg_free(msg);
 			continue;

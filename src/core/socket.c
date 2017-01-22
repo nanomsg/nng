@@ -47,34 +47,58 @@ nni_sock_hold(nni_sock **sockp, uint32_t id)
 	}
 	nni_mtx_lock(nni_idlock);
 	rv = nni_idhash_find(nni_sockets, id, (void **) &sock);
+	if ((rv != 0) || (sock->s_closed)) {
+		nni_mtx_unlock(nni_idlock);
+		return (NNG_ECLOSED);
+	}
+	sock->s_refcnt++;
 	nni_mtx_unlock(nni_idlock);
+	*sockp = sock;
 
-	if (rv == 0) {
-		if (sock->s_closing) {
-			rv = NNG_ECLOSED;
-		} else {
-			nni_mtx_lock(&sock->s_mx);
-			sock->s_refcnt++;
-			nni_mtx_unlock(&sock->s_mx);
-			*sockp = sock;
-		}
-	}
-	if (rv == NNG_ENOENT) {
-		rv = NNG_ECLOSED;
-	}
-	return (rv);
+	return (0);
 }
 
 
 void
 nni_sock_rele(nni_sock *sock)
 {
-	nni_mtx_lock(&sock->s_mx);
+	nni_mtx_lock(nni_idlock);
 	sock->s_refcnt--;
-	if (sock->s_closing) {
-		nni_cv_wake(&sock->s_cv);
+	if ((sock->s_closed) && (sock->s_refcnt == 1)) {
+		nni_cv_wake(&sock->s_refcv);
 	}
-	nni_mtx_unlock(&sock->s_mx);
+	nni_mtx_unlock(nni_idlock);
+}
+
+
+// nni_sock_hold_close is a special hold acquired by the nng_close
+// function.  This waits until it has exclusive access, and then marks
+// the socket unusuable by anything else.
+int
+nni_sock_hold_close(nni_sock **sockp, uint32_t id)
+{
+	int rv;
+	nni_sock *sock;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+
+	nni_mtx_lock(nni_idlock);
+	rv = nni_idhash_find(nni_sockets, id, (void **) &sock);
+	if (rv != 0) {
+		nni_mtx_unlock(nni_idlock);
+		return (NNG_ECLOSED);
+	}
+	sock->s_closed = 1;
+	sock->s_refcnt++;
+	while (sock->s_refcnt != 1) {
+		nni_cv_wait(&sock->s_refcv);
+	}
+	nni_mtx_unlock(nni_idlock);
+	*sockp = sock;
+
+	return (0);
 }
 
 
@@ -290,6 +314,10 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		goto fail;
 	}
 
+	if ((rv = nni_cv_init(&sock->s_refcv, nni_idlock)) != 0) {
+		goto fail;
+	}
+
 	rv = nni_ev_init(&sock->s_recv_ev, NNG_EV_CAN_RECV, sock);
 	if (rv != 0) {
 		goto fail;
@@ -355,6 +383,11 @@ fail:
 	if (sock->s_id != 0) {
 		nni_mtx_lock(nni_idlock);
 		nni_idhash_remove(nni_sockets, sock->s_id);
+		if (nni_idhash_count(nni_sockets) == 0) {
+			nni_idhash_reclaim(nni_pipes);
+			nni_idhash_reclaim(nni_endpoints);
+			nni_idhash_reclaim(nni_sockets);
+		}
 		nni_mtx_unlock(nni_idlock);
 	}
 	nni_thr_fini(&sock->s_notifier);
@@ -363,6 +396,7 @@ fail:
 	nni_ev_fini(&sock->s_recv_ev);
 	nni_msgq_fini(sock->s_urq);
 	nni_msgq_fini(sock->s_uwq);
+	nni_cv_fini(&sock->s_refcv);
 	nni_cv_fini(&sock->s_notify_cv);
 	nni_cv_fini(&sock->s_cv);
 	nni_mtx_fini(&sock->s_notify_mx);
@@ -472,7 +506,8 @@ nni_sock_shutdown(nni_sock *sock)
 // nni_sock_close shuts down the socket, then releases any resources
 // associated with it.  It is a programmer error to reference the socket
 // after this function is called, as the pointer may reference invalid
-// memory or other objects.
+// memory or other objects.  The socket should have been acquired with
+// nni_sock_hold_close().
 void
 nni_sock_close(nni_sock *sock)
 {
@@ -482,11 +517,6 @@ nni_sock_close(nni_sock *sock)
 	// Shutdown everything if not already done.  This operation
 	// is idempotent.
 	nni_sock_shutdown(sock);
-	nni_mtx_lock(&sock->s_mx);
-	while (sock->s_refcnt > 1) {
-		nni_cv_wait(&sock->s_cv);
-	}
-	nni_mtx_unlock(&sock->s_mx);
 
 	// At this point nothing else should be referencing us.
 	// As with UNIX close, it is a gross error for the caller
@@ -497,6 +527,12 @@ nni_sock_close(nni_sock *sock)
 
 	nni_mtx_lock(nni_idlock);
 	nni_idhash_remove(nni_sockets, sock->s_id);
+	if (nni_idhash_count(nni_sockets) == 0) {
+		nni_idhash_reclaim(nni_pipes);
+		nni_idhash_reclaim(nni_endpoints);
+		nni_idhash_reclaim(nni_sockets);
+	}
+
 	nni_mtx_unlock(nni_idlock);
 
 	// The protocol needs to clean up its state.
@@ -516,6 +552,7 @@ nni_sock_close(nni_sock *sock)
 	nni_msgq_fini(sock->s_uwq);
 	nni_ev_fini(&sock->s_send_ev);
 	nni_ev_fini(&sock->s_recv_ev);
+	nni_cv_fini(&sock->s_refcv);
 	nni_cv_fini(&sock->s_notify_cv);
 	nni_cv_fini(&sock->s_cv);
 	nni_mtx_fini(&sock->s_notify_mx);

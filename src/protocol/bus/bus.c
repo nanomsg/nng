@@ -94,6 +94,7 @@ nni_bus_pipe_fini(void *arg)
 	nni_bus_pipe *ppipe = arg;
 
 	if (ppipe != NULL) {
+		nni_msgq_fini(ppipe->sendq);
 		NNI_FREE_STRUCT(ppipe);
 	}
 }

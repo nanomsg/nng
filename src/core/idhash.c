@@ -11,50 +11,54 @@
 
 #include <string.h>
 
-typedef struct {
+struct nni_idhash_entry {
 	uint32_t	ihe_key;
 	uint32_t	ihe_skips;
 	void *		ihe_val;
-} nni_idhash_entry;
-
-struct nni_idhash {
-	uint32_t		ih_cap;
-	uint32_t		ih_count;
-	uint32_t		ih_load;
-	uint32_t		ih_minload; // considers placeholders
-	uint32_t		ih_maxload;
-	uint32_t		ih_walkers;
-	uint32_t		ih_minval;
-	uint32_t		ih_maxval;
-	uint32_t		ih_dynval;
-	nni_idhash_entry *	ih_entries;
 };
 
-int
-nni_idhash_create(nni_idhash **hp)
-{
-	nni_idhash *h;
 
-	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	h->ih_entries = nni_alloc(8 * sizeof (nni_idhash_entry));
-	if (h->ih_entries == NULL) {
-		NNI_FREE_STRUCT(h);
-		return (NNG_ENOMEM);
-	}
-	(void) memset(h->ih_entries, 0, (8 * sizeof (nni_idhash_entry)));
+int
+nni_idhash_init(nni_idhash *h)
+{
+	h->ih_entries = NULL;
 	h->ih_count = 0;
 	h->ih_load = 0;
-	h->ih_cap = 8;
-	h->ih_maxload = 5;
+	h->ih_cap = 0;
+	h->ih_maxload = 0;
 	h->ih_minload = 0; // never shrink below this
 	h->ih_walkers = 0;
 	h->ih_minval = 0;
 	h->ih_maxval = 0xffffffff;
 	h->ih_dynval = 0;
-	*hp = h;
 	return (0);
+}
+
+
+void
+nni_idhash_fini(nni_idhash *h)
+{
+	NNI_ASSERT(h->ih_walkers == 0);
+	if (h->ih_entries != NULL) {
+		nni_free(h->ih_entries, h->ih_cap * sizeof (nni_idhash_entry));
+		h->ih_entries = NULL;
+		h->ih_cap = h->ih_count = 0;
+		h->ih_load = h->ih_minload = h->ih_maxload = 0;
+	}
+}
+
+
+void
+nni_idhash_reclaim(nni_idhash *h)
+{
+	// Reclaim the buffer if we want, but preserve the limits.
+	if ((h->ih_count == 0) && (h->ih_cap != 0) && (h->ih_walkers == 0)) {
+		nni_free(h->ih_entries, h->ih_cap * sizeof (nni_idhash_entry));
+		h->ih_cap = 0;
+		h->ih_entries = NULL;
+		h->ih_minload = 0;
+		h->ih_maxload = 0;
+	}
 }
 
 
@@ -71,16 +75,6 @@ nni_idhash_set_limits(nni_idhash *h, uint32_t minval, uint32_t maxval,
 }
 
 
-void
-nni_idhash_destroy(nni_idhash *h)
-{
-	if (h != NULL) {
-		nni_free(h->ih_entries, h->ih_cap * sizeof (nni_idhash_entry));
-		NNI_FREE_STRUCT(h);
-	}
-}
-
-
 // Inspired by Python dict implementation.  This probe will visit every
 // cell.  We always hash consecutively assigned IDs.
 #define NNI_IDHASH_NEXTPROBE(h, j) \
@@ -90,6 +84,10 @@ int
 nni_idhash_find(nni_idhash *h, uint32_t id, void **valp)
 {
 	uint32_t index = id & (h->ih_cap - 1);
+
+	if (h->ih_count == 0) {
+		return (NNG_ENOENT);
+	}
 
 	for (;;) {
 		if ((h->ih_entries[index].ihe_val == NULL) &&
@@ -165,7 +163,9 @@ nni_hash_resize(nni_idhash *h)
 			index = NNI_IDHASH_NEXTPROBE(h, index);
 		}
 	}
-	nni_free(oldents, sizeof (nni_idhash_entry) * oldsize);
+	if (oldsize != 0) {
+		nni_free(oldents, sizeof (nni_idhash_entry) * oldsize);
+	}
 	return (0);
 }
 
@@ -286,11 +286,10 @@ nni_idhash_alloc(nni_idhash *h, uint32_t *idp, void *val)
 }
 
 
-int
-nni_idhash_count(nni_idhash *h, uint32_t *countp)
+size_t
+nni_idhash_count(nni_idhash *h)
 {
-	*countp = h->ih_count;
-	return (0);
+	return (h->ih_count);
 }
 
 

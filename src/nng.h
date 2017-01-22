@@ -372,6 +372,12 @@ NNG_DECL int64_t nng_stat_value(nng_stat *);
 // which means that messages from one side are forwarded to the other.
 NNG_DECL int nng_device(nng_socket, nng_socket);
 
+// Sleep for the specified usecs.  This is intended for use by test
+// programs (to avoid needing to expose the rest of the private details).
+// Applications are discouraged from using this -- use your platform
+// time services instead.
+NNG_DECL void nng_usleep(uint64_t);
+
 // Pollset functionality.  TBD.  (Note that I'd rather avoid this
 // altogether, because I believe that the notification mechanism I've
 // created offers a superior way to handle this. I don't think many

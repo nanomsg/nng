@@ -14,7 +14,5 @@
 // Inproc tests.
 
 TestMain("IPC Transport", {
-	nni_init();
 	trantest_test_all("ipc:///tmp/nng_ipc_test");
-	nni_fini();
 })

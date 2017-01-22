@@ -19,7 +19,6 @@
 
 Main({
 	const char *addr = "inproc://test";
-	nni_init();
 
 	Test("BUS pattern", {
 		Convey("We can create a BUS socket", {
@@ -96,6 +95,4 @@ Main({
 			})
 		})
 	})
-
-	nni_fini();
 })

@@ -14,8 +14,6 @@
 #include <string.h>
 
 Main({
-	nni_init();
-
 	Test("Socket Operations", {
 
 	Convey("We are able to open a PAIR socket", {
@@ -137,6 +135,9 @@ Main({
 			Convey("We can connect to it", {
 				nng_socket sock2;
 				So(nng_open(&sock2, NNG_PROTO_PAIR) == 0);
+				Reset({
+					nng_close(sock2);
+				})
 				rv = nng_dial(sock2, "inproc://here", NULL, NNG_FLAG_SYNCH);
 				So(rv == 0);
 				nng_close(sock2);
@@ -151,6 +152,9 @@ Main({
 			char *buf;
 
 			So(nng_open(&sock2, NNG_PROTO_PAIR) == 0);
+			Reset({
+				nng_close(sock2);
+			})
 
 			So(nng_setopt(sock, NNG_OPT_RCVBUF, &len, sizeof (len)) == 0);
 			So(nng_setopt(sock, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
@@ -172,10 +176,7 @@ Main({
 			So(sz == 4);
 			So(memcmp(buf, "abc", 4) == 0);
 			nng_free(buf, sz);
-			nng_close(sock2);
 		})
 	})
 	})
-
-	nni_fini();
 })

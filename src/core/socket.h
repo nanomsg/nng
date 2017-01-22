@@ -19,6 +19,7 @@ struct nni_socket {
 
 	uint32_t		s_id;
 	uint32_t		s_refcnt;
+	nni_cv			s_refcv;
 
 	nni_msgq *		s_uwq;  // Upper write queue
 	nni_msgq *		s_urq;  // Upper read queue
@@ -52,6 +53,7 @@ struct nni_socket {
 
 	int			s_ep_pend;      // EP dial/listen in progress
 	int			s_closing;      // Socket is closing
+	int			s_closed;       // Socket closed
 	int			s_reapexit;     // Shutdown the reaper
 	int			s_besteffort;   // Best effort mode delivery
 	int			s_senderr;      // Protocol state machine use
@@ -64,6 +66,7 @@ struct nni_socket {
 };
 
 extern int nni_sock_hold(nni_sock **, uint32_t);
+extern int nni_sock_hold_close(nni_sock **, uint32_t);
 extern void nni_sock_rele(nni_sock *);
 extern int nni_sock_open(nni_sock **, uint16_t);
 extern void nni_sock_close(nni_sock *);

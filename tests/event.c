@@ -9,8 +9,8 @@
 
 #include "convey.h"
 #include "nng.h"
-#include "core/nng_impl.h"
 #include <string.h>
+#include <assert.h>
 
 #define	APPENDSTR(m, s)	nng_msg_append(m, s, strlen(s))
 #define CHECKSTR(m, s)	So(nng_msg_len(m) == strlen(s));\
@@ -31,10 +31,7 @@ bump(nng_event *ev, void *arg)
 {
 	struct evcnt *cnt = arg;
 
-	if (nng_event_socket(ev) != cnt->sock) {
-		nni_panic("Incorrect socket! %p != %p",
-		    nng_event_socket(ev), cnt->sock);
-	}
+	assert(nng_event_socket(ev) == cnt->sock);
 	switch (nng_event_type(ev)) {
 	case NNG_EV_CAN_SEND:
 		cnt->writeable++;
@@ -61,15 +58,13 @@ bump(nng_event *ev, void *arg)
 		break;
 
 	default:
-		nni_panic("Invalid event type %d", nng_event_type(ev));
+		assert(0);
 		break;
 	}
 }
 
 Main({
 	const char *addr = "inproc://test";
-
-	nni_init();
 
 	Test("Event Handling", {
 		Convey("Given a connected pair of pair sockets", {
@@ -97,26 +92,26 @@ Main({
 			So(nng_dial(sock2, addr, NULL, NNG_FLAG_SYNCH) == 0);
 
 			// Let everything connect.
-			nni_usleep(100000);
+			nng_usleep(100000);
 
 			Convey("We can register callbacks", {
 				So((notify1 = nng_setnotify(sock1, NNG_EV_CAN_SEND, bump, &evcnt1)) != NULL);
 				So((notify2 = nng_setnotify(sock2, NNG_EV_CAN_RECV, bump, &evcnt2)) != NULL);
 
 				Convey("They are called", {
-					nni_msg *msg;
+					nng_msg *msg;
 
-					So(nni_msg_alloc(&msg, 0) == 0);
+					So(nng_msg_alloc(&msg, 0) == 0);
 					APPENDSTR(msg, "abc");
 
 					So(nng_sendmsg(sock1, msg, 0) == 0);
 					So(nng_recvmsg(sock2, &msg, 0) == 0);
 
 					CHECKSTR(msg, "abc");
-					nni_msg_free(msg);
+					nng_msg_free(msg);
 
 					// The notify runs async...
-					nni_usleep(100000);
+					nng_usleep(100000);
 
 					So(evcnt1.writeable == 1);
 					So(evcnt2.readable == 1);
@@ -131,6 +126,4 @@ Main({
 			})
 		})
 	})
-
-	nni_fini();
 })

@@ -56,7 +56,9 @@ nng_close(nng_socket sid)
 	int rv;
 	nni_sock *sock;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	// Close is special, because we still want to be able to get
+	// a hold on the socket even if shutdown was called.
+	if ((rv = nni_sock_hold_close(&sock, sid)) != 0) {
 		return (rv);
 	}
 	// No release -- close releases it.
@@ -606,4 +608,11 @@ nng_device(nng_socket sock1, nng_socket sock2)
 {
 	// Device TBD.
 	return (NNG_ENOTSUP);
+}
+
+
+void
+nng_usleep(uint64_t usec)
+{
+	nni_usleep(usec);
 }
