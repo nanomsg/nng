@@ -43,6 +43,25 @@ extern "C" {
 #define AF_SP			1
 #define AF_SP_RAW		2
 
+// Protocol stuff
+#define NN_PROTO_PAIR		1
+#define NN_PROTO_PUBSUB		2
+#define NN_PROTO_REQREP		3
+#define NN_PROTO_PIPELINE	5
+#define NN_PROTO_SURVEY		6
+#define NN_PROTO_BUS		7
+
+#define NN_PAIR			(NN_PROTO_PAIR * 16 + 1)
+#define NN_PUB			(NN_PROTO_PUBSUB * 16 + 0)
+#define NN_SUB			(NN_PROTO_PUBSUB * 16 + 1)
+#define NN_REQ			(NN_PROTO_REQREP * 16 + 0)
+#define NN_REP			(NN_PROTO_REQREP * 16 + 1)
+#define NN_PUSH			(NN_PROTO_PIPELINE * 16 + 0)
+#define NN_PULL			(NN_PROTO_PIPELINE * 16 + 1)
+#define NN_SURVEYOR		(NN_PROTO_SURVEY * 16 + 2)
+#define NN_RESPONDENT		(NN_PROTO_SURVEY * 16 + 3)
+#define NN_BUS			(NN_PROTO_BUS * 16 + 1)
+
 #define NN_SOCKADDR_MAX		128
 #define NN_SOL_SOCKET		0
 
@@ -52,6 +71,109 @@ extern "C" {
 // CMSG data type
 #define PROTO_SP		1
 #define SP_HDR			1
+
+// Errnos.  Legacy nanomsg uses posix errnos where possible.
+// If a define is not set, use add NN_ERRBASE.  nng does not
+// return all of these values, so there may be some loss of
+// of information for edge cases, but we don't expect that to be
+// a problem really.
+#define NN_ERRBASE		(0x10000000)
+#ifndef ENOTSUP
+#define ENOTSUP			(NN_ERRBASE+1)
+#endif
+#ifndef EPROTONOSUPPORT
+#define EPROTONOSUPPORT		(NN_ERRBASE+2)
+#endif
+#ifndef ENOBUFS
+#define ENOBUFS			(NN_ERRBASE+3)
+#endif
+#ifndef ENETDOWN
+#define ENETDOWN		(NN_ERRBASE+4)
+#endif
+#ifndef EADDRINUSE
+#define EADDRINUSE		(NN_ERRBASE+5)
+#endif
+#ifndef EADDRNOTAVAIL
+#define EADDRNOTAVAIL		(NN_ERRBASE+6)
+#endif
+#ifndef ENOTSOCK
+#define ENOTSOCK		(NN_ERRBASE+7)
+#endif
+#ifndef EAGAIN
+#define EAGAIN			(NN_ERRBASE+8)
+#endif
+#ifndef EBADF
+#define EBADF			(NN_ERRBASE+9)
+#endif
+#ifndef EINVAL
+#define EINVAL			(NN_ERRBASE+10)
+#endif
+#ifndef EMFILE
+#define EMFILE			(NN_ERRBASE+11)
+#endif
+#ifndef EFAULT
+#define EFAULT			(NN_ERRBASE+12)
+#endif
+#ifndef EACCES
+#define EACCES			(NN_ERRBASE+13)
+#endif
+#ifndef ENETRESET
+#define ENETRESET		(NN_ERRBASE+14)
+#endif
+#ifndef ENETUNREACH
+#define ENETUNREACH		(NN_ERRBASE+15)
+#endif
+#ifndef EHOSTUNREACH
+#define EHOSTUNREACH		(NN_ERRBASE+16)
+#endif
+#ifndef EAFNOSUPPORT
+#define EAFNOSUPPORT		(NN_ERRBASE+17)
+#endif
+#ifndef EINPROGRESS
+#define EINPROGRESS		(NN_ERRBASE+18)
+#endif
+#ifndef EPROTO
+#define EPROTO			(NN_ERRBASE+19)
+#endif
+#ifndef ECONNREFUSED
+#define ECONNREFUSED		(NN_ERRBASE+20)
+#endif
+#ifndef ENOTCONN
+#define ENOTCONN		(NN_ERRBASE+21)
+#endif
+#ifndef EMSGSIZE
+#define EMSGSIZE		(NN_ERRBASE+22)
+#endif
+#ifndef ETIMEDOUT
+#define ETIMEDOUT		(NN_ERRBASE+23)
+#endif
+#ifndef ECONNABORTED
+#define ECONNABORTED		(NN_ERRBASE+24)
+#endif
+#ifndef ECONNRESET
+#define ECONNRESET		(NN_ERRBASE+25)
+#endif
+#ifndef ENOPROTOOPT
+#define ENOPROTOOPT		(NN_ERRBASE+26)
+#endif
+#ifndef EISCONN
+#define EISCONN			(NN_ERRBASE+27)
+#endif
+#ifndef ESOCKNOSUPPORT
+#define ESOCKNOSPPORT		(NN_ERRBASE+28)
+#endif
+#ifndef ETERM
+#define ETERM			(NN_ERRBASE+29)
+#endif
+#ifndef EFSM
+#define EFSM			(NN_ERRBASE+30)
+#endif
+#ifndef ENOENT
+#define ENOENT			(NN_ERRBASE+31)
+#endif
+#ifndef EIO
+#define EIO			(NN_ERRBASE+32)
+#endif
 
 // Socket options
 #define NN_LINGER		1
@@ -72,14 +194,33 @@ extern "C" {
 #define NN_RCVMAXSIZE		16
 #define NN_MAXTTL		17
 
+// Protocol-specific options.  To simplify thins we encode the protocol
+// level in the option.
+#define NN_SUB_UNSUBSCRIBE		(NN_SUB * 16 + 1)
+#define NN_REQ_RESEND_IVL		(NN_REQ * 16 + 1)
+#define NN_SURVEY_DEADLINE		(NN_SURVEYOR * 16 + 1)
+
+// Level options for tranports
+#define NN_INPROC			(-1)
+#define NN_IPC				(-2)
+#define NN_IPC_SEC_ATTR			1
+#define NN_IPC_OUTBUFSZ			2
+#define NN_IPC_INBUFSZ			3
+#define NN_TCP				(-3)
+#define NN_TCP_NODELAY			1
+#define NN_WS				(-4)
+#define NN_WS_MSG_TYPE			1
+#define NN_WS_MSG_TYPE_TEXT		1
+#define NN_WS_MSG_TYPE_BINARY		2
+
 // Poll stuff
-#define NN_POLLIN		1
-#define NN_POLLOUT		2
+#define NN_POLLIN			1
+#define NN_POLLOUT			2
 struct nn_pollfd {
 	int		fd;
 	uint16_t	events;
 	uint16_t	revents;
-}
+};
 
 // Magical size for allocation
 #define NN_MSG    ((size_t) -1)

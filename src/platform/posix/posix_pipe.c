@@ -12,6 +12,8 @@
 
 #ifdef PLATFORM_POSIX_PIPE
 
+#include <errno.h>
+
 // This implementation of notification pipes works ~everywhere on POSIX,
 // as it only relies on pipe() and non-blocking I/O.
 

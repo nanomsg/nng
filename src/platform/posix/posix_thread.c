@@ -13,6 +13,7 @@
 
 #ifdef PLATFORM_POSIX_THREAD
 
+#include <errno.h>
 #include <pthread.h>
 #include <time.h>
 #include <string.h>

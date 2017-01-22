@@ -260,6 +260,13 @@ nng_listen(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 
 
 int
+nng_endpoint_close(nng_endpoint eid)
+{
+	// XXX: FIXME: lookup endpoint by id, and then close it.
+	return (NNG_ENOTSUP);
+}
+
+int
 nng_setopt(nng_socket sid, int opt, const void *val, size_t sz)
 {
 	nni_sock *sock;

@@ -741,7 +741,7 @@ nni_sock_senderr(nni_sock *sock, int err)
 int
 nni_sock_setopt(nni_sock *sock, int opt, const void *val, size_t size)
 {
-	int rv = ENOTSUP;
+	int rv = NNG_ENOTSUP;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
@@ -784,7 +784,7 @@ nni_sock_setopt(nni_sock *sock, int opt, const void *val, size_t size)
 int
 nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 {
-	int rv = ENOTSUP;
+	int rv = NNG_ENOTSUP;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {

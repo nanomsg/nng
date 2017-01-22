@@ -27,6 +27,9 @@ set (NNG_SOURCES
     nng.c
     nng.h
 
+    nng_compat.c
+    nng_compat.h
+
     core/defs.h
 
     core/clock.c

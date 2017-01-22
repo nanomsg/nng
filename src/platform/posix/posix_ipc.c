@@ -11,6 +11,7 @@
 
 #ifdef PLATFORM_POSIX_IPC
 
+#include <errno.H>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
