@@ -13,14 +13,8 @@
 #include <string.h>
 #include <stdio.h>
 
-// This file provides the "public" API.  This is a thin wrapper around
-// internal API functions.  We use the public prefix instead of internal,
-// to indicate that these interfaces are intended for applications to use
-// directly.
-//
-// Anything not defined in this file, applications have no business using.
-// Pretty much every function calls the nni_platform_init to check against
-// fork related activity.
+// This file supplies the legacy compatibility API.  Applications should
+// avoid using these if at all possible, and instead use the new style APIs.
 
 static struct {
 	int	perr;
@@ -204,18 +198,19 @@ nn_allocmsg(size_t size, int type)
 }
 
 
-void
-nni_freemsg(void *ptr)
+int
+nn_freemsg(void *ptr)
 {
 	nng_msg *msg;
 
 	memcpy(&msg, ((char *) ptr) - sizeof (msg), sizeof (msg));
 	nng_msg_free(msg);
+	return (0);
 }
 
 
 void *
-nni_reallocmsg(void *ptr, size_t len)
+nn_reallocmsg(void *ptr, size_t len)
 {
 	nng_msg *msg;
 	int rv;
@@ -242,19 +237,29 @@ nni_reallocmsg(void *ptr, size_t len)
 }
 
 
+static int
+nn_flags(int flags)
+{
+	switch (flags) {
+	case 0:
+		return (0);
+
+	case NN_DONTWAIT:
+		return (NNG_FLAG_NONBLOCK);
+
+	default:
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+}
+
+
 int
 nn_send(int s, const void *buf, size_t len, int flags)
 {
 	int rv;
 
-	switch (flags) {
-	case NN_DONTWAIT:
-		flags = NNG_FLAG_NONBLOCK;
-		break;
-	case 0:
-		break;
-	default:
-		nn_seterror(NNG_EINVAL);
+	if ((flags = nn_flags(flags)) == -1) {
 		return (-1);
 	}
 	if (len == NN_MSG) {
@@ -278,45 +283,154 @@ nn_recv(int s, void *buf, size_t len, int flags)
 {
 	int rv;
 
-	switch (flags) {
-	case NN_DONTWAIT:
-		flags = NNG_FLAG_NONBLOCK;
-		break;
-	case 0:
-		break;
-	default:
-		nn_seterror(NNG_EINVAL);
+	if ((flags = nn_flags(flags)) == -1) {
 		return (-1);
 	}
+
 	if (len == NN_MSG) {
 		nng_msg *msg;
-		rv = nng_recvmsg((nng_socket) s, &msg, flags);
-		if (rv == 0) {
-			void *body;
-			// prepend our header to the body...
-			// Note that this *can* alter the message,
-			// although for performance reasons it ought not.
-			// (There should be sufficient headroom.)
-			nng_msg_prepend(msg, &msg, sizeof (msg));
-			// then trim it off :-)
-			nng_msg_trim(msg, sizeof (msg));
-			// store the pointer to the revised body
-			body =  nng_msg_body(msg);
-
-			// arguably we could do this with a pointer store,
-			// but memcpy gives us extra paranoia in case the
-			// the receiver is misaligned.
-			memcpy(buf, &body, sizeof (body));
-			len = nng_msg_len(msg);
+		void *body;
+		if ((rv = nng_recvmsg((nng_socket) s, &msg, flags)) != 0) {
+			nn_seterror(rv);
+			return (-1);
 		}
-	} else {
-		rv = nng_recv((nng_socket) s, buf, &len, flags);
+
+		// prepend our header to the body...
+		// Note that this *can* alter the message,
+		// although for performance reasons it ought not.
+		// (There should be sufficient headroom.)
+		if ((rv = nng_msg_prepend(msg, &msg, sizeof (msg))) != 0) {
+			nng_msg_free(msg);
+			nn_seterror(rv);
+			return (-1);
+		}
+
+		// now "trim" it off... the value is still there, but the
+		// contents are unreferenced.  We rely on legacy nanomsg's
+		// ignorance of nng msgs to preserve this.
+		nng_msg_trim(msg, sizeof (msg));
+
+		*(void **) buf = nng_msg_body(msg);
+		return ((int) nng_msg_len(msg));
 	}
-	if (rv != 0) {
+
+	if ((rv = nng_recv((nng_socket) s, buf, &len, flags)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
 	return ((int) len);
+}
+
+
+int
+nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
+{
+	int rv;
+	nng_msg *msg;
+	size_t len;
+	int keep = 0;
+
+	if ((flags = nn_flags(flags)) == -1) {
+		return (-1);
+	}
+	if (mh == NULL) {
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+
+	if ((rv = nng_recvmsg((nng_socket) s, &msg, flags)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	if ((mh->msg_iovlen == 1) && (mh->msg_iov[0].iov_len == NN_MSG)) {
+		// Receiver wants to have a dynamically allocated message.
+		// There can only be one of these.
+		if ((rv = nng_msg_prepend(msg, &msg, sizeof (msg))) != 0) {
+			nng_msg_free(msg);
+			nn_seterror(rv);
+			return (-1);
+		}
+		nng_msg_trim(msg, sizeof (msg));
+		*(void **) (mh->msg_iov[0].iov_base) = nng_msg_body(msg);
+		len = nng_msg_len(msg);
+		keep = 1; // Do not discard message!
+	} else {
+		// copyout to multiple iovecs.
+		char *ptr = nng_msg_body(msg);
+		int i;
+		size_t n;
+		len = nng_msg_len(msg);
+
+		for (i = 0; i < mh->msg_iovlen; i++) {
+			if ((n = mh->msg_iov[i].iov_len) == NN_MSG) {
+				// This is forbidden!
+				nn_seterror(NNG_EINVAL);
+				nng_msg_free(msg);
+				return (-1);
+			}
+			if (n > len) {
+				n = len;
+			}
+			memcpy(mh->msg_iov[i].iov_base, ptr, n);
+			len -= n;
+			ptr += n;
+		}
+
+		// If we copied everything, len will be zero, otherwise,
+		// it represents the amount of data that we were unable to
+		// copyout.  The caller is responsible for noticing this,
+		// as there is no API to pass this information out.
+		len = nng_msg_len(msg);
+	}
+
+	// If the caller has requested control information (header details),
+	// we grab it.
+	if (mh->msg_control != NULL) {
+		char *cdata;
+		size_t clen;
+		size_t tlen;
+		struct nn_cmsghdr *hdr;
+
+		clen = NN_CMSG_SPACE(nng_msg_header_len(msg));
+
+		if ((tlen = mh->msg_controllen) == NN_MSG) {
+			// Ideally we'd use the same msg, but we would need
+			// to set up reference counts on the message, so
+			// instead we just make a new message.
+			nng_msg *nmsg;
+
+			rv = nng_msg_alloc(&nmsg, clen + sizeof (nmsg));
+			if (rv != 0) {
+				nng_msg_free(msg);
+				nn_seterror(rv);
+				return (-1);
+			}
+			memcpy(nng_msg_body(nmsg), &nmsg, sizeof (nmsg));
+			nng_msg_trim(nmsg, sizeof (nmsg));
+			cdata = nng_msg_body(nmsg);
+			*(void **) mh->msg_control = cdata;
+			tlen = clen;
+		} else {
+			cdata = mh->msg_control;
+			memset(cdata, 0,
+			    tlen > sizeof (*hdr) ? sizeof (*hdr) : tlen);
+		}
+
+		if (clen <= tlen) {
+			hdr = (void *) cdata;
+			hdr->cmsg_len = nng_msg_header_len(msg);
+			hdr->cmsg_level = PROTO_SP;
+			hdr->cmsg_type = SP_HDR;
+
+			memcpy(NN_CMSG_DATA(cdata), nng_msg_header(msg),
+			    nng_msg_header_len(msg));
+		}
+	}
+
+	if (!keep) {
+		nng_msg_free(msg);
+	}
+	return (len);
 }
 
 
