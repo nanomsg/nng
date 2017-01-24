@@ -50,6 +50,21 @@ if (NNG_TESTS)
         math (EXPR TEST_PORT "${TEST_PORT}+10")
     endmacro (add_nng_test)
 
+    macro (add_nng_compat_test NAME TIMEOUT)
+        list (APPEND all_tests ${NAME})
+        add_executable (${NAME} ${NAME}.c)
+        target_link_libraries (${NAME} ${PROJECT_NAME}_static)
+        target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
+        target_compile_definitions(${NAME} PUBLIC -DNNG_STATIC_LIB)
+        if (CMAKE_THREAD_LIBS_INIT)
+            target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
+        endif()
+
+        add_test (NAME ${NAME} COMMAND ${NAME} -v ${TEST_PORT})
+        set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
+        math (EXPR TEST_PORT "${TEST_PORT}+10")
+    endmacro (add_nng_compat_test)
+
 else ()
     macro (add_nng_test NAME TIMEOUT)
     endmacro (add_nng_test)
@@ -69,3 +84,6 @@ add_nng_test(pubsub 5)
 add_nng_test(sock 5)
 add_nng_test(survey 5)
 add_nng_test(tcp 5)
+
+# compatbility tests
+add_nng_compat_test(compat_reqrep 5)

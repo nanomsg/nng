@@ -10,12 +10,6 @@
 #ifndef CORE_OPTIONS_H
 #define CORE_OPTIONS_H
 
-struct nni_notifyfd {
-	int	sn_wfd; // written to in order to flag an event
-	int	sn_rfd; // read from in order to clear an event
-	int	sn_init;
-};
-
 // Option helpers.  These can be called from protocols or transports
 // in their own option handling, centralizing the logic for dealing with
 // variable sized options.

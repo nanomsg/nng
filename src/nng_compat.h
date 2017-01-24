@@ -193,7 +193,7 @@ extern "C" {
 #define NN_LINGER		1
 #define NN_SNDBUF		2
 #define NN_RCVBUF		3
-#define NN_SNDTIMEO		5
+#define NN_SNDTIMEO		4
 #define NN_RCVTIMEO		5
 #define NN_RECONNECT_IVL	6
 #define NN_RECONNECT_IVL_MAX	7
@@ -210,7 +210,8 @@ extern "C" {
 
 // Protocol-specific options.  To simplify thins we encode the protocol
 // level in the option.
-#define NN_SUB_UNSUBSCRIBE		(NN_SUB * 16 + 1)
+#define NN_SUB_SUBSCRIBE		(NN_SUB * 16 + 1)
+#define NN_SUB_UNSUBSCRIBE		(NN_SUB * 16 + 2)
 #define NN_REQ_RESEND_IVL		(NN_REQ * 16 + 1)
 #define NN_SURVEY_DEADLINE		(NN_SURVEYOR * 16 + 1)
 
@@ -294,6 +295,8 @@ NN_DECL uint64_t nn_get_statistic(int, int);
 NN_DECL void *nn_allocmsg(size_t, int);
 NN_DECL void *nn_reallocmsg(void *, size_t);
 NN_DECL int nn_freemsg(void *);
+NN_DECL int nn_errno(void);
+NN_DECL const char *nn_strerror(int);
 
 #ifdef __cplusplus
 }

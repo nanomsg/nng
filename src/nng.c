@@ -266,6 +266,7 @@ nng_endpoint_close(nng_endpoint eid)
 	return (NNG_ENOTSUP);
 }
 
+
 int
 nng_setopt(nng_socket sid, int opt, const void *val, size_t sz)
 {

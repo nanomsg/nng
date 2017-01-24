@@ -17,8 +17,8 @@
 // avoid using these if at all possible, and instead use the new style APIs.
 
 static struct {
-	int	perr;
 	int	nerr;
+	int	perr;
 }
 nn_errnos[] = {
 	{ NNG_EINTR,	    EINTR	  },
@@ -78,6 +78,13 @@ nn_seterror(int err)
 	}
 	// No idea...
 	errno = EIO;
+}
+
+
+int
+nn_errno(void)
+{
+	return (errno);
 }
 
 
@@ -498,8 +505,8 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 			// because we have to copy the data, but we should
 			// only free this message on success.  So we save the
 			// message now.
-			cdata = *(void **)cdata;
-			cmsg = *(nng_msg **)(cdata - sizeof (cmsg));
+			cdata = *(void **) cdata;
+			cmsg = *(nng_msg **) (cdata - sizeof (cmsg));
 			clen = nng_msg_len(cmsg);
 		}
 		if ((rv = nng_msg_append_header(msg, cdata, clen)) != 0) {
@@ -512,7 +519,7 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	}
 
 	sz = nng_msg_len(msg);
-	if ((rv = nng_sendmsg((nng_socket)s, msg, flags)) != 0) {
+	if ((rv = nng_sendmsg((nng_socket) s, msg, flags)) != 0) {
 		if (!keep) {
 			nng_msg_free(msg);
 		}
@@ -524,5 +531,126 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 		// We sent successfully, so free up the control message.
 		nng_msg_free(cmsg);
 	}
-	return ((int)sz);
+	return ((int) sz);
+}
+
+
+int
+nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
+{
+	int opt = 0;
+	int mscvt = 0;
+	uint64_t usec;
+	int rv;
+
+	switch (nnlevel) {
+	case NN_SOL_SOCKET:
+		switch (nnopt) {
+		case NN_LINGER:
+			opt = NNG_OPT_LINGER;
+			break;
+		case NN_SNDBUF:
+			opt = NNG_OPT_SNDBUF;
+			break;
+		case NN_RCVBUF:
+			opt = NNG_OPT_RCVBUF;
+			break;
+		case NN_RECONNECT_IVL:
+			opt = NNG_OPT_RECONN_TIME;
+			mscvt = 1;
+			break;
+		case NN_RECONNECT_IVL_MAX:
+			opt = NNG_OPT_RECONN_MAXTIME;
+			mscvt = 1;
+			break;
+		case NN_SNDFD:
+			opt = NNG_OPT_SNDFD;
+			break;
+		case NN_RCVFD:
+			opt = NNG_OPT_RCVFD;
+			break;
+		case NN_RCVMAXSIZE:
+			opt = NNG_OPT_RCVMAXSZ;
+			break;
+		case NN_MAXTTL:
+			opt = NNG_OPT_MAXTTL;
+			break;
+		case NN_RCVTIMEO:
+			opt = NNG_OPT_RCVTIMEO;
+			mscvt = 1;
+			break;
+		case NN_SNDTIMEO:
+			opt = NNG_OPT_SNDTIMEO;
+			mscvt = 1;
+			break;
+		case NN_DOMAIN:
+		case NN_PROTOCOL:
+		case NN_IPV4ONLY:
+		case NN_SOCKET_NAME:
+		case NN_SNDPRIO:
+		case NN_RCVPRIO:
+		default:
+			errno = ENOPROTOOPT;
+			return (-1);
+
+			break;
+		}
+		break;
+	case NN_REQ:
+		switch (nnopt) {
+		case NN_REQ_RESEND_IVL:
+			opt = NNG_OPT_RESENDTIME;
+			mscvt = 1;
+			break;
+		default:
+			errno = ENOPROTOOPT;
+			return (-1);
+		}
+		break;
+	case NN_SUB:
+		switch (nnopt) {
+		case NN_SUB_SUBSCRIBE:
+			opt = NNG_OPT_SUBSCRIBE;
+			break;
+		case NN_SUB_UNSUBSCRIBE:
+			opt = NNG_OPT_UNSUBSCRIBE;
+			break;
+		default:
+			errno = ENOPROTOOPT;
+			return (-1);
+		}
+		break;
+	case NN_SURVEYOR:
+		switch (nnopt) {
+		case NN_SURVEY_DEADLINE:
+			opt = NNG_OPT_SURVEYTIME;
+			mscvt = 1;
+			break;
+		default:
+			errno = ENOPROTOOPT;
+			return (-1);
+		}
+	default:
+		errno = ENOPROTOOPT;
+		return (-1);
+	}
+
+	if (mscvt) {
+		// We have to convert value to ms...
+
+		if (sz != sizeof (int)) {
+			errno = EINVAL;
+			return (-1);
+		}
+		usec = *(int *) valp;
+		usec *= 1000;
+		valp = &usec;
+		sz = sizeof (usec);
+	}
+
+	if ((rv = nng_setopt((nng_socket) s, opt, valp, sz)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	return (0);
 }
