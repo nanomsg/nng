@@ -121,29 +121,24 @@ int main ()
     test_close (rep1);
 
 
-#if 0 // The default reconnect interval is waaay to large for this to pass.
     /*  Check sending a request when the peer is not available. (It should
         be sent immediatelly when the peer comes online rather than relying
         on the resend algorithm. */
     req1 = test_socket (AF_SP, NN_REQ);
     timeo = 10;
-    rc = nn_setsockopt (req1, NN_SOL_SOCKET, NN_RECONNECT_IVL,
-        &timeo, sizeof (timeo));
+    test_setsockopt (req1, NN_SOL_SOCKET, NN_RECONNECT_IVL, &timeo, sizeof (timeo));
     test_send (req1, "ABC");
     test_connect (req1, SOCKET_ADDRESS);
 
     rep1 = test_socket (AF_SP, NN_REP);
     test_bind (rep1, SOCKET_ADDRESS);
     timeo = 500;
-    rc = nn_setsockopt (rep1, NN_SOL_SOCKET, NN_RCVTIMEO,
-       &timeo, sizeof (timeo));
-    printf("RC = %d errno %d (%s)\n", rc, errno, strerror(errno));
+    test_setsockopt (rep1, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
     errno_assert (rc == 0);
     test_recv (rep1, "ABC");
 
     test_close (req1);
     test_close (rep1);
-#endif
 
     /*  Check removing socket request sent to (It should
         be sent immediatelly to other peer rather than relying

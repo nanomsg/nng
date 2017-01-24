@@ -161,11 +161,31 @@ nni_dialer(void *arg)
 	nni_ep *ep = arg;
 	int rv;
 	nni_time cooldown;
+	nni_duration maxrtime;
+	nni_duration defrtime;
+	nni_duration rtime;
 	nni_mtx *mx = &ep->ep_sock->s_mx;
+
+	nni_mtx_lock(mx);
+	defrtime = ep->ep_sock->s_reconn;
+	if ((maxrtime = ep->ep_sock->s_reconnmax) == 0) {
+		maxrtime = defrtime;
+	}
+	nni_mtx_unlock(mx);
 
 	for (;;) {
 		nni_mtx_lock(mx);
+		if ((defrtime != ep->ep_sock->s_reconn) ||
+		    (maxrtime != ep->ep_sock->s_reconnmax)) {
+			// Times changed, so reset them.
+			defrtime = ep->ep_sock->s_reconn;
+			if ((maxrtime = ep->ep_sock->s_reconnmax) == 0) {
+				maxrtime = defrtime;
+			}
+			rtime = defrtime;
+		}
 		while ((!ep->ep_close) && (ep->ep_pipe != NULL)) {
+			rtime = defrtime;
 			nni_cv_wait(&ep->ep_cv);
 		}
 		if (ep->ep_close) {
@@ -179,22 +199,19 @@ nni_dialer(void *arg)
 		case 0:
 			// good connection
 			continue;
-		case NNG_ENOMEM:
-			cooldown = 1000000;
-			break;
 		case NNG_ECLOSED:
 			return;
 
 		default:
-			// XXX: THIS NEEDS TO BE A PROPER BACKOFF.
-			cooldown = 1000000;
+			cooldown = nni_clock() + rtime;
+			rtime *= 2;
+			if ((maxrtime >= defrtime) && (rtime > maxrtime)) {
+				rtime = maxrtime;
+			}
 			break;
 		}
 		// we inject a delay so we don't just spin hard on
-		// errors like connection refused.  For NNG_ENOMEM, we
-		// wait even longer, since the system needs time to
-		// release resources.
-		cooldown += nni_clock();
+		// errors like connection refused.
 		nni_mtx_lock(mx);
 		while (!ep->ep_close) {
 			// We need a different condvar...

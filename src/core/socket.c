@@ -274,7 +274,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	sock->s_rcvtimeo = -1;
 	sock->s_closing = 0;
 	sock->s_reconn = NNI_SECOND;
-	sock->s_reconnmax = NNI_SECOND;
+	sock->s_reconnmax = 0;
 	sock->s_reapexit = 0;
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_reaps, nni_pipe, p_node);
