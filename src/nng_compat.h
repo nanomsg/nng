@@ -15,6 +15,20 @@
 // and consumers should only use thse if they are porting software that
 // previously used nanomsg.  New programs should use the nng native APIs.
 
+// Note that compatibility promises are limited to public portions of the
+// nanomsg API, and specifically do NOT extend to the ABI.  Furthermore,
+// there may be other limitations around less commonly used portions of the
+// API; for example only SP headers may be transported in control data for
+// messages, there is almost no compatibility offered for statistics.
+// Error values may differ from those returned by nanomsg as well; the nng
+// error reporting facility expresses only a subset of the possibilities of
+// nanomsg.
+
+// Note that unlinke nanomsg, nng does not aggressively recycle socket or
+// endpoint IDs, which means applications which made assumptions that these
+// would be relatively small integers (e.g. to use them as array indices)
+// may break.  (No promise about values was ever made.)
+
 #ifdef __cplusplus
 extern "C" {
 #endif

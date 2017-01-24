@@ -170,7 +170,6 @@ nn_shutdown(int s, int ep)
 void *
 nn_allocmsg(size_t size, int type)
 {
-	uintptr_t *ch;
 	nng_msg *msg;
 	int rv;
 
@@ -188,7 +187,8 @@ nn_allocmsg(size_t size, int type)
 		return (NULL);
 	}
 
-	memcpy(nng_msg_body(msg), &msg, sizeof (msg));
+	// This counts on message bodies being aligned sensibly.
+	*(nng_msg **) (nng_msg_body(msg)) = msg;
 
 	// We are counting on the implementation of nn_msg_trim to not
 	// reallocate the message but just to leave the prefix inplace.
@@ -203,7 +203,7 @@ nn_freemsg(void *ptr)
 {
 	nng_msg *msg;
 
-	memcpy(&msg, ((char *) ptr) - sizeof (msg), sizeof (msg));
+	msg = *(nng_msg **) (((char *) ptr) - sizeof (msg));
 	nng_msg_free(msg);
 	return (0);
 }
@@ -221,7 +221,8 @@ nn_reallocmsg(void *ptr, size_t len)
 		return (NULL);
 	}
 
-	memcpy(&msg, ((char *) ptr) - sizeof (msg), sizeof (msg));
+	// This counts on message bodies being aligned sensibly.
+	msg = *(nng_msg **) (((char *) ptr) - sizeof (msg));
 
 	// We need to realloc the requested len, plus size for our header.
 	if ((rv = nng_msg_realloc(msg, len + sizeof (msg))) != 0) {
@@ -231,7 +232,7 @@ nn_reallocmsg(void *ptr, size_t len)
 		return (NULL);
 	}
 	// Stash the msg header pointer
-	memcpy(nng_msg_body(msg), &msg, sizeof (msg));
+	*(nng_msg **) (nng_msg_body(msg)) = msg;
 	nng_msg_trim(msg, sizeof (msg));
 	return (nng_msg_body(msg));
 }
@@ -289,7 +290,7 @@ nn_recv(int s, void *buf, size_t len, int flags)
 
 	if (len == NN_MSG) {
 		nng_msg *msg;
-		void *body;
+
 		if ((rv = nng_recvmsg((nng_socket) s, &msg, flags)) != 0) {
 			nn_seterror(rv);
 			return (-1);
@@ -335,6 +336,10 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 	}
 	if (mh == NULL) {
 		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+	if (mh->msg_iovlen < 0) {
+		nn_seterror(NNG_EMSGSIZE);
 		return (-1);
 	}
 
@@ -430,41 +435,94 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 	if (!keep) {
 		nng_msg_free(msg);
 	}
-	return (len);
+	return ((int) len);
 }
 
 
-#if 0
 int
 nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 {
-	void *chunk;
+	nng_msg *msg = NULL;
+	nng_msg *cmsg = NULL;
+	char *cdata = NULL;
+	int keep = 0;
+	size_t sz;
+	int rv;
 
-	switch (flags) {
-	case NN_DONTWAIT:
-		flags = NN_FLAG_NONBLOCK;
-		break;
-	case 0:
-		break;
-	default:
+	if ((flags = nn_flags(flags)) == -1) {
+		return (-1);
+	}
+
+	if (mh == NULL) {
 		nn_seterror(NNG_EINVAL);
 		return (-1);
 	}
 
-	// Iterate over the iovecs.  The first iov may be NN_MSG,
-	// in which case it must be the only iovec.
+	if (mh->msg_iovlen < 0) {
+		nn_seterror(NNG_EMSGSIZE);
+		return (-1);
+	}
 
 	if ((mh->msg_iovlen == 1) && (mh->msg_iov[0].iov_len == NN_MSG)) {
-		// Chunk is stored at the offset...
-		chunk = *(void **) mh->msg_iov[0].iov_base;
-		// Chunk must be aligned
-		if ((chuink & (sizeof (void *) - 1)) != 0) {
-			nn_seterror(NNG_EINVAL);
+		msg = *(nng_msg **)
+		    (((char *) mh->msg_iov[0].iov_base) - sizeof (msg));
+		keep = 1; // keep the message on error
+	} else {
+		char *ptr;
+		int i;
+
+		sz = 0;
+		// Get the total message size.
+		for (i = 0; i < mh->msg_iovlen; i++) {
+			sz += mh->msg_iov[i].iov_len;
+		}
+		if ((rv = nng_msg_alloc(&msg, sz)) != 0) {
+			nn_seterror(rv);
 			return (-1);
 		}
-		size = (size_t) (*(uintptr_t *) (((void **) chunk) - 1));
+		// Now copy it out.
+		ptr = nng_msg_body(msg);
+		for (i = 0; i < mh->msg_iovlen; i++) {
+			memcpy(ptr, mh->msg_iov[i].iov_base,
+			    mh->msg_iov[i].iov_len);
+			ptr += mh->msg_iov[i].iov_len;
+		}
 	}
+
+	// Now suck up the control data...
+	cmsg = NULL;
+	if ((cdata = mh->msg_control) != NULL) {
+		size_t clen;
+		if ((clen = mh->msg_controllen) == NN_MSG) {
+			// Underlying data is a message.  This is awkward,
+			// because we have to copy the data, but we should
+			// only free this message on success.  So we save the
+			// message now.
+			cdata = *(void **)cdata;
+			cmsg = *(nng_msg **)(cdata - sizeof (cmsg));
+			clen = nng_msg_len(cmsg);
+		}
+		if ((rv = nng_msg_append_header(msg, cdata, clen)) != 0) {
+			if (!keep) {
+				nng_msg_free(msg);
+			}
+			nn_seterror(rv);
+			return (-1);
+		}
+	}
+
+	sz = nng_msg_len(msg);
+	if ((rv = nng_sendmsg((nng_socket)s, msg, flags)) != 0) {
+		if (!keep) {
+			nng_msg_free(msg);
+		}
+		nn_seterror(rv);
+		return (-1);
+	}
+
+	if (cmsg != NULL) {
+		// We sent successfully, so free up the control message.
+		nng_msg_free(cmsg);
+	}
+	return ((int)sz);
 }
-
-
-#endif
