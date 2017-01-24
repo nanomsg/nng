@@ -40,7 +40,7 @@ nni_init_helper(void)
 		return (rv);
 	}
 	nni_idhash_set_limits(&nni_pipes_x, 1, 0x7fffffff,
-	    nni_random() & 0x7fffffff);
+	    (nni_random() & 0x7ffffffe) + 1);
 	nni_idhash_set_limits(&nni_sockets_x, 1, 0x7fffffff, 1);
 	nni_idhash_set_limits(&nni_endpoints_x, 1, 0xffffffff, 1);
 

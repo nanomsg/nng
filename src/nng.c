@@ -231,7 +231,7 @@ nng_dial(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 	}
 	if ((rv = nni_sock_dial(sock, addr, &ep, flags)) == 0) {
 		if (epp != NULL) {
-			*epp = ep->ep_id;
+			*epp = nni_ep_id(ep);
 		}
 	}
 	nni_sock_rele(sock);
@@ -251,7 +251,7 @@ nng_listen(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 	}
 	if ((rv = nni_sock_listen(sock, addr, &ep, flags)) == 0) {
 		if (epp != NULL) {
-			*epp = ep->ep_id;
+			*epp = nni_ep_id(ep);
 		}
 	}
 	nni_sock_rele(sock);
@@ -262,8 +262,14 @@ nng_listen(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 int
 nng_endpoint_close(nng_endpoint eid)
 {
-	// XXX: FIXME: lookup endpoint by id, and then close it.
-	return (NNG_ENOTSUP);
+	int rv;
+	nni_ep *ep;
+
+	if ((rv = nni_ep_hold_close(&ep, eid)) != 0) {
+		return (rv);
+	}
+	nni_ep_close(ep);
+	return (0);
 }
 
 
