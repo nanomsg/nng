@@ -336,7 +336,7 @@ nng_unsetnotify(nng_socket sid, nng_notify *notify)
 nng_socket
 nng_event_socket(nng_event *ev)
 {
-	// FOR NOW....  maybe evnet should contain socket Id instead?
+	// XXX: FOR NOW....  maybe evnet should contain socket Id instead?
 	return (nni_sock_id(ev->e_sock));
 }
 

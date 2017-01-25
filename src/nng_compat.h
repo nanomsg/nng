@@ -258,7 +258,7 @@ struct nn_cmsghdr {
 	int	cmsg_type;
 };
 
-#define NN_ALIGN(len) \
+#define NN_CMSG_ALIGN(len) \
 	(((len) + sizeof (size_t) - 1) & (size_t) ~(sizeof (size_t) - 1))
 
 // Unlike old nanomsg, we explicitly only support the SP header as attached
@@ -268,16 +268,17 @@ struct nn_cmsghdr {
 // anyone used that in practice though.)
 #define NN_CMSG_FIRSTHDR(mh) \
 	nn_cmsg_next((struct nn_msghdr *) (mh), NULL)
-#define NN_CMSG_NEXTHDR(mh, ch)	\
+#define NN_CMSG_NXTHDR(mh, ch) \
 	nn_cmsg_next((struct nn_msghdr *) (mh), (struct nn_cmsghdr *) ch)
 #define NN_CMSG_DATA(ch) \
 	((unsigned char *) (((struct nn_cmsghdr *) (ch)) + 1))
 #define NN_CMSG_SPACE(len) \
-	(NN_ALIGN(len) + NN_ALIGN(sizeof (struct nn_cmsghdr)))
+	(NN_CMSG_ALIGN(len) + NN_CMSG_ALIGN(sizeof (struct nn_cmsghdr)))
 #define NN_CMSG_LEN(len) \
-	(NN_ALIGN(sizeof (nn_cmsghdr)) + (len))
+	(NN_CMSG_ALIGN(sizeof (struct nn_cmsghdr)) + (len))
 
-NN_DECL struct cmsg_hdr *nn_cmsg_next(struct nn_msghdr *, struct nn_cmsghdr *);
+NN_DECL struct nn_cmsghdr *nn_cmsg_next(struct nn_msghdr *,
+    struct nn_cmsghdr *);
 NN_DECL int nn_socket(int, int);
 NN_DECL int nn_setsockopt(int, int, int, const void *, size_t);
 NN_DECL int nn_getsockopt(int, int, int, void *, size_t *);
@@ -287,7 +288,7 @@ NN_DECL int nn_shutdown(int, int);
 NN_DECL int nn_send(int, const void *, size_t, int);
 NN_DECL int nn_recv(int, void *, size_t, int);
 NN_DECL int nn_sendmsg(int, const struct nn_msghdr *, int);
-NN_DECL int nn_recvcmsg(int, struct nn_msghdr *, int);
+NN_DECL int nn_recvmsg(int, struct nn_msghdr *, int);
 NN_DECL int nn_close(int);
 NN_DECL int nn_poll(struct nn_pollfd *, int, int);
 NN_DECL int nn_device(int, int);

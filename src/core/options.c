@@ -49,6 +49,27 @@ nni_setopt_int(int *ptr, const void *val, size_t size, int minval, int maxval)
 
 
 int
+nni_setopt_size(size_t *ptr, const void *val, size_t size, size_t minval,
+    size_t maxval)
+{
+	int v;
+
+	if (size != sizeof (v)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(&v, val, sizeof (v));
+	if (v > maxval) {
+		return (NNG_EINVAL);
+	}
+	if (v < minval) {
+		return (NNG_EINVAL);
+	}
+	*ptr = v;
+	return (0);
+}
+
+
+int
 nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
 {
 	size_t sz = sizeof (*ptr);
@@ -64,6 +85,20 @@ nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
 
 int
 nni_getopt_int(int *ptr, void *val, size_t *sizep)
+{
+	size_t sz = sizeof (*ptr);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof (*ptr);
+	memcpy(val, ptr, sz);
+	return (0);
+}
+
+
+int
+nni_getopt_size(size_t *ptr, void *val, size_t *sizep)
 {
 	size_t sz = sizeof (*ptr);
 

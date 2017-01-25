@@ -189,7 +189,7 @@ nni_inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 
 
 static int
-nni_inproc_ep_init(void **epp, const char *url, uint16_t proto)
+nni_inproc_ep_init(void **epp, const char *url, nni_sock *sock)
 {
 	nni_inproc_ep *ep;
 	int rv;
@@ -207,7 +207,7 @@ nni_inproc_ep_init(void **epp, const char *url, uint16_t proto)
 
 	ep->mode = NNI_INPROC_EP_IDLE;
 	ep->closed = 0;
-	ep->proto = proto;
+	ep->proto = nni_sock_proto(sock);
 	NNI_LIST_NODE_INIT(&ep->node);
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 
@@ -290,8 +290,6 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 			nni_mtx_unlock(&nni_inproc.mx);
 			return (NNG_ECONNREFUSED);
 		}
-
-		// XXX check protocol peer validity...
 
 		ep->mode = NNI_INPROC_EP_DIAL;
 		nni_list_append(&server->clients, ep);

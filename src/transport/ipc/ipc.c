@@ -26,7 +26,7 @@ struct nni_ipc_pipe {
 	nni_plat_ipcsock	fd;
 	uint16_t		peer;
 	uint16_t		proto;
-	uint32_t		rcvmax;
+	size_t			rcvmax;
 };
 
 struct nni_ipc_ep {
@@ -34,7 +34,7 @@ struct nni_ipc_ep {
 	nni_plat_ipcsock	fd;
 	int			closed;
 	uint16_t		proto;
-	uint32_t		rcvmax;
+	size_t			rcvmax;
 };
 
 static int
@@ -123,7 +123,7 @@ nni_ipc_pipe_recv(void *arg, nni_msg **msgp)
 	}
 	NNI_GET64(buf, len);
 	if (len > pipe->rcvmax) {
-		return (NNG_EPROTO);
+		return (NNG_EMSGSIZE);
 	}
 
 	if ((rv = nng_msg_alloc(&msg, (size_t) len)) != 0) {
@@ -176,7 +176,7 @@ nni_ipc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 
 
 static int
-nni_ipc_ep_init(void **epp, const char *url, uint16_t proto)
+nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock)
 {
 	nni_ipc_ep *ep;
 	int rv;
@@ -188,8 +188,8 @@ nni_ipc_ep_init(void **epp, const char *url, uint16_t proto)
 		return (NNG_ENOMEM);
 	}
 	ep->closed = 0;
-	ep->proto = proto;
-	ep->rcvmax = 1024 * 1024;       // XXX: fix this
+	ep->proto = nni_sock_proto(sock);
+	ep->rcvmax = nni_sock_rcvmaxsz(sock);
 	if ((rv = nni_plat_ipc_init(&ep->fd)) != 0) {
 		NNI_FREE_STRUCT(ep);
 		return (rv);

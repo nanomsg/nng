@@ -131,7 +131,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 		return (NNG_ECLOSED);
 	}
 
-	rv = ep->ep_ops.ep_init(&ep->ep_data, addr, nni_sock_proto(sock));
+	rv = ep->ep_ops.ep_init(&ep->ep_data, addr, sock);
 	if (rv != 0) {
 		nni_mtx_unlock(&sock->s_mx);
 		nni_cv_fini(&ep->ep_cv);

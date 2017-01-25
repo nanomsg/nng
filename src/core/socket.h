@@ -48,6 +48,8 @@ struct nni_socket {
 	nni_cv			s_notify_cv;    // wakes notify thread
 	nni_mtx			s_notify_mx;    // protects s_notify list
 
+	size_t			s_rcvmaxsz;     // maximum receive size
+
 	nni_list		s_reaps;        // pipes to reap
 	nni_thr			s_reaper;
 	nni_thr			s_notifier;
@@ -111,5 +113,8 @@ extern nni_msgq *nni_sock_recvq(nni_sock *);
 // be called with this lock already held.  We expose the mutex directly
 // here so that protocols can use it to initialize condvars.
 extern nni_mtx *nni_sock_mtx(nni_sock *);
+
+extern nni_duration nni_sock_linger(nni_sock *);
+extern size_t nni_sock_rcvmaxsz(nni_sock *);
 
 #endif  // CORE_SOCKET_H

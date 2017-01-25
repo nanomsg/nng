@@ -401,9 +401,12 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 		char *cdata;
 		size_t clen;
 		size_t tlen;
+		size_t spsz;
 		struct nn_cmsghdr *hdr;
+		unsigned char *ptr;
 
-		clen = NN_CMSG_SPACE(nng_msg_header_len(msg));
+		spsz = nng_msg_header_len(msg);
+		clen = NN_CMSG_SPACE(sizeof (spsz) + spsz);
 
 		if ((tlen = mh->msg_controllen) == NN_MSG) {
 			// Ideally we'd use the same msg, but we would need
@@ -429,13 +432,15 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 		}
 
 		if (clen <= tlen) {
+			ptr = NN_CMSG_DATA(cdata);
 			hdr = (void *) cdata;
-			hdr->cmsg_len = nng_msg_header_len(msg);
+			hdr->cmsg_len = clen;
 			hdr->cmsg_level = PROTO_SP;
 			hdr->cmsg_type = SP_HDR;
 
-			memcpy(NN_CMSG_DATA(cdata), nng_msg_header(msg),
-			    nng_msg_header_len(msg));
+			memcpy(ptr, &spsz, sizeof (spsz));
+			ptr += sizeof (spsz);
+			memcpy(ptr, nng_msg_header(msg), spsz);
 		}
 	}
 
@@ -451,7 +456,7 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 {
 	nng_msg *msg = NULL;
 	nng_msg *cmsg = NULL;
-	char *cdata = NULL;
+	char *cdata;
 	int keep = 0;
 	size_t sz;
 	int rv;
@@ -497,9 +502,16 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	}
 
 	// Now suck up the control data...
+	// This POSIX-inspired API is one of the most painful for
+	// usability we've ever seen.
 	cmsg = NULL;
 	if ((cdata = mh->msg_control) != NULL) {
 		size_t clen;
+		size_t offs;
+		size_t spsz;
+		struct nn_cmsghdr *chdr;
+		unsigned char *data;
+
 		if ((clen = mh->msg_controllen) == NN_MSG) {
 			// Underlying data is a message.  This is awkward,
 			// because we have to copy the data, but we should
@@ -508,13 +520,42 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 			cdata = *(void **) cdata;
 			cmsg = *(nng_msg **) (cdata - sizeof (cmsg));
 			clen = nng_msg_len(cmsg);
+		} else {
+			clen = mh->msg_controllen;
 		}
-		if ((rv = nng_msg_append_header(msg, cdata, clen)) != 0) {
-			if (!keep) {
-				nng_msg_free(msg);
+
+		offs = 0;
+		while ((offs + sizeof (NN_CMSG_LEN(0))) < clen) {
+			chdr = (void *) (cdata + offs);
+			if ((chdr->cmsg_level != PROTO_SP) ||
+			    (chdr->cmsg_type != SP_HDR)) {
+				offs += chdr->cmsg_len;
 			}
-			nn_seterror(rv);
-			return (-1);
+
+			// SP header in theory.  Starts with size, then
+			// any backtrace details.
+			if (chdr->cmsg_len < sizeof (size_t)) {
+				offs += chdr->cmsg_len;
+				continue;
+			}
+			data = NN_CMSG_DATA(chdr);
+			memcpy(&spsz, data, sizeof (spsz));
+			if ((spsz + sizeof (spsz)) > chdr->cmsg_len) {
+				// Truncated header?  Ignore it.
+				offs += chdr->cmsg_len;
+				continue;
+			}
+			data += sizeof (spsz);
+			rv = nng_msg_append_header(msg, data, spsz);
+			if (rv != 0) {
+				if (!keep) {
+					nng_msg_free(msg);
+				}
+				nn_seterror(rv);
+				return (-1);
+			}
+
+			break;
 		}
 	}
 
@@ -653,4 +694,36 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 		return (-1);
 	}
 	return (0);
+}
+
+
+struct nn_cmsghdr *
+nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
+{
+	size_t clen;
+	char *data;
+
+	// We only support SP headers, so there can be at most one header.
+	if (first != NULL) {
+		return (NULL);
+	}
+	if ((clen = mh->msg_controllen) == NN_MSG) {
+		nng_msg *msg;
+		data = *((void **) (mh->msg_control));
+		msg = *(nng_msg **) (data - sizeof (msg));
+		clen = nng_msg_len(msg);
+	} else {
+		data = mh->msg_control;
+	}
+
+	if (first == NULL) {
+		first = (void *) data;
+	} else {
+		first = first + first->cmsg_len;
+	}
+
+	if (((char *) first + sizeof (*first)) > (data + clen)) {
+		return (NULL);
+	}
+	return (first);
 }

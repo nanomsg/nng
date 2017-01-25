@@ -294,6 +294,7 @@ nni_rep_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 		break;
 	case NNG_OPT_RAW:
 		rv = nni_setopt_int(&rep->raw, buf, sz, 0, 1);
+		nni_sock_senderr(rep->sock, rep->raw ? 0 : NNG_ESTATE);
 		break;
 	default:
 		rv = NNG_ENOTSUP;

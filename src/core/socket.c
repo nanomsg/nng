@@ -102,9 +102,6 @@ nni_sock_hold_close(nni_sock **sockp, uint32_t id)
 }
 
 
-// XXX: don't expose the upper queues to protocols, because we need to
-// trap on activity in those queues!
-
 // Because we have to call back into the socket, and possibly also the proto,
 // and wait for threads to terminate, we do this in a special thread.  The
 // assumption is that closing is always a "fast" operation.
@@ -276,6 +273,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	sock->s_reconn = NNI_SECOND;
 	sock->s_reconnmax = 0;
 	sock->s_reapexit = 0;
+	sock->s_rcvmaxsz = 1024 * 1024; // 1 MB by default
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_reaps, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_eps, nni_ep, ep_node);
@@ -684,6 +682,20 @@ nni_sock_peer(nni_sock *sock)
 }
 
 
+nni_duration
+nni_sock_linger(nni_sock *sock)
+{
+	return (sock->s_linger);
+}
+
+
+size_t
+nni_sock_rcvmaxsz(nni_sock *sock)
+{
+	return (sock->s_rcvmaxsz);
+}
+
+
 int
 nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 {
@@ -775,6 +787,10 @@ nni_sock_setopt(nni_sock *sock, int opt, const void *val, size_t size)
 	case NNG_OPT_RCVBUF:
 		rv = nni_setopt_buf(sock->s_urq, val, size);
 		break;
+	case NNG_OPT_RCVMAXSZ:
+		rv = nni_setopt_size(&sock->s_rcvmaxsz, val, size, 0,
+			NNI_MAXSZ);
+		break;
 	}
 	nni_mtx_unlock(&sock->s_mx);
 	return (rv);
@@ -817,6 +833,9 @@ nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 		break;
 	case NNG_OPT_RCVBUF:
 		rv = nni_getopt_buf(sock->s_urq, val, sizep);
+		break;
+	case NNG_OPT_RCVMAXSZ:
+		rv = nni_getopt_size(&sock->s_rcvmaxsz, val, sizep);
 		break;
 	case NNG_OPT_SNDFD:
 		rv = nni_getopt_fd(sock, &sock->s_send_fd, NNG_EV_CAN_SND,
