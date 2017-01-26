@@ -667,8 +667,11 @@ nng_thread_create(void **thrp, void (*func)(void *), void *arg)
 
 
 void
-nng_thread_destroy(void *thr)
+nng_thread_destroy(void *arg)
 {
+	nni_thr *thr = arg;
+
 	nni_thr_fini(thr);
+
 	NNI_FREE_STRUCT(thr);
 }
