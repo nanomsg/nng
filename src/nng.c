@@ -625,8 +625,50 @@ nng_device(nng_socket sock1, nng_socket sock2)
 }
 
 
+// These routines exist as utility functions, exposing some of our "guts"
+// to the external world for the purposes of test code and bundled utilities.
+// They should not be considered part of our public API, and applications
+// should refrain from their use.
+
 void
 nng_usleep(uint64_t usec)
 {
 	nni_usleep(usec);
+}
+
+
+uint64_t
+nng_clock(void)
+{
+	return ((uint64_t) nni_clock());
+}
+
+
+// nng_thread_create creates a thread structure, and starts it running.
+// Unlike the internals, this allocates stuff dynamically, and does not
+// wait to start.
+int
+nng_thread_create(void **thrp, void (*func)(void *), void *arg)
+{
+	nni_thr *thr;
+	int rv;
+
+	if ((thr = NNI_ALLOC_STRUCT(thr)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	memset(thr, 0, sizeof (*thr));
+	*thrp = thr;
+	if ((rv = nni_thr_init(thr, func, arg)) != 0) {
+		return (rv);
+	}
+	nni_thr_run(thr);
+	return (0);
+}
+
+
+void
+nng_thread_destroy(void *thr)
+{
+	nni_thr_fini(thr);
+	NNI_FREE_STRUCT(thr);
 }

@@ -65,7 +65,7 @@ extern "C" {
 #define NN_PROTO_SURVEY		6
 #define NN_PROTO_BUS		7
 
-#define NN_PAIR			(NN_PROTO_PAIR * 16 + 1)
+#define NN_PAIR			(NN_PROTO_PAIR * 16 + 0)
 #define NN_PUB			(NN_PROTO_PUBSUB * 16 + 0)
 #define NN_SUB			(NN_PROTO_PUBSUB * 16 + 1)
 #define NN_REQ			(NN_PROTO_REQREP * 16 + 0)
@@ -298,6 +298,22 @@ NN_DECL void *nn_reallocmsg(void *, size_t);
 NN_DECL int nn_freemsg(void *);
 NN_DECL int nn_errno(void);
 NN_DECL const char *nn_strerror(int);
+
+
+// This stuff is intended to be exposed only for test programs and our
+// own utilities.  Do not use in your own programs.
+
+#ifdef NNG_PRIVATE
+struct nn_thread {
+	void *thr;
+};
+
+NN_DECL void nn_sleep(uint64_t);
+NN_DECL uint64_t nn_clock(void);
+NN_DECL int nn_thread_init(struct nn_thread *, void (*)(void *), void *);
+NN_DECL void nn_thread_term(struct nn_thread *);
+
+#endif // NNG_PRIVATE
 
 #ifdef __cplusplus
 }

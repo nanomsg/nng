@@ -60,6 +60,8 @@ static int  test_setsockopt_impl (char *file, int line, int sock, int level,
 #define test_setsockopt(s, l, o, v, z) test_setsockopt_impl (__FILE__, \
     __LINE__, (s), (l), (o), (v), (z))
 
+#define NN_UNUSED
+
 static int test_socket_impl (char *file, int line, int family,
     int protocol)
 {

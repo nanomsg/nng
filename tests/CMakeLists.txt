@@ -86,5 +86,6 @@ add_nng_test(survey 5)
 add_nng_test(tcp 5)
 
 # compatbility tests
+add_nng_compat_test(compat_block 5)
 add_nng_compat_test(compat_cmsg 5)
 add_nng_compat_test(compat_reqrep 5)

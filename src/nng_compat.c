@@ -727,3 +727,41 @@ nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
 	}
 	return (first);
 }
+
+
+// Internal test support routines.
+
+void
+nn_sleep(uint64_t msec)
+{
+	nng_usleep(msec / 1000);
+}
+
+
+uint64_t
+nn_clock(void)
+{
+	return (nng_clock());
+}
+
+
+extern void nni_panic(const char *, ...);
+
+int
+nn_thread_init(struct nn_thread *thr, void (*func)(void *), void *arg)
+{
+	int rv;
+
+	rv = nng_thread_create(&thr->thr, func, arg);
+	if (rv != 0) {
+		nni_panic("Cannot create thread: %s", nng_strerror(rv));
+	}
+	return (rv);
+}
+
+
+void
+nn_thread_term(struct nn_thread *thr)
+{
+	nng_thread_destroy(thr->thr);
+}

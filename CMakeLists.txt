@@ -91,8 +91,10 @@ option (NNG_TESTS "Build and run tests" ON)
 option (NNG_TOOLS "Build extra tools" OFF)
 option (NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
 
-#  Platform checks.
+# Enable access to private APIs for our own use.
+add_definitions (-DNNG_PRIVATE)
 
+#  Platform checks.
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     find_package (Threads REQUIRED)

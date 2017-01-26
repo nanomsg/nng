@@ -371,11 +371,24 @@ NNG_DECL int64_t nng_stat_value(nng_stat *);
 // which means that messages from one side are forwarded to the other.
 NNG_DECL int nng_device(nng_socket, nng_socket);
 
-// Sleep for the specified usecs.  This is intended for use by test
-// programs (to avoid needing to expose the rest of the private details).
-// Applications are discouraged from using this -- use your platform
-// time services instead.
+// The following functions are not intrinsic to nanomsg, and so do not
+// represent our public API.  Avoid their use in other applications.
+
+#ifdef NNG_PRIVATE
+
+// Sleep for specified usecs.
 NNG_DECL void nng_usleep(uint64_t);
+
+// Return usecs since some arbitrary time in past.
+NNG_DECL uint64_t nng_clock(void);
+
+// Create and start a thread.
+NNG_DECL int nng_thread_create(void **, void (*)(void *), void *);
+
+// Destroy a thread (waiting for it to complete.)
+NNG_DECL void nng_thread_destroy(void *);
+
+#endif // NNG_PRIVATE
 
 // Pollset functionality.  TBD.  (Note that I'd rather avoid this
 // altogether, because I believe that the notification mechanism I've
