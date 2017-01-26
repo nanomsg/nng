@@ -23,6 +23,11 @@
 #include <unistd.h>
 #include <netdb.h>
 
+// Solaris/SunOS systems define this, which collides with our symbol
+// names.  Just undefine it now.
+#ifdef sun
+#undef sun
+#endif
 
 #ifdef  SOCK_CLOEXEC
 #define NNI_IPC_SOCKTYPE	(SOCK_STREAM | SOCK_CLOEXEC)
