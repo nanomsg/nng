@@ -74,7 +74,7 @@ extern "C" {
 #define NN_PULL			(NN_PROTO_PIPELINE * 16 + 1)
 #define NN_SURVEYOR		(NN_PROTO_SURVEY * 16 + 2)
 #define NN_RESPONDENT		(NN_PROTO_SURVEY * 16 + 3)
-#define NN_BUS			(NN_PROTO_BUS * 16 + 1)
+#define NN_BUS			(NN_PROTO_BUS * 16 + 0)
 
 #define NN_SOCKADDR_MAX		128
 #define NN_SOL_SOCKET		0

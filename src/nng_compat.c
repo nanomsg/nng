@@ -734,7 +734,7 @@ nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
 void
 nn_sleep(uint64_t msec)
 {
-	nng_usleep(msec / 1000);
+	nng_usleep(msec * 1000);
 }
 
 
