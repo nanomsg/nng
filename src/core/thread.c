@@ -86,14 +86,14 @@ static void
 nni_thr_wrap(void *arg)
 {
 	nni_thr *thr = arg;
-	int stop;
+	int start;
 
 	nni_plat_mtx_lock(&thr->mtx);
-	while (((stop = thr->stop) == 0) && (thr->start == 0)) {
+	while (((start = thr->start) == 0) && (thr->stop == 0)) {
 		nni_plat_cv_wait(&thr->cv);
 	}
 	nni_plat_mtx_unlock(&thr->mtx);
-	if ((!stop) && (thr->fn != NULL)) {
+	if ((start) && (thr->fn != NULL)) {
 		thr->fn(thr->arg);
 	}
 	nni_plat_mtx_lock(&thr->mtx);
