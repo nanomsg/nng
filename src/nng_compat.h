@@ -298,6 +298,7 @@ NN_DECL void *nn_reallocmsg(void *, size_t);
 NN_DECL int nn_freemsg(void *);
 NN_DECL int nn_errno(void);
 NN_DECL const char *nn_strerror(int);
+NN_DECL void nn_term(void);
 
 
 // This stuff is intended to be exposed only for test programs and our

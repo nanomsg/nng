@@ -348,6 +348,30 @@ nng_event_type(nng_event *ev)
 }
 
 
+int
+nng_device(nng_socket s1, nng_socket s2)
+{
+	int rv;
+	nni_sock *sock1 = NULL;
+	nni_sock *sock2 = NULL;
+
+	if ((s1 > 0) && (s1 != (nng_socket)-1)) {
+		if ((rv = nni_sock_hold(&sock1, s1)) != 0) {
+			return (rv);
+		}
+	}
+	if (((s2 > 0) && (s2 != (nng_socket)-1)) && (s2 != s1)) {
+		if ((rv = nni_sock_hold(&sock2, s2)) != 0) {
+			nni_sock_rele(sock1);
+			return (rv);
+		}
+	}
+
+	rv = nni_device(sock1, sock2);
+	return (rv);
+}
+
+
 // Misc.
 const char *
 nng_strerror(int num)
@@ -617,14 +641,6 @@ nng_stat_value(nng_stat *stat)
 }
 
 
-int
-nng_device(nng_socket sock1, nng_socket sock2)
-{
-	// Device TBD.
-	return (NNG_ENOTSUP);
-}
-
-
 // These routines exist as utility functions, exposing some of our "guts"
 // to the external world for the purposes of test code and bundled utilities.
 // They should not be considered part of our public API, and applications
@@ -652,6 +668,8 @@ nng_thread_create(void **thrp, void (*func)(void *), void *arg)
 {
 	nni_thr *thr;
 	int rv;
+
+	nni_init();
 
 	if ((thr = NNI_ALLOC_STRUCT(thr)) == NULL) {
 		return (NNG_ENOMEM);

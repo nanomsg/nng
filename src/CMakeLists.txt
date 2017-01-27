@@ -34,6 +34,8 @@ set (NNG_SOURCES
 
     core/clock.c
     core/clock.h
+    core/device.c
+    core/device.h
     core/endpt.c
     core/endpt.h
     core/event.c

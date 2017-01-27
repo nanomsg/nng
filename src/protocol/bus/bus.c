@@ -155,6 +155,7 @@ nni_bus_pipe_receiver(void *arg)
 	nni_msgq *urq = nni_sock_recvq(psock->nsock);
 	nni_msgq *uwq = nni_sock_sendq(psock->nsock);
 	nni_pipe *npipe = ppipe->npipe;
+	uint32_t id = nni_pipe_id(npipe);
 	nni_msg *msg;
 	int rv;
 
@@ -162,6 +163,11 @@ nni_bus_pipe_receiver(void *arg)
 		rv = nni_pipe_recv(npipe, &msg);
 		if (rv != 0) {
 			break;
+		}
+		if ((rv = nni_msg_prepend_header(msg, &id, 4)) != 0) {
+			// XXX: bump a nomemory stat
+			nni_msg_free(msg);
+			continue;
 		}
 		rv = nni_msgq_put_sig(urq, msg, &ppipe->sigclose);
 		if (rv != 0) {
@@ -216,6 +222,7 @@ nni_bus_sock_sender(void *arg)
 	nni_msgq *uwq = nni_sock_sendq(psock->nsock);
 	nni_mtx *mx = nni_sock_mtx(psock->nsock);
 	nni_msg *msg, *dup;
+	uint32_t sender;
 
 	for (;;) {
 		nni_bus_pipe *ppipe;
@@ -226,9 +233,23 @@ nni_bus_sock_sender(void *arg)
 			break;
 		}
 
+		// The header being present indicates that the message
+		// was received locally and we are rebroadcasting. (Device
+		// is doing this probably.)  In this case grab the pipe
+		// ID from the header, so we can exclude it.
+		if (nni_msg_header_len(msg) >= 4) {
+			memcpy(&sender, nni_msg_header(msg), 4);
+			nni_msg_trim_header(msg, 4);
+		} else {
+			sender = 0;
+		}
+
 		nni_mtx_lock(mx);
 		last = nni_list_last(&psock->pipes);
 		NNI_LIST_FOREACH (&psock->pipes, ppipe) {
+			if (nni_pipe_id(ppipe->npipe) == sender) {
+				continue;
+			}
 			if (ppipe != last) {
 				rv = nni_msg_dup(&dup, msg);
 				if (rv != 0) {

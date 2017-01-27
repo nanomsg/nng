@@ -64,7 +64,7 @@ nni_sock_rele(nni_sock *sock)
 {
 	nni_mtx_lock(nni_idlock);
 	sock->s_refcnt--;
-	if ((sock->s_closed) && (sock->s_refcnt == 1)) {
+	if ((sock->s_closed) && (sock->s_refcnt == 0)) {
 		nni_cv_wake(&sock->s_refcv);
 	}
 	nni_mtx_unlock(nni_idlock);
@@ -90,15 +90,41 @@ nni_sock_hold_close(nni_sock **sockp, uint32_t id)
 		nni_mtx_unlock(nni_idlock);
 		return (NNG_ECLOSED);
 	}
+	nni_idhash_remove(nni_sockets, id);
+	sock->s_id = 0;
 	sock->s_closed = 1;
-	sock->s_refcnt++;
-	while (sock->s_refcnt != 1) {
+	nni_mtx_unlock(nni_idlock);
+	nni_sock_shutdown(sock);
+	nni_mtx_lock(nni_idlock);
+	while (sock->s_refcnt != 0) {
 		nni_cv_wait(&sock->s_refcv);
 	}
 	nni_mtx_unlock(nni_idlock);
 	*sockp = sock;
 
 	return (0);
+}
+
+
+// nni_sock_held_close uses an existing hold on the socket, but is
+// otherwise pretty much the same as nni_sock_hold_close.  When this
+// returns there will be no other user-land references to the socket.
+void
+nni_sock_held_close(nni_sock *sock)
+{
+	nni_mtx_lock(nni_idlock);
+	sock->s_closed = 1;
+	if (sock->s_id != 0) {
+		nni_idhash_remove(nni_sockets, sock->s_id);
+		sock->s_id = 0;
+	}
+	nni_mtx_unlock(nni_idlock);
+	nni_sock_shutdown(sock);
+	nni_mtx_lock(nni_idlock);
+	while (sock->s_refcnt != 0) {
+		nni_cv_wait(&sock->s_refcv);
+	}
+	nni_mtx_unlock(nni_idlock);
 }
 
 
@@ -537,7 +563,9 @@ nni_sock_close(nni_sock *sock)
 	// the results may be tragic.
 
 	nni_mtx_lock(nni_idlock);
-	nni_idhash_remove(nni_sockets, sock->s_id);
+	if (sock->s_id != 0) {
+		nni_idhash_remove(nni_sockets, sock->s_id);
+	}
 	if (nni_idhash_count(nni_sockets) == 0) {
 		nni_idhash_reclaim(nni_pipes);
 		nni_idhash_reclaim(nni_endpoints);

@@ -729,6 +729,30 @@ nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
 }
 
 
+int
+nn_device(int s1, int s2)
+{
+	int rv;
+
+	rv = nng_device((nng_socket) s1, (nng_socket) s2);
+	// rv must always be nonzero
+	nn_seterror(rv);
+	return (-1);
+}
+
+
+// You should not use this function if you can help it.
+void
+nn_term(void)
+{
+	// XXX: Implement something to do something.  Probably we
+	// should go through the nni_sockets idhash and clobber all
+	// of the sockets.  This function is relatively toxic, since
+	// it can affect all sockets in the process, including those
+	// in use by libraries, etc.
+}
+
+
 // Internal test support routines.
 
 void
