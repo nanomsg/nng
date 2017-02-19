@@ -86,4 +86,4 @@ extern void nni_thr_run(nni_thr *thr);
 // at all.
 extern void nni_thr_wait(nni_thr *thr);
 
-#endif CORE_THREAD_H
+#endif // CORE_THREAD_H
