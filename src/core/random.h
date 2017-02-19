@@ -10,12 +10,12 @@
 #ifndef CORE_RANDOM_H
 #define CORE_RANDOM_H
 
-// nni_random_init initializes the pRNG subsystem.  This includes obtaining
+// nni_random_sys_init initializes the pRNG subsystem.  This includes obtaining
 // suitable seeding material from the platform.
-extern int nni_random_init(void);
+extern int nni_random_sys_init(void);
 
-// nni_random_fini destroys the pRNG subsystem.
-extern void nni_random_fini(void);
+// nni_random_sys_fini destroys the pRNG subsystem.
+extern void nni_random_sys_fini(void);
 
 // nni_random returns a random 32-bit integer.  Note that this routine is
 // thread-safe/reentrant.  The pRNG is very robust, should be of crypto

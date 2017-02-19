@@ -47,10 +47,10 @@ nni_tran_find(const char *addr)
 }
 
 
-// nni_transport_init initializes the entire transport subsystem, including
+// nni_tran_sys_init initializes the entire transport subsystem, including
 // each individual transport.
 void
-nni_tran_init(void)
+nni_tran_sys_init(void)
 {
 	int i;
 	nni_tran *tran;
@@ -61,8 +61,10 @@ nni_tran_init(void)
 }
 
 
+// nni_tran_sys_fini finalizes the entire transport system, including all
+// transports.
 void
-nni_tran_fini(void)
+nni_tran_sys_fini(void)
 {
 	int i;
 	nni_tran *tran;

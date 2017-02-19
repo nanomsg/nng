@@ -64,6 +64,8 @@ set (NNG_SOURCES
     core/random.h
     core/socket.c
     core/socket.h
+    core/taskq.c
+    core/taskq.h
     core/thread.c
     core/thread.h
     core/transport.c

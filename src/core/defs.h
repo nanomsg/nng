@@ -50,6 +50,10 @@ typedef uint64_t			nni_time;       // Abs. time (usec).
 typedef int64_t				nni_duration;   // Rel. time (usec).
 typedef void (*nni_worker)(void *);
 
+typedef struct nni_taskq		nni_taskq;
+typedef struct nni_taskq_ent		nni_taskq_ent;
+typedef void (*nni_cb)(void *);
+
 // Used by transports for scatter gather I/O.
 typedef struct {
 	void *	iov_buf;

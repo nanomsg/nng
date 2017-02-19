@@ -153,7 +153,7 @@ nni_isaac_randinit(nni_isaac_ctx *ctx, int flag)
 static nni_isaac_ctx nni_random_ctx;
 
 int
-nni_random_init(void)
+nni_random_sys_init(void)
 {
 	// minimally, grab the system clock
 	nni_isaac_ctx *ctx = &nni_random_ctx;
@@ -189,7 +189,7 @@ nni_random(void)
 
 
 void
-nni_random_fini(void)
+nni_random_sys_fini(void)
 {
 	nni_mtx_fini(&nni_random_ctx.mx);
 }
