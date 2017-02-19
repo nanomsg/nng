@@ -343,45 +343,6 @@ nni_msgq_put_(nni_msgq *mq, nni_msg *msg, nni_time expire, nni_signal *sig)
 }
 
 
-// nni_msgq_putback will attempt to put a single message back
-// to the head of the queue.  It never blocks.  Message queues always
-// have room for at least one putback.
-int
-nni_msgq_putback(nni_msgq *mq, nni_msg *msg)
-{
-	nni_mtx_lock(&mq->mq_lock);
-
-	// if closed, we don't put more... this check is first!
-	if (mq->mq_closed) {
-		nni_mtx_unlock(&mq->mq_lock);
-		return (NNG_ECLOSED);
-	}
-
-	// room in the queue?
-	if (mq->mq_len >= mq->mq_cap) {
-		nni_mtx_unlock(&mq->mq_lock);
-		return (NNG_EAGAIN);
-	}
-
-	// Subtract one from the get index, possibly wrapping.
-	mq->mq_get--;
-	if (mq->mq_get == 0) {
-		mq->mq_get = mq->mq_cap;
-	}
-	mq->mq_msgs[mq->mq_get] = msg;
-	mq->mq_len++;
-	if (mq->mq_rwait) {
-		mq->mq_rwait = 0;
-		nni_cv_wake(&mq->mq_readable);
-	}
-
-	nni_msgq_kick(mq, NNI_MSGQ_NOTIFY_CANGET);
-	nni_mtx_unlock(&mq->mq_lock);
-
-	return (0);
-}
-
-
 static int
 nni_msgq_get_(nni_msgq *mq, nni_msg **msgp, nni_time expire, nni_signal *sig)
 {
