@@ -10,7 +10,11 @@
 #ifndef CORE_TASKQ_H
 #define CORE_TASKQ_H
 
-#include "core/nng_impl.h"
+#include "core/defs.h"
+#include "core/list.h"
+
+typedef struct nni_taskq	nni_taskq;
+typedef struct nni_taskq_ent	nni_taskq_ent;
 
 struct nni_taskq_ent {
 	nni_list_node	tqe_node;

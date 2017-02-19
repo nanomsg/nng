@@ -10,6 +10,9 @@
 #ifndef CORE_ENDPT_H
 #define CORE_ENDPT_H
 
+#include "core/defs.h"
+#include "core/list.h"
+#include "core/thread.h"
 #include "core/transport.h"
 
 // NB: This structure is supplied here for use by the CORE. Use of this

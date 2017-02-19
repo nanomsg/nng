@@ -23,16 +23,18 @@
 // symbols should be found in the toplevel nng.h header.
 #include "core/defs.h"
 
+#include "core/platform.h"
+
 #include "core/clock.h"
 #include "core/device.h"
 #include "core/idhash.h"
 #include "core/init.h"
+#include "core/ioev.h"
 #include "core/list.h"
 #include "core/message.h"
 #include "core/msgqueue.h"
 #include "core/options.h"
 #include "core/panic.h"
-#include "core/platform.h"
 #include "core/protocol.h"
 #include "core/random.h"
 #include "core/taskq.h"

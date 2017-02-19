@@ -15,6 +15,7 @@
 // TRANSPORTS.
 
 #include "core/defs.h"
+#include "core/thread.h"
 #include "core/transport.h"
 
 struct nni_pipe {

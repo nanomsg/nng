@@ -10,7 +10,7 @@
 #ifndef CORE_LIST_H
 #define CORE_LIST_H
 
-#include "core/nng_impl.h"
+#include "core/defs.h"
 
 // In order to make life easy, we just define the list structures
 // directly, and let consumers directly inline structures.

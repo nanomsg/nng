@@ -10,7 +10,8 @@
 #ifndef CORE_THREAD_H
 #define CORE_THREAD_H
 
-#include "core/nng_impl.h"
+#include "core/defs.h"
+#include "core/platform.h"
 
 struct nni_mtx {
 	nni_plat_mtx mtx;

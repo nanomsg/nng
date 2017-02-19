@@ -10,7 +10,7 @@
 #ifndef CORE_IDHASH_H
 #define CORE_IDHASH_H
 
-#include "core/nng_impl.h"
+#include "core/defs.h"
 
 // We find that we often want to have a list of things listed by a
 // numeric ID, which is generally monotonically increasing.  This is

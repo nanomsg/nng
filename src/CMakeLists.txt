@@ -44,6 +44,8 @@ set (NNG_SOURCES
     core/idhash.h
     core/init.c
     core/init.h
+    core/ioev.c
+    core/ioev.h
     core/list.c
     core/list.h
     core/message.c
