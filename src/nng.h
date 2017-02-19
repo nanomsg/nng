@@ -423,6 +423,7 @@ NNG_DECL void nng_thread_destroy(void *);
 #define NNG_EMSGSIZE		(17)
 #define NNG_ECONNABORTED	(18)
 #define NNG_ECONNRESET		(19)
+#define NNG_ECANCELED		(20)
 
 // NNG_SYSERR is a special code, which allows us to wrap errors from the
 // underlyuing operating system.  We generally prefer to map errors to one

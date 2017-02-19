@@ -436,6 +436,9 @@ nng_strerror(int num)
 
 	case NNG_ECONNABORTED:
 		return ("Connection aborted");
+
+	case NNG_ECANCELED:
+		return ("Operation canceled");
 	}
 
 	if (num & NNG_ESYSERR) {
