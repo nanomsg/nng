@@ -25,11 +25,11 @@
 
 #include "core/platform.h"
 
+#include "core/aio.h"
 #include "core/clock.h"
 #include "core/device.h"
 #include "core/idhash.h"
 #include "core/init.h"
-#include "core/ioev.h"
 #include "core/list.h"
 #include "core/message.h"
 #include "core/msgqueue.h"
