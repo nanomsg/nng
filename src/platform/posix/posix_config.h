@@ -57,3 +57,5 @@
 #else
 #define NNG_USE_CLOCKID		CLOCK_REALTIME
 #endif  // CLOCK_REALTIME
+
+#define NNG_USE_POSIX_AIOTHR	1

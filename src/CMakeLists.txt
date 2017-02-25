@@ -75,7 +75,10 @@ set (NNG_SOURCES
 
     platform/posix/posix_impl.h
     platform/posix/posix_config.h
+    platform/posix/posix_aio.h
+
     platform/posix/posix_alloc.c
+    platform/posix/posix_aiothr.c
     platform/posix/posix_clock.c
     platform/posix/posix_debug.c
     platform/posix/posix_ipc.c
