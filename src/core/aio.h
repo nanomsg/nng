@@ -12,6 +12,7 @@
 
 #include "core/defs.h"
 #include "core/list.h"
+#include "core/taskq.h"
 #include "core/thread.h"
 
 typedef struct nni_aio_ops	nni_aio_ops;
@@ -25,10 +26,11 @@ struct nni_aio {
 	nni_cb		a_cb;           // User specified callback.
 	void *		a_cbarg;        // Callback argument.
 
-	// These fields are private to the io events framework.
+	// These fields are private to the aio framework.
 	nni_mtx		a_lk;
 	nni_cv		a_cv;
 	unsigned	a_flags;
+	nni_taskq_ent	a_tqe;
 
 	// Read/write operations.
 	nni_iov		a_iov[4];

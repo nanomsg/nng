@@ -31,6 +31,10 @@ struct nni_pipe {
 	nni_thr		p_worker_thr[NNI_MAXWORKERS];
 };
 
+// AIO
+extern int nni_pipe_aio_recv(nni_pipe *, nni_aio *);
+extern int nni_pipe_aio_send(nni_pipe *, nni_aio *);
+
 // Pipe operations that protocols use.
 extern int nni_pipe_recv(nni_pipe *, nng_msg **);
 extern int nni_pipe_send(nni_pipe *, nng_msg *);

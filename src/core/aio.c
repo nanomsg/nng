@@ -24,6 +24,7 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 	nni_cv_init(&aio->a_cv, &aio->a_lk);
 	aio->a_cb = cb;
 	aio->a_cbarg = arg;
+	nni_taskq_ent_init(&aio->a_tqe, cb, arg);
 }
 
 
@@ -86,5 +87,5 @@ nni_aio_finish(nni_aio *aio, int result, size_t count)
 	nni_cv_wake(&aio->a_cv);
 	nni_mtx_unlock(&aio->a_lk);
 
-	cb(arg);
+	nni_taskq_dispatch(NULL, &aio->a_tqe);
 }

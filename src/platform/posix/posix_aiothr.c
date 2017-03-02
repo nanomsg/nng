@@ -64,7 +64,7 @@ nni_plat_aiothr_write(int fd, nni_aio *aio)
 		aio->a_count += n;
 		progress += n;
 		while (n) {
-			// If we didn't finish the at once, try again.
+			// If we didn't finish it yet, try again.
 			if (n < iovp->iov_len) {
 				iovp->iov_len -= n;
 				iovp->iov_base += n;
@@ -128,7 +128,7 @@ nni_plat_aiothr_read(int fd, nni_aio *aio)
 		aio->a_count += n;
 		progress += n;
 		while (n) {
-			// If we didn't finish the at once, try again.
+			// If we didn't finish it yet, try again.
 			if (n < iovp->iov_len) {
 				iovp->iov_len -= n;
 				iovp->iov_base += n;

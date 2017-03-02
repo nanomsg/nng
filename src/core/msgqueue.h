@@ -35,6 +35,14 @@ extern int nni_msgq_init(nni_msgq **, int);
 // messages that may be in the queue.
 extern void nni_msgq_fini(nni_msgq *);
 
+extern int nni_msgq_aio_put(nni_msgq *, nni_aio *);
+extern int nni_msgq_aio_get(nni_msgq *, nni_aio *);
+extern int nni_msgq_aio_put_until(nni_msgq *, nni_aio *, nni_time);
+extern int nni_msgq_aio_get_until(nni_msgq *, nni_aio *, nni_time);
+extern int nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
+extern int nni_msgq_aio_notify_put(nni_msgq *, nni_aio *);
+extern int nni_msgq_aio_cancel(nni_msgq *, nni_aio *);
+
 // nni_msgq_put puts the message to the queue.  It blocks until it
 // was able to do so, or the queue is closed, returning either 0 on
 // success or NNG_ECLOSED if the queue was closed.  If NNG_ECLOSED is

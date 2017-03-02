@@ -85,6 +85,9 @@ struct nni_tran_pipe {
 	// further calls on the same pipe.
 	void		(*pipe_destroy)(void *);
 
+	int		(*pipe_aio_send)(void *, nni_aio *);
+	int		(*pipe_aio_recv)(void *, nni_aio *);
+
 	// p_send sends the message.  If the message cannot be received, then
 	// the caller may try again with the same message (or free it).  If
 	// the call succeeds, then the transport has taken ownership of the

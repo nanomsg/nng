@@ -36,6 +36,20 @@ nni_pipe_recv(nni_pipe *p, nng_msg **msgp)
 }
 
 
+int
+nni_pipe_aio_recv(nni_pipe *p, nni_aio *aio)
+{
+	return (p->p_tran_ops.pipe_aio_recv(p->p_tran_data, aio));
+}
+
+
+int
+nni_pipe_aio_send(nni_pipe *p, nni_aio *aio)
+{
+	return (p->p_tran_ops.pipe_aio_send(p->p_tran_data, aio));
+}
+
+
 // nni_pipe_close closes the underlying connection.  It is expected that
 // subsequent attempts receive or send (including any waiting receive) will
 // simply return NNG_ECLOSED.
