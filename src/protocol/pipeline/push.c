@@ -19,27 +19,34 @@
 typedef struct nni_push_pipe	nni_push_pipe;
 typedef struct nni_push_sock	nni_push_sock;
 
+static void nni_push_send_cb(void *);
+static void nni_push_recv_cb(void *);
+static void nni_push_getq_cb(void *);
+static void nni_push_recv(nni_push_pipe *);
+static void nni_push_send(nni_push_sock *);
+
 // An nni_push_sock is our per-socket protocol private structure.
 struct nni_push_sock {
-	nni_cv		cv;
 	nni_msgq *	uwq;
+	nni_msg *	msg;    // pending message
 	int		raw;
-	int		closing;
-	int		wantw;
 	nni_list	pipes;
 	nni_push_pipe * nextpipe;
 	int		npipes;
 	nni_sock *	sock;
+
+	nni_aio		aio_getq;
 };
 
 // An nni_push_pipe is our per-pipe protocol private structure.
 struct nni_push_pipe {
 	nni_pipe *	pipe;
 	nni_push_sock * push;
-	nni_msgq *	mq;
-	int		sigclose;
 	int		wantr;
 	nni_list_node	node;
+
+	nni_aio		aio_recv;
+	nni_aio		aio_send;
 };
 
 static int
@@ -51,14 +58,13 @@ nni_push_sock_init(void **pushp, nni_sock *sock)
 	if ((push = NNI_ALLOC_STRUCT(push)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_cv_init(&push->cv, nni_sock_mtx(sock))) != 0) {
+	if ((rv = nni_aio_init(&push->aio_getq, nni_push_getq_cb, push)) != 0) {
 		NNI_FREE_STRUCT(push);
 		return (rv);
 	}
 	NNI_LIST_INIT(&push->pipes, nni_push_pipe, node);
 	push->raw = 0;
 	push->npipes = 0;
-	push->wantw = 0;
 	push->nextpipe = NULL;
 	push->sock = sock;
 	push->uwq = nni_sock_sendq(sock);
@@ -69,14 +75,20 @@ nni_push_sock_init(void **pushp, nni_sock *sock)
 
 
 static void
+nni_push_sock_open(void *arg)
+{
+	nni_push_sock *push = arg;
+
+	nni_msgq_aio_get(push->uwq, &push->aio_getq);
+}
+
+
+static void
 nni_push_sock_close(void *arg)
 {
 	nni_push_sock *push = arg;
 
-	// Shut down the resender.  We request it to exit by clearing
-	// its old value, then kick it.
-	push->closing = 1;
-	nni_cv_wake(&push->cv);
+	nni_msgq_aio_cancel(push->uwq, &push->aio_getq);
 }
 
 
@@ -86,7 +98,9 @@ nni_push_sock_fini(void *arg)
 	nni_push_sock *push = arg;
 
 	if (push != NULL) {
-		nni_cv_fini(&push->cv);
+		if (push->msg != NULL) {
+			nni_msg_free(push->msg);
+		}
 		NNI_FREE_STRUCT(push);
 	}
 }
@@ -101,13 +115,17 @@ nni_push_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 	if ((pp = NNI_ALLOC_STRUCT(pp)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_msgq_init(&pp->mq, 0)) != 0) {
+	if ((rv = nni_aio_init(&pp->aio_recv, nni_push_recv_cb, pp)) != 0) {
+		NNI_FREE_STRUCT(pp);
+		return (rv);
+	}
+	if ((rv = nni_aio_init(&pp->aio_send, nni_push_send_cb, pp)) != 0) {
+		nni_aio_fini(&pp->aio_recv);
 		NNI_FREE_STRUCT(pp);
 		return (rv);
 	}
 	NNI_LIST_NODE_INIT(&pp->node);
 	pp->pipe = pipe;
-	pp->sigclose = 0;
 	pp->push = psock;
 	pp->wantr = 0;
 	*ppp = pp;
@@ -121,7 +139,8 @@ nni_push_pipe_fini(void *arg)
 	nni_push_pipe *pp = arg;
 
 	if (pp != NULL) {
-		nni_msgq_fini(pp->mq);
+		nni_aio_fini(&pp->aio_recv);
+		nni_aio_fini(&pp->aio_send);
 		NNI_FREE_STRUCT(pp);
 	}
 }
@@ -140,9 +159,19 @@ nni_push_pipe_add(void *arg)
 	// The end makes our test cases easier.
 	nni_list_append(&push->pipes, pp);
 
+	// We start out wanting data to read.
+	pp->wantr = 1;
+
 	// Wake the top sender, as we can accept a job.
 	push->npipes++;
-	nni_cv_wake(&push->cv);
+
+	// Schedule a receiver.  This is mostly so that we can detect
+	// a closed transport pipe.
+	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
+
+	// Possibly schedule the sender.
+	nni_push_send(pp->push);
+
 	return (0);
 }
 
@@ -162,46 +191,66 @@ nni_push_pipe_rem(void *arg)
 
 
 static void
-nni_push_pipe_send(void *arg)
+nni_push_recv(nni_push_pipe *pp)
 {
-	nni_push_pipe *pp = arg;
-	nni_push_sock *push = pp->push;
-	nni_mtx *mx = nni_sock_mtx(push->sock);
-	nni_msg *msg;
-
-	for (;;) {
-		nni_mtx_lock(mx);
-		pp->wantr = 1;
-		if (push->wantw) {
-			nni_cv_wake(&push->cv);
-		}
-		nni_mtx_unlock(mx);
-		if (nni_msgq_get_sig(pp->mq, &msg, &pp->sigclose) != 0) {
-			break;
-		}
-		if (nni_pipe_send(pp->pipe, msg) != 0) {
-			nni_msg_free(msg);
-			break;
-		}
-	}
-	nni_pipe_close(pp->pipe);
+	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
 }
 
 
 static void
-nni_push_pipe_recv(void *arg)
+nni_push_recv_cb(void *arg)
 {
 	nni_push_pipe *pp = arg;
-	nni_msg *msg;
 
-	for (;;) {
-		if (nni_pipe_recv(pp->pipe, &msg) != 0) {
-			break;
-		}
-		nni_msg_free(msg);
+	// We normally expect to receive an error.  If a pipe actually
+	// sends us data, we just discard it.
+	if (nni_aio_result(&pp->aio_recv) != 0) {
+		nni_pipe_close(pp->pipe);
+		return;
 	}
-	nni_msgq_signal(pp->mq, &pp->sigclose);
-	nni_pipe_close(pp->pipe);
+	nni_push_recv(pp);
+}
+
+
+static void
+nni_push_send_cb(void *arg)
+{
+	nni_push_pipe *pp = arg;
+	nni_push_sock *push = pp->push;
+	nni_mtx *mx = nni_sock_mtx(push->sock);
+
+	if (nni_aio_result(&pp->aio_send) != 0) {
+		nni_pipe_close(pp->pipe);
+		return;
+	}
+
+	nni_mtx_lock(mx);
+	pp->wantr = 1;
+
+	// This effectively kicks off a pull down.
+	nni_push_send(pp->push);
+	nni_mtx_unlock(mx);
+}
+
+
+static void
+nni_push_getq_cb(void *arg)
+{
+	nni_push_sock *push = arg;
+	nni_mtx *mx = nni_sock_mtx(push->sock);
+	nni_aio *aio = &push->aio_getq;
+
+	if (nni_aio_result(aio) != 0) {
+		// If the socket is closing, nothing else we can do.
+		return;
+	}
+
+	nni_mtx_lock(mx);
+	push->msg = aio->a_msg;
+	aio->a_msg = NULL;
+
+	nni_push_send(push);
+	nni_mtx_unlock(mx);
 }
 
 
@@ -240,51 +289,35 @@ nni_push_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 
 static void
-nni_push_sock_send(void *arg)
+nni_push_send(nni_push_sock *push)
 {
-	nni_push_sock *push = arg;
 	nni_push_pipe *pp;
-	nni_msgq *uwq = push->uwq;
 	nni_msg *msg = NULL;
-	nni_mtx *mx = nni_sock_mtx(push->sock);
 	int i;
 
-	for (;;) {
-		if ((msg == NULL) && (nni_msgq_get(uwq, &msg) != 0)) {
-			// Should only be NNG_ECLOSED
-			return;
-		}
+	if ((msg = push->msg) == NULL) {
+		// Nothing to send... bail...
+		return;
+	}
 
-		nni_mtx_lock(mx);
-		if (push->closing) {
-			if (msg != NULL) {
-				nni_mtx_unlock(mx);
-				nni_msg_free(msg);
-				return;
-			}
+	// Let's try to send it.
+	for (i = 0; i < push->npipes; i++) {
+		pp = push->nextpipe;
+		if (pp == NULL) {
+			pp = nni_list_first(&push->pipes);
 		}
-		push->wantw = 0;
-		for (i = 0; i < push->npipes; i++) {
-			pp = push->nextpipe;
-			if (pp == NULL) {
-				pp = nni_list_first(&push->pipes);
-			}
-			push->nextpipe = nni_list_next(&push->pipes, pp);
-			if (pp->wantr) {
-				pp->wantr = 0;
-				if (nni_msgq_put(pp->mq, msg) == 0) {
-					msg = NULL;
-					break;
-				}
-			}
+		push->nextpipe = nni_list_next(&push->pipes, pp);
+		if (pp->wantr) {
+			pp->aio_send.a_msg = msg;
+			push->msg = NULL;
+
+			// Schedule outbound pipe delivery...
+			nni_pipe_aio_send(pp->pipe, &pp->aio_send);
+
+			// And schedule getting another message for send.
+			nni_msgq_aio_get(push->uwq, &push->aio_getq);
+			break;
 		}
-		if (msg != NULL) {
-			// We weren't able to deliver it, so keep it and
-			// wait for a sender to let us know its ready.
-			push->wantw = 1;
-			nni_cv_wait(&push->cv);
-		}
-		nni_mtx_unlock(mx);
 	}
 }
 
@@ -296,17 +329,15 @@ static nni_proto_pipe_ops nni_push_pipe_ops = {
 	.pipe_fini	= nni_push_pipe_fini,
 	.pipe_add	= nni_push_pipe_add,
 	.pipe_rem	= nni_push_pipe_rem,
-	.pipe_worker	= { nni_push_pipe_send,
-			    nni_push_pipe_recv },
 };
 
 static nni_proto_sock_ops nni_push_sock_ops = {
 	.sock_init	= nni_push_sock_init,
 	.sock_fini	= nni_push_sock_fini,
+	.sock_open	= nni_push_sock_open,
 	.sock_close	= nni_push_sock_close,
 	.sock_setopt	= nni_push_sock_setopt,
 	.sock_getopt	= nni_push_sock_getopt,
-	.sock_worker	= { nni_push_sock_send },
 };
 
 nni_proto nni_push_proto = {

@@ -149,3 +149,12 @@ nni_list_remove(nni_list *list, void *item)
 	node->ln_next = NULL;
 	node->ln_prev = NULL;
 }
+
+
+int
+nni_list_active(nni_list *list, void *item)
+{
+	nni_list_node *node = NODE(list, item);
+
+	return (node->ln_next == NULL ? 0 : 1);
+}

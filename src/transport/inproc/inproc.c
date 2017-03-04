@@ -129,6 +129,38 @@ nni_inproc_pipe_destroy(void *arg)
 
 
 static int
+nni_inproc_pipe_aio_send(void *arg, nni_aio *aio)
+{
+	nni_inproc_pipe *pipe = arg;
+	nni_msg *msg = aio->a_msg;
+	char *h;
+	size_t l;
+	int rv;
+
+	// We need to move any header data to the body, because the other
+	// side won't know what to do otherwise.
+	h = nni_msg_header(msg);
+	l = nni_msg_header_len(msg);
+	if ((rv = nni_msg_prepend(msg, h, l)) != 0) {
+		return (rv);
+	}
+	nni_msg_trunc_header(msg, l);
+	nni_msgq_aio_put(pipe->wq, aio);
+	return (0);
+}
+
+
+static int
+nni_inproc_pipe_aio_recv(void *arg, nni_aio *aio)
+{
+	nni_inproc_pipe *pipe = arg;
+
+	nni_msgq_aio_get(pipe->rq, aio);
+	return (0);
+}
+
+
+static int
 nni_inproc_pipe_send(void *arg, nni_msg *msg)
 {
 	nni_inproc_pipe *pipe = arg;
@@ -403,6 +435,8 @@ static nni_tran_pipe nni_inproc_pipe_ops = {
 	.pipe_destroy	= nni_inproc_pipe_destroy,
 	.pipe_send	= nni_inproc_pipe_send,
 	.pipe_recv	= nni_inproc_pipe_recv,
+	.pipe_aio_send	= nni_inproc_pipe_aio_send,
+	.pipe_aio_recv	= nni_inproc_pipe_aio_recv,
 	.pipe_close	= nni_inproc_pipe_close,
 	.pipe_peer	= nni_inproc_pipe_peer,
 	.pipe_getopt	= nni_inproc_pipe_getopt,

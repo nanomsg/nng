@@ -33,6 +33,7 @@ nni_taskq_thread(void *self)
 			ent->tqe_tq = NULL;
 			nni_mtx_unlock(&tq->tq_mtx);
 			ent->tqe_cb(ent->tqe_arg);
+			nni_mtx_lock(&tq->tq_mtx);
 			continue;
 		}
 
@@ -56,8 +57,15 @@ nni_taskq_init(nni_taskq **tqp, int nthr)
 	if ((tq = NNI_ALLOC_STRUCT(tq)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_mtx_init(&tq->tq_mtx);
-	nni_cv_init(&tq->tq_cv, &tq->tq_mtx);
+	if ((rv = nni_mtx_init(&tq->tq_mtx)) != 0) {
+		NNI_FREE_STRUCT(tq);
+		return (rv);
+	}
+	if ((rv = nni_cv_init(&tq->tq_cv, &tq->tq_mtx)) != 0) {
+		nni_mtx_fini(&tq->tq_mtx);
+		NNI_FREE_STRUCT(tq);
+		return (rv);
+	}
 	tq->tq_close = 0;
 	NNI_LIST_INIT(&tq->tq_ents, nni_taskq_ent, tqe_node);
 

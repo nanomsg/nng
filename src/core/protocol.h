@@ -62,6 +62,11 @@ struct nni_proto_sock_ops {
 	// block as needed.
 	void		(*sock_fini)(void *);
 
+	// Open the protocol instance.  This is run with the lock held,
+	// and intended to allow the protocol to start any asynchronous
+	// processing.
+	void		(*sock_open)(void *);
+
 	// Close the protocol instance.  This is run with the lock held,
 	// and intended to initiate closure of the socket.  For example,
 	// it can signal the socket worker threads to exit.

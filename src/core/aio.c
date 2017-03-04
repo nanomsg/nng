@@ -12,20 +12,29 @@
 
 #define NNI_AIO_WAKE    (1<<0)
 
-void
+int
 nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 {
+	int rv;
+
 	if (cb == NULL) {
 		cb = (nni_cb) nni_aio_wake;
 		arg = aio;
 	}
 	memset(aio, 0, sizeof (*aio));
-	nni_mtx_init(&aio->a_lk);
-	nni_cv_init(&aio->a_cv, &aio->a_lk);
+	if ((rv = nni_mtx_init(&aio->a_lk)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_cv_init(&aio->a_cv, &aio->a_lk)) != 0) {
+		nni_mtx_fini(&aio->a_lk);
+		return (rv);
+	}
 	aio->a_cb = cb;
 	aio->a_cbarg = arg;
 	aio->a_expire = NNI_TIME_NEVER;
 	nni_taskq_ent_init(&aio->a_tqe, cb, arg);
+
+	return (0);
 }
 
 

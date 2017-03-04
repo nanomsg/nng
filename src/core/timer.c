@@ -12,10 +12,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-extern void nni_timer_schedule(nni_timer_node *);
-extern void nni_timer_cancel(nni_timer_node *);
-extern int nni_timer_init(void);
-extern void nni_timer_fini(void);
 static void nni_timer_loop(void *);
 
 struct nni_timer {
@@ -76,6 +72,21 @@ nni_timer_sys_fini(void)
 
 
 void
+nni_timer_init(nni_timer_node *node, nni_cb cb, void *arg)
+{
+	node->t_cb = cb;
+	node->t_arg = arg;
+}
+
+
+void
+nni_timer_fini(nni_timer_node *node)
+{
+	NNI_ARG_UNUSED(node);
+}
+
+
+void
 nni_timer_cancel(nni_timer_node *node)
 {
 	nni_timer *timer = &nni_global_timer;
@@ -92,11 +103,13 @@ nni_timer_cancel(nni_timer_node *node)
 
 
 void
-nni_timer_schedule(nni_timer_node *node)
+nni_timer_schedule(nni_timer_node *node, nni_time when)
 {
 	nni_timer *timer = &nni_global_timer;
 	nni_timer_node *srch;
 	int wake = 1;
+
+	node->t_expire = when;
 
 	nni_mtx_lock(&timer->t_list_mx);
 

@@ -325,6 +325,9 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	if (sops->sock_close == NULL) {
 		sops->sock_close = nni_sock_nullop;
 	}
+	if (sops->sock_open == NULL) {
+		sops->sock_open = nni_sock_nullop;
+	}
 	sock->s_pipe_ops = *proto->proto_pipe_ops;
 	pops = &sock->s_pipe_ops;
 	if (pops->pipe_add == NULL) {
@@ -404,6 +407,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		nni_thr_run(&sock->s_worker_thr[i]);
 	}
 
+	sops->sock_open(sock->s_data);
 
 	nni_thr_run(&sock->s_reaper);
 	nni_thr_run(&sock->s_notifier);

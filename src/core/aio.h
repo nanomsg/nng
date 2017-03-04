@@ -37,11 +37,8 @@ struct nni_aio {
 	nni_iov		a_iov[4];
 	int		a_niov;
 
-	// Sendmsg operation.
+	// Message operations.
 	nni_msg *	a_msg;
-
-	// Recvmsg operation.
-	nni_msg **	a_msgp;
 
 	// TBD: Resolver operations.
 
@@ -54,7 +51,7 @@ struct nni_aio {
 // the supplied argument when the operation is complete.  If NULL is
 // supplied for the callback, then nni_aio_wake is used in its place,
 // and the aio is used for the argument.
-extern void nni_aio_init(nni_aio *, nni_cb, void *);
+extern int nni_aio_init(nni_aio *, nni_cb, void *);
 
 // nni_aio_fini finalizes the aio, releasing resources (locks)
 // associated with it.  The caller is responsible for ensuring that any
