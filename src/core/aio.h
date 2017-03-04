@@ -25,6 +25,7 @@ struct nni_aio {
 	size_t		a_count;        // Bytes transferred (I/O only)
 	nni_cb		a_cb;           // User specified callback.
 	void *		a_cbarg;        // Callback argument.
+	nni_time	a_expire;
 
 	// These fields are private to the aio framework.
 	nni_mtx		a_lk;

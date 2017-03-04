@@ -277,7 +277,6 @@ nni_msgq_run_putq(nni_msgq *mq)
 	size_t len;
 
 	while ((waio = nni_list_first(&mq->mq_aio_putq)) != NULL) {
-
 		msg = waio->a_msg;
 		len = nni_msg_len(msg);
 
@@ -324,7 +323,6 @@ nni_msgq_run_getq(nni_msgq *mq)
 	size_t len;
 
 	while ((raio = nni_list_first(&mq->mq_aio_getq)) != NULL) {
-
 		// If anything is waiting in the queue, get it first.
 		if (mq->mq_len != 0) {
 			msg = mq->mq_msgs[mq->mq_get++];
@@ -386,6 +384,39 @@ nni_msgq_aio_get(nni_msgq *mq, nni_aio *aio)
 	nni_msgq_run_notify(mq);
 	nni_mtx_unlock(&mq->mq_lock);
 	return (0);
+}
+
+
+void
+nni_msgq_run_timeout(nni_msgq *mq)
+{
+	nni_time now;
+	nni_aio *aio;
+	nni_aio *naio;
+	int rv;
+
+	now = nni_clock();
+
+	nni_mtx_lock(&mq->mq_lock);
+	naio = nni_list_first(&mq->mq_aio_getq);
+	while ((aio = naio) != NULL) {
+		naio = nni_list_next(&mq->mq_aio_getq, aio);
+		if (now >= aio->a_expire) {
+			nni_list_remove(&mq->mq_aio_getq, aio);
+			nni_aio_finish(aio, NNG_ETIMEDOUT, 0);
+		}
+	}
+
+	naio = nni_list_first(&mq->mq_aio_putq);
+	while ((aio = naio) != NULL) {
+		naio = nni_list_next(&mq->mq_aio_putq, aio);
+		if (now >= aio->a_expire) {
+			nni_list_remove(&mq->mq_aio_putq, aio);
+			nni_aio_finish(aio, NNG_ETIMEDOUT, 0);
+		}
+	}
+
+	nni_mtx_unlock(&mq->mq_lock);
 }
 
 

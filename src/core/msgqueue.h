@@ -37,8 +37,6 @@ extern void nni_msgq_fini(nni_msgq *);
 
 extern int nni_msgq_aio_put(nni_msgq *, nni_aio *);
 extern int nni_msgq_aio_get(nni_msgq *, nni_aio *);
-extern int nni_msgq_aio_put_until(nni_msgq *, nni_aio *, nni_time);
-extern int nni_msgq_aio_get_until(nni_msgq *, nni_aio *, nni_time);
 extern int nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
 extern int nni_msgq_aio_notify_put(nni_msgq *, nni_aio *);
 extern int nni_msgq_aio_cancel(nni_msgq *, nni_aio *);

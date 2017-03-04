@@ -70,6 +70,8 @@ set (NNG_SOURCES
     core/taskq.h
     core/thread.c
     core/thread.h
+    core/timer.c
+    core/timer.h
     core/transport.c
     core/transport.h
 

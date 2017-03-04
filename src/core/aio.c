@@ -24,6 +24,7 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 	nni_cv_init(&aio->a_cv, &aio->a_lk);
 	aio->a_cb = cb;
 	aio->a_cbarg = arg;
+	aio->a_expire = NNI_TIME_NEVER;
 	nni_taskq_ent_init(&aio->a_tqe, cb, arg);
 }
 

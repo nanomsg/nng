@@ -29,12 +29,18 @@ nni_init_helper(void)
 	if ((rv = nni_taskq_sys_init()) != 0) {
 		return (rv);
 	}
+	if ((rv = nni_timer_sys_init()) != 0) {
+		nni_taskq_sys_fini();
+		return (rv);
+	}
 	if ((rv = nni_random_sys_init()) != 0) {
+		nni_timer_sys_fini();
 		nni_taskq_sys_fini();
 		return (rv);
 	}
 	if ((rv = nni_mtx_init(&nni_idlock_x)) != 0) {
 		nni_random_sys_fini();
+		nni_timer_sys_fini();
 		nni_taskq_sys_fini();
 		return (rv);
 	}
@@ -43,6 +49,7 @@ nni_init_helper(void)
 	    ((rv = nni_idhash_init(&nni_sockets_x)) != 0)) {
 		nni_mtx_fini(&nni_idlock_x);
 		nni_random_sys_fini();
+		nni_timer_sys_fini();
 		nni_taskq_sys_fini();
 		return (rv);
 	}
@@ -77,6 +84,7 @@ nni_fini(void)
 	nni_mtx_fini(&nni_idlock_x);
 	nni_tran_sys_fini();
 	nni_random_sys_fini();
+	nni_timer_sys_fini();
 	nni_taskq_sys_fini();
 	nni_plat_fini();
 }
