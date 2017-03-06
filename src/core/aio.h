@@ -55,7 +55,8 @@ extern int nni_aio_init(nni_aio *, nni_cb, void *);
 
 // nni_aio_fini finalizes the aio, releasing resources (locks)
 // associated with it.  The caller is responsible for ensuring that any
-// associated I/O is unscheduled or complete.
+// associated I/O is unscheduled or complete.  This is safe to call
+// on zero'd memory.
 extern void nni_aio_fini(nni_aio *);
 
 // nni_aio_result returns the result code (0 on success, or an NNG errno)

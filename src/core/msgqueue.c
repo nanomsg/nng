@@ -517,11 +517,13 @@ nni_msgq_run_timeout(void *arg)
 	naio = nni_list_first(&mq->mq_aio_getq);
 	while ((aio = naio) != NULL) {
 		naio = nni_list_next(&mq->mq_aio_getq, aio);
-		if (now >= aio->a_expire) {
+		if (aio->a_expire == NNI_TIME_ZERO) {
+			nni_list_remove(&mq->mq_aio_getq, aio);
+			nni_aio_finish(aio, NNG_EAGAIN, 0);
+		} else if (now >= aio->a_expire) {
 			nni_list_remove(&mq->mq_aio_getq, aio);
 			nni_aio_finish(aio, NNG_ETIMEDOUT, 0);
-		}
-		if (exp > aio->a_expire) {
+		} else if (exp > aio->a_expire) {
 			exp = aio->a_expire;
 		}
 	}
@@ -529,11 +531,13 @@ nni_msgq_run_timeout(void *arg)
 	naio = nni_list_first(&mq->mq_aio_putq);
 	while ((aio = naio) != NULL) {
 		naio = nni_list_next(&mq->mq_aio_putq, aio);
-		if (now >= aio->a_expire) {
+		if (aio->a_expire == NNI_TIME_ZERO) {
+			nni_list_remove(&mq->mq_aio_putq, aio);
+			nni_aio_finish(aio, NNG_EAGAIN, 0);
+		} else if (now >= aio->a_expire) {
 			nni_list_remove(&mq->mq_aio_putq, aio);
 			nni_aio_finish(aio, NNG_ETIMEDOUT, 0);
-		}
-		if (exp > aio->a_expire) {
+		} else if (exp > aio->a_expire) {
 			exp = aio->a_expire;
 		}
 	}
@@ -748,6 +752,7 @@ nni_msgq_put_until(nni_msgq *mq, nni_msg *msg, nni_time expire)
 	aio.a_msg = msg;
 	nni_msgq_aio_put(mq, &aio);
 	nni_aio_wait(&aio);
+	rv = nni_aio_result(&aio);
 	nni_aio_fini(&aio);
 	return (rv);
 }
