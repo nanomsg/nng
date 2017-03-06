@@ -208,6 +208,8 @@ nni_push_recv_cb(void *arg)
 		nni_pipe_close(pp->pipe);
 		return;
 	}
+	nni_msg_free(pp->aio_recv.a_msg);
+	pp->aio_recv.a_msg = NULL;
 	nni_push_recv(pp);
 }
 
@@ -220,6 +222,8 @@ nni_push_send_cb(void *arg)
 	nni_mtx *mx = nni_sock_mtx(push->sock);
 
 	if (nni_aio_result(&pp->aio_send) != 0) {
+		nni_msg_free(pp->aio_send.a_msg);
+		pp->aio_send.a_msg = NULL;
 		nni_pipe_close(pp->pipe);
 		return;
 	}

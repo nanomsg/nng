@@ -90,7 +90,7 @@ nni_list_insert_before(nni_list *list, void *item, void *before)
 	nni_list_node *where = NODE(list, before);
 
 	if ((node->ln_next != NULL) || (node->ln_prev != NULL)) {
-		nni_panic("prepending node already on a list or not inited");
+		nni_panic("inserting node already on a list or not inited");
 	}
 	node->ln_next = where;
 	node->ln_prev = where->ln_prev;
@@ -106,7 +106,7 @@ nni_list_insert_after(nni_list *list, void *item, void *after)
 	nni_list_node *where = NODE(list, after);
 
 	if ((node->ln_next != NULL) || (node->ln_prev != NULL)) {
-		nni_panic("prepending node already on a list or not inited");
+		nni_panic("inserting node already on a list or not inited");
 	}
 	node->ln_prev = where;
 	node->ln_next = where->ln_next;

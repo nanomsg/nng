@@ -172,6 +172,7 @@ nni_msgq_fini(nni_msgq *mq)
 	if (mq == NULL) {
 		return;
 	}
+	nni_timer_cancel(&mq->mq_timer);
 	nni_thr_fini(&mq->mq_notify_thr);
 	nni_cv_fini(&mq->mq_drained);
 	nni_cv_fini(&mq->mq_writeable);
