@@ -20,11 +20,22 @@
 typedef struct nni_bus_pipe	nni_bus_pipe;
 typedef struct nni_bus_sock	nni_bus_sock;
 
+static void nni_bus_sock_getq(nni_bus_sock *);
+static void nni_bus_pipe_getq(nni_bus_pipe *);
+static void nni_bus_pipe_send(nni_bus_pipe *);
+static void nni_bus_pipe_recv(nni_bus_pipe *);
+
+static void nni_bus_sock_getq_cb(void *);
+static void nni_bus_pipe_getq_cb(void *);
+static void nni_bus_pipe_send_cb(void *);
+static void nni_bus_pipe_recv_cb(void *);
+static void nni_bus_pipe_putq_cb(void *);
+
 // An nni_bus_sock is our per-socket protocol private structure.
 struct nni_bus_sock {
 	nni_sock *	nsock;
 	int		raw;
-	int		closing;
+	nni_aio		aio_getq;
 	nni_list	pipes;
 };
 
@@ -34,16 +45,25 @@ struct nni_bus_pipe {
 	nni_bus_sock *	psock;
 	nni_msgq *	sendq;
 	nni_list_node	node;
-	int		sigclose;
+	nni_aio		aio_getq;
+	nni_aio		aio_recv;
+	nni_aio		aio_send;
+	nni_aio		aio_putq;
 };
 
 static int
 nni_bus_sock_init(void **sp, nni_sock *nsock)
 {
 	nni_bus_sock *psock;
+	int rv;
 
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);
+	}
+	rv = nni_aio_init(&psock->aio_getq, nni_bus_sock_getq_cb, psock);
+	if (rv != 0) {
+		NNI_FREE_STRUCT(psock);
+		return (rv);
 	}
 	NNI_LIST_INIT(&psock->pipes, nni_bus_pipe, node);
 	psock->nsock = nsock;
@@ -60,8 +80,18 @@ nni_bus_sock_fini(void *arg)
 	nni_bus_sock *psock = arg;
 
 	if (psock != NULL) {
+		nni_aio_fini(&psock->aio_getq);
 		NNI_FREE_STRUCT(psock);
 	}
+}
+
+
+static void
+nni_bus_sock_open(void *arg)
+{
+	nni_bus_sock *psock = arg;
+
+	nni_bus_sock_getq(psock);
 }
 
 
@@ -80,9 +110,39 @@ nni_bus_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 		NNI_FREE_STRUCT(ppipe);
 		return (rv);
 	}
+	rv = nni_aio_init(&ppipe->aio_getq, nni_bus_pipe_getq_cb, ppipe);
+	if (rv != 0) {
+		nni_msgq_fini(ppipe->sendq);
+		NNI_FREE_STRUCT(ppipe);
+		return (rv);
+	}
+	rv = nni_aio_init(&ppipe->aio_send, nni_bus_pipe_send_cb, ppipe);
+	if (rv != 0) {
+		nni_aio_fini(&ppipe->aio_getq);
+		nni_msgq_fini(ppipe->sendq);
+		NNI_FREE_STRUCT(ppipe);
+		return (rv);
+	}
+	rv = nni_aio_init(&ppipe->aio_recv, nni_bus_pipe_recv_cb, ppipe);
+	if (rv != 0) {
+		nni_aio_fini(&ppipe->aio_send);
+		nni_aio_fini(&ppipe->aio_getq);
+		nni_msgq_fini(ppipe->sendq);
+		NNI_FREE_STRUCT(ppipe);
+		return (rv);
+	}
+	rv = nni_aio_init(&ppipe->aio_putq, nni_bus_pipe_putq_cb, ppipe);
+	if (rv != 0) {
+		nni_aio_fini(&ppipe->aio_recv);
+		nni_aio_fini(&ppipe->aio_send);
+		nni_aio_fini(&ppipe->aio_getq);
+		nni_msgq_fini(ppipe->sendq);
+		NNI_FREE_STRUCT(ppipe);
+		return (rv);
+	}
+
 	ppipe->npipe = npipe;
 	ppipe->psock = psock;
-	ppipe->sigclose = 0;
 	*pp = ppipe;
 	return (0);
 }
@@ -95,6 +155,10 @@ nni_bus_pipe_fini(void *arg)
 
 	if (ppipe != NULL) {
 		nni_msgq_fini(ppipe->sendq);
+		nni_aio_fini(&ppipe->aio_getq);
+		nni_aio_fini(&ppipe->aio_send);
+		nni_aio_fini(&ppipe->aio_recv);
+		nni_aio_fini(&ppipe->aio_putq);
 		NNI_FREE_STRUCT(ppipe);
 	}
 }
@@ -107,6 +171,10 @@ nni_bus_pipe_add(void *arg)
 	nni_bus_sock *psock = ppipe->psock;
 
 	nni_list_append(&psock->pipes, ppipe);
+
+	nni_bus_pipe_recv(ppipe);
+	nni_bus_pipe_getq(ppipe);
+
 	return (0);
 }
 
@@ -118,66 +186,159 @@ nni_bus_pipe_rem(void *arg)
 	nni_bus_sock *psock = ppipe->psock;
 
 	nni_list_remove(&psock->pipes, ppipe);
+
+	nni_msgq_aio_cancel(ppipe->sendq, &ppipe->aio_getq);
+	nni_msgq_aio_cancel(nni_sock_recvq(psock->nsock), &ppipe->aio_putq);
 }
 
 
 static void
-nni_bus_pipe_sender(void *arg)
+nni_bus_pipe_getq_cb(void *arg)
 {
 	nni_bus_pipe *ppipe = arg;
-	nni_pipe *npipe = ppipe->npipe;
-	nni_msgq *uwq = ppipe->sendq;
-	nni_msgq *urq = nni_sock_recvq(ppipe->psock->nsock);
-	nni_msg *msg;
-	int rv;
 
-	for (;;) {
-		rv = nni_msgq_get_sig(uwq, &msg, &ppipe->sigclose);
-		if (rv != 0) {
-			break;
-		}
-		rv = nni_pipe_send(npipe, msg);
-		if (rv != 0) {
-			nni_msg_free(msg);
-			break;
-		}
+	if (nni_aio_result(&ppipe->aio_getq) != 0) {
+		// closed?
+		nni_pipe_close(ppipe->npipe);
+		return;
 	}
-	nni_msgq_signal(urq, &ppipe->sigclose);
-	nni_pipe_close(npipe);
+	ppipe->aio_send.a_msg = ppipe->aio_getq.a_msg;
+	ppipe->aio_getq.a_msg = NULL;
+
+	nni_pipe_aio_send(ppipe->npipe, &ppipe->aio_send);
 }
 
 
 static void
-nni_bus_pipe_receiver(void *arg)
+nni_bus_pipe_send_cb(void *arg)
+{
+	nni_bus_pipe *ppipe = arg;
+
+	if (nni_aio_result(&ppipe->aio_send) != 0) {
+		// closed?
+		nni_pipe_close(ppipe->npipe);
+		return;
+	}
+
+	nni_bus_pipe_getq(ppipe);
+}
+
+
+static void
+nni_bus_pipe_recv_cb(void *arg)
 {
 	nni_bus_pipe *ppipe = arg;
 	nni_bus_sock *psock = ppipe->psock;
-	nni_msgq *urq = nni_sock_recvq(psock->nsock);
-	nni_msgq *uwq = nni_sock_sendq(psock->nsock);
-	nni_pipe *npipe = ppipe->npipe;
-	uint32_t id = nni_pipe_id(npipe);
 	nni_msg *msg;
-	int rv;
+	uint32_t id;
 
-	for (;;) {
-		rv = nni_pipe_recv(npipe, &msg);
-		if (rv != 0) {
-			break;
-		}
-		if ((rv = nni_msg_prepend_header(msg, &id, 4)) != 0) {
-			// XXX: bump a nomemory stat
-			nni_msg_free(msg);
+	if (nni_aio_result(&ppipe->aio_recv) != 0) {
+		nni_pipe_close(ppipe->npipe);
+		return;
+	}
+	msg = ppipe->aio_recv.a_msg;
+	id = nni_pipe_id(ppipe->npipe);
+
+	if (nni_msg_prepend_header(msg, &id, 4) != 0) {
+		// XXX: bump a nomemory stat
+		nni_msg_free(msg);
+		nni_bus_pipe_recv(ppipe);
+		return;
+	}
+
+	ppipe->aio_putq.a_msg = msg;
+	nni_msgq_aio_put(nni_sock_recvq(psock->nsock), &ppipe->aio_putq);
+}
+
+
+static void
+nni_bus_pipe_putq_cb(void *arg)
+{
+	nni_bus_pipe *ppipe = arg;
+
+	if (nni_aio_result(&ppipe->aio_putq) != 0) {
+		nni_pipe_close(ppipe->npipe);
+		return;
+	}
+
+	// Wait for another recv.
+	nni_bus_pipe_recv(ppipe);
+}
+
+
+static void
+nni_bus_sock_getq_cb(void *arg)
+{
+	nni_bus_sock *psock = arg;
+	nni_bus_pipe *ppipe;
+	nni_bus_pipe *lpipe;
+	nni_msgq *uwq = nni_sock_sendq(psock->nsock);
+	nni_mtx *mx = nni_sock_mtx(psock->nsock);
+	nni_msg *msg, *dup;
+	uint32_t sender;
+
+	if (nni_aio_result(&psock->aio_getq) != 0) {
+		return;
+	}
+
+	msg = psock->aio_getq.a_msg;
+
+	// The header being present indicates that the message
+	// was received locally and we are rebroadcasting. (Device
+	// is doing this probably.)  In this case grab the pipe
+	// ID from the header, so we can exclude it.
+	if (nni_msg_header_len(msg) >= 4) {
+		memcpy(&sender, nni_msg_header(msg), 4);
+		nni_msg_trim_header(msg, 4);
+	} else {
+		sender = 0;
+	}
+
+	nni_mtx_lock(mx);
+	lpipe = nni_list_last(&psock->pipes);
+	NNI_LIST_FOREACH (&psock->pipes, ppipe) {
+		if (nni_pipe_id(ppipe->npipe) == sender) {
 			continue;
 		}
-		rv = nni_msgq_put_sig(urq, msg, &ppipe->sigclose);
-		if (rv != 0) {
-			nni_msg_free(msg);
-			break;
+		if (ppipe != lpipe) {
+			if (nni_msg_dup(&dup, msg) != 0) {
+				continue;
+			}
+		} else {
+			dup = msg;
+		}
+		if (nni_msgq_tryput(ppipe->sendq, dup) != 0) {
+			nni_msg_free(dup);
 		}
 	}
-	nni_msgq_signal(uwq, &ppipe->sigclose);
-	nni_msgq_signal(ppipe->sendq, &ppipe->sigclose);
-	nni_pipe_close(npipe);
+	nni_mtx_unlock(mx);
+
+	if (lpipe == NULL) {
+		nni_msg_free(msg);
+	}
+
+	nni_bus_sock_getq(psock);
+}
+
+
+static void
+nni_bus_sock_getq(nni_bus_sock *psock)
+{
+	nni_msgq_aio_get(nni_sock_sendq(psock->nsock), &psock->aio_getq);
+}
+
+
+static void
+nni_bus_pipe_getq(nni_bus_pipe *ppipe)
+{
+	nni_msgq_aio_get(ppipe->sendq, &ppipe->aio_getq);
+}
+
+
+static void
+nni_bus_pipe_recv(nni_bus_pipe *ppipe)
+{
+	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
 }
 
 
@@ -215,77 +376,19 @@ nni_bus_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 }
 
 
-static void
-nni_bus_sock_sender(void *arg)
-{
-	nni_bus_sock *psock = arg;
-	nni_msgq *uwq = nni_sock_sendq(psock->nsock);
-	nni_mtx *mx = nni_sock_mtx(psock->nsock);
-	nni_msg *msg, *dup;
-	uint32_t sender;
-
-	for (;;) {
-		nni_bus_pipe *ppipe;
-		nni_bus_pipe *last;
-		int rv;
-
-		if ((rv = nni_msgq_get(uwq, &msg)) != 0) {
-			break;
-		}
-
-		// The header being present indicates that the message
-		// was received locally and we are rebroadcasting. (Device
-		// is doing this probably.)  In this case grab the pipe
-		// ID from the header, so we can exclude it.
-		if (nni_msg_header_len(msg) >= 4) {
-			memcpy(&sender, nni_msg_header(msg), 4);
-			nni_msg_trim_header(msg, 4);
-		} else {
-			sender = 0;
-		}
-
-		nni_mtx_lock(mx);
-		last = nni_list_last(&psock->pipes);
-		NNI_LIST_FOREACH (&psock->pipes, ppipe) {
-			if (nni_pipe_id(ppipe->npipe) == sender) {
-				continue;
-			}
-			if (ppipe != last) {
-				rv = nni_msg_dup(&dup, msg);
-				if (rv != 0) {
-					continue;
-				}
-			} else {
-				dup = msg;
-			}
-			if ((rv = nni_msgq_tryput(ppipe->sendq, dup)) != 0) {
-				nni_msg_free(dup);
-			}
-		}
-		nni_mtx_unlock(mx);
-
-		if (last == NULL) {
-			nni_msg_free(msg);
-		}
-	}
-}
-
-
 static nni_proto_pipe_ops nni_bus_pipe_ops = {
 	.pipe_init	= nni_bus_pipe_init,
 	.pipe_fini	= nni_bus_pipe_fini,
 	.pipe_add	= nni_bus_pipe_add,
 	.pipe_rem	= nni_bus_pipe_rem,
-	.pipe_worker	= { nni_bus_pipe_sender,
-			    nni_bus_pipe_receiver }
 };
 
 static nni_proto_sock_ops nni_bus_sock_ops = {
 	.sock_init	= nni_bus_sock_init,
 	.sock_fini	= nni_bus_sock_fini,
+	.sock_open	= nni_bus_sock_open,
 	.sock_setopt	= nni_bus_sock_setopt,
 	.sock_getopt	= nni_bus_sock_getopt,
-	.sock_worker	= { nni_bus_sock_sender },
 };
 
 // This is the global protocol structure -- our linkage to the core.
