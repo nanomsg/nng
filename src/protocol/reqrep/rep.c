@@ -267,7 +267,7 @@ nni_rep_pipe_getq_cb(void *arg)
 	}
 
 	rp->aio_send.a_msg = rp->aio_getq.a_msg;
-	rp->aio_send.a_msg = NULL;
+	rp->aio_getq.a_msg = NULL;
 
 	nni_pipe_aio_send(rp->pipe, &rp->aio_send);
 }
