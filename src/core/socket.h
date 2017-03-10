@@ -51,15 +51,12 @@ struct nni_socket {
 
 	size_t			s_rcvmaxsz;     // maximum receive size
 
-	nni_list		s_reaps;        // pipes to reap
-	nni_thr			s_reaper;
 	nni_thr			s_notifier;
 	nni_thr			s_worker_thr[NNI_MAXWORKERS];
 
 	int			s_ep_pend;      // EP dial/listen in progress
 	int			s_closing;      // Socket is closing
 	int			s_closed;       // Socket closed
-	int			s_reapexit;     // Shutdown the reaper
 	int			s_besteffort;   // Best effort mode delivery
 	int			s_senderr;      // Protocol state machine use
 	int			s_recverr;      // Protocol state machine use

@@ -228,66 +228,6 @@ nni_sock_unlock(nni_sock *sock)
 }
 
 
-// Because we have to call back into the socket, and possibly also the proto,
-// and wait for threads to terminate, we do this in a special thread.  The
-// assumption is that closing is always a "fast" operation.
-static void
-nni_reaper(void *arg)
-{
-#if 0
-	nni_sock *sock = arg;
-
-	for (;;) {
-		nni_pipe *pipe;
-		nni_ep *ep;
-
-		nni_mtx_lock(&sock->s_mx);
-		if ((pipe = nni_list_first(&sock->s_reaps)) != NULL) {
-			nni_list_remove(&sock->s_reaps, pipe);
-			if (pipe->p_id != 0) {
-				nni_mtx_lock(nni_idlock);
-				nni_idhash_remove(nni_pipes, pipe->p_id);
-				nni_mtx_unlock(nni_idlock);
-			}
-
-			if (((ep = pipe->p_ep) != NULL) &&
-			    ((ep->ep_pipe == pipe))) {
-				ep->ep_pipe = NULL;
-				nni_cv_wake(&ep->ep_cv);
-			}
-
-			// Remove the pipe from the protocol.  Protocols may
-			// keep lists of pipes for managing their topologies.
-			// Note that if a protocol has rejected the pipe, it
-			// won't have any data.
-			if (pipe->p_active) {
-				sock->s_pipe_ops.pipe_rem(pipe->p_proto_data);
-			}
-			nni_mtx_unlock(&sock->s_mx);
-
-			// XXX: also publish event...
-
-			// There should be no references left to this pipe.
-			// The various threads will have shutdown, except
-			// the threads that this waits for.
-			nni_pipe_destroy(pipe);
-			continue;
-		}
-
-		if ((sock->s_reapexit) &&
-		    (nni_list_first(&sock->s_reaps) == NULL) &&
-		    (nni_list_first(&sock->s_pipes) == NULL)) {
-			nni_mtx_unlock(&sock->s_mx);
-			break;
-		}
-
-		nni_cv_wait(&sock->s_cv);
-		nni_mtx_unlock(&sock->s_mx);
-	}
-#endif
-}
-
-
 static void
 nni_sock_urq_notify(nni_msgq *mq, int flags, void *arg)
 {
@@ -400,7 +340,6 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	sock->s_closing = 0;
 	sock->s_reconn = NNI_SECOND;
 	sock->s_reconnmax = 0;
-	sock->s_reapexit = 0;
 	sock->s_rcvmaxsz = 1024 * 1024; // 1 MB by default
 	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
 	NNI_LIST_INIT(&sock->s_idles, nni_pipe, p_node);
@@ -459,8 +398,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		goto fail;
 	}
 
-	if (((rv = nni_thr_init(&sock->s_reaper, nni_reaper, sock)) != 0) ||
-	    ((rv = nni_thr_init(&sock->s_notifier, nni_notifier, sock)) != 0)) {
+	if ((rv = nni_thr_init(&sock->s_notifier, nni_notifier, sock)) != 0) {
 		goto fail;
 	}
 
@@ -511,7 +449,6 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 
 	sops->sock_open(sock->s_data);
 
-	nni_thr_run(&sock->s_reaper);
 	nni_thr_run(&sock->s_notifier);
 	*sockp = sock;
 	return (0);
@@ -534,7 +471,6 @@ fail:
 		nni_mtx_unlock(nni_idlock);
 	}
 	nni_thr_fini(&sock->s_notifier);
-	nni_thr_fini(&sock->s_reaper);
 	nni_ev_fini(&sock->s_send_ev);
 	nni_ev_fini(&sock->s_recv_ev);
 	nni_msgq_fini(sock->s_urq);
@@ -626,7 +562,6 @@ nni_sock_shutdown(nni_sock *sock)
 
 	sock->s_sock_ops.sock_close(sock->s_data);
 
-	sock->s_reapexit = 1;
 	nni_cv_wake(&sock->s_notify_cv);
 	nni_cv_wake(&sock->s_cv);
 
@@ -641,7 +576,6 @@ nni_sock_shutdown(nni_sock *sock)
 		nni_thr_wait(&sock->s_worker_thr[i]);
 	}
 	nni_thr_wait(&sock->s_notifier);
-	nni_thr_wait(&sock->s_reaper);
 
 	// At this point, there are no threads blocked inside of us
 	// that are referencing socket state.  User code should call
@@ -706,7 +640,6 @@ nni_sock_close(nni_sock *sock)
 		NNI_FREE_STRUCT(notify);
 	}
 	nni_thr_fini(&sock->s_notifier);
-	nni_thr_fini(&sock->s_reaper);
 	nni_msgq_fini(sock->s_urq);
 	nni_msgq_fini(sock->s_uwq);
 	nni_ev_fini(&sock->s_send_ev);
