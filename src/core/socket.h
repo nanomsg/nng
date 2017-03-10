@@ -42,7 +42,8 @@ struct nni_socket {
 	nni_duration		s_reconnmax;    // max reconnect time
 
 	nni_list		s_eps;          // active endpoints
-	nni_list		s_pipes;        // pipes for this socket
+	nni_list		s_pipes;        // ready pipes (started)
+	nni_list		s_idles;        // idle pipes (not ready)
 	nni_list		s_events;       // pending events
 	nni_list		s_notify;       // event watchers
 	nni_cv			s_notify_cv;    // wakes notify thread
@@ -88,6 +89,29 @@ extern int nni_sock_sendmsg(nni_sock *, nni_msg *, nni_time);
 extern int nni_sock_dial(nni_sock *, const char *, nni_ep **, int);
 extern int nni_sock_listen(nni_sock *, const char *, nni_ep **, int);
 extern uint32_t nni_sock_id(nni_sock *);
+
+extern void nni_sock_lock(nni_sock *);
+extern void nni_sock_unlock(nni_sock *);
+
+// nni_sock_pipe_add is called by the pipe to register the pipe with
+// with the socket.  The pipe is added to the idle list.
+extern void nni_sock_pipe_add(nni_sock *, nni_pipe *);
+
+// nni_sock_pipe_rem deregisters the pipe from the socket.  The socket
+// will block during close if there are registered pipes outstanding.
+extern void nni_sock_pipe_rem(nni_sock *, nni_pipe *);
+
+// nni_sock_pipe_ready lets the socket know the pipe is ready for
+// business.  This also calls the socket/protocol specific add function,
+// and it may return an error.  A reference count on the pipe is incremented
+// on success.  The reference count should be dropped by nni_sock_pipe_closed.
+extern int nni_sock_pipe_ready(nni_sock *, nni_pipe *);
+
+// nni_sock_pipe_closed lets the socket know that the pipe is closed.
+// This keeps the socket from trying to schedule traffic to it.  It
+// also lets the endpoint know about it, to possibly restart a dial
+// operation.
+extern void nni_sock_pipe_closed(nni_sock *, nni_pipe *);
 
 // Set error codes for applications.  These are only ever
 // called from the filter functions in protocols, and thus

@@ -28,7 +28,8 @@ struct nni_pipe {
 	nni_ep *	p_ep;
 	int		p_reap;
 	int		p_active;
-	nni_thr		p_worker_thr[NNI_MAXWORKERS];
+	nni_mtx		p_mtx;
+	int		p_refcnt;
 };
 
 // AIO
@@ -40,6 +41,8 @@ extern int nni_pipe_recv(nni_pipe *, nng_msg **);
 extern int nni_pipe_send(nni_pipe *, nng_msg *);
 extern uint32_t nni_pipe_id(nni_pipe *);
 extern void nni_pipe_close(nni_pipe *);
+extern void nni_pipe_incref(nni_pipe *);
+extern void nni_pipe_decref(nni_pipe *);
 
 // Used only by the socket core - as we don't wish to expose the details
 // of the pipe structure outside of pipe.c.

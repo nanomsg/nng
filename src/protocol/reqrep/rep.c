@@ -182,7 +182,9 @@ nni_rep_pipe_add(void *arg)
 		return (rv);
 	}
 
+	nni_pipe_incref(rp->pipe);
 	nni_msgq_aio_get(rp->sendq, &rp->aio_getq);
+	nni_pipe_incref(rp->pipe);
 	nni_pipe_aio_recv(rp->pipe, &rp->aio_recv);
 	return (0);
 }
@@ -194,7 +196,7 @@ nni_rep_pipe_rem(void *arg)
 	nni_rep_pipe *rp = arg;
 	nni_rep_sock *rep = rp->rep;
 
-	nni_msgq_aio_cancel(rp->sendq, &rp->aio_getq);
+	nni_msgq_close(rp->sendq);
 	nni_msgq_aio_cancel(rep->urq, &rp->aio_putq);
 	nni_idhash_remove(&rep->pipes, nni_pipe_id(rp->pipe));
 }
@@ -205,7 +207,6 @@ nni_rep_sock_getq_cb(void *arg)
 {
 	nni_rep_sock *rep = arg;
 	nni_msgq *uwq = rep->uwq;
-	nni_mtx *mx = nni_sock_mtx(rep->sock);
 	nni_msg *msg;
 	uint8_t *header;
 	uint32_t id;
@@ -241,12 +242,12 @@ nni_rep_sock_getq_cb(void *arg)
 	// Look for the pipe, and attempt to put the message there
 	// (nonblocking) if we can.  If we can't for any reason, then we
 	// free the message.
-	nni_mtx_lock(mx);
+	nni_sock_lock(rep->sock);
 	rv = nni_idhash_find(&rep->pipes, id, (void **) &rp);
 	if (rv == 0) {
 		rv = nni_msgq_tryput(rp->sendq, msg);
 	}
-	nni_mtx_unlock(mx);
+	nni_sock_unlock(rep->sock);
 	if (rv != 0) {
 		nni_msg_free(msg);
 	}
@@ -263,6 +264,7 @@ nni_rep_pipe_getq_cb(void *arg)
 
 	if (nni_aio_result(&rp->aio_getq) != 0) {
 		nni_pipe_close(rp->pipe);
+		nni_pipe_decref(rp->pipe);
 		return;
 	}
 
@@ -282,6 +284,7 @@ nni_rep_pipe_send_cb(void *arg)
 		nni_msg_free(rp->aio_send.a_msg);
 		rp->aio_send.a_msg = NULL;
 		nni_pipe_close(rp->pipe);
+		nni_pipe_decref(rp->pipe);
 		return;
 	}
 
@@ -303,6 +306,7 @@ nni_rep_pipe_recv_cb(void *arg)
 
 	if (nni_aio_result(&rp->aio_recv) != 0) {
 		nni_pipe_close(rp->pipe);
+		nni_pipe_decref(rp->pipe);
 		return;
 	}
 
@@ -353,6 +357,7 @@ malformed:
 	// Failures here are bad enough to warrant to dropping the conn.
 	nni_msg_free(msg);
 	nni_pipe_close(rp->pipe);
+	nni_pipe_decref(rp->pipe);
 }
 
 
@@ -365,6 +370,7 @@ nni_rep_pipe_putq_cb(void *arg)
 		nni_msg_free(rp->aio_putq.a_msg);
 		rp->aio_putq.a_msg = NULL;
 		nni_pipe_close(rp->pipe);
+		nni_pipe_decref(rp->pipe);
 		return;
 	}
 
