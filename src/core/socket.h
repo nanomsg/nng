@@ -52,7 +52,6 @@ struct nni_socket {
 	size_t			s_rcvmaxsz;     // maximum receive size
 
 	nni_thr			s_notifier;
-	nni_thr			s_worker_thr[NNI_MAXWORKERS];
 
 	int			s_ep_pend;      // EP dial/listen in progress
 	int			s_closing;      // Socket is closing

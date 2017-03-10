@@ -421,16 +421,6 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		goto fail;
 	}
 
-	// NB: If worker functions are null, then the thread initialization
-	// turns into a NOP, and no actual thread will be started.
-	for (i = 0; i < NNI_MAXWORKERS; i++) {
-		nni_worker fn = sops->sock_worker[i];
-		rv = nni_thr_init(&sock->s_worker_thr[i], fn, sock->s_data);
-		if (rv != 0) {
-			goto fail;
-		}
-	}
-
 	// XXX: This kills performance.  Look at moving this to
 	// be conditional - if nobody has callbacks because their code is
 	// also threaded, then we don't need to jump through these hoops.
@@ -443,10 +433,6 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		goto fail;
 	}
 
-	for (i = 0; i < NNI_MAXWORKERS; i++) {
-		nni_thr_run(&sock->s_worker_thr[i]);
-	}
-
 	sops->sock_open(sock->s_data);
 
 	nni_thr_run(&sock->s_notifier);
@@ -457,9 +443,6 @@ fail:
 	sock->s_sock_ops.sock_fini(sock->s_data);
 
 	// And we need to clean up *our* state.
-	for (i = 0; i < NNI_MAXWORKERS; i++) {
-		nni_thr_fini(&sock->s_worker_thr[i]);
-	}
 	if (sock->s_id != 0) {
 		nni_mtx_lock(nni_idlock);
 		nni_idhash_remove(nni_sockets, sock->s_id);
@@ -572,9 +555,6 @@ nni_sock_shutdown(nni_sock *sock)
 	nni_mtx_unlock(&sock->s_mx);
 
 	// Wait for the threads to exit.
-	for (i = 0; i < NNI_MAXWORKERS; i++) {
-		nni_thr_wait(&sock->s_worker_thr[i]);
-	}
 	nni_thr_wait(&sock->s_notifier);
 
 	// At this point, there are no threads blocked inside of us
@@ -632,9 +612,6 @@ nni_sock_close(nni_sock *sock)
 	sock->s_sock_ops.sock_fini(sock->s_data);
 
 	// And we need to clean up *our* state.
-	for (i = 0; i < NNI_MAXWORKERS; i++) {
-		nni_thr_fini(&sock->s_worker_thr[i]);
-	}
 	while ((notify = nni_list_first(&sock->s_notify)) != NULL) {
 		nni_list_remove(&sock->s_notify, notify);
 		NNI_FREE_STRUCT(notify);
