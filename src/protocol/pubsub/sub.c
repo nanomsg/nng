@@ -108,11 +108,9 @@ nni_sub_pipe_fini(void *arg)
 {
 	nni_sub_pipe *sp = arg;
 
-	if (sp != NULL) {
-		nni_aio_fini(&sp->aio_putq);
-		nni_aio_fini(&sp->aio_recv);
-		NNI_FREE_STRUCT(sp);
-	}
+	nni_aio_fini(&sp->aio_putq);
+	nni_aio_fini(&sp->aio_recv);
+	NNI_FREE_STRUCT(sp);
 }
 
 
@@ -121,6 +119,7 @@ nni_sub_pipe_add(void *arg)
 {
 	nni_sub_pipe *sp = arg;
 
+	nni_pipe_incref(sp->pipe);
 	nni_pipe_aio_recv(sp->pipe, &sp->aio_recv);
 	return (0);
 }
@@ -145,6 +144,7 @@ nni_sub_recv_cb(void *arg)
 
 	if (nni_aio_result(&sp->aio_recv) != 0) {
 		nni_pipe_close(sp->pipe);
+		nni_pipe_decref(sp->pipe);
 		return;
 	}
 
@@ -163,6 +163,7 @@ nni_sub_putq_cb(void *arg)
 		nni_msg_free(sp->aio_putq.a_msg);
 		sp->aio_putq.a_msg = NULL;
 		nni_pipe_close(sp->pipe);
+		nni_pipe_decref(sp->pipe);
 		return;
 	}
 

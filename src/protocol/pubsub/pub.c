@@ -138,13 +138,11 @@ nni_pub_pipe_fini(void *arg)
 {
 	nni_pub_pipe *pp = arg;
 
-	if (pp != NULL) {
-		nni_msgq_fini(pp->sendq);
-		nni_aio_fini(&pp->aio_getq);
-		nni_aio_fini(&pp->aio_send);
-		nni_aio_fini(&pp->aio_recv);
-		NNI_FREE_STRUCT(pp);
-	}
+	nni_msgq_fini(pp->sendq);
+	nni_aio_fini(&pp->aio_getq);
+	nni_aio_fini(&pp->aio_send);
+	nni_aio_fini(&pp->aio_recv);
+	NNI_FREE_STRUCT(pp);
 }
 
 
@@ -160,7 +158,9 @@ nni_pub_pipe_add(void *arg)
 	nni_list_append(&pub->pipes, pp);
 
 	// Start the receiver and the queue reader.
+	nni_pipe_incref(pp->pipe);
 	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
+	nni_pipe_incref(pp->pipe);
 	nni_msgq_aio_get(pp->sendq, &pp->aio_getq);
 
 	return (0);
@@ -174,7 +174,7 @@ nni_pub_pipe_rem(void *arg)
 	nni_pub_sock *pub = pp->pub;
 
 	nni_list_remove(&pub->pipes, pp);
-	nni_msgq_aio_cancel(pp->sendq, &pp->aio_getq);
+	nni_msgq_close(pp->sendq);
 }
 
 
@@ -189,7 +189,6 @@ nni_pub_sock_getq_cb(void *arg)
 	nni_pub_pipe *pp;
 	nni_pub_pipe *last;
 	int rv;
-
 
 	if (nni_aio_result(&pub->aio_getq) != 0) {
 		return;
@@ -230,6 +229,7 @@ nni_pub_pipe_recv_cb(void *arg)
 
 	if (nni_aio_result(&pp->aio_recv) != 0) {
 		nni_pipe_close(pp->pipe);
+		nni_pipe_decref(pp->pipe);
 		return;
 	}
 
@@ -246,6 +246,7 @@ nni_pub_pipe_getq_cb(void *arg)
 
 	if (nni_aio_result(&pp->aio_getq) != 0) {
 		nni_pipe_close(pp->pipe);
+		nni_pipe_decref(pp->pipe);
 		return;
 	}
 
@@ -265,6 +266,7 @@ nni_pub_pipe_send_cb(void *arg)
 		nni_msg_free(pp->aio_send.a_msg);
 		pp->aio_send.a_msg = NULL;
 		nni_pipe_close(pp->pipe);
+		nni_pipe_decref(pp->pipe);
 		return;
 	}
 
