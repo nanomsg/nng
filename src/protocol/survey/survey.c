@@ -18,10 +18,16 @@
 typedef struct nni_surv_pipe	nni_surv_pipe;
 typedef struct nni_surv_sock	nni_surv_sock;
 
+static void nni_surv_sock_getq_cb(void *);
+static void nni_surv_getq_cb(void *);
+static void nni_surv_putq_cb(void *);
+static void nni_surv_send_cb(void *);
+static void nni_surv_recv_cb(void *);
+static void nni_surv_timeout(void *);
+
 // An nni_surv_sock is our per-socket protocol private structure.
 struct nni_surv_sock {
 	nni_sock *	nsock;
-	nni_cv		cv;
 	nni_duration	survtime;
 	nni_time	expire;
 	int		raw;
@@ -29,6 +35,10 @@ struct nni_surv_sock {
 	uint32_t	nextid;         // next id
 	uint8_t		survid[4];      // outstanding request ID (big endian)
 	nni_list	pipes;
+	nni_aio		aio_getq;
+	nni_timer_node	timer;
+	nni_msgq *	uwq;
+	nni_msgq *	urq;
 };
 
 // An nni_surv_pipe is our per-pipe protocol private structure.
@@ -37,7 +47,10 @@ struct nni_surv_pipe {
 	nni_surv_sock * psock;
 	nni_msgq *	sendq;
 	nni_list_node	node;
-	int		sigclose;
+	nni_aio		aio_getq;
+	nni_aio		aio_putq;
+	nni_aio		aio_send;
+	nni_aio		aio_recv;
 };
 
 static int
@@ -49,16 +62,21 @@ nni_surv_sock_init(void **sp, nni_sock *nsock)
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_cv_init(&psock->cv, nni_sock_mtx(nsock))) != 0) {
+	rv = nni_aio_init(&psock->aio_getq, nni_surv_sock_getq_cb, psock);
+	if (rv != 0) {
 		NNI_FREE_STRUCT(psock);
 		return (rv);
 	}
 	NNI_LIST_INIT(&psock->pipes, nni_surv_pipe, node);
+	nni_timer_init(&psock->timer, nni_surv_timeout, psock);
+
 	psock->nextid = nni_random();
 	psock->nsock = nsock;
 	psock->raw = 0;
 	psock->survtime = NNI_SECOND * 60;
 	psock->expire = NNI_TIME_ZERO;
+	psock->uwq = nni_sock_sendq(nsock);
+	psock->urq = nni_sock_recvq(nsock);
 
 	*sp = psock;
 	nni_sock_recverr(nsock, NNG_ESTATE);
@@ -67,13 +85,21 @@ nni_surv_sock_init(void **sp, nni_sock *nsock)
 
 
 static void
+nni_surv_sock_open(void *arg)
+{
+	nni_surv_sock *psock = arg;
+
+	nni_msgq_aio_get(psock->uwq, &psock->aio_getq);
+}
+
+
+static void
 nni_surv_sock_close(void *arg)
 {
 	nni_surv_sock *psock = arg;
 
-	// Shut down the resender.
-	psock->closing = 1;
-	nni_cv_wake(&psock->cv);
+	nni_timer_cancel(&psock->timer);
+	nni_msgq_aio_cancel(psock->uwq, &psock->aio_getq);
 }
 
 
@@ -82,10 +108,21 @@ nni_surv_sock_fini(void *arg)
 {
 	nni_surv_sock *psock = arg;
 
-	if (psock != NULL) {
-		nni_cv_fini(&psock->cv);
-		NNI_FREE_STRUCT(psock);
-	}
+	NNI_FREE_STRUCT(psock);
+}
+
+
+static void
+nni_surv_pipe_fini(void *arg)
+{
+	nni_surv_pipe *ppipe = arg;
+
+	nni_aio_fini(&ppipe->aio_getq);
+	nni_aio_fini(&ppipe->aio_send);
+	nni_aio_fini(&ppipe->aio_recv);
+	nni_aio_fini(&ppipe->aio_putq);
+	nni_msgq_fini(ppipe->sendq);
+	NNI_FREE_STRUCT(ppipe);
 }
 
 
@@ -100,26 +137,32 @@ nni_surv_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 	}
 	// This depth could be tunable.
 	if ((rv = nni_msgq_init(&ppipe->sendq, 16)) != 0) {
-		NNI_FREE_STRUCT(ppipe);
-		return (rv);
+		goto failed;
+	}
+	rv = nni_aio_init(&ppipe->aio_getq, nni_surv_getq_cb, ppipe);
+	if (rv != 0) {
+		goto failed;
+	}
+	rv = nni_aio_init(&ppipe->aio_putq, nni_surv_putq_cb, ppipe);
+	if (rv != 0) {
+		goto failed;
+	}
+	rv = nni_aio_init(&ppipe->aio_send, nni_surv_send_cb, ppipe);
+	if (rv != 0) {
+		goto failed;
+	}
+	rv = nni_aio_init(&ppipe->aio_recv, nni_surv_recv_cb, ppipe);
+	if (rv != 0) {
+		goto failed;
 	}
 	ppipe->npipe = npipe;
 	ppipe->psock = psock;
-	ppipe->sigclose = 0;
 	*pp = ppipe;
 	return (0);
-}
 
-
-static void
-nni_surv_pipe_fini(void *arg)
-{
-	nni_surv_pipe *ppipe = arg;
-
-	if (ppipe != NULL) {
-		nni_msgq_fini(ppipe->sendq);
-		NNI_FREE_STRUCT(ppipe);
-	}
+failed:
+	nni_surv_pipe_fini(ppipe);
+	return (rv);
 }
 
 
@@ -130,6 +173,12 @@ nni_surv_pipe_add(void *arg)
 	nni_surv_sock *psock = ppipe->psock;
 
 	nni_list_append(&psock->pipes, ppipe);
+
+	nni_pipe_incref(ppipe->npipe);
+	nni_msgq_aio_get(ppipe->sendq, &ppipe->aio_getq);
+
+	nni_pipe_incref(ppipe->npipe);
+	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
 	return (0);
 }
 
@@ -141,75 +190,100 @@ nni_surv_pipe_rem(void *arg)
 	nni_surv_sock *psock = ppipe->psock;
 
 	nni_list_remove(&psock->pipes, ppipe);
+	nni_msgq_close(ppipe->sendq);
+	nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
 }
 
 
 static void
-nni_surv_pipe_sender(void *arg)
+nni_surv_getq_cb(void *arg)
 {
 	nni_surv_pipe *ppipe = arg;
-	nni_pipe *npipe = ppipe->npipe;
-	nni_msgq *uwq = ppipe->sendq;
-	nni_msgq *urq = nni_sock_recvq(ppipe->psock->nsock);
-	nni_msg *msg;
-	int rv;
 
-	for (;;) {
-		rv = nni_msgq_get_sig(uwq, &msg, &ppipe->sigclose);
-		if (rv != 0) {
-			break;
-		}
-		rv = nni_pipe_send(npipe, msg);
-		if (rv != 0) {
-			nni_msg_free(msg);
-			break;
-		}
+	if (nni_aio_result(&ppipe->aio_getq) != 0) {
+		nni_pipe_close(ppipe->npipe);
+		nni_pipe_decref(ppipe->npipe);
+		return;
 	}
-	nni_msgq_signal(urq, &ppipe->sigclose);
-	nni_pipe_close(npipe);
+
+	ppipe->aio_send.a_msg = ppipe->aio_getq.a_msg;
+	ppipe->aio_getq.a_msg = NULL;
+
+	nni_pipe_aio_send(ppipe->npipe, &ppipe->aio_send);
 }
 
 
 static void
-nni_surv_pipe_receiver(void *arg)
+nni_surv_send_cb(void *arg)
 {
 	nni_surv_pipe *ppipe = arg;
-	nni_surv_sock *psock = ppipe->psock;
-	nni_msgq *urq = nni_sock_recvq(psock->nsock);
-	nni_msgq *uwq = nni_sock_sendq(psock->nsock);
-	nni_pipe *npipe = ppipe->npipe;
+
+	if (nni_aio_result(&ppipe->aio_send) != 0) {
+		nni_msg_free(ppipe->aio_send.a_msg);
+		ppipe->aio_send.a_msg = NULL;
+		nni_pipe_close(ppipe->npipe);
+		nni_pipe_decref(ppipe->npipe);
+		return;
+	}
+
+	nni_msgq_aio_get(ppipe->psock->uwq, &ppipe->aio_getq);
+}
+
+
+static void
+nni_surv_putq_cb(void *arg)
+{
+	nni_surv_pipe *ppipe = arg;
+
+	if (nni_aio_result(&ppipe->aio_putq) != 0) {
+		nni_msg_free(ppipe->aio_putq.a_msg);
+		ppipe->aio_putq.a_msg = NULL;
+		nni_pipe_close(ppipe->npipe);
+		nni_pipe_decref(ppipe->npipe);
+		return;
+	}
+
+	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
+}
+
+
+static void
+nni_surv_recv_cb(void *arg)
+{
+	nni_surv_pipe *ppipe = arg;
 	nni_msg *msg;
 	int rv;
 
-	for (;;) {
-		rv = nni_pipe_recv(npipe, &msg);
-		if (rv != 0) {
-			break;
-		}
-		// We yank 4 bytes of body, and move them to the header.
-		if (nni_msg_len(msg) < 4) {
-			// Not enough data, just toss it.
-			nni_msg_free(msg);
-			continue;
-		}
-		if (nni_msg_append_header(msg, nni_msg_body(msg), 4) != 0) {
-			// Should be NNG_ENOMEM
-			nni_msg_free(msg);
-			continue;
-		}
-		if (nni_msg_trim(msg, 4) != 0) {
-			// This should never happen - could be an assert.
-			nni_panic("Failed to trim SURV header from body");
-		}
-		rv = nni_msgq_put_sig(urq, msg, &ppipe->sigclose);
-		if (rv != 0) {
-			nni_msg_free(msg);
-			break;
-		}
+	if (nni_aio_result(&ppipe->aio_recv) != 0) {
+		goto failed;
 	}
-	nni_msgq_signal(uwq, &ppipe->sigclose);
-	nni_msgq_signal(ppipe->sendq, &ppipe->sigclose);
-	nni_pipe_close(npipe);
+
+	msg = ppipe->aio_recv.a_msg;
+	ppipe->aio_recv.a_msg = NULL;
+
+	// We yank 4 bytes of body, and move them to the header.
+	if (nni_msg_len(msg) < 4) {
+		// Not enough data, just toss it.
+		nni_msg_free(msg);
+		goto failed;
+	}
+	if (nni_msg_append_header(msg, nni_msg_body(msg), 4) != 0) {
+		// Should be NNG_ENOMEM
+		nni_msg_free(msg);
+		goto failed;
+	}
+	if (nni_msg_trim(msg, 4) != 0) {
+		// This should never happen - could be an assert.
+		nni_msg_free(msg);
+		goto failed;
+	}
+	ppipe->aio_putq.a_msg = msg;
+	nni_msgq_aio_put(ppipe->psock->urq, &ppipe->aio_putq);
+	return;
+
+failed:
+	nni_pipe_close(ppipe->npipe);
+	nni_pipe_decref(ppipe->npipe);
 }
 
 
@@ -234,8 +308,7 @@ nni_surv_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 				nni_sock_recverr(psock->nsock, NNG_ESTATE);
 			}
 			memset(psock->survid, 0, sizeof (psock->survid));
-			psock->expire = NNI_TIME_NEVER;
-			nni_cv_wake(&psock->cv);
+			nni_timer_cancel(&psock->timer);
 		}
 		break;
 	default:
@@ -266,70 +339,53 @@ nni_surv_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 
 static void
-nni_surv_sock_sender(void *arg)
+nni_surv_sock_getq_cb(void *arg)
 {
 	nni_surv_sock *psock = arg;
-	nni_msgq *uwq = nni_sock_sendq(psock->nsock);
-	nni_mtx *mx = nni_sock_mtx(psock->nsock);
+	nni_surv_pipe *ppipe;
+	nni_surv_pipe *last;
 	nni_msg *msg, *dup;
 
-	for (;;) {
-		nni_surv_pipe *ppipe;
-		nni_surv_pipe *last;
-		int rv;
+	if (nni_aio_result(&psock->aio_getq) != 0) {
+		// Should be NNG_ECLOSED.
+		return;
+	}
+	msg = psock->aio_getq.a_msg;
+	psock->aio_getq.a_msg = NULL;
 
-		if ((rv = nni_msgq_get(uwq, &msg)) != 0) {
-			break;
-		}
-
-		nni_mtx_lock(mx);
-		last = nni_list_last(&psock->pipes);
-		NNI_LIST_FOREACH (&psock->pipes, ppipe) {
-			if (ppipe != last) {
-				rv = nni_msg_dup(&dup, msg);
-				if (rv != 0) {
-					continue;
-				}
-			} else {
-				dup = msg;
+	nni_sock_lock(psock->nsock);
+	last = nni_list_last(&psock->pipes);
+	NNI_LIST_FOREACH (&psock->pipes, ppipe) {
+		if (ppipe != last) {
+			if (nni_msg_dup(&dup, msg) != 0) {
+				continue;
 			}
-			if ((rv = nni_msgq_tryput(ppipe->sendq, dup)) != 0) {
-				nni_msg_free(dup);
-			}
+		} else {
+			dup = msg;
 		}
-		nni_mtx_unlock(mx);
+		if (nni_msgq_tryput(ppipe->sendq, dup) != 0) {
+			nni_msg_free(dup);
+		}
+	}
+	nni_sock_unlock(psock->nsock);
 
-		if (last == NULL) {
-			nni_msg_free(msg);
-		}
+	if (last == NULL) {
+		// If there were no pipes to send on, just toss the message.
+		nni_msg_free(msg);
 	}
 }
 
 
 static void
-nni_surv_sock_timeout(void *arg)
+nni_surv_timeout(void *arg)
 {
 	nni_surv_sock *psock = arg;
-	nni_mtx *mx = nni_sock_mtx(psock->nsock);
-	nni_msgq *urq = nni_sock_recvq(psock->nsock);
 
-	nni_mtx_lock(mx);
-	for (;;) {
-		if (psock->closing) {
-			nni_mtx_unlock(mx);
-			return;
-		}
-		if (nni_clock() > psock->expire) {
-			// Set the expiration ~forever
-			psock->expire = NNI_TIME_NEVER;
-			// Survey IDs *always* have the high order bit set,
-			// so zeroing means that nothing can match.
-			memset(psock->survid, 0, sizeof (psock->survid));
-			nni_sock_recverr(psock->nsock, NNG_ESTATE);
-			nni_msgq_set_get_error(urq, NNG_ETIMEDOUT);
-		}
-		nni_cv_until(&psock->cv, psock->expire);
-	}
+	nni_sock_lock(psock->nsock);
+	memset(psock->survid, 0, sizeof (psock->survid));
+	nni_sock_recverr(psock->nsock, NNG_ESTATE);
+	nni_msgq_set_get_error(psock->urq, NNG_ETIMEDOUT);
+	nni_sock_unlock(psock->nsock);
 }
 
 
@@ -363,11 +419,11 @@ nni_surv_sock_sfilter(void *arg, nni_msg *msg)
 	// survey expiration out.  The timeout thread will wake up in
 	// the wake below, and reschedule itself appropriately.
 	psock->expire = nni_clock() + psock->survtime;
-	nni_cv_wake(&psock->cv);
+	nni_timer_schedule(&psock->timer, psock->expire);
 
 	// Clear the error condition.
 	nni_sock_recverr(psock->nsock, 0);
-	nni_msgq_set_get_error(nni_sock_recvq(psock->nsock), 0);
+	//nni_msgq_set_get_error(nni_sock_recvq(psock->nsock), 0);
 
 	return (msg);
 }
@@ -405,20 +461,17 @@ static nni_proto_pipe_ops nni_surv_pipe_ops = {
 	.pipe_fini	= nni_surv_pipe_fini,
 	.pipe_add	= nni_surv_pipe_add,
 	.pipe_rem	= nni_surv_pipe_rem,
-	.pipe_worker	= { nni_surv_pipe_sender,
-			    nni_surv_pipe_receiver }
 };
 
 static nni_proto_sock_ops nni_surv_sock_ops = {
 	.sock_init	= nni_surv_sock_init,
 	.sock_fini	= nni_surv_sock_fini,
+	.sock_open	= nni_surv_sock_open,
 	.sock_close	= nni_surv_sock_close,
 	.sock_setopt	= nni_surv_sock_setopt,
 	.sock_getopt	= nni_surv_sock_getopt,
 	.sock_rfilter	= nni_surv_sock_rfilter,
 	.sock_sfilter	= nni_surv_sock_sfilter,
-	.sock_worker	= { nni_surv_sock_sender,
-			    nni_surv_sock_timeout }
 };
 
 // This is the global protocol structure -- our linkage to the core.

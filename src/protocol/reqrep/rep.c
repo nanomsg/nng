@@ -159,14 +159,12 @@ nni_rep_pipe_fini(void *arg)
 {
 	nni_rep_pipe *rp = arg;
 
-	if (rp != NULL) {
-		nni_msgq_fini(rp->sendq);
-		nni_aio_fini(&rp->aio_getq);
-		nni_aio_fini(&rp->aio_send);
-		nni_aio_fini(&rp->aio_recv);
-		nni_aio_fini(&rp->aio_putq);
-		NNI_FREE_STRUCT(rp);
-	}
+	nni_msgq_fini(rp->sendq);
+	nni_aio_fini(&rp->aio_getq);
+	nni_aio_fini(&rp->aio_send);
+	nni_aio_fini(&rp->aio_recv);
+	nni_aio_fini(&rp->aio_putq);
+	NNI_FREE_STRUCT(rp);
 }
 
 

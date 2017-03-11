@@ -110,12 +110,10 @@ nni_req_sock_fini(void *arg)
 {
 	nni_req_sock *req = arg;
 
-	if (req != NULL) {
-		if (req->reqmsg != NULL) {
-			nni_msg_free(req->reqmsg);
-		}
-		NNI_FREE_STRUCT(req);
+	if (req->reqmsg != NULL) {
+		nni_msg_free(req->reqmsg);
 	}
+	NNI_FREE_STRUCT(req);
 }
 
 

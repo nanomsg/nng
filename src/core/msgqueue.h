@@ -72,23 +72,6 @@ extern int nni_msgq_put_until(nni_msgq *, nni_msg *, nni_time);
 // a message from the queue, it will return NNG_ETIMEDOUT.
 extern int nni_msgq_get_until(nni_msgq *, nni_msg **, nni_time);
 
-// nni_msgq_put_sig is an enhanced version of nni_msgq_put, but it
-// can be interrupted by nni_msgqueue_signal using the same final pointer,
-// which can be thought of as a turnstile.  If interrupted it returns EINTR.
-// The turnstile should be initialized to zero.
-extern int nni_msgq_put_sig(nni_msgq *, nni_msg *, nni_signal *);
-
-// nni_msgq_get_sig is an enhanced version of nni_msgq_get_t, but it
-// can be interrupted by nni_msgq_signal using the same final pointer,
-// which can be thought of as a turnstile.  If interrupted it returns EINTR.
-// The turnstile should be initialized to zero.
-extern int nni_msgq_get_sig(nni_msgq *, nni_msg **, nni_signal *);
-
-// nni_msgq_signal delivers a signal / interrupt to waiters blocked in
-// the msgq, if they have registered an interest in the same turnstile.
-// It modifies the turnstile's value under the lock to a non-zero value.
-extern void nni_msgq_signal(nni_msgq *, nni_signal *);
-
 // nni_msgq_set_error sets an error condition on the message queue,
 // which causes all current and future readers/writes to return the
 // given error condition (if non-zero).  Threads waiting to put or get
