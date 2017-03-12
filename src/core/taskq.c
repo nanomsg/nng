@@ -72,9 +72,9 @@ nni_taskq_init(nni_taskq **tqp, int nthr)
 	if ((tq->tq_threads = nni_alloc(sizeof (nni_thr) * nthr)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	for (tq->tq_nthreads = 0; tq->tq_nthreads < nthr; tq->tq_nthreads++) {
-		rv = nni_thr_init(&tq->tq_threads[tq->tq_nthreads],
-			nni_taskq_thread, tq);
+	tq->tq_nthreads = nthr;
+	for (i = 0; i < nthr; i++) {
+		rv = nni_thr_init(&tq->tq_threads[i], nni_taskq_thread, tq);
 		if (rv != 0) {
 			goto fail;
 		}
@@ -105,6 +105,7 @@ nni_taskq_fini(nni_taskq *tq)
 	for (i = 0; i < tq->tq_nthreads; i++) {
 		nni_thr_fini(&tq->tq_threads[i]);
 	}
+	nni_free(tq->tq_threads, tq->tq_nthreads * sizeof (nni_thr));
 	nni_cv_fini(&tq->tq_cv);
 	nni_mtx_fini(&tq->tq_mtx);
 	NNI_FREE_STRUCT(tq);
