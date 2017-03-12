@@ -43,12 +43,6 @@ struct nni_proto_pipe_ops {
 	// lock held, so the protocol may not call back into the socket, and
 	// must not block.
 	void		(*pipe_rem)(void *);
-
-	// Worker functions.  If non-NULL, each worker is executed and
-	// given the protocol pipe data as a argument.  All workers are
-	// started, or none are started.  The pipe_fini function is obliged
-	// to ensure that workers have exited.
-	nni_worker	pipe_worker[NNI_MAXWORKERS];
 };
 
 struct nni_proto_sock_ops {
@@ -85,12 +79,6 @@ struct nni_proto_sock_ops {
 	// Send filter.  This may be NULL, but if it isn't, then messages
 	// here are filtered just after they come from the application.
 	nni_msg *	(*sock_sfilter)(void *, nni_msg *);
-
-	// Worker functions.  If non-NULL, each worker is executed and given
-	// the protocol socket data as an argument.  These will all be started
-	// at about the same time, and all will be started, or none will be
-	// started.  They are obliged to exit in response to sock_close.
-	nni_worker	sock_worker[NNI_MAXWORKERS];
 };
 
 struct nni_proto {

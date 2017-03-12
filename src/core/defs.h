@@ -48,7 +48,6 @@ typedef void (*nni_thr_func)(void *);
 typedef int				nni_signal;     // Wakeup channel.
 typedef uint64_t			nni_time;       // Abs. time (usec).
 typedef int64_t				nni_duration;   // Rel. time (usec).
-typedef void (*nni_worker)(void *);
 
 typedef void (*nni_cb)(void *);
 
@@ -73,9 +72,6 @@ typedef struct {
 // Structure allocation conveniences.
 #define NNI_ALLOC_STRUCT(s)	nni_alloc(sizeof (*s))
 #define NNI_FREE_STRUCT(s)	nni_free((s), sizeof (*s))
-
-// Maximum number of socket or pipe worker threads.
-#define NNI_MAXWORKERS    4
 
 #define NNI_PUT16(ptr, u)				      \
 	do {						      \
