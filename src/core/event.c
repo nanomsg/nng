@@ -49,23 +49,19 @@ nni_ev_submit(nni_event *event)
 		return;
 	}
 
+	// XXX: taskq_dispatch the event processing.
+	// This probably should bump a reference count on the socket
+	// first.
+	// XXX: One question of note... the aio structures we use elsewhere
+	// would be better than this.  So instead of the handler doing two
+	// context switches we can just do one.
+
 	// Call with socket mutex owned!
 	if (event->e_pending == 0) {
 		event->e_pending = 1;
 		event->e_done = 0;
 		nni_list_append(&sock->s_events, event);
 		nni_cv_wake(&sock->s_notify_cv);
-	}
-}
-
-
-void
-nni_ev_wait(nni_event *event)
-{
-	// Call with socket mutex owned!
-	// Note that the socket mutex is dropped during the call.
-	while ((event->e_pending) && (!event->e_done)) {
-		nni_cv_wait(&event->e_cv);
 	}
 }
 
