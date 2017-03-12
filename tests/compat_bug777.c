@@ -34,6 +34,7 @@ int main (int argc, const char *argv[])
     test_bind (sb, "inproc://pair");
     sc1 = test_socket (AF_SP, NN_PAIR);
     test_connect (sc1, "inproc://pair");
+    nng_usleep(100000);
     sc2 = test_socket (AF_SP, NN_PAIR);
     test_connect (sc2, "inproc://pair");
 
