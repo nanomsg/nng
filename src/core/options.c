@@ -195,7 +195,7 @@ nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 		return (rv);
 	}
 
-	if (nni_add_notify(s, mask, nni_notifyfd_push, fd) == NULL) {
+	if (nni_sock_notify(s, mask, nni_notifyfd_push, fd) == NULL) {
 		nni_plat_pipe_close(fd->sn_wfd, fd->sn_rfd);
 		return (NNG_ENOMEM);
 	}

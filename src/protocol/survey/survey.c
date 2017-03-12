@@ -108,6 +108,7 @@ nni_surv_sock_fini(void *arg)
 {
 	nni_surv_sock *psock = arg;
 
+	nni_aio_fini(&psock->aio_getq);
 	NNI_FREE_STRUCT(psock);
 }
 

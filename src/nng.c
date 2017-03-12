@@ -313,7 +313,7 @@ nng_setnotify(nng_socket sid, int mask, nng_notify_func fn, void *arg)
 	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
 		return (NULL);
 	}
-	notify = nni_add_notify(sock, mask, fn, arg);
+	notify = nni_sock_notify(sock, mask, fn, arg);
 	nni_sock_rele(sock);
 	return (notify);
 }
@@ -328,7 +328,7 @@ nng_unsetnotify(nng_socket sid, nng_notify *notify)
 	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
 		return;
 	}
-	nni_rem_notify(sock, notify);
+	nni_sock_unnotify(sock, notify);
 	nni_sock_rele(sock);
 }
 

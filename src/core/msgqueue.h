@@ -39,8 +39,8 @@ extern int nni_msgq_canget(nni_msgq *);
 extern int nni_msgq_canput(nni_msgq *);
 extern void nni_msgq_aio_put(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
-extern int nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
-extern int nni_msgq_aio_notify_put(nni_msgq *, nni_aio *);
+extern void nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
+extern void nni_msgq_aio_notify_put(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_cancel(nni_msgq *, nni_aio *);
 
 // nni_msgq_put puts the message to the queue.  It blocks until it

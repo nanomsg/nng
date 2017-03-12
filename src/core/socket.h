@@ -44,14 +44,8 @@ struct nni_socket {
 	nni_list		s_eps;          // active endpoints
 	nni_list		s_pipes;        // ready pipes (started)
 	nni_list		s_idles;        // idle pipes (not ready)
-	nni_list		s_events;       // pending events
-	nni_list		s_notify;       // event watchers
-	nni_cv			s_notify_cv;    // wakes notify thread
-	nni_mtx			s_notify_mx;    // protects s_notify list
 
 	size_t			s_rcvmaxsz;     // maximum receive size
-
-	nni_thr			s_notifier;
 
 	int			s_ep_pend;      // EP dial/listen in progress
 	int			s_closing;      // Socket is closing
@@ -88,6 +82,9 @@ extern uint32_t nni_sock_id(nni_sock *);
 
 extern void nni_sock_lock(nni_sock *);
 extern void nni_sock_unlock(nni_sock *);
+
+extern nni_notify *nni_sock_notify(nni_sock *, int, nng_notify_func, void *);
+extern void nni_sock_unnotify(nni_sock *, nni_notify *);
 
 // nni_sock_pipe_add is called by the pipe to register the pipe with
 // with the socket.  The pipe is added to the idle list.

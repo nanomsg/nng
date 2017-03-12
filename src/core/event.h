@@ -18,25 +18,17 @@ struct nng_event {
 	nni_sock *	e_sock;
 	nni_ep *	e_ep;
 	nni_pipe *	e_pipe;
-
-	int		e_done;         // true when notify thr is finished
-	int		e_pending;      // true if event is queued
-	nni_cv		e_cv;           // signaled when e_done is noted
-	nni_list_node	e_node;         // location on the socket list
 };
 
 struct nng_notify {
-	nni_list_node	n_node;
 	nng_notify_func n_func;
 	void *		n_arg;
-	int		n_mask;
+	int		n_type;
+	nni_sock *	n_sock;
+	nni_aio		n_aio;
 };
 
-extern void nni_notifier(void *);
 extern int nni_ev_init(nni_event *, int, nni_sock *);
 extern void nni_ev_fini(nni_event *);
-extern void nni_ev_submit(nni_event *);         // call holding sock lock
-extern nni_notify *nni_add_notify(nni_sock *, int, nng_notify_func, void *);
-extern void nni_rem_notify(nni_sock *, nni_notify *);
 
 #endif // CORE_EVENT_H
