@@ -46,7 +46,7 @@ extern void nni_pipe_decref(nni_pipe *);
 
 // Used only by the socket core - as we don't wish to expose the details
 // of the pipe structure outside of pipe.c.
-extern int nni_pipe_create(nni_pipe **, nni_ep *);
+extern int nni_pipe_create(nni_pipe **, nni_ep *, nni_sock *, nni_tran *);
 
 extern void nni_pipe_destroy(nni_pipe *);
 

@@ -121,11 +121,9 @@ nni_pipe_peer(nni_pipe *p)
 
 
 int
-nni_pipe_create(nni_pipe **pp, nni_ep *ep)
+nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 {
 	nni_pipe *p;
-	nni_sock *sock = ep->ep_sock;
-	const nni_proto_pipe_ops *ops = &sock->s_pipe_ops;
 	void *pdata;
 	int rv;
 
@@ -145,7 +143,7 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep)
 
 	// Make a copy of the transport ops.  We can override entry points
 	// and we avoid an extra dereference on hot code paths.
-	p->p_tran_ops = *ep->ep_tran->tran_pipe;
+	p->p_tran_ops = *tran->tran_pipe;
 
 	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
 		nni_mtx_fini(&p->p_mtx);
