@@ -31,18 +31,19 @@ struct nni_proto_pipe_ops {
 	// pipe threads have been stopped.
 	void	(*pipe_fini)(void *);
 
-	// pipe_add is called to register a pipe with the protocol.  The
+	// pipe_start is called to register a pipe with the protocol.  The
 	// protocol can reject this, for example if another pipe is already
 	// active on a 1:1 protocol.  The protocol may not block during this,
 	// as the socket lock is held.
-	int	(*pipe_add)(void *);
+	int	(*pipe_start)(void *);
 
-	// pipe_rem is called to unregister a pipe from the protocol.
+	// pipe_stop is called to unregister a pipe from the protocol.
 	// Threads may still acccess data structures, so the protocol
 	// should not free anything yet.  This is called with the socket
 	// lock held, so the protocol may not call back into the socket, and
-	// must not block.
-	void	(*pipe_rem)(void *);
+	// must not block.  This operation must be idempotent, and may
+	// be called even if pipe_start was not.
+	void	(*pipe_stop)(void *);
 };
 
 struct nni_proto_sock_ops {

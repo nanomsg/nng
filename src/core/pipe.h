@@ -28,7 +28,6 @@ struct nni_pipe {
 	nni_sock *	p_sock;
 	nni_ep *	p_ep;
 	int		p_reap;
-	int		p_active;
 	nni_mtx		p_mtx;
 	int		p_refcnt;
 };

@@ -56,6 +56,7 @@ struct nni_req_pipe {
 	nni_aio		aio_sendcooked;         // cooked mode only
 	nni_aio		aio_recv;
 	nni_aio		aio_putq;
+	int		running;
 };
 
 static void nni_req_resender(void *);
@@ -173,7 +174,7 @@ nni_req_pipe_fini(void *arg)
 
 
 static int
-nni_req_pipe_add(void *arg)
+nni_req_pipe_start(void *arg)
 {
 	nni_req_pipe *rp = arg;
 	nni_req_sock *req = rp->req;
@@ -190,15 +191,21 @@ nni_req_pipe_add(void *arg)
 	nni_msgq_aio_get(req->uwq, &rp->aio_getq);
 	nni_pipe_incref(rp->pipe);
 	nni_pipe_aio_recv(rp->pipe, &rp->aio_recv);
+	rp->running = 1;
 	return (0);
 }
 
 
 static void
-nni_req_pipe_rem(void *arg)
+nni_req_pipe_stop(void *arg)
 {
 	nni_req_pipe *rp = arg;
 	nni_req_sock *req = rp->req;
+
+	if (!rp->running) {
+		return;
+	}
+	rp->running = 0;
 
 	// This removes the node from either busypipes or readypipes.
 	// It doesn't much matter which.
@@ -565,8 +572,8 @@ nni_req_sock_rfilter(void *arg, nni_msg *msg)
 static nni_proto_pipe_ops nni_req_pipe_ops = {
 	.pipe_init	= nni_req_pipe_init,
 	.pipe_fini	= nni_req_pipe_fini,
-	.pipe_add	= nni_req_pipe_add,
-	.pipe_rem	= nni_req_pipe_rem,
+	.pipe_start	= nni_req_pipe_start,
+	.pipe_stop	= nni_req_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_req_sock_ops = {

@@ -51,6 +51,7 @@ struct nni_surv_pipe {
 	nni_aio		aio_putq;
 	nni_aio		aio_send;
 	nni_aio		aio_recv;
+	int		running;
 };
 
 static int
@@ -168,7 +169,7 @@ failed:
 
 
 static int
-nni_surv_pipe_add(void *arg)
+nni_surv_pipe_start(void *arg)
 {
 	nni_surv_pipe *ppipe = arg;
 	nni_surv_sock *psock = ppipe->psock;
@@ -180,19 +181,22 @@ nni_surv_pipe_add(void *arg)
 
 	nni_pipe_incref(ppipe->npipe);
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
+	ppipe->running = 1;
 	return (0);
 }
 
 
 static void
-nni_surv_pipe_rem(void *arg)
+nni_surv_pipe_stop(void *arg)
 {
 	nni_surv_pipe *ppipe = arg;
 	nni_surv_sock *psock = ppipe->psock;
 
-	nni_list_remove(&psock->pipes, ppipe);
-	nni_msgq_close(ppipe->sendq);
-	nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
+	if (ppipe->running) {
+		nni_list_remove(&psock->pipes, ppipe);
+		nni_msgq_close(ppipe->sendq);
+		nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
+	}
 }
 
 
@@ -460,8 +464,8 @@ nni_surv_sock_rfilter(void *arg, nni_msg *msg)
 static nni_proto_pipe_ops nni_surv_pipe_ops = {
 	.pipe_init	= nni_surv_pipe_init,
 	.pipe_fini	= nni_surv_pipe_fini,
-	.pipe_add	= nni_surv_pipe_add,
-	.pipe_rem	= nni_surv_pipe_rem,
+	.pipe_start	= nni_surv_pipe_start,
+	.pipe_stop	= nni_surv_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_surv_sock_ops = {

@@ -163,12 +163,10 @@ nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 		return (NNG_EPROTO);
 	}
 
-	if ((rv = sock->s_pipe_ops.pipe_add(pdata)) != 0) {
+	if ((rv = sock->s_pipe_ops.pipe_start(pdata)) != 0) {
 		nni_mtx_unlock(&sock->s_mx);
 		return (rv);
 	}
-
-	pipe->p_active = 1;
 
 	nni_list_remove(&sock->s_idles, pipe);
 	nni_list_append(&sock->s_pipes, pipe);
@@ -193,10 +191,7 @@ nni_sock_pipe_closed(nni_sock *sock, nni_pipe *pipe)
 	nni_list_remove(&sock->s_pipes, pipe);
 	nni_list_append(&sock->s_idles, pipe);
 
-	if (pipe->p_active) {
-		pipe->p_active = 0;
-		sock->s_pipe_ops.pipe_rem(pdata);
-	}
+	sock->s_pipe_ops.pipe_stop(pdata);
 
 	// Notify the endpoint that the pipe has closed.
 	if (((ep = pipe->p_ep) != NULL) && ((ep->ep_pipe == pipe))) {
@@ -380,7 +375,7 @@ nni_sock_nullop(void *arg)
 
 
 static int
-nni_sock_nulladdpipe(void *arg)
+nni_sock_nullstartpipe(void *arg)
 {
 	NNI_ARG_UNUSED(arg);
 
@@ -450,11 +445,11 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	}
 	sock->s_pipe_ops = *proto->proto_pipe_ops;
 	pops = &sock->s_pipe_ops;
-	if (pops->pipe_add == NULL) {
-		pops->pipe_add = nni_sock_nulladdpipe;
+	if (pops->pipe_start == NULL) {
+		pops->pipe_start = nni_sock_nullstartpipe;
 	}
-	if (pops->pipe_rem == NULL) {
-		pops->pipe_rem = nni_sock_nullop;
+	if (pops->pipe_stop == NULL) {
+		pops->pipe_stop = nni_sock_nullop;
 	}
 
 	if (((rv = nni_mtx_init(&sock->s_mx)) != 0) ||

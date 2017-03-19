@@ -48,6 +48,7 @@ struct nni_resp_pipe {
 	nni_aio		aio_putq;
 	nni_aio		aio_send;
 	nni_aio		aio_recv;
+	int		running;
 };
 
 static int
@@ -173,7 +174,7 @@ nni_resp_pipe_fini(void *arg)
 
 
 static int
-nni_resp_pipe_add(void *arg)
+nni_resp_pipe_start(void *arg)
 {
 	nni_resp_pipe *ppipe = arg;
 	nni_resp_sock *psock = ppipe->psock;
@@ -186,20 +187,24 @@ nni_resp_pipe_add(void *arg)
 
 	nni_pipe_incref(ppipe->npipe);
 	nni_msgq_aio_get(ppipe->sendq, &ppipe->aio_getq);
+	ppipe->running = 1;
 	return (rv);
 }
 
 
 static void
-nni_resp_pipe_rem(void *arg)
+nni_resp_pipe_stop(void *arg)
 {
 	nni_resp_pipe *ppipe = arg;
 	nni_resp_sock *psock = ppipe->psock;
 
-	nni_idhash_remove(&psock->pipes, nni_pipe_id(ppipe->npipe));
+	if (ppipe->running) {
+		ppipe->running = 0;
+		nni_idhash_remove(&psock->pipes, nni_pipe_id(ppipe->npipe));
 
-	nni_msgq_close(ppipe->sendq);
-	nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
+		nni_msgq_close(ppipe->sendq);
+		nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
+	}
 }
 
 
@@ -488,8 +493,8 @@ nni_resp_sock_rfilter(void *arg, nni_msg *msg)
 static nni_proto_pipe_ops nni_resp_pipe_ops = {
 	.pipe_init	= nni_resp_pipe_init,
 	.pipe_fini	= nni_resp_pipe_fini,
-	.pipe_add	= nni_resp_pipe_add,
-	.pipe_rem	= nni_resp_pipe_rem,
+	.pipe_start	= nni_resp_pipe_start,
+	.pipe_stop	= nni_resp_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_resp_sock_ops = {

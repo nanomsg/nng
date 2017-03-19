@@ -147,7 +147,7 @@ nni_pub_pipe_fini(void *arg)
 
 
 static int
-nni_pub_pipe_add(void *arg)
+nni_pub_pipe_start(void *arg)
 {
 	nni_pub_pipe *pp = arg;
 	nni_pub_sock *pub = pp->pub;
@@ -168,13 +168,15 @@ nni_pub_pipe_add(void *arg)
 
 
 static void
-nni_pub_pipe_rem(void *arg)
+nni_pub_pipe_stop(void *arg)
 {
 	nni_pub_pipe *pp = arg;
 	nni_pub_sock *pub = pp->pub;
 
-	nni_list_remove(&pub->pipes, pp);
-	nni_msgq_close(pp->sendq);
+	if (nni_list_active(&pub->pipes, pp)) {
+		nni_list_remove(&pub->pipes, pp);
+		nni_msgq_close(pp->sendq);
+	}
 }
 
 
@@ -314,8 +316,8 @@ nni_pub_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 static nni_proto_pipe_ops nni_pub_pipe_ops = {
 	.pipe_init	= nni_pub_pipe_init,
 	.pipe_fini	= nni_pub_pipe_fini,
-	.pipe_add	= nni_pub_pipe_add,
-	.pipe_rem	= nni_pub_pipe_rem,
+	.pipe_start	= nni_pub_pipe_start,
+	.pipe_stop	= nni_pub_pipe_stop,
 };
 
 nni_proto_sock_ops nni_pub_sock_ops = {

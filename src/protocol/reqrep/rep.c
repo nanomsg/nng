@@ -49,6 +49,7 @@ struct nni_rep_pipe {
 	nni_aio		aio_send;
 	nni_aio		aio_recv;
 	nni_aio		aio_putq;
+	int		running;
 };
 
 static int
@@ -168,7 +169,7 @@ nni_rep_pipe_fini(void *arg)
 
 
 static int
-nni_rep_pipe_add(void *arg)
+nni_rep_pipe_start(void *arg)
 {
 	nni_rep_pipe *rp = arg;
 	nni_rep_sock *rep = rp->rep;
@@ -183,19 +184,23 @@ nni_rep_pipe_add(void *arg)
 	nni_msgq_aio_get(rp->sendq, &rp->aio_getq);
 	nni_pipe_incref(rp->pipe);
 	nni_pipe_aio_recv(rp->pipe, &rp->aio_recv);
+	rp->running = 1;
 	return (0);
 }
 
 
 static void
-nni_rep_pipe_rem(void *arg)
+nni_rep_pipe_stop(void *arg)
 {
 	nni_rep_pipe *rp = arg;
 	nni_rep_sock *rep = rp->rep;
 
-	nni_msgq_close(rp->sendq);
-	nni_msgq_aio_cancel(rep->urq, &rp->aio_putq);
-	nni_idhash_remove(&rep->pipes, nni_pipe_id(rp->pipe));
+	if (rp->running) {
+		rp->running = 0;
+		nni_msgq_close(rp->sendq);
+		nni_msgq_aio_cancel(rep->urq, &rp->aio_putq);
+		nni_idhash_remove(&rep->pipes, nni_pipe_id(rp->pipe));
+	}
 }
 
 
@@ -488,8 +493,8 @@ nni_rep_sock_rfilter(void *arg, nni_msg *msg)
 static nni_proto_pipe_ops nni_rep_pipe_ops = {
 	.pipe_init	= nni_rep_pipe_init,
 	.pipe_fini	= nni_rep_pipe_fini,
-	.pipe_add	= nni_rep_pipe_add,
-	.pipe_rem	= nni_rep_pipe_rem,
+	.pipe_start	= nni_rep_pipe_start,
+	.pipe_stop	= nni_rep_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_rep_sock_ops = {

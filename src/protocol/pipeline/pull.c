@@ -229,8 +229,8 @@ nni_pull_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 static nni_proto_pipe_ops nni_pull_pipe_ops = {
 	.pipe_init	= nni_pull_pipe_init,
 	.pipe_fini	= nni_pull_pipe_fini,
-	.pipe_add	= nni_pull_pipe_start,
-	.pipe_rem	= nni_pull_pipe_stop,
+	.pipe_start	= nni_pull_pipe_start,
+	.pipe_stop	= nni_pull_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_pull_sock_ops = {

@@ -130,7 +130,7 @@ nni_pair_pipe_fini(void *arg)
 
 
 static int
-nni_pair_pipe_add(void *arg)
+nni_pair_pipe_start(void *arg)
 {
 	nni_pair_pipe *ppipe = arg;
 	nni_pair_sock *psock = ppipe->psock;
@@ -152,7 +152,7 @@ nni_pair_pipe_add(void *arg)
 
 
 static void
-nni_pair_pipe_rem(void *arg)
+nni_pair_pipe_stop(void *arg)
 {
 	nni_pair_pipe *ppipe = arg;
 	nni_pair_sock *psock = ppipe->psock;
@@ -277,8 +277,8 @@ nni_pair_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 static nni_proto_pipe_ops nni_pair_pipe_ops = {
 	.pipe_init	= nni_pair_pipe_init,
 	.pipe_fini	= nni_pair_pipe_fini,
-	.pipe_add	= nni_pair_pipe_add,
-	.pipe_rem	= nni_pair_pipe_rem,
+	.pipe_start	= nni_pair_pipe_start,
+	.pipe_stop	= nni_pair_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_pair_sock_ops = {

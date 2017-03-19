@@ -115,7 +115,7 @@ nni_sub_pipe_fini(void *arg)
 
 
 static int
-nni_sub_pipe_add(void *arg)
+nni_sub_pipe_start(void *arg)
 {
 	nni_sub_pipe *sp = arg;
 
@@ -126,7 +126,7 @@ nni_sub_pipe_add(void *arg)
 
 
 static void
-nni_sub_pipe_close(void *arg)
+nni_sub_pipe_stop(void *arg)
 {
 	nni_sub_pipe *sp = arg;
 
@@ -340,8 +340,8 @@ nni_sub_sock_rfilter(void *arg, nni_msg *msg)
 static nni_proto_pipe_ops nni_sub_pipe_ops = {
 	.pipe_init	= nni_sub_pipe_init,
 	.pipe_fini	= nni_sub_pipe_fini,
-	.pipe_add	= nni_sub_pipe_add,
-	.pipe_rem	= nni_sub_pipe_close,
+	.pipe_start	= nni_sub_pipe_start,
+	.pipe_stop	= nni_sub_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_sub_sock_ops = {
