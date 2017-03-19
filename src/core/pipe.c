@@ -140,19 +140,18 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep)
 	p->p_tran_data = NULL;
 	p->p_proto_data = NULL;
 	p->p_id = 0;
-	NNI_LIST_NODE_INIT(&p->p_node);
+	NNI_LIST_NODE_INIT(&p->p_sock_node);
+	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
 	// Make a copy of the transport ops.  We can override entry points
 	// and we avoid an extra dereference on hot code paths.
 	p->p_tran_ops = *ep->ep_tran->tran_pipe;
 
-	if ((rv = ops->pipe_init(&pdata, p, sock->s_data)) != 0) {
+	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
 		nni_mtx_fini(&p->p_mtx);
 		NNI_FREE_STRUCT(p);
 		return (rv);
 	}
-	p->p_proto_data = pdata;
-	nni_sock_pipe_add(sock, p);
 
 	*pp = p;
 	return (0);
@@ -168,9 +167,6 @@ nni_pipe_destroy(nni_pipe *p)
 	// is not in use by any other consumers.  It must not be started
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.pipe_destroy(p->p_tran_data);
-	}
-	if (p->p_proto_data != NULL) {
-		p->p_sock->s_pipe_ops.pipe_fini(p->p_proto_data);
 	}
 	nni_sock_pipe_rem(p->p_sock, p);
 	nni_mtx_fini(&p->p_mtx);
@@ -213,4 +209,32 @@ nni_pipe_start(nni_pipe *p)
 	// XXX: Publish event
 
 	return (0);
+}
+
+
+void
+nni_pipe_set_proto_data(nni_pipe *p, void *data)
+{
+	p->p_proto_data = data;
+}
+
+
+void *
+nni_pipe_get_proto_data(nni_pipe *p)
+{
+	return (p->p_proto_data);
+}
+
+
+void
+nni_pipe_sock_list_init(nni_list *list)
+{
+	NNI_LIST_INIT(list, nni_pipe, p_sock_node);
+}
+
+
+void
+nni_pipe_ep_list_init(nni_list *list)
+{
+	NNI_LIST_INIT(list, nni_pipe, p_ep_node);
 }

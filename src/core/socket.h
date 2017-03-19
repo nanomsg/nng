@@ -87,11 +87,13 @@ extern nni_notify *nni_sock_notify(nni_sock *, int, nng_notify_func, void *);
 extern void nni_sock_unnotify(nni_sock *, nni_notify *);
 
 // nni_sock_pipe_add is called by the pipe to register the pipe with
-// with the socket.  The pipe is added to the idle list.
-extern void nni_sock_pipe_add(nni_sock *, nni_pipe *);
+// with the socket.  The pipe is added to the idle list.  The protocol
+// private pipe data is initialized as well.
+extern int nni_sock_pipe_add(nni_sock *, nni_pipe *);
 
 // nni_sock_pipe_rem deregisters the pipe from the socket.  The socket
 // will block during close if there are registered pipes outstanding.
+// This also frees any protocol private pipe data.
 extern void nni_sock_pipe_rem(nni_sock *, nni_pipe *);
 
 // nni_sock_pipe_ready lets the socket know the pipe is ready for

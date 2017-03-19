@@ -23,7 +23,8 @@ struct nni_pipe {
 	nni_tran_pipe	p_tran_ops;
 	void *		p_tran_data;
 	void *		p_proto_data;
-	nni_list_node	p_node;
+	nni_list_node	p_sock_node;
+	nni_list_node	p_ep_node;
 	nni_sock *	p_sock;
 	nni_ep *	p_ep;
 	int		p_reap;
@@ -54,5 +55,22 @@ extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
 extern int nni_pipe_start(nni_pipe *);
 extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
+
+// nni_pipe_set_proto_data sets the protocol private data.  No locking is
+// performed, and this routine should only be called once per pipe at
+// initialization.
+extern void nni_pipe_set_proto_data(nni_pipe *, void *);
+
+// nni_pipe_get_proto_data gets the protocol private data set with the
+// nni_pipe_set_proto_data function.  No locking is performed.
+extern void *nni_pipe_get_proto_data(nni_pipe *);
+
+// nni_pipe_sock_list_init initializes a list of pipes, to be used by
+// a per-socket list.
+extern void nni_pipe_sock_list_init(nni_list *);
+
+// nni_pipe_ep_list_init initializes a list of pipes, to be used by
+// a per-endpoint list.
+extern void nni_pipe_ep_list_init(nni_list *);
 
 #endif // CORE_PIPE_H

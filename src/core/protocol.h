@@ -24,25 +24,25 @@
 struct nni_proto_pipe_ops {
 	// pipe_init creates the protocol-specific per pipe data structure.
 	// The last argument is the per-socket protocol private data.
-	int		(*pipe_init)(void **, nni_pipe *, void *);
+	int	(*pipe_init)(void **, nni_pipe *, void *);
 
 	// pipe_fini releases any pipe data structures.  This is called after
 	// the pipe has been removed from the protocol, and the generic
 	// pipe threads have been stopped.
-	void		(*pipe_fini)(void *);
+	void	(*pipe_fini)(void *);
 
 	// pipe_add is called to register a pipe with the protocol.  The
 	// protocol can reject this, for example if another pipe is already
 	// active on a 1:1 protocol.  The protocol may not block during this,
 	// as the socket lock is held.
-	int		(*pipe_add)(void *);
+	int	(*pipe_add)(void *);
 
 	// pipe_rem is called to unregister a pipe from the protocol.
 	// Threads may still acccess data structures, so the protocol
 	// should not free anything yet.  This is called with the socket
 	// lock held, so the protocol may not call back into the socket, and
 	// must not block.
-	void		(*pipe_rem)(void *);
+	void	(*pipe_rem)(void *);
 };
 
 struct nni_proto_sock_ops {

@@ -128,12 +128,21 @@ nni_sock_held_close(nni_sock *sock)
 }
 
 
-void
+int
 nni_sock_pipe_add(nni_sock *sock, nni_pipe *pipe)
 {
+	int rv;
+	void *pdata;
+
+	rv = sock->s_pipe_ops.pipe_init(&pdata, pipe, sock->s_data);
+	if (rv != 0) {
+		return (rv);
+	}
 	nni_mtx_lock(&sock->s_mx);
+	nni_pipe_set_proto_data(pipe, pdata);
 	nni_list_append(&sock->s_pipes, pipe);
 	nni_mtx_unlock(&sock->s_mx);
+	return (0);
 }
 
 
@@ -141,6 +150,7 @@ int
 nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 {
 	int rv;
+	void *pdata = nni_pipe_get_proto_data(pipe);
 
 	nni_mtx_lock(&sock->s_mx);
 
@@ -153,7 +163,7 @@ nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 		return (NNG_EPROTO);
 	}
 
-	if ((rv = sock->s_pipe_ops.pipe_add(pipe->p_proto_data)) != 0) {
+	if ((rv = sock->s_pipe_ops.pipe_add(pdata)) != 0) {
 		nni_mtx_unlock(&sock->s_mx);
 		return (rv);
 	}
@@ -173,6 +183,7 @@ void
 nni_sock_pipe_closed(nni_sock *sock, nni_pipe *pipe)
 {
 	nni_ep *ep;
+	void *pdata = nni_pipe_get_proto_data(pipe);
 
 	nni_mtx_lock(&sock->s_mx);
 
@@ -184,7 +195,7 @@ nni_sock_pipe_closed(nni_sock *sock, nni_pipe *pipe)
 
 	if (pipe->p_active) {
 		pipe->p_active = 0;
-		sock->s_pipe_ops.pipe_rem(pipe->p_proto_data);
+		sock->s_pipe_ops.pipe_rem(pdata);
 	}
 
 	// Notify the endpoint that the pipe has closed.
@@ -200,9 +211,14 @@ void
 nni_sock_pipe_rem(nni_sock *sock, nni_pipe *pipe)
 {
 	nni_ep *ep;
+	void *pdata = nni_pipe_get_proto_data(pipe);
 
 	nni_mtx_lock(&sock->s_mx);
 	nni_list_remove(&sock->s_idles, pipe);
+
+	if (pdata != NULL) {
+		sock->s_pipe_ops.pipe_fini(pdata);
+	}
 
 	// Notify the endpoint that the pipe has closed - if not already done.
 	if (((ep = pipe->p_ep) != NULL) && ((ep->ep_pipe == pipe))) {
@@ -404,8 +420,10 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	sock->s_reconn = NNI_SECOND;
 	sock->s_reconnmax = 0;
 	sock->s_rcvmaxsz = 1024 * 1024; // 1 MB by default
-	NNI_LIST_INIT(&sock->s_pipes, nni_pipe, p_node);
-	NNI_LIST_INIT(&sock->s_idles, nni_pipe, p_node);
+
+	nni_pipe_sock_list_init(&sock->s_pipes);
+	nni_pipe_sock_list_init(&sock->s_idles);
+
 	NNI_LIST_INIT(&sock->s_eps, nni_ep, ep_node);
 	sock->s_send_fd.sn_init = 0;
 	sock->s_recv_fd.sn_init = 0;
