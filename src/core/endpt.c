@@ -29,7 +29,7 @@ nni_ep_hold(nni_ep **epp, uint32_t id)
 		nni_mtx_unlock(nni_idlock);
 		return (NNG_ECLOSED);
 	}
-	ep->ep_refcnt++;
+	ep->ep_holds++;
 	nni_mtx_unlock(nni_idlock);
 	*epp = ep;
 	return (0);
@@ -40,9 +40,9 @@ void
 nni_ep_rele(nni_ep *ep)
 {
 	nni_mtx_lock(nni_idlock);
-	ep->ep_refcnt--;
-	if (ep->ep_refcnt == 0) {
-		nni_cv_wake(&ep->ep_refcv);
+	ep->ep_holds--;
+	if (ep->ep_holds == 0) {
+		nni_cv_wake(&ep->ep_holdcv);
 	}
 	nni_mtx_unlock(nni_idlock);
 }
@@ -64,8 +64,8 @@ nni_ep_hold_close(nni_ep **epp, uint32_t id)
 	}
 	ep->ep_id = 0;
 	nni_idhash_remove(nni_endpoints, id);
-	while (ep->ep_refcnt) {
-		nni_cv_wait(&ep->ep_refcv);
+	while (ep->ep_holds) {
+		nni_cv_wait(&ep->ep_holdcv);
 	}
 	nni_mtx_unlock(nni_idlock);
 	return (0);
@@ -101,10 +101,10 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	ep->ep_bound = 0;
 	ep->ep_pipe = NULL;
 	ep->ep_tran = tran;
-	ep->ep_refcnt = 0;
+	ep->ep_holds = 0;
 	ep->ep_id = 0;
 	memset(&ep->ep_cv, 0, sizeof (ep->ep_cv));
-	memset(&ep->ep_refcv, 0, sizeof (ep->ep_refcv));
+	memset(&ep->ep_holdcv, 0, sizeof (ep->ep_holdcv));
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 	// Could safely use strcpy here, but this avoids discussion.
 	(void) snprintf(ep->ep_addr, sizeof (ep->ep_addr), "%s", addr);
@@ -115,9 +115,9 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	ep->ep_ops = *tran->tran_ep;
 
 	if (((rv = nni_cv_init(&ep->ep_cv, &sock->s_mx)) != 0) ||
-	    ((rv = nni_cv_init(&ep->ep_refcv, nni_idlock)) != 0)) {
+	    ((rv = nni_cv_init(&ep->ep_holdcv, nni_idlock)) != 0)) {
 		nni_cv_fini(&ep->ep_cv);
-		nni_cv_fini(&ep->ep_refcv);
+		nni_cv_fini(&ep->ep_holdcv);
 		NNI_FREE_STRUCT(ep);
 		return (rv);
 	}
@@ -126,7 +126,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	if (sock->s_closing) {
 		nni_mtx_unlock(&sock->s_mx);
 		nni_cv_fini(&ep->ep_cv);
-		nni_cv_fini(&ep->ep_refcv);
+		nni_cv_fini(&ep->ep_holdcv);
 		NNI_FREE_STRUCT(ep);
 		return (NNG_ECLOSED);
 	}
@@ -135,7 +135,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	if (rv != 0) {
 		nni_mtx_unlock(&sock->s_mx);
 		nni_cv_fini(&ep->ep_cv);
-		nni_cv_fini(&ep->ep_refcv);
+		nni_cv_fini(&ep->ep_holdcv);
 		NNI_FREE_STRUCT(ep);
 		return (rv);
 	}
@@ -150,7 +150,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 		nni_list_remove(&sock->s_eps, ep);
 		ep->ep_ops.ep_fini(ep->ep_data);
 		nni_cv_fini(&ep->ep_cv);
-		nni_cv_fini(&ep->ep_refcv);
+		nni_cv_fini(&ep->ep_holdcv);
 		NNI_FREE_STRUCT(ep);
 	}
 
@@ -173,8 +173,8 @@ nni_ep_close(nni_ep *ep)
 		nni_idhash_remove(nni_endpoints, ep->ep_id);
 		ep->ep_id = 0;
 	}
-	while (ep->ep_refcnt) {
-		nni_cv_wait(&ep->ep_refcv);
+	while (ep->ep_holds) {
+		nni_cv_wait(&ep->ep_holdcv);
 	}
 	nni_mtx_unlock(nni_idlock);
 
