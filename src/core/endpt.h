@@ -49,5 +49,6 @@ extern int nni_ep_accept(nni_ep *, nni_pipe **);
 extern void nni_ep_close(nni_ep *);
 extern int nni_ep_dial(nni_ep *, int);
 extern int nni_ep_listen(nni_ep *, int);
+extern void nni_ep_list_init(nni_list *);
 
 #endif // CORE_ENDPT_H

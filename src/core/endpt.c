@@ -166,6 +166,13 @@ nni_ep_close(nni_ep *ep)
 	nni_mtx *mx = &ep->ep_sock->s_mx;
 
 	nni_mtx_lock(nni_idlock);
+	if (ep->ep_id != 0) {
+		// We might have removed this already as a result of
+		// application initiated endpoint close request instead
+		// of socket close.
+		nni_idhash_remove(nni_endpoints, ep->ep_id);
+		ep->ep_id = 0;
+	}
 	while (ep->ep_refcnt) {
 		nni_cv_wait(&ep->ep_refcv);
 	}
@@ -185,15 +192,6 @@ nni_ep_close(nni_ep *ep)
 
 	nni_thr_fini(&ep->ep_thr);
 	ep->ep_ops.ep_fini(ep->ep_data);
-
-	nni_mtx_lock(nni_idlock);
-	if (ep->ep_id != 0) {
-		// We might have removed this already as a result of
-		// application initiated endpoint close request instead
-		// of socket close.
-		nni_idhash_remove(nni_endpoints, ep->ep_id);
-	}
-	nni_mtx_unlock(nni_idlock);
 
 	nni_cv_fini(&ep->ep_cv);
 	NNI_FREE_STRUCT(ep);
@@ -497,4 +495,11 @@ nni_ep_listen(nni_ep *ep, int flags)
 	nni_mtx_unlock(mx);
 
 	return (0);
+}
+
+
+void
+nni_ep_list_init(nni_list *list)
+{
+	NNI_LIST_INIT(list, nni_ep, ep_node);
 }
