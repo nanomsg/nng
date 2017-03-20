@@ -41,7 +41,7 @@ nni_ep_rele(nni_ep *ep)
 {
 	nni_mtx_lock(nni_idlock);
 	ep->ep_refcnt--;
-	if (ep->ep_refcnt == 1) {
+	if (ep->ep_refcnt == 0) {
 		nni_cv_wake(&ep->ep_refcv);
 	}
 	nni_mtx_unlock(nni_idlock);
