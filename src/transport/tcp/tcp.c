@@ -303,7 +303,7 @@ nni_tcp_negotiate(nni_tcp_pipe *pipe)
 
 
 static int
-nni_tcp_ep_connect(void *arg, void **pipep)
+nni_tcp_ep_connect(void *arg, nni_pipe *npipe)
 {
 	nni_tcp_ep *ep = arg;
 	nni_tcp_pipe *pipe;
@@ -377,7 +377,7 @@ nni_tcp_ep_connect(void *arg, void **pipep)
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
-	*pipep = pipe;
+	nni_pipe_set_tran_data(npipe, pipe);
 	return (0);
 }
 
@@ -414,7 +414,7 @@ nni_tcp_ep_bind(void *arg)
 
 
 static int
-nni_tcp_ep_accept(void *arg, void **pipep)
+nni_tcp_ep_accept(void *arg, nni_pipe *npipe)
 {
 	nni_tcp_ep *ep = arg;
 	nni_tcp_pipe *pipe;
@@ -442,7 +442,7 @@ nni_tcp_ep_accept(void *arg, void **pipep)
 		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
-	*pipep = pipe;
+	nni_pipe_set_tran_data(npipe, pipe);
 	return (0);
 }
 

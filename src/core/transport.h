@@ -46,11 +46,10 @@ struct nni_tran_ep {
 	// The endpoint will already have been closed.
 	void	(*ep_fini)(void *);
 
-	// ep_connect establishes a connection, and creates a new pipe,
-	// which is returned in the final argument.  It can return errors
+	// ep_connect establishes a connection.  It can return errors
 	// NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR, NNG_ECONNFAILED,
 	// NNG_ETIMEDOUT, and NNG_EPROTO.
-	int	(*ep_connect)(void *, void **);
+	int	(*ep_connect)(void *, nni_pipe *);
 
 	// ep_bind just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
@@ -59,9 +58,8 @@ struct nni_tran_ep {
 	// address, or NNG_EACCESS for permission problems.
 	int	(*ep_bind)(void *);
 
-	// ep_accept accepts an inbound connection, and creates
-	// a transport pipe, which is returned in the final argument.
-	int	(*ep_accept)(void *, void **);
+	// ep_accept accepts an inbound connection.
+	int	(*ep_accept)(void *, nni_pipe *);
 
 	// ep_close stops the endpoint from operating altogether.  It does
 	// not affect pipes that have already been created.

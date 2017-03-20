@@ -225,6 +225,20 @@ nni_pipe_get_proto_data(nni_pipe *p)
 
 
 void
+nni_pipe_set_tran_data(nni_pipe *p, void *data)
+{
+	p->p_tran_data = data;
+}
+
+
+void *
+nni_pipe_get_tran_data(nni_pipe *p)
+{
+	return (p->p_tran_data);
+}
+
+
+void
 nni_pipe_sock_list_init(nni_list *list)
 {
 	NNI_LIST_INIT(list, nni_pipe, p_sock_node);

@@ -262,7 +262,7 @@ nni_inproc_ep_close(void *arg)
 
 
 static int
-nni_inproc_ep_connect(void *arg, void **pipep)
+nni_inproc_ep_connect(void *arg, nni_pipe *npipe)
 {
 	nni_inproc_ep *ep = arg;
 
@@ -303,7 +303,7 @@ nni_inproc_ep_connect(void *arg, void **pipep)
 			nni_list_remove(&server->clients, ep);
 		}
 	}
-	*pipep = ep->cpipe;
+	nni_pipe_set_tran_data(npipe, ep->cpipe);
 	ep->cpipe = NULL;
 	nni_mtx_unlock(&nni_inproc.mx);
 	return (0);
@@ -342,7 +342,7 @@ nni_inproc_ep_bind(void *arg)
 
 
 static int
-nni_inproc_ep_accept(void *arg, void **pipep)
+nni_inproc_ep_accept(void *arg, nni_pipe *npipe)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *client;
@@ -393,7 +393,7 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 	pair->pipe[0].peer = ep->proto;
 	pair->refcnt = 2;
 	client->cpipe = &pair->pipe[0];
-	*pipep = &pair->pipe[1];
+	nni_pipe_set_tran_data(npipe, &pair->pipe[1]);
 	nni_cv_wake(&client->cv);
 
 	nni_mtx_unlock(&nni_inproc.mx);

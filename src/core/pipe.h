@@ -64,6 +64,15 @@ extern void nni_pipe_set_proto_data(nni_pipe *, void *);
 // nni_pipe_set_proto_data function.  No locking is performed.
 extern void *nni_pipe_get_proto_data(nni_pipe *);
 
+// nni_pipe_set_tran_data sets the transport private data.  No locking is
+// performed, and this routine should only be called once per pipe at
+// initialization.
+extern void nni_pipe_set_tran_data(nni_pipe *, void *);
+
+// nni_pipe_get_tran_data gets the transport private data set with the
+// nni_pipe_set_tran_data function.  No locking is performed.
+extern void *nni_pipe_get_tran_data(nni_pipe *);
+
 // nni_pipe_sock_list_init initializes a list of pipes, to be used by
 // a per-socket list.
 extern void nni_pipe_sock_list_init(nni_list *);
