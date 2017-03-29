@@ -178,16 +178,17 @@ nni_plat_aiothr_dothr(nni_posix_aioq *q, int (*fn)(int, nni_aio *))
 		}
 
 		nni_list_remove(&q->aq_aios, aio);
-		nni_mtx_unlock(&q->aq_lk);
+		//nni_mtx_unlock(&q->aq_lk);
 
 		// Call the callback.
 		nni_aio_finish(aio, rv, aio->a_count);
 	}
 
 	while ((aio = nni_list_first(&q->aq_aios)) != NULL) {
-		nni_mtx_unlock(&q->aq_lk);
+		nni_list_remove(&q->aq_aios, aio);
+		//nni_mtx_unlock(&q->aq_lk);
 		nni_aio_finish(aio, NNG_ECLOSED, aio->a_count);
-		nni_mtx_lock(&q->aq_lk);
+		//nni_mtx_lock(&q->aq_lk);
 	}
 
 	nni_mtx_unlock(&q->aq_lk);
@@ -299,16 +300,16 @@ nni_posix_aio_submit(nni_posix_aioq *q, nni_aio *aio)
 
 
 int
-nni_posix_aio_read(nni_posix_aioq *q, nni_aio *aio)
+nni_posix_aio_read(nni_posix_aio_pipe *p, nni_aio *aio)
 {
-	return (nni_posix_aio_submit(q, aio));
+	return (nni_posix_aio_submit(&p->ap_readq, aio));
 }
 
 
 int
-nni_posix_aio_write(nni_posix_aioq *q, nni_aio *aio)
+nni_posix_aio_write(nni_posix_aio_pipe *p, nni_aio *aio)
 {
-	return (nni_posix_aio_submit(q, aio));
+	return (nni_posix_aio_submit(&p->ap_writeq, aio));
 }
 
 

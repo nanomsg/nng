@@ -51,8 +51,8 @@ extern void nni_posix_aio_pipe_fini(nni_posix_aio_pipe *);
 
 // extern int nni_posix_aio_ep_init(nni_posix_aio_ep *, int);
 // extern void nni_posix_aio_ep_fini(nni_posix_aio_ep *);
-extern int nni_posix_aio_read(nni_posix_aioq *, nni_aio *);
-extern int nni_posix_aio_write(nni_posix_aioq *, nni_aio *);
+extern int nni_posix_aio_read(nni_posix_aio_pipe *, nni_aio *);
+extern int nni_posix_aio_write(nni_posix_aio_pipe *, nni_aio *);
 
 // extern int nni_posix_aio_connect();
 // extern int nni_posix_aio_accept();

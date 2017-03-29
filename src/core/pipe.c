@@ -39,14 +39,14 @@ nni_pipe_recv(nni_pipe *p, nng_msg **msgp)
 int
 nni_pipe_aio_recv(nni_pipe *p, nni_aio *aio)
 {
-	return (p->p_tran_ops.pipe_aio_recv(p->p_tran_data, aio));
+	return (p->p_tran_ops.p_aio_recv(p->p_tran_data, aio));
 }
 
 
 int
 nni_pipe_aio_send(nni_pipe *p, nni_aio *aio)
 {
-	return (p->p_tran_ops.pipe_aio_send(p->p_tran_data, aio));
+	return (p->p_tran_ops.p_aio_send(p->p_tran_data, aio));
 }
 
 
@@ -92,7 +92,7 @@ nni_pipe_close(nni_pipe *p)
 
 	// Close the underlying transport.
 	if (p->p_tran_data != NULL) {
-		p->p_tran_ops.pipe_close(p->p_tran_data);
+		p->p_tran_ops.p_close(p->p_tran_data);
 	}
 
 	// Unregister our ID so nobody else can find it.
@@ -116,7 +116,7 @@ nni_pipe_close(nni_pipe *p)
 uint16_t
 nni_pipe_peer(nni_pipe *p)
 {
-	return (p->p_tran_ops.pipe_peer(p->p_tran_data));
+	return (p->p_tran_ops.p_peer(p->p_tran_data));
 }
 
 
@@ -145,7 +145,15 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 	// and we avoid an extra dereference on hot code paths.
 	p->p_tran_ops = *tran->tran_pipe;
 
+	// Initialize the transport pipe data.
+	if ((rv = p->p_tran_ops.p_init(&p->p_tran_data)) != 0) {
+		nni_mtx_fini(&p->p_mtx);
+		NNI_FREE_STRUCT(p);
+		return (rv);
+	}
+
 	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
+		p->p_tran_ops.p_fini(p->p_tran_data);
 		nni_mtx_fini(&p->p_mtx);
 		NNI_FREE_STRUCT(p);
 		return (rv);
@@ -164,7 +172,7 @@ nni_pipe_destroy(nni_pipe *p)
 	// The caller is responsible for ensuring that the pipe
 	// is not in use by any other consumers.  It must not be started
 	if (p->p_tran_data != NULL) {
-		p->p_tran_ops.pipe_destroy(p->p_tran_data);
+		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
 	nni_sock_pipe_rem(p->p_sock, p);
 	nni_mtx_fini(&p->p_mtx);
@@ -176,10 +184,10 @@ int
 nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)
 {
 	/*  This should only be called with the mutex held... */
-	if (p->p_tran_ops.pipe_getopt == NULL) {
+	if (p->p_tran_ops.p_getopt == NULL) {
 		return (NNG_ENOTSUP);
 	}
-	return (p->p_tran_ops.pipe_getopt(p->p_tran_data, opt, val, szp));
+	return (p->p_tran_ops.p_getopt(p->p_tran_data, opt, val, szp));
 }
 
 

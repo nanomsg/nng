@@ -49,6 +49,8 @@ typedef int				nni_signal;     // Wakeup channel.
 typedef uint64_t			nni_time;       // Abs. time (usec).
 typedef int64_t				nni_duration;   // Rel. time (usec).
 
+typedef struct nni_aio			nni_aio;
+
 typedef void (*nni_cb)(void *);
 
 // Used by transports for scatter gather I/O.

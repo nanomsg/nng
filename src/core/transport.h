@@ -48,8 +48,10 @@ struct nni_tran_ep {
 
 	// ep_connect establishes a connection.  It can return errors
 	// NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR, NNG_ECONNFAILED,
-	// NNG_ETIMEDOUT, and NNG_EPROTO.
-	int	(*ep_connect)(void *, nni_pipe *);
+	// NNG_ETIMEDOUT, and NNG_EPROTO.  The first argument is the
+	// transport specific endpoint, and the second is the transport
+	// specific pipe structure.
+	int	(*ep_connect)(void *, void *);
 
 	// ep_bind just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
@@ -58,8 +60,10 @@ struct nni_tran_ep {
 	// address, or NNG_EACCESS for permission problems.
 	int	(*ep_bind)(void *);
 
-	// ep_accept accepts an inbound connection.
-	int	(*ep_accept)(void *, nni_pipe *);
+	// ep_accept accepts an inbound connection.  The first argument
+	// is the transport-specific endpoint, and the second is the
+	// transport-specific pipe (which will have already been created.)
+	int	(*ep_accept)(void *, void *);
 
 	// ep_close stops the endpoint from operating altogether.  It does
 	// not affect pipes that have already been created.
@@ -77,14 +81,17 @@ struct nni_tran_ep {
 // back into the socket at this point.  (Which is one reason pointers back
 // to socket or even enclosing pipe state, are not provided.)
 struct nni_tran_pipe {
-	// p_destroy destroys the pipe.  This should clean up all local
+	// p_init initializes the pipe structure, allocating the structure.
+	int		(*p_init)(void **);
+
+	// p_fini destroys the pipe.  This should clean up all local
 	// resources, including closing files and freeing memory, used by
 	// the pipe.  After this call returns, the system will not make
 	// further calls on the same pipe.
-	void		(*pipe_destroy)(void *);
+	void		(*p_fini)(void *);
 
-	int		(*pipe_aio_send)(void *, nni_aio *);
-	int		(*pipe_aio_recv)(void *, nni_aio *);
+	int		(*p_aio_send)(void *, nni_aio *);
+	int		(*p_aio_recv)(void *, nni_aio *);
 
 	// p_send sends the message.  If the message cannot be received, then
 	// the caller may try again with the same message (or free it).  If
@@ -104,15 +111,15 @@ struct nni_tran_pipe {
 
 	// p_close closes the pipe.  Further recv or send operations should
 	// return back NNG_ECLOSED.
-	void		(*pipe_close)(void *);
+	void		(*p_close)(void *);
 
 	// p_peer returns the peer protocol. This may arrive in whatever
 	// transport specific manner is appropriate.
-	uint16_t	(*pipe_peer)(void *);
+	uint16_t	(*p_peer)(void *);
 
 	// p_getopt gets an pipe (transport-specific) property.  These values
 	// may not be changed once the pipe is created.
-	int		(*pipe_getopt)(void *, int, void *, size_t *);
+	int		(*p_getopt)(void *, int, void *, size_t *);
 };
 
 // These APIs are used by the framework internally, and not for use by

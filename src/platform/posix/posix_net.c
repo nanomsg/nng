@@ -8,6 +8,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "platform/posix/posix_aio.h"
 
 #ifdef PLATFORM_POSIX_NET
 
@@ -28,6 +29,14 @@
 #define NNI_TCP_SOCKTYPE	(SOCK_STREAM | SOCK_CLOEXEC)
 #else
 #define NNI_TCP_SOCKTYPE	SOCK_STREAM
+#endif
+
+#ifdef PLATFORM_POSIX_NET
+struct nni_plat_tcpsock {
+	int			fd;
+	int			devnull; // used for shutting down blocking accept()
+	nni_posix_aio_pipe	aiop;
+};
 #endif
 
 static int
@@ -164,6 +173,20 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 
 int
+nni_plat_tcp_aio_send(nni_plat_tcpsock *s, nni_aio *aio)
+{
+	return (nni_posix_aio_write(&s->aiop, aio));
+}
+
+
+int
+nni_plat_tcp_aio_recv(nni_plat_tcpsock *s, nni_aio *aio)
+{
+	return (nni_posix_aio_read(&s->aiop, aio));
+}
+
+
+int
 nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 {
 	struct iovec iov[4];    // We never have more than 3 at present
@@ -241,32 +264,39 @@ nni_plat_tcp_setopts(int fd)
 
 
 int
-nni_plat_tcp_init(nni_plat_tcpsock *s)
+nni_plat_tcp_init(nni_plat_tcpsock **tspp)
 {
-	s->fd = -1;
+	nni_plat_tcpsock *tsp;
+
+	if ((tsp = NNI_ALLOC_STRUCT(tsp)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	tsp->fd = -1;
+	*tspp = tsp;
 	return (0);
 }
 
 
 void
-nni_plat_tcp_fini(nni_plat_tcpsock *s)
+nni_plat_tcp_fini(nni_plat_tcpsock *tsp)
 {
-	if (s->fd != -1) {
-		(void) close(s->fd);
-		s->fd = -1;
+	if (tsp->fd != -1) {
+		(void) close(tsp->fd);
+		tsp->fd = -1;
 	}
+	NNI_FREE_STRUCT(tsp);
 }
 
 
 void
-nni_plat_tcp_shutdown(nni_plat_tcpsock *s)
+nni_plat_tcp_shutdown(nni_plat_tcpsock *tsp)
 {
-	if (s->fd != -1) {
-		(void) shutdown(s->fd, SHUT_RDWR);
+	if (tsp->fd != -1) {
+		(void) shutdown(tsp->fd, SHUT_RDWR);
 		// This causes the equivalent of a close.  Hopefully waking
 		// up anything that didn't get the hint with the shutdown.
 		// (macOS does not see the shtudown).
-		(void) dup2(nni_plat_devnull, s->fd);
+		(void) dup2(nni_plat_devnull, tsp->fd);
 	}
 }
 
@@ -278,7 +308,7 @@ nni_plat_tcp_shutdown(nni_plat_tcpsock *s)
 // to keep up, and your clients are going to experience bad things.  Normally
 // the actual backlog should hover near 0 anyway.)
 int
-nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
+nni_plat_tcp_listen(nni_plat_tcpsock *tsp, const nni_sockaddr *addr)
 {
 	int fd;
 	int len;
@@ -310,7 +340,7 @@ nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
 		return (rv);
 	}
 
-	s->fd = fd;
+	tsp->fd = fd;
 	return (0);
 }
 
@@ -319,7 +349,7 @@ nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
 // bind address is not null, then it will attempt to bind to the local
 // address specified first.
 int
-nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
+nni_plat_tcp_connect(nni_plat_tcpsock *tsp, const nni_sockaddr *addr,
     const nni_sockaddr *bindaddr)
 {
 	int fd;
@@ -358,15 +388,20 @@ nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
 		(void) close(fd);
 		return (rv);
 	}
-	s->fd = fd;
+	if ((rv = nni_posix_aio_pipe_init(&tsp->aiop, fd)) != 0) {
+		(void) close(fd);
+		return (rv);
+	}
+	tsp->fd = fd;
 	return (0);
 }
 
 
 int
-nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
+nni_plat_tcp_accept(nni_plat_tcpsock *tsp, nni_plat_tcpsock *server)
 {
 	int fd;
+	int rv;
 
 	for (;;) {
 #ifdef NNG_USE_ACCEPT4
@@ -387,7 +422,12 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 
 	nni_plat_tcp_setopts(fd);
 
-	s->fd = fd;
+	if ((rv = nni_posix_aio_pipe_init(&tsp->aiop, fd)) != 0) {
+		close(fd);
+		return (rv);
+	}
+
+	tsp->fd = fd;
 	return (0);
 }
 

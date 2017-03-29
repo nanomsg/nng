@@ -35,12 +35,6 @@ extern int nni_plat_errno(int);
 #endif
 
 
-#ifdef PLATFORM_POSIX_NET
-struct nni_plat_tcpsock {
-	int	fd;
-	int	devnull; // used for shutting down blocking accept()
-};
-#endif
 
 #ifdef PLATFORM_POSIX_IPC
 struct nni_plat_ipcsock {

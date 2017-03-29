@@ -15,9 +15,7 @@
 #include "core/taskq.h"
 #include "core/thread.h"
 
-typedef struct nni_aio_ops	nni_aio_ops;
-typedef struct nni_aio		nni_aio;
-
+typedef struct nni_aio_ops   nni_aio_ops;
 
 // An nni_aio is an async I/O handle.
 struct nni_aio {

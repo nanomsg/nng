@@ -59,8 +59,26 @@ nni_ipc_pipe_close(void *arg)
 }
 
 
+static int
+nni_ipc_pipe_init(void **argp)
+{
+	nni_ipc_pipe *pipe;
+	int rv;
+
+	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_plat_ipc_init(&pipe->fd)) != 0) {
+		NNI_FREE_STRUCT(pipe);
+		return (rv);
+	}
+	*argp = pipe;
+	return (0);
+}
+
+
 static void
-nni_ipc_pipe_destroy(void *arg)
+nni_ipc_pipe_fini(void *arg)
 {
 	nni_ipc_pipe *pipe = arg;
 
@@ -260,10 +278,10 @@ nni_ipc_negotiate(nni_ipc_pipe *pipe)
 
 
 static int
-nni_ipc_ep_connect(void *arg, nni_pipe *npipe)
+nni_ipc_ep_connect(void *arg, void *pipearg)
 {
 	nni_ipc_ep *ep = arg;
-	nni_ipc_pipe *pipe;
+	nni_ipc_pipe *pipe = pipearg;
 	int rv;
 	const char *path;
 
@@ -272,13 +290,6 @@ nni_ipc_ep_connect(void *arg, nni_pipe *npipe)
 	}
 	path = ep->addr + strlen("ipc://");
 
-	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	if ((rv = nni_plat_ipc_init(&pipe->fd)) != 0) {
-		NNI_FREE_STRUCT(pipe);
-		return (rv);
-	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
 
@@ -291,11 +302,8 @@ nni_ipc_ep_connect(void *arg, nni_pipe *npipe)
 
 	if ((rv = nni_ipc_negotiate(pipe)) != 0) {
 		nni_plat_ipc_shutdown(&pipe->fd);
-		nni_plat_ipc_fini(&pipe->fd);
-		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
-	nni_pipe_set_tran_data(npipe, pipe);
 	return (0);
 }
 
@@ -321,22 +329,14 @@ nni_ipc_ep_bind(void *arg)
 
 
 static int
-nni_ipc_ep_accept(void *arg, nni_pipe *npipe)
+nni_ipc_ep_accept(void *arg, void *pipearg)
 {
 	nni_ipc_ep *ep = arg;
-	nni_ipc_pipe *pipe;
+	nni_ipc_pipe *pipe = pipearg;
 	int rv;
 
-
-	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
-	if ((rv = nni_plat_ipc_init(&pipe->fd)) != 0) {
-		NNI_FREE_STRUCT(pipe);
-		return (rv);
-	}
 
 	if ((rv = nni_plat_ipc_accept(&pipe->fd, &ep->fd)) != 0) {
 		nni_plat_ipc_fini(&pipe->fd);
@@ -345,22 +345,18 @@ nni_ipc_ep_accept(void *arg, nni_pipe *npipe)
 	}
 	if ((rv = nni_ipc_negotiate(pipe)) != 0) {
 		nni_plat_ipc_shutdown(&pipe->fd);
-		nni_plat_ipc_fini(&pipe->fd);
-		NNI_FREE_STRUCT(pipe);
 		return (rv);
 	}
-	nni_pipe_set_tran_data(npipe, pipe);
 	return (0);
 }
 
 
 static nni_tran_pipe nni_ipc_pipe_ops = {
-	.pipe_destroy	= nni_ipc_pipe_destroy,
-	.pipe_send	= nni_ipc_pipe_send,
-	.pipe_recv	= nni_ipc_pipe_recv,
-	.pipe_close	= nni_ipc_pipe_close,
-	.pipe_peer	= nni_ipc_pipe_peer,
-	.pipe_getopt	= nni_ipc_pipe_getopt,
+	.p_init		= nni_ipc_pipe_init,
+	.p_fini		= nni_ipc_pipe_fini,
+	.p_close	= nni_ipc_pipe_close,
+	.p_peer		= nni_ipc_pipe_peer,
+	.p_getopt	= nni_ipc_pipe_getopt,
 };
 
 static nni_tran_ep nni_ipc_ep_ops = {
