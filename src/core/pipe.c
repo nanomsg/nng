@@ -23,20 +23,6 @@ nni_pipe_id(nni_pipe *p)
 
 
 int
-nni_pipe_send(nni_pipe *p, nng_msg *msg)
-{
-	return (p->p_tran_ops.pipe_send(p->p_tran_data, msg));
-}
-
-
-int
-nni_pipe_recv(nni_pipe *p, nng_msg **msgp)
-{
-	return (p->p_tran_ops.pipe_recv(p->p_tran_data, msgp));
-}
-
-
-int
 nni_pipe_aio_recv(nni_pipe *p, nni_aio *aio)
 {
 	return (p->p_tran_ops.p_aio_recv(p->p_tran_data, aio));
@@ -229,20 +215,6 @@ void *
 nni_pipe_get_proto_data(nni_pipe *p)
 {
 	return (p->p_proto_data);
-}
-
-
-void
-nni_pipe_set_tran_data(nni_pipe *p, void *data)
-{
-	p->p_tran_data = data;
-}
-
-
-void *
-nni_pipe_get_tran_data(nni_pipe *p)
-{
-	return (p->p_tran_data);
 }
 
 

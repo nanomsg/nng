@@ -178,7 +178,6 @@ nni_plat_aiothr_dothr(nni_posix_aioq *q, int (*fn)(int, nni_aio *))
 		}
 
 		nni_list_remove(&q->aq_aios, aio);
-		//nni_mtx_unlock(&q->aq_lk);
 
 		// Call the callback.
 		nni_aio_finish(aio, rv, aio->a_count);
@@ -186,9 +185,7 @@ nni_plat_aiothr_dothr(nni_posix_aioq *q, int (*fn)(int, nni_aio *))
 
 	while ((aio = nni_list_first(&q->aq_aios)) != NULL) {
 		nni_list_remove(&q->aq_aios, aio);
-		//nni_mtx_unlock(&q->aq_lk);
 		nni_aio_finish(aio, NNG_ECLOSED, aio->a_count);
-		//nni_mtx_lock(&q->aq_lk);
 	}
 
 	nni_mtx_unlock(&q->aq_lk);

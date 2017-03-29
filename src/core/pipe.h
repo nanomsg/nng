@@ -37,8 +37,6 @@ extern int nni_pipe_aio_recv(nni_pipe *, nni_aio *);
 extern int nni_pipe_aio_send(nni_pipe *, nni_aio *);
 
 // Pipe operations that protocols use.
-extern int nni_pipe_recv(nni_pipe *, nng_msg **);
-extern int nni_pipe_send(nni_pipe *, nng_msg *);
 extern uint32_t nni_pipe_id(nni_pipe *);
 extern void nni_pipe_close(nni_pipe *);
 extern void nni_pipe_incref(nni_pipe *);
@@ -63,15 +61,6 @@ extern void nni_pipe_set_proto_data(nni_pipe *, void *);
 // nni_pipe_get_proto_data gets the protocol private data set with the
 // nni_pipe_set_proto_data function.  No locking is performed.
 extern void *nni_pipe_get_proto_data(nni_pipe *);
-
-// nni_pipe_set_tran_data sets the transport private data.  No locking is
-// performed, and this routine should only be called once per pipe at
-// initialization.
-extern void nni_pipe_set_tran_data(nni_pipe *, void *);
-
-// nni_pipe_get_tran_data gets the transport private data set with the
-// nni_pipe_set_tran_data function.  No locking is performed.
-extern void *nni_pipe_get_tran_data(nni_pipe *);
 
 // nni_pipe_sock_list_init initializes a list of pipes, to be used by
 // a per-socket list.

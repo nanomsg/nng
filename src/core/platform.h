@@ -208,13 +208,11 @@ extern int nni_plat_tcp_connect(nni_plat_tcpsock *, const nni_sockaddr *,
 // of iovs will never be larger than 4.  The platform may modify the iovs,
 // or the iov list.
 extern int nni_plat_tcp_aio_send(nni_plat_tcpsock *, nni_aio *);
-extern int nni_plat_tcp_send(nni_plat_tcpsock *, nni_iov *, int);
 
-// nni_plat_tcp_recv recvs data into the buffers provided by the
+// nni_plat_tcp_aio_recv recvs data into the buffers provided by the
 // iovs.  The implementation does not return until the iovs are completely
 // full, or an error condition occurs.
 extern int nni_plat_tcp_aio_recv(nni_plat_tcpsock *, nni_aio *);
-extern int nni_plat_tcp_recv(nni_plat_tcpsock *, nni_iov *, int);
 
 // nni_plat_ipc_init initializes the socket, for example it can
 // set underlying file descriptors to -1, etc.
