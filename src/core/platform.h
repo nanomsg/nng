@@ -216,7 +216,7 @@ extern int nni_plat_tcp_aio_recv(nni_plat_tcpsock *, nni_aio *);
 
 // nni_plat_ipc_init initializes the socket, for example it can
 // set underlying file descriptors to -1, etc.
-extern int nni_plat_ipc_init(nni_plat_ipcsock *);
+extern int nni_plat_ipc_init(nni_plat_ipcsock **);
 
 // nni_plat_ipc_fini just closes an IPC socket, and releases any related
 // resources.
@@ -241,15 +241,15 @@ extern int nni_plat_ipc_accept(nni_plat_ipcsock *, nni_plat_ipcsock *);
 // nni_plat_ipc_connect is the client side.
 extern int nni_plat_ipc_connect(nni_plat_ipcsock *, const char *);
 
-// nni_plat_ipc_send sends data to the peer.  The platform is responsible
+// nni_plat_ipc_aio_send sends data to the peer.  The platform is responsible
 // for attempting to send all of the data.  The iov count will never be
 // larger than 4.  The platform may modify the iovs.
-extern int nni_plat_ipc_send(nni_plat_ipcsock *, nni_iov *, int);
+extern int nni_plat_ipc_aio_send(nni_plat_ipcsock *, nni_aio *);
 
-// nni_plat_ipc_recv recvs data into the buffers provided by the
+// nni_plat_ipc_aio_recv recvs data into the buffers provided by the
 // iovs.  The implementation does not return until the iovs are completely
 // full, or an error condition occurs.
-extern int nni_plat_ipc_recv(nni_plat_ipcsock *, nni_iov *, int);
+extern int nni_plat_ipc_aio_recv(nni_plat_ipcsock *, nni_aio *);
 
 // nni_plat_seed_prng seeds the PRNG subsystem.  The specified number
 // of bytes of entropy should be stashed.  When possible, cryptographic
@@ -280,6 +280,12 @@ extern void nni_plat_pipe_clear(int);
 // nni_plat_pipe_close closes both pipes that were provided by the open
 // routine.
 extern void nni_plat_pipe_close(int, int);
+
+// XXX: Stuff to REMOVE
+extern int nni_plat_tcp_send(nni_plat_tcpsock *, nni_iov *, int);
+extern int nni_plat_tcp_recv(nni_plat_tcpsock *, nni_iov *, int);
+extern int nni_plat_ipc_send(nni_plat_ipcsock *, nni_iov *, int);
+extern int nni_plat_ipc_recv(nni_plat_ipcsock *, nni_iov *, int);
 
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.

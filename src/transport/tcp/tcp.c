@@ -107,6 +107,9 @@ nni_tcp_pipe_fini(void *arg)
 {
 	nni_tcp_pipe *pipe = arg;
 
+	if (pipe->rxmsg) {
+		nni_msg_free(pipe->rxmsg);
+	}
 	nni_aio_fini(&pipe->rxaio);
 	nni_aio_fini(&pipe->txaio);
 	nni_plat_tcp_fini(pipe->tsp);

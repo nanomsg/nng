@@ -8,9 +8,9 @@
 //
 
 #include "core/nng_impl.h"
-#include "platform/posix/posix_aio.h"
 
 #ifdef PLATFORM_POSIX_NET
+#include "platform/posix/posix_aio.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -31,13 +31,11 @@
 #define NNI_TCP_SOCKTYPE	SOCK_STREAM
 #endif
 
-#ifdef PLATFORM_POSIX_NET
 struct nni_plat_tcpsock {
 	int			fd;
-	int			devnull; // used for shutting down blocking accept()
+	int			devnull; // for shutting down accept()
 	nni_posix_aio_pipe	aiop;
 };
-#endif
 
 static int
 nni_plat_to_sockaddr(struct sockaddr_storage *ss, const nni_sockaddr *sa)
@@ -284,6 +282,7 @@ nni_plat_tcp_fini(nni_plat_tcpsock *tsp)
 		(void) close(tsp->fd);
 		tsp->fd = -1;
 	}
+	nni_posix_aio_pipe_fini(&tsp->aiop);
 	NNI_FREE_STRUCT(tsp);
 }
 

@@ -35,15 +35,6 @@ extern int nni_plat_errno(int);
 #endif
 
 
-
-#ifdef PLATFORM_POSIX_IPC
-struct nni_plat_ipcsock {
-	int	fd;
-	int	devnull;        // used for shutting down blocking accept()
-	char *	unlink;         // path to unlink at termination
-};
-#endif
-
 // Define types that this platform uses.
 #ifdef PLATFORM_POSIX_THREAD
 

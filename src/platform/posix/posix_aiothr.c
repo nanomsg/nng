@@ -239,14 +239,16 @@ nni_posix_aioq_start(nni_posix_aioq *q)
 static void
 nni_posix_aioq_fini(nni_posix_aioq *q)
 {
-	nni_mtx_lock(&q->aq_lk);
-	q->aq_fd = -1;
-	nni_cv_wake(&q->aq_cv);
-	nni_mtx_unlock(&q->aq_lk);
+	if (q->aq_fd > 0) {
+		nni_mtx_lock(&q->aq_lk);
+		q->aq_fd = -1;
+		nni_cv_wake(&q->aq_cv);
+		nni_mtx_unlock(&q->aq_lk);
 
-	nni_thr_fini(&q->aq_thr);
-	nni_cv_fini(&q->aq_cv);
-	nni_mtx_fini(&q->aq_lk);
+		nni_thr_fini(&q->aq_thr);
+		nni_cv_fini(&q->aq_cv);
+		nni_mtx_fini(&q->aq_lk);
+	}
 }
 
 

@@ -10,6 +10,7 @@
 #include "core/nng_impl.h"
 
 #ifdef PLATFORM_POSIX_IPC
+#include "platform/posix/posix_aio.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -28,6 +29,13 @@
 #ifdef sun
 #undef sun
 #endif
+
+struct nni_plat_ipcsock {
+	int			fd;
+	int			devnull;        // for shutting down accept()
+	char *			unlink;         // path to unlink at fini
+	nni_posix_aio_pipe	aiop;
+};
 
 #ifdef  SOCK_CLOEXEC
 #define NNI_IPC_SOCKTYPE	(SOCK_STREAM | SOCK_CLOEXEC)
@@ -55,6 +63,20 @@ nni_plat_ipc_path_to_sockaddr(struct sockaddr_un *sun, const char *path)
 	}
 	snprintf(sun->sun_path, sizeof (sun->sun_path), "%s", path);
 	return (sizeof (*sun));
+}
+
+
+int
+nni_plat_ipc_aio_send(nni_plat_ipcsock *isp, nni_aio *aio)
+{
+	return (nni_posix_aio_write(&isp->aiop, aio));
+}
+
+
+int
+nni_plat_ipc_aio_recv(nni_plat_ipcsock *isp, nni_aio *aio)
+{
+	return (nni_posix_aio_read(&isp->aiop, aio));
 }
 
 
@@ -178,36 +200,46 @@ nni_plat_ipc_setopts(int fd)
 
 
 int
-nni_plat_ipc_init(nni_plat_ipcsock *s)
+nni_plat_ipc_init(nni_plat_ipcsock **ispp)
 {
-	s->fd = -1;
+	nni_plat_ipcsock *isp;
+
+	if ((isp = NNI_ALLOC_STRUCT(isp)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	isp->fd = -1;
+	*ispp = isp;
 	return (0);
 }
 
 
 void
-nni_plat_ipc_fini(nni_plat_ipcsock *s)
+nni_plat_ipc_fini(nni_plat_ipcsock *isp)
 {
-	if (s->fd != -1) {
-		(void) close(s->fd);
-		s->fd = -1;
+	if (isp->fd != -1) {
+		(void) close(isp->fd);
+		isp->fd = -1;
 	}
-	if (s->unlink != NULL) {
-		(void) unlink(s->unlink);
-		nni_free(s->unlink, strlen(s->unlink) + 1);
+	if (isp->unlink != NULL) {
+		(void) unlink(isp->unlink);
+		nni_free(isp->unlink, strlen(isp->unlink) + 1);
 	}
+
+	nni_posix_aio_pipe_fini(&isp->aiop);
+
+	NNI_FREE_STRUCT(isp);
 }
 
 
 void
-nni_plat_ipc_shutdown(nni_plat_ipcsock *s)
+nni_plat_ipc_shutdown(nni_plat_ipcsock *isp)
 {
-	if (s->fd != -1) {
-		(void) shutdown(s->fd, SHUT_RDWR);
+	if (isp->fd != -1) {
+		(void) shutdown(isp->fd, SHUT_RDWR);
 		// This causes the equivalent of a close.  Hopefully waking
 		// up anything that didn't get the hint with the shutdown.
 		// (macOS does not see the shtudown).
-		(void) dup2(nni_plat_devnull, s->fd);
+		(void) dup2(nni_plat_devnull, isp->fd);
 	}
 }
 
@@ -278,7 +310,7 @@ nni_plat_ipc_listen(nni_plat_ipcsock *s, const char *path)
 
 
 int
-nni_plat_ipc_connect(nni_plat_ipcsock *s, const char *path)
+nni_plat_ipc_connect(nni_plat_ipcsock *isp, const char *path)
 {
 	int fd;
 	int len;
@@ -305,15 +337,22 @@ nni_plat_ipc_connect(nni_plat_ipcsock *s, const char *path)
 		}
 		return (rv);
 	}
-	s->fd = fd;
+
+	if ((rv = nni_posix_aio_pipe_init(&isp->aiop, fd)) != 0) {
+		(void) close(fd);
+		return (rv);
+	}
+
+	isp->fd = fd;
 	return (0);
 }
 
 
 int
-nni_plat_ipc_accept(nni_plat_ipcsock *s, nni_plat_ipcsock *server)
+nni_plat_ipc_accept(nni_plat_ipcsock *isp, nni_plat_ipcsock *server)
 {
 	int fd;
+	int rv;
 
 	for (;;) {
 #ifdef NNG_USE_ACCEPT4
@@ -341,7 +380,12 @@ nni_plat_ipc_accept(nni_plat_ipcsock *s, nni_plat_ipcsock *server)
 
 	nni_plat_ipc_setopts(fd);
 
-	s->fd = fd;
+	if ((rv = nni_posix_aio_pipe_init(&isp->aiop, fd)) != 0) {
+		(void) close(fd);
+		return (rv);
+	}
+
+	isp->fd = fd;
 	return (0);
 }
 
