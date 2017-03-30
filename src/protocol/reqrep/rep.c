@@ -110,11 +110,11 @@ nni_rep_sock_fini(void *arg)
 {
 	nni_rep_sock *rep = arg;
 
+	nni_aio_fini(&rep->aio_getq);
 	nni_idhash_fini(&rep->pipes);
 	if (rep->btrace != NULL) {
 		nni_free(rep->btrace, rep->btrace_len);
 	}
-	nni_aio_fini(&rep->aio_getq);
 	NNI_FREE_STRUCT(rep);
 }
 

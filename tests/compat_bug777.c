@@ -21,6 +21,7 @@
 */
 
 #include "nng_compat.h"
+#include "nng.h"
 #include "compat_testutil.h"
 
 int main (int argc, const char *argv[])

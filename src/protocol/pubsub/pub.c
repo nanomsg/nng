@@ -78,10 +78,8 @@ nni_pub_sock_fini(void *arg)
 {
 	nni_pub_sock *pub = arg;
 
-	if (pub != NULL) {
-		nni_aio_fini(&pub->aio_getq);
-		NNI_FREE_STRUCT(pub);
-	}
+	nni_aio_fini(&pub->aio_getq);
+	NNI_FREE_STRUCT(pub);
 }
 
 

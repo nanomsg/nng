@@ -71,14 +71,12 @@ nni_sub_sock_fini(void *arg)
 	nni_sub_sock *sub = arg;
 	nni_sub_topic *topic;
 
-	if (sub != NULL) {
-		while ((topic = nni_list_first(&sub->topics)) != NULL) {
-			nni_list_remove(&sub->topics, topic);
-			nni_free(topic->buf, topic->len);
-			NNI_FREE_STRUCT(topic);
-		}
-		NNI_FREE_STRUCT(sub);
+	while ((topic = nni_list_first(&sub->topics)) != NULL) {
+		nni_list_remove(&sub->topics, topic);
+		nni_free(topic->buf, topic->len);
+		NNI_FREE_STRUCT(topic);
 	}
+	NNI_FREE_STRUCT(sub);
 }
 
 
