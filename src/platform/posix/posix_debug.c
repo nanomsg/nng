@@ -78,7 +78,9 @@ nni_plat_errnos[] = {
 	{ EPIPE,	   NNG_ECLOSED	    },
 	{ EPROTO,	   NNG_EPROTO	    },
 	{ EPROTONOSUPPORT, NNG_ENOTSUP	    },
+#ifdef  ETIME   // Found in STREAMs, not present on all systems.
 	{ ETIME,	   NNG_ETIMEDOUT    },
+#endif
 	{ ETIMEDOUT,	   NNG_ETIMEDOUT    },
 	{ EWOULDBLOCK,	   NNG_EAGAIN	    },
 	// must be last
