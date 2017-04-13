@@ -90,24 +90,18 @@ struct nni_tran_pipe {
 	// further calls on the same pipe.
 	void		(*p_fini)(void *);
 
-	int		(*p_aio_send)(void *, nni_aio *);
-	int		(*p_aio_recv)(void *, nni_aio *);
-
-	// p_send sends the message.  If the message cannot be received, then
+	// p_aio_send queues the message for transmit.  If this fails, then
 	// the caller may try again with the same message (or free it).  If
 	// the call succeeds, then the transport has taken ownership of the
 	// message, and the caller may not use it again.  The transport will
 	// have the responsibility to free the message (nng_msg_free()) when
 	// it is finished with it.
-	int		(*pipe_send)(void *, nni_msg *);
+	int		(*p_aio_send)(void *, nni_aio *);
 
-	// p_recv recvs the message. This is a blocking operation, and a read
-	// will be performed even for cases where no data is expected.  This
-	// allows the socket to detect a closed socket, by the returned error
-	// NNG_ECLOSED. Note that the closed socket condition can arise as
-	// either a result of a remote peer closing the connection, or a
-	// synchronous call to p_close.
-	int		(*pipe_recv)(void *, nng_msg **);
+	// p_recv schedules a message receive. This will be performed even for
+	// cases where no data is expected, to allow detection of a remote
+	// disconnect.
+	int		(*p_aio_recv)(void *, nni_aio *);
 
 	// p_close closes the pipe.  Further recv or send operations should
 	// return back NNG_ECLOSED.
