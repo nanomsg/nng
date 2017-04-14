@@ -45,6 +45,7 @@ struct nni_rep_pipe {
 	nni_pipe *	pipe;
 	nni_rep_sock *	rep;
 	nni_msgq *	sendq;
+	uint32_t	id;             // we have to save it
 	nni_aio		aio_getq;
 	nni_aio		aio_send;
 	nni_aio		aio_recv;
@@ -175,7 +176,8 @@ nni_rep_pipe_start(void *arg)
 	nni_rep_sock *rep = rp->rep;
 	int rv;
 
-	rv = nni_idhash_insert(&rep->pipes, nni_pipe_id(rp->pipe), rp);
+	rp->id = nni_pipe_id(rp->pipe);
+	rv = nni_idhash_insert(&rep->pipes, rp->id, rp);
 	if (rv != 0) {
 		return (rv);
 	}
@@ -199,7 +201,7 @@ nni_rep_pipe_stop(void *arg)
 		rp->running = 0;
 		nni_msgq_close(rp->sendq);
 		nni_msgq_aio_cancel(rep->urq, &rp->aio_putq);
-		nni_idhash_remove(&rep->pipes, nni_pipe_id(rp->pipe));
+		nni_idhash_remove(&rep->pipes, rp->id);
 	}
 }
 
@@ -302,7 +304,6 @@ nni_rep_pipe_recv_cb(void *arg)
 	nni_msg *msg;
 	int rv;
 	uint8_t idbuf[4];
-	uint32_t id;
 	uint8_t *body;
 	int hops;
 
@@ -312,8 +313,7 @@ nni_rep_pipe_recv_cb(void *arg)
 		return;
 	}
 
-	id = nni_pipe_id(rp->pipe);
-	NNI_PUT32(idbuf, id);
+	NNI_PUT32(idbuf, rp->id);
 
 	msg = rp->aio_recv.a_msg;
 	rp->aio_recv.a_msg = NULL;

@@ -43,6 +43,7 @@ struct nni_resp_sock {
 struct nni_resp_pipe {
 	nni_pipe *	npipe;
 	nni_resp_sock * psock;
+	uint32_t	id;
 	nni_msgq *	sendq;
 	nni_aio		aio_getq;
 	nni_aio		aio_putq;
@@ -180,7 +181,11 @@ nni_resp_pipe_start(void *arg)
 	nni_resp_sock *psock = ppipe->psock;
 	int rv;
 
-	rv = nni_idhash_insert(&psock->pipes, nni_pipe_id(ppipe->npipe), ppipe);
+	ppipe->id = nni_pipe_id(ppipe->npipe);
+	rv = nni_idhash_insert(&psock->pipes, ppipe->id, ppipe);
+	if (rv != 0) {
+		return (rv);
+	}
 
 	nni_pipe_incref(ppipe->npipe);
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
@@ -200,7 +205,7 @@ nni_resp_pipe_stop(void *arg)
 
 	if (ppipe->running) {
 		ppipe->running = 0;
-		nni_idhash_remove(&psock->pipes, nni_pipe_id(ppipe->npipe));
+		nni_idhash_remove(&psock->pipes, ppipe->id);
 
 		nni_msgq_close(ppipe->sendq);
 		nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
@@ -300,7 +305,6 @@ nni_resp_recv_cb(void *arg)
 	nni_msgq *urq = nni_sock_recvq(psock->nsock);
 	nni_msg *msg;
 	uint8_t idbuf[4];
-	uint32_t id;
 	int hops;
 	int rv;
 
@@ -308,8 +312,7 @@ nni_resp_recv_cb(void *arg)
 		goto error;
 	}
 
-	id = nni_pipe_id(ppipe->npipe);
-	NNI_PUT32(idbuf, id);
+	NNI_PUT32(idbuf, ppipe->id);
 
 	msg = ppipe->aio_recv.a_msg;
 	ppipe->aio_recv.a_msg = NULL;

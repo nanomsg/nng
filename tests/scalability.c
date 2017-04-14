@@ -39,7 +39,7 @@ client(void *arg)
 		return;
 	}
 
-	timeo = 40000; // 4 seconds
+	timeo = 4000000; // 4 seconds
 	if (((rv = nng_setopt(s, NNG_OPT_RCVTIMEO, &timeo, sizeof (timeo))) != 0) ||
 	    ((rv = nng_setopt(s, NNG_OPT_SNDTIMEO, &timeo, sizeof (timeo))) != 0)) {
 		*result = rv;
@@ -49,18 +49,7 @@ client(void *arg)
 
 	// Sleep for up to a second before issuing requests to avoid saturating
 	// the CPU with bazillions of requests at the same time.
-
-	if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
-		*result = rv;
-		nng_close(s);
-		return;
-	}
-	if ((rv = nng_msg_append(msg, "abc", strlen("abc"))) != 0) {
-		*result = rv;
-		nng_msg_free(msg);
-		nng_close(s);
-		return;
-	}
+	nng_usleep(1000000);
 
 	for (i = 0; i < count; i++) {
 		// Sleep for up to a 1ms before issuing requests to
