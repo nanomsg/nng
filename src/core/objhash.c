@@ -23,6 +23,7 @@ struct nni_objhash {
 	uint32_t		oh_maxval;
 	uint32_t		oh_dynval;
 	nni_mtx			oh_lock;
+	nni_cv			oh_cv;
 	nni_objhash_node *	oh_nodes;
 	nni_objhash_ctor	oh_ctor;
 	nni_objhash_dtor	oh_dtor;
@@ -55,6 +56,12 @@ nni_objhash_init(nni_objhash **ohp, nni_objhash_ctor ctor,
 		return (rv);
 	}
 
+	if ((rv = nni_cv_init(&oh->oh_cv, &oh->oh_lock)) != 0) {
+		nni_mtx_fini(&oh->oh_lock);
+		NNI_FREE_STRUCT(oh);
+		return (rv);
+	}
+
 	oh->oh_nodes = NULL;
 	oh->oh_count = 0;
 	oh->oh_load = 0;
@@ -64,6 +71,8 @@ nni_objhash_init(nni_objhash **ohp, nni_objhash_ctor ctor,
 	oh->oh_minval = 1;
 	oh->oh_maxval = 0x7fffffff;
 	oh->oh_dynval = nni_random();
+	oh->oh_ctor = ctor;
+	oh->oh_dtor = dtor;
 	*ohp = oh;
 
 	return (0);
@@ -79,24 +88,9 @@ nni_objhash_fini(nni_objhash *oh)
 		oh->oh_cap = oh->oh_count = 0;
 		oh->oh_load = oh->oh_minload = oh->oh_maxload = 0;
 	}
+	nni_cv_fini(&oh->oh_cv);
 	nni_mtx_fini(&oh->oh_lock);
 	NNI_FREE_STRUCT(oh);
-}
-
-
-void
-nni_objhash_reclaim(nni_objhash *oh)
-{
-	nni_mtx_lock(&oh->oh_lock);
-	// Reclaim the buffer if we want, but preserve the limits.
-	if ((oh->oh_count == 0) && (oh->oh_cap != 0)) {
-		nni_free(oh->oh_nodes, oh->oh_cap * sizeof (nni_objhash_node));
-		oh->oh_cap = 0;
-		oh->oh_nodes = NULL;
-		oh->oh_minload = 0;
-		oh->oh_maxload = 0;
-	}
-	nni_mtx_unlock(&oh->oh_lock);
 }
 
 
@@ -159,15 +153,30 @@ nni_objhash_find(nni_objhash *oh, uint32_t id, void **valp)
 
 
 // Resize the object hash.  This is called internally with the lock
-// for the object hash held.
+// for the object hash held.  Grow indicates that this is being called
+// from a function that intends to add data, so extra space is needed.
 static int
-nni_objhash_resize(nni_objhash *oh)
+nni_objhash_resize(nni_objhash *oh, int grow)
 {
 	size_t newsize;
 	size_t oldsize;
 	nni_objhash_node *newnodes;
 	nni_objhash_node *oldnodes;
 	uint32_t i;
+
+	if ((!grow) && (oh->oh_count == 0) && (oh->oh_cap != 0)) {
+		// Table is empty, and we are unrefing.  Lets reclaim the
+		// space.  Note that this means that allocations which
+		// fluctuate between one and zero are going to bang on the
+		// allocator a bit.  Since such cases should not be very
+		// performance sensitive, this is probably okay.
+		nni_free(oh->oh_nodes, oh->oh_cap * sizeof (nni_objhash_node));
+		oh->oh_cap = 0;
+		oh->oh_nodes = NULL;
+		oh->oh_minload = 0;
+		oh->oh_maxload = 0;
+		return (0);
+	}
 
 	if ((oh->oh_load < oh->oh_maxload) && (oh->oh_load >= oh->oh_minload)) {
 		// No resize needed.
@@ -241,6 +250,9 @@ nni_objhash_unref(nni_objhash *oh, uint32_t id)
 
 	node->on_refcnt--;
 	if (node->on_refcnt != 0) {
+		if (node->on_refcnt == 1) {
+			nni_cv_wake(&oh->oh_cv);
+		}
 		// Still busy/referenced?
 		nni_mtx_unlock(&oh->oh_lock);
 		return;
@@ -270,8 +282,72 @@ nni_objhash_unref(nni_objhash *oh, uint32_t id)
 	if (node->on_skips == 0) {
 		oh->oh_load--;
 	}
+	// Reclaim the buffer if we want, but preserve the limits.
+	nni_objhash_resize(oh, 0);
 
-	nni_objhash_resize(oh);
+	nni_mtx_unlock(&oh->oh_lock);
+
+	// Now run the destructor.
+	dtor(val);
+}
+
+
+void
+nni_objhash_unref_wait(nni_objhash *oh, uint32_t id)
+{
+	int rv;
+	void *val;
+	uint32_t index;
+	nni_objhash_node *node;
+	nni_objhash_dtor dtor;
+
+	nni_mtx_lock(&oh->oh_lock);
+
+	dtor = oh->oh_dtor;
+
+	node = nni_objhash_find_node(oh, id);
+	NNI_ASSERT(node != NULL);
+	val = node->on_val;
+
+	while (node->on_refcnt != 1) {
+		nni_cv_wait(&oh->oh_cv);
+	}
+	node->on_refcnt--;
+	if (node->on_refcnt != 0) {
+		if (node->on_refcnt == 1) {
+			nni_cv_wake(&oh->oh_cv);
+		}
+		// Still busy/referenced?
+		nni_mtx_unlock(&oh->oh_lock);
+		return;
+	}
+
+	index = id & (oh->oh_cap - 1);
+	for (;;) {
+		node = &oh->oh_nodes[index];
+		if (node->on_id == id) {
+			break;
+		}
+
+		NNI_ASSERT(node->on_skips != 0);
+		node->on_skips--;
+		if ((node->on_val == NULL) && (node->on_skips == 0)) {
+			oh->oh_load--;
+		}
+		index = NNI_OBJHASH_NEXTPROBE(oh, index);
+	}
+
+	NNI_ASSERT(node->on_val != NULL);
+	NNI_ASSERT(node->on_refcnt == 0);
+	NNI_ASSERT(node->on_id == id);
+
+	node->on_val = NULL;
+	oh->oh_count--;
+	if (node->on_skips == 0) {
+		oh->oh_load--;
+	}
+	// Reclaim the buffer if we want, but preserve the limits.
+	nni_objhash_resize(oh, 0);
 
 	nni_mtx_unlock(&oh->oh_lock);
 
@@ -298,6 +374,8 @@ nni_objhash_alloc(nni_objhash *oh, uint32_t *idp, void **valp)
 		nni_mtx_unlock(&oh->oh_lock);
 		return (NNG_ENOMEM);
 	}
+
+	nni_objhash_resize(oh, 1);
 
 	for (;;) {
 		id = oh->oh_dynval;
@@ -349,9 +427,10 @@ nni_objhash_alloc(nni_objhash *oh, uint32_t *idp, void **valp)
 		}
 
 		nni_mtx_unlock(&oh->oh_lock);
-		return (NNG_ENOMEM);	// no other return from ctor
+		return (NNG_ENOMEM);    // no other return from ctor
 	}
 
+	oh->oh_count++;
 	if (node->on_skips == 0) {
 		oh->oh_load++;
 	}

@@ -13,6 +13,8 @@
 
 // Socket implementation.
 
+static nni_objhash *nni_socks;
+
 uint32_t
 nni_sock_id(nni_sock *s)
 {
@@ -45,14 +47,15 @@ nni_sock_hold(nni_sock **sockp, uint32_t id)
 	if ((rv = nni_init()) != 0) {
 		return (rv);
 	}
-	nni_mtx_lock(nni_idlock);
-	rv = nni_idhash_find(nni_sockets, id, (void **) &sock);
-	if ((rv != 0) || (sock->s_closed)) {
-		nni_mtx_unlock(nni_idlock);
+	if ((rv = nni_objhash_find(nni_socks, id, (void **) &sock)) != 0) {
+		return (rv);
+	}
+	nni_mtx_lock(&sock->s_mx);
+	if ((sock->s_closed) || (sock->s_data == NULL)) {
+		nni_mtx_unlock(&sock->s_mx);
 		return (NNG_ECLOSED);
 	}
-	sock->s_refcnt++;
-	nni_mtx_unlock(nni_idlock);
+	nni_mtx_unlock(&sock->s_mx);
 	*sockp = sock;
 
 	return (0);
@@ -62,49 +65,7 @@ nni_sock_hold(nni_sock **sockp, uint32_t id)
 void
 nni_sock_rele(nni_sock *sock)
 {
-	nni_mtx_lock(nni_idlock);
-	sock->s_refcnt--;
-	if ((sock->s_closed) && (sock->s_refcnt == 0)) {
-		nni_cv_wake(&sock->s_refcv);
-	}
-	nni_mtx_unlock(nni_idlock);
-}
-
-
-// nni_sock_hold_close is a special hold acquired by the nng_close
-// function.  This waits until it has exclusive access, and then marks
-// the socket unusuable by anything else.
-int
-nni_sock_hold_close(nni_sock **sockp, uint32_t id)
-{
-	int rv;
-	nni_sock *sock;
-
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-
-	nni_mtx_lock(nni_idlock);
-	rv = nni_idhash_find(nni_sockets, id, (void **) &sock);
-	if (rv != 0) {
-		nni_mtx_unlock(nni_idlock);
-		return (NNG_ECLOSED);
-	}
-	nni_idhash_remove(nni_sockets, id);
-	sock->s_id = 0;
-	sock->s_closed = 1;
-	nni_mtx_unlock(nni_idlock);
-
-	nni_sock_shutdown(sock);
-
-	nni_mtx_lock(nni_idlock);
-	while (sock->s_refcnt != 0) {
-		nni_cv_wait(&sock->s_refcv);
-	}
-	nni_mtx_unlock(nni_idlock);
-	*sockp = sock;
-
-	return (0);
+	nni_objhash_unref(nni_socks, sock->s_id);
 }
 
 
@@ -363,31 +324,16 @@ nni_sock_nullstartpipe(void *arg)
 }
 
 
-// nn_sock_open creates the underlying socket.
-int
-nni_sock_open(nni_sock **sockp, uint16_t pnum)
+static void *
+nni_sock_ctor(uint32_t id)
 {
-	nni_sock *sock;
-	nni_proto *proto;
 	int rv;
-	int i;
-	nni_proto_sock_ops *sops;
-	nni_proto_pipe_ops *pops;
+	nni_sock *sock;
 
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-	if ((proto = nni_proto_find(pnum)) == NULL) {
-		return (NNG_ENOTSUP);
-	}
 	if ((sock = NNI_ALLOC_STRUCT(sock)) == NULL) {
-		return (NNG_ENOMEM);
+		return (NULL);
 	}
-
-	// We make a copy of the protocol operations.
-	sock->s_protocol = proto->proto_self;
-	sock->s_peer = proto->proto_peer;
-	sock->s_flags = proto->proto_flags;
+	// s_protocol, s_peer, and s_flags undefined as yet.
 	sock->s_linger = 0;
 	sock->s_sndtimeo = -1;
 	sock->s_rcvtimeo = -1;
@@ -395,6 +341,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	sock->s_reconn = NNI_SECOND;
 	sock->s_reconnmax = 0;
 	sock->s_rcvmaxsz = 1024 * 1024; // 1 MB by default
+	sock->s_id = id;
 
 	nni_pipe_sock_list_init(&sock->s_pipes);
 	nni_pipe_sock_list_init(&sock->s_idles);
@@ -404,7 +351,116 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	sock->s_send_fd.sn_init = 0;
 	sock->s_recv_fd.sn_init = 0;
 
+	if (((rv = nni_mtx_init(&sock->s_mx)) != 0) ||
+	    ((rv = nni_cv_init(&sock->s_cv, &sock->s_mx)) != 0)) {
+		goto fail;
+	}
+
+	rv = nni_ev_init(&sock->s_recv_ev, NNG_EV_CAN_RCV, sock);
+	if (rv != 0) {
+		goto fail;
+	}
+	rv = nni_ev_init(&sock->s_send_ev, NNG_EV_CAN_SND, sock);
+	if (rv != 0) {
+		goto fail;
+	}
+
+	if (((rv = nni_msgq_init(&sock->s_uwq, 0)) != 0) ||
+	    ((rv = nni_msgq_init(&sock->s_urq, 0)) != 0)) {
+		goto fail;
+	}
+
+	return (sock);
+
+fail:
+	nni_ev_fini(&sock->s_send_ev);
+	nni_ev_fini(&sock->s_recv_ev);
+	nni_msgq_fini(sock->s_urq);
+	nni_msgq_fini(sock->s_uwq);
+	nni_cv_fini(&sock->s_cv);
+	nni_mtx_fini(&sock->s_mx);
+	NNI_FREE_STRUCT(sock);
+	return (NULL);
+}
+
+
+static void
+nni_sock_dtor(void *ptr)
+{
+	nni_sock *sock = ptr;
+
+	// Close any open notification pipes.
+	if (sock->s_recv_fd.sn_init) {
+		nni_plat_pipe_close(sock->s_recv_fd.sn_wfd,
+		    sock->s_recv_fd.sn_rfd);
+	}
+	if (sock->s_send_fd.sn_init) {
+		nni_plat_pipe_close(sock->s_send_fd.sn_wfd,
+		    sock->s_send_fd.sn_rfd);
+	}
+
+	// The protocol needs to clean up its state.
+	if (sock->s_data != NULL) {
+		sock->s_sock_ops.sock_fini(sock->s_data);
+	}
+
+	nni_ev_fini(&sock->s_send_ev);
+	nni_ev_fini(&sock->s_recv_ev);
+	nni_msgq_fini(sock->s_urq);
+	nni_msgq_fini(sock->s_uwq);
+	nni_cv_fini(&sock->s_cv);
+	nni_mtx_fini(&sock->s_mx);
+	NNI_FREE_STRUCT(sock);
+}
+
+
+int
+nni_sock_sys_init(void)
+{
+	int rv;
+
+	rv = nni_objhash_init(&nni_socks, nni_sock_ctor, nni_sock_dtor);
+
+	return (rv);
+}
+
+
+void
+nni_sock_sys_fini(void)
+{
+	nni_objhash_fini(nni_socks);
+}
+
+
+// nn_sock_open creates the underlying socket.
+int
+nni_sock_open(nni_sock **sockp, uint16_t pnum)
+{
+	nni_sock *sock;
+	nni_proto *proto;
+	int rv;
+	nni_proto_sock_ops *sops;
+	nni_proto_pipe_ops *pops;
+	uint32_t sockid;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	if ((proto = nni_proto_find(pnum)) == NULL) {
+		return (NNG_ENOTSUP);
+	}
+
+	rv = nni_objhash_alloc(nni_socks, &sockid, (void **) &sock);
+	if (rv != 0) {
+		return (rv);
+	}
+
+	// We make a copy of the protocol operations.
+	sock->s_protocol = proto->proto_self;
+	sock->s_peer = proto->proto_peer;
+	sock->s_flags = proto->proto_flags;
 	sock->s_sock_ops = *proto->proto_sock_ops;
+
 	sops = &sock->s_sock_ops;
 	if (sops->sock_sfilter == NULL) {
 		sops->sock_sfilter = nni_sock_nullfilter;
@@ -433,71 +489,15 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		pops->pipe_stop = nni_sock_nullop;
 	}
 
-	if (((rv = nni_mtx_init(&sock->s_mx)) != 0) ||
-	    ((rv = nni_cv_init(&sock->s_cv, &sock->s_mx)) != 0)) {
-		goto fail;
-	}
-
-	if ((rv = nni_cv_init(&sock->s_refcv, nni_idlock)) != 0) {
-		goto fail;
-	}
-
-	rv = nni_ev_init(&sock->s_recv_ev, NNG_EV_CAN_RCV, sock);
-	if (rv != 0) {
-		goto fail;
-	}
-	rv = nni_ev_init(&sock->s_send_ev, NNG_EV_CAN_SND, sock);
-	if (rv != 0) {
-		goto fail;
-	}
-
-	if (((rv = nni_msgq_init(&sock->s_uwq, 0)) != 0) ||
-	    ((rv = nni_msgq_init(&sock->s_urq, 0)) != 0)) {
-		goto fail;
-	}
-
-	nni_mtx_lock(nni_idlock);
-	rv = nni_idhash_alloc(nni_sockets, &sock->s_id, sock);
-	nni_mtx_unlock(nni_idlock);
-	if (rv != 0) {
-		goto fail;
-	}
-
-	// Caller always gets the socket held.
-	sock->s_refcnt = 1;
-
 	if ((rv = sops->sock_init(&sock->s_data, sock)) != 0) {
-		goto fail;
+		nni_objhash_unref(nni_socks, sockid);
+		return (rv);
 	}
 
 	sops->sock_open(sock->s_data);
 
 	*sockp = sock;
 	return (0);
-
-fail:
-	sock->s_sock_ops.sock_fini(sock->s_data);
-
-	// And we need to clean up *our* state.
-	if (sock->s_id != 0) {
-		nni_mtx_lock(nni_idlock);
-		nni_idhash_remove(nni_sockets, sock->s_id);
-		if (nni_idhash_count(nni_sockets) == 0) {
-			nni_idhash_reclaim(nni_pipes);
-			nni_idhash_reclaim(nni_endpoints);
-			nni_idhash_reclaim(nni_sockets);
-		}
-		nni_mtx_unlock(nni_idlock);
-	}
-	nni_ev_fini(&sock->s_send_ev);
-	nni_ev_fini(&sock->s_recv_ev);
-	nni_msgq_fini(sock->s_urq);
-	nni_msgq_fini(sock->s_uwq);
-	nni_cv_fini(&sock->s_refcv);
-	nni_cv_fini(&sock->s_cv);
-	nni_mtx_fini(&sock->s_mx);
-	NNI_FREE_STRUCT(sock);
-	return (rv);
 }
 
 
@@ -596,8 +596,7 @@ nni_sock_shutdown(nni_sock *sock)
 // nni_sock_close shuts down the socket, then releases any resources
 // associated with it.  It is a programmer error to reference the socket
 // after this function is called, as the pointer may reference invalid
-// memory or other objects.  The socket should have been acquired with
-// nni_sock_hold_close().
+// memory or other objects.
 void
 nni_sock_close(nni_sock *sock)
 {
@@ -608,6 +607,14 @@ nni_sock_close(nni_sock *sock)
 	// is idempotent.
 	nni_sock_shutdown(sock);
 
+	nni_mtx_lock(&sock->s_mx);
+	if (sock->s_closed) {
+		nni_mtx_unlock(&sock->s_mx);
+		return;
+	}
+	sock->s_closed = 1;
+	nni_mtx_unlock(&sock->s_mx);
+
 	// At this point nothing else should be referencing us.
 	// As with UNIX close, it is a gross error for the caller
 	// to have concurrent threads using this.  We've taken care to
@@ -615,39 +622,20 @@ nni_sock_close(nni_sock *sock)
 	// user code attempts to utilize the socket *after* this point,
 	// the results may be tragic.
 
+	// Unreference twice. First drops the reference our caller
+	// acquired to start the open, and the second (blocking) one
+	// is the reference created for us at socket creation.
+
+	nni_objhash_unref(nni_socks, sock->s_id);
+	nni_objhash_unref_wait(nni_socks, sock->s_id);
+
 	nni_mtx_lock(nni_idlock);
-	if (sock->s_id != 0) {
-		nni_idhash_remove(nni_sockets, sock->s_id);
-	}
-	if (nni_idhash_count(nni_sockets) == 0) {
+	// XXX: CLEAN THIS UP
+	if (nni_objhash_count(nni_socks) == 0) {
 		nni_idhash_reclaim(nni_pipes);
 		nni_idhash_reclaim(nni_endpoints);
-		nni_idhash_reclaim(nni_sockets);
 	}
-
 	nni_mtx_unlock(nni_idlock);
-
-	// Close any open notification pipes.
-	if (sock->s_recv_fd.sn_init) {
-		nni_plat_pipe_close(sock->s_recv_fd.sn_wfd,
-		    sock->s_recv_fd.sn_rfd);
-	}
-	if (sock->s_send_fd.sn_init) {
-		nni_plat_pipe_close(sock->s_send_fd.sn_wfd,
-		    sock->s_send_fd.sn_rfd);
-	}
-
-	// The protocol needs to clean up its state.
-	sock->s_sock_ops.sock_fini(sock->s_data);
-
-	nni_msgq_fini(sock->s_urq);
-	nni_msgq_fini(sock->s_uwq);
-	nni_ev_fini(&sock->s_send_ev);
-	nni_ev_fini(&sock->s_recv_ev);
-	nni_cv_fini(&sock->s_refcv);
-	nni_cv_fini(&sock->s_cv);
-	nni_mtx_fini(&sock->s_mx);
-	NNI_FREE_STRUCT(sock);
 }
 
 

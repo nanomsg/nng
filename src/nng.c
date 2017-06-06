@@ -30,7 +30,9 @@ nng_open(nng_socket *sidp, uint16_t proto)
 		return (rv);
 	}
 	*sidp = nni_sock_id(sock);
-	nni_sock_rele(sock);
+
+	// Keep the socket "held" until it is explicitly closed.
+
 	return (0);
 }
 
@@ -58,7 +60,7 @@ nng_close(nng_socket sid)
 
 	// Close is special, because we still want to be able to get
 	// a hold on the socket even if shutdown was called.
-	if ((rv = nni_sock_hold_close(&sock, sid)) != 0) {
+	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
 		return (rv);
 	}
 	// No release -- close releases it.

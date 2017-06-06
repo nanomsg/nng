@@ -33,6 +33,7 @@
 #include "core/list.h"
 #include "core/message.h"
 #include "core/msgqueue.h"
+#include "core/objhash.h"
 #include "core/options.h"
 #include "core/panic.h"
 #include "core/protocol.h"
