@@ -31,8 +31,6 @@ struct nni_ep {
 	int		ep_close;       // full shutdown
 	int		ep_bound;       // true if we bound locally
 	nni_cv		ep_cv;
-	int		ep_holds;       // user references (by id)
-	nni_cv		ep_holdcv;
 	nni_pipe *	ep_pipe;        // Connected pipe (dialers only)
 };
 
@@ -40,8 +38,9 @@ struct nni_ep {
 #define NNI_EP_MODE_DIAL	1
 #define NNI_EP_MODE_LISTEN	2
 
+extern int nni_ep_sys_init(void);
+extern void nni_ep_sys_fini(void);
 extern int nni_ep_hold(nni_ep **, uint32_t);
-extern int nni_ep_hold_close(nni_ep **, uint32_t);
 extern void nni_ep_rele(nni_ep *);
 extern uint32_t nni_ep_id(nni_ep *);
 extern int nni_ep_create(nni_ep **, nni_sock *, const char *);

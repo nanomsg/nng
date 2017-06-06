@@ -15,6 +15,29 @@
 
 // Functionality realited to end points.
 
+static nni_objhash *nni_eps = NULL;
+static void *nni_ep_ctor(uint32_t);
+static void nni_ep_dtor(void *);
+
+int
+nni_ep_sys_init(void)
+{
+	int rv;
+
+	rv = nni_objhash_init(&nni_eps, nni_ep_ctor, nni_ep_dtor);
+
+	return (rv);
+}
+
+
+void
+nni_ep_sys_fini(void)
+{
+	nni_objhash_fini(nni_eps);
+	nni_eps = NULL;
+}
+
+
 int
 nni_ep_hold(nni_ep **epp, uint32_t id)
 {
@@ -24,13 +47,11 @@ nni_ep_hold(nni_ep **epp, uint32_t id)
 	if ((rv = nni_init()) != 0) {
 		return (rv);
 	}
-	nni_mtx_lock(nni_idlock);
-	if ((rv = nni_idhash_find(nni_endpoints, id, (void **) &ep)) != 0) {
-		nni_mtx_unlock(nni_idlock);
+
+	rv = nni_objhash_find(nni_eps, id, (void **) &ep);
+	if (rv != 0) {
 		return (NNG_ECLOSED);
 	}
-	ep->ep_holds++;
-	nni_mtx_unlock(nni_idlock);
 	*epp = ep;
 	return (0);
 }
@@ -39,36 +60,7 @@ nni_ep_hold(nni_ep **epp, uint32_t id)
 void
 nni_ep_rele(nni_ep *ep)
 {
-	nni_mtx_lock(nni_idlock);
-	ep->ep_holds--;
-	if (ep->ep_holds == 0) {
-		nni_cv_wake(&ep->ep_holdcv);
-	}
-	nni_mtx_unlock(nni_idlock);
-}
-
-
-int
-nni_ep_hold_close(nni_ep **epp, uint32_t id)
-{
-	int rv;
-	nni_ep *ep;
-
-	if ((rv = nni_init()) != 0) {
-		return (rv);
-	}
-	nni_mtx_lock(nni_idlock);
-	if ((rv = nni_idhash_find(nni_endpoints, id, (void **) &ep)) != 0) {
-		nni_mtx_unlock(nni_idlock);
-		return (NNG_ECLOSED);
-	}
-	ep->ep_id = 0;
-	nni_idhash_remove(nni_endpoints, id);
-	while (ep->ep_holds) {
-		nni_cv_wait(&ep->ep_holdcv);
-	}
-	nni_mtx_unlock(nni_idlock);
-	return (0);
+	nni_objhash_unref(nni_eps, ep->ep_id);
 }
 
 
@@ -79,12 +71,51 @@ nni_ep_id(nni_ep *ep)
 }
 
 
+static void *
+nni_ep_ctor(uint32_t id)
+{
+	nni_ep *ep;
+	int rv;
+
+	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
+		return (NULL);
+	}
+	ep->ep_close = 0;
+	ep->ep_bound = 0;
+	ep->ep_pipe = NULL;
+	ep->ep_id = id;
+
+	NNI_LIST_NODE_INIT(&ep->ep_node);
+
+#if 0
+	if ((rv = nni_cv_init(&ep->ep_cv, &sock->s_mx)) != 0) {
+		nni_cv_fini(&ep->ep_cv);
+		NNI_FREE_STRUCT(ep);
+		return (NULL);
+	}
+#endif
+
+	return (ep);
+}
+
+
+static void
+nni_ep_dtor(void *ptr)
+{
+	nni_ep *ep = ptr;
+
+	nni_cv_fini(&ep->ep_cv);
+	NNI_FREE_STRUCT(ep);
+}
+
+
 int
 nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 {
 	nni_tran *tran;
 	nni_ep *ep;
 	int rv;
+	uint32_t id;
 
 	if ((tran = nni_tran_find(addr)) == NULL) {
 		return (NNG_ENOTSUP);
@@ -93,19 +124,13 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 		return (NNG_EINVAL);
 	}
 
-	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
-		return (NNG_ENOMEM);
+	rv = nni_objhash_alloc(nni_eps, &id, (void **) &ep);
+	if (rv != 0) {
+		return (rv);
 	}
 	ep->ep_sock = sock;
-	ep->ep_close = 0;
-	ep->ep_bound = 0;
-	ep->ep_pipe = NULL;
 	ep->ep_tran = tran;
-	ep->ep_holds = 0;
-	ep->ep_id = 0;
-	memset(&ep->ep_cv, 0, sizeof (ep->ep_cv));
-	memset(&ep->ep_holdcv, 0, sizeof (ep->ep_holdcv));
-	NNI_LIST_NODE_INIT(&ep->ep_node);
+
 	// Could safely use strcpy here, but this avoids discussion.
 	(void) snprintf(ep->ep_addr, sizeof (ep->ep_addr), "%s", addr);
 
@@ -114,10 +139,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	// dereference on hot paths.
 	ep->ep_ops = *tran->tran_ep;
 
-	if (((rv = nni_cv_init(&ep->ep_cv, &sock->s_mx)) != 0) ||
-	    ((rv = nni_cv_init(&ep->ep_holdcv, nni_idlock)) != 0)) {
-		nni_cv_fini(&ep->ep_cv);
-		nni_cv_fini(&ep->ep_holdcv);
+	if ((rv = nni_cv_init(&ep->ep_cv, &sock->s_mx)) != 0) {
 		NNI_FREE_STRUCT(ep);
 		return (rv);
 	}
@@ -125,34 +147,18 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
 		nni_mtx_unlock(&sock->s_mx);
-		nni_cv_fini(&ep->ep_cv);
-		nni_cv_fini(&ep->ep_holdcv);
-		NNI_FREE_STRUCT(ep);
+		nni_objhash_unref(nni_eps, id);
 		return (NNG_ECLOSED);
 	}
 
 	rv = ep->ep_ops.ep_init(&ep->ep_data, addr, sock);
 	if (rv != 0) {
 		nni_mtx_unlock(&sock->s_mx);
-		nni_cv_fini(&ep->ep_cv);
-		nni_cv_fini(&ep->ep_holdcv);
-		NNI_FREE_STRUCT(ep);
+		nni_objhash_unref(nni_eps, id);
 		return (rv);
 	}
 	nni_list_append(&sock->s_eps, ep);
 	nni_mtx_unlock(&sock->s_mx);
-
-	nni_mtx_lock(nni_idlock);
-	rv = nni_idhash_alloc(nni_endpoints, &ep->ep_id, ep);
-	nni_mtx_unlock(nni_idlock);
-	if (rv != 0) {
-		nni_mtx_lock(&sock->s_mx);
-		nni_list_remove(&sock->s_eps, ep);
-		ep->ep_ops.ep_fini(ep->ep_data);
-		nni_cv_fini(&ep->ep_cv);
-		nni_cv_fini(&ep->ep_holdcv);
-		NNI_FREE_STRUCT(ep);
-	}
 
 	*epp = ep;
 	return (0);
@@ -164,19 +170,6 @@ nni_ep_close(nni_ep *ep)
 {
 	nni_pipe *pipe;
 	nni_mtx *mx = &ep->ep_sock->s_mx;
-
-	nni_mtx_lock(nni_idlock);
-	if (ep->ep_id != 0) {
-		// We might have removed this already as a result of
-		// application initiated endpoint close request instead
-		// of socket close.
-		nni_idhash_remove(nni_endpoints, ep->ep_id);
-		ep->ep_id = 0;
-	}
-	while (ep->ep_holds) {
-		nni_cv_wait(&ep->ep_holdcv);
-	}
-	nni_mtx_unlock(nni_idlock);
 
 	nni_mtx_lock(mx);
 	NNI_ASSERT(ep->ep_close == 0);
@@ -193,8 +186,7 @@ nni_ep_close(nni_ep *ep)
 	nni_thr_fini(&ep->ep_thr);
 	ep->ep_ops.ep_fini(ep->ep_data);
 
-	nni_cv_fini(&ep->ep_cv);
-	NNI_FREE_STRUCT(ep);
+	nni_objhash_unref(nni_eps, ep->ep_id);
 }
 
 

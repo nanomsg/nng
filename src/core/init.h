@@ -24,8 +24,6 @@ void nni_fini(void);
 // Private hash tables matching IDs to values.  Consumers need to use the
 // nni_idlock to protect access to these.
 extern nni_mtx *nni_idlock;
-extern nni_idhash *nni_endpoints;
 extern nni_idhash *nni_pipes;
-extern nni_idhash *nni_sockets;
 
 #endif // CORE_INIT_H

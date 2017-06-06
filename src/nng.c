@@ -267,7 +267,7 @@ nng_endpoint_close(nng_endpoint eid)
 	int rv;
 	nni_ep *ep;
 
-	if ((rv = nni_ep_hold_close(&ep, eid)) != 0) {
+	if ((rv = nni_ep_hold(&ep, eid)) != 0) {
 		return (rv);
 	}
 	nni_ep_close(ep);
