@@ -82,6 +82,9 @@ nni_objhash_init(nni_objhash **ohp, nni_objhash_ctor ctor,
 void
 nni_objhash_fini(nni_objhash *oh)
 {
+	if (oh == NULL) {
+		return;
+	}
 	if (oh->oh_nodes != NULL) {
 		nni_free(oh->oh_nodes, oh->oh_cap * sizeof (nni_objhash_node));
 		oh->oh_nodes = NULL;

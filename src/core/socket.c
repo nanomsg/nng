@@ -13,7 +13,7 @@
 
 // Socket implementation.
 
-static nni_objhash *nni_socks;
+static nni_objhash *nni_socks = NULL;
 
 uint32_t
 nni_sock_id(nni_sock *s)
@@ -429,6 +429,7 @@ void
 nni_sock_sys_fini(void)
 {
 	nni_objhash_fini(nni_socks);
+	nni_socks = NULL;
 }
 
 
@@ -628,14 +629,6 @@ nni_sock_close(nni_sock *sock)
 
 	nni_objhash_unref(nni_socks, sock->s_id);
 	nni_objhash_unref_wait(nni_socks, sock->s_id);
-
-	nni_mtx_lock(nni_idlock);
-	// XXX: CLEAN THIS UP
-	if (nni_objhash_count(nni_socks) == 0) {
-		nni_idhash_reclaim(nni_pipes);
-		nni_idhash_reclaim(nni_endpoints);
-	}
-	nni_mtx_unlock(nni_idlock);
 }
 
 
