@@ -70,7 +70,8 @@ nni_objhash_init(nni_objhash **ohp, nni_objhash_ctor ctor,
 	oh->oh_minload = 0; // never shrink below this
 	oh->oh_minval = 1;
 	oh->oh_maxval = 0x7fffffff;
-	oh->oh_dynval = nni_random();
+	oh->oh_dynval = nni_random() %
+	    (oh->oh_maxval - oh->oh_minval) + oh->oh_minval;
 	oh->oh_ctor = ctor;
 	oh->oh_dtor = dtor;
 	*ohp = oh;
