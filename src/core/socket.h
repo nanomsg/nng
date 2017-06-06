@@ -138,5 +138,6 @@ extern nni_mtx *nni_sock_mtx(nni_sock *);
 
 extern nni_duration nni_sock_linger(nni_sock *);
 extern size_t nni_sock_rcvmaxsz(nni_sock *);
+extern void nni_sock_reconntimes(nni_sock *, nni_duration *, nni_duration *);
 
 #endif  // CORE_SOCKET_H

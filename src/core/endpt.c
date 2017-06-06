@@ -238,25 +238,18 @@ nni_dialer(void *arg)
 	nni_ep *ep = arg;
 	int rv;
 	nni_time cooldown;
-	nni_duration maxrtime;
-	nni_duration defrtime;
+	nni_duration maxrtime, nmaxrtime;
+	nni_duration defrtime, ndefrtime;
 	nni_duration rtime;
 
-	// XXX: these need to be obtained from the socket using a lock.
-	defrtime = ep->ep_sock->s_reconn;
-	if ((maxrtime = ep->ep_sock->s_reconnmax) == 0) {
-		maxrtime = defrtime;
-	}
+	nni_sock_reconntimes(ep->ep_sock, &defrtime, &maxrtime);
 
 	for (;;) {
-		// XXX: socket lock please...
-		if ((defrtime != ep->ep_sock->s_reconn) ||
-		    (maxrtime != ep->ep_sock->s_reconnmax)) {
+		nni_sock_reconntimes(ep->ep_sock, &ndefrtime, &nmaxrtime);
+		if ((defrtime != ndefrtime) || (maxrtime != nmaxrtime)) {
 			// Times changed, so reset them.
-			defrtime = ep->ep_sock->s_reconn;
-			if ((maxrtime = ep->ep_sock->s_reconnmax) == 0) {
-				maxrtime = defrtime;
-			}
+			defrtime = ndefrtime;
+			maxrtime = nmaxrtime;
 			rtime = defrtime;
 		}
 

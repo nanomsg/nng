@@ -792,6 +792,17 @@ nni_sock_rcvmaxsz(nni_sock *sock)
 }
 
 
+void
+nni_sock_reconntimes(nni_sock *sock, nni_duration *rcur, nni_duration *rmax)
+{
+	// These two values are linked, so get them atomically.
+	nni_mtx_lock(&sock->s_mx);
+	*rcur = sock->s_reconn;
+	*rmax = sock->s_reconnmax ? sock->s_reconnmax : sock->s_reconn;
+	nni_mtx_unlock(&sock->s_mx);
+}
+
+
 int
 nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 {
