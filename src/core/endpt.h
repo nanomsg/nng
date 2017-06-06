@@ -30,6 +30,7 @@ struct nni_ep {
 	int		ep_mode;
 	int		ep_close;       // full shutdown
 	int		ep_bound;       // true if we bound locally
+	nni_mtx		ep_mtx;
 	nni_cv		ep_cv;
 	nni_pipe *	ep_pipe;        // Connected pipe (dialers only)
 };

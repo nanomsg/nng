@@ -56,7 +56,10 @@ nni_sock_hold(nni_sock **sockp, uint32_t id)
 		return (NNG_ECLOSED);
 	}
 	nni_mtx_unlock(&sock->s_mx);
-	*sockp = sock;
+
+	if (sockp != NULL) {
+		*sockp = sock;
+	}
 
 	return (0);
 }
@@ -591,6 +594,49 @@ nni_sock_shutdown(nni_sock *sock)
 	// that are referencing socket state.  User code should call
 	// nng_close to release the last resources.
 	return (0);
+}
+
+
+// nni_sock_add_ep adds a newly created endpoint to the socket.  The
+// caller must hold references on the sock and the ep, and not be holding
+// the socket lock.  The ep acquires a reference against the sock,
+// which will be dropped later by nni_sock_rem_ep.  The endpoint must not
+// already be associated with a socket.  (Note, the ep holds the reference
+// on the socket, not the other way around.)
+int
+nni_sock_add_ep(nni_sock *sock, nni_ep *ep)
+{
+	int rv;
+
+	if ((rv = nni_sock_hold(NULL, sock->s_id)) != 0) {
+		return (rv);
+	}
+	nni_mtx_lock(&sock->s_mx);
+	if (sock->s_closing) {
+		nni_mtx_unlock(&sock->s_mx);
+		nni_sock_rele(sock);
+		return (NNG_ECLOSED);
+	}
+	nni_list_append(&sock->s_eps, ep);
+	nni_mtx_unlock(&sock->s_mx);
+	return (0);
+}
+
+
+void
+nni_sock_rem_ep(nni_sock *sock, nni_ep *ep)
+{
+	nni_mtx_lock(&sock->s_mx);
+	// If we're not on the list, then nothing to do.  Be idempotent.
+	if (!nni_list_active(&sock->s_eps, ep)) {
+		nni_mtx_unlock(&sock->s_mx);
+		return;
+	}
+	nni_list_remove(&sock->s_eps, ep);
+	nni_mtx_unlock(&sock->s_mx);
+
+	// Drop the reference the EP acquired in add_ep.
+	nni_sock_rele(sock);
 }
 
 
