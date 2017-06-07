@@ -33,6 +33,7 @@ struct nni_ep {
 	nni_mtx		ep_mtx;
 	nni_cv		ep_cv;
 	nni_pipe *	ep_pipe;        // Connected pipe (dialers only)
+	nni_list	ep_pipes;
 };
 
 #define NNI_EP_MODE_IDLE	0
@@ -50,5 +51,7 @@ extern void nni_ep_close(nni_ep *);
 extern int nni_ep_dial(nni_ep *, int);
 extern int nni_ep_listen(nni_ep *, int);
 extern void nni_ep_list_init(nni_list *);
+extern int nni_ep_add_pipe(nni_ep *, nni_pipe *);
+extern void nni_ep_rem_pipe(nni_ep *, nni_pipe *);
 
 #endif // CORE_ENDPT_H

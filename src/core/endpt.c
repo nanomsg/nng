@@ -52,6 +52,13 @@ nni_ep_hold(nni_ep **epp, uint32_t id)
 	if (rv != 0) {
 		return (NNG_ECLOSED);
 	}
+	nni_mtx_lock(&ep->ep_mtx);
+	if (ep->ep_close) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		nni_objhash_unref(nni_eps, id);
+		return (NNG_ECLOSED);
+	}
+	nni_mtx_unlock(&ep->ep_mtx);
 	if (epp != NULL) {
 		*epp = ep;
 	}
@@ -89,6 +96,8 @@ nni_ep_ctor(uint32_t id)
 	ep->ep_data = NULL;
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
+
+	nni_pipe_ep_list_init(&ep->ep_pipes);
 
 	if ((rv = nni_mtx_init(&ep->ep_mtx)) != 0) {
 		NNI_FREE_STRUCT(ep);
@@ -211,6 +220,40 @@ nni_ep_connect(nni_ep *ep, nni_pipe **pp)
 	pipe->p_ep = ep;
 	*pp = pipe;
 	return (0);
+}
+
+
+int
+nni_ep_add_pipe(nni_ep *ep, nni_pipe *pipe)
+{
+	int rv;
+
+	if ((rv = nni_ep_hold(NULL, ep->ep_id)) != 0) {
+		return (rv);
+	}
+	nni_mtx_lock(&ep->ep_mtx);
+	if (ep->ep_close) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		nni_ep_rele(ep);
+	}
+	nni_list_append(&ep->ep_pipes, pipe);
+	nni_mtx_unlock(&ep->ep_mtx);
+
+	return (0);
+}
+
+
+void
+nni_ep_rem_pipe(nni_ep *ep, nni_pipe *pipe)
+{
+	nni_mtx_lock(&ep->ep_mtx);
+	if (!nni_list_active(&ep->ep_pipes, pipe)) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		return;
+	}
+	nni_list_remove(&ep->ep_pipes, pipe);
+	nni_mtx_unlock(&ep->ep_mtx);
+	nni_ep_rele(ep);
 }
 
 
