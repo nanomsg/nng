@@ -32,6 +32,9 @@ struct nni_pipe {
 	int		p_refcnt;
 };
 
+extern int nni_pipe_sys_init(void);
+extern void nni_pipe_sys_fini(void);
+
 // AIO
 extern int nni_pipe_aio_recv(nni_pipe *, nni_aio *);
 extern int nni_pipe_aio_send(nni_pipe *, nni_aio *);

@@ -47,7 +47,16 @@ nni_init_helper(void)
 		nni_taskq_sys_fini();
 		return (rv);
 	}
+	if ((rv = nni_pipe_sys_init()) != 0) {
+		nni_ep_sys_fini();
+		nni_sock_sys_fini();
+		nni_random_sys_fini();
+		nni_timer_sys_fini();
+		nni_taskq_sys_fini();
+		return (rv);
+	}
 	if ((rv = nni_mtx_init(&nni_idlock_x)) != 0) {
+		nni_pipe_sys_fini();
 		nni_ep_sys_fini();
 		nni_sock_sys_fini();
 		nni_random_sys_fini();
@@ -57,6 +66,7 @@ nni_init_helper(void)
 	}
 	if ((rv = nni_idhash_init(&nni_pipes_x)) != 0) {
 		nni_mtx_fini(&nni_idlock_x);
+		nni_pipe_sys_fini();
 		nni_ep_sys_fini();
 		nni_sock_sys_fini();
 		nni_random_sys_fini();

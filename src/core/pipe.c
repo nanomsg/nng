@@ -14,6 +14,53 @@
 // Operations on pipes (to the transport) are generally blocking operations,
 // performed in the context of the protocol.
 
+static nni_objhash *nni_allpipes;
+
+static void *
+nni_pipe_ctor(uint32_t id)
+{
+	nni_pipe *p;
+
+	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
+		return (NULL);
+	}
+	p->p_id = id;
+	return (p);
+}
+
+
+static void
+nni_pipe_dtor(void *ptr)
+{
+	nni_pipe *p = ptr;
+
+	NNI_FREE_STRUCT(p);
+}
+
+
+int
+nni_pipe_sys_init(void)
+{
+	int rv;
+
+	rv = nni_objhash_init(&nni_allpipes, nni_pipe_ctor, nni_pipe_dtor);
+
+	if (rv != 0) {
+		return (rv);
+	}
+
+	return (0);
+}
+
+
+void
+nni_pipe_sys_fini(void)
+{
+	nni_objhash_fini(nni_allpipes);
+	nni_allpipes = NULL;
+}
+
+
 // nni_pipe_id returns the 32-bit pipe id, which can be used in backtraces.
 uint32_t
 nni_pipe_id(nni_pipe *p)
