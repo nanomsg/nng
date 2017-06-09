@@ -222,6 +222,8 @@ nni_objhash_resize(nni_objhash *oh, int grow)
 				oh->oh_load++;
 				newnodes[index].on_val = oldnodes[i].on_val;
 				newnodes[index].on_id = oldnodes[i].on_id;
+				newnodes[index].on_refcnt =
+				    oldnodes[i].on_refcnt;
 				break;
 			}
 			newnodes[index].on_skips++;
@@ -252,6 +254,8 @@ nni_objhash_unref(nni_objhash *oh, uint32_t id)
 	NNI_ASSERT(node != NULL);
 	val = node->on_val;
 
+	NNI_ASSERT(node->on_refcnt > 0);
+	NNI_ASSERT(node->on_refcnt < 1000000); // reasonable limit, debug only
 	node->on_refcnt--;
 	if (node->on_refcnt != 0) {
 		if (node->on_refcnt == 1) {
