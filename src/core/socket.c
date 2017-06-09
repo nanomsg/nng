@@ -82,6 +82,9 @@ nni_sock_pipe_add(nni_sock *sock, nni_pipe *pipe)
 	if (rv != 0) {
 		return (rv);
 	}
+
+	// XXX: place a hold on the socket.
+
 	nni_mtx_lock(&sock->s_mx);
 	nni_pipe_set_proto_data(pipe, pdata);
 	nni_list_append(&sock->s_pipes, pipe);
@@ -112,9 +115,6 @@ nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 		return (rv);
 	}
 
-	nni_list_remove(&sock->s_idles, pipe);
-	nni_list_append(&sock->s_pipes, pipe);
-
 	nni_mtx_unlock(&sock->s_mx);
 
 	return (0);
@@ -133,7 +133,9 @@ nni_sock_pipe_closed(nni_sock *sock, nni_pipe *pipe)
 	// is on, and so if the pipe is already on the idle list these
 	// two statements are effectively a no-op.
 	nni_list_remove(&sock->s_pipes, pipe);
-	nni_list_append(&sock->s_idles, pipe);
+	if (nni_list_first(&sock->s_pipes) == NULL) {
+		nni_cv_wake(&sock->s_cv);
+	}
 
 	sock->s_pipe_ops.pipe_stop(pdata);
 
@@ -153,12 +155,13 @@ nni_sock_pipe_rem(nni_sock *sock, nni_pipe *pipe)
 	void *pdata = nni_pipe_get_proto_data(pipe);
 
 	nni_mtx_lock(&sock->s_mx);
-	nni_list_remove(&sock->s_idles, pipe);
+	nni_list_remove(&sock->s_pipes, pipe);
 
 	if (pdata != NULL) {
 		sock->s_pipe_ops.pipe_fini(pdata);
 	}
 
+	// XXX: Move this to a seperate ep-specific API.
 	// Notify the endpoint that the pipe has closed - if not already done.
 	if (((ep = pipe->p_ep) != NULL) && ((ep->ep_pipe == pipe))) {
 		ep->ep_pipe = NULL;
@@ -166,6 +169,8 @@ nni_sock_pipe_rem(nni_sock *sock, nni_pipe *pipe)
 	}
 	nni_cv_wake(&sock->s_cv);
 	nni_mtx_unlock(&sock->s_mx);
+
+	// XXX release the hold on the pipe
 }
 
 
@@ -573,10 +578,8 @@ nni_sock_shutdown(nni_sock *sock)
 	// For each pipe, close the underlying transport.  Also move it
 	// to the idle list so we won't keep looping.
 	while ((pipe = nni_list_first(&sock->s_pipes)) != NULL) {
-		nni_pipe_incref(pipe);
 		nni_mtx_unlock(&sock->s_mx);
 		nni_pipe_close(pipe);
-		nni_pipe_decref(pipe);
 		nni_mtx_lock(&sock->s_mx);
 	}
 
@@ -584,10 +587,8 @@ nni_sock_shutdown(nni_sock *sock)
 
 	nni_cv_wake(&sock->s_cv);
 
-	while ((nni_list_first(&sock->s_idles) != NULL) ||
-	    (nni_list_first(&sock->s_pipes) != NULL)) {
-		nni_cv_wait(&sock->s_cv);
-	}
+	NNI_ASSERT(nni_list_first(&sock->s_pipes) == NULL);
+
 	nni_mtx_unlock(&sock->s_mx);
 
 	// At this point, there are no threads blocked inside of us
