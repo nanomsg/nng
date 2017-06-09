@@ -195,7 +195,7 @@ nni_pipe_destroy(nni_pipe *p)
 {
 	NNI_ASSERT(p->p_refcnt == 0);
 
-	nni_objhash_unref_wait(nni_allpipes, p->p_id);
+	nni_objhash_unref(nni_allpipes, p->p_id);
 }
 
 
