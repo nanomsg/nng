@@ -41,7 +41,7 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 void
 nni_aio_fini(nni_aio *aio)
 {
-	nni_taskq_cancel(&aio->a_tqe);
+	nni_taskq_cancel(NULL, &aio->a_tqe);
 	nni_cv_fini(&aio->a_cv);
 	nni_mtx_fini(&aio->a_lk);
 }
