@@ -40,8 +40,7 @@ struct nni_socket {
 	nni_duration		s_reconnmax;    // max reconnect time
 
 	nni_list		s_eps;          // active endpoints
-	nni_list		s_pipes;        // ready pipes (started)
-	nni_list		s_idles;        // idle pipes (not ready)
+	nni_list		s_pipes;        // active pipes
 
 	size_t			s_rcvmaxsz;     // maximum receive size
 

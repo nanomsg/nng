@@ -352,7 +352,6 @@ nni_sock_ctor(uint32_t id)
 	sock->s_id = id;
 
 	nni_pipe_sock_list_init(&sock->s_pipes);
-	nni_pipe_sock_list_init(&sock->s_idles);
 
 	nni_ep_list_init(&sock->s_eps);
 
