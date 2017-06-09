@@ -86,6 +86,11 @@ nni_sock_pipe_add(nni_sock *sock, nni_pipe *pipe)
 	// XXX: place a hold on the socket.
 
 	nni_mtx_lock(&sock->s_mx);
+	if (sock->s_closing) {
+		nni_mtx_unlock(&sock->s_mx);
+		sock->s_pipe_ops.pipe_fini(pdata);
+		return (NNG_ECLOSED);
+	}
 	nni_pipe_set_proto_data(pipe, pdata);
 	nni_list_append(&sock->s_pipes, pipe);
 	nni_mtx_unlock(&sock->s_mx);
@@ -155,7 +160,10 @@ nni_sock_pipe_rem(nni_sock *sock, nni_pipe *pipe)
 	void *pdata = nni_pipe_get_proto_data(pipe);
 
 	nni_mtx_lock(&sock->s_mx);
-	nni_list_remove(&sock->s_pipes, pipe);
+
+	if (nni_list_active(&sock->s_pipes, pipe)) {
+		nni_list_remove(&sock->s_pipes, pipe);
+	}
 
 	if (pdata != NULL) {
 		sock->s_pipe_ops.pipe_fini(pdata);
@@ -529,14 +537,6 @@ nni_sock_shutdown(nni_sock *sock)
 	// Mark us closing, so no more EPs or changes can occur.
 	sock->s_closing = 1;
 
-	// Stop all EPS.  We're going to do this first, since we know
-	// we're closing.
-	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
-		nni_mtx_unlock(&sock->s_mx);
-		nni_ep_close(ep);
-		nni_mtx_lock(&sock->s_mx);
-	}
-
 	// Special optimization; if there are no pipes connected,
 	// then there is no reason to linger since there's nothing that
 	// could possibly send this data out.
@@ -573,6 +573,13 @@ nni_sock_shutdown(nni_sock *sock)
 	// safely while we hold the lock.
 	nni_msgq_close(sock->s_urq);
 	nni_msgq_close(sock->s_uwq);
+
+	// Stop all EPS.
+	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
+		nni_mtx_unlock(&sock->s_mx);
+		nni_ep_close(ep);
+		nni_mtx_lock(&sock->s_mx);
+	}
 
 	// For each pipe, close the underlying transport.  Also move it
 	// to the idle list so we won't keep looping.
