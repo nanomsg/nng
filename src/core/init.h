@@ -21,9 +21,4 @@ int nni_init(void);
 // that all resources used by the library are released back to the system.
 void nni_fini(void);
 
-// Private hash tables matching IDs to values.  Consumers need to use the
-// nni_idlock to protect access to these.
-extern nni_mtx *nni_idlock;
-extern nni_idhash *nni_pipes;
-
 #endif // CORE_INIT_H

@@ -11,12 +11,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-nni_idhash *nni_pipes;
-nni_mtx *nni_idlock;
-
-static nni_idhash nni_pipes_x;
-static nni_mtx nni_idlock_x;
-
 static int
 nni_init_helper(void)
 {
@@ -55,31 +49,6 @@ nni_init_helper(void)
 		nni_taskq_sys_fini();
 		return (rv);
 	}
-	if ((rv = nni_mtx_init(&nni_idlock_x)) != 0) {
-		nni_pipe_sys_fini();
-		nni_ep_sys_fini();
-		nni_sock_sys_fini();
-		nni_random_sys_fini();
-		nni_timer_sys_fini();
-		nni_taskq_sys_fini();
-		return (rv);
-	}
-	if ((rv = nni_idhash_init(&nni_pipes_x)) != 0) {
-		nni_mtx_fini(&nni_idlock_x);
-		nni_pipe_sys_fini();
-		nni_ep_sys_fini();
-		nni_sock_sys_fini();
-		nni_random_sys_fini();
-		nni_timer_sys_fini();
-		nni_taskq_sys_fini();
-		return (rv);
-	}
-	nni_idhash_set_limits(&nni_pipes_x, 1, 0x7fffffff,
-	    (nni_random() & 0x7ffffffe) + 1);
-
-	nni_idlock = &nni_idlock_x;
-	nni_pipes = &nni_pipes_x;
-
 	nni_tran_sys_init();
 	return (0);
 }
@@ -95,8 +64,6 @@ nni_init(void)
 void
 nni_fini(void)
 {
-	nni_idhash_fini(&nni_pipes_x);
-	nni_mtx_fini(&nni_idlock_x);
 	nni_tran_sys_fini();
 	nni_ep_sys_fini();
 	nni_sock_sys_fini();

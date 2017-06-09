@@ -14,7 +14,7 @@
 // Operations on pipes (to the transport) are generally blocking operations,
 // performed in the context of the protocol.
 
-static nni_objhash *nni_allpipes;
+static nni_objhash *nni_pipes;
 
 static void *
 nni_pipe_ctor(uint32_t id)
@@ -61,7 +61,7 @@ nni_pipe_sys_init(void)
 {
 	int rv;
 
-	rv = nni_objhash_init(&nni_allpipes, nni_pipe_ctor, nni_pipe_dtor);
+	rv = nni_objhash_init(&nni_pipes, nni_pipe_ctor, nni_pipe_dtor);
 
 	if (rv != 0) {
 		return (rv);
@@ -74,8 +74,8 @@ nni_pipe_sys_init(void)
 void
 nni_pipe_sys_fini(void)
 {
-	nni_objhash_fini(nni_allpipes);
-	nni_allpipes = NULL;
+	nni_objhash_fini(nni_pipes);
+	nni_pipes = NULL;
 }
 
 
@@ -107,7 +107,7 @@ nni_pipe_incref(nni_pipe *p)
 	int rv;
 	nni_pipe *scratch;
 
-	rv = nni_objhash_find(nni_allpipes, p->p_id, (void **) &scratch);
+	rv = nni_objhash_find(nni_pipes, p->p_id, (void **) &scratch);
 	NNI_ASSERT(rv == 0);
 	NNI_ASSERT(p == scratch);
 }
@@ -116,7 +116,7 @@ nni_pipe_incref(nni_pipe *p)
 void
 nni_pipe_decref(nni_pipe *p)
 {
-	nni_objhash_unref(nni_allpipes, p->p_id);
+	nni_objhash_unref(nni_pipes, p->p_id);
 }
 
 
@@ -146,7 +146,7 @@ nni_pipe_close(nni_pipe *p)
 	// Let the socket (and endpoint) know we have closed.
 	nni_sock_pipe_closed(sock, p);
 
-	nni_objhash_unref(nni_allpipes, p->p_id);
+	nni_objhash_unref(nni_pipes, p->p_id);
 }
 
 
@@ -164,7 +164,7 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 	int rv;
 	uint32_t id;
 
-	rv = nni_objhash_alloc(nni_allpipes, &id, (void **) &p);
+	rv = nni_objhash_alloc(nni_pipes, &id, (void **) &p);
 	if (rv != 0) {
 		return (rv);
 	}
@@ -176,12 +176,12 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 
 	// Initialize the transport pipe data.
 	if ((rv = p->p_tran_ops.p_init(&p->p_tran_data)) != 0) {
-		nni_objhash_unref(nni_allpipes, p->p_id);
+		nni_objhash_unref(nni_pipes, p->p_id);
 		return (rv);
 	}
 
 	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
-		nni_objhash_unref(nni_allpipes, p->p_id);
+		nni_objhash_unref(nni_pipes, p->p_id);
 		return (rv);
 	}
 
@@ -195,7 +195,7 @@ nni_pipe_destroy(nni_pipe *p)
 {
 	NNI_ASSERT(p->p_refcnt == 0);
 
-	nni_objhash_unref(nni_allpipes, p->p_id);
+	nni_objhash_unref(nni_pipes, p->p_id);
 }
 
 
@@ -216,7 +216,7 @@ nni_pipe_start(nni_pipe *p)
 	int rv;
 	nni_pipe *scratch;
 
-	rv = nni_objhash_find(nni_allpipes, p->p_id, (void **) &scratch);
+	rv = nni_objhash_find(nni_pipes, p->p_id, (void **) &scratch);
 	if (rv != 0) {
 		return (rv);
 	}
