@@ -302,7 +302,7 @@ nni_resp_recv_cb(void *arg)
 {
 	nni_resp_pipe *ppipe = arg;
 	nni_resp_sock *psock = ppipe->psock;
-	nni_msgq *urq = nni_sock_recvq(psock->nsock);
+	nni_msgq *urq;
 	nni_msg *msg;
 	uint8_t idbuf[4];
 	int hops;
@@ -311,6 +311,8 @@ nni_resp_recv_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_recv) != 0) {
 		goto error;
 	}
+
+	urq = nni_sock_recvq(psock->nsock);
 
 	NNI_PUT32(idbuf, ppipe->id);
 
