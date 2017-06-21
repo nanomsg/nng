@@ -182,9 +182,9 @@ nni_rep_pipe_start(void *arg)
 		return (rv);
 	}
 
-	nni_pipe_incref(rp->pipe);
+	nni_pipe_hold(rp->pipe);
 	nni_msgq_aio_get(rp->sendq, &rp->aio_getq);
-	nni_pipe_incref(rp->pipe);
+	nni_pipe_hold(rp->pipe);
 	nni_pipe_aio_recv(rp->pipe, &rp->aio_recv);
 	rp->running = 1;
 	return (0);
@@ -268,7 +268,7 @@ nni_rep_pipe_getq_cb(void *arg)
 
 	if (nni_aio_result(&rp->aio_getq) != 0) {
 		nni_pipe_close(rp->pipe);
-		nni_pipe_decref(rp->pipe);
+		nni_pipe_rele(rp->pipe);
 		return;
 	}
 
@@ -288,7 +288,7 @@ nni_rep_pipe_send_cb(void *arg)
 		nni_msg_free(rp->aio_send.a_msg);
 		rp->aio_send.a_msg = NULL;
 		nni_pipe_close(rp->pipe);
-		nni_pipe_decref(rp->pipe);
+		nni_pipe_rele(rp->pipe);
 		return;
 	}
 
@@ -309,7 +309,7 @@ nni_rep_pipe_recv_cb(void *arg)
 
 	if (nni_aio_result(&rp->aio_recv) != 0) {
 		nni_pipe_close(rp->pipe);
-		nni_pipe_decref(rp->pipe);
+		nni_pipe_rele(rp->pipe);
 		return;
 	}
 
@@ -359,7 +359,7 @@ malformed:
 	// Failures here are bad enough to warrant to dropping the conn.
 	nni_msg_free(msg);
 	nni_pipe_close(rp->pipe);
-	nni_pipe_decref(rp->pipe);
+	nni_pipe_rele(rp->pipe);
 }
 
 
@@ -372,7 +372,7 @@ nni_rep_pipe_putq_cb(void *arg)
 		nni_msg_free(rp->aio_putq.a_msg);
 		rp->aio_putq.a_msg = NULL;
 		nni_pipe_close(rp->pipe);
-		nni_pipe_decref(rp->pipe);
+		nni_pipe_rele(rp->pipe);
 		return;
 	}
 

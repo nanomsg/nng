@@ -39,7 +39,7 @@ nni_ep_sys_fini(void)
 
 
 int
-nni_ep_hold(nni_ep **epp, uint32_t id)
+nni_ep_find(nni_ep **epp, uint32_t id)
 {
 	int rv;
 	nni_ep *ep;
@@ -63,6 +63,16 @@ nni_ep_hold(nni_ep **epp, uint32_t id)
 		*epp = ep;
 	}
 	return (0);
+}
+
+
+void
+nni_ep_hold(nni_ep *ep)
+{
+	int rv;
+
+	rv = nni_objhash_find(nni_eps, ep->ep_id, NULL);
+	NNI_ASSERT(rv == 0);
 }
 
 
@@ -226,11 +236,7 @@ nni_ep_connect(nni_ep *ep, nni_pipe **pp)
 int
 nni_ep_add_pipe(nni_ep *ep, nni_pipe *pipe)
 {
-	int rv;
-
-	if ((rv = nni_ep_hold(NULL, ep->ep_id)) != 0) {
-		return (rv);
-	}
+	nni_ep_hold(ep);
 	nni_mtx_lock(&ep->ep_mtx);
 	if (ep->ep_close) {
 		nni_mtx_unlock(&ep->ep_mtx);

@@ -145,7 +145,9 @@ nni_objhash_find(nni_objhash *oh, uint32_t id, void **valp)
 	node = nni_objhash_find_node(oh, id);
 
 	if ((node != NULL) && (node->on_val != NULL)) {
-		*valp = node->on_val;
+		if (valp != NULL) {
+			*valp = node->on_val;
+		}
 		node->on_refcnt++;
 		rv = 0;
 	} else {

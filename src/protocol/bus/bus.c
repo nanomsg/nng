@@ -172,9 +172,9 @@ nni_bus_pipe_start(void *arg)
 
 	nni_list_append(&psock->pipes, ppipe);
 
-	nni_pipe_incref(ppipe->npipe);
+	nni_pipe_hold(ppipe->npipe);
 	nni_bus_pipe_recv(ppipe);
-	nni_pipe_incref(ppipe->npipe);
+	nni_pipe_hold(ppipe->npipe);
 	nni_bus_pipe_getq(ppipe);
 
 	return (0);
@@ -205,7 +205,7 @@ nni_bus_pipe_getq_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_getq) != 0) {
 		// closed?
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 	ppipe->aio_send.a_msg = ppipe->aio_getq.a_msg;
@@ -225,7 +225,7 @@ nni_bus_pipe_send_cb(void *arg)
 		nni_msg_free(ppipe->aio_send.a_msg);
 		ppipe->aio_send.a_msg = NULL;
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 
@@ -243,7 +243,7 @@ nni_bus_pipe_recv_cb(void *arg)
 
 	if (nni_aio_result(&ppipe->aio_recv) != 0) {
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 	msg = ppipe->aio_recv.a_msg;
@@ -253,7 +253,7 @@ nni_bus_pipe_recv_cb(void *arg)
 		// XXX: bump a nomemory stat
 		nni_msg_free(msg);
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 
@@ -271,7 +271,7 @@ nni_bus_pipe_putq_cb(void *arg)
 		nni_msg_free(ppipe->aio_putq.a_msg);
 		ppipe->aio_putq.a_msg = NULL;
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 

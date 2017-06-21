@@ -102,19 +102,17 @@ nni_pipe_aio_send(nni_pipe *p, nni_aio *aio)
 
 
 void
-nni_pipe_incref(nni_pipe *p)
+nni_pipe_hold(nni_pipe *p)
 {
 	int rv;
-	nni_pipe *scratch;
 
-	rv = nni_objhash_find(nni_pipes, p->p_id, (void **) &scratch);
+	rv = nni_objhash_find(nni_pipes, p->p_id, NULL);
 	NNI_ASSERT(rv == 0);
-	NNI_ASSERT(p == scratch);
 }
 
 
 void
-nni_pipe_decref(nni_pipe *p)
+nni_pipe_rele(nni_pipe *p)
 {
 	nni_objhash_unref(nni_pipes, p->p_id);
 }

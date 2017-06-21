@@ -42,8 +42,8 @@ extern int nni_pipe_aio_send(nni_pipe *, nni_aio *);
 // Pipe operations that protocols use.
 extern uint32_t nni_pipe_id(nni_pipe *);
 extern void nni_pipe_close(nni_pipe *);
-extern void nni_pipe_incref(nni_pipe *);
-extern void nni_pipe_decref(nni_pipe *);
+extern void nni_pipe_hold(nni_pipe *);
+extern void nni_pipe_rele(nni_pipe *);
 
 // Used only by the socket core - as we don't wish to expose the details
 // of the pipe structure outside of pipe.c.

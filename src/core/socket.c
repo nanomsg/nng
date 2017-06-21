@@ -39,7 +39,7 @@ nni_sock_recvq(nni_sock *s)
 
 
 int
-nni_sock_hold(nni_sock **sockp, uint32_t id)
+nni_sock_find(nni_sock **sockp, uint32_t id)
 {
 	int rv;
 	nni_sock *sock;
@@ -62,6 +62,16 @@ nni_sock_hold(nni_sock **sockp, uint32_t id)
 	}
 
 	return (0);
+}
+
+
+void
+nni_sock_hold(nni_sock *sock)
+{
+	int rv;
+
+	rv = nni_objhash_find(nni_socks, sock->s_id, NULL);
+	NNI_ASSERT(rv == 0);
 }
 
 
@@ -615,9 +625,8 @@ nni_sock_add_ep(nni_sock *sock, nni_ep *ep)
 {
 	int rv;
 
-	if ((rv = nni_sock_hold(NULL, sock->s_id)) != 0) {
-		return (rv);
-	}
+	nni_sock_hold(sock);
+
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
 		nni_mtx_unlock(&sock->s_mx);

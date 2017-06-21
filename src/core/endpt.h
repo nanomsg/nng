@@ -42,7 +42,8 @@ struct nni_ep {
 
 extern int nni_ep_sys_init(void);
 extern void nni_ep_sys_fini(void);
-extern int nni_ep_hold(nni_ep **, uint32_t);
+extern int nni_ep_find(nni_ep **, uint32_t);
+extern void nni_ep_hold(nni_ep *);
 extern void nni_ep_rele(nni_ep *);
 extern uint32_t nni_ep_id(nni_ep *);
 extern int nni_ep_create(nni_ep **, nni_sock *, const char *);

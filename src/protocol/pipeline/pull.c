@@ -107,7 +107,7 @@ nni_pull_pipe_start(void *arg)
 	nni_pull_pipe *pp = arg;
 
 	// Start the pending pull...
-	nni_pipe_incref(pp->pipe);
+	nni_pipe_hold(pp->pipe);
 	nni_pull_recv(pp);
 
 	return (0);
@@ -134,7 +134,7 @@ nni_pull_recv_cb(void *arg)
 	if (nni_aio_result(aio) != 0) {
 		// Failed to get a message, probably the pipe is closed.
 		nni_pipe_close(pp->pipe);
-		nni_pipe_decref(pp->pipe);
+		nni_pipe_rele(pp->pipe);
 		return;
 	}
 
@@ -158,7 +158,7 @@ nni_pull_putq_cb(void *arg)
 		nni_msg_free(aio->a_msg);
 		aio->a_msg = NULL;
 		nni_pipe_close(pp->pipe);
-		nni_pipe_decref(pp->pipe);
+		nni_pipe_rele(pp->pipe);
 		return;
 	}
 
@@ -173,7 +173,7 @@ nni_pull_recv(nni_pull_pipe *pp)
 	// Schedule the aio with callback.
 	if (nni_pipe_aio_recv(pp->pipe, &pp->recv_aio) != 0) {
 		nni_pipe_close(pp->pipe);
-		nni_pipe_decref(pp->pipe);
+		nni_pipe_rele(pp->pipe);
 	}
 }
 

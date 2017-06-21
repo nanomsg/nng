@@ -176,10 +176,10 @@ nni_surv_pipe_start(void *arg)
 
 	nni_list_append(&psock->pipes, ppipe);
 
-	nni_pipe_incref(ppipe->npipe);
+	nni_pipe_hold(ppipe->npipe);
 	nni_msgq_aio_get(ppipe->sendq, &ppipe->aio_getq);
 
-	nni_pipe_incref(ppipe->npipe);
+	nni_pipe_hold(ppipe->npipe);
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
 	ppipe->running = 1;
 	return (0);
@@ -207,7 +207,7 @@ nni_surv_getq_cb(void *arg)
 
 	if (nni_aio_result(&ppipe->aio_getq) != 0) {
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 
@@ -227,7 +227,7 @@ nni_surv_send_cb(void *arg)
 		nni_msg_free(ppipe->aio_send.a_msg);
 		ppipe->aio_send.a_msg = NULL;
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 
@@ -244,7 +244,7 @@ nni_surv_putq_cb(void *arg)
 		nni_msg_free(ppipe->aio_putq.a_msg);
 		ppipe->aio_putq.a_msg = NULL;
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 
@@ -288,7 +288,7 @@ nni_surv_recv_cb(void *arg)
 
 failed:
 	nni_pipe_close(ppipe->npipe);
-	nni_pipe_decref(ppipe->npipe);
+	nni_pipe_rele(ppipe->npipe);
 }
 
 

@@ -43,7 +43,7 @@ nng_shutdown(nng_socket sid)
 	int rv;
 	nni_sock *sock;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	rv = nni_sock_shutdown(sock);
@@ -60,7 +60,7 @@ nng_close(nng_socket sid)
 
 	// Close is special, because we still want to be able to get
 	// a hold on the socket even if shutdown was called.
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	// No release -- close releases it.
@@ -76,7 +76,7 @@ nng_protocol(nng_socket sid)
 	uint16_t pnum;
 	nni_sock *sock;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	pnum = nni_sock_proto(sock);
@@ -92,7 +92,7 @@ nng_peer(nng_socket sid)
 	uint16_t pnum;
 	nni_sock *sock;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	pnum = nni_sock_peer(sock);
@@ -145,7 +145,7 @@ nng_recvmsg(nng_socket sid, nng_msg **msgp, int flags)
 	int rv;
 	nni_sock *sock;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	if ((flags == NNG_FLAG_NONBLOCK) || (sock->s_rcvtimeo == 0)) {
@@ -203,7 +203,7 @@ nng_sendmsg(nng_socket sid, nng_msg *msg, int flags)
 	int rv;
 	nni_sock *sock;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	if ((flags == NNG_FLAG_NONBLOCK) || (sock->s_sndtimeo == 0)) {
@@ -228,7 +228,7 @@ nng_dial(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 	int rv;
 	nni_sock *sock;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	if ((rv = nni_sock_dial(sock, addr, &ep, flags)) == 0) {
@@ -248,7 +248,7 @@ nng_listen(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 	int rv;
 	nni_sock *sock;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	if ((rv = nni_sock_listen(sock, addr, &ep, flags)) == 0) {
@@ -267,7 +267,7 @@ nng_endpoint_close(nng_endpoint eid)
 	int rv;
 	nni_ep *ep;
 
-	if ((rv = nni_ep_hold(&ep, eid)) != 0) {
+	if ((rv = nni_ep_find(&ep, eid)) != 0) {
 		return (rv);
 	}
 	nni_ep_close(ep);
@@ -281,7 +281,7 @@ nng_setopt(nng_socket sid, int opt, const void *val, size_t sz)
 	nni_sock *sock;
 	int rv;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	rv = nni_sock_setopt(sock, opt, val, sz);
@@ -296,7 +296,7 @@ nng_getopt(nng_socket sid, int opt, void *val, size_t *szp)
 	nni_sock *sock;
 	int rv;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
 	rv = nni_sock_getopt(sock, opt, val, szp);
@@ -312,7 +312,7 @@ nng_setnotify(nng_socket sid, int mask, nng_notify_func fn, void *arg)
 	nng_notify *notify;
 	int rv;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (NULL);
 	}
 	notify = nni_sock_notify(sock, mask, fn, arg);
@@ -327,7 +327,7 @@ nng_unsetnotify(nng_socket sid, nng_notify *notify)
 	nni_sock *sock;
 	int rv;
 
-	if ((rv = nni_sock_hold(&sock, sid)) != 0) {
+	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return;
 	}
 	nni_sock_unnotify(sock, notify);
@@ -358,12 +358,12 @@ nng_device(nng_socket s1, nng_socket s2)
 	nni_sock *sock2 = NULL;
 
 	if ((s1 > 0) && (s1 != (nng_socket)-1)) {
-		if ((rv = nni_sock_hold(&sock1, s1)) != 0) {
+		if ((rv = nni_sock_find(&sock1, s1)) != 0) {
 			return (rv);
 		}
 	}
 	if (((s2 > 0) && (s2 != (nng_socket)-1)) && (s2 != s1)) {
-		if ((rv = nni_sock_hold(&sock2, s2)) != 0) {
+		if ((rv = nni_sock_find(&sock2, s2)) != 0) {
 			nni_sock_rele(sock1);
 			return (rv);
 		}

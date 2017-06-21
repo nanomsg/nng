@@ -142,9 +142,9 @@ nni_pair_pipe_start(void *arg)
 
 	// Schedule a getq on the upper, and a read from the pipe.
 	// Each of these also sets up another hold on the pipe itself.
-	nni_pipe_incref(ppipe->npipe);
+	nni_pipe_hold(ppipe->npipe);
 	nni_msgq_aio_get(psock->uwq, &ppipe->aio_getq);
-	nni_pipe_incref(ppipe->npipe);
+	nni_pipe_hold(ppipe->npipe);
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
 
 	return (0);
@@ -174,7 +174,7 @@ nni_pair_recv_cb(void *arg)
 
 	if (nni_aio_result(&ppipe->aio_recv) != 0) {
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 
@@ -193,7 +193,7 @@ nni_pair_putq_cb(void *arg)
 		nni_msg_free(ppipe->aio_putq.a_msg);
 		ppipe->aio_putq.a_msg = NULL;
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
@@ -209,7 +209,7 @@ nni_pair_getq_cb(void *arg)
 
 	if (nni_aio_result(&ppipe->aio_getq) != 0) {
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 
@@ -229,7 +229,7 @@ nni_pair_send_cb(void *arg)
 		nni_msg_free(ppipe->aio_send.a_msg);
 		ppipe->aio_send.a_msg = NULL;
 		nni_pipe_close(ppipe->npipe);
-		nni_pipe_decref(ppipe->npipe);
+		nni_pipe_rele(ppipe->npipe);
 		return;
 	}
 

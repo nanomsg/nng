@@ -127,11 +127,11 @@ nni_push_pipe_start(void *arg)
 
 	// Schedule a receiver.  This is mostly so that we can detect
 	// a closed transport pipe.
-	nni_pipe_incref(pp->pipe);
+	nni_pipe_hold(pp->pipe);
 	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
 
 	// Schedule a sender.
-	nni_pipe_incref(pp->pipe);
+	nni_pipe_hold(pp->pipe);
 	nni_msgq_aio_get(push->uwq, &pp->aio_getq);
 
 	return (0);
@@ -157,7 +157,7 @@ nni_push_recv_cb(void *arg)
 	// sends us data, we just discard it.
 	if (nni_aio_result(&pp->aio_recv) != 0) {
 		nni_pipe_close(pp->pipe);
-		nni_pipe_decref(pp->pipe);
+		nni_pipe_rele(pp->pipe);
 		return;
 	}
 	nni_msg_free(pp->aio_recv.a_msg);
@@ -176,7 +176,7 @@ nni_push_send_cb(void *arg)
 		nni_msg_free(pp->aio_send.a_msg);
 		pp->aio_send.a_msg = NULL;
 		nni_pipe_close(pp->pipe);
-		nni_pipe_decref(pp->pipe);
+		nni_pipe_rele(pp->pipe);
 		return;
 	}
 
@@ -193,7 +193,7 @@ nni_push_getq_cb(void *arg)
 	if (nni_aio_result(aio) != 0) {
 		// If the socket is closing, nothing else we can do.
 		nni_pipe_close(pp->pipe);
-		nni_pipe_decref(pp->pipe);
+		nni_pipe_rele(pp->pipe);
 		return;
 	}
 

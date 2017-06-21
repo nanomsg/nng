@@ -63,7 +63,8 @@ struct nni_socket {
 extern int nni_sock_sys_init(void);
 extern void nni_sock_sys_fini(void);
 
-extern int nni_sock_hold(nni_sock **, uint32_t);
+extern int nni_sock_find(nni_sock **, uint32_t);
+extern void nni_sock_hold(nni_sock *);
 extern void nni_sock_rele(nni_sock *);
 extern int nni_sock_open(nni_sock **, uint16_t);
 extern void nni_sock_close(nni_sock *);
