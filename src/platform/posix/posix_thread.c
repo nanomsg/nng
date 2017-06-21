@@ -227,46 +227,50 @@ int
 nni_plat_init(int (*helper)(void))
 {
 	int rv;
+	int devnull;
 
 	if (nni_plat_forked) {
-		nni_panic("nng is fork-reentrant safe");
+		nni_panic("nng is not fork-reentrant safe");
 	}
 	if (nni_plat_inited) {
 		return (0);     // fast path
 	}
-
-	if ((nni_plat_devnull = open("/dev/null", O_RDONLY)) < 0) {
+	if ((devnull = open("/dev/null", O_RDONLY)) < 0) {
 		return (nni_plat_errno(errno));
 	}
+
 	pthread_mutex_lock(&nni_plat_lock);
 	if (nni_plat_inited) {        // check again under the lock to be sure
 		pthread_mutex_unlock(&nni_plat_lock);
-		(void) close(nni_plat_devnull);
+		close(devnull);
 		return (0);
 	}
 	if (pthread_condattr_init(&nni_cvattr) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
-		(void) close(nni_plat_devnull);
+		(void) close(devnull);
 		return (NNG_ENOMEM);
 	}
 #if !defined(NNG_USE_GETTIMEOFDAY) && NNG_USE_CLOCKID != CLOCK_REALTIME
 	if (pthread_condattr_setclock(&nni_cvattr, NNG_USE_CLOCKID) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
-		(void) close(nni_plat_devnull);
+		(void) close(devnull);
 		return (NNG_ENOMEM);
 	}
 #endif
 
 	if (pthread_mutexattr_init(&nni_mxattr) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
-		(void) close(nni_plat_devnull);
+		pthread_condattr_destroy(&nni_cvattr);
+		(void) close(devnull);
 		return (NNG_ENOMEM);
 	}
 
 	rv = pthread_mutexattr_settype(&nni_mxattr, PTHREAD_MUTEX_ERRORCHECK);
 	if (rv != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
-		(void) close(nni_plat_devnull);
+		(void) close(devnull);
+		pthread_mutexattr_destroy(&nni_mxattr);
+		pthread_condattr_destroy(&nni_cvattr);
 		return (NNG_ENOMEM);
 	}
 
@@ -287,7 +291,7 @@ nni_plat_init(int (*helper)(void))
 
 	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
-		(void) close(nni_plat_devnull);
+		(void) close(devnull);
 		pthread_mutexattr_destroy(&nni_mxattr);
 		pthread_condattr_destroy(&nni_cvattr);
 		pthread_attr_destroy(&nni_pthread_attr);
@@ -296,6 +300,7 @@ nni_plat_init(int (*helper)(void))
 	if ((rv = helper()) == 0) {
 		nni_plat_inited = 1;
 	}
+	nni_plat_devnull = devnull;
 	pthread_mutex_unlock(&nni_plat_lock);
 
 	return (rv);

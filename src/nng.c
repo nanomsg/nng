@@ -37,6 +37,13 @@ nng_open(nng_socket *sidp, uint16_t proto)
 }
 
 
+void
+nng_fini(void)
+{
+	nni_fini();
+}
+
+
 int
 nng_shutdown(nng_socket sid)
 {

@@ -20,7 +20,10 @@
 Main({
 	const char *addr = "inproc://test";
 
+	atexit(nng_fini);
+
 	Test("BUS pattern", {
+
 		Convey("We can create a BUS socket", {
 			nng_socket bus;
 

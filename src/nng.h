@@ -55,6 +55,16 @@ typedef struct nng_stat		nng_stat;
 // mode.
 NNG_DECL int nng_open(nng_socket *, uint16_t proto);
 
+// nng_fini is used to terminate the library, freeing certain global resources.
+// Its a good idea to call this with atexit() or during application shutdown.
+// For most cases, this call is optional, but failure to do so may cause
+// memory checkers like valgrind to incorrectly flag memory leaks.  Note that
+// this particular API is NOT THREADSAFE, and MUST NOT BE CALLED WHILE ANY
+// OTHER APIS ARE IN USE.  (It is safe however to call other functions such
+// as nng_open *after* this function returns, provided that the functions do
+// not run concurrently!)
+NNG_DECL void nng_fini(void);
+
 // nng_close closes the socket, terminating all activity and
 // closing any underlying connections and releasing any associated
 // resources. Memory associated with the socket is freed, so it is an
