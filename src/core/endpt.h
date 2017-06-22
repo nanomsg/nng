@@ -47,7 +47,6 @@ extern void nni_ep_hold(nni_ep *);
 extern void nni_ep_rele(nni_ep *);
 extern uint32_t nni_ep_id(nni_ep *);
 extern int nni_ep_create(nni_ep **, nni_sock *, const char *);
-extern int nni_ep_accept(nni_ep *, nni_pipe **);
 extern void nni_ep_close(nni_ep *);
 extern int nni_ep_dial(nni_ep *, int);
 extern int nni_ep_listen(nni_ep *, int);

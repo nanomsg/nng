@@ -13,7 +13,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-// Functionality realited to end points.
+// Functionality related to end points.
 
 static nni_objhash *nni_eps = NULL;
 static void *nni_ep_ctor(uint32_t);
@@ -213,7 +213,7 @@ nni_ep_close(nni_ep *ep)
 
 
 static int
-nni_ep_connect(nni_ep *ep, nni_pipe **pp)
+nni_ep_connect(nni_ep *ep)
 {
 	nni_pipe *pipe;
 	int rv;
@@ -226,9 +226,12 @@ nni_ep_connect(nni_ep *ep, nni_pipe **pp)
 		nni_pipe_destroy(pipe);
 		return (rv);
 	}
+	if ((rv = nni_pipe_start(pipe)) != 0) {
+		nni_pipe_close(pipe);
+		return (rv);
+	}
 	ep->ep_pipe = pipe;
 	pipe->p_ep = ep;
-	*pp = pipe;
 	return (0);
 }
 
@@ -241,6 +244,7 @@ nni_ep_add_pipe(nni_ep *ep, nni_pipe *pipe)
 	if (ep->ep_close) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		nni_ep_rele(ep);
+		return (NNG_ECLOSED);
 	}
 	nni_list_append(&ep->ep_pipes, pipe);
 	nni_mtx_unlock(&ep->ep_mtx);
@@ -260,23 +264,6 @@ nni_ep_rem_pipe(nni_ep *ep, nni_pipe *pipe)
 	nni_list_remove(&ep->ep_pipes, pipe);
 	nni_mtx_unlock(&ep->ep_mtx);
 	nni_ep_rele(ep);
-}
-
-
-// nni_dial_once just does a single dial call, so it can be used
-// for synchronous dialing.
-static int
-nni_dial_once(nni_ep *ep)
-{
-	nni_pipe *pipe;
-	int rv;
-
-	if (((rv = nni_ep_connect(ep, &pipe)) == 0) &&
-	    ((rv = nni_pipe_start(pipe)) == 0)) {
-		return (0);
-	}
-
-	return (rv);
 }
 
 
@@ -313,7 +300,7 @@ nni_dialer(void *arg)
 		}
 		nni_mtx_unlock(&ep->ep_mtx);
 
-		rv = nni_dial_once(ep);
+		rv = nni_ep_connect(ep);
 		switch (rv) {
 		case 0:
 			// good connection
@@ -366,7 +353,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 
 	if (flags & NNG_FLAG_SYNCH) {
 		nni_mtx_unlock(&ep->ep_mtx);
-		rv = nni_dial_once(ep);
+		rv = nni_ep_connect(ep);
 		if (rv != 0) {
 			nni_thr_fini(&ep->ep_thr);
 			ep->ep_mode = NNI_EP_MODE_IDLE;
@@ -383,7 +370,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 
 
 int
-nni_ep_accept(nni_ep *ep, nni_pipe **pp)
+nni_ep_accept(nni_ep *ep)
 {
 	nni_pipe *pipe;
 	int rv;
@@ -399,7 +386,10 @@ nni_ep_accept(nni_ep *ep, nni_pipe **pp)
 		nni_pipe_destroy(pipe);
 		return (rv);
 	}
-	*pp = pipe;
+	if ((rv = nni_pipe_start(pipe)) != 0) {
+		nni_pipe_close(pipe);
+		return (rv);
+	}
 	return (0);
 }
 
@@ -408,7 +398,6 @@ static void
 nni_listener(void *arg)
 {
 	nni_ep *ep = arg;
-	nni_pipe *pipe;
 	int rv;
 
 	for (;;) {
@@ -445,10 +434,7 @@ nni_listener(void *arg)
 		}
 		nni_mtx_unlock(&ep->ep_mtx);
 
-		pipe = NULL;
-
-		if (((rv = nni_ep_accept(ep, &pipe)) == 0) &&
-		    ((rv = nni_pipe_start(pipe)) == 0)) {
+		if ((rv = nni_ep_accept(ep)) == 0) {
 			// Success! Loop around for the next one.
 			continue;
 		}
