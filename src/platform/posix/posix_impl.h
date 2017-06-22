@@ -47,6 +47,7 @@ extern int nni_plat_devnull;    // open descriptor on /dev/null
 
 struct nni_plat_mtx {
 	int		init;
+	pthread_t	owner;
 	pthread_mutex_t mtx;
 };
 
@@ -57,8 +58,8 @@ struct nni_plat_thr {
 };
 
 struct nni_plat_cv {
-	pthread_cond_t		cv;
-	pthread_mutex_t *	mtx;
+	pthread_cond_t	cv;
+	nni_plat_mtx *	mtx;
 };
 
 #endif

@@ -79,6 +79,7 @@ nni_plat_mtx_lock(nni_plat_mtx *mtx)
 	if ((rv = pthread_mutex_lock(&mtx->mtx)) != 0) {
 		nni_panic("pthread_mutex_lock: %s", strerror(rv));
 	}
+	mtx->owner = pthread_self();
 }
 
 
@@ -87,9 +88,11 @@ nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 {
 	int rv;
 
+	NNI_ASSERT(mtx->owner == pthread_self());
 	if ((rv = pthread_mutex_unlock(&mtx->mtx)) != 0) {
 		nni_panic("pthread_mutex_unlock: %s", strerror(rv));
 	}
+	mtx->owner = 0;
 }
 
 
@@ -108,7 +111,7 @@ nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 			nni_panic("pthread_cond_init: %s", strerror(rv));
 		}
 	}
-	cv->mtx = &mtx->mtx;
+	cv->mtx = mtx;
 	return (0);
 }
 
@@ -129,9 +132,11 @@ nni_plat_cv_wait(nni_plat_cv *cv)
 {
 	int rv;
 
-	if ((rv = pthread_cond_wait(&cv->cv, cv->mtx)) != 0) {
+	NNI_ASSERT(cv->mtx->owner == pthread_self());
+	if ((rv = pthread_cond_wait(&cv->cv, &cv->mtx->mtx)) != 0) {
 		nni_panic("pthread_cond_wait: %s", strerror(rv));
 	}
+	cv->mtx->owner = pthread_self();
 }
 
 
@@ -141,11 +146,14 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 	struct timespec ts;
 	int rv;
 
+	NNI_ASSERT(cv->mtx->owner == pthread_self());
+
 	// Our caller has already guaranteed a sane value for until.
 	ts.tv_sec = until / 1000000;
 	ts.tv_nsec = (until % 1000000) * 1000;
 
-	rv = pthread_cond_timedwait(&cv->cv, cv->mtx, &ts);
+	rv = pthread_cond_timedwait(&cv->cv, &cv->mtx->mtx, &ts);
+	cv->mtx->owner = pthread_self();
 	if (rv == ETIMEDOUT) {
 		return (NNG_ETIMEDOUT);
 	} else if (rv != 0) {
