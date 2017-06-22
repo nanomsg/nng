@@ -259,15 +259,19 @@ nni_objhash_unref(nni_objhash *oh, uint32_t id)
 	NNI_ASSERT(node->on_refcnt > 0);
 	NNI_ASSERT(node->on_refcnt < 1000000); // reasonable limit, debug only
 	node->on_refcnt--;
+
+	// If we have further references, we are done, except that if we have
+	// only one remaining reference, we might want to wake up another
+	// thread blocked in nni_objhash_unref_wait.
 	if (node->on_refcnt != 0) {
 		if (node->on_refcnt == 1) {
 			nni_cv_wake(&oh->oh_cv);
 		}
-		// Still busy/referenced?
 		nni_mtx_unlock(&oh->oh_lock);
 		return;
 	}
 
+	NNI_ASSERT(node->on_refcnt == 0);
 	index = id & (oh->oh_cap - 1);
 	for (;;) {
 		node = &oh->oh_nodes[index];
@@ -317,20 +321,14 @@ nni_objhash_unref_wait(nni_objhash *oh, uint32_t id)
 
 	node = nni_objhash_find_node(oh, id);
 	NNI_ASSERT(node != NULL);
+	NNI_ASSERT(node->on_refcnt > 0);
 	val = node->on_val;
 
 	while (node->on_refcnt != 1) {
 		nni_cv_wait(&oh->oh_cv);
 	}
 	node->on_refcnt--;
-	if (node->on_refcnt != 0) {
-		if (node->on_refcnt == 1) {
-			nni_cv_wake(&oh->oh_cv);
-		}
-		// Still busy/referenced?
-		nni_mtx_unlock(&oh->oh_lock);
-		return;
-	}
+	NNI_ASSERT(node->on_refcnt == 0);
 
 	index = id & (oh->oh_cap - 1);
 	for (;;) {
@@ -416,6 +414,7 @@ nni_objhash_alloc(nni_objhash *oh, uint32_t *idp, void **valp)
 		index = NNI_OBJHASH_NEXTPROBE(oh, index);
 	}
 
+	NNI_ASSERT(node->on_refcnt == 0);
 	node->on_id = id;
 	node->on_refcnt++;
 
@@ -446,6 +445,9 @@ nni_objhash_alloc(nni_objhash *oh, uint32_t *idp, void **valp)
 	}
 	*valp = node->on_val;
 	*idp = id;
+
+	NNI_ASSERT(node->on_refcnt == 1);
+
 	nni_mtx_unlock(&oh->oh_lock);
 	return (0);
 }
