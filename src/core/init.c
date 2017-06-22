@@ -64,6 +64,8 @@ nni_init(void)
 void
 nni_fini(void)
 {
+	// XXX: We should make sure that underlying sockets and
+	// file descriptors are closed.  Details TBD.
 	nni_tran_sys_fini();
 	nni_ep_sys_fini();
 	nni_sock_sys_fini();

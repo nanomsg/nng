@@ -741,7 +741,8 @@ nn_device(int s1, int s2)
 }
 
 
-// You should not use this function if you can help it.
+// nn_term is suitable only for shutting down the entire library,
+// and is not thread-safe with other functions.
 void
 nn_term(void)
 {
