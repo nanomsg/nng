@@ -642,12 +642,14 @@ nni_sock_add_ep(nni_sock *sock, nni_ep *ep)
 void
 nni_sock_rem_ep(nni_sock *sock, nni_ep *ep)
 {
-	nni_mtx_lock(&sock->s_mx);
 	// If we're not on the list, then nothing to do.  Be idempotent.
-	if (!nni_list_active(&sock->s_eps, ep)) {
-		nni_mtx_unlock(&sock->s_mx);
+	// Note that if the ep is not on a list, then we assume that we have
+	// exclusive access.  Therefore the check for being active need not
+	// be locked.
+	if ((sock == NULL) || (!nni_list_active(&sock->s_eps, ep))) {
 		return;
 	}
+	nni_mtx_lock(&sock->s_mx);
 	nni_list_remove(&sock->s_eps, ep);
 	nni_mtx_unlock(&sock->s_mx);
 
