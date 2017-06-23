@@ -555,6 +555,10 @@ nni_sock_shutdown(nni_sock *sock)
 	} else {
 		linger = nni_clock() + sock->s_linger;
 	}
+
+	NNI_LIST_FOREACH (&sock->s_eps, ep) {
+		nni_ep_close(ep);
+	}
 	nni_mtx_unlock(&sock->s_mx);
 
 
@@ -586,8 +590,10 @@ nni_sock_shutdown(nni_sock *sock)
 
 	// Stop all EPS.
 	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
+		nni_list_remove(&sock->s_eps, ep);
 		nni_mtx_unlock(&sock->s_mx);
 		nni_ep_close(ep);
+		nni_ep_rele(ep);
 		nni_mtx_lock(&sock->s_mx);
 	}
 
@@ -625,12 +631,9 @@ nni_sock_add_ep(nni_sock *sock, nni_ep *ep)
 {
 	int rv;
 
-	nni_sock_hold(sock);
-
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
 		nni_mtx_unlock(&sock->s_mx);
-		nni_sock_rele(sock);
 		return (NNG_ECLOSED);
 	}
 	nni_list_append(&sock->s_eps, ep);
@@ -652,9 +655,6 @@ nni_sock_rem_ep(nni_sock *sock, nni_ep *ep)
 	nni_mtx_lock(&sock->s_mx);
 	nni_list_remove(&sock->s_eps, ep);
 	nni_mtx_unlock(&sock->s_mx);
-
-	// Drop the reference the EP acquired in add_ep.
-	nni_sock_rele(sock);
 }
 
 
@@ -833,6 +833,7 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 
 	if ((rv = nni_ep_dial(ep, flags)) != 0) {
 		nni_ep_close(ep);
+		nni_ep_rele(ep);
 	} else if (epp != NULL) {
 		*epp = ep;
 	}
@@ -853,6 +854,7 @@ nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 
 	if ((rv = nni_ep_listen(ep, flags)) != 0) {
 		nni_ep_close(ep);
+		nni_ep_rele(ep);
 	} else if (epp != NULL) {
 		*epp = ep;
 	}

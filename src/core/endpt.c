@@ -198,17 +198,16 @@ nni_ep_close(nni_ep *ep)
 	nni_sock *sock = ep->ep_sock;
 
 	nni_mtx_lock(&ep->ep_mtx);
-	NNI_ASSERT(ep->ep_closed == 0);
-	ep->ep_closed = 1;
-	ep->ep_ops.ep_close(ep->ep_data);
-	if ((pipe = ep->ep_pipe) != NULL) {
-		pipe->p_ep = NULL;
-		ep->ep_pipe = NULL;
+	if (ep->ep_closed == 0) {
+		ep->ep_closed = 1;
+		ep->ep_ops.ep_close(ep->ep_data);
+		if ((pipe = ep->ep_pipe) != NULL) {
+			pipe->p_ep = NULL;
+			ep->ep_pipe = NULL;
+		}
+		nni_cv_wake(&ep->ep_cv);
 	}
-	nni_cv_wake(&ep->ep_cv);
 	nni_mtx_unlock(&ep->ep_mtx);
-
-	nni_objhash_unref(nni_eps, ep->ep_id);
 }
 
 
