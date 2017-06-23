@@ -53,7 +53,7 @@ nni_ep_find(nni_ep **epp, uint32_t id)
 		return (NNG_ECLOSED);
 	}
 	nni_mtx_lock(&ep->ep_mtx);
-	if (ep->ep_close) {
+	if (ep->ep_closed) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		nni_objhash_unref(nni_eps, id);
 		return (NNG_ECLOSED);
@@ -99,7 +99,7 @@ nni_ep_ctor(uint32_t id)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NULL);
 	}
-	ep->ep_close = 0;
+	ep->ep_closed = 0;
 	ep->ep_bound = 0;
 	ep->ep_pipe = NULL;
 	ep->ep_id = id;
@@ -198,8 +198,8 @@ nni_ep_close(nni_ep *ep)
 	nni_sock *sock = ep->ep_sock;
 
 	nni_mtx_lock(&ep->ep_mtx);
-	NNI_ASSERT(ep->ep_close == 0);
-	ep->ep_close = 1;
+	NNI_ASSERT(ep->ep_closed == 0);
+	ep->ep_closed = 1;
 	ep->ep_ops.ep_close(ep->ep_data);
 	if ((pipe = ep->ep_pipe) != NULL) {
 		pipe->p_ep = NULL;
@@ -241,7 +241,7 @@ nni_ep_add_pipe(nni_ep *ep, nni_pipe *pipe)
 {
 	nni_ep_hold(ep);
 	nni_mtx_lock(&ep->ep_mtx);
-	if (ep->ep_close) {
+	if (ep->ep_closed) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		nni_ep_rele(ep);
 		return (NNG_ECLOSED);
@@ -290,11 +290,11 @@ nni_dialer(void *arg)
 		}
 
 		nni_mtx_lock(&ep->ep_mtx);
-		while ((!ep->ep_close) && (ep->ep_pipe != NULL)) {
+		while ((!ep->ep_closed) && (ep->ep_pipe != NULL)) {
 			rtime = defrtime;
 			nni_cv_wait(&ep->ep_cv);
 		}
-		if (ep->ep_close) {
+		if (ep->ep_closed) {
 			nni_mtx_unlock(&ep->ep_mtx);
 			break;
 		}
@@ -319,7 +319,7 @@ nni_dialer(void *arg)
 		// we inject a delay so we don't just spin hard on
 		// errors like connection refused.
 		nni_mtx_lock(&ep->ep_mtx);
-		while (!ep->ep_close) {
+		while (!ep->ep_closed) {
 			rv = nni_cv_until(&ep->ep_cv, cooldown);
 			if (rv == NNG_ETIMEDOUT) {
 				break;
@@ -340,7 +340,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_EBUSY);
 	}
-	if (ep->ep_close) {
+	if (ep->ep_closed) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_ECLOSED);
 	}
@@ -375,7 +375,7 @@ nni_ep_accept(nni_ep *ep)
 	nni_pipe *pipe;
 	int rv;
 
-	if (ep->ep_close) {
+	if (ep->ep_closed) {
 		return (NNG_ECLOSED);
 	}
 	if ((rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran)) != 0) {
@@ -405,7 +405,7 @@ nni_listener(void *arg)
 		nni_mtx_lock(&ep->ep_mtx);
 
 		// If we didn't bind synchronously, do it now.
-		while (!ep->ep_bound && !ep->ep_close) {
+		while (!ep->ep_bound && !ep->ep_closed) {
 			int rv;
 
 			nni_mtx_unlock(&ep->ep_mtx);
@@ -421,14 +421,14 @@ nni_listener(void *arg)
 			// XXX: PROPER BACKOFF NEEDED
 			cooldown = 10000;
 			cooldown += nni_clock();
-			while (!ep->ep_close) {
+			while (!ep->ep_closed) {
 				rv = nni_cv_until(&ep->ep_cv, cooldown);
 				if (rv == NNG_ETIMEDOUT) {
 					break;
 				}
 			}
 		}
-		if (ep->ep_close) {
+		if (ep->ep_closed) {
 			nni_mtx_unlock(&ep->ep_mtx);
 			break;
 		}
@@ -464,7 +464,7 @@ nni_listener(void *arg)
 		}
 		cooldown += nni_clock();
 		nni_mtx_lock(&ep->ep_mtx);
-		while (!ep->ep_close) {
+		while (!ep->ep_closed) {
 			rv = nni_cv_until(&ep->ep_cv, cooldown);
 			if (rv == NNG_ETIMEDOUT) {
 				break;
@@ -486,7 +486,7 @@ nni_ep_listen(nni_ep *ep, int flags)
 		return (NNG_EBUSY);
 	}
 
-	if (ep->ep_close) {
+	if (ep->ep_closed) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_ECLOSED);
 	}

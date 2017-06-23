@@ -28,7 +28,7 @@ struct nni_ep {
 	char		ep_addr[NNG_MAXADDRLEN];
 	nni_thr		ep_thr;
 	int		ep_mode;
-	int		ep_close;       // full shutdown
+	int		ep_closed;      // full shutdown
 	int		ep_bound;       // true if we bound locally
 	nni_mtx		ep_mtx;
 	nni_cv		ep_cv;
