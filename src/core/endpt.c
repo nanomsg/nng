@@ -19,35 +19,6 @@ static nni_objhash *nni_eps = NULL;
 static void *nni_ep_ctor(uint32_t);
 static void nni_ep_dtor(void *);
 
-// Because we can't reap threads from themselves, we need to have a separate
-// task to reap endpoints.  We use one global task to do this, and we just
-// add to the reap list as needed.
-static nni_taskq_ent nni_ep_reap_tqe;
-static nni_mtx nni_ep_reap_mx;
-static nni_list nni_ep_reap_list;
-
-static void
-nni_ep_reaper(void *arg)
-{
-	nni_ep *ep;
-
-	NNI_ARG_UNUSED(arg);
-
-	nni_mtx_lock(&nni_ep_reap_mx);
-	while ((ep = nni_list_first(&nni_ep_reap_list)) != NULL) {
-		nni_list_remove(&nni_ep_reap_list, ep);
-
-		nni_mtx_unlock(&nni_ep_reap_mx);
-		nni_thr_fini(&ep->ep_thr);
-		nni_objhash_unref(nni_eps, ep->ep_id);
-		nni_mtx_lock(&nni_ep_reap_mx);
-
-		continue;
-	}
-
-	nni_mtx_unlock(&nni_ep_reap_mx);
-}
-
 
 int
 nni_ep_sys_init(void)
@@ -58,15 +29,6 @@ nni_ep_sys_init(void)
 	if (rv != 0) {
 		return (rv);
 	}
-	rv = nni_mtx_init(&nni_ep_reap_mx);
-	if (rv != 0) {
-		nni_objhash_fini(nni_eps);
-		nni_eps = NULL;
-		return (rv);
-	}
-
-	nni_ep_list_init(&nni_ep_reap_list);
-	nni_taskq_ent_init(&nni_ep_reap_tqe, nni_ep_reaper, NULL);
 	return (rv);
 }
 
@@ -74,8 +36,6 @@ nni_ep_sys_init(void)
 void
 nni_ep_sys_fini(void)
 {
-	nni_taskq_cancel(NULL, &nni_ep_reap_tqe);
-	nni_mtx_fini(&nni_ep_reap_mx);
 	nni_objhash_fini(nni_eps);
 	nni_eps = NULL;
 }
