@@ -47,11 +47,13 @@ extern void nni_ep_hold(nni_ep *);
 extern void nni_ep_rele(nni_ep *);
 extern uint32_t nni_ep_id(nni_ep *);
 extern int nni_ep_create(nni_ep **, nni_sock *, const char *);
+extern void nni_ep_stop(nni_ep *);
 extern void nni_ep_close(nni_ep *);
+extern void nni_ep_remove(nni_ep *);
 extern int nni_ep_dial(nni_ep *, int);
 extern int nni_ep_listen(nni_ep *, int);
 extern void nni_ep_list_init(nni_list *);
-extern int nni_ep_add_pipe(nni_ep *, nni_pipe *);
-extern void nni_ep_rem_pipe(nni_ep *, nni_pipe *);
+extern int nni_ep_pipe_add(nni_ep *, nni_pipe *);
+extern void nni_ep_pipe_remove(nni_ep *, nni_pipe *);
 
 #endif // CORE_ENDPT_H

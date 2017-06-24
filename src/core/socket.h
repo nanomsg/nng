@@ -85,30 +85,25 @@ extern void nni_sock_unlock(nni_sock *);
 extern nni_notify *nni_sock_notify(nni_sock *, int, nng_notify_func, void *);
 extern void nni_sock_unnotify(nni_sock *, nni_notify *);
 
-extern int nni_sock_add_ep(nni_sock *, nni_ep *);
-extern void nni_sock_rem_ep(nni_sock *, nni_ep *);
+extern int nni_sock_ep_add(nni_sock *, nni_ep *);
+extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
 
 // nni_sock_pipe_add is called by the pipe to register the pipe with
 // with the socket.  The pipe is added to the idle list.  The protocol
 // private pipe data is initialized as well.
 extern int nni_sock_pipe_add(nni_sock *, nni_pipe *);
 
-// nni_sock_pipe_rem deregisters the pipe from the socket.  The socket
-// will block during close if there are registered pipes outstanding.
-// This also frees any protocol private pipe data.
-extern void nni_sock_pipe_rem(nni_sock *, nni_pipe *);
+// nni_sock_pipe_remove is called by the pipe when the protocol is
+// done with it.  This is the sockets indication that it should be
+// removed, and freed.  The protocol MUST guarantee that the pipe is
+// no longer in use when this function is called.
+extern void nni_sock_pipe_remove(nni_sock *, nni_pipe *);
 
 // nni_sock_pipe_ready lets the socket know the pipe is ready for
 // business.  This also calls the socket/protocol specific add function,
 // and it may return an error.  A reference count on the pipe is incremented
 // on success.  The reference count should be dropped by nni_sock_pipe_closed.
 extern int nni_sock_pipe_ready(nni_sock *, nni_pipe *);
-
-// nni_sock_pipe_closed lets the socket know that the pipe is closed.
-// This keeps the socket from trying to schedule traffic to it.  It
-// also lets the endpoint know about it, to possibly restart a dial
-// operation.
-extern void nni_sock_pipe_closed(nni_sock *, nni_pipe *);
 
 // Set error codes for applications.  These are only ever
 // called from the filter functions in protocols, and thus

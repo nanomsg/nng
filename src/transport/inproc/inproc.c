@@ -91,8 +91,12 @@ nni_inproc_pipe_close(void *arg)
 {
 	nni_inproc_pipe *pipe = arg;
 
-	nni_msgq_close(pipe->rq);
-	nni_msgq_close(pipe->wq);
+	if (pipe->rq != NULL) {
+		nni_msgq_close(pipe->rq);
+	}
+	if (pipe->wq != NULL) {
+		nni_msgq_close(pipe->wq);
+	}
 }
 
 

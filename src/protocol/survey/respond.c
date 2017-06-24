@@ -37,6 +37,7 @@ struct nni_resp_sock {
 	char *		btrace;
 	size_t		btrace_len;
 	nni_aio		aio_getq;
+	nni_mtx		mtx;
 };
 
 // An nni_resp_pipe is our per-pipe protocol private structure.
@@ -50,7 +51,27 @@ struct nni_resp_pipe {
 	nni_aio		aio_send;
 	nni_aio		aio_recv;
 	int		running;
+	int		refcnt;
+	nni_mtx		mtx;
 };
+
+
+static void
+nni_resp_sock_fini(void *arg)
+{
+	nni_resp_sock *psock = arg;
+
+	if (psock != NULL) {
+		nni_aio_fini(&psock->aio_getq);
+		nni_idhash_fini(&psock->pipes);
+		if (psock->btrace != NULL) {
+			nni_free(psock->btrace, psock->btrace_len);
+		}
+		nni_mtx_fini(&psock->mtx);
+		NNI_FREE_STRUCT(psock);
+	}
+}
+
 
 static int
 nni_resp_sock_init(void **pp, nni_sock *nsock)
@@ -68,36 +89,22 @@ nni_resp_sock_init(void **pp, nni_sock *nsock)
 	psock->btrace_len = 0;
 	psock->urq = nni_sock_recvq(nsock);
 	psock->uwq = nni_sock_sendq(nsock);
-	if ((rv = nni_idhash_init(&psock->pipes)) != 0) {
-		NNI_FREE_STRUCT(psock);
-		return (rv);
+	if (((rv = nni_idhash_init(&psock->pipes)) != 0) ||
+	    ((rv = nni_mtx_init(&psock->mtx)) != 0)) {
+		goto fail;
 	}
 	rv = nni_aio_init(&psock->aio_getq, nni_resp_sock_getq_cb, psock);
 	if (rv != 0) {
-		nni_idhash_fini(&psock->pipes);
-		NNI_FREE_STRUCT(psock);
-		return (rv);
+		goto fail;
 	}
 
 	*pp = psock;
 	nni_sock_senderr(nsock, NNG_ESTATE);
 	return (0);
-}
 
-
-static void
-nni_resp_sock_fini(void *arg)
-{
-	nni_resp_sock *psock = arg;
-
-	if (psock != NULL) {
-		nni_aio_fini(&psock->aio_getq);
-		nni_idhash_fini(&psock->pipes);
-		if (psock->btrace != NULL) {
-			nni_free(psock->btrace, psock->btrace_len);
-		}
-		NNI_FREE_STRUCT(psock);
-	}
+fail:
+	nni_resp_sock_fini(psock);
+	return (rv);
 }
 
 
@@ -128,35 +135,35 @@ nni_resp_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 	if ((ppipe = NNI_ALLOC_STRUCT(ppipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_msgq_init(&ppipe->sendq, 2)) != 0) {
-		nni_resp_pipe_fini(ppipe);
-		return (rv);
+	if (((rv = nni_msgq_init(&ppipe->sendq, 2)) != 0) ||
+	    ((rv = nni_mtx_init(&ppipe->mtx)) != 0)) {
+		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_putq, nni_resp_putq_cb, ppipe);
 	if (rv != 0) {
-		nni_resp_pipe_fini(ppipe);
-		return (rv);
+		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_recv, nni_resp_recv_cb, ppipe);
 	if (rv != 0) {
-		nni_resp_pipe_fini(ppipe);
-		return (rv);
+		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_getq, nni_resp_getq_cb, ppipe);
 	if (rv != 0) {
-		nni_resp_pipe_fini(ppipe);
-		return (rv);
+		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_send, nni_resp_send_cb, ppipe);
 	if (rv != 0) {
-		nni_resp_pipe_fini(ppipe);
-		return (rv);
+		goto fail;
 	}
 
 	ppipe->npipe = npipe;
 	ppipe->psock = psock;
 	*pp = ppipe;
 	return (0);
+
+fail:
+	nni_resp_pipe_fini(ppipe);
+	return (rv);
 }
 
 
@@ -170,6 +177,7 @@ nni_resp_pipe_fini(void *arg)
 	nni_aio_fini(&ppipe->aio_getq);
 	nni_aio_fini(&ppipe->aio_send);
 	nni_aio_fini(&ppipe->aio_recv);
+	nni_mtx_fini(&ppipe->mtx);
 	NNI_FREE_STRUCT(ppipe);
 }
 
@@ -182,33 +190,55 @@ nni_resp_pipe_start(void *arg)
 	int rv;
 
 	ppipe->id = nni_pipe_id(ppipe->npipe);
+
+	nni_mtx_lock(&psock->mtx);
 	rv = nni_idhash_insert(&psock->pipes, ppipe->id, ppipe);
+	nni_mtx_unlock(&psock->mtx);
 	if (rv != 0) {
 		return (rv);
 	}
 
-	nni_pipe_hold(ppipe->npipe);
-	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
-
-	nni_pipe_hold(ppipe->npipe);
-	nni_msgq_aio_get(ppipe->sendq, &ppipe->aio_getq);
+	nni_mtx_lock(&ppipe->mtx);
+	ppipe->refcnt = 2;
 	ppipe->running = 1;
+	nni_mtx_unlock(&ppipe->mtx);
+
+	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
+	nni_msgq_aio_get(ppipe->sendq, &ppipe->aio_getq);
+
 	return (rv);
 }
 
 
 static void
-nni_resp_pipe_stop(void *arg)
+nni_resp_pipe_stop(nni_resp_pipe *ppipe)
 {
-	nni_resp_pipe *ppipe = arg;
 	nni_resp_sock *psock = ppipe->psock;
+	int refcnt;
+	int running;
 
-	if (ppipe->running) {
-		ppipe->running = 0;
+	nni_mtx_lock(&psock->mtx);
+	if (ppipe->id != 0) {
 		nni_idhash_remove(&psock->pipes, ppipe->id);
+		ppipe->id = 0;
+	}
+	nni_mtx_unlock(&psock->mtx);
 
+	nni_mtx_lock(&ppipe->mtx);
+	NNI_ASSERT(ppipe->refcnt > 0);
+	ppipe->refcnt--;
+	refcnt = ppipe->refcnt;
+
+	running = ppipe->running;
+	ppipe->running = 0;
+	nni_mtx_unlock(&ppipe->mtx);
+
+	if (running) {
 		nni_msgq_close(ppipe->sendq);
 		nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
+	}
+	if (refcnt == 0) {
+		nni_pipe_remove(ppipe->npipe);
 	}
 }
 
@@ -246,19 +276,19 @@ nni_resp_sock_getq_cb(void *arg)
 	NNI_GET32(header, id);
 	nni_msg_trim_header(msg, 4);
 
-	nni_sock_lock(psock->nsock);
-	if (nni_idhash_find(&psock->pipes, id, (void **) &ppipe) != 0) {
-		nni_sock_unlock(psock->nsock);
+	nni_mtx_lock(&psock->mtx);
+	rv = nni_idhash_find(&psock->pipes, id, (void **) &ppipe);
+
+	if (rv != 0) {
 		nni_msg_free(msg);
 		nni_msgq_aio_get(psock->uwq, &psock->aio_getq);
-		return;
+	} else {
+		// Non-blocking put.
+		if (nni_msgq_tryput(ppipe->sendq, msg) != 0) {
+			nni_msg_free(msg);
+		}
 	}
-
-	// Non-blocking put.
-	if (nni_msgq_tryput(ppipe->sendq, msg) != 0) {
-		nni_msg_free(msg);
-	}
-	nni_sock_unlock(psock->nsock);
+	nni_mtx_unlock(&psock->mtx);
 }
 
 
@@ -268,8 +298,7 @@ nni_resp_getq_cb(void *arg)
 	nni_resp_pipe *ppipe = arg;
 
 	if (nni_aio_result(&ppipe->aio_getq) != 0) {
-		nni_pipe_close(ppipe->npipe);
-		nni_pipe_rele(ppipe->npipe);
+		nni_resp_pipe_stop(ppipe);
 		return;
 	}
 
@@ -288,8 +317,7 @@ nni_resp_send_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_send) != 0) {
 		nni_msg_free(ppipe->aio_send.a_msg);
 		ppipe->aio_send.a_msg = NULL;
-		nni_pipe_close(ppipe->npipe);
-		nni_pipe_rele(ppipe->npipe);
+		nni_resp_pipe_stop(ppipe);
 		return;
 	}
 
@@ -358,8 +386,7 @@ nni_resp_recv_cb(void *arg)
 	return;
 
 error:
-	nni_pipe_close(ppipe->npipe);
-	nni_pipe_rele(ppipe->npipe);
+	nni_resp_pipe_stop(ppipe);
 }
 
 
@@ -371,8 +398,7 @@ nni_resp_putq_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_putq) != 0) {
 		nni_msg_free(ppipe->aio_putq.a_msg);
 		ppipe->aio_putq.a_msg = NULL;
-		nni_pipe_close(ppipe->npipe);
-		nni_pipe_rele(ppipe->npipe);
+		nni_resp_pipe_stop(ppipe);
 	}
 
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
@@ -499,7 +525,6 @@ static nni_proto_pipe_ops nni_resp_pipe_ops = {
 	.pipe_init	= nni_resp_pipe_init,
 	.pipe_fini	= nni_resp_pipe_fini,
 	.pipe_start	= nni_resp_pipe_start,
-	.pipe_stop	= nni_resp_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_resp_sock_ops = {

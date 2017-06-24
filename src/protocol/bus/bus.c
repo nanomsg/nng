@@ -37,6 +37,7 @@ struct nni_bus_sock {
 	int		raw;
 	nni_aio		aio_getq;
 	nni_list	pipes;
+	nni_mtx		mtx;
 };
 
 // An nni_bus_pipe is our per-pipe protocol private structure.
@@ -49,7 +50,23 @@ struct nni_bus_pipe {
 	nni_aio		aio_recv;
 	nni_aio		aio_send;
 	nni_aio		aio_putq;
+	nni_mtx		mtx;
+	int		refcnt;
 };
+
+
+static void
+nni_bus_sock_fini(void *arg)
+{
+	nni_bus_sock *psock = arg;
+
+	if (psock != NULL) {
+		nni_aio_fini(&psock->aio_getq);
+		nni_mtx_fini(&psock->mtx);
+		NNI_FREE_STRUCT(psock);
+	}
+}
+
 
 static int
 nni_bus_sock_init(void **sp, nni_sock *nsock)
@@ -60,29 +77,23 @@ nni_bus_sock_init(void **sp, nni_sock *nsock)
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	NNI_LIST_INIT(&psock->pipes, nni_bus_pipe, node);
+	if ((rv = nni_mtx_init(&psock->mtx)) != 0) {
+		goto fail;
+	}
 	rv = nni_aio_init(&psock->aio_getq, nni_bus_sock_getq_cb, psock);
 	if (rv != 0) {
-		NNI_FREE_STRUCT(psock);
-		return (rv);
+		goto fail;
 	}
-	NNI_LIST_INIT(&psock->pipes, nni_bus_pipe, node);
 	psock->nsock = nsock;
 	psock->raw = 0;
 
 	*sp = psock;
 	return (0);
-}
 
-
-static void
-nni_bus_sock_fini(void *arg)
-{
-	nni_bus_sock *psock = arg;
-
-	if (psock != NULL) {
-		nni_aio_fini(&psock->aio_getq);
-		NNI_FREE_STRUCT(psock);
-	}
+fail:
+	nni_bus_sock_fini(psock);
+	return (rv);
 }
 
 
@@ -92,6 +103,23 @@ nni_bus_sock_open(void *arg)
 	nni_bus_sock *psock = arg;
 
 	nni_bus_sock_getq(psock);
+}
+
+
+static void
+nni_bus_pipe_fini(void *arg)
+{
+	nni_bus_pipe *ppipe = arg;
+
+	if (ppipe != NULL) {
+		nni_msgq_fini(ppipe->sendq);
+		nni_mtx_fini(&ppipe->mtx);
+		nni_aio_fini(&ppipe->aio_getq);
+		nni_aio_fini(&ppipe->aio_send);
+		nni_aio_fini(&ppipe->aio_recv);
+		nni_aio_fini(&ppipe->aio_putq);
+		NNI_FREE_STRUCT(ppipe);
+	}
 }
 
 
@@ -105,62 +133,36 @@ nni_bus_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 		return (NNG_ENOMEM);
 	}
 	NNI_LIST_NODE_INIT(&ppipe->node);
-	// This depth could be tunable.
-	if ((rv = nni_msgq_init(&ppipe->sendq, 16)) != 0) {
-		NNI_FREE_STRUCT(ppipe);
-		return (rv);
+	ppipe->refcnt = 0;
+	if (((rv = nni_mtx_init(&ppipe->mtx)) != 0) ||
+	    ((rv = nni_msgq_init(&ppipe->sendq, 16)) != 0)) {
+		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_getq, nni_bus_pipe_getq_cb, ppipe);
 	if (rv != 0) {
-		nni_msgq_fini(ppipe->sendq);
-		NNI_FREE_STRUCT(ppipe);
-		return (rv);
+		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_send, nni_bus_pipe_send_cb, ppipe);
 	if (rv != 0) {
-		nni_aio_fini(&ppipe->aio_getq);
-		nni_msgq_fini(ppipe->sendq);
-		NNI_FREE_STRUCT(ppipe);
-		return (rv);
+		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_recv, nni_bus_pipe_recv_cb, ppipe);
 	if (rv != 0) {
-		nni_aio_fini(&ppipe->aio_send);
-		nni_aio_fini(&ppipe->aio_getq);
-		nni_msgq_fini(ppipe->sendq);
-		NNI_FREE_STRUCT(ppipe);
-		return (rv);
+		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_putq, nni_bus_pipe_putq_cb, ppipe);
 	if (rv != 0) {
-		nni_aio_fini(&ppipe->aio_recv);
-		nni_aio_fini(&ppipe->aio_send);
-		nni_aio_fini(&ppipe->aio_getq);
-		nni_msgq_fini(ppipe->sendq);
-		NNI_FREE_STRUCT(ppipe);
-		return (rv);
+		goto fail;
 	}
 
 	ppipe->npipe = npipe;
 	ppipe->psock = psock;
 	*pp = ppipe;
 	return (0);
-}
 
-
-static void
-nni_bus_pipe_fini(void *arg)
-{
-	nni_bus_pipe *ppipe = arg;
-
-	if (ppipe != NULL) {
-		nni_msgq_fini(ppipe->sendq);
-		nni_aio_fini(&ppipe->aio_getq);
-		nni_aio_fini(&ppipe->aio_send);
-		nni_aio_fini(&ppipe->aio_recv);
-		nni_aio_fini(&ppipe->aio_putq);
-		NNI_FREE_STRUCT(ppipe);
-	}
+fail:
+	nni_bus_pipe_fini(ppipe);
+	return (rv);
 }
 
 
@@ -170,29 +172,56 @@ nni_bus_pipe_start(void *arg)
 	nni_bus_pipe *ppipe = arg;
 	nni_bus_sock *psock = ppipe->psock;
 
+	nni_mtx_lock(&psock->mtx);
 	nni_list_append(&psock->pipes, ppipe);
+	nni_mtx_unlock(&psock->mtx);
 
-	nni_pipe_hold(ppipe->npipe);
+	// Mark the ppipe busy twice -- once for each of the oustanding
+	// asynchronous "threads" of operation.
+	nni_mtx_lock(&ppipe->mtx);
+	ppipe->refcnt = 2;
+	nni_mtx_unlock(&ppipe->mtx);
+
 	nni_bus_pipe_recv(ppipe);
-	nni_pipe_hold(ppipe->npipe);
 	nni_bus_pipe_getq(ppipe);
 
 	return (0);
 }
 
 
+// nni_bus_pipe_stop is called only internally when one of our handlers notices
+// that the transport layer has closed.  This allows us to stop all further
+// actions.
 static void
-nni_bus_pipe_stop(void *arg)
+nni_bus_pipe_stop(nni_bus_pipe *ppipe)
 {
-	nni_bus_pipe *ppipe = arg;
+	int refcnt;
 	nni_bus_sock *psock = ppipe->psock;
-	nni_sock *nsock = psock->nsock;
 
+	// As we are called only on error paths, shut down the underlying
+	// pipe transport.  This should cause any other consumer to also get
+	// a suitable error (NNG_ECLOSED), so that we can shut down completely.
+	nni_pipe_close(ppipe->npipe);
+
+	nni_mtx_lock(&ppipe->psock->mtx);
 	if (nni_list_active(&psock->pipes, ppipe)) {
 		nni_list_remove(&psock->pipes, ppipe);
 
 		nni_msgq_close(ppipe->sendq);
-		nni_msgq_aio_cancel(nni_sock_recvq(nsock), &ppipe->aio_putq);
+		nni_msgq_aio_cancel(nni_sock_recvq(psock->nsock),
+		    &ppipe->aio_putq);
+	}
+	nni_mtx_unlock(&ppipe->psock->mtx);
+
+	nni_mtx_lock(&ppipe->mtx);
+	NNI_ASSERT(ppipe->refcnt > 0);
+	refcnt = --ppipe->refcnt;
+	nni_mtx_unlock(&ppipe->mtx);
+
+	// If we are done with the pipe, let the system know so it can
+	// deregister it.
+	if (refcnt == 0) {
+		nni_pipe_remove(ppipe->npipe);
 	}
 }
 
@@ -204,8 +233,7 @@ nni_bus_pipe_getq_cb(void *arg)
 
 	if (nni_aio_result(&ppipe->aio_getq) != 0) {
 		// closed?
-		nni_pipe_close(ppipe->npipe);
-		nni_pipe_rele(ppipe->npipe);
+		nni_bus_pipe_stop(ppipe);
 		return;
 	}
 	ppipe->aio_send.a_msg = ppipe->aio_getq.a_msg;
@@ -224,8 +252,7 @@ nni_bus_pipe_send_cb(void *arg)
 		// closed?
 		nni_msg_free(ppipe->aio_send.a_msg);
 		ppipe->aio_send.a_msg = NULL;
-		nni_pipe_close(ppipe->npipe);
-		nni_pipe_rele(ppipe->npipe);
+		nni_bus_pipe_stop(ppipe);
 		return;
 	}
 
@@ -242,8 +269,7 @@ nni_bus_pipe_recv_cb(void *arg)
 	uint32_t id;
 
 	if (nni_aio_result(&ppipe->aio_recv) != 0) {
-		nni_pipe_close(ppipe->npipe);
-		nni_pipe_rele(ppipe->npipe);
+		nni_bus_pipe_stop(ppipe);
 		return;
 	}
 	msg = ppipe->aio_recv.a_msg;
@@ -252,8 +278,7 @@ nni_bus_pipe_recv_cb(void *arg)
 	if (nni_msg_prepend_header(msg, &id, 4) != 0) {
 		// XXX: bump a nomemory stat
 		nni_msg_free(msg);
-		nni_pipe_close(ppipe->npipe);
-		nni_pipe_rele(ppipe->npipe);
+		nni_bus_pipe_stop(ppipe);
 		return;
 	}
 
@@ -270,8 +295,7 @@ nni_bus_pipe_putq_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_putq) != 0) {
 		nni_msg_free(ppipe->aio_putq.a_msg);
 		ppipe->aio_putq.a_msg = NULL;
-		nni_pipe_close(ppipe->npipe);
-		nni_pipe_rele(ppipe->npipe);
+		nni_bus_pipe_stop(ppipe);
 		return;
 	}
 
@@ -287,7 +311,6 @@ nni_bus_sock_getq_cb(void *arg)
 	nni_bus_pipe *ppipe;
 	nni_bus_pipe *lpipe;
 	nni_msgq *uwq = nni_sock_sendq(psock->nsock);
-	nni_mtx *mx = nni_sock_mtx(psock->nsock);
 	nni_msg *msg, *dup;
 	uint32_t sender;
 
@@ -308,7 +331,7 @@ nni_bus_sock_getq_cb(void *arg)
 		sender = 0;
 	}
 
-	nni_mtx_lock(mx);
+	nni_mtx_lock(&psock->mtx);
 	lpipe = nni_list_last(&psock->pipes);
 	NNI_LIST_FOREACH (&psock->pipes, ppipe) {
 		if (nni_pipe_id(ppipe->npipe) == sender) {
@@ -325,7 +348,7 @@ nni_bus_sock_getq_cb(void *arg)
 			nni_msg_free(dup);
 		}
 	}
-	nni_mtx_unlock(mx);
+	nni_mtx_unlock(&psock->mtx);
 
 	if (lpipe == NULL) {
 		nni_msg_free(msg);
@@ -394,7 +417,6 @@ static nni_proto_pipe_ops nni_bus_pipe_ops = {
 	.pipe_init	= nni_bus_pipe_init,
 	.pipe_fini	= nni_bus_pipe_fini,
 	.pipe_start	= nni_bus_pipe_start,
-	.pipe_stop	= nni_bus_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_bus_sock_ops = {

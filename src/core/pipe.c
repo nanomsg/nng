@@ -31,6 +31,7 @@ nni_pipe_ctor(uint32_t id)
 
 	p->p_tran_data = NULL;
 	p->p_proto_data = NULL;
+	p->p_proto_dtor = NULL;
 	p->p_id = id;
 
 	NNI_LIST_NODE_INIT(&p->p_sock_node);
@@ -45,8 +46,9 @@ nni_pipe_dtor(void *ptr)
 {
 	nni_pipe *p = ptr;
 
-	nni_sock_pipe_rem(p->p_sock, p);
-
+	if (p->p_proto_dtor != NULL) {
+		p->p_proto_dtor(p->p_proto_data);
+	}
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
@@ -140,11 +142,23 @@ nni_pipe_close(nni_pipe *p)
 	}
 
 	nni_mtx_unlock(&p->p_mtx);
+}
 
-	// Let the socket (and endpoint) know we have closed.
-	nni_sock_pipe_closed(sock, p);
 
-	nni_objhash_unref(nni_pipes, p->p_id);
+// nni_pipe_remove is called by protocol implementations to indicate that
+// they are finished using the pipe (it should be closed already), and the
+// owning socket and endpoint should de-register it.
+void
+nni_pipe_remove(nni_pipe *p)
+{
+	// Make sure the pipe is closed, in case it wasn't already done.
+	nni_pipe_close(p);
+
+	nni_ep_pipe_remove(p->p_ep, p);
+	nni_sock_pipe_remove(p->p_sock, p);
+
+	// XXX: would be simpler to just do a destroy here
+	nni_pipe_rele(p);
 }
 
 
@@ -167,6 +181,7 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 		return (rv);
 	}
 	p->p_sock = sock;
+	p->p_ep = ep;
 
 	// Make a copy of the transport ops.  We can override entry points
 	// and we avoid an extra dereference on hot code paths.
@@ -178,22 +193,17 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 		return (rv);
 	}
 
+	if ((rv = nni_ep_pipe_add(ep, p)) != 0) {
+		nni_pipe_remove(p);
+	}
 	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
-		nni_objhash_unref(nni_pipes, p->p_id);
+		nni_pipe_remove(p);
+		//nni_objhash_unref(nni_pipes, p->p_id);
 		return (rv);
 	}
 
 	*pp = p;
 	return (0);
-}
-
-
-void
-nni_pipe_destroy(nni_pipe *p)
-{
-	NNI_ASSERT(p->p_refcnt == 0);
-
-	nni_objhash_unref(nni_pipes, p->p_id);
 }
 
 
@@ -221,7 +231,7 @@ nni_pipe_start(nni_pipe *p)
 	NNI_ASSERT(p == scratch);
 
 	if ((rv = nni_sock_pipe_ready(p->p_sock, p)) != 0) {
-		nni_pipe_close(p);
+		nni_pipe_remove(p);
 		return (rv);
 	}
 
@@ -232,9 +242,10 @@ nni_pipe_start(nni_pipe *p)
 
 
 void
-nni_pipe_set_proto_data(nni_pipe *p, void *data)
+nni_pipe_set_proto_data(nni_pipe *p, void *data, nni_cb dtor)
 {
 	p->p_proto_data = data;
+	p->p_proto_dtor = dtor;
 }
 
 

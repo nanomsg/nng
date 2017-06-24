@@ -23,13 +23,13 @@ struct nni_pipe {
 	nni_tran_pipe	p_tran_ops;
 	void *		p_tran_data;
 	void *		p_proto_data;
+	nni_cb		p_proto_dtor;
 	nni_list_node	p_sock_node;
 	nni_list_node	p_ep_node;
 	nni_sock *	p_sock;
 	nni_ep *	p_ep;
 	int		p_reap;
 	nni_mtx		p_mtx;
-	int		p_refcnt;
 };
 
 extern int nni_pipe_sys_init(void);
@@ -41,15 +41,23 @@ extern int nni_pipe_aio_send(nni_pipe *, nni_aio *);
 
 // Pipe operations that protocols use.
 extern uint32_t nni_pipe_id(nni_pipe *);
+
+// nni_pipe_close closes the underlying transport for the pipe.  Further
+// operations against will return NNG_ECLOSED.
 extern void nni_pipe_close(nni_pipe *);
+
 extern void nni_pipe_hold(nni_pipe *);
 extern void nni_pipe_rele(nni_pipe *);
+
+// nni_pipe_remove is called by the protocol when it is done with the socket.
+// The pipe should already be closed; it will be unregistered and it's
+// resources released back to the system.  The protocol MUST not reference
+// the pipe after this.
+extern void nni_pipe_remove(nni_pipe *);
 
 // Used only by the socket core - as we don't wish to expose the details
 // of the pipe structure outside of pipe.c.
 extern int nni_pipe_create(nni_pipe **, nni_ep *, nni_sock *, nni_tran *);
-
-extern void nni_pipe_destroy(nni_pipe *);
 
 extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
@@ -58,8 +66,9 @@ extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
 
 // nni_pipe_set_proto_data sets the protocol private data.  No locking is
 // performed, and this routine should only be called once per pipe at
-// initialization.
-extern void nni_pipe_set_proto_data(nni_pipe *, void *);
+// initialization.  The third argument is called to destroy the data,
+// at termination.
+extern void nni_pipe_set_proto_data(nni_pipe *, void *, nni_cb);
 
 // nni_pipe_get_proto_data gets the protocol private data set with the
 // nni_pipe_set_proto_data function.  No locking is performed.
