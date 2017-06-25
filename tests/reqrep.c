@@ -133,19 +133,17 @@ Main({
 			So(nng_msg_alloc(&def, 0) == 0);
 			So(nng_msg_append(def, "def", 4) == 0);
 
+			So(nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(req, addr, NULL, 0) == 0);
 
 			So(nng_sendmsg(req, abc, 0) == 0);
 			So(nng_sendmsg(req, def, 0) == 0);
-
-			So(nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH) == 0);
-
 			So(nng_recvmsg(rep, &cmd, 0) == 0);
 			So(cmd != NULL);
+
 			So(nng_sendmsg(rep, cmd, 0) == 0);
 			So(nng_recvmsg(rep, &cmd, 0) == 0);
 			So(nng_sendmsg(rep, cmd, 0) == 0);
-
 			So(nng_recvmsg(req, &cmd, 0) == 0);
 
 			So(nng_msg_len(cmd) == 4);

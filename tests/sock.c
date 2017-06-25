@@ -39,7 +39,7 @@ Main({
 
 		Convey("Recv with no pipes times out correctly", {
 			nng_msg *msg = NULL;
-			int64_t when = 500000;
+			int64_t when = 100000;
 			uint64_t now;
 
 			now = nni_clock();
@@ -63,7 +63,7 @@ Main({
 
 		Convey("Send with no pipes times out correctly", {
 			nng_msg *msg = NULL;
-			int64_t when = 500000;
+			int64_t when = 100000;
 			uint64_t now;
 
 			// We cheat to get access to the core's clock.
@@ -168,7 +168,7 @@ Main({
 			So(nng_setopt(sock2, NNG_OPT_RCVTIMEO, &second, sizeof (second)) == 0);
 
 			So(nng_listen(sock, "inproc://test1", NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(sock2, "inproc://test1", NULL, 0) == 0);
+			So(nng_dial(sock2, "inproc://test1", NULL, NNG_FLAG_SYNCH) == 0);
 
 			So(nng_send(sock, "abc", 4, 0) == 0);
 			So(nng_recv(sock2 , &buf, &sz, NNG_FLAG_ALLOC) == 0);
