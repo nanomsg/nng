@@ -195,10 +195,10 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 
 	if ((rv = nni_ep_pipe_add(ep, p)) != 0) {
 		nni_pipe_remove(p);
+		return (rv);
 	}
 	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
 		nni_pipe_remove(p);
-		//nni_objhash_unref(nni_pipes, p->p_id);
 		return (rv);
 	}
 

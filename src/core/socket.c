@@ -141,6 +141,9 @@ nni_sock_pipe_remove(nni_sock *sock, nni_pipe *pipe)
 {
 	void *pdata;
 
+	if (sock == NULL) {
+		return;
+	}
 	nni_mtx_lock(&sock->s_mx);
 	if (nni_list_active(&sock->s_pipes, pipe)) {
 		nni_list_remove(&sock->s_pipes, pipe);
