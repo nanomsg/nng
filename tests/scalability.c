@@ -47,9 +47,9 @@ client(void *arg)
 		return;
 	}
 
-	// Sleep for up to a second before issuing requests to avoid saturating
+	// Sleep for up to a 10ms before issuing requests to avoid saturating
 	// the CPU with bazillions of requests at the same time.
-	nng_usleep(1000000);
+	nng_usleep(10000);
 
 	for (i = 0; i < count; i++) {
 		// Sleep for up to a 1ms before issuing requests to
