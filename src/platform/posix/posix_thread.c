@@ -89,10 +89,10 @@ nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 	int rv;
 
 	NNI_ASSERT(mtx->owner == pthread_self());
+	mtx->owner = 0;
 	if ((rv = pthread_mutex_unlock(&mtx->mtx)) != 0) {
 		nni_panic("pthread_mutex_unlock: %s", strerror(rv));
 	}
-	mtx->owner = 0;
 }
 
 
