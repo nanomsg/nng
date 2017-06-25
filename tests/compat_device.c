@@ -106,7 +106,7 @@ int main()
     endb = test_socket(AF_SP, NN_PAIR);
     test_connect(endb, SOCKET_ADDRESS_B);
 
-    nn_sleep(200);
+    nn_sleep(100);
 
     /*  Pass a pair of messages between endpoints. */
     test_send(enda, "ABC");
@@ -125,13 +125,14 @@ int main()
     /*  Start the device. */
     nn_thread_init(&thread2, device2, NULL);
 
+    nn_sleep(100);
+
     /*  Create two sockets to connect to the device. */
     endc = test_socket(AF_SP, NN_PUSH);
     test_connect(endc, SOCKET_ADDRESS_C);
     endd = test_socket(AF_SP, NN_PULL);
     test_connect(endd, SOCKET_ADDRESS_D);
 
-    nn_sleep(100);
 
     /*  Pass a message between endpoints. */
     test_send(endc, "XYZ");
