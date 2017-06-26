@@ -298,11 +298,12 @@ nni_dialer(void *arg)
 	nni_ep *ep = arg;
 	int rv;
 	nni_time cooldown;
-	nni_duration maxrtime, nmaxrtime;
-	nni_duration defrtime, ndefrtime;
+	nni_duration maxrtime = 0, nmaxrtime;
+	nni_duration defrtime = 0, ndefrtime;
 	nni_duration rtime;
 
 	nni_sock_reconntimes(ep->ep_sock, &defrtime, &maxrtime);
+	rtime = defrtime;
 
 	for (;;) {
 		nni_sock_reconntimes(ep->ep_sock, &ndefrtime, &nmaxrtime);
