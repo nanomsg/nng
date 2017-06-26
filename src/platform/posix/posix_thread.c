@@ -64,6 +64,8 @@ nni_plat_mtx_fini(nni_plat_mtx *mtx)
 	if (!mtx->init) {
 		return;
 	}
+	pthread_mutex_lock(&mtx->mtx);
+	pthread_mutex_unlock(&mtx->mtx);
 	if ((rv = pthread_mutex_destroy(&mtx->mtx)) != 0) {
 		nni_panic("pthread_mutex_fini: %s", strerror(rv));
 	}
