@@ -20,7 +20,6 @@ struct nni_timer_node {
 	nni_cb		t_cb;
 	void *		t_arg;
 	nni_list_node	t_node;
-	int		t_sched;
 };
 
 typedef struct nni_timer_node   nni_timer_node;
