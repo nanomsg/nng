@@ -105,9 +105,8 @@ nni_timer_schedule(nni_timer_node *node, nni_time when)
 	nni_timer_node *srch;
 	int wake = 1;
 
-	node->t_expire = when;
-
 	nni_mtx_lock(&timer->t_mx);
+	node->t_expire = when;
 
 	if (nni_list_active(&timer->t_entries, node)) {
 		nni_list_remove(&timer->t_entries, node);
