@@ -55,9 +55,11 @@ nni_panic(const char *fmt, ...)
 	va_list va;
 
 	va_start(va, fmt);
-	(void) snprintf(fbuf, sizeof (fbuf), "panic: %s", fmt);
-	(void) vsnprintf(buf, sizeof (buf), fbuf, va);
+	(void) vsnprintf(fbuf, sizeof (fbuf), fmt, va);
 	va_end(va);
+
+
+	(void) snprintf(buf, sizeof (buf), "panic: %s", fbuf);
 
 	nni_println(buf);
 	nni_println("This message is indicative of a BUG.");

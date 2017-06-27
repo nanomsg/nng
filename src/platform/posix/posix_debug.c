@@ -26,7 +26,8 @@ nni_plat_abort(void)
 void
 nni_plat_println(const char *message)
 {
-	(void) fprintf(stderr, "%s\n", message);
+	fputs(message, stderr);
+	fputc('\n', stderr);
 }
 
 

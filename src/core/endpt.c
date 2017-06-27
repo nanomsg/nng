@@ -253,7 +253,9 @@ nni_ep_connect(nni_ep *ep)
 		nni_pipe_remove(pipe);
 		return (rv);
 	}
+	nni_mtx_lock(&ep->ep_mtx);
 	ep->ep_pipe = pipe;
+	nni_mtx_unlock(&ep->ep_mtx);
 	return (0);
 }
 
@@ -277,17 +279,19 @@ nni_ep_pipe_add(nni_ep *ep, nni_pipe *pipe)
 void
 nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
 {
-	if ((ep != NULL) && (nni_list_active(&ep->ep_pipes, pipe))) {
-		nni_mtx_lock(&ep->ep_mtx);
+	if (ep == NULL) {
+		return;
+	}
+	nni_mtx_lock(&ep->ep_mtx);
+	if (nni_list_active(&ep->ep_pipes, pipe)) {
 		nni_list_remove(&ep->ep_pipes, pipe);
 
 		if (ep->ep_pipe == pipe) {
 			ep->ep_pipe = NULL;
 		}
 		nni_cv_wake(&ep->ep_cv);
-
-		nni_mtx_unlock(&ep->ep_mtx);
 	}
+	nni_mtx_unlock(&ep->ep_mtx);
 }
 
 
