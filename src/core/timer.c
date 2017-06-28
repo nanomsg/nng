@@ -14,6 +14,7 @@
 
 static void nni_timer_loop(void *);
 
+// XXX: replace this timer list with a minHeap based priority queue.
 struct nni_timer {
 	nni_mtx		t_mx;
 	nni_cv		t_cv;

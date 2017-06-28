@@ -34,7 +34,7 @@ struct nni_plat_ipcsock {
 	int			fd;
 	int			devnull;        // for shutting down accept()
 	char *			unlink;         // path to unlink at fini
-	nni_posix_aio_pipe	aiop;
+	nni_posix_pipedesc *	pd;
 };
 
 #ifdef  SOCK_CLOEXEC
@@ -69,14 +69,14 @@ nni_plat_ipc_path_to_sockaddr(struct sockaddr_un *sun, const char *path)
 int
 nni_plat_ipc_aio_send(nni_plat_ipcsock *isp, nni_aio *aio)
 {
-	return (nni_posix_aio_write(&isp->aiop, aio));
+	return (nni_posix_pipedesc_write(isp->pd, aio));
 }
 
 
 int
 nni_plat_ipc_aio_recv(nni_plat_ipcsock *isp, nni_aio *aio)
 {
-	return (nni_posix_aio_read(&isp->aiop, aio));
+	return (nni_posix_pipedesc_read(isp->pd, aio));
 }
 
 
@@ -225,7 +225,9 @@ nni_plat_ipc_fini(nni_plat_ipcsock *isp)
 		nni_free(isp->unlink, strlen(isp->unlink) + 1);
 	}
 
-	nni_posix_aio_pipe_fini(&isp->aiop);
+	if (isp->pd != NULL) {
+		nni_posix_pipedesc_fini(isp->pd);
+	}
 
 	NNI_FREE_STRUCT(isp);
 }
@@ -338,7 +340,7 @@ nni_plat_ipc_connect(nni_plat_ipcsock *isp, const char *path)
 		return (rv);
 	}
 
-	if ((rv = nni_posix_aio_pipe_init(&isp->aiop, fd)) != 0) {
+	if ((rv = nni_posix_pipedesc_init(&isp->pd, fd)) != 0) {
 		(void) close(fd);
 		return (rv);
 	}
@@ -380,7 +382,7 @@ nni_plat_ipc_accept(nni_plat_ipcsock *isp, nni_plat_ipcsock *server)
 
 	nni_plat_ipc_setopts(fd);
 
-	if ((rv = nni_posix_aio_pipe_init(&isp->aiop, fd)) != 0) {
+	if ((rv = nni_posix_pipedesc_init(&isp->pd, fd)) != 0) {
 		(void) close(fd);
 		return (rv);
 	}

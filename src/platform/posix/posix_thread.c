@@ -299,8 +299,18 @@ nni_plat_init(int (*helper)(void))
 	// as scalable / thrifty with our use of VM.
 	(void) pthread_attr_setstacksize(&nni_pthread_attr, 16384);
 
+	if ((rv = nni_posix_pipedesc_sysinit()) != 0) {
+		pthread_mutex_unlock(&nni_plat_lock);
+		(void) close(nni_plat_devnull);
+		pthread_mutexattr_destroy(&nni_mxattr);
+		pthread_condattr_destroy(&nni_cvattr);
+		pthread_attr_destroy(&nni_pthread_attr);
+		return (rv);
+	}
+
 	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
+		nni_posix_pipedesc_sysfini();
 		(void) close(devnull);
 		pthread_mutexattr_destroy(&nni_mxattr);
 		pthread_condattr_destroy(&nni_cvattr);
@@ -322,6 +332,7 @@ nni_plat_fini(void)
 {
 	pthread_mutex_lock(&nni_plat_lock);
 	if (nni_plat_inited) {
+		nni_posix_pipedesc_sysfini();
 		pthread_mutexattr_destroy(&nni_mxattr);
 		pthread_condattr_destroy(&nni_cvattr);
 		pthread_attr_destroy(&nni_pthread_attr);

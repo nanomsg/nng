@@ -34,7 +34,6 @@ extern int nni_plat_errno(int);
 
 #endif
 
-
 // Define types that this platform uses.
 #ifdef PLATFORM_POSIX_THREAD
 
@@ -63,5 +62,9 @@ struct nni_plat_cv {
 };
 
 #endif
+
+
+extern int nni_posix_pipedesc_sysinit(void);
+extern void nni_posix_pipedesc_sysfini(void);
 
 #endif // PLATFORM_POSIX_IMPL_H

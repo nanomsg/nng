@@ -82,12 +82,12 @@ set (NNG_SOURCES
     platform/posix/posix_aio.h
 
     platform/posix/posix_alloc.c
-    platform/posix/posix_aiothr.c
     platform/posix/posix_clock.c
     platform/posix/posix_debug.c
     platform/posix/posix_ipc.c
     platform/posix/posix_net.c
     platform/posix/posix_pipe.c
+    platform/posix/posix_poll.c
     platform/posix/posix_rand.c
     platform/posix/posix_thread.c
 

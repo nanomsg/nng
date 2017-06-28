@@ -41,6 +41,7 @@ struct nni_aio {
 	// TBD: Resolver operations.
 
 	// Provider-use fields.
+	void		(*a_prov_cancel)(nni_aio *);
 	void *		a_prov_data;
 	nni_list_node	a_prov_node;
 };

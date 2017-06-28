@@ -18,43 +18,13 @@
 
 #include "core/nng_impl.h"
 
-typedef struct nni_posix_aioq		nni_posix_aioq;
-typedef struct nni_posix_aiof		nni_posix_aiof;
-typedef struct nni_posix_aio_pipe	nni_posix_aio_pipe;
-typedef struct nni_posix_aio_ep		nni_posix_aio_ep;
 
-// Head structure representing file operations for read/write.  We process
-// the list of aios serially, and each file has its own thread for now.
-struct nni_posix_aioq {
-	nni_list	aq_aios;
-	int		aq_fd;
-	nni_mtx		aq_lk;
-	nni_cv		aq_cv;
-#ifdef NNG_USE_POSIX_AIOTHR
-	nni_thr		aq_thr;
-#endif
-};
-
-struct nni_posix_aio_pipe {
-	int		ap_fd;
-	nni_posix_aioq	ap_readq;
-	nni_posix_aioq	ap_writeq;
-};
-
-struct nni_posix_aio_ep {
-	int		ap_fd;
-	nni_posix_aioq	ap_q;
-};
-
-extern int nni_posix_aio_pipe_init(nni_posix_aio_pipe *, int);
-extern void nni_posix_aio_pipe_fini(nni_posix_aio_pipe *);
-
-// extern int nni_posix_aio_ep_init(nni_posix_aio_ep *, int);
-// extern void nni_posix_aio_ep_fini(nni_posix_aio_ep *);
-extern int nni_posix_aio_read(nni_posix_aio_pipe *, nni_aio *);
-extern int nni_posix_aio_write(nni_posix_aio_pipe *, nni_aio *);
-
-// extern int nni_posix_aio_connect();
-// extern int nni_posix_aio_accept();
+typedef struct nni_posix_pipedesc   nni_posix_pipedesc;
+extern int nni_posix_pipedesc_sysinit(void);
+extern void nni_posix_pipedesc_sysfini(void);
+extern int nni_posix_pipedesc_init(nni_posix_pipedesc **, int);
+extern void nni_posix_pipedesc_fini(nni_posix_pipedesc *);
+extern int nni_posix_pipedesc_read(nni_posix_pipedesc *, nni_aio *);
+extern int nni_posix_pipedesc_write(nni_posix_pipedesc *, nni_aio *);
 
 #endif // PLATFORM_POSIX_AIO_H
