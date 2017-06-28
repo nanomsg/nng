@@ -164,8 +164,8 @@ nni_msgq_set_put_error(nni_msgq *mq, int error)
 	if (error != 0) {
 		naio = nni_list_first(&mq->mq_aio_putq);
 		while ((aio = naio) != NULL) {
-			naio = nni_list_next(&mq->mq_aio_getq, aio);
-			nni_list_remove(&mq->mq_aio_getq, aio);
+			naio = nni_list_next(&mq->mq_aio_putq, aio);
+			nni_list_remove(&mq->mq_aio_putq, aio);
 			nni_aio_finish(aio, error, 0);
 		}
 	}
@@ -191,8 +191,8 @@ nni_msgq_set_error(nni_msgq *mq, int error)
 		}
 		naio = nni_list_first(&mq->mq_aio_putq);
 		while ((aio = naio) != NULL) {
-			naio = nni_list_next(&mq->mq_aio_getq, aio);
-			nni_list_remove(&mq->mq_aio_getq, aio);
+			naio = nni_list_next(&mq->mq_aio_putq, aio);
+			nni_list_remove(&mq->mq_aio_putq, aio);
 			nni_aio_finish(aio, error, 0);
 		}
 	}
