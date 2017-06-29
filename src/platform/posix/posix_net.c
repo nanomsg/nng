@@ -170,17 +170,17 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 }
 
 
-int
+void
 nni_plat_tcp_aio_send(nni_plat_tcpsock *s, nni_aio *aio)
 {
-	return (nni_posix_pipedesc_write(s->pd, aio));
+	nni_posix_pipedesc_write(s->pd, aio);
 }
 
 
-int
+void
 nni_plat_tcp_aio_recv(nni_plat_tcpsock *s, nni_aio *aio)
 {
-	return (nni_posix_pipedesc_read(s->pd, aio));
+	nni_posix_pipedesc_read(s->pd, aio);
 }
 
 

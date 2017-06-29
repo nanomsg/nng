@@ -42,6 +42,7 @@ struct nni_posix_pipedesc {
 	nni_list		writeq;
 	nni_list_node		node;
 	nni_posix_pollq *	pq;
+	int			nonblocking;
 };
 
 // nni_posix_pollq is a work structure used by the poller thread, that keeps
@@ -417,14 +418,17 @@ nni_posix_pipedesc_submit(nni_posix_pipedesc *pd, nni_list *l, nni_aio *aio)
 	int rv;
 	nni_posix_pollq *pq = pd->pq;
 
-	// XXX: this should be done only once, after tcp negot. is done
-	// or at init if we can get tcp negot. to be async.
-	(void) fcntl(pd->fd, F_SETFL, O_NONBLOCK);
-
 	nni_mtx_lock(&pq->mtx);
 	if (pd->fd < 0) {
 		nni_mtx_unlock(&pq->mtx);
 		nni_aio_finish(aio, NNG_ECLOSED, aio->a_count);
+		return;
+	}
+	// XXX: We really should just make all the FDs nonblocking, but we
+	// need to fix the negotiation phase.
+	if (pd->nonblocking == 0) {
+		(void) fcntl(pd->fd, F_SETFL, O_NONBLOCK);
+		pd->nonblocking = 1;
 	}
 	if ((rv = nni_aio_start(aio, nni_posix_pipedesc_cancel, pd)) != 0) {
 		nni_mtx_unlock(&pq->mtx);
@@ -470,6 +474,7 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 	pd->pq = &nni_posix_global_pollq;
 	pd->fd = fd;
 	pd->index = 0;
+	pd->nonblocking = 0;
 
 	NNI_LIST_INIT(&pd->readq, nni_aio, a_prov_node);
 	NNI_LIST_INIT(&pd->writeq, nni_aio, a_prov_node);
@@ -567,22 +572,17 @@ nni_posix_pipedesc_sysfini(void)
 // extern int nni_posix_aio_ep_init(nni_posix_aio_ep *, int);
 // extern void nni_posix_aio_ep_fini(nni_posix_aio_ep *);
 
-int
+void
 nni_posix_pipedesc_read(nni_posix_pipedesc *pd, nni_aio *aio)
 {
-	aio->a_count = 0;
-
 	nni_posix_pipedesc_submit(pd, &pd->readq, aio);
-	return (0);
 }
 
 
-int
+void
 nni_posix_pipedesc_write(nni_posix_pipedesc *pd, nni_aio *aio)
 {
-	aio->a_count = 0;
 	nni_posix_pipedesc_submit(pd, &pd->writeq, aio);
-	return (0);
 }
 
 

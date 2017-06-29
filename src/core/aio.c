@@ -116,6 +116,8 @@ nni_aio_start(nni_aio *aio, void (*cancel)(nni_aio *), void *data)
 		nni_mtx_unlock(&aio->a_lk);
 		return (NNG_ECANCELED);
 	}
+	aio->a_result = 0;
+	aio->a_count = 0;
 	aio->a_prov_cancel = cancel;
 	aio->a_prov_data = data;
 	nni_mtx_unlock(&aio->a_lk);

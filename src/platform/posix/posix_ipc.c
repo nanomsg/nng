@@ -66,17 +66,17 @@ nni_plat_ipc_path_to_sockaddr(struct sockaddr_un *sun, const char *path)
 }
 
 
-int
+void
 nni_plat_ipc_aio_send(nni_plat_ipcsock *isp, nni_aio *aio)
 {
-	return (nni_posix_pipedesc_write(isp->pd, aio));
+	nni_posix_pipedesc_write(isp->pd, aio);
 }
 
 
-int
+void
 nni_plat_ipc_aio_recv(nni_plat_ipcsock *isp, nni_aio *aio)
 {
-	return (nni_posix_pipedesc_read(isp->pd, aio));
+	nni_posix_pipedesc_read(isp->pd, aio);
 }
 
 

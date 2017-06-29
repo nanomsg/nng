@@ -207,12 +207,12 @@ extern int nni_plat_tcp_connect(nni_plat_tcpsock *, const nni_sockaddr *,
 // The data to send is stored in the a_iov field of the aio, and the array
 // of iovs will never be larger than 4.  The platform may modify the iovs,
 // or the iov list.
-extern int nni_plat_tcp_aio_send(nni_plat_tcpsock *, nni_aio *);
+extern void nni_plat_tcp_aio_send(nni_plat_tcpsock *, nni_aio *);
 
 // nni_plat_tcp_aio_recv recvs data into the buffers provided by the
 // iovs.  The implementation does not return until the iovs are completely
 // full, or an error condition occurs.
-extern int nni_plat_tcp_aio_recv(nni_plat_tcpsock *, nni_aio *);
+extern void nni_plat_tcp_aio_recv(nni_plat_tcpsock *, nni_aio *);
 
 // nni_plat_ipc_init initializes the socket, for example it can
 // set underlying file descriptors to -1, etc.
@@ -244,12 +244,12 @@ extern int nni_plat_ipc_connect(nni_plat_ipcsock *, const char *);
 // nni_plat_ipc_aio_send sends data to the peer.  The platform is responsible
 // for attempting to send all of the data.  The iov count will never be
 // larger than 4.  The platform may modify the iovs.
-extern int nni_plat_ipc_aio_send(nni_plat_ipcsock *, nni_aio *);
+extern void nni_plat_ipc_aio_send(nni_plat_ipcsock *, nni_aio *);
 
 // nni_plat_ipc_aio_recv recvs data into the buffers provided by the
 // iovs.  The implementation does not return until the iovs are completely
 // full, or an error condition occurs.
-extern int nni_plat_ipc_aio_recv(nni_plat_ipcsock *, nni_aio *);
+extern void nni_plat_ipc_aio_recv(nni_plat_ipcsock *, nni_aio *);
 
 // nni_plat_seed_prng seeds the PRNG subsystem.  The specified number
 // of bytes of entropy should be stashed.  When possible, cryptographic
