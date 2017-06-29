@@ -45,6 +45,17 @@ struct nni_posix_pipedesc {
 	int			nonblocking;
 };
 
+
+struct nni_posix_epdesc {
+	int			fd;
+	int			index;
+	nni_list		connectq;
+	nni_list		acceptq;
+	nni_list_node		node;
+	nni_posix_pollq *	pq;
+};
+
+
 // nni_posix_pollq is a work structure used by the poller thread, that keeps
 // track of all the underlying pipe handles and so forth being used by poll().
 struct nni_posix_pollq {
@@ -58,8 +69,10 @@ struct nni_posix_pollq {
 	int		close;          // request for worker to exit
 	int		started;
 	nni_thr		thr;            // worker thread
-	nni_list	pds;            // linked list of nni_posix_pipedescs.
-	int		npds;           // number of pipe descriptors
+	nni_list	pds;            // nni_posix_pipedescs.
+	int		npds;           // length of pds list
+	nni_list	eds;            // nni_posix_epdescs
+	nni_list	neds;           // length of eds list
 };
 
 static nni_posix_pollq nni_posix_global_pollq;
@@ -236,6 +249,7 @@ nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
 	nni_posix_poll_close(pd);
 	if (nni_list_active(&pq->pds, pd)) {
 		nni_list_remove(&pq->pds, pd);
+		pq->npds--;
 	}
 	nni_mtx_unlock(&pq->mtx);
 }
@@ -442,6 +456,7 @@ nni_posix_pipedesc_submit(nni_posix_pipedesc *pd, nni_list *l, nni_aio *aio)
 		}
 
 		nni_list_append(&pq->pds, pd);
+		pq->npds++;
 	}
 	NNI_ASSERT(!nni_list_active(l, aio));
 	// Only wake if we aren't already waiting for this type of I/O on
@@ -497,6 +512,7 @@ nni_posix_pipedesc_fini(nni_posix_pipedesc *pd)
 
 	if (nni_list_active(&pq->pds, pd)) {
 		nni_list_remove(&pq->pds, pd);
+		pq->npds--;
 	}
 	nni_mtx_unlock(&pq->mtx);
 
