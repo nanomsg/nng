@@ -48,9 +48,6 @@ extern uint32_t nni_pipe_id(nni_pipe *);
 // operations against will return NNG_ECLOSED.
 extern void nni_pipe_close(nni_pipe *);
 
-extern void nni_pipe_hold(nni_pipe *);
-extern void nni_pipe_rele(nni_pipe *);
-
 // nni_pipe_remove is called by the protocol when it is done with the socket.
 // The pipe should already be closed; it will be unregistered and it's
 // resources released back to the system.  The protocol MUST not reference

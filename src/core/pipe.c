@@ -103,23 +103,6 @@ nni_pipe_aio_send(nni_pipe *p, nni_aio *aio)
 }
 
 
-void
-nni_pipe_hold(nni_pipe *p)
-{
-	int rv;
-
-	rv = nni_objhash_find(nni_pipes, p->p_id, NULL);
-	NNI_ASSERT(rv == 0);
-}
-
-
-void
-nni_pipe_rele(nni_pipe *p)
-{
-	nni_objhash_unref(nni_pipes, p->p_id);
-}
-
-
 // nni_pipe_close closes the underlying connection.  It is expected that
 // subsequent attempts receive or send (including any waiting receive) will
 // simply return NNG_ECLOSED.
@@ -160,7 +143,7 @@ nni_pipe_remove(nni_pipe *p)
 	nni_sock_pipe_stop(p->p_sock, p);
 
 	// XXX: would be simpler to just do a destroy here
-	nni_pipe_rele(p);
+	nni_objhash_unref(nni_pipes, p->p_id);
 }
 
 

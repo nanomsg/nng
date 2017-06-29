@@ -373,8 +373,7 @@ nni_rep_pipe_recv_cb(void *arg)
 malformed:
 	// Failures here are bad enough to warrant to dropping the conn.
 	nni_msg_free(msg);
-	nni_pipe_close(rp->pipe);
-	nni_pipe_rele(rp->pipe);
+	nni_pipe_stop(rp->pipe);
 }
 
 
