@@ -184,7 +184,9 @@ nni_taskq_cancel(nni_taskq *tq, nni_taskq_ent *ent)
 		nni_mtx_unlock(&tq->tq_mtx);
 		return (NNG_ENOENT);
 	}
-	nni_list_remove(&tq->tq_ents, ent);
+	if (nni_list_active(&tq->tq_ents, ent)) {
+		nni_list_remove(&tq->tq_ents, ent);
+	}
 	nni_mtx_unlock(&tq->tq_mtx);
 	return (0);
 }

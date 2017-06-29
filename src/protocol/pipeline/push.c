@@ -39,8 +39,6 @@ struct nni_push_pipe {
 	nni_aio		aio_recv;
 	nni_aio		aio_send;
 	nni_aio		aio_getq;
-	int		refcnt;
-	nni_mtx		mtx;
 };
 
 static int
@@ -80,7 +78,6 @@ nni_push_pipe_fini(void *arg)
 	nni_aio_fini(&pp->aio_recv);
 	nni_aio_fini(&pp->aio_send);
 	nni_aio_fini(&pp->aio_getq);
-	nni_mtx_fini(&pp->mtx);
 	NNI_FREE_STRUCT(pp);
 }
 
@@ -99,12 +96,8 @@ nni_push_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 	}
 	if ((rv = nni_aio_init(&pp->aio_send, nni_push_send_cb, pp)) != 0) {
 		goto fail;
-		return (rv);
 	}
 	if ((rv = nni_aio_init(&pp->aio_getq, nni_push_getq_cb, pp)) != 0) {
-		goto fail;
-	}
-	if ((rv = nni_mtx_init(&pp->mtx)) != 0) {
 		goto fail;
 	}
 
@@ -130,17 +123,11 @@ nni_push_pipe_start(void *arg)
 		return (NNG_EPROTO);
 	}
 
-	nni_mtx_lock(&pp->mtx);
-	pp->refcnt = 2;
-	nni_mtx_unlock(&pp->mtx);
-
 	// Schedule a receiver.  This is mostly so that we can detect
 	// a closed transport pipe.
-	nni_pipe_hold(pp->pipe);
 	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
 
 	// Schedule a sender.
-	nni_pipe_hold(pp->pipe);
 	nni_msgq_aio_get(push->uwq, &pp->aio_getq);
 
 	return (0);
@@ -148,22 +135,14 @@ nni_push_pipe_start(void *arg)
 
 
 static void
-nni_push_pipe_stop(nni_push_pipe *pp)
+nni_push_pipe_stop(void *arg)
 {
+	nni_push_pipe *pp = arg;
 	nni_push_sock *push = pp->push;
-	int refcnt;
 
-	nni_msgq_aio_cancel(push->uwq, &pp->aio_getq);
-
-	nni_mtx_lock(&pp->mtx);
-	NNI_ASSERT(pp->refcnt > 0);
-	pp->refcnt--;
-	refcnt = pp->refcnt;
-	nni_mtx_unlock(&pp->mtx);
-
-	if (refcnt == 0) {
-		nni_pipe_remove(pp->pipe);
-	}
+	nni_aio_stop(&pp->aio_recv);
+	nni_aio_stop(&pp->aio_send);
+	nni_aio_stop(&pp->aio_getq);
 }
 
 
@@ -175,7 +154,7 @@ nni_push_recv_cb(void *arg)
 	// We normally expect to receive an error.  If a pipe actually
 	// sends us data, we just discard it.
 	if (nni_aio_result(&pp->aio_recv) != 0) {
-		nni_push_pipe_stop(pp);
+		nni_pipe_stop(pp->pipe);
 		return;
 	}
 	nni_msg_free(pp->aio_recv.a_msg);
@@ -193,7 +172,7 @@ nni_push_send_cb(void *arg)
 	if (nni_aio_result(&pp->aio_send) != 0) {
 		nni_msg_free(pp->aio_send.a_msg);
 		pp->aio_send.a_msg = NULL;
-		nni_push_pipe_stop(pp);
+		nni_pipe_stop(pp->pipe);
 		return;
 	}
 
@@ -209,7 +188,7 @@ nni_push_getq_cb(void *arg)
 
 	if (nni_aio_result(aio) != 0) {
 		// If the socket is closing, nothing else we can do.
-		nni_push_pipe_stop(pp);
+		nni_pipe_stop(pp->pipe);
 		return;
 	}
 
@@ -260,6 +239,7 @@ static nni_proto_pipe_ops nni_push_pipe_ops = {
 	.pipe_init	= nni_push_pipe_init,
 	.pipe_fini	= nni_push_pipe_fini,
 	.pipe_start	= nni_push_pipe_start,
+	.pipe_stop	= nni_push_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_push_sock_ops = {

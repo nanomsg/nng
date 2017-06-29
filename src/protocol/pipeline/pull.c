@@ -19,7 +19,6 @@ typedef struct nni_pull_sock	nni_pull_sock;
 
 static void nni_pull_putq_cb(void *);
 static void nni_pull_recv_cb(void *);
-static void nni_pull_recv(nni_pull_pipe *);
 static void nni_pull_putq(nni_pull_pipe *, nni_msg *);
 
 // An nni_pull_sock is our per-socket protocol private structure.
@@ -107,18 +106,19 @@ nni_pull_pipe_start(void *arg)
 	nni_pull_pipe *pp = arg;
 
 	// Start the pending pull...
-	nni_pull_recv(pp);
+	nni_pipe_aio_recv(pp->pipe, &pp->recv_aio);
 
 	return (0);
 }
 
 
 static void
-nni_pull_pipe_stop(nni_pull_pipe *pp)
+nni_pull_pipe_stop(void *arg)
 {
-	// Cancel any pending sendup.
-	nni_msgq_aio_cancel(pp->pull->urq, &pp->putq_aio);
-	nni_pipe_remove(pp->pipe);
+	nni_pull_pipe *pp = arg;
+
+	nni_aio_stop(&pp->putq_aio);
+	nni_aio_stop(&pp->recv_aio);
 }
 
 
@@ -131,7 +131,7 @@ nni_pull_recv_cb(void *arg)
 
 	if (nni_aio_result(aio) != 0) {
 		// Failed to get a message, probably the pipe is closed.
-		nni_pull_pipe_stop(pp);
+		nni_pipe_stop(pp->pipe);
 		return;
 	}
 
@@ -154,22 +154,11 @@ nni_pull_putq_cb(void *arg)
 		// we can do.  Just close the pipe.
 		nni_msg_free(aio->a_msg);
 		aio->a_msg = NULL;
-		nni_pull_pipe_stop(pp);
+		nni_pipe_stop(pp->pipe);
 		return;
 	}
 
-	nni_pull_recv(pp);
-}
-
-
-// nni_pull_recv is called to schedule a pending recv on the incoming pipe.
-static void
-nni_pull_recv(nni_pull_pipe *pp)
-{
-	// Schedule the aio with callback.
-	if (nni_pipe_aio_recv(pp->pipe, &pp->recv_aio) != 0) {
-		nni_pipe_remove(pp->pipe);
-	}
+	nni_pipe_aio_recv(pp->pipe, &pp->recv_aio);
 }
 
 
@@ -225,6 +214,7 @@ static nni_proto_pipe_ops nni_pull_pipe_ops = {
 	.pipe_init	= nni_pull_pipe_init,
 	.pipe_fini	= nni_pull_pipe_fini,
 	.pipe_start	= nni_pull_pipe_start,
+	.pipe_stop	= nni_pull_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_pull_sock_ops = {

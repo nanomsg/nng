@@ -203,14 +203,7 @@ nni_ep_stop(nni_ep *ep)
 void
 nni_ep_close(nni_ep *ep)
 {
-	nni_pipe *pipe;
-
 	nni_ep_stop(ep);
-	nni_mtx_lock(&ep->ep_mtx);
-	NNI_LIST_FOREACH (&ep->ep_pipes, pipe) {
-		nni_pipe_close(pipe);
-	}
-	nni_mtx_unlock(&ep->ep_mtx);
 }
 
 
@@ -220,7 +213,15 @@ nni_ep_remove(nni_ep *ep)
 	nni_pipe *pipe;
 	nni_sock *sock = ep->ep_sock;
 
-	nni_ep_close(ep);
+	nni_ep_stop(ep);
+
+	nni_thr_wait(&ep->ep_thr);
+
+	nni_mtx_lock(&ep->ep_mtx);
+	NNI_LIST_FOREACH (&ep->ep_pipes, pipe) {
+		nni_pipe_close(pipe);
+	}
+	nni_mtx_unlock(&ep->ep_mtx);
 
 	nni_mtx_lock(&ep->ep_mtx);
 	while (nni_list_first(&ep->ep_pipes) != NULL) {

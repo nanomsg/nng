@@ -50,9 +50,6 @@ struct nni_resp_pipe {
 	nni_aio		aio_putq;
 	nni_aio		aio_send;
 	nni_aio		aio_recv;
-	int		running;
-	int		refcnt;
-	nni_mtx		mtx;
 };
 
 
@@ -135,8 +132,7 @@ nni_resp_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 	if ((ppipe = NNI_ALLOC_STRUCT(ppipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_msgq_init(&ppipe->sendq, 2)) != 0) ||
-	    ((rv = nni_mtx_init(&ppipe->mtx)) != 0)) {
+	if ((rv = nni_msgq_init(&ppipe->sendq, 2)) != 0) {
 		goto fail;
 	}
 	rv = nni_aio_init(&ppipe->aio_putq, nni_resp_putq_cb, ppipe);
@@ -177,7 +173,6 @@ nni_resp_pipe_fini(void *arg)
 	nni_aio_fini(&ppipe->aio_getq);
 	nni_aio_fini(&ppipe->aio_send);
 	nni_aio_fini(&ppipe->aio_recv);
-	nni_mtx_fini(&ppipe->mtx);
 	NNI_FREE_STRUCT(ppipe);
 }
 
@@ -198,11 +193,6 @@ nni_resp_pipe_start(void *arg)
 		return (rv);
 	}
 
-	nni_mtx_lock(&ppipe->mtx);
-	ppipe->refcnt = 2;
-	ppipe->running = 1;
-	nni_mtx_unlock(&ppipe->mtx);
-
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
 	nni_msgq_aio_get(ppipe->sendq, &ppipe->aio_getq);
 
@@ -211,11 +201,16 @@ nni_resp_pipe_start(void *arg)
 
 
 static void
-nni_resp_pipe_stop(nni_resp_pipe *ppipe)
+nni_resp_pipe_stop(void *arg)
 {
+	nni_resp_pipe *ppipe = arg;
 	nni_resp_sock *psock = ppipe->psock;
-	int refcnt;
-	int running;
+
+	nni_msgq_close(ppipe->sendq);
+	nni_aio_stop(&ppipe->aio_putq);
+	nni_aio_stop(&ppipe->aio_getq);
+	nni_aio_stop(&ppipe->aio_send);
+	nni_aio_stop(&ppipe->aio_recv);
 
 	nni_mtx_lock(&psock->mtx);
 	if (ppipe->id != 0) {
@@ -223,23 +218,6 @@ nni_resp_pipe_stop(nni_resp_pipe *ppipe)
 		ppipe->id = 0;
 	}
 	nni_mtx_unlock(&psock->mtx);
-
-	nni_mtx_lock(&ppipe->mtx);
-	NNI_ASSERT(ppipe->refcnt > 0);
-	ppipe->refcnt--;
-	refcnt = ppipe->refcnt;
-
-	running = ppipe->running;
-	ppipe->running = 0;
-	nni_mtx_unlock(&ppipe->mtx);
-
-	if (running) {
-		nni_msgq_close(ppipe->sendq);
-		nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
-	}
-	if (refcnt == 0) {
-		nni_pipe_remove(ppipe->npipe);
-	}
 }
 
 
@@ -298,7 +276,7 @@ nni_resp_getq_cb(void *arg)
 	nni_resp_pipe *ppipe = arg;
 
 	if (nni_aio_result(&ppipe->aio_getq) != 0) {
-		nni_resp_pipe_stop(ppipe);
+		nni_pipe_stop(ppipe->npipe);
 		return;
 	}
 
@@ -317,7 +295,7 @@ nni_resp_send_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_send) != 0) {
 		nni_msg_free(ppipe->aio_send.a_msg);
 		ppipe->aio_send.a_msg = NULL;
-		nni_resp_pipe_stop(ppipe);
+		nni_pipe_stop(ppipe->npipe);
 		return;
 	}
 
@@ -386,7 +364,7 @@ nni_resp_recv_cb(void *arg)
 	return;
 
 error:
-	nni_resp_pipe_stop(ppipe);
+	nni_pipe_stop(ppipe->npipe);
 }
 
 
@@ -398,7 +376,7 @@ nni_resp_putq_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_putq) != 0) {
 		nni_msg_free(ppipe->aio_putq.a_msg);
 		ppipe->aio_putq.a_msg = NULL;
-		nni_resp_pipe_stop(ppipe);
+		nni_pipe_stop(ppipe->npipe);
 	}
 
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
@@ -525,6 +503,7 @@ static nni_proto_pipe_ops nni_resp_pipe_ops = {
 	.pipe_init	= nni_resp_pipe_init,
 	.pipe_fini	= nni_resp_pipe_fini,
 	.pipe_start	= nni_resp_pipe_start,
+	.pipe_stop	= nni_resp_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_resp_sock_ops = {

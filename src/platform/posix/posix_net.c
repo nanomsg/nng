@@ -299,6 +299,9 @@ nni_plat_tcp_shutdown(nni_plat_tcpsock *tsp)
 		// (macOS does not see the shtudown).
 		(void) dup2(nni_plat_devnull, tsp->fd);
 	}
+	if (tsp->pd != NULL) {
+		nni_posix_pipedesc_close(tsp->pd);
+	}
 }
 
 

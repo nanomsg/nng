@@ -52,9 +52,6 @@ struct nni_surv_pipe {
 	nni_aio		aio_putq;
 	nni_aio		aio_send;
 	nni_aio		aio_recv;
-	int		running;
-	int		refcnt;
-	nni_mtx		mtx;
 };
 
 static void
@@ -134,7 +131,6 @@ nni_surv_pipe_fini(void *arg)
 	nni_aio_fini(&ppipe->aio_recv);
 	nni_aio_fini(&ppipe->aio_putq);
 	nni_msgq_fini(ppipe->sendq);
-	nni_mtx_fini(&ppipe->mtx);
 	NNI_FREE_STRUCT(ppipe);
 }
 
@@ -149,8 +145,7 @@ nni_surv_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 		return (NNG_ENOMEM);
 	}
 	// This depth could be tunable.
-	if (((rv = nni_msgq_init(&ppipe->sendq, 16)) != 0) ||
-	    ((rv = nni_mtx_init(&ppipe->mtx)) != 0)) {
+	if ((rv = nni_msgq_init(&ppipe->sendq, 16)) != 0) {
 		goto failed;
 	}
 	rv = nni_aio_init(&ppipe->aio_getq, nni_surv_getq_cb, ppipe);
@@ -190,11 +185,6 @@ nni_surv_pipe_start(void *arg)
 	nni_list_append(&psock->pipes, ppipe);
 	nni_mtx_unlock(&psock->mtx);
 
-	nni_mtx_lock(&ppipe->mtx);
-	ppipe->refcnt = 2;
-	ppipe->running = 1;
-	nni_mtx_unlock(&ppipe->mtx);
-
 	nni_msgq_aio_get(ppipe->sendq, &ppipe->aio_getq);
 	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
 	return (0);
@@ -202,30 +192,22 @@ nni_surv_pipe_start(void *arg)
 
 
 static void
-nni_surv_pipe_stop(nni_surv_pipe *ppipe)
+nni_surv_pipe_stop(void *arg)
 {
+	nni_surv_pipe *ppipe = arg;
 	nni_surv_sock *psock = ppipe->psock;
-	int refcnt;
+
+	nni_aio_stop(&ppipe->aio_getq);
+	nni_aio_stop(&ppipe->aio_send);
+	nni_aio_stop(&ppipe->aio_recv);
+	nni_aio_stop(&ppipe->aio_putq);
+	nni_msgq_close(ppipe->sendq);
 
 	nni_mtx_lock(&psock->mtx);
 	if (nni_list_active(&psock->pipes, ppipe)) {
 		nni_list_remove(&psock->pipes, ppipe);
 	}
 	nni_mtx_unlock(&psock->mtx);
-
-	nni_mtx_lock(&ppipe->mtx);
-	NNI_ASSERT(ppipe->refcnt > 0);
-	ppipe->refcnt--;
-	refcnt = ppipe->refcnt;
-	if (ppipe->running) {
-		nni_msgq_close(ppipe->sendq);
-		nni_msgq_aio_cancel(psock->urq, &ppipe->aio_putq);
-	}
-	nni_mtx_unlock(&ppipe->mtx);
-
-	if (refcnt == 0) {
-		nni_pipe_remove(ppipe->npipe);
-	}
 }
 
 
@@ -235,7 +217,7 @@ nni_surv_getq_cb(void *arg)
 	nni_surv_pipe *ppipe = arg;
 
 	if (nni_aio_result(&ppipe->aio_getq) != 0) {
-		nni_surv_pipe_stop(ppipe);
+		nni_pipe_stop(ppipe->npipe);
 		return;
 	}
 
@@ -254,7 +236,7 @@ nni_surv_send_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_send) != 0) {
 		nni_msg_free(ppipe->aio_send.a_msg);
 		ppipe->aio_send.a_msg = NULL;
-		nni_surv_pipe_stop(ppipe);
+		nni_pipe_stop(ppipe->npipe);
 		return;
 	}
 
@@ -270,7 +252,7 @@ nni_surv_putq_cb(void *arg)
 	if (nni_aio_result(&ppipe->aio_putq) != 0) {
 		nni_msg_free(ppipe->aio_putq.a_msg);
 		ppipe->aio_putq.a_msg = NULL;
-		nni_surv_pipe_stop(ppipe);
+		nni_pipe_stop(ppipe->npipe);
 		return;
 	}
 
@@ -313,7 +295,7 @@ nni_surv_recv_cb(void *arg)
 	return;
 
 failed:
-	nni_surv_pipe_stop(ppipe);
+	nni_pipe_stop(ppipe->npipe);
 }
 
 
@@ -490,6 +472,7 @@ static nni_proto_pipe_ops nni_surv_pipe_ops = {
 	.pipe_init	= nni_surv_pipe_init,
 	.pipe_fini	= nni_surv_pipe_fini,
 	.pipe_start	= nni_surv_pipe_start,
+	.pipe_stop	= nni_surv_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_surv_sock_ops = {

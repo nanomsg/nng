@@ -26,5 +26,6 @@ extern int nni_posix_pipedesc_init(nni_posix_pipedesc **, int);
 extern void nni_posix_pipedesc_fini(nni_posix_pipedesc *);
 extern int nni_posix_pipedesc_read(nni_posix_pipedesc *, nni_aio *);
 extern int nni_posix_pipedesc_write(nni_posix_pipedesc *, nni_aio *);
+extern void nni_posix_pipedesc_close(nni_posix_pipedesc *);
 
 #endif // PLATFORM_POSIX_AIO_H

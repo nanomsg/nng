@@ -409,7 +409,6 @@ nni_ipc_ep_connect(void *arg, void *pipearg)
 	}
 
 	if ((rv = nni_ipc_negotiate(pipe)) != 0) {
-		nni_plat_ipc_shutdown(pipe->isp);
 		return (rv);
 	}
 	return (0);
@@ -450,7 +449,6 @@ nni_ipc_ep_accept(void *arg, void *pipearg)
 		return (rv);
 	}
 	if ((rv = nni_ipc_negotiate(pipe)) != 0) {
-		nni_plat_ipc_shutdown(pipe->isp);
 		return (rv);
 	}
 	return (0);

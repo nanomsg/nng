@@ -494,7 +494,6 @@ nni_tcp_ep_connect(void *arg, void *pipearg)
 	}
 
 	if ((rv = nni_tcp_negotiate(pipe)) != 0) {
-		nni_plat_tcp_shutdown(pipe->tsp);
 		return (rv);
 	}
 	return (0);
@@ -546,7 +545,6 @@ nni_tcp_ep_accept(void *arg, void *pipearg)
 		return (rv);
 	}
 	if ((rv = nni_tcp_negotiate(pipe)) != 0) {
-		nni_plat_tcp_shutdown(pipe->tsp);
 		return (rv);
 	}
 	return (0);

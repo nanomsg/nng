@@ -87,4 +87,7 @@ extern void nni_aio_wait(nni_aio *);
 // and the amount of data transferred (if any).
 extern void nni_aio_finish(nni_aio *, int, size_t);
 
+extern int nni_aio_start(nni_aio *, void (*)(nni_aio *), void *);
+extern void nni_aio_stop(nni_aio *);
+
 #endif // CORE_AIO_H

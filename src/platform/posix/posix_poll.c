@@ -224,6 +224,22 @@ nni_posix_poll_close(nni_posix_pipedesc *pd)
 }
 
 
+void
+nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
+{
+	nni_posix_pollq *pq;
+
+	pq = pd->pq;
+	nni_mtx_lock(&pq->mtx);
+	pd->fd = -1;
+	nni_posix_poll_close(pd);
+	if (nni_list_active(&pq->pds, pd)) {
+		nni_list_remove(&pq->pds, pd);
+	}
+	nni_mtx_unlock(&pq->mtx);
+}
+
+
 static void
 nni_posix_poll_thr(void *arg)
 {
@@ -355,8 +371,6 @@ nni_posix_pipedesc_cancel(nni_aio *aio)
 	if (nni_list_active(&pd->readq, aio)) {
 		nni_list_remove(&pd->readq, aio);
 	}
-	aio->a_prov_cancel = NULL;
-	aio->a_prov_data = NULL;
 	nni_mtx_unlock(&pq->mtx);
 }
 
@@ -403,9 +417,19 @@ nni_posix_pipedesc_submit(nni_posix_pipedesc *pd, nni_list *l, nni_aio *aio)
 	int rv;
 	nni_posix_pollq *pq = pd->pq;
 
+	// XXX: this should be done only once, after tcp negot. is done
+	// or at init if we can get tcp negot. to be async.
 	(void) fcntl(pd->fd, F_SETFL, O_NONBLOCK);
 
 	nni_mtx_lock(&pq->mtx);
+	if (pd->fd < 0) {
+		nni_mtx_unlock(&pq->mtx);
+		nni_aio_finish(aio, NNG_ECLOSED, aio->a_count);
+	}
+	if ((rv = nni_aio_start(aio, nni_posix_pipedesc_cancel, pd)) != 0) {
+		nni_mtx_unlock(&pq->mtx);
+		return;
+	}
 	if (!nni_list_active(&pq->pds, pd)) {
 		if ((rv = nni_posix_poll_grow(pq)) != 0) {
 			nni_aio_finish(aio, rv, aio->a_count);
@@ -416,8 +440,6 @@ nni_posix_pipedesc_submit(nni_posix_pipedesc *pd, nni_list *l, nni_aio *aio)
 		nni_list_append(&pq->pds, pd);
 	}
 	NNI_ASSERT(!nni_list_active(l, aio));
-	aio->a_prov_data = pd;
-	aio->a_prov_cancel = nni_posix_pipedesc_cancel;
 	// Only wake if we aren't already waiting for this type of I/O on
 	// this descriptor.
 	wake = nni_list_first(l) == NULL ? 1 : 0;

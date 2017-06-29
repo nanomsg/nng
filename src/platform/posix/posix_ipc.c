@@ -243,6 +243,9 @@ nni_plat_ipc_shutdown(nni_plat_ipcsock *isp)
 		// (macOS does not see the shtudown).
 		(void) dup2(nni_plat_devnull, isp->fd);
 	}
+	if (isp->pd != NULL) {
+		nni_posix_pipedesc_close(isp->pd);
+	}
 }
 
 

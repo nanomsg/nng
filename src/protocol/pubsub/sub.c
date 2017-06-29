@@ -123,10 +123,12 @@ nni_sub_pipe_start(void *arg)
 
 
 static void
-nni_sub_pipe_stop(nni_sub_pipe *sp)
+nni_sub_pipe_stop(void *arg)
 {
-	nni_msgq_aio_cancel(sp->sub->urq, &sp->aio_putq);
-	nni_pipe_remove(sp->pipe);
+	nni_sub_pipe *sp = arg;
+
+	nni_aio_stop(&sp->aio_putq);
+	nni_aio_stop(&sp->aio_recv);
 }
 
 
@@ -139,7 +141,7 @@ nni_sub_recv_cb(void *arg)
 	nni_msg *msg;
 
 	if (nni_aio_result(&sp->aio_recv) != 0) {
-		nni_sub_pipe_stop(sp);
+		nni_pipe_stop(sp->pipe);
 		return;
 	}
 
@@ -157,7 +159,7 @@ nni_sub_putq_cb(void *arg)
 	if (nni_aio_result(&sp->aio_putq) != 0) {
 		nni_msg_free(sp->aio_putq.a_msg);
 		sp->aio_putq.a_msg = NULL;
-		nni_sub_pipe_stop(sp);
+		nni_pipe_stop(sp->pipe);
 		return;
 	}
 
@@ -335,6 +337,7 @@ static nni_proto_pipe_ops nni_sub_pipe_ops = {
 	.pipe_init	= nni_sub_pipe_init,
 	.pipe_fini	= nni_sub_pipe_fini,
 	.pipe_start	= nni_sub_pipe_start,
+	.pipe_stop	= nni_sub_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_sub_sock_ops = {
