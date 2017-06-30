@@ -138,9 +138,9 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
     list (APPEND CMAKE_REQUIRED_DEFINITIONS -D_WIN32_WINNT=0x0600)
 
 else ()
-    message (AUTHOR_WARNING "WARNING: This platform may or may not be supported: ${CMAKE_SYSTEM_NAME}")
+    message (AUTHOR_WARNING "WARNING: This platform may not be supported: ${CMAKE_SYSTEM_NAME}")
     message (AUTHOR_WARNING "${ISSUE_REPORT_MSG}")
-    # blithely hope for POSIX t work
+    # blithely hope for POSIX to work
     find_package (Threads REQUIRED)
     add_definitions (-DPLATFORM_POSIX)
 endif ()

@@ -80,6 +80,7 @@ set (NNG_SOURCES
     platform/posix/posix_impl.h
     platform/posix/posix_config.h
     platform/posix/posix_aio.h
+    platform/posix/posix_socket.h
 
     platform/posix/posix_alloc.c
     platform/posix/posix_clock.c
@@ -89,6 +90,7 @@ set (NNG_SOURCES
     platform/posix/posix_pipe.c
     platform/posix/posix_poll.c
     platform/posix/posix_rand.c
+    platform/posix/posix_socket.c
     platform/posix/posix_thread.c
 
     platform/windows/win_impl.h

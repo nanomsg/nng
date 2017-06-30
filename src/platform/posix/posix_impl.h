@@ -24,6 +24,7 @@
 #define PLATFORM_POSIX_NET
 #define PLATFORM_POSIX_PIPE
 #define PLATFORM_POSIX_RANDOM
+#define PLATFORM_POSIX_SOCKET
 #define PLATFORM_POSIX_THREAD
 
 #include "platform/posix/posix_config.h"

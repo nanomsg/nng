@@ -38,6 +38,9 @@ struct nni_aio {
 	// Message operations.
 	nni_msg *	a_msg;
 
+	// Connect operations.
+	nni_sockaddr *	a_sockaddr;
+
 	// TBD: Resolver operations.
 
 	// Provider-use fields.

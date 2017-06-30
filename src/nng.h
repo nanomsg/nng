@@ -458,7 +458,7 @@ NNG_DECL void nng_thread_destroy(void *);
 // These structures can be obtained via property lookups, etc.
 struct nng_sockaddr_path {
 	uint16_t	sa_family;
-	uint8_t		sa_path[NNG_MAXADDRLEN];
+	char		sa_path[NNG_MAXADDRLEN];
 };
 typedef struct nng_sockaddr_path	nng_sockaddr_path;
 typedef struct nng_sockaddr_path	nng_sockaddr_ipc;

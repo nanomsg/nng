@@ -53,6 +53,8 @@ struct nni_posix_epdesc {
 	nni_list		acceptq;
 	nni_list_node		node;
 	nni_posix_pollq *	pq;
+	struct sockaddr_storage locaddr;
+	struct sockaddr_storage remaddr;
 };
 
 
@@ -78,7 +80,7 @@ struct nni_posix_pollq {
 static nni_posix_pollq nni_posix_global_pollq;
 
 static void
-nni_posix_poll_finish(nni_aio *aio, int rv)
+nni_posix_pipedesc_finish(nni_aio *aio, int rv)
 {
 	nni_posix_pipedesc *pd;
 
@@ -120,7 +122,7 @@ nni_posix_poll_write(nni_posix_pipedesc *pd)
 			rv = nni_plat_errno(errno);
 			nni_list_remove(&pd->writeq, aio);
 
-			nni_posix_poll_finish(aio, rv);
+			nni_posix_pipedesc_finish(aio, rv);
 			return;
 		}
 
@@ -148,7 +150,7 @@ nni_posix_poll_write(nni_posix_pipedesc *pd)
 
 		// We completed the entire operation on this aioq.
 		nni_list_remove(&pd->writeq, aio);
-		nni_posix_poll_finish(aio, 0);
+		nni_posix_pipedesc_finish(aio, 0);
 
 		// Go back to start of loop to see if there is another
 		// aioq ready for us to process.
@@ -183,13 +185,13 @@ nni_posix_poll_read(nni_posix_pipedesc *pd)
 			}
 			rv = nni_plat_errno(errno);
 
-			nni_posix_poll_finish(aio, rv);
+			nni_posix_pipedesc_finish(aio, rv);
 			return;
 		}
 
 		if (n == 0) {
 			// No bytes indicates a closed descriptor.
-			nni_posix_poll_finish(aio, NNG_ECLOSED);
+			nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 			return;
 		}
 
@@ -216,7 +218,7 @@ nni_posix_poll_read(nni_posix_pipedesc *pd)
 		}
 
 		// We completed the entire operation on this aioq.
-		nni_posix_poll_finish(aio, 0);
+		nni_posix_pipedesc_finish(aio, 0);
 
 		// Go back to start of loop to see if there is another
 		// aioq ready for us to process.
@@ -230,10 +232,10 @@ nni_posix_poll_close(nni_posix_pipedesc *pd)
 	nni_aio *aio;
 
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
-		nni_posix_poll_finish(aio, NNG_ECLOSED);
+		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 	}
 	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
-		nni_posix_poll_finish(aio, NNG_ECLOSED);
+		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 	}
 }
 
