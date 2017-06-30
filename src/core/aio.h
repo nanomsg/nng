@@ -38,8 +38,11 @@ struct nni_aio {
 	// Message operations.
 	nni_msg *	a_msg;
 
-	// Connect operations.
-	nni_sockaddr *	a_sockaddr;
+	// Connect/accept operations.
+	nni_sockaddr *	a_remaddr;
+	nni_sockaddr *	a_locaddr;
+	void *		a_endpt;        // opaque endpoint handle
+	void *		a_pipe;         // opaque pipe handle
 
 	// TBD: Resolver operations.
 

@@ -79,6 +79,121 @@ struct nni_posix_pollq {
 
 static nni_posix_pollq nni_posix_global_pollq;
 
+
+static void
+nni_posix_epdesc_cancel(nni_aio *aio)
+{
+	nni_posix_epdesc *ed;
+	nni_posix_pollq *pq;
+
+	ed = aio->a_prov_data;
+	pq = ed->pq;
+
+	nni_mtx_lock(&pq->mtx);
+	// This will remove the aio from either the read or the write
+	// list; it doesn't matter which.
+	if (nni_list_active(&ed->connectq, aio)) {
+		nni_list_remove(&ed->connectq, aio);
+	}
+	nni_mtx_unlock(&pq->mtx);
+}
+
+
+static void
+nni_posix_poll_connect(nni_posix_epdesc *ed)
+{
+	nni_aio *aio;
+	socklen_t sz;
+	int rv;
+
+	// Note that normally there will only be a single connect AIO...
+	// A socket that is here will have *initiated* with a connect()
+	// call, which returned EINPROGRESS.  When the connection attempt
+	// is done, either way, the descriptor will be noted as writable.
+	// getsockopt() with SOL_SOCKET, SO_ERROR to determine the actual
+	// status of the connection attempt...
+	while ((aio = nni_list_first(&ed->connectq)) != NULL) {
+		rv = -1;
+		sz = sizeof (rv);
+		if (getsockopt(ed->fd, SOL_SOCKET, SO_ERROR, &rv, &sz) < 0) {
+			nni_list_remove(&ed->connectq, aio);
+			nni_aio_finish(aio, nni_plat_errno(errno), 0);
+			continue;
+		}
+		switch (rv) {
+		case 0:
+			// Success!
+			nni_list_remove(&ed->connectq, aio);
+			nni_aio_finish(aio, 0, 0);
+			continue;
+
+		case EINPROGRESS:
+			// Still in progress... keep trying
+			return;
+
+		default:
+			nni_list_remove(&ed->connectq, aio);
+			nni_aio_finish(aio, nni_plat_errno(rv), 0);
+			continue;
+		}
+	}
+}
+
+
+static void
+nni_posix_poll_accept(nni_posix_epdesc *ed)
+{
+	nni_aio *aio;
+	int newfd;
+	struct sockaddr_storage ss;
+	socklen_t slen;
+
+	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
+		// We could argue that knowing the remote peer address would
+		// be nice.  But frankly if someone wants it, they can just
+		// do getpeername().
+
+#ifdef NNG_USE_ACCEPT4
+		newfd = accept4(ed->fd, NULL, NULL, SOCK_CLOEXEC);
+		if ((newfd < 0) &&
+		    ((errno == ENOSYS) || (errno == ENOTSUP))) {
+			newfd = accept(ed->fd, NULL, NULL);
+		}
+#else
+		newfd = accept(ed->fd, NULL, NULL);
+#endif
+
+		if (newfd >= 0) {
+			// successful connection request!
+			nni_list_remove(&ed->acceptq, aio);
+			// Abuse the count to hold our new fd.
+			nni_aio_finish(aio, 0, newfd);
+			continue;
+		}
+
+		if ((errno == EWOULDBLOCK) || (errno == EAGAIN)) {
+			// Well, let's try later.  Note that EWOULDBLOCK
+			// is required by standards, but some platforms may
+			// use EAGAIN.  The values may be the same, so we
+			// can't use switch.
+			return;
+		}
+
+		if (errno == ECONNABORTED) {
+			// Let's just eat this one.  Perhaps it may be
+			// better to report it to the application, but we
+			// think most applications don't want to see this.
+			// Only someone with a packet trace is going to
+			// notice this.
+			continue;
+		}
+
+		nni_list_remove(&ed->acceptq, aio);
+		nni_aio_finish(aio, nni_plat_errno(errno), 0);
+	}
+}
+
+
 static void
 nni_posix_pipedesc_finish(nni_aio *aio, int rv)
 {
@@ -120,7 +235,6 @@ nni_posix_poll_write(nni_posix_pipedesc *pd)
 				return;
 			}
 			rv = nni_plat_errno(errno);
-			nni_list_remove(&pd->writeq, aio);
 
 			nni_posix_pipedesc_finish(aio, rv);
 			return;
