@@ -46,6 +46,7 @@ struct nni_posix_sock {
 	int			devnull;        // for shutting down accept()
 	char *			unlink;         // path to unlink at unbind
 	nni_posix_pipedesc *	pd;
+	int			tcpnodelay;
 };
 
 int
@@ -97,17 +98,7 @@ nni_posix_to_sockaddr(struct sockaddr_storage *ss, const nni_sockaddr *sa)
 		sun->sun_family = PF_UNIX;
 		(void) snprintf(sun->sun_path, sizeof (sun->sun_path), "%s",
 		    sa->s_un.s_path.sa_path);
-		// Some systems (Linux!) have sun_len, while others do not.
-		// The lack of a length field means systems without it cannot
-		// use abstract sockets.
-#ifdef SUN_LEN
-		sun->sun_len = SUN_LEN(sun);
-		return (sun->sun_len);
-
-#else
 		return (sizeof (*sun));
-
-#endif
 	}
 	return (-1);
 }
@@ -169,7 +160,7 @@ nni_posix_sock_aio_recv(nni_posix_sock *s, nni_aio *aio)
 
 
 static void
-nni_posix_sock_setopts_fd(int fd)
+nni_posix_sock_setopts_fd(int fd, int tcpnodelay)
 {
 	int one;
 
@@ -190,8 +181,11 @@ nni_posix_sock_setopts_fd(int fd)
 
 	// It's unclear whether this is safe for UNIX domain sockets.  It
 	// *should* be.
-	one = 1;
-	(void) setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof (one));
+	if (tcpnodelay) {
+		one = 1;
+		(void) setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one,
+		    sizeof (one));
+	}
 }
 
 
@@ -258,15 +252,19 @@ nni_posix_sock_listen(nni_posix_sock *s, const nni_sockaddr *saddr)
 	if ((fd = socket(ss.ss_family, NNI_STREAM_SOCKTYPE, 0)) < 0) {
 		return (nni_plat_errno(errno));
 	}
+	if ((saddr->s_un.s_family == NNG_AF_INET) ||
+	    (saddr->s_un.s_family == NNG_AF_INET6)) {
+		s->tcpnodelay = 1;
+	}
 
-	nni_posix_sock_setopts_fd(fd);
+	nni_posix_sock_setopts_fd(fd, s->tcpnodelay);
 
 	// UNIX DOMAIN SOCKETS -- these have names in the file namespace.
 	// We are going to check to see if there was a name already there.
 	// If there was, and nothing is listening (ECONNREFUSED), then we
 	// will just try to cleanup the old socket.  Note that this is not
 	// perfect in all scenarios, so use this with caution.
-	if ((ss.ss_family == AF_UNIX) &&
+	if ((saddr->s_un.s_family == NNG_AF_IPC) &&
 	    (saddr->s_un.s_path.sa_path[0] != 0)) {
 		int chkfd;
 		if ((chkfd = socket(AF_UNIX, NNI_STREAM_SOCKTYPE, 0)) < 0) {
@@ -276,7 +274,7 @@ nni_posix_sock_listen(nni_posix_sock *s, const nni_sockaddr *saddr)
 
 		// Nonblocking; we don't want to wait for remote server.
 		(void) fcntl(chkfd, F_SETFL, O_NONBLOCK);
-		if (connect(chkfd, (struct sockaddr *) &ss, sizeof (ss)) < 0) {
+		if (connect(chkfd, (struct sockaddr *) &ss, len) < 0) {
 			if (errno == ECONNREFUSED) {
 				(void) unlink(saddr->s_un.s_path.sa_path);
 			}
@@ -435,7 +433,7 @@ nni_posix_sock_accept_sync(nni_posix_sock *s, nni_posix_sock *server)
 		}
 	}
 
-	nni_posix_sock_setopts_fd(fd);
+	nni_posix_sock_setopts_fd(fd, s->tcpnodelay);
 
 	if ((rv = nni_posix_pipedesc_init(&s->pd, fd)) != 0) {
 		close(fd);
@@ -464,6 +462,11 @@ nni_posix_sock_connect_sync(nni_posix_sock *s, const nni_sockaddr *addr,
 		return (nni_plat_errno(errno));
 	}
 
+	if ((addr->s_un.s_family == NNG_AF_INET) ||
+	    (addr->s_un.s_family == NNG_AF_INET6)) {
+		s->tcpnodelay = 1;
+	}
+
 	if (bindaddr != NULL) {
 		if (bindaddr->s_un.s_family != addr->s_un.s_family) {
 			return (NNG_EINVAL);
@@ -478,7 +481,7 @@ nni_posix_sock_connect_sync(nni_posix_sock *s, const nni_sockaddr *addr,
 		}
 	}
 
-	nni_posix_sock_setopts_fd(fd);
+	nni_posix_sock_setopts_fd(fd, s->tcpnodelay);
 
 	if (connect(fd, (struct sockaddr *) &ss, len) != 0) {
 		rv = nni_plat_errno(errno);
