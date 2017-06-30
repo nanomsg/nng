@@ -11,6 +11,7 @@
 
 #ifdef PLATFORM_POSIX_IPC
 #include "platform/posix/posix_aio.h"
+#include "platform/posix/posix_socket.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -30,368 +31,113 @@
 #undef sun
 #endif
 
-struct nni_plat_ipcsock {
-	int			fd;
-	int			devnull;        // for shutting down accept()
-	char *			unlink;         // path to unlink at fini
-	nni_posix_pipedesc *	pd;
-};
-
-#ifdef  SOCK_CLOEXEC
-#define NNI_IPC_SOCKTYPE	(SOCK_STREAM | SOCK_CLOEXEC)
-#else
-#define NNI_IPC_SOCKTYPE	SOCK_STREAM
-#endif
+// We alias nni_posix_sock to nni_plat_ipcsock.
 
 static int
-nni_plat_ipc_path_to_sockaddr(struct sockaddr_un *sun, const char *path)
+nni_plat_ipc_path_resolve(nni_sockaddr *addr, const char *path)
 {
-	memset(sun, 0, sizeof (*sun));
-	sun->sun_family = PF_UNIX;
+	nng_sockaddr_path *spath;
+	size_t len;
 
-	// Technically on some platforms we could support path names larger
-	// than the path, and on others we could skip null termination.  We
-	// take a conservative approach, which is that the path must fit in
-	// the supplied character array, and *must* be NULL terminated.
+	memset(addr, 0, sizeof (*addr));
+	spath = &addr->s_un.s_path;
 
 	// TODO: abstract sockets, including autobind sockets.
-	if (strlen(path) >= sizeof (sun->sun_path)) {
+	len = strlen(path);
+	if ((len >= sizeof (spath->sa_path)) || (len < 1)) {
 		return (NNG_EADDRINVAL);
 	}
-	if (strlen(path) == 0) {
-		return (-1);
-	}
-	snprintf(sun->sun_path, sizeof (sun->sun_path), "%s", path);
-	return (sizeof (*sun));
-}
-
-
-void
-nni_plat_ipc_aio_send(nni_plat_ipcsock *isp, nni_aio *aio)
-{
-	nni_posix_pipedesc_write(isp->pd, aio);
-}
-
-
-void
-nni_plat_ipc_aio_recv(nni_plat_ipcsock *isp, nni_aio *aio)
-{
-	nni_posix_pipedesc_read(isp->pd, aio);
+	(void) snprintf(spath->sa_path, sizeof (spath->sa_path), "%s", path);
+	spath->sa_family = NNG_AF_IPC;
+	return (0);
 }
 
 
 int
 nni_plat_ipc_send(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 {
-	struct iovec iov[4];    // We never have more than 3 at present
-	int i;
-	int offset;
-	int resid = 0;
-	int rv;
-
-	if (cnt > 4) {
-		return (NNG_EINVAL);
-	}
-
-	for (i = 0; i < cnt; i++) {
-		iov[i].iov_base = iovs[i].iov_buf;
-		iov[i].iov_len = iovs[i].iov_len;
-		resid += iov[i].iov_len;
-	}
-
-	i = 0;
-	while (resid) {
-		rv = writev(s->fd, &iov[i], cnt);
-		if (rv < 0) {
-			if (rv == EINTR) {
-				continue;
-			}
-			return (nni_plat_errno(errno));
-		}
-		if (rv > resid) {
-			nni_panic("writev says it wrote too much!");
-		}
-		resid -= rv;
-		while (rv) {
-			if (iov[i].iov_len <= rv) {
-				rv -= iov[i].iov_len;
-				i++;
-				cnt--;
-			} else {
-				iov[i].iov_len -= rv;
-				iov[i].iov_base += rv;
-				rv = 0;
-			}
-		}
-	}
-
-	return (0);
+	return (nni_posix_sock_send_sync((void *) s, iovs, cnt));
 }
 
 
 int
 nni_plat_ipc_recv(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
 {
-	struct iovec iov[4];    // We never have more than 3 at present
-	int i;
-	int offset;
-	int resid = 0;
-	int rv;
-
-	if (cnt > 4) {
-		return (NNG_EINVAL);
-	}
-
-	for (i = 0; i < cnt; i++) {
-		iov[i].iov_base = iovs[i].iov_buf;
-		iov[i].iov_len = iovs[i].iov_len;
-		resid += iov[i].iov_len;
-	}
-	i = 0;
-	while (resid) {
-		rv = readv(s->fd, &iov[i], cnt);
-		if (rv < 0) {
-			if (errno == EINTR) {
-				continue;
-			}
-			return (nni_plat_errno(errno));
-		}
-		if (rv == 0) {
-			return (NNG_ECLOSED);
-		}
-		if (rv > resid) {
-			nni_panic("readv says it read too much!");
-		}
-
-		resid -= rv;
-		while (rv) {
-			if (iov[i].iov_len <= rv) {
-				rv -= iov[i].iov_len;
-				i++;
-				cnt--;
-			} else {
-				iov[i].iov_len -= rv;
-				iov[i].iov_base += rv;
-				rv = 0;
-			}
-		}
-	}
-
-	return (0);
+	return (nni_posix_sock_recv_sync((void *) s, iovs, cnt));
 }
 
 
-static void
-nni_plat_ipc_setopts(int fd)
+void
+nni_plat_ipc_aio_send(nni_plat_ipcsock *s, nni_aio *aio)
 {
-	int one;
+	nni_posix_sock_aio_send((void *) s, aio);
+}
 
-	// Try to ensure that both CLOEXEC is set, and that we don't
-	// generate SIGPIPE.  (Note that SIGPIPE suppression in this way
-	// only works on BSD systems.  Linux wants us to use sendmsg().)
-	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
-#if defined(F_SETNOSIGPIPE)
-	(void) fcntl(fd, F_SETNOSIGPIPE, 1);
-#elif defined(SO_NOSIGPIPE)
-	one = 1;
-	(void) setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof (one));
-#endif
+
+void
+nni_plat_ipc_aio_recv(nni_plat_ipcsock *s, nni_aio *aio)
+{
+	nni_posix_sock_aio_recv((void *) s, aio);
 }
 
 
 int
-nni_plat_ipc_init(nni_plat_ipcsock **ispp)
+nni_plat_ipc_init(nni_plat_ipcsock **sp)
 {
-	nni_plat_ipcsock *isp;
+	nni_posix_sock *s;
+	int rv;
 
-	if ((isp = NNI_ALLOC_STRUCT(isp)) == NULL) {
-		return (NNG_ENOMEM);
+	if ((rv = nni_posix_sock_init(&s)) == 0) {
+		*sp = (void *) s;
 	}
-	isp->fd = -1;
-	*ispp = isp;
-	return (0);
+	return (rv);
 }
 
 
 void
-nni_plat_ipc_fini(nni_plat_ipcsock *isp)
+nni_plat_ipc_fini(nni_plat_ipcsock *s)
 {
-	if (isp->fd != -1) {
-		(void) close(isp->fd);
-		isp->fd = -1;
-	}
-	if (isp->unlink != NULL) {
-		(void) unlink(isp->unlink);
-		nni_free(isp->unlink, strlen(isp->unlink) + 1);
-	}
-
-	if (isp->pd != NULL) {
-		nni_posix_pipedesc_fini(isp->pd);
-	}
-
-	NNI_FREE_STRUCT(isp);
+	nni_posix_sock_fini((void *) s);
 }
 
 
 void
-nni_plat_ipc_shutdown(nni_plat_ipcsock *isp)
+nni_plat_ipc_shutdown(nni_plat_ipcsock *s)
 {
-	if (isp->fd != -1) {
-		(void) shutdown(isp->fd, SHUT_RDWR);
-		// This causes the equivalent of a close.  Hopefully waking
-		// up anything that didn't get the hint with the shutdown.
-		// (macOS does not see the shtudown).
-		(void) dup2(nni_plat_devnull, isp->fd);
-	}
-	if (isp->pd != NULL) {
-		nni_posix_pipedesc_close(isp->pd);
-	}
+	nni_posix_sock_shutdown((void *) s);
 }
 
 
-// nni_plat_ipc_listen creates a file descriptor bound to the given address.
-// This basically does the equivalent of socket, bind, and listen.  We have
-// chosen a default value for the listen backlog of 128, which should be
-// plenty.  (If it isn't, then the accept thread can't get enough resources
-// to keep up, and your clients are going to experience bad things.  Normally
-// the actual backlog should hover near 0 anyway.)
 int
 nni_plat_ipc_listen(nni_plat_ipcsock *s, const char *path)
 {
-	int fd, checkfd;
-	struct sockaddr_un sun;
 	int rv;
+	nni_sockaddr addr;
 
-	if (nni_plat_ipc_path_to_sockaddr(&sun, path) < 0) {
-		return (NNG_EADDRINVAL);
-	}
-
-	if ((fd = socket(AF_UNIX, NNI_IPC_SOCKTYPE, 0)) < 0) {
-		return (nni_plat_errno(errno));
-	}
-
-	// We are going to check to see if there was a name already there.
-	// If there was, and nothing is listening (ECONNREFUSED), then we
-	// will just try to cleanup the old socket.  Note that this is not
-	// perfect in all scenarios, so use this with caution.
-	if ((checkfd = socket(AF_UNIX, NNI_IPC_SOCKTYPE, 0)) < 0) {
-		(void) close(fd);
-		return (nni_plat_errno(errno));
-	}
-
-	// Nonblocking because we don't want to wait for any remote server.
-	(void) fcntl(checkfd, F_SETFL, O_NONBLOCK);
-	if (connect(checkfd, (struct sockaddr *) &sun, sizeof (sun)) < 0) {
-		if (errno == ECONNREFUSED) {
-			(void) unlink(path);
-		}
-	}
-	(void) close(checkfd);
-
-	nni_plat_ipc_setopts(fd);
-
-	if ((s->unlink = nni_alloc(strlen(path) + 1)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	strcpy(s->unlink, path);
-	if (bind(fd, (struct sockaddr *) &sun, sizeof (sun)) < 0) {
-		rv = nni_plat_errno(errno);
-		nni_free(s->unlink, strlen(path) + 1);
-		s->unlink = NULL;
-		(void) close(fd);
+	if ((rv = nni_plat_ipc_path_resolve(&addr, path)) != 0) {
 		return (rv);
 	}
-
-	// Listen -- 128 depth is probably sufficient.  If it isn't, other
-	// bad things are going to happen.
-	if (listen(fd, 128) < 0) {
-		rv = nni_plat_errno(errno);
-		(void) close(fd);
-		return (rv);
-	}
-	s->fd = fd;
-	return (0);
+	return (nni_posix_sock_listen((void *) s, &addr));
 }
 
 
 int
-nni_plat_ipc_connect(nni_plat_ipcsock *isp, const char *path)
+nni_plat_ipc_connect(nni_plat_ipcsock *s, const char *path)
 {
-	int fd;
-	int len;
-	struct sockaddr_un sun;
 	int rv;
+	nni_sockaddr addr;
 
-	if (nni_plat_ipc_path_to_sockaddr(&sun, path) < 0) {
-		return (NNG_EADDRINVAL);
-	}
-
-	if ((fd = socket(AF_UNIX, NNI_IPC_SOCKTYPE, 0)) < 0) {
-		return (nni_plat_errno(errno));
-	}
-
-	nni_plat_ipc_setopts(fd);
-
-	if (connect(fd, (struct sockaddr *) &sun, sizeof (sun)) != 0) {
-		rv = nni_plat_errno(errno);
-		(void) close(fd);
-		if (rv == NNG_ENOENT) {
-			// In this case we want to treat this the same as
-			// ECONNREFUSED, since they mean the same to us.
-			rv = NNG_ECONNREFUSED;
-		}
+	if ((rv = nni_plat_ipc_path_resolve(&addr, path)) != 0) {
 		return (rv);
 	}
-
-	if ((rv = nni_posix_pipedesc_init(&isp->pd, fd)) != 0) {
-		(void) close(fd);
-		return (rv);
-	}
-
-	isp->fd = fd;
-	return (0);
+	return (nni_posix_sock_connect_sync((void *) s, &addr, NULL));
 }
 
 
 int
-nni_plat_ipc_accept(nni_plat_ipcsock *isp, nni_plat_ipcsock *server)
+nni_plat_ipc_accept(nni_plat_ipcsock *s, nni_plat_ipcsock *server)
 {
-	int fd;
-	int rv;
-
-	for (;;) {
-#ifdef NNG_USE_ACCEPT4
-		fd = accept4(server->fd, NULL, NULL, SOCK_CLOEXEC);
-		if ((fd < 0) && ((errno == ENOSYS) || (errno == ENOTSUP))) {
-			fd = accept(server->fd, NULL, NULL);
-		}
-#else
-		fd = accept(server->fd, NULL, NULL);
-#endif
-
-		if (fd < 0) {
-			if ((errno == EINTR) || (errno == ECONNABORTED)) {
-				// These are not fatal errors, keep trying
-				continue;
-			}
-			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-				continue;
-			}
-			return (nni_plat_errno(errno));
-		} else {
-			break;
-		}
-	}
-
-	nni_plat_ipc_setopts(fd);
-
-	if ((rv = nni_posix_pipedesc_init(&isp->pd, fd)) != 0) {
-		(void) close(fd);
-		return (rv);
-	}
-
-	isp->fd = fd;
-	return (0);
+	return (nni_posix_sock_accept_sync((void *) s, (void *) server));
 }
 
 

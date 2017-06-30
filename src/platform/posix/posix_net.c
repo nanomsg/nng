@@ -85,13 +85,13 @@ nni_plat_tcp_aio_recv(nni_plat_tcpsock *s, nni_aio *aio)
 
 
 int
-nni_plat_tcp_init(nni_plat_tcpsock **tspp)
+nni_plat_tcp_init(nni_plat_tcpsock **sp)
 {
 	nni_posix_sock *s;
 	int rv;
 
 	if ((rv = nni_posix_sock_init(&s)) == 0) {
-		*tspp = (void *) s;
+		*sp = (void *) s;
 	}
 	return (rv);
 }
