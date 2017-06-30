@@ -43,7 +43,6 @@
 
 struct nni_posix_sock {
 	int			fd;
-	int			devnull;        // for shutting down accept()
 	char *			unlink;         // path to unlink at unbind
 	nni_posix_pipedesc *	pd;
 	nni_posix_epdesc *	ed;
@@ -149,14 +148,14 @@ nni_posix_from_sockaddr(nni_sockaddr *sa, const struct sockaddr *ss)
 void
 nni_posix_sock_aio_send(nni_posix_sock *s, nni_aio *aio)
 {
-	nni_posix_pipedesc_write(s->pd, aio);
+	nni_posix_pipedesc_send(s->pd, aio);
 }
 
 
 void
 nni_posix_sock_aio_recv(nni_posix_sock *s, nni_aio *aio)
 {
-	nni_posix_pipedesc_read(s->pd, aio);
+	nni_posix_pipedesc_recv(s->pd, aio);
 }
 
 

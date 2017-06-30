@@ -927,14 +927,14 @@ nni_posix_pipedesc_sysfini(void)
 // extern void nni_posix_aio_ep_fini(nni_posix_aio_ep *);
 
 void
-nni_posix_pipedesc_read(nni_posix_pipedesc *pd, nni_aio *aio)
+nni_posix_pipedesc_recv(nni_posix_pipedesc *pd, nni_aio *aio)
 {
 	nni_posix_pipedesc_submit(pd, &pd->readq, aio);
 }
 
 
 void
-nni_posix_pipedesc_write(nni_posix_pipedesc *pd, nni_aio *aio)
+nni_posix_pipedesc_send(nni_posix_pipedesc *pd, nni_aio *aio)
 {
 	nni_posix_pipedesc_submit(pd, &pd->writeq, aio);
 }

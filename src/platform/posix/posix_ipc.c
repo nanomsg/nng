@@ -31,7 +31,7 @@
 #undef sun
 #endif
 
-// We alias nni_posix_sock to nni_plat_ipcsock.
+// We alias nni_posix_pipdedesc to nni_plat_ipcsock.
 
 static int
 nni_plat_ipc_path_resolve(nni_sockaddr *addr, const char *path)

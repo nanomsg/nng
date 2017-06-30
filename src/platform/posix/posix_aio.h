@@ -26,8 +26,8 @@ extern int nni_posix_pipedesc_sysinit(void);
 extern void nni_posix_pipedesc_sysfini(void);
 extern int nni_posix_pipedesc_init(nni_posix_pipedesc **, int);
 extern void nni_posix_pipedesc_fini(nni_posix_pipedesc *);
-extern void nni_posix_pipedesc_read(nni_posix_pipedesc *, nni_aio *);
-extern void nni_posix_pipedesc_write(nni_posix_pipedesc *, nni_aio *);
+extern void nni_posix_pipedesc_recv(nni_posix_pipedesc *, nni_aio *);
+extern void nni_posix_pipedesc_send(nni_posix_pipedesc *, nni_aio *);
 extern void nni_posix_pipedesc_close(nni_posix_pipedesc *);
 
 extern int nni_posix_epdesc_init(nni_posix_epdesc **, int);
