@@ -280,20 +280,24 @@ nni_posix_sock_listen(nni_posix_sock *s, const nni_sockaddr *saddr)
 			}
 		}
 		(void) close(chkfd);
-
-		// Record the path so we unlink it later
-		s->unlink = nni_alloc(strlen(saddr->s_un.s_path.sa_path) + 1);
-		if (s->unlink == NULL) {
-			(void) close(fd);
-			return (NNG_ENOMEM);
-		}
 	}
-
 
 	if (bind(fd, (struct sockaddr *) &ss, len) < 0) {
 		rv = nni_plat_errno(errno);
 		(void) close(fd);
 		return (rv);
+	}
+
+	// For IPC, record the path so we unlink it later
+	if ((saddr->s_un.s_family == NNG_AF_IPC) &&
+	    (saddr->s_un.s_path.sa_path[0] != 0)) {
+		s->unlink = nni_alloc(strlen(saddr->s_un.s_path.sa_path) + 1);
+		if (s->unlink == NULL) {
+			(void) close(fd);
+			(void) unlink(saddr->s_un.s_path.sa_path);
+			return (NNG_ENOMEM);
+		}
+		strcpy(s->unlink, saddr->s_un.s_path.sa_path);
 	}
 
 	// Listen -- 128 depth is probably sufficient.  If it isn't, other
@@ -485,6 +489,12 @@ nni_posix_sock_connect_sync(nni_posix_sock *s, const nni_sockaddr *addr,
 
 	if (connect(fd, (struct sockaddr *) &ss, len) != 0) {
 		rv = nni_plat_errno(errno);
+		// Unix domain sockets return ENOENT when nothing is there.
+		// Massage this into ECONNREFUSED, to provide more consistent
+		// behavior.
+		if (rv == NNG_ENOENT) {
+			rv = NNG_ECONNREFUSED;
+		}
 		(void) close(fd);
 		return (rv);
 	}
