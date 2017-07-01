@@ -311,7 +311,13 @@ nni_posix_sock_listen(nni_posix_sock *s, const nni_sockaddr *saddr)
 		return (rv);
 	}
 
+	if ((rv = nni_posix_epdesc_init(&s->ed, fd)) != 0) {
+		(void) close(fd);
+		return (rv);
+	}
+
 	s->fd = fd;
+
 	return (0);
 }
 

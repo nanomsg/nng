@@ -889,6 +889,7 @@ nni_posix_pollq_init(nni_posix_pollq *pq)
 	int rv;
 
 	NNI_LIST_INIT(&pq->pds, nni_posix_pipedesc, node);
+	NNI_LIST_INIT(&pq->eds, nni_posix_epdesc, node);
 	pq->wakewfd = -1;
 	pq->wakerfd = -1;
 	pq->close = 0;
