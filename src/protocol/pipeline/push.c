@@ -125,7 +125,7 @@ nni_push_pipe_start(void *arg)
 
 	// Schedule a receiver.  This is mostly so that we can detect
 	// a closed transport pipe.
-	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
+	nni_pipe_recv(pp->pipe, &pp->aio_recv);
 
 	// Schedule a sender.
 	nni_msgq_aio_get(push->uwq, &pp->aio_getq);
@@ -159,7 +159,7 @@ nni_push_recv_cb(void *arg)
 	}
 	nni_msg_free(pp->aio_recv.a_msg);
 	pp->aio_recv.a_msg = NULL;
-	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
+	nni_pipe_recv(pp->pipe, &pp->aio_recv);
 }
 
 
@@ -195,7 +195,7 @@ nni_push_getq_cb(void *arg)
 	pp->aio_send.a_msg = aio->a_msg;
 	aio->a_msg = NULL;
 
-	nni_pipe_aio_send(pp->pipe, &pp->aio_send);
+	nni_pipe_send(pp->pipe, &pp->aio_send);
 }
 
 

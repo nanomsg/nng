@@ -164,7 +164,7 @@ nni_pub_pipe_start(void *arg)
 	nni_mtx_unlock(&pub->mtx);
 
 	// Start the receiver and the queue reader.
-	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
+	nni_pipe_recv(pp->pipe, &pp->aio_recv);
 	nni_msgq_aio_get(pp->sendq, &pp->aio_getq);
 
 	return (0);
@@ -246,7 +246,7 @@ nni_pub_pipe_recv_cb(void *arg)
 
 	nni_msg_free(pp->aio_recv.a_msg);
 	pp->aio_recv.a_msg = NULL;
-	nni_pipe_aio_recv(pp->pipe, &pp->aio_recv);
+	nni_pipe_recv(pp->pipe, &pp->aio_recv);
 }
 
 
@@ -263,7 +263,7 @@ nni_pub_pipe_getq_cb(void *arg)
 	pp->aio_send.a_msg = pp->aio_getq.a_msg;
 	pp->aio_getq.a_msg = NULL;
 
-	nni_pipe_aio_send(pp->pipe, &pp->aio_send);
+	nni_pipe_send(pp->pipe, &pp->aio_send);
 }
 
 

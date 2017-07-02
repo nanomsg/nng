@@ -106,7 +106,7 @@ nni_pull_pipe_start(void *arg)
 	nni_pull_pipe *pp = arg;
 
 	// Start the pending pull...
-	nni_pipe_aio_recv(pp->pipe, &pp->recv_aio);
+	nni_pipe_recv(pp->pipe, &pp->recv_aio);
 
 	return (0);
 }
@@ -158,7 +158,7 @@ nni_pull_putq_cb(void *arg)
 		return;
 	}
 
-	nni_pipe_aio_recv(pp->pipe, &pp->recv_aio);
+	nni_pipe_recv(pp->pipe, &pp->recv_aio);
 }
 
 

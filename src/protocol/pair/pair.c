@@ -150,7 +150,7 @@ nni_pair_pipe_start(void *arg)
 	// Schedule a getq on the upper, and a read from the pipe.
 	// Each of these also sets up another hold on the pipe itself.
 	nni_msgq_aio_get(psock->uwq, &ppipe->aio_getq);
-	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
+	nni_pipe_recv(ppipe->npipe, &ppipe->aio_recv);
 
 	return (0);
 }
@@ -203,7 +203,7 @@ nni_pair_putq_cb(void *arg)
 		nni_pipe_stop(ppipe->npipe);
 		return;
 	}
-	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
+	nni_pipe_recv(ppipe->npipe, &ppipe->aio_recv);
 }
 
 
@@ -221,7 +221,7 @@ nni_pair_getq_cb(void *arg)
 
 	ppipe->aio_send.a_msg = ppipe->aio_getq.a_msg;
 	ppipe->aio_getq.a_msg = NULL;
-	nni_pipe_aio_send(ppipe->npipe, &ppipe->aio_send);
+	nni_pipe_send(ppipe->npipe, &ppipe->aio_send);
 }
 
 

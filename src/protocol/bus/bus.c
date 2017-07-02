@@ -215,7 +215,7 @@ nni_bus_pipe_getq_cb(void *arg)
 	ppipe->aio_send.a_msg = ppipe->aio_getq.a_msg;
 	ppipe->aio_getq.a_msg = NULL;
 
-	nni_pipe_aio_send(ppipe->npipe, &ppipe->aio_send);
+	nni_pipe_send(ppipe->npipe, &ppipe->aio_send);
 }
 
 
@@ -351,7 +351,7 @@ nni_bus_pipe_getq(nni_bus_pipe *ppipe)
 static void
 nni_bus_pipe_recv(nni_bus_pipe *ppipe)
 {
-	nni_pipe_aio_recv(ppipe->npipe, &ppipe->aio_recv);
+	nni_pipe_recv(ppipe->npipe, &ppipe->aio_recv);
 }
 
 

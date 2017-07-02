@@ -38,8 +38,8 @@ extern int nni_pipe_sys_init(void);
 extern void nni_pipe_sys_fini(void);
 
 // AIO
-extern void nni_pipe_aio_recv(nni_pipe *, nni_aio *);
-extern void nni_pipe_aio_send(nni_pipe *, nni_aio *);
+extern void nni_pipe_recv(nni_pipe *, nni_aio *);
+extern void nni_pipe_send(nni_pipe *, nni_aio *);
 
 // Pipe operations that protocols use.
 extern uint32_t nni_pipe_id(nni_pipe *);

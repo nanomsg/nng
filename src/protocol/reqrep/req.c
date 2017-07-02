@@ -205,7 +205,7 @@ nni_req_pipe_start(void *arg)
 
 
 	nni_msgq_aio_get(req->uwq, &rp->aio_getq);
-	nni_pipe_aio_recv(rp->pipe, &rp->aio_recv);
+	nni_pipe_recv(rp->pipe, &rp->aio_recv);
 	return (0);
 }
 
@@ -321,7 +321,7 @@ nni_req_getq_cb(void *arg)
 	rp->aio_getq.a_msg = NULL;
 
 	// Send the message, but use the raw mode aio.
-	nni_pipe_aio_send(rp->pipe, &rp->aio_sendraw);
+	nni_pipe_send(rp->pipe, &rp->aio_sendraw);
 }
 
 
@@ -391,7 +391,7 @@ nni_req_putq_cb(void *arg)
 	}
 	rp->aio_putq.a_msg = NULL;
 
-	nni_pipe_aio_recv(rp->pipe, &rp->aio_recv);
+	nni_pipe_recv(rp->pipe, &rp->aio_recv);
 }
 
 
@@ -498,7 +498,7 @@ nni_req_resend(nni_req_sock *req)
 		// Note that because we were ready rather than busy, we
 		// should not have any I/O oustanding and hence the aio
 		// object will be available for our use.
-		nni_pipe_aio_send(rp->pipe, &rp->aio_sendcooked);
+		nni_pipe_send(rp->pipe, &rp->aio_sendcooked);
 		nni_timer_schedule(&req->timer, req->resend);
 	}
 }

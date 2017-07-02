@@ -117,7 +117,7 @@ nni_sub_pipe_start(void *arg)
 {
 	nni_sub_pipe *sp = arg;
 
-	nni_pipe_aio_recv(sp->pipe, &sp->aio_recv);
+	nni_pipe_recv(sp->pipe, &sp->aio_recv);
 	return (0);
 }
 
@@ -163,7 +163,7 @@ nni_sub_putq_cb(void *arg)
 		return;
 	}
 
-	nni_pipe_aio_recv(sp->pipe, &sp->aio_recv);
+	nni_pipe_recv(sp->pipe, &sp->aio_recv);
 }
 
 

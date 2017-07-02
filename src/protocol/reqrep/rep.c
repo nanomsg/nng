@@ -193,7 +193,7 @@ nni_rep_pipe_start(void *arg)
 	}
 
 	nni_msgq_aio_get(rp->sendq, &rp->aio_getq);
-	nni_pipe_aio_recv(rp->pipe, &rp->aio_recv);
+	nni_pipe_recv(rp->pipe, &rp->aio_recv);
 	return (0);
 }
 
@@ -292,7 +292,7 @@ nni_rep_pipe_getq_cb(void *arg)
 	rp->aio_send.a_msg = rp->aio_getq.a_msg;
 	rp->aio_getq.a_msg = NULL;
 
-	nni_pipe_aio_send(rp->pipe, &rp->aio_send);
+	nni_pipe_send(rp->pipe, &rp->aio_send);
 }
 
 
@@ -389,7 +389,7 @@ nni_rep_pipe_putq_cb(void *arg)
 		return;
 	}
 
-	nni_pipe_aio_recv(rp->pipe, &rp->aio_recv);
+	nni_pipe_recv(rp->pipe, &rp->aio_recv);
 }
 
 
