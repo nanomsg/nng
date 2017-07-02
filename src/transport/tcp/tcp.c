@@ -92,7 +92,7 @@ nni_tcp_pipe_fini(void *arg)
 
 
 static int
-nni_tcp_pipe_init(void **argp)
+nni_tcp_pipe_init(nni_tcp_pipe **pipep)
 {
 	nni_tcp_pipe *pipe;
 	int rv;
@@ -114,7 +114,7 @@ nni_tcp_pipe_init(void **argp)
 	if (rv != 0) {
 		goto fail;
 	}
-	*argp = pipe;
+	*pipep = pipe;
 	return (0);
 
 fail:
@@ -484,10 +484,10 @@ nni_tcp_negotiate(nni_tcp_pipe *pipe)
 
 
 static int
-nni_tcp_ep_connect(void *arg, void *pipearg)
+nni_tcp_ep_connect(void *arg, void **pipep)
 {
 	nni_tcp_ep *ep = arg;
-	nni_tcp_pipe *pipe = pipearg;
+	nni_tcp_pipe *pipe;
 	char *host;
 	uint16_t port;
 	int flag;
@@ -531,6 +531,9 @@ nni_tcp_ep_connect(void *arg, void *pipearg)
 		return (rv);
 	}
 
+	if ((rv = nni_tcp_pipe_init(&pipe)) != 0) {
+		return (rv);
+	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
 
@@ -540,12 +543,15 @@ nni_tcp_ep_connect(void *arg, void *pipearg)
 	bindaddr = lclpart == NULL ? NULL : &lcladdr;
 	rv = nni_plat_tcp_connect(pipe->tsp, &remaddr, bindaddr);
 	if (rv != 0) {
+		nni_tcp_pipe_fini(pipe);
 		return (rv);
 	}
 
 	if ((rv = nni_tcp_negotiate(pipe)) != 0) {
+		nni_tcp_pipe_fini(pipe);
 		return (rv);
 	}
+	*pipep = pipe;
 	return (0);
 }
 
@@ -582,27 +588,33 @@ nni_tcp_ep_bind(void *arg)
 
 
 static int
-nni_tcp_ep_accept(void *arg, void *pipearg)
+nni_tcp_ep_accept(void *arg, void **pipep)
 {
 	nni_tcp_ep *ep = arg;
-	nni_tcp_pipe *pipe = pipearg;
+	nni_tcp_pipe *pipe;
 	int rv;
 
+	if ((rv = nni_tcp_pipe_init(&pipe)) != 0) {
+		return (rv);
+	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
 
+
 	if ((rv = nni_plat_tcp_accept(pipe->tsp, ep->tsp)) != 0) {
+		nni_tcp_pipe_fini(pipe);
 		return (rv);
 	}
 	if ((rv = nni_tcp_negotiate(pipe)) != 0) {
+		nni_tcp_pipe_fini(pipe);
 		return (rv);
 	}
+	*pipep = pipe;
 	return (0);
 }
 
 
 static nni_tran_pipe nni_tcp_pipe_ops = {
-	.p_init		= nni_tcp_pipe_init,
 	.p_fini		= nni_tcp_pipe_fini,
 	.p_aio_send	= nni_tcp_pipe_aio_send,
 	.p_aio_recv	= nni_tcp_pipe_aio_recv,

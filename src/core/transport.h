@@ -49,9 +49,9 @@ struct nni_tran_ep {
 	// ep_connect establishes a connection.  It can return errors
 	// NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR, NNG_ECONNFAILED,
 	// NNG_ETIMEDOUT, and NNG_EPROTO.  The first argument is the
-	// transport specific endpoint, and the second is the transport
-	// specific pipe structure.
-	int	(*ep_connect)(void *, void *);
+	// transport specific endpoint, and the second is a pointer to
+	// receive a newly created transport-specific pipe structure.
+	int	(*ep_connect)(void *, void **);
 
 	// ep_bind just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
@@ -61,9 +61,9 @@ struct nni_tran_ep {
 	int	(*ep_bind)(void *);
 
 	// ep_accept accepts an inbound connection.  The first argument
-	// is the transport-specific endpoint, and the second is the
-	// transport-specific pipe (which will have already been created.)
-	int	(*ep_accept)(void *, void *);
+	// is the transport-specific endpoint, and the second is a pointer to
+	// a transport-specific pipe, created by this function.
+	int	(*ep_accept)(void *, void **);
 
 	// ep_close stops the endpoint from operating altogether.  It does
 	// not affect pipes that have already been created.
@@ -81,9 +81,6 @@ struct nni_tran_ep {
 // back into the socket at this point.  (Which is one reason pointers back
 // to socket or even enclosing pipe state, are not provided.)
 struct nni_tran_pipe {
-	// p_init initializes the pipe structure, allocating the structure.
-	int		(*p_init)(void **);
-
 	// p_fini destroys the pipe.  This should clean up all local
 	// resources, including closing files and freeing memory, used by
 	// the pipe.  After this call returns, the system will not make

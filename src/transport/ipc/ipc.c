@@ -92,7 +92,7 @@ nni_ipc_pipe_fini(void *arg)
 
 
 static int
-nni_ipc_pipe_init(void **argp)
+nni_ipc_pipe_init(nni_ipc_pipe **pipep)
 {
 	nni_ipc_pipe *pipe;
 	int rv;
@@ -115,7 +115,7 @@ nni_ipc_pipe_init(void **argp)
 	if (rv != 0) {
 		goto fail;
 	}
-	*argp = pipe;
+	*pipep = pipe;
 	return (0);
 
 fail:
@@ -443,10 +443,10 @@ nni_ipc_negotiate(nni_ipc_pipe *pipe)
 
 
 static int
-nni_ipc_ep_connect(void *arg, void *pipearg)
+nni_ipc_ep_connect(void *arg, void **pipep)
 {
 	nni_ipc_ep *ep = arg;
-	nni_ipc_pipe *pipe = pipearg;
+	nni_ipc_pipe *pipe;
 	int rv;
 	const char *path;
 
@@ -455,17 +455,24 @@ nni_ipc_ep_connect(void *arg, void *pipearg)
 	}
 	path = ep->addr + strlen("ipc://");
 
+	if ((rv = nni_ipc_pipe_init(&pipe)) != 0) {
+		return (rv);
+	}
+
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
 
 	rv = nni_plat_ipc_connect(pipe->isp, path);
 	if (rv != 0) {
+		nni_ipc_pipe_fini(pipe);
 		return (rv);
 	}
 
 	if ((rv = nni_ipc_negotiate(pipe)) != 0) {
+		nni_ipc_pipe_fini(pipe);
 		return (rv);
 	}
+	*pipep = pipe;
 	return (0);
 }
 
@@ -491,27 +498,32 @@ nni_ipc_ep_bind(void *arg)
 
 
 static int
-nni_ipc_ep_accept(void *arg, void *pipearg)
+nni_ipc_ep_accept(void *arg, void **pipep)
 {
 	nni_ipc_ep *ep = arg;
-	nni_ipc_pipe *pipe = pipearg;
+	nni_ipc_pipe *pipe;
 	int rv;
 
+	if ((rv = nni_ipc_pipe_init(&pipe)) != 0) {
+		return (rv);
+	}
 	pipe->proto = ep->proto;
 	pipe->rcvmax = ep->rcvmax;
 
 	if ((rv = nni_plat_ipc_accept(pipe->isp, ep->isp)) != 0) {
+		nni_ipc_pipe_fini(pipe);
 		return (rv);
 	}
 	if ((rv = nni_ipc_negotiate(pipe)) != 0) {
+		nni_ipc_pipe_fini(pipe);
 		return (rv);
 	}
+	*pipep = pipe;
 	return (0);
 }
 
 
 static nni_tran_pipe nni_ipc_pipe_ops = {
-	.p_init		= nni_ipc_pipe_init,
 	.p_fini		= nni_ipc_pipe_fini,
 	.p_aio_send	= nni_ipc_pipe_aio_send,
 	.p_aio_recv	= nni_ipc_pipe_aio_recv,
