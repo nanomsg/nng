@@ -119,7 +119,7 @@ nni_resp_sock_close(void *arg)
 {
 	nni_resp_sock *psock = arg;
 
-	nni_msgq_aio_cancel(psock->uwq, &psock->aio_getq);
+	nni_aio_stop(&psock->aio_getq);
 }
 
 

@@ -227,16 +227,6 @@ fail:
 void
 nni_sock_unnotify(nni_sock *sock, nni_notify *notify)
 {
-	switch (notify->n_type) {
-	case NNG_EV_CAN_RCV:
-		nni_msgq_aio_cancel(sock->s_urq, &notify->n_aio);
-		break;
-	case NNG_EV_CAN_SND:
-		nni_msgq_aio_cancel(sock->s_uwq, &notify->n_aio);
-		break;
-	default:
-		return;
-	}
 	nni_aio_fini(&notify->n_aio);
 	NNI_FREE_STRUCT(notify);
 }

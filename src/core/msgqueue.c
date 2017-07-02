@@ -441,18 +441,6 @@ nni_msgq_aio_get(nni_msgq *mq, nni_aio *aio)
 }
 
 
-void
-nni_msgq_aio_cancel(nni_msgq *mq, nni_aio *aio)
-{
-	nni_mtx_lock(&mq->mq_lock);
-	if (nni_list_active(&mq->mq_aio_getq, aio)) {
-		nni_list_remove(&mq->mq_aio_getq, aio);
-		nni_aio_finish(aio, NNG_ECANCELED, 0);
-	}
-	nni_mtx_unlock(&mq->mq_lock);
-}
-
-
 int
 nni_msgq_canput(nni_msgq *mq)
 {
