@@ -89,17 +89,17 @@ nni_pipe_id(nni_pipe *p)
 }
 
 
-int
+void
 nni_pipe_aio_recv(nni_pipe *p, nni_aio *aio)
 {
-	return (p->p_tran_ops.p_aio_recv(p->p_tran_data, aio));
+	p->p_tran_ops.p_aio_recv(p->p_tran_data, aio);
 }
 
 
-int
+void
 nni_pipe_aio_send(nni_pipe *p, nni_aio *aio)
 {
-	return (p->p_tran_ops.p_aio_send(p->p_tran_data, aio));
+	p->p_tran_ops.p_aio_send(p->p_tran_data, aio);
 }
 
 
