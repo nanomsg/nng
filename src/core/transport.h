@@ -93,12 +93,12 @@ struct nni_tran_pipe {
 	// message, and the caller may not use it again.  The transport will
 	// have the responsibility to free the message (nng_msg_free()) when
 	// it is finished with it.
-	int		(*p_aio_send)(void *, nni_aio *);
+	int		(*p_send)(void *, nni_aio *);
 
 	// p_recv schedules a message receive. This will be performed even for
 	// cases where no data is expected, to allow detection of a remote
 	// disconnect.
-	int		(*p_aio_recv)(void *, nni_aio *);
+	int		(*p_recv)(void *, nni_aio *);
 
 	// p_close closes the pipe.  Further recv or send operations should
 	// return back NNG_ECLOSED.

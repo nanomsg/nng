@@ -239,7 +239,7 @@ nni_tcp_cancel_tx(nni_aio *aio)
 
 
 static int
-nni_tcp_pipe_aio_send(void *arg, nni_aio *aio)
+nni_tcp_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *pipe = arg;
 	nni_msg *msg = aio->a_msg;
@@ -287,7 +287,7 @@ nni_tcp_cancel_rx(nni_aio *aio)
 
 
 static int
-nni_tcp_pipe_aio_recv(void *arg, nni_aio *aio)
+nni_tcp_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *pipe = arg;
 
@@ -616,8 +616,8 @@ nni_tcp_ep_accept(void *arg, void **pipep)
 
 static nni_tran_pipe nni_tcp_pipe_ops = {
 	.p_fini		= nni_tcp_pipe_fini,
-	.p_aio_send	= nni_tcp_pipe_aio_send,
-	.p_aio_recv	= nni_tcp_pipe_aio_recv,
+	.p_send		= nni_tcp_pipe_send,
+	.p_recv		= nni_tcp_pipe_recv,
 	.p_close	= nni_tcp_pipe_close,
 	.p_peer		= nni_tcp_pipe_peer,
 	.p_getopt	= nni_tcp_pipe_getopt,

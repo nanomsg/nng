@@ -153,7 +153,7 @@ nni_inproc_pipe_fini(void *arg)
 
 
 static int
-nni_inproc_pipe_aio_send(void *arg, nni_aio *aio)
+nni_inproc_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_inproc_pipe *pipe = arg;
 	nni_msg *msg = aio->a_msg;
@@ -175,7 +175,7 @@ nni_inproc_pipe_aio_send(void *arg, nni_aio *aio)
 
 
 static int
-nni_inproc_pipe_aio_recv(void *arg, nni_aio *aio)
+nni_inproc_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_inproc_pipe *pipe = arg;
 
@@ -447,8 +447,8 @@ nni_inproc_ep_accept(void *arg, void **pipep)
 
 static nni_tran_pipe nni_inproc_pipe_ops = {
 	.p_fini		= nni_inproc_pipe_fini,
-	.p_aio_send	= nni_inproc_pipe_aio_send,
-	.p_aio_recv	= nni_inproc_pipe_aio_recv,
+	.p_send		= nni_inproc_pipe_send,
+	.p_recv		= nni_inproc_pipe_recv,
 	.p_close	= nni_inproc_pipe_close,
 	.p_peer		= nni_inproc_pipe_peer,
 	.p_getopt	= nni_inproc_pipe_getopt,

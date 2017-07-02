@@ -92,14 +92,14 @@ nni_pipe_id(nni_pipe *p)
 void
 nni_pipe_recv(nni_pipe *p, nni_aio *aio)
 {
-	p->p_tran_ops.p_aio_recv(p->p_tran_data, aio);
+	p->p_tran_ops.p_recv(p->p_tran_data, aio);
 }
 
 
 void
 nni_pipe_send(nni_pipe *p, nni_aio *aio)
 {
-	p->p_tran_ops.p_aio_send(p->p_tran_data, aio);
+	p->p_tran_ops.p_send(p->p_tran_data, aio);
 }
 
 
