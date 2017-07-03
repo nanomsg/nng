@@ -443,7 +443,7 @@ nni_ipc_negotiate(nni_ipc_pipe *pipe)
 
 
 static int
-nni_ipc_ep_connect(void *arg, void **pipep)
+nni_ipc_ep_connect_sync(void *arg, void **pipep)
 {
 	nni_ipc_ep *ep = arg;
 	nni_ipc_pipe *pipe;
@@ -498,7 +498,7 @@ nni_ipc_ep_bind(void *arg)
 
 
 static int
-nni_ipc_ep_accept(void *arg, void **pipep)
+nni_ipc_ep_accept_sync(void *arg, void **pipep)
 {
 	nni_ipc_ep *ep = arg;
 	nni_ipc_pipe *pipe;
@@ -533,14 +533,14 @@ static nni_tran_pipe nni_ipc_pipe_ops = {
 };
 
 static nni_tran_ep nni_ipc_ep_ops = {
-	.ep_init	= nni_ipc_ep_init,
-	.ep_fini	= nni_ipc_ep_fini,
-	.ep_connect	= nni_ipc_ep_connect,
-	.ep_bind	= nni_ipc_ep_bind,
-	.ep_accept	= nni_ipc_ep_accept,
-	.ep_close	= nni_ipc_ep_close,
-	.ep_setopt	= NULL,
-	.ep_getopt	= NULL,
+	.ep_init		= nni_ipc_ep_init,
+	.ep_fini		= nni_ipc_ep_fini,
+	.ep_connect_sync	= nni_ipc_ep_connect_sync,
+	.ep_bind		= nni_ipc_ep_bind,
+	.ep_accept_sync		= nni_ipc_ep_accept_sync,
+	.ep_close		= nni_ipc_ep_close,
+	.ep_setopt		= NULL,
+	.ep_getopt		= NULL,
 };
 
 // This is the IPC transport linkage, and should be the only global

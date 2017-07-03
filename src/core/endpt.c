@@ -237,7 +237,7 @@ nni_ep_remove(nni_ep *ep)
 
 
 static int
-nni_ep_connect(nni_ep *ep)
+nni_ep_connect_sync(nni_ep *ep)
 {
 	nni_pipe *pipe;
 	int rv;
@@ -245,7 +245,7 @@ nni_ep_connect(nni_ep *ep)
 	if ((rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran)) != 0) {
 		return (rv);
 	}
-	rv = ep->ep_ops.ep_connect(ep->ep_data, &pipe->p_tran_data);
+	rv = ep->ep_ops.ep_connect_sync(ep->ep_data, &pipe->p_tran_data);
 	if (rv != 0) {
 		nni_pipe_remove(pipe);
 		return (rv);
@@ -330,7 +330,7 @@ nni_dialer(void *arg)
 		}
 		nni_mtx_unlock(&ep->ep_mtx);
 
-		rv = nni_ep_connect(ep);
+		rv = nni_ep_connect_sync(ep);
 		switch (rv) {
 		case 0:
 			// good connection
@@ -383,7 +383,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 
 	if (flags & NNG_FLAG_SYNCH) {
 		nni_mtx_unlock(&ep->ep_mtx);
-		rv = nni_ep_connect(ep);
+		rv = nni_ep_connect_sync(ep);
 		if (rv != 0) {
 			nni_thr_fini(&ep->ep_thr);
 			ep->ep_mode = NNI_EP_MODE_IDLE;
@@ -399,8 +399,8 @@ nni_ep_dial(nni_ep *ep, int flags)
 }
 
 
-int
-nni_ep_accept(nni_ep *ep)
+static int
+nni_ep_accept_sync(nni_ep *ep)
 {
 	nni_pipe *pipe;
 	int rv;
@@ -411,7 +411,7 @@ nni_ep_accept(nni_ep *ep)
 	if ((rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran)) != 0) {
 		return (rv);
 	}
-	rv = ep->ep_ops.ep_accept(ep->ep_data, &pipe->p_tran_data);
+	rv = ep->ep_ops.ep_accept_sync(ep->ep_data, &pipe->p_tran_data);
 	if (rv != 0) {
 		nni_pipe_remove(pipe);
 		return (rv);
@@ -464,7 +464,7 @@ nni_listener(void *arg)
 		}
 		nni_mtx_unlock(&ep->ep_mtx);
 
-		if ((rv = nni_ep_accept(ep)) == 0) {
+		if ((rv = nni_ep_accept_sync(ep)) == 0) {
 			// Success! Loop around for the next one.
 			continue;
 		}

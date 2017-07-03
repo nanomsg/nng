@@ -286,7 +286,7 @@ nni_inproc_ep_close(void *arg)
 
 
 static int
-nni_inproc_ep_connect(void *arg, void **pipep)
+nni_inproc_ep_connect_sync(void *arg, void **pipep)
 {
 	nni_inproc_pipe *pipe;
 	nni_inproc_ep *ep = arg;
@@ -380,7 +380,7 @@ nni_inproc_ep_bind(void *arg)
 
 
 static int
-nni_inproc_ep_accept(void *arg, void **pipep)
+nni_inproc_ep_accept_sync(void *arg, void **pipep)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *client;
@@ -455,14 +455,14 @@ static nni_tran_pipe nni_inproc_pipe_ops = {
 };
 
 static nni_tran_ep nni_inproc_ep_ops = {
-	.ep_init	= nni_inproc_ep_init,
-	.ep_fini	= nni_inproc_ep_fini,
-	.ep_connect	= nni_inproc_ep_connect,
-	.ep_bind	= nni_inproc_ep_bind,
-	.ep_accept	= nni_inproc_ep_accept,
-	.ep_close	= nni_inproc_ep_close,
-	.ep_setopt	= NULL,
-	.ep_getopt	= NULL,
+	.ep_init		= nni_inproc_ep_init,
+	.ep_fini		= nni_inproc_ep_fini,
+	.ep_connect_sync	= nni_inproc_ep_connect_sync,
+	.ep_bind		= nni_inproc_ep_bind,
+	.ep_accept_sync		= nni_inproc_ep_accept_sync,
+	.ep_close		= nni_inproc_ep_close,
+	.ep_setopt		= NULL,
+	.ep_getopt		= NULL,
 };
 
 // This is the inproc transport linkage, and should be the only global

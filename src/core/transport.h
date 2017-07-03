@@ -51,7 +51,7 @@ struct nni_tran_ep {
 	// NNG_ETIMEDOUT, and NNG_EPROTO.  The first argument is the
 	// transport specific endpoint, and the second is a pointer to
 	// receive a newly created transport-specific pipe structure.
-	int	(*ep_connect)(void *, void **);
+	int	(*ep_connect_sync)(void *, void **);
 
 	// ep_bind just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
@@ -63,7 +63,7 @@ struct nni_tran_ep {
 	// ep_accept accepts an inbound connection.  The first argument
 	// is the transport-specific endpoint, and the second is a pointer to
 	// a transport-specific pipe, created by this function.
-	int	(*ep_accept)(void *, void **);
+	int	(*ep_accept_sync)(void *, void **);
 
 	// ep_close stops the endpoint from operating altogether.  It does
 	// not affect pipes that have already been created.

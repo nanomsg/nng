@@ -484,7 +484,7 @@ nni_tcp_negotiate(nni_tcp_pipe *pipe)
 
 
 static int
-nni_tcp_ep_connect(void *arg, void **pipep)
+nni_tcp_ep_connect_sync(void *arg, void **pipep)
 {
 	nni_tcp_ep *ep = arg;
 	nni_tcp_pipe *pipe;
@@ -588,7 +588,7 @@ nni_tcp_ep_bind(void *arg)
 
 
 static int
-nni_tcp_ep_accept(void *arg, void **pipep)
+nni_tcp_ep_accept_sync(void *arg, void **pipep)
 {
 	nni_tcp_ep *ep = arg;
 	nni_tcp_pipe *pipe;
@@ -624,14 +624,14 @@ static nni_tran_pipe nni_tcp_pipe_ops = {
 };
 
 static nni_tran_ep nni_tcp_ep_ops = {
-	.ep_init	= nni_tcp_ep_init,
-	.ep_fini	= nni_tcp_ep_fini,
-	.ep_connect	= nni_tcp_ep_connect,
-	.ep_bind	= nni_tcp_ep_bind,
-	.ep_accept	= nni_tcp_ep_accept,
-	.ep_close	= nni_tcp_ep_close,
-	.ep_setopt	= NULL,
-	.ep_getopt	= NULL,
+	.ep_init		= nni_tcp_ep_init,
+	.ep_fini		= nni_tcp_ep_fini,
+	.ep_connect_sync	= nni_tcp_ep_connect_sync,
+	.ep_bind		= nni_tcp_ep_bind,
+	.ep_accept_sync		= nni_tcp_ep_accept_sync,
+	.ep_close		= nni_tcp_ep_close,
+	.ep_setopt		= NULL,
+	.ep_getopt		= NULL,
 };
 
 // This is the TCP transport linkage, and should be the only global
