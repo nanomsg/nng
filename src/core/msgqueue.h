@@ -43,32 +43,25 @@ extern void nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_notify_put(nni_msgq *, nni_aio *);
 
 // nni_msgq_put puts the message to the queue.  It blocks until it
-// was able to do so, or the queue is closed, returning either 0 on
-// success or NNG_ECLOSED if the queue was closed.  If NNG_ECLOSED is
-// returned, the caller is responsible for freeing the message with
-// nni_msg_free(), otherwise the message is "owned" by the queue, and
-// the caller is not permitted to access it further.
-extern int nni_msgq_put(nni_msgq *, nni_msg *);
-
-// nni_msgq_tryput is like nni_msgq_put, except that it does not block,
-// if there is no room to put the message it simply returns NNG_EAGAIN.
-extern int nni_msgq_tryput(nni_msgq *, nni_msg *);
-
-// nni_msgq_get gets the message from the queue.  It blocks until a
-// message is available, or the queue is closed, returning either 0 on
-// success or NNG_ECLOSED if the queue was closed.  If a message is
-// provided, the caller is assumes ownership of the message and must
-// call nni_msg_free() when it is finished with it.
-extern int nni_msgq_get(nni_msgq *, nni_msg **);
-
-// nni_msgq_put_until is like nni_msgq_put, except that if the
-// system clock reaches the specified time without being able to place
-// the message in the queue, it will return NNG_ETIMEDOUT.
+// was able to do so, or the queue is closed, or a timeout is reached.
+// It returns 0 on success, NNG_ECLOSED if the queue was closed, or
+// NNG_ETIMEDOUT if the timeout is reached. If an error is returned,
+// the caller is responsible for freeing the message with nni_msg_free(),
+// otherwise the message is "owned" by the queue, and the caller is not
+// permitted to access it further.
 extern int nni_msgq_put_until(nni_msgq *, nni_msg *, nni_time);
 
-// nni_msgq_get_until is like nni_msgq_put, except that if the
-// system clock reaches the specified time without being able to retrieve
-// a message from the queue, it will return NNG_ETIMEDOUT.
+// nni_msgq_tryput performs a non-blocking attempt to put a message on
+// the message queue.  It is the same as calling nng_msgq_put_until with
+// a zero time.
+extern int nni_msgq_tryput(nni_msgq *, nni_msg *);
+
+// nni_msgq_get_until gets a message from the queue.  It blocks until a
+// message is available, the queue is closed, or time out is reached.
+// It returns 0 on success, NNG_ECLOSED if the queue was closed, or
+// NNG_ETIMEDOUT if the timeout is reached.  On successful return,
+// the caller assumes ownership of the message and must call
+// nni_msg_free() when it is finished with it.
 extern int nni_msgq_get_until(nni_msgq *, nni_msg **, nni_time);
 
 // nni_msgq_set_error sets an error condition on the message queue,

@@ -591,13 +591,6 @@ nni_msgq_get_until(nni_msgq *mq, nni_msg **msgp, nni_time expire)
 
 
 int
-nni_msgq_get(nni_msgq *mq, nni_msg **msgp)
-{
-	return (nni_msgq_get_until(mq, msgp, NNI_TIME_NEVER));
-}
-
-
-int
 nni_msgq_put_until(nni_msgq *mq, nni_msg *msg, nni_time expire)
 {
 	nni_aio aio;
@@ -613,13 +606,6 @@ nni_msgq_put_until(nni_msgq *mq, nni_msg *msg, nni_time expire)
 	rv = nni_aio_result(&aio);
 	nni_aio_fini(&aio);
 	return (rv);
-}
-
-
-int
-nni_msgq_put(nni_msgq *mq, nni_msg *msg)
-{
-	return (nni_msgq_put_until(mq, msg, NNI_TIME_NEVER));
 }
 
 
