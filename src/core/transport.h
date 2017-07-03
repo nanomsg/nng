@@ -52,6 +52,7 @@ struct nni_tran_ep {
 	// transport specific endpoint, and the second is a pointer to
 	// receive a newly created transport-specific pipe structure.
 	int	(*ep_connect_sync)(void *, void **);
+	void	(*ep_connect)(void *, nni_aio *);
 
 	// ep_bind just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
@@ -64,6 +65,7 @@ struct nni_tran_ep {
 	// is the transport-specific endpoint, and the second is a pointer to
 	// a transport-specific pipe, created by this function.
 	int	(*ep_accept_sync)(void *, void **);
+	void	(*ep_accept)(void *, nni_aio *);
 
 	// ep_close stops the endpoint from operating altogether.  It does
 	// not affect pipes that have already been created.

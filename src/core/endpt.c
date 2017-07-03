@@ -237,15 +237,40 @@ nni_ep_remove(nni_ep *ep)
 
 
 static int
+nni_ep_connect_aio(nni_ep *ep, void **pipep)
+{
+	nni_aio aio;
+	int rv;
+
+	nni_aio_init(&aio, NULL, NULL);
+	aio.a_endpt = ep->ep_data;
+	ep->ep_ops.ep_connect(ep->ep_data, &aio);
+	nni_aio_wait(&aio);
+
+	if ((rv = nni_aio_result(&aio)) == 0) {
+		*pipep = aio.a_pipe;
+	}
+	nni_aio_fini(&aio);
+	return (rv);
+}
+
+
+static int
 nni_ep_connect_sync(nni_ep *ep)
 {
 	nni_pipe *pipe;
 	int rv;
 
-	if ((rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran)) != 0) {
+	rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran);
+	if (rv != 0) {
 		return (rv);
 	}
-	rv = ep->ep_ops.ep_connect_sync(ep->ep_data, &pipe->p_tran_data);
+	if (ep->ep_ops.ep_connect != NULL) {
+		rv = nni_ep_connect_aio(ep, &pipe->p_tran_data);
+	} else {
+		rv = ep->ep_ops.ep_connect_sync(ep->ep_data,
+			&pipe->p_tran_data);
+	}
 	if (rv != 0) {
 		nni_pipe_remove(pipe);
 		return (rv);
@@ -400,6 +425,25 @@ nni_ep_dial(nni_ep *ep, int flags)
 
 
 static int
+nni_ep_accept_aio(nni_ep *ep, void **pipep)
+{
+	nni_aio aio;
+	int rv;
+
+	nni_aio_init(&aio, NULL, NULL);
+	aio.a_endpt = ep->ep_data;
+	ep->ep_ops.ep_accept(ep->ep_data, &aio);
+	nni_aio_wait(&aio);
+
+	if ((rv = nni_aio_result(&aio)) == 0) {
+		*pipep = aio.a_pipe;
+	}
+	nni_aio_fini(&aio);
+	return (rv);
+}
+
+
+static int
 nni_ep_accept_sync(nni_ep *ep)
 {
 	nni_pipe *pipe;
@@ -408,10 +452,16 @@ nni_ep_accept_sync(nni_ep *ep)
 	if (ep->ep_closed) {
 		return (NNG_ECLOSED);
 	}
-	if ((rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran)) != 0) {
+	rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran);
+	if (rv != 0) {
 		return (rv);
 	}
-	rv = ep->ep_ops.ep_accept_sync(ep->ep_data, &pipe->p_tran_data);
+	if (ep->ep_ops.ep_accept != NULL) {
+		rv = nni_ep_accept_aio(ep, &pipe->p_tran_data);
+	} else {
+		rv = ep->ep_ops.ep_accept_sync(ep->ep_data,
+			&pipe->p_tran_data);
+	}
 	if (rv != 0) {
 		nni_pipe_remove(pipe);
 		return (rv);

@@ -50,6 +50,7 @@ nni_aio_fini(nni_aio *aio)
 	nni_mtx_lock(&aio->a_lk);
 	aio->a_flags |= NNI_AIO_FINI; // this prevents us from being scheduled
 	cancelfn = aio->a_prov_cancel;
+	nni_cv_wake(&aio->a_cv);
 	nni_mtx_unlock(&aio->a_lk);
 
 	// Cancel the AIO if it was scheduled.
@@ -71,7 +72,15 @@ nni_aio_fini(nni_aio *aio)
 int
 nni_aio_result(nni_aio *aio)
 {
-	return (aio->a_result);
+	int rv;
+
+	nni_mtx_lock(&aio->a_lk);
+	rv = aio->a_result;
+	if (aio->a_flags & (NNI_AIO_FINI|NNI_AIO_STOP)) {
+		rv = NNG_ECANCELED;
+	}
+	nni_mtx_unlock(&aio->a_lk);
+	return (rv);
 }
 
 
@@ -96,7 +105,7 @@ void
 nni_aio_wait(nni_aio *aio)
 {
 	nni_mtx_lock(&aio->a_lk);
-	while ((aio->a_flags & NNI_AIO_WAKE) == 0) {
+	while ((aio->a_flags & (NNI_AIO_WAKE|NNI_AIO_FINI)) == 0) {
 		nni_cv_wait(&aio->a_cv);
 	}
 	nni_mtx_unlock(&aio->a_lk);
@@ -143,6 +152,7 @@ nni_aio_stop(nni_aio *aio)
 	nni_mtx_lock(&aio->a_lk);
 	aio->a_prov_data = NULL;
 	aio->a_prov_cancel = NULL;
+	nni_cv_wake(&aio->a_cv);
 	nni_mtx_unlock(&aio->a_lk);
 
 	// This either aborts the task, or waits for it to complete if already

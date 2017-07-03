@@ -33,6 +33,7 @@ struct nni_inproc_pipe {
 	nni_msgq *		rq;
 	nni_msgq *		wq;
 	uint16_t		peer;
+	uint16_t		proto;
 };
 
 // nni_inproc_pair represents a pair of pipes.  Because we control both
@@ -42,18 +43,17 @@ struct nni_inproc_pair {
 	int			refcnt;
 	nni_msgq *		q[2];
 	nni_inproc_pipe *	pipes[2];
-	char			addr[NNG_MAXADDRLEN+1];
 };
 
 struct nni_inproc_ep {
-	char			addr[NNG_MAXADDRLEN+1];
-	int			mode;
-	int			closed;
-	nni_list_node		node;
-	uint16_t		proto;
-	nni_cv			cv;
-	nni_list		clients;
-	nni_inproc_pipe *	cpipe;          // connected pipe (DIAL only)
+	char		addr[NNG_MAXADDRLEN+1];
+	int		mode;
+	int		closed;
+	nni_list_node	node;
+	uint16_t	proto;
+	nni_cv		cv;
+	nni_list	clients;
+	nni_list	aios;
 };
 
 #define NNI_INPROC_EP_IDLE	0
@@ -113,13 +113,15 @@ nni_inproc_pair_destroy(nni_inproc_pair *pair)
 
 
 static int
-nni_inproc_pipe_init(nni_inproc_pipe **pipep)
+nni_inproc_pipe_init(nni_inproc_pipe **pipep, nni_inproc_ep *ep)
 {
 	nni_inproc_pipe *pipe;
 
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	pipe->proto = ep->proto;
+	pipe->addr = ep->addr;
 	*pipep = pipe;
 	return (0);
 }
@@ -227,16 +229,12 @@ nni_inproc_ep_init(void **epp, const char *url, nni_sock *sock)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_cv_init(&ep->cv, &nni_inproc.mx)) != 0) {
-		NNI_FREE_STRUCT(ep);
-		return (rv);
-	}
 
 	ep->mode = NNI_INPROC_EP_IDLE;
 	ep->closed = 0;
 	ep->proto = nni_sock_proto(sock);
-	NNI_LIST_NODE_INIT(&ep->node);
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
+	NNI_LIST_INIT(&ep->aios, nni_aio, a_prov_node);
 
 	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
 	*epp = ep;
@@ -249,11 +247,35 @@ nni_inproc_ep_fini(void *arg)
 {
 	nni_inproc_ep *ep = arg;
 
-	if (!ep->closed) {
-		nni_panic("inproc_ep_destroy while not closed!");
-	}
-	nni_cv_fini(&ep->cv);
+	NNI_ASSERT(ep->closed);
 	NNI_FREE_STRUCT(ep);
+}
+
+
+static void
+nni_inproc_conn_finish(nni_aio *aio, int rv)
+{
+	nni_inproc_ep *ep = aio->a_endpt;
+
+	if (rv != 0) {
+		if (aio->a_pipe != NULL) {
+			nni_inproc_pipe_fini(aio->a_pipe);
+			aio->a_pipe = NULL;
+		}
+	}
+	if (ep != NULL) {
+		if (nni_list_active(&ep->aios, aio)) {
+			nni_list_remove(&ep->aios, aio);
+		}
+
+		if ((ep->mode != NNI_INPROC_EP_LISTEN) &&
+		    (nni_list_first(&ep->aios) == NULL)) {
+			if (nni_list_active(&ep->clients, ep)) {
+				nni_list_remove(&ep->clients, ep);
+			}
+		}
+	}
+	nni_aio_finish(aio, rv, 0);
 }
 
 
@@ -261,47 +283,148 @@ static void
 nni_inproc_ep_close(void *arg)
 {
 	nni_inproc_ep *ep = arg;
+	nni_inproc_ep *client;
+	nni_aio *aio;
 
 	nni_mtx_lock(&nni_inproc.mx);
-	if (!ep->closed) {
-		ep->closed = 1;
-		if (ep->mode == NNI_INPROC_EP_LISTEN) {
-			nni_list_remove(&nni_inproc.servers, ep);
-			for (;;) {
-				// Notify waiting clients that we are closed.
-				nni_inproc_ep *client;
-				client = nni_list_first(&ep->clients);
-				if (client == NULL) {
-					break;
-				}
-				nni_list_remove(&ep->clients, client);
-				client->mode = NNI_INPROC_EP_IDLE;
-				nni_cv_wake(&client->cv);
-			}
+	ep->closed = 1;
+	if (nni_list_active(&nni_inproc.servers, ep)) {
+		nni_list_remove(&nni_inproc.servers, ep);
+	}
+	// Notify any waiting clients that we are closed.
+	while ((client = nni_list_first(&ep->clients)) != NULL) {
+		while ((aio = nni_list_first(&client->aios)) != NULL) {
+			nni_inproc_conn_finish(aio, NNG_ECONNREFUSED);
 		}
-		nni_cv_wake(&ep->cv);
+		nni_list_remove(&ep->clients, client);
+	}
+	while ((aio = nni_list_first(&ep->aios)) != NULL) {
+		nni_inproc_conn_finish(aio, NNG_ECLOSED);
 	}
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
 
-static int
-nni_inproc_ep_connect_sync(void *arg, void **pipep)
+static void
+nni_inproc_connect_abort(nni_aio *aio)
 {
-	nni_inproc_pipe *pipe;
+	nni_inproc_ep *ep = aio->a_endpt;
+
+	nni_mtx_lock(&nni_inproc.mx);
+
+	if (aio->a_pipe != NULL) {
+		nni_inproc_pipe_fini(aio->a_pipe);
+		aio->a_pipe = NULL;
+	}
+	if (ep != NULL) {
+		if (nni_list_active(&ep->aios, aio)) {
+			nni_list_remove(&ep->aios, aio);
+		}
+
+		if ((ep->mode != NNI_INPROC_EP_LISTEN) &&
+		    (nni_list_first(&ep->aios) == NULL)) {
+			if (nni_list_active(&ep->clients, ep)) {
+				nni_list_remove(&ep->clients, ep);
+			}
+		}
+	}
+	nni_mtx_unlock(&nni_inproc.mx);
+}
+
+
+static void
+nni_inproc_accept_clients(nni_inproc_ep *server)
+{
+	nni_inproc_ep *client, *nclient;
+	nni_aio *saio, *caio;
+	nni_inproc_pair *pair;
+	int rv;
+
+	nclient = nni_list_first(&server->clients);
+	while ((client = nclient) != NULL) {
+		nclient = nni_list_next(&server->clients, nclient);
+		NNI_LIST_FOREACH (&client->aios, caio) {
+			if ((saio = nni_list_first(&server->aios)) == NULL) {
+				// No outstanding accept() calls.
+				break;
+			}
+
+			if ((pair = NNI_ALLOC_STRUCT(pair)) == NULL) {
+				nni_inproc_conn_finish(caio, NNG_ENOMEM);
+				nni_inproc_conn_finish(saio, NNG_ENOMEM);
+				continue;
+			}
+
+			if (((rv = nni_mtx_init(&pair->mx)) != 0) ||
+			    ((rv = nni_msgq_init(&pair->q[0], 4)) != 0) ||
+			    ((rv = nni_msgq_init(&pair->q[1], 4)) != 0)) {
+				nni_inproc_pair_destroy(pair);
+				nni_inproc_conn_finish(caio, rv);
+				nni_inproc_conn_finish(saio, rv);
+				continue;
+			}
+
+			pair->pipes[0] = caio->a_pipe;
+			pair->pipes[1] = saio->a_pipe;
+			pair->pipes[0]->rq = pair->pipes[1]->wq = pair->q[0];
+			pair->pipes[1]->rq = pair->pipes[0]->wq = pair->q[1];
+			pair->pipes[0]->pair = pair->pipes[1]->pair = pair;
+			pair->pipes[1]->peer = pair->pipes[0]->proto;
+			pair->pipes[0]->peer = pair->pipes[1]->proto;
+			pair->refcnt = 2;
+			client->mode = NNI_INPROC_EP_IDLE;      // XXX: ??
+
+			nni_inproc_conn_finish(caio, 0);
+			nni_inproc_conn_finish(saio, 0);
+		}
+
+		if (nni_list_first(&client->aios) == NULL) {
+			// No more outstanding client connects.  Normally
+			// there should only be one.
+			if (nni_list_active(&server->clients, client)) {
+				nni_list_remove(&server->clients, client);
+			}
+		}
+	}
+}
+
+
+static void
+nni_inproc_ep_connect(void *arg, nni_aio *aio)
+{
 	nni_inproc_ep *ep = arg;
+	nni_inproc_pipe *pipe;
 	nni_inproc_ep *server;
 	int rv;
 
 	if (ep->mode != NNI_INPROC_EP_IDLE) {
-		return (NNG_EINVAL);
+		nni_aio_finish(aio, NNG_EINVAL, 0);
+		return;
+	}
+	if (nni_list_active(&ep->clients, ep)) {
+		nni_aio_finish(aio, NNG_EINVAL, 0);
+		return;
 	}
 
-	if ((rv = nni_inproc_pipe_init(&pipe)) != 0) {
-		return (rv);
+	if ((rv = nni_inproc_pipe_init(&pipe, ep)) != 0) {
+		nni_aio_finish(aio, rv, 0);
+		return;
 	}
 
 	nni_mtx_lock(&nni_inproc.mx);
+	aio->a_pipe = pipe;
+
+	if (nni_list_active(&ep->clients, ep)) {
+		// We already have a pending connection...
+		nni_inproc_conn_finish(aio, NNG_EINVAL);
+		return;
+	}
+
+	if (ep->closed) {
+		nni_inproc_conn_finish(aio, rv);
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
 
 	// Find a server.
 	NNI_LIST_FOREACH (&nni_inproc.servers, server) {
@@ -313,38 +436,17 @@ nni_inproc_ep_connect_sync(void *arg, void **pipep)
 		}
 	}
 	if (server == NULL) {
+		nni_inproc_conn_finish(aio, NNG_ECONNREFUSED);
 		nni_mtx_unlock(&nni_inproc.mx);
-		nni_inproc_pipe_fini(pipe);
-		return (NNG_ECONNREFUSED);
+		return;
 	}
 
 	ep->mode = NNI_INPROC_EP_DIAL;
-	ep->cpipe = pipe;
 	nni_list_append(&server->clients, ep);
+	nni_list_append(&ep->aios, aio);
 
-	while (ep->mode != NNI_INPROC_EP_IDLE) {
-		if (ep->closed) {
-			nni_list_remove(&server->clients, ep);
-			nni_mtx_unlock(&nni_inproc.mx);
-			nni_inproc_pipe_fini(pipe);
-			return (NNG_ECLOSED);
-		}
-		nni_cv_wake(&server->cv);
-		nni_cv_wait(&ep->cv);
-	}
-
-	// If we got here, either we connected successfully, or the far end
-	// server closed on us.  In the former case our cpipe will be NULL,
-	// having been cleared by the server.  In the latter, the cpipe will
-	// still be set, indicating server shutdown.
-	if (ep->cpipe != NULL) {
-		nni_mtx_unlock(&nni_inproc.mx);
-		nni_inproc_pipe_fini(pipe);
-		return (NNG_ECONNRESET);
-	}
+	nni_inproc_accept_clients(server);
 	nni_mtx_unlock(&nni_inproc.mx);
-	*pipep = pipe;
-	return (0);
 }
 
 
@@ -379,69 +481,39 @@ nni_inproc_ep_bind(void *arg)
 }
 
 
-static int
-nni_inproc_ep_accept_sync(void *arg, void **pipep)
+static void
+nni_inproc_ep_accept(void *arg, nni_aio *aio)
 {
 	nni_inproc_ep *ep = arg;
-	nni_inproc_ep *client;
-	nni_inproc_pair *pair;
-	int rv;
 	nni_inproc_pipe *pipe;
+	int rv;
 
 	if (ep->mode != NNI_INPROC_EP_LISTEN) {
-		return (NNG_EINVAL);
+		nni_aio_finish(aio, NNG_EINVAL, 0);
 	}
 
-	// Preallocate the pair, so we don't do it while holding a lock
-	if ((pair = NNI_ALLOC_STRUCT(pair)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	if ((rv = nni_mtx_init(&pair->mx)) != 0) {
-		NNI_FREE_STRUCT(pair);
-		return (rv);
-	}
-	if (((rv = nni_msgq_init(&pair->q[0], 4)) != 0) ||
-	    ((rv = nni_msgq_init(&pair->q[1], 4)) != 0) ||
-	    ((rv = nni_inproc_pipe_init(&pipe)) != 0)) {
-		nni_inproc_pair_destroy(pair);
-		return (rv);
+	if ((rv = nni_inproc_pipe_init(&pipe, ep)) != 0) {
+		nni_aio_finish(aio, rv, 0);
+		return;
 	}
 
 	nni_mtx_lock(&nni_inproc.mx);
-	for (;;) {
-		if (ep->closed) {
-			// This is the only possible error path from the
-			// time we acquired the lock.
-			nni_mtx_unlock(&nni_inproc.mx);
-			nni_inproc_pair_destroy(pair);
-			nni_inproc_pipe_fini(pipe);
-			return (NNG_ECLOSED);
-		}
-		if ((client = nni_list_first(&ep->clients)) != NULL) {
-			break;
-		}
-		nni_cv_wait(&ep->cv);
+	aio->a_pipe = pipe;
+
+	// We are already on the master list of servers, thanks to bind.
+
+	if (ep->closed) {
+		// This is the only possible error path from the
+		// time we acquired the lock.
+		nni_inproc_conn_finish(aio, NNG_ECLOSED);
+		return;
 	}
 
-	nni_list_remove(&ep->clients, client);
-	pair->pipes[0] = client->cpipe;
-	pair->pipes[1] = pipe;
-	(void) snprintf(pair->addr, sizeof (pair->addr), "%s", ep->addr);
-	pair->pipes[0]->rq = pair->pipes[1]->wq = pair->q[0];
-	pair->pipes[1]->rq = pair->pipes[0]->wq = pair->q[1];
-	pair->pipes[0]->pair = pair->pipes[1]->pair = pair;
-	pair->pipes[0]->addr = pair->pipes[1]->addr = pair->addr;
-	pair->pipes[1]->peer = client->proto;
-	pair->pipes[0]->peer = ep->proto;
-	pair->refcnt = 2;
-	client->mode = NNI_INPROC_EP_IDLE;
-	client->cpipe = NULL;
-	nni_cv_wake(&client->cv);
-
-	*pipep = pipe;
+	// Insert us into the pending server aios, and then run the
+	// accept list.
+	nni_list_append(&ep->aios, aio);
+	nni_inproc_accept_clients(ep);
 	nni_mtx_unlock(&nni_inproc.mx);
-
-	return (0);
 }
 
 
@@ -455,14 +527,14 @@ static nni_tran_pipe nni_inproc_pipe_ops = {
 };
 
 static nni_tran_ep nni_inproc_ep_ops = {
-	.ep_init		= nni_inproc_ep_init,
-	.ep_fini		= nni_inproc_ep_fini,
-	.ep_connect_sync	= nni_inproc_ep_connect_sync,
-	.ep_bind		= nni_inproc_ep_bind,
-	.ep_accept_sync		= nni_inproc_ep_accept_sync,
-	.ep_close		= nni_inproc_ep_close,
-	.ep_setopt		= NULL,
-	.ep_getopt		= NULL,
+	.ep_init	= nni_inproc_ep_init,
+	.ep_fini	= nni_inproc_ep_fini,
+	.ep_connect	= nni_inproc_ep_connect,
+	.ep_bind	= nni_inproc_ep_bind,
+	.ep_accept	= nni_inproc_ep_accept,
+	.ep_close	= nni_inproc_ep_close,
+	.ep_setopt	= NULL,
+	.ep_getopt	= NULL,
 };
 
 // This is the inproc transport linkage, and should be the only global
