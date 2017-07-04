@@ -177,7 +177,7 @@ nni_ipc_pipe_nego_cb(void *arg)
 		aio->a_iov[0].iov_len = pipe->wanttxhead - pipe->gottxhead;
 		aio->a_iov[0].iov_buf = &pipe->txhead[pipe->gottxhead];
 		// send it down...
-		nni_plat_ipc_aio_send(pipe->isp, aio);
+		nni_plat_ipc_send(pipe->isp, aio);
 		nni_mtx_unlock(&pipe->mtx);
 		return;
 	}
@@ -185,7 +185,7 @@ nni_ipc_pipe_nego_cb(void *arg)
 		aio->a_niov = 1;
 		aio->a_iov[0].iov_len = pipe->wantrxhead - pipe->gotrxhead;
 		aio->a_iov[0].iov_buf = &pipe->rxhead[pipe->gotrxhead];
-		nni_plat_ipc_aio_recv(pipe->isp, aio);
+		nni_plat_ipc_recv(pipe->isp, aio);
 		nni_mtx_unlock(&pipe->mtx);
 		return;
 	}
@@ -310,7 +310,7 @@ nni_ipc_pipe_recv_cb(void *arg)
 		pipe->rxaio.a_iov[0].iov_len = nni_msg_len(pipe->rxmsg);
 		pipe->rxaio.a_niov = 1;
 
-		nni_plat_ipc_aio_recv(pipe->isp, &pipe->rxaio);
+		nni_plat_ipc_recv(pipe->isp, &pipe->rxaio);
 		nni_mtx_unlock(&pipe->mtx);
 		return;
 	}
@@ -367,7 +367,7 @@ nni_ipc_pipe_send(void *arg, nni_aio *aio)
 	pipe->txaio.a_iov[2].iov_len = nni_msg_len(msg);
 	pipe->txaio.a_niov = 3;
 
-	nni_plat_ipc_aio_send(pipe->isp, &pipe->txaio);
+	nni_plat_ipc_send(pipe->isp, &pipe->txaio);
 	nni_mtx_unlock(&pipe->mtx);
 	return (0);
 }
@@ -407,7 +407,7 @@ nni_ipc_pipe_recv(void *arg, nni_aio *aio)
 	pipe->rxaio.a_iov[0].iov_len = sizeof (pipe->rxhead);
 	pipe->rxaio.a_niov = 1;
 
-	nni_plat_ipc_aio_recv(pipe->isp, &pipe->rxaio);
+	nni_plat_ipc_recv(pipe->isp, &pipe->rxaio);
 	nni_mtx_unlock(&pipe->mtx);
 	return (0);
 }
@@ -523,7 +523,7 @@ nni_ipc_negotiate(nni_ipc_pipe *pipe)
 		nni_mtx_unlock(&pipe->mtx);
 		return (NNG_ECLOSED);
 	}
-	nni_plat_ipc_aio_send(pipe->isp, &pipe->negaio);
+	nni_plat_ipc_send(pipe->isp, &pipe->negaio);
 	nni_mtx_unlock(&pipe->mtx);
 
 	nni_aio_wait(&aio);

@@ -54,14 +54,14 @@ nni_plat_ipc_path_resolve(nni_sockaddr *addr, const char *path)
 
 
 void
-nni_plat_ipc_aio_send(nni_plat_ipcsock *s, nni_aio *aio)
+nni_plat_ipc_send(nni_plat_ipcsock *s, nni_aio *aio)
 {
 	nni_posix_sock_aio_send((void *) s, aio);
 }
 
 
 void
-nni_plat_ipc_aio_recv(nni_plat_ipcsock *s, nni_aio *aio)
+nni_plat_ipc_recv(nni_plat_ipcsock *s, nni_aio *aio)
 {
 	nni_posix_sock_aio_recv((void *) s, aio);
 }

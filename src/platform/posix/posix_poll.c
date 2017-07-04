@@ -140,14 +140,25 @@ static void
 nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
 {
 	nni_posix_epdesc *ed;
+	nni_posix_pipedesc *pd;
 
 	ed = aio->a_prov_data;
+
+	// acceptq or connectq.
 	if (nni_list_active(&ed->connectq, aio)) {
 		nni_list_remove(&ed->connectq, aio);
 	}
 
+	if (rv == 0) {
+		rv = nni_posix_pipedesc_init(&pd, newfd);
+		if (rv != 0) {
+			(void) close(newfd);
+		} else {
+			aio->a_pipe = pipe;
+		}
+	}
 	// Abuse the count to hold our new fd.  This is only for accept.
-	nni_aio_finish(aio, rv, newfd);
+	nni_aio_finish(aio, rv, 0);
 }
 
 
@@ -173,7 +184,7 @@ nni_posix_poll_connect(nni_posix_epdesc *ed)
 		switch (rv) {
 		case 0:
 			// Success!
-			nni_posix_epdesc_finish(aio, 0, 0);
+			nni_posix_epdesc_finish(aio, 0, ed->fd);
 			continue;
 
 		case EINPROGRESS:
@@ -213,7 +224,6 @@ nni_posix_poll_accept(nni_posix_epdesc *ed)
 
 		if (newfd >= 0) {
 			// successful connection request!
-			// We abuse the count to hold our new file descriptor.
 			nni_posix_epdesc_finish(aio, 0, newfd);
 			continue;
 		}
@@ -924,9 +934,6 @@ nni_posix_pipedesc_sysfini(void)
 }
 
 
-// extern int nni_posix_aio_ep_init(nni_posix_aio_ep *, int);
-// extern void nni_posix_aio_ep_fini(nni_posix_aio_ep *);
-
 void
 nni_posix_pipedesc_recv(nni_posix_pipedesc *pd, nni_aio *aio)
 {
@@ -940,9 +947,6 @@ nni_posix_pipedesc_send(nni_posix_pipedesc *pd, nni_aio *aio)
 	nni_posix_pipedesc_submit(pd, &pd->writeq, aio);
 }
 
-
-// extern int nni_posix_aio_connect();
-// extern int nni_posix_aio_accept();
 
 #else
 

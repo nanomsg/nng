@@ -244,12 +244,12 @@ extern int nni_plat_ipc_connect(nni_plat_ipcsock *, const char *);
 // nni_plat_ipc_aio_send sends data to the peer.  The platform is responsible
 // for attempting to send all of the data.  The iov count will never be
 // larger than 4.  The platform may modify the iovs.
-extern void nni_plat_ipc_aio_send(nni_plat_ipcsock *, nni_aio *);
+extern void nni_plat_ipc_send(nni_plat_ipcsock *, nni_aio *);
 
 // nni_plat_ipc_aio_recv recvs data into the buffers provided by the
 // iovs.  The implementation does not return until the iovs are completely
 // full, or an error condition occurs.
-extern void nni_plat_ipc_aio_recv(nni_plat_ipcsock *, nni_aio *);
+extern void nni_plat_ipc_recv(nni_plat_ipcsock *, nni_aio *);
 
 // nni_plat_seed_prng seeds the PRNG subsystem.  The specified number
 // of bytes of entropy should be stashed.  When possible, cryptographic
