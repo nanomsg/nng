@@ -126,11 +126,7 @@ nni_posix_epdesc_cancel(nni_aio *aio)
 	pq = ed->pq;
 
 	nni_mtx_lock(&pq->mtx);
-	// This will remove the aio from either the read or the write
-	// list; it doesn't matter which.
-	if (nni_list_active(&ed->connectq, aio)) {
-		nni_list_remove(&ed->connectq, aio);
-	}
+	nni_list_node_remove(&aio->a_prov_node);
 	nni_mtx_unlock(&pq->mtx);
 }
 
@@ -322,8 +318,8 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 	}
 
 	NNI_ASSERT(!nni_list_active(&ed->connectq, aio));
-	wake = nni_list_first(&ed->connectq) == NULL ? 1 : 0;
-	nni_list_append(&ed->connectq, aio);
+	wake = nni_list_empty(&ed->connectq);
+	nni_aio_list_append(&ed->connectq, aio);
 	if (wake) {
 		nni_plat_pipe_raise(pq->wakewfd);
 	}
@@ -362,8 +358,8 @@ nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
 		nni_mtx_lock(&pq->mtx);
 	}
 	NNI_ASSERT(!nni_list_active(&ed->acceptq, aio));
-	wake = nni_list_first(&ed->acceptq) == NULL ? 1 : 0;
-	nni_list_append(&ed->acceptq, aio);
+	wake = nni_list_empty(&ed->acceptq);
+	nni_aio_list_append(&ed->acceptq, aio);
 	if (wake) {
 		nni_plat_pipe_raise(pq->wakewfd);
 	}
@@ -425,12 +421,7 @@ nni_posix_epdesc_fini(nni_posix_epdesc *ed)
 static void
 nni_posix_pipedesc_finish(nni_aio *aio, int rv)
 {
-	nni_posix_pipedesc *pd;
-
-	pd = aio->a_prov_data;
-	if (nni_list_active(&pd->readq, aio)) {
-		nni_list_remove(&pd->readq, aio);
-	}
+	nni_aio_list_remove(aio);
 	nni_aio_finish(aio, rv, aio->a_count);
 }
 
@@ -639,10 +630,10 @@ nni_posix_poll_thr(void *arg)
 			fds[nfds].fd = pd->fd;
 			fds[nfds].events = 0;
 			fds[nfds].revents = 0;
-			if (nni_list_first(&pd->readq) != NULL) {
+			if (!nni_list_empty(&pd->readq)) {
 				fds[nfds].events |= POLLIN;
 			}
-			if (nni_list_first(&pd->writeq) != NULL) {
+			if (!nni_list_empty(&pd->writeq)) {
 				fds[nfds].events |= POLLOUT;
 			}
 			pd->index = nfds;
@@ -652,10 +643,10 @@ nni_posix_poll_thr(void *arg)
 			fds[nfds].fd = ed->fd;
 			fds[nfds].events = 0;
 			fds[nfds].revents = 0;
-			if (nni_list_first(&ed->connectq) != NULL) {
+			if (!nni_list_empty(&ed->connectq)) {
 				fds[nfds].events |= POLLOUT;
 			}
-			if (nni_list_first(&ed->acceptq) != NULL) {
+			if (!nni_list_empty(&ed->acceptq)) {
 				fds[nfds].events |= POLLIN;
 			}
 			ed->index = nfds;
@@ -717,8 +708,8 @@ nni_posix_poll_thr(void *arg)
 
 			// If we have completed all the AIOs outstanding,
 			// then remove this pipedesc from the pollq.
-			if ((nni_list_first(&pd->readq) == NULL) &&
-			    (nni_list_first(&pd->writeq) == NULL)) {
+			if (nni_list_empty(&pd->readq) &&
+			    nni_list_empty(&pd->writeq)) {
 				nni_list_remove(&pollq->pds, pd);
 				pollq->npds--;
 			}
@@ -742,8 +733,8 @@ nni_posix_poll_thr(void *arg)
 			if (fds[index].revents & (POLLHUP|POLLERR|POLLNVAL)) {
 				nni_posix_poll_epclose(ed);
 			}
-			if ((nni_list_first(&ed->connectq) == NULL) &&
-			    (nni_list_first(&ed->acceptq) == NULL)) {
+			if (nni_list_empty(&ed->connectq) &&
+			    nni_list_empty(&ed->acceptq)) {
 				nni_list_remove(&pollq->eds, ed);
 				pollq->neds--;
 			}
@@ -802,8 +793,8 @@ nni_posix_pipedesc_submit(nni_posix_pipedesc *pd, nni_list *l, nni_aio *aio)
 	NNI_ASSERT(!nni_list_active(l, aio));
 	// Only wake if we aren't already waiting for this type of I/O on
 	// this descriptor.
-	wake = nni_list_first(l) == NULL ? 1 : 0;
-	nni_list_append(l, aio);
+	wake = nni_list_empty(l);
+	nni_aio_list_append(l, aio);
 
 	if (wake) {
 		nni_plat_pipe_raise(pq->wakewfd);
@@ -871,7 +862,7 @@ nni_posix_pollq_fini(nni_posix_pollq *pq)
 		nni_plat_pipe_raise(pq->wakewfd);
 
 		// All pipes should have been closed before this is called.
-		NNI_ASSERT(nni_list_first(&pq->pds) == NULL);
+		NNI_ASSERT(nni_list_empty(&pq->pds));
 		nni_mtx_unlock(&pq->mtx);
 	}
 

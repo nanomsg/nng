@@ -42,6 +42,9 @@ extern void *nni_list_next(const nni_list *, void *);
 extern void *nni_list_prev(const nni_list *, void *);
 extern void nni_list_remove(nni_list *, void *);
 extern int nni_list_active(nni_list *, void *);
+extern int nni_list_empty(nni_list *);
+extern int nni_list_node_active(nni_list_node *);
+extern void nni_list_node_remove(nni_list_node *);
 
 #define NNI_LIST_FOREACH(l, it)	\
 	for (it = nni_list_first(l); it != NULL; it = nni_list_next(l, it))

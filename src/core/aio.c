@@ -217,3 +217,32 @@ nni_aio_finish(nni_aio *aio, int result, size_t count)
 	}
 	nni_mtx_unlock(&aio->a_lk);
 }
+
+
+void
+nni_aio_list_init(nni_list *list)
+{
+	NNI_LIST_INIT(list, nni_aio, a_prov_node);
+}
+
+
+void
+nni_aio_list_append(nni_list *list, nni_aio *aio)
+{
+	nni_aio_list_remove(aio);
+	nni_list_append(list, aio);
+}
+
+
+void
+nni_aio_list_remove(nni_aio *aio)
+{
+	nni_list_node_remove(&aio->a_prov_node);
+}
+
+
+int
+nni_aio_list_active(nni_aio *aio)
+{
+	return (nni_list_node_active(&aio->a_prov_node));
+}

@@ -88,6 +88,15 @@ extern void nni_aio_wake(nni_aio *);
 // block the caller indefinitely.
 extern void nni_aio_wait(nni_aio *);
 
+// nni_aio_list_init creates a list suitable for use by providers using
+// the a_prov_node member of the aio.  These operations are not locked,
+// but they do have some extra checks -- remove is idempotent for example,
+// and append will perform any necessary remove first.
+extern void nni_aio_list_init(nni_list *);
+extern void nni_aio_list_append(nni_list *, nni_aio *);
+extern void nni_aio_list_remove(nni_aio *);
+extern int nni_aio_list_active(nni_aio *);
+
 // nni_aio_finish is called by the provider when an operation is complete.
 // The provider gives the result code (0 for success, an NNG errno otherwise),
 // and the amount of data transferred (if any).

@@ -158,3 +158,29 @@ nni_list_active(nni_list *list, void *item)
 
 	return (node->ln_next == NULL ? 0 : 1);
 }
+
+
+int
+nni_list_empty(nni_list *list)
+{
+	return (list->ll_head.ln_next == &list->ll_head);
+}
+
+
+int
+nni_list_node_active(nni_list_node *node)
+{
+	return (node->ln_next == NULL ? 0 : 1);
+}
+
+
+void
+nni_list_node_remove(nni_list_node *node)
+{
+	if (node->ln_next != NULL) {
+		node->ln_prev->ln_next = node->ln_next;
+		node->ln_next->ln_prev = node->ln_prev;
+		node->ln_next = NULL;
+		node->ln_prev = NULL;
+	}
+}

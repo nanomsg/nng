@@ -234,7 +234,7 @@ nni_inproc_ep_init(void **epp, const char *url, nni_sock *sock)
 	ep->closed = 0;
 	ep->proto = nni_sock_proto(sock);
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
-	NNI_LIST_INIT(&ep->aios, nni_aio, a_prov_node);
+	nni_aio_list_init(&ep->aios);
 
 	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
 	*epp = ep;
@@ -263,13 +263,10 @@ nni_inproc_conn_finish(nni_aio *aio, int rv)
 			aio->a_pipe = NULL;
 		}
 	}
+	nni_aio_list_remove(aio);
 	if (ep != NULL) {
-		if (nni_list_active(&ep->aios, aio)) {
-			nni_list_remove(&ep->aios, aio);
-		}
-
 		if ((ep->mode != NNI_INPROC_EP_LISTEN) &&
-		    (nni_list_first(&ep->aios) == NULL)) {
+		    nni_list_empty(&ep->aios)) {
 			if (nni_list_active(&ep->clients, ep)) {
 				nni_list_remove(&ep->clients, ep);
 			}
@@ -316,13 +313,10 @@ nni_inproc_connect_abort(nni_aio *aio)
 		nni_inproc_pipe_fini(aio->a_pipe);
 		aio->a_pipe = NULL;
 	}
+	nni_aio_list_remove(aio);
 	if (ep != NULL) {
-		if (nni_list_active(&ep->aios, aio)) {
-			nni_list_remove(&ep->aios, aio);
-		}
-
 		if ((ep->mode != NNI_INPROC_EP_LISTEN) &&
-		    (nni_list_first(&ep->aios) == NULL)) {
+		    nni_list_empty(&ep->aios)) {
 			if (nni_list_active(&ep->clients, ep)) {
 				nni_list_remove(&ep->clients, ep);
 			}
@@ -443,7 +437,7 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 
 	ep->mode = NNI_INPROC_EP_DIAL;
 	nni_list_append(&server->clients, ep);
-	nni_list_append(&ep->aios, aio);
+	nni_aio_list_append(&ep->aios, aio);
 
 	nni_inproc_accept_clients(server);
 	nni_mtx_unlock(&nni_inproc.mx);
@@ -511,7 +505,7 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 
 	// Insert us into the pending server aios, and then run the
 	// accept list.
-	nni_list_append(&ep->aios, aio);
+	nni_aio_list_append(&ep->aios, aio);
 	nni_inproc_accept_clients(ep);
 	nni_mtx_unlock(&nni_inproc.mx);
 }
