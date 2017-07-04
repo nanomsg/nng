@@ -42,7 +42,6 @@ struct nni_posix_pipedesc {
 	nni_list		writeq;
 	nni_list_node		node;
 	nni_posix_pollq *	pq;
-	int			nonblocking;
 };
 
 
@@ -790,12 +789,6 @@ nni_posix_pipedesc_submit(nni_posix_pipedesc *pd, nni_list *l, nni_aio *aio)
 		nni_mtx_unlock(&pq->mtx);
 		return;
 	}
-	// XXX: We really should just make all the FDs nonblocking, but we
-	// need to fix the negotiation phase.
-	if (pd->nonblocking == 0) {
-		(void) fcntl(pd->fd, F_SETFL, O_NONBLOCK);
-		pd->nonblocking = 1;
-	}
 	if (!nni_list_active(&pq->pds, pd)) {
 		if ((rv = nni_posix_poll_grow(pq)) != 0) {
 			nni_posix_pipedesc_finish(aio, rv);
@@ -837,7 +830,7 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 	pd->pq = &nni_posix_global_pollq;
 	pd->fd = fd;
 	pd->index = 0;
-	pd->nonblocking = 0;
+	(void) fcntl(pd->fd, F_SETFL, O_NONBLOCK);
 
 	NNI_LIST_INIT(&pd->readq, nni_aio, a_prov_node);
 	NNI_LIST_INIT(&pd->writeq, nni_aio, a_prov_node);
