@@ -281,12 +281,6 @@ extern void nni_plat_pipe_clear(int);
 // routine.
 extern void nni_plat_pipe_close(int, int);
 
-// XXX: Stuff to REMOVE
-extern int nni_plat_tcp_send(nni_plat_tcpsock *, nni_iov *, int);
-extern int nni_plat_tcp_recv(nni_plat_tcpsock *, nni_iov *, int);
-extern int nni_plat_ipc_send(nni_plat_ipcsock *, nni_iov *, int);
-extern int nni_plat_ipc_recv(nni_plat_ipcsock *, nni_iov *, int);
-
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.
 #if defined(PLATFORM_POSIX)

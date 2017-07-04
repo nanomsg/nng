@@ -29,11 +29,17 @@ struct nni_tcp_pipe {
 
 	nni_aio *		user_txaio;
 	nni_aio *		user_rxaio;
+	nni_aio *		user_negaio;
 
 	uint8_t			txlen[sizeof (uint64_t)];
 	uint8_t			rxlen[sizeof (uint64_t)];
+	int			gottxhead;
+	int			gotrxhead;
+	int			wanttxhead;
+	int			wantrxhead;
 	nni_aio			txaio;
 	nni_aio			rxaio;
+	nni_aio			negaio;
 	nni_msg *		rxmsg;
 	nni_mtx			mtx;
 };
@@ -50,6 +56,7 @@ struct nni_tcp_ep {
 
 static void nni_tcp_pipe_send_cb(void *);
 static void nni_tcp_pipe_recv_cb(void *);
+static void nni_tcp_pipe_nego_cb(void *);
 
 static int
 nni_tcp_tran_init(void)
@@ -80,6 +87,7 @@ nni_tcp_pipe_fini(void *arg)
 
 	nni_aio_fini(&pipe->rxaio);
 	nni_aio_fini(&pipe->txaio);
+	nni_aio_fini(&pipe->negaio);
 	if (pipe->tsp != NULL) {
 		nni_plat_tcp_fini(pipe->tsp);
 	}
@@ -92,7 +100,7 @@ nni_tcp_pipe_fini(void *arg)
 
 
 static int
-nni_tcp_pipe_init(nni_tcp_pipe **pipep)
+nni_tcp_pipe_init(nni_tcp_pipe **pipep, nni_tcp_ep *ep)
 {
 	nni_tcp_pipe *pipe;
 	int rv;
@@ -114,12 +122,91 @@ nni_tcp_pipe_init(nni_tcp_pipe **pipep)
 	if (rv != 0) {
 		goto fail;
 	}
+	rv = nni_aio_init(&pipe->negaio, nni_tcp_pipe_nego_cb, pipe);
+	if (rv != 0) {
+		goto fail;
+	}
+	pipe->proto = ep->proto;
+	pipe->rcvmax = ep->rcvmax;
 	*pipep = pipe;
 	return (0);
 
 fail:
 	nni_tcp_pipe_fini(pipe);
 	return (rv);
+}
+
+
+static void
+nni_tcp_cancel_nego(nni_aio *aio)
+{
+	nni_tcp_pipe *pipe = aio->a_prov_data;
+
+	nni_mtx_lock(&pipe->mtx);
+	if ((aio = pipe->user_negaio) != NULL) {
+		pipe->user_negaio = NULL;
+		nni_aio_stop(aio);
+	}
+	nni_mtx_unlock(&pipe->mtx);
+}
+
+
+static void
+nni_tcp_pipe_nego_cb(void *arg)
+{
+	nni_tcp_pipe *pipe = arg;
+	nni_aio *aio = &pipe->negaio;
+	int rv;
+
+	nni_mtx_lock(&pipe->mtx);
+	if ((rv = nni_aio_result(aio)) != 0) {
+		goto done;
+	}
+
+	// We start transmitting before we receive.
+	if (pipe->gottxhead < pipe->wanttxhead) {
+		pipe->gottxhead += nni_aio_count(aio);
+	} else if (pipe->gotrxhead < pipe->wantrxhead) {
+		pipe->gotrxhead += nni_aio_count(aio);
+	}
+
+	if (pipe->gottxhead < pipe->wanttxhead) {
+		aio->a_niov = 1;
+		aio->a_iov[0].iov_len = pipe->wanttxhead - pipe->gottxhead;
+		aio->a_iov[0].iov_buf = &pipe->txlen[pipe->gottxhead];
+		// send it down...
+		nni_plat_tcp_aio_send(pipe->tsp, aio);
+		nni_mtx_unlock(&pipe->mtx);
+		return;
+	}
+	if (pipe->gotrxhead < pipe->wantrxhead) {
+		aio->a_niov = 1;
+		aio->a_iov[0].iov_len = pipe->wantrxhead - pipe->gotrxhead;
+		aio->a_iov[0].iov_buf = &pipe->rxlen[pipe->gotrxhead];
+		nni_plat_tcp_aio_recv(pipe->tsp, aio);
+		nni_mtx_unlock(&pipe->mtx);
+		return;
+	}
+	// We have both sent and received the headers.  Lets check the
+	// receive side header.
+	if ((pipe->rxlen[0] != 0) ||
+	    (pipe->rxlen[1] != 'S') ||
+	    (pipe->rxlen[2] != 'P') ||
+	    (pipe->rxlen[3] != 0) ||
+	    (pipe->rxlen[6] != 0) ||
+	    (pipe->rxlen[7] != 0)) {
+		rv = NNG_EPROTO;
+		goto done;
+	}
+
+	NNI_GET16(&pipe->rxlen[4], pipe->peer);
+
+done:
+	if ((aio = pipe->user_negaio) != NULL) {
+		pipe->user_negaio = NULL;
+		nni_aio_finish(aio, rv, 0);
+	}
+	nni_mtx_unlock(&pipe->mtx);
 }
 
 
@@ -451,35 +538,40 @@ nni_tcp_negotiate(nni_tcp_pipe *pipe)
 	int rv;
 	nni_iov iov;
 	uint8_t buf[8];
+	nni_aio aio;
 
-	// First send our header..
-	buf[0] = 0;
-	buf[1] = 'S';
-	buf[2] = 'P';
-	buf[3] = 0;     // version
-	NNI_PUT16(&buf[4], pipe->proto);
-	NNI_PUT16(&buf[6], 0);
+	pipe->txlen[0] = 0;
+	pipe->txlen[1] = 'S';
+	pipe->txlen[2] = 'P';
+	pipe->txlen[3] = 0;
+	NNI_PUT16(&pipe->txlen[4], pipe->proto);
+	NNI_PUT16(&pipe->txlen[6], 0);
 
-	iov.iov_buf = buf;
-	iov.iov_len = 8;
-	if ((rv = nni_plat_tcp_send(pipe->tsp, &iov, 1)) != 0) {
-		return (rv);
+	nni_aio_init(&aio, NULL, NULL);
+
+	nni_mtx_lock(&pipe->mtx);
+	pipe->user_negaio = &aio;
+	pipe->gotrxhead = 0;
+	pipe->gottxhead = 0;
+	pipe->wantrxhead = 8;
+	pipe->wanttxhead = 8;
+	pipe->negaio.a_niov = 1;
+	pipe->negaio.a_iov[0].iov_len = 8;
+	pipe->negaio.a_iov[0].iov_buf = &pipe->txlen[0];
+	rv = nni_aio_start(&aio, nni_tcp_cancel_nego, pipe);
+	if (rv != 0) {
+		nni_mtx_unlock(&pipe->mtx);
+		return (NNG_ECLOSED);
 	}
+	nni_plat_tcp_aio_send(pipe->tsp, &pipe->negaio);
+	nni_mtx_unlock(&pipe->mtx);
 
-	iov.iov_buf = buf;
-	iov.iov_len = 8;
-	if ((rv = nni_plat_tcp_recv(pipe->tsp, &iov, 1)) != 0) {
-		return (rv);
-	}
+	nni_aio_wait(&aio);
+	rv = nni_aio_result(&aio);
+	nni_aio_fini(&aio);
+	NNI_ASSERT(pipe->user_negaio == NULL);
 
-	if ((buf[0] != 0) || (buf[1] != 'S') ||
-	    (buf[2] != 'P') || (buf[3] != 0) ||
-	    (buf[6] != 0) || (buf[7] != 0)) {
-		return (NNG_EPROTO);
-	}
-
-	NNI_GET16(&buf[4], pipe->peer);
-	return (0);
+	return (rv);
 }
 
 
@@ -531,11 +623,9 @@ nni_tcp_ep_connect_sync(void *arg, void **pipep)
 		return (rv);
 	}
 
-	if ((rv = nni_tcp_pipe_init(&pipe)) != 0) {
+	if ((rv = nni_tcp_pipe_init(&pipe, ep)) != 0) {
 		return (rv);
 	}
-	pipe->proto = ep->proto;
-	pipe->rcvmax = ep->rcvmax;
 
 	// Port is in the same place for both v4 and v6.
 	remaddr.s_un.s_in.sa_port = port;
@@ -594,12 +684,9 @@ nni_tcp_ep_accept_sync(void *arg, void **pipep)
 	nni_tcp_pipe *pipe;
 	int rv;
 
-	if ((rv = nni_tcp_pipe_init(&pipe)) != 0) {
+	if ((rv = nni_tcp_pipe_init(&pipe, ep)) != 0) {
 		return (rv);
 	}
-	pipe->proto = ep->proto;
-	pipe->rcvmax = ep->rcvmax;
-
 
 	if ((rv = nni_plat_tcp_accept(pipe->tsp, ep->tsp)) != 0) {
 		nni_tcp_pipe_fini(pipe);

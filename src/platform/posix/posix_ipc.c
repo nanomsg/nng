@@ -53,20 +53,6 @@ nni_plat_ipc_path_resolve(nni_sockaddr *addr, const char *path)
 }
 
 
-int
-nni_plat_ipc_send(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
-{
-	return (nni_posix_sock_send_sync((void *) s, iovs, cnt));
-}
-
-
-int
-nni_plat_ipc_recv(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
-{
-	return (nni_posix_sock_recv_sync((void *) s, iovs, cnt));
-}
-
-
 void
 nni_plat_ipc_aio_send(nni_plat_ipcsock *s, nni_aio *aio)
 {

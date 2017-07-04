@@ -56,20 +56,6 @@ nni_plat_lookup_host(const char *host, nni_sockaddr *addr, int flags)
 }
 
 
-int
-nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
-{
-	return (nni_posix_sock_send_sync((void *) s, iovs, cnt));
-}
-
-
-int
-nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
-{
-	return (nni_posix_sock_recv_sync((void *) s, iovs, cnt));
-}
-
-
 void
 nni_plat_tcp_aio_send(nni_plat_tcpsock *s, nni_aio *aio)
 {
