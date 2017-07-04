@@ -18,12 +18,12 @@
 
 #include "core/nng_impl.h"
 
+typedef struct nni_posix_pollq		nni_posix_pollq;
+
 
 typedef struct nni_posix_pipedesc	nni_posix_pipedesc;
 typedef struct nni_posix_epdesc		nni_posix_epdesc;
 
-extern int nni_posix_pipedesc_sysinit(void);
-extern void nni_posix_pipedesc_sysfini(void);
 extern int nni_posix_pipedesc_init(nni_posix_pipedesc **, int);
 extern void nni_posix_pipedesc_fini(nni_posix_pipedesc *);
 extern void nni_posix_pipedesc_recv(nni_posix_pipedesc *, nni_aio *);

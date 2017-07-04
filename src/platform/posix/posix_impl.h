@@ -26,6 +26,8 @@
 #define PLATFORM_POSIX_RANDOM
 #define PLATFORM_POSIX_SOCKET
 #define PLATFORM_POSIX_THREAD
+#define PLATFORM_POSIX_PIPEDESC
+#define PLATFORM_POSIX_EPDESC
 
 #include "platform/posix/posix_config.h"
 #endif
@@ -65,7 +67,7 @@ struct nni_plat_cv {
 #endif
 
 
-extern int nni_posix_pipedesc_sysinit(void);
-extern void nni_posix_pipedesc_sysfini(void);
+extern int nni_posix_pollq_sysinit(void);
+extern void nni_posix_pollq_sysfini(void);
 
 #endif // PLATFORM_POSIX_IMPL_H

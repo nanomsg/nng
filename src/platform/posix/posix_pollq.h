@@ -1,0 +1,43 @@
+//
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+#ifndef PLATFORM_POSIX_POLLQ_H
+#define PLATFORM_POSIX_POLLQ_H
+
+// This file defines structures we will use for emulating asynchronous I/O
+// on POSIX.  POSIX lacks the support for callback based asynchronous I/O
+// that we have on Windows, although it has a non-widely support aio layer
+// that is not very performant on many systems.   So we emulate this using
+// one of several possible different backends.
+
+#include "core/nng_impl.h"
+#include <poll.h>
+
+typedef struct nni_posix_pollq_node	nni_posix_pollq_node;
+typedef struct nni_posix_pollq		nni_posix_pollq;
+
+struct nni_posix_pollq_node {
+	nni_posix_pollq *	pq;             // associated pollq
+	nni_list_node		node;           // linkage into the pollq list
+	int			index;          // used by the poller impl
+	int			armed;          // used by the poller impl
+	int			fd;             // file descriptor to poll
+	int			events;         // events to watch for
+	int			revents;        // events received
+	void *			data;           // user data
+	nni_cb			cb;             // user callback on event
+};
+
+extern nni_posix_pollq *nni_posix_pollq_get(int);
+extern int nni_posix_pollq_submit(nni_posix_pollq *, nni_posix_pollq_node *);
+extern void nni_posix_pollq_cancel(nni_posix_pollq *, nni_posix_pollq_node *);
+extern int nni_posix_pollq_sysinit(void);
+extern void nni_posix_pollq_sysfini(void);
+
+#endif // PLATFORM_POSIX_POLLQ_H
