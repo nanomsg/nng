@@ -530,14 +530,13 @@ nni_parseaddr(char *pair, char **hostp, uint16_t *portp)
 }
 
 
-static int
-nni_tcp_negotiate(nni_tcp_pipe *pipe)
+static void
+nni_tcp_pipe_start(void *arg, nni_aio *aio)
 {
+	nni_tcp_pipe *pipe = arg;
 	int rv;
-	nni_iov iov;
-	uint8_t buf[8];
-	nni_aio aio;
 
+	nni_mtx_lock(&pipe->mtx);
 	pipe->txlen[0] = 0;
 	pipe->txlen[1] = 'S';
 	pipe->txlen[2] = 'P';
@@ -545,10 +544,7 @@ nni_tcp_negotiate(nni_tcp_pipe *pipe)
 	NNI_PUT16(&pipe->txlen[4], pipe->proto);
 	NNI_PUT16(&pipe->txlen[6], 0);
 
-	nni_aio_init(&aio, NULL, NULL);
-
-	nni_mtx_lock(&pipe->mtx);
-	pipe->user_negaio = &aio;
+	pipe->user_negaio = aio;
 	pipe->gotrxhead = 0;
 	pipe->gottxhead = 0;
 	pipe->wantrxhead = 8;
@@ -556,20 +552,12 @@ nni_tcp_negotiate(nni_tcp_pipe *pipe)
 	pipe->negaio.a_niov = 1;
 	pipe->negaio.a_iov[0].iov_len = 8;
 	pipe->negaio.a_iov[0].iov_buf = &pipe->txlen[0];
-	rv = nni_aio_start(&aio, nni_tcp_cancel_nego, pipe);
-	if (rv != 0) {
+	if (nni_aio_start(aio, nni_tcp_cancel_nego, pipe) != 0) {
 		nni_mtx_unlock(&pipe->mtx);
-		return (NNG_ECLOSED);
+		return;
 	}
 	nni_plat_tcp_aio_send(pipe->tsp, &pipe->negaio);
 	nni_mtx_unlock(&pipe->mtx);
-
-	nni_aio_wait(&aio);
-	rv = nni_aio_result(&aio);
-	nni_aio_fini(&aio);
-	NNI_ASSERT(pipe->user_negaio == NULL);
-
-	return (rv);
 }
 
 
@@ -635,10 +623,6 @@ nni_tcp_ep_connect_sync(void *arg, void **pipep)
 		return (rv);
 	}
 
-	if ((rv = nni_tcp_negotiate(pipe)) != 0) {
-		nni_tcp_pipe_fini(pipe);
-		return (rv);
-	}
 	*pipep = pipe;
 	return (0);
 }
@@ -690,10 +674,6 @@ nni_tcp_ep_accept_sync(void *arg, void **pipep)
 		nni_tcp_pipe_fini(pipe);
 		return (rv);
 	}
-	if ((rv = nni_tcp_negotiate(pipe)) != 0) {
-		nni_tcp_pipe_fini(pipe);
-		return (rv);
-	}
 	*pipep = pipe;
 	return (0);
 }
@@ -701,6 +681,7 @@ nni_tcp_ep_accept_sync(void *arg, void **pipep)
 
 static nni_tran_pipe nni_tcp_pipe_ops = {
 	.p_fini		= nni_tcp_pipe_fini,
+	.p_start	= nni_tcp_pipe_start,
 	.p_send		= nni_tcp_pipe_send,
 	.p_recv		= nni_tcp_pipe_recv,
 	.p_close	= nni_tcp_pipe_close,
