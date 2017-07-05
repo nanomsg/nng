@@ -99,7 +99,6 @@ nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 		}
 
 		// We completed the entire operation on this aioq.
-		nni_list_remove(&pd->writeq, aio);
 		nni_posix_pipedesc_finish(aio, 0);
 
 		// Go back to start of loop to see if there is another
@@ -231,24 +230,10 @@ nni_posix_pipedesc_cb(void *arg)
 void
 nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
 {
-	nni_posix_pollq *pq;
-	nni_aio *aio;
-
-	pq = pd->pq;
-
-	nni_posix_pollq_cancel(pq, &pd->node);
+	nni_posix_pollq_cancel(pd->pq, &pd->node);
 
 	nni_mtx_lock(&pd->mtx);
-	if (pd->fd != -1) {
-		// Let any peer know we are closing.
-		shutdown(pd->fd, SHUT_RDWR);
-	}
-	while ((aio = nni_list_first(&pd->readq)) != NULL) {
-		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
-	}
-	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
-		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
-	}
+	nni_posix_pipedesc_doclose(pd);
 	nni_mtx_unlock(&pd->mtx);
 }
 
@@ -256,9 +241,7 @@ nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
 static void
 nni_posix_pipedesc_cancel(nni_aio *aio)
 {
-	nni_posix_pipedesc *pd;
-
-	pd = aio->a_prov_data;
+	nni_posix_pipedesc *pd = aio->a_prov_data;
 
 	nni_mtx_lock(&pd->mtx);
 	nni_aio_list_remove(aio);
