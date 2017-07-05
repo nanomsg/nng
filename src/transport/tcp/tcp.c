@@ -325,7 +325,7 @@ nni_tcp_cancel_tx(nni_aio *aio)
 }
 
 
-static int
+static void
 nni_tcp_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *pipe = arg;
@@ -338,7 +338,7 @@ nni_tcp_pipe_send(void *arg, nni_aio *aio)
 
 	if (nni_aio_start(aio, nni_tcp_cancel_tx, pipe) != 0) {
 		nni_mtx_unlock(&pipe->mtx);
-		return (0);
+		return;
 	}
 
 	pipe->user_txaio = aio;
@@ -355,7 +355,6 @@ nni_tcp_pipe_send(void *arg, nni_aio *aio)
 
 	nni_plat_tcp_aio_send(pipe->tsp, &pipe->txaio);
 	nni_mtx_unlock(&pipe->mtx);
-	return (0);
 }
 
 
@@ -373,7 +372,7 @@ nni_tcp_cancel_rx(nni_aio *aio)
 }
 
 
-static int
+static void
 nni_tcp_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *pipe = arg;
@@ -382,7 +381,7 @@ nni_tcp_pipe_recv(void *arg, nni_aio *aio)
 
 	if (nni_aio_start(aio, nni_tcp_cancel_rx, pipe) != 0) {
 		nni_mtx_unlock(&pipe->mtx);
-		return (0);
+		return;
 	}
 	pipe->user_rxaio = aio;
 
@@ -395,7 +394,6 @@ nni_tcp_pipe_recv(void *arg, nni_aio *aio)
 
 	nni_plat_tcp_aio_recv(pipe->tsp, &pipe->rxaio);
 	nni_mtx_unlock(&pipe->mtx);
-	return (0);
 }
 
 

@@ -339,7 +339,7 @@ nni_ipc_cancel_tx(nni_aio *aio)
 }
 
 
-static int
+static void
 nni_ipc_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_ipc_pipe *pipe = arg;
@@ -351,7 +351,7 @@ nni_ipc_pipe_send(void *arg, nni_aio *aio)
 	nni_mtx_lock(&pipe->mtx);
 	if (nni_aio_start(aio, nni_ipc_cancel_tx, pipe) != 0) {
 		nni_mtx_unlock(&pipe->mtx);
-		return (0);
+		return;
 	}
 
 	pipe->user_txaio = aio;
@@ -369,7 +369,6 @@ nni_ipc_pipe_send(void *arg, nni_aio *aio)
 
 	nni_plat_ipc_send(pipe->isp, &pipe->txaio);
 	nni_mtx_unlock(&pipe->mtx);
-	return (0);
 }
 
 
@@ -387,7 +386,7 @@ nni_ipc_cancel_rx(nni_aio *aio)
 }
 
 
-static int
+static void
 nni_ipc_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_ipc_pipe *pipe = arg;
@@ -396,7 +395,7 @@ nni_ipc_pipe_recv(void *arg, nni_aio *aio)
 
 	if (nni_aio_start(aio, nni_ipc_cancel_rx, pipe) != 0) {
 		nni_mtx_unlock(&pipe->mtx);
-		return (0);
+		return;
 	}
 
 	pipe->user_rxaio = aio;
@@ -409,7 +408,6 @@ nni_ipc_pipe_recv(void *arg, nni_aio *aio)
 
 	nni_plat_ipc_recv(pipe->isp, &pipe->rxaio);
 	nni_mtx_unlock(&pipe->mtx);
-	return (0);
 }
 
 

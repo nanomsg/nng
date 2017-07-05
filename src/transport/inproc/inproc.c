@@ -154,7 +154,7 @@ nni_inproc_pipe_fini(void *arg)
 }
 
 
-static int
+static void
 nni_inproc_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_inproc_pipe *pipe = arg;
@@ -168,21 +168,20 @@ nni_inproc_pipe_send(void *arg, nni_aio *aio)
 	h = nni_msg_header(msg);
 	l = nni_msg_header_len(msg);
 	if ((rv = nni_msg_prepend(msg, h, l)) != 0) {
-		return (rv);
+		nni_aio_finish(aio, rv, aio->a_count);
+		return;
 	}
 	nni_msg_trunc_header(msg, l);
 	nni_msgq_aio_put(pipe->wq, aio);
-	return (0);
 }
 
 
-static int
+static void
 nni_inproc_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_inproc_pipe *pipe = arg;
 
 	nni_msgq_aio_get(pipe->rq, aio);
-	return (0);
 }
 
 

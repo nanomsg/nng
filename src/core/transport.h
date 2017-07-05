@@ -89,18 +89,25 @@ struct nni_tran_pipe {
 	// further calls on the same pipe.
 	void		(*p_fini)(void *);
 
+	// p_start starts the pipe running.  This gives the transport a
+	// chance to hook into any transport specific negotiation phase.
+	// The pipe will not have its p_send or p_recv calls started, and
+	// will not be access by the "socket" until the pipe has indicated
+	// its readiness by finishing the aio.
+	void		(*p_start)(void *, nni_aio *);
+
 	// p_aio_send queues the message for transmit.  If this fails, then
 	// the caller may try again with the same message (or free it).  If
 	// the call succeeds, then the transport has taken ownership of the
 	// message, and the caller may not use it again.  The transport will
 	// have the responsibility to free the message (nng_msg_free()) when
 	// it is finished with it.
-	int		(*p_send)(void *, nni_aio *);
+	void		(*p_send)(void *, nni_aio *);
 
 	// p_recv schedules a message receive. This will be performed even for
 	// cases where no data is expected, to allow detection of a remote
 	// disconnect.
-	int		(*p_recv)(void *, nni_aio *);
+	void		(*p_recv)(void *, nni_aio *);
 
 	// p_close closes the pipe.  Further recv or send operations should
 	// return back NNG_ECLOSED.
