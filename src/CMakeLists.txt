@@ -91,7 +91,6 @@ set (NNG_SOURCES
     platform/posix/posix_net.c
     platform/posix/posix_pipe.c
     platform/posix/posix_pipedesc.c
-    platform/posix/posix_poll.c
     platform/posix/posix_pollq_poll.c
     platform/posix/posix_rand.c
     platform/posix/posix_socket.c
