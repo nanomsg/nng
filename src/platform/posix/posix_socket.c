@@ -45,7 +45,6 @@ struct nni_posix_sock {
 	int			fd;
 	char *			unlink;         // path to unlink at unbind
 	nni_posix_pipedesc *	pd;
-	nni_posix_epdesc *	ed;
 	int			tcpnodelay;
 };
 
@@ -213,9 +212,6 @@ nni_posix_sock_fini(nni_posix_sock *s)
 	if (s->pd != NULL) {
 		nni_posix_pipedesc_fini(s->pd);
 	}
-	if (s->ed != NULL) {
-		nni_posix_epdesc_fini(s->ed);
-	}
 	if (s->unlink != NULL) {
 		(void) unlink(s->unlink);
 		nni_free(s->unlink, strlen(s->unlink) + 1);
@@ -307,11 +303,6 @@ nni_posix_sock_listen(nni_posix_sock *s, const nni_sockaddr *saddr)
 	// bad things are going to happen.
 	if (listen(fd, 128) != 0) {
 		rv = nni_plat_errno(errno);
-		(void) close(fd);
-		return (rv);
-	}
-
-	if ((rv = nni_posix_epdesc_init(&s->ed, fd)) != 0) {
 		(void) close(fd);
 		return (rv);
 	}

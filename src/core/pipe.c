@@ -192,14 +192,6 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 	// Save the protocol destructor.
 	p->p_proto_dtor = sock->s_pipe_ops.pipe_fini;
 
-#if 0
-	// Initialize the transport pipe data.
-	if ((rv = p->p_tran_ops.p_init(&p->p_tran_data)) != 0) {
-		nni_objhash_unref(nni_pipes, p->p_id);
-		return (rv);
-	}
-#endif
-
 	// Initialize protocol pipe data.
 	rv = sock->s_pipe_ops.pipe_init(&p->p_proto_data, p, sock->s_data);
 	if (rv != 0) {
