@@ -15,4 +15,6 @@
 
 TestMain("IPC Transport", {
 	trantest_test_all("ipc:///tmp/nng_ipc_test");
+
+	nng_fini();
 })

@@ -53,6 +53,7 @@ nni_pipe_dtor(void *ptr)
 		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
 
+	nni_aio_fini(&p->p_start_aio);
 	nni_mtx_fini(&p->p_mtx);
 	NNI_FREE_STRUCT(p);
 }
@@ -170,6 +171,28 @@ nni_pipe_peer(nni_pipe *p)
 }
 
 
+static void
+nni_pipe_start_cb(void *arg)
+{
+	nni_pipe *p = arg;
+	nni_aio *aio = &p->p_start_aio;
+	int rv;
+
+	nni_mtx_lock(&p->p_mtx);
+	if ((rv = nni_aio_result(aio)) != 0) {
+		nni_mtx_unlock(&p->p_mtx);
+		nni_pipe_stop(p);
+		return;
+	}
+
+	nni_mtx_unlock(&p->p_mtx);
+
+	if ((rv = nni_sock_pipe_ready(p->p_sock, p)) != 0) {
+		nni_pipe_stop(p);
+	}
+}
+
+
 int
 nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 {
@@ -180,6 +203,10 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 
 	rv = nni_objhash_alloc(nni_pipes, &id, (void **) &p);
 	if (rv != 0) {
+		return (rv);
+	}
+	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) != 0) {
+		nni_objhash_unref(nni_pipes, p->p_id);
 		return (rv);
 	}
 	p->p_sock = sock;
@@ -225,10 +252,12 @@ nni_pipe_start(nni_pipe *p)
 {
 	int rv;
 
-	if ((rv = nni_sock_pipe_ready(p->p_sock, p)) != 0) {
+	if (p->p_tran_ops.p_start == NULL) {
+		rv = nni_sock_pipe_ready(p->p_sock, p);
 		return (rv);
 	}
 
+	p->p_tran_ops.p_start(p->p_tran_data, &p->p_start_aio);
 	// XXX: Publish event
 
 	return (0);

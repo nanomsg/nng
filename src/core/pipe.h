@@ -32,6 +32,7 @@ struct nni_pipe {
 	int		p_stop;
 	nni_mtx		p_mtx;
 	nni_taskq_ent	p_reap_tqe;
+	nni_aio		p_start_aio;
 };
 
 extern int nni_pipe_sys_init(void);
