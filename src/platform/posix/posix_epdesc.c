@@ -42,6 +42,7 @@ struct nni_posix_epdesc {
 	struct sockaddr_storage remaddr;
 	socklen_t		loclen;
 	socklen_t		remlen;
+	const char *		url;
 	nni_mtx			mtx;
 };
 
@@ -71,7 +72,7 @@ nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
 		if (rv != 0) {
 			(void) close(newfd);
 		} else {
-			aio->a_pipe = pipe;
+			aio->a_pipe = pd;
 		}
 	}
 	// Abuse the count to hold our new fd.  This is only for accept.
@@ -110,6 +111,9 @@ nni_posix_epdesc_doconnect(nni_posix_epdesc *ed)
 			return;
 
 		default:
+			if (rv == ENOENT) {
+				rv = ECONNREFUSED;
+			}
 			nni_posix_epdesc_finish(aio, nni_plat_errno(rv), 0);
 			close(ed->fd);
 			ed->fd = -1;
@@ -232,65 +236,25 @@ nni_posix_epdesc_close(nni_posix_epdesc *ed)
 }
 
 
-// UNIX DOMAIN SOCKETS -- these have names in the file namespace.
-// We are going to check to see if there was a name already there.
-// If there was, and nothing is listening (ECONNREFUSED), then we
-// will just try to cleanup the old socket.  Note that this is not
-// perfect in all scenarios, so use this with caution.
-static int
-nni_posix_epdesc_remove_stale_ipc_socket(struct sockaddr *sa, socklen_t len)
-{
-	int fd;
-	struct sockaddr_un *sun = (void *) sa;
-
-	if ((len == 0) || (sun->sun_family != AF_UNIX)) {
-		return (0);
-	}
-
-	if ((fd = socket(AF_UNIX, NNI_STREAM_SOCKTYPE, 0)) < 0) {
-		return (nni_plat_errno(errno));
-	}
-
-	// There is an assumption here that connect() returns immediately
-	// (even when non-blocking) when a server is absent.  This seems
-	// to be true for the platforms we've tried.  If it doesn't work,
-	// then the cleanup will fail.  As this is supposed to be an
-	// exceptional case, don't worry.
-	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
-	if (connect(fd, (void *) sun, len) < 0) {
-		if (errno == ECONNREFUSED) {
-			(void) unlink(sun->sun_path);
-		}
-	}
-	(void) close(fd);
-	return (0);
-}
-
-
 int
-nni_posix_epdesc_listen(nni_posix_epdesc *ed, const nni_sockaddr *saddr)
+nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 {
 	int len;
-	struct sockaddr_storage ss;
+	struct sockaddr_storage *ss;
 	int rv;
 	int fd;
 
-	if ((len = nni_posix_to_sockaddr(&ss, saddr)) < 0) {
-		return (NNG_EADDRINVAL);
-	}
+	nni_mtx_lock(&ed->mtx);
+	ss = &ed->locaddr;
+	len = ed->loclen;
 
-	if ((fd = socket(ss.ss_family, NNI_STREAM_SOCKTYPE, 0)) < 0) {
+	if ((fd = socket(ss->ss_family, NNI_STREAM_SOCKTYPE, 0)) < 0) {
 		return (nni_plat_errno(errno));
 	}
 	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
 
-	rv = nni_posix_epdesc_remove_stale_ipc_socket((void *) &ss, len);
-	if (rv != 0) {
-		(void) close(fd);
-		return (rv);
-	}
-
-	if (bind(fd, (struct sockaddr *) &ss, len) < 0) {
+	if (bind(fd, (struct sockaddr *) ss, len) < 0) {
+		nni_mtx_unlock(&ed->mtx);
 		rv = nni_plat_errno(errno);
 		(void) close(fd);
 		return (rv);
@@ -299,12 +263,15 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed, const nni_sockaddr *saddr)
 	// Listen -- 128 depth is probably sufficient.  If it isn't, other
 	// bad things are going to happen.
 	if (listen(fd, 128) != 0) {
+		nni_mtx_unlock(&ed->mtx);
 		rv = nni_plat_errno(errno);
 		(void) close(fd);
 		return (rv);
 	}
 
 	ed->fd = fd;
+	ed->node.fd = fd;
+	nni_mtx_unlock(&ed->mtx);
 	return (0);
 }
 
@@ -363,6 +330,7 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 		nni_posix_epdesc_finish(aio, rv, 0);
 		return;
 	}
+	ed->node.fd = ed->fd;
 
 	// Possibly bind.
 	if (ed->loclen != 0) {
@@ -380,6 +348,7 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 	if (rv == 0) {
 		// Immediate connect, cool!  This probably only happens on
 		// loopback, and probably not on every platform.
+
 		nni_posix_epdesc_finish(aio, 0, ed->fd);
 		ed->fd = -1;
 		nni_mtx_unlock(&ed->mtx);
@@ -388,6 +357,9 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 
 	if (errno != EINPROGRESS) {
 		// Some immediate failure occurred.
+		if (errno == ENOENT) {
+			errno = ECONNREFUSED;
+		}
 		(void) close(ed->fd);
 		ed->fd = -1;
 		nni_posix_epdesc_finish(aio, nni_plat_errno(errno), 0);
@@ -413,7 +385,7 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 
 
 int
-nni_posix_epdesc_init(nni_posix_epdesc **edp, int fd)
+nni_posix_epdesc_init(nni_posix_epdesc **edp, const char *url)
 {
 	nni_posix_epdesc *ed;
 	int rv;
@@ -432,20 +404,51 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp, int fd)
 	// one.  For now we just have a global pollq.  Note that by tying
 	// the ed to a single pollq we may get some kind of cache warmth.
 
-	ed->pq = nni_posix_pollq_get(fd);
-	ed->fd = fd;
+	ed->pq = nni_posix_pollq_get((int) nni_random());
+	ed->fd = -1;
 	ed->node.index = 0;
-	ed->node.cb = NULL; // XXXX:
+	ed->node.cb = nni_posix_epdesc_cb;
 	ed->node.data = ed;
-
-	// Ensure we are in non-blocking mode.
-	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
+	ed->url = url;
 
 	nni_aio_list_init(&ed->connectq);
 	nni_aio_list_init(&ed->acceptq);
 
 	*edp = ed;
 	return (0);
+}
+
+
+const char *
+nni_posix_epdesc_url(nni_posix_epdesc *ed)
+{
+	return (ed->url);
+}
+
+
+void
+nni_posix_epdesc_set_local(nni_posix_epdesc *ed, void *sa, int len)
+{
+	if ((len < 0) || (len > sizeof (struct sockaddr_storage))) {
+		return;
+	}
+	nni_mtx_lock(&ed->mtx);
+	memcpy(&ed->locaddr, sa, len);
+	ed->loclen = len;
+	nni_mtx_unlock(&ed->mtx);
+}
+
+
+void
+nni_posix_epdesc_set_remote(nni_posix_epdesc *ed, void *sa, int len)
+{
+	if ((len < 0) || (len > sizeof (struct sockaddr_storage))) {
+		return;
+	}
+	nni_mtx_lock(&ed->mtx);
+	memcpy(&ed->remaddr, sa, len);
+	ed->remlen = len;
+	nni_mtx_unlock(&ed->mtx);
 }
 
 

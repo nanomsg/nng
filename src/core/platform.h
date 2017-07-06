@@ -37,6 +37,10 @@
 // they do not need in the child.  (Note that posix_spawn() does *NOT*
 // arrange for pthread_atfork() handlers to be called on some platforms.)
 
+//
+// Debugging Support
+//
+
 // nni_plat_abort crashes the system; it should do whatever is appropriate
 // for abnormal programs on the platform, such as calling abort().
 extern void nni_plat_abort(void);
@@ -45,6 +49,18 @@ extern void nni_plat_abort(void);
 // during core debugging, or to emit panic messages.  Message content will
 // not contain newlines, but the output will add them.
 extern void nni_plat_println(const char *);
+
+// nni_plat_strerror allows the platform to use additional error messages
+// for additional error codes.  The err code passed in should be the
+// equivalent of errno or GetLastError, without the NNG_ESYSERR component.
+// The platform should make sure that the returned value will be valid
+// after the call returns.  (If necessary, thread-local storage can be
+// used.)
+extern const char *nni_plat_strerror(int);
+
+//
+// Memory Management
+//
 
 // nni_alloc allocates memory.  In most cases this can just be malloc().
 // However, you may provide a different allocator, for example it is
@@ -64,9 +80,10 @@ typedef struct nni_plat_mtx		nni_plat_mtx;
 typedef struct nni_plat_cv		nni_plat_cv;
 typedef struct nni_plat_thr		nni_plat_thr;
 typedef struct nni_plat_tcpsock		nni_plat_tcpsock;
-typedef struct nni_plat_ipcsock		nni_plat_ipcsock;
 
-// Mutex handling.
+//
+// Threading & Synchronization Support
+//
 
 // nni_plat_mtx_init initializes a mutex structure.  This may require dynamic
 // allocation, depending on the platform.  It can return NNG_ENOMEM if that
@@ -127,6 +144,10 @@ extern int nni_plat_thr_init(nni_plat_thr *, void (*)(void *), void *);
 // is an error to reference the thread in any further way.
 extern void nni_plat_thr_fini(nni_plat_thr *);
 
+//
+// Clock Support
+//
+
 // nn_plat_clock returns a number of microseconds since some arbitrary time
 // in the past.  The values returned by nni_clock must use the same base
 // as the times used in nni_plat_cond_waituntil.  The nni_plat_clock() must
@@ -137,6 +158,16 @@ extern nni_time nni_plat_clock(void);
 
 // nni_plat_usleep sleeps for the specified number of microseconds (at least).
 extern void nni_plat_usleep(nni_duration);
+
+//
+// Entropy Support
+//
+
+// nni_plat_seed_prng seeds the PRNG subsystem.  The specified number
+// of bytes of entropy should be stashed.  When possible, cryptographic
+// quality entropy sources should be used.  Note that today we prefer
+// to seed up to 256 bytes of data.
+extern void nni_plat_seed_prng(void *, size_t);
 
 // nni_plat_init is called to allow the platform the chance to
 // do any necessary initialization.  This routine MUST be idempotent,
@@ -157,13 +188,6 @@ extern int nni_plat_init(int (*)(void));
 // will be called until nni_platform_init is called.
 extern void nni_plat_fini(void);
 
-// nni_plat_strerror allows the platform to use additional error messages
-// for additional error codes.  The err code passed in should be the
-// equivalent of errno or GetLastError, without the NNG_ESYSERR component.
-// The platform should make sure that the returned value will be valid
-// after the call returns.  (If necessary, thread-local storage can be
-// used.)
-extern const char *nni_plat_strerror(int);
 
 // nni_plat_lookup_host looks up a hostname in DNS, or the local hosts
 // file, or whatever.  If your platform lacks support for naming, it must
@@ -171,6 +195,10 @@ extern const char *nni_plat_strerror(int);
 // flags may include NNI_FLAG_IPV4ONLY to prevent IPv6 names from being
 // returned on dual stack machines.
 extern int nni_plat_lookup_host(const char *, nni_sockaddr *, int);
+
+//
+// TCP Support.
+//
 
 // nni_plat_tcp_init initializes the socket, for example it can
 // set underlying file descriptors to -1, etc.
@@ -214,48 +242,56 @@ extern void nni_plat_tcp_aio_send(nni_plat_tcpsock *, nni_aio *);
 // full, or an error condition occurs.
 extern void nni_plat_tcp_aio_recv(nni_plat_tcpsock *, nni_aio *);
 
-// nni_plat_ipc_init initializes the socket, for example it can
-// set underlying file descriptors to -1, etc.
-extern int nni_plat_ipc_init(nni_plat_ipcsock **);
+//
+// IPC (UNIX Domain Sockets & Named Pipes) Support.
+//
 
-// nni_plat_ipc_fini just closes an IPC socket, and releases any related
-// resources.
-extern void nni_plat_ipc_fini(nni_plat_ipcsock *);
+typedef struct nni_plat_ipc_ep		nni_plat_ipc_ep;
+typedef struct nni_plat_ipc_pipe	nni_plat_ipc_pipe;
 
-// nni_plat_ipc_shutdown performs a shutdown of the socket.  For
-// BSD sockets, this closes both sides of the IPC connection gracefully,
-// but the underlying file descriptor is left open.  (This part is critical
-// to prevention of close() related races.)
-extern void nni_plat_ipc_shutdown(nni_plat_ipcsock *);
+// nni_plat_ipc_ep_init creates a new endpoint associated with the path.
+extern int nni_plat_ipc_ep_init(nni_plat_ipc_ep **, const char *);
+
+// nni_plat_ipc_ep_fini closes the endpoint and releases resources.
+extern void nni_plat_ipc_ep_fini(nni_plat_ipc_ep *);
+
+// nni_plat_ipc_ep_close closes the endpoint; this might not close the
+// actual underlying socket, but it should call shutdown on it.
+// Further operations on the pipe should return NNG_ECLOSED.
+extern void nni_plat_ipc_ep_close(nni_plat_ipc_ep *);
 
 // nni_plat_tcp_listen creates an IPC socket in listening mode, bound
 // to the specified path.  Note that nni_plat_ipcsock should be defined
 // to whatever your platform uses.  For most systems its just "int".
-extern int nni_plat_ipc_listen(nni_plat_ipcsock *, const char *);
+extern int nni_plat_ipc_ep_listen(nni_plat_ipc_ep *);
 
-// nni_plat_ipc_accept does the accept to accept an inbound connection.
-// The ipcsock used for the server will have been set up with the
-// nni_plat_ipc_listen.
-extern int nni_plat_ipc_accept(nni_plat_ipcsock *, nni_plat_ipcsock *);
+// nni_plat_ipc_ep_accept starts an accept to receive an incoming connection.
+// An accepted connection will be passed back in the a_pipe member.
+extern void nni_plat_ipc_ep_accept(nni_plat_ipc_ep *, nni_aio *);
 
 // nni_plat_ipc_connect is the client side.
-extern int nni_plat_ipc_connect(nni_plat_ipcsock *, const char *);
+// An accepted connection will be passed back in the a_pipe member.
+extern void nni_plat_ipc_ep_connect(nni_plat_ipc_ep *, nni_aio *);
 
-// nni_plat_ipc_aio_send sends data to the peer.  The platform is responsible
-// for attempting to send all of the data.  The iov count will never be
-// larger than 4.  The platform may modify the iovs.
-extern void nni_plat_ipc_send(nni_plat_ipcsock *, nni_aio *);
+// nni_plat_ipc_pipe_fini closes the pipe, and releases all resources
+// associated with it.
+extern void nni_plat_ipc_pipe_fini(nni_plat_ipc_pipe *);
 
-// nni_plat_ipc_aio_recv recvs data into the buffers provided by the
-// iovs.  The implementation does not return until the iovs are completely
-// full, or an error condition occurs.
-extern void nni_plat_ipc_recv(nni_plat_ipcsock *, nni_aio *);
+// nni_plat_ipc_pipe_close closes the socket, or at least shuts it down.
+// Further operations on the pipe should return NNG_ECLOSED.
+extern void nni_plat_ipc_pipe_close(nni_plat_ipc_pipe *);
 
-// nni_plat_seed_prng seeds the PRNG subsystem.  The specified number
-// of bytes of entropy should be stashed.  When possible, cryptographic
-// quality entropy sources should be used.  Note that today we prefer
-// to seed up to 256 bytes of data.
-extern void nni_plat_seed_prng(void *, size_t);
+// nni_plat_ipc_pipe_send sends data in the iov buffers to the peer.
+// The platform may modify the iovs.
+extern void nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *, nni_aio *);
+
+// nni_plat_ipc_pipe_recv recvs data into the buffers provided by the iovs.
+// The platform may modify the iovs.
+extern void nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *, nni_aio *);
+
+//
+// Notification Pipe Pairs
+//
 
 // nni_plat_pipe creates a pair of linked file descriptors that are
 // suitable for notification via SENDFD/RECVFD.  These are platform
