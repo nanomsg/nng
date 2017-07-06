@@ -66,6 +66,10 @@ nni_aio_fini(nni_aio *aio)
 	// At this point the AIO is done.
 	nni_cv_fini(&aio->a_cv);
 	nni_mtx_fini(&aio->a_lk);
+
+	if ((aio->a_naddrs != 0) && (aio->a_addrs != NULL)) {
+		NNI_FREE_STRUCTS(aio->a_addrs, aio->a_naddrs);
+	}
 }
 
 

@@ -167,7 +167,7 @@ nni_posix_resolv_task(void *arg)
 			}
 		}
 		// If the only results were not IPv4 or IPv6...
-		if (aio->a_addrs == 0) {
+		if (aio->a_naddrs == 0) {
 			rv = NNG_EADDRINVAL;
 			break;
 		}
@@ -231,6 +231,9 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 	nni_posix_resolv_item *item;
 	int rv;
 
+	if ((aio->a_naddrs != 0) && (aio->a_addrs != NULL)) {
+		NNI_FREE_STRUCTS(aio->a_addrs, aio->a_naddrs);
+	}
 	if ((item = NNI_ALLOC_STRUCT(item)) == NULL) {
 		nni_aio_finish(aio, NNG_ENOMEM, 0);
 		return;
@@ -254,6 +257,7 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 	item->name = host;
 	item->serv = serv;
 	item->proto = proto;
+	item->aio = aio;
 
 	nni_mtx_lock(&nni_posix_resolv_mtx);
 	// If we were stopped, we're done...
@@ -272,7 +276,7 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 
 
 void
-nni_plat_resolv_tcp(const char *host, const char *serv, int family,
+nni_plat_tcp_resolv(const char *host, const char *serv, int family,
     int passive, nni_aio *aio)
 {
 	nni_posix_resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
@@ -280,7 +284,7 @@ nni_plat_resolv_tcp(const char *host, const char *serv, int family,
 
 
 int
-nni_posix_resolv_init(void)
+nni_posix_resolv_sysinit(void)
 {
 	int rv;
 
@@ -296,7 +300,7 @@ nni_posix_resolv_init(void)
 
 
 void
-nni_posix_resolv_fini(void)
+nni_posix_resolv_sysfini(void)
 {
 	if (nni_posix_resolv_tq != NULL) {
 		nni_taskq_fini(nni_posix_resolv_tq);

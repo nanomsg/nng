@@ -69,5 +69,7 @@ struct nni_plat_cv {
 
 extern int nni_posix_pollq_sysinit(void);
 extern void nni_posix_pollq_sysfini(void);
+extern int nni_posix_resolv_sysinit(void);
+extern void nni_posix_resolv_sysfini(void);
 
 #endif // PLATFORM_POSIX_IMPL_H

@@ -308,8 +308,20 @@ nni_plat_init(int (*helper)(void))
 		return (rv);
 	}
 
+	if ((rv = nni_posix_resolv_sysinit()) != 0) {
+		pthread_mutex_unlock(&nni_plat_lock);
+		nni_posix_pollq_sysfini();
+		(void) close(nni_plat_devnull);
+		pthread_mutexattr_destroy(&nni_mxattr);
+		pthread_condattr_destroy(&nni_cvattr);
+		pthread_attr_destroy(&nni_pthread_attr);
+		return (rv);
+
+	}
+
 	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
+		nni_posix_resolv_sysfini();
 		nni_posix_pollq_sysfini();
 		(void) close(devnull);
 		pthread_mutexattr_destroy(&nni_mxattr);
