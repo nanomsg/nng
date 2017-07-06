@@ -24,6 +24,7 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <poll.h>
+#include <netdb.h>
 
 #ifdef  SOCK_CLOEXEC
 #define NNI_STREAM_SOCKTYPE	(SOCK_STREAM | SOCK_CLOEXEC)
@@ -31,19 +32,23 @@
 #define NNI_STREAM_SOCKTYPE	SOCK_STREAM
 #endif
 
-
 struct nni_posix_epdesc {
-	int			fd;
-	nni_list		connectq;
-	nni_list		acceptq;
-	nni_posix_pollq_node	node;
-	nni_posix_pollq *	pq;
-	struct sockaddr_storage locaddr;
-	struct sockaddr_storage remaddr;
-	socklen_t		loclen;
-	socklen_t		remlen;
-	const char *		url;
-	nni_mtx			mtx;
+	int				fd;
+	nni_list			connectq;
+	nni_list			acceptq;
+	nni_posix_pollq_node		node;
+	nni_posix_pollq *		pq;
+	struct sockaddr_storage		locaddr;
+	struct sockaddr_storage		remaddr;
+	socklen_t			loclen;
+	socklen_t			remlen;
+	const char *			url;
+	struct sockaddr_storage *	remaddrs;
+	struct sockaddr_storage *	locaddrs;
+	int				nremaddrs;
+	int				nlocaddrs;
+	int				server;
+	nni_mtx				mtx;
 };
 
 

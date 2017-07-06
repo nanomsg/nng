@@ -72,8 +72,10 @@ typedef struct {
 #define NNI_SECOND		(1000000)
 
 // Structure allocation conveniences.
-#define NNI_ALLOC_STRUCT(s)	nni_alloc(sizeof (*s))
-#define NNI_FREE_STRUCT(s)	nni_free((s), sizeof (*s))
+#define NNI_ALLOC_STRUCT(s)		nni_alloc(sizeof (*s))
+#define NNI_FREE_STRUCT(s)		nni_free((s), sizeof (*s))
+#define NNI_ALLOC_STRUCTS(s, n)		nni_alloc(sizeof (*s) * n)
+#define NNI_FREE_STRUCTS(s, n)		nni_free(s, sizeof (*s) * n)
 
 #define NNI_PUT16(ptr, u)				      \
 	do {						      \

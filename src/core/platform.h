@@ -242,6 +242,15 @@ extern void nni_plat_tcp_aio_send(nni_plat_tcpsock *, nni_aio *);
 // full, or an error condition occurs.
 extern void nni_plat_tcp_aio_recv(nni_plat_tcpsock *, nni_aio *);
 
+// nni_plat_tcp_resolv resolves a TCP name asynchronously.  The family
+// should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.  The
+// first two constrain the name to those families, while the third will
+// return names of either family.  The passive flag indicates that the
+// name will be used for bind(), otherwise the name will be used with
+// connect().  The host part may be NULL only if passive is true.
+extern void nni_plat_tcp_resolv(const char *, const char *, int, int,
+    nni_aio *);
+
 //
 // IPC (UNIX Domain Sockets & Named Pipes) Support.
 //
