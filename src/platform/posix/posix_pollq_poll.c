@@ -178,6 +178,10 @@ nni_posix_poll_thr(void *arg)
 				continue;
 			}
 
+			if (fds[index].revents == 0) {
+				continue;
+			}
+
 			// Clear the index for the next time around.
 			node->index = 0;
 			node->revents = fds[index].revents;
