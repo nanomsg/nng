@@ -266,12 +266,7 @@ nni_ep_connect_sync(nni_ep *ep)
 	if (rv != 0) {
 		return (rv);
 	}
-	if (ep->ep_ops.ep_connect != NULL) {
-		rv = nni_ep_connect_aio(ep, &pipe->p_tran_data);
-	} else {
-		rv = ep->ep_ops.ep_connect_sync(ep->ep_data,
-			&pipe->p_tran_data);
-	}
+	rv = nni_ep_connect_aio(ep, &pipe->p_tran_data);
 	if (rv != 0) {
 		nni_pipe_remove(pipe);
 		return (rv);
@@ -461,12 +456,7 @@ nni_ep_accept_sync(nni_ep *ep)
 	if (rv != 0) {
 		return (rv);
 	}
-	if (ep->ep_ops.ep_accept != NULL) {
-		rv = nni_ep_accept_aio(ep, &pipe->p_tran_data);
-	} else {
-		rv = ep->ep_ops.ep_accept_sync(ep->ep_data,
-			&pipe->p_tran_data);
-	}
+	rv = nni_ep_accept_aio(ep, &pipe->p_tran_data);
 	if (rv != 0) {
 		nni_pipe_remove(pipe);
 		return (rv);

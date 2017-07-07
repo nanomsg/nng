@@ -48,10 +48,7 @@ struct nni_tran_ep {
 
 	// ep_connect establishes a connection.  It can return errors
 	// NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR, NNG_ECONNFAILED,
-	// NNG_ETIMEDOUT, and NNG_EPROTO.  The first argument is the
-	// transport specific endpoint, and the second is a pointer to
-	// receive a newly created transport-specific pipe structure.
-	int	(*ep_connect_sync)(void *, void **);
+	// NNG_ETIMEDOUT, and NNG_EPROTO.
 	void	(*ep_connect)(void *, nni_aio *);
 
 	// ep_bind just does the bind() and listen() work,
@@ -61,10 +58,7 @@ struct nni_tran_ep {
 	// address, or NNG_EACCESS for permission problems.
 	int	(*ep_bind)(void *);
 
-	// ep_accept accepts an inbound connection.  The first argument
-	// is the transport-specific endpoint, and the second is a pointer to
-	// a transport-specific pipe, created by this function.
-	int	(*ep_accept_sync)(void *, void **);
+	// ep_accept accepts an inbound connection.
 	void	(*ep_accept)(void *, nni_aio *);
 
 	// ep_close stops the endpoint from operating altogether.  It does
