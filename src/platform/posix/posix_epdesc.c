@@ -8,11 +8,10 @@
 //
 
 #include "core/nng_impl.h"
-#include "platform/posix/posix_aio.h"
-#include "platform/posix/posix_pollq.h"
-#include "platform/posix/posix_socket.h"
 
 #ifdef PLATFORM_POSIX_EPDESC
+#include "platform/posix/posix_aio.h"
+#include "platform/posix/posix_pollq.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -180,6 +179,30 @@ nni_posix_epdesc_doaccept(nni_posix_epdesc *ed)
 
 
 static void
+nni_posix_epdesc_doerror(nni_posix_epdesc *ed)
+{
+	nni_aio *aio;
+	int rv = 1;
+	socklen_t sz = sizeof (rv);
+
+	if (getsockopt(ed->fd, SOL_SOCKET, SO_ERROR, &rv, &sz) < 0) {
+		rv = errno;
+	}
+	if (rv == 0) {
+		return;
+	}
+	rv = nni_plat_errno(rv);
+
+	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
+		nni_posix_epdesc_finish(aio, rv, 0);
+	}
+	while ((aio = nni_list_first(&ed->connectq)) != NULL) {
+		nni_posix_epdesc_finish(aio, rv, 0);
+	}
+}
+
+
+static void
 nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 {
 	nni_aio *aio;
@@ -191,6 +214,8 @@ nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 		if ((sun->sun_family == AF_UNIX) && (ed->loclen != 0)) {
 			(void) unlink(sun->sun_path);
 		}
+		(void) close(ed->fd);
+		ed->fd = -1;
 	}
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
 		nni_posix_epdesc_finish(aio, NNG_ECLOSED, 0);
@@ -214,7 +239,10 @@ nni_posix_epdesc_cb(void *arg)
 	if (ed->node.revents & POLLOUT) {
 		nni_posix_epdesc_doconnect(ed);
 	}
-	if (ed->node.revents & (POLLHUP|POLLERR|POLLNVAL)) {
+	if (ed->node.revents & (POLLERR|POLLHUP)) {
+		nni_posix_epdesc_doerror(ed);
+	}
+	if (ed->node.revents & POLLNVAL) {
 		nni_posix_epdesc_doclose(ed);
 	}
 	ed->node.revents = 0;
@@ -241,6 +269,58 @@ nni_posix_epdesc_close(nni_posix_epdesc *ed)
 }
 
 
+static int
+nni_posix_epdesc_parseaddr(char *pair, char **hostp, uint16_t *portp)
+{
+	char *host, *port, *end;
+	char c;
+	int val;
+
+	if (pair[0] == '[') {
+		host = pair+1;
+		// IP address enclosed ... for IPv6 usually.
+		if ((end = strchr(host, ']')) == NULL) {
+			return (NNG_EADDRINVAL);
+		}
+		*end = '\0';
+		port = end + 1;
+		if (*port == ':') {
+			port++;
+		} else if (port != '\0') {
+			return (NNG_EADDRINVAL);
+		}
+	} else {
+		host = pair;
+		port = strchr(host, ':');
+		if (port != NULL) {
+			*port = '\0';
+			port++;
+		}
+	}
+	val = 0;
+	while ((c = *port) != '\0') {
+		val *= 10;
+		if ((c >= '0') && (c <= '9')) {
+			val += (c - '0');
+		} else {
+			return (NNG_EADDRINVAL);
+		}
+		if (val > 65535) {
+			return (NNG_EADDRINVAL);
+		}
+		port++;
+	}
+	if ((strlen(host) == 0) || (strcmp(host, "*") == 0)) {
+		*hostp = NULL;
+	} else {
+		*hostp = host;
+	}
+	// Stash the port in big endian (network) byte order.
+	NNI_PUT16((uint8_t *) portp, val);
+	return (0);
+}
+
+
 int
 nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 {
@@ -250,6 +330,7 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 	int fd;
 
 	nni_mtx_lock(&ed->mtx);
+
 	ss = &ed->locaddr;
 	len = ed->loclen;
 
@@ -273,6 +354,8 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 		(void) close(fd);
 		return (rv);
 	}
+
+	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
 	ed->fd = fd;
 	ed->node.fd = fd;
@@ -349,7 +432,10 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 		}
 	}
 
+	(void) fcntl(ed->fd, F_SETFL, O_NONBLOCK);
+
 	rv = connect(ed->fd, (void *) &ed->remaddr, ed->remlen);
+
 	if (rv == 0) {
 		// Immediate connect, cool!  This probably only happens on
 		// loopback, and probably not on every platform.
@@ -460,7 +546,9 @@ nni_posix_epdesc_set_remote(nni_posix_epdesc *ed, void *sa, int len)
 void
 nni_posix_epdesc_fini(nni_posix_epdesc *ed)
 {
-	// XXX: MORE WORK HERE.
+	if (ed->fd >= 0) {
+		(void) close(ed->fd);
+	}
 	nni_mtx_fini(&ed->mtx);
 	NNI_FREE_STRUCT(ed);
 }

@@ -35,6 +35,12 @@ ip6str(void *addr)
 TestMain("TCP Resolver", {
 	    nni_init();
 
+// These work on Darwin, and should work on illumos, but they may
+// depend on the local resolver configuration.  We elect not to depend
+// too much on them, since localhost can be configured weirdly.  Notably
+// the normal assumptions on Linux do *not* hold true.
+#if 0
+
 	    Convey("Localhost IPv4 resolves", {
 		    nni_aio aio;
 		    const char *str;
@@ -53,6 +59,7 @@ TestMain("TCP Resolver", {
 		    nni_aio_fini(&aio);
 	    }
 	    );
+
 	    Convey("Localhost IPv6 resolves", {
 		    nni_aio aio;
 		    memset(&aio, 0, sizeof (aio));
@@ -107,13 +114,14 @@ TestMain("TCP Resolver", {
 		    nni_aio_fini(&aio);
 	    }
 	    );
+#endif
 	    Convey("Google DNS IPv4 resolves", {
 		    nni_aio aio;
 		    const char *str;
 		    memset(&aio, 0, sizeof (aio));
 		    nni_aio_init(&aio, NULL, NULL);
 		    nni_plat_tcp_resolv("google-public-dns-a.google.com",
-		    	"80", NNG_AF_INET, 1, &aio);
+		    "80", NNG_AF_INET, 1, &aio);
 		    nni_aio_wait(&aio);
 		    So(nni_aio_result(&aio) == 0);
 		    So(aio.a_naddrs == 1);
@@ -130,7 +138,7 @@ TestMain("TCP Resolver", {
 		    memset(&aio, 0, sizeof (aio));
 		    nni_aio_init(&aio, NULL, NULL);
 		    nni_plat_tcp_resolv("8.8.4.4",
-		    	"80", NNG_AF_INET, 1, &aio);
+		    "80", NNG_AF_INET, 1, &aio);
 		    nni_aio_wait(&aio);
 		    So(nni_aio_result(&aio) == 0);
 		    So(aio.a_naddrs == 1);
@@ -147,7 +155,7 @@ TestMain("TCP Resolver", {
 		    memset(&aio, 0, sizeof (aio));
 		    nni_aio_init(&aio, NULL, NULL);
 		    nni_plat_tcp_resolv("8.8.4.4",
-		    	"http", NNG_AF_INET, 1, &aio);
+		    "http", NNG_AF_INET, 1, &aio);
 		    nni_aio_wait(&aio);
 		    So(nni_aio_result(&aio) == 0);
 		    So(aio.a_naddrs == 1);

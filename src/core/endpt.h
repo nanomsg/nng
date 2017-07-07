@@ -28,6 +28,7 @@ struct nni_ep {
 	char		ep_addr[NNG_MAXADDRLEN];
 	nni_thr		ep_thr;
 	int		ep_mode;
+	int		ep_started;
 	int		ep_closed;      // full shutdown
 	int		ep_bound;       // true if we bound locally
 	nni_mtx		ep_mtx;
@@ -36,7 +37,6 @@ struct nni_ep {
 	nni_list	ep_pipes;
 };
 
-#define NNI_EP_MODE_IDLE	0
 #define NNI_EP_MODE_DIAL	1
 #define NNI_EP_MODE_LISTEN	2
 
@@ -46,7 +46,7 @@ extern int nni_ep_find(nni_ep **, uint32_t);
 extern void nni_ep_hold(nni_ep *);
 extern void nni_ep_rele(nni_ep *);
 extern uint32_t nni_ep_id(nni_ep *);
-extern int nni_ep_create(nni_ep **, nni_sock *, const char *);
+extern int nni_ep_create(nni_ep **, nni_sock *, const char *, int);
 extern void nni_ep_stop(nni_ep *);
 extern void nni_ep_close(nni_ep *);
 extern void nni_ep_remove(nni_ep *);

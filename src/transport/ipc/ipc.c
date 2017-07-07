@@ -493,7 +493,7 @@ nni_ipc_ep_fini(void *arg)
 
 
 static int
-nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock)
+nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 {
 	nni_ipc_ep *ep;
 	int rv;
@@ -508,7 +508,7 @@ nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock)
 	}
 	if (((rv = nni_mtx_init(&ep->mtx)) != 0) ||
 	    ((rv = nni_aio_init(&ep->aio, nni_ipc_ep_cb, ep)) != 0) ||
-	    ((rv = nni_plat_ipc_ep_init(&ep->iep, url)) != 0)) {
+	    ((rv = nni_plat_ipc_ep_init(&ep->iep, url, mode)) != 0)) {
 		nni_ipc_ep_fini(ep);
 		return (rv);
 	}

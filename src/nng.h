@@ -42,13 +42,15 @@ extern "C" {
 
 // Types common to nng.
 typedef uint32_t		nng_socket;
-typedef uint32_t		nng_endpoint;
+typedef uint32_t		nng_dialer;
+typedef uint32_t		nng_listener;
 typedef uint32_t		nng_pipe;
 typedef struct nng_msg		nng_msg;
 typedef struct nng_event	nng_event;
 typedef struct nng_notify	nng_notify;
 typedef struct nng_snapshot	nng_snapshot;
 typedef struct nng_stat		nng_stat;
+typedef uint32_t		nng_endpoint; // XXX: REMOVE ME.
 
 // nng_open simply creates a socket of the given class. It returns an
 // error code on failure, or zero on success.  The socket starts in cooked
@@ -127,8 +129,13 @@ NNG_DECL void nng_unsetnotify(nng_socket, nng_notify *);
 #define NNG_EV_ERROR		NNG_EV_BIT(2)
 #define NNG_EV_PIPE_ADD		NNG_EV_BIT(3)
 #define NNG_EV_PIPE_REM		NNG_EV_BIT(4)
-#define NNG_EV_ENDPT_ADD	NNG_EV_BIT(5)
-#define NNG_EV_ENDPT_REM	NNG_EV_BIT(6)
+#define NNG_EV_DIALER_ADD	NNG_EV_BIT(5)
+#define NNG_EV_DIALER_REM	NNG_EV_BIT(6)
+#define NNG_EV_LISTENER_ADD	NNG_EV_BIT(7)
+#define NNG_EV_LISTENER_REM	NNG_EV_BIT(8)
+// XXX: Remove these.
+#define NNG_EV_ENDPT_ADD	NNG_EV_DIALER_ADD
+#define NNG_EV_ENDPT_REM	NNG_EV_DIALER_REM
 
 // The following functions return more detailed information about the event.
 // Some of the values will not make sense for some event types, in which case
@@ -145,7 +152,7 @@ NNG_DECL const char *nng_event_reason(nng_event *);
 // endpoint pointer, if it is not NULL.  The flags may be NNG_FLAG_SYNCH to
 // indicate that a failure setting the socket up should return an error
 // back to the caller immediately.
-NNG_DECL int nng_listen(nng_socket, const char *, nng_endpoint *, int);
+NNG_DECL int nng_listen(nng_socket, const char *, nng_listener *, int);
 
 // nng_dial creates a dialing endpoint, with no special options, and
 // starts it dialing.  Dialers have at most one active connection at a time
@@ -155,24 +162,28 @@ NNG_DECL int nng_listen(nng_socket, const char *, nng_endpoint *, int);
 // dial will be made synchronously, and a failure condition returned back
 // to the caller.  (If the connection is dropped, it will still be
 // reconnected in the background -- only the initial connect is synchronous.)
-NNG_DECL int nng_dial(nng_socket, const char *, nng_endpoint *, int);
+NNG_DECL int nng_dial(nng_socket, const char *, nng_dialer *, int);
 
-// nng_endpoint_create creates an endpoint on the socket, but does not
-// start it either dialing or listening.
-NNG_DECL int nng_endpoint_create(nng_socket, const char *, nng_endpoint *);
+// nng_dialer_create creates a new dialer, that is not yet started.
+NNG_DECL int nng_dialer_create(nng_socket, const char *, nng_dialer *);
 
-// nng_endpoint_dial starts the endpoint dialing.  This is only possible if
-// the endpoint is not already dialing or listening.
-NNG_DECL int nng_endpoint_dial(nng_endpoint, int);
+// nng_listener_create creates a new listener, that is not yet started.
+NNG_DECL int nng_listener_create(nng_socket, const char *, nng_listener *);
 
-// nng_endpoint_listen starts the endpoint listening.  This is only possible if
-// the endpoint is not already dialing or listening.
-NNG_DECL int nng_endpoint_listen(nng_endpoint, int);
+// nng_dialer_start starts the endpoint dialing.  This is only possible if
+// the dialer is not already dialing.
+NNG_DECL int nng_dialer_start(nng_dialer, int);
+
+// nng_listener_start starts the endpoint listening.  This is only possible if
+// the listener is not already listening.
+NNG_DECL int nng_listener_start(nng_listener, int);
 
 // nng_endpoint_close closes the endpoint, shutting down all underlying
 // connections and releasing all associated resources.  It is an error to
 // refer to the endpoint after this is called.
 NNG_DECL int nng_endpoint_close(nng_endpoint);
+NNG_DECL int nng_dialer_close(nng_dialer);
+NNG_DECL int nng_listener_close(nng_listener);
 
 // nng_endpoint_setopt sets an option for a specific endpoint.  Note
 // endpoint options may not be altered on a running endpoint.

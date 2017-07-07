@@ -200,47 +200,47 @@ extern int nni_plat_lookup_host(const char *, nni_sockaddr *, int);
 // TCP Support.
 //
 
-// nni_plat_tcp_init initializes the socket, for example it can
-// set underlying file descriptors to -1, etc.
-extern int nni_plat_tcp_init(nni_plat_tcpsock **);
+typedef struct nni_plat_tcp_ep		nni_plat_tcp_ep;
+typedef struct nni_plat_tcp_pipe	nni_plat_tcp_pipe;
 
-// nni_plat_tcp_fini just closes a TCP socket, and releases any related
-// resources.
-extern void nni_plat_tcp_fini(nni_plat_tcpsock *);
+// nni_plat_tcp_ep_init creates a new endpoint associated with the url.
+extern int nni_plat_tcp_ep_init(nni_plat_tcp_ep **, const char *, int);
 
-// nni_plat_tcp_shutdown performs a shutdown of the socket.  For
-// BSD sockets, this closes both sides of the TCP connection gracefully,
-// but the underlying file descriptor is left open.  (This part is critical
-// to prevention of close() related races.)
-extern void nni_plat_tcp_shutdown(nni_plat_tcpsock *);
+// nni_plat_tcp_ep_fini closes the endpoint and releases resources.
+extern void nni_plat_tcp_ep_fini(nni_plat_tcp_ep *);
 
-// nni_plat_tcp_listen creates a TCP socket in listening mode, bound
-// to the specified address.  Note that nni_plat_tcpsock should be defined
-// to whatever your platform uses.  For most systems its just "int".
-extern int nni_plat_tcp_listen(nni_plat_tcpsock *, const nni_sockaddr *);
+// nni_plat_tcp_ep_close closes the endpoint; this might not close the
+// actual underlying socket, but it should call shutdown on it.
+// Further operations on the pipe should return NNG_ECLOSED.
+extern void nni_plat_tcp_ep_close(nni_plat_tcp_ep *);
 
-// nni_plat_tcp_accept does the accept to accept an inbound connection.
-// The tcpsock used for the server will have been set up with the
-// nni_plat_tcp_listen.
-extern int nni_plat_tcp_accept(nni_plat_tcpsock *, nni_plat_tcpsock *);
+// nni_plat_tcp_listen creates an TCP socket in listening mode, bound
+// to the specified path.
+extern int nni_plat_tcp_ep_listen(nni_plat_tcp_ep *);
 
-// nni_plat_tcp_connect is the client side.  Two addresses are supplied,
-// as the client may specify a local address to which to bind.  This
-// second address may be NULL to use ephemeral ports, which is the
-// usual default.
-extern int nni_plat_tcp_connect(nni_plat_tcpsock *, const nni_sockaddr *,
-    const nni_sockaddr *);
+// nni_plat_tcp_ep_accept starts an accept to receive an incoming connection.
+// An accepted connection will be passed back in the a_pipe member.
+extern void nni_plat_tcp_ep_accept(nni_plat_tcp_ep *, nni_aio *);
 
-// nni_plat_tcp_aio_send sends the data to the remote side asynchronously.
-// The data to send is stored in the a_iov field of the aio, and the array
-// of iovs will never be larger than 4.  The platform may modify the iovs,
-// or the iov list.
-extern void nni_plat_tcp_aio_send(nni_plat_tcpsock *, nni_aio *);
+// nni_plat_tcp_connect is the client side.
+// An accepted connection will be passed back in the a_pipe member.
+extern void nni_plat_tcp_ep_connect(nni_plat_tcp_ep *, nni_aio *);
 
-// nni_plat_tcp_aio_recv recvs data into the buffers provided by the
-// iovs.  The implementation does not return until the iovs are completely
-// full, or an error condition occurs.
-extern void nni_plat_tcp_aio_recv(nni_plat_tcpsock *, nni_aio *);
+// nni_plat_tcp_pipe_fini closes the pipe, and releases all resources
+// associated with it.
+extern void nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *);
+
+// nni_plat_tcp_pipe_close closes the socket, or at least shuts it down.
+// Further operations on the pipe should return NNG_ECLOSED.
+extern void nni_plat_tcp_pipe_close(nni_plat_tcp_pipe *);
+
+// nni_plat_tcp_pipe_send sends data in the iov buffers to the peer.
+// The platform may modify the iovs.
+extern void nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *, nni_aio *);
+
+// nni_plat_tcp_pipe_recv recvs data into the buffers provided by the iovs.
+// The platform may modify the iovs.
+extern void nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *, nni_aio *);
 
 // nni_plat_tcp_resolv resolves a TCP name asynchronously.  The family
 // should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.  The
@@ -258,8 +258,8 @@ extern void nni_plat_tcp_resolv(const char *, const char *, int, int,
 typedef struct nni_plat_ipc_ep		nni_plat_ipc_ep;
 typedef struct nni_plat_ipc_pipe	nni_plat_ipc_pipe;
 
-// nni_plat_ipc_ep_init creates a new endpoint associated with the path.
-extern int nni_plat_ipc_ep_init(nni_plat_ipc_ep **, const char *);
+// nni_plat_ipc_ep_init creates a new endpoint associated with the url.
+extern int nni_plat_ipc_ep_init(nni_plat_ipc_ep **, const char *, int);
 
 // nni_plat_ipc_ep_fini closes the endpoint and releases resources.
 extern void nni_plat_ipc_ep_fini(nni_plat_ipc_ep *);
@@ -270,8 +270,7 @@ extern void nni_plat_ipc_ep_fini(nni_plat_ipc_ep *);
 extern void nni_plat_ipc_ep_close(nni_plat_ipc_ep *);
 
 // nni_plat_tcp_listen creates an IPC socket in listening mode, bound
-// to the specified path.  Note that nni_plat_ipcsock should be defined
-// to whatever your platform uses.  For most systems its just "int".
+// to the specified path.
 extern int nni_plat_ipc_ep_listen(nni_plat_ipc_ep *);
 
 // nni_plat_ipc_ep_accept starts an accept to receive an incoming connection.

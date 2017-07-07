@@ -40,7 +40,7 @@ struct nni_tran {
 struct nni_tran_ep {
 	// ep_init creates a vanilla endpoint. The value created is
 	// used for the first argument for all other endpoint functions.
-	int	(*ep_init)(void **, const char *, nni_sock *);
+	int	(*ep_init)(void **, const char *, nni_sock *, int);
 
 	// ep_fini frees the resources associated with the endpoint.
 	// The endpoint will already have been closed.

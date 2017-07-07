@@ -142,7 +142,7 @@ nni_ep_dtor(void *ptr)
 
 
 int
-nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
+nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 {
 	nni_tran *tran;
 	nni_ep *ep;
@@ -162,6 +162,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	}
 	ep->ep_sock = sock;
 	ep->ep_tran = tran;
+	ep->ep_mode = mode;
 
 	// Could safely use strcpy here, but this avoids discussion.
 	(void) snprintf(ep->ep_addr, sizeof (ep->ep_addr), "%s", addr);
@@ -172,7 +173,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr)
 	ep->ep_ops = *tran->tran_ep;
 
 
-	if ((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, sock)) != 0) {
+	if ((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, sock, mode)) != 0) {
 		nni_objhash_unref(nni_eps, id);
 		return (rv);
 	}
@@ -391,7 +392,11 @@ nni_ep_dial(nni_ep *ep, int flags)
 	int rv = 0;
 
 	nni_mtx_lock(&ep->ep_mtx);
-	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
+	if (ep->ep_mode != NNI_EP_MODE_DIAL) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (NNG_ENOTSUP);
+	}
+	if (ep->ep_started) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_EBUSY);
 	}
@@ -404,14 +409,14 @@ nni_ep_dial(nni_ep *ep, int flags)
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (rv);
 	}
-	ep->ep_mode = NNI_EP_MODE_DIAL;
+	ep->ep_started = 1;
 
 	if (flags & NNG_FLAG_SYNCH) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		rv = nni_ep_connect_sync(ep);
 		if (rv != 0) {
 			nni_thr_fini(&ep->ep_thr);
-			ep->ep_mode = NNI_EP_MODE_IDLE;
+			ep->ep_started = 0;
 			return (rv);
 		}
 		nni_mtx_lock(&ep->ep_mtx);
@@ -561,11 +566,14 @@ nni_ep_listen(nni_ep *ep, int flags)
 	int rv = 0;
 
 	nni_mtx_lock(&ep->ep_mtx);
-	if (ep->ep_mode != NNI_EP_MODE_IDLE) {
+	if (ep->ep_mode != NNI_EP_MODE_LISTEN) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (NNG_ENOTSUP);
+	}
+	if (ep->ep_started) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_EBUSY);
 	}
-
 	if (ep->ep_closed) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_ECLOSED);
@@ -576,14 +584,14 @@ nni_ep_listen(nni_ep *ep, int flags)
 		return (rv);
 	}
 
-	ep->ep_mode = NNI_EP_MODE_LISTEN;
+	ep->ep_started = 1;
 
 	if (flags & NNG_FLAG_SYNCH) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		rv = ep->ep_ops.ep_bind(ep->ep_data);
 		if (rv != 0) {
 			nni_thr_fini(&ep->ep_thr);
-			ep->ep_mode = NNI_EP_MODE_IDLE;
+			ep->ep_started = 0;
 			return (rv);
 		}
 		nni_mtx_lock(&ep->ep_mtx);

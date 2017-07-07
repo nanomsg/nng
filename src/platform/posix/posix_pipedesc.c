@@ -8,10 +8,10 @@
 //
 
 #include "core/nng_impl.h"
-#include "platform/posix/posix_aio.h"
-#include "platform/posix/posix_pollq.h"
 
 #ifdef PLATFORM_POSIX_PIPEDESC
+#include "platform/posix/posix_aio.h"
+#include "platform/posix/posix_pollq.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -183,6 +183,8 @@ nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
 	if (pd->fd != -1) {
 		// Let any peer know we are closing.
 		(void) shutdown(pd->fd, SHUT_RDWR);
+		close(pd->fd);
+		pd->fd = -1;
 	}
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
 		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);

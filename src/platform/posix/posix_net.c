@@ -11,9 +11,9 @@
 
 #ifdef PLATFORM_POSIX_NET
 #include "platform/posix/posix_aio.h"
-#include "platform/posix/posix_socket.h"
 
 #include <errno.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
@@ -24,101 +24,181 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include <netdb.h>
 
-// We alias nni_plat_tcpsock to an nni_posix_sock.
+static int
+nni_posix_tcp_addr(struct sockaddr_storage *ss, const nni_sockaddr *sa)
+{
+	struct sockaddr_in *sin;
+	struct sockaddr_in6 *sin6;
+
+	switch (sa->s_un.s_family) {
+	case NNG_AF_INET:
+		sin = (void *) ss;
+		memset(sin, 0, sizeof (*sin));
+		sin->sin_family = PF_INET;
+		sin->sin_port = sa->s_un.s_in.sa_port;
+		sin->sin_addr.s_addr = sa->s_un.s_in.sa_addr;
+		return (sizeof (*sin));
+
+
+	case NNG_AF_INET6:
+		sin6 = (void *) ss;
+		memset(sin6, 0, sizeof (*sin6));
+#ifdef  SIN6_LEN
+		sin6->sin6_len = sizeof (*sin6);
+#endif
+		sin6->sin6_family = PF_INET6;
+		sin6->sin6_port = sa->s_un.s_in6.sa_port;
+		memcpy(sin6->sin6_addr.s6_addr, sa->s_un.s_in6.sa_addr, 16);
+		return (sizeof (*sin6));
+	}
+	return (-1);
+}
+
+
+extern int nni_tcp_parse_url(char *, char **, char **, char **, char **);
 
 int
-nni_plat_lookup_host(const char *host, nni_sockaddr *addr, int flags)
+nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
 {
-	struct addrinfo hint;
-	struct addrinfo *ai;
-
-	memset(&hint, 0, sizeof (hint));
-	hint.ai_flags = AI_PASSIVE | AI_ADDRCONFIG | AI_NUMERICSERV;
-	hint.ai_family = PF_UNSPEC;
-	hint.ai_socktype = SOCK_STREAM;
-	hint.ai_protocol = IPPROTO_TCP;
-	if (flags & NNI_FLAG_IPV4ONLY) {
-		hint.ai_family = PF_INET;
-	}
-
-	if (getaddrinfo(host, "1", &hint, &ai) != 0) {
-		return (NNG_EADDRINVAL);
-	}
-
-	if (nni_posix_from_sockaddr(addr, ai->ai_addr) < 0) {
-		freeaddrinfo(ai);
-		return (NNG_EADDRINVAL);
-	}
-	freeaddrinfo(ai);
-	return (0);
-}
-
-
-void
-nni_plat_tcp_aio_send(nni_plat_tcpsock *s, nni_aio *aio)
-{
-	nni_posix_sock_aio_send((void *) s, aio);
-}
-
-
-void
-nni_plat_tcp_aio_recv(nni_plat_tcpsock *s, nni_aio *aio)
-{
-	nni_posix_sock_aio_recv((void *) s, aio);
-}
-
-
-int
-nni_plat_tcp_init(nni_plat_tcpsock **sp)
-{
-	nni_posix_sock *s;
+	nni_posix_epdesc *ed;
+	char buf[NNG_MAXADDRLEN];
 	int rv;
+	char *lhost, *rhost;
+	char *lserv, *rserv;
+	char *sep;
+	struct sockaddr_storage ss;
+	int len;
+	int passive;
+	nni_aio aio;
 
-	if ((rv = nni_posix_sock_init(&s)) == 0) {
-		*sp = (void *) s;
+	if ((rv = nni_posix_epdesc_init(&ed, url)) != 0) {
+		return (rv);
 	}
+
+	// Make a local copy.
+	snprintf(buf, sizeof (buf), "%s", url);
+	nni_aio_init(&aio, NULL, NULL);
+
+	if (mode == NNI_EP_MODE_DIAL) {
+		rv = nni_tcp_parse_url(buf, &rhost, &rserv, &lhost, &lserv);
+		if (rv != 0) {
+			goto done;
+		}
+
+		// We have to have a remote destination!
+		if ((rhost == NULL) || (rserv == NULL)) {
+			rv = NNG_EADDRINVAL;
+			goto done;
+		}
+	} else {
+		rv = nni_tcp_parse_url(buf, &lhost, &lserv, &rhost, &rserv);
+		if (rv != 0) {
+			goto done;
+		}
+		if ((rhost != NULL) || (rserv != NULL)) {
+			// remotes are nonsensical here.
+			rv = NNG_EADDRINVAL;
+			goto done;
+		}
+		if (lserv == NULL) {
+			// missing port to listen on!
+			rv = NNG_EADDRINVAL;
+			goto done;
+		}
+	}
+
+	if ((rserv != NULL) || (rhost != NULL)) {
+		nni_plat_tcp_resolv(rhost, rserv, NNG_AF_UNSPEC, 0, &aio);
+		nni_aio_wait(&aio);
+		if ((rv = nni_aio_result(&aio)) != 0) {
+			goto done;
+		}
+		len = nni_posix_tcp_addr(&ss, &aio.a_addrs[0]);
+		nni_posix_epdesc_set_remote(ed, &ss, len);
+	}
+
+	if ((lserv != NULL) || (lhost != NULL)) {
+		nni_plat_tcp_resolv(lhost, lserv, NNG_AF_UNSPEC, 1, &aio);
+		nni_aio_wait(&aio);
+		if ((rv = nni_aio_result(&aio)) != 0) {
+			goto done;
+		}
+		len = nni_posix_tcp_addr(&ss, &aio.a_addrs[0]);
+		nni_posix_epdesc_set_local(ed, &ss, len);
+	}
+	*epp = (void *) ed;
+	return (0);
+
+done:
+	if (rv != 0) {
+		nni_posix_epdesc_fini(ed);
+	}
+	nni_aio_fini(&aio);
 	return (rv);
 }
 
 
 void
-nni_plat_tcp_fini(nni_plat_tcpsock *s)
+nni_plat_tcp_ep_fini(nni_plat_tcp_ep *ep)
 {
-	nni_posix_sock_fini((void *) s);
+	nni_posix_epdesc_fini((void *) ep);
 }
 
 
 void
-nni_plat_tcp_shutdown(nni_plat_tcpsock *s)
+nni_plat_tcp_ep_close(nni_plat_tcp_ep *ep)
 {
-	nni_posix_sock_shutdown((void *) s);
+	nni_posix_epdesc_close((void *) ep);
 }
 
 
 int
-nni_plat_tcp_listen(nni_plat_tcpsock *s, const nni_sockaddr *addr)
+nni_plat_tcp_ep_listen(nni_plat_tcp_ep *ep)
 {
-	return (nni_posix_sock_listen((void *) s, addr));
+	return (nni_posix_epdesc_listen((void *) ep));
 }
 
 
-// nni_plat_tcp_connect establishes an outbound connection.  It the
-// bind address is not null, then it will attempt to bind to the local
-// address specified first.
-int
-nni_plat_tcp_connect(nni_plat_tcpsock *s, const nni_sockaddr *addr,
-    const nni_sockaddr *bindaddr)
+void
+nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
-	return (nni_posix_sock_connect_sync((void *) s, addr, bindaddr));
+	return (nni_posix_epdesc_connect((void *) ep, aio));
 }
 
 
-int
-nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
+void
+nni_plat_tcp_ep_accept(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
-	return (nni_posix_sock_accept_sync((void *) s, (void *) server));
+	return (nni_posix_epdesc_accept((void *) ep, aio));
+}
+
+
+void
+nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *p)
+{
+	nni_posix_pipedesc_fini((void *) p);
+}
+
+
+void
+nni_plat_tcp_pipe_close(nni_plat_tcp_pipe *p)
+{
+	nni_posix_pipedesc_close((void *) p);
+}
+
+
+void
+nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *p, nni_aio *aio)
+{
+	nni_posix_pipedesc_send((void *) p, aio);
+}
+
+
+void
+nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *p, nni_aio *aio)
+{
+	nni_posix_pipedesc_recv((void *) p, aio);
 }
 
 

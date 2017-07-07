@@ -297,7 +297,7 @@ nni_plat_init(int (*helper)(void))
 	// probably get by with even just 8k, but Linux usually wants 16k
 	// as a minimum.  If this fails, its not fatal, just we won't be
 	// as scalable / thrifty with our use of VM.
-	(void) pthread_attr_setstacksize(&nni_pthread_attr, 16384);
+	//(void) pthread_attr_setstacksize(&nni_pthread_attr, 16384);
 
 	if ((rv = nni_posix_pollq_sysinit()) != 0) {
 		pthread_mutex_unlock(&nni_plat_lock);
@@ -316,7 +316,6 @@ nni_plat_init(int (*helper)(void))
 		pthread_condattr_destroy(&nni_cvattr);
 		pthread_attr_destroy(&nni_pthread_attr);
 		return (rv);
-
 	}
 
 	if (pthread_atfork(NULL, NULL, nni_atfork_child) != 0) {

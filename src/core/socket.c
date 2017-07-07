@@ -775,7 +775,7 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	nni_ep *ep;
 	int rv;
 
-	if ((rv = nni_ep_create(&ep, sock, addr)) != 0) {
+	if ((rv = nni_ep_create(&ep, sock, addr, NNI_EP_MODE_DIAL)) != 0) {
 		return (rv);
 	}
 
@@ -795,7 +795,7 @@ nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	nni_ep *ep;
 	int rv;
 
-	if ((rv = nni_ep_create(&ep, sock, addr)) != 0) {
+	if ((rv = nni_ep_create(&ep, sock, addr, NNI_EP_MODE_LISTEN)) != 0) {
 		return (rv);
 	}
 

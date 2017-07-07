@@ -11,7 +11,6 @@
 
 #ifdef PLATFORM_POSIX_IPC
 #include "platform/posix/posix_aio.h"
-#include "platform/posix/posix_socket.h"
 
 #include <errno.h>
 #include <stdlib.h>
@@ -41,36 +40,39 @@
 // We alias nni_posix_pipedesc to nni_plat_ipc_pipe.
 // We alias nni_posix_epdesc to nni_plat_ipc_ep.
 
-static int
-nni_plat_ipc_path_resolve(struct sockaddr_un *sun, const char *path)
-{
-	size_t len;
-
-	memset(sun, 0, sizeof (*sun));
-
-	// TODO: abstract sockets, including autobind sockets.
-	len = strlen(path);
-	if ((len >= sizeof (sun->sun_path)) || (len < 1)) {
-		return (NNG_EADDRINVAL);
-	}
-	(void) snprintf(sun->sun_path, sizeof (sun->sun_path), "%s", path);
-	sun->sun_family = AF_UNIX;
-	return (0);
-}
-
-
 int
-nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url)
+nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
 {
 	nni_posix_epdesc *ed;
 	int rv;
+	struct sockaddr_un sun;
+	const char *path;
 
 	if (strncmp(url, "ipc://", strlen("ipc://")) != 0) {
 		return (NNG_EADDRINVAL);
 	}
-	url += strlen("ipc://");        // skip the prefix.
+	path = url + strlen("ipc://");        // skip the prefix.
+
+	// prepare the sockaddr_un
+	sun.sun_family = AF_UNIX;
+	if (strlen(url) >= sizeof (sun.sun_path)) {
+		return (NNG_EADDRINVAL);
+	}
+	snprintf(sun.sun_path, sizeof (sun.sun_path), "%s", path);
+
 	if ((rv = nni_posix_epdesc_init(&ed, url)) != 0) {
 		return (rv);
+	}
+	switch (mode) {
+	case NNI_EP_MODE_DIAL:
+		nni_posix_epdesc_set_remote(ed, &sun, sizeof (sun));
+		break;
+	case NNI_EP_MODE_LISTEN:
+		nni_posix_epdesc_set_local(ed, &sun, sizeof (sun));
+		break;
+	default:
+		nni_posix_epdesc_fini(ed);
+		return (NNG_EINVAL);
 	}
 
 	*epp = (void *) ed;
@@ -98,10 +100,14 @@ nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
 // will just try to cleanup the old socket.  Note that this is not
 // perfect in all scenarios, so use this with caution.
 static int
-nni_plat_ipc_remove_stale(struct sockaddr_un *sun)
+nni_plat_ipc_remove_stale(const char *path)
 {
 	int fd;
 	int rv;
+	struct sockaddr_un sun;
+
+	sun.sun_family = AF_UNIX;
+	snprintf(sun.sun_path, sizeof (sun.sun_path), "%s", path);
 
 	if ((fd = socket(AF_UNIX, NNI_STREAM_SOCKTYPE, 0)) < 0) {
 		return (nni_plat_errno(errno));
@@ -113,9 +119,9 @@ nni_plat_ipc_remove_stale(struct sockaddr_un *sun)
 	// then the cleanup will fail.  As this is supposed to be an
 	// exceptional case, don't worry.
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
-	if (connect(fd, (void *) sun, sizeof (*sun)) < 0) {
+	if (connect(fd, (void *) &sun, sizeof (sun)) < 0) {
 		if (errno == ECONNREFUSED) {
-			(void) unlink(sun->sun_path);
+			(void) unlink(path);
 		}
 	}
 	(void) close(fd);
@@ -132,17 +138,11 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 	int rv;
 
 	path = nni_posix_epdesc_url(ed);
+	path += strlen("ipc://");
 
-	if ((rv = nni_plat_ipc_path_resolve(&sun, path)) != 0) {
+	if ((rv = nni_plat_ipc_remove_stale(path)) != 0) {
 		return (rv);
 	}
-
-	if ((rv = nni_plat_ipc_remove_stale(&sun)) != 0) {
-		return (rv);
-	}
-
-	nni_posix_epdesc_set_local(ed, &sun, sizeof (sun));
-
 	return (nni_posix_epdesc_listen(ed));
 }
 
@@ -150,21 +150,7 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 void
 nni_plat_ipc_ep_connect(nni_plat_ipc_ep *ep, nni_aio *aio)
 {
-	const char *path;
-	nni_posix_epdesc *ed = (void *) ep;
-	struct sockaddr_un sun;
-	int rv;
-
-	path = nni_posix_epdesc_url(ed);
-
-	if ((rv = nni_plat_ipc_path_resolve(&sun, path)) != 0) {
-		nni_aio_finish(aio, rv, 0);
-		return;
-	}
-
-	nni_posix_epdesc_set_remote(ed, &sun, sizeof (sun));
-
-	nni_posix_epdesc_connect(ed, aio);
+	nni_posix_epdesc_connect((void *) ep, aio);
 }
 
 
