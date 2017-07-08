@@ -329,7 +329,6 @@ static void
 nni_req_sendraw_cb(void *arg)
 {
 	nni_req_pipe *rp = arg;
-	nni_msg *msg;
 
 	if (nni_aio_result(&rp->aio_sendraw) != 0) {
 		nni_msg_free(rp->aio_sendraw.a_msg);
@@ -455,7 +454,6 @@ nni_req_resend(nni_req_sock *req)
 {
 	nni_req_pipe *rp;
 	nni_msg *msg;
-	int i;
 
 	// Note: This routine should be called with the socket lock held.
 	// Also, this should only be called while handling cooked mode

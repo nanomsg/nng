@@ -138,7 +138,6 @@ nni_sub_recv_cb(void *arg)
 	nni_sub_pipe *sp = arg;
 	nni_sub_sock *sub = sp->sub;
 	nni_msgq *urq = sub->urq;
-	nni_msg *msg;
 
 	if (nni_aio_result(&sp->aio_recv) != 0) {
 		nni_pipe_stop(sp->pipe);

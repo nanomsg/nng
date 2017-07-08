@@ -176,7 +176,6 @@ nni_pub_pipe_stop(void *arg)
 {
 	nni_pub_pipe *pp = arg;
 	nni_pub_sock *pub = pp->pub;
-	int refcnt;
 
 	nni_aio_stop(&pp->aio_getq);
 	nni_aio_stop(&pp->aio_send);

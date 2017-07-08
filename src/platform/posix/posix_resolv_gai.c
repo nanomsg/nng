@@ -214,7 +214,6 @@ nni_posix_resolv_task(void *arg)
 		break;
 	}
 
-done:
 	if (results != NULL) {
 		freeaddrinfo(results);
 	}
