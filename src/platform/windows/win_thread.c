@@ -34,7 +34,7 @@ nni_free(void *b, size_t z)
 int
 nni_plat_mtx_init(nni_plat_mtx *mtx)
 {
-	InitializeCriticalSection(&mtx->cs);
+	InitializeSRWLock(&mtx->srl);
 	mtx->init = 1;
 	return (0);
 }
@@ -43,24 +43,21 @@ nni_plat_mtx_init(nni_plat_mtx *mtx)
 void
 nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
-	if (mtx->init) {
-		DeleteCriticalSection(&mtx->cs);
-		mtx->init = 0;
-	}
+	mtx->init = 0;
 }
 
 
 void
 nni_plat_mtx_lock(nni_plat_mtx *mtx)
 {
-	EnterCriticalSection(&mtx->cs);
+	AcquireSRWLockExclusive(&mtx->srl);
 }
 
 
 void
 nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 {
-	LeaveCriticalSection(&mtx->cs);
+	ReleaseSRWLockExclusive(&mtx->srl);
 }
 
 
@@ -68,7 +65,7 @@ int
 nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 {
 	InitializeConditionVariable(&cv->cv);
-	cv->cs = &mtx->cs;
+	cv->srl = &mtx->srl;
 	return (0);
 }
 
@@ -83,7 +80,7 @@ nni_plat_cv_wake(nni_plat_cv *cv)
 void
 nni_plat_cv_wait(nni_plat_cv *cv)
 {
-	(void) SleepConditionVariableCS(&cv->cv, cv->cs, INFINITE);
+	(void) SleepConditionVariableSRW(&cv->cv, cv->srl, INFINITE, 0);
 }
 
 
@@ -102,7 +99,7 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 		msec = (DWORD) (((until - now) + 999)/1000);
 	}
 
-	ok = SleepConditionVariableCS(&cv->cv, cv->cs, msec);
+	ok = SleepConditionVariableSRW(&cv->cv, cv->srl, msec, 0);
 	return (ok ? 0 : NNG_ETIMEDOUT);
 }
 
@@ -156,23 +153,16 @@ nni_plat_thr_fini(nni_plat_thr *thr)
 int
 nni_plat_init(int (*helper)(void))
 {
-	LONG old;
-	static LONG initing = 0;
 	static LONG inited = 0;
 	int rv;
+	static SRWLOCK lock = SRWLOCK_INIT;
 
 	if (inited) {
 		return (0);     // fast path
 	}
 
-	// This logic gets us to initialize the platform just once.
-	// If two threads enter here together, only one will get to run,
-	// and the other will be put to sleep briefly so that the first
-	// can complete.  This is a poor man's singleton initializer, since
-	// we can't statically initialize critical sections.
-	while ((old = InterlockedCompareExchange(&initing, 0, 1)) != 0) {
-		Sleep(1);
-	}
+	AcquireSRWLockExclusive(&lock);
+
 	if (!inited) {
 		WSADATA data;
 		WORD ver;
@@ -185,7 +175,6 @@ nni_plat_init(int (*helper)(void))
 			rv = NNG_EINVAL;
 			goto out;
 		}
-		printf("STARTING...\n");
 		if ((rv = nni_win_iocp_sysinit()) != 0) {
 			goto out;
 		}
@@ -197,7 +186,7 @@ nni_plat_init(int (*helper)(void))
 	}
 
 out:
-	InterlockedExchange(&initing, 0);
+	ReleaseSRWLockExclusive(&lock);
 
 	return (rv);
 }

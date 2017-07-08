@@ -137,7 +137,6 @@ nni_objhash_find_node(nni_objhash *oh, uint32_t id)
 int
 nni_objhash_find(nni_objhash *oh, uint32_t id, void **valp)
 {
-	uint32_t index;
 	nni_objhash_node *node;
 	int rv;
 
@@ -242,7 +241,6 @@ nni_objhash_resize(nni_objhash *oh, int grow)
 void
 nni_objhash_unref(nni_objhash *oh, uint32_t id)
 {
-	int rv;
 	void *val;
 	uint32_t index;
 	nni_objhash_node *node;
@@ -309,7 +307,6 @@ nni_objhash_unref(nni_objhash *oh, uint32_t id)
 void
 nni_objhash_unref_wait(nni_objhash *oh, uint32_t id)
 {
-	int rv;
 	void *val;
 	uint32_t index;
 	nni_objhash_node *node;

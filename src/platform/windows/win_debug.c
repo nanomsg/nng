@@ -77,6 +77,7 @@ nni_plat_errno(int errnum)
 	return (NNG_ESYSERR + errnum);
 }
 
+
 // Windows has infinite numbers of error codes it seems.  We only bother
 // with the ones that are relevant to us (we think).  Note that there is
 // no overlap between errnos and GetLastError values.

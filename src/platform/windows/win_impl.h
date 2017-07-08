@@ -26,7 +26,7 @@
 // These types are provided for here, to permit them to be directly inlined
 // elsewhere.
 
-typedef struct nni_win_event nni_win_event;
+typedef struct nni_win_event   nni_win_event;
 
 // nni_win_event is used with io completion ports.  This allows us to get
 // to a specific completion callback without requiring the poller (in the
@@ -60,14 +60,14 @@ struct nni_plat_thr {
 };
 
 struct nni_plat_mtx {
-	CRITICAL_SECTION	cs;
-	DWORD			owner;
-	int			init;
+	SRWLOCK srl;
+	DWORD	owner;
+	int	init;
 };
 
 struct nni_plat_cv {
 	CONDITION_VARIABLE	cv;
-	CRITICAL_SECTION *	cs;
+	PSRWLOCK		srl;
 };
 
 extern int nni_win_error(int);

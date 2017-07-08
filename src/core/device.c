@@ -56,7 +56,6 @@ static void
 nni_device_rev(void *p)
 {
 	nni_device_pair *pair = p;
-	int rv;
 
 	pair->err[1] = nni_device_loop(pair->socks[1], pair->socks[0]);
 	nni_sock_shutdown(pair->socks[0]);

@@ -472,7 +472,6 @@ nni_sock_shutdown(nni_sock *sock)
 	nni_pipe *pipe;
 	nni_ep *ep;
 	nni_time linger;
-	int i;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
@@ -577,8 +576,6 @@ nni_sock_shutdown(nni_sock *sock)
 int
 nni_sock_ep_add(nni_sock *sock, nni_ep *ep)
 {
-	int rv;
-
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
 		nni_mtx_unlock(&sock->s_mx);
@@ -613,9 +610,6 @@ nni_sock_ep_remove(nni_sock *sock, nni_ep *ep)
 void
 nni_sock_close(nni_sock *sock)
 {
-	int i;
-	nni_notify *notify;
-
 	// Shutdown everything if not already done.  This operation
 	// is idempotent.
 	nni_sock_shutdown(sock);

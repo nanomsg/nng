@@ -15,8 +15,6 @@
 int
 nni_ev_init(nni_event *event, int type, nni_sock *sock)
 {
-	int rv;
-
 	memset(event, 0, sizeof (*event));
 	event->e_type = type;
 	event->e_sock = sock;

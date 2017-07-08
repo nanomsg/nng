@@ -42,6 +42,6 @@ extern void nni_posix_pollq_cancel(nni_posix_pollq *, nni_posix_pollq_node *);
 extern int nni_posix_pollq_sysinit(void);
 extern void nni_posix_pollq_sysfini(void);
 
-#endif // PLATFORM_POSIX
+#endif  // PLATFORM_POSIX
 
-#endif // PLATFORM_POSIX_POLLQ_H
+#endif  // PLATFORM_POSIX_POLLQ_H

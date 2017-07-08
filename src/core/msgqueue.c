@@ -510,7 +510,6 @@ nni_msgq_run_timeout(void *arg)
 	nni_time exp;
 	nni_aio *aio;
 	nni_aio *naio;
-	int rv;
 
 	now = nni_clock();
 	exp = NNI_TIME_NEVER;
