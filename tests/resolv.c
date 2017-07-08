@@ -12,28 +12,39 @@
 #include "stubs.h"
 
 #include <string.h>
+
+#ifndef _WIN32
 #include <arpa/inet.h>
+#endif
 
 static const char *
-ip4str(void *addr)
+ip4tostr(void *addr)
 {
 	static char buf[256];
 
+#ifdef _WIN32
+	return (InetNtop(AF_INET, addr, buf, sizeof (buf)));
+
+#else
 	return (inet_ntop(AF_INET, addr, buf, sizeof (buf)));
+
+#endif
 }
 
 
 static const char *
-ip6str(void *addr)
+ip6tostr(void *addr)
 {
 	static char buf[256];
 
+#ifdef _WIN32
+	return (InetNtop(AF_INET6, addr, buf, sizeof (buf)));
+
+#else
 	return (inet_ntop(AF_INET6, addr, buf, sizeof (buf)));
+
+#endif
 }
-
-
-TestMain("TCP Resolver", {
-	    nni_init();
 
 // These work on Darwin, and should work on illumos, but they may
 // depend on the local resolver configuration.  We elect not to depend
@@ -54,7 +65,7 @@ TestMain("TCP Resolver", {
 		    So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
 		    So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
 		    So(aio.a_addrs[0].s_un.s_in.sa_addr == ntohl(0x7f000001));
-		    str = ip4str(&aio.a_addrs[0].s_un.s_in.sa_addr);
+		    str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
 		    So(strcmp(str, "127.0.0.1") == 0);
 		    nni_aio_fini(&aio);
 	    }
@@ -72,7 +83,7 @@ TestMain("TCP Resolver", {
 		    So(aio.a_naddrs == 1);
 		    So(aio.a_addrs[0].s_un.s_in6.sa_family == NNG_AF_INET6);
 		    So(aio.a_addrs[0].s_un.s_in6.sa_port == ntohs(80));
-		    str = ip6str(&aio.a_addrs[0].s_un.s_in6.sa_addr);
+		    str = ip6tostr(&aio.a_addrs[0].s_un.s_in6.sa_addr);
 		    So(strcmp(str, "::1") == 0);
 		    nni_aio_fini(&aio);
 	    }
@@ -94,7 +105,7 @@ TestMain("TCP Resolver", {
 				    So(aio.a_addrs[i].s_un.s_in6.sa_port ==
 				    ntohs(80));
 				    str =
-				    ip6str(&aio.a_addrs[i].s_un.s_in6.sa_addr);
+				    ip6tostr(&aio.a_addrs[i].s_un.s_in6.sa_addr);
 				    So(strcmp(str, "::1") == 0);
 				    break;
 
@@ -102,7 +113,7 @@ TestMain("TCP Resolver", {
 				    So(aio.a_addrs[i].s_un.s_in.sa_port ==
 				    ntohs(80));
 				    str =
-				    ip4str(&aio.a_addrs[i].s_un.s_in.sa_addr);
+				    ip4tostr(&aio.a_addrs[i].s_un.s_in.sa_addr);
 				    So(strcmp(str, "127.0.0.1") == 0);
 				    break;
 			    default:
@@ -115,19 +126,22 @@ TestMain("TCP Resolver", {
 	    }
 	    );
 #endif
+
+TestMain("TCP Resolver", {
+	    nni_init();
+
 	    Convey("Google DNS IPv4 resolves", {
 		    nni_aio aio;
 		    const char *str;
 		    memset(&aio, 0, sizeof (aio));
 		    nni_aio_init(&aio, NULL, NULL);
-		    nni_plat_tcp_resolv("google-public-dns-a.google.com",
-		    "80", NNG_AF_INET, 1, &aio);
+		    nni_plat_tcp_resolv("google-public-dns-a.google.com", "80", NNG_AF_INET, 1, &aio);
 		    nni_aio_wait(&aio);
 		    So(nni_aio_result(&aio) == 0);
 		    So(aio.a_naddrs == 1);
 		    So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
 		    So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
-		    str = ip4str(&aio.a_addrs[0].s_un.s_in.sa_addr);
+		    str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
 		    So(strcmp(str, "8.8.8.8") == 0);
 		    nni_aio_fini(&aio);
 	    }
@@ -137,36 +151,31 @@ TestMain("TCP Resolver", {
 		    const char *str;
 		    memset(&aio, 0, sizeof (aio));
 		    nni_aio_init(&aio, NULL, NULL);
-		    nni_plat_tcp_resolv("8.8.4.4",
-		    "80", NNG_AF_INET, 1, &aio);
+		    nni_plat_tcp_resolv("8.8.4.4", "80", NNG_AF_INET, 1, &aio);
 		    nni_aio_wait(&aio);
 		    So(nni_aio_result(&aio) == 0);
 		    So(aio.a_naddrs == 1);
 		    So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
 		    So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
-		    str = ip4str(&aio.a_addrs[0].s_un.s_in.sa_addr);
+		    str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
 		    So(strcmp(str, "8.8.4.4") == 0);
 		    nni_aio_fini(&aio);
-	    }
-	    );
+	    });
 	    Convey("Name service resolves", {
 		    nni_aio aio;
 		    const char *str;
 		    memset(&aio, 0, sizeof (aio));
 		    nni_aio_init(&aio, NULL, NULL);
-		    nni_plat_tcp_resolv("8.8.4.4",
-		    "http", NNG_AF_INET, 1, &aio);
+		    nni_plat_tcp_resolv("8.8.4.4", "http", NNG_AF_INET, 1, &aio);
 		    nni_aio_wait(&aio);
 		    So(nni_aio_result(&aio) == 0);
 		    So(aio.a_naddrs == 1);
 		    So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
 		    So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
-		    str = ip4str(&aio.a_addrs[0].s_un.s_in.sa_addr);
+		    str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
 		    So(strcmp(str, "8.8.4.4") == 0);
 		    nni_aio_fini(&aio);
-	    }
-	    );
+	    });
 
 	    nni_fini();
-    }
-    )
+    })

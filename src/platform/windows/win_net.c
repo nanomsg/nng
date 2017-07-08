@@ -13,6 +13,31 @@
 
 #include <stdio.h>
 
+static LPFN_CONNECTEX nni_win_connectex;
+static LPFN_ACCEPTEX nni_win_acceptex;
+
+
+struct nni_plat_tcp_pipe {
+	SOCKET		s;
+	nni_win_event	recv_evt;
+	nni_win_event	send_evt;
+	WSAOVERLAPPED	recv_olpd;
+	WSAOVERLAPPED	send_olpd;
+};
+
+
+struct nni_plat_tcp_ep {
+	SOCKET		s;
+	nni_win_event	evt;
+	WSAOVERLAPPED	olpd;
+
+	// We have to lookup some function pointers using ioctls.  Winsock,
+	// gotta love it.
+	LPFN_CONNECTEX	connectex;
+	LPFN_ACCEPTEX	acceptex;
+};
+
+
 // Windows has infinite numbers of error codes it seems.
 static struct {
 	int	wsa_err;
@@ -197,7 +222,88 @@ nni_plat_lookup_host(const char *host, nni_sockaddr *addr, int flags)
 
 
 int
-nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
+nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
+{
+	nni_plat_tcp_ep *ep;
+
+	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	ZeroMemory(ep, sizeof (*ep));
+	ep->s = INVALID_SOCKET;
+
+	// XXX: no need to create event?
+	ep->olpd.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
+	if (ep->olpd.hEvent == INVALID_HANDLE_VALUE) {
+		return (nni_win_error(GetLastError()));
+	}
+
+	// XXX: save URL, do lookups? etc. etc.
+
+	*epp = ep;
+	return (NNG_ENOTSUP);
+}
+
+
+void
+nni_plat_tcp_ep_fini(nni_plat_tcp_ep *ep)
+{
+}
+
+
+void
+nni_plat_tcp_ep_close(nni_plat_tcp_ep *ep)
+{
+}
+
+
+extern int
+nni_plat_tcp_ep_listen(nni_plat_tcp_ep *ep)
+{
+	return (NNG_ENOTSUP);
+}
+
+
+extern void
+nni_plat_tcp_ep_accept(nni_plat_tcp_ep *ep, nni_aio *aio)
+{
+}
+
+
+extern void
+nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
+{
+}
+
+
+void
+nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *p, nni_aio *aio)
+{
+}
+
+
+void
+nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *p, nni_aio *aio)
+{
+}
+
+
+void
+nni_plat_tcp_pipe_close(nni_plat_tcp_pipe *p)
+{
+}
+
+
+void
+nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *p)
+{
+}
+
+
+#if 0
+
+int
+nni_plat_tcp_send_old(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 {
 	WSABUF iov[4];    // We never have more than 3 at present
 	int i;
@@ -253,7 +359,7 @@ nni_plat_tcp_send(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 
 
 int
-nni_plat_tcp_recv(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
+nni_plat_tcp_recv_old(nni_plat_tcpsock *s, nni_iov *iovs, int cnt)
 {
 	WSABUF iov[4];    // We never have more than 3 at present
 	int i;
@@ -570,6 +676,9 @@ nni_plat_tcp_accept(nni_plat_tcpsock *s, nni_plat_tcpsock *server)
 	}
 	return (0);
 }
+
+
+#endif
 
 
 #else

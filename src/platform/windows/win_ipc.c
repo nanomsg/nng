@@ -13,54 +13,7 @@
 
 #include <stdio.h>
 
-// Windows has infinite numbers of error codes it seems.  We only bother
-// with the ones that are relevant to us (we think).
-static struct {
-	int	win_err;
-	int	nng_err;
-}
-nni_winpipe_errnos[] = {
-	{ ERROR_FILE_NOT_FOUND,	    NNG_ENOENT	     },
-	{ ERROR_ACCESS_DENIED,	    NNG_EPERM	     },
-	{ ERROR_INVALID_HANDLE,	    NNG_ECLOSED	     },
-	{ ERROR_NOT_ENOUGH_MEMORY,  NNG_ENOMEM	     },
-	{ ERROR_INVALID_ACCESS,	    NNG_EPERM	     },
-	{ ERROR_INVALID_DATA,	    NNG_EINVAL	     },
-	{ ERROR_OUTOFMEMORY,	    NNG_ENOMEM	     },
-	{ ERROR_HANDLE_EOF,	    NNG_ECLOSED	     },
-	{ ERROR_NOT_SUPPORTED,	    NNG_ENOTSUP	     },
-	{ ERROR_OUT_OF_STRUCTURES,  NNG_ENOMEM	     },
-	{ ERROR_INVALID_PARAMETER,  NNG_EINVAL	     },
-	{ ERROR_CONNECTION_REFUSED, NNG_ECONNREFUSED },
-	{ ERROR_BROKEN_PIPE,	    NNG_ECLOSED	     },
-	{ ERROR_BAD_PIPE,	    NNG_ECLOSED	     },
-	{ ERROR_NO_DATA,	    NNG_ECLOSED	     },
-	{ ERROR_PIPE_NOT_CONNECTED, NNG_ECLOSED	     },
-	{ ERROR_OPERATION_ABORTED,  NNG_ECLOSED	     },
-	{ WAIT_TIMEOUT,		    NNG_ETIMEDOUT    },
-	// Must be Last!!
-	{			 0,		   0 },
-};
-
-
-static int
-nni_winpipe_error(int werr)
-{
-	int i;
-
-	if (werr == 0) {
-		return (0);
-	}
-
-	for (i = 0; nni_winpipe_errnos[i].nng_err != 0; i++) {
-		if (werr == nni_winpipe_errnos[i].win_err) {
-			return (nni_winpipe_errnos[i].nng_err);
-		}
-	}
-	// Other system errno.
-	return (NNG_ESYSERR + werr);
-}
-
+#if 0
 
 int
 nni_plat_ipc_send(nni_plat_ipcsock *s, nni_iov *iovs, int cnt)
@@ -345,6 +298,86 @@ nni_plat_ipc_connect(nni_plat_ipcsock *s, const char *path)
 		break;
 	}
 	return (0);
+}
+
+
+#endif
+
+
+struct nni_plat_ipc_pipe {
+	SOCKET		s;
+	nni_win_event	recv_evt;
+	nni_win_event	send_evt;
+	OVERLAPPED	recv_olpd;
+	OVERLAPPED	send_olpd;
+};
+
+struct nni_plat_ipc_ep {
+	SOCKET		s;
+	nni_win_event	evt;
+	OVERLAPPED	olpd;
+};
+
+
+int
+nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
+{
+	return (NNG_ENOTSUP);
+}
+
+
+void
+nni_plat_ipc_ep_fini(nni_plat_ipc_ep *ep)
+{
+}
+
+
+void
+nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
+{
+}
+
+
+extern int
+nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
+{
+	return (NNG_ENOTSUP);
+}
+
+
+extern void
+nni_plat_ipc_ep_accept(nni_plat_ipc_ep *ep, nni_aio *aio)
+{
+}
+
+
+extern void
+nni_plat_ipc_ep_connect(nni_plat_ipc_ep *ep, nni_aio *aio)
+{
+}
+
+
+void
+nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *p, nni_aio *aio)
+{
+}
+
+
+void
+nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *p, nni_aio *aio)
+{
+}
+
+
+void
+nni_plat_ipc_pipe_close(nni_plat_ipc_pipe *p)
+{
+}
+
+
+void
+nni_plat_ipc_pipe_fini(nni_plat_ipc_pipe *p)
+{
 }
 
 

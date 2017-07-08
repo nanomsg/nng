@@ -26,18 +26,19 @@
 // These types are provided for here, to permit them to be directly inlined
 // elsewhere.
 
-struct nni_plat_tcpsock {
-	SOCKET		s;
+typedef struct nni_win_event nni_win_event;
 
-	WSAOVERLAPPED	recv_olpd;
-	WSAOVERLAPPED	send_olpd;
-	WSAOVERLAPPED	conn_olpd; // Use for both connect and accept
-	int		family;
-
-	// We have to lookup some function pointers using ioctls.  Winsock,
-	// gotta love it.
-	LPFN_CONNECTEX	connectex;
-	LPFN_ACCEPTEX	acceptex;
+// nni_win_event is used with io completion ports.  This allows us to get
+// to a specific completion callback without requiring the poller (in the
+// completion port) to know anything about the event itself.  We also use
+// this to pass back status and counts to the routine, which may not be
+// conveyed in the OVERLAPPED directly.
+struct nni_win_event {
+	OVERLAPPED	olpd;
+	void *		ptr;
+	nni_cb		cb;
+	int		status;
+	int		nbytes;
 };
 
 struct nni_plat_ipcsock {
@@ -69,7 +70,14 @@ struct nni_plat_cv {
 	CRITICAL_SECTION *	cs;
 };
 
+extern int nni_win_error(int);
 extern int nni_winsock_error(int);
+
+extern int nni_win_iocp_sysinit(void);
+extern void nni_win_iocp_sysfini(void);
+
+extern int nni_win_resolv_sysinit(void);
+extern void nni_win_resolv_sysfini(void);
 
 #endif  // PLATFORM_WINDOWS
 

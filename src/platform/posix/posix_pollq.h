@@ -10,6 +10,8 @@
 #ifndef PLATFORM_POSIX_POLLQ_H
 #define PLATFORM_POSIX_POLLQ_H
 
+#ifdef PLATFORM_POSIX
+
 // This file defines structures we will use for emulating asynchronous I/O
 // on POSIX.  POSIX lacks the support for callback based asynchronous I/O
 // that we have on Windows, although it has a non-widely support aio layer
@@ -39,5 +41,7 @@ extern int nni_posix_pollq_submit(nni_posix_pollq *, nni_posix_pollq_node *);
 extern void nni_posix_pollq_cancel(nni_posix_pollq *, nni_posix_pollq_node *);
 extern int nni_posix_pollq_sysinit(void);
 extern void nni_posix_pollq_sysfini(void);
+
+#endif // PLATFORM_POSIX
 
 #endif // PLATFORM_POSIX_POLLQ_H
