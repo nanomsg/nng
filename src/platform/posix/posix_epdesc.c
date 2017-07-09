@@ -32,17 +32,17 @@
 #endif
 
 struct nni_posix_epdesc {
-	int				fd;
-	nni_list			connectq;
-	nni_list			acceptq;
-	nni_posix_pollq_node		node;
-	nni_posix_pollq *		pq;
-	struct sockaddr_storage		locaddr;
-	struct sockaddr_storage		remaddr;
-	socklen_t			loclen;
-	socklen_t			remlen;
-	const char *			url;
-	nni_mtx				mtx;
+	int			fd;
+	nni_list		connectq;
+	nni_list		acceptq;
+	nni_posix_pollq_node	node;
+	nni_posix_pollq *	pq;
+	struct sockaddr_storage locaddr;
+	struct sockaddr_storage remaddr;
+	socklen_t		loclen;
+	socklen_t		remlen;
+	const char *		url;
+	nni_mtx			mtx;
 };
 
 
