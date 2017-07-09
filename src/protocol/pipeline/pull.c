@@ -147,7 +147,6 @@ nni_pull_putq_cb(void *arg)
 {
 	nni_pull_pipe *pp = arg;
 	nni_aio *aio = &pp->putq_aio;
-	int rv;
 
 	if (nni_aio_result(aio) != 0) {
 		// If we failed to put, probably NNG_ECLOSED, nothing else

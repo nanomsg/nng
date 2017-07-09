@@ -212,7 +212,6 @@ nni_pair_getq_cb(void *arg)
 {
 	nni_pair_pipe *ppipe = arg;
 	nni_pair_sock *psock = ppipe->psock;
-	nni_msg *msg;
 
 	if (nni_aio_result(&ppipe->aio_getq) != 0) {
 		nni_pipe_stop(ppipe->npipe);

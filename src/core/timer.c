@@ -135,7 +135,6 @@ nni_timer_loop(void *arg)
 {
 	nni_timer *timer = arg;
 	nni_time now;
-	nni_time expire;
 	nni_timer_node *node;
 
 	for (;;) {

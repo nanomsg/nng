@@ -199,7 +199,6 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 	nni_pipe *p;
 	int rv;
 	uint32_t id;
-	void *pdata;
 
 	rv = nni_objhash_alloc(nni_pipes, &id, (void **) &p);
 	if (rv != 0) {

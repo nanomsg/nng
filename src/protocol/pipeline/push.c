@@ -45,7 +45,6 @@ static int
 nni_push_sock_init(void **pushp, nni_sock *sock)
 {
 	nni_push_sock *push;
-	int rv;
 
 	if ((push = NNI_ALLOC_STRUCT(push)) == NULL) {
 		return (NNG_ENOMEM);

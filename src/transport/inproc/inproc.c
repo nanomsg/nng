@@ -221,7 +221,6 @@ static int
 nni_inproc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 {
 	nni_inproc_ep *ep;
-	int rv;
 
 	if (strlen(url) > NNG_MAXADDRLEN-1) {
 		return (NNG_EINVAL);

@@ -42,11 +42,6 @@ struct nni_posix_epdesc {
 	socklen_t			loclen;
 	socklen_t			remlen;
 	const char *			url;
-	struct sockaddr_storage *	remaddrs;
-	struct sockaddr_storage *	locaddrs;
-	int				nremaddrs;
-	int				nlocaddrs;
-	int				server;
 	nni_mtx				mtx;
 };
 

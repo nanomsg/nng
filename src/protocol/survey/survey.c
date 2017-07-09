@@ -265,7 +265,6 @@ nni_surv_recv_cb(void *arg)
 {
 	nni_surv_pipe *ppipe = arg;
 	nni_msg *msg;
-	int rv;
 
 	if (nni_aio_result(&ppipe->aio_recv) != 0) {
 		goto failed;

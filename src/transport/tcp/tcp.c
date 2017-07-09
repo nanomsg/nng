@@ -438,7 +438,6 @@ static int
 nni_tcp_parse_pair(char *pair, char **hostp, char **servp)
 {
 	char *host, *serv, *end;
-	char c;
 
 	if (pair[0] == '[') {
 		host = pair+1;
@@ -522,7 +521,6 @@ static void
 nni_tcp_pipe_start(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *pipe = arg;
-	int rv;
 
 	nni_mtx_lock(&pipe->mtx);
 	pipe->txlen[0] = 0;

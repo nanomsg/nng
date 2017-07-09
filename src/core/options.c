@@ -52,7 +52,7 @@ int
 nni_setopt_size(size_t *ptr, const void *val, size_t size, size_t minval,
     size_t maxval)
 {
-	int v;
+	size_t v;
 
 	if (size != sizeof (v)) {
 		return (NNG_EINVAL);
