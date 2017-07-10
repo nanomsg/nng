@@ -12,59 +12,55 @@
 #include <string.h>
 
 struct nni_idhash_entry {
-	uint32_t	ihe_key;
-	uint32_t	ihe_skips;
-	void *		ihe_val;
+	uint32_t ihe_key;
+	uint32_t ihe_skips;
+	void *   ihe_val;
 };
-
 
 int
 nni_idhash_init(nni_idhash *h)
 {
 	h->ih_entries = NULL;
-	h->ih_count = 0;
-	h->ih_load = 0;
-	h->ih_cap = 0;
+	h->ih_count   = 0;
+	h->ih_load    = 0;
+	h->ih_cap     = 0;
 	h->ih_maxload = 0;
 	h->ih_minload = 0; // never shrink below this
 	h->ih_walkers = 0;
-	h->ih_minval = 0;
-	h->ih_maxval = 0xffffffff;
-	h->ih_dynval = 0;
+	h->ih_minval  = 0;
+	h->ih_maxval  = 0xffffffff;
+	h->ih_dynval  = 0;
 	return (0);
 }
-
 
 void
 nni_idhash_fini(nni_idhash *h)
 {
 	NNI_ASSERT(h->ih_walkers == 0);
 	if (h->ih_entries != NULL) {
-		nni_free(h->ih_entries, h->ih_cap * sizeof (nni_idhash_entry));
+		nni_free(h->ih_entries, h->ih_cap * sizeof(nni_idhash_entry));
 		h->ih_entries = NULL;
 		h->ih_cap = h->ih_count = 0;
 		h->ih_load = h->ih_minload = h->ih_maxload = 0;
 	}
 }
 
-
 void
 nni_idhash_reclaim(nni_idhash *h)
 {
 	// Reclaim the buffer if we want, but preserve the limits.
 	if ((h->ih_count == 0) && (h->ih_cap != 0) && (h->ih_walkers == 0)) {
-		nni_free(h->ih_entries, h->ih_cap * sizeof (nni_idhash_entry));
-		h->ih_cap = 0;
+		nni_free(h->ih_entries, h->ih_cap * sizeof(nni_idhash_entry));
+		h->ih_cap     = 0;
 		h->ih_entries = NULL;
 		h->ih_minload = 0;
 		h->ih_maxload = 0;
 	}
 }
 
-
 void
-nni_idhash_set_limits(nni_idhash *h, uint32_t minval, uint32_t maxval,
-    uint32_t start)
+nni_idhash_set_limits(
+    nni_idhash *h, uint32_t minval, uint32_t maxval, uint32_t start)
 {
 	h->ih_minval = minval;
 	h->ih_maxval = maxval;
@@ -74,11 +70,9 @@ nni_idhash_set_limits(nni_idhash *h, uint32_t minval, uint32_t maxval,
 	NNI_ASSERT(start <= maxval);
 }
 
-
 // Inspired by Python dict implementation.  This probe will visit every
 // cell.  We always hash consecutively assigned IDs.
-#define NNI_IDHASH_NEXTPROBE(h, j) \
-	((((j) * 5) + 1) & (h->ih_cap - 1))
+#define NNI_IDHASH_NEXTPROBE(h, j) ((((j) *5) + 1) & (h->ih_cap - 1))
 
 int
 nni_idhash_find(nni_idhash *h, uint32_t id, void **valp)
@@ -102,21 +96,20 @@ nni_idhash_find(nni_idhash *h, uint32_t id, void **valp)
 	}
 }
 
-
 static int
 nni_hash_resize(nni_idhash *h)
 {
-	size_t newsize;
-	size_t oldsize;
+	size_t            newsize;
+	size_t            oldsize;
 	nni_idhash_entry *newents;
 	nni_idhash_entry *oldents;
-	uint32_t i;
+	uint32_t          i;
 
 	if ((h->ih_load < h->ih_maxload) && (h->ih_load >= h->ih_minload)) {
 		// No resize needed.
 		return (0);
 	}
-	if (h->ih_walkers && (h->ih_load < (h->ih_cap-1))) {
+	if (h->ih_walkers && (h->ih_load < (h->ih_cap - 1))) {
 		// Don't resize when walkers are running.  This way
 		// walk functions can remove hash nodes.
 		return (0);
@@ -131,14 +124,14 @@ nni_hash_resize(nni_idhash *h)
 	}
 
 	oldents = h->ih_entries;
-	newents = nni_alloc(sizeof (nni_idhash_entry) * newsize);
+	newents = nni_alloc(sizeof(nni_idhash_entry) * newsize);
 	if (newents == NULL) {
 		return (NNG_ENOMEM);
 	}
-	memset(newents, 0, sizeof (nni_idhash_entry) * newsize);
+	memset(newents, 0, sizeof(nni_idhash_entry) * newsize);
 
 	h->ih_entries = newents;
-	h->ih_cap = newsize;
+	h->ih_cap     = newsize;
 	if (newsize > 8) {
 		h->ih_minload = newsize / 8;
 		h->ih_maxload = newsize * 2 / 3;
@@ -164,17 +157,16 @@ nni_hash_resize(nni_idhash *h)
 		}
 	}
 	if (oldsize != 0) {
-		nni_free(oldents, sizeof (nni_idhash_entry) * oldsize);
+		nni_free(oldents, sizeof(nni_idhash_entry) * oldsize);
 	}
 	return (0);
 }
 
-
 int
 nni_idhash_remove(nni_idhash *h, uint32_t id)
 {
-	int rv;
-	void *val;
+	int      rv;
+	void *   val;
 	uint32_t index;
 
 	// First check that it is in the table.  This may double the
@@ -211,7 +203,6 @@ nni_idhash_remove(nni_idhash *h, uint32_t id)
 
 	return (0);
 }
-
 
 int
 nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
@@ -253,13 +244,12 @@ nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
 	}
 }
 
-
 int
 nni_idhash_alloc(nni_idhash *h, uint32_t *idp, void *val)
 {
 	uint32_t id;
-	void *scrap;
-	int rv;
+	void *   scrap;
+	int      rv;
 
 	if (h->ih_count > (h->ih_maxval - h->ih_minval)) {
 		// Really more like ENOSPC.. the table is filled to max.
@@ -285,13 +275,11 @@ nni_idhash_alloc(nni_idhash *h, uint32_t *idp, void *val)
 	return (rv);
 }
 
-
 size_t
 nni_idhash_count(nni_idhash *h)
 {
 	return (h->ih_count);
 }
-
 
 int
 nni_idhash_walk(nni_idhash *h, nni_idhash_walkfn fn, void *arg)

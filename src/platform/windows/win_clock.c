@@ -15,15 +15,13 @@ nni_time
 nni_plat_clock(void)
 {
 	// We are limited by the system clock, but that is ok.
-	return (GetTickCount64()*1000);
+	return (GetTickCount64() * 1000);
 }
-
 
 void
 nni_plat_usleep(nni_duration dur)
 {
 	uint64_t exp;
-
 
 	// Convert duration to msec, rounding up.
 	dur += 999;
@@ -43,10 +41,9 @@ nni_plat_usleep(nni_duration dur)
 	}
 }
 
-
 #else
 
 // Suppress empty symbols warnings in ranlib.
 int nni_win_clock_not_used = 0;
 
-#endif  // PLATFORM_WINDOWS
+#endif // PLATFORM_WINDOWS

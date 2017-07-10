@@ -16,10 +16,10 @@ nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
 {
 	nni_duration dur;
 
-	if (size != sizeof (*ptr)) {
+	if (size != sizeof(*ptr)) {
 		return (NNG_EINVAL);
 	}
-	memcpy(&dur, val, sizeof (dur));
+	memcpy(&dur, val, sizeof(dur));
 	if (dur < -1) {
 		return (NNG_EINVAL);
 	}
@@ -27,16 +27,15 @@ nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
 	return (0);
 }
 
-
 int
 nni_setopt_int(int *ptr, const void *val, size_t size, int minval, int maxval)
 {
 	int v;
 
-	if (size != sizeof (v)) {
+	if (size != sizeof(v)) {
 		return (NNG_EINVAL);
 	}
-	memcpy(&v, val, sizeof (v));
+	memcpy(&v, val, sizeof(v));
 	if (v > maxval) {
 		return (NNG_EINVAL);
 	}
@@ -47,17 +46,16 @@ nni_setopt_int(int *ptr, const void *val, size_t size, int minval, int maxval)
 	return (0);
 }
 
-
 int
-nni_setopt_size(size_t *ptr, const void *val, size_t size, size_t minval,
-    size_t maxval)
+nni_setopt_size(
+    size_t *ptr, const void *val, size_t size, size_t minval, size_t maxval)
 {
 	size_t v;
 
-	if (size != sizeof (v)) {
+	if (size != sizeof(v)) {
 		return (NNG_EINVAL);
 	}
-	memcpy(&v, val, sizeof (v));
+	memcpy(&v, val, sizeof(v));
 	if (v > maxval) {
 		return (NNG_EINVAL);
 	}
@@ -67,59 +65,55 @@ nni_setopt_size(size_t *ptr, const void *val, size_t size, size_t minval,
 	*ptr = v;
 	return (0);
 }
-
 
 int
 nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
 {
-	size_t sz = sizeof (*ptr);
+	size_t sz = sizeof(*ptr);
 
 	if (sz > *sizep) {
 		sz = *sizep;
 	}
-	*sizep = sizeof (*ptr);
+	*sizep = sizeof(*ptr);
 	memcpy(val, ptr, sz);
 	return (0);
 }
-
 
 int
 nni_getopt_int(int *ptr, void *val, size_t *sizep)
 {
-	size_t sz = sizeof (*ptr);
+	size_t sz = sizeof(*ptr);
 
 	if (sz > *sizep) {
 		sz = *sizep;
 	}
-	*sizep = sizeof (*ptr);
+	*sizep = sizeof(*ptr);
 	memcpy(val, ptr, sz);
 	return (0);
 }
-
 
 int
 nni_getopt_size(size_t *ptr, void *val, size_t *sizep)
 {
-	size_t sz = sizeof (*ptr);
+	size_t sz = sizeof(*ptr);
 
 	if (sz > *sizep) {
 		sz = *sizep;
 	}
-	*sizep = sizeof (*ptr);
+	*sizep = sizeof(*ptr);
 	memcpy(val, ptr, sz);
 	return (0);
 }
-
 
 int
 nni_setopt_buf(nni_msgq *mq, const void *val, size_t sz)
 {
 	int len;
 
-	if (sz < sizeof (len)) {
+	if (sz < sizeof(len)) {
 		return (NNG_EINVAL);
 	}
-	memcpy(&len, val, sizeof (len));
+	memcpy(&len, val, sizeof(len));
 	if (len < 0) {
 		return (NNG_EINVAL);
 	}
@@ -132,7 +126,6 @@ nni_setopt_buf(nni_msgq *mq, const void *val, size_t sz)
 	return (nni_msgq_resize(mq, len));
 }
 
-
 int
 nni_getopt_buf(nni_msgq *mq, void *val, size_t *sizep)
 {
@@ -140,14 +133,13 @@ nni_getopt_buf(nni_msgq *mq, void *val, size_t *sizep)
 
 	size_t sz = *sizep;
 
-	if (sz > sizeof (len)) {
-		sz = sizeof (len);
+	if (sz > sizeof(len)) {
+		sz = sizeof(len);
 	}
 	memcpy(val, &len, sz);
-	*sizep = sizeof (len);
+	*sizep = sizeof(len);
 	return (0);
 }
-
 
 static void
 nni_notifyfd_push(struct nng_event *ev, void *arg)
@@ -159,13 +151,12 @@ nni_notifyfd_push(struct nng_event *ev, void *arg)
 	nni_plat_pipe_raise(fd->sn_wfd);
 }
 
-
 int
 nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 {
 	int rv;
 
-	if ((*szp < sizeof (int))) {
+	if ((*szp < sizeof(int))) {
 		return (NNG_EINVAL);
 	}
 
@@ -186,8 +177,8 @@ nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 
 	// If we already inited this, just give back the same file descriptor.
 	if (fd->sn_init) {
-		memcpy(val, &fd->sn_rfd, sizeof (int));
-		*szp = sizeof (int);
+		memcpy(val, &fd->sn_rfd, sizeof(int));
+		*szp = sizeof(int);
 		return (0);
 	}
 
@@ -200,7 +191,7 @@ nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 		return (NNG_ENOMEM);
 	}
 
-	*szp = sizeof (int);
-	memcpy(val, &fd->sn_rfd, sizeof (int));
+	*szp = sizeof(int);
+	memcpy(val, &fd->sn_rfd, sizeof(int));
 	return (0);
 }

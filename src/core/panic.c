@@ -7,12 +7,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdlib.h>
-#include <string.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#ifdef  NNG_HAVE_BACKTRACE
+#ifdef NNG_HAVE_BACKTRACE
 #include <execinfo.h>
 #endif
 
@@ -23,12 +23,12 @@ void
 nni_show_backtrace(void)
 {
 #if NNG_HAVE_BACKTRACE
-	void *frames[50];
-	int nframes;
+	void * frames[50];
+	int    nframes;
 	char **lines;
-	int i;
+	int    i;
 
-	nframes = backtrace(frames, sizeof (frames) / sizeof (frames[0]));
+	nframes = backtrace(frames, sizeof(frames) / sizeof(frames[0]));
 	if (nframes > 1) {
 		lines = backtrace_symbols(frames, nframes);
 		if (lines == NULL) {
@@ -41,7 +41,6 @@ nni_show_backtrace(void)
 #endif
 }
 
-
 // nni_panic shows a panic message, a possible stack bracktrace, then aborts
 // the process/program.  This should only be called when a condition arises
 // that should not be possible, e.g. a programming assertion failure. It should
@@ -50,16 +49,15 @@ nni_show_backtrace(void)
 void
 nni_panic(const char *fmt, ...)
 {
-	char buf[128];
-	char fbuf[128];
+	char    buf[128];
+	char    fbuf[128];
 	va_list va;
 
 	va_start(va, fmt);
-	(void) vsnprintf(fbuf, sizeof (fbuf), fmt, va);
+	(void) vsnprintf(fbuf, sizeof(fbuf), fmt, va);
 	va_end(va);
 
-
-	(void) snprintf(buf, sizeof (buf), "panic: %s", fbuf);
+	(void) snprintf(buf, sizeof(buf), "panic: %s", fbuf);
 
 	nni_println(buf);
 	nni_println("This message is indicative of a BUG.");
@@ -68,7 +66,6 @@ nni_panic(const char *fmt, ...)
 	nni_show_backtrace();
 	nni_plat_abort();
 }
-
 
 void
 nni_println(const char *msg)

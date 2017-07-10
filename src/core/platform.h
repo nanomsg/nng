@@ -76,9 +76,9 @@ extern void *nni_alloc(size_t);
 // Most implementations can just call free() here.
 extern void nni_free(void *, size_t);
 
-typedef struct nni_plat_mtx	nni_plat_mtx;
-typedef struct nni_plat_cv	nni_plat_cv;
-typedef struct nni_plat_thr	nni_plat_thr;
+typedef struct nni_plat_mtx nni_plat_mtx;
+typedef struct nni_plat_cv  nni_plat_cv;
+typedef struct nni_plat_thr nni_plat_thr;
 
 //
 // Threading & Synchronization Support
@@ -187,7 +187,6 @@ extern int nni_plat_init(int (*)(void));
 // will be called until nni_platform_init is called.
 extern void nni_plat_fini(void);
 
-
 // nni_plat_lookup_host looks up a hostname in DNS, or the local hosts
 // file, or whatever.  If your platform lacks support for naming, it must
 // at least cope with converting IP addresses in string form.  The final
@@ -199,8 +198,8 @@ extern int nni_plat_lookup_host(const char *, nni_sockaddr *, int);
 // TCP Support.
 //
 
-typedef struct nni_plat_tcp_ep		nni_plat_tcp_ep;
-typedef struct nni_plat_tcp_pipe	nni_plat_tcp_pipe;
+typedef struct nni_plat_tcp_ep   nni_plat_tcp_ep;
+typedef struct nni_plat_tcp_pipe nni_plat_tcp_pipe;
 
 // nni_plat_tcp_ep_init creates a new endpoint associated with the url.
 extern int nni_plat_tcp_ep_init(nni_plat_tcp_ep **, const char *, int);
@@ -247,15 +246,15 @@ extern void nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *, nni_aio *);
 // return names of either family.  The passive flag indicates that the
 // name will be used for bind(), otherwise the name will be used with
 // connect().  The host part may be NULL only if passive is true.
-extern void nni_plat_tcp_resolv(const char *, const char *, int, int,
-    nni_aio *);
+extern void nni_plat_tcp_resolv(
+    const char *, const char *, int, int, nni_aio *);
 
 //
 // IPC (UNIX Domain Sockets & Named Pipes) Support.
 //
 
-typedef struct nni_plat_ipc_ep		nni_plat_ipc_ep;
-typedef struct nni_plat_ipc_pipe	nni_plat_ipc_pipe;
+typedef struct nni_plat_ipc_ep   nni_plat_ipc_ep;
+typedef struct nni_plat_ipc_pipe nni_plat_ipc_pipe;
 
 // nni_plat_ipc_ep_init creates a new endpoint associated with the url.
 extern int nni_plat_ipc_ep_init(nni_plat_ipc_ep **, const char *, int);

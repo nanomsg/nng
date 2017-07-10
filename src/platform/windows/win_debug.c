@@ -12,8 +12,8 @@
 #ifdef PLATFORM_WINDOWS
 
 #include <errno.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void
@@ -22,13 +22,11 @@ nni_plat_abort(void)
 	abort();
 }
 
-
 void
 nni_plat_println(const char *message)
 {
 	(void) fprintf(stderr, "%s\n", message);
 }
-
 
 const char *
 nni_plat_strerror(int errnum)
@@ -39,25 +37,16 @@ nni_plat_strerror(int errnum)
 	return (strerror(errnum));
 }
 
-
 // Win32 has its own error codes, but these ones it shares with POSIX.
 static struct {
-	int	sys_err;
-	int	nng_err;
-}
-nni_plat_errnos[] = {
-	{ ENOENT,	NNG_ENOENT  },
-	{ EINTR,	NNG_EINTR   },
-	{ EINVAL,	NNG_EINVAL  },
-	{ ENOMEM,	NNG_ENOMEM  },
-	{ EACCES,	NNG_EPERM   },
-	{ EAGAIN,	NNG_EAGAIN  },
-	{ EBADF,	NNG_ECLOSED },
-	{ EBUSY,	NNG_EBUSY   },
-	{ ENAMETOOLONG, NNG_EINVAL  },
-	{ EPERM,	NNG_EPERM   },
-	{ EPIPE,	NNG_ECLOSED },
-	{	     0,		  0 } // must be last
+	int sys_err;
+	int nng_err;
+} nni_plat_errnos[] = {
+	{ ENOENT, NNG_ENOENT }, { EINTR, NNG_EINTR }, { EINVAL, NNG_EINVAL },
+	{ ENOMEM, NNG_ENOMEM }, { EACCES, NNG_EPERM }, { EAGAIN, NNG_EAGAIN },
+	{ EBADF, NNG_ECLOSED }, { EBUSY, NNG_EBUSY },
+	{ ENAMETOOLONG, NNG_EINVAL }, { EPERM, NNG_EPERM },
+	{ EPIPE, NNG_ECLOSED }, { 0, 0 } // must be last
 };
 
 int
@@ -77,15 +66,14 @@ nni_plat_errno(int errnum)
 	return (NNG_ESYSERR + errnum);
 }
 
-
 // Windows has infinite numbers of error codes it seems.  We only bother
 // with the ones that are relevant to us (we think).  Note that there is
 // no overlap between errnos and GetLastError values.
 static struct {
-	int	win_err;
-	int	nng_err;
-}
-nni_win_errnos[] = {
+	int win_err;
+	int nng_err;
+} nni_win_errnos[] = {
+	// clang-format off
 	{ ERROR_FILE_NOT_FOUND,	    NNG_ENOENT	     },
 	{ ERROR_ACCESS_DENIED,	    NNG_EPERM	     },
 	{ ERROR_INVALID_HANDLE,	    NNG_ECLOSED	     },
@@ -106,6 +94,7 @@ nni_win_errnos[] = {
 	{ WAIT_TIMEOUT,		    NNG_ETIMEDOUT    },
 	// Must be Last!!
 	{			 0,		   0 },
+	// clang-format on
 };
 
 // This converts a Windows API error (from GetLastError()) to an
@@ -126,7 +115,6 @@ nni_win_error(int errnum)
 	// Other system errno.
 	return (NNG_ESYSERR + errnum);
 }
-
 
 #else
 

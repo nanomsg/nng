@@ -29,17 +29,16 @@ nni_pipe_ctor(uint32_t id)
 		return (NULL);
 	}
 
-	p->p_tran_data = NULL;
+	p->p_tran_data  = NULL;
 	p->p_proto_data = NULL;
 	p->p_proto_dtor = NULL;
-	p->p_id = id;
+	p->p_id         = id;
 
 	NNI_LIST_NODE_INIT(&p->p_sock_node);
 	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
 	return (p);
 }
-
 
 static void
 nni_pipe_dtor(void *ptr)
@@ -58,7 +57,6 @@ nni_pipe_dtor(void *ptr)
 	NNI_FREE_STRUCT(p);
 }
 
-
 int
 nni_pipe_sys_init(void)
 {
@@ -73,14 +71,12 @@ nni_pipe_sys_init(void)
 	return (0);
 }
 
-
 void
 nni_pipe_sys_fini(void)
 {
 	nni_objhash_fini(nni_pipes);
 	nni_pipes = NULL;
 }
-
 
 // nni_pipe_id returns the 32-bit pipe id, which can be used in backtraces.
 uint32_t
@@ -89,20 +85,17 @@ nni_pipe_id(nni_pipe *p)
 	return (p->p_id);
 }
 
-
 void
 nni_pipe_recv(nni_pipe *p, nni_aio *aio)
 {
 	p->p_tran_ops.p_recv(p->p_tran_data, aio);
 }
 
-
 void
 nni_pipe_send(nni_pipe *p, nni_aio *aio)
 {
 	p->p_tran_ops.p_send(p->p_tran_data, aio);
 }
-
 
 // nni_pipe_close closes the underlying connection.  It is expected that
 // subsequent attempts receive or send (including any waiting receive) will
@@ -128,7 +121,6 @@ nni_pipe_close(nni_pipe *p)
 	nni_mtx_unlock(&p->p_mtx);
 }
 
-
 // We have to stop asynchronously using a task, because otherwise we can
 // wind up having a callback from an AIO trying to cancel itself.  That
 // simply will not work.
@@ -147,7 +139,6 @@ nni_pipe_remove(nni_pipe *p)
 	nni_objhash_unref(nni_pipes, p->p_id);
 }
 
-
 void
 nni_pipe_stop(nni_pipe *p)
 {
@@ -163,20 +154,18 @@ nni_pipe_stop(nni_pipe *p)
 	nni_taskq_dispatch(NULL, &p->p_reap_tqe);
 }
 
-
 uint16_t
 nni_pipe_peer(nni_pipe *p)
 {
 	return (p->p_tran_ops.p_peer(p->p_tran_data));
 }
 
-
 static void
 nni_pipe_start_cb(void *arg)
 {
-	nni_pipe *p = arg;
-	nni_aio *aio = &p->p_start_aio;
-	int rv;
+	nni_pipe *p   = arg;
+	nni_aio * aio = &p->p_start_aio;
+	int       rv;
 
 	nni_mtx_lock(&p->p_mtx);
 	if ((rv = nni_aio_result(aio)) != 0) {
@@ -192,13 +181,12 @@ nni_pipe_start_cb(void *arg)
 	}
 }
 
-
 int
 nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 {
 	nni_pipe *p;
-	int rv;
-	uint32_t id;
+	int       rv;
+	uint32_t  id;
 
 	rv = nni_objhash_alloc(nni_pipes, &id, (void **) &p);
 	if (rv != 0) {
@@ -209,7 +197,7 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 		return (rv);
 	}
 	p->p_sock = sock;
-	p->p_ep = ep;
+	p->p_ep   = ep;
 
 	// Make a copy of the transport ops.  We can override entry points
 	// and we avoid an extra dereference on hot code paths.
@@ -234,7 +222,6 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 	return (0);
 }
 
-
 int
 nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)
 {
@@ -244,7 +231,6 @@ nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)
 	}
 	return (p->p_tran_ops.p_getopt(p->p_tran_data, opt, val, szp));
 }
-
 
 int
 nni_pipe_start(nni_pipe *p)
@@ -262,20 +248,17 @@ nni_pipe_start(nni_pipe *p)
 	return (0);
 }
 
-
 void *
 nni_pipe_get_proto_data(nni_pipe *p)
 {
 	return (p->p_proto_data);
 }
 
-
 void
 nni_pipe_sock_list_init(nni_list *list)
 {
 	NNI_LIST_INIT(list, nni_pipe, p_sock_node);
 }
-
 
 void
 nni_pipe_ep_list_init(nni_list *list)

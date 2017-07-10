@@ -7,20 +7,20 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng.h"
 #include "nng_compat.h"
+#include "nng.h"
 
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 // This file supplies the legacy compatibility API.  Applications should
 // avoid using these if at all possible, and instead use the new style APIs.
 
 static struct {
-	int	nerr;
-	int	perr;
-}
-nn_errnos[] = {
+	int nerr;
+	int perr;
+} nn_errnos[] = {
+	// clang-format off
 	{ NNG_EINTR,	    EINTR	  },
 	{ NNG_ENOMEM,	    ENOMEM	  },
 	{ NNG_EINVAL,	    EINVAL	  },
@@ -41,12 +41,13 @@ nn_errnos[] = {
 	{ NNG_ECONNABORTED, ECONNABORTED  },
 	{ NNG_ECONNRESET,   ECONNRESET	  },
 	{		 0,		0 },
+	// clang-format on
 };
 
 const char *
 nn_strerror(int err)
 {
-	int i;
+	int         i;
 	static char msgbuf[32];
 
 	for (i = 0; nn_errnos[i].perr != 0; i++) {
@@ -60,10 +61,9 @@ nn_strerror(int err)
 
 	// Arguablye we could use strerror() here, but we should only
 	// be getting errnos we understand at this point.
-	(void) snprintf(msgbuf, sizeof (msgbuf), "Unknown error %d", err);
+	(void) snprintf(msgbuf, sizeof(msgbuf), "Unknown error %d", err);
 	return (msgbuf);
 }
-
 
 static void
 nn_seterror(int err)
@@ -80,19 +80,17 @@ nn_seterror(int err)
 	errno = EIO;
 }
 
-
 int
 nn_errno(void)
 {
 	return (errno);
 }
 
-
 int
 nn_socket(int domain, int protocol)
 {
 	nng_socket sock;
-	int rv;
+	int        rv;
 
 	if ((domain != AF_SP) && (domain != AF_SP_RAW)) {
 		errno = EAFNOSUPPORT;
@@ -104,7 +102,7 @@ nn_socket(int domain, int protocol)
 	}
 	if (domain == AF_SP_RAW) {
 		int raw = 1;
-		rv = nng_setopt(sock, NNG_OPT_RAW, &raw, sizeof (raw));
+		rv      = nng_setopt(sock, NNG_OPT_RAW, &raw, sizeof(raw));
 		if (rv != 0) {
 			nn_seterror(rv);
 			nng_close(sock);
@@ -113,7 +111,6 @@ nn_socket(int domain, int protocol)
 	}
 	return ((int) sock);
 }
-
 
 int
 nn_close(int s)
@@ -127,25 +124,24 @@ nn_close(int s)
 	return (0);
 }
 
-
 int
 nn_bind(int s, const char *addr)
 {
-	int rv;
+	int          rv;
 	nng_endpoint ep;
 
-	if ((rv = nng_listen((nng_socket) s, addr, &ep, NNG_FLAG_SYNCH)) != 0) {
+	if ((rv = nng_listen((nng_socket) s, addr, &ep, NNG_FLAG_SYNCH)) !=
+	    0) {
 		nn_seterror(rv);
 		return (-1);
 	}
 	return ((int) ep);
 }
 
-
 int
 nn_connect(int s, const char *addr)
 {
-	int rv;
+	int          rv;
 	nng_endpoint ep;
 
 	if ((rv = nng_dial((nng_socket) s, addr, &ep, 0)) != 0) {
@@ -154,7 +150,6 @@ nn_connect(int s, const char *addr)
 	}
 	return ((int) ep);
 }
-
 
 int
 nn_shutdown(int s, int ep)
@@ -173,15 +168,14 @@ nn_shutdown(int s, int ep)
 	return (0);
 }
 
-
 void *
 nn_allocmsg(size_t size, int type)
 {
 	nng_msg *msg;
-	int rv;
+	int      rv;
 
 	// Validate type and non-zero size.  This also checks for overflow.
-	if ((type != 0) || (size < 1) || ((size + sizeof (msg) < size))) {
+	if ((type != 0) || (size < 1) || ((size + sizeof(msg) < size))) {
 		nn_seterror(NNG_EINVAL);
 		return (NULL);
 	}
@@ -189,7 +183,7 @@ nn_allocmsg(size_t size, int type)
 	// So our "messages" from nn are really going to be nng messages
 	// but to make this work, we use a bit of headroom in the message
 	// to stash the message header.
-	if ((rv = nng_msg_alloc(&msg, size + (sizeof (msg)))) != 0) {
+	if ((rv = nng_msg_alloc(&msg, size + (sizeof(msg)))) != 0) {
 		nn_seterror(rv);
 		return (NULL);
 	}
@@ -199,40 +193,38 @@ nn_allocmsg(size_t size, int type)
 
 	// We are counting on the implementation of nn_msg_trim to not
 	// reallocate the message but just to leave the prefix inplace.
-	(void) nng_msg_trim(msg, sizeof (msg));
+	(void) nng_msg_trim(msg, sizeof(msg));
 
 	return (nng_msg_body(msg));
 }
-
 
 int
 nn_freemsg(void *ptr)
 {
 	nng_msg *msg;
 
-	msg = *(nng_msg **) (((char *) ptr) - sizeof (msg));
+	msg = *(nng_msg **) (((char *) ptr) - sizeof(msg));
 	nng_msg_free(msg);
 	return (0);
 }
-
 
 void *
 nn_reallocmsg(void *ptr, size_t len)
 {
 	nng_msg *msg;
-	int rv;
+	int      rv;
 
-	if ((len + sizeof (msg)) < len) {
+	if ((len + sizeof(msg)) < len) {
 		// overflowed!
 		nn_seterror(NNG_EINVAL);
 		return (NULL);
 	}
 
 	// This counts on message bodies being aligned sensibly.
-	msg = *(nng_msg **) (((char *) ptr) - sizeof (msg));
+	msg = *(nng_msg **) (((char *) ptr) - sizeof(msg));
 
 	// We need to realloc the requested len, plus size for our header.
-	if ((rv = nng_msg_realloc(msg, len + sizeof (msg))) != 0) {
+	if ((rv = nng_msg_realloc(msg, len + sizeof(msg))) != 0) {
 		// We don't free the old message.  Code is free to cope
 		// as it sees fit.
 		nn_seterror(rv);
@@ -240,10 +232,9 @@ nn_reallocmsg(void *ptr, size_t len)
 	}
 	// Stash the msg header pointer
 	*(nng_msg **) (nng_msg_body(msg)) = msg;
-	nng_msg_trim(msg, sizeof (msg));
+	nng_msg_trim(msg, sizeof(msg));
 	return (nng_msg_body(msg));
 }
-
 
 static int
 nn_flags(int flags)
@@ -261,7 +252,6 @@ nn_flags(int flags)
 	}
 }
 
-
 int
 nn_send(int s, const void *buf, size_t len, int flags)
 {
@@ -272,9 +262,9 @@ nn_send(int s, const void *buf, size_t len, int flags)
 	}
 	if (len == NN_MSG) {
 		nng_msg *msg;
-		memcpy(&msg, ((char *) buf) - sizeof (msg), sizeof (msg));
+		memcpy(&msg, ((char *) buf) - sizeof(msg), sizeof(msg));
 		len = nng_msg_len(msg);
-		rv = nng_sendmsg((nng_socket) s, msg, flags);
+		rv  = nng_sendmsg((nng_socket) s, msg, flags);
 	} else {
 		rv = nng_send((nng_socket) s, (void *) buf, len, flags);
 	}
@@ -284,7 +274,6 @@ nn_send(int s, const void *buf, size_t len, int flags)
 	}
 	return ((int) len);
 }
-
 
 int
 nn_recv(int s, void *buf, size_t len, int flags)
@@ -307,7 +296,7 @@ nn_recv(int s, void *buf, size_t len, int flags)
 		// Note that this *can* alter the message,
 		// although for performance reasons it ought not.
 		// (There should be sufficient headroom.)
-		if ((rv = nng_msg_prepend(msg, &msg, sizeof (msg))) != 0) {
+		if ((rv = nng_msg_prepend(msg, &msg, sizeof(msg))) != 0) {
 			nng_msg_free(msg);
 			nn_seterror(rv);
 			return (-1);
@@ -316,7 +305,7 @@ nn_recv(int s, void *buf, size_t len, int flags)
 		// now "trim" it off... the value is still there, but the
 		// contents are unreferenced.  We rely on legacy nanomsg's
 		// ignorance of nng msgs to preserve this.
-		nng_msg_trim(msg, sizeof (msg));
+		nng_msg_trim(msg, sizeof(msg));
 
 		*(void **) buf = nng_msg_body(msg);
 		return ((int) nng_msg_len(msg));
@@ -329,14 +318,13 @@ nn_recv(int s, void *buf, size_t len, int flags)
 	return ((int) len);
 }
 
-
 int
 nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 {
-	int rv;
+	int      rv;
 	nng_msg *msg;
-	size_t len;
-	int keep = 0;
+	size_t   len;
+	int      keep = 0;
 
 	if ((flags = nn_flags(flags)) == -1) {
 		return (-1);
@@ -357,19 +345,19 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 	if ((mh->msg_iovlen == 1) && (mh->msg_iov[0].iov_len == NN_MSG)) {
 		// Receiver wants to have a dynamically allocated message.
 		// There can only be one of these.
-		if ((rv = nng_msg_prepend(msg, &msg, sizeof (msg))) != 0) {
+		if ((rv = nng_msg_prepend(msg, &msg, sizeof(msg))) != 0) {
 			nng_msg_free(msg);
 			nn_seterror(rv);
 			return (-1);
 		}
-		nng_msg_trim(msg, sizeof (msg));
+		nng_msg_trim(msg, sizeof(msg));
 		*(void **) (mh->msg_iov[0].iov_base) = nng_msg_body(msg);
-		len = nng_msg_len(msg);
+		len                                  = nng_msg_len(msg);
 		keep = 1; // Do not discard message!
 	} else {
 		// copyout to multiple iovecs.
-		char *ptr = nng_msg_body(msg);
-		int i;
+		char * ptr = nng_msg_body(msg);
+		int    i;
 		size_t n;
 		len = nng_msg_len(msg);
 
@@ -398,15 +386,15 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 	// If the caller has requested control information (header details),
 	// we grab it.
 	if (mh->msg_control != NULL) {
-		char *cdata;
-		size_t clen;
-		size_t tlen;
-		size_t spsz;
+		char *             cdata;
+		size_t             clen;
+		size_t             tlen;
+		size_t             spsz;
 		struct nn_cmsghdr *hdr;
-		unsigned char *ptr;
+		unsigned char *    ptr;
 
 		spsz = nng_msg_header_len(msg);
-		clen = NN_CMSG_SPACE(sizeof (spsz) + spsz);
+		clen = NN_CMSG_SPACE(sizeof(spsz) + spsz);
 
 		if ((tlen = mh->msg_controllen) == NN_MSG) {
 			// Ideally we'd use the same msg, but we would need
@@ -414,32 +402,32 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 			// instead we just make a new message.
 			nng_msg *nmsg;
 
-			rv = nng_msg_alloc(&nmsg, clen + sizeof (nmsg));
+			rv = nng_msg_alloc(&nmsg, clen + sizeof(nmsg));
 			if (rv != 0) {
 				nng_msg_free(msg);
 				nn_seterror(rv);
 				return (-1);
 			}
-			memcpy(nng_msg_body(nmsg), &nmsg, sizeof (nmsg));
-			nng_msg_trim(nmsg, sizeof (nmsg));
-			cdata = nng_msg_body(nmsg);
+			memcpy(nng_msg_body(nmsg), &nmsg, sizeof(nmsg));
+			nng_msg_trim(nmsg, sizeof(nmsg));
+			cdata                      = nng_msg_body(nmsg);
 			*(void **) mh->msg_control = cdata;
-			tlen = clen;
+			tlen                       = clen;
 		} else {
 			cdata = mh->msg_control;
 			memset(cdata, 0,
-			    tlen > sizeof (*hdr) ? sizeof (*hdr) : tlen);
+			    tlen > sizeof(*hdr) ? sizeof(*hdr) : tlen);
 		}
 
 		if (clen <= tlen) {
-			ptr = NN_CMSG_DATA(cdata);
-			hdr = (void *) cdata;
-			hdr->cmsg_len = clen;
+			ptr             = NN_CMSG_DATA(cdata);
+			hdr             = (void *) cdata;
+			hdr->cmsg_len   = clen;
 			hdr->cmsg_level = PROTO_SP;
-			hdr->cmsg_type = SP_HDR;
+			hdr->cmsg_type  = SP_HDR;
 
-			memcpy(ptr, &spsz, sizeof (spsz));
-			ptr += sizeof (spsz);
+			memcpy(ptr, &spsz, sizeof(spsz));
+			ptr += sizeof(spsz);
 			memcpy(ptr, nng_msg_header(msg), spsz);
 		}
 	}
@@ -450,16 +438,15 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 	return ((int) len);
 }
 
-
 int
 nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 {
-	nng_msg *msg = NULL;
+	nng_msg *msg  = NULL;
 	nng_msg *cmsg = NULL;
-	char *cdata;
-	int keep = 0;
-	size_t sz;
-	int rv;
+	char *   cdata;
+	int      keep = 0;
+	size_t   sz;
+	int      rv;
 
 	if ((flags = nn_flags(flags)) == -1) {
 		return (-1);
@@ -476,12 +463,12 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	}
 
 	if ((mh->msg_iovlen == 1) && (mh->msg_iov[0].iov_len == NN_MSG)) {
-		msg = *(nng_msg **)
-		    (((char *) mh->msg_iov[0].iov_base) - sizeof (msg));
+		msg = *(nng_msg **) (((char *) mh->msg_iov[0].iov_base) -
+		    sizeof(msg));
 		keep = 1; // keep the message on error
 	} else {
 		char *ptr;
-		int i;
+		int   i;
 
 		sz = 0;
 		// Get the total message size.
@@ -506,11 +493,11 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	// usability we've ever seen.
 	cmsg = NULL;
 	if ((cdata = mh->msg_control) != NULL) {
-		size_t clen;
-		size_t offs;
-		size_t spsz;
+		size_t             clen;
+		size_t             offs;
+		size_t             spsz;
 		struct nn_cmsghdr *chdr;
-		unsigned char *data;
+		unsigned char *    data;
 
 		if ((clen = mh->msg_controllen) == NN_MSG) {
 			// Underlying data is a message.  This is awkward,
@@ -518,14 +505,14 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 			// only free this message on success.  So we save the
 			// message now.
 			cdata = *(void **) cdata;
-			cmsg = *(nng_msg **) (cdata - sizeof (cmsg));
-			clen = nng_msg_len(cmsg);
+			cmsg  = *(nng_msg **) (cdata - sizeof(cmsg));
+			clen  = nng_msg_len(cmsg);
 		} else {
 			clen = mh->msg_controllen;
 		}
 
 		offs = 0;
-		while ((offs + sizeof (NN_CMSG_LEN(0))) < clen) {
+		while ((offs + sizeof(NN_CMSG_LEN(0))) < clen) {
 			chdr = (void *) (cdata + offs);
 			if ((chdr->cmsg_level != PROTO_SP) ||
 			    (chdr->cmsg_type != SP_HDR)) {
@@ -534,18 +521,18 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 
 			// SP header in theory.  Starts with size, then
 			// any backtrace details.
-			if (chdr->cmsg_len < sizeof (size_t)) {
+			if (chdr->cmsg_len < sizeof(size_t)) {
 				offs += chdr->cmsg_len;
 				continue;
 			}
 			data = NN_CMSG_DATA(chdr);
-			memcpy(&spsz, data, sizeof (spsz));
-			if ((spsz + sizeof (spsz)) > chdr->cmsg_len) {
+			memcpy(&spsz, data, sizeof(spsz));
+			if ((spsz + sizeof(spsz)) > chdr->cmsg_len) {
 				// Truncated header?  Ignore it.
 				offs += chdr->cmsg_len;
 				continue;
 			}
-			data += sizeof (spsz);
+			data += sizeof(spsz);
 			rv = nng_msg_append_header(msg, data, spsz);
 			if (rv != 0) {
 				if (!keep) {
@@ -575,14 +562,13 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	return ((int) sz);
 }
 
-
 int
 nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 {
-	int opt = 0;
-	int mscvt = 0;
+	int      opt   = 0;
+	int      mscvt = 0;
 	uint64_t usec;
-	int rv;
+	int      rv;
 
 	switch (nnlevel) {
 	case NN_SOL_SOCKET:
@@ -597,11 +583,11 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 			opt = NNG_OPT_RCVBUF;
 			break;
 		case NN_RECONNECT_IVL:
-			opt = NNG_OPT_RECONN_TIME;
+			opt   = NNG_OPT_RECONN_TIME;
 			mscvt = 1;
 			break;
 		case NN_RECONNECT_IVL_MAX:
-			opt = NNG_OPT_RECONN_MAXTIME;
+			opt   = NNG_OPT_RECONN_MAXTIME;
 			mscvt = 1;
 			break;
 		case NN_SNDFD:
@@ -617,11 +603,11 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 			opt = NNG_OPT_MAXTTL;
 			break;
 		case NN_RCVTIMEO:
-			opt = NNG_OPT_RCVTIMEO;
+			opt   = NNG_OPT_RCVTIMEO;
 			mscvt = 1;
 			break;
 		case NN_SNDTIMEO:
-			opt = NNG_OPT_SNDTIMEO;
+			opt   = NNG_OPT_SNDTIMEO;
 			mscvt = 1;
 			break;
 		case NN_DOMAIN:
@@ -640,7 +626,7 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 	case NN_REQ:
 		switch (nnopt) {
 		case NN_REQ_RESEND_IVL:
-			opt = NNG_OPT_RESENDTIME;
+			opt   = NNG_OPT_RESENDTIME;
 			mscvt = 1;
 			break;
 		default:
@@ -664,7 +650,7 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 	case NN_SURVEYOR:
 		switch (nnopt) {
 		case NN_SURVEY_DEADLINE:
-			opt = NNG_OPT_SURVEYTIME;
+			opt   = NNG_OPT_SURVEYTIME;
 			mscvt = 1;
 			break;
 		default:
@@ -679,14 +665,14 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 	if (mscvt) {
 		// We have to convert value to ms...
 
-		if (sz != sizeof (int)) {
+		if (sz != sizeof(int)) {
 			errno = EINVAL;
 			return (-1);
 		}
 		usec = *(int *) valp;
 		usec *= 1000;
 		valp = &usec;
-		sz = sizeof (usec);
+		sz   = sizeof(usec);
 	}
 
 	if ((rv = nng_setopt((nng_socket) s, opt, valp, sz)) != 0) {
@@ -696,12 +682,11 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 	return (0);
 }
 
-
 struct nn_cmsghdr *
 nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
 {
 	size_t clen;
-	char *data;
+	char * data;
 
 	// We only support SP headers, so there can be at most one header.
 	if (first != NULL) {
@@ -710,7 +695,7 @@ nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
 	if ((clen = mh->msg_controllen) == NN_MSG) {
 		nng_msg *msg;
 		data = *((void **) (mh->msg_control));
-		msg = *(nng_msg **) (data - sizeof (msg));
+		msg  = *(nng_msg **) (data - sizeof(msg));
 		clen = nng_msg_len(msg);
 	} else {
 		data = mh->msg_control;
@@ -722,12 +707,11 @@ nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
 		first = first + first->cmsg_len;
 	}
 
-	if (((char *) first + sizeof (*first)) > (data + clen)) {
+	if (((char *) first + sizeof(*first)) > (data + clen)) {
 		return (NULL);
 	}
 	return (first);
 }
-
 
 int
 nn_device(int s1, int s2)
@@ -739,7 +723,6 @@ nn_device(int s1, int s2)
 	nn_seterror(rv);
 	return (-1);
 }
-
 
 // nn_term is suitable only for shutting down the entire library,
 // and is not thread-safe with other functions.
@@ -753,7 +736,6 @@ nn_term(void)
 	// in use by libraries, etc.
 }
 
-
 // Internal test support routines.
 
 void
@@ -762,13 +744,11 @@ nn_sleep(uint64_t msec)
 	nng_usleep(msec * 1000);
 }
 
-
 uint64_t
 nn_clock(void)
 {
 	return (nng_clock());
 }
-
 
 extern void nni_panic(const char *, ...);
 
@@ -783,7 +763,6 @@ nn_thread_init(struct nn_thread *thr, void (*func)(void *), void *arg)
 	}
 	return (rv);
 }
-
 
 void
 nn_thread_term(struct nn_thread *thr)

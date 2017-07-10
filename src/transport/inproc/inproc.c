@@ -7,9 +7,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "core/nng_impl.h"
 
@@ -17,49 +17,45 @@
 // peer to another.  The inproc transport is only valid within the same
 // process.
 
-typedef struct nni_inproc_pair		nni_inproc_pair;
-typedef struct nni_inproc_pipe		nni_inproc_pipe;
-typedef struct nni_inproc_ep		nni_inproc_ep;
+typedef struct nni_inproc_pair nni_inproc_pair;
+typedef struct nni_inproc_pipe nni_inproc_pipe;
+typedef struct nni_inproc_ep   nni_inproc_ep;
 
 typedef struct {
-	nni_mtx		mx;
-	nni_list	servers;
+	nni_mtx  mx;
+	nni_list servers;
 } nni_inproc_global;
 
 // nni_inproc_pipe represents one half of a connection.
 struct nni_inproc_pipe {
-	const char *		addr;
-	nni_inproc_pair *	pair;
-	nni_msgq *		rq;
-	nni_msgq *		wq;
-	uint16_t		peer;
-	uint16_t		proto;
+	const char *     addr;
+	nni_inproc_pair *pair;
+	nni_msgq *       rq;
+	nni_msgq *       wq;
+	uint16_t         peer;
+	uint16_t         proto;
 };
 
 // nni_inproc_pair represents a pair of pipes.  Because we control both
 // sides of the pipes, we can allocate and free this in one structure.
 struct nni_inproc_pair {
-	nni_mtx			mx;
-	int			refcnt;
-	nni_msgq *		q[2];
-	nni_inproc_pipe *	pipes[2];
+	nni_mtx          mx;
+	int              refcnt;
+	nni_msgq *       q[2];
+	nni_inproc_pipe *pipes[2];
 };
 
 struct nni_inproc_ep {
-	char		addr[NNG_MAXADDRLEN+1];
-	int		mode;
-	int		closed;
-	int		started;
-	nni_list_node	node;
-	uint16_t	proto;
-	nni_cv		cv;
-	nni_list	clients;
-	nni_list	aios;
+	char          addr[NNG_MAXADDRLEN + 1];
+	int           mode;
+	int           closed;
+	int           started;
+	nni_list_node node;
+	uint16_t      proto;
+	nni_cv        cv;
+	nni_list      clients;
+	nni_list      aios;
 };
-
-#define NNI_INPROC_EP_IDLE	0
-#define NNI_INPROC_EP_DIAL	1
-#define NNI_INPROC_EP_LISTEN	2
 
 // nni_inproc is our global state - this contains the list of active endpoints
 // which we use for coordinating rendezvous.
@@ -79,13 +75,11 @@ nni_inproc_init(void)
 	return (0);
 }
 
-
 static void
 nni_inproc_fini(void)
 {
 	nni_mtx_fini(&nni_inproc.mx);
 }
-
 
 static void
 nni_inproc_pipe_close(void *arg)
@@ -100,7 +94,6 @@ nni_inproc_pipe_close(void *arg)
 	}
 }
 
-
 // nni_inproc_pair destroy is called when both pipe-ends of the pipe
 // have been destroyed.
 static void
@@ -112,7 +105,6 @@ nni_inproc_pair_destroy(nni_inproc_pair *pair)
 	NNI_FREE_STRUCT(pair);
 }
 
-
 static int
 nni_inproc_pipe_init(nni_inproc_pipe **pipep, nni_inproc_ep *ep)
 {
@@ -122,11 +114,10 @@ nni_inproc_pipe_init(nni_inproc_pipe **pipep, nni_inproc_ep *ep)
 		return (NNG_ENOMEM);
 	}
 	pipe->proto = ep->proto;
-	pipe->addr = ep->addr;
-	*pipep = pipe;
+	pipe->addr  = ep->addr;
+	*pipep      = pipe;
 	return (0);
 }
-
 
 static void
 nni_inproc_pipe_fini(void *arg)
@@ -154,15 +145,14 @@ nni_inproc_pipe_fini(void *arg)
 	NNI_FREE_STRUCT(pipe);
 }
 
-
 static void
 nni_inproc_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_inproc_pipe *pipe = arg;
-	nni_msg *msg = aio->a_msg;
-	char *h;
-	size_t l;
-	int rv;
+	nni_msg *        msg  = aio->a_msg;
+	char *           h;
+	size_t           l;
+	int              rv;
 
 	// We need to move any header data to the body, because the other
 	// side won't know what to do otherwise.
@@ -176,7 +166,6 @@ nni_inproc_pipe_send(void *arg, nni_aio *aio)
 	nni_msgq_aio_put(pipe->wq, aio);
 }
 
-
 static void
 nni_inproc_pipe_recv(void *arg, nni_aio *aio)
 {
@@ -184,7 +173,6 @@ nni_inproc_pipe_recv(void *arg, nni_aio *aio)
 
 	nni_msgq_aio_get(pipe->rq, aio);
 }
-
 
 static uint16_t
 nni_inproc_pipe_peer(void *arg)
@@ -194,12 +182,11 @@ nni_inproc_pipe_peer(void *arg)
 	return (pipe->peer);
 }
 
-
 static int
 nni_inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 {
 	nni_inproc_pipe *pipe = arg;
-	size_t len;
+	size_t           len;
 
 	switch (option) {
 	case NNG_OPT_LOCALADDR:
@@ -216,31 +203,29 @@ nni_inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 	return (NNG_ENOTSUP);
 }
 
-
 static int
 nni_inproc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 {
 	nni_inproc_ep *ep;
 
-	if (strlen(url) > NNG_MAXADDRLEN-1) {
+	if (strlen(url) > NNG_MAXADDRLEN - 1) {
 		return (NNG_EINVAL);
 	}
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 
-	ep->mode = mode;
-	ep->closed = 0;
+	ep->mode    = mode;
+	ep->closed  = 0;
 	ep->started = 0;
-	ep->proto = nni_sock_proto(sock);
+	ep->proto   = nni_sock_proto(sock);
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
-	(void) snprintf(ep->addr, sizeof (ep->addr), "%s", url);
+	(void) snprintf(ep->addr, sizeof(ep->addr), "%s", url);
 	*epp = ep;
 	return (0);
 }
-
 
 static void
 nni_inproc_ep_fini(void *arg)
@@ -250,7 +235,6 @@ nni_inproc_ep_fini(void *arg)
 	NNI_ASSERT(ep->closed);
 	NNI_FREE_STRUCT(ep);
 }
-
 
 static void
 nni_inproc_conn_finish(nni_aio *aio, int rv)
@@ -265,7 +249,7 @@ nni_inproc_conn_finish(nni_aio *aio, int rv)
 	}
 	nni_aio_list_remove(aio);
 	if (ep != NULL) {
-		if ((ep->mode != NNI_INPROC_EP_LISTEN) &&
+		if ((ep->mode != NNI_EP_MODE_LISTEN) &&
 		    nni_list_empty(&ep->aios)) {
 			if (nni_list_active(&ep->clients, ep)) {
 				nni_list_remove(&ep->clients, ep);
@@ -275,13 +259,12 @@ nni_inproc_conn_finish(nni_aio *aio, int rv)
 	nni_aio_finish(aio, rv, 0);
 }
 
-
 static void
 nni_inproc_ep_close(void *arg)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *client;
-	nni_aio *aio;
+	nni_aio *      aio;
 
 	nni_mtx_lock(&nni_inproc.mx);
 	ep->closed = 1;
@@ -301,7 +284,6 @@ nni_inproc_ep_close(void *arg)
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
-
 static void
 nni_inproc_connect_abort(nni_aio *aio)
 {
@@ -315,7 +297,7 @@ nni_inproc_connect_abort(nni_aio *aio)
 	}
 	nni_aio_list_remove(aio);
 	if (ep != NULL) {
-		if ((ep->mode != NNI_INPROC_EP_LISTEN) &&
+		if ((ep->mode != NNI_EP_MODE_LISTEN) &&
 		    nni_list_empty(&ep->aios)) {
 			if (nni_list_active(&ep->clients, ep)) {
 				nni_list_remove(&ep->clients, ep);
@@ -325,14 +307,13 @@ nni_inproc_connect_abort(nni_aio *aio)
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
-
 static void
 nni_inproc_accept_clients(nni_inproc_ep *server)
 {
-	nni_inproc_ep *client, *nclient;
-	nni_aio *saio, *caio;
+	nni_inproc_ep *  client, *nclient;
+	nni_aio *        saio, *caio;
 	nni_inproc_pair *pair;
-	int rv;
+	int              rv;
 
 	nclient = nni_list_first(&server->clients);
 	while ((client = nclient) != NULL) {
@@ -358,14 +339,14 @@ nni_inproc_accept_clients(nni_inproc_ep *server)
 				continue;
 			}
 
-			pair->pipes[0] = caio->a_pipe;
-			pair->pipes[1] = saio->a_pipe;
+			pair->pipes[0]     = caio->a_pipe;
+			pair->pipes[1]     = saio->a_pipe;
 			pair->pipes[0]->rq = pair->pipes[1]->wq = pair->q[0];
 			pair->pipes[1]->rq = pair->pipes[0]->wq = pair->q[1];
 			pair->pipes[0]->pair = pair->pipes[1]->pair = pair;
 			pair->pipes[1]->peer = pair->pipes[0]->proto;
 			pair->pipes[0]->peer = pair->pipes[1]->proto;
-			pair->refcnt = 2;
+			pair->refcnt         = 2;
 
 			nni_inproc_conn_finish(caio, 0);
 			nni_inproc_conn_finish(saio, 0);
@@ -381,14 +362,13 @@ nni_inproc_accept_clients(nni_inproc_ep *server)
 	}
 }
 
-
 static void
 nni_inproc_ep_connect(void *arg, nni_aio *aio)
 {
-	nni_inproc_ep *ep = arg;
+	nni_inproc_ep *  ep = arg;
 	nni_inproc_pipe *pipe;
-	nni_inproc_ep *server;
-	int rv;
+	nni_inproc_ep *  server;
+	int              rv;
 
 	if (ep->mode != NNI_EP_MODE_DIAL) {
 		nni_aio_finish(aio, NNG_EINVAL, 0);
@@ -446,13 +426,12 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
-
 static int
 nni_inproc_ep_bind(void *arg)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *srch;
-	nni_list *list = &nni_inproc.servers;
+	nni_list *     list = &nni_inproc.servers;
 
 	if (ep->mode != NNI_EP_MODE_LISTEN) {
 		return (NNG_EINVAL);
@@ -467,8 +446,7 @@ nni_inproc_ep_bind(void *arg)
 		return (NNG_ECLOSED);
 	}
 	NNI_LIST_FOREACH (list, srch) {
-		if ((srch->mode != NNI_EP_MODE_LISTEN) ||
-		    (!srch->started)) {
+		if ((srch->mode != NNI_EP_MODE_LISTEN) || (!srch->started)) {
 			continue;
 		}
 		if (strcmp(srch->addr, ep->addr) == 0) {
@@ -482,13 +460,12 @@ nni_inproc_ep_bind(void *arg)
 	return (0);
 }
 
-
 static void
 nni_inproc_ep_accept(void *arg, nni_aio *aio)
 {
-	nni_inproc_ep *ep = arg;
+	nni_inproc_ep *  ep = arg;
 	nni_inproc_pipe *pipe;
-	int rv;
+	int              rv;
 
 	if (ep->mode != NNI_EP_MODE_LISTEN) {
 		nni_aio_finish(aio, NNG_EINVAL, 0);
@@ -520,33 +497,32 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
-
 static nni_tran_pipe nni_inproc_pipe_ops = {
-	.p_fini		= nni_inproc_pipe_fini,
-	.p_send		= nni_inproc_pipe_send,
-	.p_recv		= nni_inproc_pipe_recv,
-	.p_close	= nni_inproc_pipe_close,
-	.p_peer		= nni_inproc_pipe_peer,
-	.p_getopt	= nni_inproc_pipe_getopt,
+	.p_fini   = nni_inproc_pipe_fini,
+	.p_send   = nni_inproc_pipe_send,
+	.p_recv   = nni_inproc_pipe_recv,
+	.p_close  = nni_inproc_pipe_close,
+	.p_peer   = nni_inproc_pipe_peer,
+	.p_getopt = nni_inproc_pipe_getopt,
 };
 
 static nni_tran_ep nni_inproc_ep_ops = {
-	.ep_init	= nni_inproc_ep_init,
-	.ep_fini	= nni_inproc_ep_fini,
-	.ep_connect	= nni_inproc_ep_connect,
-	.ep_bind	= nni_inproc_ep_bind,
-	.ep_accept	= nni_inproc_ep_accept,
-	.ep_close	= nni_inproc_ep_close,
-	.ep_setopt	= NULL,
-	.ep_getopt	= NULL,
+	.ep_init    = nni_inproc_ep_init,
+	.ep_fini    = nni_inproc_ep_fini,
+	.ep_connect = nni_inproc_ep_connect,
+	.ep_bind    = nni_inproc_ep_bind,
+	.ep_accept  = nni_inproc_ep_accept,
+	.ep_close   = nni_inproc_ep_close,
+	.ep_setopt  = NULL,
+	.ep_getopt  = NULL,
 };
 
 // This is the inproc transport linkage, and should be the only global
 // symbol in this entire file.
 struct nni_tran nni_inproc_tran = {
-	.tran_scheme	= "inproc",
-	.tran_ep	= &nni_inproc_ep_ops,
-	.tran_pipe	= &nni_inproc_pipe_ops,
-	.tran_init	= nni_inproc_init,
-	.tran_fini	= nni_inproc_fini,
+	.tran_scheme = "inproc",
+	.tran_ep     = &nni_inproc_ep_ops,
+	.tran_pipe   = &nni_inproc_pipe_ops,
+	.tran_init   = nni_inproc_init,
+	.tran_fini   = nni_inproc_fini,
 };

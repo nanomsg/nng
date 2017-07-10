@@ -15,13 +15,11 @@ nni_mtx_init(nni_mtx *mtx)
 	return (nni_plat_mtx_init(&mtx->mtx));
 }
 
-
 void
 nni_mtx_fini(nni_mtx *mtx)
 {
 	nni_plat_mtx_fini(&mtx->mtx);
 }
-
 
 void
 nni_mtx_lock(nni_mtx *mtx)
@@ -29,13 +27,11 @@ nni_mtx_lock(nni_mtx *mtx)
 	nni_plat_mtx_lock(&mtx->mtx);
 }
 
-
 void
 nni_mtx_unlock(nni_mtx *mtx)
 {
 	nni_plat_mtx_unlock(&mtx->mtx);
 }
-
 
 int
 nni_cv_init(nni_cv *cv, nni_mtx *mtx)
@@ -43,20 +39,17 @@ nni_cv_init(nni_cv *cv, nni_mtx *mtx)
 	return (nni_plat_cv_init(&cv->cv, &mtx->mtx));
 }
 
-
 void
 nni_cv_fini(nni_cv *cv)
 {
 	nni_plat_cv_fini(&cv->cv);
 }
 
-
 void
 nni_cv_wait(nni_cv *cv)
 {
 	nni_plat_cv_wait(&cv->cv);
 }
-
 
 int
 nni_cv_until(nni_cv *cv, nni_time until)
@@ -74,19 +67,17 @@ nni_cv_until(nni_cv *cv, nni_time until)
 	return (nni_plat_cv_until(&cv->cv, until));
 }
 
-
 void
 nni_cv_wake(nni_cv *cv)
 {
 	nni_plat_cv_wake(&cv->cv);
 }
 
-
 static void
 nni_thr_wrap(void *arg)
 {
 	nni_thr *thr = arg;
-	int start;
+	int      start;
 
 	nni_plat_mtx_lock(&thr->mtx);
 	while (((start = thr->start) == 0) && (thr->stop == 0)) {
@@ -102,17 +93,16 @@ nni_thr_wrap(void *arg)
 	nni_plat_mtx_unlock(&thr->mtx);
 }
 
-
 int
 nni_thr_init(nni_thr *thr, nni_thr_func fn, void *arg)
 {
 	int rv;
 
-	thr->done = 0;
+	thr->done  = 0;
 	thr->start = 0;
-	thr->stop = 0;
-	thr->fn = fn;
-	thr->arg = arg;
+	thr->stop  = 0;
+	thr->fn    = fn;
+	thr->arg   = arg;
 
 	if ((rv = nni_plat_mtx_init(&thr->mtx)) != 0) {
 		thr->done = 1;
@@ -138,7 +128,6 @@ nni_thr_init(nni_thr *thr, nni_thr_func fn, void *arg)
 	return (0);
 }
 
-
 void
 nni_thr_run(nni_thr *thr)
 {
@@ -147,7 +136,6 @@ nni_thr_run(nni_thr *thr)
 	nni_plat_cv_wake(&thr->cv);
 	nni_plat_mtx_unlock(&thr->mtx);
 }
-
 
 void
 nni_thr_wait(nni_thr *thr)
@@ -163,7 +151,6 @@ nni_thr_wait(nni_thr *thr)
 	}
 	nni_plat_mtx_unlock(&thr->mtx);
 }
-
 
 void
 nni_thr_fini(nni_thr *thr)

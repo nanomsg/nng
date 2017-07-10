@@ -11,7 +11,7 @@
 
 #ifdef PLATFORM_WINDOWS
 
-#define NNI_WIN_IOCP_NTHREADS    4
+#define NNI_WIN_IOCP_NTHREADS 4
 #include <stdio.h>
 
 // Windows IO Completion Port support.  We basically creaet a single
@@ -19,33 +19,33 @@
 // to the port on an as needed basis.  We use a single IO completion
 // port for pretty much everything.
 
-static HANDLE nni_win_global_iocp = NULL;
+static HANDLE  nni_win_global_iocp = NULL;
 static nni_thr nni_win_iocp_thrs[NNI_WIN_IOCP_NTHREADS];
 static nni_mtx nni_win_iocp_mtx;
 
 static void
 nni_win_iocp_handler(void *arg)
 {
-	HANDLE iocp;
-	DWORD cnt;
-	ULONG_PTR key;
-	OVERLAPPED *olpd;
+	HANDLE         iocp;
+	DWORD          cnt;
+	ULONG_PTR      key;
+	OVERLAPPED *   olpd;
 	nni_win_event *evt;
-	int status;
-	BOOL rv;
+	int            status;
+	BOOL           rv;
 
 	NNI_ARG_UNUSED(arg);
 
 	iocp = nni_win_global_iocp;
 
 	for (;;) {
-		key = 0;
-		olpd = NULL;
+		key    = 0;
+		olpd   = NULL;
 		status = 0;
-		cnt = 0;
+		cnt    = 0;
 
-		rv = GetQueuedCompletionStatus(iocp, &cnt, &key, &olpd,
-			INFINITE);
+		rv = GetQueuedCompletionStatus(
+		    iocp, &cnt, &key, &olpd, INFINITE);
 
 		if (rv == FALSE) {
 			if (olpd == NULL) {
@@ -62,7 +62,6 @@ nni_win_iocp_handler(void *arg)
 	}
 }
 
-
 int
 nni_win_iocp_register(HANDLE h)
 {
@@ -72,22 +71,20 @@ nni_win_iocp_register(HANDLE h)
 	return (0);
 }
 
-
 int
 nni_win_event_init(nni_win_event *evt, nni_cb cb, void *ptr, HANDLE h)
 {
-	ZeroMemory(&evt->olpd, sizeof (evt->olpd));
+	ZeroMemory(&evt->olpd, sizeof(evt->olpd));
 	evt->olpd.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
 	if (evt->olpd.hEvent == NULL) {
 		return (nni_win_error(GetLastError()));
 	}
 	nni_aio_list_init(&evt->aios);
 	evt->ptr = ptr;
-	evt->cb = cb;
-	evt->h = h;
+	evt->cb  = cb;
+	evt->h   = h;
 	return (0);
 }
-
 
 void
 nni_win_event_fini(nni_win_event *evt)
@@ -98,7 +95,6 @@ nni_win_event_fini(nni_win_event *evt)
 	}
 }
 
-
 int
 nni_win_event_reset(nni_win_event *evt)
 {
@@ -108,18 +104,16 @@ nni_win_event_reset(nni_win_event *evt)
 	return (0);
 }
 
-
 OVERLAPPED *
 nni_win_event_overlapped(nni_win_event *evt)
 {
 	return (&evt->olpd);
 }
 
-
 void
 nni_win_event_cancel(nni_win_event *evt)
 {
-	int rv;
+	int   rv;
 	DWORD cnt;
 
 	// Try to cancel the event...
@@ -146,23 +140,22 @@ nni_win_event_cancel(nni_win_event *evt)
 	GetOverlappedResult(evt->h, &evt->olpd, &cnt, TRUE);
 }
 
-
 int
 nni_win_iocp_sysinit(void)
 {
 	HANDLE h;
-	int i;
-	int rv;
+	int    i;
+	int    rv;
 
-	h = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0,
-		NNI_WIN_IOCP_NTHREADS);
+	h = CreateIoCompletionPort(
+	    INVALID_HANDLE_VALUE, NULL, 0, NNI_WIN_IOCP_NTHREADS);
 	if (h == NULL) {
 		return (nni_win_error(GetLastError()));
 	}
 	nni_win_global_iocp = h;
 	for (i = 0; i < NNI_WIN_IOCP_NTHREADS; i++) {
-		rv = nni_thr_init(&nni_win_iocp_thrs[i], nni_win_iocp_handler,
-			NULL);
+		rv = nni_thr_init(
+		    &nni_win_iocp_thrs[i], nni_win_iocp_handler, NULL);
 		if (rv != 0) {
 			goto fail;
 		}
@@ -186,11 +179,10 @@ fail:
 	return (rv);
 }
 
-
 void
 nni_win_iocp_sysfini(void)
 {
-	int i;
+	int    i;
 	HANDLE h;
 
 	if ((h = nni_win_global_iocp) != NULL) {
@@ -202,7 +194,6 @@ nni_win_iocp_sysfini(void)
 	}
 	nni_mtx_fini(&nni_win_iocp_mtx);
 }
-
 
 #else
 

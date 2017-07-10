@@ -28,6 +28,7 @@ extern nni_proto nni_surveyor_proto;
 extern nni_proto nni_respondent_proto;
 
 static nni_proto *protocols[] = {
+	// clang-format off
 	&nni_bus_proto,
 	&nni_pair_proto,
 	&nni_rep_proto,
@@ -39,12 +40,13 @@ static nni_proto *protocols[] = {
 	&nni_surveyor_proto,
 	&nni_respondent_proto,
 	NULL
+	// clang-format on
 };
 
 nni_proto *
 nni_proto_find(uint16_t num)
 {
-	int i;
+	int        i;
 	nni_proto *p;
 
 	for (i = 0; (p = protocols[i]) != NULL; i++) {
@@ -54,7 +56,6 @@ nni_proto_find(uint16_t num)
 	}
 	return (p);
 }
-
 
 const char *
 nni_proto_name(uint16_t num)
@@ -67,12 +68,11 @@ nni_proto_name(uint16_t num)
 	return (p->proto_name);
 }
 
-
 uint16_t
 nni_proto_number(const char *name)
 {
 	nni_proto *p;
-	int i;
+	int        i;
 
 	for (i = 0; (p = protocols[i]) != NULL; i++) {
 		if (strcmp(p->proto_name, name) == 0) {
@@ -81,7 +81,6 @@ nni_proto_number(const char *name)
 	}
 	return (NNG_PROTO_NONE);
 }
-
 
 uint16_t
 nni_proto_peer(uint16_t num)

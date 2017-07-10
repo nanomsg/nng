@@ -31,26 +31,26 @@ extern "C" {
 #ifndef NNG_DECL
 #if defined(_WIN32) && !defined(NNG_STATIC_LIB)
 #if defined(NNG_SHARED_LIB)
-#define NNG_DECL	__declspec(dllexport)
+#define NNG_DECL __declspec(dllexport)
 #else
-#define NNG_DECL	__declspec(dllimport)
+#define NNG_DECL __declspec(dllimport)
 #endif // NNG_SHARED_LIB
 #else
-#define NNG_DECL	extern
-#endif  // _WIN32 && !NNG_STATIC_LIB
-#endif  // NNG_DECL
+#define NNG_DECL extern
+#endif // _WIN32 && !NNG_STATIC_LIB
+#endif // NNG_DECL
 
 // Types common to nng.
-typedef uint32_t		nng_socket;
-typedef uint32_t		nng_dialer;
-typedef uint32_t		nng_listener;
-typedef uint32_t		nng_pipe;
-typedef struct nng_msg		nng_msg;
-typedef struct nng_event	nng_event;
-typedef struct nng_notify	nng_notify;
-typedef struct nng_snapshot	nng_snapshot;
-typedef struct nng_stat		nng_stat;
-typedef uint32_t		nng_endpoint; // XXX: REMOVE ME.
+typedef uint32_t            nng_socket;
+typedef uint32_t            nng_dialer;
+typedef uint32_t            nng_listener;
+typedef uint32_t            nng_pipe;
+typedef struct nng_msg      nng_msg;
+typedef struct nng_event    nng_event;
+typedef struct nng_notify   nng_notify;
+typedef struct nng_snapshot nng_snapshot;
+typedef struct nng_stat     nng_stat;
+typedef uint32_t            nng_endpoint; // XXX: REMOVE ME.
 
 // nng_open simply creates a socket of the given class. It returns an
 // error code on failure, or zero on success.  The socket starts in cooked
@@ -123,6 +123,7 @@ NNG_DECL void nng_unsetnotify(nng_socket, nng_notify *);
 // NNG_EV_PIPE_REM	- A pipe (connection) is removed from the socket.
 // NNG_EV_ENDPT_ADD	- An endpoint is added to the socket.
 // NNG_EV_ENDPT_REM	- An endpoint is removed from the socket.
+// clang-format off
 #define NNG_EV_BIT(x)    (1U << (x))
 #define NNG_EV_CAN_RCV		NNG_EV_BIT(0)
 #define NNG_EV_CAN_SND		NNG_EV_BIT(1)
@@ -136,6 +137,7 @@ NNG_DECL void nng_unsetnotify(nng_socket, nng_notify *);
 // XXX: Remove these.
 #define NNG_EV_ENDPT_ADD	NNG_EV_DIALER_ADD
 #define NNG_EV_ENDPT_REM	NNG_EV_DIALER_REM
+// clang-format on
 
 // The following functions return more detailed information about the event.
 // Some of the values will not make sense for some event types, in which case
@@ -143,7 +145,7 @@ NNG_DECL void nng_unsetnotify(nng_socket, nng_notify *);
 NNG_DECL int nng_event_type(nng_event *);
 NNG_DECL nng_socket nng_event_socket(nng_event *);
 NNG_DECL nng_endpoint nng_event_endpoint(nng_event *);
-NNG_DECL nng_pipe nng_event_pipe(nng_event *);
+NNG_DECL nng_pipe    nng_event_pipe(nng_event *);
 NNG_DECL const char *nng_event_reason(nng_event *);
 
 // nng_listen creates a listening endpoint with no special options,
@@ -241,22 +243,22 @@ NNG_DECL void *nng_alloc(size_t);
 NNG_DECL void nng_free(void *, size_t);
 
 // Message API.
-NNG_DECL int nng_msg_alloc(nng_msg **, size_t);
-NNG_DECL void nng_msg_free(nng_msg *);
-NNG_DECL int nng_msg_realloc(nng_msg *, size_t);
+NNG_DECL int   nng_msg_alloc(nng_msg **, size_t);
+NNG_DECL void  nng_msg_free(nng_msg *);
+NNG_DECL int   nng_msg_realloc(nng_msg *, size_t);
 NNG_DECL void *nng_msg_header(nng_msg *);
 NNG_DECL size_t nng_msg_header_len(nng_msg *);
-NNG_DECL void *nng_msg_body(nng_msg *);
+NNG_DECL void * nng_msg_body(nng_msg *);
 NNG_DECL size_t nng_msg_len(nng_msg *);
-NNG_DECL int nng_msg_append(nng_msg *, const void *, size_t);
-NNG_DECL int nng_msg_prepend(nng_msg *, const void *, size_t);
-NNG_DECL int nng_msg_trim(nng_msg *, size_t);
-NNG_DECL int nng_msg_trunc(nng_msg *, size_t);
-NNG_DECL int nng_msg_append_header(nng_msg *, const void *, size_t);
-NNG_DECL int nng_msg_prepend_header(nng_msg *, const void *, size_t);
-NNG_DECL int nng_msg_trim_header(nng_msg *, size_t);
-NNG_DECL int nng_msg_trunc_header(nng_msg *, size_t);
-NNG_DECL int nng_msg_getopt(nng_msg *, int, void *, size_t *);
+NNG_DECL int    nng_msg_append(nng_msg *, const void *, size_t);
+NNG_DECL int    nng_msg_prepend(nng_msg *, const void *, size_t);
+NNG_DECL int    nng_msg_trim(nng_msg *, size_t);
+NNG_DECL int    nng_msg_trunc(nng_msg *, size_t);
+NNG_DECL int    nng_msg_append_header(nng_msg *, const void *, size_t);
+NNG_DECL int    nng_msg_prepend_header(nng_msg *, const void *, size_t);
+NNG_DECL int    nng_msg_trim_header(nng_msg *, size_t);
+NNG_DECL int    nng_msg_trunc_header(nng_msg *, size_t);
+NNG_DECL int    nng_msg_getopt(nng_msg *, int, void *, size_t *);
 
 // Pipe API. Generally pipes are only "observable" to applications, but
 // we do permit an application to close a pipe. This can be useful, for
@@ -266,9 +268,9 @@ NNG_DECL int nng_pipe_getopt(nng_pipe, int, void *, size_t *);
 NNG_DECL int nng_pipe_close(nng_pipe);
 
 // Flags.
-#define NNG_FLAG_ALLOC		1       // Recv to allocate receive buffer.
-#define NNG_FLAG_NONBLOCK	2       // Non-block send/recv.
-#define NNG_FLAG_SYNCH		4       // Synchronous dial / listen
+#define NNG_FLAG_ALLOC 1    // Recv to allocate receive buffer.
+#define NNG_FLAG_NONBLOCK 2 // Non-block send/recv.
+#define NNG_FLAG_SYNCH 4    // Synchronous dial / listen
 
 // Protocol numbers.  These are to be used with nng_socket_create().
 // These values are used on the wire, so must not be changed.  The major
@@ -278,6 +280,7 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 // There are gaps in the list, which are obsolete or unsupported protocols.
 // Protocol numbers are never more than 16 bits.  Also, there will never be
 // a valid protocol numbered 0 (NNG_PROTO_NONE).
+// clang-format off
 #define NNG_PROTO(major, minor)    (((major) * 16) + (minor))
 #define NNG_PROTO_NONE		NNG_PROTO(0, 0)
 #define NNG_PROTO_PAIR		NNG_PROTO(1, 0)
@@ -291,12 +294,14 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 #define NNG_PROTO_RESPONDENT	NNG_PROTO(6, 3)
 #define NNG_PROTO_BUS		NNG_PROTO(7, 0)
 #define NNG_PROTO_STAR		NNG_PROTO(100, 0)
+// clang-format on
 
 // Options. We encode option numbers as follows:
 //
 // <level>	- 0: socket, 1: transport
 // <type>	- zero (socket), or transport (8 bits)
 // <code>	- specific value (16 bits)
+// clang-format off
 #define NNG_OPT_SOCKET(c)		(c)
 #define NNG_OPT_TRANSPORT_OPT(t, c)	(0x10000 | ((t) << 16) | (c))
 
@@ -320,6 +325,7 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 #define NNG_OPT_REMOTEADDR		NNG_OPT_SOCKET(17)
 #define NNG_OPT_RCVFD			NNG_OPT_SOCKET(18)
 #define NNG_OPT_SNDFD			NNG_OPT_SOCKET(19)
+// clang-format on
 
 // XXX: TBD: priorities, socket names, ipv4only
 
@@ -367,8 +373,8 @@ NNG_DECL const char *nng_stat_name(nng_stat *);
 // user as is.
 NNG_DECL int nng_stat_type(nng_stat *);
 
-#define NNG_STAT_LEVEL		0
-#define NNG_STAT_COUNTER	1
+#define NNG_STAT_LEVEL 0
+#define NNG_STAT_COUNTER 1
 
 // nng_stat_unit provides information about the unit for the statistic,
 // such as NNG_UNIT_BYTES or NNG_UNIT_BYTES.  If no specific unit is
@@ -376,12 +382,14 @@ NNG_DECL int nng_stat_type(nng_stat *);
 // returned.
 NNG_DECL int nng_stat_unit(nng_stat *);
 
+// clang-format off
 #define NNG_UNIT_NONE		0
 #define NNG_UNIT_BYTES		1
 #define NNG_UNIT_MESSAGES	2
 #define NNG_UNIT_BOOLEAN	3
 #define NNG_UNIT_MILLIS		4
 #define NNG_UNIT_EVENTS		5
+// clang-format on
 
 // nng_stat_value returns returns the actual value of the statistic.
 // Statistic values reflect their value at the time that the corresponding
@@ -425,6 +433,7 @@ NNG_DECL void nng_thread_destroy(void *);
 
 // Error codes.  These may happen to align to errnos used on your platform,
 // but do not count on this.
+// clang-format off
 #define NNG_EINTR		(1)
 #define NNG_ENOMEM		(2)
 #define NNG_EINVAL		(3)
@@ -445,6 +454,7 @@ NNG_DECL void nng_thread_destroy(void *);
 #define NNG_ECONNABORTED	(18)
 #define NNG_ECONNRESET		(19)
 #define NNG_ECANCELED		(20)
+// clang-format on
 
 // NNG_SYSERR is a special code, which allows us to wrap errors from the
 // underlyuing operating system.  We generally prefer to map errors to one
@@ -457,56 +467,58 @@ NNG_DECL void nng_thread_destroy(void *);
 // we treat it the same as memory.  But for files, etc. that's OS-specific,
 // and we use the generic below.  Some of the above error codes we use
 // internally, and the application should never see (e.g. NNG_EINTR).
-#define NNG_ESYSERR    (0x10000000)
+#define NNG_ESYSERR (0x10000000)
 
 // Maximum length of a socket address.  This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
-#define NNG_MAXADDRLEN    (128)
+#define NNG_MAXADDRLEN (128)
 
 // Some address details.  This is in some ways like a traditional sockets
 // sockaddr, but we have our own to cope with our unique families, etc.
 // The details of this structure are directly exposed to applications.
 // These structures can be obtained via property lookups, etc.
 struct nng_sockaddr_path {
-	uint16_t	sa_family;
-	char		sa_path[NNG_MAXADDRLEN];
+	uint16_t sa_family;
+	char     sa_path[NNG_MAXADDRLEN];
 };
-typedef struct nng_sockaddr_path	nng_sockaddr_path;
-typedef struct nng_sockaddr_path	nng_sockaddr_ipc;
-typedef struct nng_sockaddr_path	nng_sockaddr_inproc;
+typedef struct nng_sockaddr_path nng_sockaddr_path;
+typedef struct nng_sockaddr_path nng_sockaddr_ipc;
+typedef struct nng_sockaddr_path nng_sockaddr_inproc;
 
 struct nng_sockaddr_in6 {
-	uint16_t	sa_family;
-	uint16_t	sa_port;
-	uint8_t		sa_addr[16];
+	uint16_t sa_family;
+	uint16_t sa_port;
+	uint8_t  sa_addr[16];
 };
-typedef struct nng_sockaddr_in6		nng_sockaddr_in6;
-typedef struct nng_sockaddr_in6		nng_sockaddr_udp6;
-typedef struct nng_sockaddr_in6		nng_sockaddr_tcp6;
+typedef struct nng_sockaddr_in6 nng_sockaddr_in6;
+typedef struct nng_sockaddr_in6 nng_sockaddr_udp6;
+typedef struct nng_sockaddr_in6 nng_sockaddr_tcp6;
 
 struct nng_sockaddr_in {
-	uint16_t	sa_family;
-	uint16_t	sa_port;
-	uint32_t	sa_addr;
+	uint16_t sa_family;
+	uint16_t sa_port;
+	uint32_t sa_addr;
 };
-typedef struct nng_sockaddr_in		nng_sockaddr_in;
-typedef struct nng_sockaddr_in		nng_sockaddr_udp;
-typedef struct nng_sockaddr_in		nng_sockaddr_tcp;
+typedef struct nng_sockaddr_in nng_sockaddr_in;
+typedef struct nng_sockaddr_in nng_sockaddr_udp;
+typedef struct nng_sockaddr_in nng_sockaddr_tcp;
 
 typedef struct nng_sockaddr {
 	union {
-		uint16_t		s_family;
-		nng_sockaddr_path	s_path;
-		nng_sockaddr_in6	s_in6;
-		nng_sockaddr_in		s_in;
+		uint16_t          s_family;
+		nng_sockaddr_path s_path;
+		nng_sockaddr_in6  s_in6;
+		nng_sockaddr_in   s_in;
 	} s_un;
 } nng_sockaddr;
 
+// clang-format off
 #define NNG_AF_UNSPEC		0
 #define NNG_AF_INPROC		1
 #define NNG_AF_IPC		2
 #define NNG_AF_INET		3
 #define NNG_AF_INET6		4
+// clang-format on
 
 #ifdef __cplusplus
 }

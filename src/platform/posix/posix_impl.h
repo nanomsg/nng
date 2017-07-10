@@ -16,7 +16,7 @@
 // when using PLATFORM_POSIX_CLOCK, your condition variable timeouts need
 // to use the same base clock values.  Normally these should be used
 // together.  Almost everything depends on PLATFORM_POSIX_DEBUG.
-#ifdef  PLATFORM_POSIX
+#ifdef PLATFORM_POSIX
 #define PLATFORM_POSIX_ALLOC
 #define PLATFORM_POSIX_DEBUG
 #define PLATFORM_POSIX_CLOCK
@@ -40,7 +40,7 @@ extern int nni_plat_errno(int);
 // Define types that this platform uses.
 #ifdef PLATFORM_POSIX_THREAD
 
-extern int nni_plat_devnull;    // open descriptor on /dev/null
+extern int nni_plat_devnull; // open descriptor on /dev/null
 
 #include <pthread.h>
 
@@ -48,28 +48,27 @@ extern int nni_plat_devnull;    // open descriptor on /dev/null
 // elsewhere.
 
 struct nni_plat_mtx {
-	int		init;
-	pthread_t	owner;
+	int             init;
+	pthread_t       owner;
 	pthread_mutex_t mtx;
 };
 
 struct nni_plat_thr {
-	pthread_t	tid;
-	void		(*func)(void *);
-	void *		arg;
+	pthread_t tid;
+	void (*func)(void *);
+	void *arg;
 };
 
 struct nni_plat_cv {
-	pthread_cond_t	cv;
-	nni_plat_mtx *	mtx;
+	pthread_cond_t cv;
+	nni_plat_mtx * mtx;
 };
 
 #endif
 
-
-extern int nni_posix_pollq_sysinit(void);
+extern int  nni_posix_pollq_sysinit(void);
 extern void nni_posix_pollq_sysfini(void);
-extern int nni_posix_resolv_sysinit(void);
+extern int  nni_posix_resolv_sysinit(void);
 extern void nni_posix_resolv_sysfini(void);
 
 #endif // PLATFORM_POSIX_IMPL_H

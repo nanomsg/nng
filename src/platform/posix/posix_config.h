@@ -49,18 +49,18 @@
 // exists but has somehow very very different semantics.  We don't know
 // of any such concerns.)  This won't be used if any of the other options
 // are defined and work.
-#define NNG_USE_DEVURANDOM	1
+#define NNG_USE_DEVURANDOM 1
 
-#define NNG_USE_CLOCKID		CLOCK_REALTIME
+#define NNG_USE_CLOCKID CLOCK_REALTIME
 #ifndef CLOCK_REALTIME
 #define NNG_USE_GETTIMEOFDAY
 #elif !defined(NNG_USE_CLOCKID)
-#define NNG_USE_CLOCKID			CLOCK_MONOTONIC
+#define NNG_USE_CLOCKID CLOCK_MONOTONIC
 #else
-#define NNG_USE_CLOCKID			CLOCK_REALTIME
-#endif  // CLOCK_REALTIME
+#define NNG_USE_CLOCKID CLOCK_REALTIME
+#endif // CLOCK_REALTIME
 
-#define NNG_USE_POSIX_POLLQ_POLL	1
-#define NNG_USE_POSIX_RESOLV_GAI	1
+#define NNG_USE_POSIX_POLLQ_POLL 1
+#define NNG_USE_POSIX_RESOLV_GAI 1
 
 #endif // PLATFORM_POSIX

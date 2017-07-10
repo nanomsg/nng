@@ -26,4 +26,4 @@ extern void nni_panic(const char *, ...);
 // include one.
 extern void nni_println(const char *);
 
-#endif  // CORE_PANIC_H
+#endif // CORE_PANIC_H

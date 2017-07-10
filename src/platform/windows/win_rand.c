@@ -21,18 +21,17 @@ nni_plat_seed_prng(void *buf, size_t bufsz)
 	// The rand_s routine uses RtlGenRandom to get high quality
 	// pseudo random numbers (i.e. numbers that should be good enough
 	// for use with crypto keying.)
-	while (bufsz > sizeof (val)) {
+	while (bufsz > sizeof(val)) {
 		rand_s(&val);
-		memcpy(buf, &val, sizeof (val));
-		buf = (((char *) buf) + sizeof (val));
-		bufsz -= sizeof (val);
+		memcpy(buf, &val, sizeof(val));
+		buf = (((char *) buf) + sizeof(val));
+		bufsz -= sizeof(val);
 	}
 }
-
 
 #else
 
 // Suppress empty symbols warnings in ranlib.
 int nni_win_rand_not_used = 0;
 
-#endif  // PLATFORM_WINDOWS
+#endif // PLATFORM_WINDOWS

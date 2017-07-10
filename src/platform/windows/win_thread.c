@@ -22,14 +22,12 @@ nni_alloc(size_t sz)
 	return (v);
 }
 
-
 void
 nni_free(void *b, size_t z)
 {
 	NNI_ARG_UNUSED(z);
 	HeapFree(GetProcessHeap(), 0, b);
 }
-
 
 int
 nni_plat_mtx_init(nni_plat_mtx *mtx)
@@ -39,13 +37,11 @@ nni_plat_mtx_init(nni_plat_mtx *mtx)
 	return (0);
 }
 
-
 void
 nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
 	mtx->init = 0;
 }
-
 
 void
 nni_plat_mtx_lock(nni_plat_mtx *mtx)
@@ -53,13 +49,11 @@ nni_plat_mtx_lock(nni_plat_mtx *mtx)
 	AcquireSRWLockExclusive(&mtx->srl);
 }
 
-
 void
 nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 {
 	ReleaseSRWLockExclusive(&mtx->srl);
 }
-
 
 int
 nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
@@ -69,13 +63,11 @@ nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 	return (0);
 }
 
-
 void
 nni_plat_cv_wake(nni_plat_cv *cv)
 {
 	WakeAllConditionVariable(&cv->cv);
 }
-
 
 void
 nni_plat_cv_wait(nni_plat_cv *cv)
@@ -83,35 +75,31 @@ nni_plat_cv_wait(nni_plat_cv *cv)
 	(void) SleepConditionVariableSRW(&cv->cv, cv->srl, INFINITE, 0);
 }
 
-
 int
 nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 {
 	nni_time now;
-	DWORD msec;
-	BOOL ok;
+	DWORD    msec;
+	BOOL     ok;
 
 	now = nni_plat_clock();
 	if (now > until) {
 		msec = 0;
 	} else {
 		// times are in usec, but win32 wants millis
-		msec = (DWORD) (((until - now) + 999)/1000);
+		msec = (DWORD)(((until - now) + 999) / 1000);
 	}
 
 	ok = SleepConditionVariableSRW(&cv->cv, cv->srl, msec, 0);
 	return (ok ? 0 : NNG_ETIMEDOUT);
 }
 
-
 void
 nni_plat_cv_fini(nni_plat_cv *cv)
 {
 }
 
-
-static unsigned int __stdcall
-nni_plat_thr_main(void *arg)
+static unsigned int __stdcall nni_plat_thr_main(void *arg)
 {
 	nni_plat_thr *thr = arg;
 
@@ -119,24 +107,21 @@ nni_plat_thr_main(void *arg)
 	return (0);
 }
 
-
 int
 nni_plat_thr_init(nni_plat_thr *thr, void (*fn)(void *), void *arg)
 {
 	thr->func = fn;
-	thr->arg = arg;
+	thr->arg  = arg;
 
 	// We could probably even go down to 8k... but crypto for some
 	// protocols might get bigger than this.  1MB is waaay too big.
-	thr->handle = (HANDLE) _beginthreadex(NULL, 16384,
-		nni_plat_thr_main, thr, STACK_SIZE_PARAM_IS_A_RESERVATION,
-		NULL);
+	thr->handle = (HANDLE) _beginthreadex(NULL, 16384, nni_plat_thr_main,
+	    thr, STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
 	if (thr->handle == NULL) {
-		return (NNG_ENOMEM);    // Best guess...
+		return (NNG_ENOMEM); // Best guess...
 	}
 	return (0);
 }
-
 
 void
 nni_plat_thr_fini(nni_plat_thr *thr)
@@ -149,23 +134,22 @@ nni_plat_thr_fini(nni_plat_thr *thr)
 	}
 }
 
-
 int
 nni_plat_init(int (*helper)(void))
 {
-	static LONG inited = 0;
-	int rv;
+	static LONG    inited = 0;
+	int            rv;
 	static SRWLOCK lock = SRWLOCK_INIT;
 
 	if (inited) {
-		return (0);     // fast path
+		return (0); // fast path
 	}
 
 	AcquireSRWLockExclusive(&lock);
 
 	if (!inited) {
 		WSADATA data;
-		WORD ver;
+		WORD    ver;
 		ver = MAKEWORD(2, 2);
 		if (WSAStartup(MAKEWORD(2, 2), &data) != 0) {
 			if ((LOBYTE(data.wVersion) != 2) ||
@@ -195,7 +179,6 @@ out:
 	return (rv);
 }
 
-
 void
 nni_plat_fini(void)
 {
@@ -204,7 +187,6 @@ nni_plat_fini(void)
 	nni_win_iocp_sysfini();
 	WSACleanup();
 }
-
 
 #else
 

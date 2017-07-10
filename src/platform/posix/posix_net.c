@@ -12,72 +12,70 @@
 #ifdef PLATFORM_POSIX_NET
 #include "platform/posix/posix_aio.h"
 
+#include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/uio.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
-#include <arpa/inet.h>
-#include <fcntl.h>
 #include <unistd.h>
 
 static int
 nni_posix_tcp_addr(struct sockaddr_storage *ss, const nni_sockaddr *sa)
 {
-	struct sockaddr_in *sin;
+	struct sockaddr_in * sin;
 	struct sockaddr_in6 *sin6;
 
 	switch (sa->s_un.s_family) {
 	case NNG_AF_INET:
 		sin = (void *) ss;
-		memset(sin, 0, sizeof (*sin));
-		sin->sin_family = PF_INET;
-		sin->sin_port = sa->s_un.s_in.sa_port;
+		memset(sin, 0, sizeof(*sin));
+		sin->sin_family      = PF_INET;
+		sin->sin_port        = sa->s_un.s_in.sa_port;
 		sin->sin_addr.s_addr = sa->s_un.s_in.sa_addr;
-		return (sizeof (*sin));
-
+		return (sizeof(*sin));
 
 	case NNG_AF_INET6:
 		sin6 = (void *) ss;
-		memset(sin6, 0, sizeof (*sin6));
-#ifdef  SIN6_LEN
-		sin6->sin6_len = sizeof (*sin6);
+		memset(sin6, 0, sizeof(*sin6));
+#ifdef SIN6_LEN
+		sin6->sin6_len = sizeof(*sin6);
 #endif
 		sin6->sin6_family = PF_INET6;
-		sin6->sin6_port = sa->s_un.s_in6.sa_port;
+		sin6->sin6_port   = sa->s_un.s_in6.sa_port;
 		memcpy(sin6->sin6_addr.s6_addr, sa->s_un.s_in6.sa_addr, 16);
-		return (sizeof (*sin6));
+		return (sizeof(*sin6));
 	}
 	return (-1);
 }
-
 
 extern int nni_tcp_parse_url(char *, char **, char **, char **, char **);
 
 int
 nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
 {
-	nni_posix_epdesc *ed;
-	char buf[NNG_MAXADDRLEN];
-	int rv;
-	char *lhost, *rhost;
-	char *lserv, *rserv;
-	char *sep;
+	nni_posix_epdesc *      ed;
+	char                    buf[NNG_MAXADDRLEN];
+	int                     rv;
+	char *                  lhost, *rhost;
+	char *                  lserv, *rserv;
+	char *                  sep;
 	struct sockaddr_storage ss;
-	int len;
-	int passive;
-	nni_aio aio;
+	int                     len;
+	int                     passive;
+	nni_aio                 aio;
 
 	if ((rv = nni_posix_epdesc_init(&ed, url)) != 0) {
 		return (rv);
 	}
 
 	// Make a local copy.
-	snprintf(buf, sizeof (buf), "%s", url);
+	snprintf(buf, sizeof(buf), "%s", url);
 	nni_aio_init(&aio, NULL, NULL);
 
 	if (mode == NNI_EP_MODE_DIAL) {
@@ -138,13 +136,11 @@ done:
 	return (rv);
 }
 
-
 void
 nni_plat_tcp_ep_fini(nni_plat_tcp_ep *ep)
 {
 	nni_posix_epdesc_fini((void *) ep);
 }
-
 
 void
 nni_plat_tcp_ep_close(nni_plat_tcp_ep *ep)
@@ -152,13 +148,11 @@ nni_plat_tcp_ep_close(nni_plat_tcp_ep *ep)
 	nni_posix_epdesc_close((void *) ep);
 }
 
-
 int
 nni_plat_tcp_ep_listen(nni_plat_tcp_ep *ep)
 {
 	return (nni_posix_epdesc_listen((void *) ep));
 }
-
 
 void
 nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
@@ -166,13 +160,11 @@ nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
 	return (nni_posix_epdesc_connect((void *) ep, aio));
 }
 
-
 void
 nni_plat_tcp_ep_accept(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
 	return (nni_posix_epdesc_accept((void *) ep, aio));
 }
-
 
 void
 nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *p)
@@ -180,13 +172,11 @@ nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *p)
 	nni_posix_pipedesc_fini((void *) p);
 }
 
-
 void
 nni_plat_tcp_pipe_close(nni_plat_tcp_pipe *p)
 {
 	nni_posix_pipedesc_close((void *) p);
 }
-
 
 void
 nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *p, nni_aio *aio)
@@ -194,13 +184,11 @@ nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *p, nni_aio *aio)
 	nni_posix_pipedesc_send((void *) p, aio);
 }
 
-
 void
 nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *p, nni_aio *aio)
 {
 	nni_posix_pipedesc_recv((void *) p, aio);
 }
-
 
 #else
 

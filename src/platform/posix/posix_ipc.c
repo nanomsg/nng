@@ -13,23 +13,22 @@
 #include "platform/posix/posix_aio.h"
 
 #include <errno.h>
-#include <stdlib.h>
+#include <fcntl.h>
+#include <netdb.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <netdb.h>
 
-#ifdef  SOCK_CLOEXEC
-#define NNI_STREAM_SOCKTYPE	(SOCK_STREAM | SOCK_CLOEXEC)
+#ifdef SOCK_CLOEXEC
+#define NNI_STREAM_SOCKTYPE (SOCK_STREAM | SOCK_CLOEXEC)
 #else
-#define NNI_STREAM_SOCKTYPE	SOCK_STREAM
+#define NNI_STREAM_SOCKTYPE SOCK_STREAM
 #endif
-
 
 // Solaris/SunOS systems define this, which collides with our symbol
 // names.  Just undefine it now.
@@ -43,32 +42,32 @@
 int
 nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
 {
-	nni_posix_epdesc *ed;
-	int rv;
+	nni_posix_epdesc * ed;
+	int                rv;
 	struct sockaddr_un sun;
-	const char *path;
+	const char *       path;
 
 	if (strncmp(url, "ipc://", strlen("ipc://")) != 0) {
 		return (NNG_EADDRINVAL);
 	}
-	path = url + strlen("ipc://");        // skip the prefix.
+	path = url + strlen("ipc://"); // skip the prefix.
 
 	// prepare the sockaddr_un
 	sun.sun_family = AF_UNIX;
-	if (strlen(url) >= sizeof (sun.sun_path)) {
+	if (strlen(url) >= sizeof(sun.sun_path)) {
 		return (NNG_EADDRINVAL);
 	}
-	snprintf(sun.sun_path, sizeof (sun.sun_path), "%s", path);
+	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s", path);
 
 	if ((rv = nni_posix_epdesc_init(&ed, url)) != 0) {
 		return (rv);
 	}
 	switch (mode) {
 	case NNI_EP_MODE_DIAL:
-		nni_posix_epdesc_set_remote(ed, &sun, sizeof (sun));
+		nni_posix_epdesc_set_remote(ed, &sun, sizeof(sun));
 		break;
 	case NNI_EP_MODE_LISTEN:
-		nni_posix_epdesc_set_local(ed, &sun, sizeof (sun));
+		nni_posix_epdesc_set_local(ed, &sun, sizeof(sun));
 		break;
 	default:
 		nni_posix_epdesc_fini(ed);
@@ -79,20 +78,17 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
 	return (0);
 }
 
-
 void
 nni_plat_ipc_ep_fini(nni_plat_ipc_ep *ep)
 {
 	nni_posix_epdesc_fini((void *) ep);
 }
 
-
 void
 nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
 {
 	nni_posix_epdesc_close((void *) ep);
 }
-
 
 // UNIX DOMAIN SOCKETS -- these have names in the file namespace.
 // We are going to check to see if there was a name already there.
@@ -102,12 +98,12 @@ nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
 static int
 nni_plat_ipc_remove_stale(const char *path)
 {
-	int fd;
-	int rv;
+	int                fd;
+	int                rv;
 	struct sockaddr_un sun;
 
 	sun.sun_family = AF_UNIX;
-	snprintf(sun.sun_path, sizeof (sun.sun_path), "%s", path);
+	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s", path);
 
 	if ((fd = socket(AF_UNIX, NNI_STREAM_SOCKTYPE, 0)) < 0) {
 		return (nni_plat_errno(errno));
@@ -119,7 +115,7 @@ nni_plat_ipc_remove_stale(const char *path)
 	// then the cleanup will fail.  As this is supposed to be an
 	// exceptional case, don't worry.
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
-	if (connect(fd, (void *) &sun, sizeof (sun)) < 0) {
+	if (connect(fd, (void *) &sun, sizeof(sun)) < 0) {
 		if (errno == ECONNREFUSED) {
 			(void) unlink(path);
 		}
@@ -128,14 +124,13 @@ nni_plat_ipc_remove_stale(const char *path)
 	return (0);
 }
 
-
 int
 nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 {
-	const char *path;
-	nni_posix_epdesc *ed = (void *) ep;
+	const char *       path;
+	nni_posix_epdesc * ed = (void *) ep;
 	struct sockaddr_un sun;
-	int rv;
+	int                rv;
 
 	path = nni_posix_epdesc_url(ed);
 	path += strlen("ipc://");
@@ -146,13 +141,11 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 	return (nni_posix_epdesc_listen(ed));
 }
 
-
 void
 nni_plat_ipc_ep_connect(nni_plat_ipc_ep *ep, nni_aio *aio)
 {
 	nni_posix_epdesc_connect((void *) ep, aio);
 }
-
 
 void
 nni_plat_ipc_ep_accept(nni_plat_ipc_ep *ep, nni_aio *aio)
@@ -160,13 +153,11 @@ nni_plat_ipc_ep_accept(nni_plat_ipc_ep *ep, nni_aio *aio)
 	nni_posix_epdesc_accept((void *) ep, aio);
 }
 
-
 void
 nni_plat_ipc_pipe_fini(nni_plat_ipc_pipe *p)
 {
 	nni_posix_pipedesc_fini((void *) p);
 }
-
 
 void
 nni_plat_ipc_pipe_close(nni_plat_ipc_pipe *p)
@@ -174,20 +165,17 @@ nni_plat_ipc_pipe_close(nni_plat_ipc_pipe *p)
 	nni_posix_pipedesc_close((void *) p);
 }
 
-
 void
 nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *p, nni_aio *aio)
 {
 	nni_posix_pipedesc_send((void *) p, aio);
 }
 
-
 void
 nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *p, nni_aio *aio)
 {
 	nni_posix_pipedesc_recv((void *) p, aio);
 }
-
 
 #else
 

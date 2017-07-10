@@ -20,31 +20,30 @@ static void nni_win_ipc_send_start(nni_plat_ipc_pipe *);
 static void nni_win_ipc_recv_start(nni_plat_ipc_pipe *);
 
 struct nni_plat_ipc_pipe {
-	HANDLE		p;
-	nni_win_event	recv_evt;
-	nni_win_event	send_evt;
-	nni_mtx		mtx;
-	nni_list	readq;
-	nni_list	writeq;
+	HANDLE        p;
+	nni_win_event recv_evt;
+	nni_win_event send_evt;
+	nni_mtx       mtx;
+	nni_list      readq;
+	nni_list      writeq;
 };
 
 struct nni_plat_ipc_ep {
-	char		path[256];
-	int		mode;
-	int		started;
-	nni_list	aios;
-	HANDLE		p;              // accept side only
-	nni_win_event	acc_evt;        // accept side only
-	nni_mtx		mtx;            // accept side only
-	nni_list_node	node;           // conn side uses this
+	char          path[256];
+	int           mode;
+	int           started;
+	nni_list      aios;
+	HANDLE        p;       // accept side only
+	nni_win_event acc_evt; // accept side only
+	nni_mtx       mtx;     // accept side only
+	nni_list_node node;    // conn side uses this
 };
-
 
 static int
 nni_win_ipc_pipe_init(nni_plat_ipc_pipe **pipep, HANDLE p)
 {
 	nni_plat_ipc_pipe *pipe;
-	int rv;
+	int                rv;
 
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
@@ -71,7 +70,6 @@ nni_win_ipc_pipe_init(nni_plat_ipc_pipe **pipep, HANDLE p)
 	return (0);
 }
 
-
 static void
 nni_win_ipc_send_cancel(nni_aio *aio)
 {
@@ -83,15 +81,14 @@ nni_win_ipc_send_cancel(nni_aio *aio)
 	nni_mtx_unlock(&pipe->mtx);
 }
 
-
 static void
 nni_win_ipc_send_finish(nni_plat_ipc_pipe *pipe)
 {
-	nni_win_event *evt = &pipe->send_evt;
-	OVERLAPPED *olpd = nni_win_event_overlapped(evt);
-	int rv = 0;
-	nni_aio *aio;
-	DWORD cnt;
+	nni_win_event *evt  = &pipe->send_evt;
+	OVERLAPPED *   olpd = nni_win_event_overlapped(evt);
+	int            rv   = 0;
+	nni_aio *      aio;
+	DWORD          cnt;
 
 	if (GetOverlappedResult(pipe->p, olpd, &cnt, TRUE) == FALSE) {
 		rv = nni_win_error(GetLastError());
@@ -110,7 +107,7 @@ nni_win_ipc_send_finish(nni_plat_ipc_pipe *pipe)
 		if (aio->a_iov[0].iov_len == 0) {
 			int i;
 			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i-1] = aio->a_iov[i];
+				aio->a_iov[i - 1] = aio->a_iov[i];
 			}
 			aio->a_niov--;
 		}
@@ -127,16 +124,15 @@ nni_win_ipc_send_finish(nni_plat_ipc_pipe *pipe)
 	nni_aio_finish(aio, rv, aio->a_count);
 }
 
-
 static void
 nni_win_ipc_send_start(nni_plat_ipc_pipe *pipe)
 {
-	void *buf;
-	DWORD len;
-	int rv;
-	nni_win_event *evt = &pipe->send_evt;
-	OVERLAPPED *olpd = nni_win_event_overlapped(evt);
-	nni_aio *aio = nni_list_first(&pipe->writeq);
+	void *         buf;
+	DWORD          len;
+	int            rv;
+	nni_win_event *evt  = &pipe->send_evt;
+	OVERLAPPED *   olpd = nni_win_event_overlapped(evt);
+	nni_aio *      aio  = nni_list_first(&pipe->writeq);
 
 	NNI_ASSERT(aio != NULL);
 	NNI_ASSERT(aio->a_niov > 0);
@@ -157,8 +153,8 @@ nni_win_ipc_send_start(nni_plat_ipc_pipe *pipe)
 	// scrambling the data anyway.  Note that Windows named pipes do
 	// not appear to support scatter/gather, so we have to process
 	// each element in turn.
-	buf = aio->a_iov[0].iov_buf;
-	len = (DWORD) aio->a_iov[0].iov_len;
+	buf  = aio->a_iov[0].iov_buf;
+	len  = (DWORD) aio->a_iov[0].iov_len;
 	olpd = nni_win_event_overlapped(evt);
 
 	// We limit ourselves to writing 16MB at a time.  Named Pipes
@@ -190,7 +186,6 @@ fail:
 	nni_aio_finish(aio, rv, aio->a_count);
 }
 
-
 static void
 nni_win_ipc_send_cb(void *arg)
 {
@@ -201,12 +196,11 @@ nni_win_ipc_send_cb(void *arg)
 	nni_mtx_unlock(&pipe->mtx);
 }
 
-
 void
 nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *pipe, nni_aio *aio)
 {
 	nni_win_event *evt = &pipe->send_evt;
-	int rv;
+	int            rv;
 
 	nni_mtx_lock(&pipe->mtx);
 	if ((rv = nni_aio_start(aio, nni_win_ipc_send_cancel, pipe)) != 0) {
@@ -229,7 +223,6 @@ nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *pipe, nni_aio *aio)
 	nni_mtx_unlock(&pipe->mtx);
 }
 
-
 static void
 nni_win_ipc_recv_cancel(nni_aio *aio)
 {
@@ -241,15 +234,14 @@ nni_win_ipc_recv_cancel(nni_aio *aio)
 	nni_mtx_unlock(&pipe->mtx);
 }
 
-
 static void
 nni_win_ipc_recv_finish(nni_plat_ipc_pipe *pipe)
 {
-	nni_win_event *evt = &pipe->recv_evt;
-	OVERLAPPED *olpd = nni_win_event_overlapped(evt);
-	int rv = 0;
-	nni_aio *aio;
-	DWORD cnt;
+	nni_win_event *evt  = &pipe->recv_evt;
+	OVERLAPPED *   olpd = nni_win_event_overlapped(evt);
+	int            rv   = 0;
+	nni_aio *      aio;
+	DWORD          cnt;
 
 	if (GetOverlappedResult(pipe->p, olpd, &cnt, TRUE) == FALSE) {
 		rv = nni_win_error(GetLastError());
@@ -268,7 +260,7 @@ nni_win_ipc_recv_finish(nni_plat_ipc_pipe *pipe)
 		if (aio->a_iov[0].iov_len == 0) {
 			int i;
 			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i-1] = aio->a_iov[i];
+				aio->a_iov[i - 1] = aio->a_iov[i];
 			}
 			aio->a_niov--;
 		}
@@ -285,16 +277,15 @@ nni_win_ipc_recv_finish(nni_plat_ipc_pipe *pipe)
 	nni_aio_finish(aio, rv, aio->a_count);
 }
 
-
 static void
 nni_win_ipc_recv_start(nni_plat_ipc_pipe *pipe)
 {
-	void *buf;
-	DWORD len;
-	int rv;
-	nni_win_event *evt = &pipe->recv_evt;
-	OVERLAPPED *olpd = nni_win_event_overlapped(evt);
-	nni_aio *aio = nni_list_first(&pipe->readq);
+	void *         buf;
+	DWORD          len;
+	int            rv;
+	nni_win_event *evt  = &pipe->recv_evt;
+	OVERLAPPED *   olpd = nni_win_event_overlapped(evt);
+	nni_aio *      aio  = nni_list_first(&pipe->readq);
 
 	NNI_ASSERT(aio != NULL);
 	NNI_ASSERT(aio->a_niov > 0);
@@ -315,8 +306,8 @@ nni_win_ipc_recv_start(nni_plat_ipc_pipe *pipe)
 	// scrambling the data anyway.  Note that Windows named pipes do
 	// not appear to support scatter/gather, so we have to process
 	// each element in turn.
-	buf = aio->a_iov[0].iov_buf;
-	len = (DWORD) aio->a_iov[0].iov_len;
+	buf  = aio->a_iov[0].iov_buf;
+	len  = (DWORD) aio->a_iov[0].iov_len;
 	olpd = nni_win_event_overlapped(evt);
 
 	// We limit ourselves to writing 16MB at a time.  Named Pipes
@@ -348,7 +339,6 @@ fail:
 	nni_aio_finish(aio, rv, 0);
 }
 
-
 static void
 nni_win_ipc_recv_cb(void *arg)
 {
@@ -359,12 +349,11 @@ nni_win_ipc_recv_cb(void *arg)
 	nni_mtx_unlock(&pipe->mtx);
 }
 
-
 void
 nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *pipe, nni_aio *aio)
 {
 	nni_win_event *evt = &pipe->send_evt;
-	int rv;
+	int            rv;
 
 	nni_mtx_lock(&pipe->mtx);
 	if ((rv = nni_aio_start(aio, nni_win_ipc_recv_cancel, pipe)) != 0) {
@@ -386,7 +375,6 @@ nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *pipe, nni_aio *aio)
 	nni_win_ipc_recv_start(pipe);
 }
 
-
 void
 nni_plat_ipc_pipe_close(nni_plat_ipc_pipe *pipe)
 {
@@ -400,7 +388,6 @@ nni_plat_ipc_pipe_close(nni_plat_ipc_pipe *pipe)
 	nni_mtx_unlock(&pipe->mtx);
 }
 
-
 void
 nni_plat_ipc_pipe_fini(nni_plat_ipc_pipe *pipe)
 {
@@ -412,13 +399,12 @@ nni_plat_ipc_pipe_fini(nni_plat_ipc_pipe *pipe)
 	NNI_FREE_STRUCT(pipe);
 }
 
-
 int
 nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
 {
-	const char *path;
+	const char *     path;
 	nni_plat_ipc_ep *ep;
-	int rv;
+	int              rv;
 
 	if (strncmp(url, "ipc://", strlen("ipc://")) != 0) {
 		return (NNG_EADDRINVAL);
@@ -427,7 +413,7 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	ZeroMemory(ep, sizeof (ep));
+	ZeroMemory(ep, sizeof(ep));
 	if ((rv = nni_mtx_init(&ep->mtx)) != 0) {
 		NNI_FREE_STRUCT(ep);
 		return (rv);
@@ -437,17 +423,16 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
 	NNI_LIST_NODE_INIT(&ep->node);
 	nni_aio_list_init(&ep->aios);
 
-	(void) snprintf(ep->path, sizeof (ep->path), "\\\\.\\pipe\\%s", path);
+	(void) snprintf(ep->path, sizeof(ep->path), "\\\\.\\pipe\\%s", path);
 
 	*epp = ep;
 	return (0);
 }
 
-
 int
 nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 {
-	int rv;
+	int    rv;
 	HANDLE p;
 
 	nni_mtx_lock(&ep->mtx);
@@ -463,12 +448,11 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 	// We create the first named pipe, and we make sure that it is
 	// properly ours.
 	p = CreateNamedPipeA(ep->path,
-		PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
-		FILE_FLAG_FIRST_PIPE_INSTANCE,
-		PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
-		PIPE_REJECT_REMOTE_CLIENTS,
-		PIPE_UNLIMITED_INSTANCES,
-		4096, 4096, 0, NULL);
+	    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
+	        FILE_FLAG_FIRST_PIPE_INSTANCE,
+	    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
+	        PIPE_REJECT_REMOTE_CLIENTS,
+	    PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0, NULL);
 	if (p == INVALID_HANDLE_VALUE) {
 		if ((rv = GetLastError()) == ERROR_ACCESS_DENIED) {
 			rv = NNG_EADDRINUSE;
@@ -486,7 +470,7 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 		goto failed;
 	}
 
-	ep->p = p;
+	ep->p       = p;
 	ep->started = 1;
 	nni_mtx_unlock(&ep->mtx);
 	return (0);
@@ -501,16 +485,15 @@ failed:
 	return (rv);
 }
 
-
 static void
 nni_win_ipc_acc_finish(nni_plat_ipc_ep *ep)
 {
-	nni_win_event *evt = &ep->acc_evt;
-	DWORD nbytes;
-	int rv;
+	nni_win_event *    evt = &ep->acc_evt;
+	DWORD              nbytes;
+	int                rv;
 	nni_plat_ipc_pipe *pipe;
-	nni_aio *aio;
-	HANDLE newp, oldp;
+	nni_aio *          aio;
+	HANDLE             newp, oldp;
 
 	// Note: This should be called with the ep lock held, and only when
 	// the ConnectNamedPipe has finished.
@@ -541,17 +524,16 @@ nni_win_ipc_acc_finish(nni_plat_ipc_ep *ep)
 	}
 
 	newp = CreateNamedPipeA(ep->path,
-		PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
-		PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
-		PIPE_REJECT_REMOTE_CLIENTS,
-		PIPE_UNLIMITED_INSTANCES,
-		4096, 4096, 0, NULL);
+	    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
+	    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
+	        PIPE_REJECT_REMOTE_CLIENTS,
+	    PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0, NULL);
 	if (newp == INVALID_HANDLE_VALUE) {
 		rv = nni_win_error(GetLastError());
 		DisconnectNamedPipe(ep->p);
 		return;
 	}
-	oldp = ep->p;
+	oldp  = ep->p;
 	ep->p = newp;
 
 	if ((rv = nni_win_ipc_pipe_init(&pipe, oldp)) != 0) {
@@ -564,7 +546,6 @@ nni_win_ipc_acc_finish(nni_plat_ipc_ep *ep)
 	nni_aio_finish(aio, 0, 0);
 }
 
-
 static void
 nni_win_ipc_acc_cb(void *arg)
 {
@@ -574,7 +555,6 @@ nni_win_ipc_acc_cb(void *arg)
 	nni_win_ipc_acc_finish(ep);
 	nni_mtx_unlock(&ep->mtx);
 }
-
 
 static void
 nni_win_ipc_acc_cancel(nni_aio *aio)
@@ -587,11 +567,10 @@ nni_win_ipc_acc_cancel(nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-
 void
 nni_plat_ipc_ep_accept(nni_plat_ipc_ep *ep, nni_aio *aio)
 {
-	int rv;
+	int            rv;
 	nni_win_event *evt = &ep->acc_evt;
 
 	nni_mtx_lock(&ep->mtx);
@@ -628,34 +607,32 @@ nni_plat_ipc_ep_accept(nni_plat_ipc_ep *ep, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-
 // So Windows IPC is a bit different on the client side.  There is no
 // support for asynchronous connection, but we can fake it with a single
 // thread that runs to establish the connection.  That thread will run
 // keep looping, sleeping for 10 ms between attempts.  It performs non-blocking
 // attempts to connect.
-typedef struct nni_win_ipc_conn_work   nni_win_ipc_conn_work;
+typedef struct nni_win_ipc_conn_work nni_win_ipc_conn_work;
 struct nni_win_ipc_conn_work {
-	nni_list	waiters;
-	nni_list	workers;
-	nni_mtx		mtx;
-	nni_cv		cv;
-	nni_thr		thr;
-	int		exit;
+	nni_list waiters;
+	nni_list workers;
+	nni_mtx  mtx;
+	nni_cv   cv;
+	nni_thr  thr;
+	int      exit;
 };
 
 static nni_win_ipc_conn_work nni_win_ipc_connecter;
-
 
 static void
 nni_win_ipc_conn_thr(void *arg)
 {
 	nni_win_ipc_conn_work *w = arg;
-	nni_plat_ipc_ep *ep;
-	nni_plat_ipc_pipe *pipe;
-	nni_aio *aio;
-	HANDLE p;
-	int rv;
+	nni_plat_ipc_ep *      ep;
+	nni_plat_ipc_pipe *    pipe;
+	nni_aio *              aio;
+	HANDLE                 p;
+	int                    rv;
 
 	nni_mtx_lock(&w->mtx);
 	for (;;) {
@@ -674,10 +651,9 @@ nni_win_ipc_conn_thr(void *arg)
 				continue;
 			}
 			nni_list_remove(&ep->aios, aio);
-			p = CreateFileA(ep->path,
-				GENERIC_READ | GENERIC_WRITE,
-				0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED,
-				NULL);
+			p = CreateFileA(ep->path, GENERIC_READ | GENERIC_WRITE,
+			    0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED,
+			    NULL);
 
 			if (p == INVALID_HANDLE_VALUE) {
 				switch ((rv = GetLastError())) {
@@ -686,12 +662,12 @@ nni_win_ipc_conn_thr(void *arg)
 					nni_list_prepend(&ep->aios, aio);
 					break;
 				case ERROR_FILE_NOT_FOUND:
-					nni_aio_finish(aio, NNG_ECONNREFUSED,
-					    0);
+					nni_aio_finish(
+					    aio, NNG_ECONNREFUSED, 0);
 					break;
 				default:
-					nni_aio_finish(aio, nni_win_error(rv),
-					    0);
+					nni_aio_finish(
+					    aio, nni_win_error(rv), 0);
 					break;
 				}
 			} else {
@@ -723,12 +699,11 @@ nni_win_ipc_conn_thr(void *arg)
 	nni_mtx_unlock(&w->mtx);
 }
 
-
 static void
 nni_win_ipc_conn_cancel(nni_aio *aio)
 {
-	nni_win_ipc_conn_work *w = &nni_win_ipc_connecter;
-	nni_plat_ipc_ep *ep = aio->a_prov_data;
+	nni_win_ipc_conn_work *w  = &nni_win_ipc_connecter;
+	nni_plat_ipc_ep *      ep = aio->a_prov_data;
 
 	nni_mtx_lock(&w->mtx);
 	nni_aio_list_remove(aio);
@@ -737,7 +712,6 @@ nni_win_ipc_conn_cancel(nni_aio *aio)
 	}
 	nni_mtx_unlock(&w->mtx);
 }
-
 
 void
 nni_plat_ipc_ep_connect(nni_plat_ipc_ep *ep, nni_aio *aio)
@@ -762,7 +736,6 @@ nni_plat_ipc_ep_connect(nni_plat_ipc_ep *ep, nni_aio *aio)
 	nni_mtx_unlock(&w->mtx);
 }
 
-
 void
 nni_plat_ipc_ep_fini(nni_plat_ipc_ep *ep)
 {
@@ -776,12 +749,11 @@ nni_plat_ipc_ep_fini(nni_plat_ipc_ep *ep)
 	NNI_FREE_STRUCT(ep);
 }
 
-
 void
 nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
 {
 	nni_win_ipc_conn_work *w = &nni_win_ipc_connecter;
-	nni_aio *aio;
+	nni_aio *              aio;
 
 	switch (ep->mode) {
 	case NNI_EP_MODE_DIAL:
@@ -811,11 +783,10 @@ nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
 	}
 }
 
-
 int
 nni_win_ipc_sysinit(void)
 {
-	int rv;
+	int                    rv;
 	nni_win_ipc_conn_work *worker = &nni_win_ipc_connecter;
 
 	NNI_LIST_INIT(&worker->workers, nni_plat_ipc_ep, node);
@@ -835,7 +806,6 @@ nni_win_ipc_sysinit(void)
 	return (0);
 }
 
-
 void
 nni_win_ipc_sysfini(void)
 {
@@ -849,7 +819,6 @@ nni_win_ipc_sysfini(void)
 	nni_cv_fini(&worker->cv);
 	nni_mtx_fini(&worker->mtx);
 }
-
 
 #else
 

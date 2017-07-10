@@ -12,8 +12,8 @@
 #ifdef PLATFORM_POSIX_DEBUG
 
 #include <errno.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 void
@@ -22,14 +22,12 @@ nni_plat_abort(void)
 	abort();
 }
 
-
 void
 nni_plat_println(const char *message)
 {
 	fputs(message, stderr);
 	fputc('\n', stderr);
 }
-
 
 const char *
 nni_plat_strerror(int errnum)
@@ -40,7 +38,6 @@ nni_plat_strerror(int errnum)
 	return (strerror(errnum));
 }
 
-
 // There are of course other errors than these, but these are the ones
 // that we might reasonably expect and want to handle "cleanly".  Most of
 // the others should be handled by the system error code.  Note that EFAULT
@@ -50,10 +47,10 @@ nni_plat_strerror(int errnum)
 // error codes should exist, and be distinct positive numbers. (EWOULDBLOCK
 // and EAGAIN are permitted to have the same value.)
 static struct {
-	int	posix_err;
-	int	nng_err;
-}
-nni_plat_errnos[] = {
+	int posix_err;
+	int nng_err;
+} nni_plat_errnos[] = {
+	// clang-format off
 	{ EINTR,	   NNG_EINTR	    },
 	{ EINVAL,	   NNG_EINVAL	    },
 	{ ENOMEM,	   NNG_ENOMEM	    },
@@ -86,6 +83,7 @@ nni_plat_errnos[] = {
 	{ EWOULDBLOCK,	   NNG_EAGAIN	    },
 	// must be last
 	{		0,		  0 },
+	// clang-format on
 };
 
 int
@@ -107,7 +105,6 @@ nni_plat_errno(int errnum)
 	// Other system errno.
 	return (NNG_ESYSERR + errnum);
 }
-
 
 #else
 

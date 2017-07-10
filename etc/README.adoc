@@ -5,39 +5,34 @@ This directory contains support files that I use for developing this
 project.  I recommend others consider doing the same.
 
 
-Coding Style & Uncrustify
+Coding Style
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
 I'm using Sublime Text as my development IDE, and so I've set things up
-for that.
+for that.  But, I think you should be able to use any reasonable editor.
 
-The project coding style is automatically checked by the Uncrustify
-configuration, and there is a shell script here that will validate it.
-Uncrustify is not (for now) enforced outside of src/  (in particular it
-will probably choke on the stuff in ./tests).  I may fix that one day.
+A clang-format configuration file is included in the project, you should
+use that.  (clang format requires that the style file live at the top of
+of the project tree, not somewhere else, such as this etc directory.)  The
+format rules are probably inappropriate for the test/ subdirectory, as
+the Convey framework has a style all it's own.
 
-I am running this using Uncrustify version 0.60 -- and I know Trusty Tahr
-has 0.59 which also seems to work.  Older versions seem to generate different
-ugly output, and I have not tested the new versions.  Until updated otherwise,
-the coding style is as enforced by this config with Uncrustify 0.60.
+The style is based loosely on WebKit, but is really modified -- someday
+if clang-format ever learns about BSD KNF I'll probably switch to that.
+
+Once upon a time this used uncrustify. However, the frequent breaking changes
+in uncrustify versions, and the fact that the latest (at this time 0.65) does
+not actually support one of the most common language constructs (extern "C"
+opening braces) has driven me towards clang-format.  The good news is that
+this is probably actually easier for most folks to use.
 
 
 Sublime Text
 ~~~~~~~~~~~~
 
-I have a custom version of the Sublime Uncrustify package, which understands
-project-specific settings.  (I also have submitted an upstream PR for those
-chaanges here: https://github.com/obxyann/Sublime-Uncrustify/pulls so
-hopefully this functionality will be available to others.)  The Sublime
-project file here takes care of seting this up (nng.sublime-project)
+I've also arranged for Sublime text to understand that .h is C, not C++ (this
+is important!)
 
-I have the arranged in my Uncrustify Sublime package to configure both
-the location of the binary, and the location of the configuration, so that
-Alt-U will autoformat my buffer.  I've also arranged for Sublime text to
-understand that .h is C, not C++ (this is important!)
-
-Configuring Uncrustify without these enhancements is a little tricker, and
-will be specific to your setup.
 
 ISO Standard C
 ~~~~~~~~~~~~~~

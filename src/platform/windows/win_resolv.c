@@ -7,7 +7,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-
 #include "core/nng_impl.h"
 
 #ifdef PLATFORM_WINDOWS
@@ -23,24 +22,22 @@
 // changed with this define.
 
 #ifndef NNG_WIN_RESOLV_CONCURRENCY
-#define NNG_WIN_RESOLV_CONCURRENCY    4
+#define NNG_WIN_RESOLV_CONCURRENCY 4
 #endif
 
-
 static nni_taskq *nni_win_resolv_tq = NULL;
-static nni_mtx nni_win_resolv_mtx;
+static nni_mtx    nni_win_resolv_mtx;
 
-typedef struct nni_win_resolv_item   nni_win_resolv_item;
+typedef struct nni_win_resolv_item nni_win_resolv_item;
 struct nni_win_resolv_item {
-	int		family;
-	int		passive;
-	const char *	name;
-	const char *	serv;
-	int		proto;
-	nni_aio *	aio;
-	nni_taskq_ent	tqe;
+	int           family;
+	int           passive;
+	const char *  name;
+	const char *  serv;
+	int           proto;
+	nni_aio *     aio;
+	nni_taskq_ent tqe;
 };
-
 
 static void
 nni_win_resolv_finish(nni_win_resolv_item *item, int rv)
@@ -51,7 +48,6 @@ nni_win_resolv_finish(nni_win_resolv_item *item, int rv)
 	nni_aio_finish(aio, rv, 0);
 	NNI_FREE_STRUCT(item);
 }
-
 
 static void
 nni_win_resolv_cancel(nni_aio *aio)
@@ -68,7 +64,6 @@ nni_win_resolv_cancel(nni_aio *aio)
 	nni_taskq_cancel(nni_win_resolv_tq, &item->tqe);
 	NNI_FREE_STRUCT(item);
 }
-
 
 static int
 nni_win_gai_errno(int rv)
@@ -97,16 +92,15 @@ nni_win_gai_errno(int rv)
 	}
 }
 
-
 static void
 nni_win_resolv_task(void *arg)
 {
 	nni_win_resolv_item *item = arg;
-	nni_aio *aio = item->aio;
-	struct addrinfo hints;
-	struct addrinfo *results;
-	struct addrinfo *probe;
-	int i, rv;
+	nni_aio *            aio  = item->aio;
+	struct addrinfo      hints;
+	struct addrinfo *    results;
+	struct addrinfo *    probe;
+	int                  i, rv;
 
 	results = NULL;
 
@@ -116,13 +110,13 @@ nni_win_resolv_task(void *arg)
 	case AF_UNSPEC:
 		// We treat these all as IP addresses.  The service and the
 		// host part are split.
-		memset(&hints, 0, sizeof (hints));
+		memset(&hints, 0, sizeof(hints));
 		if (item->passive) {
 			hints.ai_flags |= AI_PASSIVE;
 		}
 		hints.ai_flags |= AI_ADDRCONFIG;
 		hints.ai_protocol = item->proto;
-		hints.ai_family = item->family;
+		hints.ai_family   = item->family;
 		if (item->family == AF_INET6) {
 			hints.ai_flags |= AI_V4MAPPED;
 		}
@@ -152,27 +146,27 @@ nni_win_resolv_task(void *arg)
 		aio->a_addrs = NNI_ALLOC_STRUCTS(aio->a_addrs, aio->a_naddrs);
 		if (aio->a_addrs == NULL) {
 			aio->a_naddrs = 0;
-			rv = NNG_ENOMEM;
+			rv            = NNG_ENOMEM;
 			break;
 		}
 		i = 0;
 		for (probe = results; probe != NULL; probe = probe->ai_next) {
-			struct sockaddr_in *sin;
+			struct sockaddr_in * sin;
 			struct sockaddr_in6 *sin6;
-			nng_sockaddr *sa = &aio->a_addrs[i];
+			nng_sockaddr *       sa = &aio->a_addrs[i];
 
 			switch (probe->ai_addr->sa_family) {
 			case AF_INET:
 				sin = (void *) probe->ai_addr;
 				sa->s_un.s_in.sa_family = NNG_AF_INET;
-				sa->s_un.s_in.sa_port = sin->sin_port;
-				sa->s_un.s_in.sa_addr = sin->sin_addr.s_addr;
+				sa->s_un.s_in.sa_port   = sin->sin_port;
+				sa->s_un.s_in.sa_addr   = sin->sin_addr.s_addr;
 				i++;
 				break;
 			case AF_INET6:
 				sin6 = (void *) probe->ai_addr;
 				sa->s_un.s_in6.sa_family = NNG_AF_INET6;
-				sa->s_un.s_in6.sa_port = sin6->sin6_port;
+				sa->s_un.s_in6.sa_port   = sin6->sin6_port;
 				memcpy(sa->s_un.s_in6.sa_addr,
 				    sin6->sin6_addr.s6_addr, 16);
 				i++;
@@ -200,13 +194,12 @@ nni_win_resolv_task(void *arg)
 	nni_mtx_unlock(&nni_win_resolv_mtx);
 }
 
-
 static void
-nni_win_resolv_ip(const char *host, const char *serv, int passive,
-    int family, int proto, nni_aio *aio)
+nni_win_resolv_ip(const char *host, const char *serv, int passive, int family,
+    int proto, nni_aio *aio)
 {
 	nni_win_resolv_item *item;
-	int rv;
+	int                  rv;
 
 	if ((aio->a_naddrs != 0) && (aio->a_addrs != NULL)) {
 		NNI_FREE_STRUCTS(aio->a_addrs, aio->a_naddrs);
@@ -231,10 +224,10 @@ nni_win_resolv_ip(const char *host, const char *serv, int passive,
 	}
 	// NB: host and serv must remain valid until this is completed.
 	item->passive = passive;
-	item->name = host;
-	item->serv = serv;
-	item->proto = proto;
-	item->aio = aio;
+	item->name    = host;
+	item->serv    = serv;
+	item->proto   = proto;
+	item->aio     = aio;
 
 	nni_mtx_lock(&nni_win_resolv_mtx);
 	// If we were stopped, we're done...
@@ -251,14 +244,12 @@ nni_win_resolv_ip(const char *host, const char *serv, int passive,
 	nni_mtx_unlock(&nni_win_resolv_mtx);
 }
 
-
 void
-nni_plat_tcp_resolv(const char *host, const char *serv, int family,
-    int passive, nni_aio *aio)
+nni_plat_tcp_resolv(
+    const char *host, const char *serv, int family, int passive, nni_aio *aio)
 {
 	nni_win_resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
 }
-
 
 int
 nni_win_resolv_sysinit(void)
@@ -275,7 +266,6 @@ nni_win_resolv_sysinit(void)
 	return (0);
 }
 
-
 void
 nni_win_resolv_sysfini(void)
 {
@@ -285,7 +275,6 @@ nni_win_resolv_sysfini(void)
 	}
 	nni_mtx_fini(&nni_win_resolv_mtx);
 }
-
 
 #else
 

@@ -14,28 +14,26 @@
 #include "platform/posix/posix_pollq.h"
 
 #include <errno.h>
+#include <fcntl.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/uio.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <poll.h>
-
 
 // nni_posix_pipedesc is a descriptor kept one per transport pipe (i.e. open
 // file descriptor for TCP socket, etc.)  This contains the list of pending
 // aios for that underlying socket, as well as the socket itself.
 struct nni_posix_pipedesc {
-	nni_posix_pollq *	pq;
-	int			fd;
-	nni_list		readq;
-	nni_list		writeq;
-	nni_posix_pollq_node	node;
-	nni_mtx			mtx;
+	nni_posix_pollq *    pq;
+	int                  fd;
+	nni_list             readq;
+	nni_list             writeq;
+	nni_posix_pollq_node node;
+	nni_mtx              mtx;
 };
-
 
 static void
 nni_posix_pipedesc_finish(nni_aio *aio, int rv)
@@ -44,24 +42,23 @@ nni_posix_pipedesc_finish(nni_aio *aio, int rv)
 	nni_aio_finish(aio, rv, aio->a_count);
 }
 
-
 static void
 nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 {
-	int n;
-	int rv;
-	int i;
-	struct iovec iovec[4];
+	int           n;
+	int           rv;
+	int           i;
+	struct iovec  iovec[4];
 	struct iovec *iovp;
-	nni_aio *aio;
+	nni_aio *     aio;
 
 	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
 		for (i = 0; i < aio->a_niov; i++) {
-			iovec[i].iov_len = aio->a_iov[i].iov_len;
+			iovec[i].iov_len  = aio->a_iov[i].iov_len;
 			iovec[i].iov_base = aio->a_iov[i].iov_buf;
 		}
 		iovp = &iovec[0];
-		rv = 0;
+		rv   = 0;
 
 		n = writev(pd->fd, iovp, aio->a_niov);
 		if (n < 0) {
@@ -92,7 +89,7 @@ nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 			// remaininng ones up, and decrement count handled.
 			n -= aio->a_iov[0].iov_len;
 			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i-1] = aio->a_iov[i];
+				aio->a_iov[i - 1] = aio->a_iov[i];
 			}
 			NNI_ASSERT(aio->a_niov > 0);
 			aio->a_niov--;
@@ -106,24 +103,23 @@ nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 	}
 }
 
-
 static void
 nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 {
-	int n;
-	int rv;
-	int i;
-	struct iovec iovec[4];
+	int           n;
+	int           rv;
+	int           i;
+	struct iovec  iovec[4];
 	struct iovec *iovp;
-	nni_aio *aio;
+	nni_aio *     aio;
 
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
 		for (i = 0; i < aio->a_niov; i++) {
-			iovec[i].iov_len = aio->a_iov[i].iov_len;
+			iovec[i].iov_len  = aio->a_iov[i].iov_len;
 			iovec[i].iov_base = aio->a_iov[i].iov_buf;
 		}
 		iovp = &iovec[0];
-		rv = 0;
+		rv   = 0;
 
 		n = readv(pd->fd, iovp, aio->a_niov);
 		if (n < 0) {
@@ -160,7 +156,7 @@ nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 			// remaininng ones up, and decrement count handled.
 			n -= aio->a_iov[0].iov_len;
 			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i-1] = aio->a_iov[i];
+				aio->a_iov[i - 1] = aio->a_iov[i];
 			}
 			NNI_ASSERT(aio->a_niov > 0);
 			aio->a_niov--;
@@ -173,7 +169,6 @@ nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 		// aioq ready for us to process.
 	}
 }
-
 
 static void
 nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
@@ -194,7 +189,6 @@ nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
 	}
 }
 
-
 static void
 nni_posix_pipedesc_cb(void *arg)
 {
@@ -207,12 +201,12 @@ nni_posix_pipedesc_cb(void *arg)
 	if (pd->node.revents & POLLOUT) {
 		nni_posix_pipedesc_dowrite(pd);
 	}
-	if (pd->node.revents & (POLLHUP|POLLERR|POLLNVAL)) {
+	if (pd->node.revents & (POLLHUP | POLLERR | POLLNVAL)) {
 		nni_posix_pipedesc_doclose(pd);
 	}
 
 	pd->node.revents = 0;
-	pd->node.events = 0;
+	pd->node.events  = 0;
 
 	if (!nni_list_empty(&pd->writeq)) {
 		pd->node.events |= POLLOUT;
@@ -228,7 +222,6 @@ nni_posix_pipedesc_cb(void *arg)
 	nni_mtx_unlock(&pd->mtx);
 }
 
-
 void
 nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
 {
@@ -239,7 +232,6 @@ nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
 	nni_mtx_unlock(&pd->mtx);
 }
 
-
 static void
 nni_posix_pipedesc_cancel(nni_aio *aio)
 {
@@ -249,7 +241,6 @@ nni_posix_pipedesc_cancel(nni_aio *aio)
 	nni_aio_list_remove(aio);
 	nni_mtx_unlock(&pd->mtx);
 }
-
 
 void
 nni_posix_pipedesc_recv(nni_posix_pipedesc *pd, nni_aio *aio)
@@ -280,7 +271,6 @@ nni_posix_pipedesc_recv(nni_posix_pipedesc *pd, nni_aio *aio)
 	nni_mtx_unlock(&pd->mtx);
 }
 
-
 void
 nni_posix_pipedesc_send(nni_posix_pipedesc *pd, nni_aio *aio)
 {
@@ -310,17 +300,16 @@ nni_posix_pipedesc_send(nni_posix_pipedesc *pd, nni_aio *aio)
 	nni_mtx_unlock(&pd->mtx);
 }
 
-
 int
 nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 {
 	nni_posix_pipedesc *pd;
-	int rv;
+	int                 rv;
 
 	if ((pd = NNI_ALLOC_STRUCT(pd)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	memset(pd, 0, sizeof (*pd));
+	memset(pd, 0, sizeof(*pd));
 
 	// We could randomly choose a different pollq, or for efficiencies
 	// sake we could take a modulo of the file desc number to choose
@@ -331,10 +320,10 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 		NNI_FREE_STRUCT(pd);
 		return (rv);
 	}
-	pd->pq = nni_posix_pollq_get(fd);
-	pd->fd = fd;
-	pd->node.fd = fd;
-	pd->node.cb = nni_posix_pipedesc_cb;
+	pd->pq        = nni_posix_pollq_get(fd);
+	pd->fd        = fd;
+	pd->node.fd   = fd;
+	pd->node.cb   = nni_posix_pipedesc_cb;
 	pd->node.data = pd;
 
 	(void) fcntl(pd->fd, F_SETFL, O_NONBLOCK);
@@ -346,7 +335,6 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 	return (0);
 }
 
-
 void
 nni_posix_pipedesc_fini(nni_posix_pipedesc *pd)
 {
@@ -357,7 +345,6 @@ nni_posix_pipedesc_fini(nni_posix_pipedesc *pd)
 
 	NNI_FREE_STRUCT(pd);
 }
-
 
 #else
 

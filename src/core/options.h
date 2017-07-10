@@ -31,8 +31,8 @@ extern int nni_getopt_duration(nni_duration *, void *, size_t *);
 // maximum values (inclusive).
 extern int nni_setopt_int(int *, const void *, size_t, int, int);
 
-#define NNI_MAXINT	((int) 2147483647)
-#define NNI_MININT	((int) -2147483648)
+#define NNI_MAXINT ((int) 2147483647)
+#define NNI_MININT ((int) -2147483648)
 
 // nni_getopt_int gets an integer.
 extern int nni_getopt_int(int *, void *, size_t *);
@@ -42,8 +42,8 @@ extern int nni_setopt_size(size_t *, const void *, size_t, size_t, size_t);
 
 // We limit the maximum size to 4GB.  That's intentional because some of the
 // underlying protocols cannot cope with anything bigger than 32-bits.
-#define NNI_MINSZ	(0)
-#define NNI_MAXSZ	((size_t) 0xffffffff)
+#define NNI_MINSZ (0)
+#define NNI_MAXSZ ((size_t) 0xffffffff)
 
 // nni_getopt_size obtains a size_t option.
 extern int nni_getopt_size(size_t *, void *, size_t *);
@@ -51,4 +51,4 @@ extern int nni_getopt_size(size_t *, void *, size_t *);
 // nni_getopt_fd obtains a notification file descriptor.
 extern int nni_getopt_fd(nni_sock *, nni_notifyfd *, int, void *, size_t *);
 
-#endif  // CORE_OPTIONS_H
+#endif // CORE_OPTIONS_H

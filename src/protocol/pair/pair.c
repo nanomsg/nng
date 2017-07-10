@@ -16,8 +16,8 @@
 // While a peer is connected to the server, all other peer connection
 // attempts are discarded.
 
-typedef struct nni_pair_pipe	nni_pair_pipe;
-typedef struct nni_pair_sock	nni_pair_sock;
+typedef struct nni_pair_pipe nni_pair_pipe;
+typedef struct nni_pair_sock nni_pair_sock;
 
 static void nni_pair_send_cb(void *);
 static void nni_pair_recv_cb(void *);
@@ -27,12 +27,12 @@ static void nni_pair_pipe_fini(void *);
 
 // An nni_pair_sock is our per-socket protocol private structure.
 struct nni_pair_sock {
-	nni_sock *	nsock;
-	nni_pair_pipe * ppipe;
-	nni_msgq *	uwq;
-	nni_msgq *	urq;
-	int		raw;
-	nni_mtx		mtx;
+	nni_sock *     nsock;
+	nni_pair_pipe *ppipe;
+	nni_msgq *     uwq;
+	nni_msgq *     urq;
+	int            raw;
+	nni_mtx        mtx;
 };
 
 // An nni_pair_pipe is our per-pipe protocol private structure.  We keep
@@ -40,19 +40,19 @@ struct nni_pair_sock {
 // pipe.  The separate data structure is more like other protocols that do
 // manage multiple pipes.
 struct nni_pair_pipe {
-	nni_pipe *	npipe;
-	nni_pair_sock * psock;
-	nni_aio		aio_send;
-	nni_aio		aio_recv;
-	nni_aio		aio_getq;
-	nni_aio		aio_putq;
+	nni_pipe *     npipe;
+	nni_pair_sock *psock;
+	nni_aio        aio_send;
+	nni_aio        aio_recv;
+	nni_aio        aio_getq;
+	nni_aio        aio_putq;
 };
 
 static int
 nni_pair_sock_init(void **sp, nni_sock *nsock)
 {
 	nni_pair_sock *psock;
-	int rv;
+	int            rv;
 
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);
@@ -63,13 +63,12 @@ nni_pair_sock_init(void **sp, nni_sock *nsock)
 	}
 	psock->nsock = nsock;
 	psock->ppipe = NULL;
-	psock->raw = 0;
-	psock->uwq = nni_sock_sendq(nsock);
-	psock->urq = nni_sock_recvq(nsock);
-	*sp = psock;
+	psock->raw   = 0;
+	psock->uwq   = nni_sock_sendq(nsock);
+	psock->urq   = nni_sock_recvq(nsock);
+	*sp          = psock;
 	return (0);
 }
-
 
 static void
 nni_pair_sock_fini(void *arg)
@@ -83,12 +82,11 @@ nni_pair_sock_fini(void *arg)
 	}
 }
 
-
 static int
 nni_pair_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 {
 	nni_pair_pipe *ppipe;
-	int rv;
+	int            rv;
 
 	if ((ppipe = NNI_ALLOC_STRUCT(ppipe)) == NULL) {
 		return (NNG_ENOMEM);
@@ -111,14 +109,13 @@ nni_pair_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 	}
 	ppipe->npipe = npipe;
 	ppipe->psock = psock;
-	*pp = ppipe;
+	*pp          = ppipe;
 	return (0);
 
 fail:
 	nni_pair_pipe_fini(ppipe);
 	return (rv);
 }
-
 
 static void
 nni_pair_pipe_fini(void *arg)
@@ -132,7 +129,6 @@ nni_pair_pipe_fini(void *arg)
 	NNI_FREE_STRUCT(ppipe);
 }
 
-
 static int
 nni_pair_pipe_start(void *arg)
 {
@@ -142,7 +138,7 @@ nni_pair_pipe_start(void *arg)
 	nni_mtx_lock(&psock->mtx);
 	if (psock->ppipe != NULL) {
 		nni_mtx_unlock(&psock->mtx);
-		return (NNG_EBUSY);      // Already have a peer, denied.
+		return (NNG_EBUSY); // Already have a peer, denied.
 	}
 	psock->ppipe = ppipe;
 	nni_mtx_unlock(&psock->mtx);
@@ -154,7 +150,6 @@ nni_pair_pipe_start(void *arg)
 
 	return (0);
 }
-
 
 static void
 nni_pair_pipe_stop(void *arg)
@@ -174,7 +169,6 @@ nni_pair_pipe_stop(void *arg)
 	nni_mtx_unlock(&psock->mtx);
 }
 
-
 static void
 nni_pair_recv_cb(void *arg)
 {
@@ -191,7 +185,6 @@ nni_pair_recv_cb(void *arg)
 	nni_msgq_aio_put(psock->urq, &ppipe->aio_putq);
 }
 
-
 static void
 nni_pair_putq_cb(void *arg)
 {
@@ -205,7 +198,6 @@ nni_pair_putq_cb(void *arg)
 	}
 	nni_pipe_recv(ppipe->npipe, &ppipe->aio_recv);
 }
-
 
 static void
 nni_pair_getq_cb(void *arg)
@@ -223,7 +215,6 @@ nni_pair_getq_cb(void *arg)
 	nni_pipe_send(ppipe->npipe, &ppipe->aio_send);
 }
 
-
 static void
 nni_pair_send_cb(void *arg)
 {
@@ -240,12 +231,11 @@ nni_pair_send_cb(void *arg)
 	nni_msgq_aio_get(psock->uwq, &ppipe->aio_getq);
 }
 
-
 static int
 nni_pair_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_pair_sock *psock = arg;
-	int rv;
+	int            rv;
 
 	switch (opt) {
 	case NNG_OPT_RAW:
@@ -257,12 +247,11 @@ nni_pair_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 	return (rv);
 }
 
-
 static int
 nni_pair_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_pair_sock *psock = arg;
-	int rv;
+	int            rv;
 
 	switch (opt) {
 	case NNG_OPT_RAW:
@@ -274,29 +263,28 @@ nni_pair_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	return (rv);
 }
 
-
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
 
 static nni_proto_pipe_ops nni_pair_pipe_ops = {
-	.pipe_init	= nni_pair_pipe_init,
-	.pipe_fini	= nni_pair_pipe_fini,
-	.pipe_start	= nni_pair_pipe_start,
-	.pipe_stop	= nni_pair_pipe_stop,
+	.pipe_init  = nni_pair_pipe_init,
+	.pipe_fini  = nni_pair_pipe_fini,
+	.pipe_start = nni_pair_pipe_start,
+	.pipe_stop  = nni_pair_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_pair_sock_ops = {
-	.sock_init	= nni_pair_sock_init,
-	.sock_fini	= nni_pair_sock_fini,
-	.sock_setopt	= nni_pair_sock_setopt,
-	.sock_getopt	= nni_pair_sock_getopt,
+	.sock_init   = nni_pair_sock_init,
+	.sock_fini   = nni_pair_sock_fini,
+	.sock_setopt = nni_pair_sock_setopt,
+	.sock_getopt = nni_pair_sock_getopt,
 };
 
 nni_proto nni_pair_proto = {
-	.proto_self	= NNG_PROTO_PAIR,
-	.proto_peer	= NNG_PROTO_PAIR,
-	.proto_name	= "pair",
-	.proto_flags	= NNI_PROTO_FLAG_SNDRCV,
+	.proto_self     = NNG_PROTO_PAIR,
+	.proto_peer     = NNG_PROTO_PAIR,
+	.proto_name     = "pair",
+	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_pair_sock_ops,
 	.proto_pipe_ops = &nni_pair_pipe_ops,
 };

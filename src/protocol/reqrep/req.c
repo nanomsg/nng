@@ -7,9 +7,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "core/nng_impl.h"
 
@@ -17,8 +17,8 @@
 // request-reply pair.  This is useful for building RPC clients, for
 // example.
 
-typedef struct nni_req_pipe	nni_req_pipe;
-typedef struct nni_req_sock	nni_req_sock;
+typedef struct nni_req_pipe nni_req_pipe;
+typedef struct nni_req_sock nni_req_sock;
 
 static void nni_req_resend(nni_req_sock *);
 static void nni_req_timeout(void *);
@@ -26,38 +26,38 @@ static void nni_req_pipe_fini(void *);
 
 // An nni_req_sock is our per-socket protocol private structure.
 struct nni_req_sock {
-	nni_sock *	sock;
-	nni_msgq *	uwq;
-	nni_msgq *	urq;
-	nni_duration	retry;
-	nni_time	resend;
-	int		raw;
-	int		wantw;
-	nni_msg *	reqmsg;
+	nni_sock *   sock;
+	nni_msgq *   uwq;
+	nni_msgq *   urq;
+	nni_duration retry;
+	nni_time     resend;
+	int          raw;
+	int          wantw;
+	nni_msg *    reqmsg;
 
-	nni_req_pipe *	pendpipe;
+	nni_req_pipe *pendpipe;
 
-	nni_list	readypipes;
-	nni_list	busypipes;
+	nni_list readypipes;
+	nni_list busypipes;
 
-	nni_timer_node	timer;
+	nni_timer_node timer;
 
-	uint32_t	nextid;         // next id
-	uint8_t		reqid[4];       // outstanding request ID (big endian)
-	nni_mtx		mtx;
+	uint32_t nextid;   // next id
+	uint8_t  reqid[4]; // outstanding request ID (big endian)
+	nni_mtx  mtx;
 };
 
 // An nni_req_pipe is our per-pipe protocol private structure.
 struct nni_req_pipe {
-	nni_pipe *	pipe;
-	nni_req_sock *	req;
-	nni_list_node	node;
-	nni_aio		aio_getq;               // raw mode only
-	nni_aio		aio_sendraw;            // raw mode only
-	nni_aio		aio_sendcooked;         // cooked mode only
-	nni_aio		aio_recv;
-	nni_aio		aio_putq;
-	nni_mtx		mtx;
+	nni_pipe *    pipe;
+	nni_req_sock *req;
+	nni_list_node node;
+	nni_aio       aio_getq;       // raw mode only
+	nni_aio       aio_sendraw;    // raw mode only
+	nni_aio       aio_sendcooked; // cooked mode only
+	nni_aio       aio_recv;
+	nni_aio       aio_putq;
+	nni_mtx       mtx;
 };
 
 static void nni_req_resender(void *);
@@ -71,7 +71,7 @@ static int
 nni_req_sock_init(void **reqp, nni_sock *sock)
 {
 	nni_req_sock *req;
-	int rv;
+	int           rv;
 
 	if ((req = NNI_ALLOC_STRUCT(req)) == NULL) {
 		return (NNG_ENOMEM);
@@ -88,20 +88,19 @@ nni_req_sock_init(void **reqp, nni_sock *sock)
 	// this is "semi random" start for request IDs.
 	req->nextid = nni_random();
 
-	req->retry = NNI_SECOND * 60;
-	req->sock = sock;
+	req->retry  = NNI_SECOND * 60;
+	req->sock   = sock;
 	req->reqmsg = NULL;
-	req->raw = 0;
-	req->wantw = 0;
+	req->raw    = 0;
+	req->wantw  = 0;
 	req->resend = NNI_TIME_ZERO;
 
 	req->uwq = nni_sock_sendq(sock);
 	req->urq = nni_sock_recvq(sock);
-	*reqp = req;
+	*reqp    = req;
 	nni_sock_recverr(sock, NNG_ESTATE);
 	return (0);
 }
-
 
 static void
 nni_req_sock_close(void *arg)
@@ -110,7 +109,6 @@ nni_req_sock_close(void *arg)
 
 	nni_timer_cancel(&req->timer);
 }
-
 
 static void
 nni_req_sock_fini(void *arg)
@@ -126,12 +124,11 @@ nni_req_sock_fini(void *arg)
 	NNI_FREE_STRUCT(req);
 }
 
-
 static int
 nni_req_pipe_init(void **rpp, nni_pipe *pipe, void *rsock)
 {
 	nni_req_pipe *rp;
-	int rv;
+	int           rv;
 
 	if ((rp = NNI_ALLOC_STRUCT(rp)) == NULL) {
 		return (NNG_ENOMEM);
@@ -159,15 +156,14 @@ nni_req_pipe_init(void **rpp, nni_pipe *pipe, void *rsock)
 
 	NNI_LIST_NODE_INIT(&rp->node);
 	rp->pipe = pipe;
-	rp->req = rsock;
-	*rpp = rp;
+	rp->req  = rsock;
+	*rpp     = rp;
 	return (0);
 
 failed:
 	nni_req_pipe_fini(rp);
 	return (rv);
 }
-
 
 static void
 nni_req_pipe_fini(void *arg)
@@ -185,11 +181,10 @@ nni_req_pipe_fini(void *arg)
 	}
 }
 
-
 static int
 nni_req_pipe_start(void *arg)
 {
-	nni_req_pipe *rp = arg;
+	nni_req_pipe *rp  = arg;
 	nni_req_sock *req = rp->req;
 
 	if (nni_pipe_peer(rp->pipe) != NNG_PROTO_REP) {
@@ -203,17 +198,15 @@ nni_req_pipe_start(void *arg)
 	}
 	nni_mtx_unlock(&req->mtx);
 
-
 	nni_msgq_aio_get(req->uwq, &rp->aio_getq);
 	nni_pipe_recv(rp->pipe, &rp->aio_recv);
 	return (0);
 }
 
-
 static void
 nni_req_pipe_stop(void *arg)
 {
-	nni_req_pipe *rp = arg;
+	nni_req_pipe *rp  = arg;
 	nni_req_sock *req = rp->req;
 
 	nni_aio_stop(&rp->aio_getq);
@@ -236,19 +229,18 @@ nni_req_pipe_stop(void *arg)
 		// removing the pipe we sent the last request on...
 		// schedule immediate resend.
 		req->pendpipe = NULL;
-		req->resend = NNI_TIME_ZERO;
-		req->wantw = 1;
+		req->resend   = NNI_TIME_ZERO;
+		req->wantw    = 1;
 		nni_req_resend(req);
 	}
 	nni_mtx_unlock(&req->mtx);
 }
 
-
 static int
 nni_req_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_req_sock *req = arg;
-	int rv;
+	int           rv;
 
 	switch (opt) {
 	case NNG_OPT_RESENDTIME:
@@ -263,12 +255,11 @@ nni_req_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 	return (rv);
 }
 
-
 static int
 nni_req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_req_sock *req = arg;
-	int rv;
+	int           rv;
 
 	switch (opt) {
 	case NNG_OPT_RESENDTIME:
@@ -282,7 +273,6 @@ nni_req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	}
 	return (rv);
 }
-
 
 // Raw and cooked mode differ in the way they send messages out.
 //
@@ -303,7 +293,7 @@ nni_req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 static void
 nni_req_getq_cb(void *arg)
 {
-	nni_req_pipe *rp = arg;
+	nni_req_pipe *rp  = arg;
 	nni_req_sock *req = rp->req;
 
 	// We should be in RAW mode.  Cooked mode traffic bypasses
@@ -318,12 +308,11 @@ nni_req_getq_cb(void *arg)
 	}
 
 	rp->aio_sendraw.a_msg = rp->aio_getq.a_msg;
-	rp->aio_getq.a_msg = NULL;
+	rp->aio_getq.a_msg    = NULL;
 
 	// Send the message, but use the raw mode aio.
 	nni_pipe_send(rp->pipe, &rp->aio_sendraw);
 }
-
 
 static void
 nni_req_sendraw_cb(void *arg)
@@ -341,11 +330,10 @@ nni_req_sendraw_cb(void *arg)
 	nni_msgq_aio_get(rp->req->uwq, &rp->aio_getq);
 }
 
-
 static void
 nni_req_sendcooked_cb(void *arg)
 {
-	nni_req_pipe *rp = arg;
+	nni_req_pipe *rp  = arg;
 	nni_req_sock *req = rp->req;
 
 	if (nni_aio_result(&rp->aio_sendcooked) != 0) {
@@ -377,7 +365,6 @@ nni_req_sendcooked_cb(void *arg)
 	nni_mtx_unlock(&req->mtx);
 }
 
-
 static void
 nni_req_putq_cb(void *arg)
 {
@@ -393,19 +380,18 @@ nni_req_putq_cb(void *arg)
 	nni_pipe_recv(rp->pipe, &rp->aio_recv);
 }
 
-
 static void
 nni_req_recv_cb(void *arg)
 {
 	nni_req_pipe *rp = arg;
-	nni_msg *msg;
+	nni_msg *     msg;
 
 	if (nni_aio_result(&rp->aio_recv) != 0) {
 		nni_pipe_stop(rp->pipe);
 		return;
 	}
 
-	msg = rp->aio_recv.a_msg;
+	msg                = rp->aio_recv.a_msg;
 	rp->aio_recv.a_msg = NULL;
 
 	// We yank 4 bytes of body, and move them to the header.
@@ -434,7 +420,6 @@ malformed:
 	nni_pipe_stop(rp->pipe);
 }
 
-
 static void
 nni_req_timeout(void *arg)
 {
@@ -448,12 +433,11 @@ nni_req_timeout(void *arg)
 	nni_mtx_unlock(&req->mtx);
 }
 
-
 static void
 nni_req_resend(nni_req_sock *req)
 {
 	nni_req_pipe *rp;
-	nni_msg *msg;
+	nni_msg *     msg;
 
 	// Note: This routine should be called with the socket lock held.
 	// Also, this should only be called while handling cooked mode
@@ -470,8 +454,8 @@ nni_req_resend(nni_req_sock *req)
 			// mark that we have a message we want to resend,
 			// in case something comes available.
 			req->wantw = 1;
-			nni_timer_schedule(&req->timer,
-			    nni_clock() + req->retry);
+			nni_timer_schedule(
+			    &req->timer, nni_clock() + req->retry);
 			return;
 		}
 
@@ -489,8 +473,8 @@ nni_req_resend(nni_req_sock *req)
 		nni_list_remove(&req->readypipes, rp);
 		nni_list_append(&req->busypipes, rp);
 
-		req->pendpipe = rp;
-		req->resend = nni_clock() + req->retry;
+		req->pendpipe            = rp;
+		req->resend              = nni_clock() + req->retry;
 		rp->aio_sendcooked.a_msg = msg;
 
 		// Note that because we were ready rather than busy, we
@@ -501,12 +485,11 @@ nni_req_resend(nni_req_sock *req)
 	}
 }
 
-
 static nni_msg *
 nni_req_sock_sfilter(void *arg, nni_msg *msg)
 {
 	nni_req_sock *req = arg;
-	uint32_t id;
+	uint32_t      id;
 
 	if (req->raw) {
 		// No automatic retry, and the request ID must
@@ -542,7 +525,7 @@ nni_req_sock_sfilter(void *arg, nni_msg *msg)
 	req->reqmsg = msg;
 	// Schedule for immediate send
 	req->resend = NNI_TIME_ZERO;
-	req->wantw = 1;
+	req->wantw  = 1;
 
 	nni_req_resend(req);
 	nni_mtx_unlock(&req->mtx);
@@ -553,12 +536,11 @@ nni_req_sock_sfilter(void *arg, nni_msg *msg)
 	return (NULL);
 }
 
-
 static nni_msg *
 nni_req_sock_rfilter(void *arg, nni_msg *msg)
 {
 	nni_req_sock *req = arg;
-	nni_msg *rmsg;
+	nni_msg *     rmsg;
 
 	if (req->raw) {
 		// Pass it unmolested
@@ -585,7 +567,7 @@ nni_req_sock_rfilter(void *arg, nni_msg *msg)
 		return (NULL);
 	}
 
-	req->reqmsg = NULL;
+	req->reqmsg   = NULL;
 	req->pendpipe = NULL;
 	nni_mtx_unlock(&req->mtx);
 
@@ -595,31 +577,30 @@ nni_req_sock_rfilter(void *arg, nni_msg *msg)
 	return (msg);
 }
 
-
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
 static nni_proto_pipe_ops nni_req_pipe_ops = {
-	.pipe_init	= nni_req_pipe_init,
-	.pipe_fini	= nni_req_pipe_fini,
-	.pipe_start	= nni_req_pipe_start,
-	.pipe_stop	= nni_req_pipe_stop,
+	.pipe_init  = nni_req_pipe_init,
+	.pipe_fini  = nni_req_pipe_fini,
+	.pipe_start = nni_req_pipe_start,
+	.pipe_stop  = nni_req_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_req_sock_ops = {
-	.sock_init	= nni_req_sock_init,
-	.sock_fini	= nni_req_sock_fini,
-	.sock_close	= nni_req_sock_close,
-	.sock_setopt	= nni_req_sock_setopt,
-	.sock_getopt	= nni_req_sock_getopt,
-	.sock_rfilter	= nni_req_sock_rfilter,
-	.sock_sfilter	= nni_req_sock_sfilter,
+	.sock_init    = nni_req_sock_init,
+	.sock_fini    = nni_req_sock_fini,
+	.sock_close   = nni_req_sock_close,
+	.sock_setopt  = nni_req_sock_setopt,
+	.sock_getopt  = nni_req_sock_getopt,
+	.sock_rfilter = nni_req_sock_rfilter,
+	.sock_sfilter = nni_req_sock_sfilter,
 };
 
 nni_proto nni_req_proto = {
-	.proto_self	= NNG_PROTO_REQ,
-	.proto_peer	= NNG_PROTO_REP,
-	.proto_name	= "req",
-	.proto_flags	= NNI_PROTO_FLAG_SNDRCV,
+	.proto_self     = NNG_PROTO_REQ,
+	.proto_peer     = NNG_PROTO_REP,
+	.proto_name     = "req",
+	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_req_sock_ops,
 	.proto_pipe_ops = &nni_req_pipe_ops,
 };

@@ -18,21 +18,22 @@ extern nni_tran nni_tcp_tran;
 extern nni_tran nni_ipc_tran;
 
 static nni_tran *transports[] = {
+	// clang-format off
 	&nni_inproc_tran,
 	&nni_tcp_tran,
 	&nni_ipc_tran,
 	NULL
+	// clang-format on
 };
-
 
 nni_tran *
 nni_tran_find(const char *addr)
 {
 	// address is of the form "<scheme>://blah..."
 	const char *end;
-	int len;
-	int i;
-	nni_tran *tran;
+	int         len;
+	int         i;
+	nni_tran *  tran;
 
 	if ((end = strstr(addr, "://")) == NULL) {
 		return (NULL);
@@ -47,13 +48,12 @@ nni_tran_find(const char *addr)
 	return (NULL);
 }
 
-
 // nni_tran_sys_init initializes the entire transport subsystem, including
 // each individual transport.
 void
 nni_tran_sys_init(void)
 {
-	int i;
+	int       i;
 	nni_tran *tran;
 
 	for (i = 0; (tran = transports[i]) != NULL; i++) {
@@ -61,13 +61,12 @@ nni_tran_sys_init(void)
 	}
 }
 
-
 // nni_tran_sys_fini finalizes the entire transport system, including all
 // transports.
 void
 nni_tran_sys_fini(void)
 {
-	int i;
+	int       i;
 	nni_tran *tran;
 
 	for (i = 0; (tran = transports[i]) != NULL; i++) {

@@ -16,8 +16,8 @@
 // Push distributes fairly, or tries to, by giving messages in round-robin
 // order.
 
-typedef struct nni_push_pipe	nni_push_pipe;
-typedef struct nni_push_sock	nni_push_sock;
+typedef struct nni_push_pipe nni_push_pipe;
+typedef struct nni_push_sock nni_push_sock;
 
 static void nni_push_send_cb(void *);
 static void nni_push_recv_cb(void *);
@@ -25,20 +25,20 @@ static void nni_push_getq_cb(void *);
 
 // An nni_push_sock is our per-socket protocol private structure.
 struct nni_push_sock {
-	nni_msgq *	uwq;
-	int		raw;
-	nni_sock *	sock;
+	nni_msgq *uwq;
+	int       raw;
+	nni_sock *sock;
 };
 
 // An nni_push_pipe is our per-pipe protocol private structure.
 struct nni_push_pipe {
-	nni_pipe *	pipe;
-	nni_push_sock * push;
-	nni_list_node	node;
+	nni_pipe *     pipe;
+	nni_push_sock *push;
+	nni_list_node  node;
 
-	nni_aio		aio_recv;
-	nni_aio		aio_send;
-	nni_aio		aio_getq;
+	nni_aio aio_recv;
+	nni_aio aio_send;
+	nni_aio aio_getq;
 };
 
 static int
@@ -49,14 +49,13 @@ nni_push_sock_init(void **pushp, nni_sock *sock)
 	if ((push = NNI_ALLOC_STRUCT(push)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	push->raw = 0;
+	push->raw  = 0;
 	push->sock = sock;
-	push->uwq = nni_sock_sendq(sock);
-	*pushp = push;
+	push->uwq  = nni_sock_sendq(sock);
+	*pushp     = push;
 	nni_sock_recverr(sock, NNG_ENOTSUP);
 	return (0);
 }
-
 
 static void
 nni_push_sock_fini(void *arg)
@@ -67,7 +66,6 @@ nni_push_sock_fini(void *arg)
 		NNI_FREE_STRUCT(push);
 	}
 }
-
 
 static void
 nni_push_pipe_fini(void *arg)
@@ -80,12 +78,11 @@ nni_push_pipe_fini(void *arg)
 	NNI_FREE_STRUCT(pp);
 }
 
-
 static int
 nni_push_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 {
 	nni_push_pipe *pp;
-	int rv;
+	int            rv;
 
 	if ((pp = NNI_ALLOC_STRUCT(pp)) == NULL) {
 		return (NNG_ENOMEM);
@@ -103,7 +100,7 @@ nni_push_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 	NNI_LIST_NODE_INIT(&pp->node);
 	pp->pipe = pipe;
 	pp->push = psock;
-	*ppp = pp;
+	*ppp     = pp;
 	return (0);
 
 fail:
@@ -111,11 +108,10 @@ fail:
 	return (rv);
 }
 
-
 static int
 nni_push_pipe_start(void *arg)
 {
-	nni_push_pipe *pp = arg;
+	nni_push_pipe *pp   = arg;
 	nni_push_sock *push = pp->push;
 
 	if (nni_pipe_peer(pp->pipe) != NNG_PROTO_PULL) {
@@ -132,18 +128,16 @@ nni_push_pipe_start(void *arg)
 	return (0);
 }
 
-
 static void
 nni_push_pipe_stop(void *arg)
 {
-	nni_push_pipe *pp = arg;
+	nni_push_pipe *pp   = arg;
 	nni_push_sock *push = pp->push;
 
 	nni_aio_stop(&pp->aio_recv);
 	nni_aio_stop(&pp->aio_send);
 	nni_aio_stop(&pp->aio_getq);
 }
-
 
 static void
 nni_push_recv_cb(void *arg)
@@ -161,11 +155,10 @@ nni_push_recv_cb(void *arg)
 	nni_pipe_recv(pp->pipe, &pp->aio_recv);
 }
 
-
 static void
 nni_push_send_cb(void *arg)
 {
-	nni_push_pipe *pp = arg;
+	nni_push_pipe *pp   = arg;
 	nni_push_sock *push = pp->push;
 
 	if (nni_aio_result(&pp->aio_send) != 0) {
@@ -178,12 +171,11 @@ nni_push_send_cb(void *arg)
 	nni_msgq_aio_get(push->uwq, &pp->aio_getq);
 }
 
-
 static void
 nni_push_getq_cb(void *arg)
 {
-	nni_push_pipe *pp = arg;
-	nni_aio *aio = &pp->aio_getq;
+	nni_push_pipe *pp  = arg;
+	nni_aio *      aio = &pp->aio_getq;
 
 	if (nni_aio_result(aio) != 0) {
 		// If the socket is closing, nothing else we can do.
@@ -192,17 +184,16 @@ nni_push_getq_cb(void *arg)
 	}
 
 	pp->aio_send.a_msg = aio->a_msg;
-	aio->a_msg = NULL;
+	aio->a_msg         = NULL;
 
 	nni_pipe_send(pp->pipe, &pp->aio_send);
 }
-
 
 static int
 nni_push_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_push_sock *push = arg;
-	int rv;
+	int            rv;
 
 	switch (opt) {
 	case NNG_OPT_RAW:
@@ -214,12 +205,11 @@ nni_push_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 	return (rv);
 }
 
-
 static int
 nni_push_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_push_sock *push = arg;
-	int rv;
+	int            rv;
 
 	switch (opt) {
 	case NNG_OPT_RAW:
@@ -231,28 +221,27 @@ nni_push_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	return (rv);
 }
 
-
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
 static nni_proto_pipe_ops nni_push_pipe_ops = {
-	.pipe_init	= nni_push_pipe_init,
-	.pipe_fini	= nni_push_pipe_fini,
-	.pipe_start	= nni_push_pipe_start,
-	.pipe_stop	= nni_push_pipe_stop,
+	.pipe_init  = nni_push_pipe_init,
+	.pipe_fini  = nni_push_pipe_fini,
+	.pipe_start = nni_push_pipe_start,
+	.pipe_stop  = nni_push_pipe_stop,
 };
 
 static nni_proto_sock_ops nni_push_sock_ops = {
-	.sock_init	= nni_push_sock_init,
-	.sock_fini	= nni_push_sock_fini,
-	.sock_setopt	= nni_push_sock_setopt,
-	.sock_getopt	= nni_push_sock_getopt,
+	.sock_init   = nni_push_sock_init,
+	.sock_fini   = nni_push_sock_fini,
+	.sock_setopt = nni_push_sock_setopt,
+	.sock_getopt = nni_push_sock_getopt,
 };
 
 nni_proto nni_push_proto = {
-	.proto_self	= NNG_PROTO_PUSH,
-	.proto_peer	= NNG_PROTO_PULL,
-	.proto_name	= "push",
-	.proto_flags	= NNI_PROTO_FLAG_SND,
+	.proto_self     = NNG_PROTO_PUSH,
+	.proto_peer     = NNG_PROTO_PULL,
+	.proto_name     = "push",
+	.proto_flags    = NNI_PROTO_FLAG_SND,
 	.proto_pipe_ops = &nni_push_pipe_ops,
 	.proto_sock_ops = &nni_push_sock_ops,
 };

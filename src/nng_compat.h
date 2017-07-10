@@ -37,6 +37,11 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+// clang-format gets in the way of most of this file.
+// We turn it off, at least until it gets smarter about aligning
+// macro definitions or we adopt enums or somesuch.
+// clang-format off
+
 // NNG_DECL is used on declarations to deal with scope.
 // For building Windows DLLs, it should be the appropriate
 // __declspec().  (We recommend *not* building this library
@@ -228,57 +233,57 @@ extern "C" {
 #define NN_WS_MSG_TYPE_TEXT		1
 #define NN_WS_MSG_TYPE_BINARY		2
 
+// from this point on formatting is fine
+// clang-format on
+
 // Poll stuff
-#define NN_POLLIN			1
-#define NN_POLLOUT			2
+#define NN_POLLIN 1
+#define NN_POLLOUT 2
 struct nn_pollfd {
-	int		fd;
-	uint16_t	events;
-	uint16_t	revents;
+	int      fd;
+	uint16_t events;
+	uint16_t revents;
 };
 
 // Magical size for allocation
-#define NN_MSG    ((size_t) -1)
+#define NN_MSG ((size_t) -1)
 
 struct nn_iovec {
-	void *	iov_base;
-	size_t	iov_len;
+	void * iov_base;
+	size_t iov_len;
 };
 
 struct nn_msghdr {
-	struct nn_iovec *	msg_iov;
-	int			msg_iovlen;
-	void *			msg_control;
-	size_t			msg_controllen;
+	struct nn_iovec *msg_iov;
+	int              msg_iovlen;
+	void *           msg_control;
+	size_t           msg_controllen;
 };
 
 struct nn_cmsghdr {
-	size_t	cmsg_len;
-	int	cmsg_level;
-	int	cmsg_type;
+	size_t cmsg_len;
+	int    cmsg_level;
+	int    cmsg_type;
 };
 
 #define NN_CMSG_ALIGN(len) \
-	(((len) + sizeof (size_t) - 1) & (size_t) ~(sizeof (size_t) - 1))
+	(((len) + sizeof(size_t) - 1) & (size_t) ~(sizeof(size_t) - 1))
 
 // Unlike old nanomsg, we explicitly only support the SP header as attached
 // cmsg data.  It turns out that old nanomsg didn't really store anything
 // useful otherwise anyway.  (One specific exception was that it stored the
 // message type of text or binary for the websocket transport.  We don't think
 // anyone used that in practice though.)
-#define NN_CMSG_FIRSTHDR(mh) \
-	nn_cmsg_next((struct nn_msghdr *) (mh), NULL)
+#define NN_CMSG_FIRSTHDR(mh) nn_cmsg_next((struct nn_msghdr *) (mh), NULL)
 #define NN_CMSG_NXTHDR(mh, ch) \
 	nn_cmsg_next((struct nn_msghdr *) (mh), (struct nn_cmsghdr *) ch)
-#define NN_CMSG_DATA(ch) \
-	((unsigned char *) (((struct nn_cmsghdr *) (ch)) + 1))
+#define NN_CMSG_DATA(ch) ((unsigned char *) (((struct nn_cmsghdr *) (ch)) + 1))
 #define NN_CMSG_SPACE(len) \
-	(NN_CMSG_ALIGN(len) + NN_CMSG_ALIGN(sizeof (struct nn_cmsghdr)))
-#define NN_CMSG_LEN(len) \
-	(NN_CMSG_ALIGN(sizeof (struct nn_cmsghdr)) + (len))
+	(NN_CMSG_ALIGN(len) + NN_CMSG_ALIGN(sizeof(struct nn_cmsghdr)))
+#define NN_CMSG_LEN(len) (NN_CMSG_ALIGN(sizeof(struct nn_cmsghdr)) + (len))
 
-NN_DECL struct nn_cmsghdr *nn_cmsg_next(struct nn_msghdr *,
-    struct nn_cmsghdr *);
+NN_DECL struct nn_cmsghdr *nn_cmsg_next(
+    struct nn_msghdr *, struct nn_cmsghdr *);
 NN_DECL int nn_socket(int, int);
 NN_DECL int nn_setsockopt(int, int, int, const void *, size_t);
 NN_DECL int nn_getsockopt(int, int, int, void *, size_t *);
@@ -292,14 +297,13 @@ NN_DECL int nn_recvmsg(int, struct nn_msghdr *, int);
 NN_DECL int nn_close(int);
 NN_DECL int nn_poll(struct nn_pollfd *, int, int);
 NN_DECL int nn_device(int, int);
-NN_DECL uint64_t nn_get_statistic(int, int);
-NN_DECL void *nn_allocmsg(size_t, int);
-NN_DECL void *nn_reallocmsg(void *, size_t);
-NN_DECL int nn_freemsg(void *);
-NN_DECL int nn_errno(void);
+NN_DECL uint64_t    nn_get_statistic(int, int);
+NN_DECL void *      nn_allocmsg(size_t, int);
+NN_DECL void *      nn_reallocmsg(void *, size_t);
+NN_DECL int         nn_freemsg(void *);
+NN_DECL int         nn_errno(void);
 NN_DECL const char *nn_strerror(int);
-NN_DECL void nn_term(void);
-
+NN_DECL void        nn_term(void);
 
 // This stuff is intended to be exposed only for test programs and our
 // own utilities.  Do not use in your own programs.
@@ -311,8 +315,8 @@ struct nn_thread {
 
 NN_DECL void nn_sleep(uint64_t);
 NN_DECL uint64_t nn_clock(void);
-NN_DECL int nn_thread_init(struct nn_thread *, void (*)(void *), void *);
-NN_DECL void nn_thread_term(struct nn_thread *);
+NN_DECL int      nn_thread_init(struct nn_thread *, void (*)(void *), void *);
+NN_DECL void     nn_thread_term(struct nn_thread *);
 
 #endif // NNG_PRIVATE
 

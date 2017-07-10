@@ -9,16 +9,15 @@
 
 #include "core/nng_impl.h"
 
-#include <string.h>
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 // Functionality related to end points.
 
 static nni_objhash *nni_eps = NULL;
-static void *nni_ep_ctor(uint32_t);
-static void nni_ep_dtor(void *);
-
+static void *       nni_ep_ctor(uint32_t);
+static void         nni_ep_dtor(void *);
 
 int
 nni_ep_sys_init(void)
@@ -32,7 +31,6 @@ nni_ep_sys_init(void)
 	return (rv);
 }
 
-
 void
 nni_ep_sys_fini(void)
 {
@@ -40,11 +38,10 @@ nni_ep_sys_fini(void)
 	nni_eps = NULL;
 }
 
-
 int
 nni_ep_find(nni_ep **epp, uint32_t id)
 {
-	int rv;
+	int     rv;
 	nni_ep *ep;
 
 	if ((rv = nni_init()) != 0) {
@@ -68,7 +65,6 @@ nni_ep_find(nni_ep **epp, uint32_t id)
 	return (0);
 }
 
-
 void
 nni_ep_hold(nni_ep *ep)
 {
@@ -78,13 +74,11 @@ nni_ep_hold(nni_ep *ep)
 	NNI_ASSERT(rv == 0);
 }
 
-
 void
 nni_ep_rele(nni_ep *ep)
 {
 	nni_objhash_unref(nni_eps, ep->ep_id);
 }
-
 
 uint32_t
 nni_ep_id(nni_ep *ep)
@@ -92,21 +86,20 @@ nni_ep_id(nni_ep *ep)
 	return (ep->ep_id);
 }
 
-
 static void *
 nni_ep_ctor(uint32_t id)
 {
 	nni_ep *ep;
-	int rv;
+	int     rv;
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NULL);
 	}
 	ep->ep_closed = 0;
-	ep->ep_bound = 0;
-	ep->ep_pipe = NULL;
-	ep->ep_id = id;
-	ep->ep_data = NULL;
+	ep->ep_bound  = 0;
+	ep->ep_pipe   = NULL;
+	ep->ep_id     = id;
+	ep->ep_data   = NULL;
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 
@@ -126,7 +119,6 @@ nni_ep_ctor(uint32_t id)
 	return (ep);
 }
 
-
 static void
 nni_ep_dtor(void *ptr)
 {
@@ -140,14 +132,13 @@ nni_ep_dtor(void *ptr)
 	NNI_FREE_STRUCT(ep);
 }
 
-
 int
 nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 {
 	nni_tran *tran;
-	nni_ep *ep;
-	int rv;
-	uint32_t id;
+	nni_ep *  ep;
+	int       rv;
+	uint32_t  id;
 
 	if ((tran = nni_tran_find(addr)) == NULL) {
 		return (NNG_ENOTSUP);
@@ -165,13 +156,12 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	ep->ep_mode = mode;
 
 	// Could safely use strcpy here, but this avoids discussion.
-	(void) snprintf(ep->ep_addr, sizeof (ep->ep_addr), "%s", addr);
+	(void) snprintf(ep->ep_addr, sizeof(ep->ep_addr), "%s", addr);
 
 	// Make a copy of the endpoint operations.  This allows us to
 	// modify them (to override NULLs for example), and avoids an extra
 	// dereference on hot paths.
 	ep->ep_ops = *tran->tran_ep;
-
 
 	if ((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, sock, mode)) != 0) {
 		nni_objhash_unref(nni_eps, id);
@@ -187,7 +177,6 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	return (0);
 }
 
-
 void
 nni_ep_stop(nni_ep *ep)
 {
@@ -200,13 +189,11 @@ nni_ep_stop(nni_ep *ep)
 	nni_mtx_unlock(&ep->ep_mtx);
 }
 
-
 void
 nni_ep_close(nni_ep *ep)
 {
 	nni_ep_stop(ep);
 }
-
 
 void
 nni_ep_remove(nni_ep *ep)
@@ -236,12 +223,11 @@ nni_ep_remove(nni_ep *ep)
 	nni_objhash_unref(nni_eps, ep->ep_id);
 }
 
-
 static int
 nni_ep_connect_aio(nni_ep *ep, void **pipep)
 {
 	nni_aio aio;
-	int rv;
+	int     rv;
 
 	nni_aio_init(&aio, NULL, NULL);
 	aio.a_endpt = ep->ep_data;
@@ -255,12 +241,11 @@ nni_ep_connect_aio(nni_ep *ep, void **pipep)
 	return (rv);
 }
 
-
 static int
 nni_ep_connect_sync(nni_ep *ep)
 {
 	nni_pipe *pipe;
-	int rv;
+	int       rv;
 
 	rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran);
 	if (rv != 0) {
@@ -281,7 +266,6 @@ nni_ep_connect_sync(nni_ep *ep)
 	return (0);
 }
 
-
 int
 nni_ep_pipe_add(nni_ep *ep, nni_pipe *pipe)
 {
@@ -296,7 +280,6 @@ nni_ep_pipe_add(nni_ep *ep, nni_pipe *pipe)
 
 	return (0);
 }
-
 
 void
 nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
@@ -316,14 +299,13 @@ nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
 	nni_mtx_unlock(&ep->ep_mtx);
 }
 
-
 // nni_dialer is the thread worker that dials in the background.
 static void
 nni_dialer(void *arg)
 {
-	nni_ep *ep = arg;
-	int rv;
-	nni_time cooldown;
+	nni_ep *     ep = arg;
+	int          rv;
+	nni_time     cooldown;
 	nni_duration maxrtime = 0, nmaxrtime;
 	nni_duration defrtime = 0, ndefrtime;
 	nni_duration rtime;
@@ -337,7 +319,7 @@ nni_dialer(void *arg)
 			// Times changed, so reset them.
 			defrtime = ndefrtime;
 			maxrtime = nmaxrtime;
-			rtime = defrtime;
+			rtime    = defrtime;
 		}
 
 		nni_mtx_lock(&ep->ep_mtx);
@@ -379,7 +361,6 @@ nni_dialer(void *arg)
 		nni_mtx_unlock(&ep->ep_mtx);
 	}
 }
-
 
 int
 nni_ep_dial(nni_ep *ep, int flags)
@@ -423,12 +404,11 @@ nni_ep_dial(nni_ep *ep, int flags)
 	return (rv);
 }
 
-
 static int
 nni_ep_accept_aio(nni_ep *ep, void **pipep)
 {
 	nni_aio aio;
-	int rv;
+	int     rv;
 
 	nni_aio_init(&aio, NULL, NULL);
 	aio.a_endpt = ep->ep_data;
@@ -442,12 +422,11 @@ nni_ep_accept_aio(nni_ep *ep, void **pipep)
 	return (rv);
 }
 
-
 static int
 nni_ep_accept_sync(nni_ep *ep)
 {
 	nni_pipe *pipe;
-	int rv;
+	int       rv;
 
 	if (ep->ep_closed) {
 		return (NNG_ECLOSED);
@@ -468,12 +447,11 @@ nni_ep_accept_sync(nni_ep *ep)
 	return (0);
 }
 
-
 static void
 nni_listener(void *arg)
 {
 	nni_ep *ep = arg;
-	int rv;
+	int     rv;
 
 	for (;;) {
 		nni_time cooldown;
@@ -534,7 +512,7 @@ nni_listener(void *arg)
 		default:
 			// Other cases we sleep just a tiny bit to avoid
 			// burning the cpu (e.g. out of files).
-			cooldown = 1000;        // 1 msec
+			cooldown = 1000; // 1 msec
 			break;
 		}
 		cooldown += nni_clock();
@@ -548,7 +526,6 @@ nni_listener(void *arg)
 		nni_mtx_unlock(&ep->ep_mtx);
 	}
 }
-
 
 int
 nni_ep_listen(nni_ep *ep, int flags)
@@ -593,7 +570,6 @@ nni_ep_listen(nni_ep *ep, int flags)
 
 	return (0);
 }
-
 
 void
 nni_ep_list_init(nni_list *list)

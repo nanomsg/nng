@@ -8,8 +8,8 @@
 //
 
 #include "core/nng_impl.h"
-#include <stdlib.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static int
 nni_init_helper(void)
@@ -53,13 +53,11 @@ nni_init_helper(void)
 	return (0);
 }
 
-
 int
 nni_init(void)
 {
 	return (nni_plat_init(nni_init_helper));
 }
-
 
 void
 nni_fini(void)

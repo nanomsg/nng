@@ -18,26 +18,25 @@
 
 #include "core/nng_impl.h"
 
-typedef struct nni_posix_pollq		nni_posix_pollq;
+typedef struct nni_posix_pollq nni_posix_pollq;
 
+typedef struct nni_posix_pipedesc nni_posix_pipedesc;
+typedef struct nni_posix_epdesc   nni_posix_epdesc;
 
-typedef struct nni_posix_pipedesc	nni_posix_pipedesc;
-typedef struct nni_posix_epdesc		nni_posix_epdesc;
-
-extern int nni_posix_pipedesc_init(nni_posix_pipedesc **, int);
+extern int  nni_posix_pipedesc_init(nni_posix_pipedesc **, int);
 extern void nni_posix_pipedesc_fini(nni_posix_pipedesc *);
 extern void nni_posix_pipedesc_recv(nni_posix_pipedesc *, nni_aio *);
 extern void nni_posix_pipedesc_send(nni_posix_pipedesc *, nni_aio *);
 extern void nni_posix_pipedesc_close(nni_posix_pipedesc *);
 
-extern int nni_posix_epdesc_init(nni_posix_epdesc **, const char *);
+extern int         nni_posix_epdesc_init(nni_posix_epdesc **, const char *);
 extern const char *nni_posix_epdesc_url(nni_posix_epdesc *);
-extern void nni_posix_epdesc_set_local(nni_posix_epdesc *, void *, int);
+extern void        nni_posix_epdesc_set_local(nni_posix_epdesc *, void *, int);
 extern void nni_posix_epdesc_set_remote(nni_posix_epdesc *, void *, int);
 extern void nni_posix_epdesc_fini(nni_posix_epdesc *);
 extern void nni_posix_epdesc_close(nni_posix_epdesc *);
 extern void nni_posix_epdesc_connect(nni_posix_epdesc *, nni_aio *);
-extern int nni_posix_epdesc_listen(nni_posix_epdesc *);
+extern int  nni_posix_epdesc_listen(nni_posix_epdesc *);
 extern void nni_posix_epdesc_accept(nni_posix_epdesc *, nni_aio *);
 
 #endif // PLATFORM_POSIX_AIO_H

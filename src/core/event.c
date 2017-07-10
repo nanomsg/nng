@@ -15,12 +15,11 @@
 int
 nni_ev_init(nni_event *event, int type, nni_sock *sock)
 {
-	memset(event, 0, sizeof (*event));
+	memset(event, 0, sizeof(*event));
 	event->e_type = type;
 	event->e_sock = sock;
 	return (0);
 }
-
 
 void
 nni_ev_fini(nni_event *event)

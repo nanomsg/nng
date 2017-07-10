@@ -14,21 +14,21 @@
 #ifdef PLATFORM_POSIX_THREAD
 
 #include <errno.h>
-#include <pthread.h>
-#include <time.h>
-#include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <pthread.h>
 #include <signal.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <time.h>
+#include <unistd.h>
 
-static pthread_mutex_t nni_plat_lock = PTHREAD_MUTEX_INITIALIZER;
-static int nni_plat_inited = 0;
-static int nni_plat_forked = 0;
+static pthread_mutex_t nni_plat_lock   = PTHREAD_MUTEX_INITIALIZER;
+static int             nni_plat_inited = 0;
+static int             nni_plat_forked = 0;
 
-pthread_condattr_t nni_cvattr;
-pthread_mutexattr_t nni_mxattr;
+pthread_condattr_t    nni_cvattr;
+pthread_mutexattr_t   nni_mxattr;
 static pthread_attr_t nni_pthread_attr;
 
 // We open a /dev/null file descriptor so that we can dup2() it to
@@ -55,7 +55,6 @@ nni_plat_mtx_init(nni_plat_mtx *mtx)
 	return (0);
 }
 
-
 void
 nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
@@ -72,7 +71,6 @@ nni_plat_mtx_fini(nni_plat_mtx *mtx)
 	mtx->init = 0;
 }
 
-
 void
 nni_plat_mtx_lock(nni_plat_mtx *mtx)
 {
@@ -83,7 +81,6 @@ nni_plat_mtx_lock(nni_plat_mtx *mtx)
 	}
 	mtx->owner = pthread_self();
 }
-
 
 void
 nni_plat_mtx_unlock(nni_plat_mtx *mtx)
@@ -96,7 +93,6 @@ nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 		nni_panic("pthread_mutex_unlock: %s", strerror(rv));
 	}
 }
-
 
 int
 nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
@@ -117,7 +113,6 @@ nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 	return (0);
 }
 
-
 void
 nni_plat_cv_wake(nni_plat_cv *cv)
 {
@@ -127,7 +122,6 @@ nni_plat_cv_wake(nni_plat_cv *cv)
 		nni_panic("pthread_cond_broadcast: %s", strerror(rv));
 	}
 }
-
 
 void
 nni_plat_cv_wait(nni_plat_cv *cv)
@@ -141,20 +135,19 @@ nni_plat_cv_wait(nni_plat_cv *cv)
 	cv->mtx->owner = pthread_self();
 }
 
-
 int
 nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 {
 	struct timespec ts;
-	int rv;
+	int             rv;
 
 	NNI_ASSERT(cv->mtx->owner == pthread_self());
 
 	// Our caller has already guaranteed a sane value for until.
-	ts.tv_sec = until / 1000000;
+	ts.tv_sec  = until / 1000000;
 	ts.tv_nsec = (until % 1000000) * 1000;
 
-	rv = pthread_cond_timedwait(&cv->cv, &cv->mtx->mtx, &ts);
+	rv             = pthread_cond_timedwait(&cv->cv, &cv->mtx->mtx, &ts);
 	cv->mtx->owner = pthread_self();
 	if (rv == ETIMEDOUT) {
 		return (NNG_ETIMEDOUT);
@@ -163,7 +156,6 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 	}
 	return (0);
 }
-
 
 void
 nni_plat_cv_fini(nni_plat_cv *cv)
@@ -179,12 +171,11 @@ nni_plat_cv_fini(nni_plat_cv *cv)
 	cv->mtx = NULL;
 }
 
-
 static void *
 nni_plat_thr_main(void *arg)
 {
 	nni_plat_thr *thr = arg;
-	sigset_t set;
+	sigset_t      set;
 
 	// Suppress (block) SIGPIPE for this thread.
 	sigemptyset(&set);
@@ -195,25 +186,23 @@ nni_plat_thr_main(void *arg)
 	return (NULL);
 }
 
-
 int
 nni_plat_thr_init(nni_plat_thr *thr, void (*fn)(void *), void *arg)
 {
 	int rv;
 
 	thr->func = fn;
-	thr->arg = arg;
+	thr->arg  = arg;
 
 	// POSIX wants functions to return a void *, but we don't care.
-	rv = pthread_create(&thr->tid, &nni_pthread_attr,
-		nni_plat_thr_main, thr);
+	rv = pthread_create(
+	    &thr->tid, &nni_pthread_attr, nni_plat_thr_main, thr);
 	if (rv != 0) {
-		//nni_printf("pthread_create: %s", strerror(rv));
+		// nni_printf("pthread_create: %s", strerror(rv));
 		return (NNG_ENOMEM);
 	}
 	return (0);
 }
-
 
 void
 nni_plat_thr_fini(nni_plat_thr *thr)
@@ -225,13 +214,11 @@ nni_plat_thr_fini(nni_plat_thr *thr)
 	}
 }
 
-
 void
 nni_atfork_child(void)
 {
 	nni_plat_forked = 1;
 }
-
 
 int
 nni_plat_init(int (*helper)(void))
@@ -243,14 +230,14 @@ nni_plat_init(int (*helper)(void))
 		nni_panic("nng is not fork-reentrant safe");
 	}
 	if (nni_plat_inited) {
-		return (0);     // fast path
+		return (0); // fast path
 	}
 	if ((devnull = open("/dev/null", O_RDONLY)) < 0) {
 		return (nni_plat_errno(errno));
 	}
 
 	pthread_mutex_lock(&nni_plat_lock);
-	if (nni_plat_inited) {        // check again under the lock to be sure
+	if (nni_plat_inited) { // check again under the lock to be sure
 		pthread_mutex_unlock(&nni_plat_lock);
 		close(devnull);
 		return (0);
@@ -337,7 +324,6 @@ nni_plat_init(int (*helper)(void))
 	return (rv);
 }
 
-
 void
 nni_plat_fini(void)
 {
@@ -349,11 +335,10 @@ nni_plat_fini(void)
 		pthread_attr_destroy(&nni_pthread_attr);
 		(void) close(nni_plat_devnull);
 		nni_plat_devnull = -1;
-		nni_plat_inited = 0;
+		nni_plat_inited  = 0;
 	}
 	pthread_mutex_unlock(&nni_plat_lock);
 }
-
 
 #else
 

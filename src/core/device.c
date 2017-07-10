@@ -12,18 +12,18 @@
 #include <string.h>
 
 struct nni_device_pair {
-	nni_thr		thrs[2];
-	nni_sock *	socks[2];
-	int		err[2];
+	nni_thr   thrs[2];
+	nni_sock *socks[2];
+	int       err[2];
 };
 
-typedef struct nni_device_pair   nni_device_pair;
+typedef struct nni_device_pair nni_device_pair;
 
 static int
 nni_device_loop(nni_sock *from, nni_sock *to)
 {
 	nni_msg *msg;
-	int rv = 0;
+	int      rv = 0;
 
 	for (;;) {
 		// Take messages sock[0], and send to sock[1].
@@ -40,7 +40,6 @@ nni_device_loop(nni_sock *from, nni_sock *to)
 	return (rv);
 }
 
-
 static void
 nni_device_fwd(void *p)
 {
@@ -50,7 +49,6 @@ nni_device_fwd(void *p)
 	nni_sock_shutdown(pair->socks[0]);
 	nni_sock_shutdown(pair->socks[1]);
 }
-
 
 static void
 nni_device_rev(void *p)
@@ -62,14 +60,13 @@ nni_device_rev(void *p)
 	nni_sock_shutdown(pair->socks[1]);
 }
 
-
 int
 nni_device(nni_sock *sock1, nni_sock *sock2)
 {
 	nni_device_pair pair;
-	int rv;
+	int             rv;
 
-	memset(&pair, 0, sizeof (pair));
+	memset(&pair, 0, sizeof(pair));
 	pair.socks[0] = sock1;
 	pair.socks[1] = sock2;
 
@@ -105,8 +102,7 @@ nni_device(nni_sock *sock1, nni_sock *sock2)
 	}
 	// If the sockets are the same, then its a simple one way forwarder,
 	// and we don't need two workers (but would be harmless if we did it).
-	if ((sock1 != sock2) &&
-	    ((sock2->s_flags & NNI_PROTO_FLAG_RCV) != 0) &&
+	if ((sock1 != sock2) && ((sock2->s_flags & NNI_PROTO_FLAG_RCV) != 0) &&
 	    ((sock1->s_flags & NNI_PROTO_FLAG_SND) != 0)) {
 		nni_thr_run(&pair.thrs[1]);
 	}

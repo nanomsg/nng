@@ -24,7 +24,7 @@
 //
 // Readers & writers in a message queue can be woken either by a timeout
 // or by a specific signal (arranged by the caller).
-typedef struct nni_msgq   nni_msgq;
+typedef struct nni_msgq nni_msgq;
 
 // nni_msgq_init creates a message queue with the given capacity,
 // which must be a positive number.  It returns NNG_EINVAL if the capacity
@@ -35,8 +35,8 @@ extern int nni_msgq_init(nni_msgq **, int);
 // messages that may be in the queue.
 extern void nni_msgq_fini(nni_msgq *);
 
-extern int nni_msgq_canget(nni_msgq *);
-extern int nni_msgq_canput(nni_msgq *);
+extern int  nni_msgq_canget(nni_msgq *);
+extern int  nni_msgq_canput(nni_msgq *);
 extern void nni_msgq_aio_put(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
@@ -108,4 +108,4 @@ extern int nni_msgq_cap(nni_msgq *mq);
 // nni_msgq_len returns the number of messages currently in the queue.
 extern int nni_msgq_len(nni_msgq *mq);
 
-#endif  // CORE_MSQUEUE_H
+#endif // CORE_MSQUEUE_H

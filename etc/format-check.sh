@@ -18,32 +18,36 @@ mydir=`dirname $0`
 srcdir=${mydir}/../src
 failed=
 
-uncrustify --version > /dev/null
+clang-format -version > /dev/null
 if [ $? -ne 0 ]; then
-	echo "Uncrustify not found.  Skipping checks."
+	echo "clang-format not found.  Skipping checks."
 	exit 0
 fi
 
+mytmpdir=`mktemp -d`
+
 for file in `find ${srcdir} -name '*.[ch]' -print`
 do
-	uncrustify -c "${mydir}/uncrustify.cfg" -q -lC $file
-	if [ $? -ne 0 ]; then
-		echo "Cannot run uncrustify??" 1>&2
-		exit 2
-	fi
-	if [ -t 1 ]; then
-		colordiff -u $file $file.uncrustify
-	else
-		diff -u $file $file.uncrustify
-	fi
-	if [ $? -ne 0 ]; then
+	ext=${file##*.}
+	oldf=${file}
+	newf=${mytmpdir}/new.${ext}
+	clang-format -style=file ${oldf} > ${newf}
+	cmp -s ${oldf} ${newf}
+	if [ $? -ne 0 ]
+	then
+		echo "${file} style changes"
+		if [ -t 1 ]; then
+			colordiff -u $oldf $newf
+		else
+			diff -u $oldf $newf
+		fi
 		failed=1
 	fi
-	rm ${file}.uncrustify
 done
+rm -rf $mytmpdir
 if [ -n "$failed" ]
 then
-	echo "Uncrustify differences found!" 1>&2
+	echo "Format differences found!" 1>&2
 	# Sadly, there are different versions of Uncrustify, and they don't
 	# seem to universally agree.  So let's not trigger a build error on
 	# this -- but instead just emit it to standard output.

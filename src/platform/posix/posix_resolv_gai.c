@@ -7,24 +7,22 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-
 #include "core/nng_impl.h"
 
 #ifdef NNG_USE_POSIX_RESOLV_GAI
 #include "platform/posix/posix_aio.h"
 
 #include <errno.h>
+#include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <netdb.h>
-#include <netinet/in.h>
-
 
 // We use a single resolver taskq - but we allocate a few threads
 // for it to ensure that names can be looked up concurrently.  This isn't
@@ -35,24 +33,22 @@
 // thread-safe getaddrinfo().  In that case they should set this to 1.
 
 #ifndef NNG_POSIX_RESOLV_CONCURRENCY
-#define NNG_POSIX_RESOLV_CONCURRENCY    4
+#define NNG_POSIX_RESOLV_CONCURRENCY 4
 #endif
 
-
 static nni_taskq *nni_posix_resolv_tq = NULL;
-static nni_mtx nni_posix_resolv_mtx;
+static nni_mtx    nni_posix_resolv_mtx;
 
-typedef struct nni_posix_resolv_item   nni_posix_resolv_item;
+typedef struct nni_posix_resolv_item nni_posix_resolv_item;
 struct nni_posix_resolv_item {
-	int		family;
-	int		passive;
-	const char *	name;
-	const char *	serv;
-	int		proto;
-	nni_aio *	aio;
-	nni_taskq_ent	tqe;
+	int           family;
+	int           passive;
+	const char *  name;
+	const char *  serv;
+	int           proto;
+	nni_aio *     aio;
+	nni_taskq_ent tqe;
 };
-
 
 static void
 nni_posix_resolv_finish(nni_posix_resolv_item *item, int rv)
@@ -63,7 +59,6 @@ nni_posix_resolv_finish(nni_posix_resolv_item *item, int rv)
 	nni_aio_finish(aio, rv, 0);
 	NNI_FREE_STRUCT(item);
 }
-
 
 static void
 nni_posix_resolv_cancel(nni_aio *aio)
@@ -80,7 +75,6 @@ nni_posix_resolv_cancel(nni_aio *aio)
 	nni_taskq_cancel(nni_posix_resolv_tq, &item->tqe);
 	NNI_FREE_STRUCT(item);
 }
-
 
 static int
 nni_posix_gai_errno(int rv)
@@ -110,16 +104,15 @@ nni_posix_gai_errno(int rv)
 	}
 }
 
-
 static void
 nni_posix_resolv_task(void *arg)
 {
 	nni_posix_resolv_item *item = arg;
-	nni_aio *aio = item->aio;
-	struct addrinfo hints;
-	struct addrinfo *results;
-	struct addrinfo *probe;
-	int i, rv;
+	nni_aio *              aio  = item->aio;
+	struct addrinfo        hints;
+	struct addrinfo *      results;
+	struct addrinfo *      probe;
+	int                    i, rv;
 
 	results = NULL;
 
@@ -129,7 +122,7 @@ nni_posix_resolv_task(void *arg)
 	case AF_UNSPEC:
 		// We treat these all as IP addresses.  The service and the
 		// host part are split.
-		memset(&hints, 0, sizeof (hints));
+		memset(&hints, 0, sizeof(hints));
 		if (item->passive) {
 			hints.ai_flags |= AI_PASSIVE;
 		}
@@ -137,11 +130,11 @@ nni_posix_resolv_task(void *arg)
 		hints.ai_flags |= AI_ADDRCONFIG;
 #endif
 		hints.ai_protocol = item->proto;
-		hints.ai_family = item->family;
+		hints.ai_family   = item->family;
 		if (item->family == AF_INET6) {
-			// We prefer to have v4mapped addresses if a remote
-			// v4 address isn't avaiable.  And we prefer to only
-			// do this if we actually support v6.
+// We prefer to have v4mapped addresses if a remote
+// v4 address isn't avaiable.  And we prefer to only
+// do this if we actually support v6.
 #if defined(AI_V4MAPPED_CFG)
 			hints.ai_flags |= AI_V4MAPPED_CFG;
 #elif defined(AI_V4MAPPED)
@@ -174,27 +167,27 @@ nni_posix_resolv_task(void *arg)
 		aio->a_addrs = NNI_ALLOC_STRUCTS(aio->a_addrs, aio->a_naddrs);
 		if (aio->a_addrs == NULL) {
 			aio->a_naddrs = 0;
-			rv = NNG_ENOMEM;
+			rv            = NNG_ENOMEM;
 			break;
 		}
 		i = 0;
 		for (probe = results; probe != NULL; probe = probe->ai_next) {
-			struct sockaddr_in *sin;
+			struct sockaddr_in * sin;
 			struct sockaddr_in6 *sin6;
-			nng_sockaddr *sa = &aio->a_addrs[i];
+			nng_sockaddr *       sa = &aio->a_addrs[i];
 
 			switch (probe->ai_addr->sa_family) {
 			case AF_INET:
 				sin = (void *) probe->ai_addr;
 				sa->s_un.s_in.sa_family = NNG_AF_INET;
-				sa->s_un.s_in.sa_port = sin->sin_port;
-				sa->s_un.s_in.sa_addr = sin->sin_addr.s_addr;
+				sa->s_un.s_in.sa_port   = sin->sin_port;
+				sa->s_un.s_in.sa_addr   = sin->sin_addr.s_addr;
 				i++;
 				break;
 			case AF_INET6:
 				sin6 = (void *) probe->ai_addr;
 				sa->s_un.s_in6.sa_family = NNG_AF_INET6;
-				sa->s_un.s_in6.sa_port = sin6->sin6_port;
+				sa->s_un.s_in6.sa_port   = sin6->sin6_port;
 				memcpy(sa->s_un.s_in6.sa_addr,
 				    sin6->sin6_addr.s6_addr, 16);
 				i++;
@@ -222,13 +215,12 @@ nni_posix_resolv_task(void *arg)
 	nni_mtx_unlock(&nni_posix_resolv_mtx);
 }
 
-
 static void
 nni_posix_resolv_ip(const char *host, const char *serv, int passive,
     int family, int proto, nni_aio *aio)
 {
 	nni_posix_resolv_item *item;
-	int rv;
+	int                    rv;
 
 	if ((aio->a_naddrs != 0) && (aio->a_addrs != NULL)) {
 		NNI_FREE_STRUCTS(aio->a_addrs, aio->a_naddrs);
@@ -253,10 +245,10 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 	}
 	// NB: host and serv must remain valid until this is completed.
 	item->passive = passive;
-	item->name = host;
-	item->serv = serv;
-	item->proto = proto;
-	item->aio = aio;
+	item->name    = host;
+	item->serv    = serv;
+	item->proto   = proto;
+	item->aio     = aio;
 
 	nni_mtx_lock(&nni_posix_resolv_mtx);
 	// If we were stopped, we're done...
@@ -273,14 +265,12 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 	nni_mtx_unlock(&nni_posix_resolv_mtx);
 }
 
-
 void
-nni_plat_tcp_resolv(const char *host, const char *serv, int family,
-    int passive, nni_aio *aio)
+nni_plat_tcp_resolv(
+    const char *host, const char *serv, int family, int passive, nni_aio *aio)
 {
 	nni_posix_resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
 }
-
 
 int
 nni_posix_resolv_sysinit(void)
@@ -297,7 +287,6 @@ nni_posix_resolv_sysinit(void)
 	return (0);
 }
 
-
 void
 nni_posix_resolv_sysfini(void)
 {
@@ -307,7 +296,6 @@ nni_posix_resolv_sysfini(void)
 	}
 	nni_mtx_fini(&nni_posix_resolv_mtx);
 }
-
 
 #else
 

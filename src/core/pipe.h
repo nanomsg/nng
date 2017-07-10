@@ -19,23 +19,23 @@
 #include "core/transport.h"
 
 struct nni_pipe {
-	uint32_t	p_id;
-	nni_tran_pipe	p_tran_ops;
-	void *		p_tran_data;
-	void *		p_proto_data;
-	nni_cb		p_proto_dtor;
-	nni_list_node	p_sock_node;
-	nni_list_node	p_ep_node;
-	nni_sock *	p_sock;
-	nni_ep *	p_ep;
-	int		p_reap;
-	int		p_stop;
-	nni_mtx		p_mtx;
-	nni_taskq_ent	p_reap_tqe;
-	nni_aio		p_start_aio;
+	uint32_t      p_id;
+	nni_tran_pipe p_tran_ops;
+	void *        p_tran_data;
+	void *        p_proto_data;
+	nni_cb        p_proto_dtor;
+	nni_list_node p_sock_node;
+	nni_list_node p_ep_node;
+	nni_sock *    p_sock;
+	nni_ep *      p_ep;
+	int           p_reap;
+	int           p_stop;
+	nni_mtx       p_mtx;
+	nni_taskq_ent p_reap_tqe;
+	nni_aio       p_start_aio;
 };
 
-extern int nni_pipe_sys_init(void);
+extern int  nni_pipe_sys_init(void);
 extern void nni_pipe_sys_fini(void);
 
 // AIO
@@ -62,7 +62,7 @@ extern int nni_pipe_create(nni_pipe **, nni_ep *, nni_sock *, nni_tran *);
 
 extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
-extern int nni_pipe_start(nni_pipe *);
+extern int      nni_pipe_start(nni_pipe *);
 extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
 
 // nni_pipe_get_proto_data gets the protocol private data set with the

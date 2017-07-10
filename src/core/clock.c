@@ -15,7 +15,6 @@ nni_clock(void)
 	return (nni_plat_clock());
 }
 
-
 void
 nni_usleep(nni_duration usec)
 {

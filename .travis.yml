@@ -30,4 +30,4 @@ script:
   - cmake -DCMAKE_BUILD_TYPE=Debug ..
   - cmake --build . -- -j4
   - ctest --output-on-failure -C Debug -j4
-  - ../etc/uncrustify_check.sh
+  - ../etc/format-check.sh

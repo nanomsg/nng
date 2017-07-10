@@ -12,9 +12,9 @@
 
 #ifdef PLATFORM_POSIX_CLOCK
 
-#include <time.h>
 #include <errno.h>
 #include <string.h>
+#include <time.h>
 
 #ifndef NNG_USE_GETTIMEOFDAY
 
@@ -23,7 +23,7 @@ nni_time
 nni_plat_clock(void)
 {
 	struct timespec ts;
-	nni_time usec;
+	nni_time        usec;
 
 	if (clock_gettime(NNG_USE_CLOCKID, &ts) != 0) {
 		/* This should never ever occur. */
@@ -36,13 +36,12 @@ nni_plat_clock(void)
 	return (usec);
 }
 
-
 void
 nni_plat_usleep(nni_duration usec)
 {
 	struct timespec ts;
 
-	ts.tv_sec = usec / 1000000;
+	ts.tv_sec  = usec / 1000000;
 	ts.tv_nsec = (usec % 1000000) * 1000;
 
 	/* Do this in a loop, so that interrupts don't actually wake us. */
@@ -53,8 +52,7 @@ nni_plat_usleep(nni_duration usec)
 	}
 }
 
-
-#else   // NNG_USE_GETTIMEOFDAY
+#else // NNG_USE_GETTIMEOFDAY
 
 // If you're here, its because you don't have a modern clock_gettime with
 // monotonic clocks, or the necessary pthread_condattr_settclock().  In
@@ -65,9 +63,9 @@ nni_plat_usleep(nni_duration usec)
 // but if you change the clock by a large amount you might wonder what the
 // heck is happening until it does.)
 
+#include <poll.h>
 #include <pthread.h>
 #include <sys/time.h>
-#include <poll.h>
 
 nni_time
 nni_plat_clock(void)
@@ -86,7 +84,6 @@ nni_plat_clock(void)
 	return (usec);
 }
 
-
 void
 nni_plat_usleep(nni_duration usec)
 {
@@ -99,16 +96,16 @@ nni_plat_usleep(nni_duration usec)
 	// So we can use poll() instead, which is rather coarse, but
 	// pretty much guaranteed to work.
 	struct pollfd pfd;
-	nni_time now;
-	nni_time expire;
+	nni_time      now;
+	nni_time      expire;
 
 	// Possibly we could pass NULL instead of pfd, but passing a valid
 	// pointer ensures that if the system dereferences the pointer it
 	// won't come back with EFAULT.
-	pfd.fd = -1;
+	pfd.fd     = -1;
 	pfd.events = 0;
 
-	now = nni_clock();
+	now    = nni_clock();
 	expire = now + usec;
 
 	while (now < expire) {
@@ -122,12 +119,11 @@ nni_plat_usleep(nni_duration usec)
 	}
 }
 
-
-#endif  // NNG_USE_GETTIMEOFDAY
+#endif // NNG_USE_GETTIMEOFDAY
 
 #else
 
 // Suppress empty symbols warnings in ranlib.
 int nni_posix_clock_not_used = 0;
 
-#endif  // PLATFORM_POSIX_CLOCK
+#endif // PLATFORM_POSIX_CLOCK

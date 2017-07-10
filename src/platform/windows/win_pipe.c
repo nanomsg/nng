@@ -24,17 +24,17 @@ nni_plat_pipe_open(int *wfdp, int *rfdp)
 	SOCKET wfd = INVALID_SOCKET;
 
 	struct sockaddr_in addr;
-	socklen_t alen;
-	int one;
-	ULONG yes;
-	int rv;
+	socklen_t          alen;
+	int                one;
+	ULONG              yes;
+	int                rv;
 
-	ZeroMemory(&addr, sizeof (addr));
+	ZeroMemory(&addr, sizeof(addr));
 
 	// Restrict our bind to the loopback address.  We bind to an
 	// ephemeral port.
-	addr.sin_family = AF_INET;
-	addr.sin_port = 0;
+	addr.sin_family      = AF_INET;
+	addr.sin_port        = 0;
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	afd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
@@ -42,15 +42,14 @@ nni_plat_pipe_open(int *wfdp, int *rfdp)
 		goto fail;
 	}
 
-
 	// Make sure we have exclusive address use...
 	one = 1;
-	if (setsockopt(afd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE,
-	    (char *) (&one), sizeof (one)) != 0) {
+	if (setsockopt(afd, SOL_SOCKET, SO_EXCLUSIVEADDRUSE, (char *) (&one),
+	        sizeof(one)) != 0) {
 		goto fail;
 	}
 
-	alen = sizeof (addr);
+	alen = sizeof(addr);
 	if (bind(afd, (struct sockaddr *) &addr, alen) != 0) {
 		goto fail;
 	}
@@ -110,7 +109,6 @@ fail:
 	return (rv);
 }
 
-
 void
 nni_plat_pipe_raise(int wfd)
 {
@@ -118,7 +116,6 @@ nni_plat_pipe_raise(int wfd)
 
 	send((SOCKET) wfd, &c, 1, 0);
 }
-
 
 void
 nni_plat_pipe_clear(int rfd)
@@ -128,12 +125,11 @@ nni_plat_pipe_clear(int rfd)
 	for (;;) {
 		// Completely drain the pipe, but don't wait.  This coalesces
 		// events somewhat.
-		if (recv((SOCKET) rfd, buf, sizeof (buf), 0) <= 0) {
+		if (recv((SOCKET) rfd, buf, sizeof(buf), 0) <= 0) {
 			return;
 		}
 	}
 }
-
 
 void
 nni_plat_pipe_close(int wfd, int rfd)
@@ -141,7 +137,6 @@ nni_plat_pipe_close(int wfd, int rfd)
 	closesocket((SOCKET) wfd);
 	closesocket((SOCKET) rfd);
 }
-
 
 #else
 

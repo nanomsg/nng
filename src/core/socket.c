@@ -21,7 +21,6 @@ nni_sock_id(nni_sock *s)
 	return (s->s_id);
 }
 
-
 // nni_sock_sendq and nni_sock_recvq are called by the protocol to obtain
 // the upper read and write queues.
 nni_msgq *
@@ -30,18 +29,16 @@ nni_sock_sendq(nni_sock *s)
 	return (s->s_uwq);
 }
 
-
 nni_msgq *
 nni_sock_recvq(nni_sock *s)
 {
 	return (s->s_urq);
 }
 
-
 int
 nni_sock_find(nni_sock **sockp, uint32_t id)
 {
-	int rv;
+	int       rv;
 	nni_sock *sock;
 
 	if ((rv = nni_init()) != 0) {
@@ -64,7 +61,6 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 	return (0);
 }
 
-
 void
 nni_sock_hold(nni_sock *sock)
 {
@@ -74,18 +70,16 @@ nni_sock_hold(nni_sock *sock)
 	NNI_ASSERT(rv == 0);
 }
 
-
 void
 nni_sock_rele(nni_sock *sock)
 {
 	nni_objhash_unref(nni_socks, sock->s_id);
 }
 
-
 int
 nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 {
-	int rv;
+	int   rv;
 	void *pdata = nni_pipe_get_proto_data(pipe);
 
 	nni_mtx_lock(&sock->s_mx);
@@ -112,7 +106,6 @@ nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 	return (0);
 }
 
-
 void
 nni_sock_pipe_stop(nni_sock *sock, nni_pipe *pipe)
 {
@@ -136,13 +129,11 @@ nni_sock_pipe_stop(nni_sock *sock, nni_pipe *pipe)
 	nni_mtx_unlock(&sock->s_mx);
 }
 
-
 void
 nni_sock_lock(nni_sock *sock)
 {
 	nni_mtx_lock(&sock->s_mx);
 }
-
 
 void
 nni_sock_unlock(nni_sock *sock)
@@ -150,12 +141,11 @@ nni_sock_unlock(nni_sock *sock)
 	nni_mtx_unlock(&sock->s_mx);
 }
 
-
 static void
 nni_sock_cansend_cb(void *arg)
 {
 	nni_notify *notify = arg;
-	nni_sock *sock = notify->n_sock;
+	nni_sock *  sock   = notify->n_sock;
 
 	if (nni_aio_result(&notify->n_aio) != 0) {
 		return;
@@ -164,12 +154,11 @@ nni_sock_cansend_cb(void *arg)
 	notify->n_func(&sock->s_send_ev, notify->n_arg);
 }
 
-
 static void
 nni_sock_canrecv_cb(void *arg)
 {
 	nni_notify *notify = arg;
-	nni_sock *sock = notify->n_sock;
+	nni_sock *  sock   = notify->n_sock;
 
 	if (nni_aio_result(&notify->n_aio) != 0) {
 		return;
@@ -178,19 +167,18 @@ nni_sock_canrecv_cb(void *arg)
 	notify->n_func(&sock->s_recv_ev, notify->n_arg);
 }
 
-
 nni_notify *
 nni_sock_notify(nni_sock *sock, int type, nng_notify_func fn, void *arg)
 {
 	nni_notify *notify;
-	int rv;
+	int         rv;
 
 	if ((notify = NNI_ALLOC_STRUCT(notify)) == NULL) {
 		return (NULL);
 	}
 
 	notify->n_func = fn;
-	notify->n_arg = arg;
+	notify->n_arg  = arg;
 	notify->n_type = type;
 	notify->n_sock = sock;
 
@@ -223,7 +211,6 @@ fail:
 	return (NULL);
 }
 
-
 void
 nni_sock_unnotify(nni_sock *sock, nni_notify *notify)
 {
@@ -231,13 +218,11 @@ nni_sock_unnotify(nni_sock *sock, nni_notify *notify)
 	NNI_FREE_STRUCT(notify);
 }
 
-
 nni_mtx *
 nni_sock_mtx(nni_sock *sock)
 {
 	return (&sock->s_mx);
 }
-
 
 static nni_msg *
 nni_sock_nullfilter(void *arg, nni_msg *mp)
@@ -245,7 +230,6 @@ nni_sock_nullfilter(void *arg, nni_msg *mp)
 	NNI_ARG_UNUSED(arg);
 	return (mp);
 }
-
 
 static int
 nni_sock_nullgetopt(void *arg, int num, void *data, size_t *szp)
@@ -257,7 +241,6 @@ nni_sock_nullgetopt(void *arg, int num, void *data, size_t *szp)
 	return (NNG_ENOTSUP);
 }
 
-
 static int
 nni_sock_nullsetopt(void *arg, int num, const void *data, size_t sz)
 {
@@ -268,13 +251,11 @@ nni_sock_nullsetopt(void *arg, int num, const void *data, size_t sz)
 	return (NNG_ENOTSUP);
 }
 
-
 static void
 nni_sock_nullop(void *arg)
 {
 	NNI_ARG_UNUSED(arg);
 }
-
 
 static int
 nni_sock_nullstartpipe(void *arg)
@@ -284,25 +265,24 @@ nni_sock_nullstartpipe(void *arg)
 	return (0);
 }
 
-
 static void *
 nni_sock_ctor(uint32_t id)
 {
-	int rv;
+	int       rv;
 	nni_sock *sock;
 
 	if ((sock = NNI_ALLOC_STRUCT(sock)) == NULL) {
 		return (NULL);
 	}
 	// s_protocol, s_peer, and s_flags undefined as yet.
-	sock->s_linger = 0;
-	sock->s_sndtimeo = -1;
-	sock->s_rcvtimeo = -1;
-	sock->s_closing = 0;
-	sock->s_reconn = NNI_SECOND;
+	sock->s_linger    = 0;
+	sock->s_sndtimeo  = -1;
+	sock->s_rcvtimeo  = -1;
+	sock->s_closing   = 0;
+	sock->s_reconn    = NNI_SECOND;
 	sock->s_reconnmax = 0;
-	sock->s_rcvmaxsz = 1024 * 1024; // 1 MB by default
-	sock->s_id = id;
+	sock->s_rcvmaxsz  = 1024 * 1024; // 1 MB by default
+	sock->s_id        = id;
 
 	nni_pipe_sock_list_init(&sock->s_pipes);
 
@@ -343,7 +323,6 @@ fail:
 	return (NULL);
 }
 
-
 static void
 nni_sock_dtor(void *ptr)
 {
@@ -351,12 +330,12 @@ nni_sock_dtor(void *ptr)
 
 	// Close any open notification pipes.
 	if (sock->s_recv_fd.sn_init) {
-		nni_plat_pipe_close(sock->s_recv_fd.sn_wfd,
-		    sock->s_recv_fd.sn_rfd);
+		nni_plat_pipe_close(
+		    sock->s_recv_fd.sn_wfd, sock->s_recv_fd.sn_rfd);
 	}
 	if (sock->s_send_fd.sn_init) {
-		nni_plat_pipe_close(sock->s_send_fd.sn_wfd,
-		    sock->s_send_fd.sn_rfd);
+		nni_plat_pipe_close(
+		    sock->s_send_fd.sn_wfd, sock->s_send_fd.sn_rfd);
 	}
 
 	// The protocol needs to clean up its state.
@@ -373,7 +352,6 @@ nni_sock_dtor(void *ptr)
 	NNI_FREE_STRUCT(sock);
 }
 
-
 int
 nni_sock_sys_init(void)
 {
@@ -384,7 +362,6 @@ nni_sock_sys_init(void)
 	return (rv);
 }
 
-
 void
 nni_sock_sys_fini(void)
 {
@@ -392,17 +369,16 @@ nni_sock_sys_fini(void)
 	nni_socks = NULL;
 }
 
-
 // nn_sock_open creates the underlying socket.
 int
 nni_sock_open(nni_sock **sockp, uint16_t pnum)
 {
-	nni_sock *sock;
-	nni_proto *proto;
-	int rv;
+	nni_sock *          sock;
+	nni_proto *         proto;
+	int                 rv;
 	nni_proto_sock_ops *sops;
 	nni_proto_pipe_ops *pops;
-	uint32_t sockid;
+	uint32_t            sockid;
 
 	if ((rv = nni_init()) != 0) {
 		return (rv);
@@ -418,8 +394,8 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 
 	// We make a copy of the protocol operations.
 	sock->s_protocol = proto->proto_self;
-	sock->s_peer = proto->proto_peer;
-	sock->s_flags = proto->proto_flags;
+	sock->s_peer     = proto->proto_peer;
+	sock->s_flags    = proto->proto_flags;
 	sock->s_sock_ops = *proto->proto_sock_ops;
 
 	sops = &sock->s_sock_ops;
@@ -442,7 +418,7 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 		sops->sock_open = nni_sock_nullop;
 	}
 	sock->s_pipe_ops = *proto->proto_pipe_ops;
-	pops = &sock->s_pipe_ops;
+	pops             = &sock->s_pipe_ops;
 	if (pops->pipe_start == NULL) {
 		pops->pipe_start = nni_sock_nullstartpipe;
 	}
@@ -461,7 +437,6 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	return (0);
 }
 
-
 // nni_sock_shutdown shuts down the socket; after this point no further
 // access to the socket will function, and any threads blocked in entry
 // points will be woken (and the functions they are blocked in will return
@@ -470,8 +445,8 @@ int
 nni_sock_shutdown(nni_sock *sock)
 {
 	nni_pipe *pipe;
-	nni_ep *ep;
-	nni_time linger;
+	nni_ep *  ep;
+	nni_time  linger;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
@@ -566,7 +541,6 @@ nni_sock_shutdown(nni_sock *sock)
 	return (0);
 }
 
-
 // nni_sock_ep_add adds a newly created endpoint to the socket.  The
 // caller must hold references on the sock and the ep, and not be holding
 // the socket lock.  The ep acquires a reference against the sock,
@@ -586,7 +560,6 @@ nni_sock_ep_add(nni_sock *sock, nni_ep *ep)
 	return (0);
 }
 
-
 void
 nni_sock_ep_remove(nni_sock *sock, nni_ep *ep)
 {
@@ -601,7 +574,6 @@ nni_sock_ep_remove(nni_sock *sock, nni_ep *ep)
 	nni_list_remove(&sock->s_eps, ep);
 	nni_mtx_unlock(&sock->s_mx);
 }
-
 
 // nni_sock_close shuts down the socket, then releases any resources
 // associated with it.  It is a programmer error to reference the socket
@@ -636,7 +608,6 @@ nni_sock_close(nni_sock *sock)
 	nni_objhash_unref(nni_socks, sock->s_id);
 	nni_objhash_unref_wait(nni_socks, sock->s_id);
 }
-
 
 int
 nni_sock_sendmsg(nni_sock *sock, nni_msg *msg, nni_time expire)
@@ -682,11 +653,10 @@ nni_sock_sendmsg(nni_sock *sock, nni_msg *msg, nni_time expire)
 	return (rv);
 }
 
-
 int
 nni_sock_recvmsg(nni_sock *sock, nni_msg **msgp, nni_time expire)
 {
-	int rv;
+	int      rv;
 	nni_msg *msg;
 
 	nni_mtx_lock(&sock->s_mx);
@@ -722,7 +692,6 @@ nni_sock_recvmsg(nni_sock *sock, nni_msg **msgp, nni_time expire)
 	return (0);
 }
 
-
 // nni_sock_protocol returns the socket's 16-bit protocol number.
 uint16_t
 nni_sock_proto(nni_sock *sock)
@@ -730,13 +699,11 @@ nni_sock_proto(nni_sock *sock)
 	return (sock->s_protocol);
 }
 
-
 uint16_t
 nni_sock_peer(nni_sock *sock)
 {
 	return (sock->s_peer);
 }
-
 
 nni_duration
 nni_sock_linger(nni_sock *sock)
@@ -744,13 +711,11 @@ nni_sock_linger(nni_sock *sock)
 	return (sock->s_linger);
 }
 
-
 size_t
 nni_sock_rcvmaxsz(nni_sock *sock)
 {
 	return (sock->s_rcvmaxsz);
 }
-
 
 void
 nni_sock_reconntimes(nni_sock *sock, nni_duration *rcur, nni_duration *rmax)
@@ -762,12 +727,11 @@ nni_sock_reconntimes(nni_sock *sock, nni_duration *rcur, nni_duration *rmax)
 	nni_mtx_unlock(&sock->s_mx);
 }
 
-
 int
 nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 {
 	nni_ep *ep;
-	int rv;
+	int     rv;
 
 	if ((rv = nni_ep_create(&ep, sock, addr, NNI_EP_MODE_DIAL)) != 0) {
 		return (rv);
@@ -782,12 +746,11 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	return (rv);
 }
 
-
 int
 nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 {
 	nni_ep *ep;
-	int rv;
+	int     rv;
 
 	if ((rv = nni_ep_create(&ep, sock, addr, NNI_EP_MODE_LISTEN)) != 0) {
 		return (rv);
@@ -802,20 +765,17 @@ nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	return (rv);
 }
 
-
 void
 nni_sock_recverr(nni_sock *sock, int err)
 {
 	sock->s_recverr = err;
 }
 
-
 void
 nni_sock_senderr(nni_sock *sock, int err)
 {
 	sock->s_senderr = err;
 }
-
 
 int
 nni_sock_setopt(nni_sock *sock, int opt, const void *val, size_t size)
@@ -855,14 +815,13 @@ nni_sock_setopt(nni_sock *sock, int opt, const void *val, size_t size)
 		rv = nni_setopt_buf(sock->s_urq, val, size);
 		break;
 	case NNG_OPT_RCVMAXSZ:
-		rv = nni_setopt_size(&sock->s_rcvmaxsz, val, size, 0,
-			NNI_MAXSZ);
+		rv = nni_setopt_size(
+		    &sock->s_rcvmaxsz, val, size, 0, NNI_MAXSZ);
 		break;
 	}
 	nni_mtx_unlock(&sock->s_mx);
 	return (rv);
 }
-
 
 int
 nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
@@ -905,12 +864,12 @@ nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 		rv = nni_getopt_size(&sock->s_rcvmaxsz, val, sizep);
 		break;
 	case NNG_OPT_SNDFD:
-		rv = nni_getopt_fd(sock, &sock->s_send_fd, NNG_EV_CAN_SND,
-			val, sizep);
+		rv = nni_getopt_fd(
+		    sock, &sock->s_send_fd, NNG_EV_CAN_SND, val, sizep);
 		break;
 	case NNG_OPT_RCVFD:
-		rv = nni_getopt_fd(sock, &sock->s_recv_fd, NNG_EV_CAN_RCV,
-			val, sizep);
+		rv = nni_getopt_fd(
+		    sock, &sock->s_recv_fd, NNG_EV_CAN_RCV, val, sizep);
 		break;
 	}
 	nni_mtx_unlock(&sock->s_mx);

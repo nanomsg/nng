@@ -12,14 +12,14 @@
 
 #ifdef PLATFORM_POSIX_RANDOM
 
-#include <time.h>
 #include <errno.h>
-#include <stdlib.h>
-#include <sys/types.h>
-#include <unistd.h>
-#include <sys/utsname.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/utsname.h>
+#include <time.h>
+#include <unistd.h>
 
 #ifdef NNG_USE_GETRANDOM
 #include <linux/random.h>
@@ -34,17 +34,17 @@
 // really really you want to have more data than this available, especially
 // for cryptographic applications.
 struct nni_plat_prng_x {
-	nni_time	now;
-	pid_t		pid;
-	uid_t		uid;
-	struct utsname	uts;
+	nni_time       now;
+	pid_t          pid;
+	uid_t          uid;
+	struct utsname uts;
 };
 
 void
 nni_plat_seed_prng(void *buf, size_t bufsz)
 {
 	struct nni_plat_prng_x x;
-	int i;
+	int                    i;
 
 	memset(buf, 0, bufsz);
 
@@ -75,21 +75,20 @@ nni_plat_seed_prng(void *buf, size_t bufsz)
 	// limited of systems, we have at least *some* level of randomness.
 	// The mixing is done in a way to avoid diminishing entropy we may
 	// have already collected.
-	memset(&x, 0, sizeof (x)); // satisfy valgrind
+	memset(&x, 0, sizeof(x)); // satisfy valgrind
 	x.now = nni_clock();
 	x.pid = getpid();
 	x.uid = getuid();
 	uname(&x.uts);
 
-	for (i = 0; (i < bufsz) && (i < sizeof (x)); i++) {
+	for (i = 0; (i < bufsz) && (i < sizeof(x)); i++) {
 		((uint8_t *) buf)[i] ^= ((uint8_t *) &x)[i];
 	}
 }
-
 
 #else
 
 // Suppress empty symbols warnings in ranlib.
 int nni_posix_rand_not_used = 0;
 
-#endif  // PLATFORM_POSIX_RANDOM
+#endif // PLATFORM_POSIX_RANDOM

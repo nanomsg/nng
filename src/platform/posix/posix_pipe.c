@@ -21,14 +21,14 @@
 
 // Linux eventfd.  This is lighter weight than pipes, and has better semantics
 // to boot.  This is far better than say epoll().
-#include <sys/eventfd.h>
 #include <fcntl.h>
+#include <sys/eventfd.h>
 #include <unistd.h>
 
 #ifdef EFD_CLOEXEC
-#define NNI_EVENTFD_FLAGS	EFD_CLOEXEC
+#define NNI_EVENTFD_FLAGS EFD_CLOEXEC
 #else
-#define NNI_EVENTFD_FLAGS	0
+#define NNI_EVENTFD_FLAGS 0
 #endif
 
 int
@@ -46,24 +46,21 @@ nni_plat_pipe_open(int *wfd, int *rfd)
 	return (0);
 }
 
-
 void
 nni_plat_pipe_raise(int wfd)
 {
 	uint64_t one = 1;
 
-	(void) write(wfd, &one, sizeof (one));
+	(void) write(wfd, &one, sizeof(one));
 }
-
 
 void
 nni_plat_pipe_clear(int rfd)
 {
 	uint64_t val;
 
-	(void) read(rfd, &val, sizeof (val));
+	(void) read(rfd, &val, sizeof(val));
 }
-
 
 void
 nni_plat_pipe_close(int wfd, int rfd)
@@ -72,11 +69,10 @@ nni_plat_pipe_close(int wfd, int rfd)
 	(void) close(wfd);
 }
 
-
 #else // NNG_USE_EVENTFD
 
-#include <unistd.h>
 #include <fcntl.h>
+#include <unistd.h>
 
 int
 nni_plat_pipe_open(int *wfd, int *rfd)
@@ -97,7 +93,6 @@ nni_plat_pipe_open(int *wfd, int *rfd)
 	return (0);
 }
 
-
 void
 nni_plat_pipe_raise(int wfd)
 {
@@ -106,22 +101,20 @@ nni_plat_pipe_raise(int wfd)
 	(void) write(wfd, &c, 1);
 }
 
-
 void
 nni_plat_pipe_clear(int rfd)
 {
 	char buf[32];
-	int rv;
+	int  rv;
 
 	for (;;) {
 		// Completely drain the pipe, but don't wait.  This coalesces
 		// events somewhat.
-		if (read(rfd, buf, sizeof (buf)) <= 0) {
+		if (read(rfd, buf, sizeof(buf)) <= 0) {
 			return;
 		}
 	}
 }
-
 
 void
 nni_plat_pipe_close(int wfd, int rfd)
@@ -129,7 +122,6 @@ nni_plat_pipe_close(int wfd, int rfd)
 	close(wfd);
 	close(rfd);
 }
-
 
 #endif // NNG_USE_EVENTFD
 

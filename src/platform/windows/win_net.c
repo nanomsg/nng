@@ -14,36 +14,33 @@
 #include <stdio.h>
 
 static LPFN_CONNECTEX nni_win_connectex;
-static LPFN_ACCEPTEX nni_win_acceptex;
-
+static LPFN_ACCEPTEX  nni_win_acceptex;
 
 struct nni_plat_tcp_pipe {
-	SOCKET		s;
-	nni_win_event	recv_evt;
-	nni_win_event	send_evt;
-	WSAOVERLAPPED	recv_olpd;
-	WSAOVERLAPPED	send_olpd;
+	SOCKET        s;
+	nni_win_event recv_evt;
+	nni_win_event send_evt;
+	WSAOVERLAPPED recv_olpd;
+	WSAOVERLAPPED send_olpd;
 };
 
-
 struct nni_plat_tcp_ep {
-	SOCKET		s;
-	nni_win_event	evt;
-	WSAOVERLAPPED	olpd;
+	SOCKET        s;
+	nni_win_event evt;
+	WSAOVERLAPPED olpd;
 
 	// We have to lookup some function pointers using ioctls.  Winsock,
 	// gotta love it.
-	LPFN_CONNECTEX	connectex;
-	LPFN_ACCEPTEX	acceptex;
+	LPFN_CONNECTEX connectex;
+	LPFN_ACCEPTEX  acceptex;
 };
-
 
 // Windows has infinite numbers of error codes it seems.
 static struct {
-	int	wsa_err;
-	int	nng_err;
-}
-nni_plat_wsa_errnos[] = {
+	int wsa_err;
+	int nng_err;
+} nni_plat_wsa_errnos[] = {
+	// clang-format off
 	{ WSA_INVALID_HANDLE,	  NNG_ECLOSED			       },
 	{ WSA_NOT_ENOUGH_MEMORY,  NNG_ENOMEM			       },
 	{ WSA_INVALID_PARAMETER,  NNG_EINVAL			       },
@@ -106,6 +103,7 @@ nni_plat_wsa_errnos[] = {
 	// Eliding all the QoS related errors.
 	// Must be Last!!
 	{		       0,				     0 },
+	// clang-format on	
 };
 
 

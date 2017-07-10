@@ -16,27 +16,26 @@ static void nni_timer_loop(void *);
 
 // XXX: replace this timer list with a minHeap based priority queue.
 struct nni_timer {
-	nni_mtx		t_mx;
-	nni_cv		t_cv;
-	nni_list	t_entries;
-	nni_thr		t_thr;
-	int		t_close;
-	int		t_waiting;
-	nni_timer_node *t_active;       // Must never ever be dereferenced!
+	nni_mtx         t_mx;
+	nni_cv          t_cv;
+	nni_list        t_entries;
+	nni_thr         t_thr;
+	int             t_close;
+	int             t_waiting;
+	nni_timer_node *t_active; // Must never ever be dereferenced!
 };
 
-typedef struct nni_timer   nni_timer;
+typedef struct nni_timer nni_timer;
 
 static nni_timer nni_global_timer;
-
 
 int
 nni_timer_sys_init(void)
 {
-	int rv;
+	int        rv;
 	nni_timer *timer = &nni_global_timer;
 
-	memset(timer, 0, sizeof (*timer));
+	memset(timer, 0, sizeof(*timer));
 	NNI_LIST_INIT(&timer->t_entries, nni_timer_node, t_node);
 	timer->t_close = 0;
 
@@ -49,7 +48,6 @@ nni_timer_sys_init(void)
 	nni_thr_run(&timer->t_thr);
 	return (0);
 }
-
 
 void
 nni_timer_sys_fini(void)
@@ -66,21 +64,18 @@ nni_timer_sys_fini(void)
 	nni_mtx_fini(&timer->t_mx);
 }
 
-
 void
 nni_timer_init(nni_timer_node *node, nni_cb cb, void *arg)
 {
-	node->t_cb = cb;
+	node->t_cb  = cb;
 	node->t_arg = arg;
 }
-
 
 void
 nni_timer_fini(nni_timer_node *node)
 {
 	NNI_ARG_UNUSED(node);
 }
-
 
 void
 nni_timer_cancel(nni_timer_node *node)
@@ -98,13 +93,12 @@ nni_timer_cancel(nni_timer_node *node)
 	nni_mtx_unlock(&timer->t_mx);
 }
 
-
 void
 nni_timer_schedule(nni_timer_node *node, nni_time when)
 {
-	nni_timer *timer = &nni_global_timer;
+	nni_timer *     timer = &nni_global_timer;
 	nni_timer_node *srch;
-	int wake = 1;
+	int             wake = 1;
 
 	nni_mtx_lock(&timer->t_mx);
 	node->t_expire = when;
@@ -129,12 +123,11 @@ nni_timer_schedule(nni_timer_node *node, nni_time when)
 	nni_mtx_unlock(&timer->t_mx);
 }
 
-
 static void
 nni_timer_loop(void *arg)
 {
-	nni_timer *timer = arg;
-	nni_time now;
+	nni_timer *     timer = arg;
+	nni_time        now;
 	nni_timer_node *node;
 
 	for (;;) {

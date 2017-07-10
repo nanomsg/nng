@@ -22,15 +22,15 @@ struct nni_cv {
 };
 
 struct nni_thr {
-	nni_plat_thr	thr;
-	nni_plat_mtx	mtx;
-	nni_plat_cv	cv;
-	nni_thr_func	fn;
-	void *		arg;
-	int		start;
-	int		stop;
-	int		done;
-	int		init;
+	nni_plat_thr thr;
+	nni_plat_mtx mtx;
+	nni_plat_cv  cv;
+	nni_thr_func fn;
+	void *       arg;
+	int          start;
+	int          stop;
+	int          done;
+	int          init;
 };
 
 // nni_mtx_init initializes the mutex.  (Win32 programmers take note;

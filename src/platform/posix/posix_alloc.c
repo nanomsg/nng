@@ -20,14 +20,12 @@ nni_alloc(size_t sz)
 	return (calloc(1, sz));
 }
 
-
 void
 nni_free(void *ptr, size_t size)
 {
 	NNI_ARG_UNUSED(size);
 	free(ptr);
 }
-
 
 #else
 

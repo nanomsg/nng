@@ -7,9 +7,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdio.h>
 
 #include "core/nng_impl.h"
 
@@ -17,35 +17,35 @@
 
 // Message chunk, internal to the message implementation.
 typedef struct {
-	size_t		ch_cap;         // allocated size
-	size_t		ch_len;         // length in use
-	uint8_t *	ch_buf;         // underlying buffer
-	uint8_t *	ch_ptr;         // pointer to actual data
+	size_t   ch_cap; // allocated size
+	size_t   ch_len; // length in use
+	uint8_t *ch_buf; // underlying buffer
+	uint8_t *ch_ptr; // pointer to actual data
 } nni_chunk;
 
 // Underlying message structure.
 struct nng_msg {
-	nni_chunk	m_header;
-	nni_chunk	m_body;
-	nni_time	m_expire;       // usec
-	nni_list	m_options;
+	nni_chunk m_header;
+	nni_chunk m_body;
+	nni_time  m_expire; // usec
+	nni_list  m_options;
 };
 
 typedef struct {
-	int		mo_num;
-	size_t		mo_sz;
-	void *		mo_val;
-	nni_list_node	mo_node;
+	int           mo_num;
+	size_t        mo_sz;
+	void *        mo_val;
+	nni_list_node mo_node;
 } nni_msgopt;
 
 static void
 nni_chunk_dump(const nni_chunk *chunk, char *prefix)
 {
-	size_t i, j;
+	size_t  i, j;
 	uint8_t x;
-	char buf[128];
+	char    buf[128];
 
-	(void) snprintf(buf, sizeof (buf),
+	(void) snprintf(buf, sizeof(buf),
 	    " %s (cap %d, len %d, offset %d ptr %p):", prefix,
 	    (int) chunk->ch_cap, (int) chunk->ch_len,
 	    (int) (chunk->ch_ptr - chunk->ch_buf), chunk->ch_ptr);
@@ -59,13 +59,13 @@ nni_chunk_dump(const nni_chunk *chunk, char *prefix)
 				nni_println(buf);
 				j = 0;
 			}
-			snprintf(buf, sizeof (buf), " %4x: ", (unsigned) i);
+			snprintf(buf, sizeof(buf), " %4x: ", (unsigned) i);
 			j += strlen(buf);
 		}
 		buf[j++] = ' ';
-		x = (chunk->ch_ptr[i] >> 4);
+		x        = (chunk->ch_ptr[i] >> 4);
 		buf[j++] = x > 9 ? ('A' + (x - 10)) : '0' + x;
-		x = (chunk->ch_ptr[i] & 0x0f);
+		x        = (chunk->ch_ptr[i] & 0x0f);
 		buf[j++] = x > 9 ? ('A' + (x - 10)) : '0' + x;
 	}
 	if (j > 0) {
@@ -74,19 +74,17 @@ nni_chunk_dump(const nni_chunk *chunk, char *prefix)
 	}
 }
 
-
 void
 nni_msg_dump(const char *banner, const nni_msg *msg)
 {
 	char buf[128];
 
-	(void) snprintf(buf, sizeof (buf), "--- %s BEGIN ---", banner);
+	(void) snprintf(buf, sizeof(buf), "--- %s BEGIN ---", banner);
 	nni_println(buf);
 	nni_chunk_dump(&msg->m_header, "HEADER");
 	nni_chunk_dump(&msg->m_body, "BODY");
 	nni_println("--- END ---");
 }
-
 
 // nni_chunk_grow increases the underlying space for a chunk.  It ensures
 // that the desired amount of trailing space (including the length)
@@ -101,7 +99,7 @@ nni_msg_dump(const char *banner, const nni_msg *msg)
 static int
 nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 {
-	size_t headroom = 0;
+	size_t   headroom = 0;
 	uint8_t *newbuf;
 
 	// We assume that if the pointer is a valid pointer, and inside
@@ -115,7 +113,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
-		headroom = (size_t) (ch->ch_ptr - ch->ch_buf);
+		headroom = (size_t)(ch->ch_ptr - ch->ch_buf);
 		if (headwanted < headroom) {
 			headwanted = headroom; // Never shrink this.
 		}
@@ -152,7 +150,6 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 	return (0);
 }
 
-
 static void
 nni_chunk_free(nni_chunk *ch)
 {
@@ -165,7 +162,6 @@ nni_chunk_free(nni_chunk *ch)
 	ch->ch_cap = 0;
 }
 
-
 // nni_chunk_trunc truncates bytes from the end of the chunk.
 static int
 nni_chunk_trunc(nni_chunk *ch, size_t len)
@@ -176,7 +172,6 @@ nni_chunk_trunc(nni_chunk *ch, size_t len)
 	ch->ch_len -= len;
 	return (0);
 }
-
 
 // nni_chunk_trim removes bytes from the beginning of the chunk.
 static int
@@ -193,7 +188,6 @@ nni_chunk_trim(nni_chunk *ch, size_t len)
 	return (0);
 }
 
-
 // nni_chunk_dup allocates storage for a new chunk, and copies
 // the contents of the source to the destination.  The new chunk will
 // have the same size, headroom, and capacity as the original.
@@ -209,7 +203,6 @@ nni_chunk_dup(nni_chunk *dst, const nni_chunk *src)
 	memcpy(dst->ch_ptr, src->ch_ptr, dst->ch_len);
 	return (0);
 }
-
 
 // nni_chunk_append appends the data to the chunk, growing as necessary.
 // If the data pointer is NULL, then the chunk data region is allocated,
@@ -235,7 +228,6 @@ nni_chunk_append(nni_chunk *ch, const void *data, size_t len)
 	return (0);
 }
 
-
 // nni_chunk_prepend prepends data to the chunk, as efficiently as possible.
 // If the data pointer is NULL, then no data is actually copied, but the
 // data region will have "grown" in the beginning, with uninitialized data.
@@ -250,7 +242,7 @@ nni_chunk_prepend(nni_chunk *ch, const void *data, size_t len)
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap)) &&
-	    (len <= (size_t) (ch->ch_ptr - ch->ch_buf))) {
+	    (len <= (size_t)(ch->ch_ptr - ch->ch_buf))) {
 		// There is already enough room at the beginning.
 		ch->ch_ptr -= len;
 	} else if ((ch->ch_len + len) <= ch->ch_cap) {
@@ -272,12 +264,11 @@ nni_chunk_prepend(nni_chunk *ch, const void *data, size_t len)
 	return (0);
 }
 
-
 int
 nni_msg_alloc(nni_msg **mp, size_t sz)
 {
 	nni_msg *m;
-	int rv;
+	int      rv;
 
 	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
@@ -295,7 +286,7 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 	// to allow for inlining backtraces, etc.  We also allow the
 	// amount of space at the end for the same reason.  Large aligned
 	// allocations are unmolested to avoid excessive overallocation.
-	if ((sz < 1024) || ((sz & (sz-1)) != 0)) {
+	if ((sz < 1024) || ((sz & (sz - 1)) != 0)) {
 		rv = nni_chunk_grow(&m->m_body, sz + 32, 32);
 	} else {
 		rv = nni_chunk_grow(&m->m_body, sz, 0);
@@ -314,21 +305,19 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 	return (0);
 }
 
-
 int
 nni_msg_dup(nni_msg **dup, const nni_msg *src)
 {
-	nni_msg *m;
+	nni_msg *   m;
 	nni_msgopt *mo;
 	nni_msgopt *newmo;
-	int rv;
+	int         rv;
 
 	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	memset(m, 0, sizeof (*m));
+	memset(m, 0, sizeof(*m));
 	NNI_LIST_INIT(&m->m_options, nni_msgopt, mo_node);
-
 
 	if ((rv = nni_chunk_dup(&m->m_header, &src->m_header)) != 0) {
 		NNI_FREE_STRUCT(m);
@@ -341,13 +330,13 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 	}
 
 	NNI_LIST_FOREACH (&src->m_options, mo) {
-		newmo = nni_alloc(sizeof (*newmo) + mo->mo_sz);
+		newmo = nni_alloc(sizeof(*newmo) + mo->mo_sz);
 		if (newmo == NULL) {
 			nni_msg_free(m);
 			return (NNG_ENOMEM);
 		}
-		newmo->mo_val = ((char *) newmo + sizeof (*newmo));
-		newmo->mo_sz = mo->mo_sz;
+		newmo->mo_val = ((char *) newmo + sizeof(*newmo));
+		newmo->mo_sz  = mo->mo_sz;
 		newmo->mo_num = mo->mo_num;
 		memcpy(newmo->mo_val, mo->mo_val, mo->mo_sz);
 		nni_list_append(&m->m_options, newmo);
@@ -356,7 +345,6 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 	*dup = m;
 	return (0);
 }
-
 
 void
 nni_msg_free(nni_msg *m)
@@ -368,12 +356,11 @@ nni_msg_free(nni_msg *m)
 		nni_chunk_free(&m->m_body);
 		while ((mo = nni_list_first(&m->m_options)) != NULL) {
 			nni_list_remove(&m->m_options, mo);
-			nni_free(mo, sizeof (*mo) + mo->mo_sz);
+			nni_free(mo, sizeof(*mo) + mo->mo_sz);
 		}
 		NNI_FREE_STRUCT(m);
 	}
 }
-
 
 int
 nni_msg_setopt(nni_msg *m, int opt, const void *val, size_t sz)
@@ -392,21 +379,20 @@ nni_msg_setopt(nni_msg *m, int opt, const void *val, size_t sz)
 			break;
 		}
 	}
-	if ((newmo = nni_alloc(sizeof (*newmo) + sz)) == NULL) {
+	if ((newmo = nni_alloc(sizeof(*newmo) + sz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	newmo->mo_val = ((char *) newmo + sizeof (*newmo));
-	newmo->mo_sz = sz;
+	newmo->mo_val = ((char *) newmo + sizeof(*newmo));
+	newmo->mo_sz  = sz;
 	newmo->mo_num = opt;
 	memcpy(newmo->mo_val, val, sz);
 	if (oldmo != NULL) {
 		nni_list_remove(&m->m_options, oldmo);
-		nni_free(oldmo, sizeof (*oldmo) + oldmo->mo_sz);
+		nni_free(oldmo, sizeof(*oldmo) + oldmo->mo_sz);
 	}
 	nni_list_append(&m->m_options, newmo);
 	return (0);
 }
-
 
 int
 nni_msg_getopt(nni_msg *m, int opt, void *val, size_t *szp)
@@ -427,7 +413,6 @@ nni_msg_getopt(nni_msg *m, int opt, void *val, size_t *szp)
 	return (NNG_ENOTSUP);
 }
 
-
 int
 nni_msg_realloc(nni_msg *m, size_t sz)
 {
@@ -445,13 +430,11 @@ nni_msg_realloc(nni_msg *m, size_t sz)
 	return (0);
 }
 
-
 void *
 nni_msg_header(nni_msg *m)
 {
 	return (m->m_header.ch_ptr);
 }
-
 
 size_t
 nni_msg_header_len(nni_msg *m)
@@ -459,13 +442,11 @@ nni_msg_header_len(nni_msg *m)
 	return (m->m_header.ch_len);
 }
 
-
 void *
 nni_msg_body(nni_msg *m)
 {
 	return (m->m_body.ch_ptr);
 }
-
 
 size_t
 nni_msg_len(nni_msg *m)
@@ -473,13 +454,11 @@ nni_msg_len(nni_msg *m)
 	return (m->m_body.ch_len);
 }
 
-
 int
 nni_msg_append(nni_msg *m, const void *data, size_t len)
 {
 	return (nni_chunk_append(&m->m_body, data, len));
 }
-
 
 int
 nni_msg_prepend(nni_msg *m, const void *data, size_t len)
@@ -487,13 +466,11 @@ nni_msg_prepend(nni_msg *m, const void *data, size_t len)
 	return (nni_chunk_prepend(&m->m_body, data, len));
 }
 
-
 int
 nni_msg_trim(nni_msg *m, size_t len)
 {
 	return (nni_chunk_trim(&m->m_body, len));
 }
-
 
 int
 nni_msg_trunc(nni_msg *m, size_t len)
@@ -501,13 +478,11 @@ nni_msg_trunc(nni_msg *m, size_t len)
 	return (nni_chunk_trunc(&m->m_body, len));
 }
 
-
 int
 nni_msg_append_header(nni_msg *m, const void *data, size_t len)
 {
 	return (nni_chunk_append(&m->m_header, data, len));
 }
-
 
 int
 nni_msg_prepend_header(nni_msg *m, const void *data, size_t len)
@@ -515,13 +490,11 @@ nni_msg_prepend_header(nni_msg *m, const void *data, size_t len)
 	return (nni_chunk_prepend(&m->m_header, data, len));
 }
 
-
 int
 nni_msg_trim_header(nni_msg *m, size_t len)
 {
 	return (nni_chunk_trim(&m->m_header, len));
 }
-
 
 int
 nni_msg_trunc_header(nni_msg *m, size_t len)

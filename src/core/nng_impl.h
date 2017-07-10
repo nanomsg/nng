@@ -44,9 +44,9 @@
 #include "core/transport.h"
 
 // These have to come after the others - particularly transport.h
+#include "core/endpt.h"
 #include "core/event.h"
 #include "core/pipe.h"
 #include "core/socket.h"
-#include "core/endpt.h"
 
-#endif  // CORE_NNG_IMPL_H
+#endif // CORE_NNG_IMPL_H

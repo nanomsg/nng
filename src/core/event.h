@@ -14,21 +14,21 @@
 #include "core/list.h"
 
 struct nng_event {
-	int		e_type;
-	nni_sock *	e_sock;
-	nni_ep *	e_ep;
-	nni_pipe *	e_pipe;
+	int       e_type;
+	nni_sock *e_sock;
+	nni_ep *  e_ep;
+	nni_pipe *e_pipe;
 };
 
 struct nng_notify {
 	nng_notify_func n_func;
-	void *		n_arg;
-	int		n_type;
-	nni_sock *	n_sock;
-	nni_aio		n_aio;
+	void *          n_arg;
+	int             n_type;
+	nni_sock *      n_sock;
+	nni_aio         n_aio;
 };
 
-extern int nni_ev_init(nni_event *, int, nni_sock *);
+extern int  nni_ev_init(nni_event *, int, nni_sock *);
 extern void nni_ev_fini(nni_event *);
 
 #endif // CORE_EVENT_H

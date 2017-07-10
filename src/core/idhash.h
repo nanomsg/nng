@@ -22,22 +22,22 @@
 // use table sizes that are powers of two.  Note that hash items
 // must be non-NULL.  The table is locked.
 
-typedef struct nni_idhash		nni_idhash;
-typedef struct nni_idhash_entry		nni_idhash_entry;
+typedef struct nni_idhash       nni_idhash;
+typedef struct nni_idhash_entry nni_idhash_entry;
 
 // The details of the nni_idhash are "private".  But they let us inline
 // this into structures.
 struct nni_idhash {
-	size_t			ih_cap;
-	size_t			ih_count;
-	size_t			ih_load;
-	size_t			ih_minload; // considers placeholders
-	size_t			ih_maxload;
-	uint32_t		ih_walkers;
-	uint32_t		ih_minval;
-	uint32_t		ih_maxval;
-	uint32_t		ih_dynval;
-	nni_idhash_entry *	ih_entries;
+	size_t            ih_cap;
+	size_t            ih_count;
+	size_t            ih_load;
+	size_t            ih_minload; // considers placeholders
+	size_t            ih_maxload;
+	uint32_t          ih_walkers;
+	uint32_t          ih_minval;
+	uint32_t          ih_maxval;
+	uint32_t          ih_dynval;
+	nni_idhash_entry *ih_entries;
 };
 
 // nni_idhash_walkfn is called when walking a hash table.  If the
@@ -48,17 +48,17 @@ struct nni_idhash {
 // Note that the walkfn must not attempt to change the hash table.
 // The user must provide any locking needed.
 typedef int (*nni_idhash_walkfn)(void *, uint32_t, void *);
-extern int nni_idhash_init(nni_idhash *);
+extern int  nni_idhash_init(nni_idhash *);
 extern void nni_idhash_fini(nni_idhash *);
 extern void nni_idhash_reclaim(nni_idhash *);
 extern void nni_idhash_set_limits(nni_idhash *, uint32_t, uint32_t, uint32_t);
-extern int nni_idhash_create(nni_idhash **);
+extern int  nni_idhash_create(nni_idhash **);
 extern void nni_idhash_destroy(nni_idhash *);
-extern int nni_idhash_find(nni_idhash *, uint32_t, void **);
-extern int nni_idhash_remove(nni_idhash *, uint32_t);
-extern int nni_idhash_insert(nni_idhash *, uint32_t, void *);
-extern int nni_idhash_alloc(nni_idhash *, uint32_t *, void *);
+extern int  nni_idhash_find(nni_idhash *, uint32_t, void **);
+extern int  nni_idhash_remove(nni_idhash *, uint32_t);
+extern int  nni_idhash_insert(nni_idhash *, uint32_t, void *);
+extern int  nni_idhash_alloc(nni_idhash *, uint32_t *, void *);
 extern size_t nni_idhash_count(nni_idhash *);
-extern int nni_idhash_walk(nni_idhash *, nni_idhash_walkfn, void *);
+extern int    nni_idhash_walk(nni_idhash *, nni_idhash_walkfn, void *);
 
-#endif  // CORE_IDHASH_H
+#endif // CORE_IDHASH_H

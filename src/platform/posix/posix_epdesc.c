@@ -14,37 +14,36 @@
 #include "platform/posix/posix_pollq.h"
 
 #include <errno.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <poll.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-#include <fcntl.h>
 #include <unistd.h>
-#include <poll.h>
-#include <netdb.h>
 
-#ifdef  SOCK_CLOEXEC
-#define NNI_STREAM_SOCKTYPE	(SOCK_STREAM | SOCK_CLOEXEC)
+#ifdef SOCK_CLOEXEC
+#define NNI_STREAM_SOCKTYPE (SOCK_STREAM | SOCK_CLOEXEC)
 #else
-#define NNI_STREAM_SOCKTYPE	SOCK_STREAM
+#define NNI_STREAM_SOCKTYPE SOCK_STREAM
 #endif
 
 struct nni_posix_epdesc {
-	int			fd;
-	nni_list		connectq;
-	nni_list		acceptq;
-	nni_posix_pollq_node	node;
-	nni_posix_pollq *	pq;
+	int                     fd;
+	nni_list                connectq;
+	nni_list                acceptq;
+	nni_posix_pollq_node    node;
+	nni_posix_pollq *       pq;
 	struct sockaddr_storage locaddr;
 	struct sockaddr_storage remaddr;
-	socklen_t		loclen;
-	socklen_t		remlen;
-	const char *		url;
-	nni_mtx			mtx;
+	socklen_t               loclen;
+	socklen_t               remlen;
+	const char *            url;
+	nni_mtx                 mtx;
 };
-
 
 static void
 nni_posix_epdesc_cancel(nni_aio *aio)
@@ -56,11 +55,10 @@ nni_posix_epdesc_cancel(nni_aio *aio)
 	nni_mtx_unlock(&ed->mtx);
 }
 
-
 static void
 nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
 {
-	nni_posix_epdesc *ed = aio->a_prov_data;
+	nni_posix_epdesc *  ed = aio->a_prov_data;
 	nni_posix_pipedesc *pd;
 
 	// acceptq or connectq.
@@ -78,13 +76,12 @@ nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
 	nni_aio_finish(aio, rv, 0);
 }
 
-
 static void
 nni_posix_epdesc_doconnect(nni_posix_epdesc *ed)
 {
-	nni_aio *aio;
+	nni_aio * aio;
 	socklen_t sz;
-	int rv;
+	int       rv;
 
 	// Note that normally there will only be a single connect AIO...
 	// A socket that is here will have *initiated* with a connect()
@@ -94,7 +91,7 @@ nni_posix_epdesc_doconnect(nni_posix_epdesc *ed)
 	// status of the connection attempt...
 	while ((aio = nni_list_first(&ed->connectq)) != NULL) {
 		rv = -1;
-		sz = sizeof (rv);
+		sz = sizeof(rv);
 		if (getsockopt(ed->fd, SOL_SOCKET, SO_ERROR, &rv, &sz) < 0) {
 			rv = errno;
 		}
@@ -121,24 +118,22 @@ nni_posix_epdesc_doconnect(nni_posix_epdesc *ed)
 	}
 }
 
-
 static void
 nni_posix_epdesc_doaccept(nni_posix_epdesc *ed)
 {
-	nni_aio *aio;
-	int newfd;
+	nni_aio *               aio;
+	int                     newfd;
 	struct sockaddr_storage ss;
-	socklen_t slen;
+	socklen_t               slen;
 
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
-		// We could argue that knowing the remote peer address would
-		// be nice.  But frankly if someone wants it, they can just
-		// do getpeername().
+// We could argue that knowing the remote peer address would
+// be nice.  But frankly if someone wants it, they can just
+// do getpeername().
 
 #ifdef NNG_USE_ACCEPT4
 		newfd = accept4(ed->fd, NULL, NULL, SOCK_CLOEXEC);
-		if ((newfd < 0) &&
-		    ((errno == ENOSYS) || (errno == ENOTSUP))) {
+		if ((newfd < 0) && ((errno == ENOSYS) || (errno == ENOTSUP))) {
 			newfd = accept(ed->fd, NULL, NULL);
 		}
 #else
@@ -172,13 +167,12 @@ nni_posix_epdesc_doaccept(nni_posix_epdesc *ed)
 	}
 }
 
-
 static void
 nni_posix_epdesc_doerror(nni_posix_epdesc *ed)
 {
-	nni_aio *aio;
-	int rv = 1;
-	socklen_t sz = sizeof (rv);
+	nni_aio * aio;
+	int       rv = 1;
+	socklen_t sz = sizeof(rv);
 
 	if (getsockopt(ed->fd, SOL_SOCKET, SO_ERROR, &rv, &sz) < 0) {
 		rv = errno;
@@ -196,11 +190,10 @@ nni_posix_epdesc_doerror(nni_posix_epdesc *ed)
 	}
 }
 
-
 static void
 nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 {
-	nni_aio *aio;
+	nni_aio *           aio;
 	struct sockaddr_un *sun;
 
 	if (ed->fd != -1) {
@@ -220,7 +213,6 @@ nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 	}
 }
 
-
 static void
 nni_posix_epdesc_cb(void *arg)
 {
@@ -234,14 +226,14 @@ nni_posix_epdesc_cb(void *arg)
 	if (ed->node.revents & POLLOUT) {
 		nni_posix_epdesc_doconnect(ed);
 	}
-	if (ed->node.revents & (POLLERR|POLLHUP)) {
+	if (ed->node.revents & (POLLERR | POLLHUP)) {
 		nni_posix_epdesc_doerror(ed);
 	}
 	if (ed->node.revents & POLLNVAL) {
 		nni_posix_epdesc_doclose(ed);
 	}
 	ed->node.revents = 0;
-	ed->node.events = 0;
+	ed->node.events  = 0;
 
 	if (!nni_list_empty(&ed->connectq)) {
 		ed->node.events |= POLLOUT;
@@ -251,7 +243,6 @@ nni_posix_epdesc_cb(void *arg)
 	}
 	nni_mtx_unlock(&ed->mtx);
 }
-
 
 void
 nni_posix_epdesc_close(nni_posix_epdesc *ed)
@@ -263,16 +254,15 @@ nni_posix_epdesc_close(nni_posix_epdesc *ed)
 	nni_mtx_unlock(&ed->mtx);
 }
 
-
 static int
 nni_posix_epdesc_parseaddr(char *pair, char **hostp, uint16_t *portp)
 {
 	char *host, *port, *end;
-	char c;
-	int val;
+	char  c;
+	int   val;
 
 	if (pair[0] == '[') {
-		host = pair+1;
+		host = pair + 1;
 		// IP address enclosed ... for IPv6 usually.
 		if ((end = strchr(host, ']')) == NULL) {
 			return (NNG_EADDRINVAL);
@@ -315,18 +305,17 @@ nni_posix_epdesc_parseaddr(char *pair, char **hostp, uint16_t *portp)
 	return (0);
 }
 
-
 int
 nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 {
-	int len;
+	int                      len;
 	struct sockaddr_storage *ss;
-	int rv;
-	int fd;
+	int                      rv;
+	int                      fd;
 
 	nni_mtx_lock(&ed->mtx);
 
-	ss = &ed->locaddr;
+	ss  = &ed->locaddr;
 	len = ed->loclen;
 
 	if ((fd = socket(ss->ss_family, NNI_STREAM_SOCKTYPE, 0)) < 0) {
@@ -352,12 +341,11 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	ed->fd = fd;
+	ed->fd      = fd;
 	ed->node.fd = fd;
 	nni_mtx_unlock(&ed->mtx);
 	return (0);
 }
-
 
 void
 nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
@@ -393,7 +381,6 @@ nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
 	}
 	nni_mtx_unlock(&ed->mtx);
 }
-
 
 void
 nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
@@ -469,12 +456,11 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 	nni_mtx_unlock(&ed->mtx);
 }
 
-
 int
 nni_posix_epdesc_init(nni_posix_epdesc **edp, const char *url)
 {
 	nni_posix_epdesc *ed;
-	int rv;
+	int               rv;
 
 	if ((ed = NNI_ALLOC_STRUCT(ed)) == NULL) {
 		return (NNG_ENOMEM);
@@ -490,12 +476,12 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp, const char *url)
 	// one.  For now we just have a global pollq.  Note that by tying
 	// the ed to a single pollq we may get some kind of cache warmth.
 
-	ed->pq = nni_posix_pollq_get((int) nni_random());
-	ed->fd = -1;
+	ed->pq         = nni_posix_pollq_get((int) nni_random());
+	ed->fd         = -1;
 	ed->node.index = 0;
-	ed->node.cb = nni_posix_epdesc_cb;
-	ed->node.data = ed;
-	ed->url = url;
+	ed->node.cb    = nni_posix_epdesc_cb;
+	ed->node.data  = ed;
+	ed->url        = url;
 
 	nni_aio_list_init(&ed->connectq);
 	nni_aio_list_init(&ed->acceptq);
@@ -504,18 +490,16 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp, const char *url)
 	return (0);
 }
 
-
 const char *
 nni_posix_epdesc_url(nni_posix_epdesc *ed)
 {
 	return (ed->url);
 }
 
-
 void
 nni_posix_epdesc_set_local(nni_posix_epdesc *ed, void *sa, int len)
 {
-	if ((len < 0) || (len > sizeof (struct sockaddr_storage))) {
+	if ((len < 0) || (len > sizeof(struct sockaddr_storage))) {
 		return;
 	}
 	nni_mtx_lock(&ed->mtx);
@@ -524,11 +508,10 @@ nni_posix_epdesc_set_local(nni_posix_epdesc *ed, void *sa, int len)
 	nni_mtx_unlock(&ed->mtx);
 }
 
-
 void
 nni_posix_epdesc_set_remote(nni_posix_epdesc *ed, void *sa, int len)
 {
-	if ((len < 0) || (len > sizeof (struct sockaddr_storage))) {
+	if ((len < 0) || (len > sizeof(struct sockaddr_storage))) {
 		return;
 	}
 	nni_mtx_lock(&ed->mtx);
@@ -536,7 +519,6 @@ nni_posix_epdesc_set_remote(nni_posix_epdesc *ed, void *sa, int len)
 	ed->remlen = len;
 	nni_mtx_unlock(&ed->mtx);
 }
-
 
 void
 nni_posix_epdesc_fini(nni_posix_epdesc *ed)
@@ -547,7 +529,6 @@ nni_posix_epdesc_fini(nni_posix_epdesc *ed)
 	nni_mtx_fini(&ed->mtx);
 	NNI_FREE_STRUCT(ed);
 }
-
 
 #else
 
