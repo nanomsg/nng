@@ -98,8 +98,8 @@ set (NNG_SOURCES
     platform/windows/win_impl.h
     platform/windows/win_clock.c
     platform/windows/win_debug.c
-    platform/windows/win_ipc.c
     platform/windows/win_iocp.c
+    platform/windows/win_ipc.c
     platform/windows/win_net.c
     platform/windows/win_pipe.c
     platform/windows/win_rand.c

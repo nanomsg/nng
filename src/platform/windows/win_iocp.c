@@ -20,14 +20,14 @@
 // port for pretty much everything.
 
 static HANDLE nni_win_global_iocp = NULL;
-static nni_win_event nni_win_iocp_exit;
 static nni_thr nni_win_iocp_thrs[NNI_WIN_IOCP_NTHREADS];
+static nni_mtx nni_win_iocp_mtx;
 
 static void
 nni_win_iocp_handler(void *arg)
 {
 	HANDLE iocp;
-	DWORD nbytes;
+	DWORD cnt;
 	ULONG_PTR key;
 	OVERLAPPED *olpd;
 	nni_win_event *evt;
@@ -42,7 +42,9 @@ nni_win_iocp_handler(void *arg)
 		key = 0;
 		olpd = NULL;
 		status = 0;
-		rv = GetQueuedCompletionStatus(iocp, &nbytes, &key, &olpd,
+		cnt = 0;
+
+		rv = GetQueuedCompletionStatus(iocp, &cnt, &key, &olpd,
 			INFINITE);
 
 		if (rv == FALSE) {
@@ -50,21 +52,12 @@ nni_win_iocp_handler(void *arg)
 				// Completion port bailed...
 				break;
 			}
-			nbytes = 0;
-			key = 0;
-			status = nni_win_error(GetLastError());
 		}
 
 		NNI_ASSERT(olpd != NULL);
 		evt = (void *) olpd;
-		if (evt == &nni_win_iocp_exit) {
-			// Exit requested.
-			break;
-		}
 
 		NNI_ASSERT(evt->cb != NULL);
-		evt->nbytes = nbytes;
-		evt->status = status;
 		evt->cb(evt->ptr);
 	}
 }
@@ -81,13 +74,86 @@ nni_win_iocp_register(HANDLE h)
 
 
 int
+nni_win_event_init(nni_win_event *evt, nni_cb cb, void *ptr, HANDLE h)
+{
+	ZeroMemory(&evt->olpd, sizeof (evt->olpd));
+	evt->olpd.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	if (evt->olpd.hEvent == NULL) {
+		return (nni_win_error(GetLastError()));
+	}
+	nni_aio_list_init(&evt->aios);
+	evt->ptr = ptr;
+	evt->cb = cb;
+	evt->h = h;
+	return (0);
+}
+
+
+void
+nni_win_event_fini(nni_win_event *evt)
+{
+	if (evt->olpd.hEvent != NULL) {
+		(void) CloseHandle(evt->olpd.hEvent);
+		evt->olpd.hEvent = NULL;
+	}
+}
+
+
+int
+nni_win_event_reset(nni_win_event *evt)
+{
+	if (!ResetEvent(evt->olpd.hEvent)) {
+		return (nni_win_error(GetLastError()));
+	}
+	return (0);
+}
+
+
+OVERLAPPED *
+nni_win_event_overlapped(nni_win_event *evt)
+{
+	return (&evt->olpd);
+}
+
+
+void
+nni_win_event_cancel(nni_win_event *evt)
+{
+	int rv;
+	DWORD cnt;
+
+	// Try to cancel the event...
+	if (!CancelIoEx(evt->h, &evt->olpd)) {
+		// None was found.  That's good.
+		if ((rv = GetLastError()) == ERROR_NOT_FOUND) {
+			// Nothing queued.  We may in theory be running
+			// the callback via the completion port handler;
+			// caller must synchronize that separately.
+			return;
+		}
+
+		// It's unclear why we would ever fail in this
+		// circumstance.  Is there a kind of "uncancellable I/O"
+		// here, or somesuch?  In this case we just wait hard
+		// using the success case -- its the best we can do.
+	}
+
+	// This basically just waits for the canceled I/O to complete.
+	// The end result can be either success or ERROR_OPERATION_ABORTED.
+	// It turns out we don't much care either way; we just want to make
+	// sure that we don't have any I/O pending on the overlapped
+	// structure before we release it or reuse it.
+	GetOverlappedResult(evt->h, &evt->olpd, &cnt, TRUE);
+}
+
+
+int
 nni_win_iocp_sysinit(void)
 {
 	HANDLE h;
 	int i;
 	int rv;
 
-	ZeroMemory(&nni_win_iocp_exit, sizeof (nni_win_iocp_exit));
 	h = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, 0,
 		NNI_WIN_IOCP_NTHREADS);
 	if (h == NULL) {
@@ -101,6 +167,9 @@ nni_win_iocp_sysinit(void)
 			goto fail;
 		}
 	}
+	if ((rv = nni_mtx_init(&nni_win_iocp_mtx)) != 0) {
+		goto fail;
+	}
 	for (i = 0; i < NNI_WIN_IOCP_NTHREADS; i++) {
 		nni_thr_run(&nni_win_iocp_thrs[i]);
 	}
@@ -108,7 +177,6 @@ nni_win_iocp_sysinit(void)
 
 fail:
 	if ((h = nni_win_global_iocp) != NULL) {
-		PostQueuedCompletionStatus(h, 0, 0, &nni_win_iocp_exit.olpd);
 		CloseHandle(h);
 		nni_win_global_iocp = NULL;
 	}
@@ -126,14 +194,13 @@ nni_win_iocp_sysfini(void)
 	HANDLE h;
 
 	if ((h = nni_win_global_iocp) != NULL) {
-		// Signal the iocp poller to exit.
-		PostQueuedCompletionStatus(h, 0, 0, &nni_win_iocp_exit.olpd);
 		CloseHandle(h);
 		nni_win_global_iocp = NULL;
-		for (i = 0; i < NNI_WIN_IOCP_NTHREADS; i++) {
-			nni_thr_fini(&nni_win_iocp_thrs[i]);
-		}
 	}
+	for (i = 0; i < NNI_WIN_IOCP_NTHREADS; i++) {
+		nni_thr_fini(&nni_win_iocp_thrs[i]);
+	}
+	nni_mtx_fini(&nni_win_iocp_mtx);
 }
 
 

@@ -22,6 +22,7 @@
 #include <process.h>
 #include <ws2tcpip.h>
 
+#include "core/list.h"
 
 // These types are provided for here, to permit them to be directly inlined
 // elsewhere.
@@ -35,22 +36,10 @@ typedef struct nni_win_event   nni_win_event;
 // conveyed in the OVERLAPPED directly.
 struct nni_win_event {
 	OVERLAPPED	olpd;
+	HANDLE		h;
 	void *		ptr;
 	nni_cb		cb;
-	int		status;
-	int		nbytes;
-};
-
-struct nni_plat_ipcsock {
-	HANDLE			p;
-
-	char			path[256];
-	WSAOVERLAPPED		recv_olpd;
-	WSAOVERLAPPED		send_olpd;
-	WSAOVERLAPPED		conn_olpd; // Use for both connect and accept
-	CRITICAL_SECTION	cs;
-
-	int			server;
+	nni_list	aios;
 };
 
 struct nni_plat_thr {
@@ -73,8 +62,19 @@ struct nni_plat_cv {
 extern int nni_win_error(int);
 extern int nni_winsock_error(int);
 
+extern int nni_win_event_init(nni_win_event *, nni_cb, void *, HANDLE);
+extern void nni_win_event_fini(nni_win_event *);
+extern int nni_win_event_reset(nni_win_event *);
+extern OVERLAPPED *nni_win_event_overlapped(nni_win_event *);
+extern void nni_win_event_cancel(nni_win_event *);
+
+extern int nni_win_iocp_register(HANDLE);
+
 extern int nni_win_iocp_sysinit(void);
 extern void nni_win_iocp_sysfini(void);
+
+extern int nni_win_ipc_sysinit(void);
+extern void nni_win_ipc_sysfini(void);
 
 extern int nni_win_resolv_sysinit(void);
 extern void nni_win_resolv_sysfini(void);

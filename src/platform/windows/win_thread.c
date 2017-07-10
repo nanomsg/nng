@@ -181,6 +181,10 @@ nni_plat_init(int (*helper)(void))
 		if ((rv = nni_win_resolv_sysinit()) != 0) {
 			goto out;
 		}
+		if ((rv = nni_win_ipc_sysinit()) != 0) {
+			goto out;
+		}
+
 		helper();
 		inited = 1;
 	}
@@ -195,9 +199,10 @@ out:
 void
 nni_plat_fini(void)
 {
-	WSACleanup();
+	nni_win_ipc_sysfini();
 	nni_win_resolv_sysfini();
 	nni_win_iocp_sysfini();
+	WSACleanup();
 }
 
 
