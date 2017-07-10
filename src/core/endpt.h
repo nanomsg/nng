@@ -37,8 +37,10 @@ struct nni_ep {
 	nni_list      ep_pipes;
 };
 
-#define NNI_EP_MODE_DIAL 1
-#define NNI_EP_MODE_LISTEN 2
+enum nni_ep_mode {
+	NNI_EP_MODE_DIAL   = 1,
+	NNI_EP_MODE_LISTEN = 2,
+};
 
 extern int      nni_ep_sys_init(void);
 extern void     nni_ep_sys_fini(void);

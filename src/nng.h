@@ -123,29 +123,34 @@ NNG_DECL void nng_unsetnotify(nng_socket, nng_notify *);
 // NNG_EV_PIPE_REM	- A pipe (connection) is removed from the socket.
 // NNG_EV_ENDPT_ADD	- An endpoint is added to the socket.
 // NNG_EV_ENDPT_REM	- An endpoint is removed from the socket.
-// clang-format off
-#define NNG_EV_BIT(x)    (1U << (x))
-#define NNG_EV_CAN_RCV		NNG_EV_BIT(0)
-#define NNG_EV_CAN_SND		NNG_EV_BIT(1)
-#define NNG_EV_ERROR		NNG_EV_BIT(2)
-#define NNG_EV_PIPE_ADD		NNG_EV_BIT(3)
-#define NNG_EV_PIPE_REM		NNG_EV_BIT(4)
-#define NNG_EV_DIALER_ADD	NNG_EV_BIT(5)
-#define NNG_EV_DIALER_REM	NNG_EV_BIT(6)
-#define NNG_EV_LISTENER_ADD	NNG_EV_BIT(7)
-#define NNG_EV_LISTENER_REM	NNG_EV_BIT(8)
-// XXX: Remove these.
-#define NNG_EV_ENDPT_ADD	NNG_EV_DIALER_ADD
-#define NNG_EV_ENDPT_REM	NNG_EV_DIALER_REM
-// clang-format on
+#define NNG_EV_BIT(x) (1U << (x))
+enum nng_ev_bit_enum {
+	NNG_EV_CAN_RCV      = NNG_EV_BIT(0),
+	NNG_EV_CAN_SND      = NNG_EV_BIT(1),
+	NNG_EV_ERROR        = NNG_EV_BIT(2),
+	NNG_EV_PIPE_ADD     = NNG_EV_BIT(3),
+	NNG_EV_PIPE_REM     = NNG_EV_BIT(4),
+	NNG_EV_DIALER_ADD   = NNG_EV_BIT(5),
+	NNG_EV_DIALER_REM   = NNG_EV_BIT(6),
+	NNG_EV_LISTENER_ADD = NNG_EV_BIT(7),
+	NNG_EV_LISTENER_REM = NNG_EV_BIT(8),
+
+	// XXX: Remove these.
+	NNG_EV_ENDPT_ADD = NNG_EV_DIALER_ADD,
+	NNG_EV_ENDPT_REM = NNG_EV_DIALER_REM,
+};
 
 // The following functions return more detailed information about the event.
 // Some of the values will not make sense for some event types, in which case
 // the value returned will be NULL.
 NNG_DECL int nng_event_type(nng_event *);
+
 NNG_DECL nng_socket nng_event_socket(nng_event *);
+
 NNG_DECL nng_endpoint nng_event_endpoint(nng_event *);
-NNG_DECL nng_pipe    nng_event_pipe(nng_event *);
+
+NNG_DECL nng_pipe nng_event_pipe(nng_event *);
+
 NNG_DECL const char *nng_event_reason(nng_event *);
 
 // nng_listen creates a listening endpoint with no special options,
@@ -268,9 +273,11 @@ NNG_DECL int nng_pipe_getopt(nng_pipe, int, void *, size_t *);
 NNG_DECL int nng_pipe_close(nng_pipe);
 
 // Flags.
-#define NNG_FLAG_ALLOC 1    // Recv to allocate receive buffer.
-#define NNG_FLAG_NONBLOCK 2 // Non-block send/recv.
-#define NNG_FLAG_SYNCH 4    // Synchronous dial / listen
+enum nng_flag_enum {
+	NNG_FLAG_ALLOC    = 1, // Recv to allocate receive buffer.
+	NNG_FLAG_NONBLOCK = 2, // Non-block send/recv.
+	NNG_FLAG_SYNCH    = 4, // Synchronous dial / listen
+};
 
 // Protocol numbers.  These are to be used with nng_socket_create().
 // These values are used on the wire, so must not be changed.  The major
@@ -280,52 +287,52 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 // There are gaps in the list, which are obsolete or unsupported protocols.
 // Protocol numbers are never more than 16 bits.  Also, there will never be
 // a valid protocol numbered 0 (NNG_PROTO_NONE).
-// clang-format off
-#define NNG_PROTO(major, minor)    (((major) * 16) + (minor))
-#define NNG_PROTO_NONE		NNG_PROTO(0, 0)
-#define NNG_PROTO_PAIR		NNG_PROTO(1, 0)
-#define NNG_PROTO_PUB		NNG_PROTO(2, 0)
-#define NNG_PROTO_SUB		NNG_PROTO(2, 1)
-#define NNG_PROTO_REQ		NNG_PROTO(3, 0)
-#define NNG_PROTO_REP		NNG_PROTO(3, 1)
-#define NNG_PROTO_PUSH		NNG_PROTO(5, 0)
-#define NNG_PROTO_PULL		NNG_PROTO(5, 1)
-#define NNG_PROTO_SURVEYOR	NNG_PROTO(6, 2)
-#define NNG_PROTO_RESPONDENT	NNG_PROTO(6, 3)
-#define NNG_PROTO_BUS		NNG_PROTO(7, 0)
-#define NNG_PROTO_STAR		NNG_PROTO(100, 0)
-// clang-format on
+#define NNG_PROTO(major, minor) (((major) *16) + (minor))
+enum nng_proto_enum {
+	NNG_PROTO_NONE       = NNG_PROTO(0, 0),
+	NNG_PROTO_PAIR       = NNG_PROTO(1, 0),
+	NNG_PROTO_PUB        = NNG_PROTO(2, 0),
+	NNG_PROTO_SUB        = NNG_PROTO(2, 1),
+	NNG_PROTO_REQ        = NNG_PROTO(3, 0),
+	NNG_PROTO_REP        = NNG_PROTO(3, 1),
+	NNG_PROTO_PUSH       = NNG_PROTO(5, 0),
+	NNG_PROTO_PULL       = NNG_PROTO(5, 1),
+	NNG_PROTO_SURVEYOR   = NNG_PROTO(6, 2),
+	NNG_PROTO_RESPONDENT = NNG_PROTO(6, 3),
+	NNG_PROTO_BUS        = NNG_PROTO(7, 0),
+	NNG_PROTO_STAR       = NNG_PROTO(100, 0),
+};
 
 // Options. We encode option numbers as follows:
 //
 // <level>	- 0: socket, 1: transport
 // <type>	- zero (socket), or transport (8 bits)
 // <code>	- specific value (16 bits)
-// clang-format off
-#define NNG_OPT_SOCKET(c)		(c)
-#define NNG_OPT_TRANSPORT_OPT(t, c)	(0x10000 | ((t) << 16) | (c))
+#define NNG_OPT_SOCKET(c) (c)
+#define NNG_OPT_TRANSPORT_OPT(t, c) (0x10000 | ((t) << 16) | (c))
 
-#define NNG_OPT_RAW			NNG_OPT_SOCKET(0)
-#define NNG_OPT_LINGER			NNG_OPT_SOCKET(1)
-#define NNG_OPT_RCVBUF			NNG_OPT_SOCKET(2)
-#define NNG_OPT_SNDBUF			NNG_OPT_SOCKET(3)
-#define NNG_OPT_RCVTIMEO		NNG_OPT_SOCKET(4)
-#define NNG_OPT_SNDTIMEO		NNG_OPT_SOCKET(5)
-#define NNG_OPT_RECONN_TIME		NNG_OPT_SOCKET(6)
-#define NNG_OPT_RECONN_MAXTIME		NNG_OPT_SOCKET(7)
-#define NNG_OPT_RCVMAXSZ		NNG_OPT_SOCKET(8)
-#define NNG_OPT_MAXTTL			NNG_OPT_SOCKET(9)
-#define NNG_OPT_PROTOCOL		NNG_OPT_SOCKET(10)
-#define NNG_OPT_SUBSCRIBE		NNG_OPT_SOCKET(11)
-#define NNG_OPT_UNSUBSCRIBE		NNG_OPT_SOCKET(12)
-#define NNG_OPT_SURVEYTIME		NNG_OPT_SOCKET(13)
-#define NNG_OPT_RESENDTIME		NNG_OPT_SOCKET(14)
-#define NNG_OPT_TRANSPORT		NNG_OPT_SOCKET(15)
-#define NNG_OPT_LOCALADDR		NNG_OPT_SOCKET(16)
-#define NNG_OPT_REMOTEADDR		NNG_OPT_SOCKET(17)
-#define NNG_OPT_RCVFD			NNG_OPT_SOCKET(18)
-#define NNG_OPT_SNDFD			NNG_OPT_SOCKET(19)
-// clang-format on
+enum nng_opt_enum {
+	NNG_OPT_RAW            = NNG_OPT_SOCKET(0),
+	NNG_OPT_LINGER         = NNG_OPT_SOCKET(1),
+	NNG_OPT_RCVBUF         = NNG_OPT_SOCKET(2),
+	NNG_OPT_SNDBUF         = NNG_OPT_SOCKET(3),
+	NNG_OPT_RCVTIMEO       = NNG_OPT_SOCKET(4),
+	NNG_OPT_SNDTIMEO       = NNG_OPT_SOCKET(5),
+	NNG_OPT_RECONN_TIME    = NNG_OPT_SOCKET(6),
+	NNG_OPT_RECONN_MAXTIME = NNG_OPT_SOCKET(7),
+	NNG_OPT_RCVMAXSZ       = NNG_OPT_SOCKET(8),
+	NNG_OPT_MAXTTL         = NNG_OPT_SOCKET(9),
+	NNG_OPT_PROTOCOL       = NNG_OPT_SOCKET(10),
+	NNG_OPT_SUBSCRIBE      = NNG_OPT_SOCKET(11),
+	NNG_OPT_UNSUBSCRIBE    = NNG_OPT_SOCKET(12),
+	NNG_OPT_SURVEYTIME     = NNG_OPT_SOCKET(13),
+	NNG_OPT_RESENDTIME     = NNG_OPT_SOCKET(14),
+	NNG_OPT_TRANSPORT      = NNG_OPT_SOCKET(15),
+	NNG_OPT_LOCALADDR      = NNG_OPT_SOCKET(16),
+	NNG_OPT_REMOTEADDR     = NNG_OPT_SOCKET(17),
+	NNG_OPT_RCVFD          = NNG_OPT_SOCKET(18),
+	NNG_OPT_SNDFD          = NNG_OPT_SOCKET(19),
+};
 
 // XXX: TBD: priorities, socket names, ipv4only
 
@@ -373,8 +380,10 @@ NNG_DECL const char *nng_stat_name(nng_stat *);
 // user as is.
 NNG_DECL int nng_stat_type(nng_stat *);
 
-#define NNG_STAT_LEVEL 0
-#define NNG_STAT_COUNTER 1
+enum nng_stat_type_enum {
+	NNG_STAT_LEVEL   = 0,
+	NNG_STAT_COUNTER = 1,
+};
 
 // nng_stat_unit provides information about the unit for the statistic,
 // such as NNG_UNIT_BYTES or NNG_UNIT_BYTES.  If no specific unit is
@@ -382,14 +391,14 @@ NNG_DECL int nng_stat_type(nng_stat *);
 // returned.
 NNG_DECL int nng_stat_unit(nng_stat *);
 
-// clang-format off
-#define NNG_UNIT_NONE		0
-#define NNG_UNIT_BYTES		1
-#define NNG_UNIT_MESSAGES	2
-#define NNG_UNIT_BOOLEAN	3
-#define NNG_UNIT_MILLIS		4
-#define NNG_UNIT_EVENTS		5
-// clang-format on
+enum nng_unit_enum {
+	NNG_UNIT_NONE     = 0,
+	NNG_UNIT_BYTES    = 1,
+	NNG_UNIT_MESSAGES = 2,
+	NNG_UNIT_BOOLEAN  = 3,
+	NNG_UNIT_MILLIS   = 4,
+	NNG_UNIT_EVENTS   = 5,
+};
 
 // nng_stat_value returns returns the actual value of the statistic.
 // Statistic values reflect their value at the time that the corresponding
@@ -433,28 +442,28 @@ NNG_DECL void nng_thread_destroy(void *);
 
 // Error codes.  These may happen to align to errnos used on your platform,
 // but do not count on this.
-// clang-format off
-#define NNG_EINTR		(1)
-#define NNG_ENOMEM		(2)
-#define NNG_EINVAL		(3)
-#define NNG_EBUSY		(4)
-#define NNG_ETIMEDOUT		(5)
-#define NNG_ECONNREFUSED	(6)
-#define NNG_ECLOSED		(7)
-#define NNG_EAGAIN		(8)
-#define NNG_ENOTSUP		(9)
-#define NNG_EADDRINUSE		(10)
-#define NNG_ESTATE		(11)
-#define NNG_ENOENT		(12)
-#define NNG_EPROTO		(13)
-#define NNG_EUNREACHABLE	(14)
-#define NNG_EADDRINVAL		(15)
-#define NNG_EPERM		(16)
-#define NNG_EMSGSIZE		(17)
-#define NNG_ECONNABORTED	(18)
-#define NNG_ECONNRESET		(19)
-#define NNG_ECANCELED		(20)
-// clang-format on
+enum nng_errno_enum {
+	NNG_EINTR        = 1,
+	NNG_ENOMEM       = 2,
+	NNG_EINVAL       = 3,
+	NNG_EBUSY        = 4,
+	NNG_ETIMEDOUT    = 5,
+	NNG_ECONNREFUSED = 6,
+	NNG_ECLOSED      = 7,
+	NNG_EAGAIN       = 8,
+	NNG_ENOTSUP      = 9,
+	NNG_EADDRINUSE   = 10,
+	NNG_ESTATE       = 11,
+	NNG_ENOENT       = 12,
+	NNG_EPROTO       = 13,
+	NNG_EUNREACHABLE = 14,
+	NNG_EADDRINVAL   = 15,
+	NNG_EPERM        = 16,
+	NNG_EMSGSIZE     = 17,
+	NNG_ECONNABORTED = 18,
+	NNG_ECONNRESET   = 19,
+	NNG_ECANCELED    = 20,
+};
 
 // NNG_SYSERR is a special code, which allows us to wrap errors from the
 // underlyuing operating system.  We generally prefer to map errors to one
@@ -512,13 +521,13 @@ typedef struct nng_sockaddr {
 	} s_un;
 } nng_sockaddr;
 
-// clang-format off
-#define NNG_AF_UNSPEC		0
-#define NNG_AF_INPROC		1
-#define NNG_AF_IPC		2
-#define NNG_AF_INET		3
-#define NNG_AF_INET6		4
-// clang-format on
+enum nng_sockaddr_family {
+	NNG_AF_UNSPEC = 0,
+	NNG_AF_INPROC = 1,
+	NNG_AF_IPC    = 2,
+	NNG_AF_INET   = 3,
+	NNG_AF_INET6  = 4,
+};
 
 #ifdef __cplusplus
 }
