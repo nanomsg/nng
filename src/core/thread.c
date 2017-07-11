@@ -12,43 +12,43 @@
 int
 nni_mtx_init(nni_mtx *mtx)
 {
-	return (nni_plat_mtx_init(&mtx->mtx));
+	return (nni_plat_mtx_init(mtx));
 }
 
 void
 nni_mtx_fini(nni_mtx *mtx)
 {
-	nni_plat_mtx_fini(&mtx->mtx);
+	nni_plat_mtx_fini(mtx);
 }
 
 void
 nni_mtx_lock(nni_mtx *mtx)
 {
-	nni_plat_mtx_lock(&mtx->mtx);
+	nni_plat_mtx_lock(mtx);
 }
 
 void
 nni_mtx_unlock(nni_mtx *mtx)
 {
-	nni_plat_mtx_unlock(&mtx->mtx);
+	nni_plat_mtx_unlock(mtx);
 }
 
 int
 nni_cv_init(nni_cv *cv, nni_mtx *mtx)
 {
-	return (nni_plat_cv_init(&cv->cv, &mtx->mtx));
+	return (nni_plat_cv_init(cv, mtx));
 }
 
 void
 nni_cv_fini(nni_cv *cv)
 {
-	nni_plat_cv_fini(&cv->cv);
+	nni_plat_cv_fini(cv);
 }
 
 void
 nni_cv_wait(nni_cv *cv)
 {
-	nni_plat_cv_wait(&cv->cv);
+	nni_plat_cv_wait(cv);
 }
 
 int
@@ -57,20 +57,20 @@ nni_cv_until(nni_cv *cv, nni_time until)
 	// Some special cases for times.  Catching these here means that
 	// platforms can assume a valid time is presented to them.
 	if (until == NNI_TIME_NEVER) {
-		nni_plat_cv_wait(&cv->cv);
+		nni_plat_cv_wait(cv);
 		return (0);
 	}
 	if (until == NNI_TIME_ZERO) {
 		return (NNG_EAGAIN);
 	}
 
-	return (nni_plat_cv_until(&cv->cv, until));
+	return (nni_plat_cv_until(cv, until));
 }
 
 void
 nni_cv_wake(nni_cv *cv)
 {
-	nni_plat_cv_wake(&cv->cv);
+	nni_plat_cv_wake(cv);
 }
 
 static void

@@ -13,14 +13,6 @@
 #include "core/defs.h"
 #include "core/platform.h"
 
-struct nni_mtx {
-	nni_plat_mtx mtx;
-};
-
-struct nni_cv {
-	nni_plat_cv cv;
-};
-
 struct nni_thr {
 	nni_plat_thr thr;
 	nni_plat_mtx mtx;
