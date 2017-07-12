@@ -16,31 +16,18 @@
 #define WIN32_LEAN_AND_MEAN
 #endif
 
-#include <mswsock.h>
-#include <process.h>
+// These headers must be included first.
 #include <windows.h>
 #include <winsock2.h>
+
+#include <mswsock.h>
+#include <process.h>
 #include <ws2tcpip.h>
 
 #include "core/list.h"
 
 // These types are provided for here, to permit them to be directly inlined
 // elsewhere.
-
-typedef struct nni_win_event nni_win_event;
-
-// nni_win_event is used with io completion ports.  This allows us to get
-// to a specific completion callback without requiring the poller (in the
-// completion port) to know anything about the event itself.  We also use
-// this to pass back status and counts to the routine, which may not be
-// conveyed in the OVERLAPPED directly.
-struct nni_win_event {
-	OVERLAPPED olpd;
-	HANDLE     h;
-	void *     ptr;
-	nni_cb     cb;
-	nni_list   aios;
-};
 
 struct nni_plat_thr {
 	void (*func)(void *);
@@ -59,14 +46,40 @@ struct nni_plat_cv {
 	PSRWLOCK           srl;
 };
 
+// nni_win_event is used with io completion ports.  This allows us to get
+// to a specific completion callback without requiring the poller (in the
+// completion port) to know anything about the event itself.  We also use
+// this to pass back status and counts to the routine, which may not be
+// conveyed in the OVERLAPPED directly.
+typedef struct nni_win_event     nni_win_event;
+typedef struct nni_win_event_ops nni_win_event_ops;
+
+struct nni_win_event_ops {
+	int (*wev_start)(nni_win_event *, nni_aio *);
+	void (*wev_finish)(nni_win_event *, nni_aio *);
+	void (*wev_cancel)(nni_win_event *, nni_aio *);
+};
+struct nni_win_event {
+	OVERLAPPED        olpd;
+	HANDLE            h;
+	void *            ptr;
+	nni_aio *         aio;
+	nni_mtx           mtx;
+	int               count;
+	int               status;
+	nni_win_event_ops ops;
+};
+
 extern int nni_win_error(int);
 extern int nni_winsock_error(int);
 
-extern int         nni_win_event_init(nni_win_event *, nni_cb, void *, HANDLE);
-extern void        nni_win_event_fini(nni_win_event *);
-extern int         nni_win_event_reset(nni_win_event *);
-extern OVERLAPPED *nni_win_event_overlapped(nni_win_event *);
-extern void        nni_win_event_cancel(nni_win_event *);
+extern int nni_win_event_init(
+    nni_win_event *, nni_win_event_ops *, void *, HANDLE);
+extern void nni_win_event_fini(nni_win_event *);
+extern void nni_win_event_submit(nni_win_event *, nni_aio *);
+extern void nni_win_event_resubmit(nni_win_event *, nni_aio *);
+extern void nni_win_event_close(nni_win_event *);
+extern void nni_win_event_complete(nni_win_event *, int);
 
 extern int nni_win_iocp_register(HANDLE);
 

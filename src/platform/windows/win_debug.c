@@ -42,11 +42,20 @@ static struct {
 	int sys_err;
 	int nng_err;
 } nni_plat_errnos[] = {
-	{ ENOENT, NNG_ENOENT }, { EINTR, NNG_EINTR }, { EINVAL, NNG_EINVAL },
-	{ ENOMEM, NNG_ENOMEM }, { EACCES, NNG_EPERM }, { EAGAIN, NNG_EAGAIN },
-	{ EBADF, NNG_ECLOSED }, { EBUSY, NNG_EBUSY },
-	{ ENAMETOOLONG, NNG_EINVAL }, { EPERM, NNG_EPERM },
-	{ EPIPE, NNG_ECLOSED }, { 0, 0 } // must be last
+	// clang-format off
+	{ ENOENT,	NNG_ENOENT },
+	{ EINTR,	NNG_EINTR },
+	{ EINVAL,	NNG_EINVAL },
+	{ ENOMEM,	NNG_ENOMEM },
+	{ EACCES,	NNG_EPERM },
+	{ EAGAIN,	NNG_EAGAIN },
+	{ EBADF,	NNG_ECLOSED },
+	{ EBUSY,	NNG_EBUSY },
+	{ ENAMETOOLONG,	NNG_EINVAL },
+	{ EPERM,	NNG_EPERM },
+	{ EPIPE,	NNG_ECLOSED },
+	{ 0,		0 } // must be last
+	// clang-format on
 };
 
 int
@@ -107,7 +116,7 @@ nni_win_error(int errnum)
 	if (errnum == 0) {
 		return (0);
 	}
-	for (i = 0; nni_win_errnos[i].nng_err != 0; i++) {
+	for (i = 0; nni_win_errnos[i].win_err != 0; i++) {
 		if (errnum == nni_win_errnos[i].win_err) {
 			return (nni_win_errnos[i].nng_err);
 		}
