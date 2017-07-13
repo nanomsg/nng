@@ -65,9 +65,16 @@ struct nni_win_event {
 	void *            ptr;
 	nni_aio *         aio;
 	nni_mtx           mtx;
+	nni_cv            cv;
+	int               flags;
 	int               count;
 	int               status;
 	nni_win_event_ops ops;
+};
+
+enum nni_win_event_flags {
+	NNI_WIN_EVENT_RUNNING = 1,
+	NNI_WIN_EVENT_ABORT   = 2,
 };
 
 extern int nni_win_error(int);
