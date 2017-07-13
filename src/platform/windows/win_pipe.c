@@ -95,7 +95,7 @@ nni_plat_pipe_open(int *wfdp, int *rfdp)
 	return (0);
 
 fail:
-	rv = nni_winsock_error(WSAGetLastError());
+	rv = nni_win_error(GetLastError());
 	if (afd != INVALID_SOCKET) {
 		closesocket(afd);
 	}

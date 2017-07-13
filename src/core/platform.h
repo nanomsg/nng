@@ -187,13 +187,6 @@ extern int nni_plat_init(int (*)(void));
 // will be called until nni_platform_init is called.
 extern void nni_plat_fini(void);
 
-// nni_plat_lookup_host looks up a hostname in DNS, or the local hosts
-// file, or whatever.  If your platform lacks support for naming, it must
-// at least cope with converting IP addresses in string form.  The final
-// flags may include NNI_FLAG_IPV4ONLY to prevent IPv6 names from being
-// returned on dual stack machines.
-extern int nni_plat_lookup_host(const char *, nni_sockaddr *, int);
-
 //
 // TCP Support.
 //

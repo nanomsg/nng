@@ -125,6 +125,7 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
 		len = nni_posix_tcp_addr(&ss, &aio.a_addrs[0]);
 		nni_posix_epdesc_set_local(ed, &ss, len);
 	}
+	nni_aio_fini(&aio);
 	*epp = (void *) ed;
 	return (0);
 

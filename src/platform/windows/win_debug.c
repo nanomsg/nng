@@ -77,7 +77,9 @@ nni_plat_errno(int errnum)
 
 // Windows has infinite numbers of error codes it seems.  We only bother
 // with the ones that are relevant to us (we think).  Note that there is
-// no overlap between errnos and GetLastError values.
+// no overlap between errnos and GetLastError values.  Note also that
+// the WinSock errors are basically in the same number space as other
+// errors, and WSAGetLastError() is an alias for GetLastError().
 static struct {
 	int win_err;
 	int nng_err;
@@ -101,6 +103,37 @@ static struct {
 	{ ERROR_PIPE_NOT_CONNECTED, NNG_ECLOSED	     },
 	{ ERROR_OPERATION_ABORTED,  NNG_ECLOSED	     },
 	{ WAIT_TIMEOUT,		    NNG_ETIMEDOUT    },
+	{ WSAEINTR,		    NNG_EINTR	     },
+	{ WSAEBADF,		    NNG_ECLOSED	     },
+	{ WSAEACCES,		    NNG_EPERM	     },
+	{ WSAEWOULDBLOCK,	    NNG_EAGAIN	     },
+	{ WSAEINPROGRESS,	    NNG_EAGAIN	     },
+	{ WSAENOTSOCK,		    NNG_ECLOSED	     },
+	{ WSAEMSGSIZE,		    NNG_EMSGSIZE     },
+	{ WSAENOPROTOOPT,	    NNG_ENOTSUP	     },
+	{ WSAEPROTONOSUPPORT,	    NNG_ENOTSUP	     },
+	{ WSAEPROTONOSUPPORT,	    NNG_ENOTSUP	     },
+	{ WSAEADDRINUSE,	    NNG_EADDRINUSE   },
+	{ WSAEADDRNOTAVAIL,	    NNG_EADDRINVAL   },
+	{ WSAENETDOWN,		    NNG_EUNREACHABLE },
+	{ WSAENETUNREACH,	    NNG_EUNREACHABLE },
+	{ WSAECONNABORTED,	    NNG_ETIMEDOUT    },
+	{ WSAECONNRESET,	    NNG_ECLOSED	     },
+	{ WSAENOBUFS,		    NNG_ENOMEM	     },
+	{ WSAENOTCONN,		    NNG_ECLOSED	     },
+	{ WSAESHUTDOWN,		    NNG_ECLOSED	     },
+	{ WSAETIMEDOUT,		    NNG_ETIMEDOUT    },
+	{ WSAECONNREFUSED,	    NNG_ECONNREFUSED },
+	{ WSAEHOSTDOWN,		    NNG_EUNREACHABLE },
+	{ WSAEHOSTUNREACH,	    NNG_EUNREACHABLE },
+	{ WSAVERNOTSUPPORTED,	    NNG_ENOTSUP	     },
+	{ WSAEDISCON,		    NNG_ECLOSED	     },
+	{ WSAECANCELLED,	    NNG_ECANCELED    },
+	{ WSA_E_CANCELLED,	    NNG_ECANCELED    },
+	{ WSAHOST_NOT_FOUND,	    NNG_EADDRINVAL   },
+	{ WSATRY_AGAIN,		    NNG_EAGAIN	     },
+	{ WSANO_DATA,		    NNG_EADDRINVAL   },
+
 	// Must be Last!!
 	{			 0,		   0 },
 	// clang-format on

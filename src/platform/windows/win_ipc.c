@@ -23,7 +23,6 @@ struct nni_plat_ipc_ep {
 	char          path[256];
 	int           mode;
 	int           started;
-	nni_list      aios;
 	HANDLE        p;       // accept side only
 	nni_win_event acc_ev;  // accept side only
 	nni_aio *     con_aio; // conn side only
@@ -32,7 +31,7 @@ struct nni_plat_ipc_ep {
 
 static int  nni_win_ipc_pipe_start(nni_win_event *, nni_aio *);
 static void nni_win_ipc_pipe_finish(nni_win_event *, nni_aio *);
-static void nni_win_ipc_pipe_cancel(nni_win_event *, nni_aio *);
+static void nni_win_ipc_pipe_cancel(nni_win_event *);
 
 static nni_win_event_ops nni_win_ipc_pipe_ops = {
 	.wev_start  = nni_win_ipc_pipe_start,
@@ -42,7 +41,7 @@ static nni_win_event_ops nni_win_ipc_pipe_ops = {
 
 static int  nni_win_ipc_acc_start(nni_win_event *, nni_aio *);
 static void nni_win_ipc_acc_finish(nni_win_event *, nni_aio *);
-static void nni_win_ipc_acc_cancel(nni_win_event *, nni_aio *);
+static void nni_win_ipc_acc_cancel(nni_win_event *);
 
 static nni_win_event_ops nni_win_ipc_acc_ops = {
 	.wev_start  = nni_win_ipc_acc_start,
@@ -64,7 +63,7 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 	NNI_ASSERT(aio->a_iov[0].iov_len > 0);
 	NNI_ASSERT(aio->a_iov[0].iov_buf != NULL);
 
-	if (evt->h == INVALID_HANDLE_VALUE) {
+	if (pipe->p == INVALID_HANDLE_VALUE) {
 		evt->status = ERROR_INVALID_HANDLE;
 		evt->count  = 0;
 		return (1);
@@ -86,13 +85,13 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 
 	evt->count = 0;
 	if (evt == &pipe->snd_ev) {
-		ok = WriteFile(evt->h, buf, len, NULL, &evt->olpd);
+		ok = WriteFile(pipe->p, buf, len, NULL, &evt->olpd);
 	} else {
-		ok = ReadFile(evt->h, buf, len, NULL, &evt->olpd);
+		ok = ReadFile(pipe->p, buf, len, NULL, &evt->olpd);
 	}
 	if ((!ok) && ((rv = GetLastError()) != ERROR_IO_PENDING)) {
 		// Synchronous failure.
-		evt->status = GetLastError();
+		evt->status = rv;
 		evt->count  = 0;
 		return (1);
 	}
@@ -104,23 +103,23 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 }
 
 static void
-nni_win_ipc_pipe_cancel(nni_win_event *evt, nni_aio *aio)
+nni_win_ipc_pipe_cancel(nni_win_event *evt)
 {
-	NNI_ARG_UNUSED(aio);
+	nni_plat_ipc_pipe *pipe = evt->ptr;
 
-	if (CancelIoEx(evt->h, &evt->olpd)) {
+	if (CancelIoEx(pipe->p, &evt->olpd)) {
 		DWORD cnt;
 
 		// If we canceled, make sure that we've completely
 		// finished with the overlapped.
-		GetOverlappedResult(evt->h, &evt->olpd, &cnt, TRUE);
+		GetOverlappedResult(pipe->p, &evt->olpd, &cnt, TRUE);
 	}
 }
 
 static void
 nni_win_ipc_pipe_finish(nni_win_event *evt, nni_aio *aio)
 {
-	int   rv = 0;
+	int   rv;
 	DWORD cnt;
 
 	cnt = evt->count;
@@ -158,12 +157,12 @@ nni_win_ipc_pipe_init(nni_plat_ipc_pipe **pipep, HANDLE p)
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	rv = nni_win_event_init(&pipe->rcv_ev, &nni_win_ipc_pipe_ops, pipe, p);
+	rv = nni_win_event_init(&pipe->rcv_ev, &nni_win_ipc_pipe_ops, pipe);
 	if (rv != 0) {
 		nni_plat_ipc_pipe_fini(pipe);
 		return (rv);
 	}
-	rv = nni_win_event_init(&pipe->snd_ev, &nni_win_ipc_pipe_ops, pipe, p);
+	rv = nni_win_event_init(&pipe->snd_ev, &nni_win_ipc_pipe_ops, pipe);
 	if (rv != 0) {
 		nni_plat_ipc_pipe_fini(pipe);
 		return (rv);
@@ -191,12 +190,13 @@ nni_plat_ipc_pipe_close(nni_plat_ipc_pipe *pipe)
 {
 	HANDLE p;
 
+	nni_win_event_close(&pipe->snd_ev);
+	nni_win_event_close(&pipe->rcv_ev);
+
 	if ((p = pipe->p) != INVALID_HANDLE_VALUE) {
 		pipe->p = INVALID_HANDLE_VALUE;
 		CloseHandle(p);
 	}
-	nni_win_event_close(&pipe->snd_ev);
-	nni_win_event_close(&pipe->rcv_ev);
 }
 
 void
@@ -262,7 +262,7 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 		}
 		goto failed;
 	}
-	rv = nni_win_event_init(&ep->acc_ev, &nni_win_ipc_acc_ops, ep, p);
+	rv = nni_win_event_init(&ep->acc_ev, &nni_win_ipc_acc_ops, ep);
 	if (rv != 0) {
 		goto failed;
 	}
@@ -320,9 +320,8 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 		return;
 	}
 
-	oldp   = ep->p;
-	ep->p  = newp;
-	evt->h = newp;
+	oldp  = ep->p;
+	ep->p = newp;
 
 	if ((rv = nni_win_ipc_pipe_init(&pipe, oldp)) != 0) {
 		// The new pipe is already fine for us.  Discard
@@ -338,25 +337,27 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 }
 
 static void
-nni_win_ipc_acc_cancel(nni_win_event *evt, nni_aio *aio)
+nni_win_ipc_acc_cancel(nni_win_event *evt)
 {
-	NNI_ARG_UNUSED(aio);
+	nni_plat_ipc_ep *ep = evt->ptr;
 
-	if (CancelIoEx(evt->h, &evt->olpd)) {
+	if (CancelIoEx(ep->p, &evt->olpd)) {
 		DWORD cnt;
 
 		// If we canceled, make sure that we've completely
 		// finished with the overlapped.
-		GetOverlappedResult(evt->h, &evt->olpd, &cnt, TRUE);
+		GetOverlappedResult(ep->p, &evt->olpd, &cnt, TRUE);
 	}
 	// Just to be sure.
-	(void) DisconnectNamedPipe(evt->h);
+	(void) DisconnectNamedPipe(ep->p);
 }
 
 static int
 nni_win_ipc_acc_start(nni_win_event *evt, nni_aio *aio)
 {
-	if (!ConnectNamedPipe(evt->h, &evt->olpd)) {
+	nni_plat_ipc_ep *ep = evt->ptr;
+
+	if (!ConnectNamedPipe(ep->p, &evt->olpd)) {
 		int rv = GetLastError();
 		switch (rv) {
 		case ERROR_PIPE_CONNECTED:
@@ -372,7 +373,7 @@ nni_win_ipc_acc_start(nni_win_event *evt, nni_aio *aio)
 
 		default:
 			// Fast-fail (synchronous).
-			evt->status = GetLastError();
+			evt->status = rv;
 			evt->count  = 0;
 			return (1);
 		}

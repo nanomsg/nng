@@ -148,24 +148,16 @@ nni_plat_init(int (*helper)(void))
 	AcquireSRWLockExclusive(&lock);
 
 	if (!inited) {
-		WSADATA data;
-		WORD    ver;
-		ver = MAKEWORD(2, 2);
-		if (WSAStartup(MAKEWORD(2, 2), &data) != 0) {
-			if ((LOBYTE(data.wVersion) != 2) ||
-			    (HIBYTE(data.wVersion) != 2)) {
-				nni_panic("got back wrong winsock ver");
-			}
-			rv = NNG_EINVAL;
-			goto out;
-		}
 		if ((rv = nni_win_iocp_sysinit()) != 0) {
 			goto out;
 		}
-		if ((rv = nni_win_resolv_sysinit()) != 0) {
+		if ((rv = nni_win_ipc_sysinit()) != 0) {
 			goto out;
 		}
-		if ((rv = nni_win_ipc_sysinit()) != 0) {
+		if ((rv = nni_win_tcp_sysinit()) != 0) {
+			goto out;
+		}
+		if ((rv = nni_win_resolv_sysinit()) != 0) {
 			goto out;
 		}
 
@@ -182,8 +174,9 @@ out:
 void
 nni_plat_fini(void)
 {
-	nni_win_ipc_sysfini();
 	nni_win_resolv_sysfini();
+	nni_win_ipc_sysfini();
+	nni_win_tcp_sysfini();
 	nni_win_iocp_sysfini();
 	WSACleanup();
 }

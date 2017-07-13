@@ -57,11 +57,10 @@ typedef struct nni_win_event_ops nni_win_event_ops;
 struct nni_win_event_ops {
 	int (*wev_start)(nni_win_event *, nni_aio *);
 	void (*wev_finish)(nni_win_event *, nni_aio *);
-	void (*wev_cancel)(nni_win_event *, nni_aio *);
+	void (*wev_cancel)(nni_win_event *);
 };
 struct nni_win_event {
 	OVERLAPPED        olpd;
-	HANDLE            h;
 	void *            ptr;
 	nni_aio *         aio;
 	nni_mtx           mtx;
@@ -78,10 +77,8 @@ enum nni_win_event_flags {
 };
 
 extern int nni_win_error(int);
-extern int nni_winsock_error(int);
 
-extern int nni_win_event_init(
-    nni_win_event *, nni_win_event_ops *, void *, HANDLE);
+extern int  nni_win_event_init(nni_win_event *, nni_win_event_ops *, void *);
 extern void nni_win_event_fini(nni_win_event *);
 extern void nni_win_event_submit(nni_win_event *, nni_aio *);
 extern void nni_win_event_resubmit(nni_win_event *, nni_aio *);
@@ -95,6 +92,9 @@ extern void nni_win_iocp_sysfini(void);
 
 extern int  nni_win_ipc_sysinit(void);
 extern void nni_win_ipc_sysfini(void);
+
+extern int  nni_win_tcp_sysinit(void);
+extern void nni_win_tcp_sysfini(void);
 
 extern int  nni_win_resolv_sysinit(void);
 extern void nni_win_resolv_sysfini(void);

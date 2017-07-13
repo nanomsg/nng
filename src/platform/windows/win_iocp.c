@@ -89,7 +89,7 @@ nni_win_event_cancel(nni_aio *aio)
 	evt->aio = NULL;
 
 	// Use provider specific cancellation.
-	evt->ops.wev_cancel(evt, aio);
+	evt->ops.wev_cancel(evt);
 
 	// Wait for everything to stop referencing this.
 	while (evt->flags & NNI_WIN_EVENT_RUNNING) {
@@ -154,23 +154,21 @@ void
 nni_win_event_close(nni_win_event *evt)
 {
 	nni_aio *aio;
-	nni_mtx_lock(&evt->mtx);
-	if (evt->h != NULL) {
-		if (CancelIoEx(evt->h, &evt->olpd)) {
-			DWORD cnt;
-			// Stall waiting for the I/O to complete.
-			GetOverlappedResult(evt->h, &evt->olpd, &cnt, TRUE);
+
+	if (evt->ptr != NULL) {
+		nni_mtx_lock(&evt->mtx);
+		evt->flags |= NNI_WIN_EVENT_ABORT;
+		evt->ops.wev_cancel(evt);
+		if ((aio = evt->aio) != NULL) {
+			evt->aio = NULL;
+			// We really don't care if we transferred data or not.
+			// The caller indicates they have closed the pipe.
+			evt->status = ERROR_INVALID_HANDLE;
+			evt->count  = 0;
+			evt->ops.wev_finish(evt, aio);
 		}
+		nni_mtx_unlock(&evt->mtx);
 	}
-	if ((aio = evt->aio) != NULL) {
-		evt->aio = NULL;
-		// We really don't care if we transferred data or not.
-		// The caller indicates they have closed the pipe.
-		evt->status = ERROR_INVALID_HANDLE;
-		evt->count  = 0;
-		evt->ops.wev_finish(evt, aio);
-	}
-	nni_mtx_unlock(&evt->mtx);
 }
 
 int
@@ -183,8 +181,7 @@ nni_win_iocp_register(HANDLE h)
 }
 
 int
-nni_win_event_init(
-    nni_win_event *evt, nni_win_event_ops *ops, void *ptr, HANDLE h)
+nni_win_event_init(nni_win_event *evt, nni_win_event_ops *ops, void *ptr)
 {
 	int rv;
 
@@ -200,7 +197,6 @@ nni_win_event_init(
 	evt->ops = *ops;
 	evt->aio = NULL;
 	evt->ptr = ptr;
-	evt->h   = h;
 	return (0);
 }
 
@@ -208,20 +204,23 @@ void
 nni_win_event_fini(nni_win_event *evt)
 {
 	nni_aio *aio;
-	nni_mtx_lock(&evt->mtx);
-	if ((aio = evt->aio) != NULL) {
-		evt->flags |= NNI_WIN_EVENT_ABORT;
-		evt->aio = NULL;
 
-		// Use provider specific cancellation.
-		evt->ops.wev_cancel(evt, aio);
+	if (evt->ptr != NULL) {
+		nni_mtx_lock(&evt->mtx);
+		if ((aio = evt->aio) != NULL) {
+			evt->flags |= NNI_WIN_EVENT_ABORT;
+			evt->aio = NULL;
 
-		// Wait for everything to stop referencing this.
-		while (evt->flags & NNI_WIN_EVENT_RUNNING) {
-			nni_cv_wait(&evt->cv);
+			// Use provider specific cancellation.
+			evt->ops.wev_cancel(evt);
+
+			// Wait for everything to stop referencing this.
+			while (evt->flags & NNI_WIN_EVENT_RUNNING) {
+				nni_cv_wait(&evt->cv);
+			}
 		}
+		nni_mtx_unlock(&evt->mtx);
 	}
-	nni_mtx_unlock(&evt->mtx);
 
 	if (evt->olpd.hEvent != NULL) {
 		(void) CloseHandle(evt->olpd.hEvent);

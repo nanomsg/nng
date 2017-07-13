@@ -567,15 +567,28 @@ nni_tcp_ep_close(void *arg)
 {
 	nni_tcp_ep *ep = arg;
 
+	nni_mtx_lock(&ep->mtx);
+	ep->closed = 1;
 	nni_plat_tcp_ep_close(ep->tep);
+	nni_mtx_unlock(&ep->mtx);
 }
 
 static int
 nni_tcp_ep_bind(void *arg)
 {
 	nni_tcp_ep *ep = arg;
+	int         rv;
 
-	return (nni_plat_tcp_ep_listen(ep->tep));
+	nni_mtx_lock(&ep->mtx);
+	if (ep->closed) {
+		nni_mtx_unlock(&ep->mtx);
+		return (NNG_ECLOSED);
+	}
+
+	rv = nni_plat_tcp_ep_listen(ep->tep);
+	nni_mtx_unlock(&ep->mtx);
+
+	return (rv);
 }
 
 static void
@@ -638,6 +651,10 @@ nni_tcp_ep_accept(void *arg, nni_aio *aio)
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
+	if (ep->closed) {
+		nni_aio_finish(aio, NNG_ECLOSED, 0);
+		nni_mtx_unlock(&ep->mtx);
+	}
 	NNI_ASSERT(ep->user_aio == NULL);
 	ep->user_aio = aio;
 
@@ -659,6 +676,10 @@ nni_tcp_ep_connect(void *arg, nni_aio *aio)
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
+	if (ep->closed) {
+		nni_aio_finish(aio, NNG_ECLOSED, 0);
+		nni_mtx_unlock(&ep->mtx);
+	}
 	NNI_ASSERT(ep->user_aio == NULL);
 	ep->user_aio = aio;
 
