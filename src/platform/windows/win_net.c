@@ -194,41 +194,40 @@ nni_win_tcp_pipe_finish(nni_win_event *evt, nni_aio *aio)
 	DWORD cnt;
 
 	cnt = evt->count;
-	    nni_win_error(evt->status), evt->count);
-	    if ((rv = evt->status) == 0) {
-		    int i;
-		    aio->a_count += cnt;
+	if ((rv = evt->status) == 0) {
+		int i;
+		aio->a_count += cnt;
 
-		    while (cnt > 0) {
-			    // If we didn't write the first full iov,
-			    // then we're done for now.  Record progress
-			    // and move on.
-			    if (cnt < aio->a_iov[0].iov_len) {
-				    aio->a_iov[0].iov_len -= cnt;
-				    aio->a_iov[0].iov_buf =
-				        (char *) aio->a_iov[0].iov_buf + cnt;
-				    break;
-			    }
+		while (cnt > 0) {
+			// If we didn't write the first full iov,
+			// then we're done for now.  Record progress
+			// and move on.
+			if (cnt < aio->a_iov[0].iov_len) {
+				aio->a_iov[0].iov_len -= cnt;
+				aio->a_iov[0].iov_buf =
+				    (char *) aio->a_iov[0].iov_buf + cnt;
+				break;
+			}
 
-			    // We consumed the full iov, so just move the
-			    // remaininng ones up, and decrement count handled.
-			    cnt -= aio->a_iov[0].iov_len;
-			    for (i = 1; i < aio->a_niov; i++) {
-				    aio->a_iov[i - 1] = aio->a_iov[i];
-			    }
-			    NNI_ASSERT(aio->a_niov > 0);
-			    aio->a_niov--;
-		    }
+			// We consumed the full iov, so just move the
+			// remaininng ones up, and decrement count handled.
+			cnt -= aio->a_iov[0].iov_len;
+			for (i = 1; i < aio->a_niov; i++) {
+				aio->a_iov[i - 1] = aio->a_iov[i];
+			}
+			NNI_ASSERT(aio->a_niov > 0);
+			aio->a_niov--;
+		}
 
-		    if (aio->a_niov > 0) {
-			    // If we have more to do, submit it!
-			    nni_win_event_resubmit(evt, aio);
-			    return;
-		    }
-	    }
+		if (aio->a_niov > 0) {
+			// If we have more to do, submit it!
+			nni_win_event_resubmit(evt, aio);
+			return;
+		}
+	}
 
-	    // All done; hopefully successfully.
-	    nni_aio_finish(aio, nni_win_error(rv), aio->a_count);
+	// All done; hopefully successfully.
+	nni_aio_finish(aio, nni_win_error(rv), aio->a_count);
 }
 
 static int
