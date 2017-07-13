@@ -218,12 +218,6 @@ nni_sock_unnotify(nni_sock *sock, nni_notify *notify)
 	NNI_FREE_STRUCT(notify);
 }
 
-nni_mtx *
-nni_sock_mtx(nni_sock *sock)
-{
-	return (&sock->s_mx);
-}
-
 static nni_msg *
 nni_sock_nullfilter(void *arg, nni_msg *mp)
 {
@@ -509,6 +503,12 @@ nni_sock_shutdown(nni_sock *sock)
 		nni_ep_close(ep);
 	}
 
+	// Wait for the pipes to be reaped (there should not be any because
+	// we have already reaped the EPs.)
+	while ((pipe = nni_list_first(&sock->s_pipes)) != NULL) {
+		nni_cv_wait(&sock->s_cv);
+	}
+
 	// Wait for the eps to be reaped.
 	while ((ep = nni_list_first(&sock->s_eps)) != NULL) {
 		nni_list_remove(&sock->s_eps, ep);
@@ -519,12 +519,6 @@ nni_sock_shutdown(nni_sock *sock)
 		nni_mtx_unlock(&sock->s_mx);
 		nni_ep_remove(ep);
 		nni_mtx_lock(&sock->s_mx);
-	}
-
-	// Wait for the pipes to be reaped (there should not be any because
-	// we have already reaped the EPs.)
-	while ((pipe = nni_list_first(&sock->s_pipes)) != NULL) {
-		nni_cv_wait(&sock->s_cv);
 	}
 
 	sock->s_sock_ops.sock_close(sock->s_data);

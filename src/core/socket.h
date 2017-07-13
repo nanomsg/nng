@@ -113,14 +113,6 @@ extern nni_msgq *nni_sock_sendq(nni_sock *);
 // inject incoming messages from pipes to it.
 extern nni_msgq *nni_sock_recvq(nni_sock *);
 
-// nni_sock_mtx obtains the socket mutex.  This is for protocols to use
-// from separate threads; they must not hold the lock for extended periods.
-// Additionally, this can only be acquired from separate threads.  The
-// synchronous entry points (excluding the send/recv thread workers) will
-// be called with this lock already held.  We expose the mutex directly
-// here so that protocols can use it to initialize condvars.
-extern nni_mtx *nni_sock_mtx(nni_sock *);
-
 extern nni_duration nni_sock_linger(nni_sock *);
 extern size_t       nni_sock_rcvmaxsz(nni_sock *);
 extern void nni_sock_reconntimes(nni_sock *, nni_duration *, nni_duration *);

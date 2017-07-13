@@ -528,6 +528,7 @@ nni_plat_ipc_ep_connect(nni_plat_ipc_ep *ep, nni_aio *aio)
 void
 nni_plat_ipc_ep_fini(nni_plat_ipc_ep *ep)
 {
+	nni_plat_ipc_ep_close(ep);
 	if (ep->p != INVALID_HANDLE_VALUE) {
 		CloseHandle(ep->p);
 		ep->p = NULL;
