@@ -15,59 +15,25 @@
 // Operations on pipes (to the transport) are generally blocking operations,
 // performed in the context of the protocol.
 
-static nni_objhash *nni_pipes;
-
-static void *
-nni_pipe_ctor(uint32_t id)
-{
-	nni_pipe *p;
-
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NULL);
-	}
-	if (nni_mtx_init(&p->p_mtx) != 0) {
-		NNI_FREE_STRUCT(p);
-		return (NULL);
-	}
-
-	p->p_tran_data  = NULL;
-	p->p_proto_data = NULL;
-	p->p_proto_dtor = NULL;
-	p->p_id         = id;
-
-	NNI_LIST_NODE_INIT(&p->p_sock_node);
-	NNI_LIST_NODE_INIT(&p->p_ep_node);
-
-	return (p);
-}
-
-static void
-nni_pipe_dtor(void *ptr)
-{
-	nni_pipe *p = ptr;
-
-	if (p->p_proto_data != NULL) {
-		p->p_proto_dtor(p->p_proto_data);
-	}
-	if (p->p_tran_data != NULL) {
-		p->p_tran_ops.p_fini(p->p_tran_data);
-	}
-
-	nni_aio_fini(&p->p_start_aio);
-	nni_mtx_fini(&p->p_mtx);
-	NNI_FREE_STRUCT(p);
-}
+static nni_idhash *nni_pipes;
 
 int
 nni_pipe_sys_init(void)
 {
 	int rv;
 
-	rv = nni_objhash_init(&nni_pipes, nni_pipe_ctor, nni_pipe_dtor);
-
+	rv = nni_idhash_init(&nni_pipes);
 	if (rv != 0) {
 		return (rv);
 	}
+
+	// Note that pipes have their own namespace.  ID hash will
+	// guarantee the that the first value is reasonable (non-zero),
+	// if we supply an out of range value (0).  (Consequently the
+	// value "1" has a bias -- its roughly twice as likely to be
+	// chosen as any other value.  This does not mater.)
+	nni_idhash_set_limits(
+	    nni_pipes, 1, 0x7fffffff, nni_random() & 0x7fffffff);
 
 	return (0);
 }
@@ -75,8 +41,30 @@ nni_pipe_sys_init(void)
 void
 nni_pipe_sys_fini(void)
 {
-	nni_objhash_fini(nni_pipes);
-	nni_pipes = NULL;
+	if (nni_pipes != NULL) {
+		nni_idhash_fini(nni_pipes);
+		nni_pipes = NULL;
+	}
+}
+
+static void
+nni_pipe_destroy(nni_pipe *p)
+{
+	if (p == NULL) {
+		return;
+	}
+
+	nni_aio_fini(&p->p_start_aio);
+	if (p->p_proto_data != NULL) {
+		p->p_proto_dtor(p->p_proto_data);
+	}
+	if (p->p_tran_data != NULL) {
+		p->p_tran_ops.p_fini(p->p_tran_data);
+	}
+	if (p->p_id != 0) {
+		nni_idhash_remove(nni_pipes, p->p_id);
+	}
+	nni_mtx_fini(&p->p_mtx);
 }
 
 // nni_pipe_id returns the 32-bit pipe id, which can be used in backtraces.
@@ -137,7 +125,7 @@ nni_pipe_remove(nni_pipe *p)
 	nni_sock_pipe_stop(p->p_sock, p);
 
 	// XXX: would be simpler to just do a destroy here
-	nni_objhash_unref(nni_pipes, p->p_id);
+	nni_pipe_destroy(p);
 }
 
 void
@@ -187,14 +175,28 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 {
 	nni_pipe *p;
 	int       rv;
-	uint32_t  id;
 
-	rv = nni_objhash_alloc(nni_pipes, &id, (void **) &p);
-	if (rv != 0) {
+	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_mtx_init(&p->p_mtx)) != 0) {
+		nni_pipe_destroy(p);
 		return (rv);
 	}
+	if ((rv = nni_idhash_alloc(nni_pipes, &p->p_id, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	p->p_tran_data  = NULL;
+	p->p_proto_data = NULL;
+	p->p_proto_dtor = NULL;
+
+	NNI_LIST_NODE_INIT(&p->p_sock_node);
+	NNI_LIST_NODE_INIT(&p->p_ep_node);
+
 	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) != 0) {
-		nni_objhash_unref(nni_pipes, p->p_id);
+		nni_pipe_destroy(p);
 		return (rv);
 	}
 	p->p_sock = sock;
@@ -210,12 +212,12 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 	// Initialize protocol pipe data.
 	rv = sock->s_pipe_ops.pipe_init(&p->p_proto_data, p, sock->s_data);
 	if (rv != 0) {
-		nni_objhash_unref(nni_pipes, p->p_id);
+		nni_pipe_destroy(p);
 		return (rv);
 	}
 
 	if ((rv = nni_ep_pipe_add(ep, p)) != 0) {
-		nni_objhash_unref(nni_pipes, p->p_id);
+		nni_pipe_destroy(p);
 		return (rv);
 	}
 

@@ -95,6 +95,13 @@ void
 nni_idhash_set_limits(
     nni_idhash *h, uint32_t minval, uint32_t maxval, uint32_t start)
 {
+	if (start < minval) {
+		start = minval;
+	}
+	if (start > maxval) {
+		start = maxval;
+	}
+
 	nni_mtx_lock(&h->ih_mtx);
 	h->ih_minval = minval;
 	h->ih_maxval = maxval;
