@@ -29,14 +29,21 @@ struct nni_idhash {
 	uint32_t          ih_maxval;
 	uint32_t          ih_dynval;
 	nni_idhash_entry *ih_entries;
+	nni_mtx           ih_mtx;
 };
 
 int
 nni_idhash_init(nni_idhash **hp)
 {
 	nni_idhash *h;
+	int         rv;
+
 	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
 		return (NNG_ENOMEM);
+	}
+	if ((rv = nni_mtx_init(&h->ih_mtx)) != 0) {
+		NNI_FREE_STRUCT(h);
+		return (rv);
 	}
 	h->ih_entries = NULL;
 	h->ih_count   = 0;
@@ -63,6 +70,7 @@ nni_idhash_fini(nni_idhash *h)
 			h->ih_cap = h->ih_count = 0;
 			h->ih_load = h->ih_minload = h->ih_maxload = 0;
 		}
+		nni_mtx_fini(&h->ih_mtx);
 		NNI_FREE_STRUCT(h);
 	}
 }
@@ -70,6 +78,8 @@ nni_idhash_fini(nni_idhash *h)
 void
 nni_idhash_reclaim(nni_idhash *h)
 {
+	nni_mtx_lock(&h->ih_mtx);
+
 	// Reclaim the buffer if we want, but preserve the limits.
 	if ((h->ih_count == 0) && (h->ih_cap != 0) && (h->ih_walkers == 0)) {
 		NNI_FREE_STRUCTS(h->ih_entries, h->ih_cap);
@@ -78,26 +88,29 @@ nni_idhash_reclaim(nni_idhash *h)
 		h->ih_minload = 0;
 		h->ih_maxload = 0;
 	}
+	nni_mtx_unlock(&h->ih_mtx);
 }
 
 void
 nni_idhash_set_limits(
     nni_idhash *h, uint32_t minval, uint32_t maxval, uint32_t start)
 {
+	nni_mtx_lock(&h->ih_mtx);
 	h->ih_minval = minval;
 	h->ih_maxval = maxval;
 	h->ih_dynval = start;
 	NNI_ASSERT(minval < maxval);
 	NNI_ASSERT(start >= minval);
 	NNI_ASSERT(start <= maxval);
+	nni_mtx_unlock(&h->ih_mtx);
 }
 
 // Inspired by Python dict implementation.  This probe will visit every
 // cell.  We always hash consecutively assigned IDs.
 #define NNI_IDHASH_NEXTPROBE(h, j) ((((j) *5) + 1) & (h->ih_cap - 1))
 
-int
-nni_idhash_find(nni_idhash *h, uint32_t id, void **valp)
+static int
+nni_hash_find(nni_idhash *h, uint32_t id, void **valp)
 {
 	uint32_t index = id & (h->ih_cap - 1);
 
@@ -116,6 +129,17 @@ nni_idhash_find(nni_idhash *h, uint32_t id, void **valp)
 		}
 		index = NNI_IDHASH_NEXTPROBE(h, index);
 	}
+}
+
+int
+nni_idhash_find(nni_idhash *h, uint32_t id, void **valp)
+{
+	int rv;
+
+	nni_mtx_lock(&h->ih_mtx);
+	rv = nni_hash_find(h, id, valp);
+	nni_mtx_unlock(&h->ih_mtx);
+	return (rv);
 }
 
 static int
@@ -191,10 +215,12 @@ nni_idhash_remove(nni_idhash *h, uint32_t id)
 	void *   val;
 	uint32_t index;
 
+	nni_mtx_lock(&h->ih_mtx);
 	// First check that it is in the table.  This may double the
 	// lookup time, but it means that if we get past this then we KNOW
 	// we are going to delete an element.
-	if ((rv = nni_idhash_find(h, id, &val)) != 0) {
+	if ((rv = nni_hash_find(h, id, &val)) != 0) {
+		nni_mtx_unlock(&h->ih_mtx);
 		return (rv);
 	}
 
@@ -222,12 +248,13 @@ nni_idhash_remove(nni_idhash *h, uint32_t id)
 
 	// Shrink -- but it's ok if we can't.
 	(void) nni_hash_resize(h);
+	nni_mtx_unlock(&h->ih_mtx);
 
 	return (0);
 }
 
-int
-nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
+static int
+nni_hash_insert(nni_idhash *h, uint32_t id, void *val)
 {
 	uint32_t index;
 
@@ -267,14 +294,28 @@ nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
 }
 
 int
+nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
+{
+	int rv;
+
+	nni_mtx_lock(&h->ih_mtx);
+	rv = nni_hash_insert(h, id, val);
+	nni_mtx_unlock(&h->ih_mtx);
+	return (rv);
+}
+
+int
 nni_idhash_alloc(nni_idhash *h, uint32_t *idp, void *val)
 {
 	uint32_t id;
 	void *   scrap;
 	int      rv;
+	nni_mtx_lock(&h->ih_mtx);
 
 	if (h->ih_count > (h->ih_maxval - h->ih_minval)) {
 		// Really more like ENOSPC.. the table is filled to max.
+		nni_mtx_unlock(&h->ih_mtx);
+
 		return (NNG_ENOMEM);
 	}
 
@@ -285,39 +326,27 @@ nni_idhash_alloc(nni_idhash *h, uint32_t *idp, void *val)
 			h->ih_dynval = h->ih_minval;
 		}
 
-		if (nni_idhash_find(h, id, &scrap) == NNG_ENOENT) {
+		if (nni_hash_find(h, id, &scrap) == NNG_ENOENT) {
 			break;
 		}
 	}
 
-	rv = nni_idhash_insert(h, id, val);
+	rv = nni_hash_insert(h, id, val);
 	if (rv == 0) {
 		*idp = id;
 	}
+	nni_mtx_unlock(&h->ih_mtx);
+
 	return (rv);
 }
 
 size_t
 nni_idhash_count(nni_idhash *h)
 {
-	return (h->ih_count);
-}
+	size_t num;
+	nni_mtx_lock(&h->ih_mtx);
+	num = h->ih_count;
+	nni_mtx_unlock(&h->ih_mtx);
 
-int
-nni_idhash_walk(nni_idhash *h, nni_idhash_walkfn fn, void *arg)
-{
-	uint32_t i, rv;
-
-	for (i = 0; i < h->ih_cap; i++) {
-		nni_idhash_entry *ent = &h->ih_entries[i];
-
-		if (ent->ihe_val == NULL) {
-			continue;
-		}
-		rv = fn(arg, ent->ihe_key, ent->ihe_val);
-		if (rv != 0) {
-			return (rv);
-		}
-	}
-	return (0);
+	return (num);
 }

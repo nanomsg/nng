@@ -11,7 +11,10 @@
 #include "core/idhash.c"
 #include "convey.h"
 
+#include "core/nng_impl.h"
+
 Main({
+	nni_init();
 	Test("General ID Hash",
 	    {
 		    int rv;
@@ -153,4 +156,6 @@ Main({
 			});
 		});
 	});
+
+	nni_fini();
 });

@@ -21,19 +21,11 @@
 // we use a better probe (taken from Python) to avoid hitting the same
 // positions.  Our hash algorithm is just the low order bits, and we
 // use table sizes that are powers of two.  Note that hash items
-// must be non-NULL.  The table is locked.
+// must be non-NULL.  The table is protected by an internal lock.
 
 typedef struct nni_idhash       nni_idhash;
 typedef struct nni_idhash_entry nni_idhash_entry;
 
-// nni_idhash_walkfn is called when walking a hash table.  If the
-// return value is non-zero, then nni_idhash_walk will terminate further
-// process and return that return value.  The function takes the generic
-// opaque value for the walk as its first argument, and the next two
-// arguments are the hash key and the opaque value stored with it.
-// Note that the walkfn must not attempt to change the hash table.
-// The user must provide any locking needed.
-typedef int (*nni_idhash_walkfn)(void *, uint32_t, void *);
 extern int  nni_idhash_init(nni_idhash **);
 extern void nni_idhash_fini(nni_idhash *);
 extern void nni_idhash_reclaim(nni_idhash *);
@@ -45,6 +37,5 @@ extern int  nni_idhash_remove(nni_idhash *, uint32_t);
 extern int  nni_idhash_insert(nni_idhash *, uint32_t, void *);
 extern int  nni_idhash_alloc(nni_idhash *, uint32_t *, void *);
 extern size_t nni_idhash_count(nni_idhash *);
-extern int    nni_idhash_walk(nni_idhash *, nni_idhash_walkfn, void *);
 
 #endif // CORE_IDHASH_H
