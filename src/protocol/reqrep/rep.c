@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -28,16 +29,16 @@ static void nni_rep_pipe_fini(void *);
 
 // An nni_rep_sock is our per-socket protocol private structure.
 struct nni_rep_sock {
-	nni_sock * sock;
-	nni_msgq * uwq;
-	nni_msgq * urq;
-	int        raw;
-	int        ttl;
-	nni_idhash pipes;
-	char *     btrace;
-	size_t     btrace_len;
-	nni_aio    aio_getq;
-	nni_mtx    mtx;
+	nni_sock *  sock;
+	nni_msgq *  uwq;
+	nni_msgq *  urq;
+	int         raw;
+	int         ttl;
+	nni_idhash *pipes;
+	char *      btrace;
+	size_t      btrace_len;
+	nni_aio     aio_getq;
+	nni_mtx     mtx;
 };
 
 // An nni_rep_pipe is our per-pipe protocol private structure.
@@ -59,7 +60,7 @@ nni_rep_sock_fini(void *arg)
 	nni_rep_sock *rep = arg;
 
 	nni_aio_fini(&rep->aio_getq);
-	nni_idhash_fini(&rep->pipes);
+	nni_idhash_fini(rep->pipes);
 	if (rep->btrace != NULL) {
 		nni_free(rep->btrace, rep->btrace_len);
 	}
@@ -183,7 +184,7 @@ nni_rep_pipe_start(void *arg)
 	rp->id = nni_pipe_id(rp->pipe);
 
 	nni_mtx_lock(&rep->mtx);
-	rv = nni_idhash_insert(&rep->pipes, rp->id, rp);
+	rv = nni_idhash_insert(rep->pipes, rp->id, rp);
 	nni_mtx_unlock(&rep->mtx);
 	if (rv != 0) {
 		return (rv);
@@ -214,7 +215,7 @@ nni_rep_pipe_stop(void *arg)
 
 	if (id != 0) {
 		nni_mtx_lock(&rep->mtx);
-		nni_idhash_remove(&rep->pipes, id);
+		nni_idhash_remove(rep->pipes, id);
 		nni_mtx_unlock(&rep->mtx);
 	}
 }
@@ -260,7 +261,7 @@ nni_rep_sock_getq_cb(void *arg)
 	// (nonblocking) if we can.  If we can't for any reason, then we
 	// free the message.
 	nni_mtx_lock(&rep->mtx);
-	rv = nni_idhash_find(&rep->pipes, id, (void **) &rp);
+	rv = nni_idhash_find(rep->pipes, id, (void **) &rp);
 	nni_mtx_unlock(&rep->mtx);
 	if (rv == 0) {
 		rv = nni_msgq_tryput(rp->sendq, msg);

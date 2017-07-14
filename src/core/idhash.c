@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -17,9 +18,26 @@ struct nni_idhash_entry {
 	void *   ihe_val;
 };
 
+struct nni_idhash {
+	size_t            ih_cap;
+	size_t            ih_count;
+	size_t            ih_load;
+	size_t            ih_minload; // considers placeholders
+	size_t            ih_maxload;
+	uint32_t          ih_walkers;
+	uint32_t          ih_minval;
+	uint32_t          ih_maxval;
+	uint32_t          ih_dynval;
+	nni_idhash_entry *ih_entries;
+};
+
 int
-nni_idhash_init(nni_idhash *h)
+nni_idhash_init(nni_idhash **hp)
 {
+	nni_idhash *h;
+	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
+		return (NNG_ENOMEM);
+	}
 	h->ih_entries = NULL;
 	h->ih_count   = 0;
 	h->ih_load    = 0;
@@ -30,18 +48,22 @@ nni_idhash_init(nni_idhash *h)
 	h->ih_minval  = 0;
 	h->ih_maxval  = 0xffffffff;
 	h->ih_dynval  = 0;
+	*hp           = h;
 	return (0);
 }
 
 void
 nni_idhash_fini(nni_idhash *h)
 {
-	NNI_ASSERT(h->ih_walkers == 0);
-	if (h->ih_entries != NULL) {
-		nni_free(h->ih_entries, h->ih_cap * sizeof(nni_idhash_entry));
-		h->ih_entries = NULL;
-		h->ih_cap = h->ih_count = 0;
-		h->ih_load = h->ih_minload = h->ih_maxload = 0;
+	if (h != NULL) {
+		NNI_ASSERT(h->ih_walkers == 0);
+		if (h->ih_entries != NULL) {
+			NNI_FREE_STRUCTS(h->ih_entries, h->ih_cap);
+			h->ih_entries = NULL;
+			h->ih_cap = h->ih_count = 0;
+			h->ih_load = h->ih_minload = h->ih_maxload = 0;
+		}
+		NNI_FREE_STRUCT(h);
 	}
 }
 
@@ -50,7 +72,7 @@ nni_idhash_reclaim(nni_idhash *h)
 {
 	// Reclaim the buffer if we want, but preserve the limits.
 	if ((h->ih_count == 0) && (h->ih_cap != 0) && (h->ih_walkers == 0)) {
-		nni_free(h->ih_entries, h->ih_cap * sizeof(nni_idhash_entry));
+		NNI_FREE_STRUCTS(h->ih_entries, h->ih_cap);
 		h->ih_cap     = 0;
 		h->ih_entries = NULL;
 		h->ih_minload = 0;
@@ -124,7 +146,7 @@ nni_hash_resize(nni_idhash *h)
 	}
 
 	oldents = h->ih_entries;
-	newents = nni_alloc(sizeof(nni_idhash_entry) * newsize);
+	newents = NNI_ALLOC_STRUCTS(newents, newsize);
 	if (newents == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -157,7 +179,7 @@ nni_hash_resize(nni_idhash *h)
 		}
 	}
 	if (oldsize != 0) {
-		nni_free(oldents, sizeof(nni_idhash_entry) * oldsize);
+		NNI_FREE_STRUCTS(oldents, oldsize);
 	}
 	return (0);
 }

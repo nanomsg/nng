@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -25,21 +26,6 @@
 typedef struct nni_idhash       nni_idhash;
 typedef struct nni_idhash_entry nni_idhash_entry;
 
-// The details of the nni_idhash are "private".  But they let us inline
-// this into structures.
-struct nni_idhash {
-	size_t            ih_cap;
-	size_t            ih_count;
-	size_t            ih_load;
-	size_t            ih_minload; // considers placeholders
-	size_t            ih_maxload;
-	uint32_t          ih_walkers;
-	uint32_t          ih_minval;
-	uint32_t          ih_maxval;
-	uint32_t          ih_dynval;
-	nni_idhash_entry *ih_entries;
-};
-
 // nni_idhash_walkfn is called when walking a hash table.  If the
 // return value is non-zero, then nni_idhash_walk will terminate further
 // process and return that return value.  The function takes the generic
@@ -48,7 +34,7 @@ struct nni_idhash {
 // Note that the walkfn must not attempt to change the hash table.
 // The user must provide any locking needed.
 typedef int (*nni_idhash_walkfn)(void *, uint32_t, void *);
-extern int  nni_idhash_init(nni_idhash *);
+extern int  nni_idhash_init(nni_idhash **);
 extern void nni_idhash_fini(nni_idhash *);
 extern void nni_idhash_reclaim(nni_idhash *);
 extern void nni_idhash_set_limits(nni_idhash *, uint32_t, uint32_t, uint32_t);
