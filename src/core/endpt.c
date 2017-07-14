@@ -254,7 +254,7 @@ nni_ep_connect_sync(nni_ep *ep)
 	}
 	rv = nni_ep_connect_aio(ep, &pipe->p_tran_data);
 	if (rv != 0) {
-		nni_pipe_remove(pipe);
+		nni_pipe_stop(pipe);
 		return (rv);
 	}
 	nni_pipe_start(pipe);
@@ -435,7 +435,7 @@ nni_ep_accept_sync(nni_ep *ep)
 	}
 	rv = nni_ep_accept_aio(ep, &pipe->p_tran_data);
 	if (rv != 0) {
-		nni_pipe_remove(pipe);
+		nni_pipe_stop(pipe);
 		return (rv);
 	}
 	nni_pipe_start(pipe);

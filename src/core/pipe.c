@@ -110,15 +110,17 @@ nni_pipe_close(nni_pipe *p)
 	nni_mtx_unlock(&p->p_mtx);
 }
 
-// We have to stop asynchronously using a task, because otherwise we can
-// wind up having a callback from an AIO trying to cancel itself.  That
-// simply will not work.
-void
-nni_pipe_remove(nni_pipe *p)
+// Pipe reap is called on a taskq when the pipe should be closed.  No
+// locks are held.  This routine must take care to synchronously ensure
+// that no further references to the pipe are possible, then it may
+// destroy the pipe.
+static void
+nni_pipe_reap(nni_pipe *p)
 {
 	// Transport close...
 	nni_pipe_close(p);
 
+	// Unlink the endpoint and pipe.
 	nni_ep_pipe_remove(p->p_ep, p);
 
 	// Tell the protocol to stop.
@@ -139,7 +141,7 @@ nni_pipe_stop(nni_pipe *p)
 	}
 	p->p_stop = 1;
 	nni_mtx_unlock(&p->p_mtx);
-	nni_taskq_ent_init(&p->p_reap_tqe, (nni_cb) nni_pipe_remove, p);
+	nni_taskq_ent_init(&p->p_reap_tqe, (nni_cb) nni_pipe_reap, p);
 	nni_taskq_dispatch(NULL, &p->p_reap_tqe);
 }
 

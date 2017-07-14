@@ -50,11 +50,12 @@ extern uint32_t nni_pipe_id(nni_pipe *);
 // operations against will return NNG_ECLOSED.
 extern void nni_pipe_close(nni_pipe *);
 
-// nni_pipe_remove is called by the protocol when it is done with the socket.
-// The pipe should already be closed; it will be unregistered and it's
-// resources released back to the system.  The protocol MUST not reference
-// the pipe after this.
-extern void nni_pipe_remove(nni_pipe *);
+// nni_pipe_stop is called to begin the process of tearing down the socket.
+// This function runs asynchronously, and takes care to ensure that no
+// other consumers are referencing the pipe.  We assume that either the
+// socket (protocol code) or endpoint may have references to the pipe
+// when this function is called.  The pipe cleanup is asynchronous and
+// make take a while depending on scheduling, etc.
 extern void nni_pipe_stop(nni_pipe *);
 
 // Used only by the socket core - as we don't wish to expose the details
