@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -504,15 +505,26 @@ nni_ipc_ep_close(void *arg)
 {
 	nni_ipc_ep *ep = arg;
 
+	nni_mtx_lock(&ep->mtx);
+	ep->closed = 1;
 	nni_plat_ipc_ep_close(ep->iep);
+	nni_mtx_unlock(&ep->mtx);
 }
 
 static int
 nni_ipc_ep_bind(void *arg)
 {
 	nni_ipc_ep *ep = arg;
+	int         rv;
 
-	return (nni_plat_ipc_ep_listen(ep->iep));
+	nni_mtx_lock(&ep->mtx);
+	if (ep->closed) {
+		rv = NNG_ECLOSED;
+	} else {
+		rv = nni_plat_ipc_ep_listen(ep->iep);
+	}
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static void
@@ -576,6 +588,12 @@ nni_ipc_ep_accept(void *arg, nni_aio *aio)
 
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
+
+	if (ep->closed) {
+		nni_aio_finish(aio, NNG_ECLOSED, 0);
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
 	ep->user_aio = aio;
 
 	// If we can't start, then its dying and we can't report either,
@@ -597,6 +615,13 @@ nni_ipc_ep_connect(void *arg, nni_aio *aio)
 
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
+
+	if (ep->closed) {
+		nni_aio_finish(aio, NNG_ECLOSED, 0);
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
+
 	ep->user_aio = aio;
 
 	// If we can't start, then its dying and we can't report either,
