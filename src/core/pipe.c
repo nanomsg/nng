@@ -218,11 +218,6 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 		return (rv);
 	}
 
-	if ((rv = nni_ep_pipe_add(ep, p)) != 0) {
-		nni_pipe_destroy(p);
-		return (rv);
-	}
-
 	*pp = p;
 	return (0);
 }

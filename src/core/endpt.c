@@ -248,10 +248,19 @@ nni_ep_connect_sync(nni_ep *ep)
 	nni_pipe *pipe;
 	int       rv;
 
+	nni_mtx_lock(&ep->ep_mtx);
+	if (ep->ep_closed) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (NNG_ECLOSED);
+	}
 	rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran);
 	if (rv != 0) {
+		nni_mtx_unlock(&ep->ep_mtx);
 		return (rv);
 	}
+	nni_list_append(&ep->ep_pipes, pipe);
+	nni_mtx_unlock(&ep->ep_mtx);
+
 	rv = nni_ep_connect_aio(ep, &pipe->p_tran_data);
 	if (rv != 0) {
 		nni_pipe_stop(pipe);
@@ -261,21 +270,6 @@ nni_ep_connect_sync(nni_ep *ep)
 	nni_mtx_lock(&ep->ep_mtx);
 	ep->ep_pipe = pipe;
 	nni_mtx_unlock(&ep->ep_mtx);
-	return (0);
-}
-
-int
-nni_ep_pipe_add(nni_ep *ep, nni_pipe *pipe)
-{
-	nni_mtx_lock(&ep->ep_mtx);
-	if (ep->ep_closed) {
-		nni_mtx_unlock(&ep->ep_mtx);
-		return (NNG_ECLOSED);
-	}
-
-	nni_list_append(&ep->ep_pipes, pipe);
-	nni_mtx_unlock(&ep->ep_mtx);
-
 	return (0);
 }
 
@@ -426,18 +420,25 @@ nni_ep_accept_sync(nni_ep *ep)
 	nni_pipe *pipe;
 	int       rv;
 
+	nni_mtx_lock(&ep->ep_mtx);
 	if (ep->ep_closed) {
+		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_ECLOSED);
 	}
 	rv = nni_pipe_create(&pipe, ep, ep->ep_sock, ep->ep_tran);
 	if (rv != 0) {
+		nni_mtx_unlock(&ep->ep_mtx);
 		return (rv);
 	}
+	nni_list_append(&ep->ep_pipes, pipe);
+	nni_mtx_unlock(&ep->ep_mtx);
+
 	rv = nni_ep_accept_aio(ep, &pipe->p_tran_data);
 	if (rv != 0) {
 		nni_pipe_stop(pipe);
 		return (rv);
 	}
+
 	nni_pipe_start(pipe);
 	return (0);
 }
