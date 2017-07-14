@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -256,10 +257,7 @@ nni_ep_connect_sync(nni_ep *ep)
 		nni_pipe_remove(pipe);
 		return (rv);
 	}
-	if ((rv = nni_pipe_start(pipe)) != 0) {
-		nni_pipe_remove(pipe);
-		return (rv);
-	}
+	nni_pipe_start(pipe);
 	nni_mtx_lock(&ep->ep_mtx);
 	ep->ep_pipe = pipe;
 	nni_mtx_unlock(&ep->ep_mtx);
@@ -440,10 +438,7 @@ nni_ep_accept_sync(nni_ep *ep)
 		nni_pipe_remove(pipe);
 		return (rv);
 	}
-	if ((rv = nni_pipe_start(pipe)) != 0) {
-		nni_pipe_remove(pipe);
-		return (rv);
-	}
+	nni_pipe_start(pipe);
 	return (0);
 }
 

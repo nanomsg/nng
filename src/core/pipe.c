@@ -235,20 +235,14 @@ nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)
 	return (p->p_tran_ops.p_getopt(p->p_tran_data, opt, val, szp));
 }
 
-int
+void
 nni_pipe_start(nni_pipe *p)
 {
-	int rv;
-
 	if (p->p_tran_ops.p_start == NULL) {
-		rv = nni_sock_pipe_ready(p->p_sock, p);
-		return (rv);
+		nni_aio_finish(&p->p_start_aio, 0, 0);
+	} else {
+		p->p_tran_ops.p_start(p->p_tran_data, &p->p_start_aio);
 	}
-
-	p->p_tran_ops.p_start(p->p_tran_data, &p->p_start_aio);
-	// XXX: Publish event
-
-	return (0);
 }
 
 void *

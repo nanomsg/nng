@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -62,7 +63,7 @@ extern int nni_pipe_create(nni_pipe **, nni_ep *, nni_sock *, nni_tran *);
 
 extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
-extern int      nni_pipe_start(nni_pipe *);
+extern void     nni_pipe_start(nni_pipe *);
 extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
 
 // nni_pipe_get_proto_data gets the protocol private data set with the
