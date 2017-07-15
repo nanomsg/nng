@@ -91,8 +91,6 @@ nni_pipe_send(nni_pipe *p, nni_aio *aio)
 void
 nni_pipe_close(nni_pipe *p)
 {
-	nni_sock *sock = p->p_sock;
-
 	nni_mtx_lock(&p->p_mtx);
 	if (p->p_reap == 1) {
 		// We already did a close.
@@ -200,18 +198,13 @@ nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran)
 		nni_pipe_destroy(p);
 		return (rv);
 	}
-	p->p_sock = sock;
 
 	// Make a copy of the transport ops.  We can override entry points
 	// and we avoid an extra dereference on hot code paths.
 	p->p_tran_ops = *tran->tran_pipe;
 
-	// Save the protocol destructor.
-	p->p_proto_dtor = sock->s_pipe_ops.pipe_fini;
-
 	// Initialize protocol pipe data.
-	rv = sock->s_pipe_ops.pipe_init(&p->p_proto_data, p, sock->s_data);
-	if (rv != 0) {
+	if ((rv = nni_sock_pipe_init(sock, p)) != 0) {
 		nni_pipe_destroy(p);
 		return (rv);
 	}

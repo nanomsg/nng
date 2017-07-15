@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -77,6 +78,27 @@ nni_sock_rele(nni_sock *sock)
 }
 
 int
+nni_sock_pipe_init(nni_sock *sock, nni_pipe *pipe)
+{
+	int rv;
+
+	// Initialize protocol pipe data.
+	nni_mtx_lock(&sock->s_mx);
+	rv = sock->s_pipe_ops.pipe_init(
+	    &pipe->p_proto_data, pipe, sock->s_data);
+	if (rv != 0) {
+		nni_mtx_lock(&sock->s_mx);
+		return (rv);
+	}
+	// Save the protocol destructor.
+	pipe->p_proto_dtor = sock->s_pipe_ops.pipe_fini;
+	pipe->p_sock       = sock;
+	nni_list_append(&sock->s_pipes, pipe);
+	nni_mtx_unlock(&sock->s_mx);
+	return (0);
+}
+
+int
 nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 {
 	int   rv;
@@ -98,9 +120,6 @@ nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 		return (rv);
 	}
 
-	// We have claimed ownership of the pipe, so add it to the list.
-	// Up until this point, the caller could destroy the pipe.
-	nni_list_append(&sock->s_pipes, pipe);
 	nni_mtx_unlock(&sock->s_mx);
 
 	return (0);

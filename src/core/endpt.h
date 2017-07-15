@@ -26,18 +26,19 @@ struct nni_ep {
 	nni_list_node ep_node; // per socket list
 	nni_sock *    ep_sock;
 	char          ep_addr[NNG_MAXADDRLEN];
-	nni_thr       ep_thr;
 	int           ep_mode;
 	int           ep_started;
 	int           ep_stop;
 	int           ep_closed; // full shutdown
 	int           ep_bound;  // true if we bound locally
+	int           ep_refcnt;
 	nni_mtx       ep_mtx;
 	nni_cv        ep_cv;
 	nni_pipe *    ep_pipe; // Connected pipe (dialers only)
 	nni_list      ep_pipes;
 	nni_aio       ep_acc_aio;
 	nni_aio       ep_con_aio;
+	nni_aio       ep_con_syn; // used for sync connect
 	nni_taskq_ent ep_reap_tqe;
 };
 
