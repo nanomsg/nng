@@ -29,12 +29,16 @@ struct nni_ep {
 	nni_thr       ep_thr;
 	int           ep_mode;
 	int           ep_started;
+	int           ep_stop;
 	int           ep_closed; // full shutdown
 	int           ep_bound;  // true if we bound locally
 	nni_mtx       ep_mtx;
 	nni_cv        ep_cv;
 	nni_pipe *    ep_pipe; // Connected pipe (dialers only)
 	nni_list      ep_pipes;
+	nni_aio       ep_acc_aio;
+	nni_aio       ep_con_aio;
+	nni_taskq_ent ep_reap_tqe;
 };
 
 enum nni_ep_mode {
@@ -45,13 +49,10 @@ enum nni_ep_mode {
 extern int      nni_ep_sys_init(void);
 extern void     nni_ep_sys_fini(void);
 extern int      nni_ep_find(nni_ep **, uint32_t);
-extern void     nni_ep_hold(nni_ep *);
-extern void     nni_ep_rele(nni_ep *);
 extern uint32_t nni_ep_id(nni_ep *);
 extern int      nni_ep_create(nni_ep **, nni_sock *, const char *, int);
 extern void     nni_ep_stop(nni_ep *);
 extern void     nni_ep_close(nni_ep *);
-extern void     nni_ep_remove(nni_ep *);
 extern int      nni_ep_dial(nni_ep *, int);
 extern int      nni_ep_listen(nni_ep *, int);
 extern void     nni_ep_list_init(nni_list *);

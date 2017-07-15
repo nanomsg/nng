@@ -22,8 +22,7 @@ nni_pipe_sys_init(void)
 {
 	int rv;
 
-	rv = nni_idhash_init(&nni_pipes);
-	if (rv != 0) {
+	if ((rv = nni_idhash_init(&nni_pipes)) != 0) {
 		return (rv);
 	}
 
@@ -102,6 +101,9 @@ nni_pipe_close(nni_pipe *p)
 	}
 	p->p_reap = 1;
 
+	// abort any pending negotiation/start process.
+	nni_aio_stop(&p->p_start_aio);
+
 	// Close the underlying transport.
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_close(p->p_tran_data);
@@ -120,9 +122,6 @@ nni_pipe_reap(nni_pipe *p)
 	// Transport close...
 	nni_pipe_close(p);
 
-	// Unlink the endpoint and pipe.
-	nni_ep_pipe_remove(p->p_ep, p);
-
 	// Tell the protocol to stop.
 	nni_sock_pipe_stop(p->p_sock, p);
 
@@ -140,9 +139,9 @@ nni_pipe_stop(nni_pipe *p)
 		return;
 	}
 	p->p_stop = 1;
-	nni_mtx_unlock(&p->p_mtx);
 	nni_taskq_ent_init(&p->p_reap_tqe, (nni_cb) nni_pipe_reap, p);
 	nni_taskq_dispatch(NULL, &p->p_reap_tqe);
+	nni_mtx_unlock(&p->p_mtx);
 }
 
 uint16_t
@@ -173,7 +172,7 @@ nni_pipe_start_cb(void *arg)
 }
 
 int
-nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
+nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran)
 {
 	nni_pipe *p;
 	int       rv;
@@ -202,7 +201,6 @@ nni_pipe_create(nni_pipe **pp, nni_ep *ep, nni_sock *sock, nni_tran *tran)
 		return (rv);
 	}
 	p->p_sock = sock;
-	p->p_ep   = ep;
 
 	// Make a copy of the transport ops.  We can override entry points
 	// and we avoid an extra dereference on hot code paths.

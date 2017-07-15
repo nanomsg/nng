@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -84,7 +85,6 @@ extern void nni_sock_unlock(nni_sock *);
 extern nni_notify *nni_sock_notify(nni_sock *, int, nng_notify_func, void *);
 extern void        nni_sock_unnotify(nni_sock *, nni_notify *);
 
-extern int  nni_sock_ep_add(nni_sock *, nni_ep *);
 extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
 
 extern void nni_sock_pipe_stop(nni_sock *, nni_pipe *);

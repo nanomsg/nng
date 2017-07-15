@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -257,14 +258,9 @@ nng_listen(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 int
 nng_endpoint_close(nng_endpoint eid)
 {
-	int     rv;
-	nni_ep *ep;
-
-	if ((rv = nni_ep_find(&ep, eid)) != 0) {
-		return (rv);
-	}
-	nni_ep_close(ep);
-	return (0);
+	// XXX: reimplement this properly.
+	NNI_ARG_UNUSED(eid);
+	return (NNG_ENOTSUP);
 }
 
 int

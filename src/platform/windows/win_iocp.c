@@ -186,7 +186,7 @@ nni_win_event_init(nni_win_event *evt, nni_win_event_ops *ops, void *ptr)
 	int rv;
 
 	ZeroMemory(&evt->olpd, sizeof(evt->olpd));
-	evt->olpd.hEvent = CreateEvent(NULL, TRUE, FALSE, NULL);
+	evt->olpd.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 	if (evt->olpd.hEvent == NULL) {
 		return (nni_win_error(GetLastError()));
 	}

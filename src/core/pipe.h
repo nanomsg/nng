@@ -60,7 +60,7 @@ extern void nni_pipe_stop(nni_pipe *);
 
 // Used only by the socket core - as we don't wish to expose the details
 // of the pipe structure outside of pipe.c.
-extern int nni_pipe_create(nni_pipe **, nni_ep *, nni_sock *, nni_tran *);
+extern int nni_pipe_create(nni_pipe **, nni_sock *, nni_tran *);
 
 extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
