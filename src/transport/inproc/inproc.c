@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -480,13 +481,13 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 
 	// We are already on the master list of servers, thanks to bind.
 	if (ep->closed) {
-		// This is the only possible error path from the
-		// time we acquired the lock.
 		nni_inproc_conn_finish(aio, NNG_ECLOSED);
+		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 	if (!ep->started) {
 		nni_inproc_conn_finish(aio, NNG_ESTATE);
+		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 
