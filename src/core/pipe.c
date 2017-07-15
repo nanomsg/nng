@@ -100,7 +100,7 @@ nni_pipe_close(nni_pipe *p)
 	p->p_reap = 1;
 
 	// abort any pending negotiation/start process.
-	nni_aio_stop(&p->p_start_aio);
+	nni_aio_cancel(&p->p_start_aio, NNG_ECLOSED);
 
 	// Close the underlying transport.
 	if (p->p_tran_data != NULL) {

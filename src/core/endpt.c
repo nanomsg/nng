@@ -154,6 +154,12 @@ nni_ep_close(nni_ep *ep)
 	ep->ep_closed = 1;
 	nni_mtx_unlock(&ep->ep_mtx);
 
+	// Abort any remaining in-flight operations.
+	nni_aio_cancel(&ep->ep_acc_aio, NNG_ECLOSED);
+	nni_aio_cancel(&ep->ep_con_aio, NNG_ECLOSED);
+	nni_aio_cancel(&ep->ep_con_syn, NNG_ECLOSED);
+
+	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
 }
 
@@ -163,11 +169,6 @@ nni_ep_reap(nni_ep *ep)
 	nni_pipe *pipe;
 
 	nni_ep_close(ep); // Extra sanity.
-
-	// Abort any in-flight operations.
-	nni_aio_stop(&ep->ep_acc_aio);
-	nni_aio_stop(&ep->ep_con_aio);
-	nni_aio_stop(&ep->ep_con_syn);
 
 	// Take us off the sock list.
 	nni_sock_ep_remove(ep->ep_sock, ep);

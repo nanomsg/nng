@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -29,6 +30,7 @@ struct nni_aio {
 	nni_mtx       a_lk;
 	nni_cv        a_cv;
 	unsigned      a_flags;
+	int           a_refcnt; // prevent use-after-free
 	nni_taskq_ent a_tqe;
 
 	// Read/write operations.
@@ -102,7 +104,18 @@ extern int  nni_aio_list_active(nni_aio *);
 // and the amount of data transferred (if any).
 extern void nni_aio_finish(nni_aio *, int, size_t);
 
-extern int  nni_aio_start(nni_aio *, void (*)(nni_aio *), void *);
-extern void nni_aio_stop(nni_aio *);
+// nni_aio_cancel is used to cancel an operation.  Any pending I/O or
+// timeouts are canceled if possible, and the callback will be returned
+// with the indicated result (NNG_ECLOSED or NNG_ECANCELED is recommended.)
+extern void nni_aio_cancel(nni_aio *, int rv);
+
+extern int nni_aio_start(nni_aio *, void (*)(nni_aio *), void *);
+
+// nni_aio_stop is used to abort all further operations on the AIO.
+// When this is executed, no further operations or callbacks will be
+// executed, and if callbacks or I/O is in progress this will block
+// until they are either canceled or aborted.  (Question: why not just
+// nni_fini?)
+// extern void nni_aio_stop(nni_aio *);
 
 #endif // CORE_AIO_H

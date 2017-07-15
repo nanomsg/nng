@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -48,8 +49,14 @@ nni_aio_fini(nni_aio *aio)
 
 	nni_mtx_lock(&aio->a_lk);
 	aio->a_flags |= NNI_AIO_FINI; // this prevents us from being scheduled
-	cancelfn = aio->a_prov_cancel;
-	nni_cv_wake(&aio->a_cv);
+	if ((aio->a_flags & NNI_AIO_DONE) == 0) {
+		aio->a_flags |= NNI_AIO_DONE;
+		aio->a_result = NNG_ECANCELED;
+		cancelfn      = aio->a_prov_cancel;
+	} else {
+		cancelfn = NULL;
+	}
+	nni_cv_wake(&aio->a_cv); // XXX: why? aio_wait? We shouldn't have any
 	nni_mtx_unlock(&aio->a_lk);
 
 	// Cancel the AIO if it was scheduled.
@@ -78,9 +85,6 @@ nni_aio_result(nni_aio *aio)
 
 	nni_mtx_lock(&aio->a_lk);
 	rv = aio->a_result;
-	if (aio->a_flags & (NNI_AIO_FINI | NNI_AIO_STOP)) {
-		rv = NNG_ECANCELED;
-	}
 	nni_mtx_unlock(&aio->a_lk);
 	return (rv);
 }
@@ -131,12 +135,18 @@ nni_aio_start(nni_aio *aio, void (*cancel)(nni_aio *), void *data)
 	return (0);
 }
 
+// XXX: REMOVE ME...
 void
 nni_aio_stop(nni_aio *aio)
 {
 	void (*cancelfn)(nni_aio *);
 
 	nni_mtx_lock(&aio->a_lk);
+	if (aio->a_flags & (NNI_AIO_STOP | NNI_AIO_FINI | NNI_AIO_DONE)) {
+		nni_mtx_unlock(&aio->a_lk);
+		return;
+	}
+	aio->a_result = NNG_ECANCELED;
 	aio->a_flags |= NNI_AIO_DONE | NNI_AIO_STOP;
 	cancelfn = aio->a_prov_cancel;
 	nni_mtx_unlock(&aio->a_lk);
@@ -158,23 +168,25 @@ nni_aio_stop(nni_aio *aio)
 }
 
 void
-nni_aio_cancel(nni_aio *aio)
+nni_aio_cancel(nni_aio *aio, int rv)
 {
 	void (*cancelfn)(nni_aio *);
 
 	nni_mtx_lock(&aio->a_lk);
-	if (aio->a_flags & NNI_AIO_DONE) {
+	if (aio->a_flags & (NNI_AIO_DONE | NNI_AIO_FINI)) {
 		// The operation already completed - so there's nothing
 		// left for us to do.
 		nni_mtx_unlock(&aio->a_lk);
 		return;
 	}
 	aio->a_flags |= NNI_AIO_DONE;
-	aio->a_result = NNG_ECANCELED;
+	aio->a_result = rv;
 	cancelfn      = aio->a_prov_cancel;
+
+	// XXX: Think about the synchronization with nni_aio_fini...
 	nni_mtx_unlock(&aio->a_lk);
 
-	// This unregisters the AIO from the provider.
+	// Stop any I/O at the provider level.
 	if (cancelfn != NULL) {
 		cancelfn(aio);
 	}
@@ -184,9 +196,12 @@ nni_aio_cancel(nni_aio *aio)
 	aio->a_prov_data   = NULL;
 	aio->a_prov_cancel = NULL;
 
-	if (!(aio->a_flags & (NNI_AIO_FINI | NNI_AIO_STOP))) {
+	// XXX: mark unbusy
+	if (!(aio->a_flags & NNI_AIO_FINI)) {
+		// If we are finalizing, then we are done.
 		nni_taskq_dispatch(NULL, &aio->a_tqe);
 	}
+	// XXX: else wake aio_cv.. because there is someone watching.
 	nni_mtx_unlock(&aio->a_lk);
 }
 
@@ -196,7 +211,7 @@ void
 nni_aio_finish(nni_aio *aio, int result, size_t count)
 {
 	nni_mtx_lock(&aio->a_lk);
-	if (aio->a_flags & NNI_AIO_DONE) {
+	if (aio->a_flags & (NNI_AIO_DONE | NNI_AIO_FINI)) {
 		// Operation already done (canceled or timed out?)
 		nni_mtx_unlock(&aio->a_lk);
 		return;
@@ -207,7 +222,8 @@ nni_aio_finish(nni_aio *aio, int result, size_t count)
 	aio->a_prov_cancel = NULL;
 	aio->a_prov_data   = NULL;
 
-	if (!(aio->a_flags & (NNI_AIO_FINI | NNI_AIO_STOP))) {
+	// XXX: cleanup the NNI_AIO_STOP flag, it's kind of pointless I think.
+	if (!(aio->a_flags & NNI_AIO_STOP)) {
 		nni_taskq_dispatch(NULL, &aio->a_tqe);
 	}
 	nni_mtx_unlock(&aio->a_lk);

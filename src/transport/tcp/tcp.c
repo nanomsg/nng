@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -141,11 +142,10 @@ nni_tcp_cancel_nego(nni_aio *aio)
 	nni_tcp_pipe *pipe = aio->a_prov_data;
 
 	nni_mtx_lock(&pipe->mtx);
-	if ((aio = pipe->user_negaio) != NULL) {
-		pipe->user_negaio = NULL;
-		nni_aio_stop(aio);
-	}
+	pipe->user_negaio = NULL;
 	nni_mtx_unlock(&pipe->mtx);
+
+	nni_aio_cancel(&pipe->negaio, aio->a_result);
 }
 
 static void
@@ -311,8 +311,8 @@ nni_tcp_cancel_tx(nni_aio *aio)
 	pipe->user_txaio = NULL;
 	nni_mtx_unlock(&pipe->mtx);
 
-	// stop the underlying aio ... we don't want a result for it.
-	nni_aio_stop(&pipe->txaio);
+	// cancel the underlying operation.
+	nni_aio_cancel(&pipe->txaio, aio->a_result);
 }
 
 static void
@@ -356,8 +356,8 @@ nni_tcp_cancel_rx(nni_aio *aio)
 	pipe->user_rxaio = NULL;
 	nni_mtx_unlock(&pipe->mtx);
 
-	// stop the underlying aio ... we don't want a result for it.
-	nni_aio_stop(&pipe->rxaio);
+	// cancel the underlying operation.
+	nni_aio_cancel(&pipe->rxaio, aio->a_result);
 }
 
 static void
@@ -637,11 +637,10 @@ nni_tcp_cancel_ep(nni_aio *aio)
 	nni_tcp_ep *ep = aio->a_prov_data;
 
 	nni_mtx_lock(&ep->mtx);
-	if (ep->user_aio == aio) {
-		ep->user_aio = NULL;
-	}
-	nni_aio_stop(&ep->aio);
+	ep->user_aio = NULL;
 	nni_mtx_unlock(&ep->mtx);
+
+	nni_aio_cancel(&ep->aio, aio->a_result);
 }
 
 static void
