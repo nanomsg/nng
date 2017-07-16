@@ -26,7 +26,8 @@ fi
 
 mytmpdir=`mktemp -d`
 
-for file in `find ${srcdir} -name '*.[ch]' -print`
+cd ${srcdir}
+for file in `find . -name '*.[ch]' -print`
 do
 	ext=${file##*.}
 	oldf=${file}
