@@ -219,51 +219,6 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	return (0);
 }
 
-#if 0
-int
-nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran)
-{
-	nni_pipe *p;
-	int       rv;
-
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	if ((rv = nni_mtx_init(&p->p_mtx)) != 0) {
-		nni_pipe_destroy(p);
-		return (rv);
-	}
-	if ((rv = nni_idhash_alloc(nni_pipes, &p->p_id, p)) != 0) {
-		nni_pipe_destroy(p);
-		return (rv);
-	}
-	p->p_tran_data  = NULL;
-	p->p_proto_data = NULL;
-	p->p_proto_dtor = NULL;
-
-	NNI_LIST_NODE_INIT(&p->p_sock_node);
-	NNI_LIST_NODE_INIT(&p->p_ep_node);
-
-	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) != 0) {
-		nni_pipe_destroy(p);
-		return (rv);
-	}
-
-	// Make a copy of the transport ops.  We can override entry points
-	// and we avoid an extra dereference on hot code paths.
-	p->p_tran_ops = *tran->tran_pipe;
-
-	// Initialize protocol pipe data.
-	if ((rv = nni_sock_pipe_init(sock, p)) != 0) {
-		nni_pipe_destroy(p);
-		return (rv);
-	}
-
-	*pp = p;
-	return (0);
-}
-#endif
-
 int
 nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)
 {
