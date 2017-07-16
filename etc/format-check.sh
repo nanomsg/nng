@@ -47,7 +47,6 @@ if [ "${maj}" -eq 3 -a "${min}" -lt 5 ]; then
 	echo "clang-format is too old.  Skipping checks."
 	exit 0
 fi
-echo "VERSION is $versno MAJOR $maj MINOR $min}"
 
 
 mytmpdir=`mktemp -d`
