@@ -78,12 +78,16 @@ nni_sock_rele(nni_sock *sock)
 }
 
 int
-nni_sock_pipe_init(nni_sock *sock, nni_pipe *pipe)
+nni_sock_pipe_add(nni_sock *sock, nni_pipe *pipe)
 {
 	int rv;
 
 	// Initialize protocol pipe data.
 	nni_mtx_lock(&sock->s_mx);
+	if (sock->s_closing) {
+		nni_mtx_unlock(&sock->s_mx);
+		return (NNG_ECLOSED);
+	}
 	rv = sock->s_pipe_ops.pipe_init(
 	    &pipe->p_proto_data, pipe, sock->s_data);
 	if (rv != 0) {
@@ -126,7 +130,7 @@ nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 }
 
 void
-nni_sock_pipe_stop(nni_sock *sock, nni_pipe *pipe)
+nni_sock_pipe_remove(nni_sock *sock, nni_pipe *pipe)
 {
 	void *  pdata;
 	nni_ep *ep;
@@ -138,19 +142,6 @@ nni_sock_pipe_stop(nni_sock *sock, nni_pipe *pipe)
 	if ((sock->s_pipe_ops.pipe_stop == NULL) || (pdata == NULL)) {
 		nni_mtx_unlock(&sock->s_mx);
 		return;
-	}
-
-	// Break up the relationship between the EP and the pipe.
-	if ((ep = pipe->p_ep) != NULL) {
-		nni_mtx_lock(&ep->ep_mtx);
-		// During early init, the pipe might not have this set.
-		if (nni_list_active(&ep->ep_pipes, pipe)) {
-			nni_list_remove(&ep->ep_pipes, pipe);
-		}
-		pipe->p_ep  = NULL;
-		ep->ep_pipe = NULL; // XXX: remove this soon
-		nni_cv_wake(&ep->ep_cv);
-		nni_mtx_unlock(&ep->ep_mtx);
 	}
 
 	sock->s_pipe_ops.pipe_stop(pdata);

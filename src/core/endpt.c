@@ -94,7 +94,6 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	}
 	ep->ep_closed = 0;
 	ep->ep_bound  = 0;
-	ep->ep_pipe   = NULL;
 	ep->ep_id     = id;
 	ep->ep_data   = NULL;
 	ep->ep_refcnt = 0;
@@ -429,6 +428,45 @@ nni_ep_listen(nni_ep *ep, int flags)
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	return (0);
+}
+
+int
+nni_ep_pipe_add(nni_ep *ep, nni_pipe *p)
+{
+	nni_mtx_lock(&ep->ep_mtx);
+	if (ep->ep_closed) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (NNG_ECLOSED);
+	}
+	nni_list_append(&ep->ep_pipes, p);
+	p->p_ep = ep;
+	nni_mtx_unlock(&ep->ep_mtx);
+	return (0);
+}
+
+void
+nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
+{
+	// Break up the relationship between the EP and the pipe.
+	nni_mtx_lock(&ep->ep_mtx);
+	// During early init, the pipe might not have this set.
+	if (nni_list_active(&ep->ep_pipes, pipe)) {
+		nni_list_remove(&ep->ep_pipes, pipe);
+	}
+	pipe->p_ep = NULL;
+	// Wake up the close thread if it is waiting.
+	if (ep->ep_closed && nni_list_empty(&ep->ep_pipes)) {
+		nni_cv_wake(&ep->ep_cv);
+	}
+
+	// If this pipe closed, then lets restart the dial operation.
+	// Since the remote side seems to have closed, lets start with
+	// a backoff.  This keeps us from pounding the crap out of the
+	// thing if a remote server accepts but then disconnects immediately.
+	if ((!ep->ep_closed) && (ep->ep_mode == NNI_EP_MODE_DIAL)) {
+		nni_ep_backoff_start(ep);
+	}
+	nni_mtx_unlock(&ep->ep_mtx);
 }
 
 void

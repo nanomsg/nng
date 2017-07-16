@@ -87,11 +87,11 @@ extern void        nni_sock_unnotify(nni_sock *, nni_notify *);
 
 extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
 
-// nni_sock_pipe_init adds the pipe to the socket. It is called by
+// nni_sock_pipe_add adds the pipe to the socket. It is called by
 // the generic pipe creation code.
-extern int nni_sock_pipe_init(nni_sock *, nni_pipe *);
+extern int nni_sock_pipe_add(nni_sock *, nni_pipe *);
 
-extern void nni_sock_pipe_stop(nni_sock *, nni_pipe *);
+extern void nni_sock_pipe_remove(nni_sock *, nni_pipe *);
 
 // nni_sock_pipe_ready lets the socket know the pipe is ready for
 // business.  This also calls the socket/protocol specific add function,

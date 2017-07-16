@@ -120,10 +120,16 @@ nni_pipe_reap(nni_pipe *p)
 	// Transport close...
 	nni_pipe_close(p);
 
-	// Tell the protocol to stop.
-	nni_sock_pipe_stop(p->p_sock, p);
+	// Remove the pipe from the socket and the endpoint.  Note
+	// that it is in theory possible for either of these to be null
+	// if the pipe is being torn down before it is fully initialized.
+	if (p->p_ep != NULL) {
+		nni_ep_pipe_remove(p->p_ep, p);
+	}
+	if (p->p_sock != NULL) {
+		nni_sock_pipe_remove(p->p_sock, p);
+	}
 
-	// XXX: would be simpler to just do a destroy here
 	nni_pipe_destroy(p);
 }
 
@@ -208,8 +214,13 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	p->p_tran_ops  = *tran->tran_pipe;
 	p->p_tran_data = tdata;
 
-	// Attempt to initialize protocol data.
-	if ((rv = nni_sock_pipe_init(sock, p)) != 0) {
+	// Attempt to initialize sock protocol & endpoint.
+	if ((rv = nni_ep_pipe_add(ep, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
+		nni_ep_pipe_remove(ep, p);
 		nni_pipe_destroy(p);
 		return (rv);
 	}

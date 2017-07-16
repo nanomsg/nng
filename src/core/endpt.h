@@ -1,5 +1,6 @@
 //
 // Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -34,7 +35,6 @@ struct nni_ep {
 	int           ep_refcnt;
 	nni_mtx       ep_mtx;
 	nni_cv        ep_cv;
-	nni_pipe *    ep_pipe; // Connected pipe (dialers only)
 	nni_list      ep_pipes;
 	nni_aio       ep_acc_aio;
 	nni_aio       ep_con_aio;
@@ -62,6 +62,7 @@ extern void     nni_ep_close(nni_ep *);
 extern int      nni_ep_dial(nni_ep *, int);
 extern int      nni_ep_listen(nni_ep *, int);
 extern void     nni_ep_list_init(nni_list *);
-extern void     nni_ep_pipe_remove(nni_ep *, nni_pipe *);
+extern int nni_ep_pipe_add(nni_ep *ep, nni_pipe *);
+extern void nni_ep_pipe_remove(nni_ep *, nni_pipe *);
 
 #endif // CORE_ENDPT_H
