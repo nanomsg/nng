@@ -1,0 +1,7 @@
+build
+lxbuild
+winbuild
+.vs
+.vscode/.cmaketools.json
+.vscode
+etc/nng.sublime-workspace
