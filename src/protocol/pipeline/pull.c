@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -112,8 +113,8 @@ nni_pull_pipe_stop(void *arg)
 {
 	nni_pull_pipe *pp = arg;
 
-	nni_aio_stop(&pp->putq_aio);
-	nni_aio_stop(&pp->recv_aio);
+	nni_aio_cancel(&pp->putq_aio, NNG_ECANCELED);
+	nni_aio_cancel(&pp->recv_aio, NNG_ECANCELED);
 }
 
 static void
