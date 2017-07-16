@@ -276,7 +276,8 @@ nni_bus_sock_getq_cb(void *arg)
 	nni_bus_pipe *ppipe;
 	nni_bus_pipe *lpipe;
 	nni_msgq *    uwq = nni_sock_sendq(psock->nsock);
-	nni_msg *     msg, *dup;
+	nni_msg *     msg;
+	nni_msg *     dup;
 	uint32_t      sender;
 
 	if (nni_aio_result(&psock->aio_getq) != 0) {

@@ -470,6 +470,7 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 
 	if (ep->mode != NNI_EP_MODE_LISTEN) {
 		nni_aio_finish(aio, NNG_EINVAL, 0);
+		return;
 	}
 	if ((rv = nni_inproc_pipe_init(&pipe, ep)) != 0) {
 		nni_aio_finish(aio, rv, 0);
@@ -477,7 +478,6 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 	}
 
 	nni_mtx_lock(&nni_inproc.mx);
-	aio->a_pipe = pipe;
 
 	// We are already on the master list of servers, thanks to bind.
 	if (ep->closed) {
@@ -490,6 +490,8 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
+
+	aio->a_pipe = pipe;
 
 	// Insert us into the pending server aios, and then run the
 	// accept list.

@@ -186,7 +186,6 @@ nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran)
 		nni_pipe_destroy(p);
 		return (rv);
 	}
-
 	p->p_tran_data  = NULL;
 	p->p_proto_data = NULL;
 	p->p_proto_dtor = NULL;

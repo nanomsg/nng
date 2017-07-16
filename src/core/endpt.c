@@ -211,8 +211,9 @@ nni_ep_connect_done(void *arg)
 	void *               tpipe;
 	nni_pipe *           pipe;
 	const nni_tran_pipe *ops;
+	int                  rv;
 
-	int rv;
+	ops = ep->ep_tran->tran_pipe;
 
 	nni_mtx_lock(&ep->ep_mtx);
 	if ((rv = nni_aio_result(aio)) == 0) {
@@ -257,7 +258,7 @@ done:
 static void
 nni_ep_connect_start(nni_ep *ep)
 {
-	nni_aio *aio = &ep->ep_acc_aio;
+	nni_aio *aio = &ep->ep_con_aio;
 
 	// Call with the Endpoint lock held.
 	if (ep->ep_closed) {
@@ -437,7 +438,6 @@ nni_ep_accept_done(void *arg)
 	}
 
 done:
-
 	switch (rv) {
 	case 0:
 		pipe->p_tran_ops  = *ops;
