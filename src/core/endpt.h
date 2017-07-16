@@ -38,7 +38,12 @@ struct nni_ep {
 	nni_list      ep_pipes;
 	nni_aio       ep_acc_aio;
 	nni_aio       ep_con_aio;
-	nni_aio       ep_con_syn; // used for sync connect
+	nni_aio       ep_con_syn;  // used for sync connect
+	nni_aio       ep_backoff;  // backoff timer
+	nni_duration  ep_maxrtime; // maximum time for reconnect
+	nni_duration  ep_currtime; // current time for reconnect
+	nni_duration  ep_inirtime; // initial time for reconnect
+	nni_time      ep_conntime; // time of last good connect
 	nni_taskq_ent ep_reap_tqe;
 };
 
