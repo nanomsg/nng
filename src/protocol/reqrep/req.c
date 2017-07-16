@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -209,11 +210,11 @@ nni_req_pipe_stop(void *arg)
 	nni_req_pipe *rp  = arg;
 	nni_req_sock *req = rp->req;
 
-	nni_aio_stop(&rp->aio_getq);
-	nni_aio_stop(&rp->aio_putq);
-	nni_aio_stop(&rp->aio_recv);
-	nni_aio_stop(&rp->aio_sendcooked);
-	nni_aio_stop(&rp->aio_sendraw);
+	nni_aio_cancel(&rp->aio_getq, NNG_ECANCELED);
+	nni_aio_cancel(&rp->aio_putq, NNG_ECANCELED);
+	nni_aio_cancel(&rp->aio_recv, NNG_ECANCELED);
+	nni_aio_cancel(&rp->aio_sendcooked, NNG_ECANCELED);
+	nni_aio_cancel(&rp->aio_sendraw, NNG_ECANCELED);
 
 	// At this point there should not be any further AIOs running.
 	// Further, any completion tasks have completed.

@@ -113,7 +113,7 @@ nni_resp_sock_close(void *arg)
 {
 	nni_resp_sock *psock = arg;
 
-	nni_aio_stop(&psock->aio_getq);
+	nni_aio_cancel(&psock->aio_getq, NNG_ECLOSED);
 }
 
 static int
@@ -195,10 +195,10 @@ nni_resp_pipe_stop(void *arg)
 	nni_resp_sock *psock = ppipe->psock;
 
 	nni_msgq_close(ppipe->sendq);
-	nni_aio_stop(&ppipe->aio_putq);
-	nni_aio_stop(&ppipe->aio_getq);
-	nni_aio_stop(&ppipe->aio_send);
-	nni_aio_stop(&ppipe->aio_recv);
+	nni_aio_cancel(&ppipe->aio_putq, NNG_ECANCELED);
+	nni_aio_cancel(&ppipe->aio_getq, NNG_ECANCELED);
+	nni_aio_cancel(&ppipe->aio_send, NNG_ECANCELED);
+	nni_aio_cancel(&ppipe->aio_recv, NNG_ECANCELED);
 
 	if (ppipe->id != 0) {
 		nni_idhash_remove(psock->pipes, ppipe->id);
