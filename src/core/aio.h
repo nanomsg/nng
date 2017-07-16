@@ -52,6 +52,9 @@ struct nni_aio {
 	void (*a_prov_cancel)(nni_aio *);
 	void *        a_prov_data;
 	nni_list_node a_prov_node;
+
+	// Expire node.
+	nni_list_node a_expire_node;
 };
 
 // nni_aio_init initializes an aio object.  The callback is called with
@@ -118,4 +121,6 @@ extern int nni_aio_start(nni_aio *, void (*)(nni_aio *), void *);
 // nni_fini?)
 // extern void nni_aio_stop(nni_aio *);
 
+extern int  nni_aio_sys_init(void);
+extern void nni_aio_sys_fini(void);
 #endif // CORE_AIO_H
