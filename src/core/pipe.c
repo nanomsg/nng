@@ -53,7 +53,6 @@ nni_pipe_destroy(nni_pipe *p)
 		return;
 	}
 
-	nni_aio_fini(&p->p_start_aio);
 	if (p->p_proto_data != NULL) {
 		p->p_proto_dtor(p->p_proto_data);
 	}
@@ -108,6 +107,9 @@ nni_pipe_close(nni_pipe *p)
 	}
 
 	nni_mtx_unlock(&p->p_mtx);
+
+	// Ensure that the negotiation step is aborted fully.
+	nni_aio_fini(&p->p_start_aio);
 }
 
 // Pipe reap is called on a taskq when the pipe should be closed.  No
