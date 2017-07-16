@@ -393,36 +393,33 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 		nni_aio_finish(aio, NNG_EINVAL, 0);
 		return;
 	}
-	if (ep->started) {
-		nni_aio_finish(aio, NNG_EBUSY, 0);
-		return;
-	}
-	if (nni_list_active(&ep->clients, ep)) {
-		nni_aio_finish(aio, NNG_EBUSY, 0);
-		return;
-	}
-
-	if ((rv = nni_inproc_pipe_init(&pipe, ep)) != 0) {
-		nni_aio_finish(aio, rv, 0);
-		return;
-	}
-
 	nni_mtx_lock(&nni_inproc.mx);
 
 	if ((rv = nni_aio_start(aio, nni_inproc_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
-	aio->a_pipe = pipe;
 
 	if (nni_list_active(&ep->clients, ep)) {
 		// We already have a pending connection...
-		nni_inproc_conn_finish(aio, NNG_EINVAL);
+		nni_aio_finish(aio, NNG_EINVAL, 0);
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
+	if (ep->started) {
+		nni_aio_finish(aio, NNG_EBUSY, 0);
+		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 
 	if (ep->closed) {
-		nni_inproc_conn_finish(aio, rv);
+		nni_aio_finish(aio, NNG_ECLOSED, 0);
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
+
+	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
+		nni_aio_finish(aio, rv, 0);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
@@ -495,21 +492,17 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 		nni_aio_finish(aio, NNG_EINVAL, 0);
 		return;
 	}
-	if ((rv = nni_inproc_pipe_init(&pipe, ep)) != 0) {
-		nni_aio_finish(aio, rv, 0);
-		return;
-	}
 
 	nni_mtx_lock(&nni_inproc.mx);
 
 	// We are already on the master list of servers, thanks to bind.
 	if (ep->closed) {
-		nni_inproc_conn_finish(aio, NNG_ECLOSED);
+		nni_aio_finish(aio, NNG_ECLOSED, 0);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 	if (!ep->started) {
-		nni_inproc_conn_finish(aio, NNG_ESTATE);
+		nni_aio_finish(aio, NNG_ESTATE, 0);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
@@ -518,7 +511,12 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
-	aio->a_pipe = pipe;
+
+	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
+		nni_aio_finish(aio, rv, 0);
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
 
 	// Insert us into the pending server aios, and then run the
 	// accept list.
