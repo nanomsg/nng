@@ -364,6 +364,24 @@ nni_inproc_accept_clients(nni_inproc_ep *server)
 }
 
 static void
+nni_inproc_ep_cancel(nni_aio *aio)
+{
+	nni_inproc_ep *ep = aio->a_prov_data;
+
+	nni_mtx_lock(&nni_inproc.mx);
+	if (nni_list_active(&ep->aios, aio)) {
+		nni_list_remove(&ep->aios, aio);
+	}
+	// Arguably if the mode is a client... then we need to remove
+	// it from the server's list.   Notably this isn't *our* list,
+	// but the offsets are the same and they're good enough using the
+	// global lock to make it all safe.
+	if (nni_list_active(&ep->clients, ep)) {
+		nni_list_remove(&ep->clients, ep);
+	}
+	nni_mtx_unlock(&nni_inproc.mx);
+}
+static void
 nni_inproc_ep_connect(void *arg, nni_aio *aio)
 {
 	nni_inproc_ep *  ep = arg;
@@ -390,6 +408,11 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 	}
 
 	nni_mtx_lock(&nni_inproc.mx);
+
+	if ((rv = nni_aio_start(aio, nni_inproc_ep_cancel, ep)) != 0) {
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
 	aio->a_pipe = pipe;
 
 	if (nni_list_active(&ep->clients, ep)) {
@@ -491,6 +514,10 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 		return;
 	}
 
+	if ((rv = nni_aio_start(aio, nni_inproc_ep_cancel, ep)) != 0) {
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
 	aio->a_pipe = pipe;
 
 	// Insert us into the pending server aios, and then run the
