@@ -55,16 +55,25 @@ extern void nni_pipe_close(nni_pipe *);
 // other consumers are referencing the pipe.  We assume that either the
 // socket (protocol code) or endpoint may have references to the pipe
 // when this function is called.  The pipe cleanup is asynchronous and
-// make take a while depending on scheduling, etc.
+// make take a while depending on scheduling, etc.  The pipe lock itself
+// may not be held during this, but any other locks may be.
 extern void nni_pipe_stop(nni_pipe *);
 
-// Used only by the socket core - as we don't wish to expose the details
-// of the pipe structure outside of pipe.c.
-extern int nni_pipe_create(nni_pipe **, nni_sock *, nni_tran *);
+// nni_pipe_create is used only by endpoints - as we don't wish to expose the
+// details of the pipe structure outside of pipe.c.  This function must be
+// called without any locks held, as it will call back up into the socket and
+// endpoint, grabbing each of those locks.  The function takes ownership of
+// the transport specific pipe (3rd argument), regardless of whether it
+// succeeds or not.  The endpoint should be held when calling this.
+extern int nni_pipe_create(nni_ep *, void *);
+
+// nni_pipe_start is called by the socket to begin any startup activities
+// on the pipe before making it ready for use by protocols.  For example,
+// TCP and IPC initial handshaking is performed this way.
+extern void nni_pipe_start(nni_pipe *);
 
 extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
-extern void     nni_pipe_start(nni_pipe *);
 extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
 
 // nni_pipe_get_proto_data gets the protocol private data set with the

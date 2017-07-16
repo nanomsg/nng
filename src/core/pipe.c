@@ -170,6 +170,57 @@ nni_pipe_start_cb(void *arg)
 }
 
 int
+nni_pipe_create(nni_ep *ep, void *tdata)
+{
+	nni_pipe *p;
+	int       rv;
+	nni_tran *tran = ep->ep_tran;
+	nni_sock *sock = ep->ep_sock;
+
+	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
+		// In this case we just toss the pipe...
+		tran->tran_pipe->p_fini(p);
+		return (NNG_ENOMEM);
+	}
+
+	// Make a private copy of the transport ops.
+	p->p_tran_ops   = *tran->tran_pipe;
+	p->p_tran_data  = tdata;
+	p->p_proto_data = NULL;
+
+	if ((rv = nni_mtx_init(&p->p_mtx)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+	if ((rv = nni_idhash_alloc(nni_pipes, &p->p_id, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	NNI_LIST_NODE_INIT(&p->p_sock_node);
+	NNI_LIST_NODE_INIT(&p->p_ep_node);
+
+	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	p->p_tran_ops  = *tran->tran_pipe;
+	p->p_tran_data = tdata;
+
+	// Attempt to initialize protocol data.
+	if ((rv = nni_sock_pipe_init(sock, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	// Start the pipe running.
+	nni_pipe_start(p);
+	return (0);
+}
+
+#if 0
+int
 nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran)
 {
 	nni_pipe *p;
@@ -211,6 +262,7 @@ nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran)
 	*pp = p;
 	return (0);
 }
+#endif
 
 int
 nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)

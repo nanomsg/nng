@@ -757,6 +757,11 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 		return (rv);
 	}
 	nni_list_append(&sock->s_eps, ep);
+	// Put a hold on the endpoint, for now.
+	nni_mtx_lock(&ep->ep_mtx);
+	ep->ep_refcnt++;
+	ep->ep_started = 1;
+	nni_mtx_unlock(&ep->ep_mtx);
 	nni_mtx_unlock(&sock->s_mx);
 
 	if ((rv = nni_ep_dial(ep, flags)) != 0) {
@@ -764,6 +769,15 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	} else if (epp != NULL) {
 		*epp = ep;
 	}
+
+	// Drop our endpoint hold.
+	nni_mtx_lock(&ep->ep_mtx);
+	if (rv != 0) {
+		ep->ep_started = 0;
+	}
+	ep->ep_refcnt--;
+	nni_cv_wake(&ep->ep_cv);
+	nni_mtx_unlock(&ep->ep_mtx);
 
 	return (rv);
 }
@@ -779,7 +793,12 @@ nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 		nni_mtx_unlock(&sock->s_mx);
 		return (rv);
 	}
+
 	nni_list_append(&sock->s_eps, ep);
+	nni_mtx_lock(&ep->ep_mtx);
+	ep->ep_refcnt++;
+	ep->ep_started = 1;
+	nni_mtx_unlock(&ep->ep_mtx);
 	nni_mtx_unlock(&sock->s_mx);
 
 	if ((rv = nni_ep_listen(ep, flags)) != 0) {
@@ -787,6 +806,15 @@ nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	} else if (epp != NULL) {
 		*epp = ep;
 	}
+
+	// Drop our endpoint hold.
+	nni_mtx_lock(&ep->ep_mtx);
+	if (rv != 0) {
+		ep->ep_started = 0;
+	}
+	ep->ep_refcnt--;
+	nni_cv_wake(&ep->ep_cv);
+	nni_mtx_unlock(&ep->ep_mtx);
 
 	return (rv);
 }

@@ -95,8 +95,8 @@ extern void nni_sock_pipe_stop(nni_sock *, nni_pipe *);
 
 // nni_sock_pipe_ready lets the socket know the pipe is ready for
 // business.  This also calls the socket/protocol specific add function,
-// and it may return an error.  A reference count on the pipe is incremented
-// on success.  The reference count should be dropped by nni_sock_pipe_closed.
+// and it may return an error.   The reference count should be dropped by
+// nni_sock_pipe_closed.
 extern int nni_sock_pipe_ready(nni_sock *, nni_pipe *);
 
 // Set error codes for applications.  These are only ever
