@@ -43,10 +43,11 @@ if [ "${maj}" -lt 3 ]; then
 	echo "clang-format is too old.  Skipping checks."
 	exit 0
 fi
-if [ "${maj}" -eq 3 -a "${min}" -lt 5 ]; then
+if [ "${maj}" -eq 3 -a "${min}" -lt 6 ]; then
 	echo "clang-format is too old.  Skipping checks."
 	exit 0
 fi
+echo "clang-format looks like ${maj} . ${min}"
 
 
 mytmpdir=`mktemp -d`
