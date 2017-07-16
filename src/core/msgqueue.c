@@ -358,13 +358,6 @@ nni_msgq_aio_put(nni_msgq *mq, nni_aio *aio)
 
 	nni_aio_list_append(&mq->mq_aio_putq, aio);
 	nni_msgq_run_putq(mq);
-
-	// if this was a non-blocking operation, and we couldn't finish
-	// it synchronously in the above run_putq, then abort.
-	if ((aio->a_expire == NNI_TIME_ZERO) && (nni_aio_list_active(aio))) {
-		nni_aio_list_remove(aio);
-		nni_aio_finish(aio, NNG_EAGAIN, 0);
-	}
 	nni_msgq_run_notify(mq);
 
 	nni_mtx_unlock(&mq->mq_lock);
@@ -391,13 +384,6 @@ nni_msgq_aio_get(nni_msgq *mq, nni_aio *aio)
 
 	nni_aio_list_append(&mq->mq_aio_getq, aio);
 	nni_msgq_run_getq(mq);
-
-	// if this was a non-blocking operation, and we couldn't finish
-	// it synchronously in the above run_getq, then abort.
-	if ((aio->a_expire == NNI_TIME_ZERO) && (nni_aio_list_active(aio))) {
-		nni_aio_list_remove(aio);
-		nni_aio_finish(aio, NNG_EAGAIN, 0);
-	}
 	nni_msgq_run_notify(mq);
 
 	nni_mtx_unlock(&mq->mq_lock);

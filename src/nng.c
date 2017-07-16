@@ -160,6 +160,13 @@ nng_recvmsg(nng_socket sid, nng_msg **msgp, int flags)
 
 	rv = nni_sock_recvmsg(sock, msgp, expire);
 	nni_sock_rele(sock);
+
+	// Possibly massage nonblocking attempt.  Note that nonblocking is
+	// still done asynchronously, and the calling thread loses context.
+	if ((rv == NNG_ETIMEDOUT) && (expire == NNI_TIME_ZERO)) {
+		rv = NNG_EAGAIN;
+	}
+
 	return (rv);
 }
 
@@ -214,6 +221,13 @@ nng_sendmsg(nng_socket sid, nng_msg *msg, int flags)
 
 	rv = nni_sock_sendmsg(sock, msg, expire);
 	nni_sock_rele(sock);
+
+	// Possibly massage nonblocking attempt.  Note that nonblocking is
+	// still done asynchronously, and the calling thread loses context.
+	if ((rv == NNG_ETIMEDOUT) && (expire == NNI_TIME_ZERO)) {
+		rv = NNG_EAGAIN;
+	}
+
 	return (rv);
 }
 
