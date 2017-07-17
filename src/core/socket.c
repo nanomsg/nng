@@ -50,6 +50,7 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 	}
 	nni_mtx_lock(&sock->s_mx);
 	if ((sock->s_closed) || (sock->s_data == NULL)) {
+		nni_objhash_unref(nni_socks, id);
 		nni_mtx_unlock(&sock->s_mx);
 		return (NNG_ECLOSED);
 	}
