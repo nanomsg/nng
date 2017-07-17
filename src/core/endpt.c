@@ -80,7 +80,6 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	nni_tran *tran;
 	nni_ep *  ep;
 	int       rv;
-	uint32_t  id;
 
 	if ((tran = nni_tran_find(addr)) == NULL) {
 		return (NNG_ENOTSUP);
@@ -94,7 +93,6 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	}
 	ep->ep_closed = 0;
 	ep->ep_bound  = 0;
-	ep->ep_id     = id;
 	ep->ep_data   = NULL;
 	ep->ep_refcnt = 0;
 
@@ -153,7 +151,6 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 void
 nni_ep_close(nni_ep *ep)
 {
-	nni_pipe *pipe;
 	nni_mtx_lock(&ep->ep_mtx);
 	if (ep->ep_closed) {
 		nni_mtx_unlock(&ep->ep_mtx);
@@ -174,8 +171,6 @@ nni_ep_close(nni_ep *ep)
 static void
 nni_ep_reap(nni_ep *ep)
 {
-	nni_pipe *pipe;
-
 	nni_ep_close(ep); // Extra sanity.
 
 	// Take us off the sock list.
@@ -269,7 +264,6 @@ nni_ep_connect_done(void *arg)
 	nni_ep * ep  = arg;
 	nni_aio *aio = &ep->ep_con_aio;
 	int      rv;
-	nni_time cooldown;
 
 	if ((rv = nni_aio_result(aio)) == 0) {
 		rv = nni_pipe_create(ep, aio->a_pipe);
@@ -278,13 +272,11 @@ nni_ep_connect_done(void *arg)
 	switch (rv) {
 	case 0:
 		// Good connect, so reset the backoff timer.
-		// XXX: This is kind of bad if a remote host just drops
-		// the connection without completing our negotiation.
-		// We should reset on close instead, when the pipe is
-		// removed *after* a good connect is made, and only
-		// if we manage to keep the pipe open for at least
-		// some meaningful amount of time.  Alternatively we
-		// can dial into the pipe start logic...
+		// Note that a host that accepts the connect, but drops us
+		// immediately, is going to get hit pretty hard (depending
+		// on the initial backoff) with no exponential backoff.
+		// This can happen if we wind up trying to connect to some
+		// port that does not speak SP for example.
 		ep->ep_currtime = ep->ep_inirtime;
 
 		// No further outgoing connects -- we will restart a
