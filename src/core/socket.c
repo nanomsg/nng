@@ -63,15 +63,6 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 }
 
 void
-nni_sock_hold(nni_sock *sock)
-{
-	int rv;
-
-	rv = nni_objhash_find(nni_socks, sock->s_id, NULL);
-	NNI_ASSERT(rv == 0);
-}
-
-void
 nni_sock_rele(nni_sock *sock)
 {
 	nni_objhash_unref(nni_socks, sock->s_id);
