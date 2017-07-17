@@ -316,6 +316,8 @@ nni_objhash_unref_wait(nni_objhash *oh, uint32_t id)
 
 	while (node->on_refcnt != 1) {
 		nni_cv_wait(&oh->oh_cv);
+		// If the table resizes, it can invalidate our old node.
+		node = nni_objhash_find_node(oh, id);
 	}
 	node->on_refcnt--;
 	NNI_ASSERT(node->on_refcnt == 0);
