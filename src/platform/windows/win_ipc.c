@@ -532,7 +532,7 @@ nni_plat_ipc_ep_fini(nni_plat_ipc_ep *ep)
 	nni_plat_ipc_ep_close(ep);
 	if (ep->p != INVALID_HANDLE_VALUE) {
 		CloseHandle(ep->p);
-		ep->p = NULL;
+		ep->p = INVALID_HANDLE_VALUE;
 	}
 	nni_win_event_close(&ep->acc_ev);
 	nni_win_event_fini(&ep->acc_ev);
