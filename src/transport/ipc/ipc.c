@@ -551,7 +551,11 @@ nni_ipc_ep_finish(nni_ipc_ep *ep)
 
 done:
 	ep->aio.a_pipe = NULL;
-	nni_aio_finish(aio, rv, 0);
+	if (nni_aio_finish(aio, rv, 0) != 0) {
+		if (rv == 0) {
+			nni_ipc_pipe_fini(pipe);
+		}
+	}
 }
 
 static void
@@ -592,7 +596,6 @@ nni_ipc_ep_accept(void *arg, nni_aio *aio)
 	}
 	ep->user_aio = aio;
 
-	// If we can't start, then its dying and we can't report either,
 	if ((rv = nni_aio_start(aio, nni_ipc_cancel_ep, ep)) != 0) {
 		ep->user_aio = NULL;
 		nni_mtx_unlock(&ep->mtx);
@@ -620,7 +623,8 @@ nni_ipc_ep_connect(void *arg, nni_aio *aio)
 
 	ep->user_aio = aio;
 
-	// If we can't start, then its dying and we can't report either,
+	// If we can't start, then its dying and we can't report
+	// either,
 	if ((rv = nni_aio_start(aio, nni_ipc_cancel_ep, ep)) != 0) {
 		ep->user_aio = NULL;
 		nni_mtx_unlock(&ep->mtx);

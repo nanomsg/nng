@@ -1,6 +1,7 @@
 build
 lxbuild
 winbuild
+wbuild
 .vs
 .vscode/.cmaketools.json
 .vscode

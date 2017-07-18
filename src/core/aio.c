@@ -206,14 +206,14 @@ nni_aio_cancel(nni_aio *aio, int rv)
 
 // I/O provider related functions.
 
-void
+int
 nni_aio_finish(nni_aio *aio, int result, size_t count)
 {
 	nni_mtx_lock(&aio->a_lk);
 	if (aio->a_flags & (NNI_AIO_DONE | NNI_AIO_FINI)) {
 		// Operation already done (canceled or timed out?)
 		nni_mtx_unlock(&aio->a_lk);
-		return;
+		return (NNG_ESTATE);
 	}
 	aio->a_flags |= NNI_AIO_DONE;
 	aio->a_result      = result;
@@ -228,6 +228,7 @@ nni_aio_finish(nni_aio *aio, int result, size_t count)
 
 	nni_taskq_dispatch(NULL, &aio->a_tqe);
 	nni_mtx_unlock(&aio->a_lk);
+	return (0);
 }
 
 void
@@ -307,7 +308,7 @@ nni_aio_expire_loop(void *arg)
 	nni_list *aios = &nni_aio_expire_aios;
 	nni_aio * aio;
 	nni_time  now;
-	int       rv;
+
 	void (*cancelfn)(nni_aio *);
 
 	NNI_ARG_UNUSED(arg);

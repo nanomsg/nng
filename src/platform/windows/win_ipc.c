@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -333,7 +334,10 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 	}
 
 	aio->a_pipe = pipe;
-	nni_aio_finish(aio, 0, 0);
+	// What if the pipe is already finished?
+	if (nni_aio_finish(aio, 0, 0) != 0) {
+		nni_plat_ipc_pipe_fini(pipe);
+	}
 }
 
 static void
@@ -559,8 +563,8 @@ nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
 		break;
 
 	case NNI_EP_MODE_LISTEN:
+		nni_win_event_close(&ep->acc_ev);
 		if (ep->p != INVALID_HANDLE_VALUE) {
-			nni_win_event_close(&ep->acc_ev);
 			CloseHandle(ep->p);
 			ep->p = INVALID_HANDLE_VALUE;
 		}

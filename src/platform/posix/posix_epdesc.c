@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -72,8 +73,9 @@ nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
 			aio->a_pipe = pd;
 		}
 	}
-	// Abuse the count to hold our new fd.  This is only for accept.
-	nni_aio_finish(aio, rv, 0);
+	if ((nni_aio_finish(aio, rv, 0) != 0) && (rv == 0)) {
+		nni_posix_pipedesc_fini(pd);
+	}
 }
 
 static void

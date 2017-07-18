@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -544,7 +545,9 @@ nni_win_tcp_acc_finish(nni_win_event *evt, nni_aio *aio)
 	}
 
 	aio->a_pipe = pipe;
-	nni_aio_finish(aio, 0, 0);
+	if (nni_aio_finish(aio, 0, 0) != 0) {
+		nni_plat_tcp_pipe_fini(pipe);
+	}
 }
 
 static int

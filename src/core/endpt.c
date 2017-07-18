@@ -397,7 +397,7 @@ nni_ep_accept_start(nni_ep *ep)
 	if (ep->ep_closed) {
 		return;
 	}
-
+	aio->a_pipe  = NULL;
 	aio->a_endpt = ep->ep_data;
 	ep->ep_ops.ep_accept(ep->ep_data, aio);
 }

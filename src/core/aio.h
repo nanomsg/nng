@@ -104,8 +104,12 @@ extern int  nni_aio_list_active(nni_aio *);
 
 // nni_aio_finish is called by the provider when an operation is complete.
 // The provider gives the result code (0 for success, an NNG errno otherwise),
-// and the amount of data transferred (if any).
-extern void nni_aio_finish(nni_aio *, int, size_t);
+// and the amount of data transferred (if any).  If the return code is
+// non-zero, it indicates that the operation failed (usually because the aio
+// was already canceled.)  This is important for providers that need to
+// prevent resources (new pipes for example) from accidentally leaking
+// during close operations.
+extern int nni_aio_finish(nni_aio *, int, size_t);
 
 // nni_aio_cancel is used to cancel an operation.  Any pending I/O or
 // timeouts are canceled if possible, and the callback will be returned

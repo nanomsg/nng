@@ -124,8 +124,7 @@ nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 void
 nni_sock_pipe_remove(nni_sock *sock, nni_pipe *pipe)
 {
-	void *  pdata;
-	nni_ep *ep;
+	void *pdata;
 
 	pdata = nni_pipe_get_proto_data(pipe);
 

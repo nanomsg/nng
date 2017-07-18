@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -213,12 +214,12 @@ nni_win_event_fini(nni_win_event *evt)
 
 			// Use provider specific cancellation.
 			evt->ops.wev_cancel(evt);
-
-			// Wait for everything to stop referencing this.
-			while (evt->flags & NNI_WIN_EVENT_RUNNING) {
-				nni_cv_wait(&evt->cv);
-			}
 		}
+		// Wait for everything to stop referencing this.
+		while (evt->flags & NNI_WIN_EVENT_RUNNING) {
+			nni_cv_wait(&evt->cv);
+		}
+
 		nni_mtx_unlock(&evt->mtx);
 	}
 

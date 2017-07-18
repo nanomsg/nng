@@ -618,7 +618,11 @@ nni_tcp_ep_finish(nni_tcp_ep *ep)
 
 done:
 	ep->aio.a_pipe = NULL;
-	nni_aio_finish(aio, rv, 0);
+	if (nni_aio_finish(aio, rv, 0) != 0) {
+		if (rv == 0) {
+			nni_tcp_pipe_fini(pipe);
+		}
+	}
 }
 
 static void
@@ -657,7 +661,6 @@ nni_tcp_ep_accept(void *arg, nni_aio *aio)
 	NNI_ASSERT(ep->user_aio == NULL);
 	ep->user_aio = aio;
 
-	// If we can't start, then its dying and we can't report either,
 	if ((rv = nni_aio_start(aio, nni_tcp_cancel_ep, ep)) != 0) {
 		ep->user_aio = NULL;
 		nni_mtx_unlock(&ep->mtx);

@@ -257,7 +257,12 @@ nni_inproc_conn_finish(nni_aio *aio, int rv)
 			}
 		}
 	}
-	nni_aio_finish(aio, rv, 0);
+	if (nni_aio_finish(aio, rv, 0) != 0) {
+		if (aio->a_pipe != NULL) {
+			nni_inproc_pipe_fini(aio->a_pipe);
+			aio->a_pipe = NULL;
+		}
+	}
 }
 
 static void
