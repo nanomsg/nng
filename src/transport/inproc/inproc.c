@@ -384,10 +384,9 @@ nni_inproc_ep_cancel(nni_aio *aio)
 static void
 nni_inproc_ep_connect(void *arg, nni_aio *aio)
 {
-	nni_inproc_ep *  ep = arg;
-	nni_inproc_pipe *pipe;
-	nni_inproc_ep *  server;
-	int              rv;
+	nni_inproc_ep *ep = arg;
+	nni_inproc_ep *server;
+	int            rv;
 
 	if (ep->mode != NNI_EP_MODE_DIAL) {
 		nni_aio_finish(aio, NNG_EINVAL, 0);
@@ -484,9 +483,8 @@ nni_inproc_ep_bind(void *arg)
 static void
 nni_inproc_ep_accept(void *arg, nni_aio *aio)
 {
-	nni_inproc_ep *  ep = arg;
-	nni_inproc_pipe *pipe;
-	int              rv;
+	nni_inproc_ep *ep = arg;
+	int            rv;
 
 	if (ep->mode != NNI_EP_MODE_LISTEN) {
 		nni_aio_finish(aio, NNG_EINVAL, 0);

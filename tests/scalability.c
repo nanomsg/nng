@@ -105,7 +105,6 @@ closeclients(nng_socket *clients, int num)
 }
 
 Main({
-	int         rv;
 	nng_socket *clients;
 	void *      server;
 	int *       results;
