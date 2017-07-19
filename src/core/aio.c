@@ -137,9 +137,6 @@ nni_aio_wait(nni_aio *aio)
 int
 nni_aio_start(nni_aio *aio, void (*cancel)(nni_aio *), void *data)
 {
-	NNI_ASSERT(aio->a_prov_data == NULL);
-	NNI_ASSERT(aio->a_prov_cancel == NULL);
-
 	nni_mtx_lock(&aio->a_lk);
 	aio->a_flags &= ~(NNI_AIO_DONE | NNI_AIO_WAKE);
 	if (aio->a_flags & NNI_AIO_FINI) {
