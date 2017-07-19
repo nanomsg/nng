@@ -228,6 +228,32 @@ nni_aio_finish(nni_aio *aio, int result, size_t count)
 	return (0);
 }
 
+int
+nni_aio_finish_pipe(nni_aio *aio, int result, void *pipe)
+{
+	nni_mtx_lock(&aio->a_lk);
+	if (aio->a_flags & (NNI_AIO_DONE | NNI_AIO_FINI)) {
+		// Operation already done (canceled or timed out?)
+		nni_mtx_unlock(&aio->a_lk);
+		return (NNG_ESTATE);
+	}
+	aio->a_flags |= NNI_AIO_DONE;
+	aio->a_result      = result;
+	aio->a_count       = 0;
+	aio->a_prov_cancel = NULL;
+	aio->a_prov_data   = NULL;
+	aio->a_pipe        = pipe;
+
+	// This is guaranteed to just be a list operation at this point,
+	// because done wasn't set.
+	nni_aio_expire_remove(aio);
+	aio->a_expire = NNI_TIME_NEVER;
+
+	nni_taskq_dispatch(NULL, &aio->a_tqe);
+	nni_mtx_unlock(&aio->a_lk);
+	return (0);
+}
+
 void
 nni_aio_list_init(nni_list *list)
 {

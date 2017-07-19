@@ -59,16 +59,22 @@ nni_ep_destroy(nni_ep *ep)
 	if (ep == NULL) {
 		return;
 	}
+
+	// Remove us form the table so we cannot be found.
+	if (ep->ep_id != 0) {
+		nni_idhash_remove(nni_eps, ep->ep_id);
+	}
+
 	nni_aio_fini(&ep->ep_acc_aio);
 	nni_aio_fini(&ep->ep_con_aio);
 	nni_aio_fini(&ep->ep_con_syn);
 	nni_aio_fini(&ep->ep_backoff);
+
+	nni_mtx_lock(&ep->ep_mtx);
 	if (ep->ep_data != NULL) {
 		ep->ep_ops.ep_fini(ep->ep_data);
 	}
-	if (ep->ep_id != 0) {
-		nni_idhash_remove(nni_eps, ep->ep_id);
-	}
+	nni_mtx_unlock(&ep->ep_mtx);
 	nni_cv_fini(&ep->ep_cv);
 	nni_mtx_fini(&ep->ep_mtx);
 	NNI_FREE_STRUCT(ep);

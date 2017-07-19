@@ -32,9 +32,8 @@ struct nni_posix_pollq_node {
 	int              fd;      // file descriptor to poll
 	int              events;  // events to watch for
 	int              revents; // events received
-	nni_taskq_ent    task;
-	void *           data; // user data
-	nni_cb           cb;   // user callback on event
+	void *           data;    // user data
+	nni_cb           cb;      // user callback on event
 };
 
 extern nni_posix_pollq *nni_posix_pollq_get(int);

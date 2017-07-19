@@ -544,8 +544,7 @@ nni_win_tcp_acc_finish(nni_win_event *evt, nni_aio *aio)
 		return;
 	}
 
-	aio->a_pipe = pipe;
-	if (nni_aio_finish(aio, 0, 0) != 0) {
+	if (nni_aio_finish_pipe(aio, 0, pipe) != 0) {
 		nni_plat_tcp_pipe_fini(pipe);
 	}
 }

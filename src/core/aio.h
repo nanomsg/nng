@@ -110,6 +110,7 @@ extern int  nni_aio_list_active(nni_aio *);
 // prevent resources (new pipes for example) from accidentally leaking
 // during close operations.
 extern int nni_aio_finish(nni_aio *, int, size_t);
+extern int nni_aio_finish_pipe(nni_aio *, int, void *);
 
 // nni_aio_cancel is used to cancel an operation.  Any pending I/O or
 // timeouts are canceled if possible, and the callback will be returned

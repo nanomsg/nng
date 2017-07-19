@@ -333,9 +333,8 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 		return;
 	}
 
-	aio->a_pipe = pipe;
 	// What if the pipe is already finished?
-	if (nni_aio_finish(aio, 0, 0) != 0) {
+	if (nni_aio_finish_pipe(aio, 0, pipe) != 0) {
 		nni_plat_ipc_pipe_fini(pipe);
 	}
 }
@@ -391,7 +390,6 @@ nni_win_ipc_acc_start(nni_win_event *evt, nni_aio *aio)
 void
 nni_plat_ipc_ep_accept(nni_plat_ipc_ep *ep, nni_aio *aio)
 {
-	aio->a_pipe = NULL;
 	nni_win_event_submit(&ep->acc_ev, aio);
 }
 
@@ -470,8 +468,9 @@ nni_win_ipc_conn_thr(void *arg)
 			    ((rv = nni_win_iocp_register(p)) != 0)) {
 				goto fail;
 			}
-			aio->a_pipe = pipe;
-			nni_aio_finish(aio, 0, 0);
+			if (rv = nni_aio_finish_pipe(aio, 0, pipe) != 0) {
+				nni_plat_ipc_pipe_fini(pipe);
+			}
 			continue;
 
 		fail:
