@@ -414,6 +414,7 @@ nni_ep_listen(nni_ep *ep, int flags)
 	int rv = 0;
 
 	nni_sock_reconntimes(ep->ep_sock, &ep->ep_inirtime, &ep->ep_maxrtime);
+	ep->ep_currtime = ep->ep_inirtime;
 
 	nni_mtx_lock(&ep->ep_mtx);
 	if (ep->ep_mode != NNI_EP_MODE_LISTEN) {
