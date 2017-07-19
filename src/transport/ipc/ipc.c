@@ -527,14 +527,10 @@ nni_ipc_ep_bind(void *arg)
 static void
 nni_ipc_ep_finish(nni_ipc_ep *ep)
 {
-	nni_aio *     aio = ep->user_aio;
-	nni_ipc_pipe *pipe;
+	nni_aio *     aio;
 	int           rv;
+	nni_ipc_pipe *pipe = NULL;
 
-	if ((aio = ep->user_aio) == NULL) {
-		return;
-	}
-	ep->user_aio = NULL;
 	if ((rv = nni_aio_result(&ep->aio)) != 0) {
 		goto done;
 	}
@@ -542,17 +538,15 @@ nni_ipc_ep_finish(nni_ipc_ep *ep)
 
 	// Attempt to allocate the parent pipe.  If this fails we'll
 	// drop the connection (ENOMEM probably).
-	if ((rv = nni_ipc_pipe_init(&pipe, ep, ep->aio.a_pipe)) != 0) {
-		nni_plat_ipc_pipe_fini(ep->aio.a_pipe);
-		goto done;
-	}
-
-	aio->a_pipe = pipe;
+	rv = nni_ipc_pipe_init(&pipe, ep, ep->aio.a_pipe);
 
 done:
 	ep->aio.a_pipe = NULL;
-	if (nni_aio_finish(aio, rv, 0) != 0) {
-		if (rv == 0) {
+	aio            = ep->user_aio;
+	ep->user_aio   = NULL;
+
+	if ((aio == NULL) || (nni_aio_finish_pipe(aio, rv, pipe) != 0)) {
+		if (pipe != NULL) {
 			nni_ipc_pipe_fini(pipe);
 		}
 	}

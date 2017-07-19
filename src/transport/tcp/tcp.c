@@ -594,14 +594,10 @@ nni_tcp_ep_bind(void *arg)
 static void
 nni_tcp_ep_finish(nni_tcp_ep *ep)
 {
-	nni_aio *     aio = ep->user_aio;
-	nni_tcp_pipe *pipe;
+	nni_aio *     aio;
 	int           rv;
+	nni_tcp_pipe *pipe = NULL;
 
-	if ((aio = ep->user_aio) == NULL) {
-		return;
-	}
-	ep->user_aio = NULL;
 	if ((rv = nni_aio_result(&ep->aio)) != 0) {
 		goto done;
 	}
@@ -609,17 +605,15 @@ nni_tcp_ep_finish(nni_tcp_ep *ep)
 
 	// Attempt to allocate the parent pipe.  If this fails we'll
 	// drop the connection (ENOMEM probably).
-	if ((rv = nni_tcp_pipe_init(&pipe, ep, ep->aio.a_pipe)) != 0) {
-		nni_plat_tcp_pipe_fini(ep->aio.a_pipe);
-		goto done;
-	}
-
-	aio->a_pipe = pipe;
+	rv = nni_tcp_pipe_init(&pipe, ep, ep->aio.a_pipe);
 
 done:
 	ep->aio.a_pipe = NULL;
-	if (nni_aio_finish(aio, rv, 0) != 0) {
-		if (rv == 0) {
+	aio            = ep->user_aio;
+	ep->user_aio   = NULL;
+
+	if ((aio == NULL) || (nni_aio_finish_pipe(aio, rv, pipe) != 0)) {
+		if (pipe != NULL) {
 			nni_tcp_pipe_fini(pipe);
 		}
 	}
@@ -654,11 +648,13 @@ nni_tcp_ep_accept(void *arg, nni_aio *aio)
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
+	NNI_ASSERT(ep->user_aio == NULL);
+
 	if (ep->closed) {
 		nni_aio_finish(aio, NNG_ECLOSED, 0);
 		nni_mtx_unlock(&ep->mtx);
+		return;
 	}
-	NNI_ASSERT(ep->user_aio == NULL);
 	ep->user_aio = aio;
 
 	if ((rv = nni_aio_start(aio, nni_tcp_cancel_ep, ep)) != 0) {
