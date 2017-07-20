@@ -132,12 +132,11 @@ nni_push_pipe_start(void *arg)
 static void
 nni_push_pipe_stop(void *arg)
 {
-	nni_push_pipe *pp   = arg;
-	nni_push_sock *push = pp->push;
+	nni_push_pipe *pp = arg;
 
-	nni_aio_cancel(&pp->aio_recv, NNG_ECANCELED);
-	nni_aio_cancel(&pp->aio_send, NNG_ECANCELED);
-	nni_aio_cancel(&pp->aio_getq, NNG_ECANCELED);
+	nni_aio_stop(&pp->aio_recv);
+	nni_aio_stop(&pp->aio_send);
+	nni_aio_stop(&pp->aio_getq);
 }
 
 static void

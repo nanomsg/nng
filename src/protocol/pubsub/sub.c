@@ -123,8 +123,8 @@ nni_sub_pipe_stop(void *arg)
 {
 	nni_sub_pipe *sp = arg;
 
-	nni_aio_cancel(&sp->aio_putq, NNG_ECANCELED);
-	nni_aio_cancel(&sp->aio_recv, NNG_ECANCELED);
+	nni_aio_stop(&sp->aio_putq);
+	nni_aio_stop(&sp->aio_recv);
 }
 
 static void

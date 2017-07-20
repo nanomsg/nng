@@ -69,6 +69,16 @@ extern int nni_aio_init(nni_aio *, nni_cb, void *);
 // on zero'd memory.
 extern void nni_aio_fini(nni_aio *);
 
+// nni_aio_stop cancels any unfinished I/O, running completion callbacks,
+// but also prevents any new operations from starting (nni_aio_start will
+// return NNG_ESTATE).  This should be called before nni_aio_fini().  The
+// best pattern is to call nni_aio_stop on all linked aios, before calling
+// nni_aio_fini on any of them.  This function will block until any
+// callbacks are executed, and therefore it should never be executed
+// from a callback itself.  (To abort operations without blocking
+// use nni_aio_cancel instead.)
+extern void nni_aio_stop(nni_aio *);
+
 // nni_aio_result returns the result code (0 on success, or an NNG errno)
 // for the operation.  It is only valid to call this when the operation is
 // complete (such as when the callback is executed or after nni_aio_wait

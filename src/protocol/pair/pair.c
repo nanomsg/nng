@@ -122,7 +122,6 @@ static void
 nni_pair_pipe_fini(void *arg)
 {
 	nni_pair_pipe *ppipe = arg;
-
 	nni_aio_fini(&ppipe->aio_send);
 	nni_aio_fini(&ppipe->aio_recv);
 	nni_aio_fini(&ppipe->aio_putq);

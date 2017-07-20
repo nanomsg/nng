@@ -60,6 +60,7 @@ nni_bus_sock_fini(void *arg)
 	nni_bus_sock *psock = arg;
 
 	if (psock != NULL) {
+		nni_aio_stop(&psock->aio_getq);
 		nni_aio_fini(&psock->aio_getq);
 		nni_mtx_fini(&psock->mtx);
 		NNI_FREE_STRUCT(psock);
@@ -107,15 +108,13 @@ nni_bus_pipe_fini(void *arg)
 {
 	nni_bus_pipe *ppipe = arg;
 
-	if (ppipe != NULL) {
-		nni_mtx_fini(&ppipe->mtx);
-		nni_aio_fini(&ppipe->aio_getq);
-		nni_aio_fini(&ppipe->aio_send);
-		nni_aio_fini(&ppipe->aio_recv);
-		nni_aio_fini(&ppipe->aio_putq);
-		nni_msgq_fini(ppipe->sendq);
-		NNI_FREE_STRUCT(ppipe);
-	}
+	nni_aio_fini(&ppipe->aio_getq);
+	nni_aio_fini(&ppipe->aio_send);
+	nni_aio_fini(&ppipe->aio_recv);
+	nni_aio_fini(&ppipe->aio_putq);
+	nni_msgq_fini(ppipe->sendq);
+	nni_mtx_fini(&ppipe->mtx);
+	NNI_FREE_STRUCT(ppipe);
 }
 
 static int
@@ -183,10 +182,10 @@ nni_bus_pipe_stop(void *arg)
 
 	nni_msgq_close(ppipe->sendq);
 
-	nni_aio_cancel(&ppipe->aio_getq, NNG_ECLOSED);
-	nni_aio_cancel(&ppipe->aio_send, NNG_ECLOSED);
-	nni_aio_cancel(&ppipe->aio_recv, NNG_ECLOSED);
-	nni_aio_cancel(&ppipe->aio_putq, NNG_ECLOSED);
+	nni_aio_stop(&ppipe->aio_getq);
+	nni_aio_stop(&ppipe->aio_send);
+	nni_aio_stop(&ppipe->aio_recv);
+	nni_aio_stop(&ppipe->aio_putq);
 
 	nni_mtx_lock(&ppipe->psock->mtx);
 	if (nni_list_active(&psock->pipes, ppipe)) {

@@ -195,6 +195,7 @@ nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 {
 	nni_aio *           aio;
 	struct sockaddr_un *sun;
+	int                 fd;
 
 	ed->closed = 1;
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
@@ -204,14 +205,14 @@ nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 		nni_posix_epdesc_finish(aio, NNG_ECLOSED, 0);
 	}
 
-	if (ed->node.fd != -1) {
-		(void) shutdown(ed->node.fd, SHUT_RDWR);
+	if ((fd = ed->node.fd) != -1) {
+		ed->node.fd = -1;
+		(void) shutdown(fd, SHUT_RDWR);
+		(void) close(fd);
 		sun = (void *) &ed->locaddr;
 		if ((sun->sun_family == AF_UNIX) && (ed->loclen != 0)) {
 			(void) unlink(sun->sun_path);
 		}
-		(void) close(ed->node.fd);
-		ed->node.fd = -1;
 	}
 }
 
@@ -511,9 +512,13 @@ nni_posix_epdesc_set_remote(nni_posix_epdesc *ed, void *sa, int len)
 void
 nni_posix_epdesc_fini(nni_posix_epdesc *ed)
 {
-	if (ed->node.fd >= 0) {
+	int fd;
+	nni_mtx_lock(&ed->mtx);
+	if ((fd = ed->node.fd) != -1) {
 		(void) close(ed->node.fd);
+		nni_posix_epdesc_doclose(ed);
 	}
+	nni_mtx_unlock(&ed->mtx);
 	nni_posix_pollq_remove(&ed->node);
 	nni_mtx_fini(&ed->mtx);
 	NNI_FREE_STRUCT(ed);

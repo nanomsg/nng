@@ -90,11 +90,9 @@ nni_pull_pipe_fini(void *arg)
 {
 	nni_pull_pipe *pp = arg;
 
-	if (pp != NULL) {
-		nni_aio_fini(&pp->putq_aio);
-		nni_aio_fini(&pp->recv_aio);
-		NNI_FREE_STRUCT(pp);
-	}
+	nni_aio_fini(&pp->putq_aio);
+	nni_aio_fini(&pp->recv_aio);
+	NNI_FREE_STRUCT(pp);
 }
 
 static int
@@ -113,8 +111,8 @@ nni_pull_pipe_stop(void *arg)
 {
 	nni_pull_pipe *pp = arg;
 
-	nni_aio_cancel(&pp->putq_aio, NNG_ECANCELED);
-	nni_aio_cancel(&pp->recv_aio, NNG_ECANCELED);
+	nni_aio_stop(&pp->putq_aio);
+	nni_aio_stop(&pp->recv_aio);
 }
 
 static void

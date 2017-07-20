@@ -83,6 +83,7 @@ nni_pub_sock_fini(void *arg)
 {
 	nni_pub_sock *pub = arg;
 
+	nni_aio_stop(&pub->aio_getq);
 	nni_aio_fini(&pub->aio_getq);
 	nni_mtx_fini(&pub->mtx);
 	NNI_FREE_STRUCT(pub);
@@ -100,7 +101,6 @@ static void
 nni_pub_pipe_fini(void *arg)
 {
 	nni_pub_pipe *pp = arg;
-
 	nni_aio_fini(&pp->aio_getq);
 	nni_aio_fini(&pp->aio_send);
 	nni_aio_fini(&pp->aio_recv);
@@ -172,9 +172,10 @@ nni_pub_pipe_stop(void *arg)
 	nni_pub_pipe *pp  = arg;
 	nni_pub_sock *pub = pp->pub;
 
-	nni_aio_cancel(&pp->aio_getq, NNG_ECANCELED);
-	nni_aio_cancel(&pp->aio_send, NNG_ECANCELED);
-	nni_aio_cancel(&pp->aio_recv, NNG_ECANCELED);
+	nni_aio_stop(&pp->aio_getq);
+	nni_aio_stop(&pp->aio_send);
+	nni_aio_stop(&pp->aio_recv);
+
 	nni_msgq_close(pp->sendq);
 
 	nni_mtx_lock(&pub->mtx);

@@ -64,6 +64,10 @@ nni_ep_destroy(nni_ep *ep)
 	if (ep->ep_id != 0) {
 		nni_idhash_remove(nni_eps, ep->ep_id);
 	}
+	nni_aio_stop(&ep->ep_acc_aio);
+	nni_aio_stop(&ep->ep_con_aio);
+	nni_aio_stop(&ep->ep_con_syn);
+	nni_aio_stop(&ep->ep_backoff);
 
 	nni_aio_fini(&ep->ep_acc_aio);
 	nni_aio_fini(&ep->ep_con_aio);
@@ -179,6 +183,10 @@ nni_ep_reap(nni_ep *ep)
 {
 	nni_ep_close(ep); // Extra sanity.
 
+	nni_aio_stop(&ep->ep_acc_aio);
+	nni_aio_stop(&ep->ep_con_aio);
+	nni_aio_stop(&ep->ep_con_syn);
+
 	// Take us off the sock list.
 	nni_sock_ep_remove(ep->ep_sock, ep);
 
@@ -188,11 +196,13 @@ nni_ep_reap(nni_ep *ep)
 	// done everything we can to wake any waiter (synchronous connect)
 	// gracefully.
 	nni_mtx_lock(&ep->ep_mtx);
-	while (!nni_list_empty(&ep->ep_pipes)) {
-		nni_cv_wait(&ep->ep_cv);
-	}
-	while (ep->ep_refcnt != 0) {
-		nni_cv_wait(&ep->ep_cv);
+	ep->ep_closed = 1;
+	for (;;) {
+		if ((!nni_list_empty(&ep->ep_pipes)) || (ep->ep_refcnt != 0)) {
+			nni_cv_wait(&ep->ep_cv);
+			continue;
+		}
+		break;
 	}
 	nni_mtx_unlock(&ep->ep_mtx);
 

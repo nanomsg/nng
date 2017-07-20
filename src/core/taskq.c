@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -153,7 +154,7 @@ nni_taskq_dispatch(nni_taskq *tq, nni_taskq_ent *ent)
 		return (NNG_ECLOSED);
 	}
 	// It might already be scheduled... if so don't redo it.
-	if (ent->tqe_tq == NULL) {
+	if (!nni_list_active(&tq->tq_ents, ent)) {
 		ent->tqe_tq = tq;
 		nni_list_append(&tq->tq_ents, ent);
 	}

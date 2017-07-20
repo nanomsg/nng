@@ -45,17 +45,20 @@ static void
 nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
 {
 	nni_aio *aio;
+	int      fd;
 
 	pd->closed = 1;
-	if (pd->node.fd != -1) {
-		// Let any peer know we are closing.
-		(void) shutdown(pd->node.fd, SHUT_RDWR);
-	}
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
 		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 	}
 	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
 		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
+	}
+	if ((fd = pd->node.fd) != -1) {
+		// Let any peer know we are closing.
+		pd->node.fd = -1;
+		(void) shutdown(fd, SHUT_RDWR);
+		(void) close(fd);
 	}
 }
 
@@ -269,7 +272,7 @@ nni_posix_pipedesc_send(nni_posix_pipedesc *pd, nni_aio *aio)
 		nni_mtx_unlock(&pd->mtx);
 		return;
 	}
-	if (pd->closed < 0) {
+	if (pd->closed) {
 		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 		nni_mtx_unlock(&pd->mtx);
 		return;

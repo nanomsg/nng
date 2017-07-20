@@ -60,6 +60,7 @@ nni_surv_sock_fini(void *arg)
 {
 	nni_surv_sock *psock = arg;
 
+	nni_aio_stop(&psock->aio_getq);
 	nni_aio_fini(&psock->aio_getq);
 	nni_mtx_fini(&psock->mtx);
 	NNI_FREE_STRUCT(psock);
@@ -191,10 +192,11 @@ nni_surv_pipe_stop(void *arg)
 	nni_surv_pipe *ppipe = arg;
 	nni_surv_sock *psock = ppipe->psock;
 
-	nni_aio_cancel(&ppipe->aio_getq, NNG_ECANCELED);
-	nni_aio_cancel(&ppipe->aio_send, NNG_ECANCELED);
-	nni_aio_cancel(&ppipe->aio_recv, NNG_ECANCELED);
-	nni_aio_cancel(&ppipe->aio_putq, NNG_ECANCELED);
+	nni_aio_stop(&ppipe->aio_getq);
+	nni_aio_stop(&ppipe->aio_send);
+	nni_aio_stop(&ppipe->aio_recv);
+	nni_aio_stop(&ppipe->aio_putq);
+
 	nni_msgq_close(ppipe->sendq);
 
 	nni_mtx_lock(&psock->mtx);

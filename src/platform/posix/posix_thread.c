@@ -329,6 +329,7 @@ nni_plat_fini(void)
 {
 	pthread_mutex_lock(&nni_plat_lock);
 	if (nni_plat_inited) {
+		nni_posix_resolv_sysfini();
 		nni_posix_pollq_sysfini();
 		pthread_mutexattr_destroy(&nni_mxattr);
 		pthread_condattr_destroy(&nni_cvattr);

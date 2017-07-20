@@ -56,6 +56,7 @@ nni_rep_sock_fini(void *arg)
 {
 	nni_rep_sock *rep = arg;
 
+	nni_aio_stop(&rep->aio_getq);
 	nni_aio_fini(&rep->aio_getq);
 	nni_idhash_fini(rep->pipes);
 	if (rep->btrace != NULL) {
@@ -192,10 +193,10 @@ nni_rep_pipe_stop(void *arg)
 	nni_rep_sock *rep = rp->rep;
 
 	nni_msgq_close(rp->sendq);
-	nni_aio_cancel(&rp->aio_getq, NNG_ECANCELED);
-	nni_aio_cancel(&rp->aio_putq, NNG_ECANCELED);
-	nni_aio_cancel(&rp->aio_send, NNG_ECANCELED);
-	nni_aio_cancel(&rp->aio_recv, NNG_ECANCELED);
+	nni_aio_stop(&rp->aio_getq);
+	nni_aio_stop(&rp->aio_send);
+	nni_aio_stop(&rp->aio_recv);
+	nni_aio_stop(&rp->aio_putq);
 
 	nni_idhash_remove(rep->pipes, nni_pipe_id(rp->pipe));
 }

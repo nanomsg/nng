@@ -86,6 +86,10 @@ nni_tcp_pipe_fini(void *arg)
 {
 	nni_tcp_pipe *pipe = arg;
 
+	nni_aio_stop(&pipe->rxaio);
+	nni_aio_stop(&pipe->txaio);
+	nni_aio_stop(&pipe->negaio);
+
 	nni_aio_fini(&pipe->rxaio);
 	nni_aio_fini(&pipe->txaio);
 	nni_aio_fini(&pipe->negaio);
@@ -530,6 +534,7 @@ nni_tcp_ep_fini(void *arg)
 {
 	nni_tcp_ep *ep = arg;
 
+	nni_aio_stop(&ep->aio);
 	if (ep->tep != NULL) {
 		nni_plat_tcp_ep_fini(ep->tep);
 	}

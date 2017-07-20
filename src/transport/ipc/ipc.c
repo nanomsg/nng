@@ -86,6 +86,10 @@ nni_ipc_pipe_fini(void *arg)
 {
 	nni_ipc_pipe *pipe = arg;
 
+	nni_aio_stop(&pipe->rxaio);
+	nni_aio_stop(&pipe->txaio);
+	nni_aio_stop(&pipe->negaio);
+
 	nni_aio_fini(&pipe->rxaio);
 	nni_aio_fini(&pipe->txaio);
 	nni_aio_fini(&pipe->negaio);
@@ -462,6 +466,7 @@ nni_ipc_ep_fini(void *arg)
 {
 	nni_ipc_ep *ep = arg;
 
+	nni_aio_stop(&ep->aio);
 	nni_plat_ipc_ep_fini(ep->iep);
 	nni_aio_fini(&ep->aio);
 	nni_mtx_fini(&ep->mtx);

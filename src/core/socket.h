@@ -87,8 +87,11 @@ extern void        nni_sock_unnotify(nni_sock *, nni_notify *);
 extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
 
 // nni_sock_pipe_add adds the pipe to the socket. It is called by
-// the generic pipe creation code.
-extern int nni_sock_pipe_add(nni_sock *, nni_pipe *);
+// the generic pipe creation code.  It also adds the socket to the
+// ep list, and starts the pipe.  It does all these to ensure that
+// we have complete success or failure, and there is no point where
+// a pipe could wind up orphaned.
+extern int nni_sock_pipe_add(nni_sock *, nni_ep *, nni_pipe *);
 
 extern void nni_sock_pipe_remove(nni_sock *, nni_pipe *);
 
