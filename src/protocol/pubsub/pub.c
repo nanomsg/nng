@@ -101,10 +101,10 @@ nni_pub_pipe_fini(void *arg)
 {
 	nni_pub_pipe *pp = arg;
 
-	nni_msgq_fini(pp->sendq);
 	nni_aio_fini(&pp->aio_getq);
 	nni_aio_fini(&pp->aio_send);
 	nni_aio_fini(&pp->aio_recv);
+	nni_msgq_fini(pp->sendq);
 	NNI_FREE_STRUCT(pp);
 }
 

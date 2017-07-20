@@ -108,12 +108,12 @@ nni_bus_pipe_fini(void *arg)
 	nni_bus_pipe *ppipe = arg;
 
 	if (ppipe != NULL) {
-		nni_msgq_fini(ppipe->sendq);
 		nni_mtx_fini(&ppipe->mtx);
 		nni_aio_fini(&ppipe->aio_getq);
 		nni_aio_fini(&ppipe->aio_send);
 		nni_aio_fini(&ppipe->aio_recv);
 		nni_aio_fini(&ppipe->aio_putq);
+		nni_msgq_fini(ppipe->sendq);
 		NNI_FREE_STRUCT(ppipe);
 	}
 }

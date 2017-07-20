@@ -160,11 +160,11 @@ nni_resp_pipe_fini(void *arg)
 {
 	nni_resp_pipe *ppipe = arg;
 
-	nni_msgq_fini(ppipe->sendq);
 	nni_aio_fini(&ppipe->aio_putq);
 	nni_aio_fini(&ppipe->aio_getq);
 	nni_aio_fini(&ppipe->aio_send);
 	nni_aio_fini(&ppipe->aio_recv);
+	nni_msgq_fini(ppipe->sendq);
 	NNI_FREE_STRUCT(ppipe);
 }
 
