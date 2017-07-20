@@ -801,9 +801,9 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 		nni_mtx_unlock(&sock->s_mx);
 		return (rv);
 	}
+	nni_mtx_lock(&ep->ep_mtx);
 	nni_list_append(&sock->s_eps, ep);
 	// Put a hold on the endpoint, for now.
-	nni_mtx_lock(&ep->ep_mtx);
 	ep->ep_refcnt++;
 	ep->ep_started = 1;
 	nni_mtx_unlock(&ep->ep_mtx);
