@@ -19,6 +19,7 @@
 // Pretty much every function calls the nni_platform_init to check against
 // fork related activity.
 
+#include <stdio.h>
 #include <string.h>
 
 void
@@ -650,6 +651,7 @@ static const struct {
 const char *
 nng_strerror(int num)
 {
+	static char unknownerrbuf[32];
 	for (int i = 0; nni_errors[i].msg != NULL; i++) {
 		if (nni_errors[i].code == num) {
 			return (nni_errors[i].msg);
@@ -660,7 +662,16 @@ nng_strerror(int num)
 		return (nni_plat_strerror(num & ~NNG_ESYSERR));
 	}
 
-	return ("Unknown error");
+	if (num & NNG_ETRANERR) {
+		static char tranerrbuf[32];
+		(void) snprintf(tranerrbuf, sizeof(tranerrbuf),
+		    "Transport error #%d", num & ~NNG_ETRANERR);
+		return (tranerrbuf);
+	}
+
+	(void) snprintf(
+	    unknownerrbuf, sizeof(unknownerrbuf), "Unknown error #%d", num);
+	return (unknownerrbuf);
 }
 
 int

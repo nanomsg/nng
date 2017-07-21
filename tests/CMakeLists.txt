@@ -128,6 +128,10 @@ add_nng_test(device 5)
 add_nng_test(errors 2)
 add_nng_test(pair1 5)
 
+if (NNG_HAVE_ZEROTIER)
+    add_nng_test(zt 60)
+endif()
+
 # compatbility tests
 add_nng_compat_test(compat_block 5)
 add_nng_compat_test(compat_bug777 5)

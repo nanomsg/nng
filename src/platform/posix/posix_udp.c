@@ -210,7 +210,7 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 	}
 
 	// UDP opens can actually run synchronously.
-	if ((udp = NNI_ALLOC_STRUCT(udp)) != NULL) {
+	if ((udp = NNI_ALLOC_STRUCT(udp)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&udp->udp_mtx);

@@ -137,6 +137,8 @@ trantest_send_recv(trantest *tt)
 		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
 		So(d != 0);
 
+		nng_usleep(20000); // listener may be behind slightly
+
 		send = NULL;
 		So(nng_msg_alloc(&send, 0) == 0);
 		So(send != NULL);

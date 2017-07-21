@@ -182,6 +182,7 @@ TestMain("Socket Operations", {
 				       &sz) == 0);
 
 				So(v == 0);
+				sz = 0;
 				So(nng_getopt(s1, nng_optid_reconnmaxt, &v,
 				       &sz) == 0);
 				So(v == 0);

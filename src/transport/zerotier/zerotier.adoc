@@ -1,0 +1,383 @@
+ZeroTier Mapping for Scalability Protocols
+===========================================
+
+sp-zerotier-mapping-06
+~~~~~~~~~~~~~~~~~~~~~~
+
+Abstract
+--------
+
+This document defines the ZeroTier mapping for scalability protocols.
+
+Status of This Memo
+-------------------
+
+This is the third draft document, and is intended to guide early
+development efforts.  Nothing here is finalized yet.
+
+Copyright Notice
+----------------
+
+Copyright 2017 Garrett D'Amore <garrett@damore.org> +
+Copyright 2017 Capitar IT Group BV <info@capitar.com>
+
+At this point, all rights are reserved. (Note that we do intend to
+release this under a liberal reuse license once it stabilizes a bit.)
+
+Underlying protocol
+-------------------
+
+ZeroTier expresses an 802.3 style layer 2, where frames maybe exchanged as if
+they were Ethernet frames.  Virtual broadcast domains are created within a
+numbered "network", and frames may then be exchanged with any peers on that
+network.
+
+Frames may arrive in any order, or be lost, just a with Ethernet
+(best effort delivery), but they are strongly protected by a
+cryptographic checksum, so frames that do arrive will be uncorrupted.
+Furthermore, ZeroTier guarantees that a given frame will be received
+at most once.
+
+Each application on a ZeroTier network has its own address, called a
+ZeroTier ID (`ZTID`), which is globally unique -- this is generated
+from a hash of the public key associated with the application.
+
+A given application may participate in multiple ZeroTier networks.
+
+Sharing of ZeroTier IDs between applications, as well as use of multiple
+ZTIDs within a single application, as well as management of the associated
+ZeroTier-specific state is out of scope for this document.
+
+ZeroTier networks have a standard MTU of 2800 bytes, but over typical
+public networks an "optimum" MTU of 1400 bytes is used.
+ZeroTier may be configured to have larger MTUs, but typically this involves
+extensive reassembly at underlying layers, and implementations *SHOULD*
+use the optimum MTU advertised by the ZeroTier implementation.
+
+
+Packet layout
+~~~~~~~~~~~~~
+
+Each SP message sent over ZeroTier is comprised of one or
+more fragments, where each fragment is mapped to a single underlying
+ZeroTier L2 frame.  We use the EtherType field of 0x0901 to indicate
+SP over ZeroTier protocol (number to be registered with IEEE).
+
+The ZeroTier L2 payload shall be encoded with a header as follows:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+    
+   |       op      |     flags     |            version            |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  reserved     |                destination port               |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |  reserved     |                  source port                  |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |     op-specific payload...
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+All numeric fields are in big-endian byte order.  Note that ZeroTier
+APIs present this as the L2 payload, but ZeroTier itself may prepend
+additional data such as the Ethernet type, and source and destination
+MAC addresses, as well as ZeroTier specific headers.  The details of
+such headers are out of scope for this document.
+
+As above, the start of each frame is just as a normal Ethernet payload.
+The Ethernet type (ethertype) we use for these frames is 0x901, with
+a VLAN ID of 0.
+
+The `op` is a field that indicates the type of message being sent.  The
+following values are defined: `DATA` (0x00), `CONN-REQ` (0x10),
+`CONN-ACK` (0x12), `DISC` (0x20), `PING` (0x30), `PONG` (0x32),
+and `ERR` (0x40).  These are discussed further below.  Implementations
+*MUST* discard messages where the `op` is not one of these.
+
+The `flags` field is reserved for future use, and *MUST* be zero.
+Implementations *MUST* discard frames for which this is not true.
+
+The `version` byte MUST be set to 0x1.  Implementations *MUST* discard
+any messages received for any other version.
+
+The `source port` and `destination port` are used to construct a logical
+conversation.  These are 24-bits wide, and are discussed further below.
+The `reserved` fields must be set to zero.
+
+The remainder of frame varies depending on the `op` used.
+
+
+The port fields are used to discriminate different uses, allowing one
+application to have multiple connections or sockets open.  The
+purpose is analogous to TCP port numbers, except that instead of the
+operating system performing the discrimination the application or
+library code must do so.  Note that port numbers are 24-bits.  This
+was chosen to allow a peer to allocate a unique port number for each
+local conversation, allowing up to 16 million concurrent conversations.
+This also allows a 40-bit node number to be combined with the 24-bit
+port number to create a 64-bit unique address.
+
+The `type` field is the numeric SP protocol ID, in big-endian form.
+When receiving a message for a port, if the SP protocol ID does not
+match the SP protocol expected on that port, the implementation *MUST*
+discard this message.
+
+Note that it is not by accident that the payload is 32-bit aligned in
+this message format.  The payload is actually 64-bit aligned.
+
+
+Note that at this time, broadcast and multicast is not supported by
+this mapping.  (A future update may resolve this.)
+
+DATA messages
+~~~~~~~~~~~~~
+
+`DATA` messages carry SP protocol payload data.  They can only be sent
+on an established session (see `CONN` messages below), and are never
+acknowledged (in this version).  The op-specific payload they carry
+is formed like this:
+
+    0                   1                   2                   3
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |          message ID           |         fragment size         |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |        fragment number        |        total fragments        |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |       user data...
+   +-+-+-+-+-+-+-+-
+
+All fragments, except for the last, *MUST* be the same size.  The fragment
+size field carries the size of every fragment, except that the last
+fragment may be shorter; however even for the last fragment, the fragment
+size *MUST* be the size of the rest of the fragments.  This is necessary
+to allow a receiver to know the fragment size of the other fragments even
+if the final fragment is received before any others.  (Typically this may
+occur if a message consisting of two fragments arrives with fragments
+out of order.)
+
+The last fragment shall have the fragment number equal to
+the total fragments minus one, and the first fragment shall have fragment
+number 0.  Under typical optimal conditions, with an optimal MTU of 1400
+bytes, the largest message that can be transmitted is approximately 86 MB.
+Specifically the limit is (65534 * (1400 - 20)) = 90,436,920 bytes.
+(Larger MTUs may be used, if the implementation determines that it is
+advantageous to do so.  Doing so would necessarily give a larger maximum
+message size.)
+
+However, transmitting such a large message would require sending over
+65 thousand fragments, and given the likelihood of fragment loss, and
+the lack of acknowledgment, it is likely that the entire message would
+be lost.  As a result, implementations are encouraged to limit the
+amount of data that they send to at most a few megabytes.  Implementations
+receiving the first fragment can easily calculate the worst case for
+the message size (the size of the user payload multiplied by the total
+number of fragments), and MAY reply to the sender with an `ERR` message
+using the code 0x05, indicating that the message is larger than the
+receiver is willing to accept.
+
+Each fragment for a given message must carry the same `message ID`.
+Implementations *MUST* initialize this to a random value when starting
+a conversation, and *MUST* increment this each time a new message is sent.
+Message IDs of zero are not permitted; implementations *MUST* skip past zero
+when incrementing message IDs.
+
+Implementations may detect the loss of a message by noticing skips in the
+message IDs that are received, accounting for the expected skip past zero.
+
+Note that no field conveys the length of the fragment itself, as
+this can be determined from the L2 length -- the user data within
+the fragment extends to the end of the L2 payload supplied by ZeroTier.
+(And, all fragments other than the final fragment for a message must
+therefore have the same length.)
+
+
+CONN-REQ and CONN-ACK messages
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+`CONN-REQ` frames represent a request from an initiator to establish a
+session, i.e. a new conversation or connection, and `CONN-ACK`
+messages are the normal successful reply from the responder.  They both
+take the same form, which consists of the usual headers along with the
+senders 16-bit (big-endian) SP protocol ID appended:
+
+    0                   1
+    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+   |         SP protocol ID          |
+   +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
+
+The connection is initiated by the initiator sending this message,
+with its own SP protocol ID, with the `op` set to `CONN-REQ`.
+The initiator must choose a `source port` number that is not currently
+being used with the remote peer. (Most implementations will choose a
+a source port that is not used at all. Source port numbers *SHOULD*
+be chosen randomly.)
+
+The responder will acknowledge this by replying with its SP protocol
+ID in the 4-byte payload, using the `CONN-ACK` op.  Additionally,
+the source port number that the responder replies with *MUST* be the
+one the intiator requested.
+
+(Responders will identify the session using the initiators chosen
+`source port`, which the initiator *MUST NOT* concurrently use for any
+other sessions.)
+
+Alternatively, a responder *MAY* reject the connection attempt by
+sending a suitably formed ERR message (see below).
+
+If a sender does not receive a reply, it *SHOULD* retry this message
+before giving up and reporting an error to the user.  It is recommended
+that a configurable number of retries and time interval be used.
+
+Given modern Internet latencies of generally less than 500 ms, resending
+up to 12 `CONN-REQ` requests, once every 5 seconds, before giving up seems
+reasonable.  (These times are somewhat larger to allow for ZeroTier
+path discovery to take place; this results in a timeout of approximately
+a minute.)
+
+The initiator *MUST NOT* send any `DATA` messages for a conversation until
+it has received an ACK from the other party, and it *MUST* send all further
+messages for the conversation to the port number supplied by the responder.
+
+If a `CONN-REQ` frame is received by a responder for a conversation that already
+exists, the responder MUST reply.  Further, the source port it replies with,
+and the SP protocol IDs MUST be identical to what it first sent.  This
+ensures that the `CONN-REQ` request is idempotent.
+
+DISC messages
+~~~~~~~~~~~~~
+
+DISC messages are used to request a session be terminated.  This
+notifies the remote sender that no more data will be sent or
+accepted, and the session resources may be released.  There is no
+payload. There is no acknowledgment.
+
+PING and PONG messages
+~~~~~~~~~~~~~~~~~~~~~~
+
+In order to keep session state, implementations will generally store
+data for each session.  In order to prevent a stale session from
+consuming these resources forever, and in order to keep underlying
+ZeroTier sessions alive, a `PING` message *MAY* be sent to a peer
+with whom a session has been established.  This message has no payload.
+
+If the `PING` is is successful, then the responder *MUST* reply with a `PONG`
+message.  As with `PING`, the `PONG` message carries no payload.
+
+There is no response to a `PONG` message.
+
+In the event of an error, an implementation *MAY*_ reply with an `ERR`
+message.
+
+Implementations *SHOULD NOT* initiate `PING` messages if they have either
+received other session messages recently.
+
+Implementations *SHOULD* use a timeout T1 seconds of be used before
+initiating a message the first time, and that in the absence of a
+reply, up to N further attempts be made, separated by T2 seconds.  If
+no reply to the Nth attempt is received after T2 seconds have passed,
+then the remote peer should be assumed offline or dead, and the
+session closed.
+
+The values for T1, T2, and N *SHOULD* be configurable, with
+recommended default values of 60, 10, and 5.  With these values,
+sessions that appear dead after 2 minutes will be closed, and their
+resources reclaimed.
+
+ERR messages
+~~~~~~~~~~~~
+
+`ERR` messages indicate a failure in the session, and abruptly
+terminate the session.  The payload for these messages consists of a
+single byte error code, followed by an ASCII message describing the
+error (not terminated by zero).  This message *MUST NOT* be more than
+128 bytes in length.
+
+The following error codes are defined:
+
+     * 0x01 No party listening at that address or port.
+     * 0x02 No such session found.
+     * 0x03 SP protocol ID invalid.
+     * 0x04 Generic protocol error.
+     * 0x05 Message size too big.
+     * 0xff Other uncategorized error.
+
+Implementations *MUST* discard any session state upon receiving an ERR
+message.  These messages are not acknowledged.
+
+Reassembly Guidelines
+~~~~~~~~~~~~~~~~~~~~~
+
+Implementations *MUST* accept and reassemble fragmented `DATA` messages.
+Implementations *MUST* discard fragmented messages of other types.
+
+Messages larger than the ZeroTier MTU *MUST* be fragmented.
+
+Implementations *SHOULD* limit the number of unassembled messages
+retained for reassembly, to minimize the likelihood of intentional
+abuse.  It is suggested that at most 2 unassembled messages be
+retained.  It is further suggested that if 2 or more unfragmented
+messages arrive before a message is reassembled, or more than 5
+seconds pass before the reassembly is complete, that the unassembled
+fragments be discarded.
+
+
+Ports
+~~~~~
+
+The port numbers are 24-bit fields, allowing a single ZT ID to
+service multiple application layer protocols, which could be treated
+as separate end points, or as separate sockets in the application.
+The implementation is responsible for discriminating on these and
+delivering to the appropriate consumer.
+
+As with UDP or TCP, it is intended that each party have its own port
+number, and that a pair of ports (combined with ZeroTier IDs) be used
+to identify a single conversation.
+
+An SP server should allocate a port for number advertisement.  It is
+expected clients will generate ephemeral port numbers.
+
+Implementations are free to choose how to allocate port numbers, but
+it is recommended manually configured port numbers are small, with
+the high order bit clear, and that numbers > 2^23 (high order bit
+set) be used for ephemeral allocations.
+
+It is recommended that separate short queues (perhaps just one or two
+messages long) be kept per local port in implementations, to prevent
+head-of-line blocking issues where backpressure on one consumer
+(perhaps just a single thread or socket) blocks others.
+
+URI Format
+~~~~~~~~~~
+
+The URI scheme used to represent ZeroTier addresses makes use of
+ZeroTier IDs, ZeroTier network IDs, and our own 24-bit ports.
+
+The format shall be `zt://<nwid>/<ztid>:<port>`, where the `<nwid>`
+component represents the 64-bit hexadecimal ZeroTier network ID,
+the `<ztid>` represents the 40-bit hexadecimal ZeroTier Device ID,
+and the `<port>` is the 24-bit port number previously described.
+
+A responder may elide the `<ztid>/` portion, to just bind to itself,
+in which case the format will be `zt://<nwid>/<ztid>:<port>`.
+
+A port number of 0 may be used when listening to indicate that a random
+ephemeral port should be chosen.
+
+An implementation *MAY* allow the `<ztid>` t0 be replaced with `*` to
+indicate that the node's local ZT_ID be used.
+
+// XXX: the ztid could use DNS names, generating 6PLANE IP addresses,
+// and extracting the 10 digit device id from that.  Note that there
+// is no good way to determine a nwid automatically.  The 6PLANE
+// address is determined by a non-reversible XOR transform of the
+// network id.
+
+Security Considerations
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The mapping isn't intended to provide any additional security beyond that
+provided by ZeroTier itself.  Managing the key materials used by ZeroTier
+is implementation-specific, and they must take the appropriate care when
+dealing with them.
