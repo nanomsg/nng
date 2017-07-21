@@ -87,13 +87,15 @@ set (NNG_SOURCES
     platform/posix/posix_debug.c
     platform/posix/posix_epdesc.c
     platform/posix/posix_ipc.c
-    platform/posix/posix_net.c
     platform/posix/posix_pipe.c
     platform/posix/posix_pipedesc.c
     platform/posix/posix_pollq_poll.c
     platform/posix/posix_rand.c
     platform/posix/posix_resolv_gai.c
+    platform/posix/posix_sockaddr.c
+    platform/posix/posix_tcp.c
     platform/posix/posix_thread.c
+    platform/posix/posix_udp.c
 
     platform/windows/win_impl.h
     platform/windows/win_clock.c

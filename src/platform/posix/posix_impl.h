@@ -21,15 +21,23 @@
 #define PLATFORM_POSIX_DEBUG
 #define PLATFORM_POSIX_CLOCK
 #define PLATFORM_POSIX_IPC
-#define PLATFORM_POSIX_NET
+#define PLATFORM_POSIX_TCP
 #define PLATFORM_POSIX_PIPE
 #define PLATFORM_POSIX_RANDOM
 #define PLATFORM_POSIX_SOCKET
 #define PLATFORM_POSIX_THREAD
 #define PLATFORM_POSIX_PIPEDESC
 #define PLATFORM_POSIX_EPDESC
+#define PLATFORM_POSIX_SOCKADDR
+#define PLATFORM_POSIX_UDP
 
 #include "platform/posix/posix_config.h"
+#endif
+
+#ifdef PLATFORM_POSIX_SOCKADDR
+#include <sys/socket.h>
+extern int nni_posix_sockaddr2nn(nni_sockaddr *, const void *);
+extern int nni_posix_nn2sockaddr(void *, const nni_sockaddr *);
 #endif
 
 #ifdef PLATFORM_POSIX_DEBUG
@@ -39,8 +47,6 @@ extern int nni_plat_errno(int);
 
 // Define types that this platform uses.
 #ifdef PLATFORM_POSIX_THREAD
-
-extern int nni_plat_devnull; // open descriptor on /dev/null
 
 #include <pthread.h>
 

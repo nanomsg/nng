@@ -289,6 +289,35 @@ extern void nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *, nni_aio *);
 extern void nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *, nni_aio *);
 
 //
+// UDP support. UDP is not connection oriented, and only has the notion
+// of being bound, sendto, and recvfrom.  (It is possible to set up a
+// connect call that semantically acts as a filter on recvfrom, but we
+// don't use that.)  Outbound packets will include the destination address
+// in the AIO, and inbound packets include the source address in the AIO.
+// For now we don't have more sophisticated options like setting the TTL.
+//
+typedef struct nni_plat_udp nni_plat_udp;
+
+// nni_plat_udp_open initializes a UDP socket, binding to the local
+// address specified specified in the AIO.  The remote address is
+// not used.  The resulting nni_plat_udp structure is returned in the
+// the aio's a_pipe.
+extern int nni_plat_udp_open(nni_plat_udp **, nni_sockaddr *);
+
+// nni_plat_udp_close closes the underlying UDP socket.
+extern void nni_plat_udp_close(nni_plat_udp *);
+
+// nni_plat_udp_send sends the data in the aio to the the
+// destination specified in the nni_aio.  The iovs are the
+// UDP payload.
+extern void nni_plat_udp_send(nni_plat_udp *, nni_aio *);
+
+// nni_plat_udp_pipe_recv recvs a message, storing it in the iovs
+// from the UDP payload.  If the UDP payload will not fit, then
+// NNG_EMSGSIZE results.
+extern void nni_plat_udp_recv(nni_plat_udp *, nni_aio *);
+
+//
 // Notification Pipe Pairs
 //
 

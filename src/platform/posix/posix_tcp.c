@@ -9,14 +9,12 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_NET
+#ifdef PLATFORM_POSIX_TCP
 #include "platform/posix/posix_aio.h"
 
-#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <netinet/tcp.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -24,35 +22,6 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
-
-static int
-nni_posix_tcp_addr(struct sockaddr_storage *ss, const nni_sockaddr *sa)
-{
-	struct sockaddr_in * sin;
-	struct sockaddr_in6 *sin6;
-
-	switch (sa->s_un.s_family) {
-	case NNG_AF_INET:
-		sin = (void *) ss;
-		memset(sin, 0, sizeof(*sin));
-		sin->sin_family      = PF_INET;
-		sin->sin_port        = sa->s_un.s_in.sa_port;
-		sin->sin_addr.s_addr = sa->s_un.s_in.sa_addr;
-		return (sizeof(*sin));
-
-	case NNG_AF_INET6:
-		sin6 = (void *) ss;
-		memset(sin6, 0, sizeof(*sin6));
-#ifdef SIN6_LEN
-		sin6->sin6_len = sizeof(*sin6);
-#endif
-		sin6->sin6_family = PF_INET6;
-		sin6->sin6_port   = sa->s_un.s_in6.sa_port;
-		memcpy(sin6->sin6_addr.s6_addr, sa->s_un.s_in6.sa_addr, 16);
-		return (sizeof(*sin6));
-	}
-	return (-1);
-}
 
 extern int nni_tcp_parse_url(char *, char **, char **, char **, char **);
 
@@ -112,7 +81,7 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
 		if ((rv = nni_aio_result(&aio)) != 0) {
 			goto done;
 		}
-		len = nni_posix_tcp_addr(&ss, &aio.a_addrs[0]);
+		len = nni_posix_nn2sockaddr((void *) &ss, &aio.a_addrs[0]);
 		nni_posix_epdesc_set_remote(ed, &ss, len);
 	}
 
@@ -122,7 +91,7 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
 		if ((rv = nni_aio_result(&aio)) != 0) {
 			goto done;
 		}
-		len = nni_posix_tcp_addr(&ss, &aio.a_addrs[0]);
+		len = nni_posix_nn2sockaddr((void *) &ss, &aio.a_addrs[0]);
 		nni_posix_epdesc_set_local(ed, &ss, len);
 	}
 	nni_aio_fini(&aio);
@@ -196,4 +165,4 @@ nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *p, nni_aio *aio)
 // Suppress empty symbols warnings in ranlib.
 int nni_posix_net_not_used = 0;
 
-#endif // PLATFORM_POSIX_NET
+#endif // PLATFORM_POSIX_TCP
