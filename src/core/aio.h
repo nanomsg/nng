@@ -22,8 +22,6 @@ typedef struct nni_aio_ops nni_aio_ops;
 struct nni_aio {
 	int      a_result; // Result code (nng_errno)
 	size_t   a_count;  // Bytes transferred (I/O only)
-	nni_cb   a_cb;     // User specified callback.
-	void *   a_cbarg;  // Callback argument.
 	nni_time a_expire;
 
 	// These fields are private to the aio framework.
@@ -90,17 +88,12 @@ extern int nni_aio_result(nni_aio *);
 // completed.
 extern size_t nni_aio_count(nni_aio *);
 
-// nni_aio_wake wakes any threads blocked in nni_aio_wait.  This is the
-// default callback if no other is supplied.  If a user callback is supplied
-// then that code must call this routine to wake any waiters (unless the
-// user code is certain that there are no such waiters).
-extern void nni_aio_wake(nni_aio *);
-
-// nni_aio_wait blocks the caller until the operation is complete, as indicated
-// by nni_aio_wake being called.  (Recall nni_aio_wake is the default
-// callback if none is supplied.)  If a user supplied callback is provided,
-// and that callback does not call nni_aio_wake, then this routine may
-// block the caller indefinitely.
+// nni_aio_wait blocks the caller until the operation is complete.
+// The operation must have already been started.  This routine will
+// block until the AIO, as well as any callback, has completed execution.
+// If the callback routine reschedules the AIO, the wait may wind up
+// waiting for the rescheduled operation; this is most often used in
+// lieu of a callback to build synchronous constructs on top of AIOs.
 extern void nni_aio_wait(nni_aio *);
 
 // nni_aio_list_init creates a list suitable for use by providers using

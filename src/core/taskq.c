@@ -145,6 +145,11 @@ nni_task_dispatch(nni_task *task)
 {
 	nni_taskq *tq = task->task_tq;
 
+	// If there is no callback to perform, then do nothing!
+	// The user will be none the wiser.
+	if (task->task_cb == NULL) {
+		return;
+	}
 	nni_mtx_lock(&tq->tq_mtx);
 	// It might already be scheduled... if so don't redo it.
 	if (!nni_list_active(&tq->tq_tasks, task)) {
