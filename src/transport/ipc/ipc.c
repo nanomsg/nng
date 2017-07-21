@@ -511,6 +511,8 @@ nni_ipc_ep_close(void *arg)
 	ep->closed = 1;
 	nni_plat_ipc_ep_close(ep->iep);
 	nni_mtx_unlock(&ep->mtx);
+
+	nni_aio_stop(&ep->aio);
 }
 
 static int

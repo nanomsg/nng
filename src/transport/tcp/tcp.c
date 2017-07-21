@@ -576,6 +576,8 @@ nni_tcp_ep_close(void *arg)
 	ep->closed = 1;
 	nni_plat_tcp_ep_close(ep->tep);
 	nni_mtx_unlock(&ep->mtx);
+
+	nni_aio_stop(&ep->aio);
 }
 
 static int
