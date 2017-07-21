@@ -158,8 +158,7 @@ nni_pipe_stop(nni_pipe *p)
 		return;
 	}
 	p->p_stop = 1;
-	nni_taskq_ent_init(&p->p_reap_tqe, (nni_cb) nni_pipe_reap, p);
-	nni_taskq_dispatch(NULL, &p->p_reap_tqe);
+	nni_task_dispatch(&p->p_reap_task);
 	nni_mtx_unlock(&p->p_mtx);
 }
 
@@ -208,6 +207,8 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	p->p_tran_ops   = *tran->tran_pipe;
 	p->p_tran_data  = tdata;
 	p->p_proto_data = NULL;
+
+	nni_task_init(NULL, &p->p_reap_task, (nni_cb) nni_pipe_reap, p);
 
 	if (((rv = nni_mtx_init(&p->p_mtx)) != 0) ||
 	    ((rv = nni_cv_init(&p->p_cv, &p->p_mtx)) != 0)) {

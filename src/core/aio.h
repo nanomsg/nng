@@ -27,11 +27,11 @@ struct nni_aio {
 	nni_time a_expire;
 
 	// These fields are private to the aio framework.
-	nni_mtx       a_lk;
-	nni_cv        a_cv;
-	unsigned      a_flags;
-	int           a_refcnt; // prevent use-after-free
-	nni_taskq_ent a_tqe;
+	nni_mtx  a_lk;
+	nni_cv   a_cv;
+	unsigned a_flags;
+	int      a_refcnt; // prevent use-after-free
+	nni_task a_task;
 
 	// Read/write operations.
 	nni_iov a_iov[4];

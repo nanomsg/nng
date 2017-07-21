@@ -49,7 +49,7 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 	aio->a_cbarg  = arg;
 	aio->a_expire = NNI_TIME_NEVER;
 	aio->a_flags  = 0;
-	nni_taskq_ent_init(&aio->a_tqe, cb, arg);
+	nni_task_init(NULL, &aio->a_task, cb, arg);
 
 	return (0);
 }
@@ -89,7 +89,7 @@ nni_aio_stop(nni_aio *aio)
 
 	// Wait for any outstanding task to complete.  We won't schedule
 	// new stuff because nni_aio_start will fail (due to AIO_FINI).
-	nni_taskq_wait(NULL, &aio->a_tqe);
+	nni_task_wait(&aio->a_task);
 }
 
 int
@@ -188,7 +188,7 @@ nni_aio_cancel(nni_aio *aio, int rv)
 	aio->a_prov_data   = NULL;
 	aio->a_prov_cancel = NULL;
 
-	nni_taskq_dispatch(NULL, &aio->a_tqe);
+	nni_task_dispatch(&aio->a_task);
 	nni_mtx_unlock(&aio->a_lk);
 }
 
@@ -215,7 +215,7 @@ nni_aio_finish(nni_aio *aio, int result, size_t count)
 	nni_aio_expire_remove(aio);
 	aio->a_expire = NNI_TIME_NEVER;
 
-	nni_taskq_dispatch(NULL, &aio->a_tqe);
+	nni_task_dispatch(&aio->a_task);
 	nni_mtx_unlock(&aio->a_lk);
 	return (0);
 }
@@ -242,7 +242,7 @@ nni_aio_finish_pipe(nni_aio *aio, int result, void *pipe)
 	nni_aio_expire_remove(aio);
 	aio->a_expire = NNI_TIME_NEVER;
 
-	nni_taskq_dispatch(NULL, &aio->a_tqe);
+	nni_task_dispatch(&aio->a_task);
 	nni_mtx_unlock(&aio->a_lk);
 	return (0);
 }
@@ -391,7 +391,7 @@ nni_aio_expire_loop(void *arg)
 		// thread.  But keeping it separate is clearer, and more
 		// consistent with other uses.  And this should not be a
 		// hot code path.
-		nni_taskq_dispatch(NULL, &aio->a_tqe);
+		nni_task_dispatch(&aio->a_task);
 	}
 }
 

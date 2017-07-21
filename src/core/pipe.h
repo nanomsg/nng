@@ -34,7 +34,7 @@ struct nni_pipe {
 	int           p_refcnt;
 	nni_mtx       p_mtx;
 	nni_cv        p_cv;
-	nni_taskq_ent p_reap_tqe;
+	nni_task      p_reap_task;
 	nni_aio       p_start_aio;
 };
 

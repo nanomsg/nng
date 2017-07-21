@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -41,13 +42,13 @@ static nni_mtx    nni_posix_resolv_mtx;
 
 typedef struct nni_posix_resolv_item nni_posix_resolv_item;
 struct nni_posix_resolv_item {
-	int           family;
-	int           passive;
-	const char *  name;
-	const char *  serv;
-	int           proto;
-	nni_aio *     aio;
-	nni_taskq_ent tqe;
+	int         family;
+	int         passive;
+	const char *name;
+	const char *serv;
+	int         proto;
+	nni_aio *   aio;
+	nni_task    task;
 };
 
 static void
@@ -72,7 +73,7 @@ nni_posix_resolv_cancel(nni_aio *aio)
 	}
 	aio->a_prov_data = NULL;
 	nni_mtx_unlock(&nni_posix_resolv_mtx);
-	nni_taskq_cancel(nni_posix_resolv_tq, &item->tqe);
+	nni_task_cancel(&item->task);
 	NNI_FREE_STRUCT(item);
 }
 
@@ -230,7 +231,8 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 		return;
 	}
 
-	nni_taskq_ent_init(&item->tqe, nni_posix_resolv_task, item);
+	nni_task_init(
+	    nni_posix_resolv_tq, &item->task, nni_posix_resolv_task, item);
 
 	switch (family) {
 	case NNG_AF_INET:
@@ -257,11 +259,7 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 		NNI_FREE_STRUCT(item);
 		return;
 	}
-	if ((rv = nni_taskq_dispatch(nni_posix_resolv_tq, &item->tqe)) != 0) {
-		nni_posix_resolv_finish(item, rv);
-		nni_mtx_unlock(&nni_posix_resolv_mtx);
-		return;
-	}
+	nni_task_dispatch(&item->task);
 	nni_mtx_unlock(&nni_posix_resolv_mtx);
 }
 

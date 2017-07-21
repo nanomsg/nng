@@ -22,6 +22,7 @@ static void nni_ep_connect_start(nni_ep *);
 static void nni_ep_connect_done(void *);
 static void nni_ep_backoff_start(nni_ep *);
 static void nni_ep_backoff_done(void *);
+static void nni_ep_reap(nni_ep *);
 
 static nni_idhash *nni_eps;
 
@@ -107,6 +108,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	ep->ep_refcnt = 0;
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
+	nni_task_init(NULL, &ep->ep_reap_task, (nni_cb) nni_ep_reap, ep);
 
 	nni_pipe_ep_list_init(&ep->ep_pipes);
 
@@ -226,8 +228,7 @@ nni_ep_stop(nni_ep *ep)
 		nni_pipe_stop(pipe);
 	}
 
-	nni_taskq_ent_init(&ep->ep_reap_tqe, (nni_cb) nni_ep_reap, ep);
-	nni_taskq_dispatch(NULL, &ep->ep_reap_tqe);
+	nni_task_dispatch(&ep->ep_reap_task);
 	nni_mtx_unlock(&ep->ep_mtx);
 }
 

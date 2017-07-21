@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -13,23 +14,30 @@
 #include "core/defs.h"
 #include "core/list.h"
 
-typedef struct nni_taskq     nni_taskq;
-typedef struct nni_taskq_ent nni_taskq_ent;
+typedef struct nni_taskq nni_taskq;
+typedef struct nni_task  nni_task;
 
-struct nni_taskq_ent {
-	nni_list_node tqe_node;
-	void *        tqe_arg;
-	nni_cb        tqe_cb;
-	nni_taskq *   tqe_tq;
+// nni_task is a structure representing a task.  Its intended to inlined
+// into structures so that taskq_dispatch can be a guaranteed operation.
+struct nni_task {
+	nni_list_node task_node;
+	void *        task_arg;
+	nni_cb        task_cb;
+	nni_taskq *   task_tq;
 };
 
 extern int  nni_taskq_init(nni_taskq **, int);
 extern void nni_taskq_fini(nni_taskq *);
 
-extern int  nni_taskq_dispatch(nni_taskq *, nni_taskq_ent *);
-extern int  nni_taskq_cancel(nni_taskq *, nni_taskq_ent *);
-extern void nni_taskq_wait(nni_taskq *, nni_taskq_ent *);
-extern void nni_taskq_ent_init(nni_taskq_ent *, nni_cb, void *);
+// nni_task_dispatch sends the task to the queue.  It is guaranteed to
+// succeed.  (If the queue is shutdown, then the behavior is undefined.)
+extern void nni_task_dispatch(nni_task *);
+
+// nni_task_cancel cancels the task.  It will wait for the task to complete
+// if it is already running.
+extern int  nni_task_cancel(nni_task *);
+extern void nni_task_wait(nni_task *);
+extern void nni_task_init(nni_taskq *, nni_task *, nni_cb, void *);
 
 extern int  nni_taskq_sys_init(void);
 extern void nni_taskq_sys_fini(void);
