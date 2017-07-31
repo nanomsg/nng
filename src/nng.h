@@ -549,6 +549,10 @@ enum nng_errno_enum {
 	NNG_ECONNABORTED = 18,
 	NNG_ECONNRESET   = 19,
 	NNG_ECANCELED    = 20,
+	NNG_ENOFILES     = 21,
+	NNG_ENOSPC       = 22,
+	NNG_EEXIST       = 23,
+	NNG_EINTERNAL    = 24,
 };
 
 // NNG_SYSERR is a special code, which allows us to wrap errors from the

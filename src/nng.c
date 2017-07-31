@@ -638,6 +638,10 @@ static const struct {
 	{ NNG_ECONNRESET, "Connection reset" },
 	{ NNG_ECONNABORTED, "Connection aborted" },
 	{ NNG_ECANCELED, "Operation canceled" },
+	{ NNG_ENOFILES, "Out of files" },
+	{ NNG_ENOSPC, "Out of space" },
+	{ NNG_EEXIST, "Resource already exists" },
+	{ NNG_EINTERNAL, "Internal error detected" },
 	{ 0, NULL }
 	// clang-format on
 };
