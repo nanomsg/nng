@@ -110,7 +110,8 @@ set (NNG_SOURCES
 
     protocol/bus/bus.c
 
-    protocol/pair/pair.c
+    protocol/pair/pair_v0.c
+    protocol/pair/pair_v1.c
 
     protocol/pipeline/pull.c
     protocol/pipeline/push.c
