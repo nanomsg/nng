@@ -28,6 +28,7 @@ struct nni_task {
 
 extern int  nni_taskq_init(nni_taskq **, int);
 extern void nni_taskq_fini(nni_taskq *);
+extern void nni_taskq_drain(nni_taskq *);
 
 // nni_task_dispatch sends the task to the queue.  It is guaranteed to
 // succeed.  (If the queue is shutdown, then the behavior is undefined.)
