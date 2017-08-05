@@ -8,15 +8,32 @@ environment:
     # array of all environments used to test builds
     # Note that we require relatively modern Visual Studio, in order to pick
     # up snprintf.  You don't want the older versions of VS, really!
-    - GENERATOR: NMake Makefiles
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      GENERATOR: NMake Makefiles
       CFG: Debug
-      VS_VERSION: 14.0
-    - GENERATOR: Visual Studio 14 2015
-      VS_VERSION: 14.0
+      VSINSTALL: ''"Microsoft Visual Studio 14.0"/VC'
+      MSVC_PLATFORM: x86
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      GENERATOR: Visual Studio 14 2015
       CFG: Debug
-    - GENERATOR: Visual Studio 14 2015 Win64
+      VSINSTALL: '"Microsoft Visual Studio 14.0"/VC'
+      MSVC_PLATFORM: x86
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      GENERATOR: Visual Studio 14 2015
       CFG: Debug
-      VS_VERSION: 14.0
+      VSINSTALL: ''"Microsoft Visual Studio 14.0"/VC'
+      MSVC_PLATFORM: amd64
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      GENERATOR: Visual Studio 15 2017
+      CFG: Debug
+      VSINSTALL: '"Microsoft Visual Studio"/2017/Community/VC/Auxiliary/Build'      
+      MSVC_PLATFORM: x86
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      GENERATOR: Visual Studio 15 2017
+      CFG: Debug
+      VSINSTALL: '"Microsoft Visual Studio"/2017/Community/VC/Auxiliary/Build'      
+      MSVC_PLATFORM: amd64
+
 
 cache:
   - '%USERPROFILE%\asciidoctor-%ASCIIDOCTOR_VER%.gem -> .appveyor.yml'
@@ -37,14 +54,18 @@ install:
 before_build:
   - del "C:\Program Files (x86)\MSBuild\%VS_VERSION%\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
 
+init:
+  - cmake --version
+  - C:\"Program Files (x86)"/%VSINSTALL%/vcvarsall.bat %MSVC_PLATFORM%
+
 build:
   parallel: true
+
 build_script:
-  - cmd: IF NOT %VS_VERSION% == NONE call "C:/Program Files (x86)/Microsoft Visual Studio %VS_VERSION%/Common7/Tools/vsvars32.bat"
-  - cmd: cmake --version
   - cmd: md build
   - cmd: cd build
-  - cmd: cmake -G "%GENERATOR%" ..
+  - cmd: cmake -G "%GENERATOR%" -DCMAKE_BUILD_TYPE=%CFG% ..
   - cmd: cmake --build .
+
 test_script:
   - cmd: ctest --output-on-failure -C "%CFG%"
