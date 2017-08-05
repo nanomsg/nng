@@ -131,9 +131,10 @@ Main({
 
 	Test("Scalability", {
 		Convey("We can handle many many clients", {
+			int i;
 			So(openclients(clients, nclients) == 0);
 			So(transact(clients, nclients) == 0);
-			for (int i = 0; i < nclients; i++) {
+			for (i = 0; i < nclients; i++) {
 				So(nng_close(clients[i]) == 0);
 			}
 		});
