@@ -23,20 +23,35 @@ static void nni_ep_connect_done(void *);
 static void nni_ep_backoff_start(nni_ep *);
 static void nni_ep_backoff_done(void *);
 static void nni_ep_reap(nni_ep *);
+static void nni_ep_reaper(void *);
 
 static nni_idhash *nni_eps;
+
+static nni_list nni_ep_reap_list;
+static nni_mtx  nni_ep_reap_lk;
+static nni_cv   nni_ep_reap_cv;
+static nni_thr  nni_ep_reap_thr;
+static int      nni_ep_reap_stop;
+static int      nni_ep_reap_start;
 
 int
 nni_ep_sys_init(void)
 {
 	int rv;
 
-	if ((rv = nni_idhash_init(&nni_eps)) != 0) {
+	NNI_LIST_INIT(&nni_ep_reap_list, nni_ep, ep_reap_node);
+
+	if (((rv = nni_mtx_init(&nni_ep_reap_lk)) != 0) ||
+	    ((rv = nni_cv_init(&nni_ep_reap_cv, &nni_ep_reap_lk)) != 0) ||
+	    ((rv = nni_thr_init(&nni_ep_reap_thr, nni_ep_reaper, 0)) != 0) ||
+	    ((rv = nni_idhash_init(&nni_eps)) != 0)) {
 		return (rv);
 	}
-
 	nni_idhash_set_limits(
 	    nni_eps, 1, 0x7fffffff, nni_random() & 0x7fffffff);
+
+	nni_ep_reap_start = 1;
+	nni_thr_run(&nni_ep_reap_thr);
 
 	return (0);
 }
@@ -44,6 +59,15 @@ nni_ep_sys_init(void)
 void
 nni_ep_sys_fini(void)
 {
+	if (nni_ep_reap_start) {
+		nni_mtx_lock(&nni_ep_reap_lk);
+		nni_ep_reap_stop = 1;
+		nni_cv_wake(&nni_ep_reap_cv);
+		nni_mtx_unlock(&nni_ep_reap_lk);
+		nni_thr_fini(&nni_ep_reap_thr);
+	}
+	nni_cv_fini(&nni_ep_reap_cv);
+	nni_mtx_fini(&nni_ep_reap_lk);
 	nni_idhash_fini(nni_eps);
 	nni_eps = NULL;
 }
@@ -108,7 +132,6 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	ep->ep_refcnt = 0;
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
-	nni_task_init(NULL, &ep->ep_reap_task, (nni_cb) nni_ep_reap, ep);
 
 	nni_pipe_ep_list_init(&ep->ep_pipes);
 
@@ -229,9 +252,12 @@ nni_ep_stop(nni_ep *ep)
 	NNI_LIST_FOREACH (&ep->ep_pipes, pipe) {
 		nni_pipe_stop(pipe);
 	}
-
-	nni_task_dispatch(&ep->ep_reap_task);
 	nni_mtx_unlock(&ep->ep_mtx);
+
+	nni_mtx_lock(&nni_ep_reap_lk);
+	nni_list_append(&nni_ep_reap_list, ep);
+	nni_cv_wake(&nni_ep_reap_cv);
+	nni_mtx_unlock(&nni_ep_reap_lk);
 }
 
 static void
@@ -502,4 +528,30 @@ void
 nni_ep_list_init(nni_list *list)
 {
 	NNI_LIST_INIT(list, nni_ep, ep_node);
+}
+
+void
+nni_ep_reaper(void *notused)
+{
+	NNI_ARG_UNUSED(notused);
+
+	nni_mtx_lock(&nni_ep_reap_lk);
+	for (;;) {
+		nni_ep *ep;
+
+		if ((ep = nni_list_first(&nni_ep_reap_list)) != NULL) {
+			nni_list_remove(&nni_ep_reap_list, ep);
+			nni_mtx_unlock(&nni_ep_reap_lk);
+			nni_ep_reap(ep);
+			nni_mtx_lock(&nni_ep_reap_lk);
+			continue;
+		}
+
+		if (nni_ep_reap_stop) {
+			break;
+		}
+
+		nni_cv_wait(&nni_ep_reap_cv);
+	}
+	nni_mtx_unlock(&nni_ep_reap_lk);
 }

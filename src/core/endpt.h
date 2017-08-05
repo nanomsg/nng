@@ -44,7 +44,7 @@ struct nni_ep {
 	nni_duration  ep_currtime; // current time for reconnect
 	nni_duration  ep_inirtime; // initial time for reconnect
 	nni_time      ep_conntime; // time of last good connect
-	nni_task      ep_reap_task;
+	nni_list_node ep_reap_node;
 };
 
 enum nni_ep_mode {
