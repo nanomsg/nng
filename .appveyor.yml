@@ -11,7 +11,7 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       GENERATOR: NMake Makefiles
       CFG: Debug
-      VSINSTALL: ''"Microsoft Visual Studio 14.0"/VC'
+      VSINSTALL: '"Microsoft Visual Studio 14.0"/VC'
       MSVC_PLATFORM: x86
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       GENERATOR: Visual Studio 14 2015
@@ -21,7 +21,7 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       GENERATOR: Visual Studio 14 2015
       CFG: Debug
-      VSINSTALL: ''"Microsoft Visual Studio 14.0"/VC'
+      VSINSTALL: '"Microsoft Visual Studio 14.0"/VC'
       MSVC_PLATFORM: amd64
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: Visual Studio 15 2017
