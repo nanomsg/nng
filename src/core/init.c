@@ -69,13 +69,13 @@ nni_fini(void)
 {
 	// XXX: We should make sure that underlying sockets and
 	// file descriptors are closed.  Details TBD.
-	nni_taskq_sys_fini();
 	nni_tran_sys_fini();
 	nni_pipe_sys_fini();
 	nni_ep_sys_fini();
 	nni_sock_sys_fini();
 	nni_random_sys_fini();
-	nni_timer_sys_fini();
 	nni_aio_sys_fini();
+	nni_timer_sys_fini();
+	nni_taskq_sys_fini();
 	nni_plat_fini();
 }

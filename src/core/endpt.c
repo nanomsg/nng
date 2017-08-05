@@ -130,6 +130,7 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	ep->ep_refcnt = 0;
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
+	NNI_LIST_NODE_INIT(&ep->ep_reap_node);
 
 	nni_pipe_ep_list_init(&ep->ep_pipes);
 
@@ -253,6 +254,7 @@ nni_ep_stop(nni_ep *ep)
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	nni_mtx_lock(&nni_ep_reap_lk);
+	NNI_ASSERT(!nni_list_node_active(&ep->ep_reap_node));
 	nni_list_append(&nni_ep_reap_list, ep);
 	nni_cv_wake(&nni_ep_reap_cv);
 	nni_mtx_unlock(&nni_ep_reap_lk);
