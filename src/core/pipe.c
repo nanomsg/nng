@@ -21,11 +21,9 @@ static nni_list nni_pipe_reap_list;
 static nni_mtx  nni_pipe_reap_lk;
 static nni_cv   nni_pipe_reap_cv;
 static nni_thr  nni_pipe_reap_thr;
-static int      nni_pipe_reap_exit;
-static int      nni_pipe_reap_start;
+static int      nni_pipe_reap_run;
 
 static void nni_pipe_reaper(void *);
-static void nni_pipe_destroy(nni_pipe *);
 
 int
 nni_pipe_sys_init(void)
@@ -49,7 +47,7 @@ nni_pipe_sys_init(void)
 	nni_idhash_set_limits(
 	    nni_pipes, 1, 0x7fffffff, nni_random() & 0x7fffffff);
 
-	nni_pipe_reap_start = 1;
+	nni_pipe_reap_run = 1;
 	nni_thr_run(&nni_pipe_reap_thr);
 
 	return (0);
@@ -58,9 +56,9 @@ nni_pipe_sys_init(void)
 void
 nni_pipe_sys_fini(void)
 {
-	if (nni_pipe_reap_start) {
+	if (nni_pipe_reap_run) {
 		nni_mtx_lock(&nni_pipe_reap_lk);
-		nni_pipe_reap_exit = 1;
+		nni_pipe_reap_run = 0;
 		nni_cv_wake(&nni_pipe_reap_cv);
 		nni_mtx_unlock(&nni_pipe_reap_lk);
 		nni_thr_fini(&nni_pipe_reap_thr);
@@ -336,7 +334,7 @@ nni_pipe_reaper(void *notused)
 			nni_mtx_lock(&nni_pipe_reap_lk);
 			continue;
 		}
-		if (nni_pipe_reap_exit) {
+		if (!nni_pipe_reap_run) {
 			break;
 		}
 		nni_cv_wait(&nni_pipe_reap_cv);

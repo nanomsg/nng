@@ -22,7 +22,6 @@ static void nni_ep_connect_start(nni_ep *);
 static void nni_ep_connect_done(void *);
 static void nni_ep_backoff_start(nni_ep *);
 static void nni_ep_backoff_done(void *);
-static void nni_ep_reap(nni_ep *);
 static void nni_ep_reaper(void *);
 
 static nni_idhash *nni_eps;
@@ -31,8 +30,7 @@ static nni_list nni_ep_reap_list;
 static nni_mtx  nni_ep_reap_lk;
 static nni_cv   nni_ep_reap_cv;
 static nni_thr  nni_ep_reap_thr;
-static int      nni_ep_reap_stop;
-static int      nni_ep_reap_start;
+static int      nni_ep_reap_run;
 
 int
 nni_ep_sys_init(void)
@@ -50,7 +48,7 @@ nni_ep_sys_init(void)
 	nni_idhash_set_limits(
 	    nni_eps, 1, 0x7fffffff, nni_random() & 0x7fffffff);
 
-	nni_ep_reap_start = 1;
+	nni_ep_reap_run = 1;
 	nni_thr_run(&nni_ep_reap_thr);
 
 	return (0);
@@ -59,9 +57,9 @@ nni_ep_sys_init(void)
 void
 nni_ep_sys_fini(void)
 {
-	if (nni_ep_reap_start) {
+	if (nni_ep_reap_run) {
 		nni_mtx_lock(&nni_ep_reap_lk);
-		nni_ep_reap_stop = 1;
+		nni_ep_reap_run = 0;
 		nni_cv_wake(&nni_ep_reap_cv);
 		nni_mtx_unlock(&nni_ep_reap_lk);
 		nni_thr_fini(&nni_ep_reap_thr);
@@ -530,7 +528,7 @@ nni_ep_list_init(nni_list *list)
 	NNI_LIST_INIT(list, nni_ep, ep_node);
 }
 
-void
+static void
 nni_ep_reaper(void *notused)
 {
 	NNI_ARG_UNUSED(notused);
@@ -547,7 +545,7 @@ nni_ep_reaper(void *notused)
 			continue;
 		}
 
-		if (nni_ep_reap_stop) {
+		if (!nni_ep_reap_run) {
 			break;
 		}
 
