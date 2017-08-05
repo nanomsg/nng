@@ -62,7 +62,7 @@ nni_posix_resolv_finish(nni_posix_resolv_item *item, int rv)
 }
 
 static void
-nni_posix_resolv_cancel(nni_aio *aio)
+nni_posix_resolv_cancel(nni_aio *aio, int rv)
 {
 	nni_posix_resolv_item *item;
 
@@ -75,6 +75,7 @@ nni_posix_resolv_cancel(nni_aio *aio)
 	nni_mtx_unlock(&nni_posix_resolv_mtx);
 	nni_task_cancel(&item->task);
 	NNI_FREE_STRUCT(item);
+	nni_aio_finish_error(aio, rv);
 }
 
 static int

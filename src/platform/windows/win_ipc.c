@@ -65,7 +65,7 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 	NNI_ASSERT(aio->a_iov[0].iov_buf != NULL);
 
 	if (pipe->p == INVALID_HANDLE_VALUE) {
-		evt->status = ERROR_INVALID_HANDLE;
+		evt->status = NNG_ECLOSED;
 		evt->count  = 0;
 		return (1);
 	}
@@ -92,7 +92,7 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 	}
 	if ((!ok) && ((rv = GetLastError()) != ERROR_IO_PENDING)) {
 		// Synchronous failure.
-		evt->status = rv;
+		evt->status = nni_win_error(rv);
 		evt->count  = 0;
 		return (1);
 	}
@@ -108,13 +108,7 @@ nni_win_ipc_pipe_cancel(nni_win_event *evt)
 {
 	nni_plat_ipc_pipe *pipe = evt->ptr;
 
-	if (CancelIoEx(pipe->p, &evt->olpd)) {
-		DWORD cnt;
-
-		// If we canceled, make sure that we've completely
-		// finished with the overlapped.
-		GetOverlappedResult(pipe->p, &evt->olpd, &cnt, TRUE);
-	}
+	CancelIoEx(pipe->p, &evt->olpd);
 }
 
 static void
@@ -146,7 +140,7 @@ nni_win_ipc_pipe_finish(nni_win_event *evt, nni_aio *aio)
 	}
 
 	// All done; hopefully successfully.
-	nni_aio_finish(aio, nni_win_error(rv), aio->a_count);
+	nni_aio_finish(aio, rv, aio->a_count);
 }
 
 static int
@@ -294,7 +288,7 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 	HANDLE             newp, oldp;
 
 	if ((rv = evt->status) != 0) {
-		nni_aio_finish(aio, nni_win_error(rv), 0);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -308,7 +302,7 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 		// We connected, but as we cannot get a new pipe,
 		// we have to disconnect the old one.
 		DisconnectNamedPipe(ep->p);
-		nni_aio_finish(aio, rv, 0);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	if ((rv = nni_win_iocp_register(newp)) != 0) {
@@ -317,7 +311,7 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 		// And discard the half-baked new one.
 		DisconnectNamedPipe(newp);
 		(void) CloseHandle(newp);
-		nni_aio_finish(aio, rv, 0);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -329,14 +323,11 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 		// the old one, since failed to be able to use it.
 		DisconnectNamedPipe(oldp);
 		(void) CloseHandle(oldp);
-		nni_aio_finish(aio, rv, 0);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	// What if the pipe is already finished?
-	if (nni_aio_finish_pipe(aio, 0, pipe) != 0) {
-		nni_plat_ipc_pipe_fini(pipe);
-	}
+	nni_aio_finish_pipe(aio, pipe);
 }
 
 static void
@@ -344,13 +335,7 @@ nni_win_ipc_acc_cancel(nni_win_event *evt)
 {
 	nni_plat_ipc_ep *ep = evt->ptr;
 
-	if (CancelIoEx(ep->p, &evt->olpd)) {
-		DWORD cnt;
-
-		// If we canceled, make sure that we've completely
-		// finished with the overlapped.
-		GetOverlappedResult(ep->p, &evt->olpd, &cnt, TRUE);
-	}
+	(void) CancelIoEx(ep->p, &evt->olpd);
 	// Just to be sure.
 	(void) DisconnectNamedPipe(ep->p);
 }
@@ -376,7 +361,7 @@ nni_win_ipc_acc_start(nni_win_event *evt, nni_aio *aio)
 
 		default:
 			// Fast-fail (synchronous).
-			evt->status = rv;
+			evt->status = nni_win_error(rv);
 			evt->count  = 0;
 			return (1);
 		}
@@ -468,9 +453,7 @@ nni_win_ipc_conn_thr(void *arg)
 			    ((rv = nni_win_iocp_register(p)) != 0)) {
 				goto fail;
 			}
-			if (rv = nni_aio_finish_pipe(aio, 0, pipe) != 0) {
-				nni_plat_ipc_pipe_fini(pipe);
-			}
+			nni_aio_finish_pipe(aio, pipe);
 			continue;
 
 		fail:
@@ -481,7 +464,7 @@ nni_win_ipc_conn_thr(void *arg)
 			if (pipe != NULL) {
 				nni_plat_ipc_pipe_fini(pipe);
 			}
-			nni_aio_finish(aio, rv, 0);
+			nni_aio_finish_error(aio, rv);
 		}
 
 		if (nni_list_empty(&w->waiters)) {
@@ -496,16 +479,19 @@ nni_win_ipc_conn_thr(void *arg)
 }
 
 static void
-nni_win_ipc_conn_cancel(nni_aio *aio)
+nni_win_ipc_conn_cancel(nni_aio *aio, int rv)
 {
 	nni_win_ipc_conn_work *w  = &nni_win_ipc_connecter;
 	nni_plat_ipc_ep *      ep = aio->a_prov_data;
 
 	nni_mtx_lock(&w->mtx);
-	ep->con_aio = NULL;
-	if (nni_list_active(&w->waiters, ep)) {
-		nni_list_remove(&w->waiters, ep);
-		nni_cv_wake(&w->cv);
+	if (aio == ep->con_aio) {
+		ep->con_aio = NULL;
+		if (nni_list_active(&w->waiters, ep)) {
+			nni_list_remove(&w->waiters, ep);
+			nni_cv_wake(&w->cv);
+		}
+		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&w->mtx);
 }
@@ -556,7 +542,7 @@ nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
 		}
 		if ((aio = ep->con_aio) != NULL) {
 			ep->con_aio = NULL;
-			nni_aio_finish(aio, NNG_ECLOSED, 0);
+			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
 		nni_mtx_unlock(&w->mtx);
 		break;

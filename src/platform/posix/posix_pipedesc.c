@@ -39,7 +39,7 @@ static void
 nni_posix_pipedesc_finish(nni_aio *aio, int rv)
 {
 	nni_aio_list_remove(aio);
-	(void) nni_aio_finish(aio, rv, aio->a_count);
+	nni_aio_finish(aio, rv, aio->a_count);
 }
 
 static void
@@ -233,12 +233,15 @@ nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
 }
 
 static void
-nni_posix_pipedesc_cancel(nni_aio *aio)
+nni_posix_pipedesc_cancel(nni_aio *aio, int rv)
 {
 	nni_posix_pipedesc *pd = aio->a_prov_data;
 
 	nni_mtx_lock(&pd->mtx);
-	nni_aio_list_remove(aio);
+	if (nni_aio_list_active(aio)) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
+	}
 	nni_mtx_unlock(&pd->mtx);
 }
 

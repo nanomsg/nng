@@ -144,7 +144,7 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 	}
 
 	if ((s = pipe->s) == INVALID_SOCKET) {
-		evt->status = ERROR_INVALID_HANDLE;
+		evt->status = NNG_ECLOSED;
 		evt->count  = 0;
 		return (1);
 	}
@@ -163,7 +163,7 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 	if ((rv == SOCKET_ERROR) &&
 	    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
 		// Synchronous failure.
-		evt->status = rv;
+		evt->status = nni_win_error(rv);
 		evt->count  = 0;
 		return (1);
 	}
@@ -179,13 +179,7 @@ nni_win_tcp_pipe_cancel(nni_win_event *evt)
 {
 	nni_plat_tcp_pipe *pipe = evt->ptr;
 
-	if (CancelIoEx((HANDLE) pipe->s, &evt->olpd)) {
-		DWORD cnt;
-
-		// If we canceled, make sure that we've completely
-		// finished with the overlapped.
-		GetOverlappedResult((HANDLE) pipe->s, &evt->olpd, &cnt, TRUE);
-	}
+	(void) CancelIoEx((HANDLE) pipe->s, &evt->olpd);
 }
 
 static void
@@ -228,7 +222,7 @@ nni_win_tcp_pipe_finish(nni_win_event *evt, nni_aio *aio)
 	}
 
 	// All done; hopefully successfully.
-	nni_aio_finish(aio, nni_win_error(rv), aio->a_count);
+	nni_aio_finish(aio, rv, aio->a_count);
 }
 
 static int
@@ -507,12 +501,8 @@ nni_win_tcp_acc_cancel(nni_win_event *evt)
 	nni_plat_tcp_ep *ep = evt->ptr;
 	SOCKET           s  = ep->s;
 
-	if ((s != INVALID_SOCKET) && CancelIoEx((HANDLE) s, &evt->olpd)) {
-		DWORD cnt;
-
-		// If we canceled, make sure that we've completely
-		// finished with the overlapped.
-		GetOverlappedResult((HANDLE) s, &evt->olpd, &cnt, TRUE);
+	if (s != INVALID_SOCKET) {
+		CancelIoEx((HANDLE) s, &evt->olpd);
 	}
 }
 
@@ -531,22 +521,15 @@ nni_win_tcp_acc_finish(nni_win_event *evt, nni_aio *aio)
 		return;
 	}
 
-	if ((rv = evt->status) != 0) {
-		closesocket(s);
-		nni_aio_finish(aio, nni_win_error(rv), 0);
-		return;
-	}
-
-	if (((rv = nni_win_iocp_register((HANDLE) s)) != 0) ||
+	if (((rv = evt->status) != 0) ||
+	    ((rv = nni_win_iocp_register((HANDLE) s)) != 0) ||
 	    ((rv = nni_win_tcp_pipe_init(&pipe, s)) != 0)) {
 		closesocket(s);
-		nni_aio_finish(aio, rv, 0);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	if (nni_aio_finish_pipe(aio, 0, pipe) != 0) {
-		nni_plat_tcp_pipe_fini(pipe);
-	}
+	nni_aio_finish_pipe(aio, pipe);
 }
 
 static int
@@ -559,7 +542,7 @@ nni_win_tcp_acc_start(nni_win_event *evt, nni_aio *aio)
 
 	acc_s = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 	if (acc_s == INVALID_SOCKET) {
-		evt->status = GetLastError();
+		evt->status = nni_win_error(GetLastError());
 		evt->count  = 0;
 		return (1);
 	}
@@ -575,7 +558,7 @@ nni_win_tcp_acc_start(nni_win_event *evt, nni_aio *aio)
 
 		default:
 			// Fast-fail (synchronous).
-			evt->status = rv;
+			evt->status = nni_win_error(rv);
 			evt->count  = 0;
 			return (1);
 		}
@@ -599,12 +582,8 @@ nni_win_tcp_con_cancel(nni_win_event *evt)
 	nni_plat_tcp_ep *ep = evt->ptr;
 	SOCKET           s  = ep->s;
 
-	if ((s != INVALID_SOCKET) && CancelIoEx((HANDLE) s, &evt->olpd)) {
-		DWORD cnt;
-
-		// If we canceled, make sure that we've completely
-		// finished with the overlapped.
-		GetOverlappedResult((HANDLE) s, &evt->olpd, &cnt, TRUE);
+	if (s != INVALID_SOCKET) {
+		CancelIoEx((HANDLE) s, &evt->olpd);
 	}
 }
 
@@ -619,19 +598,14 @@ nni_win_tcp_con_finish(nni_win_event *evt, nni_aio *aio)
 	s     = ep->s;
 	ep->s = INVALID_SOCKET;
 
-	if ((rv = evt->status) != 0) {
-		closesocket(s);
-		nni_aio_finish(aio, nni_win_error(rv), 0);
-		return;
-	}
-
 	// The socket was already registere with the IOCP.
 
-	if ((rv = nni_win_tcp_pipe_init(&pipe, s)) != 0) {
+	if (((rv = evt->status) != 0) ||
+	    ((rv = nni_win_tcp_pipe_init(&pipe, s)) != 0)) {
 		// The new pipe is already fine for us.  Discard
 		// the old one, since failed to be able to use it.
 		closesocket(s);
-		nni_aio_finish(aio, rv, 0);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -650,7 +624,7 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 
 	s = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 	if (s == INVALID_SOCKET) {
-		evt->status = GetLastError();
+		evt->status = nni_win_error(GetLastError());
 		evt->count  = 0;
 		return (1);
 	}
@@ -667,7 +641,7 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 		len           = ep->remlen;
 	}
 	if (bind(s, (struct sockaddr *) &bss, len) < 0) {
-		evt->status = GetLastError();
+		evt->status = nni_win_error(GetLastError());
 		evt->count  = 0;
 		closesocket(s);
 		return (1);
@@ -687,7 +661,7 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 		if ((rv = GetLastError()) != ERROR_IO_PENDING) {
 			closesocket(s);
 			ep->s       = INVALID_SOCKET;
-			evt->status = rv;
+			evt->status = nni_win_error(rv);
 			evt->count  = 0;
 			return (1);
 		}

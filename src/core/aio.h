@@ -18,6 +18,8 @@
 
 typedef struct nni_aio_ops nni_aio_ops;
 
+typedef void (*nni_aio_cancelfn)(nni_aio *, int);
+
 // An nni_aio is an async I/O handle.
 struct nni_aio {
 	int      a_result; // Result code (nng_errno)
@@ -25,10 +27,14 @@ struct nni_aio {
 	nni_time a_expire;
 
 	// These fields are private to the aio framework.
-	nni_mtx  a_lk;
 	nni_cv   a_cv;
-	unsigned a_flags;
-	int      a_refcnt; // prevent use-after-free
+	unsigned a_init : 1;     // initialized flag
+	unsigned a_fini : 1;     // shutting down (no new operations)
+	unsigned a_done : 1;     // operation has completed
+	unsigned a_pend : 1;     // completion routine pending
+	unsigned a_active : 1;   // aio was started
+	unsigned a_expiring : 1; // expiration callback in progress
+	unsigned a_pad : 27;     // ensure 32-bit alignment
 	nni_task a_task;
 
 	// Read/write operations.
@@ -47,9 +53,9 @@ struct nni_aio {
 	int           a_naddrs;
 
 	// Provider-use fields.
-	void (*a_prov_cancel)(nni_aio *);
-	void *        a_prov_data;
-	nni_list_node a_prov_node;
+	nni_aio_cancelfn a_prov_cancel;
+	void *           a_prov_data;
+	nni_list_node    a_prov_node;
 
 	// Expire node.
 	nni_list_node a_expire_node;
@@ -106,21 +112,17 @@ extern void nni_aio_list_remove(nni_aio *);
 extern int  nni_aio_list_active(nni_aio *);
 
 // nni_aio_finish is called by the provider when an operation is complete.
-// The provider gives the result code (0 for success, an NNG errno otherwise),
-// and the amount of data transferred (if any).  If the return code is
-// non-zero, it indicates that the operation failed (usually because the aio
-// was already canceled.)  This is important for providers that need to
-// prevent resources (new pipes for example) from accidentally leaking
-// during close operations.
-extern int nni_aio_finish(nni_aio *, int, size_t);
-extern int nni_aio_finish_pipe(nni_aio *, int, void *);
+extern void nni_aio_finish(nni_aio *, int, size_t);
+extern void nni_aio_finish_error(nni_aio *, int);
+extern void nni_aio_finish_pipe(nni_aio *, void *);
+extern void nni_aio_finish_msg(nni_aio *, nni_msg *);
 
 // nni_aio_cancel is used to cancel an operation.  Any pending I/O or
 // timeouts are canceled if possible, and the callback will be returned
 // with the indicated result (NNG_ECLOSED or NNG_ECANCELED is recommended.)
 extern void nni_aio_cancel(nni_aio *, int rv);
 
-extern int nni_aio_start(nni_aio *, void (*)(nni_aio *), void *);
+extern int nni_aio_start(nni_aio *, nni_aio_cancelfn, void *);
 
 // nni_aio_stop is used to abort all further operations on the AIO.
 // When this is executed, no further operations or callbacks will be

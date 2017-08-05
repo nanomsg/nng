@@ -46,13 +46,17 @@ struct nni_posix_epdesc {
 };
 
 static void
-nni_posix_epdesc_cancel(nni_aio *aio)
+nni_posix_epdesc_cancel(nni_aio *aio, int rv)
 {
 	nni_posix_epdesc *ed = aio->a_prov_data;
 
+	NNI_ASSERT(rv != 0);
 	nni_mtx_lock(&ed->mtx);
-	nni_aio_list_remove(aio);
-	NNI_ASSERT(aio->a_pipe == NULL);
+	if (nni_aio_list_active(aio)) {
+		nni_aio_list_remove(aio);
+		NNI_ASSERT(aio->a_pipe == NULL);
+		nni_aio_finish_error(aio, rv);
+	}
 	nni_mtx_unlock(&ed->mtx);
 }
 
@@ -70,8 +74,10 @@ nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
 			(void) close(newfd);
 		}
 	}
-	if ((nni_aio_finish_pipe(aio, rv, pd) != 0) && (pd != NULL)) {
-		nni_posix_pipedesc_fini(pd);
+	if (rv != 0) {
+		nni_aio_finish_error(aio, rv);
+	} else {
+		nni_aio_finish_pipe(aio, pd);
 	}
 }
 

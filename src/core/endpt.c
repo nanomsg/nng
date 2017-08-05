@@ -175,6 +175,7 @@ nni_ep_close(nni_ep *ep)
 	nni_aio_cancel(&ep->ep_acc_aio, NNG_ECLOSED);
 	nni_aio_cancel(&ep->ep_con_aio, NNG_ECLOSED);
 	nni_aio_cancel(&ep->ep_con_syn, NNG_ECLOSED);
+	nni_aio_cancel(&ep->ep_backoff, NNG_ECLOSED);
 
 	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
@@ -188,6 +189,7 @@ nni_ep_reap(nni_ep *ep)
 	nni_aio_stop(&ep->ep_acc_aio);
 	nni_aio_stop(&ep->ep_con_aio);
 	nni_aio_stop(&ep->ep_con_syn);
+	nni_aio_stop(&ep->ep_backoff);
 
 	// Take us off the sock list.
 	nni_sock_ep_remove(ep->ep_sock, ep);
@@ -233,6 +235,13 @@ nni_ep_stop(nni_ep *ep)
 }
 
 static void
+nni_ep_backoff_cancel(nni_aio *aio, int rv)
+{
+	// The only way this ever gets "finished", is via cancellation.
+	nni_aio_finish_error(aio, rv);
+}
+
+static void
 nni_ep_backoff_start(nni_ep *ep)
 {
 	nni_duration backoff;
@@ -255,7 +264,7 @@ nni_ep_backoff_start(nni_ep *ep)
 	// random number, but this really doesn't matter.
 
 	ep->ep_backoff.a_expire = nni_clock() + (nni_random() % backoff);
-	nni_aio_start(&ep->ep_backoff, NULL, ep);
+	nni_aio_start(&ep->ep_backoff, nni_ep_backoff_cancel, ep);
 }
 
 static void

@@ -141,15 +141,20 @@ fail:
 }
 
 static void
-nni_tcp_cancel_nego(nni_aio *aio)
+nni_tcp_cancel_nego(nni_aio *aio, int rv)
 {
 	nni_tcp_pipe *pipe = aio->a_prov_data;
 
 	nni_mtx_lock(&pipe->mtx);
+	if (pipe->user_negaio != aio) {
+		nni_mtx_unlock(&pipe->mtx);
+		return;
+	}
 	pipe->user_negaio = NULL;
 	nni_mtx_unlock(&pipe->mtx);
 
-	nni_aio_cancel(&pipe->negaio, aio->a_result);
+	nni_aio_cancel(&pipe->negaio, rv);
+	nni_aio_finish_error(aio, rv);
 }
 
 static void
@@ -239,6 +244,7 @@ nni_tcp_pipe_recv_cb(void *arg)
 	nni_tcp_pipe *pipe = arg;
 	nni_aio *     aio;
 	int           rv;
+	nni_msg *     msg;
 
 	nni_mtx_lock(&pipe->mtx);
 
@@ -257,7 +263,7 @@ nni_tcp_pipe_recv_cb(void *arg)
 			pipe->rxmsg = NULL;
 		}
 		pipe->user_rxaio = NULL;
-		nni_aio_finish(aio, rv, 0);
+		nni_aio_finish_error(aio, rv);
 		nni_mtx_unlock(&pipe->mtx);
 		return;
 	}
@@ -274,14 +280,14 @@ nni_tcp_pipe_recv_cb(void *arg)
 		// the caller will shut down the pipe.
 		if (len > pipe->rcvmax) {
 			pipe->user_rxaio = NULL;
-			nni_aio_finish(aio, NNG_EMSGSIZE, 0);
+			nni_aio_finish_error(aio, NNG_EMSGSIZE);
 			nni_mtx_unlock(&pipe->mtx);
 			return;
 		}
 
 		if ((rv = nng_msg_alloc(&pipe->rxmsg, (size_t) len)) != 0) {
 			pipe->user_rxaio = NULL;
-			nni_aio_finish(aio, rv, 0);
+			nni_aio_finish_error(aio, rv);
 			nni_mtx_unlock(&pipe->mtx);
 			return;
 		}
@@ -300,23 +306,28 @@ nni_tcp_pipe_recv_cb(void *arg)
 	// Otherwise we got a message read completely.  Let the user know the
 	// good news.
 	pipe->user_rxaio = NULL;
-	aio->a_msg       = pipe->rxmsg;
+	msg              = pipe->rxmsg;
 	pipe->rxmsg      = NULL;
-	nni_aio_finish(aio, 0, nni_msg_len(aio->a_msg));
+	nni_aio_finish_msg(aio, msg);
 	nni_mtx_unlock(&pipe->mtx);
 }
 
 static void
-nni_tcp_cancel_tx(nni_aio *aio)
+nni_tcp_cancel_tx(nni_aio *aio, int rv)
 {
 	nni_tcp_pipe *pipe = aio->a_prov_data;
 
 	nni_mtx_lock(&pipe->mtx);
+	if (pipe->user_txaio != aio) {
+		nni_mtx_unlock(&pipe->mtx);
+		return;
+	}
 	pipe->user_txaio = NULL;
 	nni_mtx_unlock(&pipe->mtx);
 
 	// cancel the underlying operation.
-	nni_aio_cancel(&pipe->txaio, aio->a_result);
+	nni_aio_cancel(&pipe->txaio, rv);
+	nni_aio_finish_error(aio, rv);
 }
 
 static void
@@ -352,16 +363,21 @@ nni_tcp_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-nni_tcp_cancel_rx(nni_aio *aio)
+nni_tcp_cancel_rx(nni_aio *aio, int rv)
 {
 	nni_tcp_pipe *pipe = aio->a_prov_data;
 
 	nni_mtx_lock(&pipe->mtx);
+	if (pipe->user_rxaio != aio) {
+		nni_mtx_unlock(&pipe->mtx);
+		return;
+	}
 	pipe->user_rxaio = NULL;
 	nni_mtx_unlock(&pipe->mtx);
 
 	// cancel the underlying operation.
-	nni_aio_cancel(&pipe->rxaio, aio->a_result);
+	nni_aio_cancel(&pipe->rxaio, rv);
+	nni_aio_finish_error(aio, rv);
 }
 
 static void
@@ -619,10 +635,16 @@ done:
 	aio            = ep->user_aio;
 	ep->user_aio   = NULL;
 
-	if ((aio == NULL) || (nni_aio_finish_pipe(aio, rv, pipe) != 0)) {
-		if (pipe != NULL) {
-			nni_tcp_pipe_fini(pipe);
-		}
+	if ((aio != NULL) && (rv == 0)) {
+		nni_aio_finish_pipe(aio, pipe);
+		return;
+	}
+	if (pipe != NULL) {
+		nni_tcp_pipe_fini(pipe);
+	}
+	if (aio != NULL) {
+		NNI_ASSERT(rv != 0);
+		nni_aio_finish_error(aio, rv);
 	}
 }
 
@@ -637,15 +659,20 @@ nni_tcp_ep_cb(void *arg)
 }
 
 static void
-nni_tcp_cancel_ep(nni_aio *aio)
+nni_tcp_cancel_ep(nni_aio *aio, int rv)
 {
 	nni_tcp_ep *ep = aio->a_prov_data;
 
 	nni_mtx_lock(&ep->mtx);
+	if (ep->user_aio != aio) {
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
 	ep->user_aio = NULL;
 	nni_mtx_unlock(&ep->mtx);
 
-	nni_aio_cancel(&ep->aio, aio->a_result);
+	nni_aio_cancel(&ep->aio, rv);
+	nni_aio_finish_error(aio, rv);
 }
 
 static void

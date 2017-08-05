@@ -241,27 +241,24 @@ static void
 nni_inproc_conn_finish(nni_aio *aio, int rv)
 {
 	nni_inproc_ep *ep = aio->a_endpt;
+	void *         pipe;
 
-	if (rv != 0) {
-		if (aio->a_pipe != NULL) {
-			nni_inproc_pipe_fini(aio->a_pipe);
-			aio->a_pipe = NULL;
-		}
-	}
 	nni_aio_list_remove(aio);
-	if (ep != NULL) {
-		if ((ep->mode != NNI_EP_MODE_LISTEN) &&
-		    nni_list_empty(&ep->aios)) {
-			if (nni_list_active(&ep->clients, ep)) {
-				nni_list_remove(&ep->clients, ep);
-			}
-		}
+	pipe        = aio->a_pipe;
+	aio->a_pipe = NULL;
+
+	if ((ep != NULL) && (ep->mode != NNI_EP_MODE_LISTEN) &&
+	    nni_list_empty(&ep->aios)) {
+		nni_list_node_remove(&ep->node);
 	}
-	if (nni_aio_finish(aio, rv, 0) != 0) {
-		if (aio->a_pipe != NULL) {
-			nni_inproc_pipe_fini(aio->a_pipe);
-			aio->a_pipe = NULL;
+
+	if (rv == 0) {
+		nni_aio_finish_pipe(aio, pipe);
+	} else {
+		if (pipe != NULL) {
+			nni_inproc_pipe_fini(pipe);
 		}
+		nni_aio_finish_error(aio, rv);
 	}
 }
 
@@ -286,29 +283,6 @@ nni_inproc_ep_close(void *arg)
 	}
 	while ((aio = nni_list_first(&ep->aios)) != NULL) {
 		nni_inproc_conn_finish(aio, NNG_ECLOSED);
-	}
-	nni_mtx_unlock(&nni_inproc.mx);
-}
-
-static void
-nni_inproc_connect_abort(nni_aio *aio)
-{
-	nni_inproc_ep *ep = aio->a_endpt;
-
-	nni_mtx_lock(&nni_inproc.mx);
-
-	if (aio->a_pipe != NULL) {
-		nni_inproc_pipe_fini(aio->a_pipe);
-		aio->a_pipe = NULL;
-	}
-	nni_aio_list_remove(aio);
-	if (ep != NULL) {
-		if ((ep->mode != NNI_EP_MODE_LISTEN) &&
-		    nni_list_empty(&ep->aios)) {
-			if (nni_list_active(&ep->clients, ep)) {
-				nni_list_remove(&ep->clients, ep);
-			}
-		}
 	}
 	nni_mtx_unlock(&nni_inproc.mx);
 }
@@ -369,23 +343,24 @@ nni_inproc_accept_clients(nni_inproc_ep *server)
 }
 
 static void
-nni_inproc_ep_cancel(nni_aio *aio)
+nni_inproc_ep_cancel(nni_aio *aio, int rv)
 {
-	nni_inproc_ep *ep = aio->a_prov_data;
+	nni_inproc_ep *  ep = aio->a_prov_data;
+	nni_inproc_pipe *pipe;
 
 	nni_mtx_lock(&nni_inproc.mx);
-	if (nni_list_active(&ep->aios, aio)) {
-		nni_list_remove(&ep->aios, aio);
-	}
-	// Arguably if the mode is a client... then we need to remove
-	// it from the server's list.   Notably this isn't *our* list,
-	// but the offsets are the same and they're good enough using the
-	// global lock to make it all safe.
-	if (nni_list_active(&ep->clients, ep)) {
-		nni_list_remove(&ep->clients, ep);
+	if (nni_aio_list_active(aio)) {
+		nni_aio_list_remove(aio);
+		nni_list_node_remove(&ep->node);
+		if ((pipe = aio->a_pipe) != NULL) {
+			aio->a_pipe = NULL;
+			nni_inproc_pipe_fini(pipe);
+		}
+		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&nni_inproc.mx);
 }
+
 static void
 nni_inproc_ep_connect(void *arg, nni_aio *aio)
 {
@@ -394,7 +369,7 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 	int            rv;
 
 	if (ep->mode != NNI_EP_MODE_DIAL) {
-		nni_aio_finish(aio, NNG_EINVAL, 0);
+		nni_aio_finish_error(aio, NNG_EINVAL);
 		return;
 	}
 	nni_mtx_lock(&nni_inproc.mx);
@@ -406,24 +381,24 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 
 	if (nni_list_active(&ep->clients, ep)) {
 		// We already have a pending connection...
-		nni_aio_finish(aio, NNG_EINVAL, 0);
+		nni_aio_finish_error(aio, NNG_EINVAL);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 	if (ep->started) {
-		nni_aio_finish(aio, NNG_EBUSY, 0);
+		nni_aio_finish_error(aio, NNG_EBUSY);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 
 	if (ep->closed) {
-		nni_aio_finish(aio, NNG_ECLOSED, 0);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 
 	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
-		nni_aio_finish(aio, rv, 0);
+		nni_aio_finish_error(aio, rv);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
@@ -491,32 +466,33 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 	nni_inproc_ep *ep = arg;
 	int            rv;
 
-	if (ep->mode != NNI_EP_MODE_LISTEN) {
-		nni_aio_finish(aio, NNG_EINVAL, 0);
-		return;
-	}
-
 	nni_mtx_lock(&nni_inproc.mx);
-
-	// We are already on the master list of servers, thanks to bind.
-	if (ep->closed) {
-		nni_aio_finish(aio, NNG_ECLOSED, 0);
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
-	if (!ep->started) {
-		nni_aio_finish(aio, NNG_ESTATE, 0);
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
 
 	if ((rv = nni_aio_start(aio, nni_inproc_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
 
+	if (ep->mode != NNI_EP_MODE_LISTEN) {
+		nni_aio_finish_error(aio, NNG_EINVAL);
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
+
+	// We are already on the master list of servers, thanks to bind.
+	if (ep->closed) {
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
+	if (!ep->started) {
+		nni_aio_finish_error(aio, NNG_ESTATE);
+		nni_mtx_unlock(&nni_inproc.mx);
+		return;
+	}
+
 	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
-		nni_aio_finish(aio, rv, 0);
+		nni_aio_finish_error(aio, rv);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}

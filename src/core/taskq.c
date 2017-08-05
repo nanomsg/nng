@@ -158,7 +158,6 @@ void
 nni_taskq_fini(nni_taskq *tq)
 {
 	int i;
-	int busy;
 
 	// First drain the taskq completely.  This is necessary since some
 	// tasks that are presently running may need to schedule additional
