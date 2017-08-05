@@ -49,13 +49,10 @@ nni_posix_udp_doclose(nni_plat_udp *udp)
 	nni_aio *aio;
 
 	udp->udp_closed = 1;
-	while ((aio = nni_list_first(&udp->udp_recvq)) != NULL) {
-		nni_list_remove(&udp->udp_recvq, aio);
-		nni_aio_finish(aio, NNG_ECLOSED, 0);
-	}
-	while ((aio = nni_list_first(&udp->udp_sendq)) != NULL) {
-		nni_list_remove(&udp->udp_recvq, aio);
-		nni_aio_finish(aio, NNG_ECLOSED, 0);
+	while (((aio = nni_list_first(&udp->udp_recvq)) != NULL) ||
+	    ((aio = nni_list_first(&udp->udp_sendq)) != NULL)) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
 	// Underlying socket left open until close API called.
 }
@@ -93,7 +90,7 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 				return;
 			}
 			rv = nni_plat_errno(errno);
-			nni_aio_finish(aio, rv, 0);
+			nni_aio_finish_error(aio, rv);
 			continue;
 		}
 
@@ -126,12 +123,12 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 
 		if (aio->a_naddrs < 1) {
 			// No incoming address?
-			nni_aio_finish(aio, NNG_EADDRINVAL, 0);
+			nni_aio_finish_error(aio, NNG_EADDRINVAL);
 			return;
 		}
 		len = nni_posix_nn2sockaddr(&ss, &aio->a_addrs[0]);
 		if (len < 0) {
-			nni_aio_finish(aio, NNG_EADDRINVAL, 0);
+			nni_aio_finish_error(aio, NNG_EADDRINVAL);
 			return;
 		}
 
@@ -155,7 +152,7 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 				return;
 			}
 			rv = nni_plat_errno(errno);
-			nni_aio_finish(aio, rv, 0);
+			nni_aio_finish_error(aio, rv);
 			continue;
 		}
 
@@ -276,12 +273,15 @@ nni_plat_udp_close(nni_plat_udp *udp)
 }
 
 void
-nni_plat_udp_cancel(nni_aio *aio)
+nni_plat_udp_cancel(nni_aio *aio, int rv)
 {
 	nni_plat_udp *udp = aio->a_prov_data;
 
 	nni_mtx_lock(&udp->udp_mtx);
-	nni_aio_list_remove(aio);
+	if (nni_aio_list_active(aio)) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
+	}
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 
@@ -295,7 +295,7 @@ nni_plat_udp_recv(nni_plat_udp *udp, nni_aio *aio)
 	}
 
 	if (udp->udp_closed) {
-		nni_aio_finish(aio, NNG_ECLOSED, 0);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 		nni_mtx_unlock(&udp->udp_mtx);
 		return;
 	}
@@ -315,7 +315,7 @@ nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 	}
 
 	if (udp->udp_closed) {
-		nni_aio_finish(aio, NNG_ECLOSED, 0);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 		nni_mtx_unlock(&udp->udp_mtx);
 		return;
 	}
