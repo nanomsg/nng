@@ -31,10 +31,10 @@ struct nni_ipc_pipe {
 
 	uint8_t txhead[1 + sizeof(uint64_t)];
 	uint8_t rxhead[1 + sizeof(uint64_t)];
-	int     gottxhead;
-	int     gotrxhead;
-	int     wanttxhead;
-	int     wantrxhead;
+	size_t  gottxhead;
+	size_t  gotrxhead;
+	size_t  wanttxhead;
+	size_t  wantrxhead;
 
 	nni_aio *user_txaio;
 	nni_aio *user_rxaio;

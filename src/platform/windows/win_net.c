@@ -140,7 +140,7 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 	// Put the AIOs in Windows form.
 	for (i = 0; i < aio->a_niov; i++) {
 		iov[i].buf = aio->a_iov[i].iov_buf;
-		iov[i].len = aio->a_iov[i].iov_len;
+		iov[i].len = (ULONG) aio->a_iov[i].iov_len;
 	}
 
 	if ((s = pipe->s) == INVALID_SOCKET) {
@@ -185,8 +185,8 @@ nni_win_tcp_pipe_cancel(nni_win_event *evt)
 static void
 nni_win_tcp_pipe_finish(nni_win_event *evt, nni_aio *aio)
 {
-	int   rv;
-	DWORD cnt;
+	int    rv;
+	size_t cnt;
 
 	cnt = evt->count;
 	if ((rv = evt->status) == 0) {

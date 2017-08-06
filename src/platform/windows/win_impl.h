@@ -68,7 +68,7 @@ struct nni_win_event {
 	nni_cv            cv;
 	unsigned          run : 1;
 	unsigned          fini : 1;
-	int               count;
+	unsigned          count;
 	int               status;
 	nni_win_event_ops ops;
 };

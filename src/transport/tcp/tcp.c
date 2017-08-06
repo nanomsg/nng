@@ -34,10 +34,10 @@ struct nni_tcp_pipe {
 
 	uint8_t  txlen[sizeof(uint64_t)];
 	uint8_t  rxlen[sizeof(uint64_t)];
-	int      gottxhead;
-	int      gotrxhead;
-	int      wanttxhead;
-	int      wantrxhead;
+	size_t   gottxhead;
+	size_t   gotrxhead;
+	size_t   wanttxhead;
+	size_t   wantrxhead;
 	nni_aio  txaio;
 	nni_aio  rxaio;
 	nni_aio  negaio;
