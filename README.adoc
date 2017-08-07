@@ -4,12 +4,16 @@ nng - nanomsg-NG
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
 image:https://img.shields.io/travis/nanomsg/nng/master.svg?label=linux[Linux Status,link="https://travis-ci.org/nanomsg/nng"]
 image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/nanomsg/nng"]
-
+image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=coverage[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
 
 This repository represents a work in progress rewrite of the SP protocol
 library called "libnanomsg".  The work is being done by Garrett D'Amore,
-and at this juncture he is *not* soliciting implementation assistance.
-Review and testing feedback is appreciated however.
+and at this juncture he is not yet soliciting implementation assistance;
+that said if you want to help with this project please file an issue
+with details about what you'd like to do, and you will be contacted.
+
+Review and testing feedback are appreciated however; but please understand
+that the project is still quite preliminary.
 
 This is a work in progress, and is *not* for suitable for product use or
 publication.  When the library is ready for broader consumption, an
@@ -19,6 +23,19 @@ If you are looking for the current production version of nanomsg, please
 see the https://github.com/nanomsg/nanomsg site.
 
 If you want to build and test yourself, you need CMake version 3.1, and
-you can use standard CMake build recipes.
+you can use standard CMake build recipes.  On a Linux/UNIX system, 
+you can for example do:
 
-	- Garrett D'Amore (Jan. 21, 2016)
+----
+  $ mkdir build
+  $ cmake ..
+  $ make
+  $ make test
+----
+
+The API is not yet stable, but if you want to explore using the newer
+API, pleaes have a look at the `nng.h` header file.  A legacy compatible
+`nng_compat.h` header is available and offers API compatibility with legacy
+_nanomsg_.
+
+	- Garrett D'Amore (Aug. 7, 2017)
