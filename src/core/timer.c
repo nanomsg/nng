@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -20,7 +21,7 @@ struct nni_timer {
 	nni_cv          t_cv;
 	nni_list        t_entries;
 	nni_thr         t_thr;
-	int             t_close;
+	int             t_run;
 	int             t_waiting;
 	nni_timer_node *t_active; // Must never ever be dereferenced!
 };
@@ -37,7 +38,6 @@ nni_timer_sys_init(void)
 
 	memset(timer, 0, sizeof(*timer));
 	NNI_LIST_INIT(&timer->t_entries, nni_timer_node, t_node);
-	timer->t_close = 0;
 
 	if (((rv = nni_mtx_init(&timer->t_mx)) != 0) ||
 	    ((rv = nni_cv_init(&timer->t_cv, &timer->t_mx)) != 0) ||
@@ -45,6 +45,7 @@ nni_timer_sys_init(void)
 		nni_timer_sys_fini();
 		return (rv);
 	}
+	timer->t_run = 1;
 	nni_thr_run(&timer->t_thr);
 	return (0);
 }
@@ -54,10 +55,12 @@ nni_timer_sys_fini(void)
 {
 	nni_timer *timer = &nni_global_timer;
 
-	nni_mtx_lock(&timer->t_mx);
-	timer->t_close = 1;
-	nni_cv_wake(&timer->t_cv);
-	nni_mtx_unlock(&timer->t_mx);
+	if (timer->t_run) {
+		nni_mtx_lock(&timer->t_mx);
+		timer->t_run = 0;
+		nni_cv_wake(&timer->t_cv);
+		nni_mtx_unlock(&timer->t_mx);
+	}
 
 	nni_thr_fini(&timer->t_thr);
 	nni_cv_fini(&timer->t_cv);
@@ -137,7 +140,7 @@ nni_timer_loop(void *arg)
 			timer->t_waiting = 1;
 			nni_cv_wake(&timer->t_cv);
 		}
-		if (timer->t_close) {
+		if (!timer->t_run) {
 			nni_mtx_unlock(&timer->t_mx);
 			break;
 		}

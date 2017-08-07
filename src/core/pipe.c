@@ -61,9 +61,9 @@ nni_pipe_sys_fini(void)
 		nni_pipe_reap_run = 0;
 		nni_cv_wake(&nni_pipe_reap_cv);
 		nni_mtx_unlock(&nni_pipe_reap_lk);
-		nni_thr_fini(&nni_pipe_reap_thr);
 	}
 
+	nni_thr_fini(&nni_pipe_reap_thr);
 	nni_cv_fini(&nni_pipe_reap_cv);
 	nni_mtx_fini(&nni_pipe_reap_lk);
 	if (nni_pipes != NULL) {

@@ -118,7 +118,7 @@ struct nni_tran_pipe {
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
 extern nni_tran *nni_tran_find(const char *);
-extern void      nni_tran_sys_init(void);
+extern int       nni_tran_sys_init(void);
 extern void      nni_tran_sys_fini(void);
 
 #endif // CORE_TRANSPORT_H

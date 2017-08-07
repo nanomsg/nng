@@ -14,7 +14,7 @@
 static nni_mtx nni_aio_lk;
 // These are used for expiration.
 static nni_cv   nni_aio_expire_cv;
-static int      nni_aio_expire_exit;
+static int      nni_aio_expire_run;
 static nni_thr  nni_aio_expire_thr;
 static nni_list nni_aio_expire_aios;
 
@@ -295,7 +295,7 @@ nni_aio_expire_loop(void *arg)
 	for (;;) {
 		nni_mtx_lock(&nni_aio_lk);
 
-		if (nni_aio_expire_exit) {
+		if (nni_aio_expire_run == 0) {
 			nni_mtx_unlock(&nni_aio_lk);
 			return;
 		}
@@ -358,6 +358,7 @@ nni_aio_sys_init(void)
 		goto fail;
 	}
 	NNI_LIST_INIT(&nni_aio_expire_aios, nni_aio, a_expire_node);
+	nni_aio_expire_run = 1;
 	nni_thr_run(thr);
 	return (0);
 
@@ -375,10 +376,12 @@ nni_aio_sys_fini(void)
 	nni_cv * cv  = &nni_aio_expire_cv;
 	nni_thr *thr = &nni_aio_expire_thr;
 
-	nni_mtx_lock(mtx);
-	nni_aio_expire_exit = 1;
-	nni_cv_wake(cv);
-	nni_mtx_unlock(mtx);
+	if (nni_aio_expire_run) {
+		nni_mtx_lock(mtx);
+		nni_aio_expire_run = 0;
+		nni_cv_wake(cv);
+		nni_mtx_unlock(mtx);
+	}
 
 	nni_thr_fini(thr);
 	nni_cv_fini(cv);

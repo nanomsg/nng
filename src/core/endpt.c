@@ -62,8 +62,8 @@ nni_ep_sys_fini(void)
 		nni_ep_reap_run = 0;
 		nni_cv_wake(&nni_ep_reap_cv);
 		nni_mtx_unlock(&nni_ep_reap_lk);
-		nni_thr_fini(&nni_ep_reap_thr);
 	}
+	nni_thr_fini(&nni_ep_reap_thr);
 	nni_cv_fini(&nni_ep_reap_cv);
 	nni_mtx_fini(&nni_ep_reap_lk);
 	nni_idhash_fini(nni_eps);

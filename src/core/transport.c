@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -50,15 +51,19 @@ nni_tran_find(const char *addr)
 
 // nni_tran_sys_init initializes the entire transport subsystem, including
 // each individual transport.
-void
+int
 nni_tran_sys_init(void)
 {
-	int       i;
 	nni_tran *tran;
 
-	for (i = 0; (tran = transports[i]) != NULL; i++) {
-		tran->tran_init();
+	for (int i = 0; (tran = transports[i]) != NULL; i++) {
+		int rv;
+		if ((rv = tran->tran_init()) != 0) {
+			nni_tran_sys_fini();
+			return (rv);
+		}
 	}
+	return (0);
 }
 
 // nni_tran_sys_fini finalizes the entire transport system, including all
@@ -66,10 +71,9 @@ nni_tran_sys_init(void)
 void
 nni_tran_sys_fini(void)
 {
-	int       i;
 	nni_tran *tran;
 
-	for (i = 0; (tran = transports[i]) != NULL; i++) {
+	for (int i = 0; (tran = transports[i]) != NULL; i++) {
 		if (tran->tran_fini != NULL) {
 			tran->tran_fini();
 		}

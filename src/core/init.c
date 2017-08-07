@@ -17,45 +17,17 @@ nni_init_helper(void)
 {
 	int rv;
 
-	if ((rv = nni_taskq_sys_init()) != 0) {
-		return (rv);
+	if (((rv = nni_taskq_sys_init()) != 0) ||
+	    ((rv = nni_timer_sys_init()) != 0) ||
+	    ((rv = nni_aio_sys_init()) != 0) ||
+	    ((rv = nni_random_sys_init()) != 0) ||
+	    ((rv = nni_sock_sys_init()) != 0) ||
+	    ((rv = nni_ep_sys_init()) != 0) ||
+	    ((rv = nni_pipe_sys_init()) != 0) ||
+	    ((rv = nni_tran_sys_init()) != 0)) {
+		nni_fini();
 	}
-	if ((rv = nni_timer_sys_init()) != 0) {
-		nni_taskq_sys_fini();
-		return (rv);
-	}
-	if ((rv = nni_aio_sys_init()) != 0) {
-		nni_taskq_sys_fini();
-		return (rv);
-	}
-	if ((rv = nni_random_sys_init()) != 0) {
-		nni_aio_sys_fini();
-		nni_taskq_sys_fini();
-		return (rv);
-	}
-	if ((rv = nni_sock_sys_init()) != 0) {
-		nni_random_sys_fini();
-		nni_aio_sys_fini();
-		nni_taskq_sys_fini();
-		return (rv);
-	}
-	if ((rv = nni_ep_sys_init()) != 0) {
-		nni_sock_sys_fini();
-		nni_random_sys_fini();
-		nni_aio_sys_fini();
-		nni_taskq_sys_fini();
-		return (rv);
-	}
-	if ((rv = nni_pipe_sys_init()) != 0) {
-		nni_ep_sys_fini();
-		nni_sock_sys_fini();
-		nni_random_sys_fini();
-		nni_aio_sys_fini();
-		nni_taskq_sys_fini();
-		return (rv);
-	}
-	nni_tran_sys_init();
-	return (0);
+	return (rv);
 }
 
 int
