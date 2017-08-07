@@ -14,11 +14,18 @@
 # uncrustify.cfg located in the same directory as this script. It only handles
 # C language at this point.
 #
+CLANG_FORMAT=${CLANG_FORMAT:-clang-format}
+case "${CLANG_FORMAT}" in
+no|off|skip|NO|OFF|SKIP)
+	echo "format checks skipped"
+	exit 0
+	;;
+esac
 mydir=`dirname $0`
 srcdir=${mydir}/../src
 failed=
 
-vers=$(clang-format -version)
+vers=$(${CLANG_FORMAT} -version)
 if [ $? -ne 0 ]; then
 	echo "clang format not found?  Skipping checks."
 	exit 0
@@ -53,7 +60,7 @@ mytmpdir=`mktemp -d`
 
 diffprog=${DIFF:-diff}
 if [ -t 1 ]; then
-	if colordiff -q /dev/null /dev/null; then
+	if colordiff -q /dev/null > /dev/null 2>&1; then
 		diffprog=${DIFF:-colordiff}
 	fi
 fi
@@ -67,7 +74,7 @@ do
 	# If we do not understand the format file, then do nothing
 	# Our style requires a relatively modern clang-format, which is
 	# older than is found on some Linux distros.
-	clang-format -fallback-style=none -style=file ${oldf} > ${newf}
+	${CLANG_FORMAT} -fallback-style=none -style=file ${oldf} > ${newf}
 	cmp -s ${oldf} ${newf}
 	if [ $? -ne 0 ]
 	then
