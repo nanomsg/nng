@@ -69,12 +69,12 @@ matrix:
         BUILD_TYPE=Debug
         CLANG_FORMAT=no
 
-script:
-  # Print all environment variables to aid in CI development
+before_script:
   - uname -a
   - printenv
-  # Print version and available CMake generators to aid in CI development
   - cmake --version
+
+script:
   # Perform out-of-source build
   - mkdir build
   - cd build
@@ -84,6 +84,6 @@ script:
   - ctest --output-on-failure -C ${BUILD_TYPE} ${TEST_PARALLEL}
   - ../etc/format-check.sh
 
-  after_success:
+after_success:
   - ../etc/codecov.sh
 
