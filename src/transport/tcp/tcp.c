@@ -450,7 +450,7 @@ nni_tcp_parse_pair(char *pair, char **hostp, char **servp)
 		serv = end + 1;
 		if (*serv == ':') {
 			serv++;
-		} else if (serv != '\0') {
+		} else if (*serv != '\0') {
 			return (NNG_EADDRINVAL);
 		}
 	} else {

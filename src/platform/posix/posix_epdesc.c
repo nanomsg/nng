@@ -281,7 +281,7 @@ nni_posix_epdesc_parseaddr(char *pair, char **hostp, uint16_t *portp)
 		port = end + 1;
 		if (*port == ':') {
 			port++;
-		} else if (port != '\0') {
+		} else if (*port != '\0') {
 			return (NNG_EADDRINVAL);
 		}
 	} else {
