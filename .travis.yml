@@ -57,7 +57,7 @@ matrix:
         CXX=g++-7
         COVERAGE=ON
         BUILD_TYPE=Debug
-        TEST_PARALLEL=
+        TEST_PARALLEL=-j1
         CLANG_FORMAT=no
     # One MacOS X build
     - os: osx
