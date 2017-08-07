@@ -36,15 +36,11 @@ struct nni_msgq {
 };
 
 int
-nni_msgq_init(nni_msgq **mqp, int cap)
+nni_msgq_init(nni_msgq **mqp, unsigned cap)
 {
 	struct nni_msgq *mq;
 	int              rv;
 	int              alloc;
-
-	if (cap < 0) {
-		return (NNG_EINVAL);
-	}
 
 	// We allocate 2 extra cells in the fifo.  One to accommodate a
 	// waiting writer when cap == 0. (We can "briefly" move the message
@@ -372,38 +368,6 @@ nni_msgq_aio_get(nni_msgq *mq, nni_aio *aio)
 	nni_msgq_run_notify(mq);
 
 	nni_mtx_unlock(&mq->mq_lock);
-}
-
-int
-nni_msgq_canput(nni_msgq *mq)
-{
-	nni_mtx_lock(&mq->mq_lock);
-	if (mq->mq_closed) {
-		nni_mtx_unlock(&mq->mq_lock);
-		return (0);
-	}
-	if ((mq->mq_len < mq->mq_cap) || !nni_list_empty(&mq->mq_aio_getq)) {
-		nni_mtx_unlock(&mq->mq_lock);
-		return (1);
-	}
-	nni_mtx_unlock(&mq->mq_lock);
-	return (0);
-}
-
-int
-nni_msgq_canget(nni_msgq *mq)
-{
-	nni_mtx_lock(&mq->mq_lock);
-	if (mq->mq_closed) {
-		nni_mtx_unlock(&mq->mq_lock);
-		return (0);
-	}
-	if ((mq->mq_len != 0) || !nni_list_empty(&mq->mq_aio_putq)) {
-		nni_mtx_unlock(&mq->mq_lock);
-		return (1);
-	}
-	nni_mtx_unlock(&mq->mq_lock);
-	return (0);
 }
 
 int

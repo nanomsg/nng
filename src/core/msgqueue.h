@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -26,17 +27,15 @@
 // or by a specific signal (arranged by the caller).
 typedef struct nni_msgq nni_msgq;
 
-// nni_msgq_init creates a message queue with the given capacity,
-// which must be a positive number.  It returns NNG_EINVAL if the capacity
-// is invalid, or NNG_ENOMEM if resources cannot be allocated.
-extern int nni_msgq_init(nni_msgq **, int);
+// nni_msgq_init creates a message queue with the given capacity.
+// (If the capacity is zero, then the queue is unbuffered.)
+// It returns NNG_ENOMEM if resources cannot be allocated.
+extern int nni_msgq_init(nni_msgq **, unsigned);
 
 // nni_msgq_fini destroys a message queue.  It will also free any
 // messages that may be in the queue.
 extern void nni_msgq_fini(nni_msgq *);
 
-extern int  nni_msgq_canget(nni_msgq *);
-extern int  nni_msgq_canput(nni_msgq *);
 extern void nni_msgq_aio_put(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
