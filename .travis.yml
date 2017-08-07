@@ -53,8 +53,8 @@ matrix:
     # code coverage build
     - os: linux
       env: >-
-        CC=clang-4.0
-        CXX=clang++-4.0
+        CC=gcc-7
+        CXX=g++-7
         COVERAGE=ON
         BUILD_TYPE=Debug
         TEST_PARALLEL=
