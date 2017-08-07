@@ -8,9 +8,6 @@ project.  I recommend others consider doing the same.
 Coding Style
 ~~~~~~~~~~~~~~~~~~~~~~~~~
 
-I'm using Sublime Text as my development IDE, and so I've set things up
-for that.  But, I think you should be able to use any reasonable editor.
-
 A clang-format configuration file is included in the project, you should
 use that.  (clang format requires that the style file live at the top of
 of the project tree, not somewhere else, such as this etc directory.)  The
