@@ -2,8 +2,8 @@
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
-#   Copyright 2016 Garrett D'Amore <garrett@damore.org>
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
+#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -33,6 +33,7 @@ include (CheckStructHasMember)
 include (CheckLibraryExists)
 include (CheckCSourceCompiles)
 include (GNUInstallDirs)
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 if (POLICY CMP0042)
     # Newer cmake on MacOS should use @rpath
@@ -90,11 +91,30 @@ option (NNG_ENABLE_DOC "Enable building documentation." ON)
 option (NNG_TESTS "Build and run tests" ON)
 option (NNG_TOOLS "Build extra tools" OFF)
 option (NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
+option (NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
 
 # Enable access to private APIs for our own use.
 add_definitions (-DNNG_PRIVATE)
 
 #  Platform checks.
+
+if (NNG_ENABLE_COVERAGE)
+    # NB: This only works for GCC and Clang 3.0 and newer.  If your stuff
+    # is older than that, you will need to find something newer.  For
+    # correct reporting, we always turn off all optimizations.
+    if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+        set(CMAKE_C_FLAGS -g -O0 -fprofile-arcs -ftest-coverage)
+        set(CMAKE_CXX_FLAGS -g -O0 -fprofile-arcs -ftest-coverage)
+    elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+        set(CMAKE_C_FLAGS -g -O0 -fprofile-arcs -ftest-coverage)
+        set(CMAKE_CXX_FLAGS -g -O0 -fprofile-arcs -ftest-coverage)
+    elseif (CMAKE_COMPILER_ID STREQUAL "AppleClang")
+        set(CMAKE_C_FLAGS -g -O0 -fprofile-arcs -ftest-coverage)
+        set(CMAKE_CXX_FLAGS -g -O0 -fprofile-arcs -ftest-coverage)
+    else()
+        message(FATAL_ERROR "Unable to enable coverage for your compiler.")
+    endif()
+endif()
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     find_package (Threads REQUIRED)

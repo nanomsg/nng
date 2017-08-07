@@ -1,22 +1,74 @@
-language: c
+language: generic
 dist: trusty
 sudo: false
 addons:
   apt:
+    sources:
+      - ubuntu-toolchain-r-test
+      - llvm-toolchain-trusty-4.0
     packages:
       - cmake
-      - uncrustify
       - colordiff
+      - g++-4.9
+      - g++-7
+      - clang-4.0
+      - clang-format-4.0
 matrix:
   include:
+    # default gcc 4.9 build - we also do a clang-format check here.
     - os: linux
-      compiler: gcc
+      env: >-
+        CC=gcc-4.9
+        CXX=g++-4.9
+        COVERAGE=OFF
+        BUILD_TYPE=Debug
+        TEST_PARALLEL=-j4
+        CLANG_FORMAT=clang-format-4.0
     - os: linux
-      compiler: clang
-#    - os: osx
-#      compiler: gcc
+      env: >-
+        CC=gcc-7
+        CXX=g++-7
+        COVERAGE=OFF
+        BUILD_TYPE=Debug
+        TEST_PARALLEL=-j4
+        CLANG_FORMAT=no
+    # clang v4 build
+    - os: linux
+      env: >-
+        CC=clang-4.0
+        CXX=clang++-4.0
+        COVERAGE=OFF
+        BUILD_TYPE=Debug
+        TEST_PARALLEL=-j4
+        CLANG_FORMAT=no
+    # one release build
+    - os: linux
+      env: >-
+        CC=clang-4.0
+        CXX=clang++-4.0
+        COVERAGE=OFF
+        BUILD_TYPE=Release
+        TEST_PARALLEL=-j4
+        CLANG_FORMAT=no
+    # code coverage build
+    - os: linux
+      env: >-
+        CC=clang-4.0
+        CXX=clang++-4.0
+        COVERAGE=ON
+        BUILD_TYPE=Debug
+        TEST_PARALLEL=
+        CLANG_FORMAT=no
+    # One MacOS X build
     - os: osx
-      compiler: clang
+      env: >-
+        CC=clang
+        CXX=clang++
+        COVERAGE=OFF
+        TEST_PARALLEL=-j4
+        BUILD_TYPE=Debug
+        CLANG_FORMAT=no
+
 script:
   # Print all environment variables to aid in CI development
   - uname -a
@@ -27,7 +79,11 @@ script:
   - mkdir build
   - cd build
   # Perform CMake backend generation, build, and test
-  - cmake -DCMAKE_BUILD_TYPE=Debug ..
+  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DNNG_ENABLE_COVERAGE=${COVERAGE} ..
   - cmake --build . -- -j4
-  - ctest --output-on-failure -C Debug -j4
+  - ctest --output-on-failure -C ${BUILD_TYPE} ${TEST_PARALLEL}
   - ../etc/format-check.sh
+
+  after_success:
+  - ../etc/codecov.sh
+
