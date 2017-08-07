@@ -76,22 +76,6 @@ nni_idhash_fini(nni_idhash *h)
 }
 
 void
-nni_idhash_reclaim(nni_idhash *h)
-{
-	nni_mtx_lock(&h->ih_mtx);
-
-	// Reclaim the buffer if we want, but preserve the limits.
-	if ((h->ih_count == 0) && (h->ih_cap != 0) && (h->ih_walkers == 0)) {
-		NNI_FREE_STRUCTS(h->ih_entries, h->ih_cap);
-		h->ih_cap     = 0;
-		h->ih_entries = NULL;
-		h->ih_minload = 0;
-		h->ih_maxload = 0;
-	}
-	nni_mtx_unlock(&h->ih_mtx);
-}
-
-void
 nni_idhash_set_limits(
     nni_idhash *h, uint32_t minval, uint32_t maxval, uint32_t start)
 {
