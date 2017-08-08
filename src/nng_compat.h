@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -218,7 +219,7 @@ extern "C" {
 #define NN_SUB_SUBSCRIBE		(NN_SUB * 16 + 1)
 #define NN_SUB_UNSUBSCRIBE		(NN_SUB * 16 + 2)
 #define NN_REQ_RESEND_IVL		(NN_REQ * 16 + 1)
-#define NN_SURVEY_DEADLINE		(NN_SURVEYOR * 16 + 1)
+#define NN_SURVEYOR_DEADLINE		(NN_SURVEYOR * 16 + 1)
 
 // Level options for tranports
 #define NN_INPROC			(-1)

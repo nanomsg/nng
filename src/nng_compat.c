@@ -622,7 +622,7 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 		break;
 	case NN_SURVEYOR:
 		switch (nnopt) {
-		case NN_SURVEY_DEADLINE:
+		case NN_SURVEYOR_DEADLINE:
 			opt   = NNG_OPT_SURVEYTIME;
 			mscvt = 1;
 			break;
@@ -630,6 +630,7 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 			errno = ENOPROTOOPT;
 			return (-1);
 		}
+		break;
 	default:
 		errno = ENOPROTOOPT;
 		return (-1);
