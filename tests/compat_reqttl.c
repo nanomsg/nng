@@ -57,8 +57,8 @@ int main (int argc, const char *argv[])
 
     int port = get_test_port(argc, argv);
 
-    test_addr_from(socket_address_a, "tcp", "127.0.0.1", port);
-    test_addr_from(socket_address_b, "tcp", "127.0.0.1", port + 1);
+    test_addr_from(socket_address_a, "inproc", "127.0.0.1", port);
+    test_addr_from(socket_address_b, "inproc", "127.0.0.1", port + 1);
 
     /*  Intialise the device sockets. */
     dev0 = test_socket (AF_SP_RAW, NN_REP);
