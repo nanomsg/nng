@@ -2,8 +2,9 @@
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
-#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
+#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
+#   Copyright 2017 Capitar IT Group BV <info@capitar.com>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -60,7 +61,7 @@ if (NNG_TESTS)
             target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
         endif()
 
-        add_test (NAME ${NAME} COMMAND ${NAME} -v ${TEST_PORT})
+        add_test (NAME ${NAME} COMMAND ${NAME} ${TEST_PORT})
         set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
         math (EXPR TEST_PORT "${TEST_PORT}+10")
     endmacro (add_nng_compat_test)
@@ -92,5 +93,6 @@ add_nng_compat_test(compat_block 5)
 add_nng_compat_test(compat_bug777 5)
 add_nng_compat_test(compat_bus 5)
 add_nng_compat_test(compat_cmsg 5)
+add_nng_compat_test(compat_msg 5)
 add_nng_compat_test(compat_device 5)
 add_nng_compat_test(compat_reqrep 5)

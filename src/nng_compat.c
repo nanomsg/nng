@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -255,24 +256,19 @@ nn_flags(int flags)
 int
 nn_send(int s, const void *buf, size_t len, int flags)
 {
-	int rv;
+	int              rv;
+	struct nn_iovec  iov;
+	struct nn_msghdr hdr;
 
-	if ((flags = nn_flags(flags)) == -1) {
-		return (-1);
-	}
-	if (len == NN_MSG) {
-		nng_msg *msg;
-		memcpy(&msg, ((char *) buf) - sizeof(msg), sizeof(msg));
-		len = nng_msg_len(msg);
-		rv  = nng_sendmsg((nng_socket) s, msg, flags);
-	} else {
-		rv = nng_send((nng_socket) s, (void *) buf, len, flags);
-	}
-	if (rv != 0) {
-		nn_seterror(rv);
-		return (-1);
-	}
-	return ((int) len);
+	iov.iov_base = (void *) buf;
+	iov.iov_len  = len;
+
+	hdr.msg_iov        = &iov;
+	hdr.msg_iovlen     = 1;
+	hdr.msg_control    = NULL;
+	hdr.msg_controllen = 0;
+
+	return (nn_sendmsg(s, &hdr, flags));
 }
 
 int
@@ -280,42 +276,18 @@ nn_recv(int s, void *buf, size_t len, int flags)
 {
 	int rv;
 
-	if ((flags = nn_flags(flags)) == -1) {
-		return (-1);
-	}
+	struct nn_iovec  iov;
+	struct nn_msghdr hdr;
 
-	if (len == NN_MSG) {
-		nng_msg *msg;
+	iov.iov_base = buf;
+	iov.iov_len  = len;
 
-		if ((rv = nng_recvmsg((nng_socket) s, &msg, flags)) != 0) {
-			nn_seterror(rv);
-			return (-1);
-		}
+	hdr.msg_iov        = &iov;
+	hdr.msg_iovlen     = 1;
+	hdr.msg_control    = NULL;
+	hdr.msg_controllen = 0;
 
-		// prepend our header to the body...
-		// Note that this *can* alter the message,
-		// although for performance reasons it ought not.
-		// (There should be sufficient headroom.)
-		if ((rv = nng_msg_prepend(msg, &msg, sizeof(msg))) != 0) {
-			nng_msg_free(msg);
-			nn_seterror(rv);
-			return (-1);
-		}
-
-		// now "trim" it off... the value is still there, but the
-		// contents are unreferenced.  We rely on legacy nanomsg's
-		// ignorance of nng msgs to preserve this.
-		nng_msg_trim(msg, sizeof(msg));
-
-		*(void **) buf = nng_msg_body(msg);
-		return ((int) nng_msg_len(msg));
-	}
-
-	if ((rv = nng_recv((nng_socket) s, buf, &len, flags)) != 0) {
-		nn_seterror(rv);
-		return (-1);
-	}
-	return ((int) len);
+	return (nn_recvmsg(s, &hdr, flags));
 }
 
 int
@@ -463,8 +435,9 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	}
 
 	if ((mh->msg_iovlen == 1) && (mh->msg_iov[0].iov_len == NN_MSG)) {
-		msg = *(nng_msg **) (((char *) mh->msg_iov[0].iov_base) -
-		    sizeof(msg));
+		char *bufp = *(char **) (mh->msg_iov[0].iov_base);
+
+		msg  = *(nng_msg **) (bufp - sizeof(msg));
 		keep = 1; // keep the message on error
 	} else {
 		char *ptr;
