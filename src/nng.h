@@ -75,6 +75,10 @@ NNG_DECL void nng_fini(void);
 // pipes associated with the socket.
 NNG_DECL int nng_close(nng_socket);
 
+// nng_closeall closes all open sockets.  Do not call this from
+// a library; it will affect all sockets.
+NNG_DECL void nng_closeall(void);
+
 // nng_shutdown shuts down the socket.  This causes any threads doing
 // work for the socket or blocked in socket functions to be woken (and
 // return NNG_ECLOSED).  The socket resources are still present, so it

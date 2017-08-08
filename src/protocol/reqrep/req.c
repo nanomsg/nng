@@ -35,6 +35,7 @@ struct nni_req_sock {
 	int          raw;
 	int          wantw;
 	int          closed;
+	int          ttl;
 	nni_msg *    reqmsg;
 
 	nni_req_pipe *pendpipe;
@@ -101,6 +102,7 @@ nni_req_sock_init(void **reqp, nni_sock *sock)
 	req->raw    = 0;
 	req->wantw  = 0;
 	req->resend = NNI_TIME_ZERO;
+	req->ttl    = 8;
 
 	req->uwq = nni_sock_sendq(sock);
 	req->urq = nni_sock_recvq(sock);
@@ -269,6 +271,12 @@ nni_req_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 		break;
 	case NNG_OPT_RAW:
 		rv = nni_setopt_int(&req->raw, buf, sz, 0, 1);
+		if (rv == 0) {
+			nni_sock_recverr(req->sock, req->raw ? 0 : NNG_ESTATE);
+		}
+		break;
+	case NNG_OPT_MAXTTL:
+		rv = nni_setopt_int(&req->ttl, buf, sz, 1, 255);
 		break;
 	default:
 		rv = NNG_ENOTSUP;
@@ -288,6 +296,9 @@ nni_req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 		break;
 	case NNG_OPT_RAW:
 		rv = nni_getopt_int(&req->raw, buf, szp);
+		break;
+	case NNG_OPT_MAXTTL:
+		rv = nni_getopt_int(&req->ttl, buf, szp);
 		break;
 	default:
 		rv = NNG_ENOTSUP;

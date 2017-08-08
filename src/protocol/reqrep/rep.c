@@ -312,7 +312,7 @@ nni_rep_pipe_recv_cb(void *arg)
 	}
 
 	// Move backtrace from body to header
-	hops = 0;
+	hops = 1;
 	for (;;) {
 		int end = 0;
 		if (hops >= rep->ttl) {

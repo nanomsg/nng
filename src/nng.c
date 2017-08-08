@@ -73,6 +73,12 @@ nng_close(nng_socket sid)
 	return (rv);
 }
 
+void
+nng_closeall(void)
+{
+	nni_sock_closeall();
+}
+
 uint16_t
 nng_protocol(nng_socket sid)
 {

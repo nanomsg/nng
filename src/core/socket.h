@@ -23,6 +23,8 @@ struct nni_socket {
 	nni_msgq *s_uwq; // Upper write queue
 	nni_msgq *s_urq; // Upper read queue
 
+	nni_list_node s_node;
+
 	uint16_t s_protocol;
 	uint16_t s_peer;
 	uint32_t s_flags;
@@ -67,6 +69,7 @@ extern int      nni_sock_find(nni_sock **, uint32_t);
 extern void     nni_sock_rele(nni_sock *);
 extern int      nni_sock_open(nni_sock **, uint16_t);
 extern void     nni_sock_close(nni_sock *);
+extern void     nni_sock_closeall(void);
 extern int      nni_sock_shutdown(nni_sock *);
 extern uint16_t nni_sock_proto(nni_sock *);
 extern uint16_t nni_sock_peer(nni_sock *);

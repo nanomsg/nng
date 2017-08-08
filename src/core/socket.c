@@ -15,6 +15,8 @@
 // Socket implementation.
 
 static nni_objhash *nni_socks = NULL;
+static nni_list     nni_sock_list;
+static nni_mtx      nni_sock_lk;
 
 uint32_t
 nni_sock_id(nni_sock *s)
@@ -362,6 +364,7 @@ nni_sock_ctor(uint32_t id)
 	sock->s_reconnmax = 0;
 	sock->s_rcvmaxsz  = 1024 * 1024; // 1 MB by default
 	sock->s_id        = id;
+	NNI_LIST_NODE_INIT(&sock->s_node);
 
 	nni_pipe_sock_list_init(&sock->s_pipes);
 
@@ -436,8 +439,12 @@ nni_sock_sys_init(void)
 {
 	int rv;
 
-	rv = nni_objhash_init(&nni_socks, nni_sock_ctor, nni_sock_dtor);
-
+	NNI_LIST_INIT(&nni_sock_list, nni_sock, s_node);
+	if (((rv = nni_objhash_init(
+	          &nni_socks, nni_sock_ctor, nni_sock_dtor)) != 0) ||
+	    ((rv = nni_mtx_init(&nni_sock_lk)) != 0)) {
+		nni_sock_sys_fini();
+	}
 	return (rv);
 }
 
@@ -446,6 +453,7 @@ nni_sock_sys_fini(void)
 {
 	nni_objhash_fini(nni_socks);
 	nni_socks = NULL;
+	nni_mtx_fini(&nni_sock_lk);
 }
 
 // nn_sock_open creates the underlying socket.
@@ -511,6 +519,10 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	}
 
 	sops->sock_open(sock->s_data);
+
+	nni_mtx_lock(&nni_sock_lk);
+	nni_list_append(&nni_sock_list, sock);
+	nni_mtx_unlock(&nni_sock_lk);
 
 	*sockp = sock;
 	return (0);
@@ -657,6 +669,10 @@ nni_sock_close(nni_sock *sock)
 	sock->s_closed = 1;
 	nni_mtx_unlock(&sock->s_mx);
 
+	nni_mtx_lock(&nni_sock_lk);
+	nni_list_node_remove(&sock->s_node);
+	nni_mtx_unlock(&nni_sock_lk);
+
 	// At this point nothing else should be referencing us.
 	// As with UNIX close, it is a gross error for the caller
 	// to have concurrent threads using this.  We've taken care to
@@ -670,6 +686,28 @@ nni_sock_close(nni_sock *sock)
 
 	nni_objhash_unref(nni_socks, sock->s_id);
 	nni_objhash_unref_wait(nni_socks, sock->s_id);
+}
+
+void
+nni_sock_closeall(void)
+{
+	nni_sock *s;
+	uint32_t  id;
+
+	for (;;) {
+		nni_mtx_lock(&nni_sock_lk);
+		if ((s = nni_list_first(&nni_sock_list)) == NULL) {
+			nni_mtx_unlock(&nni_sock_lk);
+			return;
+		}
+		id = s->s_id;
+		nni_list_node_remove(&s->s_node);
+		nni_mtx_unlock(&nni_sock_lk);
+
+		if (nni_sock_find(&s, id) == 0) {
+			nni_sock_close(s);
+		}
+	}
 }
 
 int
