@@ -182,7 +182,8 @@ nng_send(nng_socket sid, void *buf, size_t len, int flags)
 	memcpy(nng_msg_body(msg), buf, len);
 	if ((rv = nng_sendmsg(sid, msg, flags)) != 0) {
 		nng_msg_free(msg);
-	} else if (flags & NNG_FLAG_ALLOC) {
+	}
+	if (flags & NNG_FLAG_ALLOC) {
 		nni_free(buf, len);
 	}
 	return (rv);
