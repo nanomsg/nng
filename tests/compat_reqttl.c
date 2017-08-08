@@ -41,8 +41,8 @@ void device (NN_UNUSED void *arg)
     nn_assert (rc < 0 && nn_errno () == EBADF);
 
     /*  Clean up. */
-    test_close (dev0);
-    test_close (dev1);
+    nn_close (dev0);
+    nn_close (dev1);
 }
 
 int main (int argc, const char *argv[])
@@ -82,9 +82,9 @@ int main (int argc, const char *argv[])
 
     /*  Pass a message between endpoints. */
     /*  Set up max receive timeout. */
-    timeo = 100;
+    timeo = 1000;
     test_setsockopt (end0, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
-    timeo = 100;
+    timeo = 1000;
     test_setsockopt (end1, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
 
     /*  Test default TTL is 8. */
