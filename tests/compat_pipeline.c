@@ -65,7 +65,10 @@ int main ()
     push2 = test_socket (AF_SP, NN_PUSH);
     test_connect (push2, SOCKET_ADDRESS);
 
+    nn_sleep (10);
     test_send (push1, "ABC");
+
+    nn_sleep (10);
     test_send (push2, "DEF");
 
     test_recv (pull1, "ABC");
