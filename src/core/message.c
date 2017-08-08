@@ -1,5 +1,6 @@
 //
 // Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -264,6 +265,42 @@ nni_chunk_prepend(nni_chunk *ch, const void *data, size_t len)
 	return (0);
 }
 
+static int
+nni_chunk_prepend_u32(nni_chunk *ch, uint32_t val)
+{
+	unsigned char buf[sizeof(uint32_t)];
+	NNI_PUT32(buf, val);
+	return (nni_chunk_prepend(ch, buf, sizeof(buf)));
+}
+
+static int
+nni_chunk_append_u32(nni_chunk *ch, uint32_t val)
+{
+	unsigned char buf[sizeof(uint32_t)];
+	NNI_PUT32(buf, val);
+	return (nni_chunk_append(ch, buf, sizeof(buf)));
+}
+
+static uint32_t
+nni_chunk_trim_u32(nni_chunk *ch)
+{
+	uint32_t v;
+	NNI_ASSERT(ch->ch_len >= sizeof(v));
+	NNI_GET32(ch->ch_ptr, v);
+	nni_chunk_trim(ch, sizeof(v));
+	return (v);
+}
+
+static uint32_t
+nni_chunk_trunc_u32(nni_chunk *ch)
+{
+	uint32_t v;
+	NNI_ASSERT(ch->ch_len >= sizeof(v));
+	NNI_GET32(ch->ch_ptr + ch->ch_len - sizeof(v), v);
+	nni_chunk_trunc(ch, sizeof(v));
+	return (v);
+}
+
 int
 nni_msg_alloc(nni_msg **mp, size_t sz)
 {
@@ -483,7 +520,6 @@ nni_msg_append_header(nni_msg *m, const void *data, size_t len)
 {
 	return (nni_chunk_append(&m->m_header, data, len));
 }
-
 int
 nni_msg_prepend_header(nni_msg *m, const void *data, size_t len)
 {
@@ -500,4 +536,50 @@ int
 nni_msg_trunc_header(nni_msg *m, size_t len)
 {
 	return (nni_chunk_trunc(&m->m_header, len));
+}
+int
+nni_msg_append_u32(nni_msg *m, uint32_t val)
+{
+	return (nni_chunk_append_u32(&m->m_body, val));
+}
+
+int
+nni_msg_prepend_u32(nni_msg *m, uint32_t val)
+{
+	return (nni_chunk_prepend_u32(&m->m_body, val));
+}
+
+int
+nni_msg_header_append_u32(nni_msg *m, uint32_t val)
+{
+	return (nni_chunk_append_u32(&m->m_header, val));
+}
+
+int
+nni_msg_header_prepend_u32(nni_msg *m, uint32_t val)
+{
+	return (nni_chunk_prepend_u32(&m->m_header, val));
+}
+
+uint32_t
+nni_msg_trunc_u32(nni_msg *m)
+{
+	return (nni_chunk_trunc_u32(&m->m_body));
+}
+
+uint32_t
+nni_msg_trim_u32(nni_msg *m)
+{
+	return (nni_chunk_trim_u32(&m->m_body));
+}
+
+uint32_t
+nni_msg_header_trunc_u32(nni_msg *m)
+{
+	return (nni_chunk_trunc_u32(&m->m_header));
+}
+uint32_t
+nni_msg_header_trim_u32(nni_msg *m)
+{
+	return (nni_chunk_trim_u32(&m->m_header));
 }

@@ -17,7 +17,8 @@
 // change, as adding new protocols is not something intended to be done
 // outside of the core.
 extern nni_proto nni_bus_proto;
-extern nni_proto nni_pair_proto;
+extern nni_proto nni_pair0_proto;
+extern nni_proto nni_pair1_proto;
 extern nni_proto nni_rep_proto;
 extern nni_proto nni_req_proto;
 extern nni_proto nni_pub_proto;
@@ -30,7 +31,8 @@ extern nni_proto nni_respondent_proto;
 static nni_proto *protocols[] = {
 	// clang-format off
 	&nni_bus_proto,
-	&nni_pair_proto,
+	&nni_pair0_proto,
+	&nni_pair1_proto,
 	&nni_rep_proto,
 	&nni_req_proto,
 	&nni_pub_proto,

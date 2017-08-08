@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -294,7 +295,9 @@ enum nng_flag_enum {
 #define NNG_PROTO(major, minor) (((major) *16) + (minor))
 enum nng_proto_enum {
 	NNG_PROTO_NONE       = NNG_PROTO(0, 0),
-	NNG_PROTO_PAIR       = NNG_PROTO(1, 0),
+	NNG_PROTO_PAIR_V0    = NNG_PROTO(1, 0),
+	NNG_PROTO_PAIR_V1    = NNG_PROTO(1, 1),
+	NNG_PROTO_PAIR       = NNG_PROTO_PAIR_V1, // XXX: bump me later
 	NNG_PROTO_PUB        = NNG_PROTO(2, 0),
 	NNG_PROTO_SUB        = NNG_PROTO(2, 1),
 	NNG_PROTO_REQ        = NNG_PROTO(3, 0),
