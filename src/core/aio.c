@@ -187,7 +187,6 @@ nni_aio_finish_impl(
 	aio->a_result      = result;
 	aio->a_count       = count;
 	aio->a_prov_cancel = NULL;
-	aio->a_prov_data   = NULL;
 	if (pipe) {
 		aio->a_pipe = pipe;
 	}

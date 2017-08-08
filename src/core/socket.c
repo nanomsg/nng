@@ -614,7 +614,7 @@ nni_sock_ep_remove(nni_sock *sock, nni_ep *ep)
 	// Note that if the ep is not on a list, then we assume that we have
 	// exclusive access.  Therefore the check for being active need not
 	// be locked.
-	if ((sock == NULL) || (!nni_list_active(&sock->s_eps, ep))) {
+	if (!nni_list_node_active(&ep->ep_node)) {
 		return;
 	}
 
