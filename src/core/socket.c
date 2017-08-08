@@ -708,7 +708,7 @@ nni_sock_sendmsg(nni_sock *sock, nni_msg *msg, nni_time expire)
 		nni_plat_pipe_clear(sock->s_send_fd.sn_rfd);
 	}
 	rv = nni_msgq_put_until(sock->s_uwq, msg, expire);
-	if (besteffort && (rv == NNG_EAGAIN)) {
+	if (besteffort && (rv == NNG_ETIMEDOUT)) {
 		// Pretend this worked... it didn't, but pretend.
 		nni_msg_free(msg);
 		return (0);
