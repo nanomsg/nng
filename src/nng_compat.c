@@ -256,7 +256,6 @@ nn_flags(int flags)
 int
 nn_send(int s, const void *buf, size_t len, int flags)
 {
-	int              rv;
 	struct nn_iovec  iov;
 	struct nn_msghdr hdr;
 
@@ -274,8 +273,6 @@ nn_send(int s, const void *buf, size_t len, int flags)
 int
 nn_recv(int s, void *buf, size_t len, int flags)
 {
-	int rv;
-
 	struct nn_iovec  iov;
 	struct nn_msghdr hdr;
 
@@ -655,7 +652,7 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 
 	if (mscvt) {
 		// We have to convert value to ms...
-		*msecp = (usec / 1000);
+		*msecp = (int) (usec / 1000);
 		*szp   = sizeof(int);
 	}
 
