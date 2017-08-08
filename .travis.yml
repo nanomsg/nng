@@ -1,73 +1,88 @@
+# We use generic to avoid Travis from overriding our compiler choices.
+# Variables that can be set:
+#
+# CC - compiler name to use, e.g. clang-4.0
+# BUILD_TYPE - defaults to Debug, can be Release
+# CLANG_FORMAT - defaults to "no", set to name of clang-format-4.0 or better
+# COVERAGE - defaults to OFF, set to ON to enable code coverage
+# 
 language: generic
-dist: trusty
 sudo: false
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-      - llvm-toolchain-trusty-4.0
-    packages:
-      - cmake
-      - colordiff
-      - g++-4.9
-      - g++-7
-      - clang-4.0
-      - clang-format-4.0
 matrix:
   include:
+    # stock build (4.8 probably) - we also do a clang-format check here.
+    - os: linux
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - colordiff
+            - clang-format-4.0
+      env: CLANG_FORMAT=clang-format-4.0
+  
     # default gcc 4.9 build - we also do a clang-format check here.
     - os: linux
-      env: >-
-        CC=gcc-4.9
-        CXX=g++-4.9
-        COVERAGE=OFF
-        BUILD_TYPE=Debug
-        TEST_PARALLEL=-j4
-        CLANG_FORMAT=clang-format-4.0
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - colordiff
+            - gcc-4.9
+            - clang-format-4.0
+      env: CC=gcc-4.9
+
+    # gcc 7 (latest version) build
     - os: linux
-      env: >-
-        CC=gcc-7
-        CXX=g++-7
-        COVERAGE=OFF
-        BUILD_TYPE=Debug
-        TEST_PARALLEL=-j4
-        CLANG_FORMAT=no
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-7
+      env: CC=gcc-7
+
     # clang v4 build
     - os: linux
-      env: >-
-        CC=clang-4.0
-        CXX=clang++-4.0
-        COVERAGE=OFF
-        BUILD_TYPE=Debug
-        TEST_PARALLEL=-j4
-        CLANG_FORMAT=no
-    # one release build
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env: CC=clang-4.0
+
+    # release build using clang 4
     - os: linux
-      env: >-
-        CC=clang-4.0
-        CXX=clang++-4.0
-        COVERAGE=OFF
-        BUILD_TYPE=Release
-        TEST_PARALLEL=-j4
-        CLANG_FORMAT=no
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - llvm-toolchain-trusty-4.0
+          packages:
+            - clang-4.0
+      env: CC=clang-4.0 BUILD_TYPE=Release
+
     # code coverage build
     - os: linux
-      env: >-
-        CC=gcc-7
-        CXX=g++-7
-        COVERAGE=ON
-        BUILD_TYPE=Debug
-        TEST_PARALLEL=-j1
-        CLANG_FORMAT=no
+      dist: trusty
+      addons:
+        apt:
+          sources:
+            - ubuntu-toolchain-r-test
+          packages:
+            - gcc-7
+      env: CC=gcc-7 COVERAGE=ON
+
     # One MacOS X build
     - os: osx
-      env: >-
-        CC=clang
-        CXX=clang++
-        COVERAGE=OFF
-        TEST_PARALLEL=-j4
-        BUILD_TYPE=Debug
-        CLANG_FORMAT=no
+      env: CC=clang
 
 before_script:
   - uname -a
@@ -79,10 +94,10 @@ script:
   - mkdir build
   - cd build
   # Perform CMake backend generation, build, and test
-  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DNNG_ENABLE_COVERAGE=${COVERAGE} ..
+  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DNNG_ENABLE_COVERAGE=${COVERAGE:-OFF} ..
   - cmake --build . -- -j4
-  - ctest --output-on-failure -C ${BUILD_TYPE} ${TEST_PARALLEL}
-  - ../etc/format-check.sh
+  - ctest --output-on-failure -C ${BUILD_TYPE:-Debug}
+  - env CLANG_FORMAT=${CLANG_FORMAT:-no} ../etc/format-check.sh
 
 after_success:
   - ../etc/codecov.sh
