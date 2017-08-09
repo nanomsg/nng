@@ -11,6 +11,7 @@
 #include "convey.h"
 #include "core/nng_impl.h"
 #include "nng.h"
+#include <stdlib.h>
 #include <string.h>
 
 // Transport common tests.  By making a common test framework for transports,
@@ -25,10 +26,34 @@ typedef struct {
 	nni_tran * tran;
 } trantest;
 
+unsigned trantest_port = 0;
+
+void
+trantest_next_address(char *out, const char *template)
+{
+	if (trantest_port == 0) {
+		char *pstr;
+		trantest_port = 5555;
+		if (((pstr = ConveyGetEnv("TEST_PORT")) != NULL) &&
+		    (atoi(pstr) != 0)) {
+			trantest_port = atoi(pstr);
+		}
+	}
+	(void) snprintf(out, NNG_MAXADDRLEN, template, trantest_port);
+	trantest_port++;
+}
+
+void
+trantest_prev_address(char *out, const char *template)
+{
+	trantest_port--;
+	trantest_next_address(out, template);
+}
+
 void
 trantest_init(trantest *tt, const char *addr)
 {
-	(void) snprintf(tt->addr, sizeof(tt->addr), "%s", addr);
+	trantest_next_address(tt->addr, addr);
 	So(nng_req_open(&tt->reqsock) == 0);
 	So(nng_rep_open(&tt->repsock) == 0);
 

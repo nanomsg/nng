@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,11 +11,10 @@
 #include "convey.h"
 #include "trantest.h"
 
-
 // Inproc tests.
 
 TestMain("IPC Transport", {
-	trantest_test_all("ipc:///tmp/nng_ipc_test");
+	trantest_test_all("ipc:///tmp/nng_ipc_test_%u");
 
 	nng_fini();
 })

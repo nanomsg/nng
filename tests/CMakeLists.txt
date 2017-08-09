@@ -46,9 +46,9 @@ if (NNG_TESTS)
             target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
         endif()
 
-        add_test (NAME ${NAME} COMMAND ${NAME} -v ${TEST_PORT})
+        add_test (NAME ${NAME} COMMAND ${NAME} -v -p TEST_PORT=${TEST_PORT})
         set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
-        math (EXPR TEST_PORT "${TEST_PORT}+10")
+        math (EXPR TEST_PORT "${TEST_PORT}+20")
     endmacro (add_nng_test)
 
     macro (add_nng_compat_test NAME TIMEOUT)

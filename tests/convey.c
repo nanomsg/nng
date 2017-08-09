@@ -973,6 +973,52 @@ convey_nextline(char **next)
 	return (line);
 }
 
+static struct convey_env {
+	struct convey_env *next;
+	const char *name;
+	char *value;
+} *convey_environment;
+
+static struct convey_env *
+conveyFindEnv(const char *name)
+{
+	struct convey_env *ev;
+	for (ev = convey_environment; ev != NULL; ev = ev->next) {
+		if (strcmp(name, ev->name) == 0) {
+			return (ev);
+		}
+	}
+	return (NULL);
+}
+
+char *
+conveyGetEnv(const char *name)
+{
+	struct convey_env *ev;
+
+	if ((ev = conveyFindEnv(name)) != NULL) {
+		return (ev->value);
+	}
+	return (getenv(name));
+}
+
+int
+conveyPutEnv(const char *name, char *value)
+{
+	struct convey_env *env;
+
+	if ((env = conveyFindEnv(name)) == NULL) {
+		env = malloc(sizeof (*env));
+		if (env == NULL) {
+			return (-1);
+		}
+		env->next = convey_environment;
+		convey_environment = env;
+	}
+	env->name = name;
+	env->value = value;
+	return (0);
+}
 
 int
 conveyMain(int argc, char **argv)
@@ -982,6 +1028,7 @@ conveyMain(int argc, char **argv)
 	const char *prog;
 	struct convey_timer pc;
 	int secs, usecs;
+	struct convey_env *env;
 
 	if ((argc > 0) && (argv[0] != NULL)) {
 		prog = argv[0];
@@ -999,9 +1046,22 @@ conveyMain(int argc, char **argv)
 		}
 		if (strcmp(argv[i], "-v") == 0) {
 			ConveySetVerbose();
+			continue;
 		}
 		if (strcmp(argv[i], "-d") == 0) {
 			convey_debug++;
+			continue;
+		}
+		if ((strcmp(argv[i], "-p") == 0) && ((i + 1) < argc)) {
+			char *delim;
+			if ((delim = strchr(argv[i+1], '=')) != NULL) {
+				*delim = '\0';
+				conveyPutEnv(argv[i+1], delim+1);
+			} else {
+				conveyPutEnv(argv[i+1], "");
+			}
+			i++;
+			continue;
 		}
 	}
 	if (ConveyInit() != 0) {
@@ -1038,7 +1098,11 @@ conveyMain(int argc, char **argv)
 		break;
 	}
 
-	convey_read_timer(&pc, &secs, &usecs);
 	(void) printf("%-8s%-52s%4d.%03ds\n", status, prog, secs, usecs / 1000);
+	while ((env = convey_environment) != NULL) {
+		convey_environment = env->next;
+		free(env);
+	}
+	convey_read_timer(&pc, &secs, &usecs);
 	exit(i);
 }

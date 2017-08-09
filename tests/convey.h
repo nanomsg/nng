@@ -80,6 +80,8 @@ extern int conveyStart(conveyScope *, const char *);
 extern int conveyLoop(conveyScope *, int);
 extern void conveyFinish(conveyScope *, int *);
 extern int conveyMain(int, char **);
+extern char *conveyGetEnv(const char *);
+extern int conveyPutEnv(const char *, char *);
 
 extern void conveyAssertPass(const char *, const char *, int);
 extern void conveyAssertSkip(const char *, const char *, int);
@@ -167,6 +169,17 @@ extern void conveyPrintf(const char *, int, const char *, ...);
 		return (conveyMain(argc, argv));			\
 	}
 
+/*
+ * ConveyGetEnv is used to get environment variables, which can be
+ * overridden with -p <name>=<value> on the command line.
+ */
+#define ConveyGetEnv(name) conveyGetEnv(name)
+
+/*
+ * ConveyPutEnv is used to change environment variables.  This is not
+ * thread safe! 
+ */
+#define ConveyPutEnv(name, value) conveyPutEnv(name, value)
 /*
  * ConveyTest creates a top-level test instance, which can contain multiple
  * Convey blocks.

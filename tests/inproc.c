@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,6 +15,6 @@
 // Inproc tests.
 
 TestMain("Inproc Transport", {
-	trantest_test_all("inproc://TEST");
+	trantest_test_all("inproc://TEST_%u");
 	nni_fini();
 })
