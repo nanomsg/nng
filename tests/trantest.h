@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -8,8 +9,8 @@
 //
 
 #include "convey.h"
-#include "nng.h"
 #include "core/nng_impl.h"
+#include "nng.h"
 #include <string.h>
 
 // Transport common tests.  By making a common test framework for transports,
@@ -18,20 +19,21 @@
 // for comms.
 
 typedef struct {
-	char addr[NNG_MAXADDRLEN+1];
+	char       addr[NNG_MAXADDRLEN + 1];
 	nng_socket reqsock;
 	nng_socket repsock;
-	nni_tran *tran;
+	nni_tran * tran;
 } trantest;
 
 void
 trantest_init(trantest *tt, const char *addr)
 {
-	snprintf(tt->addr, sizeof (tt->addr), "%s", addr);
-	tt->tran = nni_tran_find(addr);
-	So(tt->tran != NULL);
+	(void) snprintf(tt->addr, sizeof(tt->addr), "%s", addr);
 	So(nng_open(&tt->reqsock, NNG_PROTO_REQ) == 0);
 	So(nng_open(&tt->repsock, NNG_PROTO_REP) == 0);
+
+	tt->tran = nni_tran_find(addr);
+	So(tt->tran != NULL);
 }
 
 void
@@ -57,9 +59,11 @@ trantest_conn_refused(trantest *tt)
 	Convey("Connection refused works", {
 		nng_endpoint ep = 0;
 
-		So(nng_dial(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) == NNG_ECONNREFUSED);
+		So(nng_dial(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		    NNG_ECONNREFUSED);
 		So(ep == 0);
-		So(nng_dial(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) == NNG_ECONNREFUSED);
+		So(nng_dial(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		    NNG_ECONNREFUSED);
 		So(ep == 0);
 	})
 }
@@ -69,10 +73,12 @@ trantest_duplicate_listen(trantest *tt)
 {
 	Convey("Duplicate listen rejected", {
 		nng_endpoint ep;
-		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		    0);
 		So(ep != 0);
 		ep = 0;
-		So(nng_listen(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) == NNG_EADDRINUSE);
+		So(nng_listen(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		    NNG_EADDRINUSE);
 		So(ep == 0);
 	})
 }
@@ -80,10 +86,11 @@ trantest_duplicate_listen(trantest *tt)
 void
 trantest_listen_accept(trantest *tt)
 {
-	Convey("Listen and accept" ,{
+	Convey("Listen and accept", {
 		nng_endpoint ep;
 		ep = 0;
-		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		    0);
 		So(ep != 0);
 
 		ep = 0;
@@ -97,12 +104,13 @@ trantest_send_recv(trantest *tt)
 {
 	Convey("Send and recv", {
 		nng_endpoint ep = 0;
-		nng_msg *send;
-		nng_msg *recv;
-		size_t len;
+		nng_msg *    send;
+		nng_msg *    recv;
+		size_t       len;
 
 		ep = 0;
-		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		    0);
 		So(ep != 0);
 		ep = 0;
 		So(nng_dial(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
@@ -140,9 +148,7 @@ trantest_test_all(const char *addr)
 	Convey("Given transport", {
 		trantest_init(&tt, addr);
 
-		Reset({
-			trantest_fini(&tt);
-		})
+		Reset({ trantest_fini(&tt); });
 
 		trantest_scheme(&tt);
 		trantest_conn_refused(&tt);

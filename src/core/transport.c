@@ -10,6 +10,7 @@
 
 #include "core/nng_impl.h"
 
+#include <stdio.h>
 #include <string.h>
 
 // For now the list of transports is hard-wired.  Adding new transports
@@ -18,34 +19,60 @@ extern nni_tran nni_inproc_tran;
 extern nni_tran nni_tcp_tran;
 extern nni_tran nni_ipc_tran;
 
-static nni_tran *transports[] = {
-	// clang-format off
-	&nni_inproc_tran,
-	&nni_tcp_tran,
-	&nni_ipc_tran,
-	NULL
-	// clang-format on
-};
+typedef struct nni_transport {
+	nni_tran      t_tran;
+	char          t_prefix[16]; // e.g. "tcp://" or "tls+tcp://"
+	nni_list_node t_node;
+} nni_transport;
+
+static nni_list nni_tran_list;
+static nni_mtx  nni_tran_lk;
+
+int
+nni_tran_register(const nni_tran *tran)
+{
+	nni_transport *t;
+	int            rv;
+
+	nni_mtx_lock(&nni_tran_lk);
+	// Check to see if the transport is already registered...
+	NNI_LIST_FOREACH (&nni_tran_list, t) {
+		if (strcmp(tran->tran_scheme, t->t_tran.tran_scheme) == 0) {
+			nni_mtx_unlock(&nni_tran_lk);
+			return (NNG_ESTATE);
+		}
+	}
+	if ((t = NNI_ALLOC_STRUCT(t)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	t->t_tran = *tran;
+	(void) snprintf(
+	    t->t_prefix, sizeof(t->t_prefix), "%s://", tran->tran_scheme);
+	if ((rv = t->t_tran.tran_init()) != 0) {
+		nni_mtx_unlock(&nni_tran_lk);
+		NNI_FREE_STRUCT(t);
+		return (rv);
+	}
+	nni_list_append(&nni_tran_list, t);
+	nni_mtx_unlock(&nni_tran_lk);
+	return (0);
+}
 
 nni_tran *
 nni_tran_find(const char *addr)
 {
 	// address is of the form "<scheme>://blah..."
-	const char *end;
-	int         len;
-	int         i;
-	nni_tran *  tran;
+	nni_transport *t;
 
-	if ((end = strstr(addr, "://")) == NULL) {
-		return (NULL);
-	}
-	len = (int) (end - addr);
-	for (i = 0; (tran = transports[i]) != NULL; i++) {
-		if ((strncmp(addr, tran->tran_scheme, len) == 0) &&
-		    (tran->tran_scheme[len] == '\0')) {
-			return (tran);
+	nni_mtx_lock(&nni_tran_lk);
+	NNI_LIST_FOREACH (&nni_tran_list, t) {
+		if (strncmp(addr, t->t_prefix, strlen(t->t_prefix)) == 0) {
+			nni_mtx_unlock(&nni_tran_lk);
+			return (&t->t_tran);
 		}
 	}
+	nni_mtx_unlock(&nni_tran_lk);
 	return (NULL);
 }
 
@@ -54,14 +81,15 @@ nni_tran_find(const char *addr)
 int
 nni_tran_sys_init(void)
 {
-	nni_tran *tran;
+	int rv;
 
-	for (int i = 0; (tran = transports[i]) != NULL; i++) {
-		int rv;
-		if ((rv = tran->tran_init()) != 0) {
-			nni_tran_sys_fini();
-			return (rv);
-		}
+	NNI_LIST_INIT(&nni_tran_list, nni_transport, t_node);
+	if (((rv = nni_mtx_init(&nni_tran_lk)) != 0) ||
+	    ((rv = nni_tran_register(&nni_inproc_tran)) != 0) ||
+	    ((rv = nni_tran_register(&nni_ipc_tran)) != 0) ||
+	    ((rv = nni_tran_register(&nni_tcp_tran)) != 0)) {
+		nni_tran_sys_fini();
+		return (rv);
 	}
 	return (0);
 }
@@ -71,11 +99,12 @@ nni_tran_sys_init(void)
 void
 nni_tran_sys_fini(void)
 {
-	nni_tran *tran;
+	nni_transport *t;
 
-	for (int i = 0; (tran = transports[i]) != NULL; i++) {
-		if (tran->tran_fini != NULL) {
-			tran->tran_fini();
-		}
+	while ((t = nni_list_first(&nni_tran_list)) != NULL) {
+		nni_list_remove(&nni_tran_list, t);
+		t->t_tran.tran_fini();
+		NNI_FREE_STRUCT(t);
 	}
+	nni_mtx_fini(&nni_tran_lk);
 }

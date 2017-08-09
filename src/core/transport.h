@@ -120,5 +120,6 @@ struct nni_tran_pipe {
 extern nni_tran *nni_tran_find(const char *);
 extern int       nni_tran_sys_init(void);
 extern void      nni_tran_sys_fini(void);
+extern int       nni_tran_register(const nni_tran *);
 
 #endif // CORE_TRANSPORT_H
