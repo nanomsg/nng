@@ -79,6 +79,18 @@ nni_sub_sock_fini(void *arg)
 	NNI_FREE_STRUCT(sub);
 }
 
+static void
+nni_sub_sock_open(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
+static void
+nni_sub_sock_close(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
 static int
 nni_sub_pipe_init(void **spp, nni_pipe *pipe, void *ssock)
 {
@@ -330,16 +342,24 @@ static nni_proto_pipe_ops nni_sub_pipe_ops = {
 static nni_proto_sock_ops nni_sub_sock_ops = {
 	.sock_init    = nni_sub_sock_init,
 	.sock_fini    = nni_sub_sock_fini,
+	.sock_open    = nni_sub_sock_open,
+	.sock_close   = nni_sub_sock_close,
 	.sock_setopt  = nni_sub_sock_setopt,
 	.sock_getopt  = nni_sub_sock_getopt,
 	.sock_rfilter = nni_sub_sock_rfilter,
 };
 
 nni_proto nni_sub_proto = {
-	.proto_self     = NNG_PROTO_SUB,
-	.proto_peer     = NNG_PROTO_PUB,
-	.proto_name     = "sub",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_SUB_V0, "sub" },
+	.proto_peer     = { NNG_PROTO_PUB_V0, "pub" },
 	.proto_flags    = NNI_PROTO_FLAG_RCV,
 	.proto_sock_ops = &nni_sub_sock_ops,
 	.proto_pipe_ops = &nni_sub_pipe_ops,
 };
+
+int
+nng_sub0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_sub_proto));
+}

@@ -231,6 +231,18 @@ nni_pair_send_cb(void *arg)
 	nni_msgq_aio_get(psock->uwq, &ppipe->aio_getq);
 }
 
+static void
+nni_pair_sock_open(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
+static void
+nni_pair_sock_close(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
 static int
 nni_pair_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
@@ -263,9 +275,6 @@ nni_pair_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	return (rv);
 }
 
-// This is the global protocol structure -- our linkage to the core.
-// This should be the only global non-static symbol in this file.
-
 static nni_proto_pipe_ops nni_pair_pipe_ops = {
 	.pipe_init  = nni_pair_pipe_init,
 	.pipe_fini  = nni_pair_pipe_fini,
@@ -276,15 +285,23 @@ static nni_proto_pipe_ops nni_pair_pipe_ops = {
 static nni_proto_sock_ops nni_pair_sock_ops = {
 	.sock_init   = nni_pair_sock_init,
 	.sock_fini   = nni_pair_sock_fini,
+	.sock_open   = nni_pair_sock_open,
+	.sock_close  = nni_pair_sock_close,
 	.sock_setopt = nni_pair_sock_setopt,
 	.sock_getopt = nni_pair_sock_getopt,
 };
 
 nni_proto nni_pair_proto = {
-	.proto_self     = NNG_PROTO_PAIR,
-	.proto_peer     = NNG_PROTO_PAIR,
-	.proto_name     = "pair",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_PAIR_V0, "pair" },
+	.proto_peer     = { NNG_PROTO_PAIR_V0, "pair" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_pair_sock_ops,
 	.proto_pipe_ops = &nni_pair_pipe_ops,
 };
+
+int
+nng_pair0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_pair_proto));
+}

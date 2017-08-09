@@ -56,9 +56,7 @@ nni_pull_sock_fini(void *arg)
 {
 	nni_pull_sock *pull = arg;
 
-	if (pull != NULL) {
-		NNI_FREE_STRUCT(pull);
-	}
+	NNI_FREE_STRUCT(pull);
 }
 
 static int
@@ -163,6 +161,18 @@ nni_pull_putq(nni_pull_pipe *pp, nni_msg *msg)
 	nni_msgq_aio_put(pull->urq, &pp->putq_aio);
 }
 
+static void
+nni_pull_sock_open(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
+static void
+nni_pull_sock_close(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
 static int
 nni_pull_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
@@ -195,8 +205,6 @@ nni_pull_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	return (rv);
 }
 
-// This is the global protocol structure -- our linkage to the core.
-// This should be the only global non-static symbol in this file.
 static nni_proto_pipe_ops nni_pull_pipe_ops = {
 	.pipe_init  = nni_pull_pipe_init,
 	.pipe_fini  = nni_pull_pipe_fini,
@@ -207,15 +215,23 @@ static nni_proto_pipe_ops nni_pull_pipe_ops = {
 static nni_proto_sock_ops nni_pull_sock_ops = {
 	.sock_init   = nni_pull_sock_init,
 	.sock_fini   = nni_pull_sock_fini,
+	.sock_open   = nni_pull_sock_open,
+	.sock_close  = nni_pull_sock_close,
 	.sock_setopt = nni_pull_sock_setopt,
 	.sock_getopt = nni_pull_sock_getopt,
 };
 
 nni_proto nni_pull_proto = {
-	.proto_self     = NNG_PROTO_PULL,
-	.proto_peer     = NNG_PROTO_PUSH,
-	.proto_name     = "pull",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_PULL_V0, "pull" },
+	.proto_peer     = { NNG_PROTO_PUSH_V0, "push" },
 	.proto_flags    = NNI_PROTO_FLAG_RCV,
 	.proto_pipe_ops = &nni_pull_pipe_ops,
 	.proto_sock_ops = &nni_pull_sock_ops,
 };
+
+int
+nng_pull0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_pull_proto));
+}

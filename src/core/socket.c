@@ -83,7 +83,7 @@ nni_sock_pipe_start(nni_pipe *pipe)
 		// We're closing, bail out.
 		return (NNG_ECLOSED);
 	}
-	if (nni_pipe_peer(pipe) != sock->s_peer) {
+	if (nni_pipe_peer(pipe) != sock->s_peer_id.p_id) {
 		// Peer protocol mismatch.
 		return (NNG_EPROTO);
 	}
@@ -175,7 +175,7 @@ nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
 		nni_mtx_unlock(&sock->s_mx);
 		return (NNG_ECLOSED);
 	}
-	if (nni_pipe_peer(pipe) != sock->s_peer) {
+	if (nni_pipe_peer(pipe) != sock->s_peer_id.p_id) {
 		nni_mtx_unlock(&sock->s_mx);
 		return (NNG_EPROTO);
 	}
@@ -305,47 +305,6 @@ nni_sock_unnotify(nni_sock *sock, nni_notify *notify)
 	NNI_FREE_STRUCT(notify);
 }
 
-static nni_msg *
-nni_sock_nullfilter(void *arg, nni_msg *mp)
-{
-	NNI_ARG_UNUSED(arg);
-	return (mp);
-}
-
-static int
-nni_sock_nullgetopt(void *arg, int num, void *data, size_t *szp)
-{
-	NNI_ARG_UNUSED(arg);
-	NNI_ARG_UNUSED(num);
-	NNI_ARG_UNUSED(data);
-	NNI_ARG_UNUSED(szp);
-	return (NNG_ENOTSUP);
-}
-
-static int
-nni_sock_nullsetopt(void *arg, int num, const void *data, size_t sz)
-{
-	NNI_ARG_UNUSED(arg);
-	NNI_ARG_UNUSED(num);
-	NNI_ARG_UNUSED(data);
-	NNI_ARG_UNUSED(sz);
-	return (NNG_ENOTSUP);
-}
-
-static void
-nni_sock_nullop(void *arg)
-{
-	NNI_ARG_UNUSED(arg);
-}
-
-static int
-nni_sock_nullstartpipe(void *arg)
-{
-	NNI_ARG_UNUSED(arg);
-
-	return (0);
-}
-
 static void *
 nni_sock_ctor(uint32_t id)
 {
@@ -456,22 +415,22 @@ nni_sock_sys_fini(void)
 	nni_mtx_fini(&nni_sock_lk);
 }
 
-// nn_sock_open creates the underlying socket.
 int
-nni_sock_open(nni_sock **sockp, uint16_t pnum)
+nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 {
 	nni_sock *          sock;
-	nni_proto *         proto;
 	int                 rv;
 	nni_proto_sock_ops *sops;
 	nni_proto_pipe_ops *pops;
 	uint32_t            sockid;
 
+	if (proto->proto_version != NNI_PROTOCOL_VERSION) {
+		// unsupported protocol version
+		return (NNG_ENOTSUP);
+	}
+
 	if ((rv = nni_init()) != 0) {
 		return (rv);
-	}
-	if ((proto = nni_proto_find(pnum)) == NULL) {
-		return (NNG_ENOTSUP);
 	}
 
 	rv = nni_objhash_alloc(nni_socks, &sockid, (void **) &sock);
@@ -480,40 +439,20 @@ nni_sock_open(nni_sock **sockp, uint16_t pnum)
 	}
 
 	// We make a copy of the protocol operations.
-	sock->s_protocol = proto->proto_self;
-	sock->s_peer     = proto->proto_peer;
+	sock->s_self_id  = proto->proto_self;
+	sock->s_peer_id  = proto->proto_peer;
 	sock->s_flags    = proto->proto_flags;
 	sock->s_sock_ops = *proto->proto_sock_ops;
+	sock->s_pipe_ops = *proto->proto_pipe_ops;
 
 	sops = &sock->s_sock_ops;
-	if (sops->sock_sfilter == NULL) {
-		sops->sock_sfilter = nni_sock_nullfilter;
-	}
-	if (sops->sock_rfilter == NULL) {
-		sops->sock_rfilter = nni_sock_nullfilter;
-	}
-	if (sops->sock_getopt == NULL) {
-		sops->sock_getopt = nni_sock_nullgetopt;
-	}
-	if (sops->sock_setopt == NULL) {
-		sops->sock_setopt = nni_sock_nullsetopt;
-	}
-	if (sops->sock_close == NULL) {
-		sops->sock_close = nni_sock_nullop;
-	}
-	if (sops->sock_open == NULL) {
-		sops->sock_open = nni_sock_nullop;
-	}
-	sock->s_pipe_ops = *proto->proto_pipe_ops;
-	pops             = &sock->s_pipe_ops;
-	if (pops->pipe_start == NULL) {
-		pops->pipe_start = nni_sock_nullstartpipe;
-	}
-	if (pops->pipe_stop == NULL) {
-		pops->pipe_stop = nni_sock_nullop;
-	}
+	NNI_ASSERT(sock->s_sock_ops.sock_open != NULL);
+	NNI_ASSERT(sock->s_sock_ops.sock_close != NULL);
 
-	if ((rv = sops->sock_init(&sock->s_data, sock)) != 0) {
+	NNI_ASSERT(sock->s_pipe_ops.pipe_start != NULL);
+	NNI_ASSERT(sock->s_pipe_ops.pipe_stop != NULL);
+
+	if ((rv = sock->s_sock_ops.sock_init(&sock->s_data, sock)) != 0) {
 		nni_objhash_unref(nni_socks, sockid);
 		return (rv);
 	}
@@ -730,7 +669,9 @@ nni_sock_sendmsg(nni_sock *sock, nni_msg *msg, nni_time expire)
 	}
 	besteffort = sock->s_besteffort;
 
-	msg = sock->s_sock_ops.sock_sfilter(sock->s_data, msg);
+	if (sock->s_sock_ops.sock_sfilter != NULL) {
+		msg = sock->s_sock_ops.sock_sfilter(sock->s_data, msg);
+	}
 	nni_mtx_unlock(&sock->s_mx);
 
 	if (msg == NULL) {
@@ -780,9 +721,11 @@ nni_sock_recvmsg(nni_sock *sock, nni_msg **msgp, nni_time expire)
 		if (rv != 0) {
 			return (rv);
 		}
-		nni_mtx_lock(&sock->s_mx);
-		msg = sock->s_sock_ops.sock_rfilter(sock->s_data, msg);
-		nni_mtx_unlock(&sock->s_mx);
+		if (sock->s_sock_ops.sock_rfilter != NULL) {
+			nni_mtx_lock(&sock->s_mx);
+			msg = sock->s_sock_ops.sock_rfilter(sock->s_data, msg);
+			nni_mtx_unlock(&sock->s_mx);
+		}
 		if (msg != NULL) {
 			break;
 		}
@@ -797,13 +740,13 @@ nni_sock_recvmsg(nni_sock *sock, nni_msg **msgp, nni_time expire)
 uint16_t
 nni_sock_proto(nni_sock *sock)
 {
-	return (sock->s_protocol);
+	return (sock->s_self_id.p_id);
 }
 
 uint16_t
 nni_sock_peer(nni_sock *sock)
 {
-	return (sock->s_peer);
+	return (sock->s_peer_id.p_id);
 }
 
 nni_duration
@@ -924,10 +867,13 @@ nni_sock_setopt(nni_sock *sock, int opt, const void *val, size_t size)
 		nni_mtx_unlock(&sock->s_mx);
 		return (NNG_ECLOSED);
 	}
-	rv = sock->s_sock_ops.sock_setopt(sock->s_data, opt, val, size);
-	if (rv != NNG_ENOTSUP) {
-		nni_mtx_unlock(&sock->s_mx);
-		return (rv);
+	if (sock->s_sock_ops.sock_setopt != NULL) {
+		rv =
+		    sock->s_sock_ops.sock_setopt(sock->s_data, opt, val, size);
+		if (rv != NNG_ENOTSUP) {
+			nni_mtx_unlock(&sock->s_mx);
+			return (rv);
+		}
 	}
 	switch (opt) {
 	case NNG_OPT_LINGER:
@@ -970,11 +916,15 @@ nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 		nni_mtx_unlock(&sock->s_mx);
 		return (NNG_ECLOSED);
 	}
-	rv = sock->s_sock_ops.sock_getopt(sock->s_data, opt, val, sizep);
-	if (rv != NNG_ENOTSUP) {
-		nni_mtx_unlock(&sock->s_mx);
-		return (rv);
+	if (sock->s_sock_ops.sock_getopt != NULL) {
+		rv = sock->s_sock_ops.sock_getopt(
+		    sock->s_data, opt, val, sizep);
+		if (rv != NNG_ENOTSUP) {
+			nni_mtx_unlock(&sock->s_mx);
+			return (rv);
+		}
 	}
+
 	switch (opt) {
 	case NNG_OPT_LINGER:
 		rv = nni_getopt_duration(&sock->s_linger, val, sizep);

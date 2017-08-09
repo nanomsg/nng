@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,11 +10,11 @@
 
 #include "nng.h"
 
+#include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdarg.h>
 
 // We steal access to the clock and thread functions so that we can
 // work on Windows too.  These functions are *not* part of nng's public
@@ -108,21 +109,19 @@ die(const char *fmt, ...)
 	exit(2);
 }
 
-
 static int
 parse_int(const char *arg, const char *what)
 {
-	long val;
+	long  val;
 	char *eptr;
 
 	val = strtol(arg, &eptr, 10);
 	// Must be a postive number less than around a billion.
-	if ((val < 0) || (val > (1<<30)) || (*eptr != 0) || (eptr == arg)) {
+	if ((val < 0) || (val > (1 << 30)) || (*eptr != 0) || (eptr == arg)) {
 		die("Invalid %s", what);
 	}
 	return ((int) val);
 }
-
 
 void
 do_local_lat(int argc, char **argv)
@@ -135,11 +134,10 @@ do_local_lat(int argc, char **argv)
 	}
 
 	msgsize = parse_int(argv[1], "message size");
-	trips = parse_int(argv[2], "round-trips");
+	trips   = parse_int(argv[2], "round-trips");
 
 	latency_server(argv[0], msgsize, trips);
 }
-
 
 void
 do_remote_lat(int argc, char **argv)
@@ -152,11 +150,10 @@ do_remote_lat(int argc, char **argv)
 	}
 
 	msgsize = parse_int(argv[1], "message size");
-	trips = parse_int(argv[2], "round-trips");
+	trips   = parse_int(argv[2], "round-trips");
 
 	latency_client(argv[0], msgsize, trips);
 }
-
 
 void
 do_local_thr(int argc, char **argv)
@@ -169,11 +166,10 @@ do_local_thr(int argc, char **argv)
 	}
 
 	msgsize = parse_int(argv[1], "message size");
-	trips = parse_int(argv[2], "count");
+	trips   = parse_int(argv[2], "count");
 
 	throughput_server(argv[0], msgsize, trips);
 }
-
 
 void
 do_remote_thr(int argc, char **argv)
@@ -186,17 +182,16 @@ do_remote_thr(int argc, char **argv)
 	}
 
 	msgsize = parse_int(argv[1], "message size");
-	trips = parse_int(argv[2], "count");
+	trips   = parse_int(argv[2], "count");
 
 	throughput_client(argv[0], msgsize, trips);
 }
 
-
 struct inproc_args {
-	int		count;
-	int		msgsize;
-	const char *	addr;
-	void		(*func)(const char *, int, int);
+	int         count;
+	int         msgsize;
+	const char *addr;
+	void (*func)(const char *, int, int);
 };
 
 static void
@@ -207,23 +202,22 @@ do_inproc(void *args)
 	ia->func(ia->addr, ia->msgsize, ia->count);
 }
 
-
 void
 do_inproc_lat(int argc, char **argv)
 {
-	nni_thr thr;
+	nni_thr            thr;
 	struct inproc_args ia;
-	int rv;
+	int                rv;
 
 	nni_init();
 	if (argc != 2) {
 		die("Usage: inproc_lat <msg-size> <count>");
 	}
 
-	ia.addr = "inproc://latency_test";
+	ia.addr    = "inproc://latency_test";
 	ia.msgsize = parse_int(argv[0], "message size");
-	ia.count = parse_int(argv[1], "count");
-	ia.func = latency_server;
+	ia.count   = parse_int(argv[1], "count");
+	ia.func    = latency_server;
 
 	// Sleep a bit.
 	nng_usleep(100000);
@@ -236,24 +230,22 @@ do_inproc_lat(int argc, char **argv)
 	nni_thr_fini(&thr);
 }
 
-
 void
 do_inproc_thr(int argc, char **argv)
 {
-	nni_thr thr;
+	nni_thr            thr;
 	struct inproc_args ia;
-	int rv;
+	int                rv;
 
 	nni_init();
 	if (argc != 2) {
 		die("Usage: inproc_thr <msg-size> <count>");
 	}
 
-	ia.addr = "inproc://tput_test";
+	ia.addr    = "inproc://tput_test";
 	ia.msgsize = parse_int(argv[0], "message size");
-	ia.count = parse_int(argv[1], "count");
-	ia.func = throughput_client;
-
+	ia.count   = parse_int(argv[1], "count");
+	ia.func    = throughput_client;
 
 	if ((rv = nni_thr_init(&thr, do_inproc, &ia)) != 0) {
 		die("Cannot create thread: %s", nng_strerror(rv));
@@ -263,19 +255,18 @@ do_inproc_thr(int argc, char **argv)
 	nni_thr_fini(&thr);
 }
 
-
 void
 latency_client(const char *addr, int msgsize, int trips)
 {
 	nng_socket s;
-	nng_msg *msg;
-	nni_time start, end;
-	int rv;
-	int i;
-	float total;
-	float latency;
+	nng_msg *  msg;
+	nni_time   start, end;
+	int        rv;
+	int        i;
+	float      total;
+	float      latency;
 
-	if ((rv = nng_open(&s, NNG_PROTO_PAIR)) != 0) {
+	if ((rv = nng_pair_open(&s)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
 	}
 
@@ -305,7 +296,7 @@ latency_client(const char *addr, int msgsize, int trips)
 	nni_msg_free(msg);
 	nng_close(s);
 
-	total = (float)(end - start);
+	total   = (float) (end - start);
 	latency = (total / (trips * 2));
 	printf("total time: %.3f [s]\n", total / 1000000.0);
 	printf("message size: %d [B]\n", msgsize);
@@ -313,16 +304,15 @@ latency_client(const char *addr, int msgsize, int trips)
 	printf("average latency: %.3f [us]\n", latency);
 }
 
-
 void
 latency_server(const char *addr, int msgsize, int trips)
 {
 	nng_socket s;
-	nng_msg *msg;
-	int rv;
-	int i;
+	nng_msg *  msg;
+	int        rv;
+	int        i;
 
-	if ((rv = nng_open(&s, NNG_PROTO_PAIR)) != 0) {
+	if ((rv = nng_pair_open(&s)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
 	}
 
@@ -352,7 +342,6 @@ latency_server(const char *addr, int msgsize, int trips)
 	nng_close(s);
 }
 
-
 // Our throughput story is quite a mess.  Mostly I think because of the poor
 // caching and message reuse.  We should probably implement a message pooling
 // API somewhere.
@@ -361,18 +350,18 @@ void
 throughput_server(const char *addr, int msgsize, int count)
 {
 	nng_socket s;
-	nng_msg *msg;
-	int rv;
-	int i;
-	size_t len;
-	uint64_t start, end;
-	double msgpersec, mbps, total;
+	nng_msg *  msg;
+	int        rv;
+	int        i;
+	size_t     len;
+	uint64_t   start, end;
+	double     msgpersec, mbps, total;
 
-	if ((rv = nng_open(&s, NNG_PROTO_PAIR)) != 0) {
+	if ((rv = nng_pair_open(&s)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
 	}
 	len = 128;
-	rv = nng_setopt(s, NNG_OPT_RCVBUF, &len, sizeof (len));
+	rv  = nng_setopt(s, NNG_OPT_RCVBUF, &len, sizeof(len));
 	if (rv != 0) {
 		die("nng_setopt(NNG_OPT_RCVBUF): %s", nng_strerror(rv));
 	}
@@ -403,9 +392,9 @@ throughput_server(const char *addr, int msgsize, int count)
 	}
 	end = nni_clock();
 	nng_close(s);
-	total = (end - start) / 1.0;
+	total     = (end - start) / 1.0;
 	msgpersec = (count * 1000000.0) / total;
-	mbps = (count * 8.0 * msgsize);
+	mbps      = (count * 8.0 * msgsize);
 	mbps /= total;
 	printf("total time: %.3f [s]\n", total / 1000000.0);
 	printf("message size: %d [B]\n", msgsize);
@@ -414,20 +403,19 @@ throughput_server(const char *addr, int msgsize, int count)
 	printf("throughput: %.3f [Mb/s]\n", mbps);
 }
 
-
 void
 throughput_client(const char *addr, int msgsize, int count)
 {
 	nng_socket s;
-	nng_msg *msg;
-	int rv;
-	int i;
-	int len;
+	nng_msg *  msg;
+	int        rv;
+	int        i;
+	int        len;
 
 	// We send one extra zero length message to start the timer.
 	count++;
 
-	if ((rv = nng_open(&s, NNG_PROTO_PAIR)) != 0) {
+	if ((rv = nng_pair_open(&s)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
 	}
 
@@ -435,7 +423,7 @@ throughput_client(const char *addr, int msgsize, int count)
 	// XXX: other options (TLS in the future?, Linger?)
 
 	len = 128;
-	rv = nng_setopt(s, NNG_OPT_SNDBUF, &len, sizeof (len));
+	rv  = nng_setopt(s, NNG_OPT_SNDBUF, &len, sizeof(len));
 	if (rv != 0) {
 		die("nng_setopt(NNG_OPT_SNDBUF): %s", nng_strerror(rv));
 	}

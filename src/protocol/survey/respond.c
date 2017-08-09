@@ -504,10 +504,16 @@ static nni_proto_sock_ops nni_resp_sock_ops = {
 };
 
 nni_proto nni_respondent_proto = {
-	.proto_self     = NNG_PROTO_RESPONDENT,
-	.proto_peer     = NNG_PROTO_SURVEYOR,
-	.proto_name     = "respondent",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_RESPONDENT_V0, "respondent" },
+	.proto_peer     = { NNG_PROTO_SURVEYOR_V0, "surveyor" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_resp_sock_ops,
 	.proto_pipe_ops = &nni_resp_pipe_ops,
 };
+
+int
+nng_respondent0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_respondent_proto));
+}

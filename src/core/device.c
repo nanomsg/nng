@@ -80,8 +80,8 @@ nni_device(nni_sock *sock1, nni_sock *sock2)
 		rv = NNG_EINVAL;
 		goto out;
 	}
-	if ((sock1->s_peer != sock2->s_protocol) ||
-	    (sock2->s_peer != sock1->s_protocol)) {
+	if ((sock1->s_peer_id.p_id != sock2->s_self_id.p_id) ||
+	    (sock2->s_peer_id.p_id != sock1->s_self_id.p_id)) {
 		rv = NNG_EINVAL;
 		goto out;
 	}

@@ -98,6 +98,14 @@ nni_pub_sock_open(void *arg)
 }
 
 static void
+nni_pub_sock_close(void *arg)
+{
+	nni_pub_sock *pub = arg;
+
+	nni_aio_cancel(&pub->aio_getq, NNG_ECLOSED);
+}
+
+static void
 nni_pub_pipe_fini(void *arg)
 {
 	nni_pub_pipe *pp = arg;
@@ -319,15 +327,22 @@ nni_proto_sock_ops nni_pub_sock_ops = {
 	.sock_init   = nni_pub_sock_init,
 	.sock_fini   = nni_pub_sock_fini,
 	.sock_open   = nni_pub_sock_open,
+	.sock_close  = nni_pub_sock_close,
 	.sock_setopt = nni_pub_sock_setopt,
 	.sock_getopt = nni_pub_sock_getopt,
 };
 
 nni_proto nni_pub_proto = {
-	.proto_self     = NNG_PROTO_PUB,
-	.proto_peer     = NNG_PROTO_SUB,
-	.proto_name     = "pub",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_PUB_V0, "pub" },
+	.proto_peer     = { NNG_PROTO_SUB_V0, "sub" },
 	.proto_flags    = NNI_PROTO_FLAG_SND,
 	.proto_sock_ops = &nni_pub_sock_ops,
 	.proto_pipe_ops = &nni_pub_pipe_ops,
 };
+
+int
+nng_pub0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_pub_proto));
+}

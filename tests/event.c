@@ -9,21 +9,22 @@
 
 #include "convey.h"
 #include "nng.h"
-#include <string.h>
 #include <assert.h>
+#include <string.h>
 
-#define	APPENDSTR(m, s)	nng_msg_append(m, s, strlen(s))
-#define CHECKSTR(m, s)	So(nng_msg_len(m) == strlen(s));\
-			So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
+#define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))
+#define CHECKSTR(m, s)                   \
+	So(nng_msg_len(m) == strlen(s)); \
+	So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
 struct evcnt {
 	nng_socket sock;
-	int readable;
-	int writeable;
-	int pipeadd;
-	int piperem;
-	int epadd;
-	int eprem;
-	int err;
+	int        readable;
+	int        writeable;
+	int        pipeadd;
+	int        piperem;
+	int        epadd;
+	int        eprem;
+	int        err;
 };
 
 void
@@ -68,25 +69,25 @@ Main({
 
 	Test("Event Handling", {
 		Convey("Given a connected pair of pair sockets", {
-			nng_socket sock1;
-			nng_socket sock2;
+			nng_socket   sock1;
+			nng_socket   sock2;
 			struct evcnt evcnt1;
 			struct evcnt evcnt2;
-			nng_notify *notify1;
-			nng_notify *notify2;
+			nng_notify * notify1;
+			nng_notify * notify2;
 
-			So(nng_open(&sock1, NNG_PROTO_PAIR) == 0);
-			So(nng_open(&sock2, NNG_PROTO_PAIR) == 0);
+			So(nng_pair0_open(&sock1) == 0);
+			So(nng_pair0_open(&sock2) == 0);
 
-			memset(&evcnt1, 0, sizeof (evcnt1));
-			memset(&evcnt2, 0, sizeof (evcnt2));
+			memset(&evcnt1, 0, sizeof(evcnt1));
+			memset(&evcnt2, 0, sizeof(evcnt2));
 			evcnt1.sock = sock1;
 			evcnt2.sock = sock2;
 
 			Reset({
 				nng_close(sock1);
 				nng_close(sock2);
-			})
+			});
 
 			So(nng_listen(sock1, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(sock2, addr, NULL, NNG_FLAG_SYNCH) == 0);
@@ -95,8 +96,12 @@ Main({
 			nng_usleep(100000);
 
 			Convey("We can register callbacks", {
-				So((notify1 = nng_setnotify(sock1, NNG_EV_CAN_SND, bump, &evcnt1)) != NULL);
-				So((notify2 = nng_setnotify(sock2, NNG_EV_CAN_RCV, bump, &evcnt2)) != NULL);
+				So((notify1 = nng_setnotify(sock1,
+				        NNG_EV_CAN_SND, bump, &evcnt1)) !=
+				    NULL);
+				So((notify2 = nng_setnotify(sock2,
+				        NNG_EV_CAN_RCV, bump, &evcnt2)) !=
+				    NULL);
 
 				Convey("They are called", {
 					nng_msg *msg;
@@ -112,27 +117,28 @@ Main({
 					// this.  Probably the msgq needs to
 					// toggle on reads.
 
-					//nng_usleep(20000);
+					// nng_usleep(20000);
 
-					//So(nng_recvmsg(sock2, &msg, 0) == 0);
+					// So(nng_recvmsg(sock2, &msg, 0) ==
+					// 0);
 
-					//CHECKSTR(msg, "abc");
-					//nng_msg_free(msg);
+					// CHECKSTR(msg, "abc");
+					// nng_msg_free(msg);
 
 					// The notify runs async...
 					nng_usleep(100000);
 
 					So(evcnt1.writeable == 1);
 					So(evcnt2.readable == 1);
-				})
+				});
 
 				Convey("We can unregister them", {
 					nng_unsetnotify(sock1, notify1);
 					So(1);
 					nng_unsetnotify(sock2, notify2);
 					So(1);
-				})
-			})
-		})
-	})
+				});
+			});
+		});
+	});
 })

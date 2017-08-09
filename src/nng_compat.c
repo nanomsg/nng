@@ -87,17 +87,48 @@ nn_errno(void)
 	return (errno);
 }
 
+static const struct {
+	uint16_t p_id;
+	int (*p_open)(nng_socket *);
+} nn_protocols[] = {
+	// clang-format off
+	{ NNG_PROTO_BUS_V0, nng_bus_open },
+	{ NNG_PROTO_PAIR_V0, nng_pair_open },
+	{ NNG_PROTO_PUSH_V0, nng_push_open },
+	{ NNG_PROTO_PULL_V0, nng_pull_open },
+	{ NNG_PROTO_PUB_V0, nng_pub_open },
+	{ NNG_PROTO_SUB_V0, nng_sub_open },
+	{ NNG_PROTO_REQ_V0, nng_req_open },
+	{ NNG_PROTO_REP_V0, nng_rep_open },
+	{ NNG_PROTO_SURVEYOR_V0, nng_surveyor_open },
+	{ NNG_PROTO_RESPONDENT_V0, nng_respondent_open },
+	{ NNG_PROTO_NONE, NULL },
+	// clang-format on
+};
+
 int
 nn_socket(int domain, int protocol)
 {
 	nng_socket sock;
 	int        rv;
+	int        i;
 
 	if ((domain != AF_SP) && (domain != AF_SP_RAW)) {
-		errno = EAFNOSUPPORT;
+		nn_seterror(EAFNOSUPPORT);
 		return (-1);
 	}
-	if ((rv = nng_open(&sock, protocol)) != 0) {
+
+	for (i = 0; nn_protocols[i].p_id != NNG_PROTO_NONE; i++) {
+		if (nn_protocols[i].p_id == protocol) {
+			break;
+		}
+	}
+	if (nn_protocols[i].p_open == NULL) {
+		nn_seterror(ENOTSUP);
+		return (-1);
+	}
+
+	if ((rv = nn_protocols[i].p_open(&sock)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}

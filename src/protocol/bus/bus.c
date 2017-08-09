@@ -104,6 +104,14 @@ nni_bus_sock_open(void *arg)
 }
 
 static void
+nni_bus_sock_close(void *arg)
+{
+	nni_bus_sock *psock = arg;
+
+	nni_aio_cancel(&psock->aio_getq, NNG_ECLOSED);
+}
+
+static void
 nni_bus_pipe_fini(void *arg)
 {
 	nni_bus_pipe *ppipe = arg;
@@ -383,6 +391,7 @@ static nni_proto_sock_ops nni_bus_sock_ops = {
 	.sock_init   = nni_bus_sock_init,
 	.sock_fini   = nni_bus_sock_fini,
 	.sock_open   = nni_bus_sock_open,
+	.sock_close  = nni_bus_sock_close,
 	.sock_setopt = nni_bus_sock_setopt,
 	.sock_getopt = nni_bus_sock_getopt,
 };
@@ -390,10 +399,16 @@ static nni_proto_sock_ops nni_bus_sock_ops = {
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
 nni_proto nni_bus_proto = {
-	.proto_self     = NNG_PROTO_BUS,
-	.proto_peer     = NNG_PROTO_BUS,
-	.proto_name     = "bus",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_BUS_V0, "bus" },
+	.proto_peer     = { NNG_PROTO_BUS_V0, "bus" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_bus_sock_ops,
 	.proto_pipe_ops = &nni_bus_pipe_ops,
 };
+
+int
+nng_bus0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_bus_proto));
+}

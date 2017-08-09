@@ -488,10 +488,16 @@ static nni_proto_sock_ops nni_rep_sock_ops = {
 };
 
 nni_proto nni_rep_proto = {
-	.proto_self     = NNG_PROTO_REP,
-	.proto_peer     = NNG_PROTO_REQ,
-	.proto_name     = "rep",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_REP_V0, "rep" },
+	.proto_peer     = { NNG_PROTO_REQ_V0, "req" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_rep_sock_ops,
 	.proto_pipe_ops = &nni_rep_pipe_ops,
 };
+
+int
+nng_rep0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_rep_proto));
+}

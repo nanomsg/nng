@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -47,7 +48,7 @@ struct nni_proto_pipe_ops {
 };
 
 struct nni_proto_sock_ops {
-	// sock_initf creates the protocol instance, which will be stored on
+	// sock_init creates the protocol instance, which will be stored on
 	// the socket. This is run without the sock lock held, and allocates
 	// storage or other resources for the socket.
 	int (*sock_init)(void **, nni_sock *);
@@ -82,14 +83,30 @@ struct nni_proto_sock_ops {
 	nni_msg *(*sock_sfilter)(void *, nni_msg *);
 };
 
+typedef struct nni_proto_id {
+	uint16_t    p_id;
+	const char *p_name;
+} nni_proto_id;
+
 struct nni_proto {
-	uint16_t                  proto_self;     // our 16-bit D
-	uint16_t                  proto_peer;     // who we peer with (ID)
-	const char *              proto_name;     // Our name
+	uint32_t                  proto_version;  // Ops vector version
+	nni_proto_id              proto_self;     // Our identity
+	nni_proto_id              proto_peer;     // Peer identity
 	uint32_t                  proto_flags;    // Protocol flags
 	const nni_proto_sock_ops *proto_sock_ops; // Per-socket opeations
 	const nni_proto_pipe_ops *proto_pipe_ops; // Per-pipe operations.
 };
+
+// We quite intentionally use a signature where the upper word is nonzero,
+// which ensures that if we get garbage we will reject it.  This is more
+// likely to mismatch than all zero bytes would.  The actual version is
+// stored in the lower word; this is not semver -- the numbers are just
+// increasing - we doubt it will increase more than a handful of times
+// during the life of the project.  If we add a new version, please keep
+// the old version around -- it may be possible to automatically convert
+// older versions in the future.
+#define NNI_PROTOCOL_V0 0x50520000 // "pr\0\0"
+#define NNI_PROTOCOL_VERSION NNI_PROTOCOL_V0
 
 // These flags determine which operations make sense.  We use them so that
 // we can reject attempts to create notification fds for operations that make
@@ -98,11 +115,10 @@ struct nni_proto {
 #define NNI_PROTO_FLAG_SND 2    // Protocol can send
 #define NNI_PROTO_FLAG_SNDRCV 3 // Protocol can both send & recv
 
-// These functions are not used by protocols, but rather by the socket
-// core implementation. The lookups can be used by transports as well.
-extern nni_proto * nni_proto_find(uint16_t);
-extern const char *nni_proto_name(uint16_t);
-extern uint16_t    nni_proto_number(const char *);
-extern uint16_t    nni_proto_peer(uint16_t);
+// nni_proto_open is called by the protocol to create a socket instance
+// with its ops vector.  The intent is that applications will only see
+// the single protocol-specific constructure, like nng_pair_v0_open(),
+// which should just be a thin wrapper around this.
+extern int nni_proto_open(nng_socket *, const nni_proto *);
 
 #endif // CORE_PROTOCOL_H

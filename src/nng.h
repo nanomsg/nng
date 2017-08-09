@@ -52,11 +52,6 @@ typedef struct nng_snapshot nng_snapshot;
 typedef struct nng_stat     nng_stat;
 typedef uint32_t            nng_endpoint; // XXX: REMOVE ME.
 
-// nng_open simply creates a socket of the given class. It returns an
-// error code on failure, or zero on success.  The socket starts in cooked
-// mode.
-NNG_DECL int nng_open(nng_socket *, uint16_t proto);
-
 // nng_fini is used to terminate the library, freeing certain global resources.
 // Its a good idea to call this with atexit() or during application shutdown.
 // For most cases, this call is optional, but failure to do so may cause
@@ -293,19 +288,57 @@ enum nng_flag_enum {
 // a valid protocol numbered 0 (NNG_PROTO_NONE).
 #define NNG_PROTO(major, minor) (((major) *16) + (minor))
 enum nng_proto_enum {
-	NNG_PROTO_NONE       = NNG_PROTO(0, 0),
-	NNG_PROTO_PAIR       = NNG_PROTO(1, 0),
-	NNG_PROTO_PUB        = NNG_PROTO(2, 0),
-	NNG_PROTO_SUB        = NNG_PROTO(2, 1),
-	NNG_PROTO_REQ        = NNG_PROTO(3, 0),
-	NNG_PROTO_REP        = NNG_PROTO(3, 1),
-	NNG_PROTO_PUSH       = NNG_PROTO(5, 0),
-	NNG_PROTO_PULL       = NNG_PROTO(5, 1),
-	NNG_PROTO_SURVEYOR   = NNG_PROTO(6, 2),
-	NNG_PROTO_RESPONDENT = NNG_PROTO(6, 3),
-	NNG_PROTO_BUS        = NNG_PROTO(7, 0),
-	NNG_PROTO_STAR       = NNG_PROTO(100, 0),
+	NNG_PROTO_NONE          = NNG_PROTO(0, 0),
+	NNG_PROTO_PAIR_V0       = NNG_PROTO(1, 0),
+	NNG_PROTO_PUB_V0        = NNG_PROTO(2, 0),
+	NNG_PROTO_SUB_V0        = NNG_PROTO(2, 1),
+	NNG_PROTO_REQ_V0        = NNG_PROTO(3, 0),
+	NNG_PROTO_REP_V0        = NNG_PROTO(3, 1),
+	NNG_PROTO_PUSH_V0       = NNG_PROTO(5, 0),
+	NNG_PROTO_PULL_V0       = NNG_PROTO(5, 1),
+	NNG_PROTO_SURVEYOR_V0   = NNG_PROTO(6, 2),
+	NNG_PROTO_RESPONDENT_V0 = NNG_PROTO(6, 3),
+	NNG_PROTO_BUS_V0        = NNG_PROTO(7, 0),
+	NNG_PROTO_STAR_V0       = NNG_PROTO(100, 0),
+
+	// "Legacy" names.  Please use explicit versioned names above.
+	NNG_PROTO_BUS        = NNG_PROTO_BUS_V0,
+	NNG_PROTO_PAIR       = NNG_PROTO_PAIR_V0,
+	NNG_PROTO_SUB        = NNG_PROTO_SUB_V0,
+	NNG_PROTO_PUB        = NNG_PROTO_PUB_V0,
+	NNG_PROTO_REQ        = NNG_PROTO_REQ_V0,
+	NNG_PROTO_REP        = NNG_PROTO_REP_V0,
+	NNG_PROTO_PUSH       = NNG_PROTO_PUSH_V0,
+	NNG_PROTO_PULL       = NNG_PROTO_PULL_V0,
+	NNG_PROTO_SURVEYOR   = NNG_PROTO_SURVEYOR_V0,
+	NNG_PROTO_RESPONDENT = NNG_PROTO_RESPONDENT_V0,
 };
+
+// Builtin protocol socket constructors.
+extern int nng_bus0_open(nng_socket *);
+extern int nng_pair0_open(nng_socket *);
+extern int nng_pub0_open(nng_socket *);
+extern int nng_sub0_open(nng_socket *);
+extern int nng_push0_open(nng_socket *);
+extern int nng_pull0_open(nng_socket *);
+extern int nng_req0_open(nng_socket *);
+extern int nng_rep0_open(nng_socket *);
+extern int nng_surveyor0_open(nng_socket *);
+extern int nng_respondent0_open(nng_socket *);
+
+// Default versions.  These provide compile time defaults; note that
+// the actual protocols are baked into the binary; this should avoid
+// suprising.  Choosing a new protocol should be done explicitly.
+#define nng_bus_open nng_bus0_open
+#define nng_pair_open nng_pair0_open
+#define nng_pub_open nng_pub0_open
+#define nng_sub_open nng_sub0_open
+#define nng_push_open nng_push0_open
+#define nng_pull_open nng_pull0_open
+#define nng_req_open nng_req0_open
+#define nng_rep_open nng_rep0_open
+#define nng_surveyor_open nng_surveyor0_open
+#define nng_respondent_open nng_respondent0_open
 
 // Options. We encode option numbers as follows:
 //

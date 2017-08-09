@@ -8,13 +8,13 @@
 //
 
 #include "convey.h"
-#include "nng.h"
 #include "core/nng_impl.h"
+#include "nng.h"
 
 #include <string.h>
 
 Main({
-	int rv;
+	int         rv;
 	const char *addr = "inproc://test";
 	nni_init();
 
@@ -22,36 +22,32 @@ Main({
 		Convey("We can create a REQ socket", {
 			nng_socket req;
 
-			So(nng_open(&req, NNG_PROTO_REQ) == 0);
+			So(nng_req_open(&req) == 0);
 
-			Reset({
-				nng_close(req);
-			})
+			Reset({ nng_close(req); });
 
 			Convey("Protocols match", {
 				So(nng_protocol(req) == NNG_PROTO_REQ);
 				So(nng_peer(req) == NNG_PROTO_REP);
-			})
+			});
 
 			Convey("Recv with no send fails", {
 				nng_msg *msg;
 				rv = nng_recvmsg(req, &msg, 0);
 				So(rv == NNG_ESTATE);
-			})
-		})
+			});
+		});
 
 		Convey("We can create a REP socket", {
 			nng_socket rep;
-			So(nng_open(&rep, NNG_PROTO_REP) == 0);
+			So(nng_rep_open(&rep) == 0);
 
-			Reset({
-				nng_close(rep);
-			})
+			Reset({ nng_close(rep); });
 
 			Convey("Protocols match", {
 				So(nng_protocol(rep) == NNG_PROTO_REP);
 				So(nng_peer(rep) == NNG_PROTO_REQ);
-			})
+			});
 
 			Convey("Send with no recv fails", {
 				nng_msg *msg;
@@ -60,21 +56,21 @@ Main({
 				rv = nng_sendmsg(rep, msg, 0);
 				So(rv == NNG_ESTATE);
 				nng_msg_free(msg);
-			})
-		})
+			});
+		});
 
 		Convey("We can create a linked REQ/REP pair", {
 			nng_socket req;
 			nng_socket rep;
 
-			So(nng_open(&rep, NNG_PROTO_REP) == 0);
+			So(nng_rep_open(&rep) == 0);
 
-			So(nng_open(&req, NNG_PROTO_REQ) == 0);
+			So(nng_req_open(&req) == 0);
 
 			Reset({
 				nng_close(rep);
 				nng_close(req);
-			})
+			});
 
 			So(nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(req, addr, NULL, NNG_FLAG_SYNCH) == 0);
@@ -102,31 +98,33 @@ Main({
 				So(nng_msg_len(ping) == 5);
 				So(memcmp(nng_msg_body(ping), "pong", 5) == 0);
 				nng_msg_free(ping);
-			})
-		})
+			});
+		});
 
 		Convey("Request cancellation works", {
 			nng_msg *abc;
 			nng_msg *def;
 			nng_msg *cmd;
-			uint64_t retry = 100000;	// 100 ms
-			size_t len;
+			uint64_t retry = 100000; // 100 ms
+			size_t   len;
 
 			nng_socket req;
 			nng_socket rep;
 
-			So(nng_open(&rep, NNG_PROTO_REP) == 0);
+			So(nng_rep_open(&rep) == 0);
 
-			So(nng_open(&req, NNG_PROTO_REQ) == 0);
+			So(nng_req_open(&req) == 0);
 
 			Reset({
 				nng_close(rep);
 				nng_close(req);
-			})
+			});
 
-			So(nng_setopt(req, NNG_OPT_RESENDTIME, &retry, sizeof (retry)) == 0);
+			So(nng_setopt(req, NNG_OPT_RESENDTIME, &retry,
+			       sizeof(retry)) == 0);
 			len = 16;
-			So(nng_setopt(req, NNG_OPT_SNDBUF, &len, sizeof (len)) == 0);
+			So(nng_setopt(
+			       req, NNG_OPT_SNDBUF, &len, sizeof(len)) == 0);
 
 			So(nng_msg_alloc(&abc, 0) == 0);
 			So(nng_msg_append(abc, "abc", 4) == 0);
@@ -149,8 +147,8 @@ Main({
 			So(nng_msg_len(cmd) == 4);
 			So(memcmp(nng_msg_body(cmd), "def", 4) == 0);
 			nng_msg_free(cmd);
-		})
-	})
+		});
+	});
 
 	nni_fini();
 })

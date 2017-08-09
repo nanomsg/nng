@@ -29,8 +29,8 @@ void
 trantest_init(trantest *tt, const char *addr)
 {
 	(void) snprintf(tt->addr, sizeof(tt->addr), "%s", addr);
-	So(nng_open(&tt->reqsock, NNG_PROTO_REQ) == 0);
-	So(nng_open(&tt->repsock, NNG_PROTO_REP) == 0);
+	So(nng_req_open(&tt->reqsock) == 0);
+	So(nng_rep_open(&tt->repsock) == 0);
 
 	tt->tran = nni_tran_find(addr);
 	So(tt->tran != NULL);

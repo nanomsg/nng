@@ -470,13 +470,17 @@ static nni_proto_sock_ops nni_surv_sock_ops = {
 	.sock_sfilter = nni_surv_sock_sfilter,
 };
 
-// This is the global protocol structure -- our linkage to the core.
-// This should be the only global non-static symbol in this file.
 nni_proto nni_surveyor_proto = {
-	.proto_self     = NNG_PROTO_SURVEYOR,
-	.proto_peer     = NNG_PROTO_RESPONDENT,
-	.proto_name     = "surveyor",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_SURVEYOR_V0, "surveyor" },
+	.proto_peer     = { NNG_PROTO_RESPONDENT_V0, "respondent" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_surv_sock_ops,
 	.proto_pipe_ops = &nni_surv_pipe_ops,
 };
+
+int
+nng_surveyor0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_surveyor_proto));
+}

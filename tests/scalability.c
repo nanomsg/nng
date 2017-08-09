@@ -43,7 +43,7 @@ openclients(nng_socket *clients, int num)
 	int      i;
 	uint64_t t;
 	for (i = 0; i < num; i++) {
-		if ((rv = nng_open(&clients[i], NNG_PROTO_REQ)) != 0) {
+		if ((rv = nng_req_open(&clients[i])) != 0) {
 			printf("open #%d: %s\n", i, nng_strerror(rv));
 			return (rv);
 		}
@@ -120,7 +120,7 @@ Main({
 	clients = calloc(nclients, sizeof(nng_socket));
 	results = calloc(nclients, sizeof(int));
 
-	if ((nng_open(&rep, NNG_PROTO_REP) != 0) ||
+	if ((nng_rep_open(&rep) != 0) ||
 	    (nng_setopt(rep, NNG_OPT_RCVBUF, &depth, sizeof(depth)) != 0) ||
 	    (nng_setopt(rep, NNG_OPT_SNDBUF, &depth, sizeof(depth)) != 0) ||
 	    (nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH) != 0) ||

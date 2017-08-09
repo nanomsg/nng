@@ -21,22 +21,6 @@
 
 #include <string.h>
 
-int
-nng_open(nng_socket *sidp, uint16_t proto)
-{
-	int       rv;
-	nni_sock *sock;
-
-	if ((rv = nni_sock_open(&sock, proto)) != 0) {
-		return (rv);
-	}
-	*sidp = nni_sock_id(sock);
-
-	// Keep the socket "held" until it is explicitly closed.
-
-	return (0);
-}
-
 void
 nng_fini(void)
 {

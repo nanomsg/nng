@@ -25,8 +25,9 @@ struct nni_socket {
 
 	nni_list_node s_node;
 
-	uint16_t s_protocol;
-	uint16_t s_peer;
+	nni_proto_id s_self_id;
+	nni_proto_id s_peer_id;
+
 	uint32_t s_flags;
 
 	nni_proto_pipe_ops s_pipe_ops;
@@ -67,7 +68,7 @@ extern void nni_sock_sys_fini(void);
 
 extern int      nni_sock_find(nni_sock **, uint32_t);
 extern void     nni_sock_rele(nni_sock *);
-extern int      nni_sock_open(nni_sock **, uint16_t);
+extern int      nni_sock_open(nni_sock **, const nni_proto *);
 extern void     nni_sock_close(nni_sock *);
 extern void     nni_sock_closeall(void);
 extern int      nni_sock_shutdown(nni_sock *);

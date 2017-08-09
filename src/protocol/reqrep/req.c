@@ -112,6 +112,12 @@ nni_req_sock_init(void **reqp, nni_sock *sock)
 }
 
 static void
+nni_req_sock_open(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+}
+
+static void
 nni_req_sock_close(void *arg)
 {
 	nni_req_sock *req = arg;
@@ -626,6 +632,7 @@ static nni_proto_pipe_ops nni_req_pipe_ops = {
 static nni_proto_sock_ops nni_req_sock_ops = {
 	.sock_init    = nni_req_sock_init,
 	.sock_fini    = nni_req_sock_fini,
+	.sock_open    = nni_req_sock_open,
 	.sock_close   = nni_req_sock_close,
 	.sock_setopt  = nni_req_sock_setopt,
 	.sock_getopt  = nni_req_sock_getopt,
@@ -634,10 +641,16 @@ static nni_proto_sock_ops nni_req_sock_ops = {
 };
 
 nni_proto nni_req_proto = {
-	.proto_self     = NNG_PROTO_REQ,
-	.proto_peer     = NNG_PROTO_REP,
-	.proto_name     = "req",
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNG_PROTO_REQ_V0, "req" },
+	.proto_peer     = { NNG_PROTO_REP_V0, "rep" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nni_req_sock_ops,
 	.proto_pipe_ops = &nni_req_pipe_ops,
 };
+
+int
+nng_req0_open(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &nni_req_proto));
+}
