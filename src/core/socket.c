@@ -418,11 +418,9 @@ nni_sock_sys_fini(void)
 int
 nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 {
-	nni_sock *          sock;
-	int                 rv;
-	nni_proto_sock_ops *sops;
-	nni_proto_pipe_ops *pops;
-	uint32_t            sockid;
+	nni_sock *sock;
+	int       rv;
+	uint32_t  sockid;
 
 	if (proto->proto_version != NNI_PROTOCOL_VERSION) {
 		// unsupported protocol version
@@ -445,7 +443,6 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	sock->s_sock_ops = *proto->proto_sock_ops;
 	sock->s_pipe_ops = *proto->proto_pipe_ops;
 
-	sops = &sock->s_sock_ops;
 	NNI_ASSERT(sock->s_sock_ops.sock_open != NULL);
 	NNI_ASSERT(sock->s_sock_ops.sock_close != NULL);
 
@@ -457,7 +454,7 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 		return (rv);
 	}
 
-	sops->sock_open(sock->s_data);
+	sock->s_sock_ops.sock_open(sock->s_data);
 
 	nni_mtx_lock(&nni_sock_lk);
 	nni_list_append(&nni_sock_list, sock);

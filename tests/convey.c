@@ -1098,6 +1098,7 @@ conveyMain(int argc, char **argv)
 		break;
 	}
 
+	convey_read_timer(&pc, &secs, &usecs);
 	(void) printf("%-8s%-52s%4d.%03ds\n", status, prog, secs, usecs / 1000);
 	while ((env = convey_environment) != NULL) {
 		convey_environment = env->next;
