@@ -92,19 +92,18 @@ static const struct {
 	uint16_t p_id;
 	int (*p_open)(nng_socket *);
 } nn_protocols[] = {
-	// clang-format off
-	{ NNG_PROTO_BUS_V0, nng_bus_open },
-	{ NNG_PROTO_PAIR_V0, nng_pair_open },
-	{ NNG_PROTO_PUSH_V0, nng_push_open },
-	{ NNG_PROTO_PULL_V0, nng_pull_open },
-	{ NNG_PROTO_PUB_V0, nng_pub_open },
-	{ NNG_PROTO_SUB_V0, nng_sub_open },
-	{ NNG_PROTO_REQ_V0, nng_req_open },
-	{ NNG_PROTO_REP_V0, nng_rep_open },
-	{ NNG_PROTO_SURVEYOR_V0, nng_surveyor_open },
-	{ NNG_PROTO_RESPONDENT_V0, nng_respondent_open },
+	{ NNG_PROTO_BUS_V0, nng_bus0_open },
+	{ NNG_PROTO_PAIR_V0, nng_pair0_open },
+	{ NNG_PROTO_PAIR_V0, nng_pair1_open },
+	{ NNG_PROTO_PUSH_V0, nng_push0_open },
+	{ NNG_PROTO_PULL_V0, nng_pull0_open },
+	{ NNG_PROTO_PUB_V0, nng_pub0_open },
+	{ NNG_PROTO_SUB_V0, nng_sub0_open },
+	{ NNG_PROTO_REQ_V0, nng_req0_open },
+	{ NNG_PROTO_REP_V0, nng_rep0_open },
+	{ NNG_PROTO_SURVEYOR_V0, nng_surveyor0_open },
+	{ NNG_PROTO_RESPONDENT_V0, nng_respondent0_open },
 	{ NNG_PROTO_NONE, NULL },
-	// clang-format on
 };
 
 int

@@ -1,0 +1,113 @@
+//
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+#include "convey.h"
+#include "core/nng_impl.h"
+#include "nng.h"
+
+#include <string.h>
+
+#define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))
+#define CHECKSTR(m, s)                   \
+	So(nng_msg_len(m) == strlen(s)); \
+	So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
+
+struct dev_data {
+	nng_socket s1;
+	nng_socket s2;
+};
+
+void
+dodev(void *arg)
+{
+	struct dev_data *d = arg;
+
+	nng_device(d->s1, d->s2);
+}
+
+Main({
+	nni_init();
+
+	Test("PAIRv1 device", {
+		const char *addr1 = "inproc://dev1";
+		const char *addr2 = "inproc://dev2";
+
+		Convey("We can create a PAIRv1 device", {
+			nng_socket dev1;
+			nng_socket dev2;
+			nng_socket end1;
+			nng_socket end2;
+			int        raw;
+			uint64_t   tmo;
+			nng_msg *  msg;
+			int        rv;
+			void *     thr;
+
+			So(nng_pair1_open(&dev1) == 0);
+			So(nng_pair1_open(&dev2) == 0);
+			raw = 1;
+			So(nng_setopt(dev1, NNG_OPT_RAW, &raw, sizeof(raw)) ==
+			    0);
+			raw = 1;
+			So(nng_setopt(dev2, NNG_OPT_RAW, &raw, sizeof(raw)) ==
+			    0);
+
+			struct dev_data ddata;
+			ddata.s1 = dev1;
+			ddata.s2 = dev2;
+
+			So(nng_thread_create(&thr, dodev, &ddata) == 0);
+			Reset({
+				printf("RESETING1\n");
+				nng_close(dev1);
+				nng_close(dev2);
+				nng_thread_destroy(thr);
+			});
+
+			So(nng_listen(dev1, addr1, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(dev2, addr2, NULL, NNG_FLAG_SYNCH) == 0);
+
+			So(nng_pair_open(&end1) == 0);
+			So(nng_pair_open(&end2) == 0);
+
+			So(nng_dial(end1, addr1, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(end2, addr2, NULL, NNG_FLAG_SYNCH) == 0);
+
+			tmo = 1000000;
+			So(nng_setopt(end1, NNG_OPT_RCVTIMEO, &tmo,
+			       sizeof(tmo)) == 0);
+			tmo = 1000000;
+			So(nng_setopt(end2, NNG_OPT_RCVTIMEO, &tmo,
+			       sizeof(tmo)) == 0);
+
+			nng_usleep(100000);
+			Convey("Device can send and receive", {
+
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "ALPHA");
+				So(nng_sendmsg(end1, msg, 0) == 0);
+				So(nng_recvmsg(end2, &msg, 0) == 0);
+				CHECKSTR(msg, "ALPHA");
+				nng_msg_free(msg);
+
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "OMEGA");
+
+				So(nng_sendmsg(end2, msg, 0) == 0);
+				So(nng_recvmsg(end1, &msg, 0) == 0);
+
+				CHECKSTR(msg, "OMEGA");
+				nng_msg_free(msg);
+			});
+		});
+	});
+
+	nni_fini();
+})

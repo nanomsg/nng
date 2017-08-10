@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -290,6 +291,7 @@ enum nng_flag_enum {
 enum nng_proto_enum {
 	NNG_PROTO_NONE          = NNG_PROTO(0, 0),
 	NNG_PROTO_PAIR_V0       = NNG_PROTO(1, 0),
+	NNG_PROTO_PAIR_V1       = NNG_PROTO(1, 1),
 	NNG_PROTO_PUB_V0        = NNG_PROTO(2, 0),
 	NNG_PROTO_SUB_V0        = NNG_PROTO(2, 1),
 	NNG_PROTO_REQ_V0        = NNG_PROTO(3, 0),
@@ -301,9 +303,10 @@ enum nng_proto_enum {
 	NNG_PROTO_BUS_V0        = NNG_PROTO(7, 0),
 	NNG_PROTO_STAR_V0       = NNG_PROTO(100, 0),
 
-	// "Legacy" names.  Please use explicit versioned names above.
+	// "Default" names.  Use the explicit version to guarantee
+	// backwards compatibility.
 	NNG_PROTO_BUS        = NNG_PROTO_BUS_V0,
-	NNG_PROTO_PAIR       = NNG_PROTO_PAIR_V0,
+	NNG_PROTO_PAIR       = NNG_PROTO_PAIR_V1,
 	NNG_PROTO_SUB        = NNG_PROTO_SUB_V0,
 	NNG_PROTO_PUB        = NNG_PROTO_PUB_V0,
 	NNG_PROTO_REQ        = NNG_PROTO_REQ_V0,
@@ -317,6 +320,7 @@ enum nng_proto_enum {
 // Builtin protocol socket constructors.
 extern int nng_bus0_open(nng_socket *);
 extern int nng_pair0_open(nng_socket *);
+extern int nng_pair1_open(nng_socket *);
 extern int nng_pub0_open(nng_socket *);
 extern int nng_sub0_open(nng_socket *);
 extern int nng_push0_open(nng_socket *);
@@ -330,7 +334,7 @@ extern int nng_respondent0_open(nng_socket *);
 // the actual protocols are baked into the binary; this should avoid
 // suprising.  Choosing a new protocol should be done explicitly.
 #define nng_bus_open nng_bus0_open
-#define nng_pair_open nng_pair0_open
+#define nng_pair_open nng_pair1_open
 #define nng_pub_open nng_pub0_open
 #define nng_sub_open nng_sub0_open
 #define nng_push_open nng_push0_open
@@ -369,6 +373,7 @@ enum nng_opt_enum {
 	NNG_OPT_REMOTEADDR     = NNG_OPT_SOCKET(17),
 	NNG_OPT_RCVFD          = NNG_OPT_SOCKET(18),
 	NNG_OPT_SNDFD          = NNG_OPT_SOCKET(19),
+	NNG_OPT_POLYAMOROUS    = NNG_OPT_SOCKET(20),
 };
 
 // XXX: TBD: priorities, socket names, ipv4only

@@ -72,6 +72,8 @@ extern "C" {
 #define NN_PROTO_BUS		7
 
 #define NN_PAIR			(NN_PROTO_PAIR * 16 + 0)
+#define NN_PAIR_v0		(NN_PROTO_PAIR * 16 + 0)
+#define NN_PAIR_V1		(NN_PROTO_PAIR * 16 + 1)
 #define NN_PUB			(NN_PROTO_PUBSUB * 16 + 0)
 #define NN_SUB			(NN_PROTO_PUBSUB * 16 + 1)
 #define NN_REQ			(NN_PROTO_REQREP * 16 + 0)
