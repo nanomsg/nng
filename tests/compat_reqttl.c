@@ -78,13 +78,13 @@ int main (int argc, const char *argv[])
     test_connect (end1, socket_address_b);
 
     /*  Wait for TCP to establish. */
-    nn_sleep (100);
+    nn_sleep (200);
 
     /*  Pass a message between endpoints. */
     /*  Set up max receive timeout. */
-    timeo = 1000;
+    timeo = 500;
     test_setsockopt (end0, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
-    timeo = 1000;
+    timeo = 500;
     test_setsockopt (end1, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
 
     /*  Test default TTL is 8. */

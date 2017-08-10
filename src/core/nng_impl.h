@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -33,7 +34,6 @@
 #include "core/list.h"
 #include "core/message.h"
 #include "core/msgqueue.h"
-#include "core/objhash.h"
 #include "core/options.h"
 #include "core/panic.h"
 #include "core/protocol.h"

@@ -41,6 +41,7 @@ static struct {
 	{ NNG_EMSGSIZE,	    EMSGSIZE	  },
 	{ NNG_ECONNABORTED, ECONNABORTED  },
 	{ NNG_ECONNRESET,   ECONNRESET	  },
+	{ NNG_ECANCELED,    EBADF         },
 	{		 0,		0 },
 	// clang-format on
 };

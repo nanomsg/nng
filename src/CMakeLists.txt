@@ -53,8 +53,6 @@ set (NNG_SOURCES
     core/msgqueue.c
     core/msgqueue.h
     core/nng_impl.h
-    core/objhash.c
-    core/objhash.h
     core/options.c
     core/options.h
     core/panic.c
