@@ -73,6 +73,12 @@ nni_cv_wake(nni_cv *cv)
 	nni_plat_cv_wake(cv);
 }
 
+void
+nni_cv_wake1(nni_cv *cv)
+{
+	nni_plat_cv_wake1(cv);
+}
+
 static void
 nni_thr_wrap(void *arg)
 {

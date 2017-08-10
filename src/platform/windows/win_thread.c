@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -67,6 +68,12 @@ void
 nni_plat_cv_wake(nni_plat_cv *cv)
 {
 	WakeAllConditionVariable(&cv->cv);
+}
+
+void
+nni_plat_cv_wake1(nni_plat_cv *cv)
+{
+	WakeConditionVariable(&cv->cv);
 }
 
 void

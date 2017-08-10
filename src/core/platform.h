@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -121,6 +122,10 @@ extern void nni_plat_cv_fini(nni_plat_cv *);
 // nni_plat_cv_wake wakes all waiters on the condition.  This should be
 // called with the lock held.
 extern void nni_plat_cv_wake(nni_plat_cv *);
+
+// nni_plat_cv_wake1 wakes only a single waiter.  Use with caution
+// to avoid losing the wakeup when multiple waiters may be present.
+extern void nni_plat_cv_wake1(nni_plat_cv *);
 
 // nni_plat_cv_wait waits for a wake up on the condition variable.  The
 // associated lock is atomically released and reacquired upon wake up.

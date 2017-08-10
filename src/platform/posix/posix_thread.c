@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -116,11 +117,13 @@ nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 void
 nni_plat_cv_wake(nni_plat_cv *cv)
 {
-	int rv;
+	(void) pthread_cond_broadcast(&cv->cv);
+}
 
-	if ((rv = pthread_cond_broadcast(&cv->cv)) != 0) {
-		nni_panic("pthread_cond_broadcast: %s", strerror(rv));
-	}
+void
+nni_plat_cv_wake1(nni_plat_cv *cv)
+{
+	(void) pthread_cond_signal(&cv->cv);
 }
 
 void

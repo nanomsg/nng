@@ -124,6 +124,7 @@ nni_aio_wait(nni_aio *aio)
 {
 	nni_mtx_lock(&nni_aio_lk);
 	while ((aio->a_active) && (!aio->a_done)) {
+		aio->a_waiting = 1;
 		nni_cv_wait(&aio->a_cv);
 	}
 	nni_mtx_unlock(&nni_aio_lk);
@@ -201,7 +202,10 @@ nni_aio_finish_impl(
 	// still holding the reference.
 	if (!aio->a_expiring) {
 		aio->a_done = 1;
-		nni_cv_wake(&aio->a_cv);
+		if (aio->a_waiting) {
+			aio->a_waiting = 0;
+			nni_cv_wake(&aio->a_cv);
+		}
 		nni_task_dispatch(&aio->a_task);
 	}
 	nni_mtx_unlock(&nni_aio_lk);
@@ -337,7 +341,10 @@ nni_aio_expire_loop(void *arg)
 		NNI_ASSERT(aio->a_prov_cancel == NULL);
 		aio->a_expiring = 0;
 		aio->a_done     = 1;
-		nni_cv_wake(&aio->a_cv);
+		if (aio->a_waiting) {
+			aio->a_waiting = 0;
+			nni_cv_wake(&aio->a_cv);
+		}
 		nni_task_dispatch(&aio->a_task);
 		nni_mtx_unlock(&nni_aio_lk);
 	}

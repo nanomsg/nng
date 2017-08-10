@@ -18,7 +18,8 @@ static void nni_timer_loop(void *);
 // XXX: replace this timer list with a minHeap based priority queue.
 struct nni_timer {
 	nni_mtx         t_mx;
-	nni_cv          t_cv;
+	nni_cv          t_wait_cv;
+	nni_cv          t_sched_cv;
 	nni_list        t_entries;
 	nni_thr         t_thr;
 	int             t_run;
@@ -40,7 +41,8 @@ nni_timer_sys_init(void)
 	NNI_LIST_INIT(&timer->t_entries, nni_timer_node, t_node);
 
 	if (((rv = nni_mtx_init(&timer->t_mx)) != 0) ||
-	    ((rv = nni_cv_init(&timer->t_cv, &timer->t_mx)) != 0) ||
+	    ((rv = nni_cv_init(&timer->t_sched_cv, &timer->t_mx)) != 0) ||
+	    ((rv = nni_cv_init(&timer->t_wait_cv, &timer->t_mx)) != 0) ||
 	    ((rv = nni_thr_init(&timer->t_thr, nni_timer_loop, timer)) != 0)) {
 		nni_timer_sys_fini();
 		return (rv);
@@ -58,12 +60,13 @@ nni_timer_sys_fini(void)
 	if (timer->t_run) {
 		nni_mtx_lock(&timer->t_mx);
 		timer->t_run = 0;
-		nni_cv_wake(&timer->t_cv);
+		nni_cv_wake(&timer->t_sched_cv);
 		nni_mtx_unlock(&timer->t_mx);
 	}
 
 	nni_thr_fini(&timer->t_thr);
-	nni_cv_fini(&timer->t_cv);
+	nni_cv_fini(&timer->t_wait_cv);
+	nni_cv_fini(&timer->t_sched_cv);
 	nni_mtx_fini(&timer->t_mx);
 }
 
@@ -88,7 +91,7 @@ nni_timer_cancel(nni_timer_node *node)
 	nni_mtx_lock(&timer->t_mx);
 	while (timer->t_active == node) {
 		timer->t_waiting = 1;
-		nni_cv_wait(&timer->t_cv);
+		nni_cv_wait(&timer->t_wait_cv);
 	}
 	if (nni_list_active(&timer->t_entries, node)) {
 		nni_list_remove(&timer->t_entries, node);
@@ -121,7 +124,7 @@ nni_timer_schedule(nni_timer_node *node, nni_time when)
 		nni_list_append(&timer->t_entries, node);
 	}
 	if (wake) {
-		nni_cv_wake(&timer->t_cv);
+		nni_cv_wake1(&timer->t_sched_cv);
 	}
 	nni_mtx_unlock(&timer->t_mx);
 }
@@ -137,8 +140,8 @@ nni_timer_loop(void *arg)
 		nni_mtx_lock(&timer->t_mx);
 		timer->t_active = NULL;
 		if (timer->t_waiting) {
-			timer->t_waiting = 1;
-			nni_cv_wake(&timer->t_cv);
+			timer->t_waiting = 0;
+			nni_cv_wake(&timer->t_wait_cv);
 		}
 		if (!timer->t_run) {
 			nni_mtx_unlock(&timer->t_mx);
@@ -147,13 +150,13 @@ nni_timer_loop(void *arg)
 
 		now = nni_clock();
 		if ((node = nni_list_first(&timer->t_entries)) == NULL) {
-			nni_cv_wait(&timer->t_cv);
+			nni_cv_wait(&timer->t_sched_cv);
 			nni_mtx_unlock(&timer->t_mx);
 			continue;
 		}
 		if (now < node->t_expire) {
 			// End of run, we have to wait for next.
-			nni_cv_until(&timer->t_cv, node->t_expire);
+			nni_cv_until(&timer->t_sched_cv, node->t_expire);
 			nni_mtx_unlock(&timer->t_mx);
 			continue;
 		}

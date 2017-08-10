@@ -34,7 +34,8 @@ struct nni_aio {
 	unsigned a_pend : 1;     // completion routine pending
 	unsigned a_active : 1;   // aio was started
 	unsigned a_expiring : 1; // expiration callback in progress
-	unsigned a_pad : 27;     // ensure 32-bit alignment
+	unsigned a_waiting : 1;  // a thread is waiting for this to finish
+	unsigned a_pad : 26;     // ensure 32-bit alignment
 	nni_task a_task;
 
 	// Read/write operations.

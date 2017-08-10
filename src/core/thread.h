@@ -52,6 +52,9 @@ extern void nni_cv_fini(nni_cv *cv);
 // nni_cv_wake wakes all waiters on the condition variable.
 extern void nni_cv_wake(nni_cv *cv);
 
+// nni_cv_wake wakes just one waiter on the condition variable.
+extern void nni_cv_wake1(nni_cv *cv);
+
 // nni_cv_wait waits until nni_cv_wake is called on the condition variable.
 // The wait is indefinite.  Premature wakeups are possible, so the caller
 // must verify any related condition.
