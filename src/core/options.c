@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -191,7 +192,8 @@ nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 		return (NNG_ENOMEM);
 	}
 
-	*szp = sizeof(int);
+	fd->sn_init = 1;
+	*szp        = sizeof(int);
 	memcpy(val, &fd->sn_rfd, sizeof(int));
 	return (0);
 }

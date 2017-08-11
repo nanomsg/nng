@@ -56,6 +56,14 @@ TestMain("Poll FDs",
 		        So(nng_getopt(s1, NNG_OPT_RCVFD, &fd, &sz) == 0);
 		        So(fd != INVALID_SOCKET);
 
+		        Convey("And it is always the same fd", {
+			        int fd2;
+			        sz = sizeof(fd2);
+			        So(nng_getopt(s1, NNG_OPT_RCVFD, &fd2, &sz) ==
+			            0);
+			        So(fd2 == fd);
+		        });
+
 		        Convey("And they start non pollable", {
 			        struct pollfd pfd;
 			        pfd.fd      = fd;
@@ -88,6 +96,16 @@ TestMain("Poll FDs",
 		        So(nng_send(s1, "oops", 4, 0) == 0);
 	        });
 
+	        Convey("Must have a big enough size", {
+		        int    fd;
+		        size_t sz;
+		        sz = 1;
+		        So(nng_getopt(s1, NNG_OPT_RCVFD, &fd, &sz) ==
+		            NNG_EINVAL);
+		        sz = 128;
+		        So(nng_getopt(s1, NNG_OPT_RCVFD, &fd, &sz) == 0);
+		        So(sz == sizeof(fd));
+	        });
 	        Convey("We cannot get a send FD for PULL", {
 		        nng_socket s3;
 		        int        fd;

@@ -94,14 +94,98 @@ Main({
 					So(rv == 0);
 					So(sz == sizeof(check));
 					So(check == 0);
-				}) Convey("Correct size is copied", {
+				});
+				Convey("Correct size is copied", {
 					sz = sizeof(check);
 					rv = nng_getopt(sock, NNG_OPT_SNDTIMEO,
 					    &check, &sz);
 					So(rv == 0);
 					So(sz == sizeof(check));
 					So(check == 1234);
-				})
+				});
+
+				Convey("Short size buf is not copied", {
+					int len = 5;
+					sz      = 0;
+					So(nng_getopt(sock, NNG_OPT_RCVBUF,
+					       &len, &sz) == 0);
+					So(len == 5);
+				});
+
+				Convey("Insane buffer size fails", {
+					int len = 1024 * 1024;
+					sz      = sizeof(len);
+					So(nng_setopt(sock, NNG_OPT_RCVBUF,
+					       &len, sz) == NNG_EINVAL);
+				});
+
+				Convey("Negative timeout fails", {
+					when = -5;
+					sz   = sizeof(when);
+					So(nng_setopt(sock, NNG_OPT_RCVTIMEO,
+					       &when, sz) == NNG_EINVAL);
+				});
+
+				Convey("Short timeout fails", {
+					when = 0;
+					sz   = sizeof(when) - 1;
+					So(nng_setopt(sock, NNG_OPT_RCVTIMEO,
+					       &when, sz) == NNG_EINVAL);
+				});
+
+				Convey("Bogus raw fails", {
+					int raw = 42;
+					sz      = sizeof(raw);
+
+					raw = 42;
+					So(nng_setopt(sock, NNG_OPT_RAW, &raw,
+					       sz) == NNG_EINVAL);
+					raw = -42;
+					So(nng_setopt(sock, NNG_OPT_RAW, &raw,
+					       sz) == NNG_EINVAL);
+
+					raw = 0;
+					So(nng_setopt(sock, NNG_OPT_RAW, &raw,
+					       sz) == 0);
+				});
+
+				Convey("Unsupported options fail", {
+					char *crap = "crap";
+					So(nng_setopt(sock, NNG_OPT_SUBSCRIBE,
+					       crap,
+					       strlen(crap)) == NNG_ENOTSUP);
+				});
+
+				Convey("Bogus sizes fail", {
+					size_t rmax;
+					rmax = 6550;
+					So(nng_setopt(sock, NNG_OPT_RCVMAXSZ,
+					       &rmax, sizeof(rmax)) == 0);
+					rmax = 0;
+					sz   = sizeof(rmax);
+					So(nng_getopt(sock, NNG_OPT_RCVMAXSZ,
+					       &rmax, &sz) == 0);
+					So(rmax == 6550);
+
+					rmax = 102400;
+					So(nng_setopt(sock, NNG_OPT_RCVMAXSZ,
+					       &rmax, 1) == NNG_EINVAL);
+					So(nng_getopt(sock, NNG_OPT_RCVMAXSZ,
+					       &rmax, &sz) == 0);
+					So(rmax == 6550);
+
+					if (sizeof(size_t) == 8) {
+						rmax = 0x1000000000000ull;
+						So(nng_setopt(sock,
+						       NNG_OPT_RCVMAXSZ, &rmax,
+						       sizeof(rmax)) ==
+						    NNG_EINVAL);
+						So(nng_getopt(sock,
+						       NNG_OPT_RCVMAXSZ, &rmax,
+						       &sz) == 0);
+						So(rmax == 6550);
+					}
+				});
 			});
 
 			Convey("Bogus URLs not supported", {
@@ -157,10 +241,13 @@ Main({
 
 				So(nng_setopt(sock, NNG_OPT_RCVBUF, &len,
 				       sizeof(len)) == 0);
-				So(nng_setopt(sock, NNG_OPT_SNDBUF, &len,
-				       sizeof(len)) == 0);
+				sz = sizeof(len);
+				So(nng_getopt(
+				       sock, NNG_OPT_RCVBUF, &len, &sz) == 0);
+				So(len == 1);
+				sz = 0;
 
-				So(nng_setopt(sock2, NNG_OPT_RCVBUF, &len,
+				So(nng_setopt(sock, NNG_OPT_SNDBUF, &len,
 				       sizeof(len)) == 0);
 				So(nng_setopt(sock2, NNG_OPT_SNDBUF, &len,
 				       sizeof(len)) == 0);
