@@ -225,7 +225,6 @@ nni_resp_sock_getq_cb(void *arg)
 {
 	nni_resp_sock *psock = arg;
 	nni_msg *      msg;
-	uint8_t *      header;
 	uint32_t       id;
 	nni_resp_pipe *ppipe;
 	int            rv;
@@ -244,9 +243,7 @@ nni_resp_sock_getq_cb(void *arg)
 		nni_msgq_aio_get(psock->uwq, &psock->aio_getq);
 		return;
 	}
-	header = nni_msg_header(msg);
-	NNI_GET32(header, id);
-	nni_msg_trim_header(msg, 4);
+	id = nni_msg_header_trim_u32(msg);
 
 	nni_mtx_lock(&psock->mtx);
 	rv = nni_idhash_find(psock->pipes, id, (void **) &ppipe);
@@ -301,7 +298,6 @@ nni_resp_recv_cb(void *arg)
 	nni_resp_sock *psock = ppipe->psock;
 	nni_msgq *     urq;
 	nni_msg *      msg;
-	uint8_t        idbuf[4];
 	int            hops;
 	int            rv;
 
@@ -311,13 +307,11 @@ nni_resp_recv_cb(void *arg)
 
 	urq = nni_sock_recvq(psock->nsock);
 
-	NNI_PUT32(idbuf, ppipe->id);
-
 	msg                   = ppipe->aio_recv.a_msg;
 	ppipe->aio_recv.a_msg = NULL;
 
 	// Store the pipe id in the header, first thing.
-	if (nni_msg_append_header(msg, idbuf, 4) != 0) {
+	if (nni_msg_header_append_u32(msg, ppipe->id) != 0) {
 		nni_msg_free(msg);
 		goto error;
 	}
@@ -338,7 +332,7 @@ nni_resp_recv_cb(void *arg)
 		}
 		body = nni_msg_body(msg);
 		end  = (body[0] & 0x80) ? 1 : 0;
-		rv   = nni_msg_append_header(msg, body, 4);
+		rv   = nni_msg_header_append(msg, body, 4);
 		if (rv != 0) {
 			nni_msg_free(msg);
 			goto error;
@@ -439,9 +433,9 @@ nni_resp_sock_sfilter(void *arg, nni_msg *msg)
 	}
 
 	// drop anything else in the header...
-	nni_msg_trunc_header(msg, nni_msg_header_len(msg));
+	nni_msg_header_clear(msg);
 
-	if (nni_msg_append_header(msg, psock->btrace, psock->btrace_len) !=
+	if (nni_msg_header_append(msg, psock->btrace, psock->btrace_len) !=
 	    0) {
 		nni_free(psock->btrace, psock->btrace_len);
 		psock->btrace     = NULL;
@@ -481,7 +475,7 @@ nni_resp_sock_rfilter(void *arg, nni_msg *msg)
 	}
 	psock->btrace_len = len;
 	memcpy(psock->btrace, header, len);
-	nni_msg_trunc_header(msg, len);
+	nni_msg_header_clear(msg);
 	return (msg);
 }
 

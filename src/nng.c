@@ -486,7 +486,7 @@ nng_msg_body(nng_msg *msg)
 }
 
 size_t
-nng_msg_len(nng_msg *msg)
+nng_msg_len(const nng_msg *msg)
 {
 	return (nni_msg_len(msg));
 }
@@ -498,7 +498,7 @@ nng_msg_header(nng_msg *msg)
 }
 
 size_t
-nng_msg_header_len(nng_msg *msg)
+nng_msg_header_len(const nng_msg *msg)
 {
 	return (nni_msg_header_len(msg));
 }
@@ -510,21 +510,21 @@ nng_msg_append(nng_msg *msg, const void *data, size_t sz)
 }
 
 int
-nng_msg_prepend(nng_msg *msg, const void *data, size_t sz)
+nng_msg_insert(nng_msg *msg, const void *data, size_t sz)
 {
-	return (nni_msg_prepend(msg, data, sz));
+	return (nni_msg_insert(msg, data, sz));
 }
 
 int
-nng_msg_append_header(nng_msg *msg, const void *data, size_t sz)
+nng_msg_header_append(nng_msg *msg, const void *data, size_t sz)
 {
-	return (nni_msg_append_header(msg, data, sz));
+	return (nni_msg_header_append(msg, data, sz));
 }
 
 int
-nng_msg_prepend_header(nng_msg *msg, const void *data, size_t sz)
+nng_msg_header_insert(nng_msg *msg, const void *data, size_t sz)
 {
-	return (nni_msg_prepend_header(msg, data, sz));
+	return (nni_msg_header_insert(msg, data, sz));
 }
 
 int
@@ -534,21 +534,51 @@ nng_msg_trim(nng_msg *msg, size_t sz)
 }
 
 int
-nng_msg_trunc(nng_msg *msg, size_t sz)
+nng_msg_chop(nng_msg *msg, size_t sz)
 {
-	return (nni_msg_trunc(msg, sz));
+	return (nni_msg_chop(msg, sz));
 }
 
 int
-nng_msg_trim_header(nng_msg *msg, size_t sz)
+nng_msg_header_trim(nng_msg *msg, size_t sz)
 {
-	return (nni_msg_trim_header(msg, sz));
+	return (nni_msg_header_trim(msg, sz));
 }
 
 int
-nng_msg_trunc_header(nng_msg *msg, size_t sz)
+nng_msg_header_chop(nng_msg *msg, size_t sz)
 {
-	return (nni_msg_trunc_header(msg, sz));
+	return (nni_msg_header_chop(msg, sz));
+}
+
+void
+nng_msg_clear(nng_msg *msg)
+{
+	nni_msg_clear(msg);
+}
+
+void
+nng_msg_header_clear(nng_msg *msg)
+{
+	nni_msg_header_clear(msg);
+}
+
+int
+nng_msg_dup(nng_msg **dup, const nng_msg *src)
+{
+	return (nni_msg_dup(dup, src));
+}
+
+nng_pipe
+nng_msg_get_pipe(const nng_msg *msg)
+{
+	return (nni_msg_get_pipe(msg));
+}
+
+void
+nng_msg_set_pipe(nng_msg *msg, nng_pipe p)
+{
+	nni_msg_set_pipe(msg, p);
 }
 
 int

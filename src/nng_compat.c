@@ -345,7 +345,7 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 	if ((mh->msg_iovlen == 1) && (mh->msg_iov[0].iov_len == NN_MSG)) {
 		// Receiver wants to have a dynamically allocated message.
 		// There can only be one of these.
-		if ((rv = nng_msg_prepend(msg, &msg, sizeof(msg))) != 0) {
+		if ((rv = nng_msg_insert(msg, &msg, sizeof(msg))) != 0) {
 			nng_msg_free(msg);
 			nn_seterror(rv);
 			return (-1);
@@ -534,7 +534,7 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 				continue;
 			}
 			data += sizeof(spsz);
-			rv = nng_msg_append_header(msg, data, spsz);
+			rv = nng_msg_header_append(msg, data, spsz);
 			if (rv != 0) {
 				if (!keep) {
 					nng_msg_free(msg);

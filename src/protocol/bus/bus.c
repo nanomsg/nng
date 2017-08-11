@@ -240,16 +240,14 @@ nni_bus_pipe_recv_cb(void *arg)
 	nni_bus_pipe *ppipe = arg;
 	nni_bus_sock *psock = ppipe->psock;
 	nni_msg *     msg;
-	uint32_t      id;
 
 	if (nni_aio_result(&ppipe->aio_recv) != 0) {
 		nni_pipe_stop(ppipe->npipe);
 		return;
 	}
 	msg = ppipe->aio_recv.a_msg;
-	id  = nni_pipe_id(ppipe->npipe);
 
-	if (nni_msg_prepend_header(msg, &id, 4) != 0) {
+	if (nni_msg_header_insert_u32(msg, nni_pipe_id(ppipe->npipe)) != 0) {
 		// XXX: bump a nomemory stat
 		nni_msg_free(msg);
 		nni_pipe_stop(ppipe->npipe);
@@ -298,8 +296,7 @@ nni_bus_sock_getq_cb(void *arg)
 	// is doing this probably.)  In this case grab the pipe
 	// ID from the header, so we can exclude it.
 	if (nni_msg_header_len(msg) >= 4) {
-		memcpy(&sender, nni_msg_header(msg), 4);
-		nni_msg_trim_header(msg, 4);
+		sender = nni_msg_header_trim_u32(msg);
 	} else {
 		sender = 0;
 	}

@@ -123,7 +123,7 @@ Main({
 				        msg = NULL;
 				        So(nng_recvmsg(resp, &msg, 0) == 0);
 				        CHECKSTR(msg, "abc");
-				        nng_msg_trunc(msg, 3);
+				        nng_msg_chop(msg, 3);
 				        APPENDSTR(msg, "def");
 				        So(nng_sendmsg(resp, msg, 0) == 0);
 				        msg = NULL;

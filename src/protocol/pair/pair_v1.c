@@ -224,7 +224,7 @@ pair1_pipe_recv_cb(void *arg)
 
 	// If we bounced too many times, discard the message, but
 	// keep getting more.
-	if (hdr >= s->ttl) {
+	if (hdr >= (unsigned) s->ttl) {
 		nni_msg_free(msg);
 		nni_pipe_recv(npipe, &p->aio_recv);
 		return;
@@ -309,7 +309,6 @@ pair1_pipe_getq_cb(void *arg)
 	pair1_sock *s = p->psock;
 	nni_msg *   msg;
 	uint32_t    hops;
-	uint8_t *   data;
 
 	if (nni_aio_result(&p->aio_getq) != 0) {
 		nni_pipe_stop(p->npipe);

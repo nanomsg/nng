@@ -437,17 +437,14 @@ nni_req_recv_cb(void *arg)
 		// Malformed message.
 		goto malformed;
 	}
-	if (nni_msg_append_header(msg, nni_msg_body(msg), 4) != 0) {
+	if (nni_msg_header_append(msg, nni_msg_body(msg), 4) != 0) {
 		// Arguably we could just discard and carry on.  But
 		// dropping the connection is probably more helpful since
 		// it lets the other side see that a problem occurred.
 		// Plus it gives us a chance to reclaim some memory.
 		goto malformed;
 	}
-	if (nni_msg_trim(msg, 4) != 0) {
-		// This should never happen - could be an assert.
-		nni_panic("Failed to trim REQ header from body");
-	}
+	(void) nni_msg_trim(msg, 4); // Cannot fail
 
 	rp->aio_putq.a_msg = msg;
 	nni_msgq_aio_put(rp->req->urq, &rp->aio_putq);
@@ -548,7 +545,7 @@ nni_req_sock_sfilter(void *arg, nni_msg *msg)
 	// Request ID is in big endian format.
 	NNI_PUT32(req->reqid, id);
 
-	if (nni_msg_append_header(msg, req->reqid, 4) != 0) {
+	if (nni_msg_header_append(msg, req->reqid, 4) != 0) {
 		// Should be ENOMEM.
 		nni_msg_free(msg);
 		return (NULL);

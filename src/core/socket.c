@@ -411,7 +411,6 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 {
 	nni_sock *s = NULL;
 	int       rv;
-	uint32_t  sockid;
 
 	if (proto->proto_version != NNI_PROTOCOL_VERSION) {
 		// unsupported protocol version
@@ -603,7 +602,6 @@ void
 nni_sock_closeall(void)
 {
 	nni_sock *s;
-	uint32_t  id;
 
 	for (;;) {
 		nni_mtx_lock(&nni_sock_lk);

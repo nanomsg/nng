@@ -1,5 +1,5 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -93,7 +93,7 @@ nni_msg_dump(const char *banner, const nni_msg *msg)
 // and headroom (excluding the length) are available.  It also copies
 // any extant referenced data.  Note that the capacity will increase,
 // but not the length.  To increase the length of the referenced data,
-// use either chunk_append or chunk_prepend.
+// use either chunk_append or chunk_insert.
 //
 // Note that having some headroom is useful when data must be prepended
 // to a message - it avoids having to perform extra data copies, so we
@@ -113,6 +113,11 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 	// The test below also covers the case where the pointers are both
 	// NULL, or the capacity is zero.
 
+	// No shrinking (violets)
+	if (newsz < ch->ch_len) {
+		newsz = ch->ch_len;
+	}
+
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
 		headroom = (size_t)(ch->ch_ptr - ch->ch_buf);
@@ -124,6 +129,13 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 			// We have enough space at the ends already.
 			return (0);
 		}
+		// Make sure we allocate at least as much tail room as we
+		// previously had.
+
+		if (newsz < (ch->ch_cap - headroom)) {
+			newsz = ch->ch_cap - headroom;
+		}
+
 		if ((newbuf = nni_alloc(newsz + headwanted)) == NULL) {
 			return (NNG_ENOMEM);
 		}
@@ -164,9 +176,16 @@ nni_chunk_free(nni_chunk *ch)
 	ch->ch_cap = 0;
 }
 
-// nni_chunk_trunc truncates bytes from the end of the chunk.
+// nni_chunk_clear just resets the length to zero.
+static void
+nni_chunk_clear(nni_chunk *ch)
+{
+	ch->ch_len = 0;
+}
+
+// nni_chunk_chop truncates bytes from the end of the chunk.
 static int
-nni_chunk_trunc(nni_chunk *ch, size_t len)
+nni_chunk_chop(nni_chunk *ch, size_t len)
 {
 	if (ch->ch_len < len) {
 		return (NNG_EINVAL);
@@ -230,11 +249,11 @@ nni_chunk_append(nni_chunk *ch, const void *data, size_t len)
 	return (0);
 }
 
-// nni_chunk_prepend prepends data to the chunk, as efficiently as possible.
+// nni_chunk_insert prepends data to the chunk, as efficiently as possible.
 // If the data pointer is NULL, then no data is actually copied, but the
 // data region will have "grown" in the beginning, with uninitialized data.
 static int
-nni_chunk_prepend(nni_chunk *ch, const void *data, size_t len)
+nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 {
 	int rv;
 
@@ -267,11 +286,11 @@ nni_chunk_prepend(nni_chunk *ch, const void *data, size_t len)
 }
 
 static int
-nni_chunk_prepend_u32(nni_chunk *ch, uint32_t val)
+nni_chunk_insert_u32(nni_chunk *ch, uint32_t val)
 {
 	unsigned char buf[sizeof(uint32_t)];
 	NNI_PUT32(buf, val);
-	return (nni_chunk_prepend(ch, buf, sizeof(buf)));
+	return (nni_chunk_insert(ch, buf, sizeof(buf)));
 }
 
 static int
@@ -293,12 +312,12 @@ nni_chunk_trim_u32(nni_chunk *ch)
 }
 
 static uint32_t
-nni_chunk_trunc_u32(nni_chunk *ch)
+nni_chunk_chop_u32(nni_chunk *ch)
 {
 	uint32_t v;
 	NNI_ASSERT(ch->ch_len >= sizeof(v));
 	NNI_GET32(ch->ch_ptr + ch->ch_len - sizeof(v), v);
-	nni_chunk_trunc(ch, sizeof(v));
+	nni_chunk_chop(ch, sizeof(v));
 	return (v);
 }
 
@@ -448,7 +467,7 @@ nni_msg_getopt(nni_msg *m, int opt, void *val, size_t *szp)
 			}
 		}
 	}
-	return (NNG_ENOTSUP);
+	return (NNG_ENOENT);
 }
 
 int
@@ -463,7 +482,7 @@ nni_msg_realloc(nni_msg *m, size_t sz)
 		}
 	} else {
 		// "Shrinking", just mark bytes at end usable again.
-		nni_chunk_trunc(&m->m_body, m->m_body.ch_len - sz);
+		nni_chunk_chop(&m->m_body, m->m_body.ch_len - sz);
 	}
 	return (0);
 }
@@ -475,7 +494,7 @@ nni_msg_header(nni_msg *m)
 }
 
 size_t
-nni_msg_header_len(nni_msg *m)
+nni_msg_header_len(const nni_msg *m)
 {
 	return (m->m_header.ch_len);
 }
@@ -487,7 +506,7 @@ nni_msg_body(nni_msg *m)
 }
 
 size_t
-nni_msg_len(nni_msg *m)
+nni_msg_len(const nni_msg *m)
 {
 	return (m->m_body.ch_len);
 }
@@ -499,9 +518,9 @@ nni_msg_append(nni_msg *m, const void *data, size_t len)
 }
 
 int
-nni_msg_prepend(nni_msg *m, const void *data, size_t len)
+nni_msg_insert(nni_msg *m, const void *data, size_t len)
 {
-	return (nni_chunk_prepend(&m->m_body, data, len));
+	return (nni_chunk_insert(&m->m_body, data, len));
 }
 
 int
@@ -511,33 +530,35 @@ nni_msg_trim(nni_msg *m, size_t len)
 }
 
 int
-nni_msg_trunc(nni_msg *m, size_t len)
+nni_msg_chop(nni_msg *m, size_t len)
 {
-	return (nni_chunk_trunc(&m->m_body, len));
+	return (nni_chunk_chop(&m->m_body, len));
 }
 
 int
-nni_msg_append_header(nni_msg *m, const void *data, size_t len)
+nni_msg_header_append(nni_msg *m, const void *data, size_t len)
 {
 	return (nni_chunk_append(&m->m_header, data, len));
 }
+
 int
-nni_msg_prepend_header(nni_msg *m, const void *data, size_t len)
+nni_msg_header_insert(nni_msg *m, const void *data, size_t len)
 {
-	return (nni_chunk_prepend(&m->m_header, data, len));
+	return (nni_chunk_insert(&m->m_header, data, len));
 }
 
 int
-nni_msg_trim_header(nni_msg *m, size_t len)
+nni_msg_header_trim(nni_msg *m, size_t len)
 {
 	return (nni_chunk_trim(&m->m_header, len));
 }
 
 int
-nni_msg_trunc_header(nni_msg *m, size_t len)
+nni_msg_header_chop(nni_msg *m, size_t len)
 {
-	return (nni_chunk_trunc(&m->m_header, len));
+	return (nni_chunk_chop(&m->m_header, len));
 }
+
 int
 nni_msg_append_u32(nni_msg *m, uint32_t val)
 {
@@ -545,9 +566,9 @@ nni_msg_append_u32(nni_msg *m, uint32_t val)
 }
 
 int
-nni_msg_prepend_u32(nni_msg *m, uint32_t val)
+nni_msg_insert_u32(nni_msg *m, uint32_t val)
 {
-	return (nni_chunk_prepend_u32(&m->m_body, val));
+	return (nni_chunk_insert_u32(&m->m_body, val));
 }
 
 int
@@ -557,15 +578,15 @@ nni_msg_header_append_u32(nni_msg *m, uint32_t val)
 }
 
 int
-nni_msg_header_prepend_u32(nni_msg *m, uint32_t val)
+nni_msg_header_insert_u32(nni_msg *m, uint32_t val)
 {
-	return (nni_chunk_prepend_u32(&m->m_header, val));
+	return (nni_chunk_insert_u32(&m->m_header, val));
 }
 
 uint32_t
-nni_msg_trunc_u32(nni_msg *m)
+nni_msg_chop_u32(nni_msg *m)
 {
-	return (nni_chunk_trunc_u32(&m->m_body));
+	return (nni_chunk_chop_u32(&m->m_body));
 }
 
 uint32_t
@@ -575,14 +596,26 @@ nni_msg_trim_u32(nni_msg *m)
 }
 
 uint32_t
-nni_msg_header_trunc_u32(nni_msg *m)
+nni_msg_header_chop_u32(nni_msg *m)
 {
-	return (nni_chunk_trunc_u32(&m->m_header));
+	return (nni_chunk_chop_u32(&m->m_header));
 }
 uint32_t
 nni_msg_header_trim_u32(nni_msg *m)
 {
 	return (nni_chunk_trim_u32(&m->m_header));
+}
+
+void
+nni_msg_clear(nni_msg *m)
+{
+	nni_chunk_clear(&m->m_body);
+}
+
+void
+nni_msg_header_clear(nni_msg *m)
+{
+	nni_chunk_clear(&m->m_header);
 }
 
 void
@@ -592,7 +625,7 @@ nni_msg_set_pipe(nni_msg *m, uint32_t pid)
 }
 
 uint32_t
-nni_msg_get_pipe(nni_msg *m)
+nni_msg_get_pipe(const nni_msg *m)
 {
 	return (m->m_pipe);
 }

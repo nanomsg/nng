@@ -207,7 +207,6 @@ nni_rep_sock_getq_cb(void *arg)
 	nni_rep_sock *rep = arg;
 	nni_msgq *    uwq = rep->uwq;
 	nni_msg *     msg;
-	uint8_t *     header;
 	uint32_t      id;
 	nni_rep_pipe *rp;
 	int           rv;
@@ -234,9 +233,7 @@ nni_rep_sock_getq_cb(void *arg)
 		return;
 	}
 
-	header = nni_msg_header(msg);
-	NNI_GET32(header, id);
-	nni_msg_trim_header(msg, 4);
+	id = nni_msg_header_trim_u32(msg);
 
 	// Look for the pipe, and attempt to put the message there
 	// (nonblocking) if we can.  If we can't for any reason, then we
@@ -291,7 +288,6 @@ nni_rep_pipe_recv_cb(void *arg)
 	nni_rep_sock *rep = rp->rep;
 	nni_msg *     msg;
 	int           rv;
-	uint8_t       idbuf[4];
 	uint8_t *     body;
 	int           hops;
 
@@ -300,13 +296,11 @@ nni_rep_pipe_recv_cb(void *arg)
 		return;
 	}
 
-	NNI_PUT32(idbuf, nni_pipe_id(rp->pipe));
-
 	msg                = rp->aio_recv.a_msg;
 	rp->aio_recv.a_msg = NULL;
 
 	// Store the pipe id in the header, first thing.
-	rv = nni_msg_append_header(msg, idbuf, 4);
+	rv = nni_msg_header_append_u32(msg, nni_pipe_id(rp->pipe));
 	if (rv != 0) {
 		goto malformed;
 	}
@@ -323,7 +317,7 @@ nni_rep_pipe_recv_cb(void *arg)
 		}
 		body = nni_msg_body(msg);
 		end  = (body[0] & 0x80) ? 1 : 0;
-		rv   = nni_msg_append_header(msg, body, 4);
+		rv   = nni_msg_header_append(msg, body, 4);
 		if (rv != 0) {
 			// Presumably this is due to out of memory.
 			// We could just discard and try again, but we
@@ -422,9 +416,9 @@ nni_rep_sock_sfilter(void *arg, nni_msg *msg)
 	}
 
 	// drop anything else in the header...
-	nni_msg_trunc_header(msg, nni_msg_header_len(msg));
+	nni_msg_header_clear(msg);
 
-	if (nni_msg_append_header(msg, rep->btrace, rep->btrace_len) != 0) {
+	if (nni_msg_header_append(msg, rep->btrace, rep->btrace_len) != 0) {
 		nni_free(rep->btrace, rep->btrace_len);
 		rep->btrace     = NULL;
 		rep->btrace_len = 0;
@@ -463,7 +457,7 @@ nni_rep_sock_rfilter(void *arg, nni_msg *msg)
 	}
 	rep->btrace_len = len;
 	memcpy(rep->btrace, header, len);
-	nni_msg_trunc_header(msg, len);
+	nni_msg_header_clear(msg);
 	return (msg);
 }
 

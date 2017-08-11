@@ -159,11 +159,11 @@ nni_inproc_pipe_send(void *arg, nni_aio *aio)
 	// side won't know what to do otherwise.
 	h = nni_msg_header(msg);
 	l = nni_msg_header_len(msg);
-	if ((rv = nni_msg_prepend(msg, h, l)) != 0) {
+	if ((rv = nni_msg_insert(msg, h, l)) != 0) {
 		nni_aio_finish(aio, rv, aio->a_count);
 		return;
 	}
-	nni_msg_trunc_header(msg, l);
+	nni_msg_header_chop(msg, l);
 	nni_msgq_aio_put(pipe->wq, aio);
 }
 

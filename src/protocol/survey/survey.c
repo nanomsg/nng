@@ -33,8 +33,8 @@ struct nni_surv_sock {
 	nni_time       expire;
 	int            raw;
 	int            closing;
-	uint32_t       nextid;    // next id
-	uint8_t        survid[4]; // outstanding request ID (big endian)
+	uint32_t       nextid; // next id
+	uint32_t       survid; // outstanding request ID (big endian)
 	nni_list       pipes;
 	nni_aio        aio_getq;
 	nni_timer_node timer;
@@ -271,16 +271,13 @@ nni_surv_recv_cb(void *arg)
 		nni_msg_free(msg);
 		goto failed;
 	}
-	if (nni_msg_append_header(msg, nni_msg_body(msg), 4) != 0) {
+	if (nni_msg_header_append(msg, nni_msg_body(msg), 4) != 0) {
 		// Should be NNG_ENOMEM
 		nni_msg_free(msg);
 		goto failed;
 	}
-	if (nni_msg_trim(msg, 4) != 0) {
-		// This should never happen - could be an assert.
-		nni_msg_free(msg);
-		goto failed;
-	}
+	(void) nni_msg_trim(msg, 4);
+
 	ppipe->aio_putq.a_msg = msg;
 	nni_msgq_aio_put(ppipe->psock->urq, &ppipe->aio_putq);
 	return;
@@ -309,7 +306,7 @@ nni_surv_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 			} else {
 				nni_sock_recverr(psock->nsock, NNG_ESTATE);
 			}
-			memset(psock->survid, 0, sizeof(psock->survid));
+			psock->survid = 0;
 			nni_timer_cancel(&psock->timer);
 		}
 		break;
@@ -381,7 +378,7 @@ nni_surv_timeout(void *arg)
 	nni_surv_sock *psock = arg;
 
 	nni_sock_lock(psock->nsock);
-	memset(psock->survid, 0, sizeof(psock->survid));
+	psock->survid = 0;
 	nni_sock_recverr(psock->nsock, NNG_ESTATE);
 	nni_msgq_set_get_error(psock->urq, NNG_ETIMEDOUT);
 	nni_sock_unlock(psock->nsock);
@@ -391,7 +388,6 @@ static nni_msg *
 nni_surv_sock_sfilter(void *arg, nni_msg *msg)
 {
 	nni_surv_sock *psock = arg;
-	uint32_t       id;
 
 	if (psock->raw) {
 		// No automatic retry, and the request ID must
@@ -402,12 +398,9 @@ nni_surv_sock_sfilter(void *arg, nni_msg *msg)
 	// Generate a new request ID.  We always set the high
 	// order bit so that the peer can locate the end of the
 	// backtrace.  (Pipe IDs have the high order bit clear.)
-	id = (psock->nextid++) | 0x80000000u;
+	psock->survid = (psock->nextid++) | 0x80000000u;
 
-	// Survey ID is in big endian format.
-	NNI_PUT32(psock->survid, id);
-
-	if (nni_msg_append_header(msg, psock->survid, 4) != 0) {
+	if (nni_msg_header_append_u32(msg, psock->survid) != 0) {
 		// Should be ENOMEM.
 		nni_msg_free(msg);
 		return (NULL);
@@ -436,18 +429,12 @@ nni_surv_sock_rfilter(void *arg, nni_msg *msg)
 		return (msg);
 	}
 
-	if (nni_msg_header_len(msg) < 4) {
-		nni_msg_free(msg);
-		return (NULL);
-	}
-
-	if (memcmp(nni_msg_header(msg), ssock->survid, 4) != 0) {
+	if ((nni_msg_header_len(msg) < sizeof(uint32_t)) ||
+	    (nni_msg_header_trim_u32(msg) != ssock->survid)) {
 		// Wrong request id
 		nni_msg_free(msg);
 		return (NULL);
 	}
-	// Prune the survey ID.
-	nni_msg_trim_header(msg, 4);
 
 	return (msg);
 }
