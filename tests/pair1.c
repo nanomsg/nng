@@ -357,14 +357,24 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			nng_usleep(100000);
+			So(nng_dial(c2, addr, NULL, NNG_FLAG_SYNCH) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "YES");
 			So(nng_sendmsg(s1, msg, 0) == 0);
 			So(nng_recvmsg(c1, &msg, 0) == 0);
 			CHECKSTR(msg, "YES");
-			p1 = nng_msg_get_pipe(msg);
-			So(p1 != 0);
+			nng_msg_free(msg);
+
+			nng_close(c1);
+			nng_usleep(10000);
+
+			So(nng_msg_alloc(&msg, 0) == 0);
+			APPENDSTR(msg, "AGAIN");
+			So(nng_sendmsg(s1, msg, 0) == 0);
+			So(nng_recvmsg(c2, &msg, 0) == 0);
+			CHECKSTR(msg, "AGAIN");
 			nng_msg_free(msg);
 		});
 
