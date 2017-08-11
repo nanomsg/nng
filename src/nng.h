@@ -323,17 +323,17 @@ enum nng_proto_enum {
 };
 
 // Builtin protocol socket constructors.
-extern int nng_bus0_open(nng_socket *);
-extern int nng_pair0_open(nng_socket *);
-extern int nng_pair1_open(nng_socket *);
-extern int nng_pub0_open(nng_socket *);
-extern int nng_sub0_open(nng_socket *);
-extern int nng_push0_open(nng_socket *);
-extern int nng_pull0_open(nng_socket *);
-extern int nng_req0_open(nng_socket *);
-extern int nng_rep0_open(nng_socket *);
-extern int nng_surveyor0_open(nng_socket *);
-extern int nng_respondent0_open(nng_socket *);
+NNG_DECL int nng_bus0_open(nng_socket *);
+NNG_DECL int nng_pair0_open(nng_socket *);
+NNG_DECL int nng_pair1_open(nng_socket *);
+NNG_DECL int nng_pub0_open(nng_socket *);
+NNG_DECL int nng_sub0_open(nng_socket *);
+NNG_DECL int nng_push0_open(nng_socket *);
+NNG_DECL int nng_pull0_open(nng_socket *);
+NNG_DECL int nng_req0_open(nng_socket *);
+NNG_DECL int nng_rep0_open(nng_socket *);
+NNG_DECL int nng_surveyor0_open(nng_socket *);
+NNG_DECL int nng_respondent0_open(nng_socket *);
 
 // Default versions.  These provide compile time defaults; note that
 // the actual protocols are baked into the binary; this should avoid
