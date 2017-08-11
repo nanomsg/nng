@@ -1,2 +1,4 @@
 ignore:
  - tests/*/*
+coverage:
+ range: 50..85
