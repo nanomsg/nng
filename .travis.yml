@@ -78,7 +78,7 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - gcc-7
-      env: CC=gcc-7 COVERAGE=ON
+      env: CC=gcc-7 COVERAGE=ON GCOV=gcov-7
 
     # One MacOS X build
     - os: osx
