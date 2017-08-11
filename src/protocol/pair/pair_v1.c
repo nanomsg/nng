@@ -427,6 +427,9 @@ pair1_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	case NNG_OPT_MAXTTL:
 		rv = nni_getopt_int(&s->ttl, buf, szp);
 		break;
+	case NNG_OPT_POLYAMOROUS:
+		rv = nni_getopt_int(&s->poly, buf, szp);
+		break;
 	default:
 		rv = NNG_ENOTSUP;
 	}

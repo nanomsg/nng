@@ -90,6 +90,7 @@ add_nng_test(scalability 20)
 add_nng_test(message 5)
 add_nng_test(device 5)
 add_nng_test(errors 2)
+add_nng_test(pair1 5)
 
 # compatbility tests
 add_nng_compat_test(compat_block 5)
