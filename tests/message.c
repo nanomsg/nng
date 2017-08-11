@@ -12,6 +12,7 @@
 #include "nng.h"
 
 #include <string.h>
+static uint8_t dat123[] = { 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3 };
 
 TestMain("Message Tests", {
 	int      rv;
@@ -182,5 +183,67 @@ TestMain("Message Tests", {
 			size_t sz = sizeof(buf);
 			So(nng_msg_getopt(msg, 4545, buf, &sz) == NNG_ENOENT);
 		});
+
+		Convey("Uint32 body operations work", {
+			uint32_t v;
+			So(nng_msg_append_u32(msg, 2) == 0);
+			So(nng_msg_insert_u32(msg, 1) == 0);
+			So(nng_msg_append_u32(msg, 3) == 0);
+			So(nng_msg_insert_u32(msg, 0) == 0);
+			So(nng_msg_trim_u32(msg, &v) == 0);
+			So(v == 0);
+			So(nng_msg_len(msg) == sizeof(dat123));
+			So(memcmp(nng_msg_body(msg), dat123, sizeof(dat123)) ==
+			    0);
+			So(nng_msg_trim_u32(msg, &v) == 0);
+			So(v == 1);
+			So(nng_msg_chop_u32(msg, &v) == 0);
+			So(v == 3);
+			So(nng_msg_trim_u32(msg, &v) == 0);
+			So(v == 2);
+			So(nng_msg_trim_u32(msg, &v) == NNG_EINVAL);
+			So(nng_msg_trim_u32(msg, &v) == NNG_EINVAL);
+
+			Convey("Single byte is inadequate", {
+				nng_msg_clear(msg);
+				So(nng_msg_append(msg, &v, 1) == 0);
+				So(nng_msg_trim_u32(msg, &v) == NNG_EINVAL);
+				So(nng_msg_trim_u32(msg, &v) == NNG_EINVAL);
+			});
+
+		});
+
+		Convey("Uint32 header operations work", {
+			uint32_t v;
+			So(nng_msg_header_append_u32(msg, 2) == 0);
+			So(nng_msg_header_insert_u32(msg, 1) == 0);
+			So(nng_msg_header_append_u32(msg, 3) == 0);
+			So(nng_msg_header_insert_u32(msg, 0) == 0);
+			So(nng_msg_header_trim_u32(msg, &v) == 0);
+			So(v == 0);
+			So(nng_msg_header_len(msg) == sizeof(dat123));
+			So(nng_msg_len(msg) == 0);
+			So(memcmp(nng_msg_header(msg), dat123,
+			       sizeof(dat123)) == 0);
+			So(nng_msg_header_trim_u32(msg, &v) == 0);
+			So(v == 1);
+			So(nng_msg_header_chop_u32(msg, &v) == 0);
+			So(v == 3);
+			So(nng_msg_header_trim_u32(msg, &v) == 0);
+			So(v == 2);
+			So(nng_msg_header_trim_u32(msg, &v) == NNG_EINVAL);
+			So(nng_msg_header_trim_u32(msg, &v) == NNG_EINVAL);
+
+			Convey("Single byte is inadequate", {
+				nng_msg_header_clear(msg);
+				So(nng_msg_header_append(msg, &v, 1) == 0);
+				So(nng_msg_header_trim_u32(msg, &v) ==
+				    NNG_EINVAL);
+				So(nng_msg_header_trim_u32(msg, &v) ==
+				    NNG_EINVAL);
+			});
+
+		});
+
 	});
 });

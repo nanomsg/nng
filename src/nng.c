@@ -493,6 +493,70 @@ nng_msg_header_append(nng_msg *msg, const void *data, size_t sz)
 }
 
 int
+nng_msg_header_append_u32(nng_msg *msg, uint32_t val)
+{
+	return (nni_msg_header_append_u32(msg, val));
+}
+
+int
+nng_msg_header_insert_u32(nng_msg *msg, uint32_t val)
+{
+	return (nni_msg_header_insert_u32(msg, val));
+}
+
+int
+nng_msg_header_chop_u32(nng_msg *msg, uint32_t *valp)
+{
+	if (nni_msg_header_len(msg) < sizeof(uint32_t)) {
+		return (NNG_EINVAL);
+	}
+	*valp = nni_msg_header_chop_u32(msg);
+	return (0);
+}
+
+int
+nng_msg_header_trim_u32(nng_msg *msg, uint32_t *valp)
+{
+	if (nni_msg_header_len(msg) < sizeof(uint32_t)) {
+		return (NNG_EINVAL);
+	}
+	*valp = nni_msg_header_trim_u32(msg);
+	return (0);
+}
+
+int
+nng_msg_append_u32(nng_msg *msg, uint32_t val)
+{
+	return (nni_msg_append_u32(msg, val));
+}
+
+int
+nng_msg_insert_u32(nng_msg *msg, uint32_t val)
+{
+	return (nni_msg_insert_u32(msg, val));
+}
+
+int
+nng_msg_chop_u32(nng_msg *msg, uint32_t *valp)
+{
+	if (nni_msg_len(msg) < sizeof(uint32_t)) {
+		return (NNG_EINVAL);
+	}
+	*valp = nni_msg_chop_u32(msg);
+	return (0);
+}
+
+int
+nng_msg_trim_u32(nng_msg *msg, uint32_t *valp)
+{
+	if (nni_msg_len(msg) < sizeof(uint32_t)) {
+		return (NNG_EINVAL);
+	}
+	*valp = nni_msg_trim_u32(msg);
+	return (0);
+}
+
+int
 nng_msg_header_insert(nng_msg *msg, const void *data, size_t sz)
 {
 	return (nni_msg_header_insert(msg, data, sz));

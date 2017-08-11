@@ -263,10 +263,19 @@ NNG_DECL int    nng_msg_header_append(nng_msg *, const void *, size_t);
 NNG_DECL int    nng_msg_header_insert(nng_msg *, const void *, size_t);
 NNG_DECL int    nng_msg_header_trim(nng_msg *, size_t);
 NNG_DECL int    nng_msg_header_chop(nng_msg *, size_t);
-NNG_DECL int    nng_msg_dup(nng_msg **, const nng_msg *);
-NNG_DECL void   nng_msg_clear(nng_msg *);
-NNG_DECL void   nng_msg_header_clear(nng_msg *);
-NNG_DECL void   nng_msg_set_pipe(nng_msg *, nng_pipe);
+NNG_DECL int    nng_msg_header_append_u32(nng_msg *, uint32_t);
+NNG_DECL int    nng_msg_header_insert_u32(nng_msg *, uint32_t);
+NNG_DECL int    nng_msg_header_chop_u32(nng_msg *, uint32_t *);
+NNG_DECL int    nng_msg_header_trim_u32(nng_msg *, uint32_t *);
+NNG_DECL int    nng_msg_append_u32(nng_msg *, uint32_t);
+NNG_DECL int    nng_msg_insert_u32(nng_msg *, uint32_t);
+NNG_DECL int    nng_msg_chop_u32(nng_msg *, uint32_t *);
+NNG_DECL int    nng_msg_trim_u32(nng_msg *, uint32_t *);
+
+NNG_DECL int  nng_msg_dup(nng_msg **, const nng_msg *);
+NNG_DECL void nng_msg_clear(nng_msg *);
+NNG_DECL void nng_msg_header_clear(nng_msg *);
+NNG_DECL void nng_msg_set_pipe(nng_msg *, nng_pipe);
 NNG_DECL nng_pipe nng_msg_get_pipe(const nng_msg *);
 NNG_DECL int      nng_msg_getopt(nng_msg *, int, void *, size_t *);
 
