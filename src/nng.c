@@ -360,73 +360,44 @@ nng_device(nng_socket s1, nng_socket s2)
 	return (rv);
 }
 
+static const struct {
+	int         code;
+	const char *msg;
+} nni_errors[] = {
+	// clang-format off
+	{ 0, "Hunky dory" },
+	{ NNG_EINTR, "Interrupted" },
+	{ NNG_ENOMEM, "Out of memory" },
+	{ NNG_EINVAL, "Invalid argument" },
+	{ NNG_EBUSY, "Resource busy" },
+	{ NNG_ETIMEDOUT, "Timed out" },
+	{ NNG_ECONNREFUSED, "Connection refused" },
+	{ NNG_ECLOSED, "Object closed" },
+	{ NNG_EAGAIN, "Try again" },
+	{ NNG_ENOTSUP, "Not supported" },
+	{ NNG_EADDRINUSE, "Address in use" },
+	{ NNG_ESTATE, "Incorrect state" },
+	{ NNG_ENOENT, "Entry not found" },
+	{ NNG_EPROTO, "Protocol error" },
+	{ NNG_EUNREACHABLE, "Destination unreachable" },
+	{ NNG_EADDRINVAL, "Address invalid" },
+	{ NNG_EPERM, "Permission denied" },
+	{ NNG_EMSGSIZE, "Message too large" },
+	{ NNG_ECONNRESET, "Connection reset" },
+	{ NNG_ECONNABORTED, "Connection aborted" },
+	{ NNG_ECANCELED, "Operation canceled" },
+	{ 0, NULL }
+	// clang-format on
+};
+
 // Misc.
 const char *
 nng_strerror(int num)
 {
-	switch (num) {
-	case 0:
-		return ("Hunky dory"); // What did you expect?
-
-	case NNG_EINTR:
-		return ("Interrupted");
-
-	case NNG_ENOMEM:
-		return ("Out of memory");
-
-	case NNG_EINVAL:
-		return ("Invalid argument");
-
-	case NNG_EBUSY:
-		return ("Resource busy");
-
-	case NNG_ETIMEDOUT:
-		return ("Timed out");
-
-	case NNG_ECONNREFUSED:
-		return ("Connection refused");
-
-	case NNG_ECLOSED:
-		return ("Object closed");
-
-	case NNG_EAGAIN:
-		return ("Try again");
-
-	case NNG_ENOTSUP:
-		return ("Not supported");
-
-	case NNG_EADDRINUSE:
-		return ("Address in use");
-
-	case NNG_ESTATE:
-		return ("Incorrect state");
-
-	case NNG_ENOENT:
-		return ("Entry not found");
-
-	case NNG_EPROTO:
-		return ("Protocol error");
-
-	case NNG_EUNREACHABLE:
-		return ("Destination unreachable");
-
-	case NNG_EADDRINVAL:
-		return ("Address invalid");
-
-	case NNG_EPERM:
-		return ("Permission denied");
-
-	case NNG_EMSGSIZE:
-		return ("Message too large");
-
-	case NNG_ECONNRESET:
-		return ("Connection reset");
-
-	case NNG_ECONNABORTED:
-		return ("Connection aborted");
-
-	case NNG_ECANCELED:
-		return ("Operation canceled");
+	for (int i = 0; nni_errors[i].msg != NULL; i++) {
+		if (nni_errors[i].code == num) {
+			return (nni_errors[i].msg);
+		}
 	}
 
 	if (num & NNG_ESYSERR) {
