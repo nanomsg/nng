@@ -315,7 +315,6 @@ nni_posix_pollq_fini(nni_posix_pollq *pq)
 		nni_plat_pipe_raise(pq->wakewfd);
 		nni_mtx_unlock(&pq->mtx);
 	}
-
 	nni_thr_fini(&pq->thr);
 
 	// All pipes should have been closed before this is called.
@@ -330,6 +329,8 @@ nni_posix_pollq_fini(nni_posix_pollq *pq)
 	}
 	if (pq->nfds != 0) {
 		NNI_FREE_STRUCTS(pq->fds, pq->nfds);
+		pq->fds  = NULL;
+		pq->nfds = 0;
 	}
 	nni_mtx_fini(&pq->mtx);
 }
