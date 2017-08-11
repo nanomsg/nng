@@ -345,6 +345,29 @@ TestMain("PAIRv1 protocol", {
 			So(nng_recvmsg(c2, &msg, 0) == NNG_ETIMEDOUT);
 		});
 
+		Convey("Polyamorous default works", {
+			nng_msg *msg;
+			int      poly;
+			nng_pipe p1;
+			size_t   sz;
+
+			poly = 1;
+			So(nng_setopt(s1, NNG_OPT_POLYAMOROUS, &poly,
+			       sizeof(poly)) == 0);
+
+			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+
+			So(nng_msg_alloc(&msg, 0) == 0);
+			APPENDSTR(msg, "YES");
+			So(nng_sendmsg(s1, msg, 0) == 0);
+			So(nng_recvmsg(c1, &msg, 0) == 0);
+			CHECKSTR(msg, "YES");
+			p1 = nng_msg_get_pipe(msg);
+			So(p1 != 0);
+			nng_msg_free(msg);
+		});
+
 		Convey("Polyamorous raw mode works", {
 			nng_msg *msg;
 			int      poly;
@@ -374,56 +397,69 @@ TestMain("PAIRv1 protocol", {
 			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(c2, addr, NULL, NNG_FLAG_SYNCH) == 0);
 
-			So(nng_msg_alloc(&msg, 0) == 0);
-			APPENDSTR(msg, "ONE");
-			So(nng_sendmsg(c1, msg, 0) == 0);
-			So(nng_recvmsg(s1, &msg, 0) == 0);
-			CHECKSTR(msg, "ONE");
-			p1 = nng_msg_get_pipe(msg);
-			So(p1 != 0);
-			So(nng_msg_header_trim_u32(msg, &hops) == 0);
-			So(hops == 1);
-			nng_msg_free(msg);
+			Convey("Send/recv works", {
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "ONE");
+				So(nng_sendmsg(c1, msg, 0) == 0);
+				So(nng_recvmsg(s1, &msg, 0) == 0);
+				CHECKSTR(msg, "ONE");
+				p1 = nng_msg_get_pipe(msg);
+				So(p1 != 0);
+				So(nng_msg_header_trim_u32(msg, &hops) == 0);
+				So(hops == 1);
+				nng_msg_free(msg);
 
-			So(nng_msg_alloc(&msg, 0) == 0);
-			APPENDSTR(msg, "TWO");
-			So(nng_sendmsg(c2, msg, 0) == 0);
-			So(nng_recvmsg(s1, &msg, 0) == 0);
-			CHECKSTR(msg, "TWO");
-			p2 = nng_msg_get_pipe(msg);
-			So(p2 != 0);
-			So(nng_msg_header_trim_u32(msg, &hops) == 0);
-			So(hops == 1);
-			nng_msg_free(msg);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "TWO");
+				So(nng_sendmsg(c2, msg, 0) == 0);
+				So(nng_recvmsg(s1, &msg, 0) == 0);
+				CHECKSTR(msg, "TWO");
+				p2 = nng_msg_get_pipe(msg);
+				So(p2 != 0);
+				So(nng_msg_header_trim_u32(msg, &hops) == 0);
+				So(hops == 1);
+				nng_msg_free(msg);
 
-			So(p1 != p2);
+				So(p1 != p2);
 
-			So(nng_msg_alloc(&msg, 0) == 0);
-			nng_msg_set_pipe(msg, p1);
-			APPENDSTR(msg, "UNO");
-			So(nng_msg_header_append_u32(msg, 1) == 0);
-			So(nng_sendmsg(s1, msg, 0) == 0);
-			So(nng_recvmsg(c1, &msg, 0) == 0);
-			CHECKSTR(msg, "UNO");
-			nng_msg_free(msg);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				nng_msg_set_pipe(msg, p1);
+				APPENDSTR(msg, "UNO");
+				So(nng_msg_header_append_u32(msg, 1) == 0);
+				So(nng_sendmsg(s1, msg, 0) == 0);
+				So(nng_recvmsg(c1, &msg, 0) == 0);
+				CHECKSTR(msg, "UNO");
+				nng_msg_free(msg);
 
-			So(nng_msg_alloc(&msg, 0) == 0);
-			nng_msg_set_pipe(msg, p2);
-			APPENDSTR(msg, "DOS");
-			So(nng_msg_header_append_u32(msg, 1) == 0);
-			So(nng_sendmsg(s1, msg, 0) == 0);
-			So(nng_recvmsg(c2, &msg, 0) == 0);
-			CHECKSTR(msg, "DOS");
-			nng_msg_free(msg);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				nng_msg_set_pipe(msg, p2);
+				APPENDSTR(msg, "DOS");
+				So(nng_msg_header_append_u32(msg, 1) == 0);
+				So(nng_sendmsg(s1, msg, 0) == 0);
+				So(nng_recvmsg(c2, &msg, 0) == 0);
+				CHECKSTR(msg, "DOS");
+				nng_msg_free(msg);
+			});
 
-			nng_close(c1);
+			Convey("Closed pipes don't work", {
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "ONE");
+				So(nng_sendmsg(c1, msg, 0) == 0);
+				So(nng_recvmsg(s1, &msg, 0) == 0);
+				CHECKSTR(msg, "ONE");
+				p1 = nng_msg_get_pipe(msg);
+				So(p1 != 0);
+				nng_msg_free(msg);
 
-			So(nng_msg_alloc(&msg, 0) == 0);
-			nng_msg_set_pipe(msg, p1);
-			APPENDSTR(msg, "EIN");
-			So(nng_msg_header_append_u32(msg, 1) == 0);
-			So(nng_sendmsg(s1, msg, 0) == 0);
-			So(nng_recvmsg(c2, &msg, 0) == NNG_ETIMEDOUT);
+				nng_close(c1);
+
+				So(nng_msg_alloc(&msg, 0) == 0);
+				nng_msg_set_pipe(msg, p1);
+				APPENDSTR(msg, "EIN");
+				So(nng_msg_header_append_u32(msg, 1) == 0);
+				So(nng_sendmsg(s1, msg, 0) == 0);
+				So(nng_recvmsg(c2, &msg, 0) == NNG_ETIMEDOUT);
+			});
 		});
 	});
 })
