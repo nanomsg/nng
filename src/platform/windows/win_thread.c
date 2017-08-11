@@ -141,20 +141,21 @@ nni_plat_thr_fini(nni_plat_thr *thr)
 	}
 }
 
+static LONG plat_inited = 0;
+
 int
 nni_plat_init(int (*helper)(void))
 {
-	static LONG    inited = 0;
 	int            rv;
 	static SRWLOCK lock = SRWLOCK_INIT;
 
-	if (inited) {
+	if (plat_inited) {
 		return (0); // fast path
 	}
 
 	AcquireSRWLockExclusive(&lock);
 
-	if (!inited) {
+	if (!plat_inited) {
 		if ((rv = nni_win_iocp_sysinit()) != 0) {
 			goto out;
 		}
@@ -169,7 +170,7 @@ nni_plat_init(int (*helper)(void))
 		}
 
 		helper();
-		inited = 1;
+		plat_inited = 1;
 	}
 
 out:
@@ -186,6 +187,7 @@ nni_plat_fini(void)
 	nni_win_tcp_sysfini();
 	nni_win_iocp_sysfini();
 	WSACleanup();
+	plat_inited = 0;
 }
 
 #else

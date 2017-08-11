@@ -48,7 +48,6 @@ TestMain("PAIRv1 protocol", {
 
 		Convey("Monogamous cooked mode works", {
 			nng_msg *msg;
-			int      rv;
 
 			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
@@ -113,7 +112,6 @@ TestMain("PAIRv1 protocol", {
 
 		Convey("Polyamorous cooked mode works", {
 			nng_msg *msg;
-			int      rv;
 			int      poly;
 			nng_pipe p1;
 			nng_pipe p2;
@@ -183,7 +181,6 @@ TestMain("PAIRv1 protocol", {
 
 		Convey("Polyamorous raw mode works", {
 			nng_msg *msg;
-			int      rv;
 			int      poly;
 			int      raw;
 			uint32_t hops;

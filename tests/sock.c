@@ -175,7 +175,8 @@ Main({
 					So(rmax == 6550);
 
 					if (sizeof(size_t) == 8) {
-						rmax = 0x1000000000000ull;
+						rmax = 0x10000;
+						rmax <<= 30;
 						So(nng_setopt(sock,
 						       NNG_OPT_RCVMAXSZ, &rmax,
 						       sizeof(rmax)) ==

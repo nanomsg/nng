@@ -47,7 +47,6 @@ Main({
 			int        raw;
 			uint64_t   tmo;
 			nng_msg *  msg;
-			int        rv;
 			void *     thr;
 
 			So(nng_pair1_open(&dev1) == 0);

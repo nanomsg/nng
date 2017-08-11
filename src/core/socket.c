@@ -403,6 +403,7 @@ void
 nni_sock_sys_fini(void)
 {
 	nni_idhash_fini(nni_sock_hash);
+	nni_sock_hash = NULL;
 	nni_mtx_fini(&nni_sock_lk);
 }
 

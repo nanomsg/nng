@@ -15,7 +15,6 @@
 static uint8_t dat123[] = { 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3 };
 
 TestMain("Message Tests", {
-	int      rv;
 	nng_msg *msg;
 
 	Convey("Given an empty message", {
