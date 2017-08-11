@@ -27,6 +27,8 @@ TestMain("PAIRv1 protocol", {
 	nng_socket  c1 = 0;
 	nng_socket  c2 = 0;
 	uint64_t    tmo;
+	uint32_t    v;
+	size_t      sz;
 
 	Reset({
 		nng_close(s1);
@@ -41,7 +43,7 @@ TestMain("PAIRv1 protocol", {
 		So(nng_pair1_open(&c1) == 0);
 		So(nng_pair1_open(&c2) == 0);
 
-		tmo = 500000;
+		tmo = 300000;
 		So(nng_setopt(s1, NNG_OPT_RCVTIMEO, &tmo, sizeof(tmo)) == 0);
 		So(nng_setopt(c1, NNG_OPT_RCVTIMEO, &tmo, sizeof(tmo)) == 0);
 		So(nng_setopt(c2, NNG_OPT_RCVTIMEO, &tmo, sizeof(tmo)) == 0);
@@ -67,9 +69,50 @@ TestMain("PAIRv1 protocol", {
 			nng_msg_free(msg);
 		});
 
-		Convey("Monogamous mode rejects new conns", {
-			So(nng_dial(c2, addr, NULL, NNG_FLAG_SYNCH) ==
-			    NNG_ECONNREFUSED);
+		Convey("Monogamous mode ignores new conns", {
+			int      rv;
+			nng_msg *msg;
+
+			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			nng_usleep(100000);
+			So(nng_dial(c2, addr, NULL, NNG_FLAG_SYNCH) == 0);
+
+			So(nng_msg_alloc(&msg, 0) == 0);
+			APPENDSTR(msg, "ONE");
+			So(nng_sendmsg(c1, msg, 0) == 0);
+			So(nng_recvmsg(s1, &msg, 0) == 0);
+			CHECKSTR(msg, "ONE");
+			nng_msg_free(msg);
+
+			So(nng_msg_alloc(&msg, 0) == 0);
+			APPENDSTR(msg, "TWO");
+			So(nng_sendmsg(c2, msg, 0) == 0);
+			So(nng_recvmsg(s1, &msg, 0) == NNG_ETIMEDOUT);
+		});
+
+		Convey("Cannot set raw mode after connect", {
+			int r = 1;
+			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			nng_usleep(100000);
+
+			So(nng_setopt(s1, NNG_OPT_RAW, &r, sizeof(r)) ==
+			    NNG_ESTATE);
+			So(nng_setopt(c1, NNG_OPT_RAW, &r, sizeof(r)) ==
+			    NNG_ESTATE);
+		});
+
+		Convey("Cannot set polyamorous mode after connect", {
+			int r = 1;
+			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			nng_usleep(100000);
+
+			So(nng_setopt(s1, NNG_OPT_POLYAMOROUS, &r,
+			       sizeof(r)) == NNG_ESTATE);
+			So(nng_setopt(c1, NNG_OPT_POLYAMOROUS, &r,
+			       sizeof(r)) == NNG_ESTATE);
 		});
 
 		Convey("Monogamous raw mode works", {
@@ -84,30 +127,153 @@ TestMain("PAIRv1 protocol", {
 			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
 
-			So(nng_msg_alloc(&msg, 0) == 0);
-			APPENDSTR(msg, "GAMMA");
-			So(nng_msg_header_append_u32(msg, 1) == 0);
-			So(nng_msg_header_len(msg) == sizeof(uint32_t));
-			So(nng_sendmsg(c1, msg, 0) == 0);
-			So(nng_recvmsg(s1, &msg, 0) == 0);
-			So(nng_msg_get_pipe(msg) != 0);
-			CHECKSTR(msg, "GAMMA");
-			So(nng_msg_header_len(msg) == sizeof(uint32_t));
-			So(nng_msg_header_trim_u32(msg, &hops) == 0);
-			So(hops == 2);
-			nng_msg_free(msg);
+			Convey("Send/recv work", {
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "GAMMA");
+				So(nng_msg_header_append_u32(msg, 1) == 0);
+				So(nng_msg_header_len(msg) ==
+				    sizeof(uint32_t));
+				So(nng_sendmsg(c1, msg, 0) == 0);
+				So(nng_recvmsg(s1, &msg, 0) == 0);
+				So(nng_msg_get_pipe(msg) != 0);
+				CHECKSTR(msg, "GAMMA");
+				So(nng_msg_header_len(msg) ==
+				    sizeof(uint32_t));
+				So(nng_msg_header_trim_u32(msg, &hops) == 0);
+				So(hops == 2);
+				nng_msg_free(msg);
 
-			So(nng_msg_alloc(&msg, 0) == 0);
-			APPENDSTR(msg, "EPSILON");
-			So(nng_msg_header_append_u32(msg, 1) == 0);
-			So(nng_sendmsg(s1, msg, 0) == 0);
-			So(nng_recvmsg(c1, &msg, 0) == 0);
-			CHECKSTR(msg, "EPSILON");
-			So(nng_msg_header_len(msg) == sizeof(uint32_t));
-			So(nng_msg_header_trim_u32(msg, &hops) == 0);
-			So(nng_msg_get_pipe(msg) != 0);
-			So(hops == 2);
-			nng_msg_free(msg);
+				So(nng_msg_alloc(&msg, 0) == 0);
+				APPENDSTR(msg, "EPSILON");
+				So(nng_msg_header_append_u32(msg, 1) == 0);
+				So(nng_sendmsg(s1, msg, 0) == 0);
+				So(nng_recvmsg(c1, &msg, 0) == 0);
+				CHECKSTR(msg, "EPSILON");
+				So(nng_msg_header_len(msg) ==
+				    sizeof(uint32_t));
+				So(nng_msg_header_trim_u32(msg, &hops) == 0);
+				So(nng_msg_get_pipe(msg) != 0);
+				So(hops == 2);
+				nng_msg_free(msg);
+			});
+
+			Convey("Missing raw header fails", {
+				So(nng_msg_alloc(&msg, 0) == 0);
+				So(nng_sendmsg(c1, msg, 0) == 0);
+				So(nng_recvmsg(s1, &msg, 0) == NNG_ETIMEDOUT);
+
+				So(nng_msg_alloc(&msg, 0) == 0);
+				So(nng_msg_append_u32(msg, 0xFEEDFACE) == 0);
+				So(nng_msg_header_append_u32(msg, 1) == 0);
+				So(nng_sendmsg(c1, msg, 0) == 0);
+				So(nng_recvmsg(s1, &msg, 0) == 0);
+				So(nng_msg_trim_u32(msg, &v) == 0);
+				So(v == 0xFEEDFACE);
+			});
+
+			Convey("Reserved bits in raw header", {
+
+				Convey("Nonzero bits fail", {
+					So(nng_msg_alloc(&msg, 0) == 0);
+					So(nng_msg_header_append_u32(
+					       msg, 0xDEAD0000) == 0);
+					So(nng_sendmsg(c1, msg, 0) == 0);
+					So(nng_recvmsg(s1, &msg, 0) ==
+					    NNG_ETIMEDOUT);
+				});
+				Convey("Zero bits pass", {
+					So(nng_msg_alloc(&msg, 0) == 0);
+					So(nng_msg_append_u32(
+					       msg, 0xFEEDFACE) == 0);
+					So(nng_msg_header_append_u32(msg, 1) ==
+					    0);
+					So(nng_sendmsg(c1, msg, 0) == 0);
+					So(nng_recvmsg(s1, &msg, 0) == 0);
+					So(nng_msg_trim_u32(msg, &v) == 0);
+					So(v == 0xFEEDFACE);
+				});
+			});
+
+			Convey("TTL is honored", {
+				int ttl = 4;
+
+				sz = sizeof(ttl);
+				So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl, sz) ==
+				    0);
+				ttl = 0;
+				So(nng_getopt(s1, NNG_OPT_MAXTTL, &ttl, &sz) ==
+				    0);
+				So(ttl == 4);
+				Convey("Bad TTL bounces", {
+					So(nng_msg_alloc(&msg, 0) == 0);
+					So(nng_msg_header_append_u32(msg, 4) ==
+					    0);
+					So(nng_sendmsg(c1, msg, 0) == 0);
+					So(nng_recvmsg(s1, &msg, 0) ==
+					    NNG_ETIMEDOUT);
+				});
+				Convey("Good TTL passes", {
+					So(nng_msg_alloc(&msg, 0) == 0);
+					So(nng_msg_append_u32(
+					       msg, 0xFEEDFACE) == 0);
+					So(nng_msg_header_append_u32(msg, 3) ==
+					    0);
+					So(nng_sendmsg(c1, msg, 0) == 0);
+					So(nng_recvmsg(s1, &msg, 0) == 0);
+					So(nng_msg_trim_u32(msg, &v) == 0);
+					So(v == 0xFEEDFACE);
+					So(nng_msg_header_trim_u32(msg, &v) ==
+					    0);
+					So(v == 4);
+				});
+				Convey("Large TTL passes", {
+					ttl = 0xff;
+					So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl,
+					       sz) == 0);
+					So(nng_msg_alloc(&msg, 0) == 0);
+					So(nng_msg_append_u32(msg, 1234) == 0);
+					So(nng_msg_header_append_u32(
+					       msg, 0xfe) == 0);
+					So(nng_sendmsg(c1, msg, 0) == 0);
+					So(nng_recvmsg(s1, &msg, 0) == 0);
+					So(nng_msg_trim_u32(msg, &v) == 0);
+					So(v == 1234);
+					So(nng_msg_header_trim_u32(msg, &v) ==
+					    0);
+					So(v == 0xff);
+				});
+				Convey("Max TTL fails", {
+					ttl = 0xff;
+					So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl,
+					       sz) == 0);
+					So(nng_msg_alloc(&msg, 0) == 0);
+					So(nng_msg_header_append_u32(
+					       msg, 0xff) == 0);
+					So(nng_sendmsg(c1, msg, 0) == 0);
+					So(nng_recvmsg(s1, &msg, 0) ==
+					    NNG_ETIMEDOUT);
+				});
+			});
+		});
+
+		Convey("We cannot set insane TTLs", {
+			int ttl;
+
+			ttl = 0;
+			sz  = sizeof(ttl);
+			So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl, sz) ==
+			    NNG_EINVAL);
+
+			ttl = 1000;
+			sz  = sizeof(ttl);
+			So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl, sz) ==
+			    NNG_EINVAL);
+
+			sz  = 1;
+			ttl = 8;
+
+			So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl, sz) ==
+			    NNG_EINVAL);
 		});
 
 		Convey("Polyamorous cooked mode works", {

@@ -224,7 +224,7 @@ pair1_pipe_recv_cb(void *arg)
 
 	// If we bounced too many times, discard the message, but
 	// keep getting more.
-	if (hdr >= (unsigned) s->ttl) {
+	if (hdr > (unsigned) s->ttl) {
 		nni_msg_free(msg);
 		nni_pipe_recv(npipe, &p->aio_recv);
 		return;
@@ -403,7 +403,7 @@ pair1_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 		}
 		break;
 	case NNG_OPT_MAXTTL:
-		rv = nni_setopt_int(&s->ttl, buf, sz, 0, 255);
+		rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
 		break;
 	default:
 		rv = NNG_ENOTSUP;
