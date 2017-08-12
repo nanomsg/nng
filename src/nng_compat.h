@@ -308,21 +308,6 @@ NN_DECL int         nn_errno(void);
 NN_DECL const char *nn_strerror(int);
 NN_DECL void        nn_term(void);
 
-// This stuff is intended to be exposed only for test programs and our
-// own utilities.  Do not use in your own programs.
-
-#ifdef NNG_PRIVATE
-struct nn_thread {
-	void *thr;
-};
-
-NN_DECL void nn_sleep(uint64_t);
-NN_DECL uint64_t nn_clock(void);
-NN_DECL int      nn_thread_init(struct nn_thread *, void (*)(void *), void *);
-NN_DECL void     nn_thread_term(struct nn_thread *);
-
-#endif // NNG_PRIVATE
-
 #ifdef __cplusplus
 }
 #endif
