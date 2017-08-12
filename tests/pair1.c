@@ -34,6 +34,7 @@ TestMain("PAIRv1 protocol", {
 		nng_close(s1);
 		nng_close(c1);
 		nng_close(c2);
+		nng_usleep(10000);
 		nni_fini();
 	});
 
@@ -119,7 +120,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_setopt(s1, NNG_OPT_RCVBUF, &r, sizeof(r)) == 0);
 			So(nng_setopt(s1, NNG_OPT_SNDBUF, &r, sizeof(r)) == 0);
 			So(nng_setopt(c1, NNG_OPT_RCVBUF, &r, sizeof(r)) == 0);
-			tmo = 10000;
+			tmo = 100000;
 			So(nng_setopt(
 			       s1, NNG_OPT_SNDTIMEO, &tmo, sizeof(tmo)) == 0);
 
@@ -129,6 +130,7 @@ TestMain("PAIRv1 protocol", {
 			for (i = 0, rv = 0; i < 10; i++) {
 				So(nng_msg_alloc(&msg, 0) == 0);
 				if ((rv = nng_sendmsg(s1, msg, 0)) != 0) {
+					nni_msg_free(msg);
 					break;
 				}
 			}
@@ -146,7 +148,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_setopt(s1, NNG_OPT_SNDBUF, &r, sizeof(r)) == 0);
 			So(nng_setopt(c1, NNG_OPT_RCVBUF, &r, sizeof(r)) == 0);
 
-			tmo = 10000;
+			tmo = 30000;
 			So(nng_setopt(
 			       s1, NNG_OPT_SNDTIMEO, &tmo, sizeof(tmo)) == 0);
 
@@ -232,6 +234,7 @@ TestMain("PAIRv1 protocol", {
 				So(nng_recvmsg(s1, &msg, 0) == 0);
 				So(nng_msg_trim_u32(msg, &v) == 0);
 				So(v == 0xFEEDFACE);
+				nng_msg_free(msg);
 			});
 
 			Convey("Reserved bits in raw header", {
@@ -254,6 +257,7 @@ TestMain("PAIRv1 protocol", {
 					So(nng_recvmsg(s1, &msg, 0) == 0);
 					So(nng_msg_trim_u32(msg, &v) == 0);
 					So(v == 0xFEEDFACE);
+					nng_msg_free(msg);
 				});
 			});
 
@@ -288,7 +292,9 @@ TestMain("PAIRv1 protocol", {
 					So(nng_msg_header_trim_u32(msg, &v) ==
 					    0);
 					So(v == 4);
+					nng_msg_free(msg);
 				});
+
 				Convey("Large TTL passes", {
 					ttl = 0xff;
 					So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl,
@@ -304,7 +310,9 @@ TestMain("PAIRv1 protocol", {
 					So(nng_msg_header_trim_u32(msg, &v) ==
 					    0);
 					So(v == 0xff);
+					nng_msg_free(msg);
 				});
+
 				Convey("Max TTL fails", {
 					ttl = 0xff;
 					So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl,

@@ -177,16 +177,16 @@ pair1_pipe_stop(void *arg)
 	pair1_pipe *p = arg;
 	pair1_sock *s = p->psock;
 
+	nni_mtx_lock(&s->mtx);
+	nni_idhash_remove(s->pipes, nni_pipe_id(p->npipe));
+	nni_list_node_remove(&p->node);
+	nni_mtx_unlock(&s->mtx);
+
 	nni_msgq_close(p->sendq);
 	nni_aio_cancel(&p->aio_send, NNG_ECANCELED);
 	nni_aio_cancel(&p->aio_recv, NNG_ECANCELED);
 	nni_aio_cancel(&p->aio_putq, NNG_ECANCELED);
 	nni_aio_cancel(&p->aio_getq, NNG_ECANCELED);
-
-	nni_mtx_lock(&s->mtx);
-	nni_idhash_remove(s->pipes, nni_pipe_id(p->npipe));
-	nni_list_node_remove(&p->node);
-	nni_mtx_unlock(&s->mtx);
 }
 
 static void
