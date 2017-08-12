@@ -160,27 +160,26 @@ int
 nn_bind(int s, const char *addr)
 {
 	int          rv;
-	nng_endpoint ep;
+	nng_listener l;
 
-	if ((rv = nng_listen((nng_socket) s, addr, &ep, NNG_FLAG_SYNCH)) !=
-	    0) {
+	if ((rv = nng_listen((nng_socket) s, addr, &l, NNG_FLAG_SYNCH)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
-	return ((int) ep);
+	return ((int) l);
 }
 
 int
 nn_connect(int s, const char *addr)
 {
-	int          rv;
-	nng_endpoint ep;
+	int        rv;
+	nng_dialer d;
 
-	if ((rv = nng_dial((nng_socket) s, addr, &ep, 0)) != 0) {
+	if ((rv = nng_dial((nng_socket) s, addr, &d, 0)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
-	return ((int) ep);
+	return ((int) d);
 }
 
 int
@@ -192,8 +191,11 @@ nn_shutdown(int s, int ep)
 	// ID can result in affecting the wrong socket.  But this requires
 	// a buggy application, and because we don't recycle endpoints
 	// until wrap, its unlikely to actually come up in practice.
+	// Note that listeners and dialers share the same namespace
+	// in the core, so we can close either one this way.
 
-	if ((rv = nng_endpoint_close((nng_endpoint) ep)) != 0) {
+	if (((rv = nng_dialer_close((nng_dialer) ep)) != 0) &&
+	    ((rv = nng_listener_close((nng_listener) ep)) != 0)) {
 		nn_seterror(rv);
 		return (-1);
 	}

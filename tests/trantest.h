@@ -82,14 +82,14 @@ void
 trantest_conn_refused(trantest *tt)
 {
 	Convey("Connection refused works", {
-		nng_endpoint ep = 0;
+		nng_dialer d = 0;
 
-		So(nng_dial(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		So(nng_dial(tt->reqsock, tt->addr, &d, NNG_FLAG_SYNCH) ==
 		    NNG_ECONNREFUSED);
-		So(ep == 0);
-		So(nng_dial(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		So(d == 0);
+		So(nng_dial(tt->repsock, tt->addr, &d, NNG_FLAG_SYNCH) ==
 		    NNG_ECONNREFUSED);
-		So(ep == 0);
+		So(d == 0);
 	})
 }
 
@@ -97,14 +97,13 @@ void
 trantest_duplicate_listen(trantest *tt)
 {
 	Convey("Duplicate listen rejected", {
-		nng_endpoint ep;
-		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
-		    0);
-		So(ep != 0);
-		ep = 0;
-		So(nng_listen(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
+		nng_listener l;
+		So(nng_listen(tt->repsock, tt->addr, &l, NNG_FLAG_SYNCH) == 0);
+		So(l != 0);
+		l = 0;
+		So(nng_listen(tt->reqsock, tt->addr, &l, NNG_FLAG_SYNCH) ==
 		    NNG_EADDRINUSE);
-		So(ep == 0);
+		So(l == 0);
 	})
 }
 
@@ -112,15 +111,14 @@ void
 trantest_listen_accept(trantest *tt)
 {
 	Convey("Listen and accept", {
-		nng_endpoint ep;
-		ep = 0;
-		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
-		    0);
-		So(ep != 0);
+		nng_listener l;
+		nng_dialer   d;
+		So(nng_listen(tt->repsock, tt->addr, &l, NNG_FLAG_SYNCH) == 0);
+		So(l != 0);
 
-		ep = 0;
-		So(nng_dial(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
-		So(ep != 0);
+		d = 0;
+		So(nng_dial(tt->reqsock, tt->addr, &d, NNG_FLAG_SYNCH) == 0);
+		So(d != 0);
 	})
 }
 
@@ -128,18 +126,16 @@ void
 trantest_send_recv(trantest *tt)
 {
 	Convey("Send and recv", {
-		nng_endpoint ep = 0;
+		nng_listener l;
+		nng_dialer   d;
 		nng_msg *    send;
 		nng_msg *    recv;
 		size_t       len;
 
-		ep = 0;
-		So(nng_listen(tt->repsock, tt->addr, &ep, NNG_FLAG_SYNCH) ==
-		    0);
-		So(ep != 0);
-		ep = 0;
-		So(nng_dial(tt->reqsock, tt->addr, &ep, NNG_FLAG_SYNCH) == 0);
-		So(ep != 0);
+		So(nng_listen(tt->repsock, tt->addr, &l, NNG_FLAG_SYNCH) == 0);
+		So(l != 0);
+		So(nng_dial(tt->reqsock, tt->addr, &d, NNG_FLAG_SYNCH) == 0);
+		So(d != 0);
 
 		send = NULL;
 		So(nng_msg_alloc(&send, 0) == 0);
