@@ -54,10 +54,11 @@ typedef struct nng_stat     nng_stat;
 typedef uint32_t            nng_endpoint; // XXX: REMOVE ME.
 
 // nng_fini is used to terminate the library, freeing certain global resources.
-// Its a good idea to call this with atexit() or during application shutdown.
 // For most cases, this call is optional, but failure to do so may cause
-// memory checkers like valgrind to incorrectly flag memory leaks.  Note that
-// this particular API is NOT THREADSAFE, and MUST NOT BE CALLED WHILE ANY
+// memory checkers like valgrind to incorrectly flag memory leaks associated
+// with global library resources.
+//
+// NOTE: THIS API IS NOT THREADSAFE, and MUST NOT BE CALLED WHILE ANY
 // OTHER APIS ARE IN USE.  (It is safe however to call other functions such
 // as nng_open *after* this function returns, provided that the functions do
 // not run concurrently!)
@@ -90,12 +91,23 @@ NNG_DECL uint16_t nng_peer(nng_socket);
 
 // nng_setopt sets an option for a specific socket.
 NNG_DECL int nng_setopt(nng_socket, int, const void *, size_t);
+NNG_DECL int nng_setopt_int(nng_socket, int, int);
+NNG_DECL int nng_setopt_duration(nng_socket, int, uint64_t);
+NNG_DECL int nng_setopt_size(nng_socket, int, size_t);
 
 // nng_socket_getopt obtains the option for a socket.
 NNG_DECL int nng_getopt(nng_socket, int, void *, size_t *);
+NNG_DECL int nng_getopt_int(nng_socket, int, int *);
+NNG_DECL int nng_getopt_duration(nng_socket, int, uint64_t *);
+NNG_DECL int nng_getopt_size(nng_socket, int, size_t *);
 
 // nng_notify_func is a user function that is executed upon certain
 // events.  See below.
+//
+// NOTE WELL: This API is to be replaced in the future with an
+// alternate API based on our AIO async I/O handles.  We recommend
+// against building this API too firmly into application code at
+// this juncture.
 typedef void (*nng_notify_func)(nng_event *, void *);
 
 // nng_setnotify sets a notification callback.  The callback will be

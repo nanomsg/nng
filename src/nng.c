@@ -296,6 +296,46 @@ nng_getopt(nng_socket sid, int opt, void *val, size_t *szp)
 	return (rv);
 }
 
+// Convenience option wrappers.
+int
+nng_setopt_int(nng_socket sid, int opt, int val)
+{
+	return (nng_setopt(sid, opt, &val, sizeof(val)));
+}
+
+int
+nng_setopt_size(nng_socket sid, int opt, size_t val)
+{
+	return (nng_setopt(sid, opt, &val, sizeof(val)));
+}
+
+int
+nng_setopt_duration(nng_socket sid, int opt, uint64_t val)
+{
+	return (nng_setopt(sid, opt, &val, sizeof(val)));
+}
+
+int
+nng_getopt_int(nng_socket sid, int opt, int *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_getopt(sid, opt, valp, &sz));
+}
+
+int
+nng_getopt_size(nng_socket sid, int opt, size_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_getopt(sid, opt, valp, &sz));
+}
+
+int
+nng_getopt_duration(nng_socket sid, int opt, uint64_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_getopt(sid, opt, valp, &sz));
+}
+
 nng_notify *
 nng_setnotify(nng_socket sid, int mask, nng_notify_func fn, void *arg)
 {

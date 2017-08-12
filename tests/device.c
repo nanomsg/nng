@@ -9,7 +9,6 @@
 //
 
 #include "convey.h"
-#include "core/nng_impl.h"
 #include "nng.h"
 
 #include <string.h>
@@ -33,7 +32,6 @@ dodev(void *arg)
 }
 
 Main({
-	nni_init();
 
 	Test("PAIRv1 device", {
 		const char *addr1 = "inproc://dev1";
@@ -64,7 +62,6 @@ Main({
 
 			So(nng_thread_create(&thr, dodev, &ddata) == 0);
 			Reset({
-				printf("RESETING1\n");
 				nng_close(dev1);
 				nng_close(dev2);
 				nng_thread_destroy(thr);
@@ -108,5 +105,5 @@ Main({
 		});
 	});
 
-	nni_fini();
+	nng_fini();
 })

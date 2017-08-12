@@ -8,7 +8,6 @@
 //
 
 #include "convey.h"
-#include "core/nng_impl.h"
 #include "nng.h"
 #include <string.h>
 
@@ -19,8 +18,6 @@
 
 Main({
 	const char *addr = "inproc://test";
-
-	nni_init();
 
 	Test("PIPELINE (PUSH/PULL) pattern", {
 		Convey("We can create a PUSH socket", {
@@ -166,7 +163,7 @@ Main({
 			// server couldn't have gotten to the accept.  (The
 			// accept logic is single threaded.)  Let's wait a bit
 			// though, to ensure that stuff has settled.
-			nni_usleep(100000);
+			nng_usleep(100000);
 
 			So(nng_sendmsg(push, abc, 0) == 0);
 			So(nng_sendmsg(push, def, 0) == 0);
@@ -186,5 +183,5 @@ Main({
 		});
 	});
 
-	nni_fini();
+	nng_fini();
 })
