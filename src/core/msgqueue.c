@@ -106,7 +106,7 @@ nni_msgq_fini(nni_msgq *mq)
 	while (mq->mq_len > 0) {
 		msg = mq->mq_msgs[mq->mq_get];
 		mq->mq_get++;
-		if (mq->mq_get > mq->mq_alloc) {
+		if (mq->mq_get >= mq->mq_alloc) {
 			mq->mq_get = 0;
 		}
 		mq->mq_len--;
@@ -471,7 +471,7 @@ nni_msgq_drain(nni_msgq *mq, nni_time expire)
 	// Free any remaining messages in the queue.
 	while (mq->mq_len > 0) {
 		nni_msg *msg = mq->mq_msgs[mq->mq_get++];
-		if (mq->mq_get > mq->mq_alloc) {
+		if (mq->mq_get >= mq->mq_alloc) {
 			mq->mq_get = 0;
 		}
 		mq->mq_len--;
@@ -492,7 +492,7 @@ nni_msgq_close(nni_msgq *mq)
 	// Free the messages orphaned in the queue.
 	while (mq->mq_len > 0) {
 		nni_msg *msg = mq->mq_msgs[mq->mq_get++];
-		if (mq->mq_get > mq->mq_alloc) {
+		if (mq->mq_get >= mq->mq_alloc) {
 			mq->mq_get = 0;
 		}
 		mq->mq_len--;
