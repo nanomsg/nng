@@ -40,6 +40,7 @@ typedef struct {
 	nni_list_node mo_node;
 } nni_msgopt;
 
+#if 0
 static void
 nni_chunk_dump(const nni_chunk *chunk, char *prefix)
 {
@@ -87,6 +88,7 @@ nni_msg_dump(const char *banner, const nni_msg *msg)
 	nni_chunk_dump(&msg->m_body, "BODY");
 	nni_println("--- END ---");
 }
+#endif
 
 // nni_chunk_grow increases the underlying space for a chunk.  It ensures
 // that the desired amount of trailing space (including the length)
