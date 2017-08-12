@@ -103,6 +103,69 @@ TestMain("PAIRv1 protocol", {
 			    NNG_ESTATE);
 		});
 
+		Convey("Polyamorous mode is best effort", {
+			int    r;
+			int    rv;
+			int    i;
+			size_t sz;
+
+			nng_msg *msg;
+			sz = sizeof(r);
+			r  = 1;
+			So(nng_setopt(
+			       s1, NNG_OPT_POLYAMOROUS, &r, sizeof(r)) == 0);
+
+			r = 1;
+			So(nng_setopt(s1, NNG_OPT_RCVBUF, &r, sizeof(r)) == 0);
+			So(nng_setopt(s1, NNG_OPT_SNDBUF, &r, sizeof(r)) == 0);
+			So(nng_setopt(c1, NNG_OPT_RCVBUF, &r, sizeof(r)) == 0);
+			tmo = 10000;
+			So(nng_setopt(
+			       s1, NNG_OPT_SNDTIMEO, &tmo, sizeof(tmo)) == 0);
+
+			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+
+			for (i = 0, rv = 0; i < 10; i++) {
+				So(nng_msg_alloc(&msg, 0) == 0);
+				if ((rv = nng_sendmsg(s1, msg, 0)) != 0) {
+					break;
+				}
+			}
+			So(rv == 0);
+			So(i == 10);
+		});
+
+		Convey("Monogamous mode exerts backpressure", {
+			int      r;
+			int      i;
+			int      rv;
+			nng_msg *msg;
+			r = 1;
+			So(nng_setopt(s1, NNG_OPT_RCVBUF, &r, sizeof(r)) == 0);
+			So(nng_setopt(s1, NNG_OPT_SNDBUF, &r, sizeof(r)) == 0);
+			So(nng_setopt(c1, NNG_OPT_RCVBUF, &r, sizeof(r)) == 0);
+
+			tmo = 10000;
+			So(nng_setopt(
+			       s1, NNG_OPT_SNDTIMEO, &tmo, sizeof(tmo)) == 0);
+
+			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+
+			// We choose to allow some buffering.  In reality the
+			// buffer size is just 1, and we will fail after 2.
+			for (i = 0, rv = 0; i < 10; i++) {
+				So(nng_msg_alloc(&msg, 0) == 0);
+				if ((rv = nng_sendmsg(s1, msg, 0)) != 0) {
+					nng_msg_free(msg);
+					break;
+				}
+			}
+			So(rv == NNG_ETIMEDOUT);
+			So(i < 10);
+		});
+
 		Convey("Cannot set polyamorous mode after connect", {
 			int r = 1;
 			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
@@ -402,6 +465,11 @@ TestMain("PAIRv1 protocol", {
 			raw = 1;
 			So(nng_setopt(s1, NNG_OPT_RAW, &raw, sizeof(poly)) ==
 			    0);
+
+			raw = 0;
+			sz  = sizeof(raw);
+			So(nng_getopt(s1, NNG_OPT_RAW, &raw, &sz) == 0);
+			So(raw == 1);
 
 			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
 			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
