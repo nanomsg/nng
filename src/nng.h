@@ -51,7 +51,6 @@ typedef struct nng_event    nng_event;
 typedef struct nng_notify   nng_notify;
 typedef struct nng_snapshot nng_snapshot;
 typedef struct nng_stat     nng_stat;
-typedef uint32_t            nng_endpoint; // XXX: REMOVE ME.
 
 // nng_fini is used to terminate the library, freeing certain global resources.
 // For most cases, this call is optional, but failure to do so may cause
@@ -66,10 +65,7 @@ NNG_DECL void nng_fini(void);
 
 // nng_close closes the socket, terminating all activity and
 // closing any underlying connections and releasing any associated
-// resources. Memory associated with the socket is freed, so it is an
-// error to reference the socket in any way after this is called. Likewise,
-// it is an error to reference any resources such as endpoints or
-// pipes associated with the socket.
+// resources.
 NNG_DECL int nng_close(nng_socket);
 
 // nng_closeall closes all open sockets.  Do not call this from
@@ -159,10 +155,6 @@ NNG_DECL int nng_event_type(nng_event *);
 
 NNG_DECL nng_socket nng_event_socket(nng_event *);
 
-NNG_DECL nng_endpoint nng_event_endpoint(nng_event *);
-
-NNG_DECL nng_pipe nng_event_pipe(nng_event *);
-
 NNG_DECL const char *nng_event_reason(nng_event *);
 
 // nng_listen creates a listening endpoint with no special options,
@@ -197,19 +189,27 @@ NNG_DECL int nng_dialer_start(nng_dialer, int);
 // the listener is not already listening.
 NNG_DECL int nng_listener_start(nng_listener, int);
 
-// nng_endpoint_close closes the endpoint, shutting down all underlying
-// connections and releasing all associated resources.  It is an error to
-// refer to the endpoint after this is called.
-NNG_DECL int nng_endpoint_close(nng_endpoint);
+// nng_dialer_close closes the dialer, shutting down all underlying
+// connections and releasing all associated resources.
 NNG_DECL int nng_dialer_close(nng_dialer);
+
+// nng_listener_close closes the listener, shutting down all underlying
+// connections and releasing all associated resources.
 NNG_DECL int nng_listener_close(nng_listener);
 
-// nng_endpoint_setopt sets an option for a specific endpoint.  Note
-// endpoint options may not be altered on a running endpoint.
-NNG_DECL int nng_endpoint_setopt(nng_endpoint, int, void *, size_t);
+// nng_dialer_setopt sets an option for a specific dialer.  Note
+// dialer options may not be altered on a running dialer.
+NNG_DECL int nng_dialer_setopt(nng_dialer, int, void *, size_t);
 
-// nng_endpoint_getopt obtains the option for an endpoint.
-NNG_DECL int nng_endpoint_getopt(nng_endpoint, int, void *, size_t *);
+// nng_dialer_getopt obtains the option for a dialer.
+NNG_DECL int nng_dialer_getopt(nng_dialer, int, void *, size_t *);
+
+// nng_listener_setopt sets an option for a specific listener.  Note
+// listener options may not be altered on a running listener.
+NNG_DECL int nng_listener_setopt(nng_listener, int, void *, size_t);
+
+// nng_listener_getopt obtains the option for a listener.
+NNG_DECL int nng_listener_getopt(nng_listener, int, void *, size_t *);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.

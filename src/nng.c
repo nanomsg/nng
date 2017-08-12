@@ -223,7 +223,7 @@ nng_sendmsg(nng_socket sid, nng_msg *msg, int flags)
 }
 
 int
-nng_dial(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
+nng_dial(nng_socket sid, const char *addr, nng_dialer *dp, int flags)
 {
 	nni_ep *  ep;
 	int       rv;
@@ -232,17 +232,25 @@ nng_dial(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
-	if ((rv = nni_sock_dial(sock, addr, &ep, flags)) == 0) {
-		if (epp != NULL) {
-			*epp = nni_ep_id(ep);
-		}
+	if ((rv = nni_ep_create_dialer(&ep, sock, addr)) != 0) {
+		nni_sock_rele(sock);
+		return (rv);
 	}
+	if ((rv = nni_ep_dial(ep, flags)) != 0) {
+		nni_ep_close(ep);
+		nni_sock_rele(sock);
+		return (rv);
+	}
+	if (dp != NULL) {
+		*dp = nni_ep_id(ep);
+	}
+	nni_ep_rele(ep);
 	nni_sock_rele(sock);
-	return (rv);
+	return (0);
 }
 
 int
-nng_listen(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
+nng_listen(nng_socket sid, const char *addr, nng_listener *lp, int flags)
 {
 	nni_ep *  ep;
 	int       rv;
@@ -251,20 +259,36 @@ nng_listen(nng_socket sid, const char *addr, nng_endpoint *epp, int flags)
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
-	if ((rv = nni_sock_listen(sock, addr, &ep, flags)) == 0) {
-		if (epp != NULL) {
-			*epp = nni_ep_id(ep);
-		}
+	if ((rv = nni_ep_create_listener(&ep, sock, addr)) != 0) {
+		nni_sock_rele(sock);
+		return (rv);
 	}
+	if ((rv = nni_ep_listen(ep, flags)) != 0) {
+		nni_ep_close(ep);
+		nni_sock_rele(sock);
+		return (rv);
+	}
+
+	if (lp != NULL) {
+		*lp = nni_ep_id(ep);
+	}
+	nni_ep_rele(ep);
 	nni_sock_rele(sock);
 	return (rv);
 }
 
 int
-nng_endpoint_close(nng_endpoint eid)
+nng_dialer_close(nng_dialer d)
 {
-	// XXX: reimplement this properly.
-	NNI_ARG_UNUSED(eid);
+	//	return (nni_ep_close());
+	NNI_ARG_UNUSED(d);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_listener_close(nng_listener l)
+{
+	NNI_ARG_UNUSED(l);
 	return (NNG_ENOTSUP);
 }
 
@@ -662,6 +686,7 @@ nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 	return (nni_msg_getopt(msg, opt, ptr, szp));
 }
 
+#if 0
 int
 nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)
 {
@@ -710,6 +735,7 @@ nng_stat_value(nng_stat *stat)
 	// Stats TBD.
 	return (0);
 }
+#endif
 
 // These routines exist as utility functions, exposing some of our "guts"
 // to the external world for the purposes of test code and bundled utilities.

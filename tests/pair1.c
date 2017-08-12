@@ -73,7 +73,6 @@ TestMain("PAIRv1 protocol", {
 		});
 
 		Convey("Monogamous mode ignores new conns", {
-			int      rv;
 			nng_msg *msg;
 
 			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
@@ -394,8 +393,6 @@ TestMain("PAIRv1 protocol", {
 
 		Convey("Polyamorous default works", {
 			nng_msg *msg;
-			nng_pipe p1;
-			size_t   sz;
 
 			So(nng_setopt_int(s1, NNG_OPT_POLYAMOROUS, 1) == 0);
 
