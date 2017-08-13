@@ -26,6 +26,7 @@ static void nni_ep_reaper(void *);
 
 static nni_idhash *nni_eps;
 
+static nni_mtx  nni_ep_lk;
 static nni_list nni_ep_reap_list;
 static nni_mtx  nni_ep_reap_lk;
 static nni_cv   nni_ep_reap_cv;
@@ -39,7 +40,8 @@ nni_ep_sys_init(void)
 
 	NNI_LIST_INIT(&nni_ep_reap_list, nni_ep, ep_reap_node);
 
-	if (((rv = nni_mtx_init(&nni_ep_reap_lk)) != 0) ||
+	if (((rv = nni_mtx_init(&nni_ep_lk)) != 0) ||
+	    ((rv = nni_mtx_init(&nni_ep_reap_lk)) != 0) ||
 	    ((rv = nni_cv_init(&nni_ep_reap_cv, &nni_ep_reap_lk)) != 0) ||
 	    ((rv = nni_thr_init(&nni_ep_reap_thr, nni_ep_reaper, 0)) != 0) ||
 	    ((rv = nni_idhash_init(&nni_eps)) != 0)) {
@@ -66,6 +68,7 @@ nni_ep_sys_fini(void)
 	nni_thr_fini(&nni_ep_reap_thr);
 	nni_cv_fini(&nni_ep_reap_cv);
 	nni_mtx_fini(&nni_ep_reap_lk);
+	nni_mtx_fini(&nni_ep_lk);
 	nni_idhash_fini(nni_eps);
 	nni_eps = NULL;
 }
@@ -159,6 +162,40 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 
 	*epp = ep;
 	return (0);
+}
+
+int
+nni_ep_find(nni_ep **epp, uint32_t id)
+{
+	int     rv;
+	nni_ep *ep;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+
+	nni_mtx_lock(&nni_ep_lk);
+	if ((rv = nni_idhash_find(nni_eps, id, (void **) &ep)) == 0) {
+		if (ep->ep_closed) {
+			rv = NNG_ECLOSED;
+		} else {
+			ep->ep_refcnt++;
+			*epp = ep;
+		}
+	}
+	nni_mtx_unlock(&nni_ep_lk);
+	return (rv);
+}
+
+void
+nni_ep_rele(nni_ep *ep)
+{
+	nni_mtx_lock(&nni_ep_lk);
+	ep->ep_refcnt--;
+	if (ep->ep_closing) {
+		nni_cv_wake(&ep->ep_cv);
+	}
+	nni_mtx_unlock(&nni_ep_lk);
 }
 
 void

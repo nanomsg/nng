@@ -30,8 +30,9 @@ struct nni_ep {
 	int           ep_mode;
 	int           ep_started;
 	int           ep_stop;
-	int           ep_closed; // full shutdown
-	int           ep_bound;  // true if we bound locally
+	int           ep_closed;  // full shutdown
+	int           ep_closing; // close pending (waiting on refcnt)
+	int           ep_bound;   // true if we bound locally
 	int           ep_refcnt;
 	nni_mtx       ep_mtx;
 	nni_cv        ep_cv;
@@ -57,6 +58,7 @@ extern void      nni_ep_sys_fini(void);
 extern nni_tran *nni_ep_tran(nni_ep *);
 extern nni_sock *nni_ep_sock(nni_ep *);
 extern int       nni_ep_find(nni_ep **, uint32_t);
+extern void      nni_ep_rele(nni_ep *);
 extern uint32_t  nni_ep_id(nni_ep *);
 extern int       nni_ep_create(nni_ep **, nni_sock *, const char *, int);
 extern void      nni_ep_stop(nni_ep *);
