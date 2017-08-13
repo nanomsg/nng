@@ -225,8 +225,8 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 {
 	nni_pipe *p;
 	int       rv;
-	nni_tran *tran = ep->ep_tran;
-	nni_sock *sock = ep->ep_sock;
+	nni_tran *tran = nni_ep_tran(ep);
+	nni_sock *sock = nni_ep_sock(ep);
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		// In this case we just toss the pipe...

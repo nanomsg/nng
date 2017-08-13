@@ -1,5 +1,5 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -39,7 +39,7 @@ struct nni_ep {
 	nni_aio       ep_acc_aio;
 	nni_aio       ep_con_aio;
 	nni_aio       ep_con_syn;  // used for sync connect
-	nni_aio       ep_backoff;  // backoff timer
+	nni_aio       ep_tmo_aio;  // backoff timer
 	nni_duration  ep_maxrtime; // maximum time for reconnect
 	nni_duration  ep_currtime; // current time for reconnect
 	nni_duration  ep_inirtime; // initial time for reconnect
@@ -52,16 +52,18 @@ enum nni_ep_mode {
 	NNI_EP_MODE_LISTEN = 2,
 };
 
-extern int      nni_ep_sys_init(void);
-extern void     nni_ep_sys_fini(void);
-extern int      nni_ep_find(nni_ep **, uint32_t);
-extern uint32_t nni_ep_id(nni_ep *);
-extern int      nni_ep_create(nni_ep **, nni_sock *, const char *, int);
-extern void     nni_ep_stop(nni_ep *);
-extern void     nni_ep_close(nni_ep *);
-extern int      nni_ep_dial(nni_ep *, int);
-extern int      nni_ep_listen(nni_ep *, int);
-extern void     nni_ep_list_init(nni_list *);
+extern int       nni_ep_sys_init(void);
+extern void      nni_ep_sys_fini(void);
+extern nni_tran *nni_ep_tran(nni_ep *);
+extern nni_sock *nni_ep_sock(nni_ep *);
+extern int       nni_ep_find(nni_ep **, uint32_t);
+extern uint32_t  nni_ep_id(nni_ep *);
+extern int       nni_ep_create(nni_ep **, nni_sock *, const char *, int);
+extern void      nni_ep_stop(nni_ep *);
+extern void      nni_ep_close(nni_ep *);
+extern int       nni_ep_dial(nni_ep *, int);
+extern int       nni_ep_listen(nni_ep *, int);
+extern void      nni_ep_list_init(nni_list *);
 extern int nni_ep_pipe_add(nni_ep *ep, nni_pipe *);
 extern void nni_ep_pipe_remove(nni_ep *, nni_pipe *);
 

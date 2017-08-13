@@ -16,12 +16,12 @@
 
 // Functionality related to end points.
 
-static void nni_ep_accept_start(nni_ep *);
-static void nni_ep_accept_done(void *);
-static void nni_ep_connect_start(nni_ep *);
-static void nni_ep_connect_done(void *);
-static void nni_ep_backoff_start(nni_ep *);
-static void nni_ep_backoff_done(void *);
+static void nni_ep_acc_start(nni_ep *);
+static void nni_ep_acc_cb(void *);
+static void nni_ep_con_start(nni_ep *);
+static void nni_ep_con_cb(void *);
+static void nni_ep_tmo_start(nni_ep *);
+static void nni_ep_tmo_cb(void *);
 static void nni_ep_reaper(void *);
 
 static nni_idhash *nni_eps;
@@ -90,12 +90,12 @@ nni_ep_destroy(nni_ep *ep)
 	nni_aio_stop(&ep->ep_acc_aio);
 	nni_aio_stop(&ep->ep_con_aio);
 	nni_aio_stop(&ep->ep_con_syn);
-	nni_aio_stop(&ep->ep_backoff);
+	nni_aio_stop(&ep->ep_tmo_aio);
 
 	nni_aio_fini(&ep->ep_acc_aio);
 	nni_aio_fini(&ep->ep_con_aio);
 	nni_aio_fini(&ep->ep_con_syn);
-	nni_aio_fini(&ep->ep_backoff);
+	nni_aio_fini(&ep->ep_tmo_aio);
 
 	nni_mtx_lock(&ep->ep_mtx);
 	if (ep->ep_data != NULL) {
@@ -108,7 +108,7 @@ nni_ep_destroy(nni_ep *ep)
 }
 
 int
-nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
+nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 {
 	nni_tran *tran;
 	nni_ep *  ep;
@@ -128,6 +128,17 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 	ep->ep_bound  = 0;
 	ep->ep_data   = NULL;
 	ep->ep_refcnt = 0;
+	ep->ep_sock   = s;
+	ep->ep_tran   = tran;
+	ep->ep_mode   = mode;
+
+	// Make a copy of the endpoint operations.  This allows us to
+	// modify them (to override NULLs for example), and avoids an extra
+	// dereference on hot paths.
+	ep->ep_ops = *tran->tran_ep;
+
+	// Could safely use strcpy here, but this avoids discussion.
+	(void) snprintf(ep->ep_addr, sizeof(ep->ep_addr), "%s", addr);
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 	NNI_LIST_NODE_INIT(&ep->ep_reap_node);
@@ -136,44 +147,12 @@ nni_ep_create(nni_ep **epp, nni_sock *sock, const char *addr, int mode)
 
 	if (((rv = nni_mtx_init(&ep->ep_mtx)) != 0) ||
 	    ((rv = nni_cv_init(&ep->ep_cv, &ep->ep_mtx)) != 0) ||
-	    ((rv = nni_idhash_alloc(nni_eps, &ep->ep_id, ep)) != 0)) {
-		nni_ep_destroy(ep);
-		return (rv);
-	}
-	rv = nni_aio_init(&ep->ep_acc_aio, nni_ep_accept_done, ep);
-	if (rv != 0) {
-		nni_ep_destroy(ep);
-		return (rv);
-	}
-	rv = nni_aio_init(&ep->ep_con_aio, nni_ep_connect_done, ep);
-	if (rv != 0) {
-		nni_ep_destroy(ep);
-		return (rv);
-	}
-	rv = nni_aio_init(&ep->ep_con_syn, NULL, NULL);
-	if (rv != 0) {
-		nni_ep_destroy(ep);
-		return (rv);
-	}
-	rv = nni_aio_init(&ep->ep_backoff, nni_ep_backoff_done, ep);
-	if (rv != 0) {
-		nni_ep_destroy(ep);
-		return (rv);
-	}
-
-	ep->ep_sock = sock;
-	ep->ep_tran = tran;
-	ep->ep_mode = mode;
-
-	// Could safely use strcpy here, but this avoids discussion.
-	(void) snprintf(ep->ep_addr, sizeof(ep->ep_addr), "%s", addr);
-
-	// Make a copy of the endpoint operations.  This allows us to
-	// modify them (to override NULLs for example), and avoids an extra
-	// dereference on hot paths.
-	ep->ep_ops = *tran->tran_ep;
-
-	if ((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, sock, mode)) != 0) {
+	    ((rv = nni_idhash_alloc(nni_eps, &ep->ep_id, ep)) != 0) ||
+	    ((rv = nni_aio_init(&ep->ep_acc_aio, nni_ep_acc_cb, ep)) != 0) ||
+	    ((rv = nni_aio_init(&ep->ep_con_aio, nni_ep_con_cb, ep)) != 0) ||
+	    ((rv = nni_aio_init(&ep->ep_tmo_aio, nni_ep_tmo_cb, ep)) != 0) ||
+	    ((rv = nni_aio_init(&ep->ep_con_syn, NULL, NULL)) != 0) ||
+	    ((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, s, mode)) != 0)) {
 		nni_ep_destroy(ep);
 		return (rv);
 	}
@@ -197,7 +176,7 @@ nni_ep_close(nni_ep *ep)
 	nni_aio_cancel(&ep->ep_acc_aio, NNG_ECLOSED);
 	nni_aio_cancel(&ep->ep_con_aio, NNG_ECLOSED);
 	nni_aio_cancel(&ep->ep_con_syn, NNG_ECLOSED);
-	nni_aio_cancel(&ep->ep_backoff, NNG_ECLOSED);
+	nni_aio_cancel(&ep->ep_tmo_aio, NNG_ECLOSED);
 
 	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
@@ -211,7 +190,7 @@ nni_ep_reap(nni_ep *ep)
 	nni_aio_stop(&ep->ep_acc_aio);
 	nni_aio_stop(&ep->ep_con_aio);
 	nni_aio_stop(&ep->ep_con_syn);
-	nni_aio_stop(&ep->ep_backoff);
+	nni_aio_stop(&ep->ep_tmo_aio);
 
 	// Take us off the sock list.
 	nni_sock_ep_remove(ep->ep_sock, ep);
@@ -219,8 +198,8 @@ nni_ep_reap(nni_ep *ep)
 	// Make sure any other unlocked users (references) are gone
 	// before we actually remove the memory.  We should not have
 	// to wait long as we have closed the underlying pipe and
-	// done everything we can to wake any waiter (synchronous connect)
-	// gracefully.
+	// done everything we can to wake any waiter (synchronous
+	// connect) gracefully.
 	nni_mtx_lock(&ep->ep_mtx);
 	ep->ep_closed = 1;
 	for (;;) {
@@ -261,14 +240,14 @@ nni_ep_stop(nni_ep *ep)
 }
 
 static void
-nni_ep_backoff_cancel(nni_aio *aio, int rv)
+nni_ep_tmo_cancel(nni_aio *aio, int rv)
 {
 	// The only way this ever gets "finished", is via cancellation.
 	nni_aio_finish_error(aio, rv);
 }
 
 static void
-nni_ep_backoff_start(nni_ep *ep)
+nni_ep_tmo_start(nni_ep *ep)
 {
 	nni_duration backoff;
 
@@ -282,36 +261,36 @@ nni_ep_backoff_start(nni_ep *ep)
 	}
 
 	// To minimize damage from storms, etc., we select a backoff
-	// value randomly, in the range of [0, backoff-1]; this is pretty
-	// similar to 802 style backoff, except that we have a nearly
-	// uniform time period instead of discrete slot times.  This
-	// algorithm may lead to slight biases because we don't have
-	// a statistically perfect distribution with the modulo of the
-	// random number, but this really doesn't matter.
+	// value randomly, in the range of [0, backoff-1]; this is
+	// pretty similar to 802 style backoff, except that we have a
+	// nearly uniform time period instead of discrete slot times.
+	// This algorithm may lead to slight biases because we don't
+	// have a statistically perfect distribution with the modulo of
+	// the random number, but this really doesn't matter.
 
-	ep->ep_backoff.a_expire = nni_clock() + (nni_random() % backoff);
-	nni_aio_start(&ep->ep_backoff, nni_ep_backoff_cancel, ep);
+	ep->ep_tmo_aio.a_expire = nni_clock() + (nni_random() % backoff);
+	nni_aio_start(&ep->ep_tmo_aio, nni_ep_tmo_cancel, ep);
 }
 
 static void
-nni_ep_backoff_done(void *arg)
+nni_ep_tmo_cb(void *arg)
 {
 	nni_ep * ep  = arg;
-	nni_aio *aio = &ep->ep_backoff;
+	nni_aio *aio = &ep->ep_tmo_aio;
 
 	nni_mtx_lock(&ep->ep_mtx);
 	if (nni_aio_result(aio) == NNG_ETIMEDOUT) {
 		if (ep->ep_mode == NNI_EP_MODE_DIAL) {
-			nni_ep_connect_start(ep);
+			nni_ep_con_start(ep);
 		} else {
-			nni_ep_accept_start(ep);
+			nni_ep_acc_start(ep);
 		}
 	}
 	nni_mtx_unlock(&ep->ep_mtx);
 }
 
 static void
-nni_ep_connect_done(void *arg)
+nni_ep_con_cb(void *arg)
 {
 	nni_ep * ep  = arg;
 	nni_aio *aio = &ep->ep_con_aio;
@@ -324,11 +303,12 @@ nni_ep_connect_done(void *arg)
 	switch (rv) {
 	case 0:
 		// Good connect, so reset the backoff timer.
-		// Note that a host that accepts the connect, but drops us
-		// immediately, is going to get hit pretty hard (depending
-		// on the initial backoff) with no exponential backoff.
-		// This can happen if we wind up trying to connect to some
-		// port that does not speak SP for example.
+		// Note that a host that accepts the connect, but drops
+		// us immediately, is going to get hit pretty hard
+		// (depending on the initial backoff) with no
+		// exponential backoff. This can happen if we wind up
+		// trying to connect to some port that does not speak
+		// SP for example.
 		ep->ep_currtime = ep->ep_inirtime;
 
 		// No further outgoing connects -- we will restart a
@@ -340,14 +320,14 @@ nni_ep_connect_done(void *arg)
 		break;
 	default:
 		// Other errors involve the use of the backoff timer.
-		nni_ep_backoff_start(ep);
+		nni_ep_tmo_start(ep);
 		break;
 	}
 	nni_mtx_unlock(&ep->ep_mtx);
 }
 
 static void
-nni_ep_connect_start(nni_ep *ep)
+nni_ep_con_start(nni_ep *ep)
 {
 	nni_aio *aio = &ep->ep_con_aio;
 
@@ -381,7 +361,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 	}
 
 	if ((flags & NNG_FLAG_SYNCH) == 0) {
-		nni_ep_connect_start(ep);
+		nni_ep_con_start(ep);
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (0);
 	}
@@ -404,7 +384,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 }
 
 static void
-nni_ep_accept_done(void *arg)
+nni_ep_acc_cb(void *arg)
 {
 	nni_ep * ep  = arg;
 	nni_aio *aio = &ep->ep_acc_aio;
@@ -418,7 +398,7 @@ nni_ep_accept_done(void *arg)
 	nni_mtx_lock(&ep->ep_mtx);
 	switch (rv) {
 	case 0:
-		nni_ep_accept_start(ep);
+		nni_ep_acc_start(ep);
 		break;
 	case NNG_ECLOSED:
 	case NNG_ECANCELED:
@@ -427,21 +407,22 @@ nni_ep_accept_done(void *arg)
 	case NNG_ECONNABORTED:
 	case NNG_ECONNRESET:
 		// These are remote conditions, no cool down.
-		nni_ep_accept_start(ep);
+		nni_ep_acc_start(ep);
 		break;
 	default:
-		// We don't really know why we failed, but we backoff here.
-		// This is because errors here are probably due to system
-		// failures (resource exhaustion) and we hope by not
-		// thrashing we give the system a chance to recover.
-		nni_ep_backoff_start(ep);
+		// We don't really know why we failed, but we backoff
+		// here. This is because errors here are probably due
+		// to system failures (resource exhaustion) and we hope
+		// by not thrashing we give the system a chance to
+		// recover.
+		nni_ep_tmo_start(ep);
 		break;
 	}
 	nni_mtx_unlock(&ep->ep_mtx);
 }
 
 static void
-nni_ep_accept_start(nni_ep *ep)
+nni_ep_acc_start(nni_ep *ep)
 {
 	nni_aio *aio = &ep->ep_acc_aio;
 
@@ -479,7 +460,7 @@ nni_ep_listen(nni_ep *ep, int flags)
 	}
 	ep->ep_bound = 1;
 
-	nni_ep_accept_start(ep);
+	nni_ep_acc_start(ep);
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	return (0);
@@ -517,9 +498,10 @@ nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
 	// If this pipe closed, then lets restart the dial operation.
 	// Since the remote side seems to have closed, lets start with
 	// a backoff.  This keeps us from pounding the crap out of the
-	// thing if a remote server accepts but then disconnects immediately.
+	// thing if a remote server accepts but then disconnects
+	// immediately.
 	if ((!ep->ep_closed) && (ep->ep_mode == NNI_EP_MODE_DIAL)) {
-		nni_ep_backoff_start(ep);
+		nni_ep_tmo_start(ep);
 	}
 	nni_mtx_unlock(&ep->ep_mtx);
 }
@@ -528,6 +510,18 @@ void
 nni_ep_list_init(nni_list *list)
 {
 	NNI_LIST_INIT(list, nni_ep, ep_node);
+}
+
+nni_tran *
+nni_ep_tran(nni_ep *ep)
+{
+	return (ep->ep_tran);
+}
+
+nni_sock *
+nni_ep_sock(nni_ep *ep)
+{
+	return (ep->ep_sock);
 }
 
 static void
