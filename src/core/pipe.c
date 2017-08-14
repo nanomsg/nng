@@ -148,31 +148,6 @@ nni_pipe_close(nni_pipe *p)
 	nni_aio_cancel(&p->p_start_aio, NNG_ECLOSED);
 }
 
-// Pipe reap is called on a taskq when the pipe should be closed.  No
-// locks are held.  This routine must take care to synchronously ensure
-// that no further references to the pipe are possible, then it may
-// destroy the pipe.
-static void
-nni_pipe_reap(nni_pipe *p)
-{
-	// Transport close...
-	nni_pipe_close(p);
-
-	nni_aio_stop(&p->p_start_aio);
-
-	// Remove the pipe from the socket and the endpoint.  Note
-	// that it is in theory possible for either of these to be null
-	// if the pipe is being torn down before it is fully initialized.
-	if (p->p_ep != NULL) {
-		nni_ep_pipe_remove(p->p_ep, p);
-	}
-	if (p->p_sock != NULL) {
-		nni_sock_pipe_remove(p->p_sock, p);
-	}
-
-	nni_pipe_destroy(p);
-}
-
 void
 nni_pipe_stop(nni_pipe *p)
 {
@@ -238,6 +213,8 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	p->p_tran_ops   = *tran->tran_pipe;
 	p->p_tran_data  = tdata;
 	p->p_proto_data = NULL;
+	p->p_ep         = ep;
+	p->p_sock       = sock;
 
 	NNI_LIST_NODE_INIT(&p->p_reap_node);
 
@@ -257,7 +234,13 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 		return (rv);
 	}
 
+	if ((rv = nni_ep_pipe_add(ep, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
 	if ((rv = nni_sock_pipe_add(sock, ep, p)) != 0) {
+		nni_ep_pipe_remove(ep, p);
 		nni_pipe_destroy(p);
 		return (rv);
 	}
@@ -324,12 +307,8 @@ nni_pipe_reaper(void *notused)
 			// Note that it is in theory possible for either of
 			// these to be null if the pipe is being torn down
 			// before it is fully initialized.
-			if (p->p_ep != NULL) {
-				nni_ep_pipe_remove(p->p_ep, p);
-			}
-			if (p->p_sock != NULL) {
-				nni_sock_pipe_remove(p->p_sock, p);
-			}
+			nni_ep_pipe_remove(p->p_ep, p);
+			nni_sock_pipe_remove(p->p_sock, p);
 			nni_pipe_destroy(p);
 			nni_mtx_lock(&nni_pipe_reap_lk);
 			continue;

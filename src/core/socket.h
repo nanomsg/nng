@@ -123,4 +123,6 @@ extern nni_duration nni_sock_linger(nni_sock *);
 extern size_t       nni_sock_rcvmaxsz(nni_sock *);
 extern void nni_sock_reconntimes(nni_sock *, nni_duration *, nni_duration *);
 
+extern nni_proto_pipe_ops *nni_sock_pipe_ops(nni_sock *);
+
 #endif // CORE_SOCKET_H

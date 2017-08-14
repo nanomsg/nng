@@ -114,51 +114,38 @@ nni_sock_pipe_start_cb(void *arg)
 }
 
 int
-nni_sock_pipe_add(nni_sock *s, nni_ep *ep, nni_pipe *pipe)
+nni_sock_pipe_add(nni_sock *s, nni_ep *ep, nni_pipe *p)
 {
 	int rv;
 
+	if (((rv = s->s_pipe_ops.pipe_init(&p->p_proto_data, p, s->s_data)) !=
+	        0) ||
+	    ((rv = nni_aio_init(&p->p_start_aio, nni_sock_pipe_start_cb, p)) !=
+	        0)) {
+		return (rv);
+	}
+
+	// Save the protocol destructor.
+	p->p_proto_dtor = s->s_pipe_ops.pipe_fini;
+
 	// Initialize protocol pipe data.
 	nni_mtx_lock(&s->s_mx);
-	nni_mtx_lock(&ep->ep_mtx);
-
-	if ((s->s_closing) || (ep->ep_closed)) {
-		nni_mtx_unlock(&ep->ep_mtx);
+	if (s->s_closing) {
 		nni_mtx_unlock(&s->s_mx);
 		return (NNG_ECLOSED);
 	}
-	rv = nni_aio_init(&pipe->p_start_aio, nni_sock_pipe_start_cb, pipe);
-	if (rv != 0) {
-		nni_mtx_unlock(&ep->ep_mtx);
-		nni_mtx_unlock(&s->s_mx);
-		return (rv);
-	}
 
-	rv = s->s_pipe_ops.pipe_init(&pipe->p_proto_data, pipe, s->s_data);
-	if (rv != 0) {
-		nni_mtx_unlock(&ep->ep_mtx);
-		nni_mtx_lock(&s->s_mx);
-		return (rv);
-	}
-	// Save the protocol destructor.
-	pipe->p_proto_dtor = s->s_pipe_ops.pipe_fini;
-	pipe->p_sock       = s;
-	pipe->p_ep         = ep;
-
-	nni_list_append(&s->s_pipes, pipe);
-	nni_list_append(&ep->ep_pipes, pipe);
+	nni_list_append(&s->s_pipes, p);
 
 	// Start the initial negotiation I/O...
-	if (pipe->p_tran_ops.p_start == NULL) {
-		if (nni_sock_pipe_start(pipe) != 0) {
-			nni_pipe_stop(pipe);
+	if (p->p_tran_ops.p_start == NULL) {
+		if (nni_sock_pipe_start(p) != 0) {
+			nni_pipe_stop(p);
 		}
 	} else {
-		pipe->p_tran_ops.p_start(
-		    pipe->p_tran_data, &pipe->p_start_aio);
+		p->p_tran_ops.p_start(p->p_tran_data, &p->p_start_aio);
 	}
 
-	nni_mtx_unlock(&ep->ep_mtx);
 	nni_mtx_unlock(&s->s_mx);
 	return (0);
 }
@@ -752,11 +739,7 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 		nni_mtx_unlock(&sock->s_mx);
 		return (rv);
 	}
-	nni_mtx_lock(&ep->ep_mtx);
 	nni_list_append(&sock->s_eps, ep);
-	// Put a hold on the endpoint, for now.
-	ep->ep_refcnt++;
-	nni_mtx_unlock(&ep->ep_mtx);
 	nni_mtx_unlock(&sock->s_mx);
 
 	if ((rv = nni_ep_dial(ep, flags)) != 0) {
@@ -766,10 +749,7 @@ nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	}
 
 	// Drop our endpoint hold.
-	nni_mtx_lock(&ep->ep_mtx);
-	ep->ep_refcnt--;
-	nni_cv_wake(&ep->ep_cv);
-	nni_mtx_unlock(&ep->ep_mtx);
+	nni_ep_rele(ep);
 
 	return (rv);
 }
@@ -787,9 +767,6 @@ nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	}
 
 	nni_list_append(&sock->s_eps, ep);
-	nni_mtx_lock(&ep->ep_mtx);
-	ep->ep_refcnt++;
-	nni_mtx_unlock(&ep->ep_mtx);
 	nni_mtx_unlock(&sock->s_mx);
 
 	if ((rv = nni_ep_listen(ep, flags)) != 0) {
@@ -799,10 +776,7 @@ nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
 	}
 
 	// Drop our endpoint hold.
-	nni_mtx_lock(&ep->ep_mtx);
-	ep->ep_refcnt--;
-	nni_cv_wake(&ep->ep_cv);
-	nni_mtx_unlock(&ep->ep_mtx);
+	nni_ep_rele(ep);
 
 	return (rv);
 }
@@ -923,4 +897,10 @@ nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 	}
 	nni_mtx_unlock(&sock->s_mx);
 	return (rv);
+}
+
+nni_proto_pipe_ops *
+nni_sock_pipe_ops(nni_sock *s)
+{
+	return (&s->s_pipe_ops);
 }

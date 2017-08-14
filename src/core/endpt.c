@@ -130,7 +130,7 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 	ep->ep_closed = 0;
 	ep->ep_bound  = 0;
 	ep->ep_data   = NULL;
-	ep->ep_refcnt = 0;
+	ep->ep_refcnt = 1;
 	ep->ep_sock   = s;
 	ep->ep_tran   = tran;
 	ep->ep_mode   = mode;
@@ -512,7 +512,6 @@ nni_ep_pipe_add(nni_ep *ep, nni_pipe *p)
 		return (NNG_ECLOSED);
 	}
 	nni_list_append(&ep->ep_pipes, p);
-	p->p_ep = ep;
 	nni_mtx_unlock(&ep->ep_mtx);
 	return (0);
 }
@@ -526,7 +525,6 @@ nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
 	if (nni_list_active(&ep->ep_pipes, pipe)) {
 		nni_list_remove(&ep->ep_pipes, pipe);
 	}
-	pipe->p_ep = NULL;
 	// Wake up the close thread if it is waiting.
 	if (ep->ep_closed && nni_list_empty(&ep->ep_pipes)) {
 		nni_cv_wake(&ep->ep_cv);
