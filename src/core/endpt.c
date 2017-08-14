@@ -233,8 +233,6 @@ nni_ep_rele(nni_ep *ep)
 int
 nni_ep_shutdown(nni_ep *ep)
 {
-	nni_pipe *p;
-
 	// This is done under the endpoints lock, although the remove
 	// is done under that as well, we also make sure that we hold
 	// the socket lock in the remove step.
