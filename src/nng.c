@@ -232,13 +232,21 @@ nng_dial(nng_socket sid, const char *addr, nng_dialer *dp, int flags)
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
-	if ((rv = nni_sock_dial(sock, addr, &ep, flags)) == 0) {
-		if (dp != NULL) {
-			*dp = nni_ep_id(ep);
-		}
+	if ((rv = nni_ep_create_dialer(&ep, sock, addr)) != 0) {
+		nni_sock_rele(sock);
+		return (rv);
 	}
+	if ((rv = nni_ep_dial(ep, flags)) != 0) {
+		nni_ep_close(ep);
+		nni_sock_rele(sock);
+		return (rv);
+	}
+	if (dp != NULL) {
+		*dp = nni_ep_id(ep);
+	}
+	nni_ep_rele(ep);
 	nni_sock_rele(sock);
-	return (rv);
+	return (0);
 }
 
 int
@@ -251,11 +259,20 @@ nng_listen(nng_socket sid, const char *addr, nng_listener *lp, int flags)
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
-	if ((rv = nni_sock_listen(sock, addr, &ep, flags)) == 0) {
-		if (lp != NULL) {
-			*lp = nni_ep_id(ep);
-		}
+	if ((rv = nni_ep_create_listener(&ep, sock, addr)) != 0) {
+		nni_sock_rele(sock);
+		return (rv);
 	}
+	if ((rv = nni_ep_listen(ep, flags)) != 0) {
+		nni_ep_close(ep);
+		nni_sock_rele(sock);
+		return (rv);
+	}
+
+	if (lp != NULL) {
+		*lp = nni_ep_id(ep);
+	}
+	nni_ep_rele(ep);
 	nni_sock_rele(sock);
 	return (rv);
 }

@@ -19,25 +19,6 @@
 #include "core/thread.h"
 #include "core/transport.h"
 
-struct nni_pipe {
-	uint32_t      p_id;
-	nni_tran_pipe p_tran_ops;
-	void *        p_tran_data;
-	void *        p_proto_data;
-	nni_cb        p_proto_dtor;
-	nni_list_node p_sock_node;
-	nni_list_node p_ep_node;
-	nni_sock *    p_sock;
-	nni_ep *      p_ep;
-	int           p_reap;
-	int           p_stop;
-	int           p_refcnt;
-	nni_mtx       p_mtx;
-	nni_cv        p_cv;
-	nni_list_node p_reap_node;
-	nni_aio       p_start_aio;
-};
-
 extern int  nni_pipe_sys_init(void);
 extern void nni_pipe_sys_fini(void);
 
@@ -81,6 +62,7 @@ extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
 // nni_pipe_get_proto_data gets the protocol private data set with the
 // nni_pipe_set_proto_data function.  No locking is performed.
 extern void *nni_pipe_get_proto_data(nni_pipe *);
+extern void  nni_pipe_set_proto_data(nni_pipe *, void *);
 
 // nni_pipe_sock_list_init initializes a list of pipes, to be used by
 // a per-socket list.

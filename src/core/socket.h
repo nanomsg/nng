@@ -74,8 +74,6 @@ extern int      nni_sock_setopt(nni_sock *, int, const void *, size_t);
 extern int      nni_sock_getopt(nni_sock *, int, void *, size_t *);
 extern int      nni_sock_recvmsg(nni_sock *, nni_msg **, nni_time);
 extern int      nni_sock_sendmsg(nni_sock *, nni_msg *, nni_time);
-extern int      nni_sock_dial(nni_sock *, const char *, nni_ep **, int);
-extern int      nni_sock_listen(nni_sock *, const char *, nni_ep **, int);
 extern uint32_t nni_sock_id(nni_sock *);
 
 extern void nni_sock_lock(nni_sock *);
@@ -84,22 +82,19 @@ extern void nni_sock_unlock(nni_sock *);
 extern nni_notify *nni_sock_notify(nni_sock *, int, nng_notify_func, void *);
 extern void        nni_sock_unnotify(nni_sock *, nni_notify *);
 
-extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
-
 // nni_sock_pipe_add adds the pipe to the socket. It is called by
 // the generic pipe creation code.  It also adds the socket to the
 // ep list, and starts the pipe.  It does all these to ensure that
 // we have complete success or failure, and there is no point where
 // a pipe could wind up orphaned.
-extern int nni_sock_pipe_add(nni_sock *, nni_ep *, nni_pipe *);
-
+extern int  nni_sock_pipe_add(nni_sock *, nni_pipe *);
 extern void nni_sock_pipe_remove(nni_sock *, nni_pipe *);
+extern int  nni_sock_pipe_init(nni_sock *, nni_pipe *, void **);
+extern void nni_sock_pipe_fini(nni_sock *, void *);
+extern int nni_sock_pipe_start(nni_sock *, nni_pipe *p);
 
-// nni_sock_pipe_ready lets the socket know the pipe is ready for
-// business.  This also calls the socket/protocol specific add function,
-// and it may return an error.   The reference count should be dropped by
-// nni_sock_pipe_closed.
-extern int nni_sock_pipe_ready(nni_sock *, nni_pipe *);
+extern int  nni_sock_ep_add(nni_sock *, nni_ep *);
+extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
 
 // Set error codes for applications.  These are only ever
 // called from the filter functions in protocols, and thus
@@ -122,7 +117,5 @@ extern nni_msgq *nni_sock_recvq(nni_sock *);
 extern nni_duration nni_sock_linger(nni_sock *);
 extern size_t       nni_sock_rcvmaxsz(nni_sock *);
 extern void nni_sock_reconntimes(nni_sock *, nni_duration *, nni_duration *);
-
-extern nni_proto_pipe_ops *nni_sock_pipe_ops(nni_sock *);
 
 #endif // CORE_SOCKET_H

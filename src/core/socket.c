@@ -72,61 +72,52 @@ nni_sock_rele(nni_sock *s)
 	nni_mtx_unlock(&s->s_mx);
 }
 
-static int
-nni_sock_pipe_start(nni_pipe *pipe)
+int
+nni_sock_pipe_start(nni_sock *s, nni_pipe *pipe)
 {
-	nni_sock *s     = pipe->p_sock;
-	void *    pdata = nni_pipe_get_proto_data(pipe);
-	int       rv;
+	void *pdata = nni_pipe_get_proto_data(pipe);
+	int   rv;
 
 	NNI_ASSERT(s != NULL);
+	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
 		// We're closing, bail out.
-		return (NNG_ECLOSED);
-	}
-	if (nni_pipe_peer(pipe) != s->s_peer_id.p_id) {
+		rv = NNG_ECLOSED;
+	} else if (nni_pipe_peer(pipe) != s->s_peer_id.p_id) {
 		// Peer protocol mismatch.
-		return (NNG_EPROTO);
+		rv = NNG_EPROTO;
+	} else {
+		// Protocol can reject for other reasons.
+		rv = s->s_pipe_ops.pipe_start(pdata);
 	}
-	if ((rv = s->s_pipe_ops.pipe_start(pdata)) != 0) {
-		// Protocol rejection for other reasons.
-		// E.g. pair and already have active connected partner.
-		return (rv);
-	}
+	nni_mtx_unlock(&s->s_mx);
 	return (0);
 }
 
-static void
-nni_sock_pipe_start_cb(void *arg)
+int
+nni_sock_pipe_init(nni_sock *s, nni_pipe *p, void **datap)
 {
-	nni_pipe *pipe = arg;
-	nni_aio * aio  = &pipe->p_start_aio;
+	return (s->s_pipe_ops.pipe_init(datap, p, s->s_data));
+}
 
-	if (nni_aio_result(aio) != 0) {
-		// Failed I/O during start, abort everything.
-		nni_pipe_stop(pipe);
-		return;
-	}
-	if (nni_sock_pipe_start(pipe) != 0) {
-		nni_pipe_stop(pipe);
-		return;
+void
+nni_sock_pipe_fini(nni_sock *s, void *data)
+{
+	if (data != NULL) {
+		s->s_pipe_ops.pipe_fini(data);
 	}
 }
 
 int
-nni_sock_pipe_add(nni_sock *s, nni_ep *ep, nni_pipe *p)
+nni_sock_pipe_add(nni_sock *s, nni_pipe *p)
 {
-	int rv;
+	int   rv;
+	void *pdata;
 
-	if (((rv = s->s_pipe_ops.pipe_init(&p->p_proto_data, p, s->s_data)) !=
-	        0) ||
-	    ((rv = nni_aio_init(&p->p_start_aio, nni_sock_pipe_start_cb, p)) !=
-	        0)) {
+	if ((rv = s->s_pipe_ops.pipe_init(&pdata, p, s->s_data)) != 0) {
 		return (rv);
 	}
-
-	// Save the protocol destructor.
-	p->p_proto_dtor = s->s_pipe_ops.pipe_fini;
+	nni_pipe_set_proto_data(p, pdata);
 
 	// Initialize protocol pipe data.
 	nni_mtx_lock(&s->s_mx);
@@ -138,42 +129,9 @@ nni_sock_pipe_add(nni_sock *s, nni_ep *ep, nni_pipe *p)
 	nni_list_append(&s->s_pipes, p);
 
 	// Start the initial negotiation I/O...
-	if (p->p_tran_ops.p_start == NULL) {
-		if (nni_sock_pipe_start(p) != 0) {
-			nni_pipe_stop(p);
-		}
-	} else {
-		p->p_tran_ops.p_start(p->p_tran_data, &p->p_start_aio);
-	}
+	nni_pipe_start(p);
 
 	nni_mtx_unlock(&s->s_mx);
-	return (0);
-}
-
-int
-nni_sock_pipe_ready(nni_sock *sock, nni_pipe *pipe)
-{
-	int   rv;
-	void *pdata = nni_pipe_get_proto_data(pipe);
-
-	nni_mtx_lock(&sock->s_mx);
-
-	if (sock->s_closing) {
-		nni_mtx_unlock(&sock->s_mx);
-		return (NNG_ECLOSED);
-	}
-	if (nni_pipe_peer(pipe) != sock->s_peer_id.p_id) {
-		nni_mtx_unlock(&sock->s_mx);
-		return (NNG_EPROTO);
-	}
-
-	if ((rv = sock->s_pipe_ops.pipe_start(pdata)) != 0) {
-		nni_mtx_unlock(&sock->s_mx);
-		return (rv);
-	}
-
-	nni_mtx_unlock(&sock->s_mx);
-
 	return (0);
 }
 
@@ -184,23 +142,20 @@ nni_sock_pipe_remove(nni_sock *sock, nni_pipe *pipe)
 
 	pdata = nni_pipe_get_proto_data(pipe);
 
-	// Stop any pending negotiation.
-	nni_aio_stop(&pipe->p_start_aio);
-
-	nni_mtx_lock(&sock->s_mx);
-	if ((sock->s_pipe_ops.pipe_stop == NULL) || (pdata == NULL)) {
-		nni_mtx_unlock(&sock->s_mx);
-		return;
-	}
-
-	sock->s_pipe_ops.pipe_stop(pdata);
-	if (nni_list_active(&sock->s_pipes, pipe)) {
-		nni_list_remove(&sock->s_pipes, pipe);
-		if (sock->s_closing && nni_list_empty(&sock->s_pipes)) {
-			nni_cv_wake(&sock->s_cv);
+	if (pdata != NULL) {
+		nni_mtx_lock(&sock->s_mx);
+		sock->s_pipe_ops.pipe_stop(pdata);
+		if (nni_list_active(&sock->s_pipes, pipe)) {
+			nni_list_remove(&sock->s_pipes, pipe);
+			if (sock->s_closing &&
+			    nni_list_empty(&sock->s_pipes)) {
+				nni_cv_wake(&sock->s_cv);
+			}
 		}
+		sock->s_pipe_ops.pipe_fini(pdata);
+		nni_pipe_set_proto_data(pipe, NULL);
+		nni_mtx_unlock(&sock->s_mx);
 	}
-	nni_mtx_unlock(&sock->s_mx);
 }
 
 void
@@ -433,6 +388,7 @@ nni_sock_shutdown(nni_sock *sock)
 {
 	nni_pipe *pipe;
 	nni_ep *  ep;
+	nni_ep *  nep;
 	nni_time  linger;
 
 	nni_mtx_lock(&sock->s_mx);
@@ -455,7 +411,7 @@ nni_sock_shutdown(nni_sock *sock)
 	// Close the EPs. This prevents new connections from forming but
 	// but allows existing ones to drain.
 	NNI_LIST_FOREACH (&sock->s_eps, ep) {
-		nni_ep_close(ep);
+		nni_ep_shutdown(ep);
 	}
 	nni_mtx_unlock(&sock->s_mx);
 
@@ -485,10 +441,20 @@ nni_sock_shutdown(nni_sock *sock)
 	nni_msgq_close(sock->s_urq);
 	nni_msgq_close(sock->s_uwq);
 
-	// For each ep, arrange for it to teardown hard.
-	NNI_LIST_FOREACH (&sock->s_eps, ep) {
-		nni_ep_stop(ep);
+	// Go through the endpoint list, attempting to close them.
+	// We might already have a close in progress, in which case
+	// we skip past it; it will be removed from another thread.
+	nep = nni_list_first(&sock->s_eps);
+	while ((ep = nep) != NULL) {
+		nep = nni_list_next(&sock->s_eps, nep);
+
+		if (nni_ep_hold(ep) == 0) {
+			nni_mtx_unlock(&sock->s_mx);
+			nni_ep_close(ep);
+			nni_mtx_lock(&sock->s_mx);
+		}
 	}
+
 	// For each pipe, arrange for it to teardown hard.
 	NNI_LIST_FOREACH (&sock->s_pipes, pipe) {
 		nni_pipe_stop(pipe);
@@ -512,38 +478,6 @@ nni_sock_shutdown(nni_sock *sock)
 	// that are referencing socket state.  User code should call
 	// nng_close to release the last resources.
 	return (0);
-}
-
-void
-nni_sock_ep_remove(nni_sock *sock, nni_ep *ep)
-{
-	nni_pipe *pipe;
-	// If we're not on the list, then nothing to do.  Be idempotent.
-	// Note that if the ep is not on a list, then we assume that we have
-	// exclusive access.  Therefore the check for being active need not
-	// be locked.
-	if (!nni_list_node_active(&ep->ep_node)) {
-		return;
-	}
-
-	// This is done under the endpoints lock, although the remove
-	// is done under that as well, we also make sure that we hold
-	// the socket lock in the remove step.
-	nni_mtx_lock(&ep->ep_mtx);
-	NNI_LIST_FOREACH (&ep->ep_pipes, pipe) {
-		nni_pipe_stop(pipe);
-	}
-	while (!nni_list_empty(&ep->ep_pipes)) {
-		nni_cv_wait(&ep->ep_cv);
-	}
-	nni_mtx_unlock(&ep->ep_mtx);
-
-	nni_mtx_lock(&sock->s_mx);
-	nni_list_remove(&sock->s_eps, ep);
-	if ((sock->s_closing) && (nni_list_empty(&sock->s_eps))) {
-		nni_cv_wake(&sock->s_cv);
-	}
-	nni_mtx_unlock(&sock->s_mx);
 }
 
 // nni_sock_close shuts down the socket, then releases any resources
@@ -729,56 +663,29 @@ nni_sock_reconntimes(nni_sock *sock, nni_duration *rcur, nni_duration *rmax)
 }
 
 int
-nni_sock_dial(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
+nni_sock_ep_add(nni_sock *sock, nni_ep *ep)
 {
-	nni_ep *ep;
-	int     rv;
-
 	nni_mtx_lock(&sock->s_mx);
-	if ((rv = nni_ep_create(&ep, sock, addr, NNI_EP_MODE_DIAL)) != 0) {
+	if (sock->s_closing) {
 		nni_mtx_unlock(&sock->s_mx);
-		return (rv);
+		return (NNG_ECLOSED);
 	}
 	nni_list_append(&sock->s_eps, ep);
 	nni_mtx_unlock(&sock->s_mx);
-
-	if ((rv = nni_ep_dial(ep, flags)) != 0) {
-		nni_ep_stop(ep);
-	} else if (epp != NULL) {
-		*epp = ep;
-	}
-
-	// Drop our endpoint hold.
-	nni_ep_rele(ep);
-
-	return (rv);
+	return (0);
 }
 
-int
-nni_sock_listen(nni_sock *sock, const char *addr, nni_ep **epp, int flags)
+void
+nni_sock_ep_remove(nni_sock *sock, nni_ep *ep)
 {
-	nni_ep *ep;
-	int     rv;
-
 	nni_mtx_lock(&sock->s_mx);
-	if ((rv = nni_ep_create(&ep, sock, addr, NNI_EP_MODE_LISTEN)) != 0) {
-		nni_mtx_unlock(&sock->s_mx);
-		return (rv);
+	if (nni_list_active(&sock->s_eps, ep)) {
+		nni_list_remove(&sock->s_eps, ep);
+		if ((sock->s_closed) && (nni_list_empty(&sock->s_eps))) {
+			nni_cv_wake(&sock->s_cv);
+		}
 	}
-
-	nni_list_append(&sock->s_eps, ep);
 	nni_mtx_unlock(&sock->s_mx);
-
-	if ((rv = nni_ep_listen(ep, flags)) != 0) {
-		nni_ep_stop(ep);
-	} else if (epp != NULL) {
-		*epp = ep;
-	}
-
-	// Drop our endpoint hold.
-	nni_ep_rele(ep);
-
-	return (rv);
 }
 
 void
@@ -897,10 +804,4 @@ nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 	}
 	nni_mtx_unlock(&sock->s_mx);
 	return (rv);
-}
-
-nni_proto_pipe_ops *
-nni_sock_pipe_ops(nni_sock *s)
-{
-	return (&s->s_pipe_ops);
 }
