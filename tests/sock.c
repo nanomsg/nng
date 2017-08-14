@@ -14,6 +14,8 @@
 
 TestMain("Socket Operations", {
 
+	Reset({ nng_fini(); });
+
 	Convey("We are able to open a PAIR socket", {
 		int        rv;
 		nng_socket s1;

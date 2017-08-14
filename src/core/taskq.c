@@ -149,7 +149,9 @@ nni_taskq_fini(nni_taskq *tq)
 	// First drain the taskq completely.  This is necessary since some
 	// tasks that are presently running may need to schedule additional
 	// tasks, and we don't want those to block.
-
+	if (tq == NULL) {
+		return;
+	}
 	if (tq->tq_run) {
 		nni_mtx_lock(&tq->tq_mtx);
 		nni_taskq_drain_locked(tq);
@@ -274,4 +276,5 @@ void
 nni_taskq_sys_fini(void)
 {
 	nni_taskq_fini(nni_taskq_systq);
+	nni_taskq_systq = NULL;
 }
