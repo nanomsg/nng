@@ -64,12 +64,12 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 void
 nni_sock_rele(nni_sock *s)
 {
-	nni_mtx_lock(&s->s_mx);
+	nni_mtx_lock(&nni_sock_lk);
 	s->s_refcnt--;
-	if (s->s_closing) {
-		nni_cv_wake(&s->s_cv);
+	if (s->s_closed && (s->s_refcnt < 2)) {
+		nni_cv_wake(&s->s_close_cv);
 	}
-	nni_mtx_unlock(&s->s_mx);
+	nni_mtx_unlock(&nni_sock_lk);
 }
 
 int
@@ -257,6 +257,7 @@ nni_sock_destroy(nni_sock *s)
 	nni_ev_fini(&s->s_recv_ev);
 	nni_msgq_fini(s->s_urq);
 	nni_msgq_fini(s->s_uwq);
+	nni_cv_fini(&s->s_close_cv);
 	nni_cv_fini(&s->s_cv);
 	nni_mtx_fini(&s->s_mx);
 	NNI_FREE_STRUCT(s);
@@ -300,6 +301,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 
 	if (((rv = nni_mtx_init(&s->s_mx)) != 0) ||
 	    ((rv = nni_cv_init(&s->s_cv, &s->s_mx)) != 0) ||
+	    ((rv = nni_cv_init(&s->s_close_cv, &nni_sock_lk)) != 0) ||
 	    ((rv = nni_ev_init(&s->s_recv_ev, NNG_EV_CAN_RCV, s)) != 0) ||
 	    ((rv = nni_ev_init(&s->s_send_ev, NNG_EV_CAN_SND, s)) != 0) ||
 	    ((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
@@ -492,13 +494,17 @@ nni_sock_close(nni_sock *s)
 	// nni_sock_closeall.  This is idempotent.
 	nni_list_node_remove(&s->s_node);
 
-	nni_mtx_unlock(&nni_sock_lk);
-
 	// Wait for all other references to drop.  Note that we
 	// have a reference already (from our caller).
+	while (s->s_refcnt > 1) {
+		nni_cv_wait(&s->s_close_cv);
+	}
+	nni_mtx_unlock(&nni_sock_lk);
+
+	// Wait for pipe and eps to finish closing.
 	nni_mtx_lock(&s->s_mx);
-	while ((s->s_refcnt > 1) || (!nni_list_empty(&s->s_pipes)) ||
-	    (!nni_list_empty(&s->s_eps))) {
+	while (
+	    (!nni_list_empty(&s->s_pipes)) || (!nni_list_empty(&s->s_eps))) {
 		nni_cv_wait(&s->s_cv);
 	}
 	nni_mtx_unlock(&s->s_mx);
