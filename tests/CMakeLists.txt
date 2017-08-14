@@ -105,3 +105,5 @@ add_nng_compat_test(compat_pipeline 5)
 add_nng_compat_test(compat_reqrep 5)
 add_nng_compat_test(compat_survey 5)
 add_nng_compat_test(compat_reqttl 5)
+add_nng_compat_test(compat_shutdown 5)
+
