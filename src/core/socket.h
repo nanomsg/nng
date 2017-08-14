@@ -89,8 +89,6 @@ extern void        nni_sock_unnotify(nni_sock *, nni_notify *);
 // a pipe could wind up orphaned.
 extern int  nni_sock_pipe_add(nni_sock *, nni_pipe *);
 extern void nni_sock_pipe_remove(nni_sock *, nni_pipe *);
-extern int  nni_sock_pipe_init(nni_sock *, nni_pipe *, void **);
-extern void nni_sock_pipe_fini(nni_sock *, void *);
 extern int nni_sock_pipe_start(nni_sock *, nni_pipe *p);
 
 extern int  nni_sock_ep_add(nni_sock *, nni_ep *);

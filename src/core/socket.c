@@ -95,20 +95,6 @@ nni_sock_pipe_start(nni_sock *s, nni_pipe *pipe)
 }
 
 int
-nni_sock_pipe_init(nni_sock *s, nni_pipe *p, void **datap)
-{
-	return (s->s_pipe_ops.pipe_init(datap, p, s->s_data));
-}
-
-void
-nni_sock_pipe_fini(nni_sock *s, void *data)
-{
-	if (data != NULL) {
-		s->s_pipe_ops.pipe_fini(data);
-	}
-}
-
-int
 nni_sock_pipe_add(nni_sock *s, nni_pipe *p)
 {
 	int   rv;
