@@ -54,8 +54,8 @@ TestMain("PAIRv1 protocol", {
 		Convey("Monogamous cooked mode works", {
 			nng_msg *msg;
 
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "ALPHA");
@@ -75,10 +75,10 @@ TestMain("PAIRv1 protocol", {
 		Convey("Monogamous mode ignores new conns", {
 			nng_msg *msg;
 
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
-			So(nng_dial(c2, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(c2, addr, NULL, 0) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "ONE");
@@ -95,8 +95,8 @@ TestMain("PAIRv1 protocol", {
 
 		Convey("Cannot set raw mode after connect", {
 			int r = 1;
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
 
 			So(nng_setopt_int(s1, NNG_OPT_RAW, 1) == NNG_ESTATE);
@@ -116,8 +116,8 @@ TestMain("PAIRv1 protocol", {
 			So(nng_setopt_duration(s1, NNG_OPT_SNDTIMEO, 100000) ==
 			    0);
 
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
 
 			for (i = 0, rv = 0; i < 10; i++) {
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -141,8 +141,8 @@ TestMain("PAIRv1 protocol", {
 			So(nng_setopt_duration(s1, NNG_OPT_SNDTIMEO, 30000) ==
 			    0);
 
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
 
 			// We choose to allow some buffering.  In reality the
 			// buffer size is just 1, and we will fail after 2.
@@ -158,8 +158,8 @@ TestMain("PAIRv1 protocol", {
 		});
 
 		Convey("Cannot set polyamorous mode after connect", {
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
 
 			So(nng_setopt_int(s1, NNG_OPT_POLYAMOROUS, 1) ==
@@ -176,8 +176,8 @@ TestMain("PAIRv1 protocol", {
 			So(nng_setopt_int(c1, NNG_OPT_RAW, 1) == 0);
 			So(nng_setopt_int(c2, NNG_OPT_RAW, 1) == 0);
 
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
 
 			Convey("Send/recv work", {
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -341,9 +341,9 @@ TestMain("PAIRv1 protocol", {
 			So(nng_getopt_int(s1, NNG_OPT_POLYAMOROUS, &v) == 0);
 			So(v == 1);
 
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c2, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
+			So(nng_dial(c2, addr, NULL, 0) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "ONE");
@@ -396,10 +396,10 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_setopt_int(s1, NNG_OPT_POLYAMOROUS, 1) == 0);
 
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
-			So(nng_dial(c2, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(c2, addr, NULL, 0) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "YES");
@@ -439,9 +439,9 @@ TestMain("PAIRv1 protocol", {
 			So(nng_getopt_int(s1, NNG_OPT_RAW, &v) == 0);
 			So(v == 1);
 
-			So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(c2, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(s1, addr, NULL, 0) == 0);
+			So(nng_dial(c1, addr, NULL, 0) == 0);
+			So(nng_dial(c2, addr, NULL, 0) == 0);
 
 			Convey("Send/recv works", {
 				So(nng_msg_alloc(&msg, 0) == 0);

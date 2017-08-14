@@ -176,10 +176,10 @@ NNG_DECL int nng_listen(nng_socket, const char *, nng_listener *, int);
 NNG_DECL int nng_dial(nng_socket, const char *, nng_dialer *, int);
 
 // nng_dialer_create creates a new dialer, that is not yet started.
-NNG_DECL int nng_dialer_create(nng_socket, const char *, nng_dialer *);
+NNG_DECL int nng_dialer_create(nng_dialer *, nng_socket, const char *);
 
 // nng_listener_create creates a new listener, that is not yet started.
-NNG_DECL int nng_listener_create(nng_socket, const char *, nng_listener *);
+NNG_DECL int nng_listener_create(nng_listener *, nng_socket, const char *);
 
 // nng_dialer_start starts the endpoint dialing.  This is only possible if
 // the dialer is not already dialing.
@@ -301,8 +301,7 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 // Flags.
 enum nng_flag_enum {
 	NNG_FLAG_ALLOC    = 1, // Recv to allocate receive buffer.
-	NNG_FLAG_NONBLOCK = 2, // Non-block send/recv.
-	NNG_FLAG_SYNCH    = 4, // Synchronous dial / listen
+	NNG_FLAG_NONBLOCK = 2, // Non-blocking operations.
 };
 
 // Protocol numbers.  These are to be used with nng_socket_create().

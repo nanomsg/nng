@@ -61,7 +61,7 @@ openclients(nng_socket *clients, int num)
 			    "setopt(SNDTIMEO) #%d: %s\n", i, nng_strerror(rv));
 			return (rv);
 		}
-		rv = nng_dial(clients[i], addr, NULL, NNG_FLAG_SYNCH);
+		rv = nng_dial(clients[i], addr, NULL, 0);
 		if (rv != 0) {
 			printf("dial #%d: %s\n", i, nng_strerror(rv));
 			return (rv);
@@ -123,7 +123,7 @@ Main({
 	if ((nng_rep_open(&rep) != 0) ||
 	    (nng_setopt(rep, NNG_OPT_RCVBUF, &depth, sizeof(depth)) != 0) ||
 	    (nng_setopt(rep, NNG_OPT_SNDBUF, &depth, sizeof(depth)) != 0) ||
-	    (nng_listen(rep, addr, NULL, NNG_FLAG_SYNCH) != 0) ||
+	    (nng_listen(rep, addr, NULL, 0) != 0) ||
 	    (nng_thread_create(&server, serve, &rep) != 0)) {
 		fprintf(stderr, "Unable to set up server!\n");
 		exit(1);

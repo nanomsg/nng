@@ -278,18 +278,68 @@ nng_listen(nng_socket sid, const char *addr, nng_listener *lp, int flags)
 }
 
 int
+nng_listener_create(nng_listener *lp, nng_socket sid, const char *addr)
+{
+	nni_sock *s;
+	nni_ep *  ep;
+	int       rv;
+
+	if ((rv = nni_sock_find(&s, sid)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_ep_create_listener(&ep, s, addr)) != 0) {
+		nni_sock_rele(s);
+		return (rv);
+	}
+	*lp = nni_ep_id(ep);
+	nni_ep_rele(ep);
+	nni_sock_rele(s);
+	return (0);
+}
+
+int
+nng_dialer_create(nng_dialer *dp, nng_socket sid, const char *addr)
+{
+	nni_sock *s;
+	nni_ep *  ep;
+	int       rv;
+
+	if ((rv = nni_sock_find(&s, sid)) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_ep_create_dialer(&ep, s, addr)) != 0) {
+		nni_sock_rele(s);
+		return (rv);
+	}
+	*dp = nni_ep_id(ep);
+	nni_ep_rele(ep);
+	nni_sock_rele(s);
+	return (0);
+}
+
+static int
+nng_ep_close(uint32_t id)
+{
+	nni_ep *ep;
+	int     rv;
+
+	if ((rv = nni_ep_find(&ep, id)) != 0) {
+		return (rv);
+	}
+	nni_ep_close(ep);
+	return (0);
+}
+
+int
 nng_dialer_close(nng_dialer d)
 {
-	//	return (nni_ep_close());
-	NNI_ARG_UNUSED(d);
-	return (NNG_ENOTSUP);
+	return (nng_ep_close((uint32_t) d));
 }
 
 int
 nng_listener_close(nng_listener l)
 {
-	NNI_ARG_UNUSED(l);
-	return (NNG_ENOTSUP);
+	return (nng_ep_close((uint32_t) l));
 }
 
 int

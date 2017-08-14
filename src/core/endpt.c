@@ -23,9 +23,9 @@ struct nni_ep {
 	nni_sock *    ep_sock;
 	char          ep_addr[NNG_MAXADDRLEN];
 	int           ep_mode;
+	int           ep_started;
 	int           ep_closed;  // full shutdown
 	int           ep_closing; // close pending (waiting on refcnt)
-	int           ep_bound;   // true if we bound locally
 	int           ep_refcnt;
 	nni_mtx       ep_mtx;
 	nni_cv        ep_cv;
@@ -132,13 +132,13 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	ep->ep_closed = 0;
-	ep->ep_bound  = 0;
-	ep->ep_data   = NULL;
-	ep->ep_refcnt = 1;
-	ep->ep_sock   = s;
-	ep->ep_tran   = tran;
-	ep->ep_mode   = mode;
+	ep->ep_closed  = 0;
+	ep->ep_started = 0;
+	ep->ep_data    = NULL;
+	ep->ep_refcnt  = 1;
+	ep->ep_sock    = s;
+	ep->ep_tran    = tran;
+	ep->ep_mode    = mode;
 
 	// Make a copy of the endpoint operations.  This allows us to
 	// modify them (to override NULLs for example), and avoids an extra
@@ -411,7 +411,12 @@ nni_ep_dial(nni_ep *ep, int flags)
 		return (NNG_ECLOSED);
 	}
 
-	if ((flags & NNG_FLAG_SYNCH) == 0) {
+	if (ep->ep_started) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (NNG_ESTATE);
+	}
+
+	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
 		nni_ep_con_start(ep);
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (0);
@@ -421,16 +426,18 @@ nni_ep_dial(nni_ep *ep, int flags)
 	aio          = &ep->ep_con_syn;
 	aio->a_endpt = ep->ep_data;
 	ep->ep_ops.ep_connect(ep->ep_data, aio);
+	ep->ep_started = 1;
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	nni_aio_wait(aio);
 
 	// As we're synchronous, we also have to handle the completion.
-	if ((rv = nni_aio_result(aio)) == 0) {
-		NNI_ASSERT(aio->a_pipe != NULL);
-		rv = nni_pipe_create(ep, aio->a_pipe);
+	if (((rv = nni_aio_result(aio)) != 0) ||
+	    ((rv = nni_pipe_create(ep, aio->a_pipe)) != 0)) {
+		nni_mtx_lock(&ep->ep_mtx);
+		ep->ep_started = 0;
+		nni_mtx_unlock(&ep->ep_mtx);
 	}
-
 	return (rv);
 }
 
@@ -503,14 +510,18 @@ nni_ep_listen(nni_ep *ep, int flags)
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_ECLOSED);
 	}
+	if (ep->ep_started) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (NNG_ESTATE);
+	}
 
 	rv = ep->ep_ops.ep_bind(ep->ep_data);
 	if (rv != 0) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (rv);
 	}
-	ep->ep_bound = 1;
 
+	ep->ep_started = 1;
 	nni_ep_acc_start(ep);
 	nni_mtx_unlock(&ep->ep_mtx);
 

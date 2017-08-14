@@ -75,9 +75,9 @@ Main({
 			// Its important to avoid a startup race that the
 			// sender be the dialer.  Otherwise you need a delay
 			// since the server accept is really asynchronous.
-			So(nng_listen(pull, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(push, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(what, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(pull, addr, NULL, 0) == 0);
+			So(nng_dial(push, addr, NULL, 0) == 0);
+			So(nng_dial(what, addr, NULL, 0) == 0);
 			So(nng_shutdown(what) == 0);
 
 			Convey("Push can send messages, and pull can recv", {
@@ -152,10 +152,10 @@ Main({
 			       sizeof(usecs)) == 0);
 			So(nng_setopt(pull3, NNG_OPT_RCVTIMEO, &usecs,
 			       sizeof(usecs)) == 0);
-			So(nng_listen(push, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(pull1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(pull2, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(pull3, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(push, addr, NULL, 0) == 0);
+			So(nng_dial(pull1, addr, NULL, 0) == 0);
+			So(nng_dial(pull2, addr, NULL, 0) == 0);
+			So(nng_dial(pull3, addr, NULL, 0) == 0);
 			So(nng_shutdown(pull3) == 0);
 
 			// So pull3 might not be done accepting yet, but pull1

@@ -162,7 +162,7 @@ nn_bind(int s, const char *addr)
 	int          rv;
 	nng_listener l;
 
-	if ((rv = nng_listen((nng_socket) s, addr, &l, NNG_FLAG_SYNCH)) != 0) {
+	if ((rv = nng_listen((nng_socket) s, addr, &l, 0)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -175,7 +175,8 @@ nn_connect(int s, const char *addr)
 	int        rv;
 	nng_dialer d;
 
-	if ((rv = nng_dial((nng_socket) s, addr, &d, 0)) != 0) {
+	if ((rv = nng_dial((nng_socket) s, addr, &d, NNG_FLAG_NONBLOCK)) !=
+	    0) {
 		nn_seterror(rv);
 		return (-1);
 	}

@@ -24,7 +24,7 @@ TestMain("TCP Transport", {
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
 		trantest_next_address(addr, "tcp://*:%u");
-		So(nng_dial(s, addr, NULL, NNG_FLAG_SYNCH) == NNG_EADDRINVAL);
+		So(nng_dial(s, addr, NULL, 0) == NNG_EADDRINVAL);
 	});
 
 	Convey("We can bind to wild card", {
@@ -39,10 +39,10 @@ TestMain("TCP Transport", {
 			nng_close(s1);
 		});
 		trantest_next_address(addr, "tcp://*:%u");
-		So(nng_listen(s1, addr, NULL, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(s1, addr, NULL, 0) == 0);
 		// reset port back one
 		trantest_prev_address(addr, "tcp://127.0.0.1:%u");
-		So(nng_dial(s2, addr, NULL, NNG_FLAG_SYNCH) == 0);
+		So(nng_dial(s2, addr, NULL, 0) == 0);
 	});
 
 	nng_fini();

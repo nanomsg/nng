@@ -233,7 +233,6 @@ nni_inproc_ep_fini(void *arg)
 {
 	nni_inproc_ep *ep = arg;
 
-	NNI_ASSERT(ep->closed);
 	NNI_FREE_STRUCT(ep);
 }
 

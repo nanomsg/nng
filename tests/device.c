@@ -67,14 +67,14 @@ Main({
 				nng_thread_destroy(thr);
 			});
 
-			So(nng_listen(dev1, addr1, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_listen(dev2, addr2, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_listen(dev1, addr1, NULL, 0) == 0);
+			So(nng_listen(dev2, addr2, NULL, 0) == 0);
 
 			So(nng_pair_open(&end1) == 0);
 			So(nng_pair_open(&end2) == 0);
 
-			So(nng_dial(end1, addr1, NULL, NNG_FLAG_SYNCH) == 0);
-			So(nng_dial(end2, addr2, NULL, NNG_FLAG_SYNCH) == 0);
+			So(nng_dial(end1, addr1, NULL, 0) == 0);
+			So(nng_dial(end2, addr2, NULL, 0) == 0);
 
 			tmo = 1000000;
 			So(nng_setopt(end1, NNG_OPT_RCVTIMEO, &tmo,

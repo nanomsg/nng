@@ -84,11 +84,9 @@ trantest_conn_refused(trantest *tt)
 	Convey("Connection refused works", {
 		nng_dialer d = 0;
 
-		So(nng_dial(tt->reqsock, tt->addr, &d, NNG_FLAG_SYNCH) ==
-		    NNG_ECONNREFUSED);
+		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == NNG_ECONNREFUSED);
 		So(d == 0);
-		So(nng_dial(tt->repsock, tt->addr, &d, NNG_FLAG_SYNCH) ==
-		    NNG_ECONNREFUSED);
+		So(nng_dial(tt->repsock, tt->addr, &d, 0) == NNG_ECONNREFUSED);
 		So(d == 0);
 	})
 }
@@ -98,11 +96,10 @@ trantest_duplicate_listen(trantest *tt)
 {
 	Convey("Duplicate listen rejected", {
 		nng_listener l;
-		So(nng_listen(tt->repsock, tt->addr, &l, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
 		So(l != 0);
 		l = 0;
-		So(nng_listen(tt->reqsock, tt->addr, &l, NNG_FLAG_SYNCH) ==
-		    NNG_EADDRINUSE);
+		So(nng_listen(tt->reqsock, tt->addr, &l, 0) == NNG_EADDRINUSE);
 		So(l == 0);
 	})
 }
@@ -113,11 +110,11 @@ trantest_listen_accept(trantest *tt)
 	Convey("Listen and accept", {
 		nng_listener l;
 		nng_dialer   d;
-		So(nng_listen(tt->repsock, tt->addr, &l, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
 		So(l != 0);
 
 		d = 0;
-		So(nng_dial(tt->reqsock, tt->addr, &d, NNG_FLAG_SYNCH) == 0);
+		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
 		So(d != 0);
 	})
 }
@@ -132,9 +129,9 @@ trantest_send_recv(trantest *tt)
 		nng_msg *    recv;
 		size_t       len;
 
-		So(nng_listen(tt->repsock, tt->addr, &l, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
 		So(l != 0);
-		So(nng_dial(tt->reqsock, tt->addr, &d, NNG_FLAG_SYNCH) == 0);
+		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
 		So(d != 0);
 
 		send = NULL;

@@ -219,7 +219,6 @@ do_inproc_lat(int argc, char **argv)
 	ia.count   = parse_int(argv[1], "count");
 	ia.func    = latency_server;
 
-
 	if ((rv = nni_thr_init(&thr, do_inproc, &ia)) != 0) {
 		die("Cannot create thread: %s", nng_strerror(rv));
 	}
@@ -275,7 +274,7 @@ latency_client(const char *addr, int msgsize, int trips)
 	// XXX: set no delay
 	// XXX: other options (TLS in the future?, Linger?)
 
-	if ((rv = nng_dial(s, addr, NULL, NNG_FLAG_SYNCH)) != 0) {
+	if ((rv = nng_dial(s, addr, NULL, 0)) != 0) {
 		die("nng_dial: %s", nng_strerror(rv));
 	}
 
@@ -321,7 +320,7 @@ latency_server(const char *addr, int msgsize, int trips)
 	// XXX: set no delay
 	// XXX: other options (TLS in the future?, Linger?)
 
-	if ((rv = nng_listen(s, addr, NULL, NNG_FLAG_SYNCH)) != 0) {
+	if ((rv = nng_listen(s, addr, NULL, 0)) != 0) {
 		die("nng_listen: %s", nng_strerror(rv));
 	}
 
@@ -371,7 +370,7 @@ throughput_server(const char *addr, int msgsize, int count)
 	// XXX: set no delay
 	// XXX: other options (TLS in the future?, Linger?)
 
-	if ((rv = nng_listen(s, addr, NULL, NNG_FLAG_SYNCH)) != 0) {
+	if ((rv = nng_listen(s, addr, NULL, 0)) != 0) {
 		die("nng_listen: %s", nng_strerror(rv));
 	}
 
@@ -430,7 +429,7 @@ throughput_client(const char *addr, int msgsize, int count)
 		die("nng_setopt(NNG_OPT_SNDBUF): %s", nng_strerror(rv));
 	}
 
-	if ((rv = nng_dial(s, addr, NULL, NNG_FLAG_SYNCH)) != 0) {
+	if ((rv = nng_dial(s, addr, NULL, 0)) != 0) {
 		die("nng_dial: %s", nng_strerror(rv));
 	}
 

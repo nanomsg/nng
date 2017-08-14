@@ -99,18 +99,15 @@ Main({
 			        So(nng_setopt(surv, NNG_OPT_SURVEYTIME,
 			               &expire, sizeof(expire)) == 0);
 
-			        So(nng_listen(
-			               surv, addr, NULL, NNG_FLAG_SYNCH) == 0);
-			        So(nng_dial(
-			               resp, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			        So(nng_listen(surv, addr, NULL, 0) == 0);
+			        So(nng_dial(resp, addr, NULL, 0) == 0);
 
 			        // We dial another socket as that will force
 			        // the earlier dial to have completed *fully*.
 			        // This is a hack that only works because our
 			        // listen logic is single threaded.
 			        So(nng_respondent_open(&sock) == 0);
-			        So(nng_dial(
-			               sock, addr, NULL, NNG_FLAG_SYNCH) == 0);
+			        So(nng_dial(sock, addr, NULL, 0) == 0);
 			        nng_close(sock);
 
 			        Convey("Survey works", {

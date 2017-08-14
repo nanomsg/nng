@@ -99,8 +99,8 @@ TestMain("Event Handling", {
 			nng_close(sock2);
 		});
 
-		So(nng_listen(sock1, addr, NULL, NNG_FLAG_SYNCH) == 0);
-		So(nng_dial(sock2, addr, NULL, NNG_FLAG_SYNCH) == 0);
+		So(nng_listen(sock1, addr, NULL, 0) == 0);
+		So(nng_dial(sock2, addr, NULL, 0) == 0);
 
 		// Let everything connect.
 		nng_usleep(100000);
