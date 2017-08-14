@@ -302,7 +302,8 @@ nni_rep_pipe_recv_cb(void *arg)
 	// Store the pipe id in the header, first thing.
 	rv = nni_msg_header_append_u32(msg, nni_pipe_id(rp->pipe));
 	if (rv != 0) {
-		goto malformed;
+		// Failure here causes us to drop the message.
+		goto drop;
 	}
 
 	// Move backtrace from body to header
@@ -310,10 +311,17 @@ nni_rep_pipe_recv_cb(void *arg)
 	for (;;) {
 		int end = 0;
 		if (hops >= rep->ttl) {
-			goto malformed;
+			// This isn't malformed, but it has gone through
+			// too many hops.  Do not disconnect, because we
+			// can legitimately receive messages with too many
+			// hops from devices, etc.
+			goto drop;
 		}
 		if (nni_msg_len(msg) < 4) {
-			goto malformed;
+			// Peer is speaking garbage. Kick it.
+			nni_msg_free(msg);
+			nni_pipe_stop(rp->pipe);
+			return;
 		}
 		body = nni_msg_body(msg);
 		end  = (body[0] & 0x80) ? 1 : 0;
@@ -323,7 +331,7 @@ nni_rep_pipe_recv_cb(void *arg)
 			// We could just discard and try again, but we
 			// just toss the connection for now.  Given the
 			// out of memory situation, this is not unreasonable.
-			goto malformed;
+			goto drop;
 		}
 		nni_msg_trim(msg, 4);
 		if (end) {
@@ -336,10 +344,9 @@ nni_rep_pipe_recv_cb(void *arg)
 	nni_msgq_aio_put(rp->rep->urq, &rp->aio_putq);
 	return;
 
-malformed:
-	// Failures here are bad enough to warrant to dropping the conn.
+drop:
 	nni_msg_free(msg);
-	nni_pipe_stop(rp->pipe);
+	nni_pipe_recv(rp->pipe, &rp->aio_recv);
 }
 
 static void

@@ -57,8 +57,8 @@ int main (int argc, const char *argv[])
 
     int port = get_test_port(argc, argv);
 
-    test_addr_from(socket_address_a, "inproc", "127.0.0.1", port);
-    test_addr_from(socket_address_b, "inproc", "127.0.0.1", port + 1);
+    test_addr_from(socket_address_a, "tcp", "127.0.0.1", port);
+    test_addr_from(socket_address_b, "tcp", "127.0.0.1", port + 1);
 
     /*  Intialise the device sockets. */
     dev0 = test_socket (AF_SP_RAW, NN_REP);
@@ -78,13 +78,13 @@ int main (int argc, const char *argv[])
     test_connect (end1, socket_address_b);
 
     /*  Wait for TCP to establish. */
-    nn_sleep (200);
+    nn_sleep (100);
 
     /*  Pass a message between endpoints. */
     /*  Set up max receive timeout. */
-    timeo = 500;
+    timeo = 100;
     test_setsockopt (end0, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
-    timeo = 500;
+    timeo = 100;
     test_setsockopt (end1, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
 
     /*  Test default TTL is 8. */
