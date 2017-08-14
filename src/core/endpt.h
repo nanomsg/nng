@@ -28,7 +28,6 @@ struct nni_ep {
 	nni_sock *    ep_sock;
 	char          ep_addr[NNG_MAXADDRLEN];
 	int           ep_mode;
-	int           ep_started;
 	int           ep_stop;
 	int           ep_closed;  // full shutdown
 	int           ep_closing; // close pending (waiting on refcnt)
