@@ -21,7 +21,7 @@ no|off|skip|NO|OFF|SKIP)
 	exit 0
 	;;
 esac
-mydir=`dirname $0`
+mydir=$(dirname $0)
 srcdir=${mydir}/../src
 failed=
 
@@ -56,7 +56,7 @@ if [ "${maj}" -eq 3 -a "${min}" -lt 6 ]; then
 fi
 
 
-mytmpdir=`mktemp -d`
+mytmpdir=$(mktemp -d)
 
 diffprog=${DIFF:-diff}
 if [ -t 1 ]; then
@@ -66,7 +66,7 @@ if [ -t 1 ]; then
 fi
 
 cd ${srcdir}
-for file in `find . -name '*.[ch]' -print`
+for file in $(find . -name '*.[ch]' -print)
 do
 	ext=${file##*.}
 	oldf=${file}
