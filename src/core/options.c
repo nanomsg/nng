@@ -155,20 +155,23 @@ nni_notifyfd_push(struct nng_event *ev, void *arg)
 int
 nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 {
-	int rv;
+	int      rv;
+	uint32_t flags;
 
 	if ((*szp < sizeof(int))) {
 		return (NNG_EINVAL);
 	}
 
+	flags = nni_sock_flags(s);
+
 	switch (mask) {
 	case NNG_EV_CAN_SND:
-		if ((s->s_flags & NNI_PROTO_FLAG_SND) == 0) {
+		if ((flags & NNI_PROTO_FLAG_SND) == 0) {
 			return (NNG_ENOTSUP);
 		}
 		break;
 	case NNG_EV_CAN_RCV:
-		if ((s->s_flags & NNI_PROTO_FLAG_RCV) == 0) {
+		if ((flags & NNI_PROTO_FLAG_RCV) == 0) {
 			return (NNG_ENOTSUP);
 		}
 		break;

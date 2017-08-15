@@ -132,28 +132,18 @@ nng_recv(nng_socket sid, void *buf, size_t *szp, int flags)
 int
 nng_recvmsg(nng_socket sid, nng_msg **msgp, int flags)
 {
-	nni_time  expire;
 	int       rv;
 	nni_sock *sock;
 
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
-	if ((flags == NNG_FLAG_NONBLOCK) || (sock->s_rcvtimeo == 0)) {
-		expire = NNI_TIME_ZERO;
-	} else if (sock->s_rcvtimeo < 0) {
-		expire = NNI_TIME_NEVER;
-	} else {
-		expire = nni_clock();
-		expire += sock->s_rcvtimeo;
-	}
-
-	rv = nni_sock_recvmsg(sock, msgp, expire);
+	rv = nni_sock_recvmsg(sock, msgp, flags);
 	nni_sock_rele(sock);
 
 	// Possibly massage nonblocking attempt.  Note that nonblocking is
 	// still done asynchronously, and the calling thread loses context.
-	if ((rv == NNG_ETIMEDOUT) && (expire == NNI_TIME_ZERO)) {
+	if ((rv == NNG_ETIMEDOUT) && (flags == NNG_FLAG_NONBLOCK)) {
 		rv = NNG_EAGAIN;
 	}
 
@@ -201,21 +191,12 @@ nng_sendmsg(nng_socket sid, nng_msg *msg, int flags)
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
-	if ((flags == NNG_FLAG_NONBLOCK) || (sock->s_sndtimeo == 0)) {
-		expire = NNI_TIME_ZERO;
-	} else if (sock->s_sndtimeo < 0) {
-		expire = NNI_TIME_NEVER;
-	} else {
-		expire = nni_clock();
-		expire += sock->s_sndtimeo;
-	}
-
-	rv = nni_sock_sendmsg(sock, msg, expire);
+	rv = nni_sock_sendmsg(sock, msg, flags);
 	nni_sock_rele(sock);
 
 	// Possibly massage nonblocking attempt.  Note that nonblocking is
 	// still done asynchronously, and the calling thread loses context.
-	if ((rv == NNG_ETIMEDOUT) && (expire == NNI_TIME_ZERO)) {
+	if ((rv == NNG_ETIMEDOUT) && (flags == NNG_FLAG_NONBLOCK)) {
 		rv = NNG_EAGAIN;
 	}
 

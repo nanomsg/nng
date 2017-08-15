@@ -28,10 +28,10 @@ nni_device_loop(nni_sock *from, nni_sock *to)
 	for (;;) {
 		// Take messages sock[0], and send to sock[1].
 		// If an error occurs, we close both sockets.
-		if ((rv = nni_sock_recvmsg(from, &msg, NNI_TIME_NEVER)) != 0) {
+		if ((rv = nni_sock_recvmsg(from, &msg, 0)) != 0) {
 			break;
 		}
-		if ((rv = nni_sock_sendmsg(to, msg, NNI_TIME_NEVER)) != 0) {
+		if ((rv = nni_sock_sendmsg(to, msg, 0)) != 0) {
 			nni_msg_free(msg);
 			break;
 		}
@@ -65,6 +65,8 @@ nni_device(nni_sock *sock1, nni_sock *sock2)
 {
 	nni_device_pair pair;
 	int             rv;
+	nni_time        never = NNI_TIME_NEVER;
+	size_t          sz;
 
 	memset(&pair, 0, sizeof(pair));
 	pair.socks[0] = sock1;
@@ -80,8 +82,19 @@ nni_device(nni_sock *sock1, nni_sock *sock2)
 		rv = NNG_EINVAL;
 		goto out;
 	}
-	if ((sock1->s_peer_id.p_id != sock2->s_self_id.p_id) ||
-	    (sock2->s_peer_id.p_id != sock1->s_self_id.p_id)) {
+	if ((nni_sock_peer(sock1) != nni_sock_proto(sock2)) ||
+	    (nni_sock_peer(sock2) != nni_sock_proto(sock1))) {
+		rv = NNG_EINVAL;
+		goto out;
+	}
+
+	// No timeouts.
+	sz = sizeof(never);
+	if ((nni_sock_setopt(sock1, NNG_OPT_RCVTIMEO, &never, sz) != 0) ||
+	    (nni_sock_setopt(sock2, NNG_OPT_RCVTIMEO, &never, sz) != 0) ||
+	    (nni_sock_setopt(sock1, NNG_OPT_SNDTIMEO, &never, sz) != 0) ||
+	    (nni_sock_setopt(sock2, NNG_OPT_SNDTIMEO, &never, sz) != 0)) {
+		// This should never happen.
 		rv = NNG_EINVAL;
 		goto out;
 	}
@@ -96,14 +109,15 @@ nni_device(nni_sock *sock1, nni_sock *sock2)
 		nni_thr_fini(&pair.thrs[0]);
 		goto out;
 	}
-	if (((sock1->s_flags & NNI_PROTO_FLAG_RCV) != 0) &&
-	    ((sock2->s_flags & NNI_PROTO_FLAG_SND) != 0)) {
+	if (((nni_sock_flags(sock1) & NNI_PROTO_FLAG_RCV) != 0) &&
+	    ((nni_sock_flags(sock2) & NNI_PROTO_FLAG_SND) != 0)) {
 		nni_thr_run(&pair.thrs[0]);
 	}
 	// If the sockets are the same, then its a simple one way forwarder,
 	// and we don't need two workers (but would be harmless if we did it).
-	if ((sock1 != sock2) && ((sock2->s_flags & NNI_PROTO_FLAG_RCV) != 0) &&
-	    ((sock1->s_flags & NNI_PROTO_FLAG_SND) != 0)) {
+	if ((sock1 != sock2) &&
+	    ((nni_sock_flags(sock2) & NNI_PROTO_FLAG_RCV) != 0) &&
+	    ((nni_sock_flags(sock1) & NNI_PROTO_FLAG_SND) != 0)) {
 		nni_thr_run(&pair.thrs[1]);
 	}
 
