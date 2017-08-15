@@ -632,12 +632,6 @@ nni_sock_peer(nni_sock *sock)
 	return (sock->s_peer_id.p_id);
 }
 
-nni_duration
-nni_sock_linger(nni_sock *sock)
-{
-	return (sock->s_linger);
-}
-
 size_t
 nni_sock_rcvmaxsz(nni_sock *sock)
 {
@@ -712,19 +706,19 @@ nni_sock_setopt(nni_sock *sock, int opt, const void *val, size_t size)
 	}
 	switch (opt) {
 	case NNG_OPT_LINGER:
-		rv = nni_setopt_duration(&sock->s_linger, val, size);
+		rv = nni_setopt_usec(&sock->s_linger, val, size);
 		break;
 	case NNG_OPT_SNDTIMEO:
-		rv = nni_setopt_duration(&sock->s_sndtimeo, val, size);
+		rv = nni_setopt_usec(&sock->s_sndtimeo, val, size);
 		break;
 	case NNG_OPT_RCVTIMEO:
-		rv = nni_setopt_duration(&sock->s_rcvtimeo, val, size);
+		rv = nni_setopt_usec(&sock->s_rcvtimeo, val, size);
 		break;
 	case NNG_OPT_RECONN_TIME:
-		rv = nni_setopt_duration(&sock->s_reconn, val, size);
+		rv = nni_setopt_usec(&sock->s_reconn, val, size);
 		break;
 	case NNG_OPT_RECONN_MAXTIME:
-		rv = nni_setopt_duration(&sock->s_reconnmax, val, size);
+		rv = nni_setopt_usec(&sock->s_reconnmax, val, size);
 		break;
 	case NNG_OPT_SNDBUF:
 		rv = nni_setopt_buf(sock->s_uwq, val, size);
@@ -762,19 +756,19 @@ nni_sock_getopt(nni_sock *sock, int opt, void *val, size_t *sizep)
 
 	switch (opt) {
 	case NNG_OPT_LINGER:
-		rv = nni_getopt_duration(&sock->s_linger, val, sizep);
+		rv = nni_getopt_usec(&sock->s_linger, val, sizep);
 		break;
 	case NNG_OPT_SNDTIMEO:
-		rv = nni_getopt_duration(&sock->s_sndtimeo, val, sizep);
+		rv = nni_getopt_usec(&sock->s_sndtimeo, val, sizep);
 		break;
 	case NNG_OPT_RCVTIMEO:
-		rv = nni_getopt_duration(&sock->s_rcvtimeo, val, sizep);
+		rv = nni_getopt_usec(&sock->s_rcvtimeo, val, sizep);
 		break;
 	case NNG_OPT_RECONN_TIME:
-		rv = nni_getopt_duration(&sock->s_reconn, val, sizep);
+		rv = nni_getopt_usec(&sock->s_reconn, val, sizep);
 		break;
 	case NNG_OPT_RECONN_MAXTIME:
-		rv = nni_getopt_duration(&sock->s_reconnmax, val, sizep);
+		rv = nni_getopt_usec(&sock->s_reconnmax, val, sizep);
 		break;
 	case NNG_OPT_SNDBUF:
 		rv = nni_getopt_buf(sock->s_uwq, val, sizep);

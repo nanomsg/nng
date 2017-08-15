@@ -295,7 +295,7 @@ nni_surv_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 
 	switch (opt) {
 	case NNG_OPT_SURVEYTIME:
-		rv = nni_setopt_duration(&psock->survtime, buf, sz);
+		rv = nni_setopt_usec(&psock->survtime, buf, sz);
 		break;
 	case NNG_OPT_RAW:
 		oldraw = psock->raw;
@@ -324,7 +324,7 @@ nni_surv_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 	switch (opt) {
 	case NNG_OPT_SURVEYTIME:
-		rv = nni_getopt_duration(&psock->survtime, buf, szp);
+		rv = nni_getopt_usec(&psock->survtime, buf, szp);
 		break;
 	case NNG_OPT_RAW:
 		rv = nni_getopt_int(&psock->raw, buf, szp);

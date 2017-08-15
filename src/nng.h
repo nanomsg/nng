@@ -88,13 +88,13 @@ NNG_DECL uint16_t nng_peer(nng_socket);
 // nng_setopt sets an option for a specific socket.
 NNG_DECL int nng_setopt(nng_socket, int, const void *, size_t);
 NNG_DECL int nng_setopt_int(nng_socket, int, int);
-NNG_DECL int nng_setopt_duration(nng_socket, int, uint64_t);
+NNG_DECL int nng_setopt_usec(nng_socket, int, uint64_t);
 NNG_DECL int nng_setopt_size(nng_socket, int, size_t);
 
 // nng_socket_getopt obtains the option for a socket.
 NNG_DECL int nng_getopt(nng_socket, int, void *, size_t *);
 NNG_DECL int nng_getopt_int(nng_socket, int, int *);
-NNG_DECL int nng_getopt_duration(nng_socket, int, uint64_t *);
+NNG_DECL int nng_getopt_usec(nng_socket, int, uint64_t *);
 NNG_DECL int nng_getopt_size(nng_socket, int, size_t *);
 
 // nng_notify_func is a user function that is executed upon certain

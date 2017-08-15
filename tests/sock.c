@@ -60,7 +60,7 @@ TestMain("Socket Operations", {
 
 			now = nng_clock();
 			So(now > 0);
-			So(nng_setopt_duration(s1, NNG_OPT_RCVTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, NNG_OPT_RCVTIMEO, to) == 0);
 			So(nng_recvmsg(s1, &msg, 0) == NNG_ETIMEDOUT);
 			So(msg == NULL);
 			So(nng_clock() >= (now + to));
@@ -84,7 +84,7 @@ TestMain("Socket Operations", {
 			So(msg != NULL);
 			now = nng_clock();
 
-			So(nng_setopt_duration(s1, NNG_OPT_SNDTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, to) == 0);
 			So(nng_sendmsg(s1, msg, 0) == NNG_ETIMEDOUT);
 			So(nng_clock() >= (now + to));
 			So(nng_clock() < (now + (to * 2)));
@@ -96,7 +96,7 @@ TestMain("Socket Operations", {
 			int64_t v  = 0;
 			size_t  sz;
 
-			So(nng_setopt_duration(s1, NNG_OPT_SNDTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, to) == 0);
 
 			Convey("Short size is not copied", {
 				sz = 0;
@@ -129,8 +129,8 @@ TestMain("Socket Operations", {
 			});
 
 			Convey("Negative timeout fails", {
-				So(nng_setopt_duration(s1, NNG_OPT_RCVTIMEO,
-				       -5) == NNG_EINVAL);
+				So(nng_setopt_usec(s1, NNG_OPT_RCVTIMEO, -5) ==
+				    NNG_EINVAL);
 			});
 
 			Convey("Short timeout fails", {
@@ -256,10 +256,10 @@ TestMain("Socket Operations", {
 			So(nng_setopt_int(s1, NNG_OPT_SNDBUF, 1) == 0);
 			So(nng_setopt_int(s2, NNG_OPT_SNDBUF, 1) == 0);
 
-			So(nng_setopt_duration(s1, NNG_OPT_SNDTIMEO, to) == 0);
-			So(nng_setopt_duration(s1, NNG_OPT_RCVTIMEO, to) == 0);
-			So(nng_setopt_duration(s2, NNG_OPT_SNDTIMEO, to) == 0);
-			So(nng_setopt_duration(s2, NNG_OPT_RCVTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, NNG_OPT_RCVTIMEO, to) == 0);
+			So(nng_setopt_usec(s2, NNG_OPT_SNDTIMEO, to) == 0);
+			So(nng_setopt_usec(s2, NNG_OPT_RCVTIMEO, to) == 0);
 
 			So(nng_listen(s1, a, NULL, 0) == 0);
 			So(nng_dial(s2, a, NULL, 0) == 0);

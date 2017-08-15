@@ -112,8 +112,7 @@ extern nni_msgq *nni_sock_sendq(nni_sock *);
 // inject incoming messages from pipes to it.
 extern nni_msgq *nni_sock_recvq(nni_sock *);
 
-extern nni_duration nni_sock_linger(nni_sock *);
-extern size_t       nni_sock_rcvmaxsz(nni_sock *);
-extern void nni_sock_reconntimes(nni_sock *, nni_duration *, nni_duration *);
+extern size_t nni_sock_rcvmaxsz(nni_sock *);
+extern void   nni_sock_reconntimes(nni_sock *, nni_duration *, nni_duration *);
 
 #endif // CORE_SOCKET_H

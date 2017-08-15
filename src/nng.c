@@ -384,7 +384,7 @@ nng_setopt_size(nng_socket sid, int opt, size_t val)
 }
 
 int
-nng_setopt_duration(nng_socket sid, int opt, uint64_t val)
+nng_setopt_usec(nng_socket sid, int opt, uint64_t val)
 {
 	return (nng_setopt(sid, opt, &val, sizeof(val)));
 }
@@ -404,7 +404,7 @@ nng_getopt_size(nng_socket sid, int opt, size_t *valp)
 }
 
 int
-nng_getopt_duration(nng_socket sid, int opt, uint64_t *valp)
+nng_getopt_usec(nng_socket sid, int opt, uint64_t *valp)
 {
 	size_t sz = sizeof(*valp);
 	return (nng_getopt(sid, opt, valp, &sz));

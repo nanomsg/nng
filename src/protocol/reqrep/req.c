@@ -273,7 +273,7 @@ nni_req_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 
 	switch (opt) {
 	case NNG_OPT_RESENDTIME:
-		rv = nni_setopt_duration(&req->retry, buf, sz);
+		rv = nni_setopt_usec(&req->retry, buf, sz);
 		break;
 	case NNG_OPT_RAW:
 		rv = nni_setopt_int(&req->raw, buf, sz, 0, 1);
@@ -298,7 +298,7 @@ nni_req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 	switch (opt) {
 	case NNG_OPT_RESENDTIME:
-		rv = nni_getopt_duration(&req->retry, buf, szp);
+		rv = nni_getopt_usec(&req->retry, buf, szp);
 		break;
 	case NNG_OPT_RAW:
 		rv = nni_getopt_int(&req->raw, buf, szp);

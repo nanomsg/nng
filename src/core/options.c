@@ -13,7 +13,7 @@
 #include <string.h>
 
 int
-nni_setopt_duration(nni_duration *ptr, const void *val, size_t size)
+nni_setopt_usec(nni_duration *ptr, const void *val, size_t size)
 {
 	nni_duration dur;
 
@@ -68,7 +68,7 @@ nni_setopt_size(
 }
 
 int
-nni_getopt_duration(nni_duration *ptr, void *val, size_t *sizep)
+nni_getopt_usec(nni_duration *ptr, void *val, size_t *sizep)
 {
 	size_t sz = sizeof(*ptr);
 

@@ -44,11 +44,11 @@ TestMain("PAIRv1 protocol", {
 		So(nng_pair1_open(&c2) == 0);
 
 		tmo = 300000;
-		So(nng_setopt_duration(s1, NNG_OPT_RCVTIMEO, tmo) == 0);
-		So(nng_setopt_duration(c1, NNG_OPT_RCVTIMEO, tmo) == 0);
-		So(nng_setopt_duration(c2, NNG_OPT_RCVTIMEO, tmo) == 0);
+		So(nng_setopt_usec(s1, NNG_OPT_RCVTIMEO, tmo) == 0);
+		So(nng_setopt_usec(c1, NNG_OPT_RCVTIMEO, tmo) == 0);
+		So(nng_setopt_usec(c2, NNG_OPT_RCVTIMEO, tmo) == 0);
 		tmo = 0;
-		So(nng_getopt_duration(s1, NNG_OPT_RCVTIMEO, &tmo) == 0);
+		So(nng_getopt_usec(s1, NNG_OPT_RCVTIMEO, &tmo) == 0);
 		So(tmo == 300000);
 
 		Convey("Monogamous cooked mode works", {
@@ -113,8 +113,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_setopt_int(s1, NNG_OPT_RCVBUF, 1) == 0);
 			So(nng_setopt_int(s1, NNG_OPT_SNDBUF, 1) == 0);
 			So(nng_setopt_int(c1, NNG_OPT_RCVBUF, 1) == 0);
-			So(nng_setopt_duration(s1, NNG_OPT_SNDTIMEO, 100000) ==
-			    0);
+			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, 100000) == 0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
@@ -138,8 +137,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_setopt_int(s1, NNG_OPT_RCVBUF, 1) == 0);
 			So(nng_setopt_int(s1, NNG_OPT_SNDBUF, 1) == 0);
 			So(nng_setopt_int(c1, NNG_OPT_RCVBUF, 1) == 0);
-			So(nng_setopt_duration(s1, NNG_OPT_SNDTIMEO, 30000) ==
-			    0);
+			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, 30000) == 0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);

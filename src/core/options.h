@@ -22,10 +22,10 @@ extern int nni_getopt_buf(nni_msgq *, void *, size_t *);
 
 // nni_setopt_duration sets the duration.  Durations must be legal,
 // either a positive value, 0, or -1 to indicate forever.
-extern int nni_setopt_duration(nni_duration *, const void *, size_t);
+extern int nni_setopt_usec(nni_duration *, const void *, size_t);
 
 // nni_getopt_duration gets the duration.
-extern int nni_getopt_duration(nni_duration *, void *, size_t *);
+extern int nni_getopt_usec(nni_duration *, void *, size_t *);
 
 // nni_setopt_int sets an integer, which must be between the minimum and
 // maximum values (inclusive).

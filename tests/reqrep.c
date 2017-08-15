@@ -115,7 +115,7 @@ TestMain("REQ/REP pattern", {
 			nng_close(req);
 		});
 
-		So(nng_setopt_duration(req, NNG_OPT_RESENDTIME, retry) == 0);
+		So(nng_setopt_usec(req, NNG_OPT_RESENDTIME, retry) == 0);
 		So(nng_setopt_int(req, NNG_OPT_SNDBUF, 16) == 0);
 
 		So(nng_msg_alloc(&abc, 0) == 0);
