@@ -63,7 +63,6 @@ nni_posix_epdesc_cancel(nni_aio *aio, int rv)
 static void
 nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
 {
-	nni_posix_epdesc *  ed = aio->a_prov_data;
 	nni_posix_pipedesc *pd = NULL;
 
 	// acceptq or connectq.

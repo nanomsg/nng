@@ -153,7 +153,6 @@ nni_hash_resize(nni_idhash *h)
 	}
 
 	oldsize = h->ih_cap;
-	newsize = h->ih_cap;
 
 	newsize = 8;
 	while (newsize < (h->ih_count * 2)) {

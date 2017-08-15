@@ -374,7 +374,6 @@ int
 nni_msgq_tryput(nni_msgq *mq, nni_msg *msg)
 {
 	nni_aio *raio;
-	size_t   len = nni_msg_len(msg);
 
 	nni_mtx_lock(&mq->mq_lock);
 	if (mq->mq_closed) {
@@ -484,7 +483,6 @@ void
 nni_msgq_close(nni_msgq *mq)
 {
 	nni_aio *aio;
-	nni_aio *naio;
 
 	nni_mtx_lock(&mq->mq_lock);
 	mq->mq_closed = 1;
@@ -500,7 +498,6 @@ nni_msgq_close(nni_msgq *mq)
 	}
 
 	// Let all pending blockers know we are closing the queue.
-	naio = nni_list_first(&mq->mq_aio_getq);
 	while (((aio = nni_list_first(&mq->mq_aio_getq)) != NULL) ||
 	    ((aio = nni_list_first(&mq->mq_aio_putq)) != NULL)) {
 		nni_aio_list_remove(aio);

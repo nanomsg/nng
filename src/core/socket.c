@@ -91,7 +91,7 @@ nni_sock_pipe_start(nni_sock *s, nni_pipe *pipe)
 		rv = s->s_pipe_ops.pipe_start(pdata);
 	}
 	nni_mtx_unlock(&s->s_mx);
-	return (0);
+	return (rv);
 }
 
 int
