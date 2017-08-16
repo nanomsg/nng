@@ -231,7 +231,6 @@ nni_notify *
 nni_sock_notify(nni_sock *sock, int type, nng_notify_func fn, void *arg)
 {
 	nni_notify *notify;
-	int         rv;
 
 	if ((notify = NNI_ALLOC_STRUCT(notify)) == NULL) {
 		return (NULL);
@@ -244,31 +243,19 @@ nni_sock_notify(nni_sock *sock, int type, nng_notify_func fn, void *arg)
 
 	switch (type) {
 	case NNG_EV_CAN_RCV:
-		rv = nni_aio_init(&notify->n_aio, nni_sock_canrecv_cb, notify);
-		if (rv != 0) {
-			goto fail;
-		}
+		nni_aio_init(&notify->n_aio, nni_sock_canrecv_cb, notify);
 		nni_msgq_aio_notify_get(sock->s_urq, &notify->n_aio);
 		break;
 	case NNG_EV_CAN_SND:
-		rv = nni_aio_init(&notify->n_aio, nni_sock_cansend_cb, notify);
-		if (rv != 0) {
-			goto fail;
-		}
+		nni_aio_init(&notify->n_aio, nni_sock_cansend_cb, notify);
 		nni_msgq_aio_notify_put(sock->s_uwq, &notify->n_aio);
 		break;
 	default:
-		rv = NNG_ENOTSUP;
-		goto fail;
-		break;
+		NNI_FREE_STRUCT(notify);
+		return (NULL);
 	}
 
 	return (notify);
-
-fail:
-	nni_aio_fini(&notify->n_aio);
-	NNI_FREE_STRUCT(notify);
-	return (NULL);
 }
 
 void
@@ -343,13 +330,13 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	NNI_LIST_NODE_INIT(&s->s_node);
 	nni_pipe_sock_list_init(&s->s_pipes);
 	nni_ep_list_init(&s->s_eps);
+	nni_mtx_init(&s->s_mx);
+	nni_cv_init(&s->s_cv, &s->s_mx);
+	nni_cv_init(&s->s_close_cv, &nni_sock_lk);
+	nni_ev_init(&s->s_recv_ev, NNG_EV_CAN_RCV, s);
+	nni_ev_init(&s->s_send_ev, NNG_EV_CAN_SND, s);
 
-	if (((rv = nni_mtx_init(&s->s_mx)) != 0) ||
-	    ((rv = nni_cv_init(&s->s_cv, &s->s_mx)) != 0) ||
-	    ((rv = nni_cv_init(&s->s_close_cv, &nni_sock_lk)) != 0) ||
-	    ((rv = nni_ev_init(&s->s_recv_ev, NNG_EV_CAN_RCV, s)) != 0) ||
-	    ((rv = nni_ev_init(&s->s_send_ev, NNG_EV_CAN_SND, s)) != 0) ||
-	    ((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
+	if (((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
 	    ((rv = nni_msgq_init(&s->s_urq, 0)) != 0) ||
 	    ((rv = s->s_sock_ops.sock_init(&s->s_data, s)) != 0)) {
 		nni_sock_destroy(s);
@@ -365,8 +352,9 @@ nni_sock_sys_init(void)
 	int rv;
 
 	NNI_LIST_INIT(&nni_sock_list, nni_sock, s_node);
-	if (((rv = nni_idhash_init(&nni_sock_hash)) != 0) ||
-	    ((rv = nni_mtx_init(&nni_sock_lk)) != 0)) {
+	nni_mtx_init(&nni_sock_lk);
+
+	if ((rv = nni_idhash_init(&nni_sock_hash)) != 0) {
 		nni_sock_sys_fini();
 	} else {
 		nni_idhash_set_limits(nni_sock_hash, 1, 0x7fffffff, 1);
@@ -562,6 +550,9 @@ nni_sock_closeall(void)
 {
 	nni_sock *s;
 
+	if (nni_sock_hash == NULL) {
+		return;
+	}
 	for (;;) {
 		nni_mtx_lock(&nni_sock_lk);
 		if ((s = nni_list_first(&nni_sock_list)) == NULL) {

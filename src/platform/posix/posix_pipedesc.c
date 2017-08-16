@@ -302,10 +302,6 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 	// one.  For now we just have a global pollq.  Note that by tying
 	// the pd to a single pollq we may get some kind of cache warmth.
 
-	if ((rv = nni_mtx_init(&pd->mtx)) != 0) {
-		NNI_FREE_STRUCT(pd);
-		return (rv);
-	}
 	pd->closed    = 0;
 	pd->node.fd   = fd;
 	pd->node.cb   = nni_posix_pipedesc_cb;
@@ -313,6 +309,7 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
+	nni_mtx_init(&pd->mtx);
 	nni_aio_list_init(&pd->readq);
 	nni_aio_list_init(&pd->writeq);
 

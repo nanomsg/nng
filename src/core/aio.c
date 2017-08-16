@@ -56,20 +56,14 @@ static nni_list nni_aio_expire_aios;
 
 static void nni_aio_expire_add(nni_aio *);
 
-int
+void
 nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 {
-	int rv;
-
 	memset(aio, 0, sizeof(*aio));
-	if ((rv = nni_cv_init(&aio->a_cv, &nni_aio_lk)) != 0) {
-		return (rv);
-	}
+	nni_cv_init(&aio->a_cv, &nni_aio_lk);
 	aio->a_expire = NNI_TIME_NEVER;
 	aio->a_init   = 1;
 	nni_task_init(NULL, &aio->a_task, cb, arg);
-
-	return (0);
 }
 
 void
@@ -350,31 +344,6 @@ nni_aio_expire_loop(void *arg)
 	}
 }
 
-int
-nni_aio_sys_init(void)
-{
-	int      rv;
-	nni_mtx *mtx = &nni_aio_lk;
-	nni_cv * cv  = &nni_aio_expire_cv;
-	nni_thr *thr = &nni_aio_expire_thr;
-
-	if (((rv = nni_mtx_init(mtx)) != 0) ||
-	    ((rv = nni_cv_init(cv, mtx)) != 0) ||
-	    ((rv = nni_thr_init(thr, nni_aio_expire_loop, NULL)) != 0)) {
-		goto fail;
-	}
-	NNI_LIST_INIT(&nni_aio_expire_aios, nni_aio, a_expire_node);
-	nni_aio_expire_run = 1;
-	nni_thr_run(thr);
-	return (0);
-
-fail:
-	nni_thr_fini(thr);
-	nni_cv_fini(cv);
-	nni_mtx_fini(mtx);
-	return (rv);
-}
-
 void
 nni_aio_sys_fini(void)
 {
@@ -392,4 +361,26 @@ nni_aio_sys_fini(void)
 	nni_thr_fini(thr);
 	nni_cv_fini(cv);
 	nni_mtx_fini(mtx);
+}
+
+int
+nni_aio_sys_init(void)
+{
+	int      rv;
+	nni_mtx *mtx = &nni_aio_lk;
+	nni_cv * cv  = &nni_aio_expire_cv;
+	nni_thr *thr = &nni_aio_expire_thr;
+
+	NNI_LIST_INIT(&nni_aio_expire_aios, nni_aio, a_expire_node);
+	nni_mtx_init(mtx);
+	nni_cv_init(cv, mtx);
+
+	if ((rv = nni_thr_init(thr, nni_aio_expire_loop, NULL)) != 0) {
+		nni_aio_sys_fini();
+		return (rv);
+	}
+
+	nni_aio_expire_run = 1;
+	nni_thr_run(thr);
+	return (0);
 }

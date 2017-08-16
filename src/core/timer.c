@@ -40,10 +40,11 @@ nni_timer_sys_init(void)
 	memset(timer, 0, sizeof(*timer));
 	NNI_LIST_INIT(&timer->t_entries, nni_timer_node, t_node);
 
-	if (((rv = nni_mtx_init(&timer->t_mx)) != 0) ||
-	    ((rv = nni_cv_init(&timer->t_sched_cv, &timer->t_mx)) != 0) ||
-	    ((rv = nni_cv_init(&timer->t_wait_cv, &timer->t_mx)) != 0) ||
-	    ((rv = nni_thr_init(&timer->t_thr, nni_timer_loop, timer)) != 0)) {
+	nni_mtx_init(&timer->t_mx);
+	nni_cv_init(&timer->t_sched_cv, &timer->t_mx);
+	nni_cv_init(&timer->t_wait_cv, &timer->t_mx);
+
+	if ((rv = nni_thr_init(&timer->t_thr, nni_timer_loop, timer)) != 0) {
 		nni_timer_sys_fini();
 		return (rv);
 	}

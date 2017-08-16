@@ -66,7 +66,7 @@ struct nni_aio {
 // the supplied argument when the operation is complete.  If NULL is
 // supplied for the callback, then nni_aio_wake is used in its place,
 // and the aio is used for the argument.
-extern int nni_aio_init(nni_aio *, nni_cb, void *);
+extern void nni_aio_init(nni_aio *, nni_cb, void *);
 
 // nni_aio_fini finalizes the aio, releasing resources (locks)
 // associated with it.  The caller is responsible for ensuring that any

@@ -73,22 +73,24 @@ pair1_sock_init(void **sp, nni_sock *nsock)
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	if ((rv = nni_idhash_init(&s->pipes)) != 0) {
+		NNI_FREE_STRUCT(s);
+		return (NNG_ENOMEM);
+	}
 	NNI_LIST_INIT(&s->plist, pair1_pipe, node);
 
 	// Raw mode uses this.
-	if (((rv = nni_aio_init(&s->aio_getq, pair1_sock_getq_cb, s)) != 0) ||
-	    ((rv = nni_mtx_init(&s->mtx)) != 0) ||
-	    ((rv = nni_idhash_init(&s->pipes)) != 0)) {
-		pair1_sock_fini(s);
-	} else {
-		s->nsock = nsock;
-		s->raw   = 0;
-		s->poly  = 0;
-		s->uwq   = nni_sock_sendq(nsock);
-		s->urq   = nni_sock_recvq(nsock);
-		s->ttl   = 8;
-		*sp      = s;
-	}
+	nni_aio_init(&s->aio_getq, pair1_sock_getq_cb, s);
+	nni_mtx_init(&s->mtx);
+
+	s->nsock = nsock;
+	s->raw   = 0;
+	s->poly  = 0;
+	s->uwq   = nni_sock_sendq(nsock);
+	s->urq   = nni_sock_recvq(nsock);
+	s->ttl   = 8;
+	*sp      = s;
+
 	return (0);
 }
 
@@ -101,17 +103,19 @@ pair1_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_msgq_init(&p->sendq, 2)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, pair1_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, pair1_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, pair1_pipe_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, pair1_pipe_putq_cb, p)) != 0)) {
-		pair1_pipe_fini(p);
-	} else {
-		p->npipe = npipe;
-		p->psock = psock;
-		*pp      = p;
+	if ((rv = nni_msgq_init(&p->sendq, 2)) != 0) {
+		NNI_FREE_STRUCT(p);
+		return (NNG_ENOMEM);
 	}
+	nni_aio_init(&p->aio_send, pair1_pipe_send_cb, p);
+	nni_aio_init(&p->aio_recv, pair1_pipe_recv_cb, p);
+	nni_aio_init(&p->aio_getq, pair1_pipe_getq_cb, p);
+	nni_aio_init(&p->aio_putq, pair1_pipe_putq_cb, p);
+
+	p->npipe = npipe;
+	p->psock = psock;
+	*pp      = p;
+
 	return (rv);
 }
 

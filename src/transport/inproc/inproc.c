@@ -65,14 +65,9 @@ static nni_inproc_global nni_inproc;
 static int
 nni_inproc_init(void)
 {
-	int rv;
-
 	NNI_LIST_INIT(&nni_inproc.servers, nni_inproc_ep, node);
 
-	if ((rv = nni_mtx_init(&nni_inproc.mx)) != 0) {
-		return (rv);
-	}
-
+	nni_mtx_init(&nni_inproc.mx);
 	return (0);
 }
 
@@ -309,14 +304,15 @@ nni_inproc_accept_clients(nni_inproc_ep *server)
 				continue;
 			}
 
-			if (((rv = nni_mtx_init(&pair->mx)) != 0) ||
-			    ((rv = nni_msgq_init(&pair->q[0], 4)) != 0) ||
+			if (((rv = nni_msgq_init(&pair->q[0], 4)) != 0) ||
 			    ((rv = nni_msgq_init(&pair->q[1], 4)) != 0)) {
 				nni_inproc_pair_destroy(pair);
 				nni_inproc_conn_finish(caio, rv);
 				nni_inproc_conn_finish(saio, rv);
 				continue;
 			}
+
+			nni_mtx_init(&pair->mx);
 
 			pair->pipes[0]     = caio->a_pipe;
 			pair->pipes[1]     = saio->a_pipe;

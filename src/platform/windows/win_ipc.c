@@ -566,10 +566,9 @@ nni_win_ipc_sysinit(void)
 	NNI_LIST_INIT(&worker->workers, nni_plat_ipc_ep, node);
 	NNI_LIST_INIT(&worker->waiters, nni_plat_ipc_ep, node);
 
-	if (((rv = nni_mtx_init(&worker->mtx)) != 0) ||
-	    ((rv = nni_cv_init(&worker->cv, &worker->mtx)) != 0)) {
-		return (rv);
-	}
+	nni_mtx_init(&worker->mtx);
+	nni_cv_init(&worker->cv, &worker->mtx);
+
 	rv = nni_thr_init(&worker->thr, nni_win_ipc_conn_thr, worker);
 	if (rv != 0) {
 		return (rv);

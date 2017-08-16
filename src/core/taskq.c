@@ -85,12 +85,9 @@ nni_taskq_init(nni_taskq **tqp, int nthr)
 	tq->tq_nthreads = nthr;
 	NNI_LIST_INIT(&tq->tq_tasks, nni_task, task_node);
 
-	if (((rv = nni_mtx_init(&tq->tq_mtx)) != 0) ||
-	    ((rv = nni_cv_init(&tq->tq_sched_cv, &tq->tq_mtx)) != 0) ||
-	    ((rv = nni_cv_init(&tq->tq_wait_cv, &tq->tq_mtx)) != 0)) {
-		nni_taskq_fini(tq);
-		return (rv);
-	}
+	nni_mtx_init(&tq->tq_mtx);
+	nni_cv_init(&tq->tq_sched_cv, &tq->tq_mtx);
+	nni_cv_init(&tq->tq_wait_cv, &tq->tq_mtx);
 
 	for (i = 0; i < nthr; i++) {
 		tq->tq_threads[i].tqt_tq      = tq;

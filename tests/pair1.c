@@ -94,7 +94,6 @@ TestMain("PAIRv1 protocol", {
 		});
 
 		Convey("Cannot set raw mode after connect", {
-			int r = 1;
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
@@ -313,7 +312,6 @@ TestMain("PAIRv1 protocol", {
 			int ttl;
 
 			ttl = 0;
-			sz  = sizeof(ttl);
 			So(nng_setopt_int(s1, NNG_OPT_MAXTTL, 0) ==
 			    NNG_EINVAL);
 
@@ -423,7 +421,6 @@ TestMain("PAIRv1 protocol", {
 			uint32_t hops;
 			nng_pipe p1;
 			nng_pipe p2;
-			size_t   sz;
 
 			So(nng_getopt_int(s1, NNG_OPT_POLYAMOROUS, &v) == 0);
 			So(v == 0);

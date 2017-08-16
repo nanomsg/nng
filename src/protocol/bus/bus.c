@@ -59,40 +59,28 @@ nni_bus_sock_fini(void *arg)
 {
 	nni_bus_sock *psock = arg;
 
-	if (psock != NULL) {
-		nni_aio_stop(&psock->aio_getq);
-		nni_aio_fini(&psock->aio_getq);
-		nni_mtx_fini(&psock->mtx);
-		NNI_FREE_STRUCT(psock);
-	}
+	nni_aio_stop(&psock->aio_getq);
+	nni_aio_fini(&psock->aio_getq);
+	nni_mtx_fini(&psock->mtx);
+	NNI_FREE_STRUCT(psock);
 }
 
 static int
 nni_bus_sock_init(void **sp, nni_sock *nsock)
 {
 	nni_bus_sock *psock;
-	int           rv;
 
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	NNI_LIST_INIT(&psock->pipes, nni_bus_pipe, node);
-	if ((rv = nni_mtx_init(&psock->mtx)) != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&psock->aio_getq, nni_bus_sock_getq_cb, psock);
-	if (rv != 0) {
-		goto fail;
-	}
+	nni_mtx_init(&psock->mtx);
+	nni_aio_init(&psock->aio_getq, nni_bus_sock_getq_cb, psock);
 	psock->nsock = nsock;
 	psock->raw   = 0;
 
 	*sp = psock;
 	return (0);
-
-fail:
-	nni_bus_sock_fini(psock);
-	return (rv);
 }
 
 static void
@@ -134,36 +122,21 @@ nni_bus_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 	if ((ppipe = NNI_ALLOC_STRUCT(ppipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	if ((rv = nni_msgq_init(&ppipe->sendq, 16)) != 0) {
+		NNI_FREE_STRUCT(ppipe);
+		return (rv);
+	}
 	NNI_LIST_NODE_INIT(&ppipe->node);
-	if (((rv = nni_mtx_init(&ppipe->mtx)) != 0) ||
-	    ((rv = nni_msgq_init(&ppipe->sendq, 16)) != 0)) {
-		goto fail;
-	}
-	rv = nni_aio_init(&ppipe->aio_getq, nni_bus_pipe_getq_cb, ppipe);
-	if (rv != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&ppipe->aio_send, nni_bus_pipe_send_cb, ppipe);
-	if (rv != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&ppipe->aio_recv, nni_bus_pipe_recv_cb, ppipe);
-	if (rv != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&ppipe->aio_putq, nni_bus_pipe_putq_cb, ppipe);
-	if (rv != 0) {
-		goto fail;
-	}
+	nni_mtx_init(&ppipe->mtx);
+	nni_aio_init(&ppipe->aio_getq, nni_bus_pipe_getq_cb, ppipe);
+	nni_aio_init(&ppipe->aio_send, nni_bus_pipe_send_cb, ppipe);
+	nni_aio_init(&ppipe->aio_recv, nni_bus_pipe_recv_cb, ppipe);
+	nni_aio_init(&ppipe->aio_putq, nni_bus_pipe_putq_cb, ppipe);
 
 	ppipe->npipe = npipe;
 	ppipe->psock = psock;
 	*pp          = ppipe;
 	return (0);
-
-fail:
-	nni_bus_pipe_fini(ppipe);
-	return (rv);
 }
 
 static int

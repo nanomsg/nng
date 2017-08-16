@@ -19,9 +19,9 @@
 int
 nni_plat_pipe_open(int *wfdp, int *rfdp)
 {
-	SOCKET afd = INVALID_SOCKET;
 	SOCKET rfd = INVALID_SOCKET;
 	SOCKET wfd = INVALID_SOCKET;
+	SOCKET afd;
 
 	struct sockaddr_in addr;
 	socklen_t          alen;

@@ -95,16 +95,13 @@ static int
 nni_sub_pipe_init(void **spp, nni_pipe *pipe, void *ssock)
 {
 	nni_sub_pipe *sp;
-	int           rv;
 
 	if ((sp = NNI_ALLOC_STRUCT(sp)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_aio_init(&sp->aio_putq, nni_sub_putq_cb, sp)) != 0) ||
-	    ((rv = nni_aio_init(&sp->aio_recv, nni_sub_recv_cb, sp)) != 0)) {
-		nni_sub_pipe_fini(sp);
-		return (rv);
-	}
+	nni_aio_init(&sp->aio_putq, nni_sub_putq_cb, sp);
+	nni_aio_init(&sp->aio_recv, nni_sub_recv_cb, sp);
+
 	sp->pipe = pipe;
 	sp->sub  = ssock;
 	*spp     = sp;

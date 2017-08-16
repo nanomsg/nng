@@ -77,6 +77,11 @@ nni_resp_sock_init(void **pp, nni_sock *nsock)
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	if ((rv = nni_idhash_init(&psock->pipes)) != 0) {
+		NNI_FREE_STRUCT(psock);
+		return (rv);
+	}
+
 	psock->ttl        = 8; // Per RFC
 	psock->nsock      = nsock;
 	psock->raw        = 0;
@@ -85,24 +90,12 @@ nni_resp_sock_init(void **pp, nni_sock *nsock)
 	psock->urq        = nni_sock_recvq(nsock);
 	psock->uwq        = nni_sock_sendq(nsock);
 
-	if ((rv = nni_mtx_init(&psock->mtx)) != 0) {
-		goto fail;
-	}
-	if ((rv = nni_idhash_init(&psock->pipes)) != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&psock->aio_getq, nni_resp_sock_getq_cb, psock);
-	if (rv != 0) {
-		goto fail;
-	}
+	nni_mtx_init(&psock->mtx);
+	nni_aio_init(&psock->aio_getq, nni_resp_sock_getq_cb, psock);
 
 	*pp = psock;
 	nni_sock_senderr(nsock, NNG_ESTATE);
 	return (0);
-
-fail:
-	nni_resp_sock_fini(psock);
-	return (rv);
 }
 
 static void
@@ -131,33 +124,18 @@ nni_resp_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 		return (NNG_ENOMEM);
 	}
 	if ((rv = nni_msgq_init(&ppipe->sendq, 2)) != 0) {
-		goto fail;
+		NNI_FREE_STRUCT(ppipe);
+		return (rv);
 	}
-	rv = nni_aio_init(&ppipe->aio_putq, nni_resp_putq_cb, ppipe);
-	if (rv != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&ppipe->aio_recv, nni_resp_recv_cb, ppipe);
-	if (rv != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&ppipe->aio_getq, nni_resp_getq_cb, ppipe);
-	if (rv != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&ppipe->aio_send, nni_resp_send_cb, ppipe);
-	if (rv != 0) {
-		goto fail;
-	}
+	nni_aio_init(&ppipe->aio_putq, nni_resp_putq_cb, ppipe);
+	nni_aio_init(&ppipe->aio_recv, nni_resp_recv_cb, ppipe);
+	nni_aio_init(&ppipe->aio_getq, nni_resp_getq_cb, ppipe);
+	nni_aio_init(&ppipe->aio_send, nni_resp_send_cb, ppipe);
 
 	ppipe->npipe = npipe;
 	ppipe->psock = psock;
 	*pp          = ppipe;
 	return (0);
-
-fail:
-	nni_resp_pipe_fini(ppipe);
-	return (rv);
 }
 
 static void

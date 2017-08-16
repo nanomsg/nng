@@ -84,8 +84,9 @@ nni_tran_sys_init(void)
 	int rv;
 
 	NNI_LIST_INIT(&nni_tran_list, nni_transport, t_node);
-	if (((rv = nni_mtx_init(&nni_tran_lk)) != 0) ||
-	    ((rv = nni_tran_register(&nni_inproc_tran)) != 0) ||
+	nni_mtx_init(&nni_tran_lk);
+
+	if (((rv = nni_tran_register(&nni_inproc_tran)) != 0) ||
 	    ((rv = nni_tran_register(&nni_ipc_tran)) != 0) ||
 	    ((rv = nni_tran_register(&nni_tcp_tran)) != 0)) {
 		nni_tran_sys_fini();

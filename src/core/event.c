@@ -12,13 +12,12 @@
 #include <stdlib.h>
 #include <string.h>
 
-int
+void
 nni_ev_init(nni_event *event, int type, nni_sock *sock)
 {
 	memset(event, 0, sizeof(*event));
 	event->e_type = type;
 	event->e_sock = sock;
-	return (0);
 }
 
 void

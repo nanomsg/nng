@@ -49,9 +49,10 @@ nni_pipe_sys_init(void)
 	int rv;
 
 	NNI_LIST_INIT(&nni_pipe_reap_list, nni_pipe, p_reap_node);
+	nni_mtx_init(&nni_pipe_reap_lk);
+	nni_cv_init(&nni_pipe_reap_cv, &nni_pipe_reap_lk);
+
 	if (((rv = nni_idhash_init(&nni_pipes)) != 0) ||
-	    ((rv = nni_mtx_init(&nni_pipe_reap_lk)) != 0) ||
-	    ((rv = nni_cv_init(&nni_pipe_reap_cv, &nni_pipe_reap_lk)) != 0) ||
 	    ((rv = nni_thr_init(&nni_pipe_reap_thr, nni_pipe_reaper, 0)) !=
 	        0)) {
 		return (rv);
@@ -240,11 +241,11 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	NNI_LIST_NODE_INIT(&p->p_sock_node);
 	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
-	if (((rv = nni_mtx_init(&p->p_mtx)) != 0) ||
-	    ((rv = nni_cv_init(&p->p_cv, &p->p_mtx)) != 0) ||
-	    ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) !=
-	        0) ||
-	    ((rv = nni_idhash_alloc(nni_pipes, &p->p_id, p)) != 0) ||
+	nni_mtx_init(&p->p_mtx);
+	nni_cv_init(&p->p_cv, &p->p_mtx);
+	nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p);
+
+	if (((rv = nni_idhash_alloc(nni_pipes, &p->p_id, p)) != 0) ||
 	    ((rv = nni_ep_pipe_add(ep, p)) != 0) ||
 	    ((rv = nni_sock_pipe_add(sock, p)) != 0)) {
 		nni_pipe_destroy(p);

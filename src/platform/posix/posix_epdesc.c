@@ -126,10 +126,8 @@ nni_posix_epdesc_doconnect(nni_posix_epdesc *ed)
 static void
 nni_posix_epdesc_doaccept(nni_posix_epdesc *ed)
 {
-	nni_aio *               aio;
-	int                     newfd;
-	struct sockaddr_storage ss;
-	socklen_t               slen;
+	nni_aio *aio;
+	int      newfd;
 
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
 // We could argue that knowing the remote peer address would
@@ -456,10 +454,7 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp, const char *url)
 		return (NNG_ENOMEM);
 	}
 
-	if ((rv = nni_mtx_init(&ed->mtx)) != 0) {
-		NNI_FREE_STRUCT(ed);
-		return (rv);
-	}
+	nni_mtx_init(&ed->mtx);
 
 	// We could randomly choose a different pollq, or for efficiencies
 	// sake we could take a modulo of the file desc number to choose

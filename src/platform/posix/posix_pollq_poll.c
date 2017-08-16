@@ -347,9 +347,10 @@ nni_posix_pollq_init(nni_posix_pollq *pq)
 	pq->wakerfd = -1;
 	pq->close   = 0;
 
-	if (((rv = nni_mtx_init(&pq->mtx)) != 0) ||
-	    ((rv = nni_cv_init(&pq->cv, &pq->mtx)) != 0) ||
-	    ((rv = nni_posix_pollq_poll_grow(pq)) != 0) ||
+	nni_mtx_init(&pq->mtx);
+	nni_cv_init(&pq->cv, &pq->mtx);
+
+	if (((rv = nni_posix_pollq_poll_grow(pq)) != 0) ||
 	    ((rv = nni_plat_pipe_open(&pq->wakewfd, &pq->wakerfd)) != 0) ||
 	    ((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0)) {
 		nni_posix_pollq_fini(pq);

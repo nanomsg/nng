@@ -63,20 +63,13 @@ static int
 nni_pull_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 {
 	nni_pull_pipe *pp;
-	int            rv;
 
 	if ((pp = NNI_ALLOC_STRUCT(pp)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_aio_init(&pp->putq_aio, nni_pull_putq_cb, pp))) != 0) {
-		NNI_FREE_STRUCT(pp);
-		return (rv);
-	}
-	if (((rv = nni_aio_init(&pp->recv_aio, nni_pull_recv_cb, pp))) != 0) {
-		nni_aio_fini(&pp->putq_aio);
-		NNI_FREE_STRUCT(pp);
-		return (rv);
-	}
+	nni_aio_init(&pp->putq_aio, nni_pull_putq_cb, pp);
+	nni_aio_init(&pp->recv_aio, nni_pull_recv_cb, pp);
+
 	pp->pipe = pipe;
 	pp->pull = psock;
 	*ppp     = pp;

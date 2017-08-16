@@ -53,15 +53,11 @@ static int
 pair0_sock_init(void **sp, nni_sock *nsock)
 {
 	pair0_sock *s;
-	int         rv;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mtx_init(&s->mtx)) != 0) {
-		NNI_FREE_STRUCT(s);
-		return (rv);
-	}
+	nni_mtx_init(&s->mtx);
 	s->nsock = nsock;
 	s->ppipe = NULL;
 	s->raw   = 0;
@@ -84,22 +80,19 @@ static int
 pair0_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 {
 	pair0_pipe *p;
-	int         rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_aio_init(&p->aio_send, pair0_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, pair0_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, pair0_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, pair0_putq_cb, p)) != 0)) {
-		pair0_pipe_fini(p);
-	} else {
-		p->npipe = npipe;
-		p->psock = psock;
-		*pp      = p;
-	}
-	return (rv);
+	nni_aio_init(&p->aio_send, pair0_send_cb, p);
+	nni_aio_init(&p->aio_recv, pair0_recv_cb, p);
+	nni_aio_init(&p->aio_getq, pair0_getq_cb, p);
+	nni_aio_init(&p->aio_putq, pair0_putq_cb, p);
+
+	p->npipe = npipe;
+	p->psock = psock;
+	*pp      = p;
+	return (0);
 }
 
 static void

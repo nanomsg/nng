@@ -30,12 +30,11 @@ nni_free(void *b, size_t z)
 	HeapFree(GetProcessHeap(), 0, b);
 }
 
-int
+void
 nni_plat_mtx_init(nni_plat_mtx *mtx)
 {
 	InitializeSRWLock(&mtx->srl);
 	mtx->init = 1;
-	return (0);
 }
 
 void
@@ -56,12 +55,11 @@ nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 	ReleaseSRWLockExclusive(&mtx->srl);
 }
 
-int
+void
 nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 {
 	InitializeConditionVariable(&cv->cv);
 	cv->srl = &mtx->srl;
-	return (0);
 }
 
 void

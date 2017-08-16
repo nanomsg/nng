@@ -39,7 +39,6 @@ int
 nni_msgq_init(nni_msgq **mqp, unsigned cap)
 {
 	struct nni_msgq *mq;
-	int              rv;
 	int              alloc;
 
 	// We allocate 2 extra cells in the fifo.  One to accommodate a
@@ -52,21 +51,18 @@ nni_msgq_init(nni_msgq **mqp, unsigned cap)
 	if ((mq = NNI_ALLOC_STRUCT(mq)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	if ((mq->mq_msgs = nni_alloc(sizeof(nng_msg *) * alloc)) == NULL) {
+		NNI_FREE_STRUCT(mq);
+		return (NNG_ENOMEM);
+	}
+
 	nni_aio_list_init(&mq->mq_aio_putq);
 	nni_aio_list_init(&mq->mq_aio_getq);
 	nni_aio_list_init(&mq->mq_aio_notify_get);
 	nni_aio_list_init(&mq->mq_aio_notify_put);
 
-	if ((rv = nni_mtx_init(&mq->mq_lock)) != 0) {
-		goto fail;
-	}
-	if ((rv = nni_cv_init(&mq->mq_drained, &mq->mq_lock)) != 0) {
-		goto fail;
-	}
-	if ((mq->mq_msgs = nni_alloc(sizeof(nng_msg *) * alloc)) == NULL) {
-		rv = NNG_ENOMEM;
-		goto fail;
-	}
+	nni_mtx_init(&mq->mq_lock);
+	nni_cv_init(&mq->mq_drained, &mq->mq_lock);
 
 	mq->mq_cap      = cap;
 	mq->mq_alloc    = alloc;
@@ -80,15 +76,6 @@ nni_msgq_init(nni_msgq **mqp, unsigned cap)
 	*mqp            = mq;
 
 	return (0);
-
-fail:
-	nni_cv_fini(&mq->mq_drained);
-	nni_mtx_fini(&mq->mq_lock);
-	if (mq->mq_msgs != NULL) {
-		nni_free(mq->mq_msgs, sizeof(nng_msg *) * alloc);
-	}
-	NNI_FREE_STRUCT(mq);
-	return (rv);
 }
 
 void
@@ -413,9 +400,7 @@ nni_msgq_get_until(nni_msgq *mq, nni_msg **msgp, nni_time expire)
 	nni_aio aio;
 	int     rv;
 
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
-		return (rv);
-	}
+	nni_aio_init(&aio, NULL, NULL);
 	aio.a_expire = expire;
 	nni_msgq_aio_get(mq, &aio);
 	nni_aio_wait(&aio);
@@ -433,9 +418,7 @@ nni_msgq_put_until(nni_msgq *mq, nni_msg *msg, nni_time expire)
 	nni_aio aio;
 	int     rv;
 
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
-		return (rv);
-	}
+	nni_aio_init(&aio, NULL, NULL);
 	aio.a_expire = expire;
 	aio.a_msg    = msg;
 	nni_msgq_aio_put(mq, &aio);

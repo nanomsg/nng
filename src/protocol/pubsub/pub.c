@@ -53,20 +53,13 @@ static int
 nni_pub_sock_init(void **pubp, nni_sock *sock)
 {
 	nni_pub_sock *pub;
-	int           rv;
 
 	if ((pub = NNI_ALLOC_STRUCT(pub)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mtx_init(&pub->mtx)) != 0) {
-		nni_pub_sock_fini(pub);
-		return (rv);
-	}
-	rv = nni_aio_init(&pub->aio_getq, nni_pub_sock_getq_cb, pub);
-	if (rv != 0) {
-		nni_pub_sock_fini(pub);
-		return (rv);
-	}
+	nni_mtx_init(&pub->mtx);
+	nni_aio_init(&pub->aio_getq, nni_pub_sock_getq_cb, pub);
+
 	pub->sock = sock;
 	pub->raw  = 0;
 	NNI_LIST_INIT(&pub->pipes, nni_pub_pipe, node);
@@ -127,31 +120,18 @@ nni_pub_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 	}
 	// XXX: consider making this depth tunable
 	if ((rv = nni_msgq_init(&pp->sendq, 16)) != 0) {
-		goto fail;
+		NNI_FREE_STRUCT(pp);
+		return (rv);
 	}
 
-	rv = nni_aio_init(&pp->aio_getq, nni_pub_pipe_getq_cb, pp);
-	if (rv != 0) {
-		goto fail;
-	}
+	nni_aio_init(&pp->aio_getq, nni_pub_pipe_getq_cb, pp);
+	nni_aio_init(&pp->aio_send, nni_pub_pipe_send_cb, pp);
+	nni_aio_init(&pp->aio_recv, nni_pub_pipe_recv_cb, pp);
 
-	rv = nni_aio_init(&pp->aio_send, nni_pub_pipe_send_cb, pp);
-	if (rv != 0) {
-		goto fail;
-	}
-
-	rv = nni_aio_init(&pp->aio_recv, nni_pub_pipe_recv_cb, pp);
-	if (rv != 0) {
-		goto fail;
-	}
 	pp->pipe = pipe;
 	pp->pub  = psock;
 	*ppp     = pp;
 	return (0);
-
-fail:
-	nni_pub_pipe_fini(pp);
-	return (rv);
 }
 
 static int

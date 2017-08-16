@@ -254,9 +254,8 @@ nni_win_resolv_sysinit(void)
 {
 	int rv;
 
-	if ((rv = nni_mtx_init(&nni_win_resolv_mtx)) != 0) {
-		return (rv);
-	}
+	nni_mtx_init(&nni_win_resolv_mtx);
+
 	if ((rv = nni_taskq_init(&nni_win_resolv_tq, 4)) != 0) {
 		nni_mtx_fini(&nni_win_resolv_mtx);
 		return (rv);

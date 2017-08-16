@@ -93,30 +93,19 @@ static int
 nni_push_pipe_init(void **ppp, nni_pipe *pipe, void *psock)
 {
 	nni_push_pipe *pp;
-	int            rv;
 
 	if ((pp = NNI_ALLOC_STRUCT(pp)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_aio_init(&pp->aio_recv, nni_push_recv_cb, pp)) != 0) {
-		goto fail;
-	}
-	if ((rv = nni_aio_init(&pp->aio_send, nni_push_send_cb, pp)) != 0) {
-		goto fail;
-	}
-	if ((rv = nni_aio_init(&pp->aio_getq, nni_push_getq_cb, pp)) != 0) {
-		goto fail;
-	}
+	nni_aio_init(&pp->aio_recv, nni_push_recv_cb, pp);
+	nni_aio_init(&pp->aio_send, nni_push_send_cb, pp);
+	nni_aio_init(&pp->aio_getq, nni_push_getq_cb, pp);
 
 	NNI_LIST_NODE_INIT(&pp->node);
 	pp->pipe = pipe;
 	pp->push = psock;
 	*ppp     = pp;
 	return (0);
-
-fail:
-	nni_push_pipe_fini(pp);
-	return (rv);
 }
 
 static int

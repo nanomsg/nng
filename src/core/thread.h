@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -25,9 +26,8 @@ struct nni_thr {
 	int          init;
 };
 
-// nni_mtx_init initializes the mutex.  (Win32 programmers take note;
-// our mutexes are actually CriticalSections on Win32.)
-extern int nni_mtx_init(nni_mtx *mtx);
+// nni_mtx_init initializes the mutex.
+extern void nni_mtx_init(nni_mtx *mtx);
 
 // nni_mtx_fini destroys the mutex and releases any resources used by it.
 extern void nni_mtx_fini(nni_mtx *mtx);
@@ -43,7 +43,7 @@ extern void nni_mtx_unlock(nni_mtx *mtx);
 
 // nni_cv_init initializes the condition variable.  The mutex supplied
 // must always be locked with the condition variable.
-extern int nni_cv_init(nni_cv *cv, nni_mtx *);
+extern void nni_cv_init(nni_cv *cv, nni_mtx *);
 
 // nni_cv_fini releases resources associated with the condition variable,
 // which must not be in use at the time.

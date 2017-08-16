@@ -105,7 +105,6 @@ void
 nni_plat_pipe_clear(int rfd)
 {
 	char buf[32];
-	int  rv;
 
 	for (;;) {
 		// Completely drain the pipe, but don't wait.  This coalesces

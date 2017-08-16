@@ -85,10 +85,9 @@ typedef struct nni_plat_thr nni_plat_thr;
 // Threading & Synchronization Support
 //
 
-// nni_plat_mtx_init initializes a mutex structure.  This may require dynamic
-// allocation, depending on the platform.  It can return NNG_ENOMEM if that
-// fails.  An initialized mutex must be distinguishable from zeroed memory.
-extern int nni_plat_mtx_init(nni_plat_mtx *);
+// nni_plat_mtx_init initializes a mutex structure.  An initialized mutex must
+// be distinguishable from zeroed memory.
+extern void nni_plat_mtx_init(nni_plat_mtx *);
 
 // nni_plat_mtx_fini destroys the mutex and releases any resources allocated
 // for it's use.  If the mutex is zeroed memory, this should do nothing.
@@ -99,20 +98,14 @@ extern void nni_plat_mtx_fini(nni_plat_mtx *);
 extern void nni_plat_mtx_lock(nni_plat_mtx *);
 
 // nni_plat_mtx_unlock unlocks the mutex.  This can only be performed by the
-// threadthat owned the mutex.
+// thread that owned the mutex.
 extern void nni_plat_mtx_unlock(nni_plat_mtx *);
-
-// nni_plat_mtx_tryenter tries to lock the mutex.  If it can't, it may return
-// NNG_EBUSY if the mutex is already owned.
-extern int nni_plat_mtx_trylock(nni_plat_mtx *);
 
 // nni_plat_cv_init initializes a condition variable.  We require a mutex be
 // supplied with it, and that mutex must always be held when performing any
-// operations on the condition variable (other than fini.)  This may require
-// dynamic allocation, and if so this operation may fail with NNG_ENOMEM.
-// As with mutexes, an initialized mutex should be distinguishable from
-// zeroed memory.
-extern int nni_plat_cv_init(nni_plat_cv *, nni_plat_mtx *);
+// operations on the condition variable (other than fini.)  As with mutexes, an
+// initialized mutex should be distinguishable from zeroed memory.
+extern void nni_plat_cv_init(nni_plat_cv *, nni_plat_mtx *);
 
 // nni_plat_cv_fini releases all resources associated with condition variable.
 // If the cv points to just zeroed memory (was never initialized), it does

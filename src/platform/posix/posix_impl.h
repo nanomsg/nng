@@ -54,20 +54,25 @@ extern int nni_plat_errno(int);
 // elsewhere.
 
 struct nni_plat_mtx {
-	int             init;
 	pthread_t       owner;
 	pthread_mutex_t mtx;
+	int             fallback;
+	int             flags;
+};
+
+struct nni_plat_cv {
+	pthread_cond_t cv;
+	nni_plat_mtx * mtx;
+	int            fallback;
+	int            flags;
+	int            gen;
+	int            wake;
 };
 
 struct nni_plat_thr {
 	pthread_t tid;
 	void (*func)(void *);
 	void *arg;
-};
-
-struct nni_plat_cv {
-	pthread_cond_t cv;
-	nni_plat_mtx * mtx;
 };
 
 #endif

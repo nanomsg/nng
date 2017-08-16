@@ -170,12 +170,8 @@ nni_random_sys_init(void)
 {
 	// minimally, grab the system clock
 	nni_isaac_ctx *ctx = &nni_random_ctx;
-	int            rv;
 
-	if ((rv = nni_mtx_init(&ctx->mx)) != 0) {
-		return (rv);
-	}
-
+	nni_mtx_init(&ctx->mx);
 	nni_plat_seed_prng(ctx->randrsl, sizeof(ctx->randrsl));
 	nni_isaac_randinit(ctx, 1);
 	return (0);

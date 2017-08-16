@@ -70,19 +70,13 @@ static int
 nni_surv_sock_init(void **sp, nni_sock *nsock)
 {
 	nni_surv_sock *psock;
-	int            rv;
 
 	if ((psock = NNI_ALLOC_STRUCT(psock)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mtx_init(&psock->mtx)) != 0) {
-		goto fail;
-	}
-	rv = nni_aio_init(&psock->aio_getq, nni_surv_sock_getq_cb, psock);
-	if (rv != 0) {
-		goto fail;
-	}
 	NNI_LIST_INIT(&psock->pipes, nni_surv_pipe, node);
+	nni_mtx_init(&psock->mtx);
+	nni_aio_init(&psock->aio_getq, nni_surv_sock_getq_cb, psock);
 	nni_timer_init(&psock->timer, nni_surv_timeout, psock);
 
 	psock->nextid   = nni_random();
@@ -96,10 +90,6 @@ nni_surv_sock_init(void **sp, nni_sock *nsock)
 	*sp = psock;
 	nni_sock_recverr(nsock, NNG_ESTATE);
 	return (0);
-
-fail:
-	nni_surv_sock_fini(psock);
-	return (rv);
 }
 
 static void
@@ -143,32 +133,19 @@ nni_surv_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 	}
 	// This depth could be tunable.
 	if ((rv = nni_msgq_init(&ppipe->sendq, 16)) != 0) {
-		goto failed;
+		NNI_FREE_STRUCT(ppipe);
+		return (rv);
 	}
-	rv = nni_aio_init(&ppipe->aio_getq, nni_surv_getq_cb, ppipe);
-	if (rv != 0) {
-		goto failed;
-	}
-	rv = nni_aio_init(&ppipe->aio_putq, nni_surv_putq_cb, ppipe);
-	if (rv != 0) {
-		goto failed;
-	}
-	rv = nni_aio_init(&ppipe->aio_send, nni_surv_send_cb, ppipe);
-	if (rv != 0) {
-		goto failed;
-	}
-	rv = nni_aio_init(&ppipe->aio_recv, nni_surv_recv_cb, ppipe);
-	if (rv != 0) {
-		goto failed;
-	}
+
+	nni_aio_init(&ppipe->aio_getq, nni_surv_getq_cb, ppipe);
+	nni_aio_init(&ppipe->aio_putq, nni_surv_putq_cb, ppipe);
+	nni_aio_init(&ppipe->aio_send, nni_surv_send_cb, ppipe);
+	nni_aio_init(&ppipe->aio_recv, nni_surv_recv_cb, ppipe);
+
 	ppipe->npipe = npipe;
 	ppipe->psock = psock;
 	*pp          = ppipe;
 	return (0);
-
-failed:
-	nni_surv_pipe_fini(ppipe);
-	return (rv);
 }
 
 static int

@@ -17,9 +17,13 @@
 // superior, support for such are not universal.
 #define NNI_ARG_UNUSED(x) ((void) x);
 
+#ifndef NDEBUG
 #define NNI_ASSERT(x) \
 	if (!(x))     \
 	nni_panic("%s: %d: assert err: %s", __FILE__, __LINE__, #x)
+#else
+#define NNI_ASSERT(x)
+#endif
 
 // These types are common but have names shared with user space.
 typedef struct nng_msg      nni_msg;

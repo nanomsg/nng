@@ -24,6 +24,7 @@
 void
 nng_fini(void)
 {
+	nni_sock_closeall();
 	nni_fini();
 }
 
@@ -184,7 +185,6 @@ nng_free(void *buf, size_t sz)
 int
 nng_sendmsg(nng_socket sid, nng_msg *msg, int flags)
 {
-	nni_time  expire;
 	int       rv;
 	nni_sock *sock;
 

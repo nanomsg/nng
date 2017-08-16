@@ -107,18 +107,14 @@ static int
 nni_ipc_pipe_init(nni_ipc_pipe **pipep, nni_ipc_ep *ep, void *ipp)
 {
 	nni_ipc_pipe *p;
-	int           rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_mtx_init(&p->mtx)) != 0) ||
-	    ((rv = nni_aio_init(&p->txaio, nni_ipc_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->rxaio, nni_ipc_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->negaio, nni_ipc_pipe_nego_cb, p)) != 0)) {
-		nni_ipc_pipe_fini(p);
-		return (rv);
-	}
+	nni_mtx_init(&p->mtx);
+	nni_aio_init(&p->txaio, nni_ipc_pipe_send_cb, p);
+	nni_aio_init(&p->rxaio, nni_ipc_pipe_recv_cb, p);
+	nni_aio_init(&p->negaio, nni_ipc_pipe_nego_cb, p);
 
 	p->proto  = ep->proto;
 	p->rcvmax = ep->rcvmax;
@@ -490,12 +486,14 @@ nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_mtx_init(&ep->mtx)) != 0) ||
-	    ((rv = nni_aio_init(&ep->aio, nni_ipc_ep_cb, ep)) != 0) ||
-	    ((rv = nni_plat_ipc_ep_init(&ep->iep, url, mode)) != 0)) {
-		nni_ipc_ep_fini(ep);
+	if ((rv = nni_plat_ipc_ep_init(&ep->iep, url, mode)) != 0) {
+		NNI_FREE_STRUCT(ep);
 		return (rv);
 	}
+
+	nni_mtx_init(&ep->mtx);
+	nni_aio_init(&ep->aio, nni_ipc_ep_cb, ep);
+
 	ep->closed = 0;
 	ep->proto  = nni_sock_proto(sock);
 	ep->rcvmax = nni_sock_rcvmaxsz(sock);

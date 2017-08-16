@@ -208,10 +208,7 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 	if ((udp = NNI_ALLOC_STRUCT(udp)) != NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mtx_init(&udp->udp_mtx)) != 0) {
-		NNI_FREE_STRUCT(udp);
-		return (rv);
-	}
+	nni_mtx_init(&udp->udp_mtx);
 
 	udp->udp_fd = socket(sa.ss_family, SOCK_DGRAM, IPPROTO_UDP);
 	if (udp->udp_fd < 0) {

@@ -57,10 +57,10 @@ nni_ep_sys_init(void)
 {
 	int rv;
 
-	if (((rv = nni_mtx_init(&nni_ep_lk)) != 0) ||
-	    ((rv = nni_idhash_init(&nni_eps)) != 0)) {
+	if ((rv = nni_idhash_init(&nni_eps)) != 0) {
 		return (rv);
 	}
+	nni_mtx_init(&nni_ep_lk);
 	nni_idhash_set_limits(
 	    nni_eps, 1, 0x7fffffff, nni_random() & 0x7fffffff);
 
@@ -152,13 +152,14 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 
 	nni_pipe_ep_list_init(&ep->ep_pipes);
 
-	if (((rv = nni_mtx_init(&ep->ep_mtx)) != 0) ||
-	    ((rv = nni_cv_init(&ep->ep_cv, &ep->ep_mtx)) != 0) ||
-	    ((rv = nni_aio_init(&ep->ep_acc_aio, nni_ep_acc_cb, ep)) != 0) ||
-	    ((rv = nni_aio_init(&ep->ep_con_aio, nni_ep_con_cb, ep)) != 0) ||
-	    ((rv = nni_aio_init(&ep->ep_tmo_aio, nni_ep_tmo_cb, ep)) != 0) ||
-	    ((rv = nni_aio_init(&ep->ep_con_syn, NULL, NULL)) != 0) ||
-	    ((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, s, mode)) != 0) ||
+	nni_mtx_init(&ep->ep_mtx);
+	nni_cv_init(&ep->ep_cv, &ep->ep_mtx);
+	nni_aio_init(&ep->ep_acc_aio, nni_ep_acc_cb, ep);
+	nni_aio_init(&ep->ep_con_aio, nni_ep_con_cb, ep);
+	nni_aio_init(&ep->ep_tmo_aio, nni_ep_tmo_cb, ep);
+	nni_aio_init(&ep->ep_con_syn, NULL, NULL);
+
+	if (((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, s, mode)) != 0) ||
 	    ((rv = nni_idhash_alloc(nni_eps, &ep->ep_id, ep)) != 0) ||
 	    ((rv = nni_sock_ep_add(s, ep)) != 0)) {
 		nni_ep_destroy(ep);

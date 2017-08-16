@@ -680,8 +680,6 @@ int
 nni_win_tcp_sysinit(void)
 {
 	WSADATA data;
-	WORD    ver;
-	ver = MAKEWORD(2, 2);
 	if (WSAStartup(MAKEWORD(2, 2), &data) != 0) {
 		NNI_ASSERT(LOBYTE(data.wVersion) == 2);
 		NNI_ASSERT(HIBYTE(data.wVersion) == 2);

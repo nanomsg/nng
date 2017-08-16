@@ -9,10 +9,10 @@
 
 #include "core/nng_impl.h"
 
-int
+void
 nni_mtx_init(nni_mtx *mtx)
 {
-	return (nni_plat_mtx_init(mtx));
+	nni_plat_mtx_init(mtx);
 }
 
 void
@@ -33,10 +33,10 @@ nni_mtx_unlock(nni_mtx *mtx)
 	nni_plat_mtx_unlock(mtx);
 }
 
-int
+void
 nni_cv_init(nni_cv *cv, nni_mtx *mtx)
 {
-	return (nni_plat_cv_init(cv, mtx));
+	nni_plat_cv_init(cv, mtx);
 }
 
 void
@@ -110,15 +110,9 @@ nni_thr_init(nni_thr *thr, nni_thr_func fn, void *arg)
 	thr->fn    = fn;
 	thr->arg   = arg;
 
-	if ((rv = nni_plat_mtx_init(&thr->mtx)) != 0) {
-		thr->done = 1;
-		return (rv);
-	}
-	if ((rv = nni_plat_cv_init(&thr->cv, &thr->mtx)) != 0) {
-		nni_plat_mtx_fini(&thr->mtx);
-		thr->done = 1;
-		return (rv);
-	}
+	nni_plat_mtx_init(&thr->mtx);
+	nni_plat_cv_init(&thr->cv, &thr->mtx);
+
 	if (fn == NULL) {
 		thr->init = 1;
 		thr->done = 1;

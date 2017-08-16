@@ -28,7 +28,7 @@ struct nng_notify {
 	nni_aio         n_aio;
 };
 
-extern int  nni_ev_init(nni_event *, int, nni_sock *);
+extern void nni_ev_init(nni_event *, int, nni_sock *);
 extern void nni_ev_fini(nni_event *);
 
 #endif // CORE_EVENT_H

@@ -36,15 +36,11 @@ int
 nni_idhash_init(nni_idhash **hp)
 {
 	nni_idhash *h;
-	int         rv;
 
 	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_mtx_init(&h->ih_mtx)) != 0) {
-		NNI_FREE_STRUCT(h);
-		return (rv);
-	}
+	nni_mtx_init(&h->ih_mtx);
 	h->ih_entries = NULL;
 	h->ih_count   = 0;
 	h->ih_load    = 0;

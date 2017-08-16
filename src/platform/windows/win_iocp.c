@@ -174,17 +174,14 @@ nni_win_iocp_register(HANDLE h)
 int
 nni_win_event_init(nni_win_event *evt, nni_win_event_ops *ops, void *ptr)
 {
-	int rv;
-
 	ZeroMemory(&evt->olpd, sizeof(evt->olpd));
 	evt->olpd.hEvent = CreateEvent(NULL, TRUE, TRUE, NULL);
 	if (evt->olpd.hEvent == NULL) {
 		return (nni_win_error(GetLastError()));
 	}
-	if (((rv = nni_mtx_init(&evt->mtx)) != 0) ||
-	    ((rv = nni_cv_init(&evt->cv, &evt->mtx)) != 0)) {
-		return (rv); // NB: This will never happen on Windows.
-	}
+	nni_mtx_init(&evt->mtx);
+	nni_cv_init(&evt->cv, &evt->mtx);
+
 	evt->ops  = *ops;
 	evt->aio  = NULL;
 	evt->ptr  = ptr;
@@ -240,9 +237,7 @@ nni_win_iocp_sysinit(void)
 			goto fail;
 		}
 	}
-	if ((rv = nni_mtx_init(&nni_win_iocp_mtx)) != 0) {
-		goto fail;
-	}
+	nni_mtx_init(&nni_win_iocp_mtx);
 	for (i = 0; i < NNI_WIN_IOCP_NTHREADS; i++) {
 		nni_thr_run(&nni_win_iocp_thrs[i]);
 	}
