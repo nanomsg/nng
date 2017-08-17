@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,6 +15,11 @@
 // interfaces in this file.
 
 struct nni_tran {
+	// tran_version is the version of the transport ops that this
+	// transport implements.  We only bother to version the main
+	// ops vector.
+	uint32_t tran_version;
+
 	// tran_scheme is the transport scheme, such as "tcp" or "inproc".
 	const char *tran_scheme;
 
@@ -31,6 +37,17 @@ struct nni_tran {
 	// It should release any global resources, close any open files, etc.
 	void (*tran_fini)(void);
 };
+
+// We quite intentionally use a signature where the upper word is nonzero,
+// which ensures that if we get garbage we will reject it.  This is more
+// likely to mismatch than all zero bytes would.  The actual version is
+// stored in the lower word; this is not semver -- the numbers are just
+// increasing - we doubt it will increase more than a handful of times
+// during the life of the project.  If we add a new version, please keep
+// the old version around -- it may be possible to automatically convert
+// older versions in the future.
+#define NNI_TRANSPORT_V0 0x54520000
+#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V0
 
 // Endpoint operations are called by the socket in a protocol-independent
 // fashion.  The socket makes individual calls, which are expected to block

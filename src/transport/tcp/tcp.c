@@ -737,9 +737,10 @@ static nni_tran_ep nni_tcp_ep_ops = {
 // This is the TCP transport linkage, and should be the only global
 // symbol in this entire file.
 struct nni_tran nni_tcp_tran = {
-	.tran_scheme = "tcp",
-	.tran_ep     = &nni_tcp_ep_ops,
-	.tran_pipe   = &nni_tcp_pipe_ops,
-	.tran_init   = nni_tcp_tran_init,
-	.tran_fini   = nni_tcp_tran_fini,
+	.tran_version = NNI_TRANSPORT_VERSION,
+	.tran_scheme  = "tcp",
+	.tran_ep      = &nni_tcp_ep_ops,
+	.tran_pipe    = &nni_tcp_pipe_ops,
+	.tran_init    = nni_tcp_tran_init,
+	.tran_fini    = nni_tcp_tran_fini,
 };

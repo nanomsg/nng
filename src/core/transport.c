@@ -27,12 +27,25 @@ typedef struct nni_transport {
 
 static nni_list nni_tran_list;
 static nni_mtx  nni_tran_lk;
+static int      nni_tran_inited;
 
 int
 nni_tran_register(const nni_tran *tran)
 {
 	nni_transport *t;
 	int            rv;
+
+	// Its entirely possible that we are called before any sockets
+	// are opened.  Make sure we are initialized.  This has to be
+	// protected by a guard to prevent infinite recursion, since
+	// nni_init also winds up calling us.
+	if (!nni_tran_inited) {
+		nni_init();
+	}
+
+	if (tran->tran_version != NNI_TRANSPORT_VERSION) {
+		return (NNG_ENOTSUP);
+	}
 
 	nni_mtx_lock(&nni_tran_lk);
 	// Check to see if the transport is already registered...
@@ -83,6 +96,7 @@ nni_tran_sys_init(void)
 {
 	int rv;
 
+	nni_tran_inited = 1;
 	NNI_LIST_INIT(&nni_tran_list, nni_transport, t_node);
 	nni_mtx_init(&nni_tran_lk);
 
@@ -108,4 +122,5 @@ nni_tran_sys_fini(void)
 		NNI_FREE_STRUCT(t);
 	}
 	nni_mtx_fini(&nni_tran_lk);
+	nni_tran_inited = 0;
 }

@@ -673,9 +673,10 @@ static nni_tran_ep nni_ipc_ep_ops = {
 // This is the IPC transport linkage, and should be the only global
 // symbol in this entire file.
 struct nni_tran nni_ipc_tran = {
-	.tran_scheme = "ipc",
-	.tran_ep     = &nni_ipc_ep_ops,
-	.tran_pipe   = &nni_ipc_pipe_ops,
-	.tran_init   = nni_ipc_tran_init,
-	.tran_fini   = nni_ipc_tran_fini,
+	.tran_version = NNI_TRANSPORT_VERSION,
+	.tran_scheme  = "ipc",
+	.tran_ep      = &nni_ipc_ep_ops,
+	.tran_pipe    = &nni_ipc_pipe_ops,
+	.tran_init    = nni_ipc_tran_init,
+	.tran_fini    = nni_ipc_tran_fini,
 };
