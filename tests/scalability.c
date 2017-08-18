@@ -16,24 +16,33 @@
 static int nclients = 200;
 
 static char *addr = "inproc:///atscale";
+nng_socket   rep;
+void *       server;
 
 void
 serve(void *arg)
 {
-	nng_socket rep = *(nng_socket *) arg;
-	nng_msg *  msg;
+	nng_msg *msg;
 
 	for (;;) {
-		if (nng_recvmsg(rep, &msg, 0) != 0) {
-			nng_close(rep);
-			return;
-		}
-
-		if (nng_sendmsg(rep, msg, 0) != 0) {
-			nng_close(rep);
-			return;
+		msg = NULL;
+		if ((nng_recvmsg(rep, &msg, 0) != 0) ||
+		    (nng_sendmsg(rep, msg, 0) != 0)) {
+			break;
 		}
 	}
+	if (msg != NULL) {
+		nng_msg_free(msg);
+	}
+	nng_close(rep);
+}
+
+void
+stop(void)
+{
+	nng_closeall();
+	nng_thread_destroy(server);
+	nng_fini();
 }
 
 int
@@ -76,46 +85,36 @@ transact(nng_socket *clients, int num)
 	nng_msg *msg;
 	int      rv;
 	int      i;
+
 	for (i = 0; i < num; i++) {
 
 		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
-			printf("alloc #%d: %s\n", i, nng_strerror(rv));
-			return (rv);
+			break;
 		}
 
 		if ((rv = nng_sendmsg(clients[i], msg, 0)) != 0) {
-			nng_msg_free(msg);
-			printf("sendmsg #%d: %s", i, nng_strerror(rv));
-			return (rv);
+			break;
 		}
 
+		msg = NULL;
 		if ((rv = nng_recvmsg(clients[i], &msg, 0)) != 0) {
-			printf("recvmsg #%d: %s", i, nng_strerror(rv));
-			return (rv);
+			break;
 		}
 		nng_msg_free(msg);
+		msg = NULL;
 	}
-	return (0);
-}
-
-void
-closeclients(nng_socket *clients, int num)
-{
-	int i;
-	nng_usleep(1000);
-	for (i = 0; i < num; i++) {
-		if (clients[i] > 0) {
-			nng_close(clients[i]);
-		}
+	if (msg != NULL) {
+		nng_msg_free(msg);
 	}
+	return (rv);
 }
 
 Main({
 	nng_socket *clients;
-	void *      server;
 	int *       results;
 	int         depth = 256;
-	nng_socket  rep;
+
+	atexit(stop);
 
 	clients = calloc(nclients, sizeof(nng_socket));
 	results = calloc(nclients, sizeof(int));
@@ -124,7 +123,7 @@ Main({
 	    (nng_setopt(rep, NNG_OPT_RCVBUF, &depth, sizeof(depth)) != 0) ||
 	    (nng_setopt(rep, NNG_OPT_SNDBUF, &depth, sizeof(depth)) != 0) ||
 	    (nng_listen(rep, addr, NULL, 0) != 0) ||
-	    (nng_thread_create(&server, serve, &rep) != 0)) {
+	    (nng_thread_create(&server, serve, NULL) != 0)) {
 		fprintf(stderr, "Unable to set up server!\n");
 		exit(1);
 	}
