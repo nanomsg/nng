@@ -29,6 +29,11 @@ struct nni_tran {
 	// tran_pipe links our pipe-specific operations.
 	const nni_tran_pipe *tran_pipe;
 
+	// tran_chkopt, if not NULL, is used to validate that the
+	// option data presented is valid. This allows an option to
+	// be set on a socket, even if no endpoints are configured.
+	int (*tran_chkopt)(int, const void *, size_t);
+
 	// tran_init, if not NULL, is called once during library
 	// initialization.
 	int (*tran_init)(void);
@@ -135,6 +140,7 @@ struct nni_tran_pipe {
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
 extern nni_tran *nni_tran_find(const char *);
+extern int       nni_tran_chkopt(int, const void *, size_t);
 extern int       nni_tran_sys_init(void);
 extern void      nni_tran_sys_fini(void);
 extern int       nni_tran_register(const nni_tran *);

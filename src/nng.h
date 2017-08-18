@@ -199,17 +199,35 @@ NNG_DECL int nng_listener_close(nng_listener);
 
 // nng_dialer_setopt sets an option for a specific dialer.  Note
 // dialer options may not be altered on a running dialer.
-NNG_DECL int nng_dialer_setopt(nng_dialer, int, void *, size_t);
+NNG_DECL int nng_dialer_setopt(nng_dialer, int, const void *, size_t);
+NNG_DECL int nng_dialer_setopt_int(nng_dialer, int, int);
+NNG_DECL int nng_dialer_setopt_usec(nng_dialer, int, uint64_t);
+NNG_DECL int nng_dialer_setopt_size(nng_dialer, int, size_t);
 
-// nng_dialer_getopt obtains the option for a dialer.
+// nng_dialer_getopt obtains the option for a dialer. This will
+// fail for options that a particular dialer is not interested in,
+// even if they were set on the socket.
 NNG_DECL int nng_dialer_getopt(nng_dialer, int, void *, size_t *);
+NNG_DECL int nng_dialer_getopt_int(nng_dialer, int, int *);
+NNG_DECL int nng_dialer_getopt_usec(nng_dialer, int, uint64_t *);
+NNG_DECL int nng_dialer_getopt_size(nng_dialer, int, size_t *);
 
-// nng_listener_setopt sets an option for a specific listener.  Note
-// listener options may not be altered on a running listener.
-NNG_DECL int nng_listener_setopt(nng_listener, int, void *, size_t);
+// nng_listener_setopt sets an option for a dialer.  This value is
+// not stored in the socket.  Subsequent setopts on the socket may
+// override these value however.  Note listener options may not be altered
+// on a running listener.
+NNG_DECL int nng_listener_setopt(nng_dialer, int, const void *, size_t);
+NNG_DECL int nng_listener_setopt_int(nng_dialer, int, int);
+NNG_DECL int nng_listener_setopt_usec(nng_dialer, int, uint64_t);
+NNG_DECL int nng_listener_setopt_size(nng_dialer, int, size_t);
 
-// nng_listener_getopt obtains the option for a listener.
+// nng_listener_getopt obtains the option for a listener.  This will
+// fail for options that a particular listener is not interested in,
+// even if they were set on the socket.
 NNG_DECL int nng_listener_getopt(nng_listener, int, void *, size_t *);
+NNG_DECL int nng_listener_getopt_int(nng_listener, int, int *);
+NNG_DECL int nng_listener_getopt_usec(nng_listener, int, uint64_t *);
+NNG_DECL int nng_listener_getopt_size(nng_listener, int, size_t *);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.
@@ -302,6 +320,7 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 enum nng_flag_enum {
 	NNG_FLAG_ALLOC    = 1, // Recv to allocate receive buffer.
 	NNG_FLAG_NONBLOCK = 2, // Non-blocking operations.
+	NNG_FLAG_DRYRUN   = 4, // Setopt dry-run (internally used).
 };
 
 // Protocol numbers.  These are to be used with nng_socket_create().

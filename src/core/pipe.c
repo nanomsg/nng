@@ -117,7 +117,9 @@ nni_pipe_destroy(nni_pipe *p)
 	if (nni_list_node_active(&p->p_ep_node)) {
 		nni_ep_pipe_remove(p->p_ep, p);
 	}
-	nni_sock_pipe_remove(p->p_sock, p);
+	if (nni_list_node_active(&p->p_sock_node)) {
+		nni_sock_pipe_remove(p->p_sock, p);
+	}
 
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_fini(p->p_tran_data);

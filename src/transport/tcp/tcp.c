@@ -51,6 +51,7 @@ struct nni_tcp_ep {
 	int              closed;
 	uint16_t         proto;
 	size_t           rcvmax;
+	nni_duration     linger;
 	int              ipv4only;
 	nni_aio          aio;
 	nni_aio *        user_aio;
@@ -61,6 +62,18 @@ static void nni_tcp_pipe_send_cb(void *);
 static void nni_tcp_pipe_recv_cb(void *);
 static void nni_tcp_pipe_nego_cb(void *);
 static void nni_tcp_ep_cb(void *arg);
+
+static int
+nni_tcp_tran_chkopt(int o, const void *data, size_t sz)
+{
+	switch (o) {
+	case NNG_OPT_RCVMAXSZ:
+		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
+	case NNG_OPT_LINGER:
+		return (nni_chkopt_usec(data, sz));
+	}
+	return (NNG_ENOTSUP);
+}
 
 static int
 nni_tcp_tran_init(void)
@@ -561,7 +574,6 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 
 	ep->closed = 0;
 	ep->proto  = nni_sock_proto(sock);
-	ep->rcvmax = nni_sock_rcvmaxsz(sock);
 	(void) snprintf(ep->addr, sizeof(ep->addr), "%s", url);
 
 	*epp = ep;
@@ -713,6 +725,51 @@ nni_tcp_ep_connect(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
+static int
+nni_tcp_ep_setopt(void *arg, int opt, const void *v, size_t sz)
+{
+	int         rv;
+	nni_tcp_ep *ep = arg;
+
+	nni_mtx_lock(&ep->mtx);
+	switch (opt) {
+	case NNG_OPT_RCVMAXSZ:
+		rv = nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ);
+		break;
+	case NNG_OPT_LINGER:
+		rv = nni_setopt_usec(&ep->linger, v, sz);
+		break;
+	default:
+		rv = NNG_ENOTSUP;
+		break;
+	}
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static int
+nni_tcp_ep_getopt(void *arg, int opt, void *v, size_t *szp)
+{
+	int         rv;
+	nni_tcp_ep *ep = arg;
+
+	nni_mtx_lock(&ep->mtx);
+	switch (opt) {
+	case NNG_OPT_RCVMAXSZ:
+		rv = nni_getopt_size(&ep->rcvmax, v, szp);
+		break;
+	case NNG_OPT_LINGER:
+		rv = nni_getopt_usec(&ep->linger, v, szp);
+		break;
+	default:
+		// XXX: add address properties
+		rv = NNG_ENOTSUP;
+		break;
+	}
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
 static nni_tran_pipe nni_tcp_pipe_ops = {
 	.p_fini   = nni_tcp_pipe_fini,
 	.p_start  = nni_tcp_pipe_start,
@@ -730,8 +787,8 @@ static nni_tran_ep nni_tcp_ep_ops = {
 	.ep_bind    = nni_tcp_ep_bind,
 	.ep_accept  = nni_tcp_ep_accept,
 	.ep_close   = nni_tcp_ep_close,
-	.ep_setopt  = NULL,
-	.ep_getopt  = NULL,
+	.ep_setopt  = nni_tcp_ep_setopt,
+	.ep_getopt  = nni_tcp_ep_getopt,
 };
 
 // This is the TCP transport linkage, and should be the only global
@@ -741,6 +798,7 @@ struct nni_tran nni_tcp_tran = {
 	.tran_scheme  = "tcp",
 	.tran_ep      = &nni_tcp_ep_ops,
 	.tran_pipe    = &nni_tcp_pipe_ops,
+	.tran_chkopt  = nni_tcp_tran_chkopt,
 	.tran_init    = nni_tcp_tran_init,
 	.tran_fini    = nni_tcp_tran_fini,
 };

@@ -418,6 +418,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 	}
 
 	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
+		ep->ep_started = 1;
 		nni_ep_con_start(ep);
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (0);
@@ -565,6 +566,38 @@ nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
 		nni_ep_tmo_start(ep);
 	}
 	nni_mtx_unlock(&ep->ep_mtx);
+}
+
+int
+nni_ep_setopt(nni_ep *ep, int opt, const void *val, size_t sz, int check)
+{
+	int rv;
+
+	if (ep->ep_ops.ep_setopt == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	nni_mtx_lock(&ep->ep_mtx);
+	if (check && ep->ep_started) {
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (NNG_ESTATE);
+	}
+	rv = ep->ep_ops.ep_setopt(ep->ep_data, opt, val, sz);
+	nni_mtx_unlock(&ep->ep_mtx);
+	return (rv);
+}
+
+int
+nni_ep_getopt(nni_ep *ep, int opt, void *valp, size_t *szp)
+{
+	int rv;
+
+	if (ep->ep_ops.ep_getopt == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	nni_mtx_lock(&ep->ep_mtx);
+	rv = ep->ep_ops.ep_getopt(ep->ep_data, opt, valp, szp);
+	nni_mtx_unlock(&ep->ep_mtx);
+	return (rv);
 }
 
 void

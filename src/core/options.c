@@ -13,57 +13,98 @@
 #include <string.h>
 
 int
-nni_setopt_usec(nni_duration *ptr, const void *val, size_t size)
+nni_chkopt_usec(const void *v, size_t sz)
+{
+	nni_duration val;
+	if (sz != sizeof(val)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(&val, v, sz);
+	if (val < -1) {
+		return (NNG_EINVAL);
+	}
+	return (0);
+}
+
+int
+nni_chkopt_int(const void *v, size_t sz, int minv, int maxv)
+{
+	int val;
+	if (sz != sizeof(val)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(&val, v, sz);
+	if ((val < minv) || (val > maxv)) {
+		return (NNG_EINVAL);
+	}
+	return (0);
+}
+
+int
+nni_chkopt_size(const void *v, size_t sz, size_t minv, size_t maxv)
+{
+	size_t val;
+	if (sz != sizeof(val)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(&val, v, sz);
+	if ((val < minv) || (val > maxv)) {
+		return (NNG_EINVAL);
+	}
+	return (0);
+}
+
+int
+nni_setopt_usec(nni_duration *dp, const void *v, size_t sz)
 {
 	nni_duration dur;
 
-	if (size != sizeof(*ptr)) {
+	if (sz != sizeof(*dp)) {
 		return (NNG_EINVAL);
 	}
-	memcpy(&dur, val, sizeof(dur));
+	memcpy(&dur, v, sizeof(dur));
 	if (dur < -1) {
 		return (NNG_EINVAL);
 	}
-	*ptr = dur;
+	*dp = dur;
 	return (0);
 }
 
 int
-nni_setopt_int(int *ptr, const void *val, size_t size, int minval, int maxval)
+nni_setopt_int(int *ip, const void *v, size_t sz, int minv, int maxv)
 {
-	int v;
+	int i;
 
-	if (size != sizeof(v)) {
+	if (sz != sizeof(i)) {
 		return (NNG_EINVAL);
 	}
-	memcpy(&v, val, sizeof(v));
-	if (v > maxval) {
+	memcpy(&i, v, sizeof(i));
+	if (i > maxv) {
 		return (NNG_EINVAL);
 	}
-	if (v < minval) {
+	if (i < minv) {
 		return (NNG_EINVAL);
 	}
-	*ptr = v;
+	*ip = i;
 	return (0);
 }
 
 int
-nni_setopt_size(
-    size_t *ptr, const void *val, size_t size, size_t minval, size_t maxval)
+nni_setopt_size(size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv)
 {
-	size_t v;
+	size_t val;
 
-	if (size != sizeof(v)) {
+	if (sz != sizeof(val)) {
 		return (NNG_EINVAL);
 	}
-	memcpy(&v, val, sizeof(v));
-	if (v > maxval) {
+	memcpy(&val, v, sizeof(val));
+	if (val > maxv) {
 		return (NNG_EINVAL);
 	}
-	if (v < minval) {
+	if (val < minv) {
 		return (NNG_EINVAL);
 	}
-	*ptr = v;
+	*sp = val;
 	return (0);
 }
 

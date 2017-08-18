@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -50,5 +51,9 @@ extern int nni_getopt_size(size_t *, void *, size_t *);
 
 // nni_getopt_fd obtains a notification file descriptor.
 extern int nni_getopt_fd(nni_sock *, nni_notifyfd *, int, void *, size_t *);
+
+extern int nni_chkopt_usec(const void *, size_t);
+extern int nni_chkopt_int(const void *, size_t, int, int);
+extern int nni_chkopt_size(const void *, size_t, size_t, size_t);
 
 #endif // CORE_OPTIONS_H

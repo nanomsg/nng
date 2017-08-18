@@ -279,6 +279,20 @@ nng_listener_create(nng_listener *lp, nng_socket sid, const char *addr)
 }
 
 int
+nng_listener_start(nng_listener id, int flags)
+{
+	nni_ep *ep;
+	int     rv;
+
+	if ((rv = nni_ep_find(&ep, id)) != 0) {
+		return (rv);
+	}
+	rv = nni_ep_listen(ep, flags);
+	nni_ep_rele(ep);
+	return (rv);
+}
+
+int
 nng_dialer_create(nng_dialer *dp, nng_socket sid, const char *addr)
 {
 	nni_sock *s;
@@ -296,6 +310,148 @@ nng_dialer_create(nng_dialer *dp, nng_socket sid, const char *addr)
 	nni_ep_rele(ep);
 	nni_sock_rele(s);
 	return (0);
+}
+
+int
+nng_dialer_start(nng_dialer id, int flags)
+{
+	nni_ep *ep;
+	int     rv;
+
+	if ((rv = nni_ep_find(&ep, id)) != 0) {
+		return (rv);
+	}
+	rv = nni_ep_dial(ep, flags);
+	nni_ep_rele(ep);
+	return (rv);
+}
+
+static int
+nng_ep_setopt(uint32_t id, int opt, const void *val, size_t sz)
+{
+	nni_ep *ep;
+	int     rv;
+	if ((rv = nni_ep_find(&ep, id)) != 0) {
+		return (rv);
+	}
+	rv = nni_ep_setopt(ep, opt, val, sz, 1);
+	nni_ep_rele(ep);
+	return (rv);
+}
+
+static int
+nng_ep_getopt(uint32_t id, int opt, void *val, size_t *szp)
+{
+	nni_ep *ep;
+	int     rv;
+	if ((rv = nni_ep_find(&ep, id)) != 0) {
+		return (rv);
+	}
+	rv = nni_ep_getopt(ep, opt, val, szp);
+	nni_ep_rele(ep);
+	return (rv);
+}
+
+int
+nng_dialer_setopt(nng_dialer id, int opt, const void *v, size_t sz)
+{
+	return (nng_ep_setopt(id, opt, v, sz));
+}
+
+int
+nng_dialer_setopt_int(nng_dialer id, int opt, int val)
+{
+	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+}
+
+int
+nng_dialer_setopt_size(nng_dialer id, int opt, size_t val)
+{
+	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+}
+
+int
+nng_dialer_setopt_usec(nng_dialer id, int opt, uint64_t val)
+{
+	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+}
+
+int
+nng_dialer_getopt(nng_dialer id, int opt, void *val, size_t *szp)
+{
+	return (nng_ep_getopt(id, opt, val, szp));
+}
+
+int
+nng_dialer_getopt_int(nng_dialer id, int opt, int *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_ep_getopt(id, opt, valp, &sz));
+}
+
+int
+nng_dialer_getopt_size(nng_dialer id, int opt, size_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_ep_getopt(id, opt, valp, &sz));
+}
+
+int
+nng_dialer_getopt_usec(nng_dialer id, int opt, uint64_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_ep_getopt(id, opt, valp, &sz));
+}
+
+int
+nng_listener_setopt(nng_listener id, int opt, const void *v, size_t sz)
+{
+	return (nng_ep_setopt(id, opt, v, sz));
+}
+
+int
+nng_listener_setopt_int(nng_listener id, int opt, int val)
+{
+	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+}
+
+int
+nng_listener_setopt_size(nng_listener id, int opt, size_t val)
+{
+	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+}
+
+int
+nng_listener_setopt_usec(nng_listener id, int opt, uint64_t val)
+{
+	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+}
+
+int
+nng_listener_getopt(nng_listener id, int opt, void *val, size_t *szp)
+{
+	return (nng_ep_getopt(id, opt, val, szp));
+}
+
+int
+nng_listener_getopt_int(nng_listener id, int opt, int *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_ep_getopt(id, opt, valp, &sz));
+}
+
+int
+nng_listener_getopt_size(nng_listener id, int opt, size_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_ep_getopt(id, opt, valp, &sz));
+}
+
+int
+nng_listener_getopt_usec(nng_listener id, int opt, uint64_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_ep_getopt(id, opt, valp, &sz));
 }
 
 static int
@@ -422,7 +578,8 @@ nng_unsetnotify(nng_socket sid, nng_notify *notify)
 nng_socket
 nng_event_socket(nng_event *ev)
 {
-	// XXX: FOR NOW....  maybe evnet should contain socket Id instead?
+	// XXX: FOR NOW....  maybe evnet should contain socket Id
+	// instead?
 	return (nni_sock_id(ev->e_sock));
 }
 
@@ -768,10 +925,10 @@ nng_stat_value(nng_stat *stat)
 }
 #endif
 
-// These routines exist as utility functions, exposing some of our "guts"
-// to the external world for the purposes of test code and bundled utilities.
-// They should not be considered part of our public API, and applications
-// should refrain from their use.
+// These routines exist as utility functions, exposing some of our
+// "guts" to the external world for the purposes of test code and
+// bundled utilities. They should not be considered part of our public
+// API, and applications should refrain from their use.
 
 void
 nng_usleep(uint64_t usec)

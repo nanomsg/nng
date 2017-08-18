@@ -89,6 +89,27 @@ nni_tran_find(const char *addr)
 	return (NULL);
 }
 
+int
+nni_tran_chkopt(int o, const void *v, size_t sz)
+{
+	nni_transport *t;
+	int            rv = NNG_ENOTSUP;
+	nni_mtx_lock(&nni_tran_lk);
+	NNI_LIST_FOREACH (&nni_tran_list, t) {
+		int x;
+		if (t->t_tran.tran_chkopt == NULL) {
+			continue;
+		}
+		if ((x = t->t_tran.tran_chkopt(o, v, sz)) != NNG_ENOTSUP) {
+			if ((rv = x) != 0) {
+				break;
+			}
+		}
+	}
+	nni_mtx_unlock(&nni_tran_lk);
+	return (rv);
+}
+
 // nni_tran_sys_init initializes the entire transport subsystem, including
 // each individual transport.
 int

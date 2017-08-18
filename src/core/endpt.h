@@ -27,6 +27,8 @@ extern void      nni_ep_close(nni_ep *);
 extern int       nni_ep_dial(nni_ep *, int);
 extern int       nni_ep_listen(nni_ep *, int);
 extern void      nni_ep_list_init(nni_list *);
+extern int       nni_ep_setopt(nni_ep *, int, const void *, size_t, int);
+extern int       nni_ep_getopt(nni_ep *, int, void *, size_t *);
 extern int nni_ep_pipe_add(nni_ep *ep, nni_pipe *);
 extern void nni_ep_pipe_remove(nni_ep *, nni_pipe *);
 

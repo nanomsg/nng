@@ -63,6 +63,16 @@ static void nni_ipc_pipe_nego_cb(void *);
 static void nni_ipc_ep_cb(void *);
 
 static int
+nni_ipc_tran_chkopt(int o, const void *data, size_t sz)
+{
+	switch (o) {
+	case NNG_OPT_RCVMAXSZ:
+		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
+	}
+	return (NNG_ENOTSUP);
+}
+
+static int
 nni_ipc_tran_init(void)
 {
 	return (0);
@@ -496,7 +506,6 @@ nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 
 	ep->closed = 0;
 	ep->proto  = nni_sock_proto(sock);
-	ep->rcvmax = nni_sock_rcvmaxsz(sock);
 	(void) snprintf(ep->addr, sizeof(ep->addr), "%s", url);
 
 	*epp = ep;
@@ -649,6 +658,43 @@ nni_ipc_ep_connect(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
+static int
+nni_ipc_ep_setopt(void *arg, int opt, const void *v, size_t sz)
+{
+	int         rv;
+	nni_ipc_ep *ep = arg;
+	nni_mtx_lock(&ep->mtx);
+	switch (opt) {
+	case NNG_OPT_RCVMAXSZ:
+		rv = nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ);
+		break;
+	default:
+		rv = NNG_ENOTSUP;
+		break;
+	}
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static int
+nni_ipc_ep_getopt(void *arg, int opt, void *v, size_t *szp)
+{
+	int         rv;
+	nni_ipc_ep *ep = arg;
+
+	nni_mtx_lock(&ep->mtx);
+	switch (opt) {
+	case NNG_OPT_RCVMAXSZ:
+		rv = nni_getopt_size(&ep->rcvmax, v, szp);
+		break;
+	default:
+		rv = NNG_ENOTSUP;
+		break;
+	}
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
 static nni_tran_pipe nni_ipc_pipe_ops = {
 	.p_fini   = nni_ipc_pipe_fini,
 	.p_start  = nni_ipc_pipe_start,
@@ -666,8 +712,8 @@ static nni_tran_ep nni_ipc_ep_ops = {
 	.ep_bind    = nni_ipc_ep_bind,
 	.ep_accept  = nni_ipc_ep_accept,
 	.ep_close   = nni_ipc_ep_close,
-	.ep_setopt  = NULL,
-	.ep_getopt  = NULL,
+	.ep_setopt  = nni_ipc_ep_setopt,
+	.ep_getopt  = nni_ipc_ep_getopt,
 };
 
 // This is the IPC transport linkage, and should be the only global
