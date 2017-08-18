@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
+ * Copyright 2017 Garrett D'Amore <garrett@damore.org>
  *
  * This software is supplied under the terms of the MIT License, a
  * copy of which should be located in the distribution where this
@@ -9,13 +9,13 @@
 
 #ifndef CONVEY_H
 
-#define	CONVEY_H
+#define CONVEY_H
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
 #include <setjmp.h>
 #include <stdarg.h>
+#include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 /*
  * This test framework allows one to write tests as a form of assertion,
@@ -72,16 +72,16 @@
  */
 typedef struct {
 	jmp_buf cs_jmp;
-	void 	*cs_data;
+	void *  cs_data;
 } conveyScope;
 
 /* These functions are not for use by tests -- they are used internally. */
-extern int conveyStart(conveyScope *, const char *);
-extern int conveyLoop(conveyScope *, int);
-extern void conveyFinish(conveyScope *, int *);
-extern int conveyMain(int, char **);
+extern int   conveyStart(conveyScope *, const char *);
+extern int   conveyLoop(conveyScope *, int);
+extern void  conveyFinish(conveyScope *, int *);
+extern int   conveyMain(int, char **);
 extern char *conveyGetEnv(const char *);
-extern int conveyPutEnv(const char *, char *);
+extern int   conveyPutEnv(const char *, char *);
 
 extern void conveyAssertPass(const char *, const char *, int);
 extern void conveyAssertSkip(const char *, const char *, int);
@@ -97,29 +97,29 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  * and for the code block to be inlined.  Becuase this inlines user
  * code, we have to be *very* careful with symbol names.
  */
-#define	conveyRun(convey_name, convey_code, convey_resultp)		\
-	do {								\
-		static conveyScope convey_scope;			\
-		int convey_unwind;					\
-		int convey_break = 0;					\
-		if (conveyStart(&convey_scope, convey_name) != 0) {	\
-			break;						\
-		}							\
-		convey_unwind = setjmp(convey_scope.cs_jmp);		\
-		if (conveyLoop(&convey_scope, convey_unwind) != 0) {	\
-			break;						\
-		}							\
-		do {							\
-			convey_code					\
-		} while (0);						\
-		if (convey_break) {					\
-			break;						\
-		}							\
-		conveyFinish(&convey_scope, convey_resultp);		\
+#define conveyRun(convey_name, convey_code, convey_resultp)          \
+	do {                                                         \
+		static conveyScope convey_scope;                     \
+		int                convey_unwind;                    \
+		int                convey_break = 0;                 \
+		if (conveyStart(&convey_scope, convey_name) != 0) {  \
+			break;                                       \
+		}                                                    \
+		convey_unwind = setjmp(convey_scope.cs_jmp);         \
+		if (conveyLoop(&convey_scope, convey_unwind) != 0) { \
+			break;                                       \
+		}                                                    \
+		do {                                                 \
+			convey_code                                  \
+		} while (0);                                         \
+		if (convey_break) {                                  \
+			break;                                       \
+		}                                                    \
+		conveyFinish(&convey_scope, convey_resultp);         \
 	} while (0);
 
 /*
- * ConveyRset establishes a reset for the current scope.  This code will
+ * ConveyReset establishes a reset for the current scope.  This code will
  * be executed every time the current scope is unwinding.  This means that
  * the code will be executed each time a child convey exits.  It is also
  * going to be executed once more, for the final pass, which doesn't actually
@@ -139,16 +139,16 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  * override a prior reset.  Normally you should avoid this, and just
  * use lower level convey blocks.
  */
-#define	ConveyReset(convey_reset_code)					\
-	convey_unwind = setjmp(convey_scope.cs_jmp);			\
-	if (convey_unwind) {						\
-		do {							\
-			convey_reset_code				\
-		} while (0);						\
-	}								\
-	if (conveyLoop(&convey_scope, convey_unwind) != 0) {		\
-		convey_break = 1;					\
-		break;							\
+#define ConveyReset(convey_reset_code)                       \
+	convey_unwind = setjmp(convey_scope.cs_jmp);         \
+	if (convey_unwind) {                                 \
+		do {                                         \
+			convey_reset_code                    \
+		} while (0);                                 \
+	}                                                    \
+	if (conveyLoop(&convey_scope, convey_unwind) != 0) { \
+		convey_break = 1;                            \
+		break;                                       \
 	}
 
 /*
@@ -157,17 +157,16 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  * sets up the program, parses options, and then executes the tests nested
  * within it.
  */
-#define	ConveyMain(code)						\
-	static int convey_main_rv;					\
-	int conveyMainImpl(void) {					\
-		do {							\
-			code						\
-		} while (0);						\
-		return (convey_main_rv);				\
-	}								\
-	int main(int argc, char **argv) {				\
-		return (conveyMain(argc, argv));			\
-	}
+#define ConveyMain(code)                 \
+	static int convey_main_rv;       \
+	int        conveyMainImpl(void)  \
+	{                                \
+		do {                     \
+			code             \
+		} while (0);             \
+		return (convey_main_rv); \
+	}                                \
+	int main(int argc, char **argv) { return (conveyMain(argc, argv)); }
 
 /*
  * ConveyGetEnv is used to get environment variables, which can be
@@ -177,20 +176,20 @@ extern void conveyPrintf(const char *, int, const char *, ...);
 
 /*
  * ConveyPutEnv is used to change environment variables.  This is not
- * thread safe! 
+ * thread safe!
  */
 #define ConveyPutEnv(name, value) conveyPutEnv(name, value)
 /*
  * ConveyTest creates a top-level test instance, which can contain multiple
  * Convey blocks.
  */
-#define	ConveyTest(name, code)						\
-	do {								\
-		int convey_rv;						\
-		conveyRun(name, code, &convey_rv);			\
-		if (convey_rv > convey_main_rv) {			\
-			convey_main_rv = convey_rv;			\
-		};							\
+#define ConveyTest(name, code)                      \
+	do {                                        \
+		int convey_rv;                      \
+		conveyRun(name, code, &convey_rv);  \
+		if (convey_rv > convey_main_rv) {   \
+			convey_main_rv = convey_rv; \
+		};                                  \
 	} while (0);
 
 /*
@@ -200,8 +199,7 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  * is the same as using Main with just a single Test embedded, but saves
  * some typing and probably a level of indentation.
  */
-#define	ConveyTestMain(name, code)					\
-	ConveyMain(ConveyTest(name, code))
+#define ConveyTestMain(name, code) ConveyMain(ConveyTest(name, code))
 
 /*
  * EXPERIMENTAL:
@@ -220,28 +218,28 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  * Block takes the place of both Main() and Test().  It is to be hoped
  * that you will not need this.
  */
-#define	ConveyBlock(name, code, resultp)	conveyRun(name, code, resultp)
+#define ConveyBlock(name, code, resultp) conveyRun(name, code, resultp)
 
 /*
  * ConveyAssert and ConveySo allow you to run assertions.
  */
-#define	ConveyAssert(truth)						\
-	do {								\
-		if (!(truth)) {						\
-			conveyAssertFail(#truth, __FILE__, __LINE__);	\
-		} else {						\
-			conveyAssertPass(#truth, __FILE__, __LINE__);	\
-		}							\
+#define ConveyAssert(truth)                                           \
+	do {                                                          \
+		if (!(truth)) {                                       \
+			conveyAssertFail(#truth, __FILE__, __LINE__); \
+		} else {                                              \
+			conveyAssertPass(#truth, __FILE__, __LINE__); \
+		}                                                     \
 	} while (0)
 
-#define	ConveySo(truth)		ConveyAssert(truth)
+#define ConveySo(truth) ConveyAssert(truth)
 
 /*
  * Convey(name, <code>) starts a convey context, with <code> as
  * the body.  The <code> is its scope, and may be called repeatedly
  * within the body of a loop.
  */
-#define	Convey(name, code)	conveyRun(name, code, NULL)
+#define Convey(name, code) conveyRun(name, code, NULL)
 
 /*
  * ConveySkip() just stops processing of the rest of the current context,
@@ -254,33 +252,31 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  * format specifiers.
  */
 #ifdef CONVEY_NO_VARIADICS
-#define	ConveySkip(reason)	conveySkip(__FILE__, __LINE__, reason)
-#define	ConveyFail(reason)	conveyFail(__FILE__, __LINE__, reason)
-#define	ConveyError(reason)	conveyError(__FILE__, __LINE__, reason)
-#define	ConveyPrintf(reason)	conveyPrintf(__FILE__, __LINE__, reason)
+#define ConveySkip(reason) conveySkip(__FILE__, __LINE__, reason)
+#define ConveyFail(reason) conveyFail(__FILE__, __LINE__, reason)
+#define ConveyError(reason) conveyError(__FILE__, __LINE__, reason)
+#define ConveyPrintf(reason) conveyPrintf(__FILE__, __LINE__, reason)
 #else
-#define	ConveySkip(...)		conveySkip(__FILE__, __LINE__, __VA_ARGS__)
-#define	ConveyFail(...)		conveyFail(__FILE__, __LINE__, __VA_ARGS__)
-#define	ConveyError(...)	conveyError(__FILE__, __LINE__, __VA_ARGS__)
-#define	ConveyPrintf(...)	conveyPrintf(__FILE__, __LINE__, __VA_ARGS__)
+#define ConveySkip(...) conveySkip(__FILE__, __LINE__, __VA_ARGS__)
+#define ConveyFail(...) conveyFail(__FILE__, __LINE__, __VA_ARGS__)
+#define ConveyError(...) conveyError(__FILE__, __LINE__, __VA_ARGS__)
+#define ConveyPrintf(...) conveyPrintf(__FILE__, __LINE__, __VA_ARGS__)
 #endif
 
 /*
  * ConveySkipSo() is used to skip processing of a single assertion.
  * Further processing in the same context continues.
  */
-#define	ConveySkipAssert(truth)	\
-	conveyAssertSkip(truth, __FILE__, __LINE__)
-#define	ConveySkipSo(truth)	ConveySkipAssert(truth)
+#define ConveySkipAssert(truth) conveyAssertSkip(#truth, __FILE__, __LINE__)
+#define ConveySkipSo(truth) ConveySkipAssert(truth)
 
 /*
  * ConveySkipConvey() is used to skip a convey context.  This is intended
  * to permit changing "Convey", to "SkipConvey".  This is logged,
  * and the current convey context continues processing.
  */
-#define	ConveySkipConvey(name, code)	\
-	Convey(name, ConveySkip("Skipped"))
-
+#define ConveySkipConvey(name, code) \
+	conveyRun(name, ConveySkip("Skipped");, NULL)
 
 /*
  * ConveyInit sets up initial things required for testing.  If you don't
@@ -313,18 +309,18 @@ extern void ConveySetVerbose(void);
  */
 #ifndef CONVEY_NAMESPACE_CLEAN
 
-#define	TestMain	ConveyTestMain
-#define	Test		ConveyTest
-#define	Main		ConveyMain
-#define	So		ConveySo
-#define	Skip		ConveySkip
-#define	Fail		ConveyFail
-#define	Error		ConveyError
-#define	SkipConvey	ConveySkipConvey
-#define	SkipSo		ConveySkipSo
-#define	Reset		ConveyReset
-#define	Printf		ConveyPrintf
+#define TestMain ConveyTestMain
+#define Test ConveyTest
+#define Main ConveyMain
+#define So ConveySo
+#define Skip ConveySkip
+#define Fail ConveyFail
+#define Error ConveyError
+#define SkipConvey ConveySkipConvey
+#define SkipSo ConveySkipSo
+#define Reset ConveyReset
+#define Printf ConveyPrintf
 
-#endif	/* CONVEY_NAMESPACE_CLEAN */
+#endif /* CONVEY_NAMESPACE_CLEAN */
 
-#endif	/* CONVEY_H */
+#endif /* CONVEY_H */

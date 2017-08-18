@@ -1,5 +1,5 @@
 /*
- * Copyright 2016 Garrett D'Amore <garrett@damore.org>
+ * Copyright 2017 Garrett D'Amore <garrett@damore.org>
  *
  * This software is supplied under the terms of the MIT License, a
  * copy of which should be located in the distribution where this
@@ -29,12 +29,12 @@
  * only added late -- like in 2010.  Specifically uint32_t and uint64_t).
  */
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <stdint.h>
 #include <setjmp.h>
 #include <stdarg.h>
+#include <stddef.h>
+#include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #ifdef _WIN32
@@ -42,11 +42,11 @@
 
 #else
 
-#include <time.h>
-#include <locale.h>
 #include <langinfo.h>
-#include <unistd.h>
+#include <locale.h>
 #include <sys/time.h>
+#include <time.h>
+#include <unistd.h>
 
 #ifndef CONVEY_NO_THREADS
 #include <pthread.h>
@@ -76,81 +76,81 @@
  * a scope not expressed to user code, these rules are relaxed.
  */
 
-static const char *convey_sym_pass = ".";
-static const char *convey_sym_skip = "?";
-static const char *convey_sym_fail = "X";
+static const char *convey_sym_pass  = ".";
+static const char *convey_sym_skip  = "?";
+static const char *convey_sym_fail  = "X";
 static const char *convey_sym_fatal = "!";
-static const char *convey_nocolor = "";
-static const char *convey_green = "";
-static const char *convey_red = "";
-static const char *convey_yellow = "";
+static const char *convey_nocolor   = "";
+static const char *convey_green     = "";
+static const char *convey_red       = "";
+static const char *convey_yellow    = "";
 
-static int convey_debug = 0;
-static int convey_verbose = 0;
-static int convey_nassert = 0;
-static int convey_nskip = 0;
+static int         convey_debug        = 0;
+static int         convey_verbose      = 0;
+static int         convey_nassert      = 0;
+static int         convey_nskip        = 0;
 static const char *convey_assert_color = "";
 
 #if defined(_WIN32)
-static WORD convey_defattr;
+static WORD   convey_defattr;
 static HANDLE convey_console;
 #endif
 
-#define CONVEY_EXIT_OK		0
-#define CONVEY_EXIT_USAGE	1
-#define CONVEY_EXIT_FAIL	2
-#define CONVEY_EXIT_FATAL	3
-#define CONVEY_EXIT_NOMEM	4
+#define CONVEY_EXIT_OK 0
+#define CONVEY_EXIT_USAGE 1
+#define CONVEY_EXIT_FAIL 2
+#define CONVEY_EXIT_FATAL 3
+#define CONVEY_EXIT_NOMEM 4
 
 struct convey_timer {
-	uint64_t	timer_base;
-	uint64_t	timer_count;
-	uint64_t	timer_rate;
-	int		timer_running;
+	uint64_t timer_base;
+	uint64_t timer_count;
+	uint64_t timer_rate;
+	int      timer_running;
 };
 
 struct convey_log {
-	char *	log_buf;
-	size_t	log_size;
-	size_t	log_length;
+	char * log_buf;
+	size_t log_size;
+	size_t log_length;
 };
 
 struct convey_ctx {
-	char			ctx_name[256];
-	struct convey_ctx *	ctx_parent;
-	struct convey_ctx *	ctx_root;       /* the root node on the list */
-	struct convey_ctx *	ctx_next;       /* root list only, cleanup */
-	int			ctx_level;
-	int			ctx_done;
-	int			ctx_started;
-	jmp_buf *		ctx_jmp;
-	int			ctx_fatal;
-	int			ctx_fail;
-	int			ctx_skip;
-	int			ctx_printed;
-	struct convey_timer	ctx_timer;
-	struct convey_log *	ctx_errlog;
-	struct convey_log *	ctx_faillog;
-	struct convey_log *	ctx_dbglog;
+	char                ctx_name[256];
+	struct convey_ctx * ctx_parent;
+	struct convey_ctx * ctx_root; /* the root node on the list */
+	struct convey_ctx * ctx_next; /* root list only, cleanup */
+	int                 ctx_level;
+	int                 ctx_done;
+	int                 ctx_started;
+	jmp_buf *           ctx_jmp;
+	int                 ctx_fatal;
+	int                 ctx_fail;
+	int                 ctx_skip;
+	int                 ctx_printed;
+	struct convey_timer ctx_timer;
+	struct convey_log * ctx_errlog;
+	struct convey_log * ctx_faillog;
+	struct convey_log * ctx_dbglog;
 };
 
-static void convey_print_result(struct convey_ctx *);
-static void convey_init_timer(struct convey_timer *);
-static void convey_start_timer(struct convey_timer *);
-static void convey_stop_timer(struct convey_timer *);
-static void convey_read_timer(struct convey_timer *, int *, int *);
-static void convey_init_term(void);
-static int convey_tls_init(void);
+static void  convey_print_result(struct convey_ctx *);
+static void  convey_init_timer(struct convey_timer *);
+static void  convey_start_timer(struct convey_timer *);
+static void  convey_stop_timer(struct convey_timer *);
+static void  convey_read_timer(struct convey_timer *, int *, int *);
+static void  convey_init_term(void);
+static int   convey_tls_init(void);
 static void *convey_tls_get(void);
-static int convey_tls_set(void *);
+static int   convey_tls_set(void *);
 static struct convey_ctx *convey_get_ctx(void);
 static void convey_vlogf(struct convey_log *, const char *, va_list, int);
 static void convey_logf(struct convey_log *, const char *, ...);
 static void convey_log_emit(struct convey_log *, const char *, const char *);
 static void convey_log_free(struct convey_log *);
 static struct convey_log *convey_log_alloc(void);
-static char *convey_nextline(char **);
-static void convey_emit_color(const char *);
+static char *             convey_nextline(char **);
+static void               convey_emit_color(const char *);
 
 /*
  * convey_emit_color just changes the output text to the color
@@ -165,8 +165,8 @@ convey_emit_color(const char *color)
 		WORD attr;
 
 		attr = convey_defattr &
-		    ~(FOREGROUND_BLUE|FOREGROUND_GREEN|FOREGROUND_RED|
-		    FOREGROUND_INTENSITY);
+		    ~(FOREGROUND_BLUE | FOREGROUND_GREEN | FOREGROUND_RED |
+		        FOREGROUND_INTENSITY);
 
 		if (color == convey_nocolor) {
 			attr = convey_defattr;
@@ -190,7 +190,6 @@ convey_emit_color(const char *color)
 #endif
 }
 
-
 /*
  * convey_print_result prints the test results.  It prints more information
  * in convey_verbose mode.  Note that its possible for assertion checks done at
@@ -207,15 +206,16 @@ convey_print_result(struct convey_ctx *t)
 	int secs, usecs;
 
 	if (t->ctx_root == t) {
-		convey_stop_timer(&t->ctx_timer);       /* This is idempotent */
+		convey_stop_timer(&t->ctx_timer); /* This is idempotent */
 
 		convey_read_timer(&t->ctx_timer, &secs, &usecs);
 
 		(void) convey_logf(t->ctx_dbglog, "Test %s: %s (%d.%02ds)\n",
-		    t->ctx_fatal ? "FATAL" :
-		    t->ctx_fail ? "FAIL" :
-		    t->ctx_skip ? "PASS (with SKIPs)" :
-		    "PASS", t->ctx_name, secs, usecs / 10000);
+		    t->ctx_fatal ? "FATAL"
+		                 : t->ctx_fail
+		            ? "FAIL"
+		            : t->ctx_skip ? "PASS (with SKIPs)" : "PASS",
+		    t->ctx_name, secs, usecs / 10000);
 
 		if (convey_verbose) {
 			(void) puts("");
@@ -229,20 +229,21 @@ convey_print_result(struct convey_ctx *t)
 			(void) puts("");
 			(void) puts("");
 			convey_emit_color(convey_assert_color);
-			(void) printf("%d assertions thus far", convey_nassert);
+			(void) printf(
+			    "%d assertions thus far", convey_nassert);
 			convey_emit_color(convey_nocolor);
 
 			if (convey_nskip) {
 				(void) fputs(" ", stdout);
 				convey_emit_color(convey_yellow);
-				(void) fputs("(one or more sections skipped)",
-				    stdout);
+				(void) fputs(
+				    "(one or more sections skipped)", stdout);
 				convey_emit_color(convey_nocolor);
 			}
 			(void) printf("\n\n--- %s: %s (%d.%02ds)\n",
-			    t->ctx_fatal ? "FATAL" :
-			    t->ctx_fail ? "FAIL" :
-			    "PASS", t->ctx_name, secs, usecs / 10000);
+			    t->ctx_fatal ? "FATAL"
+			                 : t->ctx_fail ? "FAIL" : "PASS",
+			    t->ctx_name, secs, usecs / 10000);
 		}
 
 		/* Remove the context, because we cannot reenter here */
@@ -256,12 +257,11 @@ convey_print_result(struct convey_ctx *t)
 				convey_log_free(t->ctx_errlog);
 			}
 			t = t->ctx_next;
-			memset(freeit, 0, sizeof (*freeit));
+			memset(freeit, 0, sizeof(*freeit));
 			free(freeit);
 		}
 	}
 }
-
 
 /*
  * conveyStart is called when the context starts, before any call to
@@ -282,37 +282,37 @@ conveyStart(conveyScope *scope, const char *name)
 	if ((t = scope->cs_data) != NULL) {
 		if (t->ctx_done) {
 			convey_print_result(t);
-			return (1);     /* all done, skip */
+			return (1); /* all done, skip */
 		}
-		return (0);             /* continue onward */
+		return (0); /* continue onward */
 	}
-	scope->cs_data = (t = calloc(1, sizeof (struct convey_ctx)));
+	scope->cs_data = (t = calloc(1, sizeof(struct convey_ctx)));
 	if (t == NULL) {
 		goto allocfail;
 	}
 	t->ctx_jmp = &scope->cs_jmp;
 
-	(void) snprintf(t->ctx_name, sizeof (t->ctx_name)-1, "%s", name);
+	(void) snprintf(t->ctx_name, sizeof(t->ctx_name) - 1, "%s", name);
+
 	if (parent != NULL) {
 		t->ctx_parent = parent;
-		t->ctx_root = t->ctx_parent->ctx_root;
-		t->ctx_level = t->ctx_parent->ctx_level + 1;
+		t->ctx_root   = t->ctx_parent->ctx_root;
+		t->ctx_level  = t->ctx_parent->ctx_level + 1;
 		/* unified logging against the root context */
-		t->ctx_dbglog = t->ctx_root->ctx_dbglog;
-		t->ctx_faillog = t->ctx_root->ctx_faillog;
-		t->ctx_errlog = t->ctx_root->ctx_errlog;
-		t->ctx_next = t->ctx_root->ctx_next;
+		t->ctx_dbglog         = t->ctx_root->ctx_dbglog;
+		t->ctx_faillog        = t->ctx_root->ctx_faillog;
+		t->ctx_errlog         = t->ctx_root->ctx_errlog;
+		t->ctx_next           = t->ctx_root->ctx_next;
 		t->ctx_root->ctx_next = t;
 	} else {
 		t->ctx_parent = t;
-		t->ctx_root = t;
+		t->ctx_root   = t;
 		if (((t->ctx_errlog = convey_log_alloc()) == NULL) ||
 		    ((t->ctx_faillog = convey_log_alloc()) == NULL) ||
 		    ((t->ctx_dbglog = convey_log_alloc()) == NULL)) {
 			goto allocfail;
 		}
-		convey_logf(t->ctx_dbglog,
-		    "Test Started: %s\n", t->ctx_name);
+		convey_logf(t->ctx_dbglog, "Test Started: %s\n", t->ctx_name);
 	}
 	return (0);
 
@@ -330,7 +330,6 @@ allocfail:
 	return (1);
 }
 
-
 /*
  * conveyLoop is called right after setjmp.  If unwind is true it indicates
  * that setjmp returned true, and we are unwinding the stack.  In that case
@@ -344,7 +343,7 @@ int
 conveyLoop(conveyScope *scope, int unwind)
 {
 	struct convey_ctx *t;
-	int i;
+	int                i;
 
 	if ((t = scope->cs_data) == NULL) {
 		return (1);
@@ -382,7 +381,6 @@ conveyLoop(conveyScope *scope, int unwind)
 	return (0);
 }
 
-
 void
 conveyFinish(conveyScope *scope, int *rvp)
 {
@@ -407,12 +405,11 @@ conveyFinish(conveyScope *scope, int *rvp)
 	longjmp(*t->ctx_jmp, 1);
 }
 
-
 void
 conveySkip(const char *file, int line, const char *fmt, ...)
 {
-	va_list ap;
-	struct convey_ctx *t = convey_get_ctx();
+	va_list            ap;
+	struct convey_ctx *t    = convey_get_ctx();
 	struct convey_log *dlog = t->ctx_dbglog;
 
 	if (convey_verbose) {
@@ -420,16 +417,14 @@ conveySkip(const char *file, int line, const char *fmt, ...)
 		(void) fputs(convey_sym_skip, stdout);
 		convey_emit_color(convey_nocolor);
 	}
-	convey_logf(dlog, "* %s (%s:%d) (Skip): ",
-	    t->ctx_name, file, line);
+	convey_logf(dlog, "* %s (%s:%d) (Skip): ", t->ctx_name, file, line);
 	va_start(ap, fmt);
 	convey_vlogf(dlog, fmt, ap, 1);
 	va_end(ap);
-	t->ctx_done = 1;        /* This forces an end */
+	t->ctx_done = 1; /* This forces an end */
 	convey_nskip++;
 	longjmp(*t->ctx_jmp, 1);
 }
-
 
 void
 conveyAssertFail(const char *cond, const char *file, int line)
@@ -447,17 +442,15 @@ conveyAssertFail(const char *cond, const char *file, int line)
 	}
 	convey_assert_color = convey_yellow;
 	t->ctx_fail++;
-	t->ctx_done = 1;        /* This forces an end */
-	convey_logf(t->ctx_faillog, "* %s (Assertion Failed)\n",
-	    t->ctx_name);
+	t->ctx_done = 1; /* This forces an end */
+	convey_logf(t->ctx_faillog, "* Assertion Failed (%s)\n", t->ctx_name);
 	convey_logf(t->ctx_faillog, "File: %s\n", file);
 	convey_logf(t->ctx_faillog, "Line: %d\n", line);
 	convey_logf(t->ctx_faillog, "Test: %s\n\n", cond);
-	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (FAILED): %s\n",
-	    t->ctx_name, file, line, cond);
+	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (FAILED): %s\n", t->ctx_name,
+	    file, line, cond);
 	longjmp(*t->ctx_jmp, 1);
 }
-
 
 void
 conveyAssertPass(const char *cond, const char *file, int line)
@@ -470,10 +463,9 @@ conveyAssertPass(const char *cond, const char *file, int line)
 		(void) fputs(convey_sym_pass, stdout);
 		convey_emit_color(convey_nocolor);
 	}
-	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Passed): %s\n",
-	    t->ctx_name, file, line, cond);
+	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Passed): %s\n", t->ctx_name,
+	    file, line, cond);
 }
-
 
 void
 conveyAssertSkip(const char *cond, const char *file, int line)
@@ -486,10 +478,9 @@ conveyAssertSkip(const char *cond, const char *file, int line)
 		(void) fputs(convey_sym_pass, stdout);
 		convey_emit_color(convey_nocolor);
 	}
-	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Skip): %s\n",
-	    t->ctx_name, file, line, cond);
+	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Skip): %s\n", t->ctx_name,
+	    file, line, cond);
 }
-
 
 /*
  * Performance counters.  Really we just want to start and stop timers, to
@@ -498,9 +489,8 @@ conveyAssertSkip(const char *cond, const char *file, int line)
 static void
 convey_init_timer(struct convey_timer *pc)
 {
-	memset(pc, 0, sizeof (*pc));
+	memset(pc, 0, sizeof(*pc));
 }
-
 
 static void
 convey_start_timer(struct convey_timer *pc)
@@ -515,7 +505,7 @@ convey_start_timer(struct convey_timer *pc)
 	pc->timer_base = pcnt.QuadPart;
 	pc->timer_rate = pfreq.QuadPart;
 #elif defined(CLOCK_MONOTONIC) && !defined(CONVEY_USE_GETTIMEOFDAY)
-	uint64_t usecs;
+	uint64_t        usecs;
 	struct timespec ts;
 
 	clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -533,7 +523,6 @@ convey_start_timer(struct convey_timer *pc)
 	pc->timer_running = 1;
 }
 
-
 static void
 convey_stop_timer(struct convey_timer *pc)
 {
@@ -546,7 +535,7 @@ convey_stop_timer(struct convey_timer *pc)
 		QueryPerformanceCounter(&pcnt);
 		pc->timer_count += (pcnt.QuadPart - pc->timer_base);
 #elif defined(CLOCK_MONOTONIC) && !defined(CONVEY_USE_GETTIMEOFDAY)
-		uint64_t ns;
+		uint64_t        ns;
 		struct timespec ts;
 
 		clock_gettime(CLOCK_MONOTONIC, &ts);
@@ -554,7 +543,7 @@ convey_stop_timer(struct convey_timer *pc)
 		ns += ts.tv_nsec;
 		pc->timer_count += (ns - pc->timer_base);
 #else
-		uint64_t us;
+		uint64_t       us;
 		struct timeval tv;
 
 		gettimeofday(&tv, NULL);
@@ -565,14 +554,13 @@ convey_stop_timer(struct convey_timer *pc)
 	} while (0);
 }
 
-
 static void
 convey_read_timer(struct convey_timer *pc, int *secp, int *usecp)
 {
 	uint64_t delta, rate, sec, usec;
 
 	delta = pc->timer_count;
-	rate = pc->timer_rate;
+	rate  = pc->timer_rate;
 
 	sec = delta / rate;
 	delta -= (sec * rate);
@@ -591,10 +579,10 @@ convey_read_timer(struct convey_timer *pc, int *secp, int *usecp)
 	}
 }
 
-
 /*
  * Thread-specific data.  Pthreads uses one way, Win32 another.  If you
- * lack threads, just #define CONVEY_NO_THREADS.  C11 thread support is pending.
+ * lack threads, just #define CONVEY_NO_THREADS.  C11 thread support is
+ * pending.
  */
 
 #ifdef CONVEY_NO_THREADS
@@ -606,7 +594,6 @@ convey_tls_init(void)
 	return (0);
 }
 
-
 static int
 convey_tls_set(void *v)
 {
@@ -614,13 +601,11 @@ convey_tls_set(void *v)
 	return (0);
 }
 
-
 static void *
 convey_tls_get(void)
 {
 	return (convey_tls_key);
 }
-
 
 #elif defined(_WIN32)
 
@@ -635,7 +620,6 @@ convey_tls_init(void)
 	return (0);
 }
 
-
 static int
 convey_tls_set(void *v)
 {
@@ -645,13 +629,11 @@ convey_tls_set(void *v)
 	return (0);
 }
 
-
 static void *
 convey_tls_get(void)
 {
 	return ((void *) TlsGetValue(convey_tls_key));
 }
-
 
 #else
 
@@ -666,7 +648,6 @@ convey_tls_init(void)
 	return (0);
 }
 
-
 static int
 convey_tls_set(void *v)
 {
@@ -676,13 +657,11 @@ convey_tls_set(void *v)
 	return (0);
 }
 
-
 static void *
 convey_tls_get(void)
 {
 	return (pthread_getspecific(convey_tls_key));
 }
-
 
 #endif
 
@@ -691,7 +670,6 @@ convey_get_ctx(void)
 {
 	return (convey_tls_get());
 }
-
 
 /*
  * Log stuff.
@@ -702,14 +680,14 @@ convey_vlogf(struct convey_log *log, const char *fmt, va_list va, int addnl)
 	/* Grow the log buffer if we need to */
 	while ((log->log_size - log->log_length) < 256) {
 		size_t newsz = log->log_size + 2000;
-		char *ptr = malloc(newsz);
+		char * ptr   = malloc(newsz);
 		if (ptr == NULL) {
 			return;
 		}
 		memcpy(ptr, log->log_buf, log->log_length);
 		memset(ptr + log->log_length, 0, newsz - log->log_length);
 		free(log->log_buf);
-		log->log_buf = ptr;
+		log->log_buf  = ptr;
 		log->log_size = newsz;
 	}
 
@@ -717,11 +695,10 @@ convey_vlogf(struct convey_log *log, const char *fmt, va_list va, int addnl)
 	(void) vsnprintf(log->log_buf + log->log_length,
 	    log->log_size - (log->log_length + 2), fmt, va);
 	log->log_length += strlen(log->log_buf + log->log_length);
-	if (addnl && (log->log_buf[log->log_length-1] != '\n')) {
+	if (addnl && (log->log_buf[log->log_length - 1] != '\n')) {
 		log->log_buf[log->log_length++] = '\n';
 	}
 }
-
 
 static void
 convey_logf(struct convey_log *log, const char *fmt, ...)
@@ -732,7 +709,6 @@ convey_logf(struct convey_log *log, const char *fmt, ...)
 	convey_vlogf(log, fmt, va, 0);
 	va_end(va);
 }
-
 
 static void
 convey_log_emit(struct convey_log *log, const char *header, const char *color)
@@ -758,7 +734,6 @@ convey_log_emit(struct convey_log *log, const char *header, const char *color)
 	}
 }
 
-
 static void
 convey_log_free(struct convey_log *log)
 {
@@ -770,13 +745,11 @@ convey_log_free(struct convey_log *log)
 	}
 }
 
-
 static struct convey_log *
 convey_log_alloc(void)
 {
-	return (calloc(1, sizeof (struct convey_log)));
+	return (calloc(1, sizeof(struct convey_log)));
 }
-
 
 /*
  * ConveyInit initializes some common global stuff.   Call it from main(),
@@ -797,21 +770,19 @@ ConveyInit(void)
 	return (0);
 }
 
-
 void
 ConveySetVerbose(void)
 {
 	convey_verbose = 1;
 }
 
-
 void
 conveyFail(const char *file, int line, const char *fmt, ...)
 {
-	struct convey_ctx *t = convey_get_ctx();
+	struct convey_ctx *t    = convey_get_ctx();
 	struct convey_log *flog = t->ctx_faillog;
 	struct convey_log *dlog = t->ctx_dbglog;
-	va_list ap;
+	va_list            ap;
 
 	convey_logf(dlog, "* %s (%s:%d) (Failed): ", t->ctx_name, file, line);
 	va_start(ap, fmt);
@@ -831,18 +802,17 @@ conveyFail(const char *file, int line, const char *fmt, ...)
 	}
 	convey_assert_color = convey_yellow;
 	t->ctx_fail++;
-	t->ctx_done = 1;        /* This forces an end */
+	t->ctx_done = 1; /* This forces an end */
 	longjmp(*t->ctx_jmp, 1);
 }
-
 
 void
 conveyError(const char *file, int line, const char *fmt, ...)
 {
-	struct convey_ctx *t = convey_get_ctx();
+	struct convey_ctx *t    = convey_get_ctx();
 	struct convey_log *flog = t->ctx_errlog;
 	struct convey_log *dlog = t->ctx_dbglog;
-	va_list ap;
+	va_list            ap;
 
 	convey_logf(dlog, "* %s (%s:%d) (Error): ", t->ctx_name, file, line);
 	va_start(ap, fmt);
@@ -862,16 +832,15 @@ conveyError(const char *file, int line, const char *fmt, ...)
 	}
 	convey_assert_color = convey_red;
 	t->ctx_fail++;
-	t->ctx_done = 1;        /* This forces an end */
+	t->ctx_done = 1; /* This forces an end */
 	longjmp(*t->ctx_jmp, 1);
 }
-
 
 void
 conveyPrintf(const char *file, int line, const char *fmt, ...)
 {
-	va_list ap;
-	struct convey_ctx *t = convey_get_ctx();
+	va_list            ap;
+	struct convey_ctx *t    = convey_get_ctx();
 	struct convey_log *dlog = t->ctx_dbglog;
 
 	convey_logf(dlog, "* %s (%s:%d) (Debug): ", t->ctx_name, file, line);
@@ -879,7 +848,6 @@ conveyPrintf(const char *file, int line, const char *fmt, ...)
 	convey_vlogf(dlog, fmt, ap, 1);
 	va_end(ap);
 }
-
 
 extern int conveyMainImpl(void);
 
@@ -895,10 +863,10 @@ convey_init_term(void)
 	(void) setlocale(LC_ALL, "");
 	codeset = nl_langinfo(CODESET);
 	if ((codeset != NULL) && (strcmp(codeset, "UTF-8") == 0)) {
-		convey_sym_pass = "✔";
-		convey_sym_fail = "✘";
+		convey_sym_pass  = "✔";
+		convey_sym_fail  = "✘";
 		convey_sym_fatal = "🔥";
-		convey_sym_skip = "⚠";
+		convey_sym_skip  = "⚠";
 	}
 	term = getenv("TERM");
 	if (!isatty(fileno(stdin))) {
@@ -916,27 +884,25 @@ convey_init_term(void)
 		// Values probably don't matter, just need to be
 		// different!
 		convey_nocolor = "\033[0m";
-		convey_green = "\033[32m";
-		convey_yellow = "\033[33m";
-		convey_red = "\033[31m";
+		convey_green   = "\033[32m";
+		convey_yellow  = "\033[33m";
+		convey_red     = "\033[31m";
 	}
 	term = getenv("TERM");
 #endif
-
 
 	if (term != NULL) {
 		if ((strstr(term, "xterm") != NULL) ||
 		    (strstr(term, "ansi") != NULL) ||
 		    (strstr(term, "color") != NULL)) {
 			convey_nocolor = "\033[0m";
-			convey_green = "\033[32m";
-			convey_yellow = "\033[33m";
-			convey_red = "\033[31m";
+			convey_green   = "\033[32m";
+			convey_yellow  = "\033[33m";
+			convey_red     = "\033[31m";
 		}
 	}
 	convey_assert_color = convey_green;
 }
-
 
 /*
  * This function exists because strtok isn't safe, and strtok_r and
@@ -949,14 +915,14 @@ convey_nextline(char **next)
 {
 	char *line = *next;
 	char *nl;
-	char c;
+	char  c;
 
 	if (line == NULL) {
 		return (NULL);
 	}
 	for (nl = line; (c = (*nl)) != '\0'; nl++) {
 		if (c == '\n') {
-			*nl = '\0';
+			*nl   = '\0';
 			*next = nl + 1;
 			return (line);
 		}
@@ -975,9 +941,9 @@ convey_nextline(char **next)
 
 static struct convey_env {
 	struct convey_env *next;
-	const char *name;
-	char *value;
-} *convey_environment;
+	const char *       name;
+	char *             value;
+} * convey_environment;
 
 static struct convey_env *
 conveyFindEnv(const char *name)
@@ -1008,14 +974,14 @@ conveyPutEnv(const char *name, char *value)
 	struct convey_env *env;
 
 	if ((env = conveyFindEnv(name)) == NULL) {
-		env = malloc(sizeof (*env));
+		env = malloc(sizeof(*env));
 		if (env == NULL) {
 			return (-1);
 		}
-		env->next = convey_environment;
+		env->next          = convey_environment;
 		convey_environment = env;
 	}
-	env->name = name;
+	env->name  = name;
 	env->value = value;
 	return (0);
 }
@@ -1023,17 +989,15 @@ conveyPutEnv(const char *name, char *value)
 int
 conveyMain(int argc, char **argv)
 {
-	int i;
-	const char *status;
-	const char *prog;
+	int                 i;
+	const char *        status;
+	const char *        prog = "<unknown>";
 	struct convey_timer pc;
-	int secs, usecs;
-	struct convey_env *env;
+	int                 secs, usecs;
+	struct convey_env * env;
 
 	if ((argc > 0) && (argv[0] != NULL)) {
 		prog = argv[0];
-	} else {
-		prog = "<unknown>";
 	}
 
 	/*
@@ -1054,11 +1018,11 @@ conveyMain(int argc, char **argv)
 		}
 		if ((strcmp(argv[i], "-p") == 0) && ((i + 1) < argc)) {
 			char *delim;
-			if ((delim = strchr(argv[i+1], '=')) != NULL) {
+			if ((delim = strchr(argv[i + 1], '=')) != NULL) {
 				*delim = '\0';
-				conveyPutEnv(argv[i+1], delim+1);
+				conveyPutEnv(argv[i + 1], delim + 1);
 			} else {
-				conveyPutEnv(argv[i+1], "");
+				conveyPutEnv(argv[i + 1], "");
 			}
 			i++;
 			continue;
@@ -1099,7 +1063,8 @@ conveyMain(int argc, char **argv)
 	}
 
 	convey_read_timer(&pc, &secs, &usecs);
-	(void) printf("%-8s%-52s%4d.%03ds\n", status, prog, secs, usecs / 1000);
+	(void) printf(
+	    "%-8s%-52s%4d.%03ds\n", status, prog, secs, usecs / 1000);
 	while ((env = convey_environment) != NULL) {
 		convey_environment = env->next;
 		free(env);
