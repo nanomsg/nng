@@ -23,87 +23,32 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-extern int nni_tcp_parse_url(char *, char **, char **, char **, char **);
-
 int
-nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
+nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
+    const nni_sockaddr *rsa, int mode)
 {
 	nni_posix_epdesc *      ed;
-	char                    buf[NNG_MAXADDRLEN];
 	int                     rv;
-	char *                  lhost, *rhost;
-	char *                  lserv, *rserv;
-	char *                  sep;
 	struct sockaddr_storage ss;
 	int                     len;
-	int                     passive;
-	nni_aio                 aio;
 
-	if ((rv = nni_posix_epdesc_init(&ed, url)) != 0) {
+	NNI_ARG_UNUSED(mode);
+
+	if ((rv = nni_posix_epdesc_init(&ed)) != 0) {
 		return (rv);
 	}
 
-	// Make a local copy.
-	snprintf(buf, sizeof(buf), "%s", url);
-	nni_aio_init(&aio, NULL, NULL);
-
-	if (mode == NNI_EP_MODE_DIAL) {
-		rv = nni_tcp_parse_url(buf, &rhost, &rserv, &lhost, &lserv);
-		if (rv != 0) {
-			goto done;
-		}
-
-		// We have to have a remote destination!
-		if ((rhost == NULL) || (rserv == NULL)) {
-			rv = NNG_EADDRINVAL;
-			goto done;
-		}
-	} else {
-		rv = nni_tcp_parse_url(buf, &lhost, &lserv, &rhost, &rserv);
-		if (rv != 0) {
-			goto done;
-		}
-		if ((rhost != NULL) || (rserv != NULL)) {
-			// remotes are nonsensical here.
-			rv = NNG_EADDRINVAL;
-			goto done;
-		}
-		if (lserv == NULL) {
-			// missing port to listen on!
-			rv = NNG_EADDRINVAL;
-			goto done;
-		}
-	}
-
-	if ((rserv != NULL) || (rhost != NULL)) {
-		nni_plat_tcp_resolv(rhost, rserv, NNG_AF_UNSPEC, 0, &aio);
-		nni_aio_wait(&aio);
-		if ((rv = nni_aio_result(&aio)) != 0) {
-			goto done;
-		}
-		len = nni_posix_nn2sockaddr((void *) &ss, &aio.a_addrs[0]);
+	if (rsa->s_un.s_family != NNG_AF_UNSPEC) {
+		len = nni_posix_nn2sockaddr((void *) &ss, rsa);
 		nni_posix_epdesc_set_remote(ed, &ss, len);
 	}
-
-	if ((lserv != NULL) || (lhost != NULL)) {
-		nni_plat_tcp_resolv(lhost, lserv, NNG_AF_UNSPEC, 1, &aio);
-		nni_aio_wait(&aio);
-		if ((rv = nni_aio_result(&aio)) != 0) {
-			goto done;
-		}
-		len = nni_posix_nn2sockaddr((void *) &ss, &aio.a_addrs[0]);
+	if (lsa->s_un.s_family != NNG_AF_UNSPEC) {
+		len = nni_posix_nn2sockaddr((void *) &ss, lsa);
 		nni_posix_epdesc_set_local(ed, &ss, len);
 	}
-	nni_aio_fini(&aio);
+
 	*epp = (void *) ed;
 	return (0);
-
-done:
-	if (rv != 0) {
-		nni_posix_epdesc_fini(ed);
-	}
-	nni_aio_fini(&aio);
-	return (rv);
 }
 
 void

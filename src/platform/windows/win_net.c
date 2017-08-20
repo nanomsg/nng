@@ -25,7 +25,6 @@ struct nni_plat_tcp_ep {
 	SOCKET        acc_s;
 	nni_win_event con_ev;
 	nni_win_event acc_ev;
-	int           mode;
 	int           started;
 	int           bound;
 
@@ -285,19 +284,12 @@ nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *pipe)
 	NNI_FREE_STRUCT(pipe);
 }
 
-extern int nni_tcp_parse_url(char *, char **, char **, char **, char **);
-
 int
-nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
+nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
+    const nni_sockaddr *rsa, int mode)
 {
-	char             buf[NNG_MAXADDRLEN];
 	nni_plat_tcp_ep *ep;
-	char *           rhost;
-	char *           rserv;
-	char *           lhost;
-	char *           lserv;
 	int              rv;
-	nni_aio          aio;
 	SOCKET           s;
 	DWORD            nbytes;
 	GUID             guid1 = WSAID_CONNECTEX;
@@ -308,55 +300,13 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
 	}
 	ZeroMemory(ep, sizeof(ep));
 
-	ep->mode = mode;
-	ep->s    = INVALID_SOCKET;
+	ep->s = INVALID_SOCKET;
 
-	nni_aio_init(&aio, NULL, NULL);
-
-	snprintf(buf, sizeof(buf), "%s", url);
-	if (mode == NNI_EP_MODE_DIAL) {
-		rv = nni_tcp_parse_url(buf, &rhost, &rserv, &lhost, &lserv);
-		if (rv != 0) {
-			goto fail;
-		}
-		// Have to ahve a remote destination.
-		if ((rhost == NULL) || (rserv == NULL)) {
-			rv = NNG_EADDRINVAL;
-			goto fail;
-		}
-	} else {
-		rv = nni_tcp_parse_url(buf, &lhost, &lserv, &rhost, &rserv);
-		if (rv != 0) {
-			goto fail;
-		}
-		// Remote destination makes no sense when listening.
-		if ((rhost != NULL) || (rserv != NULL)) {
-			rv = NNG_EADDRINVAL;
-			goto fail;
-		}
-		if (lserv == NULL) {
-			// missing port to listen on!
-			rv = NNG_EADDRINVAL;
-			goto fail;
-		}
+	if (rsa->s_un.s_family != NNG_AF_UNSPEC) {
+		ep->remlen = nni_win_tcp_addr(&ep->remaddr, rsa);
 	}
-
-	if ((rserv != NULL) || (rhost != NULL)) {
-		nni_plat_tcp_resolv(rhost, rserv, NNG_AF_INET6, 0, &aio);
-		nni_aio_wait(&aio);
-		if ((rv = nni_aio_result(&aio)) != 0) {
-			goto fail;
-		}
-		ep->remlen = nni_win_tcp_addr(&ep->remaddr, &aio.a_addrs[0]);
-	}
-
-	if ((lserv != NULL) || (lhost != NULL)) {
-		nni_plat_tcp_resolv(lhost, lserv, NNG_AF_INET6, 1, &aio);
-		nni_aio_wait(&aio);
-		if ((rv = nni_aio_result(&aio)) != 0) {
-			goto fail;
-		}
-		ep->loclen = nni_win_tcp_addr(&ep->locaddr, &aio.a_addrs[0]);
+	if (lsa->s_un.s_family != NNG_AF_UNSPEC) {
+		ep->loclen = nni_win_tcp_addr(&ep->locaddr, lsa);
 	}
 
 	// Create a scratch socket for use with ioctl.
@@ -392,7 +342,6 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const char *url, int mode)
 		goto fail;
 	}
 
-	nni_aio_fini(&aio);
 	*epp = ep;
 	return (0);
 
@@ -401,7 +350,6 @@ fail:
 		closesocket(s);
 	}
 	nni_plat_tcp_ep_fini(ep);
-	nni_aio_fini(&aio);
 	return (rv);
 }
 
@@ -433,14 +381,11 @@ nni_win_tcp_listen(nni_plat_tcp_ep *ep)
 	BOOL   yes;
 	SOCKET s;
 
-	if (ep->mode != NNI_EP_MODE_LISTEN) {
-		return (NNG_EINVAL);
-	}
 	if (ep->started) {
 		return (NNG_EBUSY);
 	}
 
-	s = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+	s = socket(ep->locaddr.ss_family, SOCK_STREAM, IPPROTO_TCP);
 	if (s == INVALID_SOCKET) {
 		rv = nni_win_error(GetLastError());
 		goto fail;
@@ -598,7 +543,7 @@ nni_win_tcp_con_finish(nni_win_event *evt, nni_aio *aio)
 	s     = ep->s;
 	ep->s = INVALID_SOCKET;
 
-	// The socket was already registere with the IOCP.
+	// The socket was already registered with the IOCP.
 
 	if (((rv = evt->status) != 0) ||
 	    ((rv = nni_win_tcp_pipe_init(&pipe, s)) != 0)) {
@@ -621,8 +566,15 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 	SOCKADDR_STORAGE bss;
 	int              len;
 	int              rv;
+	int              family;
 
-	s = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
+	if (ep->loclen > 0) {
+		family = ep->locaddr.ss_family;
+	} else {
+		family = ep->remaddr.ss_family;
+	}
+
+	s = socket(family, SOCK_STREAM, IPPROTO_TCP);
 	if (s == INVALID_SOCKET) {
 		evt->status = nni_win_error(GetLastError());
 		evt->count  = 0;
@@ -632,7 +584,7 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 	nni_win_tcp_sockinit(s);
 
 	// Windows ConnectEx requires the socket to be bound first.
-	if (ep->loclen != 0) {
+	if (ep->loclen > 0) {
 		bss = ep->locaddr;
 		len = ep->loclen;
 	} else {
@@ -644,6 +596,7 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 		evt->status = nni_win_error(GetLastError());
 		evt->count  = 0;
 		closesocket(s);
+
 		return (1);
 	}
 	// Register with the I/O completion port so we can get the

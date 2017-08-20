@@ -485,18 +485,24 @@ nni_ipc_ep_fini(void *arg)
 static int
 nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 {
-	nni_ipc_ep *ep;
-	int         rv;
+	nni_ipc_ep * ep;
+	int          rv;
+	nni_sockaddr sa;
 
 	if ((strlen(url) > NNG_MAXADDRLEN - 1) ||
 	    (strncmp(url, "ipc://", strlen("ipc://")) != 0)) {
 		return (NNG_EADDRINVAL);
 	}
 
+	sa.s_un.s_path.sa_family = NNG_AF_IPC;
+	(void) snprintf(sa.s_un.s_path.sa_path, sizeof(sa.s_un.s_path.sa_path),
+	    "%s", url + strlen("ipc://"));
+
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_plat_ipc_ep_init(&ep->iep, url, mode)) != 0) {
+	url += strlen("ipc://");
+	if ((rv = nni_plat_ipc_ep_init(&ep->iep, &sa, mode)) != 0) {
 		NNI_FREE_STRUCT(ep);
 		return (rv);
 	}

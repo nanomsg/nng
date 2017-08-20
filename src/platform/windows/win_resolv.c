@@ -104,91 +104,65 @@ nni_win_resolv_task(void *arg)
 	struct addrinfo      hints;
 	struct addrinfo *    results;
 	struct addrinfo *    probe;
-	int                  i, rv;
+	int                  rv;
 
 	results = NULL;
 
-	switch (item->family) {
-	case AF_INET:
-	case AF_INET6:
-	case AF_UNSPEC:
-		// We treat these all as IP addresses.  The service and the
-		// host part are split.
-		memset(&hints, 0, sizeof(hints));
-		if (item->passive) {
-			hints.ai_flags |= AI_PASSIVE;
-		}
-		hints.ai_flags |= AI_ADDRCONFIG;
-		hints.ai_protocol = item->proto;
-		hints.ai_family   = item->family;
-		if (item->family == AF_INET6) {
-			hints.ai_flags |= AI_V4MAPPED;
-		}
-
-		rv = getaddrinfo(item->name, item->serv, &hints, &results);
-		if (rv != 0) {
-			rv = nni_win_gai_errno(rv);
-			break;
-		}
-
-		// Count the total number of results.
-		aio->a_naddrs = 0;
-		for (probe = results; probe != NULL; probe = probe->ai_next) {
-			// Only count v4 and v6 addresses.
-			switch (probe->ai_addr->sa_family) {
-			case AF_INET:
-			case AF_INET6:
-				aio->a_naddrs++;
-				break;
-			}
-		}
-		// If the only results were not IPv4 or IPv6...
-		if (aio->a_naddrs == 0) {
-			rv = NNG_EADDRINVAL;
-			break;
-		}
-		aio->a_addrs = NNI_ALLOC_STRUCTS(aio->a_addrs, aio->a_naddrs);
-		if (aio->a_addrs == NULL) {
-			aio->a_naddrs = 0;
-			rv            = NNG_ENOMEM;
-			break;
-		}
-		i = 0;
-		for (probe = results; probe != NULL; probe = probe->ai_next) {
-			struct sockaddr_in * sin;
-			struct sockaddr_in6 *sin6;
-			nng_sockaddr *       sa = &aio->a_addrs[i];
-
-			switch (probe->ai_addr->sa_family) {
-			case AF_INET:
-				sin = (void *) probe->ai_addr;
-				sa->s_un.s_in.sa_family = NNG_AF_INET;
-				sa->s_un.s_in.sa_port   = sin->sin_port;
-				sa->s_un.s_in.sa_addr   = sin->sin_addr.s_addr;
-				i++;
-				break;
-			case AF_INET6:
-				sin6 = (void *) probe->ai_addr;
-				sa->s_un.s_in6.sa_family = NNG_AF_INET6;
-				sa->s_un.s_in6.sa_port   = sin6->sin6_port;
-				memcpy(sa->s_un.s_in6.sa_addr,
-				    sin6->sin6_addr.s6_addr, 16);
-				i++;
-				break;
-			default:
-				// Other address types are ignored.
-				break;
-			}
-		}
-		// Resolution complete!
-		rv = 0;
-		break;
-
-	default:
-		// Some other family requested we don't understand.
-		rv = NNG_ENOTSUP;
-		break;
+	// We treat these all as IP addresses.  The service and the
+	// host part are split.
+	memset(&hints, 0, sizeof(hints));
+	if (item->passive) {
+		hints.ai_flags |= AI_PASSIVE;
 	}
+	hints.ai_flags |= AI_ADDRCONFIG;
+	hints.ai_protocol = item->proto;
+	hints.ai_family   = item->family;
+	if (item->family == AF_INET6) {
+		hints.ai_flags |= AI_V4MAPPED;
+	}
+
+	rv = getaddrinfo(item->name, item->serv, &hints, &results);
+	if (rv != 0) {
+		rv = nni_win_gai_errno(rv);
+		goto done;
+	}
+
+	// We only take the first matching address.  Presumably
+	// DNS load balancing is done by the resolver/server.
+
+	rv = NNG_EADDRINVAL;
+	for (probe = results; probe != NULL; probe = probe->ai_next) {
+		if ((probe->ai_addr->sa_family == AF_INET) ||
+		    (probe->ai_addr->sa_family == AF_INET6)) {
+			break;
+		}
+	}
+
+	if (probe != NULL) {
+		struct sockaddr_in * sin;
+		struct sockaddr_in6 *sin6;
+		nng_sockaddr *       sa = aio->a_addr;
+
+		switch (probe->ai_addr->sa_family) {
+		case AF_INET:
+			rv                      = 0;
+			sin                     = (void *) probe->ai_addr;
+			sa->s_un.s_in.sa_family = NNG_AF_INET;
+			sa->s_un.s_in.sa_port   = sin->sin_port;
+			sa->s_un.s_in.sa_addr   = sin->sin_addr.s_addr;
+			break;
+		case AF_INET6:
+			rv                       = 0;
+			sin6                     = (void *) probe->ai_addr;
+			sa->s_un.s_in6.sa_family = NNG_AF_INET6;
+			sa->s_un.s_in6.sa_port   = sin6->sin6_port;
+			memcpy(sa->s_un.s_in6.sa_addr, sin6->sin6_addr.s6_addr,
+			    16);
+			break;
+		}
+	}
+
+done:
 
 	if (results != NULL) {
 		freeaddrinfo(results);
@@ -204,35 +178,37 @@ nni_win_resolv_ip(const char *host, const char *serv, int passive, int family,
 {
 	nni_win_resolv_item *item;
 	int                  rv;
+	int                  fam;
 
-	if ((aio->a_naddrs != 0) && (aio->a_addrs != NULL)) {
-		NNI_FREE_STRUCTS(aio->a_addrs, aio->a_naddrs);
+	switch (family) {
+	case NNG_AF_INET:
+		fam = AF_INET;
+		break;
+	case NNG_AF_INET6:
+		fam = AF_INET6;
+		break;
+	case NNG_AF_UNSPEC:
+		fam = AF_UNSPEC;
+		break;
+	default:
+		nni_aio_finish_error(aio, NNG_ENOTSUP);
+		return;
 	}
+
 	if ((item = NNI_ALLOC_STRUCT(item)) == NULL) {
-		nni_aio_finish(aio, NNG_ENOMEM, 0);
+		nni_aio_finish_error(aio, NNG_ENOMEM);
 		return;
 	}
 
 	nni_task_init(
 	    nni_win_resolv_tq, &item->task, nni_win_resolv_task, item);
 
-	switch (family) {
-	case NNG_AF_INET:
-		item->family = AF_INET;
-		break;
-	case NNG_AF_INET6:
-		item->family = AF_INET6;
-		break;
-	case NNG_AF_UNSPEC:
-		item->family = AF_UNSPEC;
-		break;
-	}
-	// NB: host and serv must remain valid until this is completed.
 	item->passive = passive;
 	item->name    = host;
 	item->serv    = serv;
 	item->proto   = proto;
 	item->aio     = aio;
+	item->family  = fam;
 
 	nni_mtx_lock(&nni_win_resolv_mtx);
 	// If we were stopped, we're done...

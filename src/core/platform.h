@@ -192,8 +192,10 @@ extern void nni_plat_fini(void);
 typedef struct nni_plat_tcp_ep   nni_plat_tcp_ep;
 typedef struct nni_plat_tcp_pipe nni_plat_tcp_pipe;
 
-// nni_plat_tcp_ep_init creates a new endpoint associated with the url.
-extern int nni_plat_tcp_ep_init(nni_plat_tcp_ep **, const char *, int);
+// nni_plat_tcp_ep_init creates a new endpoint associated with the local
+// and remote addresses.
+extern int nni_plat_tcp_ep_init(
+    nni_plat_tcp_ep **, const nni_sockaddr *, const nni_sockaddr *, int);
 
 // nni_plat_tcp_ep_fini closes the endpoint and releases resources.
 extern void nni_plat_tcp_ep_fini(nni_plat_tcp_ep *);
@@ -240,6 +242,11 @@ extern void nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *, nni_aio *);
 extern void nni_plat_tcp_resolv(
     const char *, const char *, int, int, nni_aio *);
 
+// nni_plat_udp_resolve is just like nni_plat_tcp_resolve, but looks up
+// service names using UDP.
+extern void nni_plat_udp_resolv(
+    const char *, const char *, int, int, nni_aio *);
+
 //
 // IPC (UNIX Domain Sockets & Named Pipes) Support.
 //
@@ -248,7 +255,7 @@ typedef struct nni_plat_ipc_ep   nni_plat_ipc_ep;
 typedef struct nni_plat_ipc_pipe nni_plat_ipc_pipe;
 
 // nni_plat_ipc_ep_init creates a new endpoint associated with the url.
-extern int nni_plat_ipc_ep_init(nni_plat_ipc_ep **, const char *, int);
+extern int nni_plat_ipc_ep_init(nni_plat_ipc_ep **, const nni_sockaddr *, int);
 
 // nni_plat_ipc_ep_fini closes the endpoint and releases resources.
 extern void nni_plat_ipc_ep_fini(nni_plat_ipc_ep *);

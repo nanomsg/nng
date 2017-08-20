@@ -22,6 +22,7 @@ struct nni_plat_ipc_pipe {
 
 struct nni_plat_ipc_ep {
 	char          path[256];
+	nni_sockaddr  addr;
 	int           mode;
 	int           started;
 	HANDLE        p;       // accept side only
@@ -205,15 +206,13 @@ nni_plat_ipc_pipe_fini(nni_plat_ipc_pipe *pipe)
 }
 
 int
-nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
+nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 {
 	const char *     path;
 	nni_plat_ipc_ep *ep;
 
-	if (strncmp(url, "ipc://", strlen("ipc://")) != 0) {
-		return (NNG_EADDRINVAL);
-	}
-	path = url + strlen("ipc://");
+	path = sa->s_un.s_path.sa_path;
+
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -222,6 +221,7 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
 	ep->mode = mode;
 	NNI_LIST_NODE_INIT(&ep->node);
 
+	ep->addr = *sa;
 	(void) snprintf(ep->path, sizeof(ep->path), "\\\\.\\pipe\\%s", path);
 
 	*epp = ep;

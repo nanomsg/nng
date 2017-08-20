@@ -97,8 +97,8 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 		// We need to store the address information.
 		// It is incumbent on the AIO submitter to supply
 		// storage for the address.
-		if (aio->a_naddrs > 0) {
-			nni_posix_sockaddr2nn(&aio->a_addrs[0], (void *) &ss);
+		if (aio->a_addr != NULL) {
+			nni_posix_sockaddr2nn(aio->a_addr, (void *) &ss);
 		}
 
 		nni_aio_finish(aio, 0, rv);
@@ -117,16 +117,16 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 	int                     len;
 	nni_list *              q = &udp->udp_sendq;
 
-	// While we're able to recv, do so.
+	// While we're able to send, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
 		nni_list_remove(q, aio);
 
-		if (aio->a_naddrs < 1) {
-			// No incoming address?
+		if (aio->a_addr == NULL) {
+			// No outgoing address?
 			nni_aio_finish_error(aio, NNG_EADDRINVAL);
 			return;
 		}
-		len = nni_posix_nn2sockaddr(&ss, &aio->a_addrs[0]);
+		len = nni_posix_nn2sockaddr(&ss, aio->a_addr);
 		if (len < 0) {
 			nni_aio_finish_error(aio, NNG_EADDRINVAL);
 			return;

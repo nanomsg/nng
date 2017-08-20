@@ -41,7 +41,6 @@ struct nni_posix_epdesc {
 	struct sockaddr_storage remaddr;
 	socklen_t               loclen;
 	socklen_t               remlen;
-	const char *            url;
 	nni_mtx                 mtx;
 };
 
@@ -261,57 +260,6 @@ nni_posix_epdesc_close(nni_posix_epdesc *ed)
 	nni_mtx_unlock(&ed->mtx);
 }
 
-static int
-nni_posix_epdesc_parseaddr(char *pair, char **hostp, uint16_t *portp)
-{
-	char *host, *port, *end;
-	char  c;
-	int   val;
-
-	if (pair[0] == '[') {
-		host = pair + 1;
-		// IP address enclosed ... for IPv6 usually.
-		if ((end = strchr(host, ']')) == NULL) {
-			return (NNG_EADDRINVAL);
-		}
-		*end = '\0';
-		port = end + 1;
-		if (*port == ':') {
-			port++;
-		} else if (*port != '\0') {
-			return (NNG_EADDRINVAL);
-		}
-	} else {
-		host = pair;
-		port = strchr(host, ':');
-		if (port != NULL) {
-			*port = '\0';
-			port++;
-		}
-	}
-	val = 0;
-	while ((c = *port) != '\0') {
-		val *= 10;
-		if ((c >= '0') && (c <= '9')) {
-			val += (c - '0');
-		} else {
-			return (NNG_EADDRINVAL);
-		}
-		if (val > 65535) {
-			return (NNG_EADDRINVAL);
-		}
-		port++;
-	}
-	if ((strlen(host) == 0) || (strcmp(host, "*") == 0)) {
-		*hostp = NULL;
-	} else {
-		*hostp = host;
-	}
-	// Stash the port in big endian (network) byte order.
-	NNI_PUT16((uint8_t *) portp, val);
-	return (0);
-}
-
 int
 nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 {
@@ -326,6 +274,7 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 	len = ed->loclen;
 
 	if ((fd = socket(ss->ss_family, NNI_STREAM_SOCKTYPE, 0)) < 0) {
+		nni_mtx_unlock(&ed->mtx);
 		return (nni_plat_errno(errno));
 	}
 	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
@@ -444,7 +393,7 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 }
 
 int
-nni_posix_epdesc_init(nni_posix_epdesc **edp, const char *url)
+nni_posix_epdesc_init(nni_posix_epdesc **edp)
 {
 	nni_posix_epdesc *ed;
 	nni_posix_pollq * pq;
@@ -464,7 +413,6 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp, const char *url)
 	ed->node.index = 0;
 	ed->node.cb    = nni_posix_epdesc_cb;
 	ed->node.data  = ed;
-	ed->url        = url;
 
 	nni_aio_list_init(&ed->connectq);
 	nni_aio_list_init(&ed->acceptq);
@@ -477,12 +425,6 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp, const char *url)
 	}
 	*edp = ed;
 	return (0);
-}
-
-const char *
-nni_posix_epdesc_url(nni_posix_epdesc *ed)
-{
-	return (ed->url);
 }
 
 void

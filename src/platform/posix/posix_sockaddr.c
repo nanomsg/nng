@@ -15,18 +15,22 @@
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <netinet/in.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
 #include <sys/types.h>
+#include <sys/un.h>
 
 int
 nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 {
-	struct sockaddr_in *    sin;
-	struct sockaddr_in6 *   sin6;
-	const nng_sockaddr_in * nsin;
-	const nng_sockaddr_in6 *nsin6;
+	struct sockaddr_in *     sin;
+	struct sockaddr_in6 *    sin6;
+	struct sockaddr_un *     spath;
+	const nng_sockaddr_in *  nsin;
+	const nng_sockaddr_in6 * nsin6;
+	const nng_sockaddr_path *nspath;
 
 	switch (na->s_un.s_family) {
 	case NNG_AF_INET:
@@ -49,6 +53,15 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 		sin6->sin6_port   = nsin6->sa_port;
 		memcpy(sin6->sin6_addr.s6_addr, nsin6->sa_addr, 16);
 		return (sizeof(*sin6));
+
+	case NNG_AF_IPC:
+		spath  = (void *) sa;
+		nspath = &na->s_un.s_path;
+		memset(spath, 0, sizeof(*spath));
+		spath->sun_family = PF_UNIX;
+		snprintf(spath->sun_path, sizeof(spath->sun_path), "%s",
+		    nspath->sa_path);
+		return (sizeof(*spath));
 	}
 	return (-1);
 }
@@ -58,8 +71,10 @@ nni_posix_sockaddr2nn(nni_sockaddr *na, const void *sa)
 {
 	const struct sockaddr_in * sin;
 	const struct sockaddr_in6 *sin6;
+	const struct sockaddr_un * spath;
 	nng_sockaddr_in *          nsin;
 	nng_sockaddr_in6 *         nsin6;
+	nng_sockaddr_path *        nspath;
 
 	switch (((struct sockaddr *) sa)->sa_family) {
 	case AF_INET:
@@ -75,6 +90,13 @@ nni_posix_sockaddr2nn(nni_sockaddr *na, const void *sa)
 		nsin6->sa_family = NNG_AF_INET6;
 		nsin6->sa_port   = sin6->sin6_port;
 		memcpy(nsin6->sa_addr, sin6->sin6_addr.s6_addr, 16);
+		break;
+	case AF_UNIX:
+		spath             = (void *) sa;
+		nspath            = &na->s_un.s_path;
+		nspath->sa_family = NNG_AF_IPC;
+		(void) snprintf(nspath->sa_path, sizeof(nspath->sa_path), "%s",
+		    spath->sun_path);
 		break;
 	default:
 		// We should never see this - the OS should always be

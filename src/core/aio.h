@@ -50,8 +50,7 @@ struct nni_aio {
 	void *a_pipe;  // opaque pipe handle
 
 	// Resolver operations.
-	nni_sockaddr *a_addrs;
-	int           a_naddrs;
+	nni_sockaddr *a_addr;
 
 	// Provider-use fields.
 	nni_aio_cancelfn a_prov_cancel;

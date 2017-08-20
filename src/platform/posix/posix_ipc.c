@@ -36,37 +36,34 @@
 #undef sun
 #endif
 
+static int nni_plat_ipc_remove_stale(const char *path);
+
 // We alias nni_posix_pipedesc to nni_plat_ipc_pipe.
 // We alias nni_posix_epdesc to nni_plat_ipc_ep.
 
 int
-nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const char *url, int mode)
+nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 {
 	nni_posix_epdesc * ed;
 	int                rv;
 	struct sockaddr_un sun;
-	const char *       path;
 
-	if (strncmp(url, "ipc://", strlen("ipc://")) != 0) {
-		return (NNG_EADDRINVAL);
-	}
-	path = url + strlen("ipc://"); // skip the prefix.
-
-	// prepare the sockaddr_un
-	sun.sun_family = AF_UNIX;
-	if (strlen(url) >= sizeof(sun.sun_path)) {
-		return (NNG_EADDRINVAL);
-	}
-	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s", path);
-
-	if ((rv = nni_posix_epdesc_init(&ed, url)) != 0) {
+	if ((rv = nni_posix_epdesc_init(&ed)) != 0) {
 		return (rv);
 	}
 	switch (mode) {
 	case NNI_EP_MODE_DIAL:
+		nni_posix_nn2sockaddr(&sun, sa);
 		nni_posix_epdesc_set_remote(ed, &sun, sizeof(sun));
 		break;
 	case NNI_EP_MODE_LISTEN:
+
+		if ((rv = nni_plat_ipc_remove_stale(
+		         sa->s_un.s_path.sa_path)) != 0) {
+			return (rv);
+		}
+
+		nni_posix_nn2sockaddr(&sun, sa);
 		nni_posix_epdesc_set_local(ed, &sun, sizeof(sun));
 		break;
 	default:
@@ -127,17 +124,8 @@ nni_plat_ipc_remove_stale(const char *path)
 int
 nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 {
-	const char *       path;
-	nni_posix_epdesc * ed = (void *) ep;
-	struct sockaddr_un sun;
-	int                rv;
+	nni_posix_epdesc *ed = (void *) ep;
 
-	path = nni_posix_epdesc_url(ed);
-	path += strlen("ipc://");
-
-	if ((rv = nni_plat_ipc_remove_stale(path)) != 0) {
-		return (rv);
-	}
 	return (nni_posix_epdesc_listen(ed));
 }
 
