@@ -9,7 +9,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef NNG_PLATFORM_WINDOWS
 
 #include <errno.h>
 #include <stdio.h>
@@ -158,9 +158,4 @@ nni_win_error(int errnum)
 	return (NNG_ESYSERR + errnum);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_win_debug_not_used = 0;
-
-#endif // PLATFORM_WINDOWS
+#endif // NNG_PLATFORM_WINDOWS

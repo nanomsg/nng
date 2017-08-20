@@ -10,7 +10,7 @@
 // POSIX pipes.
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_PIPE
+#ifdef NNG_PLATFORM_POSIX
 
 #include <errno.h>
 
@@ -124,9 +124,4 @@ nni_plat_pipe_close(int wfd, int rfd)
 
 #endif // NNG_USE_EVENTFD
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_pipe_not_used = 0;
-
-#endif // PLATFORM_POSIX_PIPE
+#endif // NNG_PLATFORM_POSIX

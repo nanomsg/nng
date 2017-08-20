@@ -12,7 +12,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef NNG_PLATFORM_WINDOWS
 
 void *
 nni_alloc(size_t sz)
@@ -187,10 +187,5 @@ nni_plat_fini(void)
 	WSACleanup();
 	plat_inited = 0;
 }
-
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_win_thread_not_used = 0;
 
 #endif

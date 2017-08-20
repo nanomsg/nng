@@ -391,9 +391,4 @@ nni_posix_pollq_sysfini(void)
 	nni_posix_pollq_fini(&nni_posix_global_pollq);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_pollq_poll_used = 0;
-
 #endif // NNG_USE_POSIX_POLLQ_POLL

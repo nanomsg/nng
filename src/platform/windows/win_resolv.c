@@ -9,10 +9,13 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef NNG_PLATFORM_WINDOWS
 
 // Modern Windows has an asynchronous resolver, but there are problems
-// with it -- it only resolves Unicode names, and it does not support
+// with it, where looking up names in DNS can poison results for other
+// uses, because the asynchronous resolver *only* considers DNS -- ignoring
+// host file, WINS, or other naming services.  As a result, we just build
+// our own limited asynchronous using a taskq.
 
 // We use a single resolver taskq - but we allocate a few threads
 // for it to ensure that names can be looked up concurrently.  This isn't
@@ -249,6 +252,13 @@ nni_plat_tcp_resolv(
 	nni_win_resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
 }
 
+void
+nni_plat_udp_resolv(
+    const char *host, const char *serv, int family, int passive, nni_aio *aio)
+{
+	nni_win_resolv_ip(host, serv, passive, family, IPPROTO_UDP, aio);
+}
+
 int
 nni_win_resolv_sysinit(void)
 {
@@ -273,9 +283,4 @@ nni_win_resolv_sysfini(void)
 	nni_mtx_fini(&nni_win_resolv_mtx);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_win_resolv_not_used = 0;
-
-#endif // PLATFORM_WINDOWS
+#endif // NNG_PLATFORM_WINDOWS

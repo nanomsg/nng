@@ -295,9 +295,4 @@ nni_posix_resolv_sysfini(void)
 	nni_mtx_fini(&nni_posix_resolv_mtx);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_resolv_gai_not_used = 0;
-
 #endif // NNG_USE_POSIX_RESOLV_GAI

@@ -9,7 +9,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_ALLOC
+#ifdef NNG_PLATFORM_POSIX
 
 #include <stdlib.h>
 
@@ -27,9 +27,4 @@ nni_free(void *ptr, size_t size)
 	free(ptr);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_alloc_not_used = 0;
-
-#endif
+#endif // NNG_PLATFORM_POSIX

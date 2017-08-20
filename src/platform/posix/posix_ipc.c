@@ -9,7 +9,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_IPC
+#ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
 
 #include <errno.h>
@@ -177,9 +177,4 @@ nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *p, nni_aio *aio)
 	nni_posix_pipedesc_recv((void *) p, aio);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_ipc_not_used = 0;
-
-#endif // PLATFORM_POSIX_IPC
+#endif // NNG_PLATFORM_POSIX

@@ -10,7 +10,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef NNG_PLATFORM_WINDOWS
 
 #include <stdio.h>
 
@@ -593,9 +593,4 @@ nni_win_ipc_sysfini(void)
 	nni_mtx_fini(&worker->mtx);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_win_ipc_not_used = 0;
-
-#endif // PLATFORM_WINDOWS
+#endif // NNG_PLATFORM_WINDOWS

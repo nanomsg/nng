@@ -10,11 +10,16 @@
 #include "core/nng_impl.h"
 
 #include <stdio.h>
+
 // Windows named pipes won't work for us; we *MUST* use sockets.  This is
 // a real sadness, but what can you do.  We use an anonymous socket bound
-// to localhost and a connected peer.
+// to localhost and a connected peer.  This is because folks that want to
+// use notification pipes (ugh) are expecting this to work with select(),
+// which only supports real winsock sockets.  We use an ephemeral port,
+// bound to localhost; some care is taken to prevent other applications on
+// the same host from messing us up by accessing the same port.
 
-#ifdef PLATFORM_WINDOWS
+#ifdef NNG_PLATFORM_WINDOWS
 
 int
 nni_plat_pipe_open(int *wfdp, int *rfdp)
@@ -138,9 +143,4 @@ nni_plat_pipe_close(int wfd, int rfd)
 	closesocket((SOCKET) rfd);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_win_pipe_not_used = 0;
-
-#endif // PLATFORM_WINDOWS
+#endif // NNG_PLATFORM_WINDOWS

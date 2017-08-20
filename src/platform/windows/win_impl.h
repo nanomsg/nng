@@ -11,7 +11,7 @@
 #ifndef PLATFORM_WIN_IMPL_H
 #define PLATFORM_WIN_IMPL_H
 
-#ifdef PLATFORM_WINDOWS
+#ifdef NNG_PLATFORM_WINDOWS
 
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -96,6 +96,6 @@ extern void nni_win_tcp_sysfini(void);
 extern int  nni_win_resolv_sysinit(void);
 extern void nni_win_resolv_sysfini(void);
 
-#endif // PLATFORM_WINDOWS
+#endif // NNG_PLATFORM_WINDOWS
 
 #endif // PLATFORM_WIN_IMPL_H

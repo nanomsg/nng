@@ -11,7 +11,7 @@
 #ifndef PLATFORM_POSIX_POLLQ_H
 #define PLATFORM_POSIX_POLLQ_H
 
-#ifdef PLATFORM_POSIX
+#ifdef NNG_PLATFORM_POSIX
 
 // This file defines structures we will use for emulating asynchronous I/O
 // on POSIX.  POSIX lacks the support for callback based asynchronous I/O
@@ -46,6 +46,6 @@ extern void nni_posix_pollq_remove(nni_posix_pollq_node *);
 extern void nni_posix_pollq_arm(nni_posix_pollq_node *, int);
 extern void nni_posix_pollq_disarm(nni_posix_pollq_node *, int);
 
-#endif // PLATFORM_POSIX
+#endif // NNG_PLATFORM_POSIX
 
 #endif // PLATFORM_POSIX_POLLQ_H

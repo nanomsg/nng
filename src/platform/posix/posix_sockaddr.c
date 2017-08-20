@@ -10,7 +10,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_SOCKADDR
+#ifdef NNG_PLATFORM_POSIX
 
 #include <arpa/inet.h>
 #include <fcntl.h>
@@ -85,9 +85,4 @@ nni_posix_sockaddr2nn(nni_sockaddr *na, const void *sa)
 	return (0);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_sockaddr_not_used = 0;
-
-#endif // PLATFORM_POSIX_SOCKADDR
+#endif // NNG_PLATFORM_POSIX

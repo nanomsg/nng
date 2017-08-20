@@ -12,7 +12,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_THREAD
+#ifdef NNG_PLATFORM_POSIX
 
 #include <errno.h>
 #include <fcntl.h>
@@ -511,9 +511,4 @@ nni_plat_fini(void)
 	pthread_mutex_unlock(&nni_plat_init_lock);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_thread_not_used = 0;
-
-#endif
+#endif // NNG_PLATFORM_POSIX

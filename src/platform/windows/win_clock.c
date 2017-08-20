@@ -9,7 +9,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef NNG_PLATFORM_WINDOWS
 
 nni_time
 nni_plat_clock(void)
@@ -41,9 +41,4 @@ nni_plat_usleep(nni_duration dur)
 	}
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_win_clock_not_used = 0;
-
-#endif // PLATFORM_WINDOWS
+#endif // NNG_PLATFORM_WINDOWS

@@ -10,7 +10,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_UDP
+#ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
 #include "platform/posix/posix_pollq.h"
 
@@ -322,9 +322,4 @@ nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_udp_not_used = 0;
-
-#endif // PLATFORM_POSIX_UDP
+#endif // NNG_PLATFORM_POSIX

@@ -7,8 +7,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "core/nng_impl.h"
 #include "convey.h"
+#include "core/nng_impl.h"
 #include "stubs.h"
 
 #include <string.h>
@@ -23,14 +23,13 @@ ip4tostr(void *addr)
 	static char buf[256];
 
 #ifdef _WIN32
-	return (InetNtop(AF_INET, addr, buf, sizeof (buf)));
+	return (InetNtop(AF_INET, addr, buf, sizeof(buf)));
 
 #else
-	return (inet_ntop(AF_INET, addr, buf, sizeof (buf)));
+	return (inet_ntop(AF_INET, addr, buf, sizeof(buf)));
 
 #endif
 }
-
 
 static const char *
 ip6tostr(void *addr)
@@ -38,10 +37,10 @@ ip6tostr(void *addr)
 	static char buf[256];
 
 #ifdef _WIN32
-	return (InetNtop(AF_INET6, addr, buf, sizeof (buf)));
+	return (InetNtop(AF_INET6, addr, buf, sizeof(buf)));
 
 #else
-	return (inet_ntop(AF_INET6, addr, buf, sizeof (buf)));
+	return (inet_ntop(AF_INET6, addr, buf, sizeof(buf)));
 
 #endif
 }
@@ -128,54 +127,69 @@ ip6tostr(void *addr)
 #endif
 
 TestMain("TCP Resolver", {
-	    nni_init();
+	nni_init();
 
-	    Convey("Google DNS IPv4 resolves", {
-		    nni_aio aio;
-		    const char *str;
-		    memset(&aio, 0, sizeof (aio));
-		    nni_aio_init(&aio, NULL, NULL);
-		    nni_plat_tcp_resolv("google-public-dns-a.google.com", "80", NNG_AF_INET, 1, &aio);
-		    nni_aio_wait(&aio);
-		    So(nni_aio_result(&aio) == 0);
-		    So(aio.a_naddrs == 1);
-		    So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
-		    So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
-		    str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
-		    So(strcmp(str, "8.8.8.8") == 0);
-		    nni_aio_fini(&aio);
-	    }
-	    );
-	    Convey("Numeric resolves", {
-		    nni_aio aio;
-		    const char *str;
-		    memset(&aio, 0, sizeof (aio));
-		    nni_aio_init(&aio, NULL, NULL);
-		    nni_plat_tcp_resolv("8.8.4.4", "80", NNG_AF_INET, 1, &aio);
-		    nni_aio_wait(&aio);
-		    So(nni_aio_result(&aio) == 0);
-		    So(aio.a_naddrs == 1);
-		    So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
-		    So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
-		    str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
-		    So(strcmp(str, "8.8.4.4") == 0);
-		    nni_aio_fini(&aio);
-	    });
-	    Convey("Name service resolves", {
-		    nni_aio aio;
-		    const char *str;
-		    memset(&aio, 0, sizeof (aio));
-		    nni_aio_init(&aio, NULL, NULL);
-		    nni_plat_tcp_resolv("8.8.4.4", "http", NNG_AF_INET, 1, &aio);
-		    nni_aio_wait(&aio);
-		    So(nni_aio_result(&aio) == 0);
-		    So(aio.a_naddrs == 1);
-		    So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
-		    So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
-		    str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
-		    So(strcmp(str, "8.8.4.4") == 0);
-		    nni_aio_fini(&aio);
-	    });
+	Convey("Google DNS IPv4 resolves", {
+		nni_aio     aio;
+		const char *str;
+		memset(&aio, 0, sizeof(aio));
+		nni_aio_init(&aio, NULL, NULL);
+		nni_plat_tcp_resolv("google-public-dns-a.google.com", "80",
+		    NNG_AF_INET, 1, &aio);
+		nni_aio_wait(&aio);
+		So(nni_aio_result(&aio) == 0);
+		So(aio.a_naddrs == 1);
+		So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
+		So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
+		str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
+		So(strcmp(str, "8.8.8.8") == 0);
+		nni_aio_fini(&aio);
+	});
+	Convey("Numeric v4 resolves", {
+		nni_aio     aio;
+		const char *str;
+		memset(&aio, 0, sizeof(aio));
+		nni_aio_init(&aio, NULL, NULL);
+		nni_plat_tcp_resolv("8.8.4.4", "80", NNG_AF_INET, 1, &aio);
+		nni_aio_wait(&aio);
+		So(nni_aio_result(&aio) == 0);
+		So(aio.a_naddrs == 1);
+		So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
+		So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
+		str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
+		So(strcmp(str, "8.8.4.4") == 0);
+		nni_aio_fini(&aio);
+	});
+	Convey("Numeric v6 resolves", {
+		nni_aio     aio;
+		const char *str;
+		memset(&aio, 0, sizeof(aio));
+		nni_aio_init(&aio, NULL, NULL);
+		nni_plat_tcp_resolv("::1", "80", NNG_AF_INET6, 1, &aio);
+		nni_aio_wait(&aio);
+		So(nni_aio_result(&aio) == 0);
+		So(aio.a_naddrs == 1);
+		So(aio.a_addrs[0].s_un.s_in6.sa_family == NNG_AF_INET6);
+		So(aio.a_addrs[0].s_un.s_in6.sa_port == ntohs(80));
+		str = ip6tostr(&aio.a_addrs[0].s_un.s_in6.sa_addr);
+		So(strcmp(str, "::1") == 0);
+		nni_aio_fini(&aio);
+	});
+	Convey("Name service resolves", {
+		nni_aio     aio;
+		const char *str;
+		memset(&aio, 0, sizeof(aio));
+		nni_aio_init(&aio, NULL, NULL);
+		nni_plat_tcp_resolv("8.8.4.4", "http", NNG_AF_INET, 1, &aio);
+		nni_aio_wait(&aio);
+		So(nni_aio_result(&aio) == 0);
+		So(aio.a_naddrs == 1);
+		So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
+		So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
+		str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
+		So(strcmp(str, "8.8.4.4") == 0);
+		nni_aio_fini(&aio);
+	});
 
-	    nni_fini();
-    })
+	nni_fini();
+})

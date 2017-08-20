@@ -42,7 +42,7 @@
 
 #include <time.h>
 
-#ifdef PLATFORM_POSIX
+#ifdef NNG_PLATFORM_POSIX
 
 // It should never hurt to use DEVURANDOM, since if the device does not
 // exist then we won't open it.  (Provided: it would be bad if the device
@@ -63,4 +63,4 @@
 #define NNG_USE_POSIX_POLLQ_POLL 1
 #define NNG_USE_POSIX_RESOLV_GAI 1
 
-#endif // PLATFORM_POSIX
+#endif // NNG_PLATFORM_POSIX

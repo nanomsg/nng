@@ -75,37 +75,6 @@ set (NNG_SOURCES
     core/transport.c
     core/transport.h
 
-    platform/posix/posix_impl.h
-    platform/posix/posix_config.h
-    platform/posix/posix_aio.h
-    platform/posix/posix_pollq.h
-
-    platform/posix/posix_alloc.c
-    platform/posix/posix_clock.c
-    platform/posix/posix_debug.c
-    platform/posix/posix_epdesc.c
-    platform/posix/posix_ipc.c
-    platform/posix/posix_pipe.c
-    platform/posix/posix_pipedesc.c
-    platform/posix/posix_pollq_poll.c
-    platform/posix/posix_rand.c
-    platform/posix/posix_resolv_gai.c
-    platform/posix/posix_sockaddr.c
-    platform/posix/posix_tcp.c
-    platform/posix/posix_thread.c
-    platform/posix/posix_udp.c
-
-    platform/windows/win_impl.h
-    platform/windows/win_clock.c
-    platform/windows/win_debug.c
-    platform/windows/win_iocp.c
-    platform/windows/win_ipc.c
-    platform/windows/win_net.c
-    platform/windows/win_pipe.c
-    platform/windows/win_rand.c
-    platform/windows/win_resolv.c
-    platform/windows/win_thread.c
-
     protocol/bus/bus.c
 
     protocol/pair/pair_v0.c
@@ -129,6 +98,45 @@ set (NNG_SOURCES
 
     transport/tcp/tcp.c
 )
+
+if (NNG_PLATFORM_POSIX)
+    set (NNG_SOURCES ${NNG_SOURCES}
+        platform/posix/posix_impl.h
+        platform/posix/posix_config.h
+        platform/posix/posix_aio.h
+        platform/posix/posix_pollq.h
+
+        platform/posix/posix_alloc.c
+        platform/posix/posix_clock.c
+        platform/posix/posix_debug.c
+        platform/posix/posix_epdesc.c
+        platform/posix/posix_ipc.c
+        platform/posix/posix_pipe.c
+        platform/posix/posix_pipedesc.c
+        platform/posix/posix_pollq_poll.c
+        platform/posix/posix_rand.c
+        platform/posix/posix_resolv_gai.c
+        platform/posix/posix_sockaddr.c
+        platform/posix/posix_tcp.c
+        platform/posix/posix_thread.c
+        platform/posix/posix_udp.c
+    )
+endif()
+
+if (NNG_PLATFORM_WINDOWS)
+    set (NNG_SOURCES ${NNG_SOURCES}
+        platform/windows/win_impl.h
+        platform/windows/win_clock.c
+        platform/windows/win_debug.c
+        platform/windows/win_iocp.c
+        platform/windows/win_ipc.c
+        platform/windows/win_net.c
+        platform/windows/win_pipe.c
+        platform/windows/win_rand.c
+        platform/windows/win_resolv.c
+        platform/windows/win_thread.c
+    )
+endif()
 
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src)
 

@@ -115,14 +115,17 @@ if (NNG_ENABLE_COVERAGE)
     endif()
 endif()
 
+find_package (Threads REQUIRED)
+
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
-    find_package (Threads REQUIRED)
-    add_definitions (-DPLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_LINUX)
     add_definitions (-DNNG_USE_EVENTFD)
+    set(NNG_PLATFORM_POSIX ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
-    find_package (Threads REQUIRED)
-    add_definitions (-DPLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_POSIX)
     # macOS 10.12 and later have getentropy, but the older releases
     # have ARC4_RANDOM, and that is sufficient to our needs.
     add_definitions (-DNNG_USE_ARC4_RANDOM)
@@ -130,27 +133,32 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     # macOS added some of CLOCK_MONOTONIC, but the implementation is
     # broken and unreliable, so don't use it.
     add_definitions (-DNNG_USE_CLOCKID=CLOCK_REALTIME)
+    set(NNG_PLATFORM_POSIX ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
-    find_package (Threads REQUIRED)
-    add_definitions (-DPLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_FREEBSD)
+    set(NNG_PLATFORM_POSIX ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "NetBSD")
-    find_package (Threads REQUIRED)
-    add_definitions (-DPLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_NETBSD)
+    set(NNG_PLATFORM_POSIX ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
-    find_package (Threads REQUIRED)
-    add_definitions (-DPLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_OPENBSD)
+    set(NNG_PLATFORM_POSIX ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "SunOS")
-    find_package (Threads REQUIRED)
-    add_definitions (-DPLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_SUNOS)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
-    add_definitions (-DPLATFORM_WINDOWS)
+    add_definitions (-DNNG_PLATFORM_WINDOWS)
     add_definitions (-D_CRT_SECURE_NO_WARNINGS)
     add_definitions (-D_CRT_RAND_S)
+    set(NNG_PLATFORM_WINDOWS ON)
 
     # Target Windows Vista and later
     add_definitions (-D_WIN32_WINNT=0x0600)
@@ -214,7 +222,7 @@ if (WIN32)
     endif()
 else ()
     # Unconditionally declare the following feature test macros.  These are
-    # needed for some platforms (glibc and SunOS/illumos) and should be harmless
+    # needed for some platforms (glibc and SunOS/illumos) and are harmless
     # on the others.
     add_definitions (-D_GNU_SOURCE)
     add_definitions (-D_REENTRANT)
@@ -226,25 +234,10 @@ else ()
     nng_check_lib (nsl gethostbyname NNG_HAVE_LIBNSL)
     nng_check_lib (socket socket NNG_HAVE_LIBSOCKET)
 
-#    nng_check_sym (atomic_cas_32 atomic.h NNG_HAVE_ATOMIC_SOLARIS)
     nng_check_sym (AF_UNIX sys/socket.h NNG_HAVE_UNIX_SOCKETS)
     nng_check_sym (backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
     nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
 endif ()
-
-#check_c_source_compiles ("
-#    #include <stdint.h>
-#    int main()
-#    {
-#        volatile uint32_t n = 0;
-#        __sync_fetch_and_add (&n, 1);
-#        __sync_fetch_and_sub (&n, 1);
-#        return 0;
-#    }
-#" NNG_HAVE_GCC_ATOMIC_BUILTINS)
-#if (NNG_HAVE_GCC_ATOMIC_BUILTINS)
-#    add_definitions (-DNNG_HAVE_GCC_ATOMIC_BUILTINS)
-#endif ()
 
 add_subdirectory (src)
 

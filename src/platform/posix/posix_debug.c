@@ -9,7 +9,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_DEBUG
+#ifdef NNG_PLATFORM_POSIX
 
 #include <errno.h>
 #include <stdio.h>
@@ -112,9 +112,4 @@ nni_plat_errno(int errnum)
 	return (NNG_ESYSERR + errnum);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_debug_not_used = 0;
-
-#endif // PLATFORM_POSIX_DEBUG
+#endif // NNG_PLATFORM_POSIX

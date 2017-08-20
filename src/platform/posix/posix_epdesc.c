@@ -10,7 +10,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_EPDESC
+#ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
 #include "platform/posix/posix_pollq.h"
 
@@ -524,9 +524,4 @@ nni_posix_epdesc_fini(nni_posix_epdesc *ed)
 	NNI_FREE_STRUCT(ed);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_epdesc_not_used = 0;
-
-#endif // PLATFORM_POSIX_EPDESC
+#endif // NNG_PLATFORM_POSIX

@@ -20,7 +20,7 @@ struct notifyarg {
 	nni_cv  cv;
 };
 
-#ifdef PLATFORM_POSIX
+#ifdef NNG_PLATFORM_POSIX
 #ifndef NDEBUG
 #define SYNC_FALLBACK 1
 #endif

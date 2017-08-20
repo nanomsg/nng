@@ -9,7 +9,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_TCP
+#ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
 
 #include <errno.h>
@@ -160,9 +160,4 @@ nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *p, nni_aio *aio)
 	nni_posix_pipedesc_recv((void *) p, aio);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_net_not_used = 0;
-
-#endif // PLATFORM_POSIX_TCP
+#endif // NNG_PLATFORM_POSIX

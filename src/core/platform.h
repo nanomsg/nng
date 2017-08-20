@@ -345,9 +345,9 @@ extern void nni_plat_pipe_close(int, int);
 
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.
-#if defined(PLATFORM_POSIX)
+#if defined(NNG_PLATFORM_POSIX)
 #include "platform/posix/posix_impl.h"
-#elif defined(PLATFORM_WINDOWS)
+#elif defined(NNG_PLATFORM_WINDOWS)
 #include "platform/windows/win_impl.h"
 #else
 #error "unknown platform"

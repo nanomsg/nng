@@ -10,7 +10,7 @@
 // POSIX clock stuff.
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_POSIX_RANDOM
+#ifdef NNG_PLATFORM_POSIX
 
 #include <errno.h>
 #include <fcntl.h>
@@ -21,11 +21,9 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifdef NNG_USE_GETRANDOM
+#if defined(NNG_USE_GETRANDOM)
 #include <linux/random.h>
-#endif
-
-#ifdef NNG_USE_GETENTROPY
+#elif defined(NNG_USE_GETENTROPY)
 #include <sys/random.h>
 #endif
 
@@ -70,7 +68,7 @@ nni_plat_seed_prng(void *buf, size_t bufsz)
 	}
 #endif
 
-	// As a speical extra guard, let's mixin the data from the
+	// As a special extra guard, let's mixin the data from the
 	// following system calls.  This ensures that even on the most
 	// limited of systems, we have at least *some* level of randomness.
 	// The mixing is done in a way to avoid diminishing entropy we may
@@ -86,9 +84,4 @@ nni_plat_seed_prng(void *buf, size_t bufsz)
 	}
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_posix_rand_not_used = 0;
-
-#endif // PLATFORM_POSIX_RANDOM
+#endif // NNG_PLATFORM_POSIX

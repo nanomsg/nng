@@ -10,7 +10,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef PLATFORM_WINDOWS
+#ifdef NNG_PLATFORM_WINDOWS
 
 #define NNI_WIN_IOCP_NTHREADS 4
 #include <stdio.h>
@@ -270,9 +270,4 @@ nni_win_iocp_sysfini(void)
 	nni_mtx_fini(&nni_win_iocp_mtx);
 }
 
-#else
-
-// Suppress empty symbols warnings in ranlib.
-int nni_win_iocp_not_used = 0;
-
-#endif // PLATFORM_WINDOWS
+#endif // NNG_PLATFORM_WINDOWS
