@@ -58,9 +58,12 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 		spath  = (void *) sa;
 		nspath = &na->s_un.s_path;
 		memset(spath, 0, sizeof(*spath));
+		// Make sure that the path fits!
+		if (snprintf(spath->sun_path, sizeof(spath->sun_path), "%s",
+		        nspath->sa_path) >= sizeof(spath->sun_path)) {
+			return (-1);
+		}
 		spath->sun_family = PF_UNIX;
-		snprintf(spath->sun_path, sizeof(spath->sun_path), "%s",
-		    nspath->sa_path);
 		return (sizeof(*spath));
 	}
 	return (-1);
