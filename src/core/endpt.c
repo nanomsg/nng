@@ -18,7 +18,7 @@ struct nni_ep {
 	nni_tran_ep   ep_ops;  // transport ops
 	nni_tran *    ep_tran; // transport pointer
 	void *        ep_data; // transport private
-	uint32_t      ep_id;   // endpoint id
+	uint64_t      ep_id;   // endpoint id
 	nni_list_node ep_node; // per socket list
 	nni_sock *    ep_sock;
 	char          ep_addr[NNG_MAXADDRLEN];
@@ -78,7 +78,7 @@ nni_ep_sys_fini(void)
 uint32_t
 nni_ep_id(nni_ep *ep)
 {
-	return (ep->ep_id);
+	return ((uint32_t) ep->ep_id);
 }
 
 static void

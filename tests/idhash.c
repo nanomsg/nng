@@ -15,117 +15,144 @@
 
 Main({
 	nni_init();
-	Test("General ID Hash",
-	    {
-		    int rv;
+	atexit(nni_fini);
+	Test("General ID Hash", {
+		int rv;
 
-		    Convey("Given an id hash", {
-			    nni_idhash *h = NULL;
+		Convey("Given an id hash", {
+			nni_idhash *h = NULL;
 
-			    So(nni_idhash_init(&h) == 0);
-			    So(h != NULL);
-			    So(nni_idhash_count(h) == 0);
+			So(nni_idhash_init(&h) == 0);
+			So(h != NULL);
+			So(nni_idhash_count(h) == 0);
 
-			    Reset({ nni_idhash_fini(h); });
+			Reset({ nni_idhash_fini(h); });
 
-			    Convey("We can insert an element", {
-				    char *five = "five";
-				    char *four = "four";
-				    rv         = nni_idhash_insert(h, 5, five);
-				    So(nni_idhash_count(h) == 1);
-				    So(rv == 0);
+			Convey("We can insert an element", {
+				char *five = "five";
+				char *four = "four";
+				rv         = nni_idhash_insert(h, 5, five);
+				So(nni_idhash_count(h) == 1);
+				So(rv == 0);
 
-				    Convey("And we can find it", {
-					    void *ptr;
-					    rv = nni_idhash_find(h, 5, &ptr);
-					    So(rv == 0);
-					    So(ptr == five);
-				    });
-				    Convey("We can delete it", {
-					    void *ptr;
-					    rv = nni_idhash_remove(h, 5);
-					    So(rv == 0);
-					    rv = nni_idhash_find(h, 5, &ptr);
-					    So(rv == NNG_ENOENT);
-				    });
-				    Convey("We can change the value", {
-					    void *ptr;
-					    So(nni_idhash_insert(h, 5, four) ==
-					        0);
-					    So(nni_idhash_count(h) == 1);
-					    So(nni_idhash_find(h, 5, &ptr) ==
-					        0);
-					    So(ptr == four);
-				    });
-				    Convey("We can insert a hash collision", {
-					    void *ptr;
-					    So(nni_idhash_insert(
-					           h, 13, four) == 0);
-					    So(nni_idhash_count(h) == 2);
-					    So(nni_idhash_find(h, 5, &ptr) ==
-					        0);
-					    So(ptr == five);
-					    So(nni_idhash_find(h, 13, &ptr) ==
-					        0);
-					    So(ptr == four);
-					    Convey("And delete intermediate", {
-						    So(nni_idhash_remove(
-						           h, 5) == 0);
-						    ptr = NULL;
-						    So(nni_idhash_find(
-						           h, 13, &ptr) == 0);
-						    So(ptr == four);
-					    });
-				    });
+				Convey("And we can find it", {
+					void *ptr;
+					rv = nni_idhash_find(h, 5, &ptr);
+					So(rv == 0);
+					So(ptr == five);
+				});
+				Convey("We can delete it", {
+					void *ptr;
+					rv = nni_idhash_remove(h, 5);
+					So(rv == 0);
+					rv = nni_idhash_find(h, 5, &ptr);
+					So(rv == NNG_ENOENT);
+				});
+				Convey("We can change the value", {
+					void *ptr;
+					So(nni_idhash_insert(h, 5, four) == 0);
+					So(nni_idhash_count(h) == 1);
+					So(nni_idhash_find(h, 5, &ptr) == 0);
+					So(ptr == four);
+				});
+				Convey("We can insert a hash collision", {
+					void *ptr;
+					So(nni_idhash_insert(h, 13, four) ==
+					    0);
+					So(nni_idhash_count(h) == 2);
+					So(nni_idhash_find(h, 5, &ptr) == 0);
+					So(ptr == five);
+					So(nni_idhash_find(h, 13, &ptr) == 0);
+					So(ptr == four);
+					Convey("And delete intermediate", {
+						So(nni_idhash_remove(h, 5) ==
+						    0);
+						ptr = NULL;
+						So(nni_idhash_find(
+						       h, 13, &ptr) == 0);
+						So(ptr == four);
+					});
+				});
 
-			    });
-			    Convey("We cannot find bogus values", {
-				    void *ptr;
-				    ptr = NULL;
-				    rv  = nni_idhash_find(h, 42, &ptr);
-				    So(rv == NNG_ENOENT);
-				    So(ptr == NULL);
-			    });
-		    });
-	    })
+			});
+			Convey("We cannot find bogus values", {
+				void *ptr;
+				ptr = NULL;
+				rv  = nni_idhash_find(h, 42, &ptr);
+				So(rv == NNG_ENOENT);
+				So(ptr == NULL);
+			});
 
-	    Test("Resize ID Hash", {
-		    int expect[1024];
-		    int i;
+			Convey("Range checks work", {
+				char *bad = "bad";
 
-		    for (i = 0; i < 1024; i++) {
-			    expect[i] = i;
-		    }
-		    Convey("Given an id hash", {
-			    nni_idhash *h;
+				nni_idhash_set_limits(h, 1, 10, 1);
+				So(nni_idhash_insert(h, 20, bad) ==
+				    NNG_EINVAL);
+			});
 
-			    So(nni_idhash_init(&h) == 0);
-			    So(nni_idhash_count(h) == 0);
+			Convey("64-bit hash values work", {
+				char *   huge    = "huge";
+				void *   ptr     = NULL;
+				uint64_t hugenum = 0x1234567890ULL;
 
-			    Reset({ nni_idhash_fini(h); });
+				nni_idhash_set_limits(h, 1, 1ULL << 63, 1);
+				So(nni_idhash_insert(h, hugenum, huge) == 0);
+				So(nni_idhash_find(h, hugenum, &ptr) == 0);
+				So((char *) ptr == huge);
+			});
 
-			    Convey("We can insert 1024 items", {
-				    for (i = 0; i < 1024; i++) {
-					    nni_idhash_insert(
-					        h, i, &expect[i]);
-				    }
-				    So(nni_idhash_count(h) == 1024);
+			Convey("64-bit dynvals work", {
+				char *   huge = "dynhuge";
+				void *   ptr  = NULL;
+				uint64_t id;
 
-				    Convey("We can remove them", {
-					    for (i = 0; i < 1024; i++) {
-						    nni_idhash_remove(h, i);
-					    }
-					    So(nni_idhash_count(h) == 0);
-				    });
-			    });
-		    });
-	    });
+				nni_idhash_set_limits(
+				    h, 1ULL << 32, 1ULL << 63, 1);
+				So(nni_idhash_alloc(h, &id, huge) == 0);
+				So(id > 0xffffffff);
+				So(nni_idhash_find(h, id, &ptr) == 0);
+				So((char *) ptr == huge);
+			});
+		});
+	});
+
+	Test("Resize ID Hash", {
+		int expect[1024];
+		int i;
+
+		for (i = 0; i < 1024; i++) {
+			expect[i] = i;
+		}
+		Convey("Given an id hash", {
+			nni_idhash *h;
+
+			So(nni_idhash_init(&h) == 0);
+			So(nni_idhash_count(h) == 0);
+
+			Reset({ nni_idhash_fini(h); });
+
+			Convey("We can insert 1024 items", {
+				for (i = 0; i < 1024; i++) {
+					nni_idhash_insert(h, i, &expect[i]);
+				}
+				So(nni_idhash_count(h) == 1024);
+
+				Convey("We can remove them", {
+					for (i = 0; i < 1024; i++) {
+						nni_idhash_remove(h, i);
+					}
+					So(nni_idhash_count(h) == 0);
+				});
+			});
+		});
+	});
 
 	Test("Dynamic ID generation", {
 		Convey("Given a small ID hash", {
 			nni_idhash *h;
 			int         expect[5];
-			uint32_t    id;
+			uint64_t    id;
 			int         i;
 			So(nni_idhash_init(&h) == 0);
 			Reset({ nni_idhash_fini(h); });
@@ -156,6 +183,4 @@ Main({
 			});
 		});
 	});
-
-	nni_fini();
 });

@@ -31,7 +31,7 @@ struct nni_socket {
 	nni_cv        s_cv;
 	nni_cv        s_close_cv;
 
-	uint32_t s_id;
+	uint64_t s_id;
 	uint32_t s_flags;
 	unsigned s_refcnt; // protected by global lock
 	void *   s_data;   // Protocol private
@@ -81,7 +81,7 @@ nni_free_opt(nni_sockopt *opt)
 uint32_t
 nni_sock_id(nni_sock *s)
 {
-	return (s->s_id);
+	return ((uint32_t) s->s_id);
 }
 
 // nni_sock_sendq and nni_sock_recvq are called by the protocol to obtain

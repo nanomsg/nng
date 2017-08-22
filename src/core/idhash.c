@@ -13,9 +13,9 @@
 #include <string.h>
 
 struct nni_idhash_entry {
-	uint32_t ihe_key;
-	uint32_t ihe_skips;
+	uint64_t ihe_key;
 	void *   ihe_val;
+	uint32_t ihe_skips;
 };
 
 struct nni_idhash {
@@ -25,9 +25,9 @@ struct nni_idhash {
 	size_t            ih_minload; // considers placeholders
 	size_t            ih_maxload;
 	uint32_t          ih_walkers;
-	uint32_t          ih_minval;
-	uint32_t          ih_maxval;
-	uint32_t          ih_dynval;
+	uint64_t          ih_minval;
+	uint64_t          ih_maxval;
+	uint64_t          ih_dynval;
 	nni_idhash_entry *ih_entries;
 	nni_mtx           ih_mtx;
 };
@@ -73,7 +73,7 @@ nni_idhash_fini(nni_idhash *h)
 
 void
 nni_idhash_set_limits(
-    nni_idhash *h, uint32_t minval, uint32_t maxval, uint32_t start)
+    nni_idhash *h, uint64_t minval, uint64_t maxval, uint64_t start)
 {
 	if (start < minval) {
 		start = minval;
@@ -97,7 +97,7 @@ nni_idhash_set_limits(
 #define NNI_IDHASH_NEXTPROBE(h, j) ((((j) *5) + 1) & (h->ih_cap - 1))
 
 static int
-nni_hash_find(nni_idhash *h, uint32_t id, void **valp)
+nni_hash_find(nni_idhash *h, uint64_t id, void **valp)
 {
 	uint32_t index = id & (h->ih_cap - 1);
 
@@ -119,7 +119,7 @@ nni_hash_find(nni_idhash *h, uint32_t id, void **valp)
 }
 
 int
-nni_idhash_find(nni_idhash *h, uint32_t id, void **valp)
+nni_idhash_find(nni_idhash *h, uint64_t id, void **valp)
 {
 	int rv;
 
@@ -195,11 +195,11 @@ nni_hash_resize(nni_idhash *h)
 }
 
 int
-nni_idhash_remove(nni_idhash *h, uint32_t id)
+nni_idhash_remove(nni_idhash *h, uint64_t id)
 {
-	int      rv;
-	void *   val;
-	uint32_t index;
+	int    rv;
+	void * val;
+	size_t index;
 
 	nni_mtx_lock(&h->ih_mtx);
 	// First check that it is in the table.  This may double the
@@ -240,9 +240,9 @@ nni_idhash_remove(nni_idhash *h, uint32_t id)
 }
 
 static int
-nni_hash_insert(nni_idhash *h, uint32_t id, void *val)
+nni_hash_insert(nni_idhash *h, uint64_t id, void *val)
 {
-	uint32_t index;
+	size_t index;
 
 	if ((id < h->ih_minval) || (id > h->ih_maxval)) {
 		return (NNG_EINVAL);
@@ -280,7 +280,7 @@ nni_hash_insert(nni_idhash *h, uint32_t id, void *val)
 }
 
 int
-nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
+nni_idhash_insert(nni_idhash *h, uint64_t id, void *val)
 {
 	int rv;
 
@@ -291,9 +291,9 @@ nni_idhash_insert(nni_idhash *h, uint32_t id, void *val)
 }
 
 int
-nni_idhash_alloc(nni_idhash *h, uint32_t *idp, void *val)
+nni_idhash_alloc(nni_idhash *h, uint64_t *idp, void *val)
 {
-	uint32_t id;
+	uint64_t id;
 	void *   scrap;
 	int      rv;
 	nni_mtx_lock(&h->ih_mtx);

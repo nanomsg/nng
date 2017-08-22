@@ -16,7 +16,7 @@
 // performed in the context of the protocol.
 
 struct nni_pipe {
-	uint32_t      p_id;
+	uint64_t      p_id;
 	nni_tran_pipe p_tran_ops;
 	void *        p_tran_data;
 	void *        p_proto_data;
@@ -135,7 +135,7 @@ nni_pipe_destroy(nni_pipe *p)
 uint32_t
 nni_pipe_id(nni_pipe *p)
 {
-	return (p->p_id);
+	return ((uint32_t) p->p_id);
 }
 
 void
