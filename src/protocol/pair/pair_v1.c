@@ -69,6 +69,7 @@ pair1_sock_init(void **sp, nni_sock *nsock)
 {
 	pair1_sock *s;
 	int         rv;
+	int         poly;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
@@ -82,6 +83,11 @@ pair1_sock_init(void **sp, nni_sock *nsock)
 	// Raw mode uses this.
 	nni_aio_init(&s->aio_getq, pair1_sock_getq_cb, s);
 	nni_mtx_init(&s->mtx);
+
+	if ((rv = nni_option_register("polyamorous", &poly)) != 0) {
+		pair1_sock_fini(s);
+		return (rv);
+	}
 
 	s->nsock = nsock;
 	s->raw   = 0;
@@ -393,30 +399,30 @@ pair1_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 	pair1_sock *s = arg;
 	int         rv;
 
-	nni_mtx_lock(&s->mtx);
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nni_option_lookup("raw")) {
+		nni_mtx_lock(&s->mtx);
 		if (s->started) {
 			rv = NNG_ESTATE;
 		} else {
 			rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
 		}
-		break;
-	case NNG_OPT_POLYAMOROUS:
+		nni_mtx_unlock(&s->mtx);
+	} else if (opt == nni_option_lookup("polyamorous")) {
+		nni_mtx_lock(&s->mtx);
 		if (s->started) {
 			rv = NNG_ESTATE;
 		} else {
 			rv = nni_setopt_int(&s->poly, buf, sz, 0, 1);
 		}
-		break;
-	case NNG_OPT_MAXTTL:
+		nni_mtx_unlock(&s->mtx);
+	} else if (opt == nni_option_lookup("max-ttl")) {
+		nni_mtx_lock(&s->mtx);
 		rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
-		break;
-	default:
+		nni_mtx_unlock(&s->mtx);
+	} else {
 		rv = NNG_ENOTSUP;
 	}
 
-	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
 
@@ -426,21 +432,21 @@ pair1_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	pair1_sock *s = arg;
 	int         rv;
 
-	nni_mtx_lock(&s->mtx);
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nni_option_lookup("raw")) {
+		nni_mtx_lock(&s->mtx);
 		rv = nni_getopt_int(&s->raw, buf, szp);
-		break;
-	case NNG_OPT_MAXTTL:
+		nni_mtx_unlock(&s->mtx);
+	} else if (opt == nni_option_lookup("max-ttl")) {
+		nni_mtx_lock(&s->mtx);
 		rv = nni_getopt_int(&s->ttl, buf, szp);
-		break;
-	case NNG_OPT_POLYAMOROUS:
+		nni_mtx_unlock(&s->mtx);
+	} else if (opt == nni_option_lookup("polyamorous")) {
+		nni_mtx_lock(&s->mtx);
 		rv = nni_getopt_int(&s->poly, buf, szp);
-		break;
-	default:
+		nni_mtx_unlock(&s->mtx);
+	} else {
 		rv = NNG_ENOTSUP;
 	}
-	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
 

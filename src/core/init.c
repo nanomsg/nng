@@ -21,6 +21,7 @@ nni_init_helper(void)
 	    ((rv = nni_timer_sys_init()) != 0) ||
 	    ((rv = nni_aio_sys_init()) != 0) ||
 	    ((rv = nni_random_sys_init()) != 0) ||
+	    ((rv = nni_option_sys_init()) != 0) ||
 	    ((rv = nni_sock_sys_init()) != 0) ||
 	    ((rv = nni_ep_sys_init()) != 0) ||
 	    ((rv = nni_pipe_sys_init()) != 0) ||
@@ -43,6 +44,7 @@ nni_fini(void)
 	nni_pipe_sys_fini();
 	nni_ep_sys_fini();
 	nni_sock_sys_fini();
+	nni_option_sys_fini();
 	nni_random_sys_fini();
 	nni_aio_sys_fini();
 	nni_timer_sys_fini();

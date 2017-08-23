@@ -309,6 +309,13 @@ NNG_DECL void nng_msg_set_pipe(nng_msg *, nng_pipe);
 NNG_DECL nng_pipe nng_msg_get_pipe(const nng_msg *);
 NNG_DECL int      nng_msg_getopt(nng_msg *, int, void *, size_t *);
 
+// Lookup an option by name.  This returns either the option value,
+// or -1 if the option name is unknown.
+NNG_DECL int nng_option_lookup(const char *);
+
+// Lookup an option name by id.  Returns NULL if not known.
+NNG_DECL const char *nng_option_name(int);
+
 // Pipe API. Generally pipes are only "observable" to applications, but
 // we do permit an application to close a pipe. This can be useful, for
 // example during a connection notification, to disconnect a pipe that
@@ -417,7 +424,6 @@ enum nng_opt_enum {
 	NNG_OPT_REMOTEADDR     = NNG_OPT_SOCKET(17),
 	NNG_OPT_RCVFD          = NNG_OPT_SOCKET(18),
 	NNG_OPT_SNDFD          = NNG_OPT_SOCKET(19),
-	NNG_OPT_POLYAMOROUS    = NNG_OPT_SOCKET(20),
 };
 
 // XXX: TBD: priorities, socket names, ipv4only

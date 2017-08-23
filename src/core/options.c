@@ -10,7 +10,21 @@
 
 #include "core/nng_impl.h"
 
+#include <stdio.h>
 #include <string.h>
+
+// Dynamic options.
+
+typedef struct nni_option nni_option;
+struct nni_option {
+	nni_list_node o_link;
+	char *        o_name;
+	int           o_id;
+};
+
+static nni_mtx  nni_option_lk;
+static nni_list nni_options;
+static int      nni_option_nextid;
 
 int
 nni_chkopt_usec(const void *v, size_t sz)
@@ -240,4 +254,147 @@ nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 	*szp        = sizeof(int);
 	memcpy(val, &fd->sn_rfd, sizeof(int));
 	return (0);
+}
+
+// nni_option_set_id sets the id for an option, if not already done so.
+// (Some options have hard coded values that end-user may depend upon.)
+// If the ID passed in is negative, then a new ID is allocated dynamically.
+static int
+nni_option_set_id(const char *name, int id)
+{
+	nni_option *opt;
+	int         len;
+	nni_mtx_lock(&nni_option_lk);
+	NNI_LIST_FOREACH (&nni_options, opt) {
+		if (strcmp(name, opt->o_name) == 0) {
+			nni_mtx_unlock(&nni_option_lk);
+			return (0);
+		}
+	}
+	if ((opt = NNI_ALLOC_STRUCT(opt)) == NULL) {
+		nni_mtx_unlock(&nni_option_lk);
+		return (NNG_ENOMEM);
+	}
+	len = strlen(name) + 1;
+	if ((opt->o_name = nni_alloc(len)) == NULL) {
+		nni_mtx_unlock(&nni_option_lk);
+		NNI_FREE_STRUCT(opt);
+		return (NNG_ENOMEM);
+	}
+	(void) snprintf(opt->o_name, len, "%s", name);
+	if (id < 0) {
+		id = nni_option_nextid++;
+	}
+	opt->o_id = id;
+	nni_list_append(&nni_options, opt);
+	nni_mtx_unlock(&nni_option_lk);
+	return (0);
+}
+
+int
+nni_option_lookup(const char *name)
+{
+	nni_option *opt;
+	int         id = -1;
+
+	nni_mtx_lock(&nni_option_lk);
+	NNI_LIST_FOREACH (&nni_options, opt) {
+		if (strcmp(name, opt->o_name) == 0) {
+			id = opt->o_id;
+			break;
+		}
+	}
+	nni_mtx_unlock(&nni_option_lk);
+	return (id);
+}
+
+const char *
+nni_option_name(int id)
+{
+	nni_option *opt;
+	const char *name = NULL;
+
+	nni_mtx_lock(&nni_option_lk);
+	NNI_LIST_FOREACH (&nni_options, opt) {
+		if (id == opt->o_id) {
+			name = opt->o_name;
+			break;
+		}
+	}
+	nni_mtx_unlock(&nni_option_lk);
+	return (name);
+}
+
+int
+nni_option_register(const char *name, int *idp)
+{
+	int id;
+	int rv;
+
+	// Note that if the id was already in use, we will
+	// wind up leaving a gap in the ID space.  That should
+	// be inconsequential.
+	if ((rv = nni_option_set_id(name, -1)) != 0) {
+		return (rv);
+	}
+	*idp = nni_option_lookup(name);
+	return (0);
+}
+
+int
+nni_option_sys_init(void)
+{
+	nni_mtx_init(&nni_option_lk);
+	NNI_LIST_INIT(&nni_options, nni_option, o_link);
+	nni_option_nextid = 0x10000;
+	int rv;
+
+	// Register our well-known options.
+	if (((rv = nni_option_set_id("raw", NNG_OPT_RAW)) != 0) ||
+	    ((rv = nni_option_set_id("linger", NNG_OPT_LINGER)) != 0) ||
+	    ((rv = nni_option_set_id("recv-buf", NNG_OPT_RCVBUF)) != 0) ||
+	    ((rv = nni_option_set_id("send-buf", NNG_OPT_SNDBUF)) != 0) ||
+	    ((rv = nni_option_set_id("recv-timeout", NNG_OPT_RCVTIMEO)) !=
+	        0) ||
+	    ((rv = nni_option_set_id("send-timeout", NNG_OPT_SNDTIMEO)) !=
+	        0) ||
+	    ((rv = nni_option_set_id("reconnect-time", NNG_OPT_RECONN_TIME)) !=
+	        0) ||
+	    ((rv = nni_option_set_id(
+	          "reconnect-max-time", NNG_OPT_RECONN_MAXTIME)) != 0) ||
+	    ((rv = nni_option_set_id("recv-max-size", NNG_OPT_RCVMAXSZ)) !=
+	        0) ||
+	    ((rv = nni_option_set_id("max-ttl", NNG_OPT_MAXTTL)) != 0) ||
+	    ((rv = nni_option_set_id("protocol", NNG_OPT_PROTOCOL)) != 0) ||
+	    ((rv = nni_option_set_id("subscribe", NNG_OPT_SUBSCRIBE)) != 0) ||
+	    ((rv = nni_option_set_id("unsubscribe", NNG_OPT_UNSUBSCRIBE)) !=
+	        0) ||
+	    ((rv = nni_option_set_id("survey-time", NNG_OPT_SURVEYTIME)) !=
+	        0) ||
+	    ((rv = nni_option_set_id("resend-time", NNG_OPT_RESENDTIME)) !=
+	        0) ||
+	    ((rv = nni_option_set_id("transport", NNG_OPT_TRANSPORT)) != 0) ||
+	    ((rv = nni_option_set_id("local-addr", NNG_OPT_LOCALADDR)) != 0) ||
+	    ((rv = nni_option_set_id("remote-addr", NNG_OPT_REMOTEADDR)) !=
+	        0) ||
+	    ((rv = nni_option_set_id("recv-fd", NNG_OPT_RCVFD)) != 0) ||
+	    ((rv = nni_option_set_id("send-fd", NNG_OPT_SNDFD)) != 0)) {
+		nni_option_sys_fini();
+		return (rv);
+	}
+	return (0);
+}
+
+void
+nni_option_sys_fini(void)
+{
+	if (nni_option_nextid != 0) {
+		nni_option *opt;
+		while ((opt = nni_list_first(&nni_options)) != NULL) {
+			nni_list_remove(&nni_options, opt);
+			nni_free(opt->o_name, strlen(opt->o_name) + 1);
+			NNI_FREE_STRUCT(opt);
+		}
+	}
+	nni_option_nextid = 0;
 }

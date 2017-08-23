@@ -106,8 +106,13 @@ TestMain("PAIRv1 protocol", {
 			int      rv;
 			int      i;
 			nng_msg *msg;
+			int      poly;
 
-			So(nng_setopt_int(s1, NNG_OPT_POLYAMOROUS, 1) == 0);
+			poly = nng_option_lookup("polyamorous");
+			So(poly >= 0);
+			So(nng_option_name(poly) != NULL);
+			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
+			So(nng_setopt_int(s1, poly, 1) == 0);
 
 			So(nng_setopt_int(s1, NNG_OPT_RCVBUF, 1) == 0);
 			So(nng_setopt_int(s1, NNG_OPT_SNDBUF, 1) == 0);
@@ -155,14 +160,16 @@ TestMain("PAIRv1 protocol", {
 		});
 
 		Convey("Cannot set polyamorous mode after connect", {
+			int poly;
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
+			poly = nng_option_lookup("polyamorous");
+			So(poly >= 0);
+			So(nng_option_name(poly) != NULL);
+			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
 
-			So(nng_setopt_int(s1, NNG_OPT_POLYAMOROUS, 1) ==
-			    NNG_ESTATE);
-			So(nng_setopt_int(c1, NNG_OPT_POLYAMOROUS, 1) ==
-			    NNG_ESTATE);
+			So(nng_setopt_int(s1, poly, 1) == NNG_ESTATE);
 		});
 
 		Convey("Monogamous raw mode works", {
@@ -329,12 +336,18 @@ TestMain("PAIRv1 protocol", {
 			int      v;
 			nng_pipe p1;
 			nng_pipe p2;
+			int      poly;
 
-			So(nng_getopt_int(s1, NNG_OPT_POLYAMOROUS, &v) == 0);
+			poly = nng_option_lookup("polyamorous");
+			So(poly >= 0);
+			So(nng_option_name(poly) != NULL);
+			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
+
+			So(nng_getopt_int(s1, poly, &v) == 0);
 			So(v == 0);
 
-			So(nng_setopt_int(s1, NNG_OPT_POLYAMOROUS, 1) == 0);
-			So(nng_getopt_int(s1, NNG_OPT_POLYAMOROUS, &v) == 0);
+			So(nng_setopt_int(s1, poly, 1) == 0);
+			So(nng_getopt_int(s1, poly, &v) == 0);
 			So(v == 1);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
@@ -389,8 +402,14 @@ TestMain("PAIRv1 protocol", {
 
 		Convey("Polyamorous default works", {
 			nng_msg *msg;
+			int      poly;
 
-			So(nng_setopt_int(s1, NNG_OPT_POLYAMOROUS, 1) == 0);
+			poly = nng_option_lookup("polyamorous");
+			So(poly >= 0);
+			So(nng_option_name(poly) != NULL);
+			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
+
+			So(nng_setopt_int(s1, poly, 1) == 0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
@@ -421,12 +440,18 @@ TestMain("PAIRv1 protocol", {
 			uint32_t hops;
 			nng_pipe p1;
 			nng_pipe p2;
+			int      poly;
 
-			So(nng_getopt_int(s1, NNG_OPT_POLYAMOROUS, &v) == 0);
+			poly = nng_option_lookup("polyamorous");
+			So(poly >= 0);
+			So(nng_option_name(poly) != NULL);
+			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
+
+			So(nng_getopt_int(s1, poly, &v) == 0);
 			So(v == 0);
 
-			So(nng_setopt_int(s1, NNG_OPT_POLYAMOROUS, 1) == 0);
-			So(nng_getopt_int(s1, NNG_OPT_POLYAMOROUS, &v) == 0);
+			So(nng_setopt_int(s1, poly, 1) == 0);
+			So(nng_getopt_int(s1, poly, &v) == 0);
 			So(v == 1);
 
 			v = 0;

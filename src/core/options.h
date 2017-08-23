@@ -56,4 +56,11 @@ extern int nni_chkopt_usec(const void *, size_t);
 extern int nni_chkopt_int(const void *, size_t, int, int);
 extern int nni_chkopt_size(const void *, size_t, size_t, size_t);
 
+extern int         nni_option_register(const char *, int *);
+extern int         nni_option_lookup(const char *);
+extern const char *nni_option_name(int);
+
+extern int  nni_option_sys_init(void);
+extern void nni_option_sys_fini(void);
+
 #endif // CORE_OPTIONS_H

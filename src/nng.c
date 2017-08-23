@@ -878,6 +878,18 @@ nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 	return (nni_msg_getopt(msg, opt, ptr, szp));
 }
 
+int
+nng_option_lookup(const char *name)
+{
+	return (nni_option_lookup(name));
+}
+
+const char *
+nng_option_name(int id)
+{
+	return (nni_option_name(id));
+}
+
 #if 0
 int
 nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)
