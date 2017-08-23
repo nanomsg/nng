@@ -16,5 +16,5 @@
 
 TestMain("Inproc Transport", {
 	trantest_test_all("inproc://TEST_%u");
-	nni_fini();
+	nng_fini();
 })

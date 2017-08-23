@@ -328,7 +328,6 @@ nni_option_name(int id)
 int
 nni_option_register(const char *name, int *idp)
 {
-	int id;
 	int rv;
 
 	// Note that if the id was already in use, we will

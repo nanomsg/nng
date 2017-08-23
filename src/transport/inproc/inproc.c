@@ -49,8 +49,6 @@ struct nni_inproc_pair {
 struct nni_inproc_ep {
 	char          addr[NNG_MAXADDRLEN + 1];
 	int           mode;
-	int           closed;
-	int           started;
 	nni_list_node node;
 	uint16_t      proto;
 	nni_cv        cv;
@@ -211,10 +209,8 @@ nni_inproc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 		return (NNG_ENOMEM);
 	}
 
-	ep->mode    = mode;
-	ep->closed  = 0;
-	ep->started = 0;
-	ep->proto   = nni_sock_proto(sock);
+	ep->mode  = mode;
+	ep->proto = nni_sock_proto(sock);
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -264,7 +260,6 @@ nni_inproc_ep_close(void *arg)
 	nni_aio *      aio;
 
 	nni_mtx_lock(&nni_inproc.mx);
-	ep->closed = 1;
 	if (nni_list_active(&nni_inproc.servers, ep)) {
 		nni_list_remove(&nni_inproc.servers, ep);
 	}
@@ -374,24 +369,6 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 		return;
 	}
 
-	if (nni_list_active(&ep->clients, ep)) {
-		// We already have a pending connection...
-		nni_aio_finish_error(aio, NNG_EINVAL);
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
-	if (ep->started) {
-		nni_aio_finish_error(aio, NNG_EBUSY);
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
-
-	if (ep->closed) {
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
-
 	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		nni_mtx_unlock(&nni_inproc.mx);
@@ -400,10 +377,6 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 
 	// Find a server.
 	NNI_LIST_FOREACH (&nni_inproc.servers, server) {
-		if ((server->mode != NNI_EP_MODE_LISTEN) ||
-		    (server->started == 0)) {
-			continue;
-		}
 		if (strcmp(server->addr, ep->addr) == 0) {
 			break;
 		}
@@ -428,28 +401,13 @@ nni_inproc_ep_bind(void *arg)
 	nni_inproc_ep *srch;
 	nni_list *     list = &nni_inproc.servers;
 
-	if (ep->mode != NNI_EP_MODE_LISTEN) {
-		return (NNG_EINVAL);
-	}
 	nni_mtx_lock(&nni_inproc.mx);
-	if (ep->started) {
-		nni_mtx_unlock(&nni_inproc.mx);
-		return (NNG_EBUSY);
-	}
-	if (ep->closed) {
-		nni_mtx_unlock(&nni_inproc.mx);
-		return (NNG_ECLOSED);
-	}
 	NNI_LIST_FOREACH (list, srch) {
-		if ((srch->mode != NNI_EP_MODE_LISTEN) || (!srch->started)) {
-			continue;
-		}
 		if (strcmp(srch->addr, ep->addr) == 0) {
 			nni_mtx_unlock(&nni_inproc.mx);
 			return (NNG_EADDRINUSE);
 		}
 	}
-	ep->started = 1;
 	nni_list_append(list, ep);
 	nni_mtx_unlock(&nni_inproc.mx);
 	return (0);
@@ -468,23 +426,7 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 		return;
 	}
 
-	if (ep->mode != NNI_EP_MODE_LISTEN) {
-		nni_aio_finish_error(aio, NNG_EINVAL);
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
-
 	// We are already on the master list of servers, thanks to bind.
-	if (ep->closed) {
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
-	if (!ep->started) {
-		nni_aio_finish_error(aio, NNG_ESTATE);
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
 
 	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
 		nni_aio_finish_error(aio, rv);

@@ -48,7 +48,6 @@ struct nni_tcp_pipe {
 struct nni_tcp_ep {
 	char             addr[NNG_MAXADDRLEN + 1];
 	nni_plat_tcp_ep *tep;
-	int              closed;
 	uint16_t         proto;
 	size_t           rcvmax;
 	nni_duration     linger;
@@ -630,8 +629,7 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	nni_mtx_init(&ep->mtx);
 	nni_aio_init(&ep->aio, nni_tcp_ep_cb, ep);
 
-	ep->closed = 0;
-	ep->proto  = nni_sock_proto(sock);
+	ep->proto = nni_sock_proto(sock);
 	(void) snprintf(ep->addr, sizeof(ep->addr), "%s", url);
 
 	*epp = ep;
@@ -644,7 +642,6 @@ nni_tcp_ep_close(void *arg)
 	nni_tcp_ep *ep = arg;
 
 	nni_mtx_lock(&ep->mtx);
-	ep->closed = 1;
 	nni_plat_tcp_ep_close(ep->tep);
 	nni_mtx_unlock(&ep->mtx);
 
@@ -658,11 +655,6 @@ nni_tcp_ep_bind(void *arg)
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
-	if (ep->closed) {
-		nni_mtx_unlock(&ep->mtx);
-		return (NNG_ECLOSED);
-	}
-
 	rv = nni_plat_tcp_ep_listen(ep->tep);
 	nni_mtx_unlock(&ep->mtx);
 
@@ -739,18 +731,12 @@ nni_tcp_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
 
-	if (ep->closed) {
-		nni_aio_finish(aio, NNG_ECLOSED, 0);
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-	ep->user_aio = aio;
-
 	if ((rv = nni_aio_start(aio, nni_tcp_cancel_ep, ep)) != 0) {
-		ep->user_aio = NULL;
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
+
+	ep->user_aio = aio;
 
 	nni_plat_tcp_ep_accept(ep->tep, &ep->aio);
 	nni_mtx_unlock(&ep->mtx);
@@ -767,12 +753,6 @@ nni_tcp_ep_connect(void *arg, nni_aio *aio)
 
 	// If we can't start, then its dying and we can't report either.
 	if ((rv = nni_aio_start(aio, nni_tcp_cancel_ep, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-
-	if (ep->closed) {
-		nni_aio_finish(aio, NNG_ECLOSED, 0);
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
