@@ -95,6 +95,15 @@ struct nni_proto {
 	uint32_t                  proto_flags;    // Protocol flags
 	const nni_proto_sock_ops *proto_sock_ops; // Per-socket opeations
 	const nni_proto_pipe_ops *proto_pipe_ops; // Per-pipe operations.
+
+	// proto_init, if not NULL, provides a function that initializes
+	// global values.  The main purpose of this may be to initialize
+	// protocol option values.
+	int (*proto_init)(void);
+
+	// proto_fini, if not NULL, is called at shutdown, to release
+	// any resources allocated at proto_init time.
+	void (*proto_fini)(void);
 };
 
 // We quite intentionally use a signature where the upper word is nonzero,
@@ -118,7 +127,11 @@ struct nni_proto {
 // nni_proto_open is called by the protocol to create a socket instance
 // with its ops vector.  The intent is that applications will only see
 // the single protocol-specific constructure, like nng_pair_v0_open(),
-// which should just be a thin wrapper around this.
+// which should just be a thin wrapper around this.  If the protocol has
+// not been initialized yet, this routine will do so.
 extern int nni_proto_open(nng_socket *, const nni_proto *);
+
+extern int  nni_proto_sys_init(void);
+extern void nni_proto_sys_fini(void);
 
 #endif // CORE_PROTOCOL_H

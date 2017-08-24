@@ -25,6 +25,7 @@ nni_init_helper(void)
 	    ((rv = nni_sock_sys_init()) != 0) ||
 	    ((rv = nni_ep_sys_init()) != 0) ||
 	    ((rv = nni_pipe_sys_init()) != 0) ||
+	    ((rv = nni_proto_sys_init()) != 0) ||
 	    ((rv = nni_tran_sys_init()) != 0)) {
 		nni_fini();
 	}
@@ -41,6 +42,7 @@ void
 nni_fini(void)
 {
 	nni_tran_sys_fini();
+	nni_proto_sys_fini();
 	nni_pipe_sys_fini();
 	nni_ep_sys_fini();
 	nni_sock_sys_fini();
