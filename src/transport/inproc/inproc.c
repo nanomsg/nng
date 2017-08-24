@@ -179,10 +179,9 @@ nni_inproc_pipe_peer(void *arg)
 static int
 nni_inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 {
-	nni_inproc_pipe *pipe = arg;
-	size_t           len;
-
 #if 0
+	nni_inproc_pipe *pipe = arg;
+
 	switch (option) {
 	case NNG_OPT_LOCALADDR:
 	case NNG_OPT_REMOTEADDR:

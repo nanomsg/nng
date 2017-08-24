@@ -174,7 +174,7 @@ nni_hash_resize(nni_idhash *h)
 		h->ih_maxload = 5;
 	}
 	for (i = 0; i < oldsize; i++) {
-		uint32_t index;
+		size_t index;
 		if (oldents[i].ihe_val == NULL) {
 			continue;
 		}

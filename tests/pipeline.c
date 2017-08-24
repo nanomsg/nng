@@ -79,6 +79,8 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		So(nng_dial(what, addr, NULL, 0) == 0);
 		So(nng_shutdown(what) == 0);
 
+		nng_usleep(20000);
+
 		Convey("Push can send messages, and pull can recv", {
 			nng_msg *msg;
 

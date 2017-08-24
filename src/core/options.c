@@ -263,7 +263,7 @@ static int
 nni_option_set_id(const char *name, int id)
 {
 	nni_option *opt;
-	int         len;
+	size_t      len;
 	nni_mtx_lock(&nni_option_lk);
 	NNI_LIST_FOREACH (&nni_options, opt) {
 		if (strcmp(name, opt->o_name) == 0) {

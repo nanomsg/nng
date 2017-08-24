@@ -307,6 +307,10 @@ nni_sock_destroy(nni_sock *s)
 		nni_free_opt(sopt);
 	}
 
+	// This exists to silence a false positive in helgrind.
+	nni_mtx_lock(&s->s_mx);
+	nni_mtx_unlock(&s->s_mx);
+
 	nni_ev_fini(&s->s_send_ev);
 	nni_ev_fini(&s->s_recv_ev);
 	nni_msgq_fini(s->s_urq);
@@ -764,7 +768,7 @@ nni_sock_ep_remove(nni_sock *sock, nni_ep *ep)
 	nni_mtx_lock(&sock->s_mx);
 	if (nni_list_active(&sock->s_eps, ep)) {
 		nni_list_remove(&sock->s_eps, ep);
-		if ((sock->s_closed) && (nni_list_empty(&sock->s_eps))) {
+		if ((sock->s_closing) && (nni_list_empty(&sock->s_eps))) {
 			nni_cv_wake(&sock->s_cv);
 		}
 	}

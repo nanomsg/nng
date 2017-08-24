@@ -77,10 +77,11 @@ TestMain("PUB/SUB pattern", {
 		// and the sub dial.  However, this creates a problem
 		// for our tests, since we can wind up trying to push
 		// data before the pipe is fully registered (the accept
-		// runs asynchronously.)  Doing the reverse here
-		// ensures that we won't lose data.
+		// runs asynchronously.)
 		So(nng_listen(sub, addr, NULL, 0) == 0);
 		So(nng_dial(pub, addr, NULL, 0) == 0);
+
+		nng_usleep(20000); // give time for connecting threads
 
 		Convey("Sub can subscribe", {
 			So(nng_setopt(

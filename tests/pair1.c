@@ -172,7 +172,6 @@ TestMain("PAIRv1 protocol", {
 		});
 
 		Convey("Cannot set polyamorous mode after connect", {
-			int poly;
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
