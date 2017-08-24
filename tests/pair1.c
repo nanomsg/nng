@@ -71,6 +71,7 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
+			nng_usleep(20000);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "ALPHA");
@@ -132,6 +133,7 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
+			nng_usleep(20000);
 
 			for (i = 0, rv = 0; i < 10; i++) {
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -157,6 +159,7 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
+			nng_usleep(20000);
 
 			// We choose to allow some buffering.  In reality the
 			// buffer size is just 1, and we will fail after 2.
@@ -190,6 +193,7 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
+			nng_usleep(20000);
 
 			Convey("Send/recv work", {
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -356,6 +360,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			So(nng_dial(c2, addr, NULL, 0) == 0);
+			nng_usleep(20000);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "ONE");
@@ -412,6 +417,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
 			So(nng_dial(c2, addr, NULL, 0) == 0);
+			nng_usleep(20000);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "YES");
@@ -453,6 +459,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			So(nng_dial(c2, addr, NULL, 0) == 0);
+			nng_usleep(20000);
 
 			Convey("Send/recv works", {
 				So(nng_msg_alloc(&msg, 0) == 0);
