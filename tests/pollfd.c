@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,6 +10,8 @@
 
 #include "convey.h"
 #include "nng.h"
+
+#include <string.h>
 
 #ifndef _WIN32
 #include <poll.h>
@@ -29,102 +32,120 @@
 
 #endif
 
-TestMain("Poll FDs",
-    {
+TestMain("Poll FDs", {
 
-        Convey("Given a connected pair of sockets", {
-	        nng_socket s1;
-	        nng_socket s2;
+	Convey("Option values work", {
+		int         opt;
+		const char *name;
 
-	        So(nng_pair_open(&s1) == 0);
-	        So(nng_pair_open(&s2) == 0);
-	        Reset({
-		        nng_close(s1);
-		        nng_close(s2);
-	        });
-	        So(nng_listen(s1, "inproc://yeahbaby", NULL, 0) == 0);
-	        nng_usleep(50000);
+		opt = nng_option_lookup(nng_opt_recvfd);
+		So(opt > 0);
+		So(opt == nng_optid_recvfd);
+		name = nng_option_name(opt);
+		So(name != NULL);
+		So(strcmp(name, nng_opt_recvfd) == 0);
+		opt = nng_option_lookup(nng_opt_sendfd);
+		So(opt > 0);
+		So(opt == nng_optid_sendfd);
+		name = nng_option_name(opt);
+		So(name != NULL);
+		So(strcmp(name, nng_opt_sendfd) == 0);
+	});
 
-	        So(nng_dial(s2, "inproc://yeahbaby", NULL, 0) == 0);
-	        nng_usleep(50000);
+	Convey("Given a connected pair of sockets", {
+		nng_socket s1;
+		nng_socket s2;
 
-	        Convey("We can get a recv FD", {
-		        int    fd;
-		        size_t sz;
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s1);
+			nng_close(s2);
+		});
+		So(nng_listen(s1, "inproc://yeahbaby", NULL, 0) == 0);
+		nng_usleep(50000);
 
-		        sz = sizeof(fd);
-		        So(nng_getopt(s1, NNG_OPT_RCVFD, &fd, &sz) == 0);
-		        So(fd != INVALID_SOCKET);
+		So(nng_dial(s2, "inproc://yeahbaby", NULL, 0) == 0);
+		nng_usleep(50000);
 
-		        Convey("And it is always the same fd", {
-			        int fd2;
-			        sz = sizeof(fd2);
-			        So(nng_getopt(s1, NNG_OPT_RCVFD, &fd2, &sz) ==
-			            0);
-			        So(fd2 == fd);
-		        });
+		Convey("We can get a recv FD", {
+			int    fd;
+			size_t sz;
 
-		        Convey("And they start non pollable", {
-			        struct pollfd pfd;
-			        pfd.fd      = fd;
-			        pfd.events  = POLLIN;
-			        pfd.revents = 0;
+			sz = sizeof(fd);
+			So(nng_getopt(s1, nng_optid_recvfd, &fd, &sz) == 0);
+			So(fd != INVALID_SOCKET);
 
-			        So(poll(&pfd, 1, 0) == 0);
-			        So(pfd.revents == 0);
-		        });
+			Convey("And it is always the same fd", {
+				int fd2;
+				sz = sizeof(fd2);
+				So(nng_getopt(
+				       s1, nng_optid_recvfd, &fd2, &sz) == 0);
+				So(fd2 == fd);
+			});
 
-		        Convey("But if we write they are pollable", {
-			        struct pollfd pfd;
-			        pfd.fd      = fd;
-			        pfd.events  = POLLIN;
-			        pfd.revents = 0;
+			Convey("And they start non pollable", {
+				struct pollfd pfd;
+				pfd.fd      = fd;
+				pfd.events  = POLLIN;
+				pfd.revents = 0;
 
-			        So(nng_send(s2, "kick", 5, 0) == 0);
-			        So(poll(&pfd, 1, 1000) == 1);
-			        So((pfd.revents & POLLIN) != 0);
-		        });
-	        });
+				So(poll(&pfd, 1, 0) == 0);
+				So(pfd.revents == 0);
+			});
 
-	        Convey("We can get a send FD", {
-		        int    fd;
-		        size_t sz;
+			Convey("But if we write they are pollable", {
+				struct pollfd pfd;
+				pfd.fd      = fd;
+				pfd.events  = POLLIN;
+				pfd.revents = 0;
 
-		        sz = sizeof(fd);
-		        So(nng_getopt(s1, NNG_OPT_SNDFD, &fd, &sz) == 0);
-		        So(fd != INVALID_SOCKET);
-		        So(nng_send(s1, "oops", 4, 0) == 0);
-	        });
+				So(nng_send(s2, "kick", 5, 0) == 0);
+				So(poll(&pfd, 1, 1000) == 1);
+				So((pfd.revents & POLLIN) != 0);
+			});
+		});
 
-	        Convey("Must have a big enough size", {
-		        int    fd;
-		        size_t sz;
-		        sz = 1;
-		        So(nng_getopt(s1, NNG_OPT_RCVFD, &fd, &sz) ==
-		            NNG_EINVAL);
-		        sz = 128;
-		        So(nng_getopt(s1, NNG_OPT_RCVFD, &fd, &sz) == 0);
-		        So(sz == sizeof(fd));
-	        });
-	        Convey("We cannot get a send FD for PULL", {
-		        nng_socket s3;
-		        int        fd;
-		        size_t     sz;
-		        So(nng_pull_open(&s3) == 0);
-		        Reset({ nng_close(s3); });
-		        sz = sizeof(fd);
-		        So(nng_getopt(s3, NNG_OPT_SNDFD, &fd, &sz) ==
-		            NNG_ENOTSUP);
-	        });
+		Convey("We can get a send FD", {
+			int    fd;
+			size_t sz;
 
-	        Convey("We cannot get a recv FD for PUSH", {
-		        nng_socket s3;
-		        int        fd;
-		        size_t     sz;
-		        So(nng_push_open(&s3) == 0);
-		        Reset({ nng_close(s3); });
-		        sz = sizeof(fd);
-		        So(nng_getopt(s3, NNG_OPT_RCVFD, &fd, &sz) ==
-		            NNG_ENOTSUP);
-	        });
-        }) })
+			sz = sizeof(fd);
+			So(nng_getopt(s1, nng_optid_sendfd, &fd, &sz) == 0);
+			So(fd != INVALID_SOCKET);
+			So(nng_send(s1, "oops", 4, 0) == 0);
+		});
+
+		Convey("Must have a big enough size", {
+			int    fd;
+			size_t sz;
+			sz = 1;
+			So(nng_getopt(s1, nng_optid_recvfd, &fd, &sz) ==
+			    NNG_EINVAL);
+			sz = 128;
+			So(nng_getopt(s1, nng_optid_recvfd, &fd, &sz) == 0);
+			So(sz == sizeof(fd));
+		});
+		Convey("We cannot get a send FD for PULL", {
+			nng_socket s3;
+			int        fd;
+			size_t     sz;
+			So(nng_pull_open(&s3) == 0);
+			Reset({ nng_close(s3); });
+			sz = sizeof(fd);
+			So(nng_getopt(s3, nng_optid_sendfd, &fd, &sz) ==
+			    NNG_ENOTSUP);
+		});
+
+		Convey("We cannot get a recv FD for PUSH", {
+			nng_socket s3;
+			int        fd;
+			size_t     sz;
+			So(nng_push_open(&s3) == 0);
+			Reset({ nng_close(s3); });
+			sz = sizeof(fd);
+			So(nng_getopt(s3, nng_optid_recvfd, &fd, &sz) ==
+			    NNG_ENOTSUP);
+		});
+	});
+})

@@ -52,29 +52,15 @@ openclients(nng_socket *clients, int num)
 	int      i;
 	uint64_t t;
 	for (i = 0; i < num; i++) {
-		if ((rv = nng_req_open(&clients[i])) != 0) {
-			printf("open #%d: %s\n", i, nng_strerror(rv));
+		t = 100000; // 100ms
+		nng_socket c;
+		if (((rv = nng_req_open(&c)) != 0) ||
+		    ((rv = nng_setopt_usec(c, nng_optid_recvtimeo, t)) != 0) ||
+		    ((rv = nng_setopt_usec(c, nng_optid_sendtimeo, t)) != 0) ||
+		    ((rv = nng_dial(c, addr, NULL, 0)) != 0)) {
 			return (rv);
 		}
-		t  = 100000; // 100ms
-		rv = nng_setopt(clients[i], NNG_OPT_RCVTIMEO, &t, sizeof(t));
-		if (rv != 0) {
-			printf(
-			    "setopt(RCVTIMEO) #%d: %s\n", i, nng_strerror(rv));
-			return (rv);
-		}
-		t  = 100000; // 100ms
-		rv = nng_setopt(clients[i], NNG_OPT_SNDTIMEO, &t, sizeof(t));
-		if (rv != 0) {
-			printf(
-			    "setopt(SNDTIMEO) #%d: %s\n", i, nng_strerror(rv));
-			return (rv);
-		}
-		rv = nng_dial(clients[i], addr, NULL, 0);
-		if (rv != 0) {
-			printf("dial #%d: %s\n", i, nng_strerror(rv));
-			return (rv);
-		}
+		clients[i] = c;
 	}
 	return (0);
 }
@@ -88,23 +74,15 @@ transact(nng_socket *clients, int num)
 
 	for (i = 0; i < num; i++) {
 
-		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
-			break;
-		}
-
-		if ((rv = nng_sendmsg(clients[i], msg, 0)) != 0) {
-			break;
-		}
-
-		msg = NULL;
-		if ((rv = nng_recvmsg(clients[i], &msg, 0)) != 0) {
+		if (((rv = nng_msg_alloc(&msg, 0)) != 0) ||
+		    ((rv = nng_sendmsg(clients[i], msg, 0)) != 0) ||
+		    ((rv = nng_recvmsg(clients[i], &msg, 0)) != 0)) {
+			// We may leak a message, but this is an
+			// error case anyway.
 			break;
 		}
 		nng_msg_free(msg);
 		msg = NULL;
-	}
-	if (msg != NULL) {
-		nng_msg_free(msg);
 	}
 	return (rv);
 }
@@ -112,7 +90,6 @@ transact(nng_socket *clients, int num)
 Main({
 	nng_socket *clients;
 	int *       results;
-	int         depth = 256;
 
 	atexit(stop);
 
@@ -120,8 +97,8 @@ Main({
 	results = calloc(nclients, sizeof(int));
 
 	if ((nng_rep_open(&rep) != 0) ||
-	    (nng_setopt(rep, NNG_OPT_RCVBUF, &depth, sizeof(depth)) != 0) ||
-	    (nng_setopt(rep, NNG_OPT_SNDBUF, &depth, sizeof(depth)) != 0) ||
+	    (nng_setopt_int(rep, nng_optid_recvbuf, 256) != 0) ||
+	    (nng_setopt_int(rep, nng_optid_sendbuf, 256) != 0) ||
 	    (nng_listen(rep, addr, NULL, 0) != 0) ||
 	    (nng_thread_create(&server, serve, NULL) != 0)) {
 		fprintf(stderr, "Unable to set up server!\n");

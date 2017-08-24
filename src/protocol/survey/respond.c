@@ -348,14 +348,13 @@ static int
 nni_resp_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_resp_sock *psock = arg;
-	int            rv;
+	int            rv    = NNG_ENOTSUP;
 	int            oldraw;
 
-	switch (opt) {
-	case NNG_OPT_MAXTTL:
+	if (opt == nng_optid_maxttl) {
 		rv = nni_setopt_int(&psock->ttl, buf, sz, 1, 255);
-		break;
-	case NNG_OPT_RAW:
+
+	} else if (opt == nng_optid_raw) {
 		oldraw = psock->raw;
 		rv     = nni_setopt_int(&psock->raw, buf, sz, 0, 1);
 		if (oldraw != psock->raw) {
@@ -365,10 +364,8 @@ nni_resp_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 				nni_sock_senderr(psock->nsock, NNG_ESTATE);
 			}
 		}
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
+
 	return (rv);
 }
 
@@ -376,17 +373,12 @@ static int
 nni_resp_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_resp_sock *psock = arg;
-	int            rv;
+	int            rv    = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_MAXTTL:
+	if (opt == nng_optid_maxttl) {
 		rv = nni_getopt_int(&psock->ttl, buf, szp);
-		break;
-	case NNG_OPT_RAW:
+	} else if (opt == nng_optid_raw) {
 		rv = nni_getopt_int(&psock->raw, buf, szp);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }

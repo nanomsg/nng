@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -11,6 +12,9 @@
 #include "nng.h"
 
 #include <string.h>
+
+extern const char *nng_opt_req_resendtime;
+extern int         nng_optid_req_resendtime;
 
 TestMain("REQ/REP pattern", {
 	int         rv;
@@ -25,6 +29,22 @@ TestMain("REQ/REP pattern", {
 		Convey("Protocols match", {
 			So(nng_protocol(req) == NNG_PROTO_REQ);
 			So(nng_peer(req) == NNG_PROTO_REP);
+		});
+
+		Convey("Resend time option id works", {
+			int         opt;
+			const char *name;
+			opt = nng_option_lookup(nng_opt_req_resendtime);
+			So(opt >= 0);
+			So(opt == nng_optid_req_resendtime);
+			name = nng_option_name(opt);
+			So(name != NULL);
+			So(strcmp(name, nng_opt_req_resendtime) == 0);
+
+			// Set timeout.
+			So(nng_setopt_usec(req, opt, 10000) == 0);
+			// Check invalid size
+			So(nng_setopt(req, opt, name, 1) == NNG_EINVAL);
 		});
 
 		Convey("Recv with no send fails", {
@@ -52,6 +72,11 @@ TestMain("REQ/REP pattern", {
 			rv = nng_sendmsg(rep, msg, 0);
 			So(rv == NNG_ESTATE);
 			nng_msg_free(msg);
+		});
+
+		Convey("Cannot set resend time", {
+			So(nng_setopt_usec(rep, nng_optid_req_resendtime,
+			       100) == NNG_ENOTSUP);
 		});
 	});
 
@@ -115,8 +140,8 @@ TestMain("REQ/REP pattern", {
 			nng_close(req);
 		});
 
-		So(nng_setopt_usec(req, NNG_OPT_RESENDTIME, retry) == 0);
-		So(nng_setopt_int(req, NNG_OPT_SNDBUF, 16) == 0);
+		So(nng_setopt_usec(req, nng_optid_req_resendtime, retry) == 0);
+		So(nng_setopt_int(req, nng_optid_sendbuf, 16) == 0);
 
 		So(nng_msg_alloc(&abc, 0) == 0);
 		So(nng_msg_append(abc, "abc", 4) == 0);

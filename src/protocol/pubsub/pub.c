@@ -266,14 +266,10 @@ static int
 nni_pub_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_pub_sock *pub = arg;
-	int           rv;
+	int           rv  = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nng_optid_raw) {
 		rv = nni_setopt_int(&pub->raw, buf, sz, 0, 1);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }
@@ -282,14 +278,10 @@ static int
 nni_pub_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_pub_sock *pub = arg;
-	int           rv;
+	int           rv  = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nng_optid_raw) {
 		rv = nni_getopt_int(&pub->raw, buf, szp);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }

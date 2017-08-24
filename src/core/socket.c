@@ -362,17 +362,17 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	if (((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
 	    ((rv = nni_msgq_init(&s->s_urq, 0)) != 0) ||
 	    ((rv = s->s_sock_ops.sock_init(&s->s_data, s)) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_LINGER, &s->s_linger,
+	    ((rv = nni_sock_setopt(s, nng_optid_linger, &s->s_linger,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_SNDTIMEO, &s->s_sndtimeo,
+	    ((rv = nni_sock_setopt(s, nng_optid_sendtimeo, &s->s_sndtimeo,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_RCVTIMEO, &s->s_rcvtimeo,
+	    ((rv = nni_sock_setopt(s, nng_optid_recvtimeo, &s->s_rcvtimeo,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_RECONN_TIME, &s->s_reconn,
+	    ((rv = nni_sock_setopt(s, nng_optid_reconnmint, &s->s_reconn,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_RECONN_MAXTIME, &s->s_reconnmax,
+	    ((rv = nni_sock_setopt(s, nng_optid_reconnmaxt, &s->s_reconnmax,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_RCVMAXSZ, &s->s_rcvmaxsz,
+	    ((rv = nni_sock_setopt(s, nng_optid_recvmaxsz, &s->s_rcvmaxsz,
 	          sizeof(size_t))) != 0)) {
 		nni_sock_destroy(s);
 		return (rv);
@@ -807,26 +807,18 @@ nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
 
 	// Some options do not go down to transports.  Handle them
 	// directly.
-	switch (opt) {
-	case NNG_OPT_RECONN_TIME:
+	if (opt == nng_optid_reconnmint) {
 		rv = nni_setopt_usec(&s->s_reconn, val, size);
-		break;
-	case NNG_OPT_RECONN_MAXTIME:
+	} else if (opt == nng_optid_reconnmaxt) {
 		rv = nni_setopt_usec(&s->s_reconnmax, val, size);
-		break;
-	case NNG_OPT_SNDBUF:
+	} else if (opt == nng_optid_sendbuf) {
 		rv = nni_setopt_buf(s->s_uwq, val, size);
-		break;
-	case NNG_OPT_RCVBUF:
+	} else if (opt == nng_optid_recvbuf) {
 		rv = nni_setopt_buf(s->s_urq, val, size);
-		break;
-	case NNG_OPT_SNDFD:
-	case NNG_OPT_RCVFD:
-	case NNG_OPT_LOCALADDR:
-	case NNG_OPT_REMOTEADDR:
+	} else if ((opt == nng_optid_sendfd) || (opt == nng_optid_recvfd) ||
+	    (opt == nng_optid_locaddr) || (opt == nng_optid_remaddr)) {
 		// these options can be read, but cannot be set
 		rv = NNG_EINVAL;
-		break;
 	}
 
 	nni_mtx_unlock(&s->s_mx);
@@ -845,21 +837,14 @@ nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
 	// check was found, or even if a transport rejected one of the
 	// settings.
 	if ((rv == NNG_ENOTSUP) || (rv == 0)) {
-		switch (opt) {
-		case NNG_OPT_LINGER:
+		if ((opt == nng_optid_linger) ||
+		    (opt == nng_optid_sendtimeo) ||
+		    (opt == nng_optid_recvtimeo)) {
 			rv = nni_chkopt_usec(val, size);
-			break;
-		case NNG_OPT_SNDTIMEO:
-			rv = nni_chkopt_usec(val, size);
-			break;
-		case NNG_OPT_RCVTIMEO:
-			rv = nni_chkopt_usec(val, size);
-			break;
-		case NNG_OPT_RCVMAXSZ:
+		} else if (opt == nng_optid_recvmaxsz) {
 			// just a sanity test on the size; it also ensures that
 			// a size can be set even with no transport configured.
 			rv = nni_chkopt_size(val, size, 0, NNI_MAXSZ);
-			break;
 		}
 	}
 
@@ -913,16 +898,13 @@ nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
 	// For some options, which also have an impact on the socket
 	// behavior, we save a local value.  Note that the transport
 	// will already have had a chance to veto this.
-	switch (opt) {
-	case NNG_OPT_LINGER:
+
+	if (opt == nng_optid_linger) {
 		rv = nni_setopt_usec(&s->s_linger, val, size);
-		break;
-	case NNG_OPT_SNDTIMEO:
+	} else if (opt == nng_optid_sendtimeo) {
 		rv = nni_setopt_usec(&s->s_sndtimeo, val, size);
-		break;
-	case NNG_OPT_RCVTIMEO:
+	} else if (opt == nng_optid_recvtimeo) {
 		rv = nni_setopt_usec(&s->s_rcvtimeo, val, size);
-		break;
 	}
 
 	if (rv == 0) {
@@ -965,26 +947,19 @@ nni_sock_getopt(nni_sock *s, int opt, void *val, size_t *szp)
 
 	// Options that are handled by socket core, and never
 	// passed down.
-	switch (opt) {
-	case NNG_OPT_RECONN_TIME:
-		rv = nni_getopt_usec(&s->s_reconn, val, szp);
-		break;
-	case NNG_OPT_RECONN_MAXTIME:
-		rv = nni_getopt_usec(&s->s_reconnmax, val, szp);
-		break;
-	case NNG_OPT_SNDBUF:
+	if (opt == nng_optid_sendbuf) {
 		rv = nni_getopt_buf(s->s_uwq, val, szp);
-		break;
-	case NNG_OPT_RCVBUF:
+	} else if (opt == nng_optid_recvbuf) {
 		rv = nni_getopt_buf(s->s_urq, val, szp);
-		break;
-	case NNG_OPT_SNDFD:
+	} else if (opt == nng_optid_sendfd) {
 		rv = nni_getopt_fd(s, &s->s_send_fd, NNG_EV_CAN_SND, val, szp);
-		break;
-	case NNG_OPT_RCVFD:
+	} else if (opt == nng_optid_recvfd) {
 		rv = nni_getopt_fd(s, &s->s_recv_fd, NNG_EV_CAN_RCV, val, szp);
-		break;
-	default:
+	} else if (opt == nng_optid_reconnmint) {
+		rv = nni_getopt_usec(&s->s_reconn, val, szp);
+	} else if (opt == nng_optid_reconnmaxt) {
+		rv = nni_getopt_usec(&s->s_reconnmax, val, szp);
+	} else {
 		NNI_LIST_FOREACH (&s->s_options, sopt) {
 			if (sopt->opt == opt) {
 				size_t sz = sopt->sz;
@@ -997,7 +972,6 @@ nni_sock_getopt(nni_sock *s, int opt, void *val, size_t *szp)
 				break;
 			}
 		}
-		break;
 	}
 	nni_mtx_unlock(&s->s_mx);
 	return (rv);

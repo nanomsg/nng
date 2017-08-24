@@ -83,35 +83,35 @@ TestMain("PUB/SUB pattern", {
 		So(nng_dial(pub, addr, NULL, 0) == 0);
 
 		Convey("Sub can subscribe", {
-			So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "ABC", 3) == 0);
-			So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "", 0) == 0);
+			So(nng_setopt(
+			       sub, nng_optid_sub_subscribe, "ABC", 3) == 0);
+			So(nng_setopt(sub, nng_optid_sub_subscribe, "", 0) ==
+			    0);
 			Convey("Unsubscribe works", {
-				So(nng_setopt(sub, NNG_OPT_UNSUBSCRIBE, "ABC",
-				       3) == 0);
-				So(nng_setopt(
-				       sub, NNG_OPT_UNSUBSCRIBE, "", 0) == 0);
+				So(nng_setopt(sub, nng_optid_sub_unsubscribe,
+				       "ABC", 3) == 0);
+				So(nng_setopt(sub, nng_optid_sub_unsubscribe,
+				       "", 0) == 0);
 
-				So(nng_setopt(sub, NNG_OPT_UNSUBSCRIBE, "",
-				       0) == NNG_ENOENT);
-				So(nng_setopt(sub, NNG_OPT_UNSUBSCRIBE,
+				So(nng_setopt(sub, nng_optid_sub_unsubscribe,
+				       "", 0) == NNG_ENOENT);
+				So(nng_setopt(sub, nng_optid_sub_unsubscribe,
 				       "HELLO", 0) == NNG_ENOENT);
 			});
 		});
 
 		Convey("Pub cannot subscribe", {
-			So(nng_setopt(pub, NNG_OPT_SUBSCRIBE, "", 0) ==
+			So(nng_setopt(pub, nng_optid_sub_subscribe, "", 0) ==
 			    NNG_ENOTSUP);
 		});
 
 		Convey("Subs can receive from pubs", {
 			nng_msg *msg;
-			uint64_t rtimeo;
 
-			So(nng_setopt(sub, NNG_OPT_SUBSCRIBE, "/some/",
+			So(nng_setopt(sub, nng_optid_sub_subscribe, "/some/",
 			       strlen("/some/")) == 0);
-			rtimeo = 50000; // 50ms
-			So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo,
-			       sizeof(rtimeo)) == 0);
+			So(nng_setopt_usec(sub, nng_optid_recvtimeo, 90000) ==
+			    0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "/some/like/it/hot");
@@ -139,10 +139,9 @@ TestMain("PUB/SUB pattern", {
 
 		Convey("Subs without subsciptions don't receive", {
 
-			uint64_t rtimeo = 50000; // 50ms
 			nng_msg *msg;
-			So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo,
-			       sizeof(rtimeo)) == 0);
+			So(nng_setopt_usec(sub, nng_optid_recvtimeo, 90000) ==
+			    0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "/some/don't/like/it");
@@ -152,14 +151,11 @@ TestMain("PUB/SUB pattern", {
 
 		Convey("Subs in raw receive", {
 
-			uint64_t rtimeo = 50000; // 500ms
-			int      raw    = 1;
 			nng_msg *msg;
 
-			So(nng_setopt(sub, NNG_OPT_RCVTIMEO, &rtimeo,
-			       sizeof(rtimeo)) == 0);
-			So(nng_setopt(sub, NNG_OPT_RAW, &raw, sizeof(raw)) ==
+			So(nng_setopt_usec(sub, nng_optid_recvtimeo, 90000) ==
 			    0);
+			So(nng_setopt_int(sub, nng_optid_raw, 1) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "/some/like/it/raw");

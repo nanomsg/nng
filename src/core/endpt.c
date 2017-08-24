@@ -320,7 +320,8 @@ nni_ep_tmo_start(nni_ep *ep)
 	// have a statistically perfect distribution with the modulo of
 	// the random number, but this really doesn't matter.
 
-	ep->ep_tmo_aio.a_expire = nni_clock() + (nni_random() % backoff);
+	ep->ep_tmo_aio.a_expire =
+	    nni_clock() + (backoff ? nni_random() % backoff : 0);
 	nni_aio_start(&ep->ep_tmo_aio, nni_ep_tmo_cancel, ep);
 }
 

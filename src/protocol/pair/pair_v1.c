@@ -25,9 +25,9 @@ static void pair1_pipe_getq_cb(void *);
 static void pair1_pipe_putq_cb(void *);
 static void pair1_pipe_fini(void *);
 
-static int pair1_opt_poly   = -1;
-static int pair1_opt_maxttl = -1;
-static int pair1_opt_raw    = -1;
+// These are exposed as external names for external consumers.
+int         nng_optid_pair1_poly;
+const char *nng_opt_pair1_poly = "pair1-polyamorous";
 
 // pair1_sock is our per-socket protocol private structure.
 struct pair1_sock {
@@ -400,10 +400,10 @@ pair1_sock_close(void *arg)
 static int
 pair1_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
-	pair1_sock *s = arg;
-	int         rv;
+	pair1_sock *s  = arg;
+	int         rv = NNG_ENOTSUP;
 
-	if (opt == pair1_opt_raw) {
+	if (opt == nng_optid_raw) {
 		nni_mtx_lock(&s->mtx);
 		if (s->started) {
 			rv = NNG_ESTATE;
@@ -411,7 +411,11 @@ pair1_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 			rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
 		}
 		nni_mtx_unlock(&s->mtx);
-	} else if (opt == pair1_opt_poly) {
+	} else if (opt == nng_optid_maxttl) {
+		nni_mtx_lock(&s->mtx);
+		rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
+		nni_mtx_unlock(&s->mtx);
+	} else if (opt == nng_optid_pair1_poly) {
 		nni_mtx_lock(&s->mtx);
 		if (s->started) {
 			rv = NNG_ESTATE;
@@ -419,12 +423,6 @@ pair1_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 			rv = nni_setopt_int(&s->poly, buf, sz, 0, 1);
 		}
 		nni_mtx_unlock(&s->mtx);
-	} else if (opt == pair1_opt_maxttl) {
-		nni_mtx_lock(&s->mtx);
-		rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
-		nni_mtx_unlock(&s->mtx);
-	} else {
-		rv = NNG_ENOTSUP;
 	}
 
 	return (rv);
@@ -433,23 +431,21 @@ pair1_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 static int
 pair1_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
-	pair1_sock *s = arg;
-	int         rv;
+	pair1_sock *s  = arg;
+	int         rv = NNG_ENOTSUP;
 
-	if (opt == pair1_opt_raw) {
+	if (opt == nng_optid_raw) {
 		nni_mtx_lock(&s->mtx);
 		rv = nni_getopt_int(&s->raw, buf, szp);
 		nni_mtx_unlock(&s->mtx);
-	} else if (opt == pair1_opt_maxttl) {
+	} else if (opt == nng_optid_maxttl) {
 		nni_mtx_lock(&s->mtx);
 		rv = nni_getopt_int(&s->ttl, buf, szp);
 		nni_mtx_unlock(&s->mtx);
-	} else if (opt == pair1_opt_poly) {
+	} else if (opt == nng_optid_pair1_poly) {
 		nni_mtx_lock(&s->mtx);
 		rv = nni_getopt_int(&s->poly, buf, szp);
 		nni_mtx_unlock(&s->mtx);
-	} else {
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }
@@ -457,19 +453,15 @@ pair1_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 static void
 pair1_fini(void)
 {
-	pair1_opt_poly   = -1;
-	pair1_opt_raw    = -1;
-	pair1_opt_maxttl = -1;
+	nng_optid_pair1_poly = -1;
 }
 
 static int
 pair1_init(void)
 {
 	int rv;
-	if (((rv = nni_option_register("polyamorous", &pair1_opt_poly)) !=
-	        0) ||
-	    ((rv = nni_option_register("raw", &pair1_opt_raw)) != 0) ||
-	    ((rv = nni_option_register("max-ttl", &pair1_opt_maxttl)) != 0)) {
+	if ((rv = nni_option_register(
+	         nng_opt_pair1_poly, &nng_optid_pair1_poly)) != 0) {
 		pair1_fini();
 		return (rv);
 	}

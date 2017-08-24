@@ -65,10 +65,10 @@ static void nni_tcp_ep_cb(void *arg);
 static int
 nni_tcp_tran_chkopt(int o, const void *data, size_t sz)
 {
-	switch (o) {
-	case NNG_OPT_RCVMAXSZ:
+	if (o == nng_optid_recvmaxsz) {
 		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
-	case NNG_OPT_LINGER:
+	}
+	if (o == nng_optid_linger) {
 		return (nni_chkopt_usec(data, sz));
 	}
 	return (NNG_ENOTSUP);
@@ -766,45 +766,39 @@ nni_tcp_ep_connect(void *arg, nni_aio *aio)
 static int
 nni_tcp_ep_setopt(void *arg, int opt, const void *v, size_t sz)
 {
-	int         rv;
+	int         rv = NNG_ENOTSUP;
 	nni_tcp_ep *ep = arg;
 
-	nni_mtx_lock(&ep->mtx);
-	switch (opt) {
-	case NNG_OPT_RCVMAXSZ:
+	if (opt == nng_optid_recvmaxsz) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ);
-		break;
-	case NNG_OPT_LINGER:
+		nni_mtx_unlock(&ep->mtx);
+
+	} else if (opt == nng_optid_linger) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nni_setopt_usec(&ep->linger, v, sz);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
-		break;
+		nni_mtx_unlock(&ep->mtx);
 	}
-	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }
 
 static int
 nni_tcp_ep_getopt(void *arg, int opt, void *v, size_t *szp)
 {
-	int         rv;
+	int         rv = NNG_ENOTSUP;
 	nni_tcp_ep *ep = arg;
 
-	nni_mtx_lock(&ep->mtx);
-	switch (opt) {
-	case NNG_OPT_RCVMAXSZ:
+	if (opt == nng_optid_recvmaxsz) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nni_getopt_size(&ep->rcvmax, v, szp);
-		break;
-	case NNG_OPT_LINGER:
+		nni_mtx_unlock(&ep->mtx);
+
+	} else if (opt == nng_optid_linger) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nni_getopt_usec(&ep->linger, v, szp);
-		break;
-	default:
-		// XXX: add address properties
-		rv = NNG_ENOTSUP;
-		break;
+		nni_mtx_unlock(&ep->mtx);
 	}
-	nni_mtx_unlock(&ep->mtx);
+	// XXX: add address properties
 	return (rv);
 }
 

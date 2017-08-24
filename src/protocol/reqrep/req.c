@@ -243,24 +243,21 @@ static int
 nni_req_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_req_sock *req = arg;
-	int           rv;
+	int           rv  = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_RESENDTIME:
+	if (opt == nng_optid_req_resendtime) {
 		rv = nni_setopt_usec(&req->retry, buf, sz);
-		break;
-	case NNG_OPT_RAW:
+
+	} else if (opt == nng_optid_raw) {
 		rv = nni_setopt_int(&req->raw, buf, sz, 0, 1);
 		if (rv == 0) {
 			nni_sock_recverr(req->sock, req->raw ? 0 : NNG_ESTATE);
 		}
-		break;
-	case NNG_OPT_MAXTTL:
+
+	} else if (opt == nng_optid_maxttl) {
 		rv = nni_setopt_int(&req->ttl, buf, sz, 1, 255);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
+
 	return (rv);
 }
 
@@ -268,21 +265,18 @@ static int
 nni_req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_req_sock *req = arg;
-	int           rv;
+	int           rv  = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_RESENDTIME:
+	if (opt == nng_optid_req_resendtime) {
 		rv = nni_getopt_usec(&req->retry, buf, szp);
-		break;
-	case NNG_OPT_RAW:
+
+	} else if (opt == nng_optid_raw) {
 		rv = nni_getopt_int(&req->raw, buf, szp);
-		break;
-	case NNG_OPT_MAXTTL:
+
+	} else if (opt == nng_optid_maxttl) {
 		rv = nni_getopt_int(&req->ttl, buf, szp);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
+
 	return (rv);
 }
 

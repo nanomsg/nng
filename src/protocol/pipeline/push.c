@@ -192,14 +192,10 @@ static int
 nni_push_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_push_sock *push = arg;
-	int            rv;
+	int            rv   = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nng_optid_raw) {
 		rv = nni_setopt_int(&push->raw, buf, sz, 0, 1);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }
@@ -208,14 +204,10 @@ static int
 nni_push_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_push_sock *push = arg;
-	int            rv;
+	int            rv   = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nng_optid_raw) {
 		rv = nni_getopt_int(&push->raw, buf, szp);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }

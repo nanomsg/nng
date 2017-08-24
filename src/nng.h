@@ -403,29 +403,50 @@ NNG_DECL int nng_respondent0_open(nng_socket *);
 #define NNG_OPT_SOCKET(c) (c)
 #define NNG_OPT_TRANSPORT_OPT(t, c) (0x10000 | ((t) << 16) | (c))
 
-enum nng_opt_enum {
-	NNG_OPT_RAW            = NNG_OPT_SOCKET(0),
-	NNG_OPT_LINGER         = NNG_OPT_SOCKET(1),
-	NNG_OPT_RCVBUF         = NNG_OPT_SOCKET(2),
-	NNG_OPT_SNDBUF         = NNG_OPT_SOCKET(3),
-	NNG_OPT_RCVTIMEO       = NNG_OPT_SOCKET(4),
-	NNG_OPT_SNDTIMEO       = NNG_OPT_SOCKET(5),
-	NNG_OPT_RECONN_TIME    = NNG_OPT_SOCKET(6),
-	NNG_OPT_RECONN_MAXTIME = NNG_OPT_SOCKET(7),
-	NNG_OPT_RCVMAXSZ       = NNG_OPT_SOCKET(8),
-	NNG_OPT_MAXTTL         = NNG_OPT_SOCKET(9),
-	NNG_OPT_PROTOCOL       = NNG_OPT_SOCKET(10),
-	NNG_OPT_SUBSCRIBE      = NNG_OPT_SOCKET(11),
-	NNG_OPT_UNSUBSCRIBE    = NNG_OPT_SOCKET(12),
-	NNG_OPT_SURVEYTIME     = NNG_OPT_SOCKET(13),
-	NNG_OPT_RESENDTIME     = NNG_OPT_SOCKET(14),
-	NNG_OPT_TRANSPORT      = NNG_OPT_SOCKET(15),
-	NNG_OPT_LOCALADDR      = NNG_OPT_SOCKET(16),
-	NNG_OPT_REMOTEADDR     = NNG_OPT_SOCKET(17),
-	NNG_OPT_RCVFD          = NNG_OPT_SOCKET(18),
-	NNG_OPT_SNDFD          = NNG_OPT_SOCKET(19),
-};
+extern const char *nng_opt_raw;
+extern const char *nng_opt_linger;
+extern const char *nng_opt_recvbuf;
+extern const char *nng_opt_sendbuf;
+extern const char *nng_opt_recvtimeo;
+extern const char *nng_opt_sendtimeo;
+extern const char *nng_opt_recvmaxsz;
+extern const char *nng_opt_reconnmint;
+extern const char *nng_opt_reconnmaxt;
+extern const char *nng_opt_maxttl;
+extern const char *nng_opt_protocol;
+extern const char *nng_opt_transport;
+extern const char *nng_opt_recvfd;
+extern const char *nng_opt_sendfd;
+extern const char *nng_opt_locaddr;
+extern const char *nng_opt_remaddr;
+extern const char *nng_opt_req_resendtime;
+extern const char *nng_opt_sub_subscribe;
+extern const char *nng_opt_sub_unsubscribe;
+extern const char *nng_opt_surveyor_surveytime;
 
+extern int nng_optid_raw;
+extern int nng_optid_linger;
+extern int nng_optid_recvbuf;
+extern int nng_optid_sendbuf;
+extern int nng_optid_recvtimeo;
+extern int nng_optid_sendtimeo;
+extern int nng_optid_recvmaxsz;
+extern int nng_optid_reconnmint;
+extern int nng_optid_reconnmaxt;
+extern int nng_optid_maxttl;
+extern int nng_optid_protocol;
+extern int nng_optid_transport;
+extern int nng_optid_recvfd;
+extern int nng_optid_sendfd;
+extern int nng_optid_locaddr;
+extern int nng_optid_remaddr;
+
+// These protocol specific options may not be valid until a socket of
+// the given protocol is opened!
+extern int nng_optid_req_resendtime;
+extern int nng_optid_sub_subscribe;
+extern int nng_optid_sub_unsubscribe;
+extern int nng_optid_surveyor_surveytime;
 // XXX: TBD: priorities, socket names, ipv4only
 
 // Statistics.  These are for informational purposes only, and subject

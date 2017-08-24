@@ -231,11 +231,9 @@ pair0_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 	pair0_sock *s = arg;
 	int         rv;
 
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nng_optid_raw) {
 		rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
-		break;
-	default:
+	} else {
 		rv = NNG_ENOTSUP;
 	}
 	return (rv);
@@ -247,11 +245,9 @@ pair0_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	pair0_sock *s = arg;
 	int         rv;
 
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nng_optid_raw) {
 		rv = nni_getopt_int(&s->raw, buf, szp);
-		break;
-	default:
+	} else {
 		rv = NNG_ENOTSUP;
 	}
 	return (rv);

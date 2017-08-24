@@ -881,12 +881,14 @@ nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 int
 nng_option_lookup(const char *name)
 {
+	(void) nni_init();
 	return (nni_option_lookup(name));
 }
 
 const char *
 nng_option_name(int id)
 {
+	(void) nni_init();
 	return (nni_option_name(id));
 }
 
@@ -990,3 +992,49 @@ nng_thread_destroy(void *arg)
 
 	NNI_FREE_STRUCT(thr);
 }
+
+// Constant option definitions.  These are for well-known options,
+// so that the vast majority of consumers don't have to look these up.
+
+const char *nng_opt_raw        = "raw";
+const char *nng_opt_linger     = "linger";
+const char *nng_opt_recvbuf    = "recv-buffer";
+const char *nng_opt_sendbuf    = "send-buffer";
+const char *nng_opt_recvtimeo  = "recv-timeout";
+const char *nng_opt_sendtimeo  = "send-timeout";
+const char *nng_opt_recvmaxsz  = "recv-size-max";
+const char *nng_opt_reconnmint = "reconnect-time-min";
+const char *nng_opt_reconnmaxt = "reconnect-time-min";
+const char *nng_opt_maxttl     = "ttl-max";
+const char *nng_opt_protocol   = "protocol";
+const char *nng_opt_transport  = "transport";
+const char *nng_opt_recvfd     = "recv-fd";
+const char *nng_opt_sendfd     = "send-fd";
+const char *nng_opt_locaddr    = "local-address";
+const char *nng_opt_remaddr    = "remote-address";
+// Well known protocol options.
+const char *nng_opt_req_resendtime      = "req:resend-time";
+const char *nng_opt_sub_subscribe       = "sub:subscribe";
+const char *nng_opt_sub_unsubscribe     = "sub:unsubscribe";
+const char *nng_opt_surveyor_surveytime = "surveyor:survey-time";
+
+int nng_optid_raw;
+int nng_optid_linger;
+int nng_optid_recvbuf;
+int nng_optid_sendbuf;
+int nng_optid_recvtimeo;
+int nng_optid_sendtimeo;
+int nng_optid_recvmaxsz;
+int nng_optid_reconnmint;
+int nng_optid_reconnmaxt;
+int nng_optid_maxttl;
+int nng_optid_protocol;
+int nng_optid_transport;
+int nng_optid_recvfd;
+int nng_optid_sendfd;
+int nng_optid_locaddr;
+int nng_optid_remaddr;
+int nng_optid_req_resendtime;
+int nng_optid_sub_subscribe;
+int nng_optid_sub_unsubscribe;
+int nng_optid_surveyor_surveytime;

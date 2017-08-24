@@ -251,20 +251,14 @@ static int
 nni_sub_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_sub_sock *sub = arg;
-	int           rv;
+	int           rv  = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nng_optid_raw) {
 		rv = nni_setopt_int(&sub->raw, buf, sz, 0, 1);
-		break;
-	case NNG_OPT_SUBSCRIBE:
+	} else if (opt == nng_optid_sub_subscribe) {
 		rv = nni_sub_subscribe(sub, buf, sz);
-		break;
-	case NNG_OPT_UNSUBSCRIBE:
+	} else if (opt == nng_optid_sub_unsubscribe) {
 		rv = nni_sub_unsubscribe(sub, buf, sz);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }
@@ -273,14 +267,10 @@ static int
 nni_sub_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_sub_sock *sub = arg;
-	int           rv;
+	int           rv  = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_RAW:
+	if (opt == nng_optid_raw) {
 		rv = nni_getopt_int(&sub->raw, buf, szp);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }

@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -63,7 +64,7 @@ TestMain("Socket Operations", {
 
 			now = nng_clock();
 			So(now > 0);
-			So(nng_setopt_usec(s1, NNG_OPT_RCVTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, nng_optid_recvtimeo, to) == 0);
 			So(nng_recvmsg(s1, &msg, 0) == NNG_ETIMEDOUT);
 			So(msg == NULL);
 			So(nng_clock() >= (now + to));
@@ -87,7 +88,7 @@ TestMain("Socket Operations", {
 			So(msg != NULL);
 			now = nng_clock();
 
-			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, nng_optid_sendtimeo, to) == 0);
 			So(nng_sendmsg(s1, msg, 0) == NNG_ETIMEDOUT);
 			So(nng_clock() >= (now + to));
 			So(nng_clock() < (now + (to * 2)));
@@ -99,17 +100,17 @@ TestMain("Socket Operations", {
 			int64_t v  = 0;
 			size_t  sz;
 
-			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, nng_optid_sendtimeo, to) == 0);
 
 			Convey("Read only options handled properly", {
-				So(nng_setopt_int(s1, NNG_OPT_RCVFD, 0) ==
+				So(nng_setopt_int(s1, nng_optid_recvfd, 0) ==
 				    NNG_EINVAL);
-				So(nng_setopt_int(s1, NNG_OPT_SNDFD, 0) ==
+				So(nng_setopt_int(s1, nng_optid_sendfd, 0) ==
 				    NNG_EINVAL);
-				So(nng_setopt(s1, NNG_OPT_LOCALADDR, "a", 1) ==
+				So(nng_setopt(s1, nng_optid_locaddr, "a", 1) ==
 				    NNG_EINVAL);
-				So(nng_setopt(s1, NNG_OPT_REMOTEADDR, "a",
-				       1) == NNG_EINVAL);
+				So(nng_setopt(s1, nng_optid_remaddr, "a", 1) ==
+				    NNG_EINVAL);
 			});
 
 			Convey("We can apply options before endpoint", {
@@ -119,51 +120,51 @@ TestMain("Socket Operations", {
 				    addr, "ipc:///tmp/lopt_%u");
 
 				So(nng_setopt_size(
-				       s1, NNG_OPT_RCVMAXSZ, 543) == 0);
+				       s1, nng_optid_recvmaxsz, 543) == 0);
 				So(nng_listener_create(&l, s1, addr) == 0);
 				So(nng_listener_getopt_size(
-				       l, NNG_OPT_RCVMAXSZ, &sz) == 0);
+				       l, nng_optid_recvmaxsz, &sz) == 0);
 				So(sz == 543);
 
 				Convey("Endpoint option can be overridden", {
-					So(nng_listener_setopt_size(
-					       l, NNG_OPT_RCVMAXSZ, 678) == 0);
-					So(nng_listener_getopt_size(
-					       l, NNG_OPT_RCVMAXSZ, &sz) == 0);
+					So(nng_listener_setopt_size(l,
+					       nng_optid_recvmaxsz, 678) == 0);
+					So(nng_listener_getopt_size(l,
+					       nng_optid_recvmaxsz, &sz) == 0);
 					So(sz == 678);
 					So(nng_getopt_size(s1,
-					       NNG_OPT_RCVMAXSZ, &sz) == 0);
+					       nng_optid_recvmaxsz, &sz) == 0);
 					So(sz == 543);
 				});
 
 				Convey("And socket overrides again", {
 					So(nng_setopt_size(s1,
-					       NNG_OPT_RCVMAXSZ, 911) == 0);
-					So(nng_listener_getopt_size(
-					       l, NNG_OPT_RCVMAXSZ, &sz) == 0);
+					       nng_optid_recvmaxsz, 911) == 0);
+					So(nng_listener_getopt_size(l,
+					       nng_optid_recvmaxsz, &sz) == 0);
 					So(sz == 911);
 				});
 			});
 			Convey("Short size is not copied", {
 				sz = 0;
-				So(nng_getopt(s1, NNG_OPT_SNDTIMEO, &v, &sz) ==
-				    0);
+				So(nng_getopt(
+				       s1, nng_optid_sendtimeo, &v, &sz) == 0);
 				So(sz == sizeof(v));
 				So(v == 0);
 				sz = 0;
-				So(nng_getopt(
-				       s1, NNG_OPT_RECONN_TIME, &v, &sz) == 0);
+				So(nng_getopt(s1, nng_optid_reconnmint, &v,
+				       &sz) == 0);
 
 				So(v == 0);
-				So(nng_getopt(s1, NNG_OPT_RECONN_MAXTIME, &v,
+				So(nng_getopt(s1, nng_optid_reconnmaxt, &v,
 				       &sz) == 0);
 				So(v == 0);
 			});
 
 			Convey("Correct size is copied", {
 				sz = sizeof(v);
-				So(nng_getopt(s1, NNG_OPT_SNDTIMEO, &v, &sz) ==
-				    0);
+				So(nng_getopt(
+				       s1, nng_optid_sendtimeo, &v, &sz) == 0);
 				So(sz == sizeof(v));
 				So(v == 1234);
 			});
@@ -171,48 +172,47 @@ TestMain("Socket Operations", {
 			Convey("Short size buf is not copied", {
 				int l = 5;
 				sz    = 0;
-				So(nng_getopt(s1, NNG_OPT_RCVBUF, &l, &sz) ==
-				    0);
+				So(nng_getopt(
+				       s1, nng_optid_recvbuf, &l, &sz) == 0);
 				So(sz == sizeof(l));
 				So(l == 5);
 			});
 
 			Convey("Insane buffer size fails", {
-				So(nng_setopt_int(s1, NNG_OPT_RCVBUF,
+				So(nng_setopt_int(s1, nng_optid_recvbuf,
 				       0x100000) == NNG_EINVAL);
-				So(nng_setopt_int(s1, NNG_OPT_RCVBUF, -200) ==
-				    NNG_EINVAL);
-
+				So(nng_setopt_int(s1, nng_optid_recvbuf,
+				       -200) == NNG_EINVAL);
 			});
 
 			Convey("Negative timeout fails", {
-				So(nng_setopt_usec(s1, NNG_OPT_RCVTIMEO, -5) ==
-				    NNG_EINVAL);
+				So(nng_setopt_usec(s1, nng_optid_recvtimeo,
+				       -5) == NNG_EINVAL);
 			});
 
 			Convey("Short timeout fails", {
 				to = 0;
 				sz = sizeof(to) - 1;
-				So(nng_setopt(s1, NNG_OPT_RCVTIMEO, &to, sz) ==
-				    NNG_EINVAL);
-				So(nng_setopt(s1, NNG_OPT_RECONN_TIME, &to,
+				So(nng_setopt(s1, nng_optid_recvtimeo, &to,
+				       sz) == NNG_EINVAL);
+				So(nng_setopt(s1, nng_optid_reconnmint, &to,
 				       sz) == NNG_EINVAL);
 			});
 
 			Convey("Bogus raw fails", {
-				So(nng_setopt_int(s1, NNG_OPT_RAW, 42) ==
+				So(nng_setopt_int(s1, nng_optid_raw, 42) ==
 				    NNG_EINVAL);
-				So(nng_setopt_int(s1, NNG_OPT_RAW, -42) ==
+				So(nng_setopt_int(s1, nng_optid_raw, -42) ==
 				    NNG_EINVAL);
-				So(nng_setopt_int(s1, NNG_OPT_RAW, 0) == 0);
-				So(nng_setopt(s1, NNG_OPT_RAW, "a", 1) ==
+				So(nng_setopt_int(s1, nng_optid_raw, 0) == 0);
+				So(nng_setopt(s1, nng_optid_raw, "a", 1) ==
 				    NNG_EINVAL);
 			});
 
 			Convey("Unsupported options fail", {
 				char *crap = "crap";
-				So(nng_setopt(s1, NNG_OPT_SUBSCRIBE, crap,
-				       strlen(crap)) == NNG_ENOTSUP);
+				So(nng_setopt(s1, nng_optid_sub_subscribe,
+				       crap, strlen(crap)) == NNG_ENOTSUP);
 			});
 
 			Convey("Bogus sizes fail", {
@@ -220,30 +220,30 @@ TestMain("Socket Operations", {
 				int    i;
 
 				So(nng_setopt_size(
-				       s1, NNG_OPT_RCVMAXSZ, 6550) == 0);
-				So(nng_getopt_size(s1, NNG_OPT_RCVMAXSZ, &v) ==
-				    0);
+				       s1, nng_optid_recvmaxsz, 6550) == 0);
+				So(nng_getopt_size(
+				       s1, nng_optid_recvmaxsz, &v) == 0);
 				So(v == 6550);
 
 				v = 102400;
-				So(nng_setopt(s1, NNG_OPT_RCVMAXSZ, &v, 1) ==
-				    NNG_EINVAL);
-				So(nng_getopt_size(s1, NNG_OPT_RCVMAXSZ, &v) ==
-				    0);
+				So(nng_setopt(s1, nng_optid_recvmaxsz, &v,
+				       1) == NNG_EINVAL);
+				So(nng_getopt_size(
+				       s1, nng_optid_recvmaxsz, &v) == 0);
 				So(v == 6550);
 
 				i = 42;
-				So(nng_setopt(s1, NNG_OPT_RCVBUF, &i, 1) ==
+				So(nng_setopt(s1, nng_optid_recvbuf, &i, 1) ==
 				    NNG_EINVAL);
 
 				if (sizeof(size_t) == 8) {
 					v = 0x10000;
 					v <<= 30;
 					So(nng_setopt_size(s1,
-					       NNG_OPT_RCVMAXSZ,
+					       nng_optid_recvmaxsz,
 					       v) == NNG_EINVAL);
-					So(nng_getopt_size(
-					       s1, NNG_OPT_RCVMAXSZ, &v) == 0);
+					So(nng_getopt_size(s1,
+					       nng_optid_recvmaxsz, &v) == 0);
 					So(v == 6550);
 				}
 			});
@@ -316,21 +316,22 @@ TestMain("Socket Operations", {
 			Convey("Options work", {
 				size_t sz;
 				So(nng_dialer_setopt_size(
-				       ep, NNG_OPT_RCVMAXSZ, 4321) == 0);
+				       ep, nng_optid_recvmaxsz, 4321) == 0);
 				So(nng_dialer_getopt_size(
-				       ep, NNG_OPT_RCVMAXSZ, &sz) == 0);
+				       ep, nng_optid_recvmaxsz, &sz) == 0);
 				So(sz == 4321);
 			});
 			Convey("Socket opts not for dialer", {
 				// Not appropriate for dialer.
-				So(nng_dialer_setopt_int(ep, NNG_OPT_RAW, 1) ==
-				    NNG_ENOTSUP);
+				So(nng_dialer_setopt_int(
+				       ep, nng_optid_raw, 1) == NNG_ENOTSUP);
 				So(nng_dialer_setopt_usec(ep,
-				       NNG_OPT_RECONN_TIME, 1) == NNG_ENOTSUP);
+				       nng_optid_reconnmint,
+				       1) == NNG_ENOTSUP);
 			});
 			Convey("Bad size checks", {
-				So(nng_dialer_setopt(ep, NNG_OPT_RCVMAXSZ, "a",
-				       1) == NNG_EINVAL);
+				So(nng_dialer_setopt(ep, nng_optid_recvmaxsz,
+				       "a", 1) == NNG_EINVAL);
 			});
 			Convey("Cannot listen",
 			    { So(nng_listener_start(ep, 0) == NNG_ENOTSUP); });
@@ -344,20 +345,21 @@ TestMain("Socket Operations", {
 			Convey("Options work", {
 				size_t sz;
 				So(nng_listener_setopt_size(
-				       ep, NNG_OPT_RCVMAXSZ, 4321) == 0);
+				       ep, nng_optid_recvmaxsz, 4321) == 0);
 				So(nng_listener_getopt_size(
-				       ep, NNG_OPT_RCVMAXSZ, &sz) == 0);
+				       ep, nng_optid_recvmaxsz, &sz) == 0);
 				So(sz == 4321);
 			});
 			Convey("Socket opts not for dialer", {
 				// Not appropriate for dialer.
 				So(nng_listener_setopt_int(
-				       ep, NNG_OPT_RAW, 1) == NNG_ENOTSUP);
+				       ep, nng_optid_raw, 1) == NNG_ENOTSUP);
 				So(nng_listener_setopt_usec(ep,
-				       NNG_OPT_RECONN_TIME, 1) == NNG_ENOTSUP);
+				       nng_optid_reconnmint,
+				       1) == NNG_ENOTSUP);
 			});
 			Convey("Bad size checks", {
-				So(nng_listener_setopt(ep, NNG_OPT_RCVMAXSZ,
+				So(nng_listener_setopt(ep, nng_optid_recvmaxsz,
 				       "a", 1) == NNG_EINVAL);
 			});
 			Convey("Cannot dial",
@@ -370,30 +372,30 @@ TestMain("Socket Operations", {
 			uint64_t t;
 
 			So(nng_dialer_setopt_size(
-			       1999, NNG_OPT_RCVMAXSZ, 10) == NNG_ENOENT);
+			       1999, nng_optid_recvmaxsz, 10) == NNG_ENOENT);
 			So(nng_listener_setopt_size(
-			       1999, NNG_OPT_RCVMAXSZ, 10) == NNG_ENOENT);
+			       1999, nng_optid_recvmaxsz, 10) == NNG_ENOENT);
 
 			s = 1;
-			So(nng_dialer_getopt(1999, NNG_OPT_RAW, &i, &s) ==
+			So(nng_dialer_getopt(1999, nng_optid_raw, &i, &s) ==
 			    NNG_ENOENT);
-			So(nng_listener_getopt(1999, NNG_OPT_RAW, &i, &s) ==
+			So(nng_listener_getopt(1999, nng_optid_raw, &i, &s) ==
 			    NNG_ENOENT);
 
 			So(nng_dialer_getopt_size(
-			       1999, NNG_OPT_RCVMAXSZ, &s) == NNG_ENOENT);
+			       1999, nng_optid_recvmaxsz, &s) == NNG_ENOENT);
 			So(nng_listener_getopt_size(
-			       1999, NNG_OPT_RCVMAXSZ, &s) == NNG_ENOENT);
+			       1999, nng_optid_recvmaxsz, &s) == NNG_ENOENT);
 
-			So(nng_dialer_getopt_int(1999, NNG_OPT_RAW, &i) ==
+			So(nng_dialer_getopt_int(1999, nng_optid_raw, &i) ==
 			    NNG_ENOENT);
-			So(nng_listener_getopt_int(1999, NNG_OPT_RAW, &i) ==
+			So(nng_listener_getopt_int(1999, nng_optid_raw, &i) ==
 			    NNG_ENOENT);
 
-			So(nng_dialer_getopt_usec(1999, NNG_OPT_LINGER, &t) ==
-			    NNG_ENOENT);
+			So(nng_dialer_getopt_usec(
+			       1999, nng_optid_linger, &t) == NNG_ENOENT);
 			So(nng_listener_getopt_usec(
-			       1999, NNG_OPT_LINGER, &t) == NNG_ENOENT);
+			       1999, nng_optid_linger, &t) == NNG_ENOENT);
 
 		});
 
@@ -404,8 +406,8 @@ TestMain("Socket Operations", {
 			trantest_next_address(addr, "ipc:///tmp/sock_test_%u");
 			So(nng_dialer_create(&ep, s1, addr) == 0);
 			So(nng_dialer_start(ep, NNG_FLAG_NONBLOCK) == 0);
-			So(nng_dialer_setopt_size(ep, NNG_OPT_RCVMAXSZ, 10) ==
-			    NNG_ESTATE);
+			So(nng_dialer_setopt_size(
+			       ep, nng_optid_recvmaxsz, 10) == NNG_ESTATE);
 			So(nng_dialer_close(ep) == 0);
 			So(nng_dialer_close(ep) == NNG_ENOENT);
 		});
@@ -419,7 +421,7 @@ TestMain("Socket Operations", {
 			So(nng_listener_create(&ep, s1, addr) == 0);
 			So(nng_listener_start(ep, 0) == 0);
 			So(nng_listener_setopt_size(
-			       ep, NNG_OPT_RCVMAXSZ, 10) == NNG_ESTATE);
+			       ep, nng_optid_recvmaxsz, 10) == NNG_ESTATE);
 			So(nng_listener_close(ep) == 0);
 			So(nng_listener_close(ep) == NNG_ENOENT);
 		});
@@ -435,17 +437,17 @@ TestMain("Socket Operations", {
 			So(nng_pair_open(&s2) == 0);
 			Reset({ nng_close(s2); });
 
-			So(nng_setopt_int(s1, NNG_OPT_RCVBUF, 1) == 0);
-			So(nng_getopt_int(s1, NNG_OPT_RCVBUF, &len) == 0);
+			So(nng_setopt_int(s1, nng_optid_recvbuf, 1) == 0);
+			So(nng_getopt_int(s1, nng_optid_recvbuf, &len) == 0);
 			So(len == 1);
 
-			So(nng_setopt_int(s1, NNG_OPT_SNDBUF, 1) == 0);
-			So(nng_setopt_int(s2, NNG_OPT_SNDBUF, 1) == 0);
+			So(nng_setopt_int(s1, nng_optid_sendbuf, 1) == 0);
+			So(nng_setopt_int(s2, nng_optid_sendbuf, 1) == 0);
 
-			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, to) == 0);
-			So(nng_setopt_usec(s1, NNG_OPT_RCVTIMEO, to) == 0);
-			So(nng_setopt_usec(s2, NNG_OPT_SNDTIMEO, to) == 0);
-			So(nng_setopt_usec(s2, NNG_OPT_RCVTIMEO, to) == 0);
+			So(nng_setopt_usec(s1, nng_optid_sendtimeo, to) == 0);
+			So(nng_setopt_usec(s1, nng_optid_recvtimeo, to) == 0);
+			So(nng_setopt_usec(s2, nng_optid_sendtimeo, to) == 0);
+			So(nng_setopt_usec(s2, nng_optid_recvtimeo, to) == 0);
 
 			So(nng_listen(s1, a, NULL, 0) == 0);
 			So(nng_dial(s2, a, NULL, 0) == 0);

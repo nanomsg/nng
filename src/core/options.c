@@ -340,50 +340,6 @@ nni_option_register(const char *name, int *idp)
 	return (0);
 }
 
-int
-nni_option_sys_init(void)
-{
-	nni_mtx_init(&nni_option_lk);
-	NNI_LIST_INIT(&nni_options, nni_option, o_link);
-	nni_option_nextid = 0x10000;
-	int rv;
-
-	// Register our well-known options.
-	if (((rv = nni_option_set_id("raw", NNG_OPT_RAW)) != 0) ||
-	    ((rv = nni_option_set_id("linger", NNG_OPT_LINGER)) != 0) ||
-	    ((rv = nni_option_set_id("recv-buf", NNG_OPT_RCVBUF)) != 0) ||
-	    ((rv = nni_option_set_id("send-buf", NNG_OPT_SNDBUF)) != 0) ||
-	    ((rv = nni_option_set_id("recv-timeout", NNG_OPT_RCVTIMEO)) !=
-	        0) ||
-	    ((rv = nni_option_set_id("send-timeout", NNG_OPT_SNDTIMEO)) !=
-	        0) ||
-	    ((rv = nni_option_set_id("reconnect-time", NNG_OPT_RECONN_TIME)) !=
-	        0) ||
-	    ((rv = nni_option_set_id(
-	          "reconnect-max-time", NNG_OPT_RECONN_MAXTIME)) != 0) ||
-	    ((rv = nni_option_set_id("recv-max-size", NNG_OPT_RCVMAXSZ)) !=
-	        0) ||
-	    ((rv = nni_option_set_id("max-ttl", NNG_OPT_MAXTTL)) != 0) ||
-	    ((rv = nni_option_set_id("protocol", NNG_OPT_PROTOCOL)) != 0) ||
-	    ((rv = nni_option_set_id("subscribe", NNG_OPT_SUBSCRIBE)) != 0) ||
-	    ((rv = nni_option_set_id("unsubscribe", NNG_OPT_UNSUBSCRIBE)) !=
-	        0) ||
-	    ((rv = nni_option_set_id("survey-time", NNG_OPT_SURVEYTIME)) !=
-	        0) ||
-	    ((rv = nni_option_set_id("resend-time", NNG_OPT_RESENDTIME)) !=
-	        0) ||
-	    ((rv = nni_option_set_id("transport", NNG_OPT_TRANSPORT)) != 0) ||
-	    ((rv = nni_option_set_id("local-addr", NNG_OPT_LOCALADDR)) != 0) ||
-	    ((rv = nni_option_set_id("remote-addr", NNG_OPT_REMOTEADDR)) !=
-	        0) ||
-	    ((rv = nni_option_set_id("recv-fd", NNG_OPT_RCVFD)) != 0) ||
-	    ((rv = nni_option_set_id("send-fd", NNG_OPT_SNDFD)) != 0)) {
-		nni_option_sys_fini();
-		return (rv);
-	}
-	return (0);
-}
-
 void
 nni_option_sys_fini(void)
 {
@@ -396,4 +352,42 @@ nni_option_sys_fini(void)
 		}
 	}
 	nni_option_nextid = 0;
+}
+
+int
+nni_option_sys_init(void)
+{
+	nni_mtx_init(&nni_option_lk);
+	NNI_LIST_INIT(&nni_options, nni_option, o_link);
+	nni_option_nextid = 0x10000;
+	int rv;
+
+#define OPT_REGISTER(o) nni_option_register(nng_opt_##o, &nng_optid_##o)
+	// Register our well-known options.
+	if (((rv = OPT_REGISTER(raw)) != 0) ||
+	    ((rv = OPT_REGISTER(linger)) != 0) ||
+	    ((rv = OPT_REGISTER(recvbuf)) != 0) ||
+	    ((rv = OPT_REGISTER(sendbuf)) != 0) ||
+	    ((rv = OPT_REGISTER(recvtimeo)) != 0) ||
+	    ((rv = OPT_REGISTER(sendtimeo)) != 0) ||
+	    ((rv = OPT_REGISTER(reconnmint)) != 0) ||
+	    ((rv = OPT_REGISTER(reconnmaxt)) != 0) ||
+	    ((rv = OPT_REGISTER(recvmaxsz)) != 0) ||
+	    ((rv = OPT_REGISTER(maxttl)) != 0) ||
+	    ((rv = OPT_REGISTER(protocol)) != 0) ||
+	    ((rv = OPT_REGISTER(transport)) != 0) ||
+	    ((rv = OPT_REGISTER(locaddr)) != 0) ||
+	    ((rv = OPT_REGISTER(remaddr)) != 0) ||
+	    ((rv = OPT_REGISTER(recvfd)) != 0) ||
+	    ((rv = OPT_REGISTER(sendfd)) != 0) ||
+	    ((rv = OPT_REGISTER(req_resendtime)) != 0) ||
+	    ((rv = OPT_REGISTER(sub_subscribe)) != 0) ||
+	    ((rv = OPT_REGISTER(sub_unsubscribe)) != 0) ||
+	    ((rv = OPT_REGISTER(surveyor_surveytime)) != 0)) {
+		nni_option_sys_fini();
+		return (rv);
+	}
+#undef OPT_REGISTER
+
+	return (0);
 }

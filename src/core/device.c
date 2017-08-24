@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -90,10 +91,10 @@ nni_device(nni_sock *sock1, nni_sock *sock2)
 
 	// No timeouts.
 	sz = sizeof(never);
-	if ((nni_sock_setopt(sock1, NNG_OPT_RCVTIMEO, &never, sz) != 0) ||
-	    (nni_sock_setopt(sock2, NNG_OPT_RCVTIMEO, &never, sz) != 0) ||
-	    (nni_sock_setopt(sock1, NNG_OPT_SNDTIMEO, &never, sz) != 0) ||
-	    (nni_sock_setopt(sock2, NNG_OPT_SNDTIMEO, &never, sz) != 0)) {
+	if ((nni_sock_setopt(sock1, nng_optid_recvtimeo, &never, sz) != 0) ||
+	    (nni_sock_setopt(sock2, nng_optid_recvtimeo, &never, sz) != 0) ||
+	    (nni_sock_setopt(sock1, nng_optid_sendtimeo, &never, sz) != 0) ||
+	    (nni_sock_setopt(sock2, nng_optid_sendtimeo, &never, sz) != 0)) {
 		// This should never happen.
 		rv = NNG_EINVAL;
 		goto out;

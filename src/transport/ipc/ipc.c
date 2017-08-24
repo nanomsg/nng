@@ -64,8 +64,7 @@ static void nni_ipc_ep_cb(void *);
 static int
 nni_ipc_tran_chkopt(int o, const void *data, size_t sz)
 {
-	switch (o) {
-	case NNG_OPT_RCVMAXSZ:
+	if (o == nng_optid_recvmaxsz) {
 		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
 	}
 	return (NNG_ENOTSUP);
@@ -648,37 +647,28 @@ nni_ipc_ep_connect(void *arg, nni_aio *aio)
 static int
 nni_ipc_ep_setopt(void *arg, int opt, const void *v, size_t sz)
 {
-	int         rv;
+	int         rv = NNG_ENOTSUP;
 	nni_ipc_ep *ep = arg;
-	nni_mtx_lock(&ep->mtx);
-	switch (opt) {
-	case NNG_OPT_RCVMAXSZ:
+
+	if (opt == nng_optid_recvmaxsz) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
-		break;
+		nni_mtx_unlock(&ep->mtx);
 	}
-	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }
 
 static int
 nni_ipc_ep_getopt(void *arg, int opt, void *v, size_t *szp)
 {
-	int         rv;
+	int         rv = NNG_ENOTSUP;
 	nni_ipc_ep *ep = arg;
 
-	nni_mtx_lock(&ep->mtx);
-	switch (opt) {
-	case NNG_OPT_RCVMAXSZ:
+	if (opt == nng_optid_recvmaxsz) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nni_getopt_size(&ep->rcvmax, v, szp);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
-		break;
+		nni_mtx_unlock(&ep->mtx);
 	}
-	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }
 

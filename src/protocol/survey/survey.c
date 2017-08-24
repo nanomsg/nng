@@ -267,14 +267,13 @@ static int
 nni_surv_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 {
 	nni_surv_sock *psock = arg;
-	int            rv;
+	int            rv    = NNG_ENOTSUP;
 	int            oldraw;
 
-	switch (opt) {
-	case NNG_OPT_SURVEYTIME:
+	if (opt == nng_optid_surveyor_surveytime) {
 		rv = nni_setopt_usec(&psock->survtime, buf, sz);
-		break;
-	case NNG_OPT_RAW:
+
+	} else if (opt == nng_optid_raw) {
 		oldraw = psock->raw;
 		rv     = nni_setopt_int(&psock->raw, buf, sz, 0, 1);
 		if (oldraw != psock->raw) {
@@ -286,10 +285,8 @@ nni_surv_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
 			psock->survid = 0;
 			nni_timer_cancel(&psock->timer);
 		}
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
+
 	return (rv);
 }
 
@@ -297,17 +294,12 @@ static int
 nni_surv_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 {
 	nni_surv_sock *psock = arg;
-	int            rv;
+	int            rv    = NNG_ENOTSUP;
 
-	switch (opt) {
-	case NNG_OPT_SURVEYTIME:
+	if (opt == nng_optid_surveyor_surveytime) {
 		rv = nni_getopt_usec(&psock->survtime, buf, szp);
-		break;
-	case NNG_OPT_RAW:
+	} else if (opt == nng_optid_raw) {
 		rv = nni_getopt_int(&psock->raw, buf, szp);
-		break;
-	default:
-		rv = NNG_ENOTSUP;
 	}
 	return (rv);
 }

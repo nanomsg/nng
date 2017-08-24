@@ -14,6 +14,9 @@
 
 #include <string.h>
 
+extern int         nng_optid_pair1_poly;
+extern const char *nng_opt_pair1_poly;
+
 #define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))
 #define CHECKSTR(m, s)                   \
 	So(nng_msg_len(m) == strlen(s)); \
@@ -44,12 +47,24 @@ TestMain("PAIRv1 protocol", {
 		So(nng_pair1_open(&c2) == 0);
 
 		tmo = 300000;
-		So(nng_setopt_usec(s1, NNG_OPT_RCVTIMEO, tmo) == 0);
-		So(nng_setopt_usec(c1, NNG_OPT_RCVTIMEO, tmo) == 0);
-		So(nng_setopt_usec(c2, NNG_OPT_RCVTIMEO, tmo) == 0);
+		So(nng_setopt_usec(s1, nng_optid_recvtimeo, tmo) == 0);
+		So(nng_setopt_usec(c1, nng_optid_recvtimeo, tmo) == 0);
+		So(nng_setopt_usec(c2, nng_optid_recvtimeo, tmo) == 0);
 		tmo = 0;
-		So(nng_getopt_usec(s1, NNG_OPT_RCVTIMEO, &tmo) == 0);
+		So(nng_getopt_usec(s1, nng_optid_recvtimeo, &tmo) == 0);
 		So(tmo == 300000);
+
+		Convey("Polyamorous option id works", {
+			// This test has to be done after polyamorous mode
+			// is registered!
+			int poly;
+			poly = nng_option_lookup(nng_opt_pair1_poly);
+			So(poly >= 0);
+			So(poly == nng_optid_pair1_poly);
+			So(nng_option_name(poly) != 0);
+			So(strcmp(nng_option_name(poly), nng_opt_pair1_poly) ==
+			    0);
+		});
 
 		Convey("Monogamous cooked mode works", {
 			nng_msg *msg;
@@ -98,26 +113,22 @@ TestMain("PAIRv1 protocol", {
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
 
-			So(nng_setopt_int(s1, NNG_OPT_RAW, 1) == NNG_ESTATE);
-			So(nng_setopt_int(c1, NNG_OPT_RAW, 1) == NNG_ESTATE);
+			So(nng_setopt_int(s1, nng_optid_raw, 1) == NNG_ESTATE);
+			So(nng_setopt_int(c1, nng_optid_raw, 1) == NNG_ESTATE);
 		});
 
 		Convey("Polyamorous mode is best effort", {
 			int      rv;
 			int      i;
 			nng_msg *msg;
-			int      poly;
 
-			poly = nng_option_lookup("polyamorous");
-			So(poly >= 0);
-			So(nng_option_name(poly) != NULL);
-			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
-			So(nng_setopt_int(s1, poly, 1) == 0);
+			So(nng_setopt_int(s1, nng_optid_pair1_poly, 1) == 0);
 
-			So(nng_setopt_int(s1, NNG_OPT_RCVBUF, 1) == 0);
-			So(nng_setopt_int(s1, NNG_OPT_SNDBUF, 1) == 0);
-			So(nng_setopt_int(c1, NNG_OPT_RCVBUF, 1) == 0);
-			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, 100000) == 0);
+			So(nng_setopt_int(s1, nng_optid_recvbuf, 1) == 0);
+			So(nng_setopt_int(s1, nng_optid_sendbuf, 1) == 0);
+			So(nng_setopt_int(c1, nng_optid_recvbuf, 1) == 0);
+			So(nng_setopt_usec(s1, nng_optid_sendtimeo, 100000) ==
+			    0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
@@ -138,10 +149,11 @@ TestMain("PAIRv1 protocol", {
 			int      rv;
 			nng_msg *msg;
 
-			So(nng_setopt_int(s1, NNG_OPT_RCVBUF, 1) == 0);
-			So(nng_setopt_int(s1, NNG_OPT_SNDBUF, 1) == 0);
-			So(nng_setopt_int(c1, NNG_OPT_RCVBUF, 1) == 0);
-			So(nng_setopt_usec(s1, NNG_OPT_SNDTIMEO, 30000) == 0);
+			So(nng_setopt_int(s1, nng_optid_recvbuf, 1) == 0);
+			So(nng_setopt_int(s1, nng_optid_sendbuf, 1) == 0);
+			So(nng_setopt_int(c1, nng_optid_recvbuf, 1) == 0);
+			So(nng_setopt_usec(s1, nng_optid_sendtimeo, 30000) ==
+			    0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
@@ -164,21 +176,18 @@ TestMain("PAIRv1 protocol", {
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
-			poly = nng_option_lookup("polyamorous");
-			So(poly >= 0);
-			So(nng_option_name(poly) != NULL);
-			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
 
-			So(nng_setopt_int(s1, poly, 1) == NNG_ESTATE);
+			So(nng_setopt_int(s1, nng_optid_pair1_poly, 1) ==
+			    NNG_ESTATE);
 		});
 
 		Convey("Monogamous raw mode works", {
 			nng_msg *msg;
 			uint32_t hops;
 
-			So(nng_setopt_int(s1, NNG_OPT_RAW, 1) == 0);
-			So(nng_setopt_int(c1, NNG_OPT_RAW, 1) == 0);
-			So(nng_setopt_int(c2, NNG_OPT_RAW, 1) == 0);
+			So(nng_setopt_int(s1, nng_optid_raw, 1) == 0);
+			So(nng_setopt_int(c1, nng_optid_raw, 1) == 0);
+			So(nng_setopt_int(c2, nng_optid_raw, 1) == 0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
@@ -255,9 +264,10 @@ TestMain("PAIRv1 protocol", {
 			Convey("TTL is honored", {
 				int ttl;
 
-				So(nng_setopt_int(s1, NNG_OPT_MAXTTL, 4) == 0);
-				So(nng_getopt_int(s1, NNG_OPT_MAXTTL, &ttl) ==
+				So(nng_setopt_int(s1, nng_optid_maxttl, 4) ==
 				    0);
+				So(nng_getopt_int(
+				       s1, nng_optid_maxttl, &ttl) == 0);
 				So(ttl == 4);
 				Convey("Bad TTL bounces", {
 					So(nng_msg_alloc(&msg, 0) == 0);
@@ -285,8 +295,8 @@ TestMain("PAIRv1 protocol", {
 
 				Convey("Large TTL passes", {
 					ttl = 0xff;
-					So(nng_setopt_int(
-					       s1, NNG_OPT_MAXTTL, 0xff) == 0);
+					So(nng_setopt_int(s1, nng_optid_maxttl,
+					       0xff) == 0);
 					So(nng_msg_alloc(&msg, 0) == 0);
 					So(nng_msg_append_u32(msg, 1234) == 0);
 					So(nng_msg_header_append_u32(
@@ -303,8 +313,8 @@ TestMain("PAIRv1 protocol", {
 
 				Convey("Max TTL fails", {
 					ttl = 0xff;
-					So(nng_setopt_int(
-					       s1, NNG_OPT_MAXTTL, 0xff) == 0);
+					So(nng_setopt_int(s1, nng_optid_maxttl,
+					       0xff) == 0);
 					So(nng_msg_alloc(&msg, 0) == 0);
 					So(nng_msg_header_append_u32(
 					       msg, 0xff) == 0);
@@ -319,15 +329,15 @@ TestMain("PAIRv1 protocol", {
 			int ttl;
 
 			ttl = 0;
-			So(nng_setopt_int(s1, NNG_OPT_MAXTTL, 0) ==
+			So(nng_setopt_int(s1, nng_optid_maxttl, 0) ==
 			    NNG_EINVAL);
 
-			So(nng_setopt_int(s1, NNG_OPT_MAXTTL, 1000) ==
+			So(nng_setopt_int(s1, nng_optid_maxttl, 1000) ==
 			    NNG_EINVAL);
 
 			sz  = 1;
 			ttl = 8;
-			So(nng_setopt(s1, NNG_OPT_MAXTTL, &ttl, sz) ==
+			So(nng_setopt(s1, nng_optid_maxttl, &ttl, sz) ==
 			    NNG_EINVAL);
 		});
 
@@ -336,18 +346,12 @@ TestMain("PAIRv1 protocol", {
 			int      v;
 			nng_pipe p1;
 			nng_pipe p2;
-			int      poly;
 
-			poly = nng_option_lookup("polyamorous");
-			So(poly >= 0);
-			So(nng_option_name(poly) != NULL);
-			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
-
-			So(nng_getopt_int(s1, poly, &v) == 0);
+			So(nng_getopt_int(s1, nng_optid_pair1_poly, &v) == 0);
 			So(v == 0);
 
-			So(nng_setopt_int(s1, poly, 1) == 0);
-			So(nng_getopt_int(s1, poly, &v) == 0);
+			So(nng_setopt_int(s1, nng_optid_pair1_poly, 1) == 0);
+			So(nng_getopt_int(s1, nng_optid_pair1_poly, &v) == 0);
 			So(v == 1);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
@@ -402,14 +406,8 @@ TestMain("PAIRv1 protocol", {
 
 		Convey("Polyamorous default works", {
 			nng_msg *msg;
-			int      poly;
 
-			poly = nng_option_lookup("polyamorous");
-			So(poly >= 0);
-			So(nng_option_name(poly) != NULL);
-			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
-
-			So(nng_setopt_int(s1, poly, 1) == 0);
+			So(nng_setopt_int(s1, nng_optid_pair1_poly, 1) == 0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
@@ -440,23 +438,17 @@ TestMain("PAIRv1 protocol", {
 			uint32_t hops;
 			nng_pipe p1;
 			nng_pipe p2;
-			int      poly;
 
-			poly = nng_option_lookup("polyamorous");
-			So(poly >= 0);
-			So(nng_option_name(poly) != NULL);
-			So(strcmp(nng_option_name(poly), "polyamorous") == 0);
-
-			So(nng_getopt_int(s1, poly, &v) == 0);
+			So(nng_getopt_int(s1, nng_optid_pair1_poly, &v) == 0);
 			So(v == 0);
 
-			So(nng_setopt_int(s1, poly, 1) == 0);
-			So(nng_getopt_int(s1, poly, &v) == 0);
+			So(nng_setopt_int(s1, nng_optid_pair1_poly, 1) == 0);
+			So(nng_getopt_int(s1, nng_optid_pair1_poly, &v) == 0);
 			So(v == 1);
 
 			v = 0;
-			So(nng_setopt_int(s1, NNG_OPT_RAW, 1) == 0);
-			So(nng_getopt_int(s1, NNG_OPT_RAW, &v) == 0);
+			So(nng_setopt_int(s1, nng_optid_raw, 1) == 0);
+			So(nng_getopt_int(s1, nng_optid_raw, &v) == 0);
 			So(v == 1);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);

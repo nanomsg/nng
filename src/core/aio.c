@@ -171,7 +171,8 @@ nni_aio_finish_impl(
 {
 	nni_mtx_lock(&nni_aio_lk);
 
-	NNI_ASSERT(aio->a_pend == 0); // provider only calls us *once*
+	// provider only calls us *once*, but expiration may be in flight
+	NNI_ASSERT(aio->a_expiring || aio->a_pend == 0);
 
 	nni_list_node_remove(&aio->a_expire_node);
 	aio->a_pend        = 1;
