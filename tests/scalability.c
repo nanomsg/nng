@@ -115,4 +115,7 @@ Main({
 			}
 		});
 	});
+
+	free(clients);
+	free(results);
 });
