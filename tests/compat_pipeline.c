@@ -39,12 +39,13 @@ int main ()
     test_bind (push1, SOCKET_ADDRESS);
     pull1 = test_socket (AF_SP, NN_PULL);
     test_connect (pull1, SOCKET_ADDRESS);
+    nn_sleep (20);
     pull2 = test_socket (AF_SP, NN_PULL);
     test_connect (pull2, SOCKET_ADDRESS);
 
     /*  Wait till both connections are established to get messages spread
         evenly between the two pull sockets. */
-    nn_sleep (10);
+    nn_sleep (20);
 
     test_send (push1, "ABC");
     test_send (push1, "DEF");
