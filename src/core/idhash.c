@@ -246,10 +246,6 @@ nni_hash_insert(nni_idhash *h, uint64_t id, void *val)
 {
 	size_t index;
 
-	if ((id < h->ih_minval) || (id > h->ih_maxval)) {
-		return (NNG_EINVAL);
-	}
-
 	// Try to resize.  If we can't, but we still have room, go ahead
 	// and store it.
 	if ((nni_hash_resize(h) != 0) && (h->ih_count >= (h->ih_cap - 1))) {
@@ -269,15 +265,6 @@ nni_hash_insert(nni_idhash *h, uint64_t id, void *val)
 		}
 		ent->ihe_skips++;
 		index = NNI_IDHASH_NEXTPROBE(h, index);
-	}
-
-	// If this was the old dynamic value, just bump it.
-	if (h->ih_dynval == id) {
-		h->ih_dynval++;
-		// Roll over...
-		if (h->ih_dynval == h->ih_maxval) {
-			h->ih_dynval = h->ih_minval;
-		}
 	}
 }
 

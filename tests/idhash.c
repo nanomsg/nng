@@ -83,14 +83,6 @@ Main({
 				So(ptr == NULL);
 			});
 
-			Convey("Range checks work", {
-				char *bad = "bad";
-
-				nni_idhash_set_limits(h, 1, 10, 1);
-				So(nni_idhash_insert(h, 20, bad) ==
-				    NNG_EINVAL);
-			});
-
 			Convey("64-bit hash values work", {
 				char *   huge    = "huge";
 				void *   ptr     = NULL;
@@ -175,11 +167,12 @@ Main({
 					So(id == 11);
 				});
 			});
-			Convey("We cannot insert bogus values", {
-				So(nni_idhash_insert(h, 1, &expect[0]) ==
-				    NNG_EINVAL);
-				So(nni_idhash_insert(h, 100, &expect[0]) ==
-				    NNG_EINVAL);
+			Convey("We can insert outside range forcibly", {
+				So(nni_idhash_insert(h, 1, &expect[0]) == 0);
+				So(nni_idhash_insert(h, 100, &expect[0]) == 0);
+				So(nni_idhash_alloc(h, &id, &expect[1]) == 0);
+				So(id >= 10);
+				So(id <= 13);
 			});
 		});
 	});
