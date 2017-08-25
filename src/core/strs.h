@@ -17,5 +17,6 @@ extern char * nni_strdup(const char *);
 extern void   nni_strfree(char *);
 extern size_t nni_strlcpy(char *, const char *, size_t);
 extern size_t nni_strlcat(char *, const char *, size_t);
+extern size_t nni_strnlen(const char *, size_t);
 
 #endif // CORE_STRS_H

@@ -242,6 +242,7 @@ endif ()
 nng_check_sym (strdup string.h NNG_HAVE_STRDUP)
 nng_check_sym (strlcat string.h NNG_HAVE_STRLCAT)
 nng_check_sym (strlcpy string.h NNG_HAVE_STRLCPY)
+nng_check_sym (strnlen string.h NNG_HAVE_STRNLEN)
 
 add_subdirectory (src)
 

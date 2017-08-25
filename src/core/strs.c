@@ -96,3 +96,17 @@ nni_strlcat(char *dst, const char *src, size_t len)
 	return (n - 1);
 #endif
 }
+
+size_t
+nni_strnlen(const char *s, size_t len)
+{
+#ifdef NNG_HAVE_STRNLEN
+	return (strnlen(s, len));
+#else
+	size_t n;
+	for (n = 0; (n < len) && (*s); n++) {
+		s++;
+	}
+	return (n);
+#endif
+}
