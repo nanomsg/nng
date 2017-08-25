@@ -146,8 +146,7 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 	// dereference on hot paths.
 	ep->ep_ops = *tran->tran_ep;
 
-	// Could safely use strcpy here, but this avoids discussion.
-	(void) snprintf(ep->ep_addr, sizeof(ep->ep_addr), "%s", addr);
+	(void) nni_strlcpy(ep->ep_addr, addr, sizeof(ep->ep_addr));
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 

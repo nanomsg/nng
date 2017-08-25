@@ -579,7 +579,9 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	int          passive;
 
 	// Make a copy of the url (to allow for destructive operations)
-	snprintf(buf, sizeof(buf), "%s", url);
+	if (nni_strlcpy(buf, url, sizeof(buf)) >= sizeof(buf)) {
+		return (NNG_EADDRINVAL);
+	}
 
 	// Parse the URLs first.
 	rv = nni_tcp_parse_url(buf, &lhost, &lserv, &rhost, &rserv, mode);
@@ -620,6 +622,10 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	if (nni_strlcpy(ep->addr, url, sizeof(ep->addr)) >= sizeof(ep->addr)) {
+		NNI_FREE_STRUCT(ep);
+		return (NNG_EADDRINVAL);
+	}
 
 	if ((rv = nni_plat_tcp_ep_init(&ep->tep, &lsa, &rsa, mode)) != 0) {
 		NNI_FREE_STRUCT(ep);
@@ -630,7 +636,6 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	nni_aio_init(&ep->aio, nni_tcp_ep_cb, ep);
 
 	ep->proto = nni_sock_proto(sock);
-	(void) snprintf(ep->addr, sizeof(ep->addr), "%s", url);
 
 	*epp = ep;
 	return (0);

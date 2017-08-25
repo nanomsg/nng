@@ -31,6 +31,7 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 	const nng_sockaddr_in *  nsin;
 	const nng_sockaddr_in6 * nsin6;
 	const nng_sockaddr_path *nspath;
+	size_t                   sz;
 
 	switch (na->s_un.s_family) {
 	case NNG_AF_INET:
@@ -59,8 +60,8 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 		nspath = &na->s_un.s_path;
 		memset(spath, 0, sizeof(*spath));
 		// Make sure that the path fits!
-		if (snprintf(spath->sun_path, sizeof(spath->sun_path), "%s",
-		        nspath->sa_path) >= sizeof(spath->sun_path)) {
+		sz = sizeof(spath->sun_path);
+		if (nni_strlcpy(spath->sun_path, nspath->sa_path, sz) >= sz) {
 			return (-1);
 		}
 		spath->sun_family = PF_UNIX;

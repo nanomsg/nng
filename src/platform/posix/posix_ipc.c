@@ -98,9 +98,14 @@ nni_plat_ipc_remove_stale(const char *path)
 	int                fd;
 	int                rv;
 	struct sockaddr_un sun;
+	size_t             sz;
 
 	sun.sun_family = AF_UNIX;
-	snprintf(sun.sun_path, sizeof(sun.sun_path), "%s", path);
+	sz             = sizeof(sun.sun_path);
+
+	if (nni_strlcpy(sun.sun_path, path, sz) >= sz) {
+		return (NNG_EADDRINVAL);
+	}
 
 	if ((fd = socket(AF_UNIX, NNI_STREAM_SOCKTYPE, 0)) < 0) {
 		return (nni_plat_errno(errno));

@@ -275,13 +275,11 @@ nni_option_set_id(const char *name, int id)
 		nni_mtx_unlock(&nni_option_lk);
 		return (NNG_ENOMEM);
 	}
-	len = strlen(name) + 1;
-	if ((opt->o_name = nni_alloc(len)) == NULL) {
+	if ((opt->o_name = nni_strdup(name)) == NULL) {
 		nni_mtx_unlock(&nni_option_lk);
 		NNI_FREE_STRUCT(opt);
 		return (NNG_ENOMEM);
 	}
-	(void) snprintf(opt->o_name, len, "%s", name);
 	if (id < 0) {
 		id = nni_option_nextid++;
 	}
@@ -347,7 +345,7 @@ nni_option_sys_fini(void)
 		nni_option *opt;
 		while ((opt = nni_list_first(&nni_options)) != NULL) {
 			nni_list_remove(&nni_options, opt);
-			nni_free(opt->o_name, strlen(opt->o_name) + 1);
+			nni_strfree(opt->o_name);
 			NNI_FREE_STRUCT(opt);
 		}
 	}

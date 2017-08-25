@@ -239,6 +239,10 @@ else ()
     nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
 endif ()
 
+nng_check_sym (strdup string.h NNG_HAVE_STRDUP)
+nng_check_sym (strlcat string.h NNG_HAVE_STRLCAT)
+nng_check_sym (strlcpy string.h NNG_HAVE_STRLCPY)
+
 add_subdirectory (src)
 
 if (NNG_TESTS)

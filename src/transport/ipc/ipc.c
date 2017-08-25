@@ -486,20 +486,29 @@ nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	nni_ipc_ep * ep;
 	int          rv;
 	nni_sockaddr sa;
+	size_t       sz;
 
-	if ((strlen(url) > NNG_MAXADDRLEN - 1) ||
-	    (strncmp(url, "ipc://", strlen("ipc://")) != 0)) {
+	if (strncmp(url, "ipc://", strlen("ipc://")) != 0) {
 		return (NNG_EADDRINVAL);
 	}
+	url += strlen("ipc://");
 
+	sz                       = sizeof(sa.s_un.s_path.sa_path);
 	sa.s_un.s_path.sa_family = NNG_AF_IPC;
-	(void) snprintf(sa.s_un.s_path.sa_path, sizeof(sa.s_un.s_path.sa_path),
-	    "%s", url + strlen("ipc://"));
+
+	if (nni_strlcpy(sa.s_un.s_path.sa_path, url, sz) >= sz) {
+		return (NNG_EADDRINVAL);
+	}
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	url += strlen("ipc://");
+
+	if (nni_strlcpy(ep->addr, url, sizeof(ep->addr)) >= sizeof(ep->addr)) {
+		NNI_FREE_STRUCT(ep);
+		return (NNG_EADDRINVAL);
+	}
+
 	if ((rv = nni_plat_ipc_ep_init(&ep->iep, &sa, mode)) != 0) {
 		NNI_FREE_STRUCT(ep);
 		return (rv);
@@ -509,7 +518,6 @@ nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	nni_aio_init(&ep->aio, nni_ipc_ep_cb, ep);
 
 	ep->proto = nni_sock_proto(sock);
-	(void) snprintf(ep->addr, sizeof(ep->addr), "%s", url);
 
 	*epp = ep;
 	return (0);

@@ -34,6 +34,7 @@ nni_tran_register(const nni_tran *tran)
 {
 	nni_transport *t;
 	int            rv;
+	size_t         sz;
 
 	// Its entirely possible that we are called before any sockets
 	// are opened.  Make sure we are initialized.  This has to be
@@ -56,12 +57,18 @@ nni_tran_register(const nni_tran *tran)
 		}
 	}
 	if ((t = NNI_ALLOC_STRUCT(t)) == NULL) {
+		nni_mtx_unlock(&nni_tran_lk);
 		return (NNG_ENOMEM);
 	}
 
 	t->t_tran = *tran;
-	(void) snprintf(
-	    t->t_prefix, sizeof(t->t_prefix), "%s://", tran->tran_scheme);
+	sz        = sizeof(t->t_prefix);
+	if ((nni_strlcpy(t->t_prefix, tran->tran_scheme, sz) >= sz) ||
+	    (nni_strlcat(t->t_prefix, "://", sz) >= sz)) {
+		nni_mtx_unlock(&nni_tran_lk);
+		NNI_FREE_STRUCT(t);
+		return (NNG_EINVAL);
+	}
 	if ((rv = t->t_tran.tran_init()) != 0) {
 		nni_mtx_unlock(&nni_tran_lk);
 		NNI_FREE_STRUCT(t);
