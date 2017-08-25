@@ -27,6 +27,7 @@ struct nni_ep {
 	int           ep_closed;  // full shutdown
 	int           ep_closing; // close pending (waiting on refcnt)
 	int           ep_refcnt;
+	int           ep_tmo_run;
 	nni_mtx       ep_mtx;
 	nni_cv        ep_cv;
 	nni_list      ep_pipes;
@@ -243,6 +244,7 @@ nni_ep_shutdown(nni_ep *ep)
 		return (NNG_ECLOSED);
 	}
 	ep->ep_closing = 1;
+	nni_mtx_unlock(&ep->ep_mtx);
 
 	// Abort any remaining in-flight operations.
 	nni_aio_cancel(&ep->ep_acc_aio, NNG_ECLOSED);
@@ -252,8 +254,6 @@ nni_ep_shutdown(nni_ep *ep)
 
 	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
-
-	nni_mtx_unlock(&ep->ep_mtx);
 
 	return (0);
 }
@@ -294,8 +294,16 @@ nni_ep_close(nni_ep *ep)
 static void
 nni_ep_tmo_cancel(nni_aio *aio, int rv)
 {
+	nni_ep *ep = aio->a_prov_data;
 	// The only way this ever gets "finished", is via cancellation.
-	nni_aio_finish_error(aio, rv);
+	if (ep != NULL) {
+		nni_mtx_lock(&ep->ep_mtx);
+		if (ep->ep_tmo_run) {
+			nni_aio_finish_error(aio, rv);
+		}
+		ep->ep_tmo_run = 0;
+		nni_mtx_unlock(&ep->ep_mtx);
+	}
 }
 
 static void
@@ -322,7 +330,10 @@ nni_ep_tmo_start(nni_ep *ep)
 
 	ep->ep_tmo_aio.a_expire =
 	    nni_clock() + (backoff ? nni_random() % backoff : 0);
-	nni_aio_start(&ep->ep_tmo_aio, nni_ep_tmo_cancel, ep);
+	ep->ep_tmo_run = 1;
+	if (nni_aio_start(&ep->ep_tmo_aio, nni_ep_tmo_cancel, ep) != 0) {
+		ep->ep_tmo_run = 0;
+	}
 }
 
 static void
