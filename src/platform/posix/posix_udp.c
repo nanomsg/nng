@@ -60,20 +60,22 @@ nni_posix_udp_doclose(nni_plat_udp *udp)
 static void
 nni_posix_udp_dorecv(nni_plat_udp *udp)
 {
-	nni_aio *               aio;
-	struct sockaddr_storage ss;
-	struct msghdr           hdr;
-	int                     niov;
-	int                     rv;
-	nni_list *              q = &udp->udp_recvq;
+	nni_aio * aio;
+	nni_list *q = &udp->udp_recvq;
 
 	// While we're able to recv, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
 		nni_list_remove(q, aio);
+		struct iovec            iov[4]; // never have more than 4
+		int                     niov;
+		struct sockaddr_storage ss;
+		struct msghdr           hdr;
+		int                     rv;
 
+		hdr.msg_iov = iov;
 		for (niov = 0; niov < aio->a_niov; niov++) {
-			hdr.msg_iov[niov].iov_base = aio->a_iov[niov].iov_buf;
-			hdr.msg_iov[niov].iov_len  = aio->a_iov[niov].iov_len;
+			iov[niov].iov_base = aio->a_iov[niov].iov_buf;
+			iov[niov].iov_len  = aio->a_iov[niov].iov_len;
 		}
 		hdr.msg_iovlen     = niov;
 		hdr.msg_name       = &ss;
@@ -109,16 +111,18 @@ static void
 nni_posix_udp_dosend(nni_plat_udp *udp)
 {
 	// XXX: TBD.
-	nni_aio *               aio;
-	struct sockaddr_storage ss;
-	struct msghdr           hdr;
-	int                     niov;
-	int                     rv;
-	int                     len;
-	nni_list *              q = &udp->udp_sendq;
+	nni_aio * aio;
+	nni_list *q = &udp->udp_sendq;
 
 	// While we're able to send, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
+		struct sockaddr_storage ss;
+		struct msghdr           hdr;
+		struct iovec            iov[4];
+		int                     niov;
+		int                     rv;
+		int                     len;
+
 		nni_list_remove(q, aio);
 
 		if (aio->a_addr == NULL) {
@@ -132,9 +136,10 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 			return;
 		}
 
+		hdr.msg_iov = iov;
 		for (niov = 0; niov < aio->a_niov; niov++) {
-			hdr.msg_iov[niov].iov_base = aio->a_iov[niov].iov_buf;
-			hdr.msg_iov[niov].iov_len  = aio->a_iov[niov].iov_len;
+			iov[niov].iov_base = aio->a_iov[niov].iov_buf;
+			iov[niov].iov_len  = aio->a_iov[niov].iov_len;
 		}
 		hdr.msg_iovlen     = niov;
 		hdr.msg_name       = &ss;
@@ -318,7 +323,7 @@ nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 	}
 
 	nni_list_append(&udp->udp_sendq, aio);
-	nni_posix_pollq_arm(&udp->udp_pitem, POLLIN);
+	nni_posix_pollq_arm(&udp->udp_pitem, POLLOUT);
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 
