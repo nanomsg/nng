@@ -436,6 +436,7 @@ conveyAssertFail(const char *cond, const char *file, int line)
 		convey_emit_color(convey_yellow);
 		(void) fputs(convey_sym_fail, stdout);
 		convey_emit_color(convey_nocolor);
+		(void) fflush(stdout);
 	}
 	if (t->ctx_root != t) {
 		t->ctx_root->ctx_fail++;
@@ -462,6 +463,7 @@ conveyAssertPass(const char *cond, const char *file, int line)
 		convey_emit_color(convey_green);
 		(void) fputs(convey_sym_pass, stdout);
 		convey_emit_color(convey_nocolor);
+		(void) fflush(stdout);
 	}
 	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Passed): %s\n", t->ctx_name,
 	    file, line, cond);
@@ -477,6 +479,7 @@ conveyAssertSkip(const char *cond, const char *file, int line)
 		convey_emit_color(convey_yellow);
 		(void) fputs(convey_sym_pass, stdout);
 		convey_emit_color(convey_nocolor);
+		(void) fflush(stdout);
 	}
 	convey_logf(t->ctx_dbglog, "* %s (%s:%d) (Skip): %s\n", t->ctx_name,
 	    file, line, cond);
