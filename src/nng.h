@@ -403,50 +403,50 @@ NNG_DECL int nng_respondent0_open(nng_socket *);
 #define NNG_OPT_SOCKET(c) (c)
 #define NNG_OPT_TRANSPORT_OPT(t, c) (0x10000 | ((t) << 16) | (c))
 
-extern const char *nng_opt_raw;
-extern const char *nng_opt_linger;
-extern const char *nng_opt_recvbuf;
-extern const char *nng_opt_sendbuf;
-extern const char *nng_opt_recvtimeo;
-extern const char *nng_opt_sendtimeo;
-extern const char *nng_opt_recvmaxsz;
-extern const char *nng_opt_reconnmint;
-extern const char *nng_opt_reconnmaxt;
-extern const char *nng_opt_maxttl;
-extern const char *nng_opt_protocol;
-extern const char *nng_opt_transport;
-extern const char *nng_opt_recvfd;
-extern const char *nng_opt_sendfd;
-extern const char *nng_opt_locaddr;
-extern const char *nng_opt_remaddr;
-extern const char *nng_opt_req_resendtime;
-extern const char *nng_opt_sub_subscribe;
-extern const char *nng_opt_sub_unsubscribe;
-extern const char *nng_opt_surveyor_surveytime;
+NNG_DECL const char *nng_opt_raw;
+NNG_DECL const char *nng_opt_linger;
+NNG_DECL const char *nng_opt_recvbuf;
+NNG_DECL const char *nng_opt_sendbuf;
+NNG_DECL const char *nng_opt_recvtimeo;
+NNG_DECL const char *nng_opt_sendtimeo;
+NNG_DECL const char *nng_opt_recvmaxsz;
+NNG_DECL const char *nng_opt_reconnmint;
+NNG_DECL const char *nng_opt_reconnmaxt;
+NNG_DECL const char *nng_opt_maxttl;
+NNG_DECL const char *nng_opt_protocol;
+NNG_DECL const char *nng_opt_transport;
+NNG_DECL const char *nng_opt_recvfd;
+NNG_DECL const char *nng_opt_sendfd;
+NNG_DECL const char *nng_opt_locaddr;
+NNG_DECL const char *nng_opt_remaddr;
+NNG_DECL const char *nng_opt_req_resendtime;
+NNG_DECL const char *nng_opt_sub_subscribe;
+NNG_DECL const char *nng_opt_sub_unsubscribe;
+NNG_DECL const char *nng_opt_surveyor_surveytime;
 
-extern int nng_optid_raw;
-extern int nng_optid_linger;
-extern int nng_optid_recvbuf;
-extern int nng_optid_sendbuf;
-extern int nng_optid_recvtimeo;
-extern int nng_optid_sendtimeo;
-extern int nng_optid_recvmaxsz;
-extern int nng_optid_reconnmint;
-extern int nng_optid_reconnmaxt;
-extern int nng_optid_maxttl;
-extern int nng_optid_protocol;
-extern int nng_optid_transport;
-extern int nng_optid_recvfd;
-extern int nng_optid_sendfd;
-extern int nng_optid_locaddr;
-extern int nng_optid_remaddr;
+NNG_DECL int nng_optid_raw;
+NNG_DECL int nng_optid_linger;
+NNG_DECL int nng_optid_recvbuf;
+NNG_DECL int nng_optid_sendbuf;
+NNG_DECL int nng_optid_recvtimeo;
+NNG_DECL int nng_optid_sendtimeo;
+NNG_DECL int nng_optid_recvmaxsz;
+NNG_DECL int nng_optid_reconnmint;
+NNG_DECL int nng_optid_reconnmaxt;
+NNG_DECL int nng_optid_maxttl;
+NNG_DECL int nng_optid_protocol;
+NNG_DECL int nng_optid_transport;
+NNG_DECL int nng_optid_recvfd;
+NNG_DECL int nng_optid_sendfd;
+NNG_DECL int nng_optid_locaddr;
+NNG_DECL int nng_optid_remaddr;
 
 // These protocol specific options may not be valid until a socket of
 // the given protocol is opened!
-extern int nng_optid_req_resendtime;
-extern int nng_optid_sub_subscribe;
-extern int nng_optid_sub_unsubscribe;
-extern int nng_optid_surveyor_surveytime;
+NNG_DECL int nng_optid_req_resendtime;
+NNG_DECL int nng_optid_sub_subscribe;
+NNG_DECL int nng_optid_sub_unsubscribe;
+NNG_DECL int nng_optid_surveyor_surveytime;
 // XXX: TBD: priorities, socket names, ipv4only
 
 // Statistics.  These are for informational purposes only, and subject
