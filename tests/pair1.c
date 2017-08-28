@@ -32,19 +32,19 @@ TestMain("PAIRv1 protocol", {
 	uint32_t    v;
 	size_t      sz;
 
-	Reset({
-		nng_close(s1);
-		nng_close(c1);
-		nng_close(c2);
-		nng_usleep(10000);
-		nng_fini();
-	});
+	atexit(nng_fini);
 
 	Convey("Given a few sockets", {
 		trantest_next_address(addr, templ);
 		So(nng_pair1_open(&s1) == 0);
 		So(nng_pair1_open(&c1) == 0);
 		So(nng_pair1_open(&c2) == 0);
+
+		Reset({
+			nng_close(s1);
+			nng_close(c1);
+			nng_close(c2);
+		});
 
 		tmo = 300000;
 		So(nng_setopt_usec(s1, nng_optid_recvtimeo, tmo) == 0);
