@@ -286,7 +286,7 @@ pub_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	int       rv = NNG_ENOTSUP;
 
 	if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(&s->raw, buf, szp);
+		rv = nni_getopt_int(s->raw, buf, szp);
 	}
 	return (rv);
 }

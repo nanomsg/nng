@@ -26,7 +26,7 @@ extern int nni_getopt_buf(nni_msgq *, void *, size_t *);
 extern int nni_setopt_usec(nni_duration *, const void *, size_t);
 
 // nni_getopt_duration gets the duration.
-extern int nni_getopt_usec(nni_duration *, void *, size_t *);
+extern int nni_getopt_usec(nni_duration, void *, size_t *);
 
 // nni_setopt_int sets an integer, which must be between the minimum and
 // maximum values (inclusive).
@@ -36,7 +36,13 @@ extern int nni_setopt_int(int *, const void *, size_t, int, int);
 #define NNI_MININT ((int) -2147483648)
 
 // nni_getopt_int gets an integer.
-extern int nni_getopt_int(int *, void *, size_t *);
+extern int nni_getopt_int(int, void *, size_t *);
+
+// nni_getopt_u64 gets an unsigned 64 bit number.
+extern int nni_getopt_u64(uint64_t, void *, size_t *);
+
+// nni_getopt_str gets a C style string.
+extern int nni_getopt_str(const char *, void *, size_t *);
 
 // nni_setopt_size sets a size_t option.
 extern int nni_setopt_size(size_t *, const void *, size_t, size_t, size_t);
@@ -47,7 +53,7 @@ extern int nni_setopt_size(size_t *, const void *, size_t, size_t, size_t);
 #define NNI_MAXSZ ((size_t) 0xffffffff)
 
 // nni_getopt_size obtains a size_t option.
-extern int nni_getopt_size(size_t *, void *, size_t *);
+extern int nni_getopt_size(size_t, void *, size_t *);
 
 // nni_getopt_fd obtains a notification file descriptor.
 extern int nni_getopt_fd(nni_sock *, nni_notifyfd *, int, void *, size_t *);

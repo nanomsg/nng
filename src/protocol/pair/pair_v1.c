@@ -432,15 +432,15 @@ pair1_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 
 	if (opt == nng_optid_raw) {
 		nni_mtx_lock(&s->mtx);
-		rv = nni_getopt_int(&s->raw, buf, szp);
+		rv = nni_getopt_int(s->raw, buf, szp);
 		nni_mtx_unlock(&s->mtx);
 	} else if (opt == nng_optid_maxttl) {
 		nni_mtx_lock(&s->mtx);
-		rv = nni_getopt_int(&s->ttl, buf, szp);
+		rv = nni_getopt_int(s->ttl, buf, szp);
 		nni_mtx_unlock(&s->mtx);
 	} else if (opt == nng_optid_pair1_poly) {
 		nni_mtx_lock(&s->mtx);
-		rv = nni_getopt_int(&s->poly, buf, szp);
+		rv = nni_getopt_int(s->poly, buf, szp);
 		nni_mtx_unlock(&s->mtx);
 	}
 	return (rv);

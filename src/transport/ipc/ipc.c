@@ -687,7 +687,7 @@ nni_ipc_ep_getopt(void *arg, int opt, void *v, size_t *szp)
 
 	if (opt == nng_optid_recvmaxsz) {
 		nni_mtx_lock(&ep->mtx);
-		rv = nni_getopt_size(&ep->rcvmax, v, szp);
+		rv = nni_getopt_size(ep->rcvmax, v, szp);
 		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);

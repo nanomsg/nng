@@ -300,9 +300,9 @@ surv_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	int        rv = NNG_ENOTSUP;
 
 	if (opt == nng_optid_surveyor_surveytime) {
-		rv = nni_getopt_usec(&s->survtime, buf, szp);
+		rv = nni_getopt_usec(s->survtime, buf, szp);
 	} else if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(&s->raw, buf, szp);
+		rv = nni_getopt_int(s->raw, buf, szp);
 	}
 	return (rv);
 }

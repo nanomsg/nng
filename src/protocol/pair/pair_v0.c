@@ -250,7 +250,7 @@ pair0_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	int         rv;
 
 	if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(&s->raw, buf, szp);
+		rv = nni_getopt_int(s->raw, buf, szp);
 	} else {
 		rv = NNG_ENOTSUP;
 	}

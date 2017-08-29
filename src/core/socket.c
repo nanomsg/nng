@@ -960,9 +960,9 @@ nni_sock_getopt(nni_sock *s, int opt, void *val, size_t *szp)
 	} else if (opt == nng_optid_recvfd) {
 		rv = nni_getopt_fd(s, &s->s_recv_fd, NNG_EV_CAN_RCV, val, szp);
 	} else if (opt == nng_optid_reconnmint) {
-		rv = nni_getopt_usec(&s->s_reconn, val, szp);
+		rv = nni_getopt_usec(s->s_reconn, val, szp);
 	} else if (opt == nng_optid_reconnmaxt) {
-		rv = nni_getopt_usec(&s->s_reconnmax, val, szp);
+		rv = nni_getopt_usec(s->s_reconnmax, val, szp);
 	} else {
 		NNI_LIST_FOREACH (&s->s_options, sopt) {
 			if (sopt->opt == opt) {

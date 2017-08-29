@@ -273,13 +273,13 @@ req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
 	int       rv = NNG_ENOTSUP;
 
 	if (opt == nng_optid_req_resendtime) {
-		rv = nni_getopt_usec(&s->retry, buf, szp);
+		rv = nni_getopt_usec(s->retry, buf, szp);
 
 	} else if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(&s->raw, buf, szp);
+		rv = nni_getopt_int(s->raw, buf, szp);
 
 	} else if (opt == nng_optid_maxttl) {
-		rv = nni_getopt_int(&s->ttl, buf, szp);
+		rv = nni_getopt_int(s->ttl, buf, szp);
 	}
 
 	return (rv);
