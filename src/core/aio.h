@@ -52,6 +52,9 @@ struct nni_aio {
 	// Resolver operations.
 	nni_sockaddr *a_addr;
 
+	// Extra user data.
+	void *a_data;
+
 	// Provider-use fields.
 	nni_aio_cancelfn a_prov_cancel;
 	void *           a_prov_data;
@@ -65,7 +68,7 @@ struct nni_aio {
 // the supplied argument when the operation is complete.  If NULL is
 // supplied for the callback, then nni_aio_wake is used in its place,
 // and the aio is used for the argument.
-extern void nni_aio_init(nni_aio *, nni_cb, void *);
+extern int nni_aio_init(nni_aio **, nni_cb, void *);
 
 // nni_aio_fini finalizes the aio, releasing resources (locks)
 // associated with it.  The caller is responsible for ensuring that any
@@ -82,6 +85,27 @@ extern void nni_aio_fini(nni_aio *);
 // from a callback itself.  (To abort operations without blocking
 // use nni_aio_cancel instead.)
 extern void nni_aio_stop(nni_aio *);
+
+// nni_aio_set_data sets user data.  This should only be done by the
+// consumer, initiating the I/O.  The intention is to be able to store
+// additional data for use when the operation callback is executed.
+extern void nni_aio_set_data(nni_aio *, void *);
+
+// nni_aio_get_data returns the user data that was previously stored
+// with nni_aio_set_data.
+extern void *nni_aio_get_data(nni_aio *);
+
+extern void     nni_aio_set_msg(nni_aio *, nni_msg *);
+extern nni_msg *nni_aio_get_msg(nni_aio *);
+extern void     nni_aio_set_pipe(nni_aio *, void *);
+extern void *   nni_aio_get_pipe(nni_aio *);
+extern void     nni_aio_set_ep(nni_aio *, void *);
+extern void *   nni_aio_get_ep(nni_aio *);
+
+// nni_aio_set_timeout sets the timeout (absolute) when the AIO will
+// be canceled.  The cancelation does not happen until after nni_aio_start
+// is called.
+extern void nni_aio_set_timeout(nni_aio *, nni_time);
 
 // nni_aio_result returns the result code (0 on success, or an NNG errno)
 // for the operation.  It is only valid to call this when the operation is

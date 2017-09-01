@@ -222,7 +222,7 @@ nni_sock_cansend_cb(void *arg)
 	nni_notify *notify = arg;
 	nni_sock *  sock   = notify->n_sock;
 
-	if (nni_aio_result(&notify->n_aio) != 0) {
+	if (nni_aio_result(notify->n_aio) != 0) {
 		return;
 	}
 
@@ -235,7 +235,7 @@ nni_sock_canrecv_cb(void *arg)
 	nni_notify *notify = arg;
 	nni_sock *  sock   = notify->n_sock;
 
-	if (nni_aio_result(&notify->n_aio) != 0) {
+	if (nni_aio_result(notify->n_aio) != 0) {
 		return;
 	}
 
@@ -259,11 +259,11 @@ nni_sock_notify(nni_sock *sock, int type, nng_notify_func fn, void *arg)
 	switch (type) {
 	case NNG_EV_CAN_RCV:
 		nni_aio_init(&notify->n_aio, nni_sock_canrecv_cb, notify);
-		nni_msgq_aio_notify_get(sock->s_urq, &notify->n_aio);
+		nni_msgq_aio_notify_get(sock->s_urq, notify->n_aio);
 		break;
 	case NNG_EV_CAN_SND:
 		nni_aio_init(&notify->n_aio, nni_sock_cansend_cb, notify);
-		nni_msgq_aio_notify_put(sock->s_uwq, &notify->n_aio);
+		nni_msgq_aio_notify_put(sock->s_uwq, notify->n_aio);
 		break;
 	default:
 		NNI_FREE_STRUCT(notify);
@@ -276,7 +276,7 @@ nni_sock_notify(nni_sock *sock, int type, nng_notify_func fn, void *arg)
 void
 nni_sock_unnotify(nni_sock *sock, nni_notify *notify)
 {
-	nni_aio_fini(&notify->n_aio);
+	nni_aio_fini(notify->n_aio);
 	NNI_FREE_STRUCT(notify);
 }
 

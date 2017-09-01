@@ -30,7 +30,7 @@ struct nni_pipe {
 	nni_mtx       p_mtx;
 	nni_cv        p_cv;
 	nni_list_node p_reap_node;
-	nni_aio       p_start_aio;
+	nni_aio *     p_start_aio;
 };
 
 static nni_idhash *nni_pipes;
@@ -99,7 +99,7 @@ nni_pipe_destroy(nni_pipe *p)
 	}
 
 	// Stop any pending negotiation.
-	nni_aio_stop(&p->p_start_aio);
+	nni_aio_stop(p->p_start_aio);
 
 	// Make sure any unlocked holders are done with this.
 	// This happens during initialization for example.
@@ -112,7 +112,7 @@ nni_pipe_destroy(nni_pipe *p)
 	// We have exclusive access at this point, so we can check if
 	// we are still on any lists.
 
-	nni_aio_fini(&p->p_start_aio);
+	nni_aio_fini(p->p_start_aio);
 
 	if (nni_list_node_active(&p->p_ep_node)) {
 		nni_ep_pipe_remove(p->p_ep, p);
@@ -172,7 +172,7 @@ nni_pipe_close(nni_pipe *p)
 	nni_mtx_unlock(&p->p_mtx);
 
 	// abort any pending negotiation/start process.
-	nni_aio_cancel(&p->p_start_aio, NNG_ECLOSED);
+	nni_aio_cancel(p->p_start_aio, NNG_ECLOSED);
 }
 
 void
@@ -205,7 +205,7 @@ static void
 nni_pipe_start_cb(void *arg)
 {
 	nni_pipe *p   = arg;
-	nni_aio * aio = &p->p_start_aio;
+	nni_aio * aio = p->p_start_aio;
 	int       rv;
 
 	if ((rv = nni_aio_result(aio)) != 0) {
@@ -270,9 +270,9 @@ void
 nni_pipe_start(nni_pipe *p)
 {
 	if (p->p_tran_ops.p_start == NULL) {
-		nni_aio_finish(&p->p_start_aio, 0, 0);
+		nni_aio_finish(p->p_start_aio, 0, 0);
 	} else {
-		p->p_tran_ops.p_start(p->p_tran_data, &p->p_start_aio);
+		p->p_tran_ops.p_start(p->p_tran_data, p->p_start_aio);
 	}
 }
 

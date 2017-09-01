@@ -56,23 +56,34 @@ static nni_list nni_aio_expire_aios;
 
 static void nni_aio_expire_add(nni_aio *);
 
-void
-nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
+int
+nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 {
+	nni_aio *aio;
+
+	if ((aio = NNI_ALLOC_STRUCT(aio)) == NULL) {
+		return (NNG_ENOMEM);
+	}
 	memset(aio, 0, sizeof(*aio));
 	nni_cv_init(&aio->a_cv, &nni_aio_lk);
 	aio->a_expire = NNI_TIME_NEVER;
 	aio->a_init   = 1;
 	nni_task_init(NULL, &aio->a_task, cb, arg);
+	*aiop = aio;
+	return (0);
 }
 
 void
 nni_aio_fini(nni_aio *aio)
 {
-	nni_aio_stop(aio);
+	if (aio != NULL) {
+		nni_aio_stop(aio);
 
-	// At this point the AIO is done.
-	nni_cv_fini(&aio->a_cv);
+		// At this point the AIO is done.
+		nni_cv_fini(&aio->a_cv);
+
+		NNI_FREE_STRUCT(aio);
+	}
 }
 
 // nni_aio_stop cancels any oustanding operation, and waits for the
@@ -95,6 +106,60 @@ nni_aio_stop(nni_aio *aio)
 	nni_aio_cancel(aio, NNG_ECANCELED);
 
 	nni_aio_wait(aio);
+}
+
+void
+nni_aio_set_timeout(nni_aio *aio, nni_time when)
+{
+	aio->a_expire = when;
+}
+
+void
+nni_aio_set_msg(nni_aio *aio, nni_msg *msg)
+{
+	aio->a_msg = msg;
+}
+
+nni_msg *
+nni_aio_get_msg(nni_aio *aio)
+{
+	return (aio->a_msg);
+}
+
+void
+nni_aio_set_pipe(nni_aio *aio, void *p)
+{
+	aio->a_pipe = p;
+}
+
+void *
+nni_aio_get_pipe(nni_aio *aio)
+{
+	return (aio->a_pipe);
+}
+
+void
+nni_aio_set_ep(nni_aio *aio, void *ep)
+{
+	aio->a_endpt = ep;
+}
+
+void *
+nni_aio_get_ep(nni_aio *aio)
+{
+	return (aio->a_endpt);
+}
+
+void
+nni_aio_set_data(nni_aio *aio, void *data)
+{
+	aio->a_data = data;
+}
+
+void *
+nni_aio_get_data(nni_aio *aio)
+{
+	return (aio->a_data);
 }
 
 int
