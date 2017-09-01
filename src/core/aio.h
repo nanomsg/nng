@@ -35,7 +35,8 @@ struct nni_aio {
 	unsigned a_active : 1;   // aio was started
 	unsigned a_expiring : 1; // expiration callback in progress
 	unsigned a_waiting : 1;  // a thread is waiting for this to finish
-	unsigned a_pad : 26;     // ensure 32-bit alignment
+	unsigned a_synch : 1;    // run completion synchronously
+	unsigned a_pad : 25;     // ensure 32-bit alignment
 	nni_task a_task;
 
 	// Read/write operations.
@@ -76,6 +77,12 @@ extern int nni_aio_init(nni_aio **, nni_cb, void *);
 // on zero'd memory.
 extern void nni_aio_fini(nni_aio *);
 
+// nni_aio_fini_cb finalizes the aio WITHOUT waiting for it to complete.
+// This is intended exclusively for finalizing an AIO from a completion
+// callack for that AIO. It is important that the caller ensure that nothing
+// else might be waiting for that AIO or using it.
+extern void nni_aio_fini_cb(nni_aio *);
+
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,
 // but also prevents any new operations from starting (nni_aio_start will
 // return NNG_ESTATE).  This should be called before nni_aio_fini().  The
@@ -101,6 +108,19 @@ extern void     nni_aio_set_pipe(nni_aio *, void *);
 extern void *   nni_aio_get_pipe(nni_aio *);
 extern void     nni_aio_set_ep(nni_aio *, void *);
 extern void *   nni_aio_get_ep(nni_aio *);
+
+// nni_aio_set_synch sets a synchronous completion flag on the AIO.
+// When this is set, the next time the AIO is completed, the callback
+// be run synchronously, from the thread calling the finish routine.
+// It is important that this only be set when the provider knows that
+// it is not holding any locks or resources when completing the operation,
+// or when the consumer knows that the callback routine does not acquire
+// any locks.  Use with caution to avoid deadlocks.  The flag is cleared
+// automatically when the completion callback is executed.  Some care has
+// been taken so that other aio operations like aio_wait will work,
+// although it is still an error to try waiting for an aio from that aio's
+// completion callback.
+void nni_aio_set_synch(nni_aio *);
 
 // nni_aio_set_timeout sets the timeout (absolute) when the AIO will
 // be canceled.  The cancelation does not happen until after nni_aio_start

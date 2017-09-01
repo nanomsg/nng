@@ -68,6 +68,9 @@ nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 	nni_cv_init(&aio->a_cv, &nni_aio_lk);
 	aio->a_expire = NNI_TIME_NEVER;
 	aio->a_init   = 1;
+	if (arg == NULL) {
+		arg = aio;
+	}
 	nni_task_init(NULL, &aio->a_task, cb, arg);
 	*aiop = aio;
 	return (0);
@@ -84,6 +87,13 @@ nni_aio_fini(nni_aio *aio)
 
 		NNI_FREE_STRUCT(aio);
 	}
+}
+
+void
+nni_aio_fini_cb(nni_aio *aio)
+{
+	nni_cv_fini(&aio->a_cv);
+	NNI_FREE_STRUCT(aio);
 }
 
 // nni_aio_stop cancels any oustanding operation, and waits for the
@@ -175,10 +185,18 @@ nni_aio_count(nni_aio *aio)
 }
 
 void
+nni_aio_set_synch(nni_aio *aio)
+{
+	aio->a_synch = 1;
+}
+
+void
 nni_aio_wait(nni_aio *aio)
 {
 	nni_mtx_lock(&nni_aio_lk);
-	while ((aio->a_active) && (!aio->a_done)) {
+	// Wait until we're done, and the synchronous completion flag
+	// is cleared (meaning any synch completion is finished).
+	while ((aio->a_active) && ((!aio->a_done) || (aio->a_synch))) {
 		aio->a_waiting = 1;
 		nni_cv_wait(&aio->a_cv);
 	}
@@ -396,11 +414,18 @@ nni_aio_expire_loop(void *arg)
 		NNI_ASSERT(aio->a_prov_cancel == NULL);
 		aio->a_expiring = 0;
 		aio->a_done     = 1;
+		if (!aio->a_synch) {
+			nni_task_dispatch(&aio->a_task);
+		} else {
+			nni_mtx_unlock(&nni_aio_lk);
+			aio->a_task.task_cb(aio->a_task.task_arg);
+			nni_mtx_lock(&nni_aio_lk);
+			aio->a_synch = 0;
+		}
 		if (aio->a_waiting) {
 			aio->a_waiting = 0;
 			nni_cv_wake(&aio->a_cv);
 		}
-		nni_task_dispatch(&aio->a_task);
 		nni_mtx_unlock(&nni_aio_lk);
 	}
 }
