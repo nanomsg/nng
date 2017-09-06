@@ -28,7 +28,6 @@ struct nni_aio {
 
 	// These fields are private to the aio framework.
 	nni_cv   a_cv;
-	unsigned a_init : 1;     // initialized flag
 	unsigned a_fini : 1;     // shutting down (no new operations)
 	unsigned a_done : 1;     // operation has completed
 	unsigned a_pend : 1;     // completion routine pending
@@ -36,7 +35,7 @@ struct nni_aio {
 	unsigned a_expiring : 1; // expiration callback in progress
 	unsigned a_waiting : 1;  // a thread is waiting for this to finish
 	unsigned a_synch : 1;    // run completion synchronously
-	unsigned a_pad : 25;     // ensure 32-bit alignment
+	unsigned a_pad : 26;     // ensure 32-bit alignment
 	nni_task a_task;
 
 	// Read/write operations.

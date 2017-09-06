@@ -67,7 +67,6 @@ nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 	memset(aio, 0, sizeof(*aio));
 	nni_cv_init(&aio->a_cv, &nni_aio_lk);
 	aio->a_expire = NNI_TIME_NEVER;
-	aio->a_init   = 1;
 	if (arg == NULL) {
 		arg = aio;
 	}
@@ -105,17 +104,15 @@ nni_aio_fini_cb(nni_aio *aio)
 void
 nni_aio_stop(nni_aio *aio)
 {
-	if (!aio->a_init) {
-		// Never initialized, so nothing should have happened.
-		return;
+	if (aio != NULL) {
+		nni_mtx_lock(&nni_aio_lk);
+		aio->a_fini = 1;
+		nni_mtx_unlock(&nni_aio_lk);
+
+		nni_aio_cancel(aio, NNG_ECANCELED);
+
+		nni_aio_wait(aio);
 	}
-	nni_mtx_lock(&nni_aio_lk);
-	aio->a_fini = 1;
-	nni_mtx_unlock(&nni_aio_lk);
-
-	nni_aio_cancel(aio, NNG_ECANCELED);
-
-	nni_aio_wait(aio);
 }
 
 void
