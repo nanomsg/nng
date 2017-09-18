@@ -244,13 +244,13 @@ nng_check_sym (strlcat string.h NNG_HAVE_STRLCAT)
 nng_check_sym (strlcpy string.h NNG_HAVE_STRLCPY)
 nng_check_sym (strnlen string.h NNG_HAVE_STRNLEN)
 
-add_subdirectory (src)
+add_subdirectory (src/nng)
 
 if (NNG_TESTS)
 	enable_testing()
 	set(all_tests, "")
-	add_subdirectory (tests)
-    add_subdirectory (perf)
+	add_subdirectory (src/tests)
+    add_subdirectory (src/perf)
 endif()
 
 #  Build the tools

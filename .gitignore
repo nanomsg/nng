@@ -1,8 +1,8 @@
-build
-lxbuild
-winbuild
-wbuild
-.vs
+build/
+lxbuild/
+winbuild/
+wbuild/
+.vs/
 .vscode/.cmaketools.json
-.vscode
+.vscode/
 etc/nng.sublime-workspace
