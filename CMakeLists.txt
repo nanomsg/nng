@@ -244,17 +244,12 @@ nng_check_sym (strlcat string.h NNG_HAVE_STRLCAT)
 nng_check_sym (strlcpy string.h NNG_HAVE_STRLCPY)
 nng_check_sym (strnlen string.h NNG_HAVE_STRNLEN)
 
+# Connects Source directory to top level CMake.
 add_subdirectory (src)
-
-if (NNG_TESTS)
-	enable_testing()
-	set(all_tests, "")
-	add_subdirectory (tests)
-    add_subdirectory (perf)
-endif()
 
 #  Build the tools
 
+# TODO: TBD: tools directory should be committed to src/tools/, most likely.
 if (NNG_ENABLE_NNGCAT)
     add_executable (nanocat tools/nngcat.c tools/options.c)
     target_link_libraries (nanocat ${PROJECT_NAME})
