@@ -28,6 +28,7 @@ struct nni_ipc_pipe {
 	uint16_t           peer;
 	uint16_t           proto;
 	size_t             rcvmax;
+	nng_sockaddr       sa;
 
 	uint8_t txhead[1 + sizeof(uint64_t)];
 	uint8_t rxhead[1 + sizeof(uint64_t)];
@@ -128,10 +129,13 @@ nni_ipc_pipe_init(nni_ipc_pipe **pipep, nni_ipc_ep *ep, void *ipp)
 		return (rv);
 	}
 
-	p->proto  = ep->proto;
-	p->rcvmax = ep->rcvmax;
-	p->ipp    = ipp;
-	p->addr   = ep->addr;
+	p->proto                    = ep->proto;
+	p->rcvmax                   = ep->rcvmax;
+	p->ipp                      = ipp;
+	p->addr                     = ep->addr;
+	p->sa.s_un.s_path.sa_family = NNG_AF_IPC;
+	nni_strlcpy(p->sa.s_un.s_path.sa_path, p->addr + strlen("ipc://"),
+	    sizeof(p->sa.s_un.s_path.sa_path));
 
 	*pipep = p;
 	return (0);
@@ -461,24 +465,20 @@ nni_ipc_pipe_peer(void *arg)
 static int
 nni_ipc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
 {
-#if 0
-	nni_inproc_pipe *pipe = arg;
-	size_t len;
 
-	switch (option) {
-	case NNG_OPT_LOCALADDR:
-	case NNG_OPT_REMOTEADDR:
-		len = strlen(pipe->addr) + 1;
-		if (len > *szp) {
-			(void) memcpy(buf, pipe->addr, *szp);
-		} else {
-			(void) memcpy(buf, pipe->addr, len);
-		}
-		*szp = len;
-		return (0);
+	nni_ipc_pipe *pipe = arg;
+	size_t        len;
+	int           rv;
+
+	if ((option == nng_optid_locaddr) || (option == nng_optid_remaddr)) {
+		rv = nni_getopt_sockaddr(&pipe->sa, buf, szp);
+	} else if (option == nng_optid_recvmaxsz) {
+		rv = nni_getopt_size(pipe->rcvmax, &buf, szp);
+
+	} else {
+		rv = NNG_ENOTSUP;
 	}
-#endif
-	return (NNG_ENOTSUP);
+	return (rv);
 }
 
 static void

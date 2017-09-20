@@ -663,29 +663,33 @@ nng_strerror(int num)
 	return ("Unknown error");
 }
 
-#if 0
 int
-nng_pipe_getopt(nng_pipe *pipe, int opt, void *val, size_t *sizep)
+nng_pipe_getopt(nng_pipe id, int opt, void *val, size_t *sizep)
 {
-	int rv;
+	int       rv;
+	nni_pipe *p;
 
-	rv = nni_pipe_getopt(pipe, opt, val, sizep);
-	if (rv == ENOTSUP) {
-		// Maybe its a generic socket option.
-		rv = nni_sock_getopt(pipe->p_sock, opt, val, sizep);
+	if ((rv = nni_pipe_find(&p, id)) != 0) {
+		return (rv);
 	}
+	rv = nni_pipe_getopt(p, opt, val, sizep);
+	nni_pipe_rele(p);
 	return (rv);
 }
 
-
 int
-nng_pipe_close(nng_pipe *pipe)
+nng_pipe_close(nng_pipe id)
 {
-	nni_pipe_close(pipe);
+	int rv;
+	nni_pipe *p;
+
+	if ((rv = nni_pipe_find(&p, id)) != 0) {
+		return (rv);
+	}
+	nni_pipe_close(p);
+	nni_pipe_rele(p);
 	return (0);
 }
-
-#endif
 
 // Message handling.
 int
@@ -1012,6 +1016,7 @@ const char *nng_opt_recvfd     = "recv-fd";
 const char *nng_opt_sendfd     = "send-fd";
 const char *nng_opt_locaddr    = "local-address";
 const char *nng_opt_remaddr    = "remote-address";
+const char *nng_opt_url        = "url";
 // Well known protocol options.
 const char *nng_opt_req_resendtime      = "req:resend-time";
 const char *nng_opt_sub_subscribe       = "sub:subscribe";
@@ -1034,6 +1039,7 @@ int nng_optid_recvfd;
 int nng_optid_sendfd;
 int nng_optid_locaddr;
 int nng_optid_remaddr;
+int nng_optid_url;
 int nng_optid_req_resendtime;
 int nng_optid_sub_subscribe;
 int nng_optid_sub_unsubscribe;

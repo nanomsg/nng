@@ -419,6 +419,7 @@ NNG_DECL const char *nng_opt_recvfd;
 NNG_DECL const char *nng_opt_sendfd;
 NNG_DECL const char *nng_opt_locaddr;
 NNG_DECL const char *nng_opt_remaddr;
+NNG_DECL const char *nng_opt_url;
 NNG_DECL const char *nng_opt_req_resendtime;
 NNG_DECL const char *nng_opt_sub_subscribe;
 NNG_DECL const char *nng_opt_sub_unsubscribe;
@@ -440,6 +441,7 @@ NNG_DECL int nng_optid_recvfd;
 NNG_DECL int nng_optid_sendfd;
 NNG_DECL int nng_optid_locaddr;
 NNG_DECL int nng_optid_remaddr;
+NNG_DECL int nng_optid_url;
 
 // These protocol specific options may not be valid until a socket of
 // the given protocol is opened!

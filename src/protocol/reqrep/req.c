@@ -405,6 +405,7 @@ req_recv_cb(void *arg)
 
 	msg = nni_aio_get_msg(p->aio_recv);
 	nni_aio_set_msg(p->aio_recv, NULL);
+	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
 
 	// We yank 4 bytes of body, and move them to the header.
 	if (nni_msg_len(msg) < 4) {

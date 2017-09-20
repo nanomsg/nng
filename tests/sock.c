@@ -113,6 +113,32 @@ TestMain("Socket Operations", {
 				    NNG_EINVAL);
 			});
 
+			Convey("URL option works", {
+				char         url[NNG_MAXADDRLEN];
+				nng_listener l;
+				nng_dialer   d;
+				size_t       sz;
+
+				So(nng_listener_create(
+				       &l, s1, "inproc://url1") == 0);
+				So(nng_dialer_create(
+				       &d, s1, "inproc://url2") == 0);
+				memset(url, 0, sizeof(url));
+				sz = sizeof(url);
+				So(nng_listener_getopt(
+				       l, nng_optid_url, url, &sz) == 0);
+				So(strcmp(url, "inproc://url1") == 0);
+				sz = sizeof(url);
+				So(nng_dialer_getopt(
+				       d, nng_optid_url, url, &sz) == 0);
+				So(strcmp(url, "inproc://url2") == 0);
+
+				Reset({
+					nng_dialer_close(d);
+					nng_listener_close(l);
+				})
+			});
+
 			Convey("We can apply options before endpoint", {
 				nng_listener l;
 				char         addr[NNG_MAXADDRLEN];

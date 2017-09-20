@@ -21,7 +21,7 @@ struct nni_ep {
 	uint64_t      ep_id;   // endpoint id
 	nni_list_node ep_node; // per socket list
 	nni_sock *    ep_sock;
-	char          ep_addr[NNG_MAXADDRLEN];
+	char          ep_url[NNG_MAXADDRLEN];
 	int           ep_mode;
 	int           ep_started;
 	int           ep_closed;  // full shutdown
@@ -82,6 +82,12 @@ nni_ep_id(nni_ep *ep)
 	return ((uint32_t) ep->ep_id);
 }
 
+const char *
+nni_ep_url(nni_ep *ep)
+{
+	return (ep->ep_url);
+}
+
 static void
 nni_ep_destroy(nni_ep *ep)
 {
@@ -117,16 +123,16 @@ nni_ep_destroy(nni_ep *ep)
 }
 
 static int
-nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
+nni_ep_create(nni_ep **epp, nni_sock *s, const char *url, int mode)
 {
 	nni_tran *tran;
 	nni_ep *  ep;
 	int       rv;
 
-	if ((tran = nni_tran_find(addr)) == NULL) {
+	if ((tran = nni_tran_find(url)) == NULL) {
 		return (NNG_ENOTSUP);
 	}
-	if (strlen(addr) >= NNG_MAXADDRLEN) {
+	if (strlen(url) >= NNG_MAXADDRLEN) {
 		return (NNG_EINVAL);
 	}
 
@@ -146,7 +152,7 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 	// dereference on hot paths.
 	ep->ep_ops = *tran->tran_ep;
 
-	(void) nni_strlcpy(ep->ep_addr, addr, sizeof(ep->ep_addr));
+	(void) nni_strlcpy(ep->ep_url, url, sizeof(ep->ep_url));
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 
@@ -159,7 +165,7 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 	    ((rv = nni_aio_init(&ep->ep_con_aio, nni_ep_con_cb, ep)) != 0) ||
 	    ((rv = nni_aio_init(&ep->ep_tmo_aio, nni_ep_tmo_cb, ep)) != 0) ||
 	    ((rv = nni_aio_init(&ep->ep_con_syn, NULL, NULL)) != 0) ||
-	    ((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, s, mode)) != 0) ||
+	    ((rv = ep->ep_ops.ep_init(&ep->ep_data, url, s, mode)) != 0) ||
 	    ((rv = nni_idhash_alloc(nni_eps, &ep->ep_id, ep)) != 0) ||
 	    ((rv = nni_sock_ep_add(s, ep)) != 0)) {
 		nni_ep_destroy(ep);
@@ -171,15 +177,15 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 }
 
 int
-nni_ep_create_dialer(nni_ep **epp, nni_sock *s, const char *addr)
+nni_ep_create_dialer(nni_ep **epp, nni_sock *s, const char *url)
 {
-	return (nni_ep_create(epp, s, addr, NNI_EP_MODE_DIAL));
+	return (nni_ep_create(epp, s, url, NNI_EP_MODE_DIAL));
 }
 
 int
-nni_ep_create_listener(nni_ep **epp, nni_sock *s, const char *addr)
+nni_ep_create_listener(nni_ep **epp, nni_sock *s, const char *url)
 {
-	return (nni_ep_create(epp, s, addr, NNI_EP_MODE_LISTEN));
+	return (nni_ep_create(epp, s, url, NNI_EP_MODE_LISTEN));
 }
 
 int
@@ -603,6 +609,9 @@ nni_ep_getopt(nni_ep *ep, int opt, void *valp, size_t *szp)
 {
 	int rv;
 
+	if (opt == nng_optid_url) {
+		return (nni_getopt_str(ep->ep_url, valp, szp));
+	}
 	if (ep->ep_ops.ep_getopt == NULL) {
 		return (NNG_ENOTSUP);
 	}

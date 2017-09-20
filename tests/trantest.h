@@ -128,6 +128,9 @@ trantest_send_recv(trantest *tt)
 		nng_msg *    send;
 		nng_msg *    recv;
 		size_t       len;
+		nng_pipe     p;
+		char         url[NNG_MAXADDRLEN];
+		size_t       sz;
 
 		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
 		So(l != 0);
@@ -155,8 +158,13 @@ trantest_send_recv(trantest *tt)
 		So(recv != NULL);
 		So(nng_msg_len(recv) == strlen("acknowledge"));
 		So(strcmp(nng_msg_body(recv), "acknowledge") == 0);
+		p = nng_msg_get_pipe(recv);
+		So(p != 0);
+		sz = sizeof (url);
+		So(nng_pipe_getopt(p, nng_optid_url, url, &sz) == 0);
+		So(strcmp(url, tt->addr) == 0);
 		nng_msg_free(recv);
-	})
+	});
 }
 void
 trantest_test_all(const char *addr)

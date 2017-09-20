@@ -136,6 +136,19 @@ nni_getopt_usec(nni_duration u, void *val, size_t *sizep)
 }
 
 int
+nni_getopt_sockaddr(const nng_sockaddr *sa, void *val, size_t *sizep)
+{
+	size_t sz = sizeof(*sa);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof(*sa);
+	memcpy(val, sa, sz);
+	return (0);
+}
+
+int
 nni_getopt_int(int i, void *val, size_t *sizep)
 {
 	size_t sz = sizeof(i);
@@ -403,6 +416,7 @@ nni_option_sys_init(void)
 	    ((rv = OPT_REGISTER(remaddr)) != 0) ||
 	    ((rv = OPT_REGISTER(recvfd)) != 0) ||
 	    ((rv = OPT_REGISTER(sendfd)) != 0) ||
+	    ((rv = OPT_REGISTER(url)) != 0) ||
 	    ((rv = OPT_REGISTER(req_resendtime)) != 0) ||
 	    ((rv = OPT_REGISTER(sub_subscribe)) != 0) ||
 	    ((rv = OPT_REGISTER(sub_unsubscribe)) != 0) ||

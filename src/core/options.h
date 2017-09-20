@@ -44,6 +44,9 @@ extern int nni_getopt_u64(uint64_t, void *, size_t *);
 // nni_getopt_str gets a C style string.
 extern int nni_getopt_str(const char *, void *, size_t *);
 
+// nni_getopt_sockaddr gets an nng_sockaddr.
+extern int nni_getopt_sockaddr(const nng_sockaddr *, void *, size_t *);
+
 // nni_setopt_size sets a size_t option.
 extern int nni_setopt_size(size_t *, const void *, size_t, size_t, size_t);
 
