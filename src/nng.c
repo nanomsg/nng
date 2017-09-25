@@ -328,131 +328,140 @@ nng_dialer_start(nng_dialer id, int flags)
 }
 
 static int
-nng_ep_setopt(uint32_t id, int opt, const void *val, size_t sz)
+nng_ep_setopt(uint32_t id, const char *name, const void *val, size_t sz)
 {
 	nni_ep *ep;
 	int     rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
 	if ((rv = nni_ep_find(&ep, id)) != 0) {
 		return (rv);
 	}
-	rv = nni_ep_setopt(ep, opt, val, sz, 1);
+	rv = nni_ep_setopt(ep, name, val, sz);
 	nni_ep_rele(ep);
 	return (rv);
 }
 
 static int
-nng_ep_getopt(uint32_t id, int opt, void *val, size_t *szp)
+nng_ep_getopt(uint32_t id, const char *name, void *val, size_t *szp)
 {
 	nni_ep *ep;
 	int     rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
 	if ((rv = nni_ep_find(&ep, id)) != 0) {
 		return (rv);
 	}
-	rv = nni_ep_getopt(ep, opt, val, szp);
+	rv = nni_ep_getopt(ep, name, val, szp);
 	nni_ep_rele(ep);
 	return (rv);
 }
 
 int
-nng_dialer_setopt(nng_dialer id, int opt, const void *v, size_t sz)
+nng_dialer_setopt(nng_dialer id, const char *name, const void *v, size_t sz)
 {
-	return (nng_ep_setopt(id, opt, v, sz));
+	return (nng_ep_setopt(id, name, v, sz));
 }
 
 int
-nng_dialer_setopt_int(nng_dialer id, int opt, int val)
+nng_dialer_setopt_int(nng_dialer id, const char *name, int val)
 {
-	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+	return (nng_ep_setopt(id, name, &val, sizeof(val)));
 }
 
 int
-nng_dialer_setopt_size(nng_dialer id, int opt, size_t val)
+nng_dialer_setopt_size(nng_dialer id, const char *name, size_t val)
 {
-	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+	return (nng_ep_setopt(id, name, &val, sizeof(val)));
 }
 
 int
-nng_dialer_setopt_usec(nng_dialer id, int opt, uint64_t val)
+nng_dialer_setopt_usec(nng_dialer id, const char *name, uint64_t val)
 {
-	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+	return (nng_ep_setopt(id, name, &val, sizeof(val)));
 }
 
 int
-nng_dialer_getopt(nng_dialer id, int opt, void *val, size_t *szp)
+nng_dialer_getopt(nng_dialer id, const char *name, void *val, size_t *szp)
 {
-	return (nng_ep_getopt(id, opt, val, szp));
+	return (nng_ep_getopt(id, name, val, szp));
 }
 
 int
-nng_dialer_getopt_int(nng_dialer id, int opt, int *valp)
+nng_dialer_getopt_int(nng_dialer id, const char *name, int *valp)
 {
 	size_t sz = sizeof(*valp);
-	return (nng_ep_getopt(id, opt, valp, &sz));
+	return (nng_ep_getopt(id, name, valp, &sz));
 }
 
 int
-nng_dialer_getopt_size(nng_dialer id, int opt, size_t *valp)
+nng_dialer_getopt_size(nng_dialer id, const char *name, size_t *valp)
 {
 	size_t sz = sizeof(*valp);
-	return (nng_ep_getopt(id, opt, valp, &sz));
+	return (nng_ep_getopt(id, name, valp, &sz));
 }
 
 int
-nng_dialer_getopt_usec(nng_dialer id, int opt, uint64_t *valp)
+nng_dialer_getopt_usec(nng_dialer id, const char *name, uint64_t *valp)
 {
 	size_t sz = sizeof(*valp);
-	return (nng_ep_getopt(id, opt, valp, &sz));
+	return (nng_ep_getopt(id, name, valp, &sz));
 }
 
 int
-nng_listener_setopt(nng_listener id, int opt, const void *v, size_t sz)
+nng_listener_setopt(
+    nng_listener id, const char *name, const void *v, size_t sz)
 {
-	return (nng_ep_setopt(id, opt, v, sz));
+	return (nng_ep_setopt(id, name, v, sz));
 }
 
 int
-nng_listener_setopt_int(nng_listener id, int opt, int val)
+nng_listener_setopt_int(nng_listener id, const char *name, int val)
 {
-	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+	return (nng_ep_setopt(id, name, &val, sizeof(val)));
 }
 
 int
-nng_listener_setopt_size(nng_listener id, int opt, size_t val)
+nng_listener_setopt_size(nng_listener id, const char *name, size_t val)
 {
-	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+	return (nng_ep_setopt(id, name, &val, sizeof(val)));
 }
 
 int
-nng_listener_setopt_usec(nng_listener id, int opt, uint64_t val)
+nng_listener_setopt_usec(nng_listener id, const char *name, uint64_t val)
 {
-	return (nng_ep_setopt(id, opt, &val, sizeof(val)));
+	return (nng_ep_setopt(id, name, &val, sizeof(val)));
 }
 
 int
-nng_listener_getopt(nng_listener id, int opt, void *val, size_t *szp)
+nng_listener_getopt(nng_listener id, const char *name, void *val, size_t *szp)
 {
-	return (nng_ep_getopt(id, opt, val, szp));
+	return (nng_ep_getopt(id, name, val, szp));
 }
 
 int
-nng_listener_getopt_int(nng_listener id, int opt, int *valp)
-{
-	size_t sz = sizeof(*valp);
-	return (nng_ep_getopt(id, opt, valp, &sz));
-}
-
-int
-nng_listener_getopt_size(nng_listener id, int opt, size_t *valp)
+nng_listener_getopt_int(nng_listener id, const char *name, int *valp)
 {
 	size_t sz = sizeof(*valp);
-	return (nng_ep_getopt(id, opt, valp, &sz));
+	return (nng_ep_getopt(id, name, valp, &sz));
 }
 
 int
-nng_listener_getopt_usec(nng_listener id, int opt, uint64_t *valp)
+nng_listener_getopt_size(nng_listener id, const char *name, size_t *valp)
 {
 	size_t sz = sizeof(*valp);
-	return (nng_ep_getopt(id, opt, valp, &sz));
+	return (nng_ep_getopt(id, name, valp, &sz));
+}
+
+int
+nng_listener_getopt_usec(nng_listener id, const char *name, uint64_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_ep_getopt(id, name, valp, &sz));
 }
 
 static int
@@ -481,71 +490,77 @@ nng_listener_close(nng_listener l)
 }
 
 int
-nng_setopt(nng_socket sid, int opt, const void *val, size_t sz)
+nng_setopt(nng_socket sid, const char *name, const void *val, size_t sz)
 {
 	nni_sock *sock;
 	int       rv;
 
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
-	rv = nni_sock_setopt(sock, opt, val, sz);
+	rv = nni_sock_setopt(sock, name, val, sz);
 	nni_sock_rele(sock);
 	return (rv);
 }
 
 int
-nng_getopt(nng_socket sid, int opt, void *val, size_t *szp)
+nng_getopt(nng_socket sid, const char *name, void *val, size_t *szp)
 {
 	nni_sock *sock;
 	int       rv;
 
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
 		return (rv);
 	}
-	rv = nni_sock_getopt(sock, opt, val, szp);
+	rv = nni_sock_getopt(sock, name, val, szp);
 	nni_sock_rele(sock);
 	return (rv);
 }
 
 // Convenience option wrappers.
 int
-nng_setopt_int(nng_socket sid, int opt, int val)
+nng_setopt_int(nng_socket sid, const char *name, int val)
 {
-	return (nng_setopt(sid, opt, &val, sizeof(val)));
+	return (nng_setopt(sid, name, &val, sizeof(val)));
 }
 
 int
-nng_setopt_size(nng_socket sid, int opt, size_t val)
+nng_setopt_size(nng_socket sid, const char *name, size_t val)
 {
-	return (nng_setopt(sid, opt, &val, sizeof(val)));
+	return (nng_setopt(sid, name, &val, sizeof(val)));
 }
 
 int
-nng_setopt_usec(nng_socket sid, int opt, uint64_t val)
+nng_setopt_usec(nng_socket sid, const char *name, uint64_t val)
 {
-	return (nng_setopt(sid, opt, &val, sizeof(val)));
+	return (nng_setopt(sid, name, &val, sizeof(val)));
 }
 
 int
-nng_getopt_int(nng_socket sid, int opt, int *valp)
+nng_getopt_int(nng_socket sid, const char *name, int *valp)
 {
 	size_t sz = sizeof(*valp);
-	return (nng_getopt(sid, opt, valp, &sz));
+	return (nng_getopt(sid, name, valp, &sz));
 }
 
 int
-nng_getopt_size(nng_socket sid, int opt, size_t *valp)
+nng_getopt_size(nng_socket sid, const char *name, size_t *valp)
 {
 	size_t sz = sizeof(*valp);
-	return (nng_getopt(sid, opt, valp, &sz));
+	return (nng_getopt(sid, name, valp, &sz));
 }
 
 int
-nng_getopt_usec(nng_socket sid, int opt, uint64_t *valp)
+nng_getopt_usec(nng_socket sid, const char *name, uint64_t *valp)
 {
 	size_t sz = sizeof(*valp);
-	return (nng_getopt(sid, opt, valp, &sz));
+	return (nng_getopt(sid, name, valp, &sz));
 }
 
 nng_notify *
@@ -642,8 +657,10 @@ static const struct {
 	{ NNG_ENOFILES, "Out of files" },
 	{ NNG_ENOSPC, "Out of space" },
 	{ NNG_EEXIST, "Resource already exists" },
+	{ NNG_EREADONLY, "Read only resource" },
+	{ NNG_EWRITEONLY, "Write only resource" },
 	{ NNG_EINTERNAL, "Internal error detected" },
-	{ 0, NULL }
+	{ 0, NULL },
 	// clang-format on
 };
 
@@ -675,15 +692,18 @@ nng_strerror(int num)
 }
 
 int
-nng_pipe_getopt(nng_pipe id, int opt, void *val, size_t *sizep)
+nng_pipe_getopt(nng_pipe id, const char *name, void *val, size_t *sizep)
 {
 	int       rv;
 	nni_pipe *p;
 
+	if ((rv = nni_init()) < 0) {
+		return (rv);
+	}
 	if ((rv = nni_pipe_find(&p, id)) != 0) {
 		return (rv);
 	}
-	rv = nni_pipe_getopt(p, opt, val, sizep);
+	rv = nni_pipe_getopt(p, name, val, sizep);
 	nni_pipe_rele(p);
 	return (rv);
 }
@@ -691,7 +711,7 @@ nng_pipe_getopt(nng_pipe id, int opt, void *val, size_t *sizep)
 int
 nng_pipe_close(nng_pipe id)
 {
-	int rv;
+	int       rv;
 	nni_pipe *p;
 
 	if ((rv = nni_pipe_find(&p, id)) != 0) {
@@ -893,20 +913,6 @@ nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 	return (nni_msg_getopt(msg, opt, ptr, szp));
 }
 
-int
-nng_option_lookup(const char *name)
-{
-	(void) nni_init();
-	return (nni_option_lookup(name));
-}
-
-const char *
-nng_option_name(int id)
-{
-	(void) nni_init();
-	return (nni_option_name(id));
-}
-
 #if 0
 int
 nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)
@@ -984,7 +990,7 @@ nng_thread_create(void **thrp, void (*func)(void *), void *arg)
 	nni_thr *thr;
 	int      rv;
 
-	nni_init();
+	(void) nni_init();
 
 	if ((thr = NNI_ALLOC_STRUCT(thr)) == NULL) {
 		return (NNG_ENOMEM);
@@ -1011,47 +1017,12 @@ nng_thread_destroy(void *arg)
 // Constant option definitions.  These are for well-known options,
 // so that the vast majority of consumers don't have to look these up.
 
-const char *nng_opt_raw        = "raw";
-const char *nng_opt_linger     = "linger";
-const char *nng_opt_recvbuf    = "recv-buffer";
-const char *nng_opt_sendbuf    = "send-buffer";
-const char *nng_opt_recvtimeo  = "recv-timeout";
-const char *nng_opt_sendtimeo  = "send-timeout";
-const char *nng_opt_recvmaxsz  = "recv-size-max";
-const char *nng_opt_reconnmint = "reconnect-time-min";
-const char *nng_opt_reconnmaxt = "reconnect-time-min";
-const char *nng_opt_maxttl     = "ttl-max";
-const char *nng_opt_protocol   = "protocol";
-const char *nng_opt_transport  = "transport";
-const char *nng_opt_recvfd     = "recv-fd";
-const char *nng_opt_sendfd     = "send-fd";
-const char *nng_opt_locaddr    = "local-address";
-const char *nng_opt_remaddr    = "remote-address";
-const char *nng_opt_url        = "url";
+const char *nng_opt_raw       = "raw";
+const char *nng_opt_recvmaxsz = "recv-size-max";
+const char *nng_opt_maxttl    = "ttl-max";
+const char *nng_opt_protocol  = "protocol";
+const char *nng_opt_transport = "transport";
+const char *nng_opt_locaddr   = "local-address";
+const char *nng_opt_remaddr   = "remote-address";
 // Well known protocol options.
-const char *nng_opt_req_resendtime      = "req:resend-time";
-const char *nng_opt_sub_subscribe       = "sub:subscribe";
-const char *nng_opt_sub_unsubscribe     = "sub:unsubscribe";
 const char *nng_opt_surveyor_surveytime = "surveyor:survey-time";
-
-int nng_optid_raw;
-int nng_optid_linger;
-int nng_optid_recvbuf;
-int nng_optid_sendbuf;
-int nng_optid_recvtimeo;
-int nng_optid_sendtimeo;
-int nng_optid_recvmaxsz;
-int nng_optid_reconnmint;
-int nng_optid_reconnmaxt;
-int nng_optid_maxttl;
-int nng_optid_protocol;
-int nng_optid_transport;
-int nng_optid_recvfd;
-int nng_optid_sendfd;
-int nng_optid_locaddr;
-int nng_optid_remaddr;
-int nng_optid_url;
-int nng_optid_req_resendtime;
-int nng_optid_sub_subscribe;
-int nng_optid_sub_unsubscribe;
-int nng_optid_surveyor_surveytime;

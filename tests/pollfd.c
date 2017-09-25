@@ -34,24 +34,6 @@
 
 TestMain("Poll FDs", {
 
-	Convey("Option values work", {
-		int         opt;
-		const char *name;
-
-		opt = nng_option_lookup(nng_opt_recvfd);
-		So(opt > 0);
-		So(opt == nng_optid_recvfd);
-		name = nng_option_name(opt);
-		So(name != NULL);
-		So(strcmp(name, nng_opt_recvfd) == 0);
-		opt = nng_option_lookup(nng_opt_sendfd);
-		So(opt > 0);
-		So(opt == nng_optid_sendfd);
-		name = nng_option_name(opt);
-		So(name != NULL);
-		So(strcmp(name, nng_opt_sendfd) == 0);
-	});
-
 	Convey("Given a connected pair of sockets", {
 		nng_socket s1;
 		nng_socket s2;
@@ -73,14 +55,14 @@ TestMain("Poll FDs", {
 			size_t sz;
 
 			sz = sizeof(fd);
-			So(nng_getopt(s1, nng_optid_recvfd, &fd, &sz) == 0);
+			So(nng_getopt(s1, NNG_OPT_RECVFD, &fd, &sz) == 0);
 			So(fd != INVALID_SOCKET);
 
 			Convey("And it is always the same fd", {
 				int fd2;
 				sz = sizeof(fd2);
-				So(nng_getopt(
-				       s1, nng_optid_recvfd, &fd2, &sz) == 0);
+				So(nng_getopt(s1, NNG_OPT_RECVFD, &fd2, &sz) ==
+				    0);
 				So(fd2 == fd);
 			});
 
@@ -111,7 +93,7 @@ TestMain("Poll FDs", {
 			size_t sz;
 
 			sz = sizeof(fd);
-			So(nng_getopt(s1, nng_optid_sendfd, &fd, &sz) == 0);
+			So(nng_getopt(s1, NNG_OPT_SENDFD, &fd, &sz) == 0);
 			So(fd != INVALID_SOCKET);
 			So(nng_send(s1, "oops", 4, 0) == 0);
 		});
@@ -120,10 +102,10 @@ TestMain("Poll FDs", {
 			int    fd;
 			size_t sz;
 			sz = 1;
-			So(nng_getopt(s1, nng_optid_recvfd, &fd, &sz) ==
+			So(nng_getopt(s1, NNG_OPT_RECVFD, &fd, &sz) ==
 			    NNG_EINVAL);
 			sz = 128;
-			So(nng_getopt(s1, nng_optid_recvfd, &fd, &sz) == 0);
+			So(nng_getopt(s1, NNG_OPT_RECVFD, &fd, &sz) == 0);
 			So(sz == sizeof(fd));
 		});
 		Convey("We cannot get a send FD for PULL", {
@@ -133,7 +115,7 @@ TestMain("Poll FDs", {
 			So(nng_pull_open(&s3) == 0);
 			Reset({ nng_close(s3); });
 			sz = sizeof(fd);
-			So(nng_getopt(s3, nng_optid_sendfd, &fd, &sz) ==
+			So(nng_getopt(s3, NNG_OPT_SENDFD, &fd, &sz) ==
 			    NNG_ENOTSUP);
 		});
 
@@ -144,7 +126,7 @@ TestMain("Poll FDs", {
 			So(nng_push_open(&s3) == 0);
 			Reset({ nng_close(s3); });
 			sz = sizeof(fd);
-			So(nng_getopt(s3, nng_optid_recvfd, &fd, &sz) ==
+			So(nng_getopt(s3, NNG_OPT_RECVFD, &fd, &sz) ==
 			    NNG_ENOTSUP);
 		});
 	});

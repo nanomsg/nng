@@ -32,8 +32,8 @@ TestMain("Reconnect works", {
 			nng_close(pull);
 		});
 
-		So(nng_setopt_usec(pull, nng_optid_reconnmint, 10000) == 0);
-		So(nng_setopt_usec(pull, nng_optid_reconnmaxt, 10000) == 0);
+		So(nng_setopt_usec(pull, NNG_OPT_RECONNMINT, 10000) == 0);
+		So(nng_setopt_usec(pull, NNG_OPT_RECONNMAXT, 10000) == 0);
 
 		Convey("Dialing before listening works", {
 			So(nng_dial(push, addr, NULL, NNG_FLAG_NONBLOCK) == 0);

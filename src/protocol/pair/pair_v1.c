@@ -25,9 +25,9 @@ static void pair1_pipe_getq_cb(void *);
 static void pair1_pipe_putq_cb(void *);
 static void pair1_pipe_fini(void *);
 
-// These are exposed as external names for external consumers.
-int         nng_optid_pair1_poly;
-const char *nng_opt_pair1_poly = "pair1-polyamorous";
+// This is exposed as an external name for external consumers.
+#define NNG_OPT_PAIR1_POLY "pair1-polyamorous"
+const char *nng_opt_pair1_poly = NNG_OPT_PAIR1_POLY;
 
 // pair1_sock is our per-socket protocol private structure.
 struct pair1_sock {
@@ -394,74 +394,57 @@ pair1_sock_close(void *arg)
 }
 
 static int
-pair1_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
+pair1_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	pair1_sock *s  = arg;
-	int         rv = NNG_ENOTSUP;
-
-	if (opt == nng_optid_raw) {
-		nni_mtx_lock(&s->mtx);
-		if (s->started) {
-			rv = NNG_ESTATE;
-		} else {
-			rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
-		}
-		nni_mtx_unlock(&s->mtx);
-	} else if (opt == nng_optid_maxttl) {
-		nni_mtx_lock(&s->mtx);
-		rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
-		nni_mtx_unlock(&s->mtx);
-	} else if (opt == nng_optid_pair1_poly) {
-		nni_mtx_lock(&s->mtx);
-		if (s->started) {
-			rv = NNG_ESTATE;
-		} else {
-			rv = nni_setopt_int(&s->poly, buf, sz, 0, 1);
-		}
-		nni_mtx_unlock(&s->mtx);
-	}
-
+	pair1_sock *s = arg;
+	int         rv;
+	nni_mtx_lock(&s->mtx);
+	rv = s->started ? NNG_ESTATE : nni_setopt_int(&s->raw, buf, sz, 0, 1);
+	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
 
 static int
-pair1_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
+pair1_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	pair1_sock *s  = arg;
-	int         rv = NNG_ENOTSUP;
-
-	if (opt == nng_optid_raw) {
-		nni_mtx_lock(&s->mtx);
-		rv = nni_getopt_int(s->raw, buf, szp);
-		nni_mtx_unlock(&s->mtx);
-	} else if (opt == nng_optid_maxttl) {
-		nni_mtx_lock(&s->mtx);
-		rv = nni_getopt_int(s->ttl, buf, szp);
-		nni_mtx_unlock(&s->mtx);
-	} else if (opt == nng_optid_pair1_poly) {
-		nni_mtx_lock(&s->mtx);
-		rv = nni_getopt_int(s->poly, buf, szp);
-		nni_mtx_unlock(&s->mtx);
-	}
-	return (rv);
-}
-
-static void
-pair1_fini(void)
-{
-	nng_optid_pair1_poly = -1;
+	pair1_sock *s = arg;
+	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static int
-pair1_init(void)
+pair1_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
 {
-	int rv;
-	if ((rv = nni_option_register(
-	         nng_opt_pair1_poly, &nng_optid_pair1_poly)) != 0) {
-		pair1_fini();
-		return (rv);
-	}
-	return (0);
+	pair1_sock *s = arg;
+	int         rv;
+	nni_mtx_lock(&s->mtx); // Have to be locked against recv cb.
+	rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
+	nni_mtx_unlock(&s->mtx);
+	return (rv);
+}
+
+static int
+pair1_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
+{
+	pair1_sock *s = arg;
+	return (nni_getopt_int(s->ttl, buf, szp));
+}
+
+static int
+pair1_sock_setopt_poly(void *arg, const void *buf, size_t sz)
+{
+	pair1_sock *s = arg;
+	int         rv;
+	nni_mtx_lock(&s->mtx);
+	rv = s->started ? NNG_ESTATE : nni_setopt_int(&s->poly, buf, sz, 0, 1);
+	nni_mtx_unlock(&s->mtx);
+	return (rv);
+}
+
+static int
+pair1_sock_getopt_poly(void *arg, void *buf, size_t *szp)
+{
+	pair1_sock *s = arg;
+	return (nni_getopt_int(s->poly, buf, szp));
 }
 
 static nni_proto_pipe_ops pair1_pipe_ops = {
@@ -471,13 +454,32 @@ static nni_proto_pipe_ops pair1_pipe_ops = {
 	.pipe_stop  = pair1_pipe_stop,
 };
 
+static nni_proto_sock_option pair1_sock_options[] = {
+	{
+	    .pso_name   = NNG_OPT_RAW,
+	    .pso_getopt = pair1_sock_getopt_raw,
+	    .pso_setopt = pair1_sock_setopt_raw,
+	},
+	{
+	    .pso_name   = NNG_OPT_MAXTTL,
+	    .pso_getopt = pair1_sock_getopt_maxttl,
+	    .pso_setopt = pair1_sock_setopt_maxttl,
+	},
+	{
+	    .pso_name   = NNG_OPT_PAIR1_POLY,
+	    .pso_getopt = pair1_sock_getopt_poly,
+	    .pso_setopt = pair1_sock_setopt_poly,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static nni_proto_sock_ops pair1_sock_ops = {
-	.sock_init   = pair1_sock_init,
-	.sock_fini   = pair1_sock_fini,
-	.sock_open   = pair1_sock_open,
-	.sock_close  = pair1_sock_close,
-	.sock_setopt = pair1_sock_setopt,
-	.sock_getopt = pair1_sock_getopt,
+	.sock_init    = pair1_sock_init,
+	.sock_fini    = pair1_sock_fini,
+	.sock_open    = pair1_sock_open,
+	.sock_close   = pair1_sock_close,
+	.sock_options = pair1_sock_options,
 };
 
 static nni_proto pair1_proto = {
@@ -487,8 +489,6 @@ static nni_proto pair1_proto = {
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &pair1_sock_ops,
 	.proto_pipe_ops = &pair1_pipe_ops,
-	.proto_init     = &pair1_init,
-	.proto_fini     = &pair1_fini,
 };
 
 int

@@ -325,27 +325,17 @@ bus_pipe_recv(bus_pipe *p)
 }
 
 static int
-bus_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
+bus_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	bus_sock *s  = arg;
-	int       rv = NNG_ENOTSUP;
-
-	if (opt == nng_optid_raw) {
-		rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
-	}
-	return (rv);
+	bus_sock *s = arg;
+	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
 }
 
 static int
-bus_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
+bus_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	bus_sock *s  = arg;
-	int       rv = NNG_ENOTSUP;
-
-	if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(s->raw, buf, szp);
-	}
-	return (rv);
+	bus_sock *s = arg;
+	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static nni_proto_pipe_ops bus_pipe_ops = {
@@ -355,13 +345,22 @@ static nni_proto_pipe_ops bus_pipe_ops = {
 	.pipe_stop  = bus_pipe_stop,
 };
 
+static nni_proto_sock_option bus_sock_options[] = {
+	{
+	    .pso_name   = NNG_OPT_RAW,
+	    .pso_getopt = bus_sock_getopt_raw,
+	    .pso_setopt = bus_sock_setopt_raw,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static nni_proto_sock_ops bus_sock_ops = {
-	.sock_init   = bus_sock_init,
-	.sock_fini   = bus_sock_fini,
-	.sock_open   = bus_sock_open,
-	.sock_close  = bus_sock_close,
-	.sock_setopt = bus_sock_setopt,
-	.sock_getopt = bus_sock_getopt,
+	.sock_init    = bus_sock_init,
+	.sock_fini    = bus_sock_fini,
+	.sock_open    = bus_sock_open,
+	.sock_close   = bus_sock_close,
+	.sock_options = bus_sock_options,
 };
 
 static nni_proto bus_proto = {

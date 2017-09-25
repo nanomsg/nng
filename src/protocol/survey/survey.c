@@ -267,44 +267,38 @@ failed:
 }
 
 static int
-surv_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
+surv_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	surv_sock *s  = arg;
-	int        rv = NNG_ENOTSUP;
-	int        oldraw;
+	surv_sock *s = arg;
+	int        rv;
 
-	if (opt == nng_optid_surveyor_surveytime) {
-		rv = nni_setopt_usec(&s->survtime, buf, sz);
-
-	} else if (opt == nng_optid_raw) {
-		oldraw = s->raw;
-		rv     = nni_setopt_int(&s->raw, buf, sz, 0, 1);
-		if (oldraw != s->raw) {
-			if (s->raw) {
-				nni_sock_recverr(s->nsock, 0);
-			} else {
-				nni_sock_recverr(s->nsock, NNG_ESTATE);
-			}
-			s->survid = 0;
-			nni_timer_cancel(&s->timer);
-		}
+	if ((rv = nni_setopt_int(&s->raw, buf, sz, 0, 1)) == 0) {
+		nni_sock_recverr(s->nsock, s->raw ? 0 : NNG_ESTATE);
+		s->survid = 0;
+		nni_timer_cancel(&s->timer);
 	}
-
 	return (rv);
 }
 
 static int
-surv_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
+surv_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	surv_sock *s  = arg;
-	int        rv = NNG_ENOTSUP;
+	surv_sock *s = arg;
+	return (nni_getopt_int(s->raw, buf, szp));
+}
 
-	if (opt == nng_optid_surveyor_surveytime) {
-		rv = nni_getopt_usec(s->survtime, buf, szp);
-	} else if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(s->raw, buf, szp);
-	}
-	return (rv);
+static int
+surv_sock_setopt_surveytime(void *arg, const void *buf, size_t sz)
+{
+	surv_sock *s = arg;
+	return (nni_setopt_usec(&s->survtime, buf, sz));
+}
+
+static int
+surv_sock_getopt_surveytime(void *arg, void *buf, size_t *szp)
+{
+	surv_sock *s = arg;
+	return (nni_getopt_usec(s->survtime, buf, szp));
 }
 
 static void
@@ -418,13 +412,27 @@ static nni_proto_pipe_ops surv_pipe_ops = {
 	.pipe_stop  = surv_pipe_stop,
 };
 
+static nni_proto_sock_option surv_sock_options[] = {
+	{
+	    .pso_name   = NNG_OPT_RAW,
+	    .pso_getopt = surv_sock_getopt_raw,
+	    .pso_setopt = surv_sock_setopt_raw,
+	},
+	{
+	    .pso_name   = NNG_OPT_SURVEYOR_SURVEYTIME,
+	    .pso_getopt = surv_sock_getopt_surveytime,
+	    .pso_setopt = surv_sock_setopt_surveytime,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static nni_proto_sock_ops surv_sock_ops = {
 	.sock_init    = surv_sock_init,
 	.sock_fini    = surv_sock_fini,
 	.sock_open    = surv_sock_open,
 	.sock_close   = surv_sock_close,
-	.sock_setopt  = surv_sock_setopt,
-	.sock_getopt  = surv_sock_getopt,
+	.sock_options = surv_sock_options,
 	.sock_rfilter = surv_sock_rfilter,
 	.sock_sfilter = surv_sock_sfilter,
 };

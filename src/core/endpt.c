@@ -480,7 +480,7 @@ nni_ep_acc_cb(void *arg)
 		break;
 	case NNG_ECLOSED:
 	case NNG_ECANCELED:
-		// Canceled or closed, no furhter action.
+		// Canceled or closed, no further action.
 		break;
 	case NNG_ECONNABORTED:
 	case NNG_ECONNRESET:
@@ -587,38 +587,62 @@ nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
 }
 
 int
-nni_ep_setopt(nni_ep *ep, int opt, const void *val, size_t sz, int check)
+nni_ep_setopt(nni_ep *ep, const char *name, const void *val, size_t sz)
 {
-	int rv;
+	nni_tran_ep_option *eo;
 
-	if (ep->ep_ops.ep_setopt == NULL) {
-		return (NNG_ENOTSUP);
+	if (strcmp(name, NNG_OPT_URL) == 0) {
+		return (NNG_EREADONLY);
 	}
-	nni_mtx_lock(&ep->ep_mtx);
-	if (check && ep->ep_started) {
+
+	for (eo = ep->ep_ops.ep_options; eo && eo->eo_name; eo++) {
+		int rv;
+
+		if (strcmp(eo->eo_name, name) != 0) {
+			continue;
+		}
+		if (eo->eo_setopt == NULL) {
+			return (NNG_EREADONLY);
+		}
+		nni_mtx_lock(&ep->ep_mtx);
+		// XXX: Consider removing this test.
+		if (ep->ep_started) {
+			nni_mtx_unlock(&ep->ep_mtx);
+			return (NNG_ESTATE);
+		}
+		rv = eo->eo_setopt(ep->ep_data, val, sz);
 		nni_mtx_unlock(&ep->ep_mtx);
-		return (NNG_ESTATE);
+		return (rv);
 	}
-	rv = ep->ep_ops.ep_setopt(ep->ep_data, opt, val, sz);
-	nni_mtx_unlock(&ep->ep_mtx);
-	return (rv);
+
+	// XXX: socket fallback
+	return (NNG_ENOTSUP);
 }
 
 int
-nni_ep_getopt(nni_ep *ep, int opt, void *valp, size_t *szp)
+nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp)
 {
-	int rv;
+	nni_tran_ep_option *eo;
 
-	if (opt == nng_optid_url) {
+	if (strcmp(name, NNG_OPT_URL) == 0) {
 		return (nni_getopt_str(ep->ep_url, valp, szp));
 	}
-	if (ep->ep_ops.ep_getopt == NULL) {
-		return (NNG_ENOTSUP);
+
+	for (eo = ep->ep_ops.ep_options; eo && eo->eo_name; eo++) {
+		int rv;
+		if (strcmp(eo->eo_name, name) != 0) {
+			continue;
+		}
+		if (eo->eo_getopt == NULL) {
+			return (NNG_EWRITEONLY);
+		}
+		nni_mtx_lock(&ep->ep_mtx);
+		rv = eo->eo_getopt(ep->ep_data, valp, szp);
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (rv);
 	}
-	nni_mtx_lock(&ep->ep_mtx);
-	rv = ep->ep_ops.ep_getopt(ep->ep_data, opt, valp, szp);
-	nni_mtx_unlock(&ep->ep_mtx);
-	return (rv);
+
+	return (nni_sock_getopt(ep->ep_sock, name, valp, szp));
 }
 
 void

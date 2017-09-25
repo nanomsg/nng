@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -122,14 +123,14 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		// back during load balancing.  Adding a small buffer
 		// ensures that we can write to each stream, even if
 		// the listeners are not running yet.
-		So(nng_setopt_int(push, nng_optid_recvbuf, 4) == 0);
-		So(nng_setopt_int(push, nng_optid_sendbuf, 4) == 0);
-		So(nng_setopt_int(pull1, nng_optid_recvbuf, 4) == 0);
-		So(nng_setopt_int(pull1, nng_optid_sendbuf, 4) == 0);
-		So(nng_setopt_int(pull2, nng_optid_recvbuf, 4) == 0);
-		So(nng_setopt_int(pull2, nng_optid_sendbuf, 4) == 0);
-		So(nng_setopt_int(pull3, nng_optid_recvbuf, 4) == 0);
-		So(nng_setopt_int(pull3, nng_optid_sendbuf, 4) == 0);
+		So(nng_setopt_int(push, NNG_OPT_RECVBUF, 4) == 0);
+		So(nng_setopt_int(push, NNG_OPT_SENDBUF, 4) == 0);
+		So(nng_setopt_int(pull1, NNG_OPT_RECVBUF, 4) == 0);
+		So(nng_setopt_int(pull1, NNG_OPT_SENDBUF, 4) == 0);
+		So(nng_setopt_int(pull2, NNG_OPT_RECVBUF, 4) == 0);
+		So(nng_setopt_int(pull2, NNG_OPT_SENDBUF, 4) == 0);
+		So(nng_setopt_int(pull3, NNG_OPT_RECVBUF, 4) == 0);
+		So(nng_setopt_int(pull3, NNG_OPT_SENDBUF, 4) == 0);
 
 		So(nng_msg_alloc(&abc, 0) == 0);
 		APPENDSTR(abc, "abc");
@@ -137,9 +138,9 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		APPENDSTR(def, "def");
 
 		usecs = 100000;
-		So(nng_setopt_usec(pull1, nng_optid_recvtimeo, usecs) == 0);
-		So(nng_setopt_usec(pull2, nng_optid_recvtimeo, usecs) == 0);
-		So(nng_setopt_usec(pull3, nng_optid_recvtimeo, usecs) == 0);
+		So(nng_setopt_usec(pull1, NNG_OPT_RECVTIMEO, usecs) == 0);
+		So(nng_setopt_usec(pull2, NNG_OPT_RECVTIMEO, usecs) == 0);
+		So(nng_setopt_usec(pull3, NNG_OPT_RECVTIMEO, usecs) == 0);
 		So(nng_listen(push, addr, NULL, 0) == 0);
 		So(nng_dial(pull1, addr, NULL, 0) == 0);
 		So(nng_dial(pull2, addr, NULL, 0) == 0);

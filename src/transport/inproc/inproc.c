@@ -177,25 +177,15 @@ nni_inproc_pipe_peer(void *arg)
 }
 
 static int
-nni_inproc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
+nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp)
 {
-#if 0
-	nni_inproc_pipe *pipe = arg;
+	nni_inproc_pipe *p = arg;
+	nni_sockaddr     sa;
 
-	switch (option) {
-	case NNG_OPT_LOCALADDR:
-	case NNG_OPT_REMOTEADDR:
-		len = strlen(pipe->addr) + 1;
-		if (len > *szp) {
-			(void) memcpy(buf, pipe->addr, *szp);
-		} else {
-			(void) memcpy(buf, pipe->addr, len);
-		}
-		*szp = len;
-		return (0);
-	}
-#endif
-	return (NNG_ENOTSUP);
+	sa.s_un.s_inproc.sa_family = NNG_AF_INPROC;
+	nni_strlcpy(sa.s_un.s_inproc.sa_path, p->addr,
+	    sizeof(sa.s_un.s_inproc.sa_path));
+	return (nni_getopt_sockaddr(&sa, buf, szp));
 }
 
 static int
@@ -442,13 +432,25 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
+static nni_tran_pipe_option nni_inproc_pipe_options[] = {
+	{ NNG_OPT_LOCADDR, nni_inproc_pipe_get_addr },
+	{ NNG_OPT_REMADDR, nni_inproc_pipe_get_addr },
+	// terminate list
+	{ NULL, NULL },
+};
+
 static nni_tran_pipe nni_inproc_pipe_ops = {
-	.p_fini   = nni_inproc_pipe_fini,
-	.p_send   = nni_inproc_pipe_send,
-	.p_recv   = nni_inproc_pipe_recv,
-	.p_close  = nni_inproc_pipe_close,
-	.p_peer   = nni_inproc_pipe_peer,
-	.p_getopt = nni_inproc_pipe_getopt,
+	.p_fini    = nni_inproc_pipe_fini,
+	.p_send    = nni_inproc_pipe_send,
+	.p_recv    = nni_inproc_pipe_recv,
+	.p_close   = nni_inproc_pipe_close,
+	.p_peer    = nni_inproc_pipe_peer,
+	.p_options = nni_inproc_pipe_options,
+};
+
+static nni_tran_ep_option nni_inproc_ep_options[] = {
+	// terminate list
+	{ NULL, NULL, NULL },
 };
 
 static nni_tran_ep nni_inproc_ep_ops = {
@@ -458,8 +460,7 @@ static nni_tran_ep nni_inproc_ep_ops = {
 	.ep_bind    = nni_inproc_ep_bind,
 	.ep_accept  = nni_inproc_ep_accept,
 	.ep_close   = nni_inproc_ep_close,
-	.ep_setopt  = NULL,
-	.ep_getopt  = NULL,
+	.ep_options = nni_inproc_ep_options,
 };
 
 // This is the inproc transport linkage, and should be the only global

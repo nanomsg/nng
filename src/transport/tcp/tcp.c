@@ -63,18 +63,6 @@ static void nni_tcp_pipe_nego_cb(void *);
 static void nni_tcp_ep_cb(void *arg);
 
 static int
-nni_tcp_tran_chkopt(int o, const void *data, size_t sz)
-{
-	if (o == nng_optid_recvmaxsz) {
-		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
-	}
-	if (o == nng_optid_linger) {
-		return (nni_chkopt_usec(data, sz));
-	}
-	return (NNG_ENOTSUP);
-}
-
-static int
 nni_tcp_tran_init(void)
 {
 	return (0);
@@ -416,29 +404,6 @@ nni_tcp_pipe_peer(void *arg)
 	nni_tcp_pipe *p = arg;
 
 	return (p->peer);
-}
-
-static int
-nni_tcp_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
-{
-#if 0
-	nni_inproc_pipe *pipe = arg;
-	size_t len;
-
-	switch (option) {
-	case NNG_OPT_LOCALADDR:
-	case NNG_OPT_REMOTEADDR:
-		len = strlen(pipe->addr) + 1;
-		if (len > *szp) {
-			(void) memcpy(buf, pipe->addr, *szp);
-		} else {
-			(void) memcpy(buf, pipe->addr, len);
-		}
-		*szp = len;
-		return (0);
-	}
-#endif
-	return (NNG_ENOTSUP);
 }
 
 static int
@@ -786,52 +751,71 @@ nni_tcp_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-nni_tcp_ep_setopt(void *arg, int opt, const void *v, size_t sz)
+nni_tcp_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz)
 {
-	int         rv = NNG_ENOTSUP;
 	nni_tcp_ep *ep = arg;
-
-	if (opt == nng_optid_recvmaxsz) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ);
-		nni_mtx_unlock(&ep->mtx);
-
-	} else if (opt == nng_optid_linger) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_setopt_usec(&ep->linger, v, sz);
-		nni_mtx_unlock(&ep->mtx);
+	if (ep == NULL) {
+		return (nni_chkopt_size(v, sz, 0, NNI_MAXSZ));
 	}
-	return (rv);
+	return (nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ));
 }
 
 static int
-nni_tcp_ep_getopt(void *arg, int opt, void *v, size_t *szp)
+nni_tcp_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp)
 {
-	int         rv = NNG_ENOTSUP;
 	nni_tcp_ep *ep = arg;
-
-	if (opt == nng_optid_recvmaxsz) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_getopt_size(ep->rcvmax, v, szp);
-		nni_mtx_unlock(&ep->mtx);
-
-	} else if (opt == nng_optid_linger) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_getopt_usec(ep->linger, v, szp);
-		nni_mtx_unlock(&ep->mtx);
-	}
-	// XXX: add address properties
-	return (rv);
+	return (nni_getopt_size(ep->rcvmax, v, szp));
 }
 
+static int
+nni_tcp_ep_setopt_linger(void *arg, const void *v, size_t sz)
+{
+	nni_tcp_ep *ep = arg;
+	if (ep == NULL) {
+		return (nni_chkopt_usec(v, sz));
+	}
+	return (nni_setopt_usec(&ep->linger, v, sz));
+}
+
+static int
+nni_tcp_ep_getopt_linger(void *arg, void *v, size_t *szp)
+{
+	nni_tcp_ep *ep = arg;
+	return (nni_getopt_usec(ep->linger, v, szp));
+}
+
+static nni_tran_pipe_option nni_tcp_pipe_options[] = {
+#if 0
+	{ NNG_OPT_LOCADDR, nni_tcp_pipe_get_locaddr },
+	{ NNG_OPT_REMADDR, nni_tcp_pipe_get_remaddr },
+#endif
+	// terminate list
+	{ NULL, NULL }
+};
+
 static nni_tran_pipe nni_tcp_pipe_ops = {
-	.p_fini   = nni_tcp_pipe_fini,
-	.p_start  = nni_tcp_pipe_start,
-	.p_send   = nni_tcp_pipe_send,
-	.p_recv   = nni_tcp_pipe_recv,
-	.p_close  = nni_tcp_pipe_close,
-	.p_peer   = nni_tcp_pipe_peer,
-	.p_getopt = nni_tcp_pipe_getopt,
+	.p_fini    = nni_tcp_pipe_fini,
+	.p_start   = nni_tcp_pipe_start,
+	.p_send    = nni_tcp_pipe_send,
+	.p_recv    = nni_tcp_pipe_recv,
+	.p_close   = nni_tcp_pipe_close,
+	.p_peer    = nni_tcp_pipe_peer,
+	.p_options = nni_tcp_pipe_options,
+};
+
+static nni_tran_ep_option nni_tcp_ep_options[] = {
+	{
+	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_getopt = nni_tcp_ep_getopt_recvmaxsz,
+	    .eo_setopt = nni_tcp_ep_setopt_recvmaxsz,
+	},
+	{
+	    .eo_name   = NNG_OPT_LINGER,
+	    .eo_getopt = nni_tcp_ep_getopt_linger,
+	    .eo_setopt = nni_tcp_ep_setopt_linger,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
 };
 
 static nni_tran_ep nni_tcp_ep_ops = {
@@ -841,8 +825,7 @@ static nni_tran_ep nni_tcp_ep_ops = {
 	.ep_bind    = nni_tcp_ep_bind,
 	.ep_accept  = nni_tcp_ep_accept,
 	.ep_close   = nni_tcp_ep_close,
-	.ep_setopt  = nni_tcp_ep_setopt,
-	.ep_getopt  = nni_tcp_ep_getopt,
+	.ep_options = nni_tcp_ep_options,
 };
 
 // This is the TCP transport linkage, and should be the only global
@@ -852,7 +835,6 @@ struct nni_tran nni_tcp_tran = {
 	.tran_scheme  = "tcp",
 	.tran_ep      = &nni_tcp_ep_ops,
 	.tran_pipe    = &nni_tcp_pipe_ops,
-	.tran_chkopt  = nni_tcp_tran_chkopt,
 	.tran_init    = nni_tcp_tran_init,
 	.tran_fini    = nni_tcp_tran_fini,
 };

@@ -57,7 +57,7 @@ extern void nni_pipe_start(nni_pipe *);
 
 extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
-extern int      nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
+extern int      nni_pipe_getopt(nni_pipe *, const char *, void *, size_t *);
 
 // nni_pipe_get_proto_data gets the protocol private data set with the
 // nni_pipe_set_proto_data function.  No locking is performed.

@@ -192,27 +192,17 @@ push_getq_cb(void *arg)
 }
 
 static int
-push_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
+push_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	push_sock *s  = arg;
-	int        rv = NNG_ENOTSUP;
-
-	if (opt == nng_optid_raw) {
-		rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
-	}
-	return (rv);
+	push_sock *s = arg;
+	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
 }
 
 static int
-push_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
+push_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	push_sock *s  = arg;
-	int        rv = NNG_ENOTSUP;
-
-	if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(s->raw, buf, szp);
-	}
-	return (rv);
+	push_sock *s = arg;
+	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static nni_proto_pipe_ops push_pipe_ops = {
@@ -222,13 +212,22 @@ static nni_proto_pipe_ops push_pipe_ops = {
 	.pipe_stop  = push_pipe_stop,
 };
 
+static nni_proto_sock_option push_sock_options[] = {
+	{
+	    .pso_name   = NNG_OPT_RAW,
+	    .pso_getopt = push_sock_getopt_raw,
+	    .pso_setopt = push_sock_setopt_raw,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static nni_proto_sock_ops push_sock_ops = {
-	.sock_init   = push_sock_init,
-	.sock_fini   = push_sock_fini,
-	.sock_open   = push_sock_open,
-	.sock_close  = push_sock_close,
-	.sock_setopt = push_sock_setopt,
-	.sock_getopt = push_sock_getopt,
+	.sock_init    = push_sock_init,
+	.sock_fini    = push_sock_fini,
+	.sock_open    = push_sock_open,
+	.sock_close   = push_sock_close,
+	.sock_options = push_sock_options,
 };
 
 static nni_proto push_proto = {

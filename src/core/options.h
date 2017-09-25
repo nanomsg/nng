@@ -72,4 +72,14 @@ extern const char *nni_option_name(int);
 extern int  nni_option_sys_init(void);
 extern void nni_option_sys_fini(void);
 
+extern int nni_optid_raw;
+extern int nni_optid_recvmaxsz;
+extern int nni_optid_maxttl;
+extern int nni_optid_protocol;
+extern int nni_optid_transport;
+extern int nni_optid_locaddr;
+extern int nni_optid_remaddr;
+extern int nni_optid_req_resendtime;
+extern int nni_optid_surveyor_surveytime;
+
 #endif // CORE_OPTIONS_H

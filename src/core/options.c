@@ -344,23 +344,6 @@ nni_option_lookup(const char *name)
 	return (id);
 }
 
-const char *
-nni_option_name(int id)
-{
-	nni_option *opt;
-	const char *name = NULL;
-
-	nni_mtx_lock(&nni_option_lk);
-	NNI_LIST_FOREACH (&nni_options, opt) {
-		if (id == opt->o_id) {
-			name = opt->o_name;
-			break;
-		}
-	}
-	nni_mtx_unlock(&nni_option_lk);
-	return (name);
-}
-
 int
 nni_option_register(const char *name, int *idp)
 {
@@ -390,6 +373,15 @@ nni_option_sys_fini(void)
 	nni_option_nextid = 0;
 }
 
+int nni_optid_raw;
+int nni_optid_recvmaxsz;
+int nni_optid_maxttl;
+int nni_optid_protocol;
+int nni_optid_transport;
+int nni_optid_locaddr;
+int nni_optid_remaddr;
+int nni_optid_surveyor_surveytime;
+
 int
 nni_option_sys_init(void)
 {
@@ -398,28 +390,15 @@ nni_option_sys_init(void)
 	nni_option_nextid = 0x10000;
 	int rv;
 
-#define OPT_REGISTER(o) nni_option_register(nng_opt_##o, &nng_optid_##o)
+#define OPT_REGISTER(o) nni_option_register(nng_opt_##o, &nni_optid_##o)
 	// Register our well-known options.
 	if (((rv = OPT_REGISTER(raw)) != 0) ||
-	    ((rv = OPT_REGISTER(linger)) != 0) ||
-	    ((rv = OPT_REGISTER(recvbuf)) != 0) ||
-	    ((rv = OPT_REGISTER(sendbuf)) != 0) ||
-	    ((rv = OPT_REGISTER(recvtimeo)) != 0) ||
-	    ((rv = OPT_REGISTER(sendtimeo)) != 0) ||
-	    ((rv = OPT_REGISTER(reconnmint)) != 0) ||
-	    ((rv = OPT_REGISTER(reconnmaxt)) != 0) ||
 	    ((rv = OPT_REGISTER(recvmaxsz)) != 0) ||
 	    ((rv = OPT_REGISTER(maxttl)) != 0) ||
 	    ((rv = OPT_REGISTER(protocol)) != 0) ||
 	    ((rv = OPT_REGISTER(transport)) != 0) ||
 	    ((rv = OPT_REGISTER(locaddr)) != 0) ||
 	    ((rv = OPT_REGISTER(remaddr)) != 0) ||
-	    ((rv = OPT_REGISTER(recvfd)) != 0) ||
-	    ((rv = OPT_REGISTER(sendfd)) != 0) ||
-	    ((rv = OPT_REGISTER(url)) != 0) ||
-	    ((rv = OPT_REGISTER(req_resendtime)) != 0) ||
-	    ((rv = OPT_REGISTER(sub_subscribe)) != 0) ||
-	    ((rv = OPT_REGISTER(sub_unsubscribe)) != 0) ||
 	    ((rv = OPT_REGISTER(surveyor_surveytime)) != 0)) {
 		nni_option_sys_fini();
 		return (rv);

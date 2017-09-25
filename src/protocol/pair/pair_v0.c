@@ -230,31 +230,17 @@ pair0_sock_close(void *arg)
 }
 
 static int
-pair0_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
+pair0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
 	pair0_sock *s = arg;
-	int         rv;
-
-	if (opt == nng_optid_raw) {
-		rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
-	} else {
-		rv = NNG_ENOTSUP;
-	}
-	return (rv);
+	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
 }
 
 static int
-pair0_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
+pair0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	pair0_sock *s = arg;
-	int         rv;
-
-	if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(s->raw, buf, szp);
-	} else {
-		rv = NNG_ENOTSUP;
-	}
-	return (rv);
+	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static nni_proto_pipe_ops pair0_pipe_ops = {
@@ -264,13 +250,22 @@ static nni_proto_pipe_ops pair0_pipe_ops = {
 	.pipe_stop  = pair0_pipe_stop,
 };
 
+static nni_proto_sock_option pair0_sock_options[] = {
+	{
+	    .pso_name   = NNG_OPT_RAW,
+	    .pso_getopt = pair0_sock_getopt_raw,
+	    .pso_setopt = pair0_sock_setopt_raw,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static nni_proto_sock_ops pair0_sock_ops = {
-	.sock_init   = pair0_sock_init,
-	.sock_fini   = pair0_sock_fini,
-	.sock_open   = pair0_sock_open,
-	.sock_close  = pair0_sock_close,
-	.sock_setopt = pair0_sock_setopt,
-	.sock_getopt = pair0_sock_getopt,
+	.sock_init    = pair0_sock_init,
+	.sock_fini    = pair0_sock_fini,
+	.sock_open    = pair0_sock_open,
+	.sock_close   = pair0_sock_close,
+	.sock_options = pair0_sock_options,
 };
 
 // Legacy protocol (v0)

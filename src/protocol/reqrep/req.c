@@ -15,8 +15,9 @@
 #include "core/nng_impl.h"
 
 // Request protocol.  The REQ protocol is the "request" side of a
-// request-reply pair.  This is useful for building RPC clients, for
-// example.
+// request-reply pair.  This is useful for building RPC clients, for example.
+
+const char *nng_opt_req_resendtime = NNG_OPT_REQ_RESENDTIME;
 
 typedef struct req_pipe req_pipe;
 typedef struct req_sock req_sock;
@@ -245,44 +246,50 @@ req_pipe_stop(void *arg)
 }
 
 static int
-req_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
+req_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	req_sock *s  = arg;
-	int       rv = NNG_ENOTSUP;
-
-	if (opt == nng_optid_req_resendtime) {
-		rv = nni_setopt_usec(&s->retry, buf, sz);
-
-	} else if (opt == nng_optid_raw) {
-		rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
-		if (rv == 0) {
-			nni_sock_recverr(s->sock, s->raw ? 0 : NNG_ESTATE);
-		}
-
-	} else if (opt == nng_optid_maxttl) {
-		rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
+	req_sock *s = arg;
+	int       rv;
+	rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
+	if (rv == 0) {
+		nni_sock_recverr(s->sock, s->raw ? 0 : NNG_ESTATE);
 	}
-
 	return (rv);
 }
 
 static int
-req_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
+req_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	req_sock *s  = arg;
-	int       rv = NNG_ENOTSUP;
+	req_sock *s = arg;
+	return (nni_getopt_int(s->raw, buf, szp));
+}
 
-	if (opt == nng_optid_req_resendtime) {
-		rv = nni_getopt_usec(s->retry, buf, szp);
+static int
+req_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+{
+	req_sock *s = arg;
+	return (nni_setopt_int(&s->ttl, buf, sz, 1, 255));
+}
 
-	} else if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(s->raw, buf, szp);
+static int
+req_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
+{
+	req_sock *s = arg;
+	return (nni_getopt_int(s->ttl, buf, szp));
+}
 
-	} else if (opt == nng_optid_maxttl) {
-		rv = nni_getopt_int(s->ttl, buf, szp);
-	}
+static int
+req_sock_setopt_resendtime(void *arg, const void *buf, size_t sz)
+{
+	req_sock *s = arg;
+	return (nni_setopt_usec(&s->retry, buf, sz));
+}
 
-	return (rv);
+static int
+req_sock_getopt_resendtime(void *arg, void *buf, size_t *szp)
+{
+	req_sock *s = arg;
+	return (nni_getopt_usec(s->retry, buf, szp));
 }
 
 // Raw and cooked mode differ in the way they send messages out.
@@ -597,13 +604,32 @@ static nni_proto_pipe_ops req_pipe_ops = {
 	.pipe_stop  = req_pipe_stop,
 };
 
+static nni_proto_sock_option req_sock_options[] = {
+	{
+	    .pso_name   = NNG_OPT_RAW,
+	    .pso_getopt = req_sock_getopt_raw,
+	    .pso_setopt = req_sock_setopt_raw,
+	},
+	{
+	    .pso_name   = NNG_OPT_MAXTTL,
+	    .pso_getopt = req_sock_getopt_maxttl,
+	    .pso_setopt = req_sock_setopt_maxttl,
+	},
+	{
+	    .pso_name   = NNG_OPT_REQ_RESENDTIME,
+	    .pso_getopt = req_sock_getopt_resendtime,
+	    .pso_setopt = req_sock_setopt_resendtime,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static nni_proto_sock_ops req_sock_ops = {
 	.sock_init    = req_sock_init,
 	.sock_fini    = req_sock_fini,
 	.sock_open    = req_sock_open,
 	.sock_close   = req_sock_close,
-	.sock_setopt  = req_sock_setopt,
-	.sock_getopt  = req_sock_getopt,
+	.sock_options = req_sock_options,
 	.sock_rfilter = req_sock_rfilter,
 	.sock_sfilter = req_sock_sfilter,
 };

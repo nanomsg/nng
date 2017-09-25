@@ -343,42 +343,36 @@ resp_putq_cb(void *arg)
 }
 
 static int
-resp_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
+resp_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	resp_sock *s  = arg;
-	int        rv = NNG_ENOTSUP;
-	int        oldraw;
+	resp_sock *s = arg;
+	int        rv;
 
-	if (opt == nng_optid_maxttl) {
-		rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
-
-	} else if (opt == nng_optid_raw) {
-		oldraw = s->raw;
-		rv     = nni_setopt_int(&s->raw, buf, sz, 0, 1);
-		if (oldraw != s->raw) {
-			if (!s->raw) {
-				nni_sock_senderr(s->nsock, 0);
-			} else {
-				nni_sock_senderr(s->nsock, NNG_ESTATE);
-			}
-		}
+	if ((rv = nni_setopt_int(&s->raw, buf, sz, 0, 1)) == 0) {
+		nni_sock_senderr(s->nsock, s->raw ? 0 : NNG_ESTATE);
 	}
-
 	return (rv);
 }
 
 static int
-resp_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
+resp_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	resp_sock *s  = arg;
-	int        rv = NNG_ENOTSUP;
+	resp_sock *s = arg;
+	return (nni_getopt_int(s->raw, buf, szp));
+}
 
-	if (opt == nng_optid_maxttl) {
-		rv = nni_getopt_int(s->ttl, buf, szp);
-	} else if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(s->raw, buf, szp);
-	}
-	return (rv);
+static int
+resp_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+{
+	resp_sock *s = arg;
+	return (nni_setopt_int(&s->ttl, buf, sz, 1, 255));
+}
+
+static int
+resp_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
+{
+	resp_sock *s = arg;
+	return (nni_getopt_int(s->ttl, buf, szp));
 }
 
 static nni_msg *
@@ -453,13 +447,27 @@ static nni_proto_pipe_ops resp_pipe_ops = {
 	.pipe_stop  = resp_pipe_stop,
 };
 
+static nni_proto_sock_option resp_sock_options[] = {
+	{
+	    .pso_name   = NNG_OPT_RAW,
+	    .pso_getopt = resp_sock_getopt_raw,
+	    .pso_setopt = resp_sock_setopt_raw,
+	},
+	{
+	    .pso_name   = NNG_OPT_MAXTTL,
+	    .pso_getopt = resp_sock_getopt_maxttl,
+	    .pso_setopt = resp_sock_setopt_maxttl,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static nni_proto_sock_ops resp_sock_ops = {
 	.sock_init    = resp_sock_init,
 	.sock_fini    = resp_sock_fini,
 	.sock_open    = resp_sock_open,
 	.sock_close   = resp_sock_close,
-	.sock_setopt  = resp_sock_setopt,
-	.sock_getopt  = resp_sock_getopt,
+	.sock_options = resp_sock_options,
 	.sock_rfilter = resp_sock_rfilter,
 	.sock_sfilter = resp_sock_sfilter,
 };

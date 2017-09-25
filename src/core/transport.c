@@ -97,19 +97,29 @@ nni_tran_find(const char *addr)
 }
 
 int
-nni_tran_chkopt(int o, const void *v, size_t sz)
+nni_tran_chkopt(const char *name, const void *v, size_t sz)
 {
 	nni_transport *t;
 	int            rv = NNG_ENOTSUP;
+
 	nni_mtx_lock(&nni_tran_lk);
 	NNI_LIST_FOREACH (&nni_tran_list, t) {
-		int x;
-		if (t->t_tran.tran_chkopt == NULL) {
-			continue;
-		}
-		if ((x = t->t_tran.tran_chkopt(o, v, sz)) != NNG_ENOTSUP) {
-			if ((rv = x) != 0) {
-				break;
+		const nni_tran_ep *       ep;
+		const nni_tran_ep_option *eo;
+
+		// Generally we look for endpoint options.
+		ep = t->t_tran.tran_ep;
+		for (eo = ep->ep_options; eo && eo->eo_name != NULL; eo++) {
+			if (strcmp(name, eo->eo_name) != 0) {
+				continue;
+			}
+			if (eo->eo_setopt == NULL) {
+				nni_mtx_unlock(&nni_tran_lk);
+				return (NNG_EREADONLY);
+			}
+			if ((rv = eo->eo_setopt(NULL, v, sz)) != 0) {
+				nni_mtx_unlock(&nni_tran_lk);
+				return (rv);
 			}
 		}
 	}

@@ -49,8 +49,8 @@ Main({
 			So(nng_pair1_open(&dev1) == 0);
 			So(nng_pair1_open(&dev2) == 0);
 
-			So(nng_setopt_int(dev1, nng_optid_raw, 1) == 0);
-			So(nng_setopt_int(dev2, nng_optid_raw, 1) == 0);
+			So(nng_setopt_int(dev1, NNG_OPT_RAW, 1) == 0);
+			So(nng_setopt_int(dev2, NNG_OPT_RAW, 1) == 0);
 
 			struct dev_data ddata;
 			ddata.s1 = dev1;
@@ -73,10 +73,8 @@ Main({
 			So(nng_dial(end2, addr2, NULL, 0) == 0);
 
 			tmo = 1000000;
-			So(nng_setopt_usec(end1, nng_optid_recvtimeo, tmo) ==
-			    0);
-			So(nng_setopt_usec(end2, nng_optid_recvtimeo, tmo) ==
-			    0);
+			So(nng_setopt_usec(end1, NNG_OPT_RECVTIMEO, tmo) == 0);
+			So(nng_setopt_usec(end2, NNG_OPT_RECVTIMEO, tmo) == 0);
 
 			nng_usleep(100000);
 			Convey("Device can send and receive", {

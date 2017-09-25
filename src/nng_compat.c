@@ -133,7 +133,7 @@ nn_socket(int domain, int protocol)
 		return (-1);
 	}
 	if (domain == AF_SP_RAW) {
-		if ((rv = nng_setopt_int(sock, nng_optid_raw, 1)) != 0) {
+		if ((rv = nng_setopt_int(sock, NNG_OPT_RAW, 1)) != 0) {
 			nn_seterror(rv);
 			nng_close(sock);
 			return (-1);
@@ -566,10 +566,10 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 
 // options which we convert -- most of the array is initialized at run time.
 static struct {
-	int nnlevel;
-	int nnopt;
-	int opt;
-	int mscvt;
+	int         nnlevel;
+	int         nnopt;
+	const char *opt;
+	int         mscvt;
 } options[] = {
 	// clang-format off
 	{ NN_SOL_SOCKET, NN_LINGER }, // review
@@ -610,60 +610,60 @@ init_opts(void)
 		case NN_SOL_SOCKET:
 			switch (options[i].nnopt) {
 			case NN_LINGER:
-				SETOPT(nng_optid_linger, 1);
+				SETOPT(NNG_OPT_LINGER, 1);
 				break;
 			case NN_SNDBUF:
-				SETOPT(nng_optid_sendbuf, 0);
+				SETOPT(NNG_OPT_SENDBUF, 0);
 				break;
 			case NN_RCVBUF:
-				SETOPT(nng_optid_recvbuf, 0);
+				SETOPT(NNG_OPT_RECVBUF, 0);
 				break;
 			case NN_RECONNECT_IVL:
-				SETOPT(nng_optid_reconnmint, 1);
+				SETOPT(NNG_OPT_RECONNMINT, 1);
 				break;
 			case NN_RECONNECT_IVL_MAX:
-				SETOPT(nng_optid_reconnmaxt, 1);
+				SETOPT(NNG_OPT_RECONNMAXT, 1);
 				break;
 			case NN_SNDFD:
-				SETOPT(nng_optid_sendfd, 0);
+				SETOPT(NNG_OPT_SENDFD, 0);
 				break;
 			case NN_RCVFD:
-				SETOPT(nng_optid_recvfd, 0);
+				SETOPT(NNG_OPT_RECVFD, 0);
 				break;
 			case NN_RCVMAXSIZE:
-				SETOPT(nng_optid_recvmaxsz, 0);
+				SETOPT(NNG_OPT_RECVMAXSZ, 0);
 				break;
 			case NN_MAXTTL:
-				SETOPT(nng_optid_maxttl, 0);
+				SETOPT(NNG_OPT_MAXTTL, 0);
 				break;
 			case NN_RCVTIMEO:
-				SETOPT(nng_optid_recvtimeo, 1);
+				SETOPT(NNG_OPT_RECVTIMEO, 1);
 				break;
 			case NN_SNDTIMEO:
-				SETOPT(nng_optid_sendtimeo, 1);
+				SETOPT(NNG_OPT_SENDTIMEO, 1);
 				break;
 			}
 			break;
 		case NN_REQ:
 			switch (options[i].nnopt) {
 			case NN_REQ_RESEND_IVL:
-				SETOPT(nng_optid_req_resendtime, 1);
+				SETOPT(NNG_OPT_REQ_RESENDTIME, 1);
 				break;
 			}
 			break;
 		case NN_SUB:
 			switch (options[i].nnopt) {
 			case NN_SUB_SUBSCRIBE:
-				SETOPT(nng_optid_sub_subscribe, 0);
+				SETOPT(NNG_OPT_SUB_SUBSCRIBE, 0);
 				break;
 			case NN_SUB_UNSUBSCRIBE:
-				SETOPT(nng_optid_sub_unsubscribe, 0);
+				SETOPT(NNG_OPT_SUB_UNSUBSCRIBE, 0);
 				break;
 			}
 		case NN_SURVEYOR:
 			switch (options[i].nnopt) {
 			case NN_SURVEYOR_DEADLINE:
-				SETOPT(nng_optid_surveyor_surveytime, 1);
+				SETOPT(nng_opt_surveyor_surveytime, 1);
 				break;
 			}
 			break;
@@ -675,11 +675,11 @@ init_opts(void)
 int
 nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 {
-	int      opt   = -1;
-	int      mscvt = 0;
-	uint64_t usec;
-	int *    msecp;
-	int      rv;
+	const char *name  = NULL;
+	int         mscvt = 0;
+	uint64_t    usec;
+	int *       msecp;
+	int         rv;
 
 	init_opts();
 
@@ -687,12 +687,12 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 		if ((options[i].nnlevel == nnlevel) &&
 		    (options[i].nnopt == nnopt)) {
 			mscvt = options[i].mscvt;
-			opt   = options[i].opt;
+			name  = options[i].opt;
 			break;
 		}
 	}
 
-	if (opt < 0) {
+	if (name == NULL) {
 		return (ENOPROTOOPT);
 	}
 
@@ -707,7 +707,7 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 		*szp  = sizeof(uint64_t);
 	}
 
-	if ((rv = nng_getopt((nng_socket) s, opt, valp, szp)) != 0) {
+	if ((rv = nng_getopt((nng_socket) s, name, valp, szp)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -724,10 +724,10 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 int
 nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 {
-	int      opt   = -1;
-	int      mscvt = 0;
-	uint64_t usec;
-	int      rv;
+	const char *name  = NULL;
+	int         mscvt = 0;
+	uint64_t    usec;
+	int         rv;
 
 	init_opts();
 
@@ -735,11 +735,11 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 		if ((options[i].nnlevel == nnlevel) &&
 		    (options[i].nnopt == nnopt)) {
 			mscvt = options[i].mscvt;
-			opt   = options[i].opt;
+			name  = options[i].opt;
 			break;
 		}
 	}
-	if (opt < 0) {
+	if (name == NULL) {
 		return (ENOPROTOOPT);
 	}
 
@@ -756,7 +756,7 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 		sz   = sizeof(usec);
 	}
 
-	if ((rv = nng_setopt((nng_socket) s, opt, valp, sz)) != 0) {
+	if ((rv = nng_setopt((nng_socket) s, name, valp, sz)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}

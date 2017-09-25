@@ -10,6 +10,8 @@
 
 #include "core/nng_impl.h"
 
+#include <string.h>
+
 // This file contains functions relating to pipes.
 //
 // Operations on pipes (to the transport) are generally blocking operations,
@@ -281,8 +283,7 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	rv = nni_idhash_alloc(nni_pipes, &p->p_id, p);
 	nni_mtx_unlock(&nni_pipe_lk);
 
-	if ((rv != 0) ||
-	    ((rv = nni_ep_pipe_add(ep, p)) != 0) ||
+	if ((rv != 0) || ((rv = nni_ep_pipe_add(ep, p)) != 0) ||
 	    ((rv = nni_sock_pipe_add(sock, p)) != 0)) {
 		nni_pipe_destroy(p);
 	}
@@ -291,21 +292,18 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 }
 
 int
-nni_pipe_getopt(nni_pipe *p, int opt, void *val, size_t *szp)
+nni_pipe_getopt(nni_pipe *p, const char *name, void *val, size_t *szp)
 {
-	int rv = NNG_ENOTSUP;
+	nni_tran_pipe_option *po;
 
-	if (opt == nng_optid_url) {
-		return (nni_getopt_str(p->p_url, val, szp));
+	for (po = p->p_tran_ops.p_options; po && po->po_name; po++) {
+		if (strcmp(po->po_name, name) != 0) {
+			continue;
+		}
+		return (po->po_getopt(p->p_tran_data, val, szp));
 	}
-	if (p->p_tran_ops.p_getopt != NULL) {
-		rv = p->p_tran_ops.p_getopt(p->p_tran_data, opt, val, szp);
-	}
-	if (rv == NNG_ENOTSUP) {
-		// Maybe its a generic socket option?
-		rv = nni_sock_getopt(p->p_sock, opt, val, szp);
-	}
-	return (rv);
+	// Maybe the endpoint knows?
+	return (nni_ep_getopt(p->p_ep, name, val, szp));
 }
 
 void

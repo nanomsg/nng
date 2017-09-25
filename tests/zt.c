@@ -13,10 +13,9 @@
 
 extern int         nng_zt_register(void);
 extern const char *nng_opt_zt_home;
-extern int         nng_optid_zt_home;
-extern int         nng_optid_zt_node;
-extern int         nng_optid_zt_status;
-extern int         nng_optid_zt_network_name;
+extern const char *nng_opt_zt_node;
+extern const char *nng_opt_zt_status;
+extern const char *nng_opt_zt_network_name;
 extern int         nng_zt_status_ok;
 
 // zerotier tests.
@@ -61,17 +60,11 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_create(&l, s, addr) == 0);
 
-		Convey("We can lookup zerotier home option id", {
-			So(nng_optid_zt_home > 0);
-			So(nng_option_lookup(nng_opt_zt_home) ==
-			    nng_optid_zt_home);
-		});
-
 		Convey("And it can be started...", {
 
 			mkdir(path1, 0700);
 
-			So(nng_listener_setopt(l, nng_optid_zt_home, path1,
+			So(nng_listener_setopt(l, nng_opt_zt_home, path1,
 			       strlen(path1) + 1) == 0);
 
 			So(nng_listener_start(l, 0) == 0);
@@ -93,12 +86,6 @@ TestMain("ZeroTier Transport", {
 		Reset({ nng_close(s); });
 
 		So(nng_dialer_create(&d, s, addr) == 0);
-
-		Convey("We can lookup zerotier home option id", {
-			So(nng_optid_zt_home > 0);
-			So(nng_option_lookup(nng_opt_zt_home) ==
-			    nng_optid_zt_home);
-		});
 	});
 
 	Convey("We can create an ephemeral listener", {
@@ -117,8 +104,7 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_create(&l, s, addr) == 0);
 
-		So(nng_listener_getopt_usec(l, nng_optid_zt_node, &node1) ==
-		    0);
+		So(nng_listener_getopt_usec(l, nng_opt_zt_node, &node1) == 0);
 		So(node1 != 0);
 
 		Convey("Network name & status options work", {
@@ -128,11 +114,11 @@ TestMain("ZeroTier Transport", {
 
 			namesz = sizeof(name);
 			nng_usleep(10000000);
-			So(nng_listener_getopt(l, nng_optid_zt_network_name,
+			So(nng_listener_getopt(l, nng_opt_zt_network_name,
 			       name, &namesz) == 0);
 			So(strcmp(name, "nng_test_open") == 0);
 			So(nng_listener_getopt_int(
-			       l, nng_optid_zt_status, &status) == 0);
+			       l, nng_opt_zt_status, &status) == 0);
 			So(status == nng_zt_status_ok);
 		});
 		Convey("Connection refused works", {
@@ -140,7 +126,7 @@ TestMain("ZeroTier Transport", {
 			    (unsigned long long) node1, 42u);
 			So(nng_dialer_create(&d, s, addr) == 0);
 			So(nng_dialer_getopt_usec(
-			       d, nng_optid_zt_node, &node2) == 0);
+			       d, nng_opt_zt_node, &node2) == 0);
 			So(node2 == node1);
 			So(nng_dialer_start(d, 0) == NNG_ECONNREFUSED);
 		});
@@ -173,18 +159,18 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_create(&l, s1, addr1) == 0);
 		So(nng_listener_setopt(
-		       l, nng_optid_zt_home, path1, strlen(path1) + 1) == 0);
+		       l, nng_opt_zt_home, path1, strlen(path1) + 1) == 0);
 
 		So(nng_listener_start(l, 0) == 0);
 		node = 0;
-		So(nng_listener_getopt_usec(l, nng_optid_zt_node, &node) == 0);
+		So(nng_listener_getopt_usec(l, nng_opt_zt_node, &node) == 0);
 		So(node != 0);
 
 		snprintf(addr2, sizeof(addr2), "zt://" NWID "/%llx:%u",
 		    (unsigned long long) node, port);
 		So(nng_dialer_create(&d, s2, addr2) == 0);
 		So(nng_dialer_setopt(
-		       d, nng_optid_zt_home, path2, strlen(path2) + 1) == 0);
+		       d, nng_opt_zt_home, path2, strlen(path2) + 1) == 0);
 		So(nng_dialer_start(d, 0) == 0);
 
 	});

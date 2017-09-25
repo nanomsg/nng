@@ -343,32 +343,36 @@ rep_pipe_putq_cb(void *arg)
 }
 
 static int
-rep_sock_setopt(void *arg, int opt, const void *buf, size_t sz)
+rep_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	rep_sock *s  = arg;
-	int       rv = NNG_ENOTSUP;
-
-	if (opt == nng_optid_maxttl) {
-		rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
-	} else if (opt == nng_optid_raw) {
-		rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
+	rep_sock *s = arg;
+	int       rv;
+	rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
+	if (rv == 0) {
 		nni_sock_senderr(s->sock, s->raw ? 0 : NNG_ESTATE);
 	}
 	return (rv);
 }
 
 static int
-rep_sock_getopt(void *arg, int opt, void *buf, size_t *szp)
+rep_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	rep_sock *s  = arg;
-	int       rv = NNG_ENOTSUP;
+	rep_sock *s = arg;
+	return (nni_getopt_int(s->raw, buf, szp));
+}
 
-	if (opt == nng_optid_maxttl) {
-		rv = nni_getopt_int(s->ttl, buf, szp);
-	} else if (opt == nng_optid_raw) {
-		rv = nni_getopt_int(s->raw, buf, szp);
-	}
-	return (rv);
+static int
+rep_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+{
+	rep_sock *s = arg;
+	return (nni_setopt_int(&s->ttl, buf, sz, 1, 255));
+}
+
+static int
+rep_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
+{
+	rep_sock *s = arg;
+	return (nni_getopt_int(s->ttl, buf, szp));
 }
 
 static nni_msg *
@@ -445,13 +449,27 @@ static nni_proto_pipe_ops rep_pipe_ops = {
 	.pipe_stop  = rep_pipe_stop,
 };
 
+static nni_proto_sock_option rep_sock_options[] = {
+	{
+	    .pso_name   = NNG_OPT_RAW,
+	    .pso_getopt = rep_sock_getopt_raw,
+	    .pso_setopt = rep_sock_setopt_raw,
+	},
+	{
+	    .pso_name   = NNG_OPT_MAXTTL,
+	    .pso_getopt = rep_sock_getopt_maxttl,
+	    .pso_setopt = rep_sock_setopt_maxttl,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static nni_proto_sock_ops rep_sock_ops = {
 	.sock_init    = rep_sock_init,
 	.sock_fini    = rep_sock_fini,
 	.sock_open    = rep_sock_open,
 	.sock_close   = rep_sock_close,
-	.sock_setopt  = rep_sock_setopt,
-	.sock_getopt  = rep_sock_getopt,
+	.sock_options = rep_sock_options,
 	.sock_rfilter = rep_sock_rfilter,
 	.sock_sfilter = rep_sock_sfilter,
 };

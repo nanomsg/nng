@@ -16,14 +16,14 @@
 
 // IPC transport.   Platform specific IPC operations must be
 // supplied as well.  Normally the IPC is UNIX domain sockets or
-// Windows named pipes.  Other platforms could use other mechanisms.
+// Windows named pipes.  Other platforms could use other mechanisms,
+// but all implementations on the platform must use the same mechanism.
 
 typedef struct nni_ipc_pipe nni_ipc_pipe;
 typedef struct nni_ipc_ep   nni_ipc_ep;
 
 // nni_ipc_pipe is one end of an IPC connection.
 struct nni_ipc_pipe {
-	const char *       addr;
 	nni_plat_ipc_pipe *ipp;
 	uint16_t           peer;
 	uint16_t           proto;
@@ -48,7 +48,7 @@ struct nni_ipc_pipe {
 };
 
 struct nni_ipc_ep {
-	char             addr[NNG_MAXADDRLEN + 1];
+	nni_sockaddr     sa;
 	nni_plat_ipc_ep *iep;
 	uint16_t         proto;
 	size_t           rcvmax;
@@ -61,15 +61,6 @@ static void nni_ipc_pipe_send_cb(void *);
 static void nni_ipc_pipe_recv_cb(void *);
 static void nni_ipc_pipe_nego_cb(void *);
 static void nni_ipc_ep_cb(void *);
-
-static int
-nni_ipc_tran_chkopt(int o, const void *data, size_t sz)
-{
-	if (o == nng_optid_recvmaxsz) {
-		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
-	}
-	return (NNG_ENOTSUP);
-}
 
 static int
 nni_ipc_tran_init(void)
@@ -132,10 +123,8 @@ nni_ipc_pipe_init(nni_ipc_pipe **pipep, nni_ipc_ep *ep, void *ipp)
 	p->proto                    = ep->proto;
 	p->rcvmax                   = ep->rcvmax;
 	p->ipp                      = ipp;
-	p->addr                     = ep->addr;
 	p->sa.s_un.s_path.sa_family = NNG_AF_IPC;
-	nni_strlcpy(p->sa.s_un.s_path.sa_path, p->addr + strlen("ipc://"),
-	    sizeof(p->sa.s_un.s_path.sa_path));
+	p->sa                       = ep->sa;
 
 	*pipep = p;
 	return (0);
@@ -463,22 +452,10 @@ nni_ipc_pipe_peer(void *arg)
 }
 
 static int
-nni_ipc_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
+nni_ipc_pipe_get_addr(void *arg, void *buf, size_t *szp)
 {
-
-	nni_ipc_pipe *pipe = arg;
-	size_t        len;
-	int           rv;
-
-	if ((option == nng_optid_locaddr) || (option == nng_optid_remaddr)) {
-		rv = nni_getopt_sockaddr(&pipe->sa, buf, szp);
-	} else if (option == nng_optid_recvmaxsz) {
-		rv = nni_getopt_size(pipe->rcvmax, &buf, szp);
-
-	} else {
-		rv = NNG_ENOTSUP;
-	}
-	return (rv);
+	nni_ipc_pipe *p = arg;
+	return (nni_getopt_sockaddr(&p->sa, buf, szp));
 }
 
 static void
@@ -496,33 +473,28 @@ nni_ipc_ep_fini(void *arg)
 static int
 nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 {
-	nni_ipc_ep * ep;
-	int          rv;
-	nni_sockaddr sa;
-	size_t       sz;
+	nni_ipc_ep *ep;
+	int         rv;
+	size_t      sz;
 
 	if (strncmp(url, "ipc://", strlen("ipc://")) != 0) {
 		return (NNG_EADDRINVAL);
 	}
 	url += strlen("ipc://");
 
-	sz                       = sizeof(sa.s_un.s_path.sa_path);
-	sa.s_un.s_path.sa_family = NNG_AF_IPC;
-
-	if (nni_strlcpy(sa.s_un.s_path.sa_path, url, sz) >= sz) {
-		return (NNG_EADDRINVAL);
-	}
-
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 
-	if (nni_strlcpy(ep->addr, url, sizeof(ep->addr)) >= sizeof(ep->addr)) {
+	sz                           = sizeof(ep->sa.s_un.s_path.sa_path);
+	ep->sa.s_un.s_path.sa_family = NNG_AF_IPC;
+
+	if (nni_strlcpy(ep->sa.s_un.s_path.sa_path, url, sz) >= sz) {
 		NNI_FREE_STRUCT(ep);
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = nni_plat_ipc_ep_init(&ep->iep, &sa, mode)) != 0) {
+	if ((rv = nni_plat_ipc_ep_init(&ep->iep, &ep->sa, mode)) != 0) {
 		NNI_FREE_STRUCT(ep);
 		return (rv);
 	}
@@ -666,41 +638,60 @@ nni_ipc_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-nni_ipc_ep_setopt(void *arg, int opt, const void *v, size_t sz)
+nni_ipc_ep_setopt_recvmaxsz(void *arg, const void *data, size_t sz)
 {
-	int         rv = NNG_ENOTSUP;
 	nni_ipc_ep *ep = arg;
 
-	if (opt == nng_optid_recvmaxsz) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ);
-		nni_mtx_unlock(&ep->mtx);
+	if (ep == NULL) {
+		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
 	}
-	return (rv);
+	return (nni_setopt_size(&ep->rcvmax, data, sz, 0, NNI_MAXSZ));
 }
 
 static int
-nni_ipc_ep_getopt(void *arg, int opt, void *v, size_t *szp)
+nni_ipc_ep_getopt_recvmaxsz(void *arg, void *data, size_t *szp)
 {
-	int         rv = NNG_ENOTSUP;
 	nni_ipc_ep *ep = arg;
-
-	if (opt == nng_optid_recvmaxsz) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_getopt_size(ep->rcvmax, v, szp);
-		nni_mtx_unlock(&ep->mtx);
-	}
-	return (rv);
+	return (nni_getopt_size(ep->rcvmax, data, szp));
 }
 
+static int
+nni_ipc_ep_get_addr(void *arg, void *data, size_t *szp)
+{
+	nni_ipc_ep *ep = arg;
+	return (nni_getopt_sockaddr(&ep->sa, data, szp));
+}
+
+static nni_tran_pipe_option nni_ipc_pipe_options[] = {
+	{ NNG_OPT_REMADDR, nni_ipc_pipe_get_addr },
+	{ NNG_OPT_LOCADDR, nni_ipc_pipe_get_addr },
+	// terminate list
+	{ NULL, NULL },
+};
+
 static nni_tran_pipe nni_ipc_pipe_ops = {
-	.p_fini   = nni_ipc_pipe_fini,
-	.p_start  = nni_ipc_pipe_start,
-	.p_send   = nni_ipc_pipe_send,
-	.p_recv   = nni_ipc_pipe_recv,
-	.p_close  = nni_ipc_pipe_close,
-	.p_peer   = nni_ipc_pipe_peer,
-	.p_getopt = nni_ipc_pipe_getopt,
+	.p_fini    = nni_ipc_pipe_fini,
+	.p_start   = nni_ipc_pipe_start,
+	.p_send    = nni_ipc_pipe_send,
+	.p_recv    = nni_ipc_pipe_recv,
+	.p_close   = nni_ipc_pipe_close,
+	.p_peer    = nni_ipc_pipe_peer,
+	.p_options = nni_ipc_pipe_options,
+};
+
+static nni_tran_ep_option nni_ipc_ep_options[] = {
+	{
+	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_getopt = nni_ipc_ep_getopt_recvmaxsz,
+	    .eo_setopt = nni_ipc_ep_setopt_recvmaxsz,
+	},
+	{
+	    .eo_name   = NNG_OPT_LOCADDR,
+	    .eo_getopt = nni_ipc_ep_get_addr,
+	    .eo_setopt = NULL,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
 };
 
 static nni_tran_ep nni_ipc_ep_ops = {
@@ -710,8 +701,7 @@ static nni_tran_ep nni_ipc_ep_ops = {
 	.ep_bind    = nni_ipc_ep_bind,
 	.ep_accept  = nni_ipc_ep_accept,
 	.ep_close   = nni_ipc_ep_close,
-	.ep_setopt  = nni_ipc_ep_setopt,
-	.ep_getopt  = nni_ipc_ep_getopt,
+	.ep_options = nni_ipc_ep_options,
 };
 
 // This is the IPC transport linkage, and should be the only global
