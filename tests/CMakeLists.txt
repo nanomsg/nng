@@ -76,9 +76,32 @@ if (NNG_TESTS)
         math (EXPR TEST_PORT "${TEST_PORT}+10")
     endmacro (add_nng_compat_test)
 
+    macro (add_nng_cpp_test NAME TIMEOUT)
+        if (NOT NNG_ENABLE_COVERAGE)
+            enable_language (CXX)
+            list (APPEND all_tests ${NAME})
+            add_executable (${NAME} ${NAME}.cc)
+            target_link_libraries (${NAME} ${PROJECT_NAME}_static)
+            target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
+            target_compile_definitions(${NAME} PUBLIC -DNNG_STATIC_LIB)
+            if (CMAKE_THREAD_LIBS_INIT)
+                target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
+            endif()
+
+            add_test (NAME ${NAME} COMMAND ${NAME} ${TEST_PORT})
+            set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
+            math (EXPR TEST_PORT "${TEST_PORT}+10")
+        endif()
+    endmacro (add_nng_cpp_test)
+
+
 else ()
     macro (add_nng_test NAME TIMEOUT)
     endmacro (add_nng_test)
+    macro (add_nng_compat_test NAME TIMEOUT)
+    endmacro (add_nng_compat_test)
+    macro (add_nng_cpp_test NAME TIMEOUT)
+    endmacro (add_nng_cpp_test)
 endif ()
 
 add_nng_test(bus 5)
@@ -120,3 +143,5 @@ add_nng_compat_test(compat_survey 5)
 add_nng_compat_test(compat_reqttl 5)
 add_nng_compat_test(compat_shutdown 5)
 
+# c++ tests
+add_nng_cpp_test(cplusplus_pair 5)
