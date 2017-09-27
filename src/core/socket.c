@@ -1095,11 +1095,8 @@ nni_sock_getopt(nni_sock *s, const char *name, void *val, size_t *szp)
 {
 	int                          rv = NNG_ENOTSUP;
 	nni_sockopt *                sopt;
-	int                          opt;
 	const nni_socket_option *    sso;
 	const nni_proto_sock_option *pso;
-
-	opt = nni_option_lookup(name);
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {

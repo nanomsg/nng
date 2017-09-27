@@ -38,16 +38,8 @@ const char *nng_opt_zt_network_name = NNG_ZT_OPT_NETWORK_NAME;
 const char *nng_opt_zt_ping_time    = NNG_ZT_OPT_PING_TIME;
 const char *nng_opt_zt_ping_count   = NNG_ZT_OPT_PING_COUNT;
 
-int zt_optid_home         = -1;
-int zt_optid_nwid         = -1;
-int zt_optid_node         = -1;
-int zt_optid_status       = -1;
-int zt_optid_network_name = -1;
-int zt_optid_ping_time    = -1;
-int zt_optid_ping_count   = -1;
-
 // These values are supplied to help folks checking status.  They are the
-// return values from zt_optid_status.
+// return values from zt_opt_status.
 int nng_zt_status_configuring = ZT_NETWORK_STATUS_REQUESTING_CONFIGURATION;
 int nng_zt_status_ok          = ZT_NETWORK_STATUS_OK;
 int nng_zt_status_denied      = ZT_NETWORK_STATUS_ACCESS_DENIED;
@@ -1605,23 +1597,6 @@ done:
 static int
 zt_tran_init(void)
 {
-	int rv;
-	if (((rv = nni_option_register(nng_opt_zt_home, &zt_optid_home)) !=
-	        0) ||
-	    ((rv = nni_option_register(nng_opt_zt_node, &zt_optid_node)) !=
-	        0) ||
-	    ((rv = nni_option_register(nng_opt_zt_nwid, &zt_optid_nwid)) !=
-	        0) ||
-	    ((rv = nni_option_register(nng_opt_zt_status, &zt_optid_status)) !=
-	        0) ||
-	    ((rv = nni_option_register(
-	          nng_opt_zt_network_name, &zt_optid_network_name)) != 0) ||
-	    ((rv = nni_option_register(
-	          nng_opt_zt_ping_count, &zt_optid_ping_count)) != 0) ||
-	    ((rv = nni_option_register(
-	          nng_opt_zt_ping_time, &zt_optid_ping_time)) != 0)) {
-		return (rv);
-	}
 	nni_mtx_init(&zt_lk);
 	NNI_LIST_INIT(&zt_nodes, zt_node, zn_link);
 	return (0);
@@ -1630,11 +1605,6 @@ zt_tran_init(void)
 static void
 zt_tran_fini(void)
 {
-	zt_optid_home       = -1;
-	zt_optid_nwid       = -1;
-	zt_optid_node       = -1;
-	zt_optid_ping_count = -1;
-	zt_optid_ping_time  = -1;
 	zt_node *ztn;
 
 	nni_mtx_lock(&zt_lk);
@@ -2494,7 +2464,7 @@ zt_ep_conn_req_cb(void *arg)
 static void
 zt_ep_connect(void *arg, nni_aio *aio)
 {
-	zt_ep *  ep = arg;
+	zt_ep *ep = arg;
 
 	// We bind locally.  We'll use the address later when we give
 	// it to the pipe, but this allows us to receive the initial

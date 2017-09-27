@@ -663,7 +663,7 @@ init_opts(void)
 		case NN_SURVEYOR:
 			switch (options[i].nnopt) {
 			case NN_SURVEYOR_DEADLINE:
-				SETOPT(nng_opt_surveyor_surveytime, 1);
+				SETOPT(NNG_OPT_SURVEYOR_SURVEYTIME, 1);
 				break;
 			}
 			break;

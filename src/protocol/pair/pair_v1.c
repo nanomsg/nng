@@ -25,10 +25,6 @@ static void pair1_pipe_getq_cb(void *);
 static void pair1_pipe_putq_cb(void *);
 static void pair1_pipe_fini(void *);
 
-// This is exposed as an external name for external consumers.
-#define NNG_OPT_PAIR1_POLY "pair1-polyamorous"
-const char *nng_opt_pair1_poly = NNG_OPT_PAIR1_POLY;
-
 // pair1_sock is our per-socket protocol private structure.
 struct pair1_sock {
 	nni_sock *  nsock;
@@ -73,7 +69,6 @@ pair1_sock_init(void **sp, nni_sock *nsock)
 {
 	pair1_sock *s;
 	int         rv;
-	int         poly;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
@@ -87,8 +82,7 @@ pair1_sock_init(void **sp, nni_sock *nsock)
 	// Raw mode uses this.
 	nni_mtx_init(&s->mtx);
 
-	if (((rv = nni_aio_init(&s->aio_getq, pair1_sock_getq_cb, s)) != 0) ||
-	    ((rv = nni_option_register("polyamorous", &poly)) != 0)) {
+	if ((rv = nni_aio_init(&s->aio_getq, pair1_sock_getq_cb, s)) != 0) {
 		pair1_sock_fini(s);
 		return (rv);
 	}

@@ -415,21 +415,14 @@ NNG_DECL int nng_respondent0_open(nng_socket *);
 #define NNG_OPT_RECONNMINT "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT "reconnect-time-max"
 
+#define NNG_OPT_PAIR1_POLY "pair1:polyamorous"
+
 #define NNG_OPT_SUB_SUBSCRIBE "sub:subscribe"
 #define NNG_OPT_SUB_UNSUBSCRIBE "sub:unsubscribe"
 
 #define NNG_OPT_REQ_RESENDTIME "req:resend-time"
 
 #define NNG_OPT_SURVEYOR_SURVEYTIME "surveyor:survey-time"
-
-NNG_DECL const char *nng_opt_raw;
-NNG_DECL const char *nng_opt_recvmaxsz;
-NNG_DECL const char *nng_opt_maxttl;
-NNG_DECL const char *nng_opt_protocol;
-NNG_DECL const char *nng_opt_transport;
-NNG_DECL const char *nng_opt_locaddr;
-NNG_DECL const char *nng_opt_remaddr;
-NNG_DECL const char *nng_opt_surveyor_surveytime;
 
 // XXX: TBD: priorities, socket names, ipv4only
 

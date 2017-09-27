@@ -1013,16 +1013,3 @@ nng_thread_destroy(void *arg)
 
 	NNI_FREE_STRUCT(thr);
 }
-
-// Constant option definitions.  These are for well-known options,
-// so that the vast majority of consumers don't have to look these up.
-
-const char *nng_opt_raw       = "raw";
-const char *nng_opt_recvmaxsz = "recv-size-max";
-const char *nng_opt_maxttl    = "ttl-max";
-const char *nng_opt_protocol  = "protocol";
-const char *nng_opt_transport = "transport";
-const char *nng_opt_locaddr   = "local-address";
-const char *nng_opt_remaddr   = "remote-address";
-// Well known protocol options.
-const char *nng_opt_surveyor_surveytime = "surveyor:survey-time";

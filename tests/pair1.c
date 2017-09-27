@@ -14,8 +14,6 @@
 
 #include <string.h>
 
-extern const char *nng_opt_pair1_poly;
-
 #define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))
 #define CHECKSTR(m, s)                   \
 	So(nng_msg_len(m) == strlen(s)); \
@@ -110,7 +108,7 @@ TestMain("PAIRv1 protocol", {
 			int      i;
 			nng_msg *msg;
 
-			So(nng_setopt_int(s1, nng_opt_pair1_poly, 1) == 0);
+			So(nng_setopt_int(s1, NNG_OPT_PAIR1_POLY, 1) == 0);
 
 			So(nng_setopt_int(s1, NNG_OPT_RECVBUF, 1) == 0);
 			So(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1) == 0);
@@ -165,7 +163,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			nng_usleep(100000);
 
-			So(nng_setopt_int(s1, nng_opt_pair1_poly, 1) ==
+			So(nng_setopt_int(s1, NNG_OPT_PAIR1_POLY, 1) ==
 			    NNG_ESTATE);
 		});
 
@@ -335,11 +333,11 @@ TestMain("PAIRv1 protocol", {
 			nng_pipe p1;
 			nng_pipe p2;
 
-			So(nng_getopt_int(s1, nng_opt_pair1_poly, &v) == 0);
+			So(nng_getopt_int(s1, NNG_OPT_PAIR1_POLY, &v) == 0);
 			So(v == 0);
 
-			So(nng_setopt_int(s1, nng_opt_pair1_poly, 1) == 0);
-			So(nng_getopt_int(s1, nng_opt_pair1_poly, &v) == 0);
+			So(nng_setopt_int(s1, NNG_OPT_PAIR1_POLY, 1) == 0);
+			So(nng_getopt_int(s1, NNG_OPT_PAIR1_POLY, &v) == 0);
 			So(v == 1);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
@@ -396,7 +394,7 @@ TestMain("PAIRv1 protocol", {
 		Convey("Polyamorous default works", {
 			nng_msg *msg;
 
-			So(nng_setopt_int(s1, nng_opt_pair1_poly, 1) == 0);
+			So(nng_setopt_int(s1, NNG_OPT_PAIR1_POLY, 1) == 0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
@@ -429,11 +427,11 @@ TestMain("PAIRv1 protocol", {
 			nng_pipe p1;
 			nng_pipe p2;
 
-			So(nng_getopt_int(s1, nng_opt_pair1_poly, &v) == 0);
+			So(nng_getopt_int(s1, NNG_OPT_PAIR1_POLY, &v) == 0);
 			So(v == 0);
 
-			So(nng_setopt_int(s1, nng_opt_pair1_poly, 1) == 0);
-			So(nng_getopt_int(s1, nng_opt_pair1_poly, &v) == 0);
+			So(nng_setopt_int(s1, NNG_OPT_PAIR1_POLY, 1) == 0);
+			So(nng_getopt_int(s1, NNG_OPT_PAIR1_POLY, &v) == 0);
 			So(v == 1);
 
 			v = 0;

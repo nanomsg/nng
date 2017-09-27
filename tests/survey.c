@@ -13,8 +13,6 @@
 
 #include <string.h>
 
-extern const char *nng_opt_surveyor_surveytime;
-
 #define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))
 #define CHECKSTR(m, s)                   \
 	So(nng_msg_len(m) == strlen(s)); \
@@ -46,7 +44,7 @@ TestMain("SURVEY pattern", {
 			nng_msg *msg;
 
 			So(nng_setopt_usec(
-			       surv, nng_opt_surveyor_surveytime, 50000) == 0);
+			       surv, NNG_OPT_SURVEYOR_SURVEYTIME, 50000) == 0);
 			So(nng_msg_alloc(&msg, 0) == 0);
 			So(nng_sendmsg(surv, msg, 0) == 0);
 			So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
@@ -85,7 +83,7 @@ TestMain("SURVEY pattern", {
 			nng_close(resp);
 		});
 
-		So(nng_setopt_usec(surv, nng_opt_surveyor_surveytime, 50000) ==
+		So(nng_setopt_usec(surv, NNG_OPT_SURVEYOR_SURVEYTIME, 50000) ==
 		    0);
 		So(nng_listen(surv, addr, NULL, 0) == 0);
 		So(nng_dial(resp, addr, NULL, 0) == 0);
