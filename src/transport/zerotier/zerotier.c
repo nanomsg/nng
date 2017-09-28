@@ -106,16 +106,16 @@ static const uint32_t zt_port_mask = 0xffffffu; // mask of valid ports
 
 // These are compile time tunables for now.
 enum zt_tunables {
-	zt_listenq       = 128,              // backlog queue length
-	zt_listen_expire = 60000000,         // maximum time in backlog
-	zt_rcv_bufsize   = ZT_MAX_MTU + 128, // max UDP recv
-	zt_conn_attempts = 12,               // connection attempts (default)
-	zt_conn_interval = 5000000,          // between attempts (usec)
-	zt_udp_sendq     = 16,               // outgoing UDP queue length
-	zt_recvq         = 2,                // max pending recv (per pipe)
-	zt_recv_stale    = 1000000,          // frags older than are stale
-	zt_ping_time     = 60000000,         // if no traffic, ping time (usec)
-	zt_ping_count    = 5,                // max ping attempts before close
+	zt_listenq       = 128,            // backlog queue length
+	zt_listen_expire = 60000000,       // maximum time in backlog
+	zt_rcv_bufsize   = ZT_MAX_PHYSMTU, // max UDP recv
+	zt_conn_attempts = 12,             // connection attempts (default)
+	zt_conn_interval = 5000000,        // between attempts (usec)
+	zt_udp_sendq     = 16,             // outgoing UDP queue length
+	zt_recvq         = 2,              // max pending recv (per pipe)
+	zt_recv_stale    = 1000000,        // frags older than are stale
+	zt_ping_time     = 60000000,       // keepalive time (usec)
+	zt_ping_count    = 5,              // keepalive attempts
 };
 
 enum zt_op_codes {
@@ -229,6 +229,7 @@ struct zt_pipe {
 	int           zp_ping_count;
 	nni_duration  zp_ping_time;
 	nni_aio *     zp_ping_aio;
+	uint8_t *     zp_send_buf;
 };
 
 typedef struct zt_creq zt_creq;
@@ -254,8 +255,7 @@ struct zt_ep {
 	nni_aio *     ze_creq_aio;
 	int           ze_creq_try;
 	nni_list      ze_aios;
-	int           ze_maxmtu;
-	int           ze_phymtu;
+	int           ze_mtu;
 	int           ze_ping_count;
 	nni_duration  ze_ping_time;
 
@@ -540,8 +540,7 @@ zt_virtual_config(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
 			if (ep->ze_nwid != config->nwid) {
 				continue;
 			}
-			ep->ze_maxmtu = config->mtu;
-			ep->ze_phymtu = config->physicalMtu;
+			ep->ze_mtu = config->mtu;
 
 			if ((ep->ze_mode == NNI_EP_MODE_DIAL) &&
 			    (nni_list_first(&ep->ze_aios) != NULL)) {
@@ -1586,8 +1585,7 @@ done:
 
 	if ((cf = ZT_Node_networkConfig(ztn->zn_znode, ep->ze_nwid)) != NULL) {
 		NNI_ASSERT(cf->nwid == ep->ze_nwid);
-		ep->ze_maxmtu = cf->mtu;
-		ep->ze_phymtu = cf->physicalMtu;
+		ep->ze_mtu = cf->mtu;
 		ZT_Node_freeQueryResult(ztn->zn_znode, cf);
 	}
 
@@ -1665,7 +1663,7 @@ zt_pipe_fini(void *arg)
 	for (int i = 0; i < zt_recvq; i++) {
 		zt_fraglist_free(&p->zp_recvq[i]);
 	}
-
+	nni_free(p->zp_send_buf, ZT_MAX_MTU);
 	NNI_FREE_STRUCT(p);
 }
 
@@ -1682,12 +1680,16 @@ zt_pipe_init(zt_pipe **pipep, zt_ep *ep, uint64_t raddr, uint64_t laddr)
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	if ((p->zp_send_buf = nni_alloc(ZT_MAX_MTU)) == NULL) {
+		NNI_FREE_STRUCT(p);
+		return (NNG_ENOMEM);
+	}
 	p->zp_ztn        = ztn;
 	p->zp_raddr      = raddr;
 	p->zp_laddr      = laddr;
 	p->zp_proto      = ep->ze_proto;
 	p->zp_nwid       = ep->ze_nwid;
-	p->zp_mtu        = ep->ze_phymtu;
+	p->zp_mtu        = ep->ze_mtu;
 	p->zp_rcvmax     = ep->ze_rcvmax;
 	p->zp_ping_count = ep->ze_ping_count;
 	p->zp_ping_time  = ep->ze_ping_time;
@@ -1705,10 +1707,14 @@ zt_pipe_init(zt_pipe **pipep, zt_ep *ep, uint64_t raddr, uint64_t laddr)
 		zt_pipe_fini(p);
 	}
 
-	// the largest fragment we can accept on this pipe
+	// The largest fragment we can accept on this pipe. The MTU is
+	// configurable by the network administrator.  Probably ZT would
+	// pass a larger one (up to MAXMTU), but we honor the network
+	// administration's configuration.
 	maxfrag = p->zp_mtu - zt_offset_data_data;
-	// and the larger fragment count we can accept on this pipe
-	// (round up)
+
+	// The largest fragment count we can accept on this pipe.
+	// This is rounded up to account for alignment.
 	maxfrags = (p->zp_rcvmax + (maxfrag - 1)) / maxfrag;
 
 	for (i = 0; i < zt_recvq; i++) {
@@ -1734,9 +1740,9 @@ zt_pipe_send(void *arg, nni_aio *aio)
 	// As we are sending UDP, and there is no callback to worry
 	// about, we just go ahead and send out a stream of messages
 	// synchronously.
-	zt_pipe *p = arg;
+	zt_pipe *p    = arg;
+	uint8_t *data = p->zp_send_buf;
 	size_t   offset;
-	uint8_t  data[ZT_MAX_MTU];
 	uint16_t id;
 	uint16_t nfrags;
 	uint16_t fragno;
@@ -2130,8 +2136,7 @@ zt_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	// not used at all for listeners.  (We have no notion of binding
 	// to different node addresses.)
 	ep->ze_mode       = mode;
-	ep->ze_maxmtu     = ZT_MAX_MTU;
-	ep->ze_phymtu     = ZT_MIN_MTU;
+	ep->ze_mtu        = ZT_MIN_MTU;
 	ep->ze_aio        = NULL;
 	ep->ze_ping_count = zt_ping_count;
 	ep->ze_ping_time  = zt_ping_time;
