@@ -285,6 +285,7 @@ resp_recv_cb(void *arg)
 
 	msg = nni_aio_get_msg(p->aio_recv);
 	nni_aio_set_msg(p->aio_recv, NULL);
+	nni_msg_set_pipe(msg, p->id);
 
 	// Store the pipe id in the header, first thing.
 	if (nni_msg_header_append_u32(msg, p->id) != 0) {

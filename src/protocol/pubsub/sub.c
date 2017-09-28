@@ -149,14 +149,17 @@ sub_recv_cb(void *arg)
 	sub_pipe *p   = arg;
 	sub_sock *s   = p->sub;
 	nni_msgq *urq = s->urq;
+	nni_msg * msg;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
 		nni_pipe_stop(p->pipe);
 		return;
 	}
 
-	nni_aio_set_msg(p->aio_putq, nni_aio_get_msg(p->aio_recv));
+	msg = nni_aio_get_msg(p->aio_recv);
 	nni_aio_set_msg(p->aio_recv, NULL);
+	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
+	nni_aio_set_msg(p->aio_putq, msg);
 	nni_msgq_aio_put(urq, p->aio_putq);
 }
 

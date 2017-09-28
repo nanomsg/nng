@@ -125,6 +125,7 @@ pull_recv_cb(void *arg)
 
 	// Got a message... start the put to send it up to the application.
 	msg = nni_aio_get_msg(aio);
+	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
 	nni_aio_set_msg(aio, NULL);
 	pull_putq(p, msg);
 }
