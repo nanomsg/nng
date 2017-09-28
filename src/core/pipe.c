@@ -121,8 +121,6 @@ nni_pipe_destroy(nni_pipe *p)
 	// We have exclusive access at this point, so we can check if
 	// we are still on any lists.
 
-	nni_aio_fini(p->p_start_aio);
-
 	if (nni_list_node_active(&p->p_ep_node)) {
 		nni_ep_pipe_remove(p->p_ep, p);
 	}
@@ -133,6 +131,7 @@ nni_pipe_destroy(nni_pipe *p)
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
+	nni_aio_fini(p->p_start_aio);
 	nni_mtx_fini(&p->p_mtx);
 	NNI_FREE_STRUCT(p);
 }
