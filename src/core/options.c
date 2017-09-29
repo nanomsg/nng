@@ -149,7 +149,7 @@ nni_getopt_int(int i, void *val, size_t *sizep)
 }
 
 int
-nni_getopt_u64(const uint64_t u, void *val, size_t *sizep)
+nni_getopt_u64(uint64_t u, void *val, size_t *sizep)
 {
 	size_t sz = sizeof(u);
 

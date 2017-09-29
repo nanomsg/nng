@@ -183,7 +183,7 @@ trantest_send_recv_large(trantest *tt)
 		size = 1024 * 128; // bigger than any transport segment
 		So((data = nng_alloc(size)) != NULL);
 
-		for (int i = 0; i < size; i++) {
+		for (int i = 0; (size_t) i < size; i++) {
 			data[i] = nni_random() & 0xff;
 		}
 

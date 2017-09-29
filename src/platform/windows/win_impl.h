@@ -93,8 +93,14 @@ extern void nni_win_ipc_sysfini(void);
 extern int  nni_win_tcp_sysinit(void);
 extern void nni_win_tcp_sysfini(void);
 
+extern int  nni_win_udp_sysinit(void);
+extern void nni_win_udp_sysfini(void);
+
 extern int  nni_win_resolv_sysinit(void);
 extern void nni_win_resolv_sysfini(void);
+
+extern int nni_win_sockaddr2nn(nni_sockaddr *, const SOCKADDR_STORAGE *);
+extern int nni_win_nn2sockaddr(SOCKADDR_STORAGE *, const nni_sockaddr *);
 
 #endif // NNG_PLATFORM_WINDOWS
 

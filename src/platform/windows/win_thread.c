@@ -154,16 +154,11 @@ nni_plat_init(int (*helper)(void))
 	AcquireSRWLockExclusive(&lock);
 
 	if (!plat_inited) {
-		if ((rv = nni_win_iocp_sysinit()) != 0) {
-			goto out;
-		}
-		if ((rv = nni_win_ipc_sysinit()) != 0) {
-			goto out;
-		}
-		if ((rv = nni_win_tcp_sysinit()) != 0) {
-			goto out;
-		}
-		if ((rv = nni_win_resolv_sysinit()) != 0) {
+		if (((rv = nni_win_iocp_sysinit()) != 0) ||
+		    ((rv = nni_win_ipc_sysinit()) != 0) ||
+		    ((rv = nni_win_tcp_sysinit()) != 0) ||
+		    ((rv = nni_win_udp_sysinit()) != 0) ||
+		    ((rv = nni_win_resolv_sysinit()) != 0)) {
 			goto out;
 		}
 
@@ -182,6 +177,7 @@ nni_plat_fini(void)
 {
 	nni_win_resolv_sysfini();
 	nni_win_ipc_sysfini();
+	nni_win_udp_sysfini();
 	nni_win_tcp_sysfini();
 	nni_win_iocp_sysfini();
 	WSACleanup();

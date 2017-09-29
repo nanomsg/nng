@@ -133,12 +133,14 @@ if (NNG_PLATFORM_WINDOWS)
         platform/windows/win_debug.c
         platform/windows/win_iocp.c
         platform/windows/win_ipc.c
-        platform/windows/win_net.c
         platform/windows/win_pipe.c
         platform/windows/win_rand.c
         platform/windows/win_resolv.c
+        platform/windows/win_sockaddr.c
+        platform/windows/win_tcp.c
         platform/windows/win_thread.c
-    )
+        platform/windows/win_udp.c
+        )
 endif()
 
 if (NNG_ENABLE_ZEROTIER)

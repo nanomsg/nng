@@ -93,32 +93,6 @@ nni_win_tcp_sockinit(SOCKET s)
 }
 
 static int
-nni_win_tcp_addr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
-{
-	SOCKADDR_IN * sin;
-	SOCKADDR_IN6 *sin6;
-
-	switch (sa->s_un.s_family) {
-	case NNG_AF_INET:
-		sin = (void *) ss;
-		memset(sin, 0, sizeof(*sin));
-		sin->sin_family      = PF_INET;
-		sin->sin_port        = sa->s_un.s_in.sa_port;
-		sin->sin_addr.s_addr = sa->s_un.s_in.sa_addr;
-		return (sizeof(*sin));
-
-	case NNG_AF_INET6:
-		sin6 = (void *) ss;
-		memset(sin6, 0, sizeof(*sin6));
-		sin6->sin6_family = PF_INET6;
-		sin6->sin6_port   = sa->s_un.s_in6.sa_port;
-		memcpy(sin6->sin6_addr.s6_addr, sa->s_un.s_in6.sa_addr, 16);
-		return (sizeof(*sin6));
-	}
-	return (-1);
-}
-
-static int
 nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 {
 	int                rv;
@@ -303,10 +277,10 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 	ep->s = INVALID_SOCKET;
 
 	if (rsa->s_un.s_family != NNG_AF_UNSPEC) {
-		ep->remlen = nni_win_tcp_addr(&ep->remaddr, rsa);
+		ep->remlen = nni_win_nn2sockaddr(&ep->remaddr, rsa);
 	}
 	if (lsa->s_un.s_family != NNG_AF_UNSPEC) {
-		ep->loclen = nni_win_tcp_addr(&ep->locaddr, lsa);
+		ep->loclen = nni_win_nn2sockaddr(&ep->locaddr, lsa);
 	}
 
 	// Create a scratch socket for use with ioctl.
