@@ -22,7 +22,7 @@ no|off|skip|NO|OFF|SKIP)
 	;;
 esac
 mydir=$(dirname $0)
-srcdir=${mydir}/../src
+srcdir=${mydir}/../src/nng
 failed=
 
 vers=$(${CLANG_FORMAT} -version)

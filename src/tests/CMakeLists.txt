@@ -27,7 +27,7 @@
 
 #  Build unit tests.
 
-include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src)
+include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src/nng)
 
 if (NNG_TESTS)
 
