@@ -350,6 +350,33 @@ extern void nni_plat_pipe_clear(int);
 // routine.
 extern void nni_plat_pipe_close(int, int);
 
+//
+// File/Store Support
+//
+// Some transports require a persistent storage for things like
+// key material, etc.  Generally, these are all going to be relatively
+// small objects (such as certificates), so we ony require a synchronous
+// implementation from platforms.  This Key-Value API is intended to
+// to support using the Key's as filenames, and keys will consist of
+// only these characters: [0-9a-zA-Z._-].  The directory used should be
+// determined by using an environment variable (NNG_STATE_DIR), or
+// using some other application-specific method.
+//
+
+// nni_plat_file_put writes the named file, with the provided data,
+// and the given size.  If the file already exists it is overwritten.
+// The permissions on the file should be limited to read and write
+// access by the entity running the application only.
+extern int nni_plat_file_put(const char *, const void *, int);
+
+// nni_plat_file_get reads the entire named file, allocating storage
+// to receive the data and returning the data and the size in the
+// reference arguments.
+extern int nni_plat_file_get(const char *, void **, int *);
+
+// nni_plat_file_delete deletes the named file.
+extern int nni_plat_file_delete(const char *);
+
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.
 #if defined(NNG_PLATFORM_POSIX)

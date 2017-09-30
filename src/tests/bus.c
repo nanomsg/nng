@@ -57,9 +57,9 @@ TestMain("BUS pattern", {
 		So(nng_dial(bus3, addr, NULL, 0) == 0);
 
 		rtimeo = 50000;
-		So(nng_setopt_usec(bus1, nng_optid_recvtimeo, rtimeo) == 0);
-		So(nng_setopt_usec(bus2, nng_optid_recvtimeo, rtimeo) == 0);
-		So(nng_setopt_usec(bus3, nng_optid_recvtimeo, rtimeo) == 0);
+		So(nng_setopt_usec(bus1, NNG_OPT_RECVTIMEO, rtimeo) == 0);
+		So(nng_setopt_usec(bus2, NNG_OPT_RECVTIMEO, rtimeo) == 0);
+		So(nng_setopt_usec(bus3, NNG_OPT_RECVTIMEO, rtimeo) == 0);
 
 		Convey("Messages delivered", {
 			nng_msg *msg;

@@ -46,7 +46,6 @@ matrix:
           packages:
             - gcc-7
       env: CC=gcc-7
-
     # clang v4 build
     - os: linux
       dist: trusty
@@ -78,7 +77,8 @@ matrix:
             - ubuntu-toolchain-r-test
           packages:
             - gcc-7
-      env: CC=gcc-7 COVERAGE=ON GCOV=gcov-7
+            - g++-7
+      env: CC=gcc-7 CXX=g++-7 COVERAGE=ON GCOV=gcov-7
 
     # One MacOS X build
     - os: osx

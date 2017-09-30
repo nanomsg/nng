@@ -128,11 +128,16 @@ trantest_send_recv(trantest *tt)
 		nng_msg *    send;
 		nng_msg *    recv;
 		size_t       len;
+		nng_pipe     p;
+		char         url[NNG_MAXADDRLEN];
+		size_t       sz;
 
 		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
 		So(l != 0);
 		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
 		So(d != 0);
+
+		nng_usleep(20000); // listener may be behind slightly
 
 		send = NULL;
 		So(nng_msg_alloc(&send, 0) == 0);
@@ -155,9 +160,68 @@ trantest_send_recv(trantest *tt)
 		So(recv != NULL);
 		So(nng_msg_len(recv) == strlen("acknowledge"));
 		So(strcmp(nng_msg_body(recv), "acknowledge") == 0);
+		p = nng_msg_get_pipe(recv);
+		So(p != 0);
+		sz = sizeof(url);
+		So(nng_pipe_getopt(p, NNG_OPT_URL, url, &sz) == 0);
+		So(strcmp(url, tt->addr) == 0);
 		nng_msg_free(recv);
+	});
+}
+
+void
+trantest_send_recv_large(trantest *tt)
+{
+	Convey("Send and recv large data", {
+		nng_listener l;
+		nng_dialer   d;
+		nng_msg *    send;
+		nng_msg *    recv;
+		char *       data;
+		size_t       size;
+
+		size = 1024 * 128; // bigger than any transport segment
+		So((data = nng_alloc(size)) != NULL);
+
+		for (int i = 0; i < size; i++) {
+			data[i] = nni_random() & 0xff;
+		}
+
+		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
+		So(l != 0);
+		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
+		So(d != 0);
+
+		nng_usleep(20000); // listener may be behind slightly
+
+		send = NULL;
+		So(nng_msg_alloc(&send, size) == 0);
+		So(send != NULL);
+		memcpy(nng_msg_body(send), data, size);
+
+		So(nng_sendmsg(tt->reqsock, send, 0) == 0);
+		recv = NULL;
+		So(nng_recvmsg(tt->repsock, &recv, 0) == 0);
+		So(recv != NULL);
+		So(nng_msg_len(recv) == size);
+		So(memcmp(nng_msg_body(recv), data, size) == 0);
+		nng_msg_free(recv);
+
+		memset(data, 0x2, size);
+
+		So(nng_msg_alloc(&send, 0) == 0);
+		So(nng_msg_append(send, data, size) == 0);
+		So(nng_sendmsg(tt->repsock, send, 0) == 0);
+		So(nng_recvmsg(tt->reqsock, &recv, 0) == 0);
+		So(recv != NULL);
+		So(nng_msg_len(recv) == size);
+		So(memcmp(nng_msg_body(recv), data, size) == 0);
+		nng_msg_free(recv);
+
+		nng_free(data, size);
 	})
 }
+
 void
 trantest_test_all(const char *addr)
 {
@@ -173,5 +237,6 @@ trantest_test_all(const char *addr)
 		trantest_duplicate_listen(&tt);
 		trantest_listen_accept(&tt);
 		trantest_send_recv(&tt);
+		trantest_send_recv_large(&tt);
 	})
 }

@@ -29,11 +29,6 @@ struct nni_tran {
 	// tran_pipe links our pipe-specific operations.
 	const nni_tran_pipe *tran_pipe;
 
-	// tran_chkopt, if not NULL, is used to validate that the
-	// option data presented is valid. This allows an option to
-	// be set on a socket, even if no endpoints are configured.
-	int (*tran_chkopt)(int, const void *, size_t);
-
 	// tran_init, if not NULL, is called once during library
 	// initialization.
 	int (*tran_init)(void);
@@ -54,10 +49,31 @@ struct nni_tran {
 #define NNI_TRANSPORT_V0 0x54520000
 #define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V0
 
+// Endpoint option handlers.
+struct nni_tran_ep_option {
+	// eo_name is the name of the option.
+	const char *eo_name;
+
+	// eo_getopt retrieves the value of the option.
+	int (*eo_getopt)(void *, void *, size_t *);
+
+	// eo_set sets the value of the option.  If the first argument
+	// (the endpoint) is NULL, then no actual set operation should be
+	// performed, but the option should be sanity tested for presence
+	// and size.  (This permits the core to validate that an option
+	// is reasonable and be set even before endpoints are created.)
+	int (*eo_setopt)(void *, const void *, size_t);
+};
+
 // Endpoint operations are called by the socket in a protocol-independent
 // fashion.  The socket makes individual calls, which are expected to block
-// if appropriate (except for destroy). Endpoints are unable to call back
-// into the socket, to prevent recusive entry and deadlock.
+// if appropriate (except for destroy), or run asynchronously if an aio
+// is provided. Endpoints are unable to call back into the socket, to prevent
+// recusive entry and deadlock.
+//
+// For a given endpoint, the framework holds a lock so that each entry
+// point is run exclusively of the others. (Transports must still guard
+// against any asynchronous operations they manage themselves, though.)
 struct nni_tran_ep {
 	// ep_init creates a vanilla endpoint. The value created is
 	// used for the first argument for all other endpoint functions.
@@ -86,11 +102,20 @@ struct nni_tran_ep {
 	// not affect pipes that have already been created.
 	void (*ep_close)(void *);
 
-	// ep_setopt sets an endpoint (transport-specific) option.
-	int (*ep_setopt)(void *, int, const void *, size_t);
+	// ep_options is an array of endpoint options.  The final element must
+	// have a NULL name. If this member is NULL, then no transport specific
+	// options are available.
+	nni_tran_ep_option *ep_options;
+};
 
-	// ep_getopt gets an endpoint (transport-specific) option.
-	int (*ep_getopt)(void *, int, void *, size_t *);
+// Pipe option handlers.  We only have get for pipes; once a pipe is created
+// no options may be set on it.
+struct nni_tran_pipe_option {
+	// po_name is the name of the option.
+	const char *po_name;
+
+	// po_getopt retrieves the value of the option.
+	int (*po_getopt)(void *, void *, size_t *);
 };
 
 // Pipe operations are entry points called by the socket. These may be called
@@ -132,15 +157,16 @@ struct nni_tran_pipe {
 	// transport specific manner is appropriate.
 	uint16_t (*p_peer)(void *);
 
-	// p_getopt gets an pipe (transport-specific) property.  These values
-	// may not be changed once the pipe is created.
-	int (*p_getopt)(void *, int, void *, size_t *);
+	// p_options is an array of pipe options.  The final element must have
+	// a NULL name. If this member is NULL, then no transport specific
+	// options are available.
+	nni_tran_pipe_option *p_options;
 };
 
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
 extern nni_tran *nni_tran_find(const char *);
-extern int       nni_tran_chkopt(int, const void *, size_t);
+extern int       nni_tran_chkopt(const char *, const void *, size_t);
 extern int       nni_tran_sys_init(void);
 extern void      nni_tran_sys_fini(void);
 extern int       nni_tran_register(const nni_tran *);

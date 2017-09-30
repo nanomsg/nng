@@ -13,9 +13,6 @@
 
 #include <string.h>
 
-extern const char *nng_opt_surveyor_surveytime;
-extern int         nng_optid_surveyor_surveytime;
-
 #define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))
 #define CHECKSTR(m, s)                   \
 	So(nng_msg_len(m) == strlen(s)); \
@@ -33,17 +30,6 @@ TestMain("SURVEY pattern", {
 
 		Reset({ nng_close(surv); });
 
-		Convey("Surveytime option id works", {
-			int         opt;
-			const char *name;
-			opt = nng_option_lookup(nng_opt_surveyor_surveytime);
-			So(opt >= 0);
-			So(opt == nng_optid_surveyor_surveytime);
-			name = nng_option_name(opt);
-			So(name != NULL);
-			So(strcmp(name, nng_opt_surveyor_surveytime) == 0);
-		});
-
 		Convey("Protocols match", {
 			So(nng_protocol(surv) == NNG_PROTO_SURVEYOR);
 			So(nng_peer(surv) == NNG_PROTO_RESPONDENT);
@@ -57,8 +43,8 @@ TestMain("SURVEY pattern", {
 		Convey("Survey without responder times out", {
 			nng_msg *msg;
 
-			So(nng_setopt_usec(surv, nng_optid_surveyor_surveytime,
-			       50000) == 0);
+			So(nng_setopt_usec(
+			       surv, NNG_OPT_SURVEYOR_SURVEYTIME, 50000) == 0);
 			So(nng_msg_alloc(&msg, 0) == 0);
 			So(nng_sendmsg(surv, msg, 0) == 0);
 			So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
@@ -97,8 +83,8 @@ TestMain("SURVEY pattern", {
 			nng_close(resp);
 		});
 
-		So(nng_setopt_usec(
-		       surv, nng_optid_surveyor_surveytime, 50000) == 0);
+		So(nng_setopt_usec(surv, NNG_OPT_SURVEYOR_SURVEYTIME, 50000) ==
+		    0);
 		So(nng_listen(surv, addr, NULL, 0) == 0);
 		So(nng_dial(resp, addr, NULL, 0) == 0);
 
@@ -132,8 +118,8 @@ TestMain("SURVEY pattern", {
 
 			Convey("And goes to non-survey state", {
 				rtimeo = 200000;
-				So(nng_setopt_usec(surv, nng_optid_recvtimeo,
-				       200000) == 0);
+				So(nng_setopt_usec(
+				       surv, NNG_OPT_RECVTIMEO, 200000) == 0);
 				So(nng_recvmsg(surv, &msg, 0) == NNG_ESTATE);
 			});
 		});

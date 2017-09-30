@@ -28,13 +28,13 @@ struct nni_aio {
 
 	// These fields are private to the aio framework.
 	nni_cv   a_cv;
-	unsigned a_init : 1;     // initialized flag
 	unsigned a_fini : 1;     // shutting down (no new operations)
 	unsigned a_done : 1;     // operation has completed
 	unsigned a_pend : 1;     // completion routine pending
 	unsigned a_active : 1;   // aio was started
 	unsigned a_expiring : 1; // expiration callback in progress
 	unsigned a_waiting : 1;  // a thread is waiting for this to finish
+	unsigned a_synch : 1;    // run completion synchronously
 	unsigned a_pad : 26;     // ensure 32-bit alignment
 	nni_task a_task;
 
@@ -52,6 +52,9 @@ struct nni_aio {
 	// Resolver operations.
 	nni_sockaddr *a_addr;
 
+	// Extra user data.
+	void *a_data;
+
 	// Provider-use fields.
 	nni_aio_cancelfn a_prov_cancel;
 	void *           a_prov_data;
@@ -65,13 +68,19 @@ struct nni_aio {
 // the supplied argument when the operation is complete.  If NULL is
 // supplied for the callback, then nni_aio_wake is used in its place,
 // and the aio is used for the argument.
-extern void nni_aio_init(nni_aio *, nni_cb, void *);
+extern int nni_aio_init(nni_aio **, nni_cb, void *);
 
 // nni_aio_fini finalizes the aio, releasing resources (locks)
 // associated with it.  The caller is responsible for ensuring that any
 // associated I/O is unscheduled or complete.  This is safe to call
 // on zero'd memory.
 extern void nni_aio_fini(nni_aio *);
+
+// nni_aio_fini_cb finalizes the aio WITHOUT waiting for it to complete.
+// This is intended exclusively for finalizing an AIO from a completion
+// callack for that AIO. It is important that the caller ensure that nothing
+// else might be waiting for that AIO or using it.
+extern void nni_aio_fini_cb(nni_aio *);
 
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,
 // but also prevents any new operations from starting (nni_aio_start will
@@ -82,6 +91,40 @@ extern void nni_aio_fini(nni_aio *);
 // from a callback itself.  (To abort operations without blocking
 // use nni_aio_cancel instead.)
 extern void nni_aio_stop(nni_aio *);
+
+// nni_aio_set_data sets user data.  This should only be done by the
+// consumer, initiating the I/O.  The intention is to be able to store
+// additional data for use when the operation callback is executed.
+extern void nni_aio_set_data(nni_aio *, void *);
+
+// nni_aio_get_data returns the user data that was previously stored
+// with nni_aio_set_data.
+extern void *nni_aio_get_data(nni_aio *);
+
+extern void     nni_aio_set_msg(nni_aio *, nni_msg *);
+extern nni_msg *nni_aio_get_msg(nni_aio *);
+extern void     nni_aio_set_pipe(nni_aio *, void *);
+extern void *   nni_aio_get_pipe(nni_aio *);
+extern void     nni_aio_set_ep(nni_aio *, void *);
+extern void *   nni_aio_get_ep(nni_aio *);
+
+// nni_aio_set_synch sets a synchronous completion flag on the AIO.
+// When this is set, the next time the AIO is completed, the callback
+// be run synchronously, from the thread calling the finish routine.
+// It is important that this only be set when the provider knows that
+// it is not holding any locks or resources when completing the operation,
+// or when the consumer knows that the callback routine does not acquire
+// any locks.  Use with caution to avoid deadlocks.  The flag is cleared
+// automatically when the completion callback is executed.  Some care has
+// been taken so that other aio operations like aio_wait will work,
+// although it is still an error to try waiting for an aio from that aio's
+// completion callback.
+void nni_aio_set_synch(nni_aio *);
+
+// nni_aio_set_timeout sets the timeout (absolute) when the AIO will
+// be canceled.  The cancelation does not happen until after nni_aio_start
+// is called.
+extern void nni_aio_set_timeout(nni_aio *, nni_time);
 
 // nni_aio_result returns the result code (0 on success, or an NNG errno)
 // for the operation.  It is only valid to call this when the operation is

@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -25,7 +26,7 @@ struct nng_notify {
 	void *          n_arg;
 	int             n_type;
 	nni_sock *      n_sock;
-	nni_aio         n_aio;
+	nni_aio *       n_aio;
 };
 
 extern void nni_ev_init(nni_event *, int, nni_sock *);

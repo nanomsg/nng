@@ -13,19 +13,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// Dynamic options.
-
-typedef struct nni_option nni_option;
-struct nni_option {
-	nni_list_node o_link;
-	char *        o_name;
-	int           o_id;
-};
-
-static nni_mtx  nni_option_lk;
-static nni_list nni_options;
-static int      nni_option_nextid;
-
 int
 nni_chkopt_usec(const void *v, size_t sz)
 {
@@ -123,41 +110,79 @@ nni_setopt_size(size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv)
 }
 
 int
-nni_getopt_usec(nni_duration *ptr, void *val, size_t *sizep)
+nni_getopt_usec(nni_duration u, void *val, size_t *sizep)
 {
-	size_t sz = sizeof(*ptr);
+	size_t sz = sizeof(u);
 
 	if (sz > *sizep) {
 		sz = *sizep;
 	}
-	*sizep = sizeof(*ptr);
+	*sizep = sizeof(u);
+	memcpy(val, &u, sz);
+	return (0);
+}
+
+int
+nni_getopt_sockaddr(const nng_sockaddr *sa, void *val, size_t *sizep)
+{
+	size_t sz = sizeof(*sa);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof(*sa);
+	memcpy(val, sa, sz);
+	return (0);
+}
+
+int
+nni_getopt_int(int i, void *val, size_t *sizep)
+{
+	size_t sz = sizeof(i);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof(i);
+	memcpy(val, &i, sz);
+	return (0);
+}
+
+int
+nni_getopt_u64(const uint64_t u, void *val, size_t *sizep)
+{
+	size_t sz = sizeof(u);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof(u);
+	memcpy(val, &u, sz);
+	return (0);
+}
+
+int
+nni_getopt_str(const char *ptr, void *val, size_t *sizep)
+{
+	size_t len = strlen(ptr) + 1;
+	size_t sz;
+
+	sz     = (len > *sizep) ? *sizep : len;
+	*sizep = len;
 	memcpy(val, ptr, sz);
 	return (0);
 }
 
 int
-nni_getopt_int(int *ptr, void *val, size_t *sizep)
+nni_getopt_size(size_t u, void *val, size_t *sizep)
 {
-	size_t sz = sizeof(*ptr);
+	size_t sz = sizeof(u);
 
 	if (sz > *sizep) {
 		sz = *sizep;
 	}
-	*sizep = sizeof(*ptr);
-	memcpy(val, ptr, sz);
-	return (0);
-}
-
-int
-nni_getopt_size(size_t *ptr, void *val, size_t *sizep)
-{
-	size_t sz = sizeof(*ptr);
-
-	if (sz > *sizep) {
-		sz = *sizep;
-	}
-	*sizep = sizeof(*ptr);
-	memcpy(val, ptr, sz);
+	*sizep = sizeof(u);
+	memcpy(val, &u, sz);
 	return (0);
 }
 
@@ -253,139 +278,5 @@ nni_getopt_fd(nni_sock *s, nni_notifyfd *fd, int mask, void *val, size_t *szp)
 	fd->sn_init = 1;
 	*szp        = sizeof(int);
 	memcpy(val, &fd->sn_rfd, sizeof(int));
-	return (0);
-}
-
-// nni_option_set_id sets the id for an option, if not already done so.
-// (Some options have hard coded values that end-user may depend upon.)
-// If the ID passed in is negative, then a new ID is allocated dynamically.
-static int
-nni_option_set_id(const char *name, int id)
-{
-	nni_option *opt;
-	size_t      len;
-	nni_mtx_lock(&nni_option_lk);
-	NNI_LIST_FOREACH (&nni_options, opt) {
-		if (strcmp(name, opt->o_name) == 0) {
-			nni_mtx_unlock(&nni_option_lk);
-			return (0);
-		}
-	}
-	if ((opt = NNI_ALLOC_STRUCT(opt)) == NULL) {
-		nni_mtx_unlock(&nni_option_lk);
-		return (NNG_ENOMEM);
-	}
-	if ((opt->o_name = nni_strdup(name)) == NULL) {
-		nni_mtx_unlock(&nni_option_lk);
-		NNI_FREE_STRUCT(opt);
-		return (NNG_ENOMEM);
-	}
-	if (id < 0) {
-		id = nni_option_nextid++;
-	}
-	opt->o_id = id;
-	nni_list_append(&nni_options, opt);
-	nni_mtx_unlock(&nni_option_lk);
-	return (0);
-}
-
-int
-nni_option_lookup(const char *name)
-{
-	nni_option *opt;
-	int         id = -1;
-
-	nni_mtx_lock(&nni_option_lk);
-	NNI_LIST_FOREACH (&nni_options, opt) {
-		if (strcmp(name, opt->o_name) == 0) {
-			id = opt->o_id;
-			break;
-		}
-	}
-	nni_mtx_unlock(&nni_option_lk);
-	return (id);
-}
-
-const char *
-nni_option_name(int id)
-{
-	nni_option *opt;
-	const char *name = NULL;
-
-	nni_mtx_lock(&nni_option_lk);
-	NNI_LIST_FOREACH (&nni_options, opt) {
-		if (id == opt->o_id) {
-			name = opt->o_name;
-			break;
-		}
-	}
-	nni_mtx_unlock(&nni_option_lk);
-	return (name);
-}
-
-int
-nni_option_register(const char *name, int *idp)
-{
-	int rv;
-
-	// Note that if the id was already in use, we will
-	// wind up leaving a gap in the ID space.  That should
-	// be inconsequential.
-	if ((rv = nni_option_set_id(name, -1)) != 0) {
-		return (rv);
-	}
-	*idp = nni_option_lookup(name);
-	return (0);
-}
-
-void
-nni_option_sys_fini(void)
-{
-	if (nni_option_nextid != 0) {
-		nni_option *opt;
-		while ((opt = nni_list_first(&nni_options)) != NULL) {
-			nni_list_remove(&nni_options, opt);
-			nni_strfree(opt->o_name);
-			NNI_FREE_STRUCT(opt);
-		}
-	}
-	nni_option_nextid = 0;
-}
-
-int
-nni_option_sys_init(void)
-{
-	nni_mtx_init(&nni_option_lk);
-	NNI_LIST_INIT(&nni_options, nni_option, o_link);
-	nni_option_nextid = 0x10000;
-	int rv;
-
-#define OPT_REGISTER(o) nni_option_register(nng_opt_##o, &nng_optid_##o)
-	// Register our well-known options.
-	if (((rv = OPT_REGISTER(raw)) != 0) ||
-	    ((rv = OPT_REGISTER(linger)) != 0) ||
-	    ((rv = OPT_REGISTER(recvbuf)) != 0) ||
-	    ((rv = OPT_REGISTER(sendbuf)) != 0) ||
-	    ((rv = OPT_REGISTER(recvtimeo)) != 0) ||
-	    ((rv = OPT_REGISTER(sendtimeo)) != 0) ||
-	    ((rv = OPT_REGISTER(reconnmint)) != 0) ||
-	    ((rv = OPT_REGISTER(reconnmaxt)) != 0) ||
-	    ((rv = OPT_REGISTER(recvmaxsz)) != 0) ||
-	    ((rv = OPT_REGISTER(maxttl)) != 0) ||
-	    ((rv = OPT_REGISTER(protocol)) != 0) ||
-	    ((rv = OPT_REGISTER(transport)) != 0) ||
-	    ((rv = OPT_REGISTER(locaddr)) != 0) ||
-	    ((rv = OPT_REGISTER(remaddr)) != 0) ||
-	    ((rv = OPT_REGISTER(recvfd)) != 0) ||
-	    ((rv = OPT_REGISTER(sendfd)) != 0) ||
-	    ((rv = OPT_REGISTER(req_resendtime)) != 0) ||
-	    ((rv = OPT_REGISTER(sub_subscribe)) != 0) ||
-	    ((rv = OPT_REGISTER(sub_unsubscribe)) != 0) ||
-	    ((rv = OPT_REGISTER(surveyor_surveytime)) != 0)) {
-		nni_option_sys_fini();
-		return (rv);
-	}
-#undef OPT_REGISTER
-
 	return (0);
 }

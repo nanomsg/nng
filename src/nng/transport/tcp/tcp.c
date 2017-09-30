@@ -38,9 +38,9 @@ struct nni_tcp_pipe {
 	size_t   gotrxhead;
 	size_t   wanttxhead;
 	size_t   wantrxhead;
-	nni_aio  txaio;
-	nni_aio  rxaio;
-	nni_aio  negaio;
+	nni_aio *txaio;
+	nni_aio *rxaio;
+	nni_aio *negaio;
 	nni_msg *rxmsg;
 	nni_mtx  mtx;
 };
@@ -52,7 +52,7 @@ struct nni_tcp_ep {
 	size_t           rcvmax;
 	nni_duration     linger;
 	int              ipv4only;
-	nni_aio          aio;
+	nni_aio *        aio;
 	nni_aio *        user_aio;
 	nni_mtx          mtx;
 };
@@ -61,18 +61,6 @@ static void nni_tcp_pipe_send_cb(void *);
 static void nni_tcp_pipe_recv_cb(void *);
 static void nni_tcp_pipe_nego_cb(void *);
 static void nni_tcp_ep_cb(void *arg);
-
-static int
-nni_tcp_tran_chkopt(int o, const void *data, size_t sz)
-{
-	if (o == nng_optid_recvmaxsz) {
-		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
-	}
-	if (o == nng_optid_linger) {
-		return (nni_chkopt_usec(data, sz));
-	}
-	return (NNG_ENOTSUP);
-}
 
 static int
 nni_tcp_tran_init(void)
@@ -98,13 +86,13 @@ nni_tcp_pipe_fini(void *arg)
 {
 	nni_tcp_pipe *p = arg;
 
-	nni_aio_stop(&p->rxaio);
-	nni_aio_stop(&p->txaio);
-	nni_aio_stop(&p->negaio);
+	nni_aio_stop(p->rxaio);
+	nni_aio_stop(p->txaio);
+	nni_aio_stop(p->negaio);
 
-	nni_aio_fini(&p->rxaio);
-	nni_aio_fini(&p->txaio);
-	nni_aio_fini(&p->negaio);
+	nni_aio_fini(p->rxaio);
+	nni_aio_fini(p->txaio);
+	nni_aio_fini(p->negaio);
 	if (p->tpp != NULL) {
 		nni_plat_tcp_pipe_fini(p->tpp);
 	}
@@ -119,14 +107,18 @@ static int
 nni_tcp_pipe_init(nni_tcp_pipe **pipep, nni_tcp_ep *ep, void *tpp)
 {
 	nni_tcp_pipe *p;
+	int           rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&p->mtx);
-	nni_aio_init(&p->txaio, nni_tcp_pipe_send_cb, p);
-	nni_aio_init(&p->rxaio, nni_tcp_pipe_recv_cb, p);
-	nni_aio_init(&p->negaio, nni_tcp_pipe_nego_cb, p);
+	if (((rv = nni_aio_init(&p->txaio, nni_tcp_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->rxaio, nni_tcp_pipe_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->negaio, nni_tcp_pipe_nego_cb, p)) != 0)) {
+		nni_tcp_pipe_fini(p);
+		return (rv);
+	}
 
 	p->proto  = ep->proto;
 	p->rcvmax = ep->rcvmax;
@@ -150,7 +142,7 @@ nni_tcp_cancel_nego(nni_aio *aio, int rv)
 	p->user_negaio = NULL;
 	nni_mtx_unlock(&p->mtx);
 
-	nni_aio_cancel(&p->negaio, rv);
+	nni_aio_cancel(p->negaio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -158,7 +150,7 @@ static void
 nni_tcp_pipe_nego_cb(void *arg)
 {
 	nni_tcp_pipe *p   = arg;
-	nni_aio *     aio = &p->negaio;
+	nni_aio *     aio = p->negaio;
 	int           rv;
 
 	nni_mtx_lock(&p->mtx);
@@ -224,12 +216,12 @@ nni_tcp_pipe_send_cb(void *arg)
 	}
 	p->user_txaio = NULL;
 
-	if ((rv = nni_aio_result(&p->txaio)) != 0) {
+	if ((rv = nni_aio_result(p->txaio)) != 0) {
 		len = 0;
 	} else {
 		len = nni_msg_len(aio->a_msg);
-		nni_msg_free(aio->a_msg);
-		aio->a_msg = NULL;
+		nni_msg_free(nni_aio_get_msg(aio));
+		nni_aio_set_msg(aio, NULL);
 	}
 	nni_aio_finish(aio, 0, len);
 	nni_mtx_unlock(&p->mtx);
@@ -251,7 +243,7 @@ nni_tcp_pipe_recv_cb(void *arg)
 		return;
 	}
 
-	if ((rv = nni_aio_result(&p->rxaio)) != 0) {
+	if ((rv = nni_aio_result(p->rxaio)) != 0) {
 		// Error on receive.  This has to cause an error back
 		// to the user.  Also, if we had allocated an rxmsg, lets
 		// toss it.
@@ -269,6 +261,7 @@ nni_tcp_pipe_recv_cb(void *arg)
 	// header, which is just the length.  This tells us the size of the
 	// message to allocate and how much more to expect.
 	if (p->rxmsg == NULL) {
+		nni_aio *rxaio;
 		uint64_t len;
 		// We should have gotten a message header.
 		NNI_GET64(p->rxlen, len);
@@ -291,11 +284,12 @@ nni_tcp_pipe_recv_cb(void *arg)
 
 		// Submit the rest of the data for a read -- we want to
 		// read the entire message now.
-		p->rxaio.a_iov[0].iov_buf = nni_msg_body(p->rxmsg);
-		p->rxaio.a_iov[0].iov_len = nni_msg_len(p->rxmsg);
-		p->rxaio.a_niov           = 1;
+		rxaio                   = p->rxaio;
+		rxaio->a_iov[0].iov_buf = nni_msg_body(p->rxmsg);
+		rxaio->a_iov[0].iov_len = nni_msg_len(p->rxmsg);
+		rxaio->a_niov           = 1;
 
-		nni_plat_tcp_pipe_recv(p->tpp, &p->rxaio);
+		nni_plat_tcp_pipe_recv(p->tpp, rxaio);
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
@@ -322,7 +316,7 @@ nni_tcp_cancel_tx(nni_aio *aio, int rv)
 	nni_mtx_unlock(&p->mtx);
 
 	// cancel the underlying operation.
-	nni_aio_cancel(&p->txaio, rv);
+	nni_aio_cancel(p->txaio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -330,8 +324,9 @@ static void
 nni_tcp_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *p   = arg;
-	nni_msg *     msg = aio->a_msg;
+	nni_msg *     msg = nni_aio_get_msg(aio);
 	uint64_t      len;
+	nni_aio *     txaio;
 
 	len = nni_msg_len(msg) + nni_msg_header_len(msg);
 
@@ -346,15 +341,16 @@ nni_tcp_pipe_send(void *arg, nni_aio *aio)
 
 	NNI_PUT64(p->txlen, len);
 
-	p->txaio.a_iov[0].iov_buf = p->txlen;
-	p->txaio.a_iov[0].iov_len = sizeof(p->txlen);
-	p->txaio.a_iov[1].iov_buf = nni_msg_header(msg);
-	p->txaio.a_iov[1].iov_len = nni_msg_header_len(msg);
-	p->txaio.a_iov[2].iov_buf = nni_msg_body(msg);
-	p->txaio.a_iov[2].iov_len = nni_msg_len(msg);
-	p->txaio.a_niov           = 3;
+	txaio                   = p->txaio;
+	txaio->a_iov[0].iov_buf = p->txlen;
+	txaio->a_iov[0].iov_len = sizeof(p->txlen);
+	txaio->a_iov[1].iov_buf = nni_msg_header(msg);
+	txaio->a_iov[1].iov_len = nni_msg_header_len(msg);
+	txaio->a_iov[2].iov_buf = nni_msg_body(msg);
+	txaio->a_iov[2].iov_len = nni_msg_len(msg);
+	txaio->a_niov           = 3;
 
-	nni_plat_tcp_pipe_send(p->tpp, &p->txaio);
+	nni_plat_tcp_pipe_send(p->tpp, txaio);
 	nni_mtx_unlock(&p->mtx);
 }
 
@@ -372,7 +368,7 @@ nni_tcp_cancel_rx(nni_aio *aio, int rv)
 	nni_mtx_unlock(&p->mtx);
 
 	// cancel the underlying operation.
-	nni_aio_cancel(&p->rxaio, rv);
+	nni_aio_cancel(p->rxaio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -380,6 +376,7 @@ static void
 nni_tcp_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *p = arg;
+	nni_aio *     rxaio;
 
 	nni_mtx_lock(&p->mtx);
 
@@ -392,11 +389,12 @@ nni_tcp_pipe_recv(void *arg, nni_aio *aio)
 	NNI_ASSERT(p->rxmsg == NULL);
 
 	// Schedule a read of the TCP header.
-	p->rxaio.a_iov[0].iov_buf = p->rxlen;
-	p->rxaio.a_iov[0].iov_len = sizeof(p->rxlen);
-	p->rxaio.a_niov           = 1;
+	rxaio                   = p->rxaio;
+	rxaio->a_iov[0].iov_buf = p->rxlen;
+	rxaio->a_iov[0].iov_len = sizeof(p->rxlen);
+	rxaio->a_niov           = 1;
 
-	nni_plat_tcp_pipe_recv(p->tpp, &p->rxaio);
+	nni_plat_tcp_pipe_recv(p->tpp, rxaio);
 	nni_mtx_unlock(&p->mtx);
 }
 
@@ -406,29 +404,6 @@ nni_tcp_pipe_peer(void *arg)
 	nni_tcp_pipe *p = arg;
 
 	return (p->peer);
-}
-
-static int
-nni_tcp_pipe_getopt(void *arg, int option, void *buf, size_t *szp)
-{
-#if 0
-	nni_inproc_pipe *pipe = arg;
-	size_t len;
-
-	switch (option) {
-	case NNG_OPT_LOCALADDR:
-	case NNG_OPT_REMOTEADDR:
-		len = strlen(pipe->addr) + 1;
-		if (len > *szp) {
-			(void) memcpy(buf, pipe->addr, *szp);
-		} else {
-			(void) memcpy(buf, pipe->addr, len);
-		}
-		*szp = len;
-		return (0);
-	}
-#endif
-	return (NNG_ENOTSUP);
 }
 
 static int
@@ -525,6 +500,7 @@ static void
 nni_tcp_pipe_start(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *p = arg;
+	nni_aio *     negaio;
 
 	nni_mtx_lock(&p->mtx);
 	p->txlen[0] = 0;
@@ -534,19 +510,20 @@ nni_tcp_pipe_start(void *arg, nni_aio *aio)
 	NNI_PUT16(&p->txlen[4], p->proto);
 	NNI_PUT16(&p->txlen[6], 0);
 
-	p->user_negaio             = aio;
-	p->gotrxhead               = 0;
-	p->gottxhead               = 0;
-	p->wantrxhead              = 8;
-	p->wanttxhead              = 8;
-	p->negaio.a_niov           = 1;
-	p->negaio.a_iov[0].iov_len = 8;
-	p->negaio.a_iov[0].iov_buf = &p->txlen[0];
+	p->user_negaio           = aio;
+	p->gotrxhead             = 0;
+	p->gottxhead             = 0;
+	p->wantrxhead            = 8;
+	p->wanttxhead            = 8;
+	negaio                   = p->negaio;
+	negaio->a_niov           = 1;
+	negaio->a_iov[0].iov_len = 8;
+	negaio->a_iov[0].iov_buf = &p->txlen[0];
 	if (nni_aio_start(aio, nni_tcp_cancel_nego, p) != 0) {
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
-	nni_plat_tcp_pipe_send(p->tpp, &p->negaio);
+	nni_plat_tcp_pipe_send(p->tpp, negaio);
 	nni_mtx_unlock(&p->mtx);
 }
 
@@ -555,11 +532,11 @@ nni_tcp_ep_fini(void *arg)
 {
 	nni_tcp_ep *ep = arg;
 
-	nni_aio_stop(&ep->aio);
+	nni_aio_stop(ep->aio);
 	if (ep->tep != NULL) {
 		nni_plat_tcp_ep_fini(ep->tep);
 	}
-	nni_aio_fini(&ep->aio);
+	nni_aio_fini(ep->aio);
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
 }
@@ -575,7 +552,7 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	char *       lhost;
 	char *       lserv;
 	nni_sockaddr rsa, lsa;
-	nni_aio      aio;
+	nni_aio *    aio;
 	int          passive;
 
 	// Make a copy of the url (to allow for destructive operations)
@@ -590,17 +567,19 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	}
 	passive = (mode == NNI_EP_MODE_DIAL ? 0 : 1);
 
-	nni_aio_init(&aio, NULL, NULL);
+	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+		return (rv);
+	}
 
 	// XXX: arguably we could defer this part to the point we do a bind
 	// or connect!
 
 	if ((rhost != NULL) || (rserv != NULL)) {
-		aio.a_addr = &rsa;
-		nni_plat_tcp_resolv(
-		    rhost, rserv, NNG_AF_UNSPEC, passive, &aio);
-		nni_aio_wait(&aio);
-		if ((rv = nni_aio_result(&aio)) != 0) {
+		aio->a_addr = &rsa;
+		nni_plat_tcp_resolv(rhost, rserv, NNG_AF_UNSPEC, passive, aio);
+		nni_aio_wait(aio);
+		if ((rv = nni_aio_result(aio)) != 0) {
+			nni_aio_fini(aio);
 			return (rv);
 		}
 	} else {
@@ -608,16 +587,17 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	}
 
 	if ((lhost != NULL) || (lserv != NULL)) {
-		aio.a_addr = &lsa;
-		nni_plat_tcp_resolv(
-		    lhost, lserv, NNG_AF_UNSPEC, passive, &aio);
-		nni_aio_wait(&aio);
-		if ((rv = nni_aio_result(&aio)) != 0) {
+		aio->a_addr = &lsa;
+		nni_plat_tcp_resolv(lhost, lserv, NNG_AF_UNSPEC, passive, aio);
+		nni_aio_wait(aio);
+		if ((rv = nni_aio_result(aio)) != 0) {
+			nni_aio_fini(aio);
 			return (rv);
 		}
 	} else {
 		lsa.s_un.s_family = NNG_AF_UNSPEC;
 	}
+	nni_aio_fini(aio);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
@@ -633,8 +613,10 @@ nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	}
 
 	nni_mtx_init(&ep->mtx);
-	nni_aio_init(&ep->aio, nni_tcp_ep_cb, ep);
-
+	if ((rv = nni_aio_init(&ep->aio, nni_tcp_ep_cb, ep)) != 0) {
+		nni_tcp_ep_fini(ep);
+		return (rv);
+	}
 	ep->proto = nni_sock_proto(sock);
 
 	*epp = ep;
@@ -650,7 +632,7 @@ nni_tcp_ep_close(void *arg)
 	nni_plat_tcp_ep_close(ep->tep);
 	nni_mtx_unlock(&ep->mtx);
 
-	nni_aio_stop(&ep->aio);
+	nni_aio_stop(ep->aio);
 }
 
 static int
@@ -673,19 +655,19 @@ nni_tcp_ep_finish(nni_tcp_ep *ep)
 	int           rv;
 	nni_tcp_pipe *pipe = NULL;
 
-	if ((rv = nni_aio_result(&ep->aio)) != 0) {
+	if ((rv = nni_aio_result(ep->aio)) != 0) {
 		goto done;
 	}
-	NNI_ASSERT(ep->aio.a_pipe != NULL);
+	NNI_ASSERT(nni_aio_get_pipe(ep->aio) != NULL);
 
 	// Attempt to allocate the parent pipe.  If this fails we'll
 	// drop the connection (ENOMEM probably).
-	rv = nni_tcp_pipe_init(&pipe, ep, ep->aio.a_pipe);
+	rv = nni_tcp_pipe_init(&pipe, ep, nni_aio_get_pipe(ep->aio));
 
 done:
-	ep->aio.a_pipe = NULL;
-	aio            = ep->user_aio;
-	ep->user_aio   = NULL;
+	nni_aio_set_pipe(ep->aio, NULL);
+	aio          = ep->user_aio;
+	ep->user_aio = NULL;
 
 	if ((aio != NULL) && (rv == 0)) {
 		nni_aio_finish_pipe(aio, pipe);
@@ -723,7 +705,7 @@ nni_tcp_cancel_ep(nni_aio *aio, int rv)
 	ep->user_aio = NULL;
 	nni_mtx_unlock(&ep->mtx);
 
-	nni_aio_cancel(&ep->aio, rv);
+	nni_aio_cancel(ep->aio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -743,7 +725,7 @@ nni_tcp_ep_accept(void *arg, nni_aio *aio)
 
 	ep->user_aio = aio;
 
-	nni_plat_tcp_ep_accept(ep->tep, &ep->aio);
+	nni_plat_tcp_ep_accept(ep->tep, ep->aio);
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -764,57 +746,76 @@ nni_tcp_ep_connect(void *arg, nni_aio *aio)
 
 	ep->user_aio = aio;
 
-	nni_plat_tcp_ep_connect(ep->tep, &ep->aio);
+	nni_plat_tcp_ep_connect(ep->tep, ep->aio);
 	nni_mtx_unlock(&ep->mtx);
 }
 
 static int
-nni_tcp_ep_setopt(void *arg, int opt, const void *v, size_t sz)
+nni_tcp_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz)
 {
-	int         rv = NNG_ENOTSUP;
 	nni_tcp_ep *ep = arg;
-
-	if (opt == nng_optid_recvmaxsz) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ);
-		nni_mtx_unlock(&ep->mtx);
-
-	} else if (opt == nng_optid_linger) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_setopt_usec(&ep->linger, v, sz);
-		nni_mtx_unlock(&ep->mtx);
+	if (ep == NULL) {
+		return (nni_chkopt_size(v, sz, 0, NNI_MAXSZ));
 	}
-	return (rv);
+	return (nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ));
 }
 
 static int
-nni_tcp_ep_getopt(void *arg, int opt, void *v, size_t *szp)
+nni_tcp_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp)
 {
-	int         rv = NNG_ENOTSUP;
 	nni_tcp_ep *ep = arg;
-
-	if (opt == nng_optid_recvmaxsz) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_getopt_size(&ep->rcvmax, v, szp);
-		nni_mtx_unlock(&ep->mtx);
-
-	} else if (opt == nng_optid_linger) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_getopt_usec(&ep->linger, v, szp);
-		nni_mtx_unlock(&ep->mtx);
-	}
-	// XXX: add address properties
-	return (rv);
+	return (nni_getopt_size(ep->rcvmax, v, szp));
 }
 
+static int
+nni_tcp_ep_setopt_linger(void *arg, const void *v, size_t sz)
+{
+	nni_tcp_ep *ep = arg;
+	if (ep == NULL) {
+		return (nni_chkopt_usec(v, sz));
+	}
+	return (nni_setopt_usec(&ep->linger, v, sz));
+}
+
+static int
+nni_tcp_ep_getopt_linger(void *arg, void *v, size_t *szp)
+{
+	nni_tcp_ep *ep = arg;
+	return (nni_getopt_usec(ep->linger, v, szp));
+}
+
+static nni_tran_pipe_option nni_tcp_pipe_options[] = {
+#if 0
+	{ NNG_OPT_LOCADDR, nni_tcp_pipe_get_locaddr },
+	{ NNG_OPT_REMADDR, nni_tcp_pipe_get_remaddr },
+#endif
+	// terminate list
+	{ NULL, NULL }
+};
+
 static nni_tran_pipe nni_tcp_pipe_ops = {
-	.p_fini   = nni_tcp_pipe_fini,
-	.p_start  = nni_tcp_pipe_start,
-	.p_send   = nni_tcp_pipe_send,
-	.p_recv   = nni_tcp_pipe_recv,
-	.p_close  = nni_tcp_pipe_close,
-	.p_peer   = nni_tcp_pipe_peer,
-	.p_getopt = nni_tcp_pipe_getopt,
+	.p_fini    = nni_tcp_pipe_fini,
+	.p_start   = nni_tcp_pipe_start,
+	.p_send    = nni_tcp_pipe_send,
+	.p_recv    = nni_tcp_pipe_recv,
+	.p_close   = nni_tcp_pipe_close,
+	.p_peer    = nni_tcp_pipe_peer,
+	.p_options = nni_tcp_pipe_options,
+};
+
+static nni_tran_ep_option nni_tcp_ep_options[] = {
+	{
+	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_getopt = nni_tcp_ep_getopt_recvmaxsz,
+	    .eo_setopt = nni_tcp_ep_setopt_recvmaxsz,
+	},
+	{
+	    .eo_name   = NNG_OPT_LINGER,
+	    .eo_getopt = nni_tcp_ep_getopt_linger,
+	    .eo_setopt = nni_tcp_ep_setopt_linger,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
 };
 
 static nni_tran_ep nni_tcp_ep_ops = {
@@ -824,8 +825,7 @@ static nni_tran_ep nni_tcp_ep_ops = {
 	.ep_bind    = nni_tcp_ep_bind,
 	.ep_accept  = nni_tcp_ep_accept,
 	.ep_close   = nni_tcp_ep_close,
-	.ep_setopt  = nni_tcp_ep_setopt,
-	.ep_getopt  = nni_tcp_ep_getopt,
+	.ep_options = nni_tcp_ep_options,
 };
 
 // This is the TCP transport linkage, and should be the only global
@@ -835,7 +835,6 @@ struct nni_tran nni_tcp_tran = {
 	.tran_scheme  = "tcp",
 	.tran_ep      = &nni_tcp_ep_ops,
 	.tran_pipe    = &nni_tcp_pipe_ops,
-	.tran_chkopt  = nni_tcp_tran_chkopt,
 	.tran_init    = nni_tcp_tran_init,
 	.tran_fini    = nni_tcp_tran_fini,
 };

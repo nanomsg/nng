@@ -86,16 +86,16 @@ NNG_DECL uint16_t nng_protocol(nng_socket);
 NNG_DECL uint16_t nng_peer(nng_socket);
 
 // nng_setopt sets an option for a specific socket.
-NNG_DECL int nng_setopt(nng_socket, int, const void *, size_t);
-NNG_DECL int nng_setopt_int(nng_socket, int, int);
-NNG_DECL int nng_setopt_usec(nng_socket, int, uint64_t);
-NNG_DECL int nng_setopt_size(nng_socket, int, size_t);
+NNG_DECL int nng_setopt(nng_socket, const char *, const void *, size_t);
+NNG_DECL int nng_setopt_int(nng_socket, const char *, int);
+NNG_DECL int nng_setopt_usec(nng_socket, const char *, uint64_t);
+NNG_DECL int nng_setopt_size(nng_socket, const char *, size_t);
 
 // nng_socket_getopt obtains the option for a socket.
-NNG_DECL int nng_getopt(nng_socket, int, void *, size_t *);
-NNG_DECL int nng_getopt_int(nng_socket, int, int *);
-NNG_DECL int nng_getopt_usec(nng_socket, int, uint64_t *);
-NNG_DECL int nng_getopt_size(nng_socket, int, size_t *);
+NNG_DECL int nng_getopt(nng_socket, const char *, void *, size_t *);
+NNG_DECL int nng_getopt_int(nng_socket, const char *, int *);
+NNG_DECL int nng_getopt_usec(nng_socket, const char *, uint64_t *);
+NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
 
 // nng_notify_func is a user function that is executed upon certain
 // events.  See below.
@@ -199,35 +199,36 @@ NNG_DECL int nng_listener_close(nng_listener);
 
 // nng_dialer_setopt sets an option for a specific dialer.  Note
 // dialer options may not be altered on a running dialer.
-NNG_DECL int nng_dialer_setopt(nng_dialer, int, const void *, size_t);
-NNG_DECL int nng_dialer_setopt_int(nng_dialer, int, int);
-NNG_DECL int nng_dialer_setopt_usec(nng_dialer, int, uint64_t);
-NNG_DECL int nng_dialer_setopt_size(nng_dialer, int, size_t);
+NNG_DECL int nng_dialer_setopt(nng_dialer, const char *, const void *, size_t);
+NNG_DECL int nng_dialer_setopt_int(nng_dialer, const char *, int);
+NNG_DECL int nng_dialer_setopt_usec(nng_dialer, const char *, uint64_t);
+NNG_DECL int nng_dialer_setopt_size(nng_dialer, const char *, size_t);
 
 // nng_dialer_getopt obtains the option for a dialer. This will
 // fail for options that a particular dialer is not interested in,
 // even if they were set on the socket.
-NNG_DECL int nng_dialer_getopt(nng_dialer, int, void *, size_t *);
-NNG_DECL int nng_dialer_getopt_int(nng_dialer, int, int *);
-NNG_DECL int nng_dialer_getopt_usec(nng_dialer, int, uint64_t *);
-NNG_DECL int nng_dialer_getopt_size(nng_dialer, int, size_t *);
+NNG_DECL int nng_dialer_getopt(nng_dialer, const char *, void *, size_t *);
+NNG_DECL int nng_dialer_getopt_int(nng_dialer, const char *, int *);
+NNG_DECL int nng_dialer_getopt_usec(nng_dialer, const char *, uint64_t *);
+NNG_DECL int nng_dialer_getopt_size(nng_dialer, const char *, size_t *);
 
 // nng_listener_setopt sets an option for a dialer.  This value is
 // not stored in the socket.  Subsequent setopts on the socket may
 // override these value however.  Note listener options may not be altered
 // on a running listener.
-NNG_DECL int nng_listener_setopt(nng_dialer, int, const void *, size_t);
-NNG_DECL int nng_listener_setopt_int(nng_dialer, int, int);
-NNG_DECL int nng_listener_setopt_usec(nng_dialer, int, uint64_t);
-NNG_DECL int nng_listener_setopt_size(nng_dialer, int, size_t);
+NNG_DECL int nng_listener_setopt(
+    nng_listener, const char *, const void *, size_t);
+NNG_DECL int nng_listener_setopt_int(nng_listener, const char *, int);
+NNG_DECL int nng_listener_setopt_usec(nng_listener, const char *, uint64_t);
+NNG_DECL int nng_listener_setopt_size(nng_listener, const char *, size_t);
 
 // nng_listener_getopt obtains the option for a listener.  This will
 // fail for options that a particular listener is not interested in,
 // even if they were set on the socket.
-NNG_DECL int nng_listener_getopt(nng_listener, int, void *, size_t *);
-NNG_DECL int nng_listener_getopt_int(nng_listener, int, int *);
-NNG_DECL int nng_listener_getopt_usec(nng_listener, int, uint64_t *);
-NNG_DECL int nng_listener_getopt_size(nng_listener, int, size_t *);
+NNG_DECL int nng_listener_getopt(nng_listener, const char *, void *, size_t *);
+NNG_DECL int nng_listener_getopt_int(nng_listener, const char *, int *);
+NNG_DECL int nng_listener_getopt_usec(nng_listener, const char *, uint64_t *);
+NNG_DECL int nng_listener_getopt_size(nng_listener, const char *, size_t *);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.
@@ -320,7 +321,7 @@ NNG_DECL const char *nng_option_name(int);
 // we do permit an application to close a pipe. This can be useful, for
 // example during a connection notification, to disconnect a pipe that
 // is associated with an invalid or untrusted remote peer.
-NNG_DECL int nng_pipe_getopt(nng_pipe, int, void *, size_t *);
+NNG_DECL int nng_pipe_getopt(nng_pipe, const char *, void *, size_t *);
 NNG_DECL int nng_pipe_close(nng_pipe);
 
 // Flags.
@@ -395,58 +396,34 @@ NNG_DECL int nng_respondent0_open(nng_socket *);
 #define nng_surveyor_open nng_surveyor0_open
 #define nng_respondent_open nng_respondent0_open
 
-// Options. We encode option numbers as follows:
-//
-// <level>	- 0: socket, 1: transport
-// <type>	- zero (socket), or transport (8 bits)
-// <code>	- specific value (16 bits)
-#define NNG_OPT_SOCKET(c) (c)
-#define NNG_OPT_TRANSPORT_OPT(t, c) (0x10000 | ((t) << 16) | (c))
+// Options.
+#define NNG_OPT_RAW "raw"
+#define NNG_OPT_LINGER "linger"
+#define NNG_OPT_RECVBUF "recv-buffer"
+#define NNG_OPT_SENDBUF "send-buffer"
+#define NNG_OPT_RECVFD "recv-fd"
+#define NNG_OPT_SENDFD "send-fd"
+#define NNG_OPT_RECVTIMEO "recv-timeout"
+#define NNG_OPT_SENDTIMEO "send-timeout"
+#define NNG_OPT_LOCADDR "local-address"
+#define NNG_OPT_REMADDR "remote-address"
+#define NNG_OPT_URL "url"
+#define NNG_OPT_MAXTTL "ttl-max"
+#define NNG_OPT_PROTOCOL "protocol"
+#define NNG_OPT_TRANSPORT "transport"
+#define NNG_OPT_RECVMAXSZ "recv-size-max"
+#define NNG_OPT_RECONNMINT "reconnect-time-min"
+#define NNG_OPT_RECONNMAXT "reconnect-time-max"
 
-NNG_DECL const char *nng_opt_raw;
-NNG_DECL const char *nng_opt_linger;
-NNG_DECL const char *nng_opt_recvbuf;
-NNG_DECL const char *nng_opt_sendbuf;
-NNG_DECL const char *nng_opt_recvtimeo;
-NNG_DECL const char *nng_opt_sendtimeo;
-NNG_DECL const char *nng_opt_recvmaxsz;
-NNG_DECL const char *nng_opt_reconnmint;
-NNG_DECL const char *nng_opt_reconnmaxt;
-NNG_DECL const char *nng_opt_maxttl;
-NNG_DECL const char *nng_opt_protocol;
-NNG_DECL const char *nng_opt_transport;
-NNG_DECL const char *nng_opt_recvfd;
-NNG_DECL const char *nng_opt_sendfd;
-NNG_DECL const char *nng_opt_locaddr;
-NNG_DECL const char *nng_opt_remaddr;
-NNG_DECL const char *nng_opt_req_resendtime;
-NNG_DECL const char *nng_opt_sub_subscribe;
-NNG_DECL const char *nng_opt_sub_unsubscribe;
-NNG_DECL const char *nng_opt_surveyor_surveytime;
+#define NNG_OPT_PAIR1_POLY "pair1:polyamorous"
 
-NNG_DECL int nng_optid_raw;
-NNG_DECL int nng_optid_linger;
-NNG_DECL int nng_optid_recvbuf;
-NNG_DECL int nng_optid_sendbuf;
-NNG_DECL int nng_optid_recvtimeo;
-NNG_DECL int nng_optid_sendtimeo;
-NNG_DECL int nng_optid_recvmaxsz;
-NNG_DECL int nng_optid_reconnmint;
-NNG_DECL int nng_optid_reconnmaxt;
-NNG_DECL int nng_optid_maxttl;
-NNG_DECL int nng_optid_protocol;
-NNG_DECL int nng_optid_transport;
-NNG_DECL int nng_optid_recvfd;
-NNG_DECL int nng_optid_sendfd;
-NNG_DECL int nng_optid_locaddr;
-NNG_DECL int nng_optid_remaddr;
+#define NNG_OPT_SUB_SUBSCRIBE "sub:subscribe"
+#define NNG_OPT_SUB_UNSUBSCRIBE "sub:unsubscribe"
 
-// These protocol specific options may not be valid until a socket of
-// the given protocol is opened!
-NNG_DECL int nng_optid_req_resendtime;
-NNG_DECL int nng_optid_sub_subscribe;
-NNG_DECL int nng_optid_sub_unsubscribe;
-NNG_DECL int nng_optid_surveyor_surveytime;
+#define NNG_OPT_REQ_RESENDTIME "req:resend-time"
+
+#define NNG_OPT_SURVEYOR_SURVEYTIME "surveyor:survey-time"
+
 // XXX: TBD: priorities, socket names, ipv4only
 
 // Statistics.  These are for informational purposes only, and subject
@@ -555,6 +532,23 @@ NNG_DECL void nng_thread_destroy(void *);
 
 // Error codes.  These may happen to align to errnos used on your platform,
 // but do not count on this.
+//
+// NNG_SYSERR is a special code, which allows us to wrap errors from the
+// underlying operating system.  We generally prefer to map errors to one
+// of the above, but if we cannot, then we just encode an error this way.
+// The bit is large enough to accommodate all known UNIX and Win32 error
+// codes.  We try hard to match things semantically to one of our standard
+// errors.  For example, a connection reset or aborted we treat as a
+// closed connection, because that's basically what it means.  (The remote
+// peer closed the connection.)  For certain kinds of resource exhaustion
+// we treat it the same as memory.  But for files, etc. that's OS-specific,
+// and we use the generic below.  Some of the above error codes we use
+// internally, and the application should never see (e.g. NNG_EINTR).
+//
+// NNG_ETRANERR is like ESYSERR, but is used to wrap transport specific
+// errors, from different transports.  It should only be used when none
+// of the other options are available.
+
 enum nng_errno_enum {
 	NNG_EINTR        = 1,
 	NNG_ENOMEM       = 2,
@@ -579,21 +573,12 @@ enum nng_errno_enum {
 	NNG_ENOFILES     = 21,
 	NNG_ENOSPC       = 22,
 	NNG_EEXIST       = 23,
-	NNG_EINTERNAL    = 24,
+	NNG_EREADONLY    = 24,
+	NNG_EWRITEONLY   = 25,
+	NNG_EINTERNAL    = 1000,
+	NNG_ESYSERR      = 0x10000000,
+	NNG_ETRANERR     = 0x20000000,
 };
-
-// NNG_SYSERR is a special code, which allows us to wrap errors from the
-// underlyuing operating system.  We generally prefer to map errors to one
-// of the above, but if we cannot, then we just encode an error this way.
-// The bit is large enough to accommodate all known UNIX and Win32 error
-// codes.  We try hard to match things semantically to one of our standard
-// errors.  For example, a connection reset or aborted we treat as a
-// closed connection, because that's basically what it means.  (The remote
-// peer closed the connection.)  For certain kinds of resource exhaustion
-// we treat it the same as memory.  But for files, etc. that's OS-specific,
-// and we use the generic below.  Some of the above error codes we use
-// internally, and the application should never see (e.g. NNG_EINTR).
-#define NNG_ESYSERR (0x10000000)
 
 // Maximum length of a socket address.  This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
@@ -625,16 +610,26 @@ struct nng_sockaddr_in {
 	uint16_t sa_port;
 	uint32_t sa_addr;
 };
+
+struct nng_sockaddr_zt {
+	uint64_t sa_nwid;
+	uint64_t sa_nodeid;
+	uint32_t sa_port;
+};
+
 typedef struct nng_sockaddr_in nng_sockaddr_in;
 typedef struct nng_sockaddr_in nng_sockaddr_udp;
 typedef struct nng_sockaddr_in nng_sockaddr_tcp;
+typedef struct nng_sockaddr_zt nng_sockaddr_zt;
 
 typedef struct nng_sockaddr {
 	union {
-		uint16_t          s_family;
-		nng_sockaddr_path s_path;
-		nng_sockaddr_in6  s_in6;
-		nng_sockaddr_in   s_in;
+		uint16_t            s_family;
+		nng_sockaddr_path   s_path;
+		nng_sockaddr_inproc s_inproc;
+		nng_sockaddr_in6    s_in6;
+		nng_sockaddr_in     s_in;
+		nng_sockaddr_zt     s_zt;
 	} s_un;
 } nng_sockaddr;
 
@@ -644,6 +639,7 @@ enum nng_sockaddr_family {
 	NNG_AF_IPC    = 2,
 	NNG_AF_INET   = 3,
 	NNG_AF_INET6  = 4,
+	NNG_AF_ZT     = 5, // ZeroTier
 };
 
 #ifdef __cplusplus

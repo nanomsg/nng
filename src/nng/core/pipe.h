@@ -57,7 +57,7 @@ extern void nni_pipe_start(nni_pipe *);
 
 extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
-extern int nni_pipe_getopt(nni_pipe *, int, void *, size_t *sizep);
+extern int      nni_pipe_getopt(nni_pipe *, const char *, void *, size_t *);
 
 // nni_pipe_get_proto_data gets the protocol private data set with the
 // nni_pipe_set_proto_data function.  No locking is performed.
@@ -71,5 +71,12 @@ extern void nni_pipe_sock_list_init(nni_list *);
 // nni_pipe_ep_list_init initializes a list of pipes, to be used by
 // a per-endpoint list.
 extern void nni_pipe_ep_list_init(nni_list *);
+
+// nni_pipe_find finds a pipe given its ID.  It places a hold on the
+// pipe, which must be released by the caller when it is done.
+extern int nni_pipe_find(nni_pipe **, uint32_t);
+
+// nni_pipe_rele releases the hold on the pipe placed by nni_pipe_find.
+extern void nni_pipe_rele(nni_pipe *);
 
 #endif // CORE_PIPE_H

@@ -21,7 +21,7 @@ struct nni_ep {
 	uint64_t      ep_id;   // endpoint id
 	nni_list_node ep_node; // per socket list
 	nni_sock *    ep_sock;
-	char          ep_addr[NNG_MAXADDRLEN];
+	char          ep_url[NNG_MAXADDRLEN];
 	int           ep_mode;
 	int           ep_started;
 	int           ep_closed;  // full shutdown
@@ -31,10 +31,10 @@ struct nni_ep {
 	nni_mtx       ep_mtx;
 	nni_cv        ep_cv;
 	nni_list      ep_pipes;
-	nni_aio       ep_acc_aio;
-	nni_aio       ep_con_aio;
-	nni_aio       ep_con_syn;  // used for sync connect
-	nni_aio       ep_tmo_aio;  // backoff timer
+	nni_aio *     ep_acc_aio;
+	nni_aio *     ep_con_aio;
+	nni_aio *     ep_con_syn;  // used for sync connect
+	nni_aio *     ep_tmo_aio;  // backoff timer
 	nni_duration  ep_maxrtime; // maximum time for reconnect
 	nni_duration  ep_currtime; // current time for reconnect
 	nni_duration  ep_inirtime; // initial time for reconnect
@@ -82,6 +82,12 @@ nni_ep_id(nni_ep *ep)
 	return ((uint32_t) ep->ep_id);
 }
 
+const char *
+nni_ep_url(nni_ep *ep)
+{
+	return (ep->ep_url);
+}
+
 static void
 nni_ep_destroy(nni_ep *ep)
 {
@@ -96,15 +102,15 @@ nni_ep_destroy(nni_ep *ep)
 
 	nni_sock_ep_remove(ep->ep_sock, ep);
 
-	nni_aio_stop(&ep->ep_acc_aio);
-	nni_aio_stop(&ep->ep_con_aio);
-	nni_aio_stop(&ep->ep_con_syn);
-	nni_aio_stop(&ep->ep_tmo_aio);
+	nni_aio_stop(ep->ep_acc_aio);
+	nni_aio_stop(ep->ep_con_aio);
+	nni_aio_stop(ep->ep_con_syn);
+	nni_aio_stop(ep->ep_tmo_aio);
 
-	nni_aio_fini(&ep->ep_acc_aio);
-	nni_aio_fini(&ep->ep_con_aio);
-	nni_aio_fini(&ep->ep_con_syn);
-	nni_aio_fini(&ep->ep_tmo_aio);
+	nni_aio_fini(ep->ep_acc_aio);
+	nni_aio_fini(ep->ep_con_aio);
+	nni_aio_fini(ep->ep_con_syn);
+	nni_aio_fini(ep->ep_tmo_aio);
 
 	nni_mtx_lock(&ep->ep_mtx);
 	if (ep->ep_data != NULL) {
@@ -117,16 +123,16 @@ nni_ep_destroy(nni_ep *ep)
 }
 
 static int
-nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
+nni_ep_create(nni_ep **epp, nni_sock *s, const char *url, int mode)
 {
 	nni_tran *tran;
 	nni_ep *  ep;
 	int       rv;
 
-	if ((tran = nni_tran_find(addr)) == NULL) {
+	if ((tran = nni_tran_find(url)) == NULL) {
 		return (NNG_ENOTSUP);
 	}
-	if (strlen(addr) >= NNG_MAXADDRLEN) {
+	if (strlen(url) >= NNG_MAXADDRLEN) {
 		return (NNG_EINVAL);
 	}
 
@@ -146,7 +152,7 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 	// dereference on hot paths.
 	ep->ep_ops = *tran->tran_ep;
 
-	(void) nni_strlcpy(ep->ep_addr, addr, sizeof(ep->ep_addr));
+	(void) nni_strlcpy(ep->ep_url, url, sizeof(ep->ep_url));
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 
@@ -154,12 +160,12 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 
 	nni_mtx_init(&ep->ep_mtx);
 	nni_cv_init(&ep->ep_cv, &ep->ep_mtx);
-	nni_aio_init(&ep->ep_acc_aio, nni_ep_acc_cb, ep);
-	nni_aio_init(&ep->ep_con_aio, nni_ep_con_cb, ep);
-	nni_aio_init(&ep->ep_tmo_aio, nni_ep_tmo_cb, ep);
-	nni_aio_init(&ep->ep_con_syn, NULL, NULL);
 
-	if (((rv = ep->ep_ops.ep_init(&ep->ep_data, addr, s, mode)) != 0) ||
+	if (((rv = nni_aio_init(&ep->ep_acc_aio, nni_ep_acc_cb, ep)) != 0) ||
+	    ((rv = nni_aio_init(&ep->ep_con_aio, nni_ep_con_cb, ep)) != 0) ||
+	    ((rv = nni_aio_init(&ep->ep_tmo_aio, nni_ep_tmo_cb, ep)) != 0) ||
+	    ((rv = nni_aio_init(&ep->ep_con_syn, NULL, NULL)) != 0) ||
+	    ((rv = ep->ep_ops.ep_init(&ep->ep_data, url, s, mode)) != 0) ||
 	    ((rv = nni_idhash_alloc(nni_eps, &ep->ep_id, ep)) != 0) ||
 	    ((rv = nni_sock_ep_add(s, ep)) != 0)) {
 		nni_ep_destroy(ep);
@@ -171,15 +177,15 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *addr, int mode)
 }
 
 int
-nni_ep_create_dialer(nni_ep **epp, nni_sock *s, const char *addr)
+nni_ep_create_dialer(nni_ep **epp, nni_sock *s, const char *url)
 {
-	return (nni_ep_create(epp, s, addr, NNI_EP_MODE_DIAL));
+	return (nni_ep_create(epp, s, url, NNI_EP_MODE_DIAL));
 }
 
 int
-nni_ep_create_listener(nni_ep **epp, nni_sock *s, const char *addr)
+nni_ep_create_listener(nni_ep **epp, nni_sock *s, const char *url)
 {
-	return (nni_ep_create(epp, s, addr, NNI_EP_MODE_LISTEN));
+	return (nni_ep_create(epp, s, url, NNI_EP_MODE_LISTEN));
 }
 
 int
@@ -246,10 +252,10 @@ nni_ep_shutdown(nni_ep *ep)
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	// Abort any remaining in-flight operations.
-	nni_aio_cancel(&ep->ep_acc_aio, NNG_ECLOSED);
-	nni_aio_cancel(&ep->ep_con_aio, NNG_ECLOSED);
-	nni_aio_cancel(&ep->ep_con_syn, NNG_ECLOSED);
-	nni_aio_cancel(&ep->ep_tmo_aio, NNG_ECLOSED);
+	nni_aio_cancel(ep->ep_acc_aio, NNG_ECLOSED);
+	nni_aio_cancel(ep->ep_con_aio, NNG_ECLOSED);
+	nni_aio_cancel(ep->ep_con_syn, NNG_ECLOSED);
+	nni_aio_cancel(ep->ep_tmo_aio, NNG_ECLOSED);
 
 	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
@@ -273,10 +279,10 @@ nni_ep_close(nni_ep *ep)
 
 	nni_ep_shutdown(ep);
 
-	nni_aio_stop(&ep->ep_acc_aio);
-	nni_aio_stop(&ep->ep_con_aio);
-	nni_aio_stop(&ep->ep_con_syn);
-	nni_aio_stop(&ep->ep_tmo_aio);
+	nni_aio_stop(ep->ep_acc_aio);
+	nni_aio_stop(ep->ep_con_aio);
+	nni_aio_stop(ep->ep_con_syn);
+	nni_aio_stop(ep->ep_tmo_aio);
 
 	nni_mtx_lock(&ep->ep_mtx);
 	NNI_LIST_FOREACH (&ep->ep_pipes, p) {
@@ -327,10 +333,11 @@ nni_ep_tmo_start(nni_ep *ep)
 	// have a statistically perfect distribution with the modulo of
 	// the random number, but this really doesn't matter.
 
-	ep->ep_tmo_aio.a_expire =
-	    nni_clock() + (backoff ? nni_random() % backoff : 0);
+	nni_aio_set_timeout(ep->ep_tmo_aio,
+	    nni_clock() + (backoff ? nni_random() % backoff : 0));
+
 	ep->ep_tmo_run = 1;
-	if (nni_aio_start(&ep->ep_tmo_aio, nni_ep_tmo_cancel, ep) != 0) {
+	if (nni_aio_start(ep->ep_tmo_aio, nni_ep_tmo_cancel, ep) != 0) {
 		ep->ep_tmo_run = 0;
 	}
 }
@@ -339,7 +346,7 @@ static void
 nni_ep_tmo_cb(void *arg)
 {
 	nni_ep * ep  = arg;
-	nni_aio *aio = &ep->ep_tmo_aio;
+	nni_aio *aio = ep->ep_tmo_aio;
 
 	nni_mtx_lock(&ep->ep_mtx);
 	if (nni_aio_result(aio) == NNG_ETIMEDOUT) {
@@ -356,11 +363,11 @@ static void
 nni_ep_con_cb(void *arg)
 {
 	nni_ep * ep  = arg;
-	nni_aio *aio = &ep->ep_con_aio;
+	nni_aio *aio = ep->ep_con_aio;
 	int      rv;
 
 	if ((rv = nni_aio_result(aio)) == 0) {
-		rv = nni_pipe_create(ep, aio->a_pipe);
+		rv = nni_pipe_create(ep, nni_aio_get_pipe(aio));
 	}
 	nni_mtx_lock(&ep->ep_mtx);
 	switch (rv) {
@@ -392,14 +399,14 @@ nni_ep_con_cb(void *arg)
 static void
 nni_ep_con_start(nni_ep *ep)
 {
-	nni_aio *aio = &ep->ep_con_aio;
+	nni_aio *aio = ep->ep_con_aio;
 
 	// Call with the Endpoint lock held.
 	if (ep->ep_closing) {
 		return;
 	}
 
-	aio->a_endpt = ep->ep_data;
+	nni_aio_set_ep(aio, ep->ep_data);
 	ep->ep_ops.ep_connect(ep->ep_data, aio);
 }
 
@@ -436,8 +443,8 @@ nni_ep_dial(nni_ep *ep, int flags)
 	}
 
 	// Synchronous mode: so we have to wait for it to complete.
-	aio          = &ep->ep_con_syn;
-	aio->a_endpt = ep->ep_data;
+	aio = ep->ep_con_syn;
+	nni_aio_set_ep(aio, ep->ep_data);
 	ep->ep_ops.ep_connect(ep->ep_data, aio);
 	ep->ep_started = 1;
 	nni_mtx_unlock(&ep->ep_mtx);
@@ -446,7 +453,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 
 	// As we're synchronous, we also have to handle the completion.
 	if (((rv = nni_aio_result(aio)) != 0) ||
-	    ((rv = nni_pipe_create(ep, aio->a_pipe)) != 0)) {
+	    ((rv = nni_pipe_create(ep, nni_aio_get_pipe(aio))) != 0)) {
 		nni_mtx_lock(&ep->ep_mtx);
 		ep->ep_started = 0;
 		nni_mtx_unlock(&ep->ep_mtx);
@@ -458,12 +465,12 @@ static void
 nni_ep_acc_cb(void *arg)
 {
 	nni_ep * ep  = arg;
-	nni_aio *aio = &ep->ep_acc_aio;
+	nni_aio *aio = ep->ep_acc_aio;
 	int      rv;
 
 	if ((rv = nni_aio_result(aio)) == 0) {
-		NNI_ASSERT(aio->a_pipe != NULL);
-		rv = nni_pipe_create(ep, aio->a_pipe);
+		NNI_ASSERT(nni_aio_get_pipe(aio) != NULL);
+		rv = nni_pipe_create(ep, nni_aio_get_pipe(aio));
 	}
 
 	nni_mtx_lock(&ep->ep_mtx);
@@ -473,7 +480,7 @@ nni_ep_acc_cb(void *arg)
 		break;
 	case NNG_ECLOSED:
 	case NNG_ECANCELED:
-		// Canceled or closed, no furhter action.
+		// Canceled or closed, no further action.
 		break;
 	case NNG_ECONNABORTED:
 	case NNG_ECONNRESET:
@@ -495,14 +502,14 @@ nni_ep_acc_cb(void *arg)
 static void
 nni_ep_acc_start(nni_ep *ep)
 {
-	nni_aio *aio = &ep->ep_acc_aio;
+	nni_aio *aio = ep->ep_acc_aio;
 
 	// Call with the Endpoint lock held.
 	if (ep->ep_closing) {
 		return;
 	}
-	aio->a_pipe  = NULL;
-	aio->a_endpt = ep->ep_data;
+	nni_aio_set_pipe(aio, NULL);
+	nni_aio_set_ep(aio, ep->ep_data);
 	ep->ep_ops.ep_accept(ep->ep_data, aio);
 }
 
@@ -580,35 +587,62 @@ nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
 }
 
 int
-nni_ep_setopt(nni_ep *ep, int opt, const void *val, size_t sz, int check)
+nni_ep_setopt(nni_ep *ep, const char *name, const void *val, size_t sz)
 {
-	int rv;
+	nni_tran_ep_option *eo;
 
-	if (ep->ep_ops.ep_setopt == NULL) {
-		return (NNG_ENOTSUP);
+	if (strcmp(name, NNG_OPT_URL) == 0) {
+		return (NNG_EREADONLY);
 	}
-	nni_mtx_lock(&ep->ep_mtx);
-	if (check && ep->ep_started) {
+
+	for (eo = ep->ep_ops.ep_options; eo && eo->eo_name; eo++) {
+		int rv;
+
+		if (strcmp(eo->eo_name, name) != 0) {
+			continue;
+		}
+		if (eo->eo_setopt == NULL) {
+			return (NNG_EREADONLY);
+		}
+		nni_mtx_lock(&ep->ep_mtx);
+		// XXX: Consider removing this test.
+		if (ep->ep_started) {
+			nni_mtx_unlock(&ep->ep_mtx);
+			return (NNG_ESTATE);
+		}
+		rv = eo->eo_setopt(ep->ep_data, val, sz);
 		nni_mtx_unlock(&ep->ep_mtx);
-		return (NNG_ESTATE);
+		return (rv);
 	}
-	rv = ep->ep_ops.ep_setopt(ep->ep_data, opt, val, sz);
-	nni_mtx_unlock(&ep->ep_mtx);
-	return (rv);
+
+	// XXX: socket fallback
+	return (NNG_ENOTSUP);
 }
 
 int
-nni_ep_getopt(nni_ep *ep, int opt, void *valp, size_t *szp)
+nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp)
 {
-	int rv;
+	nni_tran_ep_option *eo;
 
-	if (ep->ep_ops.ep_getopt == NULL) {
-		return (NNG_ENOTSUP);
+	if (strcmp(name, NNG_OPT_URL) == 0) {
+		return (nni_getopt_str(ep->ep_url, valp, szp));
 	}
-	nni_mtx_lock(&ep->ep_mtx);
-	rv = ep->ep_ops.ep_getopt(ep->ep_data, opt, valp, szp);
-	nni_mtx_unlock(&ep->ep_mtx);
-	return (rv);
+
+	for (eo = ep->ep_ops.ep_options; eo && eo->eo_name; eo++) {
+		int rv;
+		if (strcmp(eo->eo_name, name) != 0) {
+			continue;
+		}
+		if (eo->eo_getopt == NULL) {
+			return (NNG_EWRITEONLY);
+		}
+		nni_mtx_lock(&ep->ep_mtx);
+		rv = eo->eo_getopt(ep->ep_data, valp, szp);
+		nni_mtx_unlock(&ep->ep_mtx);
+		return (rv);
+	}
+
+	return (nni_sock_getopt(ep->ep_sock, name, valp, szp));
 }
 
 void

@@ -18,9 +18,15 @@ static nni_list    nni_sock_list;
 static nni_idhash *nni_sock_hash;
 static nni_mtx     nni_sock_lk;
 
+typedef struct nni_socket_option {
+	const char *so_name;
+	int (*so_getopt)(nni_sock *, void *, size_t *);
+	int (*so_setopt)(nni_sock *, const void *, size_t);
+} nni_socket_option;
+
 typedef struct nni_sockopt {
 	nni_list_node node;
-	int           opt;
+	char *        name;
 	size_t        sz;
 	void *        data;
 } nni_sockopt;
@@ -71,9 +77,158 @@ struct nni_socket {
 	nni_notifyfd s_recv_fd;
 };
 
+#if 0
+if (opt == nni_optid_reconnmint) {
+	rv = nni_setopt_usec(&s->s_reconn, val, size);
+} else if (opt == nni_optid_reconnmaxt) {
+	rv = nni_setopt_usec(&s->s_reconnmax, val, size);
+} else if (opt == nni_optid_recvtimeo) {
+	rv = nni_setopt_usec(&s->s_rcvtimeo, val, size);
+} else if (opt == nni_optid_sendtimeo) {
+	rv = nni_setopt_usec(&s->s_sndtimeo, val, size);
+} else if (opt == nni_optid_sendbuf) {
+	rv = nni_setopt_buf(s->s_uwq, val, size);
+} else if (opt == nni_optid_recvbuf) {
+	rv = nni_setopt_buf(s->s_urq, val, size);
+} else if ((opt == nni_optid_sendfd) || (opt == nni_optid_recvfd) ||
+    (opt == nni_optid_locaddr) || (opt == nni_optid_remaddr)) {
+	// these options can be read, but cannot be set
+	rv = NNG_EINVAL;
+#endif
+
+static int
+nni_sock_getopt_sendfd(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_fd(s, &s->s_send_fd, NNG_EV_CAN_SND, buf, szp));
+}
+
+static int
+nni_sock_getopt_recvfd(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_fd(s, &s->s_recv_fd, NNG_EV_CAN_RCV, buf, szp));
+}
+
+static int
+nni_sock_setopt_recvtimeo(nni_sock *s, const void *buf, size_t sz)
+{
+	return (nni_setopt_usec(&s->s_rcvtimeo, buf, sz));
+}
+
+static int
+nni_sock_getopt_recvtimeo(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_usec(s->s_rcvtimeo, buf, szp));
+}
+
+static int
+nni_sock_setopt_sendtimeo(nni_sock *s, const void *buf, size_t sz)
+{
+	return (nni_setopt_usec(&s->s_sndtimeo, buf, sz));
+}
+
+static int
+nni_sock_getopt_sendtimeo(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_usec(s->s_sndtimeo, buf, szp));
+}
+
+static int
+nni_sock_setopt_reconnmint(nni_sock *s, const void *buf, size_t sz)
+{
+	return (nni_setopt_usec(&s->s_reconn, buf, sz));
+}
+
+static int
+nni_sock_getopt_reconnmint(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_usec(s->s_reconn, buf, szp));
+}
+
+static int
+nni_sock_setopt_reconnmaxt(nni_sock *s, const void *buf, size_t sz)
+{
+	return (nni_setopt_usec(&s->s_reconnmax, buf, sz));
+}
+
+static int
+nni_sock_getopt_reconnmaxt(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_usec(s->s_reconnmax, buf, szp));
+}
+
+static int
+nni_sock_setopt_recvbuf(nni_sock *s, const void *buf, size_t sz)
+{
+	return (nni_setopt_buf(s->s_urq, buf, sz));
+}
+
+static int
+nni_sock_getopt_recvbuf(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_buf(s->s_urq, buf, szp));
+}
+
+static int
+nni_sock_setopt_sendbuf(nni_sock *s, const void *buf, size_t sz)
+{
+	return (nni_setopt_buf(s->s_uwq, buf, sz));
+}
+
+static int
+nni_sock_getopt_sendbuf(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_buf(s->s_uwq, buf, szp));
+}
+
+static const nni_socket_option nni_sock_options[] = {
+	{
+	    .so_name   = NNG_OPT_RECVTIMEO,
+	    .so_getopt = nni_sock_getopt_recvtimeo,
+	    .so_setopt = nni_sock_setopt_recvtimeo,
+	},
+	{
+	    .so_name   = NNG_OPT_SENDTIMEO,
+	    .so_getopt = nni_sock_getopt_sendtimeo,
+	    .so_setopt = nni_sock_setopt_sendtimeo,
+	},
+	{
+	    .so_name   = NNG_OPT_RECVFD,
+	    .so_getopt = nni_sock_getopt_recvfd,
+	    .so_setopt = NULL,
+	},
+	{
+	    .so_name   = NNG_OPT_SENDFD,
+	    .so_getopt = nni_sock_getopt_sendfd,
+	    .so_setopt = NULL,
+	},
+	{
+	    .so_name   = NNG_OPT_RECVBUF,
+	    .so_getopt = nni_sock_getopt_recvbuf,
+	    .so_setopt = nni_sock_setopt_recvbuf,
+	},
+	{
+	    .so_name   = NNG_OPT_SENDBUF,
+	    .so_getopt = nni_sock_getopt_sendbuf,
+	    .so_setopt = nni_sock_setopt_sendbuf,
+	},
+	{
+	    .so_name   = NNG_OPT_RECONNMINT,
+	    .so_getopt = nni_sock_getopt_reconnmint,
+	    .so_setopt = nni_sock_setopt_reconnmint,
+	},
+	{
+	    .so_name   = NNG_OPT_RECONNMAXT,
+	    .so_getopt = nni_sock_getopt_reconnmaxt,
+	    .so_setopt = nni_sock_setopt_reconnmaxt,
+	},
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
 static void
 nni_free_opt(nni_sockopt *opt)
 {
+	nni_strfree(opt->name);
 	nni_free(opt->data, opt->sz);
 	NNI_FREE_STRUCT(opt);
 }
@@ -222,7 +377,7 @@ nni_sock_cansend_cb(void *arg)
 	nni_notify *notify = arg;
 	nni_sock *  sock   = notify->n_sock;
 
-	if (nni_aio_result(&notify->n_aio) != 0) {
+	if (nni_aio_result(notify->n_aio) != 0) {
 		return;
 	}
 
@@ -235,7 +390,7 @@ nni_sock_canrecv_cb(void *arg)
 	nni_notify *notify = arg;
 	nni_sock *  sock   = notify->n_sock;
 
-	if (nni_aio_result(&notify->n_aio) != 0) {
+	if (nni_aio_result(notify->n_aio) != 0) {
 		return;
 	}
 
@@ -259,11 +414,11 @@ nni_sock_notify(nni_sock *sock, int type, nng_notify_func fn, void *arg)
 	switch (type) {
 	case NNG_EV_CAN_RCV:
 		nni_aio_init(&notify->n_aio, nni_sock_canrecv_cb, notify);
-		nni_msgq_aio_notify_get(sock->s_urq, &notify->n_aio);
+		nni_msgq_aio_notify_get(sock->s_urq, notify->n_aio);
 		break;
 	case NNG_EV_CAN_SND:
 		nni_aio_init(&notify->n_aio, nni_sock_cansend_cb, notify);
-		nni_msgq_aio_notify_put(sock->s_uwq, &notify->n_aio);
+		nni_msgq_aio_notify_put(sock->s_uwq, notify->n_aio);
 		break;
 	default:
 		NNI_FREE_STRUCT(notify);
@@ -276,7 +431,7 @@ nni_sock_notify(nni_sock *sock, int type, nng_notify_func fn, void *arg)
 void
 nni_sock_unnotify(nni_sock *sock, nni_notify *notify)
 {
-	nni_aio_fini(&notify->n_aio);
+	nni_aio_fini(notify->n_aio);
 	NNI_FREE_STRUCT(notify);
 }
 
@@ -366,17 +521,17 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	if (((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
 	    ((rv = nni_msgq_init(&s->s_urq, 0)) != 0) ||
 	    ((rv = s->s_sock_ops.sock_init(&s->s_data, s)) != 0) ||
-	    ((rv = nni_sock_setopt(s, nng_optid_linger, &s->s_linger,
+	    ((rv = nni_sock_setopt(s, NNG_OPT_LINGER, &s->s_linger,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, nng_optid_sendtimeo, &s->s_sndtimeo,
+	    ((rv = nni_sock_setopt(s, NNG_OPT_SENDTIMEO, &s->s_sndtimeo,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, nng_optid_recvtimeo, &s->s_rcvtimeo,
+	    ((rv = nni_sock_setopt(s, NNG_OPT_RECVTIMEO, &s->s_rcvtimeo,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, nng_optid_reconnmint, &s->s_reconn,
+	    ((rv = nni_sock_setopt(s, NNG_OPT_RECONNMINT, &s->s_reconn,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, nng_optid_reconnmaxt, &s->s_reconnmax,
+	    ((rv = nni_sock_setopt(s, NNG_OPT_RECONNMAXT, &s->s_reconnmax,
 	          sizeof(nni_duration))) != 0) ||
-	    ((rv = nni_sock_setopt(s, nng_optid_recvmaxsz, &s->s_rcvmaxsz,
+	    ((rv = nni_sock_setopt(s, NNG_OPT_RECVMAXSZ, &s->s_rcvmaxsz,
 	          sizeof(size_t))) != 0)) {
 		nni_sock_destroy(s);
 		return (rv);
@@ -749,14 +904,16 @@ nni_sock_ep_add(nni_sock *s, nni_ep *ep)
 		nni_mtx_unlock(&s->s_mx);
 		return (NNG_ECLOSED);
 	}
+
 	NNI_LIST_FOREACH (&s->s_options, sopt) {
 		int rv;
-		rv = nni_ep_setopt(ep, sopt->opt, sopt->data, sopt->sz, 0);
+		rv = nni_ep_setopt(ep, sopt->name, sopt->data, sopt->sz);
 		if ((rv != 0) && (rv != NNG_ENOTSUP)) {
 			nni_mtx_unlock(&s->s_mx);
 			return (rv);
 		}
 	}
+
 	nni_list_append(&s->s_eps, ep);
 	nni_mtx_unlock(&s->s_mx);
 	return (0);
@@ -788,41 +945,48 @@ nni_sock_senderr(nni_sock *sock, int err)
 }
 
 int
-nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
+nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 {
-	int          rv = NNG_ENOTSUP;
-	nni_ep *     ep;
-	int          commits = 0;
-	nni_sockopt *optv;
-	nni_sockopt *oldv = NULL;
+	int                          rv = NNG_ENOTSUP;
+	nni_ep *                     ep;
+	int                          commits = 0;
+	nni_sockopt *                optv;
+	nni_sockopt *                oldv = NULL;
+	const nni_socket_option *    sso;
+	const nni_proto_sock_option *pso;
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
 		nni_mtx_unlock(&s->s_mx);
 		return (NNG_ECLOSED);
 	}
-	if (s->s_sock_ops.sock_setopt != NULL) {
-		rv = s->s_sock_ops.sock_setopt(s->s_data, opt, val, size);
-		if (rv != NNG_ENOTSUP) {
-			nni_mtx_unlock(&s->s_mx);
-			return (rv);
+
+	// Protocol options.
+	for (pso = s->s_sock_ops.sock_options; pso->pso_name != NULL; pso++) {
+		if (strcmp(pso->pso_name, name) != 0) {
+			continue;
 		}
+		if (pso->pso_setopt == NULL) {
+			nni_mtx_unlock(&s->s_mx);
+			return (NNG_EREADONLY);
+		}
+		rv = pso->pso_setopt(s->s_data, val, size);
+		nni_mtx_unlock(&s->s_mx);
+		return (rv);
 	}
 
-	// Some options do not go down to transports.  Handle them
-	// directly.
-	if (opt == nng_optid_reconnmint) {
-		rv = nni_setopt_usec(&s->s_reconn, val, size);
-	} else if (opt == nng_optid_reconnmaxt) {
-		rv = nni_setopt_usec(&s->s_reconnmax, val, size);
-	} else if (opt == nng_optid_sendbuf) {
-		rv = nni_setopt_buf(s->s_uwq, val, size);
-	} else if (opt == nng_optid_recvbuf) {
-		rv = nni_setopt_buf(s->s_urq, val, size);
-	} else if ((opt == nng_optid_sendfd) || (opt == nng_optid_recvfd) ||
-	    (opt == nng_optid_locaddr) || (opt == nng_optid_remaddr)) {
-		// these options can be read, but cannot be set
-		rv = NNG_EINVAL;
+	// Some options do not go down to transports.  Handle them directly.
+	for (sso = nni_sock_options; sso->so_name != NULL; sso++) {
+		if (strcmp(sso->so_name, name) != 0) {
+			continue;
+		}
+		if (sso->so_setopt == NULL) {
+			nni_mtx_unlock(&s->s_mx);
+			return (NNG_EREADONLY);
+		}
+		rv = sso->so_setopt(s, val, size);
+		nni_mtx_unlock(&s->s_mx);
+		return (rv);
 	}
 
 	nni_mtx_unlock(&s->s_mx);
@@ -832,20 +996,16 @@ nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
 		return (rv);
 	}
 
-	// Validation of transport options.  This is stateless, so
-	// transports should not fail to set an option later if they
-	// passed it here.
-	rv = nni_tran_chkopt(opt, val, size);
+	// Validation of transport options.  This is stateless, so transports
+	// should not fail to set an option later if they passed it here.
+	rv = nni_tran_chkopt(name, val, size);
 
 	// Also check a few generic things.  We do this if no transport
-	// check was found, or even if a transport rejected one of the
-	// settings.
+	// was found, or even if a transport rejected one of the settings.
 	if ((rv == NNG_ENOTSUP) || (rv == 0)) {
-		if ((opt == nng_optid_linger) ||
-		    (opt == nng_optid_sendtimeo) ||
-		    (opt == nng_optid_recvtimeo)) {
+		if ((strcmp(name, NNG_OPT_LINGER) == 0)) {
 			rv = nni_chkopt_usec(val, size);
-		} else if (opt == nng_optid_recvmaxsz) {
+		} else if (strcmp(name, NNG_OPT_RECVMAXSZ) == 0) {
 			// just a sanity test on the size; it also ensures that
 			// a size can be set even with no transport configured.
 			rv = nni_chkopt_size(val, size, 0, NNI_MAXSZ);
@@ -864,14 +1024,18 @@ nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
 		NNI_FREE_STRUCT(optv);
 		return (NNG_ENOMEM);
 	}
+	if ((optv->name = nni_strdup(name)) == NULL) {
+		nni_free(optv->data, size);
+		NNI_FREE_STRUCT(optv);
+		return (NNG_ENOMEM);
+	}
 	memcpy(optv->data, val, size);
-	optv->opt = opt;
-	optv->sz  = size;
+	optv->sz = size;
 	NNI_LIST_NODE_INIT(&optv->node);
 
 	nni_mtx_lock(&s->s_mx);
 	NNI_LIST_FOREACH (&s->s_options, oldv) {
-		if (oldv->opt == opt) {
+		if (strcmp(oldv->name, name) == 0) {
 			if ((oldv->sz != size) ||
 			    (memcmp(oldv->data, val, size) != 0)) {
 				break;
@@ -889,7 +1053,7 @@ nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
 	// important that transport wide checks properly pre-validate.
 	NNI_LIST_FOREACH (&s->s_eps, ep) {
 		int x;
-		x = nni_ep_setopt(ep, opt, optv->data, size, 0);
+		x = nni_ep_setopt(ep, optv->name, optv->data, size);
 		if (x != NNG_ENOTSUP) {
 			if ((rv = x) != 0) {
 				nni_mtx_unlock(&s->s_mx);
@@ -903,12 +1067,8 @@ nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
 	// behavior, we save a local value.  Note that the transport
 	// will already have had a chance to veto this.
 
-	if (opt == nng_optid_linger) {
+	if (strcmp(name, NNG_OPT_LINGER) == 0) {
 		rv = nni_setopt_usec(&s->s_linger, val, size);
-	} else if (opt == nng_optid_sendtimeo) {
-		rv = nni_setopt_usec(&s->s_sndtimeo, val, size);
-	} else if (opt == nng_optid_recvtimeo) {
-		rv = nni_setopt_usec(&s->s_rcvtimeo, val, size);
 	}
 
 	if (rv == 0) {
@@ -931,52 +1091,60 @@ nni_sock_setopt(nni_sock *s, int opt, const void *val, size_t size)
 }
 
 int
-nni_sock_getopt(nni_sock *s, int opt, void *val, size_t *szp)
+nni_sock_getopt(nni_sock *s, const char *name, void *val, size_t *szp)
 {
-	int          rv = NNG_ENOTSUP;
-	nni_sockopt *sopt;
+	int                          rv = NNG_ENOTSUP;
+	nni_sockopt *                sopt;
+	const nni_socket_option *    sso;
+	const nni_proto_sock_option *pso;
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
 		nni_mtx_unlock(&s->s_mx);
 		return (NNG_ECLOSED);
 	}
-	if (s->s_sock_ops.sock_getopt != NULL) {
-		rv = s->s_sock_ops.sock_getopt(s->s_data, opt, val, szp);
-		if (rv != NNG_ENOTSUP) {
+
+	// Protocol specific options.
+	for (pso = s->s_sock_ops.sock_options; pso->pso_name != NULL; pso++) {
+		if (strcmp(name, pso->pso_name) != 0) {
+			continue;
+		}
+		if (pso->pso_getopt == NULL) {
 			nni_mtx_unlock(&s->s_mx);
-			return (rv);
+			return (NNG_EWRITEONLY);
+		}
+		rv = pso->pso_getopt(s->s_data, val, szp);
+		nni_mtx_unlock(&s->s_mx);
+		return (rv);
+	}
+
+	// Options that are handled by socket core, and never passed down.
+	for (sso = nni_sock_options; sso->so_name != NULL; sso++) {
+		if (strcmp(name, sso->so_name) != 0) {
+			continue;
+		}
+		if (sso->so_getopt == NULL) {
+			nni_mtx_unlock(&s->s_mx);
+			return (NNG_EWRITEONLY);
+		}
+		rv = sso->so_getopt(s, val, szp);
+		nni_mtx_unlock(&s->s_mx);
+		return (rv);
+	}
+
+	NNI_LIST_FOREACH (&s->s_options, sopt) {
+		if (strcmp(sopt->name, name) == 0) {
+			size_t sz = sopt->sz;
+			if (sopt->sz > *szp) {
+				sz = *szp;
+			}
+			*szp = sopt->sz;
+			memcpy(val, sopt->data, sz);
+			rv = 0;
+			break;
 		}
 	}
 
-	// Options that are handled by socket core, and never
-	// passed down.
-	if (opt == nng_optid_sendbuf) {
-		rv = nni_getopt_buf(s->s_uwq, val, szp);
-	} else if (opt == nng_optid_recvbuf) {
-		rv = nni_getopt_buf(s->s_urq, val, szp);
-	} else if (opt == nng_optid_sendfd) {
-		rv = nni_getopt_fd(s, &s->s_send_fd, NNG_EV_CAN_SND, val, szp);
-	} else if (opt == nng_optid_recvfd) {
-		rv = nni_getopt_fd(s, &s->s_recv_fd, NNG_EV_CAN_RCV, val, szp);
-	} else if (opt == nng_optid_reconnmint) {
-		rv = nni_getopt_usec(&s->s_reconn, val, szp);
-	} else if (opt == nng_optid_reconnmaxt) {
-		rv = nni_getopt_usec(&s->s_reconnmax, val, szp);
-	} else {
-		NNI_LIST_FOREACH (&s->s_options, sopt) {
-			if (sopt->opt == opt) {
-				size_t sz = sopt->sz;
-				if (sopt->sz > *szp) {
-					sz = *szp;
-				}
-				*szp = sopt->sz;
-				memcpy(val, sopt->data, sz);
-				rv = 0;
-				break;
-			}
-		}
-	}
 	nni_mtx_unlock(&s->s_mx);
 	return (rv);
 }

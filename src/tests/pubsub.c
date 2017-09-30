@@ -84,34 +84,33 @@ TestMain("PUB/SUB pattern", {
 		nng_usleep(20000); // give time for connecting threads
 
 		Convey("Sub can subscribe", {
-			So(nng_setopt(
-			       sub, nng_optid_sub_subscribe, "ABC", 3) == 0);
-			So(nng_setopt(sub, nng_optid_sub_subscribe, "", 0) ==
+			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "ABC", 3) ==
 			    0);
+			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "", 0) == 0);
 			Convey("Unsubscribe works", {
-				So(nng_setopt(sub, nng_optid_sub_unsubscribe,
+				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE,
 				       "ABC", 3) == 0);
-				So(nng_setopt(sub, nng_optid_sub_unsubscribe,
-				       "", 0) == 0);
+				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE, "",
+				       0) == 0);
 
-				So(nng_setopt(sub, nng_optid_sub_unsubscribe,
-				       "", 0) == NNG_ENOENT);
-				So(nng_setopt(sub, nng_optid_sub_unsubscribe,
+				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE, "",
+				       0) == NNG_ENOENT);
+				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE,
 				       "HELLO", 0) == NNG_ENOENT);
 			});
 		});
 
 		Convey("Pub cannot subscribe", {
-			So(nng_setopt(pub, nng_optid_sub_subscribe, "", 0) ==
+			So(nng_setopt(pub, NNG_OPT_SUB_SUBSCRIBE, "", 0) ==
 			    NNG_ENOTSUP);
 		});
 
 		Convey("Subs can receive from pubs", {
 			nng_msg *msg;
 
-			So(nng_setopt(sub, nng_optid_sub_subscribe, "/some/",
+			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "/some/",
 			       strlen("/some/")) == 0);
-			So(nng_setopt_usec(sub, nng_optid_recvtimeo, 90000) ==
+			So(nng_setopt_usec(sub, NNG_OPT_RECVTIMEO, 90000) ==
 			    0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
@@ -141,7 +140,7 @@ TestMain("PUB/SUB pattern", {
 		Convey("Subs without subsciptions don't receive", {
 
 			nng_msg *msg;
-			So(nng_setopt_usec(sub, nng_optid_recvtimeo, 90000) ==
+			So(nng_setopt_usec(sub, NNG_OPT_RECVTIMEO, 90000) ==
 			    0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
@@ -154,9 +153,9 @@ TestMain("PUB/SUB pattern", {
 
 			nng_msg *msg;
 
-			So(nng_setopt_usec(sub, nng_optid_recvtimeo, 90000) ==
+			So(nng_setopt_usec(sub, NNG_OPT_RECVTIMEO, 90000) ==
 			    0);
-			So(nng_setopt_int(sub, nng_optid_raw, 1) == 0);
+			So(nng_setopt_int(sub, NNG_OPT_RAW, 1) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "/some/like/it/raw");
