@@ -612,6 +612,7 @@ struct nng_sockaddr_in {
 };
 
 struct nng_sockaddr_zt {
+	uint16_t sa_family;
 	uint64_t sa_nwid;
 	uint64_t sa_nodeid;
 	uint32_t sa_port;

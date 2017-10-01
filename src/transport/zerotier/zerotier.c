@@ -29,6 +29,7 @@
 #define NNG_ZT_OPT_NETWORK_NAME "zt:network-name"
 #define NNG_ZT_OPT_PING_TIME "zt:ping-time"
 #define NNG_ZT_OPT_PING_COUNT "zt:ping-count"
+#define NNG_ZT_OPT_MTU "zt:mtu"
 
 const char *nng_opt_zt_home         = NNG_ZT_OPT_HOME;
 const char *nng_opt_zt_nwid         = NNG_ZT_OPT_NWID;
@@ -98,11 +99,12 @@ typedef struct zt_fraglist zt_fraglist;
 		(ptr)[2] = (uint8_t)((uint32_t)(u));         \
 	} while (0)
 
-static const uint16_t zt_ethertype = 0x901;
-static const uint8_t  zt_version   = 0x01;
-static const uint32_t zt_ephemeral = 0x800000u; // start of ephemeral ports
-static const uint32_t zt_max_port  = 0xffffffu; // largest port
-static const uint32_t zt_port_mask = 0xffffffu; // mask of valid ports
+static const uint16_t zt_ethertype  = 0x901;
+static const uint8_t  zt_version    = 0x01;
+static const uint32_t zt_ephemeral  = 0x800000u; // start of ephemeral ports
+static const uint32_t zt_max_port   = 0xffffffu; // largest port
+static const uint32_t zt_port_mask  = 0xffffffu; // mask of valid ports
+static const uint32_t zt_port_shift = 24;
 
 // These are compile time tunables for now.
 enum zt_tunables {
@@ -2491,7 +2493,7 @@ zt_ep_connect(void *arg, nni_aio *aio)
 		}
 
 		if ((ep->ze_raddr >> 24) == 0) {
-			ep->ze_raddr |= (ep->ze_ztn->zn_self << 24);
+			ep->ze_raddr |= (ep->ze_ztn->zn_self << zt_port_shift);
 		}
 		nni_aio_list_append(&ep->ze_aios, aio);
 
@@ -2622,21 +2624,45 @@ zt_ep_getopt_ping_count(void *arg, void *data, size_t *szp)
 	return (nni_getopt_int(ep->ze_ping_count, data, szp));
 }
 
+static int
+zt_pipe_getopt_locaddr(void *arg, void *data, size_t *szp)
+{
+	zt_pipe *    p = arg;
+	nng_sockaddr sa;
+	sa.s_un.s_zt.sa_family = NNG_AF_ZT;
+	sa.s_un.s_zt.sa_nwid   = p->zp_nwid;
+	sa.s_un.s_zt.sa_nodeid = p->zp_laddr >> zt_port_shift;
+	sa.s_un.s_zt.sa_port   = p->zp_laddr & zt_port_mask;
+	return (nni_getopt_sockaddr(&sa, data, szp));
+}
+
+static int
+zt_pipe_getopt_remaddr(void *arg, void *data, size_t *szp)
+{
+	zt_pipe *    p = arg;
+	nng_sockaddr sa;
+	sa.s_un.s_zt.sa_family = NNG_AF_ZT;
+	sa.s_un.s_zt.sa_nwid   = p->zp_nwid;
+	sa.s_un.s_zt.sa_nodeid = p->zp_raddr >> zt_port_shift;
+	sa.s_un.s_zt.sa_port   = p->zp_raddr & zt_port_mask;
+	return (nni_getopt_sockaddr(&sa, data, szp));
+}
+
+static int
+zt_pipe_getopt_mtu(void *arg, void *data, size_t *szp)
+{
+	zt_pipe *p = arg;
+	return (nni_getopt_size(p->zp_mtu, data, szp));
+}
+
 static nni_tran_pipe_option zt_pipe_options[] = {
-#if 0	
-	{ NNG_OPT_RECVMAXSZ, zt_pipe_getopt_recvmaxsz },
-	{ NNG_ZT_OPT_NWID, zt_pipe_getopt_nwid },
-	{ NNG_ZT_OPT_NODE, zt_pipe_getopt_node },
-	{ NNG_ZT_OPT_STATUS, zt_pipe_getopt_status },
-	{ NNG_ZT_OPT_NETWORK_NAME, zt_pipe_getopt_network_name },
-#endif
-#if 0
-	{ NNG_OPT_LOCADDR, zt_pipe_get_locaddr },
-	{ NNG_OPT_REMADDR, zt_pipe_get_remaddr }
-#endif
+	{ NNG_OPT_LOCADDR, zt_pipe_getopt_locaddr },
+	{ NNG_OPT_REMADDR, zt_pipe_getopt_remaddr },
+	{ NNG_ZT_OPT_MTU, zt_pipe_getopt_mtu },
 	// terminate list
 	{ NULL, NULL },
 };
+
 static nni_tran_pipe zt_pipe_ops = {
 	.p_fini    = zt_pipe_fini,
 	.p_start   = zt_pipe_start,

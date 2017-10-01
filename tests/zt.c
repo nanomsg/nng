@@ -36,6 +36,59 @@ mkdir(const char *path, int mode)
 #include <unistd.h>
 #endif // WIN32
 
+static int
+check_props(nng_msg *msg, nng_listener l, nng_dialer d)
+{
+	nng_sockaddr la, ra;
+	nng_pipe     p;
+	size_t       z;
+	size_t       mtu;
+	uint64_t     nwid;
+	p = nng_msg_get_pipe(msg);
+	So(p > 0);
+
+	// Check local address.
+	z = sizeof(nng_sockaddr);
+	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
+	So(z == sizeof(la));
+	So(la.s_un.s_family == NNG_AF_ZT);
+	So(la.s_un.s_zt.sa_port == (trantest_port - 1));
+	So(la.s_un.s_zt.sa_nwid == 0xa09acf02337b057bull);
+	So(la.s_un.s_zt.sa_nodeid != 0);
+
+	// Check remote address.
+	z = sizeof(nng_sockaddr);
+	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+	So(z == sizeof(ra));
+	So(ra.s_un.s_family == NNG_AF_ZT);
+	So(ra.s_un.s_zt.sa_port != 0);
+	So(ra.s_un.s_zt.sa_nwid == 0xa09acf02337b057bull);
+	So(ra.s_un.s_zt.sa_nodeid == la.s_un.s_zt.sa_nodeid);
+
+	// Check network ID.
+	z    = sizeof(nwid);
+	nwid = 0;
+	So(nng_pipe_getopt(p, "zt:nwid", &nwid, &z) == 0);
+	So(nwid = 0xa09acf02337b057bull);
+
+	z    = sizeof(nwid);
+	nwid = 0;
+	So(nng_dialer_getopt(d, "zt:nwid", &nwid, &z) == 0);
+	So(nwid = 0xa09acf02337b057bull);
+
+	z    = sizeof(nwid);
+	nwid = 0;
+	So(nng_listener_getopt(l, "zt:nwid", &nwid, &z) == 0);
+	So(nwid = 0xa09acf02337b057bull);
+
+	// Check MTU
+	z = sizeof(mtu);
+	So(nng_pipe_getopt(p, "zt:mtu", &mtu, &z) == 0);
+	So(mtu >= 1000 && mtu <= 10000);
+
+	return (0);
+}
+
 TestMain("ZeroTier Transport", {
 
 	char     path1[NNG_MAXADDRLEN] = "/tmp/zt_server";
@@ -175,7 +228,7 @@ TestMain("ZeroTier Transport", {
 
 	});
 
-	trantest_test_all("zt://" NWID "/*:%u");
+	trantest_test_extended("zt://" NWID "/*:%u", check_props);
 
 	nng_fini();
 })

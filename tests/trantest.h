@@ -28,6 +28,8 @@ typedef struct {
 
 unsigned trantest_port = 0;
 
+typedef int (*trantest_proptest_t)(nng_msg *, nng_listener, nng_dialer);
+
 void
 trantest_next_address(char *out, const char *template)
 {
@@ -170,6 +172,44 @@ trantest_send_recv(trantest *tt)
 }
 
 void
+trantest_check_properties(trantest *tt, trantest_proptest_t f)
+{
+	Convey("Properties test", {
+		nng_listener l;
+		nng_dialer   d;
+		nng_msg *    send;
+		nng_msg *    recv;
+		size_t       len;
+		nng_pipe     p;
+		char         url[NNG_MAXADDRLEN];
+		size_t       sz;
+		int          rv;
+
+		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
+		So(l != 0);
+		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
+		So(d != 0);
+
+		nng_usleep(20000); // listener may be behind slightly
+
+		send = NULL;
+		So(nng_msg_alloc(&send, 0) == 0);
+		So(send != NULL);
+		So(nng_msg_append(send, "props", 5) == 0);
+
+		So(nng_sendmsg(tt->reqsock, send, 0) == 0);
+		recv = NULL;
+		So(nng_recvmsg(tt->repsock, &recv, 0) == 0);
+		So(recv != NULL);
+		So(nng_msg_len(recv) == 5);
+		So(strcmp(nng_msg_body(recv), "props") == 0);
+		rv = f(recv, l, d);
+		nng_msg_free(recv);
+		So(rv == 0);
+	});
+}
+
+void
 trantest_send_recv_large(trantest *tt)
 {
 	Convey("Send and recv large data", {
@@ -238,5 +278,25 @@ trantest_test_all(const char *addr)
 		trantest_listen_accept(&tt);
 		trantest_send_recv(&tt);
 		trantest_send_recv_large(&tt);
+	})
+}
+
+void
+trantest_test_extended(const char *addr, trantest_proptest_t f)
+{
+	trantest tt;
+
+	Convey("Given transport", {
+		trantest_init(&tt, addr);
+
+		Reset({ trantest_fini(&tt); });
+
+		trantest_scheme(&tt);
+		trantest_conn_refused(&tt);
+		trantest_duplicate_listen(&tt);
+		trantest_listen_accept(&tt);
+		trantest_send_recv(&tt);
+		trantest_send_recv_large(&tt);
+		trantest_check_properties(&tt, f);
 	})
 }
