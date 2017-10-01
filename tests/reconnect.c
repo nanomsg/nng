@@ -64,6 +64,7 @@ TestMain("Reconnect works", {
 
 			Convey("They still exchange frames", {
 				nng_msg *msg;
+				nng_pipe p1;
 
 				nng_usleep(100000);
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -73,7 +74,25 @@ TestMain("Reconnect works", {
 				So(nng_recvmsg(pull, &msg, 0) == 0);
 				So(msg != NULL);
 				CHECKSTR(msg, "hello");
+				p1 = nng_msg_get_pipe(msg);
 				nng_msg_free(msg);
+
+				Convey("Even after pipe close", {
+					nng_pipe p2;
+
+					nng_pipe_close(p1);
+					nng_usleep(100000);
+					So(nng_msg_alloc(&msg, 0) == 0);
+					APPENDSTR(msg, "again");
+					So(nng_sendmsg(push, msg, 0) == 0);
+					msg = NULL;
+					So(nng_recvmsg(pull, &msg, 0) == 0);
+					So(msg != NULL);
+					CHECKSTR(msg, "again");
+					p2 = nng_msg_get_pipe(msg);
+					nng_msg_free(msg);
+					So(p2 != p1);
+				});
 			});
 		});
 	});
