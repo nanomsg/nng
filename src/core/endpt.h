@@ -32,6 +32,7 @@ extern int       nni_ep_getopt(nni_ep *, const char *, void *, size_t *);
 extern int nni_ep_pipe_add(nni_ep *ep, nni_pipe *);
 extern void        nni_ep_pipe_remove(nni_ep *, nni_pipe *);
 extern const char *nni_ep_url(nni_ep *);
+extern int         nni_ep_mode(nni_ep *);
 
 // Endpoint modes.  Currently used by transports.  Remove this when we make
 // transport dialers and listeners explicit.

@@ -605,18 +605,18 @@ nni_ep_setopt(nni_ep *ep, const char *name, const void *val, size_t sz)
 			return (NNG_EREADONLY);
 		}
 		nni_mtx_lock(&ep->ep_mtx);
-		// XXX: Consider removing this test.
-		if (ep->ep_started) {
-			nni_mtx_unlock(&ep->ep_mtx);
-			return (NNG_ESTATE);
-		}
 		rv = eo->eo_setopt(ep->ep_data, val, sz);
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (rv);
 	}
 
-	// XXX: socket fallback
 	return (NNG_ENOTSUP);
+}
+
+int
+nni_ep_mode(nni_ep *ep)
+{
+	return (ep->ep_mode);
 }
 
 int

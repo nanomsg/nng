@@ -15,6 +15,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "zerotier.h"
 
 #ifndef _WIN32
 #include <unistd.h>
@@ -22,31 +23,16 @@
 
 #include <ZeroTierOne.h>
 
-#define NNG_ZT_OPT_HOME "zt:home"
-#define NNG_ZT_OPT_NWID "zt:nwid"
-#define NNG_ZT_OPT_NODE "zt:node"
-#define NNG_ZT_OPT_STATUS "zt:status"
-#define NNG_ZT_OPT_NETWORK_NAME "zt:network-name"
-#define NNG_ZT_OPT_PING_TIME "zt:ping-time"
-#define NNG_ZT_OPT_PING_COUNT "zt:ping-count"
-#define NNG_ZT_OPT_MTU "zt:mtu"
-
-const char *nng_opt_zt_home         = NNG_ZT_OPT_HOME;
-const char *nng_opt_zt_nwid         = NNG_ZT_OPT_NWID;
-const char *nng_opt_zt_node         = NNG_ZT_OPT_NODE;
-const char *nng_opt_zt_status       = NNG_ZT_OPT_STATUS;
-const char *nng_opt_zt_network_name = NNG_ZT_OPT_NETWORK_NAME;
-const char *nng_opt_zt_ping_time    = NNG_ZT_OPT_PING_TIME;
-const char *nng_opt_zt_ping_count   = NNG_ZT_OPT_PING_COUNT;
-
 // These values are supplied to help folks checking status.  They are the
-// return values from zt_opt_status.
-int nng_zt_status_configuring = ZT_NETWORK_STATUS_REQUESTING_CONFIGURATION;
-int nng_zt_status_ok          = ZT_NETWORK_STATUS_OK;
-int nng_zt_status_denied      = ZT_NETWORK_STATUS_ACCESS_DENIED;
-int nng_zt_status_notfound    = ZT_NETWORK_STATUS_NOT_FOUND;
-int nng_zt_status_error       = ZT_NETWORK_STATUS_PORT_ERROR;
-int nng_zt_status_obsolete    = ZT_NETWORK_STATUS_CLIENT_TOO_OLD;
+// return values from zt_opt_status.  It's important that the status values
+// here match what the underlying ZeroTier core gives us.
+int nng_zt_network_status_configuring =
+    ZT_NETWORK_STATUS_REQUESTING_CONFIGURATION;
+int nng_zt_network_status_ok       = ZT_NETWORK_STATUS_OK;
+int nng_zt_network_status_denied   = ZT_NETWORK_STATUS_ACCESS_DENIED;
+int nng_zt_network_status_notfound = ZT_NETWORK_STATUS_NOT_FOUND;
+int nng_zt_network_status_error    = ZT_NETWORK_STATUS_PORT_ERROR;
+int nng_zt_network_status_obsolete = ZT_NETWORK_STATUS_CLIENT_TOO_OLD;
 
 // ZeroTier Transport.  This sits on the ZeroTier L2 network, which itself
 // is implemented on top of UDP.  This requires the 3rd party
@@ -248,6 +234,7 @@ struct zt_ep {
 	zt_node *     ze_ztn;
 	uint64_t      ze_nwid;
 	int           ze_mode;
+	int           ze_running;
 	nni_sockaddr  ze_addr;
 	uint64_t      ze_raddr; // remote node address
 	uint64_t      ze_laddr; // local node address
@@ -1932,7 +1919,7 @@ zt_pipe_peer(void *arg)
 }
 
 static int
-zt_getopt_status(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp)
+zt_getopt_network_status(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp)
 {
 	ZT_VirtualNetworkConfig *vcfg;
 	int                      status;
@@ -1988,13 +1975,6 @@ zt_pipe_get_node(void *arg, void *buf, size_t *szp)
 {
 	zt_pipe *p = arg;
 	return (nni_getopt_u64(p->zp_laddr >> 24, buf, szp));
-}
-
-static int
-zt_pipe_get_status(void *arg, void *buf, size_t *szp)
-{
-	zt_pipe *p = arg;
-	return (zt_getopt_status(p->zp_ztn, p->zp_nwid, buf, szp));
 }
 
 static void
@@ -2308,6 +2288,7 @@ zt_ep_bind_locked(zt_ep *ep)
 	ep->ze_laddr = ztn->zn_self;
 	ep->ze_laddr <<= 24;
 	ep->ze_laddr |= port;
+	ep->ze_running = 1;
 
 	if ((rv = nni_idhash_insert(ztn->zn_eps, ep->ze_laddr, ep)) != 0) {
 		nni_idhash_remove(ztn->zn_ports, port);
@@ -2498,6 +2479,7 @@ zt_ep_connect(void *arg, nni_aio *aio)
 		nni_aio_list_append(&ep->ze_aios, aio);
 
 		ep->ze_creq_try = 1;
+		ep->ze_running  = 1;
 
 		nni_aio_set_timeout(ep->ze_creq_aio, now + zt_conn_interval);
 		// This can't fail -- the only way the ze_creq_aio gets
@@ -2543,6 +2525,9 @@ zt_ep_setopt_home(void *arg, const void *data, size_t sz)
 		return (NNG_EINVAL);
 	}
 	if (ep != NULL) {
+		if (ep->ze_running) {
+			return (NNG_ESTATE);
+		}
 		nni_mtx_lock(&zt_lk);
 		nni_strlcpy(ep->ze_home, data, sizeof(ep->ze_home));
 		if ((rv = zt_node_find(ep)) != 0) {
@@ -2584,10 +2569,10 @@ zt_ep_getopt_network_name(void *arg, void *buf, size_t *szp)
 }
 
 static int
-zt_ep_getopt_status(void *arg, void *buf, size_t *szp)
+zt_ep_getopt_network_status(void *arg, void *buf, size_t *szp)
 {
 	zt_ep *ep = arg;
-	return (zt_getopt_status(ep->ze_ztn, ep->ze_nwid, buf, szp));
+	return (zt_getopt_network_status(ep->ze_ztn, ep->ze_nwid, buf, szp));
 }
 
 static int
@@ -2658,7 +2643,7 @@ zt_pipe_getopt_mtu(void *arg, void *data, size_t *szp)
 static nni_tran_pipe_option zt_pipe_options[] = {
 	{ NNG_OPT_LOCADDR, zt_pipe_getopt_locaddr },
 	{ NNG_OPT_REMADDR, zt_pipe_getopt_remaddr },
-	{ NNG_ZT_OPT_MTU, zt_pipe_getopt_mtu },
+	{ NNG_OPT_ZT_MTU, zt_pipe_getopt_mtu },
 	// terminate list
 	{ NULL, NULL },
 };
@@ -2680,37 +2665,37 @@ static nni_tran_ep_option zt_ep_options[] = {
 	    .eo_setopt = zt_ep_setopt_recvmaxsz,
 	},
 	{
-	    .eo_name   = NNG_ZT_OPT_HOME,
+	    .eo_name   = NNG_OPT_ZT_HOME,
 	    .eo_getopt = zt_ep_getopt_home,
 	    .eo_setopt = zt_ep_setopt_home,
 	},
 	{
-	    .eo_name   = NNG_ZT_OPT_NODE,
+	    .eo_name   = NNG_OPT_ZT_NODE,
 	    .eo_getopt = zt_ep_getopt_node,
 	    .eo_setopt = NULL,
 	},
 	{
-	    .eo_name   = NNG_ZT_OPT_NWID,
+	    .eo_name   = NNG_OPT_ZT_NWID,
 	    .eo_getopt = zt_ep_getopt_nwid,
 	    .eo_setopt = NULL,
 	},
 	{
-	    .eo_name   = NNG_ZT_OPT_STATUS,
-	    .eo_getopt = zt_ep_getopt_status,
+	    .eo_name   = NNG_OPT_ZT_NETWORK_STATUS,
+	    .eo_getopt = zt_ep_getopt_network_status,
 	    .eo_setopt = NULL,
 	},
 	{
-	    .eo_name   = NNG_ZT_OPT_NETWORK_NAME,
+	    .eo_name   = NNG_OPT_ZT_NETWORK_NAME,
 	    .eo_getopt = zt_ep_getopt_network_name,
 	    .eo_setopt = NULL,
 	},
 	{
-	    .eo_name   = NNG_ZT_OPT_PING_TIME,
+	    .eo_name   = NNG_OPT_ZT_PING_TIME,
 	    .eo_getopt = zt_ep_getopt_ping_time,
 	    .eo_setopt = zt_ep_setopt_ping_time,
 	},
 	{
-	    .eo_name   = NNG_ZT_OPT_PING_COUNT,
+	    .eo_name   = NNG_OPT_ZT_PING_COUNT,
 	    .eo_getopt = zt_ep_getopt_ping_count,
 	    .eo_setopt = zt_ep_setopt_ping_count,
 	},

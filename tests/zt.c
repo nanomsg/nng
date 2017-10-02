@@ -11,18 +11,17 @@
 #include "convey.h"
 #include "trantest.h"
 
-extern int         nng_zt_register(void);
-extern const char *nng_opt_zt_home;
-extern const char *nng_opt_zt_node;
-extern const char *nng_opt_zt_status;
-extern const char *nng_opt_zt_network_name;
-extern int         nng_zt_status_ok;
+#include "transport/zerotier/zerotier.h"
 
 // zerotier tests.
 
 // This network is an open network setup exclusively for nng testing.
 // Do not attach to it in production.
 #define NWID "a09acf02337b057b"
+
+// This network is a closed network, which nothing can join.  We use it for
+// testing permission denied.
+#define CLOSED_NWID "17d709436ce162a3"
 
 #ifdef _WIN32
 
@@ -42,49 +41,143 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 	nng_sockaddr la, ra;
 	nng_pipe     p;
 	size_t       z;
-	size_t       mtu;
-	uint64_t     nwid;
 	p = nng_msg_get_pipe(msg);
 	So(p > 0);
 
 	// Check local address.
-	z = sizeof(nng_sockaddr);
-	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-	So(z == sizeof(la));
-	So(la.s_un.s_family == NNG_AF_ZT);
-	So(la.s_un.s_zt.sa_port == (trantest_port - 1));
-	So(la.s_un.s_zt.sa_nwid == 0xa09acf02337b057bull);
-	So(la.s_un.s_zt.sa_nodeid != 0);
+	Convey("Local address property works", {
+		z = sizeof(nng_sockaddr);
+		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
+		So(z == sizeof(la));
+		So(la.s_un.s_family == NNG_AF_ZT);
+		So(la.s_un.s_zt.sa_port == (trantest_port - 1));
+		So(la.s_un.s_zt.sa_nwid == 0xa09acf02337b057bull);
+		So(la.s_un.s_zt.sa_nodeid != 0);
+	});
 
-	// Check remote address.
-	z = sizeof(nng_sockaddr);
-	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-	So(z == sizeof(ra));
-	So(ra.s_un.s_family == NNG_AF_ZT);
-	So(ra.s_un.s_zt.sa_port != 0);
-	So(ra.s_un.s_zt.sa_nwid == 0xa09acf02337b057bull);
-	So(ra.s_un.s_zt.sa_nodeid == la.s_un.s_zt.sa_nodeid);
+	Convey("Remote address property works", {
+		// Check remote address.
+		uint64_t mynode;
 
-	// Check network ID.
-	z    = sizeof(nwid);
-	nwid = 0;
-	So(nng_pipe_getopt(p, "zt:nwid", &nwid, &z) == 0);
-	So(nwid = 0xa09acf02337b057bull);
+		z = sizeof(nng_sockaddr);
+		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+		So(z == sizeof(ra));
+		So(ra.s_un.s_family == NNG_AF_ZT);
+		So(ra.s_un.s_zt.sa_port != 0);
+		So(ra.s_un.s_zt.sa_nwid == 0xa09acf02337b057bull);
 
-	z    = sizeof(nwid);
-	nwid = 0;
-	So(nng_dialer_getopt(d, "zt:nwid", &nwid, &z) == 0);
-	So(nwid = 0xa09acf02337b057bull);
+		z = sizeof(mynode);
+		So(nng_pipe_getopt(p, NNG_OPT_ZT_NODE, &mynode, &z) == 0);
+		So(mynode != 0);
+		So(ra.s_un.s_zt.sa_nodeid == mynode);
 
-	z    = sizeof(nwid);
-	nwid = 0;
-	So(nng_listener_getopt(l, "zt:nwid", &nwid, &z) == 0);
-	So(nwid = 0xa09acf02337b057bull);
+		So(nng_dialer_getopt(d, NNG_OPT_REMADDR, &ra, &z) != 0);
+	});
 
-	// Check MTU
-	z = sizeof(mtu);
-	So(nng_pipe_getopt(p, "zt:mtu", &mtu, &z) == 0);
-	So(mtu >= 1000 && mtu <= 10000);
+	Convey("NWID property works", {
+		uint64_t nwid;
+
+		z    = sizeof(nwid);
+		nwid = 0;
+		So(nng_pipe_getopt(p, NNG_OPT_ZT_NWID, &nwid, &z) == 0);
+		So(nwid = 0xa09acf02337b057bull);
+
+		z    = sizeof(nwid);
+		nwid = 0;
+		So(nng_dialer_getopt(d, NNG_OPT_ZT_NWID, &nwid, &z) == 0);
+		So(nwid = 0xa09acf02337b057bull);
+
+		z    = sizeof(nwid);
+		nwid = 0;
+		So(nng_listener_getopt(l, NNG_OPT_ZT_NWID, &nwid, &z) == 0);
+		So(nwid = 0xa09acf02337b057bull);
+	});
+
+	Convey("Network status property works", {
+		int s;
+		z = sizeof(s);
+		s = 0;
+		So(nng_pipe_getopt(p, NNG_OPT_ZT_NETWORK_STATUS, &s, &z) == 0);
+		So(s == nng_zt_network_status_ok);
+
+		z = sizeof(s);
+		s = 0;
+		So(nng_dialer_getopt(d, NNG_OPT_ZT_NETWORK_STATUS, &s, &z) ==
+		    0);
+		So(s == nng_zt_network_status_ok);
+
+		z = sizeof(s);
+		s = 0;
+		So(nng_listener_getopt(l, NNG_OPT_ZT_NETWORK_STATUS, &s, &z) ==
+		    0);
+		So(s == nng_zt_network_status_ok);
+
+		So(nng_dialer_setopt(d, NNG_OPT_ZT_NETWORK_STATUS, &s, z) ==
+		    NNG_EREADONLY);
+		So(nng_listener_setopt(l, NNG_OPT_ZT_NETWORK_STATUS, &s, z) ==
+		    NNG_EREADONLY);
+	});
+
+	Convey("Ping properties work", {
+		int      c;
+		uint64_t u;
+		z = sizeof(c);
+		c = 0;
+		So(nng_pipe_getopt(p, NNG_OPT_ZT_PING_COUNT, &c, &z) == 0);
+		So(c > 0 && c < 10); // actually 5...
+
+		z = sizeof(u);
+		u = 0;
+		So(nng_pipe_getopt(p, NNG_OPT_ZT_PING_TIME, &u, &z) == 0);
+		So(u > 1000000 && u < 3600000000ull); // 1 sec - 1 hour
+
+		c = 0;
+		So(nng_dialer_getopt_int(d, NNG_OPT_ZT_PING_COUNT, &c) == 0);
+		So(c > 0 && c < 10); // actually 5...
+
+		z = sizeof(u);
+		u = 0;
+		So(nng_dialer_getopt_usec(d, NNG_OPT_ZT_PING_TIME, &u) == 0);
+		So(u > 1000000 && u < 3600000000ull); // 1 sec - 1 hour
+
+		int rv = nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20);
+
+		So(nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20) == 0);
+		So(nng_dialer_setopt_usec(d, NNG_OPT_ZT_PING_TIME, 2000000) ==
+		    0);
+		So(nng_listener_setopt_int(l, NNG_OPT_ZT_PING_COUNT, 0) == 0);
+		So(nng_listener_setopt_usec(l, NNG_OPT_ZT_PING_TIME, 0) == 0);
+	});
+
+	Convey("Home property works", {
+		char v[256];
+		z = sizeof(v);
+		So(nng_pipe_getopt(p, NNG_OPT_ZT_HOME, v, &z) == 0);
+		So(strlen(v) < sizeof(v));
+
+		z = sizeof(v);
+		So(nng_dialer_getopt(d, NNG_OPT_ZT_HOME, v, &z) == 0);
+		So(strlen(v) < sizeof(v));
+
+		z = sizeof(v);
+		So(nng_listener_getopt(l, NNG_OPT_ZT_HOME, v, &z) == 0);
+		So(strlen(v) < sizeof(v));
+
+		z = strlen("/tmp/bogus") + 1;
+		So(nng_dialer_setopt(d, NNG_OPT_ZT_HOME, "/tmp/bogus", z) ==
+		    NNG_ESTATE);
+		So(nng_listener_setopt(l, NNG_OPT_ZT_HOME, "/tmp/bogus", z) ==
+		    NNG_ESTATE);
+	});
+
+	Convey("MTU property works", {
+		size_t mtu;
+
+		// Check MTU
+		z = sizeof(mtu);
+		So(nng_pipe_getopt(p, NNG_OPT_ZT_MTU, &mtu, &z) == 0);
+		So(mtu >= 1000 && mtu <= 10000);
+	});
 
 	return (0);
 }
@@ -117,7 +210,7 @@ TestMain("ZeroTier Transport", {
 
 			mkdir(path1, 0700);
 
-			So(nng_listener_setopt(l, nng_opt_zt_home, path1,
+			So(nng_listener_setopt(l, NNG_OPT_ZT_HOME, path1,
 			       strlen(path1) + 1) == 0);
 
 			So(nng_listener_start(l, 0) == 0);
@@ -157,7 +250,7 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_create(&l, s, addr) == 0);
 
-		So(nng_listener_getopt_usec(l, nng_opt_zt_node, &node1) == 0);
+		So(nng_listener_getopt_usec(l, NNG_OPT_ZT_NODE, &node1) == 0);
 		So(node1 != 0);
 
 		Convey("Network name & status options work", {
@@ -167,19 +260,19 @@ TestMain("ZeroTier Transport", {
 
 			namesz = sizeof(name);
 			nng_usleep(10000000);
-			So(nng_listener_getopt(l, nng_opt_zt_network_name,
+			So(nng_listener_getopt(l, NNG_OPT_ZT_NETWORK_NAME,
 			       name, &namesz) == 0);
 			So(strcmp(name, "nng_test_open") == 0);
 			So(nng_listener_getopt_int(
-			       l, nng_opt_zt_status, &status) == 0);
-			So(status == nng_zt_status_ok);
+			       l, NNG_OPT_ZT_NETWORK_STATUS, &status) == 0);
+			So(status == nng_zt_network_status_ok);
 		});
 		Convey("Connection refused works", {
 			snprintf(addr, sizeof(addr), "zt://" NWID "/%llx:%u",
 			    (unsigned long long) node1, 42u);
 			So(nng_dialer_create(&d, s, addr) == 0);
 			So(nng_dialer_getopt_usec(
-			       d, nng_opt_zt_node, &node2) == 0);
+			       d, NNG_OPT_ZT_NODE, &node2) == 0);
 			So(node2 == node1);
 			So(nng_dialer_start(d, 0) == NNG_ECONNREFUSED);
 		});
@@ -206,24 +299,24 @@ TestMain("ZeroTier Transport", {
 			nng_close(s1);
 			// This sleep allows us to ensure disconnect
 			// messages work.
-			nng_usleep(1000000);
+			nng_usleep(500000);
 			nng_close(s2);
 		});
 
 		So(nng_listener_create(&l, s1, addr1) == 0);
 		So(nng_listener_setopt(
-		       l, nng_opt_zt_home, path1, strlen(path1) + 1) == 0);
+		       l, NNG_OPT_ZT_HOME, path1, strlen(path1) + 1) == 0);
 
 		So(nng_listener_start(l, 0) == 0);
 		node = 0;
-		So(nng_listener_getopt_usec(l, nng_opt_zt_node, &node) == 0);
+		So(nng_listener_getopt_usec(l, NNG_OPT_ZT_NODE, &node) == 0);
 		So(node != 0);
 
 		snprintf(addr2, sizeof(addr2), "zt://" NWID "/%llx:%u",
 		    (unsigned long long) node, port);
 		So(nng_dialer_create(&d, s2, addr2) == 0);
 		So(nng_dialer_setopt(
-		       d, nng_opt_zt_home, path2, strlen(path2) + 1) == 0);
+		       d, NNG_OPT_ZT_HOME, path2, strlen(path2) + 1) == 0);
 		So(nng_dialer_start(d, 0) == 0);
 
 	});

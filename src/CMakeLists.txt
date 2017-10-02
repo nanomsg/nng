@@ -144,7 +144,12 @@ if (NNG_PLATFORM_WINDOWS)
 endif()
 
 if (NNG_ENABLE_ZEROTIER)
-    set (NNG_SOURCES ${NNG_SOURCES} transport/zerotier/zerotier.c)
+    set (NNG_SOURCES ${NNG_SOURCES}
+        transport/zerotier/zerotier.c
+        transport/zerotier/zerotier.h
+    )
+    install(FILES transport/zerotier/zerotier.h
+        DESTINATION include/nng/transport/zerotier)
 endif()
 
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src

@@ -90,12 +90,14 @@ NNG_DECL int nng_setopt(nng_socket, const char *, const void *, size_t);
 NNG_DECL int nng_setopt_int(nng_socket, const char *, int);
 NNG_DECL int nng_setopt_usec(nng_socket, const char *, uint64_t);
 NNG_DECL int nng_setopt_size(nng_socket, const char *, size_t);
+NNG_DECL int nng_setopt_uint64(nng_socket, const char *, uint64_t);
 
 // nng_socket_getopt obtains the option for a socket.
 NNG_DECL int nng_getopt(nng_socket, const char *, void *, size_t *);
 NNG_DECL int nng_getopt_int(nng_socket, const char *, int *);
 NNG_DECL int nng_getopt_usec(nng_socket, const char *, uint64_t *);
 NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
+NNG_DECL int nng_getopt_uint64(nng_socket, const char *, uint64_t *);
 
 // nng_notify_func is a user function that is executed upon certain
 // events.  See below.
@@ -203,6 +205,7 @@ NNG_DECL int nng_dialer_setopt(nng_dialer, const char *, const void *, size_t);
 NNG_DECL int nng_dialer_setopt_int(nng_dialer, const char *, int);
 NNG_DECL int nng_dialer_setopt_usec(nng_dialer, const char *, uint64_t);
 NNG_DECL int nng_dialer_setopt_size(nng_dialer, const char *, size_t);
+NNG_DECL int nng_dialer_setopt_uint64(nng_dialer, const char *, uint64_t);
 
 // nng_dialer_getopt obtains the option for a dialer. This will
 // fail for options that a particular dialer is not interested in,
@@ -211,6 +214,7 @@ NNG_DECL int nng_dialer_getopt(nng_dialer, const char *, void *, size_t *);
 NNG_DECL int nng_dialer_getopt_int(nng_dialer, const char *, int *);
 NNG_DECL int nng_dialer_getopt_usec(nng_dialer, const char *, uint64_t *);
 NNG_DECL int nng_dialer_getopt_size(nng_dialer, const char *, size_t *);
+NNG_DECL int nng_dialer_getopt_uint64(nng_dialer, const char *, uint64_t *);
 
 // nng_listener_setopt sets an option for a dialer.  This value is
 // not stored in the socket.  Subsequent setopts on the socket may
@@ -221,6 +225,7 @@ NNG_DECL int nng_listener_setopt(
 NNG_DECL int nng_listener_setopt_int(nng_listener, const char *, int);
 NNG_DECL int nng_listener_setopt_usec(nng_listener, const char *, uint64_t);
 NNG_DECL int nng_listener_setopt_size(nng_listener, const char *, size_t);
+NNG_DECL int nng_listener_setopt_uint64(nng_listener, const char *, uint64_t);
 
 // nng_listener_getopt obtains the option for a listener.  This will
 // fail for options that a particular listener is not interested in,
@@ -229,6 +234,8 @@ NNG_DECL int nng_listener_getopt(nng_listener, const char *, void *, size_t *);
 NNG_DECL int nng_listener_getopt_int(nng_listener, const char *, int *);
 NNG_DECL int nng_listener_getopt_usec(nng_listener, const char *, uint64_t *);
 NNG_DECL int nng_listener_getopt_size(nng_listener, const char *, size_t *);
+NNG_DECL int nng_listener_getopt_uint64(
+    nng_listener, const char *, uint64_t *);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.
@@ -322,6 +329,10 @@ NNG_DECL const char *nng_option_name(int);
 // example during a connection notification, to disconnect a pipe that
 // is associated with an invalid or untrusted remote peer.
 NNG_DECL int nng_pipe_getopt(nng_pipe, const char *, void *, size_t *);
+NNG_DECL int nng_pipe_getopt_int(nng_pipe, const char *, int *);
+NNG_DECL int nng_pipe_getopt_usec(nng_pipe, const char *, uint64_t *);
+NNG_DECL int nng_pipe_getopt_size(nng_pipe, const char *, size_t *);
+NNG_DECL int nng_pipe_getopt_uint64(nng_pipe, const char *, uint64_t *);
 NNG_DECL int nng_pipe_close(nng_pipe);
 
 // Flags.

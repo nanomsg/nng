@@ -357,10 +357,10 @@ ZeroTier IDs, ZeroTier network IDs, and our own 24-bit ports.
 The format shall be `zt://<nwid>/<ztid>:<port>`, where the `<nwid>`
 component represents the 64-bit hexadecimal ZeroTier network ID,
 the `<ztid>` represents the 40-bit hexadecimal ZeroTier Device ID,
-and the `<port>` is the 24-bit port number previously described.
+and the `<port>` is the 24-bit port number (decimal) previously described.
 
 A responder may elide the `<ztid>/` portion, to just bind to itself,
-in which case the format will be `zt://<nwid>/<ztid>:<port>`.
+in which case the format will be `zt://<nwid>:<port>`.
 
 A port number of 0 may be used when listening to indicate that a random
 ephemeral port should be chosen.

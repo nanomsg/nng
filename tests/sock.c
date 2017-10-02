@@ -426,33 +426,6 @@ TestMain("Socket Operations", {
 
 		});
 
-		Convey("Cannot set dialer opts when running", {
-			nng_dialer ep;
-			char       addr[NNG_MAXADDRLEN];
-
-			trantest_next_address(addr, "ipc:///tmp/sock_test_%u");
-			So(nng_dialer_create(&ep, s1, addr) == 0);
-			So(nng_dialer_start(ep, NNG_FLAG_NONBLOCK) == 0);
-			So(nng_dialer_setopt_size(ep, NNG_OPT_RECVMAXSZ, 10) ==
-			    NNG_ESTATE);
-			So(nng_dialer_close(ep) == 0);
-			So(nng_dialer_close(ep) == NNG_ENOENT);
-		});
-
-		Convey("Cannot set listener opts when running", {
-			nng_listener ep;
-			char         addr[NNG_MAXADDRLEN];
-
-			trantest_next_address(addr, "ipc:///tmp/sock_test_%u");
-
-			So(nng_listener_create(&ep, s1, addr) == 0);
-			So(nng_listener_start(ep, 0) == 0);
-			So(nng_listener_setopt_size(
-			       ep, NNG_OPT_RECVMAXSZ, 10) == NNG_ESTATE);
-			So(nng_listener_close(ep) == 0);
-			So(nng_listener_close(ep) == NNG_ENOENT);
-		});
-
 		Convey("We can send and receive messages", {
 			nng_socket s2;
 			int        len;
