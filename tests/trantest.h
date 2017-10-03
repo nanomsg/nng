@@ -179,10 +179,6 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 		nng_dialer   d;
 		nng_msg *    send;
 		nng_msg *    recv;
-		size_t       len;
-		nng_pipe     p;
-		char         url[NNG_MAXADDRLEN];
-		size_t       sz;
 		int          rv;
 
 		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);

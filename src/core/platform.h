@@ -233,6 +233,12 @@ extern void nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *, nni_aio *);
 // The platform may modify the iovs.
 extern void nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *, nni_aio *);
 
+// nni_plat_tcp_pipe_peername gets the peer name.
+extern int nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *, nni_sockaddr *);
+
+// nni_plat_tcp_pipe_sockname gets the local name.
+extern int nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *, nni_sockaddr *);
+
 // nni_plat_tcp_resolv resolves a TCP name asynchronously.  The family
 // should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.  The
 // first two constrain the name to those families, while the third will

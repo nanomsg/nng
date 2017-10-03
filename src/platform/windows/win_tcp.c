@@ -15,9 +15,11 @@
 #include <stdio.h>
 
 struct nni_plat_tcp_pipe {
-	SOCKET        s;
-	nni_win_event rcv_ev;
-	nni_win_event snd_ev;
+	SOCKET           s;
+	nni_win_event    rcv_ev;
+	nni_win_event    snd_ev;
+	SOCKADDR_STORAGE sockname;
+	SOCKADDR_STORAGE peername;
 };
 
 struct nni_plat_tcp_ep {
@@ -36,9 +38,11 @@ struct nni_plat_tcp_ep {
 	char buf[512]; // to hold acceptex results
 
 	// We have to lookup some function pointers using ioctls.  Winsock,
-	// gotta love it.
-	LPFN_CONNECTEX connectex;
-	LPFN_ACCEPTEX  acceptex;
+	// gotta love it.  Especially I love that asynch accept means that
+	// getsockname and getpeername don't work.
+	LPFN_CONNECTEX            connectex;
+	LPFN_ACCEPTEX             acceptex;
+	LPFN_GETACCEPTEXSOCKADDRS getacceptexsockaddrs;
 };
 
 static int  nni_win_tcp_pipe_start(nni_win_event *, nni_aio *);
@@ -248,6 +252,24 @@ nni_plat_tcp_pipe_close(nni_plat_tcp_pipe *pipe)
 	}
 }
 
+int
+nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *pipe, nni_sockaddr *sa)
+{
+	if (nni_win_sockaddr2nn(sa, &pipe->peername) < 0) {
+		return (NNG_EADDRINVAL);
+	}
+	return (0);
+}
+
+int
+nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *pipe, nni_sockaddr *sa)
+{
+	if (nni_win_sockaddr2nn(sa, &pipe->sockname) < 0) {
+		return (NNG_EADDRINVAL);
+	}
+	return (0);
+}
+
 void
 nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *pipe)
 {
@@ -268,6 +290,7 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 	DWORD            nbytes;
 	GUID             guid1 = WSAID_CONNECTEX;
 	GUID             guid2 = WSAID_ACCEPTEX;
+	GUID             guid3 = WSAID_GETACCEPTEXSOCKADDRS;
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
@@ -303,6 +326,14 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 		rv = nni_win_error(GetLastError());
 		goto fail;
 	}
+	if (WSAIoctl(s, SIO_GET_EXTENSION_FUNCTION_POINTER, &guid3,
+	        sizeof(guid3), &ep->getacceptexsockaddrs,
+	        sizeof(ep->getacceptexsockaddrs), &nbytes, NULL,
+	        NULL) == SOCKET_ERROR) {
+		rv = nni_win_error(GetLastError());
+		goto fail;
+	}
+
 	closesocket(s);
 	s = INVALID_SOCKET;
 
@@ -432,6 +463,10 @@ nni_win_tcp_acc_finish(nni_win_event *evt, nni_aio *aio)
 	nni_plat_tcp_pipe *pipe;
 	SOCKET             s;
 	int                rv;
+	int                len1;
+	int                len2;
+	SOCKADDR *         sa1;
+	SOCKADDR *         sa2;
 
 	s         = ep->acc_s;
 	ep->acc_s = INVALID_SOCKET;
@@ -447,6 +482,19 @@ nni_win_tcp_acc_finish(nni_win_event *evt, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+
+	// Collect the local and peer addresses, because normal getsockname
+	// and getpeername don't work with AcceptEx.
+	len1 = sizeof(pipe->sockname);
+	len2 = sizeof(pipe->peername);
+	ep->getacceptexsockaddrs(
+	    ep->buf, 0, 256, 256, &sa1, &len1, &sa2, &len2);
+	NNI_ASSERT(len1 > 0);
+	NNI_ASSERT(len1 < sizeof(SOCKADDR_STORAGE));
+	NNI_ASSERT(len2 > 0);
+	NNI_ASSERT(len2 < sizeof(SOCKADDR_STORAGE));
+	memcpy(&pipe->sockname, sa1, len1);
+	memcpy(&pipe->peername, sa2, len2);
 
 	nni_aio_finish_pipe(aio, pipe);
 }
@@ -513,6 +561,8 @@ nni_win_tcp_con_finish(nni_win_event *evt, nni_aio *aio)
 	nni_plat_tcp_pipe *pipe;
 	SOCKET             s;
 	int                rv;
+	DWORD              yes = 1;
+	int                len;
 
 	s     = ep->s;
 	ep->s = INVALID_SOCKET;
@@ -527,6 +577,17 @@ nni_win_tcp_con_finish(nni_win_event *evt, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
+
+	(void) setsockopt(s, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT,
+	    (char *) &yes, sizeof(yes));
+
+	// Windows seems to be unable to get peernames for sockets on
+	// connect - perhaps because we supplied it already with connectex.
+	// Rather than debugging it, just steal the address from the endpoint.
+	memcpy(&pipe->peername, &ep->remaddr, ep->remlen);
+
+	len = sizeof(pipe->sockname);
+	(void) getsockname(s, (SOCKADDR *) &pipe->sockname, &len);
 
 	aio->a_pipe = pipe;
 	nni_aio_finish(aio, 0, 0);

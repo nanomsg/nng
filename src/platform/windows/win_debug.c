@@ -109,6 +109,7 @@ static struct {
 	{ WSAEWOULDBLOCK,	    NNG_EAGAIN	     },
 	{ WSAEINPROGRESS,	    NNG_EAGAIN	     },
 	{ WSAENOTSOCK,		    NNG_ECLOSED	     },
+	{ WSAEINVAL,		    NNG_EINVAL       },
 	{ WSAEMSGSIZE,		    NNG_EMSGSIZE     },
 	{ WSAENOPROTOOPT,	    NNG_ENOTSUP	     },
 	{ WSAEPROTONOSUPPORT,	    NNG_ENOTSUP	     },

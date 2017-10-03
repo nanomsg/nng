@@ -105,4 +105,16 @@ nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *p, nni_aio *aio)
 	nni_posix_pipedesc_recv((void *) p, aio);
 }
 
+int
+nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *p, nni_sockaddr *sa)
+{
+	return (nni_posix_pipedesc_peername((void *) p, sa));
+}
+
+int
+nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *p, nni_sockaddr *sa)
+{
+	return (nni_posix_pipedesc_sockname((void *) p, sa));
+}
+
 #endif // NNG_PLATFORM_POSIX

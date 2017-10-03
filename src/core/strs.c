@@ -21,7 +21,11 @@ char *
 nni_strdup(const char *src)
 {
 #ifdef NNG_HAVE_STRDUP
+#ifdef _WIN32
+	return (_strdup(src));
+#else
 	return (strdup(src));
+#endif
 #else
 	char * dst;
 	size_t len = strlen(src);

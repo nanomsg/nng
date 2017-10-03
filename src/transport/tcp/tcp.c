@@ -407,6 +407,32 @@ nni_tcp_pipe_peer(void *arg)
 }
 
 static int
+nni_tcp_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
+{
+	nni_tcp_pipe *p = arg;
+	int           rv;
+	nng_sockaddr  sa;
+
+	if ((rv = nni_plat_tcp_pipe_sockname(p->tpp, &sa)) == 0) {
+		rv = nni_getopt_sockaddr(&sa, v, szp);
+	}
+	return (rv);
+}
+
+static int
+nni_tcp_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
+{
+	nni_tcp_pipe *p = arg;
+	int           rv;
+	nng_sockaddr  sa;
+
+	if ((rv = nni_plat_tcp_pipe_peername(p->tpp, &sa)) == 0) {
+		rv = nni_getopt_sockaddr(&sa, v, szp);
+	}
+	return (rv);
+}
+
+static int
 nni_tcp_parse_pair(char *pair, char **hostp, char **servp)
 {
 	char *host, *serv, *end;
@@ -785,10 +811,8 @@ nni_tcp_ep_getopt_linger(void *arg, void *v, size_t *szp)
 }
 
 static nni_tran_pipe_option nni_tcp_pipe_options[] = {
-#if 0
-	{ NNG_OPT_LOCADDR, nni_tcp_pipe_get_locaddr },
-	{ NNG_OPT_REMADDR, nni_tcp_pipe_get_remaddr },
-#endif
+	{ NNG_OPT_LOCADDR, nni_tcp_pipe_getopt_locaddr },
+	{ NNG_OPT_REMADDR, nni_tcp_pipe_getopt_remaddr },
 	// terminate list
 	{ NULL, NULL }
 };

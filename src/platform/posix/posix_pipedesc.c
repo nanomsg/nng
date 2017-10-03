@@ -288,6 +288,30 @@ nni_posix_pipedesc_send(nni_posix_pipedesc *pd, nni_aio *aio)
 }
 
 int
+nni_posix_pipedesc_peername(nni_posix_pipedesc *pd, nni_sockaddr *sa)
+{
+	struct sockaddr_storage ss;
+	socklen_t               sslen = sizeof(ss);
+
+	if (getpeername(pd->node.fd, (void *) &ss, &sslen) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	return (nni_posix_sockaddr2nn(sa, &ss));
+}
+
+int
+nni_posix_pipedesc_sockname(nni_posix_pipedesc *pd, nni_sockaddr *sa)
+{
+	struct sockaddr_storage ss;
+	socklen_t               sslen = sizeof(ss);
+
+	if (getsockname(pd->node.fd, (void *) &ss, &sslen) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	return (nni_posix_sockaddr2nn(sa, &ss));
+}
+
+int
 nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 {
 	nni_posix_pipedesc *pd;

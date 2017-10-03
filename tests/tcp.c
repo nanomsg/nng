@@ -11,11 +11,49 @@
 #include "convey.h"
 #include "trantest.h"
 
-// Inproc tests.
+// TCP tests.
+
+#ifndef _WIN32
+#include <arpa/inet.h>
+#endif
+
+static int
+check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
+{
+	nng_pipe p;
+	size_t   z;
+	p = nng_msg_get_pipe(msg);
+	So(p > 0);
+
+	Convey("Local address property works", {
+		nng_sockaddr la;
+		z = sizeof(nng_sockaddr);
+		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
+		So(z == sizeof(la));
+		So(la.s_un.s_family == NNG_AF_INET);
+		// So(la.s_un.s_in.sa_port == (trantest_port - 1));
+		So(la.s_un.s_in.sa_port != 0);
+		So(la.s_un.s_in.sa_addr == htonl(0x7f000001));
+	});
+
+	Convey("Remote address property works", {
+		nng_sockaddr ra;
+		z = sizeof(nng_sockaddr);
+		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+		So(z == sizeof(ra));
+		So(ra.s_un.s_family == NNG_AF_INET);
+		So(ra.s_un.s_in.sa_port != 0);
+		So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
+
+		So(nng_dialer_getopt(d, NNG_OPT_REMADDR, &ra, &z) != 0);
+	});
+
+	return (0);
+}
 
 TestMain("TCP Transport", {
 
-	trantest_test_all("tcp://127.0.0.1:%u");
+	trantest_test_extended("tcp://127.0.0.1:%u", check_props_v4);
 
 	Convey("We cannot connect to wild cards", {
 		nng_socket s;
