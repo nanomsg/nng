@@ -191,10 +191,10 @@ pair1_pipe_stop(void *arg)
 	nni_mtx_unlock(&s->mtx);
 
 	nni_msgq_close(p->sendq);
-	nni_aio_cancel(p->aio_send, NNG_ECANCELED);
-	nni_aio_cancel(p->aio_recv, NNG_ECANCELED);
-	nni_aio_cancel(p->aio_putq, NNG_ECANCELED);
-	nni_aio_cancel(p->aio_getq, NNG_ECANCELED);
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(p->aio_putq);
+	nni_aio_stop(p->aio_getq);
 }
 
 static void

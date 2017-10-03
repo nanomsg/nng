@@ -341,22 +341,20 @@ nni_sock_pipe_remove(nni_sock *sock, nni_pipe *pipe)
 {
 	void *pdata;
 
+	nni_mtx_lock(&sock->s_mx);
 	pdata = nni_pipe_get_proto_data(pipe);
-
 	if (pdata != NULL) {
-		nni_mtx_lock(&sock->s_mx);
 		sock->s_pipe_ops.pipe_stop(pdata);
+		nni_pipe_set_proto_data(pipe, NULL);
 		if (nni_list_active(&sock->s_pipes, pipe)) {
 			nni_list_remove(&sock->s_pipes, pipe);
-			if (sock->s_closing &&
-			    nni_list_empty(&sock->s_pipes)) {
-				nni_cv_wake(&sock->s_cv);
-			}
 		}
 		sock->s_pipe_ops.pipe_fini(pdata);
-		nni_pipe_set_proto_data(pipe, NULL);
-		nni_mtx_unlock(&sock->s_mx);
 	}
+	if (sock->s_closing && nni_list_empty(&sock->s_pipes)) {
+		nni_cv_wake(&sock->s_cv);
+	}
+	nni_mtx_unlock(&sock->s_mx);
 }
 
 void

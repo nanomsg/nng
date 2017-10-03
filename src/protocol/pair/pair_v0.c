@@ -139,10 +139,10 @@ pair0_pipe_stop(void *arg)
 	pair0_pipe *p = arg;
 	pair0_sock *s = p->psock;
 
-	nni_aio_cancel(p->aio_send, NNG_ECANCELED);
-	nni_aio_cancel(p->aio_recv, NNG_ECANCELED);
-	nni_aio_cancel(p->aio_putq, NNG_ECANCELED);
-	nni_aio_cancel(p->aio_getq, NNG_ECANCELED);
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(p->aio_putq);
+	nni_aio_stop(p->aio_getq);
 
 	nni_mtx_lock(&s->mtx);
 	if (s->ppipe == p) {
