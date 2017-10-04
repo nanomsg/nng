@@ -37,7 +37,6 @@
 struct nni_plat_udp {
 	nni_posix_pollq_node udp_pitem;
 	int                  udp_fd;
-	int                  udp_closed;
 	nni_list             udp_recvq;
 	nni_list             udp_sendq;
 	nni_mtx              udp_mtx;
@@ -48,7 +47,6 @@ nni_posix_udp_doclose(nni_plat_udp *udp)
 {
 	nni_aio *aio;
 
-	udp->udp_closed = 1;
 	while (((aio = nni_list_first(&udp->udp_recvq)) != NULL) ||
 	    ((aio = nni_list_first(&udp->udp_sendq)) != NULL)) {
 		nni_aio_list_remove(aio);
@@ -62,57 +60,51 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 {
 	nni_aio * aio;
 	nni_list *q = &udp->udp_recvq;
-
 	// While we're able to recv, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
-		nni_list_remove(q, aio);
 		struct iovec            iov[4]; // never have more than 4
 		int                     niov;
 		struct sockaddr_storage ss;
 		struct msghdr           hdr;
-		int                     rv;
+		int                     rv  = 0;
+		int                     cnt = 0;
 
-		hdr.msg_iov = iov;
 		for (niov = 0; niov < aio->a_niov; niov++) {
 			iov[niov].iov_base = aio->a_iov[niov].iov_buf;
 			iov[niov].iov_len  = aio->a_iov[niov].iov_len;
 		}
+		hdr.msg_iov        = iov;
 		hdr.msg_iovlen     = niov;
 		hdr.msg_name       = &ss;
 		hdr.msg_namelen    = sizeof(ss);
 		hdr.msg_flags      = 0;
 		hdr.msg_control    = NULL;
 		hdr.msg_controllen = 0;
-		rv                 = recvmsg(udp->udp_fd, &hdr, 0);
-		if (rv < 0) {
+
+		if ((cnt = recvmsg(udp->udp_fd, &hdr, 0)) < 0) {
 			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-				// No data available at socket.  Return
-				// the AIO to the head of the queue.
-				nni_list_prepend(q, aio);
+				// No data available at socket.  Leave
+				// the AIO at the head of the queue.
 				return;
 			}
 			rv = nni_plat_errno(errno);
-			nni_aio_finish_error(aio, rv);
-			continue;
-		}
-
-		// We need to store the address information.
-		// It is incumbent on the AIO submitter to supply
-		// storage for the address.
-		if (aio->a_addr != NULL) {
+		} else if (aio->a_addr != NULL) {
+			// We need to store the address information.
+			// It is incumbent on the AIO submitter to supply
+			// storage for the address.
 			nni_posix_sockaddr2nn(aio->a_addr, (void *) &ss);
 		}
-
-		nni_aio_finish(aio, 0, rv);
+		nni_list_remove(q, aio);
+		nni_aio_finish(aio, rv, cnt);
 	}
 }
 
 static void
 nni_posix_udp_dosend(nni_plat_udp *udp)
 {
-	// XXX: TBD.
 	nni_aio * aio;
 	nni_list *q = &udp->udp_sendq;
+	int       x = 0;
 
 	// While we're able to send, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
@@ -120,48 +112,37 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 		struct msghdr           hdr;
 		struct iovec            iov[4];
 		int                     niov;
-		int                     rv;
 		int                     len;
+		int                     rv  = 0;
+		int                     cnt = 0;
+
+		if ((len = nni_posix_nn2sockaddr(&ss, aio->a_addr)) < 0) {
+			rv = NNG_EADDRINVAL;
+		} else {
+			for (niov = 0; niov < aio->a_niov; niov++) {
+				iov[niov].iov_base = aio->a_iov[niov].iov_buf;
+				iov[niov].iov_len  = aio->a_iov[niov].iov_len;
+			}
+			hdr.msg_iov        = iov;
+			hdr.msg_iovlen     = niov;
+			hdr.msg_name       = &ss;
+			hdr.msg_namelen    = len;
+			hdr.msg_flags      = NNI_MSG_NOSIGNAL;
+			hdr.msg_control    = NULL;
+			hdr.msg_controllen = 0;
+
+			if ((cnt = sendmsg(udp->udp_fd, &hdr, 0)) < 0) {
+				if ((errno == EAGAIN) ||
+				    (errno == EWOULDBLOCK)) {
+					// Cannot send now, leave at head.
+					return;
+				}
+				rv = nni_plat_errno(errno);
+			}
+		}
 
 		nni_list_remove(q, aio);
-
-		if (aio->a_addr == NULL) {
-			// No outgoing address?
-			nni_aio_finish_error(aio, NNG_EADDRINVAL);
-			return;
-		}
-		len = nni_posix_nn2sockaddr(&ss, aio->a_addr);
-		if (len < 0) {
-			nni_aio_finish_error(aio, NNG_EADDRINVAL);
-			return;
-		}
-
-		hdr.msg_iov = iov;
-		for (niov = 0; niov < aio->a_niov; niov++) {
-			iov[niov].iov_base = aio->a_iov[niov].iov_buf;
-			iov[niov].iov_len  = aio->a_iov[niov].iov_len;
-		}
-		hdr.msg_iovlen     = niov;
-		hdr.msg_name       = &ss;
-		hdr.msg_namelen    = len;
-		hdr.msg_flags      = NNI_MSG_NOSIGNAL;
-		hdr.msg_control    = NULL;
-		hdr.msg_controllen = 0;
-
-		rv = sendmsg(udp->udp_fd, &hdr, 0);
-		if (rv < 0) {
-			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
-				// Cannot send (buffers full), return to
-				// head of queue.
-				nni_list_prepend(q, aio);
-				return;
-			}
-			rv = nni_plat_errno(errno);
-			nni_aio_finish_error(aio, rv);
-			continue;
-		}
-
-		nni_aio_finish(aio, 0, rv);
+		nni_aio_finish(aio, rv, cnt);
 	}
 }
 
@@ -234,6 +215,8 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 	udp->udp_pitem.cb   = nni_posix_udp_cb;
 	udp->udp_pitem.data = udp;
 
+	(void) fcntl(udp->udp_fd, F_SETFL, O_NONBLOCK);
+
 	nni_aio_list_init(&udp->udp_recvq);
 	nni_aio_list_init(&udp->udp_sendq);
 
@@ -255,17 +238,10 @@ nni_plat_udp_close(nni_plat_udp *udp)
 {
 	nni_aio *aio;
 
-	nni_mtx_lock(&udp->udp_mtx);
-	if (udp->udp_closed) {
-		// The only way this happens is in response to a callback that
-		// is being canceled.  Double close from user code is a bug.
-		nni_mtx_unlock(&udp->udp_mtx);
-		return;
-	}
-
 	// We're no longer interested in events.
 	nni_posix_pollq_remove(&udp->udp_pitem);
 
+	nni_mtx_lock(&udp->udp_mtx);
 	nni_posix_udp_doclose(udp);
 	nni_mtx_unlock(&udp->udp_mtx);
 
@@ -291,19 +267,10 @@ void
 nni_plat_udp_recv(nni_plat_udp *udp, nni_aio *aio)
 {
 	nni_mtx_lock(&udp->udp_mtx);
-	if (nni_aio_start(aio, nni_plat_udp_cancel, udp) != 0) {
-		nni_mtx_unlock(&udp->udp_mtx);
-		return;
+	if (nni_aio_start(aio, nni_plat_udp_cancel, udp) == 0) {
+		nni_list_append(&udp->udp_recvq, aio);
+		nni_posix_pollq_arm(&udp->udp_pitem, POLLIN);
 	}
-
-	if (udp->udp_closed) {
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_mtx_unlock(&udp->udp_mtx);
-		return;
-	}
-
-	nni_list_append(&udp->udp_recvq, aio);
-	nni_posix_pollq_arm(&udp->udp_pitem, POLLIN);
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 
@@ -311,19 +278,10 @@ void
 nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 {
 	nni_mtx_lock(&udp->udp_mtx);
-	if (nni_aio_start(aio, nni_plat_udp_cancel, udp) != 0) {
-		nni_mtx_unlock(&udp->udp_mtx);
-		return;
+	if (nni_aio_start(aio, nni_plat_udp_cancel, udp) == 0) {
+		nni_list_append(&udp->udp_sendq, aio);
+		nni_posix_pollq_arm(&udp->udp_pitem, POLLOUT);
 	}
-
-	if (udp->udp_closed) {
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_mtx_unlock(&udp->udp_mtx);
-		return;
-	}
-
-	nni_list_append(&udp->udp_sendq, aio);
-	nni_posix_pollq_arm(&udp->udp_pitem, POLLOUT);
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 

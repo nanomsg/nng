@@ -33,6 +33,9 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 	const nng_sockaddr_path *nspath;
 	size_t                   sz;
 
+	if ((sa == NULL) || (na == NULL)) {
+		return (-1);
+	}
 	switch (na->s_un.s_family) {
 	case NNG_AF_INET:
 		sin  = (void *) sa;
@@ -80,6 +83,9 @@ nni_posix_sockaddr2nn(nni_sockaddr *na, const void *sa)
 	nng_sockaddr_in6 *         nsin6;
 	nng_sockaddr_path *        nspath;
 
+	if ((na == NULL) || (sa == NULL)) {
+		return (-1);
+	}
 	switch (((struct sockaddr *) sa)->sa_family) {
 	case AF_INET:
 		sin             = (void *) sa;

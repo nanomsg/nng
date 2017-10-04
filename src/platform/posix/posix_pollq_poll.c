@@ -266,14 +266,11 @@ nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 	// on the polled list.  The polled list would be the case where
 	// the index is set to a positive value.
 	if ((oevents == 0) && (events != 0) && (node->index < 1)) {
-		if (nni_list_node_active(&node->node)) {
-			nni_list_node_remove(&node->node);
-		}
+		nni_list_node_remove(&node->node);
 		nni_list_append(&pq->armed, node);
 	}
 	if ((events != 0) && (oevents != events)) {
-		// Possibly wake up the poller since we're looking for
-		// new events.
+		// Possibly wake up poller since we're looking for new events.
 		if (pq->inpoll) {
 			nni_plat_pipe_raise(pq->wakewfd);
 		}
@@ -295,9 +292,7 @@ nni_posix_pollq_disarm(nni_posix_pollq_node *node, int events)
 	oevents = node->events;
 	node->events &= ~events;
 	if ((node->events == 0) && (oevents != 0)) {
-		if (nni_list_node_active(&node->node)) {
-			nni_list_node_remove(&node->node);
-		}
+		nni_list_node_remove(&node->node);
 		nni_list_append(&pq->idle, node);
 	}
 	// No need to wake anything, we might get a spurious wake up but

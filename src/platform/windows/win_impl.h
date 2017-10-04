@@ -63,13 +63,15 @@ struct nni_win_event_ops {
 struct nni_win_event {
 	OVERLAPPED        olpd;
 	void *            ptr;
-	nni_aio *         aio;
 	nni_mtx           mtx;
 	nni_cv            cv;
 	unsigned          run : 1;
 	unsigned          fini : 1;
+	unsigned          closed : 1;
 	unsigned          count;
 	int               status;
+	nni_list          aios;
+	nni_aio *         active;
 	nni_win_event_ops ops;
 };
 

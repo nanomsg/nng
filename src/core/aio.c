@@ -321,6 +321,13 @@ nni_aio_list_append(nni_list *list, nni_aio *aio)
 }
 
 void
+nni_aio_list_prepend(nni_list *list, nni_aio *aio)
+{
+	nni_aio_list_remove(aio);
+	nni_list_prepend(list, aio);
+}
+
+void
 nni_aio_list_remove(nni_aio *aio)
 {
 	nni_list_node_remove(&aio->a_prov_node);

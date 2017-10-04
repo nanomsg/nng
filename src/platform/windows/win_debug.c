@@ -83,8 +83,9 @@ nni_plat_errno(int errnum)
 static struct {
 	int win_err;
 	int nng_err;
-} nni_win_errnos[] = {
-	// clang-format off
+} nni_win_errnos[] =
+    {
+      // clang-format off
 	{ ERROR_FILE_NOT_FOUND,	    NNG_ENOENT	     },
 	{ ERROR_ACCESS_DENIED,	    NNG_EPERM	     },
 	{ ERROR_INVALID_HANDLE,	    NNG_ECLOSED	     },
@@ -114,6 +115,10 @@ static struct {
 	{ WSAENOPROTOOPT,	    NNG_ENOTSUP	     },
 	{ WSAEPROTONOSUPPORT,	    NNG_ENOTSUP	     },
 	{ WSAEPROTONOSUPPORT,	    NNG_ENOTSUP	     },
+	{ WSAESOCKTNOSUPPORT,	    NNG_ENOTSUP      },
+	{ WSAEOPNOTSUPP,	    NNG_ENOTSUP      },
+	{ WSAEPFNOSUPPORT,	    NNG_ENOTSUP      },
+	{ WSAEAFNOSUPPORT,	    NNG_ENOTSUP      },
 	{ WSAEADDRINUSE,	    NNG_EADDRINUSE   },
 	{ WSAEADDRNOTAVAIL,	    NNG_EADDRINVAL   },
 	{ WSAENETDOWN,		    NNG_EUNREACHABLE },
@@ -137,8 +142,8 @@ static struct {
 
 	// Must be Last!!
 	{			 0,		   0 },
-	// clang-format on
-};
+      // clang-format on
+    };
 
 // This converts a Windows API error (from GetLastError()) to an
 // nng standard error code.

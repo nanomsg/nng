@@ -151,6 +151,7 @@ extern void nni_aio_wait(nni_aio *);
 // and append will perform any necessary remove first.
 extern void nni_aio_list_init(nni_list *);
 extern void nni_aio_list_append(nni_list *, nni_aio *);
+extern void nni_aio_list_prepend(nni_list *, nni_aio *);
 extern void nni_aio_list_remove(nni_aio *);
 extern int  nni_aio_list_active(nni_aio *);
 

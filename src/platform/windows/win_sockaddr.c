@@ -20,6 +20,9 @@ nni_win_nn2sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 	SOCKADDR_IN * sin;
 	SOCKADDR_IN6 *sin6;
 
+	if ((ss == NULL) || (sa == NULL)) {
+		return (-1);
+	}
 	switch (sa->s_un.s_family) {
 	case NNG_AF_INET:
 		sin = (void *) ss;
@@ -46,6 +49,9 @@ nni_win_sockaddr2nn(nni_sockaddr *sa, const SOCKADDR_STORAGE *ss)
 	SOCKADDR_IN * sin;
 	SOCKADDR_IN6 *sin6;
 
+	if ((ss == NULL) || (sa == NULL)) {
+		return (-1);
+	}
 	switch (ss->ss_family) {
 	case PF_INET:
 		sin                     = (void *) ss;
