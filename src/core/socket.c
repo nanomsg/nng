@@ -10,6 +10,7 @@
 
 #include "core/nng_impl.h"
 
+#include <stdio.h>
 #include <string.h>
 
 // Socket implementation.
@@ -36,6 +37,7 @@ struct nni_socket {
 	nni_mtx       s_mx;
 	nni_cv        s_cv;
 	nni_cv        s_close_cv;
+	int           s_raw;
 
 	uint64_t s_id;
 	uint32_t s_flags;
@@ -59,6 +61,7 @@ struct nni_socket {
 	nni_duration s_reconnmax; // max reconnect time
 	size_t       s_rcvmaxsz;  // max receive size
 	nni_list     s_options;   // opts not handled by sock/proto
+	char         s_name[64];  // socket name (legacy compat)
 
 	nni_list s_eps;   // active endpoints
 	nni_list s_pipes; // active pipes
@@ -76,25 +79,6 @@ struct nni_socket {
 	nni_notifyfd s_send_fd;
 	nni_notifyfd s_recv_fd;
 };
-
-#if 0
-if (opt == nni_optid_reconnmint) {
-	rv = nni_setopt_usec(&s->s_reconn, val, size);
-} else if (opt == nni_optid_reconnmaxt) {
-	rv = nni_setopt_usec(&s->s_reconnmax, val, size);
-} else if (opt == nni_optid_recvtimeo) {
-	rv = nni_setopt_usec(&s->s_rcvtimeo, val, size);
-} else if (opt == nni_optid_sendtimeo) {
-	rv = nni_setopt_usec(&s->s_sndtimeo, val, size);
-} else if (opt == nni_optid_sendbuf) {
-	rv = nni_setopt_buf(s->s_uwq, val, size);
-} else if (opt == nni_optid_recvbuf) {
-	rv = nni_setopt_buf(s->s_urq, val, size);
-} else if ((opt == nni_optid_sendfd) || (opt == nni_optid_recvfd) ||
-    (opt == nni_optid_locaddr) || (opt == nni_optid_remaddr)) {
-	// these options can be read, but cannot be set
-	rv = NNG_EINVAL;
-#endif
 
 static int
 nni_sock_getopt_sendfd(nni_sock *s, void *buf, size_t *szp)
@@ -180,6 +164,28 @@ nni_sock_getopt_sendbuf(nni_sock *s, void *buf, size_t *szp)
 	return (nni_getopt_buf(s->s_uwq, buf, szp));
 }
 
+static int
+nni_sock_getopt_sockname(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_str(s->s_name, buf, szp));
+}
+
+static int
+nni_sock_setopt_sockname(nni_sock *s, const void *buf, size_t sz)
+{
+	if (nni_strnlen(buf, sz) > sizeof(s->s_name) - 1) {
+		return (NNG_EINVAL);
+	}
+	nni_strlcpy(s->s_name, buf, sizeof(s->s_name));
+	return (0);
+}
+
+static int
+nni_sock_getopt_domain(nni_sock *s, void *buf, size_t *szp)
+{
+	return (nni_getopt_int(s->s_raw + 1, buf, szp));
+}
+
 static const nni_socket_option nni_sock_options[] = {
 	{
 	    .so_name   = NNG_OPT_RECVTIMEO,
@@ -220,6 +226,16 @@ static const nni_socket_option nni_sock_options[] = {
 	    .so_name   = NNG_OPT_RECONNMAXT,
 	    .so_getopt = nni_sock_getopt_reconnmaxt,
 	    .so_setopt = nni_sock_setopt_reconnmaxt,
+	},
+	{
+	    .so_name   = NNG_OPT_SOCKNAME,
+	    .so_getopt = nni_sock_getopt_sockname,
+	    .so_setopt = nni_sock_setopt_sockname,
+	},
+	{
+	    .so_name   = NNG_OPT_DOMAIN,
+	    .so_getopt = nni_sock_getopt_domain,
+	    .so_setopt = NULL,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },
@@ -587,6 +603,9 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 		s->s_sock_ops.sock_open(s->s_data);
 		*sockp = s;
 	}
+	// Set the sockname.
+	(void) snprintf(
+	    s->s_name, sizeof(s->s_name), "%u", (unsigned) s->s_id);
 	nni_mtx_unlock(&nni_sock_lk);
 
 	return (rv);
@@ -969,6 +988,11 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 			return (NNG_EREADONLY);
 		}
 		rv = pso->pso_setopt(s->s_data, val, size);
+		if ((rv == 0) && (strcmp(name, NNG_OPT_RAW) == 0) &&
+		    (size >= sizeof(int))) {
+			// Save the raw option -- we use this for the DOMAIN.
+			memcpy(&s->s_raw, val, sizeof(int));
+		}
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}

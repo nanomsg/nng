@@ -408,6 +408,8 @@ NNG_DECL int nng_respondent0_open(nng_socket *);
 #define nng_respondent_open nng_respondent0_open
 
 // Options.
+#define NNG_OPT_SOCKNAME "socket-name"
+#define NNG_OPT_DOMAIN "compat:domain" // legacy compat only
 #define NNG_OPT_RAW "raw"
 #define NNG_OPT_LINGER "linger"
 #define NNG_OPT_RECVBUF "recv-buffer"

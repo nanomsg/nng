@@ -583,11 +583,13 @@ static struct {
 	{ NN_SOL_SOCKET, NN_MAXTTL },
 	{ NN_SOL_SOCKET, NN_RCVTIMEO },
 	{ NN_SOL_SOCKET, NN_SNDTIMEO },
+	{ NN_SOL_SOCKET, NN_DOMAIN },
+	{ NN_SOL_SOCKET, NN_SOCKET_NAME },
 	{ NN_REQ, NN_REQ_RESEND_IVL },
 	{ NN_SUB, NN_SUB_SUBSCRIBE },
 	{ NN_SUB, NN_SUB_UNSUBSCRIBE },
 	{ NN_SURVEYOR, NN_SURVEYOR_DEADLINE },
-	// XXX: DOMAIN, IPV4ONLY, SOCKETNAME, SNDPRIO, RCVPRIO
+	// XXX: IPV4ONLY, SNDPRIO, RCVPRIO
 	// clang-format on
 };
 
@@ -642,6 +644,12 @@ init_opts(void)
 			case NN_SNDTIMEO:
 				SETOPT(NNG_OPT_SENDTIMEO, 1);
 				break;
+			case NN_SOCKET_NAME:
+				SETOPT(NNG_OPT_SOCKNAME, 0);
+				break;
+			case NN_DOMAIN:
+				SETOPT(NNG_OPT_DOMAIN, 0);
+				break;
 			}
 			break;
 		case NN_REQ:
@@ -693,7 +701,8 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 	}
 
 	if (name == NULL) {
-		return (ENOPROTOOPT);
+		errno = ENOPROTOOPT;
+		return (-1);
 	}
 
 	if (mscvt) {

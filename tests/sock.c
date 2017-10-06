@@ -109,6 +109,48 @@ TestMain("Socket Operations", {
 				    NNG_EREADONLY);
 				So(nng_setopt(s1, NNG_OPT_LOCADDR, "a", 1) ==
 				    NNG_EREADONLY);
+				So(nng_setopt_int(s1, NNG_OPT_DOMAIN, 3) ==
+				    NNG_EREADONLY);
+			});
+
+			Convey("Sockname option works", {
+				char   name[128]; // 64 is max
+				size_t sz;
+				sz = sizeof(name);
+				So(nng_getopt(
+				       s1, NNG_OPT_SOCKNAME, name, &sz) == 0);
+				So(sz > 0 && sz < 64);
+				So(sz == nni_strnlen(name, 64) + 1);
+				So(atoi(name) == (unsigned) s1);
+
+				So(nng_setopt(
+				       s1, NNG_OPT_SOCKNAME, "hello", 6) == 0);
+				sz = sizeof(name);
+				So(nng_getopt(
+				       s1, NNG_OPT_SOCKNAME, name, &sz) == 0);
+				So(sz == 6);
+				So(strcmp(name, "hello") == 0);
+
+				memset(name, 'A', 64);
+				name[64] = '\0';
+				So(nng_setopt(s1, NNG_OPT_SOCKNAME, name,
+				       strlen(name)) == NNG_EINVAL);
+
+				So(nng_getopt(
+				       s1, NNG_OPT_SOCKNAME, name, &sz) == 0);
+				So(sz == 6);
+				So(strcmp(name, "hello") == 0);
+			});
+
+			Convey("Domain option works", {
+				int dom;
+				So(nng_getopt_int(s1, NNG_OPT_DOMAIN, &dom) ==
+				    0);
+				So(dom == 1); // NN_AF_SP
+				So(nng_setopt_int(s1, NNG_OPT_RAW, 1) == 0);
+				So(nng_getopt_int(s1, NNG_OPT_DOMAIN, &dom) ==
+				    0);
+				So(dom == 2); // NN_AF_SP_RAW
 			});
 
 			Convey("URL option works", {
