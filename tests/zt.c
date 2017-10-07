@@ -318,7 +318,7 @@ TestMain("ZeroTier Transport", {
 		So(nng_dialer_setopt(
 		       d, NNG_OPT_ZT_HOME, path2, strlen(path2) + 1) == 0);
 		So(nng_dialer_start(d, 0) == 0);
-
+		nng_usleep(2000000);
 	});
 
 	trantest_test_extended("zt://" NWID "/*:%u", check_props);

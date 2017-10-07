@@ -368,21 +368,65 @@ extern void nni_plat_pipe_close(int, int);
 // determined by using an environment variable (NNG_STATE_DIR), or
 // using some other application-specific method.
 //
+// We also support listing keys, for the case where a key must be looked
+// up -- for example to get a list of certificates, or some such.
+//
 
 // nni_plat_file_put writes the named file, with the provided data,
 // and the given size.  If the file already exists it is overwritten.
 // The permissions on the file should be limited to read and write
 // access by the entity running the application only.
-extern int nni_plat_file_put(const char *, const void *, int);
+extern int nni_plat_file_put(const char *, const void *, size_t);
 
 // nni_plat_file_get reads the entire named file, allocating storage
 // to receive the data and returning the data and the size in the
-// reference arguments.
-extern int nni_plat_file_get(const char *, void **, int *);
+// reference arguments.  The data pointer should be freed with nni_free
+// using the supplied size when no longer needed.
+extern int nni_plat_file_get(const char *, void **, size_t *);
 
 // nni_plat_file_delete deletes the named file.
 extern int nni_plat_file_delete(const char *);
 
+// nni_plat_dir_open attempts to "open a directory" for listing.  The
+// handle for further operations is returned in the first argument, and
+// the directory name is supplied in the second.
+extern int nni_plat_dir_open(void **, const char *);
+
+// nni_plat_dir_next gets the next directory entry.  Each call returns
+// a new entry (arbitrary order).  When no more entries exist, it returns
+// NNG_ENOENT.  The returned name is valid until the next call to this
+// function, or until the directory is closed.  Only files are returned,
+// subdirectories are not reported.
+extern int nni_plat_dir_next(void *, const char **);
+
+// nni_plat_dir_close closes the directory handle, freeing all
+// resources associated with it.
+extern void nni_plat_dir_close(void *);
+
+// nni_plat_dir_create creates a directory.  Any parent directories must
+// already exist.  If the directory already exists, 0 is returned.
+extern int nni_plat_dir_create(const char *);
+
+// nni_plat_dir_remove removes a directory, which must already be empty.
+// If it does not exist, 0 is returned.
+extern int nni_plat_dir_remove(const char *);
+
+// nni_plat_temp_dir returns a temporary/scratch directory for the platform
+// The result should be freed with nni_strfree().
+extern char *nni_plat_temp_dir(void);
+
+// nni_plat_home_dir returns the "home" directory for the user running the
+// application.  This is a convenient place to store preferences, etc.
+// Applications should append an application specific directory name.
+// The result should be freed with nni_strfree().
+extern char *nni_plat_home_dir(void);
+
+// nni_plat_join_dir joins to path components to make a path name.
+// For example. on UNIX systems nni_plat_join_dir("/tmp", "a") returns
+// "/tmp/a".  The pathname returned should be freed with nni_strfree().
+extern char *nni_plat_join_dir(const char *, const char *);
+
+//
 // Actual platforms we support.  This is included up front so that we can
 // get the specific types that are supplied by the platform.
 #if defined(NNG_PLATFORM_POSIX)

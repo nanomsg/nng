@@ -113,6 +113,7 @@ if (NNG_PLATFORM_POSIX)
         platform/posix/posix_clock.c
         platform/posix/posix_debug.c
         platform/posix/posix_epdesc.c
+        platform/posix/posix_file.c
         platform/posix/posix_ipc.c
         platform/posix/posix_pipe.c
         platform/posix/posix_pipedesc.c
@@ -131,6 +132,7 @@ if (NNG_PLATFORM_WINDOWS)
         platform/windows/win_impl.h
         platform/windows/win_clock.c
         platform/windows/win_debug.c
+        platform/windows/win_file.c
         platform/windows/win_iocp.c
         platform/windows/win_ipc.c
         platform/windows/win_pipe.c

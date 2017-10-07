@@ -17,10 +17,6 @@
 #include "core/nng_impl.h"
 #include "zerotier.h"
 
-#ifndef _WIN32
-#include <unistd.h>
-#endif
-
 #include <ZeroTierOne.h>
 
 // These values are supplied to help folks checking status.  They are the
@@ -1187,7 +1183,6 @@ zt_state_put(ZT_Node *node, void *userptr, void *thr,
     enum ZT_StateObjectType objtype, const uint64_t objid[2], const void *data,
     int len)
 {
-	FILE *      file;
 	zt_node *   ztn = userptr;
 	char        path[NNG_MAXADDRLEN + 1];
 	const char *fname;
@@ -1224,27 +1219,12 @@ zt_state_put(ZT_Node *node, void *userptr, void *thr,
 		return;
 	}
 
-	// We assume that everyone can do standard C I/O.
-	// This may be a bad assumption.  If that's the case,
-	// the platform should supply an alternative
-	// implementation. We are also assuming that we don't
-	// need to worry about atomic updates.  As these items
-	// (keys, etc.)  pretty much don't change, this should
-	// be fine.
-
 	if (len < 0) {
-		(void) unlink(path);
+		nni_plat_file_delete(path);
 		return;
 	}
 
-	if ((file = fopen(path, "wb")) == NULL) {
-		return;
-	}
-
-	if (fwrite(data, 1, len, file) != len) {
-		(void) unlink(path);
-	}
-	(void) fclose(file);
+	(void) nni_plat_file_put(path, data, len);
 }
 
 static int
@@ -1252,12 +1232,11 @@ zt_state_get(ZT_Node *node, void *userptr, void *thr,
     enum ZT_StateObjectType objtype, const uint64_t objid[2], void *data,
     unsigned int len)
 {
-	FILE *      file;
 	zt_node *   ztn = userptr;
 	char        path[NNG_MAXADDRLEN + 1];
 	const char *fname;
-	int         nread;
 	size_t      sz;
+	void *      buf;
 
 	NNI_ARG_UNUSED(objid); // we only use global files
 
@@ -1285,30 +1264,16 @@ zt_state_get(ZT_Node *node, void *userptr, void *thr,
 		return (-1);
 	}
 
-	// We assume that everyone can do standard C I/O.
-	// This may be a bad assumption.  If that's the case,
-	// the platform should supply an alternative
-	// implementation. We are also assuming that we don't
-	// need to worry about atomic updates.  As these items
-	// (keys, etc.)  pretty much don't change, this should
-	// be fine.
-
-	if ((file = fopen(path, "rb")) == NULL) {
+	if (nni_plat_file_get(path, &buf, &sz) != 0) {
 		return (-1);
 	}
-
-	// seek to end of file
-	(void) fseek(file, 0, SEEK_END);
-	if (ftell(file) > len) {
-		fclose(file);
+	if (sz > len) {
+		nni_free(buf, sz);
 		return (-1);
 	}
-	(void) fseek(file, 0, SEEK_SET);
-
-	nread = (int) fread(data, 1, len, file);
-	(void) fclose(file);
-
-	return (nread);
+	memcpy(data, buf, sz);
+	nni_free(buf, sz);
+	return ((int) sz);
 }
 
 typedef struct zt_send_hdr {

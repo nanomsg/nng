@@ -87,6 +87,7 @@ static struct {
     {
       // clang-format off
 	{ ERROR_FILE_NOT_FOUND,	    NNG_ENOENT	     },
+	{ ERROR_PATH_NOT_FOUND,	    NNG_ENOENT	     },
 	{ ERROR_ACCESS_DENIED,	    NNG_EPERM	     },
 	{ ERROR_INVALID_HANDLE,	    NNG_ECLOSED	     },
 	{ ERROR_NOT_ENOUGH_MEMORY,  NNG_ENOMEM	     },
