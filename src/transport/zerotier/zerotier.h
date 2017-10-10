@@ -93,6 +93,18 @@
 // virtual L2 frames.
 #define NNG_OPT_ZT_MTU "zt:mtu"
 
+// NNG_OPT_ZT_ORBIT is a write-only API to add a "moon" -- this affects the
+// endpoint, and all other endpoints using the same node. The value is
+// a pair of 64-bit integers -- the first is the moon ID, and the second, if
+// non-zero, is the node ID of a server.  Conventionally this is the same
+// as the moon ID.
+#define NNG_OPT_ZT_ORBIT "zt:orbit"
+
+// NNG_OPT_ZT_DEORBIT removes the moon ID from the node, so that it will
+// no longer use that moon.  The argument is a moon ID to remove.  If the
+// node is not already orbiting, then this operation does nothing.
+#define NNG_OPT_ZT_DEORBIT "zt:deorbit"
+
 // Network status values.
 // These values are supplied to help folks checking status.  They are the
 // return values from zt_opt_status.  We avoid hard coding them as defines,

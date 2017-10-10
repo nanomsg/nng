@@ -1160,51 +1160,53 @@ static const char *zt_files[] = {
 	"identity.public",
 	"identity.secret",
 	"planet",
-	NULL, // moon, e.g. moons.d/<ID>.moon -- we don't persist it
+	"moon.%llx",
 	NULL, // peer, e.g. peers.d/<ID> -- we don't persist this
-	NULL, // network, e.g. networks.d/<ID>.conf -- we don't persist
+	"network.%llx",
 	// clang-format on
 };
-
-#ifdef _WIN32
-#define unlink DeleteFile
-#define pathsep "\\"
-#else
-#define pathsep "/"
-#endif
 
 static struct {
 	size_t len;
 	void * data;
-} zt_ephemeral_state[ZT_STATE_OBJECT_NETWORK_CONFIG];
+} zt_ephemeral_state[ZT_STATE_OBJECT_NETWORK_CONFIG + 1];
 
 static void
 zt_state_put(ZT_Node *node, void *userptr, void *thr,
     enum ZT_StateObjectType objtype, const uint64_t objid[2], const void *data,
     int len)
 {
-	zt_node *   ztn = userptr;
-	char        path[NNG_MAXADDRLEN + 1];
-	const char *fname;
-	size_t      sz;
+	zt_node *ztn = userptr;
+	char *   path;
+	const char *template;
+	char fname[32];
 
 	NNI_ARG_UNUSED(objid); // only use global files
 
 	if ((objtype > ZT_STATE_OBJECT_NETWORK_CONFIG) ||
-	    ((fname = zt_files[(int) objtype]) == NULL)) {
+	    ((template = zt_files[(int) objtype]) == NULL)) {
 		return;
 	}
 
+	(void) snprintf(fname, sizeof(fname), template,
+	    (unsigned long long) objid[0], (unsigned long long) objid[1]);
+
 	// If we have no valid path, then we just use ephemeral data.
+	// Note that for moons, and so forth, we wind up just storing them
+	// all in the same place, but it does not matter since we don't
+	// really persist them anyway.
 	if (strlen(ztn->zn_path) == 0) {
 		void * ndata = NULL;
 		void * odata = zt_ephemeral_state[objtype].data;
 		size_t olen  = zt_ephemeral_state[objtype].len;
 		if ((len >= 0) && ((ndata = nni_alloc(len)) != NULL)) {
 			memcpy(ndata, data, len);
+			zt_ephemeral_state[objtype].data = ndata;
+			zt_ephemeral_state[objtype].len  = len;
+		} else if (len < 0) {
+			zt_ephemeral_state[objtype].data = NULL;
+			zt_ephemeral_state[objtype].len  = 0;
 		}
-		zt_ephemeral_state[objtype].data = ndata;
-		zt_ephemeral_state[objtype].len  = len;
 
 		if (olen > 0) {
 			nni_free(odata, olen);
@@ -1212,19 +1214,19 @@ zt_state_put(ZT_Node *node, void *userptr, void *thr,
 		return;
 	}
 
-	sz = sizeof(path);
-	if (snprintf(path, sz, "%s%s%s", ztn->zn_path, pathsep, fname) >= sz) {
-		// If the path is too long, we can't cope.  We
-		// just decline to store anything.
+	if ((path = nni_plat_join_dir(ztn->zn_path, fname)) == NULL) {
 		return;
 	}
 
 	if (len < 0) {
-		nni_plat_file_delete(path);
-		return;
+		(void) nni_plat_file_delete(path);
+	} else {
+		if (strlen(ztn->zn_path) > 0) {
+			(void) nni_plat_dir_create(ztn->zn_path);
+		}
+		(void) nni_plat_file_put(path, data, len);
 	}
-
-	(void) nni_plat_file_put(path, data, len);
+	nni_strfree(path);
 }
 
 static int
@@ -1232,18 +1234,20 @@ zt_state_get(ZT_Node *node, void *userptr, void *thr,
     enum ZT_StateObjectType objtype, const uint64_t objid[2], void *data,
     unsigned int len)
 {
-	zt_node *   ztn = userptr;
-	char        path[NNG_MAXADDRLEN + 1];
-	const char *fname;
-	size_t      sz;
-	void *      buf;
+	zt_node *ztn = userptr;
+	char *   path;
+	char     fname[32];
+	const char *template;
+	size_t sz;
+	void * buf;
 
 	NNI_ARG_UNUSED(objid); // we only use global files
 
 	if ((objtype > ZT_STATE_OBJECT_NETWORK_CONFIG) ||
-	    ((fname = zt_files[(int) objtype]) == NULL)) {
+	    ((template = zt_files[(int) objtype]) == NULL)) {
 		return (-1);
 	}
+	snprintf(fname, sizeof(fname), template, objid[0], objid[1]);
 
 	// If no base directory, we are using ephemeral data.
 	if (strlen(ztn->zn_path) == 0) {
@@ -1258,15 +1262,15 @@ zt_state_get(ZT_Node *node, void *userptr, void *thr,
 		return (len);
 	}
 
-	sz = sizeof(path);
-	if (snprintf(path, sz, "%s%s%s", ztn->zn_path, pathsep, fname) >= sz) {
-		// If the path is too long, we can't cope.
+	if ((path = nni_plat_join_dir(ztn->zn_path, fname)) == NULL) {
 		return (-1);
 	}
 
 	if (nni_plat_file_get(path, &buf, &sz) != 0) {
+		nni_strfree(path);
 		return (-1);
 	}
+	nni_strfree(path);
 	if (sz > len) {
 		nni_free(buf, sz);
 		return (-1);
@@ -1473,6 +1477,9 @@ zt_node_create(zt_node **ztnp, const char *path)
 	    (nni_random() % (zt_max_port - zt_ephemeral)) + zt_ephemeral);
 
 	nni_strlcpy(ztn->zn_path, path, sizeof(ztn->zn_path));
+	if (strlen(ztn->zn_path) > 0) {
+		(void) nni_plat_dir_create(ztn->zn_path);
+	}
 	zrv = ZT_Node_new(&ztn->zn_znode, ztn, NULL, &zt_callbacks, zt_now());
 	if (zrv != ZT_RESULT_OK) {
 		zt_node_destroy(ztn);
@@ -1514,6 +1521,7 @@ zt_node_find(zt_ep *ep)
 	int                      rv;
 	nng_sockaddr             sa;
 	ZT_VirtualNetworkConfig *cf;
+	void *                   dir;
 
 	NNI_LIST_FOREACH (&zt_nodes, ztn) {
 		if (strcmp(ep->ze_home, ztn->zn_path) == 0) {
@@ -1525,6 +1533,23 @@ zt_node_find(zt_ep *ep)
 	// initialize it.
 	if ((rv = zt_node_create(&ztn, ep->ze_home)) != 0) {
 		return (rv);
+	}
+
+	// Load moons
+	if (nni_plat_dir_open(&dir, ep->ze_home) == 0) {
+		uint64_t    moonid;
+		const char *fname;
+		char *      ep;
+		while (nni_plat_dir_next(dir, &fname) == 0) {
+			if (strncmp(fname, "moon.", 5) != 0) {
+				continue;
+			}
+			moonid = strtoull(fname + 5, &ep, 16);
+			if (*ep == '\0') {
+				ZT_Node_orbit(ztn->zn_znode, NULL, moonid, 0);
+			}
+		}
+		nni_plat_dir_close(dir);
 	}
 
 done:
@@ -1572,7 +1597,7 @@ zt_tran_fini(void)
 	}
 	nni_mtx_unlock(&zt_lk);
 
-	for (int i = 0; i < ZT_STATE_OBJECT_NETWORK_CONFIG; i++) {
+	for (int i = 0; i <= ZT_STATE_OBJECT_NETWORK_CONFIG; i++) {
 		if (zt_ephemeral_state[i].len > 0) {
 			nni_free(zt_ephemeral_state[i].data,
 			    zt_ephemeral_state[i].len);
@@ -2201,8 +2226,6 @@ zt_ep_close(void *arg)
 		nni_idhash_remove(ztn->zn_eps, ep->ze_laddr);
 	}
 
-	// XXX: clean up the pipe if a dialer
-
 	nni_mtx_unlock(&zt_lk);
 }
 
@@ -2513,6 +2536,50 @@ zt_ep_getopt_home(void *arg, void *data, size_t *szp)
 }
 
 static int
+zt_ep_setopt_orbit(void *arg, const void *data, size_t sz)
+{
+	uint64_t           moonid;
+	uint64_t           peerid;
+	zt_ep *            ep = arg;
+	enum ZT_ResultCode zrv;
+
+	if (sz == sizeof(uint64_t)) {
+		memcpy(&moonid, data, sizeof(moonid));
+		peerid = 0;
+	} else if (sz == (2 * sizeof(uint64_t))) {
+		memcpy(&moonid, data, sizeof(moonid));
+		memcpy(&peerid, ((char *) data) + sizeof(uint64_t),
+		    sizeof(peerid));
+	} else {
+		return (NNG_EINVAL);
+	}
+	nni_mtx_lock(&zt_lk);
+	zrv = ZT_Node_orbit(ep->ze_ztn->zn_znode, NULL, moonid, peerid);
+	nni_mtx_unlock(&zt_lk);
+
+	return (zt_result(zrv));
+}
+
+static int
+zt_ep_setopt_deorbit(void *arg, const void *data, size_t sz)
+{
+	uint64_t           moonid;
+	zt_ep *            ep = arg;
+	enum ZT_ResultCode zrv;
+
+	if (sz == sizeof(uint64_t)) {
+		memcpy(&moonid, data, sizeof(moonid));
+	} else {
+		return (NNG_EINVAL);
+	}
+	nni_mtx_lock(&zt_lk);
+	zrv = ZT_Node_deorbit(ep->ze_ztn->zn_znode, NULL, moonid);
+	nni_mtx_unlock(&zt_lk);
+
+	return (zt_result(zrv));
+}
+
+static int
 zt_ep_getopt_node(void *arg, void *data, size_t *szp)
 {
 	zt_ep *ep = arg;
@@ -2663,6 +2730,16 @@ static nni_tran_ep_option zt_ep_options[] = {
 	    .eo_name   = NNG_OPT_ZT_PING_COUNT,
 	    .eo_getopt = zt_ep_getopt_ping_count,
 	    .eo_setopt = zt_ep_setopt_ping_count,
+	},
+	{
+	    .eo_name   = NNG_OPT_ZT_ORBIT,
+	    .eo_getopt = NULL,
+	    .eo_setopt = zt_ep_setopt_orbit,
+	},
+	{
+	    .eo_name   = NNG_OPT_ZT_DEORBIT,
+	    .eo_getopt = NULL,
+	    .eo_setopt = zt_ep_setopt_deorbit,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },

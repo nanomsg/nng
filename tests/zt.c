@@ -214,7 +214,22 @@ TestMain("ZeroTier Transport", {
 			       strlen(path1) + 1) == 0);
 
 			So(nng_listener_start(l, 0) == 0);
-		})
+
+			Convey("And we can orbit a moon", {
+				uint64_t ids[2];
+				// Provided by Janjaap...
+				ids[0] = 0x622514484aull;
+				ids[1] = 0x622514484aull;
+
+				So(nng_listener_setopt(l, NNG_OPT_ZT_ORBIT, ids, sizeof (ids)) == 0);
+
+			});
+			Convey("And we can deorbit anything", {
+				uint64_t id;
+				id = 0x12345678;
+				So(nng_listener_setopt(l, NNG_OPT_ZT_DEORBIT, &id, sizeof (id)) == 0);
+			});
+		});
 	});
 
 	Convey("We can create a zt dialer", {
