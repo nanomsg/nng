@@ -775,7 +775,7 @@ nng_pipe_getopt_uint64(nng_pipe id, const char *name, uint64_t *valp)
 }
 
 int
-nni_pipe_getopt_usec(nng_pipe id, const char *name, uint64_t *valp)
+nng_pipe_getopt_usec(nng_pipe id, const char *name, uint64_t *valp)
 {
 	return (nng_pipe_getopt_uint64(id, name, valp));
 }
