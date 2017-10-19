@@ -800,16 +800,16 @@ nni_tcp_ep_setopt_linger(void *arg, const void *v, size_t sz)
 {
 	nni_tcp_ep *ep = arg;
 	if (ep == NULL) {
-		return (nni_chkopt_usec(v, sz));
+		return (nni_chkopt_ms(v, sz));
 	}
-	return (nni_setopt_usec(&ep->linger, v, sz));
+	return (nni_setopt_ms(&ep->linger, v, sz));
 }
 
 static int
 nni_tcp_ep_getopt_linger(void *arg, void *v, size_t *szp)
 {
 	nni_tcp_ep *ep = arg;
-	return (nni_getopt_usec(ep->linger, v, szp));
+	return (nni_getopt_ms(ep->linger, v, szp));
 }
 
 static nni_tran_pipe_option nni_tcp_pipe_options[] = {

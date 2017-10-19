@@ -162,7 +162,7 @@ TestMain("UDP support", {
 			nni_plat_udp_send(u1, aio2);
 			// This delay here is required to test for a race
 			// condition that does not occur if it is absent.
-			nng_usleep(200);
+			nng_msleep(1);
 			nni_plat_udp_send(u1, aio1);
 
 			nni_aio_wait(aio2);

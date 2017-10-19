@@ -225,7 +225,7 @@ do_inproc_lat(int argc, char **argv)
 	nni_thr_run(&thr);
 
 	// Sleep a bit.
-	nng_usleep(100000);
+	nng_msleep(100);
 
 	latency_client("inproc://latency_test", ia.msgsize, ia.count);
 	nni_thr_fini(&thr);
@@ -297,9 +297,9 @@ latency_client(const char *addr, int msgsize, int trips)
 	nni_msg_free(msg);
 	nng_close(s);
 
-	total   = (float) (end - start);
-	latency = (total / (trips * 2));
-	printf("total time: %.3f [s]\n", total / 1000000.0);
+	total   = (float) ((end - start)) / 1000;
+	latency = ((float) ((total * 1000000)) / (trips * 2));
+	printf("total time: %.3f [s]\n", total);
 	printf("message size: %d [B]\n", msgsize);
 	printf("round trip count: %d\n", trips);
 	printf("average latency: %.3f [us]\n", latency);
@@ -339,7 +339,7 @@ latency_server(const char *addr, int msgsize, int trips)
 
 	// Wait a bit for things to drain... linger should do this.
 	// 100ms ought to be enough.
-	nni_usleep(100000);
+	nng_msleep(100);
 	nng_close(s);
 }
 
@@ -355,7 +355,7 @@ throughput_server(const char *addr, int msgsize, int count)
 	int        rv;
 	int        i;
 	uint64_t   start, end;
-	double     msgpersec, mbps, total;
+	float      msgpersec, mbps, total;
 
 	if ((rv = nng_pair_open(&s)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
@@ -391,11 +391,10 @@ throughput_server(const char *addr, int msgsize, int count)
 	}
 	end = nni_clock();
 	nng_close(s);
-	total     = (end - start) / 1.0;
-	msgpersec = (count * 1000000.0) / total;
-	mbps      = (count * 8.0 * msgsize);
-	mbps /= total;
-	printf("total time: %.3f [s]\n", total / 1000000.0);
+	total     = (float) ((end - start)) / 1000;
+	msgpersec = (float) (count) / total;
+	mbps      = (float) (msgpersec * 8 * msgsize) / (1024 * 1024);
+	printf("total time: %.3f [s]\n", total);
 	printf("message size: %d [B]\n", msgsize);
 	printf("message count: %d\n", count);
 	printf("throughput: %.f [msg/s]\n", msgpersec);
@@ -447,6 +446,6 @@ throughput_client(const char *addr, int msgsize, int count)
 	}
 
 	// Wait 100msec for pipes to drain.
-	nni_usleep(100000);
+	nng_msleep(100);
 	nng_close(s);
 }

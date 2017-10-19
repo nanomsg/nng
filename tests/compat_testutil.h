@@ -222,10 +222,10 @@ test_addr_from(char *out, const char *proto, const char *ip, int port)
 }
 
 void
-nn_sleep(uint64_t msec)
+nn_sleep(int32_t msec)
 {
-	void nng_usleep(uint64_t);
-	nng_usleep(msec * 1000);
+	void nng_msleep(int32_t);
+	nng_msleep(msec);
 }
 
 struct nn_thread {

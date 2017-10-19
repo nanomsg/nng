@@ -81,7 +81,7 @@ TestMain("PUB/SUB pattern", {
 		So(nng_listen(sub, addr, NULL, 0) == 0);
 		So(nng_dial(pub, addr, NULL, 0) == 0);
 
-		nng_usleep(20000); // give time for connecting threads
+		nng_msleep(20); // give time for connecting threads
 
 		Convey("Sub can subscribe", {
 			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "ABC", 3) ==
@@ -110,8 +110,7 @@ TestMain("PUB/SUB pattern", {
 
 			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "/some/",
 			       strlen("/some/")) == 0);
-			So(nng_setopt_usec(sub, NNG_OPT_RECVTIMEO, 90000) ==
-			    0);
+			So(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 90) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "/some/like/it/hot");
@@ -140,8 +139,7 @@ TestMain("PUB/SUB pattern", {
 		Convey("Subs without subsciptions don't receive", {
 
 			nng_msg *msg;
-			So(nng_setopt_usec(sub, NNG_OPT_RECVTIMEO, 90000) ==
-			    0);
+			So(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 90) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "/some/don't/like/it");
@@ -153,8 +151,7 @@ TestMain("PUB/SUB pattern", {
 
 			nng_msg *msg;
 
-			So(nng_setopt_usec(sub, NNG_OPT_RECVTIMEO, 90000) ==
-			    0);
+			So(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 90) == 0);
 			So(nng_setopt_int(sub, NNG_OPT_RAW, 1) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);

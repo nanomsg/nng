@@ -81,7 +81,7 @@
 // is sent.  This will be done up to ping-count times.  If no traffic from
 // the remote peer is seen after all ping requests are sent, then the peer
 // is assumed to be dead or offline, and the session is closed.  The
-// NNG_OPT_ZT_PING_TIME is a duration (usec, stored as an nng_duration, and
+// NNG_OPT_ZT_PING_TIME is a duration (msec, stored as an nng_duration, and
 // NNG_OPT_ZT_PING_COUNT is an integer.)  This ping process can be disabled
 // by setting either ping-time or ping-count to zero.
 #define NNG_OPT_ZT_PING_TIME "zt:ping-time"

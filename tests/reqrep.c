@@ -31,8 +31,8 @@ TestMain("REQ/REP pattern", {
 		Convey("Resend time option id works", {
 
 			// Set timeout.
-			So(nng_setopt_usec(
-			       req, NNG_OPT_REQ_RESENDTIME, 10000) == 0);
+			So(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, 10) ==
+			    0);
 			// Check invalid size
 			So(nng_setopt(req, NNG_OPT_REQ_RESENDTIME, "", 1) ==
 			    NNG_EINVAL);
@@ -66,7 +66,7 @@ TestMain("REQ/REP pattern", {
 		});
 
 		Convey("Cannot set resend time", {
-			So(nng_setopt_usec(rep, NNG_OPT_REQ_RESENDTIME, 100) ==
+			So(nng_setopt_ms(rep, NNG_OPT_REQ_RESENDTIME, 100) ==
 			    NNG_ENOTSUP);
 		});
 	});
@@ -114,10 +114,10 @@ TestMain("REQ/REP pattern", {
 	});
 
 	Convey("Request cancellation works", {
-		nng_msg *abc;
-		nng_msg *def;
-		nng_msg *cmd;
-		uint64_t retry = 100000; // 100 ms
+		nng_msg *    abc;
+		nng_msg *    def;
+		nng_msg *    cmd;
+		nng_duration retry = 100; // 100 ms
 
 		nng_socket req;
 		nng_socket rep;
@@ -131,7 +131,7 @@ TestMain("REQ/REP pattern", {
 			nng_close(req);
 		});
 
-		So(nng_setopt_usec(req, NNG_OPT_REQ_RESENDTIME, retry) == 0);
+		So(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, retry) == 0);
 		So(nng_setopt_int(req, NNG_OPT_SENDBUF, 16) == 0);
 
 		So(nng_msg_alloc(&abc, 0) == 0);

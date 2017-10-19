@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -103,7 +104,7 @@ TestMain("Event Handling", {
 		So(nng_dial(sock2, addr, NULL, 0) == 0);
 
 		// Let everything connect.
-		nng_usleep(100000);
+		nng_msleep(100);
 
 		Convey("We can register callbacks", {
 			So((notify1 = nng_setnotify(sock1, NNG_EV_CAN_SND,
@@ -125,7 +126,7 @@ TestMain("Event Handling", {
 				// this.  Probably the msgq needs to
 				// toggle on reads.
 
-				// nng_usleep(20000);
+				// nng_msleep(20);
 
 				// So(nng_recvmsg(sock2, &msg, 0) ==
 				// 0);
@@ -134,7 +135,7 @@ TestMain("Event Handling", {
 				// nng_msg_free(msg);
 
 				// The notify runs async...
-				nng_usleep(100000);
+				nng_msleep(100);
 
 				So(evcnt1.writeable == 1);
 				So(evcnt2.readable == 1);

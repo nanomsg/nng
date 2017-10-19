@@ -95,49 +95,49 @@ nni_sock_getopt_recvfd(nni_sock *s, void *buf, size_t *szp)
 static int
 nni_sock_setopt_recvtimeo(nni_sock *s, const void *buf, size_t sz)
 {
-	return (nni_setopt_usec(&s->s_rcvtimeo, buf, sz));
+	return (nni_setopt_ms(&s->s_rcvtimeo, buf, sz));
 }
 
 static int
 nni_sock_getopt_recvtimeo(nni_sock *s, void *buf, size_t *szp)
 {
-	return (nni_getopt_usec(s->s_rcvtimeo, buf, szp));
+	return (nni_getopt_ms(s->s_rcvtimeo, buf, szp));
 }
 
 static int
 nni_sock_setopt_sendtimeo(nni_sock *s, const void *buf, size_t sz)
 {
-	return (nni_setopt_usec(&s->s_sndtimeo, buf, sz));
+	return (nni_setopt_ms(&s->s_sndtimeo, buf, sz));
 }
 
 static int
 nni_sock_getopt_sendtimeo(nni_sock *s, void *buf, size_t *szp)
 {
-	return (nni_getopt_usec(s->s_sndtimeo, buf, szp));
+	return (nni_getopt_ms(s->s_sndtimeo, buf, szp));
 }
 
 static int
 nni_sock_setopt_reconnmint(nni_sock *s, const void *buf, size_t sz)
 {
-	return (nni_setopt_usec(&s->s_reconn, buf, sz));
+	return (nni_setopt_ms(&s->s_reconn, buf, sz));
 }
 
 static int
 nni_sock_getopt_reconnmint(nni_sock *s, void *buf, size_t *szp)
 {
-	return (nni_getopt_usec(s->s_reconn, buf, szp));
+	return (nni_getopt_ms(s->s_reconn, buf, szp));
 }
 
 static int
 nni_sock_setopt_reconnmaxt(nni_sock *s, const void *buf, size_t sz)
 {
-	return (nni_setopt_usec(&s->s_reconnmax, buf, sz));
+	return (nni_setopt_ms(&s->s_reconnmax, buf, sz));
 }
 
 static int
 nni_sock_getopt_reconnmaxt(nni_sock *s, void *buf, size_t *szp)
 {
-	return (nni_getopt_usec(s->s_reconnmax, buf, szp));
+	return (nni_getopt_ms(s->s_reconnmax, buf, szp));
 }
 
 static int
@@ -500,8 +500,8 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 		return (NNG_ENOMEM);
 	}
 	s->s_linger          = 0;
-	s->s_sndtimeo        = NNI_TIME_NEVER;
-	s->s_rcvtimeo        = NNI_TIME_NEVER;
+	s->s_sndtimeo        = -1;
+	s->s_rcvtimeo        = -1;
 	s->s_closing         = 0;
 	s->s_reconn          = NNI_SECOND;
 	s->s_reconnmax       = 0;
@@ -1026,7 +1026,7 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 	// was found, or even if a transport rejected one of the settings.
 	if ((rv == NNG_ENOTSUP) || (rv == 0)) {
 		if ((strcmp(name, NNG_OPT_LINGER) == 0)) {
-			rv = nni_chkopt_usec(val, size);
+			rv = nni_chkopt_ms(val, size);
 		} else if (strcmp(name, NNG_OPT_RECVMAXSZ) == 0) {
 			// just a sanity test on the size; it also ensures that
 			// a size can be set even with no transport configured.
@@ -1090,7 +1090,7 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 	// will already have had a chance to veto this.
 
 	if (strcmp(name, NNG_OPT_LINGER) == 0) {
-		rv = nni_setopt_usec(&s->s_linger, val, size);
+		rv = nni_setopt_ms(&s->s_linger, val, size);
 	}
 
 	if (rv == 0) {

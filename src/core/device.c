@@ -66,7 +66,7 @@ nni_device(nni_sock *sock1, nni_sock *sock2)
 {
 	nni_device_pair pair;
 	int             rv;
-	nni_time        never = NNI_TIME_NEVER;
+	nni_duration    never = -1;
 	size_t          sz;
 
 	memset(&pair, 0, sizeof(pair));

@@ -14,10 +14,10 @@
 
 // Notify tests for verifying condvars.
 struct notifyarg {
-	int     did;
-	int     when;
-	nni_mtx mx;
-	nni_cv  cv;
+	int          did;
+	nng_duration when;
+	nni_mtx      mx;
+	nni_cv       cv;
 };
 
 #ifdef NNG_PLATFORM_POSIX
@@ -31,7 +31,7 @@ notifyafter(void *arg)
 {
 	struct notifyarg *na = arg;
 
-	nni_usleep(na->when);
+	nni_msleep(na->when);
 	nni_mtx_lock(&na->mx);
 	na->did = 1;
 	nni_cv_wake(&na->cv);
@@ -71,10 +71,10 @@ test_sync(void)
 				arg.when = 0;
 				nni_mtx_lock(&arg.mx);
 				nni_thr_run(&thr);
-				nng_usleep(10000);
+				nng_msleep(10);
 				So(arg.did == 0);
 				nni_mtx_unlock(&arg.mx);
-				nng_usleep(10000);
+				nng_msleep(10);
 				nni_mtx_lock(&arg.mx);
 				while (!arg.did) {
 					nni_cv_wait(&arg.cv);
@@ -103,7 +103,7 @@ test_sync(void)
 
 		Convey("Notification works", {
 			arg.did  = 0;
-			arg.when = 10000;
+			arg.when = 10;
 			nni_thr_run(&thr);
 
 			nni_mtx_lock(&arg.mx);
@@ -117,11 +117,11 @@ test_sync(void)
 
 		Convey("Timeout works", {
 			arg.did  = 0;
-			arg.when = 200000;
+			arg.when = 200;
 			nni_thr_run(&thr);
 			nni_mtx_lock(&arg.mx);
 			if (!arg.did) {
-				nni_cv_until(&arg.cv, nni_clock() + 10000);
+				nni_cv_until(&arg.cv, nni_clock() + 10);
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
@@ -139,7 +139,7 @@ test_sync(void)
 			arg.when = 1;
 			nni_mtx_lock(&arg.mx);
 			if (!arg.did) {
-				nni_cv_until(&arg.cv, nni_clock() + 10000);
+				nni_cv_until(&arg.cv, nni_clock() + 10);
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
@@ -184,10 +184,10 @@ test_sync_fallback(void)
 				arg.when = 0;
 				nni_mtx_lock(&arg.mx);
 				nni_thr_run(&thr);
-				nng_usleep(10000);
+				nng_msleep(10);
 				So(arg.did == 0);
 				nni_mtx_unlock(&arg.mx);
-				nng_usleep(10000);
+				nng_msleep(10);
 				nni_mtx_lock(&arg.mx);
 				while (!arg.did) {
 					nni_cv_wait(&arg.cv);
@@ -216,7 +216,7 @@ test_sync_fallback(void)
 
 		Convey("Notification works", {
 			arg.did  = 0;
-			arg.when = 10000;
+			arg.when = 10;
 			nni_thr_run(&thr);
 
 			nni_mtx_lock(&arg.mx);
@@ -230,11 +230,11 @@ test_sync_fallback(void)
 
 		Convey("Timeout works", {
 			arg.did  = 0;
-			arg.when = 200000;
+			arg.when = 200;
 			nni_thr_run(&thr);
 			nni_mtx_lock(&arg.mx);
 			if (!arg.did) {
-				nni_cv_until(&arg.cv, nni_clock() + 10000);
+				nni_cv_until(&arg.cv, nni_clock() + 10);
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
@@ -252,7 +252,7 @@ test_sync_fallback(void)
 			arg.when = 1;
 			nni_mtx_lock(&arg.mx);
 			if (!arg.did) {
-				nni_cv_until(&arg.cv, nni_clock() + 10000);
+				nni_cv_until(&arg.cv, nni_clock() + 10);
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
@@ -278,7 +278,7 @@ TestMain("Synchronization", {
 		So(nni_thr_init(&thr, notifyafter, &arg) == 0);
 
 		arg.did  = 0;
-		arg.when = 10000;
+		arg.when = 10;
 		nni_thr_run(&thr);
 
 		nni_mtx_lock(&arg.mx);

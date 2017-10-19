@@ -14,7 +14,7 @@
 #include <string.h>
 
 int
-nni_chkopt_usec(const void *v, size_t sz)
+nni_chkopt_ms(const void *v, size_t sz)
 {
 	nni_duration val;
 	if (sz != sizeof(val)) {
@@ -56,7 +56,7 @@ nni_chkopt_size(const void *v, size_t sz, size_t minv, size_t maxv)
 }
 
 int
-nni_setopt_usec(nni_duration *dp, const void *v, size_t sz)
+nni_setopt_ms(nni_duration *dp, const void *v, size_t sz)
 {
 	nni_duration dur;
 
@@ -110,7 +110,7 @@ nni_setopt_size(size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv)
 }
 
 int
-nni_getopt_usec(nni_duration u, void *val, size_t *sizep)
+nni_getopt_ms(nni_duration u, void *val, size_t *sizep)
 {
 	size_t sz = sizeof(u);
 

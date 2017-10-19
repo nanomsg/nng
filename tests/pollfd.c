@@ -45,10 +45,8 @@ TestMain("Poll FDs", {
 			nng_close(s2);
 		});
 		So(nng_listen(s1, "inproc://yeahbaby", NULL, 0) == 0);
-		nng_usleep(50000);
-
 		So(nng_dial(s2, "inproc://yeahbaby", NULL, 0) == 0);
-		nng_usleep(50000);
+		nng_msleep(50);
 
 		Convey("We can get a recv FD", {
 			int    fd;

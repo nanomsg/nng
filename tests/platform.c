@@ -11,34 +11,7 @@
 #include "convey.h"
 #include "core/nng_impl.h"
 #include "nng.h"
-
-#ifndef _WIN32
-#include <sys/time.h>
-#endif
-
-uint64_t
-getms(void)
-{
-#ifdef _WIN32
-	return (GetTickCount64());
-#else
-	static time_t  epoch;
-	struct timeval tv;
-
-	if (epoch == 0) {
-		epoch = time(NULL);
-	}
-	gettimeofday(&tv, NULL);
-
-	if (tv.tv_sec < epoch) {
-		// Broken clock.
-		// This will force all other timing tests to fail
-		return (0);
-	}
-	tv.tv_sec -= epoch;
-	return (((uint64_t)(tv.tv_sec) * 1000) + (tv.tv_usec / 1000));
-#endif
-}
+#include "stubs.h"
 
 // Add is for testing threads.
 void
@@ -49,10 +22,10 @@ add(void *arg)
 
 // Notify tests for verifying condvars.
 struct notifyarg {
-	int     did;
-	int     when;
-	nni_mtx mx;
-	nni_cv  cv;
+	int          did;
+	nng_duration when;
+	nni_mtx      mx;
+	nni_cv       cv;
 };
 
 void
@@ -60,7 +33,7 @@ notifyafter(void *arg)
 {
 	struct notifyarg *na = arg;
 
-	nni_usleep(na->when);
+	nng_msleep(na->when);
 	nni_mtx_lock(&na->mx);
 	na->did = 1;
 	nni_cv_wake(&na->cv);
@@ -76,7 +49,7 @@ TestMain("Platform Operations", {
 		uint64_t now = getms();
 
 		Convey("usleep works", {
-			nni_usleep(100000);
+			nng_msleep(100);
 
 			So((getms() - now) >= 100); // cannot be *shorter*!!
 			So((getms() - now) < 150);  // crummy clock resolution?
@@ -87,14 +60,14 @@ TestMain("Platform Operations", {
 			int      msdelta;
 			nni_time usend;
 			nni_time usnow = nni_clock();
-			nni_usleep(200000);
+			nng_msleep(200);
 			usend = nni_clock();
 			msend = getms();
 
 			So(usend > usnow);
 			So(msend > now);
-			usdelta = (int) ((usend - usnow) / 1000);
-			msdelta = (int) ((msend - now));
+			usdelta = (int) (usend - usnow);
+			msdelta = (int) (msend - now);
 			So(usdelta >= 200);
 			So(usdelta < 220);
 			So(abs(msdelta - usdelta) < 20);
@@ -135,7 +108,7 @@ TestMain("Platform Operations", {
 			Reset({ nni_thr_fini(&thr); });
 
 			Convey("It ran", {
-				nni_usleep(50000); // for context switch
+				nng_msleep(50); // for context switch
 				So(val == 1);
 			});
 		});
@@ -156,7 +129,7 @@ TestMain("Platform Operations", {
 
 		Convey("Notification works", {
 			arg.did  = 0;
-			arg.when = 10000;
+			arg.when = 10;
 			nni_thr_run(&thr);
 
 			nni_mtx_lock(&arg.mx);
@@ -170,11 +143,11 @@ TestMain("Platform Operations", {
 
 		Convey("Timeout works", {
 			arg.did  = 0;
-			arg.when = 200000;
+			arg.when = 200;
 			nni_thr_run(&thr);
 			nni_mtx_lock(&arg.mx);
 			if (!arg.did) {
-				nni_cv_until(&arg.cv, nni_clock() + 10000);
+				nni_cv_until(&arg.cv, nni_clock() + 10);
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);
@@ -185,7 +158,7 @@ TestMain("Platform Operations", {
 			arg.when = 1;
 			nni_mtx_lock(&arg.mx);
 			if (!arg.did) {
-				nni_cv_until(&arg.cv, nni_clock() + 10000);
+				nni_cv_until(&arg.cv, nni_clock() + 10);
 			}
 			So(arg.did == 0);
 			nni_mtx_unlock(&arg.mx);

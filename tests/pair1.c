@@ -14,20 +14,23 @@
 
 #include <string.h>
 
+#define SECOND(x) ((x) *1000)
+#define MILLISECOND(x) (x)
+
 #define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))
 #define CHECKSTR(m, s)                   \
 	So(nng_msg_len(m) == strlen(s)); \
 	So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
 
 TestMain("PAIRv1 protocol", {
-	const char *templ = "inproc://pairv1/%u";
-	char        addr[NNG_MAXADDRLEN + 1];
-	nng_socket  s1 = 0;
-	nng_socket  c1 = 0;
-	nng_socket  c2 = 0;
-	uint64_t    tmo;
-	uint32_t    v;
-	size_t      sz;
+	const char * templ = "inproc://pairv1/%u";
+	char         addr[NNG_MAXADDRLEN + 1];
+	nng_socket   s1 = 0;
+	nng_socket   c1 = 0;
+	nng_socket   c2 = 0;
+	nng_duration tmo;
+	uint32_t     v;
+	size_t       sz;
 
 	atexit(nng_fini);
 
@@ -43,20 +46,20 @@ TestMain("PAIRv1 protocol", {
 			nng_close(c2);
 		});
 
-		tmo = 300000;
-		So(nng_setopt_usec(s1, NNG_OPT_RECVTIMEO, tmo) == 0);
-		So(nng_setopt_usec(c1, NNG_OPT_RECVTIMEO, tmo) == 0);
-		So(nng_setopt_usec(c2, NNG_OPT_RECVTIMEO, tmo) == 0);
+		tmo = MILLISECOND(300);
+		So(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, tmo) == 0);
+		So(nng_setopt_ms(c1, NNG_OPT_RECVTIMEO, tmo) == 0);
+		So(nng_setopt_ms(c2, NNG_OPT_RECVTIMEO, tmo) == 0);
 		tmo = 0;
-		So(nng_getopt_usec(s1, NNG_OPT_RECVTIMEO, &tmo) == 0);
-		So(tmo == 300000);
+		So(nng_getopt_ms(s1, NNG_OPT_RECVTIMEO, &tmo) == 0);
+		So(tmo == MILLISECOND(300));
 
 		Convey("Monogamous cooked mode works", {
 			nng_msg *msg;
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
-			nng_usleep(20000);
+			nng_msleep(20);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "ALPHA");
@@ -78,7 +81,7 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
-			nng_usleep(100000);
+			nng_msleep(100);
 			So(nng_dial(c2, addr, NULL, 0) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
@@ -97,28 +100,28 @@ TestMain("PAIRv1 protocol", {
 		Convey("Cannot set raw mode after connect", {
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
-			nng_usleep(100000);
+			nng_msleep(100);
 
 			So(nng_setopt_int(s1, NNG_OPT_RAW, 1) == NNG_ESTATE);
 			So(nng_setopt_int(c1, NNG_OPT_RAW, 1) == NNG_ESTATE);
 		});
 
 		Convey("Polyamorous mode is best effort", {
-			int      rv;
-			int      i;
-			nng_msg *msg;
+			int          rv;
+			int          i;
+			nng_msg *    msg;
+			nng_duration to = MILLISECOND(100);
 
 			So(nng_setopt_int(s1, NNG_OPT_PAIR1_POLY, 1) == 0);
 
 			So(nng_setopt_int(s1, NNG_OPT_RECVBUF, 1) == 0);
 			So(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1) == 0);
 			So(nng_setopt_int(c1, NNG_OPT_RECVBUF, 1) == 0);
-			So(nng_setopt_usec(s1, NNG_OPT_SENDTIMEO, 100000) ==
-			    0);
+			So(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
-			nng_usleep(20000);
+			nng_msleep(20);
 
 			for (i = 0, rv = 0; i < 10; i++) {
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -132,18 +135,19 @@ TestMain("PAIRv1 protocol", {
 		});
 
 		Convey("Monogamous mode exerts backpressure", {
-			int      i;
-			int      rv;
-			nng_msg *msg;
+			int          i;
+			int          rv;
+			nng_msg *    msg;
+			nng_duration to = MILLISECOND(30);
 
 			So(nng_setopt_int(s1, NNG_OPT_RECVBUF, 1) == 0);
 			So(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1) == 0);
 			So(nng_setopt_int(c1, NNG_OPT_RECVBUF, 1) == 0);
-			So(nng_setopt_usec(s1, NNG_OPT_SENDTIMEO, 30000) == 0);
+			So(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
-			nng_usleep(20000);
+			nng_msleep(20);
 
 			// We choose to allow some buffering.  In reality the
 			// buffer size is just 1, and we will fail after 2.
@@ -161,7 +165,7 @@ TestMain("PAIRv1 protocol", {
 		Convey("Cannot set polyamorous mode after connect", {
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
-			nng_usleep(100000);
+			nng_msleep(100);
 
 			So(nng_setopt_int(s1, NNG_OPT_PAIR1_POLY, 1) ==
 			    NNG_ESTATE);
@@ -177,7 +181,7 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
-			nng_usleep(20000);
+			nng_msleep(20);
 
 			Convey("Send/recv work", {
 				So(nng_msg_alloc(&msg, 0) == 0);
@@ -343,7 +347,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			So(nng_dial(c2, addr, NULL, 0) == 0);
-			nng_usleep(20000);
+			nng_msleep(20);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "ONE");
@@ -398,9 +402,9 @@ TestMain("PAIRv1 protocol", {
 
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
-			nng_usleep(100000);
+			nng_msleep(100);
 			So(nng_dial(c2, addr, NULL, 0) == 0);
-			nng_usleep(20000);
+			nng_msleep(20);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "YES");
@@ -410,7 +414,7 @@ TestMain("PAIRv1 protocol", {
 			nng_msg_free(msg);
 
 			nng_close(c1);
-			nng_usleep(10000);
+			nng_msleep(10);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "AGAIN");
@@ -442,7 +446,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_listen(s1, addr, NULL, 0) == 0);
 			So(nng_dial(c1, addr, NULL, 0) == 0);
 			So(nng_dial(c2, addr, NULL, 0) == 0);
-			nng_usleep(20000);
+			nng_msleep(20);
 
 			Convey("Send/recv works", {
 				So(nng_msg_alloc(&msg, 0) == 0);

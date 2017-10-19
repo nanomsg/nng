@@ -282,14 +282,14 @@ static int
 req_sock_setopt_resendtime(void *arg, const void *buf, size_t sz)
 {
 	req_sock *s = arg;
-	return (nni_setopt_usec(&s->retry, buf, sz));
+	return (nni_setopt_ms(&s->retry, buf, sz));
 }
 
 static int
 req_sock_getopt_resendtime(void *arg, void *buf, size_t *szp)
 {
 	req_sock *s = arg;
-	return (nni_getopt_usec(s->retry, buf, szp));
+	return (nni_getopt_ms(s->retry, buf, szp));
 }
 
 // Raw and cooked mode differ in the way they send messages out.

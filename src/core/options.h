@@ -23,10 +23,10 @@ extern int nni_getopt_buf(nni_msgq *, void *, size_t *);
 
 // nni_setopt_duration sets the duration.  Durations must be legal,
 // either a positive value, 0, or -1 to indicate forever.
-extern int nni_setopt_usec(nni_duration *, const void *, size_t);
+extern int nni_setopt_ms(nni_duration *, const void *, size_t);
 
 // nni_getopt_duration gets the duration.
-extern int nni_getopt_usec(nni_duration, void *, size_t *);
+extern int nni_getopt_ms(nni_duration, void *, size_t *);
 
 // nni_setopt_int sets an integer, which must be between the minimum and
 // maximum values (inclusive).
@@ -61,7 +61,7 @@ extern int nni_getopt_size(size_t, void *, size_t *);
 // nni_getopt_fd obtains a notification file descriptor.
 extern int nni_getopt_fd(nni_sock *, nni_notifyfd *, int, void *, size_t *);
 
-extern int nni_chkopt_usec(const void *, size_t);
+extern int nni_chkopt_ms(const void *, size_t);
 extern int nni_chkopt_int(const void *, size_t, int, int);
 extern int nni_chkopt_size(const void *, size_t, size_t, size_t);
 

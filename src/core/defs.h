@@ -53,8 +53,8 @@ typedef struct nni_thr      nni_thr;
 typedef void (*nni_thr_func)(void *);
 
 typedef int      nni_signal;   // Wakeup channel.
-typedef uint64_t nni_time;     // Abs. time (usec).
-typedef int64_t  nni_duration; // Rel. time (usec).
+typedef uint64_t nni_time;     // Abs. time (ms).
+typedef int32_t  nni_duration; // Rel. time (ms).
 
 typedef struct nni_aio nni_aio;
 
@@ -76,7 +76,7 @@ typedef struct {
 // Some default timing things.
 #define NNI_TIME_NEVER ((nni_time) -1)
 #define NNI_TIME_ZERO ((nni_time) 0)
-#define NNI_SECOND (1000000)
+#define NNI_SECOND (1000)
 
 // Structure allocation conveniences.
 #define NNI_ALLOC_STRUCT(s) nni_alloc(sizeof(*s))

@@ -91,14 +91,14 @@ static const uint32_t zt_port_shift = 24;
 // These are compile time tunables for now.
 enum zt_tunables {
 	zt_listenq       = 128,            // backlog queue length
-	zt_listen_expire = 60000000,       // maximum time in backlog
+	zt_listen_expire = 60000,          // maximum time in backlog (msec)
 	zt_rcv_bufsize   = ZT_MAX_PHYSMTU, // max UDP recv
 	zt_conn_attempts = 12,             // connection attempts (default)
-	zt_conn_interval = 5000000,        // between attempts (usec)
+	zt_conn_interval = 5000,           // between attempts (msec)
 	zt_udp_sendq     = 16,             // outgoing UDP queue length
 	zt_recvq         = 2,              // max pending recv (per pipe)
-	zt_recv_stale    = 1000000,        // frags older than are stale
-	zt_ping_time     = 60000000,       // keepalive time (usec)
+	zt_recv_stale    = 1000,           // frags older than are stale (msec)
+	zt_ping_time     = 60000,          // keepalive time (msec)
 	zt_ping_count    = 5,              // keepalive attempts
 };
 
@@ -292,22 +292,22 @@ static void zt_virtual_recv(ZT_Node *, void *, void *, uint64_t, void **,
     uint64_t, uint64_t, unsigned int, unsigned int, const void *,
     unsigned int);
 
-static uint64_t
+static int64_t
 zt_now(void)
 {
 	// We return msec
-	return (nni_clock() / 1000);
+	return ((int64_t) nni_clock());
 }
 
 static void
 zt_bgthr(void *arg)
 {
 	zt_node *ztn = arg;
-	nni_time now;
+	int64_t  now;
 
 	nni_mtx_lock(&zt_lk);
 	for (;;) {
-		now = nni_clock();
+		now = zt_now();
 
 		if (ztn->zn_closed) {
 			break;
@@ -318,18 +318,21 @@ zt_bgthr(void *arg)
 			continue;
 		}
 
-		now /= 1000; // usec -> msec
+		ztn->zn_bgtime = 0;
 		ZT_Node_processBackgroundTasks(ztn->zn_znode, NULL, now, &now);
 
-		ztn->zn_bgtime = now * 1000; // usec
+		ztn->zn_bgtime = now;
 	}
 	nni_mtx_unlock(&zt_lk);
 }
 
 static void
-zt_node_resched(zt_node *ztn, uint64_t msec)
+zt_node_resched(zt_node *ztn, int64_t msec)
 {
-	ztn->zn_bgtime = msec * 1000; // convert to usec
+	if (msec > ztn->zn_bgtime && ztn->zn_bgtime != 0) {
+		return;
+	}
+	ztn->zn_bgtime = msec;
 	nni_cv_wake1(&ztn->zn_bgcv);
 }
 
@@ -341,7 +344,7 @@ zt_node_rcv4_cb(void *arg)
 	struct sockaddr_storage sa;
 	struct sockaddr_in *    sin;
 	nng_sockaddr_in *       nsin;
-	uint64_t                now;
+	int64_t                 now;
 
 	if (nni_aio_result(aio) != 0) {
 		// Outside of memory exhaustion, we can't really think
@@ -392,7 +395,7 @@ zt_node_rcv6_cb(void *arg)
 	struct sockaddr_storage  sa;
 	struct sockaddr_in6 *    sin6;
 	struct nng_sockaddr_in6 *nsin6;
-	uint64_t                 now;
+	int64_t                  now;
 
 	if (nni_aio_result(aio) != 0) {
 		// Outside of memory exhaustion, we can't really think
@@ -558,7 +561,7 @@ zt_send(zt_node *ztn, uint64_t nwid, uint8_t op, uint64_t raddr,
 {
 	uint64_t srcmac = zt_node_to_mac(laddr >> 24, nwid);
 	uint64_t dstmac = zt_node_to_mac(raddr >> 24, nwid);
-	uint64_t now    = zt_now();
+	int64_t  now    = zt_now();
 
 	NNI_ASSERT(len >= zt_size_headers);
 	data[zt_offset_op]    = op;
@@ -568,13 +571,6 @@ zt_send(zt_node *ztn, uint64_t nwid, uint8_t op, uint64_t raddr,
 	NNI_PUT16(data + zt_offset_version, zt_version);
 	ZT_PUT24(data + zt_offset_dst_port, raddr & zt_port_mask);
 	ZT_PUT24(data + zt_offset_src_port, laddr & zt_port_mask);
-
-	// If we are looping back, bypass ZT.
-	if (srcmac == dstmac) {
-		zt_virtual_recv(ztn->zn_znode, ztn, NULL, nwid, NULL, srcmac,
-		    dstmac, zt_ethertype, 0, data, len);
-		return;
-	}
 
 	(void) ZT_Node_processVirtualNetworkFrame(ztn->zn_znode, NULL, now,
 	    nwid, srcmac, dstmac, zt_ethertype, 0, data, len, &now);
@@ -1877,6 +1873,8 @@ zt_pipe_dorecv(zt_pipe *p)
 		msg        = fl->fl_msg;
 		fl->fl_msg = NULL;
 		NNI_ASSERT(msg != NULL);
+
+		p->zp_user_rxaio = NULL;
 		nni_aio_finish_msg(aio, msg);
 		zt_fraglist_clear(fl);
 		return;
@@ -2375,7 +2373,6 @@ zt_ep_doaccept(zt_ep *ep)
 			continue;
 		}
 		p->zp_peer = creq.cr_proto;
-
 		zt_pipe_send_conn_ack(p);
 		nni_aio_finish_pipe(aio, p);
 	}
@@ -2645,16 +2642,16 @@ zt_ep_setopt_ping_time(void *arg, const void *data, size_t sz)
 {
 	zt_ep *ep = arg;
 	if (ep == NULL) {
-		return (nni_chkopt_usec(data, sz));
+		return (nni_chkopt_ms(data, sz));
 	}
-	return (nni_setopt_usec(&ep->ze_ping_time, data, sz));
+	return (nni_setopt_ms(&ep->ze_ping_time, data, sz));
 }
 
 static int
 zt_ep_getopt_ping_time(void *arg, void *data, size_t *szp)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_usec(ep->ze_ping_time, data, szp));
+	return (nni_getopt_ms(ep->ze_ping_time, data, szp));
 }
 
 static int

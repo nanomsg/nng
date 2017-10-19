@@ -43,8 +43,8 @@ TestMain("SURVEY pattern", {
 		Convey("Survey without responder times out", {
 			nng_msg *msg;
 
-			So(nng_setopt_usec(
-			       surv, NNG_OPT_SURVEYOR_SURVEYTIME, 50000) == 0);
+			So(nng_setopt_ms(
+			       surv, NNG_OPT_SURVEYOR_SURVEYTIME, 50) == 0);
 			So(nng_msg_alloc(&msg, 0) == 0);
 			So(nng_sendmsg(surv, msg, 0) == 0);
 			So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
@@ -83,8 +83,7 @@ TestMain("SURVEY pattern", {
 			nng_close(resp);
 		});
 
-		So(nng_setopt_usec(surv, NNG_OPT_SURVEYOR_SURVEYTIME, 50000) ==
-		    0);
+		So(nng_setopt_ms(surv, NNG_OPT_SURVEYOR_SURVEYTIME, 50) == 0);
 		So(nng_listen(surv, addr, NULL, 0) == 0);
 		So(nng_dial(resp, addr, NULL, 0) == 0);
 
@@ -98,7 +97,6 @@ TestMain("SURVEY pattern", {
 
 		Convey("Survey works", {
 			nng_msg *msg;
-			uint64_t rtimeo;
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "abc");
@@ -117,9 +115,8 @@ TestMain("SURVEY pattern", {
 			So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
 
 			Convey("And goes to non-survey state", {
-				rtimeo = 200000;
-				So(nng_setopt_usec(
-				       surv, NNG_OPT_RECVTIMEO, 200000) == 0);
+				So(nng_setopt_ms(
+				       surv, NNG_OPT_RECVTIMEO, 200) == 0);
 				So(nng_recvmsg(surv, &msg, 0) == NNG_ESTATE);
 			});
 		});

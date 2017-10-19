@@ -292,14 +292,14 @@ static int
 surv_sock_setopt_surveytime(void *arg, const void *buf, size_t sz)
 {
 	surv_sock *s = arg;
-	return (nni_setopt_usec(&s->survtime, buf, sz));
+	return (nni_setopt_ms(&s->survtime, buf, sz));
 }
 
 static int
 surv_sock_getopt_surveytime(void *arg, void *buf, size_t *szp)
 {
 	surv_sock *s = arg;
-	return (nni_getopt_usec(s->survtime, buf, szp));
+	return (nni_getopt_ms(s->survtime, buf, szp));
 }
 
 static void

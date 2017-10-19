@@ -1,5 +1,6 @@
 /*
-    Copyright 2016 Garrett D'Amore <garrett@damore.org>
+    Copyright 2017 Garrett D'Amore <garrett@damore.org>
+    Copyright 2017 Capitar IT Group BV <info@capitar.com>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -34,7 +35,7 @@ int main (int argc, const char *argv[])
     test_bind (sb, "inproc://pair");
     sc1 = test_socket (AF_SP, NN_PAIR);
     test_connect (sc1, "inproc://pair");
-    nng_usleep(100000);
+    nn_sleep (100);
     sc2 = test_socket (AF_SP, NN_PAIR);
     test_connect (sc2, "inproc://pair");
 
@@ -45,4 +46,3 @@ int main (int argc, const char *argv[])
     test_recv (sb, "THERE");
     return 0;
 }
-

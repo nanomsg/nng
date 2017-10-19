@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -15,17 +16,13 @@ nni_time
 nni_plat_clock(void)
 {
 	// We are limited by the system clock, but that is ok.
-	return (GetTickCount64() * 1000);
+	return (GetTickCount64());
 }
 
 void
-nni_plat_usleep(nni_duration dur)
+nni_plat_sleep(nni_duration dur)
 {
 	uint64_t exp;
-
-	// Convert duration to msec, rounding up.
-	dur += 999;
-	dur /= 1000;
 
 	exp = (uint64_t) GetTickCount64() + dur;
 

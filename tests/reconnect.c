@@ -32,18 +32,18 @@ TestMain("Reconnect works", {
 			nng_close(pull);
 		});
 
-		So(nng_setopt_usec(pull, NNG_OPT_RECONNMINT, 10000) == 0);
-		So(nng_setopt_usec(pull, NNG_OPT_RECONNMAXT, 10000) == 0);
+		So(nng_setopt_ms(pull, NNG_OPT_RECONNMINT, 10) == 0);
+		So(nng_setopt_ms(pull, NNG_OPT_RECONNMAXT, 10) == 0);
 
 		Convey("Dialing before listening works", {
 			So(nng_dial(push, addr, NULL, NNG_FLAG_NONBLOCK) == 0);
-			nng_usleep(100000);
+			nng_msleep(100);
 			So(nng_listen(pull, addr, NULL, 0) == 0);
 
 			Convey("We can send a frame", {
 				nng_msg *msg;
 
-				nng_usleep(100000);
+				nng_msleep(100);
 				So(nng_msg_alloc(&msg, 0) == 0);
 				APPENDSTR(msg, "hello");
 				So(nng_sendmsg(push, msg, 0) == 0);
@@ -58,7 +58,7 @@ TestMain("Reconnect works", {
 			nng_listener l;
 			So(nng_dial(push, addr, NULL, NNG_FLAG_NONBLOCK) == 0);
 			So(nng_listen(pull, addr, &l, 0) == 0);
-			nng_usleep(100000);
+			nng_msleep(100);
 			nng_listener_close(l);
 			So(nng_listen(pull, addr, NULL, 0) == 0);
 
@@ -66,7 +66,7 @@ TestMain("Reconnect works", {
 				nng_msg *msg;
 				nng_pipe p1;
 
-				nng_usleep(100000);
+				nng_msleep(100);
 				So(nng_msg_alloc(&msg, 0) == 0);
 				APPENDSTR(msg, "hello");
 				So(nng_sendmsg(push, msg, 0) == 0);
@@ -81,7 +81,7 @@ TestMain("Reconnect works", {
 					nng_pipe p2;
 
 					nng_pipe_close(p1);
-					nng_usleep(100000);
+					nng_msleep(100);
 					So(nng_msg_alloc(&msg, 0) == 0);
 					APPENDSTR(msg, "again");
 					So(nng_sendmsg(push, msg, 0) == 0);

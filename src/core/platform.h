@@ -153,8 +153,8 @@ extern void nni_plat_thr_fini(nni_plat_thr *);
 // of using negative values for other purposes in the future.)
 extern nni_time nni_plat_clock(void);
 
-// nni_plat_usleep sleeps for the specified number of microseconds (at least).
-extern void nni_plat_usleep(nni_duration);
+// nni_plat_sleep sleeps for the specified number of milliseconds (at least).
+extern void nni_plat_sleep(nni_duration);
 
 //
 // Entropy Support

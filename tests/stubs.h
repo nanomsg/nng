@@ -10,12 +10,12 @@
 #ifndef STUBS_H
 #define STUBS_H
 
-#include <stdint.h>
-#ifdef	_WIN32
+#ifdef _WIN32
 #include <windows.h>
 #else
-#include <time.h>
+#include <stdint.h>
 #include <sys/time.h>
+#include <time.h>
 #endif
 
 // Stub handlers for some common things.
@@ -23,10 +23,10 @@
 uint64_t
 getms(void)
 {
-#ifdef	_WIN32
-	return (GetTickCount64())	;
+#ifdef _WIN32
+	return (GetTickCount64());
 #else
-	static time_t epoch;
+	static time_t  epoch;
 	struct timeval tv;
 
 	if (epoch == 0) {
@@ -40,7 +40,7 @@ getms(void)
 		return (0);
 	}
 	tv.tv_sec -= epoch;
-	return (((uint64_t)(tv.tv_sec ) * 1000) + (tv.tv_usec / 1000));
+	return (((uint64_t)(tv.tv_sec) * 1000) + (tv.tv_usec / 1000));
 #endif
 }
 

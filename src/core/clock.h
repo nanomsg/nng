@@ -1,5 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,6 +15,6 @@
 
 extern nni_time nni_clock(void);
 
-extern void nni_usleep(nni_duration usec);
+extern void nni_msleep(nni_duration);
 
 #endif // CORE_CLOCK_H

@@ -16,6 +16,7 @@
 #define CHECKSTR(m, s)                   \
 	So(nng_msg_len(m) == strlen(s)); \
 	So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
+#define MILLISECOND(x) (x)
 
 TestMain("PIPELINE (PUSH/PULL) pattern", {
 	atexit(nng_fini);
@@ -80,7 +81,7 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		So(nng_dial(what, addr, NULL, 0) == 0);
 		So(nng_shutdown(what) == 0);
 
-		nng_usleep(20000);
+		nng_msleep(20);
 
 		Convey("Push can send messages, and pull can recv", {
 			nng_msg *msg;
@@ -97,13 +98,13 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 	});
 
 	Convey("Load balancing", {
-		nng_msg *  abc;
-		nng_msg *  def;
-		uint64_t   usecs;
-		nng_socket push;
-		nng_socket pull1;
-		nng_socket pull2;
-		nng_socket pull3;
+		nng_msg *    abc;
+		nng_msg *    def;
+		nng_duration msecs;
+		nng_socket   push;
+		nng_socket   pull1;
+		nng_socket   pull2;
+		nng_socket   pull3;
 
 		So(nng_push_open(&push) == 0);
 		So(nng_pull_open(&pull1) == 0);
@@ -137,10 +138,10 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		So(nng_msg_alloc(&def, 0) == 0);
 		APPENDSTR(def, "def");
 
-		usecs = 100000;
-		So(nng_setopt_usec(pull1, NNG_OPT_RECVTIMEO, usecs) == 0);
-		So(nng_setopt_usec(pull2, NNG_OPT_RECVTIMEO, usecs) == 0);
-		So(nng_setopt_usec(pull3, NNG_OPT_RECVTIMEO, usecs) == 0);
+		msecs = MILLISECOND(100);
+		So(nng_setopt_ms(pull1, NNG_OPT_RECVTIMEO, msecs) == 0);
+		So(nng_setopt_ms(pull2, NNG_OPT_RECVTIMEO, msecs) == 0);
+		So(nng_setopt_ms(pull3, NNG_OPT_RECVTIMEO, msecs) == 0);
 		So(nng_listen(push, addr, NULL, 0) == 0);
 		So(nng_dial(pull1, addr, NULL, 0) == 0);
 		So(nng_dial(pull2, addr, NULL, 0) == 0);
@@ -152,7 +153,7 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		// server couldn't have gotten to the accept.  (The
 		// accept logic is single threaded.)  Let's wait a bit
 		// though, to ensure that stuff has settled.
-		nng_usleep(100000);
+		nng_msleep(100);
 
 		So(nng_sendmsg(push, abc, 0) == 0);
 		So(nng_sendmsg(push, def, 0) == 0);

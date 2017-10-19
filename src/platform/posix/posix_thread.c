@@ -354,8 +354,8 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 	NNI_ASSERT(cv->mtx->owner == pthread_self());
 
 	// Our caller has already guaranteed a sane value for until.
-	ts.tv_sec  = until / 1000000;
-	ts.tv_nsec = (until % 1000000) * 1000;
+	ts.tv_sec  = until / 1000;
+	ts.tv_nsec = (until % 1000) * 1000000;
 
 	if (cv->fallback) {
 		rv = nni_plat_cv_until_fallback(cv, &ts);

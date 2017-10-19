@@ -119,34 +119,32 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 	});
 
 	Convey("Ping properties work", {
-		int      c;
-		uint64_t u;
+		int          c;
+		nng_duration t;
+
 		z = sizeof(c);
 		c = 0;
 		So(nng_pipe_getopt(p, NNG_OPT_ZT_PING_COUNT, &c, &z) == 0);
 		So(c > 0 && c < 10); // actually 5...
 
-		z = sizeof(u);
-		u = 0;
-		So(nng_pipe_getopt(p, NNG_OPT_ZT_PING_TIME, &u, &z) == 0);
-		So(u > 1000000 && u < 3600000000ull); // 1 sec - 1 hour
+		t = 0;
+		So(nng_pipe_getopt_ms(p, NNG_OPT_ZT_PING_TIME, &t) == 0);
+		So(t > 1000 && t < 3600000); // 1 sec - 1 hour
 
 		c = 0;
 		So(nng_dialer_getopt_int(d, NNG_OPT_ZT_PING_COUNT, &c) == 0);
 		So(c > 0 && c < 10); // actually 5...
 
-		z = sizeof(u);
-		u = 0;
-		So(nng_dialer_getopt_usec(d, NNG_OPT_ZT_PING_TIME, &u) == 0);
-		So(u > 1000000 && u < 3600000000ull); // 1 sec - 1 hour
+		t = 0;
+		So(nng_dialer_getopt_ms(d, NNG_OPT_ZT_PING_TIME, &t) == 0);
+		So(t > 1000 && t < 3600000); // 1 sec - 1 hour
 
 		int rv = nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20);
 
 		So(nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20) == 0);
-		So(nng_dialer_setopt_usec(d, NNG_OPT_ZT_PING_TIME, 2000000) ==
-		    0);
+		So(nng_dialer_setopt_ms(d, NNG_OPT_ZT_PING_TIME, 2000) == 0);
 		So(nng_listener_setopt_int(l, NNG_OPT_ZT_PING_COUNT, 0) == 0);
-		So(nng_listener_setopt_usec(l, NNG_OPT_ZT_PING_TIME, 0) == 0);
+		So(nng_listener_setopt_ms(l, NNG_OPT_ZT_PING_TIME, 0) == 0);
 	});
 
 	Convey("Home property works", {
@@ -221,13 +219,15 @@ TestMain("ZeroTier Transport", {
 				ids[0] = 0x622514484aull;
 				ids[1] = 0x622514484aull;
 
-				So(nng_listener_setopt(l, NNG_OPT_ZT_ORBIT, ids, sizeof (ids)) == 0);
+				So(nng_listener_setopt(l, NNG_OPT_ZT_ORBIT,
+				       ids, sizeof(ids)) == 0);
 
 			});
 			Convey("And we can deorbit anything", {
 				uint64_t id;
 				id = 0x12345678;
-				So(nng_listener_setopt(l, NNG_OPT_ZT_DEORBIT, &id, sizeof (id)) == 0);
+				So(nng_listener_setopt(l, NNG_OPT_ZT_DEORBIT,
+				       &id, sizeof(id)) == 0);
 			});
 		});
 	});
@@ -265,7 +265,8 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_create(&l, s, addr) == 0);
 
-		So(nng_listener_getopt_usec(l, NNG_OPT_ZT_NODE, &node1) == 0);
+		So(nng_listener_getopt_uint64(l, NNG_OPT_ZT_NODE, &node1) ==
+		    0);
 		So(node1 != 0);
 
 		Convey("Network name & status options work", {
@@ -274,7 +275,7 @@ TestMain("ZeroTier Transport", {
 			int    status;
 
 			namesz = sizeof(name);
-			nng_usleep(10000000);
+			nng_msleep(10000);
 			So(nng_listener_getopt(l, NNG_OPT_ZT_NETWORK_NAME,
 			       name, &namesz) == 0);
 			So(strcmp(name, "nng_test_open") == 0);
@@ -286,7 +287,7 @@ TestMain("ZeroTier Transport", {
 			snprintf(addr, sizeof(addr), "zt://" NWID "/%llx:%u",
 			    (unsigned long long) node1, 42u);
 			So(nng_dialer_create(&d, s, addr) == 0);
-			So(nng_dialer_getopt_usec(
+			So(nng_dialer_getopt_uint64(
 			       d, NNG_OPT_ZT_NODE, &node2) == 0);
 			So(node2 == node1);
 			So(nng_dialer_start(d, 0) == NNG_ECONNREFUSED);
@@ -314,7 +315,7 @@ TestMain("ZeroTier Transport", {
 			nng_close(s1);
 			// This sleep allows us to ensure disconnect
 			// messages work.
-			nng_usleep(500000);
+			nng_msleep(500);
 			nng_close(s2);
 		});
 
@@ -324,16 +325,16 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_listener_start(l, 0) == 0);
 		node = 0;
-		So(nng_listener_getopt_usec(l, NNG_OPT_ZT_NODE, &node) == 0);
+		So(nng_listener_getopt_uint64(l, NNG_OPT_ZT_NODE, &node) == 0);
 		So(node != 0);
-
+		nng_msleep(40);
 		snprintf(addr2, sizeof(addr2), "zt://" NWID "/%llx:%u",
 		    (unsigned long long) node, port);
 		So(nng_dialer_create(&d, s2, addr2) == 0);
 		So(nng_dialer_setopt(
 		       d, NNG_OPT_ZT_HOME, path2, strlen(path2) + 1) == 0);
 		So(nng_dialer_start(d, 0) == 0);
-		nng_usleep(2000000);
+		nng_msleep(2000);
 	});
 
 	trantest_test_extended("zt://" NWID "/*:%u", check_props);

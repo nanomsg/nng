@@ -46,6 +46,7 @@ typedef uint32_t            nng_socket;
 typedef uint32_t            nng_dialer;
 typedef uint32_t            nng_listener;
 typedef uint32_t            nng_pipe;
+typedef int32_t             nng_duration; // in milliseconds
 typedef struct nng_msg      nng_msg;
 typedef struct nng_event    nng_event;
 typedef struct nng_notify   nng_notify;
@@ -88,14 +89,14 @@ NNG_DECL uint16_t nng_peer(nng_socket);
 // nng_setopt sets an option for a specific socket.
 NNG_DECL int nng_setopt(nng_socket, const char *, const void *, size_t);
 NNG_DECL int nng_setopt_int(nng_socket, const char *, int);
-NNG_DECL int nng_setopt_usec(nng_socket, const char *, uint64_t);
+NNG_DECL int nng_setopt_ms(nng_socket, const char *, nng_duration);
 NNG_DECL int nng_setopt_size(nng_socket, const char *, size_t);
 NNG_DECL int nng_setopt_uint64(nng_socket, const char *, uint64_t);
 
 // nng_socket_getopt obtains the option for a socket.
 NNG_DECL int nng_getopt(nng_socket, const char *, void *, size_t *);
 NNG_DECL int nng_getopt_int(nng_socket, const char *, int *);
-NNG_DECL int nng_getopt_usec(nng_socket, const char *, uint64_t *);
+NNG_DECL int nng_getopt_ms(nng_socket, const char *, nng_duration *);
 NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
 NNG_DECL int nng_getopt_uint64(nng_socket, const char *, uint64_t *);
 
@@ -203,7 +204,7 @@ NNG_DECL int nng_listener_close(nng_listener);
 // dialer options may not be altered on a running dialer.
 NNG_DECL int nng_dialer_setopt(nng_dialer, const char *, const void *, size_t);
 NNG_DECL int nng_dialer_setopt_int(nng_dialer, const char *, int);
-NNG_DECL int nng_dialer_setopt_usec(nng_dialer, const char *, uint64_t);
+NNG_DECL int nng_dialer_setopt_ms(nng_dialer, const char *, nng_duration);
 NNG_DECL int nng_dialer_setopt_size(nng_dialer, const char *, size_t);
 NNG_DECL int nng_dialer_setopt_uint64(nng_dialer, const char *, uint64_t);
 
@@ -212,7 +213,7 @@ NNG_DECL int nng_dialer_setopt_uint64(nng_dialer, const char *, uint64_t);
 // even if they were set on the socket.
 NNG_DECL int nng_dialer_getopt(nng_dialer, const char *, void *, size_t *);
 NNG_DECL int nng_dialer_getopt_int(nng_dialer, const char *, int *);
-NNG_DECL int nng_dialer_getopt_usec(nng_dialer, const char *, uint64_t *);
+NNG_DECL int nng_dialer_getopt_ms(nng_dialer, const char *, nng_duration *);
 NNG_DECL int nng_dialer_getopt_size(nng_dialer, const char *, size_t *);
 NNG_DECL int nng_dialer_getopt_uint64(nng_dialer, const char *, uint64_t *);
 
@@ -223,7 +224,7 @@ NNG_DECL int nng_dialer_getopt_uint64(nng_dialer, const char *, uint64_t *);
 NNG_DECL int nng_listener_setopt(
     nng_listener, const char *, const void *, size_t);
 NNG_DECL int nng_listener_setopt_int(nng_listener, const char *, int);
-NNG_DECL int nng_listener_setopt_usec(nng_listener, const char *, uint64_t);
+NNG_DECL int nng_listener_setopt_ms(nng_listener, const char *, nng_duration);
 NNG_DECL int nng_listener_setopt_size(nng_listener, const char *, size_t);
 NNG_DECL int nng_listener_setopt_uint64(nng_listener, const char *, uint64_t);
 
@@ -232,7 +233,8 @@ NNG_DECL int nng_listener_setopt_uint64(nng_listener, const char *, uint64_t);
 // even if they were set on the socket.
 NNG_DECL int nng_listener_getopt(nng_listener, const char *, void *, size_t *);
 NNG_DECL int nng_listener_getopt_int(nng_listener, const char *, int *);
-NNG_DECL int nng_listener_getopt_usec(nng_listener, const char *, uint64_t *);
+NNG_DECL int nng_listener_getopt_ms(
+    nng_listener, const char *, nng_duration *);
 NNG_DECL int nng_listener_getopt_size(nng_listener, const char *, size_t *);
 NNG_DECL int nng_listener_getopt_uint64(
     nng_listener, const char *, uint64_t *);
@@ -330,7 +332,7 @@ NNG_DECL const char *nng_option_name(int);
 // is associated with an invalid or untrusted remote peer.
 NNG_DECL int nng_pipe_getopt(nng_pipe, const char *, void *, size_t *);
 NNG_DECL int nng_pipe_getopt_int(nng_pipe, const char *, int *);
-NNG_DECL int nng_pipe_getopt_usec(nng_pipe, const char *, uint64_t *);
+NNG_DECL int nng_pipe_getopt_ms(nng_pipe, const char *, nng_duration *);
 NNG_DECL int nng_pipe_getopt_size(nng_pipe, const char *, size_t *);
 NNG_DECL int nng_pipe_getopt_uint64(nng_pipe, const char *, uint64_t *);
 NNG_DECL int nng_pipe_close(nng_pipe);
@@ -517,11 +519,8 @@ NNG_DECL int nng_device(nng_socket, nng_socket);
 
 #ifdef NNG_PRIVATE
 
-// Sleep for specified usecs.
-NNG_DECL void nng_usleep(uint64_t);
-
-// Return usecs since some arbitrary time in past.
-NNG_DECL uint64_t nng_clock(void);
+// Sleep for specified msecs.
+NNG_DECL void nng_msleep(nng_duration);
 
 // Create and start a thread.
 NNG_DECL int nng_thread_create(void **, void (*)(void *), void *);

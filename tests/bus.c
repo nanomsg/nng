@@ -37,10 +37,10 @@ TestMain("BUS pattern", {
 	});
 
 	Convey("We can create a linked BUS topology", {
-		nng_socket bus1;
-		nng_socket bus2;
-		nng_socket bus3;
-		uint64_t   rtimeo;
+		nng_socket   bus1;
+		nng_socket   bus2;
+		nng_socket   bus3;
+		nng_duration rtimeo;
 
 		So(nng_bus_open(&bus1) == 0);
 		So(nng_bus_open(&bus2) == 0);
@@ -56,10 +56,10 @@ TestMain("BUS pattern", {
 		So(nng_dial(bus2, addr, NULL, 0) == 0);
 		So(nng_dial(bus3, addr, NULL, 0) == 0);
 
-		rtimeo = 50000;
-		So(nng_setopt_usec(bus1, NNG_OPT_RECVTIMEO, rtimeo) == 0);
-		So(nng_setopt_usec(bus2, NNG_OPT_RECVTIMEO, rtimeo) == 0);
-		So(nng_setopt_usec(bus3, NNG_OPT_RECVTIMEO, rtimeo) == 0);
+		rtimeo = 50;
+		So(nng_setopt_ms(bus1, NNG_OPT_RECVTIMEO, rtimeo) == 0);
+		So(nng_setopt_ms(bus2, NNG_OPT_RECVTIMEO, rtimeo) == 0);
+		So(nng_setopt_ms(bus3, NNG_OPT_RECVTIMEO, rtimeo) == 0);
 
 		Convey("Messages delivered", {
 			nng_msg *msg;

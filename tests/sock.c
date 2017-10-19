@@ -12,7 +12,11 @@
 #include "nng.h"
 #include "trantest.h"
 
+#include "stubs.h"
+
 #include <string.h>
+
+#define SECONDS(x) ((x) *1000)
 
 TestMain("Socket Operations", {
 
@@ -58,17 +62,17 @@ TestMain("Socket Operations", {
 		});
 
 		Convey("Recv with no pipes times out correctly", {
-			nng_msg *msg = NULL;
-			int64_t  to  = 100000;
-			uint64_t now;
+			nng_msg *    msg = NULL;
+			nng_duration to  = 100;
+			uint64_t     now;
 
-			now = nng_clock();
+			now = getms();
 			So(now > 0);
-			So(nng_setopt_usec(s1, NNG_OPT_RECVTIMEO, to) == 0);
+			So(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, to) == 0);
 			So(nng_recvmsg(s1, &msg, 0) == NNG_ETIMEDOUT);
 			So(msg == NULL);
-			So(nng_clock() >= (now + to));
-			So(nng_clock() < (now + (to * 2)));
+			So(getms() >= (now + to));
+			So(getms() < (now + (to * 2)));
 		});
 
 		Convey("Recv nonblock with no pipes gives EAGAIN", {
@@ -79,28 +83,28 @@ TestMain("Socket Operations", {
 		});
 
 		Convey("Send with no pipes times out correctly", {
-			nng_msg *msg = NULL;
-			int64_t  to  = 100000;
-			uint64_t now;
+			nng_msg *    msg = NULL;
+			nng_duration to  = 100;
+			uint64_t     now;
 
 			// We cheat to get access to the core's clock.
 			So(nng_msg_alloc(&msg, 0) == 0);
 			So(msg != NULL);
-			now = nng_clock();
+			now = getms();
 
-			So(nng_setopt_usec(s1, NNG_OPT_SENDTIMEO, to) == 0);
+			So(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
 			So(nng_sendmsg(s1, msg, 0) == NNG_ETIMEDOUT);
-			So(nng_clock() >= (now + to));
-			So(nng_clock() < (now + (to * 2)));
+			So(getms() >= (now + to));
+			So(getms() < (now + (to * 2)));
 			nng_msg_free(msg);
 		});
 
 		Convey("We can set and get options", {
-			int64_t to = 1234;
-			int64_t v  = 0;
-			size_t  sz;
+			nng_duration to = 1234;
+			int64_t      v  = 0;
+			size_t       sz;
 
-			So(nng_setopt_usec(s1, NNG_OPT_SENDTIMEO, to) == 0);
+			So(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
 
 			Convey("Read only options handled properly", {
 				So(nng_setopt_int(s1, NNG_OPT_RECVFD, 0) ==
@@ -217,27 +221,28 @@ TestMain("Socket Operations", {
 			});
 			Convey("Short size is not copied", {
 				sz = 0;
+				to = 0;
 				So(nng_getopt(
-				       s1, NNG_OPT_SENDTIMEO, &v, &sz) == 0);
-				So(sz == sizeof(v));
-				So(v == 0);
+				       s1, NNG_OPT_SENDTIMEO, &to, &sz) == 0);
+				So(sz == sizeof(to));
+				So(to == 0);
 				sz = 0;
 				So(nng_getopt(
-				       s1, NNG_OPT_RECONNMINT, &v, &sz) == 0);
+				       s1, NNG_OPT_RECONNMINT, &to, &sz) == 0);
 
-				So(v == 0);
+				So(to == 0);
 				sz = 0;
 				So(nng_getopt(
-				       s1, NNG_OPT_RECONNMAXT, &v, &sz) == 0);
-				So(v == 0);
+				       s1, NNG_OPT_RECONNMAXT, &to, &sz) == 0);
+				So(to == 0);
 			});
 
 			Convey("Correct size is copied", {
-				sz = sizeof(v);
+				sz = sizeof(to);
 				So(nng_getopt(
-				       s1, NNG_OPT_SENDTIMEO, &v, &sz) == 0);
-				So(sz == sizeof(v));
-				So(v == 1234);
+				       s1, NNG_OPT_SENDTIMEO, &to, &sz) == 0);
+				So(sz == sizeof(to));
+				So(to == 1234);
 			});
 
 			Convey("Short size buf is not copied", {
@@ -257,8 +262,8 @@ TestMain("Socket Operations", {
 			});
 
 			Convey("Negative timeout fails", {
-				So(nng_setopt_usec(s1, NNG_OPT_RECVTIMEO,
-				       -5) == NNG_EINVAL);
+				So(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, -5) ==
+				    NNG_EINVAL);
 			});
 
 			Convey("Short timeout fails", {
@@ -346,7 +351,7 @@ TestMain("Socket Operations", {
 				So(nng_pair_open(&s2) == 0);
 				Reset({ nng_close(s2); });
 				So(nng_listen(s2, a, NULL, 0) == 0);
-				nng_usleep(100000);
+				nng_msleep(100);
 				So(nng_send(s1, "abc", 4, 0) == 0);
 				So(nng_recv(s2, &buf, &sz, NNG_FLAG_ALLOC) ==
 				    0);
@@ -396,8 +401,8 @@ TestMain("Socket Operations", {
 				// Not appropriate for dialer.
 				So(nng_dialer_setopt_int(ep, NNG_OPT_RAW, 1) ==
 				    NNG_ENOTSUP);
-				So(nng_dialer_setopt_usec(ep,
-				       NNG_OPT_RECONNMINT, 1) == NNG_ENOTSUP);
+				So(nng_dialer_setopt_ms(ep, NNG_OPT_RECONNMINT,
+				       1) == NNG_ENOTSUP);
 			});
 			Convey("Bad size checks", {
 				So(nng_dialer_setopt(ep, NNG_OPT_RECVMAXSZ,
@@ -424,7 +429,7 @@ TestMain("Socket Operations", {
 				// Not appropriate for dialer.
 				So(nng_listener_setopt_int(
 				       ep, NNG_OPT_RAW, 1) == NNG_ENOTSUP);
-				So(nng_listener_setopt_usec(ep,
+				So(nng_listener_setopt_ms(ep,
 				       NNG_OPT_RECONNMINT, 1) == NNG_ENOTSUP);
 			});
 			Convey("Bad size checks", {
@@ -436,9 +441,9 @@ TestMain("Socket Operations", {
 		});
 
 		Convey("Cannot access absent ep options", {
-			size_t   s;
-			int      i;
-			uint64_t t;
+			size_t       s;
+			int          i;
+			nng_duration t;
 
 			So(nng_dialer_setopt_size(
 			       1999, NNG_OPT_RECVMAXSZ, 10) == NNG_ENOENT);
@@ -461,20 +466,20 @@ TestMain("Socket Operations", {
 			So(nng_listener_getopt_int(1999, NNG_OPT_RAW, &i) ==
 			    NNG_ENOENT);
 
-			So(nng_dialer_getopt_usec(1999, NNG_OPT_LINGER, &t) ==
+			So(nng_dialer_getopt_ms(1999, NNG_OPT_LINGER, &t) ==
 			    NNG_ENOENT);
-			So(nng_listener_getopt_usec(
-			       1999, NNG_OPT_LINGER, &t) == NNG_ENOENT);
+			So(nng_listener_getopt_ms(1999, NNG_OPT_LINGER, &t) ==
+			    NNG_ENOENT);
 
 		});
 
 		Convey("We can send and receive messages", {
-			nng_socket s2;
-			int        len;
-			size_t     sz;
-			uint64_t   to = 3000000;
-			char *     buf;
-			char *     a = "inproc://t1";
+			nng_socket   s2;
+			int          len;
+			size_t       sz;
+			nng_duration to = SECONDS(3);
+			char *       buf;
+			char *       a = "inproc://t1";
 
 			So(nng_pair_open(&s2) == 0);
 			Reset({ nng_close(s2); });
@@ -486,10 +491,10 @@ TestMain("Socket Operations", {
 			So(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1) == 0);
 			So(nng_setopt_int(s2, NNG_OPT_SENDBUF, 1) == 0);
 
-			So(nng_setopt_usec(s1, NNG_OPT_SENDTIMEO, to) == 0);
-			So(nng_setopt_usec(s1, NNG_OPT_RECVTIMEO, to) == 0);
-			So(nng_setopt_usec(s2, NNG_OPT_SENDTIMEO, to) == 0);
-			So(nng_setopt_usec(s2, NNG_OPT_RECVTIMEO, to) == 0);
+			So(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
+			So(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, to) == 0);
+			So(nng_setopt_ms(s2, NNG_OPT_SENDTIMEO, to) == 0);
+			So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, to) == 0);
 
 			So(nng_listen(s1, a, NULL, 0) == 0);
 			So(nng_dial(s2, a, NULL, 0) == 0);

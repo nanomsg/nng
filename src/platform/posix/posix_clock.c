@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -23,28 +24,28 @@ nni_time
 nni_plat_clock(void)
 {
 	struct timespec ts;
-	nni_time        usec;
+	nni_time        msec;
 
 	if (clock_gettime(NNG_USE_CLOCKID, &ts) != 0) {
-		/* This should never ever occur. */
+		// This should never ever occur.
 		nni_panic("clock_gettime failed: %s", strerror(errno));
 	}
 
-	usec = ts.tv_sec;
-	usec *= 1000000;
-	usec += (ts.tv_nsec / 1000);
-	return (usec);
+	msec = ts.tv_sec;
+	msec *= 1000;
+	msec += (ts.tv_nsec / 1000000);
+	return (msec);
 }
 
 void
-nni_plat_usleep(nni_duration usec)
+nni_plat_sleep(nni_duration ms)
 {
 	struct timespec ts;
 
-	ts.tv_sec  = usec / 1000000;
-	ts.tv_nsec = (usec % 1000000) * 1000;
+	ts.tv_sec  = ms / 1000;
+	ts.tv_nsec = (ms % 1000) * 1000000;
 
-	/* Do this in a loop, so that interrupts don't actually wake us. */
+	// Do this in a loop, so that interrupts don't actually wake us.
 	while (ts.tv_sec || ts.tv_nsec) {
 		if (nanosleep(&ts, &ts) == 0) {
 			break;
@@ -67,10 +68,10 @@ nni_plat_usleep(nni_duration usec)
 #include <pthread.h>
 #include <sys/time.h>
 
-nni_time
+static nni_time
 nni_plat_clock(void)
 {
-	nni_time usec;
+	nni_time ms;
 
 	struct timeval tv;
 
@@ -78,14 +79,14 @@ nni_plat_clock(void)
 		nni_panic("gettimeofday failed: %s", strerror(errno));
 	}
 
-	usec = tv.tv_sec;
-	usec *= 1000000;
-	usec += tv.tv_usec;
-	return (usec);
+	ms = tv.tv_sec;
+	msec *= 1000;
+	msec += (tv.tv_usec / 1000);
+	return (msec);
 }
 
 void
-nni_plat_usleep(nni_duration usec)
+nni_plat_sleep(nni_duration ms)
 {
 	// So probably there is no nanosleep.  We could in theory use
 	// pthread condition variables, but that means doing memory
@@ -93,8 +94,7 @@ nni_plat_usleep(nni_duration usec)
 	// might be preferring the use of another threading package.
 	// Additionally, use of pthreads means that we cannot use
 	// relative times in a clock_settime safe manner.
-	// So we can use poll() instead, which is rather coarse, but
-	// pretty much guaranteed to work.
+	// So we can use poll() instead.
 	struct pollfd pfd;
 	nni_time      now;
 	nni_time      expire;
@@ -105,16 +105,11 @@ nni_plat_usleep(nni_duration usec)
 	pfd.fd     = -1;
 	pfd.events = 0;
 
-	now    = nni_clock();
-	expire = now + usec;
+	now    = nni_plat_clock(); // XXX: until nni_plat_clock returns ms.
+	expire = now + ms;
 
 	while (now < expire) {
-		// In theory we could round up to a whole number of msec,
-		// but under the covers poll already does some rounding up,
-		// and the loop above guarantees that we will not bail out
-		// early.  So this gives us a better chance to avoid adding
-		// nearly an extra unneeded millisecond to the wait.
-		(void) poll(&pfd, 0, (int) ((expire - now) / 1000));
+		(void) poll(&pfd, 0, (int) (expire - now));
 		now = nni_clock();
 	}
 }

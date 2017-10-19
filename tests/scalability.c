@@ -48,15 +48,15 @@ stop(void)
 int
 openclients(nng_socket *clients, int num)
 {
-	int      rv;
-	int      i;
-	uint64_t t;
+	int          rv;
+	int          i;
+	nng_duration t;
 	for (i = 0; i < num; i++) {
-		t = 100000; // 100ms
+		t = 100; // 100ms
 		nng_socket c;
 		if (((rv = nng_req_open(&c)) != 0) ||
-		    ((rv = nng_setopt_usec(c, NNG_OPT_RECVTIMEO, t)) != 0) ||
-		    ((rv = nng_setopt_usec(c, NNG_OPT_SENDTIMEO, t)) != 0) ||
+		    ((rv = nng_setopt_ms(c, NNG_OPT_RECVTIMEO, t)) != 0) ||
+		    ((rv = nng_setopt_ms(c, NNG_OPT_SENDTIMEO, t)) != 0) ||
 		    ((rv = nng_dial(c, addr, NULL, 0)) != 0)) {
 			return (rv);
 		}

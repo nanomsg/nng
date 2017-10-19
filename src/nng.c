@@ -389,7 +389,7 @@ nng_dialer_setopt_size(nng_dialer id, const char *name, size_t val)
 }
 
 int
-nng_dialer_setopt_usec(nng_dialer id, const char *name, uint64_t val)
+nng_dialer_setopt_ms(nng_dialer id, const char *name, nng_duration val)
 {
 	return (nng_dialer_setopt(id, name, &val, sizeof(val)));
 }
@@ -428,9 +428,10 @@ nng_dialer_getopt_uint64(nng_dialer id, const char *name, uint64_t *valp)
 }
 
 int
-nng_dialer_getopt_usec(nng_dialer id, const char *name, uint64_t *valp)
+nng_dialer_getopt_ms(nng_dialer id, const char *name, nng_duration *valp)
 {
-	return (nng_dialer_getopt_uint64(id, name, valp));
+	size_t sz = sizeof(*valp);
+	return (nng_dialer_getopt(id, name, valp, &sz));
 }
 
 int
@@ -453,7 +454,7 @@ nng_listener_setopt_size(nng_listener id, const char *name, size_t val)
 }
 
 int
-nng_listener_setopt_usec(nng_listener id, const char *name, uint64_t val)
+nng_listener_setopt_ms(nng_listener id, const char *name, nng_duration val)
 {
 	return (nng_listener_setopt(id, name, &val, sizeof(val)));
 }
@@ -492,9 +493,10 @@ nng_listener_getopt_uint64(nng_listener id, const char *name, uint64_t *valp)
 }
 
 int
-nng_listener_getopt_usec(nng_listener id, const char *name, uint64_t *valp)
+nng_listener_getopt_ms(nng_listener id, const char *name, nng_duration *valp)
 {
-	return (nng_listener_getopt_uint64(id, name, valp));
+	size_t sz = sizeof(*valp);
+	return (nng_listener_getopt(id, name, valp, &sz));
 }
 
 static int
@@ -570,7 +572,7 @@ nng_setopt_size(nng_socket sid, const char *name, size_t val)
 }
 
 int
-nng_setopt_usec(nng_socket sid, const char *name, uint64_t val)
+nng_setopt_ms(nng_socket sid, const char *name, nng_duration val)
 {
 	return (nng_setopt(sid, name, &val, sizeof(val)));
 }
@@ -603,9 +605,10 @@ nng_getopt_uint64(nng_socket sid, const char *name, uint64_t *valp)
 }
 
 int
-nng_getopt_usec(nng_socket sid, const char *name, uint64_t *valp)
+nng_getopt_ms(nng_socket sid, const char *name, nng_duration *valp)
 {
-	return (nng_getopt_uint64(sid, name, valp));
+	size_t sz = sizeof(*valp);
+	return (nng_getopt(sid, name, valp, &sz));
 }
 
 nng_notify *
@@ -775,9 +778,10 @@ nng_pipe_getopt_uint64(nng_pipe id, const char *name, uint64_t *valp)
 }
 
 int
-nng_pipe_getopt_usec(nng_pipe id, const char *name, uint64_t *valp)
+nng_pipe_getopt_ms(nng_pipe id, const char *name, nng_duration *valp)
 {
-	return (nng_pipe_getopt_uint64(id, name, valp));
+	size_t sz = sizeof(*valp);
+	return (nng_pipe_getopt(id, name, valp, &sz));
 }
 
 int
@@ -1042,9 +1046,9 @@ nng_stat_value(nng_stat *stat)
 // API, and applications should refrain from their use.
 
 void
-nng_usleep(uint64_t usec)
+nng_msleep(nng_duration ms)
 {
-	nni_usleep(usec);
+	nni_msleep(ms);
 }
 
 uint64_t

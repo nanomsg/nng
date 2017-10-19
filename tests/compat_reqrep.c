@@ -1,5 +1,7 @@
 /*
     Copyright (c) 2012 Martin Sustrik  All rights reserved.
+    Copyright 2017 Garrett D'Amore <garrett@damore.org>
+    Copyright 2017 Capitar IT Group BV <info@capitar.com>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -25,8 +27,6 @@
 #include "compat_testutil.h"
 
 #define SOCKET_ADDRESS "inproc://test"
-
-extern void nng_usleep(uint64_t);
 
 int main ()
 {
@@ -75,7 +75,7 @@ int main ()
     rep1 = test_socket (AF_SP, NN_REP);
     test_connect (rep1, SOCKET_ADDRESS);
 
-    nng_usleep(10000);  // ensure rep1 binds before rep2
+    nn_sleep(10);  // ensure rep1 binds before rep2
 
     rep2 = test_socket (AF_SP, NN_REP);
     test_connect (rep2, SOCKET_ADDRESS);
@@ -86,7 +86,7 @@ int main ()
     test_setsockopt (rep2, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
 
     // Give time for connections to settle -- required for LB stuff.
-    nng_usleep(100000);
+    nn_sleep(100);
 
     test_send (req1, "ABC");
     test_recv (rep1, "ABC");
@@ -148,7 +148,7 @@ int main ()
     rep1 = test_socket (AF_SP, NN_REP);
     test_connect (rep1, SOCKET_ADDRESS);
     rep2 = test_socket (AF_SP, NN_REP);
-    nng_usleep(10000); // give time for rep1 to connect
+    nn_sleep (10); // give time for rep1 to connect
     test_connect (rep2, SOCKET_ADDRESS);
 
     timeo = 500; // Was 200, but Windows occasionally fails at that rate.

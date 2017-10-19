@@ -31,6 +31,8 @@ dodev(void *arg)
 	nng_device(d->s1, d->s2);
 }
 
+#define SECOND(x) ((x) *1000)
+
 Main({
 
 	Test("PAIRv1 device", {
@@ -38,13 +40,13 @@ Main({
 		const char *addr2 = "inproc://dev2";
 
 		Convey("We can create a PAIRv1 device", {
-			nng_socket dev1;
-			nng_socket dev2;
-			nng_socket end1;
-			nng_socket end2;
-			uint64_t   tmo;
-			nng_msg *  msg;
-			void *     thr;
+			nng_socket   dev1;
+			nng_socket   dev2;
+			nng_socket   end1;
+			nng_socket   end2;
+			nng_duration tmo;
+			nng_msg *    msg;
+			void *       thr;
 
 			So(nng_pair1_open(&dev1) == 0);
 			So(nng_pair1_open(&dev2) == 0);
@@ -72,11 +74,11 @@ Main({
 			So(nng_dial(end1, addr1, NULL, 0) == 0);
 			So(nng_dial(end2, addr2, NULL, 0) == 0);
 
-			tmo = 1000000;
-			So(nng_setopt_usec(end1, NNG_OPT_RECVTIMEO, tmo) == 0);
-			So(nng_setopt_usec(end2, NNG_OPT_RECVTIMEO, tmo) == 0);
+			tmo = SECOND(1);
+			So(nng_setopt_ms(end1, NNG_OPT_RECVTIMEO, tmo) == 0);
+			So(nng_setopt_ms(end2, NNG_OPT_RECVTIMEO, tmo) == 0);
 
-			nng_usleep(100000);
+			nng_msleep(100);
 			Convey("Device can send and receive", {
 
 				So(nng_msg_alloc(&msg, 0) == 0);
