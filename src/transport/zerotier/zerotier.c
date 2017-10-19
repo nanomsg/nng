@@ -2679,6 +2679,8 @@ zt_pipe_getopt_locaddr(void *arg, void *data, size_t *szp)
 {
 	zt_pipe *    p = arg;
 	nng_sockaddr sa;
+
+	memset(&sa, 0, sizeof(sa));
 	sa.s_un.s_zt.sa_family = NNG_AF_ZT;
 	sa.s_un.s_zt.sa_nwid   = p->zp_nwid;
 	sa.s_un.s_zt.sa_nodeid = p->zp_laddr >> zt_port_shift;
@@ -2691,6 +2693,8 @@ zt_pipe_getopt_remaddr(void *arg, void *data, size_t *szp)
 {
 	zt_pipe *    p = arg;
 	nng_sockaddr sa;
+
+	memset(&sa, 0, sizeof(sa));
 	sa.s_un.s_zt.sa_family = NNG_AF_ZT;
 	sa.s_un.s_zt.sa_nwid   = p->zp_nwid;
 	sa.s_un.s_zt.sa_nodeid = p->zp_raddr >> zt_port_shift;

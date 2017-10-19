@@ -413,6 +413,7 @@ nni_tcp_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
 	int           rv;
 	nng_sockaddr  sa;
 
+	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_plat_tcp_pipe_sockname(p->tpp, &sa)) == 0) {
 		rv = nni_getopt_sockaddr(&sa, v, szp);
 	}
@@ -426,6 +427,7 @@ nni_tcp_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 	int           rv;
 	nng_sockaddr  sa;
 
+	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_plat_tcp_pipe_peername(p->tpp, &sa)) == 0) {
 		rv = nni_getopt_sockaddr(&sa, v, szp);
 	}

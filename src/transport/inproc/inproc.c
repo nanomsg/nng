@@ -182,6 +182,7 @@ nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp)
 	nni_inproc_pipe *p = arg;
 	nni_sockaddr     sa;
 
+	memset(&sa, 0, sizeof(sa));
 	sa.s_un.s_inproc.sa_family = NNG_AF_INPROC;
 	nni_strlcpy(sa.s_un.s_inproc.sa_path, p->addr,
 	    sizeof(sa.s_un.s_inproc.sa_path));
