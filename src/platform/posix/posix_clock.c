@@ -80,9 +80,9 @@ nni_plat_clock(void)
 	}
 
 	ms = tv.tv_sec;
-	msec *= 1000;
-	msec += (tv.tv_usec / 1000);
-	return (msec);
+	ms *= 1000;
+	ms += (tv.tv_usec / 1000);
+	return (ms);
 }
 
 void
