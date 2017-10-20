@@ -68,7 +68,7 @@ nni_plat_sleep(nni_duration ms)
 #include <pthread.h>
 #include <sys/time.h>
 
-static nni_time
+nni_time
 nni_plat_clock(void)
 {
 	nni_time ms;
@@ -110,7 +110,7 @@ nni_plat_sleep(nni_duration ms)
 
 	while (now < expire) {
 		(void) poll(&pfd, 0, (int) (expire - now));
-		now = nni_clock();
+		now = nni_plat_clock();
 	}
 }
 
