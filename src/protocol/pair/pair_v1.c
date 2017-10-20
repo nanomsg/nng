@@ -13,7 +13,9 @@
 
 #include "core/nng_impl.h"
 
-// Pair protocol.  The PAIRv1 protocol is a simple 1:1 messaging pattern.
+// Pair protocol.  The PAIRv1 protocol is a simple 1:1 messaging pattern,
+// usually, but it can support a polyamorous mode where a single server can
+// communicate with multiple partners.
 
 typedef struct pair1_pipe pair1_pipe;
 typedef struct pair1_sock pair1_sock;
@@ -239,7 +241,7 @@ pair1_pipe_recv_cb(void *arg)
 		return;
 	}
 
-	// Store the pipe id followed by the hop count.
+	// Store the hop count in the header.
 	if ((rv = nni_msg_header_append_u32(msg, hdr)) != 0) {
 		nni_msg_free(msg);
 		nni_pipe_recv(npipe, p->aio_recv);
@@ -338,6 +340,9 @@ pair1_pipe_getq_cb(void *arg)
 		}
 		hops = nni_msg_header_trim_u32(msg);
 	} else {
+		// Strip off any previously existing header, such as when
+		// replying to messages.
+		nni_msg_header_clear(msg);
 		hops = 0;
 	}
 
