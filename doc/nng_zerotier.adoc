@@ -5,6 +5,7 @@ nng_zerotier(7)
 :mansource: nng
 :manvolnum: 7
 :icons: font
+:source-highlighter: pygments
 :copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
             Copyright 2017 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
@@ -31,13 +32,13 @@ _nng_ applications over a http://www.zerotier.com[ZeroTier] network,
 using a Virtual Layer 2 packet facility.
 
 CAUTION: This transport is very experimental.  To utilize it at
-         present, the library must be built with support, and the
-         ZeroTierOne `dev` branch must be included; this will require
-         linking against a suitable `libzerotiercore` static library.         
+present, the library must be built with support, and the
+ZeroTierOne `dev` branch must be included; this will require
+linking against a suitable `libzerotiercore` static library.         
 
 NOTE: The `libzerotiercore` library at present is covered under different
-      license terms than the rest of _nng_.  Please be careful to review
-      and adhere to the licensing terms.
+license terms than the rest of _nng_.  Please be careful to review
+and adhere to the licensing terms.
 
 While ZeroTier makes use of the host's IP stack (and UDP in particular),
 this transport does not use or require an IP stack on the virtual
@@ -48,7 +49,7 @@ must permit this Ethernet type to pass in order to have a functional
 network.
 
 NOTE: This document assumes that the reader is familiar with ZeroTier
-      concepts and administration.
+concepts and administration.
 
 Registration
 ~~~~~~~~~~~~
@@ -75,6 +76,28 @@ selected port address using the `nng_listener_getopt` function.
 Listening nodes may also elide their own node number, as well as the
 delimiter seperating the node number.
 
+Socket Address
+~~~~~~~~~~~~~~
+
+When using an `nng_sockaddr` structure, the actual structure is of type
+`struct nng_sockaddr_zt`.  This type has the following definition:
+
+[source,c]
+--------
+#define NNG_AF_ZT 5
+
+struct nng_sockaddr_zt {
+    uint16_t sa_family;  // must be NNG_AF_ZT
+    uint64_t sa_nwid;    // 40-bit network ID
+    uint64_t sa_nodeid;  // 64-bit node ID
+    uint32_t sa_port;    // 24-bit application port
+}
+--------
+
+The `sa_family` member will have the value `NNG_AF_ZT` (5).  The remaining
+members are, unlike TCP socket address, in native byte order.  Only the
+lower 24-bits of the `sa_port` may be used.  Likewise only the lower 40-bits
+of the `sa_nwid` may be used.
 
 Node Presence
 ~~~~~~~~~~~~~
@@ -105,9 +128,9 @@ The following transport options are available:
   is to use an ephemeral node.
 + 
 NOTE: If this option is set to different values on different sockets,
-      dialers, or listeners, then separate nodes will be created.  It
-      is perfectly valid for an application to have multiple node identities
-      in this fashion.
+dialers, or listeners, then separate nodes will be created.  It
+is perfectly valid for an application to have multiple node identities
+in this fashion.
 
 *NNG_OPT_ZT_NWID*::
 
