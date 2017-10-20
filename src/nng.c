@@ -1051,12 +1051,6 @@ nng_msleep(nng_duration ms)
 	nni_msleep(ms);
 }
 
-uint64_t
-nng_clock(void)
-{
-	return ((uint64_t) nni_clock());
-}
-
 // nng_thread_create creates a thread structure, and starts it running.
 // Unlike the internals, this allocates stuff dynamically, and does not
 // wait to start.
