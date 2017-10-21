@@ -74,15 +74,17 @@ struct nni_proto_sock_ops {
 	// it can signal the socket worker threads to exit.
 	void (*sock_close)(void *);
 
-	// Receive filter.  This may be NULL, but if it isn't, then
-	// messages coming into the system are routed here just before being
-	// delivered to the application.  To drop the message, the prtocol
-	// should return NULL, otherwise the message (possibly modified).
-	nni_msg *(*sock_rfilter)(void *, nni_msg *);
+	// Send a message.
+	void (*sock_send)(void *, nni_aio *);
 
-	// Send filter.  This may be NULL, but if it isn't, then messages
-	// here are filtered just after they come from the application.
-	nni_msg *(*sock_sfilter)(void *, nni_msg *);
+	// Receive a message.
+	void (*sock_recv)(void *, nni_aio *);
+
+	// Message filter.  This may be NULL, but if it isn't, then
+	// messages coming into the system are routed here just before being
+	// delivered to the application.  To drop the message, the protocol
+	// should return NULL, otherwise the message (possibly modified).
+	nni_msg *(*sock_filter)(void *, nni_msg *);
 
 	// Options. Must not be NULL. Final entry should have NULL name.
 	nni_proto_sock_option *sock_options;

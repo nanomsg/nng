@@ -446,6 +446,24 @@ pair1_sock_getopt_poly(void *arg, void *buf, size_t *szp)
 	return (nni_getopt_int(s->poly, buf, szp));
 }
 
+static void
+pair1_sock_send(void *arg, nni_aio *aio)
+{
+	pair1_sock *s = arg;
+
+	nni_sock_send_pending(s->nsock);
+	nni_msgq_aio_put(s->uwq, aio);
+}
+
+static void
+pair1_sock_recv(void *arg, nni_aio *aio)
+{
+	pair1_sock *s = arg;
+
+	nni_sock_recv_pending(s->nsock);
+	nni_msgq_aio_get(s->urq, aio);
+}
+
 static nni_proto_pipe_ops pair1_pipe_ops = {
 	.pipe_init  = pair1_pipe_init,
 	.pipe_fini  = pair1_pipe_fini,
@@ -478,6 +496,8 @@ static nni_proto_sock_ops pair1_sock_ops = {
 	.sock_fini    = pair1_sock_fini,
 	.sock_open    = pair1_sock_open,
 	.sock_close   = pair1_sock_close,
+	.sock_recv    = pair1_sock_recv,
+	.sock_send    = pair1_sock_send,
 	.sock_options = pair1_sock_options,
 };
 

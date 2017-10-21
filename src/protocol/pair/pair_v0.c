@@ -243,6 +243,24 @@ pair0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
+static void
+pair0_sock_send(void *arg, nni_aio *aio)
+{
+	pair0_sock *s = arg;
+
+	nni_sock_send_pending(s->nsock);
+	nni_msgq_aio_put(s->uwq, aio);
+}
+
+static void
+pair0_sock_recv(void *arg, nni_aio *aio)
+{
+	pair0_sock *s = arg;
+
+	nni_sock_recv_pending(s->nsock);
+	nni_msgq_aio_get(s->urq, aio);
+}
+
 static nni_proto_pipe_ops pair0_pipe_ops = {
 	.pipe_init  = pair0_pipe_init,
 	.pipe_fini  = pair0_pipe_fini,
@@ -265,6 +283,8 @@ static nni_proto_sock_ops pair0_sock_ops = {
 	.sock_fini    = pair0_sock_fini,
 	.sock_open    = pair0_sock_open,
 	.sock_close   = pair0_sock_close,
+	.sock_send    = pair0_sock_send,
+	.sock_recv    = pair0_sock_recv,
 	.sock_options = pair0_sock_options,
 };
 

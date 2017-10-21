@@ -92,7 +92,6 @@ surv_sock_init(void **sp, nni_sock *nsock)
 	s->urq      = nni_sock_recvq(nsock);
 
 	*sp = s;
-	nni_sock_recverr(nsock, NNG_ESTATE);
 	return (0);
 }
 
@@ -273,11 +272,12 @@ surv_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 	surv_sock *s = arg;
 	int        rv;
 
+	nni_mtx_lock(&s->mtx);
 	if ((rv = nni_setopt_int(&s->raw, buf, sz, 0, 1)) == 0) {
-		nni_sock_recverr(s->nsock, s->raw ? 0 : NNG_ESTATE);
 		s->survid = 0;
 		nni_timer_cancel(&s->timer);
 	}
+	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
 
@@ -344,22 +344,43 @@ surv_timeout(void *arg)
 {
 	surv_sock *s = arg;
 
-	nni_sock_lock(s->nsock);
+	nni_mtx_lock(&s->mtx);
 	s->survid = 0;
-	nni_sock_recverr(s->nsock, NNG_ESTATE);
+	nni_mtx_unlock(&s->mtx);
 	nni_msgq_set_get_error(s->urq, NNG_ETIMEDOUT);
-	nni_sock_unlock(s->nsock);
 }
 
-static nni_msg *
-surv_sock_sfilter(void *arg, nni_msg *msg)
+static void
+surv_sock_recv(void *arg, nni_aio *aio)
 {
 	surv_sock *s = arg;
 
+	nni_mtx_lock(&s->mtx);
+	if (s->survid == 0) {
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(aio, NNG_ESTATE);
+		return;
+	}
+	nni_mtx_unlock(&s->mtx);
+	nni_sock_recv_pending(s->nsock);
+	nni_msgq_aio_get(s->urq, aio);
+}
+
+static void
+surv_sock_send(void *arg, nni_aio *aio)
+{
+	surv_sock *s = arg;
+	nni_msg *  msg;
+	int        rv;
+
+	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
 		// No automatic retry, and the request ID must
 		// be in the header coming down.
-		return (msg);
+		nni_mtx_unlock(&s->mtx);
+		nni_sock_send_pending(s->nsock);
+		nni_msgq_aio_put(s->uwq, aio);
+		return;
 	}
 
 	// Generate a new request ID.  We always set the high
@@ -367,10 +388,12 @@ surv_sock_sfilter(void *arg, nni_msg *msg)
 	// backtrace.  (Pipe IDs have the high order bit clear.)
 	s->survid = (s->nextid++) | 0x80000000u;
 
-	if (nni_msg_header_append_u32(msg, s->survid) != 0) {
-		// Should be ENOMEM.
-		nni_msg_free(msg);
-		return (NULL);
+	msg = nni_aio_get_msg(aio);
+	nni_msg_header_clear(msg);
+	if ((rv = nni_msg_header_append_u32(msg, s->survid)) != 0) {
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
 	}
 
 	// If another message is there, this cancels it.  We move the
@@ -379,20 +402,21 @@ surv_sock_sfilter(void *arg, nni_msg *msg)
 	s->expire = nni_clock() + s->survtime;
 	nni_timer_schedule(&s->timer, s->expire);
 
-	// Clear the error condition.
-	nni_sock_recverr(s->nsock, 0);
-	// nni_msgq_set_get_error(nni_sock_recvq(psock->nsock), 0);
+	nni_mtx_unlock(&s->mtx);
 
-	return (msg);
+	nni_sock_send_pending(s->nsock);
+	nni_msgq_aio_put(s->uwq, aio);
 }
 
 static nni_msg *
-surv_sock_rfilter(void *arg, nni_msg *msg)
+surv_sock_filter(void *arg, nni_msg *msg)
 {
 	surv_sock *s = arg;
 
+	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
 		// Pass it unmolested
+		nni_mtx_unlock(&s->mtx);
 		return (msg);
 	}
 
@@ -402,6 +426,7 @@ surv_sock_rfilter(void *arg, nni_msg *msg)
 		nni_msg_free(msg);
 		return (NULL);
 	}
+	nni_mtx_unlock(&s->mtx);
 
 	return (msg);
 }
@@ -433,9 +458,10 @@ static nni_proto_sock_ops surv_sock_ops = {
 	.sock_fini    = surv_sock_fini,
 	.sock_open    = surv_sock_open,
 	.sock_close   = surv_sock_close,
+	.sock_send    = surv_sock_send,
+	.sock_recv    = surv_sock_recv,
+	.sock_filter  = surv_sock_filter,
 	.sock_options = surv_sock_options,
-	.sock_rfilter = surv_sock_rfilter,
-	.sock_sfilter = surv_sock_sfilter,
 };
 
 static nni_proto surv_proto = {

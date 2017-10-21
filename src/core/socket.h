@@ -22,14 +22,13 @@ extern void     nni_sock_closeall(void);
 extern int      nni_sock_shutdown(nni_sock *);
 extern uint16_t nni_sock_proto(nni_sock *);
 extern uint16_t nni_sock_peer(nni_sock *);
-extern int nni_sock_setopt(nni_sock *, const char *, const void *, size_t);
-extern int nni_sock_getopt(nni_sock *, const char *, void *, size_t *);
-extern int nni_sock_recvmsg(nni_sock *, nni_msg **, int);
-extern int nni_sock_sendmsg(nni_sock *, nni_msg *, int);
+extern int  nni_sock_setopt(nni_sock *, const char *, const void *, size_t);
+extern int  nni_sock_getopt(nni_sock *, const char *, void *, size_t *);
+extern int  nni_sock_recvmsg(nni_sock *, nni_msg **, int);
+extern int  nni_sock_sendmsg(nni_sock *, nni_msg *, int);
+extern void nni_sock_send(nni_sock *, nni_aio *);
+extern void nni_sock_recv(nni_sock *, nni_aio *);
 extern uint32_t nni_sock_id(nni_sock *);
-
-extern void nni_sock_lock(nni_sock *);
-extern void nni_sock_unlock(nni_sock *);
 
 extern nni_notify *nni_sock_notify(nni_sock *, int, nng_notify_func, void *);
 extern void        nni_sock_unnotify(nni_sock *, nni_notify *);
@@ -46,15 +45,19 @@ extern int nni_sock_pipe_start(nni_sock *, nni_pipe *p);
 extern int  nni_sock_ep_add(nni_sock *, nni_ep *);
 extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
 
-// Set error codes for applications.  These are only ever
-// called from the filter functions in protocols, and thus
-// already have the socket lock held.
-extern void nni_sock_recverr(nni_sock *, int);
-extern void nni_sock_senderr(nni_sock *, int);
-
 // These are socket methods that protocol operations can expect to call.
 // Note that each of these should be called without any locks held, since
 // the socket can reenter the protocol.
+
+// nni_sock_send_pending is called by the protocol when it enqueues
+// a send operation.  The main purpose of this is to clear the raised
+// signal raised on the event descriptor.
+extern void nni_sock_send_pending(nni_sock *);
+
+// nni_sock_recv_pending is called by the protocl when it enqueues
+// a receive operation.  The main purpose of this is to clear the raised
+// signal raised on the event descriptor.
+extern void nni_sock_recv_pending(nni_sock *);
 
 // nni_socket_sendq obtains the upper writeq.  The protocol should
 // recieve messages from this, and place them on the appropriate pipe.

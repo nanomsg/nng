@@ -82,7 +82,6 @@ pub_sock_init(void **sp, nni_sock *sock)
 	s->uwq = nni_sock_sendq(sock);
 
 	*sp = s;
-	nni_sock_recverr(sock, NNG_ENOTSUP);
 	return (0);
 }
 
@@ -281,6 +280,21 @@ pub_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
+static void
+pub_sock_recv(void *arg, nni_aio *aio)
+{
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
+}
+
+static void
+pub_sock_send(void *arg, nni_aio *aio)
+{
+	pub_sock *s = arg;
+
+	nni_sock_send_pending(s->sock);
+	nni_msgq_aio_put(s->uwq, aio);
+}
+
 static nni_proto_pipe_ops pub_pipe_ops = {
 	.pipe_init  = pub_pipe_init,
 	.pipe_fini  = pub_pipe_fini,
@@ -303,6 +317,8 @@ static nni_proto_sock_ops pub_sock_ops = {
 	.sock_fini    = pub_sock_fini,
 	.sock_open    = pub_sock_open,
 	.sock_close   = pub_sock_close,
+	.sock_send    = pub_sock_send,
+	.sock_recv    = pub_sock_recv,
 	.sock_options = pub_sock_options,
 };
 

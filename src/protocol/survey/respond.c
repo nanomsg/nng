@@ -77,6 +77,7 @@ resp_sock_init(void **sp, nni_sock *nsock)
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	nni_mtx_init(&s->mtx);
 	if (((rv = nni_idhash_init(&s->pipes)) != 0) ||
 	    ((rv = nni_aio_init(&s->aio_getq, resp_sock_getq_cb, s)) != 0)) {
 		resp_sock_fini(s);
@@ -91,10 +92,7 @@ resp_sock_init(void **sp, nni_sock *nsock)
 	s->urq        = nni_sock_recvq(nsock);
 	s->uwq        = nni_sock_sendq(nsock);
 
-	nni_mtx_init(&s->mtx);
-
 	*sp = s;
-	nni_sock_senderr(nsock, NNG_ESTATE);
 	return (0);
 }
 
@@ -349,9 +347,9 @@ resp_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 	resp_sock *s = arg;
 	int        rv;
 
-	if ((rv = nni_setopt_int(&s->raw, buf, sz, 0, 1)) == 0) {
-		nni_sock_senderr(s->nsock, s->raw ? 0 : NNG_ESTATE);
-	}
+	nni_mtx_lock(&s->mtx);
+	rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
+	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
 
@@ -376,54 +374,62 @@ resp_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
 	return (nni_getopt_int(s->ttl, buf, szp));
 }
 
-static nni_msg *
-resp_sock_sfilter(void *arg, nni_msg *msg)
+static void
+resp_sock_send(void *arg, nni_aio *aio)
 {
 	resp_sock *s = arg;
+	nni_msg *  msg;
+	int        rv;
 
+	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
-		return (msg);
+		nni_mtx_unlock(&s->mtx);
+		nni_sock_send_pending(s->nsock);
+		nni_msgq_aio_put(s->uwq, aio);
+		return;
 	}
 
-	// Cannot send again until a receive is done...
-	nni_sock_senderr(s->nsock, NNG_ESTATE);
+	msg = nni_aio_get_msg(aio);
 
 	// If we have a stored backtrace, append it to the header...
 	// if we don't have a backtrace, discard the message.
 	if (s->btrace == NULL) {
-		nni_msg_free(msg);
-		return (NULL);
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(aio, NNG_ESTATE);
+		return;
 	}
 
 	// drop anything else in the header...
 	nni_msg_header_clear(msg);
 
-	if (nni_msg_header_append(msg, s->btrace, s->btrace_len) != 0) {
-		nni_free(s->btrace, s->btrace_len);
-		s->btrace     = NULL;
-		s->btrace_len = 0;
-		nni_msg_free(msg);
-		return (NULL);
+	if ((rv = nni_msg_header_append(msg, s->btrace, s->btrace_len)) != 0) {
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
 	}
 
 	nni_free(s->btrace, s->btrace_len);
 	s->btrace     = NULL;
 	s->btrace_len = 0;
-	return (msg);
+
+	nni_mtx_unlock(&s->mtx);
+	nni_sock_send_pending(s->nsock);
+	nni_msgq_aio_put(s->uwq, aio);
 }
 
 static nni_msg *
-resp_sock_rfilter(void *arg, nni_msg *msg)
+resp_sock_filter(void *arg, nni_msg *msg)
 {
 	resp_sock *s = arg;
 	char *     header;
 	size_t     len;
 
+	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
+		nni_mtx_unlock(&s->mtx);
 		return (msg);
 	}
 
-	nni_sock_senderr(s->nsock, 0);
 	len    = nni_msg_header_len(msg);
 	header = nni_msg_header(msg);
 	if (s->btrace != NULL) {
@@ -432,13 +438,24 @@ resp_sock_rfilter(void *arg, nni_msg *msg)
 		s->btrace_len = 0;
 	}
 	if ((s->btrace = nni_alloc(len)) == NULL) {
+		nni_mtx_unlock(&s->mtx);
 		nni_msg_free(msg);
 		return (NULL);
 	}
 	s->btrace_len = len;
 	memcpy(s->btrace, header, len);
 	nni_msg_header_clear(msg);
+	nni_mtx_unlock(&s->mtx);
 	return (msg);
+}
+
+static void
+resp_sock_recv(void *arg, nni_aio *aio)
+{
+	resp_sock *s = arg;
+
+	nni_sock_recv_pending(s->nsock);
+	nni_msgq_aio_get(s->urq, aio);
 }
 
 static nni_proto_pipe_ops resp_pipe_ops = {
@@ -468,9 +485,10 @@ static nni_proto_sock_ops resp_sock_ops = {
 	.sock_fini    = resp_sock_fini,
 	.sock_open    = resp_sock_open,
 	.sock_close   = resp_sock_close,
+	.sock_filter  = resp_sock_filter,
+	.sock_send    = resp_sock_send,
+	.sock_recv    = resp_sock_recv,
 	.sock_options = resp_sock_options,
-	.sock_rfilter = resp_sock_rfilter,
-	.sock_sfilter = resp_sock_sfilter,
 };
 
 static nni_proto resp_proto = {

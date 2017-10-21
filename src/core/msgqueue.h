@@ -41,27 +41,10 @@ extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_notify_put(nni_msgq *, nni_aio *);
 
-// nni_msgq_put puts the message to the queue.  It blocks until it
-// was able to do so, or the queue is closed, or a timeout is reached.
-// It returns 0 on success, NNG_ECLOSED if the queue was closed, or
-// NNG_ETIMEDOUT if the timeout is reached. If an error is returned,
-// the caller is responsible for freeing the message with nni_msg_free(),
-// otherwise the message is "owned" by the queue, and the caller is not
-// permitted to access it further.
-extern int nni_msgq_put_until(nni_msgq *, nni_msg *, nni_time);
-
 // nni_msgq_tryput performs a non-blocking attempt to put a message on
 // the message queue.  It is the same as calling nng_msgq_put_until with
 // a zero time.
 extern int nni_msgq_tryput(nni_msgq *, nni_msg *);
-
-// nni_msgq_get_until gets a message from the queue.  It blocks until a
-// message is available, the queue is closed, or time out is reached.
-// It returns 0 on success, NNG_ECLOSED if the queue was closed, or
-// NNG_ETIMEDOUT if the timeout is reached.  On successful return,
-// the caller assumes ownership of the message and must call
-// nni_msg_free() when it is finished with it.
-extern int nni_msgq_get_until(nni_msgq *, nni_msg **, nni_time);
 
 // nni_msgq_set_error sets an error condition on the message queue,
 // which causes all current and future readers/writes to return the
@@ -80,6 +63,25 @@ extern void nni_msgq_set_put_error(nni_msgq *, int);
 // message queue, and for that side behaves like nni_msgq_set_error.
 // Readers (nni_msgq_put*) are unaffected.
 extern void nni_msgq_set_get_error(nni_msgq *, int);
+
+// nni_msgq_set_best_effort marks the message queue best effort on send.
+// What this does is treat the message queue condition as if it were
+// successful, returning 0, and discarding the message.  If zero is
+// passed then this mode is reset to normal.
+extern void nni_msgq_set_best_effort(nni_msgq *, int);
+
+// nni_msgq_filter is a callback function used to filter messages.
+// The function is called on entry (put) or exit (get).  The void
+// argument is an opaque pointer supplied with the function at registration
+// time.  The primary use for these functions is to support the protocol
+// socket needs.
+typedef nni_msg *(*nni_msgq_filter)(void *, nni_msg *);
+
+// nni_msgq_set_filter sets the filter on the queue.  Messages
+// are filtered through this just before they are returned via the get
+// functions.  If the filter returns NULL, then the message is silently
+// discarded instead, and any get waiters remain waiting.
+extern void nni_msgq_set_filter(nni_msgq *, nni_msgq_filter, void *);
 
 // nni_msgq_close closes the queue.  After this all operates on the
 // message queue will return NNG_ECLOSED.  Messages inside the queue

@@ -62,7 +62,7 @@ TestMain("SURVEY pattern", {
 			So(nng_peer(resp) == NNG_PROTO_SURVEYOR);
 		});
 
-		Convey("Send fails with no suvey", {
+		Convey("Send fails with no survey", {
 			nng_msg *msg;
 			So(nng_msg_alloc(&msg, 0) == 0);
 			So(nng_sendmsg(resp, msg, 0) == NNG_ESTATE);

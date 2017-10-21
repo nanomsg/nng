@@ -26,6 +26,7 @@ static void pull_putq(pull_pipe *, nni_msg *);
 struct pull_sock {
 	nni_msgq *urq;
 	int       raw;
+	nni_sock *sock;
 };
 
 // A pull_pipe is our per-pipe protocol private structure.
@@ -44,10 +45,11 @@ pull_sock_init(void **sp, nni_sock *sock)
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	s->raw = 0;
-	s->urq = nni_sock_recvq(sock);
-	*sp    = s;
-	nni_sock_senderr(sock, NNG_ENOTSUP);
+	s->raw  = 0;
+	s->urq  = nni_sock_recvq(sock);
+	s->sock = sock;
+
+	*sp = s;
 	return (0);
 }
 
@@ -185,6 +187,21 @@ pull_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
+static void
+pull_sock_send(void *arg, nni_aio *aio)
+{
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
+}
+
+static void
+pull_sock_recv(void *arg, nni_aio *aio)
+{
+	pull_sock *s = arg;
+
+	nni_sock_recv_pending(s->sock);
+	nni_msgq_aio_get(s->urq, aio);
+}
+
 static nni_proto_pipe_ops pull_pipe_ops = {
 	.pipe_init  = pull_pipe_init,
 	.pipe_fini  = pull_pipe_fini,
@@ -207,6 +224,8 @@ static nni_proto_sock_ops pull_sock_ops = {
 	.sock_fini    = pull_sock_fini,
 	.sock_open    = pull_sock_open,
 	.sock_close   = pull_sock_close,
+	.sock_send    = pull_sock_send,
+	.sock_recv    = pull_sock_recv,
 	.sock_options = pull_sock_options,
 };
 

@@ -54,7 +54,6 @@ push_sock_init(void **sp, nni_sock *sock)
 	s->sock = sock;
 	s->uwq  = nni_sock_sendq(sock);
 	*sp     = s;
-	nni_sock_recverr(sock, NNG_ENOTSUP);
 	return (0);
 }
 
@@ -205,6 +204,21 @@ push_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
+static void
+push_sock_send(void *arg, nni_aio *aio)
+{
+	push_sock *s = arg;
+
+	nni_sock_send_pending(s->sock);
+	nni_msgq_aio_put(s->uwq, aio);
+}
+
+static void
+push_sock_recv(void *arg, nni_aio *aio)
+{
+	nni_aio_finish_error(aio, NNG_ENOTSUP);
+}
+
 static nni_proto_pipe_ops push_pipe_ops = {
 	.pipe_init  = push_pipe_init,
 	.pipe_fini  = push_pipe_fini,
@@ -228,6 +242,8 @@ static nni_proto_sock_ops push_sock_ops = {
 	.sock_open    = push_sock_open,
 	.sock_close   = push_sock_close,
 	.sock_options = push_sock_options,
+	.sock_send    = push_sock_send,
+	.sock_recv    = push_sock_recv,
 };
 
 static nni_proto push_proto = {
