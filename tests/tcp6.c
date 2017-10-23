@@ -69,6 +69,16 @@ check_props_v6(nng_msg *msg, nng_listener l, nng_dialer d)
 		So(nng_dialer_getopt(d, NNG_OPT_REMADDR, &ra, &z) != 0);
 	});
 
+	Convey("Malformed TCPv6 addresses do not panic", {
+		nng_socket s1;
+
+		So(nng_pair_open(&s1) == 0);
+		Reset({ nng_close(s1); });
+		So(nng_dial(s1, "tcp://::1", NULL, 0) == NNG_EADDRINVAL);
+		So(nng_dial(s1, "tcp://::1:5055", NULL, 0) == NNG_EADDRINVAL);
+		So(nng_dial(s1, "tcp://[::1]", NULL, 0) == NNG_EADDRINVAL);
+	});
+
 	return (0);
 }
 

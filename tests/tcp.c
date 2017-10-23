@@ -81,5 +81,23 @@ TestMain("TCP Transport", {
 		So(nng_dial(s2, addr, NULL, 0) == 0);
 	});
 
+	Convey("Malformed TCP addresses do not panic", {
+		nng_socket s1;
+
+		So(nng_pair_open(&s1) == 0);
+		Reset({ nng_close(s1); });
+		So(nng_dial(s1, "tcp://127.0.0.1", NULL, 0) == NNG_EADDRINVAL);
+		So(nng_dial(s1, "tcp://127.0.0.1.32", NULL, 0) ==
+		    NNG_EADDRINVAL);
+		So(nng_dial(s1, "tcp://127.0.x.1.32", NULL, 0) ==
+		    NNG_EADDRINVAL);
+		So(nng_listen(s1, "tcp://127.0.0.1", NULL, 0) ==
+		    NNG_EADDRINVAL);
+		So(nng_listen(s1, "tcp://127.0.0.1.32", NULL, 0) ==
+		    NNG_EADDRINVAL);
+		So(nng_listen(s1, "tcp://127.0.x.1.32", NULL, 0) ==
+		    NNG_EADDRINVAL);
+	});
+
 	nng_fini();
 })

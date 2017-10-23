@@ -465,7 +465,7 @@ nni_tcp_parse_pair(char *pair, char **hostp, char **servp)
 	} else {
 		*hostp = host;
 	}
-	if (strlen(serv) == 0) {
+	if ((serv == NULL) || (strlen(serv) == 0)) {
 		*servp = NULL;
 	} else {
 		*servp = serv;
