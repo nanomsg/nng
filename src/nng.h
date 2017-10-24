@@ -48,8 +48,6 @@ typedef uint32_t            nng_listener;
 typedef uint32_t            nng_pipe;
 typedef int32_t             nng_duration; // in milliseconds
 typedef struct nng_msg      nng_msg;
-typedef struct nng_event    nng_event;
-typedef struct nng_notify   nng_notify;
 typedef struct nng_snapshot nng_snapshot;
 typedef struct nng_stat     nng_stat;
 
@@ -99,66 +97,6 @@ NNG_DECL int nng_getopt_int(nng_socket, const char *, int *);
 NNG_DECL int nng_getopt_ms(nng_socket, const char *, nng_duration *);
 NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
 NNG_DECL int nng_getopt_uint64(nng_socket, const char *, uint64_t *);
-
-// nng_notify_func is a user function that is executed upon certain
-// events.  See below.
-//
-// NOTE WELL: This API is to be replaced in the future with an
-// alternate API based on our AIO async I/O handles.  We recommend
-// against building this API too firmly into application code at
-// this juncture.
-typedef void (*nng_notify_func)(nng_event *, void *);
-
-// nng_setnotify sets a notification callback.  The callback will be
-// called for any of the requested events, and will be executed on a
-// separate thread.  Event delivery is not guaranteed, and can fail
-// if events occur more quickly than the callback can handle, or
-// if memory or other resources are scarce.
-NNG_DECL nng_notify *nng_setnotify(nng_socket, int, nng_notify_func, void *);
-
-// nng_unsetnotify unregisters a previously registered notification callback.
-// Once this returns, the associated callback will not be executed any longer.
-// If the callback is running when this called, then it will wait until that
-// callback completes.  (The caller of this function should not hold any
-// locks acqured by the callback, in order to avoid a deadlock.)
-NNG_DECL void nng_unsetnotify(nng_socket, nng_notify *);
-
-// Event types.  Sockets can have multiple different kind of events.
-// Note that these are edge triggered -- therefore the status indicated
-// may have changed since the notification occurred.
-//
-// NNG_EV_CAN_RCV	- A message is ready for receive.
-// NNG_EV_CAN_SND	- A message can be sent.
-// NNG_EV_ERROR		- An error condition on the socket occurred.
-// NNG_EV_PIPE_ADD	- A new pipe (connection) is added to the socket.
-// NNG_EV_PIPE_REM	- A pipe (connection) is removed from the socket.
-// NNG_EV_ENDPT_ADD	- An endpoint is added to the socket.
-// NNG_EV_ENDPT_REM	- An endpoint is removed from the socket.
-#define NNG_EV_BIT(x) (1U << (x))
-enum nng_ev_bit_enum {
-	NNG_EV_CAN_RCV      = NNG_EV_BIT(0),
-	NNG_EV_CAN_SND      = NNG_EV_BIT(1),
-	NNG_EV_ERROR        = NNG_EV_BIT(2),
-	NNG_EV_PIPE_ADD     = NNG_EV_BIT(3),
-	NNG_EV_PIPE_REM     = NNG_EV_BIT(4),
-	NNG_EV_DIALER_ADD   = NNG_EV_BIT(5),
-	NNG_EV_DIALER_REM   = NNG_EV_BIT(6),
-	NNG_EV_LISTENER_ADD = NNG_EV_BIT(7),
-	NNG_EV_LISTENER_REM = NNG_EV_BIT(8),
-
-	// XXX: Remove these.
-	NNG_EV_ENDPT_ADD = NNG_EV_DIALER_ADD,
-	NNG_EV_ENDPT_REM = NNG_EV_DIALER_REM,
-};
-
-// The following functions return more detailed information about the event.
-// Some of the values will not make sense for some event types, in which case
-// the value returned will be NULL.
-NNG_DECL int nng_event_type(nng_event *);
-
-NNG_DECL nng_socket nng_event_socket(nng_event *);
-
-NNG_DECL const char *nng_event_reason(nng_event *);
 
 // nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy

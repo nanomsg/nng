@@ -46,7 +46,6 @@
 
 // These have to come after the others - particularly transport.h
 #include "core/endpt.h"
-#include "core/event.h"
 #include "core/pipe.h"
 #include "core/socket.h"
 
