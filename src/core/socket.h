@@ -30,9 +30,6 @@ extern void nni_sock_send(nni_sock *, nni_aio *);
 extern void nni_sock_recv(nni_sock *, nni_aio *);
 extern uint32_t nni_sock_id(nni_sock *);
 
-extern nni_notify *nni_sock_notify(nni_sock *, int, nng_notify_func, void *);
-extern void        nni_sock_unnotify(nni_sock *, nni_notify *);
-
 // nni_sock_pipe_add adds the pipe to the socket. It is called by
 // the generic pipe creation code.  It also adds the socket to the
 // ep list, and starts the pipe.  It does all these to ensure that

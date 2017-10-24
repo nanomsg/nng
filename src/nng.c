@@ -611,48 +611,6 @@ nng_getopt_ms(nng_socket sid, const char *name, nng_duration *valp)
 	return (nng_getopt(sid, name, valp, &sz));
 }
 
-nng_notify *
-nng_setnotify(nng_socket sid, int mask, nng_notify_func fn, void *arg)
-{
-	nni_sock *  sock;
-	nng_notify *notify;
-	int         rv;
-
-	if ((rv = nni_sock_find(&sock, sid)) != 0) {
-		return (NULL);
-	}
-	notify = nni_sock_notify(sock, mask, fn, arg);
-	nni_sock_rele(sock);
-	return (notify);
-}
-
-void
-nng_unsetnotify(nng_socket sid, nng_notify *notify)
-{
-	nni_sock *sock;
-	int       rv;
-
-	if ((rv = nni_sock_find(&sock, sid)) != 0) {
-		return;
-	}
-	nni_sock_unnotify(sock, notify);
-	nni_sock_rele(sock);
-}
-
-nng_socket
-nng_event_socket(nng_event *ev)
-{
-	// XXX: FOR NOW....  maybe evnet should contain socket Id
-	// instead?
-	return (nni_sock_id(ev->e_sock));
-}
-
-int
-nng_event_type(nng_event *ev)
-{
-	return (ev->e_type);
-}
-
 int
 nng_device(nng_socket s1, nng_socket s2)
 {

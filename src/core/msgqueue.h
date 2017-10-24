@@ -38,8 +38,6 @@ extern void nni_msgq_fini(nni_msgq *);
 
 extern void nni_msgq_aio_put(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
-extern void nni_msgq_aio_notify_get(nni_msgq *, nni_aio *);
-extern void nni_msgq_aio_notify_put(nni_msgq *, nni_aio *);
 
 // nni_msgq_tryput performs a non-blocking attempt to put a message on
 // the message queue.  It is the same as calling nng_msgq_put_until with
@@ -82,6 +80,28 @@ typedef nni_msg *(*nni_msgq_filter)(void *, nni_msg *);
 // functions.  If the filter returns NULL, then the message is silently
 // discarded instead, and any get waiters remain waiting.
 extern void nni_msgq_set_filter(nni_msgq *, nni_msgq_filter, void *);
+
+// nni_msgq_cb_flags is an enumeration of flag bits used with nni_msgq_cb.
+enum nni_msgq_cb_flags {
+	nni_msgq_f_full    = 1,
+	nni_msgq_f_empty   = 2,
+	nni_msgq_f_can_get = 4,
+	nni_msgq_f_can_put = 8,
+	nni_msgq_f_closed  = 16,
+};
+
+// nni_msgq_cb is a callback function used by sockets to monitor
+// the status of the queue.  It is called with the lock held for
+// performance reasons so consumers must not re-enter the queue.
+// The purpose is to enable file descriptor notifications on the socket,
+// which don't need to reenter the msgq.  The integer is a mask of
+// flags that are true for the given message queue.
+typedef void (*nni_msgq_cb)(void *, int);
+
+// nni_msgq_set_cb sets the callback and argument for the callback
+// which will be called on state changes in the message queue.  Only
+// one callback can be registered on a message queue at a time.
+extern void nni_msgq_set_cb(nni_msgq *, nni_msgq_cb, void *);
 
 // nni_msgq_close closes the queue.  After this all operates on the
 // message queue will return NNG_ECLOSED.  Messages inside the queue
