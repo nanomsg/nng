@@ -14,5 +14,5 @@ point.
 
 A reference manual is available <<man/v0.0.0/nng.adoc#,here>>.
 
-Please see the https://github.com/nanomsg/nng[GitHub Repsitory] for further
+Please see the https://github.com/nanomsg/nng[GitHub Repository] for further
 information.
