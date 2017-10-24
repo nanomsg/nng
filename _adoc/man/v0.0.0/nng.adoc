@@ -1,0 +1,88 @@
+nng(7)
+======
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 7
+:icons:font
+:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+NAME
+----
+nng - nanomsg next generation
+
+SYNOPSIS
+--------
+*cc* ['flags'] 'files' *-lnng* ['libraries']
+
+
+DESCRIPTION
+-----------
+
+The _nng_ library provides a common messaging framework intended to
+solve common communication problems in distributed applications.
+It offers a number of _protocols_, and also a number of _transports_.
+
+The _protocols_ implement the semantics associated with particular
+communications scenarios, such as RPC style services, service discovery,
+publish/subscribe, and so forth.
+
+The _transports_ provide support for underlying transport methods, such
+as TCP, IPC, websockets, and so forth.
+
+The _nng_ library is designed to permit easy creation of new _transports_ and,
+to a lesser extent, new _protocols_.
+
+The _nng_ library is wire compatible with the SP protocols described in
+the nanomsg project; projects using _libnanomsg_ can interoperate with
+nng as well as other conforming implementations.  (One such implementation
+is the https://github.com/go-mangos/mangos[mangos].  Applications using _nng_
+which wish to communicate with older libraries must ensure that they only
+use protocols or transports offered by the earlier library.
+
+The _nng_ library also offers a compatible API, permitting legacy code to
+be recompiled or relinked against _nng_.  When doing this, support for
+certain enhancements or features will likely be absent, requiring the
+application developer to use the new-style API.
+
+The _nng_ library is implemented in pure C; if you need bindings for
+other languages please check the http://nanomsg.org/[website].
+
+Protocols
+~~~~~~~~~
+
+* <<nng_bus.adoc,nng_bus(7)>> - Bus protocol
+* <<nng_pair.adoc,nng_pair(7)>> - Pair protocol
+* <<nng_pubsub.adoc,nng_pubsub(7)>> - Publish/Subscribe protocol
+* <<nng_reqrep.adoc,nng_reqrep(7)>> - Request/Reply protocol
+* <<nng_survey.adoc,nng_survey(7)>> - Survey/Respond protocol
+
+Transports
+~~~~~~~~~~
+
+* <<nng_inproc.adoc#,nng_inproc(7)>> - Intra-process transport
+* <<nng_ipc.adoc#,nng_ipc(7)>> - Inter-process transport
+* <<nng_tcp.adoc#,nng_tcp(7)>> - TCP (and TCPv6) transport
+* <<nng_zerotier.adoc#,nng_zerotier(7)>> - ZeroTier transport
+
+AUTHORS
+-------
+link:mailto:garrett@damore.org[Garrett D'Amore]
+
+SEE ALSO
+--------
+<<nng_compat.adoc#,nng_compat(3)>>
+
+COPYRIGHT
+---------
+
+Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/LICENSE.txt[MIT License].

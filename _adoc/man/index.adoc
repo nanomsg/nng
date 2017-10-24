@@ -1,0 +1,8 @@
+---
+title: Documentation
+layout: default
+---
+
+== Documentation
+
+* Browse the nng reference manual <</v{{ site.latest }}/nng.adoc#,here>>.
