@@ -63,11 +63,11 @@ URI Format
 ~~~~~~~~~~
 
 This transport uses URIs using the scheme `zt://`, followed by a network
-address (ten hexadecimal digits), followed by a `/` delimiter,
-followed by the node number (sixteen hexadecimal digits) of the listening
+address (sixteen hexadecimal digits), followed by a `/` delimiter,
+followed by the node number (ten hexadecimal digits) of the listening
 node, followed by a service or port number (decimal value, up to 24-bits).
-For example, the URI `zt://123456789a/0123456789abcdef:934` indicates
-that node 0123456789abcdef on network 123456789a listening on port 934.
+For example, the URI `zt://0123456789abdef/fedcba9876:999` indicates
+that node fedcba9876 on network 0123456789abcdef listening on port 999.
 
 Listening nodes may use port 0, or `*`, to indicate that a suitable port
 number be selected automatically. Applications using this must get the
@@ -88,8 +88,8 @@ When using an `nng_sockaddr` structure, the actual structure is of type
 
 struct nng_sockaddr_zt {
     uint16_t sa_family;  // must be NNG_AF_ZT
-    uint64_t sa_nwid;    // 40-bit network ID
-    uint64_t sa_nodeid;  // 64-bit node ID
+    uint64_t sa_nwid;    // 64-bit network ID
+    uint64_t sa_nodeid;  // 40-bit node ID
     uint32_t sa_port;    // 24-bit application port
 }
 --------
@@ -97,7 +97,7 @@ struct nng_sockaddr_zt {
 The `sa_family` member will have the value `NNG_AF_ZT` (5).  The remaining
 members are, unlike TCP socket address, in native byte order.  Only the
 lower 24-bits of the `sa_port` may be used.  Likewise only the lower 40-bits
-of the `sa_nwid` may be used.
+of the `sa_nodeid` may be used.
 
 Node Presence
 ~~~~~~~~~~~~~
