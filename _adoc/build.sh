@@ -20,10 +20,10 @@ for f in $(find . -name '*.adoc'); do
 	manpage=0
 	frontmatter=
         case $input in
-        v[0-9]*)
-		vers=${input#v}
+        man/v[0-9]*)
+		vers=${input#*v}
 		vers=${vers%%/*}
-		aargs="${aargs} -aversion-label=nanomsg -arevnumber=${vers} -dmanpage"
+		aargs="${aargs} -aversion-label=nng -arevnumber=${vers}"
 		manpage=1
 		;;
 	esac
