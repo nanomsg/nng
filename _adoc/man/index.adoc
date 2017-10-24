@@ -5,4 +5,4 @@ layout: default
 
 == Documentation
 
-* Browse the nng reference manual <<v{{ site.latest }}/nng.adoc#,here>>.
+* Browse the nng reference manual <</nng/man/v{{ site.latest }}/nng.adoc#,here>>.
