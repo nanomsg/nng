@@ -9,13 +9,13 @@
 //
 
 #include "core/nng_impl.h"
+#include "transport/inproc/inproc.h"
 
 #include <stdio.h>
 #include <string.h>
 
 // For now the list of transports is hard-wired.  Adding new transports
 // to the system dynamically is something that might be considered later.
-extern nni_tran nni_inproc_tran;
 extern nni_tran nni_tcp_tran;
 extern nni_tran nni_ipc_tran;
 
@@ -138,7 +138,7 @@ nni_tran_sys_init(void)
 	NNI_LIST_INIT(&nni_tran_list, nni_transport, t_node);
 	nni_mtx_init(&nni_tran_lk);
 
-	if (((rv = nni_tran_register(&nni_inproc_tran)) != 0) ||
+	if (((rv = nng_inproc_register()) != 0) ||
 	    ((rv = nni_tran_register(&nni_ipc_tran)) != 0) ||
 	    ((rv = nni_tran_register(&nni_tcp_tran)) != 0)) {
 		nni_tran_sys_fini();

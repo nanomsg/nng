@@ -474,3 +474,10 @@ struct nni_tran nni_inproc_tran = {
 	.tran_init    = nni_inproc_init,
 	.tran_fini    = nni_inproc_fini,
 };
+
+
+int
+nng_inproc_register(void)
+{
+        return (nni_tran_register(&nni_inproc_tran));
+}

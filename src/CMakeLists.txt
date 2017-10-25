@@ -143,6 +143,9 @@ if (NNG_PLATFORM_WINDOWS)
         )
 endif()
 
+install(FILES transport/inproc/inproc.h
+    DESTINATION include/nng/transport/inproc)
+    
 if (NNG_ENABLE_ZEROTIER)
     set (NNG_SOURCES ${NNG_SOURCES}
         transport/zerotier/zerotier.c
