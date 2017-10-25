@@ -29,7 +29,6 @@ static void rep_pipe_fini(void *);
 
 // A rep_sock is our per-socket protocol private structure.
 struct rep_sock {
-	nni_sock *  sock;
 	nni_msgq *  uwq;
 	nni_msgq *  urq;
 	nni_mtx     lk;
@@ -84,7 +83,6 @@ rep_sock_init(void **sp, nni_sock *sock)
 	}
 
 	s->ttl        = 8; // Per RFC
-	s->sock       = sock;
 	s->raw        = 0;
 	s->btrace     = NULL;
 	s->btrace_len = 0;
@@ -420,7 +418,6 @@ rep_sock_send(void *arg, nni_aio *aio)
 	if (s->raw) {
 		// Pass thru
 		nni_mtx_unlock(&s->lk);
-		nni_sock_send_pending(s->sock);
 		nni_msgq_aio_put(s->uwq, aio);
 		return;
 	}
@@ -447,7 +444,6 @@ rep_sock_send(void *arg, nni_aio *aio)
 	s->btrace_len = 0;
 
 	nni_mtx_unlock(&s->lk);
-	nni_sock_send_pending(s->sock);
 	nni_msgq_aio_put(s->uwq, aio);
 }
 
@@ -456,7 +452,6 @@ rep_sock_recv(void *arg, nni_aio *aio)
 {
 	rep_sock *s = arg;
 
-	nni_sock_recv_pending(s->sock);
 	nni_msgq_aio_get(s->urq, aio);
 }
 

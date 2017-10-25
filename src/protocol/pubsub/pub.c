@@ -30,7 +30,6 @@ static void pub_pipe_fini(void *);
 
 // A pub_sock is our per-socket protocol private structure.
 struct pub_sock {
-	nni_sock *sock;
 	nni_msgq *uwq;
 	int       raw;
 	nni_aio * aio_getq;
@@ -75,8 +74,7 @@ pub_sock_init(void **sp, nni_sock *sock)
 		return (rv);
 	}
 
-	s->sock = sock;
-	s->raw  = 0;
+	s->raw = 0;
 	NNI_LIST_INIT(&s->pipes, pub_pipe, node);
 
 	s->uwq = nni_sock_sendq(sock);
@@ -291,7 +289,6 @@ pub_sock_send(void *arg, nni_aio *aio)
 {
 	pub_sock *s = arg;
 
-	nni_sock_send_pending(s->sock);
 	nni_msgq_aio_put(s->uwq, aio);
 }
 

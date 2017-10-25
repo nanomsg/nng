@@ -37,7 +37,6 @@ static void bus_pipe_putq_cb(void *);
 
 // A bus_sock is our per-socket protocol private structure.
 struct bus_sock {
-	nni_sock *nsock;
 	int       raw;
 	nni_aio * aio_getq;
 	nni_list  pipes;
@@ -85,10 +84,9 @@ bus_sock_init(void **sp, nni_sock *nsock)
 		bus_sock_fini(s);
 		return (rv);
 	}
-	s->nsock = nsock;
-	s->raw   = 0;
-	s->uwq   = nni_sock_sendq(nsock);
-	s->urq   = nni_sock_recvq(nsock);
+	s->raw = 0;
+	s->uwq = nni_sock_sendq(nsock);
+	s->urq = nni_sock_recvq(nsock);
 
 	*sp = s;
 	return (0);
@@ -241,7 +239,7 @@ bus_pipe_recv_cb(void *arg)
 
 	nni_aio_set_msg(p->aio_putq, msg);
 	nni_aio_set_msg(p->aio_recv, NULL);
-	nni_msgq_aio_put(nni_sock_recvq(s->nsock), p->aio_putq);
+	nni_msgq_aio_put(s->urq, p->aio_putq);
 }
 
 static void
@@ -315,7 +313,7 @@ bus_sock_getq_cb(void *arg)
 static void
 bus_sock_getq(bus_sock *s)
 {
-	nni_msgq_aio_get(nni_sock_sendq(s->nsock), s->aio_getq);
+	nni_msgq_aio_get(s->uwq, s->aio_getq);
 }
 
 static void
@@ -349,7 +347,6 @@ bus_sock_send(void *arg, nni_aio *aio)
 {
 	bus_sock *s = arg;
 
-	nni_sock_send_pending(s->nsock);
 	nni_msgq_aio_put(s->uwq, aio);
 }
 
@@ -358,7 +355,6 @@ bus_sock_recv(void *arg, nni_aio *aio)
 {
 	bus_sock *s = arg;
 
-	nni_sock_recv_pending(s->nsock);
 	nni_msgq_aio_get(s->urq, aio);
 }
 

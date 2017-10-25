@@ -28,7 +28,6 @@ static void surv_timeout(void *);
 
 // A surv_sock is our per-socket protocol private structure.
 struct surv_sock {
-	nni_sock *     nsock;
 	nni_duration   survtime;
 	nni_time       expire;
 	int            raw;
@@ -84,7 +83,6 @@ surv_sock_init(void **sp, nni_sock *nsock)
 	nni_timer_init(&s->timer, surv_timeout, s);
 
 	s->nextid   = nni_random();
-	s->nsock    = nsock;
 	s->raw      = 0;
 	s->survtime = NNI_SECOND * 60;
 	s->expire   = NNI_TIME_ZERO;
@@ -362,7 +360,6 @@ surv_sock_recv(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_unlock(&s->mtx);
-	nni_sock_recv_pending(s->nsock);
 	nni_msgq_aio_get(s->urq, aio);
 }
 
@@ -378,7 +375,6 @@ surv_sock_send(void *arg, nni_aio *aio)
 		// No automatic retry, and the request ID must
 		// be in the header coming down.
 		nni_mtx_unlock(&s->mtx);
-		nni_sock_send_pending(s->nsock);
 		nni_msgq_aio_put(s->uwq, aio);
 		return;
 	}
@@ -404,7 +400,6 @@ surv_sock_send(void *arg, nni_aio *aio)
 
 	nni_mtx_unlock(&s->mtx);
 
-	nni_sock_send_pending(s->nsock);
 	nni_msgq_aio_put(s->uwq, aio);
 }
 

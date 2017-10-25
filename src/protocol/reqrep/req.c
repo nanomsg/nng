@@ -28,7 +28,6 @@ static void req_pipe_fini(void *);
 
 // A req_sock is our per-socket protocol private structure.
 struct req_sock {
-	nni_sock *   sock;
 	nni_msgq *   uwq;
 	nni_msgq *   urq;
 	nni_duration retry;
@@ -90,7 +89,6 @@ req_sock_init(void **sp, nni_sock *sock)
 	// this is "semi random" start for request IDs.
 	s->nextid = nni_random();
 	s->retry  = NNI_SECOND * 60;
-	s->sock   = sock;
 	s->reqmsg = NULL;
 	s->raw    = 0;
 	s->wantw  = 0;
@@ -512,7 +510,6 @@ req_sock_send(void *arg, nni_aio *aio)
 	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
 		nni_mtx_unlock(&s->mtx);
-		nni_sock_send_pending(s->sock);
 		nni_msgq_aio_put(s->uwq, aio);
 		return;
 	}
@@ -535,11 +532,6 @@ req_sock_send(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-
-	// XXX: I think we should just not do this... and leave the
-	// socket "permanently writeable".  This does screw up all the
-	// backpressure.
-	// nni_sock_send_pending(s->sock);
 
 	// If another message is there, this cancels it.
 	if (s->reqmsg != NULL) {
@@ -619,7 +611,6 @@ req_sock_recv(void *arg, nni_aio *aio)
 		}
 	}
 	nni_mtx_unlock(&s->mtx);
-	nni_sock_recv_pending(s->sock);
 	nni_msgq_aio_get(s->urq, aio);
 }
 

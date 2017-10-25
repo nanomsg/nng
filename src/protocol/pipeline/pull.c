@@ -26,7 +26,6 @@ static void pull_putq(pull_pipe *, nni_msg *);
 struct pull_sock {
 	nni_msgq *urq;
 	int       raw;
-	nni_sock *sock;
 };
 
 // A pull_pipe is our per-pipe protocol private structure.
@@ -45,9 +44,8 @@ pull_sock_init(void **sp, nni_sock *sock)
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	s->raw  = 0;
-	s->urq  = nni_sock_recvq(sock);
-	s->sock = sock;
+	s->raw = 0;
+	s->urq = nni_sock_recvq(sock);
 
 	*sp = s;
 	return (0);
@@ -198,7 +196,6 @@ pull_sock_recv(void *arg, nni_aio *aio)
 {
 	pull_sock *s = arg;
 
-	nni_sock_recv_pending(s->sock);
 	nni_msgq_aio_get(s->urq, aio);
 }
 

@@ -104,6 +104,7 @@ else ()
     endmacro (add_nng_cpp_test)
 endif ()
 
+add_nng_test(aio 5)
 add_nng_test(bus 5)
 add_nng_test(files 5)
 add_nng_test(idhash 5)

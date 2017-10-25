@@ -36,7 +36,6 @@ struct sub_topic {
 
 // An nni_rep_sock is our per-socket protocol private structure.
 struct sub_sock {
-	nni_sock *sock;
 	nni_list  topics;
 	nni_msgq *urq;
 	int       raw;
@@ -61,8 +60,7 @@ sub_sock_init(void **sp, nni_sock *sock)
 	}
 	nni_mtx_init(&s->lk);
 	NNI_LIST_INIT(&s->topics, sub_topic, node);
-	s->sock = sock;
-	s->raw  = 0;
+	s->raw = 0;
 
 	s->urq = nni_sock_recvq(sock);
 	*sp    = s;
@@ -296,7 +294,6 @@ sub_sock_recv(void *arg, nni_aio *aio)
 {
 	sub_sock *s = arg;
 
-	nni_sock_recv_pending(s->sock);
 	nni_msgq_aio_get(s->urq, aio);
 }
 

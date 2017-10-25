@@ -192,6 +192,9 @@ nni_task_wait(nni_task *task)
 	nni_taskq *tq = task->task_tq;
 	int        running;
 
+	if (task->task_cb == NULL) {
+		return;
+	}
 	nni_mtx_lock(&tq->tq_mtx);
 	for (;;) {
 		running = 0;

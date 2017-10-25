@@ -28,7 +28,6 @@ static void pair0_pipe_fini(void *);
 
 // pair0_sock is our per-socket protocol private structure.
 struct pair0_sock {
-	nni_sock *  nsock;
 	pair0_pipe *ppipe;
 	nni_msgq *  uwq;
 	nni_msgq *  urq;
@@ -58,7 +57,6 @@ pair0_sock_init(void **sp, nni_sock *nsock)
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&s->mtx);
-	s->nsock = nsock;
 	s->ppipe = NULL;
 	s->raw   = 0;
 	s->uwq   = nni_sock_sendq(nsock);
@@ -248,7 +246,6 @@ pair0_sock_send(void *arg, nni_aio *aio)
 {
 	pair0_sock *s = arg;
 
-	nni_sock_send_pending(s->nsock);
 	nni_msgq_aio_put(s->uwq, aio);
 }
 
@@ -257,7 +254,6 @@ pair0_sock_recv(void *arg, nni_aio *aio)
 {
 	pair0_sock *s = arg;
 
-	nni_sock_recv_pending(s->nsock);
 	nni_msgq_aio_get(s->urq, aio);
 }
 

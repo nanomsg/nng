@@ -50,6 +50,12 @@ typedef int32_t             nng_duration; // in milliseconds
 typedef struct nng_msg      nng_msg;
 typedef struct nng_snapshot nng_snapshot;
 typedef struct nng_stat     nng_stat;
+typedef struct nng_aio      nng_aio;
+
+// Some definitions for durations used with timeouts.
+#define NNG_DURATION_INFINITE (-1)
+#define NNG_DURATION_DEFAULT (-2)
+#define NNG_DURATION_ZERO (0)
 
 // nng_fini is used to terminate the library, freeing certain global resources.
 // For most cases, this call is optional, but failure to do so may cause
@@ -212,6 +218,20 @@ NNG_DECL int nng_sendmsg(nng_socket, nng_msg *, int);
 // can be passed off directly to nng_sendmsg.
 NNG_DECL int nng_recvmsg(nng_socket, nng_msg **, int);
 
+// nng_send_aio sends data on the socket asynchronously.  As with nng_send,
+// the completion may be executed before the data has actually been delivered,
+// but only when it is accepted for delivery.  The supplied AIO must have
+// been initialized, and have an associated message.  The message will be
+// "owned" by the socket if the operation completes successfully.  Otherwise
+// the caller is responsible for freeing it.
+NNG_DECL void nng_send_aio(nng_socket, nng_aio *);
+
+// nng_recv_aio receives data on the socket asynchronously.  On a successful
+// result, the AIO will have an associated message, that can be obtained
+// with nng_aio_get_msg().  The caller takes ownership of the message at
+// this point.
+NNG_DECL void nng_recv_aio(nng_socket, nng_aio *);
+
 // nng_alloc is used to allocate memory.  It's intended purpose is for
 // allocating memory suitable for message buffers with nng_send().
 // Applications that need memory for other purposes should use their platform
@@ -224,6 +244,62 @@ NNG_DECL void *nng_alloc(size_t);
 // is probably less convenient for general uses than the C library malloc and
 // calloc.
 NNG_DECL void nng_free(void *, size_t);
+
+// Async IO API.  AIO structures can be thought of as "handles" to
+// support asynchronous operations.  They contain the completion callback, and
+// a pointer to consumer data.  This is similar to how overlapped I/O
+// works in Windows, when used with a completion callback.
+
+// nng_aio_alloc allocates a new AIO, and associated the completion
+// callback and its opaque argument.  If NULL is supplied for the
+// callback, then the caller must use nng_aio_wait() to wait for the
+// operation to complete.  If the completion callback is not NULL, then
+// when a submitted operation completes (or is canceled or fails) the
+// callback will be executed, generally in a different thread, with no
+// locks held.
+NNG_DECL int nng_aio_alloc(nng_aio **, void (*)(void *), void *);
+
+// nng_aio_free frees the AIO and any associated resources.
+// It *must not* be in use at the time it is freed.
+NNG_DECL void nng_aio_free(nng_aio *);
+
+// nng_aio_stop stops any outstanding operation, and waits for the
+// AIO to be free, including for the callback to have completed
+// execution.  Therefore the caller must NOT hold any locks that
+// are acquired in the callback, or deadlock will occur.
+NNG_DECL void nng_aio_stop(nng_aio *);
+
+// nng_aio_result returns the status/result of the operation. This
+// will be zero on successful completion, or an nng error code on
+// failure.
+NNG_DECL int nng_aio_result(nng_aio *);
+
+// nng_aio_cancel attempts to cancel any in-progress I/O operation.
+// The AIO callback will still be executed, but if the cancellation is
+// successful then the status will be NNG_ECANCELED.
+NNG_DECL void nng_aio_cancel(nng_aio *);
+
+// nng_aio_wait waits synchronously for any pending operation to complete.
+// It also waits for the callback to have completed execution.  Therefore,
+// the caller of this function must not hold any locks acquired by the
+// callback or deadlock may occur.
+NNG_DECL void nng_aio_wait(nng_aio *);
+
+// nng_aio_set_msg sets the message structure to use for asynchronous
+// message send operations.
+NNG_DECL void nng_aio_set_msg(nng_aio *, nng_msg *);
+
+// nng_aio_get_msg returns the message structure associated with a completed
+// receive operation.
+NNG_DECL nng_msg *nng_aio_get_msg(nng_aio *);
+
+// nng_aio_set_timeout sets a timeout on the AIO.  This should be called for
+// operations that should time out after a period.  The timeout should be
+// either a positive number of milliseconds, or NNG_DURATION_INFINITE to
+// indicate that the operation has no timeout.  A poll may be done by
+// specifying NNG_DURATION_ZERO.  The value NNG_DURATION_DEFAULT indicates
+// that any socket specific timeout should be used.
+NNG_DECL void nng_aio_set_timeout(nng_aio *, nng_duration);
 
 // Message API.
 NNG_DECL int   nng_msg_alloc(nng_msg **, size_t);

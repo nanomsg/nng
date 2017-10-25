@@ -46,18 +46,8 @@ extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
 // Note that each of these should be called without any locks held, since
 // the socket can reenter the protocol.
 
-// nni_sock_send_pending is called by the protocol when it enqueues
-// a send operation.  The main purpose of this is to clear the raised
-// signal raised on the event descriptor.
-extern void nni_sock_send_pending(nni_sock *);
-
-// nni_sock_recv_pending is called by the protocl when it enqueues
-// a receive operation.  The main purpose of this is to clear the raised
-// signal raised on the event descriptor.
-extern void nni_sock_recv_pending(nni_sock *);
-
 // nni_socket_sendq obtains the upper writeq.  The protocol should
-// recieve messages from this, and place them on the appropriate pipe.
+// receive messages from this, and place them on the appropriate pipe.
 extern nni_msgq *nni_sock_sendq(nni_sock *);
 
 // nni_socket_recvq obtains the upper readq.  The protocol should

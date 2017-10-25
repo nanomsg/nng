@@ -29,7 +29,6 @@ static void resp_pipe_fini(void *);
 
 // A resp_sock is our per-socket protocol private structure.
 struct resp_sock {
-	nni_sock *  nsock;
 	nni_msgq *  urq;
 	nni_msgq *  uwq;
 	int         raw;
@@ -85,7 +84,6 @@ resp_sock_init(void **sp, nni_sock *nsock)
 	}
 
 	s->ttl        = 8; // Per RFC
-	s->nsock      = nsock;
 	s->raw        = 0;
 	s->btrace     = NULL;
 	s->btrace_len = 0;
@@ -268,9 +266,9 @@ resp_send_cb(void *arg)
 static void
 resp_recv_cb(void *arg)
 {
-	resp_pipe *p = arg;
-	resp_sock *s = p->psock;
-	nni_msgq * urq;
+	resp_pipe *p   = arg;
+	resp_sock *s   = p->psock;
+	nni_msgq * urq = s->urq;
 	nni_msg *  msg;
 	int        hops;
 	int        rv;
@@ -278,8 +276,6 @@ resp_recv_cb(void *arg)
 	if (nni_aio_result(p->aio_recv) != 0) {
 		goto error;
 	}
-
-	urq = nni_sock_recvq(s->nsock);
 
 	msg = nni_aio_get_msg(p->aio_recv);
 	nni_aio_set_msg(p->aio_recv, NULL);
@@ -384,7 +380,6 @@ resp_sock_send(void *arg, nni_aio *aio)
 	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
 		nni_mtx_unlock(&s->mtx);
-		nni_sock_send_pending(s->nsock);
 		nni_msgq_aio_put(s->uwq, aio);
 		return;
 	}
@@ -413,7 +408,6 @@ resp_sock_send(void *arg, nni_aio *aio)
 	s->btrace_len = 0;
 
 	nni_mtx_unlock(&s->mtx);
-	nni_sock_send_pending(s->nsock);
 	nni_msgq_aio_put(s->uwq, aio);
 }
 
@@ -454,7 +448,6 @@ resp_sock_recv(void *arg, nni_aio *aio)
 {
 	resp_sock *s = arg;
 
-	nni_sock_recv_pending(s->nsock);
 	nni_msgq_aio_get(s->urq, aio);
 }
 
