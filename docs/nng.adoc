@@ -39,7 +39,7 @@ The _nng_ library is designed to permit easy creation of new _transports_ and,
 to a lesser extent, new _protocols_.
 
 The _nng_ library is wire compatible with the SP protocols described in
-the nanomsg project; projects using _libnanomsg_ can interoperate with
+the nanomsg project; projects using _libnanomsg_ can inter-operate with
 nng as well as other conforming implementations.  (One such implementation
 is the https://github.com/go-mangos/mangos[mangos].  Applications using _nng_
 which wish to communicate with older libraries must ensure that they only

@@ -77,7 +77,7 @@ struct nng_sockaddr_inproc {
 --------
 
 The `sa_family` member will have the value `NNG_AF_INPROC` (1).
-The `sa_path` member is an ASCIIZ string, and may contain any charaters,
+The `sa_path` member is an ASCIIZ string, and may contain any characters,
 terminated by a `NUL` byte.
 
 Transport Options

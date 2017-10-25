@@ -78,7 +78,7 @@ number be selected automatically. Applications using this must get the
 selected port address using the `nng_listener_getopt` function.
 
 Listening nodes may also elide their own node number, as well as the
-delimiter seperating the node number.
+delimiter separating the node number.
 
 Socket Address
 ~~~~~~~~~~~~~~
@@ -127,7 +127,7 @@ The following transport options are available:
   This is a string representing the "home directory", where the transport
   can store (and reuse) persistent state, such as key materials, node
   identity, and federation membership.  This option must be set before the
-  ZeroTier transport is first used.  If this value is empty, then an ephermal
+  ZeroTier transport is first used.  If this value is empty, then an ephemeral
   ZeroTier node is created, and no persistent state is used.  The default
   is to use an ephemeral node.
 + 
@@ -150,7 +150,7 @@ in this fashion.
 
 `NNG_OPT_ZT_NETWORK_STATUS`::
 
-  This is a read-ony integer, representing the ZeroTier network status.
+  This is a read-only integer, representing the ZeroTier network status.
   Valid values for this are:
 +
 [cols="1,2"]
