@@ -1,0 +1,103 @@
+nng_inproc(7)
+=============
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 7
+:icons: font
+:source-highlighter: pygments
+:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+NAME
+----
+nng_inproc - intra-process transport for nng
+
+SYNOPSIS
+--------
+
+[source,c]
+----------
+#include <nng/transport/inproc/inproc.h>
+
+int
+nng_inproc_register(void);
+----------
+
+DESCRIPTION
+-----------
+
+The _nng_inproc_ transport provides communication support between
+_nng_ sockets within the same process. This may be used as an alternative
+to slower transports when data must be moved within the same process.
+
+This transport tries hard to avoid copying data, and thus is very
+light-weight.
+
+Registration
+~~~~~~~~~~~~
+
+The _inproc_ transport is generally built-in to the _nng_ core, so
+no extra steps to use it should be necessary.
+
+URI Format
+~~~~~~~~~~
+
+This transport uses URIs using the scheme `inproc://`, followed by
+an arbitrary string of text, terminated by a `NUL` byte.  The
+entire URI must be less than `NNG_MAXADDRLEN` bytes long, including
+the terminating `NUL`.
+
+Multiple URIs can be used within the
+same application, and they will not interfere with one another.
+
+Two applications may also use the same URI without interfering with each
+other, and they will be unable to communicate with each other using
+that URI.
+
+Socket Address
+~~~~~~~~~~~~~~
+
+When using an `nng_sockaddr` structure, the actual structure is of type
+`struct nng_sockaddr_inproc`.  This type has the following definition:
+
+[source,c]
+--------
+#define NNG_AF_INPROC 1
+#define NNG_MAXADDRLEN 128
+
+struct nng_sockaddr_inproc {
+    uint16_t sa_family;                  // must be NNG_AF_INPROC
+    uint32_t sa_path[NNG_MAXADDRLEN];    // arbitrary "path"
+}
+--------
+
+The `sa_family` member will have the value `NNG_AF_INPROC` (1).
+The `sa_path` member is an ASCIIZ string, and may contain any charaters,
+terminated by a `NUL` byte.
+
+Transport Options
+~~~~~~~~~~~~~~~~~
+
+The _inproc_ transport has no special options.
+    
+AUTHORS
+-------
+link:mailto:garrett@damore.org[Garrett D'Amore]
+
+SEE ALSO
+--------
+<<nng.adoc#,nng(7)>>
+
+COPYRIGHT
+---------
+
+Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/LICENSE.txt[MIT License].

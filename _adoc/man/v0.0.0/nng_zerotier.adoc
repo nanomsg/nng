@@ -20,9 +20,13 @@ nng_zerotier - ZeroTier transport for nng
 SYNOPSIS
 --------
 
-*#include <nn/transports/zt.h>*
+[source,c]
+----------
+#include <nng/transport/zerotier/zerotier.h>
 
-*int nng_zt_register(void);*
+int
+nng_zt_register(void);
+----------
 
 DESCRIPTION
 -----------
@@ -118,7 +122,7 @@ Transport Options
 
 The following transport options are available:
 
-*NNG_OPT_ZT_HOME*::
+`NNG_OPT_ZT_HOME`::
 
   This is a string representing the "home directory", where the transport
   can store (and reuse) persistent state, such as key materials, node
@@ -132,19 +136,19 @@ dialers, or listeners, then separate nodes will be created.  It
 is perfectly valid for an application to have multiple node identities
 in this fashion.
 
-*NNG_OPT_ZT_NWID*::
+`NNG_OPT_ZT_NWID`::
 
   This is a read-only option for listeners, dialers, and pipes, and
   provides a `uint64_t` in native byte order representing the 64-bit ZeroTier
   network number.
 
-*NNG_OPT_ZT_NODE*::
+`NNG_OPT_ZT_NODE`::
 
   This is a read-only option for listeners, dialers, and pipes, and
   provides a `uint64_t` in native byte order representing the ZeroTier
   40-bit node address.
 
-*NNG_OPT_ZT_NETWORK_STATUS*::
+`NNG_OPT_ZT_NETWORK_STATUS`::
 
   This is a read-ony integer, representing the ZeroTier network status.
   Valid values for this are:
@@ -152,39 +156,39 @@ in this fashion.
 [cols="1,2"]
 |===
 
-| *nng_zt_network_status_configuring*
+| `nng_zt_network_status_configuring`
 | The ZeroTier node is still configuring, network services are not available.
 
-| *nng_zt_network_status_ok*
+| `nng_zt_network_status_ok`
 | The ZeroTier network is up.
 
-| *nng_zt_network_status_denied*
+| `nng_zt_network_status_denied`
 | The node does not have permission to join the ZeroTier network.
 
-| *nng_zt_network_status_notfound*
+| `nng_zt_network_status_notfound`
 | The ZeroTier network is not found.
 
-| *nng_zt_network_status_error*
+| `nng_zt_network_status_error`
 | Some other ZeroTier error has occurred; the network is not available.
 
-| *nng_zt_network_status_obsolete*
+| `nng_zt_network_status_obsolete`
 | The node is running obsolete software; the network is not available.
 
 |===
 
 
-*NNG_OPT_ZT_NETWORK_NAME*::
+`NNG_OPT_ZT_NETWORK_NAME`::
 
   This is a read-only ASCIIZ string containing the name of the network
   as established by the ZeroTier network administrator.
 
-*NNG_OPT_ZT_PING_TIME*::
+`NNG_OPT_ZT_PING_TIME`::
 
    If no traffic has been received from the ZeroTier peer after this
    period of time, then a "ping" message is sent to check if the peer
    is still alive.  This is an `nng_duration` (msec).
 
-*NNG_OPT_ZT_PING_COUNT*::
+`NNG_OPT_ZT_PING_COUNT`::
 
    If this number (`int`) of consecutive "ping" requests are sent to the
    peer with no response (and no other intervening traffic), then the
@@ -192,7 +196,7 @@ in this fashion.
    if any traffic is received from the peer, then the underlying counter
    is reset to zero.
 
-*NNG_OPT_ZT_MTU*::
+`NNG_OPT_ZT_MTU`::
 
    This is a read-only size (`size_t`) representing the ZeroTier virtual
    network MTU; this is the Virtual Layer 2 MTU.  The headers used by
@@ -200,14 +204,14 @@ in this fashion.
    sent over the network.  (The transport uses 20-bytes of this, and each
    protocol may consume additional space, typically not more than 16-bytes.)
 
-*NNG_OPT_ZT_ORBIT*::
+`NNG_OPT_ZT_ORBIT`::
 
    This is a write-only option that takes an array of two `uint64_t` values,
    indicating the ID of a ZeroTier "moon", and the node ID of the root server
    for that moon.  (The ID may be zero if the moon ID is the same as it's
    root server ID, which is conventional.)
 
-*NNG_OPT_ZT_DEORBIT*::
+`NNG_OPT_ZT_DEORBIT`::
 
    This write-only option takes a single `uint64_t` indicating the moon
    ID to "deorbit".  If the node is not already orbiting the moon, then
