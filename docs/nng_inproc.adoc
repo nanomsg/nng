@@ -24,8 +24,7 @@ SYNOPSIS
 ----------
 #include <nng/transport/inproc/inproc.h>
 
-int
-nng_inproc_register(void);
+int nng_inproc_register(void);
 ----------
 
 DESCRIPTION

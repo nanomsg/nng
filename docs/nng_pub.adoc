@@ -1,0 +1,93 @@
+nng_pub(7)
+==========
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:icons: font
+:source-highlighter: pygments
+:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+NAME
+----
+nng_pub - publisher protocol
+
+SYNOPSIS
+--------
+
+[source,c]
+----------
+#include <nng/protocol/pubsub/pubsub.h>
+
+#define NNG_PROTO_PUB_V0 32
+#define NNG_PROTO_PUB NNG_PROTO_PUB_V0
+
+int nng_pub_open(nng_socket *s);
+int nng_pub0_open (nng_socket *s);
+
+----------
+
+DESCRIPTION
+-----------
+
+The _nng_pub_ protocol is one half of a publisher/subscriber pattern.
+In this pattern, a publisher sends data, which is broadcast to all
+subscribers.  The subscribing applications only see the data to which
+they have subscribed.
+
+The _nng_pub_ protocol is the publisher side, and the
+<<nng_sub.adoc#,nng_sub(7)>> protocol is the subscriber side.
+
+NOTE: In this implementation, the publisher delivers all messages to all
+subscribers. The subscribers maintain their own subscriptions, and filter
+them locally.  Thus, this pattern should not be used in an attempt to
+reduce bandwidth consumption.
+
+The topics that subscribers subscribe to is just the first part of
+the message body.  Applications should construct their messages
+accordingly.
+
+Socket Operations
+~~~~~~~~~~~~~~~~~
+
+The `nng_pub_open()` call creates a publisher socket.  This socket
+may be used to send messages, but is unable to receive them.  Attempts
+to receive messages will result in `NNG_ENOTSUP`.
+
+Protocol Versions
+~~~~~~~~~~~~~~~~~
+
+Only version 0 of this protocol is supported.  (At the time of writing,
+no other versions of this protocol have been defined.)
+
+Protocol Options
+~~~~~~~~~~~~~~~~
+
+The _nng_pub_ protocol has no protocol-specific options.
+
+Protocol Headers
+~~~~~~~~~~~~~~~~
+
+The _nng_pub_ protocol has no protocol-specific headers.
+    
+AUTHORS
+-------
+link:mailto:garrett@damore.org[Garrett D'Amore]
+
+SEE ALSO
+--------
+<<nng.adoc#,nng(7)>>
+<<nng_sub.adoc#,nng_sub(7)>>
+
+COPYRIGHT
+---------
+
+Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/LICENSE.txt[MIT License].

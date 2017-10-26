@@ -3,7 +3,6 @@ nng(7)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:manvolnum: 7
 :icons:font
 :copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
             Copyright 2017 Capitar IT Group BV <info@capitar.com> \
@@ -39,9 +38,10 @@ The _nng_ library is designed to permit easy creation of new _transports_ and,
 to a lesser extent, new _protocols_.
 
 The _nng_ library is wire compatible with the SP protocols described in
-the nanomsg project; projects using _libnanomsg_ can inter-operate with
+the nanomsg project; projects using
+https://github.com/nanomsg/nanomsg[_libnanomsg_] can inter-operate with
 nng as well as other conforming implementations.  (One such implementation
-is the https://github.com/go-mangos/mangos[mangos].  Applications using _nng_
+is https://github.com/go-mangos/mangos[_mangos_].)  Applications using _nng_
 which wish to communicate with older libraries must ensure that they only
 use protocols or transports offered by the earlier library.
 
@@ -56,11 +56,17 @@ other languages please check the http://nanomsg.org/[website].
 Protocols
 ~~~~~~~~~
 
-* <<nng_bus.adoc,nng_bus(7)>> - Bus protocol
-* <<nng_pair.adoc,nng_pair(7)>> - Pair protocol
-* <<nng_pubsub.adoc,nng_pubsub(7)>> - Publish/Subscribe protocol
-* <<nng_reqrep.adoc,nng_reqrep(7)>> - Request/Reply protocol
-* <<nng_survey.adoc,nng_survey(7)>> - Survey/Respond protocol
+* <<nng_bus.adoc#,nng_bus(7)>> - Bus protocol
+* <<nng_pair.adoc#,nng_pair(7)>> - Pair protocol
+* <<nng_pub.adoc#,nng_pub(7)>> - Publisher side of publish/subscribe protocol
+* <<nng_sub.adoc#,nng_sub(7)>> - Subscriber side of publish/subscribe protocol
+* <<nng_rep.adoc#,nng_rep(7)>> - Reply side of request/reply protocol
+* <<nng_req.adoc#,nng_req(7)>> - Request side of request/reply protocol
+* <<nng_respondent.adoc#,nng_respondent(7)>> - Respondent side of survey protocol
+* <<nng_surveyor.adoc#,nng_surveyor(7)>> - Surveyor side of survey protocol
+
+
+* <<nng_surveyor.adoc,nng_surveyor(7)>> - Survey/Respond protocol
 
 Transports
 ~~~~~~~~~~

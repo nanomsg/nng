@@ -3,7 +3,6 @@ nng_zerotier(7)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:manvolnum: 7
 :icons: font
 :source-highlighter: pygments
 :copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
@@ -24,8 +23,7 @@ SYNOPSIS
 ----------
 #include <nng/transport/zerotier/zerotier.h>
 
-int
-nng_zt_register(void);
+int nng_zt_register(void);
 ----------
 
 DESCRIPTION
