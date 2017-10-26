@@ -798,80 +798,11 @@ nni_sock_send(nni_sock *sock, nni_aio *aio)
 	sock->s_sock_ops.sock_send(sock->s_data, aio);
 }
 
-int
-nni_sock_sendmsg(nni_sock *sock, nni_msg *msg, int flags)
-{
-	int      rv;
-	nni_time expire;
-	nni_time timeo = sock->s_sndtimeo;
-	nni_aio *aio;
-
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
-		return (rv);
-	}
-
-	if ((flags == NNG_FLAG_NONBLOCK) || (timeo == 0)) {
-		expire = NNI_TIME_ZERO;
-	} else if (timeo == NNI_TIME_NEVER) {
-		expire = NNI_TIME_NEVER;
-	} else {
-		expire = nni_clock();
-		expire += timeo;
-	}
-	nni_aio_set_timeout(aio, expire);
-	nni_aio_set_msg(aio, msg);
-
-	nni_sock_send(sock, aio);
-	nni_aio_wait(aio);
-
-	rv = nni_aio_result(aio);
-	nni_aio_fini(aio);
-
-	return (rv);
-}
-
 void
 nni_sock_recv(nni_sock *sock, nni_aio *aio)
 {
 	nni_sock_normalize_expiration(aio, sock->s_rcvtimeo);
 	sock->s_sock_ops.sock_recv(sock->s_data, aio);
-}
-
-int
-nni_sock_recvmsg(nni_sock *sock, nni_msg **msgp, int flags)
-{
-	int      rv;
-	nni_msg *msg;
-	nni_time expire;
-	nni_time timeo = sock->s_rcvtimeo;
-	nni_aio *aio;
-
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
-		return (rv);
-	}
-
-	if ((flags == NNG_FLAG_NONBLOCK) || (timeo == 0)) {
-		expire = NNI_TIME_ZERO;
-	} else if (timeo == NNI_TIME_NEVER) {
-		expire = NNI_TIME_NEVER;
-	} else {
-		expire = nni_clock();
-		expire += timeo;
-	}
-
-	nni_aio_set_timeout(aio, expire);
-	nni_sock_recv(sock, aio);
-	nni_aio_wait(aio);
-
-	if ((rv = nni_aio_result(aio)) == 0) {
-		msg = nni_aio_get_msg(aio);
-		nni_aio_set_msg(aio, NULL);
-
-		*msgp = msg;
-	}
-
-	nni_aio_fini(aio);
-	return (rv);
 }
 
 // nni_sock_protocol returns the socket's 16-bit protocol number.

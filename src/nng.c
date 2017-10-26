@@ -679,6 +679,12 @@ nng_device(nng_socket s1, nng_socket s2)
 	}
 
 	rv = nni_device(sock1, sock2);
+	if (sock1 != NULL) {
+		nni_sock_rele(sock1);
+	}
+	if (sock2 != NULL) {
+		nni_sock_rele(sock2);
+	}
 	return (rv);
 }
 
