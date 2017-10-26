@@ -355,7 +355,6 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 enum nng_flag_enum {
 	NNG_FLAG_ALLOC    = 1, // Recv to allocate receive buffer.
 	NNG_FLAG_NONBLOCK = 2, // Non-blocking operations.
-	NNG_FLAG_DRYRUN   = 4, // Setopt dry-run (internally used).
 };
 
 // Protocol numbers.  These are to be used with nng_socket_create().
