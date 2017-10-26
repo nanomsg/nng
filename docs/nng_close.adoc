@@ -24,7 +24,7 @@ SYNOPSIS
 -----------
 #include <nng/nng.h>
 
-int nng_close (int s);
+int nng_close(int s);
 -----------
 
 

@@ -57,6 +57,7 @@ if [ -n "${cleanup}" ]
 then
 	tempdir=$(mktemp -d)
 	clean() {
+		sleep 1
 		rm -rf ${tempdir}
 	}
 	trap clean 0
@@ -77,5 +78,4 @@ for input in "$@"; do
 	asciidoctor -aversion-label=${name} -arevnumber=${version} \
 		-b ${backend} -o ${output} $input
 	$view $output
-	sleep 1
 done

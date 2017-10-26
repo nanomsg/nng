@@ -27,7 +27,7 @@ SYNOPSIS
 #define NNG_PROTO_SUB NNG_PROTO_SUB_V0
 
 int nng_sub_open(nng_socket *s);
-int nng_sub0_open (nng_socket *s);
+int nng_sub0_open(nng_socket *s);
 
 ----------
 
