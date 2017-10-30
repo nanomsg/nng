@@ -188,41 +188,27 @@ nni_posix_poll_thr(void *arg)
 	nni_mtx_unlock(&pollq->mtx);
 }
 
-// nni_posix_pollq_add_cb is intended to be uesd during endpoint
-// operations that create new pollq nodes in callbacks.  The lock
-// for the pollq must be held.
-int
-nni_posix_pollq_add_cb(nni_posix_pollq *pq, nni_posix_pollq_node *node)
-{
-	int rv;
-	NNI_ASSERT(!nni_list_node_active(&node->node));
-
-	if (pq->close) {
-		// This shouldn't happen!
-		return (NNG_ECLOSED);
-	}
-	node->pq = pq;
-	if ((rv = nni_posix_pollq_poll_grow(pq)) != 0) {
-		return (rv);
-	}
-	pq->nnodes++;
-	if (node->events != 0) {
-		nni_list_append(&pq->armed, node);
-	} else {
-		nni_list_append(&pq->idle, node);
-	}
-	return (0);
-}
-
 int
 nni_posix_pollq_add(nni_posix_pollq *pq, nni_posix_pollq_node *node)
 {
 	int rv;
+	NNI_ASSERT(!nni_list_node_active(&node->node));
 
 	nni_mtx_lock(&pq->mtx);
-	rv = nni_posix_pollq_add_cb(pq, node);
+	if (pq->close) {
+		// This shouldn't happen!
+		nni_mtx_unlock(&pq->mtx);
+		return (NNG_ECLOSED);
+	}
+	node->pq = pq;
+	if ((rv = nni_posix_pollq_poll_grow(pq)) != 0) {
+		nni_mtx_unlock(&pq->mtx);
+		return (rv);
+	}
+	pq->nnodes++;
+	nni_list_append(&pq->idle, node);
 	nni_mtx_unlock(&pq->mtx);
-	return (rv);
+	return (0);
 }
 
 void

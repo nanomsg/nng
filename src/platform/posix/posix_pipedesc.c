@@ -333,6 +333,12 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
+#ifdef SO_NOSIGNAL
+	// Darwin lacks MSG_NOSIGNAL, but has a socket option.
+	int one = 1;
+	(void) setsockopt(fd, SOL_SOCKET, SO_NOSIGNAL, &one, sizeof(one));
+#endif
+
 	nni_mtx_init(&pd->mtx);
 	nni_aio_list_init(&pd->readq);
 	nni_aio_list_init(&pd->writeq);
