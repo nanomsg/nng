@@ -77,13 +77,6 @@ NNG_DECL int nng_close(nng_socket);
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void);
 
-// nng_shutdown shuts down the socket.  This causes any threads doing
-// work for the socket or blocked in socket functions to be woken (and
-// return NNG_ECLOSED).  The socket resources are still present, so it
-// is safe to call other functions; they will just return NNG_ECLOSED.
-// A call to nng_close is still required to release the resources.
-NNG_DECL int nng_shutdown(nng_socket);
-
 // nng_protocol returns the protocol number of the socket.
 NNG_DECL uint16_t nng_protocol(nng_socket);
 

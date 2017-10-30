@@ -30,20 +30,6 @@ nng_fini(void)
 }
 
 int
-nng_shutdown(nng_socket sid)
-{
-	int       rv;
-	nni_sock *sock;
-
-	if ((rv = nni_sock_find(&sock, sid)) != 0) {
-		return (rv);
-	}
-	rv = nni_sock_shutdown(sock);
-	nni_sock_rele(sock);
-	return (rv);
-}
-
-int
 nng_close(nng_socket sid)
 {
 	int       rv;

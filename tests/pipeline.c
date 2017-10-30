@@ -79,7 +79,7 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		So(nng_listen(pull, addr, NULL, 0) == 0);
 		So(nng_dial(push, addr, NULL, 0) == 0);
 		So(nng_dial(what, addr, NULL, 0) == 0);
-		So(nng_shutdown(what) == 0);
+		So(nng_close(what) == 0);
 
 		nng_msleep(20);
 
@@ -146,7 +146,7 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		So(nng_dial(pull1, addr, NULL, 0) == 0);
 		So(nng_dial(pull2, addr, NULL, 0) == 0);
 		So(nng_dial(pull3, addr, NULL, 0) == 0);
-		So(nng_shutdown(pull3) == 0);
+		So(nng_close(pull3) == 0);
 
 		// So pull3 might not be done accepting yet, but pull1
 		// and pull2 definitely are, because otherwise the

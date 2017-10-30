@@ -32,30 +32,6 @@ TestMain("Socket Operations", {
 
 		Reset({ nng_close(s1); });
 
-		Convey("And we can shut it down", {
-			char * buf;
-			size_t sz;
-			So(nng_shutdown(s1) == 0);
-			So(nng_shutdown(s1) == NNG_ECLOSED);
-			Convey("It can't receive", {
-				So(nng_recv(s1, &buf, &sz, NNG_FLAG_ALLOC) ==
-				    NNG_ECLOSED);
-			});
-			Convey("It can't send",
-			    { So(nng_send(s1, "", 0, 0) == NNG_ECLOSED); });
-			Convey("Cannot create endpoints", {
-				nng_dialer   d;
-				nng_listener l;
-				char *       a = "inproc://closed";
-				So(nng_dialer_create(&d, s1, a) ==
-				    NNG_ECLOSED);
-				So(nng_listener_create(&l, s1, a) ==
-				    NNG_ECLOSED);
-				So(nng_dial(s1, a, &d, 0) == NNG_ECLOSED);
-				So(nng_listen(s1, a, &l, 0) == NNG_ECLOSED);
-			});
-		});
-
 		Convey("It's type & peer are still PAIR", {
 			So(nng_protocol(s1) == NNG_PROTO_PAIR);
 			So(nng_peer(s1) == NNG_PROTO_PAIR);
