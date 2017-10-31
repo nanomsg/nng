@@ -53,11 +53,12 @@ for input in $(find . -name '*.adoc'); do
 
 	status=$(git status -s $input )
 	when=$(git log -n1 --format='%ad' '--date=format-local:%s' $input )
-	frontmatter="version: ${vers}\nlayout: default"
-
-	echo "---" > ${output}
-	echo "$frontmatter" >> ${output}
-	echo "---" >> ${output}
+	cat <<EOF > ${output}
+---
+version: ${vers}
+layout: default
+---
+EOF
 
 	if [ -n "$when" ]
 	then
