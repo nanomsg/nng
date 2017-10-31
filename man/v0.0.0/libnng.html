@@ -9,7 +9,7 @@ version: 0.0.0\nlayout: default
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
 <meta name="copyright" content="Copyright 2017 Garrett D'Amore &lt;garrett@damore.org&gt; Copyright 2017 Capitar IT Group BV &lt;info@capitar.com&gt; This software is supplied under the terms of the MIT License, a copy of which should be located in the distribution where this file was obtained (LICENSE.txt).  A copy of the license may also be found online at https://opensource.org/licenses/MIT.">
-<title>nng_inproc(7)</title>
+<title>libnng(3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -429,96 +429,21 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .show-for-print{display:inherit!important}}
 </style>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.6.3/css/font-awesome.min.css">
-<style>
-.listingblock .pygments .hll { background-color: #ffffcc }
-.listingblock .pygments, .listingblock .pygments code { background: #f8f8f8; }
-.listingblock .pygments .tok-c { color: #408080; font-style: italic } /* Comment */
-.listingblock .pygments .tok-err { border: 1px solid #FF0000 } /* Error */
-.listingblock .pygments .tok-k { color: #008000; font-weight: bold } /* Keyword */
-.listingblock .pygments .tok-o { color: #666666 } /* Operator */
-.listingblock .pygments .tok-ch { color: #408080; font-style: italic } /* Comment.Hashbang */
-.listingblock .pygments .tok-cm { color: #408080; font-style: italic } /* Comment.Multiline */
-.listingblock .pygments .tok-cp { color: #BC7A00 } /* Comment.Preproc */
-.listingblock .pygments .tok-cpf { color: #408080; font-style: italic } /* Comment.PreprocFile */
-.listingblock .pygments .tok-c1 { color: #408080; font-style: italic } /* Comment.Single */
-.listingblock .pygments .tok-cs { color: #408080; font-style: italic } /* Comment.Special */
-.listingblock .pygments .tok-gd { color: #A00000 } /* Generic.Deleted */
-.listingblock .pygments .tok-ge { font-style: italic } /* Generic.Emph */
-.listingblock .pygments .tok-gr { color: #FF0000 } /* Generic.Error */
-.listingblock .pygments .tok-gh { color: #000080; font-weight: bold } /* Generic.Heading */
-.listingblock .pygments .tok-gi { color: #00A000 } /* Generic.Inserted */
-.listingblock .pygments .tok-go { color: #888888 } /* Generic.Output */
-.listingblock .pygments .tok-gp { color: #000080; font-weight: bold } /* Generic.Prompt */
-.listingblock .pygments .tok-gs { font-weight: bold } /* Generic.Strong */
-.listingblock .pygments .tok-gu { color: #800080; font-weight: bold } /* Generic.Subheading */
-.listingblock .pygments .tok-gt { color: #0044DD } /* Generic.Traceback */
-.listingblock .pygments .tok-kc { color: #008000; font-weight: bold } /* Keyword.Constant */
-.listingblock .pygments .tok-kd { color: #008000; font-weight: bold } /* Keyword.Declaration */
-.listingblock .pygments .tok-kn { color: #008000; font-weight: bold } /* Keyword.Namespace */
-.listingblock .pygments .tok-kp { color: #008000 } /* Keyword.Pseudo */
-.listingblock .pygments .tok-kr { color: #008000; font-weight: bold } /* Keyword.Reserved */
-.listingblock .pygments .tok-kt { color: #B00040 } /* Keyword.Type */
-.listingblock .pygments .tok-m { color: #666666 } /* Literal.Number */
-.listingblock .pygments .tok-s { color: #BA2121 } /* Literal.String */
-.listingblock .pygments .tok-na { color: #7D9029 } /* Name.Attribute */
-.listingblock .pygments .tok-nb { color: #008000 } /* Name.Builtin */
-.listingblock .pygments .tok-nc { color: #0000FF; font-weight: bold } /* Name.Class */
-.listingblock .pygments .tok-no { color: #880000 } /* Name.Constant */
-.listingblock .pygments .tok-nd { color: #AA22FF } /* Name.Decorator */
-.listingblock .pygments .tok-ni { color: #999999; font-weight: bold } /* Name.Entity */
-.listingblock .pygments .tok-ne { color: #D2413A; font-weight: bold } /* Name.Exception */
-.listingblock .pygments .tok-nf { color: #0000FF } /* Name.Function */
-.listingblock .pygments .tok-nl { color: #A0A000 } /* Name.Label */
-.listingblock .pygments .tok-nn { color: #0000FF; font-weight: bold } /* Name.Namespace */
-.listingblock .pygments .tok-nt { color: #008000; font-weight: bold } /* Name.Tag */
-.listingblock .pygments .tok-nv { color: #19177C } /* Name.Variable */
-.listingblock .pygments .tok-ow { color: #AA22FF; font-weight: bold } /* Operator.Word */
-.listingblock .pygments .tok-w { color: #bbbbbb } /* Text.Whitespace */
-.listingblock .pygments .tok-mb { color: #666666 } /* Literal.Number.Bin */
-.listingblock .pygments .tok-mf { color: #666666 } /* Literal.Number.Float */
-.listingblock .pygments .tok-mh { color: #666666 } /* Literal.Number.Hex */
-.listingblock .pygments .tok-mi { color: #666666 } /* Literal.Number.Integer */
-.listingblock .pygments .tok-mo { color: #666666 } /* Literal.Number.Oct */
-.listingblock .pygments .tok-sa { color: #BA2121 } /* Literal.String.Affix */
-.listingblock .pygments .tok-sb { color: #BA2121 } /* Literal.String.Backtick */
-.listingblock .pygments .tok-sc { color: #BA2121 } /* Literal.String.Char */
-.listingblock .pygments .tok-dl { color: #BA2121 } /* Literal.String.Delimiter */
-.listingblock .pygments .tok-sd { color: #BA2121; font-style: italic } /* Literal.String.Doc */
-.listingblock .pygments .tok-s2 { color: #BA2121 } /* Literal.String.Double */
-.listingblock .pygments .tok-se { color: #BB6622; font-weight: bold } /* Literal.String.Escape */
-.listingblock .pygments .tok-sh { color: #BA2121 } /* Literal.String.Heredoc */
-.listingblock .pygments .tok-si { color: #BB6688; font-weight: bold } /* Literal.String.Interpol */
-.listingblock .pygments .tok-sx { color: #008000 } /* Literal.String.Other */
-.listingblock .pygments .tok-sr { color: #BB6688 } /* Literal.String.Regex */
-.listingblock .pygments .tok-s1 { color: #BA2121 } /* Literal.String.Single */
-.listingblock .pygments .tok-ss { color: #19177C } /* Literal.String.Symbol */
-.listingblock .pygments .tok-bp { color: #008000 } /* Name.Builtin.Pseudo */
-.listingblock .pygments .tok-fm { color: #0000FF } /* Name.Function.Magic */
-.listingblock .pygments .tok-vc { color: #19177C } /* Name.Variable.Class */
-.listingblock .pygments .tok-vg { color: #19177C } /* Name.Variable.Global */
-.listingblock .pygments .tok-vi { color: #19177C } /* Name.Variable.Instance */
-.listingblock .pygments .tok-vm { color: #19177C } /* Name.Variable.Magic */
-.listingblock .pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
-</style>
 </head>
 <body class="manpage">
 <div id="header">
-<h1>nng_inproc(7) Manual Page</h1>
+<h1>libnng(3) Manual Page</h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_inproc - intra-process transport for nng</p>
+<p>libnng - nanomsg next generation library</p>
 </div>
 </div>
 <div id="content">
 <div class="sect1">
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/transport/inproc/inproc.h&gt;</span><span class="tok-cp"></span>
-
-<span class="tok-kt">int</span> <span class="tok-nf">nng_inproc_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
-</div>
+<div class="paragraph">
+<p><strong>cc</strong> [<em>flags</em>] <em>files</em> <strong>-lnng</strong> [<em>libraries</em>]</p>
 </div>
 </div>
 </div>
@@ -526,67 +451,319 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <em>nng_inproc</em> transport provides communication support between
-<em>nng</em> sockets within the same process. This may be used as an alternative
-to slower transports when data must be moved within the same process.</p>
+<p>The <a href="nng.html">nng(7)</a> library provides a common messaging framework
+intended to solve common communication problems in distributed applications.</p>
 </div>
 <div class="paragraph">
-<p>This transport tries hard to avoid copying data, and thus is very
-light-weight.</p>
+<p>It provides a C language API.</p>
 </div>
 <div class="sect2">
-<h3 id="_registration">Registration</h3>
+<h3 id="_common_functions">Common Functions</h3>
 <div class="paragraph">
-<p>The <em>inproc</em> transport is generally built-in to the <em>nng</em> core, so
-no extra steps to use it should be necessary.</p>
+<p>The following common functions exist in <em>libnng</em>.</p>
 </div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_alloc.html">nng_alloc(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate memory</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dial.html">nng_dial(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start a dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_free.html">nng_free(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free memory</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strerror.html">nng_strerror(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return an error description</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
-<h3 id="_uri_format">URI Format</h3>
+<h3 id="_socket_functions">Socket Functions</h3>
 <div class="paragraph">
-<p>This transport uses URIs using the scheme <code>inproc://</code>, followed by
-an arbitrary string of text, terminated by a <code>NUL</code> byte.  The
-entire URI must be less than <code>NNG_MAXADDRLEN</code> bytes long, including
-the terminating <code>NUL</code>.</p>
+<p>The following functions operate on sockets.</p>
 </div>
-<div class="paragraph">
-<p>Multiple URIs can be used within the
-same application, and they will not interfere with one another.</p>
-</div>
-<div class="paragraph">
-<p>Two applications may also use the same URI without interfering with each
-other, and they will be unable to communicate with each other using
-that URI.</p>
-</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_close.html">nng_close(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close a socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_closeall.html">nng_closeall(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close all open sockets</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dial.html">nng_dial(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start a dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_getopt.html">nng_getopt(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get a socket option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listen.html">nng_listen(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start a listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_protocol.html">nng_protocol(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return the protocol number for socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_peer.html">nng_peer(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return peer protocol number for socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recv.html">nng_recv(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_send.html">nng_send(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_setopt.html">nng_setopt(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set a socket option</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
-<h3 id="_socket_address">Socket Address</h3>
+<h3 id="_message_functions">Message Functions</h3>
 <div class="paragraph">
-<p>When using an <code>nng_sockaddr</code> structure, the actual structure is of type
-<code>struct nng_sockaddr_inproc</code>.  This type has the following definition:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#define NNG_AF_INPROC 1</span>
-<span class="tok-cp">#define NNG_MAXADDRLEN 128</span>
-
-<span class="tok-k">struct</span> <span class="tok-n">nng_sockaddr_inproc</span> <span class="tok-p">{</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>                  <span class="tok-c1">// must be NNG_AF_INPROC</span>
-    <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_path</span><span class="tok-p">[</span><span class="tok-n">NNG_MAXADDRLEN</span><span class="tok-p">];</span>    <span class="tok-c1">// arbitrary &quot;path&quot;</span>
-<span class="tok-p">}</span></code></pre>
-</div>
+<p>Applications desiring to use the richest part of <em>libnng</em> will want to
+use the message API, where a message structure is passed between functions.
+This API provides the most power support for zero-copy.</p>
 </div>
 <div class="paragraph">
-<p>The <code>sa_family</code> member will have the value <code>NNG_AF_INPROC</code> (1).
-The <code>sa_path</code> member is an ASCIIZ string, and may contain any characters,
-terminated by a <code>NUL</code> byte.</p>
+<p>Messages are divided into a header and body, where the body generally carries
+user-payload and the header carries protocol specific header information.
+Most applications will only interact with the body.</p>
 </div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_alloc.html">nng_msg_alloc(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_body.html">nng_msg_body(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return the message body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_free.html">nng_msg_free(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header.html">nng_msg_header(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return the message header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header_len.html">nng_msg_header_len(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return the message header length</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_len.html">nng_msg_len(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return the message body length</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_realloc.html">nng_msg_free(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reallocate a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recv_msg.html">nng_recvmsg(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_sendmsg.html">nng_sendmsg(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send a message</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="sect2">
-<h3 id="_transport_options">Transport Options</h3>
+<h3 id="_asynchronous_operations">Asynchronous Operations</h3>
 <div class="paragraph">
-<p>The <em>inproc</em> transport has no special options.</p>
+<p>Most applications will interact with <em>nng</em> synchronously; that is that
+functions such as <a href="nng_send.html">nng_send()</a> will block the calling
+thread until the operation has completed.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Synchronous operations which send messages may return before the
+message has actually been received, or even transmitted.  Instead, These
+functions return as soon as the message was successfully queued for
+delivery.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Asynchronous operations behave differently.  These operations are
+initiated by the calling thread, but control returns immediately to
+the calling thread.  When the operation is subsequently completed (regardless
+of whether this was successful or not), then a user supplied function
+("callback") is executed.</p>
+</div>
+<div class="paragraph">
+<p>A context structure, called an <em>aio</em>, is allocated and associated for
+each asynchronous operation.  Only a single asynchronous operation may
+be associated with an <em>aio</em> at any time.</p>
+</div>
+<div class="paragraph">
+<p>The following functions are used in the asynchronous model:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_alloc.html">nng_aio_alloc(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate asynchronous I/O context</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_cancel.html">nng_aio_cancel(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cancel asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_free.html">nng_aio_free(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free asynchronous I/O context</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_get_msg.html">nng_aio_get_msg(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get message from an asynchronous receive</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_result.html">nng_aio_result(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return result from asynchronous operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_stop.html">nng_aio_stop(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stop asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_wait.html">nng_aio_wait(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wait for an asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_msg.html">nng_aio_set_msg(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set message for an asynchronous send</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_timeout.html">nng_aio_set_timeout(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set timeout for an asynchronous send</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recv_aio.html">nng_recv_aio(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive a message asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_send_aio.html">nng_send_aio(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send a message asynchronously</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_protocols">Protocols</h3>
+<div class="paragraph">
+<p>The following functions are used to construct a socket with a specific
+protocol:</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_bus.html">nng_bus_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a bus socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pair.html">nng_pair_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a pair socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pub.html">nng_pub_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a pub socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_rep.html">nng_rep_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a rep socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_req.html">nng_req_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a req socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_respondent.html">nng_respondent_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a respondent socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_sub.html">nng_sub_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a sub socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_surveyor.html">nng_surveyor_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a surveyor socket</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_transports">Transports</h3>
+<div class="paragraph">
+<p>The following functions are used to register a transport for use.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 20%;">
+<col style="width: 80%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_inproc.html">nng_inproc_register(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register inproc transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc.html">nng_ipc_register(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register IPC transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp.html">nng_tcp_register(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register TCP transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_zerotier.html">nng_zerotier_register(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register ZeroTier transport</p></td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
 </div>
@@ -602,7 +779,8 @@ terminated by a <code>NUL</code> byte.</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng.html">nng(7)</a></p>
+<p><a href="nng.html">nng(7)</a>
+<a href="nng_compat.html">nng_compat(3)</a></p>
 </div>
 </div>
 </div>
@@ -623,7 +801,7 @@ Copyright 2017 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <div id="footer">
 <div id="footer-text">
 nng 0.0.0<br>
-Last updated 2017-10-31 01:26:12 UTC
+Last updated 2017-10-31 01:25:07 UTC
 </div>
 </div>
 </body>
