@@ -29,11 +29,6 @@ TestMain("BUS pattern", {
 		So(nng_bus_open(&bus) == 0);
 
 		Reset({ nng_close(bus); });
-
-		Convey("Protocols match", {
-			So(nng_protocol(bus) == NNG_PROTO_BUS);
-			So(nng_peer(bus) == NNG_PROTO_BUS);
-		});
 	});
 
 	Convey("We can create a linked BUS topology", {

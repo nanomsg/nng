@@ -228,8 +228,8 @@ static nni_proto_sock_ops pull_sock_ops = {
 
 static nni_proto pull_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_PULL_V0, "pull" },
-	.proto_peer     = { NNG_PROTO_PUSH_V0, "push" },
+	.proto_self     = { NNI_PROTO_PULL_V0, "pull" },
+	.proto_peer     = { NNI_PROTO_PUSH_V0, "push" },
 	.proto_flags    = NNI_PROTO_FLAG_RCV,
 	.proto_pipe_ops = &pull_pipe_ops,
 	.proto_sock_ops = &pull_sock_ops,

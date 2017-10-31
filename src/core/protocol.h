@@ -138,6 +138,31 @@ struct nni_proto {
 // not been initialized yet, this routine will do so.
 extern int nni_proto_open(nng_socket *, const nni_proto *);
 
+// Protocol numbers.  These are to be used with nng_socket_create().
+// These values are used on the wire, so must not be changed.  The major
+// number of the protocol is shifted left by 4 bits, and a subprotocol is
+// assigned in the lower 4 bits.
+//
+// There are gaps in the list, which are obsolete or unsupported protocols.
+// Protocol numbers are never more than 16 bits.  Also, there will never be
+// a valid protocol numbered 0 (NNG_PROTO_NONE).
+#define NNI_PROTO(major, minor) (((major) *16) + (minor))
+enum nng_proto_enum {
+	NNI_PROTO_NONE          = NNI_PROTO(0, 0),
+	NNI_PROTO_PAIR_V0       = NNI_PROTO(1, 0),
+	NNI_PROTO_PAIR_V1       = NNI_PROTO(1, 1),
+	NNI_PROTO_PUB_V0        = NNI_PROTO(2, 0),
+	NNI_PROTO_SUB_V0        = NNI_PROTO(2, 1),
+	NNI_PROTO_REQ_V0        = NNI_PROTO(3, 0),
+	NNI_PROTO_REP_V0        = NNI_PROTO(3, 1),
+	NNI_PROTO_PUSH_V0       = NNI_PROTO(5, 0),
+	NNI_PROTO_PULL_V0       = NNI_PROTO(5, 1),
+	NNI_PROTO_SURVEYOR_V0   = NNI_PROTO(6, 2),
+	NNI_PROTO_RESPONDENT_V0 = NNI_PROTO(6, 3),
+	NNI_PROTO_BUS_V0        = NNI_PROTO(7, 0),
+	NNI_PROTO_STAR_V0       = NNI_PROTO(100, 0),
+};
+
 extern int  nni_proto_sys_init(void);
 extern void nni_proto_sys_fini(void);
 

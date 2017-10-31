@@ -142,7 +142,7 @@ pub_pipe_start(void *arg)
 	pub_pipe *p = arg;
 	pub_sock *s = p->pub;
 
-	if (nni_pipe_peer(p->pipe) != NNG_PROTO_SUB) {
+	if (nni_pipe_peer(p->pipe) != NNI_PROTO_SUB_V0) {
 		return (NNG_EPROTO);
 	}
 	nni_mtx_lock(&s->mtx);
@@ -321,8 +321,8 @@ static nni_proto_sock_ops pub_sock_ops = {
 
 static nni_proto pub_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_PUB_V0, "pub" },
-	.proto_peer     = { NNG_PROTO_SUB_V0, "sub" },
+	.proto_self     = { NNI_PROTO_PUB_V0, "pub" },
+	.proto_peer     = { NNI_PROTO_SUB_V0, "sub" },
 	.proto_flags    = NNI_PROTO_FLAG_SND,
 	.proto_sock_ops = &pub_sock_ops,
 	.proto_pipe_ops = &pub_pipe_ops,

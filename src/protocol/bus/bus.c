@@ -387,8 +387,8 @@ static nni_proto_sock_ops bus_sock_ops = {
 
 static nni_proto bus_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_BUS_V0, "bus" },
-	.proto_peer     = { NNG_PROTO_BUS_V0, "bus" },
+	.proto_self     = { NNI_PROTO_BUS_V0, "bus" },
+	.proto_peer     = { NNI_PROTO_BUS_V0, "bus" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &bus_sock_ops,
 	.proto_pipe_ops = &bus_pipe_ops,

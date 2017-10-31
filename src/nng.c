@@ -51,36 +51,6 @@ nng_closeall(void)
 	nni_sock_closeall();
 }
 
-uint16_t
-nng_protocol(nng_socket sid)
-{
-	int       rv;
-	uint16_t  pnum;
-	nni_sock *sock;
-
-	if ((rv = nni_sock_find(&sock, sid)) != 0) {
-		return (rv);
-	}
-	pnum = nni_sock_proto(sock);
-	nni_sock_rele(sock);
-	return (pnum);
-}
-
-uint16_t
-nng_peer(nng_socket sid)
-{
-	int       rv;
-	uint16_t  pnum;
-	nni_sock *sock;
-
-	if ((rv = nni_sock_find(&sock, sid)) != 0) {
-		return (rv);
-	}
-	pnum = nni_sock_peer(sock);
-	nni_sock_rele(sock);
-	return (pnum);
-}
-
 void *
 nng_alloc(size_t sz)
 {

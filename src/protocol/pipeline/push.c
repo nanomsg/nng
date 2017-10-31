@@ -114,7 +114,7 @@ push_pipe_start(void *arg)
 	push_pipe *p = arg;
 	push_sock *s = p->push;
 
-	if (nni_pipe_peer(p->pipe) != NNG_PROTO_PULL) {
+	if (nni_pipe_peer(p->pipe) != NNI_PROTO_PULL_V0) {
 		return (NNG_EPROTO);
 	}
 
@@ -245,8 +245,8 @@ static nni_proto_sock_ops push_sock_ops = {
 
 static nni_proto push_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_PUSH_V0, "push" },
-	.proto_peer     = { NNG_PROTO_PULL_V0, "pull" },
+	.proto_self     = { NNI_PROTO_PUSH_V0, "push" },
+	.proto_peer     = { NNI_PROTO_PULL_V0, "pull" },
 	.proto_flags    = NNI_PROTO_FLAG_SND,
 	.proto_pipe_ops = &push_pipe_ops,
 	.proto_sock_ops = &push_sock_ops,

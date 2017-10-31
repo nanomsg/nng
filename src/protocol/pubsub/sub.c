@@ -384,8 +384,8 @@ static nni_proto_sock_ops sub_sock_ops = {
 
 static nni_proto sub_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_SUB_V0, "sub" },
-	.proto_peer     = { NNG_PROTO_PUB_V0, "pub" },
+	.proto_self     = { NNI_PROTO_SUB_V0, "sub" },
+	.proto_peer     = { NNI_PROTO_PUB_V0, "pub" },
 	.proto_flags    = NNI_PROTO_FLAG_RCV,
 	.proto_sock_ops = &sub_sock_ops,
 	.proto_pipe_ops = &sub_pipe_ops,

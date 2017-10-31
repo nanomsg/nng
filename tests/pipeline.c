@@ -28,11 +28,6 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 
 		Reset({ nng_close(push); });
 
-		Convey("Protocols match", {
-			So(nng_protocol(push) == NNG_PROTO_PUSH);
-			So(nng_peer(push) == NNG_PROTO_PULL);
-		});
-
 		Convey("Recv fails", {
 			nng_msg *msg;
 			So(nng_recvmsg(push, &msg, 0) == NNG_ENOTSUP);
@@ -44,11 +39,6 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		So(nng_pull_open(&pull) == 0);
 
 		Reset({ nng_close(pull); });
-
-		Convey("Protocols match", {
-			So(nng_protocol(pull) == NNG_PROTO_PULL);
-			So(nng_peer(pull) == NNG_PROTO_PUSH);
-		});
 
 		Convey("Send fails", {
 			nng_msg *msg;

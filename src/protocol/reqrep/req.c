@@ -185,7 +185,7 @@ req_pipe_start(void *arg)
 	req_pipe *p = arg;
 	req_sock *s = p->req;
 
-	if (nni_pipe_peer(p->pipe) != NNG_PROTO_REP) {
+	if (nni_pipe_peer(p->pipe) != NNI_PROTO_REP_V0) {
 		return (NNG_EPROTO);
 	}
 
@@ -654,8 +654,8 @@ static nni_proto_sock_ops req_sock_ops = {
 
 static nni_proto req_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_REQ_V0, "req" },
-	.proto_peer     = { NNG_PROTO_REP_V0, "rep" },
+	.proto_self     = { NNI_PROTO_REQ_V0, "req" },
+	.proto_peer     = { NNI_PROTO_REP_V0, "rep" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &req_sock_ops,
 	.proto_pipe_ops = &req_pipe_ops,

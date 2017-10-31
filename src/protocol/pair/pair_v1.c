@@ -499,8 +499,8 @@ static nni_proto_sock_ops pair1_sock_ops = {
 
 static nni_proto pair1_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_PAIR_V1, "pair1" },
-	.proto_peer     = { NNG_PROTO_PAIR_V1, "pair1" },
+	.proto_self     = { NNI_PROTO_PAIR_V1, "pair1" },
+	.proto_peer     = { NNI_PROTO_PAIR_V1, "pair1" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &pair1_sock_ops,
 	.proto_pipe_ops = &pair1_pipe_ops,

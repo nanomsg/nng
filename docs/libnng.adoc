@@ -52,8 +52,6 @@ The following functions operate on sockets.
 |<<nng_dial.adoc#,nng_dial(3)>>|create and start a dialer
 |<<nng_getopt.adoc#,nng_getopt(3)>>|get a socket option
 |<<nng_listen.adoc#,nng_listen(3)>>|create and start a listener
-|<<nng_protocol.adoc#,nng_protocol(3)>>|return the protocol number for socket
-|<<nng_peer.adoc#,nng_peer(3)>>|return peer protocol number for socket
 |<<nng_recv.adoc#,nng_recv(3)>>|receive data
 |<<nng_send.adoc#,nng_send(3)>>|send data
 |<<nng_setopt.adoc#,nng_setopt(3)>>|set a socket option

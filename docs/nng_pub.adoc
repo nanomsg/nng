@@ -23,9 +23,6 @@ SYNOPSIS
 ----------
 #include <nng/protocol/pubsub/pubsub.h>
 
-#define NNG_PROTO_PUB_V0 32
-#define NNG_PROTO_PUB NNG_PROTO_PUB_V0
-
 int nng_pub_open(nng_socket *s);
 int nng_pub0_open(nng_socket *s);
 

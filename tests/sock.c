@@ -32,11 +32,6 @@ TestMain("Socket Operations", {
 
 		Reset({ nng_close(s1); });
 
-		Convey("It's type & peer are still PAIR", {
-			So(nng_protocol(s1) == NNG_PROTO_PAIR);
-			So(nng_peer(s1) == NNG_PROTO_PAIR);
-		});
-
 		Convey("Recv with no pipes times out correctly", {
 			nng_msg *    msg = NULL;
 			nng_duration to  = 100;

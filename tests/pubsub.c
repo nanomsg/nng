@@ -30,11 +30,6 @@ TestMain("PUB/SUB pattern", {
 
 		Reset({ nng_close(pub); });
 
-		Convey("Protocols match", {
-			So(nng_protocol(pub) == NNG_PROTO_PUB);
-			So(nng_peer(pub) == NNG_PROTO_SUB);
-		});
-
 		Convey("Recv fails", {
 			nng_msg *msg;
 			So(nng_recvmsg(pub, &msg, 0) == NNG_ENOTSUP);
@@ -46,11 +41,6 @@ TestMain("PUB/SUB pattern", {
 		So(nng_sub_open(&sub) == 0);
 
 		Reset({ nng_close(sub); });
-
-		Convey("Protocols match", {
-			So(nng_protocol(sub) == NNG_PROTO_SUB);
-			So(nng_peer(sub) == NNG_PROTO_PUB);
-		});
 
 		Convey("Send fails", {
 			nng_msg *msg;

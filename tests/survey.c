@@ -30,11 +30,6 @@ TestMain("SURVEY pattern", {
 
 		Reset({ nng_close(surv); });
 
-		Convey("Protocols match", {
-			So(nng_protocol(surv) == NNG_PROTO_SURVEYOR);
-			So(nng_peer(surv) == NNG_PROTO_RESPONDENT);
-		});
-
 		Convey("Recv with no survey fails", {
 			nng_msg *msg;
 			So(nng_recvmsg(surv, &msg, 0) == NNG_ESTATE);
@@ -56,11 +51,6 @@ TestMain("SURVEY pattern", {
 		So(nng_respondent_open(&resp) == 0);
 
 		Reset({ nng_close(resp); });
-
-		Convey("Protocols match", {
-			So(nng_protocol(resp) == NNG_PROTO_RESPONDENT);
-			So(nng_peer(resp) == NNG_PROTO_SURVEYOR);
-		});
 
 		Convey("Send fails with no survey", {
 			nng_msg *msg;

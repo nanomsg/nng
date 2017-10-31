@@ -492,8 +492,8 @@ static nni_proto_sock_ops rep_sock_ops = {
 
 static nni_proto nni_rep_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_REP_V0, "rep" },
-	.proto_peer     = { NNG_PROTO_REQ_V0, "req" },
+	.proto_self     = { NNI_PROTO_REP_V0, "rep" },
+	.proto_peer     = { NNI_PROTO_REQ_V0, "req" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &rep_sock_ops,
 	.proto_pipe_ops = &rep_pipe_ops,

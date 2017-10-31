@@ -23,11 +23,6 @@ TestMain("REQ/REP pattern", {
 
 		Reset({ nng_close(req); });
 
-		Convey("Protocols match", {
-			So(nng_protocol(req) == NNG_PROTO_REQ);
-			So(nng_peer(req) == NNG_PROTO_REP);
-		});
-
 		Convey("Resend time option id works", {
 
 			// Set timeout.
@@ -50,11 +45,6 @@ TestMain("REQ/REP pattern", {
 		So(nng_rep_open(&rep) == 0);
 
 		Reset({ nng_close(rep); });
-
-		Convey("Protocols match", {
-			So(nng_protocol(rep) == NNG_PROTO_REP);
-			So(nng_peer(rep) == NNG_PROTO_REQ);
-		});
 
 		Convey("Send with no recv fails", {
 			nng_msg *msg;

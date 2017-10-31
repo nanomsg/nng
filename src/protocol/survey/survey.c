@@ -461,8 +461,8 @@ static nni_proto_sock_ops surv_sock_ops = {
 
 static nni_proto surv_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_SURVEYOR_V0, "surveyor" },
-	.proto_peer     = { NNG_PROTO_RESPONDENT_V0, "respondent" },
+	.proto_self     = { NNI_PROTO_SURVEYOR_V0, "surveyor" },
+	.proto_peer     = { NNI_PROTO_RESPONDENT_V0, "respondent" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &surv_sock_ops,
 	.proto_pipe_ops = &surv_pipe_ops,

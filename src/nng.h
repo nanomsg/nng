@@ -77,12 +77,6 @@ NNG_DECL int nng_close(nng_socket);
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void);
 
-// nng_protocol returns the protocol number of the socket.
-NNG_DECL uint16_t nng_protocol(nng_socket);
-
-// nng_peer returns the protocol number for the socket's peer.
-NNG_DECL uint16_t nng_peer(nng_socket);
-
 // nng_setopt sets an option for a specific socket.
 NNG_DECL int nng_setopt(nng_socket, const char *, const void *, size_t);
 NNG_DECL int nng_setopt_int(nng_socket, const char *, int);
@@ -326,13 +320,6 @@ NNG_DECL void nng_msg_set_pipe(nng_msg *, nng_pipe);
 NNG_DECL nng_pipe nng_msg_get_pipe(const nng_msg *);
 NNG_DECL int      nng_msg_getopt(nng_msg *, int, void *, size_t *);
 
-// Lookup an option by name.  This returns either the option value,
-// or -1 if the option name is unknown.
-NNG_DECL int nng_option_lookup(const char *);
-
-// Lookup an option name by id.  Returns NULL if not known.
-NNG_DECL const char *nng_option_name(int);
-
 // Pipe API. Generally pipes are only "observable" to applications, but
 // we do permit an application to close a pipe. This can be useful, for
 // example during a connection notification, to disconnect a pipe that
@@ -348,44 +335,6 @@ NNG_DECL int nng_pipe_close(nng_pipe);
 enum nng_flag_enum {
 	NNG_FLAG_ALLOC    = 1, // Recv to allocate receive buffer.
 	NNG_FLAG_NONBLOCK = 2, // Non-blocking operations.
-};
-
-// Protocol numbers.  These are to be used with nng_socket_create().
-// These values are used on the wire, so must not be changed.  The major
-// number of the protocol is shifted left by 4 bits, and a subprotocol is
-// assigned in the lower 4 bits.
-//
-// There are gaps in the list, which are obsolete or unsupported protocols.
-// Protocol numbers are never more than 16 bits.  Also, there will never be
-// a valid protocol numbered 0 (NNG_PROTO_NONE).
-#define NNG_PROTO(major, minor) (((major) *16) + (minor))
-enum nng_proto_enum {
-	NNG_PROTO_NONE          = NNG_PROTO(0, 0),
-	NNG_PROTO_PAIR_V0       = NNG_PROTO(1, 0),
-	NNG_PROTO_PAIR_V1       = NNG_PROTO(1, 1),
-	NNG_PROTO_PUB_V0        = NNG_PROTO(2, 0),
-	NNG_PROTO_SUB_V0        = NNG_PROTO(2, 1),
-	NNG_PROTO_REQ_V0        = NNG_PROTO(3, 0),
-	NNG_PROTO_REP_V0        = NNG_PROTO(3, 1),
-	NNG_PROTO_PUSH_V0       = NNG_PROTO(5, 0),
-	NNG_PROTO_PULL_V0       = NNG_PROTO(5, 1),
-	NNG_PROTO_SURVEYOR_V0   = NNG_PROTO(6, 2),
-	NNG_PROTO_RESPONDENT_V0 = NNG_PROTO(6, 3),
-	NNG_PROTO_BUS_V0        = NNG_PROTO(7, 0),
-	NNG_PROTO_STAR_V0       = NNG_PROTO(100, 0),
-
-	// "Default" names.  Use the explicit version to guarantee
-	// backwards compatibility.
-	NNG_PROTO_BUS        = NNG_PROTO_BUS_V0,
-	NNG_PROTO_PAIR       = NNG_PROTO_PAIR_V1,
-	NNG_PROTO_SUB        = NNG_PROTO_SUB_V0,
-	NNG_PROTO_PUB        = NNG_PROTO_PUB_V0,
-	NNG_PROTO_REQ        = NNG_PROTO_REQ_V0,
-	NNG_PROTO_REP        = NNG_PROTO_REP_V0,
-	NNG_PROTO_PUSH       = NNG_PROTO_PUSH_V0,
-	NNG_PROTO_PULL       = NNG_PROTO_PULL_V0,
-	NNG_PROTO_SURVEYOR   = NNG_PROTO_SURVEYOR_V0,
-	NNG_PROTO_RESPONDENT = NNG_PROTO_RESPONDENT_V0,
 };
 
 // Builtin protocol socket constructors.

@@ -287,8 +287,8 @@ static nni_proto_sock_ops pair0_sock_ops = {
 // Legacy protocol (v0)
 static nni_proto pair0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_PROTO_PAIR_V0, "pair" },
-	.proto_peer     = { NNG_PROTO_PAIR_V0, "pair" },
+	.proto_self     = { NNI_PROTO_PAIR_V0, "pair" },
+	.proto_peer     = { NNI_PROTO_PAIR_V0, "pair" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &pair0_sock_ops,
 	.proto_pipe_ops = &pair0_pipe_ops,
