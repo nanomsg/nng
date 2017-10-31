@@ -9,9 +9,12 @@
 //
 
 #include "convey.h"
+#include "nng.h"
+#include "protocol/pair0/pair.h"
+#include "transport/zerotier/zerotier.h"
 #include "trantest.h"
 
-#include "transport/zerotier/zerotier.h"
+#include "stubs.h"
 
 // zerotier tests.
 
@@ -34,6 +37,10 @@ mkdir(const char *path, int mode)
 #include <sys/stat.h>
 #include <unistd.h>
 #endif // WIN32
+
+#ifndef NNG_HAVE_ZEROTIER
+#define nng_zt_network_status_ok 0
+#endif
 
 static int
 check_props(nng_msg *msg, nng_listener l, nng_dialer d)
@@ -197,6 +204,8 @@ TestMain("ZeroTier Transport", {
 		char         addr[NNG_MAXADDRLEN];
 		int          rv;
 
+		So(nng_zt_register() == 0);
+
 		snprintf(addr, sizeof(addr), "zt://" NWID ":%u", port);
 
 		So(nng_pair_open(&s) == 0);
@@ -240,6 +249,8 @@ TestMain("ZeroTier Transport", {
 		// uint64_t   node = 0xb000072fa6ull; // my personal host
 		uint64_t node = 0x2d2f619cccull; // my personal host
 
+		So(nng_zt_register() == 0);
+
 		snprintf(addr, sizeof(addr), "zt://" NWID "/%llx:%u",
 		    (unsigned long long) node, port);
 
@@ -257,6 +268,8 @@ TestMain("ZeroTier Transport", {
 		int          rv;
 		uint64_t     node1 = 0;
 		uint64_t     node2 = 0;
+
+		So(nng_zt_register() == 0);
 
 		snprintf(addr, sizeof(addr), "zt://" NWID ":%u", port);
 
@@ -306,6 +319,7 @@ TestMain("ZeroTier Transport", {
 
 		port = 9944;
 		// uint64_t   node = 0xb000072fa6ull; // my personal host
+		So(nng_zt_register() == 0);
 
 		snprintf(addr1, sizeof(addr1), "zt://" NWID ":%u", port);
 

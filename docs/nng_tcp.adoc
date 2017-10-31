@@ -1,0 +1,137 @@
+nng_tcp(7)
+==========
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:icons: font
+:source-highlighter: pygments
+:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+NAME
+----
+nng_tcp - TCP/IP transport for nng
+
+SYNOPSIS
+--------
+
+[source,c]
+----------
+#include <nng/transport/tcp/tcp.h>
+
+int nng_tcp_register(void);
+----------
+
+DESCRIPTION
+-----------
+
+The _nng_tcp_ transport provides communication support between
+_nng_ sockets across a TCP/IP network.  Both IPv4 and IPv6
+are supported when the underlying platform also supports it.
+
+// We need to insert a reference to the nanomsg RFC.
+
+Registration
+~~~~~~~~~~~~
+
+The _tcp_ transport is generally built-in to the _nng_ core, so
+no extra steps to use it should be necessary.
+
+URI Format
+~~~~~~~~~~
+
+This transport uses URIs using the scheme `tcp://`, followed by
+an IP address or hostname, followed by a colon and finally a
+TCP port number.  For example, to contact port 80 on the localhost
+either of the following URIs could be used: `tcp://127.0.0.1:80` or
+`tcp://localhost:80`.
+
+When specifying IPv6 addresses, the address must be enclosed in
+square brackets (`[]`) to avoid confusion with the final colon
+separating the port.
+
+For example, the same port 80 on the IPv6 loopback address ('::1') would
+be specified as `tcp://[::1]:80`.
+
+NOTE: When using symbolic names, the name is resolved when the
+name is first used. _nng_ won't become aware of changes in the
+name resolution until restart,
+usually.footnote:[This is a bug and will likely be fixed in the future.]
+
+The special value of 0 (`INADDR_ANY`) can be used for a listener
+to indicate that it should listen on all interfaces on the host.
+A short-hand for this form is to either omit the address, or specify
+the asterisk (`*`) character.  For example, the following three
+URIs are all equivalent, and could be used to listen to port 9999
+on the host:
+
+  1. `tcp://0.0.0.0:9999`
+  2. `tcp://*:9999`
+  3. `tcp://:9999`
+
+The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
+
+Socket Address
+~~~~~~~~~~~~~~
+
+When using an `nng_sockaddr` structure, the actual structure is either
+of type `nng_sockaddr_in` (for IPv4) or `nng_sockaddr_in6` (for IPv6).
+These are `struct` types with the following definitions:
+
+[source,c]
+--------
+#define NNG_AF_INET    3 <1>
+#define NNG_AF_INET6   4
+#define NNG_MAXADDRLEN 128
+
+typedef struct {
+    // ... <2>
+    uint16_t sa_family;                 // must be NNG_AF_INET
+    uint16_t sa_port;                   // TCP port number
+    uint32_t sa_addr;
+    // ...
+} nng_sockaddr_in;
+
+typedef struct {
+    // ... <2>
+    uint16_t sa_family;                 // must be NNG_AF_INET6
+    uint16_t sa_port;                   // TCP port number
+    uint8_t  sa_addr[16];
+    // ...
+} nng_sockaddr_in6;
+--------
+<1> The values of these macros may change, so applications
+should avoid depending upon their values and instead use them symbolically.
+<2> Other members may be present, but only those listed here
+are suitable for application use.
+
+The `sa_family` member will have the value `NNG_AF_INET` or `NNG_AF_INET6`.
+The `sa_port` and `sa_addr` are the TCP port number and address, both in
+network byte order (most significant byte is first).
+
+Transport Options
+~~~~~~~~~~~~~~~~~
+
+The _tcp_ transport has no special
+options.footnote:[Options for TCP keepalive, linger, and nodelay are planned.]
+ 
+AUTHORS
+-------
+link:mailto:garrett@damore.org[Garrett D'Amore]
+
+SEE ALSO
+--------
+<<nng.adoc#,nng(7)>>
+
+COPYRIGHT
+---------
+
+Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/LICENSE.txt[MIT License].

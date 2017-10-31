@@ -11,6 +11,10 @@
 #include "convey.h"
 #include "nng.h"
 
+#include "protocol/reqrep0/rep.h"
+#include "protocol/reqrep0/req.h"
+#include "stubs.h"
+
 #include <string.h>
 
 static int nclients = 200;

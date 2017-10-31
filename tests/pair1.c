@@ -10,7 +10,10 @@
 
 #include "convey.h"
 #include "nng.h"
+#include "protocol/pair1/pair.h"
 #include "trantest.h"
+
+#include "stubs.h"
 
 #include <string.h>
 

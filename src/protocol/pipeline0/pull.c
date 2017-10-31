@@ -15,31 +15,39 @@
 
 // Pull protocol.  The PULL protocol is the "read" side of a pipeline.
 
-typedef struct pull_pipe pull_pipe;
-typedef struct pull_sock pull_sock;
+#ifndef NNI_PROTO_PULL_V0
+#define NNI_PROTO_PULL_V0 NNI_PROTO(5, 1)
+#endif
 
-static void pull_putq_cb(void *);
-static void pull_recv_cb(void *);
-static void pull_putq(pull_pipe *, nni_msg *);
+#ifndef NNI_PROTO_PUSH_V0
+#define NNI_PROTO_PUSH_V0 NNI_PROTO(5, 0)
+#endif
 
-// A pull_sock is our per-socket protocol private structure.
-struct pull_sock {
+typedef struct pull0_pipe pull0_pipe;
+typedef struct pull0_sock pull0_sock;
+
+static void pull0_putq_cb(void *);
+static void pull0_recv_cb(void *);
+static void pull0_putq(pull0_pipe *, nni_msg *);
+
+// pull0_sock is our per-socket protocol private structure.
+struct pull0_sock {
 	nni_msgq *urq;
 	int       raw;
 };
 
-// A pull_pipe is our per-pipe protocol private structure.
-struct pull_pipe {
-	nni_pipe * pipe;
-	pull_sock *pull;
-	nni_aio *  putq_aio;
-	nni_aio *  recv_aio;
+// pull0_pipe is our per-pipe protocol private structure.
+struct pull0_pipe {
+	nni_pipe *  pipe;
+	pull0_sock *pull;
+	nni_aio *   putq_aio;
+	nni_aio *   recv_aio;
 };
 
 static int
-pull_sock_init(void **sp, nni_sock *sock)
+pull0_sock_init(void **sp, nni_sock *sock)
 {
-	pull_sock *s;
+	pull0_sock *s;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
@@ -52,17 +60,17 @@ pull_sock_init(void **sp, nni_sock *sock)
 }
 
 static void
-pull_sock_fini(void *arg)
+pull0_sock_fini(void *arg)
 {
-	pull_sock *s = arg;
+	pull0_sock *s = arg;
 
 	NNI_FREE_STRUCT(s);
 }
 
 static void
-pull_pipe_fini(void *arg)
+pull0_pipe_fini(void *arg)
 {
-	pull_pipe *p = arg;
+	pull0_pipe *p = arg;
 
 	nni_aio_fini(p->putq_aio);
 	nni_aio_fini(p->recv_aio);
@@ -70,17 +78,17 @@ pull_pipe_fini(void *arg)
 }
 
 static int
-pull_pipe_init(void **pp, nni_pipe *pipe, void *s)
+pull0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 {
-	pull_pipe *p;
-	int        rv;
+	pull0_pipe *p;
+	int         rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_aio_init(&p->putq_aio, pull_putq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->recv_aio, pull_recv_cb, p)) != 0)) {
-		pull_pipe_fini(p);
+	if (((rv = nni_aio_init(&p->putq_aio, pull0_putq_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->recv_aio, pull0_recv_cb, p)) != 0)) {
+		pull0_pipe_fini(p);
 		return (rv);
 	}
 
@@ -91,9 +99,9 @@ pull_pipe_init(void **pp, nni_pipe *pipe, void *s)
 }
 
 static int
-pull_pipe_start(void *arg)
+pull0_pipe_start(void *arg)
 {
-	pull_pipe *p = arg;
+	pull0_pipe *p = arg;
 
 	// Start the pending pull...
 	nni_pipe_recv(p->pipe, p->recv_aio);
@@ -102,20 +110,20 @@ pull_pipe_start(void *arg)
 }
 
 static void
-pull_pipe_stop(void *arg)
+pull0_pipe_stop(void *arg)
 {
-	pull_pipe *p = arg;
+	pull0_pipe *p = arg;
 
 	nni_aio_stop(p->putq_aio);
 	nni_aio_stop(p->recv_aio);
 }
 
 static void
-pull_recv_cb(void *arg)
+pull0_recv_cb(void *arg)
 {
-	pull_pipe *p   = arg;
-	nni_aio *  aio = p->recv_aio;
-	nni_msg *  msg;
+	pull0_pipe *p   = arg;
+	nni_aio *   aio = p->recv_aio;
+	nni_msg *   msg;
 
 	if (nni_aio_result(aio) != 0) {
 		// Failed to get a message, probably the pipe is closed.
@@ -127,14 +135,14 @@ pull_recv_cb(void *arg)
 	msg = nni_aio_get_msg(aio);
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
 	nni_aio_set_msg(aio, NULL);
-	pull_putq(p, msg);
+	pull0_putq(p, msg);
 }
 
 static void
-pull_putq_cb(void *arg)
+pull0_putq_cb(void *arg)
 {
-	pull_pipe *p   = arg;
-	nni_aio *  aio = p->putq_aio;
+	pull0_pipe *p   = arg;
+	nni_aio *   aio = p->putq_aio;
 
 	if (nni_aio_result(aio) != 0) {
 		// If we failed to put, probably NNG_ECLOSED, nothing else
@@ -148,11 +156,11 @@ pull_putq_cb(void *arg)
 	nni_pipe_recv(p->pipe, p->recv_aio);
 }
 
-// nni_pull_putq schedules a put operation to the user socket (sendup).
+// pull0_putq schedules a put operation to the user socket (sendup).
 static void
-pull_putq(pull_pipe *p, nni_msg *msg)
+pull0_putq(pull0_pipe *p, nni_msg *msg)
 {
-	pull_sock *s = p->pull;
+	pull0_sock *s = p->pull;
 
 	nni_aio_set_msg(p->putq_aio, msg);
 
@@ -160,83 +168,83 @@ pull_putq(pull_pipe *p, nni_msg *msg)
 }
 
 static void
-pull_sock_open(void *arg)
+pull0_sock_open(void *arg)
 {
 	NNI_ARG_UNUSED(arg);
 }
 
 static void
-pull_sock_close(void *arg)
+pull0_sock_close(void *arg)
 {
 	NNI_ARG_UNUSED(arg);
 }
 
 static int
-pull_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+pull0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	pull_sock *s = arg;
+	pull0_sock *s = arg;
 	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
 }
 
 static int
-pull_sock_getopt_raw(void *arg, void *buf, size_t *szp)
+pull0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	pull_sock *s = arg;
+	pull0_sock *s = arg;
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static void
-pull_sock_send(void *arg, nni_aio *aio)
+pull0_sock_send(void *arg, nni_aio *aio)
 {
 	nni_aio_finish_error(aio, NNG_ENOTSUP);
 }
 
 static void
-pull_sock_recv(void *arg, nni_aio *aio)
+pull0_sock_recv(void *arg, nni_aio *aio)
 {
-	pull_sock *s = arg;
+	pull0_sock *s = arg;
 
 	nni_msgq_aio_get(s->urq, aio);
 }
 
-static nni_proto_pipe_ops pull_pipe_ops = {
-	.pipe_init  = pull_pipe_init,
-	.pipe_fini  = pull_pipe_fini,
-	.pipe_start = pull_pipe_start,
-	.pipe_stop  = pull_pipe_stop,
+static nni_proto_pipe_ops pull0_pipe_ops = {
+	.pipe_init  = pull0_pipe_init,
+	.pipe_fini  = pull0_pipe_fini,
+	.pipe_start = pull0_pipe_start,
+	.pipe_stop  = pull0_pipe_stop,
 };
 
-static nni_proto_sock_option pull_sock_options[] = {
+static nni_proto_sock_option pull0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
-	    .pso_getopt = pull_sock_getopt_raw,
-	    .pso_setopt = pull_sock_setopt_raw,
+	    .pso_getopt = pull0_sock_getopt_raw,
+	    .pso_setopt = pull0_sock_setopt_raw,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },
 };
 
-static nni_proto_sock_ops pull_sock_ops = {
-	.sock_init    = pull_sock_init,
-	.sock_fini    = pull_sock_fini,
-	.sock_open    = pull_sock_open,
-	.sock_close   = pull_sock_close,
-	.sock_send    = pull_sock_send,
-	.sock_recv    = pull_sock_recv,
-	.sock_options = pull_sock_options,
+static nni_proto_sock_ops pull0_sock_ops = {
+	.sock_init    = pull0_sock_init,
+	.sock_fini    = pull0_sock_fini,
+	.sock_open    = pull0_sock_open,
+	.sock_close   = pull0_sock_close,
+	.sock_send    = pull0_sock_send,
+	.sock_recv    = pull0_sock_recv,
+	.sock_options = pull0_sock_options,
 };
 
-static nni_proto pull_proto = {
+static nni_proto pull0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_PULL_V0, "pull" },
 	.proto_peer     = { NNI_PROTO_PUSH_V0, "push" },
 	.proto_flags    = NNI_PROTO_FLAG_RCV,
-	.proto_pipe_ops = &pull_pipe_ops,
-	.proto_sock_ops = &pull_sock_ops,
+	.proto_pipe_ops = &pull0_pipe_ops,
+	.proto_sock_ops = &pull0_sock_ops,
 };
 
 int
 nng_pull0_open(nng_socket *sidp)
 {
-	return (nni_proto_open(sidp, &pull_proto));
+	return (nni_proto_open(sidp, &pull0_proto));
 }

@@ -44,4 +44,51 @@ getms(void)
 #endif
 }
 
+int
+nosocket(nng_socket *s)
+{
+	ConveySkip("Protocol unconfigured");
+	return (NNG_ENOTSUP);
+}
+
+#ifndef NNG_HAVE_REQ0
+#define nng_req0_open nosocket
+#endif
+
+#ifndef NNG_HAVE_REP0
+#define nng_rep0_open nosocket
+#endif
+
+#ifndef NNG_HAVE_PUB0
+#define nng_pub0_open nosocket
+#endif
+
+#ifndef NNG_HAVE_SUB0
+#define nng_sub0_open nosocket
+#endif
+
+#ifndef NNG_HAVE_PAIR0
+#define nng_pair0_open nosocket
+#endif
+
+#ifndef NNG_HAVE_PAIR1
+#define nng_pair1_open nosocket
+#endif
+
+#ifndef NNG_HAVE_PUSH0
+#define nng_push0_open nosocket
+#endif
+
+#ifndef NNG_HAVE_PULL0
+#define nng_pull0_open nosocket
+#endif
+
+#ifndef NNG_HAVE_SURVEYOR0
+#define nng_surveyor0_open nosocket
+#endif
+
+#ifndef NNG_HAVE_RESPONDENT0
+#define nng_respondent0_open nosocket
+#endif
+
 #endif // STUBS_H

@@ -10,6 +10,9 @@
 
 #include "core/nng_impl.h"
 #include "transport/inproc/inproc.h"
+#include "transport/ipc/ipc.h"
+#include "transport/tcp/tcp.h"
+#include "transport/zerotier/zerotier.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -51,6 +54,11 @@ nni_tran_register(const nni_tran *tran)
 	nni_mtx_lock(&nni_tran_lk);
 	// Check to see if the transport is already registered...
 	NNI_LIST_FOREACH (&nni_tran_list, t) {
+		if (tran->tran_init == t->t_tran.tran_init) {
+			nni_mtx_unlock(&nni_tran_lk);
+			// Same transport, duplicate registration.
+			return (0);
+		}
 		if (strcmp(tran->tran_scheme, t->t_tran.tran_scheme) == 0) {
 			nni_mtx_unlock(&nni_tran_lk);
 			return (NNG_ESTATE);
@@ -129,20 +137,40 @@ nni_tran_chkopt(const char *name, const void *v, size_t sz)
 
 // nni_tran_sys_init initializes the entire transport subsystem, including
 // each individual transport.
+
+typedef int (*nni_tran_ctor)(void);
+
+static nni_tran_ctor nni_tran_ctors[] = {
+#ifdef NNG_HAVE_INPROC
+	nng_inproc_register,
+#endif
+#ifdef NNG_HAVE_IPC
+	nng_ipc_register,
+#endif
+#ifdef NNG_HAVE_TCP
+	nng_tcp_register,
+#endif
+#ifdef NNI_HAVE_ZEROTIER
+	nng_zt_register,
+#endif
+	NULL,
+};
+
 int
 nni_tran_sys_init(void)
 {
-	int rv;
+	int i;
 
 	nni_tran_inited = 1;
 	NNI_LIST_INIT(&nni_tran_list, nni_transport, t_node);
 	nni_mtx_init(&nni_tran_lk);
 
-	if (((rv = nng_inproc_register()) != 0) ||
-	    ((rv = nni_tran_register(&nni_ipc_tran)) != 0) ||
-	    ((rv = nni_tran_register(&nni_tcp_tran)) != 0)) {
-		nni_tran_sys_fini();
-		return (rv);
+	for (i = 0; nni_tran_ctors[i] != NULL; i++) {
+		int rv;
+		if ((rv = (nni_tran_ctors[i])()) != 0) {
+			nni_tran_sys_fini();
+			return (rv);
+		}
 	}
 	return (0);
 }

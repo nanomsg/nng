@@ -102,7 +102,6 @@ static int
 nni_sock_getopt_fd(nni_sock *s, int flag, void *val, size_t *szp)
 {
 	int           rv;
-	uint32_t      flags;
 	nni_notifyfd *fd;
 	nni_msgq *    mq;
 	nni_msgq_cb   cb;

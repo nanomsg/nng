@@ -10,6 +10,16 @@
 
 #include "nng_compat.h"
 #include "nng.h"
+#include "protocol/bus0/bus.h"
+#include "protocol/pair0/pair.h"
+#include "protocol/pipeline0/pull.h"
+#include "protocol/pipeline0/push.h"
+#include "protocol/pubsub0/pub.h"
+#include "protocol/pubsub0/sub.h"
+#include "protocol/reqrep0/rep.h"
+#include "protocol/reqrep0/req.h"
+#include "protocol/survey0/respond.h"
+#include "protocol/survey0/survey.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -92,17 +102,37 @@ static const struct {
 	uint16_t p_id;
 	int (*p_open)(nng_socket *);
 } nn_protocols[] = {
-	// clang-format off
+// clang-format off
+#ifdef NNG_HAVE_BUS0
 	{ NN_BUS, nng_bus0_open },
+#endif
+#ifdef NNG_HAVE_PAIR0
 	{ NN_PAIR, nng_pair0_open },
+#endif
+#ifdef NNG_HAVE_PUSH0
 	{ NN_PUSH, nng_push0_open },
+#endif
+#ifdef NNG_HAVE_PULL0
 	{ NN_PULL, nng_pull0_open },
+#endif
+#ifdef NNG_HAVE_PUB0
 	{ NN_PUB, nng_pub0_open },
+#endif
+#ifdef NNG_HAVE_SUB0
 	{ NN_SUB, nng_sub0_open },
+#endif
+#ifdef NNG_HAVE_REQ0
 	{ NN_REQ, nng_req0_open },
+#endif
+#ifdef NNG_HAVE_REP0
 	{ NN_REP, nng_rep0_open },
+#endif
+#ifdef NNG_HAVE_SURVEYOR0
 	{ NN_SURVEYOR, nng_surveyor0_open },
+#endif
+#ifdef NNG_HAVE_RESPONDENT0
 	{ NN_RESPONDENT, nng_respondent0_open },
+#endif
 	{ 0, NULL },
 	// clang-format on
 };
@@ -115,7 +145,7 @@ nn_socket(int domain, int protocol)
 	int        i;
 
 	if ((domain != AF_SP) && (domain != AF_SP_RAW)) {
-		nn_seterror(EAFNOSUPPORT);
+		errno = EAFNOSUPPORT;
 		return (-1);
 	}
 
@@ -125,7 +155,7 @@ nn_socket(int domain, int protocol)
 		}
 	}
 	if (nn_protocols[i].p_open == NULL) {
-		nn_seterror(ENOTSUP);
+		errno = ENOTSUP;
 		return (-1);
 	}
 

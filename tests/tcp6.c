@@ -13,6 +13,9 @@
 
 #include "core/nng_impl.h"
 // TCP tests for IPv6.
+#include "protocol/pair1/pair.h"
+
+#include "stubs.h"
 
 static int
 has_v6(void)

@@ -11,6 +11,8 @@
 #include "convey.h"
 #include "core/nng_impl.h"
 #include "nng.h"
+#include "protocol/reqrep0/rep.h"
+#include "protocol/reqrep0/req.h"
 #include <stdlib.h>
 #include <string.h>
 
@@ -30,9 +32,54 @@ unsigned trantest_port = 0;
 
 typedef int (*trantest_proptest_t)(nng_msg *, nng_listener, nng_dialer);
 
+#ifndef NNG_HAVE_ZEROTIER
+#define nng_zt_register notransport
+#endif
+#ifndef NNG_HAVE_INPROC
+#define nng_inproc_register notransport
+#endif
+#ifndef NNG_HAVE_IPC
+#define nng_ipc_register notransport
+#endif
+#ifndef NNG_HAVE_TCP
+#define nng_tcp_register notransport
+#endif
+
+int
+notransport(void)
+{
+	ConveySkip("Transport not configured");
+	return (NNG_ENOTSUP);
+}
+
+#define CHKTRAN(s, t)                      \
+	if (strncmp(s, t, strlen(t)) == 0) \
+	notransport()
+
+void
+trantest_checktran(const char *url)
+{
+#ifndef NNG_HAVE_ZEROTIER
+	CHKTRAN(url, "zt:");
+#endif
+#ifndef NNG_HAVE_INPROC
+	CHKTRAN(url, "inproc:");
+#endif
+#ifndef NNG_HAVE_IPC
+	CHKTRAN(url, "ipc:");
+#endif
+#ifndef NNG_HAVE_TCP
+	CHKTRAN(url, "tcp:");
+#endif
+
+	(void) url;
+}
+
 void
 trantest_next_address(char *out, const char *template)
 {
+	trantest_checktran(template);
+
 	if (trantest_port == 0) {
 		char *pstr;
 		trantest_port = 5555;
@@ -56,11 +103,16 @@ void
 trantest_init(trantest *tt, const char *addr)
 {
 	trantest_next_address(tt->addr, addr);
+
+#if defined(NNG_HAVE_REQ0) && defined(NNG_HAVE_REP0)
 	So(nng_req_open(&tt->reqsock) == 0);
 	So(nng_rep_open(&tt->repsock) == 0);
 
 	tt->tran = nni_tran_find(addr);
 	So(tt->tran != NULL);
+#else
+	ConveySkip("Missing REQ or REP protocols");
+#endif
 }
 
 void

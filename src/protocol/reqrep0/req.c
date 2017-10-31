@@ -13,21 +13,28 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "protocol/reqrep0/req.h"
 
 // Request protocol.  The REQ protocol is the "request" side of a
 // request-reply pair.  This is useful for building RPC clients, for example.
 
-const char *nng_opt_req_resendtime = NNG_OPT_REQ_RESENDTIME;
+#ifndef NNI_PROTO_REQ_V0
+#define NNI_PROTO_REQ_V0 NNI_PROTO(3, 0)
+#endif
 
-typedef struct req_pipe req_pipe;
-typedef struct req_sock req_sock;
+#ifndef NNI_PROTO_REP_V0
+#define NNI_PROTO_REP_V0 NNI_PROTO(3, 1)
+#endif
 
-static void req_resend(req_sock *);
-static void req_timeout(void *);
-static void req_pipe_fini(void *);
+typedef struct req0_pipe req0_pipe;
+typedef struct req0_sock req0_sock;
 
-// A req_sock is our per-socket protocol private structure.
-struct req_sock {
+static void req0_resend(req0_sock *);
+static void req0_timeout(void *);
+static void req0_pipe_fini(void *);
+
+// A req0_sock is our per-socket protocol private structure.
+struct req0_sock {
 	nni_msgq *   uwq;
 	nni_msgq *   urq;
 	nni_duration retry;
@@ -38,7 +45,7 @@ struct req_sock {
 	int          ttl;
 	nni_msg *    reqmsg;
 
-	req_pipe *pendpipe;
+	req0_pipe *pendpipe;
 
 	nni_list readypipes;
 	nni_list busypipes;
@@ -51,10 +58,10 @@ struct req_sock {
 	nni_cv   cv;
 };
 
-// A req_pipe is our per-pipe protocol private structure.
-struct req_pipe {
+// A req0_pipe is our per-pipe protocol private structure.
+struct req0_pipe {
 	nni_pipe *    pipe;
-	req_sock *    req;
+	req0_sock *   req;
 	nni_list_node node;
 	nni_aio *     aio_getq;       // raw mode only
 	nni_aio *     aio_sendraw;    // raw mode only
@@ -64,17 +71,17 @@ struct req_pipe {
 	nni_mtx       mtx;
 };
 
-static void req_resender(void *);
-static void req_getq_cb(void *);
-static void req_sendraw_cb(void *);
-static void req_sendcooked_cb(void *);
-static void req_recv_cb(void *);
-static void req_putq_cb(void *);
+static void req0_resender(void *);
+static void req0_getq_cb(void *);
+static void req0_sendraw_cb(void *);
+static void req0_sendcooked_cb(void *);
+static void req0_recv_cb(void *);
+static void req0_putq_cb(void *);
 
 static int
-req_sock_init(void **sp, nni_sock *sock)
+req0_sock_init(void **sp, nni_sock *sock)
 {
-	req_sock *s;
+	req0_sock *s;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
@@ -82,9 +89,9 @@ req_sock_init(void **sp, nni_sock *sock)
 	nni_mtx_init(&s->mtx);
 	nni_cv_init(&s->cv, &s->mtx);
 
-	NNI_LIST_INIT(&s->readypipes, req_pipe, node);
-	NNI_LIST_INIT(&s->busypipes, req_pipe, node);
-	nni_timer_init(&s->timer, req_timeout, s);
+	NNI_LIST_INIT(&s->readypipes, req0_pipe, node);
+	NNI_LIST_INIT(&s->busypipes, req0_pipe, node);
+	nni_timer_init(&s->timer, req0_timeout, s);
 
 	// this is "semi random" start for request IDs.
 	s->nextid = nni_random();
@@ -102,15 +109,15 @@ req_sock_init(void **sp, nni_sock *sock)
 }
 
 static void
-req_sock_open(void *arg)
+req0_sock_open(void *arg)
 {
 	NNI_ARG_UNUSED(arg);
 }
 
 static void
-req_sock_close(void *arg)
+req0_sock_close(void *arg)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
 	s->closed = 1;
@@ -120,9 +127,9 @@ req_sock_close(void *arg)
 }
 
 static void
-req_sock_fini(void *arg)
+req0_sock_fini(void *arg)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
 	while ((!nni_list_empty(&s->readypipes)) ||
@@ -139,9 +146,9 @@ req_sock_fini(void *arg)
 }
 
 static void
-req_pipe_fini(void *arg)
+req0_pipe_fini(void *arg)
 {
-	req_pipe *p = arg;
+	req0_pipe *p = arg;
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_putq);
@@ -153,22 +160,22 @@ req_pipe_fini(void *arg)
 }
 
 static int
-req_pipe_init(void **pp, nni_pipe *pipe, void *s)
+req0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 {
-	req_pipe *p;
-	int       rv;
+	req0_pipe *p;
+	int        rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&p->mtx);
-	if (((rv = nni_aio_init(&p->aio_getq, req_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, req_putq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, req_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_sendraw, req_sendraw_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_sendcooked, req_sendcooked_cb, p)) !=
+	if (((rv = nni_aio_init(&p->aio_getq, req0_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_putq, req0_putq_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_recv, req0_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_sendraw, req0_sendraw_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_sendcooked, req0_sendcooked_cb, p)) !=
 	        0)) {
-		req_pipe_fini(p);
+		req0_pipe_fini(p);
 		return (rv);
 	}
 
@@ -180,10 +187,10 @@ req_pipe_init(void **pp, nni_pipe *pipe, void *s)
 }
 
 static int
-req_pipe_start(void *arg)
+req0_pipe_start(void *arg)
 {
-	req_pipe *p = arg;
-	req_sock *s = p->req;
+	req0_pipe *p = arg;
+	req0_sock *s = p->req;
 
 	if (nni_pipe_peer(p->pipe) != NNI_PROTO_REP_V0) {
 		return (NNG_EPROTO);
@@ -198,7 +205,7 @@ req_pipe_start(void *arg)
 	// If sock was waiting for somewhere to send data, go ahead and
 	// send it to this pipe.
 	if (s->wantw) {
-		req_resend(s);
+		req0_resend(s);
 	}
 	nni_mtx_unlock(&s->mtx);
 
@@ -208,10 +215,10 @@ req_pipe_start(void *arg)
 }
 
 static void
-req_pipe_stop(void *arg)
+req0_pipe_stop(void *arg)
 {
-	req_pipe *p = arg;
-	req_sock *s = p->req;
+	req0_pipe *p = arg;
+	req0_sock *s = p->req;
 
 	nni_aio_stop(p->aio_getq);
 	nni_aio_stop(p->aio_putq);
@@ -238,50 +245,50 @@ req_pipe_stop(void *arg)
 		s->pendpipe = NULL;
 		s->resend   = NNI_TIME_ZERO;
 		s->wantw    = 1;
-		req_resend(s);
+		req0_resend(s);
 	}
 	nni_mtx_unlock(&s->mtx);
 }
 
 static int
-req_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+req0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
 }
 
 static int
-req_sock_getopt_raw(void *arg, void *buf, size_t *szp)
+req0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static int
-req_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+req0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 	return (nni_setopt_int(&s->ttl, buf, sz, 1, 255));
 }
 
 static int
-req_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
+req0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 	return (nni_getopt_int(s->ttl, buf, szp));
 }
 
 static int
-req_sock_setopt_resendtime(void *arg, const void *buf, size_t sz)
+req0_sock_setopt_resendtime(void *arg, const void *buf, size_t sz)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 	return (nni_setopt_ms(&s->retry, buf, sz));
 }
 
 static int
-req_sock_getopt_resendtime(void *arg, void *buf, size_t *szp)
+req0_sock_getopt_resendtime(void *arg, void *buf, size_t *szp)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 	return (nni_getopt_ms(s->retry, buf, szp));
 }
 
@@ -302,10 +309,10 @@ req_sock_getopt_resendtime(void *arg, void *buf, size_t *szp)
 // kind of priority.)
 
 static void
-req_getq_cb(void *arg)
+req0_getq_cb(void *arg)
 {
-	req_pipe *p = arg;
-	req_sock *s = p->req;
+	req0_pipe *p = arg;
+	req0_sock *s = p->req;
 
 	// We should be in RAW mode.  Cooked mode traffic bypasses
 	// the upper write queue entirely, and should never end up here.
@@ -326,9 +333,9 @@ req_getq_cb(void *arg)
 }
 
 static void
-req_sendraw_cb(void *arg)
+req0_sendraw_cb(void *arg)
 {
-	req_pipe *p = arg;
+	req0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_sendraw) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_sendraw));
@@ -342,10 +349,10 @@ req_sendraw_cb(void *arg)
 }
 
 static void
-req_sendcooked_cb(void *arg)
+req0_sendcooked_cb(void *arg)
 {
-	req_pipe *p = arg;
-	req_sock *s = p->req;
+	req0_pipe *p = arg;
+	req0_sock *s = p->req;
 
 	if (nni_aio_result(p->aio_sendcooked) != 0) {
 		// We failed to send... clean up and deal with it.
@@ -365,7 +372,7 @@ req_sendcooked_cb(void *arg)
 	if (nni_list_active(&s->busypipes, p)) {
 		nni_list_remove(&s->busypipes, p);
 		nni_list_append(&s->readypipes, p);
-		req_resend(s);
+		req0_resend(s);
 	} else {
 		// We wind up here if stop was called from the reader
 		// side while we were waiting to be scheduled to run for the
@@ -377,9 +384,9 @@ req_sendcooked_cb(void *arg)
 }
 
 static void
-req_putq_cb(void *arg)
+req0_putq_cb(void *arg)
 {
-	req_pipe *p = arg;
+	req0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_putq) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_putq));
@@ -393,10 +400,10 @@ req_putq_cb(void *arg)
 }
 
 static void
-req_recv_cb(void *arg)
+req0_recv_cb(void *arg)
 {
-	req_pipe *p = arg;
-	nni_msg * msg;
+	req0_pipe *p = arg;
+	nni_msg *  msg;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
 		nni_pipe_stop(p->pipe);
@@ -431,23 +438,23 @@ malformed:
 }
 
 static void
-req_timeout(void *arg)
+req0_timeout(void *arg)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
 	if (s->reqmsg != NULL) {
 		s->wantw = 1;
-		req_resend(s);
+		req0_resend(s);
 	}
 	nni_mtx_unlock(&s->mtx);
 }
 
 static void
-req_resend(req_sock *s)
+req0_resend(req0_sock *s)
 {
-	req_pipe *p;
-	nni_msg * msg;
+	req0_pipe *p;
+	nni_msg *  msg;
 
 	// Note: This routine should be called with the socket lock held.
 	// Also, this should only be called while handling cooked mode
@@ -499,13 +506,13 @@ req_resend(req_sock *s)
 }
 
 static void
-req_sock_send(void *arg, nni_aio *aio)
+req0_sock_send(void *arg, nni_aio *aio)
 {
-	req_sock *s = arg;
-	uint32_t  id;
-	size_t    len;
-	nni_msg * msg;
-	int       rv;
+	req0_sock *s = arg;
+	uint32_t   id;
+	size_t     len;
+	nni_msg *  msg;
+	int        rv;
 
 	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
@@ -547,7 +554,7 @@ req_sock_send(void *arg, nni_aio *aio)
 	s->resend = NNI_TIME_ZERO;
 	s->wantw  = 1;
 
-	req_resend(s);
+	req0_resend(s);
 
 	nni_mtx_unlock(&s->mtx);
 
@@ -555,10 +562,10 @@ req_sock_send(void *arg, nni_aio *aio)
 }
 
 static nni_msg *
-req_sock_filter(void *arg, nni_msg *msg)
+req0_sock_filter(void *arg, nni_msg *msg)
 {
-	req_sock *s = arg;
-	nni_msg * rmsg;
+	req0_sock *s = arg;
+	nni_msg *  rmsg;
 
 	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
@@ -598,9 +605,9 @@ req_sock_filter(void *arg, nni_msg *msg)
 }
 
 static void
-req_sock_recv(void *arg, nni_aio *aio)
+req0_sock_recv(void *arg, nni_aio *aio)
 {
-	req_sock *s = arg;
+	req0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
 	if (!s->raw) {
@@ -614,55 +621,55 @@ req_sock_recv(void *arg, nni_aio *aio)
 	nni_msgq_aio_get(s->urq, aio);
 }
 
-static nni_proto_pipe_ops req_pipe_ops = {
-	.pipe_init  = req_pipe_init,
-	.pipe_fini  = req_pipe_fini,
-	.pipe_start = req_pipe_start,
-	.pipe_stop  = req_pipe_stop,
+static nni_proto_pipe_ops req0_pipe_ops = {
+	.pipe_init  = req0_pipe_init,
+	.pipe_fini  = req0_pipe_fini,
+	.pipe_start = req0_pipe_start,
+	.pipe_stop  = req0_pipe_stop,
 };
 
-static nni_proto_sock_option req_sock_options[] = {
+static nni_proto_sock_option req0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
-	    .pso_getopt = req_sock_getopt_raw,
-	    .pso_setopt = req_sock_setopt_raw,
+	    .pso_getopt = req0_sock_getopt_raw,
+	    .pso_setopt = req0_sock_setopt_raw,
 	},
 	{
 	    .pso_name   = NNG_OPT_MAXTTL,
-	    .pso_getopt = req_sock_getopt_maxttl,
-	    .pso_setopt = req_sock_setopt_maxttl,
+	    .pso_getopt = req0_sock_getopt_maxttl,
+	    .pso_setopt = req0_sock_setopt_maxttl,
 	},
 	{
 	    .pso_name   = NNG_OPT_REQ_RESENDTIME,
-	    .pso_getopt = req_sock_getopt_resendtime,
-	    .pso_setopt = req_sock_setopt_resendtime,
+	    .pso_getopt = req0_sock_getopt_resendtime,
+	    .pso_setopt = req0_sock_setopt_resendtime,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },
 };
 
-static nni_proto_sock_ops req_sock_ops = {
-	.sock_init    = req_sock_init,
-	.sock_fini    = req_sock_fini,
-	.sock_open    = req_sock_open,
-	.sock_close   = req_sock_close,
-	.sock_options = req_sock_options,
-	.sock_filter  = req_sock_filter,
-	.sock_send    = req_sock_send,
-	.sock_recv    = req_sock_recv,
+static nni_proto_sock_ops req0_sock_ops = {
+	.sock_init    = req0_sock_init,
+	.sock_fini    = req0_sock_fini,
+	.sock_open    = req0_sock_open,
+	.sock_close   = req0_sock_close,
+	.sock_options = req0_sock_options,
+	.sock_filter  = req0_sock_filter,
+	.sock_send    = req0_sock_send,
+	.sock_recv    = req0_sock_recv,
 };
 
-static nni_proto req_proto = {
+static nni_proto req0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_REQ_V0, "req" },
 	.proto_peer     = { NNI_PROTO_REP_V0, "rep" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
-	.proto_sock_ops = &req_sock_ops,
-	.proto_pipe_ops = &req_pipe_ops,
+	.proto_sock_ops = &req0_sock_ops,
+	.proto_pipe_ops = &req0_pipe_ops,
 };
 
 int
 nng_req0_open(nng_socket *sidp)
 {
-	return (nni_proto_open(sidp, &req_proto));
+	return (nni_proto_open(sidp, &req0_proto));
 }

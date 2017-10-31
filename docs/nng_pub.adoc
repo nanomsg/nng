@@ -21,11 +21,9 @@ SYNOPSIS
 
 [source,c]
 ----------
-#include <nng/protocol/pubsub/pubsub.h>
+#include <nng/protocol/pubsub0/pub.h>
 
-int nng_pub_open(nng_socket *s);
 int nng_pub0_open(nng_socket *s);
-
 ----------
 
 DESCRIPTION
@@ -51,7 +49,7 @@ accordingly.
 Socket Operations
 ~~~~~~~~~~~~~~~~~
 
-The `nng_pub_open()` call creates a publisher socket.  This socket
+The `nng_pub0_open()` call creates a publisher socket.  This socket
 may be used to send messages, but is unable to receive them.  Attempts
 to receive messages will result in `NNG_ENOTSUP`.
 

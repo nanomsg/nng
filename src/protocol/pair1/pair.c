@@ -13,9 +13,15 @@
 
 #include "core/nng_impl.h"
 
+#include "protocol/pair1/pair.h"
+
 // Pair protocol.  The PAIRv1 protocol is a simple 1:1 messaging pattern,
 // usually, but it can support a polyamorous mode where a single server can
 // communicate with multiple partners.
+
+#ifndef NNI_PROTO_PAIR_V1
+#define NNI_PROTO_PAIR_V1 NNI_PROTO(1, 1)
+#endif
 
 typedef struct pair1_pipe pair1_pipe;
 typedef struct pair1_sock pair1_sock;

@@ -9,8 +9,11 @@
 //
 
 #include "convey.h"
+#include "nng.h"
+#include "protocol/pair1/pair.h"
 #include "trantest.h"
 
+#include "stubs.h"
 // TCP tests.
 
 #ifndef _WIN32

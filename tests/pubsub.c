@@ -10,6 +10,9 @@
 
 #include "convey.h"
 #include "nng.h"
+#include "protocol/pubsub0/pub.h"
+#include "protocol/pubsub0/sub.h"
+#include "stubs.h"
 
 #include <string.h>
 
@@ -34,6 +37,16 @@ TestMain("PUB/SUB pattern", {
 			nng_msg *msg;
 			So(nng_recvmsg(pub, &msg, 0) == NNG_ENOTSUP);
 		});
+
+		Convey("It cannot subscribe", {
+			So(nng_setopt(pub, NNG_OPT_SUB_SUBSCRIBE, "", 0) ==
+			    NNG_ENOTSUP);
+		});
+
+		Convey("It cannot unsubscribe", {
+			So(nng_setopt(pub, NNG_OPT_SUB_UNSUBSCRIBE, "", 0) ==
+			    NNG_ENOTSUP);
+		});
 	});
 
 	Convey("We can create a SUB socket", {
@@ -47,6 +60,23 @@ TestMain("PUB/SUB pattern", {
 			So(nng_msg_alloc(&msg, 0) == 0);
 			So(nng_sendmsg(sub, msg, 0) == NNG_ENOTSUP);
 			nng_msg_free(msg);
+		});
+
+		Convey("It can subscribe", {
+			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "ABC", 3) ==
+			    0);
+			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "", 0) == 0);
+			Convey("And it can unsubscribe", {
+				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE,
+				       "ABC", 3) == 0);
+				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE, "",
+				       0) == 0);
+
+				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE, "",
+				       0) == NNG_ENOENT);
+				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE,
+				       "HELLO", 0) == NNG_ENOENT);
+			});
 		});
 	});
 
@@ -72,28 +102,6 @@ TestMain("PUB/SUB pattern", {
 		So(nng_dial(pub, addr, NULL, 0) == 0);
 
 		nng_msleep(20); // give time for connecting threads
-
-		Convey("Sub can subscribe", {
-			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "ABC", 3) ==
-			    0);
-			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "", 0) == 0);
-			Convey("Unsubscribe works", {
-				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE,
-				       "ABC", 3) == 0);
-				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE, "",
-				       0) == 0);
-
-				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE, "",
-				       0) == NNG_ENOENT);
-				So(nng_setopt(sub, NNG_OPT_SUB_UNSUBSCRIBE,
-				       "HELLO", 0) == NNG_ENOENT);
-			});
-		});
-
-		Convey("Pub cannot subscribe", {
-			So(nng_setopt(pub, NNG_OPT_SUB_SUBSCRIBE, "", 0) ==
-			    NNG_ENOTSUP);
-		});
 
 		Convey("Subs can receive from pubs", {
 			nng_msg *msg;

@@ -854,9 +854,7 @@ static nni_tran_ep nni_tcp_ep_ops = {
 	.ep_options = nni_tcp_ep_options,
 };
 
-// This is the TCP transport linkage, and should be the only global
-// symbol in this entire file.
-struct nni_tran nni_tcp_tran = {
+static nni_tran nni_tcp_tran = {
 	.tran_version = NNI_TRANSPORT_VERSION,
 	.tran_scheme  = "tcp",
 	.tran_ep      = &nni_tcp_ep_ops,
@@ -864,3 +862,9 @@ struct nni_tran nni_tcp_tran = {
 	.tran_init    = nni_tcp_tran_init,
 	.tran_fini    = nni_tcp_tran_fini,
 };
+
+int
+nng_tcp_register(void)
+{
+	return (nni_tran_register(&nni_tcp_tran));
+}

@@ -11,6 +11,10 @@
 #include "convey.h"
 #include "nng.h"
 
+#include "protocol/pair1/pair.h"
+
+#include "stubs.h"
+
 #include <string.h>
 
 #define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))

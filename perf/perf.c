@@ -22,6 +22,24 @@
 // change without notice, and not part of the stable API or ABI.
 #include "core/nng_impl.h"
 
+#if defined(NNG_ENABLE_PAIR1)
+#include "protocol/pair1/pair.h"
+
+#elif defined(NNG_ENABLE_PAIR0)
+#include "protocol/pair0/pair.h"
+
+#else
+
+static void die(const char *, ...);
+
+static int
+nng_pair_open(nng_socket *rv)
+{
+	die("No pair protocol enabled in this build!");
+	return (NNG_ENOTSUP);
+}
+#endif // NNG_ENABLE_PAIR
+
 static void latency_client(const char *, int, int);
 static void latency_server(const char *, int, int);
 static void throughput_client(const char *, int, int);

@@ -1,0 +1,28 @@
+//
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+//
+// This software is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+#ifndef NNG_PROTOCOL_PIPELINE0_PUSH_H
+#define NNG_PROTOCOL_PIPELINE0_PUSH_H
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+NNG_DECL int nng_push0_open(nng_socket *);
+
+#ifndef nng_push_open
+#define nng_push_open nng_push0_open
+#endif
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // NNG_PROTOCOL_PIPELINE0_PUSH_H

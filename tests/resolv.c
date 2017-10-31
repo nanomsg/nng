@@ -51,26 +51,6 @@ ip6tostr(void *addr)
 // too much on them, since localhost can be configured weirdly.  Notably
 // the normal assumptions on Linux do *not* hold true.
 #if 0
-
-	    Convey("Localhost IPv4 resolves", {
-		    nni_aio aio;
-		    const char *str;
-		    memset(&aio, 0, sizeof (aio));
-		    nni_aio_init(&aio, NULL, NULL);
-		    nni_plat_tcp_resolv("localhost", "80", NNG_AF_INET, 1,
-		    &aio);
-		    nni_aio_wait(&aio);
-		    So(nni_aio_result(&aio) == 0);
-		    So(aio.a_naddrs == 1);
-		    So(aio.a_addrs[0].s_un.s_in.sa_family == NNG_AF_INET);
-		    So(aio.a_addrs[0].s_un.s_in.sa_port == ntohs(80));
-		    So(aio.a_addrs[0].s_un.s_in.sa_addr == ntohl(0x7f000001));
-		    str = ip4tostr(&aio.a_addrs[0].s_un.s_in.sa_addr);
-		    So(strcmp(str, "127.0.0.1") == 0);
-		    nni_aio_fini(&aio);
-	    }
-	    );
-
 	    Convey("Localhost IPv6 resolves", {
 		    nni_aio aio;
 		    memset(&aio, 0, sizeof (aio));
@@ -87,44 +67,6 @@ ip6tostr(void *addr)
 		    So(strcmp(str, "::1") == 0);
 		    nni_aio_fini(&aio);
 	    }
-	    );
-	    Convey("Localhost UNSPEC resolves", {
-		    nni_aio aio;
-		    memset(&aio, 0, sizeof (aio));
-		    const char *str;
-		    int i;
-		    nni_aio_init(&aio, NULL, NULL);
-		    nni_plat_tcp_resolv("localhost", "80", NNG_AF_UNSPEC, 1,
-		    &aio);
-		    nni_aio_wait(&aio);
-		    So(nni_aio_result(&aio) == 0);
-		    So(aio.a_naddrs == 2);
-		    for (i = 0; i < 2; i++) {
-			    switch (aio.a_addrs[i].s_un.s_family) {
-			    case NNG_AF_INET6:
-				    So(aio.a_addrs[i].s_un.s_in6.sa_port ==
-				    ntohs(80));
-				    str =
-				    ip6tostr(&aio.a_addrs[i].s_un.s_in6.sa_addr);
-				    So(strcmp(str, "::1") == 0);
-				    break;
-
-			    case NNG_AF_INET:
-				    So(aio.a_addrs[i].s_un.s_in.sa_port ==
-				    ntohs(80));
-				    str =
-				    ip4tostr(&aio.a_addrs[i].s_un.s_in.sa_addr);
-				    So(strcmp(str, "127.0.0.1") == 0);
-				    break;
-			    default:
-				    So(1 == 0);
-			    }
-		    }
-		    So(aio.a_addrs[0].s_un.s_family !=
-		    aio.a_addrs[1].s_un.s_family);
-		    nni_aio_fini(&aio);
-	    }
-	    );
 #endif
 
 TestMain("Resolver", {
@@ -179,10 +121,17 @@ TestMain("Resolver", {
 		So(strcmp(str, "8.8.4.4") == 0);
 		nni_aio_fini(aio);
 	});
+
 	Convey("Numeric v6 resolves", {
 		nni_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
+
+		// Travis CI has moved some of their services to host that
+		// apparently don't support IPv6 at all.  This is very sad.
+		if (getenv("TRAVIS") != NULL) {
+			ConveySkip("IPv6 missing from CI provider");
+		}
 
 		nni_aio_init(&aio, NULL, NULL);
 		aio->a_addr = &sa;
@@ -227,6 +176,52 @@ TestMain("Resolver", {
 		So(sa.s_un.s_in.sa_port == ntohs(69));
 		str = ip4tostr(&sa.s_un.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
+		nni_aio_fini(aio);
+	});
+
+	Convey("Localhost IPv4 resolves", {
+		nni_aio *    aio;
+		const char * str;
+		nng_sockaddr sa;
+
+		nni_aio_init(&aio, NULL, NULL);
+		aio->a_addr = &sa;
+		nni_plat_tcp_resolv("localhost", "80", NNG_AF_INET, 1, aio);
+		nni_aio_wait(aio);
+		So(nni_aio_result(aio) == 0);
+		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
+		So(sa.s_un.s_in.sa_port == ntohs(80));
+		So(sa.s_un.s_in.sa_addr == ntohl(0x7f000001));
+		str = ip4tostr(&sa.s_un.s_in.sa_addr);
+		So(strcmp(str, "127.0.0.1") == 0);
+		nni_aio_fini(aio);
+	});
+
+	Convey("Localhost UNSPEC resolves", {
+		nni_aio *    aio;
+		const char * str;
+		nng_sockaddr sa;
+
+		nni_aio_init(&aio, NULL, NULL);
+		aio->a_addr = &sa;
+		nni_plat_tcp_resolv("localhost", "80", NNG_AF_UNSPEC, 1, aio);
+		nni_aio_wait(aio);
+		So(nni_aio_result(aio) == 0);
+		So((sa.s_un.s_family == NNG_AF_INET) ||
+		    (sa.s_un.s_family == NNG_AF_INET6));
+		switch (sa.s_un.s_family) {
+		case NNG_AF_INET:
+			So(sa.s_un.s_in.sa_port == ntohs(80));
+			So(sa.s_un.s_in.sa_addr == ntohl(0x7f000001));
+			str = ip4tostr(&sa.s_un.s_in.sa_addr);
+			So(strcmp(str, "127.0.0.1") == 0);
+			break;
+		case NNG_AF_INET6:
+			So(sa.s_un.s_in6.sa_port == ntohs(80));
+			str = ip6tostr(&sa.s_un.s_in6.sa_addr);
+			So(strcmp(str, "::1") == 0);
+			break;
+		}
 		nni_aio_fini(aio);
 	});
 

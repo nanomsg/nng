@@ -12,31 +12,36 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "protocol/bus0/bus.h"
 
 // Bus protocol.  The BUS protocol, each peer sends a message to its peers.
 // However, bus protocols do not "forward" (absent a device).  So in order
 // for each participant to receive the message, each sender must be connected
 // to every other node in the network (full mesh).
 
-typedef struct bus_pipe bus_pipe;
-typedef struct bus_sock bus_sock;
+#ifndef NNI_PROTO_BUS_V0
+#define NNI_PROTO_BUS_V0 NNI_PROTO(7, 0)
+#endif
 
-static void bus_sock_getq(bus_sock *);
-static void bus_sock_send(void *, nni_aio *);
-static void bus_sock_recv(void *, nni_aio *);
+typedef struct bus0_pipe bus0_pipe;
+typedef struct bus0_sock bus0_sock;
 
-static void bus_pipe_getq(bus_pipe *);
-static void bus_pipe_send(bus_pipe *);
-static void bus_pipe_recv(bus_pipe *);
+static void bus0_sock_getq(bus0_sock *);
+static void bus0_sock_send(void *, nni_aio *);
+static void bus0_sock_recv(void *, nni_aio *);
 
-static void bus_sock_getq_cb(void *);
-static void bus_pipe_getq_cb(void *);
-static void bus_pipe_send_cb(void *);
-static void bus_pipe_recv_cb(void *);
-static void bus_pipe_putq_cb(void *);
+static void bus0_pipe_getq(bus0_pipe *);
+static void bus0_pipe_send(bus0_pipe *);
+static void bus0_pipe_recv(bus0_pipe *);
 
-// A bus_sock is our per-socket protocol private structure.
-struct bus_sock {
+static void bus0_sock_getq_cb(void *);
+static void bus0_pipe_getq_cb(void *);
+static void bus0_pipe_send_cb(void *);
+static void bus0_pipe_recv_cb(void *);
+static void bus0_pipe_putq_cb(void *);
+
+// bus0_sock is our per-socket protocol private structure.
+struct bus0_sock {
 	int       raw;
 	nni_aio * aio_getq;
 	nni_list  pipes;
@@ -45,10 +50,10 @@ struct bus_sock {
 	nni_msgq *urq;
 };
 
-// A bus_pipe is our per-pipe protocol private structure.
-struct bus_pipe {
+// bus0_pipe is our per-pipe protocol private structure.
+struct bus0_pipe {
 	nni_pipe *    npipe;
-	bus_sock *    psock;
+	bus0_sock *   psock;
 	nni_msgq *    sendq;
 	nni_list_node node;
 	nni_aio *     aio_getq;
@@ -59,9 +64,9 @@ struct bus_pipe {
 };
 
 static void
-bus_sock_fini(void *arg)
+bus0_sock_fini(void *arg)
 {
-	bus_sock *s = arg;
+	bus0_sock *s = arg;
 
 	nni_aio_stop(s->aio_getq);
 	nni_aio_fini(s->aio_getq);
@@ -70,18 +75,18 @@ bus_sock_fini(void *arg)
 }
 
 static int
-bus_sock_init(void **sp, nni_sock *nsock)
+bus0_sock_init(void **sp, nni_sock *nsock)
 {
-	bus_sock *s;
-	int       rv;
+	bus0_sock *s;
+	int        rv;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	NNI_LIST_INIT(&s->pipes, bus_pipe, node);
+	NNI_LIST_INIT(&s->pipes, bus0_pipe, node);
 	nni_mtx_init(&s->mtx);
-	if ((rv = nni_aio_init(&s->aio_getq, bus_sock_getq_cb, s)) != 0) {
-		bus_sock_fini(s);
+	if ((rv = nni_aio_init(&s->aio_getq, bus0_sock_getq_cb, s)) != 0) {
+		bus0_sock_fini(s);
 		return (rv);
 	}
 	s->raw = 0;
@@ -93,25 +98,25 @@ bus_sock_init(void **sp, nni_sock *nsock)
 }
 
 static void
-bus_sock_open(void *arg)
+bus0_sock_open(void *arg)
 {
-	bus_sock *s = arg;
+	bus0_sock *s = arg;
 
-	bus_sock_getq(s);
+	bus0_sock_getq(s);
 }
 
 static void
-bus_sock_close(void *arg)
+bus0_sock_close(void *arg)
 {
-	bus_sock *s = arg;
+	bus0_sock *s = arg;
 
 	nni_aio_cancel(s->aio_getq, NNG_ECLOSED);
 }
 
 static void
-bus_pipe_fini(void *arg)
+bus0_pipe_fini(void *arg)
 {
-	bus_pipe *p = arg;
+	bus0_pipe *p = arg;
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
@@ -123,10 +128,10 @@ bus_pipe_fini(void *arg)
 }
 
 static int
-bus_pipe_init(void **pp, nni_pipe *npipe, void *s)
+bus0_pipe_init(void **pp, nni_pipe *npipe, void *s)
 {
-	bus_pipe *p;
-	int       rv;
+	bus0_pipe *p;
+	int        rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
@@ -134,11 +139,11 @@ bus_pipe_init(void **pp, nni_pipe *npipe, void *s)
 	NNI_LIST_NODE_INIT(&p->node);
 	nni_mtx_init(&p->mtx);
 	if (((rv = nni_msgq_init(&p->sendq, 16)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, bus_pipe_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, bus_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, bus_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, bus_pipe_putq_cb, p)) != 0)) {
-		bus_pipe_fini(p);
+	    ((rv = nni_aio_init(&p->aio_getq, bus0_pipe_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_send, bus0_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_recv, bus0_pipe_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_putq, bus0_pipe_putq_cb, p)) != 0)) {
+		bus0_pipe_fini(p);
 		return (rv);
 	}
 
@@ -149,26 +154,26 @@ bus_pipe_init(void **pp, nni_pipe *npipe, void *s)
 }
 
 static int
-bus_pipe_start(void *arg)
+bus0_pipe_start(void *arg)
 {
-	bus_pipe *p = arg;
-	bus_sock *s = p->psock;
+	bus0_pipe *p = arg;
+	bus0_sock *s = p->psock;
 
 	nni_mtx_lock(&s->mtx);
 	nni_list_append(&s->pipes, p);
 	nni_mtx_unlock(&s->mtx);
 
-	bus_pipe_recv(p);
-	bus_pipe_getq(p);
+	bus0_pipe_recv(p);
+	bus0_pipe_getq(p);
 
 	return (0);
 }
 
 static void
-bus_pipe_stop(void *arg)
+bus0_pipe_stop(void *arg)
 {
-	bus_pipe *p = arg;
-	bus_sock *s = p->psock;
+	bus0_pipe *p = arg;
+	bus0_sock *s = p->psock;
 
 	nni_msgq_close(p->sendq);
 
@@ -185,9 +190,9 @@ bus_pipe_stop(void *arg)
 }
 
 static void
-bus_pipe_getq_cb(void *arg)
+bus0_pipe_getq_cb(void *arg)
 {
-	bus_pipe *p = arg;
+	bus0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_getq) != 0) {
 		// closed?
@@ -201,9 +206,9 @@ bus_pipe_getq_cb(void *arg)
 }
 
 static void
-bus_pipe_send_cb(void *arg)
+bus0_pipe_send_cb(void *arg)
 {
-	bus_pipe *p = arg;
+	bus0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_send) != 0) {
 		// closed?
@@ -213,15 +218,15 @@ bus_pipe_send_cb(void *arg)
 		return;
 	}
 
-	bus_pipe_getq(p);
+	bus0_pipe_getq(p);
 }
 
 static void
-bus_pipe_recv_cb(void *arg)
+bus0_pipe_recv_cb(void *arg)
 {
-	bus_pipe *p = arg;
-	bus_sock *s = p->psock;
-	nni_msg * msg;
+	bus0_pipe *p = arg;
+	bus0_sock *s = p->psock;
+	nni_msg *  msg;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
 		nni_pipe_stop(p->npipe);
@@ -243,9 +248,9 @@ bus_pipe_recv_cb(void *arg)
 }
 
 static void
-bus_pipe_putq_cb(void *arg)
+bus0_pipe_putq_cb(void *arg)
 {
-	bus_pipe *p = arg;
+	bus0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_putq) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_putq));
@@ -255,18 +260,18 @@ bus_pipe_putq_cb(void *arg)
 	}
 
 	// Wait for another recv.
-	bus_pipe_recv(p);
+	bus0_pipe_recv(p);
 }
 
 static void
-bus_sock_getq_cb(void *arg)
+bus0_sock_getq_cb(void *arg)
 {
-	bus_sock *s = arg;
-	bus_pipe *p;
-	bus_pipe *lastp;
-	nni_msg * msg;
-	nni_msg * dup;
-	uint32_t  sender;
+	bus0_sock *s = arg;
+	bus0_pipe *p;
+	bus0_pipe *lastp;
+	nni_msg *  msg;
+	nni_msg *  dup;
+	uint32_t   sender;
 
 	if (nni_aio_result(s->aio_getq) != 0) {
 		return;
@@ -307,95 +312,95 @@ bus_sock_getq_cb(void *arg)
 		nni_msg_free(msg);
 	}
 
-	bus_sock_getq(s);
+	bus0_sock_getq(s);
 }
 
 static void
-bus_sock_getq(bus_sock *s)
+bus0_sock_getq(bus0_sock *s)
 {
 	nni_msgq_aio_get(s->uwq, s->aio_getq);
 }
 
 static void
-bus_pipe_getq(bus_pipe *p)
+bus0_pipe_getq(bus0_pipe *p)
 {
 	nni_msgq_aio_get(p->sendq, p->aio_getq);
 }
 
 static void
-bus_pipe_recv(bus_pipe *p)
+bus0_pipe_recv(bus0_pipe *p)
 {
 	nni_pipe_recv(p->npipe, p->aio_recv);
 }
 
 static int
-bus_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+bus0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	bus_sock *s = arg;
+	bus0_sock *s = arg;
 	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
 }
 
 static int
-bus_sock_getopt_raw(void *arg, void *buf, size_t *szp)
+bus0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	bus_sock *s = arg;
+	bus0_sock *s = arg;
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static void
-bus_sock_send(void *arg, nni_aio *aio)
+bus0_sock_send(void *arg, nni_aio *aio)
 {
-	bus_sock *s = arg;
+	bus0_sock *s = arg;
 
 	nni_msgq_aio_put(s->uwq, aio);
 }
 
 static void
-bus_sock_recv(void *arg, nni_aio *aio)
+bus0_sock_recv(void *arg, nni_aio *aio)
 {
-	bus_sock *s = arg;
+	bus0_sock *s = arg;
 
 	nni_msgq_aio_get(s->urq, aio);
 }
 
-static nni_proto_pipe_ops bus_pipe_ops = {
-	.pipe_init  = bus_pipe_init,
-	.pipe_fini  = bus_pipe_fini,
-	.pipe_start = bus_pipe_start,
-	.pipe_stop  = bus_pipe_stop,
+static nni_proto_pipe_ops bus0_pipe_ops = {
+	.pipe_init  = bus0_pipe_init,
+	.pipe_fini  = bus0_pipe_fini,
+	.pipe_start = bus0_pipe_start,
+	.pipe_stop  = bus0_pipe_stop,
 };
 
-static nni_proto_sock_option bus_sock_options[] = {
+static nni_proto_sock_option bus0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
-	    .pso_getopt = bus_sock_getopt_raw,
-	    .pso_setopt = bus_sock_setopt_raw,
+	    .pso_getopt = bus0_sock_getopt_raw,
+	    .pso_setopt = bus0_sock_setopt_raw,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },
 };
 
-static nni_proto_sock_ops bus_sock_ops = {
-	.sock_init    = bus_sock_init,
-	.sock_fini    = bus_sock_fini,
-	.sock_open    = bus_sock_open,
-	.sock_close   = bus_sock_close,
-	.sock_send    = bus_sock_send,
-	.sock_recv    = bus_sock_recv,
-	.sock_options = bus_sock_options,
+static nni_proto_sock_ops bus0_sock_ops = {
+	.sock_init    = bus0_sock_init,
+	.sock_fini    = bus0_sock_fini,
+	.sock_open    = bus0_sock_open,
+	.sock_close   = bus0_sock_close,
+	.sock_send    = bus0_sock_send,
+	.sock_recv    = bus0_sock_recv,
+	.sock_options = bus0_sock_options,
 };
 
-static nni_proto bus_proto = {
+static nni_proto bus0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_BUS_V0, "bus" },
 	.proto_peer     = { NNI_PROTO_BUS_V0, "bus" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
-	.proto_sock_ops = &bus_sock_ops,
-	.proto_pipe_ops = &bus_pipe_ops,
+	.proto_sock_ops = &bus0_sock_ops,
+	.proto_pipe_ops = &bus0_pipe_ops,
 };
 
 int
 nng_bus0_open(nng_socket *sidp)
 {
-	return (nni_proto_open(sidp, &bus_proto));
+	return (nni_proto_open(sidp, &bus0_proto));
 }

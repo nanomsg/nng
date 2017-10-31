@@ -297,7 +297,6 @@ nni_msgq_run_getq(nni_msgq *mq)
 static void
 nni_msgq_run_notify(nni_msgq *mq)
 {
-	nni_aio *aio;
 	if (mq->mq_cb_fn != NULL) {
 		int flags = 0;
 

@@ -147,21 +147,26 @@ extern int nni_proto_open(nng_socket *, const nni_proto *);
 // Protocol numbers are never more than 16 bits.  Also, there will never be
 // a valid protocol numbered 0 (NNG_PROTO_NONE).
 #define NNI_PROTO(major, minor) (((major) *16) + (minor))
-enum nng_proto_enum {
-	NNI_PROTO_NONE          = NNI_PROTO(0, 0),
-	NNI_PROTO_PAIR_V0       = NNI_PROTO(1, 0),
-	NNI_PROTO_PAIR_V1       = NNI_PROTO(1, 1),
-	NNI_PROTO_PUB_V0        = NNI_PROTO(2, 0),
-	NNI_PROTO_SUB_V0        = NNI_PROTO(2, 1),
-	NNI_PROTO_REQ_V0        = NNI_PROTO(3, 0),
-	NNI_PROTO_REP_V0        = NNI_PROTO(3, 1),
-	NNI_PROTO_PUSH_V0       = NNI_PROTO(5, 0),
-	NNI_PROTO_PULL_V0       = NNI_PROTO(5, 1),
-	NNI_PROTO_SURVEYOR_V0   = NNI_PROTO(6, 2),
-	NNI_PROTO_RESPONDENT_V0 = NNI_PROTO(6, 3),
-	NNI_PROTO_BUS_V0        = NNI_PROTO(7, 0),
-	NNI_PROTO_STAR_V0       = NNI_PROTO(100, 0),
-};
+
+// Protocol major numbers.  This is here for documentation only, and
+// to serve as a "registry" for managing new protocol numbers.  Consider
+// updating this table when adding new protocols.
+//
+// Protocol     Maj Min Name       Notes
+// -------------------------------------------
+// NONE          0   0             reserved
+// PAIRv0        1   0  pair
+// PAIRv1        1   1  pair1      nng only, experimental
+// PUBv0         2   0  pub
+// SUBv0         2   1  sub
+// REQv0         3   0  req
+// REPv0         3   1  rep
+// PUSHv0        5   0  push
+// PULLv0        5   1  pull
+// SURVEYORv0    6   2  surveyor   minors 0 & 1 retired
+// RESPONDENTv0  6   3  respondent
+// BUSv0         7   0  bus
+// STARv0      100   0  star       mangos only, experimental
 
 extern int  nni_proto_sys_init(void);
 extern void nni_proto_sys_fini(void);

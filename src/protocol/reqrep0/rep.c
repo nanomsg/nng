@@ -12,23 +12,32 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "protocol/reqrep0/rep.h"
 
 // Response protocol.  The REP protocol is the "reply" side of a
 // request-reply pair.  This is useful for building RPC servers, for
 // example.
 
-typedef struct rep_pipe rep_pipe;
-typedef struct rep_sock rep_sock;
+#ifndef NNI_PROTO_REQ_V0
+#define NNI_PROTO_REQ_V0 NNI_PROTO(3, 0)
+#endif
 
-static void rep_sock_getq_cb(void *);
-static void rep_pipe_getq_cb(void *);
-static void rep_pipe_putq_cb(void *);
-static void rep_pipe_send_cb(void *);
-static void rep_pipe_recv_cb(void *);
-static void rep_pipe_fini(void *);
+#ifndef NNI_PROTO_REP_V0
+#define NNI_PROTO_REP_V0 NNI_PROTO(3, 1)
+#endif
 
-// A rep_sock is our per-socket protocol private structure.
-struct rep_sock {
+typedef struct rep0_pipe rep0_pipe;
+typedef struct rep0_sock rep0_sock;
+
+static void rep0_sock_getq_cb(void *);
+static void rep0_pipe_getq_cb(void *);
+static void rep0_pipe_putq_cb(void *);
+static void rep0_pipe_send_cb(void *);
+static void rep0_pipe_recv_cb(void *);
+static void rep0_pipe_fini(void *);
+
+// rep0_sock is our per-socket protocol private structure.
+struct rep0_sock {
 	nni_msgq *  uwq;
 	nni_msgq *  urq;
 	nni_mtx     lk;
@@ -40,21 +49,21 @@ struct rep_sock {
 	nni_aio *   aio_getq;
 };
 
-// A rep_pipe is our per-pipe protocol private structure.
-struct rep_pipe {
-	nni_pipe *pipe;
-	rep_sock *rep;
-	nni_msgq *sendq;
-	nni_aio * aio_getq;
-	nni_aio * aio_send;
-	nni_aio * aio_recv;
-	nni_aio * aio_putq;
+// rep0_pipe is our per-pipe protocol private structure.
+struct rep0_pipe {
+	nni_pipe * pipe;
+	rep0_sock *rep;
+	nni_msgq * sendq;
+	nni_aio *  aio_getq;
+	nni_aio *  aio_send;
+	nni_aio *  aio_recv;
+	nni_aio *  aio_putq;
 };
 
 static void
-rep_sock_fini(void *arg)
+rep0_sock_fini(void *arg)
 {
-	rep_sock *s = arg;
+	rep0_sock *s = arg;
 
 	nni_aio_stop(s->aio_getq);
 	nni_aio_fini(s->aio_getq);
@@ -67,18 +76,18 @@ rep_sock_fini(void *arg)
 }
 
 static int
-rep_sock_init(void **sp, nni_sock *sock)
+rep0_sock_init(void **sp, nni_sock *sock)
 {
-	rep_sock *s;
-	int       rv;
+	rep0_sock *s;
+	int        rv;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&s->lk);
 	if (((rv = nni_idhash_init(&s->pipes)) != 0) ||
-	    ((rv = nni_aio_init(&s->aio_getq, rep_sock_getq_cb, s)) != 0)) {
-		rep_sock_fini(s);
+	    ((rv = nni_aio_init(&s->aio_getq, rep0_sock_getq_cb, s)) != 0)) {
+		rep0_sock_fini(s);
 		return (rv);
 	}
 
@@ -95,25 +104,25 @@ rep_sock_init(void **sp, nni_sock *sock)
 }
 
 static void
-rep_sock_open(void *arg)
+rep0_sock_open(void *arg)
 {
-	rep_sock *s = arg;
+	rep0_sock *s = arg;
 
 	nni_msgq_aio_get(s->uwq, s->aio_getq);
 }
 
 static void
-rep_sock_close(void *arg)
+rep0_sock_close(void *arg)
 {
-	rep_sock *s = arg;
+	rep0_sock *s = arg;
 
 	nni_aio_cancel(s->aio_getq, NNG_ECLOSED);
 }
 
 static void
-rep_pipe_fini(void *arg)
+rep0_pipe_fini(void *arg)
 {
-	rep_pipe *p = arg;
+	rep0_pipe *p = arg;
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
@@ -124,20 +133,20 @@ rep_pipe_fini(void *arg)
 }
 
 static int
-rep_pipe_init(void **pp, nni_pipe *pipe, void *s)
+rep0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 {
-	rep_pipe *p;
-	int       rv;
+	rep0_pipe *p;
+	int        rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if (((rv = nni_msgq_init(&p->sendq, 2)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, rep_pipe_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, rep_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, rep_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, rep_pipe_putq_cb, p)) != 0)) {
-		rep_pipe_fini(p);
+	    ((rv = nni_aio_init(&p->aio_getq, rep0_pipe_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_send, rep0_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_recv, rep0_pipe_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_putq, rep0_pipe_putq_cb, p)) != 0)) {
+		rep0_pipe_fini(p);
 		return (rv);
 	}
 
@@ -148,11 +157,11 @@ rep_pipe_init(void **pp, nni_pipe *pipe, void *s)
 }
 
 static int
-rep_pipe_start(void *arg)
+rep0_pipe_start(void *arg)
 {
-	rep_pipe *p = arg;
-	rep_sock *s = p->rep;
-	int       rv;
+	rep0_pipe *p = arg;
+	rep0_sock *s = p->rep;
+	int        rv;
 
 	if ((rv = nni_idhash_insert(s->pipes, nni_pipe_id(p->pipe), p)) != 0) {
 		return (rv);
@@ -164,10 +173,10 @@ rep_pipe_start(void *arg)
 }
 
 static void
-rep_pipe_stop(void *arg)
+rep0_pipe_stop(void *arg)
 {
-	rep_pipe *p = arg;
-	rep_sock *s = p->rep;
+	rep0_pipe *p = arg;
+	rep0_sock *s = p->rep;
 
 	nni_msgq_close(p->sendq);
 	nni_aio_stop(p->aio_getq);
@@ -179,14 +188,14 @@ rep_pipe_stop(void *arg)
 }
 
 static void
-rep_sock_getq_cb(void *arg)
+rep0_sock_getq_cb(void *arg)
 {
-	rep_sock *s   = arg;
-	nni_msgq *uwq = s->uwq;
-	nni_msg * msg;
-	uint32_t  id;
-	rep_pipe *p;
-	int       rv;
+	rep0_sock *s   = arg;
+	nni_msgq * uwq = s->uwq;
+	nni_msg *  msg;
+	uint32_t   id;
+	rep0_pipe *p;
+	int        rv;
 
 	// This watches for messages from the upper write queue,
 	// extracts the destination pipe, and forwards it to the appropriate
@@ -228,9 +237,9 @@ rep_sock_getq_cb(void *arg)
 }
 
 static void
-rep_pipe_getq_cb(void *arg)
+rep0_pipe_getq_cb(void *arg)
 {
-	rep_pipe *p = arg;
+	rep0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_getq) != 0) {
 		nni_pipe_stop(p->pipe);
@@ -244,9 +253,9 @@ rep_pipe_getq_cb(void *arg)
 }
 
 static void
-rep_pipe_send_cb(void *arg)
+rep0_pipe_send_cb(void *arg)
 {
-	rep_pipe *p = arg;
+	rep0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_send) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_send));
@@ -259,14 +268,14 @@ rep_pipe_send_cb(void *arg)
 }
 
 static void
-rep_pipe_recv_cb(void *arg)
+rep0_pipe_recv_cb(void *arg)
 {
-	rep_pipe *p = arg;
-	rep_sock *s = p->rep;
-	nni_msg * msg;
-	int       rv;
-	uint8_t * body;
-	int       hops;
+	rep0_pipe *p = arg;
+	rep0_sock *s = p->rep;
+	nni_msg *  msg;
+	int        rv;
+	uint8_t *  body;
+	int        hops;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
 		nni_pipe_stop(p->pipe);
@@ -329,9 +338,9 @@ drop:
 }
 
 static void
-rep_pipe_putq_cb(void *arg)
+rep0_pipe_putq_cb(void *arg)
 {
-	rep_pipe *p = arg;
+	rep0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_putq) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_putq));
@@ -344,10 +353,10 @@ rep_pipe_putq_cb(void *arg)
 }
 
 static int
-rep_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+rep0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	rep_sock *s = arg;
-	int       rv;
+	rep0_sock *s = arg;
+	int        rv;
 
 	nni_mtx_lock(&s->lk);
 	rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
@@ -356,32 +365,32 @@ rep_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 }
 
 static int
-rep_sock_getopt_raw(void *arg, void *buf, size_t *szp)
+rep0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	rep_sock *s = arg;
+	rep0_sock *s = arg;
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static int
-rep_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+rep0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
 {
-	rep_sock *s = arg;
+	rep0_sock *s = arg;
 	return (nni_setopt_int(&s->ttl, buf, sz, 1, 255));
 }
 
 static int
-rep_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
+rep0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
 {
-	rep_sock *s = arg;
+	rep0_sock *s = arg;
 	return (nni_getopt_int(s->ttl, buf, szp));
 }
 
 static nni_msg *
-rep_sock_filter(void *arg, nni_msg *msg)
+rep0_sock_filter(void *arg, nni_msg *msg)
 {
-	rep_sock *s = arg;
-	char *    header;
-	size_t    len;
+	rep0_sock *s = arg;
+	char *     header;
+	size_t     len;
 
 	nni_mtx_lock(&s->lk);
 	if (s->raw) {
@@ -408,11 +417,11 @@ rep_sock_filter(void *arg, nni_msg *msg)
 }
 
 static void
-rep_sock_send(void *arg, nni_aio *aio)
+rep0_sock_send(void *arg, nni_aio *aio)
 {
-	rep_sock *s = arg;
-	int       rv;
-	nni_msg * msg;
+	rep0_sock *s = arg;
+	int        rv;
+	nni_msg *  msg;
 
 	nni_mtx_lock(&s->lk);
 	if (s->raw) {
@@ -448,59 +457,59 @@ rep_sock_send(void *arg, nni_aio *aio)
 }
 
 static void
-rep_sock_recv(void *arg, nni_aio *aio)
+rep0_sock_recv(void *arg, nni_aio *aio)
 {
-	rep_sock *s = arg;
+	rep0_sock *s = arg;
 
 	nni_msgq_aio_get(s->urq, aio);
 }
 
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
-static nni_proto_pipe_ops rep_pipe_ops = {
-	.pipe_init  = rep_pipe_init,
-	.pipe_fini  = rep_pipe_fini,
-	.pipe_start = rep_pipe_start,
-	.pipe_stop  = rep_pipe_stop,
+static nni_proto_pipe_ops rep0_pipe_ops = {
+	.pipe_init  = rep0_pipe_init,
+	.pipe_fini  = rep0_pipe_fini,
+	.pipe_start = rep0_pipe_start,
+	.pipe_stop  = rep0_pipe_stop,
 };
 
-static nni_proto_sock_option rep_sock_options[] = {
+static nni_proto_sock_option rep0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
-	    .pso_getopt = rep_sock_getopt_raw,
-	    .pso_setopt = rep_sock_setopt_raw,
+	    .pso_getopt = rep0_sock_getopt_raw,
+	    .pso_setopt = rep0_sock_setopt_raw,
 	},
 	{
 	    .pso_name   = NNG_OPT_MAXTTL,
-	    .pso_getopt = rep_sock_getopt_maxttl,
-	    .pso_setopt = rep_sock_setopt_maxttl,
+	    .pso_getopt = rep0_sock_getopt_maxttl,
+	    .pso_setopt = rep0_sock_setopt_maxttl,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },
 };
 
-static nni_proto_sock_ops rep_sock_ops = {
-	.sock_init    = rep_sock_init,
-	.sock_fini    = rep_sock_fini,
-	.sock_open    = rep_sock_open,
-	.sock_close   = rep_sock_close,
-	.sock_options = rep_sock_options,
-	.sock_filter  = rep_sock_filter,
-	.sock_send    = rep_sock_send,
-	.sock_recv    = rep_sock_recv,
+static nni_proto_sock_ops rep0_sock_ops = {
+	.sock_init    = rep0_sock_init,
+	.sock_fini    = rep0_sock_fini,
+	.sock_open    = rep0_sock_open,
+	.sock_close   = rep0_sock_close,
+	.sock_options = rep0_sock_options,
+	.sock_filter  = rep0_sock_filter,
+	.sock_send    = rep0_sock_send,
+	.sock_recv    = rep0_sock_recv,
 };
 
-static nni_proto nni_rep_proto = {
+static nni_proto rep0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_REP_V0, "rep" },
 	.proto_peer     = { NNI_PROTO_REQ_V0, "req" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
-	.proto_sock_ops = &rep_sock_ops,
-	.proto_pipe_ops = &rep_pipe_ops,
+	.proto_sock_ops = &rep0_sock_ops,
+	.proto_pipe_ops = &rep0_pipe_ops,
 };
 
 int
 nng_rep0_open(nng_socket *sidp)
 {
-	return (nni_proto_open(sidp, &nni_rep_proto));
+	return (nni_proto_open(sidp, &rep0_proto));
 }

@@ -704,9 +704,7 @@ static nni_tran_ep nni_ipc_ep_ops = {
 	.ep_options = nni_ipc_ep_options,
 };
 
-// This is the IPC transport linkage, and should be the only global
-// symbol in this entire file.
-struct nni_tran nni_ipc_tran = {
+static nni_tran nni_ipc_tran = {
 	.tran_version = NNI_TRANSPORT_VERSION,
 	.tran_scheme  = "ipc",
 	.tran_ep      = &nni_ipc_ep_ops,
@@ -714,3 +712,9 @@ struct nni_tran nni_ipc_tran = {
 	.tran_init    = nni_ipc_tran_init,
 	.tran_fini    = nni_ipc_tran_fini,
 };
+
+int
+nng_ipc_register(void)
+{
+	return (nni_tran_register(&nni_ipc_tran));
+}

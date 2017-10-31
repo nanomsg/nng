@@ -61,20 +61,37 @@ if (NNG_TESTS)
         math (EXPR TEST_PORT "${TEST_PORT}+20")
     endmacro (add_nng_test)
 
-    macro (add_nng_compat_test NAME TIMEOUT)
-        list (APPEND all_tests ${NAME})
-        add_executable (${NAME} ${NAME}.c)
-        target_link_libraries (${NAME} ${PROJECT_NAME}_static)
-        target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
-        target_compile_definitions(${NAME} PUBLIC -DNNG_STATIC_LIB)
-        if (CMAKE_THREAD_LIBS_INIT)
-            target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
-        endif()
+    # Compatibility tests are only added if all of the legacy protocols
+    # are present.  It's not worth trying to figure out which of these
+    # should work and which shouldn't.
+    if (NNG_PROTO_BUS0 AND
+        NNG_PROTO_PAIR0 AND
+        NNG_PROTO_REQ0 AND
+        NNG_PROTO_REP0 AND
+        NNG_PROTO_PUB0 AND
+        NNG_PROTO_SUB0 AND
+        NNG_PROTO_PUSH0 AND
+        NNG_PROTO_PULL0)
 
-        add_test (NAME ${NAME} COMMAND ${NAME} ${TEST_PORT})
-        set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
-        math (EXPR TEST_PORT "${TEST_PORT}+10")
-    endmacro (add_nng_compat_test)
+        macro (add_nng_compat_test NAME TIMEOUT)
+            list (APPEND all_tests ${NAME})
+            add_executable (${NAME} ${NAME}.c)
+            target_link_libraries (${NAME} ${PROJECT_NAME}_static)
+            target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
+            target_compile_definitions(${NAME} PUBLIC -DNNG_STATIC_LIB)
+            if (CMAKE_THREAD_LIBS_INIT)
+                target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
+            endif()
+
+            add_test (NAME ${NAME} COMMAND ${NAME} ${TEST_PORT})
+            set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
+            math (EXPR TEST_PORT "${TEST_PORT}+10")
+        endmacro (add_nng_compat_test)
+    else ()
+        macro (add_nng_compat_test NAME TIMEOUT)
+        endmacro (add_nng_compat_test)
+        message (STATUS "Compatibility tests disabled (unconfigured legacy protocols)")
+    endif ()
 
     macro (add_nng_cpp_test NAME TIMEOUT)
         if (NOT NNG_ENABLE_COVERAGE)
@@ -130,11 +147,13 @@ add_nng_test(device 5)
 add_nng_test(errors 2)
 add_nng_test(pair1 5)
 add_nng_test(udp 5)
-if (NNG_HAVE_ZEROTIER)
-    add_nng_test(zt 60)
-endif()
+add_nng_test(zt 60)
 
 # compatbility tests
+# We only support these if ALL the legacy protocols are supported.  This
+# is because we don't want to make modifications to partially enable some
+# of these tests.  Folks minimizing the library probably don't care too
+# much about these anyway.
 add_nng_compat_test(compat_block 5)
 add_nng_compat_test(compat_bug777 5)
 add_nng_compat_test(compat_bus 5)

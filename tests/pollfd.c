@@ -8,9 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-
 #include <string.h>
 
 #ifndef _WIN32
@@ -32,14 +29,21 @@
 
 #endif
 
+#include "convey.h"
+#include "nng.h"
+#include "protocol/pair1/pair.h"
+#include "protocol/pipeline0/pull.h"
+#include "protocol/pipeline0/push.h"
+#include "stubs.h"
+
 TestMain("Poll FDs", {
 
 	Convey("Given a connected pair of sockets", {
 		nng_socket s1;
 		nng_socket s2;
 
-		So(nng_pair_open(&s1) == 0);
-		So(nng_pair_open(&s2) == 0);
+		So(nng_pair1_open(&s1) == 0);
+		So(nng_pair1_open(&s2) == 0);
 		Reset({
 			nng_close(s1);
 			nng_close(s2);
@@ -106,26 +110,25 @@ TestMain("Poll FDs", {
 			So(nng_getopt(s1, NNG_OPT_RECVFD, &fd, &sz) == 0);
 			So(sz == sizeof(fd));
 		});
-		Convey("We cannot get a send FD for PULL", {
-			nng_socket s3;
-			int        fd;
-			size_t     sz;
-			So(nng_pull_open(&s3) == 0);
-			Reset({ nng_close(s3); });
-			sz = sizeof(fd);
-			So(nng_getopt(s3, NNG_OPT_SENDFD, &fd, &sz) ==
-			    NNG_ENOTSUP);
-		});
+	});
 
-		Convey("We cannot get a recv FD for PUSH", {
-			nng_socket s3;
-			int        fd;
-			size_t     sz;
-			So(nng_push_open(&s3) == 0);
-			Reset({ nng_close(s3); });
-			sz = sizeof(fd);
-			So(nng_getopt(s3, NNG_OPT_RECVFD, &fd, &sz) ==
-			    NNG_ENOTSUP);
-		});
+	Convey("We cannot get a send FD for PULL", {
+		nng_socket s3;
+		int        fd;
+		size_t     sz;
+		So(nng_pull0_open(&s3) == 0);
+		Reset({ nng_close(s3); });
+		sz = sizeof(fd);
+		So(nng_getopt(s3, NNG_OPT_SENDFD, &fd, &sz) == NNG_ENOTSUP);
+	});
+
+	Convey("We cannot get a recv FD for PUSH", {
+		nng_socket s3;
+		int        fd;
+		size_t     sz;
+		So(nng_push0_open(&s3) == 0);
+		Reset({ nng_close(s3); });
+		sz = sizeof(fd);
+		So(nng_getopt(s3, NNG_OPT_RECVFD, &fd, &sz) == NNG_ENOTSUP);
 	});
 })

@@ -93,11 +93,83 @@ option (NNG_TESTS "Build and run tests" ON)
 option (NNG_TOOLS "Build extra tools" OFF)
 option (NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
 option (NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
-option (NNG_ENABLE_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
-set (NNG_ZEROTIER_SOURCE "" CACHE PATH "Location of ZeroTier source tree.")
 # Enable access to private APIs for our own use.
 add_definitions (-DNNG_PRIVATE)
 
+option (NNG_PROTO_BUS0 "Enable BUSv0 protocol." ON)
+if (NNG_PROTO_BUS0)
+    add_definitions (-DNNG_HAVE_BUS0)
+endif ()
+
+option (NNG_PROTO_PAIR0 "Enable PAIRv0 protocol." ON)
+if (NNG_PROTO_PAIR0)
+    add_definitions (-DNNG_HAVE_PAIR0)
+endif ()
+
+option (NNG_PROTO_PAIR1 "Enable PAIRv1 protocol." ON)
+if (NNG_PROTO_PAIR1)
+    add_definitions (-DNNG_HAVE_PAIR1)
+endif ()
+
+option (NNG_PROTO_REQ0 "Enable REQv0 protocol." ON)
+if (NNG_PROTO_REQ0)
+    add_definitions (-DNNG_HAVE_REQ0)
+endif ()
+
+option (NNG_PROTO_REP0 "Enable REPv0 protocol." ON)
+if (NNG_PROTO_REP0)
+    add_definitions (-DNNG_HAVE_REP0)
+endif ()
+
+option (NNG_PROTO_PUB0 "Enable PUBv0 protocol." ON)
+if (NNG_PROTO_PUB0)
+    add_definitions (-DNNG_HAVE_PUB0)
+endif ()
+
+option (NNG_PROTO_SUB0 "Enable SUBv0 protocol." ON)
+if (NNG_PROTO_SUB0)
+    add_definitions (-DNNG_HAVE_SUB0)
+endif ()
+
+option (NNG_PROTO_PUSH0 "Enable PUSHv0 protocol." ON)
+if (NNG_PROTO_PUSH0)
+    add_definitions (-DNNG_HAVE_PUSH0)
+endif ()
+
+option (NNG_PROTO_PULL0 "Enable PULLv0 protocol." ON)
+if (NNG_PROTO_PULL0)
+    add_definitions (-DNNG_HAVE_PULL0)
+endif ()
+
+option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
+if (NNG_PROTO_SURVEYOR0)
+    add_definitions (-DNNG_HAVE_SURVEYOR0)
+endif ()
+
+option (NNG_PROTO_RESPONDENT0 "Enable RESPONDENTv0 protocol." ON)
+if (NNG_PROTO_RESPONDENT0)
+    add_definitions (-DNNG_HAVE_RESPONDENT0)
+endif ()
+
+option (NNG_TRANSPORT_INPROC "Enable inproc transport." ON)
+if (NNG_TRANSPORT_INPROC)
+    add_definitions (-DNNG_HAVE_INPROC)
+endif ()
+
+option (NNG_TRANSPORT_IPC "Enable IPC transport." ON)
+if (NNG_TRANSPORT_IPC)
+    add_definitions (-DNNG_HAVE_IPC)
+endif ()
+
+option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
+if (NNG_TRANSPORT_TCP)
+    add_definitions (-DNNG_HAVE_TCP)
+endif ()
+
+option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
+if (NNG_TRANSPORT_ZEROTIER)
+    add_definitions (-DNNG_HAVE_ZEROTIER)
+endif ()
 #  Platform checks.
 
 if (NNG_ENABLE_COVERAGE)
@@ -246,39 +318,6 @@ nng_check_sym (strdup string.h NNG_HAVE_STRDUP)
 nng_check_sym (strlcat string.h NNG_HAVE_STRLCAT)
 nng_check_sym (strlcpy string.h NNG_HAVE_STRLCPY)
 nng_check_sym (strnlen string.h NNG_HAVE_STRNLEN)
-
-# Search for ZeroTier
-# We use the libzerotiercore.a library, which is unfortunately a C++ object
-# even though it exposes only public C symbols.  It would be extremely
-# helpful if libzerotiercore didn't make us carry the whole C++ runtime
-# behind us.  The user must specify the location of the ZeroTier source
-# tree (dev branch for now, and already compiled please) by setting the
-# NNG_ZEROTIER_SOURCE macro.
-# NB: This needs to be the zerotierone tree, not the libzt library.
-# This is because we don't access the API, but instead use the low
-# level zerotiercore functionality directly.
-# NB: As we wind up linking libzerotiercore.a into the application,
-# this means that your application will *also* need to either be licensed
-# under the GPLv3, or you will need to have a commercial license from
-# ZeroTier permitting its use elsewhere.
-if (NNG_ENABLE_ZEROTIER)
-    enable_language(CXX)
-    find_library(NNG_LIBZTCORE zerotiercore PATHS ${NNG_ZEROTIER_SOURCE})
-    if (NNG_LIBZTCORE)
-        set(CMAKE_REQUIRED_INCLUDES ${NNG_ZEROTIER_SOURCE}/include)
-#        set(CMAKE_REQUIRED_LIBRARIES ${NNG_LIBZTCORE} c++)
-#        set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} ${NNG_LIBZTCORE} c++)
-        message(STATUS "C++ ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES}")
-        set(CMAKE_REQUIRED_LIBRARIES ${NNG_LIBZTCORE} ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES})
-        set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} ${NNG_LIBZTCORE} ${CMAKE_CXX_IMPLICIT_LINK_LIBRARIES})
-        set(NNG_REQUIRED_INCLUDES ${NNG_REQUIRED_INCLUDES} ${NNG_ZEROTIER_SOURCE}/include)
-        nng_check_sym(ZT_Node_join ZeroTierOne.h NNG_HAVE_ZEROTIER)
-    endif()
-    if (NOT NNG_HAVE_ZEROTIER)
-        message (FATAL_ERROR "Cannot find ZeroTier components")
-    endif()
-    message(STATUS "Found ZeroTier at ${NNG_LIBZTCORE}")
-endif()
 
 add_subdirectory (src)
 

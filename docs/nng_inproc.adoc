@@ -47,8 +47,7 @@ URI Format
 
 This transport uses URIs using the scheme `inproc://`, followed by
 an arbitrary string of text, terminated by a `NUL` byte.  The
-entire URI must be less than `NNG_MAXADDRLEN` bytes long, including
-the terminating `NUL`.
+entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 
 Multiple URIs can be used within the
 same application, and they will not interfere with one another.
@@ -65,16 +64,22 @@ When using an `nng_sockaddr` structure, the actual structure is of type
 
 [source,c]
 --------
-#define NNG_AF_INPROC 1
+#define NNG_AF_INPROC 1 <1>
 #define NNG_MAXADDRLEN 128
 
-struct nng_sockaddr_inproc {
+typedef nng_sockaddr_inproc {
+    // <2>
     uint16_t sa_family;                  // must be NNG_AF_INPROC
-    uint32_t sa_path[NNG_MAXADDRLEN];    // arbitrary "path"
+    char     sa_path[NNG_MAXADDRLEN];    // arbitrary "path"
+    //
 }
 --------
+<1> The values of these macros may change, so applications
+should avoid depending upon their values and instead use them symbolically.
+<2> Other members may be present, but only those listed here
+are suitable for application use.
 
-The `sa_family` member will have the value `NNG_AF_INPROC` (1).
+The `sa_family` member will have the value `NNG_AF_INPROC`.
 The `sa_path` member is an ASCIIZ string, and may contain any characters,
 terminated by a `NUL` byte.
 

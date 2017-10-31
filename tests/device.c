@@ -10,6 +10,8 @@
 
 #include "convey.h"
 #include "nng.h"
+#include "protocol/pair1/pair.h"
+#include "stubs.h"
 
 #include <string.h>
 
@@ -68,8 +70,8 @@ Main({
 			So(nng_listen(dev1, addr1, NULL, 0) == 0);
 			So(nng_listen(dev2, addr2, NULL, 0) == 0);
 
-			So(nng_pair_open(&end1) == 0);
-			So(nng_pair_open(&end2) == 0);
+			So(nng_pair1_open(&end1) == 0);
+			So(nng_pair1_open(&end2) == 0);
 
 			So(nng_dial(end1, addr1, NULL, 0) == 0);
 			So(nng_dial(end2, addr2, NULL, 0) == 0);

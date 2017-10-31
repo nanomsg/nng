@@ -74,30 +74,6 @@ set (NNG_SOURCES
     core/timer.h
     core/transport.c
     core/transport.h
-
-    protocol/bus/bus.c
-
-    protocol/pair/pair_v0.c
-    protocol/pair/pair_v1.c
-
-    protocol/pipeline/pull.c
-    protocol/pipeline/push.c
-
-    protocol/pubsub/pub.c
-    protocol/pubsub/sub.c
-
-    protocol/reqrep/rep.c
-    protocol/reqrep/req.c
-
-    protocol/survey/respond.c
-    protocol/survey/survey.c
-
-    transport/inproc/inproc.c
-
-    transport/ipc/ipc.c
-
-    transport/tcp/tcp.c
-
 )
 
 if (NNG_PLATFORM_POSIX)
@@ -146,14 +122,19 @@ endif()
 install(FILES transport/inproc/inproc.h
     DESTINATION include/nng/transport/inproc)
     
-if (NNG_ENABLE_ZEROTIER)
-    set (NNG_SOURCES ${NNG_SOURCES}
-        transport/zerotier/zerotier.c
-        transport/zerotier/zerotier.h
-    )
-    install(FILES transport/zerotier/zerotier.h
-        DESTINATION include/nng/transport/zerotier)
-endif()
+
+add_subdirectory(protocol/bus0)
+add_subdirectory(protocol/pair0)
+add_subdirectory(protocol/pair1)
+add_subdirectory(protocol/pipeline0)
+add_subdirectory(protocol/pubsub0)
+add_subdirectory(protocol/reqrep0)
+add_subdirectory(protocol/survey0)
+
+add_subdirectory(transport/inproc)
+add_subdirectory(transport/ipc)
+add_subdirectory(transport/tcp)
+add_subdirectory(transport/zerotier)
 
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src
     ${NNG_REQUIRED_INCLUDES})
@@ -216,3 +197,7 @@ install (TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_static
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
 )
+
+# Promote settings to parent
+set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} PARENT_SCOPE)
+set(NNG_REQUIRED_LFLAGS ${NNG_REQUIRED_LFLAGS} PARENT_SCOPE)

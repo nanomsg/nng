@@ -17,6 +17,10 @@
 // While a peer is connected to the server, all other peer connection
 // attempts are discarded.
 
+#ifndef NNI_PROTO_PAIR_V0
+#define NNI_PROTO_PAIR_V0 NNI_PROTO(1, 0)
+#endif
+
 typedef struct pair0_pipe pair0_pipe;
 typedef struct pair0_sock pair0_sock;
 

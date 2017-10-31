@@ -12,22 +12,31 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "protocol/survey0/survey.h"
 
 // Surveyor protocol.  The SURVEYOR protocol is the "survey" side of the
 // survey pattern.  This is useful for building service discovery, voting, etc.
 
-typedef struct surv_pipe surv_pipe;
-typedef struct surv_sock surv_sock;
+#ifndef NNI_PROTO_SURVEYOR_V0
+#define NNI_PROTO_SURVEYOR_V0 NNI_PROTO(6, 2)
+#endif
 
-static void surv_sock_getq_cb(void *);
-static void surv_getq_cb(void *);
-static void surv_putq_cb(void *);
-static void surv_send_cb(void *);
-static void surv_recv_cb(void *);
-static void surv_timeout(void *);
+#ifndef NNI_PROTO_RESPONDENT_V0
+#define NNI_PROTO_RESPONDENT_V0 NNI_PROTO(6, 3)
+#endif
 
-// A surv_sock is our per-socket protocol private structure.
-struct surv_sock {
+typedef struct surv0_pipe surv0_pipe;
+typedef struct surv0_sock surv0_sock;
+
+static void surv0_sock_getq_cb(void *);
+static void surv0_getq_cb(void *);
+static void surv0_putq_cb(void *);
+static void surv0_send_cb(void *);
+static void surv0_recv_cb(void *);
+static void surv0_timeout(void *);
+
+// surv0_sock is our per-socket protocol private structure.
+struct surv0_sock {
 	nni_duration   survtime;
 	nni_time       expire;
 	int            raw;
@@ -42,10 +51,10 @@ struct surv_sock {
 	nni_mtx        mtx;
 };
 
-// A surv_pipe is our per-pipe protocol private structure.
-struct surv_pipe {
+// surv0_pipe is our per-pipe protocol private structure.
+struct surv0_pipe {
 	nni_pipe *    npipe;
-	surv_sock *   psock;
+	surv0_sock *  psock;
 	nni_msgq *    sendq;
 	nni_list_node node;
 	nni_aio *     aio_getq;
@@ -55,9 +64,9 @@ struct surv_pipe {
 };
 
 static void
-surv_sock_fini(void *arg)
+surv0_sock_fini(void *arg)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 
 	nni_aio_stop(s->aio_getq);
 	nni_aio_fini(s->aio_getq);
@@ -66,21 +75,21 @@ surv_sock_fini(void *arg)
 }
 
 static int
-surv_sock_init(void **sp, nni_sock *nsock)
+surv0_sock_init(void **sp, nni_sock *nsock)
 {
-	surv_sock *s;
-	int        rv;
+	surv0_sock *s;
+	int         rv;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_aio_init(&s->aio_getq, surv_sock_getq_cb, s)) != 0) {
-		surv_sock_fini(s);
+	if ((rv = nni_aio_init(&s->aio_getq, surv0_sock_getq_cb, s)) != 0) {
+		surv0_sock_fini(s);
 		return (rv);
 	}
-	NNI_LIST_INIT(&s->pipes, surv_pipe, node);
+	NNI_LIST_INIT(&s->pipes, surv0_pipe, node);
 	nni_mtx_init(&s->mtx);
-	nni_timer_init(&s->timer, surv_timeout, s);
+	nni_timer_init(&s->timer, surv0_timeout, s);
 
 	s->nextid   = nni_random();
 	s->raw      = 0;
@@ -94,26 +103,26 @@ surv_sock_init(void **sp, nni_sock *nsock)
 }
 
 static void
-surv_sock_open(void *arg)
+surv0_sock_open(void *arg)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 
 	nni_msgq_aio_get(s->uwq, s->aio_getq);
 }
 
 static void
-surv_sock_close(void *arg)
+surv0_sock_close(void *arg)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 
 	nni_timer_cancel(&s->timer);
 	nni_aio_cancel(s->aio_getq, NNG_ECLOSED);
 }
 
 static void
-surv_pipe_fini(void *arg)
+surv0_pipe_fini(void *arg)
 {
-	surv_pipe *p = arg;
+	surv0_pipe *p = arg;
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
@@ -124,21 +133,21 @@ surv_pipe_fini(void *arg)
 }
 
 static int
-surv_pipe_init(void **pp, nni_pipe *npipe, void *s)
+surv0_pipe_init(void **pp, nni_pipe *npipe, void *s)
 {
-	surv_pipe *p;
-	int        rv;
+	surv0_pipe *p;
+	int         rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	// This depth could be tunable.
 	if (((rv = nni_msgq_init(&p->sendq, 16)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, surv_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, surv_putq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, surv_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, surv_recv_cb, p)) != 0)) {
-		surv_pipe_fini(p);
+	    ((rv = nni_aio_init(&p->aio_getq, surv0_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_putq, surv0_putq_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_send, surv0_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->aio_recv, surv0_recv_cb, p)) != 0)) {
+		surv0_pipe_fini(p);
 		return (rv);
 	}
 
@@ -149,10 +158,10 @@ surv_pipe_init(void **pp, nni_pipe *npipe, void *s)
 }
 
 static int
-surv_pipe_start(void *arg)
+surv0_pipe_start(void *arg)
 {
-	surv_pipe *p = arg;
-	surv_sock *s = p->psock;
+	surv0_pipe *p = arg;
+	surv0_sock *s = p->psock;
 
 	nni_mtx_lock(&s->mtx);
 	nni_list_append(&s->pipes, p);
@@ -164,10 +173,10 @@ surv_pipe_start(void *arg)
 }
 
 static void
-surv_pipe_stop(void *arg)
+surv0_pipe_stop(void *arg)
 {
-	surv_pipe *p = arg;
-	surv_sock *s = p->psock;
+	surv0_pipe *p = arg;
+	surv0_sock *s = p->psock;
 
 	nni_aio_stop(p->aio_getq);
 	nni_aio_stop(p->aio_send);
@@ -184,9 +193,9 @@ surv_pipe_stop(void *arg)
 }
 
 static void
-surv_getq_cb(void *arg)
+surv0_getq_cb(void *arg)
 {
-	surv_pipe *p = arg;
+	surv0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_getq) != 0) {
 		nni_pipe_stop(p->npipe);
@@ -200,9 +209,9 @@ surv_getq_cb(void *arg)
 }
 
 static void
-surv_send_cb(void *arg)
+surv0_send_cb(void *arg)
 {
-	surv_pipe *p = arg;
+	surv0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_send) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_send));
@@ -215,9 +224,9 @@ surv_send_cb(void *arg)
 }
 
 static void
-surv_putq_cb(void *arg)
+surv0_putq_cb(void *arg)
 {
-	surv_pipe *p = arg;
+	surv0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_putq) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_putq));
@@ -230,10 +239,10 @@ surv_putq_cb(void *arg)
 }
 
 static void
-surv_recv_cb(void *arg)
+surv0_recv_cb(void *arg)
 {
-	surv_pipe *p = arg;
-	nni_msg *  msg;
+	surv0_pipe *p = arg;
+	nni_msg *   msg;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
 		goto failed;
@@ -265,10 +274,10 @@ failed:
 }
 
 static int
-surv_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+surv0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
-	surv_sock *s = arg;
-	int        rv;
+	surv0_sock *s = arg;
+	int         rv;
 
 	nni_mtx_lock(&s->mtx);
 	if ((rv = nni_setopt_int(&s->raw, buf, sz, 0, 1)) == 0) {
@@ -280,33 +289,33 @@ surv_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 }
 
 static int
-surv_sock_getopt_raw(void *arg, void *buf, size_t *szp)
+surv0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 	return (nni_getopt_int(s->raw, buf, szp));
 }
 
 static int
-surv_sock_setopt_surveytime(void *arg, const void *buf, size_t sz)
+surv0_sock_setopt_surveytime(void *arg, const void *buf, size_t sz)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 	return (nni_setopt_ms(&s->survtime, buf, sz));
 }
 
 static int
-surv_sock_getopt_surveytime(void *arg, void *buf, size_t *szp)
+surv0_sock_getopt_surveytime(void *arg, void *buf, size_t *szp)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 	return (nni_getopt_ms(s->survtime, buf, szp));
 }
 
 static void
-surv_sock_getq_cb(void *arg)
+surv0_sock_getq_cb(void *arg)
 {
-	surv_sock *s = arg;
-	surv_pipe *p;
-	surv_pipe *last;
-	nni_msg *  msg, *dup;
+	surv0_sock *s = arg;
+	surv0_pipe *p;
+	surv0_pipe *last;
+	nni_msg *   msg, *dup;
 
 	if (nni_aio_result(s->aio_getq) != 0) {
 		// Should be NNG_ECLOSED.
@@ -338,9 +347,9 @@ surv_sock_getq_cb(void *arg)
 }
 
 static void
-surv_timeout(void *arg)
+surv0_timeout(void *arg)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
 	s->survid = 0;
@@ -349,9 +358,9 @@ surv_timeout(void *arg)
 }
 
 static void
-surv_sock_recv(void *arg, nni_aio *aio)
+surv0_sock_recv(void *arg, nni_aio *aio)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
 	if (s->survid == 0) {
@@ -364,11 +373,11 @@ surv_sock_recv(void *arg, nni_aio *aio)
 }
 
 static void
-surv_sock_send(void *arg, nni_aio *aio)
+surv0_sock_send(void *arg, nni_aio *aio)
 {
-	surv_sock *s = arg;
-	nni_msg *  msg;
-	int        rv;
+	surv0_sock *s = arg;
+	nni_msg *   msg;
+	int         rv;
 
 	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
@@ -404,9 +413,9 @@ surv_sock_send(void *arg, nni_aio *aio)
 }
 
 static nni_msg *
-surv_sock_filter(void *arg, nni_msg *msg)
+surv0_sock_filter(void *arg, nni_msg *msg)
 {
-	surv_sock *s = arg;
+	surv0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
 	if (s->raw) {
@@ -426,50 +435,50 @@ surv_sock_filter(void *arg, nni_msg *msg)
 	return (msg);
 }
 
-static nni_proto_pipe_ops surv_pipe_ops = {
-	.pipe_init  = surv_pipe_init,
-	.pipe_fini  = surv_pipe_fini,
-	.pipe_start = surv_pipe_start,
-	.pipe_stop  = surv_pipe_stop,
+static nni_proto_pipe_ops surv0_pipe_ops = {
+	.pipe_init  = surv0_pipe_init,
+	.pipe_fini  = surv0_pipe_fini,
+	.pipe_start = surv0_pipe_start,
+	.pipe_stop  = surv0_pipe_stop,
 };
 
-static nni_proto_sock_option surv_sock_options[] = {
+static nni_proto_sock_option surv0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
-	    .pso_getopt = surv_sock_getopt_raw,
-	    .pso_setopt = surv_sock_setopt_raw,
+	    .pso_getopt = surv0_sock_getopt_raw,
+	    .pso_setopt = surv0_sock_setopt_raw,
 	},
 	{
 	    .pso_name   = NNG_OPT_SURVEYOR_SURVEYTIME,
-	    .pso_getopt = surv_sock_getopt_surveytime,
-	    .pso_setopt = surv_sock_setopt_surveytime,
+	    .pso_getopt = surv0_sock_getopt_surveytime,
+	    .pso_setopt = surv0_sock_setopt_surveytime,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },
 };
 
-static nni_proto_sock_ops surv_sock_ops = {
-	.sock_init    = surv_sock_init,
-	.sock_fini    = surv_sock_fini,
-	.sock_open    = surv_sock_open,
-	.sock_close   = surv_sock_close,
-	.sock_send    = surv_sock_send,
-	.sock_recv    = surv_sock_recv,
-	.sock_filter  = surv_sock_filter,
-	.sock_options = surv_sock_options,
+static nni_proto_sock_ops surv0_sock_ops = {
+	.sock_init    = surv0_sock_init,
+	.sock_fini    = surv0_sock_fini,
+	.sock_open    = surv0_sock_open,
+	.sock_close   = surv0_sock_close,
+	.sock_send    = surv0_sock_send,
+	.sock_recv    = surv0_sock_recv,
+	.sock_filter  = surv0_sock_filter,
+	.sock_options = surv0_sock_options,
 };
 
-static nni_proto surv_proto = {
+static nni_proto surv0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_SURVEYOR_V0, "surveyor" },
 	.proto_peer     = { NNI_PROTO_RESPONDENT_V0, "respondent" },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
-	.proto_sock_ops = &surv_sock_ops,
-	.proto_pipe_ops = &surv_pipe_ops,
+	.proto_sock_ops = &surv0_sock_ops,
+	.proto_pipe_ops = &surv0_pipe_ops,
 };
 
 int
 nng_surveyor0_open(nng_socket *sidp)
 {
-	return (nni_proto_open(sidp, &surv_proto));
+	return (nni_proto_open(sidp, &surv0_proto));
 }
