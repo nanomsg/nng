@@ -10,7 +10,7 @@ layout: default
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
 <meta name="copyright" content="Copyright 2017 Garrett D'Amore &lt;garrett@damore.org&gt; Copyright 2017 Capitar IT Group BV &lt;info@capitar.com&gt; This software is supplied under the terms of the MIT License, a copy of which should be located in the distribution where this file was obtained (LICENSE.txt).  A copy of the license may also be found online at https://opensource.org/licenses/MIT.">
-<title>nng_pub(7)</title>
+<title>nng_tcp(7)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -504,10 +504,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage">
 <div id="header">
-<h1>nng_pub(7) Manual Page</h1>
+<h1>nng_tcp(7) Manual Page</h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_pub - publisher protocol</p>
+<p>nng_tcp - TCP/IP transport for nng</p>
 </div>
 </div>
 <div id="content">
@@ -516,9 +516,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/pubsub0/pub.h&gt;</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/transport/tcp/tcp.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_pub0_open</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-o">*</span><span class="tok-n">s</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_tcp_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -527,14 +527,34 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <em>nng_pub</em> protocol is one half of a publisher/subscriber pattern.
-In this pattern, a publisher sends data, which is broadcast to all
-subscribers.  The subscribing applications only see the data to which
-they have subscribed.</p>
+<p>The <em>nng_tcp</em> transport provides communication support between
+<em>nng</em> sockets across a TCP/IP network.  Both IPv4 and IPv6
+are supported when the underlying platform also supports it.</p>
+</div>
+<div class="sect2">
+<h3 id="_registration">Registration</h3>
+<div class="paragraph">
+<p>The <em>tcp</em> transport is generally built-in to the <em>nng</em> core, so
+no extra steps to use it should be necessary.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_uri_format">URI Format</h3>
+<div class="paragraph">
+<p>This transport uses URIs using the scheme <code>tcp://</code>, followed by
+an IP address or hostname, followed by a colon and finally a
+TCP port number.  For example, to contact port 80 on the localhost
+either of the following URIs could be used: <code>tcp://127.0.0.1:80</code> or
+<code>tcp://localhost:80</code>.</p>
 </div>
 <div class="paragraph">
-<p>The <em>nng_pub</em> protocol is the publisher side, and the
-<a href="nng_sub.html">nng_sub(7)</a> protocol is the subscriber side.</p>
+<p>When specifying IPv6 addresses, the address must be enclosed in
+square brackets (<code>[]</code>) to avoid confusion with the final colon
+separating the port.</p>
+</div>
+<div class="paragraph">
+<p>For example, the same port 80 on the IPv6 loopback address (<em>::1</em>) would
+be specified as <code>tcp://[::1]:80</code>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -543,44 +563,94 @@ they have subscribed.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-In this implementation, the publisher delivers all messages to all
-subscribers. The subscribers maintain their own subscriptions, and filter
-them locally.  Thus, this pattern should not be used in an attempt to
-reduce bandwidth consumption.
+When using symbolic names, the name is resolved when the
+name is first used. <em>nng</em> won&#8217;t become aware of changes in the
+name resolution until restart,
+usually.<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnote_1" title="View footnote.">1</a>]</sup>
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>The topics that subscribers subscribe to is just the first part of
-the message body.  Applications should construct their messages
-accordingly.</p>
+<p>The special value of 0 (<code>INADDR_ANY</code>) can be used for a listener
+to indicate that it should listen on all interfaces on the host.
+A short-hand for this form is to either omit the address, or specify
+the asterisk (<code>*</code>) character.  For example, the following three
+URIs are all equivalent, and could be used to listen to port 9999
+on the host:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p><code>tcp://0.0.0.0:9999</code></p>
+</li>
+<li>
+<p><code>tcp://*:9999</code></p>
+</li>
+<li>
+<p><code>tcp://:9999</code></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>The entire URI must be less than <code>NNG_MAXADDRLEN</code> bytes long.</p>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_socket_operations">Socket Operations</h3>
+<h3 id="_socket_address">Socket Address</h3>
 <div class="paragraph">
-<p>The <code>nng_pub0_open()</code> call creates a publisher socket.  This socket
-may be used to send messages, but is unable to receive them.  Attempts
-to receive messages will result in <code>NNG_ENOTSUP</code>.</p>
+<p>When using an <code>nng_sockaddr</code> structure, the actual structure is either
+of type <code>nng_sockaddr_in</code> (for IPv4) or <code>nng_sockaddr_in6</code> (for IPv6).
+These are <code>struct</code> types with the following definitions:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#define NNG_AF_INET    3 </span><i class="conum" data-value="1"></i><b>(1)</b>
+<span class="tok-cp">#define NNG_AF_INET6   4</span>
+<span class="tok-cp">#define NNG_MAXADDRLEN 128</span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
+    <span class="tok-c1">// ... </span><i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>                 <span class="tok-c1">// must be NNG_AF_INET</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>                   <span class="tok-c1">// TCP port number</span>
+    <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_addr</span><span class="tok-p">;</span>
+    <span class="tok-c1">// ...</span>
+<span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_in</span><span class="tok-p">;</span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
+    <span class="tok-c1">// ... </span><i class="conum" data-value="2"></i><b>(2)</b>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>                 <span class="tok-c1">// must be NNG_AF_INET6</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>                   <span class="tok-c1">// TCP port number</span>
+    <span class="tok-kt">uint8_t</span>  <span class="tok-n">sa_addr</span><span class="tok-p">[</span><span class="tok-mi">16</span><span class="tok-p">];</span>
+    <span class="tok-c1">// ...</span>
+<span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_in6</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The values of these macros may change, so applications
+should avoid depending upon their values and instead use them symbolically.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Other members may be present, but only those listed here
+are suitable for application use.</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <code>sa_family</code> member will have the value <code>NNG_AF_INET</code> or <code>NNG_AF_INET6</code>.
+The <code>sa_port</code> and <code>sa_addr</code> are the TCP port number and address, both in
+network byte order (most significant byte is first).</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_protocol_versions">Protocol Versions</h3>
+<h3 id="_transport_options">Transport Options</h3>
 <div class="paragraph">
-<p>Only version 0 of this protocol is supported.  (At the time of writing,
-no other versions of this protocol have been defined.)</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_protocol_options">Protocol Options</h3>
-<div class="paragraph">
-<p>The <em>nng_pub</em> protocol has no protocol-specific options.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_protocol_headers">Protocol Headers</h3>
-<div class="paragraph">
-<p>The <em>nng_pub</em> protocol has no protocol-specific headers.</p>
+<p>The <em>tcp</em> transport has no special
+options.<sup class="footnote">[<a id="_footnoteref_2" class="footnote" href="#_footnote_2" title="View footnote.">2</a>]</sup></p>
 </div>
 </div>
 </div>
@@ -597,8 +667,7 @@ no other versions of this protocol have been defined.)</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng.html">nng(7)</a>
-<a href="nng_sub.html">nng_sub(7)</a></p>
+<p><a href="nng.html">nng(7)</a></p>
 </div>
 </div>
 </div>
@@ -614,6 +683,15 @@ Copyright 2017 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <a href="https://opensource.org/licenses/LICENSE.txt">MIT License</a>.</p>
 </div>
 </div>
+</div>
+</div>
+<div id="footnotes">
+<hr>
+<div class="footnote" id="_footnote_1">
+<a href="#_footnoteref_1">1</a>. This is a bug and will likely be fixed in the future.
+</div>
+<div class="footnote" id="_footnote_2">
+<a href="#_footnoteref_2">2</a>. Options for TCP keepalive, linger, and nodelay are planned.
 </div>
 </div>
 <div id="footer">

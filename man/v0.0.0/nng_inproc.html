@@ -547,8 +547,7 @@ no extra steps to use it should be necessary.</p>
 <div class="paragraph">
 <p>This transport uses URIs using the scheme <code>inproc://</code>, followed by
 an arbitrary string of text, terminated by a <code>NUL</code> byte.  The
-entire URI must be less than <code>NNG_MAXADDRLEN</code> bytes long, including
-the terminating <code>NUL</code>.</p>
+entire URI must be less than <code>NNG_MAXADDRLEN</code> bytes long.</p>
 </div>
 <div class="paragraph">
 <p>Multiple URIs can be used within the
@@ -568,17 +567,33 @@ that URI.</p>
 </div>
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#define NNG_AF_INPROC 1</span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#define NNG_AF_INPROC 1 </span><i class="conum" data-value="1"></i><b>(1)</b>
 <span class="tok-cp">#define NNG_MAXADDRLEN 128</span>
 
-<span class="tok-k">struct</span> <span class="tok-n">nng_sockaddr_inproc</span> <span class="tok-p">{</span>
+<span class="tok-k">typedef</span> <span class="tok-n">nng_sockaddr_inproc</span> <span class="tok-p">{</span>
+    <i class="conum" data-value="2"></i><b>(2)</b>
     <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>                  <span class="tok-c1">// must be NNG_AF_INPROC</span>
-    <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_path</span><span class="tok-p">[</span><span class="tok-n">NNG_MAXADDRLEN</span><span class="tok-p">];</span>    <span class="tok-c1">// arbitrary &quot;path&quot;</span>
+    <span class="tok-kt">char</span>     <span class="tok-n">sa_path</span><span class="tok-p">[</span><span class="tok-n">NNG_MAXADDRLEN</span><span class="tok-p">];</span>    <span class="tok-c1">// arbitrary &quot;path&quot;</span>
+    <span class="tok-c1">//</span>
 <span class="tok-p">}</span></code></pre>
 </div>
 </div>
+<div class="colist arabic">
+<table>
+<tr>
+<td><i class="conum" data-value="1"></i><b>1</b></td>
+<td>The values of these macros may change, so applications
+should avoid depending upon their values and instead use them symbolically.</td>
+</tr>
+<tr>
+<td><i class="conum" data-value="2"></i><b>2</b></td>
+<td>Other members may be present, but only those listed here
+are suitable for application use.</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>The <code>sa_family</code> member will have the value <code>NNG_AF_INPROC</code> (1).
+<p>The <code>sa_family</code> member will have the value <code>NNG_AF_INPROC</code>.
 The <code>sa_path</code> member is an ASCIIZ string, and may contain any characters,
 terminated by a <code>NUL</code> byte.</p>
 </div>
@@ -624,7 +639,7 @@ Copyright 2017 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <div id="footer">
 <div id="footer-text">
 nng 0.0.0<br>
-Last updated 2017-10-31 01:26:12 UTC
+Last updated 2017-10-31 21:06:38 UTC
 </div>
 </div>
 </body>
