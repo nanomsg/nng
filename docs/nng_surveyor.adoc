@@ -82,7 +82,7 @@ The following protocol-specific options are available.
    When a new survey is started, a timer of this duration is also started.
    Any responses arriving this time will be discarded.  Attempts to receive
    after the timer expires with no other surveys started will result in
-   `NNG_ESTATE`.  Attempts to receive when this timer will result include
+   `NNG_ESTATE`.  Attempts to receive when this timer expires will result in
    `NNG_ETIMEDOUT`.
 
 `NNG_OPT_MAXTTL`::
