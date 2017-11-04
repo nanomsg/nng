@@ -49,12 +49,6 @@ This function returns the human-readable error message, terminated
 by a `NUL` byte.
 
 
-AUTHORS
--------
-
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
-
 SEE ALSO
 --------
 

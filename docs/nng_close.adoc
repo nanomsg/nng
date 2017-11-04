@@ -53,12 +53,6 @@ ERRORS
 `NNG_EBADF`:: The socket is already closed or was never opened.
 
 
-AUTHORS
--------
-
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
-
 SEE ALSO
 --------
 

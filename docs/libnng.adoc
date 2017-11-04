@@ -151,10 +151,6 @@ The following functions are used to register a transport for use.
 | <<nng_zerotier.adoc#,nng_zerotier_register(3)>>|register ZeroTier transport
 |===
 
-AUTHORS
--------
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>

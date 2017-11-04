@@ -120,10 +120,6 @@ and randomly when a request is first issued.)
 // TODO: Insert reference to RFC.
 
     
-AUTHORS
--------
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>

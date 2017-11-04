@@ -121,10 +121,6 @@ API
 
 The library API is documented at <<libnng.adoc#,libnng(3)>>.
 
-AUTHORS
--------
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
 SEE ALSO
 --------
 <<nng_compat.adoc#,nng_compat(3)>>

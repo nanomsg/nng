@@ -111,10 +111,6 @@ having their high order bit set to one.)
 // TODO: Insert reference to RFC.
 
     
-AUTHORS
--------
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>

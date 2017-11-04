@@ -73,10 +73,6 @@ Protocol Headers
 
 The _nng_push_ protocol has no protocol-specific headers.
     
-AUTHORS
--------
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>

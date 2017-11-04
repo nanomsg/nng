@@ -92,10 +92,6 @@ Transport Options
 The _ipc_ transport has no special
 options.footnote:[Options for security attributes and credentials are planned.]
 
-AUTHORS
--------
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>

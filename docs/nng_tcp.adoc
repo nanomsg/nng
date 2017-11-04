@@ -119,10 +119,6 @@ Transport Options
 The _tcp_ transport has no special
 options.footnote:[Options for TCP keepalive, linger, and nodelay are planned.]
  
-AUTHORS
--------
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>

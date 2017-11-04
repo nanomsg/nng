@@ -215,10 +215,6 @@ in this fashion.
    ID to "deorbit".  If the node is not already orbiting the moon, then
    this has no effect.
     
-AUTHORS
--------
-link:mailto:garrett@damore.org[Garrett D'Amore]
-
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>
