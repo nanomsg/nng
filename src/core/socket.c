@@ -357,6 +357,10 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 	}
 	nni_mtx_unlock(&nni_sock_lk);
 
+	if (rv == NNG_ENOENT) {
+		rv = NNG_ECLOSED;
+	}
+
 	return (rv);
 }
 
