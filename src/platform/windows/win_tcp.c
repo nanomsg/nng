@@ -171,7 +171,7 @@ nni_win_tcp_pipe_finish(nni_win_event *evt, nni_aio *aio)
 		aio->a_count += cnt;
 
 		while (cnt > 0) {
-			// If we didn't write the first full iov,
+			// If we didn't transfer the first full iov,
 			// then we're done for now.  Record progress
 			// and move on.
 			if (cnt < aio->a_iov[0].iov_len) {
@@ -182,7 +182,7 @@ nni_win_tcp_pipe_finish(nni_win_event *evt, nni_aio *aio)
 			}
 
 			// We consumed the full iov, so just move the
-			// remaininng ones up, and decrement count handled.
+			// remaining ones up, and decrement count handled.
 			cnt -= aio->a_iov[0].iov_len;
 			for (i = 1; i < aio->a_niov; i++) {
 				aio->a_iov[i - 1] = aio->a_iov[i];
@@ -191,10 +191,15 @@ nni_win_tcp_pipe_finish(nni_win_event *evt, nni_aio *aio)
 			aio->a_niov--;
 		}
 
-		if (aio->a_niov > 0) {
+		while (aio->a_niov > 0) {
 			// If we have more to do, submit it!
-			nni_win_event_resubmit(evt, aio);
-			return;
+			if (aio->a_iov[0].iov_len > 0) {
+				nni_win_event_resubmit(evt, aio);
+				return;
+			}
+			for (i = 1; i < aio->a_niov; i++) {
+				aio->a_iov[i - 1] = aio->a_iov[i];
+			}
 		}
 	}
 

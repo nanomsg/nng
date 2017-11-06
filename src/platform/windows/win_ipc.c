@@ -71,7 +71,7 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 		return (1);
 	}
 
-	// Now start a writefile.  We assume that only one send can be
+	// Now start a transfer.  We assume that only one send can be
 	// outstanding on a pipe at a time.  This is important to avoid
 	// scrambling the data anyway.  Note that Windows named pipes do
 	// not appear to support scatter/gather, so we have to process
@@ -120,23 +120,40 @@ nni_win_ipc_pipe_finish(nni_win_event *evt, nni_aio *aio)
 
 	cnt = evt->count;
 	if ((rv = evt->status) == 0) {
-		NNI_ASSERT(cnt <= aio->a_iov[0].iov_len);
-		aio->a_count += cnt;
-		aio->a_iov[0].iov_buf = (char *) aio->a_iov[0].iov_buf + cnt;
-		aio->a_iov[0].iov_len -= cnt;
 
-		if (aio->a_iov[0].iov_len == 0) {
-			int i;
-			aio->a_niov--;
-			for (i = 0; i < aio->a_niov; i++) {
-				aio->a_iov[i] = aio->a_iov[i + 1];
+		int i;
+		aio->a_count += cnt;
+
+		while (cnt > 0) {
+			// If we didn't transfer the first full iov,
+			// then we're done for now.  Record progress
+			// and move on.
+			if (cnt < aio->a_iov[0].iov_len) {
+				aio->a_iov[0].iov_len -= cnt;
+				aio->a_iov[0].iov_buf =
+				    (char *) aio->a_iov[0].iov_buf + cnt;
+				break;
 			}
+
+			// We consumed the full iov, so just move the
+			// remaining ones up, and decrement count handled.
+			cnt -= aio->a_iov[0].iov_len;
+			for (i = 1; i < aio->a_niov; i++) {
+				aio->a_iov[i - 1] = aio->a_iov[i];
+			}
+			NNI_ASSERT(aio->a_niov > 0);
+			aio->a_niov--;
 		}
 
-		if (aio->a_niov > 0) {
+		while (aio->a_niov > 0) {
 			// If we have more to do, submit it!
-			nni_win_event_resubmit(evt, aio);
-			return;
+			if (aio->a_iov[0].iov_len > 0) {
+				nni_win_event_resubmit(evt, aio);
+				return;
+			}
+			for (i = 1; i < aio->a_niov; i++) {
+				aio->a_iov[i - 1] = aio->a_iov[i];
+			}
 		}
 	}
 
@@ -172,6 +189,8 @@ nni_win_ipc_pipe_init(nni_plat_ipc_pipe **pipep, HANDLE p)
 void
 nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *pipe, nni_aio *aio)
 {
+	NNI_ASSERT(aio->a_niov > 0);
+	NNI_ASSERT(aio->a_iov[0].iov_len > 0);
 	nni_win_event_submit(&pipe->snd_ev, aio);
 }
 
@@ -379,10 +398,10 @@ nni_plat_ipc_ep_accept(nni_plat_ipc_ep *ep, nni_aio *aio)
 }
 
 // So Windows IPC is a bit different on the client side.  There is no
-// support for asynchronous connection, but we can fake it with a single
-// thread that runs to establish the connection.  That thread will run
-// keep looping, sleeping for 10 ms between attempts.  It performs non-blocking
-// attempts to connect.
+// support for asynchronous connection, but we can fake it with a
+// single thread that runs to establish the connection.  That thread
+// will run keep looping, sleeping for 10 ms between attempts.  It
+// performs non-blocking attempts to connect.
 typedef struct nni_win_ipc_conn_work nni_win_ipc_conn_work;
 struct nni_win_ipc_conn_work {
 	nni_list waiters;
@@ -433,9 +452,10 @@ nni_win_ipc_conn_thr(void *arg)
 			if (p == INVALID_HANDLE_VALUE) {
 				switch ((rv = GetLastError())) {
 				case ERROR_PIPE_BUSY:
-					// Still in progress.  This shouldn't
-					// happen unless the other side aborts
-					// the connection.
+					// Still in progress.  This
+					// shouldn't happen unless the
+					// other side aborts the
+					// connection.
 					ep->con_aio = aio;
 					nni_list_append(&w->waiters, ep);
 					continue;
