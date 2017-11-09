@@ -36,6 +36,8 @@ include (CheckLibraryExists)
 include (CheckCSourceCompiles)
 include (GNUInstallDirs)
 
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
 if (POLICY CMP0042)
     # Newer cmake on MacOS should use @rpath
     cmake_policy (SET CMP0042 NEW)
@@ -170,6 +172,14 @@ option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotierc
 if (NNG_TRANSPORT_ZEROTIER)
     add_definitions (-DNNG_HAVE_ZEROTIER)
 endif ()
+
+option (NNG_TRANSPORT_TLS "Enable TLS transport (requires mbedtls)" OFF)
+if (NNG_TRANSPORT_TLS)
+    set(NNG_MBEDTLS_ENABLE ON)
+    add_definitions (-DNNG_MBEDTLS_ENABLE)
+    add_definitions (-DNNG_HAVE_TLS)
+endif()
+
 #  Platform checks.
 
 if (NNG_ENABLE_COVERAGE)

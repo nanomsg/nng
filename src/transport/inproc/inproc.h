@@ -13,6 +13,6 @@
 
 // inproc transport.  This is used for intra-process communication.
 
-extern int nng_inproc_register(void);
+NNG_DECL int nng_inproc_register(void);
 
 #endif // NNG_TRANSPORT_INPROC_INPROC_H

@@ -110,13 +110,13 @@
 // return values from zt_opt_status.  We avoid hard coding them as defines,
 // to keep applications from baking in values that may change if the
 // underlying ZeroTier transport changes.
-extern int nng_zt_network_status_configuring;
-extern int nng_zt_network_status_ok;
-extern int nng_zt_network_status_denied;
-extern int nng_zt_network_status_notfound;
-extern int nng_zt_network_status_error;
-extern int nng_zt_network_status_obsolete;
+NNG_DECL int nng_zt_network_status_configuring;
+NNG_DECL int nng_zt_network_status_ok;
+NNG_DECL int nng_zt_network_status_denied;
+NNG_DECL int nng_zt_network_status_notfound;
+NNG_DECL int nng_zt_network_status_error;
+NNG_DECL int nng_zt_network_status_obsolete;
 
-extern int nng_zt_register(void);
+NNG_DECL int nng_zt_register(void);
 
 #endif // NNG_TRANSPORT_ZEROTIER_ZEROTIER_H

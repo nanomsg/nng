@@ -19,18 +19,28 @@
 // Transport common tests.  By making a common test framework for transports,
 // we can avoid rewriting the same tests for each new transport.  Include this
 // file once in your test code.  The test framework uses the REQ/REP protocol
-// for comms.
+// for messaging.
+typedef int (*trantest_proptest_t)(nng_msg *, nng_listener, nng_dialer);
 
-typedef struct {
-	char       addr[NNG_MAXADDRLEN + 1];
-	nng_socket reqsock;
-	nng_socket repsock;
-	nni_tran * tran;
-} trantest;
+typedef struct trantest trantest;
+
+struct trantest {
+	const char * tmpl;
+	char         addr[NNG_MAXADDRLEN + 1];
+	nng_socket   reqsock;
+	nng_socket   repsock;
+	nni_tran *   tran;
+	nng_dialer   dialer;
+	nng_listener listener;
+	int (*init)(struct trantest *);
+	void (*fini)(struct trantest *);
+	int (*dialer_init)(struct trantest *);
+	int (*listener_init)(struct trantest *);
+	int (*proptest)(nng_msg *, nng_listener, nng_dialer);
+	void *private; // transport specific private data
+};
 
 unsigned trantest_port = 0;
-
-typedef int (*trantest_proptest_t)(nng_msg *, nng_listener, nng_dialer);
 
 #ifndef NNG_HAVE_ZEROTIER
 #define nng_zt_register notransport
@@ -43,6 +53,9 @@ typedef int (*trantest_proptest_t)(nng_msg *, nng_listener, nng_dialer);
 #endif
 #ifndef NNG_HAVE_TCP
 #define nng_tcp_register notransport
+#endif
+#ifndef NNG_HAVE_TLS
+#define nng_tls_register notransport
 #endif
 
 int
@@ -70,6 +83,9 @@ trantest_checktran(const char *url)
 #endif
 #ifndef NNG_HAVE_TCP
 	CHKTRAN(url, "tcp:");
+#endif
+#ifndef NNG_HAVE_TLS
+	CHKTRAN(url, "tls:");
 #endif
 
 	(void) url;
@@ -122,6 +138,16 @@ trantest_fini(trantest *tt)
 	nng_close(tt->repsock);
 }
 
+int
+trantest_dial(trantest *tt)
+{
+	So(nng_dialer_create(&tt->dialer, tt->reqsock, tt->addr) == 0);
+	if (tt->dialer_init != NULL) {
+		So(tt->dialer_init(tt) == 0);
+	}
+	return (nng_dialer_start(tt->dialer, 0));
+}
+
 void
 trantest_scheme(trantest *tt)
 {
@@ -150,10 +176,12 @@ trantest_duplicate_listen(trantest *tt)
 {
 	Convey("Duplicate listen rejected", {
 		nng_listener l;
-		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
+		int          rv;
+		rv = nng_listen(tt->repsock, tt->addr, &l, 0);
+		So(rv == 0);
 		So(l != 0);
 		l = 0;
-		So(nng_listen(tt->reqsock, tt->addr, &l, 0) == NNG_EADDRINUSE);
+		So(nng_listen(tt->repsock, tt->addr, &l, 0) == NNG_EADDRINUSE);
 		So(l == 0);
 	})
 }
@@ -178,7 +206,6 @@ trantest_send_recv(trantest *tt)
 {
 	Convey("Send and recv", {
 		nng_listener l;
-		nng_dialer   d;
 		nng_msg *    send;
 		nng_msg *    recv;
 		size_t       len;
@@ -188,8 +215,7 @@ trantest_send_recv(trantest *tt)
 
 		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
 		So(l != 0);
-		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
-		So(d != 0);
+		So(trantest_dial(tt) == 0);
 
 		nng_msleep(20); // listener may be behind slightly
 
@@ -238,7 +264,7 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
 		So(d != 0);
 
-		nng_msleep(20); // listener may be behind slightly
+		nng_msleep(10); // listener may be behind slightly
 
 		send = NULL;
 		So(nng_msg_alloc(&send, 0) == 0);
@@ -280,7 +306,7 @@ trantest_send_recv_large(trantest *tt)
 		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
 		So(d != 0);
 
-		nng_msleep(20); // listener may be behind slightly
+		nng_msleep(10); // listener may be behind slightly
 
 		send = NULL;
 		So(nng_msg_alloc(&send, size) == 0);
@@ -315,6 +341,7 @@ trantest_test_all(const char *addr)
 {
 	trantest tt;
 
+	memset(&tt, 0, sizeof(tt));
 	Convey("Given transport", {
 		trantest_init(&tt, addr);
 
@@ -334,6 +361,7 @@ trantest_test_extended(const char *addr, trantest_proptest_t f)
 {
 	trantest tt;
 
+	memset(&tt, 0, sizeof(tt));
 	Convey("Given transport", {
 		trantest_init(&tt, addr);
 
@@ -346,5 +374,35 @@ trantest_test_extended(const char *addr, trantest_proptest_t f)
 		trantest_send_recv(&tt);
 		trantest_send_recv_large(&tt);
 		trantest_check_properties(&tt, f);
+	})
+}
+
+void
+trantest_test(trantest *tt)
+{
+	Convey("Given transport", {
+		trantest_init(tt, tt->tmpl);
+		if (tt->init != NULL) {
+			So(tt->init(tt) == 0);
+		}
+
+		Reset({
+			if (tt->fini != NULL) {
+				tt->fini(tt);
+			}
+			trantest_fini(tt);
+		});
+
+		trantest_scheme(tt);
+
+		trantest_conn_refused(tt);
+		trantest_duplicate_listen(tt);
+		trantest_listen_accept(tt);
+
+		trantest_send_recv(tt);
+		trantest_send_recv_large(tt);
+		if (tt->proptest != NULL) {
+			trantest_check_properties(tt, tt->proptest);
+		}
 	})
 }

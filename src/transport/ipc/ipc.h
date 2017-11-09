@@ -14,6 +14,6 @@
 // ipc transport.  This is used for inter-process communication on
 // the same host computer.
 
-extern int nng_ipc_register(void);
+NNG_DECL int nng_ipc_register(void);
 
 #endif // NNG_TRANSPORT_IPC_IPC_H

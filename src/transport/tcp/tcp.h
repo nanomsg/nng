@@ -13,6 +13,6 @@
 
 // TCP transport.  This is used for communication over TCP/IP.
 
-extern int nng_tcp_register(void);
+NNG_DECL int nng_tcp_register(void);
 
 #endif // NNG_TRANSPORT_TCP_TCP_H

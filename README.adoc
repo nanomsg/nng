@@ -7,15 +7,14 @@ image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Wi
 image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=coverage[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
 
 This repository represents a work in progress rewrite of the SP protocol
-library called "libnanomsg".  The work is being done by Garrett D'Amore,
-and at this juncture he is not yet soliciting implementation assistance;
-that said if you want to help with this project please file an issue
-with details about what you'd like to do, and you will be contacted.
+library called "libnanomsg".  This is pre-release, but at this point you
+can start using it for development, as we believe we are getting closer
+to release readiness.
 
 Review and testing feedback are appreciated however; but please understand
 that the project is still quite preliminary.
 
-This is a work in progress, and is *not* for suitable for product use or
+This is a work in progress, and is *not* for suitable for production use or
 publication.  When the library is ready for broader consumption, an
 announcement will be posted on the nanomsg mailing list and website.
 
@@ -37,9 +36,14 @@ you can for example do:
   $ make test
 ----
 
+If you want to enable the TLS transport, which is not supported by legacy
+nanomsg, use -DNNG_TRANSPORT_TLS=ON in your cmake command line.  You will
+need to have the ARM mbedTLS library installed.  (This is available in
+Xenial Ubuntu as libmbedtls-dev).
+
 The API is not yet stable, but if you want to explore using the newer
 API, pleaes have a look at the `nng.h` header file.  A legacy compatible
 `nng_compat.h` header is available and offers API compatibility with legacy
 _nanomsg_.
 
-	- Garrett D'Amore (Oct. 30, 2017)
+	- Garrett D'Amore (Nov. 20, 2017)

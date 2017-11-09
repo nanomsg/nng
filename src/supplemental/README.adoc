@@ -1,0 +1,5 @@
+= supplemental sources
+
+This is for code that is not intrinsic to nng, but which may be used
+by multiple other subsystems.  For example, common code for TLS support
+used by multiple transports is located here.
