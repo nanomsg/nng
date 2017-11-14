@@ -67,12 +67,12 @@ TestMain("UDP support", {
 
 			to                     = sa2;
 			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = msg;
+			aio1->a_iov[0].iov_buf = (void *) msg;
 			aio1->a_iov[0].iov_len = strlen(msg) + 1;
 			aio1->a_addr           = &to;
 
 			aio2->a_niov           = 1;
-			aio2->a_iov[0].iov_buf = rbuf;
+			aio2->a_iov[0].iov_buf = (void *) rbuf;
 			aio2->a_iov[0].iov_len = 1024;
 			aio2->a_addr           = &from;
 
@@ -107,7 +107,7 @@ TestMain("UDP support", {
 
 			nni_aio_init(&aio1, NULL, NULL);
 			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = msg;
+			aio1->a_iov[0].iov_buf = (void *) msg;
 			aio1->a_iov[0].iov_len = strlen(msg) + 1;
 
 			nni_plat_udp_send(u1, aio1);
@@ -137,23 +137,23 @@ TestMain("UDP support", {
 
 			to1                    = sa2;
 			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = msg1;
+			aio1->a_iov[0].iov_buf = (void *) msg1;
 			aio1->a_iov[0].iov_len = strlen(msg1) + 1;
 			aio1->a_addr           = &to1;
 
 			to2                    = sa2;
 			aio2->a_niov           = 1;
-			aio2->a_iov[0].iov_buf = msg2;
+			aio2->a_iov[0].iov_buf = (void *) msg2;
 			aio2->a_iov[0].iov_len = strlen(msg2) + 1;
 			aio2->a_addr           = &to2;
 
 			aio3->a_niov           = 1;
-			aio3->a_iov[0].iov_buf = rbuf1;
+			aio3->a_iov[0].iov_buf = (void *) rbuf1;
 			aio3->a_iov[0].iov_len = 1024;
 			aio3->a_addr           = &from1;
 
 			aio4->a_niov           = 1;
-			aio4->a_iov[0].iov_buf = rbuf2;
+			aio4->a_iov[0].iov_buf = (void *) rbuf2;
 			aio4->a_iov[0].iov_len = 1024;
 			aio4->a_addr           = &from2;
 
@@ -192,7 +192,7 @@ TestMain("UDP support", {
 
 			nni_aio_init(&aio1, NULL, NULL);
 			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = msg;
+			aio1->a_iov[0].iov_buf = (void *) msg;
 			aio1->a_iov[0].iov_len = strlen(msg) + 1;
 
 			nni_plat_udp_send(u1, aio1);
@@ -214,7 +214,7 @@ TestMain("UDP support", {
 			sa.s_un.s_in6.sa_port = 80;
 			nni_aio_init(&aio1, NULL, NULL);
 			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = msg;
+			aio1->a_iov[0].iov_buf = (void *) msg;
 			aio1->a_iov[0].iov_len = strlen(msg) + 1;
 			aio1->a_addr           = &sa;
 
@@ -239,7 +239,7 @@ TestMain("UDP support", {
 			sa.s_un.s_in6.sa_port = 80;
 			nni_aio_init(&aio1, NULL, NULL);
 			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = msg;
+			aio1->a_iov[0].iov_buf = (void *) msg;
 			aio1->a_iov[0].iov_len = strlen(msg) + 1;
 			aio1->a_addr           = &sa;
 

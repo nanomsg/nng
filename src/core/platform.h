@@ -229,8 +229,17 @@ extern void nni_plat_tcp_pipe_close(nni_plat_tcp_pipe *);
 // The platform may modify the iovs.
 extern void nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *, nni_aio *);
 
-// nni_plat_tcp_pipe_recv recvs data into the buffers provided by the iovs.
-// The platform may modify the iovs.
+// nni_plat_tcp_pipe_recv receives data into the buffers provided by the
+// I/O vector (iovs).  The platform should attempt to scatter the received
+// data into the iovs if possible.
+//
+// It is an error for the caller to supply any IO vector elements with
+// zero length.
+//
+// It is possible for the TCP reader to return less data than is requested,
+// in which case the caller is responsible for resubmitting.  The platform
+// should not return "zero" data however.  (It is an error to attempt to
+// receive zero bytes.)  The platform may not modify the I/O vector.
 extern void nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *, nni_aio *);
 
 // nni_plat_tcp_pipe_peername gets the peer name.

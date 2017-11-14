@@ -112,12 +112,13 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 	NNI_ASSERT(aio->a_iov[0].iov_len > 0);
 	NNI_ASSERT(aio->a_iov[0].iov_buf != NULL);
 
-	niov = aio->a_niov;
-
 	// Put the AIOs in Windows form.
-	for (i = 0; i < aio->a_niov; i++) {
-		iov[i].buf = aio->a_iov[i].iov_buf;
-		iov[i].len = (ULONG) aio->a_iov[i].iov_len;
+	for (niov = 0, i = 0; i < aio->a_niov; i++) {
+		if (aio->a_iov[i].iov_len != 0) {
+			iov[niov].buf = aio->a_iov[i].iov_buf;
+			iov[niov].len = (ULONG) aio->a_iov[i].iov_len;
+			niov++;
+		}
 	}
 
 	if ((s = pipe->s) == INVALID_SOCKET) {
@@ -162,49 +163,7 @@ nni_win_tcp_pipe_cancel(nni_win_event *evt)
 static void
 nni_win_tcp_pipe_finish(nni_win_event *evt, nni_aio *aio)
 {
-	int    rv;
-	size_t cnt;
-
-	cnt = evt->count;
-	if ((rv = evt->status) == 0) {
-		int i;
-		aio->a_count += cnt;
-
-		while (cnt > 0) {
-			// If we didn't transfer the first full iov,
-			// then we're done for now.  Record progress
-			// and move on.
-			if (cnt < aio->a_iov[0].iov_len) {
-				aio->a_iov[0].iov_len -= cnt;
-				aio->a_iov[0].iov_buf =
-				    (char *) aio->a_iov[0].iov_buf + cnt;
-				break;
-			}
-
-			// We consumed the full iov, so just move the
-			// remaining ones up, and decrement count handled.
-			cnt -= aio->a_iov[0].iov_len;
-			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i - 1] = aio->a_iov[i];
-			}
-			NNI_ASSERT(aio->a_niov > 0);
-			aio->a_niov--;
-		}
-
-		while (aio->a_niov > 0) {
-			// If we have more to do, submit it!
-			if (aio->a_iov[0].iov_len > 0) {
-				nni_win_event_resubmit(evt, aio);
-				return;
-			}
-			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i - 1] = aio->a_iov[i];
-			}
-		}
-	}
-
-	// All done; hopefully successfully.
-	nni_aio_finish(aio, rv, aio->a_count);
+	nni_aio_finish(aio, evt->status, evt->count);
 }
 
 static int

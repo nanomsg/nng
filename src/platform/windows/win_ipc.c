@@ -59,11 +59,10 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 	BOOL               ok;
 	int                rv;
 	nni_plat_ipc_pipe *pipe = evt->ptr;
+	int                idx;
 
 	NNI_ASSERT(aio != NULL);
 	NNI_ASSERT(aio->a_niov > 0);
-	NNI_ASSERT(aio->a_iov[0].iov_len > 0);
-	NNI_ASSERT(aio->a_iov[0].iov_buf != NULL);
 
 	if (pipe->p == INVALID_HANDLE_VALUE) {
 		evt->status = NNG_ECLOSED;
@@ -71,13 +70,20 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 		return (1);
 	}
 
+	idx = 0;
+	while ((idx < aio->a_niov) && (aio->a_iov[idx].iov_len == 0)) {
+		idx++;
+	}
+	NNI_ASSERT(idx < aio->a_niov);
 	// Now start a transfer.  We assume that only one send can be
 	// outstanding on a pipe at a time.  This is important to avoid
 	// scrambling the data anyway.  Note that Windows named pipes do
 	// not appear to support scatter/gather, so we have to process
 	// each element in turn.
-	buf = aio->a_iov[0].iov_buf;
-	len = (DWORD) aio->a_iov[0].iov_len;
+	buf = aio->a_iov[idx].iov_buf;
+	len = (DWORD) aio->a_iov[idx].iov_len;
+	NNI_ASSERT(buf != NULL);
+	NNI_ASSERT(len != 0);
 
 	// We limit ourselves to writing 16MB at a time.  Named Pipes
 	// on Windows have limits of between 31 and 64MB.
@@ -115,50 +121,7 @@ nni_win_ipc_pipe_cancel(nni_win_event *evt)
 static void
 nni_win_ipc_pipe_finish(nni_win_event *evt, nni_aio *aio)
 {
-	int   rv;
-	DWORD cnt;
-
-	cnt = evt->count;
-	if ((rv = evt->status) == 0) {
-
-		int i;
-		aio->a_count += cnt;
-
-		while (cnt > 0) {
-			// If we didn't transfer the first full iov,
-			// then we're done for now.  Record progress
-			// and move on.
-			if (cnt < aio->a_iov[0].iov_len) {
-				aio->a_iov[0].iov_len -= cnt;
-				aio->a_iov[0].iov_buf =
-				    (char *) aio->a_iov[0].iov_buf + cnt;
-				break;
-			}
-
-			// We consumed the full iov, so just move the
-			// remaining ones up, and decrement count handled.
-			cnt -= aio->a_iov[0].iov_len;
-			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i - 1] = aio->a_iov[i];
-			}
-			NNI_ASSERT(aio->a_niov > 0);
-			aio->a_niov--;
-		}
-
-		while (aio->a_niov > 0) {
-			// If we have more to do, submit it!
-			if (aio->a_iov[0].iov_len > 0) {
-				nni_win_event_resubmit(evt, aio);
-				return;
-			}
-			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i - 1] = aio->a_iov[i];
-			}
-		}
-	}
-
-	// All done; hopefully successfully.
-	nni_aio_finish(aio, rv, aio->a_count);
+	nni_aio_finish(aio, evt->status, evt->count);
 }
 
 static int

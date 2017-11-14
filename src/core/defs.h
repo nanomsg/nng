@@ -62,8 +62,8 @@ typedef void (*nni_cb)(void *);
 
 // Used by transports for scatter gather I/O.
 typedef struct {
-	void * iov_buf;
-	size_t iov_len;
+	uint8_t *iov_buf;
+	size_t   iov_len;
 } nni_iov;
 
 // Notify descriptor.

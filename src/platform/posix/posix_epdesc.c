@@ -279,6 +279,12 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 	}
 	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
 
+#ifdef SO_NOSIGPIPE
+	// Darwin lacks MSG_NOSIGNAL, but has a socket option.
+	int one = 1;
+	(void) setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(one));
+#endif
+
 	if (bind(fd, (struct sockaddr *) ss, len) < 0) {
 		nni_mtx_unlock(&ed->mtx);
 		rv = nni_plat_errno(errno);

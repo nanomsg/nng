@@ -66,93 +66,75 @@ nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
 static void
 nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 {
-	int           n;
-	int           rv;
-	int           i;
-	struct iovec  iovec[4];
-	struct iovec *iovp;
-	nni_aio *     aio;
+	int          n;
+	struct iovec iovec[4];
+	nni_aio *    aio;
+	int          niov;
 
 	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
-		for (i = 0; i < aio->a_niov; i++) {
-			iovec[i].iov_len  = aio->a_iov[i].iov_len;
-			iovec[i].iov_base = aio->a_iov[i].iov_buf;
+		int i;
+		for (niov = 0, i = 0; i < aio->a_niov; i++) {
+			iovec[niov].iov_len  = aio->a_iov[i].iov_len;
+			iovec[niov].iov_base = aio->a_iov[i].iov_buf;
+			niov++;
 		}
-		iovp = &iovec[0];
-		rv   = 0;
+		if (niov == 0) {
+			nni_posix_pipedesc_finish(aio, NNG_EINVAL);
+			continue;
+		}
 
-		n = writev(pd->node.fd, iovp, aio->a_niov);
+		n = writev(pd->node.fd, iovec, niov);
 		if (n < 0) {
 			if ((errno == EAGAIN) || (errno == EINTR)) {
 				// Can't write more right now.  We're done
 				// on this fd for now.
 				return;
 			}
-			rv = nni_plat_errno(errno);
-
-			nni_posix_pipedesc_finish(aio, rv);
+			nni_posix_pipedesc_finish(aio, nni_plat_errno(errno));
 			nni_posix_pipedesc_doclose(pd);
 			return;
 		}
 
 		aio->a_count += n;
 
-		while (n > 0) {
-			// If we didn't write the first full iov,
-			// then we're done for now.  Record progress
-			// and return to caller.
-			if (n < aio->a_iov[0].iov_len) {
-				aio->a_iov[0].iov_buf += n;
-				aio->a_iov[0].iov_len -= n;
-				return;
-			}
-
-			// We consumed the full iovec, so just move the
-			// remaininng ones up, and decrement count handled.
-			n -= aio->a_iov[0].iov_len;
-			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i - 1] = aio->a_iov[i];
-			}
-			NNI_ASSERT(aio->a_niov > 0);
-			aio->a_niov--;
-		}
-
 		// We completed the entire operation on this aioq.
 		nni_posix_pipedesc_finish(aio, 0);
 
 		// Go back to start of loop to see if there is another
-		// aioq ready for us to process.
+		// aio ready for us to process.
 	}
 }
 
 static void
 nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 {
-	int           n;
-	int           rv;
-	int           i;
-	struct iovec  iovec[4];
-	struct iovec *iovp;
-	nni_aio *     aio;
+	int          n;
+	struct iovec iovec[4];
+	nni_aio *    aio;
+	int          niov;
 
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
-		for (i = 0; i < aio->a_niov; i++) {
-			iovec[i].iov_len  = aio->a_iov[i].iov_len;
-			iovec[i].iov_base = aio->a_iov[i].iov_buf;
+		int i;
+		for (i = 0, niov = 0; i < aio->a_niov; i++) {
+			if (aio->a_iov[i].iov_len != 0) {
+				iovec[niov].iov_len  = aio->a_iov[i].iov_len;
+				iovec[niov].iov_base = aio->a_iov[i].iov_buf;
+				niov++;
+			}
 		}
-		iovp = &iovec[0];
-		rv   = 0;
+		if (niov == 0) {
+			nni_posix_pipedesc_finish(aio, NNG_EINVAL);
+			continue;
+		}
 
-		n = readv(pd->node.fd, iovp, aio->a_niov);
+		n = readv(pd->node.fd, iovec, niov);
 		if (n < 0) {
 			if ((errno == EAGAIN) || (errno == EINTR)) {
 				// Can't write more right now.  We're done
 				// on this fd for now.
 				return;
 			}
-			rv = nni_plat_errno(errno);
-
-			nni_posix_pipedesc_finish(aio, rv);
+			nni_posix_pipedesc_finish(aio, nni_plat_errno(errno));
 			nni_posix_pipedesc_doclose(pd);
 			return;
 		}
@@ -160,36 +142,17 @@ nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 		if (n == 0) {
 			// No bytes indicates a closed descriptor.
 			nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
+			nni_posix_pipedesc_doclose(pd);
 			return;
 		}
 
 		aio->a_count += n;
 
-		while (n > 0) {
-			// If we didn't write the first full iov,
-			// then we're done for now.  Record progress
-			// and return to caller.
-			if (n < aio->a_iov[0].iov_len) {
-				aio->a_iov[0].iov_buf += n;
-				aio->a_iov[0].iov_len -= n;
-				return;
-			}
-
-			// We consumed the full iovec, so just move the
-			// remaininng ones up, and decrement count handled.
-			n -= aio->a_iov[0].iov_len;
-			for (i = 1; i < aio->a_niov; i++) {
-				aio->a_iov[i - 1] = aio->a_iov[i];
-			}
-			NNI_ASSERT(aio->a_niov > 0);
-			aio->a_niov--;
-		}
-
 		// We completed the entire operation on this aioq.
 		nni_posix_pipedesc_finish(aio, 0);
 
 		// Go back to start of loop to see if there is another
-		// aioq ready for us to process.
+		// aio ready for us to process.
 	}
 }
 
@@ -262,7 +225,17 @@ nni_posix_pipedesc_recv(nni_posix_pipedesc *pd, nni_aio *aio)
 	}
 
 	nni_aio_list_append(&pd->readq, aio);
-	nni_posix_pollq_arm(&pd->node, POLLIN);
+	// If we are only job on the list, go ahead and try to do an immediate
+	// transfer. This allows for faster completions in many cases.  We
+	// also need not arm a list if it was already armed.
+	if (nni_list_first(&pd->readq) == aio) {
+		nni_posix_pipedesc_doread(pd);
+		// If we are still the first thing on the list, that means we
+		// didn't finish the job, so arm the poller to complete us.
+		if (nni_list_first(&pd->readq) == aio) {
+			nni_posix_pollq_arm(&pd->node, POLLIN);
+		}
+	}
 	nni_mtx_unlock(&pd->mtx);
 }
 
@@ -283,7 +256,14 @@ nni_posix_pipedesc_send(nni_posix_pipedesc *pd, nni_aio *aio)
 	}
 
 	nni_aio_list_append(&pd->writeq, aio);
-	nni_posix_pollq_arm(&pd->node, POLLOUT);
+	if (nni_list_first(&pd->writeq) == aio) {
+		nni_posix_pipedesc_dowrite(pd);
+		// If we are still the first thing on the list, that means we
+		// didn't finish the job, so arm the poller to complete us.
+		if (nni_list_first(&pd->writeq) == aio) {
+			nni_posix_pollq_arm(&pd->node, POLLOUT);
+		}
+	}
 	nni_mtx_unlock(&pd->mtx);
 }
 
