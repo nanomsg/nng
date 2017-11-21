@@ -21,15 +21,15 @@ jobs:
           command: apt-get update -qq && apt-get install -y build-essential asciidoctor cmake libmbedtls-dev ninja-build clang clang-format
       - run:
           name: Configure
-          command: cmake -DNNG_TRANSPORT_TLS=ON -G Nina
+          command: mkdir build && cd build && cmake -DNNG_TRANSPORT_TLS=ON -G Nina ..
 
       - run:
           name: Build
-          command: ninja build
+          command: cd build && ninja
 
       - run:
           name: Run Tests
-          command: ninja test
+          command: cd build && ninja test
 
       - run:
           name: Check Format
