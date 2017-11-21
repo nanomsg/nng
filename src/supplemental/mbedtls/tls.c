@@ -14,8 +14,17 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "mbedtls/version.h" // Must be first in order to pick up version
+
 #include "mbedtls/error.h"
+
+// mbedTLS renamed this header for 2.4.0.
+#if MBEDTLS_VERSION_MAJOR > 2 || MBEDTLS_VERSION_MINOR >= 4
+#include "mbedtls/net_sockets.h"
+#else
 #include "mbedtls/net.h"
+#endif
+
 #include "mbedtls/ssl.h"
 
 #include "core/nng_impl.h"
