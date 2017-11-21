@@ -33,4 +33,4 @@ jobs:
 
       - run:
           name: Check Format
-          ./etc/format-check.sh
+          command: ./etc/format-check.sh
