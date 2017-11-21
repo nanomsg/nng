@@ -21,7 +21,7 @@ jobs:
           command: apt-get update -qq && apt-get install -y build-essential asciidoctor cmake libmbedtls-dev ninja-build clang clang-format
       - run:
           name: Configure
-          command: mkdir build && cd build && cmake -DNNG_TRANSPORT_TLS=ON -G Nina ..
+          command: mkdir build && cd build && cmake -DNNG_TRANSPORT_TLS=ON -G Ninja ..
 
       - run:
           name: Build
@@ -31,6 +31,6 @@ jobs:
           name: Run Tests
           command: cd build && ninja test
 
-      - run:
-          name: Check Format
-          command: ./etc/format-check.sh
+#      - run:
+#          name: Check Format
+#          command: ./etc/format-check.sh
