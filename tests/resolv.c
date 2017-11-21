@@ -129,7 +129,9 @@ TestMain("Resolver", {
 
 		// Travis CI has moved some of their services to host that
 		// apparently don't support IPv6 at all.  This is very sad.
-		if (getenv("TRAVIS") != NULL) {
+		// CircleCI 2.0 is in the same boat.  (Amazon to blame.)
+		if ((getenv("TRAVIS") != NULL) ||
+		    (getenv("CIRCLECI") != NULL)) {
 			ConveySkip("IPv6 missing from CI provider");
 		}
 

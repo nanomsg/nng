@@ -33,6 +33,9 @@ test_permissions(void)
 		temp = nni_plat_temp_dir();
 		So(temp != NULL);
 		file = nni_plat_join_dir(temp, "nng_files_perms_test");
+		if (geteuid() == 0) {
+			ConveySkip("Cannot test permissions as root");
+		}
 		So(nni_plat_file_put(file, "abc", 4) == 0);
 		Reset({
 			nni_plat_file_delete(file);
