@@ -14,7 +14,7 @@ to release readiness.
 Review and testing feedback are appreciated however; but please understand
 that the project is still quite preliminary.
 
-This is a work in progress, and is *not* for suitable for production use or
+This is a work in progress, and is *not* suitable for production use or
 publication.  When the library is ready for broader consumption, an
 announcement will be posted on the nanomsg mailing list and website.
 
