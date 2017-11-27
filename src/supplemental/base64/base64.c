@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2014 Wirebird Labs LLC.  All rights reserved.
-// Copyright 2017 Staysail Systems, Inc.
+// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"),

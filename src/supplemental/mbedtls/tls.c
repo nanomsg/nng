@@ -417,7 +417,7 @@ nni_tls_send_cb(void *ctx)
 			aio->a_niov           = 1;
 			aio->a_iov[0].iov_buf = tp->sendbuf + tp->sendoff;
 			aio->a_iov[0].iov_len = tp->sendlen;
-			nni_aio_set_timeout(aio, -1); // No timeout.
+			nni_aio_set_timeout(aio, NNG_DURATION_INFINITE);
 			nni_plat_tcp_pipe_send(tp->tcp, aio);
 			nni_mtx_unlock(&tp->lk);
 			return;
@@ -455,7 +455,7 @@ nni_tls_recv_start(nni_tls *tp)
 	aio->a_niov           = 1;
 	aio->a_iov[0].iov_buf = tp->recvbuf;
 	aio->a_iov[0].iov_len = NNG_TLS_MAX_RECV_SIZE;
-	nni_aio_set_timeout(tp->tcp_recv, -1); // No timeout.
+	nni_aio_set_timeout(tp->tcp_recv, NNG_DURATION_INFINITE);
 	nni_plat_tcp_pipe_recv(tp->tcp, aio);
 }
 
@@ -526,7 +526,7 @@ nni_tls_net_send(void *ctx, const unsigned char *buf, size_t len)
 	tp->tcp_send->a_niov           = 1;
 	tp->tcp_send->a_iov[0].iov_buf = tp->sendbuf;
 	tp->tcp_send->a_iov[0].iov_len = len;
-	nni_aio_set_timeout(tp->tcp_send, -1); // No timeout.
+	nni_aio_set_timeout(tp->tcp_send, NNG_DURATION_INFINITE);
 	nni_plat_tcp_pipe_send(tp->tcp, tp->tcp_send);
 	return (len);
 }

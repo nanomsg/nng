@@ -168,6 +168,11 @@ if (NNG_TRANSPORT_TCP)
     add_definitions (-DNNG_HAVE_TCP)
 endif ()
 
+option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
+if (NNG_TRANSPORT_WS)
+    add_definitions (-DNNG_HAVE_WEBSOCKET)
+endif ()
+
 option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
 if (NNG_TRANSPORT_ZEROTIER)
     add_definitions (-DNNG_HAVE_ZEROTIER)

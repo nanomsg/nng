@@ -969,8 +969,7 @@ nng_aio_alloc(nng_aio **app, void (*cb)(void *), void *arg)
 	if ((rv = nni_aio_init(&aio, (nni_cb) cb, arg)) == 0) {
 		*app = (nng_aio *) aio;
 	}
-	aio->a_expire  = (nni_time) NNG_DURATION_DEFAULT;
-	aio->a_reltime = 1;
+	aio->a_timeout = NNG_DURATION_DEFAULT;
 	return (rv);
 }
 
@@ -1020,11 +1019,8 @@ void
 nng_aio_set_timeout(nng_aio *ap, nng_duration dur)
 {
 	// Durations here are relative, since we have no notion of a
-	// common clock.  But underlying aio uses absolute times normally.
-	// Fortunately the absolute times are big enough; we just have to
-	// make sure that we "convert" the timeout from relative time to
-	// absolute time when submitting operations.
-	nni_aio_set_timeout((nni_aio *) ap, (nni_time) dur);
+	// common clock..
+	nni_aio_set_timeout((nni_aio *) ap, dur);
 }
 
 #if 0

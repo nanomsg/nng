@@ -1,5 +1,7 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -151,7 +153,10 @@ nni_list_active(nni_list *list, void *item)
 int
 nni_list_empty(nni_list *list)
 {
-	return (list->ll_head.ln_next == &list->ll_head);
+	// The first check ensures that we treat an uninitialized list
+	// as empty.  This use useful for statically initialized lists.
+	return ((list->ll_head.ln_next == NULL) ||
+	    (list->ll_head.ln_next == &list->ll_head));
 }
 
 int

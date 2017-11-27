@@ -58,6 +58,9 @@ unsigned trantest_port = 0;
 #ifndef NNG_HAVE_TLS
 #define nng_tls_register notransport
 #endif
+#ifndef NNG_HAVE_WEBSOCKET
+#define nng_ws_register notransport
+#endif
 
 int
 notransport(void)
@@ -88,6 +91,9 @@ trantest_checktran(const char *url)
 #ifndef NNG_HAVE_TLS
 	CHKTRAN(url, "tls+tcp:");
 #endif
+#ifndef NNG_HAVE_WEBSOCKET
+	CHKTRAN(url, "ws:");
+#endif
 
 	(void) url;
 }
@@ -99,7 +105,10 @@ trantest_next_address(char *out, const char *template)
 
 	if (trantest_port == 0) {
 		char *pstr;
-		trantest_port = 5555;
+
+		// start at a different port each time -- 5000 - 10000 --
+		// unless a specific port is given.
+		trantest_port = nni_clock() % 5000 + 5000;
 		if (((pstr = ConveyGetEnv("TEST_PORT")) != NULL) &&
 		    (atoi(pstr) != 0)) {
 			trantest_port = atoi(pstr);
@@ -218,7 +227,7 @@ trantest_send_recv(trantest *tt)
 		So(l != 0);
 		So(trantest_dial(tt) == 0);
 
-		nng_msleep(20); // listener may be behind slightly
+		nng_msleep(200); // listener may be behind slightly
 
 		send = NULL;
 		So(nng_msg_alloc(&send, 0) == 0);
@@ -265,7 +274,7 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
 		So(d != 0);
 
-		nng_msleep(10); // listener may be behind slightly
+		nng_msleep(200); // listener may be behind slightly
 
 		send = NULL;
 		So(nng_msg_alloc(&send, 0) == 0);
@@ -307,7 +316,7 @@ trantest_send_recv_large(trantest *tt)
 		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
 		So(d != 0);
 
-		nng_msleep(10); // listener may be behind slightly
+		nng_msleep(200); // listener may be behind slightly
 
 		send = NULL;
 		So(nng_msg_alloc(&send, size) == 0);

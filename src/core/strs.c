@@ -8,6 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <ctype.h>
+#include <stdarg.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -17,35 +20,28 @@
 // part of standard C99.  (C11 has added some things here, but we cannot
 // count on them.)
 
+// Note that we supply our own version of strdup and strfree unconditionally,
+// so that these can be freed with nni_free(strlen(s)+1) if desired.  (Likewise
+// a string buffer allocated with nni_alloc can be freed with nni_strfree
+// provided the length is correct.)
+
 char *
 nni_strdup(const char *src)
 {
-#ifdef NNG_HAVE_STRDUP
-#ifdef _WIN32
-	return (_strdup(src));
-#else
-	return (strdup(src));
-#endif
-#else
 	char * dst;
-	size_t len = strlen(src);
+	size_t len = strlen(src) + 1;
 
 	if ((dst = nni_alloc(len)) != NULL) {
 		memcpy(dst, src, len);
 	}
 	return (dst);
-#endif
 }
 
 void
 nni_strfree(char *s)
 {
 	if (s != NULL) {
-#ifdef NNG_HAVE_STRDUP
-		free(s);
-#else
 		nni_free(s, strlen(s) + 1);
-#endif
 	}
 }
 
@@ -113,4 +109,73 @@ nni_strnlen(const char *s, size_t len)
 	}
 	return (n);
 #endif
+}
+
+char *
+nni_strcasestr(const char *s1, const char *s2)
+{
+#ifdef NNG_HAVE_STRCASESTR
+	return (strcasestr(s1, s2));
+#else
+	const char *t1, *t2;
+	while (*s1) {
+		for (t1 = s1, t2 = s2; *t1 && *t2; t2++, t1++) {
+			if (tolower(*t1) != tolower(*t2)) {
+				break;
+			}
+		}
+		if (*t2 == 0) {
+			return ((char *) s1);
+		}
+		s1++;
+	}
+	return (NULL);
+#endif
+}
+
+int
+nni_strncasecmp(const char *s1, const char *s2, size_t n)
+{
+#ifdef NNG_HAVE_STRNCASECMP
+#ifdef _WIN32
+	return (_strnicmp(s1, s2, n));
+#else
+	return (strncasecmp(s1, s2, n));
+#endif
+#else
+	for (int i = 0; i < n; i++) {
+		uint8_t c1 = (uint8_t) tolower(*s1++);
+		uint8_t c2 = (uint8_t) tolower(*s2++);
+		if (c1 == c2) {
+			if (c1 == 0) {
+				return (0);
+			}
+			continue;
+		}
+		return (c1 < c2 ? -1 : 1);
+	}
+	return (0);
+#endif
+}
+
+int
+nni_asprintf(char **sp, const char *fmt, ...)
+{
+	va_list ap;
+	size_t  len;
+	char *  s;
+
+	va_start(ap, fmt);
+	len = vsnprintf(NULL, 0, fmt, ap);
+	va_end(ap);
+	len++;
+
+	if ((s = nni_alloc(len)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	va_start(ap, fmt);
+	(void) vsnprintf(s, len, fmt, ap);
+	va_end(ap);
+	*sp = s;
+	return (0);
 }

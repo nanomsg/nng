@@ -1,0 +1,38 @@
+= websocket transport
+
+This transport provides support for SP over websocket using TCP or TLS.
+When using TCP, it is compatible with the libnanomsg legacy transport.
+It also is compatible with mangos (both TCP and TLS).
+
+TLS support requires the mbedTLS library.
+
+We set the "protocol" such as "pair.sp.nanomsg.org" in the
+Sec-WebSocket-Protocol field -- the client sets to the the server's
+protocol - i.e. the protocol that the server speaks.  For example,
+if the the server is a REP, then a REQ client would send "rep.sp.nanomsg.org".
+
+The server sends the same value (it's own), per the WebSocket specs.  (Note
+that the client's protocol is never sent, but assumed to be complementary
+to the protocol in the Sec-WebSocket-Protocol field.)
+
+Each SP message is a WebSocket message.
+
+WebSocket is defined in RFC 6455.
+
+== Design
+
+We unfortunately need to implement our own design for this -- the only
+reasonable client library would be libcurl, and there is a dearth of
+suitable server libraries.  Since we don't have to support full HTTP, but
+just the initial handshake, this isn't too tragic.
+
+== Multiple Server Sockets
+
+In order to support Multiple Server sockets listening on the same port,
+the application must be long lived.  We will set up a listener on the
+configured TCP (or TLS) port, and examine the PATH supplied in the GET.
+This will be used to match against the URL requested, and if the URL
+matches we will create the appropriate pipe.
+
+If no server endpoint at that address can be found, we return an
+HTTP error, and close the socket.

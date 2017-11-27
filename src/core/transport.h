@@ -163,6 +163,9 @@ struct nni_tran_pipe {
 	nni_tran_pipe_option *p_options;
 };
 
+// Utility for transports.
+extern int nni_tran_parse_host_port(const char *, char **, char **);
+
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
 extern nni_tran *nni_tran_find(const char *);

@@ -14,14 +14,16 @@
 extern int  nni_sock_sys_init(void);
 extern void nni_sock_sys_fini(void);
 
-extern int      nni_sock_find(nni_sock **, uint32_t);
-extern void     nni_sock_rele(nni_sock *);
-extern int      nni_sock_open(nni_sock **, const nni_proto *);
-extern void     nni_sock_close(nni_sock *);
-extern void     nni_sock_closeall(void);
-extern int      nni_sock_shutdown(nni_sock *);
-extern uint16_t nni_sock_proto(nni_sock *);
-extern uint16_t nni_sock_peer(nni_sock *);
+extern int         nni_sock_find(nni_sock **, uint32_t);
+extern void        nni_sock_rele(nni_sock *);
+extern int         nni_sock_open(nni_sock **, const nni_proto *);
+extern void        nni_sock_close(nni_sock *);
+extern void        nni_sock_closeall(void);
+extern int         nni_sock_shutdown(nni_sock *);
+extern uint16_t    nni_sock_proto(nni_sock *);
+extern uint16_t    nni_sock_peer(nni_sock *);
+extern const char *nni_sock_proto_name(nni_sock *);
+extern const char *nni_sock_peer_name(nni_sock *);
 extern int  nni_sock_setopt(nni_sock *, const char *, const void *, size_t);
 extern int  nni_sock_getopt(nni_sock *, const char *, void *, size_t *);
 extern int  nni_sock_recvmsg(nni_sock *, nni_msg **, int);

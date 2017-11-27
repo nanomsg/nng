@@ -8,7 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <strings.h>
+#include <string.h>
 
 #include "convey.h"
 

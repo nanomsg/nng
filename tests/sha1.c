@@ -9,7 +9,7 @@
 //
 
 #include <stdint.h>
-#include <strings.h>
+#include <string.h>
 
 #include "convey.h"
 

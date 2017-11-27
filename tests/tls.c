@@ -128,6 +128,7 @@ TestMain("TLS Transport", {
 
 	tt.init = init_tls;
 	tt.tmpl = "tls+tcp://127.0.0.1:%u";
+	atexit(nng_fini);
 
 	trantest_test(&tt);
 
@@ -170,7 +171,8 @@ TestMain("TLS Transport", {
 		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s1) == 0);
 		Reset({ nng_close(s1); });
-		So(nng_dial(s1, "tls+tcp://127.0.0.1", NULL, 0) == NNG_EADDRINVAL);
+		So(nng_dial(s1, "tls+tcp://127.0.0.1", NULL, 0) ==
+		    NNG_EADDRINVAL);
 		So(nng_dial(s1, "tls+tcp://127.0.0.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
 		So(nng_dial(s1, "tls+tcp://127.0.x.1.32", NULL, 0) ==
@@ -183,5 +185,4 @@ TestMain("TLS Transport", {
 		    NNG_EADDRINVAL);
 	});
 
-	nng_fini();
 })

@@ -1,6 +1,7 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -22,9 +23,10 @@ typedef void (*nni_aio_cancelfn)(nni_aio *, int);
 
 // An nni_aio is an async I/O handle.
 struct nni_aio {
-	int      a_result; // Result code (nng_errno)
-	size_t   a_count;  // Bytes transferred (I/O only)
-	nni_time a_expire;
+	int          a_result;  // Result code (nng_errno)
+	size_t       a_count;   // Bytes transferred (I/O only)
+	nni_time     a_expire;  // Absolute timeout
+	nni_duration a_timeout; // Relative timeout
 
 	// These fields are private to the aio framework.
 	nni_cv   a_cv;
@@ -35,8 +37,6 @@ struct nni_aio {
 	unsigned a_expiring : 1; // expiration callback in progress
 	unsigned a_waiting : 1;  // a thread is waiting for this to finish
 	unsigned a_synch : 1;    // run completion synchronously
-	unsigned a_reltime : 1;  // expiration time is relative
-	unsigned a_pad : 25;     // ensure 32-bit alignment
 	nni_task a_task;
 
 	// Read/write operations.
@@ -53,13 +53,21 @@ struct nni_aio {
 	// Resolver operations.
 	nni_sockaddr *a_addr;
 
-	// Extra user data.
-	void *a_data;
+	// User scratch data.  Consumers may store values here, which
+	// must be preserved by providers and the framework.
+	void *a_user_data[4];
+
+	// Operation inputs & outputs.  Up to 4 inputs and 4 outputs may be
+	// specified.  The semantics of these will vary, and depend on the
+	// specific operation.
+	void *a_inputs[4];
+	void *a_outputs[4];
 
 	// Provider-use fields.
 	nni_aio_cancelfn a_prov_cancel;
 	void *           a_prov_data;
 	nni_list_node    a_prov_node;
+	void *           a_prov_extra[4]; // Extra data used by provider
 
 	// Expire node.
 	nni_list_node a_expire_node;
@@ -96,12 +104,32 @@ extern void nni_aio_stop(nni_aio *);
 // nni_aio_set_data sets user data.  This should only be done by the
 // consumer, initiating the I/O.  The intention is to be able to store
 // additional data for use when the operation callback is executed.
-extern void nni_aio_set_data(nni_aio *, void *);
+// The index represents the "index" at which to store the data.  A maximum
+// of 4 elements can be stored with the (index >= 0 && index < 4).
+extern void nni_aio_set_data(nni_aio *, int, void *);
 
 // nni_aio_get_data returns the user data that was previously stored
 // with nni_aio_set_data.
-extern void *nni_aio_get_data(nni_aio *);
+extern void *nni_aio_get_data(nni_aio *, int);
 
+// nni_set_input sets input parameters on the AIO.  The semantic details
+// of this will be determined by the specific AIO operation.  AIOs can
+// carry up to 4 input parameters.
+extern void nni_aio_set_input(nni_aio *, int, void *);
+
+// nni_get_input returns the input value stored by nni_aio_set_input.
+extern void *nni_aio_get_input(nni_aio *, int);
+
+// nni_set_output sets output results on the AIO, allowing providers to
+// return results to consumers.  The semantic details are determined by
+// the AIO operation.  Up to 4 outputs can be carried on an AIO.
+extern void nni_aio_set_output(nni_aio *, int, void *);
+
+// nni_get_output returns an output previously stored on the AIO.
+extern void *nni_aio_get_output(nni_aio *, int);
+
+// XXX: These should be refactored in terms of the generic inputs and
+// outputs.
 extern void     nni_aio_set_msg(nni_aio *, nni_msg *);
 extern nni_msg *nni_aio_get_msg(nni_aio *);
 extern void     nni_aio_set_pipe(nni_aio *, void *);
@@ -122,10 +150,10 @@ extern void *   nni_aio_get_ep(nni_aio *);
 // completion callback.
 void nni_aio_set_synch(nni_aio *);
 
-// nni_aio_set_timeout sets the timeout (absolute) when the AIO will
+// nni_aio_set_timeout sets the timeout (relative) when the AIO will
 // be canceled.  The cancelation does not happen until after nni_aio_start
 // is called.
-extern void nni_aio_set_timeout(nni_aio *, nni_time);
+extern void nni_aio_set_timeout(nni_aio *, nni_duration);
 
 // nni_aio_result returns the result code (0 on success, or an NNG errno)
 // for the operation.  It is only valid to call this when the operation is

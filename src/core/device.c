@@ -159,7 +159,7 @@ nni_device_init(nni_device_data **dp, nni_sock *s1, nni_sock *s2)
 			return (rv);
 		}
 
-		nni_aio_set_timeout(p->aio, NNI_TIME_NEVER);
+		nni_aio_set_timeout(p->aio, NNG_DURATION_INFINITE);
 	}
 	dd->npath = npath;
 	*dp       = dd;

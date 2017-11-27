@@ -1292,7 +1292,7 @@ zt_wire_packet_send_cb(void *arg)
 	nni_aio *    aio = arg;
 	zt_send_hdr *hdr;
 
-	hdr = nni_aio_get_data(aio);
+	hdr = nni_aio_get_data(aio, 0);
 	nni_free(hdr, hdr->len + sizeof(*hdr));
 	nni_aio_fini_cb(aio);
 }
@@ -1355,7 +1355,7 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	buf += sizeof(*hdr);
 
 	memcpy(buf, data, len);
-	nni_aio_set_data(aio, hdr);
+	nni_aio_set_data(aio, hdr, 0);
 	hdr->sa  = addr;
 	hdr->len = len;
 
@@ -2001,7 +2001,7 @@ zt_pipe_ping_cb(void *arg)
 	}
 	if (p->zp_ping_try < p->zp_ping_count) {
 		nni_time now = nni_clock();
-		nni_aio_set_timeout(aio, now + p->zp_ping_time);
+		nni_aio_set_timeout(aio, p->zp_ping_time);
 		// We want pings.  We only send one if needed, but we
 		// use the the timer to wake us up even if we aren't
 		// going to send a ping.  (We don't increment the try count
@@ -2034,7 +2034,7 @@ zt_pipe_start(void *arg, nni_aio *aio)
 	if ((p->zp_ping_count > 0) && (p->zp_ping_time != NNI_TIME_ZERO) &&
 	    (p->zp_ping_time != NNI_TIME_NEVER) && (p->zp_ping_aio != NULL)) {
 		p->zp_ping_try = 0;
-		nni_aio_set_timeout(aio, nni_clock() + p->zp_ping_time);
+		nni_aio_set_timeout(aio, p->zp_ping_time);
 		if (nni_aio_start(p->zp_ping_aio, zt_pipe_cancel_ping, p) ==
 		    0) {
 			p->zp_ping_active = 1;
@@ -2456,7 +2456,7 @@ zt_ep_conn_req_cb(void *arg)
 	}
 
 	if (nni_list_first(&ep->ze_aios) != NULL) {
-		nni_aio_set_timeout(aio, nni_clock() + zt_conn_interval);
+		nni_aio_set_timeout(aio, zt_conn_interval);
 		if (nni_aio_start(aio, zt_ep_conn_req_cancel, ep) == 0) {
 			ep->ze_creq_active = 1;
 			ep->ze_creq_try++;
@@ -2479,8 +2479,7 @@ zt_ep_connect(void *arg, nni_aio *aio)
 	nni_mtx_lock(&zt_lk);
 
 	if (nni_aio_start(aio, zt_ep_cancel, ep) == 0) {
-		nni_time now = nni_clock();
-		int      rv;
+		int rv;
 
 		// Clear the port so we get an ephemeral port.
 		ep->ze_laddr &= ~((uint64_t) zt_port_mask);
@@ -2498,7 +2497,7 @@ zt_ep_connect(void *arg, nni_aio *aio)
 
 		ep->ze_running = 1;
 
-		nni_aio_set_timeout(ep->ze_creq_aio, now + zt_conn_interval);
+		nni_aio_set_timeout(ep->ze_creq_aio, zt_conn_interval);
 
 		if (nni_aio_start(
 		        ep->ze_creq_aio, zt_ep_conn_req_cancel, ep) == 0) {

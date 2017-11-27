@@ -25,6 +25,9 @@
 #define NNI_ASSERT(x)
 #endif
 
+// Returns the size of an array in elements. (Convenience.)
+#define NNI_NUM_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
+
 // These types are common but have names shared with user space.
 typedef struct nng_msg      nni_msg;
 typedef struct nng_sockaddr nni_sockaddr;

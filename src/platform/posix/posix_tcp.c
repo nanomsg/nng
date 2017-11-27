@@ -38,11 +38,11 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 		return (rv);
 	}
 
-	if (rsa->s_un.s_family != NNG_AF_UNSPEC) {
+	if ((rsa != NULL) && (rsa->s_un.s_family != NNG_AF_UNSPEC)) {
 		len = nni_posix_nn2sockaddr((void *) &ss, rsa);
 		nni_posix_epdesc_set_remote(ed, &ss, len);
 	}
-	if (lsa->s_un.s_family != NNG_AF_UNSPEC) {
+	if ((lsa != NULL) && (lsa->s_un.s_family != NNG_AF_UNSPEC)) {
 		len = nni_posix_nn2sockaddr((void *) &ss, lsa);
 		nni_posix_epdesc_set_local(ed, &ss, len);
 	}

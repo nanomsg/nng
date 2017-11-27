@@ -62,6 +62,8 @@ set (NNG_SOURCES
     core/protocol.h
     core/random.c
     core/random.h
+    core/reap.c
+    core/reap.h
     core/socket.c
     core/socket.h
     core/strs.c
@@ -120,8 +122,10 @@ if (NNG_PLATFORM_WINDOWS)
 endif()
 
 add_subdirectory(supplemental/base64)
+add_subdirectory(supplemental/http)
 add_subdirectory(supplemental/mbedtls)
 add_subdirectory(supplemental/sha1)
+add_subdirectory(supplemental/websocket)
 
 add_subdirectory(protocol/bus0)
 add_subdirectory(protocol/pair0)
@@ -135,6 +139,7 @@ add_subdirectory(transport/inproc)
 add_subdirectory(transport/ipc)
 add_subdirectory(transport/tcp)
 add_subdirectory(transport/tls)
+add_subdirectory(transport/ws)
 add_subdirectory(transport/zerotier)
 
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src

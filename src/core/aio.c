@@ -1,6 +1,7 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -66,7 +67,8 @@ nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 	}
 	memset(aio, 0, sizeof(*aio));
 	nni_cv_init(&aio->a_cv, &nni_aio_lk);
-	aio->a_expire = NNI_TIME_NEVER;
+	aio->a_expire  = NNI_TIME_NEVER;
+	aio->a_timeout = NNG_DURATION_INFINITE;
 	if (arg == NULL) {
 		arg = aio;
 	}
@@ -116,9 +118,9 @@ nni_aio_stop(nni_aio *aio)
 }
 
 void
-nni_aio_set_timeout(nni_aio *aio, nni_time when)
+nni_aio_set_timeout(nni_aio *aio, nni_duration when)
 {
-	aio->a_expire = when;
+	aio->a_timeout = when;
 }
 
 void
@@ -158,15 +160,54 @@ nni_aio_get_ep(nni_aio *aio)
 }
 
 void
-nni_aio_set_data(nni_aio *aio, void *data)
+nni_aio_set_data(nni_aio *aio, int index, void *data)
 {
-	aio->a_data = data;
+	if ((index >= 0) && (index < NNI_NUM_ELEMENTS(aio->a_user_data))) {
+		aio->a_user_data[index] = data;
+	}
 }
 
 void *
-nni_aio_get_data(nni_aio *aio)
+nni_aio_get_data(nni_aio *aio, int index)
 {
-	return (aio->a_data);
+	if ((index >= 0) && (index < NNI_NUM_ELEMENTS(aio->a_user_data))) {
+		return (aio->a_user_data[index]);
+	}
+	return (NULL);
+}
+
+void
+nni_aio_set_input(nni_aio *aio, int index, void *data)
+{
+	if ((index >= 0) && (index < NNI_NUM_ELEMENTS(aio->a_inputs))) {
+		aio->a_inputs[index] = data;
+	}
+}
+
+void *
+nni_aio_get_input(nni_aio *aio, int index)
+{
+	if ((index >= 0) && (index < NNI_NUM_ELEMENTS(aio->a_inputs))) {
+		return (aio->a_inputs[index]);
+	}
+	return (NULL);
+}
+
+void
+nni_aio_set_output(nni_aio *aio, int index, void *data)
+{
+	if ((index >= 0) && (index < NNI_NUM_ELEMENTS(aio->a_outputs))) {
+		aio->a_outputs[index] = data;
+	}
+}
+
+void *
+nni_aio_get_output(nni_aio *aio, int index)
+{
+	if ((index >= 0) && (index < NNI_NUM_ELEMENTS(aio->a_outputs))) {
+		return (aio->a_outputs[index]);
+	}
+	return (NULL);
 }
 
 int
@@ -219,8 +260,21 @@ nni_aio_start(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 	aio->a_prov_cancel = cancelfn;
 	aio->a_prov_data   = data;
 	aio->a_active      = 1;
-	if (aio->a_expire != NNI_TIME_NEVER) {
+
+	// Convert the relative timeout to an absolute timeout.
+	switch (aio->a_timeout) {
+	case NNG_DURATION_ZERO:
+		aio->a_expire = NNI_TIME_ZERO;
 		nni_aio_expire_add(aio);
+		break;
+	case NNG_DURATION_INFINITE:
+	case NNG_DURATION_DEFAULT:
+		aio->a_expire = NNI_TIME_NEVER;
+		break;
+	default:
+		aio->a_expire = nni_clock() + aio->a_timeout;
+		nni_aio_expire_add(aio);
+		break;
 	}
 	nni_mtx_unlock(&nni_aio_lk);
 	return (0);

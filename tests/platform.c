@@ -52,7 +52,7 @@ TestMain("Platform Operations", {
 			nng_msleep(100);
 
 			So((getms() - now) >= 100); // cannot be *shorter*!!
-			So((getms() - now) < 150);  // crummy clock resolution?
+			So((getms() - now) < 200);  // crummy clock resolution?
 		});
 		Convey("times work", {
 			uint64_t msend;
@@ -69,8 +69,8 @@ TestMain("Platform Operations", {
 			usdelta = (int) (usend - usnow);
 			msdelta = (int) (msend - now);
 			So(usdelta >= 200);
-			So(usdelta < 220);
-			So(abs(msdelta - usdelta) < 20);
+			So(usdelta < 250); // increased tolerance for CIs
+			So(abs(msdelta - usdelta) < 50);
 		});
 	});
 	Convey("Mutexes work", {
