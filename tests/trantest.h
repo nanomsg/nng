@@ -1,6 +1,7 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -85,7 +86,7 @@ trantest_checktran(const char *url)
 	CHKTRAN(url, "tcp:");
 #endif
 #ifndef NNG_HAVE_TLS
-	CHKTRAN(url, "tls:");
+	CHKTRAN(url, "tls+tcp:");
 #endif
 
 	(void) url;

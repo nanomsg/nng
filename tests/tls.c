@@ -1,6 +1,7 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -126,7 +127,7 @@ TestMain("TLS Transport", {
 	static trantest tt;
 
 	tt.init = init_tls;
-	tt.tmpl = "tls://127.0.0.1:%u";
+	tt.tmpl = "tls+tcp://127.0.0.1:%u";
 
 	trantest_test(&tt);
 
@@ -140,7 +141,7 @@ TestMain("TLS Transport", {
 		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
-		trantest_next_address(addr, "tls://*:%u");
+		trantest_next_address(addr, "tls+tcp://*:%u");
 		So(nng_dial(s, addr, NULL, 0) == NNG_EADDRINVAL);
 	});
 
@@ -156,10 +157,10 @@ TestMain("TLS Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tls://*:%u");
+		trantest_next_address(addr, "tls+tcp://*:%u");
 		So(nng_listen(s1, addr, NULL, 0) == 0);
 		// reset port back one
-		trantest_prev_address(addr, "tls://127.0.0.1:%u");
+		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
 		So(nng_dial(s2, addr, NULL, 0) == 0);
 	});
 
@@ -169,16 +170,16 @@ TestMain("TLS Transport", {
 		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s1) == 0);
 		Reset({ nng_close(s1); });
-		So(nng_dial(s1, "tls://127.0.0.1", NULL, 0) == NNG_EADDRINVAL);
-		So(nng_dial(s1, "tls://127.0.0.1.32", NULL, 0) ==
+		So(nng_dial(s1, "tls+tcp://127.0.0.1", NULL, 0) == NNG_EADDRINVAL);
+		So(nng_dial(s1, "tls+tcp://127.0.0.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
-		So(nng_dial(s1, "tls://127.0.x.1.32", NULL, 0) ==
+		So(nng_dial(s1, "tls+tcp://127.0.x.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
-		So(nng_listen(s1, "tls://127.0.0.1", NULL, 0) ==
+		So(nng_listen(s1, "tls+tcp://127.0.0.1", NULL, 0) ==
 		    NNG_EADDRINVAL);
-		So(nng_listen(s1, "tls://127.0.0.1.32", NULL, 0) ==
+		So(nng_listen(s1, "tls+tcp://127.0.0.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
-		So(nng_listen(s1, "tls://127.0.x.1.32", NULL, 0) ==
+		So(nng_listen(s1, "tls+tcp://127.0.x.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
 	});
 

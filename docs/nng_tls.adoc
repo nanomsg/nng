@@ -51,7 +51,8 @@ Availability
 ~~~~~~~~~~~~
 
 The _tls_ transport depends on the use of an external library.
-As of this writing, https://tls.mbed.org/[mbed TLS] is required.
+As of this writing, https://tls.mbed.org/[mbed TLS] version 2.0
+or later is required.
 
 TIP: Applications may need to add this library (or libraries) to
 their link line, particularly when using a statically built
@@ -67,18 +68,18 @@ license terms of any libraries you make use of.
 URI Format
 ~~~~~~~~~~
 
-This transport uses URIs using the scheme `tls://`, followed by
+This transport uses URIs using the scheme `tls+tcp://`, followed by
 an IP address or hostname, followed by a colon and finally a
 TCP port number.  For example, to contact port 4433 on the localhost
-either of the following URIs could be used: `tls://127.0.0.1:4433` or
-`tcp://localhost:4433`.
+either of the following URIs could be used: `tls+tcp://127.0.0.1:4433` or
+`tls+tcp://localhost:4433`.
 
 When specifying IPv6 addresses, the address must be enclosed in
 square brackets (`[]`) to avoid confusion with the final colon
 separating the port.
 
 For example, the same port 4433 on the IPv6 loopback address ('::1') would
-be specified as `tcp://[::1]:4433`.
+be specified as `tls+tcp://[::1]:4433`.
 
 NOTE: When using symbolic names, the name is resolved when the
 name is first used. _nng_ won't become aware of changes in the
@@ -97,9 +98,9 @@ the asterisk (`*`) character.  For example, the following three
 URIs are all equivalent, and could be used to listen to port 9999
 on the host:
 
-  1. `tls://0.0.0.0:9999`
-  2. `tls://*:9999`
-  3. `tls://:9999`
+  1. `tls+tcp://0.0.0.0:9999`
+  2. `tls+tcp://*:9999`
+  3. `tls+tcp://:9999`
 
 The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 

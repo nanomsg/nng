@@ -546,10 +546,10 @@ nni_tls_parse_url(char *url, char **lhost, char **lserv, char **rhost,
 	char *h1;
 	int   rv;
 
-	if (strncmp(url, "tls://", strlen("tls://")) != 0) {
+	if (strncmp(url, "tls+tcp://", strlen("tls+tcp://")) != 0) {
 		return (NNG_EADDRINVAL);
 	}
-	url += strlen("tls://");
+	url += strlen("tls+tcp://");
 	if ((mode == NNI_EP_MODE_DIAL) && ((h1 = strchr(url, ';')) != 0)) {
 		// The local address is the first part, the remote address
 		// is the second part.
@@ -1067,7 +1067,7 @@ static nni_tran_ep nni_tls_ep_ops = {
 
 static nni_tran nni_tls_tran = {
 	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "tls",
+	.tran_scheme  = "tls+tcp",
 	.tran_ep      = &nni_tls_ep_ops,
 	.tran_pipe    = &nni_tls_pipe_ops,
 	.tran_init    = nni_tls_tran_init,
