@@ -1,7 +1,7 @@
-nng - nanomsg-NG
-================
+= nng - nanomsg-next-gen
 
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
+https:https://img.shields.io/circleci/project/github/nanomsg/nng.svg?label=[Linux Status,link="https://circleci.com/gh/nanomsg/nng"]
 image:https://img.shields.io/travis/nanomsg/nng/master.svg?label=linux[Linux Status,link="https://travis-ci.org/nanomsg/nng"]
 image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/nanomsg/nng"]
 image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=coverage[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
@@ -18,7 +18,7 @@ This is a work in progress, and is *not* suitable for production use or
 publication.  When the library is ready for broader consumption, an
 announcement will be posted on the nanomsg mailing list and website.
 
-https://nanomsg.github.io/nng/man/[Draft documentation] is posted
+Some https://nanomsg.github.io/nng/man/[manual pages] are posted
 on GitHub pages.
 
 If you are looking for the current production version of nanomsg, please
@@ -41,9 +41,12 @@ nanomsg, use -DNNG_TRANSPORT_TLS=ON in your cmake command line.  You will
 need to have the ARM mbedTLS library installed.  (This is available in
 Xenial Ubuntu as libmbedtls-dev).
 
-The API is not yet stable, but if you want to explore using the newer
+The API is not yet documented, but if you want to explore using the newer
 API, pleaes have a look at the `nng.h` header file.  A legacy compatible
 `nng_compat.h` header is available and offers API compatibility with legacy
 _nanomsg_.
 
-	- Garrett D'Amore (Nov. 20, 2017)
+== Commercial Support
+
+Please contact mailto:info@staysail.tech[Staysail Systems, Inc.] to
+inquire about commercial support.
