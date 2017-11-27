@@ -1,4 +1,4 @@
-= Contributor Covenant Code of Conduct
+= NNG Code of Conduct
 
 == Our Pledge
 
@@ -69,7 +69,6 @@ members of the project's leadership.
 
 == Attribution
 
-This Code of Conduct is adapted from the [Contributor Covenant][homepage], version 1.4,
+This Code of Conduct is adapted from the
+https://www.contributor-convent.org[Contributor Covenant], version 1.4,
 available at https://www.contributor-covenant.org/version/1/4/code-of-conduct.html
-
-https://www.contributor-covenant.org[homepage]
