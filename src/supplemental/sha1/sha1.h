@@ -21,6 +21,6 @@ typedef struct {
 extern void nni_sha1_init(nni_sha1_ctx *);
 extern void nni_sha1_update(nni_sha1_ctx *, const uint8_t *, size_t);
 extern void nni_sha1_final(nni_sha1_ctx *, uint8_t[20]);
-extern void nn_sha1(const uint8_t *, size_t, uint8_t[20]);
+extern void nni_sha1(const uint8_t *, size_t, uint8_t[20]);
 
 #endif // NNG_SUPPLEMENTAL_SHA1_SHA1_H
