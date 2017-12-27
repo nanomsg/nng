@@ -646,6 +646,26 @@ ws_send_control(nni_ws *ws, uint8_t op, uint8_t *buf, size_t len)
 	nni_mtx_unlock(&ws->mtx);
 }
 
+int
+nni_ws_sock_addr(nni_ws *ws, nni_sockaddr *sa)
+{
+	int rv;
+	nni_mtx_lock(&ws->mtx);
+	rv = ws->closed ? NNG_ECLOSED : nni_http_sock_addr(ws->http, sa);
+	nni_mtx_unlock(&ws->mtx);
+	return (rv);
+}
+
+int
+nni_ws_peer_addr(nni_ws *ws, nni_sockaddr *sa)
+{
+	int rv;
+	nni_mtx_lock(&ws->mtx);
+	rv = ws->closed ? NNG_ECLOSED : nni_http_peer_addr(ws->http, sa);
+	nni_mtx_unlock(&ws->mtx);
+	return (rv);
+}
+
 void
 nni_ws_send_msg(nni_ws *ws, nni_aio *aio)
 {

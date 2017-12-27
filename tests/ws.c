@@ -23,7 +23,6 @@
 static int
 check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
 {
-#if 0
 	nng_pipe p;
 	size_t   z;
 	p = nng_msg_get_pipe(msg);
@@ -49,7 +48,6 @@ check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
 		So(ra.s_un.s_in.sa_port != 0);
 		So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
 	});
-#endif
 	return (0);
 }
 

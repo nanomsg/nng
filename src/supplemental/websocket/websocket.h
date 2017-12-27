@@ -54,6 +54,8 @@ extern void          nni_ws_send_msg(nni_ws *, nni_aio *);
 extern void          nni_ws_recv_msg(nni_ws *, nni_aio *);
 extern nni_http_res *nni_ws_response(nni_ws *);
 extern nni_http_req *nni_ws_request(nni_ws *);
+extern int           nni_ws_sock_addr(nni_ws *, nni_sockaddr *);
+extern int           nni_ws_peer_addr(nni_ws *, nni_sockaddr *);
 extern void          nni_ws_close(nni_ws *);
 extern void          nni_ws_close_error(nni_ws *, uint16_t);
 extern void          nni_ws_fini(nni_ws *);

@@ -319,13 +319,41 @@ ws_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp)
 	return (nni_getopt_size(ep->rcvmax, v, szp));
 }
 
+static int
+ws_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
+{
+	ws_pipe *    p = arg;
+	int          rv;
+	nng_sockaddr sa;
+
+	memset(&sa, 0, sizeof(sa));
+	if ((rv = nni_ws_sock_addr(p->ws, &sa)) == 0) {
+		rv = nni_getopt_sockaddr(&sa, v, szp);
+	}
+	return (rv);
+}
+
+static int
+ws_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
+{
+	ws_pipe *    p = arg;
+	int          rv;
+	nng_sockaddr sa;
+
+	memset(&sa, 0, sizeof(sa));
+	if ((rv = nni_ws_peer_addr(p->ws, &sa)) == 0) {
+		rv = nni_getopt_sockaddr(&sa, v, szp);
+	}
+	return (rv);
+}
+
 static nni_tran_pipe_option ws_pipe_options[] = {
-#if 0
+
 	// clang-format off
 	{ NNG_OPT_LOCADDR, ws_pipe_getopt_locaddr },
 	{ NNG_OPT_REMADDR, ws_pipe_getopt_remaddr },
 	// clang-format on
-#endif
+
 	// terminate list
 	{ NULL, NULL }
 };

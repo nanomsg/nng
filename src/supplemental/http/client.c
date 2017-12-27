@@ -60,11 +60,13 @@ http_conn_done(void *arg)
 		return;
 	}
 
-	t.h_data  = p;
-	t.h_write = (void *) nni_plat_tcp_pipe_send;
-	t.h_read  = (void *) nni_plat_tcp_pipe_recv;
-	t.h_close = (void *) nni_plat_tcp_pipe_close;
-	t.h_fini  = (void *) nni_plat_tcp_pipe_fini;
+	t.h_data      = p;
+	t.h_write     = (void *) nni_plat_tcp_pipe_send;
+	t.h_read      = (void *) nni_plat_tcp_pipe_recv;
+	t.h_close     = (void *) nni_plat_tcp_pipe_close;
+	t.h_sock_addr = (void *) nni_plat_tcp_pipe_sockname;
+	t.h_peer_addr = (void *) nni_plat_tcp_pipe_peername;
+	t.h_fini      = (void *) nni_plat_tcp_pipe_fini;
 
 	if ((rv = nni_http_init(&http, &t)) != 0) {
 		nni_aio_finish_error(aio, rv);

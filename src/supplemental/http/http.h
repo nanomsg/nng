@@ -22,6 +22,8 @@ typedef struct nni_http_tran {
 	void *h_data;
 	void (*h_read)(void *, nni_aio *);
 	void (*h_write)(void *, nni_aio *);
+	int (*h_sock_addr)(void *, nni_sockaddr *);
+	int (*h_peer_addr)(void *, nni_sockaddr *);
 	void (*h_close)(void *);
 	void (*h_fini)(void *);
 } nni_http_tran;
@@ -160,6 +162,8 @@ extern void nni_http_read(nni_http *, nni_aio *);
 extern void nni_http_read_full(nni_http *, nni_aio *);
 extern void nni_http_write(nni_http *, nni_aio *);
 extern void nni_http_write_full(nni_http *, nni_aio *);
+extern int  nni_http_sock_addr(nni_http *, nni_sockaddr *);
+extern int  nni_http_peer_addr(nni_http *, nni_sockaddr *);
 
 typedef struct nni_http_server nni_http_server;
 

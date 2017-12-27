@@ -42,6 +42,8 @@ struct nni_http {
 	void *sock;
 	void (*rd)(void *, nni_aio *);
 	void (*wr)(void *, nni_aio *);
+	int (*sock_addr)(void *, nni_sockaddr *);
+	int (*peer_addr)(void *, nni_sockaddr *);
 	void (*close)(void *);
 	void (*fini)(void *);
 
@@ -549,6 +551,26 @@ nni_http_write_full(nni_http *http, nni_aio *aio)
 	nni_mtx_unlock(&http->mtx);
 }
 
+int
+nni_http_sock_addr(nni_http *http, nni_sockaddr *sa)
+{
+	int rv;
+	nni_mtx_lock(&http->mtx);
+	rv = http->closed ? NNG_ECLOSED : http->sock_addr(http->sock, sa);
+	nni_mtx_unlock(&http->mtx);
+	return (rv);
+}
+
+int
+nni_http_peer_addr(nni_http *http, nni_sockaddr *sa)
+{
+	int rv;
+	nni_mtx_lock(&http->mtx);
+	rv = http->closed ? NNG_ECLOSED : http->peer_addr(http->sock, sa);
+	nni_mtx_unlock(&http->mtx);
+	return (rv);
+}
+
 void
 nni_http_fini(nni_http *http)
 {
@@ -591,12 +613,14 @@ nni_http_init(nni_http **httpp, nni_http_tran *tran)
 		nni_http_fini(http);
 		return (rv);
 	}
-	http->rd_bufsz = HTTP_BUFSIZE;
-	http->rd       = tran->h_read;
-	http->wr       = tran->h_write;
-	http->close    = tran->h_close;
-	http->fini     = tran->h_fini;
-	http->sock     = tran->h_data;
+	http->rd_bufsz  = HTTP_BUFSIZE;
+	http->rd        = tran->h_read;
+	http->wr        = tran->h_write;
+	http->close     = tran->h_close;
+	http->fini      = tran->h_fini;
+	http->sock      = tran->h_data;
+	http->sock_addr = tran->h_sock_addr;
+	http->peer_addr = tran->h_peer_addr;
 
 	*httpp = http;
 

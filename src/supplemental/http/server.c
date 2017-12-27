@@ -506,6 +506,8 @@ http_sconn_init(http_sconn **scp, nni_plat_tcp_pipe *tcp)
 	sc->tran.h_write = (void *) nni_plat_tcp_pipe_send;
 	sc->tran.h_close = (void *) nni_plat_tcp_pipe_close; // close implied
 	sc->tran.h_fini  = (void *) nni_plat_tcp_pipe_fini;
+	sc->tran.h_sock_addr = (void *) nni_plat_tcp_pipe_sockname;
+	sc->tran.h_peer_addr = (void *) nni_plat_tcp_pipe_peername;
 
 	if ((rv = nni_http_init(&sc->http, &sc->tran)) != 0) {
 		http_sconn_close(sc);
