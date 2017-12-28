@@ -20,6 +20,7 @@ extern size_t nni_strlcat(char *, const char *, size_t);
 extern size_t nni_strnlen(const char *, size_t);
 extern char * nni_strcasestr(const char *, const char *);
 extern int    nni_strncasecmp(const char *, const char *, size_t);
+extern int    nni_strcasecmp(const char *, const char *);
 extern int    nni_asprintf(char **, const char *, ...);
 
 #endif // CORE_STRS_H

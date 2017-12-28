@@ -289,7 +289,6 @@ http_sconn_rxdone(void *arg)
 	char *           uri;
 	size_t           urisz;
 	char *           path;
-	char *           tmp;
 	bool             badmeth = false;
 
 	if ((rv = nni_aio_result(aio)) != 0) {
@@ -819,7 +818,7 @@ http_server_add_handler(void **hp, nni_http_server *s, nni_http_handler *hh,
 	// matches.)  Note that a wild card host matches both.
 	NNI_LIST_FOREACH (&s->handlers, h2) {
 		if ((h2->h_host != NULL) && (h->h_host != NULL) &&
-		    (strcasecmp(h2->h_host, h->h_host) != 0)) {
+		    (nni_strcasecmp(h2->h_host, h->h_host) != 0)) {
 			// Hosts don't match, so we are safe.
 			continue;
 		}
@@ -916,7 +915,7 @@ http_lookup_type(const char *path)
 		if (l2 > l1) {
 			continue;
 		}
-		if (strcasecmp(&path[l1 - l2], content_map[i].ext) == 0) {
+		if (nni_strcasecmp(&path[l1 - l2], content_map[i].ext) == 0) {
 			return (content_map[i].typ);
 		}
 	}

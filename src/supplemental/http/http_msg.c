@@ -145,7 +145,7 @@ http_del_header(nni_list *hdrs, const char *key)
 {
 	http_header *h;
 	NNI_LIST_FOREACH (hdrs, h) {
-		if (strcasecmp(key, h->name) == 0) {
+		if (nni_strcasecmp(key, h->name) == 0) {
 			nni_list_remove(hdrs, h);
 			nni_strfree(h->name);
 			nni_free(h->value, strlen(h->value) + 1);
@@ -173,7 +173,7 @@ http_set_header(nni_list *hdrs, const char *key, const char *val)
 {
 	http_header *h;
 	NNI_LIST_FOREACH (hdrs, h) {
-		if (strcasecmp(key, h->name) == 0) {
+		if (nni_strcasecmp(key, h->name) == 0) {
 			char * news;
 			size_t len = strlen(val) + 1;
 			if ((news = nni_alloc(len)) == NULL) {
@@ -220,7 +220,7 @@ http_add_header(nni_list *hdrs, const char *key, const char *val)
 {
 	http_header *h;
 	NNI_LIST_FOREACH (hdrs, h) {
-		if (strcasecmp(key, h->name) == 0) {
+		if (nni_strcasecmp(key, h->name) == 0) {
 			char * news;
 			size_t len = strlen(h->value) + strlen(val) + 3;
 			if ((news = nni_alloc(len)) == NULL) {
@@ -267,7 +267,7 @@ http_get_header(nni_list *hdrs, const char *key)
 {
 	http_header *h;
 	NNI_LIST_FOREACH (hdrs, h) {
-		if (strcasecmp(h->name, key) == 0) {
+		if (nni_strcasecmp(h->name, key) == 0) {
 			return (h->value);
 		}
 	}
@@ -407,10 +407,9 @@ nni_http_res_alloc_data(nni_http_res *res, size_t size)
 static int
 http_parse_header(nni_list *hdrs, void *line)
 {
-	http_header *h;
-	char *       key = line;
-	char *       val;
-	char *       end;
+	char *key = line;
+	char *val;
+	char *end;
 
 	// Find separation between key and value
 	if ((val = strchr(key, ':')) == NULL) {

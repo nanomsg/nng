@@ -237,7 +237,7 @@ ws_mask_frame(ws_frame *frame)
 	}
 	r = nni_random();
 	NNI_PUT32(frame->mask, r);
-	for (int i = 0; i < frame->len; i++) {
+	for (size_t i = 0; i < frame->len; i++) {
 		frame->buf[i] ^= frame->mask[i % 4];
 	}
 	memcpy(frame->head + frame->hlen, frame->mask, 4);
@@ -253,7 +253,7 @@ ws_unmask_frame(ws_frame *frame)
 	if (!frame->masked) {
 		return;
 	}
-	for (int i = 0; i < frame->len; i++) {
+	for (size_t i = 0; i < frame->len; i++) {
 		frame->buf[i] ^= frame->mask[i % 4];
 	}
 	frame->hlen -= 4;
@@ -1651,8 +1651,7 @@ nni_ws_listener_accept(nni_ws_listener *l, nni_aio *aio)
 void
 nni_ws_listener_close(nni_ws_listener *l)
 {
-	nni_aio *aio;
-	nni_ws * ws;
+	nni_ws *ws;
 	nni_mtx_lock(&l->mtx);
 	if (l->closed) {
 		nni_mtx_unlock(&l->mtx);
@@ -2012,7 +2011,7 @@ ws_set_header(nni_list *l, const char *n, const char *v)
 	}
 
 	NNI_LIST_FOREACH (l, hdr) {
-		if (strcasecmp(hdr->name, n) == 0) {
+		if (nni_strcasecmp(hdr->name, n) == 0) {
 			nni_strfree(hdr->value);
 			hdr->value = nv;
 			return (0);
@@ -2023,7 +2022,7 @@ ws_set_header(nni_list *l, const char *n, const char *v)
 		nni_strfree(nv);
 		return (NNG_ENOMEM);
 	}
-	if ((hdr->name = strdup(n)) == NULL) {
+	if ((hdr->name = nni_strdup(n)) == NULL) {
 		nni_strfree(nv);
 		NNI_FREE_STRUCT(hdr);
 		return (NNG_ENOMEM);
