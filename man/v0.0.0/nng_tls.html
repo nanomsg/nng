@@ -550,7 +550,8 @@ cannot be initialized for any reason.</p>
 <h3 id="_availability">Availability</h3>
 <div class="paragraph">
 <p>The <em>tls</em> transport depends on the use of an external library.
-As of this writing, <a href="https://tls.mbed.org/">mbed TLS</a> is required.</p>
+As of this writing, <a href="https://tls.mbed.org/">mbed TLS</a> version 2.0
+or later is required.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -587,11 +588,11 @@ license terms of any libraries you make use of.
 <div class="sect2">
 <h3 id="_uri_format">URI Format</h3>
 <div class="paragraph">
-<p>This transport uses URIs using the scheme <code>tls://</code>, followed by
+<p>This transport uses URIs using the scheme <code>tls+tcp://</code>, followed by
 an IP address or hostname, followed by a colon and finally a
 TCP port number.  For example, to contact port 4433 on the localhost
-either of the following URIs could be used: <code>tls://127.0.0.1:4433</code> or
-<code>tcp://localhost:4433</code>.</p>
+either of the following URIs could be used: <code>tls+tcp://127.0.0.1:4433</code> or
+<code>tls+tcp://localhost:4433</code>.</p>
 </div>
 <div class="paragraph">
 <p>When specifying IPv6 addresses, the address must be enclosed in
@@ -600,7 +601,7 @@ separating the port.</p>
 </div>
 <div class="paragraph">
 <p>For example, the same port 4433 on the IPv6 loopback address (<em>::1</em>) would
-be specified as <code>tcp://[::1]:4433</code>.</p>
+be specified as <code>tls+tcp://[::1]:4433</code>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -643,13 +644,13 @@ on the host:</p>
 <div class="olist arabic">
 <ol class="arabic">
 <li>
-<p><code>tls://0.0.0.0:9999</code></p>
+<p><code>tls+tcp://0.0.0.0:9999</code></p>
 </li>
 <li>
-<p><code>tls://*:9999</code></p>
+<p><code>tls+tcp://*:9999</code></p>
 </li>
 <li>
-<p><code>tls://:9999</code></p>
+<p><code>tls+tcp://:9999</code></p>
 </li>
 </ol>
 </div>
@@ -851,7 +852,7 @@ Copyright 2017 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <div id="footer">
 <div id="footer-text">
 nng 0.0.0<br>
-Last updated 2017-11-09 22:09:14 UTC
+Last updated 2017-11-27 19:24:22 UTC
 </div>
 </div>
 </body>
