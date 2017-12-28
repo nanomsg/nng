@@ -11,6 +11,7 @@
 #include "convey.h"
 #include "nng.h"
 #include "protocol/pair1/pair.h"
+#include "transport/ws/websocket.h"
 #include "trantest.h"
 
 #include "stubs.h"
@@ -48,6 +49,41 @@ check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
 		So(ra.s_un.s_in.sa_port != 0);
 		So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
 	});
+
+	Convey("Request header property works", {
+		char * buf;
+		size_t len;
+		z   = 0;
+		buf = NULL;
+		So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
+		    0);
+		So(z > 0);
+		len = z;
+		So((buf = nni_alloc(len)) != NULL);
+		So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
+		    0);
+		So(strstr(buf, "Sec-WebSocket-Key") != NULL);
+		So(z == len);
+		nni_free(buf, len);
+	});
+
+	Convey("Response header property works", {
+		char * buf;
+		size_t len;
+		z   = 0;
+		buf = NULL;
+		So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
+		    0);
+		So(z > 0);
+		len = z;
+		So((buf = nni_alloc(len)) != NULL);
+		So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
+		    0);
+		So(strstr(buf, "Sec-WebSocket-Accept") != NULL);
+		So(z == len);
+		nni_free(buf, len);
+	});
+
 	return (0);
 }
 

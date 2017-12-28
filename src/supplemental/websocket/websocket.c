@@ -23,10 +23,16 @@
 typedef struct ws_frame ws_frame;
 typedef struct ws_msg   ws_msg;
 
+typedef struct ws_header {
+	nni_list_node node;
+	char *        name;
+	char *        value;
+} ws_header;
+
 struct nni_ws {
-	int           mode; // NNI_EP_MODE_DIAL or NNI_EP_MODE_LISTEN
 	nni_list_node node;
 	nni_reap_item reap;
+	int           mode; // NNI_EP_MODE_DIAL or NNI_EP_MODE_LISTEN
 	bool          closed;
 	bool          ready;
 	bool          wclose;
@@ -42,6 +48,8 @@ struct nni_ws {
 	nni_http *    http;
 	nni_http_req *req;
 	nni_http_res *res;
+	char *        reqhdrs;
+	char *        reshdrs;
 	size_t        maxframe;
 	size_t        fragsize;
 };
@@ -64,6 +72,7 @@ struct nni_ws_listener {
 	nni_http_handler   handler;
 	nni_ws_listen_hook hookfn;
 	void *             hookarg;
+	nni_list           headers; // response headers
 };
 
 // The dialer tracks user aios in two lists. The first list is for aios
@@ -91,6 +100,7 @@ struct nni_ws_dialer {
 	bool             started;
 	bool             closed;
 	nng_sockaddr     sa;
+	nni_list         headers; // request headers
 };
 
 typedef enum ws_type {
@@ -724,7 +734,6 @@ ws_start_read(nni_ws *ws)
 			nni_aio_finish_error(wm->aio, NNG_ENOMEM);
 		}
 		ws_msg_fini(wm);
-		// XXX: NOW WHAT?
 		return;
 	}
 
@@ -1028,6 +1037,28 @@ nni_ws_request(nni_ws *ws)
 	return (ws->req);
 }
 
+const char *
+nni_ws_request_headers(nni_ws *ws)
+{
+	nni_mtx_lock(&ws->mtx);
+	if (ws->reqhdrs == NULL) {
+		ws->reqhdrs = nni_http_req_headers(ws->req);
+	}
+	nni_mtx_unlock(&ws->mtx);
+	return (ws->reqhdrs);
+}
+
+const char *
+nni_ws_response_headers(nni_ws *ws)
+{
+	nni_mtx_lock(&ws->mtx);
+	if (ws->reshdrs == NULL) {
+		ws->reshdrs = nni_http_res_headers(ws->res);
+	}
+	nni_mtx_unlock(&ws->mtx);
+	return (ws->reshdrs);
+}
+
 static void
 ws_fini(void *arg)
 {
@@ -1075,6 +1106,8 @@ ws_fini(void *arg)
 		nni_http_res_fini(ws->res);
 	}
 
+	nni_strfree(ws->reqhdrs);
+	nni_strfree(ws->reshdrs);
 	nni_http_fini(ws->http);
 	nni_aio_fini(ws->rxaio);
 	nni_aio_fini(ws->txaio);
@@ -1261,12 +1294,20 @@ ws_init(nni_ws **wsp, nni_http *http, nni_http_req *req, nni_http_res *res)
 void
 nni_ws_listener_fini(nni_ws_listener *l)
 {
+	ws_header *hdr;
+
 	nni_mtx_fini(&l->mtx);
 	nni_strfree(l->url);
 	nni_strfree(l->proto);
 	nni_strfree(l->host);
 	nni_strfree(l->serv);
 	nni_strfree(l->path);
+	while ((hdr = nni_list_first(&l->headers)) != NULL) {
+		nni_list_remove(&l->headers, hdr);
+		nni_strfree(hdr->name);
+		nni_strfree(hdr->value);
+		NNI_FREE_STRUCT(hdr);
+	}
 	NNI_FREE_STRUCT(l);
 }
 
@@ -1718,6 +1759,7 @@ ws_conn_cb(void *arg)
 	uint8_t        raw[16];
 	char           wskey[25];
 	nni_ws *       ws;
+	ws_header *    hdr;
 
 	nni_mtx_lock(&d->mtx);
 	uaio = nni_list_first(&d->conaios);
@@ -1776,6 +1818,13 @@ ws_conn_cb(void *arg)
 	    ((rv = SETH("Sec-WebSocket-Protocol", d->proto)) != 0)) {
 		goto err;
 	}
+
+	NNI_LIST_FOREACH (&d->headers, hdr) {
+		if ((rv = SETH(hdr->name, hdr->value)) != 0) {
+			goto err;
+		}
+	}
+
 #undef SETH
 
 	if ((rv = ws_init(&ws, http, req, NULL)) != 0) {
@@ -1807,6 +1856,8 @@ err:
 void
 nni_ws_dialer_fini(nni_ws_dialer *d)
 {
+	ws_header *hdr;
+
 	nni_aio_fini(d->conaio);
 	nni_strfree(d->proto);
 	nni_strfree(d->addr);
@@ -1815,6 +1866,12 @@ nni_ws_dialer_fini(nni_ws_dialer *d)
 	nni_strfree(d->serv);
 	nni_strfree(d->path);
 	nni_strfree(d->qinfo);
+	while ((hdr = nni_list_first(&d->headers)) != NULL) {
+		nni_list_remove(&d->headers, hdr);
+		nni_strfree(hdr->name);
+		nni_strfree(hdr->value);
+		NNI_FREE_STRUCT(hdr);
+	}
 	if (d->client) {
 		nni_http_client_fini(d->client);
 	}
@@ -1832,6 +1889,7 @@ nni_ws_dialer_init(nni_ws_dialer **dp, const char *url)
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	NNI_LIST_INIT(&d->headers, ws_header, node);
 	nni_mtx_init(&d->mtx);
 	nni_aio_list_init(&d->conaios);
 	nni_aio_list_init(&d->httpaios);
@@ -1877,7 +1935,6 @@ nni_ws_dialer_init(nni_ws_dialer **dp, const char *url)
 void
 nni_ws_dialer_close(nni_ws_dialer *d)
 {
-	// XXX: what to do here?
 	nni_mtx_lock(&d->mtx);
 	if (d->closed) {
 		nni_mtx_unlock(&d->mtx);
@@ -1944,7 +2001,47 @@ nni_ws_dialer_dial(nni_ws_dialer *d, nni_aio *aio)
 	nni_mtx_unlock(&d->mtx);
 }
 
-extern int nni_ws_dialer_header(nni_ws_dialer *, const char *, const char *);
+static int
+ws_set_header(nni_list *l, const char *n, const char *v)
+{
+	ws_header *hdr;
+	char *     nv;
+
+	if ((nv = nni_strdup(v)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	NNI_LIST_FOREACH (l, hdr) {
+		if (strcasecmp(hdr->name, n) == 0) {
+			nni_strfree(hdr->value);
+			hdr->value = nv;
+			return (0);
+		}
+	}
+
+	if ((hdr = NNI_ALLOC_STRUCT(hdr)) == NULL) {
+		nni_strfree(nv);
+		return (NNG_ENOMEM);
+	}
+	if ((hdr->name = strdup(n)) == NULL) {
+		nni_strfree(nv);
+		NNI_FREE_STRUCT(hdr);
+		return (NNG_ENOMEM);
+	}
+	hdr->value = nv;
+	nni_list_append(l, hdr);
+	return (0);
+}
+
+int
+nni_ws_dialer_header(nni_ws_dialer *d, const char *n, const char *v)
+{
+	int rv;
+	nni_mtx_lock(&d->mtx);
+	rv = ws_set_header(&d->headers, n, v);
+	nni_mtx_unlock(&d->mtx);
+	return (rv);
+}
 
 // Dialer does not get a hook chance, as it can examine the request
 // and reply after dial is done; this is not a 3-way handshake, so

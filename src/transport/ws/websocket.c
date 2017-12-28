@@ -14,10 +14,19 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "supplemental/http/http.h"
 #include "supplemental/websocket/websocket.h"
+
+#include "websocket.h"
 
 typedef struct ws_ep   ws_ep;
 typedef struct ws_pipe ws_pipe;
+
+typedef struct ws_hdr {
+	nni_list_node node;
+	char *        name;
+	char *        value;
+} ws_hdr;
 
 struct ws_ep {
 	int              mode; // NNI_EP_MODE_DIAL or NNI_EP_MODE_LISTEN
@@ -32,6 +41,7 @@ struct ws_ep {
 	nni_aio *        accaio;
 	nni_ws_listener *listener;
 	nni_ws_dialer *  dialer;
+	nni_list         headers; // to send, res or req
 };
 
 struct ws_pipe {
@@ -242,9 +252,32 @@ ws_pipe_start(void *arg, nni_aio *aio)
 // Servers use the HTTP server framework, and a request methodology.
 
 static int
+ws_hook(void *arg, nni_http_req *req, nni_http_res *res)
+{
+	ws_ep * ep = arg;
+	ws_hdr *h;
+	// Eventually we'll want user customizable hooks.
+	// For now we just set the headers we want.
+
+	nni_mtx_lock(&ep->mtx);
+	NNI_LIST_FOREACH (&ep->headers, h) {
+		int rv;
+		rv = nni_http_req_set_header(req, h->name, h->value);
+		if (rv != 0) {
+			nni_mtx_unlock(&ep->mtx);
+			return (rv);
+		}
+	}
+	nni_mtx_unlock(&ep->mtx);
+	return (0);
+}
+
+static int
 ws_ep_bind(void *arg)
 {
 	ws_ep *ep = arg;
+
+	nni_ws_listener_hook(ep->listener, ws_hook, ep);
 	return (nni_ws_listener_listen(ep->listener));
 }
 
@@ -284,8 +317,9 @@ ws_ep_accept(void *arg, nni_aio *aio)
 static void
 ws_ep_connect(void *arg, nni_aio *aio)
 {
-	ws_ep *ep = arg;
-	int    rv;
+	ws_ep * ep = arg;
+	int     rv;
+	ws_hdr *h;
 
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(nni_list_empty(&ep->aios));
@@ -295,6 +329,15 @@ ws_ep_connect(void *arg, nni_aio *aio)
 	if ((rv = nni_aio_start(aio, ws_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		return;
+	}
+
+	NNI_LIST_FOREACH (&ep->headers, h) {
+		rv = nni_ws_dialer_header(ep->dialer, h->name, h->value);
+		if (rv != 0) {
+			nni_aio_finish_error(aio, rv);
+			nni_mtx_unlock(&ep->mtx);
+			return;
+		}
 	}
 
 	nni_list_append(&ep->aios, aio);
@@ -310,6 +353,117 @@ ws_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz)
 		return (nni_chkopt_size(v, sz, 0, NNI_MAXSZ));
 	}
 	return (nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ));
+}
+
+static int
+ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
+{
+	// XXX: check that the string is well formed.
+	char *   dupstr;
+	size_t   duplen;
+	char *   name;
+	char *   value;
+	char *   nl;
+	nni_list l;
+	ws_hdr * h;
+	int      rv;
+
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
+	if (ep == NULL) {
+		return (0);
+	}
+
+	NNI_LIST_INIT(&l, ws_hdr, node);
+	if ((dupstr = nni_strdup(v)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	duplen = strlen(dupstr) + 1; // so we can free it later
+	name   = dupstr;
+	for (;;) {
+		if ((value = strchr(name, ':')) == NULL) {
+			// Note that this also means that if
+			// a bare word is present, we ignore it.
+			break;
+		}
+		*value = '\0';
+		value++;
+		while (*value == ' ') {
+			// Skip leading whitespace.  Not strictly
+			// necessary, but still a good idea.
+			value++;
+		}
+		nl = value;
+		// Find the end of the line -- should be CRLF, but can
+		// also be unterminated or just LF if user
+		while ((*nl != '\0') && (*nl != '\r') && (*nl != '\n')) {
+			nl++;
+		}
+		while ((*nl == '\r') || (*nl == '\n')) {
+			*nl = '\0';
+			nl++;
+		}
+
+		if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
+			rv = NNG_ENOMEM;
+			goto done;
+		}
+		nni_list_append(&l, h);
+		if (((h->name = nni_strdup(name)) == NULL) ||
+		    ((h->value = nni_strdup(value)) == NULL)) {
+			rv = NNG_ENOMEM;
+			goto done;
+		}
+
+		name = nl;
+	}
+
+	nni_mtx_lock(&ep->mtx);
+	while ((h = nni_list_first(&ep->headers)) != NULL) {
+		nni_list_remove(&ep->headers, h);
+		nni_strfree(h->name);
+		nni_strfree(h->value);
+		NNI_FREE_STRUCT(h);
+	}
+	while ((h = nni_list_first(&l)) != NULL) {
+		nni_list_remove(&l, h);
+		nni_list_append(&ep->headers, h);
+	}
+	nni_mtx_unlock(&ep->mtx);
+	rv = 0;
+
+done:
+	while ((h = nni_list_first(&l)) != NULL) {
+		nni_list_remove(&l, h);
+		nni_strfree(h->name);
+		nni_strfree(h->value);
+		NNI_FREE_STRUCT(h);
+	}
+	nni_free(dupstr, duplen);
+	return (rv);
+}
+
+static int
+ws_ep_setopt_reqhdrs(void *arg, const void *v, size_t sz)
+{
+	ws_ep *ep = arg;
+
+	if (ep->mode == NNI_EP_MODE_LISTEN) {
+		return (NNG_EREADONLY);
+	}
+	return (ws_ep_setopt_headers(ep, v, sz));
+}
+
+static int
+ws_ep_setopt_reshdrs(void *arg, const void *v, size_t sz)
+{
+	ws_ep *ep = arg;
+
+	if (ep->mode == NNI_EP_MODE_DIAL) {
+		return (NNG_EREADONLY);
+	}
+	return (ws_ep_setopt_headers(ep, v, sz));
 }
 
 static int
@@ -347,11 +501,38 @@ ws_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 	return (rv);
 }
 
+static int
+ws_pipe_getopt_reshdrs(void *arg, void *v, size_t *szp)
+{
+	ws_pipe *   p = arg;
+	const char *s;
+
+	if ((s = nni_ws_response_headers(p->ws)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	return (nni_getopt_str(s, v, szp));
+}
+
+static int
+ws_pipe_getopt_reqhdrs(void *arg, void *v, size_t *szp)
+{
+	ws_pipe *   p = arg;
+	const char *s;
+
+	if ((s = nni_ws_request_headers(p->ws)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	return (nni_getopt_str(s, v, szp));
+}
+
 static nni_tran_pipe_option ws_pipe_options[] = {
 
 	// clang-format off
 	{ NNG_OPT_LOCADDR, ws_pipe_getopt_locaddr },
 	{ NNG_OPT_REMADDR, ws_pipe_getopt_remaddr },
+	{ NNG_OPT_WS_REQUEST_HEADERS, ws_pipe_getopt_reqhdrs },
+	{ NNG_OPT_WS_RESPONSE_HEADERS, ws_pipe_getopt_reshdrs },
+
 	// clang-format on
 
 	// terminate list
@@ -374,6 +555,17 @@ static nni_tran_ep_option ws_ep_options[] = {
 	    .eo_getopt = ws_ep_getopt_recvmaxsz,
 	    .eo_setopt = ws_ep_setopt_recvmaxsz,
 	},
+	{
+	    .eo_name   = NNG_OPT_WS_REQUEST_HEADERS,
+	    .eo_getopt = NULL,
+	    .eo_setopt = ws_ep_setopt_reqhdrs,
+	},
+	{
+	    .eo_name   = NNG_OPT_WS_RESPONSE_HEADERS,
+	    .eo_getopt = NULL,
+	    .eo_setopt = ws_ep_setopt_reshdrs,
+	},
+
 	// terminate list
 	{ NULL, NULL, NULL },
 };
@@ -381,7 +573,8 @@ static nni_tran_ep_option ws_ep_options[] = {
 static void
 ws_ep_fini(void *arg)
 {
-	ws_ep *ep = arg;
+	ws_ep * ep = arg;
+	ws_hdr *hdr;
 
 	nni_aio_stop(ep->accaio);
 	nni_aio_stop(ep->connaio);
@@ -392,6 +585,12 @@ ws_ep_fini(void *arg)
 	}
 	if (ep->dialer != NULL) {
 		nni_ws_dialer_fini(ep->dialer);
+	}
+	while ((hdr = nni_list_first(&ep->headers)) != NULL) {
+		nni_list_remove(&ep->headers, hdr);
+		nni_strfree(hdr->name);
+		nni_strfree(hdr->value);
+		NNI_FREE_STRUCT(hdr);
 	}
 	nni_strfree(ep->addr);
 	nni_strfree(ep->protoname);
@@ -493,6 +692,7 @@ ws_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	}
 
 	nni_mtx_init(&ep->mtx);
+	NNI_LIST_INIT(&ep->headers, ws_hdr, node);
 
 	// List of pipes (server only).
 	nni_aio_list_init(&ep->aios);

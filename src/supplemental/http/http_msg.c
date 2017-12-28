@@ -520,6 +520,32 @@ http_res_prepare(nni_http_res *res)
 	return (rv);
 }
 
+char *
+nni_http_req_headers(nni_http_req *req)
+{
+	char * s;
+	size_t len;
+
+	len = http_sprintf_headers(NULL, 0, &req->hdrs) + 1;
+	if ((s = nni_alloc(len)) != NULL) {
+		http_sprintf_headers(s, len, &req->hdrs);
+	}
+	return (s);
+}
+
+char *
+nni_http_res_headers(nni_http_res *res)
+{
+	char * s;
+	size_t len;
+
+	len = http_sprintf_headers(NULL, 0, &res->hdrs) + 1;
+	if ((s = nni_alloc(len)) != NULL) {
+		http_sprintf_headers(s, len, &res->hdrs);
+	}
+	return (s);
+}
+
 int
 nni_http_req_get_buf(nni_http_req *req, void **data, size_t *szp)
 {

@@ -59,6 +59,8 @@ extern int           nni_ws_peer_addr(nni_ws *, nni_sockaddr *);
 extern void          nni_ws_close(nni_ws *);
 extern void          nni_ws_close_error(nni_ws *, uint16_t);
 extern void          nni_ws_fini(nni_ws *);
+extern const char *  nni_ws_response_headers(nni_ws *);
+extern const char *  nni_ws_request_headers(nni_ws *);
 
 // The implementation will send periodic PINGs, and respond with PONGs.
 

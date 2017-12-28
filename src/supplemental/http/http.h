@@ -45,7 +45,8 @@ extern const char *nni_http_req_get_header(nni_http_req *, const char *);
 extern const char *nni_http_req_get_version(nni_http_req *);
 extern const char *nni_http_req_get_uri(nni_http_req *);
 extern const char *nni_http_req_get_method(nni_http_req *);
-extern int nni_http_req_parse(nni_http_req *, void *, size_t, size_t *);
+extern int   nni_http_req_parse(nni_http_req *, void *, size_t, size_t *);
+extern char *nni_http_req_headers(nni_http_req *);
 
 extern int  nni_http_res_init(nni_http_res **);
 extern void nni_http_res_fini(nni_http_res *);
@@ -60,12 +61,13 @@ extern const char *nni_http_res_get_header(nni_http_res *, const char *);
 extern const char *nni_http_res_get_version(nni_http_res *);
 extern const char *nni_http_res_get_reason(nni_http_res *);
 extern int         nni_http_res_get_status(nni_http_res *);
-extern int  nni_http_res_parse(nni_http_res *, void *, size_t, size_t *);
-extern int  nni_http_res_set_data(nni_http_res *, const void *, size_t);
-extern int  nni_http_res_copy_data(nni_http_res *, const void *, size_t);
-extern int  nni_http_res_alloc_data(nni_http_res *, size_t);
-extern void nni_http_res_get_data(nni_http_res *, void **, size_t *);
-extern int  nni_http_res_init_error(nni_http_res **, uint16_t);
+extern int   nni_http_res_parse(nni_http_res *, void *, size_t, size_t *);
+extern int   nni_http_res_set_data(nni_http_res *, const void *, size_t);
+extern int   nni_http_res_copy_data(nni_http_res *, const void *, size_t);
+extern int   nni_http_res_alloc_data(nni_http_res *, size_t);
+extern void  nni_http_res_get_data(nni_http_res *, void **, size_t *);
+extern int   nni_http_res_init_error(nni_http_res **, uint16_t);
+extern char *nni_http_res_headers(nni_http_res *);
 
 // HTTP status codes.  This list is not exhaustive.
 enum { NNI_HTTP_STATUS_CONTINUE                  = 100,
