@@ -219,8 +219,8 @@ http_uri_canonify(char *path)
 		*tmp = '\0';
 	}
 	// If the URI was absolute, make it relative.
-	if ((strncasecmp(path, "http://", strlen("http://")) == 0) ||
-	    (strncasecmp(path, "https://", strlen("https://")) == 0)) {
+	if ((nni_strncasecmp(path, "http://", strlen("http://")) == 0) ||
+	    (nni_strncasecmp(path, "https://", strlen("https://")) == 0)) {
 		// Skip past the ://
 		path = strchr(path, ':');
 		path += 3;
