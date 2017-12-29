@@ -26,12 +26,12 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: Visual Studio 15 2017
       CFG: Debug
-      VSINSTALL: '"Microsoft Visual Studio"/2017/Community/VC/Auxiliary/Build'      
+      VSINSTALL: '"Microsoft Visual Studio"/2017/Community/VC/Auxiliary/Build'
       MSVC_PLATFORM: x86
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
       GENERATOR: Visual Studio 15 2017 Win64
       CFG: Debug
-      VSINSTALL: '"Microsoft Visual Studio"/2017/Community/VC/Auxiliary/Build'      
+      VSINSTALL: '"Microsoft Visual Studio"/2017/Community/VC/Auxiliary/Build'
       MSVC_PLATFORM: amd64
 
 

@@ -10,7 +10,7 @@ language: generic
 sudo: false
 matrix:
   include:
-    # stock build (4.8 probably) - we also do a clang-format check here.
+    # clang 4.0 -  we also do a clang-format check here.
     - os: linux
       dist: trusty
       addons:
@@ -19,55 +19,11 @@ matrix:
             - llvm-toolchain-trusty-4.0
           packages:
             - colordiff
+            - clang-4.0
             - clang-format-4.0
-      env: CLANG_FORMAT=clang-format-4.0
+            - ninja-build
+      env: CC=clang-4.0 CLANG_FORMAT=clang-format-4.0
   
-    # default gcc 4.9 build - we also do a clang-format check here.
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-            - llvm-toolchain-trusty-4.0
-          packages:
-            - colordiff
-            - gcc-4.9
-            - clang-format-4.0
-      env: CC=gcc-4.9
-
-    # gcc 7 (latest version) build
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-7
-      env: CC=gcc-7
-    # clang v4 build
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-4.0
-          packages:
-            - clang-4.0
-      env: CC=clang-4.0
-
-    # release build using clang 4
-    - os: linux
-      dist: trusty
-      addons:
-        apt:
-          sources:
-            - llvm-toolchain-trusty-4.0
-          packages:
-            - clang-4.0
-      env: CC=clang-4.0 BUILD_TYPE=Release
-
     # code coverage build
     - os: linux
       dist: trusty
@@ -78,25 +34,24 @@ matrix:
           packages:
             - gcc-7
             - g++-7
+            - ninja-build
       env: CC=gcc-7 CXX=g++-7 COVERAGE=ON GCOV=gcov-7
 
-    # One MacOS X build
-    - os: osx
-      env: CC=clang
+    # mac OS is currently unusable at Travis, so disabled.
+    # - os: osx
+    #   env: CC=clang
 
 before_script:
   - uname -a
-  - printenv
   - cmake --version
 
 script:
   # Perform out-of-source build
   - mkdir build
   - cd build
-  # Perform CMake backend generation, build, and test
-  - cmake -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DNNG_ENABLE_COVERAGE=${COVERAGE:-OFF} ..
-  - cmake --build . -- -j4
-  - ctest --output-on-failure -C ${BUILD_TYPE:-Debug}
+  - cmake -G Ninja -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DNNG_ENABLE_COVERAGE=${COVERAGE:-OFF} ..
+  - ninja
+  - ninja test
   - env CLANG_FORMAT=${CLANG_FORMAT:-no} ../etc/format-check.sh
 
 after_success:

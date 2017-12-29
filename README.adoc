@@ -1,8 +1,7 @@
 = nng - nanomsg-next-gen
 
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
-https:https://img.shields.io/circleci/project/github/nanomsg/nng.svg?label=[Linux Status,link="https://circleci.com/gh/nanomsg/nng"]
-image:https://img.shields.io/travis/nanomsg/nng/master.svg?label=linux[Linux Status,link="https://travis-ci.org/nanomsg/nng"]
+image:https://img.shields.io/circleci/project/github/nanomsg/nng.svg?label=[Linux Status,link="https://circleci.com/gh/nanomsg/nng"]
 image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/nanomsg/nng"]
 image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=coverage[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
 
