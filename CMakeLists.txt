@@ -5,7 +5,7 @@
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
-#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
+#   Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -171,6 +171,7 @@ endif ()
 option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
 if (NNG_TRANSPORT_WS)
     add_definitions (-DNNG_HAVE_WEBSOCKET)
+    set(NNG_SUPP_WEBSOCKET ON)
 endif ()
 
 option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
@@ -183,6 +184,13 @@ if (NNG_TRANSPORT_TLS)
     set(NNG_MBEDTLS_ENABLE ON)
     add_definitions (-DNNG_MBEDTLS_ENABLE)
     add_definitions (-DNNG_HAVE_TLS)
+endif()
+
+# dependencies
+if (NNG_SUPP_WEBSOCKET)
+    set(NNG_SUPP_HTTP ON)
+    set(NNG_SUPP_BASE64 ON)
+    set(NNG_SUPP_SHA1 ON)
 endif()
 
 #  Platform checks.

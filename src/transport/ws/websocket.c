@@ -532,7 +532,6 @@ static nni_tran_pipe_option ws_pipe_options[] = {
 	{ NNG_OPT_REMADDR, ws_pipe_getopt_remaddr },
 	{ NNG_OPT_WS_REQUEST_HEADERS, ws_pipe_getopt_reqhdrs },
 	{ NNG_OPT_WS_RESPONSE_HEADERS, ws_pipe_getopt_reshdrs },
-
 	// clang-format on
 
 	// terminate list
