@@ -8,28 +8,15 @@ environment:
     # array of all environments used to test builds
     # Note that we require relatively modern Visual Studio, in order to pick
     # up snprintf.  You don't want the older versions of VS, really!
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      GENERATOR: NMake Makefiles
-      CFG: Debug
-      VSINSTALL: '"Microsoft Visual Studio 14.0"/VC'
-      MSVC_PLATFORM: x86
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      GENERATOR: Visual Studio 14 2015
-      CFG: Debug
-      VSINSTALL: '"Microsoft Visual Studio 14.0"/VC'
-      MSVC_PLATFORM: x86
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      GENERATOR: Visual Studio 14 2015 Win64
-      CFG: Debug
-      VSINSTALL: '"Microsoft Visual Studio 14.0"/VC'
-      MSVC_PLATFORM: amd64
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: Visual Studio 15 2017
+#      GENERATOR: Visual Studio 15 2017
+      GENERATOR: Ninja
       CFG: Debug
       VSINSTALL: '"Microsoft Visual Studio"/2017/Community/VC/Auxiliary/Build'
       MSVC_PLATFORM: x86
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      GENERATOR: Visual Studio 15 2017 Win64
+#      GENERATOR: Visual Studio 15 2017 Win64
+      GENERATOR: Ninja
       CFG: Debug
       VSINSTALL: '"Microsoft Visual Studio"/2017/Community/VC/Auxiliary/Build'
       MSVC_PLATFORM: amd64
@@ -49,10 +36,8 @@ install:
           (New-Object Net.WebClient).DownloadFile($url, $asciidoctor)
       }
       gem install --no-document --local $asciidoctor
+      choco install ninja
 
-# This section is a workaround for: https://github.com/nanomsg/nanomsg/issues/683
-#before_build:
-#  - del "C:\Program Files (x86)\MSBuild\%VS_VERSION%\Microsoft.Common.targets\ImportAfter\Xamarin.Common.targets"
 
 init:
   - cmake --version
