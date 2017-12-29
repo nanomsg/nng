@@ -104,6 +104,7 @@ TestMain("WebSocket Transport", {
 		});
 		trantest_next_address(addr, "ws://*:%u/test");
 		So(nng_listen(s1, addr, NULL, 0) == 0);
+		nng_msleep(100);
 		// reset port back one
 		trantest_prev_address(addr, "ws://127.0.0.1:%u/test");
 		So(nng_dial(s2, addr, NULL, 0) == 0);

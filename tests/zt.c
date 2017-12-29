@@ -32,6 +32,7 @@ int
 mkdir(const char *path, int mode)
 {
 	CreateDirectory(path, NULL);
+	return (0);
 }
 #else
 #include <sys/stat.h>
@@ -146,8 +147,7 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 		So(nng_dialer_getopt_ms(d, NNG_OPT_ZT_PING_TIME, &t) == 0);
 		So(t > 1000 && t < 3600000); // 1 sec - 1 hour
 
-		int rv = nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20);
-
+		So(nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20) == 0);
 		So(nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20) == 0);
 		So(nng_dialer_setopt_ms(d, NNG_OPT_ZT_PING_TIME, 2000) == 0);
 		So(nng_listener_setopt_int(l, NNG_OPT_ZT_PING_COUNT, 0) == 0);
@@ -203,7 +203,6 @@ TestMain("ZeroTier Transport", {
 		nng_listener l;
 		nng_socket   s;
 		char         addr[NNG_MAXADDRLEN];
-		int          rv;
 
 		So(nng_zt_register() == 0);
 
@@ -246,7 +245,6 @@ TestMain("ZeroTier Transport", {
 		nng_dialer d;
 		nng_socket s;
 		char       addr[NNG_MAXADDRLEN];
-		int        rv;
 		// uint64_t   node = 0xb000072fa6ull; // my personal host
 		uint64_t node = 0x2d2f619cccull; // my personal host
 
@@ -266,7 +264,6 @@ TestMain("ZeroTier Transport", {
 		nng_listener l;
 		nng_socket   s;
 		char         addr[NNG_MAXADDRLEN];
-		int          rv;
 		uint64_t     node1 = 0;
 		uint64_t     node2 = 0;
 
@@ -315,7 +312,6 @@ TestMain("ZeroTier Transport", {
 		nng_socket   s2;
 		char         addr1[NNG_MAXADDRLEN];
 		char         addr2[NNG_MAXADDRLEN];
-		int          rv;
 		uint64_t     node;
 
 		port = 9944;

@@ -30,13 +30,11 @@ TestMain("HTTP Client", {
 	atexit(nng_fini);
 
 	Convey("Given a TCP connection to httpbin.org", {
-		nni_plat_tcp_ep *  ep;
-		nni_plat_tcp_pipe *p;
-		nng_aio *          aio;
-		nni_aio *          iaio;
-		nng_sockaddr       rsa;
-		nni_http_client *  cli;
-		nni_http *         http;
+		nng_aio *        aio;
+		nni_aio *        iaio;
+		nng_sockaddr     rsa;
+		nni_http_client *cli;
+		nni_http *       http;
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		iaio         = (nni_aio *) aio;

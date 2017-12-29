@@ -163,6 +163,12 @@ nni_win_tcp_pipe_cancel(nni_win_event *evt)
 static void
 nni_win_tcp_pipe_finish(nni_win_event *evt, nni_aio *aio)
 {
+	if ((evt->status == 0) && (evt->count == 0)) {
+		// Windows sometimes returns a zero read.  Convert these
+		// into an NNG_ECLOSED.  (We are never supposed to come
+		// back with zero length read.)
+		evt->status = NNG_ECLOSED;
+	}
 	nni_aio_finish(aio, evt->status, evt->count);
 }
 
@@ -263,10 +269,10 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 
 	ep->s = INVALID_SOCKET;
 
-	if (rsa->s_un.s_family != NNG_AF_UNSPEC) {
+	if ((rsa != NULL) && (rsa->s_un.s_family != NNG_AF_UNSPEC)) {
 		ep->remlen = nni_win_nn2sockaddr(&ep->remaddr, rsa);
 	}
-	if (lsa->s_un.s_family != NNG_AF_UNSPEC) {
+	if ((lsa != NULL) && (lsa->s_un.s_family != NNG_AF_UNSPEC)) {
 		ep->loclen = nni_win_nn2sockaddr(&ep->locaddr, lsa);
 	}
 

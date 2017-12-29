@@ -14,20 +14,19 @@
 
 #ifdef NNG_PLATFORM_WINDOWS
 
+#include <stdlib.h>
+
 void *
 nni_alloc(size_t sz)
 {
-	void *v;
-
-	v = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sz);
-	return (v);
+	return (calloc(sz, 1));
 }
 
 void
 nni_free(void *b, size_t z)
 {
 	NNI_ARG_UNUSED(z);
-	HeapFree(GetProcessHeap(), 0, b);
+	free(b);
 }
 
 void

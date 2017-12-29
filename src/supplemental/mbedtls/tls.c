@@ -76,11 +76,11 @@ struct nni_tls {
 	bool                tls_closed; // upper TLS layer closed
 	bool                tcp_closed; // underlying TCP buffer closed
 	uint8_t *           sendbuf;    // send buffer
-	int                 sendlen;    // amount of data in send buffer
-	int                 sendoff;    // offset of start of send data
+	size_t              sendlen;    // amount of data in send buffer
+	size_t              sendoff;    // offset of start of send data
 	uint8_t *           recvbuf;    // recv buffer
-	int                 recvlen;    // amount of data in recv buffer
-	int                 recvoff;    // offset of start of recv data
+	size_t              recvlen;    // amount of data in recv buffer
+	size_t              recvoff;    // offset of start of recv data
 	nni_list            sends;      // upper side sends
 	nni_list            recvs;      // upper recv aios
 	nni_aio *           handshake;  // handshake aio (upper)

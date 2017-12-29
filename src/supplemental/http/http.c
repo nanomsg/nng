@@ -299,11 +299,12 @@ http_rd_cancel(nni_aio *aio, int rv)
 
 	nni_mtx_lock(&http->mtx);
 	if (nni_aio_list_active(aio)) {
-		nni_aio_list_remove(aio);
 		if (aio == nni_list_first(&http->rdq)) {
-			http_close(http);
+			nni_aio_cancel(http->rd_aio, NNG_ECANCELED);
+		} else {
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, rv);
 		}
-		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&http->mtx);
 }
