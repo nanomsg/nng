@@ -169,10 +169,10 @@ struct zt_node {
 	nni_idhash *  zn_rpipes;
 	nni_idhash *  zn_peers; // indexed by remote address
 	nni_aio *     zn_rcv4_aio;
-	char *        zn_rcv4_buf;
+	uint8_t *     zn_rcv4_buf;
 	nng_sockaddr  zn_rcv4_addr;
 	nni_aio *     zn_rcv6_aio;
-	char *        zn_rcv6_buf;
+	uint8_t *     zn_rcv6_buf;
 	nng_sockaddr  zn_rcv6_addr;
 	nni_thr       zn_bgthr;
 	nni_time      zn_bgtime;
@@ -1312,7 +1312,7 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	zt_node *            ztn  = userptr;
 	nni_plat_udp *       udp;
 	uint16_t             port;
-	char *               buf;
+	uint8_t *            buf;
 	zt_send_hdr *        hdr;
 
 	NNI_ARG_UNUSED(thr);
@@ -1355,7 +1355,7 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	buf += sizeof(*hdr);
 
 	memcpy(buf, data, len);
-	nni_aio_set_data(aio, hdr, 0);
+	nni_aio_set_data(aio, 0, hdr);
 	hdr->sa  = addr;
 	hdr->len = len;
 
