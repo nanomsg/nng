@@ -8,7 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifdef NNG_MBEDTLS_ENABLE
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -29,7 +28,7 @@
 
 #include "core/nng_impl.h"
 
-#include "supplemental/tls.h"
+#include "supplemental/tls/tls.h"
 
 // Implementation note.  This implementation buffers data between the TLS
 // encryption layer (mbedTLS) and the underlying TCP socket.  As a result,
@@ -66,6 +65,7 @@ typedef struct nni_tls_certkey {
 struct nni_tls {
 	nni_plat_tcp_pipe * tcp;
 	mbedtls_ssl_context ctx;
+	nng_tls_config *    cfg; // kept so we can release it
 	nni_mtx             lk;
 	nni_aio *           tcp_send;
 	nni_aio *           tcp_recv;
@@ -86,7 +86,7 @@ struct nni_tls {
 	nni_aio *           handshake;  // handshake aio (upper)
 };
 
-struct nni_tls_config {
+struct nng_tls_config {
 	mbedtls_ssl_config cfg_ctx;
 	nni_mtx            lk;
 	bool               active;
@@ -99,6 +99,8 @@ struct nni_tls_config {
 	mbedtls_x509_crl crl;
 	bool             have_ca_certs;
 	bool             have_crl;
+
+	int refcnt; // servers increment the reference
 
 	nni_list certkeys;
 };
@@ -142,7 +144,7 @@ nni_tls_random(void *arg, unsigned char *buf, size_t sz)
 {
 #ifdef NNG_TLS_USE_CTR_DRBG
 	int             rv;
-	nni_tls_config *cfg = arg;
+	nng_tls_config *cfg = arg;
 	NNI_ARG_UNUSED(arg);
 
 	nni_mtx_lock(&cfg->rng_lk);
@@ -155,9 +157,17 @@ nni_tls_random(void *arg, unsigned char *buf, size_t sz)
 }
 
 void
-nni_tls_config_fini(nni_tls_config *cfg)
+nng_tls_config_fini(nng_tls_config *cfg)
 {
 	nni_tls_certkey *ck;
+
+	nni_mtx_lock(&cfg->lk);
+	cfg->refcnt--;
+	if (cfg->refcnt != 0) {
+		nni_mtx_unlock(&cfg->lk);
+		return;
+	}
+	nni_mtx_unlock(&cfg->lk);
 
 	mbedtls_ssl_config_free(&cfg->cfg_ctx);
 #ifdef NNG_TLS_USE_CTR_DRBG
@@ -189,9 +199,9 @@ nni_tls_config_fini(nni_tls_config *cfg)
 }
 
 int
-nni_tls_config_init(nni_tls_config **cpp, int mode)
+nng_tls_config_init(nng_tls_config **cpp, enum nng_tls_mode mode)
 {
-	nni_tls_config *cfg;
+	nng_tls_config *cfg;
 	int             rv;
 	int             sslmode;
 	int             authmode;
@@ -199,8 +209,9 @@ nni_tls_config_init(nni_tls_config **cpp, int mode)
 	if ((cfg = NNI_ALLOC_STRUCT(cfg)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	cfg->refcnt = 1;
 	nni_mtx_init(&cfg->lk);
-	if (mode == NNI_TLS_CONFIG_SERVER) {
+	if (mode == NNG_TLS_MODE_SERVER) {
 		sslmode  = MBEDTLS_SSL_IS_SERVER;
 		authmode = MBEDTLS_SSL_VERIFY_NONE;
 	} else {
@@ -216,7 +227,7 @@ nni_tls_config_init(nni_tls_config **cpp, int mode)
 	rv = mbedtls_ssl_config_defaults(&cfg->cfg_ctx, sslmode,
 	    MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
 	if (rv != 0) {
-		nni_tls_config_fini(cfg);
+		nng_tls_config_fini(cfg);
 		return (rv);
 	}
 
@@ -231,7 +242,7 @@ nni_tls_config_init(nni_tls_config **cpp, int mode)
 	rv = mbedtls_ctr_drbg_seed(
 	    &cfg->rng_ctx, nni_tls_get_entropy, NULL, NULL, 0);
 	if (rv != 0) {
-		nni_tls_config_fini(cfg);
+		nng_tls_config_fini(cfg);
 		return (rv);
 	}
 #endif
@@ -241,6 +252,14 @@ nni_tls_config_init(nni_tls_config **cpp, int mode)
 
 	*cpp = cfg;
 	return (0);
+}
+
+void
+nni_tls_config_hold(nng_tls_config *cfg)
+{
+	nni_mtx_lock(&cfg->lk);
+	cfg->refcnt++;
+	nni_mtx_unlock(&cfg->lk);
 }
 
 void
@@ -263,6 +282,10 @@ nni_tls_fini(nni_tls *tp)
 	nni_mtx_fini(&tp->lk);
 	nni_free(tp->recvbuf, NNG_TLS_MAX_RECV_SIZE);
 	nni_free(tp->sendbuf, NNG_TLS_MAX_RECV_SIZE);
+	if (tp->cfg != NULL) {
+		// release the hold we got on it
+		nng_tls_config_fini(tp->cfg);
+	}
 	NNI_FREE_STRUCT(tp);
 }
 
@@ -290,7 +313,7 @@ nni_tls_mkerr(int err)
 }
 
 int
-nni_tls_init(nni_tls **tpp, nni_tls_config *cfg, nni_plat_tcp_pipe *tcp)
+nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_plat_tcp_pipe *tcp)
 {
 	nni_tls *tp;
 	int      rv;
@@ -348,6 +371,8 @@ nni_tls_init(nni_tls **tpp, nni_tls_config *cfg, nni_plat_tcp_pipe *tcp)
 		}
 		cfg->active = true;
 	}
+	cfg->refcnt++;
+	tp->cfg = cfg;
 	nni_mtx_unlock(&cfg->lk);
 
 	nni_aio_list_init(&tp->sends);
@@ -595,6 +620,18 @@ nni_tls_recv(nni_tls *tp, nni_aio *aio)
 	nni_mtx_unlock(&tp->lk);
 }
 
+int
+nni_tls_peername(nni_tls *tp, nni_sockaddr *sa)
+{
+	return (nni_plat_tcp_pipe_peername(tp->tcp, sa));
+}
+
+int
+nni_tls_sockname(nni_tls *tp, nni_sockaddr *sa)
+{
+	return (nni_plat_tcp_pipe_sockname(tp->tcp, sa));
+}
+
 void
 nni_tls_do_handshake(nni_tls *tp)
 {
@@ -758,7 +795,7 @@ nni_tls_verified(nni_tls *tp)
 }
 
 int
-nni_tls_config_server_name(nni_tls_config *cfg, const char *name)
+nng_tls_config_server_name(nng_tls_config *cfg, const char *name)
 {
 	int rv;
 	nni_mtx_lock(&cfg->lk);
@@ -776,7 +813,7 @@ nni_tls_config_server_name(nni_tls_config *cfg, const char *name)
 }
 
 int
-nni_tls_config_auth_mode(nni_tls_config *cfg, int mode)
+nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode)
 {
 	nni_mtx_lock(&cfg->lk);
 	if (cfg->active) {
@@ -784,15 +821,15 @@ nni_tls_config_auth_mode(nni_tls_config *cfg, int mode)
 		return (NNG_ESTATE);
 	}
 	switch (mode) {
-	case NNI_TLS_CONFIG_AUTH_MODE_NONE:
+	case NNG_TLS_AUTH_MODE_NONE:
 		mbedtls_ssl_conf_authmode(
 		    &cfg->cfg_ctx, MBEDTLS_SSL_VERIFY_NONE);
 		break;
-	case NNI_TLS_CONFIG_AUTH_MODE_OPTIONAL:
+	case NNG_TLS_AUTH_MODE_OPTIONAL:
 		mbedtls_ssl_conf_authmode(
 		    &cfg->cfg_ctx, MBEDTLS_SSL_VERIFY_OPTIONAL);
 		break;
-	case NNI_TLS_CONFIG_AUTH_MODE_REQUIRED:
+	case NNG_TLS_AUTH_MODE_REQUIRED:
 		mbedtls_ssl_conf_authmode(
 		    &cfg->cfg_ctx, MBEDTLS_SSL_VERIFY_REQUIRED);
 		break;
@@ -844,7 +881,7 @@ nni_tls_copy_key_cert_material(
 }
 
 int
-nni_tls_config_cert(nni_tls_config *cfg, const uint8_t *key, size_t sz)
+nng_tls_config_cert(nng_tls_config *cfg, const uint8_t *key, size_t sz)
 {
 	int              rv = 0;
 	nni_tls_certkey *ck;
@@ -885,7 +922,7 @@ err:
 }
 
 int
-nni_tls_config_key(nni_tls_config *cfg, const uint8_t *key, size_t sz)
+nng_tls_config_key(nng_tls_config *cfg, const uint8_t *key, size_t sz)
 {
 	int              rv = 0;
 	nni_tls_certkey *ck;
@@ -924,7 +961,7 @@ err:
 }
 
 int
-nni_tls_config_pass(nni_tls_config *cfg, const char *pass)
+nng_tls_config_pass(nng_tls_config *cfg, const char *pass)
 {
 	int              rv = 0;
 	nni_tls_certkey *ck;
@@ -964,7 +1001,7 @@ err:
 }
 
 int
-nni_tls_config_ca_cert(nni_tls_config *cfg, const uint8_t *data, size_t sz)
+nng_tls_config_ca_cert(nng_tls_config *cfg, const uint8_t *data, size_t sz)
 {
 	uint8_t *tmp;
 	size_t   len = sz;
@@ -998,7 +1035,7 @@ err:
 }
 
 int
-nni_tls_config_crl(nni_tls_config *cfg, const uint8_t *data, size_t sz)
+nng_tls_config_crl(nng_tls_config *cfg, const uint8_t *data, size_t sz)
 {
 	int      rv;
 	uint8_t *tmp;
@@ -1028,4 +1065,3 @@ err:
 	nni_free(tmp, len);
 	return (rv);
 }
-#endif // NNG_MBEDTLS_ENABLE

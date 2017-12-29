@@ -157,6 +157,17 @@ Transport Options
 The following transport options are available. Note that
 setting these must be done before the transport is started.
 
+`NNG_OPT_TLS_CONFIG`::
+
+This option is used to set or obtain the TLS configuration
+object (type `nng_tls_config *`), which is passed as a pointer.
+Setting this option adds a reference to the object; obtaining the
+object pointer does not.  (Therefore when retrieving this option,
+care must be taken not to access it after the endpoint is closed.)
+
+Note that configuration object is not modifiable once it has been
+used in a running TLS stream.
+
 `NNG_OPT_TLS_CA_CERT`::
 
 This is a write-only binay object containing a certificate
@@ -232,6 +243,7 @@ if the `NNG_OPT_TLS_AUTH_MODE` option is set to
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>
+<<nng_tls_init#,nng_tls_init(3)>>
 
 COPYRIGHT
 ---------

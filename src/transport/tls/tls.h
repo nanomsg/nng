@@ -49,13 +49,11 @@ NNG_DECL int nng_tls_register(void);
 // and off on servers/listeners, by default.
 #define NNG_OPT_TLS_AUTH_MODE "tls:auth-mode"
 
-extern int nng_tls_auth_mode_required;
-extern int nng_tls_auth_mode_none;
-extern int nng_tls_auth_mode_optional;
-
 // NNG_OPT_TLS_AUTH_VERIFIED is a boolean that can be read on pipes,
 // indicating whether the peer certificate is verified.
 #define NNG_OPT_TLS_AUTH_VERIFIED "tls:auth-verified"
+
+#define NNG_OPT_TLS_CONFIG "tls:config"
 
 // XXX: TBD: Ciphersuite selection and reporting.  Session reuse?
 

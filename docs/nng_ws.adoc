@@ -25,6 +25,7 @@ SYNOPSIS
 #include <nng/transport/websocket/ws.h>
 
 int nng_ws_register(void);
+int nng_wss_register(void);
 ----------
 
 DESCRIPTION
@@ -46,6 +47,11 @@ register the transport by calling `nng_ws_register`.  This function
 returns zero on success, or an nng error value if the transport
 cannot be initialized for any reason.
 
+If TLS support is enabled in the library, secure WebSockets (over TLS v1.2) 
+can be used as well, but the secure transport may have to be registered using
+the `nng_wss_register` function.  (Note that this function will not be
+present if TLS support was not enabled in the library.)
+
 URI Format
 ~~~~~~~~~~
 
@@ -56,6 +62,10 @@ is specified then port 80 is assumed.  If no path is specified then
 a path of `/` is assumed.)
 For example, the URI `ws://localhost/app/pubsub` would use
 port 80 on localhost, with the path `/app/pubsub`.
+
+Secure WebSockets (if enabled) use the scheme `wss://`, and the default
+TCP port number of 443.  Otherwise the format is the same as for regular
+WebSockets.
 
 When specifying IPv6 addresses, the address must be enclosed in
 square brackets (`[]`) to avoid confusion with the final colon
@@ -141,6 +151,15 @@ by CRLF sequences, that can be used to add furthe headers to the
 HTTP response sent when connecting.  This option can be set on listeners,
 and retrieved from pipes.
 
+`NNG_OPT_WSS_TLS_CONFIG`::
+
+This option is used on an endpoint to access the underlying TLS
+configuration object.  The value is of type `nng_tls_config *`.
+Note that attempts to set this object may fail on a listener if
+the server is already running.  Furthermore, attempts to modify the
+configuration object will fail if it is already in active use.
+This object is only available for `wss://` endpoints.
+
 // We should also look at a hook mechanism for listeners. Probably this could
 // look like NNG_OPT_WS_LISTEN_HOOK_FUNC which would take a function pointer
 // along the lines of int hook(void *, char *req_headers, char **res_headers),
@@ -150,6 +169,7 @@ and retrieved from pipes.
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>
+<<nng_tls_init#,nng_tls_init(3)>>
 
 COPYRIGHT
 ---------

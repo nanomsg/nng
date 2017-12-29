@@ -8,7 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifdef NNG_HAVE_ZEROTIER
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -2804,5 +2803,3 @@ nng_zt_register(void)
 {
 	return (nni_tran_register(&zt_tran));
 }
-
-#endif

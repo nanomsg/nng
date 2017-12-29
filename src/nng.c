@@ -405,6 +405,12 @@ nng_dialer_setopt_uint64(nng_dialer id, const char *name, uint64_t val)
 }
 
 int
+nng_dialer_setopt_ptr(nng_dialer id, const char *name, void *val)
+{
+	return (nng_dialer_setopt(id, name, &val, sizeof(val)));
+}
+
+int
 nng_dialer_getopt(nng_dialer id, const char *name, void *val, size_t *szp)
 {
 	return (nng_ep_getopt(id, name, val, szp, NNI_EP_MODE_DIAL));
@@ -426,6 +432,13 @@ nng_dialer_getopt_size(nng_dialer id, const char *name, size_t *valp)
 
 int
 nng_dialer_getopt_uint64(nng_dialer id, const char *name, uint64_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_dialer_getopt(id, name, valp, &sz));
+}
+
+int
+nng_dialer_getopt_ptr(nng_dialer id, const char *name, void **valp)
 {
 	size_t sz = sizeof(*valp);
 	return (nng_dialer_getopt(id, name, valp, &sz));
@@ -470,6 +483,12 @@ nng_listener_setopt_uint64(nng_listener id, const char *name, uint64_t val)
 }
 
 int
+nng_listener_setopt_ptr(nng_listener id, const char *name, void *val)
+{
+	return (nng_listener_setopt(id, name, &val, sizeof(val)));
+}
+
+int
 nng_listener_getopt(nng_listener id, const char *name, void *val, size_t *szp)
 {
 	return (nng_ep_getopt(id, name, val, szp, NNI_EP_MODE_LISTEN));
@@ -491,6 +510,13 @@ nng_listener_getopt_size(nng_listener id, const char *name, size_t *valp)
 
 int
 nng_listener_getopt_uint64(nng_listener id, const char *name, uint64_t *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_listener_getopt(id, name, valp, &sz));
+}
+
+int
+nng_listener_getopt_ptr(nng_listener id, const char *name, void **valp)
 {
 	size_t sz = sizeof(*valp);
 	return (nng_listener_getopt(id, name, valp, &sz));
@@ -588,6 +614,12 @@ nng_setopt_uint64(nng_socket sid, const char *name, uint64_t val)
 }
 
 int
+nng_setopt_ptr(nng_socket sid, const char *name, void *val)
+{
+	return (nng_setopt(sid, name, &val, sizeof(val)));
+}
+
+int
 nng_getopt_int(nng_socket sid, const char *name, int *valp)
 {
 	size_t sz = sizeof(*valp);
@@ -610,6 +642,13 @@ nng_getopt_uint64(nng_socket sid, const char *name, uint64_t *valp)
 
 int
 nng_getopt_ms(nng_socket sid, const char *name, nng_duration *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_getopt(sid, name, valp, &sz));
+}
+
+int
+nng_getopt_ptr(nng_socket sid, const char *name, void **valp)
 {
 	size_t sz = sizeof(*valp);
 	return (nng_getopt(sid, name, valp, &sz));

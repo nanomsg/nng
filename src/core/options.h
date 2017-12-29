@@ -58,6 +58,9 @@ extern int nni_setopt_size(size_t *, const void *, size_t, size_t, size_t);
 // nni_getopt_size obtains a size_t option.
 extern int nni_getopt_size(size_t, void *, size_t *);
 
+// nni_getopt_ptr obtains a pointer option.
+extern int nni_getopt_ptr(void *, void *, size_t *);
+
 extern int nni_chkopt_ms(const void *, size_t);
 extern int nni_chkopt_int(const void *, size_t, int, int);
 extern int nni_chkopt_size(const void *, size_t, size_t, size_t);

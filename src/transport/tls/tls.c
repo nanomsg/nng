@@ -14,7 +14,7 @@
 
 #include "core/nng_impl.h"
 
-#include "supplemental/tls.h"
+#include "supplemental/tls/tls.h"
 #include "tls.h"
 
 // TLS over TCP transport.   Platform specific TCP operations must be
@@ -61,7 +61,7 @@ struct nni_tls_ep {
 	nni_aio *        aio;
 	nni_aio *        user_aio;
 	nni_mtx          mtx;
-	nni_tls_config * cfg;
+	nng_tls_config * cfg;
 };
 
 static void nni_tls_pipe_send_cb(void *);
@@ -477,7 +477,7 @@ nni_tls_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
 	nng_sockaddr  sa;
 
 	memset(&sa, 0, sizeof(sa));
-	if ((rv = nni_plat_tcp_pipe_sockname(p->tcp, &sa)) == 0) {
+	if ((rv = nni_tls_sockname(p->tls, &sa)) == 0) {
 		rv = nni_getopt_sockaddr(&sa, v, szp);
 	}
 	return (rv);
@@ -491,7 +491,7 @@ nni_tls_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 	nng_sockaddr  sa;
 
 	memset(&sa, 0, sizeof(sa));
-	if ((rv = nni_plat_tcp_pipe_peername(p->tcp, &sa)) == 0) {
+	if ((rv = nni_tls_peername(p->tls, &sa)) == 0) {
 		rv = nni_getopt_sockaddr(&sa, v, szp);
 	}
 	return (rv);
@@ -589,7 +589,7 @@ nni_tls_ep_fini(void *arg)
 		nni_plat_tcp_ep_fini(ep->tep);
 	}
 	if (ep->cfg) {
-		nni_tls_config_fini(ep->cfg);
+		nng_tls_config_fini(ep->cfg);
 	}
 	nni_aio_fini(ep->aio);
 	nni_mtx_fini(&ep->mtx);
@@ -599,18 +599,18 @@ nni_tls_ep_fini(void *arg)
 static int
 nni_tls_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 {
-	nni_tls_ep * ep;
-	int          rv;
-	char         buf[NNG_MAXADDRLEN + 1];
-	char *       rhost;
-	char *       rserv;
-	char *       lhost;
-	char *       lserv;
-	nni_sockaddr rsa, lsa;
-	nni_aio *    aio;
-	int          passive;
-	int          tlsmode;
-	int          authmode;
+	nni_tls_ep *      ep;
+	int               rv;
+	char              buf[NNG_MAXADDRLEN + 1];
+	char *            rhost;
+	char *            rserv;
+	char *            lhost;
+	char *            lserv;
+	nni_sockaddr      rsa, lsa;
+	nni_aio *         aio;
+	int               passive;
+	nng_tls_mode      tlsmode;
+	nng_tls_auth_mode authmode;
 
 	// Make a copy of the url (to allow for destructive operations)
 	if (nni_strlcpy(buf, url, sizeof(buf)) >= sizeof(buf)) {
@@ -628,12 +628,12 @@ nni_tls_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	}
 	if (mode == NNI_EP_MODE_DIAL) {
 		passive  = 0;
-		tlsmode  = NNI_TLS_CONFIG_CLIENT;
-		authmode = NNI_TLS_CONFIG_AUTH_MODE_REQUIRED;
+		tlsmode  = NNG_TLS_MODE_CLIENT;
+		authmode = NNG_TLS_AUTH_MODE_REQUIRED;
 	} else {
 		passive  = 1;
-		tlsmode  = NNI_TLS_CONFIG_SERVER;
-		authmode = NNI_TLS_CONFIG_AUTH_MODE_NONE;
+		tlsmode  = NNG_TLS_MODE_SERVER;
+		authmode = NNG_TLS_AUTH_MODE_NONE;
 	}
 
 	// XXX: arguably we could defer this part to the point we do a bind
@@ -684,15 +684,15 @@ nni_tls_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	}
 
 	if (((rv = nni_plat_tcp_ep_init(&ep->tep, &lsa, &rsa, mode)) != 0) ||
-	    ((rv = nni_tls_config_init(&ep->cfg, tlsmode)) != 0) ||
-	    ((rv = nni_tls_config_auth_mode(ep->cfg, authmode)) != 0) ||
+	    ((rv = nng_tls_config_init(&ep->cfg, tlsmode)) != 0) ||
+	    ((rv = nng_tls_config_auth_mode(ep->cfg, authmode)) != 0) ||
 	    ((rv = nni_aio_init(&ep->aio, nni_tls_ep_cb, ep)) != 0)) {
 		nni_strfree(rhost);
 		nni_tls_ep_fini(ep);
 		return (rv);
 	}
-	if ((tlsmode == NNI_TLS_CONFIG_CLIENT) && (rhost != NULL)) {
-		if ((rv = nni_tls_config_server_name(ep->cfg, rhost)) != 0) {
+	if ((tlsmode == NNG_TLS_MODE_CLIENT) && (rhost != NULL)) {
+		if ((rv = nng_tls_config_server_name(ep->cfg, rhost)) != 0) {
 			nni_strfree(rhost);
 			nni_tls_ep_fini(ep);
 			return (rv);
@@ -868,6 +868,38 @@ nni_tls_ep_getopt_linger(void *arg, void *v, size_t *szp)
 }
 
 static int
+tls_setopt_config(void *arg, const void *data, size_t sz)
+{
+	nni_tls_ep *    ep = arg;
+	nng_tls_config *cfg, *old;
+
+	if (sz != sizeof(cfg)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(&cfg, data, sz);
+	if (cfg == NULL) {
+		return (NNG_EINVAL);
+	}
+	if (ep == NULL) {
+		return (0);
+	}
+	old = ep->cfg;
+	nni_tls_config_hold(cfg);
+	ep->cfg = cfg;
+	if (old != NULL) {
+		nng_tls_config_fini(old);
+	}
+	return (0);
+}
+
+static int
+tls_getopt_config(void *arg, void *v, size_t *szp)
+{
+	nni_tls_ep *ep = arg;
+	return (nni_getopt_ptr(ep->cfg, v, szp));
+}
+
+static int
 tls_setopt_ca_cert(void *arg, const void *data, size_t sz)
 {
 	nni_tls_ep *ep = arg;
@@ -875,7 +907,7 @@ tls_setopt_ca_cert(void *arg, const void *data, size_t sz)
 	if (ep == NULL) {
 		return (0);
 	}
-	return (nni_tls_config_ca_cert(ep->cfg, data, sz));
+	return (nng_tls_config_ca_cert(ep->cfg, data, sz));
 }
 
 static int
@@ -886,7 +918,7 @@ tls_setopt_cert(void *arg, const void *data, size_t sz)
 	if (ep == NULL) {
 		return (0);
 	}
-	return (nni_tls_config_cert(ep->cfg, data, sz));
+	return (nng_tls_config_cert(ep->cfg, data, sz));
 }
 
 static int
@@ -897,7 +929,7 @@ tls_setopt_private_key(void *arg, const void *data, size_t sz)
 	if (ep == NULL) {
 		return (0);
 	}
-	return (nni_tls_config_key(ep->cfg, data, sz));
+	return (nng_tls_config_key(ep->cfg, data, sz));
 }
 
 static int
@@ -914,12 +946,8 @@ tls_setopt_pass(void *arg, const void *data, size_t sz)
 	if (ep == NULL) {
 		return (0);
 	}
-	return (nni_tls_config_pass(ep->cfg, data));
+	return (nng_tls_config_pass(ep->cfg, data));
 }
-
-int nng_tls_auth_mode_none     = NNI_TLS_CONFIG_AUTH_MODE_NONE;
-int nng_tls_auth_mode_required = NNI_TLS_CONFIG_AUTH_MODE_REQUIRED;
-int nng_tls_auth_mode_optional = NNI_TLS_CONFIG_AUTH_MODE_OPTIONAL;
 
 static int
 tls_getopt_auth_mode(void *arg, void *v, size_t *szp)
@@ -938,9 +966,9 @@ tls_setopt_auth_mode(void *arg, const void *data, size_t sz)
 	rv = nni_setopt_int(&mode, data, sz, -100, 100);
 	if (rv == 0) {
 		switch (mode) {
-		case NNI_TLS_CONFIG_AUTH_MODE_NONE:
-		case NNI_TLS_CONFIG_AUTH_MODE_OPTIONAL:
-		case NNI_TLS_CONFIG_AUTH_MODE_REQUIRED:
+		case NNG_TLS_AUTH_MODE_NONE:
+		case NNG_TLS_AUTH_MODE_OPTIONAL:
+		case NNG_TLS_AUTH_MODE_REQUIRED:
 			break;
 		default:
 			rv = NNG_EINVAL;
@@ -952,7 +980,7 @@ tls_setopt_auth_mode(void *arg, const void *data, size_t sz)
 		return (rv);
 	}
 
-	if ((rv = nni_tls_config_auth_mode(ep->cfg, mode)) == 0) {
+	if ((rv = nng_tls_config_auth_mode(ep->cfg, mode)) == 0) {
 		ep->authmode = mode;
 	}
 	return (rv);
@@ -996,6 +1024,11 @@ static nni_tran_ep_option nni_tls_ep_options[] = {
 	    .eo_name   = NNG_OPT_LINGER,
 	    .eo_getopt = nni_tls_ep_getopt_linger,
 	    .eo_setopt = nni_tls_ep_setopt_linger,
+	},
+	{
+	    .eo_name   = NNG_OPT_TLS_CONFIG,
+	    .eo_getopt = tls_getopt_config,
+	    .eo_setopt = tls_setopt_config,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_CA_CERT,

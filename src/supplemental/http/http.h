@@ -18,16 +18,6 @@ typedef struct nni_http_msg    nni_http_msg;
 typedef struct nni_http_res    nni_http_res;
 typedef struct nni_http_entity nni_http_entity;
 
-typedef struct nni_http_tran {
-	void *h_data;
-	void (*h_read)(void *, nni_aio *);
-	void (*h_write)(void *, nni_aio *);
-	int (*h_sock_addr)(void *, nni_sockaddr *);
-	int (*h_peer_addr)(void *, nni_sockaddr *);
-	void (*h_close)(void *);
-	void (*h_fini)(void *);
-} nni_http_tran;
-
 typedef struct nni_http_req nni_http_req;
 
 extern int  nni_http_req_init(nni_http_req **);
@@ -146,7 +136,8 @@ enum { NNI_HTTP_STATUS_CONTINUE                  = 100,
 // the connection.
 typedef struct nni_http nni_http;
 
-extern int  nni_http_init(nni_http **, nni_http_tran *);
+extern int  nni_http_init_tcp(nni_http **, void *);
+extern int  nni_http_init_tls(nni_http **, nng_tls_config *, void *);
 extern void nni_http_close(nni_http *);
 extern void nni_http_fini(nni_http *);
 
@@ -254,6 +245,11 @@ extern int nni_http_server_add_handler(
 
 extern void nni_http_server_del_handler(nni_http_server *, void *);
 
+// nni_http_server_set_tls adds a TLS configuration to the server,
+// and enables the use of it.  This returns NNG_EBUSY if the server is
+// already started.
+extern int nni_http_server_set_tls(nni_http_server *, nng_tls_config *);
+
 // nni_http_server_start starts listening on the supplied port.
 extern int nni_http_server_start(nni_http_server *);
 
@@ -281,16 +277,13 @@ extern int nni_http_server_add_static(nni_http_server *, const char *host,
 extern int nni_http_server_add_file(nni_http_server *, const char *host,
     const char *ctype, const char *uri, const char *path);
 
-// TLS will use
-// extern int nni_http_server_start_tls(nni_http_server *, nng_sockaddr *,
-//     nni_tls_config *);
-
 // Client stuff.
 
 typedef struct nni_http_client nni_http_client;
 
 extern int  nni_http_client_init(nni_http_client **, nng_sockaddr *);
 extern void nni_http_client_fini(nni_http_client *);
+extern int  nni_http_client_set_tls(nni_http_client *, nng_tls_config *);
 extern void nni_http_client_connect(nni_http_client *, nni_aio *);
 
 #endif // NNG_SUPPLEMENTAL_HTTP_HTTP_H

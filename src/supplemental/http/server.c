@@ -14,6 +14,8 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "supplemental/tls/tls.h"
+
 #include "http.h"
 
 static int  http_server_sys_init(void);
@@ -50,7 +52,6 @@ typedef struct http_sconn {
 	nni_aio *        rxaio;
 	nni_aio *        txaio;
 	nni_aio *        txdataio;
-	nni_http_tran    tran;
 	nni_reap_item    reap;
 } http_sconn;
 
@@ -64,7 +65,7 @@ struct nni_http_server {
 	nni_mtx          mtx;
 	nni_cv           cv;
 	bool             closed;
-	bool             tls;
+	nng_tls_config * tls;
 	nni_aio *        accaio;
 	nni_plat_tcp_ep *tep;
 };
@@ -105,28 +106,48 @@ http_sconn_fini(http_sconn *sc)
 }
 
 static void
+http_sconn_close_locked(http_sconn *sc)
+{
+	nni_http_server *s;
+	s = sc->server;
+	nni_http *h;
+
+	if (sc->closed) {
+		return;
+	}
+	NNI_ASSERT(!sc->finished);
+
+	sc->closed = true;
+	// Close the underlying transport.
+	if (nni_list_node_active(&sc->node)) {
+		nni_list_remove(&s->conns, sc);
+		if (nni_list_empty(&s->conns)) {
+			nni_cv_wake(&s->cv);
+		}
+	}
+	nni_aio_cancel(sc->rxaio, NNG_ECLOSED);
+	nni_aio_cancel(sc->txaio, NNG_ECLOSED);
+	nni_aio_cancel(sc->txdataio, NNG_ECLOSED);
+	nni_aio_cancel(sc->cbaio, NNG_ECLOSED);
+
+	if ((h = sc->http) != NULL) {
+		nni_http_close(h);
+	}
+	http_sconn_fini(sc);
+}
+
+static void
 http_sconn_close(http_sconn *sc)
 {
 	nni_http_server *s;
 	s = sc->server;
 
-	NNI_ASSERT(!sc->finished);
-	nni_mtx_lock(&s->mtx);
-	if (!sc->closed) {
-		nni_http *h;
-		sc->closed = true;
-		// Close the underlying transport.
-		if (nni_list_node_active(&sc->node)) {
-			nni_list_remove(&s->conns, sc);
-			if (nni_list_empty(&s->conns)) {
-				nni_cv_wake(&s->cv);
-			}
-		}
-		if ((h = sc->http) != NULL) {
-			nni_http_close(h);
-		}
-		http_sconn_fini(sc);
+	if (sc->closed) {
+		return;
 	}
+
+	nni_mtx_lock(&s->mtx);
+	http_sconn_close_locked(sc);
 	nni_mtx_unlock(&s->mtx);
 }
 
@@ -484,14 +505,16 @@ http_sconn_cbdone(void *arg)
 }
 
 static int
-http_sconn_init(http_sconn **scp, nni_plat_tcp_pipe *tcp)
+http_sconn_init(http_sconn **scp, nni_http_server *s, nni_plat_tcp_pipe *tcp)
 {
 	http_sconn *sc;
 	int         rv;
 
 	if ((sc = NNI_ALLOC_STRUCT(sc)) == NULL) {
+		nni_plat_tcp_pipe_fini(tcp);
 		return (NNG_ENOMEM);
 	}
+
 	if (((rv = nni_http_req_init(&sc->req)) != 0) ||
 	    ((rv = nni_aio_init(&sc->rxaio, http_sconn_rxdone, sc)) != 0) ||
 	    ((rv = nni_aio_init(&sc->txaio, http_sconn_txdone, sc)) != 0) ||
@@ -502,18 +525,13 @@ http_sconn_init(http_sconn **scp, nni_plat_tcp_pipe *tcp)
 		http_sconn_close(sc);
 		return (rv);
 	}
-	// XXX: for HTTPS we would then try to do the TLS negotiation here.
-	// That would use a different set of tran values.
 
-	sc->tran.h_data  = tcp;
-	sc->tran.h_read  = (void *) nni_plat_tcp_pipe_recv;
-	sc->tran.h_write = (void *) nni_plat_tcp_pipe_send;
-	sc->tran.h_close = (void *) nni_plat_tcp_pipe_close; // close implied
-	sc->tran.h_fini  = (void *) nni_plat_tcp_pipe_fini;
-	sc->tran.h_sock_addr = (void *) nni_plat_tcp_pipe_sockname;
-	sc->tran.h_peer_addr = (void *) nni_plat_tcp_pipe_peername;
-
-	if ((rv = nni_http_init(&sc->http, &sc->tran)) != 0) {
+	if (s->tls != NULL) {
+		rv = nni_http_init_tls(&sc->http, s->tls, tcp);
+	} else {
+		rv = nni_http_init_tcp(&sc->http, tcp);
+	}
+	if (rv != 0) {
 		http_sconn_close(sc);
 		return (rv);
 	}
@@ -539,9 +557,8 @@ http_server_acccb(void *arg)
 		return;
 	}
 	tcp = nni_aio_get_pipe(aio);
-	if (http_sconn_init(&sc, tcp) != 0) {
-		nni_plat_tcp_pipe_close(tcp);
-		nni_plat_tcp_pipe_fini(tcp);
+	if (http_sconn_init(&sc, s, tcp) != 0) {
+		// The TCP structure is already cleaned up.
 
 		nni_plat_tcp_ep_accept(s->tep, s->accaio);
 		return;
@@ -590,6 +607,11 @@ http_server_fini(nni_http_server *s)
 		http_handler_fini(h);
 	}
 	nni_mtx_unlock(&s->mtx);
+#ifdef NNG_SUPP_TLS
+	if (s->tls != NULL) {
+		nng_tls_config_fini(s->tls);
+	}
+#endif
 	nni_aio_fini(s->accaio);
 	nni_cv_fini(&s->cv);
 	nni_mtx_fini(&s->mtx);
@@ -726,11 +748,7 @@ http_server_stop(nni_http_server *s)
 	// Stopping the server is a hard stop -- it aborts any work being
 	// done by clients.  (No graceful shutdown).
 	NNI_LIST_FOREACH (&s->conns, sc) {
-		nni_list_remove(&s->conns, sc);
-		if (sc->http != NULL) {
-			nni_http_close(sc->http);
-		}
-		http_sconn_fini(sc);
+		http_sconn_close_locked(sc);
 	}
 	nni_cv_wake(&s->cv);
 }
@@ -1072,6 +1090,29 @@ nni_http_server_add_static(nni_http_server *s, const char *host,
 	}
 	return (0);
 }
+
+#ifdef NNG_SUPP_TLS
+int
+nni_http_server_set_tls(nni_http_server *s, nng_tls_config *tcfg)
+{
+	nng_tls_config *old;
+	nni_mtx_lock(&s->mtx);
+	if (s->starts) {
+		nni_mtx_unlock(&s->mtx);
+		return (NNG_EBUSY);
+	}
+	old    = s->tls;
+	s->tls = tcfg;
+	if (tcfg) {
+		nni_tls_config_hold(tcfg);
+	}
+	nni_mtx_unlock(&s->mtx);
+	if (old) {
+		nng_tls_config_fini(old);
+	}
+	return (0);
+}
+#endif
 
 static int
 http_server_sys_init(void)

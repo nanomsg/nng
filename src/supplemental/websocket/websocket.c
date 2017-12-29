@@ -55,7 +55,6 @@ struct nni_ws {
 };
 
 struct nni_ws_listener {
-	nni_tls_config *   tls;
 	nni_http_server *  server;
 	char *             proto;
 	char *             url;
@@ -82,7 +81,6 @@ struct nni_ws_listener {
 // completion of an earlier connection.  (We don't want to establish
 // requests when we already have connects negotiating.)
 struct nni_ws_dialer {
-	nni_tls_config * tls;
 	nni_http_req *   req;
 	nni_http_res *   res;
 	nni_http_client *client;
@@ -1296,6 +1294,13 @@ nni_ws_listener_fini(nni_ws_listener *l)
 {
 	ws_header *hdr;
 
+	nni_ws_listener_close(l);
+
+	if (l->server != NULL) {
+		nni_http_server_fini(l->server);
+		l->server = NULL;
+	}
+
 	nni_mtx_fini(&l->mtx);
 	nni_strfree(l->url);
 	nni_strfree(l->proto);
@@ -1560,6 +1565,8 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *url)
 {
 	nni_ws_listener *l;
 	int              rv;
+	nni_aio *        aio;
+	nni_sockaddr     sa;
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
@@ -1581,6 +1588,24 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *url)
 	l->handler.h_path        = l->path;
 	l->handler.h_host        = l->host;
 	l->handler.h_cb          = ws_handler;
+
+	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+		nni_ws_listener_fini(l);
+		return (rv);
+	}
+	aio->a_addr = &sa;
+	nni_plat_tcp_resolv(l->host, l->serv, NNG_AF_UNSPEC, true, aio);
+	nni_aio_wait(aio);
+	rv = nni_aio_result(aio);
+	nni_aio_fini(aio);
+	if (rv != 0) {
+		nni_ws_listener_fini(l);
+		return (rv);
+	}
+	if ((rv = nni_http_server_init(&l->server, &sa)) != 0) {
+		nni_ws_listener_fini(l);
+		return (rv);
+	}
 
 	*wslp = l;
 	return (0);
@@ -1658,10 +1683,10 @@ nni_ws_listener_close(nni_ws_listener *l)
 		return;
 	}
 	l->closed = true;
-	if (l->server != NULL) {
+	if (l->started) {
 		nni_http_server_del_handler(l->server, l->hp);
-		nni_http_server_fini(l->server);
-		l->server = NULL;
+		nni_http_server_stop(l->server);
+		l->started = false;
 	}
 	NNI_LIST_FOREACH (&l->pend, ws) {
 		nni_ws_close_error(ws, WS_CLOSE_GOING_AWAY);
@@ -1675,9 +1700,7 @@ nni_ws_listener_close(nni_ws_listener *l)
 int
 nni_ws_listener_listen(nni_ws_listener *l)
 {
-	nng_sockaddr sa;
-	nni_aio *    aio;
-	int          rv;
+	int rv;
 
 	nni_mtx_lock(&l->mtx);
 	if (l->closed) {
@@ -1689,25 +1712,6 @@ nni_ws_listener_listen(nni_ws_listener *l)
 		return (NNG_ESTATE);
 	}
 
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
-		nni_mtx_unlock(&l->mtx);
-		return (rv);
-	}
-	aio->a_addr = &sa;
-	nni_plat_tcp_resolv(l->host, l->serv, NNG_AF_UNSPEC, true, aio);
-	nni_aio_wait(aio);
-	rv = nni_aio_result(aio);
-	nni_aio_fini(aio);
-	if (rv != 0) {
-		nni_mtx_unlock(&l->mtx);
-		return (rv);
-	}
-
-	if ((rv = nni_http_server_init(&l->server, &sa)) != 0) {
-		nni_mtx_unlock(&l->mtx);
-		return (rv);
-	}
-
 	rv = nni_http_server_add_handler(&l->hp, l->server, &l->handler, l);
 	if (rv != 0) {
 		nni_http_server_fini(l->server);
@@ -1716,12 +1720,12 @@ nni_ws_listener_listen(nni_ws_listener *l)
 		return (rv);
 	}
 
-	// XXX: DEAL WITH HTTPS here.
-
 	if ((rv = nni_http_server_start(l->server)) != 0) {
 		nni_http_server_del_handler(l->server, l->hp);
 		nni_http_server_fini(l->server);
 		l->server = NULL;
+		nni_mtx_unlock(&l->mtx);
+		return (rv);
 	}
 
 	l->started = true;
@@ -1740,11 +1744,17 @@ nni_ws_listener_hook(
 	nni_mtx_unlock(&l->mtx);
 }
 
-void
-nni_ws_listener_tls(nni_ws_listener *l, nni_tls_config *tls)
+#ifdef NNG_SUPP_TLS
+int
+nni_ws_listener_set_tls(nni_ws_listener *l, nng_tls_config *tls)
 {
-	// We need to add this later.
+	int rv;
+	nni_mtx_lock(&l->mtx);
+	rv = nni_http_server_set_tls(l->server, tls);
+	nni_mtx_unlock(&l->mtx);
+	return (rv);
 }
+#endif
 
 void
 ws_conn_cb(void *arg)
@@ -1930,6 +1940,18 @@ nni_ws_dialer_init(nni_ws_dialer **dp, const char *url)
 	*dp = d;
 	return (0);
 }
+
+#ifdef NNG_SUPP_TLS
+int
+nni_ws_dialer_set_tls(nni_ws_dialer *d, nng_tls_config *tls)
+{
+	int rv;
+	nni_mtx_lock(&d->mtx);
+	rv = nni_http_client_set_tls(d->client, tls);
+	nni_mtx_unlock(&d->mtx);
+	return (rv);
+}
+#endif
 
 void
 nni_ws_dialer_close(nni_ws_dialer *d)

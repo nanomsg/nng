@@ -123,8 +123,8 @@ endif()
 
 add_subdirectory(supplemental/base64)
 add_subdirectory(supplemental/http)
-add_subdirectory(supplemental/mbedtls)
 add_subdirectory(supplemental/sha1)
+add_subdirectory(supplemental/tls)
 add_subdirectory(supplemental/websocket)
 
 add_subdirectory(protocol/bus0)

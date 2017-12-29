@@ -14,6 +14,8 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "supplemental/tls/tls.h"
+
 #include "http.h"
 
 struct nni_http_client {
@@ -21,7 +23,7 @@ struct nni_http_client {
 	nni_list         aios;
 	nni_mtx          mtx;
 	bool             closed;
-	bool             tls;
+	nng_tls_config * tls;
 	nni_aio *        connaio;
 	nni_plat_tcp_ep *tep;
 };
@@ -39,7 +41,6 @@ http_conn_done(void *arg)
 	nni_aio *          aio;
 	int                rv;
 	nni_plat_tcp_pipe *p;
-	nni_http_tran      t;
 	nni_http *         http;
 
 	nni_mtx_lock(&c->mtx);
@@ -60,17 +61,13 @@ http_conn_done(void *arg)
 		return;
 	}
 
-	t.h_data      = p;
-	t.h_write     = (void *) nni_plat_tcp_pipe_send;
-	t.h_read      = (void *) nni_plat_tcp_pipe_recv;
-	t.h_close     = (void *) nni_plat_tcp_pipe_close;
-	t.h_sock_addr = (void *) nni_plat_tcp_pipe_sockname;
-	t.h_peer_addr = (void *) nni_plat_tcp_pipe_peername;
-	t.h_fini      = (void *) nni_plat_tcp_pipe_fini;
-
-	if ((rv = nni_http_init(&http, &t)) != 0) {
+	if (c->tls != NULL) {
+		rv = nni_http_init_tls(&http, c->tls, p);
+	} else {
+		rv = nni_http_init_tcp(&http, p);
+	}
+	if (rv != 0) {
 		nni_aio_finish_error(aio, rv);
-		nni_plat_tcp_pipe_fini(p);
 		nni_mtx_unlock(&c->mtx);
 		return;
 	}
@@ -90,6 +87,11 @@ nni_http_client_fini(nni_http_client *c)
 	nni_aio_fini(c->connaio);
 	nni_plat_tcp_ep_fini(c->tep);
 	nni_mtx_fini(&c->mtx);
+#ifdef NNG_SUPP_TLS
+	if (c->tls != NULL) {
+		nng_tls_config_fini(c->tls);
+	}
+#endif
 	NNI_FREE_STRUCT(c);
 }
 
@@ -118,6 +120,25 @@ nni_http_client_init(nni_http_client **cp, nng_sockaddr *sa)
 	*cp = c;
 	return (0);
 }
+
+#ifdef NNG_SUPP_TLS
+int
+nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
+{
+	nng_tls_config *old;
+	nni_mtx_lock(&c->mtx);
+	old    = c->tls;
+	c->tls = tls;
+	if (tls != NULL) {
+		nni_tls_config_hold(tls);
+	}
+	nni_mtx_unlock(&c->mtx);
+	if (old != NULL) {
+		nng_tls_config_fini(old);
+	}
+	return (0);
+}
+#endif
 
 static void
 http_connect_cancel(nni_aio *aio, int rv)

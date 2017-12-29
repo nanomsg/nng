@@ -26,40 +26,41 @@ typedef int (*trantest_proptest_t)(nng_msg *, nng_listener, nng_dialer);
 typedef struct trantest trantest;
 
 struct trantest {
-	const char * tmpl;
-	char         addr[NNG_MAXADDRLEN + 1];
-	nng_socket   reqsock;
-	nng_socket   repsock;
-	nni_tran *   tran;
-	nng_dialer   dialer;
-	nng_listener listener;
+	const char *tmpl;
+	char        addr[NNG_MAXADDRLEN + 1];
+	nng_socket  reqsock;
+	nng_socket  repsock;
+	nni_tran *  tran;
 	int (*init)(struct trantest *);
 	void (*fini)(struct trantest *);
-	int (*dialer_init)(struct trantest *);
-	int (*listener_init)(struct trantest *);
+	int (*dialer_init)(struct trantest *, nng_dialer);
+	int (*listener_init)(struct trantest *, nng_listener);
 	int (*proptest)(nng_msg *, nng_listener, nng_dialer);
 	void *private; // transport specific private data
 };
 
 unsigned trantest_port = 0;
 
-#ifndef NNG_HAVE_ZEROTIER
+#ifndef NNG_TRANSPORT_ZEROTIER
 #define nng_zt_register notransport
 #endif
-#ifndef NNG_HAVE_INPROC
+#ifndef NNG_TRANSPORT_INPROC
 #define nng_inproc_register notransport
 #endif
-#ifndef NNG_HAVE_IPC
+#ifndef NNG_TRANSPORT_IPC
 #define nng_ipc_register notransport
 #endif
-#ifndef NNG_HAVE_TCP
+#ifndef NNG_TRANSPORT_TCP
 #define nng_tcp_register notransport
 #endif
-#ifndef NNG_HAVE_TLS
+#ifndef NNG_TRANSPORT_TLS
 #define nng_tls_register notransport
 #endif
-#ifndef NNG_HAVE_WEBSOCKET
+#ifndef NNG_TRANSPORT_WS
 #define nng_ws_register notransport
+#endif
+#ifndef NNG_TRANSPORT_WSS
+#define nng_wss_register notransport
 #endif
 
 int
@@ -76,23 +77,26 @@ notransport(void)
 void
 trantest_checktran(const char *url)
 {
-#ifndef NNG_HAVE_ZEROTIER
-	CHKTRAN(url, "zt:");
-#endif
-#ifndef NNG_HAVE_INPROC
+#ifndef NNG_TRANSPORT_INPROC
 	CHKTRAN(url, "inproc:");
 #endif
-#ifndef NNG_HAVE_IPC
+#ifndef NNG_TRANSPORT_IPC
 	CHKTRAN(url, "ipc:");
 #endif
-#ifndef NNG_HAVE_TCP
+#ifndef NNG_TRANSPORT_TCP
 	CHKTRAN(url, "tcp:");
 #endif
-#ifndef NNG_HAVE_TLS
+#ifndef NNG_TRANSPORT_TLS
 	CHKTRAN(url, "tls+tcp:");
 #endif
-#ifndef NNG_HAVE_WEBSOCKET
+#ifndef NNG_TRANSPORT_WS
 	CHKTRAN(url, "ws:");
+#endif
+#ifndef NNG_TRANSPORT_WSS
+	CHKTRAN(url, "wss:");
+#endif
+#ifndef NNG_TRANSPORT_ZEROTIER
+	CHKTRAN(url, "zt:");
 #endif
 
 	(void) url;
@@ -149,13 +153,53 @@ trantest_fini(trantest *tt)
 }
 
 int
-trantest_dial(trantest *tt)
+trantest_dial(trantest *tt, nng_dialer *dp)
 {
-	So(nng_dialer_create(&tt->dialer, tt->reqsock, tt->addr) == 0);
-	if (tt->dialer_init != NULL) {
-		So(tt->dialer_init(tt) == 0);
+	nng_dialer d;
+	int        rv;
+	*dp = 0;
+
+	rv = nng_dialer_create(&d, tt->reqsock, tt->addr);
+	if (rv != 0) {
+		return (rv);
 	}
-	return (nng_dialer_start(tt->dialer, 0));
+	if (tt->dialer_init != NULL) {
+		if ((rv = tt->dialer_init(tt, d)) != 0) {
+			nng_dialer_close(d);
+			return (rv);
+		}
+	}
+	if ((rv = nng_dialer_start(d, 0)) != 0) {
+		nng_dialer_close(d);
+		return (rv);
+	}
+	*dp = d;
+	return (0);
+}
+
+int
+trantest_listen(trantest *tt, nng_listener *lp)
+{
+	int          rv;
+	nng_listener l;
+	*lp = 0;
+
+	rv = nng_listener_create(&l, tt->repsock, tt->addr);
+	if (rv != 0) {
+		return (rv);
+	}
+	if (tt->listener_init != NULL) {
+		if ((rv = tt->listener_init(tt, l)) != 0) {
+			nng_listener_close(l);
+			return (rv);
+		}
+	}
+	if ((rv = nng_listener_start(l, 0)) != 0) {
+		nng_listener_close(l);
+		return (rv);
+	}
+	*lp = l;
+	return (rv);
 }
 
 void
@@ -174,11 +218,11 @@ trantest_conn_refused(trantest *tt)
 	Convey("Connection refused works", {
 		nng_dialer d = 0;
 
-		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == NNG_ECONNREFUSED);
+		So(trantest_dial(tt, &d) == NNG_ECONNREFUSED);
 		So(d == 0);
-		So(nng_dial(tt->repsock, tt->addr, &d, 0) == NNG_ECONNREFUSED);
+		So(trantest_dial(tt, &d) == NNG_ECONNREFUSED);
 		So(d == 0);
-	})
+	});
 }
 
 void
@@ -187,13 +231,13 @@ trantest_duplicate_listen(trantest *tt)
 	Convey("Duplicate listen rejected", {
 		nng_listener l;
 		int          rv;
-		rv = nng_listen(tt->repsock, tt->addr, &l, 0);
+		rv = trantest_listen(tt, &l);
 		So(rv == 0);
 		So(l != 0);
 		l = 0;
-		So(nng_listen(tt->repsock, tt->addr, &l, 0) == NNG_EADDRINUSE);
+		So(trantest_listen(tt, &l) == NNG_EADDRINUSE);
 		So(l == 0);
-	})
+	});
 }
 
 void
@@ -202,11 +246,11 @@ trantest_listen_accept(trantest *tt)
 	Convey("Listen and accept", {
 		nng_listener l;
 		nng_dialer   d;
-		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
+		So(trantest_listen(tt, &l) == 0);
 		So(l != 0);
 
 		d = 0;
-		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
+		So(trantest_dial(tt, &d) == 0);
 		So(d != 0);
 	})
 }
@@ -216,6 +260,7 @@ trantest_send_recv(trantest *tt)
 {
 	Convey("Send and recv", {
 		nng_listener l;
+		nng_dialer   d;
 		nng_msg *    send;
 		nng_msg *    recv;
 		size_t       len;
@@ -223,9 +268,10 @@ trantest_send_recv(trantest *tt)
 		char         url[NNG_MAXADDRLEN];
 		size_t       sz;
 
-		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
+		So(trantest_listen(tt, &l) == 0);
 		So(l != 0);
-		So(trantest_dial(tt) == 0);
+		So(trantest_dial(tt, &d) == 0);
+		So(d != 0);
 
 		nng_msleep(200); // listener may be behind slightly
 
@@ -269,9 +315,9 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 		nng_msg *    recv;
 		int          rv;
 
-		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
+		So(trantest_listen(tt, &l) == 0);
 		So(l != 0);
-		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
+		So(trantest_dial(tt, &d) == 0);
 		So(d != 0);
 
 		nng_msleep(200); // listener may be behind slightly
@@ -311,9 +357,9 @@ trantest_send_recv_large(trantest *tt)
 			data[i] = nni_random() & 0xff;
 		}
 
-		So(nng_listen(tt->repsock, tt->addr, &l, 0) == 0);
+		So(trantest_listen(tt, &l) == 0);
 		So(l != 0);
-		So(nng_dial(tt->reqsock, tt->addr, &d, 0) == 0);
+		So(trantest_dial(tt, &d) == 0);
 		So(d != 0);
 
 		nng_msleep(200); // listener may be behind slightly

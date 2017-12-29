@@ -34,6 +34,7 @@ include (CheckSymbolExists)
 include (CheckStructHasMember)
 include (CheckLibraryExists)
 include (CheckCSourceCompiles)
+include (CMakeDependentOption)
 include (GNUInstallDirs)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -98,99 +99,137 @@ option (NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
 # Enable access to private APIs for our own use.
 add_definitions (-DNNG_PRIVATE)
 
+option (NNG_ENABLE_TLS "Enable TLS protocol (requires mbedTLS" OFF)
+if (NNG_ENABLE_TLS)
+    add_definitions(-DNNG_SUPP_TLS)
+    set(NNG_SUPP_TLS ON)
+   endif()
+
 option (NNG_PROTO_BUS0 "Enable BUSv0 protocol." ON)
 if (NNG_PROTO_BUS0)
     add_definitions (-DNNG_HAVE_BUS0)
 endif ()
+mark_as_advanced(NNG_PROTO_BUS0)
 
 option (NNG_PROTO_PAIR0 "Enable PAIRv0 protocol." ON)
 if (NNG_PROTO_PAIR0)
     add_definitions (-DNNG_HAVE_PAIR0)
 endif ()
+mark_as_advanced(NNG_PROTO_PAIR0)
 
 option (NNG_PROTO_PAIR1 "Enable PAIRv1 protocol." ON)
 if (NNG_PROTO_PAIR1)
     add_definitions (-DNNG_HAVE_PAIR1)
 endif ()
+mark_as_advanced(NNG_PROTO_PAIR1)
 
 option (NNG_PROTO_REQ0 "Enable REQv0 protocol." ON)
 if (NNG_PROTO_REQ0)
     add_definitions (-DNNG_HAVE_REQ0)
 endif ()
+mark_as_advanced(NNG_PROTO_REQ0)
 
 option (NNG_PROTO_REP0 "Enable REPv0 protocol." ON)
 if (NNG_PROTO_REP0)
     add_definitions (-DNNG_HAVE_REP0)
 endif ()
+mark_as_advanced(NNG_PROTO_REP0)
 
 option (NNG_PROTO_PUB0 "Enable PUBv0 protocol." ON)
 if (NNG_PROTO_PUB0)
     add_definitions (-DNNG_HAVE_PUB0)
 endif ()
+mark_as_advanced(NNG_PROTO_PUB0)
 
 option (NNG_PROTO_SUB0 "Enable SUBv0 protocol." ON)
 if (NNG_PROTO_SUB0)
     add_definitions (-DNNG_HAVE_SUB0)
 endif ()
+mark_as_advanced(NNG_PROTO_SUB0)
 
 option (NNG_PROTO_PUSH0 "Enable PUSHv0 protocol." ON)
 if (NNG_PROTO_PUSH0)
     add_definitions (-DNNG_HAVE_PUSH0)
 endif ()
+mark_as_advanced(NNG_PROTO_PUSH0)
 
 option (NNG_PROTO_PULL0 "Enable PULLv0 protocol." ON)
 if (NNG_PROTO_PULL0)
     add_definitions (-DNNG_HAVE_PULL0)
 endif ()
+mark_as_advanced(NNG_PROTO_PULL0)
 
 option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
 if (NNG_PROTO_SURVEYOR0)
     add_definitions (-DNNG_HAVE_SURVEYOR0)
 endif ()
+mark_as_advanced(NNG_PROTO_SURVEYOR0)
 
 option (NNG_PROTO_RESPONDENT0 "Enable RESPONDENTv0 protocol." ON)
 if (NNG_PROTO_RESPONDENT0)
     add_definitions (-DNNG_HAVE_RESPONDENT0)
 endif ()
+mark_as_advanced(NNG_PROTO_RESPONDENT0)
 
 option (NNG_TRANSPORT_INPROC "Enable inproc transport." ON)
 if (NNG_TRANSPORT_INPROC)
-    add_definitions (-DNNG_HAVE_INPROC)
+    add_definitions (-DNNG_TRANSPORT_INPROC)
 endif ()
+mark_as_advanced(NNG_TRANSPORT_INPROC)
 
 option (NNG_TRANSPORT_IPC "Enable IPC transport." ON)
 if (NNG_TRANSPORT_IPC)
-    add_definitions (-DNNG_HAVE_IPC)
+    add_definitions (-DNNG_TRANSPORT_IPC)
 endif ()
+mark_as_advanced(NNG_TRANSPORT_IPC)
 
 option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
 if (NNG_TRANSPORT_TCP)
-    add_definitions (-DNNG_HAVE_TCP)
+    add_definitions (-DNNG_TRANSPORT_TCP)
 endif ()
+mark_as_advanced(NNG_TRANSPORT_TCP)
+
+CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_TLS "Enable TLS transport" ON
+    "NNG_ENABLE_TLS" OFF)
+
+if (NNG_TRANSPORT_TLS)
+    set(NNG_SUPP_TLS ON)
+    add_definitions (-DNNG_TRANSPORT_TLS)
+endif()
+mark_as_advanced(NNG_TRANSPORT_TLS)
 
 option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
 if (NNG_TRANSPORT_WS)
-    add_definitions (-DNNG_HAVE_WEBSOCKET)
+    add_definitions (-DNNG_TRANSPORT_WS)
     set(NNG_SUPP_WEBSOCKET ON)
 endif ()
+mark_as_advanced(NNG_TRANSPORT_WS)
+
+CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_WSS "Enable WSS transport" ON
+    "NNG_ENABLE_TLS" OFF)
+if (NNG_TRANSPORT_WSS)
+    add_definitions (-DNNG_TRANSPORT_WSS)
+    set(NNG_SUPP_WEBSOCKET ON)
+endif ()
+mark_as_advanced(NNG_TRANSPORT_WSS)
 
 option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
 if (NNG_TRANSPORT_ZEROTIER)
-    add_definitions (-DNNG_HAVE_ZEROTIER)
+    add_definitions (-DNNG_TRANSPORT_ZEROTIER)
 endif ()
+mark_as_advanced(NNG_TRANSPORT_ZEROTIER)
 
-option (NNG_TRANSPORT_TLS "Enable TLS transport (requires mbedtls)" OFF)
-if (NNG_TRANSPORT_TLS)
-    set(NNG_MBEDTLS_ENABLE ON)
-    add_definitions (-DNNG_MBEDTLS_ENABLE)
-    add_definitions (-DNNG_HAVE_TLS)
-endif()
 
 # dependencies
 if (NNG_SUPP_WEBSOCKET)
     set(NNG_SUPP_HTTP ON)
     set(NNG_SUPP_BASE64 ON)
     set(NNG_SUPP_SHA1 ON)
+endif()
+
+# Extra defines.
+if (NNG_SUPP_TLS)
+    add_definitions (-DNNG_SUPP_TLS)
 endif()
 
 #  Platform checks.

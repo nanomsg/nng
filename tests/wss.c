@@ -1,7 +1,6 @@
 //
 // Copyright 2017 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -12,9 +11,7 @@
 #include "convey.h"
 #include "nng.h"
 #include "protocol/pair1/pair.h"
-
-#include "transport/tls/tls.h"
-
+#include "transport/ws/websocket.h"
 #include "trantest.h"
 
 #include "stubs.h"
@@ -101,11 +98,45 @@ check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
 		So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
 	});
 
+	Convey("Request header property works", {
+		char * buf;
+		size_t len;
+		z   = 0;
+		buf = NULL;
+		So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
+		    0);
+		So(z > 0);
+		len = z;
+		So((buf = nni_alloc(len)) != NULL);
+		So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
+		    0);
+		So(strstr(buf, "Sec-WebSocket-Key") != NULL);
+		So(z == len);
+		nni_free(buf, len);
+	});
+
+	Convey("Response header property works", {
+		char * buf;
+		size_t len;
+		z   = 0;
+		buf = NULL;
+		So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
+		    0);
+		So(z > 0);
+		len = z;
+		So((buf = nni_alloc(len)) != NULL);
+		So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
+		    0);
+		So(strstr(buf, "Sec-WebSocket-Accept") != NULL);
+		So(z == len);
+		nni_free(buf, len);
+	});
+
 	return (0);
 }
 
 static int
-init_dialer_tls(trantest *tt, nng_dialer d)
+init_dialer_wss(trantest *tt, nng_dialer d)
 {
 	nng_tls_config *cfg;
 	int             rv;
@@ -121,7 +152,7 @@ init_dialer_tls(trantest *tt, nng_dialer d)
 		goto out;
 	}
 	nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_NONE);
-	rv = nng_dialer_setopt_ptr(d, NNG_OPT_TLS_CONFIG, cfg);
+	rv = nng_dialer_setopt_ptr(d, NNG_OPT_WSS_TLS_CONFIG, cfg);
 
 out:
 	nng_tls_config_fini(cfg);
@@ -129,7 +160,7 @@ out:
 }
 
 static int
-init_listener_tls(trantest *tt, nng_listener l)
+init_listener_wss(trantest *tt, nng_listener l)
 {
 	nng_tls_config *cfg;
 	int             rv;
@@ -148,77 +179,28 @@ init_listener_tls(trantest *tt, nng_listener l)
 		return (rv);
 	}
 
-	if ((rv = nng_listener_setopt_ptr(l, NNG_OPT_TLS_CONFIG, cfg)) != 0) {
-		nng_tls_config_fini(cfg);
-		return (rv);
+	if ((rv = nng_listener_setopt_ptr(l, NNG_OPT_WSS_TLS_CONFIG, cfg)) !=
+	    0) {
+		// We can wind up with EBUSY from the server
+		// already running.
+		if (rv != NNG_EBUSY) {
+			nng_tls_config_fini(cfg);
+			return (rv);
+		}
 	}
 	nng_tls_config_fini(cfg);
 	return (0);
 }
 
-TestMain("TLS Transport", {
-
+TestMain("WebSocket Secure (TLS) Transport", {
 	static trantest tt;
 
-	tt.dialer_init   = init_dialer_tls;
-	tt.listener_init = init_listener_tls;
-	tt.tmpl          = "tls+tcp://127.0.0.1:%u";
+	tt.dialer_init   = init_dialer_wss;
+	tt.listener_init = init_listener_wss;
+	tt.tmpl          = "wss://127.0.0.1:%u/test";
 	tt.proptest      = check_props_v4;
-	atexit(nng_fini);
 
 	trantest_test(&tt);
 
-	Convey("We can register the TLS transport",
-	    { So(nng_tls_register() == 0); });
-
-	Convey("We cannot connect to wild cards", {
-		nng_socket s;
-		char       addr[NNG_MAXADDRLEN];
-
-		So(nng_tls_register() == 0);
-		So(nng_pair_open(&s) == 0);
-		Reset({ nng_close(s); });
-		trantest_next_address(addr, "tls+tcp://*:%u");
-		So(nng_dial(s, addr, NULL, 0) == NNG_EADDRINVAL);
-	});
-
-	Convey("We can bind to wild card", {
-		nng_socket s1;
-		nng_socket s2;
-		char       addr[NNG_MAXADDRLEN];
-
-		So(nng_tls_register() == 0);
-		So(nng_pair_open(&s1) == 0);
-		So(nng_pair_open(&s2) == 0);
-		Reset({
-			nng_close(s2);
-			nng_close(s1);
-		});
-		trantest_next_address(addr, "tls+tcp://*:%u");
-		So(nng_listen(s1, addr, NULL, 0) == 0);
-		// reset port back one
-		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
-		So(nng_dial(s2, addr, NULL, 0) == 0);
-	});
-
-	Convey("Malformed TLS addresses do not panic", {
-		nng_socket s1;
-
-		So(nng_tls_register() == 0);
-		So(nng_pair_open(&s1) == 0);
-		Reset({ nng_close(s1); });
-		So(nng_dial(s1, "tls+tcp://127.0.0.1", NULL, 0) ==
-		    NNG_EADDRINVAL);
-		So(nng_dial(s1, "tls+tcp://127.0.0.1.32", NULL, 0) ==
-		    NNG_EADDRINVAL);
-		So(nng_dial(s1, "tls+tcp://127.0.x.1.32", NULL, 0) ==
-		    NNG_EADDRINVAL);
-		So(nng_listen(s1, "tls+tcp://127.0.0.1", NULL, 0) ==
-		    NNG_EADDRINVAL);
-		So(nng_listen(s1, "tls+tcp://127.0.0.1.32", NULL, 0) ==
-		    NNG_EADDRINVAL);
-		So(nng_listen(s1, "tls+tcp://127.0.x.1.32", NULL, 0) ==
-		    NNG_EADDRINVAL);
-	});
-
+	nng_fini();
 })

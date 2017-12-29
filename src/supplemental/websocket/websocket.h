@@ -12,9 +12,8 @@
 #define NNG_SUPPLEMENTAL_WEBSOCKET_WEBSOCKET_H
 
 // Pre-defined types for some prototypes.  These are from other subsystems.
-typedef struct nni_tls_config nni_tls_config;
-typedef struct nni_http_req   nni_http_req;
-typedef struct nni_http_res   nni_http_res;
+typedef struct nni_http_req nni_http_req;
+typedef struct nni_http_res nni_http_res;
 
 typedef struct nni_ws          nni_ws;
 typedef struct nni_ws_listener nni_ws_listener;
@@ -36,7 +35,7 @@ extern int  nni_ws_listener_listen(nni_ws_listener *);
 extern void nni_ws_listener_accept(nni_ws_listener *, nni_aio *);
 extern void nni_ws_listener_hook(
     nni_ws_listener *, nni_ws_listen_hook, void *);
-extern void nni_ws_listener_tls(nni_ws_listener *, nni_tls_config *);
+extern int nni_ws_listener_set_tls(nni_ws_listener *, nng_tls_config *);
 
 extern int  nni_ws_dialer_init(nni_ws_dialer **, const char *);
 extern void nni_ws_dialer_fini(nni_ws_dialer *);
@@ -44,6 +43,7 @@ extern void nni_ws_dialer_close(nni_ws_dialer *);
 extern int  nni_ws_dialer_proto(nni_ws_dialer *, const char *);
 extern int  nni_ws_dialer_header(nni_ws_dialer *, const char *, const char *);
 extern void nni_ws_dialer_dial(nni_ws_dialer *, nni_aio *);
+extern int  nni_ws_dialer_set_tls(nni_ws_dialer *, nng_tls_config *);
 
 // Dialer does not get a hook chance, as it can examine the request and reply
 // after dial is done; this is not a 3-way handshake, so the dialer does

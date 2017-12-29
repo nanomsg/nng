@@ -44,7 +44,7 @@ const char *inproc_template = "inproc://nng_multistress_%d";
 const char *ipc_template    = "ipc:///tmp/nng_multistress_%d";
 
 const char *templates[] = {
-#ifdef NNG_HAVE_TCP
+#ifdef NNG_TRANSPORT_TCP
 	"tcp://127.0.0.1:%d",
 #endif
 // It would be nice to test TCPv6, but CI doesn't support it.
@@ -52,10 +52,10 @@ const char *templates[] = {
 #ifdef NNG_TEST_TCPV6
 	"tcp://[::1]:%d",
 #endif
-#ifdef NNG_HAVE_INPROC
+#ifdef NNG_TRANSPORT_INPROC
 	"inproc://nng_multistress_%d",
 #endif
-#ifdef NNG_HAVE_IPC
+#ifdef NNG_TRANSPORT_IPC
 	"ipc:///tmp/nng_multistress_%d",
 #endif
 };

@@ -39,7 +39,7 @@ mkdir(const char *path, int mode)
 #include <unistd.h>
 #endif // WIN32
 
-#ifndef NNG_HAVE_ZEROTIER
+#ifndef NNG_TRANSPORT_ZEROTIER
 #define nng_zt_network_status_ok 0
 #endif
 

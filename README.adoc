@@ -11,10 +11,10 @@ can start using it for development, as we believe we are getting closer
 to release readiness.
 
 Review and testing feedback are appreciated however; but please understand
-that the project is still quite preliminary.
+that the project is still preliminary.
 
-This is a work in progress, and is *not* suitable for production use or
-publication.  When the library is ready for broader consumption, an
+This is a work in progress, and is *not* suitable for production use.
+When the library is ready for broader consumption, an
 announcement will be posted on the nanomsg mailing list and website.
 
 Some https://nanomsg.github.io/nng/man/[manual pages] are posted
@@ -24,26 +24,36 @@ If you are looking for the current production version of nanomsg, please
 see the https://github.com/nanomsg/nanomsg[nanomsg repo].
 
 If you want to build and test yourself, you need CMake version 3.1, and
-you can use standard CMake build recipes.  On a Linux/UNIX system, 
-you can for example do:
+you can use standard CMake build recipes.  (We highly recommend using
+https://ninja-build.org[Ninja] as it is much faster than traditional
+build systems.) On a Linux/UNIX system, if you have Ninja already
+installed, you can for example do:
 
 [source,sh]
 ----
   $ mkdir build
-  $ cmake ..
-  $ make
-  $ make test
+  $ cmake -G Ninja ..
+  $ ninja
+  $ ninja test
 ----
 
-If you want to enable the TLS transport, which is not supported by legacy
-nanomsg, use -DNNG_TRANSPORT_TLS=ON in your cmake command line.  You will
-need to have the ARM mbedTLS library installed.  (This is available in
-Xenial Ubuntu as libmbedtls-dev).
+This library can be compiled with support for TLS, which enables
+the use of the "tls+tcp://" and "wss://" schemes.  In order to this,
+configure with `-DNNG_ENABLE_TLS=ON`.
 
-The API is not yet documented, but if you want to explore using the newer
-API, pleaes have a look at the `nng.h` header file.  A legacy compatible
-`nng_compat.h` header is available and offers API compatibility with legacy
-_nanomsg_.
+NOTE: The `NNG_ENABLE_TLS` library depends on the ARM
+https://tls.mbed.org[mbedTLS] library.  This library is available
+in packaged form for many systems, and can be built for just about
+any of the others.  However, please be aware of the licensing
+implications, because the mbedTLS library carries other licensing
+requirements (either Apache or GPL) than _nng_.
+either Apache or GPL licenses.
+
+Documentation is a work in progres -- initial pages are
+https://nanomsg.github.io/nng[online], but there is much missing.
+You can also explore the `nng.h` header file, which provides the public
+API. A legacy compatible `nng_compat.h` header is available and
+offers API compatibility with legacy _nanomsg_.
 
 == Commercial Support
 

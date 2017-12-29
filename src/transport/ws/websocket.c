@@ -15,6 +15,7 @@
 
 #include "core/nng_impl.h"
 #include "supplemental/http/http.h"
+#include "supplemental/tls/tls.h"
 #include "supplemental/websocket/websocket.h"
 
 #include "websocket.h"
@@ -42,6 +43,7 @@ struct ws_ep {
 	nni_ws_listener *listener;
 	nni_ws_dialer *  dialer;
 	nni_list         headers; // to send, res or req
+	nng_tls_config * tls;
 };
 
 struct ws_pipe {
@@ -368,9 +370,6 @@ ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
 	ws_hdr * h;
 	int      rv;
 
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
 	if (ep == NULL) {
 		return (0);
 	}
@@ -449,7 +448,11 @@ ws_ep_setopt_reqhdrs(void *arg, const void *v, size_t sz)
 {
 	ws_ep *ep = arg;
 
-	if (ep->mode == NNI_EP_MODE_LISTEN) {
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
+
+	if ((ep != NULL) && (ep->mode == NNI_EP_MODE_LISTEN)) {
 		return (NNG_EREADONLY);
 	}
 	return (ws_ep_setopt_headers(ep, v, sz));
@@ -460,7 +463,11 @@ ws_ep_setopt_reshdrs(void *arg, const void *v, size_t sz)
 {
 	ws_ep *ep = arg;
 
-	if (ep->mode == NNI_EP_MODE_DIAL) {
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
+
+	if ((ep != NULL) && (ep->mode == NNI_EP_MODE_DIAL)) {
 		return (NNG_EREADONLY);
 	}
 	return (ws_ep_setopt_headers(ep, v, sz));
@@ -594,6 +601,11 @@ ws_ep_fini(void *arg)
 	nni_strfree(ep->addr);
 	nni_strfree(ep->protoname);
 	nni_mtx_fini(&ep->mtx);
+#ifdef NNG_TRANSPORT_WSS
+	if (ep->tls) {
+		nng_tls_config_fini(ep->tls);
+	}
+#endif
 	NNI_FREE_STRUCT(ep);
 }
 
@@ -689,9 +701,20 @@ ws_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-
 	nni_mtx_init(&ep->mtx);
 	NNI_LIST_INIT(&ep->headers, ws_hdr, node);
+
+#ifdef NNG_TRANSPORT_WSS
+	if (strncmp(url, "wss://", 4) == 0) {
+		rv = nng_tls_config_init(&ep->tls,
+		    mode == NNI_EP_MODE_DIAL ? NNG_TLS_MODE_CLIENT
+		                             : NNG_TLS_MODE_SERVER);
+		if (rv != 0) {
+			NNI_FREE_STRUCT(ep);
+			return (rv);
+		}
+	}
+#endif
 
 	// List of pipes (server only).
 	nni_aio_list_init(&ep->aios);
@@ -758,3 +781,100 @@ nng_ws_register(void)
 {
 	return (nni_tran_register(&ws_tran));
 }
+
+#ifdef NNG_TRANSPORT_WSS
+
+static int
+wss_ep_getopt_tlsconfig(void *arg, void *v, size_t *szp)
+{
+	ws_ep *ep = arg;
+	return (nni_getopt_ptr(ep->tls, v, szp));
+}
+
+static int
+wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz)
+{
+	ws_ep *         ep = arg;
+	nng_tls_config *cfg;
+	int             rv;
+
+	if (sz != sizeof(cfg)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(&cfg, v, sz);
+	if (cfg == NULL) {
+		// NULL is clearly invalid.
+		return (NNG_EINVAL);
+	}
+	if (ep == NULL) {
+		return (0);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (ep->mode == NNI_EP_MODE_LISTEN) {
+		rv = nni_ws_listener_set_tls(ep->listener, cfg);
+	} else {
+		rv = nni_ws_dialer_set_tls(ep->dialer, cfg);
+	}
+	if (rv == 0) {
+		if (ep->tls != NULL) {
+			nng_tls_config_fini(ep->tls);
+		}
+		nni_tls_config_hold(cfg);
+		ep->tls = cfg;
+	}
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static nni_tran_ep_option wss_ep_options[] = {
+	{
+	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_getopt = ws_ep_getopt_recvmaxsz,
+	    .eo_setopt = ws_ep_setopt_recvmaxsz,
+	},
+	{
+	    .eo_name   = NNG_OPT_WSS_REQUEST_HEADERS,
+	    .eo_getopt = NULL,
+	    .eo_setopt = ws_ep_setopt_reqhdrs,
+	},
+	{
+	    .eo_name   = NNG_OPT_WSS_RESPONSE_HEADERS,
+	    .eo_getopt = NULL,
+	    .eo_setopt = ws_ep_setopt_reshdrs,
+	},
+	{
+	    .eo_name   = NNG_OPT_WSS_TLS_CONFIG,
+	    .eo_getopt = wss_ep_getopt_tlsconfig,
+	    .eo_setopt = wss_ep_setopt_tlsconfig,
+	},
+
+	// terminate list
+	{ NULL, NULL, NULL },
+};
+
+static nni_tran_ep wss_ep_ops = {
+	.ep_init    = ws_ep_init,
+	.ep_fini    = ws_ep_fini,
+	.ep_connect = ws_ep_connect,
+	.ep_bind    = ws_ep_bind,
+	.ep_accept  = ws_ep_accept,
+	.ep_close   = ws_ep_close,
+	.ep_options = wss_ep_options,
+};
+
+static nni_tran wss_tran = {
+	.tran_version = NNI_TRANSPORT_VERSION,
+	.tran_scheme  = "wss",
+	.tran_ep      = &wss_ep_ops,
+	.tran_pipe    = &ws_pipe_ops,
+	.tran_init    = ws_tran_init,
+	.tran_fini    = ws_tran_fini,
+};
+
+int
+nng_wss_register(void)
+{
+	return (nni_tran_register(&wss_tran));
+}
+
+#endif // NNG_TRANSPORT_WSS

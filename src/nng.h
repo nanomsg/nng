@@ -21,6 +21,7 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -90,6 +91,7 @@ NNG_DECL int nng_getopt_int(nng_socket, const char *, int *);
 NNG_DECL int nng_getopt_ms(nng_socket, const char *, nng_duration *);
 NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
 NNG_DECL int nng_getopt_uint64(nng_socket, const char *, uint64_t *);
+NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **);
 
 // nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy
@@ -138,6 +140,7 @@ NNG_DECL int nng_dialer_setopt_int(nng_dialer, const char *, int);
 NNG_DECL int nng_dialer_setopt_ms(nng_dialer, const char *, nng_duration);
 NNG_DECL int nng_dialer_setopt_size(nng_dialer, const char *, size_t);
 NNG_DECL int nng_dialer_setopt_uint64(nng_dialer, const char *, uint64_t);
+NNG_DECL int nng_dialer_setopt_ptr(nng_dialer, const char *, void *);
 
 // nng_dialer_getopt obtains the option for a dialer. This will
 // fail for options that a particular dialer is not interested in,
@@ -147,6 +150,7 @@ NNG_DECL int nng_dialer_getopt_int(nng_dialer, const char *, int *);
 NNG_DECL int nng_dialer_getopt_ms(nng_dialer, const char *, nng_duration *);
 NNG_DECL int nng_dialer_getopt_size(nng_dialer, const char *, size_t *);
 NNG_DECL int nng_dialer_getopt_uint64(nng_dialer, const char *, uint64_t *);
+NNG_DECL int nng_dialer_getopt_ptr(nng_dialer, const char *, void **);
 
 // nng_listener_setopt sets an option for a dialer.  This value is
 // not stored in the socket.  Subsequent setopts on the socket may
@@ -158,6 +162,7 @@ NNG_DECL int nng_listener_setopt_int(nng_listener, const char *, int);
 NNG_DECL int nng_listener_setopt_ms(nng_listener, const char *, nng_duration);
 NNG_DECL int nng_listener_setopt_size(nng_listener, const char *, size_t);
 NNG_DECL int nng_listener_setopt_uint64(nng_listener, const char *, uint64_t);
+NNG_DECL int nng_listener_setopt_ptr(nng_listener, const char *, void *);
 
 // nng_listener_getopt obtains the option for a listener.  This will
 // fail for options that a particular listener is not interested in,
@@ -169,6 +174,7 @@ NNG_DECL int nng_listener_getopt_ms(
 NNG_DECL int nng_listener_getopt_size(nng_listener, const char *, size_t *);
 NNG_DECL int nng_listener_getopt_uint64(
     nng_listener, const char *, uint64_t *);
+NNG_DECL int nng_listener_getopt_ptr(nng_listener, const char *, void **);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.
@@ -573,6 +579,73 @@ enum nng_sockaddr_family {
 	NNG_AF_INET6  = 4,
 	NNG_AF_ZT     = 5, // ZeroTier
 };
+
+// For some transports, we need TLS configuration.  This
+// section lets us work with TLS configurations.  Note
+// that these symbols are only actually present at link time
+// if TLS support is enabled in your build.  Note also that
+// a TLS configuration cannot be changed once it is in use.
+typedef struct nng_tls_config nng_tls_config;
+
+typedef enum nng_tls_mode {
+	NNG_TLS_MODE_CLIENT = 0,
+	NNG_TLS_MODE_SERVER = 1,
+} nng_tls_mode;
+
+typedef enum nng_tls_auth_mode {
+	NNG_TLS_AUTH_MODE_NONE     = 0, // No verification is performed
+	NNG_TLS_AUTH_MODE_OPTIONAL = 1, // Verify cert if presented
+	NNG_TLS_AUTH_MODE_REQUIRED = 2, // Verify cert, close if invalid
+} nng_tls_auth_mode;
+
+// nng_tls_config init creates a TLS configuration using
+// reasonable defaults.  This configuration can be shared
+// with multiple pipes or services/servers.
+NNG_DECL int nng_tls_config_init(nng_tls_config **, nng_tls_mode);
+
+NNG_DECL void nng_tls_config_fini(nng_tls_config *);
+
+// nng_tls_config_server_name sets the server name.  This is
+// called by clients to set the name that the server supplied
+// certificate should be matched against.  This can also cause
+// the SNI to be sent to the server to tell it which cert to
+// use if it supports more than one.
+NNG_DECL int nng_tls_config_server_name(nng_tls_config *, const char *);
+
+// nng_tls_config_ca_cert configures one or more CAs used for validation
+// of peer certificates.  Multiple CAs (and their chains) may be configured
+// by either calling this multiple times, or by specifying a list of
+// certificates as concatenated data.  The certs may be in PEM or DER
+// format.
+NNG_DECL int nng_tls_config_ca_cert(nng_tls_config *, const uint8_t *, size_t);
+
+// nng_tls_config_clr loads a certificate revocation list.  Again, these
+// are in X.509 format (either PEM or DER).
+NNG_DECL int nng_tls_config_crl(nng_tls_config *, const uint8_t *, size_t);
+
+// nng_tls_config_cert is used to load our own certificate.  For servers,
+// this may be called more than once to configure multiple different keys,
+// for example with different algorithms depending on what the peer supports.
+// On the client, only a single option is available.
+NNG_DECL int nng_tls_config_cert(nng_tls_config *, const uint8_t *, size_t);
+
+// nng_tls_config_key is used to pass our own private key.
+NNG_DECL int nng_tls_config_key(nng_tls_config *, const uint8_t *, size_t);
+
+// nng_tls_config_pass is used to pass a password used to decrypt
+// private keys that are encrypted.
+NNG_DECL int nng_tls_config_pass(nng_tls_config *, const char *);
+
+// nng_tls_config_validate_peer is used to enable validation of the peer
+// and it's certificate.  If disabled, the peer's certificate will still
+// be available, but may not be valid.
+NNG_DECL int nng_tls_config_validate_peer(nng_tls_config *, bool);
+
+// nng_tls_config_auth_mode is used to configure the authentication mode use.
+// The default is that servers have this off (i.e. no client authentication)
+// and clients have it on (they verify the server), which matches typical
+// practice.
+NNG_DECL int nng_tls_config_auth_mode(nng_tls_config *, nng_tls_auth_mode);
 
 #ifdef __cplusplus
 }

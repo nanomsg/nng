@@ -187,6 +187,19 @@ nni_getopt_size(size_t u, void *val, size_t *sizep)
 }
 
 int
+nni_getopt_ptr(void *ptr, void *val, size_t *sizep)
+{
+	size_t sz = sizeof(ptr);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof(ptr);
+	memcpy(val, &ptr, sz);
+	return (0);
+}
+
+int
 nni_setopt_buf(nni_msgq *mq, const void *val, size_t sz)
 {
 	int len;

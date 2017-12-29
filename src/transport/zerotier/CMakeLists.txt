@@ -11,6 +11,7 @@
 # ZeroTier protocol
 
 set (NNG_TRANSPORT_ZEROTIER_SOURCE "" CACHE PATH "Location of ZeroTier source tree.")
+mark_as_advanced(NNG_TRANSPORT_ZEROTIER_SOURCE)
 
 if (NNG_TRANSPORT_ZEROTIER)
 

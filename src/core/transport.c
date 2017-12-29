@@ -56,12 +56,12 @@ nni_tran_register(const nni_tran *tran)
 	nni_mtx_lock(&nni_tran_lk);
 	// Check to see if the transport is already registered...
 	NNI_LIST_FOREACH (&nni_tran_list, t) {
-		if (tran->tran_init == t->t_tran.tran_init) {
-			nni_mtx_unlock(&nni_tran_lk);
-			// Same transport, duplicate registration.
-			return (0);
-		}
 		if (strcmp(tran->tran_scheme, t->t_tran.tran_scheme) == 0) {
+			if (tran->tran_init == t->t_tran.tran_init) {
+				// duplicate.
+				nni_mtx_unlock(&nni_tran_lk);
+				return (0);
+			}
 			nni_mtx_unlock(&nni_tran_lk);
 			return (NNG_ESTATE);
 		}
@@ -208,24 +208,29 @@ nni_tran_chkopt(const char *name, const void *v, size_t sz)
 
 typedef int (*nni_tran_ctor)(void);
 
+// These are just the statically compiled in constructors.
+// In the future we might want to support dynamic additions.
 static nni_tran_ctor nni_tran_ctors[] = {
-#ifdef NNG_HAVE_INPROC
+#ifdef NNG_TRANSPORT_INPROC
 	nng_inproc_register,
 #endif
-#ifdef NNG_HAVE_IPC
+#ifdef NNG_TRANSPORT_IPC
 	nng_ipc_register,
 #endif
-#ifdef NNG_HAVE_TCP
+#ifdef NNG_TRANSPORT_TCP
 	nng_tcp_register,
 #endif
-#ifdef NNG_HAVE_TLS
+#ifdef NNG_TRANSPORT_TLS
 	nng_tls_register,
 #endif
-#ifdef NNG_HAVE_ZEROTIER
-	nng_zt_register,
-#endif
-#ifdef NNG_HAVE_WEBSOCKET
+#ifdef NNG_TRANSPORT_WS
 	nng_ws_register,
+#endif
+#ifdef NNG_TRANSPORT_WSS
+	nng_wss_register,
+#endif
+#ifdef NNG_TRANSPORT_ZEROTIER
+	nng_zt_register,
 #endif
 	NULL,
 };
