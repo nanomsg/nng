@@ -142,7 +142,7 @@ static LONG plat_inited = 0;
 int
 nni_plat_init(int (*helper)(void))
 {
-	int            rv;
+	int            rv   = 0;
 	static SRWLOCK lock = SRWLOCK_INIT;
 
 	if (plat_inited) {
