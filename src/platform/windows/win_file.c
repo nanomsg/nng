@@ -197,8 +197,8 @@ nni_plat_dir_close(void *dir)
 int
 nni_plat_dir_create(const char *name)
 {
-	char parent[MAX_PATH + 1];
-	int  len;
+	char   parent[MAX_PATH + 1];
+	size_t len;
 
 	nni_strlcpy(parent, name, sizeof(parent));
 	len = strlen(parent);
