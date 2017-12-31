@@ -72,6 +72,7 @@ Transports
 * <<nng_ipc.adoc#,nng_ipc(7)>> - Inter-process transport
 * <<nng_tls.adoc#,nng_tls(7)>> - TLSv1.2 over TCP transport
 * <<nng_tcp.adoc#,nng_tcp(7)>> - TCP (and TCPv6) transport
+* <<nng_ws.adoc#,nng_ws(7)>> - WebSocket transport
 * <<nng_zerotier.adoc#,nng_zerotier(7)>> - ZeroTier transport
 
 Conceptual Overview
