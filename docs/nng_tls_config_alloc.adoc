@@ -1,0 +1,91 @@
+nng_tls_config_alloc(3)
+=======================
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:icons: font
+:source-highlighter: pygments
+:copyright: Copyright 2017 Staysail Systems, Inc. <info@staysail.tech> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+NAME
+----
+nng_tls_config_alloc - allocate TLS configuration object
+
+SYNOPSIS
+--------
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+typedef enum nng_tls_mode {
+        NNG_TLS_MODE_CLIENT,
+        NNG_TLS_MODE_SERVER
+} nng_tls_mode;
+
+int nng_tls_config_alloc(nni_tls_config **cfgp, nng_tls_mode mode);
+-----------
+
+DESCRIPTION
+-----------
+
+The `nng_tls_config_alloc()` function creates a newly initialized
+TLS (Transport Layer Security, see
+https://tools.ietf.org/html/rfc5246[RFC 5246])
+configuration object.
+
+This object is initialized for use when acting as either a
+client (`NNG_TLS_MODE_CLIENT`) or as a server (`NNG_TLS_MODE_SERVER`).
+
+A TLS object can be further modified by functions that set the security
+keys used, peeer certificates, protocol policies, and so forth.
+
+A single TLS configuration object can be used with multiple TLS streams
+or services.  The underlying system uses reference counting to ensure
+that object is not inadvertently freed while in use.
+
+Also note that a TLS configuration object becomes "read-only" after it
+is first used with a service.  After this points, attempts to apply
+further changes to the configuration will result in `NNG_EBUSY`.
+
+
+RETURN VALUES
+-------------
+
+This function returns 0 on success, and non-zero otherwise.
+
+
+ERRORS
+------
+
+`NNG_ENOMEM`:: Insufficient memory is available to allocate the object.
+
+
+SEE ALSO
+--------
+
+<<nng_setopt#,nng_setopt(3)>>
+<<nng_strerror#,nng_strerror(3)>>
+<<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>>
+<<nng_tls_config_ca_cert#,nng_tls_config_ca_cert(3)>>
+<<nng_tls_config_cert#,nng_tls_config_cert(3)>>
+<<nng_tls_config_crl#,nng_tls_config_crl(3)>>
+<<nng_tls_config_free#,nng_tls_config_free(3)>>
+<<nng_tls_config_key#,nng_tls_config_key(3)>>
+<<nng_tls_config_pass#,nng_tls_config_pass(3)>>
+<<nng_tls_config_server_name#,nng_tls_config_server_name(3)>>
+<<nng#,nng(7)>>
+
+
+COPYRIGHT
+---------
+
+Copyright 2017 mailto:info@staysail.tech[Staysail Systems, Inc.]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/LICENSE.txt[MIT License].

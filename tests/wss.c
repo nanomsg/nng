@@ -141,7 +141,7 @@ init_dialer_wss(trantest *tt, nng_dialer d)
 	nng_tls_config *cfg;
 	int             rv;
 
-	if ((rv = nng_tls_config_init(&cfg, NNG_TLS_MODE_CLIENT)) != 0) {
+	if ((rv = nng_tls_config_alloc(&cfg, NNG_TLS_MODE_CLIENT)) != 0) {
 		return (rv);
 	}
 	if ((rv = nng_tls_config_ca_cert(
@@ -155,7 +155,7 @@ init_dialer_wss(trantest *tt, nng_dialer d)
 	rv = nng_dialer_setopt_ptr(d, NNG_OPT_WSS_TLS_CONFIG, cfg);
 
 out:
-	nng_tls_config_fini(cfg);
+	nng_tls_config_free(cfg);
 	return (rv);
 }
 
@@ -165,31 +165,29 @@ init_listener_wss(trantest *tt, nng_listener l)
 	nng_tls_config *cfg;
 	int             rv;
 
-	if ((rv = nng_tls_config_init(&cfg, NNG_TLS_MODE_SERVER)) != 0) {
+	if ((rv = nng_tls_config_alloc(&cfg, NNG_TLS_MODE_SERVER)) != 0) {
 		return (rv);
 	}
 	if ((rv = nng_tls_config_cert(
 	         cfg, (void *) server_cert, sizeof(server_cert))) != 0) {
-		nng_tls_config_fini(cfg);
-		return (rv);
+		goto out;
 	}
 	if ((rv = nng_tls_config_key(
 	         cfg, (void *) server_key, sizeof(server_key))) != 0) {
-		nng_tls_config_fini(cfg);
-		return (rv);
+		goto out;
 	}
 
 	if ((rv = nng_listener_setopt_ptr(l, NNG_OPT_WSS_TLS_CONFIG, cfg)) !=
 	    0) {
-		// We can wind up with EBUSY from the server
-		// already running.
-		if (rv != NNG_EBUSY) {
-			nng_tls_config_fini(cfg);
-			return (rv);
+		// We can wind up with EBUSY from the server already running.
+		if (rv == NNG_EBUSY) {
+			rv = 0;
 		}
 	}
-	nng_tls_config_fini(cfg);
-	return (0);
+
+out:
+	nng_tls_config_free(cfg);
+	return (rv);
 }
 
 TestMain("WebSocket Secure (TLS) Transport", {

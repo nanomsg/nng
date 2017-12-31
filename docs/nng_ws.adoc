@@ -169,7 +169,7 @@ This object is only available for `wss://` endpoints.
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>
-<<nng_tls_init#,nng_tls_init(3)>>
+<<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>
 
 COPYRIGHT
 ---------

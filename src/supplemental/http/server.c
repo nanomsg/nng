@@ -609,7 +609,7 @@ http_server_fini(nni_http_server *s)
 	nni_mtx_unlock(&s->mtx);
 #ifdef NNG_SUPP_TLS
 	if (s->tls != NULL) {
-		nng_tls_config_fini(s->tls);
+		nni_tls_config_fini(s->tls);
 	}
 #endif
 	nni_aio_fini(s->accaio);
@@ -1108,7 +1108,7 @@ nni_http_server_set_tls(nni_http_server *s, nng_tls_config *tcfg)
 	}
 	nni_mtx_unlock(&s->mtx);
 	if (old) {
-		nng_tls_config_fini(old);
+		nni_tls_config_fini(old);
 	}
 	return (0);
 }

@@ -243,7 +243,7 @@ if the `NNG_OPT_TLS_AUTH_MODE` option is set to
 SEE ALSO
 --------
 <<nng.adoc#,nng(7)>>
-<<nng_tls_init#,nng_tls_init(3)>>
+<<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>
 
 COPYRIGHT
 ---------

@@ -125,6 +125,7 @@ The library API is documented at <<libnng.adoc#,libnng(3)>>.
 
 SEE ALSO
 --------
+<<libnng.adoc#,libnng(3)>>
 <<nng_compat.adoc#,nng_compat(3)>>
 
 COPYRIGHT

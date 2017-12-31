@@ -157,7 +157,7 @@ nni_tls_random(void *arg, unsigned char *buf, size_t sz)
 }
 
 void
-nng_tls_config_fini(nng_tls_config *cfg)
+nni_tls_config_fini(nng_tls_config *cfg)
 {
 	nni_tls_certkey *ck;
 
@@ -199,7 +199,7 @@ nng_tls_config_fini(nng_tls_config *cfg)
 }
 
 int
-nng_tls_config_init(nng_tls_config **cpp, enum nng_tls_mode mode)
+nni_tls_config_init(nng_tls_config **cpp, enum nng_tls_mode mode)
 {
 	nng_tls_config *cfg;
 	int             rv;
@@ -227,7 +227,7 @@ nng_tls_config_init(nng_tls_config **cpp, enum nng_tls_mode mode)
 	rv = mbedtls_ssl_config_defaults(&cfg->cfg_ctx, sslmode,
 	    MBEDTLS_SSL_TRANSPORT_STREAM, MBEDTLS_SSL_PRESET_DEFAULT);
 	if (rv != 0) {
-		nng_tls_config_fini(cfg);
+		nni_tls_config_fini(cfg);
 		return (rv);
 	}
 
@@ -242,7 +242,7 @@ nng_tls_config_init(nng_tls_config **cpp, enum nng_tls_mode mode)
 	rv = mbedtls_ctr_drbg_seed(
 	    &cfg->rng_ctx, nni_tls_get_entropy, NULL, NULL, 0);
 	if (rv != 0) {
-		nng_tls_config_fini(cfg);
+		nni_tls_config_fini(cfg);
 		return (rv);
 	}
 #endif
@@ -284,7 +284,7 @@ nni_tls_fini(nni_tls *tp)
 	nni_free(tp->sendbuf, NNG_TLS_MAX_RECV_SIZE);
 	if (tp->cfg != NULL) {
 		// release the hold we got on it
-		nng_tls_config_fini(tp->cfg);
+		nni_tls_config_fini(tp->cfg);
 	}
 	NNI_FREE_STRUCT(tp);
 }
@@ -1064,4 +1064,16 @@ err:
 	nni_mtx_unlock(&cfg->lk);
 	nni_free(tmp, len);
 	return (rv);
+}
+
+int
+nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)
+{
+	return (nni_tls_config_init(cfgp, mode));
+}
+
+int
+nng_tls_config_free(nng_tls_config *cfg)
+{
+	nni_tls_config_fini(cfg);
 }

@@ -598,12 +598,14 @@ typedef enum nng_tls_auth_mode {
 	NNG_TLS_AUTH_MODE_REQUIRED = 2, // Verify cert, close if invalid
 } nng_tls_auth_mode;
 
-// nng_tls_config init creates a TLS configuration using
+// nng_tls_config_alloc creates a TLS configuration using
 // reasonable defaults.  This configuration can be shared
 // with multiple pipes or services/servers.
 NNG_DECL int nng_tls_config_init(nng_tls_config **, nng_tls_mode);
 
-NNG_DECL void nng_tls_config_fini(nng_tls_config *);
+// nng_tls_config_free drops the reference count on the TLS
+// configuration object, and if zero, deallocates it.
+NNG_DECL void nng_tls_config_free(nng_tls_config *);
 
 // nng_tls_config_server_name sets the server name.  This is
 // called by clients to set the name that the server supplied
@@ -619,7 +621,7 @@ NNG_DECL int nng_tls_config_server_name(nng_tls_config *, const char *);
 // format.
 NNG_DECL int nng_tls_config_ca_cert(nng_tls_config *, const uint8_t *, size_t);
 
-// nng_tls_config_clr loads a certificate revocation list.  Again, these
+// nng_tls_config_crl loads a certificate revocation list.  Again, these
 // are in X.509 format (either PEM or DER).
 NNG_DECL int nng_tls_config_crl(nng_tls_config *, const uint8_t *, size_t);
 
@@ -635,11 +637,6 @@ NNG_DECL int nng_tls_config_key(nng_tls_config *, const uint8_t *, size_t);
 // nng_tls_config_pass is used to pass a password used to decrypt
 // private keys that are encrypted.
 NNG_DECL int nng_tls_config_pass(nng_tls_config *, const char *);
-
-// nng_tls_config_validate_peer is used to enable validation of the peer
-// and it's certificate.  If disabled, the peer's certificate will still
-// be available, but may not be valid.
-NNG_DECL int nng_tls_config_validate_peer(nng_tls_config *, bool);
 
 // nng_tls_config_auth_mode is used to configure the authentication mode use.
 // The default is that servers have this off (i.e. no client authentication)

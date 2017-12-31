@@ -14,6 +14,14 @@
 // nni_tls represents the context for a single TLS stream.
 typedef struct nni_tls nni_tls;
 
+// nni_tls_config_init creates a new TLS configuration object.
+// The object is created with a reference count of one.
+extern int nni_tls_config_init(nng_tls_config **, nng_tls_mode);
+
+// nni_tls_config_fini drops the reference on the configuration
+// object, deallocating if this was the last reference.
+extern void nni_tls_config_fini(nng_tls_config *);
+
 // nni_tls_config_hold is used to get a hold on the config
 // object, preventing it from being released inadvertently.
 // The hold is released with a call to nng_tls_config_fini().
