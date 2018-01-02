@@ -601,7 +601,7 @@ typedef enum nng_tls_auth_mode {
 // nng_tls_config_alloc creates a TLS configuration using
 // reasonable defaults.  This configuration can be shared
 // with multiple pipes or services/servers.
-NNG_DECL int nng_tls_config_init(nng_tls_config **, nng_tls_mode);
+NNG_DECL int nng_tls_config_alloc(nng_tls_config **, nng_tls_mode);
 
 // nng_tls_config_free drops the reference count on the TLS
 // configuration object, and if zero, deallocates it.

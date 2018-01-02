@@ -589,7 +589,7 @@ nni_tls_ep_fini(void *arg)
 		nni_plat_tcp_ep_fini(ep->tep);
 	}
 	if (ep->cfg) {
-		nng_tls_config_fini(ep->cfg);
+		nni_tls_config_fini(ep->cfg);
 	}
 	nni_aio_fini(ep->aio);
 	nni_mtx_fini(&ep->mtx);
@@ -684,7 +684,7 @@ nni_tls_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	}
 
 	if (((rv = nni_plat_tcp_ep_init(&ep->tep, &lsa, &rsa, mode)) != 0) ||
-	    ((rv = nng_tls_config_init(&ep->cfg, tlsmode)) != 0) ||
+	    ((rv = nni_tls_config_init(&ep->cfg, tlsmode)) != 0) ||
 	    ((rv = nng_tls_config_auth_mode(ep->cfg, authmode)) != 0) ||
 	    ((rv = nni_aio_init(&ep->aio, nni_tls_ep_cb, ep)) != 0)) {
 		nni_strfree(rhost);
@@ -887,7 +887,7 @@ tls_setopt_config(void *arg, const void *data, size_t sz)
 	nni_tls_config_hold(cfg);
 	ep->cfg = cfg;
 	if (old != NULL) {
-		nng_tls_config_fini(old);
+		nni_tls_config_fini(old);
 	}
 	return (0);
 }

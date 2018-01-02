@@ -1072,7 +1072,7 @@ nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)
 	return (nni_tls_config_init(cfgp, mode));
 }
 
-int
+void
 nng_tls_config_free(nng_tls_config *cfg)
 {
 	nni_tls_config_fini(cfg);

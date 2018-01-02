@@ -603,7 +603,7 @@ ws_ep_fini(void *arg)
 	nni_mtx_fini(&ep->mtx);
 #ifdef NNG_TRANSPORT_WSS
 	if (ep->tls) {
-		nng_tls_config_fini(ep->tls);
+		nni_tls_config_fini(ep->tls);
 	}
 #endif
 	NNI_FREE_STRUCT(ep);
@@ -706,7 +706,7 @@ ws_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 
 #ifdef NNG_TRANSPORT_WSS
 	if (strncmp(url, "wss://", 4) == 0) {
-		rv = nng_tls_config_init(&ep->tls,
+		rv = nni_tls_config_init(&ep->tls,
 		    mode == NNI_EP_MODE_DIAL ? NNG_TLS_MODE_CLIENT
 		                             : NNG_TLS_MODE_SERVER);
 		if (rv != 0) {
@@ -817,7 +817,7 @@ wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz)
 	}
 	if (rv == 0) {
 		if (ep->tls != NULL) {
-			nng_tls_config_fini(ep->tls);
+			nni_tls_config_fini(ep->tls);
 		}
 		nni_tls_config_hold(cfg);
 		ep->tls = cfg;
