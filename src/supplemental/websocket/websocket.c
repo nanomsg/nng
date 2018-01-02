@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -177,21 +177,19 @@ ws_contains_word(const char *phrase, const char *word)
 static int
 ws_make_accept(const char *key, char *accept)
 {
-	uint8_t      rawkey[16];
 	uint8_t      digest[20];
 	nni_sha1_ctx ctx;
 
 #define WS_KEY_GUID "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"
 #define WS_KEY_GUIDLEN 36
 
-	if ((strlen(key) != 24) ||
-	    (nni_base64_decode(key, 24, rawkey, 16) != 16)) {
+	if (strlen(key) != 24) {
 		return (NNG_EINVAL);
 	}
 
 	nni_sha1_init(&ctx);
-	nni_sha1_update(&ctx, rawkey, 16);
-	nni_sha1_update(&ctx, (uint8_t *) WS_KEY_GUID, WS_KEY_GUIDLEN);
+	nni_sha1_update(&ctx, key, 24);
+	nni_sha1_update(&ctx, WS_KEY_GUID, WS_KEY_GUIDLEN);
 	nni_sha1_final(&ctx, digest);
 
 	nni_base64_encode(digest, 20, accept, 28);
