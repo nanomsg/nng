@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -86,7 +86,7 @@ nni_sha1_final(nni_sha1_ctx *ctx, uint8_t digest[20])
 // nni_sha1 is a convenience that does the entire init, update, and final
 // sequence in a single operation.
 void
-nni_sha1(const uint8_t *msg, size_t length, uint8_t digest[20])
+nni_sha1(const void *msg, size_t length, uint8_t digest[20])
 {
 	nni_sha1_ctx ctx;
 
@@ -97,8 +97,10 @@ nni_sha1(const uint8_t *msg, size_t length, uint8_t digest[20])
 
 // nni_sha1_update updates the SHA1 context, reading from the message supplied.
 void
-nni_sha1_update(nni_sha1_ctx *ctx, const uint8_t *msg, size_t length)
+nni_sha1_update(nni_sha1_ctx *ctx, const void *data, size_t length)
 {
+	const uint8_t *msg = data;
+
 	if (!length) {
 		return;
 	}
