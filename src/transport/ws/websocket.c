@@ -743,6 +743,17 @@ ws_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 		return (rv);
 	}
 
+	if (mode == NNI_EP_MODE_DIAL) {
+		rv = nni_ws_dialer_proto(ep->dialer, ep->protoname);
+	} else {
+		rv = nni_ws_listener_proto(ep->listener, ep->protoname);
+	}
+
+	if (rv != 0) {
+		ws_ep_fini(ep);
+		return (rv);
+	}
+
 	*epp = ep;
 	return (0);
 }
