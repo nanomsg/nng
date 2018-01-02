@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -63,8 +63,10 @@ struct nni_http {
 	nni_list rdq; // high level http read requests
 	nni_list wrq; // high level http write requests
 
-	nni_aio *rd_aio; // bottom half read operations
-	nni_aio *wr_aio; // bottom half write operations
+	nni_aio *rd_uaio; // user aio for read
+	nni_aio *wr_uaio; // user aio for write
+	nni_aio *rd_aio;  // bottom half read operations
+	nni_aio *wr_aio;  // bottom half write operations
 
 	nni_mtx mtx;
 
@@ -214,10 +216,18 @@ http_rd_buf(nni_http *http, nni_aio *aio)
 static void
 http_rd_start(nni_http *http)
 {
-	nni_aio *aio;
+	for (;;) {
+		nni_aio *aio;
+		int      rv;
 
-	while ((aio = nni_list_first(&http->rdq)) != NULL) {
-		int rv;
+		if ((aio = http->rd_uaio) == NULL) {
+			if ((aio = nni_list_first(&http->rdq)) == NULL) {
+				// No more stuff waiting for read.
+				return;
+			}
+			nni_list_remove(&http->rdq, aio);
+			http->rd_uaio = aio;
+		}
 
 		if (http->closed) {
 			rv = NNG_ECLOSED;
@@ -228,11 +238,11 @@ http_rd_start(nni_http *http)
 		case NNG_EAGAIN:
 			return;
 		case 0:
-			nni_aio_list_remove(aio);
+			http->rd_uaio = NULL;
 			nni_aio_finish(aio, 0, aio->a_count);
 			break;
 		default:
-			nni_aio_list_remove(aio);
+			http->rd_uaio = NULL;
 			nni_aio_finish_error(aio, rv);
 			http_close(http);
 			break;
@@ -252,8 +262,8 @@ http_rd_cb(void *arg)
 	nni_mtx_lock(&http->mtx);
 
 	if ((rv = nni_aio_result(aio)) != 0) {
-		if ((uaio = nni_list_first(&http->rdq)) != NULL) {
-			nni_aio_list_remove(uaio);
+		if ((uaio = http->rd_uaio) != NULL) {
+			http->rd_uaio = NULL;
 			nni_aio_finish_error(uaio, rv);
 		}
 		http_close(http);
@@ -276,8 +286,12 @@ http_rd_cb(void *arg)
 	// be no data left in the user buffer.
 	NNI_ASSERT(http->rd_get == http->rd_put);
 
-	uaio = nni_list_first(&http->rdq);
-	NNI_ASSERT(uaio != NULL);
+	if ((uaio = http->rd_uaio) == NULL) {
+		// This indicates that a read request was canceled.  This
+		// can occur only when shutting down, really.
+		nni_mtx_unlock(&http->mtx);
+		return;
+	}
 
 	for (int i = 0; (uaio->a_niov != 0) && (cnt != 0); i++) {
 		// Pull up data from the buffer if possible.
@@ -312,13 +326,13 @@ http_rd_cancel(nni_aio *aio, int rv)
 	nni_http *http = aio->a_prov_data;
 
 	nni_mtx_lock(&http->mtx);
-	if (nni_aio_list_active(aio)) {
-		if (aio == nni_list_first(&http->rdq)) {
-			nni_aio_cancel(http->rd_aio, NNG_ECANCELED);
-		} else {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, rv);
-		}
+	if (aio == http->rd_uaio) {
+		http->rd_uaio = NULL;
+		nni_aio_cancel(http->rd_aio, rv);
+		nni_aio_finish_error(aio, rv);
+	} else if (nni_aio_list_active(aio)) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&http->mtx);
 }
@@ -334,7 +348,7 @@ http_rd_submit(nni_http *http, nni_aio *aio)
 		return;
 	}
 	nni_list_append(&http->rdq, aio);
-	if (nni_list_first(&http->rdq) == aio) {
+	if (http->rd_uaio == NULL) {
 		http_rd_start(http);
 	}
 }
@@ -344,14 +358,20 @@ http_wr_start(nni_http *http)
 {
 	nni_aio *aio;
 
-	if ((aio = nni_list_first(&http->wrq)) != NULL) {
-
-		for (int i = 0; i < aio->a_niov; i++) {
-			http->wr_aio->a_iov[i] = aio->a_iov[i];
+	if ((aio = http->wr_uaio) == NULL) {
+		if ((aio = nni_list_first(&http->wrq)) == NULL) {
+			// No more stuff waiting for read.
+			return;
 		}
-		http->wr_aio->a_niov = aio->a_niov;
-		http->wr(http->sock, http->wr_aio);
+		nni_list_remove(&http->wrq, aio);
+		http->wr_uaio = aio;
 	}
+
+	for (int i = 0; i < aio->a_niov; i++) {
+		http->wr_aio->a_iov[i] = aio->a_iov[i];
+	}
+	http->wr_aio->a_niov = aio->a_niov;
+	http->wr(http->sock, http->wr_aio);
 }
 
 static void
@@ -365,12 +385,12 @@ http_wr_cb(void *arg)
 
 	nni_mtx_lock(&http->mtx);
 
-	uaio = nni_list_first(&http->wrq);
+	uaio = http->wr_uaio;
 
 	if ((rv = nni_aio_result(aio)) != 0) {
 		// We failed to complete the aio.
 		if (uaio != NULL) {
-			nni_aio_list_remove(uaio);
+			http->wr_uaio = NULL;
 			nni_aio_finish_error(uaio, rv);
 		}
 		http_close(http);
@@ -379,7 +399,9 @@ http_wr_cb(void *arg)
 	}
 
 	if (uaio == NULL) {
-		// write canceled?
+		// Write canceled?  This happens pretty much only during
+		// shutdown/close, so we don't want to resume writing.
+		// The stream is probably corrupted at this point anyway.
 		nni_mtx_unlock(&http->mtx);
 		return;
 	}
@@ -406,14 +428,15 @@ http_wr_cb(void *arg)
 		aio->a_niov--;
 	}
 	if ((aio->a_niov != 0) && (aio->a_iov[0].iov_len != 0)) {
-		// We have more to transmit.
+		// We have more to transmit - start another and leave
+		// (we will get called again when it is done).
 		http->wr(http->sock, aio);
 		nni_mtx_unlock(&http->mtx);
 		return;
 	}
 
 done:
-	nni_aio_list_remove(uaio);
+	http->wr_uaio = NULL;
 	nni_aio_finish(uaio, 0, uaio->a_count);
 
 	// Start next write if another is ready.
@@ -428,13 +451,13 @@ http_wr_cancel(nni_aio *aio, int rv)
 	nni_http *http = aio->a_prov_data;
 
 	nni_mtx_lock(&http->mtx);
-	if (nni_aio_list_active(aio)) {
-		if (aio == nni_list_first(&http->wrq)) {
-			nni_aio_cancel(http->wr_aio, NNG_ECANCELED);
-		} else {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, rv);
-		}
+	if (aio == http->wr_uaio) {
+		http->wr_uaio = NULL;
+		nni_aio_cancel(http->wr_aio, rv);
+		nni_aio_finish_error(aio, rv);
+	} else if (nni_aio_list_active(aio)) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&http->mtx);
 }
@@ -450,7 +473,7 @@ http_wr_submit(nni_http *http, nni_aio *aio)
 		return;
 	}
 	nni_list_append(&http->wrq, aio);
-	if (nni_list_first(&http->wrq) == aio) {
+	if (http->wr_uaio == NULL) {
 		http_wr_start(http);
 	}
 }

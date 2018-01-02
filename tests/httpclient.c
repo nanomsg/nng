@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -40,7 +40,7 @@ TestMain("HTTP Client", {
 		iaio         = (nni_aio *) aio;
 		iaio->a_addr = &rsa;
 
-		nng_aio_set_timeout(aio, 1000);
+		nng_aio_set_timeout(aio, 20000);
 		nni_plat_tcp_resolv("httpbin.org", "80", NNG_AF_INET, 0, iaio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
@@ -83,7 +83,7 @@ TestMain("HTTP Client", {
 			So(nng_aio_result(aio) == 0);
 			So(nni_http_res_get_status(res) == 200);
 
-			Convey("The message contents are  correct", {
+			Convey("The message contents are correct", {
 				uint8_t     digest[20];
 				void *      data;
 				const char *cstr;

@@ -62,6 +62,7 @@ struct nni_ws_listener {
 	char *             serv;
 	char *             path;
 	nni_mtx            mtx;
+	nni_cv             cv;
 	nni_list           pend;
 	nni_list           reply;
 	nni_list           aios;
@@ -417,6 +418,7 @@ ws_close_cb(void *arg)
 	nni_http_close(ws->http);
 	nni_aio_cancel(ws->txaio, NNG_ECLOSED);
 	nni_aio_cancel(ws->rxaio, NNG_ECLOSED);
+	nni_aio_cancel(ws->httpaio, NNG_ECLOSED);
 
 	// This list (receive) should be empty.
 	while ((wm = nni_list_first(&ws->rxmsgs)) != NULL) {
@@ -1122,7 +1124,6 @@ nni_ws_fini(nni_ws *ws)
 static void
 ws_http_cb_listener(nni_ws *ws, nni_aio *aio)
 {
-	// This is only
 	nni_ws_listener *l;
 	l = nni_aio_get_data(aio, 0);
 
@@ -1139,6 +1140,9 @@ ws_http_cb_listener(nni_ws *ws, nni_aio *aio)
 		nni_aio_finish_pipe(aio, ws);
 	} else {
 		nni_list_append(&l->pend, ws);
+	}
+	if (nni_list_empty(&l->reply)) {
+		nni_cv_wake(&l->cv);
 	}
 	nni_mtx_unlock(&l->mtx);
 }
@@ -1240,7 +1244,6 @@ err:
 static void
 ws_http_cb(void *arg)
 {
-	// This is only done on the server/listener side.
 	nni_ws * ws  = arg;
 	nni_aio *aio = ws->httpaio;
 
@@ -1294,11 +1297,18 @@ nni_ws_listener_fini(nni_ws_listener *l)
 
 	nni_ws_listener_close(l);
 
+	nni_mtx_lock(&l->mtx);
+	while (!nni_list_empty(&l->reply)) {
+		nni_cv_wait(&l->cv);
+	}
+	nni_mtx_unlock(&l->mtx);
+
 	if (l->server != NULL) {
 		nni_http_server_fini(l->server);
 		l->server = NULL;
 	}
 
+	nni_cv_fini(&l->cv);
 	nni_mtx_fini(&l->mtx);
 	nni_strfree(l->url);
 	nni_strfree(l->proto);
@@ -1468,6 +1478,7 @@ err:
 		nni_aio_finish(aio, 0, 0);
 	}
 }
+
 static int
 ws_parse_url(const char *url, char **schemep, char **hostp, char **servp,
     char **pathp, char **queryp)
@@ -1570,6 +1581,7 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *url)
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&l->mtx);
+	nni_cv_init(&l->cv, &l->mtx);
 	nni_aio_list_init(&l->aios);
 
 	NNI_LIST_INIT(&l->pend, nni_ws, node);

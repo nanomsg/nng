@@ -3,8 +3,8 @@
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
-#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
-#   Copyright 2017 Capitar IT Group BV <info@capitar.com>
+#   Copyright 2018 Garrett D'Amore <garrett@damore.org>
+#   Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -137,7 +137,7 @@ add_nng_test(base64 5 NNG_SUPP_BASE64)
 add_nng_test(device 5 ON)
 add_nng_test(errors 2 ON)
 add_nng_test(files 5 ON)
-add_nng_test(httpclient 30 NNG_SUPP_HTTP)
+add_nng_test(httpclient 60 NNG_SUPP_HTTP)
 add_nng_test(httpserver 30 NNG_SUPP_HTTP)
 add_nng_test(idhash 5 ON)
 add_nng_test(inproc 5 NNG_TRANSPORT_INPROC)
