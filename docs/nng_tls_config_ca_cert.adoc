@@ -1,0 +1,82 @@
+nng_tls_config_ca_cert(3)
+=========================
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:icons: font
+:source-highlighter: pygments
+:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+NAME
+----
+nng_tls_config_ca_cert - configure certificate authority certificate chain
+
+SYNOPSIS
+--------
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+int nng_tls_config_ca_cert(nni_tls_config *cfg, const uint8_t *chain, size_t size)
+-----------
+
+DESCRIPTION
+-----------
+
+The `nng_tls_config_ca_cert()` function configures a certificate or
+certificate chain to be used when validating peers using the configuragion
+'cfg'.
+
+NOTE: This function *must* be called when the TLS authentication mode SYNOPSIS
+`NNG_TLS_AUTH_MODE_REQUIRED` or `NNG_TLS_AUTH_MODE_OPTIONAL`.  It will have
+no effect if the authentication mode is `NNG_TLS_AUTH_MODE_NONE`.
+
+TIP: This function may be called multiple times, to add additional chains
+to a configuration, without affecting those added previously.
+
+The certificates located in 'chain' may be in either
+https://tools.ietf.org/html/rfc7468[PEM] or DER format.  When the 'chain' is
+in PEM format, the certificates will be ASCII encoded, and concatenated
+together.  In this case the value of 'size' will be length of the
+corresponding string (without any terminating NUL byte).
+
+When using DER encoding, the 'size' will be the total number of bytes, after
+encoding.
+
+
+RETURN VALUES
+-------------
+
+This function returns 0 on success, and non-zero otherwise.
+
+ERRORS
+------
+
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
+`NNG_EINVAL`:: An invalid 'chain' or 'size' was supplied.
+
+SEE ALSO
+--------
+
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>,
+<<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>>,
+<<nng#,nng(7)>>
+
+
+COPYRIGHT
+---------
+
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/MIT[MIT License].

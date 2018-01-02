@@ -5,8 +5,8 @@ nng_push(7)
 :mansource: nng
 :icons: font
 :source-highlighter: pygments
-:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
             copy of which should be located in the distribution where this \
             file was obtained (LICENSE.txt).  A copy of the license may also \
@@ -30,7 +30,7 @@ DESCRIPTION
 -----------
 
 The _nng_push_ protocol is one half of a pipeline pattern.  The
-other side is the <<nng_pull.adoc#,nng_pull(7)>> protocol.
+other side is the <<nng_pull#,nng_pull(7)>> protocol.
 
 In the pipeline pattern, pushers distribute messages to pullers. 
 Each message sent
@@ -55,7 +55,7 @@ NOTE: Although the pipeline protocol honors flow control, and attempts
 to avoid dropping messages, no guarantee of delivery is made.  Furthermore,
 as there is no capability for message acknowledgement, applications that
 need reliable delivery are encouraged to consider the
-<<nng_req.adoc#,nng_req(7)>> protocol instead.
+<<nng_req#,nng_req(7)>> protocol instead.
 
 Protocol Versions
 ~~~~~~~~~~~~~~~~~
@@ -75,15 +75,15 @@ The _nng_push_ protocol has no protocol-specific headers.
     
 SEE ALSO
 --------
-<<nng.adoc#,nng(7)>>
-<<nng_pull.adoc#,nng_pull(7)>>
-<<nng_req.adoc#,nng_req(7)>>
+<<nng#,nng(7)>>,
+<<nng_pull#,nng_pull(7)>>,
+<<nng_req#,nng_req(7)>>
 
 COPYRIGHT
 ---------
 
-Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
 
 This document is supplied under the terms of the
-https://opensource.org/licenses/LICENSE.txt[MIT License].
+https://opensource.org/licenses/MIT[MIT License].

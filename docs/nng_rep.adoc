@@ -5,8 +5,8 @@ nng_rep(7)
 :mansource: nng
 :icons: font
 :source-highlighter: pygments
-:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
             copy of which should be located in the distribution where this \
             file was obtained (LICENSE.txt).  A copy of the license may also \
@@ -39,7 +39,7 @@ is also "reliable", in that a the requester will keep retrying until
 a reply is received.
 
 The _nng_rep_ protocol is the replier side, and the
-<<nng_req.adoc#,nng_req(7)>> protocol is the requester side.
+<<nng_req#,nng_req(7)>> protocol is the requester side.
 
 Socket Operations
 ~~~~~~~~~~~~~~~~~
@@ -94,14 +94,14 @@ and randomly when a request is first issued.)
     
 SEE ALSO
 --------
-<<nng.adoc#,nng(7)>>
-<<nng_req.adoc#,nng_req(7)>>
+<<nng#,nng(7)>>,
+<<nng_req#,nng_req(7)>>
 
 COPYRIGHT
 ---------
 
-Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
 
 This document is supplied under the terms of the
-https://opensource.org/licenses/LICENSE.txt[MIT License].
+https://opensource.org/licenses/MIT[MIT License].

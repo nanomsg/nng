@@ -5,8 +5,8 @@ nng_pull(7)
 :mansource: nng
 :icons: font
 :source-highlighter: pygments
-:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
             copy of which should be located in the distribution where this \
             file was obtained (LICENSE.txt).  A copy of the license may also \
@@ -30,7 +30,7 @@ DESCRIPTION
 -----------
 
 The _nng_pull_ protocol is one half of a pipeline pattern. The other half
-is the <<nng_push.adoc#,nng_push(7)>> protocol.
+is the <<nng_push#,nng_push(7)>> protocol.
 
 In the pipeline pattern, pushers distribute messages to pullers. 
 Each message sent
@@ -68,14 +68,14 @@ The _nng_pull_ protocol has no protocol-specific headers.
     
 SEE ALSO
 --------
-<<nng.adoc#,nng(7)>>
-<<nng_push.adoc#,nng_push(7)>>
+<<nng#,nng(7)>>,
+<<nng_push#,nng_push(7)>>
 
 COPYRIGHT
 ---------
 
-Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
 
 This document is supplied under the terms of the
-https://opensource.org/licenses/LICENSE.txt[MIT License].
+https://opensource.org/licenses/MIT[MIT License].

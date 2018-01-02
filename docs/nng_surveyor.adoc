@@ -5,8 +5,8 @@ nng_surveyor(7)
 :mansource: nng
 :icons: font
 :source-highlighter: pygments
-:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
             copy of which should be located in the distribution where this \
             file was obtained (LICENSE.txt).  A copy of the license may also \
@@ -40,7 +40,7 @@ election in cluster configurations, as well as certain kinds of service
 discovery problems.
 
 The _nng_surveyor_ protocol is the surveyor side, and the
-<<nng_respondent.adoc#,nng_respondent(7)>> protocol is the respondent side.
+<<nng_respondent#,nng_respondent(7)>> protocol is the respondent side.
 
 Socket Operations
 ~~~~~~~~~~~~~~~~~
@@ -113,14 +113,14 @@ having their high order bit set to one.)
     
 SEE ALSO
 --------
-<<nng.adoc#,nng(7)>>
-<<nng_respondent.adoc#,nng_respondent(7)>>
+<<nng#,nng(7)>>,
+<<nng_respondent#,nng_respondent(7)>>
 
 COPYRIGHT
 ---------
 
-Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
 
 This document is supplied under the terms of the
-https://opensource.org/licenses/LICENSE.txt[MIT License].
+https://opensource.org/licenses/MIT[MIT License].

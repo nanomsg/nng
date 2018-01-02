@@ -5,8 +5,8 @@ nng_pair(7)
 :mansource: nng
 :icons: font
 :source-highlighter: pygments
-:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
             copy of which should be located in the distribution where this \
             file was obtained (LICENSE.txt).  A copy of the license may also \
@@ -54,9 +54,9 @@ able to receive the message.
 
 NOTE: Even though this mode may appear to be "reliable", because back-pressure
 prevents discarding messages most of the time, there are topologies involving
-_devices_ (see <<nng_device.adoc#,nng_device(3)>>) or raw mode sockets where
+_devices_ (see <<nng_device#,nng_device(3)>>) or raw mode sockets where
 messages may be discarded.  Applications that require reliable delivery
-semantics should consider using <<nng_req.adoc#,nng_req(7)>> sockets, or
+semantics should consider using <<nng_req#,nng_req(7)>> sockets, or
 implement their own acknowledgement layer on top of pair sockets.
 
 In order to avoid head-of-line blocking conditions, _polyamorous_ mode pair
@@ -74,7 +74,7 @@ including the legacy https://github.com/nanomsg/nanomsg[nanomsg] library or
 https://github.com/go-mangos/mangos[mangos].
 
 Version 1 of the protocol offers improved protection against loops when
-used with <<nng_device.adoc#,nng_device(3)>>.   It also offers _polyamorous_
+used with <<nng_device#,nng_device(3)>>.   It also offers _polyamorous_
 mode for forming multiple partnerships on a single socket.
 
 NOTE: Version 1 of this protocol is considered experimental at this time.
@@ -90,10 +90,10 @@ In _polyamorous_ mode, which is only available with version 1, a socket can
 support many one-to-one connections.  In this mode, the application must
 choose the remote peer to receive an ougoing message by setting the value
 of the pipe ID on the outgoing message using
-the <<nng_msg_set_pipe.adoc#,nng_msg_set_pipe(3)>> function.
+the <<nng_msg_set_pipe#,nng_msg_set_pipe(3)>> function.
 
 Most often the value of the outgoing pipe ID will be obtained from an incoming
-message using the <<nng_msg_get_pipe.adoc#,nng_msg_get_pipe(3)>> function,
+message using the <<nng_msg_get_pipe#,nng_msg_get_pipe(3)>> function,
 such as when replying to an incoming message.
 
 In order to prevent head-of-line blocking, if the peer on the given pipe
@@ -139,13 +139,13 @@ each time the message is received by a new node.
     
 SEE ALSO
 --------
-<<nng.adoc#,nng(7)>>
+<<nng#,nng(7)>>
 
 COPYRIGHT
 ---------
 
-Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
 
 This document is supplied under the terms of the
-https://opensource.org/licenses/LICENSE.txt[MIT License].
+https://opensource.org/licenses/MIT[MIT License].

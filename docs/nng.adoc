@@ -4,8 +4,8 @@ nng(7)
 :manmanual: nng
 :mansource: nng
 :icons: font
-:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
             copy of which should be located in the distribution where this \
             file was obtained (LICENSE.txt).  A copy of the license may also \
@@ -56,24 +56,24 @@ other languages please check the http://nanomsg.org/[website].
 Protocols
 ~~~~~~~~~
 
-* <<nng_bus.adoc#,nng_bus(7)>> - Bus protocol
-* <<nng_pair.adoc#,nng_pair(7)>> - Pair protocol
-* <<nng_pub.adoc#,nng_pub(7)>> - Publisher side of publish/subscribe protocol
-* <<nng_sub.adoc#,nng_sub(7)>> - Subscriber side of publish/subscribe protocol
-* <<nng_rep.adoc#,nng_rep(7)>> - Reply side of request/reply protocol
-* <<nng_req.adoc#,nng_req(7)>> - Request side of request/reply protocol
-* <<nng_respondent.adoc#,nng_respondent(7)>> - Respondent side of survey protocol
-* <<nng_surveyor.adoc#,nng_surveyor(7)>> - Surveyor side of survey protocol
+* <<nng_bus#,nng_bus(7)>> - Bus protocol
+* <<nng_pair#,nng_pair(7)>> - Pair protocol
+* <<nng_pub#,nng_pub(7)>> - Publisher side of publish/subscribe protocol
+* <<nng_sub#,nng_sub(7)>> - Subscriber side of publish/subscribe protocol
+* <<nng_rep#,nng_rep(7)>> - Reply side of request/reply protocol
+* <<nng_req#,nng_req(7)>> - Request side of request/reply protocol
+* <<nng_respondent#,nng_respondent(7)>> - Respondent side of survey protocol
+* <<nng_surveyor#,nng_surveyor(7)>> - Surveyor side of survey protocol
 
 Transports
 ~~~~~~~~~~
 
-* <<nng_inproc.adoc#,nng_inproc(7)>> - Intra-process transport
-* <<nng_ipc.adoc#,nng_ipc(7)>> - Inter-process transport
-* <<nng_tls.adoc#,nng_tls(7)>> - TLSv1.2 over TCP transport
-* <<nng_tcp.adoc#,nng_tcp(7)>> - TCP (and TCPv6) transport
-* <<nng_ws.adoc#,nng_ws(7)>> - WebSocket transport
-* <<nng_zerotier.adoc#,nng_zerotier(7)>> - ZeroTier transport
+* <<nng_inproc#,nng_inproc(7)>> - Intra-process transport
+* <<nng_ipc#,nng_ipc(7)>> - Inter-process transport
+* <<nng_tls#,nng_tls(7)>> - TLSv1.2 over TCP transport
+* <<nng_tcp#,nng_tcp(7)>> - TCP (and TCPv6) transport
+* <<nng_ws#,nng_ws(7)>> - WebSocket transport
+* <<nng_zerotier#,nng_zerotier(7)>> - ZeroTier transport
 
 Conceptual Overview
 ~~~~~~~~~~~~~~~~~~~
@@ -84,14 +84,14 @@ one _nng_ protocol.
 
 Each socket can be used to send and receive messages (if the protocol)
 supports it, and implements the appropriate protocol semantics.  For
-example, <<nng_sub.adoc#,nng_sub(7)>> sockets automatically filter incoming
+example, <<nng_sub#,nng_sub(7)>> sockets automatically filter incoming
 messages to discard those for topics that have not been subscribed.
 
 _nng_ sockets are message oriented, so that messages are either delivered
 wholly, or not at all.  Partial delivery is not possible.  Furthermore,
 _nng_ does not provide any other delivery or ordering guarantees;
 messages may be dropped or reordered.  (Some protocols, such as
-<<nng_req.adoc#,nng_req(7)>> may offer stronger guarantees by
+<<nng_req#,nng_req(7)>> may offer stronger guarantees by
 performing their own retry and validation schemes.)
 
 Each socket can have zero, one, or many "endpoints", which are either
@@ -121,18 +121,18 @@ other than in a few specific circumstances.
 API
 ~~~
 
-The library API is documented at <<libnng.adoc#,libnng(3)>>.
+The library API is documented at <<libnng#,libnng(3)>>.
 
 SEE ALSO
 --------
-<<libnng.adoc#,libnng(3)>>
-<<nng_compat.adoc#,nng_compat(3)>>
+<<libnng#,libnng(3)>>,
+<<nng_compat#,nng_compat(3)>>
 
 COPYRIGHT
 ---------
 
-Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
 
 This document is supplied under the terms of the
-https://opensource.org/licenses/LICENSE.txt[MIT License].
+https://opensource.org/licenses/MIT[MIT License].

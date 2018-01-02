@@ -4,8 +4,8 @@ libnng(3)
 :manmanual: nng
 :mansource: nng
 :icons: font
-:copyright: Copyright 2017 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2017 Capitar IT Group BV <info@capitar.com> \
+:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
             copy of which should be located in the distribution where this \
             file was obtained (LICENSE.txt).  A copy of the license may also \
@@ -23,7 +23,7 @@ SYNOPSIS
 DESCRIPTION
 -----------
 
-The <<nng.adoc#,nng(7)>> library provides a common messaging framework
+The <<nng#,nng(7)>> library provides a common messaging framework
 intended to solve common communication problems in distributed applications.
 
 It provides a C language API.
@@ -34,10 +34,10 @@ The following common functions exist in _libnng_.
 
 [cols="1,4"]
 |===
-|<<nng_alloc.adoc#,nng_alloc(3)>>|allocate memory
-|<<nng_dial.adoc#,nng_dial(3)>>|create and start a dialer
-|<<nng_free.adoc#,nng_free(3)>>|free memory
-|<<nng_strerror.adoc#,nng_strerror(3)>>|return an error description
+|<<nng_alloc#,nng_alloc(3)>>|allocate memory
+|<<nng_dial#,nng_dial(3)>>|create and start a dialer
+|<<nng_free#,nng_free(3)>>|free memory
+|<<nng_strerror#,nng_strerror(3)>>|return an error description
 |===
 
 Socket Functions
@@ -47,14 +47,14 @@ The following functions operate on sockets.
 
 [cols="1,4"]
 |===
-|<<nng_close.adoc#,nng_close(3)>>|close a socket
-|<<nng_closeall.adoc#,nng_closeall(3)>>|close all open sockets
-|<<nng_dial.adoc#,nng_dial(3)>>|create and start a dialer
-|<<nng_getopt.adoc#,nng_getopt(3)>>|get a socket option
-|<<nng_listen.adoc#,nng_listen(3)>>|create and start a listener
-|<<nng_recv.adoc#,nng_recv(3)>>|receive data
-|<<nng_send.adoc#,nng_send(3)>>|send data
-|<<nng_setopt.adoc#,nng_setopt(3)>>|set a socket option
+|<<nng_close#,nng_close(3)>>|close a socket
+|<<nng_closeall#,nng_closeall(3)>>|close all open sockets
+|<<nng_dial#,nng_dial(3)>>|create and start a dialer
+|<<nng_getopt#,nng_getopt(3)>>|get a socket option
+|<<nng_listen#,nng_listen(3)>>|create and start a listener
+|<<nng_recv#,nng_recv(3)>>|receive data
+|<<nng_send#,nng_send(3)>>|send data
+|<<nng_setopt#,nng_setopt(3)>>|set a socket option
 |===
 
 Message Functions
@@ -70,22 +70,22 @@ Most applications will only interact with the body.
 
 [cols="1,4"]
 |===
-|<<nng_msg_alloc.adoc#,nng_msg_alloc(3)>>|allocate a message
-|<<nng_msg_body.adoc#,nng_msg_body(3)>>|return the message body
-|<<nng_msg_free.adoc#,nng_msg_free(3)>>|free a message
-|<<nng_msg_header.adoc#,nng_msg_header(3)>>|return the message header
-|<<nng_msg_header_len.adoc#,nng_msg_header_len(3)>>|return the message header length
-|<<nng_msg_len.adoc#,nng_msg_len(3)>>|return the message body length
-|<<nng_msg_realloc.adoc#,nng_msg_realloc(3)>>|reallocate a message
-|<<nng_recv_msg.adoc#,nng_recvmsg(3)>>|receive a message
-|<<nng_sendmsg.adoc#,nng_sendmsg(3)>>|send a message
+|<<nng_msg_alloc#,nng_msg_alloc(3)>>|allocate a message
+|<<nng_msg_body#,nng_msg_body(3)>>|return the message body
+|<<nng_msg_free#,nng_msg_free(3)>>|free a message
+|<<nng_msg_header#,nng_msg_header(3)>>|return the message header
+|<<nng_msg_header_len#,nng_msg_header_len(3)>>|return the message header length
+|<<nng_msg_len#,nng_msg_len(3)>>|return the message body length
+|<<nng_msg_realloc#,nng_msg_realloc(3)>>|reallocate a message
+|<<nng_recv_msg#,nng_recvmsg(3)>>|receive a message
+|<<nng_sendmsg#,nng_sendmsg(3)>>|send a message
 |===
 
 Asynchronous Operations
 ~~~~~~~~~~~~~~~~~~~~~~~
 
 Most applications will interact with _nng_ synchronously; that is that
-functions such as <<nng_send.adoc#,nng_send()>> will block the calling
+functions such as <<nng_send#,nng_send()>> will block the calling
 thread until the operation has completed.
 
 NOTE: Synchronous operations which send messages may return before the
@@ -107,17 +107,17 @@ The following functions are used in the asynchronous model:
 
 [cols="1,4"]
 |===
-|<<nng_aio_alloc.adoc#,nng_aio_alloc(3)>>|allocate asynchronous I/O context
-|<<nng_aio_cancel.adoc#,nng_aio_cancel(3)>>|cancel asynchronous I/O operation
-|<<nng_aio_free.adoc#,nng_aio_free(3)>>|free asynchronous I/O context
-|<<nng_aio_get_msg.adoc#,nng_aio_get_msg(3)>>|get message from an asynchronous receive
-|<<nng_aio_result.adoc#,nng_aio_result(3)>>|return result from asynchronous operation
-|<<nng_aio_stop.adoc#,nng_aio_stop(3)>>|stop asynchronous I/O operation
-|<<nng_aio_wait.adoc#,nng_aio_wait(3)>>|wait for an asynchronous I/O operation
-|<<nng_aio_set_msg.adoc#,nng_aio_set_msg(3)>>|set message for an asynchronous send
-|<<nng_aio_set_timeout.adoc#,nng_aio_set_timeout(3)>>|set timeout for an asynchronous send
-|<<nng_recv_aio.adoc#,nng_recv_aio(3)>>|receive a message asynchronously
-|<<nng_send_aio.adoc#,nng_send_aio(3)>>|send a message asynchronously
+|<<nng_aio_alloc#,nng_aio_alloc(3)>>|allocate asynchronous I/O context
+|<<nng_aio_cancel#,nng_aio_cancel(3)>>|cancel asynchronous I/O operation
+|<<nng_aio_free#,nng_aio_free(3)>>|free asynchronous I/O context
+|<<nng_aio_get_msg#,nng_aio_get_msg(3)>>|get message from an asynchronous receive
+|<<nng_aio_result#,nng_aio_result(3)>>|return result from asynchronous operation
+|<<nng_aio_stop#,nng_aio_stop(3)>>|stop asynchronous I/O operation
+|<<nng_aio_wait#,nng_aio_wait(3)>>|wait for an asynchronous I/O operation
+|<<nng_aio_set_msg#,nng_aio_set_msg(3)>>|set message for an asynchronous send
+|<<nng_aio_set_timeout#,nng_aio_set_timeout(3)>>|set timeout for an asynchronous send
+|<<nng_recv_aio#,nng_recv_aio(3)>>|receive a message asynchronously
+|<<nng_send_aio#,nng_send_aio(3)>>|send a message asynchronously
 |===
 
 Protocols
@@ -128,14 +128,14 @@ protocol:
 
 [cols="1,4"]
 |===
-| <<nng_bus.adoc#,nng_bus_open(3)>>|open a bus socket
-| <<nng_pair.adoc#,nng_pair_open(3)>>|open a pair socket
-| <<nng_pub.adoc#,nng_pub_open(3)>>|open a pub socket
-| <<nng_rep.adoc#,nng_rep_open(3)>>|open a rep socket
-| <<nng_req.adoc#,nng_req_open(3)>>|open a req socket
-| <<nng_respondent.adoc#,nng_respondent_open(3)>>|open a respondent socket
-| <<nng_sub.adoc#,nng_sub_open(3)>>|open a sub socket
-| <<nng_surveyor.adoc#,nng_surveyor_open(3)>>|open a surveyor socket
+| <<nng_bus#,nng_bus_open(3)>>|open a bus socket
+| <<nng_pair#,nng_pair_open(3)>>|open a pair socket
+| <<nng_pub#,nng_pub_open(3)>>|open a pub socket
+| <<nng_rep#,nng_rep_open(3)>>|open a rep socket
+| <<nng_req#,nng_req_open(3)>>|open a req socket
+| <<nng_respondent#,nng_respondent_open(3)>>|open a respondent socket
+| <<nng_sub#,nng_sub_open(3)>>|open a sub socket
+| <<nng_surveyor#,nng_surveyor_open(3)>>|open a surveyor socket
 |===
 
 Transports
@@ -145,13 +145,13 @@ The following functions are used to register a transport for use.
 
 [cols="1,4"]
 |===
-| <<nng_inproc.adoc#,nng_inproc_register(3)>>|register inproc transport
-| <<nng_ipc.adoc#,nng_ipc_register(3)>>|register IPC transport
-| <<nng_tcp.adoc#,nng_tcp_register(3)>>|register TCP transport
-| <<nng_tls.adoc#,nng_tls_register(3)>>|register TLS transport
-| <<nng_ws.adoc#,nng_ws_register(3)>>|register WebSocket transport
-| <<nng_wss.adoc#,nng_wss_register(3)>>|register WebSocket Secure transport
-| <<nng_zerotier.adoc#,nng_zerotier_register(3)>>|register ZeroTier transport
+| <<nng_inproc#,nng_inproc_register(3)>>|register inproc transport
+| <<nng_ipc#,nng_ipc_register(3)>>|register IPC transport
+| <<nng_tcp#,nng_tcp_register(3)>>|register TCP transport
+| <<nng_tls#,nng_tls_register(3)>>|register TLS transport
+| <<nng_ws#,nng_ws_register(3)>>|register WebSocket transport
+| <<nng_wss#,nng_wss_register(3)>>|register WebSocket Secure transport
+| <<nng_zerotier#,nng_zerotier_register(3)>>|register ZeroTier transport
 |===
 
 TLS Configuration Objects
@@ -175,15 +175,15 @@ The following functions are used to manipulate TLS configuration objects.
 
 SEE ALSO
 --------
-<<nng.adoc#,nng(7)>>
-<<nng_compat.adoc#,nng_compat(3)>>
+<<nng#,nng(7)>>,
+<<nng_compat#,nng_compat(3)>>
 
 COPYRIGHT
 ---------
 
-Copyright 2017 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2017 mailto:info@staysail.tech[Staysail Systems, Inc.] +
-Copyright 2017 mailto:info@capitar.com[Capitar IT Group BV]
+Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
 
 This document is supplied under the terms of the
-https://opensource.org/licenses/LICENSE.txt[MIT License].
+https://opensource.org/licenses/MIT[MIT License].

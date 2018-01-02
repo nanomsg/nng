@@ -1,12 +1,12 @@
-nng_close(3)
-============
+nng_tls_config_pass(3)
+======================
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
 :manvolnum: 3
 :icons: font
 :source-highlighter: pygments
-:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
+:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
             Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
             copy of which should be located in the distribution where this \
@@ -15,7 +15,7 @@ nng_close(3)
 
 NAME
 ----
-nng_close - close a socket
+nng_tls_config_pass - configure private key password
 
 SYNOPSIS
 --------
@@ -24,47 +24,46 @@ SYNOPSIS
 -----------
 #include <nng/nng.h>
 
-int nng_close(int s);
+int nng_tls_config_pass(nni_tls_config *cfg, const char *password)
 -----------
-
 
 DESCRIPTION
 -----------
 
-The `nng_close()` function closes the supplied socket, 's'.  Messages
-that have been submitted for sending may be flushed or delivered,
-depending upon the transport and the setting of the `NNG_OPT_LINGER`
-option.
+The `nng_tls_config_pass()` function configures 'password' used to decrypt
+a private key previously configured on the configuration 'cfg' with
+<<nng_tls_config_key#,nng_tls_config_key(3)>>.
 
-Further attempts to use the socket after this call returns will result
-in `NNG_EBADF`.  Threads waiting for operations on the socket when this
-call is executed may also return with an `NNG_EBADF` result.
+The 'password' is an ASCIIZ string.
 
+This function's affect is limited to decryption only the most recent
+private key that was configured.
 
 RETURN VALUES
 -------------
 
 This function returns 0 on success, and non-zero otherwise.
 
-
 ERRORS
 ------
 
-`NNG_EBADF`:: The socket is already closed or was never opened.
-
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
+`NNG_EINVAL`:: No private key was configured.
 
 SEE ALSO
 --------
 
-<<nng_setopt#,nng_setopt(3)>>,
 <<nng_strerror#,nng_strerror(3)>>,
+<<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>,
+<<nng_tls_config_key#,nng_tls_config_key(3)>>,
 <<nng#,nng(7)>>
 
 
 COPYRIGHT
 ---------
 
-Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
 Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
 
 This document is supplied under the terms of the

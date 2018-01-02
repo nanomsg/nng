@@ -1,0 +1,86 @@
+nng_tls_config_cert(3)
+======================
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:icons: font
+:source-highlighter: pygments
+:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+NAME
+----
+nng_tls_config_cert - configure own certificate
+
+SYNOPSIS
+--------
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+int nng_tls_config_cert(nni_tls_config *cfg, const uint8_t *cert, size_t size)
+-----------
+
+DESCRIPTION
+-----------
+
+The `nng_tls_config_cert()` function configures a certificate identifying
+the local side of a TLS connection used with 'cfg'.  The certificate may be
+a chain, with the bottom-most signer first and the root at the end.  The
+self-signed certificate at the end can be omitted. (The client should already
+have it, and will have to in order to validate this certificate anyway).
+
+NOTE: The certificate supplied always contains public keying material.  In
+order to actually use this, a private key will have to be supplied as well,
+using the <<nng_tls_config_key#,nnt_tls_config_key(3)>> function.
+
+TIP: This function may be called multiple times, to add additional chains
+to a configuration, without affecting those added previously.
+
+The certificate located in 'cert' may be in either
+https://tools.ietf.org/html/rfc7468[PEM] or DER format.
+
+When the 'cert' is
+in PEM format, the certificate will be ASCII encoded.  Additionally a private
+key may or may not be present as additional concatenated PEM data.  The
+value of 'size' is the length of the concatenated strings, without any
+terminating NUL byte.
+
+When using DER encoding, the 'size' will be the total number of bytes, after
+encoding.
+
+RETURN VALUES
+-------------
+
+This function returns 0 on success, and non-zero otherwise.
+
+ERRORS
+------
+
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
+`NNG_EINVAL`:: An invalid 'cert' or 'size' was supplied.
+
+SEE ALSO
+--------
+
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>,
+<<nng_tls_config_key#,nng_tls_config_key(3)>>,
+<<nng#,nng(7)>>
+
+
+COPYRIGHT
+---------
+
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/MIT[MIT License].
