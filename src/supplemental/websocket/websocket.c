@@ -1470,7 +1470,6 @@ ws_handler(nni_aio *aio)
 	return;
 
 err:
-	nni_http_req_fini(req);
 	if ((rv = nni_http_res_init_error(&res, status)) != 0) {
 		nni_aio_finish_error(aio, rv);
 	} else {
