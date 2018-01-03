@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -298,6 +298,11 @@ http_sconn_error(http_sconn *sc, uint16_t err)
 		return;
 	}
 
+	if (sc->close) {
+		if (nni_http_res_set_header(res, "Connection", "close") != 0) {
+			http_sconn_close(sc);
+		}
+	}
 	sc->res = res;
 	nni_http_write_res(sc->http, res, sc->txaio);
 }

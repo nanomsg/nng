@@ -1,7 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -306,6 +305,63 @@ trantest_send_recv(trantest *tt)
 }
 
 void
+trantest_send_recv_multi(trantest *tt)
+{
+	Convey("Send and recv multi", {
+		nng_listener l;
+		nng_dialer   d;
+		nng_msg *    send;
+		nng_msg *    recv;
+		size_t       len;
+		nng_pipe     p;
+		char         url[NNG_MAXADDRLEN];
+		size_t       sz;
+		int          i;
+		char         msgbuf[16];
+
+		So(trantest_listen(tt, &l) == 0);
+		So(l != 0);
+		So(trantest_dial(tt, &d) == 0);
+		So(d != 0);
+
+		nng_msleep(200); // listener may be behind slightly
+
+		for (i = 0; i < 10; i++) {
+			snprintf(msgbuf, sizeof(msgbuf), "ping%d", i);
+			send = NULL;
+			So(nng_msg_alloc(&send, 0) == 0);
+			So(send != NULL);
+			So(nng_msg_append(send, msgbuf, strlen(msgbuf) + 1) ==
+			    0);
+
+			So(nng_sendmsg(tt->reqsock, send, 0) == 0);
+			recv = NULL;
+			So(nng_recvmsg(tt->repsock, &recv, 0) == 0);
+			So(recv != NULL);
+			So(nng_msg_len(recv) == strlen(msgbuf) + 1);
+			So(strcmp(nng_msg_body(recv), msgbuf) == 0);
+			nng_msg_free(recv);
+
+			snprintf(msgbuf, sizeof(msgbuf), "pong%d", i);
+			So(nng_msg_alloc(&send, 0) == 0);
+			So(nng_msg_append(send, msgbuf, strlen(msgbuf) + 1) ==
+			    0);
+			So(nng_sendmsg(tt->repsock, send, 0) == 0);
+			So(nng_recvmsg(tt->reqsock, &recv, 0) == 0);
+			So(recv != NULL);
+			So(nng_msg_len(recv) == strlen(msgbuf) + 1);
+			So(strcmp(nng_msg_body(recv), msgbuf) == 0);
+			p = nng_msg_get_pipe(recv);
+			So(p != 0);
+			sz = sizeof(url);
+			So(nng_pipe_getopt(p, NNG_OPT_URL, url, &sz) == 0);
+			So(strcmp(url, tt->addr) == 0);
+			nng_msg_free(recv);
+		}
+	});
+}
+
+void
 trantest_check_properties(trantest *tt, trantest_proptest_t f)
 {
 	Convey("Properties test", {
@@ -409,6 +465,7 @@ trantest_test_all(const char *addr)
 		trantest_listen_accept(&tt);
 		trantest_send_recv(&tt);
 		trantest_send_recv_large(&tt);
+		trantest_send_recv_multi(&tt);
 	})
 }
 
@@ -429,6 +486,7 @@ trantest_test_extended(const char *addr, trantest_proptest_t f)
 		trantest_listen_accept(&tt);
 		trantest_send_recv(&tt);
 		trantest_send_recv_large(&tt);
+		trantest_send_recv_multi(&tt);
 		trantest_check_properties(&tt, f);
 	})
 }
@@ -457,6 +515,7 @@ trantest_test(trantest *tt)
 
 		trantest_send_recv(tt);
 		trantest_send_recv_large(tt);
+		trantest_send_recv_multi(tt);
 		if (tt->proptest != NULL) {
 			trantest_check_properties(tt, tt->proptest);
 		}

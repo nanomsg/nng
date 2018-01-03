@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -614,25 +614,25 @@ nni_http_res_init(nni_http_res **resp)
 const char *
 nni_http_req_get_method(nni_http_req *req)
 {
-	return (req->meth);
+	return (req->meth != NULL ? req->meth : "");
 }
 
 const char *
 nni_http_req_get_uri(nni_http_req *req)
 {
-	return (req->uri);
+	return (req->uri != NULL ? req->uri : "");
 }
 
 const char *
 nni_http_req_get_version(nni_http_req *req)
 {
-	return (req->vers);
+	return (req->vers != NULL ? req->vers : "");
 }
 
 const char *
 nni_http_res_get_version(nni_http_res *res)
 {
-	return (res->vers);
+	return (res->vers != NULL ? res->vers : "");
 }
 
 int
@@ -678,7 +678,7 @@ nni_http_res_get_status(nni_http_res *res)
 const char *
 nni_http_res_get_reason(nni_http_res *res)
 {
-	return (res->rsn);
+	return (res->rsn != NULL ? res->rsn : "");
 }
 
 static int
@@ -864,10 +864,11 @@ nni_http_res_init_error(nni_http_res **resp, uint16_t err)
 	char *        rsn;
 	char          rsnbuf[80];
 	char          html[1024];
+	int           rv;
 	nni_http_res *res;
 
-	if ((nni_http_res_init(&res)) != 0) {
-		return (NNG_ENOMEM);
+	if ((rv = nni_http_res_init(&res)) != 0) {
+		return (rv);
 	}
 
 	// Note that it is expected that redirect URIs will update the
@@ -957,7 +958,7 @@ nni_http_res_init_error(nni_http_res **resp, uint16_t err)
 	}
 
 	// very simple builtin error page
-	snprintf(html, sizeof(html),
+	(void) snprintf(html, sizeof(html),
 	    "<head><title>%d %s</title></head>"
 	    "<body><p/><h1 align=\"center\">"
 	    "<span style=\"font-size: 36px; border-radius: 5px; "
@@ -968,14 +969,14 @@ nni_http_res_init_error(nni_http_res **resp, uint16_t err)
 	    "%s</span></p></body>",
 	    err, rsn, err, rsn);
 
-	nni_http_res_set_status(res, err, rsn);
-	nni_http_res_copy_data(res, html, strlen(html));
-	nni_http_res_set_version(res, "HTTP/1.1");
-	nni_http_res_set_header(
-	    res, "Content-Type", "text/html; charset=UTF-8");
-	// We could set the date, but we don't necessarily have a portable
-	// way to get the time of day.
-
-	*resp = res;
-	return (0);
+	if (((rv = nni_http_res_set_status(res, err, rsn)) != 0) ||
+	    ((rv = nni_http_res_set_version(res, "HTTP/1.1")) != 0) ||
+	    ((rv = nni_http_res_set_header(
+	          res, "Content-Type", "text/html; charset=UTF-8")) != 0) ||
+	    ((rv = nni_http_res_copy_data(res, html, strlen(html))) != 0)) {
+		nni_http_res_fini(res);
+	} else {
+		*resp = res;
+	}
+	return (rv);
 }

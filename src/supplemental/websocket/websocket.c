@@ -541,9 +541,10 @@ ws_write_cb(void *arg)
 		return;
 	}
 
-	frame = ws->txframe;
-	wm    = frame->wmsg;
-	aio   = wm->aio;
+	frame       = ws->txframe;
+	wm          = frame->wmsg;
+	aio         = wm->aio;
+	ws->txframe = NULL;
 
 	if ((rv = nni_aio_result(ws->txaio)) != 0) {
 
