@@ -548,28 +548,30 @@ http_server_acccb(void *arg)
 	http_sconn *       sc;
 	int                rv;
 
+	nni_mtx_lock(&s->mtx);
 	if ((rv = nni_aio_result(aio)) != 0) {
-		if (rv == NNG_ECLOSED) {
-			return;
+		if (!s->closed) {
+			// try again?
+			nni_plat_tcp_ep_accept(s->tep, s->accaio);
 		}
-		// try again?
-		nni_plat_tcp_ep_accept(s->tep, s->accaio);
+		nni_mtx_unlock(&s->mtx);
 		return;
 	}
 	tcp = nni_aio_get_pipe(aio);
+	if (s->closed) {
+		// If we're closing, then reject this one.
+		nni_plat_tcp_pipe_fini(tcp);
+		nni_mtx_unlock(&s->mtx);
+		return;
+	}
 	if (http_sconn_init(&sc, s, tcp) != 0) {
 		// The TCP structure is already cleaned up.
-
+		// Start another accept attempt.
 		nni_plat_tcp_ep_accept(s->tep, s->accaio);
-		return;
-	}
-	nni_mtx_lock(&s->mtx);
-	sc->server = s;
-	if (s->closed) {
 		nni_mtx_unlock(&s->mtx);
-		http_sconn_close(sc);
 		return;
 	}
+	sc->server = s;
 	nni_list_append(&s->conns, sc);
 
 	nni_http_read_req(sc->http, sc->req, sc->rxaio);
@@ -594,8 +596,9 @@ http_server_fini(nni_http_server *s)
 {
 	http_handler *h;
 
-	nni_mtx_lock(&s->mtx);
 	nni_aio_stop(s->accaio);
+
+	nni_mtx_lock(&s->mtx);
 	while (!nni_list_empty(&s->conns)) {
 		nni_cv_wait(&s->cv);
 	}
