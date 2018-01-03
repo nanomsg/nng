@@ -308,6 +308,7 @@ nni_aio_finish_impl(
 	NNI_ASSERT(aio->a_pend == 0); // provider only calls us *once*
 
 	nni_list_node_remove(&aio->a_expire_node);
+
 	aio->a_pend        = 1;
 	aio->a_result      = result;
 	aio->a_count       = count;

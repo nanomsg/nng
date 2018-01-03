@@ -119,6 +119,8 @@ ws_pipe_recv_cancel(nni_aio *aio, int rv)
 		return;
 	}
 	nni_aio_cancel(p->rxaio, rv);
+	p->user_rxaio = NULL;
+	nni_aio_finish_error(aio, rv);
 	nni_mtx_unlock(&p->mtx);
 }
 
@@ -147,9 +149,9 @@ ws_pipe_send_cancel(nni_aio *aio, int rv)
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
-	// This aborts the upper send, which will call back with an error
-	// when it is done.
+	p->user_txaio = NULL;
 	nni_aio_cancel(p->txaio, rv);
+	nni_aio_finish_error(aio, rv);
 	nni_mtx_unlock(&p->mtx);
 }
 
