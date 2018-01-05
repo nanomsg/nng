@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -23,31 +23,27 @@
 static int
 check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
 {
-	nng_pipe p;
-	size_t   z;
+	nng_pipe     p;
+	size_t       z;
+	nng_sockaddr la;
+	nng_sockaddr ra;
+
 	p = nng_msg_get_pipe(msg);
 	So(p > 0);
+	z = sizeof(nng_sockaddr);
+	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
+	So(z == sizeof(la));
+	So(la.s_un.s_family == NNG_AF_INET);
+	So(la.s_un.s_in.sa_port == htons(trantest_port - 1));
+	So(la.s_un.s_in.sa_port != 0);
+	So(la.s_un.s_in.sa_addr == htonl(0x7f000001));
 
-	Convey("Local address property works", {
-		nng_sockaddr la;
-		z = sizeof(nng_sockaddr);
-		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-		So(z == sizeof(la));
-		So(la.s_un.s_family == NNG_AF_INET);
-		So(la.s_un.s_in.sa_port == htons(trantest_port - 1));
-		So(la.s_un.s_in.sa_port != 0);
-		So(la.s_un.s_in.sa_addr == htonl(0x7f000001));
-	});
-
-	Convey("Remote address property works", {
-		nng_sockaddr ra;
-		z = sizeof(nng_sockaddr);
-		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-		So(z == sizeof(ra));
-		So(ra.s_un.s_family == NNG_AF_INET);
-		So(ra.s_un.s_in.sa_port != 0);
-		So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
-	});
+	z = sizeof(nng_sockaddr);
+	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+	So(z == sizeof(ra));
+	So(ra.s_un.s_family == NNG_AF_INET);
+	So(ra.s_un.s_in.sa_port != 0);
+	So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
 
 	return (0);
 }
@@ -93,8 +89,6 @@ TestMain("TCP Transport", {
 		So(nng_dial(s1, "tcp://127.0.0.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
 		So(nng_dial(s1, "tcp://127.0.x.1.32", NULL, 0) ==
-		    NNG_EADDRINVAL);
-		So(nng_listen(s1, "tcp://127.0.0.1", NULL, 0) ==
 		    NNG_EADDRINVAL);
 		So(nng_listen(s1, "tcp://127.0.0.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);

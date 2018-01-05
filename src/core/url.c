@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -250,13 +250,17 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	}
 
 	if ((url->u_host = nni_alloc(len + 1)) == NULL) {
-		nni_url_free(url);
-		return (NNG_ENOMEM);
+		rv = NNG_ENOMEM;
+		goto error;
 	}
 	memcpy(url->u_host, s, len);
 	url->u_host[len] = '\0';
 	s += len;
 
+	if ((url->u_rawpath = nni_strdup(s)) == NULL) {
+		rv = NNG_ENOMEM;
+		goto error;
+	}
 	for (len = 0; (c = s[len]) != '\0'; len++) {
 		if ((c == '?') || (c == '#')) {
 			break;
@@ -363,5 +367,6 @@ nni_url_free(nni_url *url)
 	nni_strfree(url->u_path);
 	nni_strfree(url->u_query);
 	nni_strfree(url->u_fragment);
+	nni_strfree(url->u_rawpath);
 	NNI_FREE_STRUCT(url);
 }

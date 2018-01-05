@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -104,72 +104,6 @@ nni_tran_find(const char *addr)
 	}
 	nni_mtx_unlock(&nni_tran_lk);
 	return (NULL);
-}
-
-// nni_tran_parse_host_port is a convenience routine to parse the host portion
-// of a URL (which includes a DNS name or IP address and an optional service
-// name or port, separated by a colon) into its host and port name parts.  It
-// understands IPv6 address literals when surrounded by brackets ([]).
-// If either component is empty, then NULL is passed back for the value,
-// otherwise a string suitable for freeing with nni_strfree is supplied.
-int
-nni_tran_parse_host_port(const char *pair, char **hostp, char **portp)
-{
-	const char *hstart;
-	const char *pstart;
-	char *      host;
-	char *      port;
-	size_t      hlen, plen;
-
-	if (pair[0] == '[') {
-		hstart = pair + 1;
-		hlen   = 0;
-		while (hstart[hlen] != ']') {
-			if (hstart[hlen] == '\0') {
-				return (NNG_EADDRINVAL);
-			}
-			hlen++;
-		}
-		pstart = hstart + hlen + 1; // skip over the trailing ']'
-	} else {
-		// Normal thing.
-		hstart = pair;
-		hlen   = 0;
-		while ((hstart[hlen] != ':') && (hstart[hlen] != '\0')) {
-			hlen++;
-		}
-		pstart = hstart + hlen;
-	}
-	if (pstart[0] == ':') {
-		pstart++;
-	}
-	plen = strlen(pstart);
-
-	host = NULL;
-	if (hostp) {
-		if ((hlen > 1) || ((hlen == 1) && (*hstart != '*'))) {
-			if ((host = nni_alloc(hlen + 1)) == NULL) {
-				return (NNG_ENOMEM);
-			}
-			memcpy(host, hstart, hlen);
-			host[hlen] = '\0';
-		}
-	}
-
-	port = NULL;
-	if ((plen != 0) && (portp)) {
-		if ((port = nni_strdup(pstart)) == NULL) {
-			nni_strfree(host);
-			return (NNG_ENOMEM);
-		}
-	}
-	if (hostp) {
-		*hostp = host;
-	}
-	if (portp) {
-		*portp = port;
-	}
-	return (0);
 }
 
 int

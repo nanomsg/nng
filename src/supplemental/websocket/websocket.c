@@ -57,15 +57,12 @@ struct nni_ws {
 struct nni_ws_listener {
 	nni_http_server *  server;
 	char *             proto;
-	char *             url;
-	char *             host;
-	char *             serv;
-	char *             path;
 	nni_mtx            mtx;
 	nni_cv             cv;
 	nni_list           pend;
 	nni_list           reply;
 	nni_list           aios;
+	nni_url *          url;
 	bool               started;
 	bool               closed;
 	void *             hp; // handler pointer
@@ -88,12 +85,7 @@ struct nni_ws_dialer {
 	nni_mtx          mtx;
 	nni_aio *        conaio;
 	char *           proto;
-	char *           host;
-	char *           serv;
-	char *           path;
-	char *           qinfo;
-	char *           addr;     // full address (a URL really)
-	char *           uri;      // path + query
+	nni_url *        url;
 	nni_list         conaios;  // user aios waiting for connect.
 	nni_list         httpaios; // user aios waiting for HTTP nego.
 	bool             started;
@@ -1280,7 +1272,7 @@ ws_init(nni_ws **wsp, nni_http *http, nni_http_req *req, nni_http_res *res)
 	}
 
 	nni_aio_set_timeout(ws->closeaio, 100);
-	nni_aio_set_timeout(ws->httpaio, 1000);
+	nni_aio_set_timeout(ws->httpaio, 2000);
 
 	ws->fragsize = 1 << 20; // we won't send a frame larger than this
 	ws->maxframe = (1 << 20) * 10; // default limit on incoming frame size
@@ -1311,16 +1303,15 @@ nni_ws_listener_fini(nni_ws_listener *l)
 
 	nni_cv_fini(&l->cv);
 	nni_mtx_fini(&l->mtx);
-	nni_strfree(l->url);
 	nni_strfree(l->proto);
-	nni_strfree(l->host);
-	nni_strfree(l->serv);
-	nni_strfree(l->path);
 	while ((hdr = nni_list_first(&l->headers)) != NULL) {
 		nni_list_remove(&l->headers, hdr);
 		nni_strfree(hdr->name);
 		nni_strfree(hdr->value);
 		NNI_FREE_STRUCT(hdr);
+	}
+	if (l->url) {
+		nni_url_free(l->url);
 	}
 	NNI_FREE_STRUCT(l);
 }
@@ -1479,103 +1470,15 @@ err:
 	}
 }
 
-static int
-ws_parse_url(const char *url, char **schemep, char **hostp, char **servp,
-    char **pathp, char **queryp)
-{
-	size_t scrlen;
-	char * scr;
-	char * pair;
-	char * scheme = NULL;
-	char * path   = NULL;
-	char * query  = NULL;
-	char * host   = NULL;
-	char * serv   = NULL;
-	int    rv;
-
-	// We need a scratch copy of the url to parse.
-	scrlen = strlen(url) + 1;
-	if ((scr = nni_alloc(scrlen)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	nni_strlcpy(scr, url, scrlen);
-	scheme = scr;
-	pair   = strchr(scr, ':');
-	if ((pair == NULL) || (pair[1] != '/') || (pair[2] != '/')) {
-		nni_free(scr, scrlen);
-		return (NNG_EADDRINVAL);
-	}
-
-	*pair = '\0';
-	pair += 3;
-
-	path = strchr(pair, '/');
-	if (path != NULL) {
-		*path = '\0'; // We will restore it shortly.
-	}
-	if ((rv = nni_tran_parse_host_port(pair, hostp, servp)) != 0) {
-		nni_free(scr, scrlen);
-		return (rv);
-	}
-
-	// If service was missing, assume normal defaults.
-	if (*servp == NULL) {
-		if (strcmp(scheme, "wss")) {
-			*servp = nni_strdup("443");
-		} else {
-			*servp = nni_strdup("80");
-		}
-	}
-
-	if (path) {
-		// Restore the path, and trim off the query parameter.
-		*path = '/';
-		if ((query = strchr(path, '?')) != NULL) {
-			*query = '\0';
-			query++;
-		} else {
-			query = "";
-		}
-	} else {
-		path  = "/";
-		query = "";
-	}
-
-	if (schemep) {
-		*schemep = nni_strdup(scheme);
-	}
-	if (pathp) {
-		*pathp = nni_strdup(path);
-	}
-	if (queryp) {
-		*queryp = nni_strdup(query);
-	}
-	nni_free(scr, scrlen);
-
-	if ((schemep && (*schemep == NULL)) || (*pathp == NULL) ||
-	    (*servp == NULL) || (queryp && (*queryp == NULL))) {
-		nni_strfree(*hostp);
-		nni_strfree(*servp);
-		nni_strfree(*pathp);
-		if (schemep) {
-			nni_strfree(*schemep);
-		}
-		if (queryp) {
-			nni_strfree(*queryp);
-		}
-		return (NNG_ENOMEM);
-	}
-
-	return (0);
-}
-
 int
-nni_ws_listener_init(nni_ws_listener **wslp, const char *url)
+nni_ws_listener_init(nni_ws_listener **wslp, const char *addr)
 {
 	nni_ws_listener *l;
 	int              rv;
 	nni_aio *        aio;
 	nni_sockaddr     sa;
+	char *           host;
+	char *           serv;
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
@@ -1587,16 +1490,25 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *url)
 	NNI_LIST_INIT(&l->pend, nni_ws, node);
 	NNI_LIST_INIT(&l->reply, nni_ws, node);
 
-	rv = ws_parse_url(url, NULL, &l->host, &l->serv, &l->path, NULL);
-	if (rv != 0) {
+	if ((rv = nni_url_parse(&l->url, addr)) != 0) {
 		nni_ws_listener_fini(l);
 		return (rv);
 	}
+
+	host = l->url->u_hostname;
+	if ((strlen(host) == 0) || (strcmp(host, "*") == 0)) {
+		host = NULL;
+	}
+	serv = l->url->u_port;
+	if (strlen(serv) == 0) {
+		serv = (strcmp(l->url->u_scheme, "wss") == 0) ? "443" : "80";
+	}
+
 	l->handler.h_is_dir      = false;
 	l->handler.h_is_upgrader = true;
 	l->handler.h_method      = "GET";
-	l->handler.h_path        = l->path;
-	l->handler.h_host        = l->host;
+	l->handler.h_path        = l->url->u_path;
+	l->handler.h_host        = host; // ignore the port
 	l->handler.h_cb          = ws_handler;
 
 	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
@@ -1604,7 +1516,7 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *url)
 		return (rv);
 	}
 	aio->a_addr = &sa;
-	nni_plat_tcp_resolv(l->host, l->serv, NNG_AF_UNSPEC, true, aio);
+	nni_plat_tcp_resolv(host, serv, NNG_AF_UNSPEC, true, aio);
 	nni_aio_wait(aio);
 	rv = nni_aio_result(aio);
 	nni_aio_fini(aio);
@@ -1813,18 +1725,12 @@ ws_conn_cb(void *arg)
 	nni_base64_encode(raw, 16, wskey, 24);
 	wskey[24] = '\0';
 
-	if (d->qinfo && d->qinfo[0] != '\0') {
-		rv = nni_asprintf(&d->uri, "%s?%s", d->path, d->qinfo);
-	} else if ((d->uri = nni_strdup(d->path)) == NULL) {
-		rv = NNG_ENOMEM;
-	}
-
 #define SETH(h, v) nni_http_req_set_header(req, h, v)
 	if ((rv != 0) || ((rv = nni_http_req_init(&req)) != 0) ||
-	    ((rv = nni_http_req_set_uri(req, d->uri)) != 0) ||
+	    ((rv = nni_http_req_set_uri(req, d->url->u_rawpath)) != 0) ||
 	    ((rv = nni_http_req_set_version(req, "HTTP/1.1")) != 0) ||
 	    ((rv = nni_http_req_set_method(req, "GET")) != 0) ||
-	    ((rv = SETH("Host", d->host)) != 0) ||
+	    ((rv = SETH("Host", d->url->u_host)) != 0) ||
 	    ((rv = SETH("Upgrade", "websocket")) != 0) ||
 	    ((rv = SETH("Connection", "Upgrade")) != 0) ||
 	    ((rv = SETH("Sec-WebSocket-Key", wskey)) != 0) ||
@@ -1879,12 +1785,6 @@ nni_ws_dialer_fini(nni_ws_dialer *d)
 
 	nni_aio_fini(d->conaio);
 	nni_strfree(d->proto);
-	nni_strfree(d->addr);
-	nni_strfree(d->uri);
-	nni_strfree(d->host);
-	nni_strfree(d->serv);
-	nni_strfree(d->path);
-	nni_strfree(d->qinfo);
 	while ((hdr = nni_list_first(&d->headers)) != NULL) {
 		nni_list_remove(&d->headers, hdr);
 		nni_strfree(hdr->name);
@@ -1894,16 +1794,22 @@ nni_ws_dialer_fini(nni_ws_dialer *d)
 	if (d->client) {
 		nni_http_client_fini(d->client);
 	}
+	if (d->url) {
+		nni_url_free(d->url);
+	}
 	nni_mtx_fini(&d->mtx);
 	NNI_FREE_STRUCT(d);
 }
 
 int
-nni_ws_dialer_init(nni_ws_dialer **dp, const char *url)
+nni_ws_dialer_init(nni_ws_dialer **dp, const char *addr)
 {
 	nni_ws_dialer *d;
 	int            rv;
 	nni_aio *      aio;
+	nni_url *      url;
+	char *         host;
+	char *         serv;
 
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);
@@ -1913,15 +1819,29 @@ nni_ws_dialer_init(nni_ws_dialer **dp, const char *url)
 	nni_aio_list_init(&d->conaios);
 	nni_aio_list_init(&d->httpaios);
 
-	if ((d->addr = nni_strdup(url)) == NULL) {
-		nni_ws_dialer_fini(d);
-		return (NNG_ENOMEM);
-	}
-	if ((rv = ws_parse_url(
-	         url, NULL, &d->host, &d->serv, &d->path, &d->qinfo)) != 0) {
+	if ((rv = nni_url_parse(&d->url, addr)) != 0) {
 		nni_ws_dialer_fini(d);
 		return (rv);
 	}
+
+	// Dialer requires a valid host.
+	if ((strlen(d->url->u_hostname) == 0) ||
+	    (strcmp(d->url->u_hostname, "*") == 0)) {
+		nni_ws_dialer_fini(d);
+		return (NNG_EADDRINVAL);
+	}
+
+	// Default port is 80 for ws, and 443 for wss.
+	if ((d->url->u_port == NULL) || (strlen(d->url->u_port) == 0)) {
+		if (strcmp(d->url->u_scheme, "wss") == 0) {
+			serv = "443";
+		} else {
+			serv = "80";
+		}
+	} else {
+		serv = d->url->u_port;
+	}
+
 	if ((rv = nni_aio_init(&d->conaio, ws_conn_cb, d)) != 0) {
 		nni_ws_dialer_fini(d);
 		return (rv);
@@ -1933,7 +1853,8 @@ nni_ws_dialer_init(nni_ws_dialer **dp, const char *url)
 	}
 	// XXX: this is synchronous.  We should fix this in the HTTP layer.
 	aio->a_addr = &d->sa;
-	nni_plat_tcp_resolv(d->host, d->serv, NNG_AF_UNSPEC, false, aio);
+	nni_plat_tcp_resolv(
+	    d->url->u_hostname, serv, NNG_AF_UNSPEC, false, aio);
 	nni_aio_wait(aio);
 	rv = nni_aio_result(aio);
 	nni_aio_fini(aio);

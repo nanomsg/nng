@@ -22,7 +22,6 @@ typedef struct nni_tcp_ep   nni_tcp_ep;
 
 // nni_tcp_pipe is one end of a TCP connection.
 struct nni_tcp_pipe {
-	const char *       addr;
 	nni_plat_tcp_pipe *tpp;
 	uint16_t           peer;
 	uint16_t           proto;
@@ -46,7 +45,6 @@ struct nni_tcp_pipe {
 };
 
 struct nni_tcp_ep {
-	char             addr[NNG_MAXADDRLEN + 1];
 	nni_plat_tcp_ep *tep;
 	uint16_t         proto;
 	size_t           rcvmax;
@@ -54,6 +52,7 @@ struct nni_tcp_ep {
 	int              ipv4only;
 	nni_aio *        aio;
 	nni_aio *        user_aio;
+	nni_url *        url;
 	nni_mtx          mtx;
 };
 
@@ -123,7 +122,6 @@ nni_tcp_pipe_init(nni_tcp_pipe **pipep, nni_tcp_ep *ep, void *tpp)
 	p->proto  = ep->proto;
 	p->rcvmax = ep->rcvmax;
 	p->tpp    = tpp;
-	p->addr   = ep->addr;
 
 	*pipep = p;
 	return (0);
@@ -488,96 +486,7 @@ nni_tcp_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 	return (rv);
 }
 
-static int
-nni_tcp_parse_pair(char *pair, char **hostp, char **servp)
-{
-	char *host, *serv, *end;
-
-	if (pair[0] == '[') {
-		host = pair + 1;
-		// IP address enclosed ... for IPv6 usually.
-		if ((end = strchr(host, ']')) == NULL) {
-			return (NNG_EADDRINVAL);
-		}
-		*end = '\0';
-		serv = end + 1;
-		if (*serv == ':') {
-			serv++;
-		} else if (*serv != '\0') {
-			return (NNG_EADDRINVAL);
-		}
-	} else {
-		host = pair;
-		serv = strchr(host, ':');
-		if (serv != NULL) {
-			*serv = '\0';
-			serv++;
-		}
-	}
-	if ((strlen(host) == 0) || (strcmp(host, "*") == 0)) {
-		*hostp = NULL;
-	} else {
-		*hostp = host;
-	}
-	if ((serv == NULL) || (strlen(serv) == 0)) {
-		*servp = NULL;
-	} else {
-		*servp = serv;
-	}
-	// Stash the port in big endian (network) byte order.
-	return (0);
-}
-
 // Note that the url *must* be in a modifiable buffer.
-int
-nni_tcp_parse_url(char *url, char **lhost, char **lserv, char **rhost,
-    char **rserv, int mode)
-{
-	char *h1;
-	int   rv;
-
-	if (strncmp(url, "tcp://", strlen("tcp://")) != 0) {
-		return (NNG_EADDRINVAL);
-	}
-	url += strlen("tcp://");
-	if ((mode == NNI_EP_MODE_DIAL) && ((h1 = strchr(url, ';')) != 0)) {
-		// The local address is the first part, the remote address
-		// is the second part.
-		*h1 = '\0';
-		h1++;
-		if (((rv = nni_tcp_parse_pair(h1, rhost, rserv)) != 0) ||
-		    ((rv = nni_tcp_parse_pair(url, lhost, lserv)) != 0)) {
-			return (rv);
-		}
-		if ((*rserv == NULL) || (*rhost == NULL)) {
-			// We have to know where to connect to!
-			return (NNG_EADDRINVAL);
-		}
-	} else if (mode == NNI_EP_MODE_DIAL) {
-		*lhost = NULL;
-		*lserv = NULL;
-		if ((rv = nni_tcp_parse_pair(url, rhost, rserv)) != 0) {
-			return (rv);
-		}
-		if ((*rserv == NULL) || (*rhost == NULL)) {
-			// We have to know where to connect to!
-			return (NNG_EADDRINVAL);
-		}
-	} else {
-		NNI_ASSERT(mode == NNI_EP_MODE_LISTEN);
-		*rhost = NULL;
-		*rserv = NULL;
-		if ((rv = nni_tcp_parse_pair(url, lhost, lserv)) != 0) {
-			return (rv);
-		}
-		// We have to have a port to listen on!
-		if (*lserv == NULL) {
-			return (NNG_EADDRINVAL);
-		}
-	}
-	return (0);
-}
-
 static void
 nni_tcp_pipe_start(void *arg, nni_aio *aio)
 {
@@ -618,83 +527,94 @@ nni_tcp_ep_fini(void *arg)
 	if (ep->tep != NULL) {
 		nni_plat_tcp_ep_fini(ep->tep);
 	}
+	nni_url_free(ep->url);
 	nni_aio_fini(ep->aio);
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
 }
 
 static int
-nni_tcp_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
+nni_tcp_ep_init(void **epp, const char *addr, nni_sock *sock, int mode)
 {
 	nni_tcp_ep * ep;
 	int          rv;
-	char         buf[NNG_MAXADDRLEN + 1];
-	char *       rhost;
-	char *       rserv;
-	char *       lhost;
-	char *       lserv;
+	char *       host;
+	char *       serv;
 	nni_sockaddr rsa, lsa;
 	nni_aio *    aio;
 	int          passive;
+	nni_url *    url;
 
-	// Make a copy of the url (to allow for destructive operations)
-	if (nni_strlcpy(buf, url, sizeof(buf)) >= sizeof(buf)) {
+	if ((rv = nni_url_parse(&url, addr)) != 0) {
+		return (rv);
+	}
+	// Check for invalid URL components.
+	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
+		nni_url_free(url);
+		return (NNG_EADDRINVAL);
+	}
+	if ((url->u_fragment != NULL) || (url->u_userinfo != NULL) ||
+	    (url->u_query != NULL)) {
+		nni_url_free(url);
 		return (NNG_EADDRINVAL);
 	}
 
-	// Parse the URLs first.
-	rv = nni_tcp_parse_url(buf, &lhost, &lserv, &rhost, &rserv, mode);
-	if (rv != 0) {
-		return (rv);
-	}
-	passive = (mode == NNI_EP_MODE_DIAL ? 0 : 1);
-
 	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+		nni_url_free(url);
 		return (rv);
 	}
 
+	if ((strlen(url->u_hostname) == 0) ||
+	    (strcmp(url->u_hostname, "*") == 0)) {
+		host = NULL;
+	} else {
+		host = url->u_hostname;
+	}
+
+	if (strlen(url->u_port) == 0) {
+		serv = NULL;
+	} else {
+		serv = url->u_port;
+	}
 	// XXX: arguably we could defer this part to the point we do a bind
 	// or connect!
-
-	if ((rhost != NULL) || (rserv != NULL)) {
-		aio->a_addr = &rsa;
-		nni_plat_tcp_resolv(rhost, rserv, NNG_AF_UNSPEC, passive, aio);
-		nni_aio_wait(aio);
-		if ((rv = nni_aio_result(aio)) != 0) {
-			nni_aio_fini(aio);
-			return (rv);
-		}
-	} else {
-		rsa.s_un.s_family = NNG_AF_UNSPEC;
-	}
-
-	if ((lhost != NULL) || (lserv != NULL)) {
-		aio->a_addr = &lsa;
-		nni_plat_tcp_resolv(lhost, lserv, NNG_AF_UNSPEC, passive, aio);
-		nni_aio_wait(aio);
-		if ((rv = nni_aio_result(aio)) != 0) {
-			nni_aio_fini(aio);
-			return (rv);
-		}
-	} else {
+	if (mode == NNI_EP_MODE_DIAL) {
+		passive           = 0;
 		lsa.s_un.s_family = NNG_AF_UNSPEC;
+		aio->a_addr       = &rsa;
+		if ((host == NULL) || (serv == NULL)) {
+			nni_url_free(url);
+			nni_aio_fini(aio);
+			return (NNG_EADDRINVAL);
+		}
+	} else {
+		passive           = 1;
+		rsa.s_un.s_family = NNG_AF_UNSPEC;
+		aio->a_addr       = &lsa;
 	}
+
+	nni_plat_tcp_resolv(host, serv, NNG_AF_UNSPEC, passive, aio);
+	nni_aio_wait(aio);
+	if ((rv = nni_aio_result(aio)) != 0) {
+		nni_url_free(url);
+		nni_aio_fini(aio);
+		return (rv);
+	}
+
 	nni_aio_fini(aio);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
+		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	if (nni_strlcpy(ep->addr, url, sizeof(ep->addr)) >= sizeof(ep->addr)) {
-		NNI_FREE_STRUCT(ep);
-		return (NNG_EADDRINVAL);
-	}
+	nni_mtx_init(&ep->mtx);
+	ep->url = url;
 
 	if ((rv = nni_plat_tcp_ep_init(&ep->tep, &lsa, &rsa, mode)) != 0) {
-		NNI_FREE_STRUCT(ep);
+		nni_tcp_ep_fini(ep);
 		return (rv);
 	}
 
-	nni_mtx_init(&ep->mtx);
 	if ((rv = nni_aio_init(&ep->aio, nni_tcp_ep_cb, ep)) != 0) {
 		nni_tcp_ep_fini(ep);
 		return (rv);

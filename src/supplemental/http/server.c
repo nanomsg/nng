@@ -35,6 +35,7 @@ typedef struct http_handler {
 	char *        h_host;
 	bool          h_is_upgrader;
 	bool          h_is_dir;
+	int           h_refcnt;
 	void (*h_cb)(nni_aio *);
 	void (*h_free)(void *);
 } http_handler;
@@ -72,6 +73,7 @@ struct nni_http_server {
 
 static nni_list http_servers;
 static nni_mtx  http_servers_lk;
+static void     http_handler_fini(http_handler *);
 
 static void
 http_sconn_reap(void *arg)
@@ -372,6 +374,7 @@ http_sconn_rxdone(void *arg)
 	strncpy(uri, val, urisz);
 	path = http_uri_canonify(uri);
 
+	nni_mtx_lock(&s->mtx);
 	NNI_LIST_FOREACH (&s->handlers, h) {
 		size_t len;
 		if (h->h_host != NULL) {
@@ -438,6 +441,7 @@ http_sconn_rxdone(void *arg)
 
 	nni_free(uri, urisz);
 	if (h == NULL) {
+		nni_mtx_unlock(&s->mtx);
 		if (badmeth) {
 			http_sconn_error(
 			    sc, NNI_HTTP_STATUS_METHOD_NOT_ALLOWED);
@@ -450,23 +454,27 @@ http_sconn_rxdone(void *arg)
 	nni_aio_set_input(sc->cbaio, 0, sc->http);
 	nni_aio_set_input(sc->cbaio, 1, sc->req);
 	nni_aio_set_input(sc->cbaio, 2, h->h_arg);
-	nni_aio_set_data(sc->cbaio, 1, h);
 
 	// Technically, probably callback should initialize this with
 	// start, but we do it instead.
 
 	if (nni_aio_start(sc->cbaio, NULL, NULL) == 0) {
+		nni_aio_set_data(sc->cbaio, 1, h);
+		h->h_refcnt++;
 		h->h_cb(sc->cbaio);
 	}
+	nni_mtx_unlock(&s->mtx);
 }
 
 static void
 http_sconn_cbdone(void *arg)
 {
-	http_sconn *  sc  = arg;
-	nni_aio *     aio = sc->cbaio;
-	nni_http_res *res;
-	http_handler *h;
+	http_sconn *     sc  = arg;
+	nni_aio *        aio = sc->cbaio;
+	nni_http_res *   res;
+	http_handler *   h;
+	nni_http_server *s = sc->server;
+	bool             upgrader;
 
 	if (nni_aio_result(aio) != 0) {
 		// Hard close, no further feedback.
@@ -477,10 +485,18 @@ http_sconn_cbdone(void *arg)
 	h   = nni_aio_get_data(aio, 1);
 	res = nni_aio_get_output(aio, 0);
 
+	nni_mtx_lock(&s->mtx);
+	upgrader = h->h_is_upgrader;
+	h->h_refcnt--;
+	if (h->h_refcnt == 0) {
+		http_handler_fini(h);
+	}
+	nni_mtx_unlock(&s->mtx);
+
 	// If its an upgrader, and they didn't give us back a response, it
 	// means that they took over, and we should just discard this session,
 	// without closing the underlying channel.
-	if ((h->h_is_upgrader) && (res == NULL)) {
+	if (upgrader && (res == NULL)) {
 		sc->http = NULL; // the underlying HTTP is not closed
 		sc->req  = NULL;
 		sc->res  = NULL;
@@ -795,13 +811,11 @@ http_server_add_handler(void **hp, nni_http_server *s, nni_http_handler *hh,
 	h->h_is_upgrader = hh->h_is_upgrader;
 	h->h_free        = freeit;
 
-	// Ignore the port part of the host.
+	// When registering the handler, only register *host*, not port.
 	if (hh->h_host != NULL) {
-		int rv;
-		rv = nni_tran_parse_host_port(hh->h_host, &h->h_host, NULL);
-		if (rv != 0) {
+		if ((h->h_host = nni_strdup(hh->h_host)) == NULL) {
 			http_handler_fini(h);
-			return (rv);
+			return (NNG_ENOMEM);
 		}
 	}
 
@@ -847,6 +861,7 @@ http_server_add_handler(void **hp, nni_http_server *s, nni_http_handler *hh,
 			return (NNG_EADDRINUSE);
 		}
 	}
+	h->h_refcnt = 1;
 	nni_list_append(&s->handlers, h);
 	nni_mtx_unlock(&s->mtx);
 	if (hp != NULL) {
@@ -869,9 +884,11 @@ nni_http_server_del_handler(nni_http_server *s, void *harg)
 
 	nni_mtx_lock(&s->mtx);
 	nni_list_node_remove(&h->node);
+	h->h_refcnt--;
+	if (h->h_refcnt == 0) {
+		http_handler_fini(h);
+	}
 	nni_mtx_unlock(&s->mtx);
-
-	http_handler_fini(h);
 }
 
 // Very limited MIME type map.  Used only if the handler does not

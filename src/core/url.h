@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,6 +23,7 @@ struct nni_url {
 	char *u_path;     // path, will be "" if not specified
 	char *u_query;    // without '?', will be NULL if not specified
 	char *u_fragment; // without '#', will be NULL if not specified
+	char *u_rawpath;  // includes query and fragment, "" if not specified
 };
 
 extern int nni_url_parse(nni_url **, const char *path);
