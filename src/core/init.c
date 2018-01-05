@@ -1,7 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -74,8 +73,8 @@ nni_fini(void)
 	nni_pipe_sys_fini();
 	nni_ep_sys_fini();
 	nni_sock_sys_fini();
-	nni_random_sys_fini();
 	nni_reap_sys_fini(); // must be before timer and aio (expire)
+	nni_random_sys_fini();
 	nni_aio_sys_fini();
 	nni_timer_sys_fini();
 	nni_taskq_sys_fini();
