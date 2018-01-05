@@ -44,6 +44,7 @@
 #include "core/thread.h"
 #include "core/timer.h"
 #include "core/transport.h"
+#include "core/url.h"
 
 // These have to come after the others - particularly transport.h
 #include "core/endpt.h"

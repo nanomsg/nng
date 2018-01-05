@@ -76,6 +76,8 @@ set (NNG_SOURCES
     core/timer.h
     core/transport.c
     core/transport.h
+    core/url.c
+    core/url.h
     )
 
 if (NNG_PLATFORM_POSIX)

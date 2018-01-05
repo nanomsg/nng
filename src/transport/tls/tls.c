@@ -26,7 +26,6 @@ typedef struct nni_tls_ep   nni_tls_ep;
 
 // nni_tls_pipe is one end of a TLS connection.
 struct nni_tls_pipe {
-	const char *       addr;
 	nni_plat_tcp_pipe *tcp;
 	uint16_t           peer;
 	uint16_t           proto;
@@ -51,7 +50,6 @@ struct nni_tls_pipe {
 };
 
 struct nni_tls_ep {
-	char             addr[NNG_MAXADDRLEN + 1];
 	nni_plat_tcp_ep *tep;
 	uint16_t         proto;
 	size_t           rcvmax;
@@ -62,6 +60,7 @@ struct nni_tls_ep {
 	nni_aio *        user_aio;
 	nni_mtx          mtx;
 	nng_tls_config * cfg;
+	nni_url *        url;
 };
 
 static void nni_tls_pipe_send_cb(void *);
@@ -104,9 +103,7 @@ nni_tls_pipe_fini(void *arg)
 	if (p->tls != NULL) {
 		nni_tls_fini(p->tls);
 	}
-	if (p->rxmsg) {
-		nni_msg_free(p->rxmsg);
-	}
+	nni_msg_free(p->rxmsg);
 	NNI_FREE_STRUCT(p);
 }
 
@@ -133,7 +130,6 @@ nni_tls_pipe_init(nni_tls_pipe **pipep, nni_tls_ep *ep, void *tpp)
 	p->proto  = ep->proto;
 	p->rcvmax = ep->rcvmax;
 	p->tcp    = tcp;
-	p->addr   = ep->addr;
 
 	*pipep = p;
 	return (0);
@@ -498,57 +494,6 @@ nni_tls_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 	return (rv);
 }
 
-// Note that the url *must* be in a modifiable buffer.
-int
-nni_tls_parse_url(char *url, char **lhost, char **lserv, char **rhost,
-    char **rserv, int mode)
-{
-	char *h1;
-	int   rv;
-
-	if (strncmp(url, "tls+tcp://", strlen("tls+tcp://")) != 0) {
-		return (NNG_EADDRINVAL);
-	}
-	url += strlen("tls+tcp://");
-	if ((mode == NNI_EP_MODE_DIAL) && ((h1 = strchr(url, ';')) != 0)) {
-		// The local address is the first part, the remote address
-		// is the second part.
-		*h1 = '\0';
-		h1++;
-		if (((rv = nni_tran_parse_host_port(h1, rhost, rserv)) != 0) ||
-		    ((rv = nni_tran_parse_host_port(url, lhost, lserv)) !=
-		        0)) {
-			return (rv);
-		}
-		if ((*rserv == NULL) || (*rhost == NULL)) {
-			// We have to know where to connect to!
-			return (NNG_EADDRINVAL);
-		}
-	} else if (mode == NNI_EP_MODE_DIAL) {
-		*lhost = NULL;
-		*lserv = NULL;
-		if ((rv = nni_tran_parse_host_port(url, rhost, rserv)) != 0) {
-			return (rv);
-		}
-		if ((*rserv == NULL) || (*rhost == NULL)) {
-			// We have to know where to connect to!
-			return (NNG_EADDRINVAL);
-		}
-	} else {
-		NNI_ASSERT(mode == NNI_EP_MODE_LISTEN);
-		*rhost = NULL;
-		*rserv = NULL;
-		if ((rv = nni_tran_parse_host_port(url, lhost, lserv)) != 0) {
-			return (rv);
-		}
-		// We have to have a port to listen on!
-		if (*lserv == NULL) {
-			return (NNG_EADDRINVAL);
-		}
-	}
-	return (0);
-}
-
 static void
 nni_tls_pipe_start(void *arg, nni_aio *aio)
 {
@@ -592,114 +537,111 @@ nni_tls_ep_fini(void *arg)
 	if (ep->cfg) {
 		nni_tls_config_fini(ep->cfg);
 	}
+	if (ep->url) {
+		nni_url_free(ep->url);
+	}
 	nni_aio_fini(ep->aio);
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
 }
 
 static int
-nni_tls_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
+nni_tls_ep_init(void **epp, const char *addr, nni_sock *sock, int mode)
 {
 	nni_tls_ep *      ep;
 	int               rv;
-	char              buf[NNG_MAXADDRLEN + 1];
-	char *            rhost;
-	char *            rserv;
-	char *            lhost;
-	char *            lserv;
+	char *            host;
+	char *            serv;
 	nni_sockaddr      rsa, lsa;
 	nni_aio *         aio;
 	int               passive;
 	nng_tls_mode      tlsmode;
 	nng_tls_auth_mode authmode;
+	nni_url *         url;
 
-	// Make a copy of the url (to allow for destructive operations)
-	if (nni_strlcpy(buf, url, sizeof(buf)) >= sizeof(buf)) {
+	// Parse the URLs first.
+	if ((rv = nni_url_parse(&url, addr)) != 0) {
+		return (rv);
+	}
+
+	// Check for invalid URL components.
+	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
+		nni_url_free(url);
+		return (NNG_EADDRINVAL);
+	}
+	if ((url->u_fragment != NULL) || (url->u_userinfo != NULL) ||
+	    (url->u_query != NULL)) {
+		nni_url_free(url);
 		return (NNG_EADDRINVAL);
 	}
 
 	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+		nni_url_free(url);
 		return (rv);
 	}
-	// Parse the URLs first.
-	rv = nni_tls_parse_url(buf, &lhost, &lserv, &rhost, &rserv, mode);
-	if (rv != 0) {
-		nni_aio_fini(aio);
-		return (rv);
-	}
-	if (mode == NNI_EP_MODE_DIAL) {
-		passive  = 0;
-		tlsmode  = NNG_TLS_MODE_CLIENT;
-		authmode = NNG_TLS_AUTH_MODE_REQUIRED;
+
+	if ((strlen(url->u_hostname) == 0) ||
+	    (strcmp(url->u_hostname, "*") == 0)) {
+		host = NULL;
 	} else {
-		passive  = 1;
-		tlsmode  = NNG_TLS_MODE_SERVER;
-		authmode = NNG_TLS_AUTH_MODE_NONE;
+		host = url->u_hostname;
+	}
+	if (strlen(url->u_port) == 0) {
+		serv = NULL;
+	} else {
+		serv = url->u_port;
+	}
+
+	if (mode == NNI_EP_MODE_DIAL) {
+		passive           = 0;
+		tlsmode           = NNG_TLS_MODE_CLIENT;
+		authmode          = NNG_TLS_AUTH_MODE_REQUIRED;
+		lsa.s_un.s_family = NNG_AF_UNSPEC;
+		aio->a_addr       = &rsa;
+		if ((host == NULL) || (serv == NULL)) {
+			nni_url_free(url);
+			nni_aio_fini(aio);
+			return (NNG_EADDRINVAL);
+		}
+	} else {
+		passive           = 1;
+		tlsmode           = NNG_TLS_MODE_SERVER;
+		authmode          = NNG_TLS_AUTH_MODE_NONE;
+		rsa.s_un.s_family = NNG_AF_UNSPEC;
+		aio->a_addr       = &lsa;
 	}
 
 	// XXX: arguably we could defer this part to the point we do a bind
 	// or connect!
-
-	if ((rhost != NULL) || (rserv != NULL)) {
-		aio->a_addr = &rsa;
-		nni_plat_tcp_resolv(rhost, rserv, NNG_AF_UNSPEC, passive, aio);
-		nni_aio_wait(aio);
-		nni_strfree(rserv);
-		if ((rv = nni_aio_result(aio)) != 0) {
-			nni_strfree(rhost);
-			nni_strfree(lhost);
-			nni_strfree(lserv);
-			nni_aio_fini(aio);
-			return (rv);
-		}
-	} else {
-		rsa.s_un.s_family = NNG_AF_UNSPEC;
-	}
-
-	if ((lhost != NULL) || (lserv != NULL)) {
-		aio->a_addr = &lsa;
-		nni_plat_tcp_resolv(lhost, lserv, NNG_AF_UNSPEC, passive, aio);
-		nni_aio_wait(aio);
-		nni_strfree(lhost);
-		nni_strfree(lserv);
-		if ((rv = nni_aio_result(aio)) != 0) {
-			nni_strfree(rhost);
-			nni_aio_fini(aio);
-			return (rv);
-		}
-	} else {
-		lsa.s_un.s_family = NNG_AF_UNSPEC;
+	nni_plat_tcp_resolv(host, serv, NNG_AF_UNSPEC, passive, aio);
+	nni_aio_wait(aio);
+	if ((rv = nni_aio_result(aio)) != 0) {
+		nni_url_free(url);
+		nni_aio_fini(aio);
+		return (rv);
 	}
 	nni_aio_fini(aio);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
-		nni_strfree(rhost);
+		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&ep->mtx);
-
-	if (nni_strlcpy(ep->addr, url, sizeof(ep->addr)) >= sizeof(ep->addr)) {
-		NNI_FREE_STRUCT(ep);
-		nni_strfree(rhost);
-		return (NNG_EADDRINVAL);
-	}
+	ep->url = url;
 
 	if (((rv = nni_plat_tcp_ep_init(&ep->tep, &lsa, &rsa, mode)) != 0) ||
 	    ((rv = nni_tls_config_init(&ep->cfg, tlsmode)) != 0) ||
 	    ((rv = nng_tls_config_auth_mode(ep->cfg, authmode)) != 0) ||
 	    ((rv = nni_aio_init(&ep->aio, nni_tls_ep_cb, ep)) != 0)) {
-		nni_strfree(rhost);
 		nni_tls_ep_fini(ep);
 		return (rv);
 	}
-	if ((tlsmode == NNG_TLS_MODE_CLIENT) && (rhost != NULL)) {
-		if ((rv = nng_tls_config_server_name(ep->cfg, rhost)) != 0) {
-			nni_strfree(rhost);
+	if ((tlsmode == NNG_TLS_MODE_CLIENT) && (host != NULL)) {
+		if ((rv = nng_tls_config_server_name(ep->cfg, host)) != 0) {
 			nni_tls_ep_fini(ep);
 			return (rv);
 		}
 	}
-	nni_strfree(rhost);
 	ep->proto    = nni_sock_proto(sock);
 	ep->authmode = authmode;
 

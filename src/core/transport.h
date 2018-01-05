@@ -13,7 +13,6 @@
 
 // Transport implementation details.  Transports must implement the
 // interfaces in this file.
-
 struct nni_tran {
 	// tran_version is the version of the transport ops that this
 	// transport implements.  We only bother to version the main
@@ -164,6 +163,7 @@ struct nni_tran_pipe {
 };
 
 // Utility for transports.
+
 extern int nni_tran_parse_host_port(const char *, char **, char **);
 
 // These APIs are used by the framework internally, and not for use by

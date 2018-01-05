@@ -1,7 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -79,27 +78,23 @@ check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
 	size_t   z;
 	p = nng_msg_get_pipe(msg);
 	So(p > 0);
+	nng_sockaddr la;
+	nng_sockaddr ra;
 
-	Convey("Local address property works", {
-		nng_sockaddr la;
-		z = sizeof(nng_sockaddr);
-		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-		So(z == sizeof(la));
-		So(la.s_un.s_family == NNG_AF_INET);
-		So(la.s_un.s_in.sa_port == htons(trantest_port - 1));
-		So(la.s_un.s_in.sa_port != 0);
-		So(la.s_un.s_in.sa_addr == htonl(0x7f000001));
-	});
+	z = sizeof(nng_sockaddr);
+	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
+	So(z == sizeof(la));
+	So(la.s_un.s_family == NNG_AF_INET);
+	So(la.s_un.s_in.sa_port == htons(trantest_port - 1));
+	So(la.s_un.s_in.sa_port != 0);
+	So(la.s_un.s_in.sa_addr == htonl(0x7f000001));
 
-	Convey("Remote address property works", {
-		nng_sockaddr ra;
-		z = sizeof(nng_sockaddr);
-		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-		So(z == sizeof(ra));
-		So(ra.s_un.s_family == NNG_AF_INET);
-		So(ra.s_un.s_in.sa_port != 0);
-		So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
-	});
+	z = sizeof(nng_sockaddr);
+	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+	So(z == sizeof(ra));
+	So(ra.s_un.s_family == NNG_AF_INET);
+	So(ra.s_un.s_in.sa_port != 0);
+	So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
 
 	return (0);
 }
@@ -205,18 +200,21 @@ TestMain("TLS Transport", {
 		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s1) == 0);
 		Reset({ nng_close(s1); });
+
+		// Note that if we listen to an unspecified port, then we
+		// get a random port.  So we don't look at that.  This allows
+		// a user to obtain a port at random and then query to see
+		// which one was chosen.
+
 		So(nng_dial(s1, "tls+tcp://127.0.0.1", NULL, 0) ==
 		    NNG_EADDRINVAL);
 		So(nng_dial(s1, "tls+tcp://127.0.0.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
 		So(nng_dial(s1, "tls+tcp://127.0.x.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
-		So(nng_listen(s1, "tls+tcp://127.0.0.1", NULL, 0) ==
-		    NNG_EADDRINVAL);
 		So(nng_listen(s1, "tls+tcp://127.0.0.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
 		So(nng_listen(s1, "tls+tcp://127.0.x.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
 	});
-
 })

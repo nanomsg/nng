@@ -72,65 +72,54 @@ static const char server_key[] =
 static int
 check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
 {
-	nng_pipe p;
-	size_t   z;
+	nng_pipe     p;
+	size_t       z;
+	nng_sockaddr la;
+	nng_sockaddr ra;
+	char *       buf;
+	size_t       len;
+
 	p = nng_msg_get_pipe(msg);
 	So(p > 0);
 
-	Convey("Local address property works", {
-		nng_sockaddr la;
-		z = sizeof(nng_sockaddr);
-		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-		So(z == sizeof(la));
-		So(la.s_un.s_family == NNG_AF_INET);
-		So(la.s_un.s_in.sa_port == htons(trantest_port - 1));
-		So(la.s_un.s_in.sa_port != 0);
-		So(la.s_un.s_in.sa_addr == htonl(0x7f000001));
-	});
+	z = sizeof(nng_sockaddr);
+	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
+	So(z == sizeof(la));
+	So(la.s_un.s_family == NNG_AF_INET);
+	So(la.s_un.s_in.sa_port == htons(trantest_port - 1));
+	So(la.s_un.s_in.sa_port != 0);
+	So(la.s_un.s_in.sa_addr == htonl(0x7f000001));
 
-	Convey("Remote address property works", {
-		nng_sockaddr ra;
-		z = sizeof(nng_sockaddr);
-		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-		So(z == sizeof(ra));
-		So(ra.s_un.s_family == NNG_AF_INET);
-		So(ra.s_un.s_in.sa_port != 0);
-		So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
-	});
+	z = sizeof(nng_sockaddr);
+	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+	So(z == sizeof(ra));
+	So(ra.s_un.s_family == NNG_AF_INET);
+	So(ra.s_un.s_in.sa_port != 0);
+	So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
 
-	Convey("Request header property works", {
-		char * buf;
-		size_t len;
-		z   = 0;
-		buf = NULL;
-		So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
-		    0);
-		So(z > 0);
-		len = z;
-		So((buf = nni_alloc(len)) != NULL);
-		So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
-		    0);
-		So(strstr(buf, "Sec-WebSocket-Key") != NULL);
-		So(z == len);
-		nni_free(buf, len);
-	});
+	// Request header
+	z   = 0;
+	buf = NULL;
+	So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == 0);
+	So(z > 0);
+	len = z;
+	So((buf = nni_alloc(len)) != NULL);
+	So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == 0);
+	So(strstr(buf, "Sec-WebSocket-Key") != NULL);
+	So(z == len);
+	nni_free(buf, len);
 
-	Convey("Response header property works", {
-		char * buf;
-		size_t len;
-		z   = 0;
-		buf = NULL;
-		So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
-		    0);
-		So(z > 0);
-		len = z;
-		So((buf = nni_alloc(len)) != NULL);
-		So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
-		    0);
-		So(strstr(buf, "Sec-WebSocket-Accept") != NULL);
-		So(z == len);
-		nni_free(buf, len);
-	});
+	// Response header
+	z   = 0;
+	buf = NULL;
+	So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) == 0);
+	So(z > 0);
+	len = z;
+	So((buf = nni_alloc(len)) != NULL);
+	So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) == 0);
+	So(strstr(buf, "Sec-WebSocket-Accept") != NULL);
+	So(z == len);
+	nni_free(buf, len);
 
 	return (0);
 }

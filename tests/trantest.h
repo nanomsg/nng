@@ -248,10 +248,11 @@ trantest_listen_accept(trantest *tt)
 		So(trantest_listen(tt, &l) == 0);
 		So(l != 0);
 
+		nng_msleep(200);
 		d = 0;
 		So(trantest_dial(tt, &d) == 0);
 		So(d != 0);
-	})
+	});
 }
 
 void
@@ -384,6 +385,7 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 		So(nng_msg_append(send, "props", 5) == 0);
 
 		So(nng_sendmsg(tt->reqsock, send, 0) == 0);
+
 		recv = NULL;
 		So(nng_recvmsg(tt->repsock, &recv, 0) == 0);
 		So(recv != NULL);
