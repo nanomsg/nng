@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -105,7 +105,6 @@ nni_timer_schedule(nni_timer_node *node, nni_time when)
 {
 	nni_timer *     timer = &nni_global_timer;
 	nni_timer_node *srch;
-	int             wake = 1;
 
 	nni_mtx_lock(&timer->t_mx);
 	node->t_expire = when;
@@ -117,14 +116,13 @@ nni_timer_schedule(nni_timer_node *node, nni_time when)
 	srch = nni_list_first(&timer->t_entries);
 	while ((srch != NULL) && (srch->t_expire < node->t_expire)) {
 		srch = nni_list_next(&timer->t_entries, srch);
-		wake = 0;
 	}
 	if (srch != NULL) {
 		nni_list_insert_before(&timer->t_entries, node, srch);
 	} else {
 		nni_list_append(&timer->t_entries, node);
 	}
-	if (wake) {
+	if (nni_list_first(&timer->t_entries) == node) {
 		nni_cv_wake1(&timer->t_sched_cv);
 	}
 	nni_mtx_unlock(&timer->t_mx);

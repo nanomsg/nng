@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -94,7 +94,7 @@ surv0_sock_init(void **sp, nni_sock *nsock)
 
 	s->nextid   = nni_random();
 	s->raw      = 0;
-	s->survtime = NNI_SECOND * 60;
+	s->survtime = NNI_SECOND;
 	s->expire   = NNI_TIME_ZERO;
 	s->uwq      = nni_sock_sendq(nsock);
 	s->urq      = nni_sock_recvq(nsock);
@@ -222,7 +222,7 @@ surv0_send_cb(void *arg)
 		return;
 	}
 
-	nni_msgq_aio_get(p->psock->uwq, p->aio_getq);
+	nni_msgq_aio_get(p->sendq, p->aio_getq);
 }
 
 static void
@@ -354,6 +354,8 @@ surv0_sock_getq_cb(void *arg)
 			nni_msg_free(dup);
 		}
 	}
+
+	nni_msgq_aio_get(s->uwq, s->aio_getq);
 	nni_mtx_unlock(&s->mtx);
 
 	if (last == NULL) {
@@ -370,6 +372,7 @@ surv0_timeout(void *arg)
 	nni_mtx_lock(&s->mtx);
 	s->survid = 0;
 	nni_mtx_unlock(&s->mtx);
+
 	nni_msgq_set_get_error(s->urq, NNG_ETIMEDOUT);
 }
 
@@ -420,6 +423,7 @@ surv0_sock_send(void *arg, nni_aio *aio)
 	// If another message is there, this cancels it.  We move the
 	// survey expiration out.  The timeout thread will wake up in
 	// the wake below, and reschedule itself appropriately.
+	nni_msgq_set_get_error(s->urq, 0);
 	s->expire = nni_clock() + s->survtime;
 	nni_timer_schedule(&s->timer, s->expire);
 
@@ -443,6 +447,7 @@ surv0_sock_filter(void *arg, nni_msg *msg)
 	if ((nni_msg_header_len(msg) < sizeof(uint32_t)) ||
 	    (nni_msg_header_trim_u32(msg) != s->survid)) {
 		// Wrong request id
+		nni_mtx_unlock(&s->mtx);
 		nni_msg_free(msg);
 		return (NULL);
 	}
