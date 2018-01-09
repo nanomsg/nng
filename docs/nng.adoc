@@ -59,6 +59,8 @@ Protocols
 * <<nng_bus#,nng_bus(7)>> - Bus protocol
 * <<nng_pair#,nng_pair(7)>> - Pair protocol
 * <<nng_pub#,nng_pub(7)>> - Publisher side of publish/subscribe protocol
+* <<nng_pull#,nng_pull(7)>> - Pull side of pipeline protocol
+* <<nng_push#,nng_push(7)>> - Push side of pipeline protocol
 * <<nng_sub#,nng_sub(7)>> - Subscriber side of publish/subscribe protocol
 * <<nng_rep#,nng_rep(7)>> - Reply side of request/reply protocol
 * <<nng_req#,nng_req(7)>> - Request side of request/reply protocol
