@@ -21,7 +21,7 @@ SYNOPSIS
 
 [source,c]
 ----------
-#include <nng/protocol/survey0/respondent.h>
+#include <nng/protocol/survey0/respond.h>
 
 int nng_respondent0_open(nng_socket *s);
 ----------
