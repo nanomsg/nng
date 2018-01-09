@@ -9,8 +9,8 @@ layout: default
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<meta name="copyright" content="Copyright 2018 Garrett D'Amore &lt;garrett@damore.org&gt; Copyright 2018 Capitar IT Group BV &lt;info@capitar.com&gt; This software is supplied under the terms of the MIT License, a copy of which should be located in the distribution where this file was obtained (LICENSE.txt).  A copy of the license may also be found online at https://opensource.org/licenses/MIT.">
-<title>nng_ipc(7)</title>
+<meta name="copyright" content="Copyright 2018 Staysail Systems, Inc. &lt;info@staysail.tech&gt; Copyright 2018 Capitar IT Group BV &lt;info@capitar.com&gt; This software is supplied under the terms of the MIT License, a copy of which should be located in the distribution where this file was obtained (LICENSE.txt).  A copy of the license may also be found online at https://opensource.org/licenses/MIT.">
+<title>nng_tls_config_cert(3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -504,10 +504,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage">
 <div id="header">
-<h1>nng_ipc(7) Manual Page</h1>
+<h1>nng_tls_config_cert(3) Manual Page</h1>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_ipc - IPC transport for nng</p>
+<p>nng_tls_config_cert - configure own certificate</p>
 </div>
 </div>
 <div id="content">
@@ -516,9 +516,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/transport/ipc/ipc.h&gt;</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_ipc_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-n">nng_tls_config_cert</span><span class="tok-p">(</span><span class="tok-n">nni_tls_config</span> <span class="tok-o">*</span><span class="tok-n">cfg</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">uint8_t</span> <span class="tok-o">*</span><span class="tok-n">cert</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">)</span></code></pre>
 </div>
 </div>
 </div>
@@ -527,25 +527,25 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <em>nng_ipc</em> transport provides communication support between
-<em>nng</em> sockets within different processes on the same host. For POSIX
-platforms, this is implemented using UNIX domain sockets.  For Windows,
-this is implemented using Windows Named Pipes.  Other platforms may
-have different implementation strategies.</p>
+<p>The <code>nng_tls_config_cert()</code> function configures a certificate identifying
+the local side of a TLS connection used with <em>cfg</em>.  The certificate may be
+a chain, with the bottom-most signer first and the root at the end.  The
+self-signed certificate at the end can be omitted. (The client should already
+have it, and will have to in order to validate this certificate anyway).</p>
 </div>
-<div class="sect2">
-<h3 id="_registration">Registration</h3>
-<div class="paragraph">
-<p>The <em>ipc</em> transport is generally built-in to the <em>nng</em> core, so
-no extra steps to use it should be necessary.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_uri_format">URI Format</h3>
-<div class="paragraph">
-<p>This transport uses URIs using the scheme <code>ipc://</code>, followed by
-a path name in the file system where the socket or named pipe
-should be created.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The certificate supplied always contains public keying material.  In
+order to actually use this, a private key will have to be supplied as well,
+using the <a href="nng_tls_config_key.html">nnt_tls_config_key(3)</a> function.
+</td>
+</tr>
+</table>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -554,65 +554,55 @@ should be created.</p>
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-On Windows, all names are prefixed by <code>\.\pipe\</code> and do not
-occupy the normal file system.  On POSIX platforms, the path is
-taken literally, and is relative to the current directory, unless
-an extra leading <code>/</code> is provided.  For example, <code>ipc://myname</code> refers
-to the name <code>myname</code> in the current directory, whereas <code>ipc:///tmp/myname</code>
-refers to <code>myname</code> located in <code>/tmp</code>.
+This function may be called multiple times, to add additional chains
+to a configuration, without affecting those added previously.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>The entire URI must be less than <code>NNG_MAXADDRLEN</code> bytes long.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_socket_address">Socket Address</h3>
-<div class="paragraph">
-<p>When using an <code>nng_sockaddr</code> structure, the actual structure is of type
-<code>nng_sockaddr_ipc</code>.  This is a <code>struct</code> type with the following definition:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#define NNG_AF_IPC 2 </span><i class="conum" data-value="1"></i><b>(1)</b>
-<span class="tok-cp">#define NNG_MAXADDRLEN 128</span>
-
-<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
-    <span class="tok-c1">// ... </span><i class="conum" data-value="2"></i><b>(2)</b>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>                 <span class="tok-c1">// must be NNG_AF_IPC</span>
-    <span class="tok-kt">char</span>     <span class="tok-n">sa_path</span><span class="tok-p">[</span><span class="tok-n">NNG_MAXADDRLEN</span><span class="tok-p">];</span>   <span class="tok-c1">// arbitrary &quot;path&quot;</span>
-    <span class="tok-c1">// ...</span>
-<span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_ipc</span><span class="tok-p">;</span></code></pre>
-</div>
-</div>
-<div class="colist arabic">
-<table>
-<tr>
-<td><i class="conum" data-value="1"></i><b>1</b></td>
-<td>The values of these macros may change, so applications
-should avoid depending upon their values and instead use them symbolically.</td>
-</tr>
-<tr>
-<td><i class="conum" data-value="2"></i><b>2</b></td>
-<td>Other members may be present, but only those listed here
-are suitable for application use.</td>
-</tr>
-</table>
+<p>The certificate located in <em>cert</em> may be in either
+<a href="https://tools.ietf.org/html/rfc7468">PEM</a> or DER format.</p>
 </div>
 <div class="paragraph">
-<p>The <code>sa_family</code> member will have the value <code>NNG_AF_IPC</code>.
-The <code>sa_path</code> member is an ASCIIZ string, and may contain any legal
-path name (platform-dependent), terminated by a <code>NUL</code> byte.</p>
+<p>When the <em>cert</em> is
+in PEM format, the certificate will be ASCII encoded.  Additionally a private
+key may or may not be present as additional concatenated PEM data.  The
+value of <em>size</em> is the length of the concatenated strings, without any
+terminating NUL byte.</p>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_transport_options">Transport Options</h3>
 <div class="paragraph">
-<p>The <em>ipc</em> transport has no special
-options.<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnote_1" title="View footnote.">1</a>]</sup></p>
+<p>When using DER encoding, the <em>size</em> will be the total number of bytes, after
+encoding.</p>
 </div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
+<dd>
+<p>Insufficient memory is available.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_EBUSY</code></dt>
+<dd>
+<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
+<dd>
+<p>An invalid <em>cert</em> or <em>size</em> was supplied.</p>
+</dd>
+</dl>
 </div>
 </div>
 </div>
@@ -620,7 +610,10 @@ options.<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_f
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng.html">nng(7)</a></p>
+<p><a href="nng_strerror.html">nng_strerror(3)</a>,
+<a href="nng_tls_config_alloc.html">nng_tls_config_alloc(3)</a>,
+<a href="nng_tls_config_key.html">nng_tls_config_key(3)</a>,
+<a href="nng.html">nng(7)</a></p>
 </div>
 </div>
 </div>
@@ -628,7 +621,7 @@ options.<sup class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_f
 <h2 id="_copyright">COPYRIGHT</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>Copyright 2018 <a href="mailto:garrett@damore.org">Garrett D&#8217;Amore</a><br>
+<p>Copyright 2018 <a href="mailto:info@staysail.tech">Staysail Systems, Inc.</a><br>
 Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 </div>
 <div class="paragraph">
@@ -636,12 +629,6 @@ Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <a href="https://opensource.org/licenses/MIT">MIT License</a>.</p>
 </div>
 </div>
-</div>
-</div>
-<div id="footnotes">
-<hr>
-<div class="footnote" id="_footnote_1">
-<a href="#_footnoteref_1">1</a>. Options for security attributes and credentials are planned.
 </div>
 </div>
 <div id="footer">
