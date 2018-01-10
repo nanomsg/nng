@@ -46,7 +46,7 @@
 //            Not After : Oct 24 20:08:06 2117 GMT
 //        Subject: C=US, ST=CA, L=San Diego, O=nanomsg, CN=127.0.0.1
 //
-static const char server_cert[] =
+static const char cert[] =
     "-----BEGIN CERTIFICATE-----\n"
     "MIICIjCCAYMCCQDaC9ARg31kIjAKBggqhkjOPQQDAjBUMQswCQYDVQQGEwJVUzEL\n"
     "MAkGA1UECAwCQ0ExEjAQBgNVBAcMCVNhbiBEaWVnbzEQMA4GA1UECgwHbmFub21z\n"
@@ -62,7 +62,7 @@ static const char server_cert[] =
     "PxkSj7s0SvD6T8j7rju5LDgkdZc35A==\n"
     "-----END CERTIFICATE-----\n";
 
-static const char server_key[] =
+static const char key[] =
     "-----BEGIN EC PRIVATE KEY-----\n"
     "MIHcAgEBBEIB20OHMntU2UJW2yuQn2f+bLsuhTT5KRGorcocnqxatWLvxuF1cfUA\n"
     "TjQxRRS6BIUvFt1fMIklp9qedJF00JHy4qWgBwYFK4EEACOhgYkDgYYABAA3u8Mr\n"
@@ -108,8 +108,7 @@ init_dialer_tls(trantest *tt, nng_dialer d)
 	if ((rv = nng_tls_config_alloc(&cfg, NNG_TLS_MODE_CLIENT)) != 0) {
 		return (rv);
 	}
-	if ((rv = nng_tls_config_ca_cert(
-	         cfg, (void *) server_cert, sizeof(server_cert))) != 0) {
+	if ((rv = nng_tls_config_ca_chain(cfg, cert, NULL)) != 0) {
 		goto out;
 	}
 	if ((rv = nng_tls_config_server_name(cfg, "127.0.0.1")) != 0) {
@@ -132,15 +131,9 @@ init_listener_tls(trantest *tt, nng_listener l)
 	if ((rv = nng_tls_config_alloc(&cfg, NNG_TLS_MODE_SERVER)) != 0) {
 		return (rv);
 	}
-	if ((rv = nng_tls_config_cert(
-	         cfg, (void *) server_cert, sizeof(server_cert))) != 0) {
+	if ((rv = nng_tls_config_own_cert(cfg, cert, key, NULL)) != 0) {
 		goto out;
 	}
-	if ((rv = nng_tls_config_key(
-	         cfg, (void *) server_key, sizeof(server_key))) != 0) {
-		goto out;
-	}
-
 	if ((rv = nng_listener_setopt_ptr(l, NNG_OPT_TLS_CONFIG, cfg)) != 0) {
 		goto out;
 	}

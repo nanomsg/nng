@@ -617,19 +617,21 @@ NNG_DECL int nng_tls_config_server_name(nng_tls_config *, const char *);
 // nng_tls_config_ca_cert configures one or more CAs used for validation
 // of peer certificates.  Multiple CAs (and their chains) may be configured
 // by either calling this multiple times, or by specifying a list of
-// certificates as concatenated data.  The certs may be in PEM or DER
-// format.
-NNG_DECL int nng_tls_config_ca_cert(nng_tls_config *, const uint8_t *, size_t);
+// certificates as concatenated data.  The final argument is an optional CRL
+// (revokation list) for the CA, also in PEM.  Both PEM strings are ASCIIZ
+// format (except that the CRL may be NULL).
+NNG_DECL int nng_tls_config_ca_chain(
+    nng_tls_config *, const char *, const char *);
 
-// nng_tls_config_crl loads a certificate revocation list.  Again, these
-// are in X.509 format (either PEM or DER).
-NNG_DECL int nng_tls_config_crl(nng_tls_config *, const uint8_t *, size_t);
-
-// nng_tls_config_cert is used to load our own certificate.  For servers,
-// this may be called more than once to configure multiple different keys,
-// for example with different algorithms depending on what the peer supports.
-// On the client, only a single option is available.
-NNG_DECL int nng_tls_config_cert(nng_tls_config *, const uint8_t *, size_t);
+// nng_tls_config_own_cert is used to load our own certificate and public
+// key.  For servers, this may be called more than once to configure multiple
+// different keys, for example with different algorithms depending on what
+// the peer supports. On the client, only a single option is available.
+// The first two arguments are the cert (or validation chain) and the
+// key as PEM format ASCIIZ strings.  The final argument is an optional
+// password and may be NULL.
+NNG_DECL int nng_tls_config_own_cert(
+    nng_tls_config *, const char *, const char *, const char *);
 
 // nng_tls_config_key is used to pass our own private key.
 NNG_DECL int nng_tls_config_key(nng_tls_config *, const uint8_t *, size_t);

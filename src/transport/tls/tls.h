@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -19,42 +19,12 @@ NNG_DECL int nng_tls_register(void);
 // started.  Once started, it is no longer possible to alter the TLS
 // configuration.
 
-// NNG_OPT_TLS_CA_CERT is a string with one or more X.509 certificates,
-// representing the entire CA chain.  The content may be either PEM or DER
-// encoded.
-#define NNG_OPT_TLS_CA_CERT "tls:ca-cert"
-
-// NNG_OPT_TLS_CRL is a PEM encoded CRL (revocation list).  Multiple lists
-// may be loaded by using this option multiple times.
-#define NNG_OPT_TLS_CRL "tls:crl"
-
-// NNG_OPT_TLS_CERT is used to specify our own certificate. At present
-// only one certificate may be supplied.  (In the future it may be
-// possible to call this multiple times, for servers that select different
-// certificates depending upon client capabilities.)
-#define NNG_OPT_TLS_CERT "tls:cert"
-
-// NNG_OPT_TLS_PRIVATE_KEY is used to specify the private key used
-// with the given certificate.  This should be called after setting
-// the certificate.  The private key may be in PEM or DER format.
-// If in PEM encoded, a terminating ZERO byte should be included.
-#define NNG_OPT_TLS_PRIVATE_KEY "tls:private-key"
-
-// NNG_OPT_TLS_PRIVATE_KEY_PASSWORD is used to specify a password
-// used for the private key.  The value is an ASCIIZ string.
-#define NNG_OPT_TLS_PRIVATE_KEY_PASSWORD "tls:private-key-password"
-
-// NNG_OPT_TLS_AUTH_MODE is an integer indicating whether our
-// peer should be verified or not.  It is required on clients/dialers,
-// and off on servers/listeners, by default.
-#define NNG_OPT_TLS_AUTH_MODE "tls:auth-mode"
-
 // NNG_OPT_TLS_AUTH_VERIFIED is a boolean that can be read on pipes,
 // indicating whether the peer certificate is verified.
 #define NNG_OPT_TLS_AUTH_VERIFIED "tls:auth-verified"
 
+// NNG_OPT_TLS_CONFIG is used to access the underlying configuration
+// (an nng_tls_config *).
 #define NNG_OPT_TLS_CONFIG "tls:config"
-
-// XXX: TBD: Ciphersuite selection and reporting.  Session reuse?
 
 #endif // NNG_TRANSPORT_TLS_TLS_H

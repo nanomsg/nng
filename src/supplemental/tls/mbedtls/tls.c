@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -52,13 +52,8 @@
 #endif
 
 typedef struct nni_tls_certkey {
-	char *             pass;
-	uint8_t *          crt;
-	uint8_t *          key;
-	size_t             crtlen;
-	size_t             keylen;
-	mbedtls_x509_crt   mcrt;
-	mbedtls_pk_context mpk;
+	mbedtls_x509_crt   crt;
+	mbedtls_pk_context key;
 	nni_list_node      node;
 } nni_tls_certkey;
 
@@ -180,17 +175,8 @@ nni_tls_config_fini(nng_tls_config *cfg)
 	}
 	while ((ck = nni_list_first(&cfg->certkeys))) {
 		nni_list_remove(&cfg->certkeys, ck);
-		if (ck->pass) {
-			nni_strfree(ck->pass);
-		}
-		if (ck->crt) {
-			nni_free(ck->crt, ck->crtlen);
-		}
-		if (ck->key) {
-			nni_free(ck->key, ck->keylen);
-		}
-		mbedtls_x509_crt_free(&ck->mcrt);
-		mbedtls_pk_free(&ck->mpk);
+		mbedtls_x509_crt_free(&ck->crt);
+		mbedtls_pk_free(&ck->key);
 
 		NNI_FREE_STRUCT(ck);
 	}
@@ -333,44 +319,7 @@ nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_plat_tcp_pipe *tcp)
 
 	nni_mtx_lock(&cfg->lk);
 	// No more changes allowed to config.
-	if (cfg->active == false) {
-		nni_tls_certkey *ck;
-
-		rv = 0;
-
-		if (cfg->have_ca_certs || cfg->have_crl) {
-			mbedtls_ssl_conf_ca_chain(
-			    &cfg->cfg_ctx, &cfg->ca_certs, &cfg->crl);
-		}
-		NNI_LIST_FOREACH (&cfg->certkeys, ck) {
-			if (rv != 0) {
-				break;
-			}
-			if (rv == 0) {
-				rv = mbedtls_x509_crt_parse(
-				    &ck->mcrt, ck->crt, ck->crtlen);
-			}
-			if (rv == 0) {
-				rv = mbedtls_pk_parse_key(&ck->mpk, ck->key,
-				    ck->keylen, (uint8_t *) ck->pass,
-				    ck->pass != NULL ? strlen(ck->pass) : 0);
-			}
-			if (rv == 0) {
-				rv = mbedtls_ssl_conf_own_cert(
-				    &cfg->cfg_ctx, &ck->mcrt, &ck->mpk);
-			}
-
-			if (rv != 0) {
-				break;
-			}
-		}
-		if (rv != 0) {
-			nni_mtx_unlock(&cfg->lk);
-			nni_tls_fini(tp);
-			return (nni_tls_mkerr(rv));
-		}
-		cfg->active = true;
-	}
+	cfg->active = true;
 	cfg->refcnt++;
 	tp->cfg = cfg;
 	nni_mtx_unlock(&cfg->lk);
@@ -841,228 +790,93 @@ nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode)
 	return (0);
 }
 
-#define PEMSTART "-----BEGIN "
-
-// nni_tls_copy_key_cert_material copies either PEM or DER encoded
-// key material.  It allocates an extra byte for a NUL terminator
-// required by mbed TLS if the data is PEM and missing the terminator.
-// It is required that the key material passed in begins with the
-// PEM delimiter if it is actually PEM.
-static int
-nni_tls_copy_key_cert_material(
-    uint8_t **dstp, size_t *szp, const uint8_t *src, size_t sz)
-{
-	bool     addz = false;
-	uint8_t *dst;
-
-	if ((sz > strlen(PEMSTART)) &&
-	    (strncmp((const char *) src, PEMSTART, strlen(PEMSTART)) == 0) &&
-	    (src[sz - 1] != '\0')) {
-		addz = true;
-	}
-
-	if (addz) {
-		if ((dst = nni_alloc(sz + 1)) != NULL) {
-			memcpy(dst, src, sz);
-			dst[sz] = '\0';
-			sz++;
-		}
-	} else {
-		if ((dst = nni_alloc(sz)) != NULL) {
-			memcpy(dst, src, sz);
-		}
-	}
-	if (dst == NULL) {
-		return (NNG_ENOMEM);
-	}
-	*dstp = dst;
-	*szp  = sz;
-	return (0);
-}
-
 int
-nng_tls_config_cert(nng_tls_config *cfg, const uint8_t *key, size_t sz)
+nng_tls_config_ca_chain(
+    nng_tls_config *cfg, const char *certs, const char *crl)
 {
-	int              rv = 0;
-	nni_tls_certkey *ck;
-	bool             cknew;
+	size_t         len;
+	const uint8_t *pem;
+	int            rv;
 
-	if (sz < 1) {
-		return (NNG_EINVAL);
-	}
-
+	// Certs and CRL are in PEM data, with terminating NUL byte.
 	nni_mtx_lock(&cfg->lk);
 	if (cfg->active) {
 		rv = NNG_ESTATE;
 		goto err;
 	}
-	cknew = false;
-	if (((ck = nni_list_last(&cfg->certkeys)) == NULL) ||
-	    (ck->crt != NULL)) {
-		if ((ck = NNI_ALLOC_STRUCT(ck)) == NULL) {
-			rv = NNG_ENOMEM;
-			goto err;
-		}
-		mbedtls_pk_init(&ck->mpk);
-		mbedtls_x509_crt_init(&ck->mcrt);
-		cknew = true;
-	}
-
-	rv = nni_tls_copy_key_cert_material(&ck->crt, &ck->crtlen, key, sz);
-	if (rv != 0) {
-		goto err;
-	}
-	if (cknew) {
-		nni_list_append(&cfg->certkeys, ck);
-	}
-err:
-	nni_mtx_unlock(&cfg->lk);
-
-	return (rv);
-}
-
-int
-nng_tls_config_key(nng_tls_config *cfg, const uint8_t *key, size_t sz)
-{
-	int              rv = 0;
-	nni_tls_certkey *ck;
-	bool             cknew;
-
-	if (sz < 1) {
-		return (NNG_EINVAL);
-	}
-
-	nni_mtx_lock(&cfg->lk);
-	if (cfg->active) {
-		rv = NNG_ESTATE;
-		goto err;
-	}
-	cknew = false;
-	if (((ck = nni_list_last(&cfg->certkeys)) == NULL) ||
-	    (ck->key != NULL)) {
-		if ((ck = NNI_ALLOC_STRUCT(ck)) == NULL) {
-			rv = NNG_ENOMEM;
-			goto err;
-		}
-		cknew = true;
-	}
-
-	rv = nni_tls_copy_key_cert_material(&ck->key, &ck->keylen, key, sz);
-	if (rv != 0) {
-		goto err;
-	}
-	if (cknew) {
-		nni_list_append(&cfg->certkeys, ck);
-	}
-err:
-	nni_mtx_unlock(&cfg->lk);
-
-	return (rv);
-}
-
-int
-nng_tls_config_pass(nng_tls_config *cfg, const char *pass)
-{
-	int              rv = 0;
-	nni_tls_certkey *ck;
-	bool             cknew;
-
-	if (pass == NULL) {
-		return (NNG_EINVAL);
-	}
-
-	nni_mtx_lock(&cfg->lk);
-	if (cfg->active) {
-		rv = NNG_ESTATE;
-		goto err;
-	}
-	cknew = false;
-	if (((ck = nni_list_last(&cfg->certkeys)) == NULL) ||
-	    (ck->pass != NULL)) {
-		if ((ck = NNI_ALLOC_STRUCT(ck)) == NULL) {
-			rv = NNG_ENOMEM;
-			goto err;
-		}
-		cknew = true;
-	}
-
-	if ((ck->pass = nni_strdup(pass)) != NULL) {
-		rv = NNG_ENOMEM;
-		goto err;
-	}
-	rv = 0;
-	if (cknew) {
-		nni_list_append(&cfg->certkeys, ck);
-	}
-err:
-	nni_mtx_unlock(&cfg->lk);
-
-	return (rv);
-}
-
-int
-nng_tls_config_ca_cert(nng_tls_config *cfg, const uint8_t *data, size_t sz)
-{
-	uint8_t *tmp;
-	size_t   len = sz;
-	int      rv  = 0;
-
-	if (sz < 1) {
-		return (NNG_EINVAL);
-	}
-
-	if ((rv = nni_tls_copy_key_cert_material(&tmp, &len, data, sz)) != 0) {
-		return (NNG_ENOMEM);
-	}
-
-	nni_mtx_lock(&cfg->lk);
-	if (cfg->active) {
-		rv = NNG_ESTATE;
-		goto err;
-	}
-	if ((rv = mbedtls_x509_crt_parse(&cfg->ca_certs, tmp, len)) != 0) {
+	pem = (const uint8_t *) certs;
+	len = strlen(certs) + 1;
+	if ((rv = mbedtls_x509_crt_parse(&cfg->ca_certs, pem, len)) != 0) {
 		rv = nni_tls_mkerr(rv);
-	} else {
-		cfg->have_ca_certs = true;
-	}
-err:
-	nni_mtx_unlock(&cfg->lk);
-	nni_free(tmp, len);
-	if (rv != 0) {
-		nni_panic("panic:");
-	}
-	return (rv);
-}
-
-int
-nng_tls_config_crl(nng_tls_config *cfg, const uint8_t *data, size_t sz)
-{
-	int      rv;
-	uint8_t *tmp;
-	size_t   len;
-
-	if (sz < 1) {
-		return (NNG_EINVAL);
-	}
-
-	if ((rv = nni_tls_copy_key_cert_material(&tmp, &len, data, sz)) != 0) {
-		return (NNG_ENOMEM);
-	}
-
-	nni_mtx_lock(&cfg->lk);
-	if (cfg->active) {
-		rv = NNG_ESTATE;
 		goto err;
 	}
-
-	if ((rv = mbedtls_x509_crl_parse(&cfg->crl, tmp, len)) != 0) {
-		rv = nni_tls_mkerr(rv);
-	} else {
+	if (crl != NULL) {
+		pem = (const uint8_t *) crl;
+		len = strlen(crl) + 1;
+		if ((rv = mbedtls_x509_crl_parse(&cfg->crl, pem, len)) != 0) {
+			rv = nni_tls_mkerr(rv);
+			goto err;
+		}
 		cfg->have_crl = true;
 	}
 err:
 	nni_mtx_unlock(&cfg->lk);
-	nni_free(tmp, len);
+	return (rv);
+}
+
+int
+nng_tls_config_own_cert(
+    nng_tls_config *cfg, const char *cert, const char *key, const char *pass)
+{
+	size_t           len;
+	const uint8_t *  pem;
+	nni_tls_certkey *ck;
+	int              rv;
+
+	if ((ck = NNI_ALLOC_STRUCT(ck)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	mbedtls_x509_crt_init(&ck->crt);
+	mbedtls_pk_init(&ck->key);
+
+	pem = (const uint8_t *) cert;
+	len = strlen(cert) + 1;
+	if ((rv = mbedtls_x509_crt_parse(&ck->crt, pem, len)) != 0) {
+		rv = nni_tls_mkerr(rv);
+		goto err;
+	}
+
+	pem = (const uint8_t *) key;
+	len = strlen(key) + 1;
+	rv  = mbedtls_pk_parse_key(&ck->key, pem, len, (const uint8_t *) pass,
+	    pass != NULL ? strlen(pass) : 0);
+	if (rv != 0) {
+		rv = nni_tls_mkerr(rv);
+		goto err;
+	}
+
+	nni_mtx_lock(&cfg->lk);
+	if (cfg->active) {
+		nni_mtx_unlock(&cfg->lk);
+		rv = NNG_ESTATE;
+		goto err;
+	}
+	rv = mbedtls_ssl_conf_own_cert(&cfg->cfg_ctx, &ck->crt, &ck->key);
+	if (rv != 0) {
+		nni_mtx_unlock(&cfg->lk);
+		rv = nni_tls_mkerr(rv);
+		goto err;
+	}
+
+	// Save this structure so we can free it with the context.
+	nni_list_append(&cfg->certkeys, ck);
+	nni_mtx_unlock(&cfg->lk);
+	return (0);
+
+err:
+	mbedtls_x509_crt_free(&ck->crt);
+	mbedtls_pk_free(&ck->key);
+	NNI_FREE_STRUCT(ck);
 	return (rv);
 }
 

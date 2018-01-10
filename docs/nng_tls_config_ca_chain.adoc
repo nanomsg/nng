@@ -1,5 +1,5 @@
-nng_tls_config_ca_cert(3)
-=========================
+nng_tls_config_ca_chain(3)
+==========================
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
@@ -15,7 +15,7 @@ nng_tls_config_ca_cert(3)
 
 NAME
 ----
-nng_tls_config_ca_cert - configure certificate authority certificate chain
+nng_tls_config_ca_chain - configure certificate authority certificate chain
 
 SYNOPSIS
 --------
@@ -24,13 +24,14 @@ SYNOPSIS
 -----------
 #include <nng/nng.h>
 
-int nng_tls_config_ca_cert(nni_tls_config *cfg, const uint8_t *chain, size_t size)
+int nng_tls_config_ca_cert(nni_tls_config *cfg, const char *chain,
+    const char *crl)
 -----------
 
 DESCRIPTION
 -----------
 
-The `nng_tls_config_ca_cert()` function configures a certificate or
+The `nng_tls_config_ca_chain()` function configures a certificate or
 certificate chain to be used when validating peers using the configuragion
 'cfg'.
 
@@ -41,15 +42,13 @@ no effect if the authentication mode is `NNG_TLS_AUTH_MODE_NONE`.
 TIP: This function may be called multiple times, to add additional chains
 to a configuration, without affecting those added previously.
 
-The certificates located in 'chain' may be in either
-https://tools.ietf.org/html/rfc7468[PEM] or DER format.  When the 'chain' is
-in PEM format, the certificates will be ASCII encoded, and concatenated
-together.  In this case the value of 'size' will be length of the
-corresponding string (without any terminating NUL byte).
+The certificates located in 'chain' must be a NUL terminated C string in
+https://tools.ietf.org/html/rfc7468[PEM] format.  Multiple certificates may
+appear concatenated together, with the leaf certificate listed first.
+together.
 
-When using DER encoding, the 'size' will be the total number of bytes, after
-encoding.
-
+The 'crl' may be NULL, or may also be a C string containing a PEM format
+certificate revocation list for the associated authority.
 
 RETURN VALUES
 -------------

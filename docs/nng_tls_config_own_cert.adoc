@@ -1,5 +1,5 @@
-nng_tls_config_key(3)
-=====================
+nng_tls_config_own_cert(3)
+==========================
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
@@ -15,7 +15,7 @@ nng_tls_config_key(3)
 
 NAME
 ----
-nng_tls_config_key - configure certificate authority certificate chain
+nng_tls_config_own_cert - configure own certificate and key
 
 SYNOPSIS
 --------
@@ -24,31 +24,31 @@ SYNOPSIS
 -----------
 #include <nng/nng.h>
 
-int nng_tls_config_key(nni_tls_config *cfg, const uint8_t *key, size_t size)
+int nng_tls_config_own_cert(nni_tls_config *cfg, const char *cert,
+    const char *key, const char *pass);
 -----------
 
 DESCRIPTION
 -----------
 
-The `nng_tls_config_key()` function configures a private  'key' to be used
-along with a certificate established with
-<<nng_tls_config_cert#,nng_tls_config_cert(3)>>, for the given configuration
-'cfg'.
+The `nng_tls_config_own_cert()` function configures a certificate 'cert'
+identifying the local side of a TLS connection used with 'cfg', along with an
+associated private or secret key 'key'.  The certificate may be
+a chain, with the leaf signer first and the root at the end.  The
+self-signed certificate at the end can be omitted. (The client should already
+have it, and will have to in order to validate this certificate anyway).
 
-This function should be called immediately after `nng_tls_config_cert()`,
-with the appropriate private key.
+The 'key' may be encrypted with a password, in which can be supplied in
+'pass'.  The value NULL should be supplied for 'pass' if the key is not
+encrypted.
 
-The 'key' may be in either https://tools.ietf.org/html/rfc7468[PEM] or DER
-format.  When the 'chain' is
-in PEM format, the key will be ASCII encoded. A certificate may be present
-as well.  The value of 'size' corresponds to the PEM encoding, not including
-any terminating NUL byte.
+On servers, it is possible to call this function multiple times for the
+same configuration.  This can be useful for specifying different parameters
+to be used for different cryptographic algorithms.
 
-When using DER encoding, the 'size' will be the total number of bytes, after
-encoding.
-
-The key material may be encrypted with a password, which can be supplied
-using the <<nng_tls_config_pass#,nng_tls_config_pass(3)>> function.
+The certificate located in 'cert' and 'key' must be NUL terminated C
+strings containing
+https://tools.ietf.org/html/rfc7468[PEM] formatted material.
 
 RETURN VALUES
 -------------
@@ -60,15 +60,13 @@ ERRORS
 
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
-`NNG_EINVAL`:: An invalid 'key' or 'size' was supplied.
+`NNG_EINVAL`:: An invalid 'cert' or 'size' was supplied.
 
 SEE ALSO
 --------
 
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>,
-<<nng_tls_config_cert#,nng_tls_config_cert(3)>>,
-<<nng_tls_config_pass#,nng_tls_config_pass(3)>>,
 <<nng#,nng(7)>>
 
 
