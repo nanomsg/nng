@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -11,7 +11,7 @@
 #ifndef NNG_H
 #define NNG_H
 
-// NNG (nanomsg-ng) is a next generation implementation of the SP protocols.
+// NNG (nanomsg-next-gen) is an improved implementation of the SP protocols.
 // The APIs have changed, and there is no attempt to provide API compatibility
 // with legacy libnanomsg.  This file defines the library consumer-facing
 // Public API. Use of definitions or declarations not found in this header
@@ -59,14 +59,14 @@ typedef struct nng_aio      nng_aio;
 #define NNG_DURATION_ZERO (0)
 
 // nng_fini is used to terminate the library, freeing certain global resources.
-// For most cases, this call is optional, but failure to do so may cause
-// memory checkers like valgrind to incorrectly flag memory leaks associated
-// with global library resources.
+// This should only be called during atexit() or just before dlclose().
+// THIS FUNCTION MUST NOT BE CALLED CONCURRENTLY WITH ANY OTHER FUNCTION
+// IN THIS LIBRARY; IT IS NOT REENTRANT OR THREADSAFE.
 //
-// NOTE: THIS API IS NOT THREADSAFE, and MUST NOT BE CALLED WHILE ANY
-// OTHER APIS ARE IN USE.  (It is safe however to call other functions such
-// as nng_open *after* this function returns, provided that the functions do
-// not run concurrently!)
+// For most cases, this call is unnecessary, but it is provided to assist
+// when debugging with memory checkers (e.g. valgrind).  Calling this
+// function prevents global library resources from being reported incorrectly
+// as memory leaks.  In those cases, we recommend doing this with atexit().
 NNG_DECL void nng_fini(void);
 
 // nng_close closes the socket, terminating all activity and
@@ -455,20 +455,15 @@ NNG_DECL void nng_thread_destroy(void *);
 
 #endif // NNG_PRIVATE
 
-// Pollset functionality.  TBD.  (Note that I'd rather avoid this
-// altogether, because I believe that the notification mechanism I've
-// created offers a superior way to handle this. I don't think many
-// direct consumers of nn_poll existed in the wild, except via nn_device().
-// I suspect that there not even many nn_device() consumers.)
-
 // Symbol name and visibility.  TBD.  The only symbols that really should
 // be directly exported to runtimes IMO are the option symbols.  And frankly
 // they have enough special logic around them that it might be best not to
 // automate the promotion of them to other APIs.  This is an area open
 // for discussion.
 
-// Error codes.  These may happen to align to errnos used on your platform,
-// but do not count on this.
+// Error codes.  These generally have different values from UNIX errnos,
+// so take care about converting them.  The one exception is that 0 is
+// unambigiously "success".
 //
 // NNG_SYSERR is a special code, which allows us to wrap errors from the
 // underlying operating system.  We generally prefer to map errors to one
@@ -580,11 +575,10 @@ enum nng_sockaddr_family {
 	NNG_AF_ZT     = 5, // ZeroTier
 };
 
-// For some transports, we need TLS configuration.  This
-// section lets us work with TLS configurations.  Note
-// that these symbols are only actually present at link time
-// if TLS support is enabled in your build.  Note also that
-// a TLS configuration cannot be changed once it is in use.
+// For some transports, we need TLS configuration, including certificates
+// and so forth.  Note that these symbols are only actually present at link
+// time if TLS support is enabled in your build.  A TLS configuration cannot
+// be changed once it is in use.
 typedef struct nng_tls_config nng_tls_config;
 
 typedef enum nng_tls_mode {

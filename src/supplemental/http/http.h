@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -13,8 +13,6 @@
 
 #include <stdbool.h>
 
-// nni_http_msg represents an HTTP request or response message.
-typedef struct nni_http_msg    nni_http_msg;
 typedef struct nni_http_res    nni_http_res;
 typedef struct nni_http_entity nni_http_entity;
 
