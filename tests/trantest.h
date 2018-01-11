@@ -313,7 +313,6 @@ trantest_send_recv_multi(trantest *tt)
 		nng_dialer   d;
 		nng_msg *    send;
 		nng_msg *    recv;
-		size_t       len;
 		nng_pipe     p;
 		char         url[NNG_MAXADDRLEN];
 		size_t       sz;

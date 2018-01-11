@@ -40,6 +40,8 @@ set (NNG_SOURCES
     core/device.h
     core/endpt.c
     core/endpt.h
+    core/file.c
+    core/file.h
     core/idhash.c
     core/idhash.h
     core/init.c

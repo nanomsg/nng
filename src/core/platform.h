@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -370,7 +370,7 @@ extern void nni_plat_pipe_close(int, int);
 //
 // Some transports require a persistent storage for things like
 // key material, etc.  Generally, these are all going to be relatively
-// small objects (such as certificates), so we ony require a synchronous
+// small objects (such as certificates), so we only require a synchronous
 // implementation from platforms.  This Key-Value API is intended to
 // to support using the Key's as filenames, and keys will consist of
 // only these characters: [0-9a-zA-Z._-].  The directory used should be
@@ -393,8 +393,40 @@ extern int nni_plat_file_put(const char *, const void *, size_t);
 // using the supplied size when no longer needed.
 extern int nni_plat_file_get(const char *, void **, size_t *);
 
-// nni_plat_file_delete deletes the named file.
+// nni_plat_file_delete deletes the named file.  If the name refers to
+// a directory, then that will be removed only if empty.
 extern int nni_plat_file_delete(const char *);
+
+// nni_plat_file_check checks the file path to determine its type.
+// If the path does not exist, then NNG_ENOENT is returned.
+enum nni_plat_file_type_val {
+	NNI_PLAT_FILE_TYPE_FILE,  // normal file
+	NNI_PLAT_FILE_TYPE_DIR,   // normal directory
+	NNI_PLAT_FILE_TYPE_OTHER, // something else (pipe, device node, etc.)
+};
+extern int nni_plat_file_type(const char *, int *);
+
+enum nni_plat_file_walk_result {
+	NNI_PLAT_FILE_WALK_CONTINUE,
+	NNI_PLAT_FILE_WALK_STOP,        // stop walking (all done)
+	NNI_PLAT_FILE_WALK_PRUNE_SIB,   // skip siblings and their children
+	NNI_PLAT_FILE_WALK_PRUNE_CHILD, // skip children
+};
+
+enum nni_plat_file_walk_flags {
+	NNI_PLAT_FILE_WALK_DEPTH_FIRST   = 0, // get children first
+	NNI_PLAT_FILE_WALK_BREADTH_FIRST = 1, // get siblings first (later)
+	NNI_PLAT_FILE_WALK_SHALLOW = 2, // do not descend into subdirectories
+	NNI_PLAT_FILE_WALK_FILES_ONLY = 4, // directory names are not reported
+};
+
+// nni_plat_file_walker is called for each pathname found by walking a
+// directory tree.  It returns one of the nni_plat_file_walk_result values.
+typedef int (*nni_plat_file_walker)(const char *, void *);
+
+// nni_plat_file_walk walks a directory tree, calling the walker function
+// with the path name, and the supplied void * argument.
+extern int nni_plat_file_walk(const char *, nni_plat_file_walker, void *, int);
 
 // nni_plat_dir_open attempts to "open a directory" for listing.  The
 // handle for further operations is returned in the first argument, and
@@ -434,6 +466,11 @@ extern char *nni_plat_home_dir(void);
 // For example. on UNIX systems nni_plat_join_dir("/tmp", "a") returns
 // "/tmp/a".  The pathname returned should be freed with nni_strfree().
 extern char *nni_plat_join_dir(const char *, const char *);
+
+// nni_plat_file_basename returns the "file" part of the file name.
+// The returned pointer will usually reference the end of the supplied
+// string, and may not be altered.
+extern const char *nni_plat_file_basename(const char *);
 
 //
 // Actual platforms we support.  This is included up front so that we can

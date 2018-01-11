@@ -29,6 +29,7 @@
 #include "core/aio.h"
 #include "core/clock.h"
 #include "core/device.h"
+#include "core/file.h"
 #include "core/idhash.h"
 #include "core/init.h"
 #include "core/list.h"

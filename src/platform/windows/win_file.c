@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -12,10 +12,72 @@
 
 #ifdef NNG_PLATFORM_WINDOWS
 
+#include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 // File support.
+
+static char *
+nni_plat_find_pathsep(char *path)
+{
+	char *p;
+	// Legal path separators are "\\" and "/" under Windows.
+	// This is sort of a poormans strchr, but with the two specific
+	// separator characters instead.
+	for (p = path; *p != '\0'; p++) {
+		if ((*p == '/') || (*p == '\\')) {
+			return (p);
+		}
+	}
+	return (NULL);
+}
+
+static int
+nni_plat_make_parent_dirs(const char *path)
+{
+	char *dup;
+	char *p;
+
+	// creates everything up until the last component.
+	if ((dup = nni_strdup(path)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	// Skip past C:, C:\, \\ and \ style prefixes, because we cannot
+	// create those things as directories -- they should already exist.
+	p = dup;
+	if (isalpha(p[0]) && (p[1] == ':')) {
+		p += 2;
+		if ((p[0] == '\\') || (p[0] == '/')) {
+			p++;
+		}
+	} else if ((p[0] == '\\') && (p[1] == '\\')) {
+		p += 2;
+	} else if ((p[0] == '\\') || (p[0] == '/')) {
+		p++;
+	}
+
+	while ((p = nni_plat_find_pathsep(p)) != NULL) {
+		*p = '\0';
+
+		if (!CreateDirectory(dup, NULL)) {
+			int rv = GetLastError();
+			if (rv != ERROR_ALREADY_EXISTS) {
+				nni_strfree(dup);
+				return (nni_win_error(rv));
+			}
+		}
+		*p = '\\'; // Windows prefers this though.
+
+		// collapse grouped pathsep characters
+		while ((*p == '/') || (*p == '\\')) {
+			p++;
+		}
+	}
+	nni_strfree(dup);
+	return (0);
+}
 
 // nni_plat_file_put writes the named file, with the provided data,
 // and the given size.  If the file already exists it is overwritten.
@@ -27,6 +89,10 @@ nni_plat_file_put(const char *name, const void *data, size_t len)
 	HANDLE h;
 	int    rv = 0;
 	DWORD  nwrite;
+
+	if ((rv = nni_plat_make_parent_dirs(name)) != 0) {
+		return (rv);
+	}
 
 	h = CreateFile(name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
 	    FILE_ATTRIBUTE_NORMAL, NULL);
@@ -96,141 +162,104 @@ done:
 int
 nni_plat_file_delete(const char *name)
 {
-	if (!DeleteFile(name)) {
-		return (nni_win_error(GetLastError()));
+	int rv;
+	if (RemoveDirectory(name)) {
+		return (0);
 	}
-	return (0);
+	if (DeleteFile(name)) {
+		return (0);
+	}
+	if ((rv = nni_win_error(GetLastError())) == NNG_ENOENT) {
+		return (0);
+	}
+	return (rv);
 }
 
-// nni_plat_dir_open attempts to "open a directory" for listing.  The
-// handle for further operations is returned in the first argument, and
-// the directory name is supplied in the second.
-struct dirhandle {
+static int
+nni_plat_file_walk_inner(const char *name, nni_plat_file_walker walkfn,
+    void *arg, int flags, bool *stop)
+{
+	char            path[MAX_PATH + 1];
+	int             rv;
+	int             walkrv;
 	HANDLE          dirh;
 	WIN32_FIND_DATA data;
-	int             cont; // zero on first read, 1 thereafter.
-};
 
-int
-nni_plat_dir_open(void **dhp, const char *name)
-{
-	struct dirhandle *dh;
-	char              fullpath[MAX_PATH + 1];
-
-	if ((dh = NNI_ALLOC_STRUCT(dh)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-
-	// Append wildcard to directory name
-	_snprintf(fullpath, sizeof(fullpath), "%s\\*", name);
-
-	if ((dh->dirh = FindFirstFile(fullpath, &dh->data)) ==
-	    INVALID_HANDLE_VALUE) {
-		int rv;
+	_snprintf(path, sizeof(path), "%s\\%s", name, "*");
+	if ((dirh = FindFirstFile(path, &data)) == INVALID_HANDLE_VALUE) {
 		rv = nni_win_error(GetLastError());
-		NNI_FREE_STRUCT(dh);
 		return (rv);
 	}
-	dh->cont = 0;
-	*dhp     = dh;
 
-	return (0);
-}
+	for (;;) {
+		// We never return hidden files.
+		if ((data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) ||
+		    (strcmp(data.cFileName, ".") == 0) ||
+		    (strcmp(data.cFileName, "..") == 0)) {
+			goto next_file;
+		}
+		_snprintf(path, sizeof(path), "%s\\%s", name, data.cFileName);
+		walkrv = NNI_PLAT_FILE_WALK_CONTINUE;
+		if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			if ((flags & NNI_PLAT_FILE_WALK_FILES_ONLY) == 0) {
+				walkrv = walkfn(path, arg);
+			}
 
-// nni_plat_dir_next gets the next directory entry.  Each call returns
-// a new entry (arbitrary order).  When no more entries exist, it returns
-// NNG_ENOENT.
-int
-nni_plat_dir_next(void *dir, const char **namep)
-{
-	struct dirhandle *dh = dir;
-	int               rv;
+			if (((flags & NNI_PLAT_FILE_WALK_SHALLOW) == 0) &&
+			    (walkrv != NNI_PLAT_FILE_WALK_STOP) &&
+			    (walkrv != NNI_PLAT_FILE_WALK_PRUNE_CHILD)) {
+				rv = nni_plat_file_walk_inner(
+				    path, walkfn, arg, flags, stop);
+				if (rv != 0) {
+					if (rv == NNG_ENOENT) {
+						rv = 0; // File deleted.
+					}
+					FindClose(dirh);
+					return (rv);
+				}
+			}
+		} else if (data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
+			if ((flags & NNI_PLAT_FILE_WALK_FILES_ONLY) == 0) {
+				walkrv = walkfn(path, arg);
+			}
+		} else {
+			walkrv = walkfn(path, arg);
+		}
 
-	if (dh->dirh == INVALID_HANDLE_VALUE) {
-		return (NNG_ENOENT);
-	}
-	if (dh->cont) {
-		// We need to read another entry
-		if (!FindNextFile(dh->dirh, &dh->data)) {
+		if (*stop) {
+			walkrv = NNI_PLAT_FILE_WALK_STOP;
+		}
+
+		switch (walkrv) {
+		case NNI_PLAT_FILE_WALK_STOP:
+			*stop = true;
+			FindClose(dirh);
+			return (0);
+		case NNI_PLAT_FILE_WALK_PRUNE_SIB:
+			FindClose(dirh);
+			return (0);
+		}
+
+	next_file:
+		if (!FindNextFile(dirh, &data)) {
 			rv = GetLastError();
-			FindClose(dh->dirh);
-			dh->dirh = INVALID_HANDLE_VALUE;
+			FindClose(dirh);
 			if (rv == ERROR_NO_MORE_FILES) {
-				return (NNG_ENOENT);
+				break;
 			}
 			return (nni_win_error(rv));
 		}
 	}
-	dh->cont = 1;
 
-	// Skip over directories.
-	while (dh->data.dwFileAttributes &
-	    (FILE_ATTRIBUTE_DIRECTORY | FILE_ATTRIBUTE_HIDDEN)) {
-		if (!FindNextFile(dh->dirh, &dh->data)) {
-			rv = GetLastError();
-			FindClose(dh->dirh);
-			dh->dirh = INVALID_HANDLE_VALUE;
-			if (rv == ERROR_NO_MORE_FILES) {
-				return (NNG_ENOENT);
-			}
-			return (nni_win_error(rv));
-		}
-	}
-
-	// Got a good entry.
-	*namep = dh->data.cFileName;
-	return (0);
-}
-
-// nni_plat_dir_close closes the directory handle, freeing all
-// resources associated with it.
-void
-nni_plat_dir_close(void *dir)
-{
-	struct dirhandle *dh = dir;
-	if (dh->dirh != INVALID_HANDLE_VALUE) {
-		FindClose(dh->dirh);
-	}
-	NNI_FREE_STRUCT(dh);
-}
-
-int
-nni_plat_dir_create(const char *name)
-{
-	char   parent[MAX_PATH + 1];
-	size_t len;
-
-	nni_strlcpy(parent, name, sizeof(parent));
-	len = strlen(parent);
-	while (len > 0) {
-		if ((parent[len - 1] == '/') || (parent[len - 1] == '\\')) {
-			parent[len - 1] = '\0';
-			break;
-		}
-		len--;
-	}
-
-	if (!CreateDirectoryEx(parent, name, NULL)) {
-		int rv = GetLastError();
-		if (rv == ERROR_ALREADY_EXISTS) {
-			return (0);
-		}
-		return (nni_win_error(rv));
-	}
 	return (0);
 }
 
 int
-nni_plat_dir_remove(const char *name)
+nni_plat_file_walk(
+    const char *name, nni_plat_file_walker walkfn, void *arg, int flags)
 {
-	if (!RemoveDirectory(name)) {
-		int rv = GetLastError();
-		if (rv == ERROR_PATH_NOT_FOUND) {
-			return (0);
-		}
-		return (nni_win_error(rv));
-	}
-	return (0);
+	bool stop = false;
+	return (nni_plat_file_walk_inner(name, walkfn, arg, flags, &stop));
 }
 
 char *
@@ -249,22 +278,68 @@ nni_plat_home_dir(void)
 {
 	char *homedrv;
 	char *homedir;
-	char  stuff[MAX_PATH + 1];
+	char *result;
 
 	if (((homedrv = getenv("HOMEDRIVE")) == NULL) ||
 	    ((homedir = getenv("HOMEPATH")) == NULL)) {
 		return (NULL);
 	}
-	_snprintf(stuff, sizeof(stuff), "%s%s", homedrv, homedir);
-	return (nni_strdup(stuff));
+	if (nni_asprintf(&result, "%s%s", homedrv, homedir) == 0) {
+		return (result);
+	}
+	return (NULL);
+}
+
+int
+nni_plat_file_type(const char *name, int *typep)
+{
+	HANDLE          dirh;
+	WIN32_FIND_DATA data;
+
+	if ((dirh = FindFirstFile(name, &data)) == INVALID_HANDLE_VALUE) {
+		return (nni_win_error(GetLastError()));
+	}
+	(void) FindClose(dirh);
+	if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+		*typep = NNI_PLAT_FILE_TYPE_DIR;
+	} else if (data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
+		*typep = NNI_PLAT_FILE_TYPE_OTHER;
+	} else if (data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) {
+		*typep = NNI_PLAT_FILE_TYPE_OTHER;
+	} else {
+		*typep = NNI_PLAT_FILE_TYPE_FILE;
+	}
+	return (0);
 }
 
 char *
 nni_plat_join_dir(const char *prefix, const char *suffix)
 {
-	char stuff[MAX_PATH + 1];
+	char *result;
 
-	_snprintf(stuff, sizeof(stuff), "%s\\%s", prefix, suffix);
-	return (nni_strdup(stuff));
+	if (nni_asprintf(&result, "%s\\%s", prefix, suffix) == 0) {
+		return (result);
+	}
+	return (NULL);
 }
+
+const char *
+nni_plat_file_basename(const char *name)
+{
+	const char *s;
+
+	// skip over drive designator if present
+	if (isalpha(name[0]) && (name[1] == ':')) {
+		name += 2;
+	}
+	s = name + strlen(name);
+	while (s > name) {
+		if ((*s == '\\') || (*s == '/')) {
+			return (s + 1);
+		}
+		s--;
+	}
+	return (name);
+}
+
 #endif // NNG_PLATFORM_WINDOWS

@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -1212,17 +1212,14 @@ zt_state_put(ZT_Node *node, void *userptr, void *thr,
 		return;
 	}
 
-	if ((path = nni_plat_join_dir(ztn->zn_path, fname)) == NULL) {
+	if ((path = nni_file_join(ztn->zn_path, fname)) == NULL) {
 		return;
 	}
 
 	if (len < 0) {
-		(void) nni_plat_file_delete(path);
+		(void) nni_file_delete(path);
 	} else {
-		if (strlen(ztn->zn_path) > 0) {
-			(void) nni_plat_dir_create(ztn->zn_path);
-		}
-		(void) nni_plat_file_put(path, data, len);
+		(void) nni_file_put(path, data, len);
 	}
 	nni_strfree(path);
 }
@@ -1260,11 +1257,11 @@ zt_state_get(ZT_Node *node, void *userptr, void *thr,
 		return (len);
 	}
 
-	if ((path = nni_plat_join_dir(ztn->zn_path, fname)) == NULL) {
+	if ((path = nni_file_join(ztn->zn_path, fname)) == NULL) {
 		return (-1);
 	}
 
-	if (nni_plat_file_get(path, &buf, &sz) != 0) {
+	if (nni_file_get(path, &buf, &sz) != 0) {
 		nni_strfree(path);
 		return (-1);
 	}
@@ -1475,9 +1472,6 @@ zt_node_create(zt_node **ztnp, const char *path)
 	    (nni_random() % (zt_max_port - zt_ephemeral)) + zt_ephemeral);
 
 	nni_strlcpy(ztn->zn_path, path, sizeof(ztn->zn_path));
-	if (strlen(ztn->zn_path) > 0) {
-		(void) nni_plat_dir_create(ztn->zn_path);
-	}
 	zrv = ZT_Node_new(&ztn->zn_znode, ztn, NULL, &zt_callbacks, zt_now());
 	if (zrv != ZT_RESULT_OK) {
 		zt_node_destroy(ztn);
@@ -1513,13 +1507,30 @@ zt_node_create(zt_node **ztnp, const char *path)
 }
 
 static int
+zt_walk_moons(const char *path, void *arg)
+{
+	zt_node *   ztn = arg;
+	const char *bn  = nni_file_basename(path);
+	char *      ep;
+	uint64_t    moonid;
+
+	if (strncmp(bn, "moon.", 5) != 0) {
+		return (NNI_FILE_WALK_CONTINUE);
+	}
+	moonid = strtoull(bn + 5, &ep, 16);
+	if (*ep == '\0') {
+		ZT_Node_orbit(ztn->zn_znode, NULL, moonid, 0);
+	}
+	return (NNI_FILE_WALK_CONTINUE);
+}
+
+static int
 zt_node_find(zt_ep *ep)
 {
 	zt_node *                ztn;
 	int                      rv;
 	nng_sockaddr             sa;
 	ZT_VirtualNetworkConfig *cf;
-	void *                   dir;
 
 	NNI_LIST_FOREACH (&zt_nodes, ztn) {
 		if (strcmp(ep->ze_home, ztn->zn_path) == 0) {
@@ -1534,20 +1545,9 @@ zt_node_find(zt_ep *ep)
 	}
 
 	// Load moons
-	if (nni_plat_dir_open(&dir, ep->ze_home) == 0) {
-		uint64_t    moonid;
-		const char *fname;
-		char *      ep;
-		while (nni_plat_dir_next(dir, &fname) == 0) {
-			if (strncmp(fname, "moon.", 5) != 0) {
-				continue;
-			}
-			moonid = strtoull(fname + 5, &ep, 16);
-			if (*ep == '\0') {
-				ZT_Node_orbit(ztn->zn_znode, NULL, moonid, 0);
-			}
-		}
-		nni_plat_dir_close(dir);
+	if (strlen(ep->ze_home) != 0) {
+		(void) nni_file_walk(ep->ze_home, zt_walk_moons, ztn,
+		    NNI_FILE_WALK_FILES_ONLY | NNI_FILE_WALK_SHALLOW);
 	}
 
 done:

@@ -1807,8 +1807,6 @@ nni_ws_dialer_init(nni_ws_dialer **dp, const char *addr)
 	nni_ws_dialer *d;
 	int            rv;
 	nni_aio *      aio;
-	nni_url *      url;
-	char *         host;
 	char *         serv;
 
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {

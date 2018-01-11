@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -24,6 +24,39 @@
 
 // File support.
 
+static int
+nni_plat_make_parent_dirs(const char *path)
+{
+	char *dup;
+	char *p;
+	int   rv;
+
+	// creates everything up until the last component.
+	if ((dup = nni_strdup(path)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	p = dup;
+	while ((p = strchr(p, '/')) != NULL) {
+		if (p != dup) {
+			*p = '\0';
+			rv = mkdir(dup, S_IRWXU);
+			*p = '/';
+			if ((rv != 0) && (errno != EEXIST)) {
+				rv = nni_plat_errno(errno);
+				nni_strfree(dup);
+				return (rv);
+			}
+		}
+
+		// collapse grouped "/" characters
+		while (*p == '/') {
+			p++;
+		}
+	}
+	nni_strfree(dup);
+	return (0);
+}
+
 // nni_plat_file_put writes the named file, with the provided data,
 // and the given size.  If the file already exists it is overwritten.
 // The permissions on the file should be limited to read and write
@@ -33,6 +66,15 @@ nni_plat_file_put(const char *name, const void *data, size_t len)
 {
 	FILE *f;
 	int   rv = 0;
+
+	// It is possible that the name contains a directory path
+	// that does not exist.  In this case we try to create the
+	// entire tree.
+	if (strchr(name, '/') != NULL) {
+		if ((rv = nni_plat_make_parent_dirs(name)) != 0) {
+			return (rv);
+		}
+	}
 
 	if ((f = fopen(name, "wb")) == NULL) {
 		return (nni_plat_errno(errno));
@@ -84,66 +126,64 @@ done:
 	return (rv);
 }
 
-// nni_plat_file_delete deletes the named file.
+// nni_plat_file_delete deletes the named file or directory.
 int
 nni_plat_file_delete(const char *name)
 {
-	if (unlink(name) < 0) {
+	if (rmdir(name) == 0) {
+		return (0);
+	}
+	if ((errno == ENOTDIR) && (unlink(name) == 0)) {
+		return (0);
+	}
+	if (errno == ENOENT) {
+		return (0);
+	}
+	return (nni_plat_errno(errno));
+}
+
+int
+nni_plat_file_type(const char *name, int *typep)
+{
+	struct stat sbuf;
+	int         rv;
+
+	if (stat(name, &sbuf) != 0) {
 		return (nni_plat_errno(errno));
+	}
+	switch (sbuf.st_mode & S_IFMT) {
+	case S_IFREG:
+		*typep = NNI_PLAT_FILE_TYPE_FILE;
+		break;
+	case S_IFDIR:
+		*typep = NNI_PLAT_FILE_TYPE_DIR;
+		break;
+	default:
+		*typep = NNI_PLAT_FILE_TYPE_OTHER;
+		break;
 	}
 	return (0);
 }
 
-// nni_plat_dir_open attempts to "open a directory" for listing.  The
-// handle for further operations is returned in the first argument, and
-// the directory name is supplied in the second.
-int
-nni_plat_dir_open(void **dirp, const char *name)
+static int
+nni_plat_file_walk_inner(const char *name, nni_plat_file_walker walkfn,
+    void *arg, int flags, bool *stop)
 {
 	DIR *dir;
 
 	if ((dir = opendir(name)) == NULL) {
 		return (nni_plat_errno(errno));
 	}
-	*dirp = dir;
-	return (0);
-}
-
-int
-nni_plat_dir_create(const char *name)
-{
-	if (mkdir(name, S_IRWXU) != 0) {
-		if (errno == EEXIST) {
-			return (0);
-		}
-		return (nni_plat_errno(errno));
-	}
-	return (0);
-}
-
-int
-nni_plat_dir_remove(const char *name)
-{
-	if (rmdir(name) != 0) {
-		if (errno == ENOENT) {
-			return (0);
-		}
-		return (nni_plat_errno(errno));
-	}
-	return (0);
-}
-
-// nni_plat_dir_next gets the next directory entry.  Each call returns
-// a new entry (arbitrary order).  When no more entries exist, it returns
-// NNG_ENOENT.
-int
-nni_plat_dir_next(void *dir, const char **namep)
-{
 	for (;;) {
+		int            rv;
 		struct dirent *ent;
+		struct stat    sbuf;
+		char *         path;
+		int            walkrv;
 
-		if ((ent = readdir((DIR *) dir)) == NULL) {
-			return (NNG_ENOENT);
+		if ((ent = readdir(dir)) == NULL) {
+			closedir(dir);
+			return (0);
 		}
 		// Skip "." and ".."  -- we would like to skip all
 		// directories, but that would require checking full
@@ -152,17 +192,73 @@ nni_plat_dir_next(void *dir, const char **namep)
 		    (strcmp(ent->d_name, "..") == 0)) {
 			continue;
 		}
-		*namep = ent->d_name;
-		return (0);
+		if ((rv = nni_asprintf(&path, "%s/%s", name, ent->d_name)) !=
+		    0) {
+			closedir(dir);
+			return (rv);
+		}
+		if (stat(path, &sbuf) != 0) {
+			if (errno == ENOENT) { // deleted while walking
+				continue;
+			}
+			rv = nni_plat_errno(errno);
+			nni_strfree(path);
+			closedir(dir);
+			return (rv);
+		}
+		if (flags & NNI_PLAT_FILE_WALK_FILES_ONLY) {
+			if ((sbuf.st_mode & S_IFMT) == S_IFREG) {
+				walkrv = walkfn(path, arg);
+			} else {
+				walkrv = NNI_PLAT_FILE_WALK_CONTINUE;
+			}
+		} else {
+			walkrv = walkfn(path, arg);
+		}
+
+		if (walkrv == NNI_PLAT_FILE_WALK_STOP) {
+			*stop = true;
+		}
+
+		if ((!*stop) && (rv != NNI_PLAT_FILE_WALK_PRUNE_CHILD) &&
+		    ((flags & NNI_PLAT_FILE_WALK_SHALLOW) == 0) &&
+		    ((sbuf.st_mode & S_IFMT) == S_IFDIR)) {
+			rv = nni_plat_file_walk_inner(
+			    path, walkfn, arg, flags, stop);
+			if (rv != 0) {
+				nni_strfree(path);
+				closedir(dir);
+				return (rv);
+			}
+		}
+
+		nni_strfree(path);
+
+		if ((walkrv == NNI_PLAT_FILE_WALK_PRUNE_SIB) || (*stop)) {
+			break;
+		}
 	}
+	closedir(dir);
+	return (0);
 }
 
-// nni_plat_dir_close closes the directory handle, freeing all
-// resources associated with it.
-void
-nni_plat_dir_close(void *dir)
+int
+nni_plat_file_walk(
+    const char *name, nni_plat_file_walker walkfn, void *arg, int flags)
 {
-	(void) closedir((DIR *) dir);
+	bool stop = false;
+
+	return (nni_plat_file_walk_inner(name, walkfn, arg, flags, &stop));
+}
+
+const char *
+nni_plat_file_basename(const char *path)
+{
+	const char *end;
+	if ((end = strrchr(path, '/')) != NULL) {
+		return (end + 1);
+	}
+	return (path);
 }
 
 char *
@@ -182,8 +278,8 @@ nni_plat_home_dir(void)
 {
 	char *home;
 
-	// POSIX says that $HOME is *REQUIRED*.  We could look in getpwuid,
-	// but realistically this is simply not required.
+	// POSIX says that $HOME is *REQUIRED*.  We could look in
+	// getpwuid, but realistically this is simply not required.
 	if ((home = getenv("HOME")) != NULL) {
 		return (nni_strdup(home));
 	}
