@@ -1,5 +1,5 @@
-nng_tls_config_own_cert(3)
-==========================
+nng_tls_config_cert_key_file(3)
+===============================
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
@@ -15,7 +15,7 @@ nng_tls_config_own_cert(3)
 
 NAME
 ----
-nng_tls_config_own_cert - configure own certificate and key
+nng_tls_config_cert_key_file - load own certificate and key from file
 
 SYNOPSIS
 --------
@@ -24,21 +24,24 @@ SYNOPSIS
 -----------
 #include <nng/nng.h>
 
-int nng_tls_config_own_cert(nni_tls_config *cfg, const char *cert,
-    const char *key, const char *pass);
+int nng_tls_config_cert_key_file(nni_tls_config *cfg, const char *path,
+    const char *pass);
 -----------
 
 DESCRIPTION
 -----------
 
-The `nng_tls_config_own_cert()` function configures a certificate 'cert'
-identifying the local side of a TLS connection used with 'cfg', along with an
-associated private or secret key 'key'.  The certificate may be
-a chain, with the leaf signer first and the root at the end.  The
-self-signed certificate at the end can be omitted. (The client should already
-have it, and will have to in order to validate this certificate anyway).
+The `nng_tls_config_cert_key_file()` function loads a certificate (or
+certificate chain) and a private key from the file named by 'path'.
 
-The 'key' may be encrypted with a password, in which can be supplied in
+The file must contain both the https://tools.ietf.org/html/rfc7468[PEM]
+encoded certificate and associated private key, which will be used when
+establishing TLS sessions using 'cfg'.  It may contain additional certificates
+leading to a validation chain, with the leaf certificate first.
+There is no need to include the self-signed root, as the peer
+will need to have that already in order to perform it's own validation.
+
+The private key may be encrypted with a password, in which can be supplied in
 'pass'.  The value NULL should be supplied for 'pass' if the key is not
 encrypted.
 
@@ -46,9 +49,6 @@ On servers, it is possible to call this function multiple times for the
 same configuration.  This can be useful for specifying different parameters
 to be used for different cryptographic algorithms.
 
-The certificate located in 'cert' and 'key' must be NUL terminated C
-strings containing
-https://tools.ietf.org/html/rfc7468[PEM] formatted material.
 
 RETURN VALUES
 -------------
@@ -60,14 +60,16 @@ ERRORS
 
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
-`NNG_EINVAL`:: An invalid 'cert' or 'size' was supplied.
+`NNG_EINVAL`:: The contents of 'path' are invalid.
+`NNG_ENOENT`:: The file named by 'path' does not exist.
+`NNG_EPERM`:: The file named by 'path' cannot be opened.
 
 SEE ALSO
 --------
 
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>,
-<<nng_tls_config_cert_key_file#,nng_tls_config_cert_key_file(3)>>,
+<<nng_tls_config_own_cert#,nng_tls_config_own_cert(3)>>,
 <<nng#,nng(7)>>
 
 

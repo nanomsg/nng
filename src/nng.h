@@ -84,6 +84,7 @@ NNG_DECL int nng_setopt_int(nng_socket, const char *, int);
 NNG_DECL int nng_setopt_ms(nng_socket, const char *, nng_duration);
 NNG_DECL int nng_setopt_size(nng_socket, const char *, size_t);
 NNG_DECL int nng_setopt_uint64(nng_socket, const char *, uint64_t);
+NNG_DECL int nng_setopt_string(nng_socket, const char *, const char *);
 
 // nng_socket_getopt obtains the option for a socket.
 NNG_DECL int nng_getopt(nng_socket, const char *, void *, size_t *);
@@ -141,6 +142,7 @@ NNG_DECL int nng_dialer_setopt_ms(nng_dialer, const char *, nng_duration);
 NNG_DECL int nng_dialer_setopt_size(nng_dialer, const char *, size_t);
 NNG_DECL int nng_dialer_setopt_uint64(nng_dialer, const char *, uint64_t);
 NNG_DECL int nng_dialer_setopt_ptr(nng_dialer, const char *, void *);
+NNG_DECL int nng_dialer_setopt_string(nng_dialer, const char *, const char *);
 
 // nng_dialer_getopt obtains the option for a dialer. This will
 // fail for options that a particular dialer is not interested in,
@@ -163,6 +165,8 @@ NNG_DECL int nng_listener_setopt_ms(nng_listener, const char *, nng_duration);
 NNG_DECL int nng_listener_setopt_size(nng_listener, const char *, size_t);
 NNG_DECL int nng_listener_setopt_uint64(nng_listener, const char *, uint64_t);
 NNG_DECL int nng_listener_setopt_ptr(nng_listener, const char *, void *);
+NNG_DECL int nng_listener_setopt_string(
+    nng_listener, const char *, const char *);
 
 // nng_listener_getopt obtains the option for a listener.  This will
 // fail for options that a particular listener is not interested in,
@@ -507,6 +511,8 @@ enum nng_errno_enum {
 	NNG_EEXIST       = 23,
 	NNG_EREADONLY    = 24,
 	NNG_EWRITEONLY   = 25,
+	NNG_ECRYPTO      = 26,
+	NNG_EPEERAUTH    = 27,
 	NNG_EINTERNAL    = 1000,
 	NNG_ESYSERR      = 0x10000000,
 	NNG_ETRANERR     = 0x20000000,
@@ -639,6 +645,22 @@ NNG_DECL int nng_tls_config_pass(nng_tls_config *, const char *);
 // and clients have it on (they verify the server), which matches typical
 // practice.
 NNG_DECL int nng_tls_config_auth_mode(nng_tls_config *, nng_tls_auth_mode);
+
+// nng_tls_config_ca_file is used to pass a CA chain and optional CRL
+// via the filesystem.  If CRL data is present, it must be contained
+// in the file, along with the CA certificate data.  The format is PEM.
+// The path name must be a legal file name.
+NNG_DECL int nng_tls_config_ca_file(nng_tls_config *, const char *);
+
+// nng_tls_config_cert_key_file is used to pass our own certificate and
+// private key data via the filesystem.  Both the key and certificate
+// must be present as PEM blocks in the same file.  A password is used to
+// decrypt the private key if it is encrypted and the password supplied is not
+// NULL. This may be called multiple times on servers, but only once on a
+// client. (Servers can support multiple different certificates and keys for
+// different cryptographic algorithms.  Clients only get one.)
+NNG_DECL int nng_tls_config_cert_key_file(
+    nng_tls_config *, const char *, const char *);
 
 #ifdef __cplusplus
 }

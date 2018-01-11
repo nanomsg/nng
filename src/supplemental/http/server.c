@@ -69,6 +69,7 @@ struct nni_http_server {
 	nng_tls_config * tls;
 	nni_aio *        accaio;
 	nni_plat_tcp_ep *tep;
+	nni_url *        url;
 };
 
 static nni_list http_servers;
@@ -78,13 +79,15 @@ static void     http_handler_fini(http_handler *);
 static void
 http_sconn_reap(void *arg)
 {
-	http_sconn *sc = arg;
+	http_sconn *     sc = arg;
+	nni_http_server *s  = sc->server;
 	NNI_ASSERT(!sc->finished);
 	sc->finished = true;
 	nni_aio_stop(sc->rxaio);
 	nni_aio_stop(sc->txaio);
 	nni_aio_stop(sc->txdataio);
 	nni_aio_stop(sc->cbaio);
+
 	if (sc->http != NULL) {
 		nni_http_fini(sc->http);
 	}
@@ -98,6 +101,17 @@ http_sconn_reap(void *arg)
 	nni_aio_fini(sc->txaio);
 	nni_aio_fini(sc->txdataio);
 	nni_aio_fini(sc->cbaio);
+
+	// Now it is safe to release our reference on the server.
+	nni_mtx_lock(&s->mtx);
+	if (nni_list_node_active(&sc->node)) {
+		nni_list_remove(&s->conns, sc);
+		if (nni_list_empty(&s->conns)) {
+			nni_cv_wake(&s->cv);
+		}
+	}
+	nni_mtx_unlock(&s->mtx);
+
 	NNI_FREE_STRUCT(sc);
 }
 
@@ -120,13 +134,6 @@ http_sconn_close_locked(http_sconn *sc)
 	NNI_ASSERT(!sc->finished);
 
 	sc->closed = true;
-	// Close the underlying transport.
-	if (nni_list_node_active(&sc->node)) {
-		nni_list_remove(&s->conns, sc);
-		if (nni_list_empty(&s->conns)) {
-			nni_cv_wake(&s->cv);
-		}
-	}
 	nni_aio_cancel(sc->rxaio, NNG_ECLOSED);
 	nni_aio_cancel(sc->txaio, NNG_ECLOSED);
 	nni_aio_cancel(sc->txdataio, NNG_ECLOSED);
@@ -143,10 +150,6 @@ http_sconn_close(http_sconn *sc)
 {
 	nni_http_server *s;
 	s = sc->server;
-
-	if (sc->closed) {
-		return;
-	}
 
 	nni_mtx_lock(&s->mtx);
 	http_sconn_close_locked(sc);
@@ -631,6 +634,9 @@ http_server_fini(nni_http_server *s)
 		http_handler_fini(h);
 	}
 	nni_mtx_unlock(&s->mtx);
+	if (s->url != NULL) {
+		nni_url_free(s->url);
+	}
 #ifdef NNG_SUPP_TLS
 	if (s->tls != NULL) {
 		nni_tls_config_fini(s->tls);
@@ -655,14 +661,34 @@ nni_http_server_fini(nni_http_server *s)
 }
 
 static int
-http_server_init(nni_http_server **serverp, nng_sockaddr *sa)
+http_server_init(nni_http_server **serverp, nni_url *url)
 {
 	nni_http_server *s;
 	int              rv;
+	const char *     host;
+	const char *     port;
+	nni_aio *        aio;
 
+	host = url->u_hostname;
+	if (strlen(host) == 0) {
+		host = NULL;
+	}
+
+	port = url->u_port;
+	if ((strcmp(url->u_scheme, "http") != 0) &&
+#ifdef NNG_SUPP_TLS
+	    (strcmp(url->u_scheme, "https") != 0) &&
+	    (strcmp(url->u_scheme, "wss") != 0) &&
+#endif
+	    (strcmp(url->u_scheme, "ws") != 0)) {
+		nni_url_free(url);
+		return (NNG_EADDRINVAL);
+	}
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
+		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
+	s->url = url;
 	nni_mtx_init(&s->mtx);
 	nni_cv_init(&s->cv, &s->mtx);
 	NNI_LIST_INIT(&s->handlers, http_handler, node);
@@ -671,49 +697,71 @@ http_server_init(nni_http_server **serverp, nng_sockaddr *sa)
 		http_server_fini(s);
 		return (rv);
 	}
-	s->addr  = *sa;
-	*serverp = s;
+#ifdef NNG_SUPP_TLS
+	if ((strcmp(url->u_scheme, "https") == 0) ||
+	    (strcmp(url->u_scheme, "wss") == 0)) {
+		rv = nni_tls_config_init(&s->tls, NNG_TLS_MODE_SERVER);
+		if (rv != 0) {
+			http_server_fini(s);
+			return (rv);
+		}
+	}
+#endif
+
+	// Do the DNS lookup *now*.  This means that this is synchronous,
+	// but it should be fast, since it should either resolve as a number,
+	// or resolve locally, without having to hit up DNS.
+	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+		http_server_fini(s);
+		return (rv);
+	}
+	aio->a_addr = &s->addr;
+	host        = (strlen(url->u_hostname) != 0) ? url->u_hostname : NULL;
+	port        = (strlen(url->u_port) != 0) ? url->u_port : NULL;
+	nni_plat_tcp_resolv(host, port, NNG_AF_UNSPEC, true, aio);
+	nni_aio_wait(aio);
+	rv = nni_aio_result(aio);
+	nni_aio_fini(aio);
+	if (rv != 0) {
+		http_server_fini(s);
+		return (rv);
+	}
+	s->refcnt = 1;
+	*serverp  = s;
 	return (0);
 }
 
 int
-nni_http_server_init(nni_http_server **serverp, nng_sockaddr *sa)
+nni_http_server_init(nni_http_server **serverp, const char *urlstr)
 {
 	int              rv;
 	nni_http_server *s;
+	nni_url *        url;
+
+	if ((rv = nni_url_parse(&url, urlstr)) != 0) {
+		return (rv);
+	}
 
 	nni_initialize(&http_server_initializer);
 
 	nni_mtx_lock(&http_servers_lk);
 	NNI_LIST_FOREACH (&http_servers, s) {
-		switch (sa->s_un.s_family) {
-		case NNG_AF_INET:
-			if (memcmp(&s->addr.s_un.s_in, &sa->s_un.s_in,
-			        sizeof(sa->s_un.s_in)) == 0) {
-				*serverp = s;
-				s->refcnt++;
-				nni_mtx_unlock(&http_servers_lk);
-				return (0);
-			}
-			break;
-		case NNG_AF_INET6:
-			if (memcmp(&s->addr.s_un.s_in6, &sa->s_un.s_in6,
-			        sizeof(sa->s_un.s_in6)) == 0) {
-				*serverp = s;
-				s->refcnt++;
-				nni_mtx_unlock(&http_servers_lk);
-				return (0);
-			}
-			break;
+		if ((strcmp(url->u_port, s->url->u_port) == 0) &&
+		    (strcmp(url->u_hostname, s->url->u_hostname) == 0)) {
+			nni_url_free(url);
+			*serverp = s;
+			s->refcnt++;
+			nni_mtx_unlock(&http_servers_lk);
+			return (0);
 		}
 	}
 
 	// We didn't find a server, try to make a new one.
-	if ((rv = http_server_init(&s, sa)) == 0) {
-		s->addr   = *sa;
-		s->refcnt = 1;
+	if ((rv = http_server_init(&s, url)) == 0) {
 		nni_list_append(&http_servers, s);
 		*serverp = s;
+	} else {
+		nni_url_free(url);
 	}
 
 	nni_mtx_unlock(&http_servers_lk);
@@ -724,7 +772,6 @@ static int
 http_server_start(nni_http_server *s)
 {
 	int rv;
-
 	rv = nni_plat_tcp_ep_init(&s->tep, &s->addr, NULL, NNI_EP_MODE_LISTEN);
 	if (rv != 0) {
 		return (rv);
@@ -1116,10 +1163,10 @@ nni_http_server_add_static(nni_http_server *s, const char *host,
 	return (0);
 }
 
-#ifdef NNG_SUPP_TLS
 int
 nni_http_server_set_tls(nni_http_server *s, nng_tls_config *tcfg)
 {
+#ifdef NNG_SUPP_TLS
 	nng_tls_config *old;
 	nni_mtx_lock(&s->mtx);
 	if (s->starts) {
@@ -1136,8 +1183,27 @@ nni_http_server_set_tls(nni_http_server *s, nng_tls_config *tcfg)
 		nni_tls_config_fini(old);
 	}
 	return (0);
-}
+#else
+	return (NNG_ENOTSUP);
 #endif
+}
+
+int
+nni_http_server_get_tls(nni_http_server *s, nng_tls_config **tp)
+{
+#ifdef NNG_SUPP_TLS
+	nni_mtx_lock(&s->mtx);
+	if (s->tls == NULL) {
+		nni_mtx_unlock(&s->mtx);
+		return (NNG_EINVAL);
+	}
+	*tp = s->tls;
+	nni_mtx_unlock(&s->mtx);
+	return (0);
+#else
+	return (NNG_ENOTSUP);
+#endif
+}
 
 static int
 http_server_sys_init(void)

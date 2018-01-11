@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -43,7 +43,6 @@ struct ws_ep {
 	nni_ws_listener *listener;
 	nni_ws_dialer *  dialer;
 	nni_list         headers; // to send, res or req
-	nng_tls_config * tls;
 };
 
 struct ws_pipe {
@@ -222,7 +221,6 @@ ws_pipe_init(ws_pipe **pipep, ws_ep *ep, void *ws)
 
 	p->mode   = ep->mode;
 	p->rcvmax = ep->rcvmax;
-	// p->addr   = ep->addr;
 	p->rproto = ep->rproto;
 	p->lproto = ep->lproto;
 	p->ws     = ws;
@@ -603,11 +601,6 @@ ws_ep_fini(void *arg)
 	nni_strfree(ep->addr);
 	nni_strfree(ep->protoname);
 	nni_mtx_fini(&ep->mtx);
-#ifdef NNG_TRANSPORT_WSS
-	if (ep->tls) {
-		nni_tls_config_fini(ep->tls);
-	}
-#endif
 	NNI_FREE_STRUCT(ep);
 }
 
@@ -706,18 +699,6 @@ ws_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	nni_mtx_init(&ep->mtx);
 	NNI_LIST_INIT(&ep->headers, ws_hdr, node);
 
-#ifdef NNG_TRANSPORT_WSS
-	if (strncmp(url, "wss://", 4) == 0) {
-		rv = nni_tls_config_init(&ep->tls,
-		    mode == NNI_EP_MODE_DIAL ? NNG_TLS_MODE_CLIENT
-		                             : NNG_TLS_MODE_SERVER);
-		if (rv != 0) {
-			NNI_FREE_STRUCT(ep);
-			return (rv);
-		}
-	}
-#endif
-
 	// List of pipes (server only).
 	nni_aio_list_init(&ep->aios);
 
@@ -798,10 +779,29 @@ nng_ws_register(void)
 #ifdef NNG_TRANSPORT_WSS
 
 static int
+wss_get_tls(ws_ep *ep, nng_tls_config **tlsp)
+{
+	switch (ep->mode) {
+	case NNI_EP_MODE_DIAL:
+		return (nni_ws_dialer_get_tls(ep->dialer, tlsp));
+	case NNI_EP_MODE_LISTEN:
+		return (nni_ws_listener_get_tls(ep->listener, tlsp));
+	}
+	return (NNG_EINVAL);
+}
+
+static int
 wss_ep_getopt_tlsconfig(void *arg, void *v, size_t *szp)
 {
-	ws_ep *ep = arg;
-	return (nni_getopt_ptr(ep->tls, v, szp));
+	ws_ep *         ep = arg;
+	nng_tls_config *tls;
+	int             rv;
+
+	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
+	    ((rv = nni_getopt_ptr(tls, v, szp)) != 0)) {
+		return (rv);
+	}
+	return (0);
 }
 
 static int
@@ -828,13 +828,98 @@ wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz)
 	} else {
 		rv = nni_ws_dialer_set_tls(ep->dialer, cfg);
 	}
-	if (rv == 0) {
-		if (ep->tls != NULL) {
-			nni_tls_config_fini(ep->tls);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static int
+wss_ep_setopt_tls_cert_key_file(void *arg, const void *v, size_t sz)
+{
+	ws_ep *         ep = arg;
+	int             rv;
+	nng_tls_config *tls;
+
+	if (ep == NULL) {
+		if (nni_strnlen(v, sz) >= sz) {
+			return (NNG_EINVAL);
 		}
-		nni_tls_config_hold(cfg);
-		ep->tls = cfg;
+		return (0);
 	}
+	nni_mtx_lock(&ep->mtx);
+	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
+	    ((rv = nng_tls_config_cert_key_file(tls, v, NULL)) != 0)) {
+		goto done;
+	}
+done:
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static int
+wss_ep_setopt_tls_ca_file(void *arg, const void *v, size_t sz)
+{
+	ws_ep *         ep = arg;
+	int             rv;
+	nng_tls_config *tls;
+
+	if (ep == NULL) {
+		if (nni_strnlen(v, sz) >= sz) {
+			return (NNG_EINVAL);
+		}
+		return (0);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
+	    ((rv = nng_tls_config_ca_file(tls, v)) != 0)) {
+		goto done;
+	}
+done:
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static int
+wss_ep_setopt_tls_auth_mode(void *arg, const void *v, size_t sz)
+{
+	ws_ep *         ep = arg;
+	int             rv;
+	nng_tls_config *tls;
+	int             mode;
+
+	rv = nni_setopt_int(
+	    &mode, v, sz, NNG_TLS_AUTH_MODE_NONE, NNG_TLS_AUTH_MODE_REQUIRED);
+	if ((rv != 0) || (ep == NULL)) {
+		return (rv);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
+	    ((rv = nng_tls_config_auth_mode(tls, mode)) != 0)) {
+		goto done;
+	}
+done:
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static int
+wss_ep_setopt_tls_server_name(void *arg, const void *v, size_t sz)
+{
+	ws_ep *         ep = arg;
+	int             rv;
+	nng_tls_config *tls;
+
+	if (ep == NULL) {
+		if (nni_strnlen(v, sz) >= sz) {
+			return (NNG_EINVAL);
+		}
+		return (0);
+	}
+	nni_mtx_lock(&ep->mtx);
+	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
+	    ((rv = nng_tls_config_server_name(tls, v)) != 0)) {
+		goto done;
+	}
+done:
 	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }
@@ -860,7 +945,26 @@ static nni_tran_ep_option wss_ep_options[] = {
 	    .eo_getopt = wss_ep_getopt_tlsconfig,
 	    .eo_setopt = wss_ep_setopt_tlsconfig,
 	},
-
+	{
+	    .eo_name   = NNG_OPT_WSS_TLS_CERT_KEY_FILE,
+	    .eo_getopt = NULL,
+	    .eo_setopt = wss_ep_setopt_tls_cert_key_file,
+	},
+	{
+	    .eo_name   = NNG_OPT_WSS_TLS_CA_FILE,
+	    .eo_getopt = NULL,
+	    .eo_setopt = wss_ep_setopt_tls_ca_file,
+	},
+	{
+	    .eo_name   = NNG_OPT_WSS_TLS_AUTH_MODE,
+	    .eo_getopt = NULL,
+	    .eo_setopt = wss_ep_setopt_tls_auth_mode,
+	},
+	{
+	    .eo_name   = NNG_OPT_WSS_TLS_SERVER_NAME,
+	    .eo_getopt = NULL,
+	    .eo_setopt = wss_ep_setopt_tls_server_name,
+	},
 	// terminate list
 	{ NULL, NULL, NULL },
 };

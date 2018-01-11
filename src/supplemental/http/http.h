@@ -222,11 +222,14 @@ typedef struct {
 } nni_http_handler;
 
 // nni_http_server will look for an existing server with the same
-// socket address, or create one if one does not exist.  The servers
+// name and port, or create one if one does not exist.  The servers
 // are reference counted to permit sharing the server object across
-// multiple subsystems.  The sockaddr matching is very limited though,
-// and the addresses must match *exactly*.
-extern int nni_http_server_init(nni_http_server **, nng_sockaddr *);
+// multiple subsystems.  The URL hostname matching is very limited,
+// and the names must match *exactly* (without DNS resolution).  Unless
+// a restricted binding is required, we recommend using a URL consisting
+// of an empty host name, such as http://  or https://  -- this would
+// convert to binding to the default port on all interfaces on the host.
+extern int nni_http_server_init(nni_http_server **, const char *);
 
 // nni_http_server_fini drops the reference count on the server, and
 // if this was the last reference, closes down the server and frees
@@ -245,8 +248,16 @@ extern void nni_http_server_del_handler(nni_http_server *, void *);
 
 // nni_http_server_set_tls adds a TLS configuration to the server,
 // and enables the use of it.  This returns NNG_EBUSY if the server is
-// already started.
+// already started.   This wipes out the entire TLS configuration on the
+// server client, so the caller must have configured it reasonably.
+// This API is not recommended unless the caller needs complete control
+// over the TLS configuration.
 extern int nni_http_server_set_tls(nni_http_server *, nng_tls_config *);
+
+// nni_http_server_get_tls obtains the TLS configuration if one is present,
+// or returns NNG_EINVAL.  The TLS configuration is invalidated if the
+// nni_http_server_set_tls function is called, so be careful.
+extern int nni_http_server_get_tls(nni_http_server *, nng_tls_config **);
 
 // nni_http_server_start starts listening on the supplied port.
 extern int nni_http_server_start(nni_http_server *);
@@ -279,9 +290,21 @@ extern int nni_http_server_add_file(nni_http_server *, const char *host,
 
 typedef struct nni_http_client nni_http_client;
 
-extern int  nni_http_client_init(nni_http_client **, nng_sockaddr *);
+// https vs. http; would also allow us to defer DNS lookups til later.
+extern int  nni_http_client_init(nni_http_client **, const char *);
 extern void nni_http_client_fini(nni_http_client *);
-extern int  nni_http_client_set_tls(nni_http_client *, nng_tls_config *);
+
+// nni_http_client_set_tls sets the TLS configuration.  This wipes out
+// the entire TLS configuration on the client, so the caller must have
+// configured it reasonably.  This API is not recommended unless the
+// caller needs complete control over the TLS configuration.
+extern int nni_http_client_set_tls(nni_http_client *, nng_tls_config *);
+
+// nni_http_client_get_tls obtains the TLS configuration if one is present,
+// or returns NNG_EINVAL.  The supplied TLS configuration object may
+// be invalidated by any future calls to nni_http_client_set_tls.
+extern int nni_http_client_get_tls(nni_http_client *, nng_tls_config **);
+
 extern void nni_http_client_connect(nni_http_client *, nni_aio *);
 
 #endif // NNG_SUPPLEMENTAL_HTTP_HTTP_H

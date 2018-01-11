@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -411,6 +411,12 @@ nng_dialer_setopt_ptr(nng_dialer id, const char *name, void *val)
 }
 
 int
+nng_dialer_setopt_string(nng_dialer id, const char *name, const char *val)
+{
+	return (nng_dialer_setopt(id, name, val, strlen(val) + 1));
+}
+
+int
 nng_dialer_getopt(nng_dialer id, const char *name, void *val, size_t *szp)
 {
 	return (nng_ep_getopt(id, name, val, szp, NNI_EP_MODE_DIAL));
@@ -486,6 +492,12 @@ int
 nng_listener_setopt_ptr(nng_listener id, const char *name, void *val)
 {
 	return (nng_listener_setopt(id, name, &val, sizeof(val)));
+}
+
+int
+nng_listener_setopt_string(nng_listener id, const char *name, const char *val)
+{
+	return (nng_listener_setopt(id, name, val, strlen(val) + 1));
 }
 
 int
@@ -620,6 +632,12 @@ nng_setopt_ptr(nng_socket sid, const char *name, void *val)
 }
 
 int
+nng_setopt_string(nng_socket sid, const char *name, const char *val)
+{
+	return (nng_setopt(sid, name, val, strlen(val) + 1));
+}
+
+int
 nng_getopt_int(nng_socket sid, const char *name, int *valp)
 {
 	size_t sz = sizeof(*valp);
@@ -714,6 +732,8 @@ static const struct {
 	{ NNG_EEXIST, "Resource already exists" },
 	{ NNG_EREADONLY, "Read only resource" },
 	{ NNG_EWRITEONLY, "Write only resource" },
+	{ NNG_ECRYPTO, "Cryptographic error" },
+	{ NNG_EPEERAUTH, "Peer could not be authenticated" },
 	{ NNG_EINTERNAL, "Internal error detected" },
 	{ 0, NULL },
 	// clang-format on

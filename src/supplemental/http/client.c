@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -19,12 +19,12 @@
 #include "http.h"
 
 struct nni_http_client {
-	nng_sockaddr     addr;
 	nni_list         aios;
 	nni_mtx          mtx;
 	bool             closed;
 	nng_tls_config * tls;
 	nni_aio *        connaio;
+	nni_url *        url;
 	nni_plat_tcp_ep *tep;
 };
 
@@ -92,26 +92,98 @@ nni_http_client_fini(nni_http_client *c)
 		nni_tls_config_fini(c->tls);
 	}
 #endif
+	if (c->url != NULL) {
+		nni_url_free(c->url);
+	}
 	NNI_FREE_STRUCT(c);
 }
 
 int
-nni_http_client_init(nni_http_client **cp, nng_sockaddr *sa)
+nni_http_client_init(nni_http_client **cp, const char *urlstr)
 {
-	int rv;
-
+	int              rv;
+	nni_url *        url;
 	nni_http_client *c;
+	nni_aio *        aio;
+	nni_sockaddr     sa;
+	char *           host;
+	char *           port;
+
+	if ((rv = nni_url_parse(&url, urlstr)) != 0) {
+		return (rv);
+	}
+
+	if (strlen(url->u_hostname) == 0) {
+		// We require a valid hostname.
+		nni_url_free(url);
+		return (NNG_EADDRINVAL);
+	}
+	if ((strcmp(url->u_scheme, "http") != 0) &&
+#ifdef NNG_SUPP_TLS
+	    (strcmp(url->u_scheme, "https") != 0) &&
+	    (strcmp(url->u_scheme, "wss") != 0) &&
+#endif
+	    (strcmp(url->u_scheme, "ws") != 0)) {
+		return (NNG_EADDRINVAL);
+	}
+
+	// For now we are looking up the address.  We would really like
+	// to do this later, but we need TcP support for this.  One
+	// imagines the ability to create a tcp dialer that does the
+	// necessary DNS lookups, etc. all asynchronously.
+	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+		nni_url_free(url);
+		return (rv);
+	}
+	aio->a_addr = &sa;
+	host        = (strlen(url->u_hostname) != 0) ? url->u_hostname : NULL;
+	port        = (strlen(url->u_port) != 0) ? url->u_port : NULL;
+	nni_plat_tcp_resolv(host, port, NNG_AF_UNSPEC, false, aio);
+	nni_aio_wait(aio);
+	rv = nni_aio_result(aio);
+	nni_aio_fini(aio);
+	if (rv != 0) {
+		nni_url_free(url);
+		return (rv);
+	}
+
 	if ((c = NNI_ALLOC_STRUCT(c)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	c->addr = *sa;
-	rv = nni_plat_tcp_ep_init(&c->tep, NULL, &c->addr, NNI_EP_MODE_DIAL);
-	if (rv != 0) {
-		NNI_FREE_STRUCT(c);
-		return (rv);
-	}
 	nni_mtx_init(&c->mtx);
 	nni_aio_list_init(&c->aios);
+	c->url = url;
+
+#ifdef NNG_SUPP_TLS
+	if ((strcmp(url->u_scheme, "https") == 0) ||
+	    (strcmp(url->u_scheme, "wss") == 0)) {
+		rv = nni_tls_config_init(&c->tls, NNG_TLS_MODE_CLIENT);
+		if (rv != 0) {
+			nni_http_client_fini(c);
+			return (rv);
+		}
+		// Take the server name right from the client URL. We only
+		// consider the name, as the port is never part of the
+		// certificate.
+		rv = nng_tls_config_server_name(c->tls, url->u_hostname);
+		if (rv != 0) {
+			nni_http_client_fini(c);
+			return (rv);
+		}
+
+		// Note that the application has to supply the location of
+		// certificates.  We could probably use a default based
+		// on environment or common locations used by OpenSSL, but
+		// as there is no way to *unload* the cert file, lets not
+		// do that.  (We might want to consider a mode to reset.)
+	}
+#endif
+
+	rv = nni_plat_tcp_ep_init(&c->tep, NULL, &sa, NNI_EP_MODE_DIAL);
+	if (rv != 0) {
+		nni_http_client_fini(c);
+		return (rv);
+	}
 
 	if ((rv = nni_aio_init(&c->connaio, http_conn_done, c)) != 0) {
 		nni_http_client_fini(c);
@@ -121,10 +193,10 @@ nni_http_client_init(nni_http_client **cp, nng_sockaddr *sa)
 	return (0);
 }
 
-#ifdef NNG_SUPP_TLS
 int
 nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
 {
+#ifdef NNG_SUPP_TLS
 	nng_tls_config *old;
 	nni_mtx_lock(&c->mtx);
 	old    = c->tls;
@@ -137,8 +209,27 @@ nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
 		nni_tls_config_fini(old);
 	}
 	return (0);
-}
+#else
+	return (NNG_EINVAL);
 #endif
+}
+
+int
+nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
+{
+#ifdef NNG_SUPP_TLS
+	nni_mtx_lock(&c->mtx);
+	if (c->tls == NULL) {
+		nni_mtx_unlock(&c->mtx);
+		return (NNG_EINVAL);
+	}
+	*tlsp = c->tls;
+	nni_mtx_unlock(&c->mtx);
+	return (0);
+#else
+	return (NNG_ENOTSUP);
+#endif
+}
 
 static void
 http_connect_cancel(nni_aio *aio, int rv)

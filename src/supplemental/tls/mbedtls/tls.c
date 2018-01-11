@@ -92,8 +92,6 @@ struct nng_tls_config {
 #endif
 	mbedtls_x509_crt ca_certs;
 	mbedtls_x509_crl crl;
-	bool             have_ca_certs;
-	bool             have_crl;
 
 	int refcnt; // servers increment the reference
 
@@ -275,27 +273,33 @@ nni_tls_fini(nni_tls *tp)
 	NNI_FREE_STRUCT(tp);
 }
 
-void
-nni_tls_strerror(int errnum, char *buf, size_t sz)
-{
-	if (errnum & NNG_ETRANERR) {
-		errnum &= ~NNG_ETRANERR;
-		errnum = -errnum;
-
-		mbedtls_strerror(errnum, buf, sz);
-	} else {
-		(void) snprintf(buf, sz, "%s", nng_strerror(errnum));
-	}
-}
-
 // nni_tls_mkerr converts an mbed error to an NNG error.  In all cases
 // we just encode with NNG_ETRANERR.
+static struct {
+	int tls;
+	int nng;
+} nni_tls_errs[] = {
+	{ MBEDTLS_ERR_SSL_NO_CLIENT_CERTIFICATE, NNG_EPEERAUTH },
+	{ MBEDTLS_ERR_SSL_CA_CHAIN_REQUIRED, NNG_EPEERAUTH },
+	{ MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED, NNG_EPEERAUTH },
+	{ MBEDTLS_ERR_SSL_NO_USABLE_CIPHERSUITE, NNG_EPEERAUTH },
+	{ MBEDTLS_ERR_SSL_PEER_CLOSE_NOTIFY, NNG_ECONNREFUSED },
+	{ MBEDTLS_ERR_SSL_ALLOC_FAILED, NNG_ENOMEM },
+	{ MBEDTLS_ERR_SSL_TIMEOUT, NNG_ETIMEDOUT },
+	{ MBEDTLS_ERR_SSL_CONN_EOF, NNG_ECLOSED },
+	// terminator
+	{ 0, 0 },
+};
+
 static int
 nni_tls_mkerr(int err)
 {
-	err = -err;
-	err |= NNG_ETRANERR;
-	return (err);
+	for (int i = 0; nni_tls_errs[i].tls != 0; i++) {
+		if (nni_tls_errs[i].tls == err) {
+			return (nni_tls_errs[i].nng);
+		}
+	}
+	return (NNG_ECRYPTO);
 }
 
 int
@@ -368,6 +372,23 @@ nni_tls_cancel(nni_aio *aio, int rv)
 		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&tp->lk);
+}
+
+static void
+nni_tls_fail(nni_tls *tp, int rv)
+{
+	nni_aio *aio;
+	tp->tls_closed = true;
+	nni_plat_tcp_pipe_close(tp->tcp);
+	tp->tcp_closed = true;
+	while ((aio = nni_list_first(&tp->recvs)) != NULL) {
+		nni_list_remove(&tp->recvs, aio);
+		nni_aio_finish_error(aio, rv);
+	}
+	while ((aio = nni_list_first(&tp->sends)) != NULL) {
+		nni_list_remove(&tp->recvs, aio);
+		nni_aio_finish_error(aio, rv);
+	}
 }
 
 // nni_tls_send_cb is called when the underlying TCP send completes.
@@ -602,11 +623,8 @@ nni_tls_do_handshake(nni_tls *tp)
 		return;
 
 	default:
-		// Some other error occurred... would be nice to be
-		// able to diagnose it better.
-		tp->tls_closed = true;
-		nni_plat_tcp_pipe_close(tp->tcp);
-		tp->tcp_closed = true;
+		// some other error occurred, this causes us to tear it down
+		nni_tls_fail(tp, nni_tls_mkerr(rv));
 	}
 }
 
@@ -723,7 +741,6 @@ nni_tls_close(nni_tls *tp)
 		(void) mbedtls_ssl_close_notify(&tp->ctx);
 	} else {
 		nni_plat_tcp_pipe_close(tp->tcp);
-		tp->tcp_closed = true;
 	}
 	nni_mtx_unlock(&tp->lk);
 }
@@ -817,8 +834,10 @@ nng_tls_config_ca_chain(
 			rv = nni_tls_mkerr(rv);
 			goto err;
 		}
-		cfg->have_crl = true;
 	}
+
+	mbedtls_ssl_conf_ca_chain(&cfg->cfg_ctx, &cfg->ca_certs, &cfg->crl);
+
 err:
 	nni_mtx_unlock(&cfg->lk);
 	return (rv);
@@ -877,6 +896,69 @@ err:
 	mbedtls_x509_crt_free(&ck->crt);
 	mbedtls_pk_free(&ck->key);
 	NNI_FREE_STRUCT(ck);
+	return (rv);
+}
+
+int
+nng_tls_config_ca_file(nng_tls_config *cfg, const char *path)
+{
+	int    rv;
+	void * fdata;
+	size_t fsize;
+	char * pem;
+	// Note that while mbedTLS supports its own file methods, we want
+	// to avoid depending on that because it might not have been
+	// included, so we use our own.  We have to read the file, and
+	// then allocate a buffer that has an extra byte so we can
+	// ensure NUL termination.  The file named by path may contain
+	// both a ca chain, and crl chain, or just a ca chain.
+	if ((rv = nni_file_get(path, &fdata, &fsize)) != 0) {
+		return (rv);
+	}
+	if ((pem = nni_alloc(fsize + 1)) == NULL) {
+		nni_free(fdata, fsize);
+		return (NNG_ENOMEM);
+	}
+	memcpy(pem, fdata, fsize);
+	pem[fsize] = '\0';
+	nni_free(fdata, fsize);
+	if (strstr(pem, "-----BEGIN X509 CRL-----") != NULL) {
+		rv = nng_tls_config_ca_chain(cfg, pem, pem);
+	} else {
+		rv = nng_tls_config_ca_chain(cfg, pem, NULL);
+	}
+	nni_free(pem, fsize + 1);
+	return (rv);
+}
+
+int
+nng_tls_config_cert_key_file(
+    nng_tls_config *cfg, const char *path, const char *pass)
+{
+	int    rv;
+	void * fdata;
+	size_t fsize;
+	char * pem;
+
+	// Note that while mbedTLS supports its own file methods, we want
+	// to avoid depending on that because it might not have been
+	// included, so we use our own.  We have to read the file, and
+	// then allocate a buffer that has an extra byte so we can
+	// ensure NUL termination.  The file named by path must contain
+	// both our certificate, and our private key.  The password
+	// may be NULL if the key is not encrypted.
+	if ((rv = nni_file_get(path, &fdata, &fsize)) != 0) {
+		return (rv);
+	}
+	if ((pem = nni_alloc(fsize + 1)) == NULL) {
+		nni_free(fdata, fsize);
+		return (NNG_ENOMEM);
+	}
+	memcpy(pem, fdata, fsize);
+	pem[fsize] = '\0';
+	nni_free(fdata, fsize);
+	rv = nng_tls_config_own_cert(cfg, pem, pem, pass);
+	nni_free(pem, fsize + 1);
 	return (rv);
 }
 

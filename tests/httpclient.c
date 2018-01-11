@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -32,21 +32,13 @@ TestMain("HTTP Client", {
 	Convey("Given a TCP connection to httpbin.org", {
 		nng_aio *        aio;
 		nni_aio *        iaio;
-		nng_sockaddr     rsa;
 		nni_http_client *cli;
 		nni_http *       http;
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
-		iaio         = (nni_aio *) aio;
-		iaio->a_addr = &rsa;
+		iaio = (nni_aio *) aio;
 
-		nng_aio_set_timeout(aio, 20000);
-		nni_plat_tcp_resolv("httpbin.org", "80", NNG_AF_INET, 0, iaio);
-		nng_aio_wait(aio);
-		So(nng_aio_result(aio) == 0);
-		So(rsa.s_un.s_in.sa_port == htons(80));
-
-		So(nni_http_client_init(&cli, &rsa) == 0);
+		So(nni_http_client_init(&cli, "http://httpbin.org") == 0);
 		nni_http_client_connect(cli, iaio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);

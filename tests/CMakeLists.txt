@@ -161,6 +161,7 @@ add_nng_test(udp 5 ON)
 add_nng_test(url 5 ON)
 add_nng_test(ws 30 NNG_TRANSPORT_WS)
 add_nng_test(wss 30 NNG_TRANSPORT_WSS)
+add_nng_test(wssfile 30 NNG_TRANSPORT_WSS)
 add_nng_test(zt 60 NNG_TRANSPORT_ZEROTIER)
 
 add_nng_proto_test(bus 5 NNG_PROTO_BUS0 NNG_PROTO_BUS0)

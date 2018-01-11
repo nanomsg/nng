@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -41,9 +41,12 @@ TestMain("HTTP Client", {
 		nng_sockaddr sa;
 		nni_aio *    aio;
 		char         portbuf[16];
+		char         url[32];
 		char *doc = "<html><body>Someone <b>is</b> home!</body</html>";
 
 		trantest_next_address(portbuf, "%u");
+
+		snprintf(url, sizeof(url), "http://127.0.0.1:%s", portbuf);
 
 		So(nni_aio_init(&aio, NULL, NULL) == 0);
 		aio->a_addr = &sa;
@@ -51,7 +54,7 @@ TestMain("HTTP Client", {
 		nni_aio_wait(aio);
 		So(nni_aio_result(aio) == 0);
 
-		So(nni_http_server_init(&s, &sa) == 0);
+		So(nni_http_server_init(&s, url) == 0);
 
 		Reset({
 			nni_aio_fini(aio);
@@ -68,7 +71,7 @@ TestMain("HTTP Client", {
 			nni_http_req *   req;
 			nni_http_res *   res;
 
-			So(nni_http_client_init(&cli, &sa) == 0);
+			So(nni_http_client_init(&cli, url) == 0);
 			nni_http_client_connect(cli, aio);
 			nni_aio_wait(aio);
 

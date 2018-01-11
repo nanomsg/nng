@@ -81,16 +81,12 @@ usually.footnote:[This is a bug and will likely be fixed in the future.]
 NOTE: The value specified as the host, if any, will also be used
 in the `Host:` HTTP header during HTTP negotiation.
 
-The special value of 0 (`INADDR_ANY`) can be used for a listener
-to indicate that it should listen on all interfaces on the host.
-A short-hand for this form is to either omit the address, or specify
-the asterisk (`*`) character.  For example, the following three
-URIs are all equivalent, and could be used to listen to port 9999
-on the host:
-
-  1. `ws://0.0.0.0:9999`
-  2. `ws://*:9999`
-  3. `ws://:9999`
+To listen to all ports on the system, the host name may be elided from
+the URL on the listener.  This will wind up listening to all interfaces
+on the system, with possible caveats for IPv4 and IPv6 depending on what
+the underlying system supports.  (On most modern systems it will map to the
+special IPv6 address `::`, and both IPv4 and IPv6 connections will be
+permitted, with IPv4 addresses mapped to IPv6 addresses.)
 
 Socket Address
 ~~~~~~~~~~~~~~
@@ -158,6 +154,32 @@ Note that attempts to set this object may fail on a listener if
 the server is already running.  Furthermore, attempts to modify the
 configuration object will fail if it is already in active use.
 This object is only available for `wss://` endpoints.
+
+`NNG_OPT_WSS_TLS_CA_FILE`::
+
+This is a write-only option used to load certificates associated
+associated private key from a file.  The value is a C string
+containing the path name of the file.  The file itself must contain
+https://tools.ietf.org/html/rfc7468[PEM] format objects for one or more
+X.509 certificates.  It may also contain certificate revocation list (CRL)
+objects well.  Note that attempts to call this will fail if the
+configuration associated with the underlying endpoint
+is already in use.  This option is only available for `wss://` endpoints.
+
+`NNG_OPT_WSS_TLS_CERT_KEY_FILE`::
+
+This is a write-only option used to load the local certificate and
+associated private key from a file.  The value is a C string
+containing the path name of the file.  The file itself must contain PEM
+format objects for the X.509 certificate and private key.  Multiple
+certificates may be listed in the file, to provide a validation chain,
+with the leaf certificate listed first, and subsequent certificates listed
+afterwards.  Note that attempts to call this will fail if the
+configuration associated with the underlying endpoint
+is already in use.  This option is only available for `wss://` endpoints.
+The private key must not be encrypted.  (Use the `NNG_OPT_WSS_TLS_CONFIG`
+option to get the underlying TLS configuration if more advanced
+configuration is needed.)
 
 // We should also look at a hook mechanism for listeners. Probably this could
 // look like NNG_OPT_WS_LISTEN_HOOK_FUNC which would take a function pointer

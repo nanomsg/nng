@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -36,6 +36,7 @@ extern void nni_ws_listener_accept(nni_ws_listener *, nni_aio *);
 extern void nni_ws_listener_hook(
     nni_ws_listener *, nni_ws_listen_hook, void *);
 extern int nni_ws_listener_set_tls(nni_ws_listener *, nng_tls_config *);
+extern int nni_ws_listener_get_tls(nni_ws_listener *, nng_tls_config **s);
 
 extern int  nni_ws_dialer_init(nni_ws_dialer **, const char *);
 extern void nni_ws_dialer_fini(nni_ws_dialer *);
@@ -44,6 +45,7 @@ extern int  nni_ws_dialer_proto(nni_ws_dialer *, const char *);
 extern int  nni_ws_dialer_header(nni_ws_dialer *, const char *, const char *);
 extern void nni_ws_dialer_dial(nni_ws_dialer *, nni_aio *);
 extern int  nni_ws_dialer_set_tls(nni_ws_dialer *, nng_tls_config *);
+extern int  nni_ws_dialer_get_tls(nni_ws_dialer *, nng_tls_config **);
 
 // Dialer does not get a hook chance, as it can examine the request and reply
 // after dial is done; this is not a 3-way handshake, so the dialer does

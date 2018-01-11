@@ -180,67 +180,150 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 }
 
 static int
-init_dialer_wss(trantest *tt, nng_dialer d)
+init_dialer_wss_file(trantest *tt, nng_dialer d)
 {
-	nng_tls_config *cfg;
-	int             rv;
+	int   rv;
+	char *tmpdir;
+	char *pth;
 
-	if ((rv = nng_tls_config_alloc(&cfg, NNG_TLS_MODE_CLIENT)) != 0) {
+	if ((tmpdir = nni_plat_temp_dir()) == NULL) {
+		return (NNG_ENOTSUP);
+	}
+	if ((pth = nni_file_join(tmpdir, "wss_test_cacert.pem")) == NULL) {
+		nni_strfree(tmpdir);
+		return (NNG_ENOMEM);
+	}
+	nni_strfree(tmpdir);
+
+	if ((rv = nni_file_put(pth, cert, strlen(cert))) != 0) {
+		nni_strfree(pth);
 		return (rv);
 	}
-	if ((rv = nng_tls_config_ca_chain(cfg, cert, NULL)) != 0) {
-		goto out;
-	}
-	if ((rv = nng_tls_config_server_name(cfg, "localhost")) != 0) {
-		goto out;
-	}
-	if ((rv = nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_REQUIRED)) !=
-	    0) {
-		goto out;
-	}
-	rv = nng_dialer_setopt_ptr(d, NNG_OPT_WSS_TLS_CONFIG, cfg);
 
-out:
-	nng_tls_config_free(cfg);
+	rv = nng_dialer_setopt_string(d, NNG_OPT_WSS_TLS_CA_FILE, pth);
+	nni_file_delete(pth);
+	nni_strfree(pth);
+
 	return (rv);
 }
 
 static int
-init_listener_wss(trantest *tt, nng_listener l)
+init_listener_wss_file(trantest *tt, nng_listener l)
 {
-	nng_tls_config *cfg;
-	int             rv;
+	int   rv;
+	char *tmpdir;
+	char *pth;
+	char *certkey;
 
-	if ((rv = nng_tls_config_alloc(&cfg, NNG_TLS_MODE_SERVER)) != 0) {
+	if ((tmpdir = nni_plat_temp_dir()) == NULL) {
+		return (NNG_ENOTSUP);
+	}
+
+	if ((pth = nni_file_join(tmpdir, "wss_test_certkey.pem")) == NULL) {
+		nni_strfree(tmpdir);
+		return (NNG_ENOMEM);
+	}
+	nni_strfree(tmpdir);
+
+	if ((rv = nni_asprintf(&certkey, "%s\r\n%s\r\n", cert, key)) != 0) {
+		nni_strfree(pth);
 		return (rv);
 	}
-	if ((rv = nng_tls_config_own_cert(cfg, cert, key, NULL)) != 0) {
-		goto out;
+
+	rv = nni_file_put(pth, certkey, strlen(certkey));
+	nni_strfree(certkey);
+	if (rv != 0) {
+		nni_strfree(pth);
+		return (rv);
 	}
 
-	if ((rv = nng_listener_setopt_ptr(l, NNG_OPT_WSS_TLS_CONFIG, cfg)) !=
-	    0) {
-		// We can wind up with EBUSY from the server already running.
+	rv = nng_listener_setopt_string(l, NNG_OPT_WSS_TLS_CERT_KEY_FILE, pth);
+	if (rv != 0) {
+		// We can wind up with EBUSY from the server already
+		// running.
 		if (rv == NNG_EBUSY) {
 			rv = 0;
 		}
 	}
 
-out:
-	nng_tls_config_free(cfg);
+	nni_file_delete(pth);
+	nni_strfree(pth);
 	return (rv);
 }
 
-TestMain("WebSocket Secure (TLS) Transport", {
+TestMain("WebSocket Secure (TLS) Transport (file based)", {
 
 	static trantest tt;
 
-	tt.dialer_init   = init_dialer_wss;
-	tt.listener_init = init_listener_wss;
+	tt.dialer_init   = init_dialer_wss_file;
+	tt.listener_init = init_listener_wss_file;
 	tt.tmpl          = "wss://localhost:%u/test";
 	tt.proptest      = check_props;
 
 	trantest_test(&tt);
+
+	Convey("Verify works", {
+		nng_socket   s1;
+		nng_socket   s2;
+		nng_listener l;
+		char *       buf;
+		size_t       sz;
+		char         addr[NNG_MAXADDRLEN];
+
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s2);
+			nng_close(s1);
+		});
+		trantest_next_address(addr, "wss://:%u/test");
+		So(nng_listener_create(&l, s1, addr) == 0);
+		So(init_listener_wss_file(NULL, l) == 0);
+		So(nng_listener_start(l, 0) == 0);
+		nng_msleep(100);
+
+		// reset port back one
+		trantest_prev_address(addr, "wss://127.0.0.1:%u/test");
+		So(nng_setopt_int(s2, NNG_OPT_WSS_TLS_AUTH_MODE,
+		       NNG_TLS_AUTH_MODE_REQUIRED) == 0);
+
+		So(nng_dial(s2, addr, NULL, 0) == NNG_EPEERAUTH);
+	});
+
+	Convey("No verify works", {
+		nng_socket   s1;
+		nng_socket   s2;
+		nng_listener l;
+		char *       buf;
+		size_t       sz;
+		char         addr[NNG_MAXADDRLEN];
+
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s2);
+			nng_close(s1);
+		});
+		trantest_next_address(addr, "wss://:%u/test");
+		So(nng_listener_create(&l, s1, addr) == 0);
+		So(init_listener_wss_file(NULL, l) == 0);
+		So(nng_listener_start(l, 0) == 0);
+		nng_msleep(100);
+
+		// reset port back one
+		trantest_prev_address(addr, "wss://127.0.0.1:%u/test");
+		So(nng_setopt_int(s2, NNG_OPT_WSS_TLS_AUTH_MODE,
+		       NNG_TLS_AUTH_MODE_NONE) == 0);
+		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_dial(s2, addr, NULL, 0) == 0);
+		nng_msleep(100);
+
+		So(nng_send(s1, "hello", 6, 0) == 0);
+		So(nng_recv(s2, &buf, &sz, NNG_FLAG_ALLOC) == 0);
+		So(sz == 6);
+		So(strcmp(buf, "hello") == 0);
+		nng_free(buf, sz);
+	});
 
 	nng_fini();
 })

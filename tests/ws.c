@@ -80,7 +80,7 @@ TestMain("WebSocket Transport", {
 
 	trantest_test_extended("ws://127.0.0.1:%u/test", check_props_v4);
 
-	Convey("Wild cards work", {
+	Convey("Empty hostname works", {
 		nng_socket s1;
 		nng_socket s2;
 		char       addr[NNG_MAXADDRLEN];
@@ -91,7 +91,7 @@ TestMain("WebSocket Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "ws://*:%u/test");
+		trantest_next_address(addr, "ws://:%u/test");
 		So(nng_listen(s1, addr, NULL, 0) == 0);
 		nng_msleep(100);
 		// reset port back one
@@ -110,10 +110,10 @@ TestMain("WebSocket Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "ws://*:%u/test");
+		trantest_next_address(addr, "ws://:%u/test");
 		So(nng_listen(s1, addr, NULL, 0) == 0);
 		// reset port back one
-		trantest_prev_address(addr, "ws://127.0.0.1:%u/nothere");
+		trantest_prev_address(addr, "ws://localhost:%u/nothere");
 		So(nng_dial(s2, addr, NULL, 0) == NNG_ECONNREFUSED);
 	});
 

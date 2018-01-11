@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -47,7 +47,5 @@ extern int nni_tls_verified(nni_tls *);
 extern const char *nni_tls_ciphersuite_name(nni_tls *);
 
 // TBD: getting additional peer certificate information...
-
-extern void nni_tls_strerror(int, char *, size_t); // review this
 
 #endif // NNG_SUPPLEMENTAL_TLS_TLS_H

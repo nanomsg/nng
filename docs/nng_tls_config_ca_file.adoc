@@ -1,5 +1,5 @@
-nng_tls_config_ca_chain(3)
-==========================
+nng_tls_config_ca_file(3)
+=========================
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
@@ -15,7 +15,7 @@ nng_tls_config_ca_chain(3)
 
 NAME
 ----
-nng_tls_config_ca_chain - configure certificate authority certificate chain
+nng_tls_config_ca_file - load certificate authority from file
 
 SYNOPSIS
 --------
@@ -24,30 +24,25 @@ SYNOPSIS
 -----------
 #include <nng/nng.h>
 
-int nng_tls_config_ca_cert(nni_tls_config *cfg, const char *chain,
-    const char *crl);
+int nng_tls_config_ca_file(nni_tls_config *cfg, const char *path);
 -----------
 
 DESCRIPTION
 -----------
 
-The `nng_tls_config_ca_chain()` function configures a certificate or
-certificate chain to be used when validating peers using the configuration
-'cfg'.
+The `nng_tls_config_ca_file()` function configures the certificate authority
+certificate chain and optional revocation list by loading the certificates
+(and revocation list if present) from a single named file. The file must
+at least one X.509 certificate in https://tools.ietf.org/html/rfc7468[PEM]
+format, and may contain multiple such certificates, as well as zero or
+more PEM CRL objects.  This information is used to validate certificates
+that are presented by peers, when using the configuration 'cfg'.
 
 NOTE: Certificates *must* be configured when using the authentication mode
 `NNG_TLS_AUTH_MODE_REQUIRED`.
 
 TIP: This function may be called multiple times, to add additional chains
 to a configuration, without affecting those added previously.
-
-The certificates located in 'chain' must be a zero-terminated C string in
-https://tools.ietf.org/html/rfc7468[PEM] format.  Multiple certificates may
-appear concatenated together, with the leaf certificate listed first.
-together.
-
-The 'crl' may be NULL, or may also be a C string containing a PEM format
-certificate revocation list for the associated authority.
 
 RETURN VALUES
 -------------
@@ -59,7 +54,9 @@ ERRORS
 
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
-`NNG_EINVAL`:: An invalid 'chain' or 'size' was supplied.
+`NNG_EINVAL`:: The contents of 'path' are invalid or did not contain a valid PEM certificate.
+`NNG_ENOENT`:: The file 'path' does not exist.
+`NNG_EPERM`:: The file 'path' is not readable.
 
 SEE ALSO
 --------
@@ -67,7 +64,7 @@ SEE ALSO
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>,
 <<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>>,
-<<nng_tls_config_ca_file#,nng_tls_config_ca_file(3)>>,
+<<nng_tls_config_ca_chain#,nng_tls_config_ca_chain(3)>>,
 <<nng#,nng(7)>>
 
 
