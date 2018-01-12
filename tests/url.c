@@ -27,7 +27,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_scheme, "http") == 0);
 		So(strcmp(url->u_host, "www.google.com") == 0);
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
-		So(strcmp(url->u_port, "") == 0);
+		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_path, "") == 0);
 		So(strcmp(url->u_rawpath, "") == 0);
 		So(url->u_query == NULL);
@@ -88,7 +88,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_scheme, "http") == 0);
 		So(strcmp(url->u_host, "www.google.com") == 0);
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
-		So(strcmp(url->u_port, "") == 0);
+		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_path, "/somewhere") == 0);
 		So(strcmp(url->u_query, "result=yes") == 0);
 		So(strcmp(url->u_rawpath, "/somewhere?result=yes") == 0);
@@ -104,7 +104,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_scheme, "http") == 0);
 		So(strcmp(url->u_host, "www.google.com") == 0);
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
-		So(strcmp(url->u_port, "") == 0);
+		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_path, "/somewhere") == 0);
 		So(strcmp(url->u_query, "result=yes") == 0);
 		So(strcmp(url->u_fragment, "chapter1") == 0);
@@ -120,7 +120,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_scheme, "http") == 0);
 		So(strcmp(url->u_host, "www.google.com") == 0);
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
-		So(strcmp(url->u_port, "") == 0);
+		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_path, "/somewhere") == 0);
 		So(strcmp(url->u_fragment, "chapter2") == 0);
 		So(strcmp(url->u_rawpath, "/somewhere#chapter2") == 0);
@@ -135,7 +135,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_host, "www.google.com") == 0);
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
 		So(strcmp(url->u_path, "") == 0);
-		So(strcmp(url->u_port, "") == 0);
+		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_fragment, "chapter3") == 0);
 		So(strcmp(url->u_rawpath, "#chapter3") == 0);
 		So(url->u_query == NULL);
@@ -150,7 +150,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_host, "www.google.com") == 0);
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
 		So(strcmp(url->u_path, "") == 0);
-		So(strcmp(url->u_port, "") == 0);
+		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_query, "color=red") == 0);
 		So(strcmp(url->u_rawpath, "?color=red") == 0);
 		So(url->u_fragment == NULL);
@@ -165,7 +165,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_host, "[::1]") == 0);
 		So(strcmp(url->u_hostname, "::1") == 0);
 		So(strcmp(url->u_path, "") == 0);
-		So(strcmp(url->u_port, "") == 0);
+		So(strcmp(url->u_port, "80") == 0);
 		So(url->u_query == NULL);
 		So(url->u_fragment == NULL);
 		So(url->u_userinfo == NULL);
@@ -210,6 +210,34 @@ TestMain("URLs", {
 		So(url->u_query == NULL);
 		So(url->u_fragment == NULL);
 		So(url->u_userinfo == NULL);
+		nni_url_free(url);
+	});
+
+	Convey("ws://", {
+		So(nni_url_parse(&url, "ws://") == 0);
+		So(url != NULL);
+		So(strcmp(url->u_scheme, "ws") == 0);
+		So(strcmp(url->u_host, "") == 0);
+		So(strcmp(url->u_hostname, "") == 0);
+		So(strcmp(url->u_path, "") == 0);
+		So(strcmp(url->u_port, "80") == 0);
+		So(url->u_query == NULL);
+		So(url->u_fragment == NULL);
+		So(url->u_userinfo == NULL);
+		nni_url_free(url);
+	});
+
+	Convey("ssh://user@host.example.com", {
+		So(nni_url_parse(&url, "ssh://user@host.example.com") == 0);
+		So(url != NULL);
+		So(strcmp(url->u_scheme, "ssh") == 0);
+		So(strcmp(url->u_host, "host.example.com") == 0);
+		So(strcmp(url->u_hostname, "host.example.com") == 0);
+		So(strcmp(url->u_path, "") == 0);
+		So(strcmp(url->u_port, "22") == 0);
+		So(url->u_query == NULL);
+		So(url->u_fragment == NULL);
+		So(strcmp(url->u_userinfo, "user") == 0);
 		nni_url_free(url);
 	});
 

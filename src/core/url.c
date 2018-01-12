@@ -175,6 +175,40 @@ nni_url_encode(char **out, const char *in)
 	return (nni_url_encode_ext(out, in, ""));
 }
 
+static struct {
+	const char *scheme;
+	const char *port;
+} nni_url_default_ports[] = {
+	// This list is not exhaustive, but likely covers the main ones we
+	// care about.  Feel free to add additional ones as use cases arise.
+	// Note also that we don't use "default" ports for SP protocols
+	// that have no "default" port, like tcp:// or tls+tcp://.
+	// clang-format off
+	{ "git", "9418" },
+	{ "gopher", "70" },
+	{ "http", "80" },
+	{ "https", "443" },
+	{ "ssh", "22" },
+	{ "telnet", "23" },
+	{ "ws", "80" },
+	{ "wss", "443" },
+	{ NULL, NULL },
+	// clang-format on
+};
+
+static const char *
+nni_url_default_port(const char *scheme)
+{
+	const char *s;
+
+	for (int i = 0; (s = nni_url_default_ports[i].scheme) != NULL; i++) {
+		if (strcmp(s, scheme) == 0) {
+			return (nni_url_default_ports[i].port);
+		}
+	}
+	return ("");
+}
+
 // URLs usually follow the following format:
 //
 // scheme:[//[userinfo@]host][/]path[?query][#fragment]
@@ -338,11 +372,11 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		s++; // skip over ']', only used with IPv6 addresses
 	}
 	if (s[0] == ':') {
-		if ((url->u_port = nni_strdup(s + 1)) == NULL) {
-			rv = NNG_ENOMEM;
-			goto error;
-		}
-	} else if ((url->u_port = nni_strdup("")) == NULL) {
+		url->u_port = nni_strdup(s + 1);
+	} else {
+		url->u_port = nni_strdup(nni_url_default_port(url->u_scheme));
+	}
+	if (url->u_port == NULL) {
 		rv = NNG_ENOMEM;
 		goto error;
 	}
