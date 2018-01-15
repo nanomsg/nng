@@ -60,7 +60,12 @@
 #define NNG_USE_CLOCKID CLOCK_REALTIME
 #endif // CLOCK_REALTIME
 
+#if defined(NNG_HAVE_KQUEUE)
+// pass
+#else
+// fallback to poll(2)
 #define NNG_USE_POSIX_POLLQ_POLL 1
+#endif
 #define NNG_USE_POSIX_RESOLV_GAI 1
 
 #endif // NNG_PLATFORM_POSIX

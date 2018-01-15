@@ -78,7 +78,7 @@ set (NNG_SOURCES
     core/transport.h
     core/url.c
     core/url.h
-    )
+)
 
 if (NNG_PLATFORM_POSIX)
     set (NNG_SOURCES ${NNG_SOURCES}
@@ -95,13 +95,22 @@ if (NNG_PLATFORM_POSIX)
         platform/posix/posix_ipc.c
         platform/posix/posix_pipe.c
         platform/posix/posix_pipedesc.c
-        platform/posix/posix_pollq_poll.c
         platform/posix/posix_rand.c
         platform/posix/posix_resolv_gai.c
         platform/posix/posix_sockaddr.c
         platform/posix/posix_tcp.c
         platform/posix/posix_thread.c
         platform/posix/posix_udp.c
+    )
+endif()
+
+if (NNG_HAVE_KQUEUE)
+    set (NNG_SOURCES ${NNG_SOURCES}
+        platform/posix/posix_pollq_kqueue.c
+    )
+else()
+    set (NNG_SOURCES ${NNG_SOURCES}
+        platform/posix/posix_pollq_poll.c
     )
 endif()
 
