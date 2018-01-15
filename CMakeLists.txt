@@ -383,6 +383,7 @@ else ()
     nng_check_sym (backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
     nng_check_sym (alloca alloca.h NNG_HAVE_ALLOCA)
     nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
+    nng_check_sym (kqueue sys/event.h NNG_HAVE_KQUEUE)
 endif ()
 
 nng_check_sym (strlcat string.h NNG_HAVE_STRLCAT)
