@@ -92,7 +92,7 @@ nni_url_decode(char **out, const char *in)
 	if ((len = url_decode_buf(in, NULL, 0)) < 1) {
 		return (NNG_EINVAL);
 	}
-	if ((dst = nni_alloc(len)) != 0) {
+	if ((dst = nni_alloc(len)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	url_decode_buf(in, dst, len);
