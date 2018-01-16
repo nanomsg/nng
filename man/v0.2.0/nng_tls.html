@@ -742,86 +742,6 @@ used in a running TLS stream.</p>
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>NNG_OPT_TLS_CA_CERT</code></dt>
-<dd>
-<p>This is a write-only binay object containing a certificate
-chain, consisting of one or more X.509 certificates encoded in
-either PEM or DER format.  These certificates are used to
-validate the peer.  If multiple certificates are presented,
-they must be in the same format.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_TLS_CRL</code></dt>
-<dd>
-<p>This is a write-only CRL (revocation list) in X.509 format,
-specifying certificates which may not be used.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_TLS_CERT</code></dt>
-<dd>
-<p>This is an X.509 certificate containing the peers
-own public credentials.  For servers, this option may be supplied
-multiple times, in order to specify multiple certificates
-in order to offer different algorithms.  Clients can only
-have a single certificate.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_TLS_PRIVATE_KEY</code></dt>
-<dd>
-<p>This is an encoded private key, corresponding to the most
-recently established certificate.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_TLS_PRIVATE_KEY_PASSWORD</code></dt>
-<dd>
-<p>This is a string (NUL byte terminated) used to decrypt the
-most recently supplied private key, if the private key
-is encrypted.  (If the private key is not encrypted, then
-this option need not be supplied.)</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_TLS_AUTH_MODE</code></dt>
-<dd>
-<p>This is a write only integer, indicating whether the
-peer should be authenticated.  It can take one of the
-following values:</p>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 66.6667%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_tls_auth_mode_none</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">No authentication of the peer is performed.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_tls_auth_mode_optional</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The peer certificate is checked if presented, but is not required to be valid or present.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_tls_auth_mode_required</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The peer certificate must be present and valid.</p></td>
-</tr>
-</tbody>
-</table>
-<div class="paragraph">
-<p>The default is <code>nng_tls_auth_mode_required</code> for
-clients (meaning the server must present a valid
-certificate) and <code>nng_tls_auth_mode_none</code> for
-servers (meaning any client may connect).</p>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-For TLS client authentication, set this to
-<code>nng_auth_mode_required</code> and set the value
-of <code>NNG_OPT_TLS_CA_CERT</code> to a certificate corresponding
-to your own Certificate Authority.
-</td>
-</tr>
-</table>
-</div>
-</dd>
 <dt class="hdlist1"><code>NNG_OPT_TLS_AUTH_VERIFIED</code></dt>
 <dd>
 <p>This is a read-only boolean option available only for
@@ -869,7 +789,7 @@ Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-01-02 02:11:17 UTC
+Last updated 2018-01-10 02:42:28 UTC
 </div>
 </div>
 </body>

@@ -606,25 +606,12 @@ in the <code>Host:</code> HTTP header during HTTP negotiation.
 </table>
 </div>
 <div class="paragraph">
-<p>The special value of 0 (<code>INADDR_ANY</code>) can be used for a listener
-to indicate that it should listen on all interfaces on the host.
-A short-hand for this form is to either omit the address, or specify
-the asterisk (<code>*</code>) character.  For example, the following three
-URIs are all equivalent, and could be used to listen to port 9999
-on the host:</p>
-</div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p><code>ws://0.0.0.0:9999</code></p>
-</li>
-<li>
-<p><code>ws://*:9999</code></p>
-</li>
-<li>
-<p><code>ws://:9999</code></p>
-</li>
-</ol>
+<p>To listen to all ports on the system, the host name may be elided from
+the URL on the listener.  This will wind up listening to all interfaces
+on the system, with possible caveats for IPv4 and IPv6 depending on what
+the underlying system supports.  (On most modern systems it will map to the
+special IPv6 address <code>::</code>, and both IPv4 and IPv6 connections will be
+permitted, with IPv4 addresses mapped to IPv6 addresses.)</p>
 </div>
 </div>
 <div class="sect2">
@@ -708,6 +695,32 @@ the server is already running.  Furthermore, attempts to modify the
 configuration object will fail if it is already in active use.
 This object is only available for <code>wss://</code> endpoints.</p>
 </dd>
+<dt class="hdlist1"><code>NNG_OPT_WSS_TLS_CA_FILE</code></dt>
+<dd>
+<p>This is a write-only option used to load certificates associated
+associated private key from a file.  The value is a C string
+containing the path name of the file.  The file itself must contain
+<a href="https://tools.ietf.org/html/rfc7468">PEM</a> format objects for one or more
+X.509 certificates.  It may also contain certificate revocation list (CRL)
+objects well.  Note that attempts to call this will fail if the
+configuration associated with the underlying endpoint
+is already in use.  This option is only available for <code>wss://</code> endpoints.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_WSS_TLS_CERT_KEY_FILE</code></dt>
+<dd>
+<p>This is a write-only option used to load the local certificate and
+associated private key from a file.  The value is a C string
+containing the path name of the file.  The file itself must contain PEM
+format objects for the X.509 certificate and private key.  Multiple
+certificates may be listed in the file, to provide a validation chain,
+with the leaf certificate listed first, and subsequent certificates listed
+afterwards.  Note that attempts to call this will fail if the
+configuration associated with the underlying endpoint
+is already in use.  This option is only available for <code>wss://</code> endpoints.
+The private key must not be encrypted.  (Use the <code>NNG_OPT_WSS_TLS_CONFIG</code>
+option to get the underlying TLS configuration if more advanced
+configuration is needed.)</p>
+</dd>
 </dl>
 </div>
 </div>
@@ -745,7 +758,7 @@ Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-01-02 02:11:17 UTC
+Last updated 2018-01-11 22:58:09 UTC
 </div>
 </div>
 </body>
