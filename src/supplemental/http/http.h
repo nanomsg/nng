@@ -156,6 +156,9 @@ extern void nni_http_write_full(nni_http *, nni_aio *);
 extern int  nni_http_sock_addr(nni_http *, nni_sockaddr *);
 extern int  nni_http_peer_addr(nni_http *, nni_sockaddr *);
 
+// nni_tls_http_verified returns true if the peer has been verified using TLS.
+extern bool nni_http_tls_verified(nni_http *);
+
 typedef struct nni_http_server nni_http_server;
 
 typedef struct {

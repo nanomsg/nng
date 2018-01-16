@@ -11,6 +11,8 @@
 #ifndef NNG_SUPPLEMENTAL_TLS_TLS_H
 #define NNG_SUPPLEMENTAL_TLS_TLS_H
 
+#include <stdbool.h>
+
 // nni_tls represents the context for a single TLS stream.
 typedef struct nni_tls nni_tls;
 
@@ -41,7 +43,7 @@ extern int  nni_tls_peername(nni_tls *, nni_sockaddr *);
 // verify.  (During the handshake phase, the peer is not verified, so this
 // might return false if executed too soon.  The verification status will
 // be accurate once the handshake is finished, however.
-extern int nni_tls_verified(nni_tls *);
+extern bool nni_tls_verified(nni_tls *);
 
 // nni_tls_ciphersuite_name returns the name of the ciphersuite in use.
 extern const char *nni_tls_ciphersuite_name(nni_tls *);

@@ -11,6 +11,8 @@
 #ifndef NNG_SUPPLEMENTAL_WEBSOCKET_WEBSOCKET_H
 #define NNG_SUPPLEMENTAL_WEBSOCKET_WEBSOCKET_H
 
+#include <stdbool.h>
+
 // Pre-defined types for some prototypes.  These are from other subsystems.
 typedef struct nni_http_req nni_http_req;
 typedef struct nni_http_res nni_http_res;
@@ -63,6 +65,7 @@ extern void          nni_ws_close_error(nni_ws *, uint16_t);
 extern void          nni_ws_fini(nni_ws *);
 extern const char *  nni_ws_response_headers(nni_ws *);
 extern const char *  nni_ws_request_headers(nni_ws *);
+extern bool          nni_ws_tls_verified(nni_ws *);
 
 // The implementation will send periodic PINGs, and respond with PONGs.
 

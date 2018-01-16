@@ -64,6 +64,9 @@ nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
 	if (mtx->flags & NNI_PLAT_SYNC_INIT) {
 		int rv;
+		// Locking and unlocking makes valgrind/helgrind happier.
+		pthread_mutex_lock(&mtx->mtx);
+		pthread_mutex_unlock(&mtx->mtx);
 		if ((rv = pthread_mutex_destroy(&mtx->mtx)) != 0) {
 			nni_panic("pthread_mutex_destroy: %s", strerror(rv));
 		}

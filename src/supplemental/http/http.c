@@ -40,6 +40,7 @@ typedef struct nni_http_tran {
 	void (*h_write)(void *, nni_aio *);
 	int (*h_sock_addr)(void *, nni_sockaddr *);
 	int (*h_peer_addr)(void *, nni_sockaddr *);
+	bool (*h_verified)(void *);
 	void (*h_close)(void *);
 	void (*h_fini)(void *);
 } nni_http_tran;
@@ -55,6 +56,7 @@ struct nni_http {
 	void (*wr)(void *, nni_aio *);
 	int (*sock_addr)(void *, nni_sockaddr *);
 	int (*peer_addr)(void *, nni_sockaddr *);
+	bool (*verified)(void *);
 	void (*close)(void *);
 	void (*fini)(void *);
 
@@ -610,6 +612,17 @@ nni_http_peer_addr(nni_http *http, nni_sockaddr *sa)
 	return (rv);
 }
 
+bool
+nni_http_tls_verified(nni_http *http)
+{
+	bool rv;
+
+	nni_mtx_lock(&http->mtx);
+	rv = http->closed ? false : http->verified(http->sock);
+	nni_mtx_unlock(&http->mtx);
+	return (rv);
+}
+
 void
 nni_http_fini(nni_http *http)
 {
@@ -655,6 +668,7 @@ http_init(nni_http **httpp, nni_http_tran *tran, void *data)
 	http->fini      = tran->h_fini;
 	http->sock_addr = tran->h_sock_addr;
 	http->peer_addr = tran->h_peer_addr;
+	http->verified  = tran->h_verified;
 
 	if (((rv = nni_aio_init(&http->wr_aio, http_wr_cb, http)) != 0) ||
 	    ((rv = nni_aio_init(&http->rd_aio, http_rd_cb, http)) != 0)) {
@@ -667,6 +681,13 @@ http_init(nni_http **httpp, nni_http_tran *tran, void *data)
 	return (0);
 }
 
+static bool
+nni_http_verified_tcp(void *arg)
+{
+	NNI_ARG_UNUSED(arg);
+	return (false);
+}
+
 static nni_http_tran http_tcp_ops = {
 	.h_read      = (void *) nni_plat_tcp_pipe_recv,
 	.h_write     = (void *) nni_plat_tcp_pipe_send,
@@ -674,6 +695,7 @@ static nni_http_tran http_tcp_ops = {
 	.h_fini      = (void *) nni_plat_tcp_pipe_fini,
 	.h_sock_addr = (void *) nni_plat_tcp_pipe_sockname,
 	.h_peer_addr = (void *) nni_plat_tcp_pipe_peername,
+	.h_verified  = nni_http_verified_tcp,
 };
 
 int
@@ -690,6 +712,7 @@ static nni_http_tran http_tls_ops = {
 	.h_fini      = (void *) nni_tls_fini,
 	.h_sock_addr = (void *) nni_tls_sockname,
 	.h_peer_addr = (void *) nni_tls_peername,
+	.h_verified  = (void *) nni_tls_verified,
 };
 
 int

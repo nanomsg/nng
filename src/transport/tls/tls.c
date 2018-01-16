@@ -855,7 +855,7 @@ tls_getopt_verified(void *arg, void *v, size_t *szp)
 static nni_tran_pipe_option nni_tls_pipe_options[] = {
 	{ NNG_OPT_LOCADDR, nni_tls_pipe_getopt_locaddr },
 	{ NNG_OPT_REMADDR, nni_tls_pipe_getopt_remaddr },
-	{ NNG_OPT_TLS_AUTH_VERIFIED, tls_getopt_verified },
+	{ NNG_OPT_TLS_VERIFIED, tls_getopt_verified },
 	// terminate list
 	{ NULL, NULL }
 };

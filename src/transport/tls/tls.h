@@ -15,16 +15,4 @@
 
 NNG_DECL int nng_tls_register(void);
 
-// TLS options.  Note that these can only be set *before* the endpoint is
-// started.  Once started, it is no longer possible to alter the TLS
-// configuration.
-
-// NNG_OPT_TLS_AUTH_VERIFIED is a boolean that can be read on pipes,
-// indicating whether the peer certificate is verified.
-#define NNG_OPT_TLS_AUTH_VERIFIED "tls:auth-verified"
-
-// NNG_OPT_TLS_CONFIG is used to access the underlying configuration
-// (an nng_tls_config *).
-#define NNG_OPT_TLS_CONFIG "tls:config"
-
 #endif // NNG_TRANSPORT_TLS_TLS_H

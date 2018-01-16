@@ -198,7 +198,7 @@ init_dialer_wss(trantest *tt, nng_dialer d)
 	    0) {
 		goto out;
 	}
-	rv = nng_dialer_setopt_ptr(d, NNG_OPT_WSS_TLS_CONFIG, cfg);
+	rv = nng_dialer_setopt_ptr(d, NNG_OPT_TLS_CONFIG, cfg);
 
 out:
 	nng_tls_config_free(cfg);
@@ -218,8 +218,7 @@ init_listener_wss(trantest *tt, nng_listener l)
 		goto out;
 	}
 
-	if ((rv = nng_listener_setopt_ptr(l, NNG_OPT_WSS_TLS_CONFIG, cfg)) !=
-	    0) {
+	if ((rv = nng_listener_setopt_ptr(l, NNG_OPT_TLS_CONFIG, cfg)) != 0) {
 		// We can wind up with EBUSY from the server already running.
 		if (rv == NNG_EBUSY) {
 			rv = 0;

@@ -43,6 +43,7 @@ struct ws_ep {
 	nni_ws_listener *listener;
 	nni_ws_dialer *  dialer;
 	nni_list         headers; // to send, res or req
+	bool             started;
 };
 
 struct ws_pipe {
@@ -261,16 +262,13 @@ ws_hook(void *arg, nni_http_req *req, nni_http_res *res)
 	// Eventually we'll want user customizable hooks.
 	// For now we just set the headers we want.
 
-	nni_mtx_lock(&ep->mtx);
 	NNI_LIST_FOREACH (&ep->headers, h) {
 		int rv;
-		rv = nni_http_req_set_header(req, h->name, h->value);
+		rv = nni_http_res_set_header(res, h->name, h->value);
 		if (rv != 0) {
-			nni_mtx_unlock(&ep->mtx);
 			return (rv);
 		}
 	}
-	nni_mtx_unlock(&ep->mtx);
 	return (0);
 }
 
@@ -278,9 +276,13 @@ static int
 ws_ep_bind(void *arg)
 {
 	ws_ep *ep = arg;
+	int    rv;
 
 	nni_ws_listener_hook(ep->listener, ws_hook, ep);
-	return (nni_ws_listener_listen(ep->listener));
+	if ((rv = nni_ws_listener_listen(ep->listener)) == 0) {
+		ep->started = true;
+	}
+	return (rv);
 }
 
 static void
@@ -320,28 +322,29 @@ static void
 ws_ep_connect(void *arg, nni_aio *aio)
 {
 	ws_ep * ep = arg;
-	int     rv;
+	int     rv = 0;
 	ws_hdr *h;
+
+	if (!ep->started) {
+		NNI_LIST_FOREACH (&ep->headers, h) {
+			rv = nni_ws_dialer_header(
+			    ep->dialer, h->name, h->value);
+			if (rv != 0) {
+				nni_aio_finish_error(aio, rv);
+				return;
+			}
+		}
+	}
 
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(nni_list_empty(&ep->aios));
 
-	// If we can't start, then its dying and we can't report
-	// either.
+	// If we can't start, then its dying and we can't report either.
 	if ((rv = nni_aio_start(aio, ws_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-
-	NNI_LIST_FOREACH (&ep->headers, h) {
-		rv = nni_ws_dialer_header(ep->dialer, h->name, h->value);
-		if (rv != 0) {
-			nni_aio_finish_error(aio, rv);
-			nni_mtx_unlock(&ep->mtx);
-			return;
-		}
-	}
-
+	ep->started = true;
 	nni_list_append(&ep->aios, aio);
 	nni_ws_dialer_dial(ep->dialer, ep->connaio);
 	nni_mtx_unlock(&ep->mtx);
@@ -372,6 +375,10 @@ ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
 
 	if (ep == NULL) {
 		return (0);
+	}
+
+	if (ep->started) {
+		return (NNG_EBUSY);
 	}
 
 	NNI_LIST_INIT(&l, ws_hdr, node);
@@ -418,7 +425,6 @@ ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
 		name = nl;
 	}
 
-	nni_mtx_lock(&ep->mtx);
 	while ((h = nni_list_first(&ep->headers)) != NULL) {
 		nni_list_remove(&ep->headers, h);
 		nni_strfree(h->name);
@@ -429,7 +435,6 @@ ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
 		nni_list_remove(&l, h);
 		nni_list_append(&ep->headers, h);
 	}
-	nni_mtx_unlock(&ep->mtx);
 	rv = 0;
 
 done:
@@ -532,6 +537,13 @@ ws_pipe_getopt_reqhdrs(void *arg, void *v, size_t *szp)
 	return (nni_getopt_str(s, v, szp));
 }
 
+static int
+ws_pipe_getopt_tls_verified(void *arg, void *v, size_t *szp)
+{
+	ws_pipe *p = arg;
+	return (nni_getopt_int(nni_ws_tls_verified(p->ws) ? 1 : 0, v, szp));
+}
+
 static nni_tran_pipe_option ws_pipe_options[] = {
 
 	// clang-format off
@@ -539,6 +551,7 @@ static nni_tran_pipe_option ws_pipe_options[] = {
 	{ NNG_OPT_REMADDR, ws_pipe_getopt_remaddr },
 	{ NNG_OPT_WS_REQUEST_HEADERS, ws_pipe_getopt_reqhdrs },
 	{ NNG_OPT_WS_RESPONSE_HEADERS, ws_pipe_getopt_reshdrs },
+	{ NNG_OPT_TLS_VERIFIED, ws_pipe_getopt_tls_verified },
 	// clang-format on
 
 	// terminate list
@@ -931,37 +944,37 @@ static nni_tran_ep_option wss_ep_options[] = {
 	    .eo_setopt = ws_ep_setopt_recvmaxsz,
 	},
 	{
-	    .eo_name   = NNG_OPT_WSS_REQUEST_HEADERS,
+	    .eo_name   = NNG_OPT_WS_REQUEST_HEADERS,
 	    .eo_getopt = NULL,
 	    .eo_setopt = ws_ep_setopt_reqhdrs,
 	},
 	{
-	    .eo_name   = NNG_OPT_WSS_RESPONSE_HEADERS,
+	    .eo_name   = NNG_OPT_WS_RESPONSE_HEADERS,
 	    .eo_getopt = NULL,
 	    .eo_setopt = ws_ep_setopt_reshdrs,
 	},
 	{
-	    .eo_name   = NNG_OPT_WSS_TLS_CONFIG,
+	    .eo_name   = NNG_OPT_TLS_CONFIG,
 	    .eo_getopt = wss_ep_getopt_tlsconfig,
 	    .eo_setopt = wss_ep_setopt_tlsconfig,
 	},
 	{
-	    .eo_name   = NNG_OPT_WSS_TLS_CERT_KEY_FILE,
+	    .eo_name   = NNG_OPT_TLS_CERT_KEY_FILE,
 	    .eo_getopt = NULL,
 	    .eo_setopt = wss_ep_setopt_tls_cert_key_file,
 	},
 	{
-	    .eo_name   = NNG_OPT_WSS_TLS_CA_FILE,
+	    .eo_name   = NNG_OPT_TLS_CA_FILE,
 	    .eo_getopt = NULL,
 	    .eo_setopt = wss_ep_setopt_tls_ca_file,
 	},
 	{
-	    .eo_name   = NNG_OPT_WSS_TLS_AUTH_MODE,
+	    .eo_name   = NNG_OPT_TLS_AUTH_MODE,
 	    .eo_getopt = NULL,
 	    .eo_setopt = wss_ep_setopt_tls_auth_mode,
 	},
 	{
-	    .eo_name   = NNG_OPT_WSS_TLS_SERVER_NAME,
+	    .eo_name   = NNG_OPT_TLS_SERVER_NAME,
 	    .eo_getopt = NULL,
 	    .eo_setopt = wss_ep_setopt_tls_server_name,
 	},

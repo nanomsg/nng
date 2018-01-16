@@ -1072,6 +1072,17 @@ nni_ws_response_headers(nni_ws *ws)
 	return (ws->reshdrs);
 }
 
+bool
+nni_ws_tls_verified(nni_ws *ws)
+{
+	bool rv;
+
+	nni_mtx_lock(&ws->mtx);
+	rv = nni_http_tls_verified(ws->http);
+	nni_mtx_unlock(&ws->mtx);
+	return (rv);
+}
+
 static void
 ws_fini(void *arg)
 {

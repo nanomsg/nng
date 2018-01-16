@@ -126,11 +126,35 @@ The `sa_family` member will have the value `NNG_AF_INET` or `NNG_AF_INET6`.
 The `sa_port` and `sa_addr` are the TCP port number and address, both in
 network byte order (most significant byte is first).
 
+Server Instances
+~~~~~~~~~~~~~~~~
+
+This transport makes use of shared HTTP server instances, permitting multiple
+sockets or listeners to be configured with the same hostname and port. When
+creating a new listener, it is registered with an existing HTTP server instance
+if one can be found.  Note that the matching algorithm is somewhat simple,
+using only a string based hostname or IP address and port to match.  Therefore
+it is recommended to use only IP addresses or the empty string as the hostname
+in listener URLs.
+
+Likewise, when sharing a server instance, it may not be possible to alter
+TLS configuration if the server is already running, as there is only a single
+TLS configuration context for the entire server instance.
+
+All sharing of server instances is only typically possible within the same
+process.
+
+The server may also be used by other things (for example to serve static
+content), in the same process.
+
 Transport Options
 ~~~~~~~~~~~~~~~~~
 
 The following transport options are available. Note that
 setting these must be done before the transport is started.
+
+NOTE: The TLS specific options (beginning with `NNG_OPT_TLS_`) are
+only available for `wss://` endpoints.
 
 `NNG_OPT_WS_REQUEST_HEADERS`::
 
@@ -146,40 +170,41 @@ by CRLF sequences, that can be used to add furthe headers to the
 HTTP response sent when connecting.  This option can be set on listeners,
 and retrieved from pipes.
 
-`NNG_OPT_WSS_TLS_CONFIG`::
+`NNG_OPT_TLS_CONFIG`::
 
 This option is used on an endpoint to access the underlying TLS
 configuration object.  The value is of type `nng_tls_config *`.
-Note that attempts to set this object may fail on a listener if
-the server is already running.  Furthermore, attempts to modify the
-configuration object will fail if it is already in active use.
-This object is only available for `wss://` endpoints.
 
-`NNG_OPT_WSS_TLS_CA_FILE`::
+TIP: Use this option when advanced TLS configuration is required.
+
+`NNG_OPT_TLS_CA_FILE`::
 
 This is a write-only option used to load certificates associated
-associated private key from a file.  The value is a C string
-containing the path name of the file.  The file itself must contain
-https://tools.ietf.org/html/rfc7468[PEM] format objects for one or more
-X.509 certificates.  It may also contain certificate revocation list (CRL)
-objects well.  Note that attempts to call this will fail if the
-configuration associated with the underlying endpoint
-is already in use.  This option is only available for `wss://` endpoints.
+associated private key from a file.
+See <<nng_tls_config_ca_file#,nng_tls_config_ca_file(3)>> for more
+information.
 
-`NNG_OPT_WSS_TLS_CERT_KEY_FILE`::
+`NNG_OPT_TLS_CERT_KEY_FILE`::
 
 This is a write-only option used to load the local certificate and
-associated private key from a file.  The value is a C string
-containing the path name of the file.  The file itself must contain PEM
-format objects for the X.509 certificate and private key.  Multiple
-certificates may be listed in the file, to provide a validation chain,
-with the leaf certificate listed first, and subsequent certificates listed
-afterwards.  Note that attempts to call this will fail if the
-configuration associated with the underlying endpoint
-is already in use.  This option is only available for `wss://` endpoints.
-The private key must not be encrypted.  (Use the `NNG_OPT_WSS_TLS_CONFIG`
-option to get the underlying TLS configuration if more advanced
-configuration is needed.)
+associated private key from a file. The private key used must be
+unencrypted. (Use the `NNG_OPT_TLS_CONFIG` option to access the underlying
+TLS configuration if more advanced configuration is needed.)
+See <<nng_tls_config_own_cert#,nng_tls_config_own_cert(3)>> for more
+information.
+
+`NNG_OPT_TLS_AUTH_MODE`::
+
+This is a write-only option used to configure the authentication mode
+used.  It can take an integer with value `NNG_TLS_AUTH_MODE_NONE`,
+`NNG_TLS_AUTH_MODE_REQUIRED`, or `NNG_TLS_AUTH_MODE_OPTIONAL`.  See
+<<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>> for more details.
+
+`NNG_OPT_TLS_VERIFIED`::
+
+This is a read-only option which returns a boolean value (integer 0 or 1).
+It will true (1) if the remote peer has been properly verified using TLS
+authentication, or false (0) otherwise.
 
 // We should also look at a hook mechanism for listeners. Probably this could
 // look like NNG_OPT_WS_LISTEN_HOOK_FUNC which would take a function pointer

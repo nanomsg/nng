@@ -138,6 +138,7 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 	nng_sockaddr ra;
 	char *       buf;
 	size_t       len;
+	int          v;
 
 	p = nng_msg_get_pipe(msg);
 	So(p > 0);
@@ -176,6 +177,10 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 	So(z == len);
 	nni_free(buf, len);
 
+	// Verified
+	So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
+	So(v == 1);
+
 	return (0);
 }
 
@@ -200,7 +205,7 @@ init_dialer_wss_file(trantest *tt, nng_dialer d)
 		return (rv);
 	}
 
-	rv = nng_dialer_setopt_string(d, NNG_OPT_WSS_TLS_CA_FILE, pth);
+	rv = nng_dialer_setopt_string(d, NNG_OPT_TLS_CA_FILE, pth);
 	nni_file_delete(pth);
 	nni_strfree(pth);
 
@@ -237,7 +242,7 @@ init_listener_wss_file(trantest *tt, nng_listener l)
 		return (rv);
 	}
 
-	rv = nng_listener_setopt_string(l, NNG_OPT_WSS_TLS_CERT_KEY_FILE, pth);
+	rv = nng_listener_setopt_string(l, NNG_OPT_TLS_CERT_KEY_FILE, pth);
 	if (rv != 0) {
 		// We can wind up with EBUSY from the server already
 		// running.
@@ -284,7 +289,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 
 		// reset port back one
 		trantest_prev_address(addr, "wss://127.0.0.1:%u/test");
-		So(nng_setopt_int(s2, NNG_OPT_WSS_TLS_AUTH_MODE,
+		So(nng_setopt_int(s2, NNG_OPT_TLS_AUTH_MODE,
 		       NNG_TLS_AUTH_MODE_REQUIRED) == 0);
 
 		So(nng_dial(s2, addr, NULL, 0) == NNG_EPEERAUTH);
@@ -294,9 +299,10 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		nng_socket   s1;
 		nng_socket   s2;
 		nng_listener l;
-		char *       buf;
-		size_t       sz;
 		char         addr[NNG_MAXADDRLEN];
+		nng_msg *    msg;
+		nng_pipe     p;
+		int          v;
 
 		So(nng_pair_open(&s1) == 0);
 		So(nng_pair_open(&s2) == 0);
@@ -312,17 +318,22 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 
 		// reset port back one
 		trantest_prev_address(addr, "wss://127.0.0.1:%u/test");
-		So(nng_setopt_int(s2, NNG_OPT_WSS_TLS_AUTH_MODE,
+		So(nng_setopt_int(s2, NNG_OPT_TLS_AUTH_MODE,
 		       NNG_TLS_AUTH_MODE_NONE) == 0);
 		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
 		So(nng_dial(s2, addr, NULL, 0) == 0);
 		nng_msleep(100);
 
 		So(nng_send(s1, "hello", 6, 0) == 0);
-		So(nng_recv(s2, &buf, &sz, NNG_FLAG_ALLOC) == 0);
-		So(sz == 6);
-		So(strcmp(buf, "hello") == 0);
-		nng_free(buf, sz);
+		So(nng_recvmsg(s2, &msg, 0) == 0);
+		So(msg != NULL);
+		So(nng_msg_len(msg) == 6);
+		So(strcmp(nng_msg_body(msg), "hello") == 0);
+		p = nng_msg_get_pipe(msg);
+		So(p > 0);
+		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
+		So(v == 0);
+		nng_msg_free(msg);
 	});
 
 	nng_fini();
