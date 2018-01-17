@@ -243,14 +243,6 @@ ws_pipe_peer(void *arg)
 	return (p->rproto);
 }
 
-static void
-ws_pipe_start(void *arg, nni_aio *aio)
-{
-	if (nni_aio_start(aio, NULL, NULL) == 0) {
-		nni_aio_finish(aio, 0, 0);
-	}
-}
-
 // We have very different approaches for server and client.
 // Servers use the HTTP server framework, and a request methodology.
 
@@ -563,7 +555,6 @@ static nni_tran_pipe_option ws_pipe_options[] = {
 
 static nni_tran_pipe ws_pipe_ops = {
 	.p_fini    = ws_pipe_fini,
-	.p_start   = ws_pipe_start,
 	.p_send    = ws_pipe_send,
 	.p_recv    = ws_pipe_recv,
 	.p_close   = ws_pipe_close,
