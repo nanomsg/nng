@@ -1,7 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -47,8 +46,7 @@ struct nni_aio {
 	nni_msg *a_msg;
 
 	// Connect/accept operations.
-	void *a_endpt; // opaque endpoint handle
-	void *a_pipe;  // opaque pipe handle
+	void *a_pipe; // opaque pipe handle
 
 	// Resolver operations.
 	nni_sockaddr *a_addr;
@@ -128,14 +126,11 @@ extern void nni_aio_set_output(nni_aio *, int, void *);
 // nni_get_output returns an output previously stored on the AIO.
 extern void *nni_aio_get_output(nni_aio *, int);
 
-// XXX: These should be refactored in terms of the generic inputs and
-// outputs.
+// XXX: These should be refactored in terms of generic inputs and outputs.
 extern void     nni_aio_set_msg(nni_aio *, nni_msg *);
 extern nni_msg *nni_aio_get_msg(nni_aio *);
 extern void     nni_aio_set_pipe(nni_aio *, void *);
 extern void *   nni_aio_get_pipe(nni_aio *);
-extern void     nni_aio_set_ep(nni_aio *, void *);
-extern void *   nni_aio_get_ep(nni_aio *);
 
 // nni_aio_set_synch sets a synchronous completion flag on the AIO.
 // When this is set, the next time the AIO is completed, the callback

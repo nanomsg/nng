@@ -412,7 +412,8 @@ enum nng_flag_enum {
 
 // NNG_OPT_TLS_VERIFIED returns a single integer, indicating whether the peer
 // has been verified (1) or not (0).  Typically this is read-only, and only
-// available for pipes.
+// available for pipes. This option may return incorrect results if peer
+// authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 #define NNG_OPT_TLS_VERIFIED "tls-verified"
 
 // XXX: TBD: priorities, socket names, ipv4only

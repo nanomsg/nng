@@ -363,7 +363,6 @@ ws_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz)
 static int
 ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
 {
-	// XXX: check that the string is well formed.
 	char *   dupstr;
 	size_t   duplen;
 	char *   name;
@@ -372,6 +371,10 @@ ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
 	nni_list l;
 	ws_hdr * h;
 	int      rv;
+
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
 
 	if (ep == NULL) {
 		return (0);
@@ -835,13 +838,11 @@ wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz)
 	if (ep == NULL) {
 		return (0);
 	}
-	nni_mtx_lock(&ep->mtx);
 	if (ep->mode == NNI_EP_MODE_LISTEN) {
 		rv = nni_ws_listener_set_tls(ep->listener, cfg);
 	} else {
 		rv = nni_ws_dialer_set_tls(ep->dialer, cfg);
 	}
-	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }
 
@@ -852,20 +853,16 @@ wss_ep_setopt_tls_cert_key_file(void *arg, const void *v, size_t sz)
 	int             rv;
 	nng_tls_config *tls;
 
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
 	if (ep == NULL) {
-		if (nni_strnlen(v, sz) >= sz) {
-			return (NNG_EINVAL);
-		}
 		return (0);
 	}
-	nni_mtx_lock(&ep->mtx);
-	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
-	    ((rv = nng_tls_config_cert_key_file(tls, v, NULL)) != 0)) {
-		goto done;
+	if ((rv = wss_get_tls(ep, &tls)) != 0) {
+		return (rv);
 	}
-done:
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
+	return (nng_tls_config_cert_key_file(tls, v, NULL));
 }
 
 static int
@@ -875,20 +872,16 @@ wss_ep_setopt_tls_ca_file(void *arg, const void *v, size_t sz)
 	int             rv;
 	nng_tls_config *tls;
 
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
 	if (ep == NULL) {
-		if (nni_strnlen(v, sz) >= sz) {
-			return (NNG_EINVAL);
-		}
 		return (0);
 	}
-	nni_mtx_lock(&ep->mtx);
-	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
-	    ((rv = nng_tls_config_ca_file(tls, v)) != 0)) {
-		goto done;
+	if ((rv = wss_get_tls(ep, &tls)) != 0) {
+		return (rv);
 	}
-done:
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
+	return (nng_tls_config_ca_file(tls, v));
 }
 
 static int
@@ -904,14 +897,10 @@ wss_ep_setopt_tls_auth_mode(void *arg, const void *v, size_t sz)
 	if ((rv != 0) || (ep == NULL)) {
 		return (rv);
 	}
-	nni_mtx_lock(&ep->mtx);
-	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
-	    ((rv = nng_tls_config_auth_mode(tls, mode)) != 0)) {
-		goto done;
+	if ((rv = wss_get_tls(ep, &tls)) != 0) {
+		return (rv);
 	}
-done:
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
+	return (nng_tls_config_auth_mode(tls, mode));
 }
 
 static int
@@ -921,20 +910,16 @@ wss_ep_setopt_tls_server_name(void *arg, const void *v, size_t sz)
 	int             rv;
 	nng_tls_config *tls;
 
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
 	if (ep == NULL) {
-		if (nni_strnlen(v, sz) >= sz) {
-			return (NNG_EINVAL);
-		}
 		return (0);
 	}
-	nni_mtx_lock(&ep->mtx);
-	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
-	    ((rv = nng_tls_config_server_name(tls, v)) != 0)) {
-		goto done;
+	if ((rv = wss_get_tls(ep, &tls)) != 0) {
+		return (rv);
 	}
-done:
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
+	return (nng_tls_config_server_name(tls, v));
 }
 
 static nni_tran_ep_option wss_ep_options[] = {

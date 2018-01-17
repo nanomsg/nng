@@ -843,13 +843,68 @@ tls_getopt_config(void *arg, void *v, size_t *szp)
 }
 
 static int
+tls_setopt_ca_file(void *arg, const void *v, size_t sz)
+{
+	nni_tls_ep *ep = arg;
+
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
+	if (ep == NULL) {
+		return (0);
+	}
+	return (nng_tls_config_ca_file(ep->cfg, v));
+}
+
+static int
+tls_setopt_auth_mode(void *arg, const void *v, size_t sz)
+{
+	nni_tls_ep *ep = arg;
+	int         mode;
+	int         rv;
+
+	rv = nni_setopt_int(
+	    &mode, v, sz, NNG_TLS_AUTH_MODE_NONE, NNG_TLS_AUTH_MODE_REQUIRED);
+	if ((rv != 0) || (ep == NULL)) {
+		return (rv);
+	}
+	return (nng_tls_config_auth_mode(ep->cfg, mode));
+}
+
+static int
+tls_setopt_server_name(void *arg, const void *v, size_t sz)
+{
+	nni_tls_ep *ep = arg;
+
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
+	if (ep == NULL) {
+		return (0);
+	}
+	return (nng_tls_config_server_name(ep->cfg, v));
+}
+
+static int
+tls_setopt_cert_key_file(void *arg, const void *v, size_t sz)
+{
+	nni_tls_ep *ep = arg;
+
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
+	if (ep == NULL) {
+		return (0);
+	}
+	return (nng_tls_config_cert_key_file(ep->cfg, v, NULL));
+}
+
+static int
 tls_getopt_verified(void *arg, void *v, size_t *szp)
 {
 	nni_tls_pipe *p = arg;
-	int           verified;
 
-	verified = nni_tls_verified(p->tls);
-	return (nni_getopt_int(verified, v, szp));
+	return (nni_getopt_int(nni_tls_verified(p->tls) ? 1 : 0, v, szp));
 }
 
 static nni_tran_pipe_option nni_tls_pipe_options[] = {
@@ -885,6 +940,26 @@ static nni_tran_ep_option nni_tls_ep_options[] = {
 	    .eo_name   = NNG_OPT_TLS_CONFIG,
 	    .eo_getopt = tls_getopt_config,
 	    .eo_setopt = tls_setopt_config,
+	},
+	{
+	    .eo_name   = NNG_OPT_TLS_CERT_KEY_FILE,
+	    .eo_getopt = NULL,
+	    .eo_setopt = tls_setopt_cert_key_file,
+	},
+	{
+	    .eo_name   = NNG_OPT_TLS_CA_FILE,
+	    .eo_getopt = NULL,
+	    .eo_setopt = tls_setopt_ca_file,
+	},
+	{
+	    .eo_name   = NNG_OPT_TLS_AUTH_MODE,
+	    .eo_getopt = NULL,
+	    .eo_setopt = tls_setopt_auth_mode,
+	},
+	{
+	    .eo_name   = NNG_OPT_TLS_SERVER_NAME,
+	    .eo_getopt = NULL,
+	    .eo_setopt = tls_setopt_server_name,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },

@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -406,7 +406,6 @@ nni_ep_con_start(nni_ep *ep)
 		return;
 	}
 
-	nni_aio_set_ep(aio, ep->ep_data);
 	ep->ep_ops.ep_connect(ep->ep_data, aio);
 }
 
@@ -444,7 +443,6 @@ nni_ep_dial(nni_ep *ep, int flags)
 
 	// Synchronous mode: so we have to wait for it to complete.
 	aio = ep->ep_con_syn;
-	nni_aio_set_ep(aio, ep->ep_data);
 	ep->ep_ops.ep_connect(ep->ep_data, aio);
 	ep->ep_started = 1;
 	nni_mtx_unlock(&ep->ep_mtx);
@@ -509,7 +507,6 @@ nni_ep_acc_start(nni_ep *ep)
 		return;
 	}
 	nni_aio_set_pipe(aio, NULL);
-	nni_aio_set_ep(aio, ep->ep_data);
 	ep->ep_ops.ep_accept(ep->ep_data, aio);
 }
 

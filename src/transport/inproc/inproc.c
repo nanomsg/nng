@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -222,7 +222,7 @@ nni_inproc_ep_fini(void *arg)
 static void
 nni_inproc_conn_finish(nni_aio *aio, int rv)
 {
-	nni_inproc_ep *ep = aio->a_endpt;
+	nni_inproc_ep *ep = aio->a_prov_extra[0];
 	void *         pipe;
 
 	nni_aio_list_remove(aio);
@@ -361,6 +361,7 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 		return;
 	}
 
+	aio->a_prov_extra[0] = ep;
 	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		nni_mtx_unlock(&nni_inproc.mx);
@@ -417,6 +418,8 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
+
+	aio->a_prov_extra[0] = ep;
 
 	// We are already on the master list of servers, thanks to bind.
 

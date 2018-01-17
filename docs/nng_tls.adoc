@@ -141,15 +141,6 @@ The `sa_family` member will have the value `NNG_AF_INET` or `NNG_AF_INET6`.
 The `sa_port` and `sa_addr` are the TCP port number and address, both in
 network byte order (most significant byte is first).
 
-X.509 Formats
-~~~~~~~~~~~~~
-
-The _tls_ transport supports certificates and key material provided
-in either PEM or DER encoding.  When using PEM format data, the
-encoding must be at the start of the data, with no intervening
-content.  Furthermore, PEM encoded objects may have a terminating
-NUL byte, which will be ignored if present.
-
 Transport Options
 ~~~~~~~~~~~~~~~~~
 
@@ -158,24 +149,40 @@ setting these must be done before the transport is started.
 
 `NNG_OPT_TLS_CONFIG`::
 
-This option is used to set or obtain the TLS configuration
-object (type `nng_tls_config *`), which is passed as a pointer.
-Setting this option adds a reference to the object; obtaining the
-object pointer does not.  (Therefore when retrieving this option,
-care must be taken not to access it after the endpoint is closed.)
+This option is used on an endpoint to access the underlying TLS
+configuration object.  The value is of type `nng_tls_config *`.
 
-Note that configuration object is not modifiable once it has been
-used in a running TLS stream.
+TIP: Use this option when advanced TLS configuration is required.
 
-`NNG_OPT_TLS_AUTH_VERIFIED`::
+`NNG_OPT_TLS_CA_FILE`::
 
-This is a read-only boolean option available only for
-pipes, indicating whether the peer certificate was
-valdiated or not.  This is only set when the pipe
-has completed the handshake with the peer (which always
-occurs before exchanging data), and will only be set
-if the `NNG_OPT_TLS_AUTH_MODE` option is set to
-`nng_tls_auth_mode_optional` or `nng_tls_auth_mode_required`.
+This is a write-only option used to load certificates associated
+associated private key from a file.
+See <<nng_tls_config_ca_file#,nng_tls_config_ca_file(3)>> for more
+information.
+
+`NNG_OPT_TLS_CERT_KEY_FILE`::
+
+This is a write-only option used to load the local certificate and
+associated private key from a file. The private key used must be
+unencrypted. (Use the `NNG_OPT_TLS_CONFIG` option to access the underlying
+TLS configuration if more advanced configuration is needed.)
+See <<nng_tls_config_own_cert#,nng_tls_config_own_cert(3)>> for more
+information.
+
+`NNG_OPT_TLS_AUTH_MODE`::
+
+This is a write-only option used to configure the authentication mode
+used.  It can take an integer with value `NNG_TLS_AUTH_MODE_NONE`,
+`NNG_TLS_AUTH_MODE_REQUIRED`, or `NNG_TLS_AUTH_MODE_OPTIONAL`.  See
+<<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>> for more details.
+
+`NNG_OPT_TLS_VERIFIED`::
+
+This is a read-only option which returns a boolean value (integer 0 or 1).
+It will true (1) if the remote peer has been properly verified using TLS
+authentication, or false (0) otherwise.  This option may return incorrect
+results if peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 
 SEE ALSO
 --------

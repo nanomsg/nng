@@ -204,7 +204,8 @@ used.  It can take an integer with value `NNG_TLS_AUTH_MODE_NONE`,
 
 This is a read-only option which returns a boolean value (integer 0 or 1).
 It will true (1) if the remote peer has been properly verified using TLS
-authentication, or false (0) otherwise.
+authentication, or false (0) otherwise.  This option may return incorrect
+results if peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 
 // We should also look at a hook mechanism for listeners. Probably this could
 // look like NNG_OPT_WS_LISTEN_HOOK_FUNC which would take a function pointer

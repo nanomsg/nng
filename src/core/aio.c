@@ -1,7 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -145,18 +144,6 @@ void *
 nni_aio_get_pipe(nni_aio *aio)
 {
 	return (aio->a_pipe);
-}
-
-void
-nni_aio_set_ep(nni_aio *aio, void *ep)
-{
-	aio->a_endpt = ep;
-}
-
-void *
-nni_aio_get_ep(nni_aio *aio)
-{
-	return (aio->a_endpt);
 }
 
 void

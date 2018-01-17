@@ -754,10 +754,7 @@ nni_tls_ciphersuite_name(nni_tls *tp)
 bool
 nni_tls_verified(nni_tls *tp)
 {
-	int rv;
-
-	rv = mbedtls_ssl_get_verify_result(&tp->ctx);
-	return (rv ? true : false);
+	return (mbedtls_ssl_get_verify_result(&tp->ctx) == 0);
 }
 
 int

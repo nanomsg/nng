@@ -177,10 +177,6 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 	So(z == len);
 	nni_free(buf, len);
 
-	// Verified
-	So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
-	So(v == 1);
-
 	return (0);
 }
 
@@ -267,7 +263,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 
 	trantest_test(&tt);
 
-	Convey("Verify works", {
+	Convey("Invalid verify works", {
 		nng_socket   s1;
 		nng_socket   s2;
 		nng_listener l;
@@ -319,7 +315,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		// reset port back one
 		trantest_prev_address(addr, "wss://127.0.0.1:%u/test");
 		So(nng_setopt_int(s2, NNG_OPT_TLS_AUTH_MODE,
-		       NNG_TLS_AUTH_MODE_NONE) == 0);
+		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
 		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
 		So(nng_dial(s2, addr, NULL, 0) == 0);
 		nng_msleep(100);
@@ -333,6 +329,48 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		So(p > 0);
 		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
 		So(v == 0);
+		nng_msg_free(msg);
+	});
+
+	Convey("Valid verify works", {
+		nng_socket   s1;
+		nng_socket   s2;
+		nng_listener l;
+		nng_dialer   d;
+		char         addr[NNG_MAXADDRLEN];
+		nng_msg *    msg;
+		nng_pipe     p;
+		int          v;
+
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s2);
+			nng_close(s1);
+		});
+		trantest_next_address(addr, "wss://:%u/test");
+		So(nng_listener_create(&l, s1, addr) == 0);
+		So(init_listener_wss_file(NULL, l) == 0);
+		So(nng_listener_start(l, 0) == 0);
+		nng_msleep(100);
+
+		// reset port back one
+		trantest_prev_address(addr, "wss://localhost:%u/test");
+		So(nng_dialer_create(&d, s2, addr) == 0);
+		So(init_dialer_wss_file(NULL, d) == 0);
+		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_dialer_start(d, 0) == 0);
+		nng_msleep(100);
+
+		So(nng_send(s1, "hello", 6, 0) == 0);
+		So(nng_recvmsg(s2, &msg, 0) == 0);
+		So(msg != NULL);
+		So(nng_msg_len(msg) == 6);
+		So(strcmp(nng_msg_body(msg), "hello") == 0);
+		p = nng_msg_get_pipe(msg);
+		So(p > 0);
+		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
+		So(v == 1);
 		nng_msg_free(msg);
 	});
 
