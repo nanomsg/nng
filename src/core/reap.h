@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -29,6 +29,14 @@ typedef struct nni_reap_item {
 // in the system.  The intended usage is for an nni_reap_item to be a member
 // of the structure to be reaped, and and then this function is called to
 // finalize it.
+//
+// Note that is is possible to re-queue an item to reap on the reap list.
+// This is useful if, for example, a reference count indicates that the item
+// is busy.  These will be queued at the end of the reap list.  This will
+// allow a dependency to defer reaping until its dependents have first been
+// reaped.  HOWEVER, it is important that the item in question actually be
+// part of a fully reapable graph; otherwise this can lead to an infinite
+// loop in the reap thread.
 extern void nni_reap(nni_reap_item *, nni_cb, void *);
 extern int  nni_reap_sys_init(void);
 extern void nni_reap_sys_fini(void);
