@@ -134,8 +134,12 @@ enum { NNI_HTTP_STATUS_CONTINUE                  = 100,
 // the connection.
 typedef struct nni_http nni_http;
 
-extern int  nni_http_init_tcp(nni_http **, void *);
-extern int  nni_http_init_tls(nni_http **, nng_tls_config *, void *);
+// These initialization functions create stream for HTTP transactions.
+// They should only be used by the server or client HTTP implementations,
+// and are not for use by other code.
+extern int nni_http_init_tcp(nni_http **, void *);
+extern int nni_http_init_tls(nni_http **, nng_tls_config *, void *);
+
 extern void nni_http_close(nni_http *);
 extern void nni_http_fini(nni_http *);
 

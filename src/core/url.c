@@ -283,6 +283,20 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		}
 	}
 
+	// If the hostname part is just '*', skip over it.  (We treat it
+	// as an empty host for legacy nanomsg compatibility.  This may be
+	// non-RFC compliant, but we're really only interested in parsing
+	// nanomsg URLs.  One weird side effect of this is that some URLS
+	// which would be invalid (ipc://*/bogus for example) will now parse
+	// to something that might be surprising (ipc:///bogus now), for
+	// example -- although in the IPC case the URL is *always* a local
+	// path without any host component.
+	if (((len == 1) && (s[0] == '*')) ||
+	    ((len > 1) && (strncmp(s, "*:", 2) == 0))) {
+		s++;
+		len--;
+	}
+
 	if ((url->u_host = nni_alloc(len + 1)) == NULL) {
 		rv = NNG_ENOMEM;
 		goto error;

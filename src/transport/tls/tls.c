@@ -580,8 +580,7 @@ nni_tls_ep_init(void **epp, const char *addr, nni_sock *sock, int mode)
 		return (rv);
 	}
 
-	if ((strlen(url->u_hostname) == 0) ||
-	    (strcmp(url->u_hostname, "*") == 0)) {
+	if (strlen(url->u_hostname) == 0) {
 		host = NULL;
 	} else {
 		host = url->u_hostname;
