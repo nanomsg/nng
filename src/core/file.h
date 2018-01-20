@@ -76,4 +76,12 @@ extern char *nni_file_join(const char *, const char *);
 // The returned value generally is within the supplied path name.
 extern const char *nni_file_basename(const char *);
 
+// nni_file_is_file returns true if the path references a file.  It returns
+// false if an error occurs, or the path references something else.
+extern bool nni_file_is_file(const char *);
+
+// nni_file_is_dir returns true if the path references a directroy.  It returns
+// false if an error occurs, or the path references something else.
+extern bool nni_file_is_dir(const char *);
+
 #endif // CORE_FILE_H

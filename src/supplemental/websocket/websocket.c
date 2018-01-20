@@ -69,8 +69,7 @@ struct nni_ws_listener {
 	nni_url *          url;
 	bool               started;
 	bool               closed;
-	void *             hp; // handler pointer
-	nni_http_handler   handler;
+	nni_http_handler * handler;
 	nni_ws_listen_hook hookfn;
 	void *             hookarg;
 	nni_list           headers; // response headers
@@ -1333,6 +1332,9 @@ nni_ws_listener_fini(nni_ws_listener *l)
 	}
 	nni_mtx_unlock(&l->mtx);
 
+	if (l->handler != NULL) {
+		nni_http_handler_fini(l->handler);
+	}
 	if (l->server != NULL) {
 		nni_http_server_fini(l->server);
 		l->server = NULL;
@@ -1356,20 +1358,28 @@ nni_ws_listener_fini(nni_ws_listener *l)
 static void
 ws_handler(nni_aio *aio)
 {
-	nni_ws_listener *l;
-	nni_ws *         ws;
-	nni_http *       http;
-	nni_http_req *   req;
-	nni_http_res *   res;
-	const char *     ptr;
-	const char *     proto;
-	uint16_t         status;
-	int              rv;
-	char             key[29];
+	nni_ws_listener * l;
+	nni_ws *          ws;
+	nni_http *        http;
+	nni_http_req *    req;
+	nni_http_res *    res;
+	nni_http_handler *h;
+	nni_http_ctx *    ctx;
+	const char *      ptr;
+	const char *      proto;
+	uint16_t          status;
+	int               rv;
+	char              key[29];
 
-	http = nni_aio_get_input(aio, 0);
-	req  = nni_aio_get_input(aio, 1);
-	l    = nni_aio_get_input(aio, 2);
+	req = nni_aio_get_input(aio, 0);
+	h   = nni_aio_get_input(aio, 1);
+	ctx = nni_aio_get_input(aio, 2);
+	l   = nni_http_handler_get_data(h, 0);
+
+	if ((rv = nni_http_ctx_stream(ctx, &http)) != 0) {
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 
 	// Now check the headers, etc.
 	if (strcmp(nni_http_req_get_version(req), "HTTP/1.1") != 0) {
@@ -1497,8 +1507,8 @@ ws_handler(nni_aio *aio)
 	nni_list_append(&l->reply, ws);
 	nni_aio_set_data(ws->httpaio, 0, l);
 	nni_http_write_res(http, res, ws->httpaio);
+	(void) nni_http_hijack(ctx);
 	nni_aio_set_output(aio, 0, NULL);
-	nni_aio_set_input(aio, 1, NULL);
 	nni_aio_finish(aio, 0, 0);
 	return;
 
@@ -1535,7 +1545,7 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *addr)
 	}
 
 	host = l->url->u_hostname;
-	if ((strlen(host) == 0) || (strcmp(host, "*") == 0)) {
+	if (strlen(host) == 0) {
 		host = NULL;
 	}
 	serv = l->url->u_port;
@@ -1543,14 +1553,15 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *addr)
 		serv = (strcmp(l->url->u_scheme, "wss") == 0) ? "443" : "80";
 	}
 
-	l->handler.h_is_dir      = false;
-	l->handler.h_is_upgrader = true;
-	l->handler.h_method      = "GET";
-	l->handler.h_path        = l->url->u_path;
-	l->handler.h_host        = host; // ignore the port
-	l->handler.h_cb          = ws_handler;
+	rv = nni_http_handler_init(&l->handler, l->url->u_path, ws_handler);
+	if (rv != 0) {
+		nni_ws_listener_fini(l);
+		return (rv);
+	}
 
-	if ((rv = nni_http_server_init(&l->server, addr)) != 0) {
+	if (((rv = nni_http_handler_set_host(l->handler, host)) != 0) ||
+	    ((rv = nni_http_handler_set_data(l->handler, l, 0)) != 0) ||
+	    ((rv = nni_http_server_init(&l->server, addr)) != 0)) {
 		nni_ws_listener_fini(l);
 		return (rv);
 	}
@@ -1632,7 +1643,7 @@ nni_ws_listener_close(nni_ws_listener *l)
 	}
 	l->closed = true;
 	if (l->started) {
-		nni_http_server_del_handler(l->server, l->hp);
+		nni_http_server_del_handler(l->server, l->handler);
 		nni_http_server_stop(l->server);
 		l->started = false;
 	}
@@ -1660,8 +1671,7 @@ nni_ws_listener_listen(nni_ws_listener *l)
 		return (NNG_ESTATE);
 	}
 
-	rv = nni_http_server_add_handler(&l->hp, l->server, &l->handler, l);
-	if (rv != 0) {
+	if ((rv = nni_http_server_add_handler(l->server, l->handler)) != 0) {
 		nni_http_server_fini(l->server);
 		l->server = NULL;
 		nni_mtx_unlock(&l->mtx);
@@ -1669,7 +1679,7 @@ nni_ws_listener_listen(nni_ws_listener *l)
 	}
 
 	if ((rv = nni_http_server_start(l->server)) != 0) {
-		nni_http_server_del_handler(l->server, l->hp);
+		nni_http_server_del_handler(l->server, l->handler);
 		nni_http_server_fini(l->server);
 		l->server = NULL;
 		nni_mtx_unlock(&l->mtx);

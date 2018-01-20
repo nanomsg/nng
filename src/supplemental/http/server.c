@@ -27,20 +27,20 @@ static nni_initializer http_server_initializer = {
 	.i_once = 0,
 };
 
-typedef struct http_handler {
+struct nni_http_handler {
 	nni_list_node node;
-	void *        h_arg;
-	char *        h_path;
-	char *        h_method;
-	char *        h_host;
-	bool          h_is_upgrader;
-	bool          h_is_dir;
-	int           h_refcnt;
-	void (*h_cb)(nni_aio *);
-	void (*h_free)(void *);
-} http_handler;
+	void **       args;
+	unsigned      nargs;
+	char *        path;
+	const char *  method;
+	char *        host;
+	bool          tree;
+	int           refcnt;
+	void (*cb)(nni_aio *);
+	void (*dtor)(nni_http_handler *);
+};
 
-typedef struct http_sconn {
+typedef struct nni_http_ctx {
 	nni_list_node    node;
 	nni_http *       http;
 	nni_http_server *server;
@@ -72,9 +72,133 @@ struct nni_http_server {
 	nni_url *        url;
 };
 
+int
+nni_http_handler_init(
+    nni_http_handler **hp, const char *path, void (*cb)(nni_aio *))
+{
+	nni_http_handler *h;
+
+	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((h->path = nni_strdup(path)) == NULL) {
+		NNI_FREE_STRUCT(h);
+		return (NNG_ENOMEM);
+	}
+	NNI_LIST_NODE_INIT(&h->node);
+	h->cb     = cb;
+	h->args   = NULL;
+	h->nargs  = 0;
+	h->dtor   = NULL;
+	h->method = "GET";
+	h->host   = NULL;
+	h->tree   = false;
+	h->refcnt = 0;
+	*hp       = h;
+	return (0);
+}
+
+void
+nni_http_handler_fini(nni_http_handler *h)
+{
+	if (h->refcnt != 0) {
+		return;
+	}
+	if (h->dtor != NULL) {
+		h->dtor(h);
+	}
+	if (h->nargs > 0) {
+		nni_free(h->args, h->nargs * sizeof(void *));
+	}
+	nni_strfree(h->host);
+	nni_strfree(h->path);
+	NNI_FREE_STRUCT(h);
+}
+
+int
+nni_http_handler_set_data(nni_http_handler *h, void *data, unsigned index)
+{
+	if (h->refcnt != 0) {
+		return (NNG_EBUSY);
+	}
+	if (index >= h->nargs) {
+		void **  newargs;
+		unsigned newnargs = index + 4; // +4 to reduce allocations
+		if ((newargs = nni_alloc(newnargs * sizeof(void *))) == NULL) {
+			return (NNG_ENOMEM);
+		}
+
+		memcpy(newargs, h->args, h->nargs * sizeof(void *));
+		for (unsigned i = h->nargs; i < newnargs; i++) {
+			newargs[i] = NULL;
+		}
+		nni_free(h->args, h->nargs * sizeof(void *));
+		h->args  = newargs;
+		h->nargs = newnargs;
+	}
+	h->args[index] = data;
+	return (0);
+}
+
+void *
+nni_http_handler_get_data(nni_http_handler *h, unsigned index)
+{
+	return ((index < h->nargs) ? h->args[index] : NULL);
+}
+
+int
+nni_http_handler_set_tree(nni_http_handler *h, bool is_tree)
+{
+	if (h->refcnt != 0) {
+		return (NNG_EBUSY);
+	}
+	h->tree = is_tree;
+	return (0);
+}
+
+int
+nni_http_handler_set_host(nni_http_handler *h, const char *host)
+{
+	char *duphost;
+	if (h->refcnt != 0) {
+		return (NNG_EBUSY);
+	}
+	if (host == NULL) {
+		nni_strfree(h->host);
+		h->host = NULL;
+		return (0);
+	}
+	if ((duphost = nni_strdup(host)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	nni_strfree(h->host);
+	h->host = duphost;
+	return (0);
+}
+
+int
+nni_http_handler_set_method(nni_http_handler *h, const char *method)
+{
+	if (h->refcnt != 0) {
+		return (NNG_EBUSY);
+	}
+	h->method = method;
+	return (0);
+}
+
+int
+nni_http_handler_set_dtor(
+    nni_http_handler *h, void (*dtor)(nni_http_handler *))
+{
+	if (h->refcnt != 0) {
+		return (NNG_EBUSY);
+	}
+	h->dtor = dtor;
+	return (0);
+}
+
 static nni_list http_servers;
 static nni_mtx  http_servers_lk;
-static void     http_handler_fini(http_handler *);
 
 static void
 http_sconn_reap(void *arg)
@@ -257,18 +381,23 @@ http_uri_canonify(char *path)
 		path += 3;
 
 		// scan for the end of the host, distinguished by a /
-		// path delimiter.  There might not be one, in which case
-		// the whole thing is the host and we assume the path is
-		// just /.
+		// path delimiter.  There might not be one, in which
+		// case the whole thing is the host and we assume the
+		// path is just /.
 		if ((path = strchr(path, '/')) == NULL) {
 			return ("/");
 		}
 	}
 
 	// Now we have to unescape things.  Unescaping is a shrinking
-	// operation (strictly), so this is safe.  This is just URL decode.
-	// Note that paths with an embedded NUL are going to be treated as
-	// though truncated.  Don't be that guy that sends %00 in a URL.
+	// operation (strictly), so this is safe.  This is just URL
+	// decode. Note that paths with an embedded NUL are going to be
+	// treated as though truncated.  Don't be that guy that sends
+	// %00 in a URL.
+	//
+	// XXX: Normalizer needs to leave % encoded stuff in there if
+	// the characters to which they refer are reserved.  See RFC 3986
+	// section 6.2.2.
 	tmp = path;
 	dst = path;
 	while (*tmp != '\0') {
@@ -290,6 +419,8 @@ http_uri_canonify(char *path)
 		tmp++;
 	}
 	*dst = '\0';
+
+	// XXX: this is where we should also remove /./ and /../ references.
 	return (path);
 }
 
@@ -312,29 +443,58 @@ http_sconn_error(http_sconn *sc, uint16_t err)
 	nni_http_write_res(sc->http, res, sc->txaio);
 }
 
+int
+nni_http_hijack(nni_http_ctx *ctx)
+{
+	nni_http_server *s = ctx->server;
+
+	nni_mtx_lock(&s->mtx);
+	ctx->http = NULL;
+	ctx->req  = NULL;
+	nni_mtx_unlock(&s->mtx);
+	return (0);
+}
+
+int
+nni_http_ctx_stream(nni_http_ctx *ctx, nni_http **hpp)
+{
+	nni_http_server *s = ctx->server;
+
+	nni_mtx_lock(&s->mtx);
+	if ((*hpp = ctx->http) == NULL) {
+		nni_mtx_unlock(&s->mtx);
+		return (NNG_ECLOSED);
+	}
+	nni_mtx_unlock(&s->mtx);
+	return (0);
+}
+
 static void
 http_sconn_rxdone(void *arg)
 {
-	http_sconn *     sc  = arg;
-	nni_http_server *s   = sc->server;
-	nni_aio *        aio = sc->rxaio;
-	int              rv;
-	http_handler *   h;
-	const char *     val;
-	nni_http_req *   req = sc->req;
-	char *           uri;
-	size_t           urisz;
-	char *           path;
-	bool             badmeth = false;
+	http_sconn *      sc  = arg;
+	nni_http_server * s   = sc->server;
+	nni_aio *         aio = sc->rxaio;
+	int               rv;
+	nni_http_handler *h    = NULL;
+	nni_http_handler *head = NULL;
+	const char *      val;
+	nni_http_req *    req = sc->req;
+	char *            uri;
+	size_t            urisz;
+	char *            path;
+	bool              badmeth  = false;
+	bool              needhost = false;
+	const char *      host;
 
 	if ((rv = nni_aio_result(aio)) != 0) {
 		http_sconn_close(sc);
 		return;
 	}
 
-	// Validate the request -- it has to at least look like HTTP 1.x
-	// We flatly refuse to deal with HTTP 0.9, and we can't cope with
-	// HTTP/2.
+	// Validate the request -- it has to at least look like HTTP
+	// 1.x.  We flatly refuse to deal with HTTP 0.9, and we can't
+	// cope with HTTP/2.
 	if ((val = nni_http_req_get_version(req)) == NULL) {
 		sc->close = true;
 		http_sconn_error(sc, NNI_HTTP_STATUS_BAD_REQUEST);
@@ -347,22 +507,21 @@ http_sconn_rxdone(void *arg)
 	}
 	if (strcmp(val, "HTTP/1.1") != 0) {
 		// We treat HTTP/1.0 connections as non-persistent.
-		// No effort is made to handle "persistent" HTTP/1.0
-		// since that was not standard.  (Everyone is at 1.1 now
-		// anyways.)
+		// No effort is made for non-standard "persistent" HTTP/1.0.
 		sc->close = true;
+	} else {
+		needhost = true;
 	}
 
-	// If the connection was 1.0, or a connection: close was requested,
-	// then mark this close on our end.
+	// If the connection was 1.0, or a connection: close was
+	// requested, then mark this close on our end.
 	if ((val = nni_http_req_get_header(req, "Connection")) != NULL) {
-		// HTTP 1.1 says these have to be case insensitive (7230)
+		// HTTP 1.1 says these have to be case insensitive
 		if (nni_strcasestr(val, "close") != NULL) {
 			// In theory this could falsely match some other weird
-			// connection header that included the word close not
-			// as part of a whole token.  No such legal definitions
-			// exist, and so anyone who does that gets what they
-			// deserve. (Fairly harmless actually, since it only
+			// connection header with the substring close.  No such
+			// values are defined, so anyone who does that gets
+			// what they deserve. (Harmless actually, since it only
 			// prevents persistent connections.)
 			sc->close = true;
 		}
@@ -377,71 +536,80 @@ http_sconn_rxdone(void *arg)
 	strncpy(uri, val, urisz);
 	path = http_uri_canonify(uri);
 
+	host = nni_http_req_get_header(req, "Host");
+	if ((host == NULL) && (needhost)) {
+		// Per RFC 2616 14.23 we have to send 400 status here.
+		http_sconn_error(sc, NNI_HTTP_STATUS_BAD_REQUEST);
+		return;
+	}
+
 	nni_mtx_lock(&s->mtx);
 	NNI_LIST_FOREACH (&s->handlers, h) {
 		size_t len;
-		if (h->h_host != NULL) {
-			val = nni_http_req_get_header(req, "Host");
-			if (val == NULL) {
-				// We insist on a matching Host: line for
-				// virtual hosting.  This leaves HTTP/1.0
-				// out in the cold basically.
+		if (h->host != NULL) {
+			if (host == NULL) {
+				// HTTP/1.0 cannot access virtual hosts.
 				continue;
 			}
 
-			// A few ways hosts can match.  They might have
-			// a port attached -- we ignore that.  (We don't
-			// run multiple ports, so if you got here, presumably
-			// the port at least is correct!)  It might also have
-			// a lone trailing dot, so that is ok too.
-
-			// Ignore the trailing dot if the handler supplied it.
-			len = strlen(h->h_host);
-			if ((len > 0) && (h->h_host[len - 1] == '.')) {
-				len--;
-			}
-			if ((nni_strncasecmp(val, h->h_host, len) != 0)) {
+			len = strlen(h->host);
+			if ((nni_strncasecmp(host, h->host, len) != 0)) {
 				continue;
 			}
-			if ((val[len] != '\0') && (val[len] != ':') &&
-			    ((val[len] != '.') || (val[len + 1] != '\0'))) {
+
+			// At least the first part matches.  If the ending
+			// part is a lone "." (legal in DNS), or a port
+			// number, we match it.  (We do not validate the
+			// port number.)  Note that there may be false matches
+			// with IPv6 addresses, but addresses shouldn't be
+			// used with virtual hosts anyway.  With both addresses
+			// and ports, a false match would be unlikely since
+			// they'd still have to *connect* using that info.
+			if ((host[len] != '\0') && (host[len] != ':') &&
+			    ((host[len] != '.') || (host[len + 1] != '\0'))) {
 				continue;
 			}
 		}
 
-		NNI_ASSERT(h->h_method != NULL);
-
-		len = strlen(h->h_path);
-		if (strncmp(path, h->h_path, len) != 0) {
+		len = strlen(h->path);
+		if (strncmp(path, h->path, len) != 0) {
 			continue;
 		}
 		switch (path[len]) {
 		case '\0':
 			break;
 		case '/':
-			if ((path[len + 1] != '\0') && (!h->h_is_dir)) {
-				// trailing component and not a directory.
-				// Note that this should force a failure.
+			if ((path[len + 1] != '\0') && (!h->tree)) {
+				// Trailing component and not a directory.
 				continue;
 			}
 			break;
 		default:
-			continue; // some other substring, not matched.
+			continue; // Some other substring, not matched.
 		}
 
-		// So, what about the method?
-		val = nni_http_req_get_method(req);
-		if (strcmp(val, h->h_method) == 0) {
+		if ((h->method == NULL) || (h->method[0] == '\0')) {
+			// Handler wants to process *all* methods.
 			break;
 		}
-		// HEAD is remapped to GET.
-		if ((strcmp(val, "HEAD") == 0) &&
-		    (strcmp(h->h_method, "GET") == 0)) {
+		// So, what about the method?
+		val = nni_http_req_get_method(req);
+		if (strcmp(val, h->method) == 0) {
 			break;
+		}
+		// HEAD is remapped to GET, but only if no HEAD specific
+		// handler registered.
+		if ((strcmp(val, "HEAD") == 0) &&
+		    (strcmp(h->method, "GET") == 0)) {
+			head = h;
+			continue;
 		}
 		badmeth = 1;
 	}
 
+	if ((h == NULL) && (head != NULL)) {
+		h = head;
+	}
 	nni_free(uri, urisz);
 	if (h == NULL) {
 		nni_mtx_unlock(&s->mtx);
@@ -454,30 +622,31 @@ http_sconn_rxdone(void *arg)
 		return;
 	}
 
-	nni_aio_set_input(sc->cbaio, 0, sc->http);
-	nni_aio_set_input(sc->cbaio, 1, sc->req);
-	nni_aio_set_input(sc->cbaio, 2, h->h_arg);
+	nni_aio_set_input(sc->cbaio, 0, sc->req);
+	nni_aio_set_input(sc->cbaio, 1, h);
+	nni_aio_set_input(sc->cbaio, 2, sc);
 
 	// Technically, probably callback should initialize this with
 	// start, but we do it instead.
 
-	if (nni_aio_start(sc->cbaio, NULL, NULL) == 0) {
-		nni_aio_set_data(sc->cbaio, 1, h);
-		h->h_refcnt++;
-		h->h_cb(sc->cbaio);
+	if (nni_aio_start(sc->cbaio, NULL, NULL) != 0) {
+		nni_mtx_unlock(&s->mtx);
+		return;
 	}
+	nni_aio_set_data(sc->cbaio, 1, h);
+	h->refcnt++;
 	nni_mtx_unlock(&s->mtx);
+	h->cb(sc->cbaio);
 }
 
 static void
 http_sconn_cbdone(void *arg)
 {
-	http_sconn *     sc  = arg;
-	nni_aio *        aio = sc->cbaio;
-	nni_http_res *   res;
-	http_handler *   h;
-	nni_http_server *s = sc->server;
-	bool             upgrader;
+	http_sconn *      sc  = arg;
+	nni_aio *         aio = sc->cbaio;
+	nni_http_res *    res;
+	nni_http_handler *h;
+	nni_http_server * s = sc->server;
 
 	if (nni_aio_result(aio) != 0) {
 		// Hard close, no further feedback.
@@ -489,25 +658,22 @@ http_sconn_cbdone(void *arg)
 	res = nni_aio_get_output(aio, 0);
 
 	nni_mtx_lock(&s->mtx);
-	upgrader = h->h_is_upgrader;
-	h->h_refcnt--;
-	if (h->h_refcnt == 0) {
-		http_handler_fini(h);
+	h->refcnt--;
+	if (h->refcnt == 0) {
+		nni_http_handler_fini(h);
 	}
 	nni_mtx_unlock(&s->mtx);
 
-	// If its an upgrader, and they didn't give us back a response, it
-	// means that they took over, and we should just discard this session,
-	// without closing the underlying channel.
-	if (upgrader && (res == NULL)) {
-		sc->http = NULL; // the underlying HTTP is not closed
-		sc->req  = NULL;
-		sc->res  = NULL;
-		http_sconn_close(sc); // discard server session though
+	// If its an upgrader, and they didn't give us back a response,
+	// it means that they took over, and we should just discard
+	// this session, without closing the underlying channel.
+	if (sc->http == NULL) {
+		// If this happens, then the session was hijacked.
+		// We close the context, but the http channel stays up.
+		http_sconn_close(sc);
 		return;
 	}
 	if (res != NULL) {
-
 		const char *val;
 		val = nni_http_res_get_header(res, "Connection");
 		if ((val != NULL) && (strstr(val, "close") != NULL)) {
@@ -604,21 +770,9 @@ http_server_acccb(void *arg)
 }
 
 static void
-http_handler_fini(http_handler *h)
-{
-	nni_strfree(h->h_path);
-	nni_strfree(h->h_host);
-	nni_strfree(h->h_method);
-	if (h->h_free != NULL) {
-		h->h_free(h->h_arg);
-	}
-	NNI_FREE_STRUCT(h);
-}
-
-static void
 http_server_fini(nni_http_server *s)
 {
-	http_handler *h;
+	nni_http_handler *h;
 
 	nni_aio_stop(s->accaio);
 
@@ -631,7 +785,8 @@ http_server_fini(nni_http_server *s)
 	}
 	while ((h = nni_list_first(&s->handlers)) != NULL) {
 		nni_list_remove(&s->handlers, h);
-		http_handler_fini(h);
+		h->refcnt--;
+		nni_http_handler_fini(h);
 	}
 	nni_mtx_unlock(&s->mtx);
 	if (s->url != NULL) {
@@ -691,7 +846,7 @@ http_server_init(nni_http_server **serverp, nni_url *url)
 	s->url = url;
 	nni_mtx_init(&s->mtx);
 	nni_cv_init(&s->cv, &s->mtx);
-	NNI_LIST_INIT(&s->handlers, http_handler, node);
+	NNI_LIST_INIT(&s->handlers, nni_http_handler, node);
 	NNI_LIST_INIT(&s->conns, http_sconn, node);
 	if ((rv = nni_aio_init(&s->accaio, http_server_acccb, s)) != 0) {
 		http_server_fini(s);
@@ -708,9 +863,10 @@ http_server_init(nni_http_server **serverp, nni_url *url)
 	}
 #endif
 
-	// Do the DNS lookup *now*.  This means that this is synchronous,
-	// but it should be fast, since it should either resolve as a number,
-	// or resolve locally, without having to hit up DNS.
+	// Do the DNS lookup *now*.  This means that this is
+	// synchronous, but it should be fast, since it should either
+	// resolve as a number, or resolve locally, without having to
+	// hit up DNS.
 	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
 		http_server_fini(s);
 		return (rv);
@@ -816,8 +972,8 @@ http_server_stop(nni_http_server *s)
 		nni_plat_tcp_ep_close(s->tep);
 	}
 
-	// Stopping the server is a hard stop -- it aborts any work being
-	// done by clients.  (No graceful shutdown).
+	// Stopping the server is a hard stop -- it aborts any work
+	// being done by clients.  (No graceful shutdown).
 	NNI_LIST_FOREACH (&s->conns, sc) {
 		http_sconn_close_locked(sc);
 	}
@@ -836,50 +992,20 @@ nni_http_server_stop(nni_http_server *s)
 }
 
 int
-http_server_add_handler(void **hp, nni_http_server *s, nni_http_handler *hh,
-    void *arg, void (*freeit)(void *))
+nni_http_server_add_handler(nni_http_server *s, nni_http_handler *h)
 {
-	http_handler *h, *h2;
-	size_t        l1, l2;
+	nni_http_handler *h2;
+	size_t            len;
 
 	// Must have a legal method (and not one that is HEAD), path,
 	// and handler.  (The reason HEAD is verboten is that we supply
 	// it automatically as part of GET support.)
-	if ((hh->h_method == NULL) || (hh->h_path == NULL) ||
-	    (hh->h_cb == NULL) || (strcmp(hh->h_method, "HEAD") == 0)) {
+	if (((len = strlen(h->path)) == 0) || (h->path[0] != '/') ||
+	    (h->cb == NULL)) {
 		return (NNG_EINVAL);
 	}
-	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	h->h_arg         = arg;
-	h->h_cb          = hh->h_cb;
-	h->h_is_dir      = hh->h_is_dir;
-	h->h_is_upgrader = hh->h_is_upgrader;
-	h->h_free        = freeit;
-
-	// When registering the handler, only register *host*, not port.
-	if (hh->h_host != NULL) {
-		if ((h->h_host = nni_strdup(hh->h_host)) == NULL) {
-			http_handler_fini(h);
-			return (NNG_ENOMEM);
-		}
-	}
-
-	if (((h->h_method = nni_strdup(hh->h_method)) == NULL) ||
-	    ((h->h_path = nni_strdup(hh->h_path)) == NULL)) {
-		http_handler_fini(h);
-		return (NNG_ENOMEM);
-	}
-
-	l1 = strlen(h->h_path);
-	// Chop off trailing "/"
-	while (l1 > 0) {
-		if (h->h_path[l1 - 1] != '/') {
-			break;
-		}
-		l1--;
-		h->h_path[l1] = '\0';
+	while ((len > 0) && (h->path[len - 1] == '/')) {
+		len--; // ignore trailing '/' (this collapses them)
 	}
 
 	nni_mtx_lock(&s->mtx);
@@ -888,52 +1014,64 @@ http_server_add_handler(void **hp, nni_http_server *s, nni_http_handler *hh,
 	// collision.  (But only if the methods match, and the host
 	// matches.)  Note that a wild card host matches both.
 	NNI_LIST_FOREACH (&s->handlers, h2) {
-		if ((h2->h_host != NULL) && (h->h_host != NULL) &&
-		    (nni_strcasecmp(h2->h_host, h->h_host) != 0)) {
+		size_t len2;
+
+		if ((h2->host != NULL) && (h->host != NULL) &&
+		    (nni_strcasecmp(h2->host, h->host) != 0)) {
 			// Hosts don't match, so we are safe.
 			continue;
 		}
-		if (strcmp(h2->h_method, h->h_method) != 0) {
+		if (((h2->host == NULL) && (h->host != NULL)) ||
+		    ((h->host == NULL) && (h2->host != NULL))) {
+			continue; // Host specified for just one.
+		}
+		if (((h->method == NULL) && (h2->method != NULL)) ||
+		    ((h2->method == NULL) && (h->method != NULL))) {
+			continue; // Method specified for just one.
+		}
+		if ((h->method != NULL) &&
+		    (strcmp(h2->method, h->method) != 0)) {
 			// Different methods, so again we are fine.
 			continue;
 		}
-		l2 = strlen(h2->h_path);
-		if (l1 < l2) {
-			l2 = l1;
+
+		len2 = strlen(h2->path);
+
+		while ((len2 > 0) && (h2->path[len2 - 1] == '/')) {
+			len2--; // ignore trailing '/'
 		}
-		if (strncmp(h2->h_path, h->h_path, l2) == 0) {
-			// Path collision.  NNG_EADDRINUSE.
+		if (strncmp(h->path, h2->path, len > len2 ? len2 : len) != 0) {
+			continue; // prefixes don't match.
+		}
+
+		if (len2 > len) {
+			if ((h2->path[len] == '/') && (h->tree)) {
+				nni_mtx_unlock(&s->mtx);
+				return (NNG_EADDRINUSE);
+			}
+		} else if (len > len2) {
+			if ((h->path[len2] == '/') && (h2->tree)) {
+				nni_mtx_unlock(&s->mtx);
+				return (NNG_EADDRINUSE);
+			}
+		} else {
 			nni_mtx_unlock(&s->mtx);
-			http_handler_fini(h);
 			return (NNG_EADDRINUSE);
 		}
 	}
-	h->h_refcnt = 1;
+	h->refcnt = 1;
 	nni_list_append(&s->handlers, h);
 	nni_mtx_unlock(&s->mtx);
-	if (hp != NULL) {
-		*hp = h;
-	}
 	return (0);
 }
 
-int
-nni_http_server_add_handler(
-    void **hp, nni_http_server *s, nni_http_handler *hh, void *arg)
-{
-	return (http_server_add_handler(hp, s, hh, arg, NULL));
-}
-
 void
-nni_http_server_del_handler(nni_http_server *s, void *harg)
+nni_http_server_del_handler(nni_http_server *s, nni_http_handler *h)
 {
-	http_handler *h = harg;
-
 	nni_mtx_lock(&s->mtx);
-	nni_list_node_remove(&h->node);
-	h->h_refcnt--;
-	if (h->h_refcnt == 0) {
-		http_handler_fini(h);
+	if (nni_list_node_active(&h->node)) {
+		nni_list_remove(&s->handlers, h);
+		h->refcnt--;
 	}
 	nni_mtx_unlock(&s->mtx);
 }
@@ -996,21 +1134,23 @@ http_lookup_type(const char *path)
 	return (NULL);
 }
 
-typedef struct http_file {
-	char *typ;
-	char *pth;
-} http_file;
-
 static void
 http_handle_file(nni_aio *aio)
 {
-	http_file *   f   = nni_aio_get_input(aio, 2);
-	nni_http_res *res = NULL;
-	void *        data;
-	size_t        size;
-	int           rv;
+	nni_http_handler *h   = nni_aio_get_input(aio, 1);
+	nni_http_res *    res = NULL;
+	void *            data;
+	size_t            size;
+	int               rv;
+	char *            path  = nni_http_handler_get_data(h, 0);
+	char *            ctype = nni_http_handler_get_data(h, 1);
 
-	if ((rv = nni_plat_file_get(f->pth, &data, &size)) != 0) {
+	// This is a very simplistic file server, suitable only for small
+	// files.  In the future we can use an AIO based file read, where
+	// we read files a bit at a time, or even mmap them, and serve
+	// them up chunkwise.  Applications could even come up with their own
+	// caching version of the http handler.
+	if ((rv = nni_file_get(path, &data, &size)) != 0) {
 		uint16_t status;
 		switch (rv) {
 		case NNG_ENOMEM:
@@ -1030,84 +1170,282 @@ http_handle_file(nni_aio *aio)
 			nni_aio_finish_error(aio, rv);
 			return;
 		}
-	} else {
-		if (((rv = nni_http_res_init(&res)) != 0) ||
-		    ((rv = nni_http_res_set_status(
-		          res, NNI_HTTP_STATUS_OK, "OK")) != 0) ||
-		    ((rv = nni_http_res_set_header(
-		          res, "Content-Type", f->typ)) != 0) ||
-		    ((rv = nni_http_res_set_data(res, data, size)) != 0)) {
-			nni_free(data, size);
-			nni_aio_finish_error(aio, rv);
-			return;
-		}
+		nni_aio_set_output(aio, 0, res);
+		nni_aio_finish(aio, 0, 0);
+		return;
 	}
+	if (((rv = nni_http_res_init(&res)) != 0) ||
+	    ((rv = nni_http_res_set_status(res, NNI_HTTP_STATUS_OK, "OK")) !=
+	        0) ||
+	    ((rv = nni_http_res_set_header(res, "Content-Type", ctype)) !=
+	        0) ||
+	    ((rv = nni_http_res_copy_data(res, data, size)) != 0)) {
+		if (res != NULL) {
+			nni_http_res_fini(res);
+		}
+		nni_free(data, size);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
+	nni_free(data, size);
 	nni_aio_set_output(aio, 0, res);
 	nni_aio_finish(aio, 0, 0);
 }
 
 static void
-http_free_file(void *arg)
+http_file_dtor(nni_http_handler *h)
 {
-	http_file *f = arg;
-	nni_strfree(f->pth);
-	nni_strfree(f->typ);
-	NNI_FREE_STRUCT(f);
+	char *p = nni_http_handler_get_data(h, 0);
+	nni_strfree(p);
 }
 
 int
-nni_http_server_add_file(nni_http_server *s, const char *host,
-    const char *ctype, const char *uri, const char *path)
+nni_http_handler_init_file_ctype(nni_http_handler **hpp, const char *uri,
+    const char *path, const char *ctype)
 {
-	nni_http_handler h;
-	http_file *      f;
-	int              rv;
+	nni_http_handler *h;
+	int               rv;
+	char *            p;
 
-	if ((f = NNI_ALLOC_STRUCT(f)) == NULL) {
-		return (NNG_ENOMEM);
-	}
+	// Later we might want to do this in the server side, if we support
+	// custom media type lists on a per-server basis.  For now doing this
+	// here ensures that we don't have to lookup the type every time.
 	if (ctype == NULL) {
-		ctype = http_lookup_type(path);
+		if ((ctype = http_lookup_type(path)) == NULL) {
+			ctype = "application/octet-stream";
+		}
 	}
-
-	if (((f->pth = nni_strdup(path)) == NULL) ||
-	    ((ctype != NULL) && ((f->typ = nni_strdup(ctype)) == NULL))) {
-		http_free_file(f);
+	if ((p = nni_strdup(path)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	h.h_method      = "GET";
-	h.h_path        = uri;
-	h.h_host        = host;
-	h.h_cb          = http_handle_file;
-	h.h_is_dir      = false;
-	h.h_is_upgrader = false;
 
-	if ((rv = http_server_add_handler(NULL, s, &h, f, http_free_file)) !=
-	    0) {
-		http_free_file(f);
+	if ((rv = nni_http_handler_init(&h, uri, http_handle_file)) != 0) {
+		nni_strfree(p);
 		return (rv);
 	}
+
+	if (((rv = nni_http_handler_set_data(h, p, 0)) != 0) ||
+	    ((rv = nni_http_handler_set_data(h, (void *) ctype, 1)) != 0) ||
+	    ((rv = nni_http_handler_set_dtor(h, http_file_dtor)))) {
+		nni_strfree(p);
+		nni_http_handler_fini(h);
+		return (rv);
+	}
+
+	*hpp = h;
 	return (0);
 }
 
-typedef struct http_static {
-	char * typ;
-	void * data;
-	size_t size;
-} http_static;
+int
+nni_http_handler_init_file(
+    nni_http_handler **hpp, const char *uri, const char *path)
+{
+	return (nni_http_handler_init_file_ctype(hpp, uri, path, NULL));
+}
+
+static void
+http_directory_dtor(nni_http_handler *h)
+{
+	char *path = nni_http_handler_get_data(h, 0);
+	char *base = nni_http_handler_get_data(h, 1);
+	nni_strfree(path);
+	nni_strfree(base);
+}
+
+static void
+http_handle_directory(nni_aio *aio)
+{
+	nni_http_req *    req = nni_aio_get_input(aio, 0);
+	nni_http_handler *h   = nni_aio_get_input(aio, 1);
+	nni_http_res *    res = NULL;
+	void *            data;
+	size_t            size;
+	int               rv;
+	char *            path = nni_http_handler_get_data(h, 0);
+	const char *      base = nni_http_handler_get_data(h, 1); // base uri
+	const char *      uri  = nni_http_req_get_uri(req);
+	const char *      ctype;
+	char *            dst;
+	size_t            len;
+	size_t            pnsz;
+	char *            pn;
+
+	len = strlen(base);
+	if ((strncmp(uri, base, len) != 0) ||
+	    ((uri[len] != 0) && (uri[len] != '/'))) {
+		// This should never happen!
+		nni_aio_finish_error(aio, NNG_EINVAL);
+		return;
+	}
+
+	// simple worst case is every character in path is a seperator
+	// It's never actually that bad, because we we have /<something>/.
+	pnsz = (strlen(path) + strlen(uri) + 2) * strlen(NNG_PLATFORM_DIR_SEP);
+	pnsz += strlen("index.html") + 1; // +1 for term nul
+
+	if ((pn = nni_alloc(pnsz)) == NULL) {
+		nni_aio_finish_error(aio, NNG_ENOMEM);
+		return;
+	}
+
+	// make sure we have a "/" present.
+	strcpy(pn, path);
+	dst = pn + strlen(pn);
+
+	if ((dst == pn) || (dst[-1] != '/')) {
+		*dst++ = '/';
+	}
+
+	for (uri = uri + len; *uri != '\0'; uri++) {
+		if (*uri == '/') {
+			strcpy(dst, NNG_PLATFORM_DIR_SEP);
+			dst += sizeof(NNG_PLATFORM_DIR_SEP) - 1;
+		} else {
+			*dst++ = *uri;
+		}
+	}
+
+	*dst = '\0';
+
+	// This is a very simplistic file server, suitable only for small
+	// files.  In the future we can use an AIO based file read, where
+	// we read files a bit at a time, or even mmap them, and serve
+	// them up chunkwise.  Applications could even come up with their
+	// own caching version of the http handler.
+
+	rv = 0;
+	if (nni_file_is_dir(pn)) {
+		sprintf(dst, "%s%s", NNG_PLATFORM_DIR_SEP, "index.html");
+		if (!nni_file_is_file(pn)) {
+			pn[strlen(pn) - 1] = '\0'; // index.html -> index.htm
+		}
+		if (!nni_file_is_file(pn)) {
+			rv = NNG_ENOENT;
+		}
+	}
+
+	if (rv == 0) {
+		rv = nni_file_get(pn, &data, &size);
+	} else {
+		data = NULL;
+		size = 0;
+	}
+	ctype = http_lookup_type(pn);
+	if (ctype == NULL) {
+		ctype = "application/octet-stream";
+	}
+
+	nni_free(pn, pnsz);
+	if (rv != 0) {
+		uint16_t status;
+
+		switch (rv) {
+		case NNG_ENOMEM:
+			status = NNI_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+			break;
+		case NNG_ENOENT:
+			status = NNI_HTTP_STATUS_NOT_FOUND;
+			break;
+		case NNG_EPERM:
+			status = NNI_HTTP_STATUS_FORBIDDEN;
+			break;
+		default:
+			status = NNI_HTTP_STATUS_INTERNAL_SERVER_ERROR;
+			break;
+		}
+		if ((rv = nni_http_res_init_error(&res, status)) != 0) {
+			nni_aio_finish_error(aio, rv);
+			return;
+		}
+		nni_aio_set_output(aio, 0, res);
+		nni_aio_finish(aio, 0, 0);
+		return;
+	}
+
+	if (((rv = nni_http_res_init(&res)) != 0) ||
+	    ((rv = nni_http_res_set_status(res, NNI_HTTP_STATUS_OK, "OK")) !=
+	        0) ||
+	    ((rv = nni_http_res_set_header(res, "Content-Type", ctype)) !=
+	        0) ||
+	    ((rv = nni_http_res_copy_data(res, data, size)) != 0)) {
+		if (res != NULL) {
+			nni_http_res_fini(res);
+		}
+		nni_free(data, size);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
+	nni_free(data, size);
+	nni_aio_set_output(aio, 0, res);
+	nni_aio_finish(aio, 0, 0);
+}
+
+int
+nni_http_handler_init_directory(
+    nni_http_handler **hpp, const char *uri, const char *path)
+{
+	nni_http_handler *h;
+	int               rv;
+	char *            p;
+	char *            b;
+
+	if ((p = nni_strdup(path)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	if ((b = nni_strdup(uri)) == NULL) {
+		nni_strfree(p);
+		return (NNG_ENOMEM);
+	}
+
+	if ((rv = nni_http_handler_init(&h, uri, http_handle_directory)) !=
+	    0) {
+		nni_strfree(p);
+		return (rv);
+	}
+
+	if (((rv = nni_http_handler_set_data(h, p, 0)) != 0) ||
+	    ((rv = nni_http_handler_set_data(h, b, 1)) != 0) ||
+	    ((rv = nni_http_handler_set_tree(h, true)) != 0) ||
+	    ((rv = nni_http_handler_set_dtor(h, http_directory_dtor)))) {
+		nni_strfree(p);
+		nni_strfree(b);
+		nni_http_handler_fini(h);
+		return (rv);
+	}
+
+	*hpp = h;
+	return (0);
+}
 
 static void
 http_handle_static(nni_aio *aio)
 {
-	http_static * s = nni_aio_get_input(aio, 2);
-	nni_http_res *r = NULL;
-	int           rv;
+	void *            data;
+	size_t            size;
+	char *            ctype;
+	nni_http_handler *h;
+	nni_http_res *    r = NULL;
+	int               rv;
+
+	h     = nni_aio_get_input(aio, 1);
+	data  = nni_http_handler_get_data(h, 0);
+	size  = (size_t)(uintptr_t) nni_http_handler_get_data(h, 1);
+	ctype = nni_http_handler_get_data(h, 2);
+
+	if (ctype == NULL) {
+		ctype = "application/octet-stream";
+	}
 
 	if (((rv = nni_http_res_init(&r)) != 0) ||
-	    ((rv = nni_http_res_set_header(r, "Content-Type", s->typ)) != 0) ||
+	    ((rv = nni_http_res_set_header(r, "Content-Type", ctype)) != 0) ||
 	    ((rv = nni_http_res_set_status(r, NNI_HTTP_STATUS_OK, "OK")) !=
 	        0) ||
-	    ((rv = nni_http_res_set_data(r, s->data, s->size)) != 0)) {
+	    ((rv = nni_http_res_set_data(r, data, size)) != 0)) {
+		if (r != NULL) {
+			nni_http_res_fini(r);
+		}
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -1117,49 +1455,42 @@ http_handle_static(nni_aio *aio)
 }
 
 static void
-http_free_static(void *arg)
+http_static_dtor(nni_http_handler *h)
 {
-	http_static *s = arg;
-	nni_strfree(s->typ);
-	nni_free(s->data, s->size);
-	NNI_FREE_STRUCT(s);
+	void * data = nni_http_handler_get_data(h, 0);
+	size_t size = (size_t)(uintptr_t) nni_http_handler_get_data(h, 1);
+
+	nni_free(data, size);
 }
 
 int
-nni_http_server_add_static(nni_http_server *s, const char *host,
-    const char *ctype, const char *uri, const void *data, size_t size)
+nni_http_handler_init_static(nni_http_handler **hpp, const char *uri,
+    const void *data, size_t size, const char *ctype)
 {
-	nni_http_handler h;
-	http_static *    f;
-	int              rv;
+	nni_http_handler *h;
+	int               rv;
+	void *            dat;
 
-	if ((f = NNI_ALLOC_STRUCT(f)) == NULL) {
+	if ((dat = nni_alloc(size)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (ctype == NULL) {
-		ctype = "application/octet-stream";
-	}
-	if (((f->data = nni_alloc(size)) == NULL) ||
-	    ((f->typ = nni_strdup(ctype)) == NULL)) {
-		http_free_static(f);
-		return (NNG_ENOMEM);
-	}
+	memcpy(dat, data, size);
 
-	f->size = size;
-	memcpy(f->data, data, size);
-
-	h.h_method      = "GET";
-	h.h_path        = uri;
-	h.h_host        = host;
-	h.h_cb          = http_handle_static;
-	h.h_is_dir      = false;
-	h.h_is_upgrader = false;
-
-	if ((rv = http_server_add_handler(NULL, s, &h, f, http_free_static)) !=
-	    0) {
-		http_free_static(f);
+	if ((rv = nni_http_handler_init(&h, uri, http_handle_static)) != 0) {
+		nni_free(dat, size);
 		return (rv);
 	}
+
+	if (((rv = nni_http_handler_set_data(h, dat, 0)) != 0) ||
+	    ((rv = nni_http_handler_set_data(h, (void *) size, 1)) != 0) ||
+	    ((rv = nni_http_handler_set_data(h, (void *) ctype, 2)) != 0) ||
+	    ((rv = nni_http_handler_set_dtor(h, http_static_dtor)) != 0)) {
+		nni_free(dat, size);
+		nni_http_handler_fini(h);
+		return (rv);
+	}
+
+	*hpp = h;
 	return (0);
 }
 

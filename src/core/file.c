@@ -28,6 +28,26 @@ nni_file_delete(const char *name)
 	return (nni_plat_file_delete(name));
 }
 
+bool
+nni_file_is_file(const char *name)
+{
+	int ft;
+	if ((nni_file_type(name, &ft) == 0) && (ft == NNI_FILE_TYPE_FILE)) {
+		return (true);
+	}
+	return (false);
+}
+
+bool
+nni_file_is_dir(const char *name)
+{
+	int ft;
+	if ((nni_file_type(name, &ft) == 0) && (ft == NNI_FILE_TYPE_DIR)) {
+		return (true);
+	}
+	return (false);
+}
+
 struct walkdata {
 	nni_file_walker fn;
 	void *          arg;

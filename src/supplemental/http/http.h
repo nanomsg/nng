@@ -163,70 +163,8 @@ extern int  nni_http_peer_addr(nni_http *, nni_sockaddr *);
 // nni_tls_http_verified returns true if the peer has been verified using TLS.
 extern bool nni_http_tls_verified(nni_http *);
 
-typedef struct nni_http_server nni_http_server;
-
-typedef struct {
-	// h_path is the relative URI that we are going to match against.
-	// Must not be NULL.  Note that query parameters (things following
-	// a "?" at the end of the path) are ignored when matching.  This
-	// field may not be NULL.
-	const char *h_path;
-
-	// h_method is the HTTP method to handle such as "GET" or "POST".
-	// Must not be empty or NULL.  If the incoming method is HEAD, then
-	// the server will process HEAD the same as GET, but will not send
-	// any response body.
-	const char *h_method;
-
-	// h_host is used to match on a specific Host: entry.  If left NULL,
-	// then this handler will match regardless of the Host: value.
-	const char *h_host;
-
-	// h_is_dir indicates that the path represents a directory, and
-	// any path which is a logically below it should also be matched.
-	// This means that "/phone" will match for "/phone/bob" but not
-	// "/phoneme/ma".  Be advised that it is not possible to register
-	// a handler for a parent and a different handler for children.
-	// (This restriction may be lifted in the future.)
-	bool h_is_dir;
-
-	// h_is_upgrader is used for callbacks that "upgrade" (or steal)
-	// their connection. When this is true, the server framework
-	// assumes that the handler takes over *all* of the details of
-	// the connection.  Consequently, the connection is disassociated
-	// from the framework, and no response is sent.  (Upgraders are
-	// responsible for adopting the connection, including closing it
-	// when they are done, and for sending any HTTP response message.
-	// This is true even if an error occurs.)
-	bool h_is_upgrader;
-
-	// h_cb is a callback that handles the request.  The conventions
-	// are as follows:
-	//
-	// inputs:
-	//   0 - nni_http * for the actual underlying HTTP channel
-	//   1 - nni_http_req * for the HTTP request object
-	//   2 - void * for the opaque pointer supplied at registration
-	//
-	// outputs:
-	//   0 - (optional) nni_http_res * for an HTTP response (see below)
-	//
-	// The callback may choose to return the a response object in output 0,
-	// in which case the framework will handle sending the reply.
-	// (Response entity content is also sent if the response data
-	// is not NULL.)  The callback may instead do it's own replies, in
-	// which case the response output should be NULL.
-	//
-	// Note that any request entity data is *NOT* supplied automatically
-	// with the request object; the callback is expected to call the
-	// nni_http_read_data method to retrieve any message data based upon
-	// the presence of headers. (It may also call nni_http_read or
-	// nni_http_write on the channel as it sees fit.)
-	//
-	// Upgraders should call the completion routine immediately,
-	// once they have collected the request object and HTTP channel.
-	void (*h_cb)(nni_aio *);
-} nni_http_handler;
+typedef struct nni_http_server  nni_http_server;
+typedef struct nni_http_handler nni_http_handler;
 
 // nni_http_server will look for an existing server with the same
 // name and port, or create one if one does not exist.  The servers
@@ -243,15 +181,15 @@ extern int nni_http_server_init(nni_http_server **, const char *);
 // all related resources.  It will not affect hijacked connections.
 extern void nni_http_server_fini(nni_http_server *);
 
-// nni_http_server_add_handler registers a new handler on the server.
+// nni_http_server_add_handler registers a handler on the server.
 // This function will return NNG_EADDRINUSE if a conflicting handler
 // is already registered (i.e. a handler with the same value for Host,
-// Method, and URL.)  The first parameter receives an opaque handle to
-// the handler, that can be used to unregister the handler later.
-extern int nni_http_server_add_handler(
-    void **, nni_http_server *, nni_http_handler *, void *);
+// Method, and URL.)
+extern int nni_http_server_add_handler(nni_http_server *, nni_http_handler *);
 
-extern void nni_http_server_del_handler(nni_http_server *, void *);
+// nni_http_del_handler removes the given handler.  The caller is
+// responsible for finalizing it afterwards.
+extern void nni_http_server_del_handler(nni_http_server *, nni_http_handler *);
 
 // nni_http_server_set_tls adds a TLS configuration to the server,
 // and enables the use of it.  This returns NNG_EBUSY if the server is
@@ -274,24 +212,114 @@ extern int nni_http_server_start(nni_http_server *);
 // associated with a callback will complete their callback, and then close.
 extern void nni_http_server_stop(nni_http_server *);
 
-// nni_http_server_add_static is a short cut to add static
-// content handler to the server.  The host may be NULL, and the
-// ctype (aka Content-Type) may be NULL.  If the Content-Type is NULL,
-// then application/octet stream will be the (probably bad) default.
-// The actual data is copied, and so the caller may discard it once
-// this function returns.
-extern int nni_http_server_add_static(nni_http_server *, const char *host,
-    const char *ctype, const char *uri, const void *, size_t);
+// nni_http_ctx is the context associated with a particular request
+// arriving at the server, and is tied to an underlying nni_http channel.
+typedef struct nni_http_ctx nni_http_ctx;
 
-// nni_http_server_add file is a short cut to add a file-backed static
-// content handler to the server.  The host may be NULL, and the
-// ctype (aka Content-Type) may be NULL.  If the Content-Type is NULL,
-// then the server will try to guess it based on the filename -- but only
-// a small number of file types are builtin.  URI is the absolute URI
-// (sans hostname and scheme), and the path is the path on the local
-// filesystem where the file can be found.
-extern int nni_http_server_add_file(nni_http_server *, const char *host,
-    const char *ctype, const char *uri, const char *path);
+// nni_http_hijack is intended to be called by a handler that wishes to
+// take over the processing of the HTTP session -- usually to change protocols
+// (such as in the case of websocket).  The caller is responsible for obtaining
+// and disposal of the associated nni_http session.  Also, this completely
+// disassociates the http session from the server, so the server may be
+// stopped or destroyed without affecting the hijacked session.  Note also
+// that the hijacker will need to issue any HTTP reply itself.  Finally,
+// when a session is hijacked, the caller is also responsible for disposing
+// of the request structure.  (Some hijackers may keep the request for
+// further processing.)
+extern int nni_http_hijack(nni_http_ctx *);
+
+// nni_http_ctx_stream obtains the underlying nni_http channel for the
+// context.  This is used by hijackers, as well as anything that needs
+// to handle sending its own replies on the channel.
+extern int nni_http_ctx_stream(nni_http_ctx *, nni_http **);
+
+// nni_http_handler_init creates a server handler object, for the supplied
+// URI (path only) with the callback.
+//
+// Note that methods which modify a handler cannot be called while the handler
+// is registered with the server, and that a handler can only be registered
+// once per server.
+//
+// The callback function will receive the following arguments (via
+// nni_aio_get_input(): nni_http_request *, nni_http_handler *, and
+// nni_http_context_t *.  The first is a request object, for convenience.
+// The second is the handler, from which the callback can obtain any other
+// data it has set.  The final is the http context, from which its possible
+// to hijack the session.
+extern int nni_http_handler_init(
+    nni_http_handler **, const char *, void (*)(nni_aio *));
+
+// nni_http_handler_init_file creates a handler with a function to serve
+// up a file named in the last argument.
+extern int nni_http_handler_init_file(
+    nni_http_handler **, const char *, const char *);
+
+// nni_http_handler_init_file_ctype is like nni_http_handler_init_file, but
+// provides for settign the Content-Type explicitly (last argument).
+extern int nni_http_handler_init_file_ctype(
+    nni_http_handler **, const char *, const char *, const char *);
+
+// nni_http_handler_init_directory arranges to serve up an entire
+// directory tree.  The content types are determined from the builtin
+// content type list.  Actual directories are required to contain a
+// file called index.html or index.htm.  We do not generate directory
+// listings for security reasons.
+extern int nni_http_handler_init_directory(
+    nni_http_handler **, const char *, const char *);
+
+// nni_http_handler_init_static creates a handler that serves up static content
+// supplied, with the Content-Type supplied in the final argument.
+extern int nni_http_handler_init_static(
+    nni_http_handler **, const char *, const void *, size_t, const char *);
+
+// nni_http_handler_fini destroys a handler.  This should only be done before
+// the handler is added, or after it is deleted.  The server automatically
+// calls this for any handlers still registered with it if it is destroyed.
+extern void nni_http_handler_fini(nni_http_handler *);
+
+// nni_http_handler_set_dtor sets a callback that is executed when
+// the handler is torn down.  The argument to the destructor is the
+// handler itself.  This function is called by the nni_http_handler_fini
+// function.
+extern int nni_http_handler_set_dtor(
+    nni_http_handler *, void (*)(nni_http_handler *));
+
+// nni_http_handler_set_tree marks the handler as servicing the entire
+// tree (e.g. a directory), rather than just a leaf node.  The handler
+// will probably need to inspect the URL of the request.
+extern int nni_http_handler_set_tree(nni_http_handler *, bool);
+
+// nni_http_handler_set_host limits the handler to only being called for
+// the given Host: field.  This can be used to set up multiple virtual
+// hosts.  Note that host names must match exactly.  If NULL or an empty
+// string is specified, then the client's Host: field is ignored.  (The
+// supplied value for the Host is copied by this function.)  When supplying
+// a hostname, do not include a value for the port number; we do not match
+// on port number as we assume that clients MUST have gotten that part right
+// as we do not support virtual hosting on multiple separate ports; the
+// server only listens on a single port.
+extern int nni_http_handler_set_host(nni_http_handler *, const char *);
+
+// nni_http_handler_set_method limits the handler to only being called
+// for the given HTTP method.  By default a handler is called for GET
+// methods only (and HEAD, which is handled internally.)  Handlers can
+// be specified for any valid HTTP method.  A handler may set the value
+// NULL here, to be called for any HTTP method.  In such a case, the handler
+// is obligated to inspect the method.  (Note: the passed method must be
+// in upper case and should come from a statically allocated string; the
+// server does not make its own copy.)
+extern int nni_http_handler_set_method(nni_http_handler *, const char *);
+
+// nni_http_handler_set_data sets an opaque data element on the handler,
+// which will be available to the callback via nni_http_handler_get_data.
+// Note that indices used should be small, to minimize array allocations.
+// This can fail with NNG_ENOMEM if storage cannot be allocated.
+extern int nni_http_handler_set_data(nni_http_handler *, void *, unsigned);
+
+// nni_http_handler_get_data returns the data that was previously stored
+// at that index.  It returns NULL if no data was set, or an invalid index
+// is supplied.
+extern void *nni_http_handler_get_data(nni_http_handler *, unsigned);
 
 // Client stuff.
 
