@@ -295,6 +295,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		nng_socket   s1;
 		nng_socket   s2;
 		nng_listener l;
+		nng_dialer   d;
 		char         addr[NNG_MAXADDRLEN];
 		nng_msg *    msg;
 		nng_pipe     p;
@@ -314,10 +315,20 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 
 		// reset port back one
 		trantest_prev_address(addr, "wss://127.0.0.1:%u/test");
+		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_dialer_create(&d, s2, addr) == 0);
+		So(init_dialer_wss_file(NULL, d) == 0);
+		So(nng_dialer_setopt_int(d, NNG_OPT_TLS_AUTH_MODE,
+		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
+		So(nng_dialer_setopt_string(
+		       d, NNG_OPT_TLS_SERVER_NAME, "example.com") == 0);
+		So(nng_dialer_start(d, 0) == 0);
+#if 0
 		So(nng_setopt_int(s2, NNG_OPT_TLS_AUTH_MODE,
 		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
 		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
 		So(nng_dial(s2, addr, NULL, 0) == 0);
+#endif
 		nng_msleep(100);
 
 		So(nng_send(s1, "hello", 6, 0) == 0);

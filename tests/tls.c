@@ -29,47 +29,27 @@
 //
 // Generated using openssl:
 //
-// % openssl ecparam -name secp521r1 -noout -genkey -out key.key
-// % openssl req -new -key key.key -out cert.csr
-// % openssl x509 -req -in cert.csr -days 36500 -out cert.crt -signkey key.key
+// % openssl rsa -genkey -out key.key
+// % openssl req -new -key key.key -out cert.csr -sha256
+// % openssl x509 -req -in cert.csr -days 36500 -out cert.crt
+//    -signkey key.key -sha256
 //
 // Relevant metadata:
 //
 // Certificate:
-//     Data:
+//    Data:
 //        Version: 1 (0x0)
-//        Serial Number: 9808857926806240008 (0x882010509b8f7b08)
-//    Signature Algorithm: ecdsa-with-SHA1
-//        Issuer: C=US, ST=CA, L=San Diego, O=nanomsg, CN=127.0.0.1
+//        Serial Number: 17127835813110005400 (0xedb24becc3a2be98)
+//    Signature Algorithm: sha256WithRSAEncryption
+//        Issuer: C=US, ST=CA, L=San Diego, O=nanomsg.org, CN=localhost
 //        Validity
-//            Not Before: Nov 17 20:08:06 2017 GMT
-//            Not After : Oct 24 20:08:06 2117 GMT
-//        Subject: C=US, ST=CA, L=San Diego, O=nanomsg, CN=127.0.0.1
+//            Not Before: Jan 11 22:34:35 2018 GMT
+//            Not After : Dec 18 22:34:35 2117 GMT
+//        Subject: C=US, ST=CA, L=San Diego, O=nanomsg.org, CN=localhost
+//        Subject Public Key Info:
+//            Public Key Algorithm: rsaEncryption
+//                Public-Key: (2048 bit)
 //
-static const char eccert[] =
-    "-----BEGIN CERTIFICATE-----\n"
-    "MIICIjCCAYMCCQDaC9ARg31kIjAKBggqhkjOPQQDAjBUMQswCQYDVQQGEwJVUzEL\n"
-    "MAkGA1UECAwCQ0ExEjAQBgNVBAcMCVNhbiBEaWVnbzEQMA4GA1UECgwHbmFub21z\n"
-    "ZzESMBAGA1UEAwwJMTI3LjAuMC4xMCAXDTE3MTExNzIwMjczMloYDzIxMTcxMDI0\n"
-    "MjAyNzMyWjBUMQswCQYDVQQGEwJVUzELMAkGA1UECAwCQ0ExEjAQBgNVBAcMCVNh\n"
-    "biBEaWVnbzEQMA4GA1UECgwHbmFub21zZzESMBAGA1UEAwwJMTI3LjAuMC4xMIGb\n"
-    "MBAGByqGSM49AgEGBSuBBAAjA4GGAAQAN7vDK6GEiSguMsOuhfOvGyiVc37Sog0b\n"
-    "UkpaiS6+SagTmXFSN1Rgh9isxKFYJvcCtAko3v0I8rAVQucdhf5B3hEBMQlbBIuM\n"
-    "rMKT6ZQJ+eiwyb4O3Scgd7DoL3tc/kOqijwB/5hJ4sZdquDKP5DDFe5fAf4MNtzY\n"
-    "4C+iApWlKq/LoXkwCgYIKoZIzj0EAwIDgYwAMIGIAkIBOuJAWmNSdd6Ovmr6Ebg3\n"
-    "UF9ZrsNwARd9BfYbBk5OQhUOjCLB6d8aLi49WOm1WoRvOS5PaVvmvSfNhaw8b5nV\n"
-    "hnYCQgC+EmJ6C3bEcZrndhfbqvCaOGkc7/SrKhC6fS7mJW4wL90QUV9WjQ2Ll6X5\n"
-    "PxkSj7s0SvD6T8j7rju5LDgkdZc35A==\n"
-    "-----END CERTIFICATE-----\n";
-
-static const char eckey[] =
-    "-----BEGIN EC PRIVATE KEY-----\n"
-    "MIHcAgEBBEIB20OHMntU2UJW2yuQn2f+bLsuhTT5KRGorcocnqxatWLvxuF1cfUA\n"
-    "TjQxRRS6BIUvFt1fMIklp9qedJF00JHy4qWgBwYFK4EEACOhgYkDgYYABAA3u8Mr\n"
-    "oYSJKC4yw66F868bKJVzftKiDRtSSlqJLr5JqBOZcVI3VGCH2KzEoVgm9wK0CSje\n"
-    "/QjysBVC5x2F/kHeEQExCVsEi4yswpPplAn56LDJvg7dJyB3sOgve1z+Q6qKPAH/\n"
-    "mEnixl2q4Mo/kMMV7l8B/gw23NjgL6IClaUqr8uheQ==\n"
-    "-----END EC PRIVATE KEY-----\n";
 
 static const char cert[] =
     "-----BEGIN CERTIFICATE-----\n"
@@ -92,6 +72,7 @@ static const char cert[] =
     "dFMXOO1rleU0lWAJcXWOWHH3er0fivu2ISL8fRjjikYvhRGxtkwC0kPDa2Ntzgd3\n"
     "Hsg=\n"
     "-----END CERTIFICATE-----\n";
+
 static const char key[] =
     "-----BEGIN RSA PRIVATE KEY-----\n"
     "MIIEpQIBAAKCAQEAzL6B3RJ3zoZhtz04+mAuas+jeYYJnMH+BGZKK+PkdUOYQziq\n"
@@ -377,6 +358,7 @@ TestMain("TLS Transport", {
 		nng_msg *    msg;
 		nng_pipe     p;
 		int          v;
+		nng_dialer   d;
 
 		So(nng_pair_open(&s1) == 0);
 		So(nng_pair_open(&s2) == 0);
@@ -392,11 +374,14 @@ TestMain("TLS Transport", {
 
 		// reset port back one
 		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
-		So(nng_setopt_int(s2, NNG_OPT_TLS_AUTH_MODE,
-		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
 		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
-		So(nng_dial(s2, addr, NULL, 0) == 0);
-		nng_msleep(100);
+		So(nng_dialer_create(&d, s2, addr) == 0);
+		So(init_dialer_tls_file(NULL, d) == 0);
+		So(nng_dialer_setopt_int(d, NNG_OPT_TLS_AUTH_MODE,
+		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
+		So(nng_dialer_setopt_string(
+		       d, NNG_OPT_TLS_SERVER_NAME, "example.com") == 0);
+		So(nng_dialer_start(d, 0) == 0);
 
 		So(nng_send(s1, "hello", 6, 0) == 0);
 		So(nng_recvmsg(s2, &msg, 0) == 0);

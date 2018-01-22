@@ -174,7 +174,7 @@ typedef struct nni_http_handler nni_http_handler;
 // a restricted binding is required, we recommend using a URL consisting
 // of an empty host name, such as http://  or https://  -- this would
 // convert to binding to the default port on all interfaces on the host.
-extern int nni_http_server_init(nni_http_server **, const char *);
+extern int nni_http_server_init(nni_http_server **, nni_url *);
 
 // nni_http_server_fini drops the reference count on the server, and
 // if this was the last reference, closes down the server and frees
@@ -325,8 +325,7 @@ extern void *nni_http_handler_get_data(nni_http_handler *, unsigned);
 
 typedef struct nni_http_client nni_http_client;
 
-// https vs. http; would also allow us to defer DNS lookups til later.
-extern int  nni_http_client_init(nni_http_client **, const char *);
+extern int  nni_http_client_init(nni_http_client **, nni_url *);
 extern void nni_http_client_fini(nni_http_client *);
 
 // nni_http_client_set_tls sets the TLS configuration.  This wipes out

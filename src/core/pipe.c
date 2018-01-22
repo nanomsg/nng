@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -29,7 +29,6 @@ struct nni_pipe {
 	int           p_reap;
 	int           p_stop;
 	int           p_refcnt;
-	const char *  p_url;
 	nni_mtx       p_mtx;
 	nni_cv        p_cv;
 	nni_list_node p_reap_node;
@@ -268,7 +267,6 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	p->p_proto_data = NULL;
 	p->p_ep         = ep;
 	p->p_sock       = sock;
-	p->p_url        = nni_ep_url(ep);
 
 	NNI_LIST_NODE_INIT(&p->p_reap_node);
 	NNI_LIST_NODE_INIT(&p->p_sock_node);

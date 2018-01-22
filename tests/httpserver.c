@@ -49,7 +49,7 @@ httpget(const char *addr, void **datap, size_t *sizep, uint16_t *statp,
 	    ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) ||
 	    ((rv = nni_http_req_init(&req)) != 0) ||
 	    ((rv = nni_http_res_init(&res)) != 0) ||
-	    ((rv = nni_http_client_init(&cli, addr)) != 0)) {
+	    ((rv = nni_http_client_init(&cli, url)) != 0)) {
 		goto fail;
 	}
 	nni_http_client_connect(cli, aio);
@@ -143,12 +143,15 @@ TestMain("HTTP Client", {
 	Convey("We can start an HTTP server", {
 		nni_aio *aio;
 		char     portbuf[16];
-		char     url[32];
+		char     urlstr[32];
+		nni_url *url;
 
 		trantest_next_address(portbuf, "%u");
 
-		snprintf(url, sizeof(url), "http://127.0.0.1:%s", portbuf);
+		snprintf(
+		    urlstr, sizeof(urlstr), "http://127.0.0.1:%s", portbuf);
 
+		So(nni_url_parse(&url, urlstr) == 0);
 		So(nni_aio_init(&aio, NULL, NULL) == 0);
 
 		So(nni_http_server_init(&s, url) == 0);
@@ -156,6 +159,7 @@ TestMain("HTTP Client", {
 		Reset({
 			nni_aio_fini(aio);
 			nni_http_server_fini(s);
+			nni_url_free(url);
 		});
 
 		So(nni_http_handler_init_static(&h, "/home.html", doc1,
@@ -247,7 +251,8 @@ TestMain("HTTP Client", {
 	Convey("Directory serving works", {
 		nni_aio *aio;
 		char     portbuf[16];
-		char     url[32];
+		char     urlstr[32];
+		nni_url *url;
 		char *   tmpdir;
 		char *   workdir;
 		char *   file1;
@@ -256,10 +261,8 @@ TestMain("HTTP Client", {
 		char *   subdir1;
 		char *   subdir2;
 
-		trantest_next_address(portbuf, "%u");
-
-		snprintf(url, sizeof(url), "http://127.0.0.1:%s", portbuf);
-
+		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		So(nni_url_parse(&url, urlstr) == 0);
 		So(nni_aio_init(&aio, NULL, NULL) == 0);
 		So(nni_http_server_init(&s, url) == 0);
 		So((tmpdir = nni_plat_temp_dir()) != NULL);
@@ -290,6 +293,7 @@ TestMain("HTTP Client", {
 			nni_strfree(file3);
 			nni_strfree(subdir1);
 			nni_strfree(subdir2);
+			nni_url_free(url);
 		});
 
 		So(nni_http_handler_init_directory(&h, "/docs", workdir) == 0);
@@ -305,7 +309,7 @@ TestMain("HTTP Client", {
 			char *   ctype;
 
 			snprintf(fullurl, sizeof(fullurl),
-			    "%s/docs/subdir1/index.html", url);
+			    "%s/docs/subdir1/index.html", urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
 			So(stat == NNI_HTTP_STATUS_OK);
 			So(size == strlen(doc1));
@@ -322,8 +326,8 @@ TestMain("HTTP Client", {
 			uint16_t stat;
 			char *   ctype;
 
-			snprintf(
-			    fullurl, sizeof(fullurl), "%s/docs/subdir2", url);
+			snprintf(fullurl, sizeof(fullurl), "%s/docs/subdir2",
+			    urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
 			So(stat == NNI_HTTP_STATUS_OK);
 			So(size == strlen(doc3));
@@ -340,8 +344,8 @@ TestMain("HTTP Client", {
 			uint16_t stat;
 			char *   ctype;
 
-			snprintf(
-			    fullurl, sizeof(fullurl), "%s/docs/file.txt", url);
+			snprintf(fullurl, sizeof(fullurl), "%s/docs/file.txt",
+			    urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
 			So(stat == NNI_HTTP_STATUS_OK);
 			So(size == strlen(doc2));
@@ -358,7 +362,7 @@ TestMain("HTTP Client", {
 			uint16_t stat;
 			char *   ctype;
 
-			snprintf(fullurl, sizeof(fullurl), "%s/docs/", url);
+			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
 			So(stat == NNI_HTTP_STATUS_NOT_FOUND);
 			So(size == 0);

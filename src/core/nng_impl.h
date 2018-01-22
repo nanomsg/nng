@@ -44,10 +44,13 @@
 #include "core/taskq.h"
 #include "core/thread.h"
 #include "core/timer.h"
-#include "core/transport.h"
 #include "core/url.h"
 
+// transport needs to come after url
+#include "core/transport.h"
+
 // These have to come after the others - particularly transport.h
+
 #include "core/endpt.h"
 #include "core/pipe.h"
 #include "core/socket.h"

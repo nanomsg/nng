@@ -76,7 +76,7 @@ struct nni_tran_ep_option {
 struct nni_tran_ep {
 	// ep_init creates a vanilla endpoint. The value created is
 	// used for the first argument for all other endpoint functions.
-	int (*ep_init)(void **, const char *, nni_sock *, int);
+	int (*ep_init)(void **, nni_url *, nni_sock *, int);
 
 	// ep_fini frees the resources associated with the endpoint.
 	// The endpoint will already have been closed.
@@ -164,7 +164,7 @@ struct nni_tran_pipe {
 
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
-extern nni_tran *nni_tran_find(const char *);
+extern nni_tran *nni_tran_find(nni_url *);
 extern int       nni_tran_chkopt(const char *, const void *, size_t);
 extern int       nni_tran_sys_init(void);
 extern void      nni_tran_sys_fini(void);

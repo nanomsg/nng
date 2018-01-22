@@ -29,7 +29,7 @@ typedef int (*nni_ws_listen_hook)(void *, nni_http_req *, nni_http_res *);
 // on INADDR_ANY port 80, with path "/".  For connect side, INADDR_ANY
 // makes no sense.  (TBD: return NNG_EADDRINVAL, or try loopback?)
 
-extern int  nni_ws_listener_init(nni_ws_listener **, const char *);
+extern int  nni_ws_listener_init(nni_ws_listener **, nni_url *);
 extern void nni_ws_listener_fini(nni_ws_listener *);
 extern void nni_ws_listener_close(nni_ws_listener *);
 extern int  nni_ws_listener_proto(nni_ws_listener *, const char *);
@@ -40,7 +40,7 @@ extern void nni_ws_listener_hook(
 extern int nni_ws_listener_set_tls(nni_ws_listener *, nng_tls_config *);
 extern int nni_ws_listener_get_tls(nni_ws_listener *, nng_tls_config **s);
 
-extern int  nni_ws_dialer_init(nni_ws_dialer **, const char *);
+extern int  nni_ws_dialer_init(nni_ws_dialer **, nni_url *);
 extern void nni_ws_dialer_fini(nni_ws_dialer *);
 extern void nni_ws_dialer_close(nni_ws_dialer *);
 extern int  nni_ws_dialer_proto(nni_ws_dialer *, const char *);

@@ -137,7 +137,10 @@ trantest_init(trantest *tt, const char *addr)
 	So(nng_req_open(&tt->reqsock) == 0);
 	So(nng_rep_open(&tt->repsock) == 0);
 
-	tt->tran = nni_tran_find(addr);
+	nni_url *url;
+	So(nni_url_parse(&url, tt->addr) == 0);
+	tt->tran = nni_tran_find(url);
+	nni_url_free(url);
 	So(tt->tran != NULL);
 #else
 	ConveySkip("Missing REQ or REP protocols");

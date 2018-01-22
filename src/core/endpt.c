@@ -21,7 +21,7 @@ struct nni_ep {
 	uint64_t      ep_id;   // endpoint id
 	nni_list_node ep_node; // per socket list
 	nni_sock *    ep_sock;
-	char          ep_url[NNG_MAXADDRLEN];
+	nni_url *     ep_url;
 	int           ep_mode;
 	int           ep_started;
 	int           ep_closed;  // full shutdown
@@ -82,12 +82,6 @@ nni_ep_id(nni_ep *ep)
 	return ((uint32_t) ep->ep_id);
 }
 
-const char *
-nni_ep_url(nni_ep *ep)
-{
-	return (ep->ep_url);
-}
-
 static void
 nni_ep_destroy(nni_ep *ep)
 {
@@ -119,26 +113,31 @@ nni_ep_destroy(nni_ep *ep)
 	nni_mtx_unlock(&ep->ep_mtx);
 	nni_cv_fini(&ep->ep_cv);
 	nni_mtx_fini(&ep->ep_mtx);
+	nni_url_free(ep->ep_url);
 	NNI_FREE_STRUCT(ep);
 }
 
 static int
-nni_ep_create(nni_ep **epp, nni_sock *s, const char *url, int mode)
+nni_ep_create(nni_ep **epp, nni_sock *s, const char *urlstr, int mode)
 {
 	nni_tran *tran;
 	nni_ep *  ep;
 	int       rv;
+	nni_url * url;
 
-	if ((tran = nni_tran_find(url)) == NULL) {
-		return (NNG_ENOTSUP);
+	if ((rv = nni_url_parse(&url, urlstr)) != 0) {
+		return (rv);
 	}
-	if (strlen(url) >= NNG_MAXADDRLEN) {
-		return (NNG_EINVAL);
+	if ((tran = nni_tran_find(url)) == NULL) {
+		nni_url_free(url);
+		return (NNG_ENOTSUP);
 	}
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
+		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
+	ep->ep_url     = url;
 	ep->ep_closed  = 0;
 	ep->ep_started = 0;
 	ep->ep_data    = NULL;
@@ -151,8 +150,6 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *url, int mode)
 	// modify them (to override NULLs for example), and avoids an extra
 	// dereference on hot paths.
 	ep->ep_ops = *tran->tran_ep;
-
-	(void) nni_strlcpy(ep->ep_url, url, sizeof(ep->ep_url));
 
 	NNI_LIST_NODE_INIT(&ep->ep_node);
 
@@ -177,15 +174,15 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *url, int mode)
 }
 
 int
-nni_ep_create_dialer(nni_ep **epp, nni_sock *s, const char *url)
+nni_ep_create_dialer(nni_ep **epp, nni_sock *s, const char *urlstr)
 {
-	return (nni_ep_create(epp, s, url, NNI_EP_MODE_DIAL));
+	return (nni_ep_create(epp, s, urlstr, NNI_EP_MODE_DIAL));
 }
 
 int
-nni_ep_create_listener(nni_ep **epp, nni_sock *s, const char *url)
+nni_ep_create_listener(nni_ep **epp, nni_sock *s, const char *urlstr)
 {
-	return (nni_ep_create(epp, s, url, NNI_EP_MODE_LISTEN));
+	return (nni_ep_create(epp, s, urlstr, NNI_EP_MODE_LISTEN));
 }
 
 int
@@ -622,7 +619,7 @@ nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp)
 	nni_tran_ep_option *eo;
 
 	if (strcmp(name, NNG_OPT_URL) == 0) {
-		return (nni_getopt_str(ep->ep_url, valp, szp));
+		return (nni_getopt_str(ep->ep_url->u_rawurl, valp, szp));
 	}
 
 	for (eo = ep->ep_ops.ep_options; eo && eo->eo_name; eo++) {

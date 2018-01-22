@@ -537,16 +537,13 @@ nni_tls_ep_fini(void *arg)
 	if (ep->cfg) {
 		nni_tls_config_fini(ep->cfg);
 	}
-	if (ep->url) {
-		nni_url_free(ep->url);
-	}
 	nni_aio_fini(ep->aio);
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
 }
 
 static int
-nni_tls_ep_init(void **epp, const char *addr, nni_sock *sock, int mode)
+nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 {
 	nni_tls_ep *      ep;
 	int               rv;
@@ -557,26 +554,17 @@ nni_tls_ep_init(void **epp, const char *addr, nni_sock *sock, int mode)
 	int               passive;
 	nng_tls_mode      tlsmode;
 	nng_tls_auth_mode authmode;
-	nni_url *         url;
-
-	// Parse the URLs first.
-	if ((rv = nni_url_parse(&url, addr)) != 0) {
-		return (rv);
-	}
 
 	// Check for invalid URL components.
 	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
-		nni_url_free(url);
 		return (NNG_EADDRINVAL);
 	}
 	if ((url->u_fragment != NULL) || (url->u_userinfo != NULL) ||
 	    (url->u_query != NULL)) {
-		nni_url_free(url);
 		return (NNG_EADDRINVAL);
 	}
 
 	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
-		nni_url_free(url);
 		return (rv);
 	}
 
@@ -598,7 +586,6 @@ nni_tls_ep_init(void **epp, const char *addr, nni_sock *sock, int mode)
 		lsa.s_un.s_family = NNG_AF_UNSPEC;
 		aio->a_addr       = &rsa;
 		if ((host == NULL) || (serv == NULL)) {
-			nni_url_free(url);
 			nni_aio_fini(aio);
 			return (NNG_EADDRINVAL);
 		}
@@ -615,14 +602,12 @@ nni_tls_ep_init(void **epp, const char *addr, nni_sock *sock, int mode)
 	nni_plat_tcp_resolv(host, serv, NNG_AF_UNSPEC, passive, aio);
 	nni_aio_wait(aio);
 	if ((rv = nni_aio_result(aio)) != 0) {
-		nni_url_free(url);
 		nni_aio_fini(aio);
 		return (rv);
 	}
 	nni_aio_fini(aio);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
-		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&ep->mtx);

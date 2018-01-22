@@ -24,7 +24,6 @@ struct nni_http_client {
 	bool             closed;
 	nng_tls_config * tls;
 	nni_aio *        connaio;
-	nni_url *        url;
 	nni_plat_tcp_ep *tep;
 };
 
@@ -92,30 +91,21 @@ nni_http_client_fini(nni_http_client *c)
 		nni_tls_config_fini(c->tls);
 	}
 #endif
-	if (c->url != NULL) {
-		nni_url_free(c->url);
-	}
 	NNI_FREE_STRUCT(c);
 }
 
 int
-nni_http_client_init(nni_http_client **cp, const char *urlstr)
+nni_http_client_init(nni_http_client **cp, nni_url *url)
 {
 	int              rv;
-	nni_url *        url;
 	nni_http_client *c;
 	nni_aio *        aio;
 	nni_sockaddr     sa;
 	char *           host;
 	char *           port;
 
-	if ((rv = nni_url_parse(&url, urlstr)) != 0) {
-		return (rv);
-	}
-
 	if (strlen(url->u_hostname) == 0) {
 		// We require a valid hostname.
-		nni_url_free(url);
 		return (NNG_EADDRINVAL);
 	}
 	if ((strcmp(url->u_scheme, "http") != 0) &&
@@ -132,7 +122,6 @@ nni_http_client_init(nni_http_client **cp, const char *urlstr)
 	// imagines the ability to create a tcp dialer that does the
 	// necessary DNS lookups, etc. all asynchronously.
 	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
-		nni_url_free(url);
 		return (rv);
 	}
 	aio->a_addr = &sa;
@@ -143,7 +132,6 @@ nni_http_client_init(nni_http_client **cp, const char *urlstr)
 	rv = nni_aio_result(aio);
 	nni_aio_fini(aio);
 	if (rv != 0) {
-		nni_url_free(url);
 		return (rv);
 	}
 
@@ -152,7 +140,6 @@ nni_http_client_init(nni_http_client **cp, const char *urlstr)
 	}
 	nni_mtx_init(&c->mtx);
 	nni_aio_list_init(&c->aios);
-	c->url = url;
 
 #ifdef NNG_SUPP_TLS
 	if ((strcmp(url->u_scheme, "https") == 0) ||

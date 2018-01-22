@@ -30,8 +30,7 @@ typedef struct ws_hdr {
 } ws_hdr;
 
 struct ws_ep {
-	int              mode; // NNI_EP_MODE_DIAL or NNI_EP_MODE_LISTEN
-	char *           addr;
+	int              mode;   // NNI_EP_MODE_DIAL or NNI_EP_MODE_LISTEN
 	uint16_t         lproto; // local protocol
 	uint16_t         rproto; // remote protocol
 	size_t           rcvmax;
@@ -605,7 +604,6 @@ ws_ep_fini(void *arg)
 		nni_strfree(hdr->value);
 		NNI_FREE_STRUCT(hdr);
 	}
-	nni_strfree(ep->addr);
 	nni_strfree(ep->protoname);
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
@@ -694,7 +692,7 @@ ws_ep_acc_cb(void *arg)
 }
 
 static int
-ws_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
+ws_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 {
 	ws_ep *     ep;
 	const char *pname;
@@ -721,9 +719,6 @@ ws_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 		rv    = nni_ws_listener_init(&ep->listener, url);
 	}
 
-	if ((rv == 0) && ((ep->addr = nni_strdup(url)) == NULL)) {
-		rv = NNG_ENOMEM;
-	}
 	if ((rv != 0) ||
 	    ((rv = nni_aio_init(&ep->connaio, ws_ep_conn_cb, ep)) != 0) ||
 	    ((rv = nni_aio_init(&ep->accaio, ws_ep_acc_cb, ep)) != 0) ||

@@ -69,7 +69,8 @@ struct nni_http_server {
 	nng_tls_config * tls;
 	nni_aio *        accaio;
 	nni_plat_tcp_ep *tep;
-	nni_url *        url;
+	char *           port;
+	char *           hostname;
 };
 
 int
@@ -789,9 +790,6 @@ http_server_fini(nni_http_server *s)
 		nni_http_handler_fini(h);
 	}
 	nni_mtx_unlock(&s->mtx);
-	if (s->url != NULL) {
-		nni_url_free(s->url);
-	}
 #ifdef NNG_SUPP_TLS
 	if (s->tls != NULL) {
 		nni_tls_config_fini(s->tls);
@@ -800,6 +798,8 @@ http_server_fini(nni_http_server *s)
 	nni_aio_fini(s->accaio);
 	nni_cv_fini(&s->cv);
 	nni_mtx_fini(&s->mtx);
+	nni_strfree(s->hostname);
+	nni_strfree(s->port);
 	NNI_FREE_STRUCT(s);
 }
 
@@ -820,14 +820,8 @@ http_server_init(nni_http_server **serverp, nni_url *url)
 {
 	nni_http_server *s;
 	int              rv;
-	const char *     host;
 	const char *     port;
 	nni_aio *        aio;
-
-	host = url->u_hostname;
-	if (strlen(host) == 0) {
-		host = NULL;
-	}
 
 	port = url->u_port;
 	if ((strcmp(url->u_scheme, "http") != 0) &&
@@ -836,14 +830,11 @@ http_server_init(nni_http_server **serverp, nni_url *url)
 	    (strcmp(url->u_scheme, "wss") != 0) &&
 #endif
 	    (strcmp(url->u_scheme, "ws") != 0)) {
-		nni_url_free(url);
 		return (NNG_EADDRINVAL);
 	}
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	s->url = url;
 	nni_mtx_init(&s->mtx);
 	nni_cv_init(&s->cv, &s->mtx);
 	NNI_LIST_INIT(&s->handlers, nni_http_handler, node);
@@ -852,6 +843,18 @@ http_server_init(nni_http_server **serverp, nni_url *url)
 		http_server_fini(s);
 		return (rv);
 	}
+
+	if ((strlen(url->u_port)) &&
+	    ((s->port = nni_strdup(url->u_port)) == NULL)) {
+		http_server_fini(s);
+		return (NNG_ENOMEM);
+	}
+	if ((strlen(url->u_hostname)) &&
+	    ((s->hostname = nni_strdup(url->u_hostname)) == NULL)) {
+		http_server_fini(s);
+		return (NNG_ENOMEM);
+	}
+
 #ifdef NNG_SUPP_TLS
 	if ((strcmp(url->u_scheme, "https") == 0) ||
 	    (strcmp(url->u_scheme, "wss") == 0)) {
@@ -872,9 +875,7 @@ http_server_init(nni_http_server **serverp, nni_url *url)
 		return (rv);
 	}
 	aio->a_addr = &s->addr;
-	host        = (strlen(url->u_hostname) != 0) ? url->u_hostname : NULL;
-	port        = (strlen(url->u_port) != 0) ? url->u_port : NULL;
-	nni_plat_tcp_resolv(host, port, NNG_AF_UNSPEC, true, aio);
+	nni_plat_tcp_resolv(s->hostname, s->port, NNG_AF_UNSPEC, true, aio);
 	nni_aio_wait(aio);
 	rv = nni_aio_result(aio);
 	nni_aio_fini(aio);
@@ -888,23 +889,17 @@ http_server_init(nni_http_server **serverp, nni_url *url)
 }
 
 int
-nni_http_server_init(nni_http_server **serverp, const char *urlstr)
+nni_http_server_init(nni_http_server **serverp, nni_url *url)
 {
 	int              rv;
 	nni_http_server *s;
-	nni_url *        url;
-
-	if ((rv = nni_url_parse(&url, urlstr)) != 0) {
-		return (rv);
-	}
 
 	nni_initialize(&http_server_initializer);
 
 	nni_mtx_lock(&http_servers_lk);
 	NNI_LIST_FOREACH (&http_servers, s) {
-		if ((strcmp(url->u_port, s->url->u_port) == 0) &&
-		    (strcmp(url->u_hostname, s->url->u_hostname) == 0)) {
-			nni_url_free(url);
+		if ((strcmp(url->u_port, s->port) == 0) &&
+		    (strcmp(url->u_hostname, s->hostname) == 0)) {
 			*serverp = s;
 			s->refcnt++;
 			nni_mtx_unlock(&http_servers_lk);
@@ -916,8 +911,6 @@ nni_http_server_init(nni_http_server **serverp, const char *urlstr)
 	if ((rv = http_server_init(&s, url)) == 0) {
 		nni_list_append(&http_servers, s);
 		*serverp = s;
-	} else {
-		nni_url_free(url);
 	}
 
 	nni_mtx_unlock(&http_servers_lk);

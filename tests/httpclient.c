@@ -34,11 +34,13 @@ TestMain("HTTP Client", {
 		nni_aio *        iaio;
 		nni_http_client *cli;
 		nni_http *       http;
+		nni_url *        url;
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		iaio = (nni_aio *) aio;
 
-		So(nni_http_client_init(&cli, "http://httpbin.org") == 0);
+		So(nni_url_parse(&url, "http://httpbin.org") == 0);
+		So(nni_http_client_init(&cli, url) == 0);
 		nni_http_client_connect(cli, iaio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
@@ -47,6 +49,7 @@ TestMain("HTTP Client", {
 			nni_http_client_fini(cli);
 			nni_http_fini(http);
 			nng_aio_free(aio);
+			nni_url_free(url);
 		});
 
 		Convey("We can initiate a message", {

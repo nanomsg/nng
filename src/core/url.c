@@ -454,3 +454,30 @@ nni_url_free(nni_url *url)
 	nni_strfree(url->u_rawpath);
 	NNI_FREE_STRUCT(url);
 }
+
+int
+nni_url_clone(nni_url **dstp, const nni_url *src)
+{
+	nni_url *dst;
+
+	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+#define URL_COPYSTR(d, s) ((s != NULL) && ((d = nni_strdup(s)) == NULL))
+	if (URL_COPYSTR(dst->u_rawurl, src->u_rawurl) ||
+	    URL_COPYSTR(dst->u_scheme, src->u_scheme) ||
+	    URL_COPYSTR(dst->u_userinfo, src->u_userinfo) ||
+	    URL_COPYSTR(dst->u_host, src->u_host) ||
+	    URL_COPYSTR(dst->u_hostname, src->u_hostname) ||
+	    URL_COPYSTR(dst->u_port, src->u_port) ||
+	    URL_COPYSTR(dst->u_rawpath, src->u_rawpath) ||
+	    URL_COPYSTR(dst->u_path, src->u_path) ||
+	    URL_COPYSTR(dst->u_query, src->u_query) ||
+	    URL_COPYSTR(dst->u_fragment, src->u_fragment)) {
+		nni_url_free(dst);
+		return (NNG_ENOMEM);
+	}
+#undef URL_COPYSTR
+	*dstp = dst;
+	return (0);
+}

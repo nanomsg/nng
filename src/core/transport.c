@@ -26,7 +26,6 @@ extern nni_tran nni_ipc_tran;
 
 typedef struct nni_transport {
 	nni_tran      t_tran;
-	char          t_prefix[16]; // e.g. "tcp://" or "tls+tcp://"
 	nni_list_node t_node;
 } nni_transport;
 
@@ -72,13 +71,6 @@ nni_tran_register(const nni_tran *tran)
 	}
 
 	t->t_tran = *tran;
-	sz        = sizeof(t->t_prefix);
-	if ((nni_strlcpy(t->t_prefix, tran->tran_scheme, sz) >= sz) ||
-	    (nni_strlcat(t->t_prefix, "://", sz) >= sz)) {
-		nni_mtx_unlock(&nni_tran_lk);
-		NNI_FREE_STRUCT(t);
-		return (NNG_EINVAL);
-	}
 	if ((rv = t->t_tran.tran_init()) != 0) {
 		nni_mtx_unlock(&nni_tran_lk);
 		NNI_FREE_STRUCT(t);
@@ -90,14 +82,14 @@ nni_tran_register(const nni_tran *tran)
 }
 
 nni_tran *
-nni_tran_find(const char *addr)
+nni_tran_find(nni_url *url)
 {
 	// address is of the form "<scheme>://blah..."
 	nni_transport *t;
 
 	nni_mtx_lock(&nni_tran_lk);
 	NNI_LIST_FOREACH (&nni_tran_list, t) {
-		if (strncmp(addr, t->t_prefix, strlen(t->t_prefix)) == 0) {
+		if (strcmp(url->u_scheme, t->t_tran.tran_scheme) == 0) {
 			nni_mtx_unlock(&nni_tran_lk);
 			return (&t->t_tran);
 		}

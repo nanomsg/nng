@@ -47,7 +47,7 @@ struct nni_inproc_pair {
 };
 
 struct nni_inproc_ep {
-	char          addr[NNG_MAXADDRLEN + 1];
+	const char *  addr;
 	int           mode;
 	nni_list_node node;
 	uint16_t      proto;
@@ -190,13 +190,10 @@ nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp)
 }
 
 static int
-nni_inproc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
+nni_inproc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 {
 	nni_inproc_ep *ep;
 
-	if (strlen(url) > NNG_MAXADDRLEN - 1) {
-		return (NNG_EINVAL);
-	}
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -206,8 +203,8 @@ nni_inproc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
-	(void) snprintf(ep->addr, sizeof(ep->addr), "%s", url);
-	*epp = ep;
+	ep->addr = url->u_rawurl; // we match on the full URL.
+	*epp     = ep;
 	return (0);
 }
 

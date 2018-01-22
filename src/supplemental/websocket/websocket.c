@@ -1522,12 +1522,11 @@ err:
 }
 
 int
-nni_ws_listener_init(nni_ws_listener **wslp, const char *addr)
+nni_ws_listener_init(nni_ws_listener **wslp, nni_url *url)
 {
 	nni_ws_listener *l;
 	int              rv;
 	char *           host;
-	char *           serv;
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
@@ -1539,7 +1538,8 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *addr)
 	NNI_LIST_INIT(&l->pend, nni_ws, node);
 	NNI_LIST_INIT(&l->reply, nni_ws, node);
 
-	if ((rv = nni_url_parse(&l->url, addr)) != 0) {
+	// make a private copy of the url structure.
+	if ((rv = nni_url_clone(&l->url, url)) != 0) {
 		nni_ws_listener_fini(l);
 		return (rv);
 	}
@@ -1548,12 +1548,7 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *addr)
 	if (strlen(host) == 0) {
 		host = NULL;
 	}
-	serv = l->url->u_port;
-	if (strlen(serv) == 0) {
-		serv = (strcmp(l->url->u_scheme, "wss") == 0) ? "443" : "80";
-	}
-
-	rv = nni_http_handler_init(&l->handler, l->url->u_path, ws_handler);
+	rv = nni_http_handler_init(&l->handler, url->u_path, ws_handler);
 	if (rv != 0) {
 		nni_ws_listener_fini(l);
 		return (rv);
@@ -1561,7 +1556,7 @@ nni_ws_listener_init(nni_ws_listener **wslp, const char *addr)
 
 	if (((rv = nni_http_handler_set_host(l->handler, host)) != 0) ||
 	    ((rv = nni_http_handler_set_data(l->handler, l, 0)) != 0) ||
-	    ((rv = nni_http_server_init(&l->server, addr)) != 0)) {
+	    ((rv = nni_http_server_init(&l->server, url)) != 0)) {
 		nni_ws_listener_fini(l);
 		return (rv);
 	}
@@ -1841,7 +1836,7 @@ nni_ws_dialer_fini(nni_ws_dialer *d)
 }
 
 int
-nni_ws_dialer_init(nni_ws_dialer **dp, const char *addr)
+nni_ws_dialer_init(nni_ws_dialer **dp, nni_url *url)
 {
 	nni_ws_dialer *d;
 	int            rv;
@@ -1853,12 +1848,12 @@ nni_ws_dialer_init(nni_ws_dialer **dp, const char *addr)
 	NNI_LIST_INIT(&d->wspend, nni_ws, node);
 	nni_mtx_init(&d->mtx);
 
-	if ((rv = nni_url_parse(&d->url, addr)) != 0) {
+	if ((rv = nni_url_clone(&d->url, url)) != 0) {
 		nni_ws_dialer_fini(d);
 		return (rv);
 	}
 
-	if ((rv = nni_http_client_init(&d->client, addr)) != 0) {
+	if ((rv = nni_http_client_init(&d->client, url)) != 0) {
 		nni_ws_dialer_fini(d);
 		return (rv);
 	}

@@ -529,17 +529,16 @@ nni_ipc_ep_fini(void *arg)
 }
 
 static int
-nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
+nni_ipc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 {
 	nni_ipc_ep *ep;
 	int         rv;
 	size_t      sz;
 
-	if (strncmp(url, "ipc://", strlen("ipc://")) != 0) {
-		return (NNG_EADDRINVAL);
+	if (((url->u_host != NULL) && (strlen(url->u_host) > 0)) ||
+	    (url->u_userinfo != NULL)) {
+		return (NNG_EINVAL);
 	}
-	url += strlen("ipc://");
-
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -547,7 +546,7 @@ nni_ipc_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	sz                           = sizeof(ep->sa.s_un.s_path.sa_path);
 	ep->sa.s_un.s_path.sa_family = NNG_AF_IPC;
 
-	if (nni_strlcpy(ep->sa.s_un.s_path.sa_path, url, sz) >= sz) {
+	if (nni_strlcpy(ep->sa.s_un.s_path.sa_path, url->u_path, sz) >= sz) {
 		NNI_FREE_STRUCT(ep);
 		return (NNG_EADDRINVAL);
 	}

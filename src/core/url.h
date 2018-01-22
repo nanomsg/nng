@@ -11,8 +11,6 @@
 #ifndef CORE_URL_H
 #define CORE_URL_H
 
-typedef struct nni_url nni_url;
-
 struct nni_url {
 	char *u_rawurl;   // never NULL
 	char *u_scheme;   // never NULL
@@ -28,5 +26,6 @@ struct nni_url {
 
 extern int nni_url_parse(nni_url **, const char *path);
 extern void nni_url_free(nni_url *);
+extern int  nni_url_clone(nni_url **, const nni_url *);
 
 #endif // CORE_URL_H

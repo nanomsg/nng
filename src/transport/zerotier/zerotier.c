@@ -225,7 +225,6 @@ struct zt_creq {
 
 struct zt_ep {
 	nni_list_node ze_link;
-	char          ze_url[NNG_MAXADDRLEN];
 	char          ze_home[NNG_MAXADDRLEN]; // should be enough
 	zt_node *     ze_ztn;
 	uint64_t      ze_nwid;
@@ -2100,7 +2099,7 @@ zt_parsedec(const char **sp, uint64_t *valp)
 }
 
 static int
-zt_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
+zt_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 {
 	zt_ep *     ep;
 	size_t      sz;
@@ -2127,24 +2126,18 @@ zt_ep_init(void **epp, const char *url, nni_sock *sock, int mode)
 	ep->ze_ping_count = zt_ping_count;
 	ep->ze_ping_time  = zt_ping_time;
 	ep->ze_proto      = nni_sock_proto(sock);
-	sz                = sizeof(ep->ze_url);
 
 	nni_aio_list_init(&ep->ze_aios);
 
-	if ((strncmp(url, "zt://", strlen("zt://")) != 0) ||
-	    (nni_strlcpy(ep->ze_url, url, sz) >= sz)) {
-		zt_ep_fini(ep);
-		return (NNG_EADDRINVAL);
-	}
 	rv = nni_aio_init(&ep->ze_creq_aio, zt_ep_conn_req_cb, ep);
 	if (rv != 0) {
 		zt_ep_fini(ep);
 		return (rv);
 	}
 
-	u = url + strlen("zt://");
-	// Parse the URL.
+	u = url->u_rawurl + strlen("zt://");
 
+	// Parse the URL.
 	switch (mode) {
 	case NNI_EP_MODE_DIAL:
 		// We require zt://<nwid>/<remotenode>:<port>
