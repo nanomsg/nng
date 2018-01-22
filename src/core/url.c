@@ -11,6 +11,7 @@
 #include "core/nng_impl.h"
 
 #include <ctype.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -23,156 +24,184 @@ url_hexval(char c)
 		return (c - '0');
 	}
 	if ((c >= 'A') && (c <= 'F')) {
-		return (c - 'A');
+		return ((c - 'A') + 10);
 	}
 	if ((c >= 'a') && (c <= 'f')) {
-		return (c - 'a');
+		return ((c - 'a') + 10);
 	}
 	return (0);
 }
 
+// This returns either 0, or NNG_EINVAL, if the supplied input string
+// is malformed UTF-8.  We consider UTF-8 malformed when the sequence
+// is an invalid code point, not the shortest possible code point, or
+// incomplete.
 static int
-url_decode_buf(const char *in, char *out, int len)
+url_utf8_validate(void *arg)
 {
-	int            dlen;
-	const uint8_t *src;
-	uint8_t *      dst;
-	int            c;
+	uint8_t *s = arg;
+	uint32_t v, minv;
+	int      nb;
 
-	src = (const uint8_t *) in;
-	dst = (uint8_t *) out;
-
-	dlen = 0;
-	while ((c = *src) != 0) {
-		switch (c) {
-		case '%':
-			if ((!isxdigit(src[1])) || (!isxdigit(src[2]))) {
-				return (-1);
-			}
-			c = (url_hexval(src[1]) * 16) + url_hexval(src[2]);
-			// We don't support encoded control characters.
-			if ((c < ' ') || (c == 0x7F)) {
-				return (-1);
-			}
-			src += 3;
-			break;
-		case '+':
-			src++;
-			c = ' ';
-			break;
-		default:
-			// Reject control characters and non-ASCII
-			if ((c >= 0x7F) || (c <= ' ')) {
-				return (-1);
-			}
-			// Technically this will accept some "unsafe"
-			// characters as is.
-			src++;
-			break;
-		}
-
-		if (dlen < len) {
-			*dst++ = c;
-		}
-		dlen++;
-	}
-	if (dlen < len) {
-		*dst = '\0';
-	}
-	dlen++; // for null terminator
-	return (dlen);
-}
-
-int
-nni_url_decode(char **out, const char *in)
-{
-	int   len = 0;
-	char *dst;
-
-	if ((len = url_decode_buf(in, NULL, 0)) < 1) {
-		return (NNG_EINVAL);
-	}
-	if ((dst = nni_alloc(len)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	url_decode_buf(in, dst, len);
-	*out = dst;
-	return (0);
-}
-
-static const char *url_hexdigits = "0123456789ABCDEF";
-static const char *url_safe      = "-_.~";
-
-static int
-url_encode_buf(const char *in, char *out, int len, const char *specials)
-{
-	uint8_t *      dst;
-	const uint8_t *src;
-	int            dlen;
-	int            c;
-
-	dlen = 0;
-	src  = (const uint8_t *) in;
-	dst  = (uint8_t *) out;
-
-	while ((c = *src) != 0) {
-		if ((c < ' ') || (c == 0x7F)) {
-			// No encoding of control characters
-			return (-1);
-		}
-		if ((c < 0x80) &&
-		    ((isalnum(c) || (strchr(specials, c) != NULL) ||
-		        (strchr(url_safe, c) != NULL)))) {
-			if (dlen < len) {
-				*dst++ = c;
-			}
-			dlen++;
-			src++;
+	while (*s) {
+		if ((s[0] & 0x80) == 0) {
+			s++;
 			continue;
 		}
-
-		if (dlen < len) {
-			*dst++ = '%';
+		if ((s[0] & 0xe0) == 0xc0) {
+			// 0x80 thru 0x7ff
+			v    = (s[0] & 0x1f);
+			minv = 0x80;
+			nb   = 1;
+		} else if ((s[0] & 0xf0) == 0xe0) {
+			v    = (s[0] & 0xf);
+			minv = 0x800;
+			nb   = 2;
+		} else if ((s[0] & 0xf8) == 0xf0) {
+			v    = (s[0] & 0x7);
+			minv = 0x10000;
+			nb   = 3;
+		} else {
+			// invalid byte, either continuation, or too many
+			// leading 1 bits.
+			return (NNG_EINVAL);
 		}
-		dlen++;
-		if (dlen < len) {
-			*dst++ = url_hexdigits[((c & 0xf0) >> 4)];
+		s++;
+		for (int i = 0; i < nb; i++) {
+			if ((s[0] & 0xc0) != 0x80) {
+				return (NNG_EINVAL); // not continuation
+			}
+			s++;
+			v <<= 6;
+			v += s[0] & 0x3f;
 		}
-		dlen++;
-		if (dlen < len) {
-			*dst++ = url_hexdigits[(c & 0xf)];
+		if (v < minv) {
+			return (NNG_EINVAL);
 		}
-		dlen++;
-		src++;
+		if ((v >= 0xd800) && (v <= 0xdfff)) {
+			return (NNG_EINVAL);
+		}
+		if (v > 0x10ffff) {
+			return (NNG_EINVAL);
+		}
 	}
-	if (dlen < len) {
-		*dst = '\0';
-	}
-	dlen++;
-	return (dlen);
-}
-
-int
-nni_url_encode_ext(char **out, const char *in, const char *specials)
-{
-	int   len;
-	char *dst;
-
-	if ((len = url_encode_buf(in, NULL, 0, specials)) < 0) {
-		return (NNG_EINVAL);
-	}
-	if ((dst = nni_alloc(len)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	url_encode_buf(in, dst, len, specials);
-	*out = dst;
 	return (0);
 }
 
-int
-nni_url_encode(char **out, const char *in)
+static int
+url_canonify_uri(char **outp, const char *in)
 {
-	return (nni_url_encode_ext(out, in, ""));
+	char * out;
+	size_t src, dst, len;
+	int    c;
+	int    rv;
+	bool   skip;
+
+	// We know that the transform is strictly "reducing".
+	if ((out = nni_strdup(in)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	len = strlen(out);
+
+	// First pass, convert '%xx' for safe characters to unescaped forms.
+	src = dst = 0;
+	while ((c = out[src]) != 0) {
+		if (c == '%') {
+			if ((!isxdigit(out[src + 1])) ||
+			    (!isxdigit(out[src + 2]))) {
+				nni_free(out, len);
+				return (NNG_EINVAL);
+			}
+			c = url_hexval(out[src + 1]);
+			c *= 16;
+			c += url_hexval(out[src + 2]);
+			// If it's a safe character, decode, otherwise leave
+			// it alone.  We also decode valid high-bytes for
+			// UTF-8, which will let us validate them and use
+			// those characters in file names later.
+			if (((c >= 'A') && (c <= 'Z')) ||
+			    ((c >= 'a') && (c <= 'z')) ||
+			    ((c >= '0') && (c <= '9')) || (c == '.') ||
+			    (c == '~') || (c == '_') || (c == '-') ||
+			    (c >= 0x80)) {
+				out[dst++] = (char) c;
+			} else {
+				out[dst++] = '%';
+				out[dst++] = toupper(out[src + 1]);
+				out[dst++] = toupper(out[src + 2]);
+			}
+			src += 3;
+			continue;
+		} else {
+			out[dst++] = out[src++];
+		}
+	}
+	out[dst] = 0;
+
+	// Second pass, eliminate redundant //.
+	src = dst = 0;
+	skip      = false;
+	while ((c = out[src]) != 0) {
+		if ((c == '/') && (!skip)) {
+			out[dst++] = '/';
+			while (out[src] == '/') {
+				src++;
+			}
+			continue;
+		}
+		if ((c == '?') || (c == '#')) {
+			skip = true;
+		}
+		out[dst++] = c;
+		src++;
+	}
+	out[dst] = 0;
+
+	// Second pass, reduce /. and /.. elements, but only in the path.
+	src = dst = 0;
+	skip      = false;
+	while ((c = out[src]) != 0) {
+		if ((c == '/') && (!skip)) {
+			if ((strncmp(out + src, "/..", 3) == 0) &&
+			    (out[src + 3] == 0 || out[src + 3] == '#' ||
+			        out[src + 3] == '?' || out[src + 3] == '/')) {
+
+				if (dst > 0) {
+					do {
+						dst--;
+					} while ((dst) && (out[dst] != '/'));
+				}
+				src += 3;
+				continue;
+			}
+			if ((strncmp(out + src, "/.", 2) == 0) &&
+			    (out[src + 2] == 0 || out[src + 2] == '#' ||
+			        out[src + 2] == '?' || out[src + 2] == '/')) {
+				src += 2; // just skip over it
+				continue;
+			}
+			out[dst++] = '/';
+			src++;
+		} else {
+			if ((c == '?') || (c == '#')) {
+				skip = true;
+			}
+			out[dst++] = c;
+			src++;
+		}
+	}
+	out[dst] = 0;
+
+	// Finally lets make sure that the results are valid UTF-8.
+	// This guards against using UTF-8 redundancy to break security.
+	if ((rv = url_utf8_validate(out)) != 0) {
+		nni_free(out, len);
+		return (rv);
+	}
+
+	*outp = nni_strdup(out);
+	nni_free(out, len);
+	return (*outp == NULL ? NNG_ENOMEM : 0);
 }
 
 static struct {
@@ -226,6 +255,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 {
 	nni_url *   url;
 	size_t      len;
+	int         outlen;
 	const char *s;
 	char        c;
 	int         rv;
@@ -255,7 +285,9 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		rv = NNG_ENOMEM;
 		goto error;
 	}
-	memcpy(url->u_scheme, s, len);
+	for (int i = 0; i < len; i++) {
+		url->u_scheme[i] = tolower(s[i]);
+	}
 	url->u_scheme[len] = '\0';
 
 	// Look for host part (including colon).  Will be terminated by
@@ -301,14 +333,19 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		rv = NNG_ENOMEM;
 		goto error;
 	}
-	memcpy(url->u_host, s, len);
+	// Copy the host portion, but make it lower case (hostnames are
+	// case insensitive).
+	for (int i = 0; i < len; i++) {
+		url->u_host[i] = tolower(s[i]);
+	}
 	url->u_host[len] = '\0';
 	s += len;
 
-	if ((url->u_rawpath = nni_strdup(s)) == NULL) {
-		rv = NNG_ENOMEM;
+	if ((rv = url_canonify_uri(&url->u_rawpath, s)) != 0) {
 		goto error;
 	}
+
+	s = url->u_rawpath;
 	for (len = 0; (c = s[len]) != '\0'; len++) {
 		if ((c == '?') || (c == '#')) {
 			break;
@@ -319,7 +356,6 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		rv = NNG_ENOMEM;
 		goto error;
 	}
-
 	memcpy(url->u_path, s, len);
 	url->u_path[len] = '\0';
 

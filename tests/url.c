@@ -265,4 +265,59 @@ TestMain("URLs", {
 		So(url == NULL);
 	});
 
+	Convey("Canonicalization works", {
+		url = NULL;
+		So(nni_url_parse(&url,
+		       "hTTp://www.EXAMPLE.com/bogus/.%2e/%7egarrett") == 0);
+		So(url != NULL);
+		So(strcmp(url->u_scheme, "http") == 0);
+		So(strcmp(url->u_hostname, "www.example.com") == 0);
+		So(strcmp(url->u_port, "80") == 0);
+		So(strcmp(url->u_path, "/~garrett") == 0);
+		nni_url_free(url);
+	});
+
+	Convey("Path resolution works", {
+		url = NULL;
+		So(nni_url_parse(&url,
+		       "http://www.x.com//abc/def/./x/..///./../y") == 0);
+		So(url != NULL);
+		So(strcmp(url->u_scheme, "http") == 0);
+		So(strcmp(url->u_hostname, "www.x.com") == 0);
+		So(strcmp(url->u_port, "80") == 0);
+		So(strcmp(url->u_path, "/abc/y") == 0);
+		nni_url_free(url);
+	});
+
+	Convey("Query info unmolested", {
+		url = NULL;
+		So(nni_url_parse(
+		       &url, "http://www.x.com/?/abc/def/./x/.././../y") == 0);
+		So(url != NULL);
+		So(strcmp(url->u_scheme, "http") == 0);
+		So(strcmp(url->u_hostname, "www.x.com") == 0);
+		So(strcmp(url->u_port, "80") == 0);
+		So(strcmp(url->u_path, "/") == 0);
+		So(strcmp(url->u_query, "/abc/def/./x/.././../y") == 0);
+		nni_url_free(url);
+	});
+
+	Convey("Bad UTF-8 fails", {
+		url = NULL;
+		So(nni_url_parse(&url, "http://x.com/x%80x") == NNG_EINVAL);
+		So(nni_url_parse(&url, "http://x.com/x%c0%81") == NNG_EINVAL);
+	});
+
+	Convey("Valid UTF-8 works", {
+		url = NULL;
+		So(nni_url_parse(&url, "http://www.x.com/%c2%a2_centsign") ==
+		    0);
+		So(url != NULL);
+		So(strcmp(url->u_scheme, "http") == 0);
+		So(strcmp(url->u_hostname, "www.x.com") == 0);
+		So(strcmp(url->u_port, "80") == 0);
+		So(strcmp(url->u_path, "/\xc2\xa2_centsign") == 0);
+		nni_url_free(url);
+	});
+
 })
