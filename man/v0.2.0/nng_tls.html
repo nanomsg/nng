@@ -709,16 +709,6 @@ network byte order (most significant byte is first).</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_x_509_formats">X.509 Formats</h3>
-<div class="paragraph">
-<p>The <em>tls</em> transport supports certificates and key material provided
-in either PEM or DER encoding.  When using PEM format data, the
-encoding must be at the start of the data, with no intervening
-content.  Furthermore, PEM encoded objects may have a terminating
-NUL byte, which will be ignored if present.</p>
-</div>
-</div>
-<div class="sect2">
 <h3 id="_transport_options">Transport Options</h3>
 <div class="paragraph">
 <p>The following transport options are available. Note that
@@ -728,29 +718,54 @@ setting these must be done before the transport is started.</p>
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_TLS_CONFIG</code></dt>
 <dd>
-<p>This option is used to set or obtain the TLS configuration
-object (type <code>nng_tls_config *</code>), which is passed as a pointer.
-Setting this option adds a reference to the object; obtaining the
-object pointer does not.  (Therefore when retrieving this option,
-care must be taken not to access it after the endpoint is closed.)</p>
+<p>This option is used on an endpoint to access the underlying TLS
+configuration object.  The value is of type <code>nng_tls_config *</code>.</p>
 </dd>
 </dl>
 </div>
-<div class="paragraph">
-<p>Note that configuration object is not modifiable once it has been
-used in a running TLS stream.</p>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use this option when advanced TLS configuration is required.
+</td>
+</tr>
+</table>
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>NNG_OPT_TLS_AUTH_VERIFIED</code></dt>
+<dt class="hdlist1"><code>NNG_OPT_TLS_CA_FILE</code></dt>
 <dd>
-<p>This is a read-only boolean option available only for
-pipes, indicating whether the peer certificate was
-valdiated or not.  This is only set when the pipe
-has completed the handshake with the peer (which always
-occurs before exchanging data), and will only be set
-if the <code>NNG_OPT_TLS_AUTH_MODE</code> option is set to
-<code>nng_tls_auth_mode_optional</code> or <code>nng_tls_auth_mode_required</code>.</p>
+<p>This is a write-only option used to load certificates associated
+associated private key from a file.
+See <a href="nng_tls_config_ca_file.html">nng_tls_config_ca_file(3)</a> for more
+information.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_CERT_KEY_FILE</code></dt>
+<dd>
+<p>This is a write-only option used to load the local certificate and
+associated private key from a file. The private key used must be
+unencrypted. (Use the <code>NNG_OPT_TLS_CONFIG</code> option to access the underlying
+TLS configuration if more advanced configuration is needed.)
+See <a href="nng_tls_config_own_cert.html">nng_tls_config_own_cert(3)</a> for more
+information.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_AUTH_MODE</code></dt>
+<dd>
+<p>This is a write-only option used to configure the authentication mode
+used.  It can take an integer with value <code>NNG_TLS_AUTH_MODE_NONE</code>,
+<code>NNG_TLS_AUTH_MODE_REQUIRED</code>, or <code>NNG_TLS_AUTH_MODE_OPTIONAL</code>.  See
+<a href="nng_tls_config_auth_mode.html">nng_tls_config_auth_mode(3)</a> for more details.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_VERIFIED</code></dt>
+<dd>
+<p>This is a read-only option which returns a boolean value (integer 0 or 1).
+It will true (1) if the remote peer has been properly verified using TLS
+authentication, or false (0) otherwise.  This option may return incorrect
+results if peer authentication is disabled with <code>NNG_TLS_AUTH_MODE_NONE</code>.</p>
 </dd>
 </dl>
 </div>
@@ -789,7 +804,7 @@ Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-01-10 02:42:28 UTC
+Last updated 2018-01-17 18:04:23 UTC
 </div>
 </div>
 </body>

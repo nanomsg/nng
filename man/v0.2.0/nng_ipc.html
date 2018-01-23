@@ -544,7 +544,7 @@ no extra steps to use it should be necessary.</p>
 <h3 id="_uri_format">URI Format</h3>
 <div class="paragraph">
 <p>This transport uses URIs using the scheme <code>ipc://</code>, followed by
-a path name in the file system where the socket or named pipe
+a an absolute path name in the file system where the socket or named pipe
 should be created.</p>
 </div>
 <div class="admonitionblock tip">
@@ -556,16 +556,10 @@ should be created.</p>
 <td class="content">
 On Windows, all names are prefixed by <code>\.\pipe\</code> and do not
 occupy the normal file system.  On POSIX platforms, the path is
-taken literally, and is relative to the current directory, unless
-an extra leading <code>/</code> is provided.  For example, <code>ipc://myname</code> refers
-to the name <code>myname</code> in the current directory, whereas <code>ipc:///tmp/myname</code>
-refers to <code>myname</code> located in <code>/tmp</code>.
+taken literally, and is relative to the root directory.
 </td>
 </tr>
 </table>
-</div>
-<div class="paragraph">
-<p>The entire URI must be less than <code>NNG_MAXADDRLEN</code> bytes long.</p>
 </div>
 </div>
 <div class="sect2">
@@ -647,7 +641,7 @@ Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-01-02 02:11:17 UTC
+Last updated 2018-01-23 04:38:20 UTC
 </div>
 </div>
 </body>
