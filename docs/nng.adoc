@@ -53,6 +53,38 @@ application developer to use the new-style API.
 The _nng_ library is implemented in pure C; if you need bindings for
 other languages please check the http://nanomsg.org/[website].
 
+URLs
+~~~~
+
+The _nng_ library uses universal resource locators (URLs)
+following the format specified in 
+https://tools.ietf.org/html/rfc3986[RFC 3986],
+including some schemes that are unique
+to SP.
+The URLs used in _nng_ are canonicalized as follows, mostly in
+accordance with
+https://tools.ietf.org/html/rfc3986#section-6.2.2[RFC 3986 6.2.2]:
+
+  1. The URL is parsed into scheme, userinfo, host, port, path, query and
+     fragment components.  (Not all of these members are necessarily present.)
+  2. The scheme, hostname, and port if present, are converted to lower case.
+  3. Percent-encoded values for
+     https://tools.ietf.org/html/rfc3986#section-2.3[unreserved characters]
+     converted to their unencoded forms.
+  4. Additionally URL percent-encoded values for characters in the path
+     and with numeric values larger than 127 (i.e. not ASCII) are decoded.
+  5. The resulting path is checked for invalid UTF-8 sequences, consisting
+     of surrogate pairs, illegal byte sequences, or overlong encodings.
+     If this check fails, then the entire URL is considered invalid.
+  6. Path segments consisting of `.` and `..` are resolved as per 
+     https://tools.ietf.org/html/rfc3986#section-6.2.2.3[RFC 3986 6.2.2.3].
+  7. Further, empty path segments are removed, meaning that duplicate
+     slash (`/`) separators are removed from the path.
+
+Note that steps 4, 5, and 7 are not specified by RFC 3986, but performing
+them is believed to improve both the usability and security of _nng_
+applications, without violating RFC 3986 itself.
+
 Protocols
 ~~~~~~~~~
 
