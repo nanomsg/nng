@@ -1,9 +1,7 @@
-libnng(3)
-=========
+= libnng(3)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:icons: font
 :copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
             Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
@@ -11,28 +9,26 @@ libnng(3)
             file was obtained (LICENSE.txt).  A copy of the license may also \
             be found online at https://opensource.org/licenses/MIT.
 
-NAME
-----
+== NAME
+
 libnng - nanomsg next generation library
 
-SYNOPSIS
---------
+== SYNOPSIS
+
 *cc* ['flags'] 'files' *-lnng* ['libraries']
 
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The <<nng#,nng(7)>> library provides a common messaging framework
 intended to solve common communication problems in distributed applications.
 
 It provides a C language API.
 
-Common Functions
-~~~~~~~~~~~~~~~~
+=== Common Functions
+
 The following common functions exist in _libnng_.
 
-[cols="1,4"]
 |===
 |<<nng_alloc#,nng_alloc(3)>>|allocate memory
 |<<nng_dial#,nng_dial(3)>>|create and start a dialer
@@ -40,12 +36,10 @@ The following common functions exist in _libnng_.
 |<<nng_strerror#,nng_strerror(3)>>|return an error description
 |===
 
-Socket Functions
-~~~~~~~~~~~~~~~~
+=== Socket Functions
 
 The following functions operate on sockets.
 
-[cols="1,4"]
 |===
 |<<nng_close#,nng_close(3)>>|close a socket
 |<<nng_closeall#,nng_closeall(3)>>|close all open sockets
@@ -57,8 +51,7 @@ The following functions operate on sockets.
 |<<nng_setopt#,nng_setopt(3)>>|set a socket option
 |===
 
-Message Functions
-~~~~~~~~~~~~~~~~~
+=== Message Handling Functions
 
 Applications desiring to use the richest part of _libnng_ will want to
 use the message API, where a message structure is passed between functions.
@@ -68,21 +61,39 @@ Messages are divided into a header and body, where the body generally carries
 user-payload and the header carries protocol specific header information.
 Most applications will only interact with the body.
 
-[cols="1,4"]
 |===
 |<<nng_msg_alloc#,nng_msg_alloc(3)>>|allocate a message
-|<<nng_msg_body#,nng_msg_body(3)>>|return the message body
+|<<nng_msg_append#,nng_msg_append(3)>>|append to message body
+|<<nng_msg_body#,nng_msg_body(3)>>|return message body
+|<<nng_msg_chop#,nng_msg_chop(3)>>|remove data from end of message body
+|<<nng_msg_clear#,nng_msg_clear(3)>>|clear message body
+|<<nng_msg_dup#,nng_msg_len(3)>>|duplicate a message
 |<<nng_msg_free#,nng_msg_free(3)>>|free a message
-|<<nng_msg_header#,nng_msg_header(3)>>|return the message header
-|<<nng_msg_header_len#,nng_msg_header_len(3)>>|return the message header length
+|<<nng_msg_insert#,nng_msg_insert(3)>>|prepend to message body
 |<<nng_msg_len#,nng_msg_len(3)>>|return the message body length
 |<<nng_msg_realloc#,nng_msg_realloc(3)>>|reallocate a message
+|<<nng_msg_trim#,nng_msg_trim(3)>>|remove data from start of message body
 |<<nng_recv_msg#,nng_recvmsg(3)>>|receive a message
 |<<nng_sendmsg#,nng_sendmsg(3)>>|send a message
 |===
 
-Asynchronous Operations
-~~~~~~~~~~~~~~~~~~~~~~~
+==== Message Header Handling
+
+TIP: Few applications will need these functions, as message headers are only
+used to carry protocol-specific content.  However, applications which use raw
+mode may need to access the header of messages.
+
+|===
+|<<nng_msg_header#,nng_msg_header(3)>>|return message header
+|<<nng_msg_header_append#,nng_msg_header_append(3)>>|append to message header
+|<<nng_msg_header_chop#,nng_msg_header_chop(3)>>|remove data from end of message header
+|<<nng_msg_header_clear#,nng_msg_header_clear(3)>>|clear message header
+|<<nng_msg_header_insert#,nng_msg_header_insert(3)>>|prepend to message header
+|<<nng_msg_header_len#,nng_msg_header_len(3)>>|return the message header length
+|<<nng_msg_header_trim#,nng_msg_header_trim(3)>>|remove data from start of message header
+|===
+
+=== Asynchronous Operations
 
 Most applications will interact with _nng_ synchronously; that is that
 functions such as <<nng_send#,nng_send()>> will block the calling
@@ -105,7 +116,6 @@ be associated with an _aio_ at any time.
 
 The following functions are used in the asynchronous model:
 
-[cols="1,4"]
 |===
 |<<nng_aio_alloc#,nng_aio_alloc(3)>>|allocate asynchronous I/O context
 |<<nng_aio_cancel#,nng_aio_cancel(3)>>|cancel asynchronous I/O operation
@@ -120,13 +130,11 @@ The following functions are used in the asynchronous model:
 |<<nng_send_aio#,nng_send_aio(3)>>|send a message asynchronously
 |===
 
-Protocols
-~~~~~~~~~
+=== Protocols
 
 The following functions are used to construct a socket with a specific
 protocol:
 
-[cols="1,4"]
 |===
 | <<nng_bus#,nng_bus_open(3)>>|open a bus socket
 | <<nng_pair#,nng_pair_open(3)>>|open a pair socket
@@ -138,12 +146,10 @@ protocol:
 | <<nng_surveyor#,nng_surveyor_open(3)>>|open a surveyor socket
 |===
 
-Transports
-~~~~~~~~~~
+=== Transports
 
 The following functions are used to register a transport for use.
 
-[cols="1,4"]
 |===
 | <<nng_inproc#,nng_inproc_register(3)>>|register inproc transport
 | <<nng_ipc#,nng_ipc_register(3)>>|register IPC transport
@@ -154,12 +160,14 @@ The following functions are used to register a transport for use.
 | <<nng_zerotier#,nng_zerotier_register(3)>>|register ZeroTier transport
 |===
 
-TLS Configuration Objects
-~~~~~~~~~~~~~~~~~~~~~~~~
+=== TLS Configuration Objects
 
-The following functions are used to manipulate TLS configuration objects.
+The following functions are used to manipulate transport layer security
+(TLS) configuration objects.
 
-[cols="1,4"]
+NOTE: These functions will only be present if the library has been built
+with TLS support.
+
 |===
 | <<nng_tls_config_auth_alloc#,nng_tls_config_alloc(3)>>|allocate TLS configuration
 | <<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>>|set authentication mode
@@ -167,18 +175,17 @@ The following functions are used to manipulate TLS configuration objects.
 | <<nng_tls_config_ca_file#,nng_tls_config_ca_file(3)>>|load certificate authority from file
 | <<nng_tls_config_cert_key_file#,nng_tls_config_cert_key_file_cert(3)>>|load own certificate and key from file
 | <<nng_tls_config_own_cert#,nng_tls_config_own_cert(3)>>|set own certificate and key
-| <<nng_tls_config_free#,nng_tls_config_free(3)>>}free TLS configuration
+| <<nng_tls_config_free#,nng_tls_config_free(3)>>|free TLS configuration
 | <<nng_tls_config_server_name#,nng_tls_config_server_name(3)>>|set remote server name
 |===
 
 
-SEE ALSO
---------
+== SEE ALSO
+
 <<nng#,nng(7)>>,
 <<nng_compat#,nng_compat(3)>>
 
-COPYRIGHT
----------
+== COPYRIGHT
 
 Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
 Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]

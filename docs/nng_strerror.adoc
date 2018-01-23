@@ -1,10 +1,7 @@
-nng_strerror(3)
-===============
+= nng_strerror(3)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:icons: font
-:source-highlighter: pygments
 :copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
             Copyright 2018 Capitar IT Group BV <info@capitar.com> \
             This software is supplied under the terms of the MIT License, a \
@@ -12,12 +9,11 @@ nng_strerror(3)
             file was obtained (LICENSE.txt).  A copy of the license may also \
             be found online at https://opensource.org/licenses/MIT.
 
-NAME
-----
+== NAME
+
 nng_strerror - return an error description
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 [source, c]
 -----------
@@ -26,9 +22,7 @@ SYNOPSIS
 const char * nng_strerror(int err);
 -----------
 
-
-DESCRIPTION
------------
+== DESCRIPTION
 
 The `nng_strerror()` returns the human-readable description of the
 given _nng_ error in `err`.
@@ -41,23 +35,17 @@ subject to change.  Therefore applications must not depend on the message,
 but may use them verbatim when supplying information to end-users, such
 as in diagnostic messages or log entries.
 
-
-RETURN VALUES
--------------
+== RETURN VALUES
 
 This function returns the human-readable error message, terminated
 by a `NUL` byte.
 
-
-SEE ALSO
---------
+== SEE ALSO
 
 <<libnng#,libnng(3)>>,
 <<nng#,nng(7)>>
 
-
-COPYRIGHT
----------
+== COPYRIGHT
 
 Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
 Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
