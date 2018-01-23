@@ -1,7 +1,7 @@
 #!/bin/bash
 #
-# Copyright 2017 Garrett D'Amore <garrett@damore.org>
-# Copyright 2017 Capitar IT Group BV <info@capitar.com>
+# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2018 Capitar IT Group BV <info@capitar.com>
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
 # file was obtained (LICENSE.txt).  A copy of the license may also be
@@ -33,25 +33,69 @@ else
 	style=man
 fi
 
-while getopts hmc arg
+while getopts cs: arg
 do
 	case "${arg}" in
-	h)	style=html;;
-	m)	style=man;;
 	c)	cleanup=yes;;
-	?)	echo "Usage: $0 [-h|-m] <files...>"; exit 1 ;;
+	s)	style=$OPTARG;;
+	?)	echo "Usage: $0 [-s <style>][-c] <files...>"; exit 1 ;;
 	esac
 done
 shift $(( $OPTIND - 1 ))
 
-open_man=${MAN}
-open_html=${OPEN}
-suffix_html=".html"
-suffix_man=".man"
-backend_html="html5"
-backend_man="manpage"
+case $style in
+html)
+	suffix=.html
+	;;
+ps)
+	suffix=.ps
+	;;
+pdf)
+	suffix=.pdf
+	;;
+man)
+	suffix=.man
+	OPEN=${MAN}
+	;;
+*)
+	echo "Unknown style, choose one of [html|man|pdf|ps]." 1>&2
+	exit 2
+esac
+
 version=$(cat $(dirname $0)/../.version)
 name=nng
+
+generate_pdf() {
+	typeset input=$1
+	typeset output=$2
+	asciidoctor-pdf -aversion-label=${name} -arevnumber=${version} \
+		-b pdf -o ${output} $input
+}
+
+generate_man() {
+	typeset input=$1
+	typeset output=$2
+	asciidoctor -aversion-label=${name} -arevnumber=${version} \
+		-b manpage -o ${output} $input
+}
+
+generate_html() {
+	typeset input=$1
+	typeset output=$2
+	asciidoctor -aversion-label=${name} -arevnumber=${version} \
+		-b html5 -o ${output} $input
+}
+
+generate_ps() {
+	typeset input=$1
+	typeset output=$2
+	manpage=${2%.ps}.man
+	generate_man $1 $manpage
+	if [ $? -eq 0 ]; then
+		man -t $manpage > $output
+	fi
+}
+
 
 if [ -n "${cleanup}" ]
 then
@@ -67,15 +111,10 @@ else
 	mkdir -p ${tempdir}
 fi
 
-eval backend=\$backend_${style}
-eval suffix=\$suffix_${style}
-eval view=\$open_${style}
-
 for input in "$@"; do
 	base=$(basename $input)
 	base=${base%.adoc}
 	output=${tempdir}/${base}${suffix}
-	asciidoctor -aversion-label=${name} -arevnumber=${version} \
-		-b ${backend} -o ${output} $input
-	$view $output
+	generate_${style} $input $output
+	$OPEN $output
 done
