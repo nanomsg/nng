@@ -69,7 +69,7 @@ generate_pdf() {
 	typeset input=$1
 	typeset output=$2
 	asciidoctor-pdf -aversion-label=${name} -arevnumber=${version} \
-		-b pdf -o ${output} $input
+		-b pdf -a notitle -d article -o ${output} $input
 }
 
 generate_man() {
