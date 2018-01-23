@@ -46,8 +46,7 @@ URI Format
 ~~~~~~~~~~
 
 This transport uses URIs using the scheme `inproc://`, followed by
-an arbitrary string of text, terminated by a `NUL` byte.  The
-entire URI must be less than `NNG_MAXADDRLEN` bytes long.
+an arbitrary string of text, terminated by a `NUL` byte.
 
 Multiple URIs can be used within the
 same application, and they will not interfere with one another.

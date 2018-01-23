@@ -2053,7 +2053,7 @@ zt_ep_fini(void *arg)
 }
 
 static int
-zt_parsehex(const char **sp, uint64_t *valp, int wildok)
+zt_parsehex(const char **sp, uint64_t *valp, bool wildok)
 {
 	int         n;
 	const char *s = *sp;
@@ -2109,17 +2109,12 @@ zt_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	int         n;
 	int         rv;
 	char        c;
-	const char *u;
+	const char *h;
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 
-	// URL parsing...
-	// URL is form zt://<nwid>[/<remoteaddr>]:<port>
-	// The <remoteaddr> part is required for remote  dialers, but is
-	// not used at all for listeners.  (We have no notion of binding
-	// to different node addresses.)
 	ep->ze_mode       = mode;
 	ep->ze_mtu        = ZT_MIN_MTU;
 	ep->ze_aio        = NULL;
@@ -2135,20 +2130,33 @@ zt_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		return (rv);
 	}
 
-	u = url->u_rawurl + strlen("zt://");
+	// Our URL format is:
+	//
+	// zt://<nodeid>.<nwid>:<port>
+	//
+	// The port must be specified, but may be zero.  The nodeid
+	// may be '*' to refer to ourself.  There may be a trailing slash
+	// which will be ignored.
+
+	h = url->u_hostname;
+	if (((strlen(url->u_path) == 1) && (url->u_path[0] != '/')) ||
+	    (strlen(url->u_path) > 1) || (url->u_fragment != NULL) ||
+	    (url->u_query != NULL) || (url->u_userinfo != NULL) ||
+	    (zt_parsehex(&h, &node, true) != 0) || (*h++ != '.') ||
+	    (zt_parsehex(&h, &ep->ze_nwid, false) != 0) ||
+	    (node > 0xffffffffffull)) {
+		return (NNG_EADDRINVAL);
+	}
+	h = url->u_port;
+	if ((zt_parsedec(&h, &port) != 0) || (port > zt_max_port)) {
+		return (NNG_EADDRINVAL);
+	}
 
 	// Parse the URL.
 	switch (mode) {
 	case NNI_EP_MODE_DIAL:
-		// We require zt://<nwid>/<remotenode>:<port>
-		// The remote node must be a 40 bit address
-		// (max), and we require a non-zero port to
-		// connect to.
-		if ((zt_parsehex(&u, &nwid, 0) != 0) || (*u++ != '/') ||
-		    (zt_parsehex(&u, &node, 1) != 0) ||
-		    (node > 0xffffffffffull) || (*u++ != ':') ||
-		    (zt_parsedec(&u, &port) != 0) || (*u != '\0') ||
-		    (port > zt_max_port) || (port == 0)) {
+		/// We have to have a non-zero port number to connect to.
+		if (port == 0) {
 			return (NNG_EADDRINVAL);
 		}
 		ep->ze_raddr = node;
@@ -2157,28 +2165,6 @@ zt_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		ep->ze_laddr = 0;
 		break;
 	case NNI_EP_MODE_LISTEN:
-		// Listen mode is just zt://<nwid>:<port>.  The
-		// port may be zero in this case, to indicate
-		// that the server should allocate an ephemeral
-		// port.  We do allow the same form of URL including
-		// the node address, but that must be zero, a wild
-		// card,
-		// or our own node address.
-		if (zt_parsehex(&u, &nwid, 0) != 0) {
-			return (NNG_EADDRINVAL);
-		}
-		node = 0;
-		// Look for optional node address.
-		if (*u == '/') {
-			u++;
-			if (zt_parsehex(&u, &node, 1) != 0) {
-				return (NNG_EADDRINVAL);
-			}
-		}
-		if ((*u++ != ':') || (zt_parsedec(&u, &port) != 0) ||
-		    (*u != '\0') || (port > zt_max_port)) {
-			return (NNG_EADDRINVAL);
-		}
 		ep->ze_laddr = node;
 		ep->ze_laddr <<= 24;
 		ep->ze_laddr |= port;
@@ -2188,8 +2174,6 @@ zt_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		NNI_ASSERT(0);
 		break;
 	}
-
-	ep->ze_nwid = nwid;
 
 	nni_mtx_lock(&zt_lk);
 	rv = zt_node_find(ep);

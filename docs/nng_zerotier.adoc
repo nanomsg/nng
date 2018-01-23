@@ -64,19 +64,19 @@ cannot be initialized for any reason.
 URI Format
 ~~~~~~~~~~
 
-This transport uses URIs using the scheme `zt://`, followed by a network
-address (sixteen hexadecimal digits), followed by a `/` delimiter,
-followed by the node number (ten hexadecimal digits) of the listening
-node, followed by a service or port number (decimal value, up to 24-bits).
-For example, the URI `zt://0123456789abdef/fedcba9876:999` indicates
-that node fedcba9876 on network 0123456789abcdef listening on port 999.
+This transport uses URIs using the scheme `zt://`, followed by a node
+number (ten hexadecimal digits) followed by a `.` delimited, and then
+a network address (sixteen hexadecimal digits), followed by a colon (`.`)
+and service or port number (decimal value, up to 24-bits).
+For example, the URI `zt://fedcba9876.0123456789abdef:999` indicates
+that node fedcba9876 on network 0123456789abcdef is listening on port 999.
 
-Listening nodes may use port 0, or `*`, to indicate that a suitable port
-number be selected automatically. Applications using this must get the
-selected port address using the `nng_listener_getopt` function.
+The special value `*` can be used in lieu of a node number to represent
+the node's own node number.
 
-Listening nodes may also elide their own node number, as well as the
-delimiter separating the node number.
+Listeners may use port 0 to indicate that a suitable port
+number be selected automatically. Applications using this must determine the
+selected port number using the `nng_listener_getopt` function.
 
 Socket Address
 ~~~~~~~~~~~~~~

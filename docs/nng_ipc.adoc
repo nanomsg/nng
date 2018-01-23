@@ -47,17 +47,12 @@ URI Format
 ~~~~~~~~~~
 
 This transport uses URIs using the scheme `ipc://`, followed by
-a path name in the file system where the socket or named pipe
+a an absolute path name in the file system where the socket or named pipe
 should be created.
 
 TIP: On Windows, all names are prefixed by `\.\pipe\` and do not
 occupy the normal file system.  On POSIX platforms, the path is
-taken literally, and is relative to the current directory, unless
-an extra leading `/` is provided.  For example, `ipc://myname` refers
-to the name `myname` in the current directory, whereas `ipc:///tmp/myname`
-refers to `myname` located in `/tmp`.
-
-The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
+taken literally, and is relative to the root directory.
 
 Socket Address
 ~~~~~~~~~~~~~~

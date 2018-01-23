@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -206,7 +206,7 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_zt_register() == 0);
 
-		snprintf(addr, sizeof(addr), "zt://" NWID ":%u", port);
+		snprintf(addr, sizeof(addr), "zt://*." NWID ":%u", port);
 
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
@@ -250,7 +250,7 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_zt_register() == 0);
 
-		snprintf(addr, sizeof(addr), "zt://" NWID "/%llx:%u",
+		snprintf(addr, sizeof(addr), "zt://%llx." NWID ":%u",
 		    (unsigned long long) node, port);
 
 		So(nng_pair_open(&s) == 0);
@@ -269,7 +269,7 @@ TestMain("ZeroTier Transport", {
 
 		So(nng_zt_register() == 0);
 
-		snprintf(addr, sizeof(addr), "zt://" NWID ":%u", port);
+		snprintf(addr, sizeof(addr), "zt://*." NWID ":%u", port);
 
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
@@ -295,7 +295,7 @@ TestMain("ZeroTier Transport", {
 			So(status == nng_zt_network_status_ok);
 		});
 		Convey("Connection refused works", {
-			snprintf(addr, sizeof(addr), "zt://" NWID "/%llx:%u",
+			snprintf(addr, sizeof(addr), "zt://%llx." NWID ":%u",
 			    (unsigned long long) node1, 42u);
 			So(nng_dialer_create(&d, s, addr) == 0);
 			So(nng_dialer_getopt_uint64(
@@ -318,7 +318,7 @@ TestMain("ZeroTier Transport", {
 		// uint64_t   node = 0xb000072fa6ull; // my personal host
 		So(nng_zt_register() == 0);
 
-		snprintf(addr1, sizeof(addr1), "zt://" NWID ":%u", port);
+		snprintf(addr1, sizeof(addr1), "zt://*." NWID ":%u", port);
 
 		So(nng_pair_open(&s1) == 0);
 		So(nng_pair_open(&s2) == 0);
@@ -339,7 +339,7 @@ TestMain("ZeroTier Transport", {
 		So(nng_listener_getopt_uint64(l, NNG_OPT_ZT_NODE, &node) == 0);
 		So(node != 0);
 		nng_msleep(40);
-		snprintf(addr2, sizeof(addr2), "zt://" NWID "/%llx:%u",
+		snprintf(addr2, sizeof(addr2), "zt://%llx." NWID ":%u",
 		    (unsigned long long) node, port);
 		So(nng_dialer_create(&d, s2, addr2) == 0);
 		So(nng_dialer_setopt(
@@ -348,6 +348,6 @@ TestMain("ZeroTier Transport", {
 		nng_msleep(2000);
 	});
 
-	trantest_test_extended("zt://" NWID "/*:%u", check_props);
+	trantest_test_extended("zt://*." NWID ":%u", check_props);
 
 })
