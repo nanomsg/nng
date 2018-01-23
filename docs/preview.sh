@@ -69,7 +69,16 @@ generate_pdf() {
 	typeset input=$1
 	typeset output=$2
 	asciidoctor-pdf -aversion-label=${name} -arevnumber=${version} \
+		-asource-highlighter=pygments -aicons=font \
 		-b pdf -a notitle -d article -o ${output} $input
+}
+
+generate_html() {
+	typeset input=$1
+	typeset output=$2
+	asciidoctor -aversion-label=${name} -arevnumber=${version} \
+		-aicons=font -asource-highlighter=pygments \
+		-b html5 -o ${output} $input
 }
 
 generate_man() {
@@ -77,13 +86,6 @@ generate_man() {
 	typeset output=$2
 	asciidoctor -aversion-label=${name} -arevnumber=${version} \
 		-b manpage -o ${output} $input
-}
-
-generate_html() {
-	typeset input=$1
-	typeset output=$2
-	asciidoctor -aversion-label=${name} -arevnumber=${version} \
-		-b html5 -o ${output} $input
 }
 
 generate_ps() {

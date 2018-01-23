@@ -78,6 +78,8 @@ EOF
 		-aversion-label=${name} \
 		-arevnumber=${vers}  \
 		-askip-front-matter \
+		-asource-highlighter=pygments \
+		-aicons=font \
 		-bhtml5 \
 		-o - ${adoc} >> ${output}
 	chmod 0644 ${output}
