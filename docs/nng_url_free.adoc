@@ -1,0 +1,51 @@
+= nng_url_free(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+== NAME
+
+nng_url_free - free a URL structure
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+void nng_url_free(nng_url *url);
+-----------
+
+== DESCRIPTION
+
+The `nng_url_free()` function deallocates the _url_ entirely, including
+any of it's members.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_url_clone#,nng_url_clone(3)>>,
+<<nng_url_parse#,nng_url_parse(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/MIT[MIT License].

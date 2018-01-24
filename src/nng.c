@@ -1176,3 +1176,21 @@ nng_thread_destroy(void *arg)
 
 	NNI_FREE_STRUCT(thr);
 }
+
+int
+nng_url_parse(nng_url **result, const char *ustr)
+{
+	return (nni_url_parse(result, ustr));
+}
+
+void
+nng_url_free(nng_url *url)
+{
+	nni_url_free(url);
+}
+
+int
+nng_url_clone(nng_url **dstp, const nng_url *src)
+{
+	return (nni_url_clone(dstp, src));
+}

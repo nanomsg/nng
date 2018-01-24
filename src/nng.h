@@ -710,6 +710,35 @@ NNG_DECL int nng_tls_config_ca_file(nng_tls_config *, const char *);
 NNG_DECL int nng_tls_config_cert_key_file(
     nng_tls_config *, const char *, const char *);
 
+// URL support.  We frequently want to process a URL, and these methods
+// give us a convenient way of doing so.
+
+typedef struct nng_url {
+	char *u_rawurl;   // never NULL
+	char *u_scheme;   // never NULL
+	char *u_userinfo; // will be NULL if not specified
+	char *u_host;     // including colon and port
+	char *u_hostname; // name only, will be "" if not specified
+	char *u_port;     // port, will be "" if not specified
+	char *u_path;     // path, will be "" if not specified
+	char *u_query;    // without '?', will be NULL if not specified
+	char *u_fragment; // without '#', will be NULL if not specified
+	char *u_rawpath;  // includes query and fragment, "" if not specified
+} nng_url;
+
+// nng_url_parse parses a URL string into a structured form.
+// Note that the u_port member will be filled out with a numeric
+// port if one isn't specified and a default port is appropriate for
+// the scheme.  The URL structure is allocated, along with individual
+// members.  It can be freed with nng_url_free.
+NNG_DECL int nng_url_parse(nng_url **, const char *);
+
+// nng_url_free frees a URL structure that was created by nng_url_parse9().
+NNG_DECL void nng_url_free(nng_url *);
+
+// nng_url_clone clones a URL structure.
+NNG_DECL int nng_url_clone(nng_url **, const nng_url *);
+
 #ifdef __cplusplus
 }
 #endif

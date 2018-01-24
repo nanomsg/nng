@@ -33,6 +33,7 @@ typedef struct nng_msg      nni_msg;
 typedef struct nng_sockaddr nni_sockaddr;
 typedef struct nng_event    nni_event;
 typedef struct nng_notify   nni_notify;
+typedef struct nng_url      nni_url;
 
 // These are our own names.
 typedef struct nni_socket           nni_sock;
@@ -43,7 +44,6 @@ typedef struct nni_tran_ep          nni_tran_ep;
 typedef struct nni_tran_ep_option   nni_tran_ep_option;
 typedef struct nni_tran_pipe        nni_tran_pipe;
 typedef struct nni_tran_pipe_option nni_tran_pipe_option;
-typedef struct nni_url              nni_url;
 
 typedef struct nni_proto_sock_ops    nni_proto_sock_ops;
 typedef struct nni_proto_pipe_ops    nni_proto_pipe_ops;

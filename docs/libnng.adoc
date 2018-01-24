@@ -160,6 +160,17 @@ The following functions are used to register a transport for use.
 | <<nng_zerotier#,nng_zerotier_register(3)>>|register ZeroTier transport
 |===
 
+=== URL Object
+
+Common functionality is supplied for parsing and handling
+universal resource locators (URLS).
+
+|===
+| <<nng_url_clone#,nng_url_clone(3)>>|clone URL structure
+| <<nng_url_free#,nng_url_free(3)>>|free URL structure
+| <<nng_url_parse#,nng_url_parse(3)>>|create URL structure from string
+|===
+
 === TLS Configuration Objects
 
 The following functions are used to manipulate transport layer security
