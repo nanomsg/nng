@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -73,57 +73,57 @@ TestMain("Resolver", {
 	nni_init();
 
 	Convey("Google DNS IPv4 resolves", {
-		nni_aio *    aio;
+		nng_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
 
-		nni_aio_init(&aio, NULL, NULL);
-		aio->a_addr = &sa;
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_tcp_resolv("google-public-dns-a.google.com", "80",
 		    NNG_AF_INET, 1, aio);
-		nni_aio_wait(aio);
-		So(nni_aio_result(aio) == 0);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == 0);
 		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
 		So(sa.s_un.s_in.sa_port == ntohs(80));
 		str = ip4tostr(&sa.s_un.s_in.sa_addr);
 		So(strcmp(str, "8.8.8.8") == 0);
-		nni_aio_fini(aio);
+		nng_aio_free(aio);
 	});
 	Convey("Numeric UDP resolves", {
-		nni_aio *    aio;
+		nng_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
 
-		nni_aio_init(&aio, NULL, NULL);
-		aio->a_addr = &sa;
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_udp_resolv("8.8.4.4", "69", NNG_AF_INET, 1, aio);
-		nni_aio_wait(aio);
-		So(nni_aio_result(aio) == 0);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == 0);
 		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
 		So(sa.s_un.s_in.sa_port == ntohs(69));
 		str = ip4tostr(&sa.s_un.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
-		nni_aio_fini(aio);
+		nng_aio_free(aio);
 	});
 	Convey("Numeric v4 resolves", {
-		nni_aio *    aio;
+		nng_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
 
-		nni_aio_init(&aio, NULL, NULL);
-		aio->a_addr = &sa;
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_tcp_resolv("8.8.4.4", "80", NNG_AF_INET, 1, aio);
-		nni_aio_wait(aio);
-		So(nni_aio_result(aio) == 0);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == 0);
 		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
 		So(sa.s_un.s_in.sa_port == ntohs(80));
 		str = ip4tostr(&sa.s_un.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
-		nni_aio_fini(aio);
+		nng_aio_free(aio);
 	});
 
 	Convey("Numeric v6 resolves", {
-		nni_aio *    aio;
+		nng_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
 
@@ -135,80 +135,80 @@ TestMain("Resolver", {
 			ConveySkip("IPv6 missing from CI provider");
 		}
 
-		nni_aio_init(&aio, NULL, NULL);
-		aio->a_addr = &sa;
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_tcp_resolv("::1", "80", NNG_AF_INET6, 1, aio);
-		nni_aio_wait(aio);
-		So(nni_aio_result(aio) == 0);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == 0);
 		So(sa.s_un.s_in6.sa_family == NNG_AF_INET6);
 		So(sa.s_un.s_in6.sa_port == ntohs(80));
 		str = ip6tostr(&sa.s_un.s_in6.sa_addr);
 		So(strcmp(str, "::1") == 0);
-		nni_aio_fini(aio);
+		nng_aio_free(aio);
 	});
 
 	Convey("TCP Name service resolves", {
-		nni_aio *    aio;
+		nng_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
 
-		nni_aio_init(&aio, NULL, NULL);
-		aio->a_addr = &sa;
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_tcp_resolv("8.8.4.4", "http", NNG_AF_INET, 1, aio);
-		nni_aio_wait(aio);
-		So(nni_aio_result(aio) == 0);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == 0);
 		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
 		So(sa.s_un.s_in.sa_port == ntohs(80));
 		str = ip4tostr(&sa.s_un.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
-		nni_aio_fini(aio);
+		nng_aio_free(aio);
 	});
 
 	Convey("UDP Name service resolves", {
-		nni_aio *    aio;
+		nng_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
 
-		nni_aio_init(&aio, NULL, NULL);
-		aio->a_addr = &sa;
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_udp_resolv("8.8.4.4", "tftp", NNG_AF_INET, 1, aio);
-		nni_aio_wait(aio);
-		So(nni_aio_result(aio) == 0);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == 0);
 		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
 		So(sa.s_un.s_in.sa_port == ntohs(69));
 		str = ip4tostr(&sa.s_un.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
-		nni_aio_fini(aio);
+		nng_aio_free(aio);
 	});
 
 	Convey("Localhost IPv4 resolves", {
-		nni_aio *    aio;
+		nng_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
 
-		nni_aio_init(&aio, NULL, NULL);
-		aio->a_addr = &sa;
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_tcp_resolv("localhost", "80", NNG_AF_INET, 1, aio);
-		nni_aio_wait(aio);
-		So(nni_aio_result(aio) == 0);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == 0);
 		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
 		So(sa.s_un.s_in.sa_port == ntohs(80));
 		So(sa.s_un.s_in.sa_addr == ntohl(0x7f000001));
 		str = ip4tostr(&sa.s_un.s_in.sa_addr);
 		So(strcmp(str, "127.0.0.1") == 0);
-		nni_aio_fini(aio);
+		nng_aio_free(aio);
 	});
 
 	Convey("Localhost UNSPEC resolves", {
-		nni_aio *    aio;
+		nng_aio *    aio;
 		const char * str;
 		nng_sockaddr sa;
 
-		nni_aio_init(&aio, NULL, NULL);
-		aio->a_addr = &sa;
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_tcp_resolv("localhost", "80", NNG_AF_UNSPEC, 1, aio);
-		nni_aio_wait(aio);
-		So(nni_aio_result(aio) == 0);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == 0);
 		So((sa.s_un.s_family == NNG_AF_INET) ||
 		    (sa.s_un.s_family == NNG_AF_INET6));
 		switch (sa.s_un.s_family) {
@@ -224,7 +224,7 @@ TestMain("Resolver", {
 			So(strcmp(str, "::1") == 0);
 			break;
 		}
-		nni_aio_fini(aio);
+		nng_aio_free(aio);
 	});
 
 	nni_fini();

@@ -30,12 +30,14 @@
 #define NNI_NUM_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
 
 // These types are common but have names shared with user space.
+// Internal code should use these names when possible.
 typedef struct nng_msg      nni_msg;
 typedef struct nng_sockaddr nni_sockaddr;
 typedef struct nng_event    nni_event;
 typedef struct nng_notify   nni_notify;
 typedef struct nng_url      nni_url;
 typedef struct nng_iov      nni_iov;
+typedef struct nng_aio      nni_aio;
 
 // These are our own names.
 typedef struct nni_socket           nni_sock;
@@ -61,8 +63,6 @@ typedef void (*nni_thr_func)(void *);
 typedef int      nni_signal;   // Wakeup channel.
 typedef uint64_t nni_time;     // Abs. time (ms).
 typedef int32_t  nni_duration; // Rel. time (ms).
-
-typedef struct nni_aio nni_aio;
 
 typedef void (*nni_cb)(void *);
 

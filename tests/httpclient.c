@@ -31,52 +31,46 @@ TestMain("HTTP Client", {
 
 	Convey("Given a TCP connection to httpbin.org", {
 		nng_aio *        aio;
-		nni_aio *        iaio;
 		nni_http_client *cli;
-		nni_http *       http;
-		nni_url *        url;
+		nng_http_conn *  http;
+		nng_url *        url;
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
-		iaio = (nni_aio *) aio;
 
-		So(nni_url_parse(&url, "http://httpbin.org") == 0);
+		So(nng_url_parse(&url, "http://httpbin.org/encoding/utf8") ==
+		    0);
 		So(nni_http_client_init(&cli, url) == 0);
-		nni_http_client_connect(cli, iaio);
+		nni_http_client_connect(cli, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		http = nni_aio_get_output(iaio, 0);
+		http = nni_aio_get_output(aio, 0);
 		Reset({
 			nni_http_client_fini(cli);
-			nni_http_fini(http);
+			nng_http_conn_close(http);
 			nng_aio_free(aio);
-			nni_url_free(url);
+			nng_url_free(url);
 		});
 
 		Convey("We can initiate a message", {
-			nni_http_req *req;
-			nni_http_res *res;
+			nng_http_req *req;
+			nng_http_res *res;
+
 			So(http != NULL);
 
-			So(nni_http_req_init(&req) == 0);
-			So(nni_http_res_init(&res) == 0);
+			So(nng_http_req_alloc(&req, url) == 0);
+			So(nng_http_res_alloc(&res) == 0);
 			Reset({
-				nni_http_close(http);
-				nni_http_req_fini(req);
-				nni_http_res_fini(res);
+				nng_http_req_free(req);
+				nng_http_res_free(res);
 			});
-			So(nni_http_req_set_method(req, "GET") == 0);
-			So(nni_http_req_set_version(req, "HTTP/1.1") == 0);
-			So(nni_http_req_set_uri(req, "/encoding/utf8") == 0);
-			So(nni_http_req_set_header(
-			       req, "Host", "httpbin.org") == 0);
-			nni_http_write_req(http, req, iaio);
+			nng_http_conn_write_req(http, req, aio);
 
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == 0);
-			nni_http_read_res(http, res, iaio);
+			nng_http_conn_read_res(http, res, aio);
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == 0);
-			So(nni_http_res_get_status(res) == 200);
+			So(nng_http_res_get_status(res) == 200);
 
 			Convey("The message contents are correct", {
 				uint8_t     digest[20];
@@ -85,7 +79,7 @@ TestMain("HTTP Client", {
 				size_t      sz;
 				nng_iov     iov;
 
-				cstr = nni_http_res_get_header(
+				cstr = nng_http_res_get_header(
 				    res, "Content-Length");
 				So(cstr != NULL);
 				sz = atoi(cstr);
@@ -102,7 +96,7 @@ TestMain("HTTP Client", {
 				nng_aio_wait(aio);
 				So(nng_aio_result(aio) == 0);
 
-				nni_http_read_full(http, iaio);
+				nng_http_conn_read_all(http, aio);
 				nng_aio_wait(aio);
 				So(nng_aio_result(aio) == 0);
 

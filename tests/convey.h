@@ -185,7 +185,7 @@ extern void conveyPrintf(const char *, int, const char *, ...);
  */
 #define ConveyTest(name, code)                      \
 	do {                                        \
-		int convey_rv;                      \
+		int convey_rv = 0;                  \
 		conveyRun(name, code, &convey_rv);  \
 		if (convey_rv > convey_main_rv) {   \
 			convey_main_rv = convey_rv; \

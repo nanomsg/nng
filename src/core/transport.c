@@ -38,7 +38,6 @@ nni_tran_register(const nni_tran *tran)
 {
 	nni_transport *t;
 	int            rv;
-	size_t         sz;
 
 	// Its entirely possible that we are called before any sockets
 	// are opened.  Make sure we are initialized.  This has to be

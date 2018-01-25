@@ -13,15 +13,11 @@
 
 #include <stdbool.h>
 
-// Pre-defined types for some prototypes.  These are from other subsystems.
-typedef struct nni_http_req nni_http_req;
-typedef struct nni_http_res nni_http_res;
-
 typedef struct nni_ws          nni_ws;
 typedef struct nni_ws_listener nni_ws_listener;
 typedef struct nni_ws_dialer   nni_ws_dialer;
 
-typedef int (*nni_ws_listen_hook)(void *, nni_http_req *, nni_http_res *);
+typedef int (*nni_ws_listen_hook)(void *, nng_http_req *, nng_http_res *);
 
 // Specify URL as ws://[<host>][:port][/path]
 // If host is missing, INADDR_ANY is assumed.  If port is missing,
@@ -34,7 +30,7 @@ extern void nni_ws_listener_fini(nni_ws_listener *);
 extern void nni_ws_listener_close(nni_ws_listener *);
 extern int  nni_ws_listener_proto(nni_ws_listener *, const char *);
 extern int  nni_ws_listener_listen(nni_ws_listener *);
-extern void nni_ws_listener_accept(nni_ws_listener *, nni_aio *);
+extern void nni_ws_listener_accept(nni_ws_listener *, nng_aio *);
 extern void nni_ws_listener_hook(
     nni_ws_listener *, nni_ws_listen_hook, void *);
 extern int nni_ws_listener_set_tls(nni_ws_listener *, nng_tls_config *);
@@ -45,7 +41,7 @@ extern void nni_ws_dialer_fini(nni_ws_dialer *);
 extern void nni_ws_dialer_close(nni_ws_dialer *);
 extern int  nni_ws_dialer_proto(nni_ws_dialer *, const char *);
 extern int  nni_ws_dialer_header(nni_ws_dialer *, const char *, const char *);
-extern void nni_ws_dialer_dial(nni_ws_dialer *, nni_aio *);
+extern void nni_ws_dialer_dial(nni_ws_dialer *, nng_aio *);
 extern int  nni_ws_dialer_set_tls(nni_ws_dialer *, nng_tls_config *);
 extern int  nni_ws_dialer_get_tls(nni_ws_dialer *, nng_tls_config **);
 
@@ -54,10 +50,10 @@ extern int  nni_ws_dialer_get_tls(nni_ws_dialer *, nng_tls_config **);
 // not confirm the server's response at the HTTP level.  (It can still issue
 // a websocket close).
 
-extern void          nni_ws_send_msg(nni_ws *, nni_aio *);
-extern void          nni_ws_recv_msg(nni_ws *, nni_aio *);
-extern nni_http_res *nni_ws_response(nni_ws *);
-extern nni_http_req *nni_ws_request(nni_ws *);
+extern void          nni_ws_send_msg(nni_ws *, nng_aio *);
+extern void          nni_ws_recv_msg(nni_ws *, nng_aio *);
+extern nng_http_res *nni_ws_response(nni_ws *);
+extern nng_http_req *nni_ws_request(nni_ws *);
 extern int           nni_ws_sock_addr(nni_ws *, nni_sockaddr *);
 extern int           nni_ws_peer_addr(nni_ws *, nni_sockaddr *);
 extern void          nni_ws_close(nni_ws *);

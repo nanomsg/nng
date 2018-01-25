@@ -9,11 +9,18 @@
 #
 
 if (NNG_SUPP_HTTP)
-set(HTTP_SOURCES
-        supplemental/http/http.c
-        supplemental/http/http_msg.c
-        supplemental/http/server.c
-        supplemental/http/client.c
-        supplemental/http/http.h)
+        set(HTTP_DEFINES -DNNG_SUPP_HTTP)
+        set(HTTP_SOURCES
+                supplemental/http/http.h
+                supplemental/http/http_client.c
+                supplemental/http/http_conn.c
+                supplemental/http/http_msg.c
+                supplemental/http/http_public.c
+                supplemental/http/http_server.c)
+else()
+        set(HTTP_SOURCES
+                supplemental/http/http.h
+                supplemental/http/http_public.c)
 endif()
+set(NNG_DEFINES ${NNG_DEFINES} ${HTTP_DEFINES} PARENT_SCOPE)
 set(NNG_SOURCES ${NNG_SOURCES} ${HTTP_SOURCES} PARENT_SCOPE)

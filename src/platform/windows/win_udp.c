@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -134,10 +134,11 @@ nni_win_udp_start_rx(nni_win_event *evt, nni_aio *aio)
 {
 	int           rv;
 	SOCKET        s;
-	WSABUF        iov[4];
-	DWORD         niov;
+	WSABUF        iov[4]; // XXX: consider _alloca
 	DWORD         flags;
 	nni_plat_udp *u = evt->ptr;
+	nni_iov *     aiov;
+	int           naiov;
 
 	if ((s = u->s) == INVALID_SOCKET) {
 		evt->status = NNG_ECLOSED;
@@ -146,17 +147,12 @@ nni_win_udp_start_rx(nni_win_event *evt, nni_aio *aio)
 	}
 
 	u->rxsalen = sizeof(SOCKADDR_STORAGE);
-	NNI_ASSERT(aio->a_niov > 0);
-	NNI_ASSERT(aio->a_niov <= 4);
-	NNI_ASSERT(aio->a_iov[0].iov_len > 0);
-	NNI_ASSERT(aio->a_iov[0].iov_buf != NULL);
-
-	niov = aio->a_niov;
+	nni_aio_get_iov(aio, &naiov, &aiov);
 
 	// Put the AIOs in Windows form.
-	for (int i = 0; i < aio->a_niov; i++) {
-		iov[i].buf = aio->a_iov[i].iov_buf;
-		iov[i].len = (ULONG) aio->a_iov[i].iov_len;
+	for (int i = 0; i < naiov; i++) {
+		iov[i].buf = aiov[i].iov_buf;
+		iov[i].len = (ULONG) aiov[i].iov_len;
 	}
 
 	// Note that the IOVs for the event were prepared on entry
@@ -165,7 +161,7 @@ nni_win_udp_start_rx(nni_win_event *evt, nni_aio *aio)
 	evt->count = 0;
 	flags      = 0;
 
-	rv = WSARecvFrom(u->s, iov, niov, NULL, &flags,
+	rv = WSARecvFrom(u->s, iov, (DWORD) naiov, NULL, &flags,
 	    (struct sockaddr *) &u->rxsa, &u->rxsalen, &evt->olpd, NULL);
 
 	if ((rv == SOCKET_ERROR) &&
@@ -188,9 +184,11 @@ nni_win_udp_start_tx(nni_win_event *evt, nni_aio *aio)
 	int           rv;
 	SOCKET        s;
 	WSABUF        iov[4];
-	DWORD         niov;
+	int           naiov;
+	nni_iov *     aiov;
 	nni_plat_udp *u = evt->ptr;
 	int           salen;
+	nni_sockaddr *sa;
 
 	if ((s = u->s) == INVALID_SOCKET) {
 		evt->status = NNG_ECLOSED;
@@ -198,24 +196,19 @@ nni_win_udp_start_tx(nni_win_event *evt, nni_aio *aio)
 		return (1);
 	}
 
-	if ((salen = nni_win_nn2sockaddr(&u->txsa, aio->a_addr)) < 0) {
+	sa = nni_aio_get_input(aio, 0);
+
+	if ((salen = nni_win_nn2sockaddr(&u->txsa, sa)) < 0) {
 		evt->status = NNG_EADDRINVAL;
 		evt->count  = 0;
 		return (1);
 	}
 
-	NNI_ASSERT(aio->a_addr != NULL);
-	NNI_ASSERT(aio->a_niov > 0);
-	NNI_ASSERT(aio->a_niov <= 4);
-	NNI_ASSERT(aio->a_iov[0].iov_len > 0);
-	NNI_ASSERT(aio->a_iov[0].iov_buf != NULL);
-
-	niov = aio->a_niov;
-
+	nni_aio_get_iov(aio, &naiov, &aiov);
 	// Put the AIOs in Windows form.
-	for (int i = 0; i < aio->a_niov; i++) {
-		iov[i].buf = aio->a_iov[i].iov_buf;
-		iov[i].len = (ULONG) aio->a_iov[i].iov_len;
+	for (int i = 0; i < naiov; i++) {
+		iov[i].buf = aiov[i].iov_buf;
+		iov[i].len = (ULONG) aiov[i].iov_len;
 	}
 
 	// Note that the IOVs for the event were prepared on entry
@@ -223,8 +216,8 @@ nni_win_udp_start_tx(nni_win_event *evt, nni_aio *aio)
 
 	evt->count = 0;
 
-	rv = WSASendTo(u->s, iov, niov, NULL, 0, (struct sockaddr *) &u->txsa,
-	    salen, &evt->olpd, NULL);
+	rv = WSASendTo(u->s, iov, (DWORD) naiov, NULL, 0,
+	    (struct sockaddr *) &u->txsa, salen, &evt->olpd, NULL);
 
 	if ((rv == SOCKET_ERROR) &&
 	    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
@@ -257,9 +250,10 @@ nni_win_udp_finish_rx(nni_win_event *evt, nni_aio *aio)
 
 	cnt = evt->count;
 	if ((rv = evt->status) == 0) {
+		nni_sockaddr *sa;
 		// convert address from Windows form...
-		if (aio->a_addr != NULL) {
-			if (nni_win_sockaddr2nn(aio->a_addr, &u->rxsa) != 0) {
+		if ((sa = nni_aio_get_input(aio, 0)) != NULL) {
+			if (nni_win_sockaddr2nn(sa, &u->rxsa) != 0) {
 				rv  = NNG_EADDRINVAL;
 				cnt = 0;
 			}

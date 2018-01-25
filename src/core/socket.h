@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -39,7 +39,7 @@ extern uint32_t nni_sock_id(nni_sock *);
 // a pipe could wind up orphaned.
 extern int  nni_sock_pipe_add(nni_sock *, nni_pipe *);
 extern void nni_sock_pipe_remove(nni_sock *, nni_pipe *);
-extern int nni_sock_pipe_start(nni_sock *, nni_pipe *p);
+extern int  nni_sock_pipe_start(nni_sock *, nni_pipe *p);
 
 extern int  nni_sock_ep_add(nni_sock *, nni_ep *);
 extern void nni_sock_ep_remove(nni_sock *, nni_ep *);

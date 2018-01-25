@@ -138,7 +138,7 @@ nni_tls_pipe_init(nni_tls_pipe **pipep, nni_tls_ep *ep, void *tpp)
 static void
 nni_tls_cancel_nego(nni_aio *aio, int rv)
 {
-	nni_tls_pipe *p = aio->a_prov_data;
+	nni_tls_pipe *p = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&p->mtx);
 	if (p->user_negaio != aio) {
@@ -148,7 +148,7 @@ nni_tls_cancel_nego(nni_aio *aio, int rv)
 	p->user_negaio = NULL;
 	nni_mtx_unlock(&p->mtx);
 
-	nni_aio_cancel(p->negaio, rv);
+	nni_aio_abort(p->negaio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -172,18 +172,20 @@ nni_tls_pipe_nego_cb(void *arg)
 	}
 
 	if (p->gottxhead < p->wanttxhead) {
-		aio->a_niov           = 1;
-		aio->a_iov[0].iov_len = p->wanttxhead - p->gottxhead;
-		aio->a_iov[0].iov_buf = &p->txlen[p->gottxhead];
+		nni_iov iov;
+		iov.iov_len = p->wanttxhead - p->gottxhead;
+		iov.iov_buf = &p->txlen[p->gottxhead];
+		nni_aio_set_iov(aio, 1, &iov);
 		// send it down...
 		nni_tls_send(p->tls, aio);
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
 	if (p->gotrxhead < p->wantrxhead) {
-		aio->a_niov           = 1;
-		aio->a_iov[0].iov_len = p->wantrxhead - p->gotrxhead;
-		aio->a_iov[0].iov_buf = &p->rxlen[p->gotrxhead];
+		nni_iov iov;
+		iov.iov_len = p->wantrxhead - p->gotrxhead;
+		iov.iov_buf = &p->rxlen[p->gotrxhead];
+		nni_aio_set_iov(aio, 1, &iov);
 		nni_tls_recv(p->tls, aio);
 		nni_mtx_unlock(&p->mtx);
 		return;
@@ -234,20 +236,8 @@ nni_tls_pipe_send_cb(void *arg)
 	}
 
 	n = nni_aio_count(txaio);
-	while (n) {
-		NNI_ASSERT(txaio->a_niov != 0);
-		if (txaio->a_iov[0].iov_len > n) {
-			txaio->a_iov[0].iov_len -= n;
-			NNI_INCPTR(txaio->a_iov[0].iov_buf, n);
-			break;
-		}
-		n -= txaio->a_iov[0].iov_len;
-		for (int i = 0; i < txaio->a_niov; i++) {
-			txaio->a_iov[i] = txaio->a_iov[i + 1];
-		}
-		txaio->a_niov--;
-	}
-	if ((txaio->a_niov != 0) && (txaio->a_iov[0].iov_len != 0)) {
+	nni_aio_iov_advance(txaio, n);
+	if (nni_aio_iov_count(txaio) > 0) {
 		nni_tls_send(p->tls, txaio);
 		nni_mtx_unlock(&p->mtx);
 		return;
@@ -269,7 +259,7 @@ nni_tls_pipe_recv_cb(void *arg)
 	int           rv;
 	size_t        n;
 	nni_msg *     msg;
-	nni_aio *     rxaio = p->rxaio;
+	nni_aio *     rxaio;
 
 	nni_mtx_lock(&p->mtx);
 
@@ -279,26 +269,16 @@ nni_tls_pipe_recv_cb(void *arg)
 		return;
 	}
 
+	rxaio = p->rxaio;
+
 	if ((rv = nni_aio_result(p->rxaio)) != 0) {
 		goto recv_error;
 	}
 
-	n = nni_aio_count(p->rxaio);
-	while (n) {
-		NNI_ASSERT(rxaio->a_niov != 0);
-		if (rxaio->a_iov[0].iov_len > n) {
-			rxaio->a_iov[0].iov_len -= n;
-			NNI_INCPTR(rxaio->a_iov[0].iov_buf, n);
-			break;
-		}
-		n -= rxaio->a_iov[0].iov_len;
-		rxaio->a_niov--;
-		for (int i = 0; i < rxaio->a_niov; i++) {
-			rxaio->a_iov[i] = rxaio->a_iov[i + 1];
-		}
-	}
-	// Was this a partial read?  If so then resubmit for the rest.
-	if ((rxaio->a_niov != 0) && (rxaio->a_iov[0].iov_len != 0)) {
+	n = nni_aio_count(rxaio);
+	nni_aio_iov_advance(rxaio, n);
+	if (nni_aio_iov_count(rxaio) > 0) {
+		// Was this a partial read?  If so then resubmit for the rest.
 		nni_tls_recv(p->tls, rxaio);
 		nni_mtx_unlock(&p->mtx);
 		return;
@@ -319,16 +299,17 @@ nni_tls_pipe_recv_cb(void *arg)
 			goto recv_error;
 		}
 
-		if ((rv = nng_msg_alloc(&p->rxmsg, (size_t) len)) != 0) {
+		if ((rv = nni_msg_alloc(&p->rxmsg, (size_t) len)) != 0) {
 			goto recv_error;
 		}
 
 		// Submit the rest of the data for a read -- we want to
 		// read the entire message now.
 		if (len != 0) {
-			rxaio->a_iov[0].iov_buf = nni_msg_body(p->rxmsg);
-			rxaio->a_iov[0].iov_len = (size_t) len;
-			rxaio->a_niov           = 1;
+			nni_iov iov;
+			iov.iov_buf = nni_msg_body(p->rxmsg);
+			iov.iov_len = (size_t) len;
+			nni_aio_set_iov(rxaio, 1, &iov);
 
 			nni_tls_recv(p->tls, rxaio);
 			nni_mtx_unlock(&p->mtx);
@@ -356,7 +337,7 @@ recv_error:
 static void
 nni_tls_cancel_tx(nni_aio *aio, int rv)
 {
-	nni_tls_pipe *p = aio->a_prov_data;
+	nni_tls_pipe *p = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&p->mtx);
 	if (p->user_txaio != aio) {
@@ -367,7 +348,7 @@ nni_tls_cancel_tx(nni_aio *aio, int rv)
 	nni_mtx_unlock(&p->mtx);
 
 	// cancel the underlying operation.
-	nni_aio_cancel(p->txaio, rv);
+	nni_aio_abort(p->txaio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -379,6 +360,7 @@ nni_tls_pipe_send(void *arg, nni_aio *aio)
 	uint64_t      len;
 	nni_aio *     txaio;
 	int           niov;
+	nni_iov       iov[3];
 
 	len = nni_msg_len(msg) + nni_msg_header_len(msg);
 
@@ -393,23 +375,23 @@ nni_tls_pipe_send(void *arg, nni_aio *aio)
 
 	NNI_PUT64(p->txlen, len);
 
-	niov                       = 0;
-	txaio                      = p->txaio;
-	txaio->a_iov[niov].iov_buf = p->txlen;
-	txaio->a_iov[niov].iov_len = sizeof(p->txlen);
+	niov              = 0;
+	txaio             = p->txaio;
+	iov[niov].iov_buf = p->txlen;
+	iov[niov].iov_len = sizeof(p->txlen);
 	niov++;
 	if (nni_msg_header_len(msg) > 0) {
-		txaio->a_iov[niov].iov_buf = nni_msg_header(msg);
-		txaio->a_iov[niov].iov_len = nni_msg_header_len(msg);
+		iov[niov].iov_buf = nni_msg_header(msg);
+		iov[niov].iov_len = nni_msg_header_len(msg);
 		niov++;
 	}
 	if (nni_msg_len(msg) > 0) {
-		txaio->a_iov[niov].iov_buf = nni_msg_body(msg);
-		txaio->a_iov[niov].iov_len = nni_msg_len(msg);
+		iov[niov].iov_buf = nni_msg_body(msg);
+		iov[niov].iov_len = nni_msg_len(msg);
 		niov++;
 	}
-	txaio->a_niov = niov;
 
+	nni_aio_set_iov(txaio, niov, iov);
 	nni_tls_send(p->tls, txaio);
 	nni_mtx_unlock(&p->mtx);
 }
@@ -417,7 +399,7 @@ nni_tls_pipe_send(void *arg, nni_aio *aio)
 static void
 nni_tls_cancel_rx(nni_aio *aio, int rv)
 {
-	nni_tls_pipe *p = aio->a_prov_data;
+	nni_tls_pipe *p = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&p->mtx);
 	if (p->user_rxaio != aio) {
@@ -428,7 +410,7 @@ nni_tls_cancel_rx(nni_aio *aio, int rv)
 	nni_mtx_unlock(&p->mtx);
 
 	// cancel the underlying operation.
-	nni_aio_cancel(p->rxaio, rv);
+	nni_aio_abort(p->rxaio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -437,6 +419,7 @@ nni_tls_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_tls_pipe *p = arg;
 	nni_aio *     rxaio;
+	nni_iov       iov;
 
 	nni_mtx_lock(&p->mtx);
 
@@ -449,10 +432,11 @@ nni_tls_pipe_recv(void *arg, nni_aio *aio)
 	NNI_ASSERT(p->rxmsg == NULL);
 
 	// Schedule a read of the TCP header.
-	rxaio                   = p->rxaio;
-	rxaio->a_iov[0].iov_buf = p->rxlen;
-	rxaio->a_iov[0].iov_len = sizeof(p->rxlen);
-	rxaio->a_niov           = 1;
+	rxaio = p->rxaio;
+
+	iov.iov_buf = p->rxlen;
+	iov.iov_len = sizeof(p->rxlen);
+	nni_aio_set_iov(rxaio, 1, &iov);
 
 	nni_tls_recv(p->tls, rxaio);
 	nni_mtx_unlock(&p->mtx);
@@ -471,7 +455,7 @@ nni_tls_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
 {
 	nni_tls_pipe *p = arg;
 	int           rv;
-	nng_sockaddr  sa;
+	nni_sockaddr  sa;
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_tls_sockname(p->tls, &sa)) == 0) {
@@ -485,7 +469,7 @@ nni_tls_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 {
 	nni_tls_pipe *p = arg;
 	int           rv;
-	nng_sockaddr  sa;
+	nni_sockaddr  sa;
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_tls_peername(p->tls, &sa)) == 0) {
@@ -499,6 +483,7 @@ nni_tls_pipe_start(void *arg, nni_aio *aio)
 {
 	nni_tls_pipe *p = arg;
 	nni_aio *     negaio;
+	nni_iov       iov;
 
 	nni_mtx_lock(&p->mtx);
 	p->txlen[0] = 0;
@@ -508,15 +493,15 @@ nni_tls_pipe_start(void *arg, nni_aio *aio)
 	NNI_PUT16(&p->txlen[4], p->proto);
 	NNI_PUT16(&p->txlen[6], 0);
 
-	p->user_negaio           = aio;
-	p->gotrxhead             = 0;
-	p->gottxhead             = 0;
-	p->wantrxhead            = 8;
-	p->wanttxhead            = 8;
-	negaio                   = p->negaio;
-	negaio->a_niov           = 1;
-	negaio->a_iov[0].iov_len = 8;
-	negaio->a_iov[0].iov_buf = &p->txlen[0];
+	p->user_negaio = aio;
+	p->gotrxhead   = 0;
+	p->gottxhead   = 0;
+	p->wantrxhead  = 8;
+	p->wanttxhead  = 8;
+	negaio         = p->negaio;
+	iov.iov_len    = 8;
+	iov.iov_buf    = &p->txlen[0];
+	nni_aio_set_iov(negaio, 1, &iov);
 	if (nni_aio_start(aio, nni_tls_cancel_nego, p) != 0) {
 		nni_mtx_unlock(&p->mtx);
 		return;
@@ -584,7 +569,7 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		tlsmode           = NNG_TLS_MODE_CLIENT;
 		authmode          = NNG_TLS_AUTH_MODE_REQUIRED;
 		lsa.s_un.s_family = NNG_AF_UNSPEC;
-		aio->a_addr       = &rsa;
+		nni_aio_set_input(aio, 0, &rsa);
 		if ((host == NULL) || (serv == NULL)) {
 			nni_aio_fini(aio);
 			return (NNG_EADDRINVAL);
@@ -594,7 +579,7 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		tlsmode           = NNG_TLS_MODE_SERVER;
 		authmode          = NNG_TLS_AUTH_MODE_NONE;
 		rsa.s_un.s_family = NNG_AF_UNSPEC;
-		aio->a_addr       = &lsa;
+		nni_aio_set_input(aio, 0, &lsa);
 	}
 
 	// XXX: arguably we could defer this part to the point we do a bind
@@ -705,7 +690,7 @@ nni_tls_ep_cb(void *arg)
 static void
 nni_tls_cancel_ep(nni_aio *aio, int rv)
 {
-	nni_tls_ep *ep = aio->a_prov_data;
+	nni_tls_ep *ep = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&ep->mtx);
 	if (ep->user_aio != aio) {
@@ -715,7 +700,7 @@ nni_tls_cancel_ep(nni_aio *aio, int rv)
 	ep->user_aio = NULL;
 	nni_mtx_unlock(&ep->mtx);
 
-	nni_aio_cancel(ep->aio, rv);
+	nni_aio_abort(ep->aio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 

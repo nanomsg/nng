@@ -76,14 +76,13 @@
  * a scope not expressed to user code, these rules are relaxed.
  */
 
-static const char *convey_sym_pass  = ".";
-static const char *convey_sym_skip  = "?";
-static const char *convey_sym_fail  = "X";
-static const char *convey_sym_fatal = "!";
-static const char *convey_nocolor   = "";
-static const char *convey_green     = "";
-static const char *convey_red       = "";
-static const char *convey_yellow    = "";
+static const char *convey_sym_pass = ".";
+static const char *convey_sym_skip = "?";
+static const char *convey_sym_fail = "X";
+static const char *convey_nocolor  = "";
+static const char *convey_green    = "";
+static const char *convey_red      = "";
+static const char *convey_yellow   = "";
 
 static int         convey_debug        = 0;
 static int         convey_verbose      = 0;
@@ -866,10 +865,9 @@ convey_init_term(void)
 	(void) setlocale(LC_ALL, "");
 	codeset = nl_langinfo(CODESET);
 	if ((codeset != NULL) && (strcmp(codeset, "UTF-8") == 0)) {
-		convey_sym_pass  = "✔";
-		convey_sym_fail  = "✘";
-		convey_sym_fatal = "🔥";
-		convey_sym_skip  = "⚠";
+		convey_sym_pass = "✔";
+		convey_sym_fail = "✘";
+		convey_sym_skip = "⚠";
 	}
 	term = getenv("TERM");
 	if (!isatty(fileno(stdin))) {

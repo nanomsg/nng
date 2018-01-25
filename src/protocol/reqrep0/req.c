@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -71,7 +71,6 @@ struct req0_pipe {
 	nni_mtx       mtx;
 };
 
-static void req0_resender(void *);
 static void req0_getq_cb(void *);
 static void req0_sendraw_cb(void *);
 static void req0_sendcooked_cb(void *);
@@ -312,7 +311,6 @@ static void
 req0_getq_cb(void *arg)
 {
 	req0_pipe *p = arg;
-	req0_sock *s = p->req;
 
 	// We should be in RAW mode.  Cooked mode traffic bypasses
 	// the upper write queue entirely, and should never end up here.

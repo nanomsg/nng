@@ -27,5 +27,6 @@ struct nni_url {
 extern int nni_url_parse(nni_url **, const char *path);
 extern void nni_url_free(nni_url *);
 extern int  nni_url_clone(nni_url **, const nni_url *);
+extern const char *nni_url_default_port(const char *);
 
 #endif // CORE_URL_H

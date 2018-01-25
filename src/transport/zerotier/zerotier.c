@@ -367,18 +367,19 @@ zt_node_rcv4_cb(void *arg)
 	// XXX: CHECK THIS, if it fails then we have a fatal error with
 	// the znode, and have to shut everything down.
 	ZT_Node_processWirePacket(ztn->zn_znode, NULL, now, 0, (void *) &sa,
-	    ztn->zn_rcv4_buf, aio->a_count, &now);
+	    ztn->zn_rcv4_buf, nni_aio_count(aio), &now);
 
 	// Schedule background work
 	zt_node_resched(ztn, now);
 
 	// Schedule another receive.
 	if (ztn->zn_udp4 != NULL) {
-		aio->a_niov           = 1;
-		aio->a_iov[0].iov_buf = ztn->zn_rcv4_buf;
-		aio->a_iov[0].iov_len = zt_rcv_bufsize;
-		aio->a_addr           = &ztn->zn_rcv4_addr;
-		aio->a_count          = 0;
+		nni_iov iov;
+		iov.iov_buf = ztn->zn_rcv4_buf;
+		iov.iov_len = zt_rcv_bufsize;
+		nni_aio_set_iov(aio, 1, &iov);
+
+		nni_aio_set_input(aio, 0, &ztn->zn_rcv4_addr);
 
 		nni_plat_udp_recv(ztn->zn_udp4, aio);
 	}
@@ -416,18 +417,18 @@ zt_node_rcv6_cb(void *arg)
 	// We are not going to perform any validation of the data; we
 	// just pass this straight into the ZeroTier core.
 	ZT_Node_processWirePacket(ztn->zn_znode, NULL, now, 0, (void *) &sa,
-	    ztn->zn_rcv6_buf, aio->a_count, &now);
+	    ztn->zn_rcv6_buf, nni_aio_count(aio), &now);
 
 	// Schedule background work
 	zt_node_resched(ztn, now);
 
 	// Schedule another receive.
 	if (ztn->zn_udp6 != NULL) {
-		aio->a_niov           = 1;
-		aio->a_iov[0].iov_buf = ztn->zn_rcv6_buf;
-		aio->a_iov[0].iov_len = zt_rcv_bufsize;
-		aio->a_addr           = &ztn->zn_rcv6_addr;
-		aio->a_count          = 0;
+		nni_iov iov;
+		iov.iov_buf = ztn->zn_rcv6_buf;
+		iov.iov_len = zt_rcv_bufsize;
+		nni_aio_set_iov(aio, 1, &iov);
+		nni_aio_set_input(aio, 0, &ztn->zn_rcv6_addr);
 		nni_plat_udp_recv(ztn->zn_udp6, aio);
 	}
 	nni_mtx_unlock(&zt_lk);
@@ -1309,6 +1310,7 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	uint16_t             port;
 	uint8_t *            buf;
 	zt_send_hdr *        hdr;
+	nni_iov              iov;
 
 	NNI_ARG_UNUSED(thr);
 	NNI_ARG_UNUSED(socket);
@@ -1353,11 +1355,11 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	nni_aio_set_data(aio, 0, hdr);
 	hdr->sa  = addr;
 	hdr->len = len;
+	nni_aio_set_input(aio, 0, &hdr->sa);
 
-	aio->a_addr           = &hdr->sa;
-	aio->a_niov           = 1;
-	aio->a_iov[0].iov_buf = buf;
-	aio->a_iov[0].iov_len = len;
+	iov.iov_buf = buf;
+	iov.iov_len = len;
+	nni_aio_set_iov(aio, 1, &iov);
 
 	// This should be non-blocking/best-effort, so while
 	// not great that we're holding the lock, also not tragic.
@@ -1423,6 +1425,7 @@ zt_node_create(zt_node **ztnp, const char *path)
 	nng_sockaddr       sa6;
 	int                rv;
 	enum ZT_ResultCode zrv;
+	nni_iov            iov;
 
 	// We want to bind to any address we can (for now).
 	// Note that at the moment we only support IPv4.  Its
@@ -1487,16 +1490,14 @@ zt_node_create(zt_node **ztnp, const char *path)
 	zt_node_resched(ztn, 1);
 
 	// Schedule receive
-	ztn->zn_rcv4_aio->a_niov           = 1;
-	ztn->zn_rcv4_aio->a_iov[0].iov_buf = ztn->zn_rcv4_buf;
-	ztn->zn_rcv4_aio->a_iov[0].iov_len = zt_rcv_bufsize;
-	ztn->zn_rcv4_aio->a_addr           = &ztn->zn_rcv4_addr;
-	ztn->zn_rcv4_aio->a_count          = 0;
-	ztn->zn_rcv6_aio->a_niov           = 1;
-	ztn->zn_rcv6_aio->a_iov[0].iov_buf = ztn->zn_rcv6_buf;
-	ztn->zn_rcv6_aio->a_iov[0].iov_len = zt_rcv_bufsize;
-	ztn->zn_rcv6_aio->a_addr           = &ztn->zn_rcv6_addr;
-	ztn->zn_rcv6_aio->a_count          = 0;
+	iov.iov_buf = ztn->zn_rcv4_buf;
+	iov.iov_len = zt_rcv_bufsize;
+	nni_aio_set_iov(ztn->zn_rcv4_aio, 1, &iov);
+	nni_aio_set_input(ztn->zn_rcv4_aio, 0, &ztn->zn_rcv4_addr);
+	iov.iov_buf = ztn->zn_rcv6_buf;
+	iov.iov_len = zt_rcv_bufsize;
+	nni_aio_set_iov(ztn->zn_rcv6_aio, 1, &iov);
+	nni_aio_set_input(ztn->zn_rcv6_aio, 0, &ztn->zn_rcv6_addr);
 
 	nni_plat_udp_recv(ztn->zn_udp4, ztn->zn_rcv4_aio);
 	nni_plat_udp_recv(ztn->zn_udp6, ztn->zn_rcv6_aio);
@@ -1812,7 +1813,7 @@ zt_pipe_send(void *arg, nni_aio *aio)
 static void
 zt_pipe_cancel_recv(nni_aio *aio, int rv)
 {
-	zt_pipe *p = aio->a_prov_data;
+	zt_pipe *p = nni_aio_get_prov_data(aio);
 	nni_mtx_lock(&zt_lk);
 	if (p->zp_user_rxaio == aio) {
 		p->zp_user_rxaio = NULL;
@@ -1968,7 +1969,7 @@ zt_pipe_get_node(void *arg, void *buf, size_t *szp)
 static void
 zt_pipe_cancel_ping(nni_aio *aio, int rv)
 {
-	zt_pipe *p = aio->a_prov_data;
+	zt_pipe *p = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&zt_lk);
 	if (p->zp_ping_active) {
@@ -2195,7 +2196,7 @@ zt_ep_close(void *arg)
 	zt_node *ztn;
 	nni_aio *aio;
 
-	nni_aio_cancel(ep->ze_creq_aio, NNG_ECLOSED);
+	nni_aio_abort(ep->ze_creq_aio, NNG_ECLOSED);
 
 	// Cancel any outstanding user operation(s) - they should have
 	// been aborted by the above cancellation, but we need to be
@@ -2293,12 +2294,12 @@ zt_ep_bind(void *arg)
 static void
 zt_ep_cancel(nni_aio *aio, int rv)
 {
-	zt_ep *ep = aio->a_prov_data;
+	zt_ep *ep = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&zt_lk);
 	if (nni_aio_list_active(aio)) {
 		if (ep->ze_aio != NULL) {
-			nni_aio_cancel(ep->ze_aio, rv);
+			nni_aio_abort(ep->ze_aio, rv);
 		}
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
@@ -2370,7 +2371,7 @@ zt_ep_accept(void *arg, nni_aio *aio)
 static void
 zt_ep_conn_req_cancel(nni_aio *aio, int rv)
 {
-	zt_ep *ep = aio->a_prov_data;
+	zt_ep *ep = nni_aio_get_prov_data(aio);
 	// We don't have much to do here.  The AIO will have been
 	// canceled as a result of the "parent" AIO canceling.
 	nni_mtx_lock(&zt_lk);

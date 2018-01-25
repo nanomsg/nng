@@ -59,32 +59,34 @@ TestMain("UDP support", {
 			char         rbuf[1024];
 			nng_sockaddr to;
 			nng_sockaddr from;
-			nni_aio *    aio1;
-			nni_aio *    aio2;
+			nng_aio *    aio1;
+			nng_aio *    aio2;
+			nng_iov      iov1;
+			nng_iov      iov2;
 
-			nni_aio_init(&aio1, NULL, NULL);
-			nni_aio_init(&aio2, NULL, NULL);
+			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
+			So(nng_aio_alloc(&aio2, NULL, NULL) == 0);
 
-			to                     = sa2;
-			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = (void *) msg;
-			aio1->a_iov[0].iov_len = strlen(msg) + 1;
-			aio1->a_addr           = &to;
+			to           = sa2;
+			iov1.iov_buf = msg;
+			iov1.iov_len = strlen(msg) + 1;
+			So(nng_aio_set_iov(aio1, 1, &iov1) == 0);
+			nng_aio_set_input(aio1, 0, &to);
 
-			aio2->a_niov           = 1;
-			aio2->a_iov[0].iov_buf = (void *) rbuf;
-			aio2->a_iov[0].iov_len = 1024;
-			aio2->a_addr           = &from;
+			iov2.iov_buf = rbuf;
+			iov2.iov_len = 1024;
+			So(nng_aio_set_iov(aio2, 1, &iov2) == 0);
+			nng_aio_set_input(aio2, 0, &from);
 
 			nni_plat_udp_recv(u2, aio2);
 			nni_plat_udp_send(u1, aio1);
-			nni_aio_wait(aio1);
-			nni_aio_wait(aio2);
+			nng_aio_wait(aio1);
+			nng_aio_wait(aio2);
 
-			So(nni_aio_result(aio1) == 0);
-			So(nni_aio_result(aio2) == 0);
+			So(nng_aio_result(aio1) == 0);
+			So(nng_aio_result(aio2) == 0);
 
-			So(nni_aio_count(aio2) == strlen(msg) + 1);
+			So(nng_aio_count(aio2) == strlen(msg) + 1);
 			So(strcmp(msg, rbuf) == 0);
 
 			So(from.s_un.s_in.sa_family ==
@@ -97,23 +99,25 @@ TestMain("UDP support", {
 			nni_plat_udp_recv(u2, aio2);
 			nni_plat_udp_send(u2, aio1);
 
-			nni_aio_fini(aio1);
-			nni_aio_fini(aio2);
+			nng_aio_free(aio1);
+			nng_aio_free(aio2);
 		});
 
 		Convey("Sending without an address fails", {
-			nni_aio *aio1;
+			nng_aio *aio1;
 			char *   msg = "nope";
+			nng_iov  iov;
 
-			nni_aio_init(&aio1, NULL, NULL);
-			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = (void *) msg;
-			aio1->a_iov[0].iov_len = strlen(msg) + 1;
+			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
+
+			iov.iov_buf = msg;
+			iov.iov_len = strlen(msg) + 1;
+			So(nng_aio_set_iov(aio1, 1, &iov) == 0);
 
 			nni_plat_udp_send(u1, aio1);
-			nni_aio_wait(aio1);
-			So(nni_aio_result(aio1) == NNG_EADDRINVAL);
-			nni_aio_fini(aio1);
+			nng_aio_wait(aio1);
+			So(nng_aio_result(aio1) == NNG_EADDRINVAL);
+			nng_aio_free(aio1);
 		});
 
 		Convey("Multiple operations work", {
@@ -125,37 +129,41 @@ TestMain("UDP support", {
 			nng_sockaddr to2;
 			nng_sockaddr from1;
 			nng_sockaddr from2;
-			nni_aio *    aio1;
-			nni_aio *    aio2;
-			nni_aio *    aio3;
-			nni_aio *    aio4;
+			nng_aio *    aio1;
+			nng_aio *    aio2;
+			nng_aio *    aio3;
+			nng_aio *    aio4;
+			nng_iov      iov1;
+			nng_iov      iov2;
+			nng_iov      iov3;
+			nng_iov      iov4;
 
-			nni_aio_init(&aio1, NULL, NULL);
-			nni_aio_init(&aio2, NULL, NULL);
-			nni_aio_init(&aio3, NULL, NULL);
-			nni_aio_init(&aio4, NULL, NULL);
+			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
+			So(nng_aio_alloc(&aio2, NULL, NULL) == 0);
+			So(nng_aio_alloc(&aio3, NULL, NULL) == 0);
+			So(nng_aio_alloc(&aio4, NULL, NULL) == 0);
 
-			to1                    = sa2;
-			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = (void *) msg1;
-			aio1->a_iov[0].iov_len = strlen(msg1) + 1;
-			aio1->a_addr           = &to1;
+			to1          = sa2;
+			iov1.iov_buf = msg1;
+			iov1.iov_len = strlen(msg1) + 1;
+			So(nng_aio_set_iov(aio1, 1, &iov1) == 0);
+			nng_aio_set_input(aio1, 0, &to1);
 
-			to2                    = sa2;
-			aio2->a_niov           = 1;
-			aio2->a_iov[0].iov_buf = (void *) msg2;
-			aio2->a_iov[0].iov_len = strlen(msg2) + 1;
-			aio2->a_addr           = &to2;
+			to2          = sa2;
+			iov2.iov_buf = msg2;
+			iov2.iov_len = strlen(msg2) + 1;
+			So(nng_aio_set_iov(aio2, 1, &iov2) == 0);
+			nng_aio_set_input(aio2, 0, &to2);
 
-			aio3->a_niov           = 1;
-			aio3->a_iov[0].iov_buf = (void *) rbuf1;
-			aio3->a_iov[0].iov_len = 1024;
-			aio3->a_addr           = &from1;
+			iov3.iov_buf = rbuf1;
+			iov3.iov_len = 1024;
+			So(nng_aio_set_iov(aio3, 1, &iov3) == 0);
+			nng_aio_set_input(aio3, 0, &from1);
 
-			aio4->a_niov           = 1;
-			aio4->a_iov[0].iov_buf = (void *) rbuf2;
-			aio4->a_iov[0].iov_len = 1024;
-			aio4->a_addr           = &from2;
+			iov4.iov_buf = rbuf2;
+			iov4.iov_len = 1024;
+			So(nng_aio_set_iov(aio4, 1, &iov4) == 0);
+			nng_aio_set_input(aio4, 0, &from2);
 
 			nni_plat_udp_recv(u2, aio4);
 			nni_plat_udp_recv(u2, aio3);
@@ -165,90 +173,93 @@ TestMain("UDP support", {
 			nng_msleep(1);
 			nni_plat_udp_send(u1, aio1);
 
-			nni_aio_wait(aio2);
-			nni_aio_wait(aio1);
-			nni_aio_wait(aio3);
-			nni_aio_wait(aio4);
+			nng_aio_wait(aio2);
+			nng_aio_wait(aio1);
+			nng_aio_wait(aio3);
+			nng_aio_wait(aio4);
 
-			So(nni_aio_result(aio1) == 0);
-			So(nni_aio_result(aio2) == 0);
-			So(nni_aio_result(aio3) == 0);
-			So(nni_aio_result(aio4) == 0);
+			So(nng_aio_result(aio1) == 0);
+			So(nng_aio_result(aio2) == 0);
+			So(nng_aio_result(aio3) == 0);
+			So(nng_aio_result(aio4) == 0);
 
 			So(from1.s_un.s_in.sa_family ==
 			    sa1.s_un.s_in.sa_family);
 			So(from1.s_un.s_in.sa_port == sa1.s_un.s_in.sa_port);
 			So(from1.s_un.s_in.sa_addr == sa1.s_un.s_in.sa_addr);
 
-			nni_aio_fini(aio1);
-			nni_aio_fini(aio2);
-			nni_aio_fini(aio3);
-			nni_aio_fini(aio4);
+			nng_aio_free(aio1);
+			nng_aio_free(aio2);
+			nng_aio_free(aio3);
+			nng_aio_free(aio4);
 		});
 
 		Convey("Sending without an address fails", {
-			nni_aio *aio1;
+			nng_aio *aio1;
 			char *   msg = "nope";
+			nng_iov  iov;
 
-			nni_aio_init(&aio1, NULL, NULL);
-			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = (void *) msg;
-			aio1->a_iov[0].iov_len = strlen(msg) + 1;
+			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
+			iov.iov_buf = msg;
+			iov.iov_len = strlen(msg) + 1;
+			So(nng_aio_set_iov(aio1, 1, &iov) == 0);
 
 			nni_plat_udp_send(u1, aio1);
-			nni_aio_wait(aio1);
-			So(nni_aio_result(aio1) == NNG_EADDRINVAL);
-			nni_aio_fini(aio1);
+			nng_aio_wait(aio1);
+			So(nng_aio_result(aio1) == NNG_EADDRINVAL);
+			nng_aio_free(aio1);
 		});
 
 		Convey("Sending to an IPv6 address on IPv4 fails", {
-			nni_aio *    aio1;
+			nng_aio *    aio1;
 			char *       msg = "nope";
 			nng_sockaddr sa;
 			int          rv;
+			nng_iov      iov;
 
 			sa.s_un.s_in6.sa_family = NNG_AF_INET6;
 			// address is for google.com
 			inet_ntop(AF_INET6, "2607:f8b0:4007:804::200e",
 			    (void *) sa.s_un.s_in6.sa_addr, 16);
 			sa.s_un.s_in6.sa_port = 80;
-			nni_aio_init(&aio1, NULL, NULL);
-			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = (void *) msg;
-			aio1->a_iov[0].iov_len = strlen(msg) + 1;
-			aio1->a_addr           = &sa;
+			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
+			iov.iov_buf = msg;
+			iov.iov_len = strlen(msg) + 1;
+			So(nng_aio_set_iov(aio1, 1, &iov) == 0);
+			nng_aio_set_input(aio1, 0, &sa);
 
 			nni_plat_udp_send(u1, aio1);
-			nni_aio_wait(aio1);
-			So((rv = nni_aio_result(aio1)) != 0);
+			nng_aio_wait(aio1);
+			So((rv = nng_aio_result(aio1)) != 0);
 			So(rv == NNG_EADDRINVAL || rv == NNG_ENOTSUP ||
 			    rv == NNG_EUNREACHABLE);
-			nni_aio_fini(aio1);
+			nng_aio_free(aio1);
 		});
 
 		Convey("Sending to an IPC address fails", {
-			nni_aio *    aio1;
+			nng_aio *    aio1;
 			char *       msg = "nope";
 			nng_sockaddr sa;
 			int          rv;
+			nng_iov      iov;
 
 			sa.s_un.s_in6.sa_family = NNG_AF_INET6;
 			// address is for google.com
 			inet_ntop(AF_INET6, "2607:f8b0:4007:804::200e",
 			    (void *) sa.s_un.s_in6.sa_addr, 16);
 			sa.s_un.s_in6.sa_port = 80;
-			nni_aio_init(&aio1, NULL, NULL);
-			aio1->a_niov           = 1;
-			aio1->a_iov[0].iov_buf = (void *) msg;
-			aio1->a_iov[0].iov_len = strlen(msg) + 1;
-			aio1->a_addr           = &sa;
+			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
+			iov.iov_buf = msg;
+			iov.iov_len = strlen(msg) + 1;
+			So(nng_aio_set_iov(aio1, 1, &iov) == 0);
+			nng_aio_set_input(aio1, 0, &sa);
 
 			nni_plat_udp_send(u1, aio1);
-			nni_aio_wait(aio1);
-			So((rv = nni_aio_result(aio1)) != 0);
+			nng_aio_wait(aio1);
+			So((rv = nng_aio_result(aio1)) != 0);
 			So(rv == NNG_EADDRINVAL || rv == NNG_ENOTSUP ||
 			    rv == NNG_EUNREACHABLE);
-			nni_aio_fini(aio1);
+			nng_aio_free(aio1);
 		});
 
 	});

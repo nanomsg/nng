@@ -40,7 +40,7 @@ http_conn_done(void *arg)
 	nni_aio *          aio;
 	int                rv;
 	nni_plat_tcp_pipe *p;
-	nni_http *         http;
+	nni_http_conn *    conn;
 
 	nni_mtx_lock(&c->mtx);
 	rv = nni_aio_result(c->connaio);
@@ -61,9 +61,9 @@ http_conn_done(void *arg)
 	}
 
 	if (c->tls != NULL) {
-		rv = nni_http_init_tls(&http, c->tls, p);
+		rv = nni_http_conn_init_tls(&conn, c->tls, p);
 	} else {
-		rv = nni_http_init_tcp(&http, p);
+		rv = nni_http_conn_init_tcp(&conn, p);
 	}
 	if (rv != 0) {
 		nni_aio_finish_error(aio, rv);
@@ -71,7 +71,7 @@ http_conn_done(void *arg)
 		return;
 	}
 
-	nni_aio_set_output(aio, 0, http);
+	nni_aio_set_output(aio, 0, conn);
 	nni_aio_finish(aio, 0, 0);
 
 	if (!nni_list_empty(&c->aios)) {
@@ -124,9 +124,9 @@ nni_http_client_init(nni_http_client **cp, nni_url *url)
 	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
 		return (rv);
 	}
-	aio->a_addr = &sa;
-	host        = (strlen(url->u_hostname) != 0) ? url->u_hostname : NULL;
-	port        = (strlen(url->u_port) != 0) ? url->u_port : NULL;
+	nni_aio_set_input(aio, 0, &sa);
+	host = (strlen(url->u_hostname) != 0) ? url->u_hostname : NULL;
+	port = (strlen(url->u_port) != 0) ? url->u_port : NULL;
 	nni_plat_tcp_resolv(host, port, NNG_AF_UNSPEC, false, aio);
 	nni_aio_wait(aio);
 	rv = nni_aio_result(aio);
@@ -221,14 +221,14 @@ nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
 static void
 http_connect_cancel(nni_aio *aio, int rv)
 {
-	nni_http_client *c = aio->a_prov_data;
+	nni_http_client *c = nni_aio_get_prov_data(aio);
 	nni_mtx_lock(&c->mtx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
 	}
 	if (nni_list_empty(&c->aios)) {
-		nni_aio_cancel(c->connaio, rv);
+		nni_aio_abort(c->connaio, rv);
 	}
 	nni_mtx_unlock(&c->mtx);
 }

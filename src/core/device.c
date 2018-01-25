@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.com>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -38,7 +38,7 @@ typedef struct nni_device_pair nni_device_pair;
 static void
 nni_device_cancel(nni_aio *aio, int rv)
 {
-	nni_device_data *dd = aio->a_prov_data;
+	nni_device_data *dd = nni_aio_get_prov_data(aio);
 	// cancellation is the only path to shutting it down.
 
 	nni_mtx_lock(&dd->mtx);
@@ -63,7 +63,7 @@ nni_device_cb(void *arg)
 
 	if ((rv = nni_aio_result(aio)) != 0) {
 		p->state = NNI_DEVICE_STATE_FINI;
-		nni_aio_cancel(p->user, rv);
+		nni_aio_abort(p->user, rv);
 		return;
 	}
 

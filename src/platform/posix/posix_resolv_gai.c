@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -54,11 +54,16 @@ struct nni_posix_resolv_item {
 static void
 nni_posix_resolv_finish(nni_posix_resolv_item *item, int rv)
 {
-	nni_aio *aio = item->aio;
+	nni_aio *aio;
 
-	aio->a_prov_data = NULL;
-	nni_aio_finish(aio, rv, 0);
-	NNI_FREE_STRUCT(item);
+	if ((aio = item->aio) != NULL) {
+		if (nni_aio_get_prov_data(aio) == item) {
+			nni_aio_set_prov_data(aio, NULL);
+			item->aio = NULL;
+			nni_aio_finish(aio, rv, 0);
+			NNI_FREE_STRUCT(item);
+		}
+	}
 }
 
 static void
@@ -67,11 +72,12 @@ nni_posix_resolv_cancel(nni_aio *aio, int rv)
 	nni_posix_resolv_item *item;
 
 	nni_mtx_lock(&nni_posix_resolv_mtx);
-	if ((item = aio->a_prov_data) == NULL) {
+	if ((item = nni_aio_get_prov_data(aio)) == NULL) {
 		nni_mtx_unlock(&nni_posix_resolv_mtx);
 		return;
 	}
-	aio->a_prov_data = NULL;
+	nni_aio_set_prov_data(aio, NULL);
+	item->aio = NULL;
 	nni_mtx_unlock(&nni_posix_resolv_mtx);
 	nni_task_cancel(&item->task);
 	NNI_FREE_STRUCT(item);
@@ -161,7 +167,7 @@ nni_posix_resolv_task(void *arg)
 	if (probe != NULL) {
 		struct sockaddr_in * sin;
 		struct sockaddr_in6 *sin6;
-		nng_sockaddr *       sa = aio->a_addr;
+		nng_sockaddr *       sa = nni_aio_get_input(aio, 0);
 
 		switch (probe->ai_addr->sa_family) {
 		case AF_INET:

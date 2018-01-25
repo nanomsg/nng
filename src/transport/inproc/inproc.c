@@ -143,7 +143,7 @@ static void
 nni_inproc_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_inproc_pipe *pipe = arg;
-	nni_msg *        msg  = aio->a_msg;
+	nni_msg *        msg  = nni_aio_get_msg(aio);
 	char *           h;
 	size_t           l;
 	int              rv;
@@ -153,7 +153,7 @@ nni_inproc_pipe_send(void *arg, nni_aio *aio)
 	h = nni_msg_header(msg);
 	l = nni_msg_header_len(msg);
 	if ((rv = nni_msg_insert(msg, h, l)) != 0) {
-		nni_aio_finish(aio, rv, aio->a_count);
+		nni_aio_finish(aio, rv, nni_aio_count(aio));
 		return;
 	}
 	nni_msg_header_chop(msg, l);
@@ -219,12 +219,12 @@ nni_inproc_ep_fini(void *arg)
 static void
 nni_inproc_conn_finish(nni_aio *aio, int rv)
 {
-	nni_inproc_ep *ep = aio->a_prov_extra[0];
+	nni_inproc_ep *ep = nni_aio_get_prov_data(aio);
 	void *         pipe;
 
 	nni_aio_list_remove(aio);
-	pipe        = aio->a_pipe;
-	aio->a_pipe = NULL;
+	pipe = nni_aio_get_pipe(aio);
+	nni_aio_set_pipe(aio, NULL);
 
 	if ((ep != NULL) && (ep->mode != NNI_EP_MODE_LISTEN) &&
 	    nni_list_empty(&ep->aios)) {
@@ -298,8 +298,8 @@ nni_inproc_accept_clients(nni_inproc_ep *server)
 
 			nni_mtx_init(&pair->mx);
 
-			pair->pipes[0]     = caio->a_pipe;
-			pair->pipes[1]     = saio->a_pipe;
+			pair->pipes[0]     = nni_aio_get_pipe(caio);
+			pair->pipes[1]     = nni_aio_get_pipe(saio);
 			pair->pipes[0]->rq = pair->pipes[1]->wq = pair->q[0];
 			pair->pipes[1]->rq = pair->pipes[0]->wq = pair->q[1];
 			pair->pipes[0]->pair = pair->pipes[1]->pair = pair;
@@ -324,15 +324,15 @@ nni_inproc_accept_clients(nni_inproc_ep *server)
 static void
 nni_inproc_ep_cancel(nni_aio *aio, int rv)
 {
-	nni_inproc_ep *  ep = aio->a_prov_data;
+	nni_inproc_ep *  ep = nni_aio_get_prov_data(aio);
 	nni_inproc_pipe *pipe;
 
 	nni_mtx_lock(&nni_inproc.mx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
 		nni_list_node_remove(&ep->node);
-		if ((pipe = aio->a_pipe) != NULL) {
-			aio->a_pipe = NULL;
+		if ((pipe = nni_aio_get_pipe(aio)) != NULL) {
+			nni_aio_set_pipe(aio, NULL);
 			nni_inproc_pipe_fini(pipe);
 		}
 		nni_aio_finish_error(aio, rv);
@@ -343,9 +343,10 @@ nni_inproc_ep_cancel(nni_aio *aio, int rv)
 static void
 nni_inproc_ep_connect(void *arg, nni_aio *aio)
 {
-	nni_inproc_ep *ep = arg;
-	nni_inproc_ep *server;
-	int            rv;
+	nni_inproc_ep *  ep = arg;
+	nni_inproc_ep *  server;
+	int              rv;
+	nni_inproc_pipe *pipe;
 
 	if (ep->mode != NNI_EP_MODE_DIAL) {
 		nni_aio_finish_error(aio, NNG_EINVAL);
@@ -358,12 +359,12 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 		return;
 	}
 
-	aio->a_prov_extra[0] = ep;
-	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
+	if ((rv = nni_inproc_pipe_init(&pipe, ep)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
+	nni_aio_set_pipe(aio, pipe);
 
 	// Find a server.
 	NNI_LIST_FOREACH (&nni_inproc.servers, server) {
@@ -406,8 +407,9 @@ nni_inproc_ep_bind(void *arg)
 static void
 nni_inproc_ep_accept(void *arg, nni_aio *aio)
 {
-	nni_inproc_ep *ep = arg;
-	int            rv;
+	nni_inproc_ep *  ep = arg;
+	nni_inproc_pipe *pipe;
+	int              rv;
 
 	nni_mtx_lock(&nni_inproc.mx);
 
@@ -416,15 +418,14 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 		return;
 	}
 
-	aio->a_prov_extra[0] = ep;
-
 	// We are already on the master list of servers, thanks to bind.
 
-	if ((rv = nni_inproc_pipe_init((void *) &aio->a_pipe, ep)) != 0) {
+	if ((rv = nni_inproc_pipe_init(&pipe, ep)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		nni_mtx_unlock(&nni_inproc.mx);
 		return;
 	}
+	nni_aio_set_pipe(aio, pipe);
 
 	// Insert us into the pending server aios, and then run the
 	// accept list.

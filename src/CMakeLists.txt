@@ -149,6 +149,8 @@ add_subdirectory(transport/zerotier)
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src
     ${NNG_REQUIRED_INCLUDES})
 
+add_definitions(${NNG_DEFINES})
+
 # Provide same folder structure in IDE as on disk
 foreach (f ${NNG_SOURCES})
     # Get the path of the file relative to source directory

@@ -118,7 +118,7 @@ surv0_sock_close(void *arg)
 	surv0_sock *s = arg;
 
 	nni_timer_cancel(&s->timer);
-	nni_aio_cancel(s->aio_getq, NNG_ECLOSED);
+	nni_aio_abort(s->aio_getq, NNG_ECLOSED);
 }
 
 static void

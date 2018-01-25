@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -31,7 +31,6 @@ static void bus0_sock_send(void *, nni_aio *);
 static void bus0_sock_recv(void *, nni_aio *);
 
 static void bus0_pipe_getq(bus0_pipe *);
-static void bus0_pipe_send(bus0_pipe *);
 static void bus0_pipe_recv(bus0_pipe *);
 
 static void bus0_sock_getq_cb(void *);
@@ -110,7 +109,7 @@ bus0_sock_close(void *arg)
 {
 	bus0_sock *s = arg;
 
-	nni_aio_cancel(s->aio_getq, NNG_ECLOSED);
+	nni_aio_abort(s->aio_getq, NNG_ECLOSED);
 }
 
 static void

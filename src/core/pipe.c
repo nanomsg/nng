@@ -201,7 +201,7 @@ nni_pipe_close(nni_pipe *p)
 	nni_mtx_unlock(&p->p_mtx);
 
 	// abort any pending negotiation/start process.
-	nni_aio_cancel(p->p_start_aio, NNG_ECLOSED);
+	nni_aio_abort(p->p_start_aio, NNG_ECLOSED);
 }
 
 void
@@ -274,11 +274,11 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 
 	nni_mtx_init(&p->p_mtx);
 	nni_cv_init(&p->p_cv, &nni_pipe_lk);
-	nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p);
-
-	nni_mtx_lock(&nni_pipe_lk);
-	rv = nni_idhash_alloc(nni_pipes, &p->p_id, p);
-	nni_mtx_unlock(&nni_pipe_lk);
+	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) == 0) {
+		nni_mtx_lock(&nni_pipe_lk);
+		rv = nni_idhash_alloc(nni_pipes, &p->p_id, p);
+		nni_mtx_unlock(&nni_pipe_lk);
+	}
 
 	if ((rv != 0) || ((rv = nni_ep_pipe_add(ep, p)) != 0) ||
 	    ((rv = nni_sock_pipe_add(sock, p)) != 0)) {

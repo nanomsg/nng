@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -126,7 +126,8 @@ nni_sock_getopt_fd(nni_sock *s, int flag, void *val, size_t *szp)
 		cb = nni_sock_can_recv_cb;
 		break;
 	default:
-		nni_panic("default case!");
+		// This should never occur.
+		return (NNG_EINVAL);
 	}
 
 	// If we already inited this, just give back the same file descriptor.
@@ -772,25 +773,17 @@ nni_sock_closeall(void)
 	}
 }
 
-static void
-nni_sock_normalize_expiration(nni_aio *aio, nni_duration def)
-{
-	if (aio->a_timeout == (nni_duration) -2) {
-		aio->a_timeout = def;
-	}
-}
-
 void
 nni_sock_send(nni_sock *sock, nni_aio *aio)
 {
-	nni_sock_normalize_expiration(aio, sock->s_sndtimeo);
+	nni_aio_normalize_timeout(aio, sock->s_sndtimeo);
 	sock->s_sock_ops.sock_send(sock->s_data, aio);
 }
 
 void
 nni_sock_recv(nni_sock *sock, nni_aio *aio)
 {
-	nni_sock_normalize_expiration(aio, sock->s_rcvtimeo);
+	nni_aio_normalize_timeout(aio, sock->s_rcvtimeo);
 	sock->s_sock_ops.sock_recv(sock->s_data, aio);
 }
 
@@ -872,7 +865,6 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 {
 	int                          rv = NNG_ENOTSUP;
 	nni_ep *                     ep;
-	int                          commits = 0;
 	nni_sockopt *                optv;
 	nni_sockopt *                oldv = NULL;
 	const nni_socket_option *    sso;

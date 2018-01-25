@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -47,13 +47,12 @@ struct nni_posix_epdesc {
 static void
 nni_posix_epdesc_cancel(nni_aio *aio, int rv)
 {
-	nni_posix_epdesc *ed = aio->a_prov_data;
+	nni_posix_epdesc *ed = nni_aio_get_prov_data(aio);
 
 	NNI_ASSERT(rv != 0);
 	nni_mtx_lock(&ed->mtx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
-		NNI_ASSERT(aio->a_pipe == NULL);
 		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&ed->mtx);
@@ -318,7 +317,7 @@ nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
 	// connection is ready for us.  There isn't anything else for us to
 	// do really, as that will have been done in listen.
 	nni_mtx_lock(&ed->mtx);
-	aio->a_pipe = NULL;
+	nni_aio_set_pipe(aio, NULL);
 	// If we can't start, it means that the AIO was stopped.
 	if ((rv = nni_aio_start(aio, nni_posix_epdesc_cancel, ed)) != 0) {
 		nni_mtx_unlock(&ed->mtx);
@@ -344,7 +343,7 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 	int fd;
 
 	nni_mtx_lock(&ed->mtx);
-	aio->a_pipe = NULL;
+	nni_aio_set_pipe(aio, NULL);
 	// If we can't start, it means that the AIO was stopped.
 	if ((rv = nni_aio_start(aio, nni_posix_epdesc_cancel, ed)) != 0) {
 		nni_mtx_unlock(&ed->mtx);

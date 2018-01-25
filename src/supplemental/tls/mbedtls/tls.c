@@ -365,7 +365,7 @@ nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_plat_tcp_pipe *tcp)
 static void
 nni_tls_cancel(nni_aio *aio, int rv)
 {
-	nni_tls *tp = aio->a_prov_data;
+	nni_tls *tp = nni_aio_get_prov_data(aio);
 	nni_mtx_lock(&tp->lk);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
@@ -407,11 +407,11 @@ nni_tls_send_cb(void *ctx)
 		NNI_ASSERT(tp->sendlen <= n);
 		tp->sendlen -= n;
 		if (tp->sendlen) {
+			nni_iov iov;
 			tp->sendoff += n;
-
-			aio->a_niov           = 1;
-			aio->a_iov[0].iov_buf = tp->sendbuf + tp->sendoff;
-			aio->a_iov[0].iov_len = tp->sendlen;
+			iov.iov_buf = tp->sendbuf + tp->sendoff;
+			iov.iov_len = tp->sendlen;
+			nni_aio_set_iov(aio, 1, &iov);
 			nni_aio_set_timeout(aio, NNG_DURATION_INFINITE);
 			nni_plat_tcp_pipe_send(tp->tcp, aio);
 			nni_mtx_unlock(&tp->lk);
@@ -434,6 +434,7 @@ static void
 nni_tls_recv_start(nni_tls *tp)
 {
 	nni_aio *aio;
+	nni_iov  iov;
 
 	if (tp->recving || tp->tcp_closed) {
 		return;
@@ -444,12 +445,12 @@ nni_tls_recv_start(nni_tls *tp)
 		return;
 	}
 
-	tp->recving           = 1;
-	tp->recvoff           = 0;
-	aio                   = tp->tcp_recv;
-	aio->a_niov           = 1;
-	aio->a_iov[0].iov_buf = tp->recvbuf;
-	aio->a_iov[0].iov_len = NNG_TLS_MAX_RECV_SIZE;
+	tp->recving = 1;
+	tp->recvoff = 0;
+	aio         = tp->tcp_recv;
+	iov.iov_buf = tp->recvbuf;
+	iov.iov_len = NNG_TLS_MAX_RECV_SIZE;
+	nni_aio_set_iov(aio, 1, &iov);
 	nni_aio_set_timeout(tp->tcp_recv, NNG_DURATION_INFINITE);
 	nni_plat_tcp_pipe_recv(tp->tcp, aio);
 }
@@ -498,6 +499,7 @@ int
 nni_tls_net_send(void *ctx, const unsigned char *buf, size_t len)
 {
 	nni_tls *tp = ctx;
+	nni_iov  iov;
 
 	if (len > NNG_TLS_MAX_SEND_SIZE) {
 		len = NNG_TLS_MAX_SEND_SIZE;
@@ -517,10 +519,9 @@ nni_tls_net_send(void *ctx, const unsigned char *buf, size_t len)
 	tp->sendlen = len;
 	tp->sendoff = 0;
 	memcpy(tp->sendbuf, buf, len);
-
-	tp->tcp_send->a_niov           = 1;
-	tp->tcp_send->a_iov[0].iov_buf = tp->sendbuf;
-	tp->tcp_send->a_iov[0].iov_len = len;
+	iov.iov_buf = tp->sendbuf;
+	iov.iov_len = len;
+	nni_aio_set_iov(tp->tcp_send, 1, &iov);
 	nni_aio_set_timeout(tp->tcp_send, NNG_DURATION_INFINITE);
 	nni_plat_tcp_pipe_send(tp->tcp, tp->tcp_send);
 	return (len);
@@ -640,11 +641,15 @@ nni_tls_do_send(nni_tls *tp)
 		int      n;
 		uint8_t *buf = NULL;
 		size_t   len = 0;
+		nni_iov *iov;
+		int      niov;
 
-		for (int i = 0; i < aio->a_niov; i++) {
-			if (aio->a_iov[i].iov_len != 0) {
-				buf = aio->a_iov[i].iov_buf;
-				len = aio->a_iov[i].iov_len;
+		nni_aio_get_iov(aio, &niov, &iov);
+
+		for (int i = 0; i < niov; i++) {
+			if (iov[i].iov_len != 0) {
+				buf = iov[i].iov_buf;
+				len = iov[i].iov_len;
 				break;
 			}
 		}
@@ -682,11 +687,15 @@ nni_tls_do_recv(nni_tls *tp)
 		int      n;
 		uint8_t *buf = NULL;
 		size_t   len = 0;
+		nni_iov *iov;
+		int      niov;
 
-		for (int i = 0; i < aio->a_niov; i++) {
-			if (aio->a_iov[i].iov_len != 0) {
-				buf = aio->a_iov[i].iov_buf;
-				len = aio->a_iov[i].iov_len;
+		nni_aio_get_iov(aio, &niov, &iov);
+
+		for (int i = 0; i < niov; i++) {
+			if (iov[i].iov_len != 0) {
+				buf = iov[i].iov_buf;
+				len = iov[i].iov_len;
 				break;
 			}
 		}
@@ -865,7 +874,7 @@ nng_tls_config_own_cert(
 	pem = (const uint8_t *) key;
 	len = strlen(key) + 1;
 	rv  = mbedtls_pk_parse_key(&ck->key, pem, len, (const uint8_t *) pass,
-	    pass != NULL ? strlen(pass) : 0);
+            pass != NULL ? strlen(pass) : 0);
 	if (rv != 0) {
 		rv = nni_tls_mkerr(rv);
 		goto err;

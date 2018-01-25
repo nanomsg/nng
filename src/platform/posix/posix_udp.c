@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -62,16 +62,20 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 	nni_list *q = &udp->udp_recvq;
 	// While we're able to recv, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
-		struct iovec            iov[4]; // never have more than 4
+		struct iovec            iov[4];
 		int                     niov;
+		nni_iov *               aiov;
 		struct sockaddr_storage ss;
+		nng_sockaddr *          sa;
 		struct msghdr           hdr;
 		int                     rv  = 0;
 		int                     cnt = 0;
 
-		for (niov = 0; niov < aio->a_niov; niov++) {
-			iov[niov].iov_base = aio->a_iov[niov].iov_buf;
-			iov[niov].iov_len  = aio->a_iov[niov].iov_len;
+		nni_aio_get_iov(aio, &niov, &aiov);
+
+		for (int i = 0; i < niov; i++) {
+			iov[i].iov_base = aiov[i].iov_buf;
+			iov[i].iov_len  = aiov[i].iov_len;
 		}
 		hdr.msg_iov        = iov;
 		hdr.msg_iovlen     = niov;
@@ -88,11 +92,11 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 				return;
 			}
 			rv = nni_plat_errno(errno);
-		} else if (aio->a_addr != NULL) {
+		} else if ((sa = nni_aio_get_input(aio, 0)) != NULL) {
 			// We need to store the address information.
 			// It is incumbent on the AIO submitter to supply
 			// storage for the address.
-			nni_posix_sockaddr2nn(aio->a_addr, (void *) &ss);
+			nni_posix_sockaddr2nn(sa, (void *) &ss);
 		}
 		nni_list_remove(q, aio);
 		nni_aio_finish(aio, rv, cnt);
@@ -109,19 +113,25 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 	// While we're able to send, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
 		struct sockaddr_storage ss;
-		struct msghdr           hdr;
-		struct iovec            iov[4];
-		int                     niov;
-		int                     len;
-		int                     rv  = 0;
-		int                     cnt = 0;
 
-		if ((len = nni_posix_nn2sockaddr(&ss, aio->a_addr)) < 0) {
+		int len;
+		int rv  = 0;
+		int cnt = 0;
+
+		len = nni_posix_nn2sockaddr(&ss, nni_aio_get_input(aio, 0));
+		if (len < 0) {
 			rv = NNG_EADDRINVAL;
 		} else {
-			for (niov = 0; niov < aio->a_niov; niov++) {
-				iov[niov].iov_base = aio->a_iov[niov].iov_buf;
-				iov[niov].iov_len  = aio->a_iov[niov].iov_len;
+			struct msghdr hdr;
+			struct iovec  iov[4];
+			int           niov;
+			nni_iov *     aiov;
+
+			nni_aio_get_iov(aio, &niov, &aiov);
+
+			for (int i = 0; i < niov; i++) {
+				iov[i].iov_base = aiov[i].iov_buf;
+				iov[i].iov_len  = aiov[i].iov_len;
 			}
 			hdr.msg_iov        = iov;
 			hdr.msg_iovlen     = niov;
@@ -253,7 +263,7 @@ nni_plat_udp_close(nni_plat_udp *udp)
 void
 nni_plat_udp_cancel(nni_aio *aio, int rv)
 {
-	nni_plat_udp *udp = aio->a_prov_data;
+	nni_plat_udp *udp = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&udp->udp_mtx);
 	if (nni_aio_list_active(aio)) {

@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -101,22 +101,21 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 {
 	int                rv;
 	SOCKET             s;
-	WSABUF             iov[4];
+	WSABUF             iov[4]; // XXX: consider _alloca()
 	DWORD              niov;
 	DWORD              flags;
 	nni_plat_tcp_pipe *pipe = evt->ptr;
 	int                i;
+	int                naiov;
+	nni_iov *          aiov;
 
-	NNI_ASSERT(aio->a_niov > 0);
-	NNI_ASSERT(aio->a_niov <= 4);
-	NNI_ASSERT(aio->a_iov[0].iov_len > 0);
-	NNI_ASSERT(aio->a_iov[0].iov_buf != NULL);
+	nni_aio_get_iov(aio, &naiov, &aiov);
 
 	// Put the AIOs in Windows form.
-	for (niov = 0, i = 0; i < aio->a_niov; i++) {
-		if (aio->a_iov[i].iov_len != 0) {
-			iov[niov].buf = aio->a_iov[i].iov_buf;
-			iov[niov].len = (ULONG) aio->a_iov[i].iov_len;
+	for (niov = 0, i = 0; i < naiov; i++) {
+		if (aiov[i].iov_len != 0) {
+			iov[niov].buf = aiov[i].iov_buf;
+			iov[niov].len = (ULONG) aiov[i].iov_len;
 			niov++;
 		}
 	}
@@ -265,7 +264,7 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	ZeroMemory(ep, sizeof(ep));
+	ZeroMemory(ep, sizeof(*ep));
 
 	ep->s = INVALID_SOCKET;
 
@@ -509,7 +508,7 @@ nni_win_tcp_acc_start(nni_win_event *evt, nni_aio *aio)
 void
 nni_plat_tcp_ep_accept(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
-	aio->a_pipe = NULL;
+	nni_aio_set_pipe(aio, NULL);
 	nni_win_event_submit(&ep->acc_ev, aio);
 }
 
@@ -559,8 +558,7 @@ nni_win_tcp_con_finish(nni_win_event *evt, nni_aio *aio)
 	len = sizeof(pipe->sockname);
 	(void) getsockname(s, (SOCKADDR *) &pipe->sockname, &len);
 
-	aio->a_pipe = pipe;
-	nni_aio_finish(aio, 0, 0);
+	nni_aio_finish_pipe(aio, pipe);
 }
 
 static int
@@ -630,7 +628,7 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 extern void
 nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
-	aio->a_pipe = NULL;
+	nni_aio_set_pipe(aio, NULL);
 	nni_win_event_submit(&ep->con_ev, aio);
 }
 

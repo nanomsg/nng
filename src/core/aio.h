@@ -20,59 +20,6 @@ typedef struct nni_aio_ops nni_aio_ops;
 
 typedef void (*nni_aio_cancelfn)(nni_aio *, int);
 
-// An nni_aio is an async I/O handle.
-struct nni_aio {
-	int          a_result;  // Result code (nng_errno)
-	size_t       a_count;   // Bytes transferred (I/O only)
-	nni_time     a_expire;  // Absolute timeout
-	nni_duration a_timeout; // Relative timeout
-
-	// These fields are private to the aio framework.
-	nni_cv   a_cv;
-	unsigned a_fini : 1;     // shutting down (no new operations)
-	unsigned a_done : 1;     // operation has completed
-	unsigned a_pend : 1;     // completion routine pending
-	unsigned a_active : 1;   // aio was started
-	unsigned a_expiring : 1; // expiration callback in progress
-	unsigned a_waiting : 1;  // a thread is waiting for this to finish
-	unsigned a_synch : 1;    // run completion synchronously
-	nni_task a_task;
-
-	// Read/write operations.
-	nni_iov *a_iov;
-	int      a_niov;
-	nni_iov  a_iovinl[4]; // inline IOVs - when the IOV list is short
-	int      a_niovalloc; // number of allocated IOVs
-
-	// Message operations.
-	nni_msg *a_msg;
-
-	// Connect/accept operations.
-	void *a_pipe; // opaque pipe handle
-
-	// Resolver operations.
-	nni_sockaddr *a_addr;
-
-	// User scratch data.  Consumers may store values here, which
-	// must be preserved by providers and the framework.
-	void *a_user_data[4];
-
-	// Operation inputs & outputs.  Up to 4 inputs and 4 outputs may be
-	// specified.  The semantics of these will vary, and depend on the
-	// specific operation.
-	void *a_inputs[4];
-	void *a_outputs[4];
-
-	// Provider-use fields.
-	nni_aio_cancelfn a_prov_cancel;
-	void *           a_prov_data;
-	nni_list_node    a_prov_node;
-	void *           a_prov_extra[4]; // Extra data used by provider
-
-	// Expire node.
-	nni_list_node a_expire_node;
-};
-
 // nni_aio_init initializes an aio object.  The callback is called with
 // the supplied argument when the operation is complete.  If NULL is
 // supplied for the callback, then nni_aio_wake is used in its place,
@@ -128,11 +75,6 @@ extern void nni_aio_set_output(nni_aio *, int, void *);
 // nni_get_output returns an output previously stored on the AIO.
 extern void *nni_aio_get_output(nni_aio *, int);
 
-// nni_aio_set_iov sets an IOV (scatter/gather vector) on the AIO.
-// Up to 4 may be set without any possibility of failure, more than that
-// may require an allocation and hence fail due to NNG_ENOMEM.
-extern int nni_aio_set_iov(nni_aio *, int, nng_iov *);
-
 // XXX: These should be refactored in terms of generic inputs and outputs.
 extern void     nni_aio_set_msg(nni_aio *, nni_msg *);
 extern nni_msg *nni_aio_get_msg(nni_aio *);
@@ -151,11 +93,6 @@ extern void *   nni_aio_get_pipe(nni_aio *);
 // although it is still an error to try waiting for an aio from that aio's
 // completion callback.
 void nni_aio_set_synch(nni_aio *);
-
-// nni_aio_set_timeout sets the timeout (relative) when the AIO will
-// be canceled.  The cancelation does not happen until after nni_aio_start
-// is called.
-extern void nni_aio_set_timeout(nni_aio *, nni_duration);
 
 // nni_aio_result returns the result code (0 on success, or an NNG errno)
 // for the operation.  It is only valid to call this when the operation is
@@ -192,19 +129,30 @@ extern void nni_aio_finish_error(nni_aio *, int);
 extern void nni_aio_finish_pipe(nni_aio *, void *);
 extern void nni_aio_finish_msg(nni_aio *, nni_msg *);
 
-// nni_aio_cancel is used to cancel an operation.  Any pending I/O or
+// nni_aio_abort is used to abort an operation.  Any pending I/O or
 // timeouts are canceled if possible, and the callback will be returned
 // with the indicated result (NNG_ECLOSED or NNG_ECANCELED is recommended.)
-extern void nni_aio_cancel(nni_aio *, int rv);
+extern void nni_aio_abort(nni_aio *, int rv);
 
-extern int nni_aio_start(nni_aio *, nni_aio_cancelfn, void *);
+extern int   nni_aio_start(nni_aio *, nni_aio_cancelfn, void *);
+extern void *nni_aio_get_prov_data(nni_aio *);
+extern void  nni_aio_set_prov_data(nni_aio *, void *);
+extern void *nni_aio_get_prov_extra(nni_aio *, unsigned);
+extern void  nni_aio_set_prov_extra(nni_aio *, unsigned, void *);
+// nni_aio_advance_iov moves up the iov, reflecting that some I/O as
+// been performed.  It returns the amount of data remaining in the argument;
+// i.e. if the count refers to more data than the iov can support, then
+// the result will be left over count.
+extern size_t nni_aio_iov_advance(nni_aio *, size_t);
+// nni_aio_iov_count returns the number of bytes referenced by the aio's iov.
+extern size_t nni_aio_iov_count(nni_aio *);
 
-// nni_aio_stop is used to abort all further operations on the AIO.
-// When this is executed, no further operations or callbacks will be
-// executed, and if callbacks or I/O is in progress this will block
-// until they are either canceled or aborted.  (Question: why not just
-// nni_fini?)
-// extern void nni_aio_stop(nni_aio *);
+extern int nni_aio_set_iov(nni_aio *, int, const nni_iov *);
+
+extern void nni_aio_set_timeout(nni_aio *, nng_duration);
+extern void nni_aio_get_iov(nni_aio *, int *, nni_iov **);
+extern void nni_aio_normalize_timeout(nni_aio *, nng_duration);
+extern void nni_aio_bump_count(nni_aio *, size_t);
 
 extern int  nni_aio_sys_init(void);
 extern void nni_aio_sys_fini(void);

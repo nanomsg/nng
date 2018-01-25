@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -39,7 +39,7 @@ static void
 nni_posix_pipedesc_finish(nni_aio *aio, int rv)
 {
 	nni_aio_list_remove(aio);
-	nni_aio_finish(aio, rv, aio->a_count);
+	nni_aio_finish(aio, rv, nni_aio_count(aio));
 }
 
 static void
@@ -66,21 +66,23 @@ nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
 static void
 nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 {
-	int          n;
-	struct iovec iovec[4];
-	nni_aio *    aio;
-	int          niov;
+	nni_aio *aio;
 
 	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
-		int i;
-		for (niov = 0, i = 0; i < aio->a_niov; i++) {
-			iovec[niov].iov_len  = aio->a_iov[i].iov_len;
-			iovec[niov].iov_base = aio->a_iov[i].iov_buf;
-			niov++;
-		}
-		if (niov == 0) {
-			nni_posix_pipedesc_finish(aio, NNG_EINVAL);
-			continue;
+		int          i;
+		int          n;
+		struct iovec iovec[4];
+		int          niov;
+		int          naiov;
+		nni_iov *    aiov;
+
+		nni_aio_get_iov(aio, &naiov, &aiov);
+		for (niov = 0, i = 0; i < naiov; i++) {
+			if (aiov[i].iov_len > 0) {
+				iovec[niov].iov_len  = aiov[i].iov_len;
+				iovec[niov].iov_base = aiov[i].iov_buf;
+				niov++;
+			}
 		}
 
 		n = writev(pd->node.fd, iovec, niov);
@@ -95,8 +97,7 @@ nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 			return;
 		}
 
-		aio->a_count += n;
-
+		nni_aio_bump_count(aio, n);
 		// We completed the entire operation on this aioq.
 		nni_posix_pipedesc_finish(aio, 0);
 
@@ -108,23 +109,23 @@ nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 static void
 nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 {
-	int          n;
-	struct iovec iovec[4];
-	nni_aio *    aio;
-	int          niov;
+	nni_aio *aio;
 
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
-		int i;
-		for (i = 0, niov = 0; i < aio->a_niov; i++) {
-			if (aio->a_iov[i].iov_len != 0) {
-				iovec[niov].iov_len  = aio->a_iov[i].iov_len;
-				iovec[niov].iov_base = aio->a_iov[i].iov_buf;
+		int          i;
+		int          n;
+		struct iovec iovec[4];
+		int          niov;
+		int          naiov;
+		nni_iov *    aiov;
+
+		nni_aio_get_iov(aio, &naiov, &aiov);
+		for (niov = 0, i = 0; i < naiov; i++) {
+			if (aiov[i].iov_len != 0) {
+				iovec[niov].iov_len  = aiov[i].iov_len;
+				iovec[niov].iov_base = aiov[i].iov_buf;
 				niov++;
 			}
-		}
-		if (niov == 0) {
-			nni_posix_pipedesc_finish(aio, NNG_EINVAL);
-			continue;
 		}
 
 		n = readv(pd->node.fd, iovec, niov);
@@ -146,7 +147,7 @@ nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 			return;
 		}
 
-		aio->a_count += n;
+		nni_aio_bump_count(aio, n);
 
 		// We completed the entire operation on this aioq.
 		nni_posix_pipedesc_finish(aio, 0);
@@ -198,7 +199,7 @@ nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
 static void
 nni_posix_pipedesc_cancel(nni_aio *aio, int rv)
 {
-	nni_posix_pipedesc *pd = aio->a_prov_data;
+	nni_posix_pipedesc *pd = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&pd->mtx);
 	if (nni_aio_list_active(aio)) {

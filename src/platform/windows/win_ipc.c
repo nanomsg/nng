@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -60,9 +60,10 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 	int                rv;
 	nni_plat_ipc_pipe *pipe = evt->ptr;
 	int                idx;
+	int                naiov;
+	nni_iov *          aiov;
 
 	NNI_ASSERT(aio != NULL);
-	NNI_ASSERT(aio->a_niov > 0);
 
 	if (pipe->p == INVALID_HANDLE_VALUE) {
 		evt->status = NNG_ECLOSED;
@@ -70,18 +71,19 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 		return (1);
 	}
 
+	nni_aio_get_iov(aio, &naiov, &aiov);
 	idx = 0;
-	while ((idx < aio->a_niov) && (aio->a_iov[idx].iov_len == 0)) {
+	while ((idx < naiov) && (aiov[idx].iov_len == 0)) {
 		idx++;
 	}
-	NNI_ASSERT(idx < aio->a_niov);
+	NNI_ASSERT(idx < naiov);
 	// Now start a transfer.  We assume that only one send can be
 	// outstanding on a pipe at a time.  This is important to avoid
 	// scrambling the data anyway.  Note that Windows named pipes do
 	// not appear to support scatter/gather, so we have to process
 	// each element in turn.
-	buf = aio->a_iov[idx].iov_buf;
-	len = (DWORD) aio->a_iov[idx].iov_len;
+	buf = aiov[idx].iov_buf;
+	len = (DWORD) aiov[idx].iov_len;
 	NNI_ASSERT(buf != NULL);
 	NNI_ASSERT(len != 0);
 
@@ -152,8 +154,6 @@ nni_win_ipc_pipe_init(nni_plat_ipc_pipe **pipep, HANDLE p)
 void
 nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *pipe, nni_aio *aio)
 {
-	NNI_ASSERT(aio->a_niov > 0);
-	NNI_ASSERT(aio->a_iov[0].iov_len > 0);
 	nni_win_event_submit(&pipe->snd_ev, aio);
 }
 
@@ -198,7 +198,7 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	ZeroMemory(ep, sizeof(ep));
+	ZeroMemory(ep, sizeof(*ep));
 
 	ep->mode = mode;
 	NNI_LIST_NODE_INIT(&ep->node);
@@ -465,7 +465,7 @@ static void
 nni_win_ipc_conn_cancel(nni_aio *aio, int rv)
 {
 	nni_win_ipc_conn_work *w  = &nni_win_ipc_connecter;
-	nni_plat_ipc_ep *      ep = aio->a_prov_data;
+	nni_plat_ipc_ep *      ep = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&w->mtx);
 	if (aio == ep->con_aio) {

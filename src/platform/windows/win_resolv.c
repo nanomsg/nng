@@ -47,7 +47,7 @@ nni_win_resolv_finish(nni_win_resolv_item *item, int rv)
 {
 	nni_aio *aio = item->aio;
 
-	aio->a_prov_data = NULL;
+	nni_aio_set_prov_data(aio, NULL);
 	nni_aio_finish(aio, rv, 0);
 	NNI_FREE_STRUCT(item);
 }
@@ -58,11 +58,11 @@ nni_win_resolv_cancel(nni_aio *aio, int rv)
 	nni_win_resolv_item *item;
 
 	nni_mtx_lock(&nni_win_resolv_mtx);
-	if ((item = aio->a_prov_data) == NULL) {
+	if ((item = nni_aio_get_prov_data(aio)) == NULL) {
 		nni_mtx_unlock(&nni_win_resolv_mtx);
 		return;
 	}
-	aio->a_prov_data = NULL;
+	nni_aio_set_prov_data(aio, NULL);
 	nni_mtx_unlock(&nni_win_resolv_mtx);
 	nni_task_cancel(&item->task);
 	NNI_FREE_STRUCT(item);
@@ -141,7 +141,7 @@ nni_win_resolv_task(void *arg)
 	if (probe != NULL) {
 		struct sockaddr_in * sin;
 		struct sockaddr_in6 *sin6;
-		nng_sockaddr *       sa = aio->a_addr;
+		nni_sockaddr *       sa = nni_aio_get_input(aio, 0);
 
 		switch (probe->ai_addr->sa_family) {
 		case AF_INET:

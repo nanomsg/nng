@@ -105,6 +105,12 @@ if (NNG_ENABLE_TLS)
     set(NNG_SUPP_TLS ON)
    endif()
 
+option (NNG_ENABLE_HTTP "Enable HTTP API" ON)
+if (NNG_ENABLE_HTTP)
+    set(NNG_SUPP_HTTP ON)
+endif()
+mark_as_advanced(NNG_ENABLE_HTTP)
+
 option (NNG_PROTO_BUS0 "Enable BUSv0 protocol." ON)
 if (NNG_PROTO_BUS0)
     add_definitions (-DNNG_HAVE_BUS0)

@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "supplemental/http/http.h"
 
 // This file provides the "public" API.  This is a thin wrapper around
 // internal API functions.  We use the public prefix instead of internal,
@@ -179,9 +180,8 @@ nng_sendmsg(nng_socket sid, nng_msg *msg, int flags)
 }
 
 void
-nng_recv_aio(nng_socket sid, nng_aio *ap)
+nng_recv_aio(nng_socket sid, nng_aio *aio)
 {
-	nni_aio * aio = (nni_aio *) ap;
 	nni_sock *sock;
 	int       rv;
 
@@ -194,9 +194,8 @@ nng_recv_aio(nng_socket sid, nng_aio *ap)
 }
 
 void
-nng_send_aio(nng_socket sid, nng_aio *ap)
+nng_send_aio(nng_socket sid, nng_aio *aio)
 {
-	nni_aio * aio = (nni_aio *) ap;
 	nni_sock *sock;
 	int       rv;
 
@@ -1019,73 +1018,87 @@ nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 int
 nng_aio_alloc(nng_aio **app, void (*cb)(void *), void *arg)
 {
-	nni_aio *aio;
+	nng_aio *aio;
 	int      rv;
 
 	if ((rv = nni_init()) != 0) {
 		return (rv);
 	}
 	if ((rv = nni_aio_init(&aio, (nni_cb) cb, arg)) == 0) {
-		*app = (nng_aio *) aio;
+		nng_aio_set_timeout(aio, NNG_DURATION_DEFAULT);
+		*app = aio;
 	}
-	aio->a_timeout = NNG_DURATION_DEFAULT;
 	return (rv);
 }
 
 void
-nng_aio_free(nng_aio *ap)
+nng_aio_free(nng_aio *aio)
 {
-	nni_aio_fini((nni_aio *) ap);
+	nni_aio_fini(aio);
 }
 
 int
-nng_aio_result(nng_aio *ap)
+nng_aio_result(nng_aio *aio)
 {
-	return (nni_aio_result((nni_aio *) ap));
+	return (nni_aio_result(aio));
+}
+
+size_t
+nng_aio_count(nng_aio *aio)
+{
+	return (nni_aio_count(aio));
 }
 
 void
-nng_aio_stop(nng_aio *ap)
+nng_aio_stop(nng_aio *aio)
 {
-	nni_aio_stop((nni_aio *) ap);
+	nni_aio_stop(aio);
 }
 
 void
-nng_aio_wait(nng_aio *ap)
+nng_aio_wait(nng_aio *aio)
 {
-	nni_aio_wait((nni_aio *) ap);
+	nni_aio_wait(aio);
 }
 
 void
-nng_aio_cancel(nng_aio *ap)
+nng_aio_cancel(nng_aio *aio)
 {
-	nni_aio_cancel((nni_aio *) ap, NNG_ECANCELED);
+	nni_aio_abort(aio, NNG_ECANCELED);
 }
 
 void
-nng_aio_set_msg(nng_aio *ap, nng_msg *msg)
+nng_aio_set_msg(nng_aio *aio, nng_msg *msg)
 {
-	nni_aio_set_msg((nni_aio *) ap, msg);
+	nni_aio_set_msg(aio, msg);
 }
 
 nng_msg *
-nng_aio_get_msg(nng_aio *ap)
+nng_aio_get_msg(nng_aio *aio)
 {
-	return ((nng_msg *) (nni_aio_get_msg((nni_aio *) ap)));
+	return (nni_aio_get_msg(aio));
 }
 
 void
-nng_aio_set_timeout(nng_aio *ap, nng_duration dur)
+nng_aio_set_timeout(nng_aio *aio, nni_duration when)
 {
-	// Durations here are relative, since we have no notion of a
-	// common clock..
-	nni_aio_set_timeout((nni_aio *) ap, dur);
+	nni_aio_set_timeout(aio, when);
 }
 
 int
-nng_aio_set_iov(nng_aio *ap, int niov, nng_iov *iov)
+nng_aio_set_iov(nng_aio *aio, int niov, nng_iov *iov)
 {
-	return (nni_aio_set_iov((nni_aio *) ap, niov, iov));
+	return (nni_aio_set_iov(aio, niov, iov));
+}
+
+int
+nng_aio_set_input(nng_aio *aio, unsigned index, void *arg)
+{
+	if (index > 3) {
+		return (NNG_EINVAL);
+	}
+	nni_aio_set_input(aio, index, arg);
+	return (0);
 }
 
 #if 0

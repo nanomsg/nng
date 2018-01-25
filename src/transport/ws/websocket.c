@@ -111,13 +111,13 @@ ws_pipe_recv_cb(void *arg)
 static void
 ws_pipe_recv_cancel(nni_aio *aio, int rv)
 {
-	ws_pipe *p = aio->a_prov_data;
+	ws_pipe *p = nni_aio_get_prov_data(aio);
 	nni_mtx_lock(&p->mtx);
 	if (p->user_rxaio != aio) {
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
-	nni_aio_cancel(p->rxaio, rv);
+	nni_aio_abort(p->rxaio, rv);
 	p->user_rxaio = NULL;
 	nni_aio_finish_error(aio, rv);
 	nni_mtx_unlock(&p->mtx);
@@ -142,14 +142,14 @@ ws_pipe_recv(void *arg, nni_aio *aio)
 static void
 ws_pipe_send_cancel(nni_aio *aio, int rv)
 {
-	ws_pipe *p = aio->a_prov_data;
+	ws_pipe *p = nni_aio_get_prov_data(aio);
 	nni_mtx_lock(&p->mtx);
 	if (p->user_txaio != aio) {
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
 	p->user_txaio = NULL;
-	nni_aio_cancel(p->txaio, rv);
+	nni_aio_abort(p->txaio, rv);
 	nni_aio_finish_error(aio, rv);
 	nni_mtx_unlock(&p->mtx);
 }
@@ -255,7 +255,7 @@ ws_hook(void *arg, nni_http_req *req, nni_http_res *res)
 
 	NNI_LIST_FOREACH (&ep->headers, h) {
 		int rv;
-		rv = nni_http_res_set_header(res, h->name, h->value);
+		rv = nng_http_res_set_header(res, h->name, h->value);
 		if (rv != 0) {
 			return (rv);
 		}
@@ -279,7 +279,7 @@ ws_ep_bind(void *arg)
 static void
 ws_ep_cancel(nni_aio *aio, int rv)
 {
-	ws_ep *ep = aio->a_prov_data;
+	ws_ep *ep = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&ep->mtx);
 	if (nni_aio_list_active(aio)) {
@@ -484,7 +484,7 @@ ws_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
 {
 	ws_pipe *    p = arg;
 	int          rv;
-	nng_sockaddr sa;
+	nni_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_ws_sock_addr(p->ws, &sa)) == 0) {
@@ -498,7 +498,7 @@ ws_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 {
 	ws_pipe *    p = arg;
 	int          rv;
-	nng_sockaddr sa;
+	nni_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_ws_peer_addr(p->ws, &sa)) == 0) {

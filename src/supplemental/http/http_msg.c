@@ -27,14 +27,14 @@ typedef struct http_header {
 	nni_list_node node;
 } http_header;
 
-struct nni_http_entity {
+typedef struct nni_http_entity {
 	char * data;
 	size_t size; // allocated/expected size
 	size_t len;  // current length
 	bool   own;  // if true, data is "ours", and should be freed
-};
+} nni_http_entity;
 
-struct nni_http_req {
+struct nng_http_req {
 	nni_list        hdrs;
 	nni_http_entity data;
 	char *          meth;
@@ -42,23 +42,27 @@ struct nni_http_req {
 	char *          vers;
 	char *          buf;
 	size_t          bufsz;
+	bool            parsed;
 };
 
-struct nni_http_res {
+struct nng_http_res {
 	nni_list        hdrs;
 	nni_http_entity data;
-	int             code;
+	uint16_t        code;
 	char *          rsn;
 	char *          vers;
 	char *          buf;
 	size_t          bufsz;
+	bool            parsed;
 };
 
 static int
 http_set_string(char **strp, const char *val)
 {
 	char *news;
-	if ((news = nni_strdup(val)) == NULL) {
+	if (val == NULL) {
+		news = NULL;
+	} else if ((news = nni_strdup(val)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_strfree(*strp);
@@ -114,6 +118,8 @@ nni_http_res_reset(nni_http_res *res)
 	http_entity_reset(&res->data);
 	nni_strfree(res->rsn);
 	nni_strfree(res->vers);
+	res->vers = NULL;
+	res->rsn  = NULL;
 	res->code = 0;
 	if (res->bufsz) {
 		res->buf[0] = '\0';
@@ -121,7 +127,7 @@ nni_http_res_reset(nni_http_res *res)
 }
 
 void
-nni_http_req_fini(nni_http_req *req)
+nni_http_req_free(nni_http_req *req)
 {
 	nni_http_req_reset(req);
 	if (req->bufsz) {
@@ -131,7 +137,7 @@ nni_http_req_fini(nni_http_req *req)
 }
 
 void
-nni_http_res_fini(nni_http_res *res)
+nni_http_res_free(nni_http_res *res)
 {
 	nni_http_res_reset(res);
 	if (res->bufsz) {
@@ -157,13 +163,13 @@ http_del_header(nni_list *hdrs, const char *key)
 }
 
 int
-nni_req_del_header(nni_http_req *req, const char *key)
+nni_http_req_del_header(nni_http_req *req, const char *key)
 {
 	return (http_del_header(&req->hdrs, key));
 }
 
 int
-nni_res_del_header(nni_http_res *res, const char *key)
+nni_http_res_del_header(nni_http_res *res, const char *key)
 {
 	return (http_del_header(&res->hdrs, key));
 }
@@ -398,12 +404,6 @@ nni_http_res_copy_data(nni_http_res *res, const void *data, size_t size)
 	return (0);
 }
 
-int
-nni_http_res_alloc_data(nni_http_res *res, size_t size)
-{
-	return (http_entity_alloc_data(&res->data, size));
-}
-
 static int
 http_parse_header(nni_list *hdrs, void *line)
 {
@@ -501,11 +501,12 @@ static int
 http_req_prepare(nni_http_req *req)
 {
 	int rv;
-	if ((req->uri == NULL) || (req->meth == NULL)) {
+	if (req->uri == NULL) {
 		return (NNG_EINVAL);
 	}
 	rv = http_asprintf(&req->buf, &req->bufsz, &req->hdrs, "%s %s %s\r\n",
-	    req->meth, req->uri, req->vers != NULL ? req->vers : "HTTP/1.1");
+	    req->meth != NULL ? req->meth : "GET", req->uri,
+	    req->vers != NULL ? req->vers : "HTTP/1.1");
 	return (rv);
 }
 
@@ -514,8 +515,8 @@ http_res_prepare(nni_http_res *res)
 {
 	int rv;
 	rv = http_asprintf(&res->buf, &res->bufsz, &res->hdrs, "%s %d %s\r\n",
-	    res->vers != NULL ? res->vers : "HTTP/1.1", res->code,
-	    res->rsn != NULL ? res->rsn : "Unknown Error");
+	    nni_http_res_get_version(res), nni_http_res_get_status(res),
+	    nni_http_res_get_reason(res));
 	return (rv);
 }
 
@@ -572,7 +573,7 @@ nni_http_res_get_buf(nni_http_res *res, void **data, size_t *szp)
 }
 
 int
-nni_http_req_init(nni_http_req **reqp)
+nni_http_req_alloc(nni_http_req **reqp, const nni_url *url)
 {
 	nni_http_req *req;
 	if ((req = NNI_ALLOC_STRUCT(req)) == NULL) {
@@ -587,12 +588,33 @@ nni_http_req_init(nni_http_req **reqp)
 	req->vers      = NULL;
 	req->meth      = NULL;
 	req->uri       = NULL;
-	*reqp          = req;
+	if (url != NULL) {
+		const char *host;
+		int         rv;
+		if ((req->uri = nni_strdup(url->u_rawpath)) == NULL) {
+			NNI_FREE_STRUCT(req);
+			return (NNG_ENOMEM);
+		}
+
+		// Add a Host: header since we know that from the URL. Also,
+		// only include the :port portion if it isn't the default port.
+		if (strcmp(nni_url_default_port(url->u_scheme), url->u_port) ==
+		    0) {
+			host = url->u_hostname;
+		} else {
+			host = url->u_host;
+		}
+		if ((rv = nni_http_req_add_header(req, "Host", host)) != 0) {
+			nni_http_req_free(req);
+			return (rv);
+		}
+	}
+	*reqp = req;
 	return (0);
 }
 
 int
-nni_http_res_init(nni_http_res **resp)
+nni_http_res_alloc(nni_http_res **resp)
 {
 	nni_http_res *res;
 	if ((res = NNI_ALLOC_STRUCT(res)) == NULL) {
@@ -614,7 +636,7 @@ nni_http_res_init(nni_http_res **resp)
 const char *
 nni_http_req_get_method(nni_http_req *req)
 {
-	return (req->meth != NULL ? req->meth : "");
+	return (req->meth != NULL ? req->meth : "GET");
 }
 
 const char *
@@ -626,24 +648,30 @@ nni_http_req_get_uri(nni_http_req *req)
 const char *
 nni_http_req_get_version(nni_http_req *req)
 {
-	return (req->vers != NULL ? req->vers : "");
+	return (req->vers != NULL ? req->vers : "HTTP/1.1");
 }
 
 const char *
 nni_http_res_get_version(nni_http_res *res)
 {
-	return (res->vers != NULL ? res->vers : "");
+	return (res->vers != NULL ? res->vers : "HTTP/1.1");
 }
 
 int
 nni_http_req_set_version(nni_http_req *req, const char *vers)
 {
+	if (strcmp(vers, "HTTP/1.1") == 0) {
+		vers = NULL;
+	}
 	return (http_set_string(&req->vers, vers));
 }
 
 int
 nni_http_res_set_version(nni_http_res *res, const char *vers)
 {
+	if (strcmp(vers, "HTTP/1.1") == 0) {
+		vers = NULL;
+	}
 	return (http_set_string(&res->vers, vers));
 }
 
@@ -656,29 +684,23 @@ nni_http_req_set_uri(nni_http_req *req, const char *uri)
 int
 nni_http_req_set_method(nni_http_req *req, const char *meth)
 {
+	if (strcmp(meth, "GET") == 0) {
+		meth = NULL;
+	}
 	return (http_set_string(&req->meth, meth));
 }
 
 int
-nni_http_res_set_status(nni_http_res *res, int status, const char *reason)
+nni_http_res_set_status(nni_http_res *res, uint16_t status)
 {
-	int rv;
-	if ((rv = http_set_string(&res->rsn, reason)) == 0) {
-		res->code = status;
-	}
-	return (rv);
+	res->code = status;
+	return (0);
 }
 
-int
+uint16_t
 nni_http_res_get_status(nni_http_res *res)
 {
 	return (res->code);
-}
-
-const char *
-nni_http_res_get_reason(nni_http_res *res)
-{
-	return (res->rsn != NULL ? res->rsn : "");
 }
 
 static int
@@ -740,6 +762,7 @@ http_req_parse_line(nni_http_req *req, void *line)
 	    ((rv = nni_http_req_set_version(req, version)) != 0)) {
 		return (rv);
 	}
+	req->parsed = true;
 	return (0);
 }
 
@@ -770,10 +793,12 @@ http_res_parse_line(nni_http_res *res, uint8_t *line)
 		return (NNG_EPROTO);
 	}
 
-	if (((rv = nni_http_res_set_status(res, status, reason)) != 0) ||
-	    ((rv = nni_http_res_set_version(res, version)) != 0)) {
+	if (((rv = nni_http_res_set_status(res, (uint16_t) status)) != 0) ||
+	    ((rv = nni_http_res_set_version(res, version)) != 0) ||
+	    ((rv = nni_http_res_set_reason(res, reason)) != 0)) {
 		return (rv);
 	}
+	res->parsed = true;
 	return (0);
 }
 
@@ -806,7 +831,7 @@ nni_http_req_parse(nni_http_req *req, void *buf, size_t n, size_t *lenp)
 			break;
 		}
 
-		if (req->vers != NULL) {
+		if (req->parsed) {
 			rv = http_parse_header(&req->hdrs, line);
 		} else {
 			rv = http_req_parse_line(req, line);
@@ -843,7 +868,7 @@ nni_http_res_parse(nni_http_res *res, void *buf, size_t n, size_t *lenp)
 			break;
 		}
 
-		if (res->vers != NULL) {
+		if (res->parsed) {
 			rv = http_parse_header(&res->hdrs, line);
 		} else {
 			rv = http_res_parse_line(res, line);
@@ -858,103 +883,119 @@ nni_http_res_parse(nni_http_res *res, void *buf, size_t n, size_t *lenp)
 	return (rv);
 }
 
-int
-nni_http_res_init_error(nni_http_res **resp, uint16_t err)
+static struct {
+	uint16_t    code;
+	const char *mesg;
+} http_status[] = {
+	// 200, listed first because most likely
+	{ NNG_HTTP_STATUS_OK, "OK" },
+
+	// 100 series -- informational
+	{ NNG_HTTP_STATUS_CONTINUE, "Continue" },
+	{ NNG_HTTP_STATUS_SWITCHING, "Swithching Protocols" },
+	{ NNG_HTTP_STATUS_PROCESSING, "Processing" },
+
+	// 200 series -- successful
+	{ NNG_HTTP_STATUS_CREATED, "Created" },
+	{ NNG_HTTP_STATUS_ACCEPTED, "Accepted" },
+	{ NNG_HTTP_STATUS_NOT_AUTHORITATIVE, "Not Authoritative" },
+	{ NNG_HTTP_STATUS_NO_CONTENT, "No Content" },
+	{ NNG_HTTP_STATUS_RESET_CONTENT, "Reset Content" },
+	{ NNG_HTTP_STATUS_PARTIAL_CONTENT, "Partial Content" },
+
+	// 300 series -- redirection
+	{ NNG_HTTP_STATUS_MULTIPLE_CHOICES, "Multiple Choices" },
+	{ NNG_HTTP_STATUS_STATUS_MOVED_PERMANENTLY, "Moved Permanently" },
+	{ NNG_HTTP_STATUS_FOUND, "Found" },
+	{ NNG_HTTP_STATUS_SEE_OTHER, "See Other" },
+	{ NNG_HTTP_STATUS_NOT_MODIFIED, "Not Modified" },
+	{ NNG_HTTP_STATUS_USE_PROXY, "Use Proxy" },
+	{ NNG_HTTP_STATUS_TEMPORARY_REDIRECT, "Temporary Redirect" },
+
+	// 400 series -- client errors
+	{ NNG_HTTP_STATUS_BAD_REQUEST, "Bad Request" },
+	{ NNG_HTTP_STATUS_UNAUTHORIZED, "Unauthorized" },
+	{ NNG_HTTP_STATUS_PAYMENT_REQUIRED, "Payment Required" },
+	{ NNG_HTTP_STATUS_FORBIDDEN, "Forbidden" },
+	{ NNG_HTTP_STATUS_NOT_FOUND, "Not Found" },
+	{ NNG_HTTP_STATUS_METHOD_NOT_ALLOWED, "Method Not Allowed" },
+	{ NNG_HTTP_STATUS_NOT_ACCEPTABLE, "Not Acceptable" },
+	{ NNG_HTTP_STATUS_PROXY_AUTH_REQUIRED,
+	    "Proxy Authentication Required" },
+	{ NNG_HTTP_STATUS_REQUEST_TIMEOUT, "Request Timeout" },
+	{ NNG_HTTP_STATUS_CONFLICT, "Conflict" },
+	{ NNG_HTTP_STATUS_GONE, "Gone" },
+	{ NNG_HTTP_STATUS_LENGTH_REQUIRED, "Length Required" },
+	{ NNG_HTTP_STATUS_PRECONDITION_FAILED, "Precondition Failed" },
+	{ NNG_HTTP_STATUS_ENTITY_TOO_LONG, "Request Entity Too Long" },
+	{ NNG_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE, "Unsupported Media Type" },
+	{ NNG_HTTP_STATUS_RANGE_NOT_SATISFIABLE,
+	    "Requested Range Not Satisfiable" },
+	{ NNG_HTTP_STATUS_EXPECTATION_FAILED, "Expectation Failed" },
+	{ NNG_HTTP_STATUS_TEAPOT, "I Am A Teapot" },
+	{ NNG_HTTP_STATUS_LOCKED, "Locked" },
+	{ NNG_HTTP_STATUS_FAILED_DEPENDENCY, "Failed Dependency" },
+	{ NNG_HTTP_STATUS_UPGRADE_REQUIRED, "Upgrade Required" },
+	{ NNG_HTTP_STATUS_PRECONDITION_REQUIRED, "Precondition Required" },
+	{ NNG_HTTP_STATUS_TOO_MANY_REQUESTS, "Too Many Requests" },
+	{ NNG_HTTP_STATUS_HEADERS_TOO_LARGE, "Headers Too Large" },
+	{ NNG_HTTP_STATUS_UNAVAIL_LEGAL_REASONS,
+	    "Unavailable For Legal Reasons" },
+
+	// 500 series -- server errors
+	{ NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR, "Internal Server Error" },
+	{ NNG_HTTP_STATUS_NOT_IMPLEMENTED, "Not Implemented" },
+	{ NNG_HTTP_STATUS_BAD_REQUEST, "Bad Gateway" },
+	{ NNG_HTTP_STATUS_SERVICE_UNAVAILABLE, "Service Unavailable" },
+	{ NNG_HTTP_STATUS_GATEWAY_TIMEOUT, "Gateway Timeout" },
+	{ NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP,
+	    "HTTP Version Not Supported" },
+	{ NNG_HTTP_STATUS_VARIANT_ALSO_NEGOTIATES, "Variant Also Negotiates" },
+	{ NNG_HTTP_STATUS_INSUFFICIENT_STORAGE, "Insufficient Storage" },
+	{ NNG_HTTP_STATUS_LOOP_DETECTED, "Loop Detected" },
+	{ NNG_HTTP_STATUS_NOT_EXTENDED, "Not Extended" },
+	{ NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED,
+	    "Network Authentication Required" },
+
+	// Terminator
+	{ 0, NULL },
+};
+
+const char *
+http_reason(uint16_t code)
 {
-	char *        rsn;
-	char          rsnbuf[80];
-	char          html[1024];
+	for (int i = 0; http_status[i].code != 0; i++) {
+		if (http_status[i].code == code) {
+			return (http_status[i].mesg);
+		}
+	}
+	return ("Unknown HTTP Status");
+}
+
+const char *
+nni_http_res_get_reason(nni_http_res *res)
+{
+	return (res->rsn ? res->rsn : http_reason(res->code));
+}
+
+int
+nni_http_res_set_reason(nni_http_res *res, const char *reason)
+{
+	if (strcmp(reason, http_reason(res->code)) == 0) {
+		reason = NULL;
+	}
+	return (http_set_string(&res->rsn, reason));
+}
+
+int
+nni_http_res_alloc_error(nni_http_res **resp, uint16_t err)
+{
+	char          html[512];
 	int           rv;
 	nni_http_res *res;
 
-	if ((rv = nni_http_res_init(&res)) != 0) {
+	if ((rv = nni_http_res_alloc(&res)) != 0) {
 		return (rv);
-	}
-
-	// Note that it is expected that redirect URIs will update the
-	// payload to reflect the target location.
-	switch (err) {
-	case NNI_HTTP_STATUS_STATUS_MOVED_PERMANENTLY:
-		rsn = "Moved Permanently";
-		break;
-	case NNI_HTTP_STATUS_MULTIPLE_CHOICES:
-		rsn = "Multiple Choices";
-		break;
-	case NNI_HTTP_STATUS_FOUND:
-		rsn = "Found";
-		break;
-	case NNI_HTTP_STATUS_SEE_OTHER:
-		rsn = "See Other";
-		break;
-	case NNI_HTTP_STATUS_TEMPORARY_REDIRECT:
-		rsn = "Temporary Redirect";
-		break;
-	case NNI_HTTP_STATUS_BAD_REQUEST:
-		rsn = "Bad Request";
-		break;
-	case NNI_HTTP_STATUS_UNAUTHORIZED:
-		rsn = "Unauthorized";
-		break;
-	case NNI_HTTP_STATUS_PAYMENT_REQUIRED:
-		rsn = "Payment Required";
-		break;
-	case NNI_HTTP_STATUS_NOT_FOUND:
-		rsn = "Not Found";
-		break;
-	case NNI_HTTP_STATUS_METHOD_NOT_ALLOWED:
-		// Caller must also supply an Allow: header
-		rsn = "Method Not Allowed";
-		break;
-	case NNI_HTTP_STATUS_NOT_ACCEPTABLE:
-		rsn = "Not Acceptable";
-		break;
-	case NNI_HTTP_STATUS_REQUEST_TIMEOUT:
-		rsn = "Request Timeout";
-		break;
-	case NNI_HTTP_STATUS_CONFLICT:
-		rsn = "Conflict";
-		break;
-	case NNI_HTTP_STATUS_GONE:
-		rsn = "Gone";
-		break;
-	case NNI_HTTP_STATUS_LENGTH_REQUIRED:
-		rsn = "Length Required";
-		break;
-	case NNI_HTTP_STATUS_PAYLOAD_TOO_LARGE:
-		rsn = "Payload Too Large";
-		break;
-	case NNI_HTTP_STATUS_FORBIDDEN:
-		rsn = "Forbidden";
-		break;
-	case NNI_HTTP_STATUS_URI_TOO_LONG:
-		rsn = "URI Too Long";
-		break;
-	case NNI_HTTP_STATUS_UNSUPPORTED_MEDIA_TYPE:
-		rsn = "Unsupported Media Type";
-		break;
-	case NNI_HTTP_STATUS_EXPECTATION_FAILED:
-		rsn = "Expectation Failed";
-		break;
-	case NNI_HTTP_STATUS_UPGRADE_REQUIRED:
-		// Caller must add "Upgrade:" header.
-		rsn = "Upgrade Required";
-		break;
-	case NNI_HTTP_STATUS_INTERNAL_SERVER_ERROR:
-		rsn = "Internal Server Error";
-		break;
-	case NNI_HTTP_STATUS_HTTP_VERSION_NOT_SUPP:
-		rsn = "HTTP version not supported";
-		break;
-	case NNI_HTTP_STATUS_NOT_IMPLEMENTED:
-		rsn = "Not Implemented";
-		break;
-	case NNI_HTTP_STATUS_SERVICE_UNAVAILABLE:
-		rsn = "Service Unavailable";
-		break;
-	default:
-		snprintf(rsnbuf, sizeof(rsnbuf), "HTTP error code %d", err);
-		rsn = rsnbuf;
-		break;
 	}
 
 	// very simple builtin error page
@@ -967,14 +1008,13 @@ nni_http_res_init_error(nni_http_res **resp, uint16_t err)
 	    "<p align=\"center\">"
 	    "<span style=\"font-size: 24px; font-family: Arial, sans serif;\">"
 	    "%s</span></p></body>",
-	    err, rsn, err, rsn);
+	    err, http_reason(err), err, http_reason(err));
 
-	if (((rv = nni_http_res_set_status(res, err, rsn)) != 0) ||
-	    ((rv = nni_http_res_set_version(res, "HTTP/1.1")) != 0) ||
-	    ((rv = nni_http_res_set_header(
+	res->code = err;
+	if (((rv = nni_http_res_set_header(
 	          res, "Content-Type", "text/html; charset=UTF-8")) != 0) ||
 	    ((rv = nni_http_res_copy_data(res, html, strlen(html))) != 0)) {
-		nni_http_res_fini(res);
+		nni_http_res_free(res);
 	} else {
 		*resp = res;
 	}

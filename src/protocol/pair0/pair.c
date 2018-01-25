@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -191,7 +191,6 @@ static void
 pair0_getq_cb(void *arg)
 {
 	pair0_pipe *p = arg;
-	pair0_sock *s = p->psock;
 
 	if (nni_aio_result(p->aio_getq) != 0) {
 		nni_pipe_stop(p->npipe);

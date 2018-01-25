@@ -249,10 +249,10 @@ nni_ep_shutdown(nni_ep *ep)
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	// Abort any remaining in-flight operations.
-	nni_aio_cancel(ep->ep_acc_aio, NNG_ECLOSED);
-	nni_aio_cancel(ep->ep_con_aio, NNG_ECLOSED);
-	nni_aio_cancel(ep->ep_con_syn, NNG_ECLOSED);
-	nni_aio_cancel(ep->ep_tmo_aio, NNG_ECLOSED);
+	nni_aio_abort(ep->ep_acc_aio, NNG_ECLOSED);
+	nni_aio_abort(ep->ep_con_aio, NNG_ECLOSED);
+	nni_aio_abort(ep->ep_con_syn, NNG_ECLOSED);
+	nni_aio_abort(ep->ep_tmo_aio, NNG_ECLOSED);
 
 	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
@@ -296,7 +296,7 @@ nni_ep_close(nni_ep *ep)
 static void
 nni_ep_tmo_cancel(nni_aio *aio, int rv)
 {
-	nni_ep *ep = aio->a_prov_data;
+	nni_ep *ep = nni_aio_get_prov_data(aio);
 	// The only way this ever gets "finished", is via cancellation.
 	if (ep != NULL) {
 		nni_mtx_lock(&ep->ep_mtx);

@@ -34,8 +34,8 @@ extern void nni_tls_config_hold(nng_tls_config *);
 extern int  nni_tls_init(nni_tls **, nng_tls_config *, nni_plat_tcp_pipe *);
 extern void nni_tls_close(nni_tls *);
 extern void nni_tls_fini(nni_tls *);
-extern void nni_tls_send(nni_tls *, nni_aio *);
-extern void nni_tls_recv(nni_tls *, nni_aio *);
+extern void nni_tls_send(nni_tls *, nng_aio *);
+extern void nni_tls_recv(nni_tls *, nng_aio *);
 extern int  nni_tls_sockname(nni_tls *, nni_sockaddr *);
 extern int  nni_tls_peername(nni_tls *, nni_sockaddr *);
 

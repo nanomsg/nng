@@ -184,6 +184,17 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 		So(mtu >= 1000 && mtu <= 10000);
 	});
 
+	Convey("Network name property works", {
+		char   name[NNG_MAXADDRLEN];
+		size_t namesz;
+		int    status;
+
+		namesz = sizeof(name);
+		So(nng_listener_getopt(
+		       l, NNG_OPT_ZT_NETWORK_NAME, name, &namesz) == 0);
+		So(strcmp(name, "nng_test_open") == 0);
+	});
+
 	return (0);
 }
 
@@ -280,20 +291,6 @@ TestMain("ZeroTier Transport", {
 		    0);
 		So(node1 != 0);
 
-		Convey("Network name & status options work", {
-			char   name[NNG_MAXADDRLEN];
-			size_t namesz;
-			int    status;
-
-			namesz = sizeof(name);
-			nng_msleep(10000);
-			So(nng_listener_getopt(l, NNG_OPT_ZT_NETWORK_NAME,
-			       name, &namesz) == 0);
-			So(strcmp(name, "nng_test_open") == 0);
-			So(nng_listener_getopt_int(
-			       l, NNG_OPT_ZT_NETWORK_STATUS, &status) == 0);
-			So(status == nng_zt_network_status_ok);
-		});
 		Convey("Connection refused works", {
 			snprintf(addr, sizeof(addr), "zt://%llx." NWID ":%u",
 			    (unsigned long long) node1, 42u);
@@ -315,7 +312,6 @@ TestMain("ZeroTier Transport", {
 		uint64_t     node;
 
 		port = 9944;
-		// uint64_t   node = 0xb000072fa6ull; // my personal host
 		So(nng_zt_register() == 0);
 
 		snprintf(addr1, sizeof(addr1), "zt://*." NWID ":%u", port);
@@ -324,8 +320,7 @@ TestMain("ZeroTier Transport", {
 		So(nng_pair_open(&s2) == 0);
 		Reset({
 			nng_close(s1);
-			// This sleep allows us to ensure disconnect
-			// messages work.
+			// This sleep ensures disconnect messages work.
 			nng_msleep(500);
 			nng_close(s2);
 		});
@@ -345,7 +340,7 @@ TestMain("ZeroTier Transport", {
 		So(nng_dialer_setopt(
 		       d, NNG_OPT_ZT_HOME, path2, strlen(path2) + 1) == 0);
 		So(nng_dialer_start(d, 0) == 0);
-		nng_msleep(2000);
+		nng_msleep(2000); // to give dialer time to start up
 	});
 
 	trantest_test_extended("zt://*." NWID ":%u", check_props);

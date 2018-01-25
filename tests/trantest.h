@@ -220,7 +220,6 @@ trantest_conn_refused(trantest *tt)
 	Convey("Connection refused works", {
 		nng_dialer d = 0;
 
-		int rv = trantest_dial(tt, &d);
 		So(trantest_dial(tt, &d) == NNG_ECONNREFUSED);
 		So(d == 0);
 		So(trantest_dial(tt, &d) == NNG_ECONNREFUSED);
