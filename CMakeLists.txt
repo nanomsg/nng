@@ -1,11 +1,11 @@
 #
 #   Copyright 2017 Garrett D'Amore <garrett@damore.org>
-#   Copyright 2017 Capitar IT Group BV <info@capitar.com>
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
-#   Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -262,7 +262,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     add_definitions (-DNNG_PLATFORM_POSIX)
-    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_DARWIN)
     # macOS 10.12 and later have getentropy, but the older releases
     # have ARC4_RANDOM, and that is sufficient to our needs.
     add_definitions (-DNNG_USE_ARC4_RANDOM)
