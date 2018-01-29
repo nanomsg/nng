@@ -53,6 +53,12 @@ typedef struct nng_snapshot nng_snapshot;
 typedef struct nng_stat     nng_stat;
 typedef struct nng_aio      nng_aio;
 
+// Scatter/gather I/O.
+typedef struct nng_iov {
+	void * iov_buf;
+	size_t iov_len;
+} nng_iov;
+
 // Some definitions for durations used with timeouts.
 #define NNG_DURATION_INFINITE (-1)
 #define NNG_DURATION_DEFAULT (-2)
@@ -297,6 +303,12 @@ NNG_DECL nng_msg *nng_aio_get_msg(nng_aio *);
 // specifying NNG_DURATION_ZERO.  The value NNG_DURATION_DEFAULT indicates
 // that any socket specific timeout should be used.
 NNG_DECL void nng_aio_set_timeout(nng_aio *, nng_duration);
+
+// nng_aio_set_iov sets a scatter/gather vector on the aio.  The iov array
+// itself is copied. Data members (the memory regions referenced) *may* be
+// copied as well, depending on the operation.  This operation is guaranteed
+// to succeed if n <= 4, otherwise it may fail due to NNG_ENOMEM.
+NNG_DECL int nng_aio_set_iov(nng_aio *, int, nng_iov *);
 
 // Message API.
 NNG_DECL int   nng_msg_alloc(nng_msg **, size_t);

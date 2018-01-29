@@ -145,7 +145,7 @@ http_rd_buf(nni_http *http, nni_aio *aio)
 			}
 			memcpy(aio->a_iov[0].iov_buf, rbuf, n);
 			aio->a_iov[0].iov_len -= n;
-			aio->a_iov[0].iov_buf += n;
+			NNI_INCPTR(aio->a_iov[0].iov_buf, n);
 			http->rd_get += n;
 			rbuf += n;
 			aio->a_count += n;
@@ -302,7 +302,7 @@ http_rd_cb(void *arg)
 			n = cnt;
 		}
 		uaio->a_iov[0].iov_len -= n;
-		uaio->a_iov[0].iov_buf += n;
+		NNI_INCPTR(uaio->a_iov[0].iov_buf, n);
 		uaio->a_count += n;
 		cnt -= n;
 
@@ -420,7 +420,7 @@ http_wr_cb(void *arg)
 
 		if (aio->a_iov[0].iov_len > n) {
 			aio->a_iov[0].iov_len -= n;
-			aio->a_iov[0].iov_buf += n;
+			NNI_INCPTR(aio->a_iov[0].iov_buf, n);
 			break;
 		}
 		n -= aio->a_iov[0].iov_len;

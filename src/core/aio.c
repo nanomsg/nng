@@ -66,8 +66,10 @@ nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 	}
 	memset(aio, 0, sizeof(*aio));
 	nni_cv_init(&aio->a_cv, &nni_aio_lk);
-	aio->a_expire  = NNI_TIME_NEVER;
-	aio->a_timeout = NNG_DURATION_INFINITE;
+	aio->a_expire    = NNI_TIME_NEVER;
+	aio->a_timeout   = NNG_DURATION_INFINITE;
+	aio->a_iov       = aio->a_iovinl;
+	aio->a_niovalloc = 0;
 	if (arg == NULL) {
 		arg = aio;
 	}
@@ -85,8 +87,32 @@ nni_aio_fini(nni_aio *aio)
 		// At this point the AIO is done.
 		nni_cv_fini(&aio->a_cv);
 
+		if (aio->a_niovalloc > 0) {
+			NNI_FREE_STRUCTS(aio->a_iov, aio->a_niovalloc);
+		}
+
 		NNI_FREE_STRUCT(aio);
 	}
+}
+
+int
+nni_aio_set_iov(nni_aio *aio, int niov, nng_iov *iov)
+{
+	if ((niov > 4) && (niov > aio->a_niovalloc)) {
+		nni_iov *newiov = NNI_ALLOC_STRUCTS(newiov, niov);
+		if (newiov == NULL) {
+			return (NNG_ENOMEM);
+		}
+		if (aio->a_niovalloc > 0) {
+			NNI_FREE_STRUCTS(aio->a_iov, aio->a_niovalloc);
+		}
+		aio->a_iov       = newiov;
+		aio->a_niovalloc = niov;
+	}
+
+	memcpy(aio->a_iov, iov, niov * sizeof(nng_iov));
+	aio->a_niov = niov;
+	return (0);
 }
 
 void

@@ -1,5 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitoar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -34,6 +35,7 @@ typedef struct nng_sockaddr nni_sockaddr;
 typedef struct nng_event    nni_event;
 typedef struct nng_notify   nni_notify;
 typedef struct nng_url      nni_url;
+typedef struct nng_iov      nni_iov;
 
 // These are our own names.
 typedef struct nni_socket           nni_sock;
@@ -63,12 +65,6 @@ typedef int32_t  nni_duration; // Rel. time (ms).
 typedef struct nni_aio nni_aio;
 
 typedef void (*nni_cb)(void *);
-
-// Used by transports for scatter gather I/O.
-typedef struct {
-	uint8_t *iov_buf;
-	size_t   iov_len;
-} nni_iov;
 
 // Notify descriptor.
 typedef struct {
@@ -133,6 +129,9 @@ typedef struct {
 	    (((uint64_t)((uint8_t)(ptr)[5])) << 16) + \
 	    (((uint64_t)((uint8_t)(ptr)[6])) << 8) +  \
 	    (((uint64_t)(uint8_t)(ptr)[7]))
+
+// This increments a pointer a fixed number of byte cells.
+#define NNI_INCPTR(ptr, n) ((ptr) = (void *) ((char *) (ptr) + (n)))
 
 // A few assorted other items.
 #define NNI_FLAG_IPV4ONLY 1

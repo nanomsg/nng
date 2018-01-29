@@ -1082,6 +1082,12 @@ nng_aio_set_timeout(nng_aio *ap, nng_duration dur)
 	nni_aio_set_timeout((nni_aio *) ap, dur);
 }
 
+int
+nng_aio_set_iov(nng_aio *ap, int niov, nng_iov *iov)
+{
+	return (nni_aio_set_iov((nni_aio *) ap, niov, iov));
+}
+
 #if 0
 int
 nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)

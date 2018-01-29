@@ -84,10 +84,11 @@ httpget(const char *addr, void **datap, size_t *sizep, uint16_t *statp,
 	}
 
 	if (clen > 0) {
-		data                  = nni_alloc(clen);
-		aio->a_niov           = 1;
-		aio->a_iov[0].iov_len = clen;
-		aio->a_iov[0].iov_buf = data;
+		nng_iov iov;
+		data        = nni_alloc(clen);
+		iov.iov_buf = data;
+		iov.iov_len = clen;
+		nni_aio_set_iov(aio, 1, &iov);
 		nni_http_read_full(h, aio);
 		nni_aio_wait(aio);
 		if ((rv = nni_aio_result(aio)) != 0) {
@@ -212,6 +213,7 @@ TestMain("HTTP Client", {
 			Convey("Valid data works", {
 				char        chunk[256];
 				const void *ptr;
+				nng_iov     iov;
 
 				So(nni_http_req_set_method(req, "GET") == 0);
 				So(nni_http_req_set_version(req, "HTTP/1.1") ==
@@ -236,9 +238,9 @@ TestMain("HTTP Client", {
 				So(ptr != NULL);
 				So(atoi(ptr) == strlen(doc1));
 
-				aio->a_niov           = 1;
-				aio->a_iov[0].iov_len = strlen(doc1);
-				aio->a_iov[0].iov_buf = (void *) chunk;
+				iov.iov_len = strlen(doc1);
+				iov.iov_buf = chunk;
+				So(nni_aio_set_iov(aio, 1, &iov) == 0);
 				nni_http_read_full(h, aio);
 				nni_aio_wait(aio);
 				So(nni_aio_result(aio) == 0);

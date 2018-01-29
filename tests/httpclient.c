@@ -83,6 +83,7 @@ TestMain("HTTP Client", {
 				void *      data;
 				const char *cstr;
 				size_t      sz;
+				nng_iov     iov;
 
 				cstr = nni_http_res_get_header(
 				    res, "Content-Length");
@@ -94,16 +95,16 @@ TestMain("HTTP Client", {
 				So(data != NULL);
 				Reset({ nni_free(data, sz); });
 
-				iaio->a_niov           = 1;
-				iaio->a_iov[0].iov_len = sz;
-				iaio->a_iov[0].iov_buf = data;
+				iov.iov_buf = data;
+				iov.iov_len = sz;
+				So(nng_aio_set_iov(aio, 1, &iov) == 0);
 
-				nni_aio_wait(iaio);
+				nng_aio_wait(aio);
 				So(nng_aio_result(aio) == 0);
 
 				nni_http_read_full(http, iaio);
-				nni_aio_wait(iaio);
-				So(nni_aio_result(iaio) == 0);
+				nng_aio_wait(aio);
+				So(nng_aio_result(aio) == 0);
 
 				nni_sha1(data, sz, digest);
 				So(memcmp(digest, utf8_sha1sum, 20) == 0);

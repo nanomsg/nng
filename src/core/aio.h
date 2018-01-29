@@ -39,8 +39,10 @@ struct nni_aio {
 	nni_task a_task;
 
 	// Read/write operations.
-	nni_iov a_iov[4];
-	int     a_niov;
+	nni_iov *a_iov;
+	int      a_niov;
+	nni_iov  a_iovinl[4]; // inline IOVs - when the IOV list is short
+	int      a_niovalloc; // number of allocated IOVs
 
 	// Message operations.
 	nni_msg *a_msg;
@@ -125,6 +127,11 @@ extern void nni_aio_set_output(nni_aio *, int, void *);
 
 // nni_get_output returns an output previously stored on the AIO.
 extern void *nni_aio_get_output(nni_aio *, int);
+
+// nni_aio_set_iov sets an IOV (scatter/gather vector) on the AIO.
+// Up to 4 may be set without any possibility of failure, more than that
+// may require an allocation and hence fail due to NNG_ENOMEM.
+extern int nni_aio_set_iov(nni_aio *, int, nng_iov *);
 
 // XXX: These should be refactored in terms of generic inputs and outputs.
 extern void     nni_aio_set_msg(nni_aio *, nni_msg *);

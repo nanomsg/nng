@@ -230,7 +230,7 @@ nni_tcp_pipe_send_cb(void *arg)
 		NNI_ASSERT(txaio->a_niov != 0);
 		if (txaio->a_iov[0].iov_len > n) {
 			txaio->a_iov[0].iov_len -= n;
-			txaio->a_iov[0].iov_buf += n;
+			NNI_INCPTR(txaio->a_iov[0].iov_buf, n);
 			break;
 		}
 		n -= txaio->a_iov[0].iov_len;
@@ -280,7 +280,7 @@ nni_tcp_pipe_recv_cb(void *arg)
 		NNI_ASSERT(rxaio->a_niov != 0);
 		if (rxaio->a_iov[0].iov_len > n) {
 			rxaio->a_iov[0].iov_len -= n;
-			rxaio->a_iov[0].iov_buf += n;
+			NNI_INCPTR(rxaio->a_iov[0].iov_buf, n);
 			break;
 		}
 		n -= rxaio->a_iov[0].iov_len;
