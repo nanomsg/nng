@@ -1,23 +1,18 @@
-nng_ipc(7)
-==========
+= nng_ipc(7)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:icons: font
-:source-highlighter: pygments
-:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
-NAME
-----
+== NAME
+
 nng_ipc - IPC transport for nng
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 [source,c]
 ----------
@@ -26,8 +21,7 @@ SYNOPSIS
 int nng_ipc_register(void);
 ----------
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The _nng_ipc_ transport provides communication support between
 _nng_ sockets within different processes on the same host. For POSIX
@@ -37,14 +31,12 @@ have different implementation strategies.
 
 // We need to insert a reference to the nanomsg RFC.
 
-Registration
-~~~~~~~~~~~~
+=== Registration
 
 The _ipc_ transport is generally built-in to the _nng_ core, so
 no extra steps to use it should be necessary.
 
-URI Format
-~~~~~~~~~~
+=== URI Format
 
 This transport uses URIs using the scheme `ipc://`, followed by
 a an absolute path name in the file system where the socket or named pipe
@@ -54,8 +46,7 @@ TIP: On Windows, all names are prefixed by `\.\pipe\` and do not
 occupy the normal file system.  On POSIX platforms, the path is
 taken literally, and is relative to the root directory.
 
-Socket Address
-~~~~~~~~~~~~~~
+=== Socket Address
 
 When using an `nng_sockaddr` structure, the actual structure is of type
 `nng_sockaddr_ipc`.  This is a `struct` type with the following definition:
@@ -81,21 +72,15 @@ The `sa_family` member will have the value `NNG_AF_IPC`.
 The `sa_path` member is an ASCIIZ string, and may contain any legal
 path name (platform-dependent), terminated by a `NUL` byte.
 
-Transport Options
-~~~~~~~~~~~~~~~~~
+=== Transport Options
 
 The _ipc_ transport has no special
 options.footnote:[Options for security attributes and credentials are planned.]
 
-SEE ALSO
---------
+== SEE ALSO
+
 <<nng#,nng(7)>>
 
-COPYRIGHT
----------
+== COPYRIGHT
 
-Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}

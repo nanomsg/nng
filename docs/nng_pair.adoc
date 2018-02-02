@@ -1,23 +1,18 @@
-nng_pair(7)
-===========
+= nng_pair(7)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:icons: font
-:source-highlighter: pygments
-:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
-NAME
-----
+== NAME
+
 nng_pair - pair protocol
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 .Version 0
 [source,c]
@@ -35,8 +30,7 @@ int nng_pair0_open(nng_socket *s);
 int nng_pair1_open(nng_socket *s);
 ----------
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The _nng_pair_ protocol implements a peer-to-peer pattern, where
 relationships between peers are one-to-one.
@@ -45,8 +39,7 @@ Version 1 of this protocol supports an optional _polyamorous_ mode where a
 peer can maintain multiple partnerships.  Using this mode requires
 some additional sophistication in the application.
 
-Socket Operations
-~~~~~~~~~~~~~~~~~
+=== Socket Operations
 
 The `nng_pair_open()` call creates a _pair_ socket.  Normally, this
 pattern will block when attempting to send a message, if no peer is
@@ -63,8 +56,7 @@ In order to avoid head-of-line blocking conditions, _polyamorous_ mode pair
 sockets (version 1 only) discard messages if they are unable to deliver them
 to a peer.
 
-Protocol Versions
-~~~~~~~~~~~~~~~~~
+=== Protocol Versions
 
 Version 0 is the legacy version of this protocol.  It lacks any header
 information, and is suitable when building simple one-to-one topologies.
@@ -79,8 +71,7 @@ mode for forming multiple partnerships on a single socket.
 
 NOTE: Version 1 of this protocol is considered experimental at this time.
 
-Polyamorous Mode
-~~~~~~~~~~~~~~~~
+=== Polyamorous Mode
 
 Normally pair sockets are for one-to-one communication, and a given peer
 will reject new connections if it already has an active connection to another
@@ -101,8 +92,7 @@ is not able to receive (or the pipe is no longer available, such as if the
 peer has disconnected), then the message will be discarded with no notification
 to the sender.
 
-Protocol Options
-~~~~~~~~~~~~~~~~
+=== Protocol Options
 
 The following protocol-specific options are available.
 
@@ -126,8 +116,7 @@ maximum time-to-live, and performs its own checks before forwarding a message.
 Therefore it is helpful if all nodes in the topology use the same value for
 this option.
 
-Protocol Headers
-~~~~~~~~~~~~~~~~
+=== Protocol Headers
 
 Version 0 of the pair protocol has no protocol-specific headers.
 
@@ -137,15 +126,10 @@ used in conjuction with the `NNG_OPT_MAXTTL` option to guard against
 device forwarding loops.  This value is initialized to 1, and incremented
 each time the message is received by a new node.
     
-SEE ALSO
---------
+== SEE ALSO
+
 <<nng#,nng(7)>>
 
-COPYRIGHT
----------
+== COPYRIGHT
 
-Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}

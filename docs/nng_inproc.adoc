@@ -1,23 +1,18 @@
-nng_inproc(7)
-=============
+= nng_inproc(7)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:icons: font
-:source-highlighter: pygments
-:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
-NAME
-----
+== NAME
+
 nng_inproc - intra-process transport for nng
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 [source,c]
 ----------
@@ -26,8 +21,7 @@ SYNOPSIS
 int nng_inproc_register(void);
 ----------
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The _nng_inproc_ transport provides communication support between
 _nng_ sockets within the same process. This may be used as an alternative
@@ -42,8 +36,7 @@ Registration
 The _inproc_ transport is generally built-in to the _nng_ core, so
 no extra steps to use it should be necessary.
 
-URI Format
-~~~~~~~~~~
+=== URI Format
 
 This transport uses URIs using the scheme `inproc://`, followed by
 an arbitrary string of text, terminated by a `NUL` byte.
@@ -55,8 +48,7 @@ Two applications may also use the same URI without interfering with each
 other, and they will be unable to communicate with each other using
 that URI.
 
-Socket Address
-~~~~~~~~~~~~~~
+=== Socket Address
 
 When using an `nng_sockaddr` structure, the actual structure is of type
 `struct nng_sockaddr_inproc`.  This type has the following definition:
@@ -82,20 +74,14 @@ The `sa_family` member will have the value `NNG_AF_INPROC`.
 The `sa_path` member is an ASCIIZ string, and may contain any characters,
 terminated by a `NUL` byte.
 
-Transport Options
-~~~~~~~~~~~~~~~~~
+=== Transport Options
 
 The _inproc_ transport has no special options.
     
-SEE ALSO
---------
+== SEE ALSO
+
 <<nng#,nng(7)>>
 
-COPYRIGHT
----------
+== COPYRIGHT
 
-Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}

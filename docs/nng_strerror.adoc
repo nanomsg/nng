@@ -2,12 +2,11 @@
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
 == NAME
 
@@ -47,8 +46,4 @@ by a `NUL` byte.
 
 == COPYRIGHT
 
-Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}

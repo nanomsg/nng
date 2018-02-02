@@ -1,24 +1,19 @@
-nng_tls_config_auth_mode(3)
-===========================
+= nng_tls_config_auth_mode(3)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
 :manvolnum: 3
-:icons: font
-:source-highlighter: pygments
-:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
-NAME
-----
+== NAME
+
 nng_tls_config_auth_mode - configure authentication mode
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 [source, c]
 -----------
@@ -33,8 +28,7 @@ typedef enum nng_tls_auth_mode {
 int nng_tls_config_auth_mode(nni_tls_config *cfg, nng_tls_auth_mode mode);
 -----------
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The `nng_tls_config_auth_mode()` function configures the authentication mode
 to be used for TLS sessions using this configuration object.
@@ -55,21 +49,18 @@ A check is made to ensure that the peer has presented a valid certificate
 used for the session.  If the peer's certificate is invalid or missing, then
 the session is refused.  This is the default for clients.
 
-RETURN VALUES
--------------
+== RETURN VALUES
 
 This function returns 0 on success, and non-zero otherwise.
 
-ERRORS
-------
+== ERRORS
 
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EINVAL`:: An invalid 'mode' was specified.
 `NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
 
 
-SEE ALSO
---------
+== SEE ALSO
 
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>,
@@ -79,11 +70,6 @@ SEE ALSO
 <<nng#,nng(7)>>
 
 
-COPYRIGHT
----------
+== COPYRIGHT
 
-Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}

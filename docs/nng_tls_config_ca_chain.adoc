@@ -1,24 +1,19 @@
-nng_tls_config_ca_chain(3)
-==========================
+= nng_tls_config_ca_chain(3)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
 :manvolnum: 3
-:icons: font
-:source-highlighter: pygments
-:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
-NAME
-----
+== NAME
+
 nng_tls_config_ca_chain - configure certificate authority certificate chain
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 [source, c]
 -----------
@@ -28,8 +23,7 @@ int nng_tls_config_ca_cert(nni_tls_config *cfg, const char *chain,
     const char *crl);
 -----------
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The `nng_tls_config_ca_chain()` function configures a certificate or
 certificate chain to be used when validating peers using the configuration
@@ -49,20 +43,17 @@ together.
 The 'crl' may be NULL, or may also be a C string containing a PEM format
 certificate revocation list for the associated authority.
 
-RETURN VALUES
--------------
+== RETURN VALUES
 
 This function returns 0 on success, and non-zero otherwise.
 
-ERRORS
-------
+== ERRORS
 
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
 `NNG_EINVAL`:: An invalid 'chain' or 'size' was supplied.
 
-SEE ALSO
---------
+== SEE ALSO
 
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>,
@@ -70,12 +61,6 @@ SEE ALSO
 <<nng_tls_config_ca_file#,nng_tls_config_ca_file(3)>>,
 <<nng#,nng(7)>>
 
+== COPYRIGHT
 
-COPYRIGHT
----------
-
-Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}

@@ -1,23 +1,18 @@
-nng_tcp(7)
-==========
+= nng_tcp(7)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:icons: font
-:source-highlighter: pygments
-:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
-NAME
-----
+== NAME
+
 nng_tcp - TCP/IP transport for nng
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 [source,c]
 ----------
@@ -26,8 +21,7 @@ SYNOPSIS
 int nng_tcp_register(void);
 ----------
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The _nng_tcp_ transport provides communication support between
 _nng_ sockets across a TCP/IP network.  Both IPv4 and IPv6
@@ -35,14 +29,12 @@ are supported when the underlying platform also supports it.
 
 // We need to insert a reference to the nanomsg RFC.
 
-Registration
-~~~~~~~~~~~~
+=== Registration
 
 The _tcp_ transport is generally built-in to the _nng_ core, so
 no extra steps to use it should be necessary.
 
-URI Format
-~~~~~~~~~~
+=== URI Format
 
 This transport uses URIs using the scheme `tcp://`, followed by
 an IP address or hostname, followed by a colon and finally a
@@ -75,8 +67,7 @@ on the host:
 
 The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 
-Socket Address
-~~~~~~~~~~~~~~
+=== Socket Address
 
 When using an `nng_sockaddr` structure, the actual structure is either
 of type `nng_sockaddr_in` (for IPv4) or `nng_sockaddr_in6` (for IPv6).
@@ -113,21 +104,15 @@ The `sa_family` member will have the value `NNG_AF_INET` or `NNG_AF_INET6`.
 The `sa_port` and `sa_addr` are the TCP port number and address, both in
 network byte order (most significant byte is first).
 
-Transport Options
-~~~~~~~~~~~~~~~~~
+=== Transport Options
 
 The _tcp_ transport has no special
 options.footnote:[Options for TCP keepalive, linger, and nodelay are planned.]
  
-SEE ALSO
---------
+== SEE ALSO
+
 <<nng#,nng(7)>>
 
-COPYRIGHT
----------
+== COPYRIGHT
 
-Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}

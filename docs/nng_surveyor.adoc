@@ -1,23 +1,18 @@
-nng_surveyor(7)
-===============
+= nng_surveyor(7)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:icons: font
-:source-highlighter: pygments
-:copyright: Copyright 2018 Garrett D'Amore <garrett@damore.org> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
-NAME
-----
+== NAME
+
 nng_surveyor - surveyor protocol
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 [source,c]
 ----------
@@ -26,8 +21,7 @@ SYNOPSIS
 int nng_surveyor0_open(nng_socket *s);
 ----------
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The _nng_surveyor_ protocol is one half of a survey pattern.
 In this pattern, a surveyor sends a survey, which is broadcast to all
@@ -42,8 +36,7 @@ discovery problems.
 The _nng_surveyor_ protocol is the surveyor side, and the
 <<nng_respondent#,nng_respondent(7)>> protocol is the respondent side.
 
-Socket Operations
-~~~~~~~~~~~~~~~~~
+=== Socket Operations
 
 The `nng_surveyor0_open()` call creates a respondent socket.  This socket
 may be used to send messages (surveys), and then to receive replies.  Generally
@@ -61,8 +54,7 @@ survey that arrive after this will be discarded.
 
 Raw mode sockets (set with `NNG_OPT_RAW`) ignore all these restrictions.
 
-Protocol Versions
-~~~~~~~~~~~~~~~~~
+=== Protocol Versions
 
 Only version 0 of this protocol is supported.  (At the time of writing,
 no other versions of this protocol have been defined.  An earlier and
@@ -70,8 +62,7 @@ incompatible version of the protocol was used in older pre-releases of
 http://nanomsg.org[nanomsg], but was not released in any production
 version.)
 
-Protocol Options
-~~~~~~~~~~~~~~~~
+=== Protocol Options
 
 The following protocol-specific options are available.
 
@@ -94,8 +85,7 @@ The following protocol-specific options are available.
    of 0 may be used to disable the loop protection, allowing an infinite
    number of hops.
 
-Protocol Headers
-~~~~~~~~~~~~~~~~
+=== Protocol Headers
 
 The _nng_surveyor_ protocol uses a _backtrace_ in the header.  This
 form uses an array of 32-bit big-endian identifiers, where the first
@@ -110,17 +100,11 @@ having their high order bit set to one.)
 
 // TODO: Insert reference to RFC.
 
-    
-SEE ALSO
---------
+== SEE ALSO
+
 <<nng#,nng(7)>>,
 <<nng_respondent#,nng_respondent(7)>>
 
-COPYRIGHT
----------
+== COPYRIGHT
 
-Copyright 2018 mailto:garrett@damore.org[Garrett D'Amore] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}

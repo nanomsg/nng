@@ -1,23 +1,18 @@
-nng_tls(7)
-==========
+= nng_tls(7)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
-:icons: font
-:source-highlighter: pygments
-:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
-            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
-            This software is supplied under the terms of the MIT License, a \
-            copy of which should be located in the distribution where this \
-            file was obtained (LICENSE.txt).  A copy of the license may also \
-            be found online at https://opensource.org/licenses/MIT.
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
 
-NAME
-----
+== NAME
+
 nng_tls - TLS transport for nng
 
-SYNOPSIS
---------
+== SYNOPSIS
 
 [source,c]
 ----------
@@ -26,8 +21,7 @@ SYNOPSIS
 int nng_tls_register(void);
 ----------
 
-DESCRIPTION
------------
+== DESCRIPTION
 
 The _nng_tls_ transport provides communication support between
 _nng_ sockets across a TCP/IP network using 
@@ -38,16 +32,14 @@ are supported when the underlying platform also supports it.
 The protocol details are documented in
 http://nanomsg.org/rfcs/sp-tls-v1.html[TLS Mapping for Scalability Protocols].
 
-Registration
-~~~~~~~~~~~~
+=== Registration
 
 Depending upon how the library was built, it may be necessary to
 register the transport by calling `nng_tls_register`.  This function
 returns zero on success, or an nng error value if the transport
 cannot be initialized for any reason.
 
-Availability
-~~~~~~~~~~~~
+=== Availability
 
 The _tls_ transport depends on the use of an external library.
 As of this writing, https://tls.mbed.org/[mbed TLS] version 2.0
@@ -64,8 +56,7 @@ https://opensource.org/licenses/gpl-license[GNU GPL] terms.
 You are responsible for understanding and adhering to the
 license terms of any libraries you make use of.
 
-URI Format
-~~~~~~~~~~
+=== URI Format
 
 This transport uses URIs using the scheme `tls+tcp://`, followed by
 an IP address or hostname, followed by a colon and finally a
@@ -103,8 +94,7 @@ on the host:
 
 The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 
-Socket Address
-~~~~~~~~~~~~~~
+=== Socket Address
 
 When using an `nng_sockaddr` structure, the actual structure is either
 of type `nng_sockaddr_in` (for IPv4) or `nng_sockaddr_in6` (for IPv6).
@@ -141,8 +131,7 @@ The `sa_family` member will have the value `NNG_AF_INET` or `NNG_AF_INET6`.
 The `sa_port` and `sa_addr` are the TCP port number and address, both in
 network byte order (most significant byte is first).
 
-Transport Options
-~~~~~~~~~~~~~~~~~
+=== Transport Options
 
 The following transport options are available. Note that
 setting these must be done before the transport is started.
@@ -184,16 +173,11 @@ It will true (1) if the remote peer has been properly verified using TLS
 authentication, or false (0) otherwise.  This option may return incorrect
 results if peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 
-SEE ALSO
---------
+== SEE ALSO
+
 <<nng#,nng(7)>>,
 <<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>
 
-COPYRIGHT
----------
+== COPYRIGHT
 
-Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
-Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
-
-This document is supplied under the terms of the
-https://opensource.org/licenses/MIT[MIT License].
+{copyright}
