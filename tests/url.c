@@ -26,7 +26,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
 		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_path, "") == 0);
-		So(strcmp(url->u_rawpath, "") == 0);
+		So(strcmp(url->u_requri, "") == 0);
 		So(url->u_query == NULL);
 		So(url->u_fragment == NULL);
 		So(url->u_userinfo == NULL);
@@ -41,7 +41,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
 		So(strcmp(url->u_port, "1234") == 0);
 		So(strcmp(url->u_path, "") == 0);
-		So(strcmp(url->u_rawpath, "") == 0);
+		So(strcmp(url->u_requri, "") == 0);
 		So(url->u_query == NULL);
 		So(url->u_fragment == NULL);
 		So(url->u_userinfo == NULL);
@@ -57,7 +57,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
 		So(strcmp(url->u_port, "1234") == 0);
 		So(strcmp(url->u_path, "/somewhere") == 0);
-		So(strcmp(url->u_rawpath, "/somewhere") == 0);
+		So(strcmp(url->u_requri, "/somewhere") == 0);
 		So(url->u_userinfo == NULL);
 		So(url->u_query == NULL);
 		So(url->u_fragment == NULL);
@@ -73,7 +73,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_hostname, "www.google.com") == 0);
 		So(strcmp(url->u_port, "1234") == 0);
 		So(strcmp(url->u_path, "/somewhere") == 0);
-		So(strcmp(url->u_rawpath, "/somewhere") == 0);
+		So(strcmp(url->u_requri, "/somewhere") == 0);
 		So(url->u_query == NULL);
 		So(url->u_fragment == NULL);
 		nng_url_free(url);
@@ -88,7 +88,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_path, "/somewhere") == 0);
 		So(strcmp(url->u_query, "result=yes") == 0);
-		So(strcmp(url->u_rawpath, "/somewhere?result=yes") == 0);
+		So(strcmp(url->u_requri, "/somewhere?result=yes") == 0);
 		So(url->u_userinfo == NULL);
 		So(url->u_fragment == NULL);
 		nng_url_free(url);
@@ -105,7 +105,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_path, "/somewhere") == 0);
 		So(strcmp(url->u_query, "result=yes") == 0);
 		So(strcmp(url->u_fragment, "chapter1") == 0);
-		So(strcmp(url->u_rawpath, "/somewhere?result=yes#chapter1") ==
+		So(strcmp(url->u_requri, "/somewhere?result=yes#chapter1") ==
 		    0);
 		So(url->u_userinfo == NULL);
 		nng_url_free(url);
@@ -120,7 +120,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_path, "/somewhere") == 0);
 		So(strcmp(url->u_fragment, "chapter2") == 0);
-		So(strcmp(url->u_rawpath, "/somewhere#chapter2") == 0);
+		So(strcmp(url->u_requri, "/somewhere#chapter2") == 0);
 		So(url->u_query == NULL);
 		So(url->u_userinfo == NULL);
 		nng_url_free(url);
@@ -134,7 +134,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_path, "") == 0);
 		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_fragment, "chapter3") == 0);
-		So(strcmp(url->u_rawpath, "#chapter3") == 0);
+		So(strcmp(url->u_requri, "#chapter3") == 0);
 		So(url->u_query == NULL);
 		So(url->u_userinfo == NULL);
 		nng_url_free(url);
@@ -149,7 +149,7 @@ TestMain("URLs", {
 		So(strcmp(url->u_path, "") == 0);
 		So(strcmp(url->u_port, "80") == 0);
 		So(strcmp(url->u_query, "color=red") == 0);
-		So(strcmp(url->u_rawpath, "?color=red") == 0);
+		So(strcmp(url->u_requri, "?color=red") == 0);
 		So(url->u_fragment == NULL);
 		So(url->u_userinfo == NULL);
 		nng_url_free(url);

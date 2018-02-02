@@ -11,22 +11,11 @@
 #ifndef CORE_URL_H
 #define CORE_URL_H
 
-struct nni_url {
-	char *u_rawurl;   // never NULL
-	char *u_scheme;   // never NULL
-	char *u_userinfo; // will be NULL if not specified
-	char *u_host;     // including colon and port
-	char *u_hostname; // name only, will be "" if not specified
-	char *u_port;     // port, will be "" if not specified
-	char *u_path;     // path, will be "" if not specified
-	char *u_query;    // without '?', will be NULL if not specified
-	char *u_fragment; // without '#', will be NULL if not specified
-	char *u_rawpath;  // includes query and fragment, "" if not specified
-};
+#include "core/defs.h"
 
-extern int nni_url_parse(nni_url **, const char *path);
-extern void nni_url_free(nni_url *);
-extern int  nni_url_clone(nni_url **, const nni_url *);
+extern int         nni_url_parse(nni_url **, const char *path);
+extern void        nni_url_free(nni_url *);
+extern int         nni_url_clone(nni_url **, const nni_url *);
 extern const char *nni_url_default_port(const char *);
 
 #endif // CORE_URL_H

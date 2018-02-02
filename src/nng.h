@@ -761,7 +761,7 @@ typedef struct nng_url {
 	char *u_path;     // path, will be "" if not specified
 	char *u_query;    // without '?', will be NULL if not specified
 	char *u_fragment; // without '#', will be NULL if not specified
-	char *u_rawpath;  // includes query and fragment, "" if not specified
+	char *u_requri;   // includes query and fragment, "" if not specified
 } nng_url;
 
 // nng_url_parse parses a URL string into a structured form.

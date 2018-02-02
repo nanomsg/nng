@@ -591,7 +591,7 @@ nni_http_req_alloc(nni_http_req **reqp, const nni_url *url)
 	if (url != NULL) {
 		const char *host;
 		int         rv;
-		if ((req->uri = nni_strdup(url->u_rawpath)) == NULL) {
+		if ((req->uri = nni_strdup(url->u_requri)) == NULL) {
 			NNI_FREE_STRUCT(req);
 			return (NNG_ENOMEM);
 		}

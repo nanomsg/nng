@@ -340,11 +340,11 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	url->u_host[len] = '\0';
 	s += len;
 
-	if ((rv = url_canonify_uri(&url->u_rawpath, s)) != 0) {
+	if ((rv = url_canonify_uri(&url->u_requri, s)) != 0) {
 		goto error;
 	}
 
-	s = url->u_rawpath;
+	s = url->u_requri;
 	for (len = 0; (c = s[len]) != '\0'; len++) {
 		if ((c == '?') || (c == '#')) {
 			break;
@@ -450,7 +450,7 @@ nni_url_free(nni_url *url)
 	nni_strfree(url->u_path);
 	nni_strfree(url->u_query);
 	nni_strfree(url->u_fragment);
-	nni_strfree(url->u_rawpath);
+	nni_strfree(url->u_requri);
 	NNI_FREE_STRUCT(url);
 }
 
@@ -469,7 +469,7 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 	    URL_COPYSTR(dst->u_host, src->u_host) ||
 	    URL_COPYSTR(dst->u_hostname, src->u_hostname) ||
 	    URL_COPYSTR(dst->u_port, src->u_port) ||
-	    URL_COPYSTR(dst->u_rawpath, src->u_rawpath) ||
+	    URL_COPYSTR(dst->u_requri, src->u_requri) ||
 	    URL_COPYSTR(dst->u_path, src->u_path) ||
 	    URL_COPYSTR(dst->u_query, src->u_query) ||
 	    URL_COPYSTR(dst->u_fragment, src->u_fragment)) {

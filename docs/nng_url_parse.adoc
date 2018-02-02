@@ -33,30 +33,21 @@ is stored in _urlp_.
 
 The `nng_url` structure has at least the following members:
 
-`char *u_scheme`::   The scheme, such as `http`.  Always lower case.
-
-`char *u_rawurl`::   An unparsed form of the raw URL, with only minimal
-                     canonicalization performed.
-
-`char *u_userinfo`:: The userinfo component if one was present,
-                     `NULL` otherwise.
-
-`char *u_host`:: The full host, including hostname, and colon and port
-                 if present, otehrwise the empty string.
-
-`char *u_hostname`:: The hostname if present, otherwise the empty string.
-                     Always lower case.
-
-`char *u_port`:: The port if present.  If not present, a default port
-                 will be stored here.  If no default is available, then
-                 the empty string.
-
-`char *u_path`:: The path component if present, or the empty string
-                 otherwise.
-
-`char *u_query`:: The query component if present, NULL otherwise.
-
-`char *u_fragment`:: The fragment if present, NULL otherwise.
+[source, c]
+----
+struct nng_url {
+    char *u_scheme;   // Scheme, such as "http"; always lower case.
+    char *u_rawurl;   // Unparsed URL, with minimal canonicalization.
+    char *u_userinfo; // Userinfo component, or NULL.
+    char *u_host;     // Full host, including port if present.
+    char *u_hostname; // Hostname only (or address), or empy string.
+    char *u_port;     // Port number, may be default or empty string.
+    char *u_path;     // Path if present, empty string otherwise.
+    char *u_query;    // Query info if present, NULL otherwise.
+    char *u_fragment; // Fragment if present, NULL otherwise.
+    char *u_requri;   // Request-URI (path[?query][#fragment])
+};
+----
 
 === URL Canonicalization
 
@@ -82,6 +73,9 @@ follows:
   8. If a port was not specified, but the scheme defines a default
      port, then `u_port` will be filled in with the value of the default port.
 
+TIP: Only the `u_userinfo`, `u_query`, and `u_fragment` members will ever be
+     `NULL`.  The other members will be filled in with either default values
+     or the empty string if they cannot be determined from _str_.
 
 == RETURN VALUES
 
