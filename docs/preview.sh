@@ -76,7 +76,7 @@ generate_pdf() {
 generate_html() {
 	typeset input=$1
 	typeset output=$2
-	asciidoctor -aversion-label=${name} -arevnumber=${version} \
+	asciidoctor -atoc=left -aversion-label=${name} -arevnumber=${version} \
 		-aicons=font -asource-highlighter=pygments \
 		-b html5 -o ${output} $input
 }

@@ -78,6 +78,7 @@ EOF
 		-aversion-label=${name} \
 		-arevnumber=${vers}  \
 		-askip-front-matter \
+		-atoc=left \
 		-asource-highlighter=pygments \
 		-aicons=font \
 		-bhtml5 \
