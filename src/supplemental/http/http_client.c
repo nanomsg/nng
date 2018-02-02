@@ -18,7 +18,7 @@
 
 #include "http.h"
 
-struct nni_http_client {
+struct nng_http_client {
 	nni_list         aios;
 	nni_mtx          mtx;
 	bool             closed;
@@ -95,7 +95,7 @@ nni_http_client_fini(nni_http_client *c)
 }
 
 int
-nni_http_client_init(nni_http_client **cp, nni_url *url)
+nni_http_client_init(nni_http_client **cp, const nni_url *url)
 {
 	int              rv;
 	nni_http_client *c;

@@ -20,6 +20,7 @@ typedef struct nng_http_res     nni_http_res;
 typedef struct nng_http_conn    nni_http_conn;
 typedef struct nng_http_handler nni_http_handler;
 typedef struct nng_http_server  nni_http_server;
+typedef struct nng_http_client  nni_http_client;
 
 // These functions are private to the internal framework, and really should
 // not be used elsewhere.
@@ -259,9 +260,7 @@ extern const char *nni_http_handler_get_uri(nni_http_handler *);
 
 // Client stuff.
 
-typedef struct nni_http_client nni_http_client;
-
-extern int  nni_http_client_init(nni_http_client **, nni_url *);
+extern int  nni_http_client_init(nni_http_client **, const nni_url *);
 extern void nni_http_client_fini(nni_http_client *);
 
 // nni_http_client_set_tls sets the TLS configuration.  This wipes out

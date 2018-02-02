@@ -17,7 +17,6 @@
 
 // Basic HTTP server tests.
 #include "core/nng_impl.h"
-#include "supplemental/http/http.h"
 
 const char *doc1 = "<html><body>Someone <b>is</b> home!</body</html>";
 const char *doc2 = "This is a text file.";
@@ -35,23 +34,23 @@ httpdo(nng_url *url, nng_http_req *req, nng_http_res *res, void **datap,
 {
 	int              rv;
 	nng_aio *        aio  = NULL;
-	nni_http_client *cli  = NULL;
+	nng_http_client *cli  = NULL;
 	nng_http_conn *  h    = NULL;
 	size_t           clen = 0;
 	void *           data = NULL;
 	const char *     ptr;
 
 	if (((rv = nng_aio_alloc(&aio, NULL, NULL)) != 0) ||
-	    ((rv = nni_http_client_init(&cli, url)) != 0)) {
+	    ((rv = nng_http_client_alloc(&cli, url)) != 0)) {
 		goto fail;
 	}
-	nni_http_client_connect(cli, aio);
+	nng_http_client_connect(cli, aio);
 	nng_aio_wait(aio);
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if ((rv = nng_aio_result(aio)) != 0) {
 		goto fail;
 	}
 
-	h = nni_aio_get_output(aio, 0);
+	h = nng_aio_get_output(aio, 0);
 
 	nng_http_conn_write_req(h, req, aio);
 	nng_aio_wait(aio);
@@ -94,7 +93,7 @@ fail:
 		nng_http_conn_close(h);
 	}
 	if (cli != NULL) {
-		nni_http_client_fini(cli);
+		nng_http_client_free(cli);
 	}
 
 	return (rv);
@@ -191,13 +190,13 @@ TestMain("HTTP Server", {
 		So(nng_http_server_start(s) == 0);
 
 		Convey("We can connect a client to it", {
-			nni_http_client *cli;
+			nng_http_client *cli;
 			nng_http_conn *  h;
 			nng_http_req *   req;
 			nng_http_res *   res;
 
-			So(nni_http_client_init(&cli, url) == 0);
-			nni_http_client_connect(cli, aio);
+			So(nng_http_client_alloc(&cli, url) == 0);
+			nng_http_client_connect(cli, aio);
 			nng_aio_wait(aio);
 
 			So(nng_aio_result(aio) == 0);
@@ -207,7 +206,7 @@ TestMain("HTTP Server", {
 			So(nng_http_res_alloc(&res) == 0);
 
 			Reset({
-				nni_http_client_fini(cli);
+				nng_http_client_free(cli);
 				nng_http_conn_close(h);
 				nng_http_req_free(req);
 				nng_http_res_free(res);

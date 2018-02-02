@@ -17,7 +17,6 @@
 
 // Basic HTTP client tests.
 #include "core/nng_impl.h"
-#include "supplemental/http/http.h"
 #include "supplemental/sha1/sha1.h"
 
 const uint8_t utf8_sha1sum[20] = { 0x54, 0xf3, 0xb8, 0xbb, 0xfe, 0xda, 0x6f,
@@ -31,7 +30,7 @@ TestMain("HTTP Client", {
 
 	Convey("Given a TCP connection to httpbin.org", {
 		nng_aio *        aio;
-		nni_http_client *cli;
+		nng_http_client *cli;
 		nng_http_conn *  http;
 		nng_url *        url;
 
@@ -39,13 +38,13 @@ TestMain("HTTP Client", {
 
 		So(nng_url_parse(&url, "http://httpbin.org/encoding/utf8") ==
 		    0);
-		So(nni_http_client_init(&cli, url) == 0);
-		nni_http_client_connect(cli, aio);
+		So(nng_http_client_alloc(&cli, url) == 0);
+		nng_http_client_connect(cli, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		http = nni_aio_get_output(aio, 0);
+		http = nng_aio_get_output(aio, 0);
 		Reset({
-			nni_http_client_fini(cli);
+			nng_http_client_free(cli);
 			nng_http_conn_close(http);
 			nng_aio_free(aio);
 			nng_url_free(url);

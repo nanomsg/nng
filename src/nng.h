@@ -322,14 +322,6 @@ NNG_DECL int nng_aio_set_output(nng_aio *, unsigned, void *);
 // nng_aio_get_output retrieves the output result at the given index.
 NNG_DECL void *nng_aio_get_output(nng_aio *, unsigned);
 
-// nng_aio_set_data sets an opaque data at the given index.  The intention
-// is to allow consumers to pass additional state for use in callback
-// functions.
-NNG_DECL int nng_aio_set_data(nng_aio *, unsigned, void *);
-
-// nng_aio_get_data retrieves the data that was previously stored.
-NNG_DECL void *nng_aio_get_output(nng_aio *, unsigned);
-
 // nng_aio_set_timeout sets a timeout on the AIO.  This should be called for
 // operations that should time out after a period.  The timeout should be
 // either a positive number of milliseconds, or NNG_DURATION_INFINITE to
@@ -1183,6 +1175,36 @@ NNG_DECL int nng_http_server_get_tls(nng_http_server *, nng_tls_config **);
 // further processing.)
 
 NNG_DECL int nng_http_hijack(nng_http_conn *);
+
+// nng_http_client represents a "client" object.  Clients can be used
+// to create HTTP connections.  At present, connections are not cached
+// or reused, but that could change in the future.
+typedef struct nng_http_client nng_http_client;
+
+// nng_http_client_alloc allocates a client object, associated with
+// the given URL.
+NNG_DECL int nng_http_client_alloc(nng_http_client **, const nng_url *);
+
+// nng_http_client_free frees the client.  Connections created by the
+// the client are not necessarily closed.
+NNG_DECL void nng_http_client_free(nng_http_client *);
+
+// nng_http_client_set_tls sets the TLS configuration.  This wipes out
+// the entire TLS configuration on the client, so the caller must have
+// configured it reasonably.  This API is not recommended unless the
+// caller needs complete control over the TLS configuration.
+NNG_DECL int nng_http_client_set_tls(nng_http_client *, nng_tls_config *);
+
+// nng_http_client_get_tls obtains the TLS configuration if one is present,
+// or returns NNG_EINVAL.  The supplied TLS configuration object may
+// be invalidated by any future calls to nni_http_client_set_tls.
+NNG_DECL int nng_http_client_get_tls(nng_http_client *, nng_tls_config **);
+
+// nng_http_client_connect establishes a new connection with the server
+// named in the URL used when the client was created.  Once the connection
+// is established, the associated nng_http_conn object pointer is returned
+// in the first (index 0) output for the aio.
+NNG_DECL void nng_http_client_connect(nng_http_client *, nng_aio *);
 
 #ifdef __cplusplus
 }

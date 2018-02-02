@@ -1100,6 +1100,27 @@ nng_aio_set_input(nng_aio *aio, unsigned index, void *arg)
 	nni_aio_set_input(aio, index, arg);
 	return (0);
 }
+int
+nng_aio_set_output(nng_aio *aio, unsigned index, void *arg)
+{
+	if (index > 3) {
+		return (NNG_EINVAL);
+	}
+	nni_aio_set_output(aio, index, arg);
+	return (0);
+}
+
+void *
+nng_aio_get_input(nng_aio *aio, unsigned index)
+{
+	return (nni_aio_get_input(aio, index));
+}
+
+void *
+nng_aio_get_output(nng_aio *aio, unsigned index)
+{
+	return (nni_aio_get_output(aio, index));
+}
 
 #if 0
 int
