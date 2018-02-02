@@ -1,0 +1,55 @@
+= nng_http_res_get_reason(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+== NAME
+
+nng_http_res_get_reason - return HTTP response reason
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+const char *nng_http_res_get_reason(nng_http_res *res);
+-----------
+
+== DESCRIPTION
+
+The `nng_http_res_get_reason()` returns a string representing the "reason
+phrase" associated with the response _res_.  This is a human-readable
+explanation of the status code that would be obtained from
+<<nng_http_res_get_status#,nng_http_res_get_status(3)>>.
+
+== RETURN VALUES
+
+Reason as a string.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_http_res_alloc#,nng_http_res_alloc(3)>>,
+<<nng_http_res_get_status#,nng_http_res_get_status(3)>>,
+<<nng_http_res_set_reason#,nng_http_res_set_reason(3)>>,
+<<nng#,nng(7)>>
+
+
+== COPYRIGHT
+
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/MIT[MIT License].

@@ -1,0 +1,69 @@
+= nng_http_req_alloc(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+== NAME
+
+nng_http_req_alloc - allocate HTTP request structure
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+int nng_http_req_alloc(nng_http_req **reqp, const nng_url *url);
+-----------
+
+
+== DESCRIPTION
+
+The `nng_http_req_alloc()` function allocates a new HTTP request structure
+and stores a pointer to it in __reqp__.  The request will be initialized
+to perform an HTTP/1.1 `GET` operation using the URL specified in __url__.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient free memory exists to allocate a message.
+`NNG_ENOTSUP`:: HTTP support not configured.
+
+== SEE ALSO
+
+<<nng_http_conn_read_req#,nng_http_conn_read_req(3)>>,
+<<nng_http_conn_write_req#,nng_http_conn_write_req(3)>>,
+<<nng_http_req_add_header#,nng_http_req_add_header(3)>>,
+<<nng_http_req_copy_data#,nng_http_req_copy_data(3)>>,
+<<nng_http_req_del_header#,nng_http_req_del_header(3)>>,
+<<nng_http_req_free#,nng_http_req_free(3)>>,
+<<nng_http_req_get_header#,nng_http_req_get_header(3)>>,
+<<nng_http_req_get_method#,nng_http_req_get_method(3)>>,
+<<nng_http_req_get_uri#,nng_http_req_get_uri(3)>>,
+<<nng_http_req_get_version#,nng_http_req_get_version(3)>>,
+<<nng_http_req_set_data#,nng_http_req_set_data(3)>>,
+<<nng_http_req_set_method#,nng_http_req_set_method(3)>>,
+<<nng_http_req_set_uri#,nng_http_req_set_uri(3)>>,
+<<nng_http_req_set_version#,nng_http_req_set_version(3)>>,
+<<nng_http_res_alloc#,nng_http_res_alloc(3)>>,
+<<nng_url_parse#,nng_url_parse(3)>>
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/MIT[MIT License].

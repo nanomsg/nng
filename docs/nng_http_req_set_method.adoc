@@ -1,0 +1,59 @@
+= nng_http_req_set_method(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 Staysail Systems, Inc. <info@staysail.tech> \
+            Copyright 2018 Capitar IT Group BV <info@capitar.com> \
+            This software is supplied under the terms of the MIT License, a \
+            copy of which should be located in the distribution where this \
+            file was obtained (LICENSE.txt).  A copy of the license may also \
+            be found online at https://opensource.org/licenses/MIT.
+
+== NAME
+
+nng_http_req_set_method - set HTTP request method
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+int nng_http_req_set_method(nng_http_req *req, const char *method);
+-----------
+
+== DESCRIPTION
+
+The `nng_http_req_set_method()` sets the HTTP method associated with
+the request _req_ to _method_.  The _method_ must be a string,
+such as "GET" or "POST", and the HTTP specifications indicate that it must
+be upper case.
+
+The default value method for newly allocated requests is "GET".
+
+A local copy of the _method_ is made in the request _req_.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient memory to perform the operation.
+`NNG_ENOTSUP`:: No support for HTTP in the library.
+
+== SEE ALSO
+
+<<nng_http_req_alloc#,nng_http_req_alloc(3)>>,
+<<nng_http_req_get_method#,nng_http_req_get_method(3)>>,
+<<nng#,nng(7)>>
+
+
+== COPYRIGHT
+
+Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV]
+
+This document is supplied under the terms of the
+https://opensource.org/licenses/MIT[MIT License].
