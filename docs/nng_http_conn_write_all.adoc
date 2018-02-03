@@ -1,0 +1,97 @@
+= nng_http_conn_write_all(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
+
+== NAME
+
+nng_http_conn_write_all - write all to HTTP connection
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+void nng_http_conn_write_all(nng_http_conn *conn, nng_aio *aio);
+-----------
+
+== DESCRIPTION
+
+The `nng_http_conn_write_all()` function starts an asynchronous write to the
+HTTP connection _conn_, into the scatter/gather vector located in the
+asynchronous I/O structure _aio_.
+
+NOTE: The <<nng_aio_set_iov#,nng_aio_set_iov(3)>> function must have been
+called first, to set the scatter/gather vector for _aio_.
+
+This function returns immediately, with no return value.  Completion of
+the operation is signaled via the _aio_, and the final result may be
+obtained via <<nng_aio_result#,nng_aio_result>>. That result will
+either be zero or an error code.
+
+The I/O operation completes only when the entire amount of data
+requested has been written, or an error has occurred. If the operation
+completes successfully, then the entire requested data has been written.
+
+It is still possible for a partial write to complete in the event of an
+error. The actual number of bytes written can be determined with
+<<nng_aio_count#,nng_aio_count(3)>>.
+
+TIP: The main purpose for this function is to faciliate writing HTTP
+body content.
+
+TIP: Usually an HTTP request or response will have been written immediately
+prior to this with <<nng_http_conn_write_req#,http_conn_write_req(3)>> or
+<<nng_http_conn_write_res#,http_conn_write_res(3)>>.  In that case the
+request or response should have also contained an `Content-Length` header,
+and possibly a `Content-Type` header.
+
+TIP: An easier solution to sending HTTP content data, is to include the
+conten with the request or reply using a function like
+<<nng_http_req_copy_data#,nng_http_req_copy_data(3)>>.  In that case,
+the body data will be written automatically by the 
+<<nng_http_conn_write_req#,http_conn_write_req(3)>> or
+<<nng_http_conn_write_req#,http_conn_write_res(3)>> function.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+`NNG_ECANCELED`:: The operation was canceled.
+`NNG_ECLOSED`:: The connection was closed.
+`NNG_ECONNRESET`:: The peer closed the connection.
+`NNG_EINVAL`:: The _aio_ does not contain a valid scatter/gather vector.
+`NNG_ENOMEM`:: Insufficient free memory to perform the operation.
+`NNG_ENOTSUP`:: HTTP operations are not supported.
+`NNG_ETIMEDOUT`:: Timeout waiting for data from the connection.
+
+== SEE ALSO
+
+<<nng_aio_alloc#,nng_aio_alloc(3)>>,
+<<nng_aio_count#,nng_aio_count(3)>>,
+<<nng_aio_result#,nng_aio_result(3)>>,
+<<nng_aio_set_iov#,nng_aio_set_iov(3)>>,
+<<nng_http_alloc_handler#,nng_http_alloc_handler(3)>>,
+<<nng_http_client_connect#,nng_http_client_connect(3)>>,
+<<nng_http_conn_write#,nng_http_conn_write(3)>>,
+<<nng_http_conn_write_req#,http_conn_write_req(3)>>,
+<<nng_http_conn_write_res#,http_conn_write_res(3)>>,
+<<nng_http_req_copy_data#,nng_http_req_copy_data(3)>>,
+<<nng_http_req_set_data#,nng_http_req_set_data(3)>>,
+<<nng_http_res_copy_data#,nng_http_res_copy_data(3)>>,
+<<nng_http_res_set_data#,nng_http_res_set_data(3)>>,
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+{copyright}

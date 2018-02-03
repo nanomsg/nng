@@ -1,0 +1,76 @@
+= nng_http_conn_read(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
+
+== NAME
+
+nng_http_conn_read - read from HTTP connection
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+void nng_http_conn_read(nng_http_conn *conn, nng_aio *aio);
+-----------
+
+== DESCRIPTION
+
+The `nng_http_conn_read()` function starts an asynchronous read from the
+HTTP connection _conn_, into the scatter/gather vector located in the
+asynchronous I/O structure _aio_.
+
+NOTE: The <<nng_aio_set_iov#,nng_aio_set_iov(3)>> function must have been
+called first, to set the scatter/gather vector for _aio_.
+
+This function returns immediately, with no return value.  Completion of
+the operation is signaled via the _aio_, and the final result may be
+obtained via <<nng_aio_result#,nng_aio_result>>. That result will
+either be zero or an error code.
+
+The I/O operation completes as soon as at least one byte has been
+read, or an error has occurred.
+Therefore, the number of bytes read may be less than requested.  The actual
+number of bytes read can be determined with <<nng_aio_count#,nng_aio_count(3)>>.
+
+TIP: This function is intended to facilitate uses cases that involve changing
+the protocol from HTTP -- such as WebSocket.  Most applications will never need
+to use this function.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+`NNG_ECANCELED`:: The operation was canceled.
+`NNG_ECLOSED`:: The connection was closed.
+`NNG_ECONNRESET`:: The peer closed the connection.
+`NNG_EINVAL`:: The _aio_ does not contain a valid scatter/gather vector.
+`NNG_ENOMEM`:: Insufficient free memory to perform the operation.
+`NNG_ENOTSUP`:: HTTP operations are not supported.
+`NNG_ETIMEDOUT`:: Timeout waiting for data from the connection.
+
+== SEE ALSO
+
+<<nng_aio_alloc#,nng_aio_alloc(3)>>,
+<<nng_aio_count#,nng_aio_count(3)>>,
+<<nng_aio_result#,nng_aio_result(3)>>,
+<<nng_aio_set_iov#,nng_aio_set_iov(3)>>,
+<<nng_http_alloc_handler#,nng_http_alloc_handler(3)>>,
+<<nng_http_client_connect#,nng_http_client_connect(3)>>,
+<<nng_http_conn_read_all#,nng_http_conn_read_all(3)>>,
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+{copyright}

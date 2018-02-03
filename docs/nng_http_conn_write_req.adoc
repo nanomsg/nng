@@ -1,0 +1,65 @@
+= nng_http_conn_write_req(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
+
+== NAME
+
+nng_http_conn_write_req - write HTTP request
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+void nng_http_conn_write_req(nng_http_conn *conn, nng_http_req *req,
+    nng_aio *aio);
+-----------
+
+== DESCRIPTION
+
+The `nng_http_conn_write_req()` function starts an asynchronous write of
+the HTTP request _req_ to the connection _conn_.  The entire request is sent,
+including headers, and if present, the request body data.  (The
+request body can be set with
+<<nng_http_req_set_data#,nng_http_req_set_data>> or
+<<nng_http_req_copy_data#,nng_http_req_copy_data>>.)
+
+This function returns immediately, with no return value.  Completion of
+the operation is signaled via the _aio_, and the final result may be
+obtained via <<nng_aio_result#,nng_aio_result>>. That result will
+either be zero or an error code.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+`NNG_ECANCELED`:: The operation was canceled.
+`NNG_ECLOSED`:: The connection was closed.
+`NNG_ECONNRESET`:: The peer closed the connection.
+`NNG_ENOMEM`:: Insufficient free memory to perform the operation.
+`NNG_ENOTSUP`:: HTTP operations are not supported.
+`NNG_ETIMEDOUT`:: Timeout waiting for data from the connection.
+
+== SEE ALSO
+
+<<nng_aio_alloc#,nng_aio_alloc(3)>>,
+<<nng_aio_result#,nng_aio_result(3)>>,
+<<nng_http_alloc_handler#,nng_http_alloc_handler(3)>>,
+<<nng_http_client_connect#,nng_http_client_connect(3)>>,
+<<nng_http_conn_read_all#,nng_http_conn_read_all(3)>>,
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+{copyright}
