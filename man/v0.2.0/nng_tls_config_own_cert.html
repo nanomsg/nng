@@ -9,7 +9,10 @@ layout: default
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<meta name="copyright" content="Copyright 2018 Staysail Systems, Inc. &lt;info@staysail.tech&gt; Copyright 2018 Capitar IT Group BV &lt;info@capitar.com&gt; This software is supplied under the terms of the MIT License, a copy of which should be located in the distribution where this file was obtained (LICENSE.txt).  A copy of the license may also be found online at https://opensource.org/licenses/MIT.">
+<meta name="copyright" content="Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] +
+Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] +
+ +
+This document is supplied under the terms of the https://opensource.org/licenses/MIT[MIT License].">
 <title>nng_tls_config_own_cert(3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
@@ -502,9 +505,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .listingblock .pygments .tok-il { color: #666666 } /* Literal.Number.Integer.Long */
 </style>
 </head>
-<body class="manpage">
+<body class="manpage toc2 toc-left">
 <div id="header">
 <h1>nng_tls_config_own_cert(3) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_return_values">RETURN VALUES</a></li>
+<li><a href="#_errors">ERRORS</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+<li><a href="#_copyright">COPYRIGHT</a></li>
+</ul>
+</div>
 <h2>NAME</h2>
 <div class="sectionbody">
 <p>nng_tls_config_own_cert - configure own certificate and key</p>
@@ -528,16 +542,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_tls_config_own_cert()</code> function configures a certificate <em>cert</em>
-identifying the local side of a TLS connection used with <em>cfg</em>, along with an
-associated private or secret key <em>key</em>.  The certificate may be
+<p>The <code>nng_tls_config_own_cert()</code> function configures a certificate 'cert'
+identifying the local side of a TLS connection used with 'cfg', along with an
+associated private or secret key 'key'.  The certificate may be
 a chain, with the leaf signer first and the root at the end.  The
 self-signed certificate at the end can be omitted. (The client should already
 have it, and will have to in order to validate this certificate anyway).</p>
 </div>
 <div class="paragraph">
-<p>The <em>key</em> may be encrypted with a password, in which can be supplied in
-<em>pass</em>.  The value NULL should be supplied for <em>pass</em> if the key is not
+<p>The 'key' may be encrypted with a password, in which can be supplied in
+'pass'.  The value NULL should be supplied for 'pass' if the key is not
 encrypted.</p>
 </div>
 <div class="paragraph">
@@ -546,7 +560,7 @@ same configuration.  This can be useful for specifying different parameters
 to be used for different cryptographic algorithms.</p>
 </div>
 <div class="paragraph">
-<p>The certificate located in <em>cert</em> and <em>key</em> must be NUL terminated C
+<p>The certificate located in 'cert' and 'key' must be NUL terminated C
 strings containing
 <a href="https://tools.ietf.org/html/rfc7468">PEM</a> formatted material.</p>
 </div>
@@ -571,11 +585,11 @@ strings containing
 </dd>
 <dt class="hdlist1"><code>NNG_EBUSY</code></dt>
 <dd>
-<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
+<p>The configuration 'cfg' is already in use, and cannot be modified.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EINVAL</code></dt>
 <dd>
-<p>An invalid <em>cert</em> or <em>size</em> was supplied.</p>
+<p>An invalid 'cert' or 'size' was supplied.</p>
 </dd>
 </dl>
 </div>
@@ -597,11 +611,9 @@ strings containing
 <div class="sectionbody">
 <div class="paragraph">
 <p>Copyright 2018 <a href="mailto:info@staysail.tech">Staysail Systems, Inc.</a><br>
-Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
-</div>
-<div class="paragraph">
-<p>This document is supplied under the terms of the
-<a href="https://opensource.org/licenses/MIT">MIT License</a>.</p>
+Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a><br>
+<br>
+This document is supplied under the terms of the <a href="https://opensource.org/licenses/MIT">MIT License</a>.</p>
 </div>
 </div>
 </div>
@@ -609,7 +621,7 @@ Copyright 2018 <a href="mailto:info@capitar.com">Capitar IT Group BV</a></p>
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-01-11 22:58:09 UTC
+Last updated 2018-02-02 23:43:43 UTC
 </div>
 </div>
 </body>
