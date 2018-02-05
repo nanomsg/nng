@@ -117,22 +117,22 @@ The following functions are used in the asynchronous model:
 
 |===
 |<<nng_aio_abort#,nng_aio_abort(3)>>|abort asynchronous I/O operation
-|<<nng_aio_alloc#,nng_aio_alloc(3)>>|allocate asynchronous I/O context
+|<<nng_aio_alloc#,nng_aio_alloc(3)>>|allocate asynchronous I/O handle
 |<<nng_aio_cancel#,nng_aio_cancel(3)>>|cancel asynchronous I/O operation
-|<<nng_aio_free#,nng_aio_free(3)>>|free asynchronous I/O context
-|<<nng_aio_get_input#,nng_aio_get_input(3)>>|get input parameter
+|<<nng_aio_count#,nng_aio_count(3)>>|return number of bytes transferred
+|<<nng_aio_free#,nng_aio_free(3)>>|free asynchronous I/O handle
+|<<nng_aio_get_input#,nng_aio_get_input(3)>>|return input parameter
 |<<nng_aio_get_msg#,nng_aio_get_msg(3)>>|get message from an asynchronous receive
-|<<nng_aio_get_output#,nng_aio_get_output(3)>>|get output result
-|<<nng_aio_result#,nng_aio_result(3)>>|return result from asynchronous operation
+|<<nng_aio_get_output#,nng_aio_get_output(3)>>|return output result
+|<<nng_aio_result#,nng_aio_result(3)>>|return result of asynchronous operation
 |<<nng_aio_set_input#,nng_aio_set_input(3)>>|set input parameter
 |<<nng_aio_set_iov#,nng_aio_set_iov(3)>>|set scatter/gather vector
 |<<nng_aio_set_msg#,nng_aio_set_msg(3)>>|set message for an asynchronous send
-|<<nng_aio_set_output#,nng_aio_set_input(3)>>|set output result
-|<<nng_aio_set_timeout#,nng_aio_set_timeout(3)>>|set timeout for an asynchronous send
+|<<nng_aio_set_timeout#,nng_aio_set_timeout(3)>>|set asynchronous I/O timeout
 |<<nng_aio_stop#,nng_aio_stop(3)>>|stop asynchronous I/O operation
-|<<nng_aio_wait#,nng_aio_wait(3)>>|wait for an asynchronous I/O operation
-|<<nng_recv_aio#,nng_recv_aio(3)>>|receive a message asynchronously
-|<<nng_send_aio#,nng_send_aio(3)>>|send a message asynchronously
+|<<nng_aio_wait#,nng_aio_wait(3)>>|wait for asynchronous I/O operation
+|<<nng_recv_aio#,nng_recv_aio(3)>>|receive message asynchronously
+|<<nng_send_aio#,nng_send_aio(3)>>|send message asynchronously
 |===
 
 === Protocols

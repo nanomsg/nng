@@ -1,0 +1,78 @@
+= nng_aio_alloc(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
+
+== NAME
+
+nng_aio_alloc - allocate asynchronous I/O handle
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+int nng_aio_alloc(nng_aio **aiop, void (*callb)(void *), void *arg);
+-----------
+
+
+== DESCRIPTION
+
+The `nng_aio_alloc()` function allocates a handle for asynchronous I/O
+operations, and stores a pointer to it in __aiop__.  The handle is initialized
+with a completion callback of _callb_, which will be executed when an
+associated asynchronous operation finishes.  It will be called with the
+argument _arg_.
+
+Asynchronous I/O operations all take an "aio" handle such as allocated by
+this function.  Such operations are usually started by a function that returns
+immediately.  The operation is then run asynchronously, and completes sometime
+later.  When that operation is complete, the callback supplied here is called,
+and that callback is able to determine the result of the operation using
+<<nng_aio_result#,nng_aio_result(3)>>, <<nng_aio_count#,nng_aio_count(3)>>,
+and <<nng_aio_get_output#,nng_aio_get_output(3)>>.
+
+It is possible to wait synchronously for an otherwise asynchronous operation
+by using the function <<nng_aio_wait#,nng_aio_wait(3)>>.  In that case,
+it is permissible for _callb_ and _arg_ to both be `NULL`.  Note that if
+these are `NULL`, then it will not be possible to determine when the
+operation is complete except by calling the aforementioned
+<<nng_aio_wait#,nng_aio_wait(3)>>.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient free memory to perform the operation.
+
+== SEE ALSO
+
+<<nng_aio_abort#,nng_aio_abort(3)>>,
+<<nng_aio_cancel#,nng_aio_cancel(3)>>,
+<<nng_aio_count#,nng_aio_count(3)>>,
+<<nng_aio_free#,nng_aio_free(3)>>,
+<<nng_aio_get_input#,nng_aio_get_input(3)>>,
+<<nng_aio_get_msg#,nng_aio_get_msg(3)>>,
+<<nng_aio_get_output#,nng_aio_get_output(3)>>,
+<<nng_aio_result#,nng_aio_result(3)>>,
+<<nng_aio_set_input#,nng_aio_set_input(3)>>,
+<<nng_aio_set_iov#,nng_aio_set_iov(3)>>,
+<<nng_aio_set_msg#,nng_aio_set_msg(3)>>,
+<<nng_aio_set_timeout#,nng_aio_set_timeout(3)>>,
+<<nng_aio_stop#,nng_aio_stop(3)>>,
+<<nng_aio_wait#,nng_aio_wait(3)>>,
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+{copyright}

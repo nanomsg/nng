@@ -1,0 +1,63 @@
+= nng_aio_count(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
+
+== NAME
+
+nng_aio_count - return number of bytes transferred
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+size_t nng_aio_count(nng_aio *aio);
+-----------
+
+
+== DESCRIPTION
+
+The `nng_aio_count()` returns the number of bytes transferred by the
+asynchronous operation associated with the handle _aio_. 
+
+Some asynchronous operations do not provide meaningful data for this
+function; for example operations that establish connections do not
+transfer user data (they may transfer protocol data though) -- in this case
+this function will generally return zero.
+
+This function is most useful when used with operations that make use of
+of a scatter/gather vector (set by <<nng_aio_set_iov#,nng_aio_set_iov(3)>>).
+
+NOTE: The return value from this function is undefined if the operation
+has not completed yet.   Either call this from the handle's completion
+callback, or after waiting for the operation to complete with
+<<nng_aio_wait#,nng_aio_wait(3)>>.
+
+== RETURN VALUES
+
+The number of bytes transferred by the operation.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_aio_alloc#,nng_aio_alloc(3)>>,
+<<nng_aio_result#,nng_aio_result(3)>>,
+<<nng_aio_set_iov#,nng_aio_set_iov(3)>>,
+<<nng_aio_wait#,nng_aio_wait(3)>>,
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+{copyright}
