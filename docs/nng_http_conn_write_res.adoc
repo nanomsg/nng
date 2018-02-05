@@ -37,6 +37,15 @@ the operation is signaled via the _aio_, and the final result may be
 obtained via <<nng_aio_result#,nng_aio_result>>. That result will
 either be zero or an error code.
 
+=== Persistent Connections
+
+By default, for `HTTP/1.1` connections, the connection is kept open, and
+will be reused to receive new requests.
+
+If however the _res_ contains a header of `Connection:` with a value 
+of `Close` (case-insensitive) or the response corresponds to `HTTP/1.0`,
+then the connection is immediately after sending the response.
+
 == RETURN VALUES
 
 None.

@@ -14,7 +14,7 @@ libnng - nanomsg next generation library
 
 == SYNOPSIS
 
-*cc* ['flags'] 'files' *-lnng* ['libraries']
+*cc* [_flags_] _files_ *-lnng* [_libraries_]
 
 
 == DESCRIPTION
@@ -228,6 +228,41 @@ and connections.
 | <<nng_http_res_set_reason#,nng_http_res_set_reason(3)>>|set HTTP response reason
 | <<nng_http_res_set_status#,nng_http_res_set_status(3)>>|set HTTP response status
 | <<nng_http_res_set_version#,nng_http_res_set_version(3)>>|set HTTP response protocol version
+|===
+
+==== HTTP Client Functions
+
+These functions are intended for use with HTTP client applications.
+
+|===
+| <<nng_http_client_alloc#,nng_http_client_alloc(3)>>|allocate HTTP client
+| <<nng_http_client_connect#,nng_http_client_connect(3)>>|establish HTTP client connection
+| <<nng_http_client_free#,nng_http_client_free(3)>>|free HTTP client
+| <<nng_http_client_get_tls#,nng_http_client_get_tls(3)>>|get HTTP client TLS configuration
+| <<nng_http_client_set_tls#,nng_http_client_set_tls(3)>>|set HTTP client TLS configuration
+|===
+
+==== HTTP Server Functions
+
+These functions are intended for use with HTTP server applications.
+
+|===
+| <<nng_http_handler_alloc#,nng_http_handler_alloc(3)>>|allocate HTTP server handler
+| <<nng_http_handler_free#,nng_http_handler_free(3)>>|free HTTP server handler
+| <<nng_http_handler_get_data#,nng_http_handler_get_data(3)>>|return extra data for HTTP handler
+| <<nng_http_handler_set_data#,nng_http_handler_set_data(3)>>|set extra data for HTTP handler
+| <<nng_http_handler_set_host#,nng_http_handler_set_host(3)>>|set host for HTTP handler
+| <<nng_http_handler_set_method#,nng_http_handler_set_method(3)>>|set method for HTTP handler
+| <<nng_http_handler_set_tree#,nng_http_handler_set_tree(3)>>|set HTTP handler to match trees
+| <<nng_http_hijack#,nng_http_hijack(3)>>|hijack HTTP server connection
+| <<nng_http_server_add_handler#,nng_http_server_add_handler(3)>>|add HTTP server handler
+| <<nng_http_server_del_handler#,nng_http_server_del_handler(3)>>|delete HTTP server handler
+| <<nng_http_server_get_tls#,nng_http_server_get_tls(3)>>|get HTTP server TLS configuration
+| <<nng_http_server_hold#,nng_http_server_get_tls(3)>>|get and hold HTTP server instance
+| <<nng_http_server_release#,nng_http_server_get_tls(3)>>|release HTTP server instance
+| <<nng_http_server_set_tls#,nng_http_server_set_tls(3)>>|set HTTP server TLS configuration
+| <<nng_http_server_start#,nng_http_server_start(3)>>|start HTTP server
+| <<nng_http_server_stop#,nng_http_server_stop(3)>>|stop HTTP server
 |===
 
 === TLS Configuration Objects
