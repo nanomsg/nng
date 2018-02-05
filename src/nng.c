@@ -1086,8 +1086,22 @@ nng_aio_set_timeout(nng_aio *aio, nni_duration when)
 }
 
 int
-nng_aio_set_iov(nng_aio *aio, int niov, nng_iov *iov)
+nng_aio_set_iov(nng_aio *aio, unsigned niov, const nng_iov *iov)
 {
+// We limit the niov to prevent user insanity.  This is required
+// to avoid stack allocations that might smash the stack.  The
+// assumption is that we can always put at least 1kB on the stack --
+// our nng_iov structures are 16B.  Systems without stack allocation
+// get a smaller limit, because we use an automatic variable.
+#if defined(NNG_HAVE_ALLOCA) || defined(_WIN32)
+	if (niov > 64) {
+		return (NNG_EINVAL);
+	}
+#else
+	if (niov > 16) {
+		return (NNG_EINVAL);
+	}
+#endif
 	return (nni_aio_set_iov(aio, niov, iov));
 }
 

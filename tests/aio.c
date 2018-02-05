@@ -129,6 +129,14 @@ Main({
 			})
 
 		});
+
+		Convey("We cannot set insane IOVs", {
+			nng_aio *aio;
+			nng_iov  iov;
+
+			So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+			So(nng_aio_set_iov(aio, 1024, &iov) == NNG_EINVAL);
+		});
 	});
 
 	nng_fini();

@@ -15,6 +15,7 @@
 
 #ifdef NNG_PLATFORM_WINDOWS
 
+#include <malloc.h>
 #include <stdio.h>
 
 struct nni_plat_udp {
@@ -134,11 +135,11 @@ nni_win_udp_start_rx(nni_win_event *evt, nni_aio *aio)
 {
 	int           rv;
 	SOCKET        s;
-	WSABUF        iov[4]; // XXX: consider _alloca
 	DWORD         flags;
 	nni_plat_udp *u = evt->ptr;
 	nni_iov *     aiov;
-	int           naiov;
+	unsigned      naiov;
+	WSABUF *      iov;
 
 	if ((s = u->s) == INVALID_SOCKET) {
 		evt->status = NNG_ECLOSED;
@@ -149,8 +150,13 @@ nni_win_udp_start_rx(nni_win_event *evt, nni_aio *aio)
 	u->rxsalen = sizeof(SOCKADDR_STORAGE);
 	nni_aio_get_iov(aio, &naiov, &aiov);
 
+	// This is a stack allocation- it should always succeed - or
+	// throw an exception if there is not sufficient stack space.
+	// (Turns out it can allocate from the heap, but same semantics.)
+	iov = _malloca(sizeof(*iov) * naiov);
+
 	// Put the AIOs in Windows form.
-	for (int i = 0; i < naiov; i++) {
+	for (unsigned i = 0; i < naiov; i++) {
 		iov[i].buf = aiov[i].iov_buf;
 		iov[i].len = (ULONG) aiov[i].iov_len;
 	}
@@ -163,6 +169,8 @@ nni_win_udp_start_rx(nni_win_event *evt, nni_aio *aio)
 
 	rv = WSARecvFrom(u->s, iov, (DWORD) naiov, NULL, &flags,
 	    (struct sockaddr *) &u->rxsa, &u->rxsalen, &evt->olpd, NULL);
+
+	_freea(iov);
 
 	if ((rv == SOCKET_ERROR) &&
 	    ((rv = GetLastError()) != ERROR_IO_PENDING)) {
@@ -183,12 +191,12 @@ nni_win_udp_start_tx(nni_win_event *evt, nni_aio *aio)
 {
 	int           rv;
 	SOCKET        s;
-	WSABUF        iov[4];
-	int           naiov;
+	unsigned      naiov;
 	nni_iov *     aiov;
 	nni_plat_udp *u = evt->ptr;
 	int           salen;
 	nni_sockaddr *sa;
+	WSABUF *      iov;
 
 	if ((s = u->s) == INVALID_SOCKET) {
 		evt->status = NNG_ECLOSED;
@@ -205,8 +213,11 @@ nni_win_udp_start_tx(nni_win_event *evt, nni_aio *aio)
 	}
 
 	nni_aio_get_iov(aio, &naiov, &aiov);
+
+	iov = _malloca(sizeof(*iov) * naiov);
+
 	// Put the AIOs in Windows form.
-	for (int i = 0; i < naiov; i++) {
+	for (unsigned i = 0; i < naiov; i++) {
 		iov[i].buf = aiov[i].iov_buf;
 		iov[i].len = (ULONG) aiov[i].iov_len;
 	}
@@ -218,6 +229,8 @@ nni_win_udp_start_tx(nni_win_event *evt, nni_aio *aio)
 
 	rv = WSASendTo(u->s, iov, (DWORD) naiov, NULL, 0,
 	    (struct sockaddr *) &u->txsa, salen, &evt->olpd, NULL);
+
+	_freea(iov);
 
 	if ((rv == SOCKET_ERROR) &&
 	    ((rv = GetLastError()) != ERROR_IO_PENDING)) {

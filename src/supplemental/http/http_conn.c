@@ -145,7 +145,7 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 	int      rv;
 	bool     raw = false;
 	nni_iov *iov;
-	int      niov;
+	unsigned niov;
 
 	rbuf += conn->rd_get;
 
@@ -274,7 +274,7 @@ http_rd_cb(void *arg)
 	nni_aio *      uaio;
 	size_t         cnt;
 	int            rv;
-	int            niov;
+	unsigned       niov;
 	nni_iov *      iov;
 
 	nni_mtx_lock(&conn->mtx);
@@ -377,7 +377,7 @@ http_wr_start(nni_http_conn *conn)
 {
 	nni_aio *aio;
 	nni_iov *iov;
-	int      niov;
+	unsigned niov;
 
 	if ((aio = conn->wr_uaio) == NULL) {
 		if ((aio = nni_list_first(&conn->wrq)) == NULL) {

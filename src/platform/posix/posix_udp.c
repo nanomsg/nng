@@ -63,7 +63,7 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 	// While we're able to recv, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
 		struct iovec            iov[4];
-		int                     niov;
+		unsigned                niov;
 		nni_iov *               aiov;
 		struct sockaddr_storage ss;
 		nng_sockaddr *          sa;
@@ -73,7 +73,7 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 
 		nni_aio_get_iov(aio, &niov, &aiov);
 
-		for (int i = 0; i < niov; i++) {
+		for (unsigned i = 0; i < niov; i++) {
 			iov[i].iov_base = aiov[i].iov_buf;
 			iov[i].iov_len  = aiov[i].iov_len;
 		}
@@ -123,13 +123,28 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 			rv = NNG_EADDRINVAL;
 		} else {
 			struct msghdr hdr;
-			struct iovec  iov[4];
-			int           niov;
+			unsigned      niov;
 			nni_iov *     aiov;
+#ifdef NNG_HAVE_ALLOCA
+			struct iovec *iov;
+#else
+			struct iovec iov[16];
+#endif
 
 			nni_aio_get_iov(aio, &niov, &aiov);
+#ifdef NNG_HAVE_ALLOCA
+			if (niov > 64) {
+				rv = NNG_EINVAL;
+			} else {
+				iov = alloca(niov * sizeof(*iov));
+			}
+#else
+			if (niov > NNI_NUM_ELEMENTS(iov)) {
+				rv = NNG_EINVAL;
+			}
+#endif
 
-			for (int i = 0; i < niov; i++) {
+			for (unsigned i = 0; i < niov; i++) {
 				iov[i].iov_base = aiov[i].iov_buf;
 				iov[i].iov_len  = aiov[i].iov_len;
 			}

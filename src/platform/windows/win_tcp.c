@@ -12,6 +12,7 @@
 
 #ifdef NNG_PLATFORM_WINDOWS
 
+#include <malloc.h>
 #include <stdio.h>
 
 struct nni_plat_tcp_pipe {
@@ -101,15 +102,16 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 {
 	int                rv;
 	SOCKET             s;
-	WSABUF             iov[4]; // XXX: consider _alloca()
 	DWORD              niov;
 	DWORD              flags;
 	nni_plat_tcp_pipe *pipe = evt->ptr;
 	int                i;
-	int                naiov;
+	unsigned           naiov;
 	nni_iov *          aiov;
+	WSABUF *           iov;
 
 	nni_aio_get_iov(aio, &naiov, &aiov);
+	iov = _malloca(naiov * sizeof(*iov));
 
 	// Put the AIOs in Windows form.
 	for (niov = 0, i = 0; i < naiov; i++) {
@@ -121,6 +123,7 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 	}
 
 	if ((s = pipe->s) == INVALID_SOCKET) {
+		_freea(iov);
 		evt->status = NNG_ECLOSED;
 		evt->count  = 0;
 		return (1);
@@ -136,6 +139,7 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 	} else {
 		rv = WSARecv(s, iov, niov, NULL, &flags, &evt->olpd, NULL);
 	}
+	_freea(iov);
 
 	if ((rv == SOCKET_ERROR) &&
 	    ((rv = GetLastError()) != ERROR_IO_PENDING)) {

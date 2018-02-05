@@ -69,14 +69,32 @@ nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 	nni_aio *aio;
 
 	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
-		int          i;
-		int          n;
-		struct iovec iovec[4];
-		int          niov;
-		int          naiov;
-		nni_iov *    aiov;
+		unsigned i;
+		int      n;
+		int      niov;
+		unsigned naiov;
+		nni_iov *aiov;
+#ifdef NNG_HAVE_ALLOCA
+		struct iovec *iovec;
+#else
+		struct iovec iovec[16];
+#endif
 
 		nni_aio_get_iov(aio, &naiov, &aiov);
+
+#ifdef NNG_HAVE_ALLOCA
+		if (naiov > 64) {
+			nni_posix_pipedesc_finish(aio, NNG_EINVAL);
+			continue;
+		}
+		iovec = alloca(naiov * sizeof(*iovec));
+#else
+		if (naiov > NNI_NUM_ELEMENTS(iovec)) {
+			nni_posix_pipedesc_finish(aio, NNG_EINVAL);
+			continue;
+		}
+#endif
+
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len > 0) {
 				iovec[niov].iov_len  = aiov[i].iov_len;
@@ -112,14 +130,30 @@ nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 	nni_aio *aio;
 
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
-		int          i;
-		int          n;
-		struct iovec iovec[4];
-		int          niov;
-		int          naiov;
-		nni_iov *    aiov;
+		unsigned i;
+		int      n;
+		int      niov;
+		unsigned naiov;
+		nni_iov *aiov;
+#ifdef NNG_HAVE_ALLOCA
+		struct iovec *iovec;
+#else
+		struct iovec iovec[16];
+#endif
 
 		nni_aio_get_iov(aio, &naiov, &aiov);
+#ifdef NNG_HAVE_ALLOCA
+		if (naiov > 64) {
+			nni_posix_pipedesc_finish(aio, NNG_EINVAL);
+			continue;
+		}
+		iovec = alloca(naiov * sizeof(*iovec));
+#else
+		if (naiov > NNI_NUM_ELEMENTS(iovec)) {
+			nni_posix_pipedesc_finish(aio, NNG_EINVAL);
+			continue;
+		}
+#endif
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
 				iovec[niov].iov_len  = aiov[i].iov_len;

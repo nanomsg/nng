@@ -147,7 +147,7 @@ nni_aio_fini(nni_aio *aio)
 }
 
 int
-nni_aio_set_iov(nni_aio *aio, int niov, const nni_iov *iov)
+nni_aio_set_iov(nni_aio *aio, unsigned niov, const nni_iov *iov)
 {
 	if ((niov > NNI_NUM_ELEMENTS(aio->a_iovinl)) &&
 	    (niov > aio->a_niovalloc)) {
@@ -584,7 +584,7 @@ nni_aio_set_prov_extra(nni_aio *aio, unsigned index, void *data)
 }
 
 void
-nni_aio_get_iov(nni_aio *aio, int *niovp, nni_iov **iovp)
+nni_aio_get_iov(nni_aio *aio, unsigned *niovp, nni_iov **iovp)
 {
 	*niovp = aio->a_niov;
 	*iovp  = aio->a_iov;

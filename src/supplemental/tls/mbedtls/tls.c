@@ -642,11 +642,11 @@ nni_tls_do_send(nni_tls *tp)
 		uint8_t *buf = NULL;
 		size_t   len = 0;
 		nni_iov *iov;
-		int      niov;
+		unsigned niov;
 
 		nni_aio_get_iov(aio, &niov, &iov);
 
-		for (int i = 0; i < niov; i++) {
+		for (unsigned i = 0; i < niov; i++) {
 			if (iov[i].iov_len != 0) {
 				buf = iov[i].iov_buf;
 				len = iov[i].iov_len;
@@ -688,11 +688,11 @@ nni_tls_do_recv(nni_tls *tp)
 		uint8_t *buf = NULL;
 		size_t   len = 0;
 		nni_iov *iov;
-		int      niov;
+		unsigned niov;
 
 		nni_aio_get_iov(aio, &niov, &iov);
 
-		for (int i = 0; i < niov; i++) {
+		for (unsigned i = 0; i < niov; i++) {
 			if (iov[i].iov_len != 0) {
 				buf = iov[i].iov_buf;
 				len = iov[i].iov_len;

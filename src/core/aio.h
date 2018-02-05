@@ -147,10 +147,10 @@ extern size_t nni_aio_iov_advance(nni_aio *, size_t);
 // nni_aio_iov_count returns the number of bytes referenced by the aio's iov.
 extern size_t nni_aio_iov_count(nni_aio *);
 
-extern int nni_aio_set_iov(nni_aio *, int, const nni_iov *);
+extern int nni_aio_set_iov(nni_aio *, unsigned, const nni_iov *);
 
 extern void nni_aio_set_timeout(nni_aio *, nng_duration);
-extern void nni_aio_get_iov(nni_aio *, int *, nni_iov **);
+extern void nni_aio_get_iov(nni_aio *, unsigned *, nni_iov **);
 extern void nni_aio_normalize_timeout(nni_aio *, nng_duration);
 extern void nni_aio_bump_count(nni_aio *, size_t);
 

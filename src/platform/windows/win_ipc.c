@@ -59,8 +59,8 @@ nni_win_ipc_pipe_start(nni_win_event *evt, nni_aio *aio)
 	BOOL               ok;
 	int                rv;
 	nni_plat_ipc_pipe *pipe = evt->ptr;
-	int                idx;
-	int                naiov;
+	unsigned           idx;
+	unsigned           naiov;
 	nni_iov *          aiov;
 
 	NNI_ASSERT(aio != NULL);
