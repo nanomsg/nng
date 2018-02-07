@@ -18,6 +18,7 @@ int
 nng_http_req_alloc(nng_http_req **reqp, const nng_url *url)
 {
 #ifdef NNG_SUPP_HTTP
+	nni_init();
 	return (nni_http_req_alloc(reqp, url));
 #else
 	NNI_ARG_UNUSED(reqp);
@@ -50,6 +51,7 @@ int
 nng_http_res_alloc(nng_http_res **resp)
 {
 #ifdef NNG_SUPP_HTTP
+	nni_init();
 	return (nni_http_res_alloc(resp));
 #else
 	NNI_ARG_UNUSED(resp);
@@ -60,6 +62,7 @@ nng_http_res_alloc(nng_http_res **resp)
 int
 nng_http_res_alloc_error(nng_http_res **resp, uint16_t code)
 {
+	nni_init();
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_res_alloc_error(resp, code));
 #else
@@ -481,6 +484,7 @@ nng_http_handler_alloc(
     nng_http_handler **hp, const char *uri, void (*cb)(nng_aio *))
 {
 #ifdef NNG_SUPP_HTTP
+	nni_init();
 	return (nni_http_handler_init(hp, uri, cb));
 #else
 	NNI_ARG_UNUSED(hp);
@@ -596,6 +600,7 @@ int
 nng_http_server_hold(nng_http_server **srvp, const nng_url *url)
 {
 #ifdef NNG_SUPP_HTTP
+	nni_init();
 	return (nni_http_server_init(srvp, url));
 #else
 	NNI_ARG_UNUSED(srvp);
@@ -685,6 +690,7 @@ int
 nng_http_client_alloc(nng_http_client **clip, const nng_url *url)
 {
 #ifdef NNG_SUPP_HTTP
+	nni_init();
 	return (nni_http_client_init(clip, url));
 #else
 	NNI_ARG_UNUSED(clip);
