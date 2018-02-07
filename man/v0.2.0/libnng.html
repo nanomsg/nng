@@ -539,7 +539,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_synopsis">SYNOPSIS</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><strong>cc</strong> ['flags'] 'files' <strong>-lnng</strong> ['libraries']</p>
+<p><strong>cc</strong> [<em>flags</em>] <em>files</em> <strong>-lnng</strong> [<em>libraries</em>]</p>
 </div>
 </div>
 </div>
@@ -815,6 +815,10 @@ be associated with an <em>aio</em> at any time.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return number of bytes transferred</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_finish.html">nng_aio_finish(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">finish an asynchronous I/O operation</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_free.html">nng_aio_free(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">free asynchronous I/O handle</p></td>
 </tr>
@@ -845,6 +849,10 @@ be associated with an <em>aio</em> at any time.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_msg.html">nng_aio_set_msg(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set message for an asynchronous send</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_output.html">nng_aio_set_output(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set output result</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_timeout.html">nng_aio_set_timeout(3)</a></p></td>
@@ -1160,6 +1168,118 @@ and connections.</p>
 </tbody>
 </table>
 </div>
+<div class="sect3">
+<h4 id="_http_client_functions">HTTP Client Functions</h4>
+<div class="paragraph">
+<p>These functions are intended for use with HTTP client applications.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_alloc.html">nng_http_client_alloc(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP client</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_connect.html">nng_http_client_connect(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">establish HTTP client connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_free.html">nng_http_client_free(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP client</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_get_tls.html">nng_http_client_get_tls(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP client TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_set_tls.html">nng_http_client_set_tls(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP client TLS configuration</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_server_functions">HTTP Server Functions</h4>
+<div class="paragraph">
+<p>These functions are intended for use with HTTP server applications.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_alloc.html">nng_http_handler_alloc(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_free.html">nng_http_handler_free(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_get_data.html">nng_http_handler_get_data(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return extra data for HTTP handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_set_data.html">nng_http_handler_set_data(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set extra data for HTTP handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_set_host.html">nng_http_handler_set_host(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set host for HTTP handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_set_method.html">nng_http_handler_set_method(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP handler method</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_set_tree.html">nng_http_handler_set_tree(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP handler to match trees</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_hijack.html">nng_http_hijack(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">hijack HTTP server connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_add_handler.html">nng_http_server_add_handler(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">add HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_del_handler.html">nng_http_server_del_handler(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">delete HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_get_tls.html">nng_http_server_get_tls(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP server TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_hold.html">nng_http_server_get_tls(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get and hold HTTP server instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_release.html">nng_http_server_get_tls(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">release HTTP server instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_set_tls.html">nng_http_server_set_tls(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP server TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_start.html">nng_http_server_start(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">start HTTP server</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_stop.html">nng_http_server_stop(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stop HTTP server</p></td>
+</tr>
+</tbody>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_tls_configuration_objects">TLS Configuration Objects</h3>
@@ -1247,7 +1367,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-05 19:17:15 UTC
+Last updated 2018-02-07 00:07:10 UTC
 </div>
 </div>
 </body>

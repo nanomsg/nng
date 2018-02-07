@@ -512,7 +512,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#_persistent_connections">Persistent Connections</a></li>
+</ul>
+</li>
 <li><a href="#_return_values">RETURN VALUES</a></li>
 <li><a href="#_errors">ERRORS</a></li>
 <li><a href="#_see_also">SEE ALSO</a></li>
@@ -554,6 +558,18 @@ response body can be set with
 the operation is signaled via the <em>aio</em>, and the final result may be
 obtained via <a href="nng_aio_result.html">nng_aio_result</a>. That result will
 either be zero or an error code.</p>
+</div>
+<div class="sect2">
+<h3 id="_persistent_connections">Persistent Connections</h3>
+<div class="paragraph">
+<p>By default, for <code>HTTP/1.1</code> connections, the connection is kept open, and
+will be reused to receive new requests.</p>
+</div>
+<div class="paragraph">
+<p>If however the <em>res</em> contains a header of <code>Connection:</code> with a value
+of <code>Close</code> (case-insensitive) or the response corresponds to <code>HTTP/1.0</code>,
+then the connection is immediately after sending the response.</p>
+</div>
 </div>
 </div>
 </div>
@@ -627,7 +643,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-03 00:59:26 UTC
+Last updated 2018-02-05 23:27:31 UTC
 </div>
 </div>
 </body>

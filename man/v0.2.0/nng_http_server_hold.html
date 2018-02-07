@@ -13,7 +13,7 @@ layout: default
 Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] +
  +
 This document is supplied under the terms of the https://opensource.org/licenses/MIT[MIT License].">
-<title>nng_aio_set_input(3)</title>
+<title>nng_http_server_hold(3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -507,7 +507,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_aio_set_input(3) Manual Page</h1>
+<h1>nng_http_server_hold(3) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -521,7 +521,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_aio_set_input - set input parameter</p>
+<p>nng_http_server_hold - get and hold HTTP server instance</p>
 </div>
 </div>
 <div id="content">
@@ -532,7 +532,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">void</span> <span class="tok-nf">nng_aio_set_input</span><span class="tok-p">(</span><span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">,</span> <span class="tok-kt">unsigned</span> <span class="tok-kt">int</span> <span class="tok-n">index</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">param</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_http_server_hold</span><span class="tok-p">(</span><span class="tok-n">nng_http_server</span> <span class="tok-o">**</span><span class="tok-n">serverp</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-n">nng_url</span> <span class="tok-o">*</span><span class="tok-n">url</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -541,18 +541,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_aio_set_input()</code> function sets the input parameter at <em>index</em>
-to <em>param</em> for the asynchronous operation associated with <em>aio</em>.</p>
+<p>The <code>nng_http_server_hold()</code> acquires an instance of an HTTP server suitable
+for use in serving the URL identified by <em>url</em>, and stores a pointer to it
+at the location pointed to by <em>serverp</em>.</p>
 </div>
 <div class="paragraph">
-<p>The type and semantics of input parameters are determined by specific
-operations; the caller must supply appropriate inputs for the operation
-to be performed.</p>
+<p>This function first looks to see if an existing HTTP server instance exists,
+that is suitable for this.  If so, it increments the reference count on it
+and uses that.  Otherwise, it will attempt to create a new server instance
+with an initial reference count of one (1).</p>
 </div>
 <div class="paragraph">
-<p>The valid values of <em>index</em> range from zero (0) to three (3), as no operation
-currently defined can accept more than four parameters.  (This limit could
-increase in the future.)</p>
+<p>The server instance is not started, and can have additional configuration
+applied to it before it is later started with
+<a href="nng_http_server_start.html">nng_http_server_start(3)</a>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -561,29 +563,13 @@ increase in the future.)</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-If the <em>index</em> does not correspond to a defined input for the operation,
-then this function will have no effect.  Note that attempts to set
-parameters with an <em>index</em> greater than three (3) will simply be ignored.
+The URL matching logic in determining servers is unable to distinguish
+between different aliases for the same local IP address.  This may create
+problems when using URLs for virtual hosting.  It is recommended to use
+canonical IP addresses or names in the <em>url</em> to avoid confusion.
 </td>
 </tr>
 </table>
-</div>
-<div class="admonitionblock caution">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-caution" title="Caution"></i>
-</td>
-<td class="content">
-It is an error to call this function while the <em>aio</em> is currently
-in use by an active asynchronous operation.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>An input parameter set with this function may be retrieved later with
-the <a href="nng_aio_get_input.html">nng_aio_get_input(3)</a> function.</p>
 </div>
 </div>
 </div>
@@ -591,15 +577,24 @@ the <a href="nng_aio_get_input.html">nng_aio_get_input(3)</a> function.</p>
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>None.</p>
+<p>This function returns 0 on success, and non-zero otherwise.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>None.</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
+<dd>
+<p>Insufficient free memory exists.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
+<dd>
+<p>HTTP not supported.</p>
+</dd>
+</dl>
 </div>
 </div>
 </div>
@@ -607,10 +602,11 @@ the <a href="nng_aio_get_input.html">nng_aio_get_input(3)</a> function.</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng_aio_alloc.html">nng_aio_alloc(3)</a>,
-<a href="nng_aio_get_input.html">nng_aio_get_input(3)</a>,
-<a href="nng_aio_get_output.html">nng_aio_get_output(3)</a>,
-<a href="nng_aio_result.html">nng_aio_result(3)</a>,
+<p><a href="nng_http_server_add_handler.html">nng_http_server_add_handler(3)</a>,
+<a href="nng_http_server_release.html">nng_http_server_release(3)</a>,
+<a href="nng_http_server_stop.html">nng_http_server_stop(3)</a>,
+<a href="nng_url_parse.html">nng_url_parse(3)</a>
+<a href="nng_strerror.html">nng_strerror(3)</a>,
 <a href="nng.html">nng(7)</a></p>
 </div>
 </div>
