@@ -1,0 +1,42 @@
+= http_client
+
+This is a very simple HTTP client.  It only performs HTTP GET
+operations, and does not follow HTTP redirects.  Think of it as
+a trivialized version of cURL.  It is super simple, taking the
+URL on the command line, and emitting the results to stdout.
+
+For clarity, we are eliding TLS support.
+
+It may not work on all systems, but it should work anywhere that
+ both the standard C library and nng itself are available.
+
+We check for errors, but no effort is made to clean up resources,
+since this program just exits.  In longer running programs or libraries,
+callers should take care to clean up things that they allocate.
+
+Unfortunately many famous sites use redirects (usually to HTTPS
+sites), so it's not a very useful replacement for cURL.
+
+== Compiling
+
+The following is an example typical of UNIX and similar systems like
+Linux and macOS:
+
+[source, bash]
+----
+% export CPPFLAGS="-I /usr/local/include"
+% export LDFLAGS="-L /usr/local/lib -lnng"
+% export CC="cc"
+% ${CC} ${CPPFLAGS} http_client.c -o http_client ${LDFLAGS}
+----
+
+== Running
+
+Make sure you specify the full URL (if the root page include
+the simple "/".  The URL parser does not add it for you automatically.)
+
+[source, bash]
+----
+% ./http_client http://httpbin.org/ip
+----
+
