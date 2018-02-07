@@ -37,7 +37,7 @@ increase in the future.)
 
 NOTE: If the _index_ does not correspond to a defined input for the operation,
 then this function will have no effect.  Note that attempts to set
-parameters with an index greater than three (3) will simply be ignored.
+parameters with an _index_ greater than three (3) will simply be ignored.
 
 CAUTION: It is an error to call this function while the _aio_ is currently
 in use by an active asynchronous operation.

@@ -1,0 +1,66 @@
+= nng_http_server_hold(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
+
+== NAME
+
+nng_http_server_hold - get and hold HTTP server instance
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+int nng_http_server_hold(nng_http_server **serverp, const nng_url *url);
+-----------
+
+
+== DESCRIPTION
+
+The `nng_http_server_hold()` acquires an instance of an HTTP server suitable
+for use in serving the URL identified by _url_, and stores a pointer to it
+at the location pointed to by _serverp_.
+
+This function first looks to see if an existing HTTP server instance exists,
+that is suitable for this.  If so, it increments the reference count on it
+and uses that.  Otherwise, it will attempt to create a new server instance
+with an initial reference count of one (1).
+
+The server instance is not started, and can have additional configuration
+applied to it before it is later started with
+<<nng_http_server_start#,nng_http_server_start(3)>>.
+
+NOTE: The URL matching logic in determining servers is unable to distinguish
+between different aliases for the same local IP address.  This may create
+problems when using URLs for virtual hosting.  It is recommended to use
+canonical IP addresses or names in the _url_ to avoid confusion.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient free memory exists.
+`NNG_ENOTSUP`:: HTTP not supported.
+
+== SEE ALSO
+
+<<nng_http_server_add_handler#,nng_http_server_add_handler(3)>>,
+<<nng_http_server_release#,nng_http_server_release(3)>>,
+<<nng_http_server_stop#,nng_http_server_stop(3)>>,
+<<nng_url_parse#,nng_url_parse(3)>>
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+{copyright}

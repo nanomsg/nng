@@ -1,0 +1,62 @@
+= nng_aio_set_output(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
+
+== NAME
+
+nng_aio_set_output - set output result
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+void nng_aio_set_output(nng_aio *aio, unsigned int index, void *result);
+-----------
+
+== DESCRIPTION
+
+The `nng_aio_set_output()` function sets the output result at _index_ 
+to _result_ for the asynchronous operation associated with _aio_.
+
+The type and semantics of output results are determined by specific
+operations; the operation must supply appropriate output results when
+the operation completes successfully.
+
+The valid values of _index_ range from zero (0) to three (3), as no operation
+currently defined can return more than four results.  (This limit could
+increase in the future.)
+
+NOTE:  Note that attempts to set results with an _index_ greater than
+three (3) will be ignored.
+
+An output result set with this function may be retrieved later with
+the <<nng_aio_get_output#,nng_aio_get_output(3)>> function.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_aio_alloc#,nng_aio_alloc(3)>>,
+<<nng_aio_finish#,nng_aio_finish(3)>>,
+<<nng_aio_get_output#,nng_aio_get_output(3)>>,
+<<nng_aio_result#,nng_aio_result(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+{copyright}
