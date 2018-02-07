@@ -1136,6 +1136,13 @@ nng_aio_get_output(nng_aio *aio, unsigned index)
 	return (nni_aio_get_output(aio, index));
 }
 
+void
+nng_aio_finish(nng_aio *aio, int rv)
+{
+	// Preserve the count.
+	return (nni_aio_finish(aio, rv, nni_aio_count(aio)));
+}
+
 #if 0
 int
 nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)

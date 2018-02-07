@@ -336,6 +336,13 @@ NNG_DECL void nng_aio_set_timeout(nng_aio *, nng_duration);
 // to succeed if n <= 4, otherwise it may fail due to NNG_ENOMEM.
 NNG_DECL int nng_aio_set_iov(nng_aio *, unsigned, const nng_iov *);
 
+// nng_aio_finish is used to "finish" an asynchronous operation.
+// It should only be called by "providers" (such as HTTP server API users).
+// The argument is the value that nng_aio_result() should return.
+// IMPORTANT: Callers must ensure that this is called EXACTLY ONCE on any
+// given aio.
+NNG_DECL void nng_aio_finish(nng_aio *, int);
+
 // Message API.
 NNG_DECL int   nng_msg_alloc(nng_msg **, size_t);
 NNG_DECL void  nng_msg_free(nng_msg *);
