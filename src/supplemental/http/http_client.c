@@ -44,7 +44,7 @@ http_conn_done(void *arg)
 
 	nni_mtx_lock(&c->mtx);
 	rv = nni_aio_result(c->connaio);
-	p  = rv == 0 ? nni_aio_get_pipe(c->connaio) : NULL;
+	p  = rv == 0 ? nni_aio_get_output(c->connaio, 0) : NULL;
 	if ((aio = nni_list_first(&c->aios)) == NULL) {
 		if (p != NULL) {
 			nni_plat_tcp_pipe_fini(p);

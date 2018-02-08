@@ -1140,7 +1140,7 @@ void
 nng_aio_finish(nng_aio *aio, int rv)
 {
 	// Preserve the count.
-	return (nni_aio_finish(aio, rv, nni_aio_count(aio)));
+	nni_aio_finish(aio, rv, nni_aio_count(aio));
 }
 
 #if 0

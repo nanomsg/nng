@@ -364,7 +364,7 @@ nni_ep_con_cb(void *arg)
 	int      rv;
 
 	if ((rv = nni_aio_result(aio)) == 0) {
-		rv = nni_pipe_create(ep, nni_aio_get_pipe(aio));
+		rv = nni_pipe_create(ep, nni_aio_get_output(aio, 0));
 	}
 	nni_mtx_lock(&ep->ep_mtx);
 	switch (rv) {
@@ -448,7 +448,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 
 	// As we're synchronous, we also have to handle the completion.
 	if (((rv = nni_aio_result(aio)) != 0) ||
-	    ((rv = nni_pipe_create(ep, nni_aio_get_pipe(aio))) != 0)) {
+	    ((rv = nni_pipe_create(ep, nni_aio_get_output(aio, 0))) != 0)) {
 		nni_mtx_lock(&ep->ep_mtx);
 		ep->ep_started = 0;
 		nni_mtx_unlock(&ep->ep_mtx);
@@ -464,8 +464,8 @@ nni_ep_acc_cb(void *arg)
 	int      rv;
 
 	if ((rv = nni_aio_result(aio)) == 0) {
-		NNI_ASSERT(nni_aio_get_pipe(aio) != NULL);
-		rv = nni_pipe_create(ep, nni_aio_get_pipe(aio));
+		NNI_ASSERT(nni_aio_get_output(aio, 0) != NULL);
+		rv = nni_pipe_create(ep, nni_aio_get_output(aio, 0));
 	}
 
 	nni_mtx_lock(&ep->ep_mtx);
@@ -503,7 +503,6 @@ nni_ep_acc_start(nni_ep *ep)
 	if (ep->ep_closing) {
 		return;
 	}
-	nni_aio_set_pipe(aio, NULL);
 	ep->ep_ops.ep_accept(ep->ep_data, aio);
 }
 

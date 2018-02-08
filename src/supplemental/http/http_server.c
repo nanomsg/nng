@@ -719,7 +719,7 @@ http_server_acccb(void *arg)
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
-	tcp = nni_aio_get_pipe(aio);
+	tcp = nni_aio_get_output(aio, 0);
 	if (s->closed) {
 		// If we're closing, then reject this one.
 		nni_plat_tcp_pipe_fini(tcp);

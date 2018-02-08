@@ -105,7 +105,7 @@ nni_win_tcp_pipe_start(nni_win_event *evt, nni_aio *aio)
 	DWORD              niov;
 	DWORD              flags;
 	nni_plat_tcp_pipe *pipe = evt->ptr;
-	int                i;
+	unsigned           i;
 	unsigned           naiov;
 	nni_iov *          aiov;
 	WSABUF *           iov;
@@ -469,7 +469,8 @@ nni_win_tcp_acc_finish(nni_win_event *evt, nni_aio *aio)
 	memcpy(&pipe->sockname, sa1, len1);
 	memcpy(&pipe->peername, sa2, len2);
 
-	nni_aio_finish_pipe(aio, pipe);
+	nni_aio_set_output(aio, 0, pipe);
+	nni_aio_finish(aio, 0, 0);
 }
 
 static int
@@ -512,7 +513,6 @@ nni_win_tcp_acc_start(nni_win_event *evt, nni_aio *aio)
 void
 nni_plat_tcp_ep_accept(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
-	nni_aio_set_pipe(aio, NULL);
 	nni_win_event_submit(&ep->acc_ev, aio);
 }
 
@@ -562,7 +562,8 @@ nni_win_tcp_con_finish(nni_win_event *evt, nni_aio *aio)
 	len = sizeof(pipe->sockname);
 	(void) getsockname(s, (SOCKADDR *) &pipe->sockname, &len);
 
-	nni_aio_finish_pipe(aio, pipe);
+	nni_aio_set_output(aio, 0, pipe);
+	nni_aio_finish(aio, 0, 0);
 }
 
 static int
@@ -632,7 +633,6 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 extern void
 nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
-	nni_aio_set_pipe(aio, NULL);
 	nni_win_event_submit(&ep->con_ev, aio);
 }
 

@@ -1174,7 +1174,8 @@ ws_http_cb_listener(nni_ws *ws, nni_aio *aio)
 	ws->ready = true;
 	if ((aio = nni_list_first(&l->aios)) != NULL) {
 		nni_list_remove(&l->aios, aio);
-		nni_aio_finish_pipe(aio, ws);
+		nni_aio_set_output(aio, 0, ws);
+		nni_aio_finish(aio, 0, 0);
 	} else {
 		nni_list_append(&l->pend, ws);
 	}
@@ -1269,7 +1270,8 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 	nni_list_remove(&d->wspend, ws);
 	ws->ready   = true;
 	ws->useraio = NULL;
-	nni_aio_finish_pipe(uaio, ws);
+	nni_aio_set_output(uaio, 0, ws);
+	nni_aio_finish(uaio, 0, 0);
 	nni_mtx_unlock(&d->mtx);
 	return;
 err:
@@ -1621,7 +1623,8 @@ nni_ws_listener_accept(nni_ws_listener *l, nni_aio *aio)
 	}
 	if ((ws = nni_list_first(&l->pend)) != NULL) {
 		nni_list_remove(&l->pend, ws);
-		nni_aio_finish_pipe(aio, ws);
+		nni_aio_set_output(aio, 0, ws);
+		nni_aio_finish(aio, 0, 0);
 	} else {
 		nni_list_append(&l->aios, aio);
 	}

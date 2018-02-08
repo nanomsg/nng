@@ -631,19 +631,19 @@ nni_tcp_ep_finish(nni_tcp_ep *ep)
 	if ((rv = nni_aio_result(ep->aio)) != 0) {
 		goto done;
 	}
-	NNI_ASSERT(nni_aio_get_pipe(ep->aio) != NULL);
+	NNI_ASSERT(nni_aio_get_output(ep->aio, 0) != NULL);
 
 	// Attempt to allocate the parent pipe.  If this fails we'll
 	// drop the connection (ENOMEM probably).
-	rv = nni_tcp_pipe_init(&pipe, ep, nni_aio_get_pipe(ep->aio));
+	rv = nni_tcp_pipe_init(&pipe, ep, nni_aio_get_output(ep->aio, 0));
 
 done:
-	nni_aio_set_pipe(ep->aio, NULL);
 	aio          = ep->user_aio;
 	ep->user_aio = NULL;
 
 	if ((aio != NULL) && (rv == 0)) {
-		nni_aio_finish_pipe(aio, pipe);
+		nni_aio_set_output(aio, 0, pipe);
+		nni_aio_finish(aio, 0, 0);
 		return;
 	}
 	if (pipe != NULL) {

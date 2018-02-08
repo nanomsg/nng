@@ -52,20 +52,20 @@ ip6tostr(void *addr)
 // the normal assumptions on Linux do *not* hold true.
 #if 0
 	    Convey("Localhost IPv6 resolves", {
-		    nni_aio aio;
-		    memset(&aio, 0, sizeof (aio));
+		    nng_aio *aio;
 		    const char *str;
-		    nni_aio_init(&aio, NULL, NULL);
+		    nng_sockaddr sa;
+		    So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+		    So(nng_aio_set_input(aio, 0, &sa) == 0);
 		    nni_plat_tcp_resolv("localhost", "80", NNG_AF_INET6, 1,
-		    &aio);
-		    nni_aio_wait(&aio);
-		    So(nni_aio_result(&aio) == 0);
-		    So(aio.a_naddrs == 1);
-		    So(aio.a_addrs[0].s_un.s_in6.sa_family == NNG_AF_INET6);
-		    So(aio.a_addrs[0].s_un.s_in6.sa_port == ntohs(80));
-		    str = ip6tostr(&aio.a_addrs[0].s_un.s_in6.sa_addr);
+		    aio);
+		    nng_aio_wait(aio);
+		    So(nng_aio_result(aio) == 0);
+		    So(sa.s_un.s_in6.sa_family == NNG_AF_INET6);
+		    So(sa.s_un.s_in6.sa_port == ntohs(80));
+		    str = ip6tostr(&sa.s_un.s_in6.sa_addr);
 		    So(strcmp(str, "::1") == 0);
-		    nni_aio_fini(&aio);
+		    nng_aio_free(aio);
 	    }
 #endif
 

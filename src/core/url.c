@@ -284,7 +284,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		rv = NNG_ENOMEM;
 		goto error;
 	}
-	for (int i = 0; i < len; i++) {
+	for (size_t i = 0; i < len; i++) {
 		url->u_scheme[i] = tolower(s[i]);
 	}
 	url->u_scheme[len] = '\0';
@@ -334,7 +334,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	}
 	// Copy the host portion, but make it lower case (hostnames are
 	// case insensitive).
-	for (int i = 0; i < len; i++) {
+	for (size_t i = 0; i < len; i++) {
 		url->u_host[i] = tolower(s[i]);
 	}
 	url->u_host[len] = '\0';

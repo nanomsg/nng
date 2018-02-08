@@ -74,7 +74,8 @@ nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
 	if (rv != 0) {
 		nni_aio_finish_error(aio, rv);
 	} else {
-		nni_aio_finish_pipe(aio, pd);
+		nni_aio_set_output(aio, 0, pd);
+		nni_aio_finish(aio, 0, 0);
 	}
 }
 
@@ -317,7 +318,6 @@ nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
 	// connection is ready for us.  There isn't anything else for us to
 	// do really, as that will have been done in listen.
 	nni_mtx_lock(&ed->mtx);
-	nni_aio_set_pipe(aio, NULL);
 	// If we can't start, it means that the AIO was stopped.
 	if ((rv = nni_aio_start(aio, nni_posix_epdesc_cancel, ed)) != 0) {
 		nni_mtx_unlock(&ed->mtx);
@@ -343,7 +343,6 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 	int fd;
 
 	nni_mtx_lock(&ed->mtx);
-	nni_aio_set_pipe(aio, NULL);
 	// If we can't start, it means that the AIO was stopped.
 	if ((rv = nni_aio_start(aio, nni_posix_epdesc_cancel, ed)) != 0) {
 		nni_mtx_unlock(&ed->mtx);

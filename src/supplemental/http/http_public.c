@@ -737,7 +737,7 @@ void
 nng_http_client_connect(nng_http_client *cli, nng_aio *aio)
 {
 #ifdef NNG_SUPP_HTTP
-	return (nni_http_client_connect(cli, aio));
+	nni_http_client_connect(cli, aio);
 #else
 	NNI_ARG_UNUSED(cli);
 	if (nni_aio_start(aio, NULL, NULL)) {

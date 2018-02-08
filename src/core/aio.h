@@ -78,8 +78,6 @@ extern void *nni_aio_get_output(nni_aio *, int);
 // XXX: These should be refactored in terms of generic inputs and outputs.
 extern void     nni_aio_set_msg(nni_aio *, nni_msg *);
 extern nni_msg *nni_aio_get_msg(nni_aio *);
-extern void     nni_aio_set_pipe(nni_aio *, void *);
-extern void *   nni_aio_get_pipe(nni_aio *);
 
 // nni_aio_set_synch sets a synchronous completion flag on the AIO.
 // When this is set, the next time the AIO is completed, the callback
@@ -126,7 +124,6 @@ extern int  nni_aio_list_active(nni_aio *);
 // nni_aio_finish is called by the provider when an operation is complete.
 extern void nni_aio_finish(nni_aio *, int, size_t);
 extern void nni_aio_finish_error(nni_aio *, int);
-extern void nni_aio_finish_pipe(nni_aio *, void *);
 extern void nni_aio_finish_msg(nni_aio *, nni_msg *);
 
 // nni_aio_abort is used to abort an operation.  Any pending I/O or

@@ -690,7 +690,8 @@ zt_ep_recv_conn_ack(zt_ep *ep, uint64_t raddr, const uint8_t *data, size_t len)
 	nni_idhash_remove(ztn->zn_eps, ep->ze_laddr);
 	ep->ze_laddr = 0;
 
-	nni_aio_finish_pipe(aio, p);
+	nni_aio_set_output(aio, 0, p);
+	nni_aio_finish(aio, 0, 0);
 }
 
 static void
@@ -2351,7 +2352,8 @@ zt_ep_doaccept(zt_ep *ep)
 		}
 		p->zp_peer = creq.cr_proto;
 		zt_pipe_send_conn_ack(p);
-		nni_aio_finish_pipe(aio, p);
+		nni_aio_set_output(aio, 0, p);
+		nni_aio_finish(aio, 0, 0);
 	}
 }
 
@@ -2398,14 +2400,16 @@ zt_ep_conn_req_cb(void *arg)
 	ep->ze_creq_active = 0;
 	switch ((rv = nni_aio_result(aio))) {
 	case 0:
+		p = nni_aio_get_output(aio, 0);
 		// Already canceled, or already handled?
 		if ((uaio = nni_list_first(&ep->ze_aios)) != NULL) {
 			nni_aio_list_remove(uaio);
-			nni_aio_finish_pipe(uaio, nni_aio_get_pipe(aio));
+			nni_aio_set_output(uaio, 0, p);
+			nni_aio_finish(uaio, 0, 0);
 		} else {
 			// We have a pipe, but nowhere to stick it.
 			// Just discard it.
-			zt_pipe_fini(nni_aio_get_pipe(aio));
+			zt_pipe_fini(p);
 		}
 		ep->ze_creq_try = 0;
 		break;

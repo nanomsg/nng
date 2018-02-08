@@ -205,7 +205,6 @@ ws_pipe_init(ws_pipe **pipep, ws_ep *ep, void *ws)
 {
 	ws_pipe *p;
 	int      rv;
-	nni_aio *aio;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
@@ -224,11 +223,6 @@ ws_pipe_init(ws_pipe **pipep, ws_ep *ep, void *ws)
 	p->rproto = ep->rproto;
 	p->lproto = ep->lproto;
 	p->ws     = ws;
-
-	if ((aio = nni_list_first(&ep->aios)) != NULL) {
-		nni_aio_list_remove(aio);
-		nni_aio_finish_pipe(aio, p);
-	}
 
 	*pipep = p;
 	return (0);
@@ -621,7 +615,7 @@ ws_ep_conn_cb(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 	if (nni_aio_result(caio) == 0) {
-		ws = nni_aio_get_pipe(caio);
+		ws = nni_aio_get_output(caio, 0);
 	}
 	if ((uaio = nni_list_first(&ep->aios)) == NULL) {
 		// The client stopped caring about this!
@@ -639,7 +633,8 @@ ws_ep_conn_cb(void *arg)
 		nni_ws_fini(ws);
 		nni_aio_finish_error(uaio, rv);
 	} else {
-		nni_aio_finish_pipe(uaio, p);
+		nni_aio_set_output(uaio, 0, p);
+		nni_aio_finish(uaio, 0, 0);
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
@@ -672,7 +667,7 @@ ws_ep_acc_cb(void *arg)
 			nni_aio_finish_error(uaio, rv);
 		}
 	} else {
-		nni_ws *ws = nni_aio_get_pipe(aaio);
+		nni_ws *ws = nni_aio_get_output(aaio, 0);
 		if (uaio != NULL) {
 			ws_pipe *p;
 			// Make a pipe
@@ -681,7 +676,8 @@ ws_ep_acc_cb(void *arg)
 				nni_ws_close(ws);
 				nni_aio_finish_error(uaio, rv);
 			} else {
-				nni_aio_finish_pipe(uaio, p);
+				nni_aio_set_output(uaio, 0, p);
+				nni_aio_finish(uaio, 0, 0);
 			}
 		}
 	}

@@ -321,7 +321,8 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 		return;
 	}
 
-	nni_aio_finish_pipe(aio, pipe);
+	nni_aio_set_output(aio, 0, pipe);
+	nni_aio_finish(aio, 0, 0);
 }
 
 static void
@@ -448,7 +449,8 @@ nni_win_ipc_conn_thr(void *arg)
 			    ((rv = nni_win_iocp_register(p)) != 0)) {
 				goto fail;
 			}
-			nni_aio_finish_pipe(aio, pipe);
+			nni_aio_set_output(aio, 0, pipe);
+			nni_aio_finish(aio, 0, 0);
 			continue;
 
 		fail:

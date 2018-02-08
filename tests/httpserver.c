@@ -200,7 +200,7 @@ TestMain("HTTP Server", {
 			nng_aio_wait(aio);
 
 			So(nng_aio_result(aio) == 0);
-			h = nni_aio_get_output(aio, 0);
+			h = nng_aio_get_output(aio, 0);
 			So(h != NULL);
 			So(nng_http_req_alloc(&req, url) == 0);
 			So(nng_http_res_alloc(&res) == 0);

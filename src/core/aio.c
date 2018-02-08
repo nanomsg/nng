@@ -74,16 +74,13 @@ struct nng_aio {
 
 	// Read/write operations.
 	nni_iov *a_iov;
-	int      a_niov;
+	unsigned a_niov;
 	nni_iov  a_iovinl[4]; // inline IOVs - when the IOV list is short
 	nni_iov *a_iovalloc;  // dynamically allocated IOVs
-	int      a_niovalloc; // number of allocated IOVs
+	unsigned a_niovalloc; // number of allocated IOVs
 
 	// Message operations.
 	nni_msg *a_msg;
-
-	// Connect/accept operations.
-	void *a_pipe; // opaque pipe handle
 
 	// User scratch data.  Consumers may store values here, which
 	// must be preserved by providers and the framework.
@@ -218,18 +215,6 @@ nni_aio_get_msg(nni_aio *aio)
 }
 
 void
-nni_aio_set_pipe(nni_aio *aio, void *p)
-{
-	aio->a_pipe = p;
-}
-
-void *
-nni_aio_get_pipe(nni_aio *aio)
-{
-	return (aio->a_pipe);
-}
-
-void
 nni_aio_set_data(nni_aio *aio, int index, void *data)
 {
 	if ((index >= 0) && (index < NNI_NUM_ELEMENTS(aio->a_user_data))) {
@@ -330,6 +315,9 @@ nni_aio_start(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 	aio->a_prov_cancel = cancelfn;
 	aio->a_prov_data   = data;
 	aio->a_active      = 1;
+	for (int i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
+		aio->a_outputs[i] = NULL;
+	}
 
 	// Convert the relative timeout to an absolute timeout.
 	switch (aio->a_timeout) {
@@ -370,8 +358,7 @@ nni_aio_abort(nni_aio *aio, int rv)
 // I/O provider related functions.
 
 static void
-nni_aio_finish_impl(
-    nni_aio *aio, int result, size_t count, void *pipe, nni_msg *msg)
+nni_aio_finish_impl(nni_aio *aio, int rv, size_t count, nni_msg *msg)
 {
 	nni_mtx_lock(&nni_aio_lk);
 
@@ -380,12 +367,9 @@ nni_aio_finish_impl(
 	nni_list_node_remove(&aio->a_expire_node);
 
 	aio->a_pend        = 1;
-	aio->a_result      = result;
+	aio->a_result      = rv;
 	aio->a_count       = count;
 	aio->a_prov_cancel = NULL;
-	if (pipe) {
-		aio->a_pipe = pipe;
-	}
 	if (msg) {
 		aio->a_msg = msg;
 	}
@@ -409,27 +393,20 @@ nni_aio_finish_impl(
 void
 nni_aio_finish(nni_aio *aio, int result, size_t count)
 {
-	nni_aio_finish_impl(aio, result, count, NULL, NULL);
+	nni_aio_finish_impl(aio, result, count, NULL);
 }
 
 void
 nni_aio_finish_error(nni_aio *aio, int result)
 {
-	nni_aio_finish_impl(aio, result, 0, NULL, NULL);
-}
-
-void
-nni_aio_finish_pipe(nni_aio *aio, void *pipe)
-{
-	NNI_ASSERT(pipe != NULL);
-	nni_aio_finish_impl(aio, 0, 0, pipe, NULL);
+	nni_aio_finish_impl(aio, result, 0, NULL);
 }
 
 void
 nni_aio_finish_msg(nni_aio *aio, nni_msg *msg)
 {
 	NNI_ASSERT(msg != NULL);
-	nni_aio_finish_impl(aio, 0, nni_msg_len(msg), NULL, msg);
+	nni_aio_finish_impl(aio, 0, nni_msg_len(msg), msg);
 }
 
 void
@@ -609,7 +586,7 @@ nni_aio_iov_count(nni_aio *aio)
 {
 	size_t resid = 0;
 
-	for (int i = 0; i < aio->a_niov; i++) {
+	for (unsigned i = 0; i < aio->a_niov; i++) {
 		resid += aio->a_iov[i].iov_len;
 	}
 	return (resid);
