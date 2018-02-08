@@ -1116,8 +1116,7 @@ http_handle_file(nni_aio *aio)
 	void *            data;
 	size_t            size;
 	int               rv;
-	http_file *       hf   = nni_http_handler_get_data(h);
-	char *            path = nni_http_handler_get_data(h);
+	http_file *       hf = nni_http_handler_get_data(h);
 	const char *      ctype;
 
 	if ((ctype = hf->ctype) == NULL) {
@@ -1366,7 +1365,6 @@ nni_http_handler_init_directory(
 	http_file *       hf;
 	nni_http_handler *h;
 	int               rv;
-	char *            p;
 
 	if ((hf = NNI_ALLOC_STRUCT(hf)) == NULL) {
 		return (NNG_ENOMEM);

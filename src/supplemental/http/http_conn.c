@@ -401,8 +401,6 @@ http_wr_cb(void *arg)
 	nni_aio *      uaio;
 	int            rv;
 	size_t         n;
-	int            niov;
-	nni_iov *      iov;
 
 	nni_mtx_lock(&conn->mtx);
 
