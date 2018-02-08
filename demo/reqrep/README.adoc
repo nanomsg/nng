@@ -1,0 +1,48 @@
+= reqrep
+
+This is a very simple RPC service using the REQ/REP method.
+It is derived in part from Tim Dysinger's
+http://nanomsg.org/gettingstarted/[Getting Started With Nanomsg]
+examples, but we have updated for _nng_, and converted to use binary
+frames across the wire instead of string data.
+
+The protocol is simple:
+
+* Client will send a 64-bit command (network byte order, i.e. big endian).
+* Server sends a 64-bit response (also network byte order.)
+
+The only command is "DATE", which has value 0x1.  The value returned is
+a UNIX timestamp (seconds since Jan 1, 1970.)
+
+(We used 64-bit values for simplicity, and to avoid the Y2038 bug when
+compiled on 64-bit systems.)
+
+== Compiling
+
+The following is an example typical of UNIX and similar systems like
+Linux and macOS:
+
+[source, bash]
+----
+% export CPPFLAGS="-I /usr/local/include"
+% export LDFLAGS="-L /usr/local/lib -lnng"
+% export CC="cc"
+% ${CC} ${CPPFLAGS} reqrep.c -o reqrep ${LDFLAGS}
+----
+
+== Running
+
+You can run either the client or the server, and use whatever legal
+_nng_ URL you like:
+
+[source, bash]
+----
+% ./reqrep server tcp://127.0.0.1:8899 &
+% ./reqrep client tcp://127.0.0.1:8899
+CLIENT: SENDING DATE REQUEST
+SERVER: RECEIVED DATE REQUEST
+SERVER: SENDING DATE: Thu Feb  8 10:26:18 2018
+CLIENT: RECEIVED DATE: Thu Feb  8 10:26:18 2018
+----
+
+
