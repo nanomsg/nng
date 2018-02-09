@@ -21,7 +21,7 @@ struct nni_plat_ipc_pipe {
 };
 
 struct nni_plat_ipc_ep {
-	WCHAR         wpath[NNG_MAXADDRLEN + 16];
+	char          path[NNG_MAXADDRLEN + 16];
 	nni_sockaddr  addr;
 	int           mode;
 	int           started;
@@ -192,8 +192,6 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 {
 	const char *     path;
 	nni_plat_ipc_ep *ep;
-	char             scratch[NNG_MAXADDRLEN + 16];
-	int              rv;
 
 	path = sa->s_un.s_path.sa_path;
 	if (nni_strnlen(path, NNG_MAXADDRLEN) >= NNG_MAXADDRLEN) {
@@ -209,14 +207,7 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 	NNI_LIST_NODE_INIT(&ep->node);
 
 	ep->addr = *sa;
-	(void) snprintf(scratch, sizeof(scratch), "\\\\.\\pipe\\%s", path);
-	rv = MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED, scratch, -1,
-	    ep->wpath, NNI_NUM_ELEMENTS(ep->wpath));
-	if (rv == 0) {
-		rv = nni_win_error(GetLastError());
-		NNI_FREE_STRUCT(ep);
-		return (rv);
-	}
+	(void) snprintf(ep->path, sizeof(ep->path), "\\\\.\\pipe\\%s", path);
 
 	*epp = ep;
 	return (0);
@@ -237,7 +228,7 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 
 	// We create the first named pipe, and we make sure that it is
 	// properly ours.
-	p = CreateNamedPipeW(ep->wpath,
+	p = CreateNamedPipeA(ep->path,
 	    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED |
 	        FILE_FLAG_FIRST_PIPE_INSTANCE,
 	    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
@@ -286,7 +277,7 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 		return;
 	}
 
-	newp = CreateNamedPipeW(ep->wpath,
+	newp = CreateNamedPipeA(ep->path,
 	    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
 	    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
 	        PIPE_REJECT_REMOTE_CLIENTS,
@@ -421,9 +412,9 @@ nni_win_ipc_conn_thr(void *arg)
 
 			pipe = NULL;
 
-			p = CreateFileW(ep->wpath,
-			    GENERIC_READ | GENERIC_WRITE, 0, NULL,
-			    OPEN_EXISTING, FILE_FLAG_OVERLAPPED, NULL);
+			p = CreateFileA(ep->path, GENERIC_READ | GENERIC_WRITE,
+			    0, NULL, OPEN_EXISTING, FILE_FLAG_OVERLAPPED,
+			    NULL);
 
 			if (p == INVALID_HANDLE_VALUE) {
 				switch ((rv = GetLastError())) {
