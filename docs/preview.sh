@@ -26,7 +26,7 @@ Linux)
 	exit 2
 esac
 
-if [[ -n "$DISPLAY" ]]
+if [ -n "$DISPLAY" ]
 then
 	style=html
 else
