@@ -1,5 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -42,7 +43,7 @@ void
 nni_plat_seed_prng(void *buf, size_t bufsz)
 {
 	struct nni_plat_prng_x x;
-	int                    i;
+	size_t                 i;
 
 	memset(buf, 0, bufsz);
 

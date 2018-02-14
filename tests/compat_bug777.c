@@ -25,7 +25,7 @@
 #include "nng.h"
 #include "compat_testutil.h"
 
-int main (int argc, const char *argv[])
+int main (NN_UNUSED int argc, NN_UNUSED const char *argv[])
 {
     int sb;
     int sc1;

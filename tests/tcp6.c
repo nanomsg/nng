@@ -37,7 +37,7 @@ has_v6(void)
 }
 
 static int
-check_props_v6(nng_msg *msg, nng_listener l, nng_dialer d)
+check_props_v6(nng_msg *msg)
 {
 	nng_pipe p;
 	size_t   z;
@@ -68,8 +68,6 @@ check_props_v6(nng_msg *msg, nng_listener l, nng_dialer d)
 		So(ra.s_un.s_family == NNG_AF_INET6);
 		So(ra.s_un.s_in6.sa_port != 0);
 		So(memcmp(ra.s_un.s_in6.sa_addr, loopback, 16) == 0);
-
-		So(nng_dialer_getopt(d, NNG_OPT_REMADDR, &ra, &z) != 0);
 	});
 
 	Convey("Malformed TCPv6 addresses do not panic", {

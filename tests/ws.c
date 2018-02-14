@@ -22,7 +22,7 @@
 #endif
 
 static int
-check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
+check_props_v4(nng_msg *msg)
 {
 	nng_pipe     p;
 	size_t       z;

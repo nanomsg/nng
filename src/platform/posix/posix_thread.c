@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -265,8 +265,6 @@ nni_plat_cv_until_fallback(nni_cv *cv, struct timespec *ts)
 void
 nni_plat_mtx_lock(nni_plat_mtx *mtx)
 {
-	int rv;
-
 	if (!mtx->fallback) {
 		nni_pthread_mutex_lock(&mtx->mtx);
 
@@ -328,7 +326,6 @@ nni_plat_cv_wake(nni_plat_cv *cv)
 void
 nni_plat_cv_wake1(nni_plat_cv *cv)
 {
-	int rv;
 	if (cv->fallback) {
 		nni_plat_cv_wake1_fallback(cv);
 	} else {

@@ -474,6 +474,11 @@ static nni_proto_sock_option surv0_sock_options[] = {
 	    .pso_getopt = surv0_sock_getopt_surveytime,
 	    .pso_setopt = surv0_sock_setopt_surveytime,
 	},
+	{
+	    .pso_name   = NNG_OPT_MAXTTL,
+	    .pso_getopt = surv0_sock_getopt_maxttl,
+	    .pso_setopt = surv0_sock_setopt_maxttl,
+	},
 	// terminate list
 	{ NULL, NULL, NULL },
 };

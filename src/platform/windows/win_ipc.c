@@ -330,6 +330,7 @@ static int
 nni_win_ipc_acc_start(nni_win_event *evt, nni_aio *aio)
 {
 	nni_plat_ipc_ep *ep = evt->ptr;
+	NNI_ARG_UNUSED(aio);
 
 	if (!ConnectNamedPipe(ep->p, &evt->olpd)) {
 		int rv = GetLastError();

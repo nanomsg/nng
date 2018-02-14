@@ -112,6 +112,8 @@ static void
 nni_tls_dbg(void *ctx, int level, const char *file, int line, const char *s)
 {
 	char buf[128];
+	NNI_ARG_UNUSED(ctx);
+	NNI_ARG_UNUSED(level);
 	snprintf(buf, sizeof(buf), "%s:%04d: %s", file, line, s);
 	nni_plat_println(buf);
 }

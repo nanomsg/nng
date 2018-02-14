@@ -103,7 +103,7 @@ static const char key[] =
     "-----END RSA PRIVATE KEY-----\n";
 
 static int
-check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
+check_props_v4(nng_msg *msg)
 {
 	nng_pipe p;
 	size_t   z;
@@ -132,7 +132,7 @@ check_props_v4(nng_msg *msg, nng_listener l, nng_dialer d)
 }
 
 static int
-init_dialer_tls(trantest *tt, nng_dialer d)
+init_dialer_tls(nng_dialer d)
 {
 	nng_tls_config *cfg;
 	int             rv;
@@ -157,7 +157,7 @@ out:
 }
 
 static int
-init_listener_tls(trantest *tt, nng_listener l)
+init_listener_tls(nng_listener l)
 {
 	nng_tls_config *cfg;
 	int             rv;
@@ -177,7 +177,7 @@ out:
 }
 
 static int
-init_dialer_tls_file(trantest *tt, nng_dialer d)
+init_dialer_tls_file(nng_dialer d)
 {
 	int   rv;
 	char *tmpdir;
@@ -205,7 +205,7 @@ init_dialer_tls_file(trantest *tt, nng_dialer d)
 }
 
 static int
-init_listener_tls_file(trantest *tt, nng_listener l)
+init_listener_tls_file(nng_listener l)
 {
 	int   rv;
 	char *tmpdir;
@@ -368,7 +368,7 @@ TestMain("TLS Transport", {
 		});
 		trantest_next_address(addr, "tls+tcp://*:%u");
 		So(nng_listener_create(&l, s1, addr) == 0);
-		So(init_listener_tls_file(NULL, l) == 0);
+		So(init_listener_tls_file(l) == 0);
 		So(nng_listener_start(l, 0) == 0);
 		nng_msleep(100);
 
@@ -376,7 +376,7 @@ TestMain("TLS Transport", {
 		trantest_prev_address(addr, "tls+tcp://127.0.0.1:%u");
 		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
 		So(nng_dialer_create(&d, s2, addr) == 0);
-		So(init_dialer_tls_file(NULL, d) == 0);
+		So(init_dialer_tls_file(d) == 0);
 		So(nng_dialer_setopt_int(d, NNG_OPT_TLS_AUTH_MODE,
 		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
 		So(nng_dialer_setopt_string(
@@ -413,14 +413,14 @@ TestMain("TLS Transport", {
 		});
 		trantest_next_address(addr, "tls+tcp://*:%u");
 		So(nng_listener_create(&l, s1, addr) == 0);
-		So(init_listener_tls_file(NULL, l) == 0);
+		So(init_listener_tls_file(l) == 0);
 		So(nng_listener_start(l, 0) == 0);
 		nng_msleep(100);
 
 		// reset port back one
 		trantest_prev_address(addr, "tls+tcp://localhost:%u");
 		So(nng_dialer_create(&d, s2, addr) == 0);
-		So(init_dialer_tls_file(NULL, d) == 0);
+		So(init_dialer_tls_file(d) == 0);
 		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
 		So(nng_dialer_start(d, 0) == 0);
 		nng_msleep(100);

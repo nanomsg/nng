@@ -1494,6 +1494,8 @@ nni_http_server_set_tls(nni_http_server *s, nng_tls_config *tcfg)
 	}
 	return (0);
 #else
+	NNI_ARG_UNUSED(s);
+	NNI_ARG_UNUSED(tcfg);
 	return (NNG_ENOTSUP);
 #endif
 }
@@ -1511,6 +1513,8 @@ nni_http_server_get_tls(nni_http_server *s, nng_tls_config **tp)
 	nni_mtx_unlock(&s->mtx);
 	return (0);
 #else
+	NNI_ARG_UNUSED(s);
+	NNI_ARG_UNUSED(tp);
 	return (NNG_ENOTSUP);
 #endif
 }

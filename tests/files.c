@@ -181,9 +181,10 @@ TestMain("Platform File Support", {
 		});
 
 		Convey("Directory walk works", {
-			struct walkarg wa = { 0 };
+			struct walkarg wa;
 			int            rv;
 
+			memset(&wa, 0, sizeof(wa));
 			rv = nni_file_walk(mydir, walker, &wa, 0);
 			So(rv == 0);
 			So(wa.a == 1);

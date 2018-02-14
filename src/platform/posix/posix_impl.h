@@ -37,8 +37,8 @@
 
 #ifdef NNG_PLATFORM_POSIX_SOCKADDR
 #include <sys/socket.h>
-extern int nni_posix_sockaddr2nn(nni_sockaddr *, const void *);
-extern int nni_posix_nn2sockaddr(void *, const nni_sockaddr *);
+extern int    nni_posix_sockaddr2nn(nni_sockaddr *, const void *);
+extern size_t nni_posix_nn2sockaddr(void *, const nni_sockaddr *);
 #endif
 
 #ifdef NNG_PLATFORM_POSIX_DEBUG

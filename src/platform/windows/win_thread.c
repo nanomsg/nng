@@ -100,6 +100,7 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 void
 nni_plat_cv_fini(nni_plat_cv *cv)
 {
+	NNI_ARG_UNUSED(cv);
 }
 
 static unsigned int __stdcall nni_plat_thr_main(void *arg)

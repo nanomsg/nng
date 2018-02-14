@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -145,13 +145,12 @@ Main({
 			nni_idhash *h;
 			int         expect[5];
 			uint64_t    id;
-			int         i;
 			So(nni_idhash_init(&h) == 0);
 			Reset({ nni_idhash_fini(h); });
 			nni_idhash_set_limits(h, 10, 13, 10);
 			So(1);
 			Convey("We can fill the table", {
-				for (i = 0; i < 4; i++) {
+				for (uint64_t i = 0; i < 4; i++) {
 					So(nni_idhash_alloc(
 					       h, &id, &expect[i]) == 0);
 					So(id == (i + 10));

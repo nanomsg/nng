@@ -44,7 +44,7 @@ mkdir(const char *path, int mode)
 #endif
 
 static int
-check_props(nng_msg *msg, nng_listener l, nng_dialer d)
+check_props(nng_msg *msg)
 {
 	nng_sockaddr la, ra;
 	nng_pipe     p;
@@ -78,8 +78,6 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 		So(nng_pipe_getopt(p, NNG_OPT_ZT_NODE, &mynode, &z) == 0);
 		So(mynode != 0);
 		So(ra.s_un.s_zt.sa_nodeid == mynode);
-
-		So(nng_dialer_getopt(d, NNG_OPT_REMADDR, &ra, &z) != 0);
 	});
 
 	Convey("NWID property works", {
@@ -89,16 +87,6 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 		nwid = 0;
 		So(nng_pipe_getopt(p, NNG_OPT_ZT_NWID, &nwid, &z) == 0);
 		So(nwid = 0xa09acf02337b057bull);
-
-		z    = sizeof(nwid);
-		nwid = 0;
-		So(nng_dialer_getopt(d, NNG_OPT_ZT_NWID, &nwid, &z) == 0);
-		So(nwid = 0xa09acf02337b057bull);
-
-		z    = sizeof(nwid);
-		nwid = 0;
-		So(nng_listener_getopt(l, NNG_OPT_ZT_NWID, &nwid, &z) == 0);
-		So(nwid = 0xa09acf02337b057bull);
 	});
 
 	Convey("Network status property works", {
@@ -107,23 +95,6 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 		s = 0;
 		So(nng_pipe_getopt(p, NNG_OPT_ZT_NETWORK_STATUS, &s, &z) == 0);
 		So(s == nng_zt_network_status_ok);
-
-		z = sizeof(s);
-		s = 0;
-		So(nng_dialer_getopt(d, NNG_OPT_ZT_NETWORK_STATUS, &s, &z) ==
-		    0);
-		So(s == nng_zt_network_status_ok);
-
-		z = sizeof(s);
-		s = 0;
-		So(nng_listener_getopt(l, NNG_OPT_ZT_NETWORK_STATUS, &s, &z) ==
-		    0);
-		So(s == nng_zt_network_status_ok);
-
-		So(nng_dialer_setopt(d, NNG_OPT_ZT_NETWORK_STATUS, &s, z) ==
-		    NNG_EREADONLY);
-		So(nng_listener_setopt(l, NNG_OPT_ZT_NETWORK_STATUS, &s, z) ==
-		    NNG_EREADONLY);
 	});
 
 	Convey("Ping properties work", {
@@ -138,20 +109,6 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 		t = 0;
 		So(nng_pipe_getopt_ms(p, NNG_OPT_ZT_PING_TIME, &t) == 0);
 		So(t > 1000 && t < 3600000); // 1 sec - 1 hour
-
-		c = 0;
-		So(nng_dialer_getopt_int(d, NNG_OPT_ZT_PING_COUNT, &c) == 0);
-		So(c > 0 && c < 10); // actually 5...
-
-		t = 0;
-		So(nng_dialer_getopt_ms(d, NNG_OPT_ZT_PING_TIME, &t) == 0);
-		So(t > 1000 && t < 3600000); // 1 sec - 1 hour
-
-		So(nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20) == 0);
-		So(nng_dialer_setopt_int(d, NNG_OPT_ZT_PING_COUNT, 20) == 0);
-		So(nng_dialer_setopt_ms(d, NNG_OPT_ZT_PING_TIME, 2000) == 0);
-		So(nng_listener_setopt_int(l, NNG_OPT_ZT_PING_COUNT, 0) == 0);
-		So(nng_listener_setopt_ms(l, NNG_OPT_ZT_PING_TIME, 0) == 0);
 	});
 
 	Convey("Home property works", {
@@ -159,20 +116,6 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 		z = sizeof(v);
 		So(nng_pipe_getopt(p, NNG_OPT_ZT_HOME, v, &z) == 0);
 		So(strlen(v) < sizeof(v));
-
-		z = sizeof(v);
-		So(nng_dialer_getopt(d, NNG_OPT_ZT_HOME, v, &z) == 0);
-		So(strlen(v) < sizeof(v));
-
-		z = sizeof(v);
-		So(nng_listener_getopt(l, NNG_OPT_ZT_HOME, v, &z) == 0);
-		So(strlen(v) < sizeof(v));
-
-		z = strlen("/tmp/bogus") + 1;
-		So(nng_dialer_setopt(d, NNG_OPT_ZT_HOME, "/tmp/bogus", z) ==
-		    NNG_ESTATE);
-		So(nng_listener_setopt(l, NNG_OPT_ZT_HOME, "/tmp/bogus", z) ==
-		    NNG_ESTATE);
 	});
 
 	Convey("MTU property works", {
@@ -187,11 +130,10 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 	Convey("Network name property works", {
 		char   name[NNG_MAXADDRLEN];
 		size_t namesz;
-		int    status;
 
 		namesz = sizeof(name);
-		So(nng_listener_getopt(
-		       l, NNG_OPT_ZT_NETWORK_NAME, name, &namesz) == 0);
+		So(nng_pipe_getopt(
+		       p, NNG_OPT_ZT_NETWORK_NAME, name, &namesz) == 0);
 		So(strcmp(name, "nng_test_open") == 0);
 	});
 

@@ -27,7 +27,7 @@
 #endif
 
 // Returns the size of an array in elements. (Convenience.)
-#define NNI_NUM_ELEMENTS(x) (sizeof(x) / sizeof((x)[0]))
+#define NNI_NUM_ELEMENTS(x) ((unsigned) (sizeof(x) / sizeof((x)[0])))
 
 // These types are common but have names shared with user space.
 // Internal code should use these names when possible.

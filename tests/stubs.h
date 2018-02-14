@@ -1,5 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -40,13 +41,15 @@ getms(void)
 		return (0);
 	}
 	tv.tv_sec -= epoch;
-	return (((uint64_t)(tv.tv_sec) * 1000) + (tv.tv_usec / 1000));
+	return (
+	    ((uint64_t)(tv.tv_sec) * 1000) + (uint64_t)(tv.tv_usec / 1000));
 #endif
 }
 
 int
 nosocket(nng_socket *s)
 {
+	(void) s; // not used
 	ConveySkip("Protocol unconfigured");
 	return (NNG_ENOTSUP);
 }

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -247,7 +247,7 @@ TestMain("HTTP Server", {
 				ptr = nng_http_res_get_header(
 				    res, "Content-Length");
 				So(ptr != NULL);
-				So(atoi(ptr) == strlen(doc1));
+				So(atoi(ptr) == (int) strlen(doc1));
 
 				iov.iov_len = strlen(doc1);
 				iov.iov_buf = chunk;

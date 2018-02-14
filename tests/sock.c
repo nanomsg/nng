@@ -75,8 +75,6 @@ TestMain("Socket Operations", {
 
 		Convey("We can set and get options", {
 			nng_duration to = 1234;
-			int64_t      v  = 0;
-			size_t       sz;
 
 			So(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
 
@@ -99,7 +97,7 @@ TestMain("Socket Operations", {
 				       s1, NNG_OPT_SOCKNAME, name, &sz) == 0);
 				So(sz > 0 && sz < 64);
 				So(sz == nni_strnlen(name, 64) + 1);
-				So(atoi(name) == (unsigned) s1);
+				So(atoi(name) == (int) s1);
 
 				So(nng_setopt(
 				       s1, NNG_OPT_SOCKNAME, "hello", 6) == 0);
@@ -164,6 +162,8 @@ TestMain("Socket Operations", {
 			Convey("We can apply options before endpoint", {
 				nng_listener l;
 				char         addr[NNG_MAXADDRLEN];
+				size_t       sz;
+
 				trantest_next_address(
 				    addr, "ipc:///tmp/lopt_%u");
 
@@ -194,8 +194,8 @@ TestMain("Socket Operations", {
 				});
 			});
 			Convey("Short size is not copied", {
-				sz = 0;
-				to = 0;
+				size_t sz = 0;
+				to        = 0;
 				So(nng_getopt(
 				       s1, NNG_OPT_SENDTIMEO, &to, &sz) == 0);
 				So(sz == sizeof(to));
@@ -212,7 +212,7 @@ TestMain("Socket Operations", {
 			});
 
 			Convey("Correct size is copied", {
-				sz = sizeof(to);
+				size_t sz = sizeof(to);
 				So(nng_getopt(
 				       s1, NNG_OPT_SENDTIMEO, &to, &sz) == 0);
 				So(sz == sizeof(to));
@@ -220,8 +220,8 @@ TestMain("Socket Operations", {
 			});
 
 			Convey("Short size buf is not copied", {
-				int l = 5;
-				sz    = 0;
+				int    l  = 5;
+				size_t sz = 0;
 				So(nng_getopt(s1, NNG_OPT_RECVBUF, &l, &sz) ==
 				    0);
 				So(sz == sizeof(l));
@@ -241,8 +241,8 @@ TestMain("Socket Operations", {
 			});
 
 			Convey("Short timeout fails", {
-				to = 0;
-				sz = sizeof(to) - 1;
+				size_t sz = sizeof(to) - 1;
+				to        = 0;
 				So(nng_setopt(s1, NNG_OPT_RECVTIMEO, &to,
 				       sz) == NNG_EINVAL);
 				So(nng_setopt(s1, NNG_OPT_RECONNMINT, &to,

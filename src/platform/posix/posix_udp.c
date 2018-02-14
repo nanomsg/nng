@@ -108,7 +108,6 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 {
 	nni_aio * aio;
 	nni_list *q = &udp->udp_sendq;
-	int       x = 0;
 
 	// While we're able to send, do so.
 	while ((aio = nni_list_first(q)) != NULL) {
@@ -119,7 +118,7 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 		int cnt = 0;
 
 		len = nni_posix_nn2sockaddr(&ss, nni_aio_get_input(aio, 0));
-		if (len < 0) {
+		if (len < 1) {
 			rv = NNG_EADDRINVAL;
 		} else {
 			struct msghdr hdr;
@@ -211,7 +210,7 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 	struct sockaddr_storage sa;
 	int                     rv;
 
-	if ((salen = nni_posix_nn2sockaddr(&sa, bindaddr)) < 0) {
+	if ((salen = nni_posix_nn2sockaddr(&sa, bindaddr)) < 1) {
 		return (NNG_EADDRINVAL);
 	}
 
@@ -261,8 +260,6 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 void
 nni_plat_udp_close(nni_plat_udp *udp)
 {
-	nni_aio *aio;
-
 	// We're no longer interested in events.
 	nni_posix_pollq_remove(&udp->udp_pitem);
 

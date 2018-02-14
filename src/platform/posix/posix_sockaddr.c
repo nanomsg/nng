@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -22,7 +22,7 @@
 #include <sys/types.h>
 #include <sys/un.h>
 
-int
+size_t
 nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 {
 	struct sockaddr_in *     sin;
@@ -34,7 +34,7 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 	size_t                   sz;
 
 	if ((sa == NULL) || (na == NULL)) {
-		return (-1);
+		return (0);
 	}
 	switch (na->s_un.s_family) {
 	case NNG_AF_INET:
@@ -65,12 +65,12 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 		// Make sure that the path fits!
 		sz = sizeof(spath->sun_path);
 		if (nni_strlcpy(spath->sun_path, nspath->sa_path, sz) >= sz) {
-			return (-1);
+			return (0);
 		}
 		spath->sun_family = PF_UNIX;
 		return (sizeof(*spath));
 	}
-	return (-1);
+	return (0);
 }
 
 int

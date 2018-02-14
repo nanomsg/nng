@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -45,7 +45,7 @@ TestMain("Base64 Verification", {
 		for (i = 0; (dec = cases[i].decoded) != NULL; i++) {
 			rv = nni_base64_encode(dec, strlen(dec), buf, 1024);
 			So(rv >= 0);
-			So(rv == strlen(cases[i].encoded));
+			So(rv == (int) strlen(cases[i].encoded));
 			buf[rv] = 0;
 			So(strcmp(buf, cases[i].encoded) == 0);
 		}
@@ -61,7 +61,7 @@ TestMain("Base64 Verification", {
 			rv = nni_base64_decode(
 			    enc, strlen(enc), (void *) buf, 1024);
 			So(rv >= 0);
-			So(rv == strlen(cases[i].decoded));
+			So(rv == (int) strlen(cases[i].decoded));
 			buf[rv] = 0;
 			So(strcmp(buf, cases[i].decoded) == 0);
 		}

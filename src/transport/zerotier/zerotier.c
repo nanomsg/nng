@@ -89,16 +89,16 @@ static const uint32_t zt_port_shift = 24;
 
 // These are compile time tunables for now.
 enum zt_tunables {
-	zt_listenq       = 128,            // backlog queue length
-	zt_listen_expire = 60000,          // maximum time in backlog (msec)
-	zt_rcv_bufsize   = ZT_MAX_PHYSMTU, // max UDP recv
-	zt_conn_attempts = 12,             // connection attempts (default)
-	zt_conn_interval = 5000,           // between attempts (msec)
-	zt_udp_sendq     = 16,             // outgoing UDP queue length
-	zt_recvq         = 2,              // max pending recv (per pipe)
-	zt_recv_stale    = 1000,           // frags older than are stale (msec)
-	zt_ping_time     = 60000,          // keepalive time (msec)
-	zt_ping_count    = 5,              // keepalive attempts
+	zt_listenq       = 128,   // backlog queue length
+	zt_listen_expire = 60000, // maximum time in backlog (msec)
+	zt_rcv_bufsize   = 4096,  // max UDP recv
+	zt_conn_attempts = 12,    // connection attempts (default)
+	zt_conn_interval = 5000,  // between attempts (msec)
+	zt_udp_sendq     = 16,    // outgoing UDP queue length
+	zt_recvq         = 2,     // max pending recv (per pipe)
+	zt_recv_stale    = 1000,  // frags older than are stale (msec)
+	zt_ping_time     = 60000, // keepalive time (msec)
+	zt_ping_count    = 5,     // keepalive attempts
 };
 
 enum zt_op_codes {
@@ -174,7 +174,7 @@ struct zt_node {
 	uint8_t *     zn_rcv6_buf;
 	nng_sockaddr  zn_rcv6_addr;
 	nni_thr       zn_bgthr;
-	nni_time      zn_bgtime;
+	uint64_t      zn_bgtime;
 	nni_cv        zn_bgcv;
 	nni_cv        zn_snd6_cv;
 };
@@ -290,18 +290,18 @@ static void zt_virtual_recv(ZT_Node *, void *, void *, uint64_t, void **,
     uint64_t, uint64_t, unsigned int, unsigned int, const void *,
     unsigned int);
 
-static int64_t
+static uint64_t
 zt_now(void)
 {
 	// We return msec
-	return ((int64_t) nni_clock());
+	return ((uint64_t) nni_clock());
 }
 
 static void
 zt_bgthr(void *arg)
 {
 	zt_node *ztn = arg;
-	int64_t  now;
+	uint64_t now;
 
 	nni_mtx_lock(&zt_lk);
 	for (;;) {
@@ -312,7 +312,7 @@ zt_bgthr(void *arg)
 		}
 
 		if (now < ztn->zn_bgtime) {
-			nni_cv_until(&ztn->zn_bgcv, ztn->zn_bgtime);
+			nni_cv_until(&ztn->zn_bgcv, (nni_time) ztn->zn_bgtime);
 			continue;
 		}
 
@@ -325,7 +325,7 @@ zt_bgthr(void *arg)
 }
 
 static void
-zt_node_resched(zt_node *ztn, int64_t msec)
+zt_node_resched(zt_node *ztn, uint64_t msec)
 {
 	if (msec > ztn->zn_bgtime && ztn->zn_bgtime != 0) {
 		return;
@@ -342,7 +342,7 @@ zt_node_rcv4_cb(void *arg)
 	struct sockaddr_storage sa;
 	struct sockaddr_in *    sin;
 	nng_sockaddr_in *       nsin;
-	int64_t                 now;
+	uint64_t                now;
 
 	if (nni_aio_result(aio) != 0) {
 		// Outside of memory exhaustion, we can't really think
@@ -394,7 +394,7 @@ zt_node_rcv6_cb(void *arg)
 	struct sockaddr_storage  sa;
 	struct sockaddr_in6 *    sin6;
 	struct nng_sockaddr_in6 *nsin6;
-	int64_t                  now;
+	uint64_t                 now;
 
 	if (nni_aio_result(aio) != 0) {
 		// Outside of memory exhaustion, we can't really think
@@ -412,7 +412,7 @@ zt_node_rcv6_cb(void *arg)
 	memcpy(&sin6->sin6_addr, nsin6->sa_addr, 16);
 
 	nni_mtx_lock(&zt_lk);
-	now = zt_now(); // msec
+	now = (uint64_t) zt_now(); // msec
 
 	// We are not going to perform any validation of the data; we
 	// just pass this straight into the ZeroTier core.
@@ -560,7 +560,7 @@ zt_send(zt_node *ztn, uint64_t nwid, uint8_t op, uint64_t raddr,
 {
 	uint64_t srcmac = zt_node_to_mac(laddr >> 24, nwid);
 	uint64_t dstmac = zt_node_to_mac(raddr >> 24, nwid);
-	int64_t  now    = zt_now();
+	uint64_t now    = zt_now();
 
 	NNI_ASSERT(len >= zt_size_headers);
 	data[zt_offset_op]    = op;
@@ -746,10 +746,9 @@ zt_ep_recv_conn_req(zt_ep *ep, uint64_t raddr, const uint8_t *data, size_t len)
 }
 
 static void
-zt_ep_recv_error(zt_ep *ep, uint64_t raddr, const uint8_t *data, size_t len)
+zt_ep_recv_error(zt_ep *ep, const uint8_t *data, size_t len)
 {
-	nni_aio *aio;
-	int      code;
+	int code;
 
 	// Most of the time we don't care about errors.  The exception here
 	// is that when we have an outstanding CON_REQ, we would like to
@@ -803,7 +802,7 @@ zt_ep_virtual_recv(
 		zt_ep_recv_conn_ack(ep, raddr, data, len);
 		return;
 	case zt_op_error:
-		zt_ep_recv_error(ep, raddr, data, len);
+		zt_ep_recv_error(ep, data, len);
 		return;
 	default:
 		zt_send_err(ep->ze_ztn, ep->ze_nwid, raddr, ep->ze_laddr,
@@ -832,7 +831,6 @@ zt_pipe_close_err(zt_pipe *p, int err, uint8_t code, const char *msg)
 static void
 zt_pipe_recv_data(zt_pipe *p, const uint8_t *data, size_t len)
 {
-	nni_aio *    aio;
 	uint16_t     msgid;
 	uint16_t     fragno;
 	uint16_t     nfrags;
@@ -982,6 +980,9 @@ static void
 zt_pipe_recv_disc_req(zt_pipe *p, const uint8_t *data, size_t len)
 {
 	nni_aio *aio;
+	NNI_ARG_UNUSED(data);
+	NNI_ARG_UNUSED(len);
+
 	// NB: lock held already.
 	// Don't bother to check the length, going to disconnect anyway.
 	if ((aio = p->zp_user_rxaio) != NULL) {
@@ -995,6 +996,8 @@ static void
 zt_pipe_recv_error(zt_pipe *p, const uint8_t *data, size_t len)
 {
 	nni_aio *aio;
+	NNI_ARG_UNUSED(data);
+	NNI_ARG_UNUSED(len);
 
 	// Perhaps we should log an error message, but at the end of
 	// the day, the details are just not that interesting.
@@ -1044,7 +1047,6 @@ zt_virtual_recv(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
 	zt_node *      ztn = userptr;
 	uint8_t        op;
 	const uint8_t *data = payload;
-	uint16_t       proto;
 	uint16_t       version;
 	uint32_t       rport;
 	uint32_t       lport;
@@ -1053,6 +1055,10 @@ zt_virtual_recv(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
 	uint64_t       raddr;
 	uint64_t       laddr;
 
+	NNI_ARG_UNUSED(node);
+	NNI_ARG_UNUSED(thr);
+	NNI_ARG_UNUSED(netptr);
+
 	if ((ethertype != zt_ethertype) || (len < zt_size_headers) ||
 	    (data[zt_offset_flags] != 0) || (data[zt_offset_zero1] != 0) ||
 	    (data[zt_offset_zero2] != 0)) {
@@ -1060,6 +1066,9 @@ zt_virtual_recv(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
 	}
 	NNI_GET16(data + zt_offset_version, version);
 	if (version != zt_version) {
+		return;
+	}
+	if (vlanid != 0) { // for now we only use vlan 0.
 		return;
 	}
 
@@ -1138,6 +1147,7 @@ zt_event_cb(ZT_Node *node, void *userptr, void *thr, enum ZT_Event event,
 	NNI_ARG_UNUSED(node);
 	NNI_ARG_UNUSED(userptr);
 	NNI_ARG_UNUSED(thr);
+	NNI_ARG_UNUSED(payload);
 
 	switch (event) {
 	case ZT_EVENT_ONLINE:  // Connected to the virtual net.
@@ -1180,6 +1190,8 @@ zt_state_put(ZT_Node *node, void *userptr, void *thr,
 	const char *template;
 	char fname[32];
 
+	NNI_ARG_UNUSED(node);
+	NNI_ARG_UNUSED(thr);
 	NNI_ARG_UNUSED(objid); // only use global files
 
 	if ((objtype > ZT_STATE_OBJECT_NETWORK_CONFIG) ||
@@ -1237,6 +1249,8 @@ zt_state_get(ZT_Node *node, void *userptr, void *thr,
 	size_t sz;
 	void * buf;
 
+	NNI_ARG_UNUSED(node);
+	NNI_ARG_UNUSED(thr);
 	NNI_ARG_UNUSED(objid); // we only use global files
 
 	if ((objtype > ZT_STATE_OBJECT_NETWORK_CONFIG) ||
@@ -1313,6 +1327,7 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	zt_send_hdr *        hdr;
 	nni_iov              iov;
 
+	NNI_ARG_UNUSED(node);
 	NNI_ARG_UNUSED(thr);
 	NNI_ARG_UNUSED(socket);
 	NNI_ARG_UNUSED(ttl);
@@ -1530,7 +1545,6 @@ zt_node_find(zt_ep *ep)
 {
 	zt_node *                ztn;
 	int                      rv;
-	nng_sockaddr             sa;
 	ZT_VirtualNetworkConfig *cf;
 
 	NNI_LIST_FOREACH (&zt_nodes, ztn) {
@@ -1990,8 +2004,8 @@ zt_pipe_ping_cb(void *arg)
 
 	p->zp_ping_active = 0;
 	if (p->zp_closed || aio == NULL || (p->zp_ping_count == 0) ||
-	    (p->zp_ping_time == NNI_TIME_NEVER) ||
-	    (p->zp_ping_time == NNI_TIME_ZERO)) {
+	    (p->zp_ping_time == NNG_DURATION_INFINITE) ||
+	    (p->zp_ping_time == NNG_DURATION_ZERO)) {
 		nni_mtx_unlock(&zt_lk);
 		return;
 	}
@@ -2031,8 +2045,9 @@ zt_pipe_start(void *arg, nni_aio *aio)
 	nni_mtx_lock(&zt_lk);
 	p->zp_ping_active = 0;
 	// send a gratuitous ping, and start the ping interval timer.
-	if ((p->zp_ping_count > 0) && (p->zp_ping_time != NNI_TIME_ZERO) &&
-	    (p->zp_ping_time != NNI_TIME_NEVER) && (p->zp_ping_aio != NULL)) {
+	if ((p->zp_ping_count > 0) && (p->zp_ping_time != NNG_DURATION_ZERO) &&
+	    (p->zp_ping_time != NNG_DURATION_INFINITE) &&
+	    (p->zp_ping_aio != NULL)) {
 		p->zp_ping_try = 0;
 		nni_aio_set_timeout(aio, p->zp_ping_time);
 		if (nni_aio_start(p->zp_ping_aio, zt_pipe_cancel_ping, p) ==
@@ -2104,13 +2119,9 @@ static int
 zt_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 {
 	zt_ep *     ep;
-	size_t      sz;
-	uint64_t    nwid;
 	uint64_t    node;
 	uint64_t    port;
-	int         n;
 	int         rv;
-	char        c;
 	const char *h;
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
@@ -2514,7 +2525,7 @@ zt_ep_getopt_recvmaxsz(void *arg, void *data, size_t *szp)
 static int
 zt_ep_setopt_home(void *arg, const void *data, size_t sz)
 {
-	int    len;
+	size_t len;
 	int    rv;
 	zt_ep *ep = arg;
 
@@ -2690,6 +2701,9 @@ static nni_tran_pipe_option zt_pipe_options[] = {
 	{ NNG_OPT_LOCADDR, zt_pipe_getopt_locaddr },
 	{ NNG_OPT_REMADDR, zt_pipe_getopt_remaddr },
 	{ NNG_OPT_ZT_MTU, zt_pipe_getopt_mtu },
+	{ NNG_OPT_ZT_NWID, zt_pipe_get_nwid },
+	{ NNG_OPT_ZT_NODE, zt_pipe_get_node },
+	{ NNG_OPT_RECVMAXSZ, zt_pipe_get_recvmaxsz },
 	// terminate list
 	{ NULL, NULL },
 };

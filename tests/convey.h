@@ -71,8 +71,8 @@
  * framework creates a context automatically for each convey scope.
  */
 typedef struct {
-	jmp_buf cs_jmp;
 	void *  cs_data;
+	jmp_buf cs_jmp;
 } conveyScope;
 
 /* These functions are not for use by tests -- they are used internally. */
@@ -90,6 +90,7 @@ extern void conveySkip(const char *, int, const char *, ...);
 extern void conveyFail(const char *, int, const char *, ...);
 extern void conveyError(const char *, int, const char *, ...);
 extern void conveyPrintf(const char *, int, const char *, ...);
+extern int  conveyMainImpl(void);
 
 /*
  * conveyRun is a helper macro not to be called directly by user

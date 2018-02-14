@@ -107,7 +107,7 @@ nni_base64_encode(const uint8_t *in, size_t in_len, char *out, size_t out_len)
 	uint32_t v;
 	uint8_t  ch;
 
-	const uint8_t ENCODEMAP[64] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	const uint8_t ENCODEMAP[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	                              "abcdefghijklmnopqrstuvwxyz"
 	                              "0123456789+/";
 

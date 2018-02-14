@@ -240,23 +240,31 @@ endif()
 
 #  Platform checks.
 
+if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+	set(NNG_WARN_FLAGS "-Wall -Wextra")
+elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(NNG_WARN_FLAGS "-Wall -Wextra")
+elseif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+    set(NNG_WARN_FLAGS "-Wall -Wextra")
+endif()
+
 if (NNG_ENABLE_COVERAGE)
     # NB: This only works for GCC and Clang 3.0 and newer.  If your stuff
     # is older than that, you will need to find something newer.  For
     # correct reporting, we always turn off all optimizations.
     if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-        set(CMAKE_C_FLAGS "-g -O0 --coverage")
-        set(CMAKE_CXX_FLAGS "-g -O0 --coverage")
+	    set(NNG_COVERAGE_FLAGS "-g -O0 --coverage")
     elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        set(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
-        set(CMAKE_CXX_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
-    elseif (CMAKE_COMPILER_ID STREQUAL "AppleClang")
-        set(CMAKE_C_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
-        set(CMAKE_CXX_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+    	set(NNG_COVERAGE_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
+    elseif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
+    	set(NNG_COVERAGE_FLAGS "-g -O0 -fprofile-arcs -ftest-coverage")
     else()
         message(FATAL_ERROR "Unable to enable coverage for your compiler.")
     endif()
 endif()
+
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_FLAGS}")
 
 find_package (Threads REQUIRED)
 

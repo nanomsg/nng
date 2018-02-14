@@ -221,6 +221,7 @@ push0_sock_send(void *arg, nni_aio *aio)
 static void
 push0_sock_recv(void *arg, nni_aio *aio)
 {
+	NNI_ARG_UNUSED(arg);
 	nni_aio_finish_error(aio, NNG_ENOTSUP);
 }
 

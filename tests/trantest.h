@@ -20,7 +20,7 @@
 // we can avoid rewriting the same tests for each new transport.  Include this
 // file once in your test code.  The test framework uses the REQ/REP protocol
 // for messaging.
-typedef int (*trantest_proptest_t)(nng_msg *, nng_listener, nng_dialer);
+typedef int (*trantest_proptest_t)(nng_msg *);
 
 typedef struct trantest trantest;
 
@@ -32,13 +32,25 @@ struct trantest {
 	nni_tran *  tran;
 	int (*init)(struct trantest *);
 	void (*fini)(struct trantest *);
-	int (*dialer_init)(struct trantest *, nng_dialer);
-	int (*listener_init)(struct trantest *, nng_listener);
-	int (*proptest)(nng_msg *, nng_listener, nng_dialer);
+	int (*dialer_init)(nng_dialer);
+	int (*listener_init)(nng_listener);
+	int (*proptest)(nng_msg *);
 	void *private; // transport specific private data
 };
 
 unsigned trantest_port = 0;
+
+extern int  notransport(void);
+extern void trantest_checktran(const char *url);
+extern void trantest_next_address(char *out, const char *template);
+extern void trantest_prev_address(char *out, const char *template);
+extern void trantest_init(trantest *tt, const char *addr);
+extern int  trantest_dial(trantest *tt, nng_dialer *dp);
+extern int  trantest_listen(trantest *tt, nng_listener *lp);
+extern void trantest_scheme(trantest *tt);
+extern void trantest_test(trantest *tt);
+extern void trantest_test_extended(const char *addr, trantest_proptest_t f);
+extern void trantest_test_all(const char *addr);
 
 #ifndef NNG_TRANSPORT_ZEROTIER
 #define nng_zt_register notransport
@@ -166,7 +178,7 @@ trantest_dial(trantest *tt, nng_dialer *dp)
 		return (rv);
 	}
 	if (tt->dialer_init != NULL) {
-		if ((rv = tt->dialer_init(tt, d)) != 0) {
+		if ((rv = tt->dialer_init(d)) != 0) {
 			nng_dialer_close(d);
 			return (rv);
 		}
@@ -191,7 +203,7 @@ trantest_listen(trantest *tt, nng_listener *lp)
 		return (rv);
 	}
 	if (tt->listener_init != NULL) {
-		if ((rv = tt->listener_init(tt, l)) != 0) {
+		if ((rv = tt->listener_init(l)) != 0) {
 			nng_listener_close(l);
 			return (rv);
 		}
@@ -393,7 +405,7 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 		So(recv != NULL);
 		So(nng_msg_len(recv) == 5);
 		So(strcmp(nng_msg_body(recv), "props") == 0);
-		rv = f(recv, l, d);
+		rv = f(recv);
 		nng_msg_free(recv);
 		So(rv == 0);
 	});

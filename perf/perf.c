@@ -33,17 +33,18 @@
 static void die(const char *, ...);
 
 static int
-nng_pair_open(nng_socket *rv)
+nng_pair_open(nng_socket *arg)
 {
+	(void) arg;
 	die("No pair protocol enabled in this build!");
 	return (NNG_ENOTSUP);
 }
 #endif // NNG_ENABLE_PAIR
 
-static void latency_client(const char *, int, int);
-static void latency_server(const char *, int, int);
-static void throughput_client(const char *, int, int);
-static void throughput_server(const char *, int, int);
+static void latency_client(const char *, size_t, int);
+static void latency_server(const char *, size_t, int);
+static void throughput_client(const char *, size_t, int);
+static void throughput_server(const char *, size_t, int);
 static void do_remote_lat(int argc, char **argv);
 static void do_local_lat(int argc, char **argv);
 static void do_remote_thr(int argc, char **argv);
@@ -209,7 +210,7 @@ struct inproc_args {
 	int         count;
 	int         msgsize;
 	const char *addr;
-	void (*func)(const char *, int, int);
+	void (*func)(const char *, size_t, int);
 };
 
 static void
@@ -275,7 +276,7 @@ do_inproc_thr(int argc, char **argv)
 }
 
 void
-latency_client(const char *addr, int msgsize, int trips)
+latency_client(const char *addr, size_t msgsize, int trips)
 {
 	nng_socket s;
 	nng_msg *  msg;
@@ -318,13 +319,13 @@ latency_client(const char *addr, int msgsize, int trips)
 	total   = (float) ((end - start)) / 1000;
 	latency = ((float) ((total * 1000000)) / (trips * 2));
 	printf("total time: %.3f [s]\n", total);
-	printf("message size: %d [B]\n", msgsize);
+	printf("message size: %d [B]\n", (int) msgsize);
 	printf("round trip count: %d\n", trips);
 	printf("average latency: %.3f [us]\n", latency);
 }
 
 void
-latency_server(const char *addr, int msgsize, int trips)
+latency_server(const char *addr, size_t msgsize, int trips)
 {
 	nng_socket s;
 	nng_msg *  msg;
@@ -366,7 +367,7 @@ latency_server(const char *addr, int msgsize, int trips)
 // API somewhere.
 
 void
-throughput_server(const char *addr, int msgsize, int count)
+throughput_server(const char *addr, size_t msgsize, int count)
 {
 	nng_socket s;
 	nng_msg *  msg;
@@ -413,14 +414,14 @@ throughput_server(const char *addr, int msgsize, int count)
 	msgpersec = (float) (count) / total;
 	mbps      = (float) (msgpersec * 8 * msgsize) / (1024 * 1024);
 	printf("total time: %.3f [s]\n", total);
-	printf("message size: %d [B]\n", msgsize);
+	printf("message size: %d [B]\n", (int) msgsize);
 	printf("message count: %d\n", count);
 	printf("throughput: %.f [msg/s]\n", msgpersec);
 	printf("throughput: %.3f [Mb/s]\n", mbps);
 }
 
 void
-throughput_client(const char *addr, int msgsize, int count)
+throughput_client(const char *addr, size_t msgsize, int count)
 {
 	nng_socket s;
 	nng_msg *  msg;

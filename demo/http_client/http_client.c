@@ -31,11 +31,11 @@
 // % export CC="cc"
 // % ${CC} ${CPPFLAGS} http_client.c -o http_client ${LDFLAGS}
 // % ./http_client http://httpbin.org/ip
-// 
+//
 
+#include <nng/nng.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <nng/nng.h>
 
 void
 fatal(int rv)
@@ -48,16 +48,16 @@ int
 main(int argc, char **argv)
 {
 	nng_http_client *client;
-	nng_http_conn *conn;
-	nng_url *url;
-	nng_aio *aio;	
-	nng_http_req *req;
-	nng_http_res *res;
-	const char *hdr;
-	int rv;
-	int len;
-	void *data;
-	nng_iov iov;
+	nng_http_conn *  conn;
+	nng_url *        url;
+	nng_aio *        aio;
+	nng_http_req *   req;
+	nng_http_res *   res;
+	const char *     hdr;
+	int              rv;
+	int              len;
+	void *           data;
+	nng_iov          iov;
 
 	if (argc < 2) {
 		fprintf(stderr, "No URL supplied!\n");
@@ -116,12 +116,12 @@ main(int argc, char **argv)
 		exit(1);
 	}
 
+	len = atoi(hdr);
 	if (len == 0) {
 		return (0);
 	}
 
 	// Allocate a buffer to receive the body data.
-	len = atoi(hdr);
 	data = malloc(len);
 
 	// Set up a single iov to point to the buffer.

@@ -127,8 +127,8 @@ url_canonify_uri(char **outp, const char *in)
 				out[dst++] = (char) c;
 			} else {
 				out[dst++] = '%';
-				out[dst++] = toupper(out[src + 1]);
-				out[dst++] = toupper(out[src + 2]);
+				out[dst++] = (char) toupper(out[src + 1]);
+				out[dst++] = (char) toupper(out[src + 2]);
 			}
 			src += 3;
 			continue;
@@ -152,7 +152,7 @@ url_canonify_uri(char **outp, const char *in)
 		if ((c == '?') || (c == '#')) {
 			skip = true;
 		}
-		out[dst++] = c;
+		out[dst++] = (char) c;
 		src++;
 	}
 	out[dst] = 0;
@@ -186,7 +186,7 @@ url_canonify_uri(char **outp, const char *in)
 			if ((c == '?') || (c == '#')) {
 				skip = true;
 			}
-			out[dst++] = c;
+			out[dst++] = (char) c;
 			src++;
 		}
 	}
@@ -285,7 +285,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		goto error;
 	}
 	for (size_t i = 0; i < len; i++) {
-		url->u_scheme[i] = tolower(s[i]);
+		url->u_scheme[i] = (char) tolower(s[i]);
 	}
 	url->u_scheme[len] = '\0';
 
@@ -335,7 +335,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	// Copy the host portion, but make it lower case (hostnames are
 	// case insensitive).
 	for (size_t i = 0; i < len; i++) {
-		url->u_host[i] = tolower(s[i]);
+		url->u_host[i] = (char) tolower(s[i]);
 	}
 	url->u_host[len] = '\0';
 	s += len;

@@ -4,6 +4,7 @@ image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
 image:https://img.shields.io/circleci/project/github/nanomsg/nng.svg?label=[Linux Status,link="https://circleci.com/gh/nanomsg/nng"]
 image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/nanomsg/nng"]
 image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=coverage[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
+image:https://api.codacy.com/project/badge/Grade/f241cba192974787b66f7e4368777ebf["Codacy code quality", link="https://www.codacy.com/app/gdamore/nng?utm_source=github.com&utm_medium=referral&utm_content=nanomsg/nng&utm_campaign=Badge_Grade"]
 
 This repository represents a work in progress rewrite of the SP protocol
 library called "libnanomsg".  This is pre-release, but at this point you

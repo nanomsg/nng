@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Garrett D'Amore <garrett@damore.org>
+ * Copyright 2018 Garrett D'Amore <garrett@damore.org>
  *
  * This software is supplied under the terms of the MIT License, a
  * copy of which should be located in the distribution where this
@@ -96,7 +96,6 @@ static HANDLE convey_console;
 #endif
 
 #define CONVEY_EXIT_OK 0
-#define CONVEY_EXIT_USAGE 1
 #define CONVEY_EXIT_FAIL 2
 #define CONVEY_EXIT_FATAL 3
 #define CONVEY_EXIT_NOMEM 4
@@ -507,19 +506,18 @@ convey_start_timer(struct convey_timer *pc)
 	pc->timer_base = pcnt.QuadPart;
 	pc->timer_rate = pfreq.QuadPart;
 #elif defined(CLOCK_MONOTONIC) && !defined(CONVEY_USE_GETTIMEOFDAY)
-	uint64_t        usecs;
 	struct timespec ts;
 
 	clock_gettime(CLOCK_MONOTONIC, &ts);
-	pc->timer_base = ts.tv_sec * 1000000000;
-	pc->timer_base += ts.tv_nsec;
+	pc->timer_base = (uint64_t) ts.tv_sec * 1000000000;
+	pc->timer_base += (uint64_t) ts.tv_nsec;
 	pc->timer_rate = 1000000000;
 #else
 	struct timeval tv;
 
 	gettimeofday(&tv, NULL);
-	pc->timer_base = tv.tv_sec * 1000000;
-	pc->timer_base += tv.tv_usec;
+	pc->timer_base = (uint64_t) tv.tv_sec * 1000000;
+	pc->timer_base += (uint64_t) tv.tv_usec;
 	pc->timer_rate = 1000000;
 #endif
 	pc->timer_running = 1;
@@ -542,7 +540,7 @@ convey_stop_timer(struct convey_timer *pc)
 
 		clock_gettime(CLOCK_MONOTONIC, &ts);
 		ns = (ts.tv_sec * 1000000000);
-		ns += ts.tv_nsec;
+		ns += (uint64_t) ts.tv_nsec;
 		pc->timer_count += (ns - pc->timer_base);
 #else
 		uint64_t       us;
@@ -639,7 +637,7 @@ convey_tls_get(void)
 
 #else
 
-pthread_key_t convey_tls_key;
+static pthread_key_t convey_tls_key;
 
 static int
 convey_tls_init(void)
@@ -851,8 +849,6 @@ conveyPrintf(const char *file, int line, const char *fmt, ...)
 	va_end(ap);
 }
 
-extern int conveyMainImpl(void);
-
 static void
 convey_init_term(void)
 {
@@ -885,9 +881,9 @@ convey_init_term(void)
 		// Values probably don't matter, just need to be
 		// different!
 		convey_nocolor = "\033[0m";
-		convey_green   = "\033[32m";
-		convey_yellow  = "\033[33m";
-		convey_red     = "\033[31m";
+		convey_green = "\033[32m";
+		convey_yellow = "\033[33m";
+		convey_red = "\033[31m";
 	}
 	term = getenv("TERM");
 #endif

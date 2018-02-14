@@ -265,6 +265,8 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 	GUID             guid2 = WSAID_ACCEPTEX;
 	GUID             guid3 = WSAID_GETACCEPTEXSOCKADDRS;
 
+	NNI_ARG_UNUSED(mode);
+
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -481,6 +483,8 @@ nni_win_tcp_acc_start(nni_win_event *evt, nni_aio *aio)
 	SOCKET           acc_s;
 	DWORD            cnt;
 
+	NNI_ARG_UNUSED(aio);
+
 	acc_s = socket(AF_INET6, SOCK_STREAM, IPPROTO_TCP);
 	if (acc_s == INVALID_SOCKET) {
 		evt->status = nni_win_error(GetLastError());
@@ -575,6 +579,8 @@ nni_win_tcp_con_start(nni_win_event *evt, nni_aio *aio)
 	int              len;
 	int              rv;
 	int              family;
+
+	NNI_ARG_UNUSED(aio);
 
 	if (ep->loclen > 0) {
 		family = ep->locaddr.ss_family;

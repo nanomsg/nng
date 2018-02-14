@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Garrett D'Amore <garrett@damore.org>
+ * Copyright 2018 Garrett D'Amore <garrett@damore.org>
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"),
@@ -84,7 +84,9 @@ Main({
 	Test("Skipping works", {
 		int skipped = 0;
 		SkipConvey("ConveySkip works.", { So(skipped = 0); });
+		So(skipped == 0);
 		Convey("Assertion skipping works.", { SkipSo(skipped == 1); });
+		So(skipped == 0);
 	});
 
 	Test("Reset", {

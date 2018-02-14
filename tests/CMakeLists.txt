@@ -77,7 +77,7 @@ if (NNG_TESTS)
 
         macro (add_nng_compat_test NAME TIMEOUT)
             list (APPEND all_tests ${NAME})
-            add_executable (${NAME} ${NAME}.c)
+            add_executable (${NAME} ${NAME}.c compat_testutil.c)
             target_link_libraries (${NAME} ${PROJECT_NAME}_static)
             target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
             target_compile_definitions(${NAME} PUBLIC -DNNG_STATIC_LIB)

@@ -96,7 +96,7 @@ nni_plat_file_get(const char *name, void **datap, size_t *lenp)
 	FILE *      f;
 	struct stat st;
 	int         rv = 0;
-	int         len;
+	size_t      len;
 	void *      data;
 
 	if ((f = fopen(name, "rb")) == NULL) {
@@ -146,7 +146,6 @@ int
 nni_plat_file_type(const char *name, int *typep)
 {
 	struct stat sbuf;
-	int         rv;
 
 	if (stat(name, &sbuf) != 0) {
 		return (nni_plat_errno(errno));

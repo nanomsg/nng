@@ -97,7 +97,6 @@ static int
 nni_plat_ipc_remove_stale(const char *path)
 {
 	int                fd;
-	int                rv;
 	struct sockaddr_un sun;
 	size_t             sz;
 

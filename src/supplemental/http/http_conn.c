@@ -200,10 +200,10 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 			conn->rd_get = conn->rd_put = 0;
 		}
 		if (rv == NNG_EAGAIN) {
-			nni_iov iov;
-			iov.iov_buf = conn->rd_buf + conn->rd_put;
-			iov.iov_len = conn->rd_bufsz - conn->rd_put;
-			nni_aio_set_iov(conn->rd_aio, 1, &iov);
+			nni_iov iov1;
+			iov1.iov_buf = conn->rd_buf + conn->rd_put;
+			iov1.iov_len = conn->rd_bufsz - conn->rd_put;
+			nni_aio_set_iov(conn->rd_aio, 1, &iov1);
 			nni_aio_set_data(conn->rd_aio, 1, aio);
 			conn->rd(conn->sock, conn->rd_aio);
 		}
@@ -217,10 +217,10 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 			conn->rd_get = conn->rd_put = 0;
 		}
 		if (rv == NNG_EAGAIN) {
-			nni_iov iov;
-			iov.iov_buf = conn->rd_buf + conn->rd_put;
-			iov.iov_len = conn->rd_bufsz - conn->rd_put;
-			nni_aio_set_iov(conn->rd_aio, 1, &iov);
+			nni_iov iov1;
+			iov1.iov_buf = conn->rd_buf + conn->rd_put;
+			iov1.iov_len = conn->rd_bufsz - conn->rd_put;
+			nni_aio_set_iov(conn->rd_aio, 1, &iov1);
 			nni_aio_set_data(conn->rd_aio, 1, aio);
 			conn->rd(conn->sock, conn->rd_aio);
 		}

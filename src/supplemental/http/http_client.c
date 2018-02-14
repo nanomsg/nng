@@ -197,6 +197,8 @@ nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
 	}
 	return (0);
 #else
+	NNI_ARG_UNUSED(c);
+	NNI_ARG_UNUSED(tls);
 	return (NNG_EINVAL);
 #endif
 }
@@ -214,6 +216,8 @@ nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
 	nni_mtx_unlock(&c->mtx);
 	return (0);
 #else
+	NNI_ARG_UNUSED(c);
+	NNI_ARG_UNUSED(tlsp);
 	return (NNG_ENOTSUP);
 #endif
 }

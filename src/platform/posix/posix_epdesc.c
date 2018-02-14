@@ -434,9 +434,9 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp)
 }
 
 void
-nni_posix_epdesc_set_local(nni_posix_epdesc *ed, void *sa, int len)
+nni_posix_epdesc_set_local(nni_posix_epdesc *ed, void *sa, size_t len)
 {
-	if ((len < 0) || (len > sizeof(struct sockaddr_storage))) {
+	if ((len < 1) || (len > sizeof(struct sockaddr_storage))) {
 		return;
 	}
 	nni_mtx_lock(&ed->mtx);
@@ -446,9 +446,9 @@ nni_posix_epdesc_set_local(nni_posix_epdesc *ed, void *sa, int len)
 }
 
 void
-nni_posix_epdesc_set_remote(nni_posix_epdesc *ed, void *sa, int len)
+nni_posix_epdesc_set_remote(nni_posix_epdesc *ed, void *sa, size_t len)
 {
-	if ((len < 0) || (len > sizeof(struct sockaddr_storage))) {
+	if ((len < 1) || (len > sizeof(struct sockaddr_storage))) {
 		return;
 	}
 	nni_mtx_lock(&ed->mtx);

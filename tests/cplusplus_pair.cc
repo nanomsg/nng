@@ -26,6 +26,8 @@ main(int argc, char **argv)
 	int        rv;
 	size_t     sz;
 	char       buf[8];
+	(void) argc;
+	(void) argv;
 
 	if ((rv = nng_pair1_open(&s1)) != 0) {
 		throw nng_strerror(rv);
@@ -68,6 +70,8 @@ main(int argc, char **argv)
 
 	std::cout << "Pass." << std::endl;
 #else
+	(void) argc;
+	(void) argv;
 	std::cout << "Skipped (protocol unconfigured)." << std::endl;
 #endif
 

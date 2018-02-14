@@ -130,7 +130,7 @@ validloopback(nng_sockaddr *sa)
 }
 
 static int
-check_props(nng_msg *msg, nng_listener l, nng_dialer d)
+check_props(nng_msg *msg)
 {
 	nng_pipe     p;
 	size_t       z;
@@ -180,7 +180,7 @@ check_props(nng_msg *msg, nng_listener l, nng_dialer d)
 }
 
 static int
-init_dialer_wss(trantest *tt, nng_dialer d)
+init_dialer_wss(nng_dialer d)
 {
 	nng_tls_config *cfg;
 	int             rv;
@@ -206,7 +206,7 @@ out:
 }
 
 static int
-init_listener_wss(trantest *tt, nng_listener l)
+init_listener_wss(nng_listener l)
 {
 	nng_tls_config *cfg;
 	int             rv;

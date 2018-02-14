@@ -510,6 +510,7 @@ int
 nni_ep_listen(nni_ep *ep, int flags)
 {
 	int rv = 0;
+	NNI_ARG_UNUSED(flags);
 
 	nni_sock_reconntimes(ep->ep_sock, &ep->ep_inirtime, &ep->ep_maxrtime);
 	ep->ep_currtime = ep->ep_inirtime;

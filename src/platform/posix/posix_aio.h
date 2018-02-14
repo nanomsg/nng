@@ -33,8 +33,8 @@ extern int  nni_posix_pipedesc_peername(nni_posix_pipedesc *, nni_sockaddr *);
 extern int  nni_posix_pipedesc_sockname(nni_posix_pipedesc *, nni_sockaddr *);
 
 extern int  nni_posix_epdesc_init(nni_posix_epdesc **);
-extern void nni_posix_epdesc_set_local(nni_posix_epdesc *, void *, int);
-extern void nni_posix_epdesc_set_remote(nni_posix_epdesc *, void *, int);
+extern void nni_posix_epdesc_set_local(nni_posix_epdesc *, void *, size_t);
+extern void nni_posix_epdesc_set_remote(nni_posix_epdesc *, void *, size_t);
 extern void nni_posix_epdesc_fini(nni_posix_epdesc *);
 extern void nni_posix_epdesc_close(nni_posix_epdesc *);
 extern void nni_posix_epdesc_connect(nni_posix_epdesc *, nni_aio *);

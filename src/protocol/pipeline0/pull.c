@@ -196,6 +196,7 @@ pull0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 static void
 pull0_sock_send(void *arg, nni_aio *aio)
 {
+	NNI_ARG_UNUSED(arg);
 	nni_aio_finish_error(aio, NNG_ENOTSUP);
 }
 

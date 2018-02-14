@@ -244,6 +244,8 @@ ws_hook(void *arg, nni_http_req *req, nni_http_res *res)
 {
 	ws_ep * ep = arg;
 	ws_hdr *h;
+	NNI_ARG_UNUSED(req);
+
 	// Eventually we'll want user customizable hooks.
 	// For now we just set the headers we want.
 

@@ -660,7 +660,7 @@ ws_send_control(nni_ws *ws, uint8_t op, uint8_t *buf, size_t len)
 
 	nni_mtx_lock(&ws->mtx);
 	if ((ws->closed) ||
-	    (ws_msg_init_control(&wm, ws, op, buf, sizeof(buf)) != 0)) {
+	    (ws_msg_init_control(&wm, ws, op, buf, len) != 0)) {
 		nni_mtx_unlock(&ws->mtx);
 		return;
 	}
@@ -1768,7 +1768,7 @@ ws_conn_cb(void *arg)
 	}
 
 	for (int i = 0; i < 16; i++) {
-		raw[i] = nni_random();
+		raw[i] = (uint8_t) nni_random();
 	}
 	nni_base64_encode(raw, 16, wskey, 24);
 	wskey[24] = '\0';
