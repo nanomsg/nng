@@ -28,7 +28,7 @@ for f in $(find . -name '*.adoc'); do
 		;;
 	esac
 	while read line; do
-		if [[ "$line" == "---" ]]
+		if [ "$line" = "---" ]
 		then
 			if (( $infrontmatter != 0 ))
 			then
@@ -36,9 +36,9 @@ for f in $(find . -name '*.adoc'); do
 			else
 				infrontmatter=1
 			fi
-		elif [[ "$infrontmatter" != 0 ]]
+		elif (( $infrontmatter != 0 ))
 		then
-			if [[ -z "$frontmater" ]]
+			if [ -z "$frontmater" ]
 			then
 				frontmatter="$line"
 			else
@@ -54,12 +54,12 @@ for f in $(find . -name '*.adoc'); do
 
 	done < $input
 
-	if [[ -n "$indir" ]] && [[ ! -d "$outdir" ]]
+	if [ -n "$indir" ] && [ ! -d "$outdir" ]
 	then
 		mkdir -p $outdir
 	fi
 
-	if [[ -n "$frontmatter" ]]
+	if [ -n "$frontmatter" ]
 	then
 		echo "---"
 		echo "$frontmatter"
