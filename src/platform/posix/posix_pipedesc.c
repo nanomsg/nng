@@ -358,8 +358,8 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 	nni_aio_list_init(&pd->readq);
 	nni_aio_list_init(&pd->writeq);
 
-	rv = nni_posix_pollq_add(nni_posix_pollq_get(fd), &pd->node);
-	if (rv != 0) {
+	if (((rv = nni_posix_pollq_init(&pd->node)) != 0) ||
+	    ((rv = nni_posix_pollq_add(&pd->node)) != 0)) {
 		nni_mtx_fini(&pd->mtx);
 		NNI_FREE_STRUCT(pd);
 		return (rv);
@@ -373,7 +373,7 @@ nni_posix_pipedesc_fini(nni_posix_pipedesc *pd)
 {
 	// Make sure no other polling activity is pending.
 	nni_posix_pipedesc_close(pd);
-	nni_posix_pollq_remove(&pd->node);
+	nni_posix_pollq_fini(&pd->node);
 	if (pd->node.fd >= 0) {
 		(void) close(pd->node.fd);
 	}

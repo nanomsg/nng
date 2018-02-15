@@ -41,7 +41,9 @@ extern nni_posix_pollq *nni_posix_pollq_get(int);
 extern int              nni_posix_pollq_sysinit(void);
 extern void             nni_posix_pollq_sysfini(void);
 
-extern int  nni_posix_pollq_add(nni_posix_pollq *, nni_posix_pollq_node *);
+extern int  nni_posix_pollq_init(nni_posix_pollq_node *);
+extern void nni_posix_pollq_fini(nni_posix_pollq_node *);
+extern int  nni_posix_pollq_add(nni_posix_pollq_node *);
 extern void nni_posix_pollq_remove(nni_posix_pollq_node *);
 extern void nni_posix_pollq_arm(nni_posix_pollq_node *, int);
 extern void nni_posix_pollq_disarm(nni_posix_pollq_node *, int);

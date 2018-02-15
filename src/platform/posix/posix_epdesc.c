@@ -102,6 +102,7 @@ nni_posix_epdesc_doconnect(nni_posix_epdesc *ed)
 		switch (rv) {
 		case 0:
 			// Success!
+			nni_posix_pollq_remove(&ed->node);
 			nni_posix_epdesc_finish(aio, 0, ed->node.fd);
 			ed->node.fd = -1;
 			continue;
@@ -114,6 +115,7 @@ nni_posix_epdesc_doconnect(nni_posix_epdesc *ed)
 			if (rv == ENOENT) {
 				rv = ECONNREFUSED;
 			}
+			nni_posix_pollq_remove(&ed->node);
 			nni_posix_epdesc_finish(aio, nni_plat_errno(rv), 0);
 			(void) close(ed->node.fd);
 			ed->node.fd = -1;
@@ -207,6 +209,8 @@ nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 		nni_posix_epdesc_finish(aio, NNG_ECLOSED, 0);
 	}
 
+	nni_posix_pollq_remove(&ed->node);
+
 	if ((fd = ed->node.fd) != -1) {
 		ed->node.fd = -1;
 		(void) shutdown(fd, SHUT_RDWR);
@@ -253,8 +257,6 @@ nni_posix_epdesc_cb(void *arg)
 void
 nni_posix_epdesc_close(nni_posix_epdesc *ed)
 {
-	nni_posix_pollq_disarm(&ed->node, POLLIN | POLLOUT);
-
 	nni_mtx_lock(&ed->mtx);
 	nni_posix_epdesc_doclose(ed);
 	nni_mtx_unlock(&ed->mtx);
@@ -304,6 +306,12 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
 	ed->node.fd = fd;
+	if ((rv = nni_posix_pollq_add(&ed->node)) != 0) {
+		(void) close(fd);
+		ed->node.fd = -1;
+		nni_mtx_unlock(&ed->mtx);
+		return (rv);
+	}
 	nni_mtx_unlock(&ed->mtx);
 	return (0);
 }
@@ -393,6 +401,13 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 
 	// We have to submit to the pollq, because the connection is pending.
 	ed->node.fd = fd;
+	if ((rv = nni_posix_pollq_add(&ed->node)) != 0) {
+		(void) close(fd);
+		nni_posix_epdesc_finish(aio, rv, 0);
+		nni_mtx_unlock(&ed->mtx);
+		return;
+	}
+
 	nni_aio_list_append(&ed->connectq, aio);
 	nni_posix_pollq_arm(&ed->node, POLLOUT);
 	nni_mtx_unlock(&ed->mtx);
@@ -402,7 +417,6 @@ int
 nni_posix_epdesc_init(nni_posix_epdesc **edp)
 {
 	nni_posix_epdesc *ed;
-	nni_posix_pollq * pq;
 	int               rv;
 
 	if ((ed = NNI_ALLOC_STRUCT(ed)) == NULL) {
@@ -423,8 +437,7 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp)
 	nni_aio_list_init(&ed->connectq);
 	nni_aio_list_init(&ed->acceptq);
 
-	pq = nni_posix_pollq_get(nni_random() % 0xffff);
-	if ((rv = nni_posix_pollq_add(pq, &ed->node)) != 0) {
+	if ((rv = nni_posix_pollq_init(&ed->node)) != 0) {
 		nni_mtx_fini(&ed->mtx);
 		NNI_FREE_STRUCT(ed);
 		return (rv);
@@ -467,7 +480,7 @@ nni_posix_epdesc_fini(nni_posix_epdesc *ed)
 		nni_posix_epdesc_doclose(ed);
 	}
 	nni_mtx_unlock(&ed->mtx);
-	nni_posix_pollq_remove(&ed->node);
+	nni_posix_pollq_fini(&ed->node);
 	nni_mtx_fini(&ed->mtx);
 	NNI_FREE_STRUCT(ed);
 }

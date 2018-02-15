@@ -189,10 +189,17 @@ nni_posix_poll_thr(void *arg)
 }
 
 int
-nni_posix_pollq_add(nni_posix_pollq *pq, nni_posix_pollq_node *node)
+nni_posix_pollq_add(nni_posix_pollq_node *node)
 {
-	int rv;
+	int              rv;
+	nni_posix_pollq *pq;
+
 	NNI_ASSERT(!nni_list_node_active(&node->node));
+
+	pq = nni_posix_pollq_get(node->fd);
+	if (node->pq != NULL) {
+		return (NNG_ESTATE);
+	}
 
 	nni_mtx_lock(&pq->mtx);
 	if (pq->close) {
@@ -211,6 +218,9 @@ nni_posix_pollq_add(nni_posix_pollq *pq, nni_posix_pollq_node *node)
 	return (0);
 }
 
+// nni_posix_pollq_remove removes the node from the pollq, but
+// does not ensure that the pollq node is safe to destroy.  In particular,
+// this function can be called from a callback (the callback may be active).
 void
 nni_posix_pollq_remove(nni_posix_pollq_node *node)
 {
@@ -219,6 +229,39 @@ nni_posix_pollq_remove(nni_posix_pollq_node *node)
 	if (pq == NULL) {
 		return;
 	}
+	node->pq = NULL;
+	nni_mtx_lock(&pq->mtx);
+	if (nni_list_node_active(&node->node)) {
+		nni_list_node_remove(&node->node);
+		pq->nnodes--;
+	}
+	if (pq->close) {
+		nni_cv_wake(&pq->cv);
+	}
+	nni_mtx_unlock(&pq->mtx);
+}
+
+// nni_posix_pollq_init merely ensures that the node is ready for use.
+// It does not register the node with any pollq in particular.
+int
+nni_posix_pollq_init(nni_posix_pollq_node *node)
+{
+	NNI_LIST_NODE_INIT(&node->node);
+	return (0);
+}
+
+// nni_posix_pollq_fini does everything that nni_posix_pollq_remove does,
+// but it also ensures that the callback is not active, so that the node
+// may be deallocated.  This function must not be called in a callback.
+void
+nni_posix_pollq_fini(nni_posix_pollq_node *node)
+{
+	nni_posix_pollq *pq = node->pq;
+
+	if (pq == NULL) {
+		return;
+	}
+	node->pq = NULL;
 	nni_mtx_lock(&pq->mtx);
 	while (pq->active == node) {
 		pq->wait = node;
@@ -287,7 +330,7 @@ nni_posix_pollq_disarm(nni_posix_pollq_node *node, int events)
 }
 
 static void
-nni_posix_pollq_fini(nni_posix_pollq *pq)
+nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
 	if (pq->started) {
 		nni_mtx_lock(&pq->mtx);
@@ -317,7 +360,7 @@ nni_posix_pollq_fini(nni_posix_pollq *pq)
 }
 
 static int
-nni_posix_pollq_init(nni_posix_pollq *pq)
+nni_posix_pollq_create(nni_posix_pollq *pq)
 {
 	int rv;
 
@@ -334,7 +377,7 @@ nni_posix_pollq_init(nni_posix_pollq *pq)
 	if (((rv = nni_posix_pollq_poll_grow(pq)) != 0) ||
 	    ((rv = nni_plat_pipe_open(&pq->wakewfd, &pq->wakerfd)) != 0) ||
 	    ((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0)) {
-		nni_posix_pollq_fini(pq);
+		nni_posix_pollq_destroy(pq);
 		return (rv);
 	}
 	pq->started = 1;
@@ -363,14 +406,14 @@ nni_posix_pollq_sysinit(void)
 {
 	int rv;
 
-	rv = nni_posix_pollq_init(&nni_posix_global_pollq);
+	rv = nni_posix_pollq_create(&nni_posix_global_pollq);
 	return (rv);
 }
 
 void
 nni_posix_pollq_sysfini(void)
 {
-	nni_posix_pollq_fini(&nni_posix_global_pollq);
+	nni_posix_pollq_destroy(&nni_posix_global_pollq);
 }
 
 #endif // NNG_USE_POSIX_POLLQ_POLL

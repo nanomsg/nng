@@ -244,9 +244,8 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 	nni_aio_list_init(&udp->udp_recvq);
 	nni_aio_list_init(&udp->udp_sendq);
 
-	rv = nni_posix_pollq_add(
-	    nni_posix_pollq_get(udp->udp_fd), &udp->udp_pitem);
-	if (rv != 0) {
+	if (((rv = nni_posix_pollq_init(&udp->udp_pitem)) != 0) ||
+	    ((rv = nni_posix_pollq_add(&udp->udp_pitem)) != 0)) {
 		(void) close(udp->udp_fd);
 		nni_mtx_fini(&udp->udp_mtx);
 		NNI_FREE_STRUCT(udp);
@@ -261,7 +260,7 @@ void
 nni_plat_udp_close(nni_plat_udp *udp)
 {
 	// We're no longer interested in events.
-	nni_posix_pollq_remove(&udp->udp_pitem);
+	nni_posix_pollq_fini(&udp->udp_pitem);
 
 	nni_mtx_lock(&udp->udp_mtx);
 	nni_posix_udp_doclose(udp);
