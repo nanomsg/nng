@@ -1,4 +1,4 @@
-= nng_close(3)
+= nng_listener_start(3)
 :doctype: manpage
 :manmanual: nng
 :mansource: nng
@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_close - close socket
+nng_listener_start - start listener
 
 == SYNOPSIS
 
@@ -19,19 +19,19 @@ nng_close - close socket
 -----------
 #include <nng/nng.h>
 
-int nng_close(nng_socket s);
+int nng_listener_start(nng_listener l);
 -----------
 
 == DESCRIPTION
 
-The `nng_close()` function closes the supplied socket, _s_.  Messages
-that have been submitted for sending may be flushed or delivered,
-depending upon the transport and the setting of the `NNG_OPT_LINGER`
-option.
+The `nng_listener_start()` function starts the listener _l_.
 
-Further attempts to use the socket after this call returns will result
-in `NNG_EBADF`.  Threads waiting for operations on the socket when this
-call is executed may also return with an `NNG_EBADF` result.
+This causes the listener to start accepting connections from remote
+dialers.  Each new connection results in a pipe, which will be attached
+to the listener's socket.
+
+Once a listener has started, it is generally not possible to change
+it's configuration.
 
 == RETURN VALUES
 
@@ -39,11 +39,13 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
-`NNG_EBADF`:: The socket _s_ is already closed or was never opened.
+`NNG_ECLOSED`:: Parameter _l_ does not refer to an open listener.
+`NNG_ESTATE`:: The listener _l_ is already started.
 
 == SEE ALSO
 
-<<nng_setopt#,nng_setopt(3)>>,
+<<nng_listen#,nng_listen(3)>>,
+<<nng_listener_create#,nng_listener_create(3)>>
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng#,nng(7)>>
 
