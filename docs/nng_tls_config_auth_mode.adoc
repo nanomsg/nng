@@ -56,8 +56,8 @@ This function returns 0 on success, and non-zero otherwise.
 == ERRORS
 
 `NNG_ENOMEM`:: Insufficient memory is available.
-`NNG_EINVAL`:: An invalid 'mode' was specified.
-`NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
+`NNG_EINVAL`:: An invalid _mode_ was specified.
+`NNG_EBUSY`:: The configuration _cfg_ is already in use, and cannot be modified.
 
 
 == SEE ALSO

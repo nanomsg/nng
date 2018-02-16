@@ -26,17 +26,17 @@ int nng_tls_config_cert_key_file(nni_tls_config *cfg, const char *path,
 == DESCRIPTION
 
 The `nng_tls_config_cert_key_file()` function loads a certificate (or
-certificate chain) and a private key from the file named by 'path'.
+certificate chain) and a private key from the file named by _path_.
 
 The file must contain both the https://tools.ietf.org/html/rfc7468[PEM]
 encoded certificate and associated private key, which will be used when
-establishing TLS sessions using 'cfg'.  It may contain additional certificates
+establishing TLS sessions using _cfg_.  It may contain additional certificates
 leading to a validation chain, with the leaf certificate first.
 There is no need to include the self-signed root, as the peer
 will need to have that already in order to perform it's own validation.
 
 The private key may be encrypted with a password, in which can be supplied in
-'pass'.  The value NULL should be supplied for 'pass' if the key is not
+_pass_.  The value `NULL` should be supplied for _pass_ if the key is not
 encrypted.
 
 On servers, it is possible to call this function multiple times for the
@@ -50,10 +50,10 @@ This function returns 0 on success, and non-zero otherwise.
 == ERRORS
 
 `NNG_ENOMEM`:: Insufficient memory is available.
-`NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
-`NNG_EINVAL`:: The contents of 'path' are invalid.
-`NNG_ENOENT`:: The file named by 'path' does not exist.
-`NNG_EPERM`:: The file named by 'path' cannot be opened.
+`NNG_EBUSY`:: The configuration _cfg_ is already in use, and cannot be modified.
+`NNG_EINVAL`:: The contents of _path_ are invalid.
+`NNG_ENOENT`:: The file named by _path_ does not exist.
+`NNG_EPERM`:: The file named by _path_ cannot be opened.
 
 == SEE ALSO
 

@@ -27,7 +27,7 @@ int nng_tls_config_ca_cert(nni_tls_config *cfg, const char *chain,
 
 The `nng_tls_config_ca_chain()` function configures a certificate or
 certificate chain to be used when validating peers using the configuration
-'cfg'.
+_cfg_.
 
 NOTE: Certificates *must* be configured when using the authentication mode
 `NNG_TLS_AUTH_MODE_REQUIRED`.
@@ -35,12 +35,12 @@ NOTE: Certificates *must* be configured when using the authentication mode
 TIP: This function may be called multiple times, to add additional chains
 to a configuration, without affecting those added previously.
 
-The certificates located in 'chain' must be a zero-terminated C string in
+The certificates located in _chain_ must be a zero-terminated C string in
 https://tools.ietf.org/html/rfc7468[PEM] format.  Multiple certificates may
 appear concatenated together, with the leaf certificate listed first.
 together.
 
-The 'crl' may be NULL, or may also be a C string containing a PEM format
+The _crl_ may be `NULL`, or may also be a C string containing a PEM format
 certificate revocation list for the associated authority.
 
 == RETURN VALUES
@@ -50,8 +50,8 @@ This function returns 0 on success, and non-zero otherwise.
 == ERRORS
 
 `NNG_ENOMEM`:: Insufficient memory is available.
-`NNG_EBUSY`:: The configuration 'cfg' is already in use, and cannot be modified.
-`NNG_EINVAL`:: An invalid 'chain' or 'size' was supplied.
+`NNG_EBUSY`:: The configuration _cfg_ is already in use, and cannot be modified.
+`NNG_EINVAL`:: An invalid _chain_ or _crl_ was supplied.
 
 == SEE ALSO
 

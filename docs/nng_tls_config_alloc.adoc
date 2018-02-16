@@ -32,11 +32,11 @@ int nng_tls_config_alloc(nni_tls_config **cfgp, nng_tls_mode mode);
 The `nng_tls_config_alloc()` function creates a newly initialized
 https://tools.ietf.org/html/rfc5246[Transport Layer Security])
 configuration object, and stores a pointer to it in the value pointed
-to by 'cfgp'.
+to by _cfgp_.
 
 This object is initialized for use when acting as either a
 client (`NNG_TLS_MODE_CLIENT`) or as a server (`NNG_TLS_MODE_SERVER`),
-depending on the value of 'mode'.
+depending on the value of _mode_.
 
 A TLS object can be further modified by functions that set the security
 keys used, peeer certificates, protocol policies, and so forth.
@@ -56,8 +56,8 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
-`NNG_ENOMEM`:: Insufficient memory is available to allocate the object.
-`NNG_EINVAL`:: An invalid 'mode' was specified.
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_EINVAL`:: An invalid _mode_ was specified.
 
 == SEE ALSO
 
