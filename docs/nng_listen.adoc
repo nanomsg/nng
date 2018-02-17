@@ -72,11 +72,11 @@ This function returns 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
-<<nng_strerror#,nng_strerror(3)>>,
 <<nng_dial#,nng_dial(3)>>,
 <<nng_listener_close#,nng_listener_close(3)>>,
 <<nng_listener_create#,nng_listener_create(3)>>
 <<nng_listener_start#,nng_listener_start(3)>>,
+<<nng_strerror#,nng_strerror(3)>>,
 <<nng#,nng(7)>>
 
 == COPYRIGHT

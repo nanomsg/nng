@@ -62,13 +62,13 @@ This function returns 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
-<<nng_strerror#,nng_strerror(3)>>,
 <<nng_dialer_create#,nng_dialer_create(3)>>
 <<nng_listen#,nng_listen(3)>>,
 <<nng_listener_close#,nng_listener_close(3)>>,
 <<nng_listener_getopt#,nng_listener_getopt(3)>>,
 <<nng_listener_setopt#,nng_listener_setopt(3)>>,
 <<nng_listener_start#,nng_listener_start(3)>>,
+<<nng_strerror#,nng_strerror(3)>>,
 <<nng#,nng(7)>>
 
 == COPYRIGHT
