@@ -56,6 +56,11 @@ Listeners accept incoming connection requets, and dialers make them.
 
 |===
 |<<nng_dial#,nng_dial(3)>>|create and start dialer
+|<<nng_dialer_close#,nng_dialer_close(3)>>|close dialer
+|<<nng_dialer_create#,nng_dialer_create(3)>>|create dialer
+|<<nng_dialer_getopt#,nng_dialer_getopt(3)>>|get dialer option
+|<<nng_dialer_setopt#,nng_dialer_setopt(3)>>|set dialer option
+|<<nng_dialer_start#,nng_dialer_start(3)>>|start dialer
 |<<nng_listen#,nng_listen(3)>>|create and start listener
 |<<nng_listener_close#,nng_listener_close(3)>>|close listener
 |<<nng_listener_create#,nng_listener_create(3)>>|create listener
