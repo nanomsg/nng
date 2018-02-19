@@ -73,20 +73,8 @@ The following protocol-specific options are available.
 Protocol Headers
 ~~~~~~~~~~~~~~~~
 
-The _nng_rep_ protocol uses a _backtrace_ in the header.  This
-form uses an array of 32-bit big-endian identifiers, where the first
-element in the array
-identifies the local peer identifier to which the message will next be sent.
-This is a hop-by-hop header where each element in a path adds routing
-information to the end when sending a request, and when replying removes
-elements to obtain the next hop information.  The request ID is at the
-end of this header and is inserted into the header as its first element
-by the originating surveyor.  (Request IDs are distinguished from hops by
-having their high order bit set to one.  They are generated automatically
-and randomly when a request is first issued.)
-
-// TODO: Insert reference to RFC.
-
+The _nng_rep_ protocol uses a _backtrace_ in the header.  This is
+more fully documented in the <<nng_rep#,nng_rep(7)>> manual.
     
 SEE ALSO
 --------

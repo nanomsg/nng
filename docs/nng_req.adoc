@@ -95,22 +95,42 @@ The following protocol-specific options are available.
 
 === Protocol Headers
 
-The _nng_req_ protocol uses a _backtrace_ in the header.  This
-form uses an array of 32-bit big-endian identifiers, where the first
-element in the array
-identifies the local peer identifier to which the message will next be sent.
-This is a hop-by-hop header where each element in a path adds routing
-information to the end when sending a request, and when replying removes
-elements to obtain the next hop information.  The request ID is at the
-end of this header and is inserted into the header as its first element
-by the originating surveyor.  (Request IDs are distinguished from hops by
-having their high order bit set to one.  They are generated automatically
-and randomly when a request is first issued.)
+This protocol uses a _backtrace_ in the header.  This
+form uses a "stack" of 32-bit big-endian identifiers.  There *must* be
+at least one identifier, the __request ID__, which will be the last
+element in the array, and *must* have the most significant bit set.
+
+There may be additional __peer ID__s preceeding the request ID.  These
+will be distinguishable from the request ID by having their most
+significant bit clear.
+
+When a request message is received by a forwarding node (see
+<<nng_device#,nng_device(3)>>), the forwarding node prepends a
+32-bit peer ID (which *must* have the most significant bit clear),
+which is the forwarder's way of identifying the directly connected
+peer from which it received the message.  (This peer ID, except for the
+most significant bit, has meaning only to the forwarding node itself.)
+
+It may help to think of prepending a peer ID as "pushing" a peer ID onto the
+front of the stack of headers for the message.  (It will use the peer ID
+it popped from the front to determine the next intermediate destination
+for the reply.)
+
+When a reply message is created, it is created using the same headers
+that the request contained.
+
+A forwarding node can "pop" the peer ID it originally pushed on the
+message, stripping it from the front of the message as it does so.
+
+When the reply finally arrives back at the initiating requestor, it
+should have only a single element in the message, which will be the
+request ID it originally used for the request.
 
 // TODO: Insert reference to RFC.
 
 == SEE ALSO
 
+<<nng_device(3)#,nng_device(3)>>,
 <<nng#,nng(7)>>,
 <<nng_rep#,nng_rep(7)>>
 
