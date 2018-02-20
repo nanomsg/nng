@@ -521,7 +521,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_close - close a socket</p>
+<p>nng_close - close socket</p>
 </div>
 </div>
 <div id="content">
@@ -532,7 +532,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_close</span><span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">s</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_close</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -541,7 +541,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_close()</code> function closes the supplied socket, 's'.  Messages
+<p>The <code>nng_close()</code> function closes the supplied socket, <em>s</em>.  Messages
 that have been submitted for sending may be flushed or delivered,
 depending upon the transport and the setting of the <code>NNG_OPT_LINGER</code>
 option.</p>
@@ -568,7 +568,7 @@ call is executed may also return with an <code>NNG_EBADF</code> result.</p>
 <dl>
 <dt class="hdlist1"><code>NNG_EBADF</code></dt>
 <dd>
-<p>The socket is already closed or was never opened.</p>
+<p>The socket <em>s</em> is already closed or was never opened.</p>
 </dd>
 </dl>
 </div>
@@ -599,7 +599,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-02 23:43:43 UTC
+Last updated 2018-02-16 18:29:53 UTC
 </div>
 </div>
 </body>

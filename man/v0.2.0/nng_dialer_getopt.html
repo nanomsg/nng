@@ -13,7 +13,7 @@ layout: default
 Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] +
  +
 This document is supplied under the terms of the https://opensource.org/licenses/MIT[MIT License].">
-<title>nng_tls_config_ca_file(3)</title>
+<title>nng_dialer_getopt(3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -507,7 +507,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_tls_config_ca_file(3) Manual Page</h1>
+<h1>nng_dialer_getopt(3) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -521,7 +521,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_tls_config_ca_file - load certificate authority from file</p>
+<p>nng_dialer_getopt - get dialer option</p>
 </div>
 </div>
 <div id="content">
@@ -532,7 +532,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_tls_config_ca_file</span><span class="tok-p">(</span><span class="tok-n">nni_tls_config</span> <span class="tok-o">*</span><span class="tok-n">cfg</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">path</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">valszp</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt_int</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-o">*</span><span class="tok-n">ivalp</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt_ms</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_duration</span> <span class="tok-o">*</span><span class="tok-n">durp</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt_ptr</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">**</span><span class="tok-n">ptr</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_setopt_size</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">zp</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt_uint64</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-o">*</span><span class="tok-n">u64p</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -541,39 +546,72 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_tls_config_ca_file()</code> function configures the certificate authority
-certificate chain and optional revocation list by loading the certificates
-(and revocation list if present) from a single named file. The file must
-at least one X.509 certificate in <a href="https://tools.ietf.org/html/rfc7468">PEM</a>
-format, and may contain multiple such certificates, as well as zero or
-more PEM CRL objects.  This information is used to validate certificates
-that are presented by peers, when using the configuration <em>cfg</em>.</p>
+<p>The <code>nng_dialer_getopt()</code> functions are used to retrieve option values for
+the dialer <em>d</em>. The actual options that may be retrieved in this way
+vary, and are documented in the <a href="nng_getopt.html">nng_getopt(3)</a> manual.
+Additionally some transport-specific options are documented with the
+transports themselves.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Certificates <strong>must</strong> be configured when using the authentication mode
-<code>NNG_TLS_AUTH_MODE_REQUIRED</code>.
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>In all of these forms, the option <em>opt</em> is retrieved from the dialer <em>d</em>.</p>
 </div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-This function may be called multiple times, to add additional chains
-to a configuration, without affecting those added previously.
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>The details of the type, size, and semantics of the option will depend
+on the actual option, and will be documented with the option itself.</p>
+</div>
+<div class="paragraph">
+<p>The first form of this function, <code>nng_dialer_getopt()</code>, can be used to
+retrieve the value of any option.  It is untyped.  The caller must store
+a pointer to a buffer to receive the value in <em>val</em>, and the size of the
+buffer shall be stored at the location referenced by <em>valszp</em>.</p>
+</div>
+<div class="paragraph">
+<p>When the function returns, the actual size of the data copied (or that
+would have been copied if sufficient space were present) is stored at
+the location referened by <em>valszp</em>.  If the caller&#8217;s buffer is not large
+enough to hold the entire object, then the copy is truncated.  Therefore
+the caller should validate that the returned size in <em>valszp</em> does not
+exceed the original buffer size to check for truncation.</p>
+</div>
+<div class="paragraph">
+<p>It is acceptable to pass <code>NULL</code> for <em>val</em> if the value in <em>valszp</em> is zero.
+This can be used to determine the size of the buffer needed to receive
+the object.</p>
+</div>
+<div class="paragraph">
+<p>Generally, it will be easier to use one of the typed forms instead.  Note
+however that no validation that the option is actually of the associated
+type is performed, so the caller must take care to use the <strong>correct</strong> typed
+form.</p>
+</div>
+<div class="paragraph">
+<p>The second form, <code>nng_dialer_getopt_int()</code>,
+is for options which take an integer (or boolean).  The value will
+be stored at <em>ivalp</em>.  For booleans the value will be eiher 0 (false) or 1 (true).</p>
+</div>
+<div class="paragraph">
+<p>The third form, <code>nng_dialer_getopt_ms()</code>, is used to retrieve time durations
+(such as timeouts), stored in <em>durp</em> as a number of milliseconds.
+(The special value <code>NNG_DUR_INFINITE</code> means an infinite amount of time, and
+the special value <code>NNG_DUR_DEFAULT</code> means a context-specific default.)</p>
+</div>
+<div class="paragraph">
+<p>The fourth form, <code>nng_dialer_getopt_ptr()</code>, is used to retrieve a
+pointer <em>ptr</em> to structured data.  The data referenced by <em>ptr</em> is
+generally managed using other functions.
+Note that this form is somewhat special in that the object is generally
+not copied, but instead the <strong>pointer</strong> to the object is copied.</p>
+</div>
+<div class="paragraph">
+<p>The fifth form, <code>nng_dialer_getopt_size()</code>, is used to retrieve a size
+into the pointer <em>zp</em>, typically for buffer sizes, message maximum sizes, and
+similar options.</p>
+</div>
+<div class="paragraph">
+<p>The sixth form, <code>nng_diale_getopt_uint64()</code>, is used to retrieve a
+64-bit unsigned value into the value referenced by <em>u64p</em>.
+This is typically used for options
+related to identifiers, network numbers, and similar.</p>
 </div>
 </div>
 </div>
@@ -590,25 +628,17 @@ to a configuration, without affecting those added previously.
 <div class="sectionbody">
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
+<dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
 <dd>
-<p>Insufficient memory is available.</p>
+<p>Parameter <em>d</em> does not refer to an open dialer.</p>
 </dd>
-<dt class="hdlist1"><code>NNG_EBUSY</code></dt>
+<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
 <dd>
-<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
+<p>The option <em>opt</em> is not supported.</p>
 </dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
+<dt class="hdlist1"><code>NNG_EWRITEONLY</code></dt>
 <dd>
-<p>The contents of <em>path</em> are invalid or do not contain a valid PEM certificate.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOENT</code></dt>
-<dd>
-<p>The file <em>path</em> does not exist.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EPERM</code></dt>
-<dd>
-<p>The file <em>path</em> is not readable.</p>
+<p>The option <em>opt</em> is write-only.</p>
 </dd>
 </dl>
 </div>
@@ -618,10 +648,11 @@ to a configuration, without affecting those added previously.
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng_strerror.html">nng_strerror(3)</a>,
-<a href="nng_tls_config_alloc.html">nng_tls_config_alloc(3)</a>,
-<a href="nng_tls_config_auth_mode.html">nng_tls_config_auth_mode(3)</a>,
-<a href="nng_tls_config_ca_chain.html">nng_tls_config_ca_chain(3)</a>,
+<p><a href="nng_listen.html">nng_listen(3)</a>,
+<a href="nng_dialer_create.html">nng_dialer_create(3)</a>
+<a href="nng_dialer_setopt.html">nng_dialer_setopt(3)</a>
+<a href="nng_getopt.html">nng_getopt(3)</a>,
+<a href="nng_strerror.html">nng_strerror(3)</a>,
 <a href="nng.html">nng(7)</a></p>
 </div>
 </div>
@@ -641,7 +672,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-16 04:49:28 UTC
+Last updated 2018-02-17 04:03:11 UTC
 </div>
 </div>
 </body>

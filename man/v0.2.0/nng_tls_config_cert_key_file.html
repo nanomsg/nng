@@ -543,19 +543,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>The <code>nng_tls_config_cert_key_file()</code> function loads a certificate (or
-certificate chain) and a private key from the file named by 'path'.</p>
+certificate chain) and a private key from the file named by <em>path</em>.</p>
 </div>
 <div class="paragraph">
 <p>The file must contain both the <a href="https://tools.ietf.org/html/rfc7468">PEM</a>
 encoded certificate and associated private key, which will be used when
-establishing TLS sessions using 'cfg'.  It may contain additional certificates
+establishing TLS sessions using <em>cfg</em>.  It may contain additional certificates
 leading to a validation chain, with the leaf certificate first.
 There is no need to include the self-signed root, as the peer
 will need to have that already in order to perform it&#8217;s own validation.</p>
 </div>
 <div class="paragraph">
 <p>The private key may be encrypted with a password, in which can be supplied in
-'pass'.  The value NULL should be supplied for 'pass' if the key is not
+<em>pass</em>.  The value <code>NULL</code> should be supplied for <em>pass</em> if the key is not
 encrypted.</p>
 </div>
 <div class="paragraph">
@@ -584,19 +584,19 @@ to be used for different cryptographic algorithms.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EBUSY</code></dt>
 <dd>
-<p>The configuration 'cfg' is already in use, and cannot be modified.</p>
+<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EINVAL</code></dt>
 <dd>
-<p>The contents of 'path' are invalid.</p>
+<p>The contents of <em>path</em> are invalid.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_ENOENT</code></dt>
 <dd>
-<p>The file named by 'path' does not exist.</p>
+<p>The file named by <em>path</em> does not exist.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EPERM</code></dt>
 <dd>
-<p>The file named by 'path' cannot be opened.</p>
+<p>The file named by <em>path</em> cannot be opened.</p>
 </dd>
 </dl>
 </div>
@@ -628,7 +628,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-02 23:43:43 UTC
+Last updated 2018-02-16 04:49:28 UTC
 </div>
 </div>
 </body>

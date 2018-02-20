@@ -13,7 +13,7 @@ layout: default
 Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] +
  +
 This document is supplied under the terms of the https://opensource.org/licenses/MIT[MIT License].">
-<title>nng_tls_config_ca_file(3)</title>
+<title>nng_listener_start(3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -507,7 +507,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_tls_config_ca_file(3) Manual Page</h1>
+<h1>nng_listener_start(3) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -521,7 +521,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_tls_config_ca_file - load certificate authority from file</p>
+<p>nng_listener_start - start listener</p>
 </div>
 </div>
 <div id="content">
@@ -532,7 +532,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_tls_config_ca_file</span><span class="tok-p">(</span><span class="tok-n">nni_tls_config</span> <span class="tok-o">*</span><span class="tok-n">cfg</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">path</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_listener_start</span><span class="tok-p">(</span><span class="tok-n">nng_listener</span> <span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">flags</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -541,26 +541,21 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_tls_config_ca_file()</code> function configures the certificate authority
-certificate chain and optional revocation list by loading the certificates
-(and revocation list if present) from a single named file. The file must
-at least one X.509 certificate in <a href="https://tools.ietf.org/html/rfc7468">PEM</a>
-format, and may contain multiple such certificates, as well as zero or
-more PEM CRL objects.  This information is used to validate certificates
-that are presented by peers, when using the configuration <em>cfg</em>.</p>
+<p>The <code>nng_listener_start()</code> function starts the listener <em>l</em>.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Certificates <strong>must</strong> be configured when using the authentication mode
-<code>NNG_TLS_AUTH_MODE_REQUIRED</code>.
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>This causes the listener to bind to the address it was created with,
+and to start accepting connections from remote
+dialers.  Each new connection results in a pipe, which will be attached
+to the listener&#8217;s socket.</p>
+</div>
+<div class="paragraph">
+<p>Normally, the act of "binding" to it&#8217;s address is done
+synchronously, including any necessary name resolution.  As a result,
+a failure, such as if the address is already in use, will be returned
+immediately.  However, if the special value <code>NNG_FLAG_NONBLOCK</code> is
+supplied in <em>flags</em>, then this is done asynchronously; furthermore any
+failure to bind will be periodically reattempted in the background.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -569,11 +564,15 @@ Certificates <strong>must</strong> be configured when using the authentication m
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-This function may be called multiple times, to add additional chains
-to a configuration, without affecting those added previously.
+While <code>NNG_FLAG_NONBLOCK</code> can help an application be more resilient,
+it also generally makes diagnosing failures somewhat more difficult.
 </td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>Once a listener has started, it is generally not possible to change
+it&#8217;s configuration.</p>
 </div>
 </div>
 </div>
@@ -590,25 +589,13 @@ to a configuration, without affecting those added previously.
 <div class="sectionbody">
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
+<dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
 <dd>
-<p>Insufficient memory is available.</p>
+<p>Parameter <em>l</em> does not refer to an open listener.</p>
 </dd>
-<dt class="hdlist1"><code>NNG_EBUSY</code></dt>
+<dt class="hdlist1"><code>NNG_ESTATE</code></dt>
 <dd>
-<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
-<p>The contents of <em>path</em> are invalid or do not contain a valid PEM certificate.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOENT</code></dt>
-<dd>
-<p>The file <em>path</em> does not exist.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EPERM</code></dt>
-<dd>
-<p>The file <em>path</em> is not readable.</p>
+<p>The listener <em>l</em> is already started.</p>
 </dd>
 </dl>
 </div>
@@ -618,10 +605,9 @@ to a configuration, without affecting those added previously.
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng_strerror.html">nng_strerror(3)</a>,
-<a href="nng_tls_config_alloc.html">nng_tls_config_alloc(3)</a>,
-<a href="nng_tls_config_auth_mode.html">nng_tls_config_auth_mode(3)</a>,
-<a href="nng_tls_config_ca_chain.html">nng_tls_config_ca_chain(3)</a>,
+<p><a href="nng_listen.html">nng_listen(3)</a>,
+<a href="nng_listener_create.html">nng_listener_create(3)</a>
+<a href="nng_strerror.html">nng_strerror(3)</a>,
 <a href="nng.html">nng(7)</a></p>
 </div>
 </div>
@@ -641,7 +627,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-16 04:49:28 UTC
+Last updated 2018-02-17 03:11:06 UTC
 </div>
 </div>
 </body>

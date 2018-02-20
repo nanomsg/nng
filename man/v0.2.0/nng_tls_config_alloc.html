@@ -549,12 +549,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The <code>nng_tls_config_alloc()</code> function creates a newly initialized
 <a href="https://tools.ietf.org/html/rfc5246">Transport Layer Security</a>)
 configuration object, and stores a pointer to it in the value pointed
-to by 'cfgp'.</p>
+to by <em>cfgp</em>.</p>
 </div>
 <div class="paragraph">
 <p>This object is initialized for use when acting as either a
 client (<code>NNG_TLS_MODE_CLIENT</code>) or as a server (<code>NNG_TLS_MODE_SERVER</code>),
-depending on the value of 'mode'.</p>
+depending on the value of <em>mode</em>.</p>
 </div>
 <div class="paragraph">
 <p>A TLS object can be further modified by functions that set the security
@@ -587,11 +587,11 @@ further changes to the configuration will result in <code>NNG_EBUSY</code>.</p>
 <dl>
 <dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
 <dd>
-<p>Insufficient memory is available to allocate the object.</p>
+<p>Insufficient memory is available.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EINVAL</code></dt>
 <dd>
-<p>An invalid 'mode' was specified.</p>
+<p>An invalid <em>mode</em> was specified.</p>
 </dd>
 </dl>
 </div>
@@ -626,7 +626,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-02 23:43:43 UTC
+Last updated 2018-02-16 04:49:28 UTC
 </div>
 </div>
 </body>

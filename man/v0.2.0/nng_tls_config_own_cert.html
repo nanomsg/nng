@@ -542,16 +542,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_tls_config_own_cert()</code> function configures a certificate 'cert'
-identifying the local side of a TLS connection used with 'cfg', along with an
-associated private or secret key 'key'.  The certificate may be
+<p>The <code>nng_tls_config_own_cert()</code> function configures a certificate <em>cert</em>
+identifying the local side of a TLS connection used with <em>cfg</em>, along with an
+associated private or secret key <em>key</em>.  The certificate may be
 a chain, with the leaf signer first and the root at the end.  The
 self-signed certificate at the end can be omitted. (The client should already
 have it, and will have to in order to validate this certificate anyway).</p>
 </div>
 <div class="paragraph">
-<p>The 'key' may be encrypted with a password, in which can be supplied in
-'pass'.  The value NULL should be supplied for 'pass' if the key is not
+<p>The <em>key</em> may be encrypted with a password, in which can be supplied in
+<em>pass</em>.  The value <code>NULL</code> should be supplied for <em>pass</em> if the key is not
 encrypted.</p>
 </div>
 <div class="paragraph">
@@ -560,7 +560,7 @@ same configuration.  This can be useful for specifying different parameters
 to be used for different cryptographic algorithms.</p>
 </div>
 <div class="paragraph">
-<p>The certificate located in 'cert' and 'key' must be NUL terminated C
+<p>The certificate located in <em>cert</em> and <em>key</em> must be NUL (<code>\0</code>) terminated C
 strings containing
 <a href="https://tools.ietf.org/html/rfc7468">PEM</a> formatted material.</p>
 </div>
@@ -585,11 +585,11 @@ strings containing
 </dd>
 <dt class="hdlist1"><code>NNG_EBUSY</code></dt>
 <dd>
-<p>The configuration 'cfg' is already in use, and cannot be modified.</p>
+<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EINVAL</code></dt>
 <dd>
-<p>An invalid 'cert' or 'size' was supplied.</p>
+<p>An invalid <em>cert</em> or <em>key</em> was supplied.</p>
 </dd>
 </dl>
 </div>
@@ -621,7 +621,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-02 23:43:43 UTC
+Last updated 2018-02-16 04:49:28 UTC
 </div>
 </div>
 </body>

@@ -544,7 +544,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>The <code>nng_tls_config_ca_chain()</code> function configures a certificate or
 certificate chain to be used when validating peers using the configuration
-'cfg'.</p>
+<em>cfg</em>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -573,13 +573,13 @@ to a configuration, without affecting those added previously.
 </table>
 </div>
 <div class="paragraph">
-<p>The certificates located in 'chain' must be a zero-terminated C string in
+<p>The certificates located in <em>chain</em> must be a zero-terminated C string in
 <a href="https://tools.ietf.org/html/rfc7468">PEM</a> format.  Multiple certificates may
 appear concatenated together, with the leaf certificate listed first.
 together.</p>
 </div>
 <div class="paragraph">
-<p>The 'crl' may be NULL, or may also be a C string containing a PEM format
+<p>The <em>crl</em> may be <code>NULL</code>, or may also be a C string containing a PEM format
 certificate revocation list for the associated authority.</p>
 </div>
 </div>
@@ -603,11 +603,11 @@ certificate revocation list for the associated authority.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EBUSY</code></dt>
 <dd>
-<p>The configuration 'cfg' is already in use, and cannot be modified.</p>
+<p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EINVAL</code></dt>
 <dd>
-<p>An invalid 'chain' or 'size' was supplied.</p>
+<p>An invalid <em>chain</em> or <em>crl</em> was supplied.</p>
 </dd>
 </dl>
 </div>
@@ -640,7 +640,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-02 23:43:43 UTC
+Last updated 2018-02-16 04:49:28 UTC
 </div>
 </div>
 </body>

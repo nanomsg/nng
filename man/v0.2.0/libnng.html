@@ -516,6 +516,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <ul class="sectlevel2">
 <li><a href="#_common_functions">Common Functions</a></li>
 <li><a href="#_socket_functions">Socket Functions</a></li>
+<li><a href="#_connection_management">Connection Management</a></li>
 <li><a href="#_message_handling_functions">Message Handling Functions</a></li>
 <li><a href="#_asynchronous_operations">Asynchronous Operations</a></li>
 <li><a href="#_protocols">Protocols</a></li>
@@ -596,23 +597,19 @@ intended to solve common communication problems in distributed applications.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_close.html">nng_close(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">close a socket</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_closeall.html">nng_closeall(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">close all open sockets</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close socket</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dial.html">nng_dial(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">create and start a dialer</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start dialer</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_getopt.html">nng_getopt(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">get a socket option</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get socket option</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listen.html">nng_listen(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">create and start a listener</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start listener</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recv.html">nng_recv(3)</a></p></td>
@@ -624,7 +621,70 @@ intended to solve common communication problems in distributed applications.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_setopt.html">nng_setopt(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">set a socket option</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set socket option</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_connection_management">Connection Management</h3>
+<div class="paragraph">
+<p>The following functions are used with either listeners, or dialers.
+Listeners accept incoming connection requets, and dialers make them.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dial.html">nng_dial(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_close.html">nng_dialer_close(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_create.html">nng_dialer_create(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_getopt.html">nng_dialer_getopt(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get dialer option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_setopt.html">nng_dialer_setopt(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set dialer option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_start.html">nng_dialer_start(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">start dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listen.html">nng_listen(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_close.html">nng_listener_close(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_create.html">nng_listener_create(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_getopt.html">nng_listener_getopt(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get listener option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_setopt.html">nng_listener_setopt(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set listener option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_start.html">nng_listener_start(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">start listener</p></td>
 </tr>
 </tbody>
 </table>
@@ -1367,7 +1427,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-07 00:07:10 UTC
+Last updated 2018-02-17 04:03:11 UTC
 </div>
 </div>
 </body>

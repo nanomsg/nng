@@ -664,17 +664,42 @@ number of hops.</p>
 <div class="sect2">
 <h3 id="_protocol_headers">Protocol Headers</h3>
 <div class="paragraph">
-<p>The <em>nng_req</em> protocol uses a <em>backtrace</em> in the header.  This
-form uses an array of 32-bit big-endian identifiers, where the first
-element in the array
-identifies the local peer identifier to which the message will next be sent.
-This is a hop-by-hop header where each element in a path adds routing
-information to the end when sending a request, and when replying removes
-elements to obtain the next hop information.  The request ID is at the
-end of this header and is inserted into the header as its first element
-by the originating surveyor.  (Request IDs are distinguished from hops by
-having their high order bit set to one.  They are generated automatically
-and randomly when a request is first issued.)</p>
+<p>This protocol uses a <em>backtrace</em> in the header.  This
+form uses a "stack" of 32-bit big-endian identifiers.  There <strong>must</strong> be
+at least one identifier, the <em>request ID</em>, which will be the last
+element in the array, and <strong>must</strong> have the most significant bit set.</p>
+</div>
+<div class="paragraph">
+<p>There may be additional <em>peer ID</em>s preceeding the request ID.  These
+will be distinguishable from the request ID by having their most
+significant bit clear.</p>
+</div>
+<div class="paragraph">
+<p>When a request message is received by a forwarding node (see
+<a href="nng_device.html">nng_device(3)</a>), the forwarding node prepends a
+32-bit peer ID (which <strong>must</strong> have the most significant bit clear),
+which is the forwarder&#8217;s way of identifying the directly connected
+peer from which it received the message.  (This peer ID, except for the
+most significant bit, has meaning only to the forwarding node itself.)</p>
+</div>
+<div class="paragraph">
+<p>It may help to think of prepending a peer ID as "pushing" a peer ID onto the
+front of the stack of headers for the message.  (It will use the peer ID
+it popped from the front to determine the next intermediate destination
+for the reply.)</p>
+</div>
+<div class="paragraph">
+<p>When a reply message is created, it is created using the same headers
+that the request contained.</p>
+</div>
+<div class="paragraph">
+<p>A forwarding node can "pop" the peer ID it originally pushed on the
+message, stripping it from the front of the message as it does so.</p>
+</div>
+<div class="paragraph">
+<p>When the reply finally arrives back at the initiating requestor, it
+should have only a single element in the message, which will be the
+request ID it originally used for the request.</p>
 </div>
 </div>
 </div>
@@ -683,7 +708,8 @@ and randomly when a request is first issued.)</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng.html">nng(7)</a>,
+<p><a href="#nng_device(3)<mark>">nng_device(3)</a>,
+<a href="#nng</mark>">nng(7)</a>,
 <a href="nng_rep.html">nng_rep(7)</a></p>
 </div>
 </div>
@@ -703,7 +729,7 @@ This document is supplied under the terms of the <a href="https://opensource.org
 <div id="footer">
 <div id="footer-text">
 nng 0.2.0<br>
-Last updated 2018-02-02 23:43:43 UTC
+Last updated 2018-02-19 19:28:20 UTC
 </div>
 </div>
 </body>
