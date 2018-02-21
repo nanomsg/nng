@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -12,8 +12,9 @@
 #include "nng.h"
 #include "protocol/pipeline0/pull.h"
 #include "protocol/pipeline0/push.h"
-#include "stubs.h"
+#include "supplemental/util/platform.h"
 
+#include "stubs.h"
 #include <string.h>
 
 #define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))

@@ -1194,6 +1194,7 @@ nng_stat_value(nng_stat *stat)
 }
 #endif
 
+#if 0
 // These routines exist as utility functions, exposing some of our
 // "guts" to the external world for the purposes of test code and
 // bundled utilities. They should not be considered part of our public
@@ -1237,6 +1238,7 @@ nng_thread_destroy(void *arg)
 
 	NNI_FREE_STRUCT(thr);
 }
+#endif
 
 int
 nng_url_parse(nng_url **result, const char *ustr)

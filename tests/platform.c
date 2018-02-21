@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,8 +9,10 @@
 //
 
 #include "convey.h"
-#include "core/nng_impl.h"
+
 #include "nng.h"
+#include "supplemental/util/platform.h"
+
 #include "stubs.h"
 
 // Add is for testing threads.
@@ -24,8 +26,8 @@ add(void *arg)
 struct notifyarg {
 	int          did;
 	nng_duration when;
-	nni_mtx      mx;
-	nni_cv       cv;
+	nng_mtx *    mx;
+	nng_cv *     cv;
 };
 
 void
@@ -34,15 +36,13 @@ notifyafter(void *arg)
 	struct notifyarg *na = arg;
 
 	nng_msleep(na->when);
-	nni_mtx_lock(&na->mx);
+	nng_mtx_lock(na->mx);
 	na->did = 1;
-	nni_cv_wake(&na->cv);
-	nni_mtx_unlock(&na->mx);
+	nng_cv_wake(na->cv);
+	nng_mtx_unlock(na->mx);
 }
 
 TestMain("Platform Operations", {
-
-	nni_init();
 
 	// This is required for anything else to work
 	Convey("The clock works", {
@@ -58,10 +58,10 @@ TestMain("Platform Operations", {
 			uint64_t msend;
 			int      usdelta;
 			int      msdelta;
-			nni_time usend;
-			nni_time usnow = nni_clock();
+			nng_time usend;
+			nng_time usnow = nng_clock();
 			nng_msleep(200);
-			usend = nni_clock();
+			usend = nng_clock();
 			msend = getms();
 
 			So(usend > usnow);
@@ -74,94 +74,42 @@ TestMain("Platform Operations", {
 		});
 	});
 	Convey("Mutexes work", {
-		static nni_mtx mx;
+		static nng_mtx *mx;
 
-		nni_mtx_init(&mx);
+		So(nng_mtx_alloc(&mx) == 0);
+		Reset({ nng_mtx_free(mx); });
 
 		Convey("We can lock a mutex", {
-			nni_mtx_lock(&mx);
+			nng_mtx_lock(mx);
 			So(1);
 			Convey("And we can unlock it", {
-				nni_mtx_unlock(&mx);
+				nng_mtx_unlock(mx);
 				So(1);
 				Convey("And then lock it again", {
-					nni_mtx_lock(&mx);
+					nng_mtx_lock(mx);
 					So(1);
-					nni_mtx_unlock(&mx);
+					nng_mtx_unlock(mx);
 					So(1);
 				});
 			});
 		});
-		Convey("We can finalize it", { nni_mtx_fini(&mx); });
 	});
 
 	Convey("Threads work", {
-		static nni_thr thr;
-		int            val = 0;
-		int            rv;
+		static nng_thread *thr;
+		int                val = 0;
+		int                rv;
 
 		Convey("We can create threads", {
-			rv = nni_thr_init(&thr, add, &val);
+			rv = nng_thread_create(&thr, add, &val);
 			So(rv == 0);
-			nni_thr_run(&thr);
 
-			Reset({ nni_thr_fini(&thr); });
+			Reset({ nng_thread_destroy(thr); });
 
 			Convey("It ran", {
 				nng_msleep(50); // for context switch
 				So(val == 1);
 			});
-		});
-	});
-	Convey("Condition variables work", {
-		static struct notifyarg arg;
-		static nni_thr          thr;
-
-		nni_mtx_init(&arg.mx);
-		nni_cv_init(&arg.cv, &arg.mx);
-		So(nni_thr_init(&thr, notifyafter, &arg) == 0);
-
-		Reset({
-			nni_cv_fini(&arg.cv);
-			nni_mtx_fini(&arg.mx);
-			nni_thr_fini(&thr);
-		});
-
-		Convey("Notification works", {
-			arg.did  = 0;
-			arg.when = 10;
-			nni_thr_run(&thr);
-
-			nni_mtx_lock(&arg.mx);
-			if (!arg.did) {
-				nni_cv_wait(&arg.cv);
-			}
-			nni_mtx_unlock(&arg.mx);
-			nni_thr_wait(&thr);
-			So(arg.did == 1);
-		});
-
-		Convey("Timeout works", {
-			arg.did  = 0;
-			arg.when = 200;
-			nni_thr_run(&thr);
-			nni_mtx_lock(&arg.mx);
-			if (!arg.did) {
-				nni_cv_until(&arg.cv, nni_clock() + 10);
-			}
-			So(arg.did == 0);
-			nni_mtx_unlock(&arg.mx);
-			nni_thr_wait(&thr);
-		});
-		Convey("Not running works", {
-			arg.did  = 0;
-			arg.when = 1;
-			nni_mtx_lock(&arg.mx);
-			if (!arg.did) {
-				nni_cv_until(&arg.cv, nni_clock() + 10);
-			}
-			So(arg.did == 0);
-			nni_mtx_unlock(&arg.mx);
 		});
 	});
 })

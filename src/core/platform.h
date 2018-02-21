@@ -145,12 +145,12 @@ extern void nni_plat_thr_fini(nni_plat_thr *);
 // Clock Support
 //
 
-// nn_plat_clock returns a number of microseconds since some arbitrary time
+// nn_plat_clock returns a number of milliseconds since some arbitrary time
 // in the past.  The values returned by nni_clock must use the same base
 // as the times used in nni_plat_cond_waituntil.  The nni_plat_clock() must
-// returnvalues > 0, and must return values smaller than 2^63.  (We could relax
-// this last constraint, but there is no reason to, and leaves us the option
-// of using negative values for other purposes in the future.)
+// return values > 0, and must return values smaller than 2^63.  (We could
+// relax this last constraint, but there is no reason to, and leaves us the
+// option of using negative values for other purposes in the future.)
 extern nni_time nni_plat_clock(void);
 
 // nni_plat_sleep sleeps for the specified number of milliseconds (at least).

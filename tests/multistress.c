@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -22,6 +22,7 @@
 #include "protocol/reqrep0/req.h"
 #include "protocol/survey0/respond.h"
 #include "protocol/survey0/survey.h"
+#include "supplemental/util/platform.h"
 #include "transport/inproc/inproc.h"
 #include "transport/ipc/ipc.h"
 #include "transport/tcp/tcp.h"
@@ -69,7 +70,7 @@ int    allocaddrs;
 typedef struct test_case {
 	nng_socket  socket;
 	const char *name;
-	void *      thr;
+	nng_thread *thr;
 	int         nrecv;
 	int         nsend;
 	int         nfail;

@@ -536,22 +536,6 @@ NNG_DECL int64_t nng_stat_value(nng_stat *);
 // which means that messages from one side are forwarded to the other.
 NNG_DECL int nng_device(nng_socket, nng_socket);
 
-// The following functions are not intrinsic to nanomsg, and so do not
-// represent our public API.  Avoid their use in other applications.
-
-#ifdef NNG_PRIVATE
-
-// Sleep for specified msecs.
-NNG_DECL void nng_msleep(nng_duration);
-
-// Create and start a thread.
-NNG_DECL int nng_thread_create(void **, void (*)(void *), void *);
-
-// Destroy a thread (waiting for it to complete.)
-NNG_DECL void nng_thread_destroy(void *);
-
-#endif // NNG_PRIVATE
-
 // Symbol name and visibility.  TBD.  The only symbols that really should
 // be directly exported to runtimes IMO are the option symbols.  And frankly
 // they have enough special logic around them that it might be best not to
@@ -985,7 +969,7 @@ NNG_DECL int nng_http_res_set_data(nng_http_res *, const void *, size_t);
 // probably set the content-type header.
 NNG_DECL int nng_http_res_copy_data(nng_http_res *, const void *, size_t);
 
-// An nng_http_conn represents an underlyinjg "connection".  It may be
+// An nng_http_conn represents an underlying "connection".  It may be
 // a TCP channel, or a TLS channel, but the main thing is that this is
 // normally only used for exchanging HTTP requests and responses.
 typedef struct nng_http_conn nng_http_conn;

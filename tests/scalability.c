@@ -13,6 +13,7 @@
 
 #include "protocol/reqrep0/rep.h"
 #include "protocol/reqrep0/req.h"
+#include "supplemental/util/platform.h"
 #include "stubs.h"
 
 #include <string.h>
@@ -21,7 +22,7 @@ static int nclients = 200;
 
 static char *addr = "inproc:///atscale";
 nng_socket   rep;
-void *       server;
+nng_thread *server;
 
 void
 serve(void *arg)

@@ -1,8 +1,9 @@
 #
-#   Copyright (c) 2012-2013 Martin Sustrik  All rights reserved.
-#   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
-#   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
-#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
+# Copyright 2018 Capitar IT Group BV <info@capitar.com>
+# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright (c) 2012-2013 Martin Sustrik  All rights reserved.
+# Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
+# Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -129,6 +130,7 @@ add_subdirectory(supplemental/base64)
 add_subdirectory(supplemental/http)
 add_subdirectory(supplemental/sha1)
 add_subdirectory(supplemental/tls)
+add_subdirectory(supplemental/util)
 add_subdirectory(supplemental/websocket)
 
 add_subdirectory(protocol/bus0)
@@ -152,6 +154,7 @@ include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src
 add_definitions(${NNG_DEFINES})
 
 # Provide same folder structure in IDE as on disk
+# XXX: Consider replacing this with source_group(TREE...)
 foreach (f ${NNG_SOURCES})
     # Get the path of the file relative to source directory
     if (IS_ABSOLUTE "${f}")
