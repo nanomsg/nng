@@ -74,7 +74,7 @@ Protocol Headers
 ~~~~~~~~~~~~~~~~
 
 The _nng_rep_ protocol uses a _backtrace_ in the header.  This is
-more fully documented in the <<nng_rep#,nng_rep(7)>> manual.
+more fully documented in the <<nng_req#,nng_req(7)>> manual.
     
 SEE ALSO
 --------
