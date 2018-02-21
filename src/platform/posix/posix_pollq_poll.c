@@ -283,9 +283,7 @@ nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 	nni_posix_pollq *pq = node->pq;
 	int              oevents;
 
-	if (pq == NULL) {
-		return;
-	}
+	NNI_ASSERT(pq != NULL);
 
 	nni_mtx_lock(&pq->mtx);
 	oevents = node->events;

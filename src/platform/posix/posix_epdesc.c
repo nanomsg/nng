@@ -18,6 +18,7 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <poll.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -36,7 +37,7 @@ struct nni_posix_epdesc {
 	nni_posix_pollq_node    node;
 	nni_list                connectq;
 	nni_list                acceptq;
-	int                     closed;
+	bool                    closed;
 	struct sockaddr_storage locaddr;
 	struct sockaddr_storage remaddr;
 	socklen_t               loclen;
@@ -131,9 +132,6 @@ nni_posix_epdesc_doaccept(nni_posix_epdesc *ed)
 	int      newfd;
 
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
-// We could argue that knowing the remote peer address would
-// be nice.  But frankly if someone wants it, they can just
-// do getpeername().
 
 #ifdef NNG_USE_ACCEPT4
 		newfd = accept4(ed->node.fd, NULL, NULL, SOCK_CLOEXEC);
@@ -201,7 +199,7 @@ nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 	struct sockaddr_un *sun;
 	int                 fd;
 
-	ed->closed = 1;
+	ed->closed = true;
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
 		nni_posix_epdesc_finish(aio, NNG_ECLOSED, 0);
 	}
@@ -250,7 +248,9 @@ nni_posix_epdesc_cb(void *arg)
 	if (!nni_list_empty(&ed->acceptq)) {
 		events |= POLLIN;
 	}
-	nni_posix_pollq_arm(&ed->node, events);
+	if ((!ed->closed) && (events != 0)) {
+		nni_posix_pollq_arm(&ed->node, events);
+	}
 	nni_mtx_unlock(&ed->mtx);
 }
 
@@ -433,6 +433,8 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp)
 	ed->node.index = 0;
 	ed->node.cb    = nni_posix_epdesc_cb;
 	ed->node.data  = ed;
+	ed->node.fd    = -1;
+	ed->closed     = false;
 
 	nni_aio_list_init(&ed->connectq);
 	nni_aio_list_init(&ed->acceptq);

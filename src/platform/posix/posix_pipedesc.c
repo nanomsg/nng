@@ -17,6 +17,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
@@ -31,7 +32,7 @@ struct nni_posix_pipedesc {
 	nni_posix_pollq_node node;
 	nni_list             readq;
 	nni_list             writeq;
-	int                  closed;
+	bool                 closed;
 	nni_mtx              mtx;
 };
 
@@ -48,7 +49,7 @@ nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
 	nni_aio *aio;
 	int      fd;
 
-	pd->closed = 1;
+	pd->closed = true;
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
 		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 	}
@@ -213,7 +214,7 @@ nni_posix_pipedesc_cb(void *arg)
 		if (!nni_list_empty(&pd->readq)) {
 			events |= POLLIN;
 		}
-		if (events) {
+		if ((!pd->closed) && (events != 0)) {
 			nni_posix_pollq_arm(&pd->node, events);
 		}
 	}
@@ -341,7 +342,7 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 	// one.  For now we just have a global pollq.  Note that by tying
 	// the pd to a single pollq we may get some kind of cache warmth.
 
-	pd->closed    = 0;
+	pd->closed    = false;
 	pd->node.fd   = fd;
 	pd->node.cb   = nni_posix_pipedesc_cb;
 	pd->node.data = pd;
