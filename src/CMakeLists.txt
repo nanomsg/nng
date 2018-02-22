@@ -126,6 +126,8 @@ if (NNG_PLATFORM_WINDOWS)
         )
 endif()
 
+set (NNG_HEADERS nng.h)
+
 add_subdirectory(supplemental/base64)
 add_subdirectory(supplemental/http)
 add_subdirectory(supplemental/sha1)
@@ -178,35 +180,39 @@ target_compile_definitions(${PROJECT_NAME}_static PUBLIC -DNNG_STATIC_LIB)
 # Shared library
 add_library (${PROJECT_NAME} SHARED ${NNG_SOURCES})
 target_compile_definitions(${PROJECT_NAME} PRIVATE -DNNG_SHARED_LIB)
-#set_target_properties (${PROJECT_NAME} PROPERTIES SOVERSION "${NNG_ABI_VERSION}")
+
+set_target_properties (${PROJECT_NAME}
+	PROPERTIES SOVERSION "${NNG_ABI_VERSION}")
 
 # Set library outputs same as top-level project binary outputs
-set_target_properties (${PROJECT_NAME} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-set_target_properties (${PROJECT_NAME} PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-set_target_properties (${PROJECT_NAME} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}_static
+	PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}_static
+	PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}_static
+	PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-set_target_properties (${PROJECT_NAME}_static PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-set_target_properties (${PROJECT_NAME}_static PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-set_target_properties (${PROJECT_NAME}_static PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
+set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}_static
+	PROPERTIES FRAMEWORK OFF)
 
 target_link_libraries (${PROJECT_NAME} ${NNG_REQUIRED_LIBRARIES})
-if( THREADS_HAVE_PTHREAD_ARG)
-    add_definitions (-pthread)
-endif()
-if (CMAKE_THREAD_LIBS_INIT)
-    target_link_libraries (${PROJECT_NAME} "${CMAKE_THREAD_LIBS_INIT}")
-endif()
+target_link_libraries (${PROJECT_NAME} Threads::Threads)
 
-# pkg-config file
-#configure_file (pkgconfig.in ${PROJECT_NAME}.pc @ONLY)
-#install (
-#    FILES ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}.pc
-#    DESTINATION ${CMAKE_INSTALL_LIBDIR}/pkgconfig)
 install (TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_static
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT tools
 )
+
+# Install the header files.  It would be much better if we could use
+# the PUBLIC_HEADER facility, but it stupidly flattens the directories.
+foreach (f ${NNG_HEADERS})
+	get_filename_component(d ${f} DIRECTORY)
+	install(FILES ${f}
+		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nng/${d}
+		COMPONENT headers)
+endforeach()
 
 # Promote settings to parent
 set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} PARENT_SCOPE)

@@ -1,6 +1,6 @@
 #
-# Copyright 2017 Garrett D'Amore <garrett@damore.org>
-# Copyright 2017 Capitar IT Group BV <info@capitar.com>
+# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -45,7 +45,8 @@ if (NNG_TRANSPORT_ZEROTIER)
     message(STATUS "Found ZeroTier at ${NNG_LIBZTCORE}")
 
     set(ZT_SOURCES transport/zerotier/zerotier.c transport/zerotier/zerotier.h)
-    install(FILES zerotier.h DESTINATION include/nng/transport/zerotier)
+    set(ZT_HEADERS transport/zerotier/zerotier.h)
 endif()
 
 set(NNG_SOURCES ${NNG_SOURCES} ${ZT_SOURCES} PARENT_SCOPE)
+set(NNG_HEADERS ${NNG_HEADERS} ${ZT_HEADERS} PARENT_SCOPE)

@@ -1,5 +1,4 @@
 #
-#   Copyright 2017 Garrett D'Amore <garrett@damore.org>
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
@@ -90,7 +89,6 @@ endif()
 
 # User-defined options.
 
-#option (NNG_STATIC_LIB "Build static library instead of shared library." OFF)
 option (NNG_ENABLE_DOC "Enable building documentation." ON)
 option (NNG_TESTS "Build and run tests" ON)
 option (NNG_TOOLS "Build extra tools" OFF)
@@ -323,10 +321,6 @@ else ()
     add_definitions (-DPLATFORM_POSIX)
 endif ()
 
-if (NNG_STATIC_LIB)
-    add_definitions (-DNNG_DECL=extern)
-endif ()
-
 macro (nng_check_func SYM DEF)
     check_function_exists (${SYM} ${DEF})
     if (${DEF})
@@ -508,9 +502,9 @@ if (NNG_ENABLE_DOC)
 
 endif ()
 
-install (TARGETS LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install (TARGETS ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
-install (FILES src/nng.h DESTINATION include/nng)
+#install (TARGETS LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+#install (TARGETS ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR})
+#install (FILES src/nng.h DESTINATION include/nng)
 
 if (NNG_ENABLE_NNGCAT)
     install (TARGETS nngcat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
@@ -518,8 +512,16 @@ endif()
 
 set (CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set (CPACK_PACKAGE_VERSION ${NNG_PACKAGE_VERSION})
+set (CPACK_PACKAGE_CONTACT "nanomsg@freelists.org")
+set (CPACK_PACKAGE_VENDOR "nanomsg.org")
+set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "nanomsg next generation library")
 set (CPACK_SOURCE_GENERATOR "TBZ2;TGZ;ZIP")
 set (CPACK_SOURCE_IGNORE_FILES "/build/;/.git/;~$;${CPACK_SOURCE_IGNORE_FILES}")
-set (CPACK_SOURCE_PACKAGE_FILE_NAME "${PROJECT_NAME}-${NNG_PACKAGE_VERSION}")
+set (CPACK_SOURCE_PACKAGE_FILE_NAME
+	"${PROJECT_NAME}-${NNG_PACKAGE_VERSION}-src")
+set (CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)
+set (CPACK_PACKAGE_INSTALL_DIRECTORY "nng")
+set (CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${NNG_PACKAGE_VERSION}")
+
 add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 include (CPack)

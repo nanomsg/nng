@@ -12,12 +12,13 @@
 
 if (NNG_PROTO_SURVEYOR0)
     set(SURV0_SOURCES protocol/survey0/survey.c protocol/survey0/survey.h)
-    install(FILES survey.h DESTINATION include/nng/protocol/survey0)
+    set(SURV0_HEADERS protocol/survey0/survey.h)
 endif()
 
 if (NNG_PROTO_RESPONDENT0)
     set(RESP0_SOURCES protocol/survey0/respond.c protocol/survey0/respond.h)
-    install(FILES respond.h DESTINATION include/nng/protocol/survey0)
+    set(RESP0_HEADERS protocol/survey0/respond.h)
 endif()
 
 set(NNG_SOURCES ${NNG_SOURCES} ${SURV0_SOURCES} ${RESP0_SOURCES} PARENT_SCOPE)
+set(NNG_HEADERS ${NNG_HEADERS} ${SURV0_HEADERS} ${RESP0_HEADERS} PARENT_SCOPE)

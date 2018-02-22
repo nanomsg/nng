@@ -1,6 +1,6 @@
 #
-# Copyright 2017 Garrett D'Amore <garrett@damore.org>
-# Copyright 2017 Capitar IT Group BV <info@capitar.com>
+# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -12,12 +12,13 @@
 
 if (NNG_PROTO_REQ0)
     set(REQ0_SOURCES protocol/reqrep0/req.c protocol/reqrep0/req.h)
-    install(FILES req.h DESTINATION include/nng/protocol/reqrep0)
+    set(REQ0_HEADERS protocol/reqrep0/req.h)
 endif()
 
 if (NNG_PROTO_REP0)
     set(REP0_SOURCES protocol/reqrep0/rep.c protocol/reqrep0/rep.h)
-    install(FILES rep.h DESTINATION include/nng/protocol/reqrep0)
+    set(REP0_HEADERS protocol/reqrep0/rep.h)
 endif()
 
 set(NNG_SOURCES ${NNG_SOURCES} ${REQ0_SOURCES} ${REP0_SOURCES} PARENT_SCOPE)
+set(NNG_HEADERS ${NNG_HEADERS} ${REQ0_HEADERS} ${REP0_HEADERS} PARENT_SCOPE)
