@@ -18,6 +18,7 @@ nng_http_res_alloc_error - allocate HTTP error response
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 int nng_http_res_alloc_error(nng_http_res **resp, uint16_t status);
 -----------

@@ -17,6 +17,7 @@
 
 // Basic HTTP client tests.
 #include "core/nng_impl.h"
+#include "supplemental/http/http.h"
 #include "supplemental/sha1/sha1.h"
 
 const uint8_t utf8_sha1sum[20] = { 0x54, 0xf3, 0xb8, 0xbb, 0xfe, 0xda, 0x6f,

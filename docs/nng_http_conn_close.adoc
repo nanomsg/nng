@@ -18,6 +18,7 @@ nng_http_conn_close - close HTTP connection
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 void nng_http_conn_close(nng_http_conn *conn);
 -----------

@@ -18,6 +18,7 @@ nng_http_handler_set_host - set host for HTTP handler
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 int nng_http_handler_set_host(nng_http_handler *handler, const char *host);
 -----------

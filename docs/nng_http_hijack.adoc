@@ -18,6 +18,7 @@ nng_http_hijack - hijack HTTP server connection
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 void nng_http_hijack(nng_http_conn *conn);
 -----------

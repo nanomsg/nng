@@ -10,6 +10,7 @@
 
 #include "core/nng_impl.h"
 #include "http.h"
+#include "http_api.h"
 
 // Symbols in this file are "public" versions of the HTTP API.
 // These are suitable for exposure to applications.

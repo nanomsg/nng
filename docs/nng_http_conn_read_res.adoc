@@ -18,6 +18,7 @@ nng_http_conn_read_res - read HTTP response
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 void nng_http_conn_read_res(nng_http_conn *conn, nng_http_res *res,
     nng_aio *aio);

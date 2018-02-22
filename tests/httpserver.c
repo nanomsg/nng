@@ -17,6 +17,7 @@
 
 // Basic HTTP server tests.
 #include "core/nng_impl.h"
+#include "supplemental/http/http.h"
 
 const char *doc1 = "<html><body>Someone <b>is</b> home!</body</html>";
 const char *doc2 = "This is a text file.";

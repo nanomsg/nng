@@ -18,6 +18,7 @@ nng_http_req_add_header - add HTTP request header
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 int nng_http_req_add_header(nng_http_req *req, const char *key,
     const char *val);

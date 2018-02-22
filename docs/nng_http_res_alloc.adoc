@@ -18,6 +18,7 @@ nng_http_res_alloc - allocate HTTP response structure
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 int nng_http_res_alloc(nng_http_res **resp);
 -----------

@@ -18,6 +18,7 @@ nng_http_conn_read_all - read all from HTTP connection
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 void nng_http_conn_read_all(nng_http_conn *conn, nng_aio *aio);
 -----------

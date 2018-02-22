@@ -16,7 +16,7 @@
 #include "core/nng_impl.h"
 #include "supplemental/tls/tls.h"
 
-#include "http.h"
+#include "http_api.h"
 
 static int  http_server_sys_init(void);
 static void http_server_sys_fini(void);

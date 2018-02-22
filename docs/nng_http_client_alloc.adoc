@@ -18,6 +18,7 @@ nng_http_client_alloc - allocate HTTP client
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 int nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
 -----------

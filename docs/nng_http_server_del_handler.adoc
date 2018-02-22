@@ -18,6 +18,7 @@ nng_http_server_del_handler - delete HTTP server handler
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 int nng_http_server_del_hanlder(nng_http_server *s, nng_http_handler *h);
 -----------

@@ -14,7 +14,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "supplemental/http/http.h"
+#include "supplemental/http/http_api.h"
 #include "supplemental/tls/tls.h"
 #include "supplemental/websocket/websocket.h"
 

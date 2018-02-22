@@ -14,7 +14,7 @@
 #include "core/nng_impl.h"
 #include "supplemental/tls/tls.h"
 
-#include "http.h"
+#include "http_api.h"
 
 // We insist that individual headers fit in 8K.
 // If you need more than that, you need something we can't do.

@@ -9,7 +9,6 @@
 //
 
 #include "core/nng_impl.h"
-#include "supplemental/http/http.h"
 
 // This file provides the "public" API.  This is a thin wrapper around
 // internal API functions.  We use the public prefix instead of internal,

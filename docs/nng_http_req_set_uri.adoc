@@ -18,6 +18,7 @@ nng_http_req_set_uri - set HTTP request URI
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 int nng_http_req_set_uri(nng_http_req *req, const char *uri);
 -----------

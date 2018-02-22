@@ -16,7 +16,7 @@
 #include "core/nng_impl.h"
 #include "supplemental/tls/tls.h"
 
-#include "http.h"
+#include "http_api.h"
 
 struct nng_http_client {
 	nni_list         aios;

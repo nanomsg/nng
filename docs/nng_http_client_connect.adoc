@@ -18,6 +18,7 @@ nng_http_client_connect - establish HTTP client connection
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
 
 void nng_http_client_connect(nng_http_client *client, nng_aio *aio);
 -----------
