@@ -1,0 +1,83 @@
+= nng_recv(3)
+:doctype: manpage
+:manmanual: nng
+:mansource: nng
+:manvolnum: 3
+:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
+            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
+            {blank} + \
+            This document is supplied under the terms of the \
+            https://opensource.org/licenses/MIT[MIT License].
+
+== NAME
+
+nng_recv - recv data
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+int nng_recv(nng_socket s, void *data, size_t *sizep int flags);
+-----------
+
+== DESCRIPTION
+
+The `nng_recv()` receives a message.
+
+If the special flag `NNG_FLAG_ALLOC` is not specified, then the caller must
+set _data_ to a buffer to receive the message body content, and must store
+the size of that buffer at the location pointed to by _sizep_.  When the
+function returns, if it is successful, the size at _sizep_ will be updated with
+the actual message body length copied into _data_.
+
+If the special flag `NNG_FLAG_ALLOC` is present, then a "zero-copy" mode is
+used.  In this case the caller must set the value of _data_ to the location
+of another pointer (of type `void *`), and the _sizep_ pointer must be set
+to a location to receive the size of the message body.  The function will then
+allocate a message buffer (as if by <<nng_alloc#,nng_alloc(3)>>), fill it with
+the message body, and store it at the address referenced by _data_, and update
+the size referenced by _sizep_.  When this flag is present, the caller assumes
+responsibility for disposing of the received buffer either by the function
+<<nng_free#,nng_free(3)>> or reusing the message for sending (with the same
+size) via <<nng_send#nng_send(3)>>.
+
+NOTE: The semantics of what receiving a message means vary from protocol to
+protocol, so examination of the protocol documentation is encouraged.  (For
+example, with an <<nng_req#,nng_req(3)>> socket a message may only be received
+after a request has been sent, and an <<nng_sub#,nng_sub(3)>> socket
+may only receive messages corresponding to topics to which it has subscribed.)
+Furthermore, some protocols may not support receiving data at all, such as
+<<nng_pub#,nng_pub(3)>>.
+
+TIP: The `NNG_FLAG_ALLOC` flag can be used to reduce data copies, thereby
+increasing performance, particularly if the buffer is reused to send
+a response using the same flag.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_EAGAIN`:: The socket _s_ cannot accept data for sending.
+`NNG_ECLOSED`:: The socket _s_ is not open.
+`NNG_EINVAL`:: An invalid set of _flags_ was specified.
+`NNG_EMSGSIZE`:: The received message did not fit in the size provided.
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol for socket _s_ does not support receiving.
+`NNG_ESTATE`:: The socket _s_ cannot receive data in this state.
+
+== SEE ALSO
+
+<<nng_alloc#,nng_alloc(3)>>,
+<<nng_free#,nng_free(3)>>,
+<<nng_recvmsg#,nng_recvmsg(3)>>,
+<<nng_send#,nng_send(3)>>,
+<<nng_strerror#,nng_strerror(3)>>,
+<<nng#,nng(7)>>
+
+== COPYRIGHT
+
+{copyright}
