@@ -522,23 +522,25 @@ nni_ipc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	nni_mtx_init(&ep->mtx);
 
 	sz                           = sizeof(ep->sa.s_un.s_path.sa_path);
 	ep->sa.s_un.s_path.sa_family = NNG_AF_IPC;
 
 	if (nni_strlcpy(ep->sa.s_un.s_path.sa_path, url->u_path, sz) >= sz) {
-		NNI_FREE_STRUCT(ep);
+		nni_ipc_ep_fini(ep);
 		return (NNG_EADDRINVAL);
 	}
 
 	if ((rv = nni_plat_ipc_ep_init(&ep->iep, &ep->sa, mode)) != 0) {
-		NNI_FREE_STRUCT(ep);
+		nni_ipc_ep_fini(ep);
 		return (rv);
 	}
 
-	nni_mtx_init(&ep->mtx);
-	nni_aio_init(&ep->aio, nni_ipc_ep_cb, ep);
-
+	if ((rv = nni_aio_init(&ep->aio, nni_ipc_ep_cb, ep)) != 0) {
+		nni_ipc_ep_fini(ep);
+		return (rv);
+	}
 	ep->proto = nni_sock_proto(sock);
 
 	*epp = ep;
