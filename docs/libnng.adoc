@@ -30,7 +30,6 @@ The following common functions exist in _libnng_.
 
 |===
 |<<nng_alloc#,nng_alloc(3)>>|allocate memory
-|<<nng_dial#,nng_dial(3)>>|create and start a dialer
 |<<nng_free#,nng_free(3)>>|free memory
 |<<nng_strerror#,nng_strerror(3)>>|return an error description
 |===
@@ -162,14 +161,16 @@ The following functions are used to construct a socket with a specific
 protocol:
 
 |===
-| <<nng_bus#,nng_bus_open(3)>>|open a bus socket
-| <<nng_pair#,nng_pair_open(3)>>|open a pair socket
-| <<nng_pub#,nng_pub_open(3)>>|open a pub socket
-| <<nng_rep#,nng_rep_open(3)>>|open a rep socket
-| <<nng_req#,nng_req_open(3)>>|open a req socket
-| <<nng_respondent#,nng_respondent_open(3)>>|open a respondent socket
-| <<nng_sub#,nng_sub_open(3)>>|open a sub socket
-| <<nng_surveyor#,nng_surveyor_open(3)>>|open a surveyor socket
+|<<nng_bus#,nng_bus_open(3)>>|open a bus socket
+|<<nng_pair#,nng_pair_open(3)>>|open a pair socket
+|<<nng_pub#,nng_pub_open(3)>>|open a pub socket
+|<<nng_pull#,nng_pull_open(3)>>|open a pull socket
+|<<nng_push#,nng_push_open(3)>>|open a push socket
+|<<nng_rep#,nng_rep_open(3)>>|open a rep socket
+|<<nng_req#,nng_req_open(3)>>|open a req socket
+|<<nng_respondent#,nng_respondent_open(3)>>|open a respondent socket
+|<<nng_sub#,nng_sub_open(3)>>|open a sub socket
+|<<nng_surveyor#,nng_surveyor_open(3)>>|open a surveyor socket
 |===
 
 === Transports
@@ -192,9 +193,9 @@ Common functionality is supplied for parsing and handling
 universal resource locators (URLS).
 
 |===
-| <<nng_url_clone#,nng_url_clone(3)>>|clone URL structure
-| <<nng_url_free#,nng_url_free(3)>>|free URL structure
-| <<nng_url_parse#,nng_url_parse(3)>>|create URL structure from string
+|<<nng_url_clone#,nng_url_clone(3)>>|clone URL structure
+|<<nng_url_free#,nng_url_free(3)>>|free URL structure
+|<<nng_url_parse#,nng_url_parse(3)>>|create URL structure from string
 |===
 
 
@@ -211,44 +212,44 @@ The following functions are used to work with HTTP requests, responses,
 and connections.
 
 |===
-| <<nng_http_conn_close#,nng_http_conn_close(3)>>|close HTTP connection
-| <<nng_http_conn_read#,nng_http_conn_read(3)>>|read from HTTP connection
-| <<nng_http_conn_read_all#,nng_http_conn_read_all(3)>>|read all from HTTP connection
-| <<nng_http_conn_read_req#,nng_http_conn_read_req(3)>>|read HTTP request
-| <<nng_http_conn_read_res#,nng_http_conn_read_req(3)>>|read HTTP response
-| <<nng_http_conn_write#,nng_http_conn_write(3)>>|write to HTTP connection
-| <<nng_http_conn_write_all#,nng_http_conn_write_all(3)>>|write all to HTTP connection
-| <<nng_http_conn_write_req#,nng_http_conn_write(3)>>|write HTTP request
-| <<nng_http_conn_write_res#,nng_http_conn_write(3)>>|write HTTP response
-| <<nng_http_req_add_header#,nng_http_req_add_header(3)>>|add HTTP request header
-| <<nng_http_req_alloc#,nng_http_req_alloc(3)>>|allocate HTTP request structure
-| <<nng_http_req_copy_data#,nng_http_req_copy_data(3)>>|copy HTTP request body
-| <<nng_http_req_del_header#,nng_http_req_del_header(3)>>|delete HTTP request header
-| <<nng_http_req_free#,nng_http_req_free(3)>>|free HTTP request structure
-| <<nng_http_req_get_header#,nng_http_req_get_header(3)>>|return HTTP request header
-| <<nng_http_req_get_method#,nng_http_req_get_method(3)>>|return HTTP request method
-| <<nng_http_req_get_uri#,nng_http_req_get_uri(3)>>|return HTTP request URI
-| <<nng_http_req_get_version#,nng_http_req_get_version(3)>>|return HTTP request protocol version
-| <<nng_http_req_set_data#,nng_http_req_set_data(3)>>|set HTTP request body
-| <<nng_http_req_set_header#,nng_http_req_set_header(3)>>|set HTTP request header
-| <<nng_http_req_set_method#,nng_http_req_set_method(3)>>|set HTTP request method
-| <<nng_http_req_set_uri#,nng_http_req_set_uri(3)>>|set HTTP request URI
-| <<nng_http_req_set_version#,nng_http_req_set_version(3)>>|set HTTP request protocol version
-| <<nng_http_res_add_header#,nng_http_res_add_header(3)>>|add HTTP response header
-| <<nng_http_res_alloc#,nng_http_res_alloc(3)>>|allocate HTTP response structure
-| <<nng_http_res_alloc_error#,nng_http_res_alloc_error(3)>>|allocate HTTP error response
-| <<nng_http_res_copy_data#,nng_http_res_copy_data(3)>>|copy HTTP response body
-| <<nng_http_res_del_header#,nng_http_res_del_header(3)>>|delete HTTP response header
-| <<nng_http_res_free#,nng_http_res_free(3)>>|free HTTP response structure
-| <<nng_http_res_set_data#,nng_http_res_set_data(3)>>|set HTTP response body
-| <<nng_http_res_get_header#,nng_http_res_get_header(3)>>|return HTTP response header
-| <<nng_http_res_get_reason#,nng_http_res_get_reason(3)>>|return HTTP response reason
-| <<nng_http_res_get_status#,nng_http_res_get_status(3)>>|return HTTP response status
-| <<nng_http_res_get_version#,nng_http_res_get_version(3)>>|return HTTP response protocol version
-| <<nng_http_res_set_header#,nng_http_res_set_header(3)>>|set HTTP response header
-| <<nng_http_res_set_reason#,nng_http_res_set_reason(3)>>|set HTTP response reason
-| <<nng_http_res_set_status#,nng_http_res_set_status(3)>>|set HTTP response status
-| <<nng_http_res_set_version#,nng_http_res_set_version(3)>>|set HTTP response protocol version
+|<<nng_http_conn_close#,nng_http_conn_close(3)>>|close HTTP connection
+|<<nng_http_conn_read#,nng_http_conn_read(3)>>|read from HTTP connection
+|<<nng_http_conn_read_all#,nng_http_conn_read_all(3)>>|read all from HTTP connection
+|<<nng_http_conn_read_req#,nng_http_conn_read_req(3)>>|read HTTP request
+|<<nng_http_conn_read_res#,nng_http_conn_read_req(3)>>|read HTTP response
+|<<nng_http_conn_write#,nng_http_conn_write(3)>>|write to HTTP connection
+|<<nng_http_conn_write_all#,nng_http_conn_write_all(3)>>|write all to HTTP connection
+|<<nng_http_conn_write_req#,nng_http_conn_write(3)>>|write HTTP request
+|<<nng_http_conn_write_res#,nng_http_conn_write(3)>>|write HTTP response
+|<<nng_http_req_add_header#,nng_http_req_add_header(3)>>|add HTTP request header
+|<<nng_http_req_alloc#,nng_http_req_alloc(3)>>|allocate HTTP request structure
+|<<nng_http_req_copy_data#,nng_http_req_copy_data(3)>>|copy HTTP request body
+|<<nng_http_req_del_header#,nng_http_req_del_header(3)>>|delete HTTP request header
+|<<nng_http_req_free#,nng_http_req_free(3)>>|free HTTP request structure
+|<<nng_http_req_get_header#,nng_http_req_get_header(3)>>|return HTTP request header
+|<<nng_http_req_get_method#,nng_http_req_get_method(3)>>|return HTTP request method
+|<<nng_http_req_get_uri#,nng_http_req_get_uri(3)>>|return HTTP request URI
+|<<nng_http_req_get_version#,nng_http_req_get_version(3)>>|return HTTP request protocol version
+|<<nng_http_req_set_data#,nng_http_req_set_data(3)>>|set HTTP request body
+|<<nng_http_req_set_header#,nng_http_req_set_header(3)>>|set HTTP request header
+|<<nng_http_req_set_method#,nng_http_req_set_method(3)>>|set HTTP request method
+|<<nng_http_req_set_uri#,nng_http_req_set_uri(3)>>|set HTTP request URI
+|<<nng_http_req_set_version#,nng_http_req_set_version(3)>>|set HTTP request protocol version
+|<<nng_http_res_add_header#,nng_http_res_add_header(3)>>|add HTTP response header
+|<<nng_http_res_alloc#,nng_http_res_alloc(3)>>|allocate HTTP response structure
+|<<nng_http_res_alloc_error#,nng_http_res_alloc_error(3)>>|allocate HTTP error response
+|<<nng_http_res_copy_data#,nng_http_res_copy_data(3)>>|copy HTTP response body
+|<<nng_http_res_del_header#,nng_http_res_del_header(3)>>|delete HTTP response header
+|<<nng_http_res_free#,nng_http_res_free(3)>>|free HTTP response structure
+|<<nng_http_res_set_data#,nng_http_res_set_data(3)>>|set HTTP response body
+|<<nng_http_res_get_header#,nng_http_res_get_header(3)>>|return HTTP response header
+|<<nng_http_res_get_reason#,nng_http_res_get_reason(3)>>|return HTTP response reason
+|<<nng_http_res_get_status#,nng_http_res_get_status(3)>>|return HTTP response status
+|<<nng_http_res_get_version#,nng_http_res_get_version(3)>>|return HTTP response protocol version
+|<<nng_http_res_set_header#,nng_http_res_set_header(3)>>|set HTTP response header
+|<<nng_http_res_set_reason#,nng_http_res_set_reason(3)>>|set HTTP response reason
+|<<nng_http_res_set_status#,nng_http_res_set_status(3)>>|set HTTP response status
+|<<nng_http_res_set_version#,nng_http_res_set_version(3)>>|set HTTP response protocol version
 |===
 
 ==== HTTP Client Functions
@@ -268,22 +269,22 @@ These functions are intended for use with HTTP client applications.
 These functions are intended for use with HTTP server applications.
 
 |===
-| <<nng_http_handler_alloc#,nng_http_handler_alloc(3)>>|allocate HTTP server handler
-| <<nng_http_handler_free#,nng_http_handler_free(3)>>|free HTTP server handler
-| <<nng_http_handler_get_data#,nng_http_handler_get_data(3)>>|return extra data for HTTP handler
-| <<nng_http_handler_set_data#,nng_http_handler_set_data(3)>>|set extra data for HTTP handler
-| <<nng_http_handler_set_host#,nng_http_handler_set_host(3)>>|set host for HTTP handler
-| <<nng_http_handler_set_method#,nng_http_handler_set_method(3)>>|set HTTP handler method
-| <<nng_http_handler_set_tree#,nng_http_handler_set_tree(3)>>|set HTTP handler to match trees
-| <<nng_http_hijack#,nng_http_hijack(3)>>|hijack HTTP server connection
-| <<nng_http_server_add_handler#,nng_http_server_add_handler(3)>>|add HTTP server handler
-| <<nng_http_server_del_handler#,nng_http_server_del_handler(3)>>|delete HTTP server handler
-| <<nng_http_server_get_tls#,nng_http_server_get_tls(3)>>|get HTTP server TLS configuration
-| <<nng_http_server_hold#,nng_http_server_get_tls(3)>>|get and hold HTTP server instance
-| <<nng_http_server_release#,nng_http_server_get_tls(3)>>|release HTTP server instance
-| <<nng_http_server_set_tls#,nng_http_server_set_tls(3)>>|set HTTP server TLS configuration
-| <<nng_http_server_start#,nng_http_server_start(3)>>|start HTTP server
-| <<nng_http_server_stop#,nng_http_server_stop(3)>>|stop HTTP server
+|<<nng_http_handler_alloc#,nng_http_handler_alloc(3)>>|allocate HTTP server handler
+|<<nng_http_handler_free#,nng_http_handler_free(3)>>|free HTTP server handler
+|<<nng_http_handler_get_data#,nng_http_handler_get_data(3)>>|return extra data for HTTP handler
+|<<nng_http_handler_set_data#,nng_http_handler_set_data(3)>>|set extra data for HTTP handler
+|<<nng_http_handler_set_host#,nng_http_handler_set_host(3)>>|set host for HTTP handler
+|<<nng_http_handler_set_method#,nng_http_handler_set_method(3)>>|set HTTP handler method
+|<<nng_http_handler_set_tree#,nng_http_handler_set_tree(3)>>|set HTTP handler to match trees
+|<<nng_http_hijack#,nng_http_hijack(3)>>|hijack HTTP server connection
+|<<nng_http_server_add_handler#,nng_http_server_add_handler(3)>>|add HTTP server handler
+|<<nng_http_server_del_handler#,nng_http_server_del_handler(3)>>|delete HTTP server handler
+|<<nng_http_server_get_tls#,nng_http_server_get_tls(3)>>|get HTTP server TLS configuration
+|<<nng_http_server_hold#,nng_http_server_get_tls(3)>>|get and hold HTTP server instance
+|<<nng_http_server_release#,nng_http_server_get_tls(3)>>|release HTTP server instance
+|<<nng_http_server_set_tls#,nng_http_server_set_tls(3)>>|set HTTP server TLS configuration
+|<<nng_http_server_start#,nng_http_server_start(3)>>|start HTTP server
+|<<nng_http_server_stop#,nng_http_server_stop(3)>>|stop HTTP server
 |===
 
 === TLS Configuration Objects
@@ -295,14 +296,14 @@ NOTE: These functions will only be present if the library has been built
 with TLS support.
 
 |===
-| <<nng_tls_config_auth_alloc#,nng_tls_config_alloc(3)>>|allocate TLS configuration
-| <<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>>|set authentication mode
-| <<nng_tls_config_ca_chain#,nng_tls_config_ca_chain(3)>>|set certificate authority chain
-| <<nng_tls_config_ca_file#,nng_tls_config_ca_file(3)>>|load certificate authority from file
-| <<nng_tls_config_cert_key_file#,nng_tls_config_cert_key_file_cert(3)>>|load own certificate and key from file
-| <<nng_tls_config_own_cert#,nng_tls_config_own_cert(3)>>|set own certificate and key
-| <<nng_tls_config_free#,nng_tls_config_free(3)>>|free TLS configuration
-| <<nng_tls_config_server_name#,nng_tls_config_server_name(3)>>|set remote server name
+|<<nng_tls_config_auth_alloc#,nng_tls_config_alloc(3)>>|allocate TLS configuration
+|<<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>>|set authentication mode
+|<<nng_tls_config_ca_chain#,nng_tls_config_ca_chain(3)>>|set certificate authority chain
+|<<nng_tls_config_ca_file#,nng_tls_config_ca_file(3)>>|load certificate authority from file
+|<<nng_tls_config_cert_key_file#,nng_tls_config_cert_key_file_cert(3)>>|load own certificate and key from file
+|<<nng_tls_config_own_cert#,nng_tls_config_own_cert(3)>>|set own certificate and key
+|<<nng_tls_config_free#,nng_tls_config_free(3)>>|free TLS configuration
+|<<nng_tls_config_server_name#,nng_tls_config_server_name(3)>>|set remote server name
 |===
 
 
