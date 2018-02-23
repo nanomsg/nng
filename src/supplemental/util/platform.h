@@ -20,12 +20,12 @@
 // APIs or Windows APIs, then by all means please feel free to simply
 // ignore this.
 
+#include <stddef.h>
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#include <stddef.h>
-#include <stdint.h>
 
 // nng_time represents an absolute time since some arbitrary point in the
 // past, measured in milliseconds.  The values are always positive.

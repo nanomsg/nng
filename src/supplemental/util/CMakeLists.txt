@@ -8,8 +8,8 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-set(SUPP_PLATFORM_SOURCES supplemental/util/platform.c)
-set(SUPP_PLATFORM_HEADERS supplemental/util/platform.h)
+set(SUPP_UTIL_SOURCES supplemental/util/options.c supplemental/util/platform.c)
+set(SUPP_UTIL_HEADERS supplemental/util/options.h supplemental/util/platform.h)
 
-set(NNG_SOURCES ${NNG_SOURCES} ${SUPP_PLATFORM_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${SUPP_PLATFORM_HEADERS} PARENT_SCOPE)
+set(NNG_SOURCES ${NNG_SOURCES} ${SUPP_UTIL_SOURCES} PARENT_SCOPE)
+set(NNG_HEADERS ${NNG_HEADERS} ${SUPP_UTIL_HEADERS} PARENT_SCOPE)
