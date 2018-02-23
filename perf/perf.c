@@ -18,10 +18,10 @@
 
 #include "supplemental/util/platform.h"
 
-#if defined(NNG_ENABLE_PAIR1)
+#if defined(NNG_HAVE_PAIR1)
 #include "protocol/pair1/pair.h"
 
-#elif defined(NNG_ENABLE_PAIR0)
+#elif defined(NNG_HAVE_PAIR0)
 #include "protocol/pair0/pair.h"
 
 #else
@@ -220,7 +220,7 @@ do_inproc(void *args)
 void
 do_inproc_lat(int argc, char **argv)
 {
-	nng_thread         *thr;
+	nng_thread *       thr;
 	struct inproc_args ia;
 	int                rv;
 
@@ -247,7 +247,7 @@ do_inproc_lat(int argc, char **argv)
 void
 do_inproc_thr(int argc, char **argv)
 {
-	nng_thread         *thr;
+	nng_thread *       thr;
 	struct inproc_args ia;
 	int                rv;
 
