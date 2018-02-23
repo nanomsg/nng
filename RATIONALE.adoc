@@ -1,7 +1,6 @@
-Rational: Or why am I bothering to rewrite nanomsg?
-===================================================
+= Rational: Or why am I bothering to rewrite nanomsg?
 Garrett D'Amore <garrett@damore.org>
-v0.1, October 18, 2017
+v0.2, February 22, 2018
 
 
 NOTE: You might want to review
@@ -9,37 +8,47 @@ NOTE: You might want to review
       for nanomsg vs. ZeroMQ.
 
 
-Background
-----------
+== Background
 
-I became involved in the nanomsg community back in 2014, when
-I wrote https://github.com/go-mangos/mangos[mangos] as a pure Golang
-implementation of the wire protocols behind nanomsg.  I did that work
-because I was dissatisfied with ZeroMQ's licensing and C++ baggage, and
-I needed something that would work with Golang on Solaris, which at the time
-lacked support for cgo (so I could not just use an FFI binding.)  This gave
-me a lot of detail about the internals of nanomsg and the SP protocols.
+I became involved in the
+http://www.nanomsg.org[nanomsg] community back in 2014, when
+I wrote https://github.com/go-mangos/mangos[mangos] as a pure
+http://www.golang.org[Go] implementation of the wire protocols behind
+_nanomsg_.  I did that work because I was dissatisfied with the
+http://zeromq.org[_ZeroMQ_] licensing model
+and the {cpp} baggage that came with it. I also needed something that would
+work with _Go_ on http://www.illumos.org[illumos], which at the time
+lacked support for `cgo` (so I could not just use an FFI binding.)
+
+
 At the time, it was the only alternate implementation those protocols.
+Writing _mangos_ gave me a lot of detail about the internals of _nanomsg_ and
+the SP protocols.
 
-It would not be wrong to say that one of the goals of mangos was to teach
-me about golang.  It was my first non-trivial golang project.
+It would not be wrong to say that one of the goals of _mangos_ was to teach
+me about _Go_.  It was my first non-trivial _Go_ project.
 
-While working with mangos, I wound up implementing a number of additional
+While working with _mangos_, I wound up implementing a number of additional
 features, such as a TLS transport, the ability to bind to wild card ports,
 and the ability to determine more information about the sender of a message.
 This was incredibly useful in a number of projects.
 
-I initially looked at nanomsg itself, as I wanted to add a TLS transport
+I initially looked at _nanomsg_ itself, as I wanted to add a TLS transport
 to it, and I needed to make some bug fixes (for protocol bugs for example),
 and so forth.
 
+== Lessons Learned
 
-State Machine Madness
----------------------
+Perhaps it might be better to state that there were a number of opportunities
+to learn from the lessons of _nanomsg_, as well as lessons we learned while
+building _nng_ itself.
 
-What I ran into was a challenging mess of state machines.
-nanomsg has dozens of state machines, many of which feed into others,
-such that tracking flow through the state machines is incredibly painful.
+=== State Machine Madness
+
+What I ran into in _nanomsg_, when attempting to improve it, was a
+challenging mess of state machines. _nanomsg_ has dozens of state machines,
+many of which feed into others, such that tracking flow through the state
+machines is incredibly painful.
 
 Worse, these state machines are designed to be run from a single worker
 thread.  This means that a given socket is entirely single theaded; you
@@ -49,11 +58,11 @@ non-blocking I/O is used to let the OS kernel calls run asynchronously
 perhaps on multiple cores, but nanomsg itself runs all socket code on
 a single worker thread.)
 
-There is another problem too -- the inproc code that moves messages
+There is another problem too -- the `inproc` code that moves messages
 between one socket and another was incredibly racy.  This is because the
 two sockets have different locks, and so dealing with the different
 contexts was tricky (and consequently buggy).  (I've since, I think, fixed
-the worst of the bugs here, but not after many hours of pulling out hair.)
+the worst of the bugs here, but only after many hours of pulling out hair.)
 
 The state machines also make fairly linear flow really difficult to follow.
 For example, there is a state machine to read the header information.  This
@@ -63,24 +72,22 @@ single 32-bit word.  This is a lot more complex than most programmers are
 used to, such as `read(fd, &val, 4)`.
 
 Now to be fair, Martin Sustrik had the best intentions when he created the
-state machine model around which nanomsg is built.  I do think that from
-experience this is one of the most dense and unapproachable parts of nanomsg,
+state machine model around which _nanomsg_ is built.  I do think that from
+experience this is one of the most dense and unapproachable parts of _nanomsg_,
 in spite of the fact that Martin's goal was precisely the opposite.  I
 consider this a "failed experiment" -- but hey failed experiments are the
 basis of all great science.
 
+=== Thread Challenges
 
-Thread Challenges
------------------
-
-While nanomsg is mostly internally single threaded, I decided to try to
-emulate the simple architecture of mangos using system threads.  (mangos
-has the benefit of goroutines.)  Having been well and truly spoiled by
-Solaris/illumos threading (and especially Solaris/illumos kernel threads),
-I thought this would be a reasonable architecture.
+While _nanomsg_ is mostly internally single threaded, I decided to try to
+emulate the simple architecture of _mangos_ using system threads.  (_mangos_
+benefits greatly from _Go_'s excellent coroutine facility.)  Having been well
+and truly spoiled by _illumos_ threading (and especially _illumos_ kernel
+threads), I thought this would be a reasonable architecture.
 
 Sadly, this initial effort, while it worked, scaled incredibly poorly --
-even so-called "modern" operating systems like macOS 10.12 and Windows 8.1
+even so-called "modern" operating systems like _macOS_ 10.12 and _Windows_ 8.1
 simply melted or failed entirely when creating any non-trivial number of
 threads.  (To me, creating 100 threads should be a no-brainer, especially if
 one limits the stack size appropriately.  I'm used to be able to create
@@ -93,32 +100,34 @@ Chalk up another failed experiment.
 
 I did find another approach which is discussed further.
 
+=== File Descriptor Driven
 
-File Descriptor Driven
-----------------------
-
-Most of the underlying I/O in nanomsg is built around file descriptors,
+Most of the underlying I/O in _nanomsg_ is built around file descriptors,
 and it's internal usock structure, which is also state machine driven.
 This means that implementing new transports which might need something
 other than a file descriptor, is really non-trivial.  This stymied my
-first attempt to add OpenSSL support to get TLS added -- OpenSSL has
-it's own struct BIO for this stuff, and I could not see an easy way to
-convert nanomsg's usock stuff to accomodate the struct BIO.
+first attempt to add http://www.openssl.org[OpenSSL] support to get TLS
+added -- _OpenSSL_ has it's own `struct BIO` for this stuff, and I could
+not see an easy way to convert _nanomsg_'s `usock` stuff to accomodate the
+`struct BIO`.
 
+In retrospect, _OpenSSL_ wasn't the ideal choice for an SSL/TLS library,
+and we have since chosen another (https://tls.mbed.org[mbed TLS]).
+Still, we needed an abstraction model that was better than just file
+descriptors for I/O.
 
-Poll
-----
+=== Poll
 
 In order to support use in event driven programming, asynchronous
-situations, etc. nanomsg offers non-blocking I/O.  In order to make
+situations, etc. _nanomsg_ offers non-blocking I/O.  In order to make
 this work for end-users, a notification mechanism is required, and
 nanomsg, in the spirit of following POSIX, offers a notification method
-based on poll(2) or select(2).
+based on `poll(2)` or `select(2)`.
 
 In order for this to work, it offers up a selectable file descriptor
 for send and another one for receive.  When events occur, these are
 written to, and the user application "clears" these by reading from
-them.  (This is done on behalf of the application by nanomsg's API calls.)
+them.  (This is done on behalf of the application by _nanomsg_'s API calls.)
 
 This means that in addition to the context switch code, there are not
 fewer than 2 extra system calls executed per message sent or received, and
@@ -126,88 +135,95 @@ on a mostly idle system as many as 3.  This means that to send a message
 from one process to another you may have to execute up to 6 extra system
 calls, beyond the 2 required to actually send and receive the message.
 
+NOTE: Its even more hideous to support this on Windows, where there is no
+      `pipe(2)` system call, so we have to cobble up a loopback TCP connection
+      just for this event notification, in addition to the system call
+      explosion.
+
 There are cases where this file descriptor logic is easier for existing
 applications to integrate into event loops (e.g. they already have a thread
-blocked in poll().)
+blocked in `poll()`.)
 
 But for many cases this is not necessary.  A simple callback mechanism
 would be far better, with the FDs available only as an option for code
-that needs them.  This is the approach that we have taken with nng.
+that needs them.  This is the approach that we have taken with _nng_.
 
 As another consequence of our approach, we do not require file descriptors
 for sockets at all, so it is possible to create applications containing
-many thousands of inproc sockets with no files open at all.  (Obviously
+_many_ thousands of `inproc` sockets with no files open at all.  (Obviously
 if you're going to perform real I/O to other processes or other systems,
 you're going to need to have the underlying transport file descriptors
-open.)
+open, but then the only real limit should be the number of files that you
+can open on your system.  And the number of active connections you can maintain
+should ideally approach that system limit closely.)
 
-
-POSIX APIs
-----------
+=== POSIX APIs
 
 Another of Martin's goals, which seems worthwhile at first, was the
-attempt to provide a familiar BSD POSIX API.  As a C programmer, this
-really attracted me.
+attempt to provide a familiar POSIX API (based upon the BSD socket API).
+As a C programmer coming from UNIX systems, this really attracted me.
 
 The problem is that the POSIX APIs are actually really horrible.  In
-particular the semantics around cmsg are about as arcane and painful as
-one can imagine.  Largely, this has meant that extensions to the cmsg
-API simply have not occurred in nanomsg.
+particular the semantics around `cmsg` are about as arcane and painful as
+one can imagine.  Largely, this has meant that extensions to the `cmsg
+API simply have not occurred in _nanomsg_.
 
-The cmsg API specified by POSIX is as bad as it is because POSIX had
+The `cmsg` API specified by POSIX is as bad as it is because POSIX had
 requirements not to break APIs that already existed, and they needed to
 shim something that would work with existing implementations, including
-getting across a system call boundary.  nanomsg  has never had such
+getting across a system call boundary. _nanomsg_ has never had such
 constraints.
+
+Oh, and there was that whole "design by committee" aspect.
 
 Attempting to retain low numbered "socket descriptors" had its own
 problems -- a huge source of use-after-close bugs, which made the
-use of nn_close() incredibly dangerous for multithreaded sockets.
+use of `nn_close()` incredibly dangerous for multithreaded sockets.
 (If one thread closes and opens a new socket, other threads still using
 the old socket might wind up accessing the "new" socket without realizing
 it.)
 
 The other thing is that BSD socket APIs are super familiar to UNIX C
-programmers -- but experience with nanomsg has taught us already that these
-are actually in the minority of nanomsg's users.  Most of our users are
-coming to us from C++ (object oriented), Java, and Python backgrounds.
+programmers -- but experience with _nanomsg_ has taught us already that these
+are actually in the minority of _nanomsg_'s users.  Most of our users are
+coming to us from {cpp} (object oriented), _Java_, and _Python_ backgrounds.
 For them the BSD sockets API is frankly somewhat bizarre and alien.
 
-With nng, we realized that constraining ourselves to the mistakes of the
-POSIX API was hurting rather than helping. So nng provides a much friendlier
+With _nng_, we realized that constraining ourselves to the mistakes of the
+POSIX API was hurting rather than helping. So _nng_ provides a much friendlier
 interface for getting properties associated with messages.
 
-In nng we also generally try hard to avoid reusing
+In _nng_ we also generally try hard to avoid reusing
 an identifier until no other option exists.  This generally means most
 applications won't see socket reuse until billions of other sockets
-have been opened.
+have been opened.  There is little chance for accidental reuse.
 
 
-Compatibility
--------------
+== Compatibility
 
-Of course, there are a number of existing nanomsg consumers "in the wild"
+Of course, there are a number of existing _nanomsg_ consumers "in the wild"
 already.  It is important to continue to support them.  So I decided from
 the get go to implement a "compatibility" layer, that provides the same
-API, and as much as possible the same ABI, as legacy nanomsg.  However,
+API, and as much as possible the same ABI, as legacy _nanomsg_.  However,
 new features and capabilities would not necessarily be exposed to the
 the legacy API.
 
-Today nng offers this.  You can relink an existing nanomsg binary against
-nng instead of nanomsg, and it usually Just Works.  Source compatibility
-is almost as easy, although the application code needs to be modified
-to use different header files.  (Note: I am considering changing this
-in the future.)
+Today _nng_ offers this.  You can relink an existing _nanomsg_ binary against
+_libnng_ instead of _libnn_, and it usually Just Works(TM).  Source
+compatibility is almost as easy, although the application code needs to be
+modified to use different header files.
 
+NOTE: I am considering changing the include file in the future so that
+it matches exactly the _nanomsg_ include path, so that only a compiler
+flag change would be needed.
 
-Asynchronous IO
----------------
+== Asynchronous IO
 
 As a consequence of our experience with threads being so unscalable,
 we decided to create a new underlying abstraction modeled largely on
 Windows IO completion ports.  (As bad as so many of the Windows APIs
 are, the IO completion port stuff is actually pretty nice.)  Under the
-hood in nng all I/O is asynchronous, and we have `struct nni_aio` objects
+hood in _nng_ all I/O is asynchronous, and we have `nni_aio` objects
 for each pending I/O.  These have an associated completion routine.
 
 The completion routines are _usually_ run on a separate worker thread
@@ -217,44 +233,84 @@ core is available for work), but they can be run "synchronously" if
 the I/O provider knows it is safe to do so (for example the completion
 is occuring in a context where no locks are held.)
 
-There is still a lot of performance tuning work to do, and there is a
-real need to expose the AIO structures to user code, which is something
-that I will be doing in the coming days.  This should enable a much 
-faster and lighter weight I/O model, especially for event driven programs.
+The `nni_aio` structures are accessible to user applications as well, which can
+lead to much more efficient and easier to write asynchronous applications,
+and can aid integration into event-driven systems and runtimes, without
+requiring extra system calls required by the legacy _nanomsg_ approach.
 
+There is still performance tuning work to do, especially optimization for
+specific pollers like `epoll()` and `kqueue()` to address the C10K problem,
+but that work is already in progress.
 
-New Transports (ZeroTier)
--------------------------
+== Portability & Embeddability
 
-The other, most critical, motivation behind nng was to enable an easier
-creation of new transports.  In particular, one client (Capitar IT Group BV)
-contracted the creation of a ZeroTier transport for nanomsg.
+A significant goal of _nng_ is to be portable to many kinds of different
+kinds of systems, and embedded in systems that do not support POSIX or Win32
+APIs.  To that end we have a clear platform portability layer.  We do require
+that platforms supply entry points for certain networking, synchronization,
+threading, and timekeeping functions, but these are fairly straight-forward
+to implement on any reasonable 32-bit or 64-bit system, including most
+embedded operating systems.
+
+Additionally, this portability layer may be used to build other kinds of
+experiments -- for example it should be relatively straight-forward to provide
+a "platform" based on one of the various coroutine libraries such as Martin's
+http://libdill.org[libdill] or https://swtch.com/libtask/[libtask].
+
+TIP: If you want to write a coroutine-based platform, let me know!
+
+== New Transports
+
+The other, most critical, motivation behind _nng_ was to enable an easier
+creation of new transports.  In particular, one client (
+http://www.capitar.com[Capitar IT Group BV])
+contracted the creation of a http://www.zerotier.com[ZeroTier] transport for
+_nanomsg_.
 
 After beating my head against the state machines some more, I finally asked
-myself if it would not be easier just to rewrite nanomsg using the model
-I had created for mangos.
+myself if it would not be easier just to rewrite _nanomsg_ using the model
+I had created for _mangos_.
 
 In retrospect, I'm not sure that the answer was a clear and definite yes
-in favor of nng, but for the other things I want to do, it has enabled a
+in favor of _nng_, but for the other things I want to do, it has enabled a
 lot of new work.  The ZeroTier transport was created with a relatively
 modest amount of effort, in spite of being based upon a connectionless
 transport.  I do not believe I could have done this easily in the existing
-nanomsg.
+_nanomsg_.
 
-In the coming weeks I expect to create transports for TLS, websocket,
-and websocket over TLS.  I expect the websocket transport to support
-multiple sockets with different path components bound to the same TCP port.
-This might be possible with nanomsg, but it wouldn't be easy.  With nng,
-it looks fairly straight-forward.
+I've since added a rich TLS transport, and have implemented a WebSocket
+transport that is far more capable than that in _nanomsg_, as it can
+support TLS and sharing the TCP port across multiple _nng_ sockets (using
+the path to discriminate) or even other HTTP services.
 
+There are already plans afoot for other kinds of transports using QUIC
+or KCP or SSH, as well as a pure UDP transport.  The new _nng_ transport
+layer makes implementation of these all fairly straight-forward.
 
-Towards nanomsg 2.0
--------------------
+== HTTP and Other services
 
-It is my intention that nng ultimately replace nanomsg.  I do think of it
+As part of implementing a real WebSocket transport, it was necessary to
+implement at least some HTTP capabilities.  Rather than just settle for a toy
+implementation, _nng_ has a very capable HTTP server and client framework. 
+The server can be used to build real web services, so it becomes possible
+for example to serve static content, REST API, and _nng_ based services
+all from the same TCP port using the same program.
+
+We've also made the WebSocket services fairly generic, which may support
+a plethora of other kinds of transports and services.
+
+There is also a portability layer -- so some common services (threading,
+timing, etc.) are provided in the _nng_ library to help make writing
+portable _nng_ applications easier.
+
+It will not surprise me if developers start finding uses for _nng_ that
+have nothing to do with Scalability Protocols.
+
+== Towards _nanomsg_ 2.0
+
+It is my intention that _nng_ ultimately replace _nanomsg_.  I do think of it
 as "nanomsg 2.0".  In fact "nng" stands for "nanomsg next generation" in
 my mind.  Some day before too long I'm hoping that the various website
-references to nanomsg my simply be updated to point at nng.  It is not
+references to nanomsg my simply be updated to point at _nng_.  It is not
 clear to me whether at that time I will simply rename the existing
-code to nanomsg, nanomsg2, or leave it as nng.  (One possible issue is
-that Martin Sustrik retains the trademark for "nanomsg".)
+code to _nanomsg_, nanomsg2, or leave it as _nng_.
