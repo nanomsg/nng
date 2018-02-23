@@ -14,5 +14,7 @@ point.
 
 A reference manual is available <<man/v0.2.0/nng.adoc#,here>>.
 
+Here is my <<RATIONALE#,rationale>> for why I made _nng_.
+
 Please see the https://github.com/nanomsg/nng[GitHub Repository] for further
 information.
