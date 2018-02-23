@@ -32,8 +32,8 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <nanomsg/nn.h>
 #include "compat_testutil.h"
-#include "nng_compat.h"
 
 int  test_socket_impl(char *file, int line, int family, int protocol);
 int  test_connect_impl(char *file, int line, int sock, char *address);

@@ -1,7 +1,7 @@
 /*
     Copyright (c) 2012 Martin Sustrik  All rights reserved.
-    Copyright 2017 Garrett D'Amore <garrett@damore.org>
-    Copyright 2017 Capitar IT Group BV <info@capitar.com>
+    Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+    Copyright 2018 Capitar IT Group BV <info@capitar.com>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"),
@@ -22,7 +22,7 @@
     IN THE SOFTWARE.
 */
 
-#include "nng_compat.h"
+#include <nanomsg/nn.h>
 
 #include "compat_testutil.h"
 

@@ -28,9 +28,6 @@ set (NNG_SOURCES
     nng.c
     nng.h
 
-    nng_compat.c
-    nng_compat.h
-
     core/defs.h
 
     core/aio.c
@@ -127,6 +124,8 @@ if (NNG_PLATFORM_WINDOWS)
 endif()
 
 set (NNG_HEADERS nng.h)
+
+add_subdirectory(compat/nanomsg)
 
 add_subdirectory(supplemental/base64)
 add_subdirectory(supplemental/http)

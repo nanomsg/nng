@@ -3,7 +3,7 @@
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
-#   Copyright 2018 Garrett D'Amore <garrett@damore.org>
+#   Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 #   Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -53,9 +53,6 @@ if (NNG_TESTS)
             target_link_libraries (${NAME} ${PROJECT_NAME}_static)
             target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
             target_compile_definitions(${NAME} PUBLIC -DNNG_STATIC_LIB)
-            if (CMAKE_THREAD_LIBS_INIT)
-                target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
-            endif()
 
             add_test (NAME ${NAME} COMMAND ${NAME} -v -p TEST_PORT=${TEST_PORT})
             set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
@@ -81,9 +78,8 @@ if (NNG_TESTS)
             target_link_libraries (${NAME} ${PROJECT_NAME}_static)
             target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
             target_compile_definitions(${NAME} PUBLIC -DNNG_STATIC_LIB)
-            if (CMAKE_THREAD_LIBS_INIT)
-                target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
-            endif()
+            target_include_directories(${NAME} PUBLIC
+		${PROJECT_SOURCE_DIR}/src/compat)
 
             add_test (NAME ${NAME} COMMAND ${NAME} ${TEST_PORT})
             set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
@@ -92,7 +88,7 @@ if (NNG_TESTS)
     else ()
         macro (add_nng_compat_test NAME TIMEOUT)
         endmacro (add_nng_compat_test)
-        message (STATUS "Compatibility tests disabled (unconfigured legacy protocols)")
+        message (STATUS "Compatibility tests disabled (unconfigured protocols)")
     endif ()
 
     macro (add_nng_cpp_test NAME TIMEOUT)
@@ -103,9 +99,6 @@ if (NNG_TESTS)
             target_link_libraries (${NAME} ${PROJECT_NAME}_static)
             target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
             target_compile_definitions(${NAME} PUBLIC -DNNG_STATIC_LIB)
-            if (CMAKE_THREAD_LIBS_INIT)
-                target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
-            endif()
 
             add_test (NAME ${NAME} COMMAND ${NAME} ${TEST_PORT})
             set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})

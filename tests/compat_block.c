@@ -20,7 +20,7 @@
     IN THE SOFTWARE.
 */
 
-#include "nng_compat.h"
+#include <nanomsg/nn.h>
 #include "compat_testutil.h"
 
 /*  This test checks whether blocking on send/recv works as expected. */

@@ -23,7 +23,7 @@
     IN THE SOFTWARE.
 */
 
-#include "nng_compat.h"
+#include <nanomsg/nn.h>
 #include "compat_testutil.h"
 
 #include <string.h>

@@ -1,6 +1,6 @@
 /*
     Copyright (c) 2014 Martin Sustrik  All rights reserved.
-    Copyright 2015 Garrett D'Amore <garrett@damore.org>
+    Copyright 2018 Garrett D'Amore <garrett@damore.org>
     Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,7 +22,7 @@
     IN THE SOFTWARE.
 */
 
-#include "nng_compat.h"
+#include <nanomsg/nn.h>
 #include "compat_testutil.h"
 
 int main (int argc, const char *argv[])
