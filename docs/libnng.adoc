@@ -1,7 +1,4 @@
 = libnng(3)
-:doctype: manpage
-:manmanual: nng
-:mansource: nng
 :copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
             Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
             {blank} + \
