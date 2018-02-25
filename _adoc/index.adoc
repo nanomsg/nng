@@ -2,8 +2,8 @@
 layout: default
 ---
 nng - nanomsg-NG
-:nofooter:
 ================
+:nofooter:
 
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
 image:https://img.shields.io/travis/nanomsg/nng/master.svg?label=linux[Linux Status,link="https://travis-ci.org/nanomsg/nng"]
