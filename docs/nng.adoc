@@ -1,16 +1,21 @@
 = nng(7)
-:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
-            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
-            {blank} + \
-            This document is supplied under the terms of the \
-            https://opensource.org/licenses/MIT[MIT License].
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 == NAME
+
 nng - nanomsg next generation
 
 == SYNOPSIS
-*cc* ['flags'] 'files' *-lnng* ['libraries']
 
+*cc* ['flags'] 'files' *-lnng* ['libraries']
 
 == DESCRIPTION
 
@@ -147,7 +152,3 @@ The library API is documented at <<libnng#,libnng(3)>>.
 
 <<libnng#,libnng(3)>>,
 <<nng_compat#,nng_compat(3)>>
-
-== COPYRIGHT
-
-{copyright}

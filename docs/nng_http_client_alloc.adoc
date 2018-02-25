@@ -1,9 +1,13 @@
 = nng_http_client_alloc(3)
-:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
-            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
-            {blank} + \
-            This document is supplied under the terms of the \
-            https://opensource.org/licenses/MIT[MIT License].
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 == NAME
 
@@ -18,7 +22,6 @@ nng_http_client_alloc - allocate HTTP client
 
 int nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
 -----------
-
 
 == DESCRIPTION
 
@@ -42,7 +45,3 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_url_parse#,nng_url_parse(3)>>
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng#,nng(7)>>
-
-== COPYRIGHT
-
-{copyright}

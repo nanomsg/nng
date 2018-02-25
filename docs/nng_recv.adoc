@@ -1,9 +1,13 @@
 = nng_recv(3)
-:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
-            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
-            {blank} + \
-            This document is supplied under the terms of the \
-            https://opensource.org/licenses/MIT[MIT License].
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 == NAME
 
@@ -37,7 +41,7 @@ the message body, and store it at the address referenced by _data_, and update
 the size referenced by _sizep_.  When this flag is present, the caller assumes
 responsibility for disposing of the received buffer either by the function
 <<nng_free#,nng_free(3)>> or reusing the message for sending (with the same
-size) via <<nng_send#nng_send(3)>>.
+size) via <<nng_send#,nng_send(3)>>.
 
 NOTE: The semantics of what receiving a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.  (For
@@ -73,7 +77,3 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_send#,nng_send(3)>>,
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng#,nng(7)>>
-
-== COPYRIGHT
-
-{copyright}

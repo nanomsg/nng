@@ -23,11 +23,12 @@ tmpdir=$(mktemp -d)
 srcdir=$(dirname $0)
 dstdir=${tmpdir}/pages
 cd ${srcdir}
-vers=$(cat ../.version)
-dstman=${dstdir}/man/v${vers}
-name=nng
+VERSION=$(cat ../.version)
 MANMANUAL="NNG Reference Manual"
 MANSOURCE="NNG"
+LAYOUT=refman
+dstman=${dstdir}/man/v${VERSION}
+name=nng
 
 giturl="${GITURL:-git@github.com:nanomsg/nng}"
 
@@ -57,8 +58,8 @@ for input in $(find . -name '*.adoc'); do
 	when=$(git log -n1 --format='%ad' '--date=format-local:%s' $input )
 	cat <<EOF > ${output}
 ---
-version: ${vers}
-layout: default
+version: ${VERSION}
+layout: ${LAYOUT}
 ---
 EOF
 
@@ -80,8 +81,7 @@ EOF
 		-dmanpage \
 		-amansource="${MANSOURCE}" \
 		-amanmanual="${MANMANUAL}" \
-		-aversion-label=${name} \
-		-arevnumber=${vers}  \
+		-anofooter=yes \
 		-askip-front-matter \
 		-atoc=left \
 		-asource-highlighter=pygments \
@@ -112,4 +112,4 @@ then
 	exit 1
 fi
 
-(cd ${dstman}; git commit -m "man page updates for ${vers}"; git push origin gh-pages)
+(cd ${dstman}; git commit -m "man page updates for ${VERSION}"; git push origin gh-pages)

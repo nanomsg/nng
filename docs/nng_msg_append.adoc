@@ -1,9 +1,13 @@
 = nng_msg_append(3)
-:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
-            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
-            {blank} + \
-            This document is supplied under the terms of the \
-            https://opensource.org/licenses/MIT[MIT License].
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 == NAME
 
@@ -34,7 +38,6 @@ This function returns 0 on success, and non-zero otherwise.
 
 `NNG_ENOMEM`:: Insufficient free memory exists.
 
-
 == SEE ALSO
 
 <<nng_msg_alloc#,nng_msg_alloc(3)>>,
@@ -47,8 +50,3 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_msg_trim#,nng_msg_trim(3)>>,
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng#,nng(7)>>
-
-
-== COPYRIGHT
-
-{copyright}

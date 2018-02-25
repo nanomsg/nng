@@ -1,9 +1,13 @@
 = nng_http_res_add_header(3)
-:copyright: Copyright 2018 mailto:info@staysail.tech[Staysail Systems, Inc.] + \
-            Copyright 2018 mailto:info@capitar.com[Capitar IT Group BV] + \
-            {blank} + \
-            This document is supplied under the terms of the \
-            https://opensource.org/licenses/MIT[MIT License].
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
 
 == NAME
 
@@ -56,7 +60,3 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_http_res_get_header#,nng_http_res_get_header(3)>>,
 <<nng_http_res_set_header#,nng_http_res_set_header(3)>>,
 <<nng#,nng(7)>>
-
-== COPYRIGHT
-
-{copyright}
