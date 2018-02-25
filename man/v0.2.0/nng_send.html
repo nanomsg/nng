@@ -9,7 +9,7 @@ layout: refman
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>nng_zerotier(7)</title>
+<title>nng_send(3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -503,26 +503,20 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_zerotier(7) Manual Page</h1>
+<h1>nng_send(3) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a>
-<ul class="sectlevel2">
-<li><a href="#_registration">Registration</a></li>
-<li><a href="#_uri_format">URI Format</a></li>
-<li><a href="#_socket_address">Socket Address</a></li>
-<li><a href="#_node_presence">Node Presence</a></li>
-<li><a href="#_transport_options">Transport Options</a></li>
-</ul>
-</li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_return_values">RETURN VALUES</a></li>
+<li><a href="#_errors">ERRORS</a></li>
 <li><a href="#_see_also">SEE ALSO</a></li>
 </ul>
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_zerotier - ZeroTier transport for nng</p>
+<p>nng_send - send data</p>
 </div>
 </div>
 <div id="content">
@@ -531,9 +525,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/transport/zerotier/zerotier.h&gt;</span><span class="tok-cp"></span>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_zt_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_send</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">data</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">flags</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -542,24 +536,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <em>nng_zerotier</em> transport provides communication support for
-<em>nng</em> applications over a <a href="http://www.zerotier.com">ZeroTier</a> network,
-using a Virtual Layer 2 packet facility.</p>
-</div>
-<div class="admonitionblock caution">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-caution" title="Caution"></i>
-</td>
-<td class="content">
-This transport is very experimental.  To utilize it at
-present, the library must be built with support, and the
-ZeroTierOne <code>dev</code> branch must be included; this will require
-linking against a suitable <code>libzerotiercore</code> static library.
-</td>
-</tr>
-</table>
+<p>The <code>nng_send()</code> sends a message containing the <em>data</em> of length <em>size</em>
+using the socket <em>s</em>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -568,120 +546,58 @@ linking against a suitable <code>libzerotiercore</code> static library.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <code>libzerotiercore</code> library at present is covered under different
-license terms than the rest of <em>nng</em>.  Please be careful to review
-and adhere to the licensing terms.
+The semantics of what sending a message means vary from protocol to
+protocol, so examination of the protocol documentation is encouraged.  (For
+example, with an <a href="nng_pub.html">nng_pub(3)</a> socket the data is broadcast, so that
+any peers who have a suitable subscription will be able to receive it using
+<a href="nng_recv.html">nng_recv(3)</a> or a similar function.)  Furthermore, some protocols
+may not support sending data (such as <a href="nng_sub.html">nng_sub(3)</a>) or may
+require other conditions.  (For example, <a href="nng_rep.html">nng_rep(3)</a> sockets
+cannot normally send data, which are responses to requests, until they have
+first received a request.)
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>While ZeroTier makes use of the host&#8217;s IP stack (and UDP in particular),
-this transport does not use or require an IP stack on the virtual
-network; thereby mitigating any considerations about IP address management.</p>
-</div>
-<div class="paragraph">
-<p>This service uses Ethernet type 901 to transport packets.  Network rules
-must permit this Ethernet type to pass in order to have a functional
-network.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This document assumes that the reader is familiar with ZeroTier
-concepts and administration.
-</td>
-</tr>
-</table>
-</div>
-<div class="sect2">
-<h3 id="_registration">Registration</h3>
-<div class="paragraph">
-<p>Depending upon how the library was built, it may be necessary to
-register the transport by calling <code>nng_zt_register</code>.  This function
-returns zero on success, or an nng error value if the transport
-cannot be initialized for any reason.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_uri_format">URI Format</h3>
-<div class="paragraph">
-<p>This transport uses URIs using the scheme <code>zt://</code>, followed by a node
-number (ten hexadecimal digits) followed by a <code>.</code> delimited, and then
-a network address (sixteen hexadecimal digits), followed by a colon (<code>.</code>)
-and service or port number (decimal value, up to 24-bits).
-For example, the URI <code>zt://fedcba9876.0123456789abdef:999</code> indicates
-that node fedcba9876 on network 0123456789abcdef is listening on port 999.</p>
-</div>
-<div class="paragraph">
-<p>The special value <code>*</code> can be used in lieu of a node number to represent
-the node&#8217;s own node number.</p>
-</div>
-<div class="paragraph">
-<p>Listeners may use port 0 to indicate that a suitable port
-number be selected automatically. Applications using this must determine the
-selected port number using the <code>nng_listener_getopt</code> function.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_socket_address">Socket Address</h3>
-<div class="paragraph">
-<p>When using an <code>nng_sockaddr</code> structure, the actual structure is of type
-<code>struct nng_sockaddr_zt</code>.  This type has the following definition:</p>
-</div>
-<div class="listingblock">
-<div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#define NNG_AF_ZT 5</span>
-
-<span class="tok-k">struct</span> <span class="tok-n">nng_sockaddr_zt</span> <span class="tok-p">{</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>  <span class="tok-c1">// must be NNG_AF_ZT</span>
-    <span class="tok-kt">uint64_t</span> <span class="tok-n">sa_nwid</span><span class="tok-p">;</span>    <span class="tok-c1">// 64-bit network ID</span>
-    <span class="tok-kt">uint64_t</span> <span class="tok-n">sa_nodeid</span><span class="tok-p">;</span>  <span class="tok-c1">// 40-bit node ID</span>
-    <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>    <span class="tok-c1">// 24-bit application port</span>
-<span class="tok-p">}</span></code></pre>
-</div>
-</div>
-<div class="paragraph">
-<p>The <code>sa_family</code> member will have the value <code>NNG_AF_ZT</code> (5).  The remaining
-members are, unlike TCP socket address, in native byte order.  Only the
-lower 24-bits of the <code>sa_port</code> may be used.  Likewise only the lower 40-bits
-of the <code>sa_nodeid</code> may be used.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_node_presence">Node Presence</h3>
-<div class="paragraph">
-<p>By default this transport creates an "ephemeral" node, and used the
-same ephemeral node for any additional endpoints created.  As this node
-is ephemeral, the keys associated with it and all associated data are
-located in memory and are discarded upon application termination.  If
-a persistent node is desired, please see the <code>NNG_OPT_ZT_HOME</code> option
-below.</p>
-</div>
-<div class="paragraph">
-<p>It is possible for a single application to join multiple networks
-using the same node, or using separate nodes.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_transport_options">Transport Options</h3>
-<div class="paragraph">
-<p>The following transport options are available:</p>
+<p>The <em>flags</em> may contain either of (or neither of) the following values:</p>
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>NNG_OPT_ZT_HOME</code></dt>
+<dt class="hdlist1"><code>NNG_FLAG_NONBLOCK</code></dt>
 <dd>
-<p>This is a string representing the "home directory", where the transport
-can store (and reuse) persistent state, such as key materials, node
-identity, and federation membership.  This option must be set before the
-ZeroTier transport is first used.  If this value is empty, then an ephemeral
-ZeroTier node is created, and no persistent state is used.  The default
-is to use an ephemeral node.</p>
+<p>The function returns immediately, regardless of whether
+the socket is able to accept the data or not.  If the socket is unable
+to accept the data (such as if backpressure exists because the peers
+are consuming messages too slowly, or no peer is present), then the
+function will return with <code>NNG_EAGAIN</code>.  If this flag is not specified,
+then the function will block if such a condition exists.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_FLAG_ALLOC</code></dt>
+<dd>
+<p>The <em>data</em> was allocated using <a href="nng_alloc.html">nng_alloc(3)</a>, or was obtained
+from a call to <a href="nng_recv.html">nng_recv(3)</a> with the <code>NNG_FLAG_ALLOC</code> flag.
+If this function returns success, then the <em>data</em> is "owned" by the
+function, and it will assume responsibility for calling
+<a href="nng_free.html">nng_free(3)</a> when it is no longer needed.  In the absence
+of this flag, the <em>data</em> is copied by the implementation before the
+function returns to the caller.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The <code>NNG_FLAG_ALLOC</code> flag can be used to reduce data copies, thereby
+increasing performance.
+</td>
+</tr>
+</table>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -689,106 +605,74 @@ is to use an ephemeral node.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-If this option is set to different values on different sockets,
-dialers, or listeners, then separate nodes will be created.  It
-is perfectly valid for an application to have multiple node identities
-in this fashion.
+Regardless of the presence or absence of <code>NNG_FLAG_NONBLOCK</code>, there may
+be queues between the sender and the receiver.  Furthermore, there is no
+guarantee that the message has actually been delivered.  Finally, with some
+protocols, the semantic is implictly <code>NNG_FLAG_NONBLOCK</code>, such as with
+<a href="nng_pub.html">nng_pub(3)</a> sockets, which are best-effort delivery only.
 </td>
 </tr>
 </table>
 </div>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_NWID</code></dt>
-<dd>
-<p>This is a read-only option for listeners, dialers, and pipes, and
-provides a <code>uint64_t</code> in native byte order representing the 64-bit ZeroTier
-network number.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_NODE</code></dt>
-<dd>
-<p>This is a read-only option for listeners, dialers, and pipes, and
-provides a <code>uint64_t</code> in native byte order representing the ZeroTier
-40-bit node address.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_NETWORK_STATUS</code></dt>
-<dd>
-<p>This is a read-only integer, representing the ZeroTier network status.
-Valid values for this are:</p>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 66.6667%;">
-</colgroup>
-<tbody>
+<div class="admonitionblock warning">
+<table>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_configuring</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The ZeroTier node is still configuring, network services are not available.</p></td>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+When using <code>NNG_FLAG_ALLOC</code>, it is important that the value of <em>size</em>
+match the actual allocated size of the data.  Using an incorrect size results
+in unspecified behavior, which may include heap corruption, program crashes,
+or transdimensional mutation of the program&#8217;s author.
+</td>
 </tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_ok</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The ZeroTier network is up.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_denied</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The node does not have permission to join the ZeroTier network.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_notfound</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The ZeroTier network is not found.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_error</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Some other ZeroTier error has occurred; the network is not available.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_obsolete</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The node is running obsolete software; the network is not available.</p></td>
-</tr>
-</tbody>
 </table>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_NETWORK_NAME</code></dt>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_EAGAIN</code></dt>
 <dd>
-<p>This is a read-only ASCIIZ string containing the name of the network
-as established by the ZeroTier network administrator.</p>
+<p>The socket <em>s</em> cannot accept data for sending.</p>
 </dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_PING_TIME</code></dt>
+<dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
 <dd>
-<p>If no traffic has been received from the ZeroTier peer after this
-period of time, then a "ping" message is sent to check if the peer
-is still alive.  This is an <code>nng_duration</code> (msec).</p>
+<p>The socket <em>s</em> is not open.</p>
 </dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_PING_COUNT</code></dt>
+<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
 <dd>
-<p>If this number (<code>int</code>) of consecutive "ping" requests are sent to the
-peer with no response (and no other intervening traffic), then the
-peer is assumed to be dead and the connection is closed.  Note that
-if any traffic is received from the peer, then the underlying counter
-is reset to zero.</p>
+<p>An invalid set of <em>flags</em> was specified.</p>
 </dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_MTU</code></dt>
+<dt class="hdlist1"><code>NNG_EMSGSIZE</code></dt>
 <dd>
-<p>This is a read-only size (<code>size_t</code>) representing the ZeroTier virtual
-network MTU; this is the Virtual Layer 2 MTU.  The headers used by
-this transport and the protocols consume some of this for each message
-sent over the network.  (The transport uses 20-bytes of this, and each
-protocol may consume additional space, typically not more than 16-bytes.)</p>
+<p>The value of <em>size</em> is too large.</p>
 </dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_ORBIT</code></dt>
+<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
 <dd>
-<p>This is a write-only option that takes an array of two <code>uint64_t</code> values,
-indicating the ID of a ZeroTier "moon", and the node ID of the root server
-for that moon.  (The ID may be zero if the moon ID is the same as it&#8217;s
-root server ID, which is conventional.)</p>
+<p>Insufficient memory is available.</p>
 </dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_DEORBIT</code></dt>
+<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
 <dd>
-<p>This write-only option takes a single <code>uint64_t</code> indicating the moon
-ID to "deorbit".  If the node is not already orbiting the moon, then
-this has no effect.</p>
+<p>The protocol for socket <em>s</em> does not support sending.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ESTATE</code></dt>
+<dd>
+<p>The socket <em>s</em> cannot send data in this state.</p>
 </dd>
 </dl>
-</div>
 </div>
 </div>
 </div>
@@ -796,7 +680,12 @@ this has no effect.</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng.html">nng(7)</a></p>
+<p><a href="nng_alloc.html">nng_alloc(3)</a>,
+<a href="nng_free.html">nng_free(3)</a>,
+<a href="#nng_recv">nng_recv(3)</a>,
+<a href="nng_sendmsg.html">nng_sendmsg(3)</a>,
+<a href="nng_strerror.html">nng_strerror(3)</a>,
+<a href="nng.html">nng(7)</a></p>
 </div>
 </div>
 </div>
