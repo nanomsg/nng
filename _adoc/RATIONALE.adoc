@@ -2,6 +2,7 @@
 layout: default
 ---
 = Rational: Or why am I bothering to rewrite nanomsg?
+:nofooter:
 Garrett D'Amore <garrett@damore.org>
 v0.2, February 22, 2018
 

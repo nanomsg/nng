@@ -2,6 +2,7 @@
 layout: default
 ---
 nng - nanomsg-NG
+:nofooter:
 ================
 
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
