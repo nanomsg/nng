@@ -23,7 +23,7 @@ tmpdir=$(mktemp -d)
 srcdir=$(dirname $0)
 dstdir=${tmpdir}/pages
 cd ${srcdir}
-VERSION=$(cat ../.version)
+VERSION=$(cat ../../.version)
 MANMANUAL="NNG Reference Manual"
 MANSOURCE="NNG"
 LAYOUT=refman
