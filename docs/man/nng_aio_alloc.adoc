@@ -30,7 +30,11 @@ with a completion callback of _callb_, which will be executed when an
 associated asynchronous operation finishes.  It will be called with the
 argument _arg_.
 
-Asynchronous I/O operations all take an "aio" handle such as allocated by
+NOTE: The callback _callb_ must not perform any blocking operations, and
+must complete it's execution quickly.  If _callb_ does block, this can
+lead ultimately to an apparent "hang" or deadlock in the application.
+
+Asynchronous I/O operations all take an _aio_ handle such as allocated by
 this function.  Such operations are usually started by a function that returns
 immediately.  The operation is then run asynchronously, and completes sometime
 later.  When that operation is complete, the callback supplied here is called,
