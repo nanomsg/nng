@@ -88,7 +88,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 <<nng_alloc#,nng_alloc(3)>>,
 <<nng_free#,nng_free(3)>>,
-<<nng_recv,nng_recv(3)>>,
+<<nng_recv#,nng_recv(3)>>,
 <<nng_sendmsg#,nng_sendmsg(3)>>,
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng#,nng(7)>>
