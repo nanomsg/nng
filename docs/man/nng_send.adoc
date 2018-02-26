@@ -29,11 +29,11 @@ using the socket _s_.
 
 NOTE: The semantics of what sending a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.  (For
-example, with an <<nng_pub#,nng_pub(3)>> socket the data is broadcast, so that
+example, with an <<nng_pub#,nng_pub(7)>> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
 <<nng_recv#,nng_recv(3)>> or a similar function.)  Furthermore, some protocols
-may not support sending data (such as <<nng_sub#,nng_sub(3)>>) or may
-require other conditions.  (For example, <<nng_rep#,nng_rep(3)>> sockets
+may not support sending data (such as <<nng_sub#,nng_sub(7)>>) or may
+require other conditions.  (For example, <<nng_rep#,nng_rep(7)>> sockets
 cannot normally send data, which are responses to requests, until they have
 first received a request.)
 
@@ -63,7 +63,7 @@ NOTE: Regardless of the presence or absence of `NNG_FLAG_NONBLOCK`, there may
 be queues between the sender and the receiver.  Furthermore, there is no
 guarantee that the message has actually been delivered.  Finally, with some
 protocols, the semantic is implictly `NNG_FLAG_NONBLOCK`, such as with
-<<nng_pub#,nng_pub(3)>> sockets, which are best-effort delivery only.
+<<nng_pub#,nng_pub(7)>> sockets, which are best-effort delivery only.
 
 WARNING: When using `NNG_FLAG_ALLOC`, it is important that the value of _size_
 match the actual allocated size of the data.  Using an incorrect size results

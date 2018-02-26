@@ -45,11 +45,11 @@ size) via <<nng_send#,nng_send(3)>>.
 
 NOTE: The semantics of what receiving a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.  (For
-example, with an <<nng_req#,nng_req(3)>> socket a message may only be received
-after a request has been sent, and an <<nng_sub#,nng_sub(3)>> socket
+example, with an <<nng_req#,nng_req(7)>> socket a message may only be received
+after a request has been sent, and an <<nng_sub#,nng_sub(7)>> socket
 may only receive messages corresponding to topics to which it has subscribed.)
 Furthermore, some protocols may not support receiving data at all, such as
-<<nng_pub#,nng_pub(3)>>.
+<<nng_pub#,nng_pub(7)>>.
 
 TIP: The `NNG_FLAG_ALLOC` flag can be used to reduce data copies, thereby
 increasing performance, particularly if the buffer is reused to send
