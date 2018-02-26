@@ -548,11 +548,11 @@ using the socket <em>s</em>.</p>
 <td class="content">
 The semantics of what sending a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.  (For
-example, with an <a href="nng_pub.html">nng_pub(3)</a> socket the data is broadcast, so that
+example, with an <a href="nng_pub.html">nng_pub(7)</a> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
 <a href="nng_recv.html">nng_recv(3)</a> or a similar function.)  Furthermore, some protocols
-may not support sending data (such as <a href="nng_sub.html">nng_sub(3)</a>) or may
-require other conditions.  (For example, <a href="nng_rep.html">nng_rep(3)</a> sockets
+may not support sending data (such as <a href="nng_sub.html">nng_sub(7)</a>) or may
+require other conditions.  (For example, <a href="nng_rep.html">nng_rep(7)</a> sockets
 cannot normally send data, which are responses to requests, until they have
 first received a request.)
 </td>
@@ -609,7 +609,7 @@ Regardless of the presence or absence of <code>NNG_FLAG_NONBLOCK</code>, there m
 be queues between the sender and the receiver.  Furthermore, there is no
 guarantee that the message has actually been delivered.  Finally, with some
 protocols, the semantic is implictly <code>NNG_FLAG_NONBLOCK</code>, such as with
-<a href="nng_pub.html">nng_pub(3)</a> sockets, which are best-effort delivery only.
+<a href="nng_pub.html">nng_pub(7)</a> sockets, which are best-effort delivery only.
 </td>
 </tr>
 </table>
@@ -682,7 +682,7 @@ or transdimensional mutation of the program&#8217;s author.
 <div class="paragraph">
 <p><a href="nng_alloc.html">nng_alloc(3)</a>,
 <a href="nng_free.html">nng_free(3)</a>,
-<a href="#nng_recv">nng_recv(3)</a>,
+<a href="nng_recv.html">nng_recv(3)</a>,
 <a href="nng_sendmsg.html">nng_sendmsg(3)</a>,
 <a href="nng_strerror.html">nng_strerror(3)</a>,
 <a href="nng.html">nng(7)</a></p>

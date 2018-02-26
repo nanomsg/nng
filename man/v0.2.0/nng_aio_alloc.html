@@ -542,8 +542,22 @@ with a completion callback of <em>callb</em>, which will be executed when an
 associated asynchronous operation finishes.  It will be called with the
 argument <em>arg</em>.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The callback <em>callb</em> must not perform any blocking operations, and
+must complete it&#8217;s execution quickly.  If <em>callb</em> does block, this can
+lead ultimately to an apparent "hang" or deadlock in the application.
+</td>
+</tr>
+</table>
+</div>
 <div class="paragraph">
-<p>Asynchronous I/O operations all take an "aio" handle such as allocated by
+<p>Asynchronous I/O operations all take an <em>aio</em> handle such as allocated by
 this function.  Such operations are usually started by a function that returns
 immediately.  The operation is then run asynchronously, and completes sometime
 later.  When that operation is complete, the callback supplied here is called,
