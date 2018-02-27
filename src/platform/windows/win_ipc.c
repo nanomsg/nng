@@ -336,10 +336,11 @@ nni_win_ipc_acc_start(nni_win_event *evt, nni_aio *aio)
 		int rv = GetLastError();
 		switch (rv) {
 		case ERROR_PIPE_CONNECTED:
-			// Synch completion already occurred.
-			// Windows is weird.  Apparently the I/O
-			// completion packet has already been sent.
-			return (0);
+			// Kind of like success, but as this is technically
+			// an "error", we have to complete it ourself.
+			evt->status = 0;
+			evt->count  = 0;
+			return (1);
 
 		case ERROR_IO_PENDING:
 			// Normal asynchronous operation.  Wait for
@@ -354,8 +355,8 @@ nni_win_ipc_acc_start(nni_win_event *evt, nni_aio *aio)
 		}
 	}
 
-	// Synch completion right now.  I/O completion packet delivered
-	// already.
+	// Synchronous success - the I/O completion packet should still
+	// be delivered.
 	return (0);
 }
 
