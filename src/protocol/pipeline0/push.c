@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "protocol/pipeline0/push.h"
 
 // Push protocol.  The PUSH protocol is the "write" side of a pipeline.
 // Push distributes fairly, or tries to, by giving messages in round-robin

@@ -590,6 +590,8 @@ enum nng_errno_enum {
 	NNG_EWRITEONLY   = 25,
 	NNG_ECRYPTO      = 26,
 	NNG_EPEERAUTH    = 27,
+	NNG_ENOARG       = 28,
+	NNG_EAMBIGUOUS   = 29,
 	NNG_EINTERNAL    = 1000,
 	NNG_ESYSERR      = 0x10000000,
 	NNG_ETRANERR     = 0x20000000,

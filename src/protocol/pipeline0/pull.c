@@ -12,6 +12,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "protocol/pipeline0/pull.h"
 
 // Pull protocol.  The PULL protocol is the "read" side of a pipeline.
 

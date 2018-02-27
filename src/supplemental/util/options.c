@@ -90,7 +90,7 @@ nng_opts_parse(int argc, const char **argv, const nng_optspec *opts, int *val,
 		break;
 	default:
 		// Ambiguous (not match)
-		return (NNG_EINVAL);
+		return (NNG_EAMBIGUOUS);
 		break;
 	}
 
@@ -113,7 +113,7 @@ nng_opts_parse(int argc, const char **argv, const nng_optspec *opts, int *val,
 	} else {
 		i++;
 		if (i >= argc) {
-			return (NNG_EINVAL);
+			return (NNG_ENOARG);
 		}
 		*optarg = argv[i];
 	}
