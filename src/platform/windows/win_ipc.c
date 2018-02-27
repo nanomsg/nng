@@ -462,7 +462,7 @@ nni_win_ipc_conn_thr(void *arg)
 			nni_cv_wait(&w->cv);
 		} else {
 			// Wait 10 ms, unless woken earlier.
-			nni_cv_until(&w->cv, nni_clock() + 10000);
+			nni_cv_until(&w->cv, nni_clock() + 10);
 		}
 	}
 	nni_mtx_unlock(&w->mtx);
