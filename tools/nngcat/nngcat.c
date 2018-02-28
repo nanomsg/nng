@@ -105,7 +105,7 @@ static nng_optspec opts[] = {
 	{ .o_name = "pair1", .o_val = OPT_PAIR1 },
 	{ .o_name = "bus0", .o_val = OPT_BUS0 },
 	{ .o_name = "dial", .o_val = OPT_DIAL, .o_arg = true },
-	{ .o_name = "listen", .o_val = OPT_DIAL, .o_arg = true },
+	{ .o_name = "listen", .o_val = OPT_LISTEN, .o_arg = true },
 	{ .o_name = "data", .o_short = 'D', .o_val = OPT_DATA, .o_arg = true },
 	{ .o_name = "file", .o_short = 'F', .o_val = OPT_FILE, .o_arg = true },
 	{ .o_name = "subscribe", .o_val = OPT_SUBSCRIBE, .o_arg = true },
