@@ -31,6 +31,8 @@
 #include <string.h>
 #include <time.h>
 
+#include "stubs.h"
+
 #ifdef NDEBUG
 #define dprintf(...)
 #else

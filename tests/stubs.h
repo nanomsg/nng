@@ -94,4 +94,8 @@ nosocket(nng_socket *s)
 #define nng_respondent0_open nosocket
 #endif
 
+#ifndef NNG_HAVE_BUS0
+#define nng_bus0_open nosocket
+#endif
+
 #endif // STUBS_H
