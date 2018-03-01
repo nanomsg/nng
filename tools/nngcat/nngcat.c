@@ -41,9 +41,15 @@ nng_duration sendtimeo = NNG_DURATION_INFINITE;
 nng_duration recvtimeo = NNG_DURATION_INFINITE;
 void *       data      = NULL;
 size_t       datalen   = 0;
-size_t       datacap   = 0;
 int          compat    = 0;
 int          async     = 0;
+int          insecure  = 0;
+void *       cacert    = NULL;
+size_t       cacertlen = 0;
+void *       keyfile   = NULL;
+size_t       keylen    = 0;
+void *       certfile  = NULL;
+size_t       certlen   = 0;
 
 // Options, must start at 1 because zero is sentinel.
 enum options {
@@ -85,6 +91,10 @@ enum options {
 	OPT_DIAL_IPC,
 	OPT_LISTEN_LOCAL,
 	OPT_DIAL_LOCAL,
+	OPT_INSECURE,
+	OPT_CACERT,
+	OPT_KEYFILE,
+	OPT_CERTFILE,
 };
 
 static nng_optspec opts[] = {
@@ -157,6 +167,15 @@ static nng_optspec opts[] = {
 	    .o_name  = "connect-local",
 	    .o_short = 'l',
 	    .o_val   = OPT_DIAL_LOCAL,
+	    .o_arg   = true,
+	},
+	{ .o_name = "insecure", .o_short = 'k', .o_val = OPT_INSECURE },
+	{ .o_name = "cacert", .o_val = OPT_CACERT, .o_arg = true },
+	{ .o_name = "key", .o_val = OPT_KEYFILE, .o_arg = true },
+	{
+	    .o_name  = "cert",
+	    .o_short = 'E',
+	    .o_val   = OPT_CERTFILE,
 	    .o_arg   = true,
 	},
 
@@ -241,6 +260,70 @@ intarg(const char *val, int maxv)
 		fatal("Integer argument overflow.");
 	}
 	return (v);
+}
+
+// This reads a file into memory.  Care is taken to ensure that
+// the buffer is one byte larger and contains a terminating
+// NUL. (Useful for key files and such.)
+static void
+loadfile(const char *path, void **datap, size_t *lenp)
+{
+	FILE * f;
+	size_t cap;
+	char * data;
+	size_t len;
+	if ((f = fopen(path, "r")) == NULL) {
+		fatal("Cannot open file %s: %s", path, strerror(errno));
+	}
+	cap = 4096;
+	len = 0;
+	if ((data = malloc(cap)) == NULL) {
+		fatal("Out of memory.");
+	}
+	data[0] = '\0';
+	for (;;) {
+		size_t n;
+		// Read until end of file, reallocating as needed.
+		if (len == (cap - 1)) {
+			void *old = data;
+			cap *= 2;
+			if ((data = realloc(old, cap)) == NULL) {
+				fatal("Out of memory");
+			}
+		}
+		n = fread(data + len, 1, cap - len, f);
+		if (n == 0) {
+			if (ferror(f)) {
+				fatal("Read file %s failed: %s", path,
+				    strerror(errno));
+			}
+			break;
+		}
+		len += n;
+		data[len] = '\0';
+	}
+	fclose(f);
+	*datap = data;
+	*lenp  = len;
+}
+
+static void
+configtls(nng_tls_config *tls)
+{
+	int rv = 0;
+	if (insecure) {
+		rv = nng_tls_config_auth_mode(tls, NNG_TLS_AUTH_MODE_NONE);
+	}
+	if ((rv == 0) && (certfile != NULL)) {
+		keyfile = keyfile ? keyfile : certfile;
+		rv = nng_tls_config_own_cert(tls, certfile, keyfile, NULL);
+	}
+	if ((rv == 0) && (cacert != NULL)) {
+		rv = nng_tls_config_ca_chain(tls, cacert, NULL);
+	}
+	if (rv != 0) {
+		fatal("Unable to configure TLS: %s", nng_strerror(rv));
+	}
 }
 
 struct addr {
@@ -335,7 +418,8 @@ printmsg(char *buf, size_t len)
 		putchar('"');
 		putchar('\n');
 		break;
-	case OPT_MSGPACK: // MsgPack, we just encode prefix + len, then raw.
+	case OPT_MSGPACK: // MsgPack, we just encode prefix + len, then
+	                  // raw.
 		if (len < 256) {
 			putchar('\xc4');
 			putchar(len & 0xff);
@@ -352,7 +436,8 @@ printmsg(char *buf, size_t len)
 		}
 		fwrite(buf, 1, len, stdout);
 		break;
-	case OPT_HEX: // Hex, quoted C string encoded with hex literals.
+	case OPT_HEX: // Hex, quoted C string encoded with hex
+	              // literals.
 		putchar('"');
 		for (size_t i = 0; i < len; i++) {
 			printf("\\x%02x", (uint8_t) buf[i]);
@@ -375,8 +460,8 @@ recvloop(nng_socket sock)
 		switch (rv) {
 		case NNG_ETIMEDOUT:
 		case NNG_ESTATE:
-			// Either a regular timeout, or we reached the end
-			// of an event like a survey completing.
+			// Either a regular timeout, or we reached the
+			// end of an event like a survey completing.
 			return;
 		case 0:
 			printmsg(nng_msg_body(msg), nng_msg_len(msg));
@@ -443,9 +528,9 @@ sendloop(nng_socket sock)
 			break;
 		}
 		// We sleep, but we account for time spent, so that our
-		// interval appears more or less constant.  Of course if we
-		// took more than the interval here, then we skip the sleep
-		// altogether.
+		// interval appears more or less constant.  Of course
+		// if we took more than the interval here, then we skip
+		// the sleep altogether.
 		if ((delta >= 0) && (delta < interval)) {
 			nng_msleep(interval - delta);
 		}
@@ -490,8 +575,9 @@ sendrecv(nng_socket sock)
 			break;
 		}
 
-		// We would like to use recvloop, but we need to reset our
-		// timeout each time, as the timer counts down towards zero.
+		// We would like to use recvloop, but we need to reset
+		// our timeout each time, as the timer counts down
+		// towards zero.
 
 		for (;;) {
 			delta = (nng_duration)(nng_clock() - start);
@@ -529,9 +615,9 @@ sendrecv(nng_socket sock)
 		delta = (nng_duration)(end - start);
 
 		// We sleep, but we account for time spent, so that our
-		// interval appears more or less constant.  Of course if we
-		// took more than the interval here, then we skip the sleep
-		// altogether.
+		// interval appears more or less constant.  Of course
+		// if we took more than the interval here, then we skip
+		// the sleep altogether.
 		if ((delta >= 0) && (delta < interval)) {
 			nng_msleep(interval - delta);
 		}
@@ -552,7 +638,6 @@ main(int ac, const char **av)
 	struct topic **topicend;
 	nng_socket     sock;
 	int            port;
-	FILE *         f;
 
 	idx      = 1;
 	addrend  = &addrs;
@@ -655,55 +740,48 @@ main(int ac, const char **av)
 			break;
 		case OPT_FILE:
 			if (data != NULL) {
-				fatal("Data (--file, --data) may be specified "
+				fatal("Data (--file, --data) may be "
+				      "specified "
 				      "only once.");
 			}
-			if ((f = fopen(arg, "r")) == NULL) {
-				fatal("Cannot open file %s: %s", arg,
-				    strerror(errno));
-			}
-			for (;;) {
-				size_t n;
-				// Read until end of file, reallocating as
-				// needed.
-				if (datacap == 0) {
-					data    = malloc(4096);
-					datacap = 4096;
-				} else if (datacap == datalen) {
-					void *odata = data;
-					datacap *= 2;
-					data = realloc(odata, datacap);
-					if (data == NULL) {
-						free(odata);
-					}
-				}
-				if (data == NULL) {
-					fatal("Out of memory.");
-				}
-				n = fread((char *) data + datalen, 1,
-				    datacap - datalen, f);
-				if (n == 0) {
-					if (ferror(f)) {
-						fatal(
-						    "Read file %s failed: %s",
-						    arg, strerror(errno));
-					}
-					break;
-				}
-			}
-			fclose(f);
+			loadfile(arg, &data, &datalen);
 			break;
 		case OPT_DATA:
 			if (data != NULL) {
-				fatal("Data (--file, --data) may be specified "
+				fatal("Data (--file, --data) may be "
+				      "specified "
 				      "only once.");
 			}
 			if ((data = malloc(strlen(arg) + 1)) == NULL) {
 				fatal("Out of memory.");
 			}
 			memcpy(data, arg, strlen(arg) + 1);
-			datacap = strlen(arg) + 1;
 			datalen = strlen(arg);
+			break;
+		case OPT_CACERT:
+			if (cacert != NULL) {
+				fatal("CA Certificate (--cacert) may be "
+				      "specified only once.");
+			}
+			loadfile(arg, &cacert, &cacertlen);
+			break;
+		case OPT_KEYFILE:
+			if (keyfile != NULL) {
+				fatal(
+				    "Key (--key) may be specified only once.");
+			}
+			loadfile(arg, &keyfile, &keylen);
+			break;
+		case OPT_CERTFILE:
+			if (certfile != NULL) {
+				fatal("Cert (--cert) may be specified "
+				      "only "
+				      "once.");
+			}
+			loadfile(arg, &certfile, &certlen);
+			break;
+		case OPT_INSECURE:
+			insecure = 1;
 			break;
 		}
 	}
@@ -725,7 +803,8 @@ main(int ac, const char **av)
 
 	if (compat) {
 		if (async != 0) {
-			fatal("Option --async and --compat are incompatible.");
+			fatal("Option --async and --compat are "
+			      "incompatible.");
 		}
 		if (proto == OPT_PAIR) {
 			proto = OPT_PAIR0;
@@ -761,8 +840,17 @@ main(int ac, const char **av)
 		}
 		break;
 	case OPT_PUSH0:
-	case OPT_SURVEY0:
 	case OPT_PUB0:
+		if (format != 0) {
+			fatal("Protocol does not support --format "
+			      "options.");
+		}
+		if (data == NULL) {
+			fatal("Protocol requires either --file or "
+			      "--data.");
+		}
+		break;
+	case OPT_SURVEY0:
 	case OPT_REQ0:
 		if (data == NULL) {
 			fatal("Protocol requires either --file or "
@@ -890,22 +978,48 @@ main(int ac, const char **av)
 		fatal("Unable to set send timeout: %s", nng_strerror(rv));
 	}
 
-	// XXX: TBD: This is where we should add other socket options,
-	// like TLS configuration, timeouts, etc.
-
 	for (struct addr *a = addrs; a != NULL; a = a->next) {
-		char *act;
+		char *          act;
+		nng_listener    l;
+		nng_dialer      d;
+		nng_tls_config *tls;
 		switch (a->mode) {
 		case OPT_DIAL:
 		case OPT_DIAL_IPC:
 		case OPT_DIAL_LOCAL:
-			rv  = nng_dial(sock, a->val, NULL, async);
+			rv = nng_dialer_create(&d, sock, a->val);
+			if (rv != 0) {
+				fatal("Unable to create dialer for %s: %s",
+				    a->val, nng_strerror(rv));
+			}
+			rv = nng_dialer_getopt_ptr(
+			    d, NNG_OPT_TLS_CONFIG, (void **) &tls);
+			if (rv == 0) {
+				configtls(tls);
+			} else if (rv != NNG_ENOTSUP) {
+				fatal("Unable to get TLS config: %s",
+				    nng_strerror(rv));
+			}
+			rv  = nng_dialer_start(d, async);
 			act = "dial";
 			break;
 		case OPT_LISTEN:
 		case OPT_LISTEN_IPC:
 		case OPT_LISTEN_LOCAL:
-			rv  = nng_listen(sock, a->val, NULL, async);
+			rv = nng_listener_create(&l, sock, a->val);
+			if (rv != 0) {
+				fatal("Unable to create listener for %s: %s",
+				    a->val, nng_strerror(rv));
+			}
+			rv = nng_listener_getopt_ptr(
+			    l, NNG_OPT_TLS_CONFIG, (void **) &tls);
+			if (rv == 0) {
+				configtls(tls);
+			} else if (rv != NNG_ENOTSUP) {
+				fatal("Unable to get TLS config: %s",
+				    nng_strerror(rv));
+			}
+			rv  = nng_listener_start(l, async);
 			act = "listen";
 			break;
 		default:

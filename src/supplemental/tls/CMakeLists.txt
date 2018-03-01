@@ -1,6 +1,6 @@
 #
-# Copyright 2017 Capitar IT Group BV <info@capitar.com>
-# Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2018 Capitar IT Group BV <info@capitar.com>
+# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -34,6 +34,8 @@ if (NNG_SUPP_TLS_MBEDTLS)
 	    set(NNG_REQUIRED_INCLUDES ${NNG_REQUIRED_INCLUDES} PARENT_SCOPE)
 	endif()
 	set(TLS_SOURCES ${TLS_SOURCES} supplemental/tls/mbedtls/tls.c)
+else()
+	set(TLS_SOURCES ${TLS_SOURCES} supplemental/tls/none/tls.c)
 endif()
 
 set(NNG_DEFINES ${NNG_DEFINES} ${TLS_DEFINES} PARENT_SCOPE)

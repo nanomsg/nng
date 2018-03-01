@@ -528,8 +528,6 @@ nni_msgq_resize(nni_msgq *mq, int cap)
 	nni_msg * msg;
 	nni_msg **newq, **oldq;
 	int       oldget;
-	int       oldput;
-	int       oldcap;
 	int       oldlen;
 	int       oldalloc;
 
@@ -564,8 +562,6 @@ nni_msgq_resize(nni_msgq *mq, int cap)
 
 	oldq     = mq->mq_msgs;
 	oldget   = mq->mq_get;
-	oldput   = mq->mq_put;
-	oldcap   = mq->mq_cap;
 	oldalloc = mq->mq_alloc;
 	oldlen   = mq->mq_len;
 

@@ -497,7 +497,7 @@ nni_tls_recv_cb(void *ctx)
 // The chunk size we accept is 64k at a time, which prevents
 // ridiculous over queueing.  This is always called with the pipe
 // lock held, and never blocks.
-int
+static int
 nni_tls_net_send(void *ctx, const unsigned char *buf, size_t len)
 {
 	nni_tls *tp = ctx;
@@ -605,7 +605,7 @@ nni_tls_sockname(nni_tls *tp, nni_sockaddr *sa)
 	return (nni_plat_tcp_pipe_sockname(tp->tcp, sa));
 }
 
-void
+static void
 nni_tls_do_handshake(nni_tls *tp)
 {
 	int rv;

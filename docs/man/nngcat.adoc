@@ -208,6 +208,26 @@ the data.
 *--send-timeout*=_SEC_::
   Give up trying to send a message after _SEC_ seconds.
 
+=== TLS Options
+
+These options are only present if TLS is configured; they are ignored
+when using addresses that are not secured with TLS.
+
+*-k, --insecure*::
+  Skip peer validation.
+
+*-E, --cert*=_FILE_::
+  Load own certificate from _FILE_.
+
+*--key*=_FILE_::
+  Load own key from _FILE_.  Should be used in conjuction with *--cert*.  If 
+  not specified, and *--cert* is specified, then a single file containing both 
+  the private key and the associated certificate is assumed.
+
+*--cacert*=_FILE_::
+  Load CA certificates from _FILE_.  These CAs ("Certificate Authorities") are
+  used as trust roots when validating certificates presented by peers.
+
 == EXAMPLES
 
 .Echo service using request/reply.
