@@ -1,0 +1,126 @@
+= NNG Contributing Guidelines
+
+Legal stuff:
+
+For any submission you make to us, either by filing an issue, or submitting a
+defect, or sending us a message, you agree and certify that:
+
+        ** You are the author or legal owner of the content submitted, or
+           you have authorization to submit the content by the owner
+           (such as your employer).
+
+        ** Unless the submission is otherwise labeled, you or the owner
+           are granting the NNG Project, its contributors, and licensees,
+           a non-exclusive license to your use submission under the terms of
+           MIT License (as documented in the <<LICENSE#,LICENSE>> file in this
+           repository.)  This grant shall include a right to use for any
+           patents covering content in the submission.
+
+        ** You are not aware of any legal encumberances to the use of the
+           submission (such as patents held by others) unless explicitly
+           stated otherwise.
+
+        ** You have read, and agree to abide by, our
+           <<CODE_OF_CONDUCT#,Code of Conduct>>.
+
+        ** You understand that participation in this project is voluntary,
+           and at no point shall any of the project members or leadership
+           be obligated to review, merge, or handle any submission.
+
+== Filing Issues
+
+We use github issues for NNG.  We ask that you keep in mind the following
+when filing issues:
+
+* First look to see if your issue is already covered by an existing issue.
+
+* Synopsis should be brief, but descriptive. (We may alter the synopsis
+  to correct its accuracy or improve its brevity.)
+
+* Include details about the platform (operating system, language).
+
+* Include CMake configuration used to build NNG.
+
+* Inclue expected results or behavior, and observed results or behavior.
+
+* If at all possible, a reproducible test case is helpful. We prefer test
+  cases as the minimal amount of C code to demonstrate the defect.
+
+* Please file issues only when filing things that should be fixed by
+  changes to the source or documentation in the repository (such as bugs
+  or feature requests).  For support questions and other discussion, please
+  instead use the mailing list or Gitter chat.
+
+== Pull Requests
+
+* We use Github PRs
+
+* Please follow the existing coding style.
+
+        ** See the `.clang-format` for whitespace rules.
+        ** Return values should be enclosed in parenthesis.
+        ** Conditional clauses are always enclosed in braces, and thus
+           span multiple lines.
+
+TIP: The `.clang-format` file and `clang-format` may be helpful, but
+is not necessarily complete.  Also you may need to use a recent version
+of `clang-format` as older versions can differ in their output.
+
+* If you submit a PR, we would appreciate it if you would respond to review
+  feedback, rather than just leaving your baby on our doorstep.  Abandoned
+  PRs or issues may be closed without further action.
+
+* Commits should have comments formatted like this:
+
+----
+    fixes #<issue#1> <issue#1-synopsis>
+    fixes #<issue#2> <issue#2-synopsis>
+
+    <Comments describing the issues, or fix, that you want to have
+    in the commit history.  Not every issue needs such comments.>
+----
+
+* We have an "always release ready" policy for our tree, meaning we should
+  be able to build a functional release at any commit boundary.  This ensures
+  that others taking the work can use git bisect and similar approaches when
+  hunting down regressions, or when cherry-picking changes for their own
+  forked copies.  This has a few consequences:
+
+	** PRs should be functionally complete (that is, don't submit a
+           PR with partial work in progress, unless you have reached a 
+           milestone that can stand on its own merit.)
+
+	** Each commit in a PR should also be "complete", so that the
+           a release could be cut in between your commits without
+           leaving the tree in a broken or dysfunctional state.
+
+        ** Usually this means its best to address only one issue in a PR,
+           with just one commit (squashed).
+
+        ** Please have already merged and tested your code against the
+           latest changes in master.  (If your code has merge conflicts,
+           your PR will be rejected until you have fixed the conflicts.)
+
+* As a special exception, you may submit a PR for handling by our test
+  infrastructure; in that case please clearly identify that the PR is
+  submitted for that purpose, and should not considered for integration
+  yet.  When that testing is done, please close the PR, and submit a new
+  one when you are ready for final review and integration.
+
+* Code submitted should contain updates to any copyright files to add
+  your copyright to the license.  We prefer you follow the existing
+  style of copyright, `// Copyright <year> <owner> <email or url>`
+
+NOTE: We only use the most recent year, and we do not use `\(C)` which has
+no legal value when the word "`Copyright`" is already present. We also
+do not use the old "`All rights reserved.`" statement, which is equally
+meaningless under current international copyright law.
+
+* When updating an existing file, any new Copyright notice should be
+  added immediately below the pre-existing one, just before the license
+  boilerplate.
+
+* All new files should use the MIT license and the same boilerplate
+  from one of the other files.  We do not normally approve submissions 
+  with different license or boilerplates -- please contact us if you
+  have a compelling reason for wanting to do that.
