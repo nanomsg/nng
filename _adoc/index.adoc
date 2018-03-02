@@ -13,7 +13,7 @@ image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=cove
 This is the documentation for _nng_.  This is all very preliminary at this
 point.
 
-A reference manual is available <<man/v0.2.0/nng.adoc#,here>>.
+A reference manual is available <<man/{{site.latest}}/nng.adoc#,here>>.
 
 Here is my <<RATIONALE#,rationale>> for why I made _nng_.
 
