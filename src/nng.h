@@ -42,6 +42,15 @@ extern "C" {
 #endif // _WIN32 && !NNG_STATIC_LIB
 #endif // NNG_DECL
 
+// NNG Library & API version.
+// We use SemVer, and these versions are about the API, and
+// may not necessarily match the ABI versions. Right now at
+// version 0, you should not be making any forward compatibility
+// assumptions.
+#define	NNG_MAJOR_VERSION	0
+#define	NNG_MINOR_VERSION	5
+#define	NNG_PATCH_VERSION	0
+
 // Types common to nng.
 typedef uint32_t            nng_socket;
 typedef uint32_t            nng_dialer;

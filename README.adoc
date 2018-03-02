@@ -6,20 +6,23 @@ image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Wi
 image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=coverage[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
 image:https://api.codacy.com/project/badge/Grade/f241cba192974787b66f7e4368777ebf["Codacy code quality", link="https://www.codacy.com/app/gdamore/nng?utm_source=github.com&utm_medium=referral&utm_content=nanomsg/nng&utm_campaign=Badge_Grade"]
 
-This repository represents a work in progress rewrite of the SP protocol
-library called "libnanomsg".  This is pre-release, but at this point you
-can start using it for development, as we believe we are getting closer
-to release readiness.
+This repository represents a rewrite of the SP protocol
+library known as https://github.com/nanomsg/nanomsg[libnanomsg].
 
-Review and testing feedback are appreciated however; but please understand
-that the project is still preliminary.
+This is pre-release, but at this point we believe that the library is
+robust enough to use for development and testing, and we are actively
+seeing additional testing and review.
 
-This is a work in progress, and is *not* suitable for production use.
+While we have made every reasonable effort to ensure that this library
+is robust and safe, it is still a *pre-release*, and details are subject
+to change.  Therefore, we do not recommend it for production use, yet.
+
+NOTE: We're getting pretty close to removing this caveat though,
+and we'd like help from others in testing to further improve our confidence
+before we do.
+
 When the library is ready for broader consumption, an
 announcement will be posted on the nanomsg mailing list and website.
-
-Some https://nanomsg.github.io/nng/man/[manual pages] are posted
-on GitHub pages.
 
 If you are looking for the current production version of nanomsg, please
 see the https://github.com/nanomsg/nanomsg[nanomsg repo].
@@ -50,13 +53,16 @@ implications, because the mbedTLS library carries other licensing
 requirements (either Apache or GPL) than _nng_.
 either Apache or GPL licenses.
 
-Documentation is a work in progres -- initial pages are
-https://nanomsg.github.io/nng[online], but there is much missing.
+Much of the library, but not all, is documented in the docs/ folder,
+and also https://nanomsg.github.io/nng[online].
+
 You can also explore the `nng.h` header file, which provides the public
 API. A legacy compatible `nng_compat.h` header is available and
 offers API compatibility with legacy _nanomsg_.
 
 == Commercial Support
 
+Commercial support for _NNG_ is available.
+
 Please contact mailto:info@staysail.tech[Staysail Systems, Inc.] to
-inquire about commercial support.
+inquire further.
