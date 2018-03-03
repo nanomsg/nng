@@ -17,6 +17,8 @@ nngcat - command line access to Scalabity Protocols
 
 *nngcat* --help
 
+*nngcat* --version
+
 *nngcat* [_OPTION_]... 
 
 == DESCRIPTION
@@ -41,6 +43,8 @@ equa
 === Generic
 *-h, --help*::
   Get usage help.
+*-V, --version*::
+  Print the version and exit.
 *-v, --verbose*::
   Select verbose operation.
 *-q, --silent*::

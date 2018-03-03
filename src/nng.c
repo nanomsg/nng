@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include "nng.h"
 #include "core/nng_impl.h"
 
 // This file provides the "public" API.  This is a thin wrapper around
@@ -1211,4 +1212,14 @@ int
 nng_url_clone(nng_url **dstp, const nng_url *src)
 {
 	return (nni_url_clone(dstp, src));
+}
+
+#define xstr(a) str(a)
+#define str(a) #a
+
+const char *
+nng_version(void)
+{
+	return (xstr(NNG_MAJOR_VERSION) "." xstr(NNG_MINOR_VERSION) "." xstr(
+	    NNG_PATCH_VERSION));
 }

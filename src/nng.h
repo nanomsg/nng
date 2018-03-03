@@ -47,9 +47,9 @@ extern "C" {
 // may not necessarily match the ABI versions. Right now at
 // version 0, you should not be making any forward compatibility
 // assumptions.
-#define	NNG_MAJOR_VERSION	0
-#define	NNG_MINOR_VERSION	5
-#define	NNG_PATCH_VERSION	0
+#define NNG_MAJOR_VERSION 0
+#define NNG_MINOR_VERSION 5
+#define NNG_PATCH_VERSION 0
 
 // Types common to nng.
 typedef uint32_t            nng_socket;
@@ -698,6 +698,8 @@ NNG_DECL void nng_url_free(nng_url *);
 // nng_url_clone clones a URL structure.
 NNG_DECL int nng_url_clone(nng_url **, const nng_url *);
 
+// nng_version returns the library version as a human readable string.
+NNG_DECL const char *nng_version(void);
 #ifdef __cplusplus
 }
 #endif

@@ -96,6 +96,7 @@ enum options {
 	OPT_CACERT,
 	OPT_KEYFILE,
 	OPT_CERTFILE,
+	OPT_VERSION,
 };
 
 static nng_optspec opts[] = {
@@ -179,6 +180,7 @@ static nng_optspec opts[] = {
 	    .o_val   = OPT_CERTFILE,
 	    .o_arg   = true,
 	},
+	{ .o_name = "version", .o_short = 'V', .o_val = OPT_VERSION },
 
 	// Sentinel.
 	{ .o_name = NULL, .o_val = 0 },
@@ -784,6 +786,9 @@ main(int ac, const char **av)
 		case OPT_INSECURE:
 			insecure = 1;
 			break;
+		case OPT_VERSION:
+			printf("%s\n", nng_version());
+			exit(0);
 		}
 	}
 	switch (rv) {
