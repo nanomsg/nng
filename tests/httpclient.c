@@ -17,6 +17,7 @@
 
 // Basic HTTP client tests.
 #include "core/nng_impl.h"
+#include "supplemental/tls/tls.h"
 #include "supplemental/http/http.h"
 #include "supplemental/sha1/sha1.h"
 

@@ -12,6 +12,8 @@
 #define NNG_SUPPLEMENTAL_HTTP_HTTP_API_H
 
 #include "core/nng_impl.h"
+#include "supplemental/tls/tls.h"
+
 #include "supplemental/http/http.h"
 
 // This represents the "internal" HTTP API.  It should not be used
@@ -115,7 +117,7 @@ extern void nni_http_write_full(nni_http_conn *, nni_aio *);
 extern int  nni_http_sock_addr(nni_http_conn *, nni_sockaddr *);
 extern int  nni_http_peer_addr(nni_http_conn *, nni_sockaddr *);
 
-// nni_tls_http_verified returns true if the peer has been verified using TLS.
+// nni_http_tls_verified returns true if the peer has been verified using TLS.
 extern bool nni_http_tls_verified(nni_http_conn *);
 
 // nni_http_server will look for an existing server with the same

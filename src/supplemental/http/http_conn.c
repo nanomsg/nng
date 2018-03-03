@@ -13,6 +13,7 @@
 
 #include "core/nng_impl.h"
 #include "supplemental/tls/tls.h"
+#include "supplemental/tls/tls_api.h"
 
 #include "http_api.h"
 

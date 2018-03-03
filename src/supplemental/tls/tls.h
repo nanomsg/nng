@@ -11,43 +11,97 @@
 #ifndef NNG_SUPPLEMENTAL_TLS_TLS_H
 #define NNG_SUPPLEMENTAL_TLS_TLS_H
 
-#include <stdbool.h>
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-// nni_tls represents the context for a single TLS stream.
-typedef struct nni_tls nni_tls;
+#include <stddef.h>
+#include <stdint.h>
 
-// nni_tls_config_init creates a new TLS configuration object.
-// The object is created with a reference count of one.
-extern int nni_tls_config_init(nng_tls_config **, nng_tls_mode);
+// Note that TLS functions may be stubbed out if TLS is not enabled in
+// the build.
 
-// nni_tls_config_fini drops the reference on the configuration
-// object, deallocating if this was the last reference.
-extern void nni_tls_config_fini(nng_tls_config *);
+// For some transports, we need TLS configuration, including certificates
+// and so forth.  A TLS configuration cannot be changed once it is in use.
+typedef struct nng_tls_config nng_tls_config;
 
-// nni_tls_config_hold is used to get a hold on the config
-// object, preventing it from being released inadvertently.
-// The hold is released with a call to nng_tls_config_fini().
-// Note that a hold need not be acquired at creation, since
-// the configuration object is created with a hold on it.
-extern void nni_tls_config_hold(nng_tls_config *);
+typedef enum nng_tls_mode {
+	NNG_TLS_MODE_CLIENT = 0,
+	NNG_TLS_MODE_SERVER = 1,
+} nng_tls_mode;
 
-extern int  nni_tls_init(nni_tls **, nng_tls_config *, nni_plat_tcp_pipe *);
-extern void nni_tls_close(nni_tls *);
-extern void nni_tls_fini(nni_tls *);
-extern void nni_tls_send(nni_tls *, nng_aio *);
-extern void nni_tls_recv(nni_tls *, nng_aio *);
-extern int  nni_tls_sockname(nni_tls *, nni_sockaddr *);
-extern int  nni_tls_peername(nni_tls *, nni_sockaddr *);
+typedef enum nng_tls_auth_mode {
+	NNG_TLS_AUTH_MODE_NONE     = 0, // No verification is performed
+	NNG_TLS_AUTH_MODE_OPTIONAL = 1, // Verify cert if presented
+	NNG_TLS_AUTH_MODE_REQUIRED = 2, // Verify cert, close if invalid
+} nng_tls_auth_mode;
 
-// nni_tls_verified returns true if the peer, or false if the peer did not
-// verify.  (During the handshake phase, the peer is not verified, so this
-// might return false if executed too soon.  The verification status will
-// be accurate once the handshake is finished, however.
-extern bool nni_tls_verified(nni_tls *);
+// nng_tls_config_alloc creates a TLS configuration using
+// reasonable defaults.  This configuration can be shared
+// with multiple pipes or services/servers.
+NNG_DECL int nng_tls_config_alloc(nng_tls_config **, nng_tls_mode);
 
-// nni_tls_ciphersuite_name returns the name of the ciphersuite in use.
-extern const char *nni_tls_ciphersuite_name(nni_tls *);
+// nng_tls_config_free drops the reference count on the TLS
+// configuration object, and if zero, deallocates it.
+NNG_DECL void nng_tls_config_free(nng_tls_config *);
 
-// TBD: getting additional peer certificate information...
+// nng_tls_config_server_name sets the server name.  This is
+// called by clients to set the name that the server supplied
+// certificate should be matched against.  This can also cause
+// the SNI to be sent to the server to tell it which cert to
+// use if it supports more than one.
+NNG_DECL int nng_tls_config_server_name(nng_tls_config *, const char *);
+
+// nng_tls_config_ca_cert configures one or more CAs used for validation
+// of peer certificates.  Multiple CAs (and their chains) may be configured
+// by either calling this multiple times, or by specifying a list of
+// certificates as concatenated data.  The final argument is an optional CRL
+// (revokation list) for the CA, also in PEM.  Both PEM strings are ASCIIZ
+// format (except that the CRL may be NULL).
+NNG_DECL int nng_tls_config_ca_chain(
+    nng_tls_config *, const char *, const char *);
+
+// nng_tls_config_own_cert is used to load our own certificate and public
+// key.  For servers, this may be called more than once to configure multiple
+// different keys, for example with different algorithms depending on what
+// the peer supports. On the client, only a single option is available.
+// The first two arguments are the cert (or validation chain) and the
+// key as PEM format ASCIIZ strings.  The final argument is an optional
+// password and may be NULL.
+NNG_DECL int nng_tls_config_own_cert(
+    nng_tls_config *, const char *, const char *, const char *);
+
+// nng_tls_config_key is used to pass our own private key.
+NNG_DECL int nng_tls_config_key(nng_tls_config *, const uint8_t *, size_t);
+
+// nng_tls_config_pass is used to pass a password used to decrypt
+// private keys that are encrypted.
+NNG_DECL int nng_tls_config_pass(nng_tls_config *, const char *);
+
+// nng_tls_config_auth_mode is used to configure the authentication mode use.
+// The default is that servers have this off (i.e. no client authentication)
+// and clients have it on (they verify the server), which matches typical
+// practice.
+NNG_DECL int nng_tls_config_auth_mode(nng_tls_config *, nng_tls_auth_mode);
+
+// nng_tls_config_ca_file is used to pass a CA chain and optional CRL
+// via the filesystem.  If CRL data is present, it must be contained
+// in the file, along with the CA certificate data.  The format is PEM.
+// The path name must be a legal file name.
+NNG_DECL int nng_tls_config_ca_file(nng_tls_config *, const char *);
+
+// nng_tls_config_cert_key_file is used to pass our own certificate and
+// private key data via the filesystem.  Both the key and certificate
+// must be present as PEM blocks in the same file.  A password is used to
+// decrypt the private key if it is encrypted and the password supplied is not
+// NULL. This may be called multiple times on servers, but only once on a
+// client. (Servers can support multiple different certificates and keys for
+// different cryptographic algorithms.  Clients only get one.)
+NNG_DECL int nng_tls_config_cert_key_file(
+    nng_tls_config *, const char *, const char *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // NNG_SUPPLEMENTAL_TLS_TLS_H

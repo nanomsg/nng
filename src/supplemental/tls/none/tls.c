@@ -18,6 +18,7 @@
 
 #include "core/nng_impl.h"
 #include "supplemental/tls/tls.h"
+#include "supplemental/tls/tls_api.h"
 
 void
 nni_tls_config_fini(nng_tls_config *cfg)

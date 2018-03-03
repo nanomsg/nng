@@ -11,7 +11,7 @@
 #include "convey.h"
 #include "nng.h"
 #include "protocol/pair1/pair.h"
-
+#include "supplemental/tls/tls.h"
 #include "transport/tls/tls.h"
 
 #include "trantest.h"

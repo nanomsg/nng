@@ -15,6 +15,7 @@
 #include "core/nng_impl.h"
 
 #include "supplemental/tls/tls.h"
+#include "supplemental/tls/tls_api.h"
 #include "tls.h"
 
 // TLS over TCP transport.   Platform specific TCP operations must be

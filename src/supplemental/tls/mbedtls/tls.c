@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 #include "mbedtls/version.h" // Must be first in order to pick up version
 
 #include "mbedtls/error.h"
@@ -29,6 +30,7 @@
 #include "core/nng_impl.h"
 
 #include "supplemental/tls/tls.h"
+#include "supplemental/tls/tls_api.h"
 
 // Implementation note.  This implementation buffers data between the TLS
 // encryption layer (mbedTLS) and the underlying TCP socket.  As a result,

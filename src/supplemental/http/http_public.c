@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "supplemental/tls/tls.h"
 #include "http.h"
 #include "http_api.h"
 

@@ -10,9 +10,9 @@
 
 if (NNG_SUPP_TLS)
 	set(NNG_SUPP_TLS_MBEDTLS ON)
-	set(TLS_SOURCES supplemental/tls/tls.h)
 	set(TLS_DEFINES -DNNG_SUPP_TLS)
 endif()
+set(TLS_SOURCES supplemental/tls/tls.h)
 
 # For now we only support the ARM mbedTLS library.
 if (NNG_SUPP_TLS_MBEDTLS)
@@ -38,5 +38,8 @@ else()
 	set(TLS_SOURCES ${TLS_SOURCES} supplemental/tls/none/tls.c)
 endif()
 
+set(TLS_HEADERS supplemental/tls/tls.h)
+
 set(NNG_DEFINES ${NNG_DEFINES} ${TLS_DEFINES} PARENT_SCOPE)
 set(NNG_SOURCES ${NNG_SOURCES} ${TLS_SOURCES} PARENT_SCOPE)
+set(NNG_HEADERS ${NNG_HEADERS} ${TLS_HEADERS} PARENT_SCOPE)

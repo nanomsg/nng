@@ -12,6 +12,8 @@
 #include "nng.h"
 #include "protocol/pair1/pair.h"
 #include "transport/ws/websocket.h"
+#include "supplemental/tls/tls.h"
+
 #include "trantest.h"
 
 #include "stubs.h"
