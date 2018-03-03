@@ -18,6 +18,7 @@ nng_tls_config_auth_mode - configure authentication mode
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
 
 typedef enum nng_tls_auth_mode {
         NNG_TLS_AUTH_MODE_NONE,

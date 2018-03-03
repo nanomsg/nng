@@ -18,6 +18,7 @@ nng_tls_config_server_name - configure remote server name
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
 
 int nng_tls_config_server_name(nni_tls_config *cfg, const char *name);
 -----------

@@ -18,6 +18,7 @@ nng_tls_config_ca_chain - configure certificate authority certificate chain
 [source, c]
 -----------
 #include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
 
 int nng_tls_config_ca_cert(nni_tls_config *cfg, const char *chain,
     const char *crl);
