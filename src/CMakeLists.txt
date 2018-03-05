@@ -108,6 +108,10 @@ if (NNG_HAVE_KQUEUE)
     set (NNG_SOURCES ${NNG_SOURCES}
         platform/posix/posix_pollq_kqueue.c
     )
+elseif (NNG_HAVE_EPOLL)
+    set (NNG_SOURCES ${NNG_SOURCES}
+        platform/posix/posix_pollq_epoll.c
+    )
 else()
     set (NNG_SOURCES ${NNG_SOURCES}
         platform/posix/posix_pollq_poll.c
