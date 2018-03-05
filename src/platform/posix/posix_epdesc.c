@@ -343,6 +343,18 @@ nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
 	nni_mtx_unlock(&ed->mtx);
 }
 
+int
+nni_posix_epdesc_sockname(nni_posix_epdesc *ed, nni_sockaddr *sa)
+{
+	struct sockaddr_storage ss;
+	socklen_t               sslen = sizeof(ss);
+
+	if (getsockname(ed->node.fd, (void *) &ss, &sslen) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	return (nni_posix_sockaddr2nn(sa, &ss));
+}
+
 void
 nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 {

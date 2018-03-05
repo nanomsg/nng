@@ -230,7 +230,6 @@ struct zt_ep {
 	uint64_t      ze_nwid;
 	int           ze_mode;
 	int           ze_running;
-	nni_sockaddr  ze_addr;
 	uint64_t      ze_raddr; // remote node address
 	uint64_t      ze_laddr; // local node address
 	uint16_t      ze_proto;
@@ -2557,6 +2556,21 @@ zt_ep_getopt_home(void *arg, void *data, size_t *szp)
 }
 
 static int
+zt_ep_getopt_url(void *arg, void *data, size_t *szp)
+{
+	char     ustr[64]; // more than plenty
+	zt_ep *  ep = arg;
+	uint64_t addr;
+
+	addr = ep->ze_mode == NNI_EP_MODE_DIAL ? ep->ze_raddr : ep->ze_laddr;
+	snprintf(ustr, sizeof(ustr), "zt://%llx.%llx:%u",
+	    (unsigned long long) addr >> zt_port_shift,
+	    (unsigned long long) ep->ze_nwid,
+	    (unsigned) (addr & zt_port_mask));
+	return (nni_getopt_str(ustr, data, szp));
+}
+
+static int
 zt_ep_setopt_orbit(void *arg, const void *data, size_t sz)
 {
 	uint64_t           moonid;
@@ -2723,6 +2737,11 @@ static nni_tran_ep_option zt_ep_options[] = {
 	    .eo_name   = NNG_OPT_RECVMAXSZ,
 	    .eo_getopt = zt_ep_getopt_recvmaxsz,
 	    .eo_setopt = zt_ep_setopt_recvmaxsz,
+	},
+	{
+	    .eo_name   = NNG_OPT_URL,
+	    .eo_getopt = zt_ep_getopt_url,
+	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_HOME,

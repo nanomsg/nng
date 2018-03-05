@@ -61,7 +61,9 @@ struct nni_tls_ep {
 	nni_aio *        user_aio;
 	nni_mtx          mtx;
 	nng_tls_config * cfg;
+	nng_sockaddr     bsa;
 	nni_url *        url;
+	int              mode;
 };
 
 static void nni_tls_pipe_send_cb(void *);
@@ -597,7 +599,8 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&ep->mtx);
-	ep->url = url;
+	ep->url  = url;
+	ep->mode = mode;
 
 	if (((rv = nni_plat_tcp_ep_init(&ep->tep, &lsa, &rsa, mode)) != 0) ||
 	    ((rv = nni_tls_config_init(&ep->cfg, tlsmode)) != 0) ||
@@ -638,7 +641,7 @@ nni_tls_ep_bind(void *arg)
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
-	rv = nni_plat_tcp_ep_listen(ep->tep);
+	rv = nni_plat_tcp_ep_listen(ep->tep, &ep->bsa);
 	nni_mtx_unlock(&ep->mtx);
 
 	return (rv);
@@ -744,6 +747,22 @@ nni_tls_ep_connect(void *arg, nni_aio *aio)
 
 	nni_plat_tcp_ep_connect(ep->tep, ep->aio);
 	nni_mtx_unlock(&ep->mtx);
+}
+
+static int
+nni_tls_ep_getopt_url(void *arg, void *v, size_t *szp)
+{
+	nni_tls_ep *ep = arg;
+	char        ustr[128];
+	char        ipstr[48];  // max for IPv6 addresses including []
+	char        portstr[6]; // max for 16-bit port
+
+	if (ep->mode == NNI_EP_MODE_DIAL) {
+		return (nni_getopt_str(ep->url->u_rawurl, v, szp));
+	}
+	nni_plat_tcp_ntop(&ep->bsa, ipstr, portstr);
+	snprintf(ustr, sizeof(ustr), "tls+tcp://%s:%s", ipstr, portstr);
+	return (nni_getopt_str(ustr, v, szp));
 }
 
 static int
@@ -905,6 +924,11 @@ static nni_tran_ep_option nni_tls_ep_options[] = {
 	    .eo_name   = NNG_OPT_LINGER,
 	    .eo_getopt = nni_tls_ep_getopt_linger,
 	    .eo_setopt = nni_tls_ep_setopt_linger,
+	},
+	{
+	    .eo_name   = NNG_OPT_URL,
+	    .eo_getopt = nni_tls_ep_getopt_url,
+	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_CONFIG,

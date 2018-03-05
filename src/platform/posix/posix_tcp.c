@@ -13,6 +13,7 @@
 #ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
 
+#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
@@ -65,9 +66,14 @@ nni_plat_tcp_ep_close(nni_plat_tcp_ep *ep)
 }
 
 int
-nni_plat_tcp_ep_listen(nni_plat_tcp_ep *ep)
+nni_plat_tcp_ep_listen(nni_plat_tcp_ep *ep, nng_sockaddr *bsa)
 {
-	return (nni_posix_epdesc_listen((void *) ep));
+	int rv;
+	rv = nni_posix_epdesc_listen((void *) ep);
+	if ((rv == 0) && (bsa != NULL)) {
+		rv = nni_posix_epdesc_sockname((void *) ep, bsa);
+	}
+	return (rv);
 }
 
 void
@@ -116,6 +122,47 @@ int
 nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *p, nni_sockaddr *sa)
 {
 	return (nni_posix_pipedesc_sockname((void *) p, sa));
+}
+
+int
+nni_plat_tcp_ntop(const nni_sockaddr *sa, char *ipstr, char *portstr)
+{
+	const void *ap;
+	uint16_t    port;
+	int         af;
+	switch (sa->s_un.s_family) {
+	case NNG_AF_INET:
+		ap   = &sa->s_un.s_in.sa_addr;
+		port = sa->s_un.s_in.sa_port;
+		af   = AF_INET;
+		break;
+	case NNG_AF_INET6:
+		ap   = &sa->s_un.s_in6.sa_addr;
+		port = sa->s_un.s_in6.sa_port;
+		af   = AF_INET6;
+		break;
+	default:
+		return (NNG_EINVAL);
+	}
+	if (ipstr != NULL) {
+		if (af == AF_INET6) {
+			size_t l;
+			ipstr[0] = '[';
+			inet_ntop(af, ap, ipstr + 1, INET6_ADDRSTRLEN);
+			l          = strlen(ipstr);
+			ipstr[l++] = ']';
+			ipstr[l++] = '\0';
+		} else {
+			inet_ntop(af, ap, ipstr, INET6_ADDRSTRLEN);
+		}
+	}
+	if (portstr != NULL) {
+#ifdef NNG_LITTLE_ENDIAN
+		port = ((port >> 8) & 0xff) | ((port & 0xff) << 8);
+#endif
+		snprintf(portstr, 6, "%u", port);
+	}
+	return (0);
 }
 
 #endif // NNG_PLATFORM_POSIX

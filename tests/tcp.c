@@ -80,6 +80,25 @@ TestMain("TCP Transport", {
 		So(nng_dial(s2, addr, NULL, 0) == 0);
 	});
 
+	Convey("We can bind to port zero", {
+		nng_socket   s1;
+		nng_socket   s2;
+		nng_listener l;
+		char         addr[NNG_MAXADDRLEN];
+		size_t       sz;
+
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s2);
+			nng_close(s1);
+		});
+		So(nng_listen(s1, "tcp://127.0.0.1:0", &l, 0) == 0);
+		sz = NNG_MAXADDRLEN;
+		So(nng_listener_getopt(l, NNG_OPT_URL, addr, &sz) == 0);
+		So(nng_dial(s2, addr, NULL, 0) == 0);
+	});
+
 	Convey("Malformed TCP addresses do not panic", {
 		nng_socket s1;
 

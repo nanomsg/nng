@@ -355,7 +355,7 @@ nni_plat_tcp_ep_fini(nni_plat_tcp_ep *ep)
 }
 
 static int
-nni_win_tcp_listen(nni_plat_tcp_ep *ep)
+nni_win_tcp_listen(nni_plat_tcp_ep *ep, nni_sockaddr *bsa)
 {
 	int    rv;
 	BOOL   yes;
@@ -392,6 +392,17 @@ nni_win_tcp_listen(nni_plat_tcp_ep *ep)
 		goto fail;
 	}
 
+	if (bsa != NULL) {
+		SOCKADDR_STORAGE bound;
+		int              len = sizeof(bound);
+		rv = getsockname(s, (SOCKADDR *) &bound, &len);
+		if (rv != 0) {
+			rv = nni_win_error(GetLastError());
+			goto fail;
+		}
+		nni_win_sockaddr2nn(bsa, &bound);
+	}
+
 	if (listen(s, SOMAXCONN) != 0) {
 		rv = nni_win_error(GetLastError());
 		goto fail;
@@ -410,12 +421,12 @@ fail:
 }
 
 int
-nni_plat_tcp_ep_listen(nni_plat_tcp_ep *ep)
+nni_plat_tcp_ep_listen(nni_plat_tcp_ep *ep, nng_sockaddr *bsa)
 {
 	int rv;
 
 	nni_mtx_lock(&ep->acc_ev.mtx);
-	rv = nni_win_tcp_listen(ep);
+	rv = nni_win_tcp_listen(ep, bsa);
 	nni_mtx_unlock(&ep->acc_ev.mtx);
 	return (rv);
 }
@@ -640,6 +651,47 @@ extern void
 nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
 	nni_win_event_submit(&ep->con_ev, aio);
+}
+
+int
+nni_plat_tcp_ntop(const nni_sockaddr *sa, char *ipstr, char *portstr)
+{
+	const void *ap;
+	uint16_t    port;
+	int         af;
+	switch (sa->s_un.s_family) {
+	case NNG_AF_INET:
+		ap   = &sa->s_un.s_in.sa_addr;
+		port = sa->s_un.s_in.sa_port;
+		af   = AF_INET;
+		break;
+	case NNG_AF_INET6:
+		ap   = &sa->s_un.s_in6.sa_addr;
+		port = sa->s_un.s_in6.sa_port;
+		af   = AF_INET6;
+		break;
+	default:
+		return (NNG_EINVAL);
+	}
+	if (ipstr != NULL) {
+		if (af == AF_INET6) {
+			size_t l;
+			ipstr[0] = '[';
+			InetNtopA(af, ap, ipstr + 1, INET6_ADDRSTRLEN);
+			l          = strlen(ipstr);
+			ipstr[l++] = ']';
+			ipstr[l++] = '\0';
+		} else {
+			InetNtopA(af, ap, ipstr, INET6_ADDRSTRLEN);
+		}
+	}
+	if (portstr != NULL) {
+#ifdef NNG_LITTLE_ENDIAN
+		port = ((port >> 8) & 0xff) | ((port & 0xff) << 8);
+#endif
+		snprintf(portstr, 6, "%u", port);
+	}
+	return (0);
 }
 
 int

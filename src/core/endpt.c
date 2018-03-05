@@ -618,10 +618,6 @@ nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp)
 {
 	nni_tran_ep_option *eo;
 
-	if (strcmp(name, NNG_OPT_URL) == 0) {
-		return (nni_getopt_str(ep->ep_url->u_rawurl, valp, szp));
-	}
-
 	for (eo = ep->ep_ops.ep_options; eo && eo->eo_name; eo++) {
 		int rv;
 		if (strcmp(eo->eo_name, name) != 0) {
@@ -634,6 +630,13 @@ nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp)
 		rv = eo->eo_getopt(ep->ep_data, valp, szp);
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (rv);
+	}
+
+	// We provide a fallback on the URL, but let the implementation
+	// override.  This allows the URL to be created with wildcards,
+	// that are resolved later.
+	if (strcmp(name, NNG_OPT_URL) == 0) {
+		return (nni_getopt_str(ep->ep_url->u_rawurl, valp, szp));
 	}
 
 	return (nni_sock_getopt(ep->ep_sock, name, valp, szp));

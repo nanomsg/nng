@@ -40,5 +40,6 @@ extern void nni_posix_epdesc_close(nni_posix_epdesc *);
 extern void nni_posix_epdesc_connect(nni_posix_epdesc *, nni_aio *);
 extern int  nni_posix_epdesc_listen(nni_posix_epdesc *);
 extern void nni_posix_epdesc_accept(nni_posix_epdesc *, nni_aio *);
+extern int  nni_posix_epdesc_sockname(nni_posix_epdesc *, nni_sockaddr *);
 
 #endif // PLATFORM_POSIX_AIO_H

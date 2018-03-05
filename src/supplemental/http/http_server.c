@@ -895,7 +895,7 @@ http_server_start(nni_http_server *s)
 	if (rv != 0) {
 		return (rv);
 	}
-	if ((rv = nni_plat_tcp_ep_listen(s->tep)) != 0) {
+	if ((rv = nni_plat_tcp_ep_listen(s->tep, NULL)) != 0) {
 		nni_plat_tcp_ep_fini(s->tep);
 		s->tep = NULL;
 		return (rv);

@@ -207,7 +207,7 @@ extern void nni_plat_tcp_ep_close(nni_plat_tcp_ep *);
 
 // nni_plat_tcp_listen creates an TCP socket in listening mode, bound
 // to the specified path.
-extern int nni_plat_tcp_ep_listen(nni_plat_tcp_ep *);
+extern int nni_plat_tcp_ep_listen(nni_plat_tcp_ep *, nni_sockaddr *);
 
 // nni_plat_tcp_ep_accept starts an accept to receive an incoming connection.
 // An accepted connection will be passed back in the a_pipe member.
@@ -247,6 +247,12 @@ extern int nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *, nni_sockaddr *);
 
 // nni_plat_tcp_pipe_sockname gets the local name.
 extern int nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *, nni_sockaddr *);
+
+// nni_plat_tcp_ntop obtains the IP address for the socket (enclosing it
+// in brackets if it is IPv6) and port.  Enough space for both must
+// be present (48 bytes and 6 bytes each), although if either is NULL then
+// those components are skipped.
+extern int nni_plat_tcp_ntop(const nni_sockaddr *, char *, char *);
 
 // nni_plat_tcp_resolv resolves a TCP name asynchronously.  The family
 // should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.  The

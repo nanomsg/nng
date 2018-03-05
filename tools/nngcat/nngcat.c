@@ -1008,6 +1008,15 @@ main(int ac, const char **av)
 			}
 			rv  = nng_dialer_start(d, async);
 			act = "dial";
+			if ((rv == 0) && (verbose == OPT_VERBOSE)) {
+				char   ustr[256];
+				size_t sz;
+				sz = sizeof(ustr);
+				if (nng_dialer_getopt(
+				        d, NNG_OPT_URL, ustr, &sz) == 0) {
+					printf("Connected to: %s\n", ustr);
+				}
+			}
 			break;
 		case OPT_LISTEN:
 		case OPT_LISTEN_IPC:
@@ -1027,6 +1036,15 @@ main(int ac, const char **av)
 			}
 			rv  = nng_listener_start(l, async);
 			act = "listen";
+			if ((rv == 0) && (verbose == OPT_VERBOSE)) {
+				char   ustr[256];
+				size_t sz;
+				sz = sizeof(ustr);
+				if (nng_listener_getopt(
+				        l, NNG_OPT_URL, ustr, &sz) == 0) {
+					printf("Listening at: %s\n", ustr);
+				}
+			}
 			break;
 		default:
 			fatal("Invalid address mode! (Bug!)");

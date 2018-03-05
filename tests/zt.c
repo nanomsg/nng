@@ -285,6 +285,20 @@ TestMain("ZeroTier Transport", {
 		nng_msleep(2000); // to give dialer time to start up
 	});
 
-	trantest_test_extended("zt://*." NWID ":%u", check_props);
+	// We need to determine our ephemeral ID:
+
+	nng_socket   s_test;
+	nng_listener l_test;
+	uint64_t     node;
+	char         fmt[128];
+
+	So(nng_pair_open(&s_test) == 0);
+	So(nng_listener_create(&l_test, s_test, "zt://*." NWID ":0") == 0);
+	So(nng_listener_start(l_test, 0) == 0);
+	So(nng_listener_getopt_uint64(l_test, NNG_OPT_ZT_NODE, &node) == 0);
+	snprintf(fmt, sizeof(fmt), "zt://%llx." NWID ":%%u", node);
+	nng_listener_close(l_test);
+
+	trantest_test_extended(fmt, check_props);
 
 })

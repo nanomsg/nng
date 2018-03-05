@@ -53,6 +53,8 @@ struct nni_tcp_ep {
 	nni_aio *        aio;
 	nni_aio *        user_aio;
 	nni_url *        url;
+	nng_sockaddr     bsa; // bound addr
+	int              mode;
 	nni_mtx          mtx;
 };
 
@@ -591,6 +593,7 @@ nni_tcp_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		return (rv);
 	}
 	ep->proto = nni_sock_proto(sock);
+	ep->mode  = mode;
 
 	*epp = ep;
 	return (0);
@@ -615,7 +618,7 @@ nni_tcp_ep_bind(void *arg)
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
-	rv = nni_plat_tcp_ep_listen(ep->tep);
+	rv = nni_plat_tcp_ep_listen(ep->tep, &ep->bsa);
 	nni_mtx_unlock(&ep->mtx);
 
 	return (rv);
@@ -734,6 +737,22 @@ nni_tcp_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz)
 }
 
 static int
+nni_tcp_ep_getopt_url(void *arg, void *v, size_t *szp)
+{
+	nni_tcp_ep *ep = arg;
+	char        ustr[128];
+	char        ipstr[48];  // max for IPv6 addresses including []
+	char        portstr[6]; // max for 16-bit port
+
+	if (ep->mode == NNI_EP_MODE_DIAL) {
+		return (nni_getopt_str(ep->url->u_rawurl, v, szp));
+	}
+	nni_plat_tcp_ntop(&ep->bsa, ipstr, portstr);
+	snprintf(ustr, sizeof(ustr), "tcp://%s:%s", ipstr, portstr);
+	return (nni_getopt_str(ustr, v, szp));
+}
+
+static int
 nni_tcp_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp)
 {
 	nni_tcp_ep *ep = arg;
@@ -779,6 +798,11 @@ static nni_tran_ep_option nni_tcp_ep_options[] = {
 	    .eo_name   = NNG_OPT_RECVMAXSZ,
 	    .eo_getopt = nni_tcp_ep_getopt_recvmaxsz,
 	    .eo_setopt = nni_tcp_ep_setopt_recvmaxsz,
+	},
+	{
+	    .eo_name   = NNG_OPT_URL,
+	    .eo_getopt = nni_tcp_ep_getopt_url,
+	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_LINGER,

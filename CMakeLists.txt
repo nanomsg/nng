@@ -35,6 +35,7 @@ include (CheckLibraryExists)
 include (CheckCSourceCompiles)
 include (CMakeDependentOption)
 include (GNUInstallDirs)
+include (TestBigEndian)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -263,6 +264,14 @@ endif()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_FLAGS}")
+
+TEST_BIG_ENDIAN(NNG_BIG_ENDIAN)
+if (NNG_BIG_ENDIAN)
+    add_definitions (-DNNG_BIG_ENDIAN)
+else()
+    add_definitions (-DNNG_LITTLE_ENDIAN)
+endif()
+
 
 find_package (Threads REQUIRED)
 
