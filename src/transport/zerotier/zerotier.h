@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -22,13 +22,13 @@
 // route management and TCP fallback.  You need to have connectivity
 // to the Internet to use this.  (Or at least to your Planetary root.)
 //
-// The ZeroTier URL format we support is zt://<nwid>/<ztid>:<port> where
+// The ZeroTier URL format we support is zt://<ztid>.<nwid>:<port> where
 // the <nwid> component represents the 64-bit hexadecimal ZeroTier
 // network ID,the <ztid> represents the 40-bit hexadecimal ZeroTier
 // node (device) ID, and the <port> is a 24-bit (decimal) port number.
 //
-// A listener may elide the <ztid>/ portion, to just bind to itself,
-// in which case the format will be zt://<nwid>:<port>
+// A listener may replace the <ztid> with a wildcard, to just bind to itself,
+// in which case the format will be zt://*.<nwid>:<port>
 //
 // A listener may also use either 0 or * for the <port> to indicate that
 // a random local ephemeral port should be used.
@@ -39,6 +39,9 @@
 // quite a few seconds for peer-to-peer connectivity to be established.
 //
 // The ZeroTier transport was funded by Capitar IT Group, BV.
+//
+// The protocol itself is documented online at:
+// http://nanomsg.org/rfcs/sp-zerotier-v0.html
 //
 // This transport is highly experimental.
 
