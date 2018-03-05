@@ -174,7 +174,7 @@ struct zt_node {
 	uint8_t *     zn_rcv6_buf;
 	nng_sockaddr  zn_rcv6_addr;
 	nni_thr       zn_bgthr;
-	uint64_t      zn_bgtime;
+	int64_t       zn_bgtime;
 	nni_cv        zn_bgcv;
 	nni_cv        zn_snd6_cv;
 };
@@ -289,18 +289,18 @@ static void zt_virtual_recv(ZT_Node *, void *, void *, uint64_t, void **,
     uint64_t, uint64_t, unsigned int, unsigned int, const void *,
     unsigned int);
 
-static uint64_t
+static int64_t
 zt_now(void)
 {
 	// We return msec
-	return ((uint64_t) nni_clock());
+	return ((int64_t) nni_clock());
 }
 
 static void
 zt_bgthr(void *arg)
 {
 	zt_node *ztn = arg;
-	uint64_t now;
+	int64_t now;
 
 	nni_mtx_lock(&zt_lk);
 	for (;;) {
@@ -324,7 +324,7 @@ zt_bgthr(void *arg)
 }
 
 static void
-zt_node_resched(zt_node *ztn, uint64_t msec)
+zt_node_resched(zt_node *ztn, int64_t msec)
 {
 	if (msec > ztn->zn_bgtime && ztn->zn_bgtime != 0) {
 		return;
@@ -341,7 +341,7 @@ zt_node_rcv4_cb(void *arg)
 	struct sockaddr_storage sa;
 	struct sockaddr_in *    sin;
 	nng_sockaddr_in *       nsin;
-	uint64_t                now;
+	int64_t                 now;
 
 	if (nni_aio_result(aio) != 0) {
 		// Outside of memory exhaustion, we can't really think
@@ -393,7 +393,7 @@ zt_node_rcv6_cb(void *arg)
 	struct sockaddr_storage  sa;
 	struct sockaddr_in6 *    sin6;
 	struct nng_sockaddr_in6 *nsin6;
-	uint64_t                 now;
+	int64_t                  now;
 
 	if (nni_aio_result(aio) != 0) {
 		// Outside of memory exhaustion, we can't really think
@@ -559,7 +559,7 @@ zt_send(zt_node *ztn, uint64_t nwid, uint8_t op, uint64_t raddr,
 {
 	uint64_t srcmac = zt_node_to_mac(laddr >> 24, nwid);
 	uint64_t dstmac = zt_node_to_mac(raddr >> 24, nwid);
-	uint64_t now    = zt_now();
+	int64_t now     = zt_now();
 
 	NNI_ASSERT(len >= zt_size_headers);
 	data[zt_offset_op]    = op;
