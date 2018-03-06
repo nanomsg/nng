@@ -260,6 +260,33 @@ nni_plat_file_basename(const char *path)
 	return (path);
 }
 
+int
+nni_plat_file_lock(const char *path, nni_plat_flock *lk)
+{
+	int fd;
+	if ((fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
+		return (nni_plat_errno(errno));
+	}
+	if (lockf(fd, F_TLOCK, 0) < 0) {
+		int rv = errno;
+		close(fd);
+		if (rv == EAGAIN) {
+			return (NNG_EBUSY);
+		}
+		return (nni_plat_errno(rv));
+	}
+	lk->fd = fd;
+	return (0);
+}
+
+void
+nni_plat_file_unlock(nni_plat_flock *lk)
+{
+	int fd = lk->fd;
+	lk->fd = -1;
+	(void) close(fd);
+}
+
 char *
 nni_plat_temp_dir(void)
 {

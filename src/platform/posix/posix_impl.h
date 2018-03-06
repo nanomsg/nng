@@ -76,6 +76,10 @@ struct nni_plat_thr {
 	void *arg;
 };
 
+struct nni_plat_flock {
+	int fd;
+};
+
 #define NNG_PLATFORM_DIR_SEP "/"
 
 #endif

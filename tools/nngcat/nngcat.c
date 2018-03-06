@@ -31,6 +31,7 @@
 #include "supplemental/tls/tls.h"
 #include "supplemental/util/options.h"
 #include "supplemental/util/platform.h"
+#include "transport/zerotier/zerotier.h"
 
 // Globals.  We need this to avoid passing around everything.
 int          format    = 0;
@@ -51,6 +52,7 @@ void *       keyfile   = NULL;
 size_t       keylen    = 0;
 void *       certfile  = NULL;
 size_t       certlen   = 0;
+const char * zthome    = NULL;
 
 // Options, must start at 1 because zero is sentinel.
 enum options {
@@ -97,6 +99,7 @@ enum options {
 	OPT_KEYFILE,
 	OPT_CERTFILE,
 	OPT_VERSION,
+	OPT_ZTHOME,
 };
 
 static nng_optspec opts[] = {
@@ -180,6 +183,9 @@ static nng_optspec opts[] = {
 	    .o_val   = OPT_CERTFILE,
 	    .o_arg   = true,
 	},
+	{
+	    .o_name = "zt-home", .o_val = OPT_ZTHOME, .o_arg = true,
+	},
 	{ .o_name = "version", .o_short = 'V', .o_val = OPT_VERSION },
 
 	// Sentinel.
@@ -234,6 +240,7 @@ help(void)
 	printf("  --verbose              (or alias -v)\n");
 	printf("  --compat\n");
 	printf("  --async\n");
+	printf("  --zt-home <path>\n");
 	printf("\n<src> may be one of:\n");
 	printf("  --file <file>          (or alias -F <file>)\n");
 	printf("  --data <data>          (or alias -D <data>)\n");
@@ -783,6 +790,9 @@ main(int ac, const char **av)
 			}
 			loadfile(arg, &certfile, &certlen);
 			break;
+		case OPT_ZTHOME:
+			zthome = arg;
+			break;
 		case OPT_INSECURE:
 			insecure = 1;
 			break;
@@ -1006,6 +1016,14 @@ main(int ac, const char **av)
 				fatal("Unable to get TLS config: %s",
 				    nng_strerror(rv));
 			}
+			if (zthome != NULL) {
+				rv = nng_dialer_setopt(d, NNG_OPT_ZT_HOME,
+				    zthome, strlen(zthome) + 1);
+				if ((rv != 0) && (rv != NNG_ENOTSUP)) {
+					fatal("Unable to set ZT home: %s",
+					    nng_strerror(rv));
+				}
+			}
 			rv  = nng_dialer_start(d, async);
 			act = "dial";
 			if ((rv == 0) && (verbose == OPT_VERBOSE)) {
@@ -1033,6 +1051,14 @@ main(int ac, const char **av)
 			} else if (rv != NNG_ENOTSUP) {
 				fatal("Unable to get TLS config: %s",
 				    nng_strerror(rv));
+			}
+			if (zthome != NULL) {
+				rv = nng_listener_setopt(l, NNG_OPT_ZT_HOME,
+				    zthome, strlen(zthome) + 1);
+				if ((rv != 0) && (rv != NNG_ENOTSUP)) {
+					fatal("Unable to set ZT home: %s",
+					    nng_strerror(rv));
+				}
 			}
 			rv  = nng_listener_start(l, async);
 			act = "listen";

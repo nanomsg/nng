@@ -75,6 +75,10 @@ struct nni_win_event {
 	nni_win_event_ops ops;
 };
 
+struct nni_plat_flock {
+	HANDLE h;
+};
+
 extern int nni_win_error(int);
 
 extern int  nni_win_event_init(nni_win_event *, nni_win_event_ops *, void *);

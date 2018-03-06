@@ -129,3 +129,31 @@ nni_file_basename(const char *path)
 {
 	return (nni_plat_file_basename(path));
 }
+
+struct nni_file_lockh {
+	nni_plat_flock lk;
+};
+
+int
+nni_file_lock(const char *path, nni_file_lockh **hp)
+{
+	nni_file_lockh *h;
+	int             rv;
+	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	rv = nni_plat_file_lock(path, &h->lk);
+	if (rv != 0) {
+		NNI_FREE_STRUCT(h);
+		return (rv);
+	}
+	*hp = h;
+	return (0);
+}
+
+void
+nni_file_unlock(nni_file_lockh *h)
+{
+	nni_plat_file_unlock(&h->lk);
+	NNI_FREE_STRUCT(h);
+}

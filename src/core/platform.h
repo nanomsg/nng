@@ -434,6 +434,18 @@ typedef int (*nni_plat_file_walker)(const char *, void *);
 // with the path name, and the supplied void * argument.
 extern int nni_plat_file_walk(const char *, nni_plat_file_walker, void *, int);
 
+typedef struct nni_plat_flock nni_plat_flock;
+
+// nni_plat_file_lock locks the file.  This usually means open it (creating
+// if it does not exist) and doing a lock operation.  The nni_plat_flock
+// is our handle for the lock, to unlock.  Usually its just a file descriptor,
+// and we can unlock by doing close().  Note that this is a "try-lock"
+// operation -- if the file is already locked then NNG_EBUSY is returned.
+extern int nni_plat_file_lock(const char *path, nni_plat_flock *);
+
+// nni_plat_file_unlock unlocks the previously locked file.
+extern void nni_plat_file_unlock(nni_plat_flock *);
+
 // nni_plat_dir_open attempts to "open a directory" for listing.  The
 // handle for further operations is returned in the first argument, and
 // the directory name is supplied in the second.

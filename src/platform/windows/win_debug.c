@@ -1,5 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -83,9 +84,8 @@ nni_plat_errno(int errnum)
 static struct {
 	int win_err;
 	int nng_err;
-} nni_win_errnos[] =
-    {
-      // clang-format off
+} nni_win_errnos[] = {
+	// clang-format off
 	{ ERROR_FILE_NOT_FOUND,	    NNG_ENOENT	     },
 	{ ERROR_PATH_NOT_FOUND,	    NNG_ENOENT	     },
 	{ ERROR_ACCESS_DENIED,	    NNG_EPERM	     },
@@ -104,6 +104,7 @@ static struct {
 	{ ERROR_NO_DATA,	    NNG_ECLOSED	     },
 	{ ERROR_PIPE_NOT_CONNECTED, NNG_ECLOSED	     },
 	{ ERROR_OPERATION_ABORTED,  NNG_ECLOSED	     },
+	{ ERROR_SHARING_VIOLATION,  NNG_EBUSY        },
 	{ WAIT_TIMEOUT,		    NNG_ETIMEDOUT    },
 	{ WSAEINTR,		    NNG_EINTR	     },
 	{ WSAEBADF,		    NNG_ECLOSED	     },
@@ -143,8 +144,8 @@ static struct {
 
 	// Must be Last!!
 	{			 0,		   0 },
-      // clang-format on
-    };
+	// clang-format on
+};
 
 // This converts a Windows API error (from GetLastError()) to an
 // nng standard error code.

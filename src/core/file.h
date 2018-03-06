@@ -84,4 +84,10 @@ extern bool nni_file_is_file(const char *);
 // false if an error occurs, or the path references something else.
 extern bool nni_file_is_dir(const char *);
 
+typedef struct nni_file_lockh nni_file_lockh;
+
+extern int nni_file_lock(const char *, nni_file_lockh **);
+
+extern void nni_file_unlock(nni_file_lockh *);
+
 #endif // CORE_FILE_H

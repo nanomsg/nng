@@ -153,30 +153,31 @@ enum zt_errors {
 // them with a reference count, and uniquely identify them using the
 // homedir.
 struct zt_node {
-	char          zn_path[NNG_MAXADDRLEN]; // ought to be sufficient
-	ZT_Node *     zn_znode;
-	uint64_t      zn_self;
-	nni_list_node zn_link;
-	int           zn_closed;
-	nni_plat_udp *zn_udp4;
-	nni_plat_udp *zn_udp6;
-	nni_list      zn_eplist;
-	nni_list      zn_plist;
-	nni_idhash *  zn_ports;
-	nni_idhash *  zn_eps;
-	nni_idhash *  zn_lpipes;
-	nni_idhash *  zn_rpipes;
-	nni_idhash *  zn_peers; // indexed by remote address
-	nni_aio *     zn_rcv4_aio;
-	uint8_t *     zn_rcv4_buf;
-	nng_sockaddr  zn_rcv4_addr;
-	nni_aio *     zn_rcv6_aio;
-	uint8_t *     zn_rcv6_buf;
-	nng_sockaddr  zn_rcv6_addr;
-	nni_thr       zn_bgthr;
-	int64_t       zn_bgtime;
-	nni_cv        zn_bgcv;
-	nni_cv        zn_snd6_cv;
+	char            zn_path[NNG_MAXADDRLEN]; // ought to be sufficient
+	nni_file_lockh *zn_flock;
+	ZT_Node *       zn_znode;
+	uint64_t        zn_self;
+	nni_list_node   zn_link;
+	int             zn_closed;
+	nni_plat_udp *  zn_udp4;
+	nni_plat_udp *  zn_udp6;
+	nni_list        zn_eplist;
+	nni_list        zn_plist;
+	nni_idhash *    zn_ports;
+	nni_idhash *    zn_eps;
+	nni_idhash *    zn_lpipes;
+	nni_idhash *    zn_rpipes;
+	nni_idhash *    zn_peers; // indexed by remote address
+	nni_aio *       zn_rcv4_aio;
+	uint8_t *       zn_rcv4_buf;
+	nng_sockaddr    zn_rcv4_addr;
+	nni_aio *       zn_rcv6_aio;
+	uint8_t *       zn_rcv6_buf;
+	nng_sockaddr    zn_rcv6_addr;
+	nni_thr         zn_bgthr;
+	int64_t         zn_bgtime;
+	nni_cv          zn_bgcv;
+	nni_cv          zn_snd6_cv;
 };
 
 // The fragment list is used to keep track of incoming received
@@ -300,7 +301,7 @@ static void
 zt_bgthr(void *arg)
 {
 	zt_node *ztn = arg;
-	int64_t now;
+	int64_t  now;
 
 	nni_mtx_lock(&zt_lk);
 	for (;;) {
@@ -559,7 +560,7 @@ zt_send(zt_node *ztn, uint64_t nwid, uint8_t op, uint64_t raddr,
 {
 	uint64_t srcmac = zt_node_to_mac(laddr >> 24, nwid);
 	uint64_t dstmac = zt_node_to_mac(raddr >> 24, nwid);
-	int64_t now     = zt_now();
+	int64_t  now    = zt_now();
 
 	NNI_ASSERT(len >= zt_size_headers);
 	data[zt_offset_op]    = op;
@@ -1422,6 +1423,9 @@ zt_node_destroy(zt_node *ztn)
 	if (ztn->zn_rcv6_buf != NULL) {
 		nni_free(ztn->zn_rcv6_buf, zt_rcv_bufsize);
 	}
+	if (ztn->zn_flock != NULL) {
+		nni_file_unlock(ztn->zn_flock);
+	}
 	nni_aio_fini(ztn->zn_rcv4_aio);
 	nni_aio_fini(ztn->zn_rcv6_aio);
 	nni_idhash_fini(ztn->zn_eps);
@@ -1478,6 +1482,21 @@ zt_node_create(zt_node **ztnp, const char *path)
 	    ((rv = nni_plat_udp_open(&ztn->zn_udp6, &sa6)) != 0)) {
 		zt_node_destroy(ztn);
 		return (rv);
+	}
+
+	if (strlen(path) > 0) {
+		char *lkfile;
+		if ((lkfile = nni_file_join(path, "lock")) == NULL) {
+			zt_node_destroy(ztn);
+			return (NNG_ENOMEM);
+		}
+
+		if ((rv = nni_file_lock(lkfile, &ztn->zn_flock)) != 0) {
+			zt_node_destroy(ztn);
+			nni_strfree(lkfile);
+			return (rv);
+		}
+		nni_strfree(lkfile);
 	}
 
 	// Setup for dynamic ephemeral port allocations.  We
