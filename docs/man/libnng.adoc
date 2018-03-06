@@ -32,6 +32,7 @@ The following common functions exist in _libnng_.
 |<<nng_alloc#,nng_alloc(3)>>|allocate memory
 |<<nng_free#,nng_free(3)>>|free memory
 |<<nng_strerror#,nng_strerror(3)>>|return an error description
+|<<nng_version#,nng_version(3)>>|report library version
 |===
 
 === Socket Functions
