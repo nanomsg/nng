@@ -471,14 +471,14 @@ nni_win_tcp_acc_finish(nni_win_event *evt, nni_aio *aio)
 
 	// Collect the local and peer addresses, because normal getsockname
 	// and getpeername don't work with AcceptEx.
-	len1 = sizeof(pipe->sockname);
-	len2 = sizeof(pipe->peername);
+	len1 = (int) sizeof(pipe->sockname);
+	len2 = (int) sizeof(pipe->peername);
 	ep->getacceptexsockaddrs(
 	    ep->buf, 0, 256, 256, &sa1, &len1, &sa2, &len2);
 	NNI_ASSERT(len1 > 0);
-	NNI_ASSERT(len1 < sizeof(SOCKADDR_STORAGE));
+	NNI_ASSERT(len1 < (int) sizeof(SOCKADDR_STORAGE));
 	NNI_ASSERT(len2 > 0);
-	NNI_ASSERT(len2 < sizeof(SOCKADDR_STORAGE));
+	NNI_ASSERT(len2 < (int) sizeof(SOCKADDR_STORAGE));
 	memcpy(&pipe->sockname, sa1, len1);
 	memcpy(&pipe->peername, sa2, len2);
 

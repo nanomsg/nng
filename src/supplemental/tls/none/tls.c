@@ -139,6 +139,7 @@ nng_tls_config_own_cert(
     nng_tls_config *cfg, const char *cert, const char *key, const char *pass)
 {
 	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(cert);
 	NNI_ARG_UNUSED(key);
 	NNI_ARG_UNUSED(pass);
 	return (NNG_ENOTSUP);

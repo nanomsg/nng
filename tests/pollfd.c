@@ -14,6 +14,7 @@
 #include <poll.h>
 #include <unistd.h>
 #define INVALID_SOCKET -1
+#define SOCKET int
 #else
 
 #define poll WSAPoll
@@ -54,7 +55,7 @@ TestMain("Poll FDs", {
 		nng_msleep(50);
 
 		Convey("We can get a recv FD", {
-			int    fd;
+			SOCKET fd;
 			size_t sz;
 
 			sz = sizeof(fd);
@@ -92,7 +93,7 @@ TestMain("Poll FDs", {
 		});
 
 		Convey("We can get a send FD", {
-			int    fd;
+			SOCKET fd;
 			size_t sz;
 
 			sz = sizeof(fd);
@@ -102,7 +103,7 @@ TestMain("Poll FDs", {
 		});
 
 		Convey("Must have a big enough size", {
-			int    fd;
+			SOCKET fd;
 			size_t sz;
 			sz = 1;
 			So(nng_getopt(s1, NNG_OPT_RECVFD, &fd, &sz) ==
@@ -115,7 +116,7 @@ TestMain("Poll FDs", {
 
 	Convey("We cannot get a send FD for PULL", {
 		nng_socket s3;
-		int        fd;
+		SOCKET     fd;
 		size_t     sz;
 		So(nng_pull0_open(&s3) == 0);
 		Reset({ nng_close(s3); });
@@ -125,7 +126,7 @@ TestMain("Poll FDs", {
 
 	Convey("We cannot get a recv FD for PUSH", {
 		nng_socket s3;
-		int        fd;
+		SOCKET     fd;
 		size_t     sz;
 		So(nng_push0_open(&s3) == 0);
 		Reset({ nng_close(s3); });
