@@ -30,6 +30,8 @@ jobs:
       - run:
           name: Run Tests
           command: cd build && ninja test
+          environment:
+            CTEST_OUTPUT_ON_FAILURE: 1
 
 #      - run:
 #          name: Check Format
