@@ -140,7 +140,7 @@ in this fashion.
   This is a read-only integer, representing the ZeroTier network status.
   Valid values for this are:
 +
-[cols="1,2"]
+[cols="3,5"]
 |===
 
 | `nng_zt_network_status_configuring`
