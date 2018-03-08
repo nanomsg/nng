@@ -14,7 +14,6 @@
 #include <poll.h>
 #include <unistd.h>
 #define INVALID_SOCKET -1
-#define SOCKET int
 #else
 
 #define poll WSAPoll
@@ -55,12 +54,12 @@ TestMain("Poll FDs", {
 		nng_msleep(50);
 
 		Convey("We can get a recv FD", {
-			SOCKET fd;
+			int    fd;
 			size_t sz;
 
 			sz = sizeof(fd);
 			So(nng_getopt(s1, NNG_OPT_RECVFD, &fd, &sz) == 0);
-			So(fd != INVALID_SOCKET);
+			So(fd != (int) INVALID_SOCKET);
 
 			Convey("And it is always the same fd", {
 				int fd2;
@@ -93,17 +92,17 @@ TestMain("Poll FDs", {
 		});
 
 		Convey("We can get a send FD", {
-			SOCKET fd;
+			int    fd;
 			size_t sz;
 
 			sz = sizeof(fd);
 			So(nng_getopt(s1, NNG_OPT_SENDFD, &fd, &sz) == 0);
-			So(fd != INVALID_SOCKET);
+			So(fd != (int) INVALID_SOCKET);
 			So(nng_send(s1, "oops", 4, 0) == 0);
 		});
 
 		Convey("Must have a big enough size", {
-			SOCKET fd;
+			int    fd;
 			size_t sz;
 			sz = 1;
 			So(nng_getopt(s1, NNG_OPT_RECVFD, &fd, &sz) ==
@@ -116,7 +115,7 @@ TestMain("Poll FDs", {
 
 	Convey("We cannot get a send FD for PULL", {
 		nng_socket s3;
-		SOCKET     fd;
+		int        fd;
 		size_t     sz;
 		So(nng_pull0_open(&s3) == 0);
 		Reset({ nng_close(s3); });
@@ -126,7 +125,7 @@ TestMain("Poll FDs", {
 
 	Convey("We cannot get a recv FD for PUSH", {
 		nng_socket s3;
-		SOCKET     fd;
+		int        fd;
 		size_t     sz;
 		So(nng_push0_open(&s3) == 0);
 		Reset({ nng_close(s3); });
