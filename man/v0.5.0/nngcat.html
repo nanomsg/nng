@@ -517,6 +517,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_receive_options">Receive Options</a></li>
 <li><a href="#_transmit_options">Transmit Options</a></li>
 <li><a href="#_tls_options">TLS Options</a></li>
+<li><a href="#_zerotier_options">ZeroTier Options</a></li>
 </ul>
 </li>
 <li><a href="#_examples">EXAMPLES</a></li>
@@ -534,6 +535,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p><strong>nngcat</strong> --help</p>
+</div>
+<div class="paragraph">
+<p><strong>nngcat</strong> --version</p>
 </div>
 <div class="paragraph">
 <p><strong>nngcat</strong> [<em>OPTION</em>]&#8230;&#8203;</p>
@@ -584,6 +588,10 @@ equa</p>
 <dd>
 <p>Get usage help.</p>
 </dd>
+<dt class="hdlist1"><strong>-V, --version</strong></dt>
+<dd>
+<p>Print the version and exit.</p>
+</dd>
 <dt class="hdlist1"><strong>-v, --verbose</strong></dt>
 <dd>
 <p>Select verbose operation.</p>
@@ -596,13 +604,14 @@ equa</p>
 <dd>
 <p>Compatible mode.  This cause <em>nngcat</em> to behave more like the legacy
 <em>nanocat</em> application.  In this mode connections are made asynchronously,
-and the <strong>--pair</strong> option selects version 0 of the <a href="nng_pair.html">PAIR</a> protocol
-instead of version 1.</p>
+and the <strong>--pair</strong> option selects version 0 of the <a href="nng_pair.html">nng_pair(7)</a>
+protocol instead of version 1.</p>
 </dd>
 <dt class="hdlist1"><strong>--subscribe</strong>=<em>TOPIC</em></dt>
 <dd>
 <p>Subscribe to <em>TOPIC</em>.  This option can only be used with the
-<a href="nng_sub.html">SUBv0</a> protocol.  The <em>TOPIC</em> is checked against the first bytes
+<a href="nng_sub.html">nng_sub(7)</a> protocol.  The <em>TOPIC</em> is checked against the
+first bytes
 of messages received, and messages are discarded if they do not match.
 This may be specified multiple times to subscribe to multiple topics.  If
 not specified at all, then a default subscription to everything is assumed.</p>
@@ -628,50 +637,53 @@ At least one protocol must be selected.
 <dl>
 <dt class="hdlist1"><strong>--bus, --bus0</strong></dt>
 <dd>
-<p>Select the <a href="nng_bus.html">BUSv0</a> protocol.  This protocol can send
-and receive messages to and from other <a href="nng_bus.html">BUSv0</a> peers.</p>
+<p>Select the <a href="nng_bus.html">nng_bus(7)</a> version 0 protocol.  This protocol can send
+and receive messages to and from other BUS version 0 peers.</p>
 </dd>
 <dt class="hdlist1"><strong>--req, --req0</strong></dt>
 <dd>
-<p>Select the <a href="nng_req.html">REQv0</a> protocol.  This protocol sends
-messages to <a href="nng_rep.html">REPv0</a> peers and receives replies from them.</p>
+<p>Select the <a href="nng_req.html">nng_req(7)</a> version 0 protocol.  This protocol sends
+messages to <a href="nng_rep.html">nng_rep(7)</a> version 0 peers and receives replies
+from them.</p>
 </dd>
 <dt class="hdlist1"><strong>--rep, --rep0</strong></dt>
 <dd>
-<p>Select the <a href="nng_rep.html">REPv0</a> protocol.  This protocol receives
-messages from <a href="nng_req.html">REQv0</a> peers and can send replies to them.</p>
+<p>Select the <a href="nng_rep.html">nng_rep(7)</a> version 0 protocol.  This protocol
+receives messages from <a href="nng_req.html">nng_req(7)</a> version 0 peers and can send
+replies to them.</p>
 </dd>
 <dt class="hdlist1"><strong>--pub, --pub0</strong></dt>
 <dd>
-<p>Select the <a href="nng_pub.html">PUBv0</a> protocol.  This protocol sends
-messages to <a href="nng_sub.html">SUBv0</a> peers.</p>
+<p>Select the <a href="nng_pub.html">nng_pub(7)</a> version 0 protocol.  This protocol sends
+messages to <a href="nng_sub.html">nng_sub(7)</a> version peers.</p>
 </dd>
 <dt class="hdlist1"><strong>--sub, --sub0</strong></dt>
 <dd>
-<p>Select the <a href="nng_sub.html">SUBv0</a> protocol.  This protocol receives
-messages from <a href="nng_pub.html">PUBv0</a> peers, and filters them based on
-subscriptions set with <strong>--subscribe</strong>.</p>
+<p>Select the <a href="nng_sub.html">nng_sub(7)</a> version 0 protocol.
+This protocol receives messages from <a href="nng_pub.html">nng_pub(7)</a> version 0 peers,
+and filters them based on subscriptions set with <strong>--subscribe</strong>.</p>
 </dd>
 <dt class="hdlist1"><strong>--push, --push0</strong></dt>
 <dd>
-<p>Select the <a href="nng_push.html">PUSHv0</a> protocol.  This protocol sends
-messages to <a href="nng_pull.html">PULLv0</a> peers. A given message is normally
-only delivered to a single peer.</p>
+<p>Select the <a href="nng_push.html">nng_push(7)</a> version 0 protocol.
+This protocol sends messages to <a href="nng_pull.html">nng_pull(7)</a> version 0 peers.
+A given message is normally only delivered to a single peer.</p>
 </dd>
 <dt class="hdlist1"><strong>--pull, --pull0</strong></dt>
 <dd>
-<p>Select the <a href="nng_pull.html">PULLv0</a> protocol.  This protocol receives
-messages from <a href="nng_push.html">PUSHv0</a> peers.</p>
+<p>Select the <a href="nng_pull.html">nng_pull(7)</a> version 0 protocol.
+This protocol receives
+messages from <a href="nng_push.html">nng_push(7)</a> version 0 peers.</p>
 </dd>
 <dt class="hdlist1"><strong>--pair0</strong></dt>
 <dd>
-<p>Select the <a href="nng_pair.html">PAIRv0</a> protocol.  This protocol can send and
-receive messages with one connected <a href="nng_pair.html">PAIRv0</a> peer.</p>
+<p>Select the <a href="nng_pair.html">nng_pair(7)</a> veresion 0 protocol.  This protocol
+can send and receive messages with one connected PAIR version 0 peer.</p>
 </dd>
 <dt class="hdlist1"><strong>--pair1</strong></dt>
 <dd>
-<p>Select the <a href="nng_pair.html">PAIRv1</a> protocol.  This protocol can send and
-receive messages with one connected <a href="nng_pair.html">PAIRv1</a> peer. It
+<p>Select the <a href="nng_pair.html">nng_pair(7)</a> version 1 protocol.  This protocol
+can send and receive messages with one connected PAIR version 1 peer. It
 is not supported in <strong>--compat</strong> mode.  (Polyamorous mode is not supported
 in <em>nngcat</em>, although peers may be using polyamorous mode.)</p>
 </dd>
@@ -682,15 +694,15 @@ which case it acts as an alias for <strong>--pair0</strong>.</p>
 </dd>
 <dt class="hdlist1"><strong>--surveyor, --surveyor0</strong></dt>
 <dd>
-<p>Select the <a href="nng_surveyor.html">SURVEYORv0</a> protocol.  This protocol sends
-a survey request to <a href="nng_respondent.html">RESPONDENTv0</a> peers, and then
-receives replies from them.</p>
+<p>Select the <a href="nng_surveyor.html">nng_surveyor(7)</a> version 0 protocol.
+This protocol sends a survey request to <a href="nng_respondent.html">nng_respondent(7)</a>
+version 0 peers, and then receives replies from them.</p>
 </dd>
 <dt class="hdlist1"><strong>--respondent, --respondent0</strong></dt>
 <dd>
-<p>Select the <a href="nng_respondent.html">RESPONDENTv0</a> protocol.  This protocol receives
-survey requests from <a href="nng_survey.html">SURVEYORv0</a> peers, and can send a reply
-to them.</p>
+<p>Select the <a href="nng_respondent.html">nng_respondent(7)</a> version 0 protocol.
+This protocol receives survey requests from <a href="nng_surveyor.html">nng_surveyor(7)</a>
+version 0 peers, and can send a reply to them.</p>
 </dd>
 </dl>
 </div>
@@ -891,6 +903,23 @@ used as trust roots when validating certificates presented by peers.</p>
 </dl>
 </div>
 </div>
+<div class="sect2">
+<h3 id="_zerotier_options">ZeroTier Options</h3>
+<div class="paragraph">
+<p>These options are only present if ZeroTier is configured; they are ignored
+otherwise.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>--zt-home</strong>=<em>DIRECTORY</em></dt>
+<dd>
+<p>Directory for persistent ZeroTier node (key material, etc.)  This directory
+must already exist.  Only one program may use a ZeroTier node at a time;
+file locking is used to prevent this.</p>
+</dd>
+</dl>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -922,7 +951,7 @@ $ nngcat --sub --dial<span class="tok-o">=</span><span class="tok-si">${</span><
 <div class="sectionbody">
 <div class="paragraph">
 <p><a href="libnng.html">libnng(3)</a>,
-<a href="nng.html">nng(3)</a>,
+<a href="nng.html">nng(7)</a>,
 <a href="nng_bus.html">nng_bus(7)</a>,
 <a href="nng_pair.html">nng_pair(7)</a>,
 <a href="nng_pub.html">nng_pub(7)</a>,

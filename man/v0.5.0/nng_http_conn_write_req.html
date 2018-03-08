@@ -542,13 +542,13 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 the HTTP request <em>req</em> to the connection <em>conn</em>.  The entire request is sent,
 including headers, and if present, the request body data.  (The
 request body can be set with
-<a href="nng_http_req_set_data.html">nng_http_req_set_data</a> or
-<a href="nng_http_req_copy_data.html">nng_http_req_copy_data</a>.)</p>
+<a href="nng_http_req_set_data.html">nng_http_req_set_data(3)</a> or
+<a href="nng_http_req_copy_data.html">nng_http_req_copy_data(3)</a>.)</p>
 </div>
 <div class="paragraph">
 <p>This function returns immediately, with no return value.  Completion of
 the operation is signaled via the <em>aio</em>, and the final result may be
-obtained via <a href="nng_aio_result.html">nng_aio_result</a>. That result will
+obtained via <a href="nng_aio_result.html">nng_aio_result(3)</a>. That result will
 either be zero or an error code.</p>
 </div>
 </div>
@@ -600,7 +600,6 @@ either be zero or an error code.</p>
 <div class="paragraph">
 <p><a href="nng_aio_alloc.html">nng_aio_alloc(3)</a>,
 <a href="nng_aio_result.html">nng_aio_result(3)</a>,
-<a href="nng_http_alloc_handler.html">nng_http_alloc_handler(3)</a>,
 <a href="nng_http_client_connect.html">nng_http_client_connect(3)</a>,
 <a href="nng_http_conn_read_all.html">nng_http_conn_read_all(3)</a>,
 <a href="nng_strerror.html">nng_strerror(3)</a>,

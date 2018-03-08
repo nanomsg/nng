@@ -572,6 +572,10 @@ intended to solve common communication problems in distributed applications.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strerror.html">nng_strerror(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return an error description</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_version.html">nng_version(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">report library version</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -743,7 +747,7 @@ Most applications will only interact with the body.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">remove data from start of message body</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recv_msg.html">nng_recvmsg(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recvmsg.html">nng_recvmsg(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">receive a message</p></td>
 </tr>
 <tr>
@@ -810,7 +814,7 @@ mode may need to access the header of messages.
 <h3 id="_asynchronous_operations">Asynchronous Operations</h3>
 <div class="paragraph">
 <p>Most applications will interact with <em>nng</em> synchronously; that is that
-functions such as <a href="nng_send.html">nng_send()</a> will block the calling
+functions such as <a href="nng_send.html">nng_send(3)</a> will block the calling
 thread until the operation has completed.</p>
 </div>
 <div class="admonitionblock note">
@@ -1366,7 +1370,7 @@ with TLS support.
 </colgroup>
 <tbody>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_auth_alloc.html">nng_tls_config_alloc(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_alloc.html">nng_tls_config_alloc(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">allocate TLS configuration</p></td>
 </tr>
 <tr>

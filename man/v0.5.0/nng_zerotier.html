@@ -546,11 +546,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <em>nng</em> applications over a <a href="http://www.zerotier.com">ZeroTier</a> network,
 using a Virtual Layer 2 packet facility.</p>
 </div>
-<div class="admonitionblock caution">
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-caution" title="Caution"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
 This transport is very experimental.  To utilize it at
@@ -561,16 +561,32 @@ linking against a suitable <code>libzerotiercore</code> static library.
 </tr>
 </table>
 </div>
-<div class="admonitionblock note">
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
 The <code>libzerotiercore</code> library at present is covered under different
 license terms than the rest of <em>nng</em>.  Please be careful to review
 and adhere to the licensing terms.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The ZeroTier transport can take a long time to establish an
+initial connection&#8201;&#8212;&#8201;up to even a minute in extreme cases, while the network
+topology is configured.  Consequently, this transport is not recommended
+for use cases involving short-lived programs, but is better for long-running
+programs such as background daemons or agents.
 </td>
 </tr>
 </table>
@@ -651,6 +667,20 @@ members are, unlike TCP socket address, in native byte order.  Only the
 lower 24-bits of the <code>sa_port</code> may be used.  Likewise only the lower 40-bits
 of the <code>sa_nodeid</code> may be used.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The fields of this structure are in <strong>native</strong> byte order,
+unlike the other socket address structures associated with <code>NNG_AF_INET</code> or
+<code>NNG_AF_INET6</code>.
+</td>
+</tr>
+</table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_node_presence">Node Presence</h3>
@@ -716,8 +746,8 @@ provides a <code>uint64_t</code> in native byte order representing the ZeroTier
 Valid values for this are:</p>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
-<col style="width: 33.3333%;">
-<col style="width: 66.6667%;">
+<col style="width: 37.5%;">
+<col style="width: 62.5%;">
 </colgroup>
 <tbody>
 <tr>
@@ -752,13 +782,26 @@ Valid values for this are:</p>
 <p>This is a read-only ASCIIZ string containing the name of the network
 as established by the ZeroTier network administrator.</p>
 </dd>
+<dt class="hdlist1"><code>NNG_OPT_ZT_CONN_TIME</code></dt>
+<dd>
+<p>The time to wait between sending connection attempts.  This is an
+<code>nng_duration</code> (msec), and is only used with dialers. The default is 500 msec.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_ZT_CONN_TRIES</code></dt>
+<dd>
+<p>The maximum number (<code>int</code>) of attempts to try to establish a connection
+before reporting a timeout, and is only used with dialers.  The default
+is 240, which results in a 2 minute timeout if <code>NNG_OPT_ZT_CONN_TIME</code> is at
+it&#8217;s default of 500.  If the value is set to 0, then the connection
+attempts will keep retrying forever.</p>
+</dd>
 <dt class="hdlist1"><code>NNG_OPT_ZT_PING_TIME</code></dt>
 <dd>
 <p>If no traffic has been received from the ZeroTier peer after this
 period of time, then a "ping" message is sent to check if the peer
 is still alive.  This is an <code>nng_duration</code> (msec).</p>
 </dd>
-<dt class="hdlist1"><code>NNG_OPT_ZT_PING_COUNT</code></dt>
+<dt class="hdlist1"><code>NNG_OPT_ZT_PING_TRIES</code></dt>
 <dd>
 <p>If this number (<code>int</code>) of consecutive "ping" requests are sent to the
 peer with no response (and no other intervening traffic), then the
