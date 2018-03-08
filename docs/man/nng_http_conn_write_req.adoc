@@ -30,12 +30,12 @@ The `nng_http_conn_write_req()` function starts an asynchronous write of
 the HTTP request _req_ to the connection _conn_.  The entire request is sent,
 including headers, and if present, the request body data.  (The
 request body can be set with
-<<nng_http_req_set_data#,nng_http_req_set_data>> or
-<<nng_http_req_copy_data#,nng_http_req_copy_data>>.)
+<<nng_http_req_set_data#,nng_http_req_set_data(3)>> or
+<<nng_http_req_copy_data#,nng_http_req_copy_data(3)>>.)
 
 This function returns immediately, with no return value.  Completion of
 the operation is signaled via the _aio_, and the final result may be
-obtained via <<nng_aio_result#,nng_aio_result>>. That result will
+obtained via <<nng_aio_result#,nng_aio_result(3)>>. That result will
 either be zero or an error code.
 
 == RETURN VALUES
@@ -55,7 +55,6 @@ None.
 
 <<nng_aio_alloc#,nng_aio_alloc(3)>>,
 <<nng_aio_result#,nng_aio_result(3)>>,
-<<nng_http_alloc_handler#,nng_http_alloc_handler(3)>>,
 <<nng_http_client_connect#,nng_http_client_connect(3)>>,
 <<nng_http_conn_read_all#,nng_http_conn_read_all(3)>>,
 <<nng_strerror#,nng_strerror(3)>>,

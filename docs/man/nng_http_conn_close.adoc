@@ -41,6 +41,6 @@ None.
 == SEE ALSO
 
 <<nng_http_client_connect#,nng_http_client_connect(3)>>,
-<<nng_http_alloc_handler#,nng_http_alloc_handler(3)>>,
+<<nng_http_handler_alloc#,nng_http_handler_alloc(3)>>,
 <<nng_strerror#,nng_strerror(3)>>,
 <<nng#,nng(7)>>

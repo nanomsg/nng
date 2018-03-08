@@ -47,7 +47,7 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_http_conn_read_res#,nng_http_conn_read_res(3)>>,
 <<nng_http_conn_write_res#,nng_http_conn_write_res(3)>>,
 <<nng_http_req_alloc#,nng_http_req_alloc(3)>>,
-<<nng_http_res_alloc_errror#,nng_http_res_alloc_error(3)>>,
+<<nng_http_res_alloc_error#,nng_http_res_alloc_error(3)>>,
 <<nng_http_res_add_header#,nng_http_res_add_header(3)>>,
 <<nng_http_res_copy_data#,nng_http_res_copy_data(3)>>,
 <<nng_http_res_del_header#,nng_http_res_del_header(3)>>,

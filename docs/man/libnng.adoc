@@ -114,7 +114,7 @@ mode may need to access the header of messages.
 === Asynchronous Operations
 
 Most applications will interact with _nng_ synchronously; that is that
-functions such as <<nng_send#,nng_send()>> will block the calling
+functions such as <<nng_send#,nng_send(3)>> will block the calling
 thread until the operation has completed.
 
 NOTE: Synchronous operations which send messages may return before the
@@ -297,7 +297,7 @@ NOTE: These functions will only be present if the library has been built
 with TLS support.
 
 |===
-|<<nng_tls_config_auth_alloc#,nng_tls_config_alloc(3)>>|allocate TLS configuration
+|<<nng_tls_config_alloc#,nng_tls_config_alloc(3)>>|allocate TLS configuration
 |<<nng_tls_config_auth_mode#,nng_tls_config_auth_mode(3)>>|set authentication mode
 |<<nng_tls_config_ca_chain#,nng_tls_config_ca_chain(3)>>|set certificate authority chain
 |<<nng_tls_config_ca_file#,nng_tls_config_ca_file(3)>>|load certificate authority from file

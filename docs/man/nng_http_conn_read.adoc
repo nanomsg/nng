@@ -34,7 +34,7 @@ called first, to set the scatter/gather vector for _aio_.
 
 This function returns immediately, with no return value.  Completion of
 the operation is signaled via the _aio_, and the final result may be
-obtained via <<nng_aio_result#,nng_aio_result>>. That result will
+obtained via <<nng_aio_result#,nng_aio_result(3)>>. That result will
 either be zero or an error code.
 
 The I/O operation completes as soon as at least one byte has been
@@ -66,7 +66,7 @@ None.
 <<nng_aio_count#,nng_aio_count(3)>>,
 <<nng_aio_result#,nng_aio_result(3)>>,
 <<nng_aio_set_iov#,nng_aio_set_iov(3)>>,
-<<nng_http_alloc_handler#,nng_http_alloc_handler(3)>>,
+<<nng_http_handler_alloc#,nng_http_handler_alloc(3)>>,
 <<nng_http_client_connect#,nng_http_client_connect(3)>>,
 <<nng_http_conn_read_all#,nng_http_conn_read_all(3)>>,
 <<nng_strerror#,nng_strerror(3)>>,
