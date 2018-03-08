@@ -45,7 +45,7 @@ considered when determining whether the handler should be called.
 
 Additionally each handler has a method it is registered to handle
 (the default is "GET", see
-<<nng_http_handler_set_method#,nng_http_handler_set_method(3)), and
+<<nng_http_handler_set_method#,nng_http_handler_set_method(3)>>), and
 optionally a 'Host' header it can be matched against (see
 <<nng_http_handler_set_host#,nng_http_handler_set_host(3)).
 
