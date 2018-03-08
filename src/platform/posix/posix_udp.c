@@ -306,4 +306,19 @@ nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 
+int
+nni_plat_udp_sockname(nni_plat_udp *udp, nni_sockaddr *sa)
+{
+	struct sockaddr_storage ss;
+	socklen_t               sz;
+	int                     rv;
+
+	sz = sizeof(ss);
+	if ((rv = getsockname(udp->udp_fd, (struct sockaddr *) &ss, &sz)) <
+	    0) {
+		return (nni_plat_errno(errno));
+	}
+	return (nni_posix_sockaddr2nn(sa, &ss));
+}
+
 #endif // NNG_PLATFORM_POSIX

@@ -78,7 +78,7 @@
 // is presented as an ASCIIZ string.
 #define NNG_OPT_ZT_NETWORK_NAME "zt:network-name"
 
-// NNG_OPT_ZT_PING_TIME and NNG_OPT_ZT_PING_COUNT are used to send ping
+// NNG_OPT_ZT_PING_TIME and NNG_OPT_ZT_PING_TRIES are used to send ping
 // requests when a connection appears to be idled.  If a logical session
 // has not received traffic from it's peer for ping-time, then a ping packet
 // is sent.  This will be done up to ping-count times.  If no traffic from
@@ -88,7 +88,15 @@
 // NNG_OPT_ZT_PING_COUNT is an integer.)  This ping process can be disabled
 // by setting either ping-time or ping-count to zero.
 #define NNG_OPT_ZT_PING_TIME "zt:ping-time"
-#define NNG_OPT_ZT_PING_COUNT "zt:ping-count"
+#define NNG_OPT_ZT_PING_TRIES "zt:ping-tries"
+
+// NNG_OPT_ZT_CONN_TIME and NNG_OPT_ZT_CONN_TRIES are used to control
+// the interval between connection attempts, and the maximum number of
+// connection attempts to make before assuming that the peer is absent
+// (and returning NNG_ETIMEDOUT).  The NNG_OPT_ZT_CONN_TIME is a duration,
+// the NNG_OPT_ZT_CONN_TRIES is an integer.
+#define NNG_OPT_ZT_CONN_TIME "zt:conn-time"
+#define NNG_OPT_ZT_CONN_TRIES "zt:conn-tries"
 
 // NNG_OPT_ZT_MTU is a read-only size_t and contains the ZeroTier virtual
 // network MTU (i.e. the L2 payload MTU). Messages that are larger than this

@@ -371,6 +371,8 @@ extern void nni_plat_pipe_clear(int);
 // routine.
 extern void nni_plat_pipe_close(int, int);
 
+extern int nni_plat_udp_sockname(nni_plat_udp *, nni_sockaddr *);
+
 //
 // File/Store Support
 //

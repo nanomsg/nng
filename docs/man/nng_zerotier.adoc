@@ -28,14 +28,20 @@ The _nng_zerotier_ transport provides communication support for
 _nng_ applications over a http://www.zerotier.com[ZeroTier] network,
 using a Virtual Layer 2 packet facility.
 
-CAUTION: This transport is very experimental.  To utilize it at
+IMPORTANT: This transport is very experimental.  To utilize it at
 present, the library must be built with support, and the
 ZeroTierOne `dev` branch must be included; this will require
-linking against a suitable `libzerotiercore` static library.         
+linking against a suitable `libzerotiercore` static library.
 
-NOTE: The `libzerotiercore` library at present is covered under different
+IMPORTANT: The `libzerotiercore` library at present is covered under different
 license terms than the rest of _nng_.  Please be careful to review
 and adhere to the licensing terms.
+
+IMPORTANT: The ZeroTier transport can take a long time to establish an
+initial connection -- up to even a minute in extreme cases, while the network
+topology is configured.  Consequently, this transport is not recommended
+for use cases involving short-lived programs, but is better for long-running
+programs such as background daemons or agents.
 
 While ZeroTier makes use of the host's IP stack (and UDP in particular),
 this transport does not use or require an IP stack on the virtual
@@ -92,6 +98,10 @@ The `sa_family` member will have the value `NNG_AF_ZT` (5).  The remaining
 members are, unlike TCP socket address, in native byte order.  Only the
 lower 24-bits of the `sa_port` may be used.  Likewise only the lower 40-bits
 of the `sa_nodeid` may be used.
+
+NOTE: The fields of this structure are in *native* byte order,
+unlike the other socket address structures associated with `NNG_AF_INET` or
+`NNG_AF_INET6`.
 
 === Node Presence
 
@@ -169,40 +179,53 @@ in this fashion.
   This is a read-only ASCIIZ string containing the name of the network
   as established by the ZeroTier network administrator.
 
+`NNG_OPT_ZT_CONN_TIME`::
+
+  The time to wait between sending connection attempts.  This is an
+  `nng_duration` (msec), and is only used with dialers. The default is 500 msec.
+
+`NNG_OPT_ZT_CONN_TRIES`::
+
+  The maximum number (`int`) of attempts to try to establish a connection
+  before reporting a timeout, and is only used with dialers.  The default
+  is 240, which results in a 2 minute timeout if `NNG_OPT_ZT_CONN_TIME` is at
+  it's default of 500.  If the value is set to 0, then the connection
+  attempts will keep retrying forever.
+
 `NNG_OPT_ZT_PING_TIME`::
 
-   If no traffic has been received from the ZeroTier peer after this
-   period of time, then a "ping" message is sent to check if the peer
-   is still alive.  This is an `nng_duration` (msec).
+  If no traffic has been received from the ZeroTier peer after this
+  period of time, then a "ping" message is sent to check if the peer
+  is still alive.  This is an `nng_duration` (msec).
 
-`NNG_OPT_ZT_PING_COUNT`::
+`NNG_OPT_ZT_PING_TRIES`::
 
-   If this number (`int`) of consecutive "ping" requests are sent to the
-   peer with no response (and no other intervening traffic), then the
-   peer is assumed to be dead and the connection is closed.  Note that
-   if any traffic is received from the peer, then the underlying counter
-   is reset to zero.
+  If this number (`int`) of consecutive "ping" requests are sent to the
+  peer with no response (and no other intervening traffic), then the
+  peer is assumed to be dead and the connection is closed.  Note that
+  if any traffic is received from the peer, then the underlying counter
+  is reset to zero.
 
 `NNG_OPT_ZT_MTU`::
 
-   This is a read-only size (`size_t`) representing the ZeroTier virtual
-   network MTU; this is the Virtual Layer 2 MTU.  The headers used by
-   this transport and the protocols consume some of this for each message
-   sent over the network.  (The transport uses 20-bytes of this, and each
-   protocol may consume additional space, typically not more than 16-bytes.)
+  This is a read-only size (`size_t`) representing the ZeroTier virtual
+  network MTU; this is the Virtual Layer 2 MTU.  The headers used by
+  this transport and the protocols consume some of this for each message
+  sent over the network.  (The transport uses 20-bytes of this, and each
+  protocol may consume additional space, typically not more than 16-bytes.)
 
 `NNG_OPT_ZT_ORBIT`::
 
-   This is a write-only option that takes an array of two `uint64_t` values,
-   indicating the ID of a ZeroTier "moon", and the node ID of the root server
-   for that moon.  (The ID may be zero if the moon ID is the same as it's
-   root server ID, which is conventional.)
+  This is a write-only option that takes an array of two `uint64_t` values,
+  indicating the ID of a ZeroTier "moon", and the node ID of the root server
+  for that moon.  (The ID may be zero if the moon ID is the same as it's
+  root server ID, which is conventional.)
 
 `NNG_OPT_ZT_DEORBIT`::
 
-   This write-only option takes a single `uint64_t` indicating the moon
-   ID to "deorbit".  If the node is not already orbiting the moon, then
-   this has no effect.
+  This write-only option takes a single `uint64_t` indicating the moon
+  ID to "deorbit".  If the node is not already orbiting the moon, then
+  this has no effect.
     
 == SEE ALSO
 

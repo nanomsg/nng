@@ -103,7 +103,7 @@ check_props(nng_msg *msg)
 
 		z = sizeof(c);
 		c = 0;
-		So(nng_pipe_getopt(p, NNG_OPT_ZT_PING_COUNT, &c, &z) == 0);
+		So(nng_pipe_getopt(p, NNG_OPT_ZT_PING_TRIES, &c, &z) == 0);
 		So(c > 0 && c < 10); // actually 5...
 
 		t = 0;
