@@ -1,6 +1,6 @@
 {% include header.html %}
 {% if page.version and page.version != site.latest  %}
-   {% if page.version = tip %}
+   {% if page.version == tip %}
        {% include tip_version.html %}
    {% else %}
        {% include old_version.html %}
