@@ -1,6 +1,10 @@
 {% include header.html %}
 {% if page.version and page.version != site.latest  %}
-   {% include old_version.html %}
+   {% if page.version = tip %}
+       {% include tip_version.html %}
+   {% else %}
+       {% include old_version.html %}
+   {% endif %}
 {% endif %}
 {{ content }}
 {% include footer_refman.html %}
