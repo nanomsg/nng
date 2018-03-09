@@ -1,5 +1,5 @@
 ---
-version: 0.5.0
+version: v0.5.0
 layout: refman
 ---
 <!DOCTYPE html>
@@ -559,7 +559,7 @@ receiving messages.</p>
 <h2 id="_options">OPTIONS</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The following options may be supplied for <em>OPTION</em>.</p>
+<p>The possible values for <em>OPTION</em> are described below.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -577,8 +577,21 @@ any of <code>--req</code>, <code>--rep</code>, or <code>--respondent</code>.
 </table>
 </div>
 <div class="paragraph">
-<p>Options that take values may be separated from their value either by an
-equa</p>
+<p>When using the long form of an option (names prefixed with with <code>--</code>), if the
+option takes a value then the value may be supplied by appending the option
+with an equals sign and the value (e.g. <code>--subscribe=times</code>), by appending
+the option with a colon and the value (e.g. <code>--subscribe:tribune</code>) or by
+providing the data as the next program argument (e.g. <code>--subscribe herald</code>).</p>
+</div>
+<div class="paragraph">
+<p>When using short form options (a single letter prefixed with a <code>-</code>),
+if the option takes a value it may either be immediately appended to
+the value (e.g. <code>-L5678</code>) or provided as the next program argument
+(e.g. <code>-L 5678</code>).</p>
+</div>
+<div class="paragraph">
+<p>POSIX style option clustering of single letter options is not supported;
+each option must be presented as a separate argument to the program.</p>
 </div>
 <div class="sect2">
 <h3 id="_generic">Generic</h3>
