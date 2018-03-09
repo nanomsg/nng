@@ -85,7 +85,7 @@ Most applications will only interact with the body.
 |<<nng_msg_body#,nng_msg_body(3)>>|return message body
 |<<nng_msg_chop#,nng_msg_chop(3)>>|remove data from end of message body
 |<<nng_msg_clear#,nng_msg_clear(3)>>|clear message body
-|<<nng_msg_dup#,nng_msg_len(3)>>|duplicate a message
+|<<nng_msg_dup#,nng_msg_dup(3)>>|duplicate a message
 |<<nng_msg_free#,nng_msg_free(3)>>|free a message
 |<<nng_msg_insert#,nng_msg_insert(3)>>|prepend to message body
 |<<nng_msg_len#,nng_msg_len(3)>>|return the message body length
