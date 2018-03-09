@@ -10,12 +10,12 @@ image:https://img.shields.io/travis/nanomsg/nng/master.svg?label=linux[Linux Sta
 image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/nanomsg/nng"]
 image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=coverage[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
 
-This is the documentation for _nng_.  This is all very preliminary at this
-point.
+This is the documentation for _nng_.  This is all very preliminary at this point.
 
-A reference manual is available <<man/v{{ site.latest }}/nng.adoc#,here>>.
+The Reference Manual is available for browsing <<man/index#,here>>.
+
+You can also development and documentation efforts for _nng_ by purchasing your own copy of the https://leanpub.com/nngmanual[NNG Reference Manual on Leanpub].
 
 Here is my <<RATIONALE#,rationale>> for why I made _nng_.
 
-Please see the https://github.com/nanomsg/nng[GitHub Repository] for further
-information.
+Please see the https://github.com/nanomsg/nng[GitHub Repository] for further information.

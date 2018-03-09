@@ -3,6 +3,7 @@ title: Documentation
 layout: default
 ---
 
-== Documentation
+== NNG Reference Manual
 
-* Browse the nng reference manual <</nng/man/v{{ site.latest }}/nng.adoc#,here>>.
+* <</nng/man/v{{site.latest}}/index#,Latest>> (v{{site.latest}}, the most recent release)
+* <</nng/man/tip/index#,Tip>> (reflects unreleased changes)
