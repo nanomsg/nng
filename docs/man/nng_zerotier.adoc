@@ -115,6 +115,36 @@ below.
 It is possible for a single application to join multiple networks
 using the same node, or using separate nodes.
 
+=== Network Status
+
+A ZeroTier node can be in one of the following states, which
+can be obtained with the `NNG_OPT_ZT_NETWORK_STATUS` option:
+
+`NNG_ZT_STATUS_UP`::
+The ZeroTier network is up.  This is the only state where it is
+possible to communicate with peers, and the only state where
+the network name (`NNG_OPT_ZT_NETWORK_NAME`) is available.
+
+`NNG_ZT_STATUS_CONFIG`::
+The ZeroTier node is still configuring, network services are not available.
+
+`NNG_ZT_STATUS_DENIED`::
+The node does not have permission to join the ZeroTier network.
+
+`NNG_ZT_STATUS_NOTFOUND`::
+The ZeroTier network is not found.
+
+`NNG_ZT_STATUS_ERROR`::
+Some other ZeroTier error has occurred; the network is not available.
+
+`NNG_ZT_STATUS_OBSOLETE`::
+The node is running obsolete software; the network is not available.
+
+`NNG_ZT_STATUS_UNKNOWN`::
+The network is in an unknown state. This should not happen, as it
+indicates that the ZeroTier software is reporting an unexpected status.
+The network is most likely not available.
+
 === Transport Options
 
 The following transport options are available:
@@ -148,31 +178,7 @@ in this fashion.
 `NNG_OPT_ZT_NETWORK_STATUS`::
 
   This is a read-only integer, representing the ZeroTier network status.
-  Valid values for this are:
-+
-[cols="3,5"]
-|===
-
-| `nng_zt_network_status_configuring`
-| The ZeroTier node is still configuring, network services are not available.
-
-| `nng_zt_network_status_ok`
-| The ZeroTier network is up.
-
-| `nng_zt_network_status_denied`
-| The node does not have permission to join the ZeroTier network.
-
-| `nng_zt_network_status_notfound`
-| The ZeroTier network is not found.
-
-| `nng_zt_network_status_error`
-| Some other ZeroTier error has occurred; the network is not available.
-
-| `nng_zt_network_status_obsolete`
-| The node is running obsolete software; the network is not available.
-
-|===
-
+  See <<Network Status>> for an explanation of this option.
 
 `NNG_OPT_ZT_NETWORK_NAME`::
 

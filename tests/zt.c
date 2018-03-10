@@ -39,10 +39,6 @@ mkdir(const char *path, int mode)
 #include <unistd.h>
 #endif // WIN32
 
-#ifndef NNG_TRANSPORT_ZEROTIER
-#define nng_zt_network_status_ok 0
-#endif
-
 static int
 check_props(nng_msg *msg)
 {
@@ -94,7 +90,7 @@ check_props(nng_msg *msg)
 		z = sizeof(s);
 		s = 0;
 		So(nng_pipe_getopt(p, NNG_OPT_ZT_NETWORK_STATUS, &s, &z) == 0);
-		So(s == nng_zt_network_status_ok);
+		So(s == NNG_ZT_STATUS_UP);
 	});
 
 	Convey("Ping properties work", {

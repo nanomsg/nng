@@ -18,17 +18,6 @@
 
 #include <ZeroTierOne.h>
 
-// These values are supplied to help folks checking status.  They are the
-// return values from zt_opt_status.  It's important that the status values
-// here match what the underlying ZeroTier core gives us.
-int nng_zt_network_status_configuring =
-    ZT_NETWORK_STATUS_REQUESTING_CONFIGURATION;
-int nng_zt_network_status_ok       = ZT_NETWORK_STATUS_OK;
-int nng_zt_network_status_denied   = ZT_NETWORK_STATUS_ACCESS_DENIED;
-int nng_zt_network_status_notfound = ZT_NETWORK_STATUS_NOT_FOUND;
-int nng_zt_network_status_error    = ZT_NETWORK_STATUS_PORT_ERROR;
-int nng_zt_network_status_obsolete = ZT_NETWORK_STATUS_CLIENT_TOO_OLD;
-
 // ZeroTier Transport.  This sits on the ZeroTier L2 network, which itself
 // is implemented on top of UDP.  This requires the 3rd party
 // libzerotiercore library (which is GPLv3!) and platform specific UDP
@@ -1949,7 +1938,29 @@ zt_getopt_network_status(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp)
 		nni_mtx_unlock(&zt_lk);
 		return (NNG_ECLOSED);
 	}
-	status = vcfg->status;
+	switch (vcfg->status) {
+	case ZT_NETWORK_STATUS_REQUESTING_CONFIGURATION:
+		status = NNG_ZT_STATUS_CONFIG;
+		break;
+	case ZT_NETWORK_STATUS_OK:
+		status = NNG_ZT_STATUS_UP;
+		break;
+	case ZT_NETWORK_STATUS_ACCESS_DENIED:
+		status = NNG_ZT_STATUS_DENIED;
+		break;
+	case ZT_NETWORK_STATUS_NOT_FOUND:
+		status = NNG_ZT_STATUS_NOTFOUND;
+		break;
+	case ZT_NETWORK_STATUS_PORT_ERROR:
+		status = NNG_ZT_STATUS_ERROR;
+		break;
+	case ZT_NETWORK_STATUS_CLIENT_TOO_OLD:
+		status = NNG_ZT_STATUS_OBSOLETE;
+		break;
+	default:
+		status = NNG_ZT_STATUS_UNKNOWN;
+		break;
+	}
 	ZT_Node_freeQueryResult(ztn->zn_znode, vcfg);
 	nni_mtx_unlock(&zt_lk);
 
