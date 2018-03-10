@@ -67,6 +67,7 @@ Listeners accept incoming connection requets, and dialers make them.
 |<<nng_listener_getopt#,nng_listener_getopt(3)>>|get listener option
 |<<nng_listener_setopt#,nng_listener_setopt(3)>>|set listener option
 |<<nng_listener_start#,nng_listener_start(3)>>|start listener
+|<<nng_pipe_getopt#,nng_pipe_getopt(3)>>|get pipe option
 |===
 
 === Message Handling Functions
@@ -87,9 +88,11 @@ Most applications will only interact with the body.
 |<<nng_msg_clear#,nng_msg_clear(3)>>|clear message body
 |<<nng_msg_dup#,nng_msg_dup(3)>>|duplicate a message
 |<<nng_msg_free#,nng_msg_free(3)>>|free a message
+|<<nng_msg_get_pipe#,nng_msg_get_pipe(3)>>|get pipe for message
 |<<nng_msg_insert#,nng_msg_insert(3)>>|prepend to message body
 |<<nng_msg_len#,nng_msg_len(3)>>|return the message body length
 |<<nng_msg_realloc#,nng_msg_realloc(3)>>|reallocate a message
+|<<nng_msg_set_pipe#,nng_msg_set_pipe(3)>>|set pipe for message
 |<<nng_msg_trim#,nng_msg_trim(3)>>|remove data from start of message body
 |<<nng_recvmsg#,nng_recvmsg(3)>>|receive a message
 |<<nng_sendmsg#,nng_sendmsg(3)>>|send a message
