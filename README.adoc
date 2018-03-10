@@ -15,7 +15,7 @@ seeing additional testing and review.
 
 While we have made every reasonable effort to ensure that this library
 is robust and safe, it is still a *pre-release*, and details are subject
-to change.  Therefore, we do not recommend it for production use, yet.
+to change.  Caution is advised before depending upon it.
 
 NOTE: We're getting pretty close to removing this caveat though,
 and we'd like help from others in testing to further improve our confidence
@@ -55,6 +55,11 @@ either Apache or GPL licenses.
 
 Much of the library, but not all, is documented in the docs/ folder,
 and also https://nanomsg.github.io/nng[online].
+
+You can also buy a copy of the 
+https://leanpub.com/nngmanual/[NNG Reference Manual at Leanpub].
+(Purchases from Leanpub help fund our work, and get get a nicer
+formatted single PDF or ebook edition.)
 
 You can also explore the `nng.h` header file, which provides the public
 API. A legacy compatible `nng_compat.h` header is available and
