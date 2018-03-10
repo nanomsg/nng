@@ -1,38 +1,67 @@
-# Debian packages we want (makes life better);
-#
-# - asciidoctor
-# - cmake
-# - libmbedtls-dev
-# - ninja-build
-# - clang
-# - clang-format
-# - gcc (-7?)
-# - g++ (-7?)
-#
-version: 2
+
+# TODO: create custom docker images for each of these environments
+# to avoid re-downloading & installing dependencies each time
+
+version: 2.0
 jobs:
-  build:
+  "clang - build, test":
     docker:
-      - image: debian:stretch
+      - image: ubuntu:16.04
+        environment:
+          CC: clang-4.0
+          CXX: clang++-4.0
+          CLANG_FORMAT: clang-format-4.0
+          CTEST_OUTPUT_ON_FAILURE: 1
     steps:
       - checkout
-      - run:
-          name: Install Dependencies
-          command: apt-get update -qq && apt-get install -y build-essential asciidoctor cmake libmbedtls-dev ninja-build clang clang-format
-      - run:
-          name: Configure
-          command: mkdir build && cd build && cmake -DNNG_TRANSPORT_TLS=ON -G Ninja ..
+      - run: apt-get update -qq
+      - run: apt-get install -y software-properties-common
+      # llvm apt details: https://apt.llvm.org
+      - run: apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-4.0 main"
+      - run: apt-get update -qq
+      - run: >
+          apt-get install -y
+          build-essential
+          curl
+          asciidoctor
+          cmake
+          libmbedtls-dev
+          ninja-build
+          clang-4.0
+          clang-format-4.0
+      - run: ./etc/format-check.sh
+      - run: ./.circleci/build-and-test.sh
 
-      - run:
-          name: Build
-          command: cd build && ninja
+  "gcc - build, test, coverage":
+    docker:
+      - image: ubuntu:16.04
+        environment:
+          CC: gcc-7
+          CXX: g++-7
+          COVERAGE: "ON"
+          GCOV: gcov-7
+    steps:
+      - checkout
+      - run: apt-get update -qq
+      - run: apt-get install -y software-properties-common
+      - run: add-apt-repository ppa:ubuntu-toolchain-r/test
+      - run: apt-get update -qq
+      - run: >
+          apt-get install -y
+          build-essential
+          curl
+          asciidoctor
+          cmake
+          libmbedtls-dev
+          ninja-build
+          gcc-7
+          g++-7
+      - run: ./.circleci/build-and-test.sh
+      - run: ./etc/codecov.sh
 
-      - run:
-          name: Run Tests
-          command: cd build && ninja test
-          environment:
-            CTEST_OUTPUT_ON_FAILURE: 1
-
-#      - run:
-#          name: Check Format
-#          command: ./etc/format-check.sh
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - "clang - build, test"
+      - "gcc - build, test, coverage"
