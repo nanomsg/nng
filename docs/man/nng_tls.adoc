@@ -109,16 +109,16 @@ These are `struct` types with the following definitions:
 
 typedef struct {
     // ... <2>
-    uint16_t sa_family;                 // must be NNG_AF_INET
-    uint16_t sa_port;                   // TCP port number
+    uint16_t sa_family;   // must be NNG_AF_INET
+    uint16_t sa_port;     // TCP port number
     uint32_t sa_addr;
     // ...
 } nng_sockaddr_in;
 
 typedef struct {
     // ... <2>
-    uint16_t sa_family;                 // must be NNG_AF_INET6
-    uint16_t sa_port;                   // TCP port number
+    uint16_t sa_family;   // must be NNG_AF_INET6
+    uint16_t sa_port;     // TCP port number
     uint8_t  sa_addr[16];
     // ...
 } nng_sockaddr_in6;
