@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/ksh
 #
 # Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
@@ -23,24 +23,86 @@ tmpdir=$(mktemp -d)
 srcdir=$(dirname $0)
 dstdir=${tmpdir}/pages
 cd ${srcdir}
-VERSION=$(cat ../../.version)
 MANMANUAL="NNG Reference Manual"
 MANSOURCE="NNG"
 LAYOUT=refman
-dstman=${dstdir}/man/v${VERSION}
 name=nng
+
+
+TIPVERS=$(cd ${srcdir}; git describe --always origin/master)
+GITVERS=$(cd ${srcdir}; git describe --always)
+
+if [[ -z "${VERSION}" ]]
+then
+	if [[ "${GITVERS}" == *-* ]]
+	then
+		if [[ "${GITVERS}" == "${TIPVERS}" ]]
+		then
+			VERSION=tip
+		else
+			printf "Cannot publish - sources not pushed yet.\n"
+			exit 1
+		fi
+	else
+		VERSION="${GITVERS}"
+	fi
+fi
+
+printf "PUBLISHING version ${VERSION}\n"
+
+if [ ${VERSION} == tip ]
+then
+	dstman=${dstdir}/man/tip
+else
+	dstman=${dstdir}/man/v${VERSION}
+fi
 
 giturl="${GITURL:-git@github.com:nanomsg/nng}"
 
 cleanup() {
-	echo "DELETING ${tmpdir}"
+	printf "DELETING ${tmpdir}\n"
 	rm -rf ${tmpdir}
+}
+
+getinfo() {
+	PAGE=
+	SECT=
+	DESC=
+
+	while read line
+	do
+		case "$line" in
+		"//"*)
+			;;
+		"= "**|"="*)
+			if [ -z "${PAGE}" ] && [ -z "${SECT}" ]
+			then
+				PAGE=${line%\(}
+				PAGE=${PAGE#=}
+				PAGE=${PAGE## }
+				PAGE=${PAGE%\(*}
+				SECT=${line#*\(}
+				SECT=${SECT%\)}
+			fi
+			;;
+
+		*" - "*)
+			if [ -z "${DESC}" ] && [ -n "${PAGE}" ] && [ -n "${SECT}" ]
+			then
+				DESC=${line#*- }
+				return
+			fi
+			;;
+		esac
+	done
 }
 
 mkdir -p ${tmpdir}
 
 trap cleanup 0
 
+typeset -A descs
+typeset -A pages
 echo git clone ${giturl} ${dstdir} || exit 1
 git clone ${giturl} ${dstdir} || exit 1
 
@@ -49,7 +111,20 @@ git clone ${giturl} ${dstdir} || exit 1
 [ -d ${dstman} ] || mkdir -p ${dstman}
 
 dirty=
-for input in $(find . -name '*.adoc'); do
+files=( $(find . -name '*.adoc' -print | sort ) )
+
+printf "Processing files: [%3d%%]" 0
+typeset -i num
+typeset -i pct
+
+num=0
+pct=0
+for input in ${files[@]}
+do 
+	num=$(( num + 1 ))
+	pct=$(( num * 100 / ${#files[@]} ))
+
+	printf "\b\b\b\b\b\b[%3d%%]" ${pct}
 	adoc=${input#./}
 	html=${adoc%.adoc}.html
 	output=${dstman}/${html}
@@ -72,12 +147,18 @@ EOF
 	fi
 	if [ -n "$status" ]
 	then
-		echo "File $adoc is not checked in!"
+		printf "\nFile $adoc is not checked in!\n"
 		dirty=yes
 	fi
 
+	getinfo < ${adoc}
+	if [ -n "${DESC}" ]
+	then
+		descs[${PAGE}_${SECT}]="$DESC"
+		pages[${SECT}]=( ${pages[$SECT][*]} $PAGE )
+	fi
 
-	env ${epoch} asciidoctor \
+	 env ${epoch} asciidoctor \
 		-dmanpage \
 		-amansource="${MANSOURCE}" \
 		-amanmanual="${MANMANUAL}" \
@@ -92,24 +173,74 @@ EOF
 
 	if [ $? -ne 0 ]
 	then
-		echo "Failed to process $adoc !"
+		printf "\n$Failed to process $adoc !\n"
 		fails=yes
 	fi
-		
 
 	(cd ${dstman}; git add ${html})
 done
 
+printf "\nProcessing index: "
+
+index=${dstman}/index.asc
+
+cat <<EOF > ${index}
+= NNG Reference Manual: ${VERSION}
+
+The following pages are present:
+
+EOF
+
+typeset -A titles
+titles[1]="Utilities and Programs"
+titles[3]="Library Functions"
+titles[7]="Protocols and Transports"
+
+for S in $(echo ${!pages[@]} | sort )
+do
+	printf "\n== Section ${S}: ${titles[$S]}\n"
+
+	printf "\n[cols=\"3,5\"]\n"
+	printf "|===\n"
+	for P in $(echo ${pages[$S][@]} | tr " " "\n" | sort)
+	do
+		printf "|<<${P}#,${P}(${S})>>\n"
+		printf "|${descs[${P}_${S}]}\n"
+		printf "\n"
+	done
+	printf "|===\n"
+done >> ${index}
+
+cat <<EOF >${dstman}/index.html
+---
+version: ${VERSION}
+layout: ${LAYOUT}
+---
+EOF
+
+env ${epoch} asciidoctor \
+	-darticle \
+	-anofooter=yes \
+	-askip-front-matter \
+	-atoc=left \
+	-aicons=font \
+	-bhtml5 \
+	-o - ${index} >> ${dstman}/index.html
+chmod 0644 ${dstman}/index.html
+
+(cd ${dstman}; git add index.html)
+
 if [ -n "$dirty" ]
 then
-	echo "Repository has uncommited documentation.  Aborting."
+	printf "Repository has uncommited documentation.  Aborting.\n"
 	exit 1
 fi
 
 if [ -n "$fails" ]
 then
-	echo "Failures formatting documentation. Aborting."
+	printf "\nFailures formatting documentation. Aborting.\n"
 	exit 1
 fi
+printf "Done.\n"
 
 (cd ${dstman}; git commit -m "man page updates for ${VERSION}"; git push origin gh-pages)
