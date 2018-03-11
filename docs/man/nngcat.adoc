@@ -51,7 +51,7 @@ the value (e.g. `-L5678`) or provided as the next program argument
 POSIX style option clustering of single letter options is not supported;
 each option must be presented as a separate argument to the program.
 
-=== Generic
+=== Generic Options
 *-h, --help*::
   Get usage help.
 *-V, --version*::
@@ -73,7 +73,7 @@ each option must be presented as a separate argument to the program.
   This may be specified multiple times to subscribe to multiple topics.  If
   not specified at all, then a default subscription to everything is assumed.
 
-=== Protocol Selection
+=== Protocol Selection Options
 NOTE: At least one protocol must be selected.
 
 *--bus, --bus0*::
@@ -133,7 +133,7 @@ NOTE: At least one protocol must be selected.
   This protocol receives survey requests from <<nng_surveyor#,nng_surveyor(7)>>
   version 0 peers, and can send a reply to them.
 
-=== Peer Selection
+=== Peer Selection Options
 NOTE: At least one peer address must be selected.
 
 TIP: While legacy _nanocat_ only supported one peer, _nng_ can support
