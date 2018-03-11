@@ -514,6 +514,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_uri_format">URI Format</a></li>
 <li><a href="#_socket_address">Socket Address</a></li>
 <li><a href="#_node_presence">Node Presence</a></li>
+<li><a href="#_network_status">Network Status</a></li>
 <li><a href="#_transport_options">Transport Options</a></li>
 </ul>
 </li>
@@ -698,6 +699,49 @@ using the same node, or using separate nodes.</p>
 </div>
 </div>
 <div class="sect2">
+<h3 id="_network_status">Network Status</h3>
+<div class="paragraph">
+<p>A ZeroTier node can be in one of the following states, which
+can be obtained with the <code>NNG_OPT_ZT_NETWORK_STATUS</code> option:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_ZT_STATUS_UP</code></dt>
+<dd>
+<p>The ZeroTier network is up.  This is the only state where it is
+possible to communicate with peers, and the only state where
+the network name (<code>NNG_OPT_ZT_NETWORK_NAME</code>) is available.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ZT_STATUS_CONFIG</code></dt>
+<dd>
+<p>The ZeroTier node is still configuring, network services are not available.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ZT_STATUS_DENIED</code></dt>
+<dd>
+<p>The node does not have permission to join the ZeroTier network.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ZT_STATUS_NOTFOUND</code></dt>
+<dd>
+<p>The ZeroTier network is not found.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ZT_STATUS_ERROR</code></dt>
+<dd>
+<p>Some other ZeroTier error has occurred; the network is not available.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ZT_STATUS_OBSOLETE</code></dt>
+<dd>
+<p>The node is running obsolete software; the network is not available.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ZT_STATUS_UNKNOWN</code></dt>
+<dd>
+<p>The network is in an unknown state. This should not happen, as it
+indicates that the ZeroTier software is reporting an unexpected status.
+The network is most likely not available.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_transport_options">Transport Options</h3>
 <div class="paragraph">
 <p>The following transport options are available:</p>
@@ -743,39 +787,7 @@ provides a <code>uint64_t</code> in native byte order representing the ZeroTier
 <dt class="hdlist1"><code>NNG_OPT_ZT_NETWORK_STATUS</code></dt>
 <dd>
 <p>This is a read-only integer, representing the ZeroTier network status.
-Valid values for this are:</p>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 37.5%;">
-<col style="width: 62.5%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_configuring</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The ZeroTier node is still configuring, network services are not available.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_ok</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The ZeroTier network is up.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_denied</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The node does not have permission to join the ZeroTier network.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_notfound</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The ZeroTier network is not found.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_error</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">Some other ZeroTier error has occurred; the network is not available.</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nng_zt_network_status_obsolete</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">The node is running obsolete software; the network is not available.</p></td>
-</tr>
-</tbody>
-</table>
+See <a href="#_network_status">Network Status</a> for an explanation of this option.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_ZT_NETWORK_NAME</code></dt>
 <dd>

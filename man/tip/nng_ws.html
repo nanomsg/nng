@@ -644,16 +644,16 @@ These are <code>struct</code> types with the following definitions:</p>
 
 <span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
     <span class="tok-c1">// ... </span><i class="conum" data-value="2"></i><b>(2)</b>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>                 <span class="tok-c1">// must be NNG_AF_INET</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>                   <span class="tok-c1">// TCP port number</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>   <span class="tok-c1">// must be NNG_AF_INET</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>     <span class="tok-c1">// TCP port number</span>
     <span class="tok-kt">uint32_t</span> <span class="tok-n">sa_addr</span><span class="tok-p">;</span>
     <span class="tok-c1">// ...</span>
 <span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_in</span><span class="tok-p">;</span>
 
 <span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
     <span class="tok-c1">// ... </span><i class="conum" data-value="2"></i><b>(2)</b>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>                 <span class="tok-c1">// must be NNG_AF_INET6</span>
-    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>                   <span class="tok-c1">// TCP port number</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>   <span class="tok-c1">// must be NNG_AF_INET6</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>     <span class="tok-c1">// TCP port number</span>
     <span class="tok-kt">uint8_t</span>  <span class="tok-n">sa_addr</span><span class="tok-p">[</span><span class="tok-mi">16</span><span class="tok-p">];</span>
     <span class="tok-c1">// ...</span>
 <span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_in6</span><span class="tok-p">;</span></code></pre>
