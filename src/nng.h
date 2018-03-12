@@ -352,6 +352,11 @@ NNG_DECL int nng_aio_set_iov(nng_aio *, unsigned, const nng_iov *);
 // given aio.
 NNG_DECL void nng_aio_finish(nng_aio *, int);
 
+// nng_aio_sleep does a "sleeping" operation, basically does nothing
+// but wait for the specified number of milliseconds to expire, then
+// calls the callback.  This returns 0, rather than NNG_ETIMEDOUT.
+NNG_DECL void nng_sleep_aio(nng_duration, nng_aio *);
+
 // Message API.
 NNG_DECL int   nng_msg_alloc(nng_msg **, size_t);
 NNG_DECL void  nng_msg_free(nng_msg *);

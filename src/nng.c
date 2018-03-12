@@ -1039,6 +1039,12 @@ nng_aio_free(nng_aio *aio)
 	nni_aio_fini(aio);
 }
 
+void
+nng_sleep_aio(nng_duration ms, nng_aio *aio)
+{
+	nni_sleep_aio(ms, aio);
+}
+
 int
 nng_aio_result(nng_aio *aio)
 {

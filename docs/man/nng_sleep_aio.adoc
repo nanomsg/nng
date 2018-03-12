@@ -1,0 +1,49 @@
+= nng_sleep_aio(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_sleep_aio - sleep asynchronously
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+void nng_sleep_aio(nng_duration msec, nng_aio *aio);
+-----------
+
+== DESCRIPTION
+
+The `nng_sleep_aio()` function performs an asynchronous "`sleep``",
+causing the callback for _aio_ to be executed after _msec_ milliseconds.
+This is logically the equivalent of starting an asynchronous operation
+that does nothing at all, but expires after _msec_ duration, _except_ that
+the completion result will be zero rather `NNG_ETIMEDOUT`.
+
+NOTE: This overrides and replaces any timeout on the _aio_ set with
+<<nng_aio_set_timeout#,nng_aio_set_timeout(3)>>.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_aio_abort#,nng_aio_abort(3)>>,
+<<nng_aio_alloc#,nng_aio_alloc(3)>>,
+<<nng_aio_set_timeout#,nng_aio_set_timeout(3)>>,
+<<nng#,nng(7)>>

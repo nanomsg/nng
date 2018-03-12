@@ -70,6 +70,7 @@ struct nng_aio {
 	unsigned a_expiring : 1; // expiration callback in progress
 	unsigned a_waiting : 1;  // a thread is waiting for this to finish
 	unsigned a_synch : 1;    // run completion synchronously
+	unsigned a_sleep : 1;    // sleeping with no action
 	nni_task a_task;
 
 	// Read/write operations.
@@ -375,6 +376,7 @@ nni_aio_finish_impl(nni_aio *aio, int rv, size_t count, nni_msg *msg)
 	}
 
 	aio->a_expire = NNI_TIME_NEVER;
+	aio->a_sleep  = 0;
 
 	// If we are expiring, then we rely on the expiration thread to
 	// complete this; we must not because the expiration thread is
@@ -471,6 +473,7 @@ nni_aio_expire_loop(void *arg)
 	nni_aio *        aio;
 	nni_time         now;
 	nni_aio_cancelfn cancelfn;
+	int              rv;
 
 	NNI_ARG_UNUSED(arg);
 
@@ -506,14 +509,18 @@ nni_aio_expire_loop(void *arg)
 		// and the done flag won't be set either.
 		aio->a_expiring = 1;
 		cancelfn        = aio->a_prov_cancel;
+		rv              = aio->a_sleep ? 0 : NNG_ETIMEDOUT;
+		aio->a_sleep    = 0;
 
 		// Cancel any outstanding activity.  This is always non-NULL
 		// for a valid aio, and becomes NULL only when an AIO is
 		// already being canceled or finished.
 		if (cancelfn != NULL) {
 			nni_mtx_unlock(&nni_aio_lk);
-			cancelfn(aio, NNG_ETIMEDOUT);
+			cancelfn(aio, aio->a_sleep ? 0 : NNG_ETIMEDOUT);
 			nni_mtx_lock(&nni_aio_lk);
+		} else {
+			aio->a_pend = 1;
 		}
 
 		NNI_ASSERT(aio->a_pend); // nni_aio_finish was run
@@ -609,6 +616,16 @@ nni_aio_iov_advance(nni_aio *aio, size_t n)
 		aio->a_niov--;
 	}
 	return (resid); // we might not have used all of n for this iov
+}
+
+void
+nni_sleep_aio(nng_duration ms, nng_aio *aio)
+{
+	nni_aio_set_timeout(aio, ms);
+	aio->a_sleep = 1;
+	if (nni_aio_start(aio, NULL, NULL)) {
+		return;
+	}
 }
 
 void

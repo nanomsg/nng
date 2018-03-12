@@ -12,6 +12,7 @@
 #include "nng.h"
 
 #include "protocol/pair1/pair.h"
+#include "supplemental/util/platform.h"
 
 #include "stubs.h"
 
@@ -28,11 +29,33 @@ cbdone(void *p)
 	(*(int *) p)++;
 }
 
+void
+sleepdone(void *arg)
+{
+	*(nng_time *) arg = nng_clock();
+}
+
 Main({
 
 	Test("AIO operations", {
 		const char *addr = "inproc://aio";
 
+		Convey("Sleep works", {
+			nng_time start = 0;
+			nng_time end   = 0;
+			nng_aio *saio;
+			So(nng_aio_alloc(&saio, sleepdone, &end) == 0);
+			start = nng_clock();
+			nng_sleep_aio(200, saio);
+			nng_aio_wait(saio);
+			So(nng_aio_result(saio) == 0);
+			So(end != 0);
+			So((end - start) >= 200);
+			So((end - start) <= 1000);
+			So((nng_clock() - start) >= 200);
+			So((nng_clock() - start) <= 1000);
+			nng_aio_free(saio);
+		});
 		Convey("Given a connected pair of sockets", {
 			nng_socket s1;
 			nng_socket s2;

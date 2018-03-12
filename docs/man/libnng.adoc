@@ -157,6 +157,7 @@ The following functions are used in the asynchronous model:
 |<<nng_aio_wait#,nng_aio_wait(3)>>|wait for asynchronous I/O operation
 |<<nng_recv_aio#,nng_recv_aio(3)>>|receive message asynchronously
 |<<nng_send_aio#,nng_send_aio(3)>>|send message asynchronously
+|<<nng_sleep_aio#,nng_sleep_aio(3)>>|sleep asynchronously
 |===
 
 === Protocols

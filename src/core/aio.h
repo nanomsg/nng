@@ -151,6 +151,8 @@ extern void nni_aio_get_iov(nni_aio *, unsigned *, nni_iov **);
 extern void nni_aio_normalize_timeout(nni_aio *, nng_duration);
 extern void nni_aio_bump_count(nni_aio *, size_t);
 
+extern void nni_sleep_aio(nni_duration, nni_aio *);
+
 extern int  nni_aio_sys_init(void);
 extern void nni_aio_sys_fini(void);
 #endif // CORE_AIO_H
