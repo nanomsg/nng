@@ -1,0 +1,53 @@
+= async
+
+This is a simple asynchronous demo, that demonstrates use of the RAW
+option with a server, along with async message handling, to obtain a
+very high level of asynchronous operation, suitable for use in a highly
+concurrent server application.
+
+== Compiling
+
+You can override the level of concurrency with the `PARALLEL`
+define.  This determines how many requests the server will accept
+at a time, and keep outstanding.  Note that for our toy
+implementation, we create this many "logical" flows of execution
+(these are _NOT_ threads), where a request is followed by a reply.
+
+The value of `PARALLEL` must be at least one, and may be as large
+as your memory will permit.  (The default value is 32.)
+
+On UNIX-style systems:
+
+[source, bash]
+----
+% export CPPFLAGS="-D PARALLEL=32 -I /usr/local/include"
+% export LDFLAGS="-L /usr/local/lib -lnng"
+% export CC="cc"
+% ${CC} ${CPPFLAGS} async.c -o async ${LDFLAGS}
+----
+
+== Running
+
+To run the server, use the arguments `__url__ -s`.
+
+To run the client, use the arguments `__url__ __msec__`.
+
+The _msec_ is a "delay" time that server will wait before responding.
+We have these delays so simulate long running work.
+
+In the following example, all of the clients should complete within
+2 seconds.  (Assuming `PARALLEL` is defined to be large enough.)
+
+[source,bash]
+----
+% export URL="tcp://127.0.0.1:55995"
+# start the server
+% ./async $URL -s &
+# start a bunch of clients
+# Note that these all run concurrently!
+% ./async $URL 2 &
+% ./async $URL 2 &
+% ./async $URL 2 &
+% ./async $URL 2 &
+% ./async $URL 2 &
+----
