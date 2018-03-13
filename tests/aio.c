@@ -56,6 +56,25 @@ Main({
 			So((nng_clock() - start) <= 1000);
 			nng_aio_free(saio);
 		});
+
+		Convey("Sleep timeout works", {
+			nng_time start = 0;
+			nng_time end   = 0;
+			nng_aio *saio;
+			So(nng_aio_alloc(&saio, sleepdone, &end) == 0);
+			nng_aio_set_timeout(saio, 100);
+			start = nng_clock();
+			nng_sleep_aio(2000, saio);
+			nng_aio_wait(saio);
+			So(nng_aio_result(saio) == NNG_ETIMEDOUT);
+			So(end != 0);
+			So((end - start) >= 100);
+			So((end - start) <= 1000);
+			So((nng_clock() - start) >= 100);
+			So((nng_clock() - start) <= 1000);
+			nng_aio_free(saio);
+		});
+
 		Convey("Given a connected pair of sockets", {
 			nng_socket s1;
 			nng_socket s2;

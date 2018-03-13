@@ -321,19 +321,24 @@ nni_aio_start(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 	}
 
 	// Convert the relative timeout to an absolute timeout.
-	switch (aio->a_timeout) {
-	case NNG_DURATION_ZERO:
-		aio->a_expire = NNI_TIME_ZERO;
+	if (aio->a_sleep) {
+		// expire node already set.
 		nni_aio_expire_add(aio);
-		break;
-	case NNG_DURATION_INFINITE:
-	case NNG_DURATION_DEFAULT:
-		aio->a_expire = NNI_TIME_NEVER;
-		break;
-	default:
-		aio->a_expire = nni_clock() + aio->a_timeout;
-		nni_aio_expire_add(aio);
-		break;
+	} else {
+		switch (aio->a_timeout) {
+		case NNG_DURATION_ZERO:
+			aio->a_expire = NNI_TIME_ZERO;
+			nni_aio_expire_add(aio);
+			break;
+		case NNG_DURATION_INFINITE:
+		case NNG_DURATION_DEFAULT:
+			aio->a_expire = NNI_TIME_NEVER;
+			break;
+		default:
+			aio->a_expire = nni_clock() + aio->a_timeout;
+			nni_aio_expire_add(aio);
+			break;
+		}
 	}
 	nni_mtx_unlock(&nni_aio_lk);
 	return (0);
@@ -517,10 +522,11 @@ nni_aio_expire_loop(void *arg)
 		// already being canceled or finished.
 		if (cancelfn != NULL) {
 			nni_mtx_unlock(&nni_aio_lk);
-			cancelfn(aio, aio->a_sleep ? 0 : NNG_ETIMEDOUT);
+			cancelfn(aio, rv);
 			nni_mtx_lock(&nni_aio_lk);
 		} else {
-			aio->a_pend = 1;
+			aio->a_pend   = 1;
+			aio->a_result = rv;
 		}
 
 		NNI_ASSERT(aio->a_pend); // nni_aio_finish was run
@@ -621,11 +627,23 @@ nni_aio_iov_advance(nni_aio *aio, size_t n)
 void
 nni_sleep_aio(nng_duration ms, nng_aio *aio)
 {
-	nni_aio_set_timeout(aio, ms);
-	aio->a_sleep = 1;
-	if (nni_aio_start(aio, NULL, NULL)) {
-		return;
+	switch (aio->a_timeout) {
+	case NNG_DURATION_DEFAULT:
+	case NNG_DURATION_INFINITE:
+		// No premature timeout, honor our expected values.
+		break;
+	default:
+		// If the timeout on the aio is shorter than our sleep time,
+		// then let it still wake up early, but with NNG_ETIMEDOUT.
+		if (ms > aio->a_timeout) {
+			aio->a_sleep = 0;
+			(void) nni_aio_start(aio, NULL, NULL);
+			return;
+		}
 	}
+	aio->a_sleep  = 1;
+	aio->a_expire = nni_clock() + ms;
+	(void) nni_aio_start(aio, NULL, NULL);
 }
 
 void

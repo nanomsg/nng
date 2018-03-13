@@ -26,12 +26,11 @@ void nng_sleep_aio(nng_duration msec, nng_aio *aio);
 
 The `nng_sleep_aio()` function performs an asynchronous "`sleep``",
 causing the callback for _aio_ to be executed after _msec_ milliseconds.
-This is logically the equivalent of starting an asynchronous operation
-that does nothing at all, but expires after _msec_ duration, _except_ that
-the completion result will be zero rather `NNG_ETIMEDOUT`.
+If the sleep finishes completely, the result will always be zero.
 
-NOTE: This overrides and replaces any timeout on the _aio_ set with
-<<nng_aio_set_timeout#,nng_aio_set_timeout(3)>>.
+NOTE: If a timeout is set on _aio_ using
+<<nng_aio_timeout#,nng_aio_set_timeout(3)>>, and it is shorter than _msec_,
+then the sleep will wake up early, with a result code of `NNG_ETIMEDOUT`.
 
 == RETURN VALUES
 
