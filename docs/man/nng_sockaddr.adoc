@@ -1,0 +1,93 @@
+= nng_sockaddr(5)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_sockaddr - socket address
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+union nng_sockaddr {
+        uint16_t            s_family;
+        nng_sockaddr_ipc    s_ipc;
+        nng_sockaddr_inproc s_inproc;
+        nng_sockaddr_in     s_in;
+        nng_sockaddr_in6    s_in6;
+        nng_sockaddr_zt     s_zt;
+};
+typedef union nng_sockaddr nng_sockaddr;
+
+enum sockaddr_family {
+        NNG_AF_UNSPEC = 0,
+        NNG_AF_INPROC = 1,
+        NNG_AF_IPC    = 2,
+        NNG_AF_INET   = 3,
+        NNG_AF_INET6  = 4,
+        NNG_AF_ZT     = 5,        
+};
+-----------
+
+== DESCRIPTION
+
+An ((`nng_sockaddr`))(((socket, address))) is a structure used for
+representing the addresses used by underlying transports, such as TCP/IP
+addresses, IPC paths, and so forth.
+
+***
+The name `sockaddr` is based on it's similarity with POSIX `struct sockaddr`,
+but in the _nng_ library, these addreses are more closely affiliated with
+instances of <<nng_pipe#,`nng_pipe`>>
+than of <<nng_socket#,`nng_socket`>>.
+The naming confusion is unfortunate.
+***
+
+This structure is actually a union, with different members for different
+types of addreses.
+
+Every member structure has as its first element a `uint16_t` field
+containing the "`address family`"(((address family))).
+This overlaps the `s_family` member of the union, and indicates which
+specific member should be used.
+
+The values of `s_family` are as follows:
+
+`NNG_AF_UNSPEC`::
+    Invalid address, no other valid fields.
+`NNG_AF_INPROC`::
+    Address for intraprocess communication (<<nng_inproc#,nng_inproc(7)>>).
+    The `s_inproc` member is valid.
+`NNG_AF_IPC`::
+    Address for interprocess communication (<<nng_ipc#,nng_ipc(7)>>).
+    The `s_path` member is valid.
+`NNG_AF_INET`::
+    Address for TCP/IP (v4) communication.
+    The `s_in` member is valid.
+`NNG_AF_INET6`::
+    Address for TCP/IP (v6) communication.
+    The `s_in6` member is valid.
+`NNG_AF_ZT`::
+    Address for ZeroTier transport (<<nng_zerotier#,nng_zerotier(7)>>).
+    The `s_zt` member is valid.
+
+Please see the manual pages for each individual type for more information.
+
+== SEE ALSO
+[.text-left]
+<<nng_sockaddr_in#,nng_sockaddr_in(5)>>,
+<<nng_sockaddr_in6#,nng_sockaddr_in6(5)>>,
+<<nng_sockaddr_inproc#,nng_sockaddr_inproc(5)>>,
+<<nng_sockaddr_path#,nng_sockaddr_path(5)>>,
+<<nng_sockaddr_zt#,nng_sockaddr_zt(5)>>,
+<<nng#,nng(7)>>
