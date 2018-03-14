@@ -61,9 +61,9 @@ ip6tostr(void *addr)
 		    aio);
 		    nng_aio_wait(aio);
 		    So(nng_aio_result(aio) == 0);
-		    So(sa.s_un.s_in6.sa_family == NNG_AF_INET6);
-		    So(sa.s_un.s_in6.sa_port == ntohs(80));
-		    str = ip6tostr(&sa.s_un.s_in6.sa_addr);
+		    So(sa.s_in6.sa_family == NNG_AF_INET6);
+		    So(sa.s_in6.sa_port == ntohs(80));
+		    str = ip6tostr(&sa.s_in6.sa_addr);
 		    So(strcmp(str, "::1") == 0);
 		    nng_aio_free(aio);
 	    }
@@ -83,9 +83,9 @@ TestMain("Resolver", {
 		    NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
-		So(sa.s_un.s_in.sa_port == ntohs(80));
-		str = ip4tostr(&sa.s_un.s_in.sa_addr);
+		So(sa.s_in.sa_family == NNG_AF_INET);
+		So(sa.s_in.sa_port == ntohs(80));
+		str = ip4tostr(&sa.s_in.sa_addr);
 		So(strcmp(str, "8.8.8.8") == 0);
 		nng_aio_free(aio);
 	});
@@ -99,9 +99,9 @@ TestMain("Resolver", {
 		nni_plat_udp_resolv("8.8.4.4", "69", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
-		So(sa.s_un.s_in.sa_port == ntohs(69));
-		str = ip4tostr(&sa.s_un.s_in.sa_addr);
+		So(sa.s_in.sa_family == NNG_AF_INET);
+		So(sa.s_in.sa_port == ntohs(69));
+		str = ip4tostr(&sa.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
 		nng_aio_free(aio);
 	});
@@ -115,9 +115,9 @@ TestMain("Resolver", {
 		nni_plat_tcp_resolv("8.8.4.4", "80", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
-		So(sa.s_un.s_in.sa_port == ntohs(80));
-		str = ip4tostr(&sa.s_un.s_in.sa_addr);
+		So(sa.s_in.sa_family == NNG_AF_INET);
+		So(sa.s_in.sa_port == ntohs(80));
+		str = ip4tostr(&sa.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
 		nng_aio_free(aio);
 	});
@@ -140,9 +140,9 @@ TestMain("Resolver", {
 		nni_plat_tcp_resolv("::1", "80", NNG_AF_INET6, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		So(sa.s_un.s_in6.sa_family == NNG_AF_INET6);
-		So(sa.s_un.s_in6.sa_port == ntohs(80));
-		str = ip6tostr(&sa.s_un.s_in6.sa_addr);
+		So(sa.s_in6.sa_family == NNG_AF_INET6);
+		So(sa.s_in6.sa_port == ntohs(80));
+		str = ip6tostr(&sa.s_in6.sa_addr);
 		So(strcmp(str, "::1") == 0);
 		nng_aio_free(aio);
 	});
@@ -157,9 +157,9 @@ TestMain("Resolver", {
 		nni_plat_tcp_resolv("8.8.4.4", "http", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
-		So(sa.s_un.s_in.sa_port == ntohs(80));
-		str = ip4tostr(&sa.s_un.s_in.sa_addr);
+		So(sa.s_in.sa_family == NNG_AF_INET);
+		So(sa.s_in.sa_port == ntohs(80));
+		str = ip4tostr(&sa.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
 		nng_aio_free(aio);
 	});
@@ -174,9 +174,9 @@ TestMain("Resolver", {
 		nni_plat_udp_resolv("8.8.4.4", "tftp", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
-		So(sa.s_un.s_in.sa_port == ntohs(69));
-		str = ip4tostr(&sa.s_un.s_in.sa_addr);
+		So(sa.s_in.sa_family == NNG_AF_INET);
+		So(sa.s_in.sa_port == ntohs(69));
+		str = ip4tostr(&sa.s_in.sa_addr);
 		So(strcmp(str, "8.8.4.4") == 0);
 		nng_aio_free(aio);
 	});
@@ -191,10 +191,10 @@ TestMain("Resolver", {
 		nni_plat_tcp_resolv("localhost", "80", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		So(sa.s_un.s_in.sa_family == NNG_AF_INET);
-		So(sa.s_un.s_in.sa_port == ntohs(80));
-		So(sa.s_un.s_in.sa_addr == ntohl(0x7f000001));
-		str = ip4tostr(&sa.s_un.s_in.sa_addr);
+		So(sa.s_in.sa_family == NNG_AF_INET);
+		So(sa.s_in.sa_port == ntohs(80));
+		So(sa.s_in.sa_addr == ntohl(0x7f000001));
+		str = ip4tostr(&sa.s_in.sa_addr);
 		So(strcmp(str, "127.0.0.1") == 0);
 		nng_aio_free(aio);
 	});
@@ -209,18 +209,18 @@ TestMain("Resolver", {
 		nni_plat_tcp_resolv("localhost", "80", NNG_AF_UNSPEC, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
-		So((sa.s_un.s_family == NNG_AF_INET) ||
-		    (sa.s_un.s_family == NNG_AF_INET6));
-		switch (sa.s_un.s_family) {
+		So((sa.s_family == NNG_AF_INET) ||
+		    (sa.s_family == NNG_AF_INET6));
+		switch (sa.s_family) {
 		case NNG_AF_INET:
-			So(sa.s_un.s_in.sa_port == ntohs(80));
-			So(sa.s_un.s_in.sa_addr == ntohl(0x7f000001));
-			str = ip4tostr(&sa.s_un.s_in.sa_addr);
+			So(sa.s_in.sa_port == ntohs(80));
+			So(sa.s_in.sa_addr == ntohl(0x7f000001));
+			str = ip4tostr(&sa.s_in.sa_addr);
 			So(strcmp(str, "127.0.0.1") == 0);
 			break;
 		case NNG_AF_INET6:
-			So(sa.s_un.s_in6.sa_port == ntohs(80));
-			str = ip6tostr(&sa.s_un.s_in6.sa_addr);
+			So(sa.s_in6.sa_port == ntohs(80));
+			str = ip6tostr(&sa.s_in6.sa_addr);
 			So(strcmp(str, "::1") == 0);
 			break;
 		}

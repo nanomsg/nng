@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staystail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -24,10 +24,10 @@ has_v6(void)
 	nni_plat_udp *u;
 	int           rv;
 
-	sa.s_un.s_in6.sa_family = NNG_AF_INET6;
-	sa.s_un.s_in6.sa_port   = 0;
-	memset(sa.s_un.s_in6.sa_addr, 0, 16);
-	sa.s_un.s_in6.sa_addr[15] = 1;
+	sa.s_in6.sa_family = NNG_AF_INET6;
+	sa.s_in6.sa_port   = 0;
+	memset(sa.s_in6.sa_addr, 0, 16);
+	sa.s_in6.sa_addr[15] = 1;
 
 	rv = nni_plat_udp_open(&u, &sa);
 	if (rv == 0) {
@@ -52,10 +52,10 @@ check_props_v6(nng_msg *msg)
 		So(p > 0);
 		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
 		So(z == sizeof(la));
-		So(la.s_un.s_family == NNG_AF_INET6);
-		// So(la.s_un.s_in.sa_port == (trantest_port - 1));
-		So(la.s_un.s_in6.sa_port != 0);
-		So(memcmp(la.s_un.s_in6.sa_addr, loopback, 16) == 0);
+		So(la.s_family == NNG_AF_INET6);
+		// So(la.s_in.sa_port == (trantest_port - 1));
+		So(la.s_in6.sa_port != 0);
+		So(memcmp(la.s_in6.sa_addr, loopback, 16) == 0);
 	});
 
 	Convey("IPv6 Remote address property works", {
@@ -65,9 +65,9 @@ check_props_v6(nng_msg *msg)
 		So(p > 0);
 		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
 		So(z == sizeof(ra));
-		So(ra.s_un.s_family == NNG_AF_INET6);
-		So(ra.s_un.s_in6.sa_port != 0);
-		So(memcmp(ra.s_un.s_in6.sa_addr, loopback, 16) == 0);
+		So(ra.s_family == NNG_AF_INET6);
+		So(ra.s_in6.sa_port != 0);
+		So(memcmp(ra.s_in6.sa_addr, loopback, 16) == 0);
 	});
 
 	Convey("Malformed TCPv6 addresses do not panic", {

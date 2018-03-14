@@ -120,11 +120,11 @@ nni_ipc_pipe_init(nni_ipc_pipe **pipep, nni_ipc_ep *ep, void *ipp)
 		return (rv);
 	}
 
-	p->proto                    = ep->proto;
-	p->rcvmax                   = ep->rcvmax;
-	p->ipp                      = ipp;
-	p->sa.s_un.s_path.sa_family = NNG_AF_IPC;
-	p->sa                       = ep->sa;
+	p->proto              = ep->proto;
+	p->rcvmax             = ep->rcvmax;
+	p->ipp                = ipp;
+	p->sa.s_ipc.sa_family = NNG_AF_IPC;
+	p->sa                 = ep->sa;
 
 	*pipep = p;
 	return (0);
@@ -524,10 +524,10 @@ nni_ipc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	}
 	nni_mtx_init(&ep->mtx);
 
-	sz                           = sizeof(ep->sa.s_un.s_path.sa_path);
-	ep->sa.s_un.s_path.sa_family = NNG_AF_IPC;
+	sz                     = sizeof(ep->sa.s_ipc.sa_path);
+	ep->sa.s_ipc.sa_family = NNG_AF_IPC;
 
-	if (nni_strlcpy(ep->sa.s_un.s_path.sa_path, url->u_path, sz) >= sz) {
+	if (nni_strlcpy(ep->sa.s_ipc.sa_path, url->u_path, sz) >= sz) {
 		nni_ipc_ep_fini(ep);
 		return (NNG_EADDRINVAL);
 	}

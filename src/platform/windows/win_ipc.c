@@ -193,7 +193,7 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 	const char *     path;
 	nni_plat_ipc_ep *ep;
 
-	path = sa->s_un.s_path.sa_path;
+	path = sa->s_ipc.sa_path;
 	if (nni_strnlen(path, NNG_MAXADDRLEN) >= NNG_MAXADDRLEN) {
 		return (NNG_EINVAL);
 	}

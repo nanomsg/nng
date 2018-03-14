@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -39,13 +39,13 @@ TestMain("UDP support", {
 		p1 = trantest_port++;
 		p2 = trantest_port++;
 
-		sa1.s_un.s_in.sa_family = NNG_AF_INET;
-		sa1.s_un.s_in.sa_addr   = loopback;
-		sa1.s_un.s_in.sa_port   = htons(p1);
+		sa1.s_in.sa_family = NNG_AF_INET;
+		sa1.s_in.sa_addr   = loopback;
+		sa1.s_in.sa_port   = htons(p1);
 
-		sa2.s_un.s_in.sa_family = NNG_AF_INET;
-		sa2.s_un.s_in.sa_addr   = loopback;
-		sa2.s_un.s_in.sa_port   = htons(p2);
+		sa2.s_in.sa_family = NNG_AF_INET;
+		sa2.s_in.sa_addr   = loopback;
+		sa2.s_in.sa_port   = htons(p2);
 
 		So(nni_plat_udp_open(&u1, &sa1) == 0);
 		So(nni_plat_udp_open(&u2, &sa2) == 0);
@@ -89,10 +89,9 @@ TestMain("UDP support", {
 			So(nng_aio_count(aio2) == strlen(msg) + 1);
 			So(strcmp(msg, rbuf) == 0);
 
-			So(from.s_un.s_in.sa_family ==
-			    sa1.s_un.s_in.sa_family);
-			So(from.s_un.s_in.sa_port == sa1.s_un.s_in.sa_port);
-			So(from.s_un.s_in.sa_addr == sa1.s_un.s_in.sa_addr);
+			So(from.s_in.sa_family == sa1.s_in.sa_family);
+			So(from.s_in.sa_port == sa1.s_in.sa_port);
+			So(from.s_in.sa_addr == sa1.s_in.sa_addr);
 
 			// Set up some calls that will ever complete, so
 			// we test cancellation, etc.
@@ -183,10 +182,9 @@ TestMain("UDP support", {
 			So(nng_aio_result(aio3) == 0);
 			So(nng_aio_result(aio4) == 0);
 
-			So(from1.s_un.s_in.sa_family ==
-			    sa1.s_un.s_in.sa_family);
-			So(from1.s_un.s_in.sa_port == sa1.s_un.s_in.sa_port);
-			So(from1.s_un.s_in.sa_addr == sa1.s_un.s_in.sa_addr);
+			So(from1.s_in.sa_family == sa1.s_in.sa_family);
+			So(from1.s_in.sa_port == sa1.s_in.sa_port);
+			So(from1.s_in.sa_addr == sa1.s_in.sa_addr);
 
 			nng_aio_free(aio1);
 			nng_aio_free(aio2);
@@ -217,11 +215,11 @@ TestMain("UDP support", {
 			int          rv;
 			nng_iov      iov;
 
-			sa.s_un.s_in6.sa_family = NNG_AF_INET6;
+			sa.s_in6.sa_family = NNG_AF_INET6;
 			// address is for google.com
 			inet_ntop(AF_INET6, "2607:f8b0:4007:804::200e",
-			    (void *) sa.s_un.s_in6.sa_addr, 16);
-			sa.s_un.s_in6.sa_port = 80;
+			    (void *) sa.s_in6.sa_addr, 16);
+			sa.s_in6.sa_port = 80;
 			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
 			iov.iov_buf = msg;
 			iov.iov_len = strlen(msg) + 1;
@@ -243,11 +241,11 @@ TestMain("UDP support", {
 			int          rv;
 			nng_iov      iov;
 
-			sa.s_un.s_in6.sa_family = NNG_AF_INET6;
+			sa.s_in6.sa_family = NNG_AF_INET6;
 			// address is for google.com
 			inet_ntop(AF_INET6, "2607:f8b0:4007:804::200e",
-			    (void *) sa.s_un.s_in6.sa_addr, 16);
-			sa.s_un.s_in6.sa_port = 80;
+			    (void *) sa.s_in6.sa_addr, 16);
+			sa.s_in6.sa_port = 80;
 			So(nng_aio_alloc(&aio1, NULL, NULL) == 0);
 			iov.iov_buf = msg;
 			iov.iov_len = strlen(msg) + 1;
@@ -269,8 +267,8 @@ TestMain("UDP support", {
 		nng_sockaddr  sa;
 		int           rv;
 
-		sa.s_un.s_path.sa_family = NNG_AF_IPC;
-		strcpy(sa.s_un.s_path.sa_path, "/tmp/t");
+		sa.s_ipc.sa_family = NNG_AF_IPC;
+		strcpy(sa.s_ipc.sa_path, "/tmp/t");
 		So((rv = nni_plat_udp_open(&u, &sa)) != 0);
 		// Some platforms reject IPC addresses altogether (Windows),
 		// whereas others just say it's not supported with UDP.
@@ -286,10 +284,10 @@ TestMain("UDP support", {
 		nng_sockaddr  sa;
 		uint16_t      p1;
 
-		p1                     = trantest_port++;
-		sa.s_un.s_in.sa_family = NNG_AF_INET;
-		sa.s_un.s_in.sa_port   = htons(p1);
-		sa.s_un.s_in.sa_addr   = htonl(0x7f000001);
+		p1                = trantest_port++;
+		sa.s_in.sa_family = NNG_AF_INET;
+		sa.s_in.sa_port   = htons(p1);
+		sa.s_in.sa_addr   = htonl(0x7f000001);
 		So(nni_plat_udp_open(&u1, &sa) == 0);
 		So(nni_plat_udp_open(&u2, &sa) == NNG_EADDRINUSE);
 		nni_plat_udp_close(u1);

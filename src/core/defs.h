@@ -31,13 +31,13 @@
 
 // These types are common but have names shared with user space.
 // Internal code should use these names when possible.
-typedef struct nng_msg      nni_msg;
-typedef struct nng_sockaddr nni_sockaddr;
-typedef struct nng_event    nni_event;
-typedef struct nng_notify   nni_notify;
-typedef struct nng_url      nni_url;
-typedef struct nng_iov      nni_iov;
-typedef struct nng_aio      nni_aio;
+typedef nng_msg           nni_msg;
+typedef nng_sockaddr      nni_sockaddr;
+typedef nng_url           nni_url;
+typedef nng_iov           nni_iov;
+typedef nng_aio           nni_aio;
+typedef struct nng_event  nni_event;
+typedef struct nng_notify nni_notify;
 
 // These are our own names.
 typedef struct nni_socket           nni_sock;

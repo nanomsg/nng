@@ -274,10 +274,10 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 
 	ep->s = INVALID_SOCKET;
 
-	if ((rsa != NULL) && (rsa->s_un.s_family != NNG_AF_UNSPEC)) {
+	if ((rsa != NULL) && (rsa->s_family != NNG_AF_UNSPEC)) {
 		ep->remlen = nni_win_nn2sockaddr(&ep->remaddr, rsa);
 	}
-	if ((lsa != NULL) && (lsa->s_un.s_family != NNG_AF_UNSPEC)) {
+	if ((lsa != NULL) && (lsa->s_family != NNG_AF_UNSPEC)) {
 		ep->loclen = nni_win_nn2sockaddr(&ep->locaddr, lsa);
 	}
 
@@ -659,15 +659,15 @@ nni_plat_tcp_ntop(const nni_sockaddr *sa, char *ipstr, char *portstr)
 	const void *ap;
 	uint16_t    port;
 	int         af;
-	switch (sa->s_un.s_family) {
+	switch (sa->s_family) {
 	case NNG_AF_INET:
-		ap   = &sa->s_un.s_in.sa_addr;
-		port = sa->s_un.s_in.sa_port;
+		ap   = &sa->s_in.sa_addr;
+		port = sa->s_in.sa_port;
 		af   = AF_INET;
 		break;
 	case NNG_AF_INET6:
-		ap   = &sa->s_un.s_in6.sa_addr;
-		port = sa->s_un.s_in6.sa_port;
+		ap   = &sa->s_in6.sa_addr;
+		port = sa->s_in6.sa_port;
 		af   = AF_INET6;
 		break;
 	default:

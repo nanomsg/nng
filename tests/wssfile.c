@@ -11,8 +11,8 @@
 #include "convey.h"
 #include "nng.h"
 #include "protocol/pair1/pair.h"
-#include "transport/ws/websocket.h"
 #include "supplemental/tls/tls.h"
+#include "transport/ws/websocket.h"
 
 #include "trantest.h"
 
@@ -107,21 +107,21 @@ validloopback(nng_sockaddr *sa)
 	memset(ipv6, 0, sizeof(ipv6));
 	ipv6[15] = 1;
 
-	switch (sa->s_un.s_family) {
+	switch (sa->s_family) {
 	case NNG_AF_INET:
-		if (sa->s_un.s_in.sa_port == 0) {
+		if (sa->s_in.sa_port == 0) {
 			return (0);
 		}
-		if (sa->s_un.s_in.sa_addr != htonl(0x7f000001)) {
+		if (sa->s_in.sa_addr != htonl(0x7f000001)) {
 			return (0);
 		}
 		return (1);
 
 	case NNG_AF_INET6:
-		if (sa->s_un.s_in6.sa_port == 0) {
+		if (sa->s_in6.sa_port == 0) {
 			return (0);
 		}
-		if (memcmp(sa->s_un.s_in6.sa_addr, ipv6, sizeof(ipv6)) != 0) {
+		if (memcmp(sa->s_in6.sa_addr, ipv6, sizeof(ipv6)) != 0) {
 			return (0);
 		}
 		return (1);

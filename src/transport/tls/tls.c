@@ -568,20 +568,20 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	}
 
 	if (mode == NNI_EP_MODE_DIAL) {
-		passive           = 0;
-		tlsmode           = NNG_TLS_MODE_CLIENT;
-		authmode          = NNG_TLS_AUTH_MODE_REQUIRED;
-		lsa.s_un.s_family = NNG_AF_UNSPEC;
+		passive      = 0;
+		tlsmode      = NNG_TLS_MODE_CLIENT;
+		authmode     = NNG_TLS_AUTH_MODE_REQUIRED;
+		lsa.s_family = NNG_AF_UNSPEC;
 		nni_aio_set_input(aio, 0, &rsa);
 		if ((host == NULL) || (serv == NULL)) {
 			nni_aio_fini(aio);
 			return (NNG_EADDRINVAL);
 		}
 	} else {
-		passive           = 1;
-		tlsmode           = NNG_TLS_MODE_SERVER;
-		authmode          = NNG_TLS_AUTH_MODE_NONE;
-		rsa.s_un.s_family = NNG_AF_UNSPEC;
+		passive      = 1;
+		tlsmode      = NNG_TLS_MODE_SERVER;
+		authmode     = NNG_TLS_AUTH_MODE_NONE;
+		rsa.s_family = NNG_AF_UNSPEC;
 		nni_aio_set_input(aio, 0, &lsa);
 	}
 

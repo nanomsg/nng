@@ -118,17 +118,17 @@ check_props_v4(nng_msg *msg)
 	z = sizeof(nng_sockaddr);
 	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
 	So(z == sizeof(la));
-	So(la.s_un.s_family == NNG_AF_INET);
-	So(la.s_un.s_in.sa_port == htons(trantest_port - 1));
-	So(la.s_un.s_in.sa_port != 0);
-	So(la.s_un.s_in.sa_addr == htonl(0x7f000001));
+	So(la.s_family == NNG_AF_INET);
+	So(la.s_in.sa_port == htons(trantest_port - 1));
+	So(la.s_in.sa_port != 0);
+	So(la.s_in.sa_addr == htonl(0x7f000001));
 
 	z = sizeof(nng_sockaddr);
 	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
 	So(z == sizeof(ra));
-	So(ra.s_un.s_family == NNG_AF_INET);
-	So(ra.s_un.s_in.sa_port != 0);
-	So(ra.s_un.s_in.sa_addr == htonl(0x7f000001));
+	So(ra.s_family == NNG_AF_INET);
+	So(ra.s_in.sa_port != 0);
+	So(ra.s_in.sa_addr == htonl(0x7f000001));
 
 	return (0);
 }

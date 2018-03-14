@@ -555,16 +555,16 @@ nni_tcp_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	// XXX: arguably we could defer this part to the point we do a bind
 	// or connect!
 	if (mode == NNI_EP_MODE_DIAL) {
-		passive           = 0;
-		lsa.s_un.s_family = NNG_AF_UNSPEC;
+		passive      = 0;
+		lsa.s_family = NNG_AF_UNSPEC;
 		nni_aio_set_input(aio, 0, &rsa);
 		if ((host == NULL) || (serv == NULL)) {
 			nni_aio_fini(aio);
 			return (NNG_EADDRINVAL);
 		}
 	} else {
-		passive           = 1;
-		rsa.s_un.s_family = NNG_AF_UNSPEC;
+		passive      = 1;
+		rsa.s_family = NNG_AF_UNSPEC;
 		nni_aio_set_input(aio, 0, &lsa);
 	}
 

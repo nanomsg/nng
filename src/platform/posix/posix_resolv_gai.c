@@ -171,19 +171,18 @@ nni_posix_resolv_task(void *arg)
 
 		switch (probe->ai_addr->sa_family) {
 		case AF_INET:
-			rv                      = 0;
-			sin                     = (void *) probe->ai_addr;
-			sa->s_un.s_in.sa_family = NNG_AF_INET;
-			sa->s_un.s_in.sa_port   = sin->sin_port;
-			sa->s_un.s_in.sa_addr   = sin->sin_addr.s_addr;
+			rv                 = 0;
+			sin                = (void *) probe->ai_addr;
+			sa->s_in.sa_family = NNG_AF_INET;
+			sa->s_in.sa_port   = sin->sin_port;
+			sa->s_in.sa_addr   = sin->sin_addr.s_addr;
 			break;
 		case AF_INET6:
-			rv                       = 0;
-			sin6                     = (void *) probe->ai_addr;
-			sa->s_un.s_in6.sa_family = NNG_AF_INET6;
-			sa->s_un.s_in6.sa_port   = sin6->sin6_port;
-			memcpy(sa->s_un.s_in6.sa_addr, sin6->sin6_addr.s6_addr,
-			    16);
+			rv                  = 0;
+			sin6                = (void *) probe->ai_addr;
+			sa->s_in6.sa_family = NNG_AF_INET6;
+			sa->s_in6.sa_port   = sin6->sin6_port;
+			memcpy(sa->s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 			break;
 		}
 	}

@@ -619,13 +619,18 @@ enum nng_errno_enum {
 // sockaddr, but we have our own to cope with our unique families, etc.
 // The details of this structure are directly exposed to applications.
 // These structures can be obtained via property lookups, etc.
+struct nng_sockaddr_inproc {
+	uint16_t sa_family;
+	char     sa_name[NNG_MAXADDRLEN];
+};
+typedef struct nng_sockaddr_inproc nng_sockaddr_inproc;
+
 struct nng_sockaddr_path {
 	uint16_t sa_family;
 	char     sa_path[NNG_MAXADDRLEN];
 };
 typedef struct nng_sockaddr_path nng_sockaddr_path;
 typedef struct nng_sockaddr_path nng_sockaddr_ipc;
-typedef struct nng_sockaddr_path nng_sockaddr_inproc;
 
 struct nng_sockaddr_in6 {
 	uint16_t sa_family;
@@ -654,15 +659,13 @@ typedef struct nng_sockaddr_in nng_sockaddr_udp;
 typedef struct nng_sockaddr_in nng_sockaddr_tcp;
 typedef struct nng_sockaddr_zt nng_sockaddr_zt;
 
-typedef struct nng_sockaddr {
-	union {
-		uint16_t            s_family;
-		nng_sockaddr_path   s_path;
-		nng_sockaddr_inproc s_inproc;
-		nng_sockaddr_in6    s_in6;
-		nng_sockaddr_in     s_in;
-		nng_sockaddr_zt     s_zt;
-	} s_un;
+typedef union nng_sockaddr {
+	uint16_t            s_family;
+	nng_sockaddr_ipc    s_ipc;
+	nng_sockaddr_inproc s_inproc;
+	nng_sockaddr_in6    s_in6;
+	nng_sockaddr_in     s_in;
+	nng_sockaddr_zt     s_zt;
 } nng_sockaddr;
 
 enum nng_sockaddr_family {

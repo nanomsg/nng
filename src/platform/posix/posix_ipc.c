@@ -59,8 +59,7 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 		break;
 	case NNI_EP_MODE_LISTEN:
 
-		if ((rv = nni_plat_ipc_remove_stale(
-		         sa->s_un.s_path.sa_path)) != 0) {
+		if ((rv = nni_plat_ipc_remove_stale(sa->s_ipc.sa_path)) != 0) {
 			return (rv);
 		}
 

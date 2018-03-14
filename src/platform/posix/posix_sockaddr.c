@@ -36,10 +36,10 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 	if ((sa == NULL) || (na == NULL)) {
 		return (0);
 	}
-	switch (na->s_un.s_family) {
+	switch (na->s_family) {
 	case NNG_AF_INET:
 		sin  = (void *) sa;
-		nsin = &na->s_un.s_in;
+		nsin = &na->s_in;
 		memset(sin, 0, sizeof(*sin));
 		sin->sin_family      = PF_INET;
 		sin->sin_port        = nsin->sa_port;
@@ -48,7 +48,7 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 
 	case NNG_AF_INET6:
 		sin6  = (void *) sa;
-		nsin6 = &na->s_un.s_in6;
+		nsin6 = &na->s_in6;
 		memset(sin6, 0, sizeof(*sin6));
 #ifdef SIN6_LEN
 		sin6->sin6_len = sizeof(*sin6);
@@ -60,7 +60,7 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 
 	case NNG_AF_IPC:
 		spath  = (void *) sa;
-		nspath = &na->s_un.s_path;
+		nspath = &na->s_ipc;
 		memset(spath, 0, sizeof(*spath));
 		// Make sure that the path fits!
 		sz = sizeof(spath->sun_path);
@@ -89,21 +89,21 @@ nni_posix_sockaddr2nn(nni_sockaddr *na, const void *sa)
 	switch (((struct sockaddr *) sa)->sa_family) {
 	case AF_INET:
 		sin             = (void *) sa;
-		nsin            = &na->s_un.s_in;
+		nsin            = &na->s_in;
 		nsin->sa_family = NNG_AF_INET;
 		nsin->sa_port   = sin->sin_port;
 		nsin->sa_addr   = sin->sin_addr.s_addr;
 		break;
 	case AF_INET6:
 		sin6             = (void *) sa;
-		nsin6            = &na->s_un.s_in6;
+		nsin6            = &na->s_in6;
 		nsin6->sa_family = NNG_AF_INET6;
 		nsin6->sa_port   = sin6->sin6_port;
 		memcpy(nsin6->sa_addr, sin6->sin6_addr.s6_addr, 16);
 		break;
 	case AF_UNIX:
 		spath             = (void *) sa;
-		nspath            = &na->s_un.s_path;
+		nspath            = &na->s_ipc;
 		nspath->sa_family = NNG_AF_IPC;
 		(void) snprintf(nspath->sa_path, sizeof(nspath->sa_path), "%s",
 		    spath->sun_path);

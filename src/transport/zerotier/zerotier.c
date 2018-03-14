@@ -345,7 +345,7 @@ zt_node_rcv4_cb(void *arg)
 
 	memset(&sa, 0, sizeof(sa));
 	sin                  = (void *) &sa;
-	nsin                 = &ztn->zn_rcv4_addr.s_un.s_in;
+	nsin                 = &ztn->zn_rcv4_addr.s_in;
 	sin->sin_family      = AF_INET;
 	sin->sin_port        = nsin->sa_port;
 	sin->sin_addr.s_addr = nsin->sa_addr;
@@ -397,7 +397,7 @@ zt_node_rcv6_cb(void *arg)
 
 	memset(&sa, 0, sizeof(sa));
 	sin6              = (void *) &sa;
-	nsin6             = &ztn->zn_rcv6_addr.s_un.s_in6;
+	nsin6             = &ztn->zn_rcv6_addr.s_in6;
 	sin6->sin6_family = AF_INET6;
 	sin6->sin6_port   = nsin6->sa_port;
 	memcpy(&sin6->sin6_addr, nsin6->sa_addr, 16);
@@ -1326,18 +1326,18 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	// the platform layer.
 	switch (sin->sin_family) {
 	case AF_INET:
-		addr.s_un.s_in.sa_family = NNG_AF_INET;
-		addr.s_un.s_in.sa_port   = sin->sin_port;
-		addr.s_un.s_in.sa_addr   = sin->sin_addr.s_addr;
-		udp                      = ztn->zn_udp4;
-		port                     = htons(sin->sin_port);
+		addr.s_in.sa_family = NNG_AF_INET;
+		addr.s_in.sa_port   = sin->sin_port;
+		addr.s_in.sa_addr   = sin->sin_addr.s_addr;
+		udp                 = ztn->zn_udp4;
+		port                = htons(sin->sin_port);
 		break;
 	case AF_INET6:
-		addr.s_un.s_in6.sa_family = NNG_AF_INET6;
-		addr.s_un.s_in6.sa_port   = sin6->sin6_port;
-		udp                       = ztn->zn_udp6;
-		port                      = htons(sin6->sin6_port);
-		memcpy(addr.s_un.s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
+		addr.s_in6.sa_family = NNG_AF_INET6;
+		addr.s_in6.sa_port   = sin6->sin6_port;
+		udp                  = ztn->zn_udp6;
+		port                 = htons(sin6->sin6_port);
+		memcpy(addr.s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 		break;
 	default:
 		// No way to understand the address.
@@ -1440,9 +1440,9 @@ zt_node_create(zt_node **ztnp, const char *path)
 
 	// We want to bind to any address we can (for now).
 	memset(&sa4, 0, sizeof(sa4));
-	sa4.s_un.s_in.sa_family = NNG_AF_INET;
+	sa4.s_in.sa_family = NNG_AF_INET;
 	memset(&sa6, 0, sizeof(sa6));
-	sa6.s_un.s_in6.sa_family = NNG_AF_INET6;
+	sa6.s_in6.sa_family = NNG_AF_INET6;
 
 	if ((ztn = NNI_ALLOC_STRUCT(ztn)) == NULL) {
 		return (NNG_ENOMEM);
@@ -2747,10 +2747,10 @@ zt_pipe_getopt_locaddr(void *arg, void *data, size_t *szp)
 	nng_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
-	sa.s_un.s_zt.sa_family = NNG_AF_ZT;
-	sa.s_un.s_zt.sa_nwid   = p->zp_nwid;
-	sa.s_un.s_zt.sa_nodeid = p->zp_laddr >> zt_port_shift;
-	sa.s_un.s_zt.sa_port   = p->zp_laddr & zt_port_mask;
+	sa.s_zt.sa_family = NNG_AF_ZT;
+	sa.s_zt.sa_nwid   = p->zp_nwid;
+	sa.s_zt.sa_nodeid = p->zp_laddr >> zt_port_shift;
+	sa.s_zt.sa_port   = p->zp_laddr & zt_port_mask;
 	return (nni_getopt_sockaddr(&sa, data, szp));
 }
 
@@ -2761,10 +2761,10 @@ zt_pipe_getopt_remaddr(void *arg, void *data, size_t *szp)
 	nng_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
-	sa.s_un.s_zt.sa_family = NNG_AF_ZT;
-	sa.s_un.s_zt.sa_nwid   = p->zp_nwid;
-	sa.s_un.s_zt.sa_nodeid = p->zp_raddr >> zt_port_shift;
-	sa.s_un.s_zt.sa_port   = p->zp_raddr & zt_port_mask;
+	sa.s_zt.sa_family = NNG_AF_ZT;
+	sa.s_zt.sa_nwid   = p->zp_nwid;
+	sa.s_zt.sa_nodeid = p->zp_raddr >> zt_port_shift;
+	sa.s_zt.sa_port   = p->zp_raddr & zt_port_mask;
 	return (nni_getopt_sockaddr(&sa, data, szp));
 }
 

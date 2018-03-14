@@ -53,10 +53,10 @@ check_props(nng_msg *msg)
 		z = sizeof(nng_sockaddr);
 		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
 		So(z == sizeof(la));
-		So(la.s_un.s_family == NNG_AF_ZT);
-		So(la.s_un.s_zt.sa_port == (trantest_port - 1));
-		So(la.s_un.s_zt.sa_nwid == 0xa09acf02337b057bull);
-		So(la.s_un.s_zt.sa_nodeid != 0);
+		So(la.s_family == NNG_AF_ZT);
+		So(la.s_zt.sa_port == (trantest_port - 1));
+		So(la.s_zt.sa_nwid == 0xa09acf02337b057bull);
+		So(la.s_zt.sa_nodeid != 0);
 	});
 
 	Convey("Remote address property works", {
@@ -66,14 +66,14 @@ check_props(nng_msg *msg)
 		z = sizeof(nng_sockaddr);
 		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
 		So(z == sizeof(ra));
-		So(ra.s_un.s_family == NNG_AF_ZT);
-		So(ra.s_un.s_zt.sa_port != 0);
-		So(ra.s_un.s_zt.sa_nwid == 0xa09acf02337b057bull);
+		So(ra.s_family == NNG_AF_ZT);
+		So(ra.s_zt.sa_port != 0);
+		So(ra.s_zt.sa_nwid == 0xa09acf02337b057bull);
 
 		z = sizeof(mynode);
 		So(nng_pipe_getopt(p, NNG_OPT_ZT_NODE, &mynode, &z) == 0);
 		So(mynode != 0);
-		So(ra.s_un.s_zt.sa_nodeid == mynode);
+		So(ra.s_zt.sa_nodeid == mynode);
 	});
 
 	Convey("NWID property works", {
