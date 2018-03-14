@@ -21,11 +21,17 @@ nng_dialer_setopt - set dialer option
 
 int nng_dialer_setopt(nng_dialer d, const char *opt, const void *val,
     size_t valsz);
+
 int nng_dialer_setopt_int(nng_dialer d, const char *opt, int ival);
+
 int nng_dialer_setopt_ms(nng_dialer d, const char *opt, nng_duration dur);
+
 int nng_dialer_setopt_ptr(nng_dialer d, const char *opt, void *ptr);
+
 int nng_dialer_setopt_size(nng_dialer d, const char *opt, size_t z);
+
 int nng_dialer_setopt_string(nng_dialer d, const char *opt, const char *str);
+
 int nng_dialer_setopt_uint64(nng_dialer d, const char *opt, uint64_t u64);
 -----------
 

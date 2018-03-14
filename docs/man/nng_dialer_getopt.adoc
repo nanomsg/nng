@@ -20,10 +20,15 @@ nng_dialer_getopt - get dialer option
 #include <nng/nng.h>
 
 int nng_dialer_getopt(nng_dialer d, const char *opt, void *val, size_t *valszp);
+
 int nng_dialer_getopt_int(nng_dialer d, const char *opt, int *ivalp);
+
 int nng_dialer_getopt_ms(nng_dialer d, const char *opt, nng_duration *durp);
+
 int nng_dialer_getopt_ptr(nng_dialer d, const char *opt, void **ptr);
+
 int nng_dialer_setopt_size(nng_dialer d, const char *opt, size_t *zp);
+
 int nng_dialer_getopt_uint64(nng_dialer d, const char *opt, uint64_t *u64p);
 -----------
 
@@ -40,30 +45,37 @@ In all of these forms, the option _opt_ is retrieved from the dialer _d_.
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
 
+=== Untyped Form
+
 The first form of this function, `nng_dialer_getopt()`, can be used to
-retrieve the value of any option.  It is untyped.  The caller must store
-a pointer to a buffer to receive the value in _val_, and the size of the
-buffer shall be stored at the location referenced by _valszp_.
+retrieve the value of any option.
+The caller must store a pointer to a buffer to receive the value in _val_,
+and the size of the buffer shall be stored at the location referenced
+by _valszp_.
 
 When the function returns, the actual size of the data copied (or that
 would have been copied if sufficient space were present) is stored at
-the location referened by _valszp_.  If the caller's buffer is not large
-enough to hold the entire object, then the copy is truncated.  Therefore
-the caller should validate that the returned size in _valszp_ does not
+the location referened by _valszp_.
+If the caller's buffer is not large
+enough to hold the entire object, then the copy is truncated.
+Therefore the caller should validate that the returned size in _valszp_ does not
 exceed the original buffer size to check for truncation.
 
 It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
 This can be used to determine the size of the buffer needed to receive
 the object.
 
-Generally, it will be easier to use one of the typed forms instead.  Note
-however that no validation that the option is actually of the associated
+=== Typed Forms
+
+Generally, it will be easier to use one of the typed forms instead.
+Note however that no validation that the option is actually of the associated
 type is performed, so the caller must take care to use the *correct* typed
 form.
 
 The second form, `nng_dialer_getopt_int()`,
-is for options which take an integer (or boolean).  The value will
-be stored at _ivalp_.  For booleans the value will be eiher 0 (false) or 1 (true).
+is for options which take an integer (or boolean).
+The value will be stored at _ivalp_.
+For booleans the value will be eiher 0 (false) or 1 (true).
 
 The third form, `nng_dialer_getopt_ms()`, is used to retrieve time durations
 (such as timeouts), stored in _durp_ as a number of milliseconds.
@@ -71,8 +83,8 @@ The third form, `nng_dialer_getopt_ms()`, is used to retrieve time durations
 the special value `NNG_DUR_DEFAULT` means a context-specific default.)
 
 The fourth form, `nng_dialer_getopt_ptr()`, is used to retrieve a
-pointer _ptr_ to structured data.  The data referenced by _ptr_ is
-generally managed using other functions.
+pointer _ptr_ to structured data.
+The data referenced by _ptr_ is generally managed using other functions.
 Note that this form is somewhat special in that the object is generally
 not copied, but instead the *pointer* to the object is copied.
 
@@ -80,7 +92,7 @@ The fifth form, `nng_dialer_getopt_size()`, is used to retrieve a size
 into the pointer _zp_, typically for buffer sizes, message maximum sizes, and
 similar options.
 
-The sixth form, `nng_diale_getopt_uint64()`, is used to retrieve a
+The sixth form, `nng_dialer_getopt_uint64()`, is used to retrieve a
 64-bit unsigned value into the value referenced by _u64p_.
 This is typically used for options
 related to identifiers, network numbers, and similar.

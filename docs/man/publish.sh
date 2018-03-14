@@ -194,6 +194,7 @@ EOF
 typeset -A titles
 titles[1]="Utilities and Programs"
 titles[3]="Library Functions"
+titles[5]="Macros and Types"
 titles[7]="Protocols and Transports"
 
 for S in $(echo ${!pages[@]} | sort )

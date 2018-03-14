@@ -23,7 +23,7 @@ nngcat - command line access to Scalabity Protocols
 
 == DESCRIPTION
 
-The _nngcat_ utility provides command line access to the Scalability
+The ((_nngcat_)) utility provides command line access to the Scalability
 Protocols, making it possible to write shell scripts that interact
 with other peers in a Scalability Protocols topology, by both sending and
 receiving messages.
@@ -61,7 +61,8 @@ each option must be presented as a separate argument to the program.
 *-q, --silent*::
   Select silent operation.
 *--compat*::
-  Compatible mode.  This cause _nngcat_ to behave more like the legacy
+  Compatible mode. (((compatible mode)))
+  This cause _nngcat_ to behave more like the legacy
   _nanocat_ application.  In this mode connections are made asynchronously,
   and the *--pair* option selects version 0 of the <<nng_pair#,nng_pair(7)>>
   protocol instead of version 1.
@@ -173,14 +174,16 @@ options can only be specified when using a protocol that receives messages.
   `raw`:::
     Raw output, every byte received is sent to standard output.
   `ascii`:::
-    ASCII safe, printable ASCII is emitted verbatim, with other bytes
+    ((ASCII)) safe, printable ASCII is emitted verbatim, with other bytes
     substituted with `.` (period).
   `quoted`:::
-    Messages are printed as quoted strings, using C language conventions.
+    Messages are printed as ((quoted)) strings, using C language conventions.
   `hex`:::
-    Messages are printed as quoted strings, with every byte appearing as
-    an escaped hexadecimal value, such as `\x2E`.
+    (((hex))) Messages are printed as quoted strings, with every byte appearing
+    as an escaped hexadecimal value, such as `\x2E`.
   `msgpack`:::
+    (((msgpack)))
+    (((MessagePack)))
     Messages are emitted as https://msgpack.org[MessagePack] "bin format"
     (byte arrays).
 
@@ -280,6 +283,7 @@ $ nngcat --sub --dial=${addr} --quoted &
 
 == SEE ALSO
 
+[.text-left]
 <<libnng#,libnng(3)>>,
 <<nng#,nng(7)>>,
 <<nng_bus#,nng_bus(7)>>,
