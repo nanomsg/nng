@@ -111,6 +111,7 @@ Main({
 			nng_aio_set_msg(txaio, m);
 			nng_send_aio(s1, txaio);
 
+			nng_aio_wait(txaio);
 			nng_aio_wait(rxaio);
 
 			So(nng_aio_result(rxaio) == 0);
