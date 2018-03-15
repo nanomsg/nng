@@ -1,0 +1,306 @@
+= nngcat(1)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nngcat - command line access to Scalabity Protocols
+
+== SYNOPSIS
+
+*nngcat* --help
+
+*nngcat* --version
+
+*nngcat* [_OPTION_]... 
+
+== DESCRIPTION
+
+The ((_nngcat_)) utility provides command line access to the Scalability
+Protocols, making it possible to write shell scripts that interact
+with other peers in a Scalability Protocols topology, by both sending and
+receiving messages.
+
+== OPTIONS
+
+The possible values for _OPTION_ are described below.
+
+TIP: The _nngcat_ utility accepts shortened versions of these options, as long
+as the supplied option is unambiguous.
+For example `--comp` can be used in lieu
+of `--compat`, but `--re` may not be used for anything because it could mean
+any of `--req`, `--rep`, or `--respondent`.
+
+When using the long form of an option (names prefixed with with `--`), if the
+option takes a value then the value may be supplied by appending the option
+with an equals sign and the value (e.g. `--subscribe=times`), by appending
+the option with a colon and the value (e.g. `--subscribe:tribune`) or by
+providing the data as the next program argument (e.g. `--subscribe herald`).
+
+When using short form options (a single letter prefixed with a `-`),
+if the option takes a value it may either be immediately appended to
+the value (e.g. `-L5678`) or provided as the next program argument
+(e.g. `-L 5678`).
+
+POSIX style option clustering of single letter options is not supported;
+each option must be presented as a separate argument to the program.
+
+=== Generic Options
+*-h, --help*::
+  Get usage help.
+*-V, --version*::
+  Print the version and exit.
+*-v, --verbose*::
+  Select verbose operation.
+*-q, --silent*::
+  Select silent operation.
+*--compat*::
+  Compatible mode. (((compatible mode)))
+  This cause _nngcat_ to behave more like the legacy
+  _nanocat_ application.
+  In this mode connections are made asynchronously,
+  and the *--pair* option selects version 0 of
+  the <<nng_pair.7#,_pair_>> protocol instead of version 1.
+*--subscribe*=_TOPIC_::
+  Subscribe to _TOPIC_.  This option can only be used with the
+  <<nng_sub.7#,_sub_>> protocol.
+  The _TOPIC_ is checked against the first bytes
+  of messages received, and messages are discarded if they do not match.
+  This may be specified multiple times to subscribe to multiple topics.
+  If not specified at all, then a default subscription to everything is assumed.
+
+=== Protocol Selection Options
+NOTE: At least one protocol must be selected.
+
+*--bus, --bus0*::
+  Select the <<nng_bus.7#,_bus_>> version 0 protocol.
+  This protocol can send and receive messages to and from other _bus_ version 0
+  peers.
+
+*--req, --req0*::
+  Select the <<nng_req.7#,_req_>> version 0 protocol.
+  This protocol sends messages to <<nng_rep.7#,_rep_>> version 0
+  peers and receives replies from them.
+
+*--rep, --rep0*::
+  Select the <<nng_rep.7#,_rep_>> version 0 protocol.
+  This protocol receives messages from <<nng_req.7#,_req_>> version 0 peers
+  and can send replies to them.
+
+*--pub, --pub0*::
+  Select the <<nng_pub.7#,_pub_>> version 0 protocol.
+  This protocol sends messages to <<nng_sub.7#,_sub_>> version peers.
+
+*--sub, --sub0*::
+  Select the <<nng_sub.7#,_sub_>> version 0 protocol.
+  This protocol receives messages from <<nng_pub.7#,_pub_>> version
+  0 peers, and filters them based on subscriptions set with *--subscribe*.
+  
+*--push, --push0*::
+  Select the <<nng_push.7#,_push_>> version 0 protocol.
+  This protocol sends messages to <<nng_pull.7#,_pull_>> version 0 peers.
+  A given message is normally only delivered to a single peer.
+
+*--pull, --pull0*::
+  Select the <<nng_pull.7#,_pull_>> version 0 protocol.
+  This protocol receives
+  messages from <<nng_push.7#,_push_>> version 0 peers.
+
+*--pair0*::
+  Select the <<nng_pair.7#,_pair_>> veresion 0 protocol.
+  This protocol can send and receive messages with one connected _pair_
+  version 0 peer.
+
+*--pair1*::
+  Select the <<nng_pair.7#,_pair_>> version 1 protocol.
+  This protocol can send and receive messages with one connected _pair_
+  version 1 peer.
+  It is not supported in *--compat* mode.
+  (Polyamorous mode is not supported 
+  in _nngcat_, although peers may be using polyamorous mode.)
+
+*--pair*::
+  Acts as an alias for *--pair1*, unless *--compat* mode is selected, in
+  which case it acts as an alias for *--pair0*.
+
+*--surveyor, --surveyor0*::
+  Select the <<nng_surveyor.7#,_surveyor_>> version 0 protocol.
+  This protocol sends a survey request to <<nng_respondent.7#,_respondent_>>
+  version 0 peers, and then receives replies from them.
+
+*--respondent, --respondent0*::
+  Select the <<nng_respondent.7#,_respondent_>> version 0 protocol.
+  This protocol receives survey requests from <nng_surveyor.7#,_surveyor_>>
+  version 0 peers, and can send a reply to them.
+
+=== Peer Selection Options
+NOTE: At least one peer address must be selected.
+
+TIP: While legacy _nanocat_ only supported one peer, _nng_ can support
+more than one peer on a given connection.
+
+*--connect, --dial*=_URL_::
+  Connect to the peer at the address specified by _URL_.
+
+*--bind, --listen*=_URL_::
+  Bind to, and accept connections from peers, at the address specified by _URL_.
+
+*-x, --connect-ipc*=_PATH_::
+  Connect to the IPC path specified by _PATH_.  This is the same as 
+  *--connect*=ipc://_PATH_.
+
+*-X, --bind-ipc*=_PATH_::
+  Bind to the IPC path specified by _PATH_.  This is the same as 
+  *--bind*=ipc://_PATH_.
+
+*-l, --connect-local*=_PORT_::
+  Connect to `localhost` at the TCP port specified by _PORT_.  This is the same
+  as *--connect*=tcp://127.0.0.1:__PORT__.
+
+*-L, --bind-local*=_PORT_::
+  Bind to the TCP port specified by _PORT_.  This is the same as 
+  *--bind*=tcp://127.0.0.1:__PORT__.
+
+=== Receive Options
+
+Data messages received can be formatted in different ways.  These
+options can only be specified when using a protocol that receives messages.
+
+*--format*=_FORMAT_::
+  Format data as indicated.  The _FORMAT_ can be any of: +
+  `no`:::
+    No output at all.
+  `raw`:::
+    Raw output, every byte received is sent to standard output.
+  `ascii`:::
+    ((ASCII)) safe, printable ASCII is emitted verbatim, with other bytes
+    substituted with `.` (period).
+  `quoted`:::
+    Messages are printed as ((quoted)) strings, using C language conventions.
+  `hex`:::
+    (((hex))) Messages are printed as quoted strings, with every byte appearing
+    as an escaped hexadecimal value, such as `\x2E`.
+  `msgpack`:::
+    (((msgpack)))
+    (((MessagePack)))
+    Messages are emitted as https://msgpack.org[MessagePack] "bin format"
+    (byte arrays).
+
+*-A, --ascii*::
+  The same as specifying *--format*=`ascii`.
+
+*-Q, --quoted*::
+  The same as specifying *--format*=`quoted`.
+
+*--hex*::
+  The same as specifying *--format*=`hex`.
+
+*--msgpack*::
+  The same as specifying *--format*=`msgpack`.
+
+*--raw*::
+  The same as specifying *--format*=`raw`.
+
+*--receive-timeout*=_SEC_::
+  Give up receiving messages after _SEC_ seconds pass without any received
+  messages.
+
+=== Transmit Options
+
+Protocols that support sending data can use these options to select the data. 
+
+*-D, --data*=_DATA_::
+  Use _DATA_ for the body of outgoing messages.
+
+*-F, --file*=_FILE_::
+  Use _FILE_ for the body of outgoing messages.
+
+*-i, --interval*=_SEC_::
+  For protocols that send unsolicited data (as opposed to those that
+  send data only in response to received messages), this will resend the
+  outgoing message at repeating intervals of _SEC_ seconds.
+
+*-d, --delay*=_SEC_::
+  Wait _SEC_ seconds before sending the first outgoing message.
+  This is useful to let connections establish before sending data, thereby
+  avoiding message loss.
+
+*--send-timeout*=_SEC_::
+  Give up trying to send a message after _SEC_ seconds.
+
+=== TLS Options
+
+These options are only present if TLS is configured; they are ignored
+when using addresses that are not secured with TLS.
+
+*-k, --insecure*::
+  Skip peer validation.
+
+*-E, --cert*=_FILE_::
+  Load own certificate from _FILE_.
+
+*--key*=_FILE_::
+  Load own key from _FILE_.
+  Should be used in conjuction with *--cert*.
+  If not specified, and *--cert* is specified, then a single file containing both 
+  the private key and the associated certificate is assumed.
+
+*--cacert*=_FILE_::
+  Load CA certificates from _FILE_.
+  These CAs ("Certificate Authorities") are
+  used as trust roots when validating certificates presented by peers.
+
+=== ZeroTier Options
+
+These options are only present if ZeroTier is configured; they are ignored
+otherwise.
+
+*--zt-home*=_DIRECTORY_::
+  Directory for persistent ZeroTier node (key material, etc.)
+  This directory must already exist.
+  Only one program may use a ZeroTier node at a time;
+  file locking is used to prevent this.
+
+== EXAMPLES
+
+.Echo service using request/reply.
+[source,sh]
+----
+$ addr="tcp://127.0.0.1:4567"
+$ nngcat --rep --listen=${addr} --data="42" --quoted &
+$ nngcat --req --dial=${addr} --data="what is the answer?" --quoted
+"what is the answer?"
+"42"
+----
+
+.Send a chime every hour (3600 seconds).
+[source,sh]
+----
+$ addr=ipc:///grandpa_clock
+$ nngcat --pub --listen=${addr} --data "cuckoo" --interval 3600 &
+$ nngcat --sub --dial=${addr} --quoted &
+"cuckoo"
+----
+
+== SEE ALSO
+
+<<libnng.3#,libnng(3)>>,
+<<nng.7#,nng(7)>>,
+<<nng_bus.7#,nng_bus(7)>>,
+<<nng_pair.7#,nng_pair(7)>>,
+<<nng_pub.7#,nng_pub(7)>>,
+<<nng_pull.7#,nng_pull(7)>>,
+<<nng_push.7#,nng_push(7)>>,
+<<nng_sub.7#,nng_sub(7)>>,
+<<nng_rep.7#,nng_rep(7)>>,
+<<nng_req.7#,nng_req(7)>>,
+<<nng_respondent.7#,nng_respondent(7)>>,
+<<nng_surveyor.7#,nng_surveyor(7)>>
+

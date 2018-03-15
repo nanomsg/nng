@@ -1,0 +1,55 @@
+= nng_msg_chop(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_msg_chop, nng_msg_chop_u32 - remove data from end of message body
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+int nng_msg_chop(nng_msg *msg, size_t size);
+
+int nng_msg_chop_u32(nng_msg *msg, uint32_t *val32);
+----
+
+== DESCRIPTION
+
+The `nng_msg_chop()` and `nng_msg_chop_u32()` functions remove data from
+the end of the body of message _msg_. 
+The first function removes _size_ bytes.
+The second function removes 4 bytes, and stores them in the value _val32_,
+after converting them from network-byte order (big-endian) to native byte order.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_EINVAL`:: The message body is too short to remove the requested data.
+
+== SEE ALSO
+
+<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
+<<nng_msg_append.3#,nng_msg_append(3)>>,
+<<nng_msg_body.3#,nng_msg_body(3)>>,
+<<nng_msg_free.3#,nng_msg_free(3)>>,
+<<nng_msg_insert.3#,nng_msg_insert(3)>>,
+<<nng_msg_len.3#,nng_msg_len(3)>>,
+<<nng_msg_realloc.3#,nng_msg_realloc(3)>>,
+<<nng_msg_trim.3#,nng_msg_trim(3)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_msg.5#,nng_msg(5)>>,
+<<nng.7#,nng(7)>>

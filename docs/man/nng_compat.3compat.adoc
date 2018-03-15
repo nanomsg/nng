@@ -1,0 +1,96 @@
+= nng_compat(3compat)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_compat - compatibility with nanomsg 1.0
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nn/nn.h>
+----
+
+== DESCRIPTION
+
+The <<nng.7#,_nng_>> library provides source-level compatibility for
+most _nanomsg_ 1.0 applications.
+
+IMPORTANT: This is intended to faciliate converting legacy applications to
+use the _nng_ library.
+New applications shoud not use the newer <<nng.7#,_nng_>> API instead.
+
+Applications making use of this ((compatibility layer)) take care
+to link with <<libnng.3#,_libnng_>> instead of _libnn_.
+
+NOTE: Some capabilities, protocols, and transports, will not be accessible
+using this API, as the compatible API has no provision for expression
+of certain concepts introduced in the newer <<nng.7#,_nng_>> API.
+
+NOTE: While reasonable efforts have been made to provide for compatibility,
+some things may behave differently, and some less common parts of the
+_nanomsg_ 1.0 API are not supported at this time, including certain
+options and the statistics API.
+
+TIP: If an installation of the older _nanomsg_ library is present on
+the build system, it may be necessary to provide a different search
+path for header files to ensure that the compatibility definitions are
+used in compilation.
+
+=== Functions
+
+The following functions are provided:
+
+// Add links for the following as they are written.
+|===
+|`nn_socket()`|create a socket
+|`nn_getsockopt()`|get socket option
+|`nn_setsockopt()`|set socket option
+|`nn_bind()`|accept connections from remote peers
+|`nn_connect()`|connect to remote peer
+|`nn_send()`|send data
+|`nn_recv()`|receive data
+|`nn_shutdown()`|shut down endpoint
+|`nn_close()`|close socket
+|`nn_poll()`|poll sockets
+|`nn_device()`|create forwarding device
+|`nn_recvmsg()`|receive message
+|`nn_sendmsg()`|send message
+|`nn_get_statistic()`|get statistic (stub)
+|`nn_allocmsg()`|allocate message
+|`nn_reallocmsg()`|reallocate message
+|`nn_freemsg()`|free message
+|`nn_errno()`|return most recent error
+|`nn_strerror()`|return message for error
+|`nn_term()`|terminate library
+|===
+
+NOTE: Documentation for the compatibility functions will be
+supplied here later.
+In the meantime it can be found online at the
+http://nanomsg.org[nanomsg site].
+
+// === Common Functions
+//
+// The following common functions exist in _libnng_.
+//
+// |===
+// |<<nng_alloc.3#,nng_alloc()>>|allocate memory
+// |<<nng_free.3#,nng_free()>>|free memory
+// |<<nng_strerror.3#,nng_strerror()>>|return an error description
+// |<<nng_version.3#,nng_version()>>|report library version
+// |===
+//
+
+== SEE ALSO
+
+<<nng.7#,nng(7)>>

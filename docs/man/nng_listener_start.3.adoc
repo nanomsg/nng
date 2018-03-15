@@ -1,0 +1,65 @@
+= nng_listener_start(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_listener_start - start listener
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+int nng_listener_start(nng_listener l, int flags);
+----
+
+== DESCRIPTION
+
+The `nng_listener_start()` function starts the listener _l_.
+
+This causes the listener to bind to the address it was created with,
+and to start accepting connections from remote
+dialers.
+Each new connection results in an <<nng_pipe.5#,`nng_pipe`>> object,
+which will be attached to the listener's socket.
+
+Normally, the act of "`binding``" to it's address is done
+synchronously, including any necessary name resolution.
+As a result,
+a failure, such as if the address is already in use, will be returned
+immediately.
+However, if the special value `NNG_FLAG_NONBLOCK` is
+supplied in _flags_, then this is done asynchronously; furthermore any
+failure to bind will be periodically reattempted in the background.
+
+TIP: While `NNG_FLAG_NONBLOCK` can help an application be more resilient,
+it also generally makes diagnosing failures somewhat more difficult.
+
+Once a listener has started, it is generally not possible to change
+it's configuration.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ECLOSED`:: Parameter _l_ does not refer to an open listener.
+`NNG_ESTATE`:: The listener _l_ is already started.
+
+== SEE ALSO
+
+<<nng_listen.3#,nng_listen(3)>>,
+<<nng_listener_create.3#,nng_listener_create(3)>>
+<<nng_listener.5#,nng_listener(5)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng.7#,nng(7)>>

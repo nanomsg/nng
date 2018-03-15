@@ -1,0 +1,60 @@
+= nng_msg_insert(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_msg_insert, nng_msg_insert_u32 - prepend to message body
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+int nng_msg_insert(nng_msg *msg, const void *val, size_t size);
+
+int nng_msg_insert(nng_msg *msg, uint32_t val32);
+-----------
+
+== DESCRIPTION
+
+The `nng_msg_insert()` and `nng_msg_insert_u32()` functions prepend data to
+the front of the body of message _msg_, reallocating it if necessary.
+The first function prepends _size_ bytes, copying them from _val_. 
+The second function prepends the value _val32_ in network-byte order
+(big-endian).
+
+TIP: This function makes use of pre-allocated "`headroom`" in the message if
+available, so it can often avoid performing any reallocation.
+Applications should use this instead of reallocating and copying message
+content themselves, in order to benefit from this capabilitiy.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient free memory exists.
+
+== SEE ALSO
+
+<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
+<<nng_msg_append.3#,nng_msg_append(3)>>,
+<<nng_msg_body.3#,nng_msg_body(3)>>,
+<<nng_msg_chop.3#,nng_msg_chop(3)>>,
+<<nng_msg_free.3#,nng_msg_free(3)>>,
+<<nng_msg_len.3#,nng_msg_len(3)>>,
+<<nng_msg_realloc.3#,nng_msg_realloc(3)>>,
+<<nng_msg_trim.3#,nng_msg_trim(3)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_msg.5#,nng_msg(5)>>,
+<<nng.7#,nng(7)>>

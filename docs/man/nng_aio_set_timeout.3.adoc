@@ -1,0 +1,64 @@
+= nng_aio_set_timeout(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_aio_set_timeout - set asynchronous I/O timeout
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef int nng_duration;
+void nng_aio_set_timeout(nng_aio *aio, nng_duration timeout);
+----
+
+== DESCRIPTION
+
+The `nng_aio_set_timeout()` function sets a _timeout_(((timeout)))
+for the asynchronous operation associated with _aio_.
+This causes a timer to be started when the operation is actually started.
+If the timer expires before the operation is completed, then it is
+aborted with an error of `NNG_ETIMEDOUT`.
+The _timeout_ is specified as a relative number of milliseconds.
+
+If the timeout is `NNG_DURATION_INFINITE`, then no timeout is used.
+If the timeout is `NNG_DURATION_DEFAULT`, then a "default" or socket-specific
+timeout is used.
+(This is frequently the same as `NNG_DURATION_INFINITE`.)
+
+TIP: As most operations involve some context switching, it is usually a good
+idea to allow at least a few tens of milliseconds before timing them out --
+a too small timeout might not allow the operation to properly begin before
+giving up!
+
+The value of _timeout_ set for the _aio_ is persistent, so that if the
+handle is reused for multiple operations, they will have the same relative
+timeout.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
+<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
+<<nng_aio_result.3#,nng_aio_result(3)>>,
+<<nng_aio.5#,nng_aio(5)>>,
+<<nng_duration.5#,nng_duration(5)>>,
+<<nng.7#,nng(7)>>

@@ -1,0 +1,53 @@
+= nng_pair_open(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_pair_open - create pair socket
+
+== SYNOPSIS
+
+.Version 0
+[source,c]
+----
+#include <nng/protocol/pair0/pair.h>
+
+int nng_pair0_open(nng_socket *s);
+----
+
+.Version 1
+[source,c]
+----
+#include <nng/protocol/pair1/pair.h>
+
+int nng_pair1_open(nng_socket *s);
+----
+
+== DESCRIPTION
+
+The `nng_pair0_open()` and `nng_pair1_open()` functions
+create a <<nng_pair.7#,_pair_>> version 0 or version 1
+<<nng_socket.5#,socket>> and return it at the location pointed to by _s_.
+
+== RETURN VALUES
+
+These functions returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol is not supported.
+
+== SEE ALSO
+
+<<nng_socket.5#,nng_socket(5)>>,
+<<nng_pair.7#,nng_pair(7)>>,
+<<nng.7#,nng(7)>>

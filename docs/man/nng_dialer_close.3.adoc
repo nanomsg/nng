@@ -1,0 +1,54 @@
+= nng_dialer_close(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_dialer_close - close dialer
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+int nng_dialer_close(nng_dialer d);
+----
+
+== DESCRIPTION
+
+The `nng_dialer_close()` function closes the listener _d_.
+This also closes any <<nng_pipe.5#,`nng_pipe`>> ojects that have
+been created by the dialer.
+
+Once this function returns, the dialer _d_ and any of its resources
+are deallocated.
+Therefore it is an error to attempt to access _d_ after
+this function has returned.
+(Attempts to do so will result in `NNG_ECLOSED` errors.)
+
+Dialers are implicitly closed when the socket they are associated with is closed.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ECLOSED`:: Parameter _d_ does not refer to an open listener.
+
+== SEE ALSO
+
+<<nng_close.3#,nng_close(3)>>,
+<<nng_dial.3#,nng_dial(3)>>,
+<<nng_dialer_create.3#,nng_dialer_create(3)>>
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_dialer.5#,nng_dialer(5)>>,
+<<nng.7#,nng(7)>>

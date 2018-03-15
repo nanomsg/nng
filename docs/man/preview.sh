@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/ksh
 #
 # Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
@@ -120,9 +120,23 @@ else
 fi
 
 for input in "$@"; do
+	subdir=$(dirname $input)
+	parent=$(basename $subdir)
+	case "${parent}" in
+	man[0-9a-zA-Z_]*)
+		echo doing subdir ${parent}
+		subdir=${parent}/
+		outdir="${tempdir}/${subdir}"
+		[[ -d ${outdir} ]] || mkdir -p ${outdir}
+		;;
+	*)
+		subdir=""
+		outdir="${tempdir}"
+		;;
+	esac
 	base=$(basename $input)
 	base=${base%.adoc}
-	output=${tempdir}/${base}${suffix}
+	output=${outdir}/${base}${suffix}
 	generate_${style} $input $output
 	$OPEN $output
 done

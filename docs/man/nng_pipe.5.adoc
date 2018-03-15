@@ -1,0 +1,57 @@
+= nng_pipe(5)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_pipe - communications pipe
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+typedef uint32_t nng_pipe;
+-----------
+
+== DESCRIPTION
+
+(((pipe)))(((connection)))
+An `nng_pipe` is a handle to a "`pipe`", which can be thought of as a single
+connection.
+(In most cases this is actually the case -- the pipe is an abstraction for a
+single TCP or IPC connection.) 
+Pipes are associated with either the listener or dialer that created them,
+and therefore are also automatically associated with a single socket.
+
+TIP: Most applications should never concern themselves with individual pipes. 
+However it is possible to access a pipe when more information about the
+source of a message is needed, or when more control is required over
+message delivery.
+
+Pipe objects are created by dialers (<<nng_dialer.5#,`nng_dialer`>> objects)
+and listeners (<<nng_listener.5#,`nng_listener`>> objects), which can be
+thought of as "`owning`" the pipe.
+
+Pipe objects may be destroyed by the
+<<nng_pipe_close.3#,`nng_pipe_close()`>> function.
+They are also closed when their "`owning`" dialer or listener is closed,
+or when the remote peer closes the underlying connection.
+
+== SEE ALSO
+
+<<nng_msg_get_pipe.3#,nng_msg_get_pipe(3)>>,
+<<nng_pipe_close.3#,nng_pipe_close(3)>>,
+<<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,
+<<nng_dialer.5#,nng_dialer(5)>>,
+<<nng_listener.5#,nng_listener(5)>>,
+<<nng_options.5#,nng_options(5)>>,
+<<nng.7#,nng(7)>>

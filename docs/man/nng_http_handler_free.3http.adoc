@@ -1,0 +1,46 @@
+= nng_http_handler_free(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_handler_free - free HTTP server handler
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+void nng_http_handler_free(nng_http_handler *h);
+----
+
+== DESCRIPTION
+
+The `nng_http_handler_free()` function frees an allocated HTTP server handler.
+
+IMPORTANT: It is an error to free a handler that is registered with a server.
+Any handlers that are registered with servers are automatically freed
+when the server itself is deallocated.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
+<<nng_http_server_add_handler.3http#,nng_http_server_add_handler(3http)>>,
+<<nng.7#,nng(7)>>
