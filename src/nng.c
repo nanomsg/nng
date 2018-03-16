@@ -1070,6 +1070,12 @@ nng_aio_wait(nng_aio *aio)
 }
 
 void
+nng_aio_abort(nng_aio *aio, int err_code)
+{
+	nni_aio_abort(aio, err_code);
+}
+
+void
 nng_aio_cancel(nng_aio *aio)
 {
 	nni_aio_abort(aio, NNG_ECANCELED);
@@ -1192,6 +1198,13 @@ nng_stat_type(nng_stat *stat)
 {
 	// Stats TBD.
 	return (0);
+}
+
+int
+nng_stat_unit(nng_stat *stat)
+{
+    // Stats TBD.
+    return (0);
 }
 
 int64_t
