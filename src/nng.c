@@ -1161,18 +1161,22 @@ int
 nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)
 {
 	// Stats TBD.
+	NNI_ARG_UNUSED(sock)
+	NNI_ARG_UNUSED(snapp)
 	return (NNG_ENOTSUP);
 }
 
 void
 nng_snapshot_free(nng_snapshot *snap)
 {
+	NNI_ARG_UNUSED(snap)
 	// Stats TBD.
 }
 
 int
 nng_snapshot_update(nng_snapshot *snap)
 {
+	NNI_ARG_UNUSED(snap)
 	// Stats TBD.
 	return (NNG_ENOTSUP);
 }
@@ -1180,6 +1184,8 @@ nng_snapshot_update(nng_snapshot *snap)
 int
 nng_snapshot_next(nng_snapshot *snap, nng_stat **statp)
 {
+	NNI_ARG_UNUSED(snap)
+	NNI_ARG_UNUSED(statp)
 	// Stats TBD.
 	*statp = NULL;
 	return (NNG_ENOTSUP);
@@ -1188,6 +1194,7 @@ nng_snapshot_next(nng_snapshot *snap, nng_stat **statp)
 const char *
 nng_stat_name(nng_stat *stat)
 {
+	NNI_ARG_UNUSED(stat)
 	// Stats TBD.
 	return (NULL);
 }
@@ -1195,6 +1202,7 @@ nng_stat_name(nng_stat *stat)
 int
 nng_stat_type(nng_stat *stat)
 {
+	NNI_ARG_UNUSED(stat)
 	// Stats TBD.
 	return (0);
 }
@@ -1202,6 +1210,7 @@ nng_stat_type(nng_stat *stat)
 int
 nng_stat_unit(nng_stat *stat)
 {
+	NNI_ARG_UNUSED(stat)
     // Stats TBD.
     return (0);
 }
@@ -1209,6 +1218,7 @@ nng_stat_unit(nng_stat *stat)
 int64_t
 nng_stat_value(nng_stat *stat)
 {
+	NNI_ARG_UNUSED(stat)
 	// Stats TBD.
 	return (0);
 }
