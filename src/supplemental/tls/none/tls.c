@@ -163,6 +163,22 @@ nng_tls_config_cert_key_file(
 	return (NNG_ENOTSUP);
 }
 
+int nng_tls_config_key(nng_tls_config *cfg, const uint8_t * key, size_t size)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(key);
+	NNI_ARG_UNUSED(size);
+	return (NNG_ENOTSUP);
+}
+
+int nng_tls_config_pass(nng_tls_config *cfg, const char *pass)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(pass);
+	return (NNG_ENOTSUP);
+}
+
+
 int
 nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)
 {

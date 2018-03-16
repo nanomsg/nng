@@ -574,6 +574,16 @@ nng_http_handler_set_host(nng_http_handler *h, const char *host)
 #endif
 }
 
+int nng_http_handler_set_tree(nng_http_handler *h)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_handler_set_tree(h));
+#else
+	NNI_ARG_UNUSED(h);
+	return (NNG_ENOTSUP);
+#endif
+}
+
 int
 nng_http_handler_set_data(nng_http_handler *h, void *dat, void (*dtor)(void *))
 {
@@ -588,7 +598,7 @@ nng_http_handler_set_data(nng_http_handler *h, void *dat, void (*dtor)(void *))
 }
 
 void *
-nng_handler_get_data(nng_http_handler *h)
+nng_http_handler_get_data(nng_http_handler *h)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_handler_get_data(h));
@@ -684,6 +694,16 @@ nng_http_server_get_tls(nng_http_server *srv, nng_tls_config **cfgp)
 #else
 	NNI_ARG_UNUSED(srv);
 	NNI_ARG_UNUSED(cfgp);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int nng_http_hijack(nng_http_conn * conn)
+{
+#ifdef NNG_SUPP_HTTP
+    return (nni_http_hijack(conn));
+#else
+    NNI_ARG_UNUSED(conn);
 	return (NNG_ENOTSUP);
 #endif
 }

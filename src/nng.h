@@ -492,15 +492,15 @@ enum nng_flag_enum {
 // object must be deallocated expressly by the user, and may persist beyond
 // the lifetime of any socket object used to update it.  Note that the
 // values of the statistics are initially unset.
-NNG_DECL int nng_snapshot_create(nng_socket, nng_snapshot **);
+//NNG_DECL int nng_snapshot_create(nng_socket, nng_snapshot **);
 
 // nng_snapshot_free frees a snapshot object.  All statistic objects
 // contained therein are destroyed as well.
-NNG_DECL void nng_snapshot_free(nng_snapshot *);
+//NNG_DECL void nng_snapshot_free(nng_snapshot *);
 
 // nng_snapshot_update updates a snapshot of all the statistics
 // relevant to a particular socket.  All prior values are overwritten.
-NNG_DECL int nng_snapshot_update(nng_snapshot *);
+//NNG_DECL int nng_snapshot_update(nng_snapshot *);
 
 // nng_snapshot_next is used to iterate over the individual statistic
 // objects inside the snapshot. Note that the statistic object, and the
@@ -511,13 +511,13 @@ NNG_DECL int nng_snapshot_update(nng_snapshot *);
 // Iteration begins by providing NULL in the value referenced. Successive
 // calls will update this value, returning NULL when no more statistics
 // are available in the snapshot.
-NNG_DECL int nng_snapshot_next(nng_snapshot *, nng_stat **);
+//NNG_DECL int nng_snapshot_next(nng_snapshot *, nng_stat **);
 
 // nng_stat_name is used to determine the name of the statistic.
 // This is a human readable name.  Statistic names, as well as the presence
 // or absence or semantic of any particular statistic are not part of any
 // stable API, and may be changed without notice in future updates.
-NNG_DECL const char *nng_stat_name(nng_stat *);
+//NNG_DECL const char *nng_stat_name(nng_stat *);
 
 // nng_stat_type is used to determine the type of the statistic.
 // At present, only NNG_STAT_TYPE_LEVEL and and NNG_STAT_TYPE_COUNTER
@@ -525,7 +525,7 @@ NNG_DECL const char *nng_stat_name(nng_stat *);
 // value over time are likely more interesting than the actual level.  Level
 // values reflect some absolute state however, and should be presented to the
 // user as is.
-NNG_DECL int nng_stat_type(nng_stat *);
+//NNG_DECL int nng_stat_type(nng_stat *);
 
 enum nng_stat_type_enum {
 	NNG_STAT_LEVEL   = 0,
@@ -536,7 +536,7 @@ enum nng_stat_type_enum {
 // such as NNG_UNIT_BYTES or NNG_UNIT_BYTES.  If no specific unit is
 // applicable, such as a relative priority, then NN_UNIT_NONE is
 // returned.
-NNG_DECL int nng_stat_unit(nng_stat *);
+//NNG_DECL int nng_stat_unit(nng_stat *);
 
 enum nng_unit_enum {
 	NNG_UNIT_NONE     = 0,
@@ -550,7 +550,7 @@ enum nng_unit_enum {
 // nng_stat_value returns returns the actual value of the statistic.
 // Statistic values reflect their value at the time that the corresponding
 // snapshot was updated, and are undefined until an update is performed.
-NNG_DECL int64_t nng_stat_value(nng_stat *);
+//NNG_DECL int64_t nng_stat_value(nng_stat *);
 
 // Device functionality.  This connects two sockets together in a device,
 // which means that messages from one side are forwarded to the other.
