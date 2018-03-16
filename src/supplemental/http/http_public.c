@@ -598,7 +598,7 @@ nng_http_handler_set_data(nng_http_handler *h, void *dat, void (*dtor)(void *))
 }
 
 void *
-nng_handler_get_data(nng_http_handler *h)
+nng_http_handler_get_data(nng_http_handler *h)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_handler_get_data(h));

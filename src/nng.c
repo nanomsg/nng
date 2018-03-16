@@ -1166,7 +1166,7 @@ nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)
 }
 
 void
-nng_snapshot_destroy(nng_snapshot *snap)
+nng_snapshot_free(nng_snapshot *snap)
 {
 	// Stats TBD.
 }
