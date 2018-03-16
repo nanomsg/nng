@@ -976,5 +976,11 @@ nng_wss_register(void)
 {
 	return (nni_tran_register(&wss_tran));
 }
+#else
+int
+nng_wss_register(void)
+{
+	return (0);
+}
 
 #endif // NNG_TRANSPORT_WSS
