@@ -58,7 +58,9 @@ concepts and administration.
 === Registration
 
 Depending upon how the library was built, it may be necessary to
-register the transport by calling `nng_zt_register()`.  This function
+register the transport by calling
+<<nng_zt_register.3#,`nng_zt_register()`>>.
+This function
 returns zero on success, or an nng error value if the transport
 cannot be initialized for any reason.
 

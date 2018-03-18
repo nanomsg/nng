@@ -1,4 +1,4 @@
-= nng_zerotier_register(3)
+= nng_zt_register(3)
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_zerotier_register - register ZeroTier transport
+nng_zt_register - register ZeroTier transport
 
 == SYNOPSIS
 
@@ -19,12 +19,12 @@ nng_zerotier_register - register ZeroTier transport
 ----
 #include <nng/transport/zerotier/zerotier.h>
 
-int nng_zerotier_register(void);
+int nng_zt_register(void);
 ----
 
 == DESCRIPTION
 
-The `nng_zerotier_register()` function registers the
+The `nng_zt_register()` function registers the
 ((_zt_ transport))(((transport, _zt_))) for use.
 
 == RETURN VALUES

@@ -190,7 +190,7 @@ The following functions are used to register a transport for use.
 | <<nng_tls_register.3#,nng_tls_register()>>|register TLS transport
 | <<nng_ws_register.3#,nng_ws_register()>>|register WebSocket transport
 | <<nng_wss_register.3#,nng_wss_register()>>|register WebSocket Secure transport
-| <<nng_zerotier_register.3#,nng_zerotier_register()>>|register ZeroTier transport
+| <<nng_zt_register.3#,nng_zt_register()>>|register ZeroTier transport
 |===
 
 === URL Object
