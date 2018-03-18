@@ -133,23 +133,24 @@ This option can be set on listeners, and retrieved from pipes.
 
 ((`NNG_OPT_TLS_CONFIG`))::
 
-This option is used on an endpoint to access the underlying TLS
-configuration object.  The value is of type `nng_tls_config *`.
+(opaque) This option is used on an endpoint to access the underlying TLS
+configuration object.
+The value is of type `nng_tls_config *`.
 
 TIP: Use this option when advanced TLS configuration is required.
 
 ((`NNG_OPT_TLS_CA_FILE`))::
 
-This is a write-only option used to load certificates associated
+(string) This is a write-only option used to load certificates associated
 associated private key from a file.
 See <<nng_tls_config_ca_file.3tls#,`nng_tls_config_ca_file()`>> for more
 information.
 
 ((`NNG_OPT_TLS_CERT_KEY_FILE`))::
 
-This is a write-only option used to load the local certificate and
-associated private key from a file. The private key used must be
-unencrypted.
+(string) This is a write-only option used to load the local certificate and
+associated private key from a file.
+The private key used must be unencrypted.
 (Use the `NNG_OPT_TLS_CONFIG` option to access the underlying
 TLS configuration if more advanced configuration is needed.)
 See <<nng_tls_config_own_cert.3tls#,`nng_tls_config_own_cert()`>> for more
@@ -157,7 +158,7 @@ information.
 
 ((`NNG_OPT_TLS_AUTH_MODE`))::
 
-This is a write-only option used to configure the authentication mode
+(`int`) This is a write-only option used to configure the authentication mode
 used.
 It can take an integer with value `NNG_TLS_AUTH_MODE_NONE`,
 `NNG_TLS_AUTH_MODE_REQUIRED`, or `NNG_TLS_AUTH_MODE_OPTIONAL`.
@@ -166,9 +167,9 @@ details.
 
 `NNG_OPT_TLS_VERIFIED`::
 
-This is a read-only option which returns a boolean value (integer 0 or 1).
-It will true (1) if the remote peer has been properly verified using TLS
-authentication, or false (0) otherwise.  This option may return incorrect
+(bool) This is a read-only option that is `true` if the remote peer has been
+properly verified using TLS authentication, or `false` otherwise.
+This option may return incorrect
 results if peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 
 // We should also look at a hook mechanism for listeners. Probably this could

@@ -32,7 +32,7 @@ dialers.
 Each new connection results in an <<nng_pipe.5#,`nng_pipe`>> object,
 which will be attached to the listener's socket.
 
-Normally, the act of "`binding``" to it's address is done
+Normally, the act of "`binding`" to it's address is done
 synchronously, including any necessary name resolution.
 As a result,
 a failure, such as if the address is already in use, will be returned

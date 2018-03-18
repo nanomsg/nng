@@ -105,13 +105,13 @@ The following protocol-specific options are available.
 
 ((`NNG_OPT_PAIR1_POLY`))::
 
-   (Version 1 only).  This option enables the use of _polyamorous_ mode.
+   (`bool`, version 1 only)  This option enables the use of _polyamorous_ mode.
    The value is read-write, and takes an integer boolean value.  The default
    false value (0) indicates that legacy monogamous mode should be used.
 
 <<nng_options.5#NNG_OPT_MAXTTL,`NNG_OPT_MAXTTL`>>::
 
-   (Version 1 only).  Maximum time-to-live.
+   (`int`, version 1 only).  Maximum time-to-live.
 
 === Protocol Headers
 

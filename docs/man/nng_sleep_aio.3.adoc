@@ -24,7 +24,7 @@ void nng_sleep_aio(nng_duration msec, nng_aio *aio);
 
 == DESCRIPTION
 
-The `nng_sleep_aio()` function performs an asynchronous "`sleep``",
+The `nng_sleep_aio()` function performs an asynchronous "`sleep`",
 causing the callback for _aio_ to be executed after _msec_ milliseconds.
 If the sleep finishes completely, the result will always be zero.
 

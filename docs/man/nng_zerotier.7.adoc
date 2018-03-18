@@ -137,7 +137,7 @@ The network is most likely not available.
 The following transport options are available:
 
 ((`NNG_OPT_ZT_HOME`))::
-  This is a string representing the "`home directory``", where the transport
+  This is a string representing the "`home directory`", where the transport
   can store (and reuse) persistent state, such as key materials, node
   identity, and federation membership.
   This option must be set before the ZeroTier transport is first used.
@@ -191,12 +191,12 @@ in this fashion.
 [[NNG_OPT_ZT_PING_TIME]]
 ((`NNG_OPT_ZT_PING_TIME`))::
   If no traffic has been received from the ZeroTier peer after this
-  period of time, then a "`ping``" message is sent to check if the peer
+  period of time, then a "`ping`" message is sent to check if the peer
   is still alive.  This is an <<nng_duration.5#,`nng_duration`>> (msec).
 
 [[NNG_OPT_ZT_PING_TRIES]]
 ((`NNG_OPT_ZT_PING_TRIES`))::
-  If this number (`int`) of consecutive "`ping``" requests are sent to the
+  If this number (`int`) of consecutive "`ping`" requests are sent to the
   peer with no response (and no other intervening traffic), then the
   peer is assumed to be dead and the connection is closed.  Note that
   if any traffic is received from the peer, then the underlying counter
@@ -213,14 +213,14 @@ in this fashion.
 [[NNG_OPT_ZT_ORBIT]]
 ((`NNG_OPT_ZT_ORBIT`))(((orbit, ZeroTier)))(((federation,ZeroTier))):
   This is a write-only option that takes an array of two `uint64_t` values,
-  indicating the ID of a ZeroTier "`moon``", and the node ID of the root server
+  indicating the ID of a ZeroTier "`moon`", and the node ID of the root server
   for that moon.  (The ID may be zero if the moon ID is the same as it's
   root server ID, which is conventional.)
 
 [[NNG_OPT_ZT_DEORBIT]]
 ((`NNG_OPT_ZT_DEORBIT`))::
   This write-only option takes a single `uint64_t` indicating the moon
-  ID to "`deorbit``".  If the node is not already orbiting the moon, then
+  ID to "`deorbit`".  If the node is not already orbiting the moon, then
   this has no effect.
     
 == SEE ALSO
