@@ -88,8 +88,6 @@ TestMain("Socket Operations", {
 				    NNG_EREADONLY);
 				So(nng_setopt(s1, NNG_OPT_LOCADDR, "a", 1) ==
 				    NNG_EREADONLY);
-				So(nng_setopt_int(s1, NNG_OPT_DOMAIN, 3) ==
-				    NNG_EREADONLY);
 			});
 
 			Convey("Sockname option works", {
@@ -121,15 +119,13 @@ TestMain("Socket Operations", {
 				So(strcmp(name, "hello") == 0);
 			});
 
-			Convey("Domain option works", {
-				int dom;
-				So(nng_getopt_int(s1, NNG_OPT_DOMAIN, &dom) ==
-				    0);
-				So(dom == 1); // NN_AF_SP
+			Convey("RAW option works", {
+				int raw;
+				So(nng_getopt_int(s1, NNG_OPT_RAW, &raw) == 0);
+				So(raw == 0);
 				So(nng_setopt_int(s1, NNG_OPT_RAW, 1) == 0);
-				So(nng_getopt_int(s1, NNG_OPT_DOMAIN, &dom) ==
-				    0);
-				So(dom == 2); // NN_AF_SP_RAW
+				So(nng_getopt_int(s1, NNG_OPT_RAW, &raw) == 0);
+				So(raw == 1);
 			});
 
 			Convey("URL option works", {

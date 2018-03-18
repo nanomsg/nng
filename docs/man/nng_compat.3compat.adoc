@@ -79,6 +79,51 @@ supplied here later.
 In the meantime it can be found online at the
 http://nanomsg.org[nanomsg site].
 
+There are a few caveats, that should be kept in mind.
+
+NOTE: Socket numbers can be quite large.
+The legacy _libnanomsg_ attempted to reuse socket numbers, like
+file descriptors in UNIX systems.
+The _nng_ library avoids this to prevent accidental reuse or
+collision after a descriptor is closed.
+Consequently, socket numbers can become quite large, and should
+probably not be used for array indices.
+
+NOTE: The following options (`nn_getsockopt`) are unsupported:
+`NN_PROTOCOL`, `NN_SNDPRIO`, `NN_RCVPRIO`, `NN_IPV4ONLY`.
+Some of these will probably be added back in the future when
+the relevant support is added to _nng_.
+
+NOTE: Statistics (`nn_get_statistic`) are unsupported.
+The plan is to support statistics in the native _nng_ API, but
+we think there is no need for this in a compatibility layer.
+Hence, this function returns `ENOTSUP`.
+
+NOTE: Some transports can support longer URLs than legacy _libnanomsg_ can.
+It is a good idea to use short pathnames in URLs if interoperability
+is a concern.
+
+NOTE: Some transports are unusable from this mode.
+In particular, this legacy API offers no way to configure
+TLS parameters that are required for use.
+
+NOTE: ABI versioning is not supported.
+We don't offer the `NN_VERSION_` macros.  Sorry.
+
+NOTE: Runtime symbol information is not implemented.
+Specifically, there is no `nn_symbol()` function yet.
+(This may be addressed later if there is a need.)
+
+IMPORTANT: The `nn_term()` function is destructive and should be avoided.
+This function closes down all sockets, and really there is no good
+reason to ever use it.
+Removal from existing code is advised.
+(Keep track of sockets and close them explicitly if necessary.)
+
+IMPORTANT: It *is* possible at present to intermix sockets between the new and
+the old APIs, but this is not a guaranteed feature, and should only
+be used temporarily to facilitate transitioning code to the new APIs.
+
 // === Common Functions
 //
 // The following common functions exist in _libnng_.

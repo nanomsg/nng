@@ -408,7 +408,6 @@ enum nng_flag_enum {
 
 // Options.
 #define NNG_OPT_SOCKNAME "socket-name"
-#define NNG_OPT_DOMAIN "compat:domain" // legacy compat only
 #define NNG_OPT_RAW "raw"
 #define NNG_OPT_LINGER "linger"
 #define NNG_OPT_RECVBUF "recv-buffer"
@@ -421,8 +420,6 @@ enum nng_flag_enum {
 #define NNG_OPT_REMADDR "remote-address"
 #define NNG_OPT_URL "url"
 #define NNG_OPT_MAXTTL "ttl-max"
-#define NNG_OPT_PROTOCOL "protocol"
-#define NNG_OPT_TRANSPORT "transport"
 #define NNG_OPT_RECVMAXSZ "recv-size-max"
 #define NNG_OPT_RECONNMINT "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT "reconnect-time-max"
