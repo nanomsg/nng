@@ -532,7 +532,7 @@ static int
 ws_pipe_getopt_tls_verified(void *arg, void *v, size_t *szp)
 {
 	ws_pipe *p = arg;
-	return (nni_getopt_int(nni_ws_tls_verified(p->ws) ? 1 : 0, v, szp));
+	return (nni_getopt_bool(nni_ws_tls_verified(p->ws), v, szp));
 }
 
 static nni_tran_pipe_option ws_pipe_options[] = {

@@ -21,6 +21,8 @@ nng_setopt - set socket option
 
 int nng_setopt(nng_socket s, const char *opt, const void *val, size_t valsz);
 
+int nng_setopt_bool(nng_socket s, const char *opt, int bval);
+
 int nng_setopt_int(nng_socket s, const char *opt, int ival);
 
 int nng_setopt_ms(nng_socket s, const char *opt, nng_duration dur);
@@ -59,10 +61,13 @@ This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _valsz_ is the
 size of the objected located at _val_.
 
+`nng_setopt_bool()`::
+This function is for options which take a boolean (`bool`).
+The _bval_ is passed to the option.
+
 `nng_setopt_int()`::
-This function is for options which take an integer (`int`) or boolean (`bool`).
+This function is for options which take an integer (`int`).
 The _ival_ is passed to the option.
-For booleans pass either 0 (`false`) or 1 (`true`).
 
 `nng_setopt_ms()`::
 This function is used to configure time durations (such as timeouts) using

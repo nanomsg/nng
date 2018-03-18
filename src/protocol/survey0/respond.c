@@ -40,7 +40,7 @@ static void resp0_pipe_fini(void *);
 struct resp0_sock {
 	nni_msgq *  urq;
 	nni_msgq *  uwq;
-	int         raw;
+	bool        raw;
 	int         ttl;
 	nni_idhash *pipes;
 	char *      btrace;
@@ -93,7 +93,7 @@ resp0_sock_init(void **sp, nni_sock *nsock)
 	}
 
 	s->ttl        = 8; // Per RFC
-	s->raw        = 0;
+	s->raw        = false;
 	s->btrace     = NULL;
 	s->btrace_len = 0;
 	s->urq        = nni_sock_recvq(nsock);
@@ -353,7 +353,7 @@ resp0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 	int         rv;
 
 	nni_mtx_lock(&s->mtx);
-	rv = nni_setopt_int(&s->raw, buf, sz, 0, 1);
+	rv = nni_setopt_bool(&s->raw, buf, sz);
 	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
@@ -362,7 +362,7 @@ static int
 resp0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	resp0_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static int

@@ -49,7 +49,6 @@ struct nni_tcp_ep {
 	uint16_t         proto;
 	size_t           rcvmax;
 	nni_duration     linger;
-	int              ipv4only;
 	nni_aio *        aio;
 	nni_aio *        user_aio;
 	nni_url *        url;

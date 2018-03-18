@@ -11,8 +11,8 @@
 #include "convey.h"
 #include "nng.h"
 #include "protocol/pair1/pair.h"
-#include "supplemental/util/platform.h"
 #include "stubs.h"
+#include "supplemental/util/platform.h"
 
 #include <string.h>
 
@@ -54,8 +54,8 @@ Main({
 			So(nng_pair1_open(&dev1) == 0);
 			So(nng_pair1_open(&dev2) == 0);
 
-			So(nng_setopt_int(dev1, NNG_OPT_RAW, 1) == 0);
-			So(nng_setopt_int(dev2, NNG_OPT_RAW, 1) == 0);
+			So(nng_setopt_bool(dev1, NNG_OPT_RAW, true) == 0);
+			So(nng_setopt_bool(dev2, NNG_OPT_RAW, true) == 0);
 
 			struct dev_data ddata;
 			ddata.s1 = dev1;

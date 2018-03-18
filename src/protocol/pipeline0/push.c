@@ -36,7 +36,7 @@ static void push0_getq_cb(void *);
 // push0_sock is our per-socket protocol private structure.
 struct push0_sock {
 	nni_msgq *uwq;
-	int       raw;
+	bool      raw;
 };
 
 // push0_pipe is our per-pipe protocol private structure.
@@ -58,7 +58,7 @@ push0_sock_init(void **sp, nni_sock *sock)
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	s->raw = 0;
+	s->raw = false;
 	s->uwq = nni_sock_sendq(sock);
 	*sp    = s;
 	return (0);
@@ -201,14 +201,14 @@ static int
 push0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
 	push0_sock *s = arg;
-	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
+	return (nni_setopt_bool(&s->raw, buf, sz));
 }
 
 static int
 push0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	push0_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static void

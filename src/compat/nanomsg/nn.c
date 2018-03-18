@@ -164,7 +164,7 @@ nn_socket(int domain, int protocol)
 		return (-1);
 	}
 	if (domain == AF_SP_RAW) {
-		if ((rv = nng_setopt_int(sock, NNG_OPT_RAW, 1)) != 0) {
+		if ((rv = nng_setopt_bool(sock, NNG_OPT_RAW, true)) != 0) {
 			nn_seterror(rv);
 			nng_close(sock);
 			return (-1);
@@ -624,14 +624,15 @@ static const struct {
 static int
 nn_getdomain(int s, void *valp, size_t *szp)
 {
-	int i;
-	int rv;
+	int  i;
+	bool b;
+	int  rv;
 
-	if ((rv = nng_getopt_int((nng_socket) s, NNG_OPT_RAW, &i)) != 0) {
+	if ((rv = nng_getopt_bool((nng_socket) s, NNG_OPT_RAW, &b)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
-	i = i ? AF_SP_RAW : AF_SP;
+	i = b ? AF_SP_RAW : AF_SP;
 	memcpy(valp, &i, *szp < sizeof(int) ? *szp : sizeof(int));
 	*szp = sizeof(int);
 	return (0);

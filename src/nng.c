@@ -380,6 +380,12 @@ nng_dialer_setopt(nng_dialer id, const char *name, const void *v, size_t sz)
 }
 
 int
+nng_dialer_setopt_bool(nng_dialer id, const char *name, bool val)
+{
+	return (nng_dialer_setopt(id, name, &val, sizeof(val)));
+}
+
+int
 nng_dialer_setopt_int(nng_dialer id, const char *name, int val)
 {
 	return (nng_dialer_setopt(id, name, &val, sizeof(val)));
@@ -419,6 +425,13 @@ int
 nng_dialer_getopt(nng_dialer id, const char *name, void *val, size_t *szp)
 {
 	return (nng_ep_getopt(id, name, val, szp, NNI_EP_MODE_DIAL));
+}
+
+int
+nng_dialer_getopt_bool(nng_dialer id, const char *name, bool *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_dialer_getopt(id, name, valp, &sz));
 }
 
 int
@@ -464,6 +477,12 @@ nng_listener_setopt(
 }
 
 int
+nng_listener_setopt_bool(nng_listener id, const char *name, bool val)
+{
+	return (nng_listener_setopt(id, name, &val, sizeof(val)));
+}
+
+int
 nng_listener_setopt_int(nng_listener id, const char *name, int val)
 {
 	return (nng_listener_setopt(id, name, &val, sizeof(val)));
@@ -506,6 +525,13 @@ nng_listener_getopt(nng_listener id, const char *name, void *val, size_t *szp)
 }
 
 int
+nng_listener_getopt_bool(nng_listener id, const char *name, bool *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_listener_getopt(id, name, valp, &sz));
+}
+
+int
 nng_listener_getopt_int(nng_listener id, const char *name, int *valp)
 {
 	size_t sz = sizeof(*valp);
@@ -541,7 +567,7 @@ nng_listener_getopt_ms(nng_listener id, const char *name, nng_duration *valp)
 }
 
 static int
-nng_ep_close(uint32_t id)
+nng_ep_close(uint32_t id, int mode)
 {
 	nni_ep *ep;
 	int     rv;
@@ -549,6 +575,11 @@ nng_ep_close(uint32_t id)
 	if ((rv = nni_ep_find(&ep, id)) != 0) {
 		return (rv);
 	}
+	if (nni_ep_mode(ep) != mode) {
+		nni_ep_rele(ep);
+		return (NNG_ENOENT);
+	}
+
 	nni_ep_close(ep);
 	return (0);
 }
@@ -556,13 +587,13 @@ nng_ep_close(uint32_t id)
 int
 nng_dialer_close(nng_dialer d)
 {
-	return (nng_ep_close((uint32_t) d));
+	return (nng_ep_close((uint32_t) d, NNI_EP_MODE_DIAL));
 }
 
 int
 nng_listener_close(nng_listener l)
 {
-	return (nng_ep_close((uint32_t) l));
+	return (nng_ep_close((uint32_t) l, NNI_EP_MODE_LISTEN));
 }
 
 int
@@ -607,6 +638,12 @@ nng_setopt_int(nng_socket sid, const char *name, int val)
 }
 
 int
+nng_setopt_bool(nng_socket sid, const char *name, bool val)
+{
+	return (nng_setopt(sid, name, &val, sizeof(val)));
+}
+
+int
 nng_setopt_size(nng_socket sid, const char *name, size_t val)
 {
 	return (nng_setopt(sid, name, &val, sizeof(val)));
@@ -634,6 +671,13 @@ int
 nng_setopt_string(nng_socket sid, const char *name, const char *val)
 {
 	return (nng_setopt(sid, name, val, strlen(val) + 1));
+}
+
+int
+nng_getopt_bool(nng_socket sid, const char *name, bool *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_getopt(sid, name, valp, &sz));
 }
 
 int
@@ -785,6 +829,13 @@ nng_pipe_getopt(nng_pipe id, const char *name, void *val, size_t *sizep)
 }
 
 int
+nng_pipe_getopt_bool(nng_pipe id, const char *name, bool *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_pipe_getopt(id, name, valp, &sz));
+}
+
+int
 nng_pipe_getopt_int(nng_pipe id, const char *name, int *valp)
 {
 	size_t sz = sizeof(*valp);
@@ -807,6 +858,13 @@ nng_pipe_getopt_uint64(nng_pipe id, const char *name, uint64_t *valp)
 
 int
 nng_pipe_getopt_ms(nng_pipe id, const char *name, nng_duration *valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_pipe_getopt(id, name, valp, &sz));
+}
+
+int
+nng_pipe_getopt_ptr(nng_pipe id, const char *name, void **valp)
 {
 	size_t sz = sizeof(*valp);
 	return (nng_pipe_getopt(id, name, valp, &sz));

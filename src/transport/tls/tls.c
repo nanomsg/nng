@@ -55,7 +55,6 @@ struct nni_tls_ep {
 	uint16_t         proto;
 	size_t           rcvmax;
 	nni_duration     linger;
-	int              ipv4only;
 	int              authmode;
 	nni_aio *        aio;
 	nni_aio *        user_aio;
@@ -893,7 +892,7 @@ tls_getopt_verified(void *arg, void *v, size_t *szp)
 {
 	nni_tls_pipe *p = arg;
 
-	return (nni_getopt_int(nni_tls_verified(p->tls) ? 1 : 0, v, szp));
+	return (nni_getopt_bool(nni_tls_verified(p->tls), v, szp));
 }
 
 static nni_tran_pipe_option nni_tls_pipe_options[] = {

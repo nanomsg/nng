@@ -21,6 +21,8 @@ nng_getopt - get socket option
 
 int nng_getopt(nng_socket s, const char *opt, void *val, size_t *valszp);
 
+int nng_getopt_bool(nng_socket s, const char *opt, bool *bvalp);
+
 int nng_getopt_int(nng_socket s, const char *opt, int *ivalp);
 
 int nng_getopt_ms(nng_socket s, const char *opt, nng_duration *durp);
@@ -72,11 +74,15 @@ It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
 This can be used to determine the size of the buffer needed to receive
 the object.
 
+`nng_getopt_bool()`::
+
+This function is for options which take a boolean (`bool`).
+The value will be stored at _ivalp_.
+
 `nng_getopt_int()`::
 
-This function is for options which take an integer (`int`) or boolean (`bool`).
+This function is for options which take an integer (`int`).
 The value will be stored at _ivalp_.
-For booleans the value will be eiher 0 (`false`) or 1 (`true`).
 
 `nng_getopt_ms()`::
 This function is used to retrieve time durations

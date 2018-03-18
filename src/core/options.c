@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -42,6 +42,15 @@ nni_chkopt_int(const void *v, size_t sz, int minv, int maxv)
 }
 
 int
+nni_chkopt_bool(size_t sz)
+{
+	if (sz != sizeof(bool)) {
+		return (NNG_EINVAL);
+	}
+	return (0);
+}
+
+int
 nni_chkopt_size(const void *v, size_t sz, size_t minv, size_t maxv)
 {
 	size_t val;
@@ -68,6 +77,16 @@ nni_setopt_ms(nni_duration *dp, const void *v, size_t sz)
 		return (NNG_EINVAL);
 	}
 	*dp = dur;
+	return (0);
+}
+
+int
+nni_setopt_bool(bool *bp, const void *v, size_t sz)
+{
+	if (sz != sizeof(*bp)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(bp, v, sizeof(*bp));
 	return (0);
 }
 
@@ -183,6 +202,19 @@ nni_getopt_size(size_t u, void *val, size_t *sizep)
 	}
 	*sizep = sizeof(u);
 	memcpy(val, &u, sz);
+	return (0);
+}
+
+int
+nni_getopt_bool(bool b, void *val, size_t *sizep)
+{
+	size_t sz = sizeof(b);
+
+	if (sz > *sizep) {
+		sz = *sizep;
+	}
+	*sizep = sizeof(b);
+	memcpy(val, &b, sz);
 	return (0);
 }
 

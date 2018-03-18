@@ -39,9 +39,9 @@ struct req0_sock {
 	nni_msgq *   urq;
 	nni_duration retry;
 	nni_time     resend;
-	int          raw;
-	int          wantw;
-	int          closed;
+	bool         raw;
+	bool         wantw;
+	bool         closed;
 	int          ttl;
 	nni_msg *    reqmsg;
 
@@ -96,8 +96,8 @@ req0_sock_init(void **sp, nni_sock *sock)
 	s->nextid = nni_random();
 	s->retry  = NNI_SECOND * 60;
 	s->reqmsg = NULL;
-	s->raw    = 0;
-	s->wantw  = 0;
+	s->raw    = false;
+	s->wantw  = false;
 	s->resend = NNI_TIME_ZERO;
 	s->ttl    = 8;
 	s->uwq    = nni_sock_sendq(sock);
@@ -119,7 +119,7 @@ req0_sock_close(void *arg)
 	req0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
-	s->closed = 1;
+	s->closed = true;
 	nni_mtx_unlock(&s->mtx);
 
 	nni_timer_cancel(&s->timer);
@@ -243,7 +243,7 @@ req0_pipe_stop(void *arg)
 		// schedule immediate resend.
 		s->pendpipe = NULL;
 		s->resend   = NNI_TIME_ZERO;
-		s->wantw    = 1;
+		s->wantw    = true;
 		req0_resend(s);
 	}
 	nni_mtx_unlock(&s->mtx);
@@ -253,14 +253,14 @@ static int
 req0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
 	req0_sock *s = arg;
-	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
+	return (nni_setopt_bool(&s->raw, buf, sz));
 }
 
 static int
 req0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	req0_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static int
@@ -442,7 +442,7 @@ req0_timeout(void *arg)
 
 	nni_mtx_lock(&s->mtx);
 	if (s->reqmsg != NULL) {
-		s->wantw = 1;
+		s->wantw = true;
 		req0_resend(s);
 	}
 	nni_mtx_unlock(&s->mtx);
@@ -467,13 +467,13 @@ req0_resend(req0_sock *s)
 	}
 
 	if (s->wantw) {
-		s->wantw = 0;
+		s->wantw = false;
 
 		if (nni_msg_dup(&msg, s->reqmsg) != 0) {
 			// Failed to alloc message, reschedule it. Also,
 			// mark that we have a message we want to resend,
 			// in case something comes available.
-			s->wantw = 1;
+			s->wantw = true;
 			nni_timer_schedule(&s->timer, nni_clock() + s->retry);
 			return;
 		}
@@ -484,7 +484,7 @@ req0_resend(req0_sock *s)
 			// No pipes ready to process us.  Note that we have
 			// something to send, and schedule it.
 			nni_msg_free(msg);
-			s->wantw = 1;
+			s->wantw = true;
 			return;
 		}
 
@@ -550,7 +550,7 @@ req0_sock_send(void *arg, nni_aio *aio)
 	s->reqmsg = msg;
 	// Schedule for immediate send
 	s->resend = NNI_TIME_ZERO;
-	s->wantw  = 1;
+	s->wantw  = true;
 
 	req0_resend(s);
 

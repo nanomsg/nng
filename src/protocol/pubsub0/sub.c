@@ -44,7 +44,7 @@ struct sub0_topic {
 struct sub0_sock {
 	nni_list  topics;
 	nni_msgq *urq;
-	int       raw;
+	bool      raw;
 	nni_mtx   lk;
 };
 
@@ -66,7 +66,7 @@ sub0_sock_init(void **sp, nni_sock *sock)
 	}
 	nni_mtx_init(&s->lk);
 	NNI_LIST_INIT(&s->topics, sub0_topic, node);
-	s->raw = 0;
+	s->raw = false;
 
 	s->urq = nni_sock_recvq(sock);
 	*sp    = s;
@@ -279,14 +279,14 @@ static int
 sub0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
 	sub0_sock *s = arg;
-	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
+	return (nni_setopt_bool(&s->raw, buf, sz));
 }
 
 static int
 sub0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	sub0_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static void

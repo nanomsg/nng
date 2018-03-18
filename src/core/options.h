@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -27,6 +27,12 @@ extern int nni_setopt_ms(nni_duration *, const void *, size_t);
 
 // nni_getopt_duration gets the duration.
 extern int nni_getopt_ms(nni_duration, void *, size_t *);
+
+// nni_setopt_bool sets a bool, or _Bool
+extern int nni_setopt_bool(bool *, const void *, size_t);
+
+// nni_getopt_bool gets a bool (or _Bool)
+extern int nni_getopt_bool(bool, void *, size_t *);
 
 // nni_setopt_int sets an integer, which must be between the minimum and
 // maximum values (inclusive).
@@ -61,6 +67,7 @@ extern int nni_getopt_size(size_t, void *, size_t *);
 // nni_getopt_ptr obtains a pointer option.
 extern int nni_getopt_ptr(void *, void *, size_t *);
 
+extern int nni_chkopt_bool(size_t);
 extern int nni_chkopt_ms(const void *, size_t);
 extern int nni_chkopt_int(const void *, size_t, int, int);
 extern int nni_chkopt_size(const void *, size_t, size_t, size_t);

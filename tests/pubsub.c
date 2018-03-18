@@ -151,7 +151,7 @@ TestMain("PUB/SUB pattern", {
 			nng_msg *msg;
 
 			So(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 90) == 0);
-			So(nng_setopt_int(sub, NNG_OPT_RAW, 1) == 0);
+			So(nng_setopt_bool(sub, NNG_OPT_RAW, true) == 0);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "/some/like/it/raw");
