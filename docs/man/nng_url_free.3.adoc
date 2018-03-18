@@ -16,11 +16,11 @@ nng_url_free - free a URL structure
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 
 void nng_url_free(nng_url *url);
------------
+----
 
 == DESCRIPTION
 

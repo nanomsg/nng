@@ -16,11 +16,11 @@ nng_url_parse - create URL structure from a string
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 
 int nng_url_parse(nng_url **urlp, const char *str);
------------
+----
 
 == DESCRIPTION
 
