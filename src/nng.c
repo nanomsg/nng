@@ -1157,6 +1157,7 @@ nng_aio_finish(nng_aio *aio, int rv)
 	nni_aio_finish(aio, rv, nni_aio_count(aio));
 }
 
+#if 0
 int
 nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)
 {
@@ -1222,6 +1223,7 @@ nng_stat_value(nng_stat *stat)
 	// Stats TBD.
 	return (0);
 }
+#endif
 
 int
 nng_url_parse(nng_url **result, const char *ustr)
