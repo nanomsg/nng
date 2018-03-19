@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -52,6 +52,15 @@ static const struct {
 	{ NNG_ECONNABORTED, ECONNABORTED  },
 	{ NNG_ECONNRESET,   ECONNRESET	  },
 	{ NNG_ECANCELED,    EBADF         },
+	{ NNG_EEXIST,       EEXIST        },
+	{ NNG_EWRITEONLY,   EACCES        },
+	{ NNG_EREADONLY,    EACCES        },
+	{ NNG_ECRYPTO,      EACCES        },
+	{ NNG_EPEERAUTH,    EACCES        },
+	{ NNG_EBADTYPE,     EINVAL        },
+	{ NNG_EAMBIGUOUS,   EINVAL        },
+	{ NNG_ENOFILES,     EMFILE        },
+	{ NNG_ENOSPC,       ENOSPC        },
 	{		 0,		0 },
 	// clang-format on
 };

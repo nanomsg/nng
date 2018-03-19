@@ -465,21 +465,26 @@ static nni_proto_pipe_ops surv0_pipe_ops = {
 static nni_proto_sock_option surv0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
+	    .pso_type   = NNI_TYPE_BOOL,
 	    .pso_getopt = surv0_sock_getopt_raw,
 	    .pso_setopt = surv0_sock_setopt_raw,
 	},
 	{
 	    .pso_name   = NNG_OPT_SURVEYOR_SURVEYTIME,
+	    .pso_type   = NNI_TYPE_DURATION,
 	    .pso_getopt = surv0_sock_getopt_surveytime,
 	    .pso_setopt = surv0_sock_setopt_surveytime,
 	},
 	{
 	    .pso_name   = NNG_OPT_MAXTTL,
+	    .pso_type   = NNI_TYPE_INT32,
 	    .pso_getopt = surv0_sock_getopt_maxttl,
 	    .pso_setopt = surv0_sock_setopt_maxttl,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .pso_name = NULL,
+	},
 };
 
 static nni_proto_sock_ops surv0_sock_ops = {

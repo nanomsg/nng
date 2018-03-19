@@ -289,7 +289,7 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 }
 
 int
-nni_pipe_getopt(nni_pipe *p, const char *name, void *val, size_t *szp)
+nni_pipe_getopt(nni_pipe *p, const char *name, void *val, size_t *szp, int typ)
 {
 	nni_tran_pipe_option *po;
 
@@ -297,10 +297,14 @@ nni_pipe_getopt(nni_pipe *p, const char *name, void *val, size_t *szp)
 		if (strcmp(po->po_name, name) != 0) {
 			continue;
 		}
+		if ((typ != NNI_TYPE_OPAQUE) &&
+		    (po->po_type != NNI_TYPE_OPAQUE) && (typ != po->po_type)) {
+			return (NNG_EBADTYPE);
+		}
 		return (po->po_getopt(p->p_tran_data, val, szp));
 	}
 	// Maybe the endpoint knows?
-	return (nni_ep_getopt(p->p_ep, name, val, szp));
+	return (nni_ep_getopt(p->p_ep, name, val, szp, typ));
 }
 
 void

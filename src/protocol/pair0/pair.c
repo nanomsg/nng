@@ -271,11 +271,14 @@ static nni_proto_pipe_ops pair0_pipe_ops = {
 static nni_proto_sock_option pair0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
+	    .pso_type   = NNI_TYPE_BOOL,
 	    .pso_getopt = pair0_sock_getopt_raw,
 	    .pso_setopt = pair0_sock_setopt_raw,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .pso_name = NULL,
+	}
 };
 
 static nni_proto_sock_ops pair0_sock_ops = {

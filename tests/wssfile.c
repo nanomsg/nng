@@ -144,15 +144,20 @@ check_props(nng_msg *msg)
 	p = nng_msg_get_pipe(msg);
 	So(p > 0);
 
+	// Typed
 	z = sizeof(nng_sockaddr);
-	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
+	So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(z == sizeof(la));
 	So(validloopback(&la));
 
+	// Untyped
 	z = sizeof(nng_sockaddr);
 	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
 	So(z == sizeof(ra));
 	So(validloopback(&ra));
+
+	// Bad type
+	So(nng_pipe_getopt_size(p, NNG_OPT_LOCADDR, &z) == NNG_EBADTYPE);
 
 	// Request header
 	z   = 0;
@@ -298,7 +303,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		char         addr[NNG_MAXADDRLEN];
 		nng_msg *    msg;
 		nng_pipe     p;
-		int          v;
+		bool         b;
 
 		So(nng_pair_open(&s1) == 0);
 		So(nng_pair_open(&s2) == 0);
@@ -337,8 +342,8 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
 		So(p > 0);
-		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
-		So(v == 0);
+		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
+		So(b == false);
 		nng_msg_free(msg);
 	});
 
@@ -350,7 +355,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		char         addr[NNG_MAXADDRLEN];
 		nng_msg *    msg;
 		nng_pipe     p;
-		int          v;
+		bool         b;
 
 		So(nng_pair_open(&s1) == 0);
 		So(nng_pair_open(&s2) == 0);
@@ -379,8 +384,8 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
 		So(p > 0);
-		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
-		So(v == 1);
+		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
+		So(b == true);
 		nng_msg_free(msg);
 	});
 

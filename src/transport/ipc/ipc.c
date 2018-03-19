@@ -703,10 +703,20 @@ nni_ipc_ep_get_addr(void *arg, void *data, size_t *szp)
 }
 
 static nni_tran_pipe_option nni_ipc_pipe_options[] = {
-	{ NNG_OPT_REMADDR, nni_ipc_pipe_get_addr },
-	{ NNG_OPT_LOCADDR, nni_ipc_pipe_get_addr },
+	{
+	    .po_name   = NNG_OPT_REMADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = nni_ipc_pipe_get_addr,
+	},
+	{
+	    .po_name   = NNG_OPT_LOCADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = nni_ipc_pipe_get_addr,
+	},
 	// terminate list
-	{ NULL, NULL },
+	{
+	    .po_name = NULL,
+	},
 };
 
 static nni_tran_pipe nni_ipc_pipe_ops = {
@@ -722,16 +732,20 @@ static nni_tran_pipe nni_ipc_pipe_ops = {
 static nni_tran_ep_option nni_ipc_ep_options[] = {
 	{
 	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_type   = NNI_TYPE_SIZE,
 	    .eo_getopt = nni_ipc_ep_getopt_recvmaxsz,
 	    .eo_setopt = nni_ipc_ep_setopt_recvmaxsz,
 	},
 	{
 	    .eo_name   = NNG_OPT_LOCADDR,
+	    .eo_type   = NNI_TYPE_SOCKADDR,
 	    .eo_getopt = nni_ipc_ep_get_addr,
 	    .eo_setopt = NULL,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .eo_name = NULL,
+	},
 };
 
 static nni_tran_ep nni_ipc_ep_ops = {

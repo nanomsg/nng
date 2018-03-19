@@ -581,7 +581,7 @@ nni_ep_pipe_remove(nni_ep *ep, nni_pipe *pipe)
 }
 
 int
-nni_ep_setopt(nni_ep *ep, const char *name, const void *val, size_t sz)
+nni_ep_setopt(nni_ep *ep, const char *name, const void *val, size_t sz, int t)
 {
 	nni_tran_ep_option *eo;
 
@@ -598,6 +598,11 @@ nni_ep_setopt(nni_ep *ep, const char *name, const void *val, size_t sz)
 		if (eo->eo_setopt == NULL) {
 			return (NNG_EREADONLY);
 		}
+		if ((t != NNI_TYPE_OPAQUE) &&
+		    (eo->eo_type != NNI_TYPE_OPAQUE) && (t != eo->eo_type)) {
+			return (NNG_EBADTYPE);
+		}
+
 		nni_mtx_lock(&ep->ep_mtx);
 		rv = eo->eo_setopt(ep->ep_data, val, sz);
 		nni_mtx_unlock(&ep->ep_mtx);
@@ -614,7 +619,25 @@ nni_ep_mode(nni_ep *ep)
 }
 
 int
-nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp)
+nni_ep_opttype(nni_ep *ep, const char *name, int *tp)
+{
+	nni_tran_ep_option *eo;
+
+	for (eo = ep->ep_ops.ep_options; eo && eo->eo_name; eo++) {
+		if (strcmp(eo->eo_name, name) == 0) {
+			*tp = eo->eo_type;
+			return (0);
+		}
+	}
+	if (strcmp(name, NNG_OPT_URL) == 0) {
+		*tp = NNI_TYPE_STRING;
+		return (0);
+	}
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp, int t)
 {
 	nni_tran_ep_option *eo;
 
@@ -626,6 +649,10 @@ nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp)
 		if (eo->eo_getopt == NULL) {
 			return (NNG_EWRITEONLY);
 		}
+		if ((t != NNI_TYPE_OPAQUE) &&
+		    (eo->eo_type != NNI_TYPE_OPAQUE) && (t != eo->eo_type)) {
+			return (NNG_EBADTYPE);
+		}
 		nni_mtx_lock(&ep->ep_mtx);
 		rv = eo->eo_getopt(ep->ep_data, valp, szp);
 		nni_mtx_unlock(&ep->ep_mtx);
@@ -636,10 +663,14 @@ nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp)
 	// override.  This allows the URL to be created with wildcards,
 	// that are resolved later.
 	if (strcmp(name, NNG_OPT_URL) == 0) {
+		if (t != NNI_TYPE_OPAQUE) {
+			// XXX: Add NNI_TYPE_STRING.
+			return (NNG_EBADTYPE);
+		}
 		return (nni_getopt_str(ep->ep_url->u_rawurl, valp, szp));
 	}
 
-	return (nni_sock_getopt(ep->ep_sock, name, valp, szp));
+	return (nni_sock_getopt(ep->ep_sock, name, valp, szp, t));
 }
 
 void

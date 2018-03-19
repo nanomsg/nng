@@ -46,12 +46,16 @@ struct nni_tran {
 // the old version around -- it may be possible to automatically convert
 // older versions in the future.
 #define NNI_TRANSPORT_V0 0x54520000
-#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V0
+#define NNI_TRANSPORT_V1 0x54520001
+#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V1
 
 // Endpoint option handlers.
 struct nni_tran_ep_option {
 	// eo_name is the name of the option.
 	const char *eo_name;
+
+	// eo_type is the type of the option.
+	int eo_type;
 
 	// eo_getopt retrieves the value of the option.
 	int (*eo_getopt)(void *, void *, size_t *);
@@ -112,6 +116,9 @@ struct nni_tran_ep {
 struct nni_tran_pipe_option {
 	// po_name is the name of the option.
 	const char *po_name;
+
+	// po_type is the type of the option.
+	int po_type;
 
 	// po_getopt retrieves the value of the option.
 	int (*po_getopt)(void *, void *, size_t *);

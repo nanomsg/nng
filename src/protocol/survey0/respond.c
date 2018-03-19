@@ -470,16 +470,20 @@ static nni_proto_pipe_ops resp0_pipe_ops = {
 static nni_proto_sock_option resp0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
+	    .pso_type   = NNI_TYPE_BOOL,
 	    .pso_getopt = resp0_sock_getopt_raw,
 	    .pso_setopt = resp0_sock_setopt_raw,
 	},
 	{
 	    .pso_name   = NNG_OPT_MAXTTL,
+	    .pso_type   = NNI_TYPE_INT32,
 	    .pso_getopt = resp0_sock_getopt_maxttl,
 	    .pso_setopt = resp0_sock_setopt_maxttl,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .pso_name = NULL,
+	},
 };
 
 static nni_proto_sock_ops resp0_sock_ops = {

@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -196,6 +196,13 @@ extern "C" {
 #ifndef EIO
 #define EIO			(NN_ERRBASE+32)
 #endif
+#ifndef EEXIST
+#define EEXIST			(NN_ERRBASE+33)
+#endif
+#ifndef ENOSPC
+#define ENOSPC			(NN_ERRBASE+34)
+#endif
+
 
 // Socket options
 #define NN_LINGER		1

@@ -136,4 +136,20 @@ typedef struct {
 // A few assorted other items.
 #define NNI_FLAG_IPV4ONLY 1
 
+// Types.  These are used to provide more structured access to options
+// (and maybe later statistics).  For now these are internal only.
+enum nni_type {
+	NNI_TYPE_OPAQUE,
+	NNI_TYPE_BOOL,
+	NNI_TYPE_INT32,
+	NNI_TYPE_UINT32,
+	NNI_TYPE_INT64,
+	NNI_TYPE_UINT64,
+	NNI_TYPE_SIZE,
+	NNI_TYPE_DURATION,
+	NNI_TYPE_STRING,
+	NNI_TYPE_SOCKADDR,
+	NNI_TYPE_POINTER,
+};
+
 #endif // CORE_DEFS_H

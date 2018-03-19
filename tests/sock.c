@@ -254,11 +254,11 @@ TestMain("Socket Operations", {
 			Convey("Bogus raw fails", {
 				// Bool type is 1 byte.
 				So(nng_setopt_int(s1, NNG_OPT_RAW, 42) ==
-				    NNG_EINVAL);
+				    NNG_EBADTYPE);
 				So(nng_setopt_int(s1, NNG_OPT_RAW, -42) ==
-				    NNG_EINVAL);
+				    NNG_EBADTYPE);
 				So(nng_setopt_int(s1, NNG_OPT_RAW, 0) ==
-				    NNG_EINVAL);
+				    NNG_EBADTYPE);
 				So(nng_setopt(s1, NNG_OPT_RAW, "abcd", 4) ==
 				    NNG_EINVAL);
 			});

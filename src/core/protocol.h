@@ -49,6 +49,7 @@ struct nni_proto_pipe_ops {
 
 struct nni_proto_sock_option {
 	const char *pso_name;
+	int         pso_type;
 	int (*pso_getopt)(void *, void *, size_t *);
 	int (*pso_setopt)(void *, const void *, size_t);
 };

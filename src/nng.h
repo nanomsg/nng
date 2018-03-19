@@ -51,6 +51,10 @@ extern "C" {
 #define NNG_MINOR_VERSION 7
 #define NNG_PATCH_VERSION 0
 
+// Maximum length of a socket address.  This includes the terminating NUL.
+// This limit is built into other implementations, so do not change it.
+#define NNG_MAXADDRLEN (128)
+
 // Types common to nng.
 typedef uint32_t            nng_socket;
 typedef uint32_t            nng_dialer;
@@ -61,6 +65,68 @@ typedef struct nng_msg      nng_msg;
 typedef struct nng_snapshot nng_snapshot;
 typedef struct nng_stat     nng_stat;
 typedef struct nng_aio      nng_aio;
+
+// Some address details.  This is in some ways like a traditional sockets
+// sockaddr, but we have our own to cope with our unique families, etc.
+// The details of this structure are directly exposed to applications.
+// These structures can be obtained via property lookups, etc.
+struct nng_sockaddr_inproc {
+	uint16_t sa_family;
+	char     sa_name[NNG_MAXADDRLEN];
+};
+typedef struct nng_sockaddr_inproc nng_sockaddr_inproc;
+
+struct nng_sockaddr_path {
+	uint16_t sa_family;
+	char     sa_path[NNG_MAXADDRLEN];
+};
+typedef struct nng_sockaddr_path nng_sockaddr_path;
+typedef struct nng_sockaddr_path nng_sockaddr_ipc;
+
+struct nng_sockaddr_in6 {
+	uint16_t sa_family;
+	uint16_t sa_port;
+	uint8_t  sa_addr[16];
+};
+typedef struct nng_sockaddr_in6 nng_sockaddr_in6;
+typedef struct nng_sockaddr_in6 nng_sockaddr_udp6;
+typedef struct nng_sockaddr_in6 nng_sockaddr_tcp6;
+
+struct nng_sockaddr_in {
+	uint16_t sa_family;
+	uint16_t sa_port;
+	uint32_t sa_addr;
+};
+
+struct nng_sockaddr_zt {
+	uint16_t sa_family;
+	uint64_t sa_nwid;
+	uint64_t sa_nodeid;
+	uint32_t sa_port;
+};
+
+typedef struct nng_sockaddr_in nng_sockaddr_in;
+typedef struct nng_sockaddr_in nng_sockaddr_udp;
+typedef struct nng_sockaddr_in nng_sockaddr_tcp;
+typedef struct nng_sockaddr_zt nng_sockaddr_zt;
+
+typedef union nng_sockaddr {
+	uint16_t            s_family;
+	nng_sockaddr_ipc    s_ipc;
+	nng_sockaddr_inproc s_inproc;
+	nng_sockaddr_in6    s_in6;
+	nng_sockaddr_in     s_in;
+	nng_sockaddr_zt     s_zt;
+} nng_sockaddr;
+
+enum nng_sockaddr_family {
+	NNG_AF_UNSPEC = 0,
+	NNG_AF_INPROC = 1,
+	NNG_AF_IPC    = 2,
+	NNG_AF_INET   = 3,
+	NNG_AF_INET6  = 4,
+	NNG_AF_ZT     = 5, // ZeroTier
+};
 
 // Scatter/gather I/O.
 typedef struct nng_iov {
@@ -171,6 +237,8 @@ NNG_DECL int nng_dialer_getopt_bool(nng_dialer, const char *, bool *);
 NNG_DECL int nng_dialer_getopt_int(nng_dialer, const char *, int *);
 NNG_DECL int nng_dialer_getopt_ms(nng_dialer, const char *, nng_duration *);
 NNG_DECL int nng_dialer_getopt_size(nng_dialer, const char *, size_t *);
+NNG_DECL int nng_dialer_getopt_sockaddr(
+    nng_dialer, const char *, nng_sockaddr *);
 NNG_DECL int nng_dialer_getopt_uint64(nng_dialer, const char *, uint64_t *);
 NNG_DECL int nng_dialer_getopt_ptr(nng_dialer, const char *, void **);
 
@@ -198,6 +266,8 @@ NNG_DECL int nng_listener_getopt_int(nng_listener, const char *, int *);
 NNG_DECL int nng_listener_getopt_ms(
     nng_listener, const char *, nng_duration *);
 NNG_DECL int nng_listener_getopt_size(nng_listener, const char *, size_t *);
+NNG_DECL int nng_listener_getopt_sockaddr(
+    nng_listener, const char *, nng_sockaddr *);
 NNG_DECL int nng_listener_getopt_uint64(
     nng_listener, const char *, uint64_t *);
 NNG_DECL int nng_listener_getopt_ptr(nng_listener, const char *, void **);
@@ -405,6 +475,7 @@ NNG_DECL int nng_pipe_getopt_bool(nng_pipe, const char *, bool *);
 NNG_DECL int nng_pipe_getopt_int(nng_pipe, const char *, int *);
 NNG_DECL int nng_pipe_getopt_ms(nng_pipe, const char *, nng_duration *);
 NNG_DECL int nng_pipe_getopt_size(nng_pipe, const char *, size_t *);
+NNG_DECL int nng_pipe_getopt_sockaddr(nng_pipe, const char *, nng_sockaddr *);
 NNG_DECL int nng_pipe_getopt_uint64(nng_pipe, const char *, uint64_t *);
 NNG_DECL int nng_pipe_getopt_ptr(nng_pipe, const char *, void **);
 NNG_DECL int nng_pipe_close(nng_pipe);
@@ -492,15 +563,15 @@ enum nng_flag_enum {
 // object must be deallocated expressly by the user, and may persist beyond
 // the lifetime of any socket object used to update it.  Note that the
 // values of the statistics are initially unset.
-//NNG_DECL int nng_snapshot_create(nng_socket, nng_snapshot **);
+// NNG_DECL int nng_snapshot_create(nng_socket, nng_snapshot **);
 
 // nng_snapshot_free frees a snapshot object.  All statistic objects
 // contained therein are destroyed as well.
-//NNG_DECL void nng_snapshot_free(nng_snapshot *);
+// NNG_DECL void nng_snapshot_free(nng_snapshot *);
 
 // nng_snapshot_update updates a snapshot of all the statistics
 // relevant to a particular socket.  All prior values are overwritten.
-//NNG_DECL int nng_snapshot_update(nng_snapshot *);
+// NNG_DECL int nng_snapshot_update(nng_snapshot *);
 
 // nng_snapshot_next is used to iterate over the individual statistic
 // objects inside the snapshot. Note that the statistic object, and the
@@ -511,13 +582,13 @@ enum nng_flag_enum {
 // Iteration begins by providing NULL in the value referenced. Successive
 // calls will update this value, returning NULL when no more statistics
 // are available in the snapshot.
-//NNG_DECL int nng_snapshot_next(nng_snapshot *, nng_stat **);
+// NNG_DECL int nng_snapshot_next(nng_snapshot *, nng_stat **);
 
 // nng_stat_name is used to determine the name of the statistic.
 // This is a human readable name.  Statistic names, as well as the presence
 // or absence or semantic of any particular statistic are not part of any
 // stable API, and may be changed without notice in future updates.
-//NNG_DECL const char *nng_stat_name(nng_stat *);
+// NNG_DECL const char *nng_stat_name(nng_stat *);
 
 // nng_stat_type is used to determine the type of the statistic.
 // At present, only NNG_STAT_TYPE_LEVEL and and NNG_STAT_TYPE_COUNTER
@@ -525,7 +596,7 @@ enum nng_flag_enum {
 // value over time are likely more interesting than the actual level.  Level
 // values reflect some absolute state however, and should be presented to the
 // user as is.
-//NNG_DECL int nng_stat_type(nng_stat *);
+// NNG_DECL int nng_stat_type(nng_stat *);
 
 enum nng_stat_type_enum {
 	NNG_STAT_LEVEL   = 0,
@@ -536,7 +607,7 @@ enum nng_stat_type_enum {
 // such as NNG_UNIT_BYTES or NNG_UNIT_BYTES.  If no specific unit is
 // applicable, such as a relative priority, then NN_UNIT_NONE is
 // returned.
-//NNG_DECL int nng_stat_unit(nng_stat *);
+// NNG_DECL int nng_stat_unit(nng_stat *);
 
 enum nng_unit_enum {
 	NNG_UNIT_NONE     = 0,
@@ -550,7 +621,7 @@ enum nng_unit_enum {
 // nng_stat_value returns returns the actual value of the statistic.
 // Statistic values reflect their value at the time that the corresponding
 // snapshot was updated, and are undefined until an update is performed.
-//NNG_DECL int64_t nng_stat_value(nng_stat *);
+// NNG_DECL int64_t nng_stat_value(nng_stat *);
 
 // Device functionality.  This connects two sockets together in a device,
 // which means that messages from one side are forwarded to the other.
@@ -612,75 +683,10 @@ enum nng_errno_enum {
 	NNG_EPEERAUTH    = 27,
 	NNG_ENOARG       = 28,
 	NNG_EAMBIGUOUS   = 29,
+	NNG_EBADTYPE     = 30,
 	NNG_EINTERNAL    = 1000,
 	NNG_ESYSERR      = 0x10000000,
 	NNG_ETRANERR     = 0x20000000,
-};
-
-// Maximum length of a socket address.  This includes the terminating NUL.
-// This limit is built into other implementations, so do not change it.
-#define NNG_MAXADDRLEN (128)
-
-// Some address details.  This is in some ways like a traditional sockets
-// sockaddr, but we have our own to cope with our unique families, etc.
-// The details of this structure are directly exposed to applications.
-// These structures can be obtained via property lookups, etc.
-struct nng_sockaddr_inproc {
-	uint16_t sa_family;
-	char     sa_name[NNG_MAXADDRLEN];
-};
-typedef struct nng_sockaddr_inproc nng_sockaddr_inproc;
-
-struct nng_sockaddr_path {
-	uint16_t sa_family;
-	char     sa_path[NNG_MAXADDRLEN];
-};
-typedef struct nng_sockaddr_path nng_sockaddr_path;
-typedef struct nng_sockaddr_path nng_sockaddr_ipc;
-
-struct nng_sockaddr_in6 {
-	uint16_t sa_family;
-	uint16_t sa_port;
-	uint8_t  sa_addr[16];
-};
-typedef struct nng_sockaddr_in6 nng_sockaddr_in6;
-typedef struct nng_sockaddr_in6 nng_sockaddr_udp6;
-typedef struct nng_sockaddr_in6 nng_sockaddr_tcp6;
-
-struct nng_sockaddr_in {
-	uint16_t sa_family;
-	uint16_t sa_port;
-	uint32_t sa_addr;
-};
-
-struct nng_sockaddr_zt {
-	uint16_t sa_family;
-	uint64_t sa_nwid;
-	uint64_t sa_nodeid;
-	uint32_t sa_port;
-};
-
-typedef struct nng_sockaddr_in nng_sockaddr_in;
-typedef struct nng_sockaddr_in nng_sockaddr_udp;
-typedef struct nng_sockaddr_in nng_sockaddr_tcp;
-typedef struct nng_sockaddr_zt nng_sockaddr_zt;
-
-typedef union nng_sockaddr {
-	uint16_t            s_family;
-	nng_sockaddr_ipc    s_ipc;
-	nng_sockaddr_inproc s_inproc;
-	nng_sockaddr_in6    s_in6;
-	nng_sockaddr_in     s_in;
-	nng_sockaddr_zt     s_zt;
-} nng_sockaddr;
-
-enum nng_sockaddr_family {
-	NNG_AF_UNSPEC = 0,
-	NNG_AF_INPROC = 1,
-	NNG_AF_IPC    = 2,
-	NNG_AF_INET   = 3,
-	NNG_AF_INET6  = 4,
-	NNG_AF_ZT     = 5, // ZeroTier
 };
 
 // URL support.  We frequently want to process a URL, and these methods

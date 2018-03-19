@@ -115,20 +115,24 @@ check_props_v4(nng_msg *msg)
 	nng_sockaddr la;
 	nng_sockaddr ra;
 
-	z = sizeof(nng_sockaddr);
-	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-	So(z == sizeof(la));
+	// Typed access
+	So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(la.s_family == NNG_AF_INET);
 	So(la.s_in.sa_port == htons(trantest_port - 1));
 	So(la.s_in.sa_port != 0);
 	So(la.s_in.sa_addr == htonl(0x7f000001));
 
+	// Untyped access
 	z = sizeof(nng_sockaddr);
 	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
 	So(z == sizeof(ra));
 	So(ra.s_family == NNG_AF_INET);
 	So(ra.s_in.sa_port != 0);
 	So(ra.s_in.sa_addr == htonl(0x7f000001));
+
+	// Check for type enforcement
+	int i;
+	So(nng_pipe_getopt_int(p, NNG_OPT_REMADDR, &i) == NNG_EBADTYPE);
 
 	return (0);
 }
@@ -379,7 +383,7 @@ TestMain("TLS Transport", {
 		char         addr[NNG_MAXADDRLEN];
 		nng_msg *    msg;
 		nng_pipe     p;
-		int          v;
+		bool         b;
 		nng_dialer   d;
 
 		So(nng_pair_open(&s1) == 0);
@@ -412,8 +416,8 @@ TestMain("TLS Transport", {
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
 		So(p > 0);
-		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
-		So(v == 0);
+		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
+		So(b == false);
 		nng_msg_free(msg);
 	});
 
@@ -425,7 +429,7 @@ TestMain("TLS Transport", {
 		char         addr[NNG_MAXADDRLEN];
 		nng_msg *    msg;
 		nng_pipe     p;
-		int          v;
+		bool         b;
 
 		So(nng_pair_open(&s1) == 0);
 		So(nng_pair_open(&s2) == 0);
@@ -454,9 +458,11 @@ TestMain("TLS Transport", {
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
 		So(p > 0);
-		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &v) == 0);
-		So(v == 1);
+		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
+		So(b == true);
+		int i;
+		So(nng_pipe_getopt_int(p, NNG_OPT_TLS_VERIFIED, &i) ==
+		    NNG_EBADTYPE);
 		nng_msg_free(msg);
 	});
-
 })

@@ -19,8 +19,7 @@ nng_listener_getopt - get listener option
 ----
 #include <nng/nng.h>
 
-int nng_listener_getopt(nng_listener l, const char *opt, void *val,
-    size_t *valszp);
+int nng_listener_getopt(nng_listener l, const char *opt, void *val, size_t *valszp);
 
 int nng_listener_getopt_bool(nng_listener l, const char *opt, bool *bvalp);
 
@@ -30,7 +29,9 @@ int nng_listener_getopt_ms(nng_listener l, const char *opt, nng_duration *durp);
 
 int nng_listener_getopt_ptr(nng_listener l, const char *opt, void **ptr);
 
-int nng_listener_setopt_size(nng_listener l, const char *opt, size_t *zp);
+int nng_listener_getopt_size(nng_listener l, const char *opt, size_t *zp);
+
+int nng_listener_getopt_sockaddr(nng_listener l, const char *opt, nng_sockaddr *sap);
 
 int nng_listener_getopt_uint64(nng_listener l, const char *opt, uint64_t *u64p);
 ----
@@ -80,7 +81,7 @@ the object.
 
 ==== `nng_listener_getopt_bool()`
 This function is for options which take a boolean (`bool`).
-The value will be stored at _ivalp_.
+The value will be stored at _bvalp_.
 
 ==== `nng_listener_getopt_int()`
 This function is for options which take an integer (`int`).
@@ -89,8 +90,6 @@ The value will be stored at _ivalp_.
 ==== `nng_listener_getopt_ms()`
 This function is used to retrieve time <<nng_duration.5#,durations>>
 (such as timeouts), stored in _durp_ as a number of milliseconds.
-(The special value ((`NNG_DUR_INFINITE`)) means an infinite amount of time, and
-the special value ((`NNG_DUR_DEFAULT`)) means a context-specific default.)
 
 ==== `nng_listener_getopt_ptr()`
 This function is used to retrieve a pointer, _ptr_, to structured data.
@@ -101,6 +100,10 @@ not copied, but instead the *pointer* to the object is copied.
 ==== `nng_listener_getopt_size()`
 This function is used to retrieve a size into the pointer _zp_,
 typically for buffer sizes, message maximum sizes, and similar options.
+
+==== `nng_listener_getopt_sockaddr()`
+This function is used to retrieve an <<nng_sockaddr.5#,`nng_sockaddr`>>
+into the value referenced by _sap_.
 
 ==== `nng_listener_getopt_uint64()`
 This function is used to retrieve a 64-bit unsigned value into the value
@@ -125,4 +128,8 @@ These functions return 0 on success, and non-zero otherwise.
 <<nng_listener_setopt.3#,nng_listener_setopt(3)>>
 <<nng_getopt.3#,nng_getopt(3)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_duration.5#,nng_duration(5)>>,
+<<nng_listener.5#,nng_listener(5)>>,
+<<nng_options.5#,nng_options(5)>>,
+<<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng.7#,nng(7)>>

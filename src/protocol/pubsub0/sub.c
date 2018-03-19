@@ -361,21 +361,26 @@ static nni_proto_pipe_ops sub0_pipe_ops = {
 static nni_proto_sock_option sub0_sock_options[] = {
 	{
 	    .pso_name   = NNG_OPT_RAW,
+	    .pso_type   = NNI_TYPE_BOOL,
 	    .pso_getopt = sub0_sock_getopt_raw,
 	    .pso_setopt = sub0_sock_setopt_raw,
 	},
 	{
 	    .pso_name   = NNG_OPT_SUB_SUBSCRIBE,
+	    .pso_type   = NNI_TYPE_OPAQUE,
 	    .pso_getopt = NULL,
 	    .pso_setopt = sub0_subscribe,
 	},
 	{
 	    .pso_name   = NNG_OPT_SUB_UNSUBSCRIBE,
+	    .pso_type   = NNI_TYPE_OPAQUE,
 	    .pso_getopt = NULL,
 	    .pso_setopt = sub0_unsubscribe,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .pso_name = NULL,
+	},
 };
 
 static nni_proto_sock_ops sub0_sock_ops = {

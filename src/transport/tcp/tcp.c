@@ -776,10 +776,20 @@ nni_tcp_ep_getopt_linger(void *arg, void *v, size_t *szp)
 }
 
 static nni_tran_pipe_option nni_tcp_pipe_options[] = {
-	{ NNG_OPT_LOCADDR, nni_tcp_pipe_getopt_locaddr },
-	{ NNG_OPT_REMADDR, nni_tcp_pipe_getopt_remaddr },
+	{
+	    .po_name   = NNG_OPT_LOCADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = nni_tcp_pipe_getopt_locaddr,
+	},
+	{
+	    .po_name   = NNG_OPT_REMADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = nni_tcp_pipe_getopt_remaddr,
+	},
 	// terminate list
-	{ NULL, NULL }
+	{
+	    .po_name = NULL,
+	},
 };
 
 static nni_tran_pipe nni_tcp_pipe_ops = {
@@ -795,21 +805,26 @@ static nni_tran_pipe nni_tcp_pipe_ops = {
 static nni_tran_ep_option nni_tcp_ep_options[] = {
 	{
 	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_type   = NNI_TYPE_SIZE,
 	    .eo_getopt = nni_tcp_ep_getopt_recvmaxsz,
 	    .eo_setopt = nni_tcp_ep_setopt_recvmaxsz,
 	},
 	{
 	    .eo_name   = NNG_OPT_URL,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = nni_tcp_ep_getopt_url,
 	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_LINGER,
+	    .eo_type   = NNI_TYPE_DURATION,
 	    .eo_getopt = nni_tcp_ep_getopt_linger,
 	    .eo_setopt = nni_tcp_ep_setopt_linger,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .eo_name = NULL,
+	},
 };
 
 static nni_tran_ep nni_tcp_ep_ops = {

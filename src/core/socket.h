@@ -24,8 +24,10 @@ extern uint16_t    nni_sock_proto(nni_sock *);
 extern uint16_t    nni_sock_peer(nni_sock *);
 extern const char *nni_sock_proto_name(nni_sock *);
 extern const char *nni_sock_peer_name(nni_sock *);
-extern int  nni_sock_setopt(nni_sock *, const char *, const void *, size_t);
-extern int  nni_sock_getopt(nni_sock *, const char *, void *, size_t *);
+
+extern int nni_sock_setopt(
+    nni_sock *, const char *, const void *, size_t, int);
+extern int  nni_sock_getopt(nni_sock *, const char *, void *, size_t *, int);
 extern int  nni_sock_recvmsg(nni_sock *, nni_msg **, int);
 extern int  nni_sock_sendmsg(nni_sock *, nni_msg *, int);
 extern void nni_sock_send(nni_sock *, nni_aio *);

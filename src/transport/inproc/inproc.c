@@ -421,10 +421,20 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 }
 
 static nni_tran_pipe_option nni_inproc_pipe_options[] = {
-	{ NNG_OPT_LOCADDR, nni_inproc_pipe_get_addr },
-	{ NNG_OPT_REMADDR, nni_inproc_pipe_get_addr },
+	{
+	    .po_name   = NNG_OPT_LOCADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = nni_inproc_pipe_get_addr,
+	},
+	{
+	    .po_name   = NNG_OPT_REMADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = nni_inproc_pipe_get_addr,
+	},
 	// terminate list
-	{ NULL, NULL },
+	{
+	    .po_name = NULL,
+	},
 };
 
 static nni_tran_pipe nni_inproc_pipe_ops = {
@@ -438,7 +448,9 @@ static nni_tran_pipe nni_inproc_pipe_ops = {
 
 static nni_tran_ep_option nni_inproc_ep_options[] = {
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .eo_name = NULL,
+	},
 };
 
 static nni_tran_ep nni_inproc_ep_ops = {

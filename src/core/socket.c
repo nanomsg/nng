@@ -21,6 +21,7 @@ static nni_mtx     nni_sock_lk;
 
 typedef struct nni_socket_option {
 	const char *so_name;
+	int         so_type;
 	int (*so_getopt)(nni_sock *, void *, size_t *);
 	int (*so_setopt)(nni_sock *, const void *, size_t);
 } nni_socket_option;
@@ -28,6 +29,7 @@ typedef struct nni_socket_option {
 typedef struct nni_sockopt {
 	nni_list_node node;
 	char *        name;
+	int           typ;
 	size_t        sz;
 	void *        data;
 } nni_sockopt;
@@ -251,51 +253,62 @@ nni_sock_setopt_sockname(nni_sock *s, const void *buf, size_t sz)
 static const nni_socket_option nni_sock_options[] = {
 	{
 	    .so_name   = NNG_OPT_RECVTIMEO,
+	    .so_type   = NNI_TYPE_DURATION,
 	    .so_getopt = nni_sock_getopt_recvtimeo,
 	    .so_setopt = nni_sock_setopt_recvtimeo,
 	},
 	{
 	    .so_name   = NNG_OPT_SENDTIMEO,
+	    .so_type   = NNI_TYPE_DURATION,
 	    .so_getopt = nni_sock_getopt_sendtimeo,
 	    .so_setopt = nni_sock_setopt_sendtimeo,
 	},
 	{
 	    .so_name   = NNG_OPT_RECVFD,
+	    .so_type   = NNI_TYPE_INT32,
 	    .so_getopt = nni_sock_getopt_recvfd,
 	    .so_setopt = NULL,
 	},
 	{
 	    .so_name   = NNG_OPT_SENDFD,
+	    .so_type   = NNI_TYPE_INT32,
 	    .so_getopt = nni_sock_getopt_sendfd,
 	    .so_setopt = NULL,
 	},
 	{
 	    .so_name   = NNG_OPT_RECVBUF,
+	    .so_type   = NNI_TYPE_INT32,
 	    .so_getopt = nni_sock_getopt_recvbuf,
 	    .so_setopt = nni_sock_setopt_recvbuf,
 	},
 	{
 	    .so_name   = NNG_OPT_SENDBUF,
+	    .so_type   = NNI_TYPE_INT32,
 	    .so_getopt = nni_sock_getopt_sendbuf,
 	    .so_setopt = nni_sock_setopt_sendbuf,
 	},
 	{
 	    .so_name   = NNG_OPT_RECONNMINT,
+	    .so_type   = NNI_TYPE_DURATION,
 	    .so_getopt = nni_sock_getopt_reconnmint,
 	    .so_setopt = nni_sock_setopt_reconnmint,
 	},
 	{
 	    .so_name   = NNG_OPT_RECONNMAXT,
+	    .so_type   = NNI_TYPE_DURATION,
 	    .so_getopt = nni_sock_getopt_reconnmaxt,
 	    .so_setopt = nni_sock_setopt_reconnmaxt,
 	},
 	{
 	    .so_name   = NNG_OPT_SOCKNAME,
+	    .so_type   = NNI_TYPE_STRING,
 	    .so_getopt = nni_sock_getopt_sockname,
 	    .so_setopt = nni_sock_setopt_sockname,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .so_name = NULL,
+	},
 };
 
 static void
@@ -513,17 +526,17 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	    ((rv = nni_msgq_init(&s->s_urq, 0)) != 0) ||
 	    ((rv = s->s_sock_ops.sock_init(&s->s_data, s)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_LINGER, &s->s_linger,
-	          sizeof(nni_duration))) != 0) ||
+	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_SENDTIMEO, &s->s_sndtimeo,
-	          sizeof(nni_duration))) != 0) ||
+	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_RECVTIMEO, &s->s_rcvtimeo,
-	          sizeof(nni_duration))) != 0) ||
+	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_RECONNMINT, &s->s_reconn,
-	          sizeof(nni_duration))) != 0) ||
+	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_RECONNMAXT, &s->s_reconnmax,
-	          sizeof(nni_duration))) != 0) ||
+	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_RECVMAXSZ, &s->s_rcvmaxsz,
-	          sizeof(size_t))) != 0)) {
+	          sizeof(size_t), NNI_TYPE_SIZE)) != 0)) {
 		nni_sock_destroy(s);
 		return (rv);
 	}
@@ -823,7 +836,8 @@ nni_sock_ep_add(nni_sock *s, nni_ep *ep)
 
 	NNI_LIST_FOREACH (&s->s_options, sopt) {
 		int rv;
-		rv = nni_ep_setopt(ep, sopt->name, sopt->data, sopt->sz);
+		rv = nni_ep_setopt(
+		    ep, sopt->name, sopt->data, sopt->sz, NNI_TYPE_OPAQUE);
 		if ((rv != 0) && (rv != NNG_ENOTSUP)) {
 			nni_mtx_unlock(&s->s_mx);
 			return (rv);
@@ -849,7 +863,7 @@ nni_sock_ep_remove(nni_sock *sock, nni_ep *ep)
 }
 
 int
-nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
+nni_sock_setopt(nni_sock *s, const char *name, const void *v, size_t sz, int t)
 {
 	int                          rv = NNG_ENOTSUP;
 	nni_ep *                     ep;
@@ -873,7 +887,12 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 			nni_mtx_unlock(&s->s_mx);
 			return (NNG_EREADONLY);
 		}
-		rv = pso->pso_setopt(s->s_data, val, size);
+		if ((pso->pso_type != NNI_TYPE_OPAQUE) &&
+		    (t != NNI_TYPE_OPAQUE) && (t != pso->pso_type)) {
+			nni_mtx_unlock(&s->s_mx);
+			return (NNG_EBADTYPE);
+		}
+		rv = pso->pso_setopt(s->s_data, v, sz);
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}
@@ -887,7 +906,12 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 			nni_mtx_unlock(&s->s_mx);
 			return (NNG_EREADONLY);
 		}
-		rv = sso->so_setopt(s, val, size);
+		if ((sso->so_type != NNI_TYPE_OPAQUE) &&
+		    (t != NNI_TYPE_OPAQUE) && (t != sso->so_type)) {
+			nni_mtx_unlock(&s->s_mx);
+			return (NNG_EBADTYPE);
+		}
+		rv = sso->so_setopt(s, v, sz);
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}
@@ -901,17 +925,17 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 
 	// Validation of transport options.  This is stateless, so transports
 	// should not fail to set an option later if they passed it here.
-	rv = nni_tran_chkopt(name, val, size);
+	rv = nni_tran_chkopt(name, v, sz);
 
 	// Also check a few generic things.  We do this if no transport
 	// was found, or even if a transport rejected one of the settings.
 	if ((rv == NNG_ENOTSUP) || (rv == 0)) {
 		if ((strcmp(name, NNG_OPT_LINGER) == 0)) {
-			rv = nni_chkopt_ms(val, size);
+			rv = nni_chkopt_ms(v, sz);
 		} else if (strcmp(name, NNG_OPT_RECVMAXSZ) == 0) {
 			// just a sanity test on the size; it also ensures that
 			// a size can be set even with no transport configured.
-			rv = nni_chkopt_size(val, size, 0, NNI_MAXSZ);
+			rv = nni_chkopt_size(v, sz, 0, NNI_MAXSZ);
 		}
 	}
 
@@ -923,24 +947,25 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 	if ((optv = NNI_ALLOC_STRUCT(optv)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((optv->data = nni_alloc(size)) == NULL) {
+	if ((optv->data = nni_alloc(sz)) == NULL) {
 		NNI_FREE_STRUCT(optv);
 		return (NNG_ENOMEM);
 	}
 	if ((optv->name = nni_strdup(name)) == NULL) {
-		nni_free(optv->data, size);
+		nni_free(optv->data, sz);
 		NNI_FREE_STRUCT(optv);
 		return (NNG_ENOMEM);
 	}
-	memcpy(optv->data, val, size);
-	optv->sz = size;
+	memcpy(optv->data, v, sz);
+	optv->sz  = sz;
+	optv->typ = t;
 	NNI_LIST_NODE_INIT(&optv->node);
 
 	nni_mtx_lock(&s->s_mx);
 	NNI_LIST_FOREACH (&s->s_options, oldv) {
 		if (strcmp(oldv->name, name) == 0) {
-			if ((oldv->sz != size) ||
-			    (memcmp(oldv->data, val, size) != 0)) {
+			if ((oldv->sz != sz) ||
+			    (memcmp(oldv->data, v, sz) != 0)) {
 				break;
 			}
 
@@ -956,7 +981,17 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 	// important that transport wide checks properly pre-validate.
 	NNI_LIST_FOREACH (&s->s_eps, ep) {
 		int x;
-		x = nni_ep_setopt(ep, optv->name, optv->data, size);
+		if (optv->typ == NNI_TYPE_OPAQUE) {
+			int t2;
+			if (nni_ep_opttype(ep, optv->name, &t2) ==
+			    NNG_ENOTSUP) {
+				continue;
+			}
+			// This allows us to determine what the type
+			// *should* be.
+			optv->typ = t2;
+		}
+		x = nni_ep_setopt(ep, optv->name, optv->data, sz, t);
 		if (x != NNG_ENOTSUP) {
 			if ((rv = x) != 0) {
 				nni_mtx_unlock(&s->s_mx);
@@ -971,7 +1006,7 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 	// will already have had a chance to veto this.
 
 	if (strcmp(name, NNG_OPT_LINGER) == 0) {
-		rv = nni_setopt_ms(&s->s_linger, val, size);
+		rv = nni_setopt_ms(&s->s_linger, v, sz);
 	}
 
 	if (rv == 0) {
@@ -994,7 +1029,7 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 }
 
 int
-nni_sock_getopt(nni_sock *s, const char *name, void *val, size_t *szp)
+nni_sock_getopt(nni_sock *s, const char *name, void *val, size_t *szp, int t)
 {
 	int                          rv = NNG_ENOTSUP;
 	nni_sockopt *                sopt;
@@ -1016,12 +1051,17 @@ nni_sock_getopt(nni_sock *s, const char *name, void *val, size_t *szp)
 			nni_mtx_unlock(&s->s_mx);
 			return (NNG_EWRITEONLY);
 		}
+		if ((pso->pso_type != NNI_TYPE_OPAQUE) &&
+		    (t != NNI_TYPE_OPAQUE) && (t != pso->pso_type)) {
+			nni_mtx_unlock(&s->s_mx);
+			return (NNG_EBADTYPE);
+		}
 		rv = pso->pso_getopt(s->s_data, val, szp);
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}
 
-	// Options that are handled by socket core, and never passed down.
+	// Socket generic options.
 	for (sso = nni_sock_options; sso->so_name != NULL; sso++) {
 		if (strcmp(name, sso->so_name) != 0) {
 			continue;
@@ -1029,6 +1069,11 @@ nni_sock_getopt(nni_sock *s, const char *name, void *val, size_t *szp)
 		if (sso->so_getopt == NULL) {
 			nni_mtx_unlock(&s->s_mx);
 			return (NNG_EWRITEONLY);
+		}
+		if ((sso->so_type != NNI_TYPE_OPAQUE) &&
+		    (t != NNI_TYPE_OPAQUE) && (t != sso->so_type)) {
+			nni_mtx_unlock(&s->s_mx);
+			return (NNG_EBADTYPE);
 		}
 		rv = sso->so_getopt(s, val, szp);
 		nni_mtx_unlock(&s->s_mx);
@@ -1038,6 +1083,12 @@ nni_sock_getopt(nni_sock *s, const char *name, void *val, size_t *szp)
 	NNI_LIST_FOREACH (&s->s_options, sopt) {
 		if (strcmp(sopt->name, name) == 0) {
 			size_t sz = sopt->sz;
+
+			if ((sopt->typ != NNI_TYPE_OPAQUE) &&
+			    (t != NNI_TYPE_OPAQUE) && (t != sopt->typ)) {
+				nni_mtx_unlock(&s->s_mx);
+				return (NNG_EBADTYPE);
+			}
 			if (sopt->sz > *szp) {
 				sz = *szp;
 			}

@@ -537,16 +537,35 @@ ws_pipe_getopt_tls_verified(void *arg, void *v, size_t *szp)
 
 static nni_tran_pipe_option ws_pipe_options[] = {
 
-	// clang-format off
-	{ NNG_OPT_LOCADDR, ws_pipe_getopt_locaddr },
-	{ NNG_OPT_REMADDR, ws_pipe_getopt_remaddr },
-	{ NNG_OPT_WS_REQUEST_HEADERS, ws_pipe_getopt_reqhdrs },
-	{ NNG_OPT_WS_RESPONSE_HEADERS, ws_pipe_getopt_reshdrs },
-	{ NNG_OPT_TLS_VERIFIED, ws_pipe_getopt_tls_verified },
-	// clang-format on
-
+	{
+	    .po_name   = NNG_OPT_LOCADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = ws_pipe_getopt_locaddr,
+	},
+	{
+	    .po_name   = NNG_OPT_REMADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = ws_pipe_getopt_remaddr,
+	},
+	{
+	    .po_name   = NNG_OPT_WS_REQUEST_HEADERS,
+	    .po_type   = NNI_TYPE_STRING,
+	    .po_getopt = ws_pipe_getopt_reqhdrs,
+	},
+	{
+	    .po_name   = NNG_OPT_WS_RESPONSE_HEADERS,
+	    .po_type   = NNI_TYPE_STRING,
+	    .po_getopt = ws_pipe_getopt_reshdrs,
+	},
+	{
+	    .po_name   = NNG_OPT_TLS_VERIFIED,
+	    .po_type   = NNI_TYPE_BOOL,
+	    .po_getopt = ws_pipe_getopt_tls_verified,
+	},
 	// terminate list
-	{ NULL, NULL }
+	{
+	    .po_name = NULL,
+	}
 };
 
 static nni_tran_pipe ws_pipe_ops = {
@@ -561,22 +580,26 @@ static nni_tran_pipe ws_pipe_ops = {
 static nni_tran_ep_option ws_ep_options[] = {
 	{
 	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_type   = NNI_TYPE_SIZE,
 	    .eo_getopt = ws_ep_getopt_recvmaxsz,
 	    .eo_setopt = ws_ep_setopt_recvmaxsz,
 	},
 	{
 	    .eo_name   = NNG_OPT_WS_REQUEST_HEADERS,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = ws_ep_setopt_reqhdrs,
 	},
 	{
 	    .eo_name   = NNG_OPT_WS_RESPONSE_HEADERS,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = ws_ep_setopt_reshdrs,
 	},
-
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .eo_name = NULL,
+	},
 };
 
 static void
@@ -910,46 +933,56 @@ wss_ep_setopt_tls_server_name(void *arg, const void *v, size_t sz)
 static nni_tran_ep_option wss_ep_options[] = {
 	{
 	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_type   = NNI_TYPE_SIZE,
 	    .eo_getopt = ws_ep_getopt_recvmaxsz,
 	    .eo_setopt = ws_ep_setopt_recvmaxsz,
 	},
 	{
 	    .eo_name   = NNG_OPT_WS_REQUEST_HEADERS,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = ws_ep_setopt_reqhdrs,
 	},
 	{
 	    .eo_name   = NNG_OPT_WS_RESPONSE_HEADERS,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = ws_ep_setopt_reshdrs,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_CONFIG,
+	    .eo_type   = NNI_TYPE_POINTER,
 	    .eo_getopt = wss_ep_getopt_tlsconfig,
 	    .eo_setopt = wss_ep_setopt_tlsconfig,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_CERT_KEY_FILE,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = wss_ep_setopt_tls_cert_key_file,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_CA_FILE,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = wss_ep_setopt_tls_ca_file,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_AUTH_MODE,
+	    .eo_type   = NNI_TYPE_INT32,
 	    .eo_getopt = NULL,
 	    .eo_setopt = wss_ep_setopt_tls_auth_mode,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_SERVER_NAME,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = wss_ep_setopt_tls_server_name,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .eo_name = NULL,
+	},
 };
 
 static nni_tran_ep wss_ep_ops = {

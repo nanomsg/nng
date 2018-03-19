@@ -29,7 +29,9 @@ int nng_dialer_getopt_ms(nng_dialer d, const char *opt, nng_duration *durp);
 
 int nng_dialer_getopt_ptr(nng_dialer d, const char *opt, void **ptr);
 
-int nng_dialer_setopt_size(nng_dialer d, const char *opt, size_t *zp);
+int nng_dialer_getopt_size(nng_dialer d, const char *opt, size_t *zp);
+
+int nng_dialer_getopt_sockaddr(nng_dialer d, const char *opt, nng_sockaddr *sap);
 
 int nng_dialer_getopt_uint64(nng_dialer d, const char *opt, uint64_t *u64p);
 ----
@@ -79,7 +81,7 @@ the object.
 
 ==== `nng_dialer_getopt_bool()`
 This function is for options which take a boolean (`bool`).
-The value will be stored at _ivalp_.
+The value will be stored at _bvalp_.
 
 ==== `nng_dialer_getopt_int()`
 This function is for options which take an integer (`int`).
@@ -100,6 +102,10 @@ not copied, but instead the *pointer* to the object is copied.
 ==== `nng_dialer_getopt_size()`
 This function is used to retrieve a size into the pointer _zp_,
 typically for buffer sizes, message maximum sizes, and similar options.
+
+==== `nng_dialer_getopt_sockaddr()`
+This function is used to retrieve an <<nng_sockaddr.5#,`nng_sockaddr`>>
+into the value referenced by _sap_.
 
 ==== `nng_dialer_getopt_uint64()`
 This function is used to retrieve a 64-bit unsigned value into the value
@@ -125,4 +131,5 @@ These functions returns 0 on success, and non-zero otherwise.
 <<nng_dialer.5#,nng_dialer(5)>>,
 <<nng_duration.5#,nng_duration(5)>>,
 <<nng_options.5#,nng_options(5)>>,
+<<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng.7#,nng(7)>>

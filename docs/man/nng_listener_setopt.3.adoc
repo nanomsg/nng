@@ -123,6 +123,7 @@ These functions return 0 on success, and non-zero otherwise.
 <<nng_listener_getopt.3#,nng_listener_getopt(3)>>
 <<nng_setopt.3#,nng_setopt(3)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_duration.5#,nng_duration(5)>>,
 <<nng_listener.5#,nng_listener(5)>>,
 <<nng_options.5#,nng_options(5)>>,
 <<nng.7#,nng(7)>>

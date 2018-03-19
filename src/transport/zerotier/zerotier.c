@@ -2776,14 +2776,40 @@ zt_pipe_getopt_mtu(void *arg, void *data, size_t *szp)
 }
 
 static nni_tran_pipe_option zt_pipe_options[] = {
-	{ NNG_OPT_LOCADDR, zt_pipe_getopt_locaddr },
-	{ NNG_OPT_REMADDR, zt_pipe_getopt_remaddr },
-	{ NNG_OPT_ZT_MTU, zt_pipe_getopt_mtu },
-	{ NNG_OPT_ZT_NWID, zt_pipe_get_nwid },
-	{ NNG_OPT_ZT_NODE, zt_pipe_get_node },
-	{ NNG_OPT_RECVMAXSZ, zt_pipe_get_recvmaxsz },
+	{
+	    .po_name   = NNG_OPT_LOCADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = zt_pipe_getopt_locaddr,
+	},
+	{
+	    .po_name   = NNG_OPT_REMADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = zt_pipe_getopt_remaddr,
+	},
+	{
+	    .po_name   = NNG_OPT_ZT_MTU,
+	    .po_type   = NNI_TYPE_SIZE,
+	    .po_getopt = zt_pipe_getopt_mtu,
+	},
+	{
+	    .po_name   = NNG_OPT_ZT_NWID,
+	    .po_type   = NNI_TYPE_UINT64,
+	    .po_getopt = zt_pipe_get_nwid,
+	},
+	{
+	    .po_name   = NNG_OPT_ZT_NODE,
+	    .po_type   = NNI_TYPE_UINT64,
+	    .po_getopt = zt_pipe_get_node,
+	},
+	{
+	    .po_name   = NNG_OPT_RECVMAXSZ,
+	    .po_type   = NNI_TYPE_SIZE,
+	    .po_getopt = zt_pipe_get_recvmaxsz,
+	},
 	// terminate list
-	{ NULL, NULL },
+	{
+	    .po_name = NULL,
+	},
 };
 
 static nni_tran_pipe zt_pipe_ops = {
@@ -2799,71 +2825,86 @@ static nni_tran_pipe zt_pipe_ops = {
 static nni_tran_ep_option zt_ep_options[] = {
 	{
 	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_type   = NNI_TYPE_SIZE,
 	    .eo_getopt = zt_ep_getopt_recvmaxsz,
 	    .eo_setopt = zt_ep_setopt_recvmaxsz,
 	},
 	{
 	    .eo_name   = NNG_OPT_URL,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = zt_ep_getopt_url,
 	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_HOME,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = zt_ep_getopt_home,
 	    .eo_setopt = zt_ep_setopt_home,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_NODE,
+	    .eo_type   = NNI_TYPE_UINT64,
 	    .eo_getopt = zt_ep_getopt_node,
 	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_NWID,
+	    .eo_type   = NNI_TYPE_UINT64,
 	    .eo_getopt = zt_ep_getopt_nwid,
 	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_NETWORK_STATUS,
+	    .eo_type   = NNI_TYPE_INT32, // enumeration really
 	    .eo_getopt = zt_ep_getopt_network_status,
 	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_NETWORK_NAME,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = zt_ep_getopt_network_name,
 	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_PING_TIME,
+	    .eo_type   = NNI_TYPE_DURATION,
 	    .eo_getopt = zt_ep_getopt_ping_time,
 	    .eo_setopt = zt_ep_setopt_ping_time,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_PING_TRIES,
+	    .eo_type   = NNI_TYPE_INT32,
 	    .eo_getopt = zt_ep_getopt_ping_tries,
 	    .eo_setopt = zt_ep_setopt_ping_tries,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_CONN_TIME,
+	    .eo_type   = NNI_TYPE_DURATION,
 	    .eo_getopt = zt_ep_getopt_conn_time,
 	    .eo_setopt = zt_ep_setopt_conn_time,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_CONN_TRIES,
+	    .eo_type   = NNI_TYPE_INT32,
 	    .eo_getopt = zt_ep_getopt_conn_tries,
 	    .eo_setopt = zt_ep_setopt_conn_tries,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_ORBIT,
+	    .eo_type   = NNI_TYPE_UINT64, // use opaque for two
 	    .eo_getopt = NULL,
 	    .eo_setopt = zt_ep_setopt_orbit,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_DEORBIT,
+	    .eo_type   = NNI_TYPE_UINT64,
 	    .eo_getopt = NULL,
 	    .eo_setopt = zt_ep_setopt_deorbit,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .eo_name = NULL,
+	},
 };
 
 static nni_tran_ep zt_ep_ops = {

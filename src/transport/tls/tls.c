@@ -896,11 +896,25 @@ tls_getopt_verified(void *arg, void *v, size_t *szp)
 }
 
 static nni_tran_pipe_option nni_tls_pipe_options[] = {
-	{ NNG_OPT_LOCADDR, nni_tls_pipe_getopt_locaddr },
-	{ NNG_OPT_REMADDR, nni_tls_pipe_getopt_remaddr },
-	{ NNG_OPT_TLS_VERIFIED, tls_getopt_verified },
+	{
+	    .po_name   = NNG_OPT_LOCADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = nni_tls_pipe_getopt_locaddr,
+	},
+	{
+	    .po_name   = NNG_OPT_REMADDR,
+	    .po_type   = NNI_TYPE_SOCKADDR,
+	    .po_getopt = nni_tls_pipe_getopt_remaddr,
+	},
+	{
+	    .po_name   = NNG_OPT_TLS_VERIFIED,
+	    .po_type   = NNI_TYPE_BOOL,
+	    .po_getopt = tls_getopt_verified,
+	},
 	// terminate list
-	{ NULL, NULL }
+	{
+	    .po_name = NULL,
+	},
 };
 
 static nni_tran_pipe nni_tls_pipe_ops = {
@@ -916,46 +930,56 @@ static nni_tran_pipe nni_tls_pipe_ops = {
 static nni_tran_ep_option nni_tls_ep_options[] = {
 	{
 	    .eo_name   = NNG_OPT_RECVMAXSZ,
+	    .eo_type   = NNI_TYPE_SIZE,
 	    .eo_getopt = nni_tls_ep_getopt_recvmaxsz,
 	    .eo_setopt = nni_tls_ep_setopt_recvmaxsz,
 	},
 	{
 	    .eo_name   = NNG_OPT_LINGER,
+	    .eo_type   = NNI_TYPE_DURATION,
 	    .eo_getopt = nni_tls_ep_getopt_linger,
 	    .eo_setopt = nni_tls_ep_setopt_linger,
 	},
 	{
 	    .eo_name   = NNG_OPT_URL,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = nni_tls_ep_getopt_url,
 	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_CONFIG,
+	    .eo_type   = NNI_TYPE_POINTER,
 	    .eo_getopt = tls_getopt_config,
 	    .eo_setopt = tls_setopt_config,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_CERT_KEY_FILE,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = tls_setopt_cert_key_file,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_CA_FILE,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = tls_setopt_ca_file,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_AUTH_MODE,
+	    .eo_type   = NNI_TYPE_INT32, // enum really
 	    .eo_getopt = NULL,
 	    .eo_setopt = tls_setopt_auth_mode,
 	},
 	{
 	    .eo_name   = NNG_OPT_TLS_SERVER_NAME,
+	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = tls_setopt_server_name,
 	},
 	// terminate list
-	{ NULL, NULL, NULL },
+	{
+	    .eo_name = NULL,
+	},
 };
 
 static nni_tran_ep nni_tls_ep_ops = {
