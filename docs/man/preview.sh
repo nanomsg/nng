@@ -65,7 +65,7 @@ man)
 	exit 2
 esac
 
-version=$(cat $(dirname $0)/../../.version)
+version=PREVIEW
 name=nng
 
 generate_pdf() {
