@@ -1,0 +1,44 @@
+= nng_http_req_get_version(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_req_get_version - return HTTP request protocol version
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+const char *nng_http_req_get_version(nng_http_req *req);
+----
+
+== DESCRIPTION
+
+The `nng_http_req_get_version()` returns a string representing the HTTP
+protocol version associated with the request _req_, such as "HTTP/1.1".
+
+
+== RETURN VALUES
+
+Request version as a string.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
+<<nng_http_req_set_version.3http#,nng_http_req_set_version(3http)>>,
+<<nng.7#,nng(7)>>

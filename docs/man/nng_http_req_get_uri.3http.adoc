@@ -1,0 +1,46 @@
+= nng_http_req_get_method(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_req_get_uri - return HTTP request URI
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+const char *nng_http_req_get_method(nng_http_req *req);
+----
+
+== DESCRIPTION
+
+The `nng_http_req_get_uri()` returns the URI (path) associated with the HTTP
+the request _req_.
+The value returned includes the path, as well as any query information or
+fragment.  The value will look like a filesystem path
+with those optional components appened, such as `/api/get_info.cgi?name=garrett`.
+
+== RETURN VALUES
+
+Request URI as a string.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
+<<nng_http_req_set_uri.3http#,nng_http_req_set_uri(3http)>>,
+<<nng.7#,nng(7)>>

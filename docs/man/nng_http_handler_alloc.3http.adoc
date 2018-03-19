@@ -1,0 +1,150 @@
+= nng_http_handler_alloc(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_handler_alloc - allocate HTTP server handler
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+typedef struct nng_http_handler nng_http_handler;
+
+int nng_http_handler_alloc(nng_http_handler **hp, const char *path,
+    void (*func)(nng_aio *);
+
+int nng_http_handler_alloc_directory(nng_http_handler **hp, const char *path,
+    const char *dirname);
+
+int nng_http_handler_alloc_file(nng_http_handler **hp, const char *path,
+    const char *filename);
+
+int nng_http_handler_alloc_static(nng_http_handler **hp, const char *path,
+    const void *data, size_t size, const char *content_type);
+----
+
+== DESCRIPTION
+
+The `nng_http_handler_alloc()` family of functions allocate a handler
+which will be used to process requests coming into an HTTP server.
+On success, a pointer to the handler is stored at the located pointed to
+by _hp_.
+
+Every handler has a Request-URI to which it refers, which is determined
+by the _path_ argument.
+Only the path component of the Request URI is
+considered when determining whether the handler should be called.
+
+Additionally each handler has a method it is registered to handle
+(the default is "GET", see
+<<nng_http_handler_set_method.3http#,`nng_http_handler_set_method()`>>), and
+optionally a 'Host' header it can be matched against (see
+<<nng_http_handler_set_host.3http#,`nng_http_handler_set_host()`>>).
+
+In some cases, a handler may reference a logical tree rather (directory)
+rather than just a single element.
+(See <<nng_http_handler_set_tree.3http#,`nng_http_handler_set_tree()`>>).
+
+=== Custom Handler
+
+The generic (first) form of this creates a handler that uses a user-supplied
+function to process HTTP requests.
+This function uses the asynchronous I/O framework.
+The function takes a pointer to an <<nng_aio.5#,`nng_aio`>> structure.
+That structure will be passed with the following input values (retrieved with
+<<nng_aio_get_input.3#,`nng_aio_get_input()`>>):
+
+   0: `nng_http_req *` __request__:: The client's HTTP request.
+   1: `nng_http_handler *` __handler__:: Pointer to the handler object.
+   2: `nng_http_conn *` __conn__:: The underlying HTTP connection.
+
+The handler should create an `nng_http_res *` response (such as via
+<<nng_http_res_alloc.3http#,`nng_http_res_alloc()`>> or
+<<nng_http_res_alloc_error.3http#,`nng_http_res_alloc_error()`>>) and store that
+in as the first output (index 0) with
+<<nng_aio_set_output.3#,`nng_aio_set_output()`>>.
+
+Alternatively, the handler may send the HTTP response (and any associated
+body data) itself using the connection.
+In that case the output at index 0 of the _aio_ should be NULL.
+
+Finally, using the <<nng_aio_finish.3#,`nng_aio_finish()`>> function, the
+_aio_ should be completed successfully.
+If any non-zero status is returned back to the caller instead,
+then a generic 500 response will be created and
+sent, if possible, and the connection will be closed.
+
+=== Directory Handler
+
+The second member of this family, `nng_http_handler_alloc_directory()`, creates
+a handler configured to serve a directory tree.
+The _uri_ is taken as the root, and files are served from the directory
+tree rooted at _path_.
+
+When the client Request-URI resolves to a directory in the filesystem,
+the handler looks first for a file named `index.html` or `index.htm`.
+If one is found, then that file is returned back to the client.
+If no such index file exists, then an `NNG_HTTP_STATUS_NOT_FOUND` (404) error is
+sent back to the client.
+
+The `Content-Type` will be set automatically based upon the extension
+of the requsted file name.
+If a content type cannot be determined from
+the extension, then `application/octet-stream` is used.
+
+=== File Handler
+
+The third member of this family, `nng_http_handler_alloc_file()`, creates
+a handler to serve up a single file; it does not traverse directories
+or search for `index.html` or `index.htm` files. 
+
+The `Content-Type` will be set automatically based upon the extension
+of the requsted file name.
+If a content type cannot be determined from
+the extension, then `application/octet-stream` is used.
+
+=== Static Handler
+
+The fourth member of this family, `nng_http_handler_alloc_static()`, creates
+a handler to serve up fixed content located in program data.
+The client is
+sent the _data_, with `Content-Length` of _size_ bytes, and `Content-Type` of
+__content_type__.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_EINVAL`:: An invalid _path_ was specified.
+`NNG_ENOMEM`:: Insufficient free memory exists to allocate a message.
+`NNG_ENOTSUP`:: No support for HTTP in the library.
+
+== SEE ALSO
+
+<<nng_aio_finish.3#,nng_aio_finish(3)>>,
+<<nng_aio_get_input.3#,nng_aio_get_input(3)>>,
+<<nng_aio_set_output.3#,nng_aio_set_output(3)>>,
+<<nng_http_handler_free.3http#,nng_http_handler_free(3http)>>,
+<<nng_http_handler_set_host.3http#,nng_http_handler_set_host(3http)>>,
+<<nng_http_handler_set_method.3http#,nng_http_handler_set_method(3http)>>,
+<<nng_http_handler_set_tree.3http#,nng_http_handler_set_tree(3http)>>,
+<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
+<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error(3http)>>,
+<<nng_http_server_add_handler.3http#,nng_http_server_add_handler(3http)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_aio.5#,nng_aio(5)>>,
+<<nng.7#,nng(7)>>

@@ -1,0 +1,319 @@
+= libnng(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+libnng - nanomsg next generation library
+
+== SYNOPSIS
+
+*cc* [_flags_] _files_ *-lnng* [_libraries_]
+
+== DESCRIPTION
+
+The <<nng.7#,_nng_>> library provides a common messaging framework
+intended to solve common communication problems in distributed applications.
+
+It provides a C language API.
+
+=== Common Functions
+
+The following common functions exist in _libnng_.
+
+|===
+|<<nng_alloc.3#,nng_alloc()>>|allocate memory
+|<<nng_free.3#,nng_free()>>|free memory
+|<<nng_strerror.3#,nng_strerror()>>|return an error description
+|<<nng_version.3#,nng_version()>>|report library version
+|===
+
+=== Socket Functions
+
+The following functions operate on sockets.
+
+|===
+|<<nng_close.3#,nng_close()>>|close socket
+|<<nng_dial.3#,nng_dial()>>|create and start dialer
+|<<nng_getopt.3#,nng_getopt()>>|get socket option
+|<<nng_listen.3#,nng_listen()>>|create and start listener
+|<<nng_recv.3#,nng_recv()>>|receive data
+|<<nng_send.3#,nng_send()>>|send data
+|<<nng_setopt.3#,nng_setopt()>>|set socket option
+|===
+
+=== Connection Management
+
+The following functions are used with either listeners, or dialers.
+Listeners accept incoming connection requets, and dialers make them.
+
+|===
+|<<nng_dial.3#,nng_dial()>>|create and start dialer
+|<<nng_dialer_close.3#,nng_dialer_close()>>|close dialer
+|<<nng_dialer_create.3#,nng_dialer_create()>>|create dialer
+|<<nng_dialer_getopt.3#,nng_dialer_getopt()>>|get dialer option
+|<<nng_dialer_setopt.3#,nng_dialer_setopt()>>|set dialer option
+|<<nng_dialer_start.3#,nng_dialer_start()>>|start dialer
+|<<nng_listen.3#,nng_listen()>>|create and start listener
+|<<nng_listener_close.3#,nng_listener_close()>>|close listener
+|<<nng_listener_create.3#,nng_listener_create()>>|create listener
+|<<nng_listener_getopt.3#,nng_listener_getopt()>>|get listener option
+|<<nng_listener_setopt.3#,nng_listener_setopt()>>|set listener option
+|<<nng_listener_start.3#,nng_listener_start()>>|start listener
+|<<nng_pipe_close.3#,nng_pipe_close()>>|close pipe
+|<<nng_pipe_getopt.3#,nng_pipe_getopt()>>|get pipe option
+|===
+
+=== Message Handling Functions
+
+Applications desiring to use the richest part of _libnng_ will want to
+use the message API, where a message structure is passed between functions.
+This API provides the most power support for zero-copy.
+
+Messages are divided into a header and body, where the body generally carries
+user-payload and the header carries protocol specific header information.
+Most applications will only interact with the body.
+
+|===
+|<<nng_msg_alloc.3#,nng_msg_alloc()>>|allocate a message
+|<<nng_msg_append.3#,nng_msg_append()>>|append to message body
+|<<nng_msg_body.3#,nng_msg_body()>>|return message body
+|<<nng_msg_chop.3#,nng_msg_chop()>>|remove data from end of message body
+|<<nng_msg_clear.3#,nng_msg_clear()>>|clear message body
+|<<nng_msg_dup.3#,nng_msg_dup()>>|duplicate a message
+|<<nng_msg_free.3#,nng_msg_free()>>|free a message
+|<<nng_msg_get_pipe.3#,nng_msg_get_pipe()>>|get pipe for message
+|<<nng_msg_insert.3#,nng_msg_insert()>>|prepend to message body
+|<<nng_msg_len.3#,nng_msg_len()>>|return the message body length
+|<<nng_msg_realloc.3#,nng_msg_realloc()>>|reallocate a message
+|<<nng_msg_set_pipe.3#,nng_msg_set_pipe()>>|set pipe for message
+|<<nng_msg_trim.3#,nng_msg_trim()>>|remove data from start of message body
+|<<nng_recvmsg.3#,nng_recvmsg()>>|receive a message
+|<<nng_sendmsg.3#,nng_sendmsg()>>|send a message
+|===
+
+==== Message Header Handling
+
+TIP: Few applications will need these functions, as message headers are only
+used to carry protocol-specific content.  However, applications which use raw
+mode may need to access the header of messages.
+
+|===
+|<<nng_msg_header.3#,nng_msg_header()>>|return message header
+|<<nng_msg_header_append.3#,nng_msg_header_append()>>|append to message header
+|<<nng_msg_header_chop.3#,nng_msg_header_chop()>>|remove data from end of message header
+|<<nng_msg_header_clear.3#,nng_msg_header_clear()>>|clear message header
+|<<nng_msg_header_insert.3#,nng_msg_header_insert()>>|prepend to message header
+|<<nng_msg_header_len.3#,nng_msg_header_len()>>|return the message header length
+|<<nng_msg_header_trim.3#,nng_msg_header_trim()>>|remove data from start of message header
+|===
+
+=== Asynchronous Operations
+
+Most applications will interact with _nng_ synchronously; that is that
+functions such as <<nng_send.3#,`nng_send()`>> will block the calling
+thread until the operation has completed.
+
+NOTE: Synchronous operations which send messages may return before the
+message has actually been received, or even transmitted.  Instead, These
+functions return as soon as the message was successfully queued for
+delivery.
+
+Asynchronous operations behave differently.  These operations are
+initiated by the calling thread, but control returns immediately to
+the calling thread.  When the operation is subsequently completed (regardless
+of whether this was successful or not), then a user supplied function
+("callback") is executed.
+
+A context structure, an <<nng_aio.5#,`nng_aio`>>, is allocated and
+associated with each asynchronous operation.
+Only a single asynchronous operation may be associated with an
+`nng_aio` at any time.
+
+The following functions are used in the asynchronous model:
+
+|===
+|<<nng_aio_abort.3#,nng_aio_abort()>>|abort asynchronous I/O operation
+|<<nng_aio_alloc.3#,nng_aio_alloc()>>|allocate asynchronous I/O handle
+|<<nng_aio_cancel.3#,nng_aio_cancel()>>|cancel asynchronous I/O operation
+|<<nng_aio_count.3#,nng_aio_count()>>|return number of bytes transferred
+|<<nng_aio_finish.3#,nng_aio_finish()>>|finish an asynchronous I/O operation
+|<<nng_aio_free.3#,nng_aio_free()>>|free asynchronous I/O handle
+|<<nng_aio_get_input.3#,nng_aio_get_input()>>|return input parameter
+|<<nng_aio_get_msg.3#,nng_aio_get_msg()>>|get message from an asynchronous receive
+|<<nng_aio_get_output.3#,nng_aio_get_output()>>|return output result
+|<<nng_aio_result.3#,nng_aio_result()>>|return result of asynchronous operation
+|<<nng_aio_set_input.3#,nng_aio_set_input()>>|set input parameter
+|<<nng_aio_set_iov.3#,nng_aio_set_iov()>>|set scatter/gather vector
+|<<nng_aio_set_msg.3#,nng_aio_set_msg()>>|set message for an asynchronous send
+|<<nng_aio_set_output.3#,nng_aio_set_output()>>|set output result
+|<<nng_aio_set_timeout.3#,nng_aio_set_timeout()>>|set asynchronous I/O timeout
+|<<nng_aio_stop.3#,nng_aio_stop()>>|stop asynchronous I/O operation
+|<<nng_aio_wait.3#,nng_aio_wait()>>|wait for asynchronous I/O operation
+|<<nng_recv_aio.3#,nng_recv_aio()>>|receive message asynchronously
+|<<nng_send_aio.3#,nng_send_aio()>>|send message asynchronously
+|<<nng_sleep_aio.3#,nng_sleep_aio()>>|sleep asynchronously
+|===
+
+=== Protocols
+
+The following functions are used to construct a socket with a specific protocol:
+
+|===
+|<<nng_bus_open.3#,nng_bus_open()>>|open a bus socket
+|<<nng_pair_open.3#,nng_pair_open()>>|open a pair socket
+|<<nng_pub_open.3#,nng_pub_open()>>|open a pub socket
+|<<nng_pull_open.3#,nng_pull_open()>>|open a pull socket
+|<<nng_push_open.3#,nng_push_open()>>|open a push socket
+|<<nng_rep_open.3#,nng_rep_open()>>|open a rep socket
+|<<nng_req_open.3#,nng_req_open()>>|open a req socket
+|<<nng_respondent_open.3#,nng_respondent_open()>>|open a respondent socket
+|<<nng_sub_open.3#,nng_sub_open()>>|open a sub socket
+|<<nng_surveyor_open.3#,nng_surveyor_open()>>|open a surveyor socket
+|===
+
+=== Transports
+
+The following functions are used to register a transport for use.
+
+|===
+| <<nng_inproc_register.3#,nng_inproc_register()>>|register inproc transport
+| <<nng_ipc_register.3#,nng_ipc_register()>>|register IPC transport
+| <<nng_tcp_register.3#,nng_tcp_register()>>|register TCP transport
+| <<nng_tls_register.3#,nng_tls_register()>>|register TLS transport
+| <<nng_ws_register.3#,nng_ws_register()>>|register WebSocket transport
+| <<nng_wss_register.3#,nng_wss_register()>>|register WebSocket Secure transport
+| <<nng_zt_register.3#,nng_zt_register()>>|register ZeroTier transport
+|===
+
+=== URL Object
+
+Common functionality is supplied for parsing and handling
+universal resource locators (URLS).
+
+|===
+|<<nng_url_clone.3#,nng_url_clone()>>|clone URL structure
+|<<nng_url_free.3#,nng_url_free()>>|free URL structure
+|<<nng_url_parse.3#,nng_url_parse()>>|create URL structure from string
+|===
+
+
+=== HTTP Support
+
+The library may be configured with support for HTTP, and this will
+be the case if WebSocket support is configured as well.
+In this case, it is possible to access functionality to support the creation of
+HTTP (and HTTP/S if TLS support is present) servers and clients.
+
+==== Common HTTP Functions
+
+The following functions are used to work with HTTP requests, responses,
+and connections.
+
+|===
+|<<nng_http_conn_close.3http#,nng_http_conn_close()>>|close HTTP connection
+|<<nng_http_conn_read.3http#,nng_http_conn_read()>>|read from HTTP connection
+|<<nng_http_conn_read_all.3http#,nng_http_conn_read_all()>>|read all from HTTP connection
+|<<nng_http_conn_read_req.3http#,nng_http_conn_read_req()>>|read HTTP request
+|<<nng_http_conn_read_res.3http#,nng_http_conn_read_req()>>|read HTTP response
+|<<nng_http_conn_write.3http#,nng_http_conn_write()>>|write to HTTP connection
+|<<nng_http_conn_write_all.3http#,nng_http_conn_write_all()>>|write all to HTTP connection
+|<<nng_http_conn_write_req.3http#,nng_http_conn_write()>>|write HTTP request
+|<<nng_http_conn_write_res.3http#,nng_http_conn_write()>>|write HTTP response
+|<<nng_http_req_add_header.3http#,nng_http_req_add_header()>>|add HTTP request header
+|<<nng_http_req_alloc.3http#,nng_http_req_alloc()>>|allocate HTTP request structure
+|<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>|copy HTTP request body
+|<<nng_http_req_del_header.3http#,nng_http_req_del_header()>>|delete HTTP request header
+|<<nng_http_req_free.3http#,nng_http_req_free()>>|free HTTP request structure
+|<<nng_http_req_get_header.3http#,nng_http_req_get_header()>>|return HTTP request header
+|<<nng_http_req_get_method.3http#,nng_http_req_get_method()>>|return HTTP request method
+|<<nng_http_req_get_uri.3http#,nng_http_req_get_uri()>>|return HTTP request URI
+|<<nng_http_req_get_version.3http#,nng_http_req_get_version()>>|return HTTP request protocol version
+|<<nng_http_req_set_data.3http#,nng_http_req_set_data()>>|set HTTP request body
+|<<nng_http_req_set_header.3http#,nng_http_req_set_header()>>|set HTTP request header
+|<<nng_http_req_set_method.3http#,nng_http_req_set_method()>>|set HTTP request method
+|<<nng_http_req_set_uri.3http#,nng_http_req_set_uri()>>|set HTTP request URI
+|<<nng_http_req_set_version.3http#,nng_http_req_set_version()>>|set HTTP request protocol version
+|<<nng_http_res_add_header.3http#,nng_http_res_add_header()>>|add HTTP response header
+|<<nng_http_res_alloc.3http#,nng_http_res_alloc()>>|allocate HTTP response structure
+|<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error()>>|allocate HTTP error response
+|<<nng_http_res_copy_data.3http#,nng_http_res_copy_data()>>|copy HTTP response body
+|<<nng_http_res_del_header.3http#,nng_http_res_del_header()>>|delete HTTP response header
+|<<nng_http_res_free.3http#,nng_http_res_free()>>|free HTTP response structure
+|<<nng_http_res_set_data.3http#,nng_http_res_set_data()>>|set HTTP response body
+|<<nng_http_res_get_header.3http#,nng_http_res_get_header()>>|return HTTP response header
+|<<nng_http_res_get_reason.3http#,nng_http_res_get_reason()>>|return HTTP response reason
+|<<nng_http_res_get_status.3http#,nng_http_res_get_status()>>|return HTTP response status
+|<<nng_http_res_get_version.3http#,nng_http_res_get_version()>>|return HTTP response protocol version
+|<<nng_http_res_set_header.3http#,nng_http_res_set_header()>>|set HTTP response header
+|<<nng_http_res_set_reason.3http#,nng_http_res_set_reason()>>|set HTTP response reason
+|<<nng_http_res_set_status.3http#,nng_http_res_set_status()>>|set HTTP response status
+|<<nng_http_res_set_version.3http#,nng_http_res_set_version()>>|set HTTP response protocol version
+|===
+
+==== HTTP Client Functions
+
+These functions are intended for use with HTTP client applications.
+
+|===
+| <<nng_http_client_alloc.3http#,nng_http_client_alloc()>>|allocate HTTP client
+| <<nng_http_client_connect.3http#,nng_http_client_connect()>>|establish HTTP client connection
+| <<nng_http_client_free.3http#,nng_http_client_free()>>|free HTTP client
+| <<nng_http_client_get_tls.3http#,nng_http_client_get_tls()>>|get HTTP client TLS configuration
+| <<nng_http_client_set_tls.3http#,nng_http_client_set_tls()>>|set HTTP client TLS configuration
+|===
+
+==== HTTP Server Functions
+
+These functions are intended for use with HTTP server applications.
+
+|===
+|<<nng_http_handler_alloc.3http#,nng_http_handler_alloc()>>|allocate HTTP server handler
+|<<nng_http_handler_free.3http#,nng_http_handler_free()>>|free HTTP server handler
+|<<nng_http_handler_get_data.3http#,nng_http_handler_get_data()>>|return extra data for HTTP handler
+|<<nng_http_handler_set_data.3http#,nng_http_handler_set_data()>>|set extra data for HTTP handler
+|<<nng_http_handler_set_host.3http#,nng_http_handler_set_host()>>|set host for HTTP handler
+|<<nng_http_handler_set_method.3http#,nng_http_handler_set_method()>>|set HTTP handler method
+|<<nng_http_handler_set_tree.3http#,nng_http_handler_set_tree()>>|set HTTP handler to match trees
+|<<nng_http_hijack.3http#,nng_http_hijack()>>|hijack HTTP server connection
+|<<nng_http_server_add_handler.3http#,nng_http_server_add_handler()>>|add HTTP server handler
+|<<nng_http_server_del_handler.3http#,nng_http_server_del_handler()>>|delete HTTP server handler
+|<<nng_http_server_get_tls.3http#,nng_http_server_get_tls()>>|get HTTP server TLS configuration
+|<<nng_http_server_hold.3http#,nng_http_server_get_tls()>>|get and hold HTTP server instance
+|<<nng_http_server_release.3http#,nng_http_server_get_tls()>>|release HTTP server instance
+|<<nng_http_server_set_tls.3http#,nng_http_server_set_tls()>>|set HTTP server TLS configuration
+|<<nng_http_server_start.3http#,nng_http_server_start()>>|start HTTP server
+|<<nng_http_server_stop.3http#,nng_http_server_stop()>>|stop HTTP server
+|===
+
+=== TLS Configuration Objects
+
+The following functions are used to manipulate transport layer security
+(TLS) configuration objects.
+
+NOTE: These functions will only be present if the library has been built
+with TLS support.
+
+|===
+|<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc()>>|allocate TLS configuration
+|<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode()>>|set authentication mode
+|<<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain()>>|set certificate authority chain
+|<<nng_tls_config_ca_file.3tls#,nng_tls_config_ca_file()>>|load certificate authority from file
+|<<nng_tls_config_cert_key_file.3tls#,nng_tls_config_cert_key_file_cert()>>|load own certificate and key from file
+|<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>|set own certificate and key
+|<<nng_tls_config_free.3tls#,nng_tls_config_free()>>|free TLS configuration
+|<<nng_tls_config_server_name.3tls#,nng_tls_config_server_name()>>|set remote server name
+|===
+
+
+== SEE ALSO
+
+<<nng_compat.3compat#,nng_compat(3compat)>>,
+<<nng.7#,nng(7)>>

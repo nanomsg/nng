@@ -1,0 +1,49 @@
+= nng_http_handler_set_tree(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_handler_set_tree - set HTTP handler to match trees
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+int nng_http_handler_set_tree(nng_http_handler *handler);
+----
+
+== DESCRIPTION
+
+The `nng_http_handler_set_tree()` function causes the _handler_ to be
+matched if the Request URI sent by the client is a logical child of
+the path for _handler_.
+
+TIP: This method is useful when constructing API handlers where a single
+service address (path) supports dynamically generated children.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient free memory exists.
+`NNG_ENOTSUP`:: No support for HTTP in the library.
+
+== SEE ALSO
+
+<<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
+<<nng_http_server_add_handler.3http#,nng_http_server_add_handler(3http)>>,
+<<nng_http_req_get_method.3http#,nng_http_req_get_method(3http)>>,
+<<nng.7#,nng(7)>>

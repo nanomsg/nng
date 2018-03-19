@@ -40,7 +40,7 @@ static void pub0_pipe_fini(void *);
 // pub0_sock is our per-socket protocol private structure.
 struct pub0_sock {
 	nni_msgq *uwq;
-	int       raw;
+	bool      raw;
 	nni_aio * aio_getq;
 	nni_list  pipes;
 	nni_mtx   mtx;
@@ -83,7 +83,7 @@ pub0_sock_init(void **sp, nni_sock *sock)
 		return (rv);
 	}
 
-	s->raw = 0;
+	s->raw = false;
 	NNI_LIST_INIT(&s->pipes, pub0_pipe, node);
 
 	s->uwq = nni_sock_sendq(sock);
@@ -277,14 +277,14 @@ static int
 pub0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
 	pub0_sock *s = arg;
-	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
+	return (nni_setopt_bool(&s->raw, buf, sz));
 }
 
 static int
 pub0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	pub0_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static void

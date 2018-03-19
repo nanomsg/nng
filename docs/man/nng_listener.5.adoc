@@ -1,0 +1,64 @@
+= nng_listener(5)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_listener - listener
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+
+typedef uint32_t nng_listener;
+-----------
+
+== DESCRIPTION
+
+(((listener)))
+An `nng_listener` is a handle to a "`listener`" object, which is responsible for
+creating <<nng_pipe.5#,`nng_pipe`>> objects by accepting incoming connections.
+A given listener object may create many pipes at the same time, much like an HTTP
+server can have many connections to multiple clients simultaneously.
+
+Listener objects are created by the
+<<nng_listener_create.3#,`nng_listener_create()`>>
+or <<nng_listen.3#,`nng_listen()`>> functions, and are always "`owned`"
+by a single <<nng_socket.5#,`nng_socket`>>.
+
+TIP: A given <<nng_socket.5#,`nng_socket`>> may have multiple listener
+objects, multiple <<nng_dialer.5#,dialer>> objects, or even some
+of both.
+
+TIP: The client/server relationship described by dialer/listener is
+completely orthogonal to any similar relationship in the protocols.
+For example, a <<nng_rep.7#,_rep_>> socket may use a dialer
+to connect to a listener on an <<nng_req.7#,_req_>> socket.
+This orthogonality can lead to innovative solutions to otherwise
+challenging communications problems.
+
+Listener objects may be destroyed by the
+<<nng_listener_close.3#,`nng_listener_close()`>> function.
+They are also closed when their "`owning`" socket is closed.
+
+== SEE ALSO
+
+<<nng_listen.3#,nng_listen(3)>>,
+<<nng_listener_close.3#,nng_listener_close(3)>>,
+<<nng_listener_create.3#,nng_listener_create(3)>>,
+<<nng_listener_getopt.3#,nng_listener_getopt(3)>>,
+<<nng_listener_setopt.3#,nng_listener_setopt(3)>>,
+<<nng_listener_start.3#,nng_listener_start(3)>>,
+<<nng_dialer.5#,nng_dialer(5)>>,
+<<nng_pipe.5#,nng_pipe(5)>>,
+<<nng_socket.5#,nng_socket(5)>>,
+<<nng.7#,nng(7)>>

@@ -164,7 +164,7 @@ nn_socket(int domain, int protocol)
 		return (-1);
 	}
 	if (domain == AF_SP_RAW) {
-		if ((rv = nng_setopt_int(sock, NNG_OPT_RAW, 1)) != 0) {
+		if ((rv = nng_setopt_bool(sock, NNG_OPT_RAW, true)) != 0) {
 			nn_seterror(rv);
 			nng_close(sock);
 			return (-1);
@@ -613,7 +613,6 @@ static const struct {
 	{ NN_SOL_SOCKET, NN_MAXTTL, NNG_OPT_MAXTTL },
 	{ NN_SOL_SOCKET, NN_RCVTIMEO, NNG_OPT_RECVTIMEO },
 	{ NN_SOL_SOCKET, NN_SNDTIMEO, NNG_OPT_SENDTIMEO },
-	{ NN_SOL_SOCKET, NN_DOMAIN, NNG_OPT_DOMAIN },
 	{ NN_SOL_SOCKET, NN_SOCKET_NAME, NNG_OPT_SOCKNAME },
 	{ NN_REQ, NN_REQ_RESEND_IVL, NNG_OPT_REQ_RESENDTIME },
 	{ NN_SUB, NN_SUB_SUBSCRIBE, NNG_OPT_SUB_SUBSCRIBE },
@@ -621,6 +620,23 @@ static const struct {
 	{ NN_SURVEYOR, NN_SURVEYOR_DEADLINE, NNG_OPT_SURVEYOR_SURVEYTIME },
 	// XXX: IPV4ONLY, SNDPRIO, RCVPRIO
 };
+
+static int
+nn_getdomain(int s, void *valp, size_t *szp)
+{
+	int  i;
+	bool b;
+	int  rv;
+
+	if ((rv = nng_getopt_bool((nng_socket) s, NNG_OPT_RAW, &b)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	i = b ? AF_SP_RAW : AF_SP;
+	memcpy(valp, &i, *szp < sizeof(int) ? *szp : sizeof(int));
+	*szp = sizeof(int);
+	return (0);
+}
 
 int
 nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
@@ -637,6 +653,10 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 	}
 
 	if (name == NULL) {
+		if (nnlevel == NN_SOL_SOCKET && nnopt == NN_DOMAIN) {
+			return (nn_getdomain(s, valp, szp));
+		}
+
 		errno = ENOPROTOOPT;
 		return (-1);
 	}

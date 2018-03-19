@@ -88,8 +88,6 @@ TestMain("Socket Operations", {
 				    NNG_EREADONLY);
 				So(nng_setopt(s1, NNG_OPT_LOCADDR, "a", 1) ==
 				    NNG_EREADONLY);
-				So(nng_setopt_int(s1, NNG_OPT_DOMAIN, 3) ==
-				    NNG_EREADONLY);
 			});
 
 			Convey("Sockname option works", {
@@ -121,15 +119,16 @@ TestMain("Socket Operations", {
 				So(strcmp(name, "hello") == 0);
 			});
 
-			Convey("Domain option works", {
-				int dom;
-				So(nng_getopt_int(s1, NNG_OPT_DOMAIN, &dom) ==
+			Convey("RAW option works", {
+				bool raw;
+				So(nng_getopt_bool(s1, NNG_OPT_RAW, &raw) ==
 				    0);
-				So(dom == 1); // NN_AF_SP
-				So(nng_setopt_int(s1, NNG_OPT_RAW, 1) == 0);
-				So(nng_getopt_int(s1, NNG_OPT_DOMAIN, &dom) ==
+				So(raw == false);
+				So(nng_setopt_bool(s1, NNG_OPT_RAW, true) ==
 				    0);
-				So(dom == 2); // NN_AF_SP_RAW
+				So(nng_getopt_bool(s1, NNG_OPT_RAW, &raw) ==
+				    0);
+				So(raw == true);
 			});
 
 			Convey("URL option works", {
@@ -253,12 +252,14 @@ TestMain("Socket Operations", {
 			});
 
 			Convey("Bogus raw fails", {
+				// Bool type is 1 byte.
 				So(nng_setopt_int(s1, NNG_OPT_RAW, 42) ==
 				    NNG_EINVAL);
 				So(nng_setopt_int(s1, NNG_OPT_RAW, -42) ==
 				    NNG_EINVAL);
-				So(nng_setopt_int(s1, NNG_OPT_RAW, 0) == 0);
-				So(nng_setopt(s1, NNG_OPT_RAW, "a", 1) ==
+				So(nng_setopt_int(s1, NNG_OPT_RAW, 0) ==
+				    NNG_EINVAL);
+				So(nng_setopt(s1, NNG_OPT_RAW, "abcd", 4) ==
 				    NNG_EINVAL);
 			});
 
@@ -374,12 +375,29 @@ TestMain("Socket Operations", {
 				       ep, NNG_OPT_RECVMAXSZ, &sz) == 0);
 				So(sz == 4321);
 			});
+
+			Convey("Cannot access as listener", {
+				bool b;
+				So(nng_listener_getopt_bool(
+				       ep, NNG_OPT_RAW, &b) == NNG_ENOENT);
+				So(nng_listener_close(ep) == NNG_ENOENT);
+			});
+
 			Convey("Socket opts not for dialer", {
 				// Not appropriate for dialer.
-				So(nng_dialer_setopt_int(ep, NNG_OPT_RAW, 1) ==
-				    NNG_ENOTSUP);
+				So(nng_dialer_setopt_bool(
+				       ep, NNG_OPT_RAW, true) == NNG_ENOTSUP);
 				So(nng_dialer_setopt_ms(ep, NNG_OPT_RECONNMINT,
 				       1) == NNG_ENOTSUP);
+				So(nng_dialer_setopt_string(ep,
+				       NNG_OPT_SOCKNAME,
+				       "bogus") == NNG_ENOTSUP);
+			});
+
+			Convey("URL is readonly", {
+				So(nng_dialer_setopt_string(ep, NNG_OPT_URL,
+				       "tcp://somewhere.else.com:8888") ==
+				    NNG_EREADONLY);
 			});
 			Convey("Bad size checks", {
 				So(nng_dialer_setopt(ep, NNG_OPT_RECVMAXSZ,
@@ -402,13 +420,30 @@ TestMain("Socket Operations", {
 				       ep, NNG_OPT_RECVMAXSZ, &sz) == 0);
 				So(sz == 4321);
 			});
-			Convey("Socket opts not for dialer", {
+			Convey("Cannot access as dialer", {
+				bool b;
+				So(nng_dialer_getopt_bool(
+				       ep, NNG_OPT_RAW, &b) == NNG_ENOENT);
+				So(nng_dialer_close(ep) == NNG_ENOENT);
+			});
+
+			Convey("Socket opts not for listener", {
 				// Not appropriate for dialer.
-				So(nng_listener_setopt_int(
-				       ep, NNG_OPT_RAW, 1) == NNG_ENOTSUP);
+				So(nng_listener_setopt_bool(
+				       ep, NNG_OPT_RAW, true) == NNG_ENOTSUP);
 				So(nng_listener_setopt_ms(ep,
 				       NNG_OPT_RECONNMINT, 1) == NNG_ENOTSUP);
+				So(nng_listener_setopt_string(ep,
+				       NNG_OPT_SOCKNAME,
+				       "bogus") == NNG_ENOTSUP);
 			});
+
+			Convey("URL is readonly", {
+				So(nng_listener_setopt_string(ep, NNG_OPT_URL,
+				       "tcp://somewhere.else.com:8888") ==
+				    NNG_EREADONLY);
+			});
+
 			Convey("Bad size checks", {
 				So(nng_listener_setopt(ep, NNG_OPT_RECVMAXSZ,
 				       "a", 1) == NNG_EINVAL);
@@ -421,6 +456,7 @@ TestMain("Socket Operations", {
 			size_t       s;
 			int          i;
 			nng_duration t;
+			bool         b;
 
 			So(nng_dialer_setopt_size(
 			       1999, NNG_OPT_RECVMAXSZ, 10) == NNG_ENOENT);
@@ -428,9 +464,9 @@ TestMain("Socket Operations", {
 			       1999, NNG_OPT_RECVMAXSZ, 10) == NNG_ENOENT);
 
 			s = 1;
-			So(nng_dialer_getopt(1999, NNG_OPT_RAW, &i, &s) ==
+			So(nng_dialer_getopt_bool(1999, NNG_OPT_RAW, &b) ==
 			    NNG_ENOENT);
-			So(nng_listener_getopt(1999, NNG_OPT_RAW, &i, &s) ==
+			So(nng_listener_getopt_bool(1999, NNG_OPT_RAW, &b) ==
 			    NNG_ENOENT);
 
 			So(nng_dialer_getopt_size(

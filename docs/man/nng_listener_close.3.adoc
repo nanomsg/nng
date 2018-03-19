@@ -1,0 +1,54 @@
+= nng_listener_close(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_listener_close - close listener
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+int nng_listener_close(nng_listener l);
+----
+
+== DESCRIPTION
+
+The `nng_listener_close()` function closes the listener _l_.
+This also closes any pipes that have been created by the listener.
+
+Once this function returns, the listener _l_ and any of its resources
+are deallocated.
+Therefore it is an error to attempt to access _l_
+after this function has returned.
+(Attempts to do so will result in `NNG_ECLOSED` errors.)
+
+Listeners are implicitly closed when the socket they are associated with
+is closed.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ECLOSED`:: Parameter _l_ does not refer to an open listener.
+
+== SEE ALSO
+
+<<nng_close.3#,nng_close(3)>>,
+<<nng_listen.3#,nng_listen(3)>>,
+<<nng_listener_create.3#,nng_listener_create(3)>>
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_listener.5#,nng_listener(5)>>,
+<<nng.7#,nng(7)>>

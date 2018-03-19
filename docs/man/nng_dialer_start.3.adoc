@@ -1,0 +1,75 @@
+= nng_dialer_start(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_dialer_start - start dialer
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+int nng_dialer_start(nng_dialer d, int flags);
+----
+
+== DESCRIPTION
+
+The `nng_dialer_start()` function starts the dialer _d_.
+
+This causes the dialer to start connecting to the address with which it was
+created.
+
+When a connection is established, it results in a pipe being created,
+which will be attached to the dialer's socket.
+
+Normally, the first attempt to connect to the dialer's address is done
+synchronously, including any necessary name resolution.
+As a result, a failure, such as if the connection is refused, will be returned
+immediately, and no further action will be taken. 
+
+However, if the special value `NNG_FLAG_NONBLOCK` is
+supplied in _flags_, then the connection attempt is made asynchronously.
+
+Furthermore, if the connection was closed for a synchronously dialed
+connection, the dialer will still attempt to redial asynchronously.
+
+TIP: While `NNG_FLAG_NONBLOCK` can help an application be more resilient,
+it also generally makes diagnosing failures somewhat more difficult.
+
+Once a dialer has started, it is generally not possible to change
+its configuration.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_EADDRINVAL`:: An invalid _url_ was specified.
+`NNG_ECLOSED`:: The socket _s_ is not open.
+`NNG_ECONNREFUSED`:: The remote peer refused the connection.
+`NNG_ECONNRESET`:: The remote peer reset the connection.
+`NNG_EINVAL`:: An invalid set of _flags_ was specified.
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_EPEERAUTH`:: Authentication or authorization failure.
+`NNG_EPROTO`:: A protocol error occurred.
+`NNG_ESTATE`:: The dialer _d_ is already started.
+`NNG_EUNREACHABLE`:: The remote address is not reachable.
+
+== SEE ALSO
+
+<<nng_dial.3#,nng_dial(3)>>,
+<<nng_dialer_create.3#,nng_dialer_create(3)>>
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_dialer.5#,nng_dialer(5)>>,
+<<nng.7#,nng(7)>>

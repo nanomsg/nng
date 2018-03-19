@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <stdbool.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -41,7 +42,7 @@ static void bus0_pipe_putq_cb(void *);
 
 // bus0_sock is our per-socket protocol private structure.
 struct bus0_sock {
-	int       raw;
+	bool      raw;
 	nni_aio * aio_getq;
 	nni_list  pipes;
 	nni_mtx   mtx;
@@ -88,7 +89,7 @@ bus0_sock_init(void **sp, nni_sock *nsock)
 		bus0_sock_fini(s);
 		return (rv);
 	}
-	s->raw = 0;
+	s->raw = false;
 	s->uwq = nni_sock_sendq(nsock);
 	s->urq = nni_sock_recvq(nsock);
 
@@ -336,14 +337,14 @@ static int
 bus0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
 	bus0_sock *s = arg;
-	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
+	return (nni_setopt_bool(&s->raw, buf, sz));
 }
 
 static int
 bus0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	bus0_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static void

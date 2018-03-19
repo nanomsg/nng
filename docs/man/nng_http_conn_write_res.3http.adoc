@@ -1,0 +1,71 @@
+= nng_http_conn_write_res(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_conn_write_res - write HTTP response
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+void nng_http_conn_write_res(nng_http_conn *conn, nng_http_res *res,
+    nng_aio *aio);
+----
+
+== DESCRIPTION
+
+The `nng_http_conn_write_res()` function starts an asynchronous write of
+the HTTP response _res_ to the connection _conn_.
+The entire response is sent,
+including headers, and if present, the response body data.
+(The response body can be set with
+<<nng_http_res_set_data.3http#,`nng_http_res_set_data()`>> or
+<<nng_http_res_copy_data.3http#,`nng_http_res_copy_data()`>>.)
+
+This function returns immediately, with no return value.
+Completion of the operation is signaled via the _aio_, and the final result
+may be obtained via <<nng_aio_result.3#,`nng_aio_result()`>>.
+That result will either be zero or an error code.
+
+=== Persistent Connections
+
+By default, for `HTTP/1.1` connections, the connection is kept open, and
+will be reused to receive new requests.
+
+If however the _res_ contains a header of `Connection:` with a value 
+of `Close` (case-insensitive) or the response corresponds to `HTTP/1.0`,
+then the connection is immediately after sending the response.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+`NNG_ECANCELED`:: The operation was canceled.
+`NNG_ECLOSED`:: The connection was closed.
+`NNG_ECONNRESET`:: The peer closed the connection.
+`NNG_ENOMEM`:: Insufficient free memory to perform the operation.
+`NNG_ENOTSUP`:: HTTP operations are not supported.
+`NNG_ETIMEDOUT`:: Timeout waiting for data from the connection.
+
+== SEE ALSO
+
+<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
+<<nng_aio_result.3#,nng_aio_result(3)>>,
+<<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
+<<nng_http_conn_read_all.3http#,nng_http_conn_read_all(3http)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng.7#,nng(7)>>

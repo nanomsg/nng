@@ -36,7 +36,7 @@ struct pair0_sock {
 	pair0_pipe *ppipe;
 	nni_msgq *  uwq;
 	nni_msgq *  urq;
-	int         raw;
+	bool        raw;
 	nni_mtx     mtx;
 };
 
@@ -63,7 +63,7 @@ pair0_sock_init(void **sp, nni_sock *nsock)
 	}
 	nni_mtx_init(&s->mtx);
 	s->ppipe = NULL;
-	s->raw   = 0;
+	s->raw   = false;
 	s->uwq   = nni_sock_sendq(nsock);
 	s->urq   = nni_sock_recvq(nsock);
 	*sp      = s;
@@ -235,14 +235,14 @@ static int
 pair0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 {
 	pair0_sock *s = arg;
-	return (nni_setopt_int(&s->raw, buf, sz, 0, 1));
+	return (nni_setopt_bool(&s->raw, buf, sz));
 }
 
 static int
 pair0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	pair0_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static void

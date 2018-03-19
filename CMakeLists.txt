@@ -80,10 +80,6 @@ elseif (GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
         set (NNG_PACKAGE_VERSION "${NNG_PACKAGE_VERSION}-dirty")
     endif()
 
-elseif (EXISTS ${PROJECT_SOURCE_DIR}/.version)
-    #  If git is not available (e.g. when building from source package)
-    #  we can extract the package version from .version file.
-    file (STRINGS .version NNG_PACKAGE_VERSION)
 else ()
     set (NNG_PACKAGE_VERSION "Unknown")
 endif()

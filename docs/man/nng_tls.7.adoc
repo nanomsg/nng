@@ -1,0 +1,158 @@
+= nng_tls(7)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tls - TLS transport
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/transport/tls/tls.h>
+
+int nng_tls_register(void);
+----
+
+== DESCRIPTION
+
+(((TLS)))(((Transport Layer Security)))(((transport, _tls_)))
+The ((_tls_ transport)) provides communication support between
+_nng_ sockets across a TCP/IP network using 
+https://tools.ietf.org/html/rfc5246[TLS v1.2] on top of
+https://tools.ietf.org/html/rfc793[TCP].
+Both IPv4 and IPv6 are supported when the underlying platform also supports it.
+
+The protocol details are documented in
+http://nanomsg.org/rfcs/sp-tls-v1.html[TLS Mapping for Scalability Protocols].
+
+=== Registration
+
+Depending upon how the library was built, it may be necessary to
+register the transport by calling
+<<nng_tls_register.3#,`nng_tls_register()`>>.
+
+=== Availability
+
+The _tls_ transport depends on the use of an external library.
+As of this writing, https://tls.mbed.org/[mbedTLS] version 2.0
+or later is required.
+
+TIP: Applications may need to add this library (or libraries) to
+their link line, particularly when using a statically built
+_nng_ library.
+
+NOTE: The mbedTLS library uses different licensing terms than
+_nng_ itself; as of this writing it is offered under either
+https://opensource.org/licenses/Apache-2.0[Apache License 2.0] or
+https://opensource.org/licenses/gpl-license[GNU GPL] terms.
+You are responsible for understanding and adhering to the
+license terms of any libraries you make use of.
+
+=== URI Format
+
+(((URI, `tls+tcp://`)))
+This transport uses URIs using the scheme `tls+tcp://`, followed by
+an IP address or hostname, followed by a colon and finally a
+TCP port number.
+For example, to contact port 4433 on the localhost
+either of the following URIs could be used: `tls+tcp://127.0.0.1:4433` or
+`tls+tcp://localhost:4433`.
+
+When specifying IPv6 addresses, the address must be enclosed in
+square brackets (`[]`) to avoid confusion with the final colon
+separating the port.
+
+For example, the same port 4433 on the IPv6 loopback address ('::1') would
+be specified as `tls+tcp://[::1]:4433`.
+
+NOTE: When using symbolic names, the name is resolved when the
+name is first used. _nng_ won't become aware of changes in the
+name resolution until restart,
+usually.
+(This is a bug and will likely be fixed in the future.)
+
+TIP: Certificate validation generally works when using names
+rather than IP addresses.
+This transport automatically uses the name supplied in the URL when validating
+the certificate supplied by the server.
+
+The special value of 0 (`INADDR_ANY`) can be used for a listener
+to indicate that it should listen on all interfaces on the host.
+A short-hand for this form is to either omit the address, or specify
+the asterisk (`*`) character.
+For example, the following three URIs are all equivalent,
+and could be used to listen to port 9999 on the host:
+
+  1. `tls+tcp://0.0.0.0:9999`
+  2. `tls+tcp://*:9999`
+  3. `tls+tcp://:9999`
+
+The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
+
+=== Socket Address
+
+When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
+the actual structure is either of type
+<<nng_sockaddr_in.5#,`nng_sockaddr_in`>> (for IPv4) or
+<<nng_sockaddr_in6.5#,`nng_sockaddr_in6`>> (for IPv6).
+
+=== Transport Options
+
+The following transport options are available.
+Note that setting these must be done before the transport is started.
+
+((`NNG_OPT_TLS_CONFIG`))::
+
+This option is used on an endpoint to access the underlying TLS
+configuration object.
+The value is of type `nng_tls_config *`.
+
+TIP: Use this option when advanced TLS configuration is required.
+
+((`NNG_OPT_TLS_CA_FILE`))::
+
+This is a write-only option used to load certificates associated
+associated private key from a file.
+See <<nng_tls_config_ca_file.3tls#,`nng_tls_config_ca_file()`>> for more
+information.
+
+((`NNG_OPT_TLS_CERT_KEY_FILE`))::
+
+This is a write-only option used to load the local certificate and
+associated private key from a file. The private key used must be
+unencrypted. (Use the `NNG_OPT_TLS_CONFIG` option to access the underlying
+TLS configuration if more advanced configuration is needed.)
+See <<nng_tls_config_own_cert.3tls#,`nng_tls_config_own_cert()`>> for more
+information.
+
+((`NNG_OPT_TLS_AUTH_MODE`))::
+
+This is a write-only option used to configure the authentication mode
+used.  It can take an integer with value `NNG_TLS_AUTH_MODE_NONE`,
+`NNG_TLS_AUTH_MODE_REQUIRED`, or `NNG_TLS_AUTH_MODE_OPTIONAL`.
+See <<nng_tls_config_auth_mode.3tls#,`nng_tls_config_auth_mode()`>> for
+more details.
+
+((`NNG_OPT_TLS_VERIFIED`))::
+
+This is a read-only option which returns a boolean value (integer 0 or 1).
+It will true (1) if the remote peer has been properly verified using TLS
+authentication, or false (0) otherwise.
+This option may return incorrect
+results if peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
+
+== SEE ALSO
+
+<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>
+<<nng_sockaddr_in.5#,nng_sockaddr_in(5)>>,
+<<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,
+<<nng.7#,nng(7)>>,

@@ -39,9 +39,8 @@ static void surv0_timeout(void *);
 struct surv0_sock {
 	nni_duration   survtime;
 	nni_time       expire;
-	int            raw;
+	bool           raw;
 	int            ttl;
-	int            closing;
 	uint32_t       nextid; // next id
 	uint32_t       survid; // outstanding request ID (big endian)
 	nni_list       pipes;
@@ -93,7 +92,7 @@ surv0_sock_init(void **sp, nni_sock *nsock)
 	nni_timer_init(&s->timer, surv0_timeout, s);
 
 	s->nextid   = nni_random();
-	s->raw      = 0;
+	s->raw      = false;
 	s->survtime = NNI_SECOND;
 	s->expire   = NNI_TIME_ZERO;
 	s->uwq      = nni_sock_sendq(nsock);
@@ -282,7 +281,7 @@ surv0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 	int         rv;
 
 	nni_mtx_lock(&s->mtx);
-	if ((rv = nni_setopt_int(&s->raw, buf, sz, 0, 1)) == 0) {
+	if ((rv = nni_setopt_bool(&s->raw, buf, sz)) == 0) {
 		s->survid = 0;
 		nni_timer_cancel(&s->timer);
 	}
@@ -294,7 +293,7 @@ static int
 surv0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	surv0_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static int

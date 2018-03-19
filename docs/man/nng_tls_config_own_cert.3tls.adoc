@@ -1,0 +1,65 @@
+= nng_tls_config_own_cert(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tls_config_own_cert - configure own certificate and key
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
+
+int nng_tls_config_own_cert(nni_tls_config *cfg, const char *cert,
+    const char *key, const char *pass);
+----
+
+== DESCRIPTION
+
+The `nng_tls_config_own_cert()` function configures a certificate _cert_
+identifying the local side of a TLS connection used with _cfg_, along with an
+associated private or secret key _key_.
+The certificate may be
+a chain, with the leaf signer first and the root at the end.  The
+self-signed certificate at the end can be omitted.
+(The client should already
+have it, and will have to in order to validate this certificate anyway).
+
+The _key_ may be encrypted with a password, in which can be supplied in _pass_.
+The value `NULL` should be supplied for _pass_ if the key is not encrypted.
+
+On servers, it is possible to call this function multiple times for the
+same configuration.
+This can be useful for specifying different parameters
+to be used for different cryptographic algorithms.
+
+The certificate located in _cert_ and _key_ must be NUL (`\0`) terminated C
+strings containing
+https://tools.ietf.org/html/rfc7468[PEM] formatted material.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_EBUSY`:: The configuration _cfg_ is already in use, and cannot be modified.
+`NNG_EINVAL`:: An invalid _cert_ or _key_ was supplied.
+
+== SEE ALSO
+
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
+<<nng_tls_config_cert_key_file.3tls#,nng_tls_config_cert_key_file(3tls)>>,
+<<nng.7#,nng(7)>>

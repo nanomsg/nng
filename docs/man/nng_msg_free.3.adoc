@@ -1,0 +1,42 @@
+= nng_msg_free(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_msg_free - free a message
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+void nng_msg_free(nng_msg *msg);
+----
+
+== DESCRIPTION
+
+The `nng_msg_free()` function deallocates the message _msg_ entirely.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
+<<nng_msg_realloc.3#,nng_msg_realloc(3)>>,
+<<nng_msg.5#,nng_msg(5)>>,
+<<nng.7#,nng(7)>>

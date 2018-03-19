@@ -1,0 +1,73 @@
+= nng_ipc(7)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_ipc - IPC transport
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/transport/ipc/ipc.h>
+
+int nng_ipc_register(void);
+----
+
+== DESCRIPTION
+
+(((IPC)))(((transport, _ipc_)))
+The ((_ipc_ transport)) provides communication support between
+_nng_ sockets within different processes on the same host.
+For POSIX platforms, this is implemented using ((UNIX domain sockets)).
+For Windows, this is implemented using Windows ((Named Pipes)).
+Other platforms may have different implementation strategies.
+
+// We need to insert a reference to the nanomsg RFC.
+
+=== Registration
+
+The _ipc_ transport is generally built-in to the _nng_ core, so
+no extra steps to use it should be necessary.
+
+=== URI Format
+
+(((URI, `ipc://`)))
+This transport uses URIs using the scheme `ipc://`, followed by
+a an absolute path name in the file system where the socket or named pipe
+should be created.
+
+TIP: On Windows, all names are prefixed by `\.\pipe\` and do not
+occupy the normal file system.
+On POSIX platforms, the path is taken literally,
+and is relative to the root directory.
+
+NOTE: If compatibility with legacy _nanomsg_ applications is required,
+then pathnames must not be longer than 122 bytes, including the final
+`NUL` byte.
+This is because legacy versions of _nanomsg_ cannot express URLs
+longer than 128 bytes, including the `ipc://` prefix.
+
+=== Socket Address
+
+When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
+the actual structure is of type <<nng_sockaddr_ipc.5#,`nng_sockaddr_ipc`>>.
+
+=== Transport Options
+
+The _ipc_ transport has no special options.
+
+NOTE: Options for security attributes and credentials are planned.
+
+== SEE ALSO
+
+<<nng_sockaddr.5#,nng_sockaddr(5)>>,
+<<nng.7#,nng(7)>>

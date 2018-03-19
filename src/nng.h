@@ -48,7 +48,7 @@ extern "C" {
 // version 0, you should not be making any forward compatibility
 // assumptions.
 #define NNG_MAJOR_VERSION 0
-#define NNG_MINOR_VERSION 5
+#define NNG_MINOR_VERSION 7
 #define NNG_PATCH_VERSION 0
 
 // Types common to nng.
@@ -95,14 +95,17 @@ NNG_DECL void nng_closeall(void);
 
 // nng_setopt sets an option for a specific socket.
 NNG_DECL int nng_setopt(nng_socket, const char *, const void *, size_t);
+NNG_DECL int nng_setopt_bool(nng_socket, const char *, bool);
 NNG_DECL int nng_setopt_int(nng_socket, const char *, int);
 NNG_DECL int nng_setopt_ms(nng_socket, const char *, nng_duration);
 NNG_DECL int nng_setopt_size(nng_socket, const char *, size_t);
 NNG_DECL int nng_setopt_uint64(nng_socket, const char *, uint64_t);
 NNG_DECL int nng_setopt_string(nng_socket, const char *, const char *);
+NNG_DECL int nng_setopt_ptr(nng_socket, const char *, void *);
 
 // nng_socket_getopt obtains the option for a socket.
 NNG_DECL int nng_getopt(nng_socket, const char *, void *, size_t *);
+NNG_DECL int nng_getopt_bool(nng_socket, const char *, bool *);
 NNG_DECL int nng_getopt_int(nng_socket, const char *, int *);
 NNG_DECL int nng_getopt_ms(nng_socket, const char *, nng_duration *);
 NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
@@ -152,6 +155,7 @@ NNG_DECL int nng_listener_close(nng_listener);
 // nng_dialer_setopt sets an option for a specific dialer.  Note
 // dialer options may not be altered on a running dialer.
 NNG_DECL int nng_dialer_setopt(nng_dialer, const char *, const void *, size_t);
+NNG_DECL int nng_dialer_setopt_bool(nng_dialer, const char *, bool);
 NNG_DECL int nng_dialer_setopt_int(nng_dialer, const char *, int);
 NNG_DECL int nng_dialer_setopt_ms(nng_dialer, const char *, nng_duration);
 NNG_DECL int nng_dialer_setopt_size(nng_dialer, const char *, size_t);
@@ -163,6 +167,7 @@ NNG_DECL int nng_dialer_setopt_string(nng_dialer, const char *, const char *);
 // fail for options that a particular dialer is not interested in,
 // even if they were set on the socket.
 NNG_DECL int nng_dialer_getopt(nng_dialer, const char *, void *, size_t *);
+NNG_DECL int nng_dialer_getopt_bool(nng_dialer, const char *, bool *);
 NNG_DECL int nng_dialer_getopt_int(nng_dialer, const char *, int *);
 NNG_DECL int nng_dialer_getopt_ms(nng_dialer, const char *, nng_duration *);
 NNG_DECL int nng_dialer_getopt_size(nng_dialer, const char *, size_t *);
@@ -175,6 +180,7 @@ NNG_DECL int nng_dialer_getopt_ptr(nng_dialer, const char *, void **);
 // on a running listener.
 NNG_DECL int nng_listener_setopt(
     nng_listener, const char *, const void *, size_t);
+NNG_DECL int nng_listener_setopt_bool(nng_listener, const char *, bool);
 NNG_DECL int nng_listener_setopt_int(nng_listener, const char *, int);
 NNG_DECL int nng_listener_setopt_ms(nng_listener, const char *, nng_duration);
 NNG_DECL int nng_listener_setopt_size(nng_listener, const char *, size_t);
@@ -187,6 +193,7 @@ NNG_DECL int nng_listener_setopt_string(
 // fail for options that a particular listener is not interested in,
 // even if they were set on the socket.
 NNG_DECL int nng_listener_getopt(nng_listener, const char *, void *, size_t *);
+NNG_DECL int nng_listener_getopt_bool(nng_listener, const char *, bool *);
 NNG_DECL int nng_listener_getopt_int(nng_listener, const char *, int *);
 NNG_DECL int nng_listener_getopt_ms(
     nng_listener, const char *, nng_duration *);
@@ -394,10 +401,12 @@ NNG_DECL int      nng_msg_getopt(nng_msg *, int, void *, size_t *);
 // example during a connection notification, to disconnect a pipe that
 // is associated with an invalid or untrusted remote peer.
 NNG_DECL int nng_pipe_getopt(nng_pipe, const char *, void *, size_t *);
+NNG_DECL int nng_pipe_getopt_bool(nng_pipe, const char *, bool *);
 NNG_DECL int nng_pipe_getopt_int(nng_pipe, const char *, int *);
 NNG_DECL int nng_pipe_getopt_ms(nng_pipe, const char *, nng_duration *);
 NNG_DECL int nng_pipe_getopt_size(nng_pipe, const char *, size_t *);
 NNG_DECL int nng_pipe_getopt_uint64(nng_pipe, const char *, uint64_t *);
+NNG_DECL int nng_pipe_getopt_ptr(nng_pipe, const char *, void **);
 NNG_DECL int nng_pipe_close(nng_pipe);
 
 // Flags.
@@ -408,7 +417,6 @@ enum nng_flag_enum {
 
 // Options.
 #define NNG_OPT_SOCKNAME "socket-name"
-#define NNG_OPT_DOMAIN "compat:domain" // legacy compat only
 #define NNG_OPT_RAW "raw"
 #define NNG_OPT_LINGER "linger"
 #define NNG_OPT_RECVBUF "recv-buffer"
@@ -421,8 +429,6 @@ enum nng_flag_enum {
 #define NNG_OPT_REMADDR "remote-address"
 #define NNG_OPT_URL "url"
 #define NNG_OPT_MAXTTL "ttl-max"
-#define NNG_OPT_PROTOCOL "protocol"
-#define NNG_OPT_TRANSPORT "transport"
 #define NNG_OPT_RECVMAXSZ "recv-size-max"
 #define NNG_OPT_RECONNMINT "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT "reconnect-time-max"
@@ -475,7 +481,7 @@ enum nng_flag_enum {
 // authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 #define NNG_OPT_TLS_VERIFIED "tls-verified"
 
-// XXX: TBD: priorities, socket names, ipv4only
+// XXX: TBD: priorities, ipv4only, TCP options
 
 // Statistics.  These are for informational purposes only, and subject
 // to change without notice.  The API for accessing these is stable,

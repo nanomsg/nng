@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -37,13 +37,13 @@ static void pair1_pipe_fini(void *);
 struct pair1_sock {
 	nni_msgq *  uwq;
 	nni_msgq *  urq;
-	int         raw;
+	bool        raw;
 	int         ttl;
 	nni_mtx     mtx;
 	nni_idhash *pipes;
 	nni_list    plist;
-	int         started;
-	int         poly;
+	bool        started;
+	bool        poly;
 	nni_aio *   aio_getq;
 };
 
@@ -94,8 +94,8 @@ pair1_sock_init(void **sp, nni_sock *nsock)
 		return (rv);
 	}
 
-	s->raw  = 0;
-	s->poly = 0;
+	s->raw  = false;
+	s->poly = false;
 	s->uwq  = nni_sock_sendq(nsock);
 	s->urq  = nni_sock_recvq(nsock);
 	s->ttl  = 8;
@@ -167,7 +167,7 @@ pair1_pipe_start(void *arg)
 		}
 	}
 	nni_list_append(&s->plist, p);
-	s->started = 1;
+	s->started = true;
 	nni_mtx_unlock(&s->mtx);
 
 	// Schedule a getq.  In polyamorous mode we get on the per pipe
@@ -402,7 +402,7 @@ pair1_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 	pair1_sock *s = arg;
 	int         rv;
 	nni_mtx_lock(&s->mtx);
-	rv = s->started ? NNG_ESTATE : nni_setopt_int(&s->raw, buf, sz, 0, 1);
+	rv = s->started ? NNG_ESTATE : nni_setopt_bool(&s->raw, buf, sz);
 	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
@@ -411,7 +411,7 @@ static int
 pair1_sock_getopt_raw(void *arg, void *buf, size_t *szp)
 {
 	pair1_sock *s = arg;
-	return (nni_getopt_int(s->raw, buf, szp));
+	return (nni_getopt_bool(s->raw, buf, szp));
 }
 
 static int
@@ -438,7 +438,7 @@ pair1_sock_setopt_poly(void *arg, const void *buf, size_t sz)
 	pair1_sock *s = arg;
 	int         rv;
 	nni_mtx_lock(&s->mtx);
-	rv = s->started ? NNG_ESTATE : nni_setopt_int(&s->poly, buf, sz, 0, 1);
+	rv = s->started ? NNG_ESTATE : nni_setopt_bool(&s->poly, buf, sz);
 	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
@@ -447,7 +447,7 @@ static int
 pair1_sock_getopt_poly(void *arg, void *buf, size_t *szp)
 {
 	pair1_sock *s = arg;
-	return (nni_getopt_int(s->poly, buf, szp));
+	return (nni_getopt_bool(s->poly, buf, szp));
 }
 
 static void

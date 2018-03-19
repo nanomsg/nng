@@ -1,0 +1,48 @@
+= nng_aio_wait(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_aio_wait - wait for asynchronous I/O operation
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+void nng_aio_wait(nng_aio *aio);
+----
+
+== DESCRIPTION
+
+The `nng_aio_wait()` function waits for an asynchronous I/O operation
+to complete.
+If the operation has not been started, or has already
+completed, then it returns immediately.
+
+If the a callback was set with _aio_ when it was allocated, then this
+function will not be called until the callback has completed.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_aio_abort.3#,nng_aio_abort(3)>>,
+<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
+<<nng_aio.5#,nng_aio(5)>>,
+<<nng.7#,nng(7)>>

@@ -1,0 +1,45 @@
+= nng_pull_open(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_pull_open - create pull socket
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/nng.h>
+#include <nng/protocol/pipeline0/pull.h>
+
+int nng_pull0_open(nng_socket *s);
+----
+
+== DESCRIPTION
+
+The `nng_pull0_open()` function creates a <<nng_pull.7#,_pull_>> version 0
+<<nng_socket.5#,socket>> and returns it at the location pointed to by _s_.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol is not supported.
+
+== SEE ALSO
+
+<<nng_socket.5#,nng_socket(5)>>,
+<<nng_pull.7#,nng_pull(7)>>,
+<<nng_push.7#,nng_push(7)>>,
+<<nng.7#,nng(7)>>

@@ -19,6 +19,7 @@
 # This script requires asciidoctor, pygments, git, and a UNIX shell.
 # 
 
+curdir=$(pwd)
 tmpdir=$(mktemp -d)
 srcdir=$(dirname $0)
 dstdir=${tmpdir}/pages
@@ -60,41 +61,37 @@ fi
 giturl="${GITURL:-git@github.com:nanomsg/nng}"
 
 cleanup() {
+	cd $curdir
 	printf "DELETING ${tmpdir}\n"
 	rm -rf ${tmpdir}
 }
 
-getinfo() {
-	PAGE=
-	SECT=
-	DESC=
+getdesc() {
+	typeset input=$1
+	typeset -i doname=0
 
 	while read line
 	do
 		case "$line" in
-		"//"*)
+		"== NAME")
+			doname=1
 			;;
-		"= "**|"="*)
-			if [ -z "${PAGE}" ] && [ -z "${SECT}" ]
-			then
-				PAGE=${line%\(}
-				PAGE=${PAGE#=}
-				PAGE=${PAGE## }
-				PAGE=${PAGE%\(*}
-				SECT=${line#*\(}
-				SECT=${SECT%\)}
-			fi
+		==*)
+			doname=0
+			;;
+
+		"//"*|"")
 			;;
 
 		*" - "*)
-			if [ -z "${DESC}" ] && [ -n "${PAGE}" ] && [ -n "${SECT}" ]
+			if (( doname ))
 			then
-				DESC=${line#*- }
+				echo ${line#*- }
 				return
 			fi
 			;;
 		esac
-	done
+	done < $input
 }
 
 mkdir -p ${tmpdir}
@@ -103,6 +100,7 @@ trap cleanup 0
 
 typeset -A descs
 typeset -A pages
+typeset -A htmls
 echo git clone ${giturl} ${dstdir} || exit 1
 git clone ${giturl} ${dstdir} || exit 1
 
@@ -112,6 +110,14 @@ git clone ${giturl} ${dstdir} || exit 1
 
 dirty=
 files=( $(find . -name '*.adoc' -print | sort ) )
+status=$(git status -s *.adoc)
+if [[ -n "${status}" ]]
+then
+	printf "Files not checked in!\n"
+	git status -s *.adoc
+	dirty=yes
+fi
+
 
 printf "Processing files: [%3d%%]" 0
 typeset -i num
@@ -125,12 +131,14 @@ do
 	pct=$(( num * 100 / ${#files[@]} ))
 
 	printf "\b\b\b\b\b\b[%3d%%]" ${pct}
-	adoc=${input#./}
-	html=${adoc%.adoc}.html
+	adoc=${input#*/}
+	base=${adoc%.adoc}
+	html=${base}.html
+	page=${base%.*}
+	sect=${base##*.}
 	output=${dstman}/${html}
+	
 
-	status=$(git status -s $input )
-	when=$(git log -n1 --format='%ad' '--date=format-local:%s' $input )
 	cat <<EOF > ${output}
 ---
 version: ${VERSION}
@@ -138,27 +146,28 @@ layout: ${LAYOUT}
 ---
 EOF
 
-	if [ -n "$when" ]
+	if [[ -z "${sect}" ]]
 	then
-		epoch="SOURCE_DATE_EPOCH=${when}"
+		printf "\nNo section in file name for ${adoc}!\n"
+		fails=yes
+	fi
+	if [[ -z "${page}" ]]
+	then
+		printf "\nNo section topic for ${adoc}!\n"
+		fails=yes
+	fi
+
+	desc=$(getdesc ${adoc})
+	if [[ -n "${desc}" ]]
+	then
+		descs[${page}_${sect}]="$desc"
+		pages[${sect}]+=( $page )
 	else
-		epoch=
-		dirty=yes
-	fi
-	if [ -n "$status" ]
-	then
-		printf "\nFile $adoc is not checked in!\n"
-		dirty=yes
+		printf "\nNo description for ${adoc}!\n"
+		fails=yes
 	fi
 
-	getinfo < ${adoc}
-	if [ -n "${DESC}" ]
-	then
-		descs[${PAGE}_${SECT}]="$DESC"
-		pages[${SECT}]=( ${pages[$SECT][*]} $PAGE )
-	fi
-
-	 env ${epoch} asciidoctor \
+	asciidoctor \
 		-dmanpage \
 		-amansource="${MANSOURCE}" \
 		-amanmanual="${MANMANUAL}" \
@@ -169,15 +178,14 @@ EOF
 		-aicons=font \
 		-bhtml5 \
 		-o - ${adoc} >> ${output}
-	chmod 0644 ${output}
 
-	if [ $? -ne 0 ]
+	if [[ $? -ne 0 ]]
 	then
-		printf "\n$Failed to process $adoc !\n"
+		printf "\nFailed to process ${adoc}!\n"
 		fails=yes
 	fi
+	htmls[${html}]=${adoc}
 
-	(cd ${dstman}; git add ${html})
 done
 
 printf "\nProcessing index: "
@@ -191,22 +199,19 @@ The following pages are present:
 
 EOF
 
-typeset -A titles
-titles[1]="Utilities and Programs"
-titles[3]="Library Functions"
-titles[5]="Macros and Types"
-titles[7]="Protocols and Transports"
-
-for S in $(echo ${!pages[@]} | sort )
+for sect in $(echo ${!pages[@]} | sort )
 do
-	printf "\n== Section ${S}: ${titles[$S]}\n"
+	title=$(cat ${srcdir}/man${sect}.sect)
+	desc=$(cat ${srcdir}/man${sect}.desc)
+	printf "\n== Section ${sect}: ${title}\n";
+	printf "\n${desc}\n";
 
 	printf "\n[cols=\"3,5\"]\n"
 	printf "|===\n"
-	for P in $(echo ${pages[$S][@]} | tr " " "\n" | sort)
+	for page in $(echo ${pages[$sect][@]} | tr " " "\n" | sort)
 	do
-		printf "|<<${P}#,${P}(${S})>>\n"
-		printf "|${descs[${P}_${S}]}\n"
+		printf "|<<${page}.${sect}#,${page}(${sect})>>\n"
+		printf "|${descs[${page}_${sect}]}\n"
 		printf "\n"
 	done
 	printf "|===\n"
@@ -219,17 +224,32 @@ layout: ${LAYOUT}
 ---
 EOF
 
-env ${epoch} asciidoctor \
+asciidoctor \
 	-darticle \
 	-anofooter=yes \
 	-askip-front-matter \
 	-atoc=left \
 	-aicons=font \
+	-aoutdir=${dstman} \
 	-bhtml5 \
 	-o - ${index} >> ${dstman}/index.html
-chmod 0644 ${dstman}/index.html
 
-(cd ${dstman}; git add index.html)
+htmls["index.html"]=${index}
+
+cd $dstman
+
+printf "\nRemoving old files: "
+for f in *.html
+do
+	if [[ -z "${htmls[$f]}" ]]
+	then
+		git rm $f
+	fi
+done
+
+printf "\nAdding new files: "
+git add ${!htmls[@]}
+chmod 0644 ${!htmls[@]}
 
 if [ -n "$dirty" ]
 then
@@ -244,4 +264,4 @@ then
 fi
 printf "Done.\n"
 
-(cd ${dstman}; git commit -m "man page updates for ${VERSION}"; git push origin gh-pages)
+git commit -m "man page updates for ${VERSION}"; git push origin gh-pages

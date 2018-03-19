@@ -37,7 +37,6 @@ struct nni_socket {
 	nni_mtx       s_mx;
 	nni_cv        s_cv;
 	nni_cv        s_close_cv;
-	int           s_raw;
 
 	uint64_t s_id;
 	uint32_t s_flags;
@@ -249,12 +248,6 @@ nni_sock_setopt_sockname(nni_sock *s, const void *buf, size_t sz)
 	return (0);
 }
 
-static int
-nni_sock_getopt_domain(nni_sock *s, void *buf, size_t *szp)
-{
-	return (nni_getopt_int(s->s_raw + 1, buf, szp));
-}
-
 static const nni_socket_option nni_sock_options[] = {
 	{
 	    .so_name   = NNG_OPT_RECVTIMEO,
@@ -300,11 +293,6 @@ static const nni_socket_option nni_sock_options[] = {
 	    .so_name   = NNG_OPT_SOCKNAME,
 	    .so_getopt = nni_sock_getopt_sockname,
 	    .so_setopt = nni_sock_setopt_sockname,
-	},
-	{
-	    .so_name   = NNG_OPT_DOMAIN,
-	    .so_getopt = nni_sock_getopt_domain,
-	    .so_setopt = NULL,
 	},
 	// terminate list
 	{ NULL, NULL, NULL },
@@ -886,11 +874,6 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *val, size_t size)
 			return (NNG_EREADONLY);
 		}
 		rv = pso->pso_setopt(s->s_data, val, size);
-		if ((rv == 0) && (strcmp(name, NNG_OPT_RAW) == 0) &&
-		    (size >= sizeof(int))) {
-			// Save the raw option -- we use this for the DOMAIN.
-			memcpy(&s->s_raw, val, sizeof(int));
-		}
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}

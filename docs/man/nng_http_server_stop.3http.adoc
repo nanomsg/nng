@@ -1,0 +1,44 @@
+= nng_http_server_stop(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_server_stop - stop HTTP server
+
+== SYNOPSIS
+
+[source, c]
+-----------
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+void nng_http_server_stop(nng_http_server *server);
+-----------
+
+== DESCRIPTION
+
+The `nng_http_server_stop()` stops the HTTP server instance _server_.
+This will cause it to close any underlying TCP sockets, and to terminate
+any HTTP connections associated with it.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
+<<nng_http_server_start.3http#,nng_http_server_start(3http)>>,
+<<nng.7#,nng(7)>>
