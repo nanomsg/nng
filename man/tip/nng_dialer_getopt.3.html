@@ -510,8 +510,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_synopsis">SYNOPSIS</a></li>
 <li><a href="#_description">DESCRIPTION</a>
 <ul class="sectlevel2">
-<li><a href="#_untyped_form">Untyped Form</a></li>
-<li><a href="#_typed_forms">Typed Forms</a></li>
+<li><a href="#_forms">Forms</a></li>
 </ul>
 </li>
 <li><a href="#_return_values">RETURN VALUES</a></li>
@@ -534,6 +533,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">valszp</span><span class="tok-p">);</span>
 
+<span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt_bool</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">bool</span> <span class="tok-o">*</span><span class="tok-n">bvalp</span><span class="tok-p">);</span>
+
 <span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt_int</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-o">*</span><span class="tok-n">ivalp</span><span class="tok-p">);</span>
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt_ms</span><span class="tok-p">(</span><span class="tok-n">nng_dialer</span> <span class="tok-n">d</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_duration</span> <span class="tok-o">*</span><span class="tok-n">durp</span><span class="tok-p">);</span>
@@ -551,25 +552,56 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_dialer_getopt()</code> functions are used to retrieve option values for
-the dialer <em>d</em>.
+<p>
+The <code>nng_dialer_getopt()</code> functions are used to retrieve option values for
+the <a href="nng_dialer.5.html">dialer</a> <em>d</em>.
 The actual options that may be retrieved in this way
-vary, and many are documented in <a href="nng_options.5.html">nng_options(5)</a>.
-Additionally some transport-specific options are documented with the
-transports themselves.</p>
+vary, and many are documented in <a href="nng_options.5.html">nng_options(5)</a>.</p>
 </div>
 <div class="paragraph">
-<p>In all of these forms, the option <em>opt</em> is retrieved from the dialer <em>d</em>.</p>
+<p>Additionally some transport-specific options and protocol-specific options
+are documented with the transports and protocols themselves.</p>
+</div>
+<div class="sect2">
+<h3 id="_forms">Forms</h3>
+<div class="paragraph">
+<p>In all of these forms, the option <em>opt</em> is retrieved from the dialer <em>d</em>.
+The forms vary based on the type of the option they take.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Generally, it will be easier to use one of the typed versions of this
+function.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+No validation that the option is actually of the associated type is
+performed, so the caller must take care to use the <strong>correct</strong> typed form.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.</p>
 </div>
-<div class="sect2">
-<h3 id="_untyped_form">Untyped Form</h3>
+<div class="sect3">
+<h4 id="_code_nng_dialer_getopt_code"><code>nng_dialer_getopt()</code></h4>
 <div class="paragraph">
-<p>The first form of this function, <code>nng_dialer_getopt()</code>, can be used to
-retrieve the value of any option.
+<p>This function is untyped and can be used to retrieve the value of any option.
 The caller must store a pointer to a buffer to receive the value in <em>val</em>,
 and the size of the buffer shall be stored at the location referenced
 by <em>valszp</em>.</p>
@@ -589,43 +621,53 @@ This can be used to determine the size of the buffer needed to receive
 the object.</p>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_typed_forms">Typed Forms</h3>
+<div class="sect3">
+<h4 id="_code_nng_dialer_getopt_bool_code"><code>nng_dialer_getopt_bool()</code></h4>
 <div class="paragraph">
-<p>Generally, it will be easier to use one of the typed forms instead.
-Note however that no validation that the option is actually of the associated
-type is performed, so the caller must take care to use the <strong>correct</strong> typed
-form.</p>
+<p>This function is for options which take a boolean (<code>bool</code>).
+The value will be stored at <em>ivalp</em>.</p>
 </div>
-<div class="paragraph">
-<p>The second form, <code>nng_dialer_getopt_int()</code>,
-is for options which take an integer (or boolean).
-The value will be stored at <em>ivalp</em>.
-For booleans the value will be eiher 0 (false) or 1 (true).</p>
 </div>
+<div class="sect3">
+<h4 id="_code_nng_dialer_getopt_int_code"><code>nng_dialer_getopt_int()</code></h4>
 <div class="paragraph">
-<p>The third form, <code>nng_dialer_getopt_ms()</code>, is used to retrieve time durations
+<p>This function is for options which take an integer (<code>int</code>).
+The value will be stored at <em>ivalp</em>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_dialer_getopt_ms_code"><code>nng_dialer_getopt_ms()</code></h4>
+<div class="paragraph">
+<p>This function is used to retrieve time <a href="nng_duration.5.html">durations</a>
 (such as timeouts), stored in <em>durp</em> as a number of milliseconds.
 (The special value <code>NNG_DUR_INFINITE</code> means an infinite amount of time, and
 the special value <code>NNG_DUR_DEFAULT</code> means a context-specific default.)</p>
 </div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_dialer_getopt_ptr_code"><code>nng_dialer_getopt_ptr()</code></h4>
 <div class="paragraph">
-<p>The fourth form, <code>nng_dialer_getopt_ptr()</code>, is used to retrieve a
-pointer <em>ptr</em> to structured data.
+<p>This function is used to retrieve a pointer, <em>ptr</em>, to structured data.
 The data referenced by <em>ptr</em> is generally managed using other functions.
 Note that this form is somewhat special in that the object is generally
 not copied, but instead the <strong>pointer</strong> to the object is copied.</p>
 </div>
-<div class="paragraph">
-<p>The fifth form, <code>nng_dialer_getopt_size()</code>, is used to retrieve a size
-into the pointer <em>zp</em>, typically for buffer sizes, message maximum sizes, and
-similar options.</p>
 </div>
+<div class="sect3">
+<h4 id="_code_nng_dialer_getopt_size_code"><code>nng_dialer_getopt_size()</code></h4>
 <div class="paragraph">
-<p>The sixth form, <code>nng_dialer_getopt_uint64()</code>, is used to retrieve a
-64-bit unsigned value into the value referenced by <em>u64p</em>.
-This is typically used for options
-related to identifiers, network numbers, and similar.</p>
+<p>This function is used to retrieve a size into the pointer <em>zp</em>,
+typically for buffer sizes, message maximum sizes, and similar options.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_dialer_getopt_uint64_code"><code>nng_dialer_getopt_uint64()</code></h4>
+<div class="paragraph">
+<p>This function is used to retrieve a 64-bit unsigned value into the value
+referenced by <em>u64p</em>.
+This is typically used for options related to identifiers, network
+numbers, and similar.</p>
+</div>
 </div>
 </div>
 </div>
@@ -634,7 +676,7 @@ related to identifiers, network numbers, and similar.</p>
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This function returns 0 on success, and non-zero otherwise.</p>
+<p>These functions returns 0 on success, and non-zero otherwise.</p>
 </div>
 </div>
 </div>
@@ -667,6 +709,7 @@ related to identifiers, network numbers, and similar.</p>
 <a href="nng_dialer_setopt.3.html">nng_dialer_setopt(3)</a>
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
 <a href="nng_dialer.5.html">nng_dialer(5)</a>,
+<a href="nng_duration.5.html">nng_duration(5)</a>,
 <a href="nng_options.5.html">nng_options(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>

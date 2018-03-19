@@ -508,7 +508,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#_forms">Forms</a></li>
+</ul>
+</li>
 <li><a href="#_return_values">RETURN VALUES</a></li>
 <li><a href="#_errors">ERRORS</a></li>
 <li><a href="#_see_also">SEE ALSO</a></li>
@@ -549,63 +553,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_listener_setopt()</code> functions are used to configure options for
-the listener <em>l</em>. The actual options that may be configured in this way
-vary, and many are documented in <a href="nng_options.5.html">nng_options(5)</a>.
-Additionally some transport-specific options are documented with the
-transports themselves.</p>
+<p>
+The <code>nng_listener_setopt()</code> functions are used to configure options for
+the <a href="nng_listener.5.html">listener</a> <em>l</em>.
+The actual options that may be configured in this way
+vary, and many are documented in <a href="nng_options.5.html">nng_options(5)</a>.</p>
 </div>
 <div class="paragraph">
-<p>In all of these forms, the option <em>opt</em> is configured on the listener <em>l</em>.</p>
-</div>
-<div class="paragraph">
-<p>The details of the type, size, and semantics of the option will depend
-on the actual option, and will be documented with the option itself.</p>
-</div>
-<div class="paragraph">
-<p>The first form of this function, <code>nng_listener_setopt()</code>, can be used to
-configure any arbitrary data.
-The <em>val</em> pointer addresses the data to copy, and <em>valsz</em> is the
-size of the objected located at <em>val</em>.</p>
-</div>
-<div class="paragraph">
-<p>Generally, it will be easier to use one of the typed forms instead.</p>
-</div>
-<div class="paragraph">
-<p>The second form, <code>nng_listener_setopt_int()</code>,
-is for options which take an integer (or boolean).  The <em>ival</em>
-is passed to the option.  For booleans pass either 0 (false) or 1 (true).</p>
-</div>
-<div class="paragraph">
-<p>The third form, <code>nng_listener_setopt_ms()</code>, is used to configure time durations
-(such as timeouts).
-The duration <em>dur</em> is an integer number of milliseconds.  (The special value
-<code>NNG_DUR_INFINITE</code> means an infinite amount of time.)</p>
-</div>
-<div class="paragraph">
-<p>The fourth form, <code>nng_listener_setopt_ptr()</code>, is used to pass a
-pointer <em>ptr</em> to structured data.  The data referenced by <em>ptr</em> is
-generally managed by other functions.
-For example, TLS configuration objects
-(<a href="nng_tls_config_alloc.3tls.html"><code>nng_tls_config_alloc()</code></a>) can be passed this way.
-Note that this form is somewhat special in that the object is generally
-not copied, but instead the <strong>pointer</strong> to the object is copied.</p>
-</div>
-<div class="paragraph">
-<p>The fifth form, <code>nng_listener_setopt_size()</code>, is used to pass a size
-specified by <em>z</em>, typically for buffer sizes, message maximum sizes, and
-similar options.</p>
-</div>
-<div class="paragraph">
-<p>The sixth form, <code>nng_listener_setopt_string()</code>, is used to pass a string
-<em>str</em>.  Strings passed this way must be legal UTF-8 or ASCII strings, terminated
-with a <code>NUL</code> (<code>\0</code>) byte.  (Other constraints may apply as well, see the
-documentation for <em>opt</em> for details.)</p>
-</div>
-<div class="paragraph">
-<p>The seventh form, <code>nng_listener_setopt_uint64()</code>, is used to configure
-the 64-bit unsigned value in <em>u64</em>.  This is typically used for options
-related to identifiers, network numbers, and similar.</p>
+<p>Additionally some transport-specific options and protocol-specific options
+are documented with the transports and protocols themselves.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -620,13 +576,115 @@ it&#8217;s configuration.
 </tr>
 </table>
 </div>
+<div class="sect2">
+<h3 id="_forms">Forms</h3>
+<div class="paragraph">
+<p>In all of these forms, the option <em>opt</em> is configured on the listener <em>l</em>.</p>
+</div>
+<div class="paragraph">
+<p>The details of the type, size, and semantics of the option will depend
+on the actual option, and will be documented with the option itself.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Generally, it will be easier to use one of the typed forms instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+No validation that the option is actually of the associated
+type is performed, so the caller must take care to use the <strong>correct</strong> typed form.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_listener_setopt_code"><code>nng_listener_setopt()</code></h4>
+<div class="paragraph">
+<p>This function is untyped, and can be used to configure any arbitrary data.
+The <em>val</em> pointer addresses the data to copy, and <em>valsz</em> is the
+size of the objected located at <em>val</em>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_listener_setopt_bool_code"><code>nng_listener_setopt_bool()</code></h4>
+<div class="paragraph">
+<p>This function is for options which take a boolean (<code>bool</code>).
+The <em>bval</em> is passed to the option.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_listener_setopt_int_code"><code>nng_listener_setopt_int()</code></h4>
+<div class="paragraph">
+<p>This function is for options which take an integer (<code>int</code>).
+The <em>ival</em> is passed to the option.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_listener_setopt_ms_code"><code>nng_listener_setopt_ms()</code></h4>
+<div class="paragraph">
+<p>This function is used to configure time durations (such as timeouts) using
+type <a href="nng_duration.5.html"><code>nng_duration</code></a>.
+The duration <em>dur</em> is an integer number of milliseconds.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_listener_setopt_ptr_code"><code>nng_listener_setopt_ptr()</code></h4>
+<div class="paragraph">
+<p>This function is used to pass a pointer, <em>ptr</em>, to structured data.
+The data referenced by <em>ptr</em> is generally managed by other functions.
+For example, TLS configuration objects created with
+(<a href="nng_tls_config_alloc.3tls.html"><code>nng_tls_config_alloc()</code></a>)
+can be passed this way.
+Note that this form is somewhat special in that the object is generally
+not copied, but instead the <strong>pointer</strong> to the object is copied.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_listener_setopt_size_code"><code>nng_listener_setopt_size()</code></h4>
+<div class="paragraph">
+<p>This function is used to configure a size, <em>z</em>, typically for buffer sizes,
+message maximum sizes, and similar options.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_listener_setopt_string_code"><code>nng_listener_setopt_string()</code></h4>
+<div class="paragraph">
+<p>This function is used to pass configure a string, <em>str</em>.
+Strings passed this way must be legal UTF-8 or ASCII strings, terminated
+with a <code>NUL</code> (<code>\0</code>) byte.
+(Other constraints may apply as well, see the documentation for each option
+for details.)</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_listener_setopt_uint64_code"><code>nng_listener_setopt_uint64()</code></h4>
+<div class="paragraph">
+<p>This function is used to configure a 64-bit unsigned value, <em>u64</em>.
+This is typically used for options related to identifiers, network numbers,
+and similar.</p>
+</div>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This function returns 0 on success, and non-zero otherwise.</p>
+<p>These functions return 0 on success, and non-zero otherwise.</p>
 </div>
 </div>
 </div>

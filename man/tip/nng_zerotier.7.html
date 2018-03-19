@@ -620,7 +620,9 @@ concepts and administration.
 <h3 id="_registration">Registration</h3>
 <div class="paragraph">
 <p>Depending upon how the library was built, it may be necessary to
-register the transport by calling <code>nng_zt_register()</code>.  This function
+register the transport by calling
+<a href="nng_zt_register.3.html"><code>nng_zt_register()</code></a>.
+This function
 returns zero on success, or an nng error value if the transport
 cannot be initialized for any reason.</p>
 </div>
@@ -724,7 +726,7 @@ The network is most likely not available.</p>
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_ZT_HOME</code></dt>
 <dd>
-<p>This is a string representing the &#8220;home directory`&#8221;, where the transport
+<p>This is a string representing the &#8220;home directory&#8221;, where the transport
 can store (and reuse) persistent state, such as key materials, node
 identity, and federation membership.
 This option must be set before the ZeroTier transport is first used.
@@ -813,7 +815,7 @@ If the value is set to 0, then connection attempts will keep retrying forever.</
 <dt class="hdlist1"><code>NNG_OPT_ZT_PING_TIME</code></dt>
 <dd>
 <p>If no traffic has been received from the ZeroTier peer after this
-period of time, then a &#8220;ping`&#8221; message is sent to check if the peer
+period of time, then a &#8220;ping&#8221; message is sent to check if the peer
 is still alive.  This is an <a href="nng_duration.5.html"><code>nng_duration</code></a> (msec).</p>
 </dd>
 </dl>
@@ -822,7 +824,7 @@ is still alive.  This is an <a href="nng_duration.5.html"><code>nng_duration</co
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_ZT_PING_TRIES</code></dt>
 <dd>
-<p>If this number (<code>int</code>) of consecutive &#8220;ping`&#8221; requests are sent to the
+<p>If this number (<code>int</code>) of consecutive &#8220;ping&#8221; requests are sent to the
 peer with no response (and no other intervening traffic), then the
 peer is assumed to be dead and the connection is closed.  Note that
 if any traffic is received from the peer, then the underlying counter
@@ -845,7 +847,7 @@ protocol may consume additional space, typically not more than 16-bytes.)</p>
 <div id="NNG_OPT_ZT_ORBIT" class="paragraph">
 <p><code>NNG_OPT_ZT_ORBIT</code>:
   This is a write-only option that takes an array of two <code>uint64_t</code> values,
-  indicating the ID of a ZeroTier &#8220;moon`&#8221;, and the node ID of the root server
+  indicating the ID of a ZeroTier &#8220;moon&#8221;, and the node ID of the root server
   for that moon.  (The ID may be zero if the moon ID is the same as it&#8217;s
   root server ID, which is conventional.)</p>
 </div>
@@ -854,7 +856,7 @@ protocol may consume additional space, typically not more than 16-bytes.)</p>
 <dt class="hdlist1"><code>NNG_OPT_ZT_DEORBIT</code></dt>
 <dd>
 <p>This write-only option takes a single <code>uint64_t</code> indicating the moon
-ID to &#8220;deorbit`&#8221;.  If the node is not already orbiting the moon, then
+ID to &#8220;deorbit&#8221;.  If the node is not already orbiting the moon, then
 this has no effect.</p>
 </dd>
 </dl>

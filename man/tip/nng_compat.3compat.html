@@ -709,6 +709,142 @@ In the meantime it can be found online at the
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>There are a few caveats, that should be kept in mind.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Socket numbers can be quite large.
+The legacy <em>libnanomsg</em> attempted to reuse socket numbers, like
+file descriptors in UNIX systems.
+The <em>nng</em> library avoids this to prevent accidental reuse or
+collision after a descriptor is closed.
+Consequently, socket numbers can become quite large, and should
+probably not be used for array indices.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The following options (<code>nn_getsockopt</code>) are unsupported:
+<code>NN_PROTOCOL</code>, <code>NN_SNDPRIO</code>, <code>NN_RCVPRIO</code>, <code>NN_IPV4ONLY</code>.
+Some of these will probably be added back in the future when
+the relevant support is added to <em>nng</em>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Statistics (<code>nn_get_statistic</code>) are unsupported.
+The plan is to support statistics in the native <em>nng</em> API, but
+we think there is no need for this in a compatibility layer.
+Hence, this function returns <code>ENOTSUP</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Some transports can support longer URLs than legacy <em>libnanomsg</em> can.
+It is a good idea to use short pathnames in URLs if interoperability
+is a concern.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Some transports are unusable from this mode.
+In particular, this legacy API offers no way to configure
+TLS parameters that are required for use.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+ABI versioning is not supported.
+We don&#8217;t offer the <code>NN_VERSION_</code> macros.  Sorry.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Runtime symbol information is not implemented.
+Specifically, there is no <code>nn_symbol()</code> function yet.
+(This may be addressed later if there is a need.)
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The <code>nn_term()</code> function is destructive and should be avoided.
+This function closes down all sockets, and really there is no good
+reason to ever use it.
+Removal from existing code is advised.
+(Keep track of sockets and close them explicitly if necessary.)
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+It <strong>is</strong> possible at present to intermix sockets between the new and
+the old APIs, but this is not a guaranteed feature, and should only
+be used temporarily to facilitate transitioning code to the new APIs.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>

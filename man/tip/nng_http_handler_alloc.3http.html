@@ -585,7 +585,7 @@ rather than just a single element.
 <p>The generic (first) form of this creates a handler that uses a user-supplied
 function to process HTTP requests.
 This function uses the asynchronous I/O framework.
-The function takes a pointer to an <code>nng_aio</code> structure.
+The function takes a pointer to an <a href="nng_aio.5.html"><code>nng_aio</code></a> structure.
 That structure will be passed with the following input values (retrieved with
 <a href="nng_aio_get_input.3.html"><code>nng_aio_get_input()</code></a>):</p>
 </div>
@@ -595,11 +595,11 @@ That structure will be passed with the following input values (retrieved with
 <dd>
 <p>The client&#8217;s HTTP request.</p>
 </dd>
-<dt class="hdlist1">1: <code>nng_http_handler *</code><em>handler</em></dt>
+<dt class="hdlist1">1: <code>nng_http_handler *</code> <em>handler</em></dt>
 <dd>
 <p>Pointer to the handler object.</p>
 </dd>
-<dt class="hdlist1">2: <code>nng_http_conn *</code><em>conn</em></dt>
+<dt class="hdlist1">2: <code>nng_http_conn *</code> <em>conn</em></dt>
 <dd>
 <p>The underlying HTTP connection.</p>
 </dd>
@@ -717,6 +717,7 @@ sent the <em>data</em>, with <code>Content-Length</code> of <em>size</em> bytes,
 <a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error(3http)</a>,
 <a href="nng_http_server_add_handler.3http.html">nng_http_server_add_handler(3http)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_aio.5.html">nng_aio(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>

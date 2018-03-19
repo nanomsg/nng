@@ -701,8 +701,9 @@ This option can be set on listeners, and retrieved from pipes.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_TLS_CONFIG</code></dt>
 <dd>
-<p>This option is used on an endpoint to access the underlying TLS
-configuration object.  The value is of type <code>nng_tls_config *</code>.</p>
+<p>(opaque) This option is used on an endpoint to access the underlying TLS
+configuration object.
+The value is of type <code>nng_tls_config *</code>.</p>
 </dd>
 </dl>
 </div>
@@ -722,16 +723,16 @@ Use this option when advanced TLS configuration is required.
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_TLS_CA_FILE</code></dt>
 <dd>
-<p>This is a write-only option used to load certificates associated
+<p>(string) This is a write-only option used to load certificates associated
 associated private key from a file.
 See <a href="nng_tls_config_ca_file.3tls.html"><code>nng_tls_config_ca_file()</code></a> for more
 information.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_TLS_CERT_KEY_FILE</code></dt>
 <dd>
-<p>This is a write-only option used to load the local certificate and
-associated private key from a file. The private key used must be
-unencrypted.
+<p>(string) This is a write-only option used to load the local certificate and
+associated private key from a file.
+The private key used must be unencrypted.
 (Use the <code>NNG_OPT_TLS_CONFIG</code> option to access the underlying
 TLS configuration if more advanced configuration is needed.)
 See <a href="nng_tls_config_own_cert.3tls.html"><code>nng_tls_config_own_cert()</code></a> for more
@@ -739,7 +740,7 @@ information.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_TLS_AUTH_MODE</code></dt>
 <dd>
-<p>This is a write-only option used to configure the authentication mode
+<p>(<code>int</code>) This is a write-only option used to configure the authentication mode
 used.
 It can take an integer with value <code>NNG_TLS_AUTH_MODE_NONE</code>,
 <code>NNG_TLS_AUTH_MODE_REQUIRED</code>, or <code>NNG_TLS_AUTH_MODE_OPTIONAL</code>.
@@ -748,9 +749,9 @@ details.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_TLS_VERIFIED</code></dt>
 <dd>
-<p>This is a read-only option which returns a boolean value (integer 0 or 1).
-It will true (1) if the remote peer has been properly verified using TLS
-authentication, or false (0) otherwise.  This option may return incorrect
+<p>(bool) This is a read-only option that is <code>true</code> if the remote peer has been
+properly verified using TLS authentication, or <code>false</code> otherwise.
+This option may return incorrect
 results if peer authentication is disabled with <code>NNG_TLS_AUTH_MODE_NONE</code>.</p>
 </dd>
 </dl>

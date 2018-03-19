@@ -508,7 +508,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#_forms">Forms</a></li>
+</ul>
+</li>
 <li><a href="#_return_values">RETURN VALUES</a></li>
 <li><a href="#_errors">ERRORS</a></li>
 <li><a href="#_see_also">SEE ALSO</a></li>
@@ -529,6 +533,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_getopt</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">valszp</span><span class="tok-p">);</span>
 
+<span class="tok-kt">int</span> <span class="tok-nf">nng_getopt_bool</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">bool</span> <span class="tok-o">*</span><span class="tok-n">bvalp</span><span class="tok-p">);</span>
+
 <span class="tok-kt">int</span> <span class="tok-nf">nng_getopt_int</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-o">*</span><span class="tok-n">ivalp</span><span class="tok-p">);</span>
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_getopt_ms</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_duration</span> <span class="tok-o">*</span><span class="tok-n">durp</span><span class="tok-p">);</span>
@@ -546,8 +552,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_getopt()</code> functions are used to retrieve option values for
-the socket <em>s</em>.
+<p>
+The <code>nng_getopt()</code> functions are used to retrieve option values for
+the <a href="nng_socket.5.html">socket</a> <em>s</em>.
 The actual options that may be retrieved in this way vary.
 A number of them are documented in <a href="nng_options.5.html">nng_options(5)</a>.</p>
 </div>
@@ -555,6 +562,8 @@ A number of them are documented in <a href="nng_options.5.html">nng_options(5)</
 <p>Additionally transport-specific options and protocol-specific options are
 documented with the transports and protocols themselves.</p>
 </div>
+<div class="sect2">
+<h3 id="_forms">Forms</h3>
 <div class="paragraph">
 <p>In all of these forms, the option <em>opt</em> is retrieved from the socket <em>s</em>.
 The forms vary based on the type of the option they take.</p>
@@ -588,14 +597,14 @@ type is performed, so the caller must take care to use the <strong>correct</stro
 <p>The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.</p>
 </div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>nng_getopt()</code></dt>
-<dd>
-<p>This function is untyped can be used to retrieve the value of any option.
+<div class="sect3">
+<h4 id="_code_nng_getopt_code"><code>nng_getopt()</code></h4>
+<div class="paragraph">
+<p>This function is untyped and can be used to retrieve the value of any option.
 The caller must store a pointer to a buffer to receive the value in <em>val</em>,
 and the size of the buffer shall be stored at the location referenced by
 <em>valszp</em>.</p>
+</div>
 <div class="paragraph">
 <p>When the function returns, the actual size of the data copied (or that
 would have been copied if sufficient space were present) is stored at
@@ -610,40 +619,55 @@ returned size in <em>valszp</em> does not exceed the original buffer size.</p>
 This can be used to determine the size of the buffer needed to receive
 the object.</p>
 </div>
-</dd>
-<dt class="hdlist1"><code>nng_getopt_int()</code></dt>
-<dd>
-<p>This function is for options which take an integer (<code>int</code>) or boolean (<code>bool</code>).
-The value will be stored at <em>ivalp</em>.
-For booleans the value will be eiher 0 (<code>false</code>) or 1 (<code>true</code>).</p>
-</dd>
-<dt class="hdlist1"><code>nng_getopt_ms()</code></dt>
-<dd>
-<p>This function is used to retrieve time durations
+</div>
+<div class="sect3">
+<h4 id="_code_nng_getopt_bool_code"><code>nng_getopt_bool()</code></h4>
+<div class="paragraph">
+<p>This function is for options which take a boolean (<code>bool</code>).
+The value will be stored at <em>ivalp</em>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_getopt_int_code"><code>nng_getopt_int()</code></h4>
+<div class="paragraph">
+<p>This function is for options which take an integer (<code>int</code>).
+The value will be stored at <em>ivalp</em>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_getopt_ms_code"><code>nng_getopt_ms()</code></h4>
+<div class="paragraph">
+<p>This function is used to retrieve time <a href="nng_duration.5.html">durations</a>
 (such as timeouts), stored in <em>durp</em> as a number of milliseconds.
 (The special value <code>NNG_DUR_INFINITE</code> means an infinite amount of time, and
 the special value <code>NNG_DUR_DEFAULT</code> means a context-specific default.)</p>
-</dd>
-<dt class="hdlist1"><code>nng_getopt_ptr()</code></dt>
-<dd>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_getopt_ptr_code"><code>nng_getopt_ptr()</code></h4>
+<div class="paragraph">
 <p>This function is used to retrieve a pointer, <em>ptr</em>, to structured data.
 The data referenced by <em>ptr</em> is generally managed using other functions.
 Note that this form is somewhat special in that the object is generally
 not copied, but instead the <strong>pointer</strong> to the object is copied.</p>
-</dd>
-<dt class="hdlist1"><code>nng_getopt_size()</code></dt>
-<dd>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_getopt_size_code"><code>nng_getopt_size()</code></h4>
+<div class="paragraph">
 <p>This function is used to retrieve a size into the pointer <em>zp</em>,
 typically for buffer sizes, message maximum sizes, and similar options.</p>
-</dd>
-<dt class="hdlist1"><code>nng_getopt_uint64()</code></dt>
-<dd>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_getopt_uint64_code"><code>nng_getopt_uint64()</code></h4>
+<div class="paragraph">
 <p>This function is used to retrieve a 64-bit unsigned value into the value
 referenced by <em>u64p</em>.
 This is typically used for options related to identifiers, network
 numbers, and similar.</p>
-</dd>
-</dl>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -651,7 +675,7 @@ numbers, and similar.</p>
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This function returns 0 on success, and non-zero otherwise.</p>
+<p>These functions return 0 on success, and non-zero otherwise.</p>
 </div>
 </div>
 </div>
@@ -685,6 +709,7 @@ numbers, and similar.</p>
 <a href="nng_pipe_getopt.3.html">nng_pipe_getopt(3)</a>,
 <a href="nng_setopt.3.html">nng_setopt(3)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_duration.5.html">nng_duration(5)</a>,
 <a href="nng_options.5.html">nng_options(5)</a>,
 <a href="nng_socket.5.html">nng_socket(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
