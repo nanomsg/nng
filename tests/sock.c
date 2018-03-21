@@ -198,18 +198,18 @@ TestMain("Socket Operations", {
 			Convey("Short size is not copied", {
 				size_t sz = 0;
 				to        = 0;
-				So(nng_getopt(
-				       s1, NNG_OPT_SENDTIMEO, &to, &sz) == 0);
+				So(nng_getopt(s1, NNG_OPT_SENDTIMEO, &to,
+				       &sz) == NNG_EINVAL);
 				So(sz == sizeof(to));
 				So(to == 0);
 				sz = 0;
-				So(nng_getopt(
-				       s1, NNG_OPT_RECONNMINT, &to, &sz) == 0);
+				So(nng_getopt(s1, NNG_OPT_RECONNMINT, &to,
+				       &sz) == NNG_EINVAL);
 
 				So(to == 0);
 				sz = 0;
-				So(nng_getopt(
-				       s1, NNG_OPT_RECONNMAXT, &to, &sz) == 0);
+				So(nng_getopt(s1, NNG_OPT_RECONNMAXT, &to,
+				       &sz) == NNG_EINVAL);
 				So(to == 0);
 			});
 
@@ -225,7 +225,7 @@ TestMain("Socket Operations", {
 				int    l  = 5;
 				size_t sz = 0;
 				So(nng_getopt(s1, NNG_OPT_RECVBUF, &l, &sz) ==
-				    0);
+				    NNG_EINVAL);
 				So(sz == sizeof(l));
 				So(l == 5);
 			});

@@ -178,6 +178,11 @@ NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
 NNG_DECL int nng_getopt_uint64(nng_socket, const char *, uint64_t *);
 NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **);
 
+// nng_getopt_string is special -- it allocates a string to hold the
+// resulting string, which should be freed with nng_strfree when it is
+// no logner needed.
+NNG_DECL int nng_getopt_string(nng_socket, const char *, char **);
+
 // nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy
 // nn_bind(). The underlying endpoint is returned back to the caller in the
@@ -242,6 +247,11 @@ NNG_DECL int nng_dialer_getopt_sockaddr(
 NNG_DECL int nng_dialer_getopt_uint64(nng_dialer, const char *, uint64_t *);
 NNG_DECL int nng_dialer_getopt_ptr(nng_dialer, const char *, void **);
 
+// nng_dialer_getopt_string is special -- it allocates a string to hold the
+// resulting string, which should be freed with nng_strfree when it is
+// no logner needed.
+NNG_DECL int nng_dialer_getopt_string(nng_dialer, const char *, char **);
+
 // nng_listener_setopt sets an option for a dialer.  This value is
 // not stored in the socket.  Subsequent setopts on the socket may
 // override these value however.  Note listener options may not be altered
@@ -271,6 +281,11 @@ NNG_DECL int nng_listener_getopt_sockaddr(
 NNG_DECL int nng_listener_getopt_uint64(
     nng_listener, const char *, uint64_t *);
 NNG_DECL int nng_listener_getopt_ptr(nng_listener, const char *, void **);
+
+// nng_listener_getopt_string is special -- it allocates a string to hold the
+// resulting string, which should be freed with nng_strfree when it is
+// no logner needed.
+NNG_DECL int nng_listener_getopt_string(nng_listener, const char *, char **);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.
@@ -333,6 +348,13 @@ NNG_DECL void *nng_alloc(size_t);
 // is probably less convenient for general uses than the C library malloc and
 // calloc.
 NNG_DECL void nng_free(void *, size_t);
+
+// nng_strdup duplicates the source string, using nng_alloc. The result
+// should be freed with nng_strfree (or nng_free(strlen(s)+1)).
+NNG_DECL char *nng_strdup(const char *);
+
+// nng_strfree is equivalent to nng_free(strlen(s)+1).
+NNG_DECL void nng_strfree(char *);
 
 // Async IO API.  AIO structures can be thought of as "handles" to
 // support asynchronous operations.  They contain the completion callback, and
@@ -478,6 +500,7 @@ NNG_DECL int nng_pipe_getopt_size(nng_pipe, const char *, size_t *);
 NNG_DECL int nng_pipe_getopt_sockaddr(nng_pipe, const char *, nng_sockaddr *);
 NNG_DECL int nng_pipe_getopt_uint64(nng_pipe, const char *, uint64_t *);
 NNG_DECL int nng_pipe_getopt_ptr(nng_pipe, const char *, void **);
+NNG_DECL int nng_pipe_getopt_string(nng_pipe, const char *, char **);
 NNG_DECL int nng_pipe_close(nng_pipe);
 
 // Flags.

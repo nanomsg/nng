@@ -58,7 +58,7 @@ struct nni_tran_ep_option {
 	int eo_type;
 
 	// eo_getopt retrieves the value of the option.
-	int (*eo_getopt)(void *, void *, size_t *);
+	int (*eo_getopt)(void *, void *, size_t *, int);
 
 	// eo_set sets the value of the option.  If the first argument
 	// (the endpoint) is NULL, then no actual set operation should be
@@ -121,7 +121,7 @@ struct nni_tran_pipe_option {
 	int po_type;
 
 	// po_getopt retrieves the value of the option.
-	int (*po_getopt)(void *, void *, size_t *);
+	int (*po_getopt)(void *, void *, size_t *, int);
 };
 
 // Pipe operations are entry points called by the socket. These may be called

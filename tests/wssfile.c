@@ -162,26 +162,34 @@ check_props(nng_msg *msg)
 	// Request header
 	z   = 0;
 	buf = NULL;
-	So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == 0);
+	So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) ==
+	    NNG_EINVAL);
 	So(z > 0);
 	len = z;
-	So((buf = nni_alloc(len)) != NULL);
+	So((buf = nng_alloc(len)) != NULL);
 	So(nng_pipe_getopt(p, NNG_OPT_WS_REQUEST_HEADERS, buf, &z) == 0);
 	So(strstr(buf, "Sec-WebSocket-Key") != NULL);
 	So(z == len);
-	nni_free(buf, len);
+	nng_free(buf, len);
+	So(nng_pipe_getopt_string(p, NNG_OPT_WS_REQUEST_HEADERS, &buf) == 0);
+	So(strlen(buf) == len - 1);
+	nng_strfree(buf);
 
 	// Response header
 	z   = 0;
 	buf = NULL;
-	So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) == 0);
+	So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) ==
+	    NNG_EINVAL);
 	So(z > 0);
 	len = z;
-	So((buf = nni_alloc(len)) != NULL);
+	So((buf = nng_alloc(len)) != NULL);
 	So(nng_pipe_getopt(p, NNG_OPT_WS_RESPONSE_HEADERS, buf, &z) == 0);
 	So(strstr(buf, "Sec-WebSocket-Accept") != NULL);
 	So(z == len);
-	nni_free(buf, len);
+	nng_free(buf, len);
+	So(nng_pipe_getopt_string(p, NNG_OPT_WS_RESPONSE_HEADERS, &buf) == 0);
+	So(strlen(buf) == len - 1);
+	nng_strfree(buf);
 
 	return (0);
 }

@@ -116,20 +116,16 @@ TestMain("Poll FDs", {
 	Convey("We cannot get a send FD for PULL", {
 		nng_socket s3;
 		int        fd;
-		size_t     sz;
 		So(nng_pull0_open(&s3) == 0);
 		Reset({ nng_close(s3); });
-		sz = sizeof(fd);
-		So(nng_getopt(s3, NNG_OPT_SENDFD, &fd, &sz) == NNG_ENOTSUP);
+		So(nng_getopt_int(s3, NNG_OPT_SENDFD, &fd) == NNG_ENOTSUP);
 	});
 
 	Convey("We cannot get a recv FD for PUSH", {
 		nng_socket s3;
 		int        fd;
-		size_t     sz;
 		So(nng_push0_open(&s3) == 0);
 		Reset({ nng_close(s3); });
-		sz = sizeof(fd);
-		So(nng_getopt(s3, NNG_OPT_RECVFD, &fd, &sz) == NNG_ENOTSUP);
+		So(nng_getopt_int(s3, NNG_OPT_RECVFD, &fd) == NNG_ENOTSUP);
 	});
 })

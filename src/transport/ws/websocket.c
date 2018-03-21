@@ -470,14 +470,14 @@ ws_ep_setopt_reshdrs(void *arg, const void *v, size_t sz)
 }
 
 static int
-ws_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp)
+ws_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp, int typ)
 {
 	ws_ep *ep = arg;
-	return (nni_getopt_size(ep->rcvmax, v, szp));
+	return (nni_copyout_size(ep->rcvmax, v, szp, typ));
 }
 
 static int
-ws_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
+ws_pipe_getopt_locaddr(void *arg, void *v, size_t *szp, int typ)
 {
 	ws_pipe *    p = arg;
 	int          rv;
@@ -485,13 +485,13 @@ ws_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_ws_sock_addr(p->ws, &sa)) == 0) {
-		rv = nni_getopt_sockaddr(&sa, v, szp);
+		rv = nni_copyout_sockaddr(&sa, v, szp, typ);
 	}
 	return (rv);
 }
 
 static int
-ws_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
+ws_pipe_getopt_remaddr(void *arg, void *v, size_t *szp, int typ)
 {
 	ws_pipe *    p = arg;
 	int          rv;
@@ -499,13 +499,13 @@ ws_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_ws_peer_addr(p->ws, &sa)) == 0) {
-		rv = nni_getopt_sockaddr(&sa, v, szp);
+		rv = nni_copyout_sockaddr(&sa, v, szp, typ);
 	}
 	return (rv);
 }
 
 static int
-ws_pipe_getopt_reshdrs(void *arg, void *v, size_t *szp)
+ws_pipe_getopt_reshdrs(void *arg, void *v, size_t *szp, int typ)
 {
 	ws_pipe *   p = arg;
 	const char *s;
@@ -513,11 +513,11 @@ ws_pipe_getopt_reshdrs(void *arg, void *v, size_t *szp)
 	if ((s = nni_ws_response_headers(p->ws)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	return (nni_getopt_str(s, v, szp));
+	return (nni_copyout_str(s, v, szp, typ));
 }
 
 static int
-ws_pipe_getopt_reqhdrs(void *arg, void *v, size_t *szp)
+ws_pipe_getopt_reqhdrs(void *arg, void *v, size_t *szp, int typ)
 {
 	ws_pipe *   p = arg;
 	const char *s;
@@ -525,14 +525,14 @@ ws_pipe_getopt_reqhdrs(void *arg, void *v, size_t *szp)
 	if ((s = nni_ws_request_headers(p->ws)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	return (nni_getopt_str(s, v, szp));
+	return (nni_copyout_str(s, v, szp, typ));
 }
 
 static int
-ws_pipe_getopt_tls_verified(void *arg, void *v, size_t *szp)
+ws_pipe_getopt_tls_verified(void *arg, void *v, size_t *szp, int typ)
 {
 	ws_pipe *p = arg;
-	return (nni_getopt_bool(nni_ws_tls_verified(p->ws), v, szp));
+	return (nni_copyout_bool(nni_ws_tls_verified(p->ws), v, szp, typ));
 }
 
 static nni_tran_pipe_option ws_pipe_options[] = {
@@ -815,14 +815,14 @@ wss_get_tls(ws_ep *ep, nng_tls_config **tlsp)
 }
 
 static int
-wss_ep_getopt_tlsconfig(void *arg, void *v, size_t *szp)
+wss_ep_getopt_tlsconfig(void *arg, void *v, size_t *szp, int typ)
 {
 	ws_ep *         ep = arg;
 	nng_tls_config *tls;
 	int             rv;
 
 	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
-	    ((rv = nni_getopt_ptr(tls, v, szp)) != 0)) {
+	    ((rv = nni_copyout_ptr(tls, v, szp, typ)) != 0)) {
 		return (rv);
 	}
 	return (0);

@@ -257,10 +257,10 @@ req0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 }
 
 static int
-req0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
+req0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
 {
 	req0_sock *s = arg;
-	return (nni_getopt_bool(s->raw, buf, szp));
+	return (nni_copyout_bool(s->raw, buf, szp, typ));
 }
 
 static int
@@ -271,10 +271,10 @@ req0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
 }
 
 static int
-req0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp)
+req0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp, int typ)
 {
 	req0_sock *s = arg;
-	return (nni_getopt_int(s->ttl, buf, szp));
+	return (nni_copyout_int(s->ttl, buf, szp, typ));
 }
 
 static int
@@ -285,10 +285,10 @@ req0_sock_setopt_resendtime(void *arg, const void *buf, size_t sz)
 }
 
 static int
-req0_sock_getopt_resendtime(void *arg, void *buf, size_t *szp)
+req0_sock_getopt_resendtime(void *arg, void *buf, size_t *szp, int typ)
 {
 	req0_sock *s = arg;
-	return (nni_getopt_ms(s->retry, buf, szp));
+	return (nni_copyout_ms(s->retry, buf, szp, typ));
 }
 
 // Raw and cooked mode differ in the way they send messages out.

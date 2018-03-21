@@ -281,10 +281,10 @@ pub0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
 }
 
 static int
-pub0_sock_getopt_raw(void *arg, void *buf, size_t *szp)
+pub0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
 {
 	pub0_sock *s = arg;
-	return (nni_getopt_bool(s->raw, buf, szp));
+	return (nni_copyout_bool(s->raw, buf, szp, typ));
 }
 
 static void

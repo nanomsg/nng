@@ -134,6 +134,8 @@ check_props_v4(nng_msg *msg)
 	int i;
 	So(nng_pipe_getopt_int(p, NNG_OPT_REMADDR, &i) == NNG_EBADTYPE);
 
+	z = 1;
+	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == NNG_EINVAL);
 	return (0);
 }
 
@@ -303,7 +305,7 @@ TestMain("TLS Transport", {
 		nng_socket   s1;
 		nng_socket   s2;
 		nng_listener l;
-		char         addr[NNG_MAXADDRLEN];
+		char *       addr;
 		size_t       sz;
 
 		So(nng_tls_register() == 0);
@@ -315,8 +317,9 @@ TestMain("TLS Transport", {
 		});
 		So(nng_listen(s1, "tls+tcp://127.0.0.1:0", &l, 0) == 0);
 		sz = NNG_MAXADDRLEN;
-		So(nng_listener_getopt(l, NNG_OPT_URL, addr, &sz) == 0);
+		So(nng_listener_getopt_string(l, NNG_OPT_URL, &addr) == 0);
 		So(nng_dial(s2, addr, NULL, 0) == 0);
+		nng_strfree(addr);
 	});
 
 	Convey("Malformed TLS addresses do not panic", {

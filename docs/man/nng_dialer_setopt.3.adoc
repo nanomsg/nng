@@ -60,9 +60,6 @@ on the actual option, and will be documented with the option itself.
 
 TIP: Generally, it will be easier to use one of the typed forms instead.
 
-NOTE: No validation that the option is actually of the associated
-type is performed, so the caller must take care to use the *correct* typed form.
-
 ==== `nng_dialer_setopt()`
 This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _valsz_ is the
@@ -112,6 +109,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+`NNG_EBADTYPE`:: Incorrect type for option.
 `NNG_ECLOSED`:: Parameter _d_ does not refer to an open dialer.
 `NNG_EINVAL`:: The value being passed is invalid.
 `NNG_ENOTSUP`:: The option _opt_ is not supported.

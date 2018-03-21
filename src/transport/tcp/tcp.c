@@ -442,7 +442,7 @@ nni_tcp_pipe_peer(void *arg)
 }
 
 static int
-nni_tcp_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
+nni_tcp_pipe_getopt_locaddr(void *arg, void *v, size_t *szp, int typ)
 {
 	nni_tcp_pipe *p = arg;
 	int           rv;
@@ -450,13 +450,13 @@ nni_tcp_pipe_getopt_locaddr(void *arg, void *v, size_t *szp)
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_plat_tcp_pipe_sockname(p->tpp, &sa)) == 0) {
-		rv = nni_getopt_sockaddr(&sa, v, szp);
+		rv = nni_copyout_sockaddr(&sa, v, szp, typ);
 	}
 	return (rv);
 }
 
 static int
-nni_tcp_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
+nni_tcp_pipe_getopt_remaddr(void *arg, void *v, size_t *szp, int typ)
 {
 	nni_tcp_pipe *p = arg;
 	int           rv;
@@ -464,7 +464,7 @@ nni_tcp_pipe_getopt_remaddr(void *arg, void *v, size_t *szp)
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_plat_tcp_pipe_peername(p->tpp, &sa)) == 0) {
-		rv = nni_getopt_sockaddr(&sa, v, szp);
+		rv = nni_copyout_sockaddr(&sa, v, szp, typ);
 	}
 	return (rv);
 }
@@ -736,7 +736,7 @@ nni_tcp_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz)
 }
 
 static int
-nni_tcp_ep_getopt_url(void *arg, void *v, size_t *szp)
+nni_tcp_ep_getopt_url(void *arg, void *v, size_t *szp, int typ)
 {
 	nni_tcp_ep *ep = arg;
 	char        ustr[128];
@@ -744,18 +744,18 @@ nni_tcp_ep_getopt_url(void *arg, void *v, size_t *szp)
 	char        portstr[6]; // max for 16-bit port
 
 	if (ep->mode == NNI_EP_MODE_DIAL) {
-		return (nni_getopt_str(ep->url->u_rawurl, v, szp));
+		return (nni_copyout_str(ep->url->u_rawurl, v, szp, typ));
 	}
 	nni_plat_tcp_ntop(&ep->bsa, ipstr, portstr);
 	snprintf(ustr, sizeof(ustr), "tcp://%s:%s", ipstr, portstr);
-	return (nni_getopt_str(ustr, v, szp));
+	return (nni_copyout_str(ustr, v, szp, typ));
 }
 
 static int
-nni_tcp_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp)
+nni_tcp_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp, int typ)
 {
 	nni_tcp_ep *ep = arg;
-	return (nni_getopt_size(ep->rcvmax, v, szp));
+	return (nni_copyout_size(ep->rcvmax, v, szp, typ));
 }
 
 static int
@@ -769,10 +769,10 @@ nni_tcp_ep_setopt_linger(void *arg, const void *v, size_t sz)
 }
 
 static int
-nni_tcp_ep_getopt_linger(void *arg, void *v, size_t *szp)
+nni_tcp_ep_getopt_linger(void *arg, void *v, size_t *szp, int typ)
 {
 	nni_tcp_ep *ep = arg;
-	return (nni_getopt_ms(ep->linger, v, szp));
+	return (nni_copyout_ms(ep->linger, v, szp, typ));
 }
 
 static nni_tran_pipe_option nni_tcp_pipe_options[] = {

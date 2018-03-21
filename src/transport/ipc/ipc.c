@@ -490,10 +490,10 @@ nni_ipc_pipe_peer(void *arg)
 }
 
 static int
-nni_ipc_pipe_get_addr(void *arg, void *buf, size_t *szp)
+nni_ipc_pipe_get_addr(void *arg, void *buf, size_t *szp, int typ)
 {
 	nni_ipc_pipe *p = arg;
-	return (nni_getopt_sockaddr(&p->sa, buf, szp));
+	return (nni_copyout_sockaddr(&p->sa, buf, szp, typ));
 }
 
 static void
@@ -689,17 +689,17 @@ nni_ipc_ep_setopt_recvmaxsz(void *arg, const void *data, size_t sz)
 }
 
 static int
-nni_ipc_ep_getopt_recvmaxsz(void *arg, void *data, size_t *szp)
+nni_ipc_ep_getopt_recvmaxsz(void *arg, void *data, size_t *szp, int typ)
 {
 	nni_ipc_ep *ep = arg;
-	return (nni_getopt_size(ep->rcvmax, data, szp));
+	return (nni_copyout_size(ep->rcvmax, data, szp, typ));
 }
 
 static int
-nni_ipc_ep_get_addr(void *arg, void *data, size_t *szp)
+nni_ipc_ep_get_addr(void *arg, void *data, size_t *szp, int typ)
 {
 	nni_ipc_ep *ep = arg;
-	return (nni_getopt_sockaddr(&ep->sa, data, szp));
+	return (nni_copyout_sockaddr(&ep->sa, data, szp, typ));
 }
 
 static nni_tran_pipe_option nni_ipc_pipe_options[] = {

@@ -42,17 +42,15 @@ mkdir(const char *path, int mode)
 static int
 check_props(nng_msg *msg)
 {
-	nng_sockaddr la, ra;
-	nng_pipe     p;
-	size_t       z;
+	nng_pipe p;
 	p = nng_msg_get_pipe(msg);
 	So(p > 0);
 
 	// Check local address.
 	Convey("Local address property works", {
-		z = sizeof(nng_sockaddr);
-		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-		So(z == sizeof(la));
+		nng_sockaddr la;
+		So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
+
 		So(la.s_family == NNG_AF_ZT);
 		So(la.s_zt.sa_port == (trantest_port - 1));
 		So(la.s_zt.sa_nwid == 0xa09acf02337b057bull);
@@ -61,76 +59,65 @@ check_props(nng_msg *msg)
 
 	Convey("Remote address property works", {
 		// Check remote address.
-		uint64_t mynode;
+		uint64_t     mynode;
+		nng_sockaddr ra;
 
-		z = sizeof(nng_sockaddr);
-		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-		So(z == sizeof(ra));
+		So(nng_pipe_getopt_sockaddr(p, NNG_OPT_REMADDR, &ra) == 0);
 		So(ra.s_family == NNG_AF_ZT);
 		So(ra.s_zt.sa_port != 0);
 		So(ra.s_zt.sa_nwid == 0xa09acf02337b057bull);
 
-		z = sizeof(mynode);
-		So(nng_pipe_getopt(p, NNG_OPT_ZT_NODE, &mynode, &z) == 0);
+		So(nng_pipe_getopt_uint64(p, NNG_OPT_ZT_NODE, &mynode) == 0);
 		So(mynode != 0);
 		So(ra.s_zt.sa_nodeid == mynode);
 	});
 
 	Convey("NWID property works", {
-		uint64_t nwid;
+		uint64_t nwid = 0;
 
-		z    = sizeof(nwid);
-		nwid = 0;
-		So(nng_pipe_getopt(p, NNG_OPT_ZT_NWID, &nwid, &z) == 0);
+		So(nng_pipe_getopt_uint64(p, NNG_OPT_ZT_NWID, &nwid) == 0);
 		So(nwid = 0xa09acf02337b057bull);
 	});
 
 	Convey("Network status property works", {
-		int s;
-		z = sizeof(s);
-		s = 0;
-		So(nng_pipe_getopt(p, NNG_OPT_ZT_NETWORK_STATUS, &s, &z) == 0);
+		int s = 0;
+
+		So(nng_pipe_getopt_int(p, NNG_OPT_ZT_NETWORK_STATUS, &s) == 0);
 		So(s == NNG_ZT_STATUS_UP);
 	});
 
 	Convey("Ping properties work", {
-		int          c;
-		nng_duration t;
+		int          c = 0;
+		nng_duration t = 0;
 
-		z = sizeof(c);
-		c = 0;
-		So(nng_pipe_getopt(p, NNG_OPT_ZT_PING_TRIES, &c, &z) == 0);
+		So(nng_pipe_getopt_int(p, NNG_OPT_ZT_PING_TRIES, &c) == 0);
 		So(c > 0 && c < 10); // actually 5...
 
-		t = 0;
 		So(nng_pipe_getopt_ms(p, NNG_OPT_ZT_PING_TIME, &t) == 0);
 		So(t > 1000 && t < 3600000); // 1 sec - 1 hour
 	});
 
 	Convey("Home property works", {
-		char v[256];
-		z = sizeof(v);
-		So(nng_pipe_getopt(p, NNG_OPT_ZT_HOME, v, &z) == 0);
-		So(strlen(v) < sizeof(v));
+		char *v;
+		So(nng_pipe_getopt_string(p, NNG_OPT_ZT_HOME, &v) == 0);
+		nng_strfree(v);
 	});
 
 	Convey("MTU property works", {
 		size_t mtu;
 
 		// Check MTU
-		z = sizeof(mtu);
-		So(nng_pipe_getopt(p, NNG_OPT_ZT_MTU, &mtu, &z) == 0);
+		So(nng_pipe_getopt_size(p, NNG_OPT_ZT_MTU, &mtu) == 0);
 		So(mtu >= 1000 && mtu <= 10000);
 	});
 
 	Convey("Network name property works", {
-		char   name[NNG_MAXADDRLEN];
-		size_t namesz;
+		char *name;
 
-		namesz = sizeof(name);
-		So(nng_pipe_getopt(
-		       p, NNG_OPT_ZT_NETWORK_NAME, name, &namesz) == 0);
+		So(nng_pipe_getopt_string(p, NNG_OPT_ZT_NETWORK_NAME, &name) ==
+		    0);
 		So(strcmp(name, "nng_test_open") == 0);
+		nng_strfree(name);
 	});
 
 	return (0);

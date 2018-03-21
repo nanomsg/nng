@@ -28,10 +28,10 @@ The `nng_free()` function deallocates a memory region of size _size_,
 that was previously allocated by <<nng_alloc.3#,`nng_alloc()`>> or
 <<nng_recv.3#,`nng_recv()`>> with the `NNG_FLAG_ALLOC` flag.
 
-WARNING: It is very important that _size_ match the allocation size
+IMPORTANT: It is very important that _size_ match the allocation size
 used to allocate the memory.
 
-WARNING: Do not attempt to use this function to deallocate memory
+IMPORTANT: Do not attempt to use this function to deallocate memory
 obtained by a call to the system `malloc()` or `calloc()` functions,
 or the {cpp} `new` operator.
 Doing so may result in unpredictable

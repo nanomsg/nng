@@ -129,109 +129,6 @@ nni_setopt_size(size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv)
 }
 
 int
-nni_getopt_ms(nni_duration u, void *val, size_t *sizep)
-{
-	size_t sz = sizeof(u);
-
-	if (sz > *sizep) {
-		sz = *sizep;
-	}
-	*sizep = sizeof(u);
-	memcpy(val, &u, sz);
-	return (0);
-}
-
-int
-nni_getopt_sockaddr(const nng_sockaddr *sa, void *val, size_t *sizep)
-{
-	size_t sz = sizeof(*sa);
-
-	if (sz > *sizep) {
-		sz = *sizep;
-	}
-	*sizep = sizeof(*sa);
-	memcpy(val, sa, sz);
-	return (0);
-}
-
-int
-nni_getopt_int(int i, void *val, size_t *sizep)
-{
-	size_t sz = sizeof(i);
-
-	if (sz > *sizep) {
-		sz = *sizep;
-	}
-	*sizep = sizeof(i);
-	memcpy(val, &i, sz);
-	return (0);
-}
-
-int
-nni_getopt_u64(uint64_t u, void *val, size_t *sizep)
-{
-	size_t sz = sizeof(u);
-
-	if (sz > *sizep) {
-		sz = *sizep;
-	}
-	*sizep = sizeof(u);
-	memcpy(val, &u, sz);
-	return (0);
-}
-
-int
-nni_getopt_str(const char *ptr, void *val, size_t *sizep)
-{
-	size_t len = strlen(ptr) + 1;
-	size_t sz;
-
-	sz     = (len > *sizep) ? *sizep : len;
-	*sizep = len;
-	memcpy(val, ptr, sz);
-	return (0);
-}
-
-int
-nni_getopt_size(size_t u, void *val, size_t *sizep)
-{
-	size_t sz = sizeof(u);
-
-	if (sz > *sizep) {
-		sz = *sizep;
-	}
-	*sizep = sizeof(u);
-	memcpy(val, &u, sz);
-	return (0);
-}
-
-int
-nni_getopt_bool(bool b, void *val, size_t *sizep)
-{
-	size_t sz = sizeof(b);
-
-	if (sz > *sizep) {
-		sz = *sizep;
-	}
-	*sizep = sizeof(b);
-	memcpy(val, &b, sz);
-	return (0);
-}
-
-int
-nni_getopt_ptr(void *ptr, void *val, size_t *sizep)
-{
-	size_t sz = sizeof(ptr);
-
-	if (sz > *sizep) {
-		sz = *sizep;
-	}
-	*sizep = sizeof(ptr);
-	memcpy(val, &ptr, sz);
-	return (0);
-}
-
-int
 nni_setopt_buf(nni_msgq *mq, const void *val, size_t sz)
 {
 	int len;
@@ -253,16 +150,145 @@ nni_setopt_buf(nni_msgq *mq, const void *val, size_t sz)
 }
 
 int
-nni_getopt_buf(nni_msgq *mq, void *val, size_t *sizep)
+nni_copyout(const void *src, size_t srcsz, void *dst, size_t *dstszp)
 {
-	int len = nni_msgq_cap(mq);
-
-	size_t sz = *sizep;
-
-	if (sz > sizeof(len)) {
-		sz = sizeof(len);
+	int    rv     = 0;
+	size_t copysz = *dstszp;
+	// Assumption is that this is type NNI_TYPE_OPAQUE.
+	if (copysz > srcsz) {
+		copysz = srcsz;
+	} else if (srcsz > copysz) {
+		// destination too small.
+		rv = NNG_EINVAL;
 	}
-	memcpy(val, &len, sz);
-	*sizep = sizeof(len);
-	return (0);
+	*dstszp = srcsz;
+	memcpy(dst, src, copysz);
+	return (rv);
+}
+
+int
+nni_copyout_bool(bool b, void *dst, size_t *szp, int typ)
+{
+	switch (typ) {
+	case NNI_TYPE_BOOL:
+		NNI_ASSERT(*szp == sizeof(b));
+		*(bool *) dst = b;
+		return (0);
+	case NNI_TYPE_OPAQUE:
+		return (nni_copyout(&b, sizeof(b), dst, szp));
+	default:
+		return (NNG_EBADTYPE);
+	}
+}
+
+int
+nni_copyout_int(int i, void *dst, size_t *szp, int typ)
+{
+	switch (typ) {
+	case NNI_TYPE_INT32:
+		NNI_ASSERT(*szp == sizeof(i));
+		*(int *) dst = i;
+		return (0);
+	case NNI_TYPE_OPAQUE:
+		return (nni_copyout(&i, sizeof(i), dst, szp));
+	default:
+		return (NNG_EBADTYPE);
+	}
+}
+
+int
+nni_copyout_ms(nng_duration d, void *dst, size_t *szp, int typ)
+{
+	switch (typ) {
+	case NNI_TYPE_DURATION:
+		NNI_ASSERT(*szp == sizeof(d));
+		*(nng_duration *) dst = d;
+		return (0);
+	case NNI_TYPE_OPAQUE:
+		return (nni_copyout(&d, sizeof(d), dst, szp));
+	default:
+		return (NNG_EBADTYPE);
+	}
+}
+
+int
+nni_copyout_ptr(void *p, void *dst, size_t *szp, int typ)
+{
+	switch (typ) {
+	case NNI_TYPE_POINTER:
+		NNI_ASSERT(*szp == sizeof(p));
+		*(void **) dst = p;
+		return (0);
+	case NNI_TYPE_OPAQUE:
+		return (nni_copyout(&p, sizeof(p), dst, szp));
+	default:
+		return (NNG_EBADTYPE);
+	}
+}
+
+int
+nni_copyout_size(size_t s, void *dst, size_t *szp, int typ)
+{
+	switch (typ) {
+	case NNI_TYPE_SIZE:
+		NNI_ASSERT(*szp == sizeof(s));
+		*(size_t *) dst = s;
+		return (0);
+	case NNI_TYPE_OPAQUE:
+		return (nni_copyout(&s, sizeof(s), dst, szp));
+	default:
+		return (NNG_EBADTYPE);
+	}
+}
+
+int
+nni_copyout_sockaddr(const nng_sockaddr *sap, void *dst, size_t *szp, int typ)
+{
+	switch (typ) {
+	case NNI_TYPE_SOCKADDR:
+		NNI_ASSERT(*szp == sizeof(*sap));
+		*(nng_sockaddr *) dst = *sap;
+		return (0);
+	case NNI_TYPE_OPAQUE:
+		return (nni_copyout(sap, sizeof(*sap), dst, szp));
+	default:
+		return (NNG_EBADTYPE);
+	}
+}
+
+int
+nni_copyout_u64(uint64_t u, void *dst, size_t *szp, int typ)
+{
+	switch (typ) {
+	case NNI_TYPE_UINT64:
+		NNI_ASSERT(*szp == sizeof(u));
+		*(uint64_t *) dst = u;
+		return (0);
+	case NNI_TYPE_OPAQUE:
+		return (nni_copyout(&u, sizeof(u), dst, szp));
+	default:
+		return (NNG_EBADTYPE);
+	}
+}
+
+int
+nni_copyout_str(const char *str, void *dst, size_t *szp, int typ)
+{
+	char *s;
+
+	switch (typ) {
+	case NNI_TYPE_STRING:
+		NNI_ASSERT(*szp == sizeof(char *));
+		if ((s = nni_strdup(str)) == NULL) {
+			return (NNG_ENOMEM);
+		}
+		*(char **) dst = s;
+		return (0);
+
+	case NNI_TYPE_OPAQUE:
+		return (nni_copyout(str, strlen(str) + 1, dst, szp));
+
+	default:
+		return (NNG_EBADTYPE);
+	}
 }

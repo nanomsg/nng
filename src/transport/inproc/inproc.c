@@ -177,7 +177,7 @@ nni_inproc_pipe_peer(void *arg)
 }
 
 static int
-nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp)
+nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, int typ)
 {
 	nni_inproc_pipe *p = arg;
 	nni_sockaddr     sa;
@@ -185,7 +185,7 @@ nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp)
 	memset(&sa, 0, sizeof(sa));
 	sa.s_inproc.sa_family = NNG_AF_INPROC;
 	nni_strlcpy(sa.s_inproc.sa_name, p->addr, sizeof(sa.s_inproc.sa_name));
-	return (nni_getopt_sockaddr(&sa, buf, szp));
+	return (nni_copyout_sockaddr(&sa, buf, szp, typ));
 }
 
 static int

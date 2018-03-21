@@ -31,7 +31,9 @@ The following common functions exist in _libnng_.
 |===
 |<<nng_alloc.3#,nng_alloc()>>|allocate memory
 |<<nng_free.3#,nng_free()>>|free memory
+|<<nng_strdup.3#,nng_strdup()>>|duplicate string
 |<<nng_strerror.3#,nng_strerror()>>|return an error description
+|<<nng_strfree.3#,nng_strfree()>>|free string
 |<<nng_version.3#,nng_version()>>|report library version
 |===
 

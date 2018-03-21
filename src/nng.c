@@ -64,6 +64,18 @@ nng_free(void *buf, size_t sz)
 	nni_free(buf, sz);
 }
 
+char *
+nng_strdup(const char *src)
+{
+	return (nni_strdup(src));
+}
+
+void
+nng_strfree(char *s)
+{
+	nni_strfree(s);
+}
+
 int
 nng_recv(nng_socket sid, void *buf, size_t *szp, int flags)
 {
@@ -482,6 +494,13 @@ nng_dialer_getopt_ptr(nng_dialer id, const char *name, void **vp)
 }
 
 int
+nng_dialer_getopt_string(nng_dialer id, const char *name, char **vp)
+{
+	size_t sz = sizeof(*vp);
+	return (nng_dialer_getx(id, name, vp, &sz, NNI_TYPE_STRING));
+}
+
+int
 nng_dialer_getopt_ms(nng_dialer id, const char *name, nng_duration *vp)
 {
 	size_t sz = sizeof(*vp);
@@ -598,6 +617,13 @@ nng_listener_getopt_ptr(nng_listener id, const char *name, void **vp)
 {
 	size_t sz = sizeof(*vp);
 	return (nng_listener_getx(id, name, vp, &sz, NNI_TYPE_POINTER));
+}
+
+int
+nng_listener_getopt_string(nng_listener id, const char *name, char **vp)
+{
+	size_t sz = sizeof(*vp);
+	return (nng_listener_getx(id, name, vp, &sz, NNI_TYPE_STRING));
 }
 
 int
@@ -769,6 +795,13 @@ nng_getopt_ptr(nng_socket sid, const char *name, void **valp)
 }
 
 int
+nng_getopt_string(nng_socket sid, const char *name, char **valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_getx(sid, name, valp, &sz, NNI_TYPE_STRING));
+}
+
+int
 nng_device(nng_socket s1, nng_socket s2)
 {
 	int       rv;
@@ -935,6 +968,13 @@ nng_pipe_getopt_sockaddr(nng_pipe id, const char *name, nng_sockaddr *sap)
 {
 	size_t sz = sizeof(*sap);
 	return (nng_pipe_getopt_x(id, name, sap, &sz, NNI_TYPE_SOCKADDR));
+}
+
+int
+nng_pipe_getopt_string(nng_pipe id, const char *name, char **valp)
+{
+	size_t sz = sizeof(*valp);
+	return (nng_pipe_getopt_x(id, name, valp, &sz, NNI_TYPE_STRING));
 }
 
 int

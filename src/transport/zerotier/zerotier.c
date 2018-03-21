@@ -1927,7 +1927,8 @@ zt_pipe_peer(void *arg)
 }
 
 static int
-zt_getopt_network_status(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp)
+zt_getopt_nw_status(
+    zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, int typ)
 {
 	ZT_VirtualNetworkConfig *vcfg;
 	int                      status;
@@ -1964,11 +1965,11 @@ zt_getopt_network_status(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp)
 	ZT_Node_freeQueryResult(ztn->zn_znode, vcfg);
 	nni_mtx_unlock(&zt_lk);
 
-	return (nni_getopt_int(status, buf, szp));
+	return (nni_copyout_int(status, buf, szp, typ));
 }
 
 static int
-zt_getopt_network_name(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp)
+zt_getopt_nw_name(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, int typ)
 {
 	ZT_VirtualNetworkConfig *vcfg;
 	int                      rv;
@@ -1979,7 +1980,8 @@ zt_getopt_network_name(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp)
 		nni_mtx_unlock(&zt_lk);
 		return (NNG_ECLOSED);
 	}
-	rv = nni_getopt_str(vcfg->name, buf, szp);
+
+	rv = nni_copyout_str(vcfg->name, buf, szp, typ);
 	ZT_Node_freeQueryResult(ztn->zn_znode, vcfg);
 	nni_mtx_unlock(&zt_lk);
 
@@ -1987,24 +1989,24 @@ zt_getopt_network_name(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp)
 }
 
 static int
-zt_pipe_get_recvmaxsz(void *arg, void *buf, size_t *szp)
+zt_pipe_get_recvmaxsz(void *arg, void *buf, size_t *szp, int typ)
 {
 	zt_pipe *p = arg;
-	return (nni_getopt_size(p->zp_rcvmax, buf, szp));
+	return (nni_copyout_size(p->zp_rcvmax, buf, szp, typ));
 }
 
 static int
-zt_pipe_get_nwid(void *arg, void *buf, size_t *szp)
+zt_pipe_get_nwid(void *arg, void *buf, size_t *szp, int typ)
 {
 	zt_pipe *p = arg;
-	return (nni_getopt_u64(p->zp_nwid, buf, szp));
+	return (nni_copyout_u64(p->zp_nwid, buf, szp, typ));
 }
 
 static int
-zt_pipe_get_node(void *arg, void *buf, size_t *szp)
+zt_pipe_get_node(void *arg, void *buf, size_t *szp, int typ)
 {
 	zt_pipe *p = arg;
-	return (nni_getopt_u64(p->zp_laddr >> 24, buf, szp));
+	return (nni_copyout_u64(p->zp_laddr >> 24, buf, szp, typ));
 }
 
 static void
@@ -2545,10 +2547,10 @@ zt_ep_setopt_recvmaxsz(void *arg, const void *data, size_t sz)
 }
 
 static int
-zt_ep_getopt_recvmaxsz(void *arg, void *data, size_t *szp)
+zt_ep_getopt_recvmaxsz(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_size(ep->ze_rcvmax, data, szp));
+	return (nni_copyout_size(ep->ze_rcvmax, data, szp, typ));
 }
 
 static int
@@ -2579,14 +2581,14 @@ zt_ep_setopt_home(void *arg, const void *data, size_t sz)
 }
 
 static int
-zt_ep_getopt_home(void *arg, void *data, size_t *szp)
+zt_ep_getopt_home(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_str(ep->ze_home, data, szp));
+	return (nni_copyout_str(ep->ze_home, data, szp, typ));
 }
 
 static int
-zt_ep_getopt_url(void *arg, void *data, size_t *szp)
+zt_ep_getopt_url(void *arg, void *data, size_t *szp, int typ)
 {
 	char     ustr[64]; // more than plenty
 	zt_ep *  ep = arg;
@@ -2597,7 +2599,7 @@ zt_ep_getopt_url(void *arg, void *data, size_t *szp)
 	    (unsigned long long) addr >> zt_port_shift,
 	    (unsigned long long) ep->ze_nwid,
 	    (unsigned) (addr & zt_port_mask));
-	return (nni_getopt_str(ustr, data, szp));
+	return (nni_copyout_str(ustr, data, szp, typ));
 }
 
 static int
@@ -2645,31 +2647,31 @@ zt_ep_setopt_deorbit(void *arg, const void *data, size_t sz)
 }
 
 static int
-zt_ep_getopt_node(void *arg, void *data, size_t *szp)
+zt_ep_getopt_node(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_u64(ep->ze_ztn->zn_self, data, szp));
+	return (nni_copyout_u64(ep->ze_ztn->zn_self, data, szp, typ));
 }
 
 static int
-zt_ep_getopt_nwid(void *arg, void *data, size_t *szp)
+zt_ep_getopt_nwid(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_u64(ep->ze_nwid, data, szp));
+	return (nni_copyout_u64(ep->ze_nwid, data, szp, typ));
 }
 
 static int
-zt_ep_getopt_network_name(void *arg, void *buf, size_t *szp)
+zt_ep_getopt_nw_name(void *arg, void *buf, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (zt_getopt_network_name(ep->ze_ztn, ep->ze_nwid, buf, szp));
+	return (zt_getopt_nw_name(ep->ze_ztn, ep->ze_nwid, buf, szp, typ));
 }
 
 static int
-zt_ep_getopt_network_status(void *arg, void *buf, size_t *szp)
+zt_ep_getopt_nw_status(void *arg, void *buf, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (zt_getopt_network_status(ep->ze_ztn, ep->ze_nwid, buf, szp));
+	return (zt_getopt_nw_status(ep->ze_ztn, ep->ze_nwid, buf, szp, typ));
 }
 
 static int
@@ -2683,10 +2685,10 @@ zt_ep_setopt_ping_time(void *arg, const void *data, size_t sz)
 }
 
 static int
-zt_ep_getopt_ping_time(void *arg, void *data, size_t *szp)
+zt_ep_getopt_ping_time(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_ms(ep->ze_ping_time, data, szp));
+	return (nni_copyout_ms(ep->ze_ping_time, data, szp, typ));
 }
 
 static int
@@ -2700,10 +2702,10 @@ zt_ep_setopt_ping_tries(void *arg, const void *data, size_t sz)
 }
 
 static int
-zt_ep_getopt_ping_tries(void *arg, void *data, size_t *szp)
+zt_ep_getopt_ping_tries(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_int(ep->ze_ping_tries, data, szp));
+	return (nni_copyout_int(ep->ze_ping_tries, data, szp, typ));
 }
 
 static int
@@ -2717,10 +2719,10 @@ zt_ep_setopt_conn_time(void *arg, const void *data, size_t sz)
 }
 
 static int
-zt_ep_getopt_conn_time(void *arg, void *data, size_t *szp)
+zt_ep_getopt_conn_time(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_ms(ep->ze_conn_time, data, szp));
+	return (nni_copyout_ms(ep->ze_conn_time, data, szp, typ));
 }
 
 static int
@@ -2734,14 +2736,14 @@ zt_ep_setopt_conn_tries(void *arg, const void *data, size_t sz)
 }
 
 static int
-zt_ep_getopt_conn_tries(void *arg, void *data, size_t *szp)
+zt_ep_getopt_conn_tries(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_ep *ep = arg;
-	return (nni_getopt_int(ep->ze_conn_tries, data, szp));
+	return (nni_copyout_int(ep->ze_conn_tries, data, szp, typ));
 }
 
 static int
-zt_pipe_getopt_locaddr(void *arg, void *data, size_t *szp)
+zt_pipe_getopt_locaddr(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_pipe *    p = arg;
 	nng_sockaddr sa;
@@ -2751,11 +2753,11 @@ zt_pipe_getopt_locaddr(void *arg, void *data, size_t *szp)
 	sa.s_zt.sa_nwid   = p->zp_nwid;
 	sa.s_zt.sa_nodeid = p->zp_laddr >> zt_port_shift;
 	sa.s_zt.sa_port   = p->zp_laddr & zt_port_mask;
-	return (nni_getopt_sockaddr(&sa, data, szp));
+	return (nni_copyout_sockaddr(&sa, data, szp, typ));
 }
 
 static int
-zt_pipe_getopt_remaddr(void *arg, void *data, size_t *szp)
+zt_pipe_getopt_remaddr(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_pipe *    p = arg;
 	nng_sockaddr sa;
@@ -2765,14 +2767,14 @@ zt_pipe_getopt_remaddr(void *arg, void *data, size_t *szp)
 	sa.s_zt.sa_nwid   = p->zp_nwid;
 	sa.s_zt.sa_nodeid = p->zp_raddr >> zt_port_shift;
 	sa.s_zt.sa_port   = p->zp_raddr & zt_port_mask;
-	return (nni_getopt_sockaddr(&sa, data, szp));
+	return (nni_copyout_sockaddr(&sa, data, szp, typ));
 }
 
 static int
-zt_pipe_getopt_mtu(void *arg, void *data, size_t *szp)
+zt_pipe_getopt_mtu(void *arg, void *data, size_t *szp, int typ)
 {
 	zt_pipe *p = arg;
-	return (nni_getopt_size(p->zp_mtu, data, szp));
+	return (nni_copyout_size(p->zp_mtu, data, szp, typ));
 }
 
 static nni_tran_pipe_option zt_pipe_options[] = {
@@ -2856,13 +2858,13 @@ static nni_tran_ep_option zt_ep_options[] = {
 	{
 	    .eo_name   = NNG_OPT_ZT_NETWORK_STATUS,
 	    .eo_type   = NNI_TYPE_INT32, // enumeration really
-	    .eo_getopt = zt_ep_getopt_network_status,
+	    .eo_getopt = zt_ep_getopt_nw_status,
 	    .eo_setopt = NULL,
 	},
 	{
 	    .eo_name   = NNG_OPT_ZT_NETWORK_NAME,
 	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = zt_ep_getopt_network_name,
+	    .eo_getopt = zt_ep_getopt_nw_name,
 	    .eo_setopt = NULL,
 	},
 	{

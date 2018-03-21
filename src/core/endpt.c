@@ -649,12 +649,8 @@ nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp, int t)
 		if (eo->eo_getopt == NULL) {
 			return (NNG_EWRITEONLY);
 		}
-		if ((t != NNI_TYPE_OPAQUE) &&
-		    (eo->eo_type != NNI_TYPE_OPAQUE) && (t != eo->eo_type)) {
-			return (NNG_EBADTYPE);
-		}
 		nni_mtx_lock(&ep->ep_mtx);
-		rv = eo->eo_getopt(ep->ep_data, valp, szp);
+		rv = eo->eo_getopt(ep->ep_data, valp, szp, t);
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (rv);
 	}
@@ -663,11 +659,7 @@ nni_ep_getopt(nni_ep *ep, const char *name, void *valp, size_t *szp, int t)
 	// override.  This allows the URL to be created with wildcards,
 	// that are resolved later.
 	if (strcmp(name, NNG_OPT_URL) == 0) {
-		if (t != NNI_TYPE_OPAQUE) {
-			// XXX: Add NNI_TYPE_STRING.
-			return (NNG_EBADTYPE);
-		}
-		return (nni_getopt_str(ep->ep_url->u_rawurl, valp, szp));
+		return (nni_copyout_str(ep->ep_url->u_rawurl, valp, szp, t));
 	}
 
 	return (nni_sock_getopt(ep->ep_sock, name, valp, szp, t));
