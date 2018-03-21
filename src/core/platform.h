@@ -242,6 +242,15 @@ extern void nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *, nni_aio *);
 // receive zero bytes.)  The platform may not modify the I/O vector.
 extern void nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *, nni_aio *);
 
+// nni_plat_tcp_pipe_set_linger sets the linger interval on a pipe.
+// The time period is in msec, but may be rounded up to nearest second
+// depending on the platform.  Turning this to 0 may cause close to
+// send RST (abort), and so is not recommended.
+extern int nni_plat_tcp_pipe_set_linger(nni_plat_tcp_pipe *, nng_duration);
+
+// nni_plat_tcp_pipe_set_nodelay disables NAGLE.
+extern int nni_plat_tcp_pipe_set_nodelay(nni_plat_tcp_pipe *, bool);
+
 // nni_plat_tcp_pipe_peername gets the peer name.
 extern int nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *, nni_sockaddr *);
 

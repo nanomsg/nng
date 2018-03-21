@@ -120,6 +120,7 @@ nni_tcp_pipe_init(nni_tcp_pipe **pipep, nni_tcp_ep *ep, void *tpp)
 		return (rv);
 	}
 
+	nni_plat_tcp_pipe_set_linger(tpp, ep->linger);
 	p->proto  = ep->proto;
 	p->rcvmax = ep->rcvmax;
 	p->tpp    = tpp;
