@@ -207,6 +207,17 @@ universal resource locators (URLS).
 |===
 
 
+=== Supplemental API
+
+These supplemental functions are not intrinsic to building
+network applications with _NNG_, but they are made available
+as a convenience to aid in creating portable applications.
+
+|===
+|<<nng_opts_parse.3#,nng_opts_parse()>>|parse command line options
+|===
+
+
 === HTTP Support
 
 The library may be configured with support for HTTP, and this will

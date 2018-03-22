@@ -1,0 +1,3 @@
+This section documents supplemental functions that are available.
+These functions are not intrinsic to building applications with
+this library, but their presence may facilitate writing portable applications.
