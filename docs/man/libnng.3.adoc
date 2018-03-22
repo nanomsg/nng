@@ -214,7 +214,22 @@ network applications with _NNG_, but they are made available
 as a convenience to aid in creating portable applications.
 
 |===
-|<<nng_opts_parse.3#,nng_opts_parse()>>|parse command line options
+|<<nng_clock.3supp#,nng_clock()>>|get time
+|<<nng_cv_alloc.3supp#,nng_cv_alloc()>>|allocate condition variable
+|<<nng_cv_free.3supp#,nng_cv_free()>>|free condition variable
+|<<nng_cv_until.3supp#,nng_cv_until()>>|wait for condition or timeout
+|<<nng_cv_wait.3supp#,nng_cv_wait()>>|wait for condition
+|<<nng_cv_wake.3supp#,nng_cv_wake()>>|wake all waiters
+|<<nng_cv_wake1.3supp#,nng_cv_wake()>>|wake one waiter
+|<<nng_msleep.3supp#,nng_msleep()>>|sleep for milliseconds
+|<<nng_mtx_alloc.3supp#,nng_mtx_alloc()>>|allocate mutex
+|<<nng_mtx_free.3supp#,nng_mtx_free()>>|free mutex
+|<<nng_mtx_lock.3supp#,nng_mtx_lock()>>|lock mutex
+|<<nng_mtx_unlock.3supp#,nng_mtx_unlock()>>|unlock mutex
+|<<nng_opts_parse.3supp#,nng_opts_parse()>>|parse command line options
+|<<nng_random.3supp#,nng_random()>>|get random number
+|<<nng_thread_create.3supp#,nng_thread_create()>>|create thread
+|<<nng_thread_destroy.3supp#,nng_thread_destroy()>>|reap thread
 |===
 
 

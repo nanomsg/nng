@@ -34,7 +34,7 @@ typedef uint64_t nng_time;
 // Return an absolute time from some arbitrary point.  The value is
 // provided in milliseconds, and is of limited resolution based on the
 // system clock.  (Do not use it for fine grained performance measurements.)
-NNG_DECL uint64_t nng_clock(void);
+NNG_DECL nng_time nng_clock(void);
 
 // Sleep for specified msecs.
 NNG_DECL void nng_msleep(nng_duration);

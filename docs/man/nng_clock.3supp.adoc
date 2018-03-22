@@ -1,0 +1,58 @@
+= nng_clock(3supp)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_clock - get time
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+typedef uint64_t nng_time;
+
+nng_time nng_clock(void);
+----
+
+== DESCRIPTION
+
+The `nng_clock()` returns the number of elapsed milliseconds since some
+arbitrary time in the past.
+The resolution of the clock depends on the underlying timing facilities
+of the system.
+This function may be used for timing, but applications should not expect
+very fine grained values.
+
+IMPORTANT: The reference time will be the same for a given program,
+but different programs may have different references.
+
+TIP: This function is intended mostly to help with setting appropriate
+timeouts using <<nng_cv_until.3supp#,nng_cv_until(3supp)>>.
+
+== RETURN VALUES
+
+Milliseconds since reference time.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_sleep_aio.3#,nng_sleep_aio(3)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_cv_until.3supp#,nng_cv_until(3supp)>>,
+<<nng_msleep.3supp#,nng_msleep(3supp)>>,
+<<nng_duration.5#,nng_duration(5)>>,
+<<nng.7#,nng(7)>>
