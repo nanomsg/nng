@@ -262,6 +262,7 @@ TestMain("ZeroTier Transport", {
 		snprintf(addr2, sizeof(addr2), "zt://%llx." NWID ":%u",
 		    (unsigned long long) node, port);
 		So(nng_dialer_create(&d, s2, addr2) == 0);
+		mkdir(path2, 0700);
 		So(nng_dialer_setopt(
 		       d, NNG_OPT_ZT_HOME, path2, strlen(path2) + 1) == 0);
 		So(nng_dialer_start(d, 0) == 0);
