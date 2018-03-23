@@ -18,4 +18,7 @@ You can also development and documentation efforts for _nng_ by purchasing your 
 
 Here is my <<RATIONALE#,rationale>> for why I made _nng_.
 
+My presentation, https://staysail.github.io/nng_presentation/nng_presentation.html[Scalability Protocols], from February 2018, also has some more detail
+about these protocols and NNG in particular.
+
 Please see the https://github.com/nanomsg/nng[GitHub Repository] for further information.
