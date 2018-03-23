@@ -392,7 +392,15 @@ nni_aio_finish_impl(nni_aio *aio, int rv, size_t count, nni_msg *msg)
 			aio->a_waiting = 0;
 			nni_cv_wake(&aio->a_cv);
 		}
-		nni_task_dispatch(&aio->a_task);
+
+		if (!aio->a_synch) {
+			nni_task_dispatch(&aio->a_task);
+		} else {
+			nni_mtx_unlock(&nni_aio_lk);
+			aio->a_task.task_cb(aio->a_task.task_arg);
+			nni_mtx_lock(&nni_aio_lk);
+			aio->a_synch = 0;
+		}
 	}
 	nni_mtx_unlock(&nni_aio_lk);
 }

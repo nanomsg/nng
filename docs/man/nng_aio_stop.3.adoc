@@ -28,9 +28,16 @@ The `nng_aio_stop()` function stops the asynchronous I/O operation
 associated with _aio_ by aborting with `NNG_ECANCELED`, and then waits
 for it to complete or to be completely aborted.
 
-This is logically the equivalent of <<nng_aio_cancel.3#,`nng_aio_cancel()`>>
-followed by <<nng_aio_wait.3#,`nng_aio_wait()`>>, except that the asynchronous
-I/O handle may not be used for any further operations.
+If an operation is in progress when this function is called, that operation
+is canceled and the callback function is _not_ allowed to run.
+
+If the callback function is already running when this function is called,
+then it is allowed to complete before returning to the caller.
+
+No new operations will be started on this _aio_.
+
+NOTE: Calling this function means that the operation may be aborted without
+completing its callback function.
 
 TIP: When multiple asynchronous I/O handles are in use and need to be
 shut down, it is safest to stop all of them, before deallocating any of
