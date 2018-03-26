@@ -113,17 +113,19 @@ nni_timer_schedule(nni_timer_node *node, nni_time when)
 		nni_list_remove(&timer->t_entries, node);
 	}
 
-	srch = nni_list_first(&timer->t_entries);
-	while ((srch != NULL) && (srch->t_expire < node->t_expire)) {
-		srch = nni_list_next(&timer->t_entries, srch);
-	}
-	if (srch != NULL) {
-		nni_list_insert_before(&timer->t_entries, node, srch);
-	} else {
-		nni_list_append(&timer->t_entries, node);
-	}
-	if (nni_list_first(&timer->t_entries) == node) {
-		nni_cv_wake1(&timer->t_sched_cv);
+	if (when != NNI_TIME_NEVER) {
+		srch = nni_list_first(&timer->t_entries);
+		while ((srch != NULL) && (srch->t_expire < node->t_expire)) {
+			srch = nni_list_next(&timer->t_entries, srch);
+		}
+		if (srch != NULL) {
+			nni_list_insert_before(&timer->t_entries, node, srch);
+		} else {
+			nni_list_append(&timer->t_entries, node);
+		}
+		if (nni_list_first(&timer->t_entries) == node) {
+			nni_cv_wake1(&timer->t_sched_cv);
+		}
 	}
 	nni_mtx_unlock(&timer->t_mx);
 }
