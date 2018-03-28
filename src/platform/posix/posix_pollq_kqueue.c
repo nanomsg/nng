@@ -93,7 +93,6 @@ nni_posix_pollq_add(nni_posix_pollq_node *node)
 static void
 nni_posix_pollq_remove_helper(nni_posix_pollq *pq, nni_posix_pollq_node *node)
 {
-	int           rv;
 	struct kevent kevents[2];
 
 	node->events = 0;
@@ -105,11 +104,11 @@ nni_posix_pollq_remove_helper(nni_posix_pollq *pq, nni_posix_pollq_node *node)
 	EV_SET(&kevents[1], (uintptr_t) node->fd, EVFILT_WRITE, EV_DELETE, 0,
 	    0, (kevent_udata_t) node);
 
-	rv = kevent(pq->kq, kevents, 2, NULL, 0, NULL);
-	// allow errnos that indicate the fd has already been removed
-	if (rv < 0 && errno != EBADF && errno != ENOENT) {
-		NNI_ASSERT(false);
-	}
+	// So it turns out that we can get EBADF, ENOENT, and apparently
+	// also EINPROGRESS (new on macOS Sierra).  Frankly, we're deleting
+	// an event, and its harmless if the event removal fails (worst
+	// case would be a spurious wakeup), so lets ignore it.
+	(void) kevent(pq->kq, kevents, 2, NULL, 0, NULL);
 }
 
 // nni_posix_pollq_remove removes the node from the pollq, but
@@ -192,9 +191,14 @@ nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 	}
 
 	if (nevents > 0) {
-		int rv;
-		rv = kevent(pq->kq, kevents, nevents, NULL, 0, NULL);
-		NNI_ASSERT(rv >= 0);
+		// This call should never fail, really.  The only possible
+		// legitimate failure would be ENOMEM, but in that case
+		// lots of other things are going to be failing, or ENOENT
+		// or ESRCH, indicating we already lost interest; the
+		// only consequence of ignoring these errors is that a given
+		// descriptor might appear "stuck".  This beats the alternative
+		// of just blithely crashing the application with an assertion.
+		(void) kevent(pq->kq, kevents, nevents, NULL, 0, NULL);
 		node->events |= events;
 	}
 
@@ -303,7 +307,7 @@ nni_posix_poll_thr(void *arg)
 			// this will only fail if the fd is already
 			// closed/invalid which we don't mind anyway,
 			// so ignore return value.
-			kevent(pq->kq, &ev_disable, 1, NULL, 0, NULL);
+			(void) kevent(pq->kq, &ev_disable, 1, NULL, 0, NULL);
 
 			// mark events as cleared
 			node->events &= ~node->revents;
@@ -341,7 +345,7 @@ nni_posix_pollq_destroy(nni_posix_pollq *pq)
 		nni_mtx_lock(&pq->mtx);
 		pq->close   = true;
 		pq->started = false;
-		kevent(pq->kq, &ev, 1, NULL, 0, NULL);
+		(void) kevent(pq->kq, &ev, 1, NULL, 0, NULL);
 		nni_mtx_unlock(&pq->mtx);
 	}
 	nni_thr_fini(&pq->thr);
