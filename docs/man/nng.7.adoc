@@ -146,6 +146,13 @@ Note that steps 4, 5, and 7 are not specified by RFC 3986, but performing
 them is believed to improve both the usability and security of _nng_
 applications, without violating RFC 3986 itself.
 
+TIP: Port numbers may be service names in some instances, but it is recommended
+that numeric port numbers be used when known.
+If service names are used, it is recommended that they follow the naming
+conventions for C identifiers, and not be longer than 32 characters in length.
+This will maximize compatibility across systems and minimize opportunities for
+confusion when they are parsed on different systems.
+
 == API
 
 The library API is documented at <<libnng.3#,libnng(3)>>.
