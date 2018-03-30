@@ -24,7 +24,6 @@ struct nni_idhash {
 	size_t            ih_load;
 	size_t            ih_minload; // considers placeholders
 	size_t            ih_maxload;
-	uint32_t          ih_walkers;
 	uint64_t          ih_minval;
 	uint64_t          ih_maxval;
 	uint64_t          ih_dynval;
@@ -47,7 +46,6 @@ nni_idhash_init(nni_idhash **hp)
 	h->ih_cap     = 0;
 	h->ih_maxload = 0;
 	h->ih_minload = 0; // never shrink below this
-	h->ih_walkers = 0;
 	h->ih_minval  = 0;
 	h->ih_maxval  = 0xffffffff;
 	h->ih_dynval  = 0;
@@ -59,7 +57,6 @@ void
 nni_idhash_fini(nni_idhash *h)
 {
 	if (h != NULL) {
-		NNI_ASSERT(h->ih_walkers == 0);
 		if (h->ih_entries != NULL) {
 			NNI_FREE_STRUCTS(h->ih_entries, h->ih_cap);
 			h->ih_entries = NULL;
@@ -142,11 +139,6 @@ nni_hash_resize(nni_idhash *h)
 
 	if ((h->ih_load < h->ih_maxload) && (h->ih_load >= h->ih_minload)) {
 		// No resize needed.
-		return (0);
-	}
-	if (h->ih_walkers && (h->ih_load < (h->ih_cap - 1))) {
-		// Don't resize when walkers are running.  This way
-		// walk functions can remove hash nodes.
 		return (0);
 	}
 
