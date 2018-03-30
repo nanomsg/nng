@@ -147,25 +147,30 @@ nni_aio_fini(nni_aio *aio)
 int
 nni_aio_set_iov(nni_aio *aio, unsigned niov, const nni_iov *iov)
 {
-	if ((niov > NNI_NUM_ELEMENTS(aio->a_iovinl)) &&
-	    (niov > aio->a_niovalloc)) {
-		nni_iov *newiov = NNI_ALLOC_STRUCTS(newiov, niov);
-		if (newiov == NULL) {
-			return (NNG_ENOMEM);
+	// Sometimes we are resubmitting our own io vector, with
+	// just a smaller niov.
+	if (aio->a_iov != iov) {
+		if ((niov > NNI_NUM_ELEMENTS(aio->a_iovinl)) &&
+		    (niov > aio->a_niovalloc)) {
+			nni_iov *newiov = NNI_ALLOC_STRUCTS(newiov, niov);
+			if (newiov == NULL) {
+				return (NNG_ENOMEM);
+			}
+			if (aio->a_niovalloc > 0) {
+				NNI_FREE_STRUCTS(
+				    aio->a_iovalloc, aio->a_niovalloc);
+			}
+			aio->a_iov       = newiov;
+			aio->a_iovalloc  = newiov;
+			aio->a_niovalloc = niov;
 		}
-		if (aio->a_niovalloc > 0) {
-			NNI_FREE_STRUCTS(aio->a_iovalloc, aio->a_niovalloc);
+		if (niov <= NNI_NUM_ELEMENTS(aio->a_iovinl)) {
+			aio->a_iov = aio->a_iovinl;
+		} else {
+			aio->a_iov = aio->a_iovalloc;
 		}
-		aio->a_iov       = newiov;
-		aio->a_iovalloc  = newiov;
-		aio->a_niovalloc = niov;
+		memcpy(aio->a_iov, iov, niov * sizeof(nni_iov));
 	}
-	if (niov <= NNI_NUM_ELEMENTS(aio->a_iovinl)) {
-		aio->a_iov = aio->a_iovinl;
-	} else {
-		aio->a_iov = aio->a_iovalloc;
-	}
-	memcpy(aio->a_iov, iov, niov * sizeof(nni_iov));
 	aio->a_niov = niov;
 	return (0);
 }
