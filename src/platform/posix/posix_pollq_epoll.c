@@ -36,6 +36,7 @@ struct nni_posix_pollq {
 	int                   evfd;  // event fd
 	bool                  close; // request for worker to exit
 	bool                  started;
+	nni_idhash *          nodes;
 	nni_thr               thr;    // worker thread
 	nni_posix_pollq_node *wait;   // cancel waiting on this
 	nni_posix_pollq_node *active; // active node (in callback)
@@ -47,6 +48,7 @@ nni_posix_pollq_add(nni_posix_pollq_node *node)
 	int                rv;
 	nni_posix_pollq *  pq;
 	struct epoll_event ev;
+	uint64_t           id;
 
 	pq = nni_posix_pollq_get(node->fd);
 	if (pq == NULL) {
@@ -65,16 +67,23 @@ nni_posix_pollq_add(nni_posix_pollq_node *node)
 		return (NNG_ECLOSED);
 	}
 
+	if ((rv = nni_idhash_alloc(pq->nodes, &id, node)) != 0) {
+		nni_mtx_unlock(&pq->mtx);
+		return (rv);
+	}
+	node->index  = (int) id;
 	node->pq     = pq;
 	node->events = 0;
 
 	// notifications disabled to begin with
 	ev.events   = 0;
-	ev.data.ptr = node;
+	ev.data.u64 = id;
 
 	rv = epoll_ctl(pq->epfd, EPOLL_CTL_ADD, node->fd, &ev);
 	if (rv != 0) {
 		rv = nni_plat_errno(errno);
+		nni_idhash_remove(pq->nodes, id);
+		node->index = 0;
 	}
 
 	nni_mtx_unlock(&pq->mtx);
@@ -93,8 +102,16 @@ nni_posix_pollq_remove_helper(nni_posix_pollq *pq, nni_posix_pollq_node *node)
 	node->pq     = NULL;
 
 	ev.events   = 0;
-	ev.data.ptr = node;
+	ev.data.u64 = (uint64_t) node->index;
 
+	if (node->index != 0) {
+		// This dereegisters the node.  If the poller was blocked
+		// then this keeps it from coming back in to find us.
+		nni_idhash_remove(pq->nodes, (uint64_t) node->index);
+	}
+
+	// NB: EPOLL_CTL_DEL actually *ignores* the event, but older Linux
+	// versions need it to be non-NULL.
 	rv = epoll_ctl(pq->epfd, EPOLL_CTL_DEL, node->fd, &ev);
 	if (rv != 0) {
 		NNI_ASSERT(errno == EBADF || errno == ENOENT);
@@ -127,7 +144,7 @@ nni_posix_pollq_remove(nni_posix_pollq_node *node)
 int
 nni_posix_pollq_init(nni_posix_pollq_node *node)
 {
-	NNI_ARG_UNUSED(node);
+	node->index = 0;
 	return (0);
 }
 
@@ -172,7 +189,7 @@ nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 
 	node->events |= events;
 	ev.events   = node->events | NNI_EPOLL_FLAGS;
-	ev.data.ptr = node;
+	ev.data.u64 = (uint64_t) node->index;
 
 	rv = epoll_ctl(pq->epfd, EPOLL_CTL_MOD, node->fd, &ev);
 	NNI_ASSERT(rv == 0);
@@ -198,7 +215,7 @@ nni_posix_pollq_disarm(nni_posix_pollq_node *node, int events)
 	} else {
 		ev.events = node->events | NNI_EPOLL_FLAGS;
 	}
-	ev.data.ptr = node;
+	ev.data.u64 = (uint64_t) node->index;
 
 	if (epoll_ctl(pq->epfd, EPOLL_CTL_MOD, node->fd, &ev) != 0) {
 		NNI_ASSERT(errno == EBADF || errno == ENOENT);
@@ -221,8 +238,10 @@ nni_posix_poll_thr(void *arg)
 
 		// block indefinitely, timers are handled separately
 		nni_mtx_unlock(&pq->mtx);
+
 		nevents =
 		    epoll_wait(pq->epfd, events, NNI_MAX_EPOLL_EVENTS, -1);
+
 		nni_mtx_lock(&pq->mtx);
 
 		if (nevents <= 0) {
@@ -236,7 +255,7 @@ nni_posix_poll_thr(void *arg)
 
 			ev = &events[i];
 			// If the waker pipe was signaled, read from it.
-			if ((ev->data.ptr == pq) && (ev->events & POLLIN)) {
+			if ((ev->data.u64 == 0) && (ev->events & POLLIN)) {
 				int      rv;
 				uint64_t clear;
 				rv = read(pq->evfd, &clear, sizeof(clear));
@@ -244,8 +263,8 @@ nni_posix_poll_thr(void *arg)
 				continue;
 			}
 
-			node = (nni_posix_pollq_node *) ev->data.ptr;
-			if (node->pq == NULL) {
+			if (nni_idhash_find(pq->nodes, ev->data.u64,
+			        (void **) &node) != 0) {
 				// node was removed while we were blocking
 				continue;
 			}
@@ -303,6 +322,10 @@ nni_posix_pollq_destroy(nni_posix_pollq *pq)
 	close(pq->epfd);
 	pq->epfd = -1;
 
+	if (pq->nodes != NULL) {
+		nni_idhash_fini(pq->nodes);
+	}
+
 	nni_mtx_fini(&pq->mtx);
 }
 
@@ -313,13 +336,15 @@ nni_posix_pollq_add_eventfd(nni_posix_pollq *pq)
 	struct epoll_event ev;
 	int                rv;
 
+	memset(&ev, 0, sizeof(ev));
+
 	pq->evfd = eventfd(0, EFD_NONBLOCK);
 	if (pq->evfd == -1) {
 		return (nni_plat_errno(errno));
 	}
 
 	ev.events   = EPOLLIN;
-	ev.data.ptr = pq;
+	ev.data.u64 = 0;
 
 	rv = epoll_ctl(pq->epfd, EPOLL_CTL_ADD, pq->evfd, &ev);
 	if (rv != 0) {
@@ -343,12 +368,15 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 	nni_mtx_init(&pq->mtx);
 	nni_cv_init(&pq->cv, &pq->mtx);
 
-	if (((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0) ||
+	if (((rv = nni_idhash_init(&pq->nodes)) != 0) ||
+	    ((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0) ||
 	    ((rv = nni_posix_pollq_add_eventfd(pq)) != 0)) {
 		nni_posix_pollq_destroy(pq);
 		return (rv);
 	}
 
+	// Positive values only for node indices. (0 is reserved for eventfd).
+	nni_idhash_set_limits(pq->nodes, 1, 0x7FFFFFFFu, 1);
 	pq->started = true;
 	nni_thr_run(&pq->thr);
 	return (0);
