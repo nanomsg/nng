@@ -550,15 +550,11 @@ sendloop(nng_socket sock)
 void
 sendrecv(nng_socket sock)
 {
-	nng_duration iv = 0;
 	if (data == NULL) {
 		fatal("No data to send (specify with --data or --file)");
 	}
 	if (delay > 0) {
 		nng_msleep(delay);
-	}
-	if (interval > 0) {
-		iv = interval;
 	}
 
 	// We start by sending a message, then we receive iteratively
