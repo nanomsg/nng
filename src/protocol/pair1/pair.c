@@ -397,12 +397,12 @@ pair1_sock_close(void *arg)
 }
 
 static int
-pair1_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+pair1_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
 {
 	pair1_sock *s = arg;
 	int         rv;
 	nni_mtx_lock(&s->mtx);
-	rv = s->started ? NNG_ESTATE : nni_setopt_bool(&s->raw, buf, sz);
+	rv = s->started ? NNG_ESTATE : nni_copyin_bool(&s->raw, buf, sz, typ);
 	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
@@ -415,12 +415,12 @@ pair1_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
 }
 
 static int
-pair1_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+pair1_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
 {
 	pair1_sock *s = arg;
 	int         rv;
 	nni_mtx_lock(&s->mtx); // Have to be locked against recv cb.
-	rv = nni_setopt_int(&s->ttl, buf, sz, 1, 255);
+	rv = nni_copyin_int(&s->ttl, buf, sz, 1, 255, typ);
 	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
@@ -433,12 +433,12 @@ pair1_sock_getopt_maxttl(void *arg, void *buf, size_t *szp, int typ)
 }
 
 static int
-pair1_sock_setopt_poly(void *arg, const void *buf, size_t sz)
+pair1_sock_setopt_poly(void *arg, const void *buf, size_t sz, int typ)
 {
 	pair1_sock *s = arg;
 	int         rv;
 	nni_mtx_lock(&s->mtx);
-	rv = s->started ? NNG_ESTATE : nni_setopt_bool(&s->poly, buf, sz);
+	rv = s->started ? NNG_ESTATE : nni_copyin_bool(&s->poly, buf, sz, typ);
 	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }

@@ -760,13 +760,16 @@ nni_tcp_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-nni_tcp_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz)
+nni_tcp_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
 {
 	nni_tcp_ep *ep = arg;
-	if (ep == NULL) {
-		return (nni_chkopt_size(v, sz, 0, NNI_MAXSZ));
+	size_t      val;
+	int         rv;
+	rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, typ);
+	if ((rv == 0) && (ep != NULL)) {
+		ep->rcvmax = val;
 	}
-	return (nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ));
+	return (rv);
 }
 
 static int
@@ -793,13 +796,16 @@ nni_tcp_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp, int typ)
 }
 
 static int
-nni_tcp_ep_setopt_linger(void *arg, const void *v, size_t sz)
+nni_tcp_ep_setopt_linger(void *arg, const void *v, size_t sz, int typ)
 {
-	nni_tcp_ep *ep = arg;
-	if (ep == NULL) {
-		return (nni_chkopt_ms(v, sz));
+	nni_tcp_ep * ep = arg;
+	nng_duration val;
+	int          rv;
+
+	if (((rv = nni_copyin_ms(&val, v, sz, typ)) == 0) && (ep != NULL)) {
+		ep->linger = val;
 	}
-	return (nni_setopt_ms(&ep->linger, v, sz));
+	return (rv);
 }
 
 static int

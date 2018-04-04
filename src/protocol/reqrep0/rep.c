@@ -353,13 +353,13 @@ rep0_pipe_putq_cb(void *arg)
 }
 
 static int
-rep0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+rep0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
 {
 	rep0_sock *s = arg;
 	int        rv;
 
 	nni_mtx_lock(&s->lk);
-	rv = nni_setopt_bool(&s->raw, buf, sz);
+	rv = nni_copyin_bool(&s->raw, buf, sz, typ);
 	nni_mtx_unlock(&s->lk);
 	return (rv);
 }
@@ -372,10 +372,10 @@ rep0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
 }
 
 static int
-rep0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+rep0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
 {
 	rep0_sock *s = arg;
-	return (nni_setopt_int(&s->ttl, buf, sz, 1, 255));
+	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, typ));
 }
 
 static int

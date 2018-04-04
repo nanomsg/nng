@@ -65,7 +65,7 @@ struct nni_tran_ep_option {
 	// performed, but the option should be sanity tested for presence
 	// and size.  (This permits the core to validate that an option
 	// is reasonable and be set even before endpoints are created.)
-	int (*eo_setopt)(void *, const void *, size_t);
+	int (*eo_setopt)(void *, const void *, size_t, int);
 };
 
 // Endpoint operations are called by the socket in a protocol-independent
@@ -172,7 +172,7 @@ struct nni_tran_pipe {
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
 extern nni_tran *nni_tran_find(nni_url *);
-extern int       nni_tran_chkopt(const char *, const void *, size_t);
+extern int       nni_tran_chkopt(const char *, const void *, size_t, int);
 extern int       nni_tran_sys_init(void);
 extern void      nni_tran_sys_fini(void);
 extern int       nni_tran_register(const nni_tran *);

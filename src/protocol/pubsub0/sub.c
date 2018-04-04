@@ -190,11 +190,12 @@ sub0_putq_cb(void *arg)
 // to replace this with a patricia trie, like old nanomsg had.
 
 static int
-sub0_subscribe(void *arg, const void *buf, size_t sz)
+sub0_subscribe(void *arg, const void *buf, size_t sz, int typ)
 {
 	sub0_sock * s = arg;
 	sub0_topic *topic;
 	sub0_topic *newtopic;
+	NNI_ARG_UNUSED(typ);
 
 	nni_mtx_lock(&s->lk);
 	NNI_LIST_FOREACH (&s->topics, topic) {
@@ -240,11 +241,12 @@ sub0_subscribe(void *arg, const void *buf, size_t sz)
 }
 
 static int
-sub0_unsubscribe(void *arg, const void *buf, size_t sz)
+sub0_unsubscribe(void *arg, const void *buf, size_t sz, int typ)
 {
 	sub0_sock * s = arg;
 	sub0_topic *topic;
 	int         rv;
+	NNI_ARG_UNUSED(typ);
 
 	nni_mtx_lock(&s->lk);
 	NNI_LIST_FOREACH (&s->topics, topic) {
@@ -276,10 +278,10 @@ sub0_unsubscribe(void *arg, const void *buf, size_t sz)
 }
 
 static int
-sub0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+sub0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
 {
 	sub0_sock *s = arg;
-	return (nni_setopt_bool(&s->raw, buf, sz));
+	return (nni_copyin_bool(&s->raw, buf, sz, typ));
 }
 
 static int

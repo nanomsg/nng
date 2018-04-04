@@ -181,10 +181,10 @@ pull0_sock_close(void *arg)
 }
 
 static int
-pull0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+pull0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
 {
 	pull0_sock *s = arg;
-	return (nni_setopt_bool(&s->raw, buf, sz));
+	return (nni_copyin_bool(&s->raw, buf, sz, typ));
 }
 
 static int

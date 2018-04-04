@@ -598,13 +598,9 @@ nni_ep_setopt(nni_ep *ep, const char *name, const void *val, size_t sz, int t)
 		if (eo->eo_setopt == NULL) {
 			return (NNG_EREADONLY);
 		}
-		if ((t != NNI_TYPE_OPAQUE) &&
-		    (eo->eo_type != NNI_TYPE_OPAQUE) && (t != eo->eo_type)) {
-			return (NNG_EBADTYPE);
-		}
 
 		nni_mtx_lock(&ep->ep_mtx);
-		rv = eo->eo_setopt(ep->ep_data, val, sz);
+		rv = eo->eo_setopt(ep->ep_data, val, sz, t);
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (rv);
 	}

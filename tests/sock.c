@@ -92,6 +92,7 @@ TestMain("Socket Operations", {
 
 			Convey("Sockname option works", {
 				char   name[128]; // 64 is max
+				char * allocd;
 				size_t sz;
 				sz = sizeof(name);
 				So(nng_getopt(
@@ -110,13 +111,16 @@ TestMain("Socket Operations", {
 
 				memset(name, 'A', 64);
 				name[64] = '\0';
-				So(nng_setopt(s1, NNG_OPT_SOCKNAME, name,
-				       strlen(name)) == NNG_EINVAL);
 
-				So(nng_getopt(
-				       s1, NNG_OPT_SOCKNAME, name, &sz) == 0);
-				So(sz == 6);
-				So(strcmp(name, "hello") == 0);
+				// strings must be NULL terminated
+				So(nng_setopt(s1, NNG_OPT_SOCKNAME, name, 5) ==
+				    NNG_EINVAL);
+
+				So(nng_getopt_string(
+				       s1, NNG_OPT_SOCKNAME, &allocd) == 0);
+				So(strlen(allocd) == 5);
+				So(strcmp(allocd, "hello") == 0);
+				nng_strfree(allocd);
 			});
 
 			Convey("RAW option works", {

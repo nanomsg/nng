@@ -334,10 +334,10 @@ bus0_pipe_recv(bus0_pipe *p)
 }
 
 static int
-bus0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+bus0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
 {
 	bus0_sock *s = arg;
-	return (nni_setopt_bool(&s->raw, buf, sz));
+	return (nni_copyin_bool(&s->raw, buf, sz, typ));
 }
 
 static int

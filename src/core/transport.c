@@ -98,7 +98,7 @@ nni_tran_find(nni_url *url)
 }
 
 int
-nni_tran_chkopt(const char *name, const void *v, size_t sz)
+nni_tran_chkopt(const char *name, const void *v, size_t sz, int typ)
 {
 	nni_transport *t;
 	int            rv = NNG_ENOTSUP;
@@ -118,7 +118,7 @@ nni_tran_chkopt(const char *name, const void *v, size_t sz)
 				nni_mtx_unlock(&nni_tran_lk);
 				return (NNG_EREADONLY);
 			}
-			if ((rv = eo->eo_setopt(NULL, v, sz)) != 0) {
+			if ((rv = eo->eo_setopt(NULL, v, sz, typ)) != 0) {
 				nni_mtx_unlock(&nni_tran_lk);
 				return (rv);
 			}

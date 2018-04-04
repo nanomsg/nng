@@ -274,10 +274,10 @@ pub0_pipe_send_cb(void *arg)
 }
 
 static int
-pub0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+pub0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
 {
 	pub0_sock *s = arg;
-	return (nni_setopt_bool(&s->raw, buf, sz));
+	return (nni_copyin_bool(&s->raw, buf, sz, typ));
 }
 
 static int

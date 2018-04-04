@@ -275,13 +275,13 @@ failed:
 }
 
 static int
-surv0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+surv0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
 {
 	surv0_sock *s = arg;
 	int         rv;
 
 	nni_mtx_lock(&s->mtx);
-	if ((rv = nni_setopt_bool(&s->raw, buf, sz)) == 0) {
+	if ((rv = nni_copyin_bool(&s->raw, buf, sz, typ)) == 0) {
 		s->survid = 0;
 		nni_timer_cancel(&s->timer);
 	}
@@ -297,10 +297,10 @@ surv0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
 }
 
 static int
-surv0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+surv0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
 {
 	surv0_sock *s = arg;
-	return (nni_setopt_int(&s->ttl, buf, sz, 1, 255));
+	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, typ));
 }
 
 static int
@@ -311,10 +311,10 @@ surv0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp, int typ)
 }
 
 static int
-surv0_sock_setopt_surveytime(void *arg, const void *buf, size_t sz)
+surv0_sock_setopt_surveytime(void *arg, const void *buf, size_t sz, int typ)
 {
 	surv0_sock *s = arg;
-	return (nni_setopt_ms(&s->survtime, buf, sz));
+	return (nni_copyin_ms(&s->survtime, buf, sz, typ));
 }
 
 static int

@@ -339,17 +339,21 @@ ws_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-ws_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz)
+ws_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
 {
 	ws_ep *ep = arg;
-	if (ep == NULL) {
-		return (nni_chkopt_size(v, sz, 0, NNI_MAXSZ));
+	size_t val;
+	int    rv;
+
+	rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, typ);
+	if ((rv == 0) && (ep != NULL)) {
+		ep->rcvmax = val;
 	}
-	return (nni_setopt_size(&ep->rcvmax, v, sz, 0, NNI_MAXSZ));
+	return (rv);
 }
 
 static int
-ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
+ws_ep_setopt_headers(ws_ep *ep, const char *v)
 {
 	char *   dupstr;
 	size_t   duplen;
@@ -359,14 +363,6 @@ ws_ep_setopt_headers(ws_ep *ep, const void *v, size_t sz)
 	nni_list l;
 	ws_hdr * h;
 	int      rv;
-
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-
-	if (ep == NULL) {
-		return (0);
-	}
 
 	if (ep->started) {
 		return (NNG_EBUSY);
@@ -440,9 +436,13 @@ done:
 }
 
 static int
-ws_ep_setopt_reqhdrs(void *arg, const void *v, size_t sz)
+ws_ep_setopt_reqhdrs(void *arg, const void *v, size_t sz, int typ)
 {
 	ws_ep *ep = arg;
+
+	if ((typ != NNI_TYPE_STRING) && (typ != NNI_TYPE_OPAQUE)) {
+		return (NNG_EBADTYPE);
+	}
 
 	if (nni_strnlen(v, sz) >= sz) {
 		return (NNG_EINVAL);
@@ -451,13 +451,17 @@ ws_ep_setopt_reqhdrs(void *arg, const void *v, size_t sz)
 	if ((ep != NULL) && (ep->mode == NNI_EP_MODE_LISTEN)) {
 		return (NNG_EREADONLY);
 	}
-	return (ws_ep_setopt_headers(ep, v, sz));
+	return (ws_ep_setopt_headers(ep, v));
 }
 
 static int
-ws_ep_setopt_reshdrs(void *arg, const void *v, size_t sz)
+ws_ep_setopt_reshdrs(void *arg, const void *v, size_t sz, int typ)
 {
 	ws_ep *ep = arg;
+
+	if ((typ != NNI_TYPE_STRING) && (typ != NNI_TYPE_OPAQUE)) {
+		return (NNG_EBADTYPE);
+	}
 
 	if (nni_strnlen(v, sz) >= sz) {
 		return (NNG_EINVAL);
@@ -466,7 +470,7 @@ ws_ep_setopt_reshdrs(void *arg, const void *v, size_t sz)
 	if ((ep != NULL) && (ep->mode == NNI_EP_MODE_DIAL)) {
 		return (NNG_EREADONLY);
 	}
-	return (ws_ep_setopt_headers(ep, v, sz));
+	return (ws_ep_setopt_headers(ep, v));
 }
 
 static int
@@ -829,16 +833,15 @@ wss_ep_getopt_tlsconfig(void *arg, void *v, size_t *szp, int typ)
 }
 
 static int
-wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz)
+wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz, int typ)
 {
 	ws_ep *         ep = arg;
 	nng_tls_config *cfg;
 	int             rv;
 
-	if (sz != sizeof(cfg)) {
-		return (NNG_EINVAL);
+	if ((rv = nni_copyin_ptr((void **) &cfg, v, sz, typ)) != 0) {
+		return (rv);
 	}
-	memcpy(&cfg, v, sz);
 	if (cfg == NULL) {
 		// NULL is clearly invalid.
 		return (NNG_EINVAL);
@@ -855,12 +858,15 @@ wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz)
 }
 
 static int
-wss_ep_setopt_tls_cert_key_file(void *arg, const void *v, size_t sz)
+wss_ep_setopt_tls_cert_key_file(void *arg, const void *v, size_t sz, int typ)
 {
 	ws_ep *         ep = arg;
 	int             rv;
 	nng_tls_config *tls;
 
+	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
+		return (NNG_EBADTYPE);
+	}
 	if (nni_strnlen(v, sz) >= sz) {
 		return (NNG_EINVAL);
 	}
@@ -874,11 +880,15 @@ wss_ep_setopt_tls_cert_key_file(void *arg, const void *v, size_t sz)
 }
 
 static int
-wss_ep_setopt_tls_ca_file(void *arg, const void *v, size_t sz)
+wss_ep_setopt_tls_ca_file(void *arg, const void *v, size_t sz, int typ)
 {
 	ws_ep *         ep = arg;
 	int             rv;
 	nng_tls_config *tls;
+
+	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
+		return (NNG_EBADTYPE);
+	}
 
 	if (nni_strnlen(v, sz) >= sz) {
 		return (NNG_EINVAL);
@@ -893,15 +903,15 @@ wss_ep_setopt_tls_ca_file(void *arg, const void *v, size_t sz)
 }
 
 static int
-wss_ep_setopt_tls_auth_mode(void *arg, const void *v, size_t sz)
+wss_ep_setopt_tls_auth_mode(void *arg, const void *v, size_t sz, int typ)
 {
 	ws_ep *         ep = arg;
 	int             rv;
 	nng_tls_config *tls;
 	int             mode;
 
-	rv = nni_setopt_int(
-	    &mode, v, sz, NNG_TLS_AUTH_MODE_NONE, NNG_TLS_AUTH_MODE_REQUIRED);
+	rv = nni_copyin_int(&mode, v, sz, NNG_TLS_AUTH_MODE_NONE,
+	    NNG_TLS_AUTH_MODE_REQUIRED, typ);
 	if ((rv != 0) || (ep == NULL)) {
 		return (rv);
 	}
@@ -912,11 +922,15 @@ wss_ep_setopt_tls_auth_mode(void *arg, const void *v, size_t sz)
 }
 
 static int
-wss_ep_setopt_tls_server_name(void *arg, const void *v, size_t sz)
+wss_ep_setopt_tls_server_name(void *arg, const void *v, size_t sz, int typ)
 {
 	ws_ep *         ep = arg;
 	int             rv;
 	nng_tls_config *tls;
+
+	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
+		return (NNG_EBADTYPE);
+	}
 
 	if (nni_strnlen(v, sz) >= sz) {
 		return (NNG_EINVAL);

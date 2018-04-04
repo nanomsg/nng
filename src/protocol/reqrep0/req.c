@@ -250,10 +250,10 @@ req0_pipe_stop(void *arg)
 }
 
 static int
-req0_sock_setopt_raw(void *arg, const void *buf, size_t sz)
+req0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
 {
 	req0_sock *s = arg;
-	return (nni_setopt_bool(&s->raw, buf, sz));
+	return (nni_copyin_bool(&s->raw, buf, sz, typ));
 }
 
 static int
@@ -264,10 +264,10 @@ req0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
 }
 
 static int
-req0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz)
+req0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
 {
 	req0_sock *s = arg;
-	return (nni_setopt_int(&s->ttl, buf, sz, 1, 255));
+	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, typ));
 }
 
 static int
@@ -278,10 +278,10 @@ req0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp, int typ)
 }
 
 static int
-req0_sock_setopt_resendtime(void *arg, const void *buf, size_t sz)
+req0_sock_setopt_resendtime(void *arg, const void *buf, size_t sz, int typ)
 {
 	req0_sock *s = arg;
-	return (nni_setopt_ms(&s->retry, buf, sz));
+	return (nni_copyin_ms(&s->retry, buf, sz, typ));
 }
 
 static int

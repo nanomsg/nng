@@ -719,14 +719,17 @@ nni_ipc_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-nni_ipc_ep_setopt_recvmaxsz(void *arg, const void *data, size_t sz)
+nni_ipc_ep_setopt_recvmaxsz(void *arg, const void *data, size_t sz, int typ)
 {
 	nni_ipc_ep *ep = arg;
+	size_t      val;
+	int         rv;
 
-	if (ep == NULL) {
-		return (nni_chkopt_size(data, sz, 0, NNI_MAXSZ));
+	rv = nni_copyin_size(&val, data, sz, 0, NNI_MAXSZ, typ);
+	if ((rv == 0) && (ep != NULL)) {
+		ep->rcvmax = val;
 	}
-	return (nni_setopt_size(&ep->rcvmax, data, sz, 0, NNI_MAXSZ));
+	return (rv);
 }
 
 static int

@@ -14,65 +14,24 @@
 #include <string.h>
 
 int
-nni_chkopt_ms(const void *v, size_t sz)
-{
-	nni_duration val;
-	if (sz != sizeof(val)) {
-		return (NNG_EINVAL);
-	}
-	memcpy(&val, v, sz);
-	if (val < -1) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-int
-nni_chkopt_int(const void *v, size_t sz, int minv, int maxv)
-{
-	int val;
-	if (sz != sizeof(val)) {
-		return (NNG_EINVAL);
-	}
-	memcpy(&val, v, sz);
-	if ((val < minv) || (val > maxv)) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-int
-nni_chkopt_bool(size_t sz)
-{
-	if (sz != sizeof(bool)) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-int
-nni_chkopt_size(const void *v, size_t sz, size_t minv, size_t maxv)
-{
-	size_t val;
-	if (sz != sizeof(val)) {
-		return (NNG_EINVAL);
-	}
-	memcpy(&val, v, sz);
-	if ((val < minv) || (val > maxv)) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-int
-nni_setopt_ms(nni_duration *dp, const void *v, size_t sz)
+nni_copyin_ms(nni_duration *dp, const void *v, size_t sz, int typ)
 {
 	nni_duration dur;
 
-	if (sz != sizeof(*dp)) {
-		return (NNG_EINVAL);
+	switch (typ) {
+	case NNI_TYPE_DURATION:
+		dur = *(nng_duration *) v;
+		break;
+	case NNI_TYPE_OPAQUE:
+		if (sz != sizeof(dur)) {
+			return (NNG_EINVAL);
+		}
+		memcpy(&dur, v, sz);
+		break;
+	default:
+		return (NNG_EBADTYPE);
 	}
-	memcpy(&dur, v, sizeof(dur));
+
 	if (dur < -1) {
 		return (NNG_EINVAL);
 	}
@@ -81,24 +40,43 @@ nni_setopt_ms(nni_duration *dp, const void *v, size_t sz)
 }
 
 int
-nni_setopt_bool(bool *bp, const void *v, size_t sz)
+nni_copyin_bool(bool *bp, const void *v, size_t sz, int typ)
 {
-	if (sz != sizeof(*bp)) {
-		return (NNG_EINVAL);
+	switch (typ) {
+	case NNI_TYPE_BOOL:
+		*bp = *(bool *) v;
+		break;
+	case NNI_TYPE_OPAQUE:
+		if (sz != sizeof(bool)) {
+			return (NNG_EINVAL);
+		}
+		memcpy(bp, v, sz);
+		break;
+	default:
+		return (NNG_EBADTYPE);
 	}
-	memcpy(bp, v, sizeof(*bp));
+
 	return (0);
 }
 
 int
-nni_setopt_int(int *ip, const void *v, size_t sz, int minv, int maxv)
+nni_copyin_int(int *ip, const void *v, size_t sz, int minv, int maxv, int typ)
 {
 	int i;
 
-	if (sz != sizeof(i)) {
-		return (NNG_EINVAL);
+	switch (typ) {
+	case NNI_TYPE_INT32:
+		i = *(int *) v;
+		break;
+	case NNI_TYPE_OPAQUE:
+		if (sz != sizeof(i)) {
+			return (NNG_EINVAL);
+		}
+		memcpy(&i, v, sz);
+		break;
+	default:
+		return (NNG_EBADTYPE);
 	}
-	memcpy(&i, v, sizeof(i));
 	if (i > maxv) {
 		return (NNG_EINVAL);
 	}
@@ -110,18 +88,27 @@ nni_setopt_int(int *ip, const void *v, size_t sz, int minv, int maxv)
 }
 
 int
-nni_setopt_size(size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv)
+nni_copyin_size(
+    size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv, int typ)
 {
 	size_t val;
 
-	if (sz != sizeof(val)) {
-		return (NNG_EINVAL);
+	switch (typ) {
+	case NNI_TYPE_SIZE:
+		val = *(size_t *) v;
+		break;
+	case NNI_TYPE_OPAQUE:
+		if (sz != sizeof(val)) {
+			return (NNG_EINVAL);
+		}
+		memcpy(&val, v, sz);
+		break;
+	default:
+		return (NNG_EBADTYPE);
 	}
-	memcpy(&val, v, sizeof(val));
-	if (val > maxv) {
-		return (NNG_EINVAL);
-	}
-	if (val < minv) {
+
+	val = *(size_t *) v;
+	if ((val > maxv) || (val < minv)) {
 		return (NNG_EINVAL);
 	}
 	*sp = val;
@@ -129,24 +116,72 @@ nni_setopt_size(size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv)
 }
 
 int
-nni_setopt_buf(nni_msgq *mq, const void *val, size_t sz)
+nni_copyin_ptr(void **pp, const void *v, size_t sz, int typ)
 {
-	int len;
+	void *p;
 
-	if (sz < sizeof(len)) {
-		return (NNG_EINVAL);
+	switch (typ) {
+	case NNI_TYPE_POINTER:
+		p = *(void **) v;
+		break;
+	case NNI_TYPE_OPAQUE:
+		if (sz != sizeof(p)) {
+			return (NNG_EINVAL);
+		}
+		memcpy(&p, v, sz);
+		break;
+	default:
+		return (NNG_EBADTYPE);
 	}
-	memcpy(&len, val, sizeof(len));
-	if (len < 0) {
-		return (NNG_EINVAL);
+	*pp = p;
+	return (0);
+}
+
+int
+nni_copyin_str(char *s, const void *v, size_t sz, size_t maxsz, int typ)
+{
+	size_t z;
+
+	switch (typ) {
+	case NNI_TYPE_STRING:
+		z = strlen(v) + 1;
+		NNI_ASSERT(sz == z);
+		break;
+	case NNI_TYPE_OPAQUE:
+		if ((z = nni_strnlen(v, sz)) >= sz) {
+			return (NNG_EINVAL); // missing terminator
+		}
+		break;
+	default:
+		return (NNG_EBADTYPE);
 	}
-	if (len > 8192) {
-		// put a reasonable uppper limit on queue depth.
-		// This is a count in messages, so the total queue
-		// size could be quite large indeed in this case.
-		return (NNG_EINVAL);
+	if (z > maxsz) {
+		return (NNG_EINVAL); // too long
 	}
-	return (nni_msgq_resize(mq, len));
+	memcpy(s, v, z);
+	return (0);
+}
+
+int
+nni_copyin_u64(uint64_t *up, const void *v, size_t sz, int typ)
+{
+	uint64_t u;
+
+	switch (typ) {
+	case NNI_TYPE_UINT64:
+		u = *(uint64_t *) v;
+		break;
+	case NNI_TYPE_OPAQUE:
+		if (sz != sizeof(u)) {
+			return (NNG_EINVAL);
+		}
+		memcpy(&u, v, sz);
+		break;
+	default:
+		return (NNG_EBADTYPE);
+	}
+	*up = u;
+	return (0);
 }
 
 int
