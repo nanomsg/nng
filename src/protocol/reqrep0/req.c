@@ -78,7 +78,7 @@ static void req0_recv_cb(void *);
 static void req0_putq_cb(void *);
 
 static int
-req0_sock_init(void **sp, nni_sock *sock)
+req0_sock_init_impl(void **sp, nni_sock *sock, bool raw)
 {
 	req0_sock *s;
 
@@ -96,7 +96,7 @@ req0_sock_init(void **sp, nni_sock *sock)
 	s->nextid = nni_random();
 	s->retry  = NNI_SECOND * 60;
 	s->reqmsg = NULL;
-	s->raw    = false;
+	s->raw    = raw;
 	s->wantw  = false;
 	s->resend = NNI_TIME_ZERO;
 	s->ttl    = 8;
@@ -105,6 +105,18 @@ req0_sock_init(void **sp, nni_sock *sock)
 	*sp       = s;
 
 	return (0);
+}
+
+static int
+req0_sock_init(void **sp, nni_sock *sock)
+{
+	return (req0_sock_init_impl(sp, sock, false));
+}
+
+static int
+req0_sock_init_raw(void **sp, nni_sock *sock)
+{
+	return (req0_sock_init_impl(sp, sock, true));
 }
 
 static void
@@ -247,20 +259,6 @@ req0_pipe_stop(void *arg)
 		req0_resend(s);
 	}
 	nni_mtx_unlock(&s->mtx);
-}
-
-static int
-req0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
-{
-	req0_sock *s = arg;
-	return (nni_copyin_bool(&s->raw, buf, sz, typ));
-}
-
-static int
-req0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
-{
-	req0_sock *s = arg;
-	return (nni_copyout_bool(s->raw, buf, szp, typ));
 }
 
 static int
@@ -513,11 +511,6 @@ req0_sock_send(void *arg, nni_aio *aio)
 	int        rv;
 
 	nni_mtx_lock(&s->mtx);
-	if (s->raw) {
-		nni_mtx_unlock(&s->mtx);
-		nni_msgq_aio_put(s->uwq, aio);
-		return;
-	}
 
 	msg = nni_aio_get_msg(aio);
 	len = nni_msg_len(msg);
@@ -559,6 +552,14 @@ req0_sock_send(void *arg, nni_aio *aio)
 	nni_aio_finish(aio, 0, len);
 }
 
+static void
+req0_sock_send_raw(void *arg, nni_aio *aio)
+{
+	req0_sock *s = arg;
+
+	nni_msgq_aio_put(s->uwq, aio);
+}
+
 static nni_msg *
 req0_sock_filter(void *arg, nni_msg *msg)
 {
@@ -566,11 +567,6 @@ req0_sock_filter(void *arg, nni_msg *msg)
 	nni_msg *  rmsg;
 
 	nni_mtx_lock(&s->mtx);
-	if (s->raw) {
-		// Pass it unmolested
-		nni_mtx_unlock(&s->mtx);
-		return (msg);
-	}
 
 	if (nni_msg_header_len(msg) < 4) {
 		nni_mtx_unlock(&s->mtx);
@@ -608,14 +604,20 @@ req0_sock_recv(void *arg, nni_aio *aio)
 	req0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
-	if (!s->raw) {
-		if (s->reqmsg == NULL) {
-			nni_mtx_unlock(&s->mtx);
-			nni_aio_finish_error(aio, NNG_ESTATE);
-			return;
-		}
+	if (s->reqmsg == NULL) {
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(aio, NNG_ESTATE);
+		return;
 	}
 	nni_mtx_unlock(&s->mtx);
+	nni_msgq_aio_get(s->urq, aio);
+}
+
+static void
+req0_sock_recv_raw(void *arg, nni_aio *aio)
+{
+	req0_sock *s = arg;
+
 	nni_msgq_aio_get(s->urq, aio);
 }
 
@@ -627,12 +629,6 @@ static nni_proto_pipe_ops req0_pipe_ops = {
 };
 
 static nni_proto_sock_option req0_sock_options[] = {
-	{
-	    .pso_name   = NNG_OPT_RAW,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = req0_sock_getopt_raw,
-	    .pso_setopt = req0_sock_setopt_raw,
-	},
 	{
 	    .pso_name   = NNG_OPT_MAXTTL,
 	    .pso_type   = NNI_TYPE_INT32,
@@ -675,4 +671,29 @@ int
 nng_req0_open(nng_socket *sidp)
 {
 	return (nni_proto_open(sidp, &req0_proto));
+}
+
+static nni_proto_sock_ops req0_sock_ops_raw = {
+	.sock_init    = req0_sock_init_raw,
+	.sock_fini    = req0_sock_fini,
+	.sock_open    = req0_sock_open,
+	.sock_close   = req0_sock_close,
+	.sock_options = req0_sock_options,
+	.sock_send    = req0_sock_send_raw,
+	.sock_recv    = req0_sock_recv_raw,
+};
+
+static nni_proto req0_proto_raw = {
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_REQ_V0, "req" },
+	.proto_peer     = { NNI_PROTO_REP_V0, "rep" },
+	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
+	.proto_sock_ops = &req0_sock_ops_raw,
+	.proto_pipe_ops = &req0_pipe_ops,
+};
+
+int
+nng_req0_open_raw(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &req0_proto_raw));
 }

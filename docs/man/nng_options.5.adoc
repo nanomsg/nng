@@ -99,7 +99,7 @@ listeners but not dialers.
 (((raw mode)))
 (((cooked mode)))
 (`bool`)
-This option determines whether the socket is in "`raw`" mode.
+This read-only option indicates whether the socket is in "`raw`" mode.
 If `true`, the socket is in "`raw`" mode, and if `false` the socket is
 in "`cooked`" mode.
 Raw mode sockets generally do not have any protocol-specific semantics applied
@@ -107,6 +107,7 @@ to them; instead the application is expected to perform such semantics itself.
 (For example, in "`cooked`" mode a <<nng_rep.7#,_rep_>> socket would
 automatically copy message headers from a received message to the corresponding
 reply, whereas in "`raw`" mode this is not done.)
+See <<nng.7#raw_mode,Raw Mode>> for more details.
 
 [[NNG_OPT_RECONNMINT]]
 ((`NNG_OPT_RECONNMINT`))::

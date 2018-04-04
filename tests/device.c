@@ -42,6 +42,12 @@ Main({
 		const char *addr1 = "inproc://dev1";
 		const char *addr2 = "inproc://dev2";
 
+		Convey("We cannot create cooked mode device", {
+			nng_socket s1;
+			So(nng_pair1_open(&s1) == 0);
+			Reset({ nng_close(s1); });
+			So(nng_device(s1, s1) == NNG_EINVAL);
+		});
 		Convey("We can create a PAIRv1 device", {
 			nng_socket   dev1;
 			nng_socket   dev2;
@@ -51,11 +57,8 @@ Main({
 			nng_msg *    msg;
 			nng_thread * thr;
 
-			So(nng_pair1_open(&dev1) == 0);
-			So(nng_pair1_open(&dev2) == 0);
-
-			So(nng_setopt_bool(dev1, NNG_OPT_RAW, true) == 0);
-			So(nng_setopt_bool(dev2, NNG_OPT_RAW, true) == 0);
+			So(nng_pair1_open_raw(&dev1) == 0);
+			So(nng_pair1_open_raw(&dev2) == 0);
 
 			struct dev_data ddata;
 			ddata.s1 = dev1;

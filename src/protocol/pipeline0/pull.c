@@ -53,7 +53,6 @@ pull0_sock_init(void **sp, nni_sock *sock)
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	s->raw = false;
 	s->urq = nni_sock_recvq(sock);
 
 	*sp = s;
@@ -180,20 +179,6 @@ pull0_sock_close(void *arg)
 	NNI_ARG_UNUSED(arg);
 }
 
-static int
-pull0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
-{
-	pull0_sock *s = arg;
-	return (nni_copyin_bool(&s->raw, buf, sz, typ));
-}
-
-static int
-pull0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
-{
-	pull0_sock *s = arg;
-	return (nni_copyout_bool(s->raw, buf, szp, typ));
-}
-
 static void
 pull0_sock_send(void *arg, nni_aio *aio)
 {
@@ -217,12 +202,6 @@ static nni_proto_pipe_ops pull0_pipe_ops = {
 };
 
 static nni_proto_sock_option pull0_sock_options[] = {
-	{
-	    .pso_name   = NNG_OPT_RAW,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = pull0_sock_getopt_raw,
-	    .pso_setopt = pull0_sock_setopt_raw,
-	},
 	// terminate list
 	{
 	    .pso_name = NULL,
@@ -248,8 +227,23 @@ static nni_proto pull0_proto = {
 	.proto_sock_ops = &pull0_sock_ops,
 };
 
+static nni_proto pull0_proto_raw = {
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_PULL_V0, "pull" },
+	.proto_peer     = { NNI_PROTO_PUSH_V0, "push" },
+	.proto_flags    = NNI_PROTO_FLAG_RCV | NNI_PROTO_FLAG_RAW,
+	.proto_pipe_ops = &pull0_pipe_ops,
+	.proto_sock_ops = &pull0_sock_ops,
+};
+
 int
 nng_pull0_open(nng_socket *sidp)
 {
 	return (nni_proto_open(sidp, &pull0_proto));
+}
+
+int
+nng_pull0_open_raw(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &pull0_proto_raw));
 }

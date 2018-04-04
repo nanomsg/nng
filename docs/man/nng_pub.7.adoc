@@ -18,8 +18,6 @@ nng_pub - publisher protocol
 [source,c]
 ----
 #include <nng/protocol/pubsub0/pub.h>
-
-int nng_pub0_open(nng_socket *s);
 ----
 
 == DESCRIPTION
@@ -46,7 +44,7 @@ Applications should construct their messages accordingly.
 
 === Socket Operations
 
-The <<nng_pub_open.3#,`nng_pub0_open()`>> call creates a publisher socket.
+The <<nng_pub_open.3#,`nng_pub0_open()`>> functions create a publisher socket.
 This socket may be used to send messages, but is unable to receive them.
 Attempts to receive messages will result in `NNG_ENOTSUP`.
 

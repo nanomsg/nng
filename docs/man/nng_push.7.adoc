@@ -16,11 +16,9 @@ nng_push - push protocol
 == SYNOPSIS
 
 [source,c]
-----------
+----
 #include <nng/protocol/pipeline0/push.h>
-
-int nng_push0_open(nng_socket *s);
-----------
+----
 
 == DESCRIPTION
 

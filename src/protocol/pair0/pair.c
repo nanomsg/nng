@@ -36,7 +36,6 @@ struct pair0_sock {
 	pair0_pipe *ppipe;
 	nni_msgq *  uwq;
 	nni_msgq *  urq;
-	bool        raw;
 	nni_mtx     mtx;
 };
 
@@ -63,7 +62,6 @@ pair0_sock_init(void **sp, nni_sock *nsock)
 	}
 	nni_mtx_init(&s->mtx);
 	s->ppipe = NULL;
-	s->raw   = false;
 	s->uwq   = nni_sock_sendq(nsock);
 	s->urq   = nni_sock_recvq(nsock);
 	*sp      = s;
@@ -231,20 +229,6 @@ pair0_sock_close(void *arg)
 	NNI_ARG_UNUSED(arg);
 }
 
-static int
-pair0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
-{
-	pair0_sock *s = arg;
-	return (nni_copyin_bool(&s->raw, buf, sz, typ));
-}
-
-static int
-pair0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
-{
-	pair0_sock *s = arg;
-	return (nni_copyout_bool(s->raw, buf, szp, typ));
-}
-
 static void
 pair0_sock_send(void *arg, nni_aio *aio)
 {
@@ -269,12 +253,6 @@ static nni_proto_pipe_ops pair0_pipe_ops = {
 };
 
 static nni_proto_sock_option pair0_sock_options[] = {
-	{
-	    .pso_name   = NNG_OPT_RAW,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = pair0_sock_getopt_raw,
-	    .pso_setopt = pair0_sock_setopt_raw,
-	},
 	// terminate list
 	{
 	    .pso_name = NULL,
@@ -301,8 +279,23 @@ static nni_proto pair0_proto = {
 	.proto_pipe_ops = &pair0_pipe_ops,
 };
 
+static nni_proto pair0_proto_raw = {
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_PAIR_V0, "pair" },
+	.proto_peer     = { NNI_PROTO_PAIR_V0, "pair" },
+	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
+	.proto_sock_ops = &pair0_sock_ops,
+	.proto_pipe_ops = &pair0_pipe_ops,
+};
+
 int
 nng_pair0_open(nng_socket *sidp)
 {
 	return (nni_proto_open(sidp, &pair0_proto));
+}
+
+int
+nng_pair0_open_raw(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &pair0_proto_raw));
 }

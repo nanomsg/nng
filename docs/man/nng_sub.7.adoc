@@ -19,8 +19,6 @@ nng_sub - subscriber protocol
 ----
 #include <nng/nng.h>
 #include <nng/protocol/pubsub0/sub.h>
-
-int nng_sub0_open(nng_socket *s);
 ----
 
 == DESCRIPTION
@@ -45,7 +43,7 @@ Applications should construct their messages accordingly.
 
 === Socket Operations
 
-The <<nng_sub_open.3#,`nng_sub0_open()`>> call creates a subscriber socket.
+The <<nng_sub_open.3#,`nng_sub0_open()`>> functions create a subscriber socket.
 This socket may be used to receive messages, but is unable to send them.
 Attempts to send messages will result in `NNG_ENOTSUP`.
 

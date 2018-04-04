@@ -127,10 +127,12 @@ struct nni_proto {
 
 // These flags determine which operations make sense.  We use them so that
 // we can reject attempts to create notification fds for operations that make
-// no sense.
+// no sense.  Also, we can detect raw mode, thereby providing handling for
+// that at the socket layer (NNG_PROTO_FLAG_RAW).
 #define NNI_PROTO_FLAG_RCV 1    // Protocol can receive
 #define NNI_PROTO_FLAG_SND 2    // Protocol can send
 #define NNI_PROTO_FLAG_SNDRCV 3 // Protocol can both send & recv
+#define NNI_PROTO_FLAG_RAW 4    // Protocol is raw
 
 // nni_proto_open is called by the protocol to create a socket instance
 // with its ops vector.  The intent is that applications will only see

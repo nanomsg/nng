@@ -40,7 +40,6 @@ static void pub0_pipe_fini(void *);
 // pub0_sock is our per-socket protocol private structure.
 struct pub0_sock {
 	nni_msgq *uwq;
-	bool      raw;
 	nni_aio * aio_getq;
 	nni_list  pipes;
 	nni_mtx   mtx;
@@ -83,7 +82,6 @@ pub0_sock_init(void **sp, nni_sock *sock)
 		return (rv);
 	}
 
-	s->raw = false;
 	NNI_LIST_INIT(&s->pipes, pub0_pipe, node);
 
 	s->uwq = nni_sock_sendq(sock);
@@ -273,20 +271,6 @@ pub0_pipe_send_cb(void *arg)
 	nni_msgq_aio_get(p->sendq, p->aio_getq);
 }
 
-static int
-pub0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
-{
-	pub0_sock *s = arg;
-	return (nni_copyin_bool(&s->raw, buf, sz, typ));
-}
-
-static int
-pub0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
-{
-	pub0_sock *s = arg;
-	return (nni_copyout_bool(s->raw, buf, szp, typ));
-}
-
 static void
 pub0_sock_recv(void *arg, nni_aio *aio)
 {
@@ -310,12 +294,6 @@ static nni_proto_pipe_ops pub0_pipe_ops = {
 };
 
 static nni_proto_sock_option pub0_sock_options[] = {
-	{
-	    .pso_name   = NNG_OPT_RAW,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = pub0_sock_getopt_raw,
-	    .pso_setopt = pub0_sock_setopt_raw,
-	},
 	// terminate list
 	{
 	    .pso_name = NULL,
@@ -341,8 +319,23 @@ static nni_proto pub0_proto = {
 	.proto_pipe_ops = &pub0_pipe_ops,
 };
 
+static nni_proto pub0_proto_raw = {
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_PUB_V0, "pub" },
+	.proto_peer     = { NNI_PROTO_SUB_V0, "sub" },
+	.proto_flags    = NNI_PROTO_FLAG_SND | NNI_PROTO_FLAG_RAW,
+	.proto_sock_ops = &pub0_sock_ops,
+	.proto_pipe_ops = &pub0_pipe_ops,
+};
+
 int
 nng_pub0_open(nng_socket *sidp)
 {
 	return (nni_proto_open(sidp, &pub0_proto));
+}
+
+int
+nng_pub0_open_raw(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &pub0_proto_raw));
 }

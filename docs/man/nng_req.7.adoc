@@ -16,11 +16,9 @@ nng_req - request protocol
 == SYNOPSIS
 
 [source,c]
-----------
+----
 #include <nng/protocol/reqrep0/req.h>
-
-int nng_req0_open(nng_socket *s);
-----------
+----
 
 == DESCRIPTION
 
@@ -54,7 +52,7 @@ The _req_ protocol is the requester side, and the
 
 === Socket Operations
 
-The <<nng_req_open.3#,`nng_req0_open()`>> call creates a requester socket.
+The <<nng_req_open.3#,`nng_req0_open()`>> functions create a requester socket.
 This socket may be used to send messages (requests),
 and then to receive replies.
 Generally a reply can only be received after sending a request.
@@ -70,8 +68,7 @@ that has already been placed on the wire.
 Attempts to receive on a socket with no outstanding requests will result
 in `NNG_ESTATE`. 
 
-Raw mode sockets (set with <<nng_options.5#NNG_OPT_RAW,`NNG_OPT_RAW`>>)
-ignore all these restrictions.
+<<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
 
 === Protocol Versions
 

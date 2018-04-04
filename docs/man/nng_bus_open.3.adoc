@@ -21,6 +21,8 @@ nng_bus_open - create bus socket
 #include <nng/protocol/bus0/bus.h>
 
 int nng_bus0_open(nng_socket *s);
+
+int nng_bus0_open_raw(nng_socket *s);
 ----
 
 == DESCRIPTION
@@ -28,9 +30,13 @@ int nng_bus0_open(nng_socket *s);
 The `nng_bus0_open()` function creates a <<nng_bus.7#,_bus_>> version 0
 <<nng_socket.5#,socket>> and returns it at the location pointed to by _s_.
 
+The `nng_bus0_open_raw()` function creates a <<nng_bus.7#,_bus_>> version 0
+<<nng_socket.5#,socket>> in
+<<nng.7#raw_mode,raw>> mode, and returns it at the location pointed to by _s_.
+
 == RETURN VALUES
 
-This function returns 0 on success, and non-zero otherwise.
+These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 

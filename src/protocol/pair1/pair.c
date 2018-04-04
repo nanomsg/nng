@@ -72,7 +72,7 @@ pair1_sock_fini(void *arg)
 }
 
 static int
-pair1_sock_init(void **sp, nni_sock *nsock)
+pair1_sock_init_impl(void **sp, nni_sock *nsock, bool raw)
 {
 	pair1_sock *s;
 	int         rv;
@@ -94,7 +94,7 @@ pair1_sock_init(void **sp, nni_sock *nsock)
 		return (rv);
 	}
 
-	s->raw  = false;
+	s->raw  = raw;
 	s->poly = false;
 	s->uwq  = nni_sock_sendq(nsock);
 	s->urq  = nni_sock_recvq(nsock);
@@ -102,6 +102,18 @@ pair1_sock_init(void **sp, nni_sock *nsock)
 	*sp     = s;
 
 	return (0);
+}
+
+static int
+pair1_sock_init(void **sp, nni_sock *nsock)
+{
+	return (pair1_sock_init_impl(sp, nsock, false));
+}
+
+static int
+pair1_sock_init_raw(void **sp, nni_sock *nsock)
+{
+	return (pair1_sock_init_impl(sp, nsock, true));
 }
 
 static void
@@ -397,24 +409,6 @@ pair1_sock_close(void *arg)
 }
 
 static int
-pair1_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
-{
-	pair1_sock *s = arg;
-	int         rv;
-	nni_mtx_lock(&s->mtx);
-	rv = s->started ? NNG_ESTATE : nni_copyin_bool(&s->raw, buf, sz, typ);
-	nni_mtx_unlock(&s->mtx);
-	return (rv);
-}
-
-static int
-pair1_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
-{
-	pair1_sock *s = arg;
-	return (nni_copyout_bool(s->raw, buf, szp, typ));
-}
-
-static int
 pair1_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
 {
 	pair1_sock *s = arg;
@@ -475,12 +469,6 @@ static nni_proto_pipe_ops pair1_pipe_ops = {
 
 static nni_proto_sock_option pair1_sock_options[] = {
 	{
-	    .pso_name   = NNG_OPT_RAW,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = pair1_sock_getopt_raw,
-	    .pso_setopt = pair1_sock_setopt_raw,
-	},
-	{
 	    .pso_name   = NNG_OPT_MAXTTL,
 	    .pso_type   = NNI_TYPE_INT32,
 	    .pso_getopt = pair1_sock_getopt_maxttl,
@@ -521,4 +509,29 @@ int
 nng_pair1_open(nng_socket *sidp)
 {
 	return (nni_proto_open(sidp, &pair1_proto));
+}
+
+static nni_proto_sock_ops pair1_sock_ops_raw = {
+	.sock_init    = pair1_sock_init_raw,
+	.sock_fini    = pair1_sock_fini,
+	.sock_open    = pair1_sock_open,
+	.sock_close   = pair1_sock_close,
+	.sock_recv    = pair1_sock_recv,
+	.sock_send    = pair1_sock_send,
+	.sock_options = pair1_sock_options,
+};
+
+static nni_proto pair1_proto_raw = {
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_PAIR_V1, "pair1" },
+	.proto_peer     = { NNI_PROTO_PAIR_V1, "pair1" },
+	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
+	.proto_sock_ops = &pair1_sock_ops_raw,
+	.proto_pipe_ops = &pair1_pipe_ops,
+};
+
+int
+nng_pair1_open_raw(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &pair1_proto_raw));
 }

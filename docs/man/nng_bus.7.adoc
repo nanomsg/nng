@@ -18,8 +18,6 @@ nng_bus - bus protocol
 [source,c]
 ----
 #include <nng/protocol/bus0/bus.h>
-
-int nng_bus0_open(nng_socket *s);
 ----
 
 == DESCRIPTION
@@ -51,7 +49,7 @@ the more likely that message loss is to occur.
 
 === Socket Operations
 
-The <<nng_bus_open.3#,`nng_bus0_open()`>> call creates a bus socket.
+The <<nng_bus_open.3#,`nng_bus0_open()`>> functions create a bus socket.
 This socket may be used to send and receive messages.
 Sending messages will attempt to deliver to each directly connected peer.
 

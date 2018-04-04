@@ -13,6 +13,7 @@
 #include "protocol/reqrep0/rep.h"
 #include "protocol/reqrep0/req.h"
 #include "stubs.h"
+#include "supplemental/util/platform.h"
 
 #include <string.h>
 
@@ -135,19 +136,44 @@ TestMain("REQ/REP pattern", {
 		So(nng_listen(rep, addr, NULL, 0) == 0);
 		So(nng_dial(req, addr, NULL, 0) == 0);
 
+		// Send req #1 (abc).
 		So(nng_sendmsg(req, abc, 0) == 0);
+
+		// Sleep a bit.  This is so that we ensure that our
+		// request gets to the far side.  (If we cancel too
+		// fast, then our outgoing send will be canceled before
+		// it gets to the wire.)
+		nng_msleep(20);
+
+		// Send the next next request ("def").  Note that
+		// the REP side server will have already buffered the receive
+		// request, and should simply be waiting for us to reply to
+		// abc.
 		So(nng_sendmsg(req, def, 0) == 0);
-		So(nng_recvmsg(rep, &cmd, 0) == 0);
-		So(cmd != NULL);
 
-		So(nng_sendmsg(rep, cmd, 0) == 0);
+		// Receive the first request (should be abc) on the REP server.
 		So(nng_recvmsg(rep, &cmd, 0) == 0);
-		So(nng_sendmsg(rep, cmd, 0) == 0);
-		So(nng_recvmsg(req, &cmd, 0) == 0);
-
 		So(nng_msg_len(cmd) == 4);
-		So(memcmp(nng_msg_body(cmd), "def", 4) == 0);
+		So(strcmp(nng_msg_body(cmd), "abc") == 0);
+
+		// REP sends the reply to first command.  This will be
+		// discarded by the REQ server.
+		So(nng_sendmsg(rep, cmd, 0) == 0);
+
+		// Now get the next command from the REP; should be "def".
+		So(nng_recvmsg(rep, &cmd, 0) == 0);
+		So(nng_msg_len(cmd) == 4);
+		So(strcmp(nng_msg_body(cmd), "def") == 0);
+
+		// And send it back to REQ.
+		So(nng_sendmsg(rep, cmd, 0) == 0);
+
+		// Try a req command.  This should give back "def"
+		So(nng_recvmsg(req, &cmd, 0) == 0);
+		So(nng_msg_len(cmd) == 4);
+		So(strcmp(nng_msg_body(cmd), "def") == 0);
 		nng_msg_free(cmd);
 	});
+
 	nng_fini();
 })

@@ -128,11 +128,6 @@ TestMain("Socket Operations", {
 				So(nng_getopt_bool(s1, NNG_OPT_RAW, &raw) ==
 				    0);
 				So(raw == false);
-				So(nng_setopt_bool(s1, NNG_OPT_RAW, true) ==
-				    0);
-				So(nng_getopt_bool(s1, NNG_OPT_RAW, &raw) ==
-				    0);
-				So(raw == true);
 			});
 
 			Convey("URL option works", {
@@ -255,16 +250,9 @@ TestMain("Socket Operations", {
 				       sz) == NNG_EINVAL);
 			});
 
-			Convey("Bogus raw fails", {
-				// Bool type is 1 byte.
-				So(nng_setopt_int(s1, NNG_OPT_RAW, 42) ==
-				    NNG_EBADTYPE);
-				So(nng_setopt_int(s1, NNG_OPT_RAW, -42) ==
-				    NNG_EBADTYPE);
-				So(nng_setopt_int(s1, NNG_OPT_RAW, 0) ==
-				    NNG_EBADTYPE);
-				So(nng_setopt(s1, NNG_OPT_RAW, "abcd", 4) ==
-				    NNG_EINVAL);
+			Convey("Cannot set raw", {
+				So(nng_setopt_bool(s1, NNG_OPT_RAW, true) ==
+				    NNG_EREADONLY);
 			});
 
 			Convey("Unsupported options fail", {

@@ -41,7 +41,6 @@ struct rep0_sock {
 	nni_msgq *  uwq;
 	nni_msgq *  urq;
 	nni_mtx     lk;
-	bool        raw;
 	int         ttl;
 	nni_idhash *pipes;
 	char *      btrace;
@@ -92,7 +91,6 @@ rep0_sock_init(void **sp, nni_sock *sock)
 	}
 
 	s->ttl        = 8; // Per RFC
-	s->raw        = false;
 	s->btrace     = NULL;
 	s->btrace_len = 0;
 	s->uwq        = nni_sock_sendq(sock);
@@ -353,25 +351,6 @@ rep0_pipe_putq_cb(void *arg)
 }
 
 static int
-rep0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
-{
-	rep0_sock *s = arg;
-	int        rv;
-
-	nni_mtx_lock(&s->lk);
-	rv = nni_copyin_bool(&s->raw, buf, sz, typ);
-	nni_mtx_unlock(&s->lk);
-	return (rv);
-}
-
-static int
-rep0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
-{
-	rep0_sock *s = arg;
-	return (nni_copyout_bool(s->raw, buf, szp, typ));
-}
-
-static int
 rep0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
 {
 	rep0_sock *s = arg;
@@ -393,10 +372,6 @@ rep0_sock_filter(void *arg, nni_msg *msg)
 	size_t     len;
 
 	nni_mtx_lock(&s->lk);
-	if (s->raw) {
-		nni_mtx_unlock(&s->lk);
-		return (msg);
-	}
 
 	len    = nni_msg_header_len(msg);
 	header = nni_msg_header(msg);
@@ -417,6 +392,13 @@ rep0_sock_filter(void *arg, nni_msg *msg)
 }
 
 static void
+rep0_sock_send_raw(void *arg, nni_aio *aio)
+{
+	rep0_sock *s = arg;
+	nni_msgq_aio_put(s->uwq, aio);
+}
+
+static void
 rep0_sock_send(void *arg, nni_aio *aio)
 {
 	rep0_sock *s = arg;
@@ -424,12 +406,6 @@ rep0_sock_send(void *arg, nni_aio *aio)
 	nni_msg *  msg;
 
 	nni_mtx_lock(&s->lk);
-	if (s->raw) {
-		// Pass thru
-		nni_mtx_unlock(&s->lk);
-		nni_msgq_aio_put(s->uwq, aio);
-		return;
-	}
 	if (s->btrace == NULL) {
 		nni_mtx_unlock(&s->lk);
 		nni_aio_finish_error(aio, NNG_ESTATE);
@@ -475,12 +451,6 @@ static nni_proto_pipe_ops rep0_pipe_ops = {
 
 static nni_proto_sock_option rep0_sock_options[] = {
 	{
-	    .pso_name   = NNG_OPT_RAW,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = rep0_sock_getopt_raw,
-	    .pso_setopt = rep0_sock_setopt_raw,
-	},
-	{
 	    .pso_name   = NNG_OPT_MAXTTL,
 	    .pso_type   = NNI_TYPE_INT32,
 	    .pso_getopt = rep0_sock_getopt_maxttl,
@@ -503,6 +473,17 @@ static nni_proto_sock_ops rep0_sock_ops = {
 	.sock_recv    = rep0_sock_recv,
 };
 
+static nni_proto_sock_ops rep0_sock_ops_raw = {
+	.sock_init    = rep0_sock_init,
+	.sock_fini    = rep0_sock_fini,
+	.sock_open    = rep0_sock_open,
+	.sock_close   = rep0_sock_close,
+	.sock_options = rep0_sock_options,
+	.sock_filter  = NULL, // No filtering for raw mode
+	.sock_send    = rep0_sock_send_raw,
+	.sock_recv    = rep0_sock_recv,
+};
+
 static nni_proto rep0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_REP_V0, "rep" },
@@ -512,8 +493,23 @@ static nni_proto rep0_proto = {
 	.proto_pipe_ops = &rep0_pipe_ops,
 };
 
+static nni_proto rep0_proto_raw = {
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_REP_V0, "rep" },
+	.proto_peer     = { NNI_PROTO_REQ_V0, "req" },
+	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
+	.proto_sock_ops = &rep0_sock_ops_raw,
+	.proto_pipe_ops = &rep0_pipe_ops,
+};
+
 int
 nng_rep0_open(nng_socket *sidp)
 {
 	return (nni_proto_open(sidp, &rep0_proto));
+}
+
+int
+nng_rep0_open_raw(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &rep0_proto_raw));
 }

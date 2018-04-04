@@ -73,45 +73,72 @@ other languages please check the http://nanomsg.org/[website].
 
 == Conceptual Overview
 
-_nng_ presents a _socket_ view of networking.  The sockets are constructed
-using protocol-specific functions, as a given socket implements precisely
-one _nng_ protocol.
+_nng_ presents a _socket_ view of networking.
+The sockets are constructed using protocol-specific functions, as a given
+socket implements precisely one _nng_ protocol.
 
 Each socket can be used to send and receive messages (if the protocol)
-supports it, and implements the appropriate protocol semantics.  For
-example, <<nng_sub.7#,nng_sub(7)>> sockets automatically filter incoming
+supports it, and implements the appropriate protocol semantics.
+For example, <<nng_sub.7#,_sub_>> sockets automatically filter incoming
 messages to discard those for topics that have not been subscribed.
 
 _nng_ sockets are message oriented, so that messages are either delivered
-wholly, or not at all.  Partial delivery is not possible.  Furthermore,
-_nng_ does not provide any other delivery or ordering guarantees;
-messages may be dropped or reordered.  (Some protocols, such as
-<<nng_req.7#,nng_req(7)>> may offer stronger guarantees by
-performing their own retry and validation schemes.)
+wholly, or not at all.  Partial delivery is not possible.
+Furthermore, _nng_ does not provide any other delivery or ordering guarantees;
+messages may be dropped or reordered
+(Some protocols, such as <<nng_req.7#,_req_>> may offer stronger
+guarantees by performing their own retry and validation schemes.)
 
 Each socket can have zero, one, or many "endpoints", which are either
-_listeners_ or _dialers_. (A given socket may freely choose whether it uses
-listeners, dialers, or both.)  These "endpoints" provide access to
-underlying transports, such as TCP, etc.
+_listeners_ or _dialers_.
+(A given socket may freely choose whether it uses listeners, dialers, or both.)
+These "endpoints" provide access to underlying transports, such as TCP, etc.
 
-Each endpoint is associated with a URL, which is a service address.  For
-dialers, this will be the service address that will be contacted, whereas
-for listeners this is where the listener will bind and watch for new
-connections.
+Each endpoint is associated with a URL, which is a service address.
+For dialers, this will be the service address that will be contacted, whereas
+for listeners this is where the listener will accept new connections.
 
-Endpoints do not themselves transport data.  They are instead responsible
-for the creation of _pipes_, which can be thought of as message-oriented,
-connected, streams.  Pipes frequently correspond to a single underlying
-byte stream -- for example both IPC and TCP transports implement their
-pipes using a 1:1 relationship with a connected socket.
+Endpoints do not themselves transport data.
+They are instead responsible for the creation of _pipes_, which can be
+thought of as message-oriented connected streams.
+Pipes frequently correspond to a single underlying byte stream.
+For example both IPC and TCP transports implement their
+pipes using a 1:1 relationship with a connected operating system socket.
 
-Endpoints create pipes as needed.  Listeners will create them when a new
-client connection request arrives, and dialers will generally create one,
-then wait for it to disconnect before reconnecting.
+Endpoints create pipes as needed.
+Listeners will create them when a new client connection request arrives,
+and dialers will generally create one, then wait for it to disconnect before
+reconnecting.
 
 Most applications should not have to worry about endpoints or pipes at
 all; the socket abstraction should provide all the functionality needed
 other than in a few specific circumstances.
+
+[[raw_mode]](((raw mode)))
+=== Raw Mode
+
+(((cooked mode)))
+Most applications will use _nng_ sockets in "`cooked`" mode. 
+This mode provides the full semantics of the protocol.
+For example, <<nng_req.7#,_req_>> sockets will automatically
+match a reply to a request, and resend requests periodically if no reply
+was received.
+
+There are situations, such as with <<nng_device.7#,proxies>>,
+where it is desirable to bypass these semantics and simply pass messages
+to and from the socket with no extra semantic handling.
+This is possible using "`raw`" mode sockets.
+
+Raw mode sockets are generally constructed with a different function,
+such as <<nng_req_open.3#,`nng_req0_open_raw()`>>.
+Using these sockets, the application can simply send and receive messages,
+and is responsible for supplying any additional socket semantics.
+Typically this means that the application will need to inspect message
+headers on incoming messages, and supply them on outgoing messages.
+
+TIP: The <<nng_device.3#,`nng_device()`>> function only works with raw mode
+sockets, but as it only forwards the messages, no additional application
+processing is needed.
 
 === URLs
 

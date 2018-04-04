@@ -31,6 +31,11 @@ This function is used to create forwarders, which can be used to create
 complex network topologies to provide for improved ((horizontal scalability)),
 reliability, and isolation.
 
+Only <<nng_options.5#NNG_OPT_RAW,raw>> mode sockets may be used with this
+function.
+These can be created using `_raw` forms of the various socket constructors,
+such as <<nng_req_open.3#,`nng_req0_open_raw()`>>.
+
 The `nng_device()` function does not return until one of the sockets
 is closed.
 
@@ -60,11 +65,14 @@ be a _bus_ socket.
 
 === Operation
 
-This `nng_device()` function puts each socket into raw mode
-(see <<nng_options.5#NNG_OPT_RAW,`NNG_OPT_RAW`>>), and then moves messages
-between them.
-When a protocol has a ((backtrace)) style header, routing information is
-added as the message crosses the forwarder, allowing replies to be
+The `nng_device()` function moves messages between the provided sockets.
+
+When a protocol has a ((backtrace)) style header, routing information
+is present in the header of received messages, and is copied to the
+header of the output bound message.
+The underlying raw mode protocols supply the necessary header
+adjustments to add or remove routing headers as needed.
+This allows replies to be
 returned to requestors, and responses to be routed back to surveyors.
 
 Additionally, some protocols have a maximum ((time-to-live)) to protect

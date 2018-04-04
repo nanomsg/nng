@@ -16,11 +16,9 @@ nng_pull - pull protocol
 == SYNOPSIS
 
 [source,c]
-----------
+----
 #include <nng/protocol/pipeline0/pull.h>
-
-int nng_pull0_open(nng_socket *s);
-----------
+----
 
 == DESCRIPTION
 
@@ -37,7 +35,7 @@ This property makes this pattern useful in ((load-balancing)) scenarios.
 
 === Socket Operations
 
-The <<nng_pull_open.3#,`nng_pull0_open()`>> call creates a puller socket.
+The <<nng_pull_open.3#,`nng_pull0_open()`>> functions create a puller socket.
 This socket may be used to receive messages, but is unable to send them.
 Attempts to send messages will result in `NNG_ENOTSUP`.
 

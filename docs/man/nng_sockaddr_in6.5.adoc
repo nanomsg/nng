@@ -28,7 +28,6 @@ typedef struct {
     uint16_t sa_port;
     uint8_t  sa_addr[16];
 } nng_sockaddr_in6;
-
 ----
 
 == DESCRIPTION

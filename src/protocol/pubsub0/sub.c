@@ -44,7 +44,6 @@ struct sub0_topic {
 struct sub0_sock {
 	nni_list  topics;
 	nni_msgq *urq;
-	bool      raw;
 	nni_mtx   lk;
 };
 
@@ -66,7 +65,6 @@ sub0_sock_init(void **sp, nni_sock *sock)
 	}
 	nni_mtx_init(&s->lk);
 	NNI_LIST_INIT(&s->topics, sub0_topic, node);
-	s->raw = false;
 
 	s->urq = nni_sock_recvq(sock);
 	*sp    = s;
@@ -277,20 +275,6 @@ sub0_unsubscribe(void *arg, const void *buf, size_t sz, int typ)
 	return (NNG_ENOENT);
 }
 
-static int
-sub0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
-{
-	sub0_sock *s = arg;
-	return (nni_copyin_bool(&s->raw, buf, sz, typ));
-}
-
-static int
-sub0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
-{
-	sub0_sock *s = arg;
-	return (nni_copyout_bool(s->raw, buf, szp, typ));
-}
-
 static void
 sub0_sock_send(void *arg, nni_aio *aio)
 {
@@ -315,16 +299,13 @@ sub0_sock_filter(void *arg, nni_msg *msg)
 	size_t      len;
 	int         match;
 
-	nni_mtx_lock(&s->lk);
-	if (s->raw) {
-		nni_mtx_unlock(&s->lk);
-		return (msg);
-	}
-
 	body = nni_msg_body(msg);
 	len  = nni_msg_len(msg);
 
 	match = 0;
+
+	nni_mtx_lock(&s->lk);
+
 	// Check to see if the message matches one of our subscriptions.
 	NNI_LIST_FOREACH (&s->topics, topic) {
 		if (len >= topic->len) {
@@ -362,12 +343,6 @@ static nni_proto_pipe_ops sub0_pipe_ops = {
 
 static nni_proto_sock_option sub0_sock_options[] = {
 	{
-	    .pso_name   = NNG_OPT_RAW,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = sub0_sock_getopt_raw,
-	    .pso_setopt = sub0_sock_setopt_raw,
-	},
-	{
 	    .pso_name   = NNG_OPT_SUB_SUBSCRIBE,
 	    .pso_type   = NNI_TYPE_OPAQUE,
 	    .pso_getopt = NULL,
@@ -396,6 +371,17 @@ static nni_proto_sock_ops sub0_sock_ops = {
 	.sock_options = sub0_sock_options,
 };
 
+static nni_proto_sock_ops sub0_sock_ops_raw = {
+	.sock_init    = sub0_sock_init,
+	.sock_fini    = sub0_sock_fini,
+	.sock_open    = sub0_sock_open,
+	.sock_close   = sub0_sock_close,
+	.sock_send    = sub0_sock_send,
+	.sock_recv    = sub0_sock_recv,
+	.sock_filter  = NULL, // raw does not filter
+	.sock_options = sub0_sock_options,
+};
+
 static nni_proto sub0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_SUB_V0, "sub" },
@@ -405,8 +391,23 @@ static nni_proto sub0_proto = {
 	.proto_pipe_ops = &sub0_pipe_ops,
 };
 
+static nni_proto sub0_proto_raw = {
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_SUB_V0, "sub" },
+	.proto_peer     = { NNI_PROTO_PUB_V0, "pub" },
+	.proto_flags    = NNI_PROTO_FLAG_RCV | NNI_PROTO_FLAG_RAW,
+	.proto_sock_ops = &sub0_sock_ops_raw,
+	.proto_pipe_ops = &sub0_pipe_ops,
+};
+
 int
 nng_sub0_open(nng_socket *sidp)
 {
 	return (nni_proto_open(sidp, &sub0_proto));
+}
+
+int
+nng_sub0_open_raw(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &sub0_proto_raw));
 }

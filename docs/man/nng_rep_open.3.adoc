@@ -28,9 +28,13 @@ int nng_rep0_open(nng_socket *s);
 The `nng_rep0_open()` function creates a <<nng_rep.7#,_rep_>> version 0
 <<nng_socket.5#,socket>> and returns it at the location pointed to by _s_.
 
+The `nng_rep0_open_raw()` function creates a <<nng_rep.7#,_rep_>> version 0
+<<nng_socket.5#,socket>>
+in <<nng.7#,raw>> mode and returns it at the location pointed to by _s_.
+
 == RETURN VALUES
 
-This function returns 0 on success, and non-zero otherwise.
+These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 

@@ -21,6 +21,8 @@ nng_respondent_open - create respondent socket
 #include <nng/protocol/survey0/respond.h>
 
 int nng_respondent0_open(nng_socket *s);
+
+int nng_respondent0_open_raw(nng_socket *s);
 ----
 
 == DESCRIPTION
@@ -30,9 +32,14 @@ The `nng_respondent0_open()` function creates a
 version 0 <<nng_socket.5#,socket>> and returns it at the location
 pointed to by _s_.
 
+The `nng_respondent0_open_raw()` function creates a
+<<nng_respondent.7#,_respondent_>>
+version 0 <<nng_socket.5#,socket>> in
+<<nng.7#raw_mode,raw>> mode and returns it at the location pointed to by _s_.
+
 == RETURN VALUES
 
-This function returns 0 on success, and non-zero otherwise.
+These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 

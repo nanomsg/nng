@@ -105,6 +105,8 @@ nni_device_init(nni_device_data **dp, nni_sock *s1, nni_sock *s2)
 	nni_device_data *dd;
 	int              npath = 2;
 	int              i;
+	bool             raw;
+	size_t           rsz;
 
 	// Specifying either of these as null turns the device into
 	// a loopback reflector.
@@ -120,6 +122,21 @@ nni_device_init(nni_device_data **dp, nni_sock *s1, nni_sock *s2)
 	}
 	if ((nni_sock_peer(s1) != nni_sock_proto(s2)) ||
 	    (nni_sock_peer(s2) != nni_sock_proto(s1))) {
+		return (NNG_EINVAL);
+	}
+
+	raw = false;
+	rsz = sizeof(raw);
+	if (((nni_sock_getopt(s1, NNG_OPT_RAW, &raw, &rsz, NNI_TYPE_BOOL) !=
+	        0)) ||
+	    (!raw)) {
+		return (NNG_EINVAL);
+	}
+
+	rsz = sizeof(raw);
+	if (((nni_sock_getopt(s2, NNG_OPT_RAW, &raw, &rsz, NNI_TYPE_BOOL) !=
+	        0)) ||
+	    (!raw)) {
 		return (NNG_EINVAL);
 	}
 
@@ -201,7 +218,7 @@ nni_device(nni_sock *s1, nni_sock *s2)
 	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
 		return (rv);
 	}
-	if (nni_device_init(&dd, s1, s2) != 0) {
+	if ((rv = nni_device_init(&dd, s1, s2)) != 0) {
 		nni_aio_fini(aio);
 		return (rv);
 	}

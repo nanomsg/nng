@@ -193,6 +193,13 @@ nni_sock_getopt_recvfd(nni_sock *s, void *buf, size_t *szp, int typ)
 }
 
 static int
+nni_sock_getopt_raw(nni_sock *s, void *buf, size_t *szp, int typ)
+{
+	bool raw = ((nni_sock_flags(s) & NNI_PROTO_FLAG_RAW) != 0);
+	return (nni_copyout_bool(raw, buf, szp, typ));
+}
+
+static int
 nni_sock_setopt_recvtimeo(nni_sock *s, const void *buf, size_t sz, int typ)
 {
 	return (nni_copyin_ms(&s->s_rcvtimeo, buf, sz, typ));
@@ -346,6 +353,12 @@ static const nni_socket_option nni_sock_options[] = {
 	    .so_type   = NNI_TYPE_STRING,
 	    .so_getopt = nni_sock_getopt_sockname,
 	    .so_setopt = nni_sock_setopt_sockname,
+	},
+	{
+	    .so_name   = NNG_OPT_RAW,
+	    .so_type   = NNI_TYPE_BOOL,
+	    .so_getopt = nni_sock_getopt_raw,
+	    .so_setopt = NULL,
 	},
 	// terminate list
 	{
@@ -920,7 +933,8 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *v, size_t sz, int t)
 		return (NNG_ECLOSED);
 	}
 
-	// Protocol options.
+	// Protocol options.  The protocol can override options that
+	// the socket framework would otherwise supply, like buffer sizes.
 	for (pso = s->s_sock_ops.sock_options; pso->pso_name != NULL; pso++) {
 		if (strcmp(pso->pso_name, name) != 0) {
 			continue;
@@ -1076,7 +1090,8 @@ nni_sock_getopt(nni_sock *s, const char *name, void *val, size_t *szp, int t)
 		return (NNG_ECLOSED);
 	}
 
-	// Protocol specific options.
+	// Protocol specific options.  The protocol can override
+	// options like the send buffer or notification descriptors this way.
 	for (pso = s->s_sock_ops.sock_options; pso->pso_name != NULL; pso++) {
 		if (strcmp(name, pso->pso_name) != 0) {
 			continue;

@@ -19,8 +19,6 @@ nng_surveyor - surveyor protocol
 ----
 #include <nng/nng.h>
 #include <nng/protocol/survey0/survey.h>
-
-int nng_surveyor0_open(nng_socket *s);
 ----
 
 == DESCRIPTION
@@ -43,7 +41,7 @@ The _surveyor_ protocol is the surveyor side, and the
 === Socket Operations
 
 The <<nng_surveyor_open.3#,`nng_surveyor0_open()`>>
-call creates a surveyor socket.
+functions create a surveyor socket.
 This socket may be used to send messages (surveys), and then to receive replies.
 A reply can only be received after sending a survey.
 A surveyor can normally expect to receive at most one reply from each responder.
@@ -59,8 +57,7 @@ Only one survey can be outstanding at a time; sending another survey will
 cancel the prior one, and any responses from respondents from the prior
 survey that arrive after this will be discarded.
 
-Raw mode sockets (set with <<nng_options.5#NNG_OPT_RAW,`NNG_OPT_RAW`>>)
-ignore all these restrictions.
+<<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
 
 === Protocol Versions
 

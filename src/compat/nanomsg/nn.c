@@ -110,40 +110,81 @@ nn_errno(void)
 static const struct {
 	uint16_t p_id;
 	int (*p_open)(nng_socket *);
+	int (*p_open_raw)(nng_socket *);
 } nn_protocols[] = {
-// clang-format off
 #ifdef NNG_HAVE_BUS0
-	{ NN_BUS, nng_bus0_open },
+	{
+	    .p_id       = NN_BUS,
+	    .p_open     = nng_bus0_open,
+	    .p_open_raw = nng_bus0_open_raw,
+	},
 #endif
 #ifdef NNG_HAVE_PAIR0
-	{ NN_PAIR, nng_pair0_open },
-#endif
-#ifdef NNG_HAVE_PUSH0
-	{ NN_PUSH, nng_push0_open },
+	{
+	    .p_id       = NN_PAIR,
+	    .p_open     = nng_pair0_open,
+	    .p_open_raw = nng_pair0_open_raw,
+	},
 #endif
 #ifdef NNG_HAVE_PULL0
-	{ NN_PULL, nng_pull0_open },
+	{
+	    .p_id       = NN_PULL,
+	    .p_open     = nng_pull0_open,
+	    .p_open_raw = nng_pull0_open_raw,
+	},
+#endif
+#ifdef NNG_HAVE_PUSH0
+	{
+	    .p_id       = NN_PUSH,
+	    .p_open     = nng_push0_open,
+	    .p_open_raw = nng_push0_open_raw,
+	},
 #endif
 #ifdef NNG_HAVE_PUB0
-	{ NN_PUB, nng_pub0_open },
+	{
+	    .p_id       = NN_PUB,
+	    .p_open     = nng_pub0_open,
+	    .p_open_raw = nng_pub0_open_raw,
+	},
 #endif
 #ifdef NNG_HAVE_SUB0
-	{ NN_SUB, nng_sub0_open },
+	{
+	    .p_id       = NN_SUB,
+	    .p_open     = nng_sub0_open,
+	    .p_open_raw = nng_sub0_open_raw,
+	},
 #endif
 #ifdef NNG_HAVE_REQ0
-	{ NN_REQ, nng_req0_open },
+	{
+	    .p_id       = NN_REQ,
+	    .p_open     = nng_req0_open,
+	    .p_open_raw = nng_req0_open_raw,
+	},
 #endif
 #ifdef NNG_HAVE_REP0
-	{ NN_REP, nng_rep0_open },
+	{
+	    .p_id       = NN_REP,
+	    .p_open     = nng_rep0_open,
+	    .p_open_raw = nng_rep0_open_raw,
+	},
 #endif
 #ifdef NNG_HAVE_SURVEYOR0
-	{ NN_SURVEYOR, nng_surveyor0_open },
+	{
+	    .p_id       = NN_SURVEYOR,
+	    .p_open     = nng_surveyor0_open,
+	    .p_open_raw = nng_surveyor0_open_raw,
+	},
 #endif
 #ifdef NNG_HAVE_RESPONDENT0
-	{ NN_RESPONDENT, nng_respondent0_open },
+	{
+	    .p_id       = NN_RESPONDENT,
+	    .p_open     = nng_respondent0_open,
+	    .p_open_raw = nng_respondent0_open_raw,
+	},
 #endif
-	{ 0, NULL },
-	// clang-format on
+	{
+	    .p_id = 0,
+	},
 };
 
 int
@@ -168,17 +209,16 @@ nn_socket(int domain, int protocol)
 		return (-1);
 	}
 
-	if ((rv = nn_protocols[i].p_open(&sock)) != 0) {
+	if (domain == AF_SP_RAW) {
+		rv = nn_protocols[i].p_open_raw(&sock);
+	} else {
+		rv = nn_protocols[i].p_open(&sock);
+	}
+	if (rv != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
-	if (domain == AF_SP_RAW) {
-		if ((rv = nng_setopt_bool(sock, NNG_OPT_RAW, true)) != 0) {
-			nn_seterror(rv);
-			nng_close(sock);
-			return (-1);
-		}
-	}
+
 	return ((int) sock);
 }
 

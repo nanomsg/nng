@@ -39,7 +39,6 @@ static void surv0_timeout(void *);
 struct surv0_sock {
 	nni_duration   survtime;
 	nni_time       expire;
-	bool           raw;
 	int            ttl;
 	uint32_t       nextid; // next id
 	uint32_t       survid; // outstanding request ID (big endian)
@@ -92,7 +91,6 @@ surv0_sock_init(void **sp, nni_sock *nsock)
 	nni_timer_init(&s->timer, surv0_timeout, s);
 
 	s->nextid   = nni_random();
-	s->raw      = false;
 	s->survtime = NNI_SECOND;
 	s->expire   = NNI_TIME_ZERO;
 	s->uwq      = nni_sock_sendq(nsock);
@@ -275,28 +273,6 @@ failed:
 }
 
 static int
-surv0_sock_setopt_raw(void *arg, const void *buf, size_t sz, int typ)
-{
-	surv0_sock *s = arg;
-	int         rv;
-
-	nni_mtx_lock(&s->mtx);
-	if ((rv = nni_copyin_bool(&s->raw, buf, sz, typ)) == 0) {
-		s->survid = 0;
-		nni_timer_cancel(&s->timer);
-	}
-	nni_mtx_unlock(&s->mtx);
-	return (rv);
-}
-
-static int
-surv0_sock_getopt_raw(void *arg, void *buf, size_t *szp, int typ)
-{
-	surv0_sock *s = arg;
-	return (nni_copyout_bool(s->raw, buf, szp, typ));
-}
-
-static int
 surv0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
 {
 	surv0_sock *s = arg;
@@ -391,6 +367,14 @@ surv0_sock_recv(void *arg, nni_aio *aio)
 }
 
 static void
+surv0_sock_send_raw(void *arg, nni_aio *aio)
+{
+	surv0_sock *s = arg;
+
+	nni_msgq_aio_put(s->uwq, aio);
+}
+
+static void
 surv0_sock_send(void *arg, nni_aio *aio)
 {
 	surv0_sock *s = arg;
@@ -398,13 +382,6 @@ surv0_sock_send(void *arg, nni_aio *aio)
 	int         rv;
 
 	nni_mtx_lock(&s->mtx);
-	if (s->raw) {
-		// No automatic retry, and the request ID must
-		// be in the header coming down.
-		nni_mtx_unlock(&s->mtx);
-		nni_msgq_aio_put(s->uwq, aio);
-		return;
-	}
 
 	// Generate a new request ID.  We always set the high
 	// order bit so that the peer can locate the end of the
@@ -437,11 +414,6 @@ surv0_sock_filter(void *arg, nni_msg *msg)
 	surv0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
-	if (s->raw) {
-		// Pass it unmolested
-		nni_mtx_unlock(&s->mtx);
-		return (msg);
-	}
 
 	if ((nni_msg_header_len(msg) < sizeof(uint32_t)) ||
 	    (nni_msg_header_trim_u32(msg) != s->survid)) {
@@ -463,12 +435,6 @@ static nni_proto_pipe_ops surv0_pipe_ops = {
 };
 
 static nni_proto_sock_option surv0_sock_options[] = {
-	{
-	    .pso_name   = NNG_OPT_RAW,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = surv0_sock_getopt_raw,
-	    .pso_setopt = surv0_sock_setopt_raw,
-	},
 	{
 	    .pso_name   = NNG_OPT_SURVEYOR_SURVEYTIME,
 	    .pso_type   = NNI_TYPE_DURATION,
@@ -498,6 +464,17 @@ static nni_proto_sock_ops surv0_sock_ops = {
 	.sock_options = surv0_sock_options,
 };
 
+static nni_proto_sock_ops surv0_sock_ops_raw = {
+	.sock_init    = surv0_sock_init,
+	.sock_fini    = surv0_sock_fini,
+	.sock_open    = surv0_sock_open,
+	.sock_close   = surv0_sock_close,
+	.sock_send    = surv0_sock_send_raw,
+	.sock_recv    = surv0_sock_recv,
+	.sock_filter  = surv0_sock_filter,
+	.sock_options = surv0_sock_options,
+};
+
 static nni_proto surv0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_SURVEYOR_V0, "surveyor" },
@@ -507,8 +484,23 @@ static nni_proto surv0_proto = {
 	.proto_pipe_ops = &surv0_pipe_ops,
 };
 
+static nni_proto surv0_proto_raw = {
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_SURVEYOR_V0, "surveyor" },
+	.proto_peer     = { NNI_PROTO_RESPONDENT_V0, "respondent" },
+	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
+	.proto_sock_ops = &surv0_sock_ops_raw,
+	.proto_pipe_ops = &surv0_pipe_ops,
+};
+
 int
 nng_surveyor0_open(nng_socket *sidp)
 {
 	return (nni_proto_open(sidp, &surv0_proto));
+}
+
+int
+nng_surveyor0_open_raw(nng_socket *sidp)
+{
+	return (nni_proto_open(sidp, &surv0_proto_raw));
 }

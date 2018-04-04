@@ -18,8 +18,6 @@ nng_respondent - respondent protocol
 [source,c]
 ----------
 #include <nng/protocol/survey0/respond.h>
-
-int nng_respondent0_open(nng_socket *s);
 ----------
 
 == DESCRIPTION
@@ -41,7 +39,7 @@ The _respondent_ protocol is the respondent side, and the
 
 === Socket Operations
 
-The <<nng_respondent_open.3#,`nng_respondent0_open()`>> call creates a
+The <<nng_respondent_open.3#,`nng_respondent0_open()`>> functions create a
 respondent socket.
 This socket may be used to receive messages, and then to send replies.
 A reply can only be sent after receiving a survey, and generally the

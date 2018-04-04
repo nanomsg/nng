@@ -18,8 +18,6 @@ nng_rep - reply protocol
 [source,c]
 ----
 #include <nng/protocol/reqrep0/rep.h>
-
-int nng_rep0_open(nng_socket *s);
 ----
 
 == DESCRIPTION
@@ -40,7 +38,7 @@ The _rep_ protocol is the replier side, and the
 
 === Socket Operations
 
-The <<nng_rep_open.3#,`nng_rep0_open()`>> call creates a replier socket.
+The <<nng_rep_open.3#,`nng_rep0_open()`>> functions create a replier socket.
 This socket may be used to receive messages (requests), and then to send
 replies.
 Generally a reply can only be sent after receiving a request.
@@ -50,8 +48,7 @@ is no outstanding request.)
 Attempts to send on a socket with no outstanding requests will result
 in `NNG_ESTATE`. 
 
-Raw mode sockets (set with <<nng_options.5#NNG_OPT_RAW,`NNG_OPT_RAW`>>)
-ignore all these restrictions.
+<<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
 
 === Protocol Versions
 

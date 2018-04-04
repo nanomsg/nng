@@ -146,19 +146,44 @@ TestMain("PUB/SUB pattern", {
 			So(nng_recvmsg(sub, &msg, 0) == NNG_ETIMEDOUT);
 		});
 
-		Convey("Subs in raw receive", {
-
-			nng_msg *msg;
-
-			So(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 90) == 0);
-			So(nng_setopt_bool(sub, NNG_OPT_RAW, true) == 0);
-
-			So(nng_msg_alloc(&msg, 0) == 0);
-			APPENDSTR(msg, "/some/like/it/raw");
-			So(nng_sendmsg(pub, msg, 0) == 0);
-			So(nng_recvmsg(sub, &msg, 0) == 0);
-			CHECKSTR(msg, "/some/like/it/raw");
-			nng_msg_free(msg);
-		});
 	});
+
+	Convey("Subs in raw receive", {
+
+		nng_msg *  msg;
+		nng_socket pub;
+		nng_socket sub;
+		bool       raw;
+
+		So(nng_pub_open(&pub) == 0);
+
+		So(nng_sub_open_raw(&sub) == 0);
+
+		Reset({
+			nng_close(pub);
+			nng_close(sub);
+		});
+
+		// Most applications will usually have the pub listen,
+		// and the sub dial.  However, this creates a problem
+		// for our tests, since we can wind up trying to push
+		// data before the pipe is fully registered (the accept
+		// runs asynchronously.)
+		So(nng_listen(sub, addr, NULL, 0) == 0);
+		So(nng_dial(pub, addr, NULL, 0) == 0);
+
+		nng_msleep(20); // give time for connecting threads
+
+		So(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 90) == 0);
+		So(nng_getopt_bool(sub, NNG_OPT_RAW, &raw) == 0);
+		So(raw == true);
+
+		So(nng_msg_alloc(&msg, 0) == 0);
+		APPENDSTR(msg, "/some/like/it/raw");
+		So(nng_sendmsg(pub, msg, 0) == 0);
+		So(nng_recvmsg(sub, &msg, 0) == 0);
+		CHECKSTR(msg, "/some/like/it/raw");
+		nng_msg_free(msg);
+	});
+
 })
