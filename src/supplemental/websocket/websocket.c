@@ -604,8 +604,7 @@ ws_write_cb(void *arg)
 	if (aio != NULL) {
 		nng_msg *msg = nni_aio_get_msg(aio);
 		nni_aio_set_msg(aio, NULL);
-		nni_aio_set_synch(aio);
-		nni_aio_finish(aio, 0, nni_msg_len(msg));
+		nni_aio_finish_synch(aio, 0, nni_msg_len(msg));
 		nni_msg_free(msg);
 	}
 }
@@ -1022,8 +1021,7 @@ ws_read_cb(void *arg)
 			body += frame->len;
 		}
 		nni_aio_set_msg(wm->aio, msg);
-		nni_aio_set_synch(aio);
-		nni_aio_finish(wm->aio, 0, nni_msg_len(msg));
+		nni_aio_finish_synch(wm->aio, 0, nni_msg_len(msg));
 		ws_msg_fini(wm);
 	}
 }

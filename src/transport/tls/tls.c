@@ -257,8 +257,7 @@ nni_tls_pipe_send_cb(void *arg)
 	n   = nni_msg_len(msg);
 	nni_aio_set_msg(aio, NULL);
 	nni_msg_free(msg);
-	nni_aio_set_synch(aio);
-	nni_aio_finish(aio, 0, n);
+	nni_aio_finish_synch(aio, 0, n);
 }
 
 static void
@@ -329,9 +328,8 @@ nni_tls_pipe_recv_cb(void *arg)
 	}
 	nni_mtx_unlock(&p->mtx);
 
-	nni_aio_set_synch(aio);
 	nni_aio_set_msg(aio, msg);
-	nni_aio_finish(aio, 0, nni_msg_len(msg));
+	nni_aio_finish_synch(aio, 0, nni_msg_len(msg));
 	return;
 
 recv_error:

@@ -1368,7 +1368,6 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 
 	// This should be non-blocking/best-effort, so while
 	// not great that we're holding the lock, also not tragic.
-	nni_aio_set_synch(aio);
 	nni_plat_udp_send(udp, aio);
 
 	return (0);

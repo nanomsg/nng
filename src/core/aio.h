@@ -79,19 +79,6 @@ extern void *nni_aio_get_output(nni_aio *, unsigned);
 extern void     nni_aio_set_msg(nni_aio *, nni_msg *);
 extern nni_msg *nni_aio_get_msg(nni_aio *);
 
-// nni_aio_set_synch sets a synchronous completion flag on the AIO.
-// When this is set, the next time the AIO is completed, the callback
-// be run synchronously, from the thread calling the finish routine.
-// It is important that this only be set when the provider knows that
-// it is not holding any locks or resources when completing the operation,
-// or when the consumer knows that the callback routine does not acquire
-// any locks.  Use with caution to avoid deadlocks.  The flag is cleared
-// automatically when the completion callback is executed.  Some care has
-// been taken so that other aio operations like aio_wait will work,
-// although it is still an error to try waiting for an aio from that aio's
-// completion callback.
-void nni_aio_set_synch(nni_aio *);
-
 // nni_aio_result returns the result code (0 on success, or an NNG errno)
 // for the operation.  It is only valid to call this when the operation is
 // complete (such as when the callback is executed or after nni_aio_wait
@@ -123,6 +110,11 @@ extern int  nni_aio_list_active(nni_aio *);
 
 // nni_aio_finish is called by the provider when an operation is complete.
 extern void nni_aio_finish(nni_aio *, int, size_t);
+// nni_aio_finish_synch is to be called when a synchronous completion is
+// desired.  It is very important that the caller not hold any locks when
+// calling this, but it is useful for chaining completions to minimize
+// context switch overhead during completions.
+extern void nni_aio_finish_synch(nni_aio *, int, size_t);
 extern void nni_aio_finish_error(nni_aio *, int);
 extern void nni_aio_finish_msg(nni_aio *, nni_msg *);
 
