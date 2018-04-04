@@ -11,12 +11,14 @@
 #  Req/Rep protocol
 
 if (NNG_PROTO_REQ0)
-    set(REQ0_SOURCES protocol/reqrep0/req.c protocol/reqrep0/req.h)
+    set(REQ0_SOURCES protocol/reqrep0/req.c protocol/reqrep0/xreq.c
+    protocol/reqrep0/req.h)
     set(REQ0_HEADERS protocol/reqrep0/req.h)
 endif()
 
 if (NNG_PROTO_REP0)
-    set(REP0_SOURCES protocol/reqrep0/rep.c protocol/reqrep0/rep.h)
+    set(REP0_SOURCES protocol/reqrep0/rep.c protocol/reqrep0/xrep.c
+    protocol/reqrep0/rep.h)
     set(REP0_HEADERS protocol/reqrep0/rep.h)
 endif()
 

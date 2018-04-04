@@ -41,14 +41,27 @@ The _rep_ protocol is the replier side, and the
 The <<nng_rep_open.3#,`nng_rep0_open()`>> functions create a replier socket.
 This socket may be used to receive messages (requests), and then to send
 replies.
-Generally a reply can only be sent after receiving a request.
-(Attempts to receive a message will result in `NNG_ESTATE` if there
-is no outstanding request.)
 
-Attempts to send on a socket with no outstanding requests will result
-in `NNG_ESTATE`. 
+Generally a reply can only be sent after receiving a request.
+
+Send operations will result in `NNG_ESTATE` if no corresponding request
+was previously received.
+
+Likewise, only one receive operation may be pending at a time.
+Any additional concurrent receive operations will result in `NNG_ESTATE`.
 
 <<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
+
+=== Context Operations
+
+This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
+use cases using <<nng_ctx_open.3#,`nng_ctx_open()`>>.
+
+Each context may have at most one outstanding request, and operates
+independently from the others.
+The restrictions for order of operations with sockets apply equally
+well for contexts, except that each context will be treated as if it were
+a separate socket.
 
 === Protocol Versions
 

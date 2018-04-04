@@ -57,6 +57,7 @@ extern "C" {
 
 // Types common to nng.
 typedef uint32_t            nng_socket;
+typedef uint32_t            nng_ctx;
 typedef uint32_t            nng_dialer;
 typedef uint32_t            nng_listener;
 typedef uint32_t            nng_pipe;
@@ -335,6 +336,47 @@ NNG_DECL void nng_send_aio(nng_socket, nng_aio *);
 // with nng_aio_get_msg().  The caller takes ownership of the message at
 // this point.
 NNG_DECL void nng_recv_aio(nng_socket, nng_aio *);
+
+// Context support.  User contexts are not supported by all protocols,
+// but for those that do, they give a way to create multiple contexts
+// on a single socket, each of which runs the protocol's state machinery
+// independently, offering a way to achieve concurrent protocol support
+// without resorting to raw mode sockets.  See the protocol specific
+// documentation for further details.  (Note that at this time, only
+// asynchronous send/recv are supported for contexts, but its easy enough
+// to make synchronous versions with nng_aio_wait().)  Note that nng_close
+// of the parent socket will *block* as long as any contexts are open.
+
+// nng_ctx_open creates a context.  This returns NNG_ENOTSUP if the
+// protocol implementation does not support separate contexts.
+NNG_DECL int nng_ctx_open(nng_ctx *, nng_socket);
+
+// nng_ctx_close closes the context.
+NNG_DECL int nng_ctx_close(nng_ctx);
+
+// nng_ctx_recv receives asynchronously.  It works like nng_recv_aio, but
+// uses a local context instead of the socket global context.
+NNG_DECL void nng_ctx_recv(nng_ctx, nng_aio *);
+
+// nng_ctx_send sends asynchronously. It works like nng_send_aio, but
+// uses a local context instead of the socket global context.
+NNG_DECL void nng_ctx_send(nng_ctx, nng_aio *);
+
+// nng_ctx_getopt is used to retrieve a context-specific option.  This
+// can only be used for those options that relate to specific context
+// tunables (which does include NNG_OPT_SENDTIMEO and NNG_OPT_RECVTIMEO);
+// see the protocol documentation for more details.
+NNG_DECL int nng_ctx_getopt(nng_ctx, const char *, void *, size_t *);
+NNG_DECL int nng_ctx_getopt_bool(nng_ctx, const char *, bool *);
+NNG_DECL int nng_ctx_getopt_int(nng_ctx, const char *, int *);
+NNG_DECL int nng_ctx_getopt_ms(nng_ctx, const char *, nng_duration *);
+NNG_DECL int nng_ctx_getopt_size(nng_ctx, const char *, size_t *);
+
+// nng_ctx_setopt is used to set a context-specific option.  This
+// can only be used for those options that relate to specific context
+// tunables (which does include NNG_OPT_SENDTIMEO and NNG_OPT_RECVTIMEO);
+// see the protocol documentation for more details.
+NNG_DECL int nng_ctx_setopt(nng_ctx, const char *, const void *, size_t);
 
 // nng_alloc is used to allocate memory.  It's intended purpose is for
 // allocating memory suitable for message buffers with nng_send().

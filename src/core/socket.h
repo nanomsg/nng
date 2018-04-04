@@ -63,4 +63,46 @@ extern void nni_sock_reconntimes(nni_sock *, nni_duration *, nni_duration *);
 // nni_sock_flags returns the socket flags, used to indicate whether read
 // and or write are appropriate for the protocol.
 extern uint32_t nni_sock_flags(nni_sock *);
+
+// nni_ctx_open is used to open/create a new context structure.
+// Contexts are not supported by most protocols, but for those that do,
+// this can offer some improvements for massive concurrency/scalability.
+// Returns NNG_ENOTSUP for protocols that lack context support.  This adds
+// another reference (hold) on the socket on success, and the newly
+// created context is also held by the caller. Not supported by raw mode
+// sockets (will also return NNG_ENOTSUP).
+extern int nni_ctx_open(nni_ctx **, nni_sock *);
+
+// nni_ctx_find finds a context given its id.  The last argument should
+// be true if the context is acquired merely to close it, false otherwise.
+// (If the socket for the context is being closed, then this will return
+// NNG_ECLOSED unless the final argument is true.)
+extern int nni_ctx_find(nni_ctx **, uint32_t, bool);
+
+// nni_ctx_rele is called to release a hold on the context.  These holds
+// are acquired by either nni_ctx_open or nni_ctx_find.  If the context
+// is being closed (nni_ctx_close was called), and this is the last reference,
+// then the underlying context is freed, and the implicit socket hold
+// by the context is also released.
+extern void nni_ctx_rele(nni_ctx *);
+
+// nni_ctx_close is used to close the context.  It also implictly releases
+// the context.
+extern void nni_ctx_close(nni_ctx *);
+
+// nni_ctx_id returns the context ID, which can be used with nni_ctx_find.
+extern uint32_t nni_ctx_id(nni_ctx *);
+
+// nni_ctx_recv is an asychronous receive.
+extern void nni_ctx_recv(nni_ctx *, nni_aio *);
+
+// nni_ctx_send is an asychronous receive.
+extern void nni_ctx_send(nni_ctx *, nni_aio *);
+
+// nni_ctx_getopt is used to get a context option.
+extern int nni_ctx_getopt(nni_ctx *, const char *, void *, size_t *, int);
+
+// nni_ctx_setopt is used to set a context option.
+extern int nni_ctx_setopt(nni_ctx *, const char *, const void *, size_t, int);
+
 #endif // CORE_SOCKET_H

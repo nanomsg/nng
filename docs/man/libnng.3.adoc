@@ -195,6 +195,22 @@ The following functions are used to register a transport for use.
 | <<nng_zt_register.3#,nng_zt_register()>>|register ZeroTier transport
 |===
 
+=== Protocol Contexts
+
+The following functions are useful to separate the protocol processing
+from a socket object, into a separate context.
+This can allow multiple contexts to be created on a single socket for
+concurrent applications.
+
+|===
+|<<nng_ctx_close.3#,nng_ctx_close()>>|close context
+|<<nng_ctx_getopt.3#,nng_ctx_getopt()>>|get context option
+|<<nng_ctx_open.3#,nng_ctx_open()>>|create context
+|<<nng_ctx_recv.3#,nng_ctx_recv()>>|receive message using context asynchronously
+|<<nng_ctx_send.3#,nng_ctx_send()>>|send message using context asynchronously
+|<<nng_ctx_setopt.3#,nng_ctx_setopt()>>|set context option
+|===
+
 === URL Object
 
 Common functionality is supplied for parsing and handling

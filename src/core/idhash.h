@@ -29,8 +29,6 @@ typedef struct nni_idhash_entry nni_idhash_entry;
 extern int  nni_idhash_init(nni_idhash **);
 extern void nni_idhash_fini(nni_idhash *);
 extern void nni_idhash_set_limits(nni_idhash *, uint64_t, uint64_t, uint64_t);
-extern int  nni_idhash_create(nni_idhash **);
-extern void nni_idhash_destroy(nni_idhash *);
 extern int  nni_idhash_find(nni_idhash *, uint64_t, void **);
 extern int  nni_idhash_remove(nni_idhash *, uint64_t);
 extern int  nni_idhash_insert(nni_idhash *, uint64_t, void *);

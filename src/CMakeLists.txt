@@ -53,6 +53,8 @@ set (NNG_SOURCES
     core/nng_impl.h
     core/options.c
     core/options.h
+    core/pollable.c
+    core/pollable.h
     core/panic.c
     core/panic.h
     core/pipe.c

@@ -324,6 +324,7 @@ nni_aio_start(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 	}
 
 	if (!aio->a_sleep) {
+		// Convert the relative timeout to an absolute timeout.
 		switch (aio->a_timeout) {
 		case NNG_DURATION_ZERO:
 			aio->a_expire = NNI_TIME_ZERO;
@@ -338,7 +339,6 @@ nni_aio_start(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 		}
 	}
 
-	// Convert the relative timeout to an absolute timeout.
 	if (aio->a_expire != NNI_TIME_NEVER) {
 		nni_aio_expire_add(aio);
 	}

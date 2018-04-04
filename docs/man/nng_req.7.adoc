@@ -53,11 +53,15 @@ The _req_ protocol is the requester side, and the
 === Socket Operations
 
 The <<nng_req_open.3#,`nng_req0_open()`>> functions create a requester socket.
-This socket may be used to send messages (requests),
-and then to receive replies.
+This socket may be used to send messages (requests), and then to receive replies.
+
 Generally a reply can only be received after sending a request.
 (Attempts to receive a message will result in `NNG_ESTATE` if there is no
 outstanding request.)
+
+Furthermore, only a single receive operation may be pending at a time.
+Attempts to post more receive operations concurrently will result in
+`NNG_ESTATE`.
 
 Requests may be canceled by sending a different request.
 This will cause the requester to discard any reply from the earlier request,
@@ -65,10 +69,20 @@ but it will not stop a replier
 from processing a request it has already received or terminate a request
 that has already been placed on the wire.
 
-Attempts to receive on a socket with no outstanding requests will result
-in `NNG_ESTATE`. 
-
 <<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
+
+=== Context Operations
+
+This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
+use cases using <<nng_ctx_open.3#,`nng_ctx_open()`>>.
+The `NNG_OPT_REQ_RESENDTIME` value may be configured differently
+on contexts created this way.
+
+Each context may have at most one outstanding request, and operates
+independently from the others.
+The restrictions for order of operations with sockets apply equally
+well for contexts, except that each context will be treated as if it were
+a separate socket.
 
 === Protocol Versions
 
@@ -82,7 +96,7 @@ The following protocol-specific option is available.
 ((`NNG_OPT_REQ_RESENDTIME`))::
 
    This read/write option is a duration (32-bit unsigned integer) representing
-   a relative number of milliseconds. 
+   a relative number of milliseconds.
    When a new request is started, a timer of this duration is also started.
    If no reply is received before this timer expires, then the request will
    be resent.  (Requests are also automatically resent if the peer to whom
@@ -129,7 +143,9 @@ request ID it originally used for the request.
 
 == SEE ALSO
 
+<<nng_ctx_open.3#,nng_ctx_open(3)>>,
 <<nng_device.3#,nng_device(3)>>,
 <<nng_req_open.3#,nng_req_open(3)>>,
+<<nng_ctx.5#,nng_ctx(5)>>,
 <<nng.7#,nng(7)>>,
 <<nng_rep.7#,nng_rep(7)>>

@@ -47,6 +47,39 @@ struct nni_proto_pipe_ops {
 	void (*pipe_stop)(void *);
 };
 
+struct nni_proto_ctx_option {
+	const char *co_name;
+	int         co_type;
+	int (*co_getopt)(void *, void *, size_t *, int);
+	int (*co_setopt)(void *, const void *, size_t, int);
+};
+
+struct nni_proto_ctx_ops {
+	// ctx_init creates a new context. The second argument is the
+	// protocol specific socket structure.
+	int (*ctx_init)(void **, void *);
+
+	// ctx_fini destroys a context.
+	void (*ctx_fini)(void *);
+
+	// ctx_recv is an asynchronous recv.
+	void (*ctx_recv)(void *, nni_aio *);
+
+	// ctx_send is an asynchronous send.
+	void (*ctx_send)(void *, nni_aio *);
+
+	// ctx_drain drains the context, signaling the aio when done.
+	// This should prevent any further receives from completing,
+	// and only sends that had already been submitted should be
+	// permitted to continue.  It may be NULL for protocols where
+	// draining without an ability to receive makes no sense
+	// (e.g. REQ or SURVEY).
+	void (*ctx_drain)(void *, nni_aio *);
+
+	// ctx_options array.
+	nni_proto_ctx_option *ctx_options;
+};
+
 struct nni_proto_sock_option {
 	const char *pso_name;
 	int         pso_type;
@@ -87,6 +120,12 @@ struct nni_proto_sock_ops {
 	// should return NULL, otherwise the message (possibly modified).
 	nni_msg *(*sock_filter)(void *, nni_msg *);
 
+	// Socket draining is intended to permit protocols to "drain"
+	// before exiting.  For protocols where draining makes no
+	// sense, this may be NULL.  (Example: REQ and SURVEYOR should
+	// not drain, because they cannot receive a reply!)
+	void (*sock_drain)(void *, nni_aio *);
+
 	// Options. Must not be NULL. Final entry should have NULL name.
 	nni_proto_sock_option *sock_options;
 };
@@ -103,6 +142,7 @@ struct nni_proto {
 	uint32_t                  proto_flags;    // Protocol flags
 	const nni_proto_sock_ops *proto_sock_ops; // Per-socket opeations
 	const nni_proto_pipe_ops *proto_pipe_ops; // Per-pipe operations.
+	const nni_proto_ctx_ops * proto_ctx_ops;  // Context operations.
 
 	// proto_init, if not NULL, provides a function that initializes
 	// global values.  The main purpose of this may be to initialize
@@ -128,11 +168,14 @@ struct nni_proto {
 // These flags determine which operations make sense.  We use them so that
 // we can reject attempts to create notification fds for operations that make
 // no sense.  Also, we can detect raw mode, thereby providing handling for
-// that at the socket layer (NNG_PROTO_FLAG_RAW).
+// that at the socket layer (NNG_PROTO_FLAG_RAW).  Finally, we provide the
+// NNI_PROTO_FLAG_NOMSGQ flag for protocols that do not use the upper write
+// or upper read queues.
 #define NNI_PROTO_FLAG_RCV 1    // Protocol can receive
 #define NNI_PROTO_FLAG_SND 2    // Protocol can send
 #define NNI_PROTO_FLAG_SNDRCV 3 // Protocol can both send & recv
 #define NNI_PROTO_FLAG_RAW 4    // Protocol is raw
+#define NNI_PROTO_FLAG_NOMSGQ 8 // Protocol bypasses the upper queues
 
 // nni_proto_open is called by the protocol to create a socket instance
 // with its ops vector.  The intent is that applications will only see

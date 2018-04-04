@@ -1,0 +1,69 @@
+= nng_ctx_open(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_ctx_open - create context
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/nng.h>
+
+int nng_ctx_open(nng_ctx *ctxp, nng_socket s);
+----
+
+== DESCRIPTION
+
+The `nng_ctx0_open()` function creates a separate ((context)) to be used with
+the socket _s_,
+and returns it at the location pointed by _ctxp_.
+
+NOTE: Not every protocol supports creation of separate contexts.
+
+Contexts allow the independent and concurrent use of stateful operations
+using the same socket.
+For example, two different contexts created on a <<nng_rep.7#,_rep_>>
+socket can each receive requests, and send replies to them, without any
+regard to or interference with each other.
+
+(((raw mode)))
+TIP: Using contexts is an excellent way to write simpler concurrent
+applications, while retaining the benefits of the protocol-specific
+advanced processing, avoiding the need to bypass that with
+<<nng.7#raw_mode,raw mode>> sockets.
+
+NOTE: Use of contexts with <<nng.7#raw_mode,raw mode>> sockets is
+nonsensical, and not supported.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ENOMEM`:: Insufficient memory is available.
+`NNG_ENOTSUP`:: The protocol does not support separate contexts, or the socket was opened in raw mode.
+
+== SEE ALSO
+
+<<nng_ctx_close.3#,nng_ctx_close(3)>>,
+<<nng_ctx_getopt.3#,nng_ctx_getopt(3)>>,
+<<nng_ctx_recv.3#,nng_ctx_recv(3)>>,
+<<nng_ctx_send.3#,nng_ctx_send(3)>>,
+<<nng_ctx_setopt.3#,nng_ctx_setopt(3)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_ctx.5#,nng_ctx(5)>>,
+<<nng_socket.5#,nng_socket(5)>>,
+<<nng_rep.7#,nng_rep(7)>>,
+<<nng_req.7#,nng_req(7)>>,
+<<nng.7#,nng(7)>>
