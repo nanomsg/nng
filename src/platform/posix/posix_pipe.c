@@ -17,6 +17,11 @@
 // This implementation of notification pipes works ~everywhere on POSIX,
 // as it only relies on pipe() and non-blocking I/O.
 
+// So as much as we would like to use eventfd, it turns out to be completely
+// busted on some systems (latest Ubuntu release for example).  So we go
+// back to the old but repliable pipe() system call.
+#undef NNG_USE_EVENTFD
+
 #ifdef NNG_USE_EVENTFD
 
 // Linux eventfd.  This is lighter weight than pipes, and has better semantics
