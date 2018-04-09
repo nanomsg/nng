@@ -292,8 +292,8 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 			spipe = cpipe = NULL;
 			if (((rv = nni_inproc_pipe_init(&cpipe, cli)) != 0) ||
 			    ((rv = nni_inproc_pipe_init(&spipe, srv)) != 0) ||
-			    ((rv = nni_msgq_init(&pair->q[0], 4)) != 0) ||
-			    ((rv = nni_msgq_init(&pair->q[1], 4)) != 0)) {
+			    ((rv = nni_msgq_init(&pair->q[0], 1)) != 0) ||
+			    ((rv = nni_msgq_init(&pair->q[1], 1)) != 0)) {
 
 				if (cpipe != NULL) {
 					nni_inproc_pipe_fini(cpipe);
