@@ -122,19 +122,26 @@ int main ()
 
 
     /*  Check sending a request when the peer is not available. (It should
-        be sent immediatelly when the peer comes online rather than relying
-        on the resend algorithm. */
+        be sent immediately when the peer comes online rather than relying
+        on the resend algorithm.) */
     req1 = test_socket (AF_SP, NN_REQ);
     timeo = 10;
     test_setsockopt (req1, NN_SOL_SOCKET, NN_RECONNECT_IVL, &timeo, sizeof (timeo));
-    test_send (req1, "ABC");
     test_connect (req1, SOCKET_ADDRESS);
 
     rep1 = test_socket (AF_SP, NN_REP);
     test_bind (rep1, SOCKET_ADDRESS);
+
     timeo = 500;
     test_setsockopt (rep1, NN_SOL_SOCKET, NN_RCVTIMEO, &timeo, sizeof (timeo));
     errno_assert (rc == 0);
+    test_send (req1, "ABC");
+
+    /*  Now close the peer, and reopen it.  This should still work. */
+    test_close(rep1);
+    rep1 = test_socket (AF_SP, NN_REP);
+    test_bind (rep1, SOCKET_ADDRESS);
+
     test_recv (rep1, "ABC");
 
     test_close (req1);
@@ -173,11 +180,17 @@ int main ()
 
     req1 = test_socket (AF_SP, NN_REQ);
     test_connect (req1, SOCKET_ADDRESS);
-    test_send (req1, "ABC");
-    test_send (req1, "DEF");
 
     rep1 = test_socket (AF_SP, NN_REP);
     test_bind (rep1, SOCKET_ADDRESS);
+
+    test_send (req1, "ABC");
+    test_send (req1, "DEF");
+    test_close (rep1);
+
+    rep1 = test_socket (AF_SP, NN_REP);
+    test_bind (rep1, SOCKET_ADDRESS);
+
     timeo = 100;
     test_recv (rep1, "DEF");
 
