@@ -67,16 +67,19 @@ nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 	nni_aio *aio;
 
 	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
-		unsigned i;
-		int      n;
-		int      niov;
-		unsigned naiov;
-		nni_iov *aiov;
+		unsigned      i;
+		int           n;
+		int           niov;
+		unsigned      naiov;
+		nni_iov *     aiov;
+		struct msghdr hdr;
 #ifdef NNG_HAVE_ALLOCA
 		struct iovec *iovec;
 #else
 		struct iovec iovec[16];
 #endif
+
+		memset(&hdr, 0, sizeof(hdr));
 
 		nni_aio_get_iov(aio, &naiov, &aiov);
 
@@ -101,7 +104,14 @@ nni_posix_pipedesc_dowrite(nni_posix_pipedesc *pd)
 			}
 		}
 
-		n = writev(pd->node.fd, iovec, niov);
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
+#endif
+
+		hdr.msg_iovlen = niov;
+		hdr.msg_iov    = iovec;
+
+		n = sendmsg(pd->node.fd, &hdr, MSG_NOSIGNAL);
 		if (n < 0) {
 			if ((errno == EAGAIN) || (errno == EINTR)) {
 				// Can't write more right now.  We're done
