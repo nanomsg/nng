@@ -1,6 +1,6 @@
-= Rational: Or why am I bothering to rewrite nanomsg?
+= Rationale: Or why am I bothering to rewrite nanomsg?
 Garrett D'Amore <garrett@damore.org>
-v0.2, February 22, 2018
+v0.3, April 10, 2018
 
 
 NOTE: You might want to review
@@ -306,11 +306,35 @@ portable _nng_ applications easier.
 It will not surprise me if developers start finding uses for _nng_ that
 have nothing to do with Scalability Protocols.
 
+== Separate Contexts
+
+As part of working on a demo suite of applications, I realized that the
+requirement to use raw mode sockets for concurrent applications was rather
+onerous, forcing application developers to re-implement much of the
+same logic that is already in _nng_.
+
+Thus was the born the idea of separating the context for protocols from
+the socket, allowing multiple contexts (each of which managing it's own
+REQ/REP state machinery) to be allocated and used on a single socket.
+
+This was a large change indeed, but we believe application developers
+are going to find it *much* easier to write scalable applications,
+and hopefully the uses of raw mode and applications needing to inspect
+or generate their own application headers will vanish.
+
+Note that these contexts are entirely optional -- an application can
+still use the implicit context associated with the socket just like
+always, if it has no need for extra concurrency.
+
+One side benefit of this work was that we identified several places
+to make _nng_ perform more efficiently, reducing the number of context
+switches and extra raw vs. cooked logic.
+
 == Towards _nanomsg_ 2.0
 
 It is my intention that _nng_ ultimately replace _nanomsg_.  I do think of it
 as "nanomsg 2.0".  In fact "nng" stands for "nanomsg next generation" in
-my mind.  Some day before too long I'm hoping that the various website
+my mind.  Some day soon I'm hoping that the various website
 references to nanomsg my simply be updated to point at _nng_.  It is not
 clear to me whether at that time I will simply rename the existing
 code to _nanomsg_, nanomsg2, or leave it as _nng_.
