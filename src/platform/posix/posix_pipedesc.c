@@ -47,7 +47,6 @@ static void
 nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
 {
 	nni_aio *aio;
-	int      fd;
 
 	pd->closed = true;
 	while ((aio = nni_list_first(&pd->readq)) != NULL) {
@@ -56,11 +55,9 @@ nni_posix_pipedesc_doclose(nni_posix_pipedesc *pd)
 	while ((aio = nni_list_first(&pd->writeq)) != NULL) {
 		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 	}
-	if ((fd = pd->node.fd) != -1) {
+	if (pd->node.fd != -1) {
 		// Let any peer know we are closing.
-		pd->node.fd = -1;
-		(void) shutdown(fd, SHUT_RDWR);
-		(void) close(fd);
+		(void) shutdown(pd->node.fd, SHUT_RDWR);
 	}
 }
 
