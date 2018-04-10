@@ -369,9 +369,9 @@ static void
 nni_aio_finish_impl(
     nni_aio *aio, int rv, size_t count, nni_msg *msg, bool synch)
 {
-	NNI_ASSERT(!aio->a_pend); // provider only calls us *once*
-
 	nni_mtx_lock(&nni_aio_lk);
+
+	NNI_ASSERT(!aio->a_pend); // provider only calls us *once*
 
 	nni_list_node_remove(&aio->a_expire_node);
 
