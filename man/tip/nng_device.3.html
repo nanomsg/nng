@@ -551,6 +551,12 @@ complex network topologies to provide for improved horizontal scalability,
 reliability, and isolation.</p>
 </div>
 <div class="paragraph">
+<p>Only <a href="nng_options.5.html#NNG_OPT_RAW">raw</a> mode sockets may be used with this
+function.
+These can be created using <code>_raw</code> forms of the various socket constructors,
+such as <a href="nng_req_open.3.html"><code>nng_req0_open_raw()</code></a>.</p>
+</div>
+<div class="paragraph">
 <p>The <code>nng_device()</code> function does not return until one of the sockets
 is closed.</p>
 </div>
@@ -585,11 +591,15 @@ be a <em>bus</em> socket.</p>
 <div class="sect2">
 <h3 id="_operation">Operation</h3>
 <div class="paragraph">
-<p>This <code>nng_device()</code> function puts each socket into raw mode
-(see <a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>), and then moves messages
-between them.
-When a protocol has a backtrace style header, routing information is
-added as the message crosses the forwarder, allowing replies to be
+<p>The <code>nng_device()</code> function moves messages between the provided sockets.</p>
+</div>
+<div class="paragraph">
+<p>When a protocol has a backtrace style header, routing information
+is present in the header of received messages, and is copied to the
+header of the output bound message.
+The underlying raw mode protocols supply the necessary header
+adjustments to add or remove routing headers as needed.
+This allows replies to be
 returned to requestors, and responses to be routed back to surveyors.</p>
 </div>
 <div class="paragraph">

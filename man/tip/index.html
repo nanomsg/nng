@@ -440,6 +440,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_section_3_library_functions">Section 3: Library Functions</a></li>
 <li><a href="#_section_3compat_compatible_library_functions">Section 3compat: Compatible Library Functions</a></li>
 <li><a href="#_section_3http_supplemental_http_functions">Section 3http: Supplemental HTTP Functions</a></li>
+<li><a href="#_section_3supp_supplemental_functions">Section 3supp: Supplemental Functions</a></li>
 <li><a href="#_section_3tls_supplemental_tls_functions">Section 3tls: Supplemental TLS Functions</a></li>
 <li><a href="#_section_5_macros_and_types">Section 5: Macros and Types</a></li>
 <li><a href="#_section_7_protocols_and_transports">Section 7: Protocols and Transports</a></li>
@@ -571,6 +572,30 @@ callable by applications.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_close.3.html">nng_close(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">close socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_close.3.html">nng_ctx_close(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close context</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_getopt.3.html">nng_ctx_getopt(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get context option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_open.3.html">nng_ctx_open(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create context</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_recv.3.html">nng_ctx_recv(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive message using context asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_send.3.html">nng_ctx_send(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send message using context asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_setopt.3.html">nng_ctx_setopt(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set context option</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_device.3.html">nng_device(3)</a></p></td>
@@ -789,8 +814,16 @@ callable by applications.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">sleep asynchronously</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strdup.3.html">nng_strdup(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">duplicate string</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strerror.3.html">nng_strerror(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return an error description</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strfree.3.html">nng_strfree(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free memory</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_sub_open.3.html">nng_sub_open(3)</a></p></td>
@@ -1114,6 +1147,88 @@ that are available.</p>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_section_3supp_supplemental_functions">Section 3supp: Supplemental Functions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This section documents supplemental functions that are available.
+These functions are not intrinsic to building applications with
+this library, but their presence may facilitate writing portable applications.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 37.5%;">
+<col style="width: 62.5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_clock.3supp.html">nng_clock(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get time</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_alloc.3supp.html">nng_cv_alloc(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate condition variable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_free.3supp.html">nng_cv_free(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free condition variable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_until.3supp.html">nng_cv_until(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wait for condition or timeout</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_wait.3supp.html">nng_cv_wait(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wait for condition</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_wake.3supp.html">nng_cv_wake(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wake all waiters</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_wake1.3supp.html">nng_cv_wake1(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wake one waiter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msleep.3supp.html">nng_msleep(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">sleep milliseconds</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_mtx_alloc.3supp.html">nng_mtx_alloc(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_mtx_free.3supp.html">nng_mtx_free(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_mtx_lock.3supp.html">nng_mtx_lock(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lock mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_mtx_unlock.3supp.html">nng_mtx_unlock(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lock mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_opts_parse.3supp.html">nng_opts_parse(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">parse command line options</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_random.3supp.html">nng_random(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get random number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_thread_create.3supp.html">nng_thread_create(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create thread</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_thread_destroy.3supp.html">nng_thread_destroy(3supp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reap thread</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_section_3tls_supplemental_tls_functions">Section 3tls: Supplemental TLS Functions</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1176,6 +1291,10 @@ that are available.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio.5.html">nng_aio(5)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">asynchronous I/O handle</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx.5.html">nng_ctx(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">protocol context</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer.5.html">nng_dialer(5)</a></p></td>

@@ -541,9 +541,28 @@ associated with <em>aio</em> by aborting with <code>NNG_ECANCELED</code>, and th
 for it to complete or to be completely aborted.</p>
 </div>
 <div class="paragraph">
-<p>This is logically the equivalent of <a href="nng_aio_cancel.3.html"><code>nng_aio_cancel()</code></a>
-followed by <a href="nng_aio_wait.3.html"><code>nng_aio_wait()</code></a>, except that the asynchronous
-I/O handle may not be used for any further operations.</p>
+<p>If an operation is in progress when this function is called, that operation
+is canceled and the callback function is <em>not</em> allowed to run.</p>
+</div>
+<div class="paragraph">
+<p>If the callback function is already running when this function is called,
+then it is allowed to complete before returning to the caller.</p>
+</div>
+<div class="paragraph">
+<p>No new operations will be started on this <em>aio</em>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Calling this function means that the operation may be aborted without
+completing its callback function.
+</td>
+</tr>
+</table>
 </div>
 <div class="admonitionblock tip">
 <table>

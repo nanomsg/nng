@@ -546,11 +546,11 @@ case it can be directly passed to <a href="nng_send.3.html"><code>nng_send()</co
 the flag <code>NNG_FLAG_ALLOC</code>.  Alternatively, it can be freed when no
 longer needed using <a href="nng_free.3.html"><code>nng_free()</code></a>.</p>
 </div>
-<div class="admonitionblock warning">
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-warning" title="Warning"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
 Do not use the system <code>free()</code> function to release this memory.
@@ -566,20 +566,17 @@ to a crash or other undesirable and unpredictable behavior.
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This function returns 0 on success, and non-zero otherwise.</p>
+<p>This function returns a pointer to the allocated memory on success,
+and <code>NULL</code> otherwise.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
-<p>Insufficient free memory exists.</p>
-</dd>
-</dl>
+<div class="paragraph">
+<p>No errors are returned, but a <code>NULL</code> return value should be
+treated the same as <code>NNG_ENOMEM</code>.</p>
 </div>
 </div>
 </div>

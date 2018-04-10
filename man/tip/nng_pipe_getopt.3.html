@@ -541,6 +541,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_dialer_getopt_ptr</span><span class="tok-p">(</span><span class="tok-n">nng_pipe</span> <span class="tok-n">p</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">**</span><span class="tok-n">ptr</span><span class="tok-p">);</span>
 
+<span class="tok-kt">int</span> <span class="tok-nf">nng_pipe_getopt_sockaddr</span><span class="tok-p">(</span><span class="tok-n">nng_pipe</span> <span class="tok-n">p</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-n">nng_sockaddr</span> <span class="tok-o">*</span><span class="tok-n">sap</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_pipe_getopt_string</span><span class="tok-p">(</span><span class="tok-n">nng_pipe</span> <span class="tok-n">p</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">char</span> <span class="tok-o">**</span><span class="tok-n">strp</span><span class="tok-p">);</span>
+
 <span class="tok-kt">int</span> <span class="tok-nf">nng_pipe_getopt_size</span><span class="tok-p">(</span><span class="tok-n">nng_pipe</span> <span class="tok-n">p</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-o">*</span><span class="tok-n">zp</span><span class="tok-p">);</span>
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_pipe_getopt_uint64</span><span class="tok-p">(</span><span class="tok-n">nng_pipe</span> <span class="tok-n">p</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">opt</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-o">*</span><span class="tok-n">u64p</span><span class="tok-p">);</span></code></pre>
@@ -618,8 +622,6 @@ the object.</p>
 </td>
 <td class="content">
 Generally, it will be easier to use one of the typed forms instead.
-Note however that no validation that the option is actually of the associated
-type is performed, so the caller must take care to use the <strong>correct</strong> typed form.
 </td>
 </tr>
 </table>
@@ -665,6 +667,22 @@ typically for buffer sizes, message maximum sizes, and similar options.</p>
 </div>
 </div>
 <div class="sect3">
+<h4 id="_code_nng_pipe_getopt_sockaddr_code"><code>nng_pipe_getopt_sockaddr()</code></h4>
+<div class="paragraph">
+<p>This function is used to retrieve an <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>
+into <em>sap</em>.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_code_nng_pipe_getopt_string_code"><code>nng_pipe_getopt_string()</code></h4>
+<div class="paragraph">
+<p>This function is used to retrieve a string into <em>strp</em>.
+This string is created from the source using <a href="nng_strdup.3.html"><code>nng_strdup()</code></a>
+and consequently must be freed by the caller using
+<a href="nng_strfree.3.html"><code>nng_strfree()</code></a> when it is no longer needed.</p>
+</div>
+</div>
+<div class="sect3">
 <h4 id="_code_nng_pipe_getopt_uint64_code"><code>nng_pipe_getopt_uint64()</code></h4>
 <div class="paragraph">
 <p>This function is used to retriev a 64-bit unsigned value into the value
@@ -689,6 +707,10 @@ related to identifiers, network numbers, and similar.</p>
 <div class="sectionbody">
 <div class="dlist">
 <dl>
+<dt class="hdlist1"><code>NNG_EBADTYPE</code></dt>
+<dd>
+<p>Incorrect type for option.</p>
+</dd>
 <dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
 <dd>
 <p>Parameter <em>p</em> does not refer to an open pipe.</p>
@@ -696,6 +718,14 @@ related to identifiers, network numbers, and similar.</p>
 <dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
 <dd>
 <p>The option <em>opt</em> is not supported.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
+<dd>
+<p>Insufficient memory exists.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
+<dd>
+<p>Size of destination <em>val</em> too small for object.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_EWRITEONLY</code></dt>
 <dd>
@@ -713,8 +743,13 @@ related to identifiers, network numbers, and similar.</p>
 <a href="nng_getopt.3.html">nng_getopt(3)</a>,
 <a href="nng_listener_setopt.3.html">nng_listener_setopt(3)</a>
 <a href="nng_msg_get_pipe.3.html">nng_msg_get_pipe(3)</a>
+<a href="nng_strdup.3.html">nng_strdup(3)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_strfree.3.html">nng_strfree(3)</a>,
+<a href="nng_duration.5.html">nng_duration(5)</a>,
 <a href="nng_options.5.html">nng_options(5)</a>,
+<a href="nng_pipe.5.html">nng_pipe(5)</a>,
+<a href="nng_sockaddr.5.html">nng_sockaddr(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>

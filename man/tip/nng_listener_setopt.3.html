@@ -597,19 +597,6 @@ Generally, it will be easier to use one of the typed forms instead.
 </tr>
 </table>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-No validation that the option is actually of the associated
-type is performed, so the caller must take care to use the <strong>correct</strong> typed form.
-</td>
-</tr>
-</table>
-</div>
 <div class="sect3">
 <h4 id="_code_nng_listener_setopt_code"><code>nng_listener_setopt()</code></h4>
 <div class="paragraph">
@@ -693,6 +680,10 @@ and similar.</p>
 <div class="sectionbody">
 <div class="dlist">
 <dl>
+<dt class="hdlist1"><code>NNG_EBADTYPE</code></dt>
+<dd>
+<p>Incorrect type for option.</p>
+</dd>
 <dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
 <dd>
 <p>Parameter <em>l</em> does not refer to an open listener.</p>
@@ -726,6 +717,7 @@ and similar.</p>
 <a href="nng_listener_getopt.3.html">nng_listener_getopt(3)</a>
 <a href="nng_setopt.3.html">nng_setopt(3)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_duration.5.html">nng_duration(5)</a>,
 <a href="nng_listener.5.html">nng_listener(5)</a>,
 <a href="nng_options.5.html">nng_options(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
