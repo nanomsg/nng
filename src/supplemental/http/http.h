@@ -21,6 +21,8 @@ extern "C" {
 
 #include <stdint.h>
 
+typedef struct nng_tls_config nng_tls_config;
+
 // HTTP status codes.  This list is not exhaustive.
 enum nng_http_status {
 	NNG_HTTP_STATUS_CONTINUE                 = 100,
