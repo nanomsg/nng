@@ -114,10 +114,10 @@ Most applications should not have to worry about endpoints or pipes at
 all; the socket abstraction should provide all the functionality needed
 other than in a few specific circumstances.
 
-[[raw_mode]](((raw mode)))
+[[raw_mode]]
 === Raw Mode
 
-(((cooked mode)))
+(((cooked mode)))(((raw mode)))
 Most applications will use _nng_ sockets in "`cooked`" mode. 
 This mode provides the full semantics of the protocol.
 For example, <<nng_req.7#,_req_>> sockets will automatically
