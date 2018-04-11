@@ -1,0 +1,25 @@
+= REST API Gateway demo
+
+This is a somewhat contrived demonstration, but may be useful
+in a pattern for solving real world problems.
+
+There is a single "server" program, that does these:
+
+. REST API at /api/rest/rot13 - this API takes data from HTTP POST commands,
+  and forwards them to an NNG REQ socket.  When the REQ response comes,
+  the reply is redirected back to the server.  (For the purposes of the
+  demonstration, our server just performs ROT13 on input.)
+
+. REP server (implemented in the same program using inproc, for demonstration
+  purposes. In a real world scenario this might instead go to another
+  process on another computer.)
+
+[source, bash]
+----
+% env PORT=8888  # default
+% ./server &
+% curl -d ABC http://127.0.0.1:8888/api/rest/rot13; echo
+NOP
+% curl -d ABC http://127.0.0.1:8888/api/rest/rot13; echo
+ABC
+----
