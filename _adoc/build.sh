@@ -5,6 +5,7 @@
 # of annoying, since Jekyll on github-pages doesn't support asciidoctor
 # properly.
 
+aargs="-aicons=font"
 cd $(dirname $0)
 for f in $(find . -name '*.adoc'); do
 
