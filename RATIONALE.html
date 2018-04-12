@@ -9,7 +9,7 @@ layout: default
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
 <meta name="author" content="Garrett D'Amore">
-<title>Rational: Or why am I bothering to rewrite nanomsg?</title>
+<title>Rationale: Or why am I bothering to rewrite nanomsg?</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -431,12 +431,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article">
 <div id="header">
-<h1>Rational: Or why am I bothering to rewrite nanomsg?</h1>
+<h1>Rationale: Or why am I bothering to rewrite nanomsg?</h1>
 <div class="details">
 <span id="author" class="author">Garrett D'Amore</span><br>
 <span id="email" class="email"><a href="mailto:garrett@damore.org">garrett@damore.org</a></span><br>
-<span id="revnumber">version 0.2,</span>
-<span id="revdate">February 22, 2018</span>
+<span id="revnumber">version 0.3,</span>
+<span id="revdate">April 10, 2018</span>
 </div>
 </div>
 <div id="content">
@@ -656,7 +656,7 @@ As a C programmer coming from UNIX systems, this really attracted me.</p>
 <div class="paragraph">
 <p>The problem is that the POSIX APIs are actually really horrible.  In
 particular the semantics around <code>cmsg</code> are about as arcane and painful as
-one can imagine.  Largely, this has meant that extensions to the <code>cmsg</code>
+one can imagine.  Largely, this has meant that extensions to the `cmsg
 API simply have not occurred in <em>nanomsg</em>.</p>
 </div>
 <div class="paragraph">
@@ -858,12 +858,44 @@ have nothing to do with Scalability Protocols.</p>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_separate_contexts">Separate Contexts</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>As part of working on a demo suite of applications, I realized that the
+requirement to use raw mode sockets for concurrent applications was rather
+onerous, forcing application developers to re-implement much of the
+same logic that is already in <em>nng</em>.</p>
+</div>
+<div class="paragraph">
+<p>Thus was the born the idea of separating the context for protocols from
+the socket, allowing multiple contexts (each of which managing it&#8217;s own
+REQ/REP state machinery) to be allocated and used on a single socket.</p>
+</div>
+<div class="paragraph">
+<p>This was a large change indeed, but we believe application developers
+are going to find it <strong>much</strong> easier to write scalable applications,
+and hopefully the uses of raw mode and applications needing to inspect
+or generate their own application headers will vanish.</p>
+</div>
+<div class="paragraph">
+<p>Note that these contexts are entirely optional&#8201;&#8212;&#8201;an application can
+still use the implicit context associated with the socket just like
+always, if it has no need for extra concurrency.</p>
+</div>
+<div class="paragraph">
+<p>One side benefit of this work was that we identified several places
+to make <em>nng</em> perform more efficiently, reducing the number of context
+switches and extra raw vs. cooked logic.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_towards_em_nanomsg_em_2_0">Towards <em>nanomsg</em> 2.0</h2>
 <div class="sectionbody">
 <div class="paragraph">
 <p>It is my intention that <em>nng</em> ultimately replace <em>nanomsg</em>.  I do think of it
 as "nanomsg 2.0".  In fact "nng" stands for "nanomsg next generation" in
-my mind.  Some day before too long I&#8217;m hoping that the various website
+my mind.  Some day soon I&#8217;m hoping that the various website
 references to nanomsg my simply be updated to point at <em>nng</em>.  It is not
 clear to me whether at that time I will simply rename the existing
 code to <em>nanomsg</em>, nanomsg2, or leave it as <em>nng</em>.</p>
