@@ -1,20 +1,24 @@
 = async
 
-This is a simple asynchronous demo, that demonstrates use of the RAW
-option with a server, along with async message handling, to obtain a
-very high level of asynchronous operation, suitable for use in a highly
-concurrent server application.
+This is a simple asynchronous demo, that demonstrates use of the contexts
+and asynchronous message handling and operations, to obtain highly concurrent
+processing with minimal fuss.
 
 == Compiling
 
 You can override the level of concurrency with the `PARALLEL`
 define.  This determines how many requests the server will accept
-at a time, and keep outstanding.  Note that for our toy
-implementation, we create this many "logical" flows of execution
-(these are _NOT_ threads), where a request is followed by a reply.
+at a time, and keep outstanding.  Note that for our toy implementation,
+we create this many "logical" flows of execution (contexts) (these are
+_NOT_ threads), where a request is followed by a reply.
 
 The value of `PARALLEL` must be at least one, and may be as large
-as your memory will permit.  (The default value is 32.)
+as your memory will permit.  (The default value is 128.)  Probably
+you want the value to be small enough to ensure that you have enough
+file descriptors.  (You can create more contexts than this, but generally
+you can't have more than one client per descriptor.  Contexts can be used
+on the client side to support many thousands of concurrent requests over
+even just a single TCP connection, however.)
 
 On UNIX-style systems:
 
@@ -23,31 +27,19 @@ On UNIX-style systems:
 % export CPPFLAGS="-D PARALLEL=32 -I /usr/local/include"
 % export LDFLAGS="-L /usr/local/lib -lnng"
 % export CC="cc"
-% ${CC} ${CPPFLAGS} async.c -o async ${LDFLAGS}
+% ${CC} ${CPPFLAGS} server.c -o server ${LDFLAGS}
+% ${CC} ${CPPFLAGS} client.c -o client ${LDFLAGS}
 ----
 
 == Running
 
-To run the server, use the arguments `__url__ -s`.
+The easiest thing is to simply use the `run.sh` script, which
+sends COUNT (10) random jobs to the server in parallel.
 
-To run the client, use the arguments `__url__ __msec__`.
+You can of course run the client and server manually instead.
 
-The _msec_ is a "delay" time that server will wait before responding.
-We have these delays so simulate long running work.
+The server takes the address (url) as its only argument.
 
-In the following example, all of the clients should complete within
-2 seconds.  (Assuming `PARALLEL` is defined to be large enough.)
-
-[source,bash]
-----
-% export URL="tcp://127.0.0.1:55995"
-# start the server
-% ./async $URL -s &
-# start a bunch of clients
-# Note that these all run concurrently!
-% ./async $URL 2 &
-% ./async $URL 2 &
-% ./async $URL 2 &
-% ./async $URL 2 &
-% ./async $URL 2 &
-----
+The client takes the address (url), followed by the number of
+milliseconds the server should "wait" before responding (to simulate
+an expensive operation.)
