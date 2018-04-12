@@ -1,3 +1,10 @@
+ifdef::env-github[]
+:tip-caption: :bulb:
+:note-caption: :information_source:
+:important-caption: :heavy_exclamation_mark:
+:caution-caption: :fire:
+:warning-caption: :warning:
+endif::[]
 = nng - nanomsg-next-gen
 
 image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
