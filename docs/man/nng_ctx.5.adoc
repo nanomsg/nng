@@ -121,7 +121,7 @@ echo(void *arg)
 ----
 
 Given the above fragment, the following example shows setting up the
-service.  It assumes that the <<nng_socket.7#,socket>> has already been
+service.  It assumes that the <<nng_socket.5#,socket>> has already been
 created and any transports set up as well with functions such as
 <<nng_dial.3#,`nng_dial()`>>
 or <<nng_listen.3#,`nng_listen()`>>.

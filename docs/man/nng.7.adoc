@@ -124,7 +124,7 @@ For example, <<nng_req.7#,_req_>> sockets will automatically
 match a reply to a request, and resend requests periodically if no reply
 was received.
 
-There are situations, such as with <<nng_device.7#,proxies>>,
+There are situations, such as with <<nng_device.3#,proxies>>,
 where it is desirable to bypass these semantics and simply pass messages
 to and from the socket with no extra semantic handling.
 This is possible using "`raw`" mode sockets.
