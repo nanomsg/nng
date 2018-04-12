@@ -48,7 +48,7 @@ extern "C" {
 // version 0, you should not be making any forward compatibility
 // assumptions.
 #define NNG_MAJOR_VERSION 0
-#define NNG_MINOR_VERSION 7
+#define NNG_MINOR_VERSION 8
 #define NNG_PATCH_VERSION 0
 
 // Maximum length of a socket address.  This includes the terminating NUL.
