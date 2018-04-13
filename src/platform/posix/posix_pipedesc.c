@@ -25,6 +25,9 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+
 // nni_posix_pipedesc is a descriptor kept one per transport pipe (i.e. open
 // file descriptor for TCP socket, etc.)  This contains the list of pending
 // aios for that underlying socket, as well as the socket itself.
@@ -332,6 +335,39 @@ nni_posix_pipedesc_sockname(nni_posix_pipedesc *pd, nni_sockaddr *sa)
 		return (nni_plat_errno(errno));
 	}
 	return (nni_posix_sockaddr2nn(sa, &ss));
+}
+
+int
+nni_posix_pipedesc_set_linger(nni_posix_pipedesc *pd, nng_duration linger)
+{
+// POSIX says that SO_LINGER should exist, and be calculated as
+// seconds.  macOS defaults to ticks.
+#ifdef SO_LINGER_SOCK
+#define NNI_SO_LINGER SO_LINGER_SOCK
+#else
+#define NNI_SO_LINGER SO_LINGER
+#endif
+	struct linger sl;
+	memset(&sl, 0, sizeof(sl));
+	if (linger > 0) {
+		sl.l_onoff  = 1;
+		sl.l_linger = (int) ((linger + 999) / 1000);
+	} else {
+		sl.l_onoff  = 0;
+		sl.l_linger = 0;
+	}
+	(void) setsockopt(
+	    pd->node.fd, SOL_SOCKET, NNI_SO_LINGER, &sl, sizeof(sl));
+	return (0);
+}
+
+int
+nni_posix_pipedesc_set_nodelay(nni_posix_pipedesc *pd, bool nodelay)
+{
+	int onoff = nodelay ? 1 : 0;
+	(void) setsockopt(
+	    pd->node.fd, IPPROTO_TCP, TCP_NODELAY, &onoff, sizeof(onoff));
+	return (0);
 }
 
 int

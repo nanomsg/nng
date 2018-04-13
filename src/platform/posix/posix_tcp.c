@@ -113,6 +113,18 @@ nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *p, nni_aio *aio)
 }
 
 int
+nni_plat_tcp_pipe_set_linger(nni_plat_tcp_pipe *p, nng_duration linger)
+{
+	return (nni_posix_pipedesc_set_linger((void *) p, linger));
+}
+
+int
+nni_plat_tcp_pipe_set_nodelay(nni_plat_tcp_pipe *p, bool nodelay)
+{
+	return (nni_posix_pipedesc_set_nodelay((void *) p, nodelay));
+}
+
+int
 nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *p, nni_sockaddr *sa)
 {
 	return (nni_posix_pipedesc_peername((void *) p, sa));

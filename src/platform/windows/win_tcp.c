@@ -226,6 +226,30 @@ nni_plat_tcp_pipe_close(nni_plat_tcp_pipe *pipe)
 }
 
 int
+nni_plat_tcp_pipe_set_linger(nni_plat_tcp_pipe *pipe, nng_duration linger)
+{
+	LINGER sl;
+
+	if (linger > 0) {
+		sl.l_onoff  = 1;
+		sl.l_linger = (unsigned short) (linger / 1000);
+	} else {
+		sl.l_onoff  = 0;
+		sl.l_linger = 0;
+	}
+	setsockopt(pipe->s, SOL_SOCKET, SO_LINGER, &sl, sizeof(sl));
+	return (0);
+}
+
+int
+nni_plat_tcp_pipe_set_nodelay(nni_plat_tcp_pipe *pipe, bool nodelay)
+{
+	BOOL nd = nodelay ? TRUE : FALSE;
+	setsockopt(pipe->s, IPPROTO_TCP, TCP_NODELAY, &nd, sizeof(nd));
+	return (0);
+}
+
+int
 nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *pipe, nni_sockaddr *sa)
 {
 	if (nni_win_sockaddr2nn(sa, &pipe->peername) < 0) {

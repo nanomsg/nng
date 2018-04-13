@@ -81,10 +81,19 @@ This is the linger time of the socket in milliseconds.
 When this value is non-zero, then the system will
 attempt to defer closing until it has undelivered data, or until the specified
 timeout has expired.
+The actual time to linger will be rounded up based upon the granularity
+provided by the system; most often this is a whole second.
+This value defaults to one (with any rounding up applied.)
 
 NOTE: Not all transports support lingering, and
 so closing a socket or exiting the application can still result in the loss
 of undelivered messages.
+
+NOTE: Setting a linger time of zero disables linger.
+This can cause not only lost data, but for some protocols it causes
+a reset of the communications channel, which can be perceived as a remote
+reset by peers.
+Thus, setting this to zero is not recommended.
 
 [[NNG_OPT_LOCADDR]]
 ((`NNG_OPT_LOCADDR`))::

@@ -546,7 +546,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	s->s_linger          = 0;
+	s->s_linger          = 1;
 	s->s_sndtimeo        = -1;
 	s->s_rcvtimeo        = -1;
 	s->s_closing         = 0;
