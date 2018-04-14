@@ -877,7 +877,9 @@ callable by applications.</p>
 <h2 id="_section_3compat_compatible_library_functions">Section 3compat: Compatible Library Functions</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section documents the <em>nanomsg</em> 1.0 libary compatible functions.</p>
+<p>This section documents the <em>nanomsg</em> 1.0 libary compatible functions.
+The functions in this section not be used except to aid in transitioning
+from the older <em>libnanomsg</em> library.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -885,6 +887,86 @@ callable by applications.</p>
 <col style="width: 62.5%;">
 </colgroup>
 <tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_allocmsg.3compat.html">nn_allocmsg(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate message (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_bind.3compat.html">nn_bind(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">accept connections from remote peers (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_close.3compat.html">nn_close(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close socket (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_cmsg.3compat.html">nn_cmsg(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">message control data (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_connect.3compat.html">nn_connect(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">connect to remote peer (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_device.3compat.html">nn_device(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create forwarding device (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_errno.3compat.html">nn_errno(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return most recent error (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_freemsg.3compat.html">nn_freemsg(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free message (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_get_statistic.3compat.html">nn_get_statistic(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic (stub)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_getsockopt.3compat.html">nn_getsockopt(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get socket option (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_reallocmsg.3compat.html">nn_reallocmsg(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reallocate message (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_recv.3compat.html">nn_recv(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive data (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_recvmsg.3compat.html">nn_recvmsg(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive message (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_send.3compat.html">nn_send(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send data (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_sendmsg.3compat.html">nn_sendmsg(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send message (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_setsockopt.3compat.html">nn_setsockopt(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set socket option (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_shutdown.3compat.html">nn_shutdown(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">shut down endpoint (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_socket.3compat.html">nn_socket(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create socket (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_strerror.3compat.html">nn_strerror(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return message for error (compatible API)</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nn_term.3compat.html">nn_term(3compat)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">terminate library (compatible API)</p></td>
+</tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_compat.3compat.html">nng_compat(3compat)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">compatibility with nanomsg 1.0</p></td>

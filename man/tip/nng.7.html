@@ -513,6 +513,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_transports">Transports</a></li>
 <li><a href="#_conceptual_overview">Conceptual Overview</a>
 <ul class="sectlevel2">
+<li><a href="#raw_mode">Raw Mode</a></li>
 <li><a href="#_urls">URLs</a></li>
 </ul>
 </li>
@@ -694,10 +695,8 @@ reconnecting.</p>
 all; the socket abstraction should provide all the functionality needed
 other than in a few specific circumstances.</p>
 </div>
-<div class="paragraph">
-<p><a id="raw_mode"></a>
-=== Raw Mode</p>
-</div>
+<div class="sect2">
+<h3 id="raw_mode">Raw Mode</h3>
 <div class="paragraph">
 <p>
 Most applications will use <em>nng</em> sockets in &#8220;cooked&#8221; mode.
@@ -707,7 +706,7 @@ match a reply to a request, and resend requests periodically if no reply
 was received.</p>
 </div>
 <div class="paragraph">
-<p>There are situations, such as with <a href="nng_device.7.html">proxies</a>,
+<p>There are situations, such as with <a href="nng_device.3.html">proxies</a>,
 where it is desirable to bypass these semantics and simply pass messages
 to and from the socket with no extra semantic handling.
 This is possible using &#8220;raw&#8221; mode sockets.</p>
@@ -733,6 +732,7 @@ processing is needed.
 </td>
 </tr>
 </table>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_urls">URLs</h3>

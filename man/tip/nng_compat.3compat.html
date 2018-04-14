@@ -548,13 +548,13 @@ most <em>nanomsg</em> 1.0 applications.</p>
 <td class="content">
 This is intended to faciliate converting legacy applications to
 use the <em>nng</em> library.
-New applications shoud not use the newer <a href="nng.7.html"><em>nng</em></a> API instead.
+New applications should use the newer <a href="nng.7.html"><em>nng</em></a> API instead.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
-<p>Applications making use of this compatibility layer take care
+<p>Applications making use of this compatibility layer must take care
 to link with <a href="libnng.3.html"><em>libnng</em></a> instead of <em>libnn</em>.</p>
 </div>
 <div class="admonitionblock note">
@@ -606,105 +606,166 @@ used in compilation.
 <div class="paragraph">
 <p>The following functions are provided:</p>
 </div>
-<table class="tableblock frame-all grid-all spread">
-<colgroup>
-<col style="width: 50%;">
-<col style="width: 50%;">
-</colgroup>
-<tbody>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_socket()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">create a socket</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_getsockopt()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">get socket option</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_setsockopt()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">set socket option</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_bind()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">accept connections from remote peers</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_connect()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">connect to remote peer</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_send()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">send data</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_recv()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">receive data</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_shutdown()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">shut down endpoint</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_close()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">close socket</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_poll()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">poll sockets</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_device()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">create forwarding device</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_recvmsg()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">receive message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_sendmsg()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">send message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_get_statistic()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic (stub)</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_allocmsg()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">allocate message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_reallocmsg()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">reallocate message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_freemsg()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">free message</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_errno()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">return most recent error</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_strerror()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">return message for error</p></td>
-</tr>
-<tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><code>nn_term()</code></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">terminate library</p></td>
-</tr>
-</tbody>
-</table>
-<div class="admonitionblock note">
+<div class="hdlist">
 <table>
 <tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<td class="hdlist1">
+<code><a href="nn_socket.3compat.html">nn_socket()</a></code>
 </td>
-<td class="content">
-Documentation for the compatibility functions will be
-supplied here later.
-In the meantime it can be found online at the
-<a href="http://nanomsg.org">nanomsg site</a>.
+<td class="hdlist2">
+<p>create socket</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_getsockopt.3compat.html">nn_getsockopt()</a></code>
+</td>
+<td class="hdlist2">
+<p>get socket option</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_setsockopt.3compat.html">nn_setsockopt()</a></code>
+</td>
+<td class="hdlist2">
+<p>set socket option</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_bind.3compat.html">nn_bind()</a></code>
+</td>
+<td class="hdlist2">
+<p>accept connections from remote peers</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_connect.3compat.html">nn_connect()</a></code>
+</td>
+<td class="hdlist2">
+<p>connect to remote peer</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_send.3compat.html">nn_send()</a></code>
+</td>
+<td class="hdlist2">
+<p>send data</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_recv.3compat.html">nn_recv()</a></code>
+</td>
+<td class="hdlist2">
+<p>receive data</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_shutdown.3compat.html">nn_shutdown()</a></code>
+</td>
+<td class="hdlist2">
+<p>shut down endpoint</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_close.3compat.html">nn_close()</a></code>
+</td>
+<td class="hdlist2">
+<p>close socket</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_device.3compat.html">nn_device()</a></code>
+</td>
+<td class="hdlist2">
+<p>create forwarding device</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_recvmsg.3compat.html">nn_recvmsg()</a></code>
+</td>
+<td class="hdlist2">
+<p>receive message</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_sendmsg.3compat.html">nn_sendmsg()</a></code>
+</td>
+<td class="hdlist2">
+<p>send message</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_cmsg.3compat.html">nn_cmsg()</a></code>
+</td>
+<td class="hdlist2">
+<p>message control data</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_get_statistic.3compat.html">nn_get_statistic()</a></code>
+</td>
+<td class="hdlist2">
+<p>get statistic (stub)</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_allocmsg.3compat.html">nn_allocmsg()</a></code>
+</td>
+<td class="hdlist2">
+<p>allocate message</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_reallocmsg.3compat.html">nn_reallocmsg()</a></code>
+</td>
+<td class="hdlist2">
+<p>reallocate message</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_freemsg.3compat.html">nn_freemsg()</a></code>
+</td>
+<td class="hdlist2">
+<p>free message</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_errno.3compat.html">nn_errno()</a></code>
+</td>
+<td class="hdlist2">
+<p>return most recent error</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_strerror.3compat.html">nn_strerror()</a></code>
+</td>
+<td class="hdlist2">
+<p>return message for error</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code><a href="nn_term.3compat.html">nn_term()</a></code>
+</td>
+<td class="hdlist2">
+<p>terminate library</p>
 </td>
 </tr>
 </table>
@@ -752,10 +813,8 @@ the relevant support is added to <em>nng</em>.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Statistics (<code>nn_get_statistic</code>) are unsupported.
-The plan is to support statistics in the native <em>nng</em> API, but
-we think there is no need for this in a compatibility layer.
-Hence, this function returns <code>ENOTSUP</code>.
+Access to statistics using this legacy API
+(<code><a href="nn_get_statistic.3compat.html">nn_get_statistic()</a></code>) is unsupported.
 </td>
 </tr>
 </table>
@@ -852,7 +911,8 @@ be used temporarily to facilitate transitioning code to the new APIs.
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p><a href="nng.7.html">nng(7)</a></p>
+<p><a href="libnng.3.html">libnng(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>
 </div>
