@@ -27,9 +27,9 @@ most _nanomsg_ 1.0 applications.
 
 IMPORTANT: This is intended to faciliate converting legacy applications to
 use the _nng_ library.
-New applications shoud not use the newer <<nng.7#,_nng_>> API instead.
+New applications should use the newer <<nng.7#,_nng_>> API instead.
 
-Applications making use of this ((compatibility layer)) take care
+Applications making use of this ((compatibility layer)) must take care
 to link with <<libnng.3#,_libnng_>> instead of _libnn_.
 
 NOTE: Some capabilities, protocols, and transports, will not be accessible
@@ -50,34 +50,59 @@ used in compilation.
 
 The following functions are provided:
 
+// For PDF, we don't have horizontal lists, so we have to conditionalize
+// this and use tables there -- it looks ugly otherwise.
+ifndef::backend-pdf[]
+[horizontal]
+`<<nn_socket.3compat#,nn_socket()>>`:: create socket
+`<<nn_getsockopt.3compat#,nn_getsockopt()>>`:: get socket option
+`<<nn_setsockopt.3compat#,nn_setsockopt()>>`:: set socket option
+`<<nn_bind.3compat#,nn_bind()>>`:: accept connections from remote peers
+`<<nn_connect.3compat#,nn_connect()>>`:: connect to remote peer
+`<<nn_send.3compat#,nn_send()>>`:: send data
+`<<nn_recv.3compat#,nn_recv()>>`:: receive data
+`<<nn_shutdown.3compat#,nn_shutdown()>>`:: shut down endpoint
+`<<nn_close.3compat#,nn_close()>>`:: close socket
+//`nn_poll()`:: poll sockets
+`<<nn_device.3compat#,nn_device()>>`:: create forwarding device
+`<<nn_recvmsg.3compat#,nn_recvmsg()>>`:: receive message
+`<<nn_sendmsg.3compat#,nn_sendmsg()>>`:: send message
+`<<nn_cmsg.3compat#,nn_cmsg()>>`:: message control data
+`<<nn_get_statistic.3compat#,nn_get_statistic()>>`:: get statistic (stub)
+`<<nn_allocmsg.3compat#,nn_allocmsg()>>`:: allocate message
+`<<nn_reallocmsg.3compat#,nn_reallocmsg()>>`:: reallocate message
+`<<nn_freemsg.3compat#,nn_freemsg()>>`:: free message
+`<<nn_errno.3compat#,nn_errno()>>`:: return most recent error
+`<<nn_strerror.3compat#,nn_strerror()>>`:: return message for error
+`<<nn_term.3compat#,nn_term()>>`:: terminate library
+endif::[]
+ifdef::backend-pdf[]
 // Add links for the following as they are written.
+[.hdlist,width=90%, grid=rows,cols="1,2", align="center"]
 |===
-|`nn_socket()`|create a socket
-|`nn_getsockopt()`|get socket option
-|`nn_setsockopt()`|set socket option
-|`nn_bind()`|accept connections from remote peers
-|`nn_connect()`|connect to remote peer
-|`nn_send()`|send data
-|`nn_recv()`|receive data
-|`nn_shutdown()`|shut down endpoint
-|`nn_close()`|close socket
-|`nn_poll()`|poll sockets
-|`nn_device()`|create forwarding device
-|`nn_recvmsg()`|receive message
-|`nn_sendmsg()`|send message
-|`nn_get_statistic()`|get statistic (stub)
-|`nn_allocmsg()`|allocate message
-|`nn_reallocmsg()`|reallocate message
-|`nn_freemsg()`|free message
-|`nn_errno()`|return most recent error
-|`nn_strerror()`|return message for error
-|`nn_term()`|terminate library
+|`<<nn_socket.3compat#,nn_socket()`>>|create socket
+|`<<nn_getsockopt.3compat#,nn_getsockopt()>>`|get socket option
+|`<<nn_setsockopt.3compat#,nn_setsockopt()>>`|set socket option
+|`<<nn_bind.3compat#,nn_bind()>>`|accept connections from remote peers
+|`<<nn_connect.3compat#,nn_connect()>>`|connect to remote peer
+|`<<nn_send.3compat#,nn_send()>>`|send data
+|`<<nn_recv.3compat#,nn_recv()>>`|receive data
+|`<<nn_shutdown.3compat#,nn_shutdown()>>`|shut down endpoint
+|`<<nn_close.3compat#,nn_close()>>`|close socket
+//|`nn_poll()`|poll sockets
+|`<<nn_device.3compat#,nn_device()>>`|create forwarding device
+|`<<nn_recvmsg.3compat#,nn_recvmsg()>>`|receive message
+|`<<nn_sendmsg.3compat#,nn_sendmsg()>>`|send message
+|`<<nn_cmsg.3compat#,nn_cmsg()>>`|message control data
+|`<<nn_get_statistic.3compat#,nn_get_statistic()>>`|get statistic (stub)
+|`<<nn_allocmsg.3compat#,nn_allocmsg()>>`|allocate message
+|`<<nn_reallocmsg.3compat#,nn_reallocmsg()>>`|reallocate message
+|`<<nn_freemsg.3compat#,nn_freemsg()>>`|free message
+|`<<nn_errno.3compat#,nn_errno()>>`|return most recent error
+|`<<nn_strerror.3compat#,nn_strerror()>>`|return message for error
+|`<<nn_term.3compat#,nn_term()>>`|terminate library
 |===
-
-NOTE: Documentation for the compatibility functions will be
-supplied here later.
-In the meantime it can be found online at the
-http://nanomsg.org[nanomsg site].
+endif::[]
 
 There are a few caveats, that should be kept in mind.
 
@@ -94,10 +119,8 @@ NOTE: The following options (`nn_getsockopt`) are unsupported:
 Some of these will probably be added back in the future when
 the relevant support is added to _nng_.
 
-NOTE: Statistics (`nn_get_statistic`) are unsupported.
-The plan is to support statistics in the native _nng_ API, but
-we think there is no need for this in a compatibility layer.
-Hence, this function returns `ENOTSUP`.
+NOTE: Access to statistics using this legacy API
+(`<<nn_get_statistic.3compat#,nn_get_statistic()>>`) is unsupported.
 
 NOTE: Some transports can support longer URLs than legacy _libnanomsg_ can.
 It is a good idea to use short pathnames in URLs if interoperability
@@ -124,18 +147,7 @@ IMPORTANT: It *is* possible at present to intermix sockets between the new and
 the old APIs, but this is not a guaranteed feature, and should only
 be used temporarily to facilitate transitioning code to the new APIs.
 
-// === Common Functions
-//
-// The following common functions exist in _libnng_.
-//
-// |===
-// |<<nng_alloc.3#,nng_alloc()>>|allocate memory
-// |<<nng_free.3#,nng_free()>>|free memory
-// |<<nng_strerror.3#,nng_strerror()>>|return an error description
-// |<<nng_version.3#,nng_version()>>|report library version
-// |===
-//
-
 == SEE ALSO
 
+<<libnng.3#,libnng(3)>>,
 <<nng.7#,nng(7)>>

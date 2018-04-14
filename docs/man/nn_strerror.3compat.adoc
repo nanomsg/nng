@@ -1,0 +1,46 @@
+= nn_errno(3compat)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nn_strerror - return message for error (compatible API)
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nanomsg/nn.h>
+
+const char *nn_strerror(int err);
+----
+
+== DESCRIPTION
+
+The `nn_strerror()` function returns a human readable message corresponding
+to the given error number _err_.
+
+NOTE: This function is provided for API
+<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
+Consider using the relevant <<libnng.3#,modern API>> instead.
+
+== RETURN VALUES
+
+This function returns the message corresponding to _err_.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nn_errno.3compat#,nn_errno(3compat)>>,
+<<nng_compat.3compat#,nng_compat(3compat)>>,
+<<nng.7#,nng(7)>>

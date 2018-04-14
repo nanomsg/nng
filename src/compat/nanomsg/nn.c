@@ -795,3 +795,12 @@ nn_term(void)
 	// in a library -- only e.g. atexit() and similar.
 	nng_closeall();
 }
+
+uint64_t
+nn_get_statistic(int x, int y)
+{
+	(void) x;
+	(void) y;
+
+	return (0);
+}

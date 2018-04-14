@@ -97,7 +97,8 @@ the requestor, if reliable delivery is needed.
 
 == RETURN VALUES
 
-This function returns 0 on success, and non-zero otherwise.
+This function continues running, and only returns an appropriate error when
+one occurs, or if one of the sockets is closed.
 
 == ERRORS
 

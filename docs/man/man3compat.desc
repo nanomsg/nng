@@ -1,1 +1,3 @@
 This section documents the _nanomsg_ 1.0 libary compatible functions.
+The functions in this section not be used except to aid in transitioning
+from the older _libnanomsg_ library.

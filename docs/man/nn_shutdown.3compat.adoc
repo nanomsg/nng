@@ -1,0 +1,54 @@
+= nn_shutdown(3compat)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nn_shutdown - shut down endpoint (compatible API)
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nanomsg/nn.h>
+
+int nn_shutdown(int sock, int ep)
+----
+
+== DESCRIPTION
+
+The `nn_shutdown()` shuts down the "`endpoint`"  _ep_ on the socket _sock_.
+This will stop the socket from either accepting new connections, or establishing
+old ones.
+Additionally, any established connections associated with _ep_ will be
+closed.
+
+NOTE: This function is provided for API
+<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
+Consider using the relevant <<libnng.3#,modern API>> instead.
+
+== RETURN VALUES
+
+This function returns zero on success, and -1 on error.
+
+== ERRORS
+
+[horizontal]
+`EBADF`:: The socket _sock_ is not open.
+`EINVAL`:: An invalid _ep_ was supplied.
+
+== SEE ALSO
+
+<<nn_bind.3compat#,nn_bind(3compat)>>,
+<<nn_connect.3compat#,nn_connect(3compat)>>,
+<<nn_errno.3compat#,nn_errno(3compat)>>,
+<<nn_socket.3compat#,nn_socket(3compat)>>,
+<<nng_compat.3compat#,nn_compat(3compat)>>,
+<<nng.7#,nng(7)>>
