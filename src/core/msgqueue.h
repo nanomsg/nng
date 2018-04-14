@@ -17,10 +17,6 @@
 // they are a thread-safe way to pass messages between subsystems.  They
 // do have additional capabilities though.
 //
-// A closed message queue cannot be written to, but if there are messages
-// still in it and it is draining, it can be read from.  This permits
-// linger operations to work.
-//
 // Message queues can be closed many times safely.
 //
 // Readers & writers in a message queue can be woken either by a timeout
@@ -107,12 +103,6 @@ extern void nni_msgq_set_cb(nni_msgq *, nni_msgq_cb, void *);
 // message queue will return NNG_ECLOSED.  Messages inside the queue
 // are freed.  Unlike closing a go channel, this operation is idempotent.
 extern void nni_msgq_close(nni_msgq *);
-
-// nni_msgq_drain is like nng_msgq_close, except that reads
-// against the queue are permitted for up to the time limit.  The
-// operation blocks until either the queue is empty, or the timeout
-// has expired.  Any messages still in the queue at the timeout are freed.
-extern void nni_msgq_drain(nni_msgq *, nni_time);
 
 // nni_msgq_resize resizes the message queue; messages already in the queue
 // will be preserved as long as there is room.  Messages that are dropped

@@ -54,7 +54,6 @@ struct nni_tls_ep {
 	nni_plat_tcp_ep *tep;
 	uint16_t         proto;
 	size_t           rcvmax;
-	nni_duration     linger;
 	int              authmode;
 	nni_aio *        aio;
 	nni_aio *        user_aio;
@@ -819,26 +818,6 @@ nni_tls_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp, int typ)
 }
 
 static int
-nni_tls_ep_setopt_linger(void *arg, const void *v, size_t sz, int typ)
-{
-	nni_tls_ep * ep = arg;
-	nng_duration val;
-	int          rv;
-
-	if (((rv = nni_copyin_ms(&val, v, sz, typ)) == 0) && (ep != NULL)) {
-		ep->linger = val;
-	}
-	return (rv);
-}
-
-static int
-nni_tls_ep_getopt_linger(void *arg, void *v, size_t *szp, int typ)
-{
-	nni_tls_ep *ep = arg;
-	return (nni_copyout_ms(ep->linger, v, szp, typ));
-}
-
-static int
 tls_setopt_config(void *arg, const void *data, size_t sz, int typ)
 {
 	nni_tls_ep *    ep = arg;
@@ -982,12 +961,6 @@ static nni_tran_ep_option nni_tls_ep_options[] = {
 	    .eo_type   = NNI_TYPE_SIZE,
 	    .eo_getopt = nni_tls_ep_getopt_recvmaxsz,
 	    .eo_setopt = nni_tls_ep_setopt_recvmaxsz,
-	},
-	{
-	    .eo_name   = NNG_OPT_LINGER,
-	    .eo_type   = NNI_TYPE_DURATION,
-	    .eo_getopt = nni_tls_ep_getopt_linger,
-	    .eo_setopt = nni_tls_ep_setopt_linger,
 	},
 	{
 	    .eo_name   = NNG_OPT_URL,

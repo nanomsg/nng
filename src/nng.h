@@ -554,7 +554,6 @@ enum nng_flag_enum {
 // Options.
 #define NNG_OPT_SOCKNAME "socket-name"
 #define NNG_OPT_RAW "raw"
-#define NNG_OPT_LINGER "linger"
 #define NNG_OPT_RECVBUF "recv-buffer"
 #define NNG_OPT_SENDBUF "send-buffer"
 #define NNG_OPT_RECVFD "recv-fd"

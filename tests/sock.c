@@ -471,10 +471,10 @@ TestMain("Socket Operations", {
 			So(nng_listener_getopt_int(1999, NNG_OPT_RAW, &i) ==
 			    NNG_ENOENT);
 
-			So(nng_dialer_getopt_ms(1999, NNG_OPT_LINGER, &t) ==
+			So(nng_dialer_getopt_ms(1999, NNG_OPT_RECVTIMEO, &t) ==
 			    NNG_ENOENT);
-			So(nng_listener_getopt_ms(1999, NNG_OPT_LINGER, &t) ==
-			    NNG_ENOENT);
+			So(nng_listener_getopt_ms(
+			       1999, NNG_OPT_SENDTIMEO, &t) == NNG_ENOENT);
 
 		});
 

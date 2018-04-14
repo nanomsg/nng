@@ -48,7 +48,6 @@ struct nni_tcp_ep {
 	nni_plat_tcp_ep *tep;
 	uint16_t         proto;
 	size_t           rcvmax;
-	nni_duration     linger;
 	nni_aio *        aio;
 	nni_aio *        user_aio;
 	nni_url *        url;
@@ -795,26 +794,6 @@ nni_tcp_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp, int typ)
 	return (nni_copyout_size(ep->rcvmax, v, szp, typ));
 }
 
-static int
-nni_tcp_ep_setopt_linger(void *arg, const void *v, size_t sz, int typ)
-{
-	nni_tcp_ep * ep = arg;
-	nng_duration val;
-	int          rv;
-
-	if (((rv = nni_copyin_ms(&val, v, sz, typ)) == 0) && (ep != NULL)) {
-		ep->linger = val;
-	}
-	return (rv);
-}
-
-static int
-nni_tcp_ep_getopt_linger(void *arg, void *v, size_t *szp, int typ)
-{
-	nni_tcp_ep *ep = arg;
-	return (nni_copyout_ms(ep->linger, v, szp, typ));
-}
-
 static nni_tran_pipe_option nni_tcp_pipe_options[] = {
 	{
 	    .po_name   = NNG_OPT_LOCADDR,
@@ -854,12 +833,6 @@ static nni_tran_ep_option nni_tcp_ep_options[] = {
 	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = nni_tcp_ep_getopt_url,
 	    .eo_setopt = NULL,
-	},
-	{
-	    .eo_name   = NNG_OPT_LINGER,
-	    .eo_type   = NNI_TYPE_DURATION,
-	    .eo_getopt = nni_tcp_ep_getopt_linger,
-	    .eo_setopt = nni_tcp_ep_setopt_linger,
 	},
 	// terminate list
 	{

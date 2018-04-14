@@ -21,6 +21,8 @@
 #include "protocol/survey0/respond.h"
 #include "protocol/survey0/survey.h"
 
+#include "core/nng_impl.h"
+
 #include <stdio.h>
 #include <string.h>
 
@@ -645,39 +647,14 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	return ((int) sz);
 }
 
-// options which we convert -- most of the array is initialized at run time.
-static const struct {
-	int         nnlevel;
-	int         nnopt;
-	const char *opt;
-} options[] = {
-	{ NN_SOL_SOCKET, NN_LINGER, NNG_OPT_LINGER }, // review
-	{ NN_SOL_SOCKET, NN_SNDBUF, NNG_OPT_SENDBUF },
-	{ NN_SOL_SOCKET, NN_RCVBUF, NNG_OPT_RECVBUF },
-	{ NN_SOL_SOCKET, NN_RECONNECT_IVL, NNG_OPT_RECONNMINT },
-	{ NN_SOL_SOCKET, NN_RECONNECT_IVL_MAX, NNG_OPT_RECONNMAXT },
-	{ NN_SOL_SOCKET, NN_SNDFD, NNG_OPT_SENDFD },
-	{ NN_SOL_SOCKET, NN_RCVFD, NNG_OPT_RECVFD },
-	{ NN_SOL_SOCKET, NN_RCVMAXSIZE, NNG_OPT_RECVMAXSZ },
-	{ NN_SOL_SOCKET, NN_MAXTTL, NNG_OPT_MAXTTL },
-	{ NN_SOL_SOCKET, NN_RCVTIMEO, NNG_OPT_RECVTIMEO },
-	{ NN_SOL_SOCKET, NN_SNDTIMEO, NNG_OPT_SENDTIMEO },
-	{ NN_SOL_SOCKET, NN_SOCKET_NAME, NNG_OPT_SOCKNAME },
-	{ NN_REQ, NN_REQ_RESEND_IVL, NNG_OPT_REQ_RESENDTIME },
-	{ NN_SUB, NN_SUB_SUBSCRIBE, NNG_OPT_SUB_SUBSCRIBE },
-	{ NN_SUB, NN_SUB_UNSUBSCRIBE, NNG_OPT_SUB_UNSUBSCRIBE },
-	{ NN_SURVEYOR, NN_SURVEYOR_DEADLINE, NNG_OPT_SURVEYOR_SURVEYTIME },
-	// XXX: IPV4ONLY, SNDPRIO, RCVPRIO
-};
-
 static int
-nn_getdomain(int s, void *valp, size_t *szp)
+nn_getdomain(nng_socket s, void *valp, size_t *szp)
 {
 	int  i;
 	bool b;
 	int  rv;
 
-	if ((rv = nng_getopt_bool((nng_socket) s, NNG_OPT_RAW, &b)) != 0) {
+	if ((rv = nng_getopt_bool(s, NNG_OPT_RAW, &b)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -687,25 +664,143 @@ nn_getdomain(int s, void *valp, size_t *szp)
 	return (0);
 }
 
+static int
+nn_getzero(nng_socket s, void *valp, size_t *szp)
+{
+	int zero = 0;
+	NNI_ARG_UNUSED(s);
+	memcpy(valp, &zero, *szp < sizeof(zero) ? *szp : sizeof(zero));
+	*szp = sizeof(zero);
+	return (0);
+}
+
+static int
+nn_setignore(nng_socket s, const void *valp, size_t sz)
+{
+	NNI_ARG_UNUSED(valp);
+	NNI_ARG_UNUSED(s);
+	if (sz != sizeof(int)) {
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+	return (0);
+}
+
+// options which we convert -- most of the array is initialized at run time.
+static const struct {
+	int         nnlevel;
+	int         nnopt;
+	const char *opt;
+	int (*get)(nng_socket, void *, size_t *);
+	int (*set)(nng_socket, const void *, size_t);
+} options[] = {
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_LINGER,
+	    .get     = nn_getzero,
+	    .set     = nn_setignore,
+	}, // review
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_DOMAIN,
+	    .get     = nn_getdomain,
+	    .set     = NULL,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_SNDBUF,
+	    .opt     = NNG_OPT_SENDBUF,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_RCVBUF,
+	    .opt     = NNG_OPT_RECVBUF,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_RECONNECT_IVL,
+	    .opt     = NNG_OPT_RECONNMINT,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_RECONNECT_IVL_MAX,
+	    .opt     = NNG_OPT_RECONNMAXT,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET, .nnopt = NN_SNDFD, .opt = NNG_OPT_SENDFD,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET, .nnopt = NN_RCVFD, .opt = NNG_OPT_RECVFD,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_RCVMAXSIZE,
+	    .opt     = NNG_OPT_RECVMAXSZ,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_MAXTTL,
+	    .opt     = NNG_OPT_MAXTTL,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_RCVTIMEO,
+	    .opt     = NNG_OPT_RECVTIMEO,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_SNDTIMEO,
+	    .opt     = NNG_OPT_SENDTIMEO,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_SOCKET_NAME,
+	    .opt     = NNG_OPT_SOCKNAME,
+	},
+	{
+	    .nnlevel = NN_REQ,
+	    .nnopt   = NN_REQ_RESEND_IVL,
+	    .opt     = NNG_OPT_REQ_RESENDTIME,
+	},
+	{
+	    .nnlevel = NN_SUB,
+	    .nnopt   = NN_SUB_SUBSCRIBE,
+	    .opt     = NNG_OPT_SUB_SUBSCRIBE,
+	},
+	{
+	    .nnlevel = NN_SUB,
+	    .nnopt   = NN_SUB_UNSUBSCRIBE,
+	    .opt     = NNG_OPT_SUB_UNSUBSCRIBE,
+	},
+	{
+	    .nnlevel = NN_SURVEYOR,
+	    .nnopt   = NN_SURVEYOR_DEADLINE,
+	    .opt     = NNG_OPT_SURVEYOR_SURVEYTIME,
+	},
+	// XXX: IPV4ONLY, SNDPRIO, RCVPRIO
+};
+
 int
 nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 {
-	const char *name = NULL;
-	int         rv;
+	const char *name                         = NULL;
+	int (*get)(nng_socket, void *, size_t *) = NULL;
+	int rv;
 
 	for (unsigned i = 0; i < sizeof(options) / sizeof(options[0]); i++) {
 		if ((options[i].nnlevel == nnlevel) &&
 		    (options[i].nnopt == nnopt)) {
+			get  = options[i].get;
 			name = options[i].opt;
 			break;
 		}
 	}
 
-	if (name == NULL) {
-		if (nnlevel == NN_SOL_SOCKET && nnopt == NN_DOMAIN) {
-			return (nn_getdomain(s, valp, szp));
-		}
+	if (get != NULL) {
+		return (get((nng_socket) s, valp, szp));
+	}
 
+	if (name == NULL) {
 		errno = ENOPROTOOPT;
 		return (-1);
 	}
@@ -721,16 +816,24 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 int
 nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 {
-	const char *name = NULL;
-	int         rv;
+	const char *name                             = NULL;
+	int (*set)(nng_socket, const void *, size_t) = NULL;
+	int rv;
 
 	for (unsigned i = 0; i < sizeof(options) / sizeof(options[0]); i++) {
 		if ((options[i].nnlevel == nnlevel) &&
 		    (options[i].nnopt == nnopt)) {
+
+			set  = options[i].set;
 			name = options[i].opt;
 			break;
 		}
 	}
+
+	if (set != NULL) {
+		return (set((nng_socket) s, valp, sz));
+	}
+
 	if (name == NULL) {
 		return (ENOPROTOOPT);
 	}

@@ -21,7 +21,6 @@ nng_options - socket, dialer, listener, and pipe options
 
 #define NNG_OPT_SOCKNAME   "socket-name"
 #define NNG_OPT_RAW        "raw"
-#define NNG_OPT_LINGER     "linger"
 #define NNG_OPT_RECVBUF    "recv-buffer"
 #define NNG_OPT_SENDBUF    "send-buffer"
 #define NNG_OPT_RECVFD     "recv-fd"
@@ -72,19 +71,6 @@ example there is no single meaningful address for a socket, since sockets
 can have multiple dialers and endpoints associated with them.
 An attempt has been made to include details about such restrictions in the
 description of the option.
-
-[[NNG_OPT_LINGER]]
-((`NNG_OPT_LINGER`))::
-(((lingering)))
-(`<<nng_duration.5#,nng_duration>>`)
-This is the linger time of the socket in milliseconds.
-When this value is non-zero, then the system will
-attempt to defer closing until it has undelivered data, or until the specified
-timeout has expired.
-
-NOTE: Not all transports support lingering, and
-so closing a socket or exiting the application can still result in the loss
-of undelivered messages.
 
 [[NNG_OPT_LOCADDR]]
 ((`NNG_OPT_LOCADDR`))::

@@ -69,7 +69,6 @@ struct nni_socket {
 	nni_proto_ctx_ops  s_ctx_ops;
 
 	// options
-	nni_duration s_linger;    // linger time
 	nni_duration s_sndtimeo;  // send timeout
 	nni_duration s_rcvtimeo;  // receive timeout
 	nni_duration s_reconn;    // reconnect time
@@ -546,7 +545,6 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	s->s_linger          = 0;
 	s->s_sndtimeo        = -1;
 	s->s_rcvtimeo        = -1;
 	s->s_closing         = 0;
@@ -586,8 +584,6 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	if (((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
 	    ((rv = nni_msgq_init(&s->s_urq, 0)) != 0) ||
 	    ((rv = s->s_sock_ops.sock_init(&s->s_data, s)) != 0) ||
-	    ((rv = nni_sock_setopt(s, NNG_OPT_LINGER, &s->s_linger,
-	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_SENDTIMEO, &s->s_sndtimeo,
 	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_RECVTIMEO, &s->s_rcvtimeo,
@@ -686,7 +682,6 @@ nni_sock_shutdown(nni_sock *sock)
 	nni_pipe *pipe;
 	nni_ep *  ep;
 	nni_ep *  nep;
-	nni_time  linger;
 	nni_ctx * ctx;
 	nni_ctx * nctx;
 
@@ -697,15 +692,6 @@ nni_sock_shutdown(nni_sock *sock)
 	}
 	// Mark us closing, so no more EPs or changes can occur.
 	sock->s_closing = 1;
-
-	// Special optimization; if there are no pipes connected,
-	// then there is no reason to linger since there's nothing that
-	// could possibly send this data out.
-	if (nni_list_first(&sock->s_pipes) == NULL) {
-		linger = NNI_TIME_ZERO;
-	} else {
-		linger = nni_clock() + sock->s_linger;
-	}
 
 	// Close the EPs. This prevents new connections from forming but
 	// but allows existing ones to drain.
@@ -732,21 +718,6 @@ nni_sock_shutdown(nni_sock *sock)
 	}
 	nni_mtx_unlock(&nni_sock_lk);
 
-	// XXX: Add protocol specific drain here. This should replace the
-	// msgq_drain feature below.  Probably msgq_drain will need to
-	// be changed to take an AIO for completion.
-
-	// We drain the upper write queue.  This is just like closing it,
-	// except that the protocol gets a chance to get the messages and
-	// push them down to the transport.  This operation can *block*
-	// until the linger time has expired.  We only do this for sendable
-	// sockets that are actually using the message queue of course.
-	if ((nni_sock_flags(sock) &
-	        (NNI_PROTO_FLAG_NOMSGQ | NNI_PROTO_FLAG_SND)) ==
-	    NNI_PROTO_FLAG_SND) {
-		nni_msgq_drain(sock->s_uwq, linger);
-	}
-
 	// Generally, unless the protocol is blocked trying to perform
 	// writes (e.g. a slow reader on the other side), it should be
 	// trying to shut things down.  We wait to give it
@@ -760,11 +731,6 @@ nni_sock_shutdown(nni_sock *sock)
 	nni_mtx_unlock(&nni_sock_lk);
 
 	nni_mtx_lock(&sock->s_mx);
-	while (nni_list_first(&sock->s_pipes) != NULL) {
-		if (nni_cv_until(&sock->s_cv, linger) == NNG_ETIMEDOUT) {
-			break;
-		}
-	}
 
 	// At this point, we've done everything we politely can to give
 	// the protocol a chance to flush its write side.  Now its time
@@ -1029,10 +995,7 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *v, size_t sz, int t)
 	// Also check a few generic things.  We do this if no transport
 	// was found, or even if a transport rejected one of the settings.
 	if ((rv == NNG_ENOTSUP) || (rv == 0)) {
-		if ((strcmp(name, NNG_OPT_LINGER) == 0)) {
-			nng_duration d;
-			rv = nni_copyin_ms(&d, v, sz, t);
-		} else if (strcmp(name, NNG_OPT_RECVMAXSZ) == 0) {
+		if (strcmp(name, NNG_OPT_RECVMAXSZ) == 0) {
 			size_t z;
 			// just a sanity test on the size; it also ensures that
 			// a size can be set even with no transport configured.
@@ -1100,14 +1063,6 @@ nni_sock_setopt(nni_sock *s, const char *name, const void *v, size_t sz, int t)
 				return (rv);
 			}
 		}
-	}
-
-	// For some options, which also have an impact on the socket
-	// behavior, we save a local value.  Note that the transport
-	// will already have had a chance to veto this.
-
-	if (strcmp(name, NNG_OPT_LINGER) == 0) {
-		rv = nni_copyin_ms(&s->s_linger, v, sz, t);
 	}
 
 	if (rv == 0) {
