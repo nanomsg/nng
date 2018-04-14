@@ -135,11 +135,16 @@ in configuring device forwarding.
 // NN_RCVFD is read-only.
 // NN_SNDFD is read-only.
 
+The following option is available for `NN_REQ` sockets
+using the `NN_REQ` level:
+
 `NN_REQ_RESEND_IVL`::
 Request retry interval in milliseconds.
 If an `NN_REQ` socket does not receive a reply to a request within this
 period of time, the socket will automatically resend the request.
 The default value is 60000 (one minute).
+
+The following options are available for `NN_SUB` sockets using the `NN_SUB` level:
 
 `NN_SUB_SUBSCRIBE`::
 Subscription topic, for `NN_SUB` sockets.
@@ -153,6 +158,9 @@ TIP: To receive all messages, subscribe to an empty topic (_sz_ equal to zero).
 
 `NN_SUB_UNSUBSCRIBE`::
 Removes a subscription topic that was earlier established.
+
+The following option is available for `NN_SURVEYOR` sockets
+using the `NN_SURVEYOR` level:
 
 `NN_SURVEYOR_DEADLINE`::
 Survey deadline in milliseconds for `NN_SURVEYOR` sockets.
