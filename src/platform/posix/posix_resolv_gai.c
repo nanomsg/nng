@@ -98,6 +98,7 @@ nni_posix_gai_errno(int rv)
 		return (nni_plat_errno(errno));
 
 	case EAI_NONAME:
+	case EAI_NODATA:
 	case EAI_SERVICE:
 		return (NNG_EADDRINVAL);
 
