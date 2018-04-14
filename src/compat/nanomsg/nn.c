@@ -835,7 +835,8 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 	}
 
 	if (name == NULL) {
-		return (ENOPROTOOPT);
+		errno = ENOPROTOOPT;
+		return (-1);
 	}
 
 	if ((rv = nng_setopt((nng_socket) s, name, valp, sz)) != 0) {
