@@ -92,37 +92,11 @@ struct nni_socket {
 
 static void nni_ctx_destroy(nni_ctx *);
 
-static void
-nni_sock_can_send_cb(void *arg, int flags)
-{
-	nni_notifyfd *fd = arg;
-
-	if ((flags & nni_msgq_f_can_put) == 0) {
-		nni_plat_pipe_clear(fd->sn_rfd);
-	} else {
-		nni_plat_pipe_raise(fd->sn_wfd);
-	}
-}
-
-static void
-nni_sock_can_recv_cb(void *arg, int flags)
-{
-	nni_notifyfd *fd = arg;
-
-	if ((flags & nni_msgq_f_can_get) == 0) {
-		nni_plat_pipe_clear(fd->sn_rfd);
-	} else {
-		nni_plat_pipe_raise(fd->sn_wfd);
-	}
-}
-
 static int
 nni_sock_get_fd(nni_sock *s, int flag, int *fdp)
 {
 	int           rv;
-	nni_notifyfd *fd;
-	nni_msgq *    mq;
-	nni_msgq_cb   cb;
+	nni_pollable *p;
 
 	if ((flag & nni_sock_flags(s)) == 0) {
 		return (NNG_ENOTSUP);
@@ -130,41 +104,21 @@ nni_sock_get_fd(nni_sock *s, int flag, int *fdp)
 
 	switch (flag) {
 	case NNI_PROTO_FLAG_SND:
-		fd = &s->s_send_fd;
-		mq = s->s_uwq;
-		cb = nni_sock_can_send_cb;
+		rv = nni_msgq_get_sendable(s->s_uwq, &p);
 		break;
 	case NNI_PROTO_FLAG_RCV:
-		fd = &s->s_recv_fd;
-		mq = s->s_urq;
-		cb = nni_sock_can_recv_cb;
+		rv = nni_msgq_get_recvable(s->s_urq, &p);
 		break;
 	default:
-		// This should never occur.
-		return (NNG_EINVAL);
+		rv = NNG_EINVAL;
+		break;
 	}
 
-	// Open if not already done.
-	if (!fd->sn_init) {
-		if ((rv = nni_plat_pipe_open(&fd->sn_wfd, &fd->sn_rfd)) != 0) {
-			return (rv);
-		}
-
-		// Only set the callback on the message queue if we are
-		// using it.  The message queue automatically updates
-		// the pipe when the callback is first established.
-		// If we are not using the message queue, then we have
-		// to update the initial state explicitly ourselves.
-
-		if ((nni_sock_flags(s) & NNI_PROTO_FLAG_NOMSGQ) == 0) {
-			nni_msgq_set_cb(mq, cb, fd);
-		}
-
-		fd->sn_init = 1;
+	if (rv == 0) {
+		rv = nni_pollable_getfd(p, fdp);
 	}
 
-	*fdp = fd->sn_rfd;
-	return (0);
+	return (rv);
 }
 
 static int

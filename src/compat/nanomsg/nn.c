@@ -664,6 +664,39 @@ nn_getdomain(nng_socket s, void *valp, size_t *szp)
 	return (0);
 }
 
+#ifndef NNG_PLATFORM_WINDOWS
+#define SOCKET int
+#endif
+
+static int
+nn_getfd(nng_socket s, void *valp, size_t *szp, const char *opt)
+{
+	int    ifd;
+	int    rv;
+	SOCKET sfd;
+
+	if ((rv = nng_getopt_int(s, opt, &ifd)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	sfd = (SOCKET) ifd;
+	memcpy(valp, &sfd, *szp < sizeof(sfd) ? *szp : sizeof(sfd));
+	*szp = sizeof(sfd);
+	return (0);
+}
+
+static int
+nn_getrecvfd(nng_socket s, void *valp, size_t *szp)
+{
+	return (nn_getfd(s, valp, szp, NNG_OPT_RECVFD));
+}
+
+static int
+nn_getsendfd(nng_socket s, void *valp, size_t *szp)
+{
+	return (nn_getfd(s, valp, szp, NNG_OPT_SENDFD));
+}
+
 static int
 nn_getzero(nng_socket s, void *valp, size_t *szp)
 {
@@ -727,10 +760,16 @@ static const struct {
 	    .opt     = NNG_OPT_RECONNMAXT,
 	},
 	{
-	    .nnlevel = NN_SOL_SOCKET, .nnopt = NN_SNDFD, .opt = NNG_OPT_SENDFD,
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_SNDFD,
+	    .opt     = NNG_OPT_SENDFD,
+	    .get     = nn_getsendfd,
 	},
 	{
-	    .nnlevel = NN_SOL_SOCKET, .nnopt = NN_RCVFD, .opt = NNG_OPT_RECVFD,
+	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_RCVFD,
+	    .opt     = NNG_OPT_RECVFD,
+	    .get     = nn_getrecvfd,
 	},
 	{
 	    .nnlevel = NN_SOL_SOCKET,
@@ -886,6 +925,115 @@ nn_device(int s1, int s2)
 	// rv must always be nonzero
 	nn_seterror(rv);
 	return (-1);
+}
+
+// Windows stuff.
+#ifdef NNG_PLATFORM_WINDOWS
+#define poll WSAPoll
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+#include <windows.h>
+#include <mswsock.h>
+#elif defined NNG_PLATFORM_POSIX
+#include <poll.h>
+#endif
+
+int
+nn_poll(struct nn_pollfd *fds, int nfds, int timeout)
+{
+// This function is rather unfortunate.  poll() is available
+// on POSIX, and on Windows as WSAPoll.  On other systems it might
+// not exist at all.  We could also benefit from using a notification
+// that didn't have to access file descriptors... sort of access to
+// the pollable element on the socket.  We don't have that, so we
+// just use poll.  This function is definitely suboptimal compared to
+// using callbacks.
+#if defined(NNG_PLATFORM_WINDOWS) || defined(NNG_PLATFORM_POSIX)
+	struct pollfd *pfd;
+	int            npfd;
+	int            rv;
+
+	if ((pfd = NNI_ALLOC_STRUCTS(pfd, nfds * 2)) == NULL) {
+		errno = ENOMEM;
+		return (-1);
+	}
+
+	// First prepare the master polling structure.
+	npfd = 0;
+	for (int i = 0; i < nfds; i++) {
+		int fd;
+		if (fds[i].events & NN_POLLIN) {
+			if ((rv = nng_getopt_int((nng_socket) fds[i].fd,
+			         NNG_OPT_RECVFD, &fd)) != 0) {
+				nn_seterror(rv);
+				NNI_FREE_STRUCTS(pfd, nfds * 2);
+				return (-1);
+			}
+#ifdef NNG_PLATFORM_WINDOWS
+			pfd[npfd].fd = (SOCKET) fd;
+#else
+			pfd[npfd].fd = fd;
+#endif
+			pfd[npfd].events = POLLIN;
+			npfd++;
+		}
+		if (fds[i].events & NN_POLLOUT) {
+			if ((rv = nng_getopt_int((nng_socket) fds[i].fd,
+			         NNG_OPT_SENDFD, &fd)) != 0) {
+				nn_seterror(rv);
+				NNI_FREE_STRUCTS(pfd, nfds * 2);
+				return (-1);
+			}
+#ifdef NNG_PLATFORM_WINDOWS
+			pfd[npfd].fd = (SOCKET) fd;
+#else
+			pfd[npfd].fd = fd;
+#endif
+			pfd[npfd].events = POLLIN;
+			npfd++;
+		}
+	}
+
+	rv = poll(pfd, npfd, timeout);
+	if (rv < 0) {
+		int e = errno;
+		NNI_FREE_STRUCTS(pfd, nfds * 2);
+		errno = e;
+		return (-1);
+	}
+
+	// Now update the nn_poll from the system poll.
+	npfd = 0;
+	rv   = 0;
+	for (int i = 0; i < nfds; i++) {
+		fds[i].revents = 0;
+		if (fds[i].events & NN_POLLIN) {
+			if (pfd[npfd].revents & POLLIN) {
+				fds[i].revents |= NN_POLLIN;
+			}
+			npfd++;
+		}
+		if (fds[i].events & NN_POLLOUT) {
+			if (pfd[npfd].revents & POLLIN) {
+				fds[i].revents |= NN_POLLOUT;
+			}
+			npfd++;
+		}
+		if (fds[i].revents) {
+			rv++;
+		}
+	}
+	NNI_FREE_STRUCTS(pfd, nfds * 2);
+	return (rv);
+
+#else // NNG_PLATFORM_WINDOWS or NNG_PLATFORM_POSIX
+	NNI_ARG_UNUSED(pfds);
+	NNI_ARG_UNUSED(npfd);
+	NNI_ARG_UNUSED(timeout);
+	errno = ENOTSUP;
+	return (-1);
+#endif
 }
 
 // nn_term is suitable only for shutting down the entire library,

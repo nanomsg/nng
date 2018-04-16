@@ -40,6 +40,7 @@
 #define nn_err_abort abort
 #define nn_assert assert
 #define errno_assert assert
+#define wsa_assert assert
 #define alloc_assert(x) assert(x != NULL)
 
 #if defined __GNUC__ || defined __llvm__ || defined __clang__

@@ -52,11 +52,13 @@ nni_pollable_raise(nni_pollable *p)
 		return;
 	}
 	nni_mtx_lock(&p->p_lock);
-	p->p_raised = true;
-	if (p->p_open) {
-		nni_mtx_unlock(&p->p_lock);
-		nni_plat_pipe_raise(p->p_wfd);
-		return;
+	if (!p->p_raised) {
+		p->p_raised = true;
+		if (p->p_open) {
+			nni_mtx_unlock(&p->p_lock);
+			nni_plat_pipe_raise(p->p_wfd);
+			return;
+		}
 	}
 	nni_mtx_unlock(&p->p_lock);
 }
@@ -68,11 +70,13 @@ nni_pollable_clear(nni_pollable *p)
 		return;
 	}
 	nni_mtx_lock(&p->p_lock);
-	p->p_raised = false;
-	if (p->p_open) {
-		nni_mtx_unlock(&p->p_lock);
-		nni_plat_pipe_clear(p->p_rfd);
-		return;
+	if (p->p_raised) {
+		p->p_raised = false;
+		if (p->p_open) {
+			nni_mtx_unlock(&p->p_lock);
+			nni_plat_pipe_clear(p->p_rfd);
+			return;
+		}
 	}
 	nni_mtx_unlock(&p->p_lock);
 }

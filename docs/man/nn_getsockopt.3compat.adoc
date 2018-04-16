@@ -148,15 +148,19 @@ This option returns a file descriptor suitable for use in with `poll()` or
 `select()` (or other system-specific polling functions).
 This descriptor will be readable when a message is available for receiving
 at the socket.
+This option is of type `int` on all systems except Windows, where it is of
+type `SOCKET`.
 
 NOTE: The file descriptor should not be read or written by the application,
 and is not the same as any underlying descriptor used for network sockets.
 
-`NN_RCVFD`::
+`NN_SNDFD`::
 This option returns a file descriptor suitable for use in with `poll()` or
 `select()` (or other system-specific polling functions).
 This descriptor will be readable when the socket is able to accept a message
 for sending.
+This option is of type `int` on all systems except Windows, where it is of
+type `SOCKET`.
 
 NOTE: The file descriptor should not be read or written by the application,
 and is not the same as any underlying descriptor used for network sockets.

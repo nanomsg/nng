@@ -63,7 +63,7 @@ ifndef::backend-pdf[]
 `<<nn_recv.3compat#,nn_recv()>>`:: receive data
 `<<nn_shutdown.3compat#,nn_shutdown()>>`:: shut down endpoint
 `<<nn_close.3compat#,nn_close()>>`:: close socket
-//`nn_poll()`:: poll sockets
+`<<nn_poll.3compat#,nn_poll()>>`:: poll sockets
 `<<nn_device.3compat#,nn_device()>>`:: create forwarding device
 `<<nn_recvmsg.3compat#,nn_recvmsg()>>`:: receive message
 `<<nn_sendmsg.3compat#,nn_sendmsg()>>`:: send message
@@ -89,7 +89,7 @@ ifdef::backend-pdf[]
 |`<<nn_recv.3compat#,nn_recv()>>`|receive data
 |`<<nn_shutdown.3compat#,nn_shutdown()>>`|shut down endpoint
 |`<<nn_close.3compat#,nn_close()>>`|close socket
-//|`nn_poll()`|poll sockets
+|`<<nn_poll.3compat#,nn_poll()>>`|poll sockets
 |`<<nn_device.3compat#,nn_device()>>`|create forwarding device
 |`<<nn_recvmsg.3compat#,nn_recvmsg()>>`|receive message
 |`<<nn_sendmsg.3compat#,nn_sendmsg()>>`|send message
