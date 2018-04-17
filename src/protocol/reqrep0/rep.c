@@ -42,8 +42,9 @@ struct rep0_ctx {
 	size_t        btrace_size;
 	int           ttl;
 	uint32_t      pipe_id;
-	nni_aio *     saio; // send aio
-	nni_aio *     raio; // recv aio
+	rep0_pipe *   spipe; // send pipe
+	nni_aio *     saio;  // send aio
+	nni_aio *     raio;  // recv aio
 	nni_list_node sqnode;
 	nni_list_node rqnode;
 };
@@ -83,8 +84,11 @@ rep0_ctx_close(void *arg)
 	nni_mtx_lock(&s->lk);
 	ctx->closed = true;
 	if ((aio = ctx->saio) != NULL) {
-		nni_msg *msg;
-		nni_list_node_remove(&ctx->sqnode);
+		nni_msg *  msg;
+		rep0_pipe *pipe = ctx->spipe;
+		ctx->saio       = NULL;
+		ctx->spipe      = NULL;
+		nni_list_remove(&pipe->sendq, ctx);
 		msg = nni_aio_get_msg(aio);
 		nni_msg_free(msg);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
@@ -214,7 +218,8 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	if (p->busy) {
-		ctx->saio = aio;
+		ctx->saio  = aio;
+		ctx->spipe = p;
 		nni_list_append(&p->sendq, ctx);
 		nni_mtx_unlock(&s->lk);
 		return;
@@ -412,11 +417,12 @@ rep0_pipe_send_cb(void *arg)
 	}
 
 	nni_list_remove(&p->sendq, ctx);
-	aio       = ctx->saio;
-	ctx->saio = NULL;
-	p->busy   = true;
-	msg       = nni_aio_get_msg(aio);
-	len       = nni_msg_len(msg);
+	aio        = ctx->saio;
+	ctx->saio  = NULL;
+	ctx->spipe = NULL;
+	p->busy    = true;
+	msg        = nni_aio_get_msg(aio);
+	len        = nni_msg_len(msg);
 	nni_aio_set_msg(aio, NULL);
 	nni_aio_set_msg(p->aio_send, msg);
 	nni_pipe_send(p->pipe, p->aio_send);
