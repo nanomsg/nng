@@ -287,22 +287,26 @@ nni_plat_udp_cancel(nni_aio *aio, int rv)
 void
 nni_plat_udp_recv(nni_plat_udp *udp, nni_aio *aio)
 {
-	nni_mtx_lock(&udp->udp_mtx);
-	if (nni_aio_start(aio, nni_plat_udp_cancel, udp) == 0) {
-		nni_list_append(&udp->udp_recvq, aio);
-		nni_posix_pollq_arm(&udp->udp_pitem, POLLIN);
+	if (nni_aio_begin(aio) != 0) {
+		return;
 	}
+	nni_mtx_lock(&udp->udp_mtx);
+	nni_aio_schedule(aio, nni_plat_udp_cancel, udp);
+	nni_list_append(&udp->udp_recvq, aio);
+	nni_posix_pollq_arm(&udp->udp_pitem, POLLIN);
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 
 void
 nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 {
-	nni_mtx_lock(&udp->udp_mtx);
-	if (nni_aio_start(aio, nni_plat_udp_cancel, udp) == 0) {
-		nni_list_append(&udp->udp_sendq, aio);
-		nni_posix_pollq_arm(&udp->udp_pitem, POLLOUT);
+	if (nni_aio_begin(aio) != 0) {
+		return;
 	}
+	nni_mtx_lock(&udp->udp_mtx);
+	nni_aio_schedule(aio, nni_plat_udp_cancel, udp);
+	nni_list_append(&udp->udp_sendq, aio);
+	nni_posix_pollq_arm(&udp->udp_pitem, POLLOUT);
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 

@@ -313,7 +313,7 @@ nni_ep_tmo_start(nni_ep *ep)
 {
 	nni_duration backoff;
 
-	if (ep->ep_closing) {
+	if (ep->ep_closing || (nni_aio_begin(ep->ep_tmo_aio) != 0)) {
 		return;
 	}
 	backoff = ep->ep_currtime;
@@ -334,9 +334,7 @@ nni_ep_tmo_start(nni_ep *ep)
 	    ep->ep_tmo_aio, (backoff ? nni_random() % backoff : 0));
 
 	ep->ep_tmo_run = 1;
-	if (nni_aio_start(ep->ep_tmo_aio, nni_ep_tmo_cancel, ep) != 0) {
-		ep->ep_tmo_run = 0;
-	}
+	nni_aio_schedule(ep->ep_tmo_aio, nni_ep_tmo_cancel, ep);
 }
 
 static void

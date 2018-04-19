@@ -254,20 +254,20 @@ nni_posix_pipedesc_cancel(nni_aio *aio, int rv)
 void
 nni_posix_pipedesc_recv(nni_posix_pipedesc *pd, nni_aio *aio)
 {
-	int rv;
-
-	nni_mtx_lock(&pd->mtx);
-	if ((rv = nni_aio_start(aio, nni_posix_pipedesc_cancel, pd)) != 0) {
-		nni_mtx_unlock(&pd->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&pd->mtx);
+
 	if (pd->closed) {
-		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 		nni_mtx_unlock(&pd->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
 
 	nni_aio_list_append(&pd->readq, aio);
+	nni_aio_schedule(aio, nni_posix_pipedesc_cancel, pd);
+
 	// If we are only job on the list, go ahead and try to do an immediate
 	// transfer. This allows for faster completions in many cases.  We
 	// also need not arm a list if it was already armed.
@@ -285,20 +285,20 @@ nni_posix_pipedesc_recv(nni_posix_pipedesc *pd, nni_aio *aio)
 void
 nni_posix_pipedesc_send(nni_posix_pipedesc *pd, nni_aio *aio)
 {
-	int rv;
-
-	nni_mtx_lock(&pd->mtx);
-	if ((rv = nni_aio_start(aio, nni_posix_pipedesc_cancel, pd)) != 0) {
-		nni_mtx_unlock(&pd->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&pd->mtx);
+
 	if (pd->closed) {
-		nni_posix_pipedesc_finish(aio, NNG_ECLOSED);
 		nni_mtx_unlock(&pd->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
 
 	nni_aio_list_append(&pd->writeq, aio);
+	nni_aio_schedule(aio, nni_posix_pipedesc_cancel, pd);
+
 	if (nni_list_first(&pd->writeq) == aio) {
 		nni_posix_pipedesc_dowrite(pd);
 		// If we are still the first thing on the list, that means we

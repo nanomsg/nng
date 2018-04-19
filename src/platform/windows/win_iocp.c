@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -155,12 +155,11 @@ nni_win_event_resubmit(nni_win_event *evt, nni_aio *aio)
 void
 nni_win_event_submit(nni_win_event *evt, nni_aio *aio)
 {
-	nni_mtx_lock(&evt->mtx);
-	if (nni_aio_start(aio, nni_win_event_cancel, evt) != 0) {
-		// the aio was aborted
-		nni_mtx_unlock(&evt->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&evt->mtx);
+	nni_aio_schedule(aio, nni_win_event_cancel, evt);
 	nni_aio_list_append(&evt->aios, aio);
 	nni_win_event_start(evt);
 	nni_mtx_unlock(&evt->mtx);

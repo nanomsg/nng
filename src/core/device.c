@@ -188,12 +188,12 @@ nni_device_start(nni_device_data *dd, nni_aio *user)
 {
 	int i;
 
-	nni_mtx_lock(&dd->mtx);
-	dd->user = user;
-	if (nni_aio_start(user, nni_device_cancel, dd) != 0) {
-		nni_mtx_unlock(&dd->mtx);
+	if (nni_aio_begin(user) != 0) {
 		return;
 	}
+	nni_mtx_lock(&dd->mtx);
+	nni_aio_schedule(user, nni_device_cancel, dd);
+	dd->user = user;
 	for (i = 0; i < dd->npath; i++) {
 		nni_device_path *p = &dd->paths[i];
 		p->user            = user;

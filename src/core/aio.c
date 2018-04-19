@@ -49,9 +49,9 @@ static nni_list nni_aio_expire_aios;
 //
 // In order to guard against aio reuse during teardown, we set a fini
 // flag.  Any attempt to initialize for a new operation after that point
-// will fail and the caller will get NNG_ESTATE indicating this.  The
-// provider that calls nni_aio_start() MUST check the return value, and
-// if it comes back nonzero (NNG_ESTATE) then it must simply discard the
+// will fail and the caller will get NNG_ECANCELED indicating this.  The
+// provider that calls nni_aio_begin() MUST check the return value, and
+// if it comes back nonzero (NNG_ECANCELED) then it must simply discard the
 // request and return.
 
 // An nni_aio is an async I/O handle.
@@ -184,7 +184,7 @@ nni_aio_fini_cb(nni_aio *aio)
 
 // nni_aio_stop cancels any oustanding operation, and waits for the
 // callback to complete, if still running.  It also marks the AIO as
-// stopped, preventing further calls to nni_aio_start from succeeding.
+// stopped, preventing further calls to nni_aio_begin from succeeding.
 // To correctly tear down an AIO, call stop, and make sure any other
 // calles are not also stopped, before calling nni_aio_fini to release
 // actual memory.
@@ -298,14 +298,11 @@ nni_aio_wait(nni_aio *aio)
 }
 
 int
-nni_aio_start(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
+nni_aio_begin(nni_aio *aio)
 {
-	nni_time now = nni_clock();
-
 	nni_mtx_lock(&nni_aio_lk);
-
+	// We should not reschedule anything at this point.
 	if (aio->a_fini) {
-		// We should not reschedule anything at this point.
 		aio->a_active = false;
 		aio->a_result = NNG_ECANCELED;
 		nni_mtx_unlock(&nni_aio_lk);
@@ -315,34 +312,52 @@ nni_aio_start(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 	aio->a_pend        = false;
 	aio->a_result      = 0;
 	aio->a_count       = 0;
-	aio->a_prov_cancel = cancelfn;
-	aio->a_prov_data   = data;
+	aio->a_prov_cancel = NULL;
+	aio->a_prov_data   = NULL;
 	aio->a_active      = true;
-
 	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
 		aio->a_outputs[i] = NULL;
 	}
+	nni_mtx_unlock(&nni_aio_lk);
+	return (0);
+}
 
+void
+nni_aio_schedule(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
+{
 	if (!aio->a_sleep) {
 		// Convert the relative timeout to an absolute timeout.
 		switch (aio->a_timeout) {
 		case NNG_DURATION_ZERO:
-			aio->a_expire = NNI_TIME_ZERO;
+			aio->a_expire = nni_clock();
 			break;
 		case NNG_DURATION_INFINITE:
 		case NNG_DURATION_DEFAULT:
 			aio->a_expire = NNI_TIME_NEVER;
 			break;
 		default:
-			aio->a_expire = now + aio->a_timeout;
+			aio->a_expire = nni_clock() + aio->a_timeout;
 			break;
 		}
 	}
 
+	nni_mtx_lock(&nni_aio_lk);
+	aio->a_prov_cancel = cancelfn;
+	aio->a_prov_data   = data;
 	if (aio->a_expire != NNI_TIME_NEVER) {
 		nni_aio_expire_add(aio);
 	}
 	nni_mtx_unlock(&nni_aio_lk);
+}
+
+int
+nni_aio_schedule_verify(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
+{
+
+	if ((!aio->a_sleep) && (aio->a_timeout == NNG_DURATION_ZERO)) {
+		return (NNG_ETIMEDOUT);
+	}
+	nni_aio_schedule(aio, cancelfn, data);
 	return (0);
 }
 
@@ -651,6 +666,9 @@ nni_aio_iov_advance(nni_aio *aio, size_t n)
 void
 nni_sleep_aio(nng_duration ms, nng_aio *aio)
 {
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	switch (aio->a_timeout) {
 	case NNG_DURATION_DEFAULT:
 	case NNG_DURATION_INFINITE:
@@ -661,13 +679,15 @@ nni_sleep_aio(nng_duration ms, nng_aio *aio)
 		// then let it still wake up early, but with NNG_ETIMEDOUT.
 		if (ms > aio->a_timeout) {
 			aio->a_sleep = false;
-			(void) nni_aio_start(aio, NULL, NULL);
+			(void) nni_aio_schedule(aio, NULL, NULL);
 			return;
 		}
 	}
 	aio->a_sleep  = true;
 	aio->a_expire = nni_clock() + ms;
-	(void) nni_aio_start(aio, NULL, NULL);
+
+	// There is no cancellation, apart from just unexpiring.
+	nni_aio_schedule(aio, NULL, NULL);
 }
 
 void

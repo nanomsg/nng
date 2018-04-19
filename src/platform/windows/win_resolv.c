@@ -180,6 +180,9 @@ nni_win_resolv_ip(const char *host, const char *serv, int passive, int family,
 	int                  rv;
 	int                  fam;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	switch (family) {
 	case NNG_AF_INET:
 		fam = AF_INET;
@@ -211,12 +214,7 @@ nni_win_resolv_ip(const char *host, const char *serv, int passive, int family,
 	item->family  = fam;
 
 	nni_mtx_lock(&nni_win_resolv_mtx);
-	// If we were stopped, we're done...
-	if ((rv = nni_aio_start(aio, nni_win_resolv_cancel, item)) != 0) {
-		nni_mtx_unlock(&nni_win_resolv_mtx);
-		NNI_FREE_STRUCT(item);
-		return;
-	}
+	nni_aio_schedule(aio, nni_win_resolv_cancel, item);
 	nni_task_dispatch(&item->task);
 	nni_mtx_unlock(&nni_win_resolv_mtx);
 }

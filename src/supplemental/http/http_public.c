@@ -9,9 +9,9 @@
 //
 
 #include "core/nng_impl.h"
-#include "supplemental/tls/tls.h"
 #include "http.h"
 #include "http_api.h"
+#include "supplemental/tls/tls.h"
 
 // Symbols in this file are "public" versions of the HTTP API.
 // These are suitable for exposure to applications.
@@ -382,7 +382,7 @@ nng_http_conn_read(nng_http_conn *conn, nng_aio *aio)
 	nni_http_read(conn, aio);
 #else
 	NNI_ARG_UNUSED(conn);
-	if (nni_aio_start(aio, NULL, NULL)) {
+	if (nni_aio_begin(aio) == 0) {
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 	}
 #endif
@@ -395,7 +395,7 @@ nng_http_conn_read_all(nng_http_conn *conn, nng_aio *aio)
 	nni_http_read_full(conn, aio);
 #else
 	NNI_ARG_UNUSED(conn);
-	if (nni_aio_start(aio, NULL, NULL)) {
+	if (nni_aio_begin(aio) == 0) {
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 	}
 #endif
@@ -408,7 +408,7 @@ nng_http_conn_write(nng_http_conn *conn, nng_aio *aio)
 	nni_http_write(conn, aio);
 #else
 	NNI_ARG_UNUSED(conn);
-	if (nni_aio_start(aio, NULL, NULL)) {
+	if (nni_aio_begin(aio) == 0) {
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 	}
 #endif
@@ -433,7 +433,7 @@ nng_http_conn_write_req(nng_http_conn *conn, nng_http_req *req, nng_aio *aio)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(req);
-	if (nni_aio_start(aio, NULL, NULL)) {
+	if (nni_aio_begin(aio) == 0) {
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 	}
 #endif
@@ -447,7 +447,7 @@ nng_http_conn_write_res(nng_http_conn *conn, nng_http_res *res, nng_aio *aio)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(res);
-	if (nni_aio_start(aio, NULL, NULL)) {
+	if (nni_aio_begin(aio) == 0) {
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 	}
 #endif
@@ -461,7 +461,7 @@ nng_http_conn_read_req(nng_http_conn *conn, nng_http_req *req, nng_aio *aio)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(req);
-	if (nni_aio_start(aio, NULL, NULL)) {
+	if (nni_aio_begin(aio) == 0) {
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 	}
 #endif
@@ -475,7 +475,7 @@ nng_http_conn_read_res(nng_http_conn *conn, nng_http_res *res, nng_aio *aio)
 #else
 	NNI_ARG_UNUSED(conn);
 	NNI_ARG_UNUSED(res);
-	if (nni_aio_start(aio, NULL, NULL)) {
+	if (nni_aio_begin(aio) == 0) {
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 	}
 #endif
@@ -574,7 +574,8 @@ nng_http_handler_set_host(nng_http_handler *h, const char *host)
 #endif
 }
 
-int nng_http_handler_set_tree(nng_http_handler *h)
+int
+nng_http_handler_set_tree(nng_http_handler *h)
 {
 #ifdef NNG_SUPP_HTTP
 	return (nni_http_handler_set_tree(h));
@@ -698,12 +699,13 @@ nng_http_server_get_tls(nng_http_server *srv, nng_tls_config **cfgp)
 #endif
 }
 
-int nng_http_hijack(nng_http_conn * conn)
+int
+nng_http_hijack(nng_http_conn *conn)
 {
 #ifdef NNG_SUPP_HTTP
-    return (nni_http_hijack(conn));
+	return (nni_http_hijack(conn));
 #else
-    NNI_ARG_UNUSED(conn);
+	NNI_ARG_UNUSED(conn);
 	return (NNG_ENOTSUP);
 #endif
 }
@@ -762,7 +764,7 @@ nng_http_client_connect(nng_http_client *cli, nng_aio *aio)
 	nni_http_client_connect(cli, aio);
 #else
 	NNI_ARG_UNUSED(cli);
-	if (nni_aio_start(aio, NULL, NULL)) {
+	if (nni_aio_begin(aio) == 0) {
 		nni_aio_finish_error(aio, NNG_ENOTSUP);
 	}
 #endif

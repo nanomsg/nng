@@ -129,13 +129,12 @@ ws_pipe_recv(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
 
-	nni_mtx_lock(&p->mtx);
-	if (nni_aio_start(aio, ws_pipe_recv_cancel, p) != 0) {
-		nni_mtx_unlock(&p->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&p->mtx);
+	nni_aio_schedule(aio, ws_pipe_recv_cancel, p);
 	p->user_rxaio = aio;
-
 	nni_ws_recv_msg(p->ws, p->rxaio);
 	nni_mtx_unlock(&p->mtx);
 }
@@ -160,11 +159,11 @@ ws_pipe_send(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
 
-	nni_mtx_lock(&p->mtx);
-	if (nni_aio_start(aio, ws_pipe_send_cancel, p) != 0) {
-		nni_mtx_unlock(&p->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&p->mtx);
+	nni_aio_schedule(aio, ws_pipe_send_cancel, p);
 	p->user_txaio = aio;
 	nni_aio_set_msg(p->txaio, nni_aio_get_msg(aio));
 	nni_aio_set_msg(aio, NULL);
@@ -294,11 +293,11 @@ ws_ep_accept(void *arg, nni_aio *aio)
 	// We already bound, so we just need to look for an available
 	// pipe (created by the handler), and match it.
 	// Otherwise we stick the AIO in the accept list.
-	nni_mtx_lock(&ep->mtx);
-	if (nni_aio_start(aio, ws_ep_cancel, ep) != 0) {
-		nni_mtx_unlock(&ep->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&ep->mtx);
+	nni_aio_schedule(aio, ws_ep_cancel, ep);
 	nni_list_append(&ep->aios, aio);
 	if (aio == nni_list_first(&ep->aios)) {
 		nni_ws_listener_accept(ep->listener, ep->accaio);
@@ -313,6 +312,9 @@ ws_ep_connect(void *arg, nni_aio *aio)
 	int     rv = 0;
 	ws_hdr *h;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	if (!ep->started) {
 		NNI_LIST_FOREACH (&ep->headers, h) {
 			rv = nni_ws_dialer_header(
@@ -327,11 +329,7 @@ ws_ep_connect(void *arg, nni_aio *aio)
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(nni_list_empty(&ep->aios));
 
-	// If we can't start, then its dying and we can't report either.
-	if ((rv = nni_aio_start(aio, ws_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
+	nni_aio_schedule(aio, ws_ep_cancel, ep);
 	ep->started = true;
 	nni_list_append(&ep->aios, aio);
 	nni_ws_dialer_dial(ep->dialer, ep->connaio);

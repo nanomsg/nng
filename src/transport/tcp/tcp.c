@@ -398,11 +398,11 @@ nni_tcp_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *p = arg;
 
-	nni_mtx_lock(&p->mtx);
-	if (nni_aio_start(aio, nni_tcp_cancel_tx, p) != 0) {
-		nni_mtx_unlock(&p->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&p->mtx);
+	nni_aio_schedule(aio, nni_tcp_cancel_tx, p);
 	nni_list_append(&p->sendq, aio);
 	if (nni_list_first(&p->sendq) == aio) {
 		nni_tcp_pipe_dosend(p, aio);
@@ -454,11 +454,11 @@ nni_tcp_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_tcp_pipe *p = arg;
 
-	nni_mtx_lock(&p->mtx);
-	if (nni_aio_start(aio, nni_tcp_cancel_rx, p) != 0) {
-		nni_mtx_unlock(&p->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&p->mtx);
+	nni_aio_schedule(aio, nni_tcp_cancel_rx, p);
 	nni_list_append(&p->recvq, aio);
 	if (nni_list_first(&p->recvq) == aio) {
 		nni_tcp_pipe_dorecv(p);
@@ -510,6 +510,9 @@ nni_tcp_pipe_start(void *arg, nni_aio *aio)
 	nni_aio *     negaio;
 	nni_iov       iov;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	nni_mtx_lock(&p->mtx);
 	p->txlen[0] = 0;
 	p->txlen[1] = 'S';
@@ -527,10 +530,7 @@ nni_tcp_pipe_start(void *arg, nni_aio *aio)
 	iov.iov_len    = 8;
 	iov.iov_buf    = &p->txlen[0];
 	nni_aio_set_iov(negaio, 1, &iov);
-	if (nni_aio_start(aio, nni_tcp_cancel_nego, p) != 0) {
-		nni_mtx_unlock(&p->mtx);
-		return;
-	}
+	nni_aio_schedule(aio, nni_tcp_cancel_nego, p);
 	nni_plat_tcp_pipe_send(p->tpp, negaio);
 	nni_mtx_unlock(&p->mtx);
 }
@@ -721,16 +721,14 @@ static void
 nni_tcp_ep_accept(void *arg, nni_aio *aio)
 {
 	nni_tcp_ep *ep = arg;
-	int         rv;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
 
-	if ((rv = nni_aio_start(aio, nni_tcp_cancel_ep, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-
+	nni_aio_schedule(aio, nni_tcp_cancel_ep, ep);
 	ep->user_aio = aio;
 
 	nni_plat_tcp_ep_accept(ep->tep, ep->aio);
@@ -741,17 +739,14 @@ static void
 nni_tcp_ep_connect(void *arg, nni_aio *aio)
 {
 	nni_tcp_ep *ep = arg;
-	int         rv;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
 
-	// If we can't start, then its dying and we can't report either.
-	if ((rv = nni_aio_start(aio, nni_tcp_cancel_ep, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-
+	nni_aio_schedule(aio, nni_tcp_cancel_ep, ep);
 	ep->user_aio = aio;
 
 	nni_plat_tcp_ep_connect(ep->tep, ep->aio);

@@ -349,18 +349,15 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 {
 	nni_inproc_ep *ep = arg;
 	nni_inproc_ep *server;
-	int            rv;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	if (ep->mode != NNI_EP_MODE_DIAL) {
 		nni_aio_finish_error(aio, NNG_EINVAL);
 		return;
 	}
 	nni_mtx_lock(&nni_inproc.mx);
-
-	if ((rv = nni_aio_start(aio, nni_inproc_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
 
 	// Find a server.
 	NNI_LIST_FOREACH (&nni_inproc.servers, server) {
@@ -369,10 +366,16 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 		}
 	}
 	if (server == NULL) {
-		nni_inproc_conn_finish(aio, NNG_ECONNREFUSED, NULL);
+		// nni_inproc_conn_finish(aio, NNG_ECONNREFUSED, NULL);
 		nni_mtx_unlock(&nni_inproc.mx);
+		nni_aio_finish_error(aio, NNG_ECONNREFUSED);
 		return;
 	}
+
+	// We don't have to worry about the case where a zero timeout
+	// on connect was specified, as there is no option to specify
+	// that in the upper API.
+	nni_aio_schedule(aio, nni_inproc_ep_cancel, ep);
 
 	nni_list_append(&server->clients, ep);
 	nni_aio_list_append(&ep->aios, aio);
@@ -404,14 +407,16 @@ static void
 nni_inproc_ep_accept(void *arg, nni_aio *aio)
 {
 	nni_inproc_ep *ep = arg;
-	int            rv;
+
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 
 	nni_mtx_lock(&nni_inproc.mx);
 
-	if ((rv = nni_aio_start(aio, nni_inproc_ep_cancel, ep)) != 0) {
-		nni_mtx_unlock(&nni_inproc.mx);
-		return;
-	}
+	// We need not worry about the case where a non-blocking
+	// accept was tried -- there is no API to do such a thing.
+	nni_aio_schedule(aio, nni_inproc_ep_cancel, ep);
 
 	// We are already on the master list of servers, thanks to bind.
 	// Insert us into pending server aios, and then run accept list.

@@ -491,16 +491,16 @@ nni_plat_ipc_ep_connect(nni_plat_ipc_ep *ep, nni_aio *aio)
 {
 	nni_win_ipc_conn_work *w = &nni_win_ipc_connecter;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	nni_mtx_lock(&w->mtx);
 
 	NNI_ASSERT(!nni_list_active(&w->waiters, ep));
 
-	if (nni_aio_start(aio, nni_win_ipc_conn_cancel, ep) != 0) {
-		nni_mtx_unlock(&w->mtx);
-		return;
-	}
 	ep->con_aio = aio;
 	nni_list_append(&w->waiters, ep);
+	nni_aio_schedule(aio, nni_win_ipc_conn_cancel, ep);
 	nni_cv_wake(&w->cv);
 	nni_mtx_unlock(&w->mtx);
 }

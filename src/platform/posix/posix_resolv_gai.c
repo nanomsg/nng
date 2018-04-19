@@ -206,9 +206,11 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
     int family, int proto, nni_aio *aio)
 {
 	nni_posix_resolv_item *item;
-	int                    rv;
 	sa_family_t            fam;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	switch (family) {
 	case NNG_AF_INET:
 		fam = AF_INET;
@@ -241,12 +243,7 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 	item->family  = fam;
 
 	nni_mtx_lock(&nni_posix_resolv_mtx);
-	// If we were stopped, we're done...
-	if ((rv = nni_aio_start(aio, nni_posix_resolv_cancel, item)) != 0) {
-		nni_mtx_unlock(&nni_posix_resolv_mtx);
-		NNI_FREE_STRUCT(item);
-		return;
-	}
+	nni_aio_schedule(aio, nni_posix_resolv_cancel, item);
 	nni_task_dispatch(&item->task);
 	nni_mtx_unlock(&nni_posix_resolv_mtx);
 }

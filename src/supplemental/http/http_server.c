@@ -590,8 +590,8 @@ http_sconn_rxdone(void *arg)
 
 	// Technically, probably callback should initialize this with
 	// start, but we do it instead.
-
-	if (nni_aio_start(sc->cbaio, NULL, NULL) != 0) {
+	// This operation cannot at present canceled or timed out.
+	if (nni_aio_begin(sc->cbaio) != 0) {
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}

@@ -123,7 +123,14 @@ extern void nni_aio_finish_msg(nni_aio *, nni_msg *);
 // with the indicated result (NNG_ECLOSED or NNG_ECANCELED is recommended.)
 extern void nni_aio_abort(nni_aio *, int rv);
 
-extern int   nni_aio_start(nni_aio *, nni_aio_cancelfn, void *);
+// nni_aio_begin is called by a provider to indicate it is starting the
+// operation, and to check that the aio has not already been marked for
+// teardown.  It returns 0 on success, or NNG_ECANCELED if the aio is being
+// torn down.  (In that case, no operation should be aborted without any
+// call to any other functions on this AIO, most especially not the
+// nng_aio_finish family of functions.)
+extern int nni_aio_begin(nni_aio *);
+
 extern void *nni_aio_get_prov_data(nni_aio *);
 extern void  nni_aio_set_prov_data(nni_aio *, void *);
 extern void *nni_aio_get_prov_extra(nni_aio *, unsigned);
@@ -142,6 +149,17 @@ extern void nni_aio_set_timeout(nni_aio *, nng_duration);
 extern void nni_aio_get_iov(nni_aio *, unsigned *, nni_iov **);
 extern void nni_aio_normalize_timeout(nni_aio *, nng_duration);
 extern void nni_aio_bump_count(nni_aio *, size_t);
+
+// nni_aio_schedule indicates that the AIO has begun, and is scheduled for
+// asychronous completion. This also starts the expiration timer. Note that
+// prior to this, the aio is uncancellable.
+extern void nni_aio_schedule(nni_aio *, nni_aio_cancelfn, void *);
+
+// nni_aio_schedule_verify is like nni_aio_schedule, except that if the
+// operation has been run with a zero time (NNG_FLAG_NONBLOCK), then it
+// returns NNG_ETIMEDOUT.  This is done to permit bypassing scheduling
+// if the operation could not be immediately completed.
+extern int nni_aio_schedule_verify(nni_aio *, nni_aio_cancelfn, void *);
 
 extern void nni_sleep_aio(nni_duration, nni_aio *);
 

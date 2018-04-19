@@ -241,10 +241,11 @@ http_connect_cancel(nni_aio *aio, int rv)
 void
 nni_http_client_connect(nni_http_client *c, nni_aio *aio)
 {
-	if (nni_aio_start(aio, http_connect_cancel, aio) != 0) {
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
+	nni_aio_schedule(aio, http_connect_cancel, aio);
 	nni_list_append(&c->aios, aio);
 	if (nni_list_first(&c->aios) == aio) {
 		http_conn_start(c);

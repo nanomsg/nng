@@ -418,11 +418,11 @@ nni_ipc_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_ipc_pipe *pipe = arg;
 
-	nni_mtx_lock(&pipe->mtx);
-	if (nni_aio_start(aio, nni_ipc_cancel_tx, pipe) != 0) {
-		nni_mtx_unlock(&pipe->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&pipe->mtx);
+	nni_aio_schedule(aio, nni_ipc_cancel_tx, pipe);
 	nni_list_append(&pipe->sendq, aio);
 	if (nni_list_first(&pipe->sendq) == aio) {
 		nni_ipc_pipe_dosend(pipe, aio);
@@ -474,12 +474,13 @@ nni_ipc_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_ipc_pipe *pipe = arg;
 
-	nni_mtx_lock(&pipe->mtx);
-
-	if (nni_aio_start(aio, nni_ipc_cancel_rx, pipe) != 0) {
-		nni_mtx_unlock(&pipe->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&pipe->mtx);
+
+	// Transports never have a zero length timeout.
+	(void) nni_aio_schedule(aio, nni_ipc_cancel_rx, pipe);
 
 	nni_list_append(&pipe->recvq, aio);
 	if (nni_list_first(&pipe->recvq) == aio) {
@@ -492,10 +493,12 @@ static void
 nni_ipc_pipe_start(void *arg, nni_aio *aio)
 {
 	nni_ipc_pipe *pipe = arg;
-	int           rv;
 	nni_aio *     negaio;
 	nni_iov       iov;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	nni_mtx_lock(&pipe->mtx);
 	pipe->txhead[0] = 0;
 	pipe->txhead[1] = 'S';
@@ -513,11 +516,7 @@ nni_ipc_pipe_start(void *arg, nni_aio *aio)
 	iov.iov_len       = 8;
 	iov.iov_buf       = &pipe->txhead[0];
 	nni_aio_set_iov(negaio, 1, &iov);
-	rv = nni_aio_start(aio, nni_ipc_cancel_start, pipe);
-	if (rv != 0) {
-		nni_mtx_unlock(&pipe->mtx);
-		return;
-	}
+	nni_aio_schedule(aio, nni_ipc_cancel_start, pipe);
 	nni_plat_ipc_pipe_send(pipe->ipp, negaio);
 	nni_mtx_unlock(&pipe->mtx);
 }
@@ -680,16 +679,14 @@ static void
 nni_ipc_ep_accept(void *arg, nni_aio *aio)
 {
 	nni_ipc_ep *ep = arg;
-	int         rv;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
 
-	if ((rv = nni_aio_start(aio, nni_ipc_cancel_ep, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-
+	nni_aio_schedule(aio, nni_ipc_cancel_ep, ep);
 	ep->user_aio = aio;
 
 	nni_plat_ipc_ep_accept(ep->iep, ep->aio);
@@ -700,18 +697,14 @@ static void
 nni_ipc_ep_connect(void *arg, nni_aio *aio)
 {
 	nni_ipc_ep *ep = arg;
-	int         rv;
 
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
 
-	// If we can't start, then its dying and we can't report
-	// either.
-	if ((rv = nni_aio_start(aio, nni_ipc_cancel_ep, ep)) != 0) {
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-
+	nni_aio_schedule(aio, nni_ipc_cancel_ep, ep);
 	ep->user_aio = aio;
 
 	nni_plat_ipc_ep_connect(ep->iep, ep->aio);

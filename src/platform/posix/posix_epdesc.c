@@ -319,26 +319,22 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 void
 nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
 {
-	int rv;
-
 	// Accept is simpler than the connect case.  With accept we just
 	// need to wait for the socket to be readable to indicate an incoming
 	// connection is ready for us.  There isn't anything else for us to
 	// do really, as that will have been done in listen.
-	nni_mtx_lock(&ed->mtx);
-	// If we can't start, it means that the AIO was stopped.
-	if ((rv = nni_aio_start(aio, nni_posix_epdesc_cancel, ed)) != 0) {
-		nni_mtx_unlock(&ed->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&ed->mtx);
 
 	if (ed->closed) {
-		nni_posix_epdesc_finish(aio, NNG_ECLOSED, 0);
 		nni_mtx_unlock(&ed->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-
 	nni_aio_list_append(&ed->acceptq, aio);
+	nni_aio_schedule(aio, nni_posix_epdesc_cancel, ed);
 	nni_posix_pollq_arm(&ed->node, POLLIN);
 	nni_mtx_unlock(&ed->mtx);
 }
@@ -362,39 +358,33 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 	int rv;
 	int fd;
 
-	nni_mtx_lock(&ed->mtx);
-	// If we can't start, it means that the AIO was stopped.
-	if ((rv = nni_aio_start(aio, nni_posix_epdesc_cancel, ed)) != 0) {
-		nni_mtx_unlock(&ed->mtx);
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+	nni_mtx_lock(&ed->mtx);
 
-	fd = socket(ed->remaddr.ss_family, NNI_STREAM_SOCKTYPE, 0);
-	if (fd < 0) {
-		nni_posix_epdesc_finish(aio, rv, 0);
+	if ((fd = socket(ed->remaddr.ss_family, NNI_STREAM_SOCKTYPE, 0)) < 0) {
+		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&ed->mtx);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
 	// Possibly bind.
-	if (ed->loclen != 0) {
-		rv = bind(fd, (void *) &ed->locaddr, ed->loclen);
-		if (rv != 0) {
-			(void) close(fd);
-			nni_posix_epdesc_finish(aio, rv, 0);
-			nni_mtx_unlock(&ed->mtx);
-			return;
-		}
+	if ((ed->loclen != 0) &&
+	    (bind(fd, (void *) &ed->locaddr, ed->loclen) != 0)) {
+		rv = nni_plat_errno(errno);
+		nni_mtx_unlock(&ed->mtx);
+		(void) close(fd);
+		nni_aio_finish_error(aio, rv);
+		return;
 	}
 
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	rv = connect(fd, (void *) &ed->remaddr, ed->remlen);
-
-	if (rv == 0) {
+	if ((rv = connect(fd, (void *) &ed->remaddr, ed->remlen)) == 0) {
 		// Immediate connect, cool!  This probably only happens on
 		// loopback, and probably not on every platform.
-
 		nni_posix_epdesc_finish(aio, 0, fd);
 		nni_mtx_unlock(&ed->mtx);
 		return;
@@ -402,24 +392,27 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 
 	if (errno != EINPROGRESS) {
 		// Some immediate failure occurred.
-		if (errno == ENOENT) {
+		if (errno == ENOENT) { // For UNIX domain sockets
 			errno = ECONNREFUSED;
 		}
-		(void) close(fd);
-		nni_posix_epdesc_finish(aio, nni_plat_errno(errno), 0);
+		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&ed->mtx);
+		(void) close(fd);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
 	// We have to submit to the pollq, because the connection is pending.
 	ed->node.fd = fd;
 	if ((rv = nni_posix_pollq_add(&ed->node)) != 0) {
-		(void) close(fd);
-		nni_posix_epdesc_finish(aio, rv, 0);
+		ed->node.fd = -1;
 		nni_mtx_unlock(&ed->mtx);
+		(void) close(fd);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
+	nni_aio_schedule(aio, nni_posix_epdesc_cancel, ed);
 	nni_aio_list_append(&ed->connectq, aio);
 	nni_posix_pollq_arm(&ed->node, POLLOUT);
 	nni_mtx_unlock(&ed->mtx);

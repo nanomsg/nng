@@ -63,7 +63,7 @@ extern void nni_msgq_set_get_error(nni_msgq *, int);
 // What this does is treat the message queue condition as if it were
 // successful, returning 0, and discarding the message.  If zero is
 // passed then this mode is reset to normal.
-extern void nni_msgq_set_best_effort(nni_msgq *, int);
+extern void nni_msgq_set_best_effort(nni_msgq *, bool);
 
 // nni_msgq_filter is a callback function used to filter messages.
 // The function is called on entry (put) or exit (get).  The void

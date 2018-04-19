@@ -360,13 +360,14 @@ http_rd_cancel(nni_aio *aio, int rv)
 static void
 http_rd_submit(nni_http_conn *conn, nni_aio *aio)
 {
-	if (nni_aio_start(aio, http_rd_cancel, conn) != 0) {
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	if (conn->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
+	nni_aio_schedule(aio, http_rd_cancel, conn);
 	nni_list_append(&conn->rdq, aio);
 	if (conn->rd_uaio == NULL) {
 		http_rd_start(conn);
@@ -473,7 +474,7 @@ http_wr_cancel(nni_aio *aio, int rv)
 static void
 http_wr_submit(nni_http_conn *conn, nni_aio *aio)
 {
-	if (nni_aio_start(aio, http_wr_cancel, conn) != 0) {
+	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	if (conn->closed) {
@@ -481,6 +482,7 @@ http_wr_submit(nni_http_conn *conn, nni_aio *aio)
 		return;
 	}
 	nni_list_append(&conn->wrq, aio);
+	nni_aio_schedule(aio, http_wr_cancel, conn);
 	if (conn->wr_uaio == NULL) {
 		http_wr_start(conn);
 	}
