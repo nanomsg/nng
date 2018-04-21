@@ -55,7 +55,7 @@ TestMain("REQ pollable", {
 
 	atexit(nng_fini);
 
-	Convey("Given a connected REQ/REP pair", {
+	Convey("Given a REQ/REP pair", {
 		nng_socket req;
 		nng_socket rep;
 		nng_ctx    ctx;
@@ -74,7 +74,7 @@ TestMain("REQ pollable", {
 		Convey("REQ ctx not pollable", {
 			int fd;
 			So(nng_ctx_open(&ctx, req) == 0);
-			Reset({ nng_ctx_close(req); });
+			Reset({ nng_ctx_close(ctx); });
 			So(nng_ctx_getopt_int(ctx, NNG_OPT_SENDFD, &fd) ==
 			    NNG_ENOTSUP);
 			So(nng_ctx_getopt_int(ctx, NNG_OPT_RECVFD, &fd) ==
@@ -87,7 +87,7 @@ TestMain("REQ pollable", {
 			So(nng_getopt_int(req, NNG_OPT_SENDFD, &fd) == 0);
 			So(isready(fd) == false);
 
-			Convey("And becomes readable on connect", {
+			Convey("And becomes writable on connect", {
 				So(nng_dial(req, "inproc://ctx1", NULL, 0) ==
 				    0);
 				nng_msleep(100);

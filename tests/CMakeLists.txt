@@ -166,7 +166,10 @@ add_nng_proto_test(reqctx 5 NNG_PROTO_REQ0 NNG_PROTO_REP0)
 add_nng_proto_test(reqpoll 5 NNG_PROTO_REQ0 NNG_PROTO_REP0)
 add_nng_proto_test(reqrep 5 NNG_PROTO_REQ0 NNG_PROTO_REP0)
 add_nng_proto_test(reqstress 60 NNG_PROTO_REQ0 NNG_PROTO_REP0)
+add_nng_proto_test(respondpoll 5 NNG_PROTO_SURVEYOR0 NNG_PROTO_RESPONDENT0)
 add_nng_test(survey 5 NNG_PROTO_SURVEYOR0 NNG_PROTO_RESPONDENT0)
+add_nng_proto_test(surveyctx 5 NNG_PROTO_SURVEYOR0 NNG_PROTO_RESPONDENT0)
+add_nng_proto_test(surveypoll 5 NNG_PROTO_SURVEYOR0 NNG_PROTO_RESPONDENT0)
 
 # compatbility tests
 # We only support these if ALL the legacy protocols are supported.  This
@@ -186,6 +189,7 @@ add_nng_compat_test(compat_reqrep 5)
 add_nng_compat_test(compat_survey 5)
 add_nng_compat_test(compat_reqttl 5)
 add_nng_compat_test(compat_shutdown 5)
+add_nng_compat_test(compat_surveyttl 5)
 add_nng_compat_test(compat_poll 5)
 
 # These are special tests for compat mode, not inherited from the

@@ -198,7 +198,9 @@ nng_recv_aio(nng_socket sid, nng_aio *aio)
 	int       rv;
 
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
-		nni_aio_finish_error(aio, rv);
+		if (nni_aio_begin(aio) == 0) {
+			nni_aio_finish_error(aio, rv);
+		}
 		return;
 	}
 	nni_sock_recv(sock, aio);
@@ -211,8 +213,16 @@ nng_send_aio(nng_socket sid, nng_aio *aio)
 	nni_sock *sock;
 	int       rv;
 
+	if (nni_aio_get_msg(aio) == NULL) {
+		if (nni_aio_begin(aio) == 0) {
+			nni_aio_finish_error(aio, NNG_EINVAL);
+		}
+		return;
+	}
 	if ((rv = nni_sock_find(&sock, sid)) != 0) {
-		nni_aio_finish_error(aio, rv);
+		if (nni_aio_begin(aio) == 0) {
+			nni_aio_finish_error(aio, rv);
+		}
 		return;
 	}
 	nni_sock_send(sock, aio);
@@ -260,7 +270,9 @@ nng_ctx_recv(nng_ctx cid, nng_aio *aio)
 	nni_ctx *ctx;
 
 	if ((rv = nni_ctx_find(&ctx, cid, false)) != 0) {
-		nni_aio_finish_error(aio, rv);
+		if (nni_aio_begin(aio) == 0) {
+			nni_aio_finish_error(aio, rv);
+		}
 		return;
 	}
 	nni_ctx_recv(ctx, aio);
@@ -273,8 +285,16 @@ nng_ctx_send(nng_ctx cid, nng_aio *aio)
 	int      rv;
 	nni_ctx *ctx;
 
+	if (nni_aio_get_msg(aio) == NULL) {
+		if (nni_aio_begin(aio) == 0) {
+			nni_aio_finish_error(aio, NNG_EINVAL);
+		}
+		return;
+	}
 	if ((rv = nni_ctx_find(&ctx, cid, false)) != 0) {
-		nni_aio_finish_error(aio, rv);
+		if (nni_aio_begin(aio) == 0) {
+			nni_aio_finish_error(aio, rv);
+		}
 		return;
 	}
 	nni_ctx_send(ctx, aio);

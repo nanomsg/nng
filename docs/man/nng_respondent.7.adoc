@@ -16,9 +16,9 @@ nng_respondent - respondent protocol
 == SYNOPSIS
 
 [source,c]
-----------
+----
 #include <nng/protocol/survey0/respond.h>
-----------
+----
 
 == DESCRIPTION
 
@@ -49,6 +49,19 @@ Respondents may discard a survey by simply not replying to it.
 
 Raw mode sockets (set with <<nng_options.5#NNG_OPT_RAW,`NNG_OPT_RAW`>>)
 ignore all these restrictions.
+
+=== Context Operations
+
+This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
+use cases using <<nng_ctx_open.3#,`nng_ctx_open()`>>.
+
+Incoming surveys will be routed to and received by only one context.
+Additional surveys may be received by other contexts in parallel.
+Replies made using a context will be returned to the the surveyor that
+issued the survey most recently received by that context.
+The restrictions for order of operations with sockets apply equally
+well for contexts, except that each context will be treated as if it were
+a separate socket.
 
 === Protocol Versions
 

@@ -226,25 +226,21 @@ xreq0_recv_cb(void *arg)
 
 	// We yank 4 bytes from front of body, and move them to the header.
 	if (nni_msg_len(msg) < 4) {
-		// Malformed message.
-		goto malformed;
+		// Peer gave us garbage, so kick it.
+		nni_msg_free(msg);
+		nni_pipe_stop(p->pipe);
+		return;
 	}
 	id = nni_msg_trim_u32(msg);
 	if (nni_msg_header_append_u32(msg, id) != 0) {
-		// Arguably we could just discard and carry on.  But
-		// dropping the connection is probably more helpful since
-		// it lets the other side see that a problem occurred.
-		// Plus it gives us a chance to reclaim some memory.
-		goto malformed;
+		// Probably ENOMEM, discard and carry on.
+		nni_msg_free(msg);
+		nni_pipe_recv(p->pipe, p->aio_recv);
+		return;
 	}
 
 	nni_aio_set_msg(p->aio_putq, msg);
 	nni_msgq_aio_put(sock->urq, p->aio_putq);
-	return;
-
-malformed:
-	nni_msg_free(msg);
-	nni_pipe_stop(p->pipe);
 }
 
 static void

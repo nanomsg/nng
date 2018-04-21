@@ -1,6 +1,6 @@
 #
-# Copyright 2017 Garrett D'Amore <garrett@damore.org>
-# Copyright 2017 Capitar IT Group BV <info@capitar.com>
+# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -8,15 +8,17 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-#  Req/Rep protocol
+# Surveyor/Respondent protocol
 
 if (NNG_PROTO_SURVEYOR0)
-    set(SURV0_SOURCES protocol/survey0/survey.c protocol/survey0/survey.h)
+    set(SURV0_SOURCES protocol/survey0/survey.c protocol/survey0/xsurvey.c
+    protocol/survey0/survey.h)
     set(SURV0_HEADERS protocol/survey0/survey.h)
 endif()
 
 if (NNG_PROTO_RESPONDENT0)
-    set(RESP0_SOURCES protocol/survey0/respond.c protocol/survey0/respond.h)
+    set(RESP0_SOURCES protocol/survey0/respond.c protocol/survey0/xrespond.c
+    protocol/survey0/respond.h)
     set(RESP0_HEADERS protocol/survey0/respond.h)
 endif()
 

@@ -14,6 +14,7 @@
 #include "protocol/survey0/respond.h"
 #include "protocol/survey0/survey.h"
 #include "stubs.h"
+#include "supplemental/util/platform.h"
 
 #include <string.h>
 
@@ -114,5 +115,221 @@ TestMain("SURVEY pattern", {
 				So(nng_recvmsg(surv, &msg, 0) == NNG_ESTATE);
 			});
 		});
+
+		Convey("Second send cancels pending recv", {
+			nng_msg *msg;
+			nng_aio *aio;
+
+			So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+			So(nng_msg_alloc(&msg, 0) == 0);
+			APPENDSTR(msg, "one");
+			So(nng_sendmsg(surv, msg, 0) == 0);
+			msg = NULL;
+			nng_recv_aio(surv, aio);
+			So(nng_msg_alloc(&msg, 0) == 0);
+			APPENDSTR(msg, "two");
+			So(nng_sendmsg(surv, msg, 0) == 0);
+			nng_aio_wait(aio);
+			So(nng_aio_result(aio) == NNG_ECANCELED);
+		});
+
+		Convey("Sending a NULL message does not panic", {
+			nng_aio *aio;
+
+			So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+			Reset({ nng_aio_free(aio); });
+			So(nng_sendmsg(surv, NULL, 0) == NNG_EINVAL);
+			nng_send_aio(surv, aio);
+			nng_aio_wait(aio);
+			So(nng_aio_result(aio) == NNG_EINVAL);
+		});
+
+		Convey("Disconnecting before getting response", {
+			nng_msg *msg;
+
+			So(nng_msg_alloc(&msg, 0) == 0);
+			So(nng_sendmsg(surv, msg, 0) == 0);
+			So(nng_recvmsg(resp, &msg, 0) == 0);
+			nng_close(surv);
+			nng_msleep(100);
+			So(nng_sendmsg(resp, msg, 0) == 0);
+		});
 	});
+
+	Convey("Bad backtrace survey is ignored", {
+		nng_socket surv;
+		nng_socket resp;
+		nng_msg *  msg;
+		So(nng_surveyor0_open_raw(&surv) == 0);
+		So(nng_respondent0_open(&resp) == 0);
+		Reset({
+			nng_close(surv);
+			nng_close(resp);
+		});
+		So(nng_listen(resp, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_dial(surv, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_setopt_ms(resp, NNG_OPT_RECVTIMEO, 200) == 0);
+		nng_msleep(100);
+		So(nng_msg_alloc(&msg, 0) == 0);
+		So(nng_msg_header_append_u32(msg, 1) ==
+		    0); // high order bit not set!
+		So(nng_sendmsg(surv, msg, 0) == 0);
+		So(nng_recvmsg(resp, &msg, 0) == NNG_ETIMEDOUT);
+	});
+
+	Convey("Bad backtrace survey is ignored (raw)", {
+		nng_socket surv;
+		nng_socket resp;
+		nng_msg *  msg;
+		So(nng_surveyor0_open_raw(&surv) == 0);
+		So(nng_respondent0_open_raw(&resp) == 0);
+		Reset({
+			nng_close(surv);
+			nng_close(resp);
+		});
+		So(nng_listen(resp, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_dial(surv, "inproc://badsurvback", NULL, 0) == 0);
+		nng_msleep(100);
+		So(nng_setopt_ms(resp, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_msg_alloc(&msg, 0) == 0);
+		So(nng_msg_header_append_u32(msg, 1) ==
+		    0); // high order bit not set!
+		So(nng_sendmsg(surv, msg, 0) == 0);
+		So(nng_recvmsg(resp, &msg, 0) == NNG_ETIMEDOUT);
+	});
+
+	Convey("Missing backtrace survey is ignored", {
+		nng_socket surv;
+		nng_socket resp;
+		nng_msg *  msg;
+		So(nng_surveyor0_open_raw(&surv) == 0);
+		So(nng_respondent0_open(&resp) == 0);
+		Reset({
+			nng_close(surv);
+			nng_close(resp);
+		});
+		So(nng_listen(resp, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_dial(surv, "inproc://badsurvback", NULL, 0) == 0);
+		nng_msleep(100);
+		So(nng_setopt_ms(resp, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_msg_alloc(&msg, 0) == 0);
+		So(nng_sendmsg(surv, msg, 0) == 0);
+		So(nng_recvmsg(resp, &msg, 0) == NNG_ETIMEDOUT);
+	});
+
+	Convey("Missing backtrace survey is ignored (raw)", {
+		nng_socket surv;
+		nng_socket resp;
+		nng_msg *  msg;
+		So(nng_surveyor0_open_raw(&surv) == 0);
+		So(nng_respondent0_open_raw(&resp) == 0);
+		Reset({
+			nng_close(surv);
+			nng_close(resp);
+		});
+		So(nng_listen(resp, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_dial(surv, "inproc://badsurvback", NULL, 0) == 0);
+		nng_msleep(100);
+		So(nng_setopt_ms(resp, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_msg_alloc(&msg, 0) == 0);
+		So(nng_sendmsg(surv, msg, 0) == 0);
+		So(nng_recvmsg(resp, &msg, 0) == NNG_ETIMEDOUT);
+	});
+
+	Convey("Bad backtrace response is ignored", {
+		nng_socket surv;
+		nng_socket resp;
+		nng_msg *  msg;
+		So(nng_surveyor0_open(&surv) == 0);
+		So(nng_respondent0_open_raw(&resp) == 0);
+		Reset({
+			nng_close(surv);
+			nng_close(resp);
+		});
+		So(nng_listen(resp, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_dial(surv, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_setopt_ms(resp, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_setopt_ms(surv, NNG_OPT_RECVTIMEO, 200) == 0);
+		nng_msleep(100);
+		So(nng_msg_alloc(&msg, 0) == 0);
+		So(nng_sendmsg(surv, msg, 0) == 0);
+		So(nng_recvmsg(resp, &msg, 0) == 0);
+		nng_msg_header_clear(msg);
+		nng_msg_header_append_u32(msg, 1);
+		So(nng_sendmsg(resp, msg, 0) == 0);
+		So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
+	});
+
+	Convey("Bad backtrace response is ignored (raw)", {
+		nng_socket surv;
+		nng_socket resp;
+		nng_msg *  msg;
+		So(nng_surveyor0_open_raw(&surv) == 0);
+		So(nng_respondent0_open_raw(&resp) == 0);
+		Reset({
+			nng_close(surv);
+			nng_close(resp);
+		});
+		So(nng_listen(resp, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_dial(surv, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_setopt_ms(resp, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_setopt_ms(surv, NNG_OPT_RECVTIMEO, 200) == 0);
+		nng_msleep(100);
+		So(nng_msg_alloc(&msg, 0) == 0);
+		So(nng_msg_header_append_u32(msg, 0x80000000) == 0);
+		So(nng_sendmsg(surv, msg, 0) == 0);
+		So(nng_recvmsg(resp, &msg, 0) == 0);
+		nng_msg_header_clear(msg);
+		nng_msg_header_append_u32(msg, 1);
+		So(nng_sendmsg(resp, msg, 0) == 0);
+		So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
+	});
+
+	Convey("Missing backtrace response is ignored", {
+		nng_socket surv;
+		nng_socket resp;
+		nng_msg *  msg;
+		So(nng_surveyor0_open(&surv) == 0);
+		So(nng_respondent0_open_raw(&resp) == 0);
+		Reset({
+			nng_close(surv);
+			nng_close(resp);
+		});
+		So(nng_listen(resp, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_dial(surv, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_setopt_ms(resp, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_setopt_ms(surv, NNG_OPT_RECVTIMEO, 200) == 0);
+		nng_msleep(100);
+		So(nng_msg_alloc(&msg, 0) == 0);
+		So(nng_sendmsg(surv, msg, 0) == 0);
+		So(nng_recvmsg(resp, &msg, 0) == 0);
+		nng_msg_header_clear(msg);
+		So(nng_sendmsg(resp, msg, 0) == 0);
+		So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
+	});
+
+	Convey("Missing backtrace response is ignored (raw)", {
+		nng_socket surv;
+		nng_socket resp;
+		nng_msg *  msg;
+		So(nng_surveyor0_open_raw(&surv) == 0);
+		So(nng_respondent0_open_raw(&resp) == 0);
+		Reset({
+			nng_close(surv);
+			nng_close(resp);
+		});
+		So(nng_listen(resp, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_dial(surv, "inproc://badsurvback", NULL, 0) == 0);
+		So(nng_setopt_ms(resp, NNG_OPT_RECVTIMEO, 200) == 0);
+		So(nng_setopt_ms(surv, NNG_OPT_RECVTIMEO, 200) == 0);
+		nng_msleep(100);
+		So(nng_msg_alloc(&msg, 0) == 0);
+		So(nng_msg_header_append_u32(msg, 0x80000000) == 0);
+		So(nng_sendmsg(surv, msg, 0) == 0);
+		So(nng_recvmsg(resp, &msg, 0) == 0);
+		nng_msg_header_clear(msg);
+		So(nng_sendmsg(resp, msg, 0) == 0);
+		So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
+	});
+
 });

@@ -12,11 +12,23 @@
 #define STUBS_H
 
 #ifdef _WIN32
+
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <windows.h>
+#include <winsock2.h>
+// order counts
+#include <mswsock.h>
+#define PLATFD SOCKET
+#define poll WSAPoll
 #else
+#include <poll.h>
 #include <stdint.h>
 #include <sys/time.h>
 #include <time.h>
+#define PLATFD int
 #endif
 
 // Stub handlers for some common things.
@@ -44,6 +56,25 @@ getms(void)
 	return (
 	    ((uint64_t)(tv.tv_sec) * 1000) + (uint64_t)(tv.tv_usec / 1000));
 #endif
+}
+
+bool
+fdready(int fd)
+{
+	struct pollfd pfd;
+	pfd.fd      = (PLATFD) fd;
+	pfd.events  = POLLRDNORM;
+	pfd.revents = 0;
+
+	switch (poll(&pfd, 1, 0)) {
+	case 0:
+		return (false);
+	case 1:
+		return (true);
+	default:
+		ConveyError("BAD POLL RETURN!");
+		return (false);
+	}
 }
 
 int
