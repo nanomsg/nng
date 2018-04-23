@@ -667,19 +667,11 @@ static nni_proto_pipe_ops rep0_pipe_ops = {
 	.pipe_stop  = rep0_pipe_stop,
 };
 
-static nni_proto_ctx_option rep0_ctx_options[] = {
-	// terminate list
-	{
-	    .co_name = NULL,
-	},
-};
-
 static nni_proto_ctx_ops rep0_ctx_ops = {
-	.ctx_init    = rep0_ctx_init,
-	.ctx_fini    = rep0_ctx_fini,
-	.ctx_send    = rep0_ctx_send,
-	.ctx_recv    = rep0_ctx_recv,
-	.ctx_options = rep0_ctx_options,
+	.ctx_init = rep0_ctx_init,
+	.ctx_fini = rep0_ctx_fini,
+	.ctx_send = rep0_ctx_send,
+	.ctx_recv = rep0_ctx_recv,
 };
 
 static nni_proto_sock_option rep0_sock_options[] = {

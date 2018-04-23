@@ -1273,15 +1273,14 @@ nni_ctx_getopt(nni_ctx *ctx, const char *opt, void *v, size_t *szp, int typ)
 {
 	nni_sock *            sock = ctx->c_sock;
 	nni_proto_ctx_option *co;
-	int                   rv;
+	int                   rv = NNG_ENOTSUP;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (strcmp(opt, NNG_OPT_RECVTIMEO) == 0) {
 		rv = nni_copyout_ms(ctx->c_rcvtimeo, v, szp, typ);
 	} else if (strcmp(opt, NNG_OPT_SENDTIMEO) == 0) {
 		rv = nni_copyout_ms(ctx->c_sndtimeo, v, szp, typ);
-	} else {
-		rv = NNG_ENOTSUP;
+	} else if (ctx->c_ops.ctx_options != NULL) {
 		for (co = ctx->c_ops.ctx_options; co->co_name != NULL; co++) {
 			if (strcmp(opt, co->co_name) != 0) {
 				continue;
@@ -1294,7 +1293,6 @@ nni_ctx_getopt(nni_ctx *ctx, const char *opt, void *v, size_t *szp, int typ)
 			break;
 		}
 	}
-
 	nni_mtx_unlock(&sock->s_mx);
 	return (rv);
 }
@@ -1305,15 +1303,14 @@ nni_ctx_setopt(
 {
 	nni_sock *            sock = ctx->c_sock;
 	nni_proto_ctx_option *co;
-	int                   rv;
+	int                   rv = NNG_ENOTSUP;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (strcmp(opt, NNG_OPT_RECVTIMEO) == 0) {
 		rv = nni_copyin_ms(&ctx->c_rcvtimeo, v, sz, typ);
 	} else if (strcmp(opt, NNG_OPT_SENDTIMEO) == 0) {
 		rv = nni_copyin_ms(&ctx->c_sndtimeo, v, sz, typ);
-	} else {
-		rv = NNG_ENOTSUP;
+	} else if (ctx->c_ops.ctx_options != NULL) {
 		for (co = ctx->c_ops.ctx_options; co->co_name != NULL; co++) {
 			if (strcmp(opt, co->co_name) != 0) {
 				continue;
