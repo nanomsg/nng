@@ -177,7 +177,6 @@ nni_win_resolv_ip(const char *host, const char *serv, int passive, int family,
     int proto, nni_aio *aio)
 {
 	nni_win_resolv_item *item;
-	int                  rv;
 	int                  fam;
 
 	if (nni_aio_begin(aio) != 0) {
