@@ -1,7 +1,6 @@
 version: 0.0.{build}
 environment:
   global:
-    ASCIIDOCTOR_VER: 1.5.4
     CFLAGS: /MP
     TERM: xterm
   matrix:
@@ -23,19 +22,11 @@ environment:
 
 
 cache:
-  - '%USERPROFILE%\asciidoctor-%ASCIIDOCTOR_VER%.gem -> .appveyor.yml'
+  - C:\ProgramData\chocolatey\bin -> appveyor.yml
+  - C:\ProgramData\chocolatey\lib -> appveyor.yml
 
 install:
-  # Gem fetching can sometimes be excruciatingly slow due to the rubygems database,
-  # so we have to manually download our target gem.
   - ps: |
-      $asciidoctor = "$($env:USERPROFILE)\asciidoctor-$($env:ASCIIDOCTOR_VER).gem"
-      if (-not (Test-Path $asciidoctor)) {
-          $url = "https://rubygems.org/downloads/asciidoctor-$($env:ASCIIDOCTOR_VER).gem"
-          Write-Output "Downloading asciidoctor $env:ASCIIDOCTOR_VER from $url"
-          (New-Object Net.WebClient).DownloadFile($url, $asciidoctor)
-      }
-      gem install --no-document --local $asciidoctor
       choco install ninja
 
 
