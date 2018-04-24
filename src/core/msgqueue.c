@@ -24,7 +24,6 @@ struct nni_msgq {
 	int       mq_put;
 	int       mq_puterr;
 	int       mq_geterr;
-	bool      mq_besteffort;
 	bool      mq_closed;
 	nni_msg **mq_msgs;
 
@@ -249,30 +248,9 @@ nni_msgq_run_putq(nni_msgq *mq)
 			continue;
 		}
 
-		// If we are in best effort mode, just drop the message
-		// as if we delivered.
-		if (mq->mq_besteffort) {
-			nni_list_remove(&mq->mq_aio_putq, waio);
-			nni_aio_set_msg(waio, NULL);
-			nni_msg_free(msg);
-			nni_aio_finish(waio, 0, len);
-			continue;
-		}
-
 		// Unable to make progress, leave the aio where it is.
 		break;
 	}
-}
-
-void
-nni_msgq_set_best_effort(nni_msgq *mq, bool on)
-{
-	nni_mtx_lock(&mq->mq_lock);
-	mq->mq_besteffort = on;
-	if (on) {
-		nni_msgq_run_putq(mq);
-	}
-	nni_mtx_unlock(&mq->mq_lock);
 }
 
 static void
@@ -373,11 +351,10 @@ nni_msgq_aio_put(nni_msgq *mq, nni_aio *aio)
 	}
 
 	// If this is an instantaneous poll operation, and the queue has
-	// no room, nobody is waiting to receive, and we're not best effort
-	// (best effort discards), then report the error (NNG_ETIMEDOUT).
+	// no room, nobody is waiting to receive, then report NNG_ETIMEDOUT.
 	rv = nni_aio_schedule_verify(aio, nni_msgq_cancel, mq);
 	if ((rv != 0) && (mq->mq_len >= mq->mq_cap) &&
-	    (nni_list_empty(&mq->mq_aio_getq)) && (!mq->mq_besteffort)) {
+	    (nni_list_empty(&mq->mq_aio_getq))) {
 		nni_mtx_unlock(&mq->mq_lock);
 		nni_aio_finish_error(aio, rv);
 		return;

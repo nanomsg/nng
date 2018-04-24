@@ -63,12 +63,6 @@ extern void nni_msgq_set_put_error(nni_msgq *, int);
 // Readers (nni_msgq_put*) are unaffected.
 extern void nni_msgq_set_get_error(nni_msgq *, int);
 
-// nni_msgq_set_best_effort marks the message queue best effort on send.
-// What this does is treat the message queue condition as if it were
-// successful, returning 0, and discarding the message.  If zero is
-// passed then this mode is reset to normal.
-extern void nni_msgq_set_best_effort(nni_msgq *, bool);
-
 // nni_msgq_filter is a callback function used to filter messages.
 // The function is called on entry (put) or exit (get).  The void
 // argument is an opaque pointer supplied with the function at registration
