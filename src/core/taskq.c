@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -70,9 +70,7 @@ nni_taskq_thread(void *self)
 int
 nni_taskq_init(nni_taskq **tqp, int nthr)
 {
-	int        rv;
 	nni_taskq *tq;
-	int        i;
 
 	if ((tq = NNI_ALLOC_STRUCT(tq)) == NULL) {
 		return (NNG_ENOMEM);
@@ -89,7 +87,8 @@ nni_taskq_init(nni_taskq **tqp, int nthr)
 	nni_cv_init(&tq->tq_sched_cv, &tq->tq_mtx);
 	nni_cv_init(&tq->tq_wait_cv, &tq->tq_mtx);
 
-	for (i = 0; i < nthr; i++) {
+	for (int i = 0; i < nthr; i++) {
+		int rv;
 		tq->tq_threads[i].tqt_tq      = tq;
 		tq->tq_threads[i].tqt_running = NULL;
 		rv = nni_thr_init(&tq->tq_threads[i].tqt_thread,
@@ -100,7 +99,7 @@ nni_taskq_init(nni_taskq **tqp, int nthr)
 		}
 	}
 	tq->tq_run = 1;
-	for (i = 0; i < tq->tq_nthreads; i++) {
+	for (int i = 0; i < tq->tq_nthreads; i++) {
 		nni_thr_run(&tq->tq_threads[i].tqt_thread);
 	}
 	*tqp = tq;
@@ -190,20 +189,19 @@ void
 nni_task_wait(nni_task *task)
 {
 	nni_taskq *tq = task->task_tq;
-	int        running;
 
 	if (task->task_cb == NULL) {
 		return;
 	}
 	nni_mtx_lock(&tq->tq_mtx);
 	for (;;) {
-		running = 0;
+		bool running = false;
 		if (nni_list_active(&tq->tq_tasks, task)) {
-			running = 1;
+			running = true;
 		} else {
 			for (int i = 0; i < tq->tq_nthreads; i++) {
 				if (tq->tq_threads[i].tqt_running == task) {
-					running = 1;
+					running = true;
 					break;
 				}
 			}
@@ -222,15 +220,15 @@ int
 nni_task_cancel(nni_task *task)
 {
 	nni_taskq *tq = task->task_tq;
-	int        running;
+	bool       running;
 
 	nni_mtx_lock(&tq->tq_mtx);
-	running = 1;
+	running = true;
 	for (;;) {
-		running = 0;
+		running = false;
 		for (int i = 0; i < tq->tq_nthreads; i++) {
 			if (tq->tq_threads[i].tqt_running == task) {
-				running = 1;
+				running = true;
 				break;
 			}
 		}

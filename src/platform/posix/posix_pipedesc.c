@@ -202,8 +202,7 @@ nni_posix_pipedesc_doread(nni_posix_pipedesc *pd)
 static void
 nni_posix_pipedesc_cb(void *arg)
 {
-	nni_posix_pipedesc *pd     = arg;
-	int                 events = 0;
+	nni_posix_pipedesc *pd = arg;
 
 	nni_mtx_lock(&pd->mtx);
 	if (pd->node.revents & POLLIN) {
@@ -215,6 +214,7 @@ nni_posix_pipedesc_cb(void *arg)
 	if (pd->node.revents & (POLLHUP | POLLERR | POLLNVAL)) {
 		nni_posix_pipedesc_doclose(pd);
 	} else {
+		int events = 0;
 		if (!nni_list_empty(&pd->writeq)) {
 			events |= POLLOUT;
 		}

@@ -143,25 +143,28 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 			}
 #endif
 
-			for (unsigned i = 0; i < niov; i++) {
-				iov[i].iov_base = aiov[i].iov_buf;
-				iov[i].iov_len  = aiov[i].iov_len;
-			}
-			hdr.msg_iov        = iov;
-			hdr.msg_iovlen     = niov;
-			hdr.msg_name       = &ss;
-			hdr.msg_namelen    = len;
-			hdr.msg_flags      = NNI_MSG_NOSIGNAL;
-			hdr.msg_control    = NULL;
-			hdr.msg_controllen = 0;
-
-			if ((cnt = sendmsg(udp->udp_fd, &hdr, 0)) < 0) {
-				if ((errno == EAGAIN) ||
-				    (errno == EWOULDBLOCK)) {
-					// Cannot send now, leave at head.
-					return;
+			if (rv == 0) {
+				for (unsigned i = 0; i < niov; i++) {
+					iov[i].iov_base = aiov[i].iov_buf;
+					iov[i].iov_len  = aiov[i].iov_len;
 				}
-				rv = nni_plat_errno(errno);
+				hdr.msg_iov        = iov;
+				hdr.msg_iovlen     = niov;
+				hdr.msg_name       = &ss;
+				hdr.msg_namelen    = len;
+				hdr.msg_flags      = NNI_MSG_NOSIGNAL;
+				hdr.msg_control    = NULL;
+				hdr.msg_controllen = 0;
+
+				if ((cnt = sendmsg(udp->udp_fd, &hdr, 0)) <
+				    0) {
+					if ((errno == EAGAIN) ||
+					    (errno == EWOULDBLOCK)) {
+						// Cannot send now, leave.
+						return;
+					}
+					rv = nni_plat_errno(errno);
+				}
 			}
 		}
 
@@ -176,7 +179,6 @@ nni_posix_udp_cb(void *arg)
 {
 	nni_plat_udp *udp = arg;
 	int           revents;
-	int           events = 0;
 
 	nni_mtx_lock(&udp->udp_mtx);
 	revents = udp->udp_pitem.revents;
@@ -189,6 +191,7 @@ nni_posix_udp_cb(void *arg)
 	if (revents & (POLLHUP | POLLERR | POLLNVAL)) {
 		nni_posix_udp_doclose(udp);
 	} else {
+		int events = 0;
 		if (!nni_list_empty(&udp->udp_sendq)) {
 			events |= POLLOUT;
 		}

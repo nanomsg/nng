@@ -129,9 +129,9 @@ static void
 nni_posix_epdesc_doaccept(nni_posix_epdesc *ed)
 {
 	nni_aio *aio;
-	int      newfd;
 
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
+		int newfd;
 
 #ifdef NNG_USE_ACCEPT4
 		newfd = accept4(ed->node.fd, NULL, NULL, SOCK_CLOEXEC);
@@ -195,9 +195,8 @@ nni_posix_epdesc_doerror(nni_posix_epdesc *ed)
 static void
 nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 {
-	nni_aio *           aio;
-	struct sockaddr_un *sun;
-	int                 fd;
+	nni_aio *aio;
+	int      fd;
 
 	ed->closed = true;
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
@@ -210,10 +209,10 @@ nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
 	nni_posix_pollq_remove(&ed->node);
 
 	if ((fd = ed->node.fd) != -1) {
-		ed->node.fd = -1;
+		struct sockaddr_un *sun = (void *) &ed->locaddr;
+		ed->node.fd             = -1;
 		(void) shutdown(fd, SHUT_RDWR);
 		(void) close(fd);
-		sun = (void *) &ed->locaddr;
 		if ((sun->sun_family == AF_UNIX) && (ed->loclen != 0)) {
 			(void) unlink(sun->sun_path);
 		}

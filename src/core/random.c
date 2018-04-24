@@ -1,5 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -37,13 +38,12 @@ typedef struct {
 static void
 nni_isaac(nni_isaac_ctx *ctx)
 {
-	register uint32_t i, x, y;
-
 	ctx->cc++;          // cc incremented once per 256 results
 	ctx->bb += ctx->cc; // then combined with bb
 
-	for (i = 0; i < 256; ++i) {
-		x = ctx->mm[i];
+	for (uint32_t i = 0; i < 256; ++i) {
+		uint32_t x = ctx->mm[i];
+		uint32_t y;
 		switch (i % 4) {
 		case 0:
 			ctx->aa ^= (ctx->aa << 13);

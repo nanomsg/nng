@@ -105,15 +105,14 @@ nni_base64_encode(const uint8_t *in, size_t in_len, char *out, size_t out_len)
 	unsigned io;
 	unsigned rem;
 	uint32_t v;
-	uint8_t  ch;
 
 	const uint8_t ENCODEMAP[65] = "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	                              "abcdefghijklmnopqrstuvwxyz"
 	                              "0123456789+/";
 
 	for (io = 0, ii = 0, v = 0, rem = 0; ii < in_len; ii++) {
-		ch = in[ii];
-		v  = (v << 8) | ch;
+		uint8_t ch = in[ii];
+		v          = (v << 8) | ch;
 		rem += 8;
 		while (rem >= 6) {
 			rem -= 6;

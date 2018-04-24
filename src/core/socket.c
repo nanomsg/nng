@@ -81,7 +81,6 @@ struct nni_socket {
 	nni_list s_pipes; // active pipes
 	nni_list s_ctxs;  // active contexts (protected by global nni_sock_lk)
 
-	int  s_ep_pend; // EP dial/listen in progress
 	int  s_closing; // Socket is closing
 	int  s_closed;  // Socket closed, protected by global lock
 	bool s_ctxwait; // Waiting for contexts to close.

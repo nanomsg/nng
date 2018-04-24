@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -102,7 +102,6 @@ nni_msg_dump(const char *banner, const nni_msg *msg)
 static int
 nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 {
-	size_t   headroom = 0;
 	uint8_t *newbuf;
 
 	// We assume that if the pointer is a valid pointer, and inside
@@ -121,7 +120,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 
 	if ((ch->ch_ptr >= ch->ch_buf) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
-		headroom = (size_t)(ch->ch_ptr - ch->ch_buf);
+		size_t headroom = (size_t)(ch->ch_ptr - ch->ch_buf);
 		if (headwanted < headroom) {
 			headwanted = headroom; // Never shrink this.
 		}
@@ -474,10 +473,9 @@ nni_msg_getopt(nni_msg *m, int opt, void *val, size_t *szp)
 int
 nni_msg_realloc(nni_msg *m, size_t sz)
 {
-	int rv = 0;
-
 	if (m->m_body.ch_len < sz) {
-		rv = nni_chunk_append(&m->m_body, NULL, sz - m->m_body.ch_len);
+		int rv =
+		    nni_chunk_append(&m->m_body, NULL, sz - m->m_body.ch_len);
 		if (rv != 0) {
 			return (rv);
 		}

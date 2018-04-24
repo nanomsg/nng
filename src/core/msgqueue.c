@@ -82,8 +82,6 @@ nni_msgq_init(nni_msgq **mqp, unsigned cap)
 void
 nni_msgq_fini(nni_msgq *mq)
 {
-	nni_msg *msg;
-
 	if (mq == NULL) {
 		return;
 	}
@@ -91,7 +89,7 @@ nni_msgq_fini(nni_msgq *mq)
 
 	/* Free any orphaned messages. */
 	while (mq->mq_len > 0) {
-		msg = mq->mq_msgs[mq->mq_get];
+		nni_msg *msg = mq->mq_msgs[mq->mq_get];
 		mq->mq_get++;
 		if (mq->mq_get >= mq->mq_alloc) {
 			mq->mq_get = 0;
@@ -114,8 +112,6 @@ nni_msgq_fini(nni_msgq *mq)
 void
 nni_msgq_set_get_error(nni_msgq *mq, int error)
 {
-	nni_aio *aio;
-
 	// Let all pending blockers know we are closing the queue.
 	nni_mtx_lock(&mq->mq_lock);
 	if (mq->mq_closed) {
@@ -123,6 +119,7 @@ nni_msgq_set_get_error(nni_msgq *mq, int error)
 		error = NNG_ECLOSED;
 	}
 	if (error != 0) {
+		nni_aio *aio;
 		while ((aio = nni_list_first(&mq->mq_aio_getq)) != NULL) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, error);
@@ -136,8 +133,6 @@ nni_msgq_set_get_error(nni_msgq *mq, int error)
 void
 nni_msgq_set_put_error(nni_msgq *mq, int error)
 {
-	nni_aio *aio;
-
 	// Let all pending blockers know we are closing the queue.
 	nni_mtx_lock(&mq->mq_lock);
 	if (mq->mq_closed) {
@@ -145,6 +140,7 @@ nni_msgq_set_put_error(nni_msgq *mq, int error)
 		error = NNG_ECLOSED;
 	}
 	if (error != 0) {
+		nni_aio *aio;
 		while ((aio = nni_list_first(&mq->mq_aio_putq)) != NULL) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, error);
@@ -158,8 +154,6 @@ nni_msgq_set_put_error(nni_msgq *mq, int error)
 void
 nni_msgq_set_error(nni_msgq *mq, int error)
 {
-	nni_aio *aio;
-
 	// Let all pending blockers know we are closing the queue.
 	nni_mtx_lock(&mq->mq_lock);
 	if (mq->mq_closed) {
@@ -167,6 +161,7 @@ nni_msgq_set_error(nni_msgq *mq, int error)
 		error = NNG_ECLOSED;
 	}
 	if (error != 0) {
+		nni_aio *aio;
 		while (((aio = nni_list_first(&mq->mq_aio_getq)) != NULL) ||
 		    ((aio = nni_list_first(&mq->mq_aio_putq)) != NULL)) {
 			nni_aio_list_remove(aio);
@@ -207,13 +202,11 @@ static void
 nni_msgq_run_putq(nni_msgq *mq)
 {
 	nni_aio *waio;
-	nni_aio *raio;
-	nni_msg *msg;
-	size_t   len;
 
 	while ((waio = nni_list_first(&mq->mq_aio_putq)) != NULL) {
-		msg = nni_aio_get_msg(waio);
-		len = nni_msg_len(msg);
+		nni_msg *msg = nni_aio_get_msg(waio);
+		size_t   len = nni_msg_len(msg);
+		nni_aio *raio;
 
 		// The presence of any blocked reader indicates that
 		// the queue is empty, otherwise it would have just taken
@@ -257,9 +250,9 @@ static void
 nni_msgq_run_getq(nni_msgq *mq)
 {
 	nni_aio *raio;
-	nni_aio *waio;
 
 	while ((raio = nni_list_first(&mq->mq_aio_getq)) != NULL) {
+		nni_aio *waio;
 		// If anything is waiting in the queue, get it first.
 		if (mq->mq_len != 0) {
 			nni_msg *msg = mq->mq_msgs[mq->mq_get++];

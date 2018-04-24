@@ -1,5 +1,6 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -23,18 +24,16 @@ void
 nni_show_backtrace(void)
 {
 #if NNG_HAVE_BACKTRACE
-	void * frames[50];
-	int    nframes;
-	char **lines;
-	int    i;
+	void *frames[50];
+	int   nframes;
 
 	nframes = backtrace(frames, sizeof(frames) / sizeof(frames[0]));
 	if (nframes > 1) {
-		lines = backtrace_symbols(frames, nframes);
+		char **lines = backtrace_symbols(frames, nframes);
 		if (lines == NULL) {
 			return;
 		}
-		for (i = 1; i < nframes; i++) {
+		for (int i = 1; i < nframes; i++) {
 			nni_println(lines[i]);
 		}
 	}

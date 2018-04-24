@@ -440,12 +440,11 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 		keep = 1; // Do not discard message!
 	} else {
 		// copyout to multiple iovecs.
-		char * ptr = nng_msg_body(msg);
-		int    i;
-		size_t n;
-		len = nng_msg_len(msg);
+		char *ptr = nng_msg_body(msg);
+		len       = nng_msg_len(msg);
 
-		for (i = 0; i < mh->msg_iovlen; i++) {
+		for (int i = 0; i < mh->msg_iovlen; i++) {
+			size_t n;
 			if ((n = mh->msg_iov[i].iov_len) == NN_MSG) {
 				// This is forbidden!
 				nn_seterror(NNG_EINVAL);
@@ -475,7 +474,6 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 		size_t             tlen;
 		size_t             spsz;
 		struct nn_cmsghdr *hdr;
-		unsigned char *    ptr;
 
 		spsz = nng_msg_header_len(msg);
 		clen = NN_CMSG_SPACE(sizeof(spsz) + spsz);
@@ -504,7 +502,7 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 		}
 
 		if (clen <= tlen) {
-			ptr             = NN_CMSG_DATA(cdata);
+			uint8_t *ptr    = NN_CMSG_DATA(cdata);
 			hdr             = (void *) cdata;
 			hdr->cmsg_len   = clen;
 			hdr->cmsg_level = PROTO_SP;
@@ -578,11 +576,10 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	// usability we've ever seen.
 	cmsg = NULL;
 	if ((cdata = mh->msg_control) != NULL) {
-		size_t             clen;
-		size_t             offs;
-		size_t             spsz;
-		struct nn_cmsghdr *chdr;
-		unsigned char *    data;
+		size_t         clen;
+		size_t         offs;
+		size_t         spsz;
+		unsigned char *data;
 
 		if ((clen = mh->msg_controllen) == NN_MSG) {
 			// Underlying data is a message.  This is awkward,
@@ -598,7 +595,7 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 
 		offs = 0;
 		while ((offs + sizeof(NN_CMSG_LEN(0))) < clen) {
-			chdr = (void *) (cdata + offs);
+			struct nn_cmsghdr *chdr = (void *) (cdata + offs);
 			if ((chdr->cmsg_level != PROTO_SP) ||
 			    (chdr->cmsg_type != SP_HDR)) {
 				offs += chdr->cmsg_len;

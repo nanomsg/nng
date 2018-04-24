@@ -103,8 +103,7 @@ nni_timer_cancel(nni_timer_node *node)
 void
 nni_timer_schedule(nni_timer_node *node, nni_time when)
 {
-	nni_timer *     timer = &nni_global_timer;
-	nni_timer_node *srch;
+	nni_timer *timer = &nni_global_timer;
 
 	nni_mtx_lock(&timer->t_mx);
 	node->t_expire = when;
@@ -114,7 +113,7 @@ nni_timer_schedule(nni_timer_node *node, nni_time when)
 	}
 
 	if (when != NNI_TIME_NEVER) {
-		srch = nni_list_first(&timer->t_entries);
+		nni_timer_node *srch = nni_list_first(&timer->t_entries);
 		while ((srch != NULL) && (srch->t_expire < node->t_expire)) {
 			srch = nni_list_next(&timer->t_entries, srch);
 		}

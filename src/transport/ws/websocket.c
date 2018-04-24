@@ -308,16 +308,15 @@ ws_ep_accept(void *arg, nni_aio *aio)
 static void
 ws_ep_connect(void *arg, nni_aio *aio)
 {
-	ws_ep * ep = arg;
-	int     rv = 0;
-	ws_hdr *h;
+	ws_ep *ep = arg;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	if (!ep->started) {
+		ws_hdr *h;
 		NNI_LIST_FOREACH (&ep->headers, h) {
-			rv = nni_ws_dialer_header(
+			int rv = nni_ws_dialer_header(
 			    ep->dialer, h->name, h->value);
 			if (rv != 0) {
 				nni_aio_finish_error(aio, rv);
