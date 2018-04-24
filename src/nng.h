@@ -377,6 +377,10 @@ NNG_DECL int nng_ctx_getopt_size(nng_ctx, const char *, size_t *);
 // tunables (which does include NNG_OPT_SENDTIMEO and NNG_OPT_RECVTIMEO);
 // see the protocol documentation for more details.
 NNG_DECL int nng_ctx_setopt(nng_ctx, const char *, const void *, size_t);
+NNG_DECL int nng_ctx_setopt_bool(nng_ctx, const char *, bool);
+NNG_DECL int nng_ctx_setopt_int(nng_ctx, const char *, int);
+NNG_DECL int nng_ctx_setopt_ms(nng_ctx, const char *, nng_duration);
+NNG_DECL int nng_ctx_setopt_size(nng_ctx, const char *, size_t);
 
 // nng_alloc is used to allocate memory.  It's intended purpose is for
 // allocating memory suitable for message buffers with nng_send().

@@ -326,17 +326,57 @@ nng_ctx_getopt_size(nng_ctx id, const char *name, size_t *vp)
 }
 
 int
-nng_ctx_getopt_string(nng_ctx id, const char *name, char **vp)
-{
-	size_t sz = sizeof(*vp);
-	return (nng_ctx_getx(id, name, vp, &sz, NNI_TYPE_STRING));
-}
-
-int
 nng_ctx_getopt_ms(nng_ctx id, const char *name, nng_duration *vp)
 {
 	size_t sz = sizeof(*vp);
 	return (nng_ctx_getx(id, name, vp, &sz, NNI_TYPE_DURATION));
+}
+
+static int
+nng_ctx_setx(nng_ctx id, const char *n, const void *v, size_t sz, int t)
+{
+	nni_ctx *ctx;
+	int      rv;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_ctx_find(&ctx, id, false)) != 0) {
+		return (rv);
+	}
+	rv = nni_ctx_setopt(ctx, n, v, sz, t);
+	nni_ctx_rele(ctx);
+	return (rv);
+}
+
+int
+nng_ctx_setopt(nng_ctx id, const char *name, const void *val, size_t sz)
+{
+	return (nng_ctx_setx(id, name, val, sz, NNI_TYPE_OPAQUE));
+}
+
+int
+nng_ctx_setopt_bool(nng_ctx id, const char *name, bool v)
+{
+	return (nng_ctx_setx(id, name, &v, sizeof(v), NNI_TYPE_BOOL));
+}
+
+int
+nng_ctx_setopt_int(nng_ctx id, const char *name, int v)
+{
+	return (nng_ctx_setx(id, name, &v, sizeof(v), NNI_TYPE_INT32));
+}
+
+int
+nng_ctx_setopt_size(nng_ctx id, const char *name, size_t v)
+{
+	return (nng_ctx_setx(id, name, &v, sizeof(v), NNI_TYPE_SIZE));
+}
+
+int
+nng_ctx_setopt_ms(nng_ctx id, const char *name, nng_duration v)
+{
+	return (nng_ctx_setx(id, name, &v, sizeof(v), NNI_TYPE_DURATION));
 }
 
 int
