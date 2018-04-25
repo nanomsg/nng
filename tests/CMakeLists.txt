@@ -126,6 +126,7 @@ else ()
 endif ()
 
 add_nng_test(aio 5 ON)
+add_nng_test(bufsz 5 NNG_PROTO_PAIR0)
 add_nng_test(base64 5 NNG_SUPP_BASE64)
 add_nng_test(device 5 ON)
 add_nng_test(errors 2 ON)

@@ -716,6 +716,84 @@ nn_setignore(nng_socket s, const void *valp, size_t sz)
 	return (0);
 }
 
+static int
+nn_getrcvbuf(nng_socket s, void *valp, size_t *szp)
+{
+	int cnt;
+	int rv;
+
+	if ((rv = nng_getopt_int(s, NNG_OPT_RECVBUF, &cnt)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	cnt *= 1024;
+	memcpy(valp, &cnt, *szp < sizeof(cnt) ? *szp : sizeof(cnt));
+	*szp = sizeof(cnt);
+	return (0);
+}
+
+static int
+nn_setrcvbuf(nng_socket s, const void *valp, size_t sz)
+{
+	int cnt;
+	int rv;
+
+	if (sz != sizeof(cnt)) {
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+	memcpy(&cnt, valp, sizeof(cnt));
+	// Round up to a whole number of kilobytes, then divide by kB to
+	// go from buffer size in bytes to messages.  This is a coarse
+	// estimate, and assumes messages are 1kB on average.
+	cnt += 1023;
+	cnt /= 1024;
+	if ((rv = nng_setopt_int(s, NNG_OPT_RECVBUF, cnt)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	return (0);
+}
+
+static int
+nn_getsndbuf(nng_socket s, void *valp, size_t *szp)
+{
+	int cnt;
+	int rv;
+
+	if ((rv = nng_getopt_int(s, NNG_OPT_SENDBUF, &cnt)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	cnt *= 1024;
+	memcpy(valp, &cnt, *szp < sizeof(cnt) ? *szp : sizeof(cnt));
+	*szp = sizeof(cnt);
+	return (0);
+}
+
+static int
+nn_setsndbuf(nng_socket s, const void *valp, size_t sz)
+{
+	int cnt;
+	int rv;
+
+	if (sz != sizeof(cnt)) {
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+	memcpy(&cnt, valp, sizeof(cnt));
+	// Round up to a whole number of kilobytes, then divide by kB to
+	// go from buffer size in bytes to messages.  This is a coarse
+	// estimate, and assumes messages are 1kB on average.
+	cnt += 1023;
+	cnt /= 1024;
+	if ((rv = nng_setopt_int(s, NNG_OPT_SENDBUF, cnt)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	return (0);
+}
+
 // options which we convert -- most of the array is initialized at run time.
 static const struct {
 	int         nnlevel;
@@ -738,13 +816,15 @@ static const struct {
 	},
 	{
 	    .nnlevel = NN_SOL_SOCKET,
-	    .nnopt   = NN_SNDBUF,
-	    .opt     = NNG_OPT_SENDBUF,
+	    .nnopt   = NN_RCVBUF,
+	    .get     = nn_getrcvbuf,
+	    .set     = nn_setrcvbuf,
 	},
 	{
 	    .nnlevel = NN_SOL_SOCKET,
-	    .nnopt   = NN_RCVBUF,
-	    .opt     = NNG_OPT_RECVBUF,
+	    .nnopt   = NN_SNDBUF,
+	    .get     = nn_getsndbuf,
+	    .set     = nn_setsndbuf,
 	},
 	{
 	    .nnlevel = NN_SOL_SOCKET,
