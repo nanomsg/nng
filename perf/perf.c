@@ -10,6 +10,7 @@
 
 #include "nng.h"
 
+#include <ctype.h>
 #include <stdarg.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -64,42 +65,67 @@ static void die(const char *, ...);
 // - inproc_thr - inproc throughput
 //
 
+bool
+matches(const char *arg, const char *name)
+{
+	const char *ptr = arg;
+	const char *x;
+
+	while (((x = strchr(ptr, '/')) != NULL) ||
+	    ((x = strchr(ptr, '\\')) != NULL) ||
+	    ((x = strchr(ptr, ':')) != NULL)) {
+		ptr = x + 1;
+	}
+	for (;;) {
+		if (*name == '\0') {
+			break;
+		}
+		if (tolower(*ptr) != *name) {
+			return (false);
+		}
+		ptr++;
+		name++;
+	}
+
+	switch (*ptr) {
+	case '\0':
+		return (true);
+	case '.': // extension; ignore it.
+		return (true);
+	default: // some other trailing bit.
+		return (false);
+	}
+}
+
 int
 main(int argc, char **argv)
 {
 	char *prog;
 
-	// Allow -m <remote_late> or whatever to override argv[0].
+	// Allow -m <remote_lat> or whatever to override argv[0].
 	if ((argc >= 3) && (strcmp(argv[1], "-m") == 0)) {
-		prog = argv[1];
+		prog = argv[2];
 		argv += 3;
 		argc -= 3;
 	} else {
-		if (((prog = strrchr(argv[0], '/')) != NULL) ||
-		    ((prog = strrchr(argv[0], '\\')) != NULL) ||
-		    ((prog = strrchr(argv[0], ':')) != NULL)) {
-			prog++;
-		} else {
-			prog = argv[0];
-		}
+		prog = argv[0];
 		argc--;
 		argv++;
 	}
-	if ((strcmp(prog, "remote_lat") == 0) ||
-	    (strcmp(prog, "latency_client") == 0)) {
+	if (matches(prog, "remote_lat") || matches(prog, "latency_client")) {
 		do_remote_lat(argc, argv);
-	} else if ((strcmp(prog, "local_lat") == 0) ||
-	    (strcmp(prog, "latency_server") == 0)) {
+	} else if (matches(prog, "local_lat") ||
+	    matches(prog, "latency_server")) {
 		do_local_lat(argc, argv);
-	} else if ((strcmp(prog, "local_thr") == 0) ||
-	    (strcmp(prog, "throughput_server") == 0)) {
+	} else if (matches(prog, "local_thr") ||
+	    matches(prog, "throughput_server")) {
 		do_local_thr(argc, argv);
-	} else if ((strcmp(prog, "remote_thr") == 0) ||
-	    (strcmp(prog, "throughput_client") == 0)) {
+	} else if (matches(prog, "remote_thr") ||
+	    matches(prog, "throughput_client")) {
 		do_remote_thr(argc, argv);
-	} else if ((strcmp(prog, "inproc_thr") == 0)) {
+	} else if (matches(prog, "inproc_thr")) {
 		do_inproc_thr(argc, argv);
-	} else if ((strcmp(prog, "inproc_lat") == 0)) {
+	} else if (matches(prog, "inproc_lat")) {
 		do_inproc_lat(argc, argv);
 	} else {
 		die("Unknown program mode? Use -m <mode>.");
@@ -258,12 +284,16 @@ do_inproc_thr(int argc, char **argv)
 	ia.addr    = "inproc://tput_test";
 	ia.msgsize = parse_int(argv[0], "message size");
 	ia.count   = parse_int(argv[1], "count");
-	ia.func    = throughput_client;
+	ia.func    = throughput_server;
 
 	if ((rv = nng_thread_create(&thr, do_inproc, &ia)) != 0) {
 		die("Cannot create thread: %s", nng_strerror(rv));
 	}
-	throughput_server("inproc://tput_test", ia.msgsize, ia.count);
+
+	// Sleep a bit.
+	nng_msleep(100);
+
+	throughput_client("inproc://tput_test", ia.msgsize, ia.count);
 	nng_thread_destroy(thr);
 }
 
