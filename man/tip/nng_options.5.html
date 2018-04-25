@@ -531,7 +531,6 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 
 <span class="tok-cp">#define NNG_OPT_SOCKNAME   &quot;socket-name&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RAW        &quot;raw&quot;</span>
-<span class="tok-cp">#define NNG_OPT_LINGER     &quot;linger&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RECVBUF    &quot;recv-buffer&quot;</span>
 <span class="tok-cp">#define NNG_OPT_SENDBUF    &quot;send-buffer&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RECVFD     &quot;recv-fd&quot;</span>
@@ -592,33 +591,6 @@ example there is no single meaningful address for a socket, since sockets
 can have multiple dialers and endpoints associated with them.
 An attempt has been made to include details about such restrictions in the
 description of the option.</p>
-</div>
-<div id="NNG_OPT_LINGER" class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_OPT_LINGER</code></dt>
-<dd>
-<p>
-(<code><a href="nng_duration.5.html">nng_duration</a></code>)
-This is the linger time of the socket in milliseconds.
-When this value is non-zero, then the system will
-attempt to defer closing until it has undelivered data, or until the specified
-timeout has expired.</p>
-</dd>
-</dl>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Not all transports support lingering, and
-so closing a socket or exiting the application can still result in the loss
-of undelivered messages.
-</td>
-</tr>
-</table>
 </div>
 <div id="NNG_OPT_LOCADDR" class="dlist">
 <dl>

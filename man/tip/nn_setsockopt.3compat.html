@@ -753,6 +753,10 @@ in configuring device forwarding.
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>The following option is available for <code>NN_REQ</code> sockets
+using the <code>NN_REQ</code> level:</p>
+</div>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><code>NN_REQ_RESEND_IVL</code></dt>
@@ -762,6 +766,13 @@ If an <code>NN_REQ</code> socket does not receive a reply to a request within th
 period of time, the socket will automatically resend the request.
 The default value is 60000 (one minute).</p>
 </dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>The following options are available for <code>NN_SUB</code> sockets using the <code>NN_SUB</code> level:</p>
+</div>
+<div class="dlist">
+<dl>
 <dt class="hdlist1"><code>NN_SUB_SUBSCRIBE</code></dt>
 <dd>
 <p>Subscription topic, for <code>NN_SUB</code> sockets.
@@ -791,6 +802,14 @@ To receive all messages, subscribe to an empty topic (<em>sz</em> equal to zero)
 <dd>
 <p>Removes a subscription topic that was earlier established.</p>
 </dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>The following option is available for <code>NN_SURVEYOR</code> sockets
+using the <code>NN_SURVEYOR</code> level:</p>
+</div>
+<div class="dlist">
+<dl>
 <dt class="hdlist1"><code>NN_SURVEYOR_DEADLINE</code></dt>
 <dd>
 <p>Survey deadline in milliseconds for <code>NN_SURVEYOR</code> sockets.

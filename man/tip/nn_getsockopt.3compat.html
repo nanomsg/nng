@@ -785,7 +785,9 @@ to the value that the socket was created with.</p>
 <p>This option returns a file descriptor suitable for use in with <code>poll()</code> or
 <code>select()</code> (or other system-specific polling functions).
 This descriptor will be readable when a message is available for receiving
-at the socket.</p>
+at the socket.
+This option is of type <code>int</code> on all systems except Windows, where it is of
+type <code>SOCKET</code>.</p>
 </dd>
 </dl>
 </div>
@@ -804,12 +806,14 @@ and is not the same as any underlying descriptor used for network sockets.
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>NN_RCVFD</code></dt>
+<dt class="hdlist1"><code>NN_SNDFD</code></dt>
 <dd>
 <p>This option returns a file descriptor suitable for use in with <code>poll()</code> or
 <code>select()</code> (or other system-specific polling functions).
 This descriptor will be readable when the socket is able to accept a message
-for sending.</p>
+for sending.
+This option is of type <code>int</code> on all systems except Windows, where it is of
+type <code>SOCKET</code>.</p>
 </dd>
 </dl>
 </div>
@@ -827,6 +831,10 @@ Furthermore, the file descriptor should only be polled for <em>readability</em>.
 </tr>
 </table>
 </div>
+<div class="paragraph">
+<p>The following option is available for <code>NN_REQ</code> sockets
+using the <code>NN_REQ</code> level:</p>
+</div>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><code>NN_REQ_RESEND_IVL</code></dt>
@@ -836,6 +844,14 @@ If an <code>NN_REQ</code> socket does not receive a reply to a request within th
 period of time, the socket will automatically resend the request.
 The default value is 60000 (one minute).</p>
 </dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>The following option is available for <code>NN_SURVEYOR</code> sockets
+using the <code>NN_SURVEYOR</code> level:</p>
+</div>
+<div class="dlist">
+<dl>
 <dt class="hdlist1"><code>NN_SURVEYOR_DEADLINE</code></dt>
 <dd>
 <p>Survey deadline in milliseconds for <code>NN_SURVEYOR</code> sockets.

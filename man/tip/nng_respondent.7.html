@@ -511,6 +511,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_description">DESCRIPTION</a>
 <ul class="sectlevel2">
 <li><a href="#_socket_operations">Socket Operations</a></li>
+<li><a href="#_context_operations">Context Operations</a></li>
 <li><a href="#_protocol_versions">Protocol Versions</a></li>
 <li><a href="#_protocol_options">Protocol Options</a></li>
 <li><a href="#_protocol_headers">Protocol Headers</a></li>
@@ -580,6 +581,22 @@ reply will be sent to surveyor from whom the last survey was received.</p>
 <div class="paragraph">
 <p>Raw mode sockets (set with <a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>)
 ignore all these restrictions.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_context_operations">Context Operations</h3>
+<div class="paragraph">
+<p>This protocol supports the creation of <a href="nng_ctx.5.html">contexts</a> for concurrent
+use cases using <a href="nng_ctx_open.3.html"><code>nng_ctx_open()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>Incoming surveys will be routed to and received by only one context.
+Additional surveys may be received by other contexts in parallel.
+Replies made using a context will be returned to the the surveyor that
+issued the survey most recently received by that context.
+The restrictions for order of operations with sockets apply equally
+well for contexts, except that each context will be treated as if it were
+a separate socket.</p>
 </div>
 </div>
 <div class="sect2">
