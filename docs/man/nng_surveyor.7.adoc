@@ -59,6 +59,24 @@ survey that arrive after this will be discarded.
 
 <<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
 
+=== Context Operations
+
+This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
+use cases using <<nng_ctx_open.3#,`nng_ctx_open()`>>.
+
+Each context can initiate its own surveys, and it will receive only
+responses to its own outstanding surveys.
+Other contexts on the same socket may have overlapping surveys
+operating at the same time.
+Each of these may have their own timeouts established with
+`NNG_OPT_SURVEYOR_SURVEYTIME`.
+Additionally, sending a survey on a context will only cancel an outstanding
+survey on the same context.
+
+NOTE: Due to the best-effort nature of this protocol, if too may contexts
+are attempting to perform surveys simultaneously, it is possible for either
+individual outgoing surveys or incoming responses to be lost.
+
 === Protocol Versions
 
 Only version 0 of this protocol is supported.
