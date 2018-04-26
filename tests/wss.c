@@ -141,7 +141,7 @@ check_props(nng_msg *msg)
 	size_t       len;
 
 	p = nng_msg_get_pipe(msg);
-	So(p > 0);
+	So(p.id > 0);
 
 	z = sizeof(nng_sockaddr);
 	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);

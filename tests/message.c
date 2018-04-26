@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -113,9 +113,13 @@ TestMain("Message Tests", {
 		});
 
 		Convey("Pipe retrievals work", {
-			So(nng_msg_get_pipe(msg) == 0);
-			nng_msg_set_pipe(msg, (nng_pipe) 45);
-			So(nng_msg_get_pipe(msg) == (nng_pipe) 45);
+			nng_pipe p;
+			p = nng_msg_get_pipe(msg);
+			So(p.id == 0);
+			p.id = 45;
+			nng_msg_set_pipe(msg, p);
+			p = nng_msg_get_pipe(msg);
+			So(p.id == 45);
 		});
 
 		Convey("Message realloc works", {

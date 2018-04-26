@@ -19,7 +19,7 @@ nng_socket - socket handle
 ----
 #include <nng/nng.h>
 
-typedef uint32_t nng_socket;
+typedef struct nng_socket_s nng_socket;
 ----
 
 == DESCRIPTION
@@ -34,9 +34,10 @@ may be connected to multiple transports at the same time.
 However, a given socket will have exactly one "`protocol`" associated with it,
 and is responsible for any state machines or other protocol-specific logic.
 
-NOTE: Although `nng_socket` is an integer data type, these objects are not
-ordinary file descriptors, and can only be used with the functions that
-explicitly indicate that it safe and appropropate to do so.
+IMPORTANT: The `nng_socket` structure is always passed by value (both
+for input parameters and return values), and should be treated opaquely.
+Passing structures this way ensures gives the compiler a chance to perform
+accurate type checks in functions passing values of this type.
 
 Each `nng_socket` is created by a protocol-specific constructor, such as
 <<nng_rep_open.3#,`nng_rep_open()`>>.

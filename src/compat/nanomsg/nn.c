@@ -221,15 +221,18 @@ nn_socket(int domain, int protocol)
 		return (-1);
 	}
 
-	return ((int) sock);
+	return ((int) sock.id);
 }
 
 int
 nn_close(int s)
 {
-	int rv;
+	int        rv;
+	nng_socket sid;
 
-	if ((rv = nng_close((nng_socket) s)) != 0) {
+	sid.id = (uint32_t) s;
+
+	if ((rv = nng_close(sid)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -241,12 +244,14 @@ nn_bind(int s, const char *addr)
 {
 	int          rv;
 	nng_listener l;
+	nng_socket   sid;
 
-	if ((rv = nng_listen((nng_socket) s, addr, &l, 0)) != 0) {
+	sid.id = (uint32_t) s;
+	if ((rv = nng_listen(sid, addr, &l, 0)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
-	return ((int) l);
+	return ((int) l.id);
 }
 
 int
@@ -254,13 +259,14 @@ nn_connect(int s, const char *addr)
 {
 	int        rv;
 	nng_dialer d;
+	nng_socket sid;
 
-	if ((rv = nng_dial((nng_socket) s, addr, &d, NNG_FLAG_NONBLOCK)) !=
-	    0) {
+	sid.id = (uint32_t) s;
+	if ((rv = nng_dial(sid, addr, &d, NNG_FLAG_NONBLOCK)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
-	return ((int) d);
+	return ((int) d.id);
 }
 
 int
@@ -268,6 +274,8 @@ nn_shutdown(int s, int ep)
 {
 	int rv;
 	(void) s; // Unused
+	nng_dialer   d;
+	nng_listener l;
 
 	// Socket is wired into the endpoint... so passing a bad endpoint
 	// ID can result in affecting the wrong socket.  But this requires
@@ -276,8 +284,9 @@ nn_shutdown(int s, int ep)
 	// Note that listeners and dialers share the same namespace
 	// in the core, so we can close either one this way.
 
-	if (((rv = nng_dialer_close((nng_dialer) ep)) != 0) &&
-	    ((rv = nng_listener_close((nng_listener) ep)) != 0)) {
+	d.id = l.id = (uint32_t) ep;
+	if (((rv = nng_dialer_close(d)) != 0) &&
+	    ((rv = nng_listener_close(l)) != 0)) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -405,10 +414,11 @@ nn_recv(int s, void *buf, size_t len, int flags)
 int
 nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 {
-	int      rv;
-	nng_msg *msg;
-	size_t   len;
-	int      keep = 0;
+	int        rv;
+	nng_msg *  msg;
+	size_t     len;
+	int        keep = 0;
+	nng_socket sid;
 
 	if ((flags = nn_flags(flags)) == -1) {
 		return (-1);
@@ -422,7 +432,8 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 		return (-1);
 	}
 
-	if ((rv = nng_recvmsg((nng_socket) s, &msg, flags)) != 0) {
+	sid.id = (uint32_t) s;
+	if ((rv = nng_recvmsg(sid, &msg, flags)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -523,12 +534,15 @@ nn_recvmsg(int s, struct nn_msghdr *mh, int flags)
 int
 nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 {
-	nng_msg *msg  = NULL;
-	nng_msg *cmsg = NULL;
-	char *   cdata;
-	int      keep = 0;
-	size_t   sz;
-	int      rv;
+	nng_msg *  msg  = NULL;
+	nng_msg *  cmsg = NULL;
+	nng_socket sid;
+	char *     cdata;
+	int        keep = 0;
+	size_t     sz;
+	int        rv;
+
+	sid.id = (uint32_t) s;
 
 	if ((flags = nn_flags(flags)) == -1) {
 		return (-1);
@@ -629,7 +643,7 @@ nn_sendmsg(int s, const struct nn_msghdr *mh, int flags)
 	}
 
 	sz = nng_msg_len(msg);
-	if ((rv = nng_sendmsg((nng_socket) s, msg, flags)) != 0) {
+	if ((rv = nng_sendmsg(sid, msg, flags)) != 0) {
 		if (!keep) {
 			nng_msg_free(msg);
 		}
@@ -901,7 +915,10 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 {
 	const char *name                         = NULL;
 	int (*get)(nng_socket, void *, size_t *) = NULL;
-	int rv;
+	int        rv;
+	nng_socket sid;
+
+	sid.id = (uint32_t) s;
 
 	for (unsigned i = 0; i < sizeof(options) / sizeof(options[0]); i++) {
 		if ((options[i].nnlevel == nnlevel) &&
@@ -913,7 +930,7 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 	}
 
 	if (get != NULL) {
-		return (get((nng_socket) s, valp, szp));
+		return (get(sid, valp, szp));
 	}
 
 	if (name == NULL) {
@@ -921,7 +938,7 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 		return (-1);
 	}
 
-	if ((rv = nng_getopt((nng_socket) s, name, valp, szp)) != 0) {
+	if ((rv = nng_getopt(sid, name, valp, szp)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -932,9 +949,12 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 int
 nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 {
+	nng_socket  sid;
 	const char *name                             = NULL;
 	int (*set)(nng_socket, const void *, size_t) = NULL;
 	int rv;
+
+	sid.id = (uint32_t) s;
 
 	for (unsigned i = 0; i < sizeof(options) / sizeof(options[0]); i++) {
 		if ((options[i].nnlevel == nnlevel) &&
@@ -947,7 +967,7 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 	}
 
 	if (set != NULL) {
-		return (set((nng_socket) s, valp, sz));
+		return (set(sid, valp, sz));
 	}
 
 	if (name == NULL) {
@@ -955,7 +975,7 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 		return (-1);
 	}
 
-	if ((rv = nng_setopt((nng_socket) s, name, valp, sz)) != 0) {
+	if ((rv = nng_setopt(sid, name, valp, sz)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -996,9 +1016,14 @@ nn_cmsg_next(struct nn_msghdr *mh, struct nn_cmsghdr *first)
 int
 nn_device(int s1, int s2)
 {
-	int rv;
+	int        rv;
+	nng_socket sid1;
+	nng_socket sid2;
 
-	rv = nng_device((nng_socket) s1, (nng_socket) s2);
+	sid1.id = (uint32_t) s1;
+	sid2.id = (uint32_t) s2;
+
+	rv = nng_device(sid1, sid2);
 	// rv must always be nonzero
 	nn_seterror(rv);
 	return (-1);
@@ -1041,8 +1066,10 @@ nn_poll(struct nn_pollfd *fds, int nfds, int timeout)
 	for (int i = 0; i < nfds; i++) {
 		int fd;
 		if (fds[i].events & NN_POLLIN) {
-			if ((rv = nng_getopt_int((nng_socket) fds[i].fd,
-			         NNG_OPT_RECVFD, &fd)) != 0) {
+			nng_socket s;
+			s.id = fds[i].fd;
+			if ((rv = nng_getopt_int(s, NNG_OPT_RECVFD, &fd)) !=
+			    0) {
 				nn_seterror(rv);
 				NNI_FREE_STRUCTS(pfd, nfds * 2);
 				return (-1);
@@ -1056,8 +1083,10 @@ nn_poll(struct nn_pollfd *fds, int nfds, int timeout)
 			npfd++;
 		}
 		if (fds[i].events & NN_POLLOUT) {
-			if ((rv = nng_getopt_int((nng_socket) fds[i].fd,
-			         NNG_OPT_SENDFD, &fd)) != 0) {
+			nng_socket s;
+			s.id = fds[i].fd;
+			if ((rv = nng_getopt_int(s, NNG_OPT_SENDFD, &fd)) !=
+			    0) {
 				nn_seterror(rv);
 				NNI_FREE_STRUCTS(pfd, nfds * 2);
 				return (-1);

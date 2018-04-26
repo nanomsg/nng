@@ -172,7 +172,7 @@ trantest_dial(trantest *tt, nng_dialer *dp)
 {
 	nng_dialer d;
 	int        rv;
-	*dp = 0;
+	d.id = 0;
 
 	rv = nng_dialer_create(&d, tt->reqsock, tt->addr);
 	if (rv != 0) {
@@ -197,7 +197,7 @@ trantest_listen(trantest *tt, nng_listener *lp)
 {
 	int          rv;
 	nng_listener l;
-	*lp = 0;
+	l.id = 0;
 
 	rv = nng_listener_create(&l, tt->repsock, tt->addr);
 	if (rv != 0) {
@@ -231,12 +231,13 @@ void
 trantest_conn_refused(trantest *tt)
 {
 	Convey("Connection refused works", {
-		nng_dialer d = 0;
+		nng_dialer d;
+		d.id = 0;
 
 		So(trantest_dial(tt, &d) == NNG_ECONNREFUSED);
-		So(d == 0);
+		So(d.id == 0);
 		So(trantest_dial(tt, &d) == NNG_ECONNREFUSED);
-		So(d == 0);
+		So(d.id == 0);
 	});
 }
 
@@ -248,10 +249,10 @@ trantest_duplicate_listen(trantest *tt)
 		int          rv;
 		rv = trantest_listen(tt, &l);
 		So(rv == 0);
-		So(l != 0);
-		l = 0;
+		So(l.id != 0);
+		l.id = 0;
 		So(trantest_listen(tt, &l) == NNG_EADDRINUSE);
-		So(l == 0);
+		So(l.id == 0);
 	});
 }
 
@@ -262,12 +263,12 @@ trantest_listen_accept(trantest *tt)
 		nng_listener l;
 		nng_dialer   d;
 		So(trantest_listen(tt, &l) == 0);
-		So(l != 0);
+		So(l.id != 0);
 
 		nng_msleep(200);
-		d = 0;
+		d.id = 0;
 		So(trantest_dial(tt, &d) == 0);
-		So(d != 0);
+		So(d.id != 0);
 	});
 }
 
@@ -284,9 +285,9 @@ trantest_send_recv(trantest *tt)
 		char *       url;
 
 		So(trantest_listen(tt, &l) == 0);
-		So(l != 0);
+		So(l.id != 0);
 		So(trantest_dial(tt, &d) == 0);
-		So(d != 0);
+		So(d.id != 0);
 
 		nng_msleep(200); // listener may be behind slightly
 
@@ -312,7 +313,7 @@ trantest_send_recv(trantest *tt)
 		So(nng_msg_len(recv) == strlen("acknowledge"));
 		So(strcmp(nng_msg_body(recv), "acknowledge") == 0);
 		p = nng_msg_get_pipe(recv);
-		So(p != 0);
+		So(p.id != 0);
 		So(nng_pipe_getopt_string(p, NNG_OPT_URL, &url) == 0);
 		So(strcmp(url, tt->addr) == 0);
 		nng_strfree(url);
@@ -334,9 +335,9 @@ trantest_send_recv_multi(trantest *tt)
 		char         msgbuf[16];
 
 		So(trantest_listen(tt, &l) == 0);
-		So(l != 0);
+		So(l.id != 0);
 		So(trantest_dial(tt, &d) == 0);
-		So(d != 0);
+		So(d.id != 0);
 
 		nng_msleep(200); // listener may be behind slightly
 
@@ -366,7 +367,7 @@ trantest_send_recv_multi(trantest *tt)
 			So(nng_msg_len(recv) == strlen(msgbuf) + 1);
 			So(strcmp(nng_msg_body(recv), msgbuf) == 0);
 			p = nng_msg_get_pipe(recv);
-			So(p != 0);
+			So(p.id != 0);
 			So(nng_pipe_getopt_string(p, NNG_OPT_URL, &url) == 0);
 			So(strcmp(url, tt->addr) == 0);
 			nng_strfree(url);
@@ -386,9 +387,9 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 		int          rv;
 
 		So(trantest_listen(tt, &l) == 0);
-		So(l != 0);
+		So(l.id != 0);
 		So(trantest_dial(tt, &d) == 0);
-		So(d != 0);
+		So(d.id != 0);
 
 		nng_msleep(200); // listener may be behind slightly
 
@@ -429,9 +430,9 @@ trantest_send_recv_large(trantest *tt)
 		}
 
 		So(trantest_listen(tt, &l) == 0);
-		So(l != 0);
+		So(l.id != 0);
 		So(trantest_dial(tt, &d) == 0);
-		So(d != 0);
+		So(d.id != 0);
 
 		nng_msleep(200); // listener may be behind slightly
 

@@ -59,11 +59,33 @@ extern "C" {
 #define NNG_MAXADDRLEN (128)
 
 // Types common to nng.
-typedef uint32_t            nng_socket;
-typedef uint32_t            nng_ctx;
-typedef uint32_t            nng_dialer;
-typedef uint32_t            nng_listener;
-typedef uint32_t            nng_pipe;
+
+// Identifiers are wrapped in a structure to improve compiler validation
+// of incorrect passing.  This gives us strong type checking.  Modern
+// compilers compile passing these by value to identical code as passing
+// the integer type (at least with optimization applied).  Please do not
+// access the ID member directly.
+
+typedef struct nng_ctx_s {
+	uint32_t id;
+} nng_ctx;
+
+typedef struct nng_dialer_s {
+	uint32_t id;
+} nng_dialer;
+
+typedef struct nng_listener_s {
+	uint32_t id;
+} nng_listener;
+
+typedef struct nng_pipe_s {
+	uint32_t id;
+} nng_pipe;
+
+typedef struct nng_socket_s {
+	uint32_t id;
+} nng_socket;
+
 typedef int32_t             nng_duration; // in milliseconds
 typedef struct nng_msg      nng_msg;
 typedef struct nng_snapshot nng_snapshot;

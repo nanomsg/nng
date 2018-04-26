@@ -150,7 +150,7 @@ req_client(void *arg)
 		nng_msg *  msg;
 		char       buf[32];
 
-		(void) snprintf(buf, sizeof(buf), "%d-%d", req, num++);
+		(void) snprintf(buf, sizeof(buf), "%u-%d", req.id, num++);
 
 		nng_msleep(rand() % 10);
 
@@ -212,8 +212,8 @@ reqrep_test(int ntests)
 
 		cli->name = "req";
 		getaddr(addr);
-		dprintf("DOING reqrep0 (req %d rep %d) address: %s\n",
-		    cli->socket, srv->socket, addr);
+		dprintf("DOING reqrep0 (req %u rep %u) address: %s\n",
+		    cli->socket.id, srv->socket.id, addr);
 
 		if ((rv = nng_listen(srv->socket, addr, NULL, 0)) != 0) {
 			fatal("nng_listen", rv);
@@ -296,8 +296,8 @@ pair0_test(void)
 	}
 
 	getaddr(addr);
-	dprintf("DOING pair0 (%d, %d) address: %s\n", cli->socket, srv->socket,
-	    addr);
+	dprintf("DOING pair0 (%u, %u) address: %s\n", cli->socket.id,
+	    srv->socket.id, addr);
 
 	if ((rv = nng_listen(srv->socket, addr, NULL, 0)) != 0) {
 		fatal("nng_listen", rv);
@@ -375,8 +375,8 @@ bus_test(void)
 	}
 
 	getaddr(addr);
-	dprintf("DOING bus0 (%d, %d) address: %s\n", cli->socket, srv->socket,
-	    addr);
+	dprintf("DOING bus0 (%u, %u) address: %s\n", cli->socket.id,
+	    srv->socket.id, addr);
 
 	if ((rv = nng_listen(srv->socket, addr, NULL, 0)) != 0) {
 		fatal("nng_listen", rv);
@@ -468,8 +468,8 @@ pubsub_test(int ntests)
 
 		cli->name = "sub";
 		getaddr(addr);
-		dprintf("DOING pubsub0 (pub %d sub %d) address: %s\n",
-		    cli->socket, srv->socket, addr);
+		dprintf("DOING pubsub0 (pub %u sub %u) address: %s\n",
+		    cli->socket.id, srv->socket.id, addr);
 
 		if ((rv = nng_listen(srv->socket, addr, NULL, 0)) != 0) {
 			fatal("nng_listen", rv);
@@ -563,8 +563,8 @@ pipeline0_test(int ntests)
 
 		cli->name = "pull";
 		getaddr(addr);
-		dprintf("DOING pipeline0 (pull %d push %d) address: %s\n",
-		    cli->socket, srv->socket, addr);
+		dprintf("DOING pipeline0 (pull %u push %u) address: %s\n",
+		    cli->socket.id, srv->socket.id, addr);
 
 		if ((rv = nng_listen(srv->socket, addr, NULL, 0)) != 0) {
 			fatal("nng_listen", rv);
@@ -637,10 +637,10 @@ Main({
 				if (cases[i].thr != NULL) {
 					nng_thread_destroy(cases[i].thr);
 					dprintf(
-					    "RESULT socket %d (%s) sent %d "
+					    "RESULT socket %u (%s) sent %d "
 					    "recd "
 					    "%d fail %d\n",
-					    cases[i].socket, cases[i].name,
+					    cases[i].socket.id, cases[i].name,
 					    cases[i].nsend, cases[i].nrecv,
 					    cases[i].nfail);
 					So(cases[i].nfail == 0);

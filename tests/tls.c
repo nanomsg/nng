@@ -114,7 +114,7 @@ check_props_v4(nng_msg *msg)
 	nng_sockaddr ra;
 
 	p = nng_msg_get_pipe(msg);
-	So(p > 0);
+	So(p.id > 0);
 
 	// Typed access
 	So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
@@ -426,7 +426,7 @@ TestMain("TLS Transport", {
 		So(nng_msg_len(msg) == 6);
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
-		So(p > 0);
+		So(p.id > 0);
 		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
 		So(b == false);
 		nng_msg_free(msg);
@@ -468,7 +468,7 @@ TestMain("TLS Transport", {
 		So(nng_msg_len(msg) == 6);
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
-		So(p > 0);
+		So(p.id > 0);
 		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
 		So(b == true);
 		int i;

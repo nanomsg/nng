@@ -96,7 +96,7 @@ TestMain("Reconnect works", {
 					CHECKSTR(msg, "again");
 					p2 = nng_msg_get_pipe(msg);
 					nng_msg_free(msg);
-					So(p2 != p1);
+					So(p2.id != p1.id);
 				});
 			});
 		});

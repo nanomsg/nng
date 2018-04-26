@@ -19,7 +19,7 @@ nng_ctx - protocol context
 ----
 #include <nng/nng.h>
 
-typedef uint32_t nng_ctx
+typedef struct nng_ctx_s nng_ctx
 ----
 
 == DESCRIPTION
@@ -37,6 +37,11 @@ For example, a <<nng_req.7#,_req_>> context will contain the request ID
 of any sent request, a timer to retry the request on failure, and so forth.
 A separate context on the same socket can have similar data, but corresponding
 to a completely different request.
+
+IMPORTANT: The `nng_ctx` structure is always passed by value (both
+for input parameters and return values), and should be treated opaquely.
+Passing structures this way ensures gives the compiler a chance to perform
+accurate type checks in functions passing values of this type.
 
 All contexts share the same socket, and so some options, as well as the
 underlying transport details, will be common to all contexts on that socket.

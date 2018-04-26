@@ -142,7 +142,7 @@ check_props(nng_msg *msg)
 	size_t       len;
 
 	p = nng_msg_get_pipe(msg);
-	So(p > 0);
+	So(p.id > 0);
 
 	// Typed
 	z = sizeof(nng_sockaddr);
@@ -349,7 +349,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		So(nng_msg_len(msg) == 6);
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
-		So(p > 0);
+		So(p.id > 0);
 		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
 		So(b == false);
 		nng_msg_free(msg);
@@ -391,7 +391,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 		So(nng_msg_len(msg) == 6);
 		So(strcmp(nng_msg_body(msg), "hello") == 0);
 		p = nng_msg_get_pipe(msg);
-		So(p > 0);
+		So(p.id > 0);
 		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
 		So(b == true);
 		nng_msg_free(msg);

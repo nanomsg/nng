@@ -16,11 +16,11 @@ nng_listener - listener
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 
-typedef uint32_t nng_listener;
------------
+typedef struct nng_listener_s nng_listener;
+----
 
 == DESCRIPTION
 
@@ -34,6 +34,11 @@ Listener objects are created by the
 <<nng_listener_create.3#,`nng_listener_create()`>>
 or <<nng_listen.3#,`nng_listen()`>> functions, and are always "`owned`"
 by a single <<nng_socket.5#,`nng_socket`>>.
+
+IMPORTANT: The `nng_listener` structure is always passed by value (both
+for input parameters and return values), and should be treated opaquely.
+Passing structures this way ensures gives the compiler a chance to perform
+accurate type checks in functions passing values of this type.
 
 TIP: A given <<nng_socket.5#,`nng_socket`>> may have multiple listener
 objects, multiple <<nng_dialer.5#,dialer>> objects, or even some

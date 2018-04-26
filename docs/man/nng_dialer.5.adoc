@@ -16,11 +16,11 @@ nng_dialer - dialer
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 
-typedef uint32_t nng_dialer;
------------
+typedef struct nng_dialer_s nng_dialer;
+----
 
 == DESCRIPTION
 
@@ -37,6 +37,11 @@ Dialer objects are created by the
 <<nng_dialer_create.3#,`nng_dialer_create()`>>
 or <<nng_dial.3#,`nng_dial()`>> functions, and are always "`owned`"
 by a single <<nng_socket.5#,`nng_socket`>>.
+
+IMPORTANT: The `nng_dialer` structure is always passed by value (both
+for input parameters and return values), and should be treated opaquely.
+Passing structures this way ensures gives the compiler a chance to perform
+accurate type checks in functions passing values of this type.
 
 TIP: A given <<nng_socket.5#,`nng_socket`>> may have multiple dialer
 objects, multiple <<nng_listener.5#,listener>> objects, or even some

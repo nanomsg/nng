@@ -49,7 +49,7 @@ check_props_v6(nng_msg *msg)
 		nng_sockaddr la;
 		z = sizeof(nng_sockaddr);
 		p = nng_msg_get_pipe(msg);
-		So(p > 0);
+		So(p.id > 0);
 		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
 		So(z == sizeof(la));
 		So(la.s_family == NNG_AF_INET6);
@@ -62,7 +62,7 @@ check_props_v6(nng_msg *msg)
 		nng_sockaddr ra;
 		z = sizeof(nng_sockaddr);
 		p = nng_msg_get_pipe(msg);
-		So(p > 0);
+		So(p.id > 0);
 		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
 		So(z == sizeof(ra));
 		So(ra.s_family == NNG_AF_INET6);

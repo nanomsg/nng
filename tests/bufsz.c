@@ -61,7 +61,7 @@ TestMain("Buffer Options", {
 		// MUST NOT assume this.  We only do so for testing.
 		Convey("Legacy Recv Buf Option", {
 			int    cnt;
-			int    os = (int) s1;
+			int    os = (int) s1.id;
 			size_t sz = sizeof(cnt);
 			So(nng_setopt_int(s1, NNG_OPT_RECVBUF, 10) == 0);
 			So(nn_getsockopt(
@@ -82,7 +82,7 @@ TestMain("Buffer Options", {
 		});
 		Convey("Legacy Send Buf Option", {
 			int    cnt;
-			int    os = (int) s1;
+			int    os = (int) s1.id;
 			size_t sz = sizeof(cnt);
 			So(nng_setopt_int(s1, NNG_OPT_SENDBUF, 10) == 0);
 			So(nn_getsockopt(

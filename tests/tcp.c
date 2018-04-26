@@ -30,7 +30,7 @@ check_props_v4(nng_msg *msg)
 	bool         b;
 
 	p = nng_msg_get_pipe(msg);
-	So(p > 0);
+	So(p.id > 0);
 	So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(la.s_family == NNG_AF_INET);
 	So(la.s_in.sa_port == htons(trantest_port - 1));

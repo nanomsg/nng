@@ -99,7 +99,7 @@ TestMain("Socket Operations", {
 				       s1, NNG_OPT_SOCKNAME, name, &sz) == 0);
 				So(sz > 0 && sz < 64);
 				So(sz == nni_strnlen(name, 64) + 1);
-				So(atoi(name) == (int) s1);
+				So(atoi(name) == (int) s1.id);
 
 				So(nng_setopt(
 				       s1, NNG_OPT_SOCKNAME, "hello", 6) == 0);
@@ -336,7 +336,7 @@ TestMain("Socket Operations", {
 			nng_listener l;
 			rv = nng_listen(s1, a, &l, 0);
 			So(rv == 0);
-			So(l != 0);
+			So(l.id != 0);
 
 			Convey("Second listen fails ADDRINUSE", {
 				rv = nng_listen(s1, a, NULL, 0);
@@ -369,10 +369,12 @@ TestMain("Socket Operations", {
 			});
 
 			Convey("Cannot access as listener", {
-				bool b;
+				bool         b;
+				nng_listener l;
+				l.id = ep.id;
 				So(nng_listener_getopt_bool(
-				       ep, NNG_OPT_RAW, &b) == NNG_ENOENT);
-				So(nng_listener_close(ep) == NNG_ENOENT);
+				       l, NNG_OPT_RAW, &b) == NNG_ENOENT);
+				So(nng_listener_close(l) == NNG_ENOENT);
 			});
 
 			Convey("Socket opts not for dialer", {
@@ -395,8 +397,11 @@ TestMain("Socket Operations", {
 				So(nng_dialer_setopt(ep, NNG_OPT_RECVMAXSZ,
 				       "a", 1) == NNG_EINVAL);
 			});
-			Convey("Cannot listen",
-			    { So(nng_listener_start(ep, 0) == NNG_ENOTSUP); });
+			Convey("Cannot listen", {
+				nng_listener l;
+				l.id = ep.id;
+				So(nng_listener_start(l, 0) == NNG_ENOTSUP);
+			});
 
 		});
 
@@ -413,10 +418,12 @@ TestMain("Socket Operations", {
 				So(sz == 4321);
 			});
 			Convey("Cannot access as dialer", {
-				bool b;
+				bool       b;
+				nng_dialer d;
+				d.id = ep.id;
 				So(nng_dialer_getopt_bool(
-				       ep, NNG_OPT_RAW, &b) == NNG_ENOENT);
-				So(nng_dialer_close(ep) == NNG_ENOENT);
+				       d, NNG_OPT_RAW, &b) == NNG_ENOENT);
+				So(nng_dialer_close(d) == NNG_ENOENT);
 			});
 
 			Convey("Socket opts not for listener", {
@@ -440,8 +447,11 @@ TestMain("Socket Operations", {
 				So(nng_listener_setopt(ep, NNG_OPT_RECVMAXSZ,
 				       "a", 1) == NNG_EINVAL);
 			});
-			Convey("Cannot dial",
-			    { So(nng_dialer_start(ep, 0) == NNG_ENOTSUP); });
+			Convey("Cannot dial", {
+				nng_dialer d;
+				d.id = ep.id;
+				So(nng_dialer_start(d, 0) == NNG_ENOTSUP);
+			});
 		});
 
 		Convey("Cannot access absent ep options", {
@@ -449,32 +459,36 @@ TestMain("Socket Operations", {
 			int          i;
 			nng_duration t;
 			bool         b;
+			nng_dialer   d;
+			nng_listener l;
+			d.id = 1999;
+			l.id = 1999;
 
-			So(nng_dialer_setopt_size(
-			       1999, NNG_OPT_RECVMAXSZ, 10) == NNG_ENOENT);
+			So(nng_dialer_setopt_size(d, NNG_OPT_RECVMAXSZ, 10) ==
+			    NNG_ENOENT);
 			So(nng_listener_setopt_size(
-			       1999, NNG_OPT_RECVMAXSZ, 10) == NNG_ENOENT);
+			       l, NNG_OPT_RECVMAXSZ, 10) == NNG_ENOENT);
 
 			s = 1;
-			So(nng_dialer_getopt_bool(1999, NNG_OPT_RAW, &b) ==
+			So(nng_dialer_getopt_bool(d, NNG_OPT_RAW, &b) ==
 			    NNG_ENOENT);
-			So(nng_listener_getopt_bool(1999, NNG_OPT_RAW, &b) ==
+			So(nng_listener_getopt_bool(l, NNG_OPT_RAW, &b) ==
 			    NNG_ENOENT);
 
-			So(nng_dialer_getopt_size(
-			       1999, NNG_OPT_RECVMAXSZ, &s) == NNG_ENOENT);
+			So(nng_dialer_getopt_size(d, NNG_OPT_RECVMAXSZ, &s) ==
+			    NNG_ENOENT);
 			So(nng_listener_getopt_size(
-			       1999, NNG_OPT_RECVMAXSZ, &s) == NNG_ENOENT);
+			       l, NNG_OPT_RECVMAXSZ, &s) == NNG_ENOENT);
 
-			So(nng_dialer_getopt_int(1999, NNG_OPT_RAW, &i) ==
+			So(nng_dialer_getopt_int(d, NNG_OPT_RAW, &i) ==
 			    NNG_ENOENT);
-			So(nng_listener_getopt_int(1999, NNG_OPT_RAW, &i) ==
+			So(nng_listener_getopt_int(l, NNG_OPT_RAW, &i) ==
 			    NNG_ENOENT);
 
-			So(nng_dialer_getopt_ms(1999, NNG_OPT_RECVTIMEO, &t) ==
+			So(nng_dialer_getopt_ms(d, NNG_OPT_RECVTIMEO, &t) ==
 			    NNG_ENOENT);
-			So(nng_listener_getopt_ms(
-			       1999, NNG_OPT_SENDTIMEO, &t) == NNG_ENOENT);
+			So(nng_listener_getopt_ms(l, NNG_OPT_SENDTIMEO, &t) ==
+			    NNG_ENOENT);
 
 		});
 

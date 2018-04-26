@@ -266,7 +266,7 @@ TestMain("Surveyor concurrent contexts", {
 			nng_ctx_send(ctx, aio);
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == 0);
-			nng_recv_aio(ctx, aio);
+			nng_ctx_recv(ctx, aio);
 			nng_ctx_close(ctx);
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == NNG_ECLOSED);
