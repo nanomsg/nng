@@ -26,6 +26,8 @@ struct nni_tcp_pipe {
 	uint16_t           peer;
 	uint16_t           proto;
 	size_t             rcvmax;
+	bool               nodelay;
+	bool               keepalive;
 
 	nni_list recvq;
 	nni_list sendq;
@@ -48,6 +50,8 @@ struct nni_tcp_ep {
 	nni_plat_tcp_ep *tep;
 	uint16_t         proto;
 	size_t           rcvmax;
+	bool             nodelay;
+	bool             keepalive;
 	nni_aio *        aio;
 	nni_aio *        user_aio;
 	nni_url *        url;
@@ -123,9 +127,17 @@ nni_tcp_pipe_init(nni_tcp_pipe **pipep, nni_tcp_ep *ep, void *tpp)
 	nni_aio_list_init(&p->recvq);
 	nni_aio_list_init(&p->sendq);
 
-	p->proto  = ep->proto;
-	p->rcvmax = ep->rcvmax;
-	p->tpp    = tpp;
+	p->proto     = ep->proto;
+	p->rcvmax    = ep->rcvmax;
+	p->nodelay   = ep->nodelay;
+	p->keepalive = ep->keepalive;
+	p->tpp       = tpp;
+
+	// We try to set the nodelay and keepalive, but if these fail for
+	// some reason, its not really fatal to the communication channel.
+	// So ignore the return values.
+	(void) nni_plat_tcp_pipe_set_nodelay(tpp, p->nodelay);
+	(void) nni_plat_tcp_pipe_set_keepalive(tpp, p->keepalive);
 
 	*pipep = p;
 	return (0);
@@ -502,6 +514,20 @@ nni_tcp_pipe_getopt_remaddr(void *arg, void *v, size_t *szp, int typ)
 	return (rv);
 }
 
+static int
+nni_tcp_pipe_getopt_keepalive(void *arg, void *v, size_t *szp, int typ)
+{
+	nni_tcp_pipe *p = arg;
+	return (nni_copyout_bool(p->keepalive, v, szp, typ));
+}
+
+static int
+nni_tcp_pipe_getopt_nodelay(void *arg, void *v, size_t *szp, int typ)
+{
+	nni_tcp_pipe *p = arg;
+	return (nni_copyout_bool(p->nodelay, v, szp, typ));
+}
+
 // Note that the url *must* be in a modifiable buffer.
 static void
 nni_tcp_pipe_start(void *arg, nni_aio *aio)
@@ -624,8 +650,10 @@ nni_tcp_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		nni_tcp_ep_fini(ep);
 		return (rv);
 	}
-	ep->proto = nni_sock_proto(sock);
-	ep->mode  = mode;
+	ep->proto     = nni_sock_proto(sock);
+	ep->mode      = mode;
+	ep->nodelay   = true;
+	ep->keepalive = false;
 
 	*epp = ep;
 	return (0);
@@ -767,6 +795,46 @@ nni_tcp_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
 }
 
 static int
+nni_tcp_ep_setopt_nodelay(void *arg, const void *v, size_t sz, int typ)
+{
+	nni_tcp_ep *ep = arg;
+	bool        val;
+	int         rv;
+	rv = nni_copyin_bool(&val, v, sz, typ);
+	if ((rv == 0) && (ep != NULL)) {
+		ep->nodelay = val;
+	}
+	return (rv);
+}
+
+static int
+nni_tcp_ep_getopt_nodelay(void *arg, void *v, size_t *szp, int typ)
+{
+	nni_tcp_ep *ep = arg;
+	return (nni_copyout_bool(ep->nodelay, v, szp, typ));
+}
+
+static int
+nni_tcp_ep_setopt_keepalive(void *arg, const void *v, size_t sz, int typ)
+{
+	nni_tcp_ep *ep = arg;
+	bool        val;
+	int         rv;
+	rv = nni_copyin_bool(&val, v, sz, typ);
+	if ((rv == 0) && (ep != NULL)) {
+		ep->keepalive = val;
+	}
+	return (rv);
+}
+
+static int
+nni_tcp_ep_getopt_keepalive(void *arg, void *v, size_t *szp, int typ)
+{
+	nni_tcp_ep *ep = arg;
+	return (nni_copyout_bool(ep->keepalive, v, szp, typ));
+}
+
+static int
 nni_tcp_ep_getopt_url(void *arg, void *v, size_t *szp, int typ)
 {
 	nni_tcp_ep *ep = arg;
@@ -800,6 +868,16 @@ static nni_tran_pipe_option nni_tcp_pipe_options[] = {
 	    .po_type   = NNI_TYPE_SOCKADDR,
 	    .po_getopt = nni_tcp_pipe_getopt_remaddr,
 	},
+	{
+	    .po_name   = NNG_OPT_TCP_KEEPALIVE,
+	    .po_type   = NNI_TYPE_BOOL,
+	    .po_getopt = nni_tcp_pipe_getopt_keepalive,
+	},
+	{
+	    .po_name   = NNG_OPT_TCP_NODELAY,
+	    .po_type   = NNI_TYPE_BOOL,
+	    .po_getopt = nni_tcp_pipe_getopt_nodelay,
+	},
 	// terminate list
 	{
 	    .po_name = NULL,
@@ -828,6 +906,18 @@ static nni_tran_ep_option nni_tcp_ep_options[] = {
 	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = nni_tcp_ep_getopt_url,
 	    .eo_setopt = NULL,
+	},
+	{
+	    .eo_name   = NNG_OPT_TCP_NODELAY,
+	    .eo_type   = NNI_TYPE_BOOL,
+	    .eo_getopt = nni_tcp_ep_getopt_nodelay,
+	    .eo_setopt = nni_tcp_ep_setopt_nodelay,
+	},
+	{
+	    .eo_name   = NNG_OPT_TCP_KEEPALIVE,
+	    .eo_type   = NNI_TYPE_BOOL,
+	    .eo_getopt = nni_tcp_ep_getopt_keepalive,
+	    .eo_setopt = nni_tcp_ep_setopt_keepalive,
 	},
 	// terminate list
 	{

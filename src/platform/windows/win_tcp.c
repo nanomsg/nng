@@ -243,6 +243,30 @@ nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *pipe, nni_sockaddr *sa)
 	return (0);
 }
 
+int
+nni_plat_tcp_pipe_set_nodelay(nni_plat_tcp_pipe *pipe, bool val)
+{
+	BOOL b;
+	b = val ? TRUE : FALSE;
+	if (setsockopt(pipe->s, IPPROTO_TCP, TCP_NODELAY, (void *) &b,
+	        sizeof(b)) != 0) {
+		return (nni_win_error(WSAGetLastError()));
+	}
+	return (0);
+}
+
+int
+nni_plat_tcp_pipe_set_keepalive(nni_plat_tcp_pipe *pipe, bool val)
+{
+	BOOL b;
+	b = val ? TRUE : FALSE;
+	if (setsockopt(pipe->s, SOL_SOCKET, SO_KEEPALIVE, (void *) &b,
+	        sizeof(b)) != 0) {
+		return (nni_win_error(WSAGetLastError()));
+	}
+	return (0);
+}
+
 void
 nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *pipe)
 {

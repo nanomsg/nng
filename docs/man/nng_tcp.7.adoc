@@ -81,10 +81,22 @@ the actual structure is either of type
 
 === Transport Options
 
-The _nng_tcp_ transport has no special options.
+((`NNG_OPT_TCP_KEEPALIVE`))::
 
-NOTE: Options for TCP keepalive, linger, and nodelay are planned.
- 
+This option is used to configure TCP keep-alives.
+The value is of type `bool`, and defaults to `false`.
+
+((`NNG_OPT_TCP_NODELAY`))::
+
+This option is used to configure Nagle's algorithm.
+When enabled (`false`), the underlying TCP stream will attempt
+to buffer and coalesce messages before sending them on, waiting
+a short interval to improve buffering and reduce the overhead
+caused by sending too-small messages.
+This comes at a cost to latency, and is not recommended with modern
+high speed networks.
+The value is of type `bool` and defaults to `true`.
+
 == SEE ALSO
 
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,

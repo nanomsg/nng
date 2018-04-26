@@ -16,6 +16,8 @@
 
 #include <errno.h>
 #include <fcntl.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <stdlib.h>
@@ -332,6 +334,30 @@ nni_posix_pipedesc_sockname(nni_posix_pipedesc *pd, nni_sockaddr *sa)
 		return (nni_plat_errno(errno));
 	}
 	return (nni_posix_sockaddr2nn(sa, &ss));
+}
+
+int
+nni_posix_pipedesc_set_nodelay(nni_posix_pipedesc *pd, bool nodelay)
+{
+	int val = nodelay ? 1 : 0;
+
+	if (setsockopt(pd->node.fd, IPPROTO_TCP, TCP_NODELAY, &val,
+	        sizeof(val)) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	return (0);
+}
+
+int
+nni_posix_pipedesc_set_keepalive(nni_posix_pipedesc *pd, bool keep)
+{
+	int val = keep ? 1 : 0;
+
+	if (setsockopt(pd->node.fd, SOL_SOCKET, SO_KEEPALIVE, &val,
+	        sizeof(val)) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	return (0);
 }
 
 int

@@ -27,6 +27,7 @@ check_props_v4(nng_msg *msg)
 	size_t       z;
 	nng_sockaddr la;
 	nng_sockaddr ra;
+	bool         b;
 
 	p = nng_msg_get_pipe(msg);
 	So(p > 0);
@@ -47,6 +48,12 @@ check_props_v4(nng_msg *msg)
 	So(nng_pipe_getopt_size(p, NNG_OPT_REMADDR, &z) == NNG_EBADTYPE);
 	z = 1;
 	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == NNG_EINVAL);
+
+	So(nng_pipe_getopt_bool(p, NNG_OPT_TCP_KEEPALIVE, &b) == 0);
+	So(b == false); // default
+
+	So(nng_pipe_getopt_bool(p, NNG_OPT_TCP_NODELAY, &b) == 0);
+	So(b == true); // default
 
 	return (0);
 }
@@ -116,6 +123,101 @@ TestMain("TCP Transport", {
 		    NNG_EADDRINVAL);
 		So(nng_listen(s1, "tcp://127.0.x.1.32", NULL, 0) ==
 		    NNG_EADDRINVAL);
+	});
+
+	Convey("No delay option", {
+		nng_socket   s;
+		nng_dialer   d;
+		nng_listener l;
+		bool         v;
+		int          x;
+
+		So(nng_pair_open(&s) == 0);
+		Reset({ nng_close(s); });
+		So(nng_getopt_bool(s, NNG_OPT_TCP_NODELAY, &v) == NNG_ENOTSUP);
+		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
+		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(v == true);
+		So(nng_dialer_setopt_bool(d, NNG_OPT_TCP_NODELAY, false) == 0);
+		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(v == false);
+		So(nng_dialer_getopt_int(d, NNG_OPT_TCP_NODELAY, &x) ==
+		    NNG_EBADTYPE);
+		x = 0;
+		So(nng_dialer_setopt_int(d, NNG_OPT_TCP_NODELAY, x) ==
+		    NNG_EBADTYPE);
+		// This assumes sizeof (bool) != sizeof (int)
+		So(nng_dialer_setopt(d, NNG_OPT_TCP_NODELAY, &x, sizeof(x)) ==
+		    NNG_EINVAL);
+
+		So(nng_listener_create(&l, s, "tcp://127.0.0.1:4999") == 0);
+		So(nng_listener_getopt_bool(l, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(v == true);
+		x = 0;
+		So(nng_listener_setopt_int(l, NNG_OPT_TCP_NODELAY, x) ==
+		    NNG_EBADTYPE);
+		// This assumes sizeof (bool) != sizeof (int)
+		So(nng_listener_setopt(
+		       l, NNG_OPT_TCP_NODELAY, &x, sizeof(x)) == NNG_EINVAL);
+
+		nng_dialer_close(d);
+		nng_listener_close(l);
+
+		// Make sure socket wide defaults apply.
+		So(nng_setopt_bool(s, NNG_OPT_TCP_NODELAY, true) == 0);
+		v = false;
+		So(nng_getopt_bool(s, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(v == true);
+		So(nng_setopt_bool(s, NNG_OPT_TCP_NODELAY, false) == 0);
+		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
+		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(v == false);
+	});
+
+	Convey("Keepalive option", {
+		nng_socket   s;
+		nng_dialer   d;
+		nng_listener l;
+		bool         v;
+		int          x;
+
+		So(nng_pair_open(&s) == 0);
+		Reset({ nng_close(s); });
+		So(nng_getopt_bool(s, NNG_OPT_TCP_KEEPALIVE, &v) ==
+		    NNG_ENOTSUP);
+		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
+		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(v == false);
+		So(nng_dialer_setopt_bool(d, NNG_OPT_TCP_KEEPALIVE, true) ==
+		    0);
+		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(v == true);
+		So(nng_dialer_getopt_int(d, NNG_OPT_TCP_KEEPALIVE, &x) ==
+		    NNG_EBADTYPE);
+		x = 1;
+		So(nng_dialer_setopt_int(d, NNG_OPT_TCP_KEEPALIVE, x) ==
+		    NNG_EBADTYPE);
+
+		So(nng_listener_create(&l, s, "tcp://127.0.0.1:4999") == 0);
+		So(nng_listener_getopt_bool(l, NNG_OPT_TCP_KEEPALIVE, &v) ==
+		    0);
+		So(v == false);
+		x = 1;
+		So(nng_listener_setopt_int(l, NNG_OPT_TCP_KEEPALIVE, x) ==
+		    NNG_EBADTYPE);
+
+		nng_dialer_close(d);
+		nng_listener_close(l);
+
+		// Make sure socket wide defaults apply.
+		So(nng_setopt_bool(s, NNG_OPT_TCP_KEEPALIVE, false) == 0);
+		v = true;
+		So(nng_getopt_bool(s, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(v == false);
+		So(nng_setopt_bool(s, NNG_OPT_TCP_KEEPALIVE, true) == 0);
+		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
+		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(v == true);
 	});
 
 	nng_fini();

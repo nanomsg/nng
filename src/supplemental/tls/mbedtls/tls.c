@@ -311,6 +311,11 @@ nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_plat_tcp_pipe *tcp)
 	nni_tls *tp;
 	int      rv;
 
+	// During the handshake, disable Nagle to shorten the
+	// negotiation.  Once things are set up the caller can
+	// re-enable Nagle if so desired.
+	(void) nni_plat_tcp_pipe_set_nodelay(tcp, true);
+
 	if ((tp = NNI_ALLOC_STRUCT(tp)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -604,6 +609,18 @@ int
 nni_tls_sockname(nni_tls *tp, nni_sockaddr *sa)
 {
 	return (nni_plat_tcp_pipe_sockname(tp->tcp, sa));
+}
+
+int
+nni_tls_set_nodelay(nni_tls *tp, bool val)
+{
+	return (nni_plat_tcp_pipe_set_nodelay(tp->tcp, val));
+}
+
+int
+nni_tls_set_keepalive(nni_tls *tp, bool val)
+{
+	return (nni_plat_tcp_pipe_set_keepalive(tp->tcp, val));
 }
 
 static void

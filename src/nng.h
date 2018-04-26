@@ -13,7 +13,7 @@
 
 // NNG (nanomsg-next-gen) is an improved implementation of the SP protocols.
 // The APIs have changed, and there is no attempt to provide API compatibility
-// with legacy libnanomsg.  This file defines the library consumer-facing
+// with legacy libnanomsg. This file defines the library consumer-facing
 // Public API. Use of definitions or declarations not found in this header
 // file is specfically unsupported and strongly discouraged.
 
@@ -26,10 +26,10 @@ extern "C" {
 #include <stdint.h>
 
 // NNG_DECL is used on declarations to deal with scope.
-// For building Windows DLLs, it should be the appropriate
-// __declspec().  (We recommend *not* building this library
-// as a DLL, but instead linking it statically for your projects
-// to minimize questions about link dependencies later.)
+// For building Windows DLLs, it should be the appropriate __declspec().
+// (We recommend *not* building this library as a DLL, but instead linking
+// it statically for your project to minimize concerns about link
+// dependencies later.)
 #ifndef NNG_DECL
 #if defined(_WIN32) && !defined(NNG_STATIC_LIB)
 #if defined(NNG_SHARED_LIB)
@@ -51,8 +51,11 @@ extern "C" {
 #define NNG_MINOR_VERSION 9
 #define NNG_PATCH_VERSION 0
 
-// Maximum length of a socket address.  This includes the terminating NUL.
+// Maximum length of a socket address. This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
+// Note that some transports are quite happy to let you use addresses
+// in excess of this, but if you do you may not be able to communicate
+// with other implementations.
 #define NNG_MAXADDRLEN (128)
 
 // Types common to nng.
@@ -67,7 +70,7 @@ typedef struct nng_snapshot nng_snapshot;
 typedef struct nng_stat     nng_stat;
 typedef struct nng_aio      nng_aio;
 
-// Some address details.  This is in some ways like a traditional sockets
+// Some address details. This is in some ways like a traditional sockets
 // sockaddr, but we have our own to cope with our unique families, etc.
 // The details of this structure are directly exposed to applications.
 // These structures can be obtained via property lookups, etc.
@@ -156,7 +159,7 @@ NNG_DECL void nng_fini(void);
 // resources.
 NNG_DECL int nng_close(nng_socket);
 
-// nng_closeall closes all open sockets.  Do not call this from
+// nng_closeall closes all open sockets. Do not call this from
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void);
 
@@ -614,31 +617,51 @@ enum nng_flag_enum {
 // on listeners.
 #define NNG_OPT_TLS_SERVER_NAME "tls-server-name"
 
-// NNG_OPT_TLS_VERIFIED returns a single integer, indicating whether the peer
-// has been verified (1) or not (0).  Typically this is read-only, and only
-// available for pipes. This option may return incorrect results if peer
-// authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
+// NNG_OPT_TLS_VERIFIED returns a boolean indicating whether the peer has
+// been verified (true) or not (false). Typically this is read-only, and
+// only available for pipes. This option may return incorrect results if
+// peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 #define NNG_OPT_TLS_VERIFIED "tls-verified"
+
+// TCP options.  These may be supported on various transports that use
+// TCP underneath such as TLS, or not.
+
+// TCP nodelay disables the use of Nagle, so that messages are sent
+// as soon as data is available. This tends to reduce latency, but
+// can come at the cost of extra messages being sent, and may have
+// a detrimental effect on performance. For most uses, we recommend
+// enabling this. (Disable it if you are on a very slow network.)
+// This is a boolean.
+#define NNG_OPT_TCP_NODELAY "tcp-nodelay"
+
+// TCP keepalive causes the underlying transport to send keep-alive
+// messages, and keep the session active. Keepalives are zero length
+// messages with the ACK flag turned on. If we don't get an ACK back,
+// then we know the other side is gone. This is useful for detecting
+// dead peers, and is also used to prevent disconnections caused by
+// middle boxes thinking the session has gone idle (e.g. keeping NAT
+// state current). This is a boolean.
+#define NNG_OPT_TCP_KEEPALIVE "tcp-keepalive"
 
 // XXX: TBD: priorities, ipv4only, TCP options
 
-// Statistics.  These are for informational purposes only, and subject
-// to change without notice.  The API for accessing these is stable,
+// Statistics. These are for informational purposes only, and subject
+// to change without notice. The API for accessing these is stable,
 // but the individual statistic names, values, and meanings are all
 // subject to change.
 
-// nng_snapshot_create creates a statistics snapshot.  The snapshot
+// nng_snapshot_create creates a statistics snapshot. The snapshot
 // object must be deallocated expressly by the user, and may persist beyond
-// the lifetime of any socket object used to update it.  Note that the
+// the lifetime of any socket object used to update it. Note that the
 // values of the statistics are initially unset.
 // NNG_DECL int nng_snapshot_create(nng_socket, nng_snapshot **);
 
-// nng_snapshot_free frees a snapshot object.  All statistic objects
+// nng_snapshot_free frees a snapshot object. All statistic objects
 // contained therein are destroyed as well.
 // NNG_DECL void nng_snapshot_free(nng_snapshot *);
 
 // nng_snapshot_update updates a snapshot of all the statistics
-// relevant to a particular socket.  All prior values are overwritten.
+// relevant to a particular socket. All prior values are overwritten.
 // NNG_DECL int nng_snapshot_update(nng_snapshot *);
 
 // nng_snapshot_next is used to iterate over the individual statistic

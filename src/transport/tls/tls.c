@@ -31,6 +31,8 @@ struct nni_tls_pipe {
 	uint16_t           peer;
 	uint16_t           proto;
 	size_t             rcvmax;
+	bool               nodelay;
+	bool               keepalive;
 
 	nni_list sendq;
 	nni_list recvq;
@@ -62,6 +64,8 @@ struct nni_tls_ep {
 	nng_sockaddr     bsa;
 	nni_url *        url;
 	int              mode;
+	bool             nodelay;
+	bool             keepalive;
 };
 
 static void nni_tls_pipe_dorecv(nni_tls_pipe *);
@@ -132,9 +136,11 @@ nni_tls_pipe_init(nni_tls_pipe **pipep, nni_tls_ep *ep, void *tpp)
 	nni_aio_list_init(&p->recvq);
 	nni_aio_list_init(&p->sendq);
 
-	p->proto  = ep->proto;
-	p->rcvmax = ep->rcvmax;
-	p->tcp    = tcp;
+	p->proto     = ep->proto;
+	p->rcvmax    = ep->rcvmax;
+	p->tcp       = tcp;
+	p->keepalive = ep->keepalive;
+	p->nodelay   = ep->nodelay;
 
 	*pipep = p;
 	return (0);
@@ -207,6 +213,12 @@ nni_tls_pipe_nego_cb(void *arg)
 	NNI_GET16(&p->rxlen[4], p->peer);
 
 done:
+	if (rv == 0) {
+		// These can fail. Note that the TLS stack automatically
+		// starts out in NODELAY to make the handshake performant.
+		(void) nni_tls_set_nodelay(p->tls, p->nodelay);
+		(void) nni_tls_set_keepalive(p->tls, p->keepalive);
+	}
 	if ((aio = p->user_negaio) != NULL) {
 		p->user_negaio = NULL;
 		nni_aio_finish(aio, rv, 0);
@@ -510,6 +522,20 @@ nni_tls_pipe_getopt_remaddr(void *arg, void *v, size_t *szp, int typ)
 	return (rv);
 }
 
+static int
+nni_tls_pipe_getopt_keepalive(void *arg, void *v, size_t *szp, int typ)
+{
+	nni_tls_pipe *p = arg;
+	return (nni_copyout_bool(p->keepalive, v, szp, typ));
+}
+
+static int
+nni_tls_pipe_getopt_nodelay(void *arg, void *v, size_t *szp, int typ)
+{
+	nni_tls_pipe *p = arg;
+	return (nni_copyout_bool(p->nodelay, v, szp, typ));
+}
+
 static void
 nni_tls_pipe_start(void *arg, nni_aio *aio)
 {
@@ -628,8 +654,10 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&ep->mtx);
-	ep->url  = url;
-	ep->mode = mode;
+	ep->url       = url;
+	ep->mode      = mode;
+	ep->keepalive = false;
+	ep->nodelay   = true;
 
 	if (((rv = nni_plat_tcp_ep_init(&ep->tep, &lsa, &rsa, mode)) != 0) ||
 	    ((rv = nni_tls_config_init(&ep->cfg, tlsmode)) != 0) ||
@@ -767,6 +795,46 @@ nni_tls_ep_connect(void *arg, nni_aio *aio)
 	ep->user_aio = aio;
 	nni_plat_tcp_ep_connect(ep->tep, ep->aio);
 	nni_mtx_unlock(&ep->mtx);
+}
+
+static int
+nni_tls_ep_setopt_nodelay(void *arg, const void *v, size_t sz, int typ)
+{
+	nni_tls_ep *ep = arg;
+	bool        val;
+	int         rv;
+	rv = nni_copyin_bool(&val, v, sz, typ);
+	if ((rv == 0) && (ep != NULL)) {
+		ep->nodelay = val;
+	}
+	return (rv);
+}
+
+static int
+nni_tls_ep_getopt_nodelay(void *arg, void *v, size_t *szp, int typ)
+{
+	nni_tls_ep *ep = arg;
+	return (nni_copyout_bool(ep->nodelay, v, szp, typ));
+}
+
+static int
+nni_tls_ep_setopt_keepalive(void *arg, const void *v, size_t sz, int typ)
+{
+	nni_tls_ep *ep = arg;
+	bool        val;
+	int         rv;
+	rv = nni_copyin_bool(&val, v, sz, typ);
+	if ((rv == 0) && (ep != NULL)) {
+		ep->keepalive = val;
+	}
+	return (rv);
+}
+
+static int
+nni_tls_ep_getopt_keepalive(void *arg, void *v, size_t *szp, int typ)
+{
+	nni_tls_ep *ep = arg;
+	return (nni_copyout_bool(ep->keepalive, v, szp, typ));
 }
 
 static int
@@ -928,6 +996,16 @@ static nni_tran_pipe_option nni_tls_pipe_options[] = {
 	    .po_type   = NNI_TYPE_BOOL,
 	    .po_getopt = tls_getopt_verified,
 	},
+	{
+	    .po_name   = NNG_OPT_TCP_KEEPALIVE,
+	    .po_type   = NNI_TYPE_BOOL,
+	    .po_getopt = nni_tls_pipe_getopt_keepalive,
+	},
+	{
+	    .po_name   = NNG_OPT_TCP_NODELAY,
+	    .po_type   = NNI_TYPE_BOOL,
+	    .po_getopt = nni_tls_pipe_getopt_nodelay,
+	},
 	// terminate list
 	{
 	    .po_name = NULL,
@@ -986,6 +1064,18 @@ static nni_tran_ep_option nni_tls_ep_options[] = {
 	    .eo_type   = NNI_TYPE_STRING,
 	    .eo_getopt = NULL,
 	    .eo_setopt = tls_setopt_server_name,
+	},
+	{
+	    .eo_name   = NNG_OPT_TCP_NODELAY,
+	    .eo_type   = NNI_TYPE_BOOL,
+	    .eo_getopt = nni_tls_ep_getopt_nodelay,
+	    .eo_setopt = nni_tls_ep_setopt_nodelay,
+	},
+	{
+	    .eo_name   = NNG_OPT_TCP_KEEPALIVE,
+	    .eo_type   = NNI_TYPE_BOOL,
+	    .eo_getopt = nni_tls_ep_getopt_keepalive,
+	    .eo_setopt = nni_tls_ep_setopt_keepalive,
 	},
 	// terminate list
 	{

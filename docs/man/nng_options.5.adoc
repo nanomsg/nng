@@ -19,21 +19,23 @@ nng_options - socket, dialer, listener, and pipe options
 ----
 #include <nng/nng.h>
 
-#define NNG_OPT_SOCKNAME   "socket-name"
-#define NNG_OPT_RAW        "raw"
-#define NNG_OPT_RECVBUF    "recv-buffer"
-#define NNG_OPT_SENDBUF    "send-buffer"
-#define NNG_OPT_RECVFD     "recv-fd"
-#define NNG_OPT_SENDFD     "send-fd"
-#define NNG_OPT_RECVTIMEO  "recv-timeout"
-#define NNG_OPT_SENDTIMEO  "send-timeout"
-#define NNG_OPT_LOCADDR    "local-address"
-#define NNG_OPT_REMADDR    "remote-address"
-#define NNG_OPT_URL        "url"
-#define NNG_OPT_MAXTTL     "ttl-max"
-#define NNG_OPT_RECVMAXSZ  "recv-size-max"
-#define NNG_OPT_RECONNMINT "reconnect-time-min"
-#define NNG_OPT_RECONNMAXT "reconnect-time-max"
+#define NNG_OPT_SOCKNAME      "socket-name"
+#define NNG_OPT_RAW           "raw"
+#define NNG_OPT_RECVBUF       "recv-buffer"
+#define NNG_OPT_SENDBUF       "send-buffer"
+#define NNG_OPT_RECVFD        "recv-fd"
+#define NNG_OPT_SENDFD        "send-fd"
+#define NNG_OPT_RECVTIMEO     "recv-timeout"
+#define NNG_OPT_SENDTIMEO     "send-timeout"
+#define NNG_OPT_LOCADDR       "local-address"
+#define NNG_OPT_REMADDR       "remote-address"
+#define NNG_OPT_URL           "url"
+#define NNG_OPT_MAXTTL        "ttl-max"
+#define NNG_OPT_RECVMAXSZ     "recv-size-max"
+#define NNG_OPT_RECONNMINT    "reconnect-time-min"
+#define NNG_OPT_RECONNMAXT    "reconnect-time-max"
+#define NNG_OPT_TCP_NODELAY   "tcp-nodelay"
+#define NNG_OPT_TCP_KEEPALIVE "tcp-nodelay"
 ----
 
 == DESCRIPTION
@@ -285,6 +287,41 @@ Accordingly it can only be used with dialers, listeners, and pipes.
 
 NOTE: Some transports will canonify URLs before returning them to the
 application.
+
+[[NNG_OPT_TCP_NODELAY]]
+((`NNG_OPT_TCP_NODELAY`))::
+(`bool``)
+This option is used to disable (or enable) the use of Nagle's algorithm
+for TCP connections.
+When `true` (the default), messages are sent immediately by the underlying
+TCP stream without waiting to gather more data.
+When `false`, Nagle's algorithm is enabled, and the TCP stream may
+wait briefly in attempt to coalesce messages.
+Nagle's algorithm is useful on low-bandwidth connections to reduce overhead,
+but it comes at a cost to latency.
+
+NOTE: This setting may apply to transports that are built on top of TCP.
+See the transport documentation for each transport for details.
+
+[[NNG_OPT_TCP_KEEPALIVE]]
+((`NNG_OPT_TCP_KEEPALIVE`))::
+(`bool``)
+This option is used to enable the sending of keep-alive messages on
+the underlying TCP stream.
+This option is `false` by default.
+When enabled, if no messages are seen for a period of time, then
+a zero length TCP message is sent with the ACK flag set in an attempt
+to tickle some traffic from the peer.
+If none is still seen (after some platform-specific number of retries and
+timeouts), then the remote peer is presumed dead, and the connection is closed.
+
+NOTE: This setting may apply to transports that are built on top of TCP.
+See the transport documentation for each transport for details.
+
+TIP: This option has two purposes.
+First, it can be used to detect dead peers on an otherwise quiescent network.
+Second, it can be used to keep connection table entries in NAT and other
+middleware from being expiring due to lack of activity.
 
 == SEE ALSO
 

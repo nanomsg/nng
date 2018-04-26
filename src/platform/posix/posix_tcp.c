@@ -125,6 +125,18 @@ nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *p, nni_sockaddr *sa)
 }
 
 int
+nni_plat_tcp_pipe_set_keepalive(nni_plat_tcp_pipe *p, bool v)
+{
+	return (nni_posix_pipedesc_set_keepalive((void *) p, v));
+}
+
+int
+nni_plat_tcp_pipe_set_nodelay(nni_plat_tcp_pipe *p, bool v)
+{
+	return (nni_posix_pipedesc_set_nodelay((void *) p, v));
+}
+
+int
 nni_plat_tcp_ntop(const nni_sockaddr *sa, char *ipstr, char *portstr)
 {
 	const void *ap;

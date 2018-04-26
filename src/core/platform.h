@@ -248,6 +248,14 @@ extern int nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *, nni_sockaddr *);
 // nni_plat_tcp_pipe_sockname gets the local name.
 extern int nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *, nni_sockaddr *);
 
+// nni_plat_tcp_pipe_set_nodelay sets nodelay, disabling Nagle, according
+// to the parameter.  true disables Nagle; false enables Nagle.
+extern int nni_plat_tcp_pipe_set_nodelay(nni_plat_tcp_pipe *, bool);
+
+// nni_plat_tcp_pipe_set_keepalive indicates that the TCP pipe should send
+// keepalive probes.  Tuning of these keepalives is current unsupported.
+extern int nni_plat_tcp_pipe_set_keepalive(nni_plat_tcp_pipe *, bool);
+
 // nni_plat_tcp_ntop obtains the IP address for the socket (enclosing it
 // in brackets if it is IPv6) and port.  Enough space for both must
 // be present (48 bytes and 6 bytes each), although if either is NULL then

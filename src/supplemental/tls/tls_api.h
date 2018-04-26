@@ -38,6 +38,8 @@ extern void nni_tls_send(nni_tls *, nng_aio *);
 extern void nni_tls_recv(nni_tls *, nng_aio *);
 extern int  nni_tls_sockname(nni_tls *, nni_sockaddr *);
 extern int  nni_tls_peername(nni_tls *, nni_sockaddr *);
+extern int  nni_tls_set_nodelay(nni_tls *, bool);
+extern int  nni_tls_set_keepalive(nni_tls *, bool);
 
 // nni_tls_verified returns true if the peer, or false if the peer did not
 // verify.  (During the handshake phase, the peer is not verified, so this
