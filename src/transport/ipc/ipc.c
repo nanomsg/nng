@@ -13,6 +13,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "ipc.h"
 
 // IPC transport.   Platform specific IPC operations must be
 // supplied as well.  Normally the IPC is UNIX domain sockets or
@@ -739,6 +740,40 @@ nni_ipc_ep_get_addr(void *arg, void *data, size_t *szp, int typ)
 	return (nni_copyout_sockaddr(&ep->sa, data, szp, typ));
 }
 
+static int
+nni_ipc_ep_setopt_permissions(void *arg, const void *data, size_t sz, int typ)
+{
+	nni_ipc_ep *ep = arg;
+	int         val;
+	int         rv;
+
+	// Probably we could further limit this -- most systems don't have
+	// meaningful chmod beyond the lower 9 bits.
+	rv = nni_copyin_int(&val, data, sz, 0, 0x7FFFFFFF, typ);
+	if ((rv == 0) && (ep != NULL)) {
+		rv = nni_plat_ipc_ep_set_permissions(ep->iep, val);
+	}
+	return (rv);
+}
+
+static int
+nni_ipc_ep_setopt_security_desc(
+    void *arg, const void *data, size_t sz, int typ)
+{
+	nni_ipc_ep *ep = arg;
+	void *      ptr;
+	int         rv;
+
+	if ((rv = nni_copyin_ptr((void **) &ptr, data, sz, typ)) != 0) {
+		return (rv);
+	}
+
+	if (ep == NULL) {
+		return (0);
+	}
+	return (nni_plat_ipc_ep_set_security_descriptor(ep->iep, ptr));
+}
+
 static nni_tran_pipe_option nni_ipc_pipe_options[] = {
 	{
 	    .po_name   = NNG_OPT_REMADDR,
@@ -778,6 +813,18 @@ static nni_tran_ep_option nni_ipc_ep_options[] = {
 	    .eo_type   = NNI_TYPE_SOCKADDR,
 	    .eo_getopt = nni_ipc_ep_get_addr,
 	    .eo_setopt = NULL,
+	},
+	{
+	    .eo_name   = NNG_OPT_IPC_SECURITY_DESCRIPTOR,
+	    .eo_type   = NNI_TYPE_POINTER,
+	    .eo_getopt = NULL,
+	    .eo_setopt = nni_ipc_ep_setopt_security_desc,
+	},
+	{
+	    .eo_name   = NNG_OPT_IPC_PERMISSIONS,
+	    .eo_type   = NNI_TYPE_INT32,
+	    .eo_getopt = NULL,
+	    .eo_setopt = nni_ipc_ep_setopt_permissions,
 	},
 	// terminate list
 	{

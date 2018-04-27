@@ -21,14 +21,15 @@ struct nni_plat_ipc_pipe {
 };
 
 struct nni_plat_ipc_ep {
-	char          path[NNG_MAXADDRLEN + 16];
-	nni_sockaddr  addr;
-	int           mode;
-	int           started;
-	HANDLE        p;       // accept side only
-	nni_win_event acc_ev;  // accept side only
-	nni_aio *     con_aio; // conn side only
-	nni_list_node node;    // conn side uses this
+	char                path[NNG_MAXADDRLEN + 16];
+	nni_sockaddr        addr;
+	int                 mode;
+	bool                started;
+	HANDLE              p;       // accept side only
+	nni_win_event       acc_ev;  // accept side only
+	nni_aio *           con_aio; // conn side only
+	nni_list_node       node;    // conn side uses this
+	SECURITY_ATTRIBUTES sec_attr;
 };
 
 static int  nni_win_ipc_pipe_start(nni_win_event *, nni_aio *);
@@ -203,13 +204,40 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 	}
 	ZeroMemory(ep, sizeof(*ep));
 
-	ep->mode = mode;
+	ep->mode                          = mode;
+	ep->sec_attr.nLength              = sizeof(ep->sec_attr);
+	ep->sec_attr.lpSecurityDescriptor = NULL;
+	ep->sec_attr.bInheritHandle       = FALSE;
 	NNI_LIST_NODE_INIT(&ep->node);
 
 	ep->addr = *sa;
 	(void) snprintf(ep->path, sizeof(ep->path), "\\\\.\\pipe\\%s", path);
 
 	*epp = ep;
+	return (0);
+}
+
+int
+nni_plat_ipc_ep_set_permissions(nni_plat_ipc_ep *ep, uint32_t bits)
+{
+	NNI_ARG_UNUSED(ep);
+	NNI_ARG_UNUSED(bits);
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_plat_ipc_ep_set_security_descriptor(nni_plat_ipc_ep *ep, void *desc)
+{
+	if (ep->started) {
+		return (NNG_EBUSY);
+	}
+	if (ep->mode != NNI_EP_MODE_LISTEN) {
+		return (NNG_ENOTSUP);
+	}
+	if (!IsValidSecurityDescriptor((SECURITY_DESCRIPTOR *) desc)) {
+		return (NNG_EINVAL);
+	}
+	ep->sec_attr.lpSecurityDescriptor = desc;
 	return (0);
 }
 
@@ -233,7 +261,7 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 	        FILE_FLAG_FIRST_PIPE_INSTANCE,
 	    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
 	        PIPE_REJECT_REMOTE_CLIENTS,
-	    PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0, NULL);
+	    PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0, &ep->sec_attr);
 	if (p == INVALID_HANDLE_VALUE) {
 		if ((rv = GetLastError()) == ERROR_ACCESS_DENIED) {
 			rv = NNG_EADDRINUSE;
@@ -252,7 +280,7 @@ nni_plat_ipc_ep_listen(nni_plat_ipc_ep *ep)
 	}
 
 	ep->p       = p;
-	ep->started = 1;
+	ep->started = true;
 	return (0);
 
 failed:
@@ -281,7 +309,7 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 	    PIPE_ACCESS_DUPLEX | FILE_FLAG_OVERLAPPED,
 	    PIPE_TYPE_BYTE | PIPE_READMODE_BYTE | PIPE_WAIT |
 	        PIPE_REJECT_REMOTE_CLIENTS,
-	    PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0, NULL);
+	    PIPE_UNLIMITED_INSTANCES, 4096, 4096, 0, &ep->sec_attr);
 	if (newp == INVALID_HANDLE_VALUE) {
 		rv = nni_win_error(GetLastError());
 		// We connected, but as we cannot get a new pipe,

@@ -34,7 +34,7 @@ extern int  nni_posix_pipedesc_sockname(nni_posix_pipedesc *, nni_sockaddr *);
 extern int  nni_posix_pipedesc_set_nodelay(nni_posix_pipedesc *, bool);
 extern int  nni_posix_pipedesc_set_keepalive(nni_posix_pipedesc *, bool);
 
-extern int  nni_posix_epdesc_init(nni_posix_epdesc **);
+extern int  nni_posix_epdesc_init(nni_posix_epdesc **, int);
 extern void nni_posix_epdesc_set_local(nni_posix_epdesc *, void *, size_t);
 extern void nni_posix_epdesc_set_remote(nni_posix_epdesc *, void *, size_t);
 extern void nni_posix_epdesc_fini(nni_posix_epdesc *);
@@ -43,5 +43,6 @@ extern void nni_posix_epdesc_connect(nni_posix_epdesc *, nni_aio *);
 extern int  nni_posix_epdesc_listen(nni_posix_epdesc *);
 extern void nni_posix_epdesc_accept(nni_posix_epdesc *, nni_aio *);
 extern int  nni_posix_epdesc_sockname(nni_posix_epdesc *, nni_sockaddr *);
+extern int  nni_posix_epdesc_set_permissions(nni_posix_epdesc *, mode_t);
 
 #endif // PLATFORM_POSIX_AIO_H

@@ -36,7 +36,7 @@ nni_plat_tcp_ep_init(nni_plat_tcp_ep **epp, const nni_sockaddr *lsa,
 
 	NNI_ARG_UNUSED(mode);
 
-	if ((rv = nni_posix_epdesc_init(&ed)) != 0) {
+	if ((rv = nni_posix_epdesc_init(&ed, mode)) != 0) {
 		return (rv);
 	}
 

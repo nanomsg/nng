@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/un.h>
@@ -38,10 +39,13 @@ struct nni_posix_epdesc {
 	nni_list                connectq;
 	nni_list                acceptq;
 	bool                    closed;
+	bool                    started;
 	struct sockaddr_storage locaddr;
 	struct sockaddr_storage remaddr;
 	socklen_t               loclen;
 	socklen_t               remlen;
+	mode_t                  perms; // UNIX sockets only
+	int                     mode;  // end point mode (dialer/listener)
 	nni_mtx                 mtx;
 };
 
@@ -287,17 +291,35 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 #endif
 
 	if (bind(fd, (struct sockaddr *) ss, len) < 0) {
-		nni_mtx_unlock(&ed->mtx);
 		rv = nni_plat_errno(errno);
+		nni_mtx_unlock(&ed->mtx);
 		(void) close(fd);
 		return (rv);
+	}
+
+	// For UNIX domain sockets, optionally set the permission bits.
+	// This is done after the bind and before listen, and on the file
+	// rather than the file descriptor.
+	// Experiments have shown that chmod() works correctly, provided that
+	// it is done *before* the listen() operation, whereas fchmod seems to
+	// have no impact.  This behavior was observed on both macOS and Linux.
+	// YMMV on other platforms.
+	if ((ss->ss_family == AF_UNIX) && (ed->perms != 0)) {
+		struct sockaddr_un *sun   = (void *) ss;
+		mode_t              perms = ed->perms & ~(S_IFMT);
+		if ((rv = chmod(sun->sun_path, perms)) != 0) {
+			rv = nni_plat_errno(errno);
+			nni_mtx_unlock(&ed->mtx);
+			close(fd);
+			return (rv);
+		}
 	}
 
 	// Listen -- 128 depth is probably sufficient.  If it isn't, other
 	// bad things are going to happen.
 	if (listen(fd, 128) != 0) {
-		nni_mtx_unlock(&ed->mtx);
 		rv = nni_plat_errno(errno);
+		nni_mtx_unlock(&ed->mtx);
 		(void) close(fd);
 		return (rv);
 	}
@@ -311,6 +333,7 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 		nni_mtx_unlock(&ed->mtx);
 		return (rv);
 	}
+	ed->started = true;
 	nni_mtx_unlock(&ed->mtx);
 	return (0);
 }
@@ -384,6 +407,7 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 	if ((rv = connect(fd, (void *) &ed->remaddr, ed->remlen)) == 0) {
 		// Immediate connect, cool!  This probably only happens on
 		// loopback, and probably not on every platform.
+		ed->started = true;
 		nni_posix_epdesc_finish(aio, 0, fd);
 		nni_mtx_unlock(&ed->mtx);
 		return;
@@ -403,6 +427,7 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 
 	// We have to submit to the pollq, because the connection is pending.
 	ed->node.fd = fd;
+	ed->started = true;
 	if ((rv = nni_posix_pollq_add(&ed->node)) != 0) {
 		ed->node.fd = -1;
 		nni_mtx_unlock(&ed->mtx);
@@ -418,7 +443,7 @@ nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
 }
 
 int
-nni_posix_epdesc_init(nni_posix_epdesc **edp)
+nni_posix_epdesc_init(nni_posix_epdesc **edp, int mode)
 {
 	nni_posix_epdesc *ed;
 	int               rv;
@@ -439,6 +464,9 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp)
 	ed->node.data  = ed;
 	ed->node.fd    = -1;
 	ed->closed     = false;
+	ed->started    = false;
+	ed->perms      = 0; // zero means use default (no change)
+	ed->mode       = mode;
 
 	nni_aio_list_init(&ed->connectq);
 	nni_aio_list_init(&ed->acceptq);
@@ -474,6 +502,27 @@ nni_posix_epdesc_set_remote(nni_posix_epdesc *ed, void *sa, size_t len)
 	memcpy(&ed->remaddr, sa, len);
 	ed->remlen = len;
 	nni_mtx_unlock(&ed->mtx);
+}
+
+int
+nni_posix_epdesc_set_permissions(nni_posix_epdesc *ed, mode_t mode)
+{
+	nni_mtx_lock(&ed->mtx);
+	if (ed->mode != NNI_EP_MODE_LISTEN) {
+		nni_mtx_unlock(&ed->mtx);
+		return (NNG_ENOTSUP);
+	}
+	if (ed->started) {
+		nni_mtx_unlock(&ed->mtx);
+		return (NNG_EBUSY);
+	}
+	if ((mode & S_IFMT) != 0) {
+		nni_mtx_unlock(&ed->mtx);
+		return (NNG_EINVAL);
+	}
+	ed->perms = mode | S_IFSOCK; // we set IFSOCK to ensure non-zero
+	nni_mtx_unlock(&ed->mtx);
+	return (0);
 }
 
 void

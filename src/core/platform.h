@@ -284,6 +284,8 @@ typedef struct nni_plat_ipc_ep   nni_plat_ipc_ep;
 typedef struct nni_plat_ipc_pipe nni_plat_ipc_pipe;
 
 // nni_plat_ipc_ep_init creates a new endpoint associated with the url.
+// The final field is the mode, either for dialing (NNI_EP_MODE_DIAL) or
+// listening (NNI_EP_MODE_LISTEN).
 extern int nni_plat_ipc_ep_init(nni_plat_ipc_ep **, const nni_sockaddr *, int);
 
 // nni_plat_ipc_ep_fini closes the endpoint and releases resources.
@@ -305,6 +307,23 @@ extern void nni_plat_ipc_ep_accept(nni_plat_ipc_ep *, nni_aio *);
 // nni_plat_ipc_connect is the client side.
 // An accepted connection will be passed back in the a_pipe member.
 extern void nni_plat_ipc_ep_connect(nni_plat_ipc_ep *, nni_aio *);
+
+// nni_plat_ipc_ep_set_security_descriptor sets the Windows security
+// descriptor. This is *only* supported for Windows platforms.  All
+// others return NNG_ENOTSUP.  The void argument is a pointer to
+// a SECURITY_DESCRIPTOR object, and must be valid.
+extern int nni_plat_ipc_ep_set_security_descriptor(nni_plat_ipc_ep *, void *);
+
+// nni_plat_ipc_ep_set_permissions sets UNIX style permissions
+// on the named pipes.  This basically just does a chmod() on the
+// named pipe, and is only supported o the server side, and only on
+// systems that support this (POSIX, not Windows).  Note that changing
+// ownership is not supported at this time.  Most systems use only
+// 16-bits, the lower 12 of which are user, group, and other, e.g.
+// 0640 gives read/write access to user, read to group, and prevents
+// any other user from accessing it.  This option only has meaning
+// for listeners, on dialers it is ignored.
+extern int nni_plat_ipc_ep_set_permissions(nni_plat_ipc_ep *, uint32_t);
 
 // nni_plat_ipc_pipe_fini closes the pipe, and releases all resources
 // associated with it.

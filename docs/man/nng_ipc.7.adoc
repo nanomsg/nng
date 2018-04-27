@@ -45,7 +45,7 @@ This transport uses URIs using the scheme `ipc://`, followed by
 a an absolute path name in the file system where the socket or named pipe
 should be created.
 
-TIP: On Windows, all names are prefixed by `\.\pipe\` and do not
+TIP: On Windows, all names are prefixed by `\\.\pipe\` and do not
 occupy the normal file system.
 On POSIX platforms, the path is taken literally,
 and is relative to the root directory.
@@ -63,9 +63,29 @@ the actual structure is of type <<nng_sockaddr_ipc.5#,`nng_sockaddr_ipc`>>.
 
 === Transport Options
 
-The _ipc_ transport has no special options.
+((`NNG_OPT_IPC_PERMISSIONS`))::
 
-NOTE: Options for security attributes and credentials are planned.
+This write-only option may be used to configure the permissions that
+are used on the UNIX domain socket created by a listener.
+This property is only supported on POSIX systems.
+The value is of type `int`, representing the normal permission bits
+on a file, such as `0600` (typically meaning read-write to the owner, and
+no permissions for anyone else.)
+The default is system-specific, most often `0644`.
+
+NOTE: Normally both read and write permission will be necessary for a
+peer dialer to connect.
+See your system documentation for UNIX domain sockets for more information.
+
+NOTE: The _umask_ of the process is *not* applied to these bits.
+
+((`NNG_OPT_IPC_SECURITY_DESCRIPTOR`))::
+
+This write-only option may be used on Windows platforms to configure
+the `SECURITY_DESCRIPTOR` that is used when creating the underying
+named pipe.
+The value is a pointer, `PSECURITY_DESCRIPTOR`, and may only be
+applied to listeners that have not been started yet.
 
 == SEE ALSO
 

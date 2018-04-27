@@ -49,7 +49,7 @@ nni_plat_ipc_ep_init(nni_plat_ipc_ep **epp, const nni_sockaddr *sa, int mode)
 	int                rv;
 	struct sockaddr_un sun;
 
-	if ((rv = nni_posix_epdesc_init(&ed)) != 0) {
+	if ((rv = nni_posix_epdesc_init(&ed, mode)) != 0) {
 		return (rv);
 	}
 	switch (mode) {
@@ -85,6 +85,20 @@ void
 nni_plat_ipc_ep_close(nni_plat_ipc_ep *ep)
 {
 	nni_posix_epdesc_close((void *) ep);
+}
+
+int
+nni_plat_ipc_ep_set_permissions(nni_plat_ipc_ep *ep, uint32_t bits)
+{
+	return (nni_posix_epdesc_set_permissions((void *) ep, (mode_t) bits));
+}
+
+int
+nni_plat_ipc_ep_set_security_descriptor(nni_plat_ipc_ep *ep, void *attr)
+{
+	NNI_ARG_UNUSED(ep);
+	NNI_ARG_UNUSED(attr);
+	return (NNG_ENOTSUP);
 }
 
 // UNIX DOMAIN SOCKETS -- these have names in the file namespace.
