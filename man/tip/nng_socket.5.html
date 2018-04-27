@@ -525,7 +525,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-k">typedef</span> <span class="tok-kt">uint32_t</span> <span class="tok-n">nng_socket</span><span class="tok-p">;</span></code></pre>
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_socket_s</span> <span class="tok-n">nng_socket</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
 </div>
@@ -544,16 +544,17 @@ may be connected to multiple transports at the same time.
 However, a given socket will have exactly one &#8220;protocol&#8221; associated with it,
 and is responsible for any state machines or other protocol-specific logic.</p>
 </div>
-<div class="admonitionblock note">
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Although <code>nng_socket</code> is an integer data type, these objects are not
-ordinary file descriptors, and can only be used with the functions that
-explicitly indicate that it safe and appropropate to do so.
+The <code>nng_socket</code> structure is always passed by value (both
+for input parameters and return values), and should be treated opaquely.
+Passing structures this way ensures gives the compiler a chance to perform
+accurate type checks in functions passing values of this type.
 </td>
 </tr>
 </table>

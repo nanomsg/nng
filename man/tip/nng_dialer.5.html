@@ -525,7 +525,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-k">typedef</span> <span class="tok-kt">uint32_t</span> <span class="tok-n">nng_dialer</span><span class="tok-p">;</span></code></pre>
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_dialer_s</span> <span class="tok-n">nng_dialer</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
 </div>
@@ -549,6 +549,21 @@ destroyed.</p>
 <a href="nng_dialer_create.3.html"><code>nng_dialer_create()</code></a>
 or <a href="nng_dial.3.html"><code>nng_dial()</code></a> functions, and are always &#8220;owned&#8221;
 by a single <a href="nng_socket.5.html"><code>nng_socket</code></a>.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The <code>nng_dialer</code> structure is always passed by value (both
+for input parameters and return values), and should be treated opaquely.
+Passing structures this way ensures gives the compiler a chance to perform
+accurate type checks in functions passing values of this type.
+</td>
+</tr>
+</table>
 </div>
 <div class="admonitionblock tip">
 <table>
