@@ -17,13 +17,13 @@
 
 // Basic HTTP client tests.
 #include "core/nng_impl.h"
-#include "supplemental/tls/tls.h"
 #include "supplemental/http/http.h"
 #include "supplemental/sha1/sha1.h"
+#include "supplemental/tls/tls.h"
 
-const uint8_t utf8_sha1sum[20] = { 0x54, 0xf3, 0xb8, 0xbb, 0xfe, 0xda, 0x6f,
-	0xb4, 0x96, 0xdd, 0xc9, 0x8b, 0x8c, 0x41, 0xf4, 0xfe, 0xe5, 0xa9, 0x7d,
-	0xa9 };
+const uint8_t example_sum[20] = { 0x0e, 0x97, 0x3b, 0x59, 0xf4, 0x76, 0x00,
+	0x7f, 0xd1, 0x0f, 0x87, 0xf3, 0x47, 0xc3, 0x95, 0x60, 0x65, 0x51, 0x6f,
+	0xc0 };
 
 TestMain("HTTP Client", {
 
@@ -38,8 +38,8 @@ TestMain("HTTP Client", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 
-		So(nng_url_parse(&url, "http://httpbin.org/encoding/utf8") ==
-		    0);
+		So(nng_url_parse(&url, "http://example.org/") == 0);
+
 		So(nng_http_client_alloc(&cli, url) == 0);
 		nng_http_client_connect(cli, aio);
 		nng_aio_wait(aio);
@@ -71,6 +71,7 @@ TestMain("HTTP Client", {
 			nng_http_conn_read_res(http, res, aio);
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == 0);
+			printf("RESULT IS %d\n", nng_http_res_get_status(res));
 			So(nng_http_res_get_status(res) == 200);
 
 			Convey("The message contents are correct", {
@@ -102,7 +103,7 @@ TestMain("HTTP Client", {
 				So(nng_aio_result(aio) == 0);
 
 				nni_sha1(data, sz, digest);
-				So(memcmp(digest, utf8_sha1sum, 20) == 0);
+				So(memcmp(digest, example_sum, 20) == 0);
 			});
 		});
 	});
