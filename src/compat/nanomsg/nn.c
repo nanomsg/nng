@@ -808,6 +808,25 @@ nn_setsndbuf(nng_socket s, const void *valp, size_t sz)
 	return (0);
 }
 
+#ifdef _WIN32
+static int
+nn_setsecattr(nng_socket s, const void *valp, size_t sz)
+{
+	SECURITY_ATTRIBUTES sec;
+	if (sz != sizeof(sec)) {
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+	rv = nng_setopt_pointer(
+	    s, NNG_OPT_SECURITY_DESCRIPTOR, sec.lpSecurityDescriptor);
+	if (rv != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	return (0);
+}
+#endif
+
 // options which we convert -- most of the array is initialized at run time.
 static const struct {
 	int         nnlevel;
@@ -912,6 +931,14 @@ static const struct {
 	    .nnopt   = NN_SURVEYOR_DEADLINE,
 	    .opt     = NNG_OPT_SURVEYOR_SURVEYTIME,
 	},
+#ifdef _WIN32
+	{
+	    .nnlevel = NN_IPC,
+	    .nnopt   = NN_IPC_SEC_ATTR,
+	    .set     = nn_setsecattr,
+	    .get     = NULL,
+	},
+#endif
 	// XXX: IPV4ONLY, SNDPRIO, RCVPRIO
 };
 
