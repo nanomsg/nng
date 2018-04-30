@@ -20,6 +20,7 @@
 #include "protocol/reqrep0/req.h"
 #include "protocol/survey0/respond.h"
 #include "protocol/survey0/survey.h"
+#include "transport/ipc/ipc.h"
 
 #include "core/nng_impl.h"
 
