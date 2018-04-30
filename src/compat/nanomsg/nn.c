@@ -813,13 +813,13 @@ static int
 nn_setsecattr(nng_socket s, const void *valp, size_t sz)
 {
 	int rv;
-	
+
 	SECURITY_ATTRIBUTES sec;
 	if (sz != sizeof(sec)) {
 		nn_seterror(NNG_EINVAL);
 		return (-1);
 	}
-	rv = nng_setopt_pointer(
+	rv = nng_setopt_ptr(
 	    s, NNG_OPT_IPC_SECURITY_DESCRIPTOR, sec.lpSecurityDescriptor);
 	if (rv != 0) {
 		nn_seterror(rv);
