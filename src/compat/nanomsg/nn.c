@@ -884,6 +884,11 @@ static const struct {
 	},
 	{
 	    .nnlevel = NN_SOL_SOCKET,
+	    .nnopt   = NN_PROTOCOL,
+	    .opt     = NNG_OPT_PROTO,
+	},
+	{
+	    .nnlevel = NN_SOL_SOCKET,
 	    .nnopt   = NN_SOCKET_NAME,
 	    .opt     = NNG_OPT_SOCKNAME,
 	},

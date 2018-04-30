@@ -27,6 +27,21 @@ TestMain("REQ/REP pattern", {
 
 		Reset({ nng_close(req); });
 
+		Convey("Protocol & peer options match", {
+			int   p;
+			char *s;
+			So(nng_getopt_int(req, NNG_OPT_PROTO, &p) == 0);
+			So(p == 48);
+			So(nng_getopt_string(req, NNG_OPT_PROTONAME, &s) == 0);
+			So(strcmp(s, "req") == 0);
+			nng_strfree(s);
+			So(nng_getopt_int(req, NNG_OPT_PEER, &p) == 0);
+			So(p == 49);
+			So(nng_getopt_string(req, NNG_OPT_PEERNAME, &s) == 0);
+			So(strcmp(s, "rep") == 0);
+			nng_strfree(s);
+		});
+
 		Convey("Resend time option id works", {
 
 			// Set timeout.
@@ -49,6 +64,21 @@ TestMain("REQ/REP pattern", {
 		So(nng_rep_open(&rep) == 0);
 
 		Reset({ nng_close(rep); });
+
+		Convey("Protocol & peer options match", {
+			int   p;
+			char *s;
+			So(nng_getopt_int(rep, NNG_OPT_PROTO, &p) == 0);
+			So(p == 49);
+			So(nng_getopt_string(rep, NNG_OPT_PROTONAME, &s) == 0);
+			So(strcmp(s, "rep") == 0);
+			nng_strfree(s);
+			So(nng_getopt_int(rep, NNG_OPT_PEER, &p) == 0);
+			So(p == 48);
+			So(nng_getopt_string(rep, NNG_OPT_PEERNAME, &s) == 0);
+			So(strcmp(s, "req") == 0);
+			nng_strfree(s);
+		});
 
 		Convey("Send with no recv fails", {
 			nng_msg *msg;

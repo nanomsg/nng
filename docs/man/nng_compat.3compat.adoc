@@ -115,9 +115,9 @@ Consequently, socket numbers can become quite large, and should
 probably not be used for array indices.
 
 NOTE: The following options (`nn_getsockopt`) are unsupported:
-`NN_PROTOCOL`, `NN_SNDPRIO`, `NN_RCVPRIO`, `NN_IPV4ONLY`.
-Some of these will probably be added back in the future when
-the relevant support is added to _nng_.
+`NN_IPC_INBUFSZ`, `NN_OUTBUFSZ`, `NN_SNDPRIO`, `NN_RCVPRIO`, `NN_IPV4ONLY`.
+Some of these may be supported in the future when the relevant support
+is added to _nng_.
 
 NOTE: Access to statistics using this legacy API
 (`<<nn_get_statistic.3compat#,nn_get_statistic()>>`) is unsupported.

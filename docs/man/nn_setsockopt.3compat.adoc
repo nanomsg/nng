@@ -130,11 +130,6 @@ This value, if positive, provides some protection against forwarding loops in
 NOTE: Not all protocols offer this protection, so care should still be used
 in configuring device forwarding.
 
-// NN_DOMAIN is readonly.
-// NN_PROTOCOL is not supported.
-// NN_RCVFD is read-only.
-// NN_SNDFD is read-only.
-
 The following option is available for `NN_REQ` sockets
 using the `NN_REQ` level:
 

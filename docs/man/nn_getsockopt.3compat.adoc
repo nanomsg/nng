@@ -137,11 +137,12 @@ NOTE: Not all protocols offer this protection, so care should still be used
 in configuring device forwarding.
 
 `NN_DOMAIN`::
-This contains either the value `AF_SP` or `AF_SP_RAW`, corresponding
-to the value that the socket was created with.
+This option of type `int` represents either the value `AF_SP` or `AF_SP_RAW`,
+corresponding to the value that the socket was created with.
 
 `NN_PROTOCOL`::
-This option is not supported at this time.
+This option option of type `int` contains the numeric protocol number
+that the socket is used with.
 
 `NN_RCVFD`::
 This option returns a file descriptor suitable for use in with `poll()` or

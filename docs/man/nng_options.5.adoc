@@ -21,6 +21,10 @@ nng_options - socket, dialer, listener, and pipe options
 
 #define NNG_OPT_SOCKNAME      "socket-name"
 #define NNG_OPT_RAW           "raw"
+#define NNG_OPT_PROTO         "protocol"
+#define NNG_OPT_PROTONAME     "protocol-name"
+#define NNG_OPT_PEER          "peer"
+#define NNG_OPT_PEERNAME      "peer-name"
 #define NNG_OPT_RECVBUF       "recv-buffer"
 #define NNG_OPT_SENDBUF       "send-buffer"
 #define NNG_OPT_RECVFD        "recv-fd"
@@ -287,6 +291,29 @@ Accordingly it can only be used with dialers, listeners, and pipes.
 
 NOTE: Some transports will canonify URLs before returning them to the
 application.
+
+[[NNG_OPT_PROTO]]
+((`NNG_OPT_PROTO`))::
+(`int`)
+This read-only option is used to obtain the 16-bit number for the socket's protocol.
+
+[[NNG_OPT_PEER]]
+((`NNG_OPT_PEER`))::
+(`int`)
+This read-only option is used to obtain the 16-bit number of the
+peer protocol for the socket.
+
+
+[[NNG_OPT_PROTONAME]]
+((`NNG_OPT_PROTONAME`))::
+(string)
+This read-only option is used to obtain the name of the socket's protocol.
+
+[[NNG_OPT_PEERNAME]]
+((`NNG_OPT_PEERNAME`))::
+(string)
+This read-only option is used to obtain the name of the peer protocol for
+the socket.
 
 [[NNG_OPT_TCP_NODELAY]]
 ((`NNG_OPT_TCP_NODELAY`))::

@@ -251,6 +251,30 @@ nni_sock_setopt_sockname(nni_sock *s, const void *buf, size_t sz, int typ)
 	return (nni_copyin_str(s->s_name, buf, sizeof(s->s_name), sz, typ));
 }
 
+static int
+nni_sock_getopt_proto(nni_sock *s, void *buf, size_t *szp, int typ)
+{
+	return (nni_copyout_int(nni_sock_proto(s), buf, szp, typ));
+}
+
+static int
+nni_sock_getopt_peer(nni_sock *s, void *buf, size_t *szp, int typ)
+{
+	return (nni_copyout_int(nni_sock_peer(s), buf, szp, typ));
+}
+
+static int
+nni_sock_getopt_protoname(nni_sock *s, void *buf, size_t *szp, int typ)
+{
+	return (nni_copyout_str(nni_sock_proto_name(s), buf, szp, typ));
+}
+
+static int
+nni_sock_getopt_peername(nni_sock *s, void *buf, size_t *szp, int typ)
+{
+	return (nni_copyout_str(nni_sock_peer_name(s), buf, szp, typ));
+}
+
 static const nni_socket_option nni_sock_options[] = {
 	{
 	    .so_name   = NNG_OPT_RECVTIMEO,
@@ -310,6 +334,30 @@ static const nni_socket_option nni_sock_options[] = {
 	    .so_name   = NNG_OPT_RAW,
 	    .so_type   = NNI_TYPE_BOOL,
 	    .so_getopt = nni_sock_getopt_raw,
+	    .so_setopt = NULL,
+	},
+	{
+	    .so_name   = NNG_OPT_PROTO,
+	    .so_type   = NNI_TYPE_INT32,
+	    .so_getopt = nni_sock_getopt_proto,
+	    .so_setopt = NULL,
+	},
+	{
+	    .so_name   = NNG_OPT_PEER,
+	    .so_type   = NNI_TYPE_INT32,
+	    .so_getopt = nni_sock_getopt_peer,
+	    .so_setopt = NULL,
+	},
+	{
+	    .so_name   = NNG_OPT_PROTONAME,
+	    .so_type   = NNI_TYPE_STRING,
+	    .so_getopt = nni_sock_getopt_protoname,
+	    .so_setopt = NULL,
+	},
+	{
+	    .so_name   = NNG_OPT_PEERNAME,
+	    .so_type   = NNI_TYPE_STRING,
+	    .so_getopt = nni_sock_getopt_peername,
 	    .so_setopt = NULL,
 	},
 	// terminate list
