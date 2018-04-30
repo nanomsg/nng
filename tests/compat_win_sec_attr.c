@@ -64,7 +64,7 @@ int main ()
     PSECURITY_DESCRIPTOR sd = NULL;
 
     sc = test_socket (AF_SP, NN_PAIR);
-    test_connect (sc, SOCKET_ADDRESS);
+//    test_connect (sc, SOCKET_ADDRESS);
 
     sb = test_socket (AF_SP, NN_PAIR);
 
@@ -95,6 +95,8 @@ int main ()
     ret3 = nn_setsockopt (sb, NN_IPC, NN_IPC_SEC_ATTR, &sec, sizeof (sec));
     nn_assert (ret3 == 0);
     test_bind (sb, SOCKET_ADDRESS);
+
+    test_connect (sc, SOCKET_ADDRESS);
 
     nn_sleep (200);
 
