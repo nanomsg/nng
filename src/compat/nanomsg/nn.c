@@ -20,6 +20,7 @@
 #include "protocol/reqrep0/req.h"
 #include "protocol/survey0/respond.h"
 #include "protocol/survey0/survey.h"
+#include "transport/ipc/ipc.h"
 
 #include "core/nng_impl.h"
 
@@ -808,6 +809,28 @@ nn_setsndbuf(nng_socket s, const void *valp, size_t sz)
 	return (0);
 }
 
+#ifdef NNG_PLATFORM_WINDOWS
+static int
+nn_setsecattr(nng_socket s, const void *valp, size_t sz)
+{
+	int rv;
+
+	SECURITY_ATTRIBUTES sec;
+	if (sz != sizeof(sec)) {
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+	memcpy(&sec, valp, sz);
+	rv = nng_setopt_ptr(
+	    s, NNG_OPT_IPC_SECURITY_DESCRIPTOR, sec.lpSecurityDescriptor);
+	if (rv != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	return (0);
+}
+#endif
+
 // options which we convert -- most of the array is initialized at run time.
 static const struct {
 	int         nnlevel;
@@ -912,6 +935,14 @@ static const struct {
 	    .nnopt   = NN_SURVEYOR_DEADLINE,
 	    .opt     = NNG_OPT_SURVEYOR_SURVEYTIME,
 	},
+#ifdef NNG_PLATFORM_WINDOWS
+	{
+	    .nnlevel = NN_IPC,
+	    .nnopt   = NN_IPC_SEC_ATTR,
+	    .set     = nn_setsecattr,
+	    .get     = NULL,
+	},
+#endif
 	// XXX: IPV4ONLY, SNDPRIO, RCVPRIO
 };
 
