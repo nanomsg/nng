@@ -19,7 +19,7 @@ nng_pipe_close - close pipe
 ----
 #include <nng/nng.h>
 
-int nng_pipe_close(nng_socket s);
+int nng_pipe_close(nng_pipe p);
 ----
 
 == DESCRIPTION

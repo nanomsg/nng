@@ -46,6 +46,12 @@ nng_close(nng_socket s)
 	return (rv);
 }
 
+int
+nng_socket_id(nng_socket s)
+{
+	return (((int) s.id > 0) ? (int) s.id : -1);
+}
+
 void
 nng_closeall(void)
 {
@@ -230,12 +236,12 @@ nng_send_aio(nng_socket s, nng_aio *aio)
 }
 
 int
-nng_ctx_open(nng_ctx *idp, nng_socket s)
+nng_ctx_open(nng_ctx *cp, nng_socket s)
 {
 	nni_sock *sock;
 	nni_ctx * ctx;
 	int       rv;
-	nng_ctx   id;
+	nng_ctx   c;
 
 	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
 		return (rv);
@@ -244,25 +250,31 @@ nng_ctx_open(nng_ctx *idp, nng_socket s)
 		nni_sock_rele(sock);
 		return (rv);
 	}
-	id.id = nni_ctx_id(ctx);
-	*idp  = id;
+	c.id = nni_ctx_id(ctx);
 	nni_ctx_rele(ctx);
 	nni_sock_rele(sock);
+	*cp = c;
 	return (0);
 }
 
 int
-nng_ctx_close(nng_ctx cid)
+nng_ctx_close(nng_ctx c)
 {
 	int      rv;
 	nni_ctx *ctx;
 
-	if ((rv = nni_ctx_find(&ctx, cid.id, true)) != 0) {
+	if ((rv = nni_ctx_find(&ctx, c.id, true)) != 0) {
 		return (rv);
 	}
 	// no release, close releases implicitly.
 	nni_ctx_close(ctx);
 	return (0);
+}
+
+int
+nng_ctx_id(nng_ctx c)
+{
+	return (((int) c.id > 0) ? (int) c.id : -1);
 }
 
 void
@@ -497,6 +509,12 @@ nng_listener_start(nng_listener l, int flags)
 }
 
 int
+nng_listener_id(nng_listener l)
+{
+	return (((int) l.id > 0) ? (int) l.id : -1);
+}
+
+int
 nng_dialer_create(nng_dialer *dp, nng_socket s, const char *addr)
 {
 	nni_sock * sock;
@@ -530,6 +548,12 @@ nng_dialer_start(nng_dialer d, int flags)
 	rv = nni_ep_dial(ep, flags);
 	nni_ep_rele(ep);
 	return (rv);
+}
+
+int
+nng_dialer_id(nng_dialer d)
+{
+	return (((int) d.id > 0) ? (int) d.id : -1);
 }
 
 static int
@@ -1088,19 +1112,19 @@ nng_strerror(int num)
 }
 
 static int
-nng_pipe_getx(nng_pipe id, const char *name, void *val, size_t *szp, int t)
+nng_pipe_getx(nng_pipe p, const char *name, void *val, size_t *szp, int t)
 {
 	int       rv;
-	nni_pipe *p;
+	nni_pipe *pipe;
 
 	if ((rv = nni_init()) < 0) {
 		return (rv);
 	}
-	if ((rv = nni_pipe_find(&p, id.id)) != 0) {
+	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
 		return (rv);
 	}
-	rv = nni_pipe_getopt(p, name, val, szp, t);
-	nni_pipe_rele(p);
+	rv = nni_pipe_getopt(pipe, name, val, szp, t);
+	nni_pipe_rele(pipe);
 	return (rv);
 }
 
@@ -1167,17 +1191,23 @@ nng_pipe_getopt_string(nng_pipe p, const char *name, char **valp)
 }
 
 int
-nng_pipe_close(nng_pipe pid)
+nng_pipe_close(nng_pipe p)
 {
 	int       rv;
-	nni_pipe *p;
+	nni_pipe *pipe;
 
-	if ((rv = nni_pipe_find(&p, pid.id)) != 0) {
+	if ((rv = nni_pipe_find(&pipe, p.id)) != 0) {
 		return (rv);
 	}
-	nni_pipe_close(p);
-	nni_pipe_rele(p);
+	nni_pipe_close(pipe);
+	nni_pipe_rele(pipe);
 	return (0);
+}
+
+int
+nng_pipe_id(nng_pipe p)
+{
+	return (((int) p.id > 0) ? (int) p.id : -1);
 }
 
 // Message handling.

@@ -58,12 +58,19 @@ Dialer objects may be destroyed by the
 <<nng_dialer_close.3#,`nng_pipe_close()`>> function.
 They are also closed when their "`owning`" socket is closed.
 
+[[NNG_DIALER_INITIALIZER]]
+=== Initialization
+
+A dialer may be initialized using the macro `NNG_DIALER_INITIALIZER`
+before it is opened, to prevent confusion with valid open dialers.
+
 == SEE ALSO
 
 <<nng_dial.3#,nng_dial(3)>>,
 <<nng_dialer_close.3#,nng_dialer_close(3)>>,
 <<nng_dialer_create.3#,nng_dialer_create(3)>>,
 <<nng_dialer_getopt.3#,nng_dialer_getopt(3)>>,
+<<nng_dialer_id.3#,nng_dialer_id(3)>>,
 <<nng_dialer_setopt.3#,nng_dialer_setopt(3)>>,
 <<nng_dialer_start.3#,nng_dialer_start(3)>>,
 <<nng_listener.5#,nng_listener(5)>>,

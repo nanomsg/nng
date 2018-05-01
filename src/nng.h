@@ -92,6 +92,15 @@ typedef struct nng_snapshot nng_snapshot;
 typedef struct nng_stat     nng_stat;
 typedef struct nng_aio      nng_aio;
 
+// Initializers.
+// clang-format off
+#define NNG_PIPE_INITIALIZER { 0 }
+#define NNG_SOCKET_INITIALIZER { 0 }
+#define NNG_DIALER_INITIALIZER { 0 }
+#define NNG_LISTENER_INITIALIZER { 0 }
+#define NNG_CTX_INITIALIZER { 0 }
+// clang-format on
+
 // Some address details. This is in some ways like a traditional sockets
 // sockaddr, but we have our own to cope with our unique families, etc.
 // The details of this structure are directly exposed to applications.
@@ -181,6 +190,10 @@ NNG_DECL void nng_fini(void);
 // resources.
 NNG_DECL int nng_close(nng_socket);
 
+// nng_socket_id returns the positive socket id for the socket, or -1
+// if the socket is not valid.
+NNG_DECL int nng_socket_id(nng_socket);
+
 // nng_closeall closes all open sockets. Do not call this from
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void);
@@ -248,6 +261,14 @@ NNG_DECL int nng_dialer_close(nng_dialer);
 // nng_listener_close closes the listener, shutting down all underlying
 // connections and releasing all associated resources.
 NNG_DECL int nng_listener_close(nng_listener);
+
+// nng_dialer_id returns the positive dialer ID, or -1 if the dialer is
+// invalid.
+NNG_DECL int nng_dialer_id(nng_dialer);
+
+// nng_listener_id returns the positive listener ID, or -1 if the listener is
+// invalid.
+NNG_DECL int nng_listener_id(nng_listener);
 
 // nng_dialer_setopt sets an option for a specific dialer.  Note
 // dialer options may not be altered on a running dialer.
@@ -378,6 +399,11 @@ NNG_DECL int nng_ctx_open(nng_ctx *, nng_socket);
 
 // nng_ctx_close closes the context.
 NNG_DECL int nng_ctx_close(nng_ctx);
+
+// nng_ctx_id returns the numeric id for the context; this will be
+// a postive value for a valid context, or < 0 for an invalid context.
+// A valid context is not necessarily an *open* context.
+NNG_DECL int nng_ctx_id(nng_ctx);
 
 // nng_ctx_recv receives asynchronously.  It works like nng_recv_aio, but
 // uses a local context instead of the socket global context.
@@ -573,6 +599,7 @@ NNG_DECL int nng_pipe_getopt_uint64(nng_pipe, const char *, uint64_t *);
 NNG_DECL int nng_pipe_getopt_ptr(nng_pipe, const char *, void **);
 NNG_DECL int nng_pipe_getopt_string(nng_pipe, const char *, char **);
 NNG_DECL int nng_pipe_close(nng_pipe);
+NNG_DECL int nng_pipe_id(nng_pipe);
 
 // Flags.
 enum nng_flag_enum {

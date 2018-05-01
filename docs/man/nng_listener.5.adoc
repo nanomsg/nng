@@ -55,12 +55,19 @@ Listener objects may be destroyed by the
 <<nng_listener_close.3#,`nng_listener_close()`>> function.
 They are also closed when their "`owning`" socket is closed.
 
+[[NNG_LISTENER_INITIALIZER]]
+=== Initialization
+
+A listener may be initialized using the macro `NNG_LISTENER_INITIALIZER`
+before it is opened, to prevent confusion with valid open listener.
+
 == SEE ALSO
 
 <<nng_listen.3#,nng_listen(3)>>,
 <<nng_listener_close.3#,nng_listener_close(3)>>,
 <<nng_listener_create.3#,nng_listener_create(3)>>,
 <<nng_listener_getopt.3#,nng_listener_getopt(3)>>,
+<<nng_listener_id.3#,nng_listener_id(3)>>,
 <<nng_listener_setopt.3#,nng_listener_setopt(3)>>,
 <<nng_listener_start.3#,nng_listener_start(3)>>,
 <<nng_dialer.5#,nng_dialer(5)>>,

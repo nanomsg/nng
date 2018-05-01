@@ -92,7 +92,7 @@ TestMain("Surveyor concurrent contexts", {
 	atexit(nng_fini);
 
 	Convey("We can use Surveyor contexts concurrently", {
-		nng_socket surv;
+		nng_socket surv = NNG_SOCKET_INITIALIZER;
 
 		So(nng_aio_alloc(&resp_state.aio, (void *) resp_cb, NULL) ==
 		    0);
@@ -144,6 +144,14 @@ TestMain("Surveyor concurrent contexts", {
 		for (i = 0; i < NCTX; i++) {
 			if ((rv = nng_ctx_open(&ctxs[i], surv)) != 0) {
 				break;
+			}
+			if (nng_ctx_id(ctxs[i]) < 0) {
+				Fail("Invalid context ID");
+				break;
+			}
+			if ((i > 0) &&
+			    (nng_ctx_id(ctxs[i]) == nng_ctx_id(ctxs[i - 1]))) {
+				Fail("Context IDs not different");
 			}
 		}
 		So(rv == 0);

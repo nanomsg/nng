@@ -28,14 +28,13 @@
 TestMain("PAIRv1 protocol", {
 	const char * templ = "inproc://pairv1/%u";
 	char         addr[NNG_MAXADDRLEN + 1];
-	nng_socket   s1;
-	nng_socket   c1;
-	nng_socket   c2;
+	nng_socket   s1 = NNG_SOCKET_INITIALIZER;
+	nng_socket   c1 = NNG_SOCKET_INITIALIZER;
+	nng_socket   c2 = NNG_SOCKET_INITIALIZER;
 	nng_duration tmo;
 	uint32_t     v;
 	size_t       sz;
 
-	s1.id = c1.id = c2.id = 0;
 	atexit(nng_fini);
 
 	Convey("Given a few sockets", {
@@ -43,6 +42,13 @@ TestMain("PAIRv1 protocol", {
 		So(nng_pair1_open(&s1) == 0);
 		So(nng_pair1_open(&c1) == 0);
 		So(nng_pair1_open(&c2) == 0);
+
+		So(nng_socket_id(s1) > 0);
+		So(nng_socket_id(c1) > 0);
+		So(nng_socket_id(c2) > 0);
+		So(nng_socket_id(s1) != nng_socket_id(c1));
+		So(nng_socket_id(s1) != nng_socket_id(c2));
+		So(nng_socket_id(c1) != nng_socket_id(c2));
 
 		Reset({
 			nng_close(s1);
@@ -211,7 +217,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_recvmsg(s1, &msg, 0) == 0);
 			CHECKSTR(msg, "ONE");
 			p1 = nng_msg_get_pipe(msg);
-			So(p1.id != 0);
+			So(nng_pipe_id(p1) > 0);
 			nng_msg_free(msg);
 
 			So(nng_msg_alloc(&msg, 0) == 0);
@@ -220,10 +226,10 @@ TestMain("PAIRv1 protocol", {
 			So(nng_recvmsg(s1, &msg, 0) == 0);
 			CHECKSTR(msg, "TWO");
 			p2 = nng_msg_get_pipe(msg);
-			So(p2.id != 0);
+			So(nng_pipe_id(p2) > 0);
 			nng_msg_free(msg);
 
-			So(p1.id != p2.id);
+			So(nng_pipe_id(p1) != nng_pipe_id(p2));
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 
@@ -308,7 +314,7 @@ TestMain("PAIRv1 protocol", {
 		nng_msleep(20);
 
 		Convey("Send/recv work", {
-			nng_pipe p;
+			nng_pipe p = NNG_PIPE_INITIALIZER;
 			So(nng_msg_alloc(&msg, 0) == 0);
 			APPENDSTR(msg, "GAMMA");
 			So(nng_msg_header_append_u32(msg, 1) == 0);
@@ -316,7 +322,8 @@ TestMain("PAIRv1 protocol", {
 			So(nng_sendmsg(c1, msg, 0) == 0);
 			So(nng_recvmsg(s1, &msg, 0) == 0);
 			p = nng_msg_get_pipe(msg);
-			So(p.id != 0);
+			So(nng_pipe_id(p) > 0);
+
 			CHECKSTR(msg, "GAMMA");
 			So(nng_msg_header_len(msg) == sizeof(uint32_t));
 			So(nng_msg_header_trim_u32(msg, &hops) == 0);
@@ -332,7 +339,8 @@ TestMain("PAIRv1 protocol", {
 			So(nng_msg_header_len(msg) == sizeof(uint32_t));
 			So(nng_msg_header_trim_u32(msg, &hops) == 0);
 			p = nng_msg_get_pipe(msg);
-			So(p.id != 0);
+			So(nng_pipe_id(p) > 0);
+
 			So(hops == 2);
 			nng_msg_free(msg);
 		});
@@ -474,7 +482,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_recvmsg(s1, &msg, 0) == 0);
 			CHECKSTR(msg, "ONE");
 			p1 = nng_msg_get_pipe(msg);
-			So(p1.id != 0);
+			So(nng_pipe_id(p1) > 0);
 			So(nng_msg_header_trim_u32(msg, &hops) == 0);
 			So(hops == 1);
 			nng_msg_free(msg);
@@ -485,12 +493,12 @@ TestMain("PAIRv1 protocol", {
 			So(nng_recvmsg(s1, &msg, 0) == 0);
 			CHECKSTR(msg, "TWO");
 			p2 = nng_msg_get_pipe(msg);
-			So(p2.id != 0);
+			So(nng_pipe_id(p2) > 0);
 			So(nng_msg_header_trim_u32(msg, &hops) == 0);
 			So(hops == 1);
 			nng_msg_free(msg);
 
-			So(p1.id != p2.id);
+			So(nng_pipe_id(p1) != nng_pipe_id(p2));
 
 			So(nng_msg_alloc(&msg, 0) == 0);
 			nng_msg_set_pipe(msg, p1);
@@ -518,7 +526,7 @@ TestMain("PAIRv1 protocol", {
 			So(nng_recvmsg(s1, &msg, 0) == 0);
 			CHECKSTR(msg, "ONE");
 			p1 = nng_msg_get_pipe(msg);
-			So(p1.id != 0);
+			So(nng_pipe_id(p1) > 0);
 			nng_msg_free(msg);
 
 			nng_close(c1);

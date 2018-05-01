@@ -51,11 +51,25 @@ Pipe objects may be destroyed by the
 They are also closed when their "`owning`" dialer or listener is closed,
 or when the remote peer closes the underlying connection.
 
+[[NNG_PIPE_INITIALIZER]]
+=== Initialization
+
+A pipe may be initialized using the macro `NNG_PIPE_INITIALIZER`
+before it is opened, to prevent confusion with valid open pipes.
+
+For example:
+
+[source, c]
+----
+nng_pipe p = NNG_PIPE_INITIALIZER;
+----
+
 == SEE ALSO
 
 <<nng_msg_get_pipe.3#,nng_msg_get_pipe(3)>>,
 <<nng_pipe_close.3#,nng_pipe_close(3)>>,
 <<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,
+<<nng_pipe_id.3#,nng_pipe_id(3)>>,
 <<nng_dialer.5#,nng_dialer(5)>>,
 <<nng_listener.5#,nng_listener(5)>>,
 <<nng_options.5#,nng_options(5)>>,

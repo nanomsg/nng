@@ -333,10 +333,12 @@ TestMain("Socket Operations", {
 
 		Convey("Listening works", {
 			char *       a = "inproc://here";
-			nng_listener l;
+			nng_listener l = NNG_LISTENER_INITIALIZER;
+
+			So(nng_listener_id(l) < 0);
 			rv = nng_listen(s1, a, &l, 0);
 			So(rv == 0);
-			So(l.id != 0);
+			So(nng_listener_id(l) > 0);
 
 			Convey("Second listen fails ADDRINUSE", {
 				rv = nng_listen(s1, a, NULL, 0);
@@ -347,7 +349,8 @@ TestMain("Socket Operations", {
 			    { So(nng_listener_start(l, 0) == NNG_ESTATE); });
 
 			Convey("We can connect to it", {
-				nng_socket s2;
+				nng_socket s2 = NNG_SOCKET_INITIALIZER;
+				So(nng_socket_id(s2) < 0);
 				So(nng_pair_open(&s2) == 0);
 				Reset({ nng_close(s2); });
 				So(nng_dial(s2, a, NULL, 0) == 0);
@@ -356,9 +359,13 @@ TestMain("Socket Operations", {
 		});
 
 		Convey("Dialer creation ok", {
-			nng_dialer ep;
-			char *     a = "tcp://127.0.0.1:2929";
+			nng_dialer ep = NNG_DIALER_INITIALIZER;
+			char *     a  = "tcp://127.0.0.1:2929";
+
+			So(nng_dialer_id(ep) < 0);
 			So(nng_dialer_create(&ep, s1, a) == 0);
+			So(nng_dialer_id(ep) > 0);
+
 			Convey("Options work", {
 				size_t sz;
 				So(nng_dialer_setopt_size(

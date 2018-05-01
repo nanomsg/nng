@@ -44,12 +44,26 @@ Each `nng_socket` is created by a protocol-specific constructor, such as
 When the socket is no longer needed, it can be closed with
 <<nng_close.3#,`nng_close()`>>.
 
+[[NNG_SOCKET_INITIALIZER]]
+=== Initialization
+
+A socket may be initialized using the macro `NNG_SOCKET_INITIALIZER`
+before it is opened, to prevent confusion with valid open sockets.
+
+For example:
+
+[source, c]
+----
+nng_socket s = NNG_SOCKET_INITIALIZER;
+----
+
 == SEE ALSO
 
 <<libnng.3#,libnng(3)>>,
 <<nng_close.3#,nng_close(3)>>,
 <<nng_getopt.3#,nng_getopt(3)>>,
 <<nng_setopt.3#,nng_setopt(3)>>,
+<<nng_socket_id.3#,nng_socket_id(3)>>,
 <<nng_dialer.5#,nng_dialer(5)>>,
 <<nng_listener.5#,nng_listener(5)>>,
 <<nng_options.5#,nng_options(5)>>,

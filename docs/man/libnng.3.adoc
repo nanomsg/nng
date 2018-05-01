@@ -49,6 +49,7 @@ The following functions operate on sockets.
 |<<nng_recv.3#,nng_recv()>>|receive data
 |<<nng_send.3#,nng_send()>>|send data
 |<<nng_setopt.3#,nng_setopt()>>|set socket option
+|<<nng_socket_id.3#,nng_socket_id()>>|get numeric socket identifier
 |===
 
 === Connection Management
@@ -61,16 +62,19 @@ Listeners accept incoming connection requets, and dialers make them.
 |<<nng_dialer_close.3#,nng_dialer_close()>>|close dialer
 |<<nng_dialer_create.3#,nng_dialer_create()>>|create dialer
 |<<nng_dialer_getopt.3#,nng_dialer_getopt()>>|get dialer option
+|<<nng_dialer_id.3#,nng_dialer_id()>>|get numeric dialer identifier
 |<<nng_dialer_setopt.3#,nng_dialer_setopt()>>|set dialer option
 |<<nng_dialer_start.3#,nng_dialer_start()>>|start dialer
 |<<nng_listen.3#,nng_listen()>>|create and start listener
 |<<nng_listener_close.3#,nng_listener_close()>>|close listener
 |<<nng_listener_create.3#,nng_listener_create()>>|create listener
 |<<nng_listener_getopt.3#,nng_listener_getopt()>>|get listener option
+|<<nng_listener_id.3#,nng_listener_id()>>|get numeric listener identifier
 |<<nng_listener_setopt.3#,nng_listener_setopt()>>|set listener option
 |<<nng_listener_start.3#,nng_listener_start()>>|start listener
 |<<nng_pipe_close.3#,nng_pipe_close()>>|close pipe
 |<<nng_pipe_getopt.3#,nng_pipe_getopt()>>|get pipe option
+|<<nng_pipe_id.3#,nng_pipe_id()>>|get numeric pipe identifier
 |===
 
 === Message Handling Functions
@@ -205,6 +209,7 @@ concurrent applications.
 |===
 |<<nng_ctx_close.3#,nng_ctx_close()>>|close context
 |<<nng_ctx_getopt.3#,nng_ctx_getopt()>>|get context option
+|<<nng_ctx_id.3#,nng_ctx_id()>>|get numeric context identifier
 |<<nng_ctx_open.3#,nng_ctx_open()>>|create context
 |<<nng_ctx_recv.3#,nng_ctx_recv()>>|receive message using context asynchronously
 |<<nng_ctx_send.3#,nng_ctx_send()>>|send message using context asynchronously

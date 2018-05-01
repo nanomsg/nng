@@ -170,9 +170,8 @@ trantest_fini(trantest *tt)
 int
 trantest_dial(trantest *tt, nng_dialer *dp)
 {
-	nng_dialer d;
+	nng_dialer d = NNG_DIALER_INITIALIZER;
 	int        rv;
-	d.id = 0;
 
 	rv = nng_dialer_create(&d, tt->reqsock, tt->addr);
 	if (rv != 0) {
@@ -196,8 +195,7 @@ int
 trantest_listen(trantest *tt, nng_listener *lp)
 {
 	int          rv;
-	nng_listener l;
-	l.id = 0;
+	nng_listener l = NNG_LISTENER_INITIALIZER;
 
 	rv = nng_listener_create(&l, tt->repsock, tt->addr);
 	if (rv != 0) {
@@ -231,13 +229,12 @@ void
 trantest_conn_refused(trantest *tt)
 {
 	Convey("Connection refused works", {
-		nng_dialer d;
-		d.id = 0;
+		nng_dialer d = NNG_DIALER_INITIALIZER;
 
 		So(trantest_dial(tt, &d) == NNG_ECONNREFUSED);
-		So(d.id == 0);
+		So(nng_dialer_id(d) < 0);
 		So(trantest_dial(tt, &d) == NNG_ECONNREFUSED);
-		So(d.id == 0);
+		So(nng_dialer_id(d) < 0);
 	});
 }
 
@@ -245,14 +242,15 @@ void
 trantest_duplicate_listen(trantest *tt)
 {
 	Convey("Duplicate listen rejected", {
-		nng_listener l;
+		nng_listener l1 = NNG_LISTENER_INITIALIZER;
+		nng_listener l2 = NNG_LISTENER_INITIALIZER;
 		int          rv;
-		rv = trantest_listen(tt, &l);
+		rv = trantest_listen(tt, &l1);
 		So(rv == 0);
-		So(l.id != 0);
-		l.id = 0;
-		So(trantest_listen(tt, &l) == NNG_EADDRINUSE);
-		So(l.id == 0);
+		So(nng_listener_id(l1) > 0);
+		So(trantest_listen(tt, &l2) == NNG_EADDRINUSE);
+		So(nng_listener_id(l2) < 0);
+		So(nng_listener_id(l1) != nng_listener_id(l2));
 	});
 }
 
@@ -260,15 +258,16 @@ void
 trantest_listen_accept(trantest *tt)
 {
 	Convey("Listen and accept", {
-		nng_listener l;
-		nng_dialer   d;
+		nng_listener l  = NNG_LISTENER_INITIALIZER;
+		nng_dialer   d  = NNG_DIALER_INITIALIZER;
+		nng_dialer   d0 = NNG_DIALER_INITIALIZER;
 		So(trantest_listen(tt, &l) == 0);
-		So(l.id != 0);
+		So(nng_listener_id(l) > 0);
 
 		nng_msleep(200);
-		d.id = 0;
 		So(trantest_dial(tt, &d) == 0);
-		So(d.id != 0);
+		So(nng_dialer_id(d) > 0);
+		So(nng_dialer_id(d0) < 0);
 	});
 }
 
@@ -276,18 +275,19 @@ void
 trantest_send_recv(trantest *tt)
 {
 	Convey("Send and recv", {
-		nng_listener l;
-		nng_dialer   d;
+		nng_listener l = NNG_LISTENER_INITIALIZER;
+		nng_dialer   d = NNG_DIALER_INITIALIZER;
+		nng_pipe     p = NNG_PIPE_INITIALIZER;
 		nng_msg *    send;
 		nng_msg *    recv;
 		size_t       len;
-		nng_pipe     p;
 		char *       url;
 
 		So(trantest_listen(tt, &l) == 0);
-		So(l.id != 0);
+		So(nng_listener_id(l) > 0);
+
 		So(trantest_dial(tt, &d) == 0);
-		So(d.id != 0);
+		So(nng_dialer_id(d) > 0);
 
 		nng_msleep(200); // listener may be behind slightly
 
@@ -313,7 +313,7 @@ trantest_send_recv(trantest *tt)
 		So(nng_msg_len(recv) == strlen("acknowledge"));
 		So(strcmp(nng_msg_body(recv), "acknowledge") == 0);
 		p = nng_msg_get_pipe(recv);
-		So(p.id != 0);
+		So(nng_pipe_id(p) > 0);
 		So(nng_pipe_getopt_string(p, NNG_OPT_URL, &url) == 0);
 		So(strcmp(url, tt->addr) == 0);
 		nng_strfree(url);
@@ -325,19 +325,19 @@ void
 trantest_send_recv_multi(trantest *tt)
 {
 	Convey("Send and recv multi", {
-		nng_listener l;
-		nng_dialer   d;
+		nng_listener l = NNG_LISTENER_INITIALIZER;
+		nng_dialer   d = NNG_DIALER_INITIALIZER;
+		nng_pipe     p = NNG_PIPE_INITIALIZER;
 		nng_msg *    send;
 		nng_msg *    recv;
-		nng_pipe     p;
 		char *       url;
 		int          i;
 		char         msgbuf[16];
 
 		So(trantest_listen(tt, &l) == 0);
-		So(l.id != 0);
+		So(nng_listener_id(l) > 0);
 		So(trantest_dial(tt, &d) == 0);
-		So(d.id != 0);
+		So(nng_dialer_id(d) > 0);
 
 		nng_msleep(200); // listener may be behind slightly
 
@@ -367,7 +367,7 @@ trantest_send_recv_multi(trantest *tt)
 			So(nng_msg_len(recv) == strlen(msgbuf) + 1);
 			So(strcmp(nng_msg_body(recv), msgbuf) == 0);
 			p = nng_msg_get_pipe(recv);
-			So(p.id != 0);
+			So(nng_pipe_id(p) > 0);
 			So(nng_pipe_getopt_string(p, NNG_OPT_URL, &url) == 0);
 			So(strcmp(url, tt->addr) == 0);
 			nng_strfree(url);
@@ -380,16 +380,16 @@ void
 trantest_check_properties(trantest *tt, trantest_proptest_t f)
 {
 	Convey("Properties test", {
-		nng_listener l;
-		nng_dialer   d;
+		nng_listener l = NNG_LISTENER_INITIALIZER;
+		nng_dialer   d = NNG_DIALER_INITIALIZER;
 		nng_msg *    send;
 		nng_msg *    recv;
 		int          rv;
 
 		So(trantest_listen(tt, &l) == 0);
-		So(l.id != 0);
+		So(nng_listener_id(l) > 0);
 		So(trantest_dial(tt, &d) == 0);
-		So(d.id != 0);
+		So(nng_dialer_id(d) > 0);
 
 		nng_msleep(200); // listener may be behind slightly
 
@@ -415,8 +415,8 @@ void
 trantest_send_recv_large(trantest *tt)
 {
 	Convey("Send and recv large data", {
-		nng_listener l;
-		nng_dialer   d;
+		nng_listener l = NNG_LISTENER_INITIALIZER;
+		nng_dialer   d = NNG_DIALER_INITIALIZER;
 		nng_msg *    send;
 		nng_msg *    recv;
 		char *       data;
@@ -430,9 +430,9 @@ trantest_send_recv_large(trantest *tt)
 		}
 
 		So(trantest_listen(tt, &l) == 0);
-		So(l.id != 0);
+		So(nng_listener_id(l) > 0);
 		So(trantest_dial(tt, &d) == 0);
-		So(d.id != 0);
+		So(nng_dialer_id(d) > 0);
 
 		nng_msleep(200); // listener may be behind slightly
 

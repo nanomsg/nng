@@ -113,13 +113,17 @@ TestMain("Message Tests", {
 		});
 
 		Convey("Pipe retrievals work", {
-			nng_pipe p;
+			nng_pipe p  = NNG_PIPE_INITIALIZER;
+			nng_pipe p0 = NNG_PIPE_INITIALIZER;
+
+			So(nng_pipe_id(p0) < 0);
 			p = nng_msg_get_pipe(msg);
-			So(p.id == 0);
-			p.id = 45;
+			So(nng_pipe_id(p) < 0);
+			memset(&p, 0x22, sizeof(p));
 			nng_msg_set_pipe(msg, p);
 			p = nng_msg_get_pipe(msg);
-			So(p.id == 45);
+			So(nng_pipe_id(p) != nng_pipe_id(p0));
+			So(nng_pipe_id(p) == 0x22222222);
 		});
 
 		Convey("Message realloc works", {

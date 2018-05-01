@@ -26,7 +26,7 @@ struct nni_pipe {
 	nni_list_node p_ep_node;
 	nni_sock *    p_sock;
 	nni_ep *      p_ep;
-	int           p_reap;
+	bool          p_reap;
 	int           p_stop;
 	int           p_refcnt;
 	nni_mtx       p_mtx;
@@ -142,8 +142,12 @@ nni_pipe_find(nni_pipe **pp, uint32_t id)
 	nni_pipe *p;
 	nni_mtx_lock(&nni_pipe_lk);
 	if ((rv = nni_idhash_find(nni_pipes, id, (void **) &p)) == 0) {
-		p->p_refcnt++;
-		*pp = p;
+		if (p->p_reap) {
+			rv = NNG_ECLOSED;
+		} else {
+			p->p_refcnt++;
+			*pp = p;
+		}
 	}
 	nni_mtx_unlock(&nni_pipe_lk);
 	return (rv);
@@ -186,12 +190,12 @@ void
 nni_pipe_close(nni_pipe *p)
 {
 	nni_mtx_lock(&p->p_mtx);
-	if (p->p_reap == 1) {
+	if (p->p_reap) {
 		// We already did a close.
 		nni_mtx_unlock(&p->p_mtx);
 		return;
 	}
-	p->p_reap = 1;
+	p->p_reap = true;
 
 	// Close the underlying transport.
 	if (p->p_tran_data != NULL) {
@@ -267,6 +271,7 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	p->p_proto_data = NULL;
 	p->p_ep         = ep;
 	p->p_sock       = sock;
+	p->p_reap       = false;
 
 	NNI_LIST_NODE_INIT(&p->p_reap_node);
 	NNI_LIST_NODE_INIT(&p->p_sock_node);

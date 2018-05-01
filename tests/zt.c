@@ -44,7 +44,7 @@ check_props(nng_msg *msg)
 {
 	nng_pipe p;
 	p = nng_msg_get_pipe(msg);
-	So(p.id > 0);
+	So(nng_pipe_id(p) > 0);
 
 	// Check local address.
 	Convey("Local address property works", {

@@ -81,6 +81,12 @@ are in use on the same socket is not supported, and may lead to unpredictable
 behavior.
 These asynchronous methods should not be mixed on the same socket.
 
+[[NNG_CTX_INITIALIZER]]
+=== Initialization
+
+A context may be initialized using the macro `NNG_CTX_INITIALIZER`
+before it is opened, to prevent confusion with valid open contexts.
+
 == EXAMPLE
 
 The following program fragment demonstrates the use of contexts to implement
@@ -91,7 +97,7 @@ to the sender.
 ----
 
 struct echo_context {
-    nng_ctx *ctx;
+    nng_ctx ctx;
     nng_aio *aio;
     enum { INIT, RECV, SEND } state;
 };
@@ -156,6 +162,7 @@ start_echo_service(nng_socket rep_socket)
 <<nng_ctx_close.3#,nng_ctx_close(3)>>,
 <<nng_ctx_open.3#,nng_ctx_open(3)>>,
 <<nng_ctx_getopt.3#,nng_ctx_getopt(3)>>,
+<<nng_ctx_id.3#,nng_ctx_id(3)>>,
 <<nng_ctx_recv.3#,nng_ctx_recv(3)>>,
 <<nng_ctx_send.3#,nng_ctx_send(3)>>,
 <<nng_ctx_setopt.3#,nng_ctx_setopt(3)>>,

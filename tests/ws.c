@@ -32,7 +32,7 @@ check_props_v4(nng_msg *msg)
 	size_t       len;
 
 	p = nng_msg_get_pipe(msg);
-	So(p.id > 0);
+	So(nng_pipe_id(p) > 0);
 
 	So(nng_pipe_getopt_sockaddr(p, NNG_OPT_LOCADDR, &la) == 0);
 	So(la.s_family == NNG_AF_INET);
