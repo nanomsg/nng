@@ -27,7 +27,7 @@ struct nni_pipe {
 	nni_sock *    p_sock;
 	nni_ep *      p_ep;
 	bool          p_reap;
-	int           p_stop;
+	bool          p_stop;
 	int           p_refcnt;
 	nni_mtx       p_mtx;
 	nni_cv        p_cv;
@@ -218,7 +218,7 @@ nni_pipe_stop(nni_pipe *p)
 		nni_mtx_unlock(&p->p_mtx);
 		return;
 	}
-	p->p_stop = 1;
+	p->p_stop = true;
 	nni_mtx_unlock(&p->p_mtx);
 
 	// Put it on the reaplist for async cleanup
@@ -239,14 +239,13 @@ nni_pipe_start_cb(void *arg)
 {
 	nni_pipe *p   = arg;
 	nni_aio * aio = p->p_start_aio;
-	int       rv;
 
-	if ((rv = nni_aio_result(aio)) != 0) {
+	if (nni_aio_result(aio) != 0) {
 		nni_pipe_stop(p);
 		return;
 	}
 
-	if ((rv = nni_sock_pipe_start(p->p_sock, p)) != 0) {
+	if (nni_sock_pipe_start(p->p_sock, p) != 0) {
 		nni_pipe_stop(p);
 	}
 }
@@ -272,6 +271,8 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	p->p_ep         = ep;
 	p->p_sock       = sock;
 	p->p_reap       = false;
+	p->p_stop       = false;
+	p->p_refcnt     = 0;
 
 	NNI_LIST_NODE_INIT(&p->p_reap_node);
 	NNI_LIST_NODE_INIT(&p->p_sock_node);
@@ -354,9 +355,6 @@ nni_pipe_reaper(void *notused)
 			nni_list_remove(&nni_pipe_reap_list, p);
 
 			nni_mtx_unlock(&nni_pipe_reap_lk);
-			// Transport close...
-			nni_pipe_close(p);
-
 			nni_pipe_destroy(p);
 			nni_mtx_lock(&nni_pipe_reap_lk);
 			continue;
