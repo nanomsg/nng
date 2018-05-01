@@ -42,7 +42,7 @@ no extra steps to use it should be necessary.
 
 (((URI, `ipc://`)))
 This transport uses URIs using the scheme `ipc://`, followed by
-a an absolute path name in the file system where the socket or named pipe
+an absolute path name in the file system where the socket or named pipe
 should be created.
 
 TIP: On Windows, all names are prefixed by `\\.\pipe\` and do not
@@ -55,6 +55,9 @@ then pathnames must not be longer than 122 bytes, including the final
 `NUL` byte.
 This is because legacy versions of _nanomsg_ cannot express URLs
 longer than 128 bytes, including the `ipc://` prefix.
+
+NOTE: Legacy _nanomsg_ supported relative IPC path names; modern _nng_ does not.
+Therefore, always use an absolute path name if interoperability is required.
 
 === Socket Address
 

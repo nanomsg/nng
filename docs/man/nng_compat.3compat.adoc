@@ -115,9 +115,9 @@ Consequently, socket numbers can become quite large, and should
 probably not be used for array indices.
 
 NOTE: The following options (`nn_getsockopt`) are unsupported:
-`NN_IPC_INBUFSZ`, `NN_OUTBUFSZ`, `NN_SNDPRIO`, `NN_RCVPRIO`, `NN_IPV4ONLY`.
-Some of these may be supported in the future when the relevant support
-is added to _nng_.
+`NN_SNDPRIO`, `NN_RCVPRIO`, `NN_IPV4ONLY`.
+The priority options may be supported in the future, when
+the underlying capability is present in _nng_.
 
 NOTE: Access to statistics using this legacy API
 (`<<nn_get_statistic.3compat#,nn_get_statistic()>>`) is unsupported.
@@ -125,6 +125,9 @@ NOTE: Access to statistics using this legacy API
 NOTE: Some transports can support longer URLs than legacy _libnanomsg_ can.
 It is a good idea to use short pathnames in URLs if interoperability
 is a concern.
+
+NOTE: Only absolute paths are supported in `ipc://` URLs.
+For example, `ipc:///tmp/mysocket` is acceptable, but `ipc://mysocket` is not.
 
 NOTE: Some transports are unusable from this mode.
 In particular, this legacy API offers no way to configure
