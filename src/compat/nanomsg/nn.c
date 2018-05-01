@@ -809,7 +809,7 @@ nn_setsndbuf(nng_socket s, const void *valp, size_t sz)
 	return (0);
 }
 
-#ifdef _WIN32
+#ifdef NNG_PLATFORM_WINDOWS
 static int
 nn_setsecattr(nng_socket s, const void *valp, size_t sz)
 {
@@ -820,6 +820,7 @@ nn_setsecattr(nng_socket s, const void *valp, size_t sz)
 		nn_seterror(NNG_EINVAL);
 		return (-1);
 	}
+	memcpy(&sec, valp, sz);
 	rv = nng_setopt_ptr(
 	    s, NNG_OPT_IPC_SECURITY_DESCRIPTOR, sec.lpSecurityDescriptor);
 	if (rv != 0) {
@@ -934,7 +935,7 @@ static const struct {
 	    .nnopt   = NN_SURVEYOR_DEADLINE,
 	    .opt     = NNG_OPT_SURVEYOR_SURVEYTIME,
 	},
-#ifdef _WIN32
+#ifdef NNG_PLATFORM_WINDOWS
 	{
 	    .nnlevel = NN_IPC,
 	    .nnopt   = NN_IPC_SEC_ATTR,
