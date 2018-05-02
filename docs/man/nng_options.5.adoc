@@ -158,15 +158,11 @@ be readable.
 
 IMPORTANT: Appplications should never attempt to read or write to the
 returned file descriptor.
-Furthermore, applications should not attempt to use the actual socket (of
-type `<<nng_socket.5#,nng_socket>>`) with polling functions,
-since it is merely an internal
-identifier and will not necessarily referency any operting system object or
-handle.
 
 TIP: While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
-objects instead.  See `<<nng_aio_alloc.3#,nng_aio_alloc()>>`.
+objects instead.
+See `<<nng_aio_alloc.3#,nng_aio_alloc()>>`.
 
 [[NNG_OPT_RECVMAXSZ]]
 ((`NNG_OPT_RECVMAXSZ`))::
@@ -234,15 +230,11 @@ the descriptor will *not* be readable.
 
 IMPORTANT: Appplications should never attempt to read or write to the
 returned file descriptor.
-Furthermore, applications should not attempt to use the actual socket (of
-type `<<nng_socket.5#,nng_socket>>`) with polling functions,
-since it is merely an internal
-identifier and will not necessarily referency any operting system object or
-handle.
 
 TIP: While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
-objects instead.  See `<<nng_aio_alloc.3#,nng_aio_alloc()>>`.
+objects instead.
+See `<<nng_aio_alloc.3#,nng_aio_alloc()>>`.
 
 [[NNG_OPT_SENDTIMEO]]
 ((`NNG_OPT_SENDTIMEO`))::
