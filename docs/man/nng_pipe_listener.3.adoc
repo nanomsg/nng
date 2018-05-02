@@ -1,0 +1,46 @@
+= nng_pipe_listener(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_pipe_listener - return listener that created pipe
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+nng_listener nng_pipe_listener(nng_pipe p);
+----
+
+== DESCRIPTION
+
+The `nng_pipe_listener()` function returns the `<<nng_listener.5#,nng_lisener>>`
+that created the pipe _p_.
+If the pipe was not created by a listener, then the returned value will
+have an identifier (`<<nng_listener_id.3#,nng_listener_id()>>`) of `-1`.
+
+== RETURN VALUES
+
+This function returns the listener that created the pipe, unless it was
+not created by a listener, in which case a value initialized with
+`NNG_LISTENER_INITIALIZER` will be returned.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+<<nng_pipe.5#,nng_pipe(5)>>,
+<<nng_listener.5#,nng_listener(5)>>,
+<<nng.7#,nng(7)>>

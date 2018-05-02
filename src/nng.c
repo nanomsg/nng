@@ -1015,6 +1015,24 @@ nng_getopt_string(nng_socket s, const char *name, char **valp)
 }
 
 int
+nng_pipe_notify(nng_socket s, nng_pipe_cb cb, void *arg)
+{
+	int       rv;
+	nni_sock *sock;
+
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
+	if ((rv = nni_sock_find(&sock, s.id)) != 0) {
+		return (rv);
+	}
+
+	nni_sock_set_pipe_cb(sock, cb, arg);
+	nni_sock_rele(sock);
+	return (0);
+}
+
+int
 nng_device(nng_socket s1, nng_socket s2)
 {
 	int       rv;
@@ -1188,6 +1206,47 @@ nng_pipe_getopt_string(nng_pipe p, const char *name, char **valp)
 {
 	size_t sz = sizeof(*valp);
 	return (nng_pipe_getx(p, name, valp, &sz, NNI_TYPE_STRING));
+}
+
+nng_socket
+nng_pipe_socket(nng_pipe p)
+{
+	nng_socket s = NNG_SOCKET_INITIALIZER;
+	nni_pipe * pipe;
+
+	if ((nni_init() == 0) && (nni_pipe_find(&pipe, p.id) == 0)) {
+		s.id = nni_pipe_sock_id(pipe);
+		nni_pipe_rele(pipe);
+	}
+	return (s);
+}
+
+nng_dialer
+nng_pipe_dialer(nng_pipe p)
+{
+	nng_dialer d = NNG_DIALER_INITIALIZER;
+	nni_pipe * pipe;
+	if ((nni_init() == 0) && (nni_pipe_find(&pipe, p.id) == 0)) {
+		if (nni_pipe_ep_mode(pipe) == NNI_EP_MODE_DIAL) {
+			d.id = nni_pipe_ep_id(pipe);
+		}
+		nni_pipe_rele(pipe);
+	}
+	return (d);
+}
+
+nng_listener
+nng_pipe_listener(nng_pipe p)
+{
+	nng_listener l = NNG_LISTENER_INITIALIZER;
+	nni_pipe *   pipe;
+	if ((nni_init() == 0) && (nni_pipe_find(&pipe, p.id) == 0)) {
+		if (nni_pipe_ep_mode(pipe) == NNI_EP_MODE_LISTEN) {
+			l.id = nni_pipe_ep_id(pipe);
+		}
+		nni_pipe_rele(pipe);
+	}
+	return (l);
 }
 
 int

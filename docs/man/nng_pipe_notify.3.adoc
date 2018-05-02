@@ -1,0 +1,71 @@
+= nng_pipe_notify(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_pipe_notify - register pipe notification callback
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef enum {
+        NNG_PIPE_ADD,
+        NNG_PIPE_REM,
+} nng_pipe_action;
+
+typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_action, void *);
+
+int nng_pipe_notify(nng_socket s, nng_pipe_cb cb, void *arg);
+----
+
+== DESCRIPTION
+
+The `nng_pipe_notify()` function registers the callback function _cb_
+to be called whenever a <<nng_pipe.5#,pipe>> is added to or removed from the
+socket _s_.
+
+The function _cb_ will be called with the action `NNG_PIPE_ADD` just before
+a pipe is added to the socket (as a result of a connection being established).
+The final argument passed will be the argument _arg_ that was specified when
+the function was registered.
+
+The function _cb_ will also be called with the action `NNG_PIPE_REM` when
+the pipe is being removed from the socket for any reason.
+This will also use the same argument _arg_.
+
+NOTE: Only one callback can be registered for a given socket. 
+Subsequent calls to `nng_pipe_notify()` on the same socket will overwrite
+any prior registration.
+
+TIP: The callback _cb_ may reject a pipe for any reason by simply closing
+it using `<<nng_pipe_close.3#,nng_pipe_close()>>`.
+This might be done, for example, if the remote peer is not authorized to
+access this session, based on values determined with the aid of
+`<<nng_pipe_getopt.3#,nng_pipe_getopt()>>`.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_ECLOSED`:: The socket _s_ does not refer to an open socket.
+
+== SEE ALSO
+
+<<nng_pipe_close.3#,nng_pipe_close(3)>>,
+<<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,
+<<nng_pipe.5#,nng_pipe(5)>>,
+<<nng_socket.5#,nng_socket(5)>>,
+<<nng.7#,nng(7)>>

@@ -217,6 +217,18 @@ NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
 NNG_DECL int nng_getopt_uint64(nng_socket, const char *, uint64_t *);
 NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **);
 
+// Arguably the pipe callback functions could be handled as an option,
+// but with the need to specify an argument, we find it best to unify
+// this as a separate function to pass in the argument and the callback.
+// Only one callback can be set on a given socket, and there is no way
+// to retrieve the old value.
+typedef enum {
+	NNG_PIPE_ADD,
+	NNG_PIPE_REM,
+} nng_pipe_action;
+typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_action, void *);
+NNG_DECL int nng_pipe_notify(nng_socket, nng_pipe_cb, void *);
+
 // nng_getopt_string is special -- it allocates a string to hold the
 // resulting string, which should be freed with nng_strfree when it is
 // no logner needed.
@@ -600,6 +612,9 @@ NNG_DECL int nng_pipe_getopt_ptr(nng_pipe, const char *, void **);
 NNG_DECL int nng_pipe_getopt_string(nng_pipe, const char *, char **);
 NNG_DECL int nng_pipe_close(nng_pipe);
 NNG_DECL int nng_pipe_id(nng_pipe);
+NNG_DECL nng_socket nng_pipe_socket(nng_pipe);
+NNG_DECL nng_dialer nng_pipe_dialer(nng_pipe);
+NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 
 // Flags.
 enum nng_flag_enum {
@@ -696,7 +711,7 @@ enum nng_flag_enum {
 // state current). This is a boolean.
 #define NNG_OPT_TCP_KEEPALIVE "tcp-keepalive"
 
-// XXX: TBD: priorities, ipv4only, TCP options
+// XXX: TBD: priorities, ipv4only
 
 // Statistics. These are for informational purposes only, and subject
 // to change without notice. The API for accessing these is stable,

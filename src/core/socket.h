@@ -41,7 +41,7 @@ extern uint32_t nni_sock_id(nni_sock *);
 // a pipe could wind up orphaned.
 extern int  nni_sock_pipe_add(nni_sock *, nni_pipe *);
 extern void nni_sock_pipe_remove(nni_sock *, nni_pipe *);
-extern int  nni_sock_pipe_start(nni_sock *, nni_pipe *p);
+extern int  nni_sock_pipe_start(nni_sock *, nni_pipe *);
 
 extern int  nni_sock_ep_add(nni_sock *, nni_ep *);
 extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
@@ -63,6 +63,13 @@ extern void nni_sock_reconntimes(nni_sock *, nni_duration *, nni_duration *);
 // nni_sock_flags returns the socket flags, used to indicate whether read
 // and or write are appropriate for the protocol.
 extern uint32_t nni_sock_flags(nni_sock *);
+
+// This function is used by the public API to set callbacks.  It is
+// one of the only cases (the only?) where the socket core understands
+// the public data types.  (Other solutions might exist, but they require
+// keeping extra state to support conversion between public and internal
+// types.)
+extern void nni_sock_set_pipe_cb(nni_sock *sock, nng_pipe_cb, void *);
 
 // nni_ctx_open is used to open/create a new context structure.
 // Contexts are not supported by most protocols, but for those that do,

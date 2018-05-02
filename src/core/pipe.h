@@ -79,6 +79,20 @@ extern void nni_pipe_ep_list_init(nni_list *);
 // pipe, which must be released by the caller when it is done.
 extern int nni_pipe_find(nni_pipe **, uint32_t);
 
+// nni_pipe_sock_id returns the socket id for the pipe (used by public API).
+extern uint32_t nni_pipe_sock_id(nni_pipe *);
+
+// nni_pipe_ep_id returns the endpoint id for the pipe.
+extern uint32_t nni_pipe_ep_id(nni_pipe *);
+
+// nni_pipe_ep_mode returns the endpoint mode for the pipe.
+extern int nni_pipe_ep_mode(nni_pipe *);
+
+// nni_pipe_closed returns true if nni_pipe_close was called.
+// (This is used by the socket to determine if user closed the pipe
+// during callback.)
+extern bool nni_pipe_closed(nni_pipe *);
+
 // nni_pipe_rele releases the hold on the pipe placed by nni_pipe_find.
 extern void nni_pipe_rele(nni_pipe *);
 
