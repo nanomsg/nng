@@ -26,10 +26,10 @@ nng_msg *nng_aio_get_msg(nng_aio *aio);
 
 The `nng_aio_get_msg()` function gets any message stored in _aio_ as
 either a result of a successful receive
-(see <<nng_recv_aio.3#,`nng_recv_aio()`>>)
-or that was previously stored with <<nng_aio_set_msg.3#,`nng_aio_set_msg()`>>.
+(see `<<nng_recv_aio.3#,nng_recv_aio()>>`)
+or that was previously stored with `<<nng_aio_set_msg.3#,nng_aio_set_msg()>>`.
 
-IMPORTANT: The `nng_aio` must not have an operation in progress.
+IMPORTANT: The `<<nng_aio.5#,nng_aio>>` must not have an operation in progress.
 
 == RETURN VALUES
 

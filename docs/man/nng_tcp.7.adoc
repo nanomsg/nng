@@ -74,10 +74,10 @@ The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 
 === Socket Address
 
-When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
+When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
 the actual structure is either of type
-<<nng_sockaddr_in.5#,`nng_sockaddr_in`>> (for IPv4) or
-<<nng_sockaddr_in6.5#,`nng_sockaddr_in6`>> (for IPv6).
+`<<nng_sockaddr_in.5#,nng_sockaddr_in>>` (for IPv4) or
+`<<nng_sockaddr_in6.5#,nng_sockaddr_in6>>` (for IPv6).
 
 === Transport Options
 

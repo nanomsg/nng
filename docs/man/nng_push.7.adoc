@@ -34,7 +34,7 @@ This property makes this pattern useful in ((load-balancing)) scenarios.
 
 === Socket Operations
 
-The <<nng_push_open.3#,`nng_push0_open()`>> call creates a pusher socket.
+The `<<nng_push_open.3#,nng_push0_open()>>` call creates a pusher socket.
 This socket may be used to send messages, but is unable to receive them.
 Attempts to receive messages will result in `NNG_ENOTSUP`.
 

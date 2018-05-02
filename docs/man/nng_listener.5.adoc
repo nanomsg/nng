@@ -26,21 +26,21 @@ typedef struct nng_listener_s nng_listener;
 
 (((listener)))
 An `nng_listener` is a handle to a "`listener`" object, which is responsible for
-creating <<nng_pipe.5#,`nng_pipe`>> objects by accepting incoming connections.
-A given listener object may create many pipes at the same time, much like an HTTP
-server can have many connections to multiple clients simultaneously.
+creating `<<nng_pipe.5#,nng_pipe>>` objects by accepting incoming connections.
+A given listener object may create many pipes at the same time, much like an
+HTTP server can have many connections to multiple clients simultaneously.
 
 Listener objects are created by the
-<<nng_listener_create.3#,`nng_listener_create()`>>
-or <<nng_listen.3#,`nng_listen()`>> functions, and are always "`owned`"
-by a single <<nng_socket.5#,`nng_socket`>>.
+`<<nng_listener_create.3#,nng_listener_create()>>`
+or `<<nng_listen.3#,nng_listen()>>` functions, and are always "`owned`"
+by a single `<<nng_socket.5#,nng_socket>>`.
 
 IMPORTANT: The `nng_listener` structure is always passed by value (both
 for input parameters and return values), and should be treated opaquely.
 Passing structures this way ensures gives the compiler a chance to perform
 accurate type checks in functions passing values of this type.
 
-TIP: A given <<nng_socket.5#,`nng_socket`>> may have multiple listener
+TIP: A given `<<nng_socket.5#,nng_socket>>` may have multiple listener
 objects, multiple <<nng_dialer.5#,dialer>> objects, or even some
 of both.
 
@@ -52,7 +52,7 @@ This orthogonality can lead to innovative solutions to otherwise
 challenging communications problems.
 
 Listener objects may be destroyed by the
-<<nng_listener_close.3#,`nng_listener_close()`>> function.
+`<<nng_listener_close.3#,nng_listener_close()>>` function.
 They are also closed when their "`owning`" socket is closed.
 
 [[NNG_LISTENER_INITIALIZER]]

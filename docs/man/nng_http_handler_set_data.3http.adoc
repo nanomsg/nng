@@ -29,7 +29,7 @@ void *nng_http_handler_get_data(nng_http_handler *handler, void *data,
 The `nng_http_handler_set_data()` function is used to set an additional
 _data_ for the _handler_.
 The stored _data_ can be retrieved later in the handler function using
-<<nng_http_handler_get_data.3http#,`nng_http_handler_get_data()`>>.
+`<<nng_http_handler_get_data.3http#,nng_http_handler_get_data()>>`.
 
 Additionally, when the handler is deallocated, if _dtor_ is not `NULL`,
 then it will be called with _data_ as its argument.

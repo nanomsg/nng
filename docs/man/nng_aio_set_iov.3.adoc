@@ -27,7 +27,7 @@ int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
 The `nng_aio_set_iov()` function sets a ((scatter/gather)) vector _iov_ on the
 handle _aio_. 
 
-The _iov_ is a pointer to an array of _niov_ <<nng_iov.5#,`nng_iov`>>
+The _iov_ is a pointer to an array of _niov_ `<<nng_iov.5#,nng_iov>>`
 structures, which have the following definition:
 
 [source, c]

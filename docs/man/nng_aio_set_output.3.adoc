@@ -39,7 +39,7 @@ NOTE:  Note that attempts to set results with an _index_ greater than
 three (3) will be ignored.
 
 An output result set with this function may be retrieved later with
-the <<nng_aio_get_output.3#,`nng_aio_get_output()`>> function.
+the `<<nng_aio_get_output.3#,nng_aio_get_output()>>` function.
 
 == RETURN VALUES
 

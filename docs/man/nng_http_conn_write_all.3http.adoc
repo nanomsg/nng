@@ -29,37 +29,38 @@ The `nng_http_conn_write_all()` function starts an asynchronous write to the
 HTTP connection _conn_, into the scatter/gather vector located in the
 asynchronous I/O structure _aio_.
 
-NOTE: The <<nng_aio_set_iov.3#,`nng_aio_set_iov()`>> function must have been
+NOTE: The `<<nng_aio_set_iov.3#,nng_aio_set_iov()>>` function must have been
 called first, to set the scatter/gather vector for _aio_.
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the
-final result may be obtained via <<nng_aio_result.3#,`nng_aio_result()`>>.
+final result may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
 That result will either be zero or an error code.
 
 The I/O operation completes only when the entire amount of data
-requested has been written, or an error has occurred. If the operation
-completes successfully, then the entire requested data has been written.
+requested has been written, or an error has occurred.
+If the operation completes successfully, then the entire requested data has
+been written.
 
 It is still possible for a partial write to complete in the event of an error.
 The actual number of bytes written can be determined with
-<<nng_aio_count.3#,`nng_aio_count()`>>.
+`<<nng_aio_count.3#,nng_aio_count()>>`.
 
 TIP: The main purpose for this function is to faciliate writing HTTP
 body content.
 
 TIP: Usually an HTTP request or response will have been written immediately
-prior to this with <<nng_http_conn_write_req.3http#,`http_conn_write_req()`>> or
-<<nng_http_conn_write_res.3http#,`http_conn_write_res()`>>.
+prior to this with `<<nng_http_conn_write_req.3http#,http_conn_write_req()>>` or
+`<<nng_http_conn_write_res.3http#,http_conn_write_res()>>`.
 In that case the request or response should have also contained
 an `Content-Length` header, and possibly a `Content-Type` header.
 
 TIP: An easier solution to sending HTTP content data, is to include the
 conten with the request or reply using a function like
-<<nng_http_req_copy_data.3http#,`nng_http_req_copy_data()`>>.
+`<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>`.
 In that case, the body data will be written automatically by the 
-<<nng_http_conn_write_req.3http#,`http_conn_write_req()`>> or
-<<nng_http_conn_write_req.3http#,`http_conn_write_res()`>> function.
+`<<nng_http_conn_write_req.3http#,http_conn_write_req()>>` or
+`<<nng_http_conn_write_req.3http#,http_conn_write_res()>>` function.
 
 == RETURN VALUES
 

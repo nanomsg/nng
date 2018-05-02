@@ -30,12 +30,12 @@ content of the message _msg_.
 NOTE: The value returned by this is invalidated by a call to any of the
 functions that modify the message itself.
 Such functions are
-<<nng_msg_free.3#,`nng_msg_free()`>>,
-<<nng_msg_realloc.3#,`nng_msg_realloc()`>>,
-any of the <<nng_msg_trim.3#,`nng_msg_trim()`>>, 
-<<nng_msg_chop.3#,`nng_msg_chop()`>>,
-<<nng_msg_append.3#,`nng_msg_append()`>>, 
-or <<nng_msg_insert.3#,`nng_msg_insert()`>> variants.
+`<<nng_msg_free.3#,nng_msg_free()>>`,
+`<<nng_msg_realloc.3#,nng_msg_realloc()>>`,
+any of the `<<nng_msg_trim.3#,nng_msg_trim()>>`,
+`<<nng_msg_chop.3#,nng_msg_chop()>>`,
+`<<nng_msg_append.3#,nng_msg_append()>>`, 
+or `<<nng_msg_insert.3#,nng_msg_insert()>>` variants.
 
 == RETURN VALUES
 

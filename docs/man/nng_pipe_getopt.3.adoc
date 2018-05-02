@@ -51,8 +51,8 @@ documented with the transports andp protocols themselves.
 NOTE: All "`options`" on a pipe are read-only values, and intended to
 facilitate understanding the identity of an associated peer.
 Modification of options must be done on the listener or dialer using either
-<<nng_listener_setopt.3#,`nng_listener_setopt()`>> or
-<<nng_dialer_getopt.3#,`nng_dialer_getopt()`>>
+`<<nng_listener_setopt.3#,nng_listener_setopt()>>` or
+`<<nng_dialer_getopt.3#,nng_dialer_setopt()>>`.
 
 Any option that is set on a dialer or listener will normally be retrievable
 from pipes created by that dialer or listener.
@@ -98,7 +98,7 @@ The value will be stored at _ivalp_.  For booleans the value will be eiher 0
 ==== `nng_pipe_getopt_ms()`
 
 This function is used to retrieve time durations
-(<<nng_duration.5#,`nng_duration`>>) in milliseconds, which are stored in
+(`<<nng_duration.5#,nng_duration>>`) in milliseconds, which are stored in
 _durp_.
 
 ==== `nng_pipe_getopt_ptr()`
@@ -114,15 +114,15 @@ typically for buffer sizes, message maximum sizes, and similar options.
 
 ==== `nng_pipe_getopt_sockaddr()`
 
-This function is used to retrieve an <<nng_sockaddr.5#,`nng_sockaddr`>>
+This function is used to retrieve an `<<nng_sockaddr.5#,nng_sockaddr>>`
 into _sap_.
 
 ==== `nng_pipe_getopt_string()`
 
 This function is used to retrieve a string into _strp_.
-This string is created from the source using <<nng_strdup.3#,`nng_strdup()`>>
+This string is created from the source using `<<nng_strdup.3#,nng_strdup()>>`
 and consequently must be freed by the caller using
-<<nng_strfree.3#,`nng_strfree()`>> when it is no longer needed.
+`<<nng_strfree.3#,nng_strfree()>>` when it is no longer needed.
 
 ==== `nng_pipe_getopt_uint64()`
 

@@ -28,7 +28,7 @@ The `nng_recvmsg()` receives a message on socket _s_, storing the
 received message at the location pointed to by _msgp_.
 
 TIP: Using this function gives access to the message structure, and thus may
-offer more functionality than the simpler <<nng_recv.3#,`nng_recv()`>> function.
+offer more functionality than the simpler `<<nng_recv.3#,nng_recv()>>` function.
 
 The _flags_ may contain the following value:
 

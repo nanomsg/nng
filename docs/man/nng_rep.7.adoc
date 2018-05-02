@@ -38,7 +38,7 @@ The _rep_ protocol is the replier side, and the
 
 === Socket Operations
 
-The <<nng_rep_open.3#,`nng_rep0_open()`>> functions create a replier socket.
+The `<<nng_rep_open.3#,nng_rep0_open()>>` functions create a replier socket.
 This socket may be used to receive messages (requests), and then to send
 replies.
 
@@ -55,7 +55,7 @@ Any additional concurrent receive operations will result in `NNG_ESTATE`.
 === Context Operations
 
 This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
-use cases using <<nng_ctx_open.3#,`nng_ctx_open()`>>.
+use cases using `<<nng_ctx_open.3#,nng_ctx_open()>>`.
 
 Each context may have at most one outstanding request, and operates
 independently from the others.

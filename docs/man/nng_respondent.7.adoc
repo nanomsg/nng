@@ -39,7 +39,7 @@ The _respondent_ protocol is the respondent side, and the
 
 === Socket Operations
 
-The <<nng_respondent_open.3#,`nng_respondent0_open()`>> functions create a
+The `<<nng_respondent_open.3#,nng_respondent0_open()>>` functions create a
 respondent socket.
 This socket may be used to receive messages, and then to send replies.
 A reply can only be sent after receiving a survey, and generally the
@@ -47,13 +47,13 @@ reply will be sent to surveyor from whom the last survey was received.
 
 Respondents may discard a survey by simply not replying to it. 
 
-Raw mode sockets (set with <<nng_options.5#NNG_OPT_RAW,`NNG_OPT_RAW`>>)
+Raw mode sockets (set with `<<nng_options.5#NNG_OPT_RAW,NNG_OPT_RAW>>`)
 ignore all these restrictions.
 
 === Context Operations
 
 This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
-use cases using <<nng_ctx_open.3#,`nng_ctx_open()`>>.
+use cases using `<<nng_ctx_open.3#,nng_ctx_open()>>`.
 
 Incoming surveys will be routed to and received by only one context.
 Additional surveys may be received by other contexts in parallel.

@@ -27,7 +27,7 @@ void nng_aio_finish(nng_aio *aio, int err);
 The `nng_aio_finish()` function marks operation associated with _aio_ as
 complete, with the status _err_.
 This will be the result returned by
-<<nng_aio_result.3#,`nng_aio_result()`>>.
+`<<nng_aio_result.3#,nng_aio_result()>>`.
 
 This function causes the callback associated with the _aio_ to called.
 

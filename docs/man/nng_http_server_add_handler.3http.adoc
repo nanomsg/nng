@@ -35,7 +35,7 @@ If a handler is added to a server, and the server is subsequently
 deallocated, the handler and any of its resources will also be deallocated.
 
 Handlers that are added to a server may be subsequently removed using the
-<<nng_http_server_del_handler.3http#,`nng_http_server_del_handler()`>> function.
+`<<nng_http_server_del_handler.3http#,nng_http_server_del_handler()>>` function.
 
 == RETURN VALUES
 

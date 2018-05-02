@@ -53,9 +53,9 @@ that URI.
 
 === Socket Address
 
-When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
+When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
 the actual structure is of type
-<<nng_sockaddr_inproc.5#,`nng_sockaddr_inproc`>>.
+`<<nng_sockaddr_inproc.5#,nng_sockaddr_inproc>>`.
 
 === Transport Options
 

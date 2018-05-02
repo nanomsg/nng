@@ -27,7 +27,7 @@ int nng_close(nng_socket s);
 The `nng_close()` function closes the supplied socket, _s_.
 Messages that have been submitted for sending may be flushed or delivered,
 depending upon the transport and the setting of the
-<<nng_options.5#NNG_OPT_LINGER,`NNG_OPT_LINGER`>> option.
+`<<nng_options.5#NNG_OPT_LINGER,NNG_OPT_LINGER>>` option.
 
 Further attempts to use the socket after this call returns will result
 in `NNG_ECLOSED`.

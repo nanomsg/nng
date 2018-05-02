@@ -41,7 +41,7 @@ completing its callback function.
 
 TIP: When multiple asynchronous I/O handles are in use and need to be
 shut down, it is safest to stop all of them, before deallocating any of
-this with <<nng_aio_free.3#,`nng_aio_free()`>>, particularly if the callbacks
+this with `<<nng_aio_free.3#,nng_aio_free()>>`, particularly if the callbacks
 might attempt to reschedule additional operations.
 
 == RETURN VALUES

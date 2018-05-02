@@ -80,7 +80,7 @@ ifdef::backend-pdf[]
 // Add links for the following as they are written.
 [.hdlist,width=90%, grid=rows,cols="1,2", align="center"]
 |===
-|`<<nn_socket.3compat#,nn_socket()`>>|create socket
+|`<<nn_socket.3compat#,nn_socket()>>`|create socket
 |`<<nn_getsockopt.3compat#,nn_getsockopt()>>`|get socket option
 |`<<nn_setsockopt.3compat#,nn_setsockopt()>>`|set socket option
 |`<<nn_bind.3compat#,nn_bind()>>`|accept connections from remote peers

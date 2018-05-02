@@ -31,12 +31,12 @@ the HTTP request _req_ to the connection _conn_.
 The entire request is sent,
 including headers, and if present, the request body data.
 (The request body can be set with
-<<nng_http_req_set_data.3http#,`nng_http_req_set_data()`>> or
-<<nng_http_req_copy_data.3http#,`nng_http_req_copy_data()`>>.)
+`<<nng_http_req_set_data.3http#,nng_http_req_set_data()>>` or
+`<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>`.)
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
-may be obtained via <<nng_aio_result.3#,`nng_aio_result()`>>.
+may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
 That result willeither be zero or an error code.
 
 == RETURN VALUES

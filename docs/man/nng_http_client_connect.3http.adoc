@@ -31,12 +31,12 @@ _client_ was configured with.
 
 The result of the operation will be stored in the _aio_ when the operation
 is complete, and will be obtainable via
-<<nng_aio_result.3#,`nng_aio_result()`>>.
+`<<nng_aio_result.3#,nng_aio_result()>>`.
 
 On success, a pointer to the underlying HTTP client (type `nng_http_conn *`)
 will be stored in the first output result of the _aio_, and can be
 obtained by
-<<nng_aio_get_output.3#,`nng_aio_get_output()`>> with an _index_ of zero (0).
+`<<nng_aio_get_output.3#,nng_aio_get_output()>>` with an _index_ of zero (0).
 
 == RETURN VALUES
 

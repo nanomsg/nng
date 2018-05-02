@@ -42,7 +42,7 @@ programs that use simple sequential execution, using functions in the
 _NNG_ suite that would otherwise normally "`block`".
 
 When the thread is no longer needed, the
-<<nng_thread_destroy.3supp#,`nng_thread_destroy()`>>
+`<<nng_thread_destroy.3supp#,nng_thread_destroy()>>`
 function should be used to reap it.
 (This function will block waiting for _func_ to return.)
 
@@ -61,7 +61,7 @@ TIP: The system may impose limits on the number of threads that can be
 created.
 Typically applications should not create more than a few dozen of these.
 If greater concurrency or scalability is needed, consider instead using
-an asynchronous model using <<nng_aio.5#,`nng_aio`>> structures.
+an asynchronous model using `<<nng_aio.5#,nng_aio>>` structures.
 
 TIP: Threads can be synchronized using
 <<nng_mtx_alloc.3supp#,mutexes>> and

@@ -16,11 +16,11 @@ nng_aio_cancel - cancel asynchronous I/O operation
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 
 void nng_aio_cancel(nng_aio *aio);
------------
+----
 
 == DESCRIPTION
 
@@ -28,7 +28,7 @@ The `nng_aio_cancel()` function aborts an operation previously started
 with the handle _aio_.
 If the operation is aborted, then the callback
 for the handle will be called, and the function
-<<nng_aio_result.3#,`nng_aio_result()`>> will return the error `NNG_ECANCELED`.
+`<<nng_aio_result.3#,nng_aio_result()>>` will return the error `NNG_ECANCELED`.
 
 This function does not wait for the operation to be fully aborted, but
 returns immediately.
@@ -38,7 +38,7 @@ finished, or no operation has been started yet), then this function
 has no effect.
 
 NOTE: This function is the same as calling
-<<nng_aio_abort.3#,`nng_aio_abort()`>> with the error `NNG_ECANCELED`.
+`<<nng_aio_abort.3#,nng_aio_abort()>>` with the error `NNG_ECANCELED`.
 
 == RETURN VALUES
 

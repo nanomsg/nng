@@ -92,7 +92,7 @@ guarantees by performing their own retry and validation schemes.)
 Each socket can have zero, one, or many "endpoints", which are either
 _listeners_ or _dialers_.
 (A given socket may freely choose whether it uses listeners, dialers, or both.)
-These "endpoints" provide access to underlying transports, such as TCP, etc.
+These "`endpoints`" provide access to underlying transports, such as TCP, etc.
 
 Each endpoint is associated with a URL, which is a service address.
 For dialers, this will be the service address that will be contacted, whereas
@@ -130,13 +130,13 @@ to and from the socket with no extra semantic handling.
 This is possible using "`raw`" mode sockets.
 
 Raw mode sockets are generally constructed with a different function,
-such as <<nng_req_open.3#,`nng_req0_open_raw()`>>.
+such as `<<nng_req_open.3#,nng_req0_open_raw()>>`.
 Using these sockets, the application can simply send and receive messages,
 and is responsible for supplying any additional socket semantics.
 Typically this means that the application will need to inspect message
 headers on incoming messages, and supply them on outgoing messages.
 
-TIP: The <<nng_device.3#,`nng_device()`>> function only works with raw mode
+TIP: The `<<nng_device.3#,nng_device()>>` function only works with raw mode
 sockets, but as it only forwards the messages, no additional application
 processing is needed.
 

@@ -25,7 +25,7 @@ int nng_listener_create(nng_listener *listenerp, nng_socket s, const char *url);
 == DESCRIPTION
 
 The `nng_listener_create()` function creates a newly initialized
-<<nng_listener.5#,`nng_listener`>> object, associated with socket _s_,
+`<<nng_listener.5#,nng_listener>>` object, associated with socket _s_,
 and configured to listen at the address specified by _url_,
 and stores a pointer to at the location referenced by _listenerp_.
 
@@ -43,14 +43,14 @@ but might also have associated listeners.
 It may even have some of each at the same time!
 
 The listener is not started, but may be further configured with
-the <<nng_listener_setopt.3#,`nng_listener_setopt()`>> family of
+the `<<nng_listener_setopt.3#,nng_listener_setopt()>>` family of
 functions.
 
 Once it is fully configured, the listener may be started using the
-<<nng_listener_start.3#,`nng_listener_start()`>> function.
+`<<nng_listener_start.3#,nng_listener_start()>>` function.
 
 TIP: If no specific configuration is required, consider using the
-simpler <<nng_listen.3#,`nng_listen()`>> function instead.
+simpler `<<nng_listen.3#,nng_listen()>>` function instead.
 
 == RETURN VALUES
 

@@ -47,22 +47,22 @@ nng_options - socket, dialer, listener, and pipe options
 This page documents the various standard options that can be set or
 retrieved on objects in the _nng_ library.
 
-Sockets (<<nng_socket.5#,`nng_socket`>> objects) use the functions
-<<nng_getopt.3#,`nng_getopt()`>>
-and <<nng_setopt.3#,`nng_setopt()`>> to set and retrieve option values.
+Sockets (`<<nng_socket.5#,nng_socket>>` objects) use the functions
+`<<nng_getopt.3#,nng_getopt()>>`
+and `<<nng_setopt.3#,nng_setopt()>>` to set and retrieve option values.
 
-Dialers (<<nng_dialer.5#,`nng_dialer`>> objects) use the functions
-<<nng_dialer_getopt.3#,`nng_dialer_getopt()`>> and
-<<nng_dialer_setopt.3#,`nng_dialer_setopt()`>> to set and retrieve option
+Dialers (`<<nng_dialer.5#,nng_dialer>>` objects) use the functions
+`<<nng_dialer_getopt.3#,nng_dialer_getopt()>>` and
+`<<nng_dialer_setopt.3#,nng_dialer_setopt()>>` to set and retrieve option
 values.
 
-Listeners (<<nng_listener.5#,`nng_listener`>> objects) use the functions
-<<nng_listener_getopt.3#,`nng_listener_getopt()`>>
-and <<nng_listener_setopt.3#,`nng_listener_setopt()`>> to set and
+Listeners (`<<nng_listener.5#,nng_listener>>` objects) use the functions
+`<<nng_listener_getopt.3#,nng_listener_getopt()>>`
+and `<<nng_listener_setopt.3#,nng_listener_setopt()>>` to set and
 retrieve option values.
 
-Pipes (<<nng_pipe.5#,`nng_pipe`>> objects) can only retrieve option values using
-the <<nng_pipe_getopt.3#,`nng_pipe_getopt()`>> function.
+Pipes (`<<nng_pipe.5#,nng_pipe>>` objects) can only retrieve option values using
+the `<<nng_pipe_getopt.3#,nng_pipe_getopt()>>` function.
 
 In addition to the options listed here, transports and protocols will generally
 have some of their own options, which will be documented with the transport
@@ -159,14 +159,14 @@ be readable.
 IMPORTANT: Appplications should never attempt to read or write to the
 returned file descriptor.
 Furthermore, applications should not attempt to use the actual socket (of
-type <<nng_socket.5#,`nng_socket`>>) with polling functions,
+type `<<nng_socket.5#,nng_socket>>`) with polling functions,
 since it is merely an internal
 identifier and will not necessarily referency any operting system object or
 handle.
 
 TIP: While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
-objects instead.  See <<nng_aio_alloc.3#,`nng_aio_alloc()`>>.
+objects instead.  See `<<nng_aio_alloc.3#,nng_aio_alloc()>>`.
 
 [[NNG_OPT_RECVMAXSZ]]
 ((`NNG_OPT_RECVMAXSZ`))::
@@ -235,14 +235,14 @@ the descriptor will *not* be readable.
 IMPORTANT: Appplications should never attempt to read or write to the
 returned file descriptor.
 Furthermore, applications should not attempt to use the actual socket (of
-type <<nng_socket.5#,`nng_socket`>>) with polling functions,
+type `<<nng_socket.5#,nng_socket>>`) with polling functions,
 since it is merely an internal
 identifier and will not necessarily referency any operting system object or
 handle.
 
 TIP: While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
-objects instead.  See <<nng_aio_alloc.3#,`nng_aio_alloc`()>>.
+objects instead.  See `<<nng_aio_alloc.3#,nng_aio_alloc()>>`.
 
 [[NNG_OPT_SENDTIMEO]]
 ((`NNG_OPT_SENDTIMEO`))::
@@ -268,7 +268,7 @@ The string must fit within 64-bytes, including the terminating
 (`int`)
 (((time-to-live)))
 This is the maximum number of "`hops`" a message may traverse (see
-<<nng_device.3#,`nng_device()`>>).
+`<<nng_device.3#,nng_device()>>`).
 The intention here is to prevent ((forwarding loops)) in device chains.
 When this is supported, it can have a value between 1 and 255, inclusive.
 
@@ -317,7 +317,7 @@ the socket.
 
 [[NNG_OPT_TCP_NODELAY]]
 ((`NNG_OPT_TCP_NODELAY`))::
-(`bool``)
+(`bool`)
 This option is used to disable (or enable) the use of Nagle's algorithm
 for TCP connections.
 When `true` (the default), messages are sent immediately by the underlying
@@ -332,7 +332,7 @@ See the transport documentation for each transport for details.
 
 [[NNG_OPT_TCP_KEEPALIVE]]
 ((`NNG_OPT_TCP_KEEPALIVE`))::
-(`bool``)
+(`bool`)
 This option is used to enable the sending of keep-alive messages on
 the underlying TCP stream.
 This option is `false` by default.

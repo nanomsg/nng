@@ -37,7 +37,7 @@ If no such header already exists, then one is created with the value _val_.
 TIP: The HTTP specification requires that duplicate headers be treated
 identically to a single header with multiple comma-delimited values.
 
-TIP: See <<nng_http_req_set_header.3http#,`nng_http_req_set_header()`>> if
+TIP: See `<<nng_http_req_set_header.3http#,nng_http_req_set_header()>>` if
 replacement of an existing header rather than appending to it is desired.
 
 The value of _key_ is case insensitive, and should not include the final

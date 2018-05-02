@@ -38,7 +38,7 @@ http://nanomsg.org/rfcs/sp-tls-v1.html[TLS Mapping for Scalability Protocols].
 
 Depending upon how the library was built, it may be necessary to
 register the transport by calling
-<<nng_tls_register.3#,`nng_tls_register()`>>.
+`<<nng_tls_register.3#,nng_tls_register()>>`.
 
 === Availability
 
@@ -100,10 +100,10 @@ The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 
 === Socket Address
 
-When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
+When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
 the actual structure is either of type
-<<nng_sockaddr_in.5#,`nng_sockaddr_in`>> (for IPv4) or
-<<nng_sockaddr_in6.5#,`nng_sockaddr_in6`>> (for IPv6).
+`<<nng_sockaddr_in.5#,nng_sockaddr_in>>` (for IPv4) or
+`<<nng_sockaddr_in6.5#,nng_sockaddr_in6>>` (for IPv6).
 
 === Transport Options
 
@@ -138,7 +138,7 @@ TIP: Use this option when advanced TLS configuration is required.
 
 This is a write-only option used to load certificates associated
 associated private key from a file.
-See <<nng_tls_config_ca_file.3tls#,`nng_tls_config_ca_file()`>> for more
+See `<<nng_tls_config_ca_file.3tls#,nng_tls_config_ca_file()>>` for more
 information.
 
 ((`NNG_OPT_TLS_CERT_KEY_FILE`))::
@@ -147,7 +147,7 @@ This is a write-only option used to load the local certificate and
 associated private key from a file. The private key used must be
 unencrypted. (Use the `NNG_OPT_TLS_CONFIG` option to access the underlying
 TLS configuration if more advanced configuration is needed.)
-See <<nng_tls_config_own_cert.3tls#,`nng_tls_config_own_cert()`>> for more
+See `<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>` for more
 information.
 
 ((`NNG_OPT_TLS_AUTH_MODE`))::
@@ -155,7 +155,7 @@ information.
 This is a write-only option used to configure the authentication mode
 used.  It can take an integer with value `NNG_TLS_AUTH_MODE_NONE`,
 `NNG_TLS_AUTH_MODE_REQUIRED`, or `NNG_TLS_AUTH_MODE_OPTIONAL`.
-See <<nng_tls_config_auth_mode.3tls#,`nng_tls_config_auth_mode()`>> for
+See `<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode()>>` for
 more details.
 
 ((`NNG_OPT_TLS_VERIFIED`))::

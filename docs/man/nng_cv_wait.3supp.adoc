@@ -26,8 +26,8 @@ void nng_cv_wait(nng_cv *cv);
 == DESCRIPTION
 
 The `nng_cv_wait()` waits for the condition variable _cv_ to be signaled
-by another thread calling either <<nng_cv_wake.3supp#,`nng_cv_wake()`>> or
-<<nng_cv_wake1.3supp#,`nng_cv_wake1()`>>.
+by another thread calling either `<<nng_cv_wake.3supp#,nng_cv_wake()>>` or
+`<<nng_cv_wake1.3supp#,nng_cv_wake1()>>`.
 
 The caller must have have ownership of the mutex that was used when
 _cv_ was allocated.

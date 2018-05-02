@@ -31,7 +31,7 @@ _res_ and the _key_ to the _val_.
 The _key_ and _val_ are copied.
 Any previous header with the same _key_ is replaced.
 
-TIP: See <<nng_http_res_add_header.3http#,`nng_http_res_add_header()`>> to
+TIP: See `<<nng_http_res_add_header.3http#,nng_http_res_add_header()>>` to
 add additional headers with the same _key_ without replacing them.
 
 The value of _key_ is case insensitive, and should not include the final

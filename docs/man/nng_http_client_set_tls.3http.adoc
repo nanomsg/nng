@@ -30,10 +30,10 @@ The `nng_http_client_set_tls()` sets the TLS configuration of _client_ to _cfg_.
 This change overwrites any previous TLS configuration.
 
 IMPORTANT: This also invalidates any previously obtained values from
-<<nng_http_client_get_tls.3http#,`nng_http_client_get_tls()`>>.
+`<<nng_http_client_get_tls.3http#,nng_http_client_get_tls()>>`.
 
 NOTE: Any connections established with
-<<nng_http_client_connect.3http#,`nng_http_client_connect()`>>
+`<<nng_http_client_connect.3http#,nng_http_client_connect()>>`
 will continue to use any TLS configuration that they were started with.
 
 == RETURN VALUES

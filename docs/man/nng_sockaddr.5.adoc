@@ -48,8 +48,8 @@ addresses, IPC paths, and so forth.
 ****
 The name `sockaddr` is based on it's similarity with POSIX `struct sockaddr`,
 but in the _nng_ library, these addreses are more closely affiliated with
-instances of <<nng_pipe.5#,`nng_pipe`>>
-than of <<nng_socket.5#,`nng_socket`>>.
+instances of `<<nng_pipe.5#,nng_pipe>>`
+than of `<<nng_socket.5#,nng_socket>>`.
 The naming confusion is unfortunate.
 ****
 

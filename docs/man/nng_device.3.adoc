@@ -34,15 +34,15 @@ reliability, and isolation.
 Only <<nng_options.5#NNG_OPT_RAW,raw>> mode sockets may be used with this
 function.
 These can be created using `_raw` forms of the various socket constructors,
-such as <<nng_req_open.3#,`nng_req0_open_raw()`>>.
+such as `<<nng_req_open.3#,nng_req0_open_raw()>>`.
 
 The `nng_device()` function does not return until one of the sockets
 is closed.
 
 === Reflectors
 
-One of the sockets may be passed the special value `-1` (cast to an,
-<<nng_socket.5#,`nng_socket`>> of course).
+One of the sockets may be passed an inititalize `-1` (cast to an,
+`<<nng_socket.5#,nng_socket>>` of course).
 If this is the case, then the other socket must be valid, and must be
 a protocol that is bidirectional and can peer with itself (such as
 <<nng_pair.7#,_pair_>> or
@@ -81,7 +81,7 @@ In these cases, the default limit (usually 8), ensures that messages will
 self-terminate when they have passed through too many forwarders,
 protecting the network from unlimited message amplification that can arise
 through misconfiguration.
-This is controlled via the <<nng_options.5#NNG_OPT_MAXTTL,`NNG_OPT_MAXTTL`>>
+This is controlled via the `<<nng_options.5#NNG_OPT_MAXTTL,NNG_OPT_MAXTTL>>`
 option.
 
 IMPORTANT: Not all protocols have support for guarding against forwarding loops,

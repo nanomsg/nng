@@ -34,8 +34,8 @@ TIP: Using the message-oriented functions in the <<nng.7#,_nng_>> API is
 a good way to reduce the likelihood of data copies and improve application
 performance.
 
-Messages are allocated using the <<nng_msg_alloc.3#,`nng_msg_alloc()`>>
-function, and are deallocated using the <<nng_msg_free.3#,`nng_msg_free`>>
+Messages are allocated using the `<<nng_msg_alloc.3#,nng_msg_alloc()>>`
+function, and are deallocated using the `<<nng_msg_free.3#,nng_msg_free()>>`
 function.
 
 In addition there are other functions used to access message contents,

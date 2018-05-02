@@ -28,11 +28,11 @@ The `nng_ctx_send()` sends a <<nng_msg.5#,message>> using the
 <<nng_ctx.5#,context>> _ctx_ asynchronously.
 
 The message to send must have previously been set on the _aio_
-using the <<nng_aio_set_msg.3#,`nng_aio_set_msg()`>> function.
+using the `<<nng_aio_set_msg.3#,nng_aio_set_msg()>>` function.
 The function assumes "`ownership`" of the message.
 
 If the message was successfully queued for delivery to the socket,
-then the _aio_ will be completed, and <<nng_aio_result.3#,`nng_aio_result()`>>
+then the _aio_ will be completed, and `<<nng_aio_result.3#,nng_aio_result()>>`
 will return zero.
 In this case the socket will dispose of the message when it is finished with it.
 
@@ -44,13 +44,13 @@ may still be buffered in the sending socket, buffered in the receiving
 socket, or in flight over physical media.
 
 If the operation fails for any reason (including cancellation or timeout),
-then the _aio_ callback will be executed and <<nng_aio_result.3#,`nng_aio_result()`>>
-will return a non-zero error status.
+then the _aio_ callback will be executed and
+`<<nng_aio_result.3#,nng_aio_result()>>` will return a non-zero error status.
 In this case, the callback has a responsibity to retrieve the message from
-the _aio_ with <<nng_aio_get_msg.3#,`nng_aio_get_msg()`>> and dispose of
+the _aio_ with `<<nng_aio_get_msg.3#,nng_aio_get_msg()>>` and dispose of
 it appropriately.
 (This may include retrying the send operation on the same or a different
-socket, or deallocating the message with <<nng_msg_free.3#,`nng_msg_free()`>>.)
+socket, or deallocating the message with `<<nng_msg_free.3#,nng_msg_free()>>`.)
 
 NOTE: The semantics of what sending a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
@@ -58,7 +58,7 @@ protocol, so examination of the protocol documentation is encouraged.
 TIP: Context send operations are asynchronous.
 If a synchronous operation is needed, one can be constructed by using a
 `NULL` callback on the _aio_ and then waiting for the operation using
-<<nng_aio_wait.3#,`nng_aio_wait()`>>.
+`<<nng_aio_wait.3#,nng_aio_wait()>>`.
 
 == RETURN VALUES
 

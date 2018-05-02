@@ -29,9 +29,9 @@ The `nng_recv_aio()` receives a <<nng_msg.5#,message>> using the
 
 When a message is successfully received by the socket, it is
 stored in the _aio_ by an internal call equivalent to
-<<nng_aio_set_msg.3#,`nng_aio_set_msg()`>>, then the completion
+`<<nng_aio_set_msg.3#,nng_aio_set_msg()>>`, then the completion
 callback on the _aio_ is executed.
-In this case, <<nng_aio_result.3#,`nng_aio_result()`>> will
+In this case, `<<nng_aio_result.3#,nng_aio_result()>>` will
 return zero.
 The callback function is responsible for retrieving the message
 and disposing of it appropriately.
@@ -42,13 +42,13 @@ case can lead to memory leaks.
 If for some reason the asynchronous receive cannot be completed
 successfully (including by being canceled or timing out), then
 the callback will still be executed,
-but <<nng_aio_result.3#,`nng_aio_result()`>> will be non-zero.
+but `<<nng_aio_result.3#,nng_aio_result()>>` will be non-zero.
 
 NOTE: The semantics of what receiving a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 (For example, with a <<nng_pub.7#,_pub_>> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
-<<nng_recv.3#,`nng_recv()`>> or a similar function.)
+`<<nng_recv.3#,nng_recv()>>` or a similar function.)
 Furthermore, some protocols may not support receiving (such as
 <<nng_pub.7#,_pub_>>) or may require other conditions.
 (For example, <<nng_req.7#,_req_>> sockets cannot normally receive data, which

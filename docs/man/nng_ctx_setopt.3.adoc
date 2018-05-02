@@ -67,7 +67,7 @@ The _ival_ is passed to the option.
 
 ==== `nng_ctx_setopt_ms()`
 This function is used to configure time durations (such as timeouts) using
-type <<nng_duration.5#,`nng_duration`>>.
+type `<<nng_duration.5#,nng_duration>>`.
 The duration _dur_ is an integer number of milliseconds.
 
 ==== `nng_ctx_setopt_size()`

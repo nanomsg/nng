@@ -34,7 +34,7 @@ typedef struct {
 == DESCRIPTION
 
 (((socket, address, ZeroTier)))
-An `nng_sockaddr_zt` is the flavor of <<nng_sockaddr.5#,`nng_sockaddr`>>
+An `nng_sockaddr_zt` is the flavor of `<<nng_sockaddr.5#,nng_sockaddr>>`
 used to represent ZeroTier addresses, including the
 (((port number, ZeroTier)))port number used by the
 <<nng_zerotier.7#,_zt_>> transport.

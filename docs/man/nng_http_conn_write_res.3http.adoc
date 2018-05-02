@@ -31,12 +31,12 @@ the HTTP response _res_ to the connection _conn_.
 The entire response is sent,
 including headers, and if present, the response body data.
 (The response body can be set with
-<<nng_http_res_set_data.3http#,`nng_http_res_set_data()`>> or
-<<nng_http_res_copy_data.3http#,`nng_http_res_copy_data()`>>.)
+`<<nng_http_res_set_data.3http#,nng_http_res_set_data()>>` or
+`<<nng_http_res_copy_data.3http#,nng_http_res_copy_data()>>`.)
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
-may be obtained via <<nng_aio_result.3#,`nng_aio_result()`>>.
+may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
 That result will either be zero or an error code.
 
 === Persistent Connections

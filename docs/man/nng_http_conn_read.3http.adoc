@@ -29,20 +29,20 @@ The `nng_http_conn_read()` function starts an asynchronous read from the
 HTTP connection _conn_, into the scatter/gather vector located in the
 asynchronous I/O structure _aio_.
 
-NOTE: The <<nng_aio_set_iov.3#,`nng_aio_set_iov()`>> function must have been
+NOTE: The `<<nng_aio_set_iov.3#,nng_aio_set_iov()>>` function must have been
 called first, to set the scatter/gather vector for _aio_.
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_,
 and the final result may be obtained via
-<<nng_aio_result.3#,`nng_aio_result()`>>.
+`<<nng_aio_result.3#,nng_aio_result()>>`.
 That result will either be zero or an error code.
 
 The I/O operation completes as soon as at least one byte has been
 read, or an error has occurred.
 Therefore, the number of bytes read may be less than requested.
 The actual number of bytes read can be determined with
-<<nng_aio_count.3#,`nng_aio_count()`>>.
+`<<nng_aio_count.3#,nng_aio_count()>>`.
 
 TIP: This function is intended to facilitate uses cases that involve changing
 the protocol from HTTP, such as WebSocket.

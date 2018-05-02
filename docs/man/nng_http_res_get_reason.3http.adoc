@@ -25,11 +25,11 @@ const char *nng_http_res_get_reason(nng_http_res *res);
 
 == DESCRIPTION
 
-The `nng_http_res_get_reason()` returns a string representing the "reason
-phrase" associated with the response _res_.
+The `nng_http_res_get_reason()` returns a string representing the
+"`reason phrase`" associated with the response _res_.
 This is a human-readable explanation of the status code that
 would be obtained from
-<<nng_http_res_get_status.3http#,`nng_http_res_get_status()`>>.
+`<<nng_http_res_get_status.3http#,nng_http_res_get_status()>>`.
 
 == RETURN VALUES
 

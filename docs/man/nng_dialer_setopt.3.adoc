@@ -75,14 +75,14 @@ The _ival_ is passed to the option.
 
 ==== `nng_dialer_setopt_ms()`
 This function is used to configure time durations (such as timeouts) using
-type <<nng_duration.5#,`nng_duration`>>.
+type `<<nng_duration.5#,nng_duration>>`.
 The duration _dur_ is an integer number of milliseconds.
 
 ==== `nng_dialer_setopt_ptr()`
 This function is used to pass a pointer, _ptr_, to structured data.
 The data referenced by _ptr_ is generally managed by other functions.
 For example, TLS configuration objects created with
-(<<nng_tls_config_alloc.3tls#,`nng_tls_config_alloc()`>>)
+(`<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc()>>`)
 can be passed this way.
 Note that this form is somewhat special in that the object is generally
 not copied, but instead the *pointer* to the object is copied.

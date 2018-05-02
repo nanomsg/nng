@@ -61,8 +61,8 @@ Therefore, always use an absolute path name if interoperability is required.
 
 === Socket Address
 
-When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
-the actual structure is of type <<nng_sockaddr_ipc.5#,`nng_sockaddr_ipc`>>.
+When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
+the actual structure is of type `<<nng_sockaddr_ipc.5#,nng_sockaddr_ipc>>`.
 
 === Transport Options
 

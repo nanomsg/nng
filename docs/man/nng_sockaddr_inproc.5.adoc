@@ -32,7 +32,7 @@ typedef struct {
 == DESCRIPTION
 
 (((socket, address, inproc)))
-An `nng_sockaddr_inproc` is the flavor of <<nng_sockaddr.5#,`nng_sockaddr`>>
+An `nng_sockaddr_inproc` is the flavor of `<<nng_sockaddr.5#,nng_sockaddr>>`
 used to represent addresses associated with intra-process communication
 using the <<nng_inproc.7#,_inproc_>> transport.
 

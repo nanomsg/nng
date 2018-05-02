@@ -40,7 +40,7 @@ NOTE: No validation of the _method_ is performed, but HTTP specifications
 insist that the actual method sent over the wire be capitalized.
 
 The handler may always examine the actual method used using the
-<<nng_http_req_get_method.3http#,`nng_http_req_get_method()`>> function.
+`<<nng_http_req_get_method.3http#,nng_http_req_get_method()>>` function.
 
 == RETURN VALUES
 

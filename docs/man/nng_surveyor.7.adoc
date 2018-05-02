@@ -40,7 +40,7 @@ The _surveyor_ protocol is the surveyor side, and the
 
 === Socket Operations
 
-The <<nng_surveyor_open.3#,`nng_surveyor0_open()`>>
+The `<<nng_surveyor_open.3#,nng_surveyor0_open()>>`
 functions create a surveyor socket.
 This socket may be used to send messages (surveys), and then to receive replies.
 A reply can only be received after sending a survey.
@@ -62,14 +62,16 @@ survey that arrive after this will be discarded.
 === Context Operations
 
 This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
-use cases using <<nng_ctx_open.3#,`nng_ctx_open()`>>.
+use cases using `<<nng_ctx_open.3#,nng_ctx_open()>>`.
 
 Each context can initiate its own surveys, and it will receive only
 responses to its own outstanding surveys.
 Other contexts on the same socket may have overlapping surveys
 operating at the same time.
+
 Each of these may have their own timeouts established with
 `NNG_OPT_SURVEYOR_SURVEYTIME`.
+
 Additionally, sending a survey on a context will only cancel an outstanding
 survey on the same context.
 
@@ -92,7 +94,7 @@ The following protocol-specific options is available.
 
 ((`NNG_OPT_SURVEYOR_SURVEYTIME`))::
 
-   This read/write option is an <<nng_duration.5#,`nng_duration`>>
+   This read/write option is an `<<nng_duration.5#,nng_duration>>`
    representing a postive number of milliseconds that following surveys
    will last. 
    When a new survey is started, a timer of this duration is also started.
@@ -105,7 +107,7 @@ The following protocol-specific options is available.
 === Protocol Headers
 
 (((backtrace)))
-This form uses a "stack" of 32-bit big-endian identifiers.
+This form uses a "`stack`" of 32-bit big-endian identifiers.
 There *must* be at least one identifier, the __survey ID__, which will be the
 last element in the array, and *must* have the most significant bit set.
 
@@ -114,14 +116,14 @@ These will be distinguishable from the survey ID by having their most
 significant bit clear.
 
 When a survey message is received by a forwarding node (see
-<<nng_device.3#,`nng_device()`>>), the forwarding node prepends a
+`<<nng_device.3#,nng_device()>>`), the forwarding node prepends a
 32-bit peer ID (which *must* have the most significant bit clear),
 which is the forwarder's way of identifying the directly connected
 peer from which it received the message.
 (This peer ID, except for the
 most significant bit, has meaning only to the forwarding node itself.)
 
-It may help to think of prepending a peer ID as "pushing" a peer ID onto the
+It may help to think of prepending a peer ID as "`pushing`" a peer ID onto the
 front of the stack of headers for the message.
 (It will use the peer ID
 it popped from the front to determine the next intermediate destination
@@ -130,7 +132,7 @@ for the response.)
 When a response message is created, it is created using the same headers
 that the survey contained.
 
-A forwarding node can "pop" the peer ID it originally pushed on the
+A forwarding node can "`pop`" the peer ID it originally pushed on the
 message, stripping it from the front of the message as it does so.
 
 When the response finally arrives back at the initiating surveyor, it

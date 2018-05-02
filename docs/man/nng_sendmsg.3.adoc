@@ -36,13 +36,13 @@ to dispose of the _msg_, which may include freeing it, sending it to
 another socket, or simply trying again later.
 
 TIP: Using this function gives access to the message structure, and may
-offer more functionality than the simpler <<nng_send.3#,`nng_send()`>> function.
+offer more functionality than the simpler `<<nng_send.3#,nng_send()>>` function.
 
 NOTE: The semantics of what sending a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 (For example, with a <<nng_pub.7#,_pub_>> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
-<<nng_recv.3#,`nng_recv()`>> or a similar function.)
+`<<nng_recv.3#,nng_recv()>>` or a similar function.)
 Furthermore, some protocols may not support sending (such as
 <<nng_sub.7#,_sub_>>) or may require other conditions.
 (For example, <<nng_rep.7#,_rep_>> sockets cannot normally send data, which

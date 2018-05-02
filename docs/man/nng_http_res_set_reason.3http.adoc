@@ -30,7 +30,7 @@ associated with the response _res_ to _reason_.
 
 If the value of _reason_ is `NULL` (the default), then a default reason
 phrase is supplied based upon the value of the status code (see
-<<nng_http_res_set_status.3http#,`nng_http_res_set_status()`>>).
+`<<nng_http_res_set_status.3http#,nng_http_res_set_status()>>`).
 
 TIP: The _reason_ is never parsed automatically, but it can be a hint for humans
      to help them understand the nature of any erroroneous result.

@@ -28,11 +28,11 @@ The `nng_send_aio()` sends a <<nng_msg.5#,message>> using the
 <<nng_socket.5#,socket>> _s_ asynchronously.
 
 The message to send must have previously been set on the _aio_
-using the <<nng_aio_set_msg.3#,`nng_aio_set_msg()`>> function.
+using the `<<nng_aio_set_msg.3#,nng_aio_set_msg()>>` function.
 The function assumes "`ownership`" of the message.
 
 If the message was successfully queued for delivery to the socket,
-then the _aio_ will be completed, and <<nng_aio_result.3#,`nng_aio_result()`>>
+then the _aio_ will be completed, and `<<nng_aio_result.3#,nng_aio_result()>>`
 will return zero.  In this case the socket will dispose of the
 message when it is finished with it.
 
@@ -44,19 +44,20 @@ may still be buffered in the sending socket, buffered in the receiving
 socket, or in flight over physical media.
 
 If the operation fails for any reason (including cancellation or timeout),
-then the _aio_ callback will be executed and <<nng_aio_result.3#,`nng_aio_result()`>>
+then the _aio_ callback will be executed and
+`<<nng_aio_result.3#,nng_aio_result()>>`
 will return a non-zero error status.
 In this case, the callback has a responsibity to retrieve the message from
-the _aio_ with <<nng_aio_get_msg.3#,`nng_aio_get_msg()`>> and dispose of
-it appropriately.
+the _aio_ with
+`<<nng_aio_get_msg.3#,nng_aio_get_msg()>>` and dispose of it appropriately.
 (This may include retrying the send operation on the same or a different
-socket, or deallocating the message with <<nng_msg_free.3#,`nng_msg_free()`>>.)
+socket, or deallocating the message with `<<nng_msg_free.3#,nng_msg_free()>>`.)
 
 NOTE: The semantics of what sending a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 (For example, with a <<nng_pub.7#,_pub_>> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
-<<nng_recv.3#,`nng_recv()`>> or a similar function.)
+`<<nng_recv.3#,nng_recv()>>` or a similar function.)
 Furthermore, some protocols may not support sending (such as
 <<nng_sub.7#,_sub_>>) or may require other conditions.
 (For example, <<nng_rep.7#,_rep_>> sockets cannot normally send data, which

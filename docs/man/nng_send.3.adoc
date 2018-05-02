@@ -16,11 +16,11 @@ nng_send - send data
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 
 int nng_send(nng_socket s, void *data, size_t size, int flags);
------------
+----
 
 == DESCRIPTION
 
@@ -31,7 +31,7 @@ NOTE: The semantics of what sending a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 (For example, with an <<nng_pub.7#,_nng_>> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
-<<nng_recv.3#,`nng_recv()`>> or a similar function.)
+`<<nng_recv.3#,nng_recv()>>` or a similar function.)
 Furthermore, some protocols may not support sending data (such as
 <<nng_sub.7#,_sub_>>) or may require other conditions.
 (For example, <<nng_rep.7#,_rep_>> sockets cannot normally send data,
@@ -48,12 +48,12 @@ The _flags_ may contain either of (or neither of) the following values:
     then the function will block if such a condition exists.
 
 `NNG_FLAG_ALLOC`::
-    The _data_ was allocated using <<nng_alloc.3#,`nng_alloc()`>>, or was
-    obtained from a call to <<nng_recv.3#,`nng_recv()`>> with
+    The _data_ was allocated using `<<nng_alloc.3#,nng_alloc()>>`, or was
+    obtained from a call to `<<nng_recv.3#,nng_recv()>>` with
     the `NNG_FLAG_ALLOC` flag.
     If this function returns success, then the _data_ is "owned" by the
     function, and it will assume responsibility for calling
-    <<nng_free.3#,`nng_free()`>> when it is no longer needed.
+    `<<nng_free.3#,nng_free()>>` when it is no longer needed.
     In the absence of this flag, the _data_ is copied by the implementation
     before the function returns to the caller.
 

@@ -75,8 +75,8 @@ applications, and should be used in lieu of
 
 WARNING: Use of file descriptor polling (with descriptors
 obtained using the
-<<nng_options.5#NNG_OPT_RECVFD,`NNG_OPT_RECVFD`>> or
-<<nng_options.5#NNG_OPT_SENDFD,`NNG_OPT_SENDFD`>> options) while contexts
+`<<nng_options.5#NNG_OPT_RECVFD,NNG_OPT_RECVFD>>` or
+`<<nng_options.5#NNG_OPT_SENDFD,NNG_OPT_SENDFD>>` options) while contexts
 are in use on the same socket is not supported, and may lead to unpredictable
 behavior.
 These asynchronous methods should not be mixed on the same socket.
@@ -134,8 +134,8 @@ echo(void *arg)
 Given the above fragment, the following example shows setting up the
 service.  It assumes that the <<nng_socket.5#,socket>> has already been
 created and any transports set up as well with functions such as
-<<nng_dial.3#,`nng_dial()`>>
-or <<nng_listen.3#,`nng_listen()`>>.
+`<<nng_dial.3#,nng_dial()>>`
+or `<<nng_listen.3#,nng_listen()>>`.
 
 [source,c]
 ----

@@ -49,38 +49,38 @@ considered when determining whether the handler should be called.
 
 Additionally each handler has a method it is registered to handle
 (the default is "GET", see
-<<nng_http_handler_set_method.3http#,`nng_http_handler_set_method()`>>), and
+`<<nng_http_handler_set_method.3http#,nng_http_handler_set_method()>>`), and
 optionally a 'Host' header it can be matched against (see
-<<nng_http_handler_set_host.3http#,`nng_http_handler_set_host()`>>).
+`<<nng_http_handler_set_host.3http#,nng_http_handler_set_host()>>`).
 
 In some cases, a handler may reference a logical tree rather (directory)
 rather than just a single element.
-(See <<nng_http_handler_set_tree.3http#,`nng_http_handler_set_tree()`>>).
+(See `<<nng_http_handler_set_tree.3http#,nng_http_handler_set_tree()>>`).
 
 === Custom Handler
 
 The generic (first) form of this creates a handler that uses a user-supplied
 function to process HTTP requests.
 This function uses the asynchronous I/O framework.
-The function takes a pointer to an <<nng_aio.5#,`nng_aio`>> structure.
+The function takes a pointer to an `<<nng_aio.5#,nng_aio>>` structure.
 That structure will be passed with the following input values (retrieved with
-<<nng_aio_get_input.3#,`nng_aio_get_input()`>>):
+`<<nng_aio_get_input.3#,nng_aio_get_input()>>`):
 
    0: `nng_http_req *` __request__:: The client's HTTP request.
    1: `nng_http_handler *` __handler__:: Pointer to the handler object.
    2: `nng_http_conn *` __conn__:: The underlying HTTP connection.
 
 The handler should create an `nng_http_res *` response (such as via
-<<nng_http_res_alloc.3http#,`nng_http_res_alloc()`>> or
-<<nng_http_res_alloc_error.3http#,`nng_http_res_alloc_error()`>>) and store that
+`<<nng_http_res_alloc.3http#,nng_http_res_alloc()>>` or
+`<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error()>>`) and store that
 in as the first output (index 0) with
-<<nng_aio_set_output.3#,`nng_aio_set_output()`>>.
+`<<nng_aio_set_output.3#,nng_aio_set_output()>>`.
 
 Alternatively, the handler may send the HTTP response (and any associated
 body data) itself using the connection.
 In that case the output at index 0 of the _aio_ should be NULL.
 
-Finally, using the <<nng_aio_finish.3#,`nng_aio_finish()`>> function, the
+Finally, using the `<<nng_aio_finish.3#,nng_aio_finish()>>` function, the
 _aio_ should be completed successfully.
 If any non-zero status is returned back to the caller instead,
 then a generic 500 response will be created and

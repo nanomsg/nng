@@ -29,7 +29,7 @@ causing the callback for _aio_ to be executed after _msec_ milliseconds.
 If the sleep finishes completely, the result will always be zero.
 
 NOTE: If a timeout is set on _aio_ using
-<<nng_aio_set_timeout.3#,`nng_aio_set_timeout()`>>, and it is shorter
+`<<nng_aio_set_timeout.3#,nng_aio_set_timeout()>>`, and it is shorter
 than _msec_,
 then the sleep will wake up early, with a result code of `NNG_ETIMEDOUT`.
 

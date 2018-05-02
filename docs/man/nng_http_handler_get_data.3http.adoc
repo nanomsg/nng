@@ -28,7 +28,7 @@ int nng_http_handler_get_data(nng_http_handler *handler, void *data,
 
 The `nng_http_handler_get_data()` function returns the data previously
 stored on _handler_ using the function
-<<nng_http_handler_set_data.3http#,`nng_http_handler_set_data()`>>.
+`<<nng_http_handler_set_data.3http#,nng_http_handler_set_data()>>`.
 
 == RETURN VALUES
 

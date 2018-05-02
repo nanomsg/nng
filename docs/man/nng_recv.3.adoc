@@ -38,13 +38,13 @@ In this case the caller must set the value of _data_ to the location
 of another pointer (of type `void *`), and the _sizep_ pointer must be set
 to a location to receive the size of the message body.
 The function will then allocate a message buffer
-(as if by <<nng_alloc.3#,`nng_alloc()`>>), fill it with
+(as if by `<<nng_alloc.3#,nng_alloc()>>`), fill it with
 the message body, and store it at the address referenced by _data_, and update
 the size referenced by _sizep_.
 When this flag is present, the caller assumes
 responsibility for disposing of the received buffer either by the function
-<<nng_free.3#,`nng_free()`>> or reusing the message for sending (with the same
-size) in a call to <<nng_send.3#,`nng_send()`>>.
+`<<nng_free.3#,nng_free()>>` or reusing the message for sending (with the same
+size) in a call to `<<nng_send.3#,nng_send()>>`.
 
 NOTE: The semantics of what receiving a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.

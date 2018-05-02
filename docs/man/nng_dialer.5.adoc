@@ -26,7 +26,7 @@ typedef struct nng_dialer_s nng_dialer;
 
 (((dialer)))
 An `nng_dialer` is a handle to a "`dialer`" object, which is responsible for
-creating a single <<nng_pipe.5#,`nng_pipe`>> at a time by
+creating a single `<<nng_pipe.5#,nng_pipe>>` at a time by
 establishing an outgoing connection.
 
 If the connection is broken, or fails, the dialer object will automatically
@@ -34,16 +34,16 @@ attempt to reconnect, and will keep doing so until the dialer or socket is
 destroyed.
 
 Dialer objects are created by the
-<<nng_dialer_create.3#,`nng_dialer_create()`>>
-or <<nng_dial.3#,`nng_dial()`>> functions, and are always "`owned`"
-by a single <<nng_socket.5#,`nng_socket`>>.
+`<<nng_dialer_create.3#,nng_dialer_create()>>`
+or `<<nng_dial.3#,nng_dial()>>` functions, and are always "`owned`"
+by a single `<<nng_socket.5#,nng_socket>>`.
 
 IMPORTANT: The `nng_dialer` structure is always passed by value (both
 for input parameters and return values), and should be treated opaquely.
 Passing structures this way ensures gives the compiler a chance to perform
 accurate type checks in functions passing values of this type.
 
-TIP: A given <<nng_socket.5#,`nng_socket`>> may have multiple dialer
+TIP: A given `<<nng_socket.5#,nng_socket>>` may have multiple dialer
 objects, multiple <<nng_listener.5#,listener>> objects, or even some
 of both.
 
@@ -55,7 +55,7 @@ This orthogonality can lead to innovative solutions to otherwise
 challenging communications problems.
 
 Dialer objects may be destroyed by the
-<<nng_dialer_close.3#,`nng_pipe_close()`>> function.
+`<<nng_dialer_close.3#,nng_dialer_close()>>` function.
 They are also closed when their "`owning`" socket is closed.
 
 [[NNG_DIALER_INITIALIZER]]

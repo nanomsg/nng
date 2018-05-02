@@ -93,9 +93,9 @@ typically for buffer sizes, message maximum sizes, and similar options.
 
 ==== `nng_ctx_getopt_string()`
 This function is used to retrieve a string into _strp_.
-This string is created from the source using <<nng_strdup.3#,`nng_strdup()`>>
+This string is created from the source using `<<nng_strdup.3#,nng_strdup()>>`
 and consequently must be freed by the caller using
-<<nng_strfree.3#,`nng_strfree()`>> when it is no longer needed.
+`<<nng_strfree.3#,nng_strfree()>>` when it is no longer needed.
 
 ==== `nng_ctx_getopt_uint64()`
 This function is used to retrieve a 64-bit unsigned value into the value

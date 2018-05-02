@@ -37,15 +37,15 @@ This callback will be executed exactly once.
 
 The asynchronous I/O framework in _nng_ also supports cancellation of
 operations that are already in progress
-(see <<nng_aio_cancel.3#,`nng_aio_cancel()`>>), as well setting a maximum
+(see `<<nng_aio_cancel.3#,nng_aio_cancel()>>`), as well setting a maximum
 timeout for them to complete within
-(see <<nng_aio_set_timeout.3#,`nng_aio_set_timeout()`>>).
+(see `<<nng_aio_set_timeout.3#,nng_aio_set_timeout()>>`).
 
 It is also possible to initiate an asynchronous operation, and wait for it to
-complete using <<nng_aio_wait.3#,`nng_aio_wait()`>>.
+complete using `<<nng_aio_wait.3#,nng_aio_wait()>>`.
 
-These structures are created using the <<nng_aio_alloc.3#,`nng_aio_alloc()`>>,
-and destroyed using <<nng_aio_free.3#,`nng_aio_free()`>>.
+These structures are created using the `<<nng_aio_alloc.3#,nng_aio_alloc()>>`,
+and destroyed using `<<nng_aio_free.3#,nng_aio_free()>>`.
 
 == SEE ALSO
 

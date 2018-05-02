@@ -103,15 +103,15 @@ This function is used to retrieve a size into the pointer _zp_,
 typically for buffer sizes, message maximum sizes, and similar options.
 
 ==== `nng_dialer_getopt_sockaddr()`
-This function is used to retrieve an <<nng_sockaddr.5#,`nng_sockaddr`>>
+This function is used to retrieve an `<<nng_sockaddr.5#,nng_sockaddr>>`
 into the value referenced by _sap_.
 
 ==== `nng_dialer_getopt_string()`
 
 This function is used to retrieve a string into _strp_.
-This string is created from the source using <<nng_strdup.3#,`nng_strdup()`>>
+This string is created from the source using `<<nng_strdup.3#,nng_strdup()>>`
 and consequently must be freed by the caller using
-<<nng_strfree.3#,`nng_strfree()`>> when it is no longer needed.
+`<<nng_strfree.3#,nng_strfree()>>` when it is no longer needed.
 
 ==== `nng_dialer_getopt_uint64()`
 This function is used to retrieve a 64-bit unsigned value into the value

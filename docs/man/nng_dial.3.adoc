@@ -25,7 +25,7 @@ int nng_dial(nng_socket s, const char *url, nng_dialer *dp, int flags);
 == DESCRIPTION
 
 The `nng_dialer()` function creates a newly initialized
-<<nng_dialer.5#,`nng_dialer`>> object,
+`<<nng_dialer.5#,nng_dialer>>` object,
 associated with socket _s_, and configured to listen at the
 address specified by _url_, and starts it.
 If the value of _dp_ is not `NULL`, then
@@ -62,8 +62,8 @@ it also generally makes diagnosing failures somewhat more difficult.
 
 Because the dialer is started immediately, it is generally not possible
 to apply extra configuration; if that is needed applications should consider
-using <<nng_dialer_create.3#,`nng_dialer_create()`>> and 
-<<nng_dialer_start.3#,`nng_dialer_start()`>> instead.
+using `<<nng_dialer_create.3#,nng_dialer_create()>>` and 
+`<<nng_dialer_start.3#,nng_dialer_start()>>` instead.
 
 == RETURN VALUES
 

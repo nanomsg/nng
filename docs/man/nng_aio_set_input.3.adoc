@@ -42,7 +42,7 @@ IMPORTANT: It is an error to call this function while the _aio_ is currently
 in use by an active asynchronous operation.
 
 An input parameter set with this function may be retrieved later with
-the <<nng_aio_get_input.3#,`nng_aio_get_input()`>> function.
+the `<<nng_aio_get_input.3#,nng_aio_get_input()>>` function.
 
 == RETURN VALUES
 

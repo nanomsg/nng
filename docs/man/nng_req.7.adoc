@@ -41,10 +41,10 @@ some reason.)
 (((load-balancing)))
 The requester generally only has one outstanding request at a time unless
 in "raw" mode (via
-<<nng_options.5#NNG_OPT_RAW,`NNG_OPT_RAW`>>),
+`<<nng_options.5#NNG_OPT_RAW,NNG_OPT_RAW>>`),
 and it will generally attempt to spread work requests to different peer repliers.
 
-TIP: This property, when combined with <<nng_device.3#,`nng_device()`>>
+TIP: This property, when combined with `<<nng_device.3#,nng_device()>>`
 can help provide a degree of load-balancing.
 
 The _req_ protocol is the requester side, and the
@@ -52,7 +52,7 @@ The _req_ protocol is the requester side, and the
 
 === Socket Operations
 
-The <<nng_req_open.3#,`nng_req0_open()`>> functions create a requester socket.
+The `<<nng_req_open.3#,nng_req0_open()>>` functions create a requester socket.
 This socket may be used to send messages (requests), and then to receive replies.
 
 Generally a reply can only be received after sending a request.
@@ -74,12 +74,14 @@ that has already been placed on the wire.
 === Context Operations
 
 This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
-use cases using <<nng_ctx_open.3#,`nng_ctx_open()`>>.
+use cases using `<<nng_ctx_open.3#,nng_ctx_open()>>`.
+
 The `NNG_OPT_REQ_RESENDTIME` value may be configured differently
 on contexts created this way.
 
 Each context may have at most one outstanding request, and operates
 independently from the others.
+
 The restrictions for order of operations with sockets apply equally
 well for contexts, except that each context will be treated as if it were
 a separate socket.
@@ -95,11 +97,12 @@ The following protocol-specific option is available.
 
 ((`NNG_OPT_REQ_RESENDTIME`))::
 
-   This read/write option is a duration (32-bit unsigned integer) representing
-   a relative number of milliseconds.
+   This read/write option is a duration (`<<nng_duration.5#,nng_duration>>`)
+   representing a relative number of milliseconds.
    When a new request is started, a timer of this duration is also started.
    If no reply is received before this timer expires, then the request will
-   be resent.  (Requests are also automatically resent if the peer to whom
+   be resent.
+   (Requests are also automatically resent if the peer to whom
    the original request was sent disconnects, or if a peer becomes available
    while the requester is waiting for an available peer.)
 
@@ -107,7 +110,7 @@ The following protocol-specific option is available.
 
 (((backtrace)))
 This protocol uses a _backtrace_ in the header.
-This form uses a "stack" of 32-bit big-endian identifiers.
+This form uses a "`stack`" of 32-bit big-endian identifiers.
 There *must* be at least one identifier, the __request ID__, which will be the
 last element in the array, and *must* have the most significant bit set.
 
@@ -116,14 +119,14 @@ These will be distinguishable from the request ID by having their most
 significant bit clear.
 
 When a request message is received by a forwarding node (see
-<<nng_device.3#,`nng_device()`>>), the forwarding node prepends a
+`<<nng_device.3#,nng_device()>>`), the forwarding node prepends a
 32-bit peer ID (which *must* have the most significant bit clear),
 which is the forwarder's way of identifying the directly connected
 peer from which it received the message.
 (This peer ID, except for the
 most significant bit, has meaning only to the forwarding node itself.)
 
-It may help to think of prepending a peer ID as "pushing" a peer ID onto the
+It may help to think of prepending a peer ID as "`pushing`" a peer ID onto the
 front of the stack of headers for the message.
 (It will use the peer ID
 it popped from the front to determine the next intermediate destination
@@ -132,7 +135,7 @@ for the reply.)
 When a reply message is created, it is created using the same headers
 that the request contained.
 
-A forwarding node can "pop" the peer ID it originally pushed on the
+A forwarding node can "`pop`" the peer ID it originally pushed on the
 message, stripping it from the front of the message as it does so.
 
 When the reply finally arrives back at the initiating requestor, it

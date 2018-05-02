@@ -29,7 +29,7 @@ The `nng_listener_start()` function starts the listener _l_.
 This causes the listener to bind to the address it was created with,
 and to start accepting connections from remote
 dialers.
-Each new connection results in an <<nng_pipe.5#,`nng_pipe`>> object,
+Each new connection results in an `<<nng_pipe.5#,nng_pipe>>` object,
 which will be attached to the listener's socket.
 
 Normally, the act of "`binding`" to it's address is done

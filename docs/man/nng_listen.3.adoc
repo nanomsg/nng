@@ -25,14 +25,14 @@ int nng_listen(nng_socket s, const char *url, nng_listener *lp, int flags);
 == DESCRIPTION
 
 The `nng_listen()` function creates a newly initialized
-<<nng_listener.5#,`nng_listener`>> object, associated with socket _s_,
+`<<nng_listener.5#,nng_listener>>` object, associated with socket _s_,
 and configured to listen at the address specified by _url_, and starts it.
 If the value of _lp_ is not `NULL`, then
 the newly created listener is stored at the address indicated by _lp_.
 
 Listeners are used to accept connections initiated by remote dialers.
 An incoming connection generally results in and
-<<nng_pipe.5#,`nng_pipe`>> object being created and attached to the socket _s_.
+`<<nng_pipe.5#,nng_pipe>>` object being created and attached to the socket _s_.
 Unlike dialers, listeners generally can create many
 pipes, which may be open concurrently.
 
@@ -56,8 +56,8 @@ it also generally makes diagnosing failures somewhat more difficult.
 
 Because the listener is started immediately, it is generally not possible
 to apply extra configuration; if that is needed applications should consider
-using <<nng_listener_create.3#,`nng_listener_create()`>> and 
-<<nng_listener_start.3#,`nng_listener_start()`>> instead.
+using `<<nng_listener_create.3#,nng_listener_create()>>` and 
+`<<nng_listener_start.3#,nng_listener_start()>>` instead.
 
 The created listener will continue to accept new connections, associating
 their pipes with the socket, until either it or the socket _s_ is closed.

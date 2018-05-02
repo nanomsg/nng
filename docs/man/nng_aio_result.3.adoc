@@ -33,7 +33,7 @@ NOTE: The return value from this function is undefined if the operation
 has not completed yet.
 Either call this from the handle's completion
 callback, or after waiting for the operation to complete with
-<<nng_aio_wait.3#,`nng_aio_wait()`>>.
+`<<nng_aio_wait.3#,nng_aio_wait()>>`.
 
 == RETURN VALUES
 

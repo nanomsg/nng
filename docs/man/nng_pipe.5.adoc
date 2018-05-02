@@ -42,12 +42,12 @@ However it is possible to access a pipe when more information about the
 source of a message is needed, or when more control is required over
 message delivery.
 
-Pipe objects are created by dialers (<<nng_dialer.5#,`nng_dialer`>> objects)
-and listeners (<<nng_listener.5#,`nng_listener`>> objects), which can be
+Pipe objects are created by dialers (`<<nng_dialer.5#,nng_dialer>>` objects)
+and listeners (`<<nng_listener.5#,nng_listener>>` objects), which can be
 thought of as "`owning`" the pipe.
 
 Pipe objects may be destroyed by the
-<<nng_pipe_close.3#,`nng_pipe_close()`>> function.
+`<<nng_pipe_close.3#,nng_pipe_close()>>` function.
 They are also closed when their "`owning`" dialer or listener is closed,
 or when the remote peer closes the underlying connection.
 

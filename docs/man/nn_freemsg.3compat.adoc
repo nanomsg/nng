@@ -25,7 +25,7 @@ int nn_freemsg(void *msg);
 == DESCRIPTION
 
 The `nn_freemsg()` deallocates a message previously allocated with
-`<<nn_allocmsg.3compat#,nn_allocmsg()>>`` or similar functions.
+`<<nn_allocmsg.3compat#,nn_allocmsg()>>` or similar functions.
 
 NOTE: This function is provided for API
 <<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
