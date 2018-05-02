@@ -566,6 +566,7 @@ ws_write_cb(void *arg)
 
 	if ((rv = nni_aio_result(ws->txaio)) != 0) {
 
+		nni_list_remove(&ws->txmsgs, wm);
 		ws_msg_fini(wm);
 		if (aio != NULL) {
 			nni_aio_list_remove(aio);
