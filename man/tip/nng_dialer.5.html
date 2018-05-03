@@ -508,7 +508,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#NNG_DIALER_INITIALIZER">Initialization</a></li>
+</ul>
+</li>
 <li><a href="#_see_also">SEE ALSO</a></li>
 </ul>
 </div>
@@ -536,7 +540,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>
 An <code>nng_dialer</code> is a handle to a &#8220;dialer&#8221; object, which is responsible for
-creating a single <a href="nng_pipe.5.html"><code>nng_pipe</code></a> at a time by
+creating a single <code><a href="nng_pipe.5.html">nng_pipe</a></code> at a time by
 establishing an outgoing connection.</p>
 </div>
 <div class="paragraph">
@@ -546,9 +550,9 @@ destroyed.</p>
 </div>
 <div class="paragraph">
 <p>Dialer objects are created by the
-<a href="nng_dialer_create.3.html"><code>nng_dialer_create()</code></a>
-or <a href="nng_dial.3.html"><code>nng_dial()</code></a> functions, and are always &#8220;owned&#8221;
-by a single <a href="nng_socket.5.html"><code>nng_socket</code></a>.</p>
+<code><a href="nng_dialer_create.3.html">nng_dialer_create()</a></code>
+or <code><a href="nng_dial.3.html">nng_dial()</a></code> functions, and are always &#8220;owned&#8221;
+by a single <code><a href="nng_socket.5.html">nng_socket</a></code>.</p>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -572,7 +576,7 @@ accurate type checks in functions passing values of this type.
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-A given <a href="nng_socket.5.html"><code>nng_socket</code></a> may have multiple dialer
+A given <code><a href="nng_socket.5.html">nng_socket</a></code> may have multiple dialer
 objects, multiple <a href="nng_listener.5.html">listener</a> objects, or even some
 of both.
 </td>
@@ -598,8 +602,15 @@ challenging communications problems.
 </div>
 <div class="paragraph">
 <p>Dialer objects may be destroyed by the
-<a href="nng_dialer_close.3.html"><code>nng_pipe_close()</code></a> function.
+<code><a href="nng_dialer_close.3.html">nng_dialer_close()</a></code> function.
 They are also closed when their &#8220;owning&#8221; socket is closed.</p>
+</div>
+<div class="sect2">
+<h3 id="NNG_DIALER_INITIALIZER">Initialization</h3>
+<div class="paragraph">
+<p>A dialer may be initialized using the macro <code>NNG_DIALER_INITIALIZER</code>
+before it is opened, to prevent confusion with valid open dialers.</p>
+</div>
 </div>
 </div>
 </div>
@@ -611,6 +622,7 @@ They are also closed when their &#8220;owning&#8221; socket is closed.</p>
 <a href="nng_dialer_close.3.html">nng_dialer_close(3)</a>,
 <a href="nng_dialer_create.3.html">nng_dialer_create(3)</a>,
 <a href="nng_dialer_getopt.3.html">nng_dialer_getopt(3)</a>,
+<a href="nng_dialer_id.3.html">nng_dialer_id(3)</a>,
 <a href="nng_dialer_setopt.3.html">nng_dialer_setopt(3)</a>,
 <a href="nng_dialer_start.3.html">nng_dialer_start(3)</a>,
 <a href="nng_listener.5.html">nng_listener(5)</a>,

@@ -542,9 +542,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>When a message is successfully received by the context, it is
 stored in the <em>aio</em> by an internal call equivalent to
-<a href="nng_aio_set_msg.3.html"><code>nng_aio_set_msg()</code></a>, then the completion
+<code><a href="nng_aio_set_msg.3.html">nng_aio_set_msg()</a></code>, then the completion
 callback on the <em>aio</em> is executed.
-In this case, <a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a> will
+In this case, <code><a href="nng_aio_result.3.html">nng_aio_result()</a></code> will
 return zero.
 The callback function is responsible for retrieving the message
 and disposing of it appropriately.</p>
@@ -566,7 +566,7 @@ case can lead to memory leaks.
 <p>If for some reason the asynchronous receive cannot be completed
 successfully (including by being canceled or timing out), then
 the callback will still be executed,
-but <a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a> will be non-zero.</p>
+but <code><a href="nng_aio_result.3.html">nng_aio_result()</a></code> will be non-zero.</p>
 </div>
 <div class="admonitionblock note">
 <table>

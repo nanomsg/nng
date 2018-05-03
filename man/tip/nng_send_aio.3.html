@@ -541,12 +541,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="paragraph">
 <p>The message to send must have previously been set on the <em>aio</em>
-using the <a href="nng_aio_set_msg.3.html"><code>nng_aio_set_msg()</code></a> function.
+using the <code><a href="nng_aio_set_msg.3.html">nng_aio_set_msg()</a></code> function.
 The function assumes &#8220;ownership&#8221; of the message.</p>
 </div>
 <div class="paragraph">
 <p>If the message was successfully queued for delivery to the socket,
-then the <em>aio</em> will be completed, and <a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>
+then the <em>aio</em> will be completed, and <code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>
 will return zero.  In this case the socket will dispose of the
 message when it is finished with it.</p>
 </div>
@@ -569,13 +569,14 @@ socket, or in flight over physical media.
 </div>
 <div class="paragraph">
 <p>If the operation fails for any reason (including cancellation or timeout),
-then the <em>aio</em> callback will be executed and <a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>
+then the <em>aio</em> callback will be executed and
+<code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>
 will return a non-zero error status.
 In this case, the callback has a responsibity to retrieve the message from
-the <em>aio</em> with <a href="nng_aio_get_msg.3.html"><code>nng_aio_get_msg()</code></a> and dispose of
-it appropriately.
+the <em>aio</em> with
+<code><a href="nng_aio_get_msg.3.html">nng_aio_get_msg()</a></code> and dispose of it appropriately.
 (This may include retrying the send operation on the same or a different
-socket, or deallocating the message with <a href="nng_msg_free.3.html"><code>nng_msg_free()</code></a>.)</p>
+socket, or deallocating the message with <code><a href="nng_msg_free.3.html">nng_msg_free()</a></code>.)</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -588,7 +589,7 @@ The semantics of what sending a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 (For example, with a <a href="nng_pub.7.html"><em>pub</em></a> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
-<a href="nng_recv.3.html"><code>nng_recv()</code></a> or a similar function.)
+<code><a href="nng_recv.3.html">nng_recv()</a></code> or a similar function.)
 Furthermore, some protocols may not support sending (such as
 <a href="nng_sub.7.html"><em>sub</em></a>) or may require other conditions.
 (For example, <a href="nng_rep.7.html"><em>rep</em></a> sockets cannot normally send data, which

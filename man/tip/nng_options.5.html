@@ -531,6 +531,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 
 <span class="tok-cp">#define NNG_OPT_SOCKNAME      &quot;socket-name&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RAW           &quot;raw&quot;</span>
+<span class="tok-cp">#define NNG_OPT_PROTO         &quot;protocol&quot;</span>
+<span class="tok-cp">#define NNG_OPT_PROTONAME     &quot;protocol-name&quot;</span>
+<span class="tok-cp">#define NNG_OPT_PEER          &quot;peer&quot;</span>
+<span class="tok-cp">#define NNG_OPT_PEERNAME      &quot;peer-name&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RECVBUF       &quot;recv-buffer&quot;</span>
 <span class="tok-cp">#define NNG_OPT_SENDBUF       &quot;send-buffer&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RECVFD        &quot;recv-fd&quot;</span>
@@ -558,25 +562,25 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 retrieved on objects in the <em>nng</em> library.</p>
 </div>
 <div class="paragraph">
-<p>Sockets (<a href="nng_socket.5.html"><code>nng_socket</code></a> objects) use the functions
-<a href="nng_getopt.3.html"><code>nng_getopt()</code></a>
-and <a href="nng_setopt.3.html"><code>nng_setopt()</code></a> to set and retrieve option values.</p>
+<p>Sockets (<code><a href="nng_socket.5.html">nng_socket</a></code> objects) use the functions
+<code><a href="nng_getopt.3.html">nng_getopt()</a></code>
+and <code><a href="nng_setopt.3.html">nng_setopt()</a></code> to set and retrieve option values.</p>
 </div>
 <div class="paragraph">
-<p>Dialers (<a href="nng_dialer.5.html"><code>nng_dialer</code></a> objects) use the functions
-<a href="nng_dialer_getopt.3.html"><code>nng_dialer_getopt()</code></a> and
-<a href="nng_dialer_setopt.3.html"><code>nng_dialer_setopt()</code></a> to set and retrieve option
+<p>Dialers (<code><a href="nng_dialer.5.html">nng_dialer</a></code> objects) use the functions
+<code><a href="nng_dialer_getopt.3.html">nng_dialer_getopt()</a></code> and
+<code><a href="nng_dialer_setopt.3.html">nng_dialer_setopt()</a></code> to set and retrieve option
 values.</p>
 </div>
 <div class="paragraph">
-<p>Listeners (<a href="nng_listener.5.html"><code>nng_listener</code></a> objects) use the functions
-<a href="nng_listener_getopt.3.html"><code>nng_listener_getopt()</code></a>
-and <a href="nng_listener_setopt.3.html"><code>nng_listener_setopt()</code></a> to set and
+<p>Listeners (<code><a href="nng_listener.5.html">nng_listener</a></code> objects) use the functions
+<code><a href="nng_listener_getopt.3.html">nng_listener_getopt()</a></code>
+and <code><a href="nng_listener_setopt.3.html">nng_listener_setopt()</a></code> to set and
 retrieve option values.</p>
 </div>
 <div class="paragraph">
-<p>Pipes (<a href="nng_pipe.5.html"><code>nng_pipe</code></a> objects) can only retrieve option values using
-the <a href="nng_pipe_getopt.3.html"><code>nng_pipe_getopt()</code></a> function.</p>
+<p>Pipes (<code><a href="nng_pipe.5.html">nng_pipe</a></code> objects) can only retrieve option values using
+the <code><a href="nng_pipe_getopt.3.html">nng_pipe_getopt()</a></code> function.</p>
 </div>
 <div class="paragraph">
 <p>In addition to the options listed here, transports and protocols will generally
@@ -705,11 +709,6 @@ be readable.</p>
 <td class="content">
 Appplications should never attempt to read or write to the
 returned file descriptor.
-Furthermore, applications should not attempt to use the actual socket (of
-type <a href="nng_socket.5.html"><code>nng_socket</code></a>) with polling functions,
-since it is merely an internal
-identifier and will not necessarily referency any operting system object or
-handle.
 </td>
 </tr>
 </table>
@@ -723,7 +722,8 @@ handle.
 <td class="content">
 While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
-objects instead.  See <a href="nng_aio_alloc.3.html"><code>nng_aio_alloc()</code></a>.
+objects instead.
+See <code><a href="nng_aio_alloc.3.html">nng_aio_alloc()</a></code>.
 </td>
 </tr>
 </table>
@@ -841,11 +841,6 @@ the descriptor will <strong>not</strong> be readable.</p>
 <td class="content">
 Appplications should never attempt to read or write to the
 returned file descriptor.
-Furthermore, applications should not attempt to use the actual socket (of
-type <a href="nng_socket.5.html"><code>nng_socket</code></a>) with polling functions,
-since it is merely an internal
-identifier and will not necessarily referency any operting system object or
-handle.
 </td>
 </tr>
 </table>
@@ -859,7 +854,8 @@ handle.
 <td class="content">
 While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
-objects instead.  See <a href="nng_aio_alloc.3.html"><code>nng_aio_alloc</code>()</a>.
+objects instead.
+See <code><a href="nng_aio_alloc.3.html">nng_aio_alloc()</a></code>.
 </td>
 </tr>
 </table>
@@ -898,7 +894,7 @@ The string must fit within 64-bytes, including the terminating
 <p>(<code>int</code>)
 
 This is the maximum number of &#8220;hops&#8221; a message may traverse (see
-<a href="nng_device.3.html"><code>nng_device()</code></a>).
+<code><a href="nng_device.3.html">nng_device()</a></code>).
 The intention here is to prevent forwarding loops in device chains.
 When this is supported, it can have a value between 1 and 255, inclusive.</p>
 </dd>
@@ -958,11 +954,49 @@ application.
 </tr>
 </table>
 </div>
+<div id="NNG_OPT_PROTO" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PROTO</code></dt>
+<dd>
+<p>(<code>int</code>)
+This read-only option is used to obtain the 16-bit number for the socket&#8217;s protocol.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEER" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEER</code></dt>
+<dd>
+<p>(<code>int</code>)
+This read-only option is used to obtain the 16-bit number of the
+peer protocol for the socket.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PROTONAME" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PROTONAME</code></dt>
+<dd>
+<p>(string)
+This read-only option is used to obtain the name of the socket&#8217;s protocol.</p>
+</dd>
+</dl>
+</div>
+<div id="NNG_OPT_PEERNAME" class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PEERNAME</code></dt>
+<dd>
+<p>(string)
+This read-only option is used to obtain the name of the peer protocol for
+the socket.</p>
+</dd>
+</dl>
+</div>
 <div id="NNG_OPT_TCP_NODELAY" class="dlist">
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_TCP_NODELAY</code></dt>
 <dd>
-<p>(<code>bool`</code>)
+<p>(<code>bool</code>)
 This option is used to disable (or enable) the use of Nagle&#8217;s algorithm
 for TCP connections.
 When <code>true</code> (the default), messages are sent immediately by the underlying
@@ -991,7 +1025,7 @@ See the transport documentation for each transport for details.
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_TCP_KEEPALIVE</code></dt>
 <dd>
-<p>(<code>bool`</code>)
+<p>(<code>bool</code>)
 This option is used to enable the sending of keep-alive messages on
 the underlying TCP stream.
 This option is <code>false</code> by default.

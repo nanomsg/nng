@@ -539,7 +539,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The <code>nng_ctx_close()</code> function closes the context <em>ctx</em>.
 Messages that have been submitted for sending may be flushed or delivered,
 depending upon the transport and the setting of the
-<a href="nng_options.5.html#NNG_OPT_LINGER"><code>NNG_OPT_LINGER</code></a> option.</p>
+<code><a href="nng_options.5.html#NNG_OPT_LINGER">NNG_OPT_LINGER</a></code> option.</p>
 </div>
 <div class="paragraph">
 <p>Further attempts to use the context after this call returns will result
@@ -555,7 +555,7 @@ call is executed may also return with an <code>NNG_ECLOSED</code> result.</p>
 </td>
 <td class="content">
 Closing the socket associated with <em>ctx</em>
-(using <a href="nng_close.3.html"><code>nng_close()</code></a>) also closes this context.
+(using <code><a href="nng_close.3.html">nng_close()</a></code>) also closes this context.
 </td>
 </tr>
 </table>

@@ -537,7 +537,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>The <code>nng_listen()</code> function creates a newly initialized
-<a href="nng_listener.5.html"><code>nng_listener</code></a> object, associated with socket <em>s</em>,
+<code><a href="nng_listener.5.html">nng_listener</a></code> object, associated with socket <em>s</em>,
 and configured to listen at the address specified by <em>url</em>, and starts it.
 If the value of <em>lp</em> is not <code>NULL</code>, then
 the newly created listener is stored at the address indicated by <em>lp</em>.</p>
@@ -545,7 +545,7 @@ the newly created listener is stored at the address indicated by <em>lp</em>.</p
 <div class="paragraph">
 <p>Listeners are used to accept connections initiated by remote dialers.
 An incoming connection generally results in and
-<a href="nng_pipe.5.html"><code>nng_pipe</code></a> object being created and attached to the socket <em>s</em>.
+<code><a href="nng_pipe.5.html">nng_pipe</a></code> object being created and attached to the socket <em>s</em>.
 Unlike dialers, listeners generally can create many
 pipes, which may be open concurrently.</p>
 </div>
@@ -591,8 +591,8 @@ it also generally makes diagnosing failures somewhat more difficult.
 <div class="paragraph">
 <p>Because the listener is started immediately, it is generally not possible
 to apply extra configuration; if that is needed applications should consider
-using <a href="nng_listener_create.3.html"><code>nng_listener_create()</code></a> and
-<a href="nng_listener_start.3.html"><code>nng_listener_start()</code></a> instead.</p>
+using <code><a href="nng_listener_create.3.html">nng_listener_create()</a></code> and
+<code><a href="nng_listener_start.3.html">nng_listener_start()</a></code> instead.</p>
 </div>
 <div class="paragraph">
 <p>The created listener will continue to accept new connections, associating

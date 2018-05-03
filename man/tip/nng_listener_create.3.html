@@ -537,7 +537,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>The <code>nng_listener_create()</code> function creates a newly initialized
-<a href="nng_listener.5.html"><code>nng_listener</code></a> object, associated with socket <em>s</em>,
+<code><a href="nng_listener.5.html">nng_listener</a></code> object, associated with socket <em>s</em>,
 and configured to listen at the address specified by <em>url</em>,
 and stores a pointer to at the location referenced by <em>listenerp</em>.</p>
 </div>
@@ -567,12 +567,12 @@ It may even have some of each at the same time!
 </div>
 <div class="paragraph">
 <p>The listener is not started, but may be further configured with
-the <a href="nng_listener_setopt.3.html"><code>nng_listener_setopt()</code></a> family of
+the <code><a href="nng_listener_setopt.3.html">nng_listener_setopt()</a></code> family of
 functions.</p>
 </div>
 <div class="paragraph">
 <p>Once it is fully configured, the listener may be started using the
-<a href="nng_listener_start.3.html"><code>nng_listener_start()</code></a> function.</p>
+<code><a href="nng_listener_start.3.html">nng_listener_start()</a></code> function.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -582,7 +582,7 @@ functions.</p>
 </td>
 <td class="content">
 If no specific configuration is required, consider using the
-simpler <a href="nng_listen.3.html"><code>nng_listen()</code></a> function instead.
+simpler <code><a href="nng_listen.3.html">nng_listen()</a></code> function instead.
 </td>
 </tr>
 </table>

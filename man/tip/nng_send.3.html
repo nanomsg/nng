@@ -550,7 +550,7 @@ The semantics of what sending a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 (For example, with an <a href="nng_pub.7.html"><em>nng</em></a> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
-<a href="nng_recv.3.html"><code>nng_recv()</code></a> or a similar function.)
+<code><a href="nng_recv.3.html">nng_recv()</a></code> or a similar function.)
 Furthermore, some protocols may not support sending data (such as
 <a href="nng_sub.7.html"><em>sub</em></a>) or may require other conditions.
 (For example, <a href="nng_rep.7.html"><em>rep</em></a> sockets cannot normally send data,
@@ -575,12 +575,12 @@ then the function will block if such a condition exists.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_FLAG_ALLOC</code></dt>
 <dd>
-<p>The <em>data</em> was allocated using <a href="nng_alloc.3.html"><code>nng_alloc()</code></a>, or was
-obtained from a call to <a href="nng_recv.3.html"><code>nng_recv()</code></a> with
+<p>The <em>data</em> was allocated using <code><a href="nng_alloc.3.html">nng_alloc()</a></code>, or was
+obtained from a call to <code><a href="nng_recv.3.html">nng_recv()</a></code> with
 the <code>NNG_FLAG_ALLOC</code> flag.
 If this function returns success, then the <em>data</em> is "owned" by the
 function, and it will assume responsibility for calling
-<a href="nng_free.3.html"><code>nng_free()</code></a> when it is no longer needed.
+<code><a href="nng_free.3.html">nng_free()</a></code> when it is no longer needed.
 In the absence of this flag, the <em>data</em> is copied by the implementation
 before the function returns to the caller.</p>
 </dd>

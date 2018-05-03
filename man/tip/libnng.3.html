@@ -628,6 +628,10 @@ intended to solve common communication problems in distributed applications.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_setopt.3.html">nng_setopt()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set socket option</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_socket_id.3.html">nng_socket_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric socket identifier</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -660,6 +664,10 @@ Listeners accept incoming connection requets, and dialers make them.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">get dialer option</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_id.3.html">nng_dialer_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric dialer identifier</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_setopt.3.html">nng_dialer_setopt()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set dialer option</p></td>
 </tr>
@@ -684,6 +692,10 @@ Listeners accept incoming connection requets, and dialers make them.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">get listener option</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_id.3.html">nng_listener_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric listener identifier</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_setopt.3.html">nng_listener_setopt()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set listener option</p></td>
 </tr>
@@ -696,8 +708,28 @@ Listeners accept incoming connection requets, and dialers make them.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">close pipe</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_dialer.3.html">nng_pipe_dialer()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return dialer that created pipe</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_getopt.3.html">nng_pipe_getopt()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">get pipe option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_id.3.html">nng_pipe_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric pipe identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_listener.3.html">nng_pipe_listener()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return listener that created pipe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_notify.3.html">nng_pipe_notify())</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register pipe notification callback</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_socket.3.html">nng_pipe_socket())</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return owning socket for pipe</p></td>
 </tr>
 </tbody>
 </table>
@@ -840,7 +872,7 @@ mode may need to access the header of messages.
 <h3 id="_asynchronous_operations">Asynchronous Operations</h3>
 <div class="paragraph">
 <p>Most applications will interact with <em>nng</em> synchronously; that is that
-functions such as <a href="nng_send.3.html"><code>nng_send()</code></a> will block the calling
+functions such as <code><a href="nng_send.3.html">nng_send()</a></code> will block the calling
 thread until the operation has completed.</p>
 </div>
 <div class="admonitionblock note">
@@ -863,10 +895,10 @@ delivery.
 initiated by the calling thread, but control returns immediately to
 the calling thread.  When the operation is subsequently completed (regardless
 of whether this was successful or not), then a user supplied function
-("callback") is executed.</p>
+(&#8220;callback&#8221;) is executed.</p>
 </div>
 <div class="paragraph">
-<p>A context structure, an <a href="nng_aio.5.html"><code>nng_aio</code></a>, is allocated and
+<p>A context structure, an <code><a href="nng_aio.5.html">nng_aio</a></code>, is allocated and
 associated with each asynchronous operation.
 Only a single asynchronous operation may be associated with an
 <code>nng_aio</code> at any time.</p>
@@ -1080,6 +1112,10 @@ concurrent applications.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_getopt.3.html">nng_ctx_getopt()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">get context option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_id.3.html">nng_ctx_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric context identifier</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_open.3.html">nng_ctx_open()</a></p></td>

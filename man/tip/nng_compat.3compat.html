@@ -807,9 +807,9 @@ probably not be used for array indices.
 </td>
 <td class="content">
 The following options (<code>nn_getsockopt</code>) are unsupported:
-<code>NN_PROTOCOL</code>, <code>NN_SNDPRIO</code>, <code>NN_RCVPRIO</code>, <code>NN_IPV4ONLY</code>.
-Some of these will probably be added back in the future when
-the relevant support is added to <em>nng</em>.
+<code>NN_SNDPRIO</code>, <code>NN_RCVPRIO</code>, <code>NN_IPV4ONLY</code>.
+The priority options may be supported in the future, when
+the underlying capability is present in <em>nng</em>.
 </td>
 </tr>
 </table>
@@ -837,6 +837,19 @@ Access to statistics using this legacy API
 Some transports can support longer URLs than legacy <em>libnanomsg</em> can.
 It is a good idea to use short pathnames in URLs if interoperability
 is a concern.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Only absolute paths are supported in <code>ipc://</code> URLs.
+For example, <code>ipc:///tmp/mysocket</code> is acceptable, but <code>ipc://mysocket</code> is not.
 </td>
 </tr>
 </table>

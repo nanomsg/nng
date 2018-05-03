@@ -539,7 +539,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>The <code>nng_mtx_lock()</code> acquires exclusive ownership of the mutex <em>mtx</em>.
 If the lock is already owned, this function will wait until the current
-owner releases it with <a href="nng_mtx_unlock.3supp.html"><code>nng_mtx_unlock()</code></a>.</p>
+owner releases it with <code><a href="nng_mtx_unlock.3supp.html">nng_mtx_unlock()</a></code>.</p>
 </div>
 <div class="paragraph">
 <p>If multiple threads are waiting for the lock, the order of acquisition
@@ -575,8 +575,8 @@ reacquire it.
 <div class="sidebarblock">
 <div class="content">
 <div class="paragraph">
-<p><em>NNG</em> offers neither a &#8220;trylock&#8221; operation, nor recursive mutexes.
-This is by design, as <em>NNG</em> itself does not use such things,
+<p><em>nng</em> offers neither a &#8220;trylock&#8221; operation, nor recursive mutexes.
+This is by design, as <em>nng</em> itself does not use such things,
 and most often the need for them is the result of poor design.
 If such capabilities are needed, they may be synthesized fairly
 easily from mutexes and condition variables.</p>

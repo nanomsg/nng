@@ -557,7 +557,7 @@ programs that use simple sequential execution, using functions in the
 </div>
 <div class="paragraph">
 <p>When the thread is no longer needed, the
-<a href="nng_thread_destroy.3supp.html"><code>nng_thread_destroy()</code></a>
+<code><a href="nng_thread_destroy.3supp.html">nng_thread_destroy()</a></code>
 function should be used to reap it.
 (This function will block waiting for <em>func</em> to return.)</p>
 </div>
@@ -603,7 +603,7 @@ The system may impose limits on the number of threads that can be
 created.
 Typically applications should not create more than a few dozen of these.
 If greater concurrency or scalability is needed, consider instead using
-an asynchronous model using <a href="nng_aio.5.html"><code>nng_aio</code></a> structures.
+an asynchronous model using <code><a href="nng_aio.5.html">nng_aio</a></code> structures.
 </td>
 </tr>
 </table>

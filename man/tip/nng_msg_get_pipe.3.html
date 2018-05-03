@@ -536,7 +536,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_msg_get_pipe()</code> returns the <a href="nng_pipe.5.html"><code>nng_pipe</code></a> object
+<p>The <code>nng_msg_get_pipe()</code> returns the <code><a href="nng_pipe.5.html">nng_pipe</a></code> object
 associated with message <em>msg</em>.
 On receive, this is the pipe from which a message was received.
 On transmit, this would be the pipe that the message should be delivered
@@ -559,7 +559,7 @@ Not all protocols support overriding the destination pipe.
 from which the message was received.
 This can be used to provide different behaviors for different peers, such as
 a higher level of authentication for peers located on an untrusted network.
-The <a href="nng_pipe_getopt.3.html"><code>nng_pipe_getopt()</code></a> function
+The <code><a href="nng_pipe_getopt.3.html">nng_pipe_getopt()</a></code> function
 is useful in this situation.</p>
 </div>
 </div>

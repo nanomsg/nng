@@ -548,7 +548,7 @@ asynchronous I/O structure <em>aio</em>.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <a href="nng_aio_set_iov.3.html"><code>nng_aio_set_iov()</code></a> function must have been
+The <code><a href="nng_aio_set_iov.3.html">nng_aio_set_iov()</a></code> function must have been
 called first, to set the scatter/gather vector for <em>aio</em>.
 </td>
 </tr>
@@ -557,18 +557,19 @@ called first, to set the scatter/gather vector for <em>aio</em>.
 <div class="paragraph">
 <p>This function returns immediately, with no return value.
 Completion of the operation is signaled via the <em>aio</em>, and the
-final result may be obtained via <a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>.
+final result may be obtained via <code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>.
 That result will either be zero or an error code.</p>
 </div>
 <div class="paragraph">
 <p>The I/O operation completes only when the entire amount of data
-requested has been written, or an error has occurred. If the operation
-completes successfully, then the entire requested data has been written.</p>
+requested has been written, or an error has occurred.
+If the operation completes successfully, then the entire requested data has
+been written.</p>
 </div>
 <div class="paragraph">
 <p>It is still possible for a partial write to complete in the event of an error.
 The actual number of bytes written can be determined with
-<a href="nng_aio_count.3.html"><code>nng_aio_count()</code></a>.</p>
+<code><a href="nng_aio_count.3.html">nng_aio_count()</a></code>.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -591,8 +592,8 @@ body content.
 </td>
 <td class="content">
 Usually an HTTP request or response will have been written immediately
-prior to this with <a href="nng_http_conn_write_req.3http.html"><code>http_conn_write_req()</code></a> or
-<a href="nng_http_conn_write_res.3http.html"><code>http_conn_write_res()</code></a>.
+prior to this with <code><a href="nng_http_conn_write_req.3http.html">http_conn_write_req()</a></code> or
+<code><a href="nng_http_conn_write_res.3http.html">http_conn_write_res()</a></code>.
 In that case the request or response should have also contained
 an <code>Content-Length</code> header, and possibly a <code>Content-Type</code> header.
 </td>
@@ -608,10 +609,10 @@ an <code>Content-Length</code> header, and possibly a <code>Content-Type</code> 
 <td class="content">
 An easier solution to sending HTTP content data, is to include the
 conten with the request or reply using a function like
-<a href="nng_http_req_copy_data.3http.html"><code>nng_http_req_copy_data()</code></a>.
+<code><a href="nng_http_req_copy_data.3http.html">nng_http_req_copy_data()</a></code>.
 In that case, the body data will be written automatically by the
-<a href="nng_http_conn_write_req.3http.html"><code>http_conn_write_req()</code></a> or
-<a href="nng_http_conn_write_req.3http.html"><code>http_conn_write_res()</code></a> function.
+<code><a href="nng_http_conn_write_req.3http.html">http_conn_write_req()</a></code> or
+<code><a href="nng_http_conn_write_req.3http.html">http_conn_write_res()</a></code> function.
 </td>
 </tr>
 </table>

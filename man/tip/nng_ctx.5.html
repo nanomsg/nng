@@ -508,7 +508,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#NNG_CTX_INITIALIZER">Initialization</a></li>
+</ul>
+</li>
 <li><a href="#_example">EXAMPLE</a></li>
 <li><a href="#_see_also">SEE ALSO</a></li>
 </ul>
@@ -637,14 +641,21 @@ applications, and should be used in lieu of
 <td class="content">
 Use of file descriptor polling (with descriptors
 obtained using the
-<a href="nng_options.5.html#NNG_OPT_RECVFD"><code>NNG_OPT_RECVFD</code></a> or
-<a href="nng_options.5.html#NNG_OPT_SENDFD"><code>NNG_OPT_SENDFD</code></a> options) while contexts
+<code><a href="nng_options.5.html#NNG_OPT_RECVFD">NNG_OPT_RECVFD</a></code> or
+<code><a href="nng_options.5.html#NNG_OPT_SENDFD">NNG_OPT_SENDFD</a></code> options) while contexts
 are in use on the same socket is not supported, and may lead to unpredictable
 behavior.
 These asynchronous methods should not be mixed on the same socket.
 </td>
 </tr>
 </table>
+</div>
+<div class="sect2">
+<h3 id="NNG_CTX_INITIALIZER">Initialization</h3>
+<div class="paragraph">
+<p>A context may be initialized using the macro <code>NNG_CTX_INITIALIZER</code>
+before it is opened, to prevent confusion with valid open contexts.</p>
+</div>
 </div>
 </div>
 </div>
@@ -660,7 +671,7 @@ to the sender.</p>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span>
 <span class="tok-k">struct</span> <span class="tok-n">echo_context</span> <span class="tok-p">{</span>
-    <span class="tok-n">nng_ctx</span> <span class="tok-o">*</span><span class="tok-n">ctx</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">;</span>
     <span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">;</span>
     <span class="tok-k">enum</span> <span class="tok-p">{</span> <span class="tok-n">INIT</span><span class="tok-p">,</span> <span class="tok-n">RECV</span><span class="tok-p">,</span> <span class="tok-n">SEND</span> <span class="tok-p">}</span> <span class="tok-n">state</span><span class="tok-p">;</span>
 <span class="tok-p">};</span>
@@ -698,8 +709,8 @@ to the sender.</p>
 <p>Given the above fragment, the following example shows setting up the
 service.  It assumes that the <a href="nng_socket.5.html">socket</a> has already been
 created and any transports set up as well with functions such as
-<a href="nng_dial.3.html"><code>nng_dial()</code></a>
-or <a href="nng_listen.3.html"><code>nng_listen()</code></a>.</p>
+<code><a href="nng_dial.3.html">nng_dial()</a></code>
+or <code><a href="nng_listen.3.html">nng_listen()</a></code>.</p>
 </div>
 <div class="listingblock">
 <div class="content">
@@ -730,6 +741,7 @@ or <a href="nng_listen.3.html"><code>nng_listen()</code></a>.</p>
 <a href="nng_ctx_close.3.html">nng_ctx_close(3)</a>,
 <a href="nng_ctx_open.3.html">nng_ctx_open(3)</a>,
 <a href="nng_ctx_getopt.3.html">nng_ctx_getopt(3)</a>,
+<a href="nng_ctx_id.3.html">nng_ctx_id(3)</a>,
 <a href="nng_ctx_recv.3.html">nng_ctx_recv(3)</a>,
 <a href="nng_ctx_send.3.html">nng_ctx_send(3)</a>,
 <a href="nng_ctx_setopt.3.html">nng_ctx_setopt(3)</a>,

@@ -552,13 +552,13 @@ In this case the caller must set the value of <em>data</em> to the location
 of another pointer (of type <code>void *</code>), and the <em>sizep</em> pointer must be set
 to a location to receive the size of the message body.
 The function will then allocate a message buffer
-(as if by <a href="nng_alloc.3.html"><code>nng_alloc()</code></a>), fill it with
+(as if by <code><a href="nng_alloc.3.html">nng_alloc()</a></code>), fill it with
 the message body, and store it at the address referenced by <em>data</em>, and update
 the size referenced by <em>sizep</em>.
 When this flag is present, the caller assumes
 responsibility for disposing of the received buffer either by the function
-<a href="nng_free.3.html"><code>nng_free()</code></a> or reusing the message for sending (with the same
-size) in a call to <a href="nng_send.3.html"><code>nng_send()</code></a>.</p>
+<code><a href="nng_free.3.html">nng_free()</a></code> or reusing the message for sending (with the same
+size) in a call to <code><a href="nng_send.3.html">nng_send()</a></code>.</p>
 </div>
 <div class="admonitionblock note">
 <table>

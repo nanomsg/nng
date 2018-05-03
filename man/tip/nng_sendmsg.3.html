@@ -557,7 +557,7 @@ another socket, or simply trying again later.</p>
 </td>
 <td class="content">
 Using this function gives access to the message structure, and may
-offer more functionality than the simpler <a href="nng_send.3.html"><code>nng_send()</code></a> function.
+offer more functionality than the simpler <code><a href="nng_send.3.html">nng_send()</a></code> function.
 </td>
 </tr>
 </table>
@@ -573,7 +573,7 @@ The semantics of what sending a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
 (For example, with a <a href="nng_pub.7.html"><em>pub</em></a> socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
-<a href="nng_recv.3.html"><code>nng_recv()</code></a> or a similar function.)
+<code><a href="nng_recv.3.html">nng_recv()</a></code> or a similar function.)
 Furthermore, some protocols may not support sending (such as
 <a href="nng_sub.7.html"><em>sub</em></a>) or may require other conditions.
 (For example, <a href="nng_rep.7.html"><em>rep</em></a> sockets cannot normally send data, which

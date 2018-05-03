@@ -569,7 +569,7 @@ discovery problems.
 <div class="sect2">
 <h3 id="_socket_operations">Socket Operations</h3>
 <div class="paragraph">
-<p>The <a href="nng_respondent_open.3.html"><code>nng_respondent0_open()</code></a> functions create a
+<p>The <code><a href="nng_respondent_open.3.html">nng_respondent0_open()</a></code> functions create a
 respondent socket.
 This socket may be used to receive messages, and then to send replies.
 A reply can only be sent after receiving a survey, and generally the
@@ -579,7 +579,7 @@ reply will be sent to surveyor from whom the last survey was received.</p>
 <p>Respondents may discard a survey by simply not replying to it.</p>
 </div>
 <div class="paragraph">
-<p>Raw mode sockets (set with <a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>)
+<p>Raw mode sockets (set with <code><a href="nng_options.5.html#NNG_OPT_RAW">NNG_OPT_RAW</a></code>)
 ignore all these restrictions.</p>
 </div>
 </div>
@@ -587,7 +587,7 @@ ignore all these restrictions.</p>
 <h3 id="_context_operations">Context Operations</h3>
 <div class="paragraph">
 <p>This protocol supports the creation of <a href="nng_ctx.5.html">contexts</a> for concurrent
-use cases using <a href="nng_ctx_open.3.html"><code>nng_ctx_open()</code></a>.</p>
+use cases using <code><a href="nng_ctx_open.3.html">nng_ctx_open()</a></code>.</p>
 </div>
 <div class="paragraph">
 <p>Incoming surveys will be routed to and received by only one context.

@@ -570,14 +570,14 @@ considered when determining whether the handler should be called.</p>
 <div class="paragraph">
 <p>Additionally each handler has a method it is registered to handle
 (the default is "GET", see
-<a href="nng_http_handler_set_method.3http.html"><code>nng_http_handler_set_method()</code></a>), and
+<code><a href="nng_http_handler_set_method.3http.html">nng_http_handler_set_method()</a></code>), and
 optionally a 'Host' header it can be matched against (see
-<a href="nng_http_handler_set_host.3http.html"><code>nng_http_handler_set_host()</code></a>).</p>
+<code><a href="nng_http_handler_set_host.3http.html">nng_http_handler_set_host()</a></code>).</p>
 </div>
 <div class="paragraph">
 <p>In some cases, a handler may reference a logical tree rather (directory)
 rather than just a single element.
-(See <a href="nng_http_handler_set_tree.3http.html"><code>nng_http_handler_set_tree()</code></a>).</p>
+(See <code><a href="nng_http_handler_set_tree.3http.html">nng_http_handler_set_tree()</a></code>).</p>
 </div>
 <div class="sect2">
 <h3 id="_custom_handler">Custom Handler</h3>
@@ -585,9 +585,9 @@ rather than just a single element.
 <p>The generic (first) form of this creates a handler that uses a user-supplied
 function to process HTTP requests.
 This function uses the asynchronous I/O framework.
-The function takes a pointer to an <a href="nng_aio.5.html"><code>nng_aio</code></a> structure.
+The function takes a pointer to an <code><a href="nng_aio.5.html">nng_aio</a></code> structure.
 That structure will be passed with the following input values (retrieved with
-<a href="nng_aio_get_input.3.html"><code>nng_aio_get_input()</code></a>):</p>
+<code><a href="nng_aio_get_input.3.html">nng_aio_get_input()</a></code>):</p>
 </div>
 <div class="dlist">
 <dl>
@@ -607,10 +607,10 @@ That structure will be passed with the following input values (retrieved with
 </div>
 <div class="paragraph">
 <p>The handler should create an <code>nng_http_res *</code> response (such as via
-<a href="nng_http_res_alloc.3http.html"><code>nng_http_res_alloc()</code></a> or
-<a href="nng_http_res_alloc_error.3http.html"><code>nng_http_res_alloc_error()</code></a>) and store that
+<code><a href="nng_http_res_alloc.3http.html">nng_http_res_alloc()</a></code> or
+<code><a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error()</a></code>) and store that
 in as the first output (index 0) with
-<a href="nng_aio_set_output.3.html"><code>nng_aio_set_output()</code></a>.</p>
+<code><a href="nng_aio_set_output.3.html">nng_aio_set_output()</a></code>.</p>
 </div>
 <div class="paragraph">
 <p>Alternatively, the handler may send the HTTP response (and any associated
@@ -618,7 +618,7 @@ body data) itself using the connection.
 In that case the output at index 0 of the <em>aio</em> should be NULL.</p>
 </div>
 <div class="paragraph">
-<p>Finally, using the <a href="nng_aio_finish.3.html"><code>nng_aio_finish()</code></a> function, the
+<p>Finally, using the <code><a href="nng_aio_finish.3.html">nng_aio_finish()</a></code> function, the
 <em>aio</em> should be completed successfully.
 If any non-zero status is returned back to the caller instead,
 then a generic 500 response will be created and

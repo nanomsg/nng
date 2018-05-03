@@ -539,8 +539,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>The <code>nng_cv_wake1()</code> wakes at most one thread waiting for the condition
 variable <em>cv</em>
-to be signaled in the <a href="nng_cv_wait.3supp.html"><code>nng_cv_wait()</code></a> or
-<a href="nng_cv_until.3supp.html"><code>nng_cv_until()</code></a> functions.</p>
+to be signaled in the <code><a href="nng_cv_wait.3supp.html">nng_cv_wait()</a></code> or
+<code><a href="nng_cv_until.3supp.html">nng_cv_until()</a></code> functions.</p>
 </div>
 <div class="paragraph">
 <p>The caller must have have ownership of the mutex that was used when
@@ -569,7 +569,7 @@ will check, while holding the mutex.
 While this function avoids the &#8220;thundering herd&#8221; problem, the
 caller cannot predict which waiter will be woken, and so the design must
 ensure that it is sufficient that <em>any</em> waiter be woken.
-When in doubt, it is safer to use <a href="nng_cv_wake.3supp.html"><code>nng_cv_wake()</code></a>.
+When in doubt, it is safer to use <code><a href="nng_cv_wake.3supp.html">nng_cv_wake()</a></code>.
 </td>
 </tr>
 </table>

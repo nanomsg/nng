@@ -550,11 +550,11 @@ and will reuse the existing memory when possible.</p>
 <td class="content">
 One way to further reduce message allocations is to allocate a message
 larger than needed, then use this function or
-<a href="nng_msg_chop.3.html"><code>nng_msg_chop()</code></a> to reduce the message size
+<code><a href="nng_msg_chop.3.html">nng_msg_chop()</a></code> to reduce the message size
 to that actually needed.
 The extra space left
 over will still be present in the message, so that when the message size
-needs to grow due to this function or <a href="nng_msg_append.3.html"><code>nng_msg_append()</code></a>
+needs to grow due to this function or <code><a href="nng_msg_append.3.html">nng_msg_append()</a></code>
 no actual memory allocations need to take place.
 </td>
 </tr>

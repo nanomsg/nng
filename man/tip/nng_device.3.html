@@ -554,7 +554,7 @@ reliability, and isolation.</p>
 <p>Only <a href="nng_options.5.html#NNG_OPT_RAW">raw</a> mode sockets may be used with this
 function.
 These can be created using <code>_raw</code> forms of the various socket constructors,
-such as <a href="nng_req_open.3.html"><code>nng_req0_open_raw()</code></a>.</p>
+such as <code><a href="nng_req_open.3.html">nng_req0_open_raw()</a></code>.</p>
 </div>
 <div class="paragraph">
 <p>The <code>nng_device()</code> function does not return until one of the sockets
@@ -563,8 +563,8 @@ is closed.</p>
 <div class="sect2">
 <h3 id="_reflectors">Reflectors</h3>
 <div class="paragraph">
-<p>One of the sockets may be passed the special value <code>-1</code> (cast to an,
-<a href="nng_socket.5.html"><code>nng_socket</code></a> of course).
+<p>One of the sockets may be passed an inititalize <code>-1</code> (cast to an,
+<code><a href="nng_socket.5.html">nng_socket</a></code> of course).
 If this is the case, then the other socket must be valid, and must be
 a protocol that is bidirectional and can peer with itself (such as
 <a href="nng_pair.7.html"><em>pair</em></a> or
@@ -609,7 +609,7 @@ In these cases, the default limit (usually 8), ensures that messages will
 self-terminate when they have passed through too many forwarders,
 protecting the network from unlimited message amplification that can arise
 through misconfiguration.
-This is controlled via the <a href="nng_options.5.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a>
+This is controlled via the <code><a href="nng_options.5.html#NNG_OPT_MAXTTL">NNG_OPT_MAXTTL</a></code>
 option.</p>
 </div>
 <div class="admonitionblock important">

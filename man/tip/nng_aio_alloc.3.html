@@ -557,23 +557,23 @@ lead ultimately to an apparent "hang" or deadlock in the application.
 </table>
 </div>
 <div class="paragraph">
-<p>Asynchronous I/O operations all take an <a href="nng_aio.5.html"><code>nng_aio</code></a>
+<p>Asynchronous I/O operations all take an <code><a href="nng_aio.5.html">nng_aio</a></code>
 handle such as allocated by this function.
 Such operations are usually started by a function that returns immediately.
 The operation is then run asynchronously, and completes sometime later.
 When that operation is complete, the callback supplied here is called,
 and that callback is able to determine the result of the operation using
-<a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>,
-<a href="nng_aio_count.3.html"><code>nng_aio_count()</code></a>,
-and <a href="nng_aio_get_output.3.html"><code>nng_aio_get_output()</code></a>.</p>
+<code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>,
+<code><a href="nng_aio_count.3.html">nng_aio_count()</a></code>,
+and <code><a href="nng_aio_get_output.3.html">nng_aio_get_output()</a></code>.</p>
 </div>
 <div class="paragraph">
 <p>It is possible to wait synchronously for an otherwise asynchronous operation
-by using the function <a href="nng_aio_wait.3.html"><code>nng_aio_wait()</code></a>.
+by using the function <code><a href="nng_aio_wait.3.html">nng_aio_wait()</a></code>.
 In that case, it is permissible for <em>callb</em> and <em>arg</em> to both be <code>NULL</code>.
 Note that if these are <code>NULL</code>, then it will not be possible to determine when the
 operation is complete except by calling the aforementioned
-<a href="nng_aio_wait.3.html"><code>nng_aio_wait()</code></a>.</p>
+<code><a href="nng_aio_wait.3.html">nng_aio_wait()</a></code>.</p>
 </div>
 </div>
 </div>

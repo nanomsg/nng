@@ -558,7 +558,7 @@ Both IPv4 and IPv6 are supported when the underlying platform also supports it.<
 <div class="paragraph">
 <p>Depending upon how the library was built, it may be necessary to
 register the transport by calling
-<a href="nng_tls_register.3.html"><code>nng_tls_register()</code></a>.</p>
+<code><a href="nng_tls_register.3.html">nng_tls_register()</a></code>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -679,10 +679,10 @@ and could be used to listen to port 9999 on the host:</p>
 <div class="sect2">
 <h3 id="_socket_address">Socket Address</h3>
 <div class="paragraph">
-<p>When using an <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a> structure,
+<p>When using an <code><a href="nng_sockaddr.5.html">nng_sockaddr</a></code> structure,
 the actual structure is either of type
-<a href="nng_sockaddr_in.5.html"><code>nng_sockaddr_in</code></a> (for IPv4) or
-<a href="nng_sockaddr_in6.5.html"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
+<code><a href="nng_sockaddr_in.5.html">nng_sockaddr_in</a></code> (for IPv4) or
+<code><a href="nng_sockaddr_in6.5.html">nng_sockaddr_in6</a></code> (for IPv6).</p>
 </div>
 </div>
 <div class="sect2">
@@ -735,7 +735,7 @@ Use this option when advanced TLS configuration is required.
 <dd>
 <p>This is a write-only option used to load certificates associated
 associated private key from a file.
-See <a href="nng_tls_config_ca_file.3tls.html"><code>nng_tls_config_ca_file()</code></a> for more
+See <code><a href="nng_tls_config_ca_file.3tls.html">nng_tls_config_ca_file()</a></code> for more
 information.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_TLS_CERT_KEY_FILE</code></dt>
@@ -744,7 +744,7 @@ information.</p>
 associated private key from a file. The private key used must be
 unencrypted. (Use the <code>NNG_OPT_TLS_CONFIG</code> option to access the underlying
 TLS configuration if more advanced configuration is needed.)
-See <a href="nng_tls_config_own_cert.3tls.html"><code>nng_tls_config_own_cert()</code></a> for more
+See <code><a href="nng_tls_config_own_cert.3tls.html">nng_tls_config_own_cert()</a></code> for more
 information.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_TLS_AUTH_MODE</code></dt>
@@ -752,7 +752,7 @@ information.</p>
 <p>This is a write-only option used to configure the authentication mode
 used.  It can take an integer with value <code>NNG_TLS_AUTH_MODE_NONE</code>,
 <code>NNG_TLS_AUTH_MODE_REQUIRED</code>, or <code>NNG_TLS_AUTH_MODE_OPTIONAL</code>.
-See <a href="nng_tls_config_auth_mode.3tls.html"><code>nng_tls_config_auth_mode()</code></a> for
+See <code><a href="nng_tls_config_auth_mode.3tls.html">nng_tls_config_auth_mode()</a></code> for
 more details.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_OPT_TLS_VERIFIED</code></dt>

@@ -547,13 +547,13 @@ the HTTP response <em>res</em> to the connection <em>conn</em>.
 The entire response is sent,
 including headers, and if present, the response body data.
 (The response body can be set with
-<a href="nng_http_res_set_data.3http.html"><code>nng_http_res_set_data()</code></a> or
-<a href="nng_http_res_copy_data.3http.html"><code>nng_http_res_copy_data()</code></a>.)</p>
+<code><a href="nng_http_res_set_data.3http.html">nng_http_res_set_data()</a></code> or
+<code><a href="nng_http_res_copy_data.3http.html">nng_http_res_copy_data()</a></code>.)</p>
 </div>
 <div class="paragraph">
 <p>This function returns immediately, with no return value.
 Completion of the operation is signaled via the <em>aio</em>, and the final result
-may be obtained via <a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>.
+may be obtained via <code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>.
 That result will either be zero or an error code.</p>
 </div>
 <div class="sect2">

@@ -539,15 +539,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The <code>nng_strdup()</code> duplicates the string <em>src</em> and returns it.</p>
 </div>
 <div class="paragraph">
-<p>This is logically equiavlent to using <a href="nng_alloc.3.html"><code>nng_alloc()</code></a>
+<p>This is logically equiavlent to using <code><a href="nng_alloc.3.html">nng_alloc()</a></code>
 to allocate a region of memory of <code>strlen(s) + 1</code> bytes, and then
 using <code>strcpy()</code> to copy the string into the destination before
 returning it.</p>
 </div>
 <div class="paragraph">
 <p>The returned string should be deallocated with
-<a href="nng_strfree.3.html"><code>nng_strfree()</code></a>, or may be deallocated using the
-<a href="nng_free.3.html"><code>nng_free()</code></a> using the length of the returned string plus
+<code><a href="nng_strfree.3.html">nng_strfree()</a></code>, or may be deallocated using the
+<code><a href="nng_free.3.html">nng_free()</a></code> using the length of the returned string plus
 one (for the <code>NUL</code> terminating byte).</p>
 </div>
 <div class="admonitionblock important">

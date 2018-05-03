@@ -548,7 +548,7 @@ asynchronous I/O structure <em>aio</em>.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <a href="nng_aio_set_iov.3.html"><code>nng_aio_set_iov()</code></a> function must have been
+The <code><a href="nng_aio_set_iov.3.html">nng_aio_set_iov()</a></code> function must have been
 called first, to set the scatter/gather vector for <em>aio</em>.
 </td>
 </tr>
@@ -558,7 +558,7 @@ called first, to set the scatter/gather vector for <em>aio</em>.
 <p>This function returns immediately, with no return value.
 Completion of the operation is signaled via the <em>aio</em>,
 and the final result may be obtained via
-<a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>.
+<code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>.
 That result will either be zero or an error code.</p>
 </div>
 <div class="paragraph">
@@ -566,7 +566,7 @@ That result will either be zero or an error code.</p>
 read, or an error has occurred.
 Therefore, the number of bytes read may be less than requested.
 The actual number of bytes read can be determined with
-<a href="nng_aio_count.3.html"><code>nng_aio_count()</code></a>.</p>
+<code><a href="nng_aio_count.3.html">nng_aio_count()</a></code>.</p>
 </div>
 <div class="admonitionblock tip">
 <table>

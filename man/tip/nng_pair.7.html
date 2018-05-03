@@ -559,7 +559,7 @@ some additional sophistication in the application.</p>
 <div class="sect2">
 <h3 id="_socket_operations">Socket Operations</h3>
 <div class="paragraph">
-<p>The <a href="nng_pair_open.3.html"><code>nng_pair_open()</code></a> functions create <em>pair</em> socket.</p>
+<p>The <code><a href="nng_pair_open.3.html">nng_pair_open()</a></code> functions create <em>pair</em> socket.</p>
 </div>
 <div class="paragraph">
 <p>Normally, this pattern will block when attempting to send a message if
@@ -574,8 +574,8 @@ no peer is able to receive the message.</p>
 <td class="content">
 Even though this mode may appear to be "reliable", because back-pressure
 prevents discarding messages most of the time, there are topologies involving
-<em>devices</em> (see <a href="nng_device.3.html"><code>nng_device()</code></a>) or raw mode sockets
-(see <a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>) where
+<em>devices</em> (see <code><a href="nng_device.3.html">nng_device()</a></code>) or raw mode sockets
+(see <code><a href="nng_options.5.html#NNG_OPT_RAW">NNG_OPT_RAW</a></code>) where
 messages may be discarded.
 Applications that require reliable delivery semantics should consider using
 <a href="nng_req.7.html"><em>req</em></a> sockets, or
@@ -613,7 +613,7 @@ including the legacy <a href="https://github.com/nanomsg/nanomsg">nanomsg</a> li
 </div>
 <div class="paragraph">
 <p>Version 1 of the protocol offers improved protection against loops when
-used with <a href="nng_device.3.html"><code>nng_device()</code></a>.
+used with <code><a href="nng_device.3.html">nng_device()</a></code>.
 It also offers <em>polyamorous</em> mode for forming multiple partnerships
 on a single socket.</p>
 </div>
@@ -642,12 +642,12 @@ peer.</p>
 support many one-to-one connections.
 In this mode, the application must
 choose the remote peer to receive an ougoing message by setting the
-<a href="nng_pipe.5.html"><code>nng_pipe</code></a> to use for the outgoing message with
-the <a href="nng_msg_set_pipe.3.html"><code>nng_msg_set_pipe()</code></a> function.</p>
+<code><a href="nng_pipe.5.html">nng_pipe</a></code> to use for the outgoing message with
+the <code><a href="nng_msg_set_pipe.3.html">nng_msg_set_pipe()</a></code> function.</p>
 </div>
 <div class="paragraph">
 <p>Most often the value of the outgoing pipe will be obtained from an incoming
-message using the <a href="nng_msg_get_pipe.3.html"><code>nng_msg_get_pipe()</code></a> function,
+message using the <code><a href="nng_msg_get_pipe.3.html">nng_msg_get_pipe()</a></code> function,
 such as when replying to an incoming message.</p>
 </div>
 <div class="paragraph">
@@ -670,7 +670,7 @@ to the sender.</p>
 The value is read-write, and takes an integer boolean value.  The default
 false value (0) indicates that legacy monogamous mode should be used.</p>
 </dd>
-<dt class="hdlist1"><a href="nng_options.5.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a></dt>
+<dt class="hdlist1"><code><a href="nng_options.5.html#NNG_OPT_MAXTTL">NNG_OPT_MAXTTL</a></code></dt>
 <dd>
 <p>(<code>int</code>, version 1 only).  Maximum time-to-live.</p>
 </dd>
@@ -686,7 +686,7 @@ false value (0) indicates that legacy monogamous mode should be used.</p>
 <p>Version 1 of the pair protocol uses a single 32-bit unsigned value.  The
 low-order (big-endian) byte of this value contains a "hop" count, and is
 used in conjuction with the
-<a href="nng_options.5.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a> option to guard against
+<code><a href="nng_options.5.html#NNG_OPT_MAXTTL">NNG_OPT_MAXTTL</a></code> option to guard against
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is
 received by a new node.</p>

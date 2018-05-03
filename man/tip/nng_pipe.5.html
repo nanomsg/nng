@@ -508,7 +508,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#NNG_PIPE_INITIALIZER">Initialization</a></li>
+</ul>
+</li>
 <li><a href="#_see_also">SEE ALSO</a></li>
 </ul>
 </div>
@@ -573,15 +577,30 @@ message delivery.
 </table>
 </div>
 <div class="paragraph">
-<p>Pipe objects are created by dialers (<a href="nng_dialer.5.html"><code>nng_dialer</code></a> objects)
-and listeners (<a href="nng_listener.5.html"><code>nng_listener</code></a> objects), which can be
+<p>Pipe objects are created by dialers (<code><a href="nng_dialer.5.html">nng_dialer</a></code> objects)
+and listeners (<code><a href="nng_listener.5.html">nng_listener</a></code> objects), which can be
 thought of as &#8220;owning&#8221; the pipe.</p>
 </div>
 <div class="paragraph">
 <p>Pipe objects may be destroyed by the
-<a href="nng_pipe_close.3.html"><code>nng_pipe_close()</code></a> function.
+<code><a href="nng_pipe_close.3.html">nng_pipe_close()</a></code> function.
 They are also closed when their &#8220;owning&#8221; dialer or listener is closed,
 or when the remote peer closes the underlying connection.</p>
+</div>
+<div class="sect2">
+<h3 id="NNG_PIPE_INITIALIZER">Initialization</h3>
+<div class="paragraph">
+<p>A pipe may be initialized using the macro <code>NNG_PIPE_INITIALIZER</code>
+before it is opened, to prevent confusion with valid open pipes.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-n">nng_pipe</span> <span class="tok-n">p</span> <span class="tok-o">=</span> <span class="tok-n">NNG_PIPE_INITIALIZER</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -592,6 +611,10 @@ or when the remote peer closes the underlying connection.</p>
 <p><a href="nng_msg_get_pipe.3.html">nng_msg_get_pipe(3)</a>,
 <a href="nng_pipe_close.3.html">nng_pipe_close(3)</a>,
 <a href="nng_pipe_getopt.3.html">nng_pipe_getopt(3)</a>,
+<a href="nng_pipe_dialer.3.html">nng_pipe_dialer(3)</a>,
+<a href="nng_pipe_id.3.html">nng_pipe_id(3)</a>,
+<a href="nng_pipe_listener.3.html">nng_pipe_listener(3)</a>,
+<a href="nng_pipe_socket.3.html">nng_pipe_socket(3)</a>,
 <a href="nng_dialer.5.html">nng_dialer(5)</a>,
 <a href="nng_listener.5.html">nng_listener(5)</a>,
 <a href="nng_options.5.html">nng_options(5)</a>,

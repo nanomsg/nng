@@ -537,7 +537,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>The <code>nng_strfree()</code> function deallocates the string <em>str</em>.
-This is equivalent to using <a href="nng_free.3.html"><code>nng_free()</code></a> with
+This is equivalent to using <code><a href="nng_free.3.html">nng_free()</a></code> with
 the length of <em>str</em> plus one (for the <code>NUL</code> terminating byte) as
 the size.</p>
 </div>
@@ -549,8 +549,8 @@ the size.</p>
 </td>
 <td class="content">
 This should only be used with strings that were allocated
-by <a href="nng_strdup.3.html"><code>nng_strdup()</code></a> or
-<a href="nng_alloc.3.html"><code>nng_alloc()</code></a>.
+by <code><a href="nng_strdup.3.html">nng_strdup()</a></code> or
+<code><a href="nng_alloc.3.html">nng_alloc()</a></code>.
 In all cases, the allocation size of the string must be the same
 as <code>strlen(<em>str</em>) + 1</code>.
 </td>
@@ -565,9 +565,9 @@ as <code>strlen(<em>str</em>) + 1</code>.
 </td>
 <td class="content">
 Consequently, if the a string created with
-<a href="nng_strdup.3.html"><code>nng_strdup()</code></a> is modified to be shorter, then
+<code><a href="nng_strdup.3.html">nng_strdup()</a></code> is modified to be shorter, then
 it is incorrect to call this function.
-(The <a href="nng_free.3.html"><code>nng_free()</code></a> function can be used instead in that
+(The <code><a href="nng_free.3.html">nng_free()</a></code> function can be used instead in that
 case, using the length of the original string plus one for the size.)
 </td>
 </tr>

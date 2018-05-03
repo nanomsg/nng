@@ -566,7 +566,7 @@ a reply is received.
 <div class="sect2">
 <h3 id="_socket_operations">Socket Operations</h3>
 <div class="paragraph">
-<p>The <a href="nng_rep_open.3.html"><code>nng_rep0_open()</code></a> functions create a replier socket.
+<p>The <code><a href="nng_rep_open.3.html">nng_rep0_open()</a></code> functions create a replier socket.
 This socket may be used to receive messages (requests), and then to send
 replies.</p>
 </div>
@@ -589,7 +589,7 @@ Any additional concurrent receive operations will result in <code>NNG_ESTATE</co
 <h3 id="_context_operations">Context Operations</h3>
 <div class="paragraph">
 <p>This protocol supports the creation of <a href="nng_ctx.5.html">contexts</a> for concurrent
-use cases using <a href="nng_ctx_open.3.html"><code>nng_ctx_open()</code></a>.</p>
+use cases using <code><a href="nng_ctx_open.3.html">nng_ctx_open()</a></code>.</p>
 </div>
 <div class="paragraph">
 <p>Each context may have at most one outstanding request, and operates

@@ -570,7 +570,7 @@ service discovery problems.
 <div class="sect2">
 <h3 id="_socket_operations">Socket Operations</h3>
 <div class="paragraph">
-<p>The <a href="nng_surveyor_open.3.html"><code>nng_surveyor0_open()</code></a>
+<p>The <code><a href="nng_surveyor_open.3.html">nng_surveyor0_open()</a></code>
 functions create a surveyor socket.
 This socket may be used to send messages (surveys), and then to receive replies.
 A reply can only be received after sending a survey.
@@ -597,16 +597,20 @@ survey that arrive after this will be discarded.</p>
 <h3 id="_context_operations">Context Operations</h3>
 <div class="paragraph">
 <p>This protocol supports the creation of <a href="nng_ctx.5.html">contexts</a> for concurrent
-use cases using <a href="nng_ctx_open.3.html"><code>nng_ctx_open()</code></a>.</p>
+use cases using <code><a href="nng_ctx_open.3.html">nng_ctx_open()</a></code>.</p>
 </div>
 <div class="paragraph">
 <p>Each context can initiate its own surveys, and it will receive only
 responses to its own outstanding surveys.
 Other contexts on the same socket may have overlapping surveys
-operating at the same time.
-Each of these may have their own timeouts established with
-<code>NNG_OPT_SURVEYOR_SURVEYTIME</code>.
-Additionally, sending a survey on a context will only cancel an outstanding
+operating at the same time.</p>
+</div>
+<div class="paragraph">
+<p>Each of these may have their own timeouts established with
+<code>NNG_OPT_SURVEYOR_SURVEYTIME</code>.</p>
+</div>
+<div class="paragraph">
+<p>Additionally, sending a survey on a context will only cancel an outstanding
 survey on the same context.</p>
 </div>
 <div class="admonitionblock note">
@@ -644,7 +648,7 @@ version.)</p>
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_SURVEYOR_SURVEYTIME</code></dt>
 <dd>
-<p>This read/write option is an <a href="nng_duration.5.html"><code>nng_duration</code></a>
+<p>This read/write option is an <code><a href="nng_duration.5.html">nng_duration</a></code>
 representing a postive number of milliseconds that following surveys
 will last.
 When a new survey is started, a timer of this duration is also started.
@@ -661,7 +665,7 @@ Attempts to receive when this timer expires will result in <code>NNG_ETIMEDOUT</
 <h3 id="_protocol_headers">Protocol Headers</h3>
 <div class="paragraph">
 <p>
-This form uses a "stack" of 32-bit big-endian identifiers.
+This form uses a &#8220;stack&#8221; of 32-bit big-endian identifiers.
 There <strong>must</strong> be at least one identifier, the <em>survey ID</em>, which will be the
 last element in the array, and <strong>must</strong> have the most significant bit set.</p>
 </div>
@@ -672,7 +676,7 @@ significant bit clear.</p>
 </div>
 <div class="paragraph">
 <p>When a survey message is received by a forwarding node (see
-<a href="nng_device.3.html"><code>nng_device()</code></a>), the forwarding node prepends a
+<code><a href="nng_device.3.html">nng_device()</a></code>), the forwarding node prepends a
 32-bit peer ID (which <strong>must</strong> have the most significant bit clear),
 which is the forwarder&#8217;s way of identifying the directly connected
 peer from which it received the message.
@@ -680,7 +684,7 @@ peer from which it received the message.
 most significant bit, has meaning only to the forwarding node itself.)</p>
 </div>
 <div class="paragraph">
-<p>It may help to think of prepending a peer ID as "pushing" a peer ID onto the
+<p>It may help to think of prepending a peer ID as &#8220;pushing&#8221; a peer ID onto the
 front of the stack of headers for the message.
 (It will use the peer ID
 it popped from the front to determine the next intermediate destination
@@ -691,7 +695,7 @@ for the response.)</p>
 that the survey contained.</p>
 </div>
 <div class="paragraph">
-<p>A forwarding node can "pop" the peer ID it originally pushed on the
+<p>A forwarding node can &#8220;pop&#8221; the peer ID it originally pushed on the
 message, stripping it from the front of the message as it does so.</p>
 </div>
 <div class="paragraph">

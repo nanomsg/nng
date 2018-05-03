@@ -580,7 +580,7 @@ some reason.)
 <p>
 The requester generally only has one outstanding request at a time unless
 in "raw" mode (via
-<a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>),
+<code><a href="nng_options.5.html#NNG_OPT_RAW">NNG_OPT_RAW</a></code>),
 and it will generally attempt to spread work requests to different peer repliers.</p>
 </div>
 <div class="admonitionblock tip">
@@ -590,7 +590,7 @@ and it will generally attempt to spread work requests to different peer repliers
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-This property, when combined with <a href="nng_device.3.html"><code>nng_device()</code></a>
+This property, when combined with <code><a href="nng_device.3.html">nng_device()</a></code>
 can help provide a degree of load-balancing.
 </td>
 </tr>
@@ -603,7 +603,7 @@ can help provide a degree of load-balancing.
 <div class="sect2">
 <h3 id="_socket_operations">Socket Operations</h3>
 <div class="paragraph">
-<p>The <a href="nng_req_open.3.html"><code>nng_req0_open()</code></a> functions create a requester socket.
+<p>The <code><a href="nng_req_open.3.html">nng_req0_open()</a></code> functions create a requester socket.
 This socket may be used to send messages (requests), and then to receive replies.</p>
 </div>
 <div class="paragraph">
@@ -631,14 +631,18 @@ that has already been placed on the wire.</p>
 <h3 id="_context_operations">Context Operations</h3>
 <div class="paragraph">
 <p>This protocol supports the creation of <a href="nng_ctx.5.html">contexts</a> for concurrent
-use cases using <a href="nng_ctx_open.3.html"><code>nng_ctx_open()</code></a>.
-The <code>NNG_OPT_REQ_RESENDTIME</code> value may be configured differently
+use cases using <code><a href="nng_ctx_open.3.html">nng_ctx_open()</a></code>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>NNG_OPT_REQ_RESENDTIME</code> value may be configured differently
 on contexts created this way.</p>
 </div>
 <div class="paragraph">
 <p>Each context may have at most one outstanding request, and operates
-independently from the others.
-The restrictions for order of operations with sockets apply equally
+independently from the others.</p>
+</div>
+<div class="paragraph">
+<p>The restrictions for order of operations with sockets apply equally
 well for contexts, except that each context will be treated as if it were
 a separate socket.</p>
 </div>
@@ -659,11 +663,12 @@ a separate socket.</p>
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_REQ_RESENDTIME</code></dt>
 <dd>
-<p>This read/write option is a duration (32-bit unsigned integer) representing
-a relative number of milliseconds.
+<p>This read/write option is a duration (<code><a href="nng_duration.5.html">nng_duration</a></code>)
+representing a relative number of milliseconds.
 When a new request is started, a timer of this duration is also started.
 If no reply is received before this timer expires, then the request will
-be resent.  (Requests are also automatically resent if the peer to whom
+be resent.
+(Requests are also automatically resent if the peer to whom
 the original request was sent disconnects, or if a peer becomes available
 while the requester is waiting for an available peer.)</p>
 </dd>
@@ -675,7 +680,7 @@ while the requester is waiting for an available peer.)</p>
 <div class="paragraph">
 <p>
 This protocol uses a <em>backtrace</em> in the header.
-This form uses a "stack" of 32-bit big-endian identifiers.
+This form uses a &#8220;stack&#8221; of 32-bit big-endian identifiers.
 There <strong>must</strong> be at least one identifier, the <em>request ID</em>, which will be the
 last element in the array, and <strong>must</strong> have the most significant bit set.</p>
 </div>
@@ -686,7 +691,7 @@ significant bit clear.</p>
 </div>
 <div class="paragraph">
 <p>When a request message is received by a forwarding node (see
-<a href="nng_device.3.html"><code>nng_device()</code></a>), the forwarding node prepends a
+<code><a href="nng_device.3.html">nng_device()</a></code>), the forwarding node prepends a
 32-bit peer ID (which <strong>must</strong> have the most significant bit clear),
 which is the forwarder&#8217;s way of identifying the directly connected
 peer from which it received the message.
@@ -694,7 +699,7 @@ peer from which it received the message.
 most significant bit, has meaning only to the forwarding node itself.)</p>
 </div>
 <div class="paragraph">
-<p>It may help to think of prepending a peer ID as "pushing" a peer ID onto the
+<p>It may help to think of prepending a peer ID as &#8220;pushing&#8221; a peer ID onto the
 front of the stack of headers for the message.
 (It will use the peer ID
 it popped from the front to determine the next intermediate destination
@@ -705,7 +710,7 @@ for the reply.)</p>
 that the request contained.</p>
 </div>
 <div class="paragraph">
-<p>A forwarding node can "pop" the peer ID it originally pushed on the
+<p>A forwarding node can &#8220;pop&#8221; the peer ID it originally pushed on the
 message, stripping it from the front of the message as it does so.</p>
 </div>
 <div class="paragraph">

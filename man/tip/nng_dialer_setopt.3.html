@@ -625,7 +625,7 @@ The <em>ival</em> is passed to the option.</p>
 <h4 id="_code_nng_dialer_setopt_ms_code"><code>nng_dialer_setopt_ms()</code></h4>
 <div class="paragraph">
 <p>This function is used to configure time durations (such as timeouts) using
-type <a href="nng_duration.5.html"><code>nng_duration</code></a>.
+type <code><a href="nng_duration.5.html">nng_duration</a></code>.
 The duration <em>dur</em> is an integer number of milliseconds.</p>
 </div>
 </div>
@@ -635,7 +635,7 @@ The duration <em>dur</em> is an integer number of milliseconds.</p>
 <p>This function is used to pass a pointer, <em>ptr</em>, to structured data.
 The data referenced by <em>ptr</em> is generally managed by other functions.
 For example, TLS configuration objects created with
-(<a href="nng_tls_config_alloc.3tls.html"><code>nng_tls_config_alloc()</code></a>)
+(<code><a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc()</a></code>)
 can be passed this way.
 Note that this form is somewhat special in that the object is generally
 not copied, but instead the <strong>pointer</strong> to the object is copied.</p>
