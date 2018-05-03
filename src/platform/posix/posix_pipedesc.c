@@ -26,6 +26,12 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#if defined(NNG_HAVE_GETPEERUCRED)
+#include <ucred.h>
+#elif defined(NNG_HAVE_LOCALPEERCRED)
+#include <sys/ucred.h>
+#include <sys/un.h>
+#endif
 
 // nni_posix_pipedesc is a descriptor kept one per transport pipe (i.e. open
 // file descriptor for TCP socket, etc.)  This contains the list of pending
@@ -400,6 +406,68 @@ nni_posix_pipedesc_init(nni_posix_pipedesc **pdp, int fd)
 	}
 	*pdp = pd;
 	return (0);
+}
+
+int
+nni_posix_pipedesc_get_peerid(nni_posix_pipedesc *pd, uint64_t *euid,
+    uint64_t *egid, uint64_t *prid, uint64_t *znid)
+{
+	int fd = pd->node.fd;
+#if defined(NNG_HAVE_GETPEEREID)
+	uid_t uid;
+	gid_t gid;
+
+	if (getpeereid(fd, &uid, &gid) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	*euid = uid;
+	*egid = gid;
+	*prid = (uint64_t) -1;
+	*znid = (uint64_t) -1;
+	return (0);
+#elif defined(NNG_HAVE_GETPEERUCRED)
+	ucred *ucp;
+	if (getpeerucred(fd, &ucp) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	*euid = ucred_geteuid(ucp);
+	*egid = ucred_geteuid(ucp);
+	*prid = ucred_getpid(ucp);
+	*znid = ucred_getzoneid(ucp);
+	ucred_free(ucp);
+	return (0);
+#elif defined(NNG_HAVE_SOPEERCRED)
+	struct ucred uc;
+	socklen_t    len = sizeof(uc);
+	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	*euid = uc.uid;
+	*egid = uc.gid;
+	*prid = uc.pid;
+	*znid = (uint64_t) -1;
+	return (0);
+#elif defined(NNG_HAVE_LOCALPEERCRED)
+	struct xucred xu;
+	socklen_t     len = sizeof(xu);
+	if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERCRED, &xu, &len) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	*euid = xu.cr_uid;
+	*egid = xu.cr_gid;
+	*prid = (uint64_t) -1; // XXX: macOS has undocumented LOCAL_PEERPID...
+	*znid = (uint64_t) -1;
+	return (0);
+#else
+	if (fd < 0) {
+		return (NNG_ECLOSED);
+	}
+	NNI_ARG_UNUSED(euid);
+	NNI_ARG_UNUSED(egid);
+	NNI_ARG_UNUSED(prid);
+	NNI_ARG_UNUSED(znid);
+	return (NNG_ENOTSUP);
+#endif
 }
 
 void

@@ -537,6 +537,54 @@ nni_ipc_pipe_get_addr(void *arg, void *buf, size_t *szp, int typ)
 	return (nni_copyout_sockaddr(&p->sa, buf, szp, typ));
 }
 
+static int
+nni_ipc_pipe_get_peer_uid(void *arg, void *buf, size_t *szp, int typ)
+{
+	nni_ipc_pipe *p = arg;
+	uint64_t      id;
+	int           rv;
+	if ((rv = nni_plat_ipc_pipe_get_peer_uid(p->ipp, &id)) != 0) {
+		return (rv);
+	}
+	return (nni_copyout_u64(id, buf, szp, typ));
+}
+
+static int
+nni_ipc_pipe_get_peer_gid(void *arg, void *buf, size_t *szp, int typ)
+{
+	nni_ipc_pipe *p = arg;
+	uint64_t      id;
+	int           rv;
+	if ((rv = nni_plat_ipc_pipe_get_peer_gid(p->ipp, &id)) != 0) {
+		return (rv);
+	}
+	return (nni_copyout_u64(id, buf, szp, typ));
+}
+
+static int
+nni_ipc_pipe_get_peer_pid(void *arg, void *buf, size_t *szp, int typ)
+{
+	nni_ipc_pipe *p = arg;
+	uint64_t      id;
+	int           rv;
+	if ((rv = nni_plat_ipc_pipe_get_peer_pid(p->ipp, &id)) != 0) {
+		return (rv);
+	}
+	return (nni_copyout_u64(id, buf, szp, typ));
+}
+
+static int
+nni_ipc_pipe_get_peer_zoneid(void *arg, void *buf, size_t *szp, int typ)
+{
+	nni_ipc_pipe *p = arg;
+	uint64_t      id;
+	int           rv;
+	if ((rv = nni_plat_ipc_pipe_get_peer_zoneid(p->ipp, &id)) != 0) {
+		return (rv);
+	}
+	return (nni_copyout_u64(id, buf, szp, typ));
+}
+
 static void
 nni_ipc_ep_fini(void *arg)
 {
@@ -784,6 +832,26 @@ static nni_tran_pipe_option nni_ipc_pipe_options[] = {
 	    .po_name   = NNG_OPT_LOCADDR,
 	    .po_type   = NNI_TYPE_SOCKADDR,
 	    .po_getopt = nni_ipc_pipe_get_addr,
+	},
+	{
+	    .po_name   = NNG_OPT_IPC_PEER_UID,
+	    .po_type   = NNI_TYPE_UINT64,
+	    .po_getopt = nni_ipc_pipe_get_peer_uid,
+	},
+	{
+	    .po_name   = NNG_OPT_IPC_PEER_GID,
+	    .po_type   = NNI_TYPE_UINT64,
+	    .po_getopt = nni_ipc_pipe_get_peer_gid,
+	},
+	{
+	    .po_name   = NNG_OPT_IPC_PEER_PID,
+	    .po_type   = NNI_TYPE_UINT64,
+	    .po_getopt = nni_ipc_pipe_get_peer_pid,
+	},
+	{
+	    .po_name   = NNG_OPT_IPC_PEER_ZONEID,
+	    .po_type   = NNI_TYPE_UINT64,
+	    .po_getopt = nni_ipc_pipe_get_peer_zoneid,
 	},
 	// terminate list
 	{

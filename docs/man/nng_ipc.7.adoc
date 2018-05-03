@@ -68,8 +68,9 @@ the actual structure is of type `<<nng_sockaddr_ipc.5#,nng_sockaddr_ipc>>`.
 
 ((`NNG_OPT_IPC_PERMISSIONS`))::
 
-This write-only option may be used to configure the permissions that
-are used on the UNIX domain socket created by a listener.
+(`int`)
+This write-only option may be applied to a listener to configure the
+permissions that are used on the UNIX domain socket created by that listener.
 This property is only supported on POSIX systems.
 The value is of type `int`, representing the normal permission bits
 on a file, such as `0600` (typically meaning read-write to the owner, and
@@ -84,11 +85,49 @@ NOTE: The _umask_ of the process is *not* applied to these bits.
 
 ((`NNG_OPT_IPC_SECURITY_DESCRIPTOR`))::
 
-This write-only option may be used on Windows platforms to configure
-the `SECURITY_DESCRIPTOR` that is used when creating the underying
+(`PSECURITY_DESCRIPTOR`)
+This write-only option may be used on listeners on Windows platforms to
+configure the `SECURITY_DESCRIPTOR` that is used when creating the underlying
 named pipe.
 The value is a pointer, `PSECURITY_DESCRIPTOR`, and may only be
 applied to listeners that have not been started yet.
+
+((`NNG_OPT_IPC_PEER_UID`))::
+
+(`uint64_t`)
+This read-only option may be read from a pipe to determine the peer user id.
+This is the effective user id of the peer when either the underlying
+`listen()` or `connect()` calls were made, and is not forgeable.
+This option is generally only available on POSIX systems.
+
+((`NNG_OPT_IPC_PEER_GID`))::
+
+(`uint64_t`)
+This read-only option may be read from a pipe to determine the peer primary
+group id.
+This is the effective group id of the peer when either the underlying
+`listen()` or `connect()` calls were made, and is not forgeable.
+This option is generally only available on POSIX systems.
+
+((`NNG_OPT_IPC_PEER_PID`))::
+
+(`uint64_t`)
+This read-only option may be read from a pipe to determine the process id
+of the peer.
+This option is only available on Windows, Linux, and certain other systems.
+
+NOTE: Applications should not assume that the process ID does not change,
+as it is possible (although unsupported!) for a nefarious process to pass a
+file descriptor between processes.
+However, it is not possible for a nefarious application to forge the identity
+of a well-behaved one using this method.
+
+((`NNG_OPT_IPC_PEER_ZONEID`))::
+
+(`uint64_t`)
+This read-only option may be read from a pipe to determine the zone id
+of the peer.
+Zones (and this option) are only supported on Solaris and illumos systems.
 
 == SEE ALSO
 

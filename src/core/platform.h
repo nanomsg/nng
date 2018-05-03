@@ -341,6 +341,21 @@ extern void nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *, nni_aio *);
 // The platform may modify the iovs.
 extern void nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *, nni_aio *);
 
+// nni_plat_ipc_pipe_get_peer_uid obtains the peer user id, if possible.
+// NB: Only POSIX systems support user IDs.
+extern int nni_plat_ipc_pipe_get_peer_uid(nni_plat_ipc_pipe *, uint64_t *);
+
+// nni_plat_ipc_pipe_get_peer_gid obtains the peer group id, if possible.
+// NB: Only POSIX systems support group IDs.
+extern int nni_plat_ipc_pipe_get_peer_gid(nni_plat_ipc_pipe *, uint64_t *);
+
+// nni_plat_ipc_pipe_get_peer_pid obtains the peer process id, if possible.
+extern int nni_plat_ipc_pipe_get_peer_pid(nni_plat_ipc_pipe *, uint64_t *);
+
+// nni_plat_ipc_pipe_get_peer_zoneid obtains the peer zone id, if possible.
+// NB: Only illumos & SunOS systems have the notion of "zones".
+extern int nni_plat_ipc_pipe_get_peer_zoneid(nni_plat_ipc_pipe *, uint64_t *);
+
 //
 // UDP support. UDP is not connection oriented, and only has the notion
 // of being bound, sendto, and recvfrom.  (It is possible to set up a

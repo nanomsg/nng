@@ -183,4 +183,68 @@ nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *p, nni_aio *aio)
 	nni_posix_pipedesc_recv((void *) p, aio);
 }
 
+int
+nni_plat_ipc_pipe_get_peer_uid(nni_plat_ipc_pipe *p, uint64_t *uid)
+{
+	int      rv;
+	uint64_t ignore;
+
+	if ((rv = nni_posix_pipedesc_get_peerid(
+	         (void *) p, uid, &ignore, &ignore, &ignore)) != 0) {
+		return (rv);
+	}
+	return (0);
+}
+
+int
+nni_plat_ipc_pipe_get_peer_gid(nni_plat_ipc_pipe *p, uint64_t *gid)
+{
+	int      rv;
+	uint64_t ignore;
+
+	if ((rv = nni_posix_pipedesc_get_peerid(
+	         (void *) p, &ignore, gid, &ignore, &ignore)) != 0) {
+		return (rv);
+	}
+	return (0);
+}
+
+int
+nni_plat_ipc_pipe_get_peer_zoneid(nni_plat_ipc_pipe *p, uint64_t *zid)
+{
+	int      rv;
+	uint64_t ignore;
+	uint64_t id;
+
+	if ((rv = nni_posix_pipedesc_get_peerid(
+	         (void *) p, &ignore, &ignore, &ignore, &id)) != 0) {
+		return (rv);
+	}
+	if (id == (uint64_t) -1) {
+		// NB: -1 is not a legal zone id (illumos/Solaris)
+		return (NNG_ENOTSUP);
+	}
+	*zid = id;
+	return (0);
+}
+
+int
+nni_plat_ipc_pipe_get_peer_pid(nni_plat_ipc_pipe *p, uint64_t *pid)
+{
+	int      rv;
+	uint64_t ignore;
+	uint64_t id;
+
+	if ((rv = nni_posix_pipedesc_get_peerid(
+	         (void *) p, &ignore, &ignore, &id, &ignore)) != 0) {
+		return (rv);
+	}
+	if (id == (uint64_t) -1) {
+		// NB: -1 is not a legal process id
+		return (NNG_ENOTSUP);
+	}
+	*pid = id;
+	return (0);
+}
+
 #endif // NNG_PLATFORM_POSIX

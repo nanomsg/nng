@@ -16,6 +16,7 @@
 
 struct nni_plat_ipc_pipe {
 	HANDLE        p;
+	int           mode;
 	nni_win_event rcv_ev;
 	nni_win_event snd_ev;
 };
@@ -128,7 +129,7 @@ nni_win_ipc_pipe_finish(nni_win_event *evt, nni_aio *aio)
 }
 
 static int
-nni_win_ipc_pipe_init(nni_plat_ipc_pipe **pipep, HANDLE p)
+nni_win_ipc_pipe_init(nni_plat_ipc_pipe **pipep, HANDLE p, int mode)
 {
 	nni_plat_ipc_pipe *pipe;
 	int                rv;
@@ -136,6 +137,7 @@ nni_win_ipc_pipe_init(nni_plat_ipc_pipe **pipep, HANDLE p)
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	pipe->mode = mode;
 	rv = nni_win_event_init(&pipe->rcv_ev, &nni_win_ipc_pipe_ops, pipe);
 	if (rv != 0) {
 		nni_plat_ipc_pipe_fini(pipe);
@@ -186,6 +188,56 @@ nni_plat_ipc_pipe_fini(nni_plat_ipc_pipe *pipe)
 	nni_win_event_fini(&pipe->snd_ev);
 	nni_win_event_fini(&pipe->rcv_ev);
 	NNI_FREE_STRUCT(pipe);
+}
+
+int
+nni_plat_ipc_pipe_get_peer_uid(nni_plat_ipc_pipe *pipe, uint64_t *id)
+{
+	NNI_ARG_UNUSED(pipe);
+	NNI_ARG_UNUSED(id);
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_plat_ipc_pipe_get_peer_gid(nni_plat_ipc_pipe *pipe, uint64_t *id)
+{
+	NNI_ARG_UNUSED(pipe);
+	NNI_ARG_UNUSED(id);
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_plat_ipc_pipe_get_peer_zoneid(nni_plat_ipc_pipe *pipe, uint64_t *id)
+{
+	NNI_ARG_UNUSED(pipe);
+	NNI_ARG_UNUSED(id);
+	return (NNG_ENOTSUP);
+}
+
+// nni_plat_ipc_pipe_get_peer_gid obtains the peer group id, if possible.
+// NB: Only POSIX systems support group IDs.
+int
+nni_plat_ipc_pipe_get_peer_pid(nni_plat_ipc_pipe *pipe, uint64_t *pid)
+{
+	ULONG id;
+	switch (pipe->mode) {
+	case NNI_EP_MODE_DIAL:
+		if (!GetNamedPipeServerProcessId(pipe->p, &id)) {
+			return (nni_win_error(GetLastError()));
+		}
+		*pid = id;
+		break;
+	case NNI_EP_MODE_LISTEN:
+		if (!GetNamedPipeClientProcessId(pipe->p, &id)) {
+			return (nni_win_error(GetLastError()));
+		}
+		*pid = id;
+		break;
+	default:
+		// Should never occur!
+		return (NNG_EINVAL);
+	}
+	return (0);
 }
 
 int
@@ -331,7 +383,8 @@ nni_win_ipc_acc_finish(nni_win_event *evt, nni_aio *aio)
 	oldp  = ep->p;
 	ep->p = newp;
 
-	if ((rv = nni_win_ipc_pipe_init(&pipe, oldp)) != 0) {
+	if ((rv = nni_win_ipc_pipe_init(&pipe, oldp, NNI_EP_MODE_LISTEN)) !=
+	    0) {
 		// The new pipe is already fine for us.  Discard
 		// the old one, since failed to be able to use it.
 		DisconnectNamedPipe(oldp);
@@ -466,7 +519,8 @@ nni_win_ipc_conn_thr(void *arg)
 				}
 				goto fail;
 			}
-			if (((rv = nni_win_ipc_pipe_init(&pipe, p)) != 0) ||
+			if (((rv = nni_win_ipc_pipe_init(
+			          &pipe, p, NNI_EP_MODE_DIAL)) != 0) ||
 			    ((rv = nni_win_iocp_register(p)) != 0)) {
 				goto fail;
 			}
