@@ -621,8 +621,9 @@ the actual structure is of type <code><a href="nng_sockaddr_ipc.5.html">nng_sock
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_IPC_PERMISSIONS</code></dt>
 <dd>
-<p>This write-only option may be used to configure the permissions that
-are used on the UNIX domain socket created by a listener.
+<p>(<code>int</code>)
+This write-only option may be applied to a listener to configure the
+permissions that are used on the UNIX domain socket created by that listener.
 This property is only supported on POSIX systems.
 The value is of type <code>int</code>, representing the normal permission bits
 on a file, such as <code>0600</code> (typically meaning read-write to the owner, and
@@ -661,11 +662,63 @@ The <em>umask</em> of the process is <strong>not</strong> applied to these bits.
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code></dt>
 <dd>
-<p>This write-only option may be used on Windows platforms to configure
-the <code>SECURITY_DESCRIPTOR</code> that is used when creating the underying
+<p>(<code>PSECURITY_DESCRIPTOR</code>)
+This write-only option may be used on listeners on Windows platforms to
+configure the <code>SECURITY_DESCRIPTOR</code> that is used when creating the underlying
 named pipe.
 The value is a pointer, <code>PSECURITY_DESCRIPTOR</code>, and may only be
 applied to listeners that have not been started yet.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_IPC_PEER_UID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option may be read from a pipe to determine the peer user id.
+This is the effective user id of the peer when either the underlying
+<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
+This option is generally only available on POSIX systems.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_IPC_PEER_GID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option may be read from a pipe to determine the peer primary
+group id.
+This is the effective group id of the peer when either the underlying
+<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
+This option is generally only available on POSIX systems.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_IPC_PEER_PID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option may be read from a pipe to determine the process id
+of the peer.
+This option is only available on Windows, Linux, and certain other systems.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Applications should not assume that the process ID does not change,
+as it is possible (although unsupported!) for a nefarious process to pass a
+file descriptor between processes.
+However, it is not possible for a nefarious application to forge the identity
+of a well-behaved one using this method.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_IPC_PEER_ZONEID</code></dt>
+<dd>
+<p>(<code>uint64_t</code>)
+This read-only option may be read from a pipe to determine the zone id
+of the peer.
+Zones (and this option) are only supported on Solaris and illumos systems.</p>
 </dd>
 </dl>
 </div>
