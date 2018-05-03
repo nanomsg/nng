@@ -85,11 +85,13 @@ TestMain("Pipe notify works", {
 		So(nng_setopt_ms(push.s, NNG_OPT_RECONNMAXT, 10) == 0);
 
 		Convey("Dialing works", {
-			So(nng_listen(pull.s, addr, &pull.l, 0) == 0);
+			So(nng_listener_create(&pull.l, pull.s, addr) == 0);
+			So(nng_dialer_create(&push.d, push.s, addr) == 0);
 			So(nng_listener_id(pull.l) > 0);
-			So(nng_dial(push.s, addr, &push.d, 0) == 0);
 			So(nng_dialer_id(push.d) > 0);
-			nng_msleep(200);
+			So(nng_listener_start(pull.l, 0) == 0);
+			So(nng_dialer_start(push.d, 0) == 0);
+			nng_msleep(100);
 			So(pull.add == 1);
 			So(pull.rem == 0);
 			So(pull.err == 0);
@@ -99,7 +101,6 @@ TestMain("Pipe notify works", {
 			Convey("We can send a frame", {
 				nng_msg *msg;
 
-				nng_msleep(200);
 				So(nng_msg_alloc(&msg, 0) == 0);
 				APPENDSTR(msg, "hello");
 				So(nng_sendmsg(push.s, msg, 0) == 0);
