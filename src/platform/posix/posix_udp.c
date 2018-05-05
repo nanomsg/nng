@@ -31,10 +31,8 @@
 // UDP support.
 
 // If we can suppress SIGPIPE on send, please do so.
-#ifdef MSG_NOSIGNAL
-#define NNI_MSG_NOSIGNAL MSG_NOSIGNAL
-#else
-#define NNI_MSG_NOSIGNAL 0
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0
 #endif
 
 struct nni_plat_udp {
@@ -70,7 +68,7 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 		nni_iov *               aiov;
 		struct sockaddr_storage ss;
 		nng_sockaddr *          sa;
-		struct msghdr           hdr;
+		struct msghdr           hdr = { .msg_name = NULL };
 		int                     rv  = 0;
 		int                     cnt = 0;
 
@@ -80,13 +78,10 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 			iov[i].iov_base = aiov[i].iov_buf;
 			iov[i].iov_len  = aiov[i].iov_len;
 		}
-		hdr.msg_iov        = iov;
-		hdr.msg_iovlen     = niov;
-		hdr.msg_name       = &ss;
-		hdr.msg_namelen    = sizeof(ss);
-		hdr.msg_flags      = 0;
-		hdr.msg_control    = NULL;
-		hdr.msg_controllen = 0;
+		hdr.msg_iov     = iov;
+		hdr.msg_iovlen  = niov;
+		hdr.msg_name    = &ss;
+		hdr.msg_namelen = sizeof(ss);
 
 		if ((cnt = recvmsg(udp->udp_fd, &hdr, 0)) < 0) {
 			if ((errno == EAGAIN) || (errno == EWOULDBLOCK)) {
@@ -124,9 +119,8 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 		if (len < 1) {
 			rv = NNG_EADDRINVAL;
 		} else {
-			struct msghdr hdr;
-			unsigned      niov;
-			nni_iov *     aiov;
+			unsigned niov;
+			nni_iov *aiov;
 #ifdef NNG_HAVE_ALLOCA
 			struct iovec *iov;
 #else
@@ -145,22 +139,19 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 				rv = NNG_EINVAL;
 			}
 #endif
-
 			if (rv == 0) {
+				struct msghdr hdr = { .msg_name = NULL };
 				for (unsigned i = 0; i < niov; i++) {
 					iov[i].iov_base = aiov[i].iov_buf;
 					iov[i].iov_len  = aiov[i].iov_len;
 				}
-				hdr.msg_iov        = iov;
-				hdr.msg_iovlen     = niov;
-				hdr.msg_name       = &ss;
-				hdr.msg_namelen    = len;
-				hdr.msg_flags      = NNI_MSG_NOSIGNAL;
-				hdr.msg_control    = NULL;
-				hdr.msg_controllen = 0;
+				hdr.msg_iov     = iov;
+				hdr.msg_iovlen  = niov;
+				hdr.msg_name    = &ss;
+				hdr.msg_namelen = len;
 
-				if ((cnt = sendmsg(udp->udp_fd, &hdr, 0)) <
-				    0) {
+				cnt = sendmsg(udp->udp_fd, &hdr, MSG_NOSIGNAL);
+				if (cnt < 0) {
 					if ((errno == EAGAIN) ||
 					    (errno == EWOULDBLOCK)) {
 						// Cannot send now, leave.
