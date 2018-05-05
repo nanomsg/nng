@@ -307,6 +307,7 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "OpenBSD")
 elseif (CMAKE_SYSTEM_NAME MATCHES "SunOS")
     add_definitions (-DNNG_PLATFORM_POSIX)
     add_definitions (-DNNG_PLATFORM_SUNOS)
+    set(NNG_PLATFORM_POSIX ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions (-DNNG_PLATFORM_WINDOWS)
