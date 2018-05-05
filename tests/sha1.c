@@ -60,4 +60,4 @@ TestMain("SHA1 Verification", {
 			So(strcmp(strout, resultarray[i]) == 0);
 		}
 	});
-});
+})

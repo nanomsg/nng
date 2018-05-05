@@ -253,4 +253,4 @@ TestMain("Message Tests", {
 		});
 
 	});
-});
+})

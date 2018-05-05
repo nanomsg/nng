@@ -79,13 +79,13 @@ nni_plat_tcp_ep_listen(nni_plat_tcp_ep *ep, nng_sockaddr *bsa)
 void
 nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
-	return (nni_posix_epdesc_connect((void *) ep, aio));
+	nni_posix_epdesc_connect((void *) ep, aio);
 }
 
 void
 nni_plat_tcp_ep_accept(nni_plat_tcp_ep *ep, nni_aio *aio)
 {
-	return (nni_posix_epdesc_accept((void *) ep, aio));
+	nni_posix_epdesc_accept((void *) ep, aio);
 }
 
 void

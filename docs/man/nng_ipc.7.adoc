@@ -77,11 +77,26 @@ on a file, such as `0600` (typically meaning read-write to the owner, and
 no permissions for anyone else.)
 The default is system-specific, most often `0644`.
 
+IMPORTANT: Not all systems validate these permissions.
+In particular, illumos and Solaris are known to ignore these permission
+settings when connecting.
+
 NOTE: Normally both read and write permission will be necessary for a
 peer dialer to connect.
 See your system documentation for UNIX domain sockets for more information.
 
 NOTE: The _umask_ of the process is *not* applied to these bits.
+
+TIP: The best practice for limiting access is to place the socket in a
+directory writable only by the server, and only readable and searchable
+by clients.
+All mainstream POSIX systems will fail to permit a client to connect
+to a socket located in a diretor for which the client lacks search (execute)
+permission.
+
+TIP: Also consider using the `NNG_OPT_IPC_PEER_UID` property from within a
+a pipe notification callback (`<<nng_pipe_notify.3#,nng_pipe_notify()>>`)
+to validate peer credentials.
 
 ((`NNG_OPT_IPC_SECURITY_DESCRIPTOR`))::
 

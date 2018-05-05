@@ -32,6 +32,9 @@
 #include <sys/ucred.h>
 #include <sys/un.h>
 #endif
+#ifdef NNG_HAVE_ALLOCA
+#include <alloca.h>
+#endif
 
 // nni_posix_pipedesc is a descriptor kept one per transport pipe (i.e. open
 // file descriptor for TCP socket, etc.)  This contains the list of pending
@@ -426,12 +429,12 @@ nni_posix_pipedesc_get_peerid(nni_posix_pipedesc *pd, uint64_t *euid,
 	*znid = (uint64_t) -1;
 	return (0);
 #elif defined(NNG_HAVE_GETPEERUCRED)
-	ucred *ucp;
+	ucred_t *ucp = NULL;
 	if (getpeerucred(fd, &ucp) != 0) {
 		return (nni_plat_errno(errno));
 	}
 	*euid = ucred_geteuid(ucp);
-	*egid = ucred_geteuid(ucp);
+	*egid = ucred_getegid(ucp);
 	*prid = ucred_getpid(ucp);
 	*znid = ucred_getzoneid(ucp);
 	ucred_free(ucp);

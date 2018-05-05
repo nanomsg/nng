@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -69,7 +69,7 @@ check_props(nng_msg *msg)
 
 #ifdef NNG_HAVE_GETPEERUCRED
 	So(nng_pipe_getopt_uint64(p, NNG_OPT_IPC_PEER_ZONEID, &id) == 0);
-	So(id == getzoneid());
+	So(id == (uint64_t) getzoneid());
 #else
 	So(nng_pipe_getopt_uint64(p, NNG_OPT_IPC_PEER_ZONEID, &id) ==
 	    NNG_ENOTSUP);

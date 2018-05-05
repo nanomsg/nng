@@ -160,7 +160,7 @@ enum nng_sockaddr_family {
 	NNG_AF_IPC    = 2,
 	NNG_AF_INET   = 3,
 	NNG_AF_INET6  = 4,
-	NNG_AF_ZT     = 5, // ZeroTier
+	NNG_AF_ZT     = 5 // ZeroTier
 };
 
 // Scatter/gather I/O.
@@ -223,9 +223,10 @@ NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **);
 // Only one callback can be set on a given socket, and there is no way
 // to retrieve the old value.
 typedef enum {
-	NNG_PIPE_ADD,
-	NNG_PIPE_REM,
+	NNG_PIPE_ADD, // Pipe added to socket
+	NNG_PIPE_REM  // Pipe removed from socket
 } nng_pipe_action;
+
 typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_action, void *);
 NNG_DECL int nng_pipe_notify(nng_socket, nng_pipe_cb, void *);
 
@@ -619,7 +620,7 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // Flags.
 enum nng_flag_enum {
 	NNG_FLAG_ALLOC    = 1, // Recv to allocate receive buffer.
-	NNG_FLAG_NONBLOCK = 2, // Non-blocking operations.
+	NNG_FLAG_NONBLOCK = 2  // Non-blocking operations.
 };
 
 // Options.
@@ -758,8 +759,8 @@ enum nng_flag_enum {
 // NNG_DECL int nng_stat_type(nng_stat *);
 
 enum nng_stat_type_enum {
-	NNG_STAT_LEVEL   = 0,
-	NNG_STAT_COUNTER = 1,
+	NNG_STAT_LEVEL   = 0, // Numeric "absolute" value, diffs meaningless
+	NNG_STAT_COUNTER = 1  // Incrementing value (diffs are meaningful)
 };
 
 // nng_stat_unit provides information about the unit for the statistic,
@@ -774,7 +775,7 @@ enum nng_unit_enum {
 	NNG_UNIT_MESSAGES = 2,
 	NNG_UNIT_BOOLEAN  = 3,
 	NNG_UNIT_MILLIS   = 4,
-	NNG_UNIT_EVENTS   = 5,
+	NNG_UNIT_EVENTS   = 5
 };
 
 // nng_stat_value returns returns the actual value of the statistic.
@@ -845,7 +846,7 @@ enum nng_errno_enum {
 	NNG_EBADTYPE     = 30,
 	NNG_EINTERNAL    = 1000,
 	NNG_ESYSERR      = 0x10000000,
-	NNG_ETRANERR     = 0x20000000,
+	NNG_ETRANERR     = 0x20000000
 };
 
 // URL support.  We frequently want to process a URL, and these methods

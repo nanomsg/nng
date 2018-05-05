@@ -36,14 +36,21 @@ enum write_flavor {
 	HTTP_WR_RES,
 };
 
+typedef void (*http_read_fn)(void *, nni_aio *);
+typedef void (*http_write_fn)(void *, nni_aio *);
+typedef void (*http_close_fn)(void *);
+typedef void (*http_fini_fn)(void *);
+typedef bool (*http_verified_fn)(void *);
+typedef int (*http_addr_fn)(void *, nni_sockaddr *);
+
 typedef struct nni_http_tran {
-	void (*h_read)(void *, nni_aio *);
-	void (*h_write)(void *, nni_aio *);
-	int (*h_sock_addr)(void *, nni_sockaddr *);
-	int (*h_peer_addr)(void *, nni_sockaddr *);
-	bool (*h_verified)(void *);
-	void (*h_close)(void *);
-	void (*h_fini)(void *);
+	http_read_fn     h_read;
+	http_write_fn    h_write;
+	http_addr_fn     h_sock_addr;
+	http_addr_fn     h_peer_addr;
+	http_verified_fn h_verified;
+	http_close_fn    h_close;
+	http_fini_fn     h_fini;
 } nni_http_tran;
 
 #define SET_RD_FLAVOR(aio, f) \
@@ -54,20 +61,18 @@ typedef struct nni_http_tran {
 #define GET_WR_FLAVOR(aio) (int) ((intptr_t) nni_aio_get_prov_extra(aio, 0))
 
 struct nng_http_conn {
-	void *sock;
-	void (*rd)(void *, nni_aio *);
-	void (*wr)(void *, nni_aio *);
-	int (*sock_addr)(void *, nni_sockaddr *);
-	int (*peer_addr)(void *, nni_sockaddr *);
-	bool (*verified)(void *);
-	void (*close)(void *);
-	void (*fini)(void *);
-
-	void *ctx;
-	bool  closed;
-
-	nni_list rdq; // high level http read requests
-	nni_list wrq; // high level http write requests
+	void *           sock;
+	http_read_fn     rd;
+	http_write_fn    wr;
+	http_addr_fn     sock_addr;
+	http_addr_fn     peer_addr;
+	http_verified_fn verified;
+	http_close_fn    close;
+	http_fini_fn     fini;
+	void *           ctx;
+	bool             closed;
+	nni_list         rdq; // high level http read requests
+	nni_list         wrq; // high level http write requests
 
 	nni_aio *rd_uaio; // user aio for read
 	nni_aio *wr_uaio; // user aio for write
@@ -715,13 +720,13 @@ nni_http_verified_tcp(void *arg)
 }
 
 static nni_http_tran http_tcp_ops = {
-	.h_read      = (void *) nni_plat_tcp_pipe_recv,
-	.h_write     = (void *) nni_plat_tcp_pipe_send,
-	.h_close     = (void *) nni_plat_tcp_pipe_close,
-	.h_fini      = (void *) nni_plat_tcp_pipe_fini,
-	.h_sock_addr = (void *) nni_plat_tcp_pipe_sockname,
-	.h_peer_addr = (void *) nni_plat_tcp_pipe_peername,
-	.h_verified  = nni_http_verified_tcp,
+	.h_read      = (http_read_fn) nni_plat_tcp_pipe_recv,
+	.h_write     = (http_write_fn) nni_plat_tcp_pipe_send,
+	.h_close     = (http_close_fn) nni_plat_tcp_pipe_close,
+	.h_fini      = (http_fini_fn) nni_plat_tcp_pipe_fini,
+	.h_sock_addr = (http_addr_fn) nni_plat_tcp_pipe_sockname,
+	.h_peer_addr = (http_addr_fn) nni_plat_tcp_pipe_peername,
+	.h_verified  = (http_verified_fn) nni_http_verified_tcp,
 };
 
 int
@@ -732,17 +737,18 @@ nni_http_conn_init_tcp(nni_http_conn **connp, void *tcp)
 
 #ifdef NNG_SUPP_TLS
 static nni_http_tran http_tls_ops = {
-	.h_read      = (void *) nni_tls_recv,
-	.h_write     = (void *) nni_tls_send,
-	.h_close     = (void *) nni_tls_close,
-	.h_fini      = (void *) nni_tls_fini,
-	.h_sock_addr = (void *) nni_tls_sockname,
-	.h_peer_addr = (void *) nni_tls_peername,
-	.h_verified  = (void *) nni_tls_verified,
+	.h_read      = (http_read_fn) nni_tls_recv,
+	.h_write     = (http_write_fn) nni_tls_send,
+	.h_close     = (http_close_fn) nni_tls_close,
+	.h_fini      = (http_fini_fn) nni_tls_fini,
+	.h_sock_addr = (http_addr_fn) nni_tls_sockname,
+	.h_peer_addr = (http_addr_fn) nni_tls_peername,
+	.h_verified  = (http_verified_fn) nni_tls_verified,
 };
 
 int
-nni_http_conn_init_tls(nni_http_conn **connp, nng_tls_config *cfg, void *tcp)
+nni_http_conn_init_tls(
+    nni_http_conn **connp, struct nng_tls_config *cfg, void *tcp)
 {
 	nni_tls *tls;
 	int      rv;
@@ -756,7 +762,8 @@ nni_http_conn_init_tls(nni_http_conn **connp, nng_tls_config *cfg, void *tcp)
 }
 #else
 int
-nni_http_conn_init_tls(nni_http_conn **connp, nng_tls_config *cfg, void *tcp)
+nni_http_conn_init_tls(
+    nni_http_conn **connp, struct nng_tls_config *cfg, void *tcp)
 {
 	NNI_ARG_UNUSED(connp);
 	NNI_ARG_UNUSED(cfg);

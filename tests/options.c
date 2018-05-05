@@ -248,5 +248,4 @@ TestMain("Option Parsing", {
 		So(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
 		So(opti == 6);
 	});
-
-});
+})

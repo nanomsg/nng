@@ -166,4 +166,4 @@ TestMain("PIPELINE (PUSH/PULL) pattern", {
 		So(nng_recvmsg(pull1, &abc, 0) == NNG_ETIMEDOUT);
 		So(nng_recvmsg(pull2, &abc, 0) == NNG_ETIMEDOUT);
 	});
-});
+})

@@ -19,8 +19,6 @@
 
 #include "core/nng_impl.h"
 
-typedef struct nni_posix_pollq nni_posix_pollq;
-
 typedef struct nni_posix_pipedesc nni_posix_pipedesc;
 typedef struct nni_posix_epdesc   nni_posix_epdesc;
 
