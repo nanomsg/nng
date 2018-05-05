@@ -28,6 +28,10 @@
 #include <sys/un.h>
 #include <unistd.h>
 
+#ifdef sun
+#undef sun
+#endif
+
 #ifdef SOCK_CLOEXEC
 #define NNI_STREAM_SOCKTYPE (SOCK_STREAM | SOCK_CLOEXEC)
 #else
