@@ -24,6 +24,9 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
+#ifdef NNG_HAVE_ALLOCA
+#include <alloca.h>
+#endif
 
 // UDP support.
 
