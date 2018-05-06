@@ -509,15 +509,17 @@ convey_start_timer(struct convey_timer *pc)
 	struct timespec ts;
 
 	clock_gettime(CLOCK_MONOTONIC, &ts);
-	pc->timer_base = (uint64_t) ts.tv_sec * 1000000000;
-	pc->timer_base += (uint64_t) ts.tv_nsec;
+	pc->timer_base = ts.tv_sec;
+	pc->timer_base *= 1000000000;
+	pc->timer_base += ts.tv_nsec;
 	pc->timer_rate = 1000000000;
 #else
 	struct timeval tv;
 
 	gettimeofday(&tv, NULL);
-	pc->timer_base = (uint64_t) tv.tv_sec * 1000000;
-	pc->timer_base += (uint64_t) tv.tv_usec;
+	pc->timer_base = tv.tv_sec;
+	pc->timer_base *= 1000000;
+	pc->timer_base += tv.tv_usec;
 	pc->timer_rate = 1000000;
 #endif
 	pc->timer_running = 1;
@@ -539,7 +541,8 @@ convey_stop_timer(struct convey_timer *pc)
 		struct timespec ts;
 
 		clock_gettime(CLOCK_MONOTONIC, &ts);
-		ns = (ts.tv_sec * 1000000000);
+		ns = ts.tv_sec;
+		ns *= 1000000000;
 		ns += (uint64_t) ts.tv_nsec;
 		pc->timer_count += (ns - pc->timer_base);
 #else
@@ -547,7 +550,8 @@ convey_stop_timer(struct convey_timer *pc)
 		struct timeval tv;
 
 		gettimeofday(&tv, NULL);
-		us = (tv.tv_sec * 1000000);
+		us = tv.tv_sec;
+		us *= 1000000;
 		us += tv.tv_usec;
 		pc->timer_count += (us - pc->timer_base);
 #endif
