@@ -256,4 +256,4 @@ TestMain("Platform File Support", {
 	});
 
 	test_permissions();
-});
+})

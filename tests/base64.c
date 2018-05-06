@@ -82,7 +82,5 @@ TestMain("Base64 Verification", {
 			       enc, strlen(enc), buf, strlen(dec) - 1) == -1);
 			So(nni_base64_encode(enc, strlen(enc), buf, 0) == -1);
 		}
-
 	})
-
-});
+})

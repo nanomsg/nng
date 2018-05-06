@@ -332,4 +332,4 @@ TestMain("SURVEY pattern", {
 		So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
 	});
 
-});
+})

@@ -21,7 +21,7 @@ extern "C" {
 
 #include <stdint.h>
 
-typedef struct nng_tls_config nng_tls_config;
+struct nng_tls_config;
 
 // HTTP status codes.  This list is not exhaustive.
 enum nng_http_status {
@@ -398,12 +398,14 @@ NNG_DECL int nng_http_server_del_handler(
 // server client, so the caller must have configured it reasonably.
 // This API is not recommended unless the caller needs complete control
 // over the TLS configuration.
-NNG_DECL int nng_http_server_set_tls(nng_http_server *, nng_tls_config *);
+NNG_DECL int nng_http_server_set_tls(
+    nng_http_server *, struct nng_tls_config *);
 
 // nng_http_server_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The TLS configuration is invalidated if the
 // nng_http_server_set_tls function is called, so be careful.
-NNG_DECL int nng_http_server_get_tls(nng_http_server *, nng_tls_config **);
+NNG_DECL int nng_http_server_get_tls(
+    nng_http_server *, struct nng_tls_config **);
 
 // nng_http_hijack is intended to be called by a handler that wishes to
 // take over the processing of the HTTP session -- usually to change protocols
@@ -435,12 +437,14 @@ NNG_DECL void nng_http_client_free(nng_http_client *);
 // the entire TLS configuration on the client, so the caller must have
 // configured it reasonably.  This API is not recommended unless the
 // caller needs complete control over the TLS configuration.
-NNG_DECL int nng_http_client_set_tls(nng_http_client *, nng_tls_config *);
+NNG_DECL int nng_http_client_set_tls(
+    nng_http_client *, struct nng_tls_config *);
 
 // nng_http_client_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The supplied TLS configuration object may
 // be invalidated by any future calls to nni_http_client_set_tls.
-NNG_DECL int nng_http_client_get_tls(nng_http_client *, nng_tls_config **);
+NNG_DECL int nng_http_client_get_tls(
+    nng_http_client *, struct nng_tls_config **);
 
 // nng_http_client_connect establishes a new connection with the server
 // named in the URL used when the client was created.  Once the connection

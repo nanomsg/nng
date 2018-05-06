@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -305,15 +305,4 @@ nni_idhash_alloc(nni_idhash *h, uint64_t *idp, void *val)
 	nni_mtx_unlock(&h->ih_mtx);
 
 	return (rv);
-}
-
-size_t
-nni_idhash_count(nni_idhash *h)
-{
-	size_t num;
-	nni_mtx_lock(&h->ih_mtx);
-	num = h->ih_count;
-	nni_mtx_unlock(&h->ih_mtx);
-
-	return (num);
 }

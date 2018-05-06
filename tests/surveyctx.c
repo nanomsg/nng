@@ -26,9 +26,10 @@ static struct {
 } resp_state;
 
 void
-resp_cb(void)
+resp_cb(void *notused)
 {
 	int rv;
+	(void) notused;
 
 	if (resp_state.state == START) {
 		resp_state.state = RECV;
@@ -94,8 +95,7 @@ TestMain("Surveyor concurrent contexts", {
 	Convey("We can use Surveyor contexts concurrently", {
 		nng_socket surv = NNG_SOCKET_INITIALIZER;
 
-		So(nng_aio_alloc(&resp_state.aio, (void *) resp_cb, NULL) ==
-		    0);
+		So(nng_aio_alloc(&resp_state.aio, resp_cb, NULL) == 0);
 		So(nng_respondent0_open(&resp_state.s) == 0);
 		So(nng_surveyor0_open(&surv) == 0);
 
@@ -139,7 +139,7 @@ TestMain("Surveyor concurrent contexts", {
 		nng_msleep(100); // let things establish.
 
 		// Start the rep state machine going.
-		resp_cb();
+		resp_cb(NULL);
 
 		for (i = 0; i < NCTX; i++) {
 			if ((rv = nng_ctx_open(&ctxs[i], surv)) != 0) {
@@ -303,4 +303,4 @@ TestMain("Surveyor concurrent contexts", {
 		So(nng_ctx_open(&ctx, surv) == NNG_ENOTSUP);
 		nng_close(surv);
 	});
-});
+})

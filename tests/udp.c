@@ -292,5 +292,4 @@ TestMain("UDP support", {
 		So(nni_plat_udp_open(&u2, &sa) == NNG_EADDRINUSE);
 		nni_plat_udp_close(u1);
 	});
-
-});
+})

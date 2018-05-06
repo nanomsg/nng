@@ -101,4 +101,4 @@ TestMain("Reconnect works", {
 			});
 		});
 	});
-});
+})

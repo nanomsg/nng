@@ -205,40 +205,6 @@ nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 	nni_mtx_unlock(&pq->mtx);
 }
 
-void
-nni_posix_pollq_disarm(nni_posix_pollq_node *node, int events)
-{
-	struct kevent kevents[2];
-	int           nevents = 0;
-
-	nni_posix_pollq *pq = node->pq;
-	if (pq == NULL) {
-		return;
-	}
-
-	nni_mtx_lock(&pq->mtx);
-
-	if ((node->events & POLLIN) && (events & POLLIN)) {
-		EV_SET(&kevents[nevents++], (uintptr_t) node->fd, EVFILT_READ,
-		    EV_DISABLE, 0, 0, (kevent_udata_t) node);
-	}
-
-	if ((node->events & POLLOUT) && (events & POLLOUT)) {
-		EV_SET(&kevents[nevents++], (uintptr_t) node->fd, EVFILT_WRITE,
-		    EV_DISABLE, 0, 0, (kevent_udata_t) node);
-	}
-
-	if (nevents > 0) {
-		int rv = kevent(pq->kq, kevents, nevents, NULL, 0, NULL);
-		if (rv < 0 && errno != ENOENT && errno != EBADF) {
-			NNI_ASSERT(false);
-		}
-		node->events &= ~events;
-	}
-
-	nni_mtx_unlock(&pq->mtx);
-}
-
 static void
 nni_posix_poll_thr(void *arg)
 {

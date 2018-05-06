@@ -59,7 +59,6 @@ typedef struct nni_proto             nni_proto;
 
 typedef struct nni_plat_mtx nni_mtx;
 typedef struct nni_plat_cv  nni_cv;
-typedef struct nni_idhash   nni_idhash;
 typedef struct nni_thr      nni_thr;
 typedef void (*nni_thr_func)(void *);
 
