@@ -106,7 +106,11 @@ if (NNG_PLATFORM_POSIX)
     )
 endif()
 
-if (NNG_HAVE_KQUEUE)
+if (NNG_HAVE_PORT_CREATE)
+    set (NNG_SOURCES ${NNG_SOURCES}
+        platform/posix/posix_pollq_port.c
+    )
+elseif (NNG_HAVE_KQUEUE)
     set (NNG_SOURCES ${NNG_SOURCES}
         platform/posix/posix_pollq_kqueue.c
     )

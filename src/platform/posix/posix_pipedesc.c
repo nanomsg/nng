@@ -242,7 +242,7 @@ nni_posix_pipedesc_cb(void *arg)
 void
 nni_posix_pipedesc_close(nni_posix_pipedesc *pd)
 {
-	nni_posix_pollq_disarm(&pd->node, POLLIN | POLLOUT);
+	nni_posix_pollq_remove(&pd->node);
 
 	nni_mtx_lock(&pd->mtx);
 	nni_posix_pipedesc_doclose(pd);

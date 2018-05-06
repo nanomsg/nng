@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -35,6 +35,8 @@ struct nni_posix_pollq_node {
 	int              revents; // events received
 	void *           data;    // user data
 	nni_cb           cb;      // user callback on event
+	nni_mtx          mx;
+	nni_cv           cv;
 };
 
 extern nni_posix_pollq *nni_posix_pollq_get(int);
@@ -46,7 +48,6 @@ extern void nni_posix_pollq_fini(nni_posix_pollq_node *);
 extern int  nni_posix_pollq_add(nni_posix_pollq_node *);
 extern void nni_posix_pollq_remove(nni_posix_pollq_node *);
 extern void nni_posix_pollq_arm(nni_posix_pollq_node *, int);
-extern void nni_posix_pollq_disarm(nni_posix_pollq_node *, int);
 
 #endif // NNG_PLATFORM_POSIX
 
