@@ -30,6 +30,12 @@
 
 #define ADDR "/tmp/ipc_perms_test"
 
+#if defined(__sun)
+#define honor_chmod() false
+#else
+#define honor_chmod() true
+#endif
+
 // Inproc tests.
 
 #ifdef _WIN32
@@ -77,6 +83,9 @@ TestMain("IPC Permissions", {
 
 				if (geteuid() == 0) {
 					Skip("Running as root");
+				}
+				if (!honor_chmod()) {
+					Skip("System does not honor chmod");
 				}
 				strcpy(sa.sun_path, ADDR);
 				sa.sun_family = AF_UNIX;
