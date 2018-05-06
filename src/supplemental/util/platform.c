@@ -29,10 +29,6 @@ nng_msleep(nng_duration dur)
 	nni_msleep(dur);
 }
 
-// nng_thread is a handle to a "thread", which may be a real system
-// thread, or a coroutine on some platforms.
-typedef struct nng_thread nng_thread;
-
 // Create and start a thread.  Note that on some platforms, this might
 // actually be a coroutine, with limitations about what system APIs
 // you can call.  Therefore, these threads should only be used with the
@@ -110,8 +106,6 @@ nng_mtx_unlock(nng_mtx *mp)
 struct nng_cv {
 	nni_cv c;
 };
-
-typedef struct nng_cv nng_cv;
 
 int
 nng_cv_alloc(nng_cv **cvp, nng_mtx *mx)
