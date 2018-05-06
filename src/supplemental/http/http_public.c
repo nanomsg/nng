@@ -676,7 +676,7 @@ nng_http_server_del_handler(nng_http_server *srv, nng_http_handler *h)
 }
 
 int
-nng_http_server_set_tls(nng_http_server *srv, nng_tls_config *cfg)
+nng_http_server_set_tls(nng_http_server *srv, struct nng_tls_config *cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
 	return (nni_http_server_set_tls(srv, cfg));
@@ -688,7 +688,7 @@ nng_http_server_set_tls(nng_http_server *srv, nng_tls_config *cfg)
 }
 
 int
-nng_http_server_get_tls(nng_http_server *srv, nng_tls_config **cfgp)
+nng_http_server_get_tls(nng_http_server *srv, struct nng_tls_config **cfgp)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
 	return (nni_http_server_get_tls(srv, cfgp));
@@ -734,7 +734,7 @@ nng_http_client_free(nng_http_client *cli)
 }
 
 int
-nng_http_client_set_tls(nng_http_client *cli, nng_tls_config *cfg)
+nng_http_client_set_tls(nng_http_client *cli, struct nng_tls_config *cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
 	return (nni_http_client_set_tls(cli, cfg));
@@ -746,7 +746,7 @@ nng_http_client_set_tls(nng_http_client *cli, nng_tls_config *cfg)
 }
 
 int
-nng_http_client_get_tls(nng_http_client *cli, nng_tls_config **cfgp)
+nng_http_client_get_tls(nng_http_client *cli, struct nng_tls_config **cfgp)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
 	return (nni_http_client_get_tls(cli, cfgp));

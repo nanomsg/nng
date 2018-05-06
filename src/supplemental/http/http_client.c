@@ -20,12 +20,12 @@
 #include "http_api.h"
 
 struct nng_http_client {
-	nni_list         aios;
-	nni_mtx          mtx;
-	bool             closed;
-	nng_tls_config * tls;
-	nni_aio *        connaio;
-	nni_plat_tcp_ep *tep;
+	nni_list               aios;
+	nni_mtx                mtx;
+	bool                   closed;
+	struct nng_tls_config *tls;
+	nni_aio *              connaio;
+	nni_plat_tcp_ep *      tep;
 };
 
 static void
@@ -182,10 +182,10 @@ nni_http_client_init(nni_http_client **cp, const nni_url *url)
 }
 
 int
-nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
+nni_http_client_set_tls(nni_http_client *c, struct nng_tls_config *tls)
 {
 #ifdef NNG_SUPP_TLS
-	nng_tls_config *old;
+	struct nng_tls_config *old;
 	nni_mtx_lock(&c->mtx);
 	old    = c->tls;
 	c->tls = tls;
@@ -205,7 +205,7 @@ nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
 }
 
 int
-nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
+nni_http_client_get_tls(nni_http_client *c, struct nng_tls_config **tlsp)
 {
 #ifdef NNG_SUPP_TLS
 	nni_mtx_lock(&c->mtx);

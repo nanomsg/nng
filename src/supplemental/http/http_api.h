@@ -65,7 +65,8 @@ extern void *nni_http_conn_get_ctx(nni_http_conn *);
 // They should only be used by the server or client HTTP implementations,
 // and are not for use by other code.
 extern int nni_http_conn_init_tcp(nni_http_conn **, void *);
-extern int nni_http_conn_init_tls(nni_http_conn **, nng_tls_config *, void *);
+extern int nni_http_conn_init_tls(
+    nni_http_conn **, struct nng_tls_config *, void *);
 
 extern void nni_http_conn_close(nni_http_conn *);
 extern void nni_http_conn_fini(nni_http_conn *);
@@ -153,12 +154,13 @@ extern int nni_http_server_del_handler(nni_http_server *, nni_http_handler *);
 // server client, so the caller must have configured it reasonably.
 // This API is not recommended unless the caller needs complete control
 // over the TLS configuration.
-extern int nni_http_server_set_tls(nni_http_server *, nng_tls_config *);
+extern int nni_http_server_set_tls(nni_http_server *, struct nng_tls_config *);
 
 // nni_http_server_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The TLS configuration is invalidated if the
 // nni_http_server_set_tls function is called, so be careful.
-extern int nni_http_server_get_tls(nni_http_server *, nng_tls_config **);
+extern int nni_http_server_get_tls(
+    nni_http_server *, struct nng_tls_config **);
 
 // nni_http_server_start starts listening on the supplied port.
 extern int nni_http_server_start(nni_http_server *);
@@ -273,12 +275,13 @@ extern void nni_http_client_fini(nni_http_client *);
 // the entire TLS configuration on the client, so the caller must have
 // configured it reasonably.  This API is not recommended unless the
 // caller needs complete control over the TLS configuration.
-extern int nni_http_client_set_tls(nni_http_client *, nng_tls_config *);
+extern int nni_http_client_set_tls(nni_http_client *, struct nng_tls_config *);
 
 // nni_http_client_get_tls obtains the TLS configuration if one is present,
 // or returns NNG_EINVAL.  The supplied TLS configuration object may
 // be invalidated by any future calls to nni_http_client_set_tls.
-extern int nni_http_client_get_tls(nni_http_client *, nng_tls_config **);
+extern int nni_http_client_get_tls(
+    nni_http_client *, struct nng_tls_config **);
 
 extern void nni_http_client_connect(nni_http_client *, nni_aio *);
 

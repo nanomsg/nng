@@ -742,7 +742,8 @@ static nni_http_tran http_tls_ops = {
 };
 
 int
-nni_http_conn_init_tls(nni_http_conn **connp, nng_tls_config *cfg, void *tcp)
+nni_http_conn_init_tls(
+    nni_http_conn **connp, struct nng_tls_config *cfg, void *tcp)
 {
 	nni_tls *tls;
 	int      rv;
@@ -756,7 +757,8 @@ nni_http_conn_init_tls(nni_http_conn **connp, nng_tls_config *cfg, void *tcp)
 }
 #else
 int
-nni_http_conn_init_tls(nni_http_conn **connp, nng_tls_config *cfg, void *tcp)
+nni_http_conn_init_tls(
+    nni_http_conn **connp, struct nng_tls_config *cfg, void *tcp)
 {
 	NNI_ARG_UNUSED(connp);
 	NNI_ARG_UNUSED(cfg);
