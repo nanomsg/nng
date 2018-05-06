@@ -234,14 +234,11 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 		return (nni_plat_errno(errno));
 	}
 
-	pq->close = false;
-
 	if ((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0) {
 		nni_posix_pollq_destroy(pq);
 		return (rv);
 	}
 
-	pq->started = true;
 	nni_thr_run(&pq->thr);
 	return (0);
 }
