@@ -24,7 +24,6 @@ Main({
 
 			So(nni_idhash_init(&h) == 0);
 			So(h != NULL);
-			So(nni_idhash_count(h) == 0);
 
 			Reset({ nni_idhash_fini(h); });
 
@@ -32,7 +31,6 @@ Main({
 				char *five = "five";
 				char *four = "four";
 				rv         = nni_idhash_insert(h, 5, five);
-				So(nni_idhash_count(h) == 1);
 				So(rv == 0);
 
 				Convey("And we can find it", {
@@ -51,7 +49,6 @@ Main({
 				Convey("We can change the value", {
 					void *ptr;
 					So(nni_idhash_insert(h, 5, four) == 0);
-					So(nni_idhash_count(h) == 1);
 					So(nni_idhash_find(h, 5, &ptr) == 0);
 					So(ptr == four);
 				});
@@ -59,7 +56,6 @@ Main({
 					void *ptr;
 					So(nni_idhash_insert(h, 13, four) ==
 					    0);
-					So(nni_idhash_count(h) == 2);
 					So(nni_idhash_find(h, 5, &ptr) == 0);
 					So(ptr == five);
 					So(nni_idhash_find(h, 13, &ptr) == 0);
@@ -120,7 +116,6 @@ Main({
 			nni_idhash *h;
 
 			So(nni_idhash_init(&h) == 0);
-			So(nni_idhash_count(h) == 0);
 
 			Reset({ nni_idhash_fini(h); });
 
@@ -128,13 +123,11 @@ Main({
 				for (i = 0; i < 1024; i++) {
 					nni_idhash_insert(h, i, &expect[i]);
 				}
-				So(nni_idhash_count(h) == 1024);
 
 				Convey("We can remove them", {
 					for (i = 0; i < 1024; i++) {
 						nni_idhash_remove(h, i);
 					}
-					So(nni_idhash_count(h) == 0);
 				});
 			});
 		});
