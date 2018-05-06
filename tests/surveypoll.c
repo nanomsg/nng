@@ -123,4 +123,4 @@ TestMain("Survey pollable", {
 			});
 		});
 	});
-});
+})

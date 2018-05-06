@@ -26,9 +26,10 @@ static struct {
 } rep_state;
 
 void
-rep_cb(void)
+rep_cb(void *notused)
 {
 	int rv;
+	(void) notused;
 
 	if (rep_state.state == START) {
 		rep_state.state = RECV;
@@ -94,7 +95,7 @@ TestMain("REQ concurrent contexts", {
 	Convey("We can use REQ contexts concurrently", {
 		nng_socket req;
 
-		So(nng_aio_alloc(&rep_state.aio, (void *) rep_cb, NULL) == 0);
+		So(nng_aio_alloc(&rep_state.aio, rep_cb, NULL) == 0);
 		So(nng_rep_open(&rep_state.s) == 0);
 		So(nng_req_open(&req) == 0);
 
@@ -137,7 +138,7 @@ TestMain("REQ concurrent contexts", {
 		nng_msleep(100); // let things establish.
 
 		// Start the rep state machine going.
-		rep_cb();
+		rep_cb(NULL);
 
 		for (i = 0; i < NCTX; i++) {
 			if ((rv = nng_ctx_open(&ctxs[i], req)) != 0) {
@@ -255,4 +256,4 @@ TestMain("REQ concurrent contexts", {
 			nng_close(req);
 		});
 	});
-});
+})

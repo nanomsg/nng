@@ -146,4 +146,4 @@ TestMain("Pipe notify works", {
 			});
 		});
 	});
-});
+})

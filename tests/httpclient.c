@@ -71,7 +71,6 @@ TestMain("HTTP Client", {
 			nng_http_conn_read_res(http, res, aio);
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == 0);
-			printf("RESULT IS %d\n", nng_http_res_get_status(res));
 			So(nng_http_res_get_status(res) == 200);
 
 			Convey("The message contents are correct", {
@@ -107,4 +106,4 @@ TestMain("HTTP Client", {
 			});
 		});
 	});
-});
+})

@@ -303,4 +303,4 @@ TestMain("Surveyor concurrent contexts", {
 		So(nng_ctx_open(&ctx, surv) == NNG_ENOTSUP);
 		nng_close(surv);
 	});
-});
+})
