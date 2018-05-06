@@ -434,7 +434,7 @@ nni_posix_pipedesc_get_peerid(nni_posix_pipedesc *pd, uint64_t *euid,
 		return (nni_plat_errno(errno));
 	}
 	*euid = ucred_geteuid(ucp);
-	*egid = ucred_geteuid(ucp);
+	*egid = ucred_getegid(ucp);
 	*prid = ucred_getpid(ucp);
 	*znid = ucred_getzoneid(ucp);
 	ucred_free(ucp);
