@@ -84,6 +84,7 @@ nni_posix_pollq_add(nni_posix_pollq_node *node)
 		rv = nni_plat_errno(errno);
 		nni_idhash_remove(pq->nodes, id);
 		node->index = 0;
+		node->pq    = NULL;
 	}
 
 	nni_mtx_unlock(&pq->mtx);
@@ -105,7 +106,7 @@ nni_posix_pollq_remove_helper(nni_posix_pollq *pq, nni_posix_pollq_node *node)
 	ev.data.u64 = (uint64_t) node->index;
 
 	if (node->index != 0) {
-		// This dereegisters the node.  If the poller was blocked
+		// This deregisters the node.  If the poller was blocked
 		// then this keeps it from coming back in to find us.
 		nni_idhash_remove(pq->nodes, (uint64_t) node->index);
 	}
@@ -193,33 +194,6 @@ nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 
 	rv = epoll_ctl(pq->epfd, EPOLL_CTL_MOD, node->fd, &ev);
 	NNI_ASSERT(rv == 0);
-
-	nni_mtx_unlock(&pq->mtx);
-}
-
-void
-nni_posix_pollq_disarm(nni_posix_pollq_node *node, int events)
-{
-	struct epoll_event ev;
-
-	nni_posix_pollq *pq = node->pq;
-	if (pq == NULL) {
-		return;
-	}
-
-	nni_mtx_lock(&pq->mtx);
-
-	node->events &= ~events;
-	if (node->events == 0) {
-		ev.events = 0;
-	} else {
-		ev.events = node->events | NNI_EPOLL_FLAGS;
-	}
-	ev.data.u64 = (uint64_t) node->index;
-
-	if (epoll_ctl(pq->epfd, EPOLL_CTL_MOD, node->fd, &ev) != 0) {
-		NNI_ASSERT(errno == EBADF || errno == ENOENT);
-	}
 
 	nni_mtx_unlock(&pq->mtx);
 }

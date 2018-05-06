@@ -305,28 +305,6 @@ nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 	nni_mtx_unlock(&pq->mtx);
 }
 
-void
-nni_posix_pollq_disarm(nni_posix_pollq_node *node, int events)
-{
-	nni_posix_pollq *pq = node->pq;
-	int              oevents;
-
-	if (pq == NULL) {
-		return;
-	}
-
-	nni_mtx_lock(&pq->mtx);
-	oevents = node->events;
-	node->events &= ~events;
-	if ((node->events == 0) && (oevents != 0)) {
-		nni_list_node_remove(&node->node);
-		nni_list_append(&pq->idle, node);
-	}
-	// No need to wake anything, we might get a spurious wake up but
-	// that's harmless.
-	nni_mtx_unlock(&pq->mtx);
-}
-
 static void
 nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
