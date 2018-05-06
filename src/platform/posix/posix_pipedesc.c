@@ -429,7 +429,7 @@ nni_posix_pipedesc_get_peerid(nni_posix_pipedesc *pd, uint64_t *euid,
 	*znid = (uint64_t) -1;
 	return (0);
 #elif defined(NNG_HAVE_GETPEERUCRED)
-	ucred_t *ucp;
+	ucred_t *ucp = NULL;
 	if (getpeerucred(fd, &ucp) != 0) {
 		return (nni_plat_errno(errno));
 	}
