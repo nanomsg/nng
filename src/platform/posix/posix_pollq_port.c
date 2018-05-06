@@ -32,7 +32,6 @@ struct nni_posix_pollq {
 int
 nni_posix_pollq_add(nni_posix_pollq_node *node)
 {
-	int              rv;
 	nni_posix_pollq *pq;
 
 	pq = nni_posix_pollq_get(node->fd);
@@ -105,7 +104,7 @@ nni_posix_pollq_fini(nni_posix_pollq_node *node)
 		node->armed = false;
 
 		for (;;) {
-			if (port_send(pq->port, 0, node) = 0) {
+			if (port_send(pq->port, 0, node) == 0) {
 				break;
 			}
 			switch (errno) {
@@ -117,7 +116,7 @@ nni_posix_pollq_fini(nni_posix_pollq_node *node)
 				// hang, but by sleeping here maybe we give
 				// a chance for things to clear up.
 				nni_mtx_unlock(&node->mx);
-				nng_msleep(5000);
+				nni_msleep(5000);
 				nni_mtx_unlock(&node->mx);
 				continue;
 			case EBADFD:
@@ -143,9 +142,7 @@ nni_posix_pollq_fini(nni_posix_pollq_node *node)
 void
 nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 {
-	int                rv;
-	struct epoll_event ev;
-	nni_posix_pollq *  pq = node->pq;
+	nni_posix_pollq *pq = node->pq;
 
 	NNI_ASSERT(pq != NULL);
 	if (events == 0) {
@@ -168,7 +165,7 @@ nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
 	// For now we ignore them all. (We need to be able to return
 	// errors to our caller.)  Effect on the application will appear
 	// to be a stalled file descriptor (no notifications).
-	nni_mtx_unlock(&node->mtx);
+	nni_mtx_unlock(&node->mx);
 }
 
 static void
