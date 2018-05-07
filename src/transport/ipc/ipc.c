@@ -302,7 +302,7 @@ nni_ipc_pipe_recv_cb(void *arg)
 
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
-		if (len > pipe->rcvmax) {
+		if ((len > pipe->rcvmax) && (pipe->rcvmax > 0)) {
 			rv = NNG_EMSGSIZE;
 			goto recv_error;
 		}

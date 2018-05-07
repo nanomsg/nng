@@ -921,7 +921,8 @@ zt_pipe_recv_data(zt_pipe *p, const uint8_t *data, size_t len)
 	if (fragno == (nfrags - 1)) {
 		// Last frag, maybe shorten the message.
 		nni_msg_chop(fl->fl_msg, (fragsz - len));
-		if (nni_msg_len(fl->fl_msg) > p->zp_rcvmax) {
+		if ((nni_msg_len(fl->fl_msg) > p->zp_rcvmax) &&
+		    (p->zp_rcvmax > 0)) {
 			// Strict enforcement of max recv.
 			zt_fraglist_clear(fl);
 			// Just discard the message.

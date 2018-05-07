@@ -19,7 +19,7 @@ nngcat - command line access to Scalabity Protocols
 
 *nngcat* --version
 
-*nngcat* [_OPTION_]... 
+*nngcat* [_OPTION_]...
 
 == DESCRIPTION
 
@@ -55,12 +55,16 @@ each option must be presented as a separate argument to the program.
 === Generic Options
 *-h, --help*::
   Get usage help.
+
 *-V, --version*::
   Print the version and exit.
+
 *-v, --verbose*::
   Select verbose operation.
+
 *-q, --silent*::
   Select silent operation.
+
 *--compat*::
   Compatible mode. (((compatible mode)))
   This cause _nngcat_ to behave more like the legacy
@@ -68,6 +72,7 @@ each option must be presented as a separate argument to the program.
   In this mode connections are made asynchronously,
   and the *--pair* option selects version 0 of
   the <<nng_pair.7#,_pair_>> protocol instead of version 1.
+
 *--subscribe*=_TOPIC_::
   Subscribe to _TOPIC_.  This option can only be used with the
   <<nng_sub.7#,_sub_>> protocol.
@@ -75,6 +80,17 @@ each option must be presented as a separate argument to the program.
   of messages received, and messages are discarded if they do not match.
   This may be specified multiple times to subscribe to multiple topics.
   If not specified at all, then a default subscription to everything is assumed.
+
+*--count=*=_COUNT_::
+  Limit the number of iterations when looping to _COUNT_ iterations.
+  For protocols that only send, this will only send _COUNT_ messages before
+  exiting.
+  For protocols that only receive, this will only receive _COUNT_ messages
+  before exiting.
+  For protocols that involve a full exchange, this will only perform _COUNT_
+  exchanges (each exchange is characterized by at most a single send, and
+  one or more receives.)
+  If _COUNT_ is zero, then an infinite number of iterations is performed.
 
 === Protocol Selection Options
 NOTE: At least one protocol must be selected.
@@ -102,7 +118,7 @@ NOTE: At least one protocol must be selected.
   Select the <<nng_sub.7#,_sub_>> version 0 protocol.
   This protocol receives messages from <<nng_pub.7#,_pub_>> version
   0 peers, and filters them based on subscriptions set with *--subscribe*.
-  
+
 *--push, --push0*::
   Select the <<nng_push.7#,_push_>> version 0 protocol.
   This protocol sends messages to <<nng_pull.7#,_pull_>> version 0 peers.
@@ -123,7 +139,7 @@ NOTE: At least one protocol must be selected.
   This protocol can send and receive messages with one connected _pair_
   version 1 peer.
   It is not supported in *--compat* mode.
-  (Polyamorous mode is not supported 
+  (Polyamorous mode is not supported
   in _nngcat_, although peers may be using polyamorous mode.)
 
 *--pair*::
@@ -153,11 +169,11 @@ more than one peer on a given connection.
   Bind to, and accept connections from peers, at the address specified by _URL_.
 
 *-x, --connect-ipc*=_PATH_::
-  Connect to the IPC path specified by _PATH_.  This is the same as 
+  Connect to the IPC path specified by _PATH_.  This is the same as
   *--connect*=ipc://_PATH_.
 
 *-X, --bind-ipc*=_PATH_::
-  Bind to the IPC path specified by _PATH_.  This is the same as 
+  Bind to the IPC path specified by _PATH_.  This is the same as
   *--bind*=ipc://_PATH_.
 
 *-l, --connect-local*=_PORT_::
@@ -165,7 +181,7 @@ more than one peer on a given connection.
   as *--connect*=tcp://127.0.0.1:__PORT__.
 
 *-L, --bind-local*=_PORT_::
-  Bind to the TCP port specified by _PORT_.  This is the same as 
+  Bind to the TCP port specified by _PORT_.  This is the same as
   *--bind*=tcp://127.0.0.1:__PORT__.
 
 === Receive Options
@@ -212,9 +228,15 @@ options can only be specified when using a protocol that receives messages.
   Give up receiving messages after _SEC_ seconds pass without any received
   messages.
 
+*--recv-maxsz*=_COUNT_::
+  Set the maximum message size socket will accept to _COUNT_ bytes.
+  Messages larger than this will be discarded.
+  The default is 1048576 (1 MB).
+  To eliminate any restriction, use 0.
+
 === Transmit Options
 
-Protocols that support sending data can use these options to select the data. 
+Protocols that support sending data can use these options to select the data.
 
 *-D, --data*=_DATA_::
   Use _DATA_ for the body of outgoing messages.
@@ -249,7 +271,7 @@ when using addresses that are not secured with TLS.
 *--key*=_FILE_::
   Load own key from _FILE_.
   Should be used in conjuction with *--cert*.
-  If not specified, and *--cert* is specified, then a single file containing both 
+  If not specified, and *--cert* is specified, then a single file containing both
   the private key and the associated certificate is assumed.
 
 *--cacert*=_FILE_::
@@ -303,4 +325,3 @@ $ nngcat --sub --dial=${addr} --quoted &
 <<nng_req.7#,nng_req(7)>>,
 <<nng_respondent.7#,nng_respondent(7)>>,
 <<nng_surveyor.7#,nng_surveyor(7)>>
-
