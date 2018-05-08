@@ -61,7 +61,6 @@ xsurv0_sock_fini(void *arg)
 {
 	xsurv0_sock *s = arg;
 
-	nni_aio_stop(s->aio_getq);
 	nni_aio_fini(s->aio_getq);
 	nni_mtx_fini(&s->mtx);
 	NNI_FREE_STRUCT(s);
@@ -104,13 +103,18 @@ xsurv0_sock_close(void *arg)
 {
 	xsurv0_sock *s = arg;
 
-	nni_aio_abort(s->aio_getq, NNG_ECLOSED);
+	nni_aio_close(s->aio_getq);
 }
 
 static void
 xsurv0_pipe_fini(void *arg)
 {
 	xsurv0_pipe *p = arg;
+
+	nni_aio_stop(p->aio_getq);
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(p->aio_putq);
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
@@ -171,10 +175,10 @@ xsurv0_pipe_stop(void *arg)
 	xsurv0_pipe *p = arg;
 	xsurv0_sock *s = p->psock;
 
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_putq);
+	nni_aio_close(p->aio_getq);
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_recv);
+	nni_aio_close(p->aio_putq);
 
 	nni_msgq_close(p->sendq);
 

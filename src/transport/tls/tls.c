@@ -91,6 +91,10 @@ nni_tls_pipe_close(void *arg)
 {
 	nni_tls_pipe *p = arg;
 
+	nni_aio_close(p->rxaio);
+	nni_aio_close(p->txaio);
+	nni_aio_close(p->negaio);
+
 	nni_tls_close(p->tls);
 }
 

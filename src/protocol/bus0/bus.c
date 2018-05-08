@@ -67,7 +67,6 @@ bus0_sock_fini(void *arg)
 {
 	bus0_sock *s = arg;
 
-	nni_aio_stop(s->aio_getq);
 	nni_aio_fini(s->aio_getq);
 	nni_mtx_fini(&s->mtx);
 	NNI_FREE_STRUCT(s);
@@ -108,13 +107,18 @@ bus0_sock_close(void *arg)
 {
 	bus0_sock *s = arg;
 
-	nni_aio_abort(s->aio_getq, NNG_ECLOSED);
+	nni_aio_close(s->aio_getq);
 }
 
 static void
 bus0_pipe_fini(void *arg)
 {
 	bus0_pipe *p = arg;
+
+	nni_aio_stop(p->aio_getq);
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(p->aio_putq);
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
@@ -173,12 +177,12 @@ bus0_pipe_stop(void *arg)
 	bus0_pipe *p = arg;
 	bus0_sock *s = p->psock;
 
-	nni_msgq_close(p->sendq);
+	nni_aio_close(p->aio_getq);
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_recv);
+	nni_aio_close(p->aio_putq);
 
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_putq);
+	nni_msgq_close(p->sendq);
 
 	nni_mtx_lock(&s->mtx);
 	if (nni_list_active(&s->pipes, p)) {

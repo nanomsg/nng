@@ -81,9 +81,13 @@ nni_tcp_tran_fini(void)
 static void
 nni_tcp_pipe_close(void *arg)
 {
-	nni_tcp_pipe *pipe = arg;
+	nni_tcp_pipe *p = arg;
 
-	nni_plat_tcp_pipe_close(pipe->tpp);
+	nni_aio_close(p->rxaio);
+	nni_aio_close(p->txaio);
+	nni_aio_close(p->negaio);
+
+	nni_plat_tcp_pipe_close(p->tpp);
 }
 
 static void
@@ -668,7 +672,7 @@ nni_tcp_ep_close(void *arg)
 	nni_plat_tcp_ep_close(ep->tep);
 	nni_mtx_unlock(&ep->mtx);
 
-	nni_aio_stop(ep->aio);
+	nni_aio_close(ep->aio);
 }
 
 static int

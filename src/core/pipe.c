@@ -205,7 +205,7 @@ nni_pipe_close(nni_pipe *p)
 	nni_mtx_unlock(&p->p_mtx);
 
 	// abort any pending negotiation/start process.
-	nni_aio_abort(p->p_start_aio, NNG_ECLOSED);
+	nni_aio_close(p->p_start_aio);
 }
 
 bool

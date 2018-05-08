@@ -86,6 +86,9 @@ static void
 push0_pipe_fini(void *arg)
 {
 	push0_pipe *p = arg;
+	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_getq);
 
 	nni_aio_fini(p->aio_recv);
 	nni_aio_fini(p->aio_send);
@@ -140,9 +143,9 @@ push0_pipe_stop(void *arg)
 {
 	push0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_getq);
+	nni_aio_close(p->aio_recv);
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_getq);
 }
 
 static void

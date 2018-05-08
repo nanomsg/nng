@@ -748,6 +748,9 @@ nni_tls_close(nni_tls *tp)
 {
 	nni_aio *aio;
 
+	nni_aio_close(tp->tcp_send);
+	nni_aio_close(tp->tcp_recv);
+
 	nni_mtx_lock(&tp->lk);
 	tp->tls_closed = true;
 

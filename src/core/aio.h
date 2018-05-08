@@ -44,9 +44,16 @@ extern void nni_aio_fini_cb(nni_aio *);
 // best pattern is to call nni_aio_stop on all linked aios, before calling
 // nni_aio_fini on any of them.  This function will block until any
 // callbacks are executed, and therefore it should never be executed
-// from a callback itself.  (To abort operations without blocking
-// use nni_aio_cancel instead.)
+// from a callback itself.  (To abort operations in a non-blocking close()
+// context, use nni_aio_close instead.)
 extern void nni_aio_stop(nni_aio *);
+
+// nni_aio_close closes the aio. This will abort any in-flight operation on
+// the aio with NNG_ECLOSED.  It will also cause nni_aio_begin() to return
+// NNG_ECLOSED, but the call to nni_aio_begin() will automatically also
+// queue a completion callback on the aio with NNG_ECLOSED.  This operation
+// does not wait for existing operations to complete.
+extern void nni_aio_close(nni_aio *);
 
 // nni_aio_set_data sets user data.  This should only be done by the
 // consumer, initiating the I/O.  The intention is to be able to store

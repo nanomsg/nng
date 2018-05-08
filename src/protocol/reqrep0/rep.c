@@ -302,6 +302,9 @@ rep0_pipe_fini(void *arg)
 {
 	rep0_pipe *p = arg;
 
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
 	NNI_FREE_STRUCT(p);
@@ -354,6 +357,9 @@ rep0_pipe_stop(void *arg)
 	rep0_sock *s = p->rep;
 	rep0_ctx * ctx;
 
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_recv);
+
 	nni_mtx_lock(&s->lk);
 	while ((ctx = nni_list_first(&p->sendq)) != NULL) {
 		nni_aio *aio;
@@ -375,9 +381,6 @@ rep0_pipe_stop(void *arg)
 	}
 	nni_idhash_remove(s->pipes, nni_pipe_id(p->pipe));
 	nni_mtx_unlock(&s->lk);
-
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
 }
 
 static void

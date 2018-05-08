@@ -62,7 +62,6 @@ xrep0_sock_fini(void *arg)
 {
 	xrep0_sock *s = arg;
 
-	nni_aio_stop(s->aio_getq);
 	nni_aio_fini(s->aio_getq);
 	nni_idhash_fini(s->pipes);
 	nni_mtx_fini(&s->lk);
@@ -108,13 +107,18 @@ xrep0_sock_close(void *arg)
 {
 	xrep0_sock *s = arg;
 
-	nni_aio_abort(s->aio_getq, NNG_ECLOSED);
+	nni_aio_close(s->aio_getq);
 }
 
 static void
 xrep0_pipe_fini(void *arg)
 {
 	xrep0_pipe *p = arg;
+
+	nni_aio_stop(p->aio_getq);
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(p->aio_putq);
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
@@ -183,11 +187,11 @@ xrep0_pipe_stop(void *arg)
 	xrep0_pipe *p = arg;
 	xrep0_sock *s = p->rep;
 
+	nni_aio_close(p->aio_getq);
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_recv);
+	nni_aio_close(p->aio_putq);
 	nni_msgq_close(p->sendq);
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_putq);
 
 	nni_mtx_lock(&s->lk);
 	nni_idhash_remove(s->pipes, nni_pipe_id(p->pipe));

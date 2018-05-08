@@ -195,6 +195,9 @@ ws_pipe_close(void *arg)
 {
 	ws_pipe *p = arg;
 
+	nni_aio_close(p->rxaio);
+	nni_aio_close(p->txaio);
+
 	nni_mtx_lock(&p->mtx);
 	nni_ws_close(p->ws);
 	nni_mtx_unlock(&p->mtx);

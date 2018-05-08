@@ -249,10 +249,10 @@ nni_ep_shutdown(nni_ep *ep)
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	// Abort any remaining in-flight operations.
-	nni_aio_abort(ep->ep_acc_aio, NNG_ECLOSED);
-	nni_aio_abort(ep->ep_con_aio, NNG_ECLOSED);
-	nni_aio_abort(ep->ep_con_syn, NNG_ECLOSED);
-	nni_aio_abort(ep->ep_tmo_aio, NNG_ECLOSED);
+	nni_aio_close(ep->ep_acc_aio);
+	nni_aio_close(ep->ep_con_aio);
+	nni_aio_close(ep->ep_con_syn);
+	nni_aio_close(ep->ep_tmo_aio);
 
 	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
@@ -276,10 +276,10 @@ nni_ep_close(nni_ep *ep)
 
 	nni_ep_shutdown(ep);
 
-	nni_aio_stop(ep->ep_acc_aio);
-	nni_aio_stop(ep->ep_con_aio);
-	nni_aio_stop(ep->ep_con_syn);
-	nni_aio_stop(ep->ep_tmo_aio);
+	nni_aio_close(ep->ep_acc_aio);
+	nni_aio_close(ep->ep_con_aio);
+	nni_aio_close(ep->ep_con_syn);
+	nni_aio_close(ep->ep_tmo_aio);
 
 	nni_mtx_lock(&ep->ep_mtx);
 	NNI_LIST_FOREACH (&ep->ep_pipes, p) {

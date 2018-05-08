@@ -407,14 +407,16 @@ ws_close_cb(void *arg)
 	nni_ws *ws = arg;
 	ws_msg *wm;
 
+	nni_aio_close(ws->txaio);
+	nni_aio_close(ws->rxaio);
+	nni_aio_close(ws->httpaio);
+	nni_aio_close(ws->connaio);
+
 	// Either we sent a close frame, or we didn't.  Either way,
 	// we are done, and its time to abort everything else.
 	nni_mtx_lock(&ws->mtx);
 
 	nni_http_conn_close(ws->http);
-	nni_aio_abort(ws->txaio, NNG_ECLOSED);
-	nni_aio_abort(ws->rxaio, NNG_ECLOSED);
-	nni_aio_abort(ws->httpaio, NNG_ECLOSED);
 
 	// This list (receive) should be empty.
 	while ((wm = nni_list_first(&ws->rxmsgs)) != NULL) {
@@ -464,8 +466,8 @@ ws_close(nni_ws *ws, uint16_t code)
 	// pending connect request.
 	if (!ws->closed) {
 		// ABORT connection negotiation.
-		nni_aio_abort(ws->connaio, NNG_ECLOSED);
-		nni_aio_abort(ws->httpaio, NNG_ECLOSED);
+		nni_aio_close(ws->connaio);
+		nni_aio_close(ws->httpaio);
 		ws_send_close(ws, code);
 	}
 

@@ -81,6 +81,10 @@ static void
 pair0_pipe_fini(void *arg)
 {
 	pair0_pipe *p = arg;
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(p->aio_putq);
+	nni_aio_stop(p->aio_getq);
 
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -140,10 +144,10 @@ pair0_pipe_stop(void *arg)
 	pair0_pipe *p = arg;
 	pair0_sock *s = p->psock;
 
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_putq);
-	nni_aio_stop(p->aio_getq);
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_recv);
+	nni_aio_close(p->aio_putq);
+	nni_aio_close(p->aio_getq);
 
 	nni_mtx_lock(&s->mtx);
 	if (s->ppipe == p) {
