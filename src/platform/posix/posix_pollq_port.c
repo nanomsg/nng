@@ -117,7 +117,7 @@ nni_posix_pollq_fini(nni_posix_pollq_node *node)
 				// a chance for things to clear up.
 				nni_mtx_unlock(&node->mx);
 				nni_msleep(5000);
-				nni_mtx_unlock(&node->mx);
+				nni_mtx_lock(&node->mx);
 				continue;
 			case EBADFD:
 			case EBADF:
