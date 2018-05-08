@@ -632,6 +632,18 @@ of messages received, and messages are discarded if they do not match.
 This may be specified multiple times to subscribe to multiple topics.
 If not specified at all, then a default subscription to everything is assumed.</p>
 </dd>
+<dt class="hdlist1"><strong>--count=</strong>=<em>COUNT</em></dt>
+<dd>
+<p>Limit the number of iterations when looping to <em>COUNT</em> iterations.
+For protocols that only send, this will only send <em>COUNT</em> messages before
+exiting.
+For protocols that only receive, this will only receive <em>COUNT</em> messages
+before exiting.
+For protocols that involve a full exchange, this will only perform <em>COUNT</em>
+exchanges (each exchange is characterized by at most a single send, and
+one or more receives.)
+If <em>COUNT</em> is zero, then an infinite number of iterations is performed.</p>
+</dd>
 </dl>
 </div>
 </div>
@@ -856,6 +868,13 @@ Messages are emitted as <a href="https://msgpack.org">MessagePack</a> "bin forma
 <dd>
 <p>Give up receiving messages after <em>SEC</em> seconds pass without any received
 messages.</p>
+</dd>
+<dt class="hdlist1"><strong>--recv-maxsz</strong>=<em>COUNT</em></dt>
+<dd>
+<p>Set the maximum message size socket will accept to <em>COUNT</em> bytes.
+Messages larger than this will be discarded.
+The default is 1048576 (1 MB).
+To eliminate any restriction, use 0.</p>
 </dd>
 </dl>
 </div>

@@ -632,6 +632,20 @@ The default is system-specific, most often <code>0644</code>.</p>
 </dd>
 </dl>
 </div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Not all systems validate these permissions.
+In particular, illumos and Solaris are known to ignore these permission
+settings when connecting.
+</td>
+</tr>
+</table>
+</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -654,6 +668,37 @@ See your system documentation for UNIX domain sockets for more information.
 </td>
 <td class="content">
 The <em>umask</em> of the process is <strong>not</strong> applied to these bits.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The best practice for limiting access is to place the socket in a
+directory writable only by the server, and only readable and searchable
+by clients.
+All mainstream POSIX systems will fail to permit a client to connect
+to a socket located in a diretor for which the client lacks search (execute)
+permission.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Also consider using the <code>NNG_OPT_IPC_PEER_UID</code> property from within a
+a pipe notification callback (<code><a href="nng_pipe_notify.3.html">nng_pipe_notify()</a></code>)
+to validate peer credentials.
 </td>
 </tr>
 </table>
