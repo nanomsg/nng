@@ -431,6 +431,10 @@ throughput_server(const char *addr, size_t msgsize, int count)
 		nng_msg_free(msg);
 	}
 	end = nng_clock();
+	// Send a synchronization message (empty) to the other side,
+	// and wait a bit to make sure it goes out the wire.
+	nng_send(s, "", 0, 0);
+	nng_msleep(200);
 	nng_close(s);
 	total     = (float) ((end - start)) / 1000;
 	msgpersec = (float) (count) / total;
@@ -465,6 +469,11 @@ throughput_client(const char *addr, size_t msgsize, int count)
 		die("nng_setopt(nng_opt_sendbuf): %s", nng_strerror(rv));
 	}
 
+	rv = nng_setopt_ms(s, NNG_OPT_RECVTIMEO, 5000);
+	if (rv != 0) {
+		die("nng_setopt(nng_opt_recvtimeo): %s", nng_strerror(rv));
+	}
+
 	if ((rv = nng_dial(s, addr, NULL, 0)) != 0) {
 		die("nng_dial: %s", nng_strerror(rv));
 	}
@@ -486,7 +495,10 @@ throughput_client(const char *addr, size_t msgsize, int count)
 		}
 	}
 
-	// Wait 100msec for pipes to drain.
-	nng_msleep(100);
+	// Attempt to get the completion indication from the other side.
+	if (nng_recvmsg(s, &msg, 0) == 0) {
+		nng_msg_free(msg);
+	}
+
 	nng_close(s);
 }
