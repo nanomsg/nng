@@ -190,9 +190,6 @@ req0_pipe_fini(void *arg)
 {
 	req0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_send);
-
 	nni_aio_fini(p->aio_recv);
 	nni_aio_fini(p->aio_send);
 	NNI_FREE_STRUCT(p);
@@ -246,7 +243,7 @@ req0_pipe_start(void *arg)
 }
 
 static void
-req0_pipe_stop(void *arg)
+req0_pipe_close(void *arg)
 {
 	req0_pipe *p = arg;
 	req0_sock *s = p->req;
@@ -277,6 +274,16 @@ req0_pipe_stop(void *arg)
 		nni_timer_schedule(&ctx->timer, NNI_TIME_ZERO);
 	}
 	nni_mtx_unlock(&s->mtx);
+}
+
+static void
+req0_pipe_stop(void *arg)
+{
+	req0_pipe *p = arg;
+
+	req0_pipe_close(p);
+	nni_aio_wait(p->aio_recv);
+	nni_aio_wait(p->aio_send);
 }
 
 // For cooked mode, we use a context, and send out that way.  This
@@ -837,6 +844,7 @@ static nni_proto_pipe_ops req0_pipe_ops = {
 	.pipe_init  = req0_pipe_init,
 	.pipe_fini  = req0_pipe_fini,
 	.pipe_start = req0_pipe_start,
+	.pipe_close = req0_pipe_close,
 	.pipe_stop  = req0_pipe_stop,
 };
 

@@ -78,6 +78,10 @@ nni_pipe_destroy(nni_pipe *p)
 		return;
 	}
 
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_stop(p->p_proto_data);
+	}
+
 	// Stop any pending negotiation.
 	nni_aio_stop(p->p_start_aio);
 
@@ -175,18 +179,19 @@ nni_pipe_close(nni_pipe *p)
 		return;
 	}
 	p->p_closed = true;
+	nni_mtx_unlock(&p->p_mtx);
 
 	// abort any pending negotiation/start process.
 	nni_aio_close(p->p_start_aio);
 
-	p->p_proto_ops.pipe_stop(p->p_proto_data);
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_close(p->p_proto_data);
+	}
 
 	// Close the underlying transport.
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_close(p->p_tran_data);
 	}
-
-	nni_mtx_unlock(&p->p_mtx);
 }
 
 bool
@@ -239,9 +244,11 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 {
 	nni_pipe *          p;
 	int                 rv;
-	nni_tran *          tran = nni_ep_tran(ep);
-	nni_sock *          sock = nni_ep_sock(ep);
-	nni_proto_pipe_ops *pops = nni_sock_proto_pipe_ops(sock);
+	nni_tran *          tran  = nni_ep_tran(ep);
+	nni_sock *          sock  = nni_ep_sock(ep);
+	nni_proto_pipe_ops *pops  = nni_sock_proto_pipe_ops(sock);
+	void *              sdata = nni_sock_proto_data(sock);
+	uint64_t            id;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		// In this case we just toss the pipe...
@@ -266,30 +273,37 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	nni_mtx_init(&p->p_mtx);
 	nni_cv_init(&p->p_cv, &nni_pipe_lk);
 
-	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) == 0) {
-		uint64_t id;
-		nni_mtx_lock(&nni_pipe_lk);
-		if ((rv = nni_idhash_alloc(nni_pipes, &id, p)) == 0) {
-			p->p_id = (uint32_t) id;
-		}
-		nni_mtx_unlock(&nni_pipe_lk);
+	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
 	}
 
-	if (rv == 0) {
-		void *sdata = nni_sock_proto_data(sock);
-		rv          = pops->pipe_init(&p->p_proto_data, p, sdata);
-	}
-	if (rv == 0) {
-		rv = nni_ep_pipe_add(ep, p);
-	}
-	if (rv == 0) {
-		rv = nni_sock_pipe_add(sock, p);
-	}
+	nni_mtx_lock(&nni_pipe_lk);
+	rv = nni_idhash_alloc(nni_pipes, &id, p);
+	nni_mtx_unlock(&nni_pipe_lk);
 	if (rv != 0) {
 		nni_pipe_destroy(p);
+		return (rv);
 	}
 
-	return (rv);
+	p->p_id = (uint32_t) id;
+
+	if ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	if ((rv = nni_ep_pipe_add(ep, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
+		nni_pipe_stop(p);
+		return (rv);
+	}
+
+	return (0);
 }
 
 int

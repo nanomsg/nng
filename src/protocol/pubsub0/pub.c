@@ -110,10 +110,6 @@ pub0_pipe_fini(void *arg)
 {
 	pub0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
-
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -168,7 +164,7 @@ pub0_pipe_start(void *arg)
 }
 
 static void
-pub0_pipe_stop(void *arg)
+pub0_pipe_close(void *arg)
 {
 	pub0_pipe *p = arg;
 	pub0_sock *s = p->pub;
@@ -184,6 +180,18 @@ pub0_pipe_stop(void *arg)
 		nni_list_remove(&s->pipes, p);
 	}
 	nni_mtx_unlock(&s->mtx);
+}
+
+static void
+pub0_pipe_stop(void *arg)
+{
+	pub0_pipe *p = arg;
+
+	pub0_pipe_close(p);
+
+	nni_aio_wait(p->aio_getq);
+	nni_aio_wait(p->aio_send);
+	nni_aio_wait(p->aio_recv);
 }
 
 static void
@@ -294,6 +302,7 @@ static nni_proto_pipe_ops pub0_pipe_ops = {
 	.pipe_init  = pub0_pipe_init,
 	.pipe_fini  = pub0_pipe_fini,
 	.pipe_start = pub0_pipe_start,
+	.pipe_close = pub0_pipe_close,
 	.pipe_stop  = pub0_pipe_stop,
 };
 

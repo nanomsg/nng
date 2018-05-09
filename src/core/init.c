@@ -68,12 +68,12 @@ nni_fini(void)
 		}
 		nni_mtx_unlock(&nni_init_mtx);
 	}
+	nni_reap_sys_fini(); // must be before timer and aio (expire)
 	nni_tran_sys_fini();
 	nni_proto_sys_fini();
 	nni_pipe_sys_fini();
 	nni_ep_sys_fini();
 	nni_sock_sys_fini();
-	nni_reap_sys_fini(); // must be before timer and aio (expire)
 	nni_random_sys_fini();
 	nni_aio_sys_fini();
 	nni_timer_sys_fini();

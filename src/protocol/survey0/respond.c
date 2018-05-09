@@ -294,8 +294,6 @@ static void
 resp0_pipe_fini(void *arg)
 {
 	resp0_pipe *p = arg;
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
 
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -347,7 +345,7 @@ resp0_pipe_start(void *arg)
 }
 
 static void
-resp0_pipe_stop(void *arg)
+resp0_pipe_close(void *arg)
 {
 	resp0_pipe *p = arg;
 	resp0_sock *s = p->psock;
@@ -375,6 +373,16 @@ resp0_pipe_stop(void *arg)
 	}
 	nni_idhash_remove(s->pipes, p->id);
 	nni_mtx_unlock(&s->mtx);
+}
+
+static void
+resp0_pipe_stop(void *arg)
+{
+	resp0_pipe *p = arg;
+
+	resp0_pipe_close(p);
+	nni_aio_wait(p->aio_send);
+	nni_aio_wait(p->aio_recv);
 }
 
 static void
@@ -629,6 +637,7 @@ static nni_proto_pipe_ops resp0_pipe_ops = {
 	.pipe_init  = resp0_pipe_init,
 	.pipe_fini  = resp0_pipe_fini,
 	.pipe_start = resp0_pipe_start,
+	.pipe_close = resp0_pipe_close,
 	.pipe_stop  = resp0_pipe_stop,
 };
 

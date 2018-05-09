@@ -34,16 +34,19 @@ struct nni_proto_pipe_ops {
 
 	// pipe_start is called to register a pipe with the protocol.  The
 	// protocol can reject this, for example if another pipe is already
-	// active on a 1:1 protocol.  The protocol may not block during this,
-	// as the socket lock is held.
+	// active on a 1:1 protocol.  The protocol may not block during this.
 	int (*pipe_start)(void *);
 
-	// pipe_stop is called to unregister a pipe from the protocol.
-	// Threads may still acccess data structures, so the protocol
-	// should not free anything yet.  This is called with the socket
-	// lock held, so the protocol may not call back into the socket, and
-	// must not block.  This operation must be idempotent, and may
-	// be called even if pipe_start was not.
+	// pipe_close is an idempotent, non-blocking, operation, called
+	// when the pipe is being closed.  Any operations pending on the
+	// pipe should be canceled with NNG_ECLOSED.  (Best option is to
+	// use nng_aio_close() on them)
+	void (*pipe_close)(void *);
+
+	// pipe_stop is called during finalization, to ensure that
+	// the protocol is absolutely finished with the pipe.  It should
+	// wait if necessary to ensure that the pipe is not referenced
+	// anymore by the protocol.  It should not destroy resources.
 	void (*pipe_stop)(void *);
 };
 

@@ -115,11 +115,6 @@ bus0_pipe_fini(void *arg)
 {
 	bus0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_putq);
-
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -172,7 +167,7 @@ bus0_pipe_start(void *arg)
 }
 
 static void
-bus0_pipe_stop(void *arg)
+bus0_pipe_close(void *arg)
 {
 	bus0_pipe *p = arg;
 	bus0_sock *s = p->psock;
@@ -189,6 +184,18 @@ bus0_pipe_stop(void *arg)
 	nni_aio_close(p->aio_putq);
 
 	nni_msgq_close(p->sendq);
+}
+
+static void
+bus0_pipe_stop(void *arg)
+{
+	bus0_pipe *p = arg;
+
+	bus0_pipe_close(arg);
+	nni_aio_wait(p->aio_getq);
+	nni_aio_wait(p->aio_send);
+	nni_aio_wait(p->aio_recv);
+	nni_aio_wait(p->aio_putq);
 }
 
 static void
@@ -355,6 +362,7 @@ static nni_proto_pipe_ops bus0_pipe_ops = {
 	.pipe_init  = bus0_pipe_init,
 	.pipe_fini  = bus0_pipe_fini,
 	.pipe_start = bus0_pipe_start,
+	.pipe_close = bus0_pipe_close,
 	.pipe_stop  = bus0_pipe_stop,
 };
 
