@@ -81,6 +81,10 @@ nni_ipc_pipe_close(void *arg)
 {
 	nni_ipc_pipe *pipe = arg;
 
+	nni_aio_close(pipe->rxaio);
+	nni_aio_close(pipe->txaio);
+	nni_aio_close(pipe->negaio);
+
 	nni_plat_ipc_pipe_close(pipe->ipp);
 }
 
@@ -630,7 +634,7 @@ nni_ipc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		nni_ipc_ep_fini(ep);
 		return (rv);
 	}
-	ep->proto = nni_sock_proto(sock);
+	ep->proto = nni_sock_proto_id(sock);
 
 	*epp = ep;
 	return (0);
@@ -645,7 +649,7 @@ nni_ipc_ep_close(void *arg)
 	nni_plat_ipc_ep_close(ep->iep);
 	nni_mtx_unlock(&ep->mtx);
 
-	nni_aio_stop(ep->aio);
+	nni_aio_close(ep->aio);
 }
 
 static int
@@ -859,7 +863,7 @@ static nni_tran_pipe_option nni_ipc_pipe_options[] = {
 	},
 };
 
-static nni_tran_pipe nni_ipc_pipe_ops = {
+static nni_tran_pipe_ops nni_ipc_pipe_ops = {
 	.p_fini    = nni_ipc_pipe_fini,
 	.p_start   = nni_ipc_pipe_start,
 	.p_send    = nni_ipc_pipe_send,
@@ -900,7 +904,7 @@ static nni_tran_ep_option nni_ipc_ep_options[] = {
 	},
 };
 
-static nni_tran_ep nni_ipc_ep_ops = {
+static nni_tran_ep_ops nni_ipc_ep_ops = {
 	.ep_init    = nni_ipc_ep_init,
 	.ep_fini    = nni_ipc_ep_fini,
 	.ep_connect = nni_ipc_ep_connect,

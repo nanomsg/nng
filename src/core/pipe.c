@@ -18,47 +18,33 @@
 // performed in the context of the protocol.
 
 struct nni_pipe {
-	uint32_t      p_id;
-	nni_tran_pipe p_tran_ops;
-	void *        p_tran_data;
-	void *        p_proto_data;
-	nni_list_node p_sock_node;
-	nni_list_node p_ep_node;
-	nni_sock *    p_sock;
-	nni_ep *      p_ep;
-	bool          p_closed;
-	bool          p_stop;
-	int           p_refcnt;
-	nni_mtx       p_mtx;
-	nni_cv        p_cv;
-	nni_list_node p_reap_node;
-	nni_aio *     p_start_aio;
+	uint32_t           p_id;
+	nni_tran_pipe_ops  p_tran_ops;
+	nni_proto_pipe_ops p_proto_ops;
+	void *             p_tran_data;
+	void *             p_proto_data;
+	nni_list_node      p_sock_node;
+	nni_list_node      p_ep_node;
+	nni_sock *         p_sock;
+	nni_ep *           p_ep;
+	bool               p_closed;
+	bool               p_stop;
+	int                p_refcnt;
+	nni_mtx            p_mtx;
+	nni_cv             p_cv;
+	nni_aio *          p_start_aio;
+	nni_reap_item      p_reap;
 };
 
 static nni_idhash *nni_pipes;
 static nni_mtx     nni_pipe_lk;
-
-static nni_list nni_pipe_reap_list;
-static nni_mtx  nni_pipe_reap_lk;
-static nni_cv   nni_pipe_reap_cv;
-static nni_thr  nni_pipe_reap_thr;
-static int      nni_pipe_reap_run;
-
-static void nni_pipe_reaper(void *);
 
 int
 nni_pipe_sys_init(void)
 {
 	int rv;
 
-	NNI_LIST_INIT(&nni_pipe_reap_list, nni_pipe, p_reap_node);
-	nni_mtx_init(&nni_pipe_lk);
-	nni_mtx_init(&nni_pipe_reap_lk);
-	nni_cv_init(&nni_pipe_reap_cv, &nni_pipe_reap_lk);
-
-	if (((rv = nni_idhash_init(&nni_pipes)) != 0) ||
-	    ((rv = nni_thr_init(&nni_pipe_reap_thr, nni_pipe_reaper, 0)) !=
-	        0)) {
+	if ((rv = nni_idhash_init(&nni_pipes)) != 0) {
 		return (rv);
 	}
 
@@ -70,30 +56,19 @@ nni_pipe_sys_init(void)
 	nni_idhash_set_limits(
 	    nni_pipes, 1, 0x7fffffff, nni_random() & 0x7fffffff);
 
-	nni_pipe_reap_run = 1;
-	nni_thr_run(&nni_pipe_reap_thr);
-
+	nni_mtx_init(&nni_pipe_lk);
 	return (0);
 }
 
 void
 nni_pipe_sys_fini(void)
 {
-	if (nni_pipe_reap_run) {
-		nni_mtx_lock(&nni_pipe_reap_lk);
-		nni_pipe_reap_run = 0;
-		nni_cv_wake(&nni_pipe_reap_cv);
-		nni_mtx_unlock(&nni_pipe_reap_lk);
-	}
 
-	nni_thr_fini(&nni_pipe_reap_thr);
-	nni_cv_fini(&nni_pipe_reap_cv);
-	nni_mtx_fini(&nni_pipe_reap_lk);
-	nni_mtx_fini(&nni_pipe_lk);
 	if (nni_pipes != NULL) {
 		nni_idhash_fini(nni_pipes);
 		nni_pipes = NULL;
 	}
+	nni_mtx_fini(&nni_pipe_lk);
 }
 
 static void
@@ -101,6 +76,10 @@ nni_pipe_destroy(nni_pipe *p)
 {
 	if (p == NULL) {
 		return;
+	}
+
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_stop(p->p_proto_data);
 	}
 
 	// Stop any pending negotiation.
@@ -125,6 +104,10 @@ nni_pipe_destroy(nni_pipe *p)
 		nni_cv_wait(&p->p_cv);
 	}
 	nni_mtx_unlock(&nni_pipe_lk);
+
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_fini(p->p_proto_data);
+	}
 
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_fini(p->p_tran_data);
@@ -196,16 +179,19 @@ nni_pipe_close(nni_pipe *p)
 		return;
 	}
 	p->p_closed = true;
+	nni_mtx_unlock(&p->p_mtx);
+
+	// abort any pending negotiation/start process.
+	nni_aio_close(p->p_start_aio);
+
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_close(p->p_proto_data);
+	}
 
 	// Close the underlying transport.
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_close(p->p_tran_data);
 	}
-
-	nni_mtx_unlock(&p->p_mtx);
-
-	// abort any pending negotiation/start process.
-	nni_aio_abort(p->p_start_aio, NNG_ECLOSED);
 }
 
 bool
@@ -222,7 +208,6 @@ void
 nni_pipe_stop(nni_pipe *p)
 {
 	// Guard against recursive calls.
-	nni_pipe_close(p);
 	nni_mtx_lock(&p->p_mtx);
 	if (p->p_stop) {
 		nni_mtx_unlock(&p->p_mtx);
@@ -230,12 +215,9 @@ nni_pipe_stop(nni_pipe *p)
 	}
 	p->p_stop = true;
 	nni_mtx_unlock(&p->p_mtx);
+	nni_pipe_close(p);
 
-	// Put it on the reaplist for async cleanup
-	nni_mtx_lock(&nni_pipe_reap_lk);
-	nni_list_append(&nni_pipe_reap_list, p);
-	nni_cv_wake(&nni_pipe_reap_cv);
-	nni_mtx_unlock(&nni_pipe_reap_lk);
+	nni_reap(&p->p_reap, (nni_cb) nni_pipe_destroy, p);
 }
 
 uint16_t
@@ -250,12 +232,9 @@ nni_pipe_start_cb(void *arg)
 	nni_pipe *p   = arg;
 	nni_aio * aio = p->p_start_aio;
 
-	if (nni_aio_result(aio) != 0) {
-		nni_pipe_stop(p);
-		return;
-	}
-
-	if (nni_sock_pipe_start(p->p_sock, p) != 0) {
+	if ((nni_aio_result(aio) != 0) ||
+	    (nni_sock_pipe_start(p->p_sock, p) != 0) ||
+	    (p->p_proto_ops.pipe_start(p->p_proto_data) != 0)) {
 		nni_pipe_stop(p);
 	}
 }
@@ -263,10 +242,13 @@ nni_pipe_start_cb(void *arg)
 int
 nni_pipe_create(nni_ep *ep, void *tdata)
 {
-	nni_pipe *p;
-	int       rv;
-	nni_tran *tran = nni_ep_tran(ep);
-	nni_sock *sock = nni_ep_sock(ep);
+	nni_pipe *          p;
+	int                 rv;
+	nni_tran *          tran  = nni_ep_tran(ep);
+	nni_sock *          sock  = nni_ep_sock(ep);
+	nni_proto_pipe_ops *pops  = nni_sock_proto_pipe_ops(sock);
+	void *              sdata = nni_sock_proto_data(sock);
+	uint64_t            id;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		// In this case we just toss the pipe...
@@ -276,6 +258,7 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 
 	// Make a private copy of the transport ops.
 	p->p_tran_ops   = *tran->tran_pipe;
+	p->p_proto_ops  = *pops;
 	p->p_tran_data  = tdata;
 	p->p_proto_data = NULL;
 	p->p_ep         = ep;
@@ -284,27 +267,43 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 	p->p_stop       = false;
 	p->p_refcnt     = 0;
 
-	NNI_LIST_NODE_INIT(&p->p_reap_node);
 	NNI_LIST_NODE_INIT(&p->p_sock_node);
 	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
 	nni_mtx_init(&p->p_mtx);
 	nni_cv_init(&p->p_cv, &nni_pipe_lk);
-	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) == 0) {
-		uint64_t id;
-		nni_mtx_lock(&nni_pipe_lk);
-		if ((rv = nni_idhash_alloc(nni_pipes, &id, p)) == 0) {
-			p->p_id = (uint32_t) id;
-		}
-		nni_mtx_unlock(&nni_pipe_lk);
-	}
 
-	if ((rv != 0) || ((rv = nni_ep_pipe_add(ep, p)) != 0) ||
-	    ((rv = nni_sock_pipe_add(sock, p)) != 0)) {
+	if ((rv = nni_aio_init(&p->p_start_aio, nni_pipe_start_cb, p)) != 0) {
 		nni_pipe_destroy(p);
+		return (rv);
 	}
 
-	return (rv);
+	nni_mtx_lock(&nni_pipe_lk);
+	rv = nni_idhash_alloc(nni_pipes, &id, p);
+	nni_mtx_unlock(&nni_pipe_lk);
+	if (rv != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	p->p_id = (uint32_t) id;
+
+	if ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	if ((rv = nni_ep_pipe_add(ep, p)) != 0) {
+		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
+		nni_pipe_stop(p);
+		return (rv);
+	}
+
+	return (0);
 }
 
 int
@@ -339,12 +338,6 @@ nni_pipe_get_proto_data(nni_pipe *p)
 }
 
 void
-nni_pipe_set_proto_data(nni_pipe *p, void *data)
-{
-	p->p_proto_data = data;
-}
-
-void
 nni_pipe_sock_list_init(nni_list *list)
 {
 	NNI_LIST_INIT(list, nni_pipe, p_sock_node);
@@ -372,28 +365,4 @@ int
 nni_pipe_ep_mode(nni_pipe *p)
 {
 	return (nni_ep_mode(p->p_ep));
-}
-
-static void
-nni_pipe_reaper(void *notused)
-{
-	NNI_ARG_UNUSED(notused);
-
-	nni_mtx_lock(&nni_pipe_reap_lk);
-	for (;;) {
-		nni_pipe *p;
-		if ((p = nni_list_first(&nni_pipe_reap_list)) != NULL) {
-			nni_list_remove(&nni_pipe_reap_list, p);
-
-			nni_mtx_unlock(&nni_pipe_reap_lk);
-			nni_pipe_destroy(p);
-			nni_mtx_lock(&nni_pipe_reap_lk);
-			continue;
-		}
-		if (!nni_pipe_reap_run) {
-			break;
-		}
-		nni_cv_wait(&nni_pipe_reap_cv);
-	}
-	nni_mtx_unlock(&nni_pipe_reap_lk);
 }

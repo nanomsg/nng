@@ -63,7 +63,6 @@ xresp0_sock_fini(void *arg)
 {
 	xresp0_sock *s = arg;
 
-	nni_aio_stop(s->aio_getq);
 	nni_aio_fini(s->aio_getq);
 	nni_idhash_fini(s->pipes);
 	nni_mtx_fini(&s->mtx);
@@ -107,7 +106,7 @@ xresp0_sock_close(void *arg)
 {
 	xresp0_sock *s = arg;
 
-	nni_aio_abort(s->aio_getq, NNG_ECLOSED);
+	nni_aio_close(s->aio_getq);
 }
 
 static void
@@ -170,20 +169,33 @@ xresp0_pipe_start(void *arg)
 }
 
 static void
-xresp0_pipe_stop(void *arg)
+xresp0_pipe_close(void *arg)
 {
 	xresp0_pipe *p = arg;
 	xresp0_sock *s = p->psock;
 
+	nni_aio_close(p->aio_putq);
+	nni_aio_close(p->aio_getq);
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_recv);
+
 	nni_msgq_close(p->sendq);
-	nni_aio_stop(p->aio_putq);
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
 
 	nni_mtx_lock(&s->mtx);
 	nni_idhash_remove(s->pipes, p->id);
 	nni_mtx_unlock(&s->mtx);
+}
+
+static void
+xresp0_pipe_stop(void *arg)
+{
+	xresp0_pipe *p = arg;
+
+	xresp0_pipe_close(p);
+	nni_aio_wait(p->aio_putq);
+	nni_aio_wait(p->aio_getq);
+	nni_aio_wait(p->aio_send);
+	nni_aio_wait(p->aio_recv);
 }
 
 // resp0_sock_send watches for messages from the upper write queue,
@@ -366,6 +378,7 @@ static nni_proto_pipe_ops xresp0_pipe_ops = {
 	.pipe_init  = xresp0_pipe_init,
 	.pipe_fini  = xresp0_pipe_fini,
 	.pipe_start = xresp0_pipe_start,
+	.pipe_close = xresp0_pipe_close,
 	.pipe_stop  = xresp0_pipe_stop,
 };
 

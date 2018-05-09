@@ -63,14 +63,15 @@ struct nng_aio {
 
 	// These fields are private to the aio framework.
 	nni_cv   a_cv;
-	bool     a_fini : 1;     // shutting down (no new operations)
-	bool     a_done : 1;     // operation has completed
-	bool     a_pend : 1;     // completion routine pending
-	bool     a_active : 1;   // aio was started
-	bool     a_expiring : 1; // expiration callback in progress
-	bool     a_waiting : 1;  // a thread is waiting for this to finish
-	bool     a_synch : 1;    // run completion synchronously
-	bool     a_sleep : 1;    // sleeping with no action
+	bool     a_fini;   // shutting down (no new operations)
+	bool     a_closed; // aio is closed, all operations abort with ECLOSED
+	bool     a_done;   // operation has completed
+	bool     a_pend;   // completion routine pending
+	bool     a_active; // aio was started
+	bool     a_expiring; // expiration callback in progress
+	bool     a_waiting;  // a thread is waiting for this to finish
+	bool     a_synch;    // run completion synchronously
+	bool     a_sleep;    // sleeping with no action
 	nni_task a_task;
 
 	// Read/write operations.
@@ -192,13 +193,44 @@ void
 nni_aio_stop(nni_aio *aio)
 {
 	if (aio != NULL) {
+		nni_aio_cancelfn cancelfn;
 		nni_mtx_lock(&nni_aio_lk);
+
+		if (aio->a_fini || aio->a_closed) {
+			cancelfn = NULL;
+		} else {
+			cancelfn = aio->a_prov_cancel;
+		}
 		aio->a_fini = true;
 		nni_mtx_unlock(&nni_aio_lk);
 
-		nni_aio_abort(aio, NNG_ECANCELED);
+		if (cancelfn != NULL) {
+			cancelfn(aio, NNG_ECANCELED);
+		}
 
 		nni_aio_wait(aio);
+	}
+}
+
+void
+nni_aio_close(nni_aio *aio)
+{
+	if (aio != NULL) {
+		nni_aio_cancelfn cancelfn;
+
+		nni_mtx_lock(&nni_aio_lk);
+		if (aio->a_fini || aio->a_closed) {
+			nni_mtx_unlock(&nni_aio_lk);
+			return;
+		}
+		aio->a_closed      = true;
+		cancelfn           = aio->a_prov_cancel;
+		aio->a_prov_cancel = NULL;
+		nni_mtx_unlock(&nni_aio_lk);
+
+		if (cancelfn != NULL) {
+			cancelfn(aio, NNG_ECLOSED);
+		}
 	}
 }
 
@@ -304,7 +336,6 @@ nni_aio_begin(nni_aio *aio)
 	// We should not reschedule anything at this point.
 	if (aio->a_fini) {
 		aio->a_active = false;
-		aio->a_result = NNG_ECANCELED;
 		nni_mtx_unlock(&nni_aio_lk);
 		return (NNG_ECANCELED);
 	}
@@ -317,6 +348,19 @@ nni_aio_begin(nni_aio *aio)
 	aio->a_active      = true;
 	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
 		aio->a_outputs[i] = NULL;
+	}
+	if (aio->a_closed) {
+		aio->a_result = NNG_ECLOSED;
+		aio->a_synch  = false;
+		aio->a_pend   = true;
+		aio->a_done   = true;
+		nni_task_dispatch(&aio->a_task);
+		if (aio->a_waiting) {
+			aio->a_waiting = false;
+			nni_cv_wake(&aio->a_cv);
+		}
+		nni_mtx_unlock(&nni_aio_lk);
+		return (NNG_ECLOSED);
 	}
 	nni_mtx_unlock(&nni_aio_lk);
 	return (0);

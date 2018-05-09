@@ -15,30 +15,30 @@
 #include <string.h>
 
 struct nni_ep {
-	nni_tran_ep   ep_ops;  // transport ops
-	nni_tran *    ep_tran; // transport pointer
-	void *        ep_data; // transport private
-	uint64_t      ep_id;   // endpoint id
-	nni_list_node ep_node; // per socket list
-	nni_sock *    ep_sock;
-	nni_url *     ep_url;
-	int           ep_mode;
-	int           ep_started;
-	int           ep_closed;  // full shutdown
-	int           ep_closing; // close pending (waiting on refcnt)
-	int           ep_refcnt;
-	int           ep_tmo_run;
-	nni_mtx       ep_mtx;
-	nni_cv        ep_cv;
-	nni_list      ep_pipes;
-	nni_aio *     ep_acc_aio;
-	nni_aio *     ep_con_aio;
-	nni_aio *     ep_con_syn;  // used for sync connect
-	nni_aio *     ep_tmo_aio;  // backoff timer
-	nni_duration  ep_maxrtime; // maximum time for reconnect
-	nni_duration  ep_currtime; // current time for reconnect
-	nni_duration  ep_inirtime; // initial time for reconnect
-	nni_time      ep_conntime; // time of last good connect
+	nni_tran_ep_ops ep_ops;  // transport ops
+	nni_tran *      ep_tran; // transport pointer
+	void *          ep_data; // transport private
+	uint64_t        ep_id;   // endpoint id
+	nni_list_node   ep_node; // per socket list
+	nni_sock *      ep_sock;
+	nni_url *       ep_url;
+	int             ep_mode;
+	int             ep_started;
+	int             ep_closed;  // full shutdown
+	int             ep_closing; // close pending (waiting on refcnt)
+	int             ep_refcnt;
+	int             ep_tmo_run;
+	nni_mtx         ep_mtx;
+	nni_cv          ep_cv;
+	nni_list        ep_pipes;
+	nni_aio *       ep_acc_aio;
+	nni_aio *       ep_con_aio;
+	nni_aio *       ep_con_syn;  // used for sync connect
+	nni_aio *       ep_tmo_aio;  // backoff timer
+	nni_duration    ep_maxrtime; // maximum time for reconnect
+	nni_duration    ep_currtime; // current time for reconnect
+	nni_duration    ep_inirtime; // initial time for reconnect
+	nni_time        ep_conntime; // time of last good connect
 };
 
 // Functionality related to end points.
@@ -249,10 +249,10 @@ nni_ep_shutdown(nni_ep *ep)
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	// Abort any remaining in-flight operations.
-	nni_aio_abort(ep->ep_acc_aio, NNG_ECLOSED);
-	nni_aio_abort(ep->ep_con_aio, NNG_ECLOSED);
-	nni_aio_abort(ep->ep_con_syn, NNG_ECLOSED);
-	nni_aio_abort(ep->ep_tmo_aio, NNG_ECLOSED);
+	nni_aio_close(ep->ep_acc_aio);
+	nni_aio_close(ep->ep_con_aio);
+	nni_aio_close(ep->ep_con_syn);
+	nni_aio_close(ep->ep_tmo_aio);
 
 	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
@@ -276,10 +276,10 @@ nni_ep_close(nni_ep *ep)
 
 	nni_ep_shutdown(ep);
 
-	nni_aio_stop(ep->ep_acc_aio);
-	nni_aio_stop(ep->ep_con_aio);
-	nni_aio_stop(ep->ep_con_syn);
-	nni_aio_stop(ep->ep_tmo_aio);
+	nni_aio_close(ep->ep_acc_aio);
+	nni_aio_close(ep->ep_con_aio);
+	nni_aio_close(ep->ep_con_syn);
+	nni_aio_close(ep->ep_tmo_aio);
 
 	nni_mtx_lock(&ep->ep_mtx);
 	NNI_LIST_FOREACH (&ep->ep_pipes, p) {
