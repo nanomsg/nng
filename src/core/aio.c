@@ -175,13 +175,6 @@ nni_aio_set_iov(nni_aio *aio, unsigned niov, const nni_iov *iov)
 	return (0);
 }
 
-void
-nni_aio_fini_cb(nni_aio *aio)
-{
-	nni_cv_fini(&aio->a_cv);
-	NNI_FREE_STRUCT(aio);
-}
-
 // nni_aio_stop cancels any oustanding operation, and waits for the
 // callback to complete, if still running.  It also marks the AIO as
 // stopped, preventing further calls to nni_aio_begin from succeeding.

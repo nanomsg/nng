@@ -32,12 +32,6 @@ extern int nni_aio_init(nni_aio **, nni_cb, void *);
 // on zero'd memory.
 extern void nni_aio_fini(nni_aio *);
 
-// nni_aio_fini_cb finalizes the aio WITHOUT waiting for it to complete.
-// This is intended exclusively for finalizing an AIO from a completion
-// callack for that AIO. It is important that the caller ensure that nothing
-// else might be waiting for that AIO or using it.
-extern void nni_aio_fini_cb(nni_aio *);
-
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,
 // but also prevents any new operations from starting (nni_aio_start will
 // return NNG_ESTATE).  This should be called before nni_aio_fini().  The

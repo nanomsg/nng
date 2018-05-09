@@ -1285,19 +1285,6 @@ typedef struct zt_send_hdr {
 	size_t       len;
 } zt_send_hdr;
 
-static void
-zt_wire_packet_send_cb(void *arg)
-{
-	// We don't actually care much about the results, we
-	// just need to release the resources.
-	nni_aio *    aio = arg;
-	zt_send_hdr *hdr;
-
-	hdr = nni_aio_get_data(aio, 0);
-	nni_free(hdr, hdr->len + sizeof(*hdr));
-	nni_aio_fini_cb(aio);
-}
-
 // This function is called when ZeroTier desires to send a
 // physical frame. The data is a UDP payload, the rest of the
 // payload should be set over vanilla UDP.
@@ -1345,7 +1332,7 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 		return (-1);
 	}
 
-	if (nni_aio_init(&aio, zt_wire_packet_send_cb, NULL) != 0) {
+	if (nni_aio_init(&aio, NULL, NULL) != 0) {
 		// Out of memory
 		return (-1);
 	}
@@ -1370,6 +1357,15 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	// This should be non-blocking/best-effort, so while
 	// not great that we're holding the lock, also not tragic.
 	nni_plat_udp_send(udp, aio);
+
+	// UDP sending is "fast" on all platforms -- given that its
+	// best effort only, this will complete immediately, resulting
+	// in either a message on the wire, or a discarded frame.  We don't
+	// care which.  (There may be a few thread context switches, but
+	// none of them are going to have to wait for some unbounded time.)
+	nni_aio_wait(aio);
+	nni_aio_fini(aio);
+	nni_free(hdr, hdr->len + sizeof(*hdr));
 
 	return (0);
 }
