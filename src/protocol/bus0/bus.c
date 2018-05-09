@@ -177,18 +177,18 @@ bus0_pipe_stop(void *arg)
 	bus0_pipe *p = arg;
 	bus0_sock *s = p->psock;
 
+	nni_mtx_lock(&s->mtx);
+	if (nni_list_active(&s->pipes, p)) {
+		nni_list_remove(&s->pipes, p);
+	}
+	nni_mtx_unlock(&s->mtx);
+
 	nni_aio_close(p->aio_getq);
 	nni_aio_close(p->aio_send);
 	nni_aio_close(p->aio_recv);
 	nni_aio_close(p->aio_putq);
 
 	nni_msgq_close(p->sendq);
-
-	nni_mtx_lock(&s->mtx);
-	if (nni_list_active(&s->pipes, p)) {
-		nni_list_remove(&s->pipes, p);
-	}
-	nni_mtx_unlock(&s->mtx);
 }
 
 static void

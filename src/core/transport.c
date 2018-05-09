@@ -118,7 +118,7 @@ nni_tran_chkopt(const char *name, const void *v, size_t sz, int typ)
 
 	nni_mtx_lock(&nni_tran_lk);
 	NNI_LIST_FOREACH (&nni_tran_list, t) {
-		const nni_tran_ep *       ep;
+		const nni_tran_ep_ops *   ep;
 		const nni_tran_ep_option *eo;
 
 		// Generally we look for endpoint options.

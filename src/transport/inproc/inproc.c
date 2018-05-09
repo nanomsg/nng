@@ -198,7 +198,7 @@ nni_inproc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	}
 
 	ep->mode  = mode;
-	ep->proto = nni_sock_proto(sock);
+	ep->proto = nni_sock_proto_id(sock);
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -442,7 +442,7 @@ static nni_tran_pipe_option nni_inproc_pipe_options[] = {
 	},
 };
 
-static nni_tran_pipe nni_inproc_pipe_ops = {
+static nni_tran_pipe_ops nni_inproc_pipe_ops = {
 	.p_fini    = nni_inproc_pipe_fini,
 	.p_send    = nni_inproc_pipe_send,
 	.p_recv    = nni_inproc_pipe_recv,
@@ -458,7 +458,7 @@ static nni_tran_ep_option nni_inproc_ep_options[] = {
 	},
 };
 
-static nni_tran_ep nni_inproc_ep_ops = {
+static nni_tran_ep_ops nni_inproc_ep_ops = {
 	.ep_init    = nni_inproc_ep_init,
 	.ep_fini    = nni_inproc_ep_fini,
 	.ep_connect = nni_inproc_ep_connect,
