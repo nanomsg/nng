@@ -355,6 +355,10 @@ rep0_pipe_stop(void *arg)
 	rep0_ctx * ctx;
 
 	nni_mtx_lock(&s->lk);
+	if (nni_list_active(&s->recvpipes, p)) {
+		// We are no longer "receivable".
+		nni_list_remove(&s->recvpipes, p);
+	}
 	while ((ctx = nni_list_first(&p->sendq)) != NULL) {
 		nni_aio *aio;
 		nni_msg *msg;
