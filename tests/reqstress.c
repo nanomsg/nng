@@ -150,13 +150,17 @@ req_client(void *arg)
 
 		nng_msleep(rand() % 10);
 
-		if (((rv = nng_msg_alloc(&msg, 0)) != 0) ||
-		    ((rv = nng_msg_append(msg, buf, strlen(buf) + 1)) != 0)) {
+		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
 			error(c, "alloc fail", rv);
 			return;
 		}
-
+		if ((rv = nng_msg_append(msg, buf, strlen(buf) + 1)) != 0) {
+			nng_msg_free(msg);
+			error(c, "append fail", rv);
+			return;
+		}
 		if ((rv = nng_sendmsg(req, msg, 0)) != 0) {
+			nng_msg_free(msg);
 			error(c, "sendmsg", rv);
 			return;
 		}
@@ -169,6 +173,7 @@ req_client(void *arg)
 
 		if (strcmp(nng_msg_body(msg), buf) != 0) {
 			error(c, "mismatched message", NNG_EINTERNAL);
+			nng_msg_free(msg);
 			return;
 		}
 
@@ -226,7 +231,22 @@ reqrep_test(int ntests)
 }
 
 Main({
-	int i;
+	int   i;
+	int   tmo;
+	char *str;
+
+	atexit(nng_fini);
+
+	if (((str = ConveyGetEnv("STRESSTIME")) == NULL) ||
+	    ((tmo = atoi(str)) < 1)) {
+		tmo = 30;
+	}
+	// We have to keep this relatively low by default because some
+	// platforms don't support large numbers of threads.
+	if (((str = ConveyGetEnv("STRESSPRESSURE")) == NULL) ||
+	    ((ncases = atoi(str)) < 1)) {
+		ncases = 32;
+	}
 
 	// Each run should truly be random.
 	srand((int) time(NULL));
@@ -234,10 +254,6 @@ Main({
 	// Reduce the likelihood of address in use conflicts between
 	// subsequent runs.
 	next_port += (rand() % 100) * 100;
-
-	// We have to keep this relatively low because some platforms
-	// don't support large numbers of threads.
-	ncases = 32;
 
 	i = ncases;
 
@@ -251,8 +267,8 @@ Main({
 		i -= x;
 	}
 
-	dprintf("WAITING for 30 sec...\n");
-	nng_msleep(30000); // sleep 30 sec
+	dprintf("WAITING for %d sec...\n", tmo);
+	nng_msleep(tmo * 1000); // sleep 30 sec
 	nng_closeall();
 
 	Test("Req/Rep Stress", {

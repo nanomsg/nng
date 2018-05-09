@@ -154,13 +154,17 @@ req_client(void *arg)
 
 		nng_msleep(rand() % 10);
 
-		if (((rv = nng_msg_alloc(&msg, 0)) != 0) ||
-		    ((rv = nng_msg_append(msg, buf, strlen(buf) + 1)) != 0)) {
+		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
 			error(c, "alloc fail", rv);
 			return;
 		}
-
+		if ((rv = nng_msg_append(msg, buf, strlen(buf) + 1)) != 0) {
+			nng_msg_free(msg);
+			error(c, "append fail", rv);
+			return;
+		}
 		if ((rv = nng_sendmsg(req, msg, 0)) != 0) {
+			nng_msg_free(msg);
 			error(c, "sendmsg", rv);
 			return;
 		}
@@ -247,11 +251,13 @@ pair0_bouncer(void *arg)
 
 		r = rand();
 		if ((rv = nng_msg_append(msg, &r, sizeof(r))) != 0) {
+			nng_msg_free(msg);
 			error(c, "msg_append", rv);
 			return;
 		}
 
 		if ((rv = nng_sendmsg(c->socket, msg, 0)) != 0) {
+			nng_msg_free(msg);
 			error(c, "sendmsg", rv);
 			return;
 		}
@@ -325,11 +331,13 @@ bus0_bouncer(void *arg)
 
 		r = rand();
 		if ((rv = nng_msg_append(msg, &r, sizeof(r))) != 0) {
+			nng_msg_free(msg);
 			error(c, "msg_append", rv);
 			return;
 		}
 
 		if ((rv = nng_sendmsg(c->socket, msg, 0)) != 0) {
+			nng_msg_free(msg);
 			error(c, "sendmsg", rv);
 			return;
 		}
@@ -402,11 +410,13 @@ pub0_sender(void *arg)
 		}
 
 		if ((rv = nng_msg_append(msg, "SUB", 4)) != 0) {
+			nng_msg_free(msg);
 			error(c, "msg_append", rv);
 			return;
 		}
 
 		if ((rv = nng_sendmsg(c->socket, msg, 0)) != 0) {
+			nng_msg_free(msg);
 			error(c, "sendmsg", rv);
 			return;
 		}
@@ -501,11 +511,13 @@ pipeline0_pusher(void *arg)
 		}
 
 		if ((rv = nng_msg_append(msg, "PUSH", 5)) != 0) {
+			nng_msg_free(msg);
 			error(c, "msg_append", rv);
 			return;
 		}
 
 		if ((rv = nng_sendmsg(c->socket, msg, 0)) != 0) {
+			nng_msg_free(msg);
 			error(c, "sendmsg", rv);
 			return;
 		}
@@ -538,6 +550,8 @@ pipeline0_test(int ntests)
 	int        i;
 	char       addr[NNG_MAXADDRLEN];
 	int        rv;
+
+	atexit(nng_fini);
 
 	if (ntests < 2) {
 		// Need a client *and* a server.
@@ -581,18 +595,29 @@ pipeline0_test(int ntests)
 }
 
 Main({
-	int i;
+	int   i;
+	char *str;
+	int   tmo;
+
+	atexit(nng_fini);
 
 	// Each run should truly be random.
 	srand((int) time(NULL));
 
+	if (((str = ConveyGetEnv("STRESSTIME")) == NULL) ||
+	    ((tmo = atoi(str)) < 1)) {
+		tmo = 30;
+	}
+	// We have to keep this relatively low by default because some
+	// platforms don't support large numbers of threads.
+	if (((str = ConveyGetEnv("STRESSPRESSURE")) == NULL) ||
+	    ((ncases = atoi(str)) < 1)) {
+		ncases = 32;
+	}
+
 	// Reduce the likelihood of address in use conflicts between
 	// subsequent runs.
 	next_port += (rand() % 100) * 100;
-
-	// We have to keep this relatively low because some platforms
-	// don't support large numbers of threads.
-	ncases = 32;
 
 	i = ncases;
 
@@ -627,8 +652,8 @@ Main({
 		i -= x;
 	}
 
-	dprintf("WAITING for 30 sec...\n");
-	nng_msleep(30000); // sleep 30 sec
+	dprintf("WAITING for %d sec...\n", tmo);
+	nng_msleep(tmo * 1000); // sleep 30 sec
 	nng_closeall();
 
 	Test("MultiProtocol/Transport Stress", {
