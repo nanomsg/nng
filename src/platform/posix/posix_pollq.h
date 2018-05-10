@@ -22,32 +22,18 @@
 #include "core/nng_impl.h"
 #include <poll.h>
 
-typedef struct nni_posix_pollq_node nni_posix_pollq_node;
-typedef struct nni_posix_pollq      nni_posix_pollq;
+typedef struct nni_posix_pfd nni_posix_pfd;
+typedef void (*nni_posix_pfd_cb)(nni_posix_pfd *, int, void *);
 
-struct nni_posix_pollq_node {
-	nni_list_node    node;    // linkage into the pollq list
-	nni_posix_pollq *pq;      // associated pollq
-	int              index;   // used by the poller impl
-	int              armed;   // used by the poller impl
-	int              fd;      // file descriptor to poll
-	int              events;  // events to watch for
-	int              revents; // events received
-	void *           data;    // user data
-	nni_cb           cb;      // user callback on event
-	nni_mtx          mx;
-	nni_cv           cv;
-};
+extern int  nni_posix_pollq_sysinit(void);
+extern void nni_posix_pollq_sysfini(void);
 
-extern nni_posix_pollq *nni_posix_pollq_get(int);
-extern int              nni_posix_pollq_sysinit(void);
-extern void             nni_posix_pollq_sysfini(void);
-
-extern int  nni_posix_pollq_init(nni_posix_pollq_node *);
-extern void nni_posix_pollq_fini(nni_posix_pollq_node *);
-extern int  nni_posix_pollq_add(nni_posix_pollq_node *);
-extern void nni_posix_pollq_remove(nni_posix_pollq_node *);
-extern void nni_posix_pollq_arm(nni_posix_pollq_node *, int);
+extern int  nni_posix_pfd_init(nni_posix_pfd **, int);
+extern void nni_posix_pfd_fini(nni_posix_pfd *);
+extern int  nni_posix_pfd_arm(nni_posix_pfd *, int);
+extern int  nni_posix_pfd_fd(nni_posix_pfd *);
+extern void nni_posix_pfd_close(nni_posix_pfd *);
+extern void nni_posix_pfd_set_cb(nni_posix_pfd *, nni_posix_pfd_cb, void *);
 
 #endif // NNG_PLATFORM_POSIX
 

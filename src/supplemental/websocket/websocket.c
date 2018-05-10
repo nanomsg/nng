@@ -667,8 +667,12 @@ ws_send_close(nni_ws *ws, uint16_t code)
 		return;
 	}
 	// Close frames get priority!
+	if ((rv = nni_aio_schedule(aio, ws_cancel_close, ws)) != 0) {
+		ws->wclose = false;
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_list_prepend(&ws->txmsgs, wm);
-	nni_aio_schedule(aio, ws_cancel_close, ws);
 	ws_start_write(ws);
 }
 
@@ -737,7 +741,12 @@ nni_ws_send_msg(nni_ws *ws, nni_aio *aio)
 		ws_msg_fini(wm);
 		return;
 	}
-	nni_aio_schedule(aio, ws_write_cancel, ws);
+	if ((rv = nni_aio_schedule(aio, ws_write_cancel, ws)) != 0) {
+		nni_mtx_unlock(&ws->mtx);
+		nni_aio_finish_error(aio, rv);
+		ws_msg_fini(wm);
+		return;
+	}
 	nni_aio_set_prov_extra(aio, 0, wm);
 	nni_list_append(&ws->sendq, aio);
 	nni_list_append(&ws->txmsgs, wm);
@@ -1060,7 +1069,12 @@ nni_ws_recv_msg(nni_ws *ws, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ws->mtx);
-	nni_aio_schedule(aio, ws_read_cancel, ws);
+	if ((rv = nni_aio_schedule(aio, ws_read_cancel, ws)) != 0) {
+		nni_mtx_unlock(&ws->mtx);
+		ws_msg_fini(wm);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_aio_set_prov_extra(aio, 0, wm);
 	nni_list_append(&ws->recvq, aio);
 	nni_list_append(&ws->rxmsgs, wm);
@@ -1647,6 +1661,7 @@ void
 nni_ws_listener_accept(nni_ws_listener *l, nni_aio *aio)
 {
 	nni_ws *ws;
+	int     rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1669,7 +1684,11 @@ nni_ws_listener_accept(nni_ws_listener *l, nni_aio *aio)
 		nni_aio_finish(aio, 0, 0);
 		return;
 	}
-	nni_aio_schedule(aio, ws_accept_cancel, l);
+	if ((rv = nni_aio_schedule(aio, ws_accept_cancel, l)) != 0) {
+		nni_aio_finish_error(aio, rv);
+		nni_mtx_unlock(&l->mtx);
+		return;
+	}
 	nni_list_append(&l->aios, aio);
 	nni_mtx_unlock(&l->mtx);
 }
@@ -1995,11 +2014,16 @@ nni_ws_dialer_dial(nni_ws_dialer *d, nni_aio *aio)
 		ws_fini(ws);
 		return;
 	}
+	if ((rv = nni_aio_schedule(aio, ws_dial_cancel, ws)) != 0) {
+		nni_mtx_unlock(&d->mtx);
+		nni_aio_finish_error(aio, rv);
+		ws_fini(ws);
+		return;
+	}
 	ws->dialer  = d;
 	ws->useraio = aio;
 	ws->mode    = NNI_EP_MODE_DIAL;
 	nni_list_append(&d->wspend, ws);
-	nni_aio_schedule(aio, ws_dial_cancel, ws);
 	nni_http_client_connect(d->client, ws->connaio);
 	nni_mtx_unlock(&d->mtx);
 }

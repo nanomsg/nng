@@ -128,12 +128,17 @@ static void
 ws_pipe_recv(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
+	int      rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	nni_aio_schedule(aio, ws_pipe_recv_cancel, p);
+	if ((rv = nni_aio_schedule(aio, ws_pipe_recv_cancel, p)) != 0) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	p->user_rxaio = aio;
 	nni_ws_recv_msg(p->ws, p->rxaio);
 	nni_mtx_unlock(&p->mtx);
@@ -158,12 +163,17 @@ static void
 ws_pipe_send(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
+	int      rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	nni_aio_schedule(aio, ws_pipe_send_cancel, p);
+	if ((rv = nni_aio_schedule(aio, ws_pipe_send_cancel, p)) != 0) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	p->user_txaio = aio;
 	nni_aio_set_msg(p->txaio, nni_aio_get_msg(aio));
 	nni_aio_set_msg(aio, NULL);
@@ -289,6 +299,7 @@ static void
 ws_ep_accept(void *arg, nni_aio *aio)
 {
 	ws_ep *ep = arg;
+	int    rv;
 
 	// We already bound, so we just need to look for an available
 	// pipe (created by the handler), and match it.
@@ -297,7 +308,11 @@ ws_ep_accept(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	nni_aio_schedule(aio, ws_ep_cancel, ep);
+	if ((rv = nni_aio_schedule(aio, ws_ep_cancel, ep)) != 0) {
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_list_append(&ep->aios, aio);
 	if (aio == nni_list_first(&ep->aios)) {
 		nni_ws_listener_accept(ep->listener, ep->accaio);
@@ -309,6 +324,7 @@ static void
 ws_ep_connect(void *arg, nni_aio *aio)
 {
 	ws_ep *ep = arg;
+	int    rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -326,9 +342,12 @@ ws_ep_connect(void *arg, nni_aio *aio)
 	}
 
 	nni_mtx_lock(&ep->mtx);
+	if ((rv = nni_aio_schedule(aio, ws_ep_cancel, ep)) != 0) {
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	NNI_ASSERT(nni_list_empty(&ep->aios));
-
-	nni_aio_schedule(aio, ws_ep_cancel, ep);
 	ep->started = true;
 	nni_list_append(&ep->aios, aio);
 	nni_ws_dialer_dial(ep->dialer, ep->connaio);

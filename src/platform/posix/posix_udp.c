@@ -36,24 +36,29 @@
 #endif
 
 struct nni_plat_udp {
-	nni_posix_pollq_node udp_pitem;
-	int                  udp_fd;
-	nni_list             udp_recvq;
-	nni_list             udp_sendq;
-	nni_mtx              udp_mtx;
+	nni_posix_pfd *udp_pfd;
+	int            udp_fd;
+	nni_list       udp_recvq;
+	nni_list       udp_sendq;
+	nni_mtx        udp_mtx;
 };
 
 static void
-nni_posix_udp_doclose(nni_plat_udp *udp)
+nni_posix_udp_doerror(nni_plat_udp *udp, int rv)
 {
 	nni_aio *aio;
 
 	while (((aio = nni_list_first(&udp->udp_recvq)) != NULL) ||
 	    ((aio = nni_list_first(&udp->udp_sendq)) != NULL)) {
 		nni_aio_list_remove(aio);
-		nni_aio_finish_error(aio, NNG_ECLOSED);
+		nni_aio_finish_error(aio, rv);
 	}
-	// Underlying socket left open until close API called.
+}
+
+static void
+nni_posix_udp_doclose(nni_plat_udp *udp)
+{
+	nni_posix_udp_doerror(udp, NNG_ECLOSED);
 }
 
 static void
@@ -169,23 +174,22 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 
 // This function is called by the poller on activity on the FD.
 static void
-nni_posix_udp_cb(void *arg)
+nni_posix_udp_cb(nni_posix_pfd *pfd, int events, void *arg)
 {
 	nni_plat_udp *udp = arg;
-	int           revents;
+	NNI_ASSERT(pfd == udp->udp_pfd);
 
 	nni_mtx_lock(&udp->udp_mtx);
-	revents = udp->udp_pitem.revents;
-	if (revents & POLLIN) {
+	if (events & POLLIN) {
 		nni_posix_udp_dorecv(udp);
 	}
-	if (revents & POLLOUT) {
+	if (events & POLLOUT) {
 		nni_posix_udp_dosend(udp);
 	}
-	if (revents & (POLLHUP | POLLERR | POLLNVAL)) {
+	if (events & (POLLHUP | POLLERR | POLLNVAL)) {
 		nni_posix_udp_doclose(udp);
 	} else {
-		int events = 0;
+		events = 0;
 		if (!nni_list_empty(&udp->udp_sendq)) {
 			events |= POLLOUT;
 		}
@@ -193,7 +197,11 @@ nni_posix_udp_cb(void *arg)
 			events |= POLLIN;
 		}
 		if (events) {
-			nni_posix_pollq_arm(&udp->udp_pitem, events);
+			int rv;
+			rv = nni_posix_pfd_arm(udp->udp_pfd, events);
+			if (rv != 0) {
+				nni_posix_udp_doerror(udp, rv);
+			}
 		}
 	}
 	nni_mtx_unlock(&udp->udp_mtx);
@@ -232,22 +240,16 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 		NNI_FREE_STRUCT(udp);
 		return (rv);
 	}
-	udp->udp_pitem.fd   = udp->udp_fd;
-	udp->udp_pitem.cb   = nni_posix_udp_cb;
-	udp->udp_pitem.data = udp;
-
-	(void) fcntl(udp->udp_fd, F_SETFL, O_NONBLOCK);
-
-	nni_aio_list_init(&udp->udp_recvq);
-	nni_aio_list_init(&udp->udp_sendq);
-
-	if (((rv = nni_posix_pollq_init(&udp->udp_pitem)) != 0) ||
-	    ((rv = nni_posix_pollq_add(&udp->udp_pitem)) != 0)) {
+	if ((rv = nni_posix_pfd_init(&udp->udp_pfd, udp->udp_fd)) != 0) {
 		(void) close(udp->udp_fd);
 		nni_mtx_fini(&udp->udp_mtx);
 		NNI_FREE_STRUCT(udp);
 		return (rv);
 	}
+	nni_posix_pfd_set_cb(udp->udp_pfd, nni_posix_udp_cb, udp);
+
+	nni_aio_list_init(&udp->udp_recvq);
+	nni_aio_list_init(&udp->udp_sendq);
 
 	*upp = udp;
 	return (0);
@@ -256,8 +258,7 @@ nni_plat_udp_open(nni_plat_udp **upp, nni_sockaddr *bindaddr)
 void
 nni_plat_udp_close(nni_plat_udp *udp)
 {
-	// We're no longer interested in events.
-	nni_posix_pollq_fini(&udp->udp_pitem);
+	nni_posix_pfd_fini(udp->udp_pfd);
 
 	nni_mtx_lock(&udp->udp_mtx);
 	nni_posix_udp_doclose(udp);
@@ -284,26 +285,46 @@ nni_plat_udp_cancel(nni_aio *aio, int rv)
 void
 nni_plat_udp_recv(nni_plat_udp *udp, nni_aio *aio)
 {
+	int rv;
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&udp->udp_mtx);
-	nni_aio_schedule(aio, nni_plat_udp_cancel, udp);
+	if ((rv = nni_aio_schedule(aio, nni_plat_udp_cancel, udp)) != 0) {
+		nni_mtx_unlock(&udp->udp_mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_list_append(&udp->udp_recvq, aio);
-	nni_posix_pollq_arm(&udp->udp_pitem, POLLIN);
+	if (nni_list_first(&udp->udp_recvq) == aio) {
+		if ((rv = nni_posix_pfd_arm(udp->udp_pfd, POLLIN)) != 0) {
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, rv);
+		}
+	}
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 
 void
 nni_plat_udp_send(nni_plat_udp *udp, nni_aio *aio)
 {
+	int rv;
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&udp->udp_mtx);
-	nni_aio_schedule(aio, nni_plat_udp_cancel, udp);
+	if ((rv = nni_aio_schedule(aio, nni_plat_udp_cancel, udp)) != 0) {
+		nni_mtx_unlock(&udp->udp_mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_list_append(&udp->udp_sendq, aio);
-	nni_posix_pollq_arm(&udp->udp_pitem, POLLOUT);
+	if (nni_list_first(&udp->udp_sendq) == aio) {
+		if ((rv = nni_posix_pfd_arm(udp->udp_pfd, POLLOUT)) != 0) {
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, rv);
+		}
+	}
 	nni_mtx_unlock(&udp->udp_mtx);
 }
 

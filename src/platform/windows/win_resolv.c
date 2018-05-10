@@ -29,49 +29,55 @@
 #define NNG_WIN_RESOLV_CONCURRENCY 4
 #endif
 
-static nni_taskq *nni_win_resolv_tq = NULL;
-static nni_mtx    nni_win_resolv_mtx;
+static nni_taskq *win_resolv_tq = NULL;
+static nni_mtx    win_resolv_mtx;
 
-typedef struct nni_win_resolv_item nni_win_resolv_item;
-struct nni_win_resolv_item {
-	int         family;
-	int         passive;
-	const char *name;
-	const char *serv;
-	int         proto;
-	nni_aio *   aio;
-	nni_task    task;
+typedef struct win_resolv_item win_resolv_item;
+struct win_resolv_item {
+	int          family;
+	int          passive;
+	const char * name;
+	const char * serv;
+	int          proto;
+	nni_aio *    aio;
+	nni_task *   task;
+	nng_sockaddr sa;
 };
 
 static void
-nni_win_resolv_finish(nni_win_resolv_item *item, int rv)
+win_resolv_finish(win_resolv_item *item, int rv)
 {
-	nni_aio *aio = item->aio;
+	nni_aio *aio;
 
-	nni_aio_set_prov_data(aio, NULL);
-	nni_aio_finish(aio, rv, 0);
-	NNI_FREE_STRUCT(item);
+	if (((aio = item->aio) != NULL) &&
+	    (nni_aio_get_prov_data(aio) == item)) {
+		nni_sockaddr *sa = nni_aio_get_input(aio, 0);
+		nni_aio_set_prov_data(aio, NULL);
+		memcpy(sa, &item->sa, sizeof(*sa));
+		nni_aio_finish(aio, rv, 0);
+		nni_task_fini(item->task);
+		NNI_FREE_STRUCT(item);
+	}
 }
 
 static void
-nni_win_resolv_cancel(nni_aio *aio, int rv)
+win_resolv_cancel(nni_aio *aio, int rv)
 {
-	nni_win_resolv_item *item;
+	win_resolv_item *item;
 
-	nni_mtx_lock(&nni_win_resolv_mtx);
+	nni_mtx_lock(&win_resolv_mtx);
 	if ((item = nni_aio_get_prov_data(aio)) == NULL) {
-		nni_mtx_unlock(&nni_win_resolv_mtx);
+		nni_mtx_unlock(&win_resolv_mtx);
 		return;
 	}
 	nni_aio_set_prov_data(aio, NULL);
-	nni_mtx_unlock(&nni_win_resolv_mtx);
-	nni_task_cancel(&item->task);
-	NNI_FREE_STRUCT(item);
+	item->aio = NULL;
+	nni_mtx_unlock(&win_resolv_mtx);
 	nni_aio_finish_error(aio, rv);
 }
 
 static int
-nni_win_gai_errno(int rv)
+win_gai_errno(int rv)
 {
 	switch (rv) {
 	case 0:
@@ -98,16 +104,25 @@ nni_win_gai_errno(int rv)
 }
 
 static void
-nni_win_resolv_task(void *arg)
+win_resolv_task(void *arg)
 {
-	nni_win_resolv_item *item = arg;
-	nni_aio *            aio  = item->aio;
-	struct addrinfo      hints;
-	struct addrinfo *    results;
-	struct addrinfo *    probe;
-	int                  rv;
+	win_resolv_item *item = arg;
+	struct addrinfo  hints;
+	struct addrinfo *results;
+	struct addrinfo *probe;
+	int              rv;
 
 	results = NULL;
+
+	nni_mtx_lock(&win_resolv_mtx);
+	if (item->aio == NULL) {
+		nni_mtx_unlock(&win_resolv_mtx);
+		// Caller canceled, and no longer cares about this.
+		nni_task_fini(item->task);
+		NNI_FREE_STRUCT(item);
+		return;
+	}
+	nni_mtx_unlock(&win_resolv_mtx);
 
 	// We treat these all as IP addresses.  The service and the
 	// host part are split.
@@ -124,7 +139,7 @@ nni_win_resolv_task(void *arg)
 
 	rv = getaddrinfo(item->name, item->serv, &hints, &results);
 	if (rv != 0) {
-		rv = nni_win_gai_errno(rv);
+		rv = win_gai_errno(rv);
 		goto done;
 	}
 
@@ -142,7 +157,7 @@ nni_win_resolv_task(void *arg)
 	if (probe != NULL) {
 		struct sockaddr_in * sin;
 		struct sockaddr_in6 *sin6;
-		nni_sockaddr *       sa = nni_aio_get_input(aio, 0);
+		nni_sockaddr *       sa = &item->sa;
 
 		switch (probe->ai_addr->sa_family) {
 		case AF_INET:
@@ -167,17 +182,18 @@ done:
 	if (results != NULL) {
 		freeaddrinfo(results);
 	}
-	nni_mtx_lock(&nni_win_resolv_mtx);
-	nni_win_resolv_finish(item, rv);
-	nni_mtx_unlock(&nni_win_resolv_mtx);
+	nni_mtx_lock(&win_resolv_mtx);
+	win_resolv_finish(item, rv);
+	nni_mtx_unlock(&win_resolv_mtx);
 }
 
 static void
-nni_win_resolv_ip(const char *host, const char *serv, int passive, int family,
+win_resolv_ip(const char *host, const char *serv, int passive, int family,
     int proto, nni_aio *aio)
 {
-	nni_win_resolv_item *item;
-	int                  fam;
+	win_resolv_item *item;
+	int              fam;
+	int              rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -202,8 +218,12 @@ nni_win_resolv_ip(const char *host, const char *serv, int passive, int family,
 		return;
 	}
 
-	nni_task_init(
-	    nni_win_resolv_tq, &item->task, nni_win_resolv_task, item);
+	rv = nni_task_init(&item->task, win_resolv_tq, win_resolv_task, item);
+	if (rv != 0) {
+		NNI_FREE_STRUCT(item);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 
 	item->passive = passive;
 	item->name    = host;
@@ -212,24 +232,30 @@ nni_win_resolv_ip(const char *host, const char *serv, int passive, int family,
 	item->aio     = aio;
 	item->family  = fam;
 
-	nni_mtx_lock(&nni_win_resolv_mtx);
-	nni_aio_schedule(aio, nni_win_resolv_cancel, item);
-	nni_task_dispatch(&item->task);
-	nni_mtx_unlock(&nni_win_resolv_mtx);
+	nni_mtx_lock(&win_resolv_mtx);
+	if ((rv = nni_aio_schedule(aio, win_resolv_cancel, item)) != 0) {
+		nni_mtx_unlock(&win_resolv_mtx);
+		nni_task_fini(item->task);
+		NNI_FREE_STRUCT(item);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+	nni_task_dispatch(item->task);
+	nni_mtx_unlock(&win_resolv_mtx);
 }
 
 void
 nni_plat_tcp_resolv(
     const char *host, const char *serv, int family, int passive, nni_aio *aio)
 {
-	nni_win_resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
+	win_resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
 }
 
 void
 nni_plat_udp_resolv(
     const char *host, const char *serv, int family, int passive, nni_aio *aio)
 {
-	nni_win_resolv_ip(host, serv, passive, family, IPPROTO_UDP, aio);
+	win_resolv_ip(host, serv, passive, family, IPPROTO_UDP, aio);
 }
 
 int
@@ -237,10 +263,10 @@ nni_win_resolv_sysinit(void)
 {
 	int rv;
 
-	nni_mtx_init(&nni_win_resolv_mtx);
+	nni_mtx_init(&win_resolv_mtx);
 
-	if ((rv = nni_taskq_init(&nni_win_resolv_tq, 4)) != 0) {
-		nni_mtx_fini(&nni_win_resolv_mtx);
+	if ((rv = nni_taskq_init(&win_resolv_tq, 4)) != 0) {
+		nni_mtx_fini(&win_resolv_mtx);
 		return (rv);
 	}
 	return (0);
@@ -249,11 +275,11 @@ nni_win_resolv_sysinit(void)
 void
 nni_win_resolv_sysfini(void)
 {
-	if (nni_win_resolv_tq != NULL) {
-		nni_taskq_fini(nni_win_resolv_tq);
-		nni_win_resolv_tq = NULL;
+	if (win_resolv_tq != NULL) {
+		nni_taskq_fini(win_resolv_tq);
+		win_resolv_tq = NULL;
 	}
-	nni_mtx_fini(&nni_win_resolv_mtx);
+	nni_mtx_fini(&win_resolv_mtx);
 }
 
 #endif // NNG_PLATFORM_WINDOWS

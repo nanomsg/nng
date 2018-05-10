@@ -104,24 +104,24 @@ if (NNG_PLATFORM_POSIX)
         platform/posix/posix_thread.c
         platform/posix/posix_udp.c
     )
-endif()
 
-if (NNG_HAVE_PORT_CREATE)
-    set (NNG_SOURCES ${NNG_SOURCES}
-        platform/posix/posix_pollq_port.c
-    )
-elseif (NNG_HAVE_KQUEUE)
-    set (NNG_SOURCES ${NNG_SOURCES}
-        platform/posix/posix_pollq_kqueue.c
-    )
-elseif (NNG_HAVE_EPOLL)
-    set (NNG_SOURCES ${NNG_SOURCES}
-        platform/posix/posix_pollq_epoll.c
-    )
-else()
-    set (NNG_SOURCES ${NNG_SOURCES}
-        platform/posix/posix_pollq_poll.c
-    )
+    if (NNG_HAVE_PORT_CREATE)
+        set (NNG_SOURCES ${NNG_SOURCES}
+            platform/posix/posix_pollq_port.c
+        )
+    elseif (NNG_HAVE_KQUEUE)
+        set (NNG_SOURCES ${NNG_SOURCES}
+            platform/posix/posix_pollq_kqueue.c
+        )
+    elseif (NNG_HAVE_EPOLL)
+        set (NNG_SOURCES ${NNG_SOURCES}
+            platform/posix/posix_pollq_epoll.c
+        )
+    else()
+        set (NNG_SOURCES ${NNG_SOURCES}
+            platform/posix/posix_pollq_poll.c
+        )
+    endif()
 endif()
 
 if (NNG_PLATFORM_WINDOWS)

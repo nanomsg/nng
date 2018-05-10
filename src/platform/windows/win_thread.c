@@ -107,6 +107,7 @@ static unsigned int __stdcall nni_plat_thr_main(void *arg)
 {
 	nni_plat_thr *thr = arg;
 
+	thr->id = GetCurrentThreadId();
 	thr->func(thr->arg);
 	return (0);
 }
@@ -136,6 +137,12 @@ nni_plat_thr_fini(nni_plat_thr *thr)
 	if (CloseHandle(thr->handle) == 0) {
 		nni_panic("close handle for thread failed!");
 	}
+}
+
+bool
+nni_plat_thr_is_self(nni_plat_thr *thr)
+{
+	return (GetCurrentThreadId() == thr->id);
 }
 
 static LONG plat_inited = 0;

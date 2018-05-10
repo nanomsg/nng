@@ -11,8 +11,6 @@
 #include "core/nng_impl.h"
 #include "platform/posix/posix_pollq.h"
 
-#ifdef NNG_USE_POSIX_POLLQ_POLL
-
 #include <errno.h>
 #include <fcntl.h>
 #include <poll.h>
@@ -32,306 +30,285 @@
 
 // nni_posix_pollq is a work structure used by the poller thread, that keeps
 // track of all the underlying pipe handles and so forth being used by poll().
+
+// Locking strategy:  We use the pollq lock to guard the lists on the pollq,
+// the nfds (which counts the number of items in the pollq), the pollq
+// shutdown flags (pq->closing and pq->closed) and the cv on each pfd.  We
+// use a lock on the pfd only to protect the the events field (which we treat
+// as an atomic bitfield), and the cb and arg pointers.  Note that the pfd
+// lock is therefore a leaf lock, which is sometimes acquired while holding
+// the pq lock.  Every reasonable effort is made to minimize holding locks.
+// (Btw, pfd->fd is not guarded, because it is set at pfd creation and
+// persists until the pfd is destroyed.)
+
+typedef struct nni_posix_pollq nni_posix_pollq;
+
 struct nni_posix_pollq {
-	nni_mtx               mtx;
-	nni_cv                cv;
-	struct pollfd *       fds;
-	int                   nfds;
-	int                   wakewfd; // write side of waker pipe
-	int                   wakerfd; // read side of waker pipe
-	int                   close;   // request for worker to exit
-	int                   started;
-	nni_thr               thr;    // worker thread
-	nni_list              polled; // polled nodes
-	nni_list              armed;  // armed nodes
-	nni_list              idle;   // idle nodes
-	int                   nnodes; // num of nodes in nodes list
-	int                   inpoll; // poller asleep in poll
-	nni_posix_pollq_node *wait;   // cancel waiting on this
-	nni_posix_pollq_node *active; // active node (in callback)
+	nni_mtx  mtx;
+	int      nfds;
+	int      wakewfd; // write side of waker pipe
+	int      wakerfd; // read side of waker pipe
+	bool     closing; // request for worker to exit
+	bool     closed;
+	nni_thr  thr;   // worker thread
+	nni_list pollq; // armed nodes
+	nni_list reapq;
 };
 
-static int
-nni_posix_pollq_poll_grow(nni_posix_pollq *pq)
+struct nni_posix_pfd {
+	nni_posix_pollq *pq;
+	int              fd;
+	nni_list_node    node;
+	nni_cv           cv;
+	nni_mtx          mtx;
+	int              events;
+	nni_posix_pfd_cb cb;
+	void *           arg;
+};
+
+static nni_posix_pollq nni_posix_global_pollq;
+
+int
+nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 {
-	int            grow = pq->nnodes + 2; // one for us, one for waker
-	struct pollfd *newfds;
+	nni_posix_pfd *  pfd;
+	nni_posix_pollq *pq = &nni_posix_global_pollq;
 
-	if (grow < pq->nfds) {
-		return (0);
-	}
+	// Set this is as soon as possible (narrow the close-exec race as
+	// much as we can; better options are system calls that suppress
+	// this behavior from descriptor creation.)
+	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
+	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
+#ifdef SO_NOSIGPIPE
+	// Darwin lacks MSG_NOSIGNAL, but has a socket option.
+	// If this code is getting used, you really should be using the
+	// kqueue poller, or you need to upgrade your older system.
+	int one = 1;
+	(void) setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(one));
+#endif
 
-	grow = grow + 128;
-
-	if ((newfds = NNI_ALLOC_STRUCTS(newfds, grow)) == NULL) {
+	if ((pfd = NNI_ALLOC_STRUCT(pfd)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-
-	if (pq->nfds != 0) {
-		NNI_FREE_STRUCTS(pq->fds, pq->nfds);
+	NNI_LIST_NODE_INIT(&pfd->node);
+	nni_mtx_init(&pfd->mtx);
+	nni_cv_init(&pfd->cv, &pq->mtx);
+	pfd->fd     = fd;
+	pfd->events = 0;
+	pfd->cb     = NULL;
+	pfd->arg    = NULL;
+	pfd->pq     = pq;
+	nni_mtx_lock(&pq->mtx);
+	if (pq->closing) {
+		nni_mtx_unlock(&pq->mtx);
+		nni_cv_fini(&pfd->cv);
+		nni_mtx_fini(&pfd->mtx);
+		NNI_FREE_STRUCT(pfd);
+		return (NNG_ECLOSED);
 	}
-	pq->fds  = newfds;
-	pq->nfds = grow;
+	nni_list_append(&pq->pollq, pfd);
+	pq->nfds++;
+	nni_mtx_unlock(&pq->mtx);
+	*pfdp = pfd;
+	return (0);
+}
 
+void
+nni_posix_pfd_set_cb(nni_posix_pfd *pfd, nni_posix_pfd_cb cb, void *arg)
+{
+	nni_mtx_lock(&pfd->mtx);
+	pfd->cb  = cb;
+	pfd->arg = arg;
+	nni_mtx_unlock(&pfd->mtx);
+}
+
+int
+nni_posix_pfd_fd(nni_posix_pfd *pfd)
+{
+	return (pfd->fd);
+}
+
+void
+nni_posix_pfd_close(nni_posix_pfd *pfd)
+{
+	(void) shutdown(pfd->fd, SHUT_RDWR);
+}
+
+void
+nni_posix_pfd_fini(nni_posix_pfd *pfd)
+{
+	nni_posix_pollq *pq = pfd->pq;
+
+	nni_posix_pfd_close(pfd);
+
+	nni_mtx_lock(&pq->mtx);
+	if (nni_list_active(&pq->pollq, pfd)) {
+		nni_list_remove(&pq->pollq, pfd);
+		pq->nfds--;
+	}
+
+	if ((!nni_thr_is_self(&pq->thr)) && (!pq->closed)) {
+		nni_list_append(&pq->reapq, pfd);
+		nni_plat_pipe_raise(pq->wakewfd);
+		while (nni_list_active(&pq->reapq, pfd)) {
+			nni_cv_wait(&pfd->cv);
+		}
+	}
+	nni_mtx_unlock(&pq->mtx);
+
+	// We're exclusive now.
+	(void) close(pfd->fd);
+	nni_cv_fini(&pfd->cv);
+	nni_mtx_fini(&pfd->mtx);
+	NNI_FREE_STRUCT(pfd);
+}
+
+int
+nni_posix_pfd_arm(nni_posix_pfd *pfd, int events)
+{
+	nni_posix_pollq *pq = pfd->pq;
+
+	nni_mtx_lock(&pfd->mtx);
+	pfd->events |= events;
+	nni_mtx_unlock(&pfd->mtx);
+
+	// If we're running on the callback, then don't bother to kick
+	// the pollq again.  This is necessary because we cannot modify
+	// the poller while it is polling.
+	if (!nni_thr_is_self(&pq->thr)) {
+		nni_plat_pipe_raise(pq->wakewfd);
+	}
 	return (0);
 }
 
 static void
 nni_posix_poll_thr(void *arg)
 {
-	nni_posix_pollq *     pollq = arg;
-	nni_posix_pollq_node *node;
+	nni_posix_pollq *pq     = arg;
+	int              nalloc = 0;
+	struct pollfd *  fds    = NULL;
+	nni_posix_pfd ** pfds   = NULL;
 
-	nni_mtx_lock(&pollq->mtx);
 	for (;;) {
-		int            rv;
 		int            nfds;
-		struct pollfd *fds;
+		int            events;
+		nni_posix_pfd *pfd;
 
-		if (pollq->close) {
-			break;
+		nni_mtx_lock(&pq->mtx);
+		while (nalloc < (pq->nfds + 1)) {
+			int n = pq->nfds + 128;
+
+			// Drop the lock while we sleep or allocate.  This
+			// allows additional items to be added or removed (!)
+			// while we wait.
+			nni_mtx_unlock(&pq->mtx);
+
+			// Toss the old ones first; avoids *doubling* memory
+			// consumption during alloc.
+			NNI_FREE_STRUCTS(fds, nalloc);
+			NNI_FREE_STRUCTS(pfds, nalloc);
+			nalloc = 0;
+
+			if ((pfds = NNI_ALLOC_STRUCTS(pfds, n)) == NULL) {
+				nni_msleep(10); // sleep for a bit, try later
+			} else if ((fds = NNI_ALLOC_STRUCTS(fds, n)) == NULL) {
+				NNI_FREE_STRUCTS(pfds, n);
+				nni_msleep(10);
+			} else {
+				nalloc = n;
+			}
+			nni_mtx_lock(&pq->mtx);
 		}
-
-		fds  = pollq->fds;
-		nfds = 0;
 
 		// The waker pipe is set up so that we will be woken
 		// when it is written (this allows us to be signaled).
-		fds[nfds].fd      = pollq->wakerfd;
-		fds[nfds].events  = POLLIN;
-		fds[nfds].revents = 0;
-		nfds++;
+		fds[0].fd      = pq->wakerfd;
+		fds[0].events  = POLLIN;
+		fds[0].revents = 0;
+		pfds[0]        = NULL;
+		nfds           = 1;
+
+		// Also lets reap anything that was in the reaplist!
+		while ((pfd = nni_list_first(&pq->reapq)) != NULL) {
+			nni_list_remove(&pq->reapq, pfd);
+			nni_cv_wake(&pfd->cv);
+		}
+
+		// If we're closing down, bail now.  This is done *after* we
+		// have ensured that the reapq is empty.  Anything still in
+		// the pollq is not going to receive further callbacks.
+		if (pq->closing) {
+			pq->closed = true;
+			nni_mtx_unlock(&pq->mtx);
+			break;
+		}
 
 		// Set up the poll list.
-		while ((node = nni_list_first(&pollq->armed)) != NULL) {
-			nni_list_remove(&pollq->armed, node);
-			nni_list_append(&pollq->polled, node);
-			fds[nfds].fd      = node->fd;
-			fds[nfds].events  = node->events;
-			fds[nfds].revents = 0;
-			node->index       = nfds;
-			nfds++;
-		}
+		NNI_LIST_FOREACH (&pq->pollq, pfd) {
 
-		// Now poll it.  We block indefinitely, since we use separate
-		// timeouts to wake and remove the elements from the list.
-		pollq->inpoll = 1;
-		nni_mtx_unlock(&pollq->mtx);
-		rv = poll(fds, nfds, -1);
-		nni_mtx_lock(&pollq->mtx);
-		pollq->inpoll = 0;
+			nni_mtx_lock(&pfd->mtx);
+			events = pfd->events;
+			nni_mtx_unlock(&pfd->mtx);
 
-		if (rv < 0) {
-			// This shouldn't happen really.  If it does, we
-			// just try again.  (EINTR is probably the only
-			// reasonable failure here, unless internal memory
-			// allocations fail in the kernel, leading to EAGAIN.)
-			continue;
+			if (events != 0) {
+				fds[nfds].fd      = pfd->fd;
+				fds[nfds].events  = events;
+				fds[nfds].revents = 0;
+				pfds[nfds]        = pfd;
+				nfds++;
+			}
 		}
+		nni_mtx_unlock(&pq->mtx);
+
+		// We could get the result from poll, and avoid iterating
+		// over the entire set of pollfds, but since on average we
+		// will be walking half the list, doubling the work we do
+		// (the condition with a potential pipeline stall) seems like
+		// adding complexity with no real benefit.  It also makes the
+		// worst case even worse.
+		(void) poll(fds, nfds, -1);
 
 		// If the waker pipe was signaled, read from it.
 		if (fds[0].revents & POLLIN) {
-			NNI_ASSERT(fds[0].fd == pollq->wakerfd);
-			nni_plat_pipe_clear(pollq->wakerfd);
+			NNI_ASSERT(fds[0].fd == pq->wakerfd);
+			nni_plat_pipe_clear(pq->wakerfd);
 		}
 
-		while ((node = nni_list_first(&pollq->polled)) != NULL) {
-			int index = node->index;
+		for (int i = 1; i < nfds; i++) {
+			if ((events = fds[i].revents) != 0) {
+				nni_posix_pfd_cb cb;
+				void *           arg;
 
-			// We remove ourselves from the polled list, and
-			// then put it on either the idle or armed list
-			// depending on whether it remains armed.
-			node->index = 0;
-			nni_list_remove(&pollq->polled, node);
-			NNI_ASSERT(index > 0);
-			if (fds[index].revents == 0) {
-				// If still watching for events, return it
-				// to the armed list.
-				if (node->events) {
-					nni_list_append(&pollq->armed, node);
-				} else {
-					nni_list_append(&pollq->idle, node);
+				pfd = pfds[i];
+
+				nni_mtx_lock(&pfd->mtx);
+				cb  = pfd->cb;
+				arg = pfd->arg;
+				pfd->events &= ~events;
+				nni_mtx_unlock(&pfd->mtx);
+
+				if (cb) {
+					cb(pfd, events, arg);
 				}
-				continue;
-			}
-
-			// We are calling the callback, so disarm
-			// all events; the node can rearm them in its
-			// callback.
-			node->revents = fds[index].revents;
-			node->events &= ~node->revents;
-			if (node->events == 0) {
-				nni_list_append(&pollq->idle, node);
-			} else {
-				nni_list_append(&pollq->armed, node);
-			}
-
-			// Save the active node; we can notice this way
-			// when it is busy, and avoid freeing it until
-			// we are sure that it is not in use.
-			pollq->active = node;
-
-			// Execute the callback -- without locks held.
-			nni_mtx_unlock(&pollq->mtx);
-			node->cb(node->data);
-			nni_mtx_lock(&pollq->mtx);
-
-			// We finished with this node.  If something
-			// was blocked waiting for that, wake it up.
-			pollq->active = NULL;
-			if (pollq->wait == node) {
-				pollq->wait = NULL;
-				nni_cv_wake(&pollq->cv);
 			}
 		}
 	}
-	nni_mtx_unlock(&pollq->mtx);
-}
 
-int
-nni_posix_pollq_add(nni_posix_pollq_node *node)
-{
-	int              rv;
-	nni_posix_pollq *pq;
-
-	NNI_ASSERT(!nni_list_node_active(&node->node));
-
-	pq = nni_posix_pollq_get(node->fd);
-	if (node->pq != NULL) {
-		return (NNG_ESTATE);
-	}
-
-	nni_mtx_lock(&pq->mtx);
-	if (pq->close) {
-		// This shouldn't happen!
-		nni_mtx_unlock(&pq->mtx);
-		return (NNG_ECLOSED);
-	}
-	node->pq = pq;
-	if ((rv = nni_posix_pollq_poll_grow(pq)) != 0) {
-		nni_mtx_unlock(&pq->mtx);
-		return (rv);
-	}
-	pq->nnodes++;
-	nni_list_append(&pq->idle, node);
-	nni_mtx_unlock(&pq->mtx);
-	return (0);
-}
-
-// nni_posix_pollq_remove removes the node from the pollq, but
-// does not ensure that the pollq node is safe to destroy.  In particular,
-// this function can be called from a callback (the callback may be active).
-void
-nni_posix_pollq_remove(nni_posix_pollq_node *node)
-{
-	nni_posix_pollq *pq = node->pq;
-
-	if (pq == NULL) {
-		return;
-	}
-	node->pq = NULL;
-	nni_mtx_lock(&pq->mtx);
-	if (nni_list_node_active(&node->node)) {
-		nni_list_node_remove(&node->node);
-		pq->nnodes--;
-	}
-	if (pq->close) {
-		nni_cv_wake(&pq->cv);
-	}
-	nni_mtx_unlock(&pq->mtx);
-}
-
-// nni_posix_pollq_init merely ensures that the node is ready for use.
-// It does not register the node with any pollq in particular.
-int
-nni_posix_pollq_init(nni_posix_pollq_node *node)
-{
-	NNI_LIST_NODE_INIT(&node->node);
-	return (0);
-}
-
-// nni_posix_pollq_fini does everything that nni_posix_pollq_remove does,
-// but it also ensures that the callback is not active, so that the node
-// may be deallocated.  This function must not be called in a callback.
-void
-nni_posix_pollq_fini(nni_posix_pollq_node *node)
-{
-	nni_posix_pollq *pq = node->pq;
-
-	if (pq == NULL) {
-		return;
-	}
-	node->pq = NULL;
-	nni_mtx_lock(&pq->mtx);
-	while (pq->active == node) {
-		pq->wait = node;
-		nni_cv_wait(&pq->cv);
-	}
-	if (nni_list_node_active(&node->node)) {
-		nni_list_node_remove(&node->node);
-		pq->nnodes--;
-	}
-	if (pq->close) {
-		nni_cv_wake(&pq->cv);
-	}
-	nni_mtx_unlock(&pq->mtx);
-}
-
-void
-nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
-{
-	nni_posix_pollq *pq = node->pq;
-	int              oevents;
-
-	NNI_ASSERT(pq != NULL);
-
-	nni_mtx_lock(&pq->mtx);
-	oevents = node->events;
-	node->events |= events;
-
-	// We move this to the armed list if its not armed, or already
-	// on the polled list.  The polled list would be the case where
-	// the index is set to a positive value.
-	if ((oevents == 0) && (events != 0) && (node->index < 1)) {
-		nni_list_node_remove(&node->node);
-		nni_list_append(&pq->armed, node);
-	}
-	if ((events != 0) && (oevents != events)) {
-		// Possibly wake up poller since we're looking for new events.
-		if (pq->inpoll) {
-			nni_plat_pipe_raise(pq->wakewfd);
-		}
-	}
-	nni_mtx_unlock(&pq->mtx);
+	NNI_FREE_STRUCTS(fds, nalloc);
+	NNI_FREE_STRUCTS(pfds, nalloc);
 }
 
 static void
 nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
-	if (pq->started) {
-		nni_mtx_lock(&pq->mtx);
-		pq->close   = 1;
-		pq->started = 0;
-		nni_plat_pipe_raise(pq->wakewfd);
-		nni_mtx_unlock(&pq->mtx);
-	}
+	nni_mtx_lock(&pq->mtx);
+	pq->closing = 1;
+	nni_mtx_unlock(&pq->mtx);
+
+	nni_plat_pipe_raise(pq->wakewfd);
+
 	nni_thr_fini(&pq->thr);
-
-	// All pipes should have been closed before this is called.
-	NNI_ASSERT(nni_list_empty(&pq->polled));
-	NNI_ASSERT(nni_list_empty(&pq->armed));
-	NNI_ASSERT(nni_list_empty(&pq->idle));
-	NNI_ASSERT(pq->nnodes == 0);
-
-	if (pq->wakewfd >= 0) {
-		nni_plat_pipe_close(pq->wakewfd, pq->wakerfd);
-		pq->wakewfd = pq->wakerfd = -1;
-	}
-	if (pq->nfds != 0) {
-		NNI_FREE_STRUCTS(pq->fds, pq->nfds);
-		pq->fds  = NULL;
-		pq->nfds = 0;
-	}
+	nni_plat_pipe_close(pq->wakewfd, pq->wakerfd);
 	nni_mtx_fini(&pq->mtx);
 }
 
@@ -340,50 +317,27 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 {
 	int rv;
 
-	NNI_LIST_INIT(&pq->polled, nni_posix_pollq_node, node);
-	NNI_LIST_INIT(&pq->armed, nni_posix_pollq_node, node);
-	NNI_LIST_INIT(&pq->idle, nni_posix_pollq_node, node);
-	pq->wakewfd = -1;
-	pq->wakerfd = -1;
-	pq->close   = 0;
+	NNI_LIST_INIT(&pq->pollq, nni_posix_pfd, node);
+	NNI_LIST_INIT(&pq->reapq, nni_posix_pfd, node);
+	pq->closing = false;
+	pq->closed  = false;
 
-	nni_mtx_init(&pq->mtx);
-	nni_cv_init(&pq->cv, &pq->mtx);
-
-	if (((rv = nni_posix_pollq_poll_grow(pq)) != 0) ||
-	    ((rv = nni_plat_pipe_open(&pq->wakewfd, &pq->wakerfd)) != 0) ||
-	    ((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0)) {
-		nni_posix_pollq_destroy(pq);
+	if ((rv = nni_plat_pipe_open(&pq->wakewfd, &pq->wakerfd)) != 0) {
 		return (rv);
 	}
-	pq->started = 1;
+	if ((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0) {
+		nni_plat_pipe_close(pq->wakewfd, pq->wakerfd);
+		return (rv);
+	}
+	nni_mtx_init(&pq->mtx);
 	nni_thr_run(&pq->thr);
 	return (0);
-}
-
-// We use a single pollq for the entire system, which means only a single
-// thread is polling.  This may be somewhat less than optimally efficient,
-// and it may be worth investigating having multiple threads to improve
-// efficiency and scalability.  (This would shorten the linked lists,
-// improving C10K scalability, and also allow us to engage multiple cores.)
-// It's not entirely clear how many threads are "optimal".
-static nni_posix_pollq nni_posix_global_pollq;
-
-nni_posix_pollq *
-nni_posix_pollq_get(int fd)
-{
-	NNI_ARG_UNUSED(fd);
-	// This is the point where we could choose a pollq based on FD.
-	return (&nni_posix_global_pollq);
 }
 
 int
 nni_posix_pollq_sysinit(void)
 {
-	int rv;
-
-	rv = nni_posix_pollq_create(&nni_posix_global_pollq);
-	return (rv);
+	return (nni_posix_pollq_create(&nni_posix_global_pollq));
 }
 
 void
@@ -391,5 +345,3 @@ nni_posix_pollq_sysfini(void)
 {
 	nni_posix_pollq_destroy(&nni_posix_global_pollq);
 }
-
-#endif // NNG_USE_POSIX_POLLQ_POLL

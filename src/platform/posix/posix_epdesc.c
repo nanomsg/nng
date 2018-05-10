@@ -39,7 +39,7 @@
 #endif
 
 struct nni_posix_epdesc {
-	nni_posix_pollq_node    node;
+	nni_posix_pfd *         pfd;
 	nni_list                connectq;
 	nni_list                acceptq;
 	bool                    closed;
@@ -53,10 +53,14 @@ struct nni_posix_epdesc {
 	nni_mtx                 mtx;
 };
 
+static void nni_epdesc_connect_cb(nni_posix_pfd *, int, void *);
+static void nni_epdesc_accept_cb(nni_posix_pfd *, int, void *);
+
 static void
-nni_posix_epdesc_cancel(nni_aio *aio, int rv)
+nni_epdesc_cancel(nni_aio *aio, int rv)
 {
-	nni_posix_epdesc *ed = nni_aio_get_prov_data(aio);
+	nni_posix_epdesc *ed  = nni_aio_get_prov_data(aio);
+	nni_posix_pfd *   pfd = NULL;
 
 	NNI_ASSERT(rv != 0);
 	nni_mtx_lock(&ed->mtx);
@@ -64,200 +68,136 @@ nni_posix_epdesc_cancel(nni_aio *aio, int rv)
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
 	}
+	if ((ed->mode == NNI_EP_MODE_DIAL) && nni_list_empty(&ed->connectq) &&
+	    ((pfd = ed->pfd) != NULL)) {
+		nni_posix_pfd_close(pfd);
+	}
 	nni_mtx_unlock(&ed->mtx);
 }
 
 static void
-nni_posix_epdesc_finish(nni_aio *aio, int rv, int newfd)
+nni_epdesc_finish(nni_aio *aio, int rv, nni_posix_pfd *newpfd)
 {
 	nni_posix_pipedesc *pd = NULL;
 
 	// acceptq or connectq.
 	nni_aio_list_remove(aio);
 
-	if (rv == 0) {
-		if ((rv = nni_posix_pipedesc_init(&pd, newfd)) != 0) {
-			(void) close(newfd);
-		}
-	}
 	if (rv != 0) {
+		NNI_ASSERT(newpfd == NULL);
 		nni_aio_finish_error(aio, rv);
-	} else {
-		nni_aio_set_output(aio, 0, pd);
-		nni_aio_finish(aio, 0, 0);
-	}
-}
-
-static void
-nni_posix_epdesc_doconnect(nni_posix_epdesc *ed)
-{
-	nni_aio * aio;
-	socklen_t sz;
-	int       rv;
-
-	// Note that normally there will only be a single connect AIO...
-	// A socket that is here will have *initiated* with a connect()
-	// call, which returned EINPROGRESS.  When the connection attempt
-	// is done, either way, the descriptor will be noted as writable.
-	// getsockopt() with SOL_SOCKET, SO_ERROR to determine the actual
-	// status of the connection attempt...
-	while ((aio = nni_list_first(&ed->connectq)) != NULL) {
-		rv = -1;
-		sz = sizeof(rv);
-		if (getsockopt(ed->node.fd, SOL_SOCKET, SO_ERROR, &rv, &sz) <
-		    0) {
-			rv = errno;
-		}
-		switch (rv) {
-		case 0:
-			// Success!
-			nni_posix_pollq_remove(&ed->node);
-			nni_posix_epdesc_finish(aio, 0, ed->node.fd);
-			ed->node.fd = -1;
-			continue;
-
-		case EINPROGRESS:
-			// Still in progress... keep trying
-			return;
-
-		default:
-			if (rv == ENOENT) {
-				rv = ECONNREFUSED;
-			}
-			nni_posix_pollq_remove(&ed->node);
-			nni_posix_epdesc_finish(aio, nni_plat_errno(rv), 0);
-			(void) close(ed->node.fd);
-			ed->node.fd = -1;
-			continue;
-		}
-	}
-}
-
-static void
-nni_posix_epdesc_doaccept(nni_posix_epdesc *ed)
-{
-	nni_aio *aio;
-
-	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
-		int newfd;
-
-#ifdef NNG_USE_ACCEPT4
-		newfd = accept4(ed->node.fd, NULL, NULL, SOCK_CLOEXEC);
-		if ((newfd < 0) && ((errno == ENOSYS) || (errno == ENOTSUP))) {
-			newfd = accept(ed->node.fd, NULL, NULL);
-		}
-#else
-		newfd = accept(ed->node.fd, NULL, NULL);
-#endif
-
-		if (newfd >= 0) {
-			// successful connection request!
-			nni_posix_epdesc_finish(aio, 0, newfd);
-			continue;
-		}
-
-		if ((errno == EWOULDBLOCK) || (errno == EAGAIN)) {
-			// Well, let's try later.  Note that EWOULDBLOCK
-			// is required by standards, but some platforms may
-			// use EAGAIN.  The values may be the same, so we
-			// can't use switch.
-			return;
-		}
-
-		if ((errno == ECONNABORTED) || (errno == ECONNRESET)) {
-			// Let's just eat this one.  Perhaps it may be
-			// better to report it to the application, but we
-			// think most applications don't want to see this.
-			// Only someone with a packet trace is going to
-			// notice this.
-			continue;
-		}
-
-		nni_posix_epdesc_finish(aio, nni_plat_errno(errno), 0);
-	}
-}
-
-static void
-nni_posix_epdesc_doerror(nni_posix_epdesc *ed)
-{
-	nni_aio * aio;
-	int       rv = 1;
-	socklen_t sz = sizeof(rv);
-
-	if (getsockopt(ed->node.fd, SOL_SOCKET, SO_ERROR, &rv, &sz) < 0) {
-		rv = errno;
-	}
-	if (rv == 0) {
 		return;
 	}
-	rv = nni_plat_errno(rv);
+
+	NNI_ASSERT(newpfd != NULL);
+	if ((rv = nni_posix_pipedesc_init(&pd, newpfd)) != 0) {
+		nni_posix_pfd_fini(newpfd);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+	nni_aio_set_output(aio, 0, pd);
+	nni_aio_finish(aio, 0, 0);
+}
+
+static void
+nni_epdesc_doaccept(nni_posix_epdesc *ed)
+{
+	nni_aio *aio;
 
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
-		nni_posix_epdesc_finish(aio, rv, 0);
-	}
-	while ((aio = nni_list_first(&ed->connectq)) != NULL) {
-		nni_posix_epdesc_finish(aio, rv, 0);
+		int            newfd;
+		int            fd;
+		int            rv;
+		nni_posix_pfd *pfd;
+
+		fd = nni_posix_pfd_fd(ed->pfd);
+
+#ifdef NNG_USE_ACCEPT4
+		newfd = accept4(fd, NULL, NULL, SOCK_CLOEXEC);
+		if ((newfd < 0) && ((errno == ENOSYS) || (errno == ENOTSUP))) {
+			newfd = accept(fd, NULL, NULL);
+		}
+#else
+		newfd = accept(fd, NULL, NULL);
+#endif
+		if (newfd < 0) {
+			switch (errno) {
+			case EAGAIN:
+#ifdef EWOULDBLOCK
+#if EWOULDBLOCK != EAGAIN
+			case EWOULDBLOCK:
+#endif
+#endif
+				rv = nni_posix_pfd_arm(ed->pfd, POLLIN);
+				if (rv != 0) {
+					nni_epdesc_finish(aio, rv, NULL);
+					continue;
+				}
+				// Come back later...
+				return;
+			case ECONNABORTED:
+			case ECONNRESET:
+				// Eat them, they aren't interesting.
+				continue;
+			default:
+				// Error this one, but keep moving to the next.
+				rv = nni_plat_errno(errno);
+				nni_epdesc_finish(aio, rv, NULL);
+				continue;
+			}
+		}
+
+		if ((rv = nni_posix_pfd_init(&pfd, newfd)) != 0) {
+			close(newfd);
+			nni_epdesc_finish(aio, rv, NULL);
+			continue;
+		}
+
+		nni_epdesc_finish(aio, 0, pfd);
 	}
 }
 
 static void
-nni_posix_epdesc_doclose(nni_posix_epdesc *ed)
+nni_epdesc_doclose(nni_posix_epdesc *ed)
 {
 	nni_aio *aio;
-	int      fd;
 
 	ed->closed = true;
 	while ((aio = nni_list_first(&ed->acceptq)) != NULL) {
-		nni_posix_epdesc_finish(aio, NNG_ECLOSED, 0);
+		nni_epdesc_finish(aio, NNG_ECLOSED, 0);
 	}
 	while ((aio = nni_list_first(&ed->connectq)) != NULL) {
-		nni_posix_epdesc_finish(aio, NNG_ECLOSED, 0);
+		nni_epdesc_finish(aio, NNG_ECLOSED, 0);
 	}
 
-	nni_posix_pollq_remove(&ed->node);
+	if (ed->pfd != NULL) {
 
-	if ((fd = ed->node.fd) != -1) {
+		nni_posix_pfd_close(ed->pfd);
+	}
+
+	// clean up stale UNIX socket when closing the server.
+	if ((ed->mode == NNI_EP_MODE_LISTEN) && (ed->loclen != 0) &&
+	    (ed->locaddr.ss_family == AF_UNIX)) {
 		struct sockaddr_un *sun = (void *) &ed->locaddr;
-		ed->node.fd             = -1;
-		(void) shutdown(fd, SHUT_RDWR);
-		(void) close(fd);
-		if ((sun->sun_family == AF_UNIX) && (ed->loclen != 0)) {
-			(void) unlink(sun->sun_path);
-		}
+		(void) unlink(sun->sun_path);
 	}
 }
 
 static void
-nni_posix_epdesc_cb(void *arg)
+nni_epdesc_accept_cb(nni_posix_pfd *pfd, int events, void *arg)
 {
 	nni_posix_epdesc *ed = arg;
-	int               events;
 
 	nni_mtx_lock(&ed->mtx);
+	if (events & POLLNVAL) {
+		nni_epdesc_doclose(ed);
+		nni_mtx_unlock(&ed->mtx);
+		return;
+	}
+	NNI_ASSERT(pfd == ed->pfd);
 
-	if (ed->node.revents & POLLIN) {
-		nni_posix_epdesc_doaccept(ed);
-	}
-	if (ed->node.revents & POLLOUT) {
-		nni_posix_epdesc_doconnect(ed);
-	}
-	if (ed->node.revents & (POLLERR | POLLHUP)) {
-		nni_posix_epdesc_doerror(ed);
-	}
-	if (ed->node.revents & POLLNVAL) {
-		nni_posix_epdesc_doclose(ed);
-	}
-
-	events = 0;
-	if (!nni_list_empty(&ed->connectq)) {
-		events |= POLLOUT;
-	}
-	if (!nni_list_empty(&ed->acceptq)) {
-		events |= POLLIN;
-	}
-	if ((!ed->closed) && (events != 0)) {
-		nni_posix_pollq_arm(&ed->node, events);
-	}
+	// Anything else will turn up in accept.
+	nni_epdesc_doaccept(ed);
 	nni_mtx_unlock(&ed->mtx);
 }
 
@@ -265,7 +205,7 @@ void
 nni_posix_epdesc_close(nni_posix_epdesc *ed)
 {
 	nni_mtx_lock(&ed->mtx);
-	nni_posix_epdesc_doclose(ed);
+	nni_epdesc_doclose(ed);
 	nni_mtx_unlock(&ed->mtx);
 }
 
@@ -276,8 +216,22 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 	struct sockaddr_storage *ss;
 	int                      rv;
 	int                      fd;
+	nni_posix_pfd *          pfd;
 
 	nni_mtx_lock(&ed->mtx);
+
+	if (ed->started) {
+		nni_mtx_unlock(&ed->mtx);
+		return (NNG_ESTATE);
+	}
+	if (ed->closed) {
+		nni_mtx_unlock(&ed->mtx);
+		return (NNG_ECLOSED);
+	}
+	if ((len = ed->loclen) == 0) {
+		nni_mtx_unlock(&ed->mtx);
+		return (NNG_EADDRINVAL);
+	}
 
 	ss  = &ed->locaddr;
 	len = ed->loclen;
@@ -286,18 +240,17 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 		nni_mtx_unlock(&ed->mtx);
 		return (nni_plat_errno(errno));
 	}
-	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
 
-#ifdef SO_NOSIGPIPE
-	// Darwin lacks MSG_NOSIGNAL, but has a socket option.
-	int one = 1;
-	(void) setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(one));
-#endif
+	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
+		nni_mtx_unlock(&ed->mtx);
+		nni_posix_pfd_fini(pfd);
+		return (rv);
+	}
 
 	if (bind(fd, (struct sockaddr *) ss, len) < 0) {
 		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&ed->mtx);
-		(void) close(fd);
+		nni_posix_pfd_fini(pfd);
 		return (rv);
 	}
 
@@ -314,7 +267,7 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 		if ((rv = chmod(sun->sun_path, perms)) != 0) {
 			rv = nni_plat_errno(errno);
 			nni_mtx_unlock(&ed->mtx);
-			close(fd);
+			nni_posix_pfd_fini(pfd);
 			return (rv);
 		}
 	}
@@ -324,27 +277,24 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 	if (listen(fd, 128) != 0) {
 		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&ed->mtx);
-		(void) close(fd);
+		nni_posix_pfd_fini(pfd);
 		return (rv);
 	}
 
-	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
+	nni_posix_pfd_set_cb(pfd, nni_epdesc_accept_cb, ed);
 
-	ed->node.fd = fd;
-	if ((rv = nni_posix_pollq_add(&ed->node)) != 0) {
-		(void) close(fd);
-		ed->node.fd = -1;
-		nni_mtx_unlock(&ed->mtx);
-		return (rv);
-	}
+	ed->pfd     = pfd;
 	ed->started = true;
 	nni_mtx_unlock(&ed->mtx);
+
 	return (0);
 }
 
 void
 nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
 {
+	int rv;
+
 	// Accept is simpler than the connect case.  With accept we just
 	// need to wait for the socket to be readable to indicate an incoming
 	// connection is ready for us.  There isn't anything else for us to
@@ -354,14 +304,25 @@ nni_posix_epdesc_accept(nni_posix_epdesc *ed, nni_aio *aio)
 	}
 	nni_mtx_lock(&ed->mtx);
 
+	if (!ed->started) {
+		nni_mtx_unlock(&ed->mtx);
+		nni_aio_finish_error(aio, NNG_ESTATE);
+		return;
+	}
 	if (ed->closed) {
 		nni_mtx_unlock(&ed->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
+	if ((rv = nni_aio_schedule(aio, nni_epdesc_cancel, ed)) != 0) {
+		nni_mtx_unlock(&ed->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_aio_list_append(&ed->acceptq, aio);
-	nni_aio_schedule(aio, nni_posix_epdesc_cancel, ed);
-	nni_posix_pollq_arm(&ed->node, POLLIN);
+	if (nni_list_first(&ed->acceptq) == aio) {
+		nni_epdesc_doaccept(ed);
+	}
 	nni_mtx_unlock(&ed->mtx);
 }
 
@@ -370,79 +331,171 @@ nni_posix_epdesc_sockname(nni_posix_epdesc *ed, nni_sockaddr *sa)
 {
 	struct sockaddr_storage ss;
 	socklen_t               sslen = sizeof(ss);
+	int                     fd    = -1;
 
-	if (getsockname(ed->node.fd, (void *) &ss, &sslen) != 0) {
+	nni_mtx_lock(&ed->mtx);
+	if (ed->pfd != NULL) {
+		fd = nni_posix_pfd_fd(ed->pfd);
+	}
+	nni_mtx_unlock(&ed->mtx);
+
+	if (getsockname(fd, (void *) &ss, &sslen) != 0) {
 		return (nni_plat_errno(errno));
 	}
 	return (nni_posix_sockaddr2nn(sa, &ss));
 }
 
-void
-nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
+static void
+nni_epdesc_connect_start(nni_posix_epdesc *ed)
 {
-	// NB: We assume that the FD is already set to nonblocking mode.
-	int rv;
-	int fd;
+	nni_posix_pfd *pfd;
+	int            fd;
+	int            rv;
+	nni_aio *      aio;
 
-	if (nni_aio_begin(aio) != 0) {
+loop:
+	if ((aio = nni_list_first(&ed->connectq)) == NULL) {
 		return;
 	}
-	nni_mtx_lock(&ed->mtx);
+
+	NNI_ASSERT(ed->pfd == NULL);
+	if (ed->closed) {
+		nni_epdesc_finish(aio, NNG_ECLOSED, NULL);
+		goto loop;
+	}
+	ed->started = true;
 
 	if ((fd = socket(ed->remaddr.ss_family, NNI_STREAM_SOCKTYPE, 0)) < 0) {
 		rv = nni_plat_errno(errno);
-		nni_mtx_unlock(&ed->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
+		nni_epdesc_finish(aio, rv, NULL);
+		goto loop;
 	}
 
+	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
+		(void) close(fd);
+		nni_epdesc_finish(aio, rv, NULL);
+		goto loop;
+	}
 	// Possibly bind.
 	if ((ed->loclen != 0) &&
 	    (bind(fd, (void *) &ed->locaddr, ed->loclen) != 0)) {
 		rv = nni_plat_errno(errno);
-		nni_mtx_unlock(&ed->mtx);
-		(void) close(fd);
-		nni_aio_finish_error(aio, rv);
-		return;
+		nni_epdesc_finish(aio, rv, NULL);
+		nni_posix_pfd_fini(pfd);
+		goto loop;
 	}
-
-	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
 	if ((rv = connect(fd, (void *) &ed->remaddr, ed->remlen)) == 0) {
 		// Immediate connect, cool!  This probably only happens on
 		// loopback, and probably not on every platform.
-		ed->started = true;
-		nni_posix_epdesc_finish(aio, 0, fd);
-		nni_mtx_unlock(&ed->mtx);
-		return;
+		nni_epdesc_finish(aio, 0, pfd);
+		goto loop;
 	}
 
 	if (errno != EINPROGRESS) {
 		// Some immediate failure occurred.
 		if (errno == ENOENT) { // For UNIX domain sockets
-			errno = ECONNREFUSED;
+			rv = NNG_ECONNREFUSED;
+		} else {
+			rv = nni_plat_errno(errno);
 		}
-		rv = nni_plat_errno(errno);
+		nni_epdesc_finish(aio, rv, NULL);
+		nni_posix_pfd_fini(pfd);
+		goto loop;
+	}
+	nni_posix_pfd_set_cb(pfd, nni_epdesc_connect_cb, ed);
+	if ((rv = nni_posix_pfd_arm(pfd, POLLOUT)) != 0) {
+		nni_epdesc_finish(aio, rv, NULL);
+		nni_posix_pfd_fini(pfd);
+		goto loop;
+	}
+	ed->pfd = pfd;
+	// all done... wait for this to signal via callback
+}
+
+void
+nni_posix_epdesc_connect(nni_posix_epdesc *ed, nni_aio *aio)
+{
+	int rv;
+
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
+	nni_mtx_lock(&ed->mtx);
+	if (ed->closed) {
 		nni_mtx_unlock(&ed->mtx);
-		(void) close(fd);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
+	if ((rv = nni_aio_schedule(aio, nni_epdesc_cancel, ed)) != 0) {
+		nni_mtx_unlock(&ed->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	// We have to submit to the pollq, because the connection is pending.
-	ed->node.fd = fd;
 	ed->started = true;
-	if ((rv = nni_posix_pollq_add(&ed->node)) != 0) {
-		ed->node.fd = -1;
+	nni_list_append(&ed->connectq, aio);
+	if (nni_list_first(&ed->connectq) == aio) {
+		// If there was a stale pfd (probably from an aborted or
+		// canceled connect attempt), discard it so we start fresh.
+		if (ed->pfd != NULL) {
+			nni_posix_pfd_fini(ed->pfd);
+			ed->pfd = NULL;
+		}
+		nni_epdesc_connect_start(ed);
+	}
+	nni_mtx_unlock(&ed->mtx);
+}
+
+static void
+nni_epdesc_connect_cb(nni_posix_pfd *pfd, int events, void *arg)
+{
+	nni_posix_epdesc *ed = arg;
+	nni_aio *         aio;
+	socklen_t         sz;
+	int               rv;
+	int               fd;
+
+	nni_mtx_lock(&ed->mtx);
+	if ((ed->closed) || ((aio = nni_list_first(&ed->connectq)) == NULL) ||
+	    (pfd != ed->pfd)) {
+		// Spurious completion.  Ignore it, but discard the PFD.
+		if (ed->pfd == pfd) {
+			ed->pfd = NULL;
+		}
+		nni_posix_pfd_fini(pfd);
 		nni_mtx_unlock(&ed->mtx);
-		(void) close(fd);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	nni_aio_schedule(aio, nni_posix_epdesc_cancel, ed);
-	nni_aio_list_append(&ed->connectq, aio);
-	nni_posix_pollq_arm(&ed->node, POLLOUT);
+	fd = nni_posix_pfd_fd(pfd);
+	sz = sizeof(rv);
+
+	if ((events & POLLNVAL) != 0) {
+		rv = EBADF;
+
+	} else if (getsockopt(fd, SOL_SOCKET, SO_ERROR, &rv, &sz) < 0) {
+		rv = errno;
+	}
+
+	switch (rv) {
+	case 0:
+		// Good connect!
+		ed->pfd = NULL;
+		nni_epdesc_finish(aio, 0, pfd);
+		break;
+	case EINPROGRESS: // still connecting... come back later
+		nni_mtx_unlock(&ed->mtx);
+		return;
+	default:
+		ed->pfd = NULL;
+		nni_epdesc_finish(aio, nni_plat_errno(rv), NULL);
+		nni_posix_pfd_fini(pfd);
+		break;
+	}
+
+	// Start another connect running, if any is waiting.
+	nni_epdesc_connect_start(ed);
 	nni_mtx_unlock(&ed->mtx);
 }
 
@@ -450,7 +503,6 @@ int
 nni_posix_epdesc_init(nni_posix_epdesc **edp, int mode)
 {
 	nni_posix_epdesc *ed;
-	int               rv;
 
 	if ((ed = NNI_ALLOC_STRUCT(ed)) == NULL) {
 		return (NNG_ENOMEM);
@@ -458,28 +510,14 @@ nni_posix_epdesc_init(nni_posix_epdesc **edp, int mode)
 
 	nni_mtx_init(&ed->mtx);
 
-	// We could randomly choose a different pollq, or for efficiencies
-	// sake we could take a modulo of the file desc number to choose
-	// one.  For now we just have a global pollq.  Note that by tying
-	// the ed to a single pollq we may get some kind of cache warmth.
-
-	ed->node.index = 0;
-	ed->node.cb    = nni_posix_epdesc_cb;
-	ed->node.data  = ed;
-	ed->node.fd    = -1;
-	ed->closed     = false;
-	ed->started    = false;
-	ed->perms      = 0; // zero means use default (no change)
-	ed->mode       = mode;
+	ed->pfd     = NULL;
+	ed->closed  = false;
+	ed->started = false;
+	ed->perms   = 0; // zero means use default (no change)
+	ed->mode    = mode;
 
 	nni_aio_list_init(&ed->connectq);
 	nni_aio_list_init(&ed->acceptq);
-
-	if ((rv = nni_posix_pollq_init(&ed->node)) != 0) {
-		nni_mtx_fini(&ed->mtx);
-		NNI_FREE_STRUCT(ed);
-		return (rv);
-	}
 	*edp = ed;
 	return (0);
 }
@@ -532,14 +570,16 @@ nni_posix_epdesc_set_permissions(nni_posix_epdesc *ed, mode_t mode)
 void
 nni_posix_epdesc_fini(nni_posix_epdesc *ed)
 {
-	int fd;
+	nni_posix_pfd *pfd;
+
 	nni_mtx_lock(&ed->mtx);
-	if ((fd = ed->node.fd) != -1) {
-		(void) close(ed->node.fd);
-		nni_posix_epdesc_doclose(ed);
-	}
+	nni_epdesc_doclose(ed);
+	pfd = ed->pfd;
 	nni_mtx_unlock(&ed->mtx);
-	nni_posix_pollq_fini(&ed->node);
+
+	if (pfd != NULL) {
+		nni_posix_pfd_fini(pfd);
+	}
 	nni_mtx_fini(&ed->mtx);
 	NNI_FREE_STRUCT(ed);
 }

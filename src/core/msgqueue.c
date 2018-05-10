@@ -345,7 +345,7 @@ nni_msgq_aio_put(nni_msgq *mq, nni_aio *aio)
 
 	// If this is an instantaneous poll operation, and the queue has
 	// no room, nobody is waiting to receive, then report NNG_ETIMEDOUT.
-	rv = nni_aio_schedule_verify(aio, nni_msgq_cancel, mq);
+	rv = nni_aio_schedule(aio, nni_msgq_cancel, mq);
 	if ((rv != 0) && (mq->mq_len >= mq->mq_cap) &&
 	    (nni_list_empty(&mq->mq_aio_getq))) {
 		nni_mtx_unlock(&mq->mq_lock);
@@ -373,7 +373,7 @@ nni_msgq_aio_get(nni_msgq *mq, nni_aio *aio)
 		nni_aio_finish_error(aio, mq->mq_geterr);
 		return;
 	}
-	rv = nni_aio_schedule_verify(aio, nni_msgq_cancel, mq);
+	rv = nni_aio_schedule(aio, nni_msgq_cancel, mq);
 	if ((rv != 0) && (mq->mq_len == 0) &&
 	    (nni_list_empty(&mq->mq_aio_putq))) {
 		nni_mtx_unlock(&mq->mq_lock);

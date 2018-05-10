@@ -173,3 +173,12 @@ nni_thr_fini(nni_thr *thr)
 	nni_plat_mtx_fini(&thr->mtx);
 	thr->init = 0;
 }
+
+bool
+nni_thr_is_self(nni_thr *thr)
+{
+	if (!thr->init) {
+		return (false);
+	}
+	return (nni_plat_thr_is_self(&thr->thr));
+}

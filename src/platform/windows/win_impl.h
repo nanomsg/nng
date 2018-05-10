@@ -34,6 +34,7 @@ struct nni_plat_thr {
 	void (*func)(void *);
 	void * arg;
 	HANDLE handle;
+	DWORD  id;
 };
 
 struct nni_plat_mtx {

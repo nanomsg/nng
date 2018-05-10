@@ -155,11 +155,16 @@ nni_win_event_resubmit(nni_win_event *evt, nni_aio *aio)
 void
 nni_win_event_submit(nni_win_event *evt, nni_aio *aio)
 {
+	int rv;
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&evt->mtx);
-	nni_aio_schedule(aio, nni_win_event_cancel, evt);
+	if ((rv = nni_aio_schedule(aio, nni_win_event_cancel, evt)) != 0) {
+		nni_mtx_unlock(&evt->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_aio_list_append(&evt->aios, aio);
 	nni_win_event_start(evt);
 	nni_mtx_unlock(&evt->mtx);

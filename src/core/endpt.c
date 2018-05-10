@@ -27,7 +27,7 @@ struct nni_ep {
 	int           ep_closed;  // full shutdown
 	int           ep_closing; // close pending (waiting on refcnt)
 	int           ep_refcnt;
-	int           ep_tmo_run;
+	bool          ep_tmo_run;
 	nni_mtx       ep_mtx;
 	nni_cv        ep_cv;
 	nni_list      ep_pipes;
@@ -303,7 +303,7 @@ nni_ep_tmo_cancel(nni_aio *aio, int rv)
 		if (ep->ep_tmo_run) {
 			nni_aio_finish_error(aio, rv);
 		}
-		ep->ep_tmo_run = 0;
+		ep->ep_tmo_run = false;
 		nni_mtx_unlock(&ep->ep_mtx);
 	}
 }
@@ -312,6 +312,7 @@ static void
 nni_ep_tmo_start(nni_ep *ep)
 {
 	nni_duration backoff;
+	int          rv;
 
 	if (ep->ep_closing || (nni_aio_begin(ep->ep_tmo_aio) != 0)) {
 		return;
@@ -333,8 +334,12 @@ nni_ep_tmo_start(nni_ep *ep)
 	nni_aio_set_timeout(
 	    ep->ep_tmo_aio, (backoff ? nni_random() % backoff : 0));
 
-	ep->ep_tmo_run = 1;
-	nni_aio_schedule(ep->ep_tmo_aio, nni_ep_tmo_cancel, ep);
+	if ((rv = nni_aio_schedule(ep->ep_tmo_aio, nni_ep_tmo_cancel, ep)) !=
+	    0) {
+		nni_aio_finish_error(ep->ep_tmo_aio, rv);
+	}
+
+	ep->ep_tmo_run = true;
 }
 
 static void

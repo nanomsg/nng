@@ -422,6 +422,12 @@ nni_plat_thr_fini(nni_plat_thr *thr)
 	}
 }
 
+bool
+nni_plat_thr_is_self(nni_plat_thr *thr)
+{
+	return (pthread_self() == thr->tid);
+}
+
 void
 nni_atfork_child(void)
 {

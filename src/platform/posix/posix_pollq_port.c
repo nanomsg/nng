@@ -1,7 +1,6 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Liam Staskawicz <liam@stask.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -12,7 +11,9 @@
 #ifdef NNG_HAVE_PORT_CREATE
 
 #include <errno.h>
+#include <fcntl.h>
 #include <port.h>
+#include <sched.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h> /* for strerror() */
@@ -20,6 +21,9 @@
 
 #include "core/nng_impl.h"
 #include "platform/posix/posix_pollq.h"
+
+#define NNI_MAX_PORTEV 64
+typedef struct nni_posix_pollq nni_posix_pollq;
 
 // nni_posix_pollq is a work structure that manages state for the port-event
 // based pollq implementation.  We only really need to keep track of the
@@ -29,190 +33,178 @@ struct nni_posix_pollq {
 	nni_thr thr;  // worker thread
 };
 
+struct nni_posix_pfd {
+	nni_posix_pollq *pq;
+	int              fd;
+	nni_mtx          mtx;
+	nni_cv           cv;
+	int              events;
+	bool             closed;
+	bool             closing;
+	nni_posix_pfd_cb cb;
+	void *           data;
+};
+
+// single global instance for now
+static nni_posix_pollq nni_posix_global_pollq;
+
 int
-nni_posix_pollq_add(nni_posix_pollq_node *node)
+nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 {
 	nni_posix_pollq *pq;
+	nni_posix_pfd *  pfd;
 
-	pq = nni_posix_pollq_get(node->fd);
-	if (pq == NULL) {
-		return (NNG_EINVAL);
+	pq = &nni_posix_global_pollq;
+
+	if ((pfd = NNI_ALLOC_STRUCT(pfd)) == NULL) {
+		return (NNG_ENOMEM);
 	}
+	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
+	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	nni_mtx_lock(&node->mx);
-	// ensure node was not previously associated with a pollq
-	if (node->pq != NULL) {
-		nni_mtx_unlock(&node->mx);
-		return (NNG_ESTATE);
-	}
-
-	node->pq     = pq;
-	node->events = 0;
-	node->armed  = false;
-	nni_mtx_unlock(&node->mx);
-
+	nni_mtx_init(&pfd->mtx);
+	nni_cv_init(&pfd->cv, &pfd->mtx);
+	pfd->closed  = false;
+	pfd->closing = false;
+	pfd->fd      = fd;
+	pfd->pq      = pq;
+	pfd->cb      = NULL;
+	pfd->data    = NULL;
+	*pfdp        = pfd;
 	return (0);
 }
 
-// nni_posix_pollq_remove removes the node from the pollq, but
-// does not ensure that the pollq node is safe to destroy.  In particular,
-// this function can be called from a callback (the callback may be active).
-void
-nni_posix_pollq_remove(nni_posix_pollq_node *node)
-{
-	nni_posix_pollq *pq = node->pq;
-
-	if (pq == NULL) {
-		return;
-	}
-
-	nni_mtx_lock(&node->mx);
-	node->events = 0;
-	if (node->armed) {
-		// Failure modes that can occur are uninteresting.
-		(void) port_dissociate(pq->port, PORT_SOURCE_FD, node->fd);
-		node->armed = false;
-	}
-	nni_mtx_unlock(&node->mx);
-}
-
-// nni_posix_pollq_init merely ensures that the node is ready for use.
-// It does not register the node with any pollq in particular.
 int
-nni_posix_pollq_init(nni_posix_pollq_node *node)
+nni_posix_pfd_fd(nni_posix_pfd *pfd)
 {
-	nni_mtx_init(&node->mx);
-	nni_cv_init(&node->cv, &node->mx);
-	node->pq    = NULL;
-	node->armed = false;
-	NNI_LIST_NODE_INIT(&node->node);
+	return (pfd->fd);
+}
+
+void
+nni_posix_pfd_close(nni_posix_pfd *pfd)
+{
+	nni_posix_pollq *pq = pfd->pq;
+
+	nni_mtx_lock(&pfd->mtx);
+	if (!pfd->closing) {
+		pfd->closing = true;
+		(void) shutdown(pfd->fd, SHUT_RDWR);
+		port_dissociate(pq->port, PORT_SOURCE_FD, pfd->fd);
+	}
+	nni_mtx_unlock(&pfd->mtx);
+
+	// Send the wake event to the poller to synchronize with it.
+	// Note that port_send should only really fail if out of memory
+	// or we run into a resource limit.
+}
+
+void
+nni_posix_pfd_fini(nni_posix_pfd *pfd)
+{
+	nni_posix_pollq *pq = pfd->pq;
+
+	nni_posix_pfd_close(pfd);
+
+	if (!nni_thr_is_self(&pq->thr)) {
+
+		while (port_send(pq->port, 1, pfd) != 0) {
+			if ((errno == EBADF) || (errno == EBADFD)) {
+				pfd->closed = true;
+				break;
+			}
+			sched_yield(); // try again later...
+		}
+
+		nni_mtx_lock(&pfd->mtx);
+		while (!pfd->closed) {
+			nni_cv_wait(&pfd->cv);
+		}
+		nni_mtx_unlock(&pfd->mtx);
+	}
+
+	// We're exclusive now.
+	(void) close(pfd->fd);
+	nni_cv_fini(&pfd->cv);
+	nni_mtx_fini(&pfd->mtx);
+	NNI_FREE_STRUCT(pfd);
+}
+
+int
+nni_posix_pfd_arm(nni_posix_pfd *pfd, int events)
+{
+	nni_posix_pollq *pq = pfd->pq;
+
+	nni_mtx_lock(&pfd->mtx);
+	if (!pfd->closing) {
+		pfd->events |= events;
+		if (port_associate(pq->port, PORT_SOURCE_FD, pfd->fd,
+		        pfd->events, pfd) != 0) {
+			int rv = nni_plat_errno(errno);
+			nni_mtx_unlock(&pfd->mtx);
+			return (rv);
+		}
+	}
+	nni_mtx_unlock(&pfd->mtx);
 	return (0);
-}
-
-// nni_posix_pollq_fini does everything that nni_posix_pollq_remove does,
-// but it also ensures that the node is removed properly.
-void
-nni_posix_pollq_fini(nni_posix_pollq_node *node)
-{
-	nni_posix_pollq *pq = node->pq;
-
-	nni_mtx_lock(&node->mx);
-	if ((pq = node->pq) != NULL) {
-		// Dissociate the port; if it isn't already associated we
-		// don't care.  (An extra syscall, but it should not matter.)
-		(void) port_dissociate(pq->port, PORT_SOURCE_FD, node->fd);
-		node->armed = false;
-
-		for (;;) {
-			if (port_send(pq->port, 0, node) == 0) {
-				break;
-			}
-			switch (errno) {
-			case EAGAIN:
-			case ENOMEM:
-				// Resource exhaustion.
-				// Best bet in these cases is to sleep it off.
-				// This may appear like a total application
-				// hang, but by sleeping here maybe we give
-				// a chance for things to clear up.
-				nni_mtx_unlock(&node->mx);
-				nni_msleep(5000);
-				nni_mtx_lock(&node->mx);
-				continue;
-			case EBADFD:
-			case EBADF:
-				// Most likely these indicate that the pollq
-				// itself has been closed.  That's ok.
-				break;
-			}
-		}
-		// Wait for the pollq thread to tell us with certainty that
-		// they are done.  This is needed to ensure that the pollq
-		// thread isn't executing (or about to execute) the callback
-		// before we destroy it.
-		while (node->pq != NULL) {
-			nni_cv_wait(&node->cv);
-		}
-	}
-	nni_mtx_unlock(&node->mx);
-	nni_cv_fini(&node->cv);
-	nni_mtx_fini(&node->mx);
-}
-
-void
-nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
-{
-	nni_posix_pollq *pq = node->pq;
-
-	NNI_ASSERT(pq != NULL);
-	if (events == 0) {
-		return;
-	}
-
-	nni_mtx_lock(&node->mx);
-	node->events |= events;
-	node->armed = true;
-	(void) port_associate(
-	    pq->port, PORT_SOURCE_FD, node->fd, node->events, node);
-
-	// Possible errors here are:
-	//
-	// EBADF -- programming error on our part
-	// EBADFD -- programming error on our part
-	// ENOMEM -- not much we can do here
-	// EAGAIN -- too many port events registered (65K!!)
-	//
-	// For now we ignore them all. (We need to be able to return
-	// errors to our caller.)  Effect on the application will appear
-	// to be a stalled file descriptor (no notifications).
-	nni_mtx_unlock(&node->mx);
 }
 
 static void
 nni_posix_poll_thr(void *arg)
 {
-
 	for (;;) {
-		nni_posix_pollq *     pq = arg;
-		port_event_t          ev;
-		nni_posix_pollq_node *node;
+		nni_posix_pollq *pq = arg;
+		port_event_t     ev[NNI_MAX_PORTEV];
+		nni_posix_pfd *  pfd;
+		int              events;
+		nni_posix_pfd_cb cb;
+		void *           arg;
+		unsigned         n;
 
-		if (port_get(pq->port, &ev, NULL) != 0) {
+		n = 1; // wake us even on just one event
+		if (port_getn(pq->port, ev, NNI_MAX_PORTEV, &n, NULL) != 0) {
 			if (errno == EINTR) {
 				continue;
 			}
 			return;
 		}
 
-		switch (ev.portev_source) {
-		case PORT_SOURCE_ALERT:
-			return;
+		// We run through the returned ports twice.  First we
+		// get the callbacks.  Then we do the reaps.  This way
+		// we ensure that we only reap *after* callbacks have run.
+		for (unsigned i = 0; i < n; i++) {
+			if (ev[i].portev_source != PORT_SOURCE_FD) {
+				continue;
+			}
+			pfd    = ev[i].portev_user;
+			events = ev[i].portev_events;
 
-		case PORT_SOURCE_FD:
-			node = ev.portev_user;
+			nni_mtx_lock(&pfd->mtx);
+			cb  = pfd->cb;
+			arg = pfd->data;
+			pfd->events &= ~events;
+			nni_mtx_unlock(&pfd->mtx);
 
-			nni_mtx_lock(&node->mx);
-			node->revents = ev.portev_events;
-			// mark events as cleared
-			node->events &= ~node->revents;
-			node->armed = false;
-			nni_mtx_unlock(&node->mx);
+			if (cb != NULL) {
+				cb(pfd, events, arg);
+			}
+		}
+		for (unsigned i = 0; i < n; i++) {
+			if (ev[i].portev_source != PORT_SOURCE_USER) {
+				continue;
+			}
 
-			node->cb(node->data);
-			break;
-
-		case PORT_SOURCE_USER:
 			// User event telling us to stop doing things.
-			// We signal back to use this as a coordination event
-			// between the pollq and the thread handler.
-			// NOTE: It is absolutely critical that there is only
-			// a single thread per pollq.  Otherwise we cannot
-			// be sure that we are blocked completely,
-			node = ev.portev_user;
-			nni_mtx_lock(&node->mx);
-			node->pq = NULL;
-			nni_cv_wake(&node->cv);
-			nni_mtx_unlock(&node->mx);
+			// We signal back to use this as a coordination
+			// event between the pollq and the thread
+			// handler. NOTE: It is absolutely critical
+			// that there is only a single thread per
+			// pollq.  Otherwise we cannot be sure that we
+			// are blocked completely,
+			pfd = ev[i].portev_user;
+			nni_mtx_lock(&pfd->mtx);
+			pfd->closed = true;
+			nni_cv_wake(&pfd->cv);
+			nni_mtx_unlock(&pfd->mtx);
 		}
 	}
 }
@@ -220,7 +212,6 @@ nni_posix_poll_thr(void *arg)
 static void
 nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
-	port_alert(pq->port, PORT_ALERT_SET, 1, NULL);
 	(void) close(pq->port);
 	nni_thr_fini(&pq->thr);
 }
@@ -243,14 +234,15 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 	return (0);
 }
 
-// single global instance for now
-static nni_posix_pollq nni_posix_global_pollq;
-
-nni_posix_pollq *
-nni_posix_pollq_get(int fd)
+void
+nni_posix_pfd_set_cb(nni_posix_pfd *pfd, nni_posix_pfd_cb cb, void *arg)
 {
-	NNI_ARG_UNUSED(fd);
-	return (&nni_posix_global_pollq);
+	NNI_ASSERT(cb != NULL); // must not be null when established.
+
+	nni_mtx_lock(&pfd->mtx);
+	pfd->cb   = cb;
+	pfd->data = arg;
+	nni_mtx_unlock(&pfd->mtx);
 }
 
 int

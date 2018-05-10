@@ -136,10 +136,15 @@ extern int nni_plat_cv_until(nni_plat_cv *, nni_time);
 // immediately.
 extern int nni_plat_thr_init(nni_plat_thr *, void (*)(void *), void *);
 
-// nni_thread_reap waits for the thread to exit, and then releases any
+// nni_plat_thr_fini waits for the thread to exit, and then releases any
 // resources associated with the thread.  After this returns, it
 // is an error to reference the thread in any further way.
 extern void nni_plat_thr_fini(nni_plat_thr *);
+
+// nni_plat_thr_is_self returns true if the caller is the thread
+// identified, and false otherwise.  (This allows some deadlock
+// prevention in callbacks, for example.)
+extern bool nni_plat_thr_is_self(nni_plat_thr *);
 
 //
 // Clock Support

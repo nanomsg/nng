@@ -416,12 +416,17 @@ static void
 nni_tls_pipe_send(void *arg, nni_aio *aio)
 {
 	nni_tls_pipe *p = arg;
+	int           rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	nni_aio_schedule(aio, nni_tls_cancel_tx, p);
+	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_tx, p)) != 0) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	nni_list_append(&p->sendq, aio);
 	if (nni_list_first(&p->sendq) == aio) {
 		nni_tls_pipe_dosend(p, aio);
@@ -472,13 +477,18 @@ static void
 nni_tls_pipe_recv(void *arg, nni_aio *aio)
 {
 	nni_tls_pipe *p = arg;
+	int           rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
+	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_rx, p)) != 0) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 
-	nni_aio_schedule(aio, nni_tls_cancel_rx, p);
 	nni_aio_list_append(&p->recvq, aio);
 	if (nni_list_first(&p->recvq) == aio) {
 		nni_tls_pipe_dorecv(p);
@@ -542,11 +552,17 @@ nni_tls_pipe_start(void *arg, nni_aio *aio)
 	nni_tls_pipe *p = arg;
 	nni_aio *     negaio;
 	nni_iov       iov;
+	int           rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
+	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_nego, p)) != 0) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	p->txlen[0] = 0;
 	p->txlen[1] = 'S';
 	p->txlen[2] = 'P';
@@ -563,7 +579,6 @@ nni_tls_pipe_start(void *arg, nni_aio *aio)
 	iov.iov_len    = 8;
 	iov.iov_buf    = &p->txlen[0];
 	nni_aio_set_iov(negaio, 1, &iov);
-	nni_aio_schedule(aio, nni_tls_cancel_nego, p);
 	nni_tls_send(p->tls, negaio);
 	nni_mtx_unlock(&p->mtx);
 }
@@ -769,13 +784,18 @@ static void
 nni_tls_ep_accept(void *arg, nni_aio *aio)
 {
 	nni_tls_ep *ep = arg;
+	int         rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
-	nni_aio_schedule(aio, nni_tls_cancel_ep, ep);
+	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_ep, ep)) != 0) {
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	ep->user_aio = aio;
 	nni_plat_tcp_ep_accept(ep->tep, ep->aio);
 	nni_mtx_unlock(&ep->mtx);
@@ -785,13 +805,17 @@ static void
 nni_tls_ep_connect(void *arg, nni_aio *aio)
 {
 	nni_tls_ep *ep = arg;
+	int         rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
-	nni_aio_schedule(aio, nni_tls_cancel_ep, ep);
+	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_ep, ep)) != 0) {
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, rv);
+	}
 	ep->user_aio = aio;
 	nni_plat_tcp_ep_connect(ep->tep, ep->aio);
 	nni_mtx_unlock(&ep->mtx);

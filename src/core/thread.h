@@ -82,4 +82,7 @@ extern void nni_thr_run(nni_thr *thr);
 // at all.
 extern void nni_thr_wait(nni_thr *thr);
 
+// nni_thr_is_self returns true if the caller is the named thread.
+extern bool nni_thr_is_self(nni_thr *thr);
+
 #endif // CORE_THREAD_H

@@ -216,8 +216,7 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 
-	rv = nni_aio_schedule_verify(aio, rep0_ctx_cancel_send, ctx);
-	if (rv != 0) {
+	if ((rv = nni_aio_schedule(aio, rep0_ctx_cancel_send, ctx)) != 0) {
 		nni_mtx_unlock(&s->lk);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -354,6 +353,9 @@ rep0_pipe_stop(void *arg)
 	rep0_sock *s = p->rep;
 	rep0_ctx * ctx;
 
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+
 	nni_mtx_lock(&s->lk);
 	if (nni_list_active(&s->recvpipes, p)) {
 		// We are no longer "receivable".
@@ -379,9 +381,6 @@ rep0_pipe_stop(void *arg)
 	}
 	nni_idhash_remove(s->pipes, nni_pipe_id(p->pipe));
 	nni_mtx_unlock(&s->lk);
-
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
 }
 
 static void
@@ -459,8 +458,7 @@ rep0_ctx_recv(void *arg, nni_aio *aio)
 	nni_mtx_lock(&s->lk);
 	if ((p = nni_list_first(&s->recvpipes)) == NULL) {
 		int rv;
-		rv = nni_aio_schedule_verify(aio, rep0_cancel_recv, ctx);
-		if (rv != 0) {
+		if ((rv = nni_aio_schedule(aio, rep0_cancel_recv, ctx)) != 0) {
 			nni_mtx_unlock(&s->lk);
 			nni_aio_finish_error(aio, rv);
 			return;
@@ -516,10 +514,10 @@ rep0_pipe_recv_cb(void *arg)
 		bool end = false;
 
 		if (hops > s->ttl) {
-			// This isn't malformed, but it has gone through
-			// too many hops.  Do not disconnect, because we
-			// can legitimately receive messages with too many
-			// hops from devices, etc.
+			// This isn't malformed, but it has gone
+			// through too many hops.  Do not disconnect,
+			// because we can legitimately receive messages
+			// with too many hops from devices, etc.
 			goto drop;
 		}
 		hops++;
@@ -566,9 +564,9 @@ rep0_pipe_recv_cb(void *arg)
 	nni_msg_header_clear(msg);
 	ctx->pipe_id = p->id;
 
-	// If we got a request on a pipe that wasn't busy, we should mark
-	// it sendable.  (The sendable flag is not set when there is no
-	// request needing a reply.)
+	// If we got a request on a pipe that wasn't busy, we should
+	// mark it sendable.  (The sendable flag is not set when there
+	// is no request needing a reply.)
 	if ((ctx == s->ctx) && (!p->busy)) {
 		nni_pollable_raise(s->sendable);
 	}

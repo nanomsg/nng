@@ -37,50 +37,51 @@
 #define NNG_POSIX_RESOLV_CONCURRENCY 4
 #endif
 
-static nni_taskq *nni_posix_resolv_tq = NULL;
-static nni_mtx    nni_posix_resolv_mtx;
+static nni_taskq *resolv_tq = NULL;
+static nni_mtx    resolv_mtx;
 
-typedef struct nni_posix_resolv_item nni_posix_resolv_item;
-struct nni_posix_resolv_item {
-	int         family;
-	int         passive;
-	const char *name;
-	const char *serv;
-	int         proto;
-	nni_aio *   aio;
-	nni_task    task;
+typedef struct resolv_item resolv_item;
+struct resolv_item {
+	int          family;
+	int          passive;
+	const char * name;
+	const char * serv;
+	int          proto;
+	nni_aio *    aio;
+	nni_task *   task;
+	nng_sockaddr sa;
 };
 
 static void
-nni_posix_resolv_finish(nni_posix_resolv_item *item, int rv)
+resolv_finish(resolv_item *item, int rv)
 {
 	nni_aio *aio;
 
-	if ((aio = item->aio) != NULL) {
-		if (nni_aio_get_prov_data(aio) == item) {
-			nni_aio_set_prov_data(aio, NULL);
-			item->aio = NULL;
-			nni_aio_finish(aio, rv, 0);
-			NNI_FREE_STRUCT(item);
-		}
+	if (((aio = item->aio) != NULL) &&
+	    (nni_aio_get_prov_data(aio) == item)) {
+		nng_sockaddr *sa = nni_aio_get_input(aio, 0);
+		nni_aio_set_prov_data(aio, NULL);
+		item->aio = NULL;
+		memcpy(sa, &item->sa, sizeof(*sa));
+		nni_aio_finish(aio, rv, 0);
+		nni_task_fini(item->task);
+		NNI_FREE_STRUCT(item);
 	}
 }
 
 static void
-nni_posix_resolv_cancel(nni_aio *aio, int rv)
+resolv_cancel(nni_aio *aio, int rv)
 {
-	nni_posix_resolv_item *item;
+	resolv_item *item;
 
-	nni_mtx_lock(&nni_posix_resolv_mtx);
+	nni_mtx_lock(&resolv_mtx);
 	if ((item = nni_aio_get_prov_data(aio)) == NULL) {
-		nni_mtx_unlock(&nni_posix_resolv_mtx);
+		nni_mtx_unlock(&resolv_mtx);
 		return;
 	}
 	nni_aio_set_prov_data(aio, NULL);
 	item->aio = NULL;
-	nni_mtx_unlock(&nni_posix_resolv_mtx);
-	nni_task_cancel(&item->task);
-	NNI_FREE_STRUCT(item);
+	nni_mtx_unlock(&resolv_mtx);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -116,14 +117,23 @@ nni_posix_gai_errno(int rv)
 }
 
 static void
-nni_posix_resolv_task(void *arg)
+resolv_task(void *arg)
 {
-	nni_posix_resolv_item *item = arg;
-	nni_aio *              aio  = item->aio;
-	struct addrinfo        hints;
-	struct addrinfo *      results;
-	struct addrinfo *      probe;
-	int                    rv;
+	resolv_item *    item = arg;
+	struct addrinfo  hints;
+	struct addrinfo *results;
+	struct addrinfo *probe;
+	int              rv;
+
+	nni_mtx_lock(&resolv_mtx);
+	if (item->aio == NULL) {
+		nni_mtx_unlock(&resolv_mtx);
+		// Caller canceled, and no longer cares about this.
+		nni_task_fini(item->task);
+		NNI_FREE_STRUCT(item);
+		return;
+	}
+	nni_mtx_unlock(&resolv_mtx);
 
 	results = NULL;
 
@@ -170,7 +180,7 @@ nni_posix_resolv_task(void *arg)
 	if (probe != NULL) {
 		struct sockaddr_in * sin;
 		struct sockaddr_in6 *sin6;
-		nng_sockaddr *       sa = nni_aio_get_input(aio, 0);
+		nng_sockaddr *       sa = &item->sa;
 
 		switch (probe->ai_addr->sa_family) {
 		case AF_INET:
@@ -196,17 +206,18 @@ done:
 		freeaddrinfo(results);
 	}
 
-	nni_mtx_lock(&nni_posix_resolv_mtx);
-	nni_posix_resolv_finish(item, rv);
-	nni_mtx_unlock(&nni_posix_resolv_mtx);
+	nni_mtx_lock(&resolv_mtx);
+	resolv_finish(item, rv);
+	nni_mtx_unlock(&resolv_mtx);
 }
 
 static void
-nni_posix_resolv_ip(const char *host, const char *serv, int passive,
-    int family, int proto, nni_aio *aio)
+resolv_ip(const char *host, const char *serv, int passive, int family,
+    int proto, nni_aio *aio)
 {
-	nni_posix_resolv_item *item;
-	sa_family_t            fam;
+	resolv_item *item;
+	sa_family_t  fam;
+	int          rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -231,10 +242,15 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 		return;
 	}
 
-	nni_task_init(
-	    nni_posix_resolv_tq, &item->task, nni_posix_resolv_task, item);
+	if ((rv = nni_task_init(&item->task, resolv_tq, resolv_task, item)) !=
+	    0) {
+		NNI_FREE_STRUCT(item);
+		nni_aio_finish_error(aio, rv);
+		return;
+	};
 
 	// NB: host and serv must remain valid until this is completed.
+	memset(&item->sa, 0, sizeof(item->sa));
 	item->passive = passive;
 	item->name    = host;
 	item->serv    = serv;
@@ -242,24 +258,30 @@ nni_posix_resolv_ip(const char *host, const char *serv, int passive,
 	item->aio     = aio;
 	item->family  = fam;
 
-	nni_mtx_lock(&nni_posix_resolv_mtx);
-	nni_aio_schedule(aio, nni_posix_resolv_cancel, item);
-	nni_task_dispatch(&item->task);
-	nni_mtx_unlock(&nni_posix_resolv_mtx);
+	nni_mtx_lock(&resolv_mtx);
+	if ((rv = nni_aio_schedule(aio, resolv_cancel, item)) != 0) {
+		nni_mtx_unlock(&resolv_mtx);
+		nni_task_fini(item->task);
+		NNI_FREE_STRUCT(item);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+	nni_task_dispatch(item->task);
+	nni_mtx_unlock(&resolv_mtx);
 }
 
 void
 nni_plat_tcp_resolv(
     const char *host, const char *serv, int family, int passive, nni_aio *aio)
 {
-	nni_posix_resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
+	resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
 }
 
 void
 nni_plat_udp_resolv(
     const char *host, const char *serv, int family, int passive, nni_aio *aio)
 {
-	nni_posix_resolv_ip(host, serv, passive, family, IPPROTO_UDP, aio);
+	resolv_ip(host, serv, passive, family, IPPROTO_UDP, aio);
 }
 
 int
@@ -267,10 +289,10 @@ nni_posix_resolv_sysinit(void)
 {
 	int rv;
 
-	nni_mtx_init(&nni_posix_resolv_mtx);
+	nni_mtx_init(&resolv_mtx);
 
-	if ((rv = nni_taskq_init(&nni_posix_resolv_tq, 4)) != 0) {
-		nni_mtx_fini(&nni_posix_resolv_mtx);
+	if ((rv = nni_taskq_init(&resolv_tq, 4)) != 0) {
+		nni_mtx_fini(&resolv_mtx);
 		return (rv);
 	}
 	return (0);
@@ -279,11 +301,11 @@ nni_posix_resolv_sysinit(void)
 void
 nni_posix_resolv_sysfini(void)
 {
-	if (nni_posix_resolv_tq != NULL) {
-		nni_taskq_fini(nni_posix_resolv_tq);
-		nni_posix_resolv_tq = NULL;
+	if (resolv_tq != NULL) {
+		nni_taskq_fini(resolv_tq);
+		resolv_tq = NULL;
 	}
-	nni_mtx_fini(&nni_posix_resolv_mtx);
+	nni_mtx_fini(&resolv_mtx);
 }
 
 #endif // NNG_USE_POSIX_RESOLV_GAI

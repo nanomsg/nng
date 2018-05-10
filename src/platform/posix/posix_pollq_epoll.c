@@ -12,6 +12,7 @@
 #ifdef NNG_HAVE_EPOLL
 
 #include <errno.h>
+#include <fcntl.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <string.h> /* for strerror() */
@@ -22,179 +23,215 @@
 #include "core/nng_impl.h"
 #include "platform/posix/posix_pollq.h"
 
+typedef struct nni_posix_pollq nni_posix_pollq;
+
+#ifndef EFD_CLOEXEC
+#define EFD_CLOEXEC 0
+#endif
+#ifndef EFD_NONBLOCK
+#define EFD_NONBLOCK 0
+#endif
+
 #define NNI_MAX_EPOLL_EVENTS 64
 
 // flags we always want enabled as long as at least one event is active
 #define NNI_EPOLL_FLAGS (EPOLLONESHOT | EPOLLERR | EPOLLHUP)
 
+// Locking strategy:
+//
+// The pollq mutex protects its own reapq, close state, and the close
+// state of the individual pfds.  It also protects the pfd cv, which is
+// only signaled when the pfd is closed.  This mutex is only acquired
+// when shutting down the pollq, or closing a pfd.  For normal hot-path
+// operations we don't need it.
+//
+// The pfd mutex protects the pfd's own "closing" flag (test and set),
+// the callback and arg, and its event mask.  This mutex is used a lot,
+// but it should be uncontended excepting possibly when closing.
+
 // nni_posix_pollq is a work structure that manages state for the epoll-based
 // pollq implementation
 struct nni_posix_pollq {
-	nni_mtx               mtx;
-	nni_cv                cv;
-	int                   epfd;  // epoll handle
-	int                   evfd;  // event fd
-	bool                  close; // request for worker to exit
-	bool                  started;
-	nni_idhash *          nodes;
-	nni_thr               thr;    // worker thread
-	nni_posix_pollq_node *wait;   // cancel waiting on this
-	nni_posix_pollq_node *active; // active node (in callback)
+	nni_mtx  mtx;
+	int      epfd;  // epoll handle
+	int      evfd;  // event fd (to wake us for other stuff)
+	bool     close; // request for worker to exit
+	nni_thr  thr;   // worker thread
+	nni_list reapq;
 };
 
+struct nni_posix_pfd {
+	nni_posix_pollq *pq;
+	nni_list_node    node;
+	int              fd;
+	nni_posix_pfd_cb cb;
+	void *           arg;
+	bool             closed;
+	bool             closing;
+	bool             reap;
+	int              events;
+	nni_mtx          mtx;
+	nni_cv           cv;
+};
+
+// single global instance for now.
+static nni_posix_pollq nni_posix_global_pollq;
+
 int
-nni_posix_pollq_add(nni_posix_pollq_node *node)
+nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 {
-	int                rv;
+	nni_posix_pfd *    pfd;
 	nni_posix_pollq *  pq;
 	struct epoll_event ev;
-	uint64_t           id;
+	int                rv;
 
-	pq = nni_posix_pollq_get(node->fd);
-	if (pq == NULL) {
-		return (NNG_EINVAL);
-	}
+	pq = &nni_posix_global_pollq;
 
-	// ensure node was not previously associated with a pollq
-	if (node->pq != NULL) {
-		return (NNG_ESTATE);
-	}
+	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
+	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
-	nni_mtx_lock(&pq->mtx);
-	if (pq->close) {
-		// This shouldn't happen!
-		nni_mtx_unlock(&pq->mtx);
-		return (NNG_ECLOSED);
+	if ((pfd = NNI_ALLOC_STRUCT(pfd)) == NULL) {
+		return (NNG_ENOMEM);
 	}
+	pfd->pq      = pq;
+	pfd->fd      = fd;
+	pfd->cb      = NULL;
+	pfd->arg     = NULL;
+	pfd->events  = 0;
+	pfd->closing = false;
+	pfd->closed  = false;
 
-	if ((rv = nni_idhash_alloc(pq->nodes, &id, node)) != 0) {
-		nni_mtx_unlock(&pq->mtx);
-		return (rv);
-	}
-	node->index  = (int) id;
-	node->pq     = pq;
-	node->events = 0;
+	nni_mtx_init(&pfd->mtx);
+	nni_cv_init(&pfd->cv, &pq->mtx);
+	NNI_LIST_NODE_INIT(&pfd->node);
 
 	// notifications disabled to begin with
 	ev.events   = 0;
-	ev.data.u64 = id;
+	ev.data.ptr = pfd;
 
-	rv = epoll_ctl(pq->epfd, EPOLL_CTL_ADD, node->fd, &ev);
-	if (rv != 0) {
+	if ((rv = epoll_ctl(pq->epfd, EPOLL_CTL_ADD, fd, &ev)) != 0) {
 		rv = nni_plat_errno(errno);
-		nni_idhash_remove(pq->nodes, id);
-		node->index = 0;
-		node->pq    = NULL;
+		nni_cv_fini(&pfd->cv);
+		NNI_FREE_STRUCT(pfd);
+		return (rv);
 	}
 
-	nni_mtx_unlock(&pq->mtx);
-	return (rv);
-}
-
-// common functionality for nni_posix_pollq_remove() and nni_posix_pollq_fini()
-// called while pq's lock is held
-static void
-nni_posix_pollq_remove_helper(nni_posix_pollq *pq, nni_posix_pollq_node *node)
-{
-	int                rv;
-	struct epoll_event ev;
-
-	node->events = 0;
-	node->pq     = NULL;
-
-	ev.events   = 0;
-	ev.data.u64 = (uint64_t) node->index;
-
-	if (node->index != 0) {
-		// This deregisters the node.  If the poller was blocked
-		// then this keeps it from coming back in to find us.
-		nni_idhash_remove(pq->nodes, (uint64_t) node->index);
-	}
-
-	// NB: EPOLL_CTL_DEL actually *ignores* the event, but older Linux
-	// versions need it to be non-NULL.
-	rv = epoll_ctl(pq->epfd, EPOLL_CTL_DEL, node->fd, &ev);
-	if (rv != 0) {
-		NNI_ASSERT(errno == EBADF || errno == ENOENT);
-	}
-}
-
-// nni_posix_pollq_remove removes the node from the pollq, but
-// does not ensure that the pollq node is safe to destroy.  In particular,
-// this function can be called from a callback (the callback may be active).
-void
-nni_posix_pollq_remove(nni_posix_pollq_node *node)
-{
-	nni_posix_pollq *pq = node->pq;
-
-	if (pq == NULL) {
-		return;
-	}
-
-	nni_mtx_lock(&pq->mtx);
-	nni_posix_pollq_remove_helper(pq, node);
-
-	if (pq->close) {
-		nni_cv_wake(&pq->cv);
-	}
-	nni_mtx_unlock(&pq->mtx);
-}
-
-// nni_posix_pollq_init merely ensures that the node is ready for use.
-// It does not register the node with any pollq in particular.
-int
-nni_posix_pollq_init(nni_posix_pollq_node *node)
-{
-	node->index = 0;
+	*pfdp = pfd;
 	return (0);
 }
 
-// nni_posix_pollq_fini does everything that nni_posix_pollq_remove does,
-// but it also ensures that the callback is not active, so that the node
-// may be deallocated.  This function must not be called in a callback.
-void
-nni_posix_pollq_fini(nni_posix_pollq_node *node)
+int
+nni_posix_pfd_arm(nni_posix_pfd *pfd, int events)
 {
-	nni_posix_pollq *pq = node->pq;
-	if (pq == NULL) {
-		return;
-	}
+	nni_posix_pollq *pq = pfd->pq;
 
-	nni_mtx_lock(&pq->mtx);
-	while (pq->active == node) {
-		pq->wait = node;
-		nni_cv_wait(&pq->cv);
-	}
+	// NB: We depend on epoll event flags being the same as their POLLIN
+	// equivalents.  I.e. POLLIN == EPOLLIN, POLLOUT == EPOLLOUT, and so
+	// forth.  This turns out to be true both for Linux and the illumos
+	// epoll implementation.
 
-	nni_posix_pollq_remove_helper(pq, node);
+	nni_mtx_lock(&pfd->mtx);
+	if (!pfd->closing) {
+		struct epoll_event ev;
+		pfd->events |= events;
+		events = pfd->events;
 
-	if (pq->close) {
-		nni_cv_wake(&pq->cv);
+		ev.events   = events | NNI_EPOLL_FLAGS;
+		ev.data.ptr = pfd;
+
+		if (epoll_ctl(pq->epfd, EPOLL_CTL_MOD, pfd->fd, &ev) != 0) {
+			int rv = nni_plat_errno(errno);
+			nni_mtx_unlock(&pfd->mtx);
+			return (rv);
+		}
 	}
-	nni_mtx_unlock(&pq->mtx);
+	nni_mtx_unlock(&pfd->mtx);
+	return (0);
+}
+
+int
+nni_posix_pfd_fd(nni_posix_pfd *pfd)
+{
+	return (pfd->fd);
 }
 
 void
-nni_posix_pollq_arm(nni_posix_pollq_node *node, int events)
+nni_posix_pfd_set_cb(nni_posix_pfd *pfd, nni_posix_pfd_cb cb, void *arg)
 {
-	int                rv;
-	struct epoll_event ev;
-	nni_posix_pollq *  pq = node->pq;
+	nni_mtx_lock(&pfd->mtx);
+	pfd->cb  = cb;
+	pfd->arg = arg;
+	nni_mtx_unlock(&pfd->mtx);
+}
 
-	NNI_ASSERT(pq != NULL);
-	if (events == 0) {
-		return;
+void
+nni_posix_pfd_close(nni_posix_pfd *pfd)
+{
+	nni_mtx_lock(&pfd->mtx);
+	if (!pfd->closing) {
+		nni_posix_pollq *  pq = pfd->pq;
+		struct epoll_event ev; // Not actually used.
+		pfd->closing = true;
+
+		(void) shutdown(pfd->fd, SHUT_RDWR);
+		(void) epoll_ctl(pq->epfd, EPOLL_CTL_DEL, pfd->fd, &ev);
+	}
+	nni_mtx_unlock(&pfd->mtx);
+}
+
+void
+nni_posix_pfd_fini(nni_posix_pfd *pfd)
+{
+	nni_posix_pollq *pq = pfd->pq;
+
+	nni_posix_pfd_close(pfd);
+
+	// We have to synchronize with the pollq thread (unless we are
+	// on that thread!)
+	if (!nni_thr_is_self(&pq->thr)) {
+
+		uint64_t one = 1;
+
+		nni_mtx_lock(&pq->mtx);
+		nni_list_append(&pq->reapq, pfd);
+
+		// Wake the remote side.  For now we assume this always
+		// succeeds.  The only failure modes here occur when we
+		// have already excessively signaled this (2^64 times
+		// with no read!!), or when the evfd is closed, or some
+		// kernel bug occurs.  Those errors would manifest as
+		// a hang waiting for the poller to reap the pfd in fini,
+		// if it were possible for them to occur.  (Barring other
+		// bugs, it isn't.)
+		(void) write(pq->evfd, &one, sizeof(one));
+
+		while (!pfd->closed) {
+			nni_cv_wait(&pfd->cv);
+		}
+		nni_mtx_unlock(&pq->mtx);
 	}
 
+	// We're exclusive now.
+
+	(void) close(pfd->fd);
+	nni_cv_fini(&pfd->cv);
+	nni_mtx_fini(&pfd->mtx);
+	NNI_FREE_STRUCT(pfd);
+}
+
+static void
+nni_posix_pollq_reap(nni_posix_pollq *pq)
+{
+	nni_posix_pfd *pfd;
 	nni_mtx_lock(&pq->mtx);
+	while ((pfd = nni_list_first(&pq->reapq)) != NULL) {
+		nni_list_remove(&pq->reapq, pfd);
 
-	node->events |= events;
-	ev.events   = node->events | NNI_EPOLL_FLAGS;
-	ev.data.u64 = (uint64_t) node->index;
-
-	rv = epoll_ctl(pq->epfd, EPOLL_CTL_MOD, node->fd, &ev);
-	NNI_ASSERT(rv == 0);
-
+		// Let fini know we're done with it, and it's safe to
+		// remove.
+		pfd->closed = true;
+		nni_cv_wake(&pfd->cv);
+	}
 	nni_mtx_unlock(&pq->mtx);
 }
 
@@ -204,101 +241,74 @@ nni_posix_poll_thr(void *arg)
 	nni_posix_pollq *  pq = arg;
 	struct epoll_event events[NNI_MAX_EPOLL_EVENTS];
 
-	nni_mtx_lock(&pq->mtx);
+	for (;;) {
+		int  n;
+		bool reap = false;
 
-	while (!pq->close) {
-		int i;
-		int nevents;
-
-		// block indefinitely, timers are handled separately
-		nni_mtx_unlock(&pq->mtx);
-
-		nevents =
-		    epoll_wait(pq->epfd, events, NNI_MAX_EPOLL_EVENTS, -1);
-
-		nni_mtx_lock(&pq->mtx);
-
-		if (nevents <= 0) {
-			continue;
+		n = epoll_wait(pq->epfd, events, NNI_MAX_EPOLL_EVENTS, -1);
+		if ((n < 0) && (errno == EBADF)) {
+			// Epoll fd closed, bail.
+			return;
 		}
 
 		// dispatch events
-		for (i = 0; i < nevents; ++i) {
+		for (int i = 0; i < n; ++i) {
 			const struct epoll_event *ev;
-			nni_posix_pollq_node *    node;
 
 			ev = &events[i];
 			// If the waker pipe was signaled, read from it.
-			if ((ev->data.u64 == 0) && (ev->events & POLLIN)) {
-				int      rv;
+			if ((ev->data.ptr == NULL) && (ev->events & POLLIN)) {
 				uint64_t clear;
-				rv = read(pq->evfd, &clear, sizeof(clear));
-				NNI_ASSERT(rv == sizeof(clear));
-				continue;
-			}
+				(void) read(pq->evfd, &clear, sizeof(clear));
+				reap = true;
+			} else {
+				nni_posix_pfd *  pfd = ev->data.ptr;
+				nni_posix_pfd_cb cb;
+				void *           arg;
+				int              events;
 
-			if (nni_idhash_find(pq->nodes, ev->data.u64,
-			        (void **) &node) != 0) {
-				// node was removed while we were blocking
-				continue;
-			}
+				events = ev->events &
+				    (EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP);
 
-			node->revents = ev->events &
-			    (EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP);
+				nni_mtx_lock(&pfd->mtx);
+				pfd->events &= ~events;
+				cb  = pfd->cb;
+				arg = pfd->arg;
+				nni_mtx_unlock(&pfd->mtx);
 
-			// mark events as cleared
-			node->events &= ~node->revents;
-
-			// Save the active node; we can notice this way
-			// when it is busy, and avoid freeing it until
-			// we are sure that it is not in use.
-			pq->active = node;
-
-			// Execute the callback with lock released
-			nni_mtx_unlock(&pq->mtx);
-			node->cb(node->data);
-			nni_mtx_lock(&pq->mtx);
-
-			// We finished with this node.  If something
-			// was blocked waiting for that, wake it up.
-			pq->active = NULL;
-			if (pq->wait == node) {
-				pq->wait = NULL;
-				nni_cv_wake(&pq->cv);
+				// Execute the callback with lock released
+				if (cb != NULL) {
+					cb(pfd, events, arg);
+				}
 			}
 		}
-	}
 
-	nni_mtx_unlock(&pq->mtx);
+		if (reap) {
+			nni_posix_pollq_reap(pq);
+			nni_mtx_lock(&pq->mtx);
+			if (pq->close) {
+				nni_mtx_unlock(&pq->mtx);
+				return;
+			}
+			nni_mtx_unlock(&pq->mtx);
+		}
+	}
 }
 
 static void
 nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
-	if (pq->started) {
-		int      rv;
-		uint64_t wakeval = 1;
+	uint64_t one = 1;
 
-		nni_mtx_lock(&pq->mtx);
-		pq->close   = true;
-		pq->started = false;
-		rv          = write(pq->evfd, &wakeval, sizeof(wakeval));
-		NNI_ASSERT(rv == sizeof(wakeval));
-		nni_mtx_unlock(&pq->mtx);
-	}
+	nni_mtx_lock(&pq->mtx);
+	pq->close = true;
+	(void) write(pq->evfd, &one, sizeof(one));
+	nni_mtx_unlock(&pq->mtx);
+
 	nni_thr_fini(&pq->thr);
 
-	if (pq->evfd >= 0) {
-		close(pq->evfd);
-		pq->evfd = -1;
-	}
-
+	close(pq->evfd);
 	close(pq->epfd);
-	pq->epfd = -1;
-
-	if (pq->nodes != NULL) {
-		nni_idhash_fini(pq->nodes);
-	}
 
 	nni_mtx_fini(&pq->mtx);
 }
@@ -308,22 +318,25 @@ nni_posix_pollq_add_eventfd(nni_posix_pollq *pq)
 {
 	// add event fd so we can wake ourself on exit
 	struct epoll_event ev;
-	int                rv;
+	int                fd;
 
 	memset(&ev, 0, sizeof(ev));
 
-	pq->evfd = eventfd(0, EFD_NONBLOCK);
-	if (pq->evfd == -1) {
+	if ((fd = eventfd(0, EFD_NONBLOCK)) < 0) {
 		return (nni_plat_errno(errno));
 	}
+	(void) fcntl(fd, F_SETFD, FD_CLOEXEC);
+	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
 
+	// This is *NOT* one shot.  We want to wake EVERY single time.
 	ev.events   = EPOLLIN;
-	ev.data.u64 = 0;
+	ev.data.ptr = 0;
 
-	rv = epoll_ctl(pq->epfd, EPOLL_CTL_ADD, pq->evfd, &ev);
-	if (rv != 0) {
+	if (epoll_ctl(pq->epfd, EPOLL_CTL_ADD, fd, &ev) != 0) {
+		(void) close(fd);
 		return (nni_plat_errno(errno));
 	}
+	pq->evfd = fd;
 	return (0);
 }
 
@@ -332,38 +345,28 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 {
 	int rv;
 
-	if ((pq->epfd = epoll_create1(0)) < 0) {
+	if ((pq->epfd = epoll_create1(EPOLL_CLOEXEC)) < 0) {
 		return (nni_plat_errno(errno));
 	}
 
-	pq->evfd  = -1;
 	pq->close = false;
 
+	NNI_LIST_INIT(&pq->reapq, nni_posix_pfd, node);
 	nni_mtx_init(&pq->mtx);
-	nni_cv_init(&pq->cv, &pq->mtx);
 
-	if (((rv = nni_idhash_init(&pq->nodes)) != 0) ||
-	    ((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0) ||
-	    ((rv = nni_posix_pollq_add_eventfd(pq)) != 0)) {
-		nni_posix_pollq_destroy(pq);
+	if ((rv = nni_posix_pollq_add_eventfd(pq)) != 0) {
+		(void) close(pq->epfd);
+		nni_mtx_fini(&pq->mtx);
 		return (rv);
 	}
-
-	// Positive values only for node indices. (0 is reserved for eventfd).
-	nni_idhash_set_limits(pq->nodes, 1, 0x7FFFFFFFu, 1);
-	pq->started = true;
+	if ((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0) {
+		(void) close(pq->epfd);
+		(void) close(pq->evfd);
+		nni_mtx_fini(&pq->mtx);
+		return (rv);
+	}
 	nni_thr_run(&pq->thr);
 	return (0);
-}
-
-// single global instance for now
-static nni_posix_pollq nni_posix_global_pollq;
-
-nni_posix_pollq *
-nni_posix_pollq_get(int fd)
-{
-	NNI_ARG_UNUSED(fd);
-	return (&nni_posix_global_pollq);
 }
 
 int

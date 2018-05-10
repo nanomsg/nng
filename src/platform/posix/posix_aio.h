@@ -18,11 +18,12 @@
 // one of several possible different backends.
 
 #include "core/nng_impl.h"
+#include "posix_pollq.h"
 
 typedef struct nni_posix_pipedesc nni_posix_pipedesc;
 typedef struct nni_posix_epdesc   nni_posix_epdesc;
 
-extern int  nni_posix_pipedesc_init(nni_posix_pipedesc **, int);
+extern int  nni_posix_pipedesc_init(nni_posix_pipedesc **, nni_posix_pfd *);
 extern void nni_posix_pipedesc_fini(nni_posix_pipedesc *);
 extern void nni_posix_pipedesc_recv(nni_posix_pipedesc *, nni_aio *);
 extern void nni_posix_pipedesc_send(nni_posix_pipedesc *, nni_aio *);
