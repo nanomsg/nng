@@ -107,6 +107,10 @@ nni_pipe_destroy(nni_pipe *p)
 	// Stop any pending negotiation.
 	nni_aio_stop(p->p_start_aio);
 
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_stop(p->p_proto_data);
+	}
+
 	// We have exclusive access at this point, so we can check if
 	// we are still on any lists.
 	if (nni_list_node_active(&p->p_ep_node)) {
@@ -203,15 +207,16 @@ nni_pipe_close(nni_pipe *p)
 		return;
 	}
 	p->p_closed = true;
+	nni_mtx_unlock(&p->p_mtx);
 
-	p->p_proto_ops.pipe_stop(p->p_proto_data);
+	if (p->p_proto_data != NULL) {
+		p->p_proto_ops.pipe_close(p->p_proto_data);
+	}
 
 	// Close the underlying transport.
 	if (p->p_tran_data != NULL) {
 		p->p_tran_ops.p_close(p->p_tran_data);
 	}
-
-	nni_mtx_unlock(&p->p_mtx);
 }
 
 bool
@@ -309,9 +314,16 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 
 	if ((rv != 0) ||
 	    ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0) ||
-	    ((rv = nni_ep_pipe_add(ep, p)) != 0) ||
-	    ((rv = nni_sock_pipe_add(sock, p)) != 0)) {
+	    ((rv = nni_ep_pipe_add(ep, p)) != 0)) {
 		nni_pipe_destroy(p);
+		return (rv);
+	}
+
+	// At this point the endpoint knows about it, and the protocol
+	// might too, so on failure we have to tear it down fully as if done
+	// after a successful result.
+	if ((rv = nni_sock_pipe_add(sock, p)) != 0) {
+		nni_pipe_stop(p);
 	}
 	return (rv);
 }

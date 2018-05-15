@@ -68,12 +68,18 @@ pull0_sock_fini(void *arg)
 }
 
 static void
-pull0_pipe_fini(void *arg)
+pull0_pipe_stop(void *arg)
 {
 	pull0_pipe *p = arg;
 
 	nni_aio_stop(p->putq_aio);
 	nni_aio_stop(p->recv_aio);
+}
+
+static void
+pull0_pipe_fini(void *arg)
+{
+	pull0_pipe *p = arg;
 
 	nni_aio_fini(p->putq_aio);
 	nni_aio_fini(p->recv_aio);
@@ -113,7 +119,7 @@ pull0_pipe_start(void *arg)
 }
 
 static void
-pull0_pipe_stop(void *arg)
+pull0_pipe_close(void *arg)
 {
 	pull0_pipe *p = arg;
 
@@ -201,6 +207,7 @@ static nni_proto_pipe_ops pull0_pipe_ops = {
 	.pipe_init  = pull0_pipe_init,
 	.pipe_fini  = pull0_pipe_fini,
 	.pipe_start = pull0_pipe_start,
+	.pipe_close = pull0_pipe_close,
 	.pipe_stop  = pull0_pipe_stop,
 };
 

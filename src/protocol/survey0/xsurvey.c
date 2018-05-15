@@ -107,7 +107,7 @@ xsurv0_sock_close(void *arg)
 }
 
 static void
-xsurv0_pipe_fini(void *arg)
+xsurv0_pipe_stop(void *arg)
 {
 	xsurv0_pipe *p = arg;
 
@@ -115,6 +115,12 @@ xsurv0_pipe_fini(void *arg)
 	nni_aio_stop(p->aio_send);
 	nni_aio_stop(p->aio_recv);
 	nni_aio_stop(p->aio_putq);
+}
+
+static void
+xsurv0_pipe_fini(void *arg)
+{
+	xsurv0_pipe *p = arg;
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
@@ -170,7 +176,7 @@ xsurv0_pipe_start(void *arg)
 }
 
 static void
-xsurv0_pipe_stop(void *arg)
+xsurv0_pipe_close(void *arg)
 {
 	xsurv0_pipe *p = arg;
 	xsurv0_sock *s = p->psock;
@@ -342,6 +348,7 @@ static nni_proto_pipe_ops xsurv0_pipe_ops = {
 	.pipe_init  = xsurv0_pipe_init,
 	.pipe_fini  = xsurv0_pipe_fini,
 	.pipe_start = xsurv0_pipe_start,
+	.pipe_close = xsurv0_pipe_close,
 	.pipe_stop  = xsurv0_pipe_stop,
 };
 

@@ -90,7 +90,7 @@ xreq0_sock_fini(void *arg)
 }
 
 static void
-xreq0_pipe_fini(void *arg)
+xreq0_pipe_stop(void *arg)
 {
 	xreq0_pipe *p = arg;
 
@@ -98,6 +98,12 @@ xreq0_pipe_fini(void *arg)
 	nni_aio_stop(p->aio_putq);
 	nni_aio_stop(p->aio_recv);
 	nni_aio_stop(p->aio_send);
+}
+
+static void
+xreq0_pipe_fini(void *arg)
+{
+	xreq0_pipe *p = arg;
 
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_putq);
@@ -145,7 +151,7 @@ xreq0_pipe_start(void *arg)
 }
 
 static void
-xreq0_pipe_stop(void *arg)
+xreq0_pipe_close(void *arg)
 {
 	xreq0_pipe *p = arg;
 
@@ -279,6 +285,7 @@ static nni_proto_pipe_ops xreq0_pipe_ops = {
 	.pipe_init  = xreq0_pipe_init,
 	.pipe_fini  = xreq0_pipe_fini,
 	.pipe_start = xreq0_pipe_start,
+	.pipe_close = xreq0_pipe_close,
 	.pipe_stop  = xreq0_pipe_stop,
 };
 

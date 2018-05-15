@@ -78,7 +78,7 @@ pair0_sock_fini(void *arg)
 }
 
 static void
-pair0_pipe_fini(void *arg)
+pair0_pipe_stop(void *arg)
 {
 	pair0_pipe *p = arg;
 
@@ -86,6 +86,12 @@ pair0_pipe_fini(void *arg)
 	nni_aio_stop(p->aio_recv);
 	nni_aio_stop(p->aio_putq);
 	nni_aio_stop(p->aio_getq);
+}
+
+static void
+pair0_pipe_fini(void *arg)
+{
+	pair0_pipe *p = arg;
 
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -140,7 +146,7 @@ pair0_pipe_start(void *arg)
 }
 
 static void
-pair0_pipe_stop(void *arg)
+pair0_pipe_close(void *arg)
 {
 	pair0_pipe *p = arg;
 	pair0_sock *s = p->psock;
@@ -254,6 +260,7 @@ static nni_proto_pipe_ops pair0_pipe_ops = {
 	.pipe_init  = pair0_pipe_init,
 	.pipe_fini  = pair0_pipe_fini,
 	.pipe_start = pair0_pipe_start,
+	.pipe_close = pair0_pipe_close,
 	.pipe_stop  = pair0_pipe_stop,
 };
 

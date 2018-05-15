@@ -297,11 +297,18 @@ rep0_sock_close(void *arg)
 }
 
 static void
+rep0_pipe_stop(void *arg)
+{
+	rep0_pipe *p = arg;
+
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+}
+
+static void
 rep0_pipe_fini(void *arg)
 {
 	rep0_pipe *p = arg;
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
 
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -349,7 +356,7 @@ rep0_pipe_start(void *arg)
 }
 
 static void
-rep0_pipe_stop(void *arg)
+rep0_pipe_close(void *arg)
 {
 	rep0_pipe *p = arg;
 	rep0_sock *s = p->rep;
@@ -649,6 +656,7 @@ static nni_proto_pipe_ops rep0_pipe_ops = {
 	.pipe_init  = rep0_pipe_init,
 	.pipe_fini  = rep0_pipe_fini,
 	.pipe_start = rep0_pipe_start,
+	.pipe_close = rep0_pipe_close,
 	.pipe_stop  = rep0_pipe_stop,
 };
 
