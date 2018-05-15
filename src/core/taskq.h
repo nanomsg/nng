@@ -23,15 +23,29 @@ extern void nni_taskq_fini(nni_taskq *);
 // nni_task_dispatch sends the task to the queue.  It is guaranteed to
 // succeed.  (If the queue is shutdown, then the behavior is undefined.)
 extern void nni_task_dispatch(nni_task *);
+
+// nni_task_exec runs the task synchronously, if possible.  (Under certain
+// circumstances the task must be run asynchronously.)  The caller is
+// responsible for ensuring that it does not hold any resources which might
+// be acquired by the task itself; otherwise deadlock may occur.  (When in
+// doubt, use nni_task_dispatch instead.)
 extern void nni_task_exec(nni_task *);
+
+// nni_task_prep and nni_task_unprep are used by and exclusively for the aio
+// framework.  nni_task_prep marks the task as "scheduled" without actually
+// dispatching anything to it yet; nni_task_wait will block waiting for the
+// task to complete normally (after a call to nni_task_dispatch or
+// nni_task_exec), or for nni_task_unprep to be called.
 extern void nni_task_prep(nni_task *);
 extern void nni_task_unprep(nni_task *);
 
-// nni_task_cancel cancels the task.  It will wait for the task to complete
-// if it is already running.
-extern int  nni_task_cancel(nni_task *);
 extern void nni_task_wait(nni_task *);
 extern int  nni_task_init(nni_task **, nni_taskq *, nni_cb, void *);
+
+// nni_task_fini destroys the task.  It will reap resources asynchronously
+// if the task is currently executing.  Use nni_task_wait() first if the
+// callback must be stopped entirely before destroying the task (such as if
+// it reschedules the task.)
 extern void nni_task_fini(nni_task *);
 
 extern int  nni_taskq_sys_init(void);

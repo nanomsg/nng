@@ -285,7 +285,7 @@ nni_task_fini(nni_task *task)
 {
 	NNI_ASSERT(!nni_list_node_active(&task->task_node));
 	nni_mtx_lock(&task->task_mtx);
-	if (task->task_run || task->task_exec) {
+	if ((task->task_run || task->task_exec) && (!task->task_done)) {
 		// destroy later.
 		task->task_fini = true;
 		nni_mtx_unlock(&task->task_mtx);
