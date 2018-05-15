@@ -23,10 +23,10 @@ struct nni_ep {
 	nni_sock *      ep_sock;
 	nni_url *       ep_url;
 	int             ep_mode;
-	int             ep_started;
-	int             ep_closed;  // full shutdown
-	int             ep_closing; // close pending (waiting on refcnt)
 	int             ep_refcnt;
+	bool            ep_started;
+	bool            ep_closed;  // full shutdown
+	bool            ep_closing; // close pending (waiting on refcnt)
 	bool            ep_tmo_run;
 	nni_mtx         ep_mtx;
 	nni_cv          ep_cv;
@@ -138,8 +138,9 @@ nni_ep_create(nni_ep **epp, nni_sock *s, const char *urlstr, int mode)
 		return (NNG_ENOMEM);
 	}
 	ep->ep_url     = url;
-	ep->ep_closed  = 0;
-	ep->ep_started = 0;
+	ep->ep_closed  = false;
+	ep->ep_closing = false;
+	ep->ep_started = false;
 	ep->ep_data    = NULL;
 	ep->ep_refcnt  = 1;
 	ep->ep_sock    = s;
@@ -237,15 +238,12 @@ nni_ep_rele(nni_ep *ep)
 int
 nni_ep_shutdown(nni_ep *ep)
 {
-	// This is done under the endpoints lock, although the remove
-	// is done under that as well, we also make sure that we hold
-	// the socket lock in the remove step.
 	nni_mtx_lock(&ep->ep_mtx);
 	if (ep->ep_closing) {
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (NNG_ECLOSED);
 	}
-	ep->ep_closing = 1;
+	ep->ep_closing = true;
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	// Abort any remaining in-flight operations.
@@ -271,15 +269,15 @@ nni_ep_close(nni_ep *ep)
 		nni_ep_rele(ep);
 		return;
 	}
-	ep->ep_closed = 1;
+	ep->ep_closed = true;
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	nni_ep_shutdown(ep);
 
-	nni_aio_close(ep->ep_acc_aio);
-	nni_aio_close(ep->ep_con_aio);
-	nni_aio_close(ep->ep_con_syn);
-	nni_aio_close(ep->ep_tmo_aio);
+	nni_aio_stop(ep->ep_acc_aio);
+	nni_aio_stop(ep->ep_con_aio);
+	nni_aio_stop(ep->ep_con_syn);
+	nni_aio_stop(ep->ep_tmo_aio);
 
 	nni_mtx_lock(&ep->ep_mtx);
 	NNI_LIST_FOREACH (&ep->ep_pipes, p) {
@@ -435,7 +433,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 	}
 
 	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
-		ep->ep_started = 1;
+		ep->ep_started = true;
 		nni_ep_con_start(ep);
 		nni_mtx_unlock(&ep->ep_mtx);
 		return (0);
@@ -444,7 +442,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 	// Synchronous mode: so we have to wait for it to complete.
 	aio = ep->ep_con_syn;
 	ep->ep_ops.ep_connect(ep->ep_data, aio);
-	ep->ep_started = 1;
+	ep->ep_started = true;
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	nni_aio_wait(aio);
@@ -453,7 +451,7 @@ nni_ep_dial(nni_ep *ep, int flags)
 	if (((rv = nni_aio_result(aio)) != 0) ||
 	    ((rv = nni_pipe_create(ep, nni_aio_get_output(aio, 0))) != 0)) {
 		nni_mtx_lock(&ep->ep_mtx);
-		ep->ep_started = 0;
+		ep->ep_started = false;
 		nni_mtx_unlock(&ep->ep_mtx);
 	}
 	return (rv);
@@ -538,7 +536,7 @@ nni_ep_listen(nni_ep *ep, int flags)
 		return (rv);
 	}
 
-	ep->ep_started = 1;
+	ep->ep_started = true;
 	nni_ep_acc_start(ep);
 	nni_mtx_unlock(&ep->ep_mtx);
 

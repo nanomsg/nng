@@ -99,13 +99,19 @@ nni_tls_pipe_close(void *arg)
 }
 
 static void
-nni_tls_pipe_fini(void *arg)
+nni_tls_pipe_stop(void *arg)
 {
 	nni_tls_pipe *p = arg;
 
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
 	nni_aio_stop(p->negaio);
+}
+
+static void
+nni_tls_pipe_fini(void *arg)
+{
+	nni_tls_pipe *p = arg;
 
 	nni_aio_fini(p->rxaio);
 	nni_aio_fini(p->txaio);
@@ -1043,6 +1049,7 @@ static nni_tran_pipe_option nni_tls_pipe_options[] = {
 static nni_tran_pipe_ops nni_tls_pipe_ops = {
 	.p_fini    = nni_tls_pipe_fini,
 	.p_start   = nni_tls_pipe_start,
+	.p_stop    = nni_tls_pipe_stop,
 	.p_send    = nni_tls_pipe_send,
 	.p_recv    = nni_tls_pipe_recv,
 	.p_close   = nni_tls_pipe_close,

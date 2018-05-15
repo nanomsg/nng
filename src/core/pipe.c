@@ -110,6 +110,9 @@ nni_pipe_destroy(nni_pipe *p)
 	if (p->p_proto_data != NULL) {
 		p->p_proto_ops.pipe_stop(p->p_proto_data);
 	}
+	if ((p->p_tran_data != NULL) && (p->p_tran_ops.p_stop != NULL)) {
+		p->p_tran_ops.p_stop(p->p_tran_data);
+	}
 
 	// We have exclusive access at this point, so we can check if
 	// we are still on any lists.

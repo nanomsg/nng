@@ -170,6 +170,7 @@ nni_task_dispatch(nni_task *task)
 	nni_mtx_lock(&task->task_mtx);
 	task->task_sched = true;
 	task->task_run   = false;
+	task->task_exec  = false;
 	task->task_done  = false;
 	nni_mtx_unlock(&task->task_mtx);
 
@@ -201,6 +202,7 @@ nni_task_exec(nni_task *task)
 	task->task_exec  = true;
 	task->task_sched = false;
 	task->task_done  = false;
+	task->task_run   = false;
 	nni_mtx_unlock(&task->task_mtx);
 
 	task->task_cb(task->task_arg);

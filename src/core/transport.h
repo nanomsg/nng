@@ -102,8 +102,12 @@ struct nni_tran_ep_ops {
 	void (*ep_accept)(void *, nni_aio *);
 
 	// ep_close stops the endpoint from operating altogether.  It does
-	// not affect pipes that have already been created.
+	// not affect pipes that have already been created.  It is nonblocking.
 	void (*ep_close)(void *);
+
+	// ep_stop stops the endpoint, and *waits* for any outstanding
+	// aio operations to complete.
+	void (*ep_stop)(void *);
 
 	// ep_options is an array of endpoint options.  The final element must
 	// have a NULL name. If this member is NULL, then no transport specific
@@ -141,6 +145,11 @@ struct nni_tran_pipe_ops {
 	// will not be access by the "socket" until the pipe has indicated
 	// its readiness by finishing the aio.
 	void (*p_start)(void *, nni_aio *);
+
+	// p_stop stops the pipe, waiting for any callbacks that are
+	// outstanding to complete.  This is done before tearing down
+	// resources with p_fini.
+	void (*p_stop)(void *);
 
 	// p_aio_send queues the message for transmit.  If this fails, then
 	// the caller may try again with the same message (or free it).  If

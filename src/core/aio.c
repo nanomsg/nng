@@ -387,7 +387,8 @@ nni_aio_abort(nni_aio *aio, int rv)
 	nni_aio_cancelfn cancelfn;
 
 	nni_mtx_lock(&nni_aio_lk);
-	cancelfn = aio->a_prov_cancel;
+	cancelfn           = aio->a_prov_cancel;
+	aio->a_prov_cancel = NULL;
 	nni_mtx_unlock(&nni_aio_lk);
 
 	// Stop any I/O at the provider level.

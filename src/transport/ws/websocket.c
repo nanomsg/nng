@@ -183,12 +183,18 @@ ws_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-ws_pipe_fini(void *arg)
+ws_pipe_stop(void *arg)
 {
 	ws_pipe *p = arg;
 
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
+}
+
+static void
+ws_pipe_fini(void *arg)
+{
+	ws_pipe *p = arg;
 
 	nni_aio_fini(p->rxaio);
 	nni_aio_fini(p->txaio);
@@ -593,6 +599,7 @@ static nni_tran_pipe_option ws_pipe_options[] = {
 
 static nni_tran_pipe_ops ws_pipe_ops = {
 	.p_fini    = ws_pipe_fini,
+	.p_stop    = ws_pipe_stop,
 	.p_send    = ws_pipe_send,
 	.p_recv    = ws_pipe_recv,
 	.p_close   = ws_pipe_close,

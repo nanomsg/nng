@@ -89,13 +89,19 @@ nni_ipc_pipe_close(void *arg)
 }
 
 static void
-nni_ipc_pipe_fini(void *arg)
+nni_ipc_pipe_stop(void *arg)
 {
 	nni_ipc_pipe *pipe = arg;
 
 	nni_aio_stop(pipe->rxaio);
 	nni_aio_stop(pipe->txaio);
 	nni_aio_stop(pipe->negaio);
+}
+
+static void
+nni_ipc_pipe_fini(void *arg)
+{
+	nni_ipc_pipe *pipe = arg;
 
 	nni_aio_fini(pipe->rxaio);
 	nni_aio_fini(pipe->txaio);
@@ -890,6 +896,7 @@ static nni_tran_pipe_option nni_ipc_pipe_options[] = {
 static nni_tran_pipe_ops nni_ipc_pipe_ops = {
 	.p_fini    = nni_ipc_pipe_fini,
 	.p_start   = nni_ipc_pipe_start,
+	.p_stop    = nni_ipc_pipe_stop,
 	.p_send    = nni_ipc_pipe_send,
 	.p_recv    = nni_ipc_pipe_recv,
 	.p_close   = nni_ipc_pipe_close,
