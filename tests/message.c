@@ -18,7 +18,6 @@ TestMain("Message Tests", {
 	nng_msg *msg;
 
 	Convey("Given an empty message", {
-
 		So(nng_msg_alloc(&msg, 0) == 0);
 
 		Reset({ nng_msg_free(msg); });
@@ -217,7 +216,6 @@ TestMain("Message Tests", {
 				So(nng_msg_trim_u32(msg, &v) == NNG_EINVAL);
 				So(nng_msg_trim_u32(msg, &v) == NNG_EINVAL);
 			});
-
 		});
 
 		Convey("Uint32 header operations work", {
@@ -249,8 +247,6 @@ TestMain("Message Tests", {
 				So(nng_msg_header_trim_u32(msg, &v) ==
 				    NNG_EINVAL);
 			});
-
 		});
-
 	});
 })
