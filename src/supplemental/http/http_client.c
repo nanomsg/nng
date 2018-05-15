@@ -246,7 +246,7 @@ nni_http_client_connect(nni_http_client *c, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
-	if ((rv = nni_aio_schedule(aio, http_connect_cancel, aio)) != 0) {
+	if ((rv = nni_aio_schedule(aio, http_connect_cancel, c)) != 0) {
 		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
