@@ -23,10 +23,10 @@ struct nni_tran {
 	const char *tran_scheme;
 
 	// tran_ep links our endpoint-specific operations.
-	const nni_tran_ep *tran_ep;
+	const nni_tran_ep_ops *tran_ep;
 
 	// tran_pipe links our pipe-specific operations.
-	const nni_tran_pipe *tran_pipe;
+	const nni_tran_pipe_ops *tran_pipe;
 
 	// tran_init, if not NULL, is called once during library
 	// initialization.
@@ -77,7 +77,7 @@ struct nni_tran_ep_option {
 // For a given endpoint, the framework holds a lock so that each entry
 // point is run exclusively of the others. (Transports must still guard
 // against any asynchronous operations they manage themselves, though.)
-struct nni_tran_ep {
+struct nni_tran_ep_ops {
 	// ep_init creates a vanilla endpoint. The value created is
 	// used for the first argument for all other endpoint functions.
 	int (*ep_init)(void **, nni_url *, nni_sock *, int);
@@ -128,7 +128,7 @@ struct nni_tran_pipe_option {
 // with socket locks held, so it is forbidden for the transport to call
 // back into the socket at this point.  (Which is one reason pointers back
 // to socket or even enclosing pipe state, are not provided.)
-struct nni_tran_pipe {
+struct nni_tran_pipe_ops {
 	// p_fini destroys the pipe.  This should clean up all local
 	// resources, including closing files and freeing memory, used by
 	// the pipe.  After this call returns, the system will not make

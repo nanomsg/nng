@@ -2182,7 +2182,7 @@ zt_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	ep->ze_ping_time  = zt_ping_time;
 	ep->ze_conn_time  = zt_conn_time;
 	ep->ze_conn_tries = zt_conn_tries;
-	ep->ze_proto      = nni_sock_proto(sock);
+	ep->ze_proto      = nni_sock_proto_id(sock);
 
 	nni_aio_list_init(&ep->ze_aios);
 
@@ -2888,7 +2888,7 @@ static nni_tran_pipe_option zt_pipe_options[] = {
 	},
 };
 
-static nni_tran_pipe zt_pipe_ops = {
+static nni_tran_pipe_ops zt_pipe_ops = {
 	.p_fini    = zt_pipe_fini,
 	.p_start   = zt_pipe_start,
 	.p_send    = zt_pipe_send,
@@ -2983,7 +2983,7 @@ static nni_tran_ep_option zt_ep_options[] = {
 	},
 };
 
-static nni_tran_ep zt_ep_ops = {
+static nni_tran_ep_ops zt_ep_ops = {
 	.ep_init    = zt_ep_init,
 	.ep_fini    = zt_ep_fini,
 	.ep_connect = zt_ep_connect,

@@ -65,7 +65,6 @@ extern int nni_pipe_getopt(nni_pipe *, const char *, void *, size_t *, int);
 // nni_pipe_get_proto_data gets the protocol private data set with the
 // nni_pipe_set_proto_data function.  No locking is performed.
 extern void *nni_pipe_get_proto_data(nni_pipe *);
-extern void  nni_pipe_set_proto_data(nni_pipe *, void *);
 
 // nni_pipe_sock_list_init initializes a list of pipes, to be used by
 // a per-socket list.
