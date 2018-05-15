@@ -94,12 +94,12 @@ nni_ep_destroy(nni_ep *ep)
 		nni_idhash_remove(nni_eps, ep->ep_id);
 	}
 
-	nni_sock_ep_remove(ep->ep_sock, ep);
-
 	nni_aio_stop(ep->ep_acc_aio);
 	nni_aio_stop(ep->ep_con_aio);
 	nni_aio_stop(ep->ep_con_syn);
 	nni_aio_stop(ep->ep_tmo_aio);
+
+	nni_sock_ep_remove(ep->ep_sock, ep);
 
 	nni_aio_fini(ep->ep_acc_aio);
 	nni_aio_fini(ep->ep_con_aio);
@@ -247,10 +247,10 @@ nni_ep_shutdown(nni_ep *ep)
 	nni_mtx_unlock(&ep->ep_mtx);
 
 	// Abort any remaining in-flight operations.
-	nni_aio_close(ep->ep_acc_aio);
-	nni_aio_close(ep->ep_con_aio);
-	nni_aio_close(ep->ep_con_syn);
-	nni_aio_close(ep->ep_tmo_aio);
+	nni_aio_stop(ep->ep_acc_aio);
+	nni_aio_stop(ep->ep_con_aio);
+	nni_aio_stop(ep->ep_con_syn);
+	nni_aio_stop(ep->ep_tmo_aio);
 
 	// Stop the underlying transport.
 	ep->ep_ops.ep_close(ep->ep_data);
