@@ -300,6 +300,8 @@ static void
 rep0_pipe_fini(void *arg)
 {
 	rep0_pipe *p = arg;
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
 
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -353,8 +355,8 @@ rep0_pipe_stop(void *arg)
 	rep0_sock *s = p->rep;
 	rep0_ctx * ctx;
 
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_recv);
 
 	nni_mtx_lock(&s->lk);
 	if (nni_list_active(&s->recvpipes, p)) {

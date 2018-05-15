@@ -72,6 +72,9 @@ pull0_pipe_fini(void *arg)
 {
 	pull0_pipe *p = arg;
 
+	nni_aio_stop(p->putq_aio);
+	nni_aio_stop(p->recv_aio);
+
 	nni_aio_fini(p->putq_aio);
 	nni_aio_fini(p->recv_aio);
 	NNI_FREE_STRUCT(p);
@@ -114,8 +117,8 @@ pull0_pipe_stop(void *arg)
 {
 	pull0_pipe *p = arg;
 
-	nni_aio_stop(p->putq_aio);
-	nni_aio_stop(p->recv_aio);
+	nni_aio_close(p->putq_aio);
+	nni_aio_close(p->recv_aio);
 }
 
 static void

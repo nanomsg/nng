@@ -42,6 +42,12 @@ extern void nni_aio_fini(nni_aio *);
 // use nni_aio_cancel instead.)
 extern void nni_aio_stop(nni_aio *);
 
+// nni_aio_close closes the aio for further activity. It aborts any in-progress
+// transaction (if it can), and future calls nni_aio_begin or nni_aio_schedule
+// with both result in NNG_ECLOSED. The expectation is that protocols call this
+// for all their aios in a stop routine, before calling fini on any of them.
+extern void nni_aio_close(nni_aio *);
+
 // nni_aio_set_data sets user data.  This should only be done by the
 // consumer, initiating the I/O.  The intention is to be able to store
 // additional data for use when the operation callback is executed.

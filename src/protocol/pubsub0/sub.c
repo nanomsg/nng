@@ -102,6 +102,8 @@ static void
 sub0_pipe_fini(void *arg)
 {
 	sub0_pipe *p = arg;
+	nni_aio_stop(p->aio_putq);
+	nni_aio_stop(p->aio_recv);
 
 	nni_aio_fini(p->aio_putq);
 	nni_aio_fini(p->aio_recv);
@@ -143,8 +145,8 @@ sub0_pipe_stop(void *arg)
 {
 	sub0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_putq);
-	nni_aio_stop(p->aio_recv);
+	nni_aio_close(p->aio_putq);
+	nni_aio_close(p->aio_recv);
 }
 
 static void

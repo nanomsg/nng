@@ -94,6 +94,11 @@ xreq0_pipe_fini(void *arg)
 {
 	xreq0_pipe *p = arg;
 
+	nni_aio_stop(p->aio_getq);
+	nni_aio_stop(p->aio_putq);
+	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(p->aio_send);
+
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_putq);
 	nni_aio_fini(p->aio_recv);
@@ -144,13 +149,10 @@ xreq0_pipe_stop(void *arg)
 {
 	xreq0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_putq);
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_send);
-
-	// At this point there should not be any further AIOs running.
-	// Further, any completion tasks have completed.
+	nni_aio_close(p->aio_getq);
+	nni_aio_close(p->aio_putq);
+	nni_aio_close(p->aio_recv);
+	nni_aio_close(p->aio_send);
 }
 
 // For raw mode we can just let the pipes "contend" via getq to get a

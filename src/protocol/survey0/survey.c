@@ -288,6 +288,10 @@ surv0_pipe_fini(void *arg)
 {
 	surv0_pipe *p = arg;
 
+	nni_aio_stop(p->aio_getq);
+	nni_aio_stop(p->aio_send);
+	nni_aio_stop(p->aio_recv);
+
 	nni_aio_fini(p->aio_getq);
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -343,9 +347,9 @@ surv0_pipe_stop(void *arg)
 	surv0_pipe *p = arg;
 	surv0_sock *s = p->sock;
 
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
+	nni_aio_close(p->aio_getq);
+	nni_aio_close(p->aio_send);
+	nni_aio_close(p->aio_recv);
 
 	nni_msgq_close(p->sendq);
 

@@ -91,6 +91,10 @@ nni_tls_pipe_close(void *arg)
 {
 	nni_tls_pipe *p = arg;
 
+	nni_aio_close(p->rxaio);
+	nni_aio_close(p->txaio);
+	nni_aio_close(p->negaio);
+
 	nni_tls_close(p->tls);
 }
 
@@ -699,11 +703,11 @@ nni_tls_ep_close(void *arg)
 {
 	nni_tls_ep *ep = arg;
 
+	nni_aio_close(ep->aio);
+
 	nni_mtx_lock(&ep->mtx);
 	nni_plat_tcp_ep_close(ep->tep);
 	nni_mtx_unlock(&ep->mtx);
-
-	nni_aio_stop(ep->aio);
 }
 
 static int

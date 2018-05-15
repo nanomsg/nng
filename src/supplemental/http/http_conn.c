@@ -110,22 +110,26 @@ http_close(nni_http_conn *conn)
 	}
 
 	conn->closed = true;
-	if (nni_list_first(&conn->wrq)) {
-		nni_aio_abort(conn->wr_aio, NNG_ECLOSED);
-		// Abort all operations except the one in flight.
-		while ((aio = nni_list_last(&conn->wrq)) !=
-		    nni_list_first(&conn->wrq)) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_ECLOSED);
-		}
+	nni_aio_close(conn->wr_aio);
+	nni_aio_close(conn->rd_aio);
+
+	if ((aio = conn->rd_uaio) != NULL) {
+		conn->rd_uaio = NULL;
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
-	if (nni_list_first(&conn->rdq)) {
-		nni_aio_abort(conn->rd_aio, NNG_ECLOSED);
-		while ((aio = nni_list_last(&conn->rdq)) !=
-		    nni_list_first(&conn->rdq)) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_ECLOSED);
-		}
+	if ((aio = conn->wr_uaio) != NULL) {
+		conn->wr_uaio = NULL;
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+	}
+
+	// Abort all operations except the one in flight.
+	while ((aio = nni_list_first(&conn->wrq)) != NULL) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+	}
+	while ((aio = nni_list_first(&conn->rdq)) != NULL) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
 
 	if (conn->sock != NULL) {
@@ -668,6 +672,9 @@ nni_http_tls_verified(nni_http_conn *conn)
 void
 nni_http_conn_fini(nni_http_conn *conn)
 {
+	nni_aio_stop(conn->wr_aio);
+	nni_aio_stop(conn->rd_aio);
+
 	nni_mtx_lock(&conn->mtx);
 	http_close(conn);
 	if ((conn->sock != NULL) && (conn->fini != NULL)) {
@@ -675,8 +682,7 @@ nni_http_conn_fini(nni_http_conn *conn)
 		conn->sock = NULL;
 	}
 	nni_mtx_unlock(&conn->mtx);
-	nni_aio_stop(conn->wr_aio);
-	nni_aio_stop(conn->rd_aio);
+
 	nni_aio_fini(conn->wr_aio);
 	nni_aio_fini(conn->rd_aio);
 	nni_free(conn->rd_buf, conn->rd_bufsz);

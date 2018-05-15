@@ -81,6 +81,10 @@ nni_ipc_pipe_close(void *arg)
 {
 	nni_ipc_pipe *pipe = arg;
 
+	nni_aio_close(pipe->rxaio);
+	nni_aio_close(pipe->txaio);
+	nni_aio_close(pipe->negaio);
+
 	nni_plat_ipc_pipe_close(pipe->ipp);
 }
 
@@ -655,11 +659,11 @@ nni_ipc_ep_close(void *arg)
 {
 	nni_ipc_ep *ep = arg;
 
+	nni_aio_close(ep->aio);
+
 	nni_mtx_lock(&ep->mtx);
 	nni_plat_ipc_ep_close(ep->iep);
 	nni_mtx_unlock(&ep->mtx);
-
-	nni_aio_stop(ep->aio);
 }
 
 static int

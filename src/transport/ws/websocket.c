@@ -205,6 +205,9 @@ ws_pipe_close(void *arg)
 {
 	ws_pipe *p = arg;
 
+	nni_aio_close(p->rxaio);
+	nni_aio_close(p->txaio);
+
 	nni_mtx_lock(&p->mtx);
 	nni_ws_close(p->ws);
 	nni_mtx_unlock(&p->mtx);
@@ -689,6 +692,9 @@ static void
 ws_ep_close(void *arg)
 {
 	ws_ep *ep = arg;
+
+	nni_aio_close(ep->accaio);
+	nni_aio_close(ep->connaio);
 
 	if (ep->mode == NNI_EP_MODE_LISTEN) {
 		nni_ws_listener_close(ep->listener);
