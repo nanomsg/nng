@@ -229,12 +229,6 @@ http_sconn_reap(void *arg)
 }
 
 static void
-http_sconn_fini(http_sconn *sc)
-{
-	nni_reap(&sc->reap, http_sconn_reap, sc);
-}
-
-static void
 http_sconn_close_locked(http_sconn *sc)
 {
 	nni_http_conn *conn;
@@ -245,15 +239,15 @@ http_sconn_close_locked(http_sconn *sc)
 	NNI_ASSERT(!sc->finished);
 
 	sc->closed = true;
-	nni_aio_abort(sc->rxaio, NNG_ECLOSED);
-	nni_aio_abort(sc->txaio, NNG_ECLOSED);
-	nni_aio_abort(sc->txdataio, NNG_ECLOSED);
-	nni_aio_abort(sc->cbaio, NNG_ECLOSED);
+	nni_aio_close(sc->rxaio);
+	nni_aio_close(sc->txaio);
+	nni_aio_close(sc->txdataio);
+	nni_aio_close(sc->cbaio);
 
 	if ((conn = sc->conn) != NULL) {
 		nni_http_conn_close(conn);
 	}
-	http_sconn_fini(sc);
+	nni_reap(&sc->reap, http_sconn_reap, sc);
 }
 
 static void

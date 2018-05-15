@@ -63,10 +63,10 @@ struct nng_aio {
 	nni_duration a_timeout; // Relative timeout
 
 	// These fields are private to the aio framework.
-	bool      a_stop;     // shutting down (no new operations)
-	bool      a_sleep;    // sleeping with no action
-	int       a_sleeprv;  // result when sleep wakes
-	int       a_cancelrv; // if canceled between begin and schedule
+	bool      a_stop;    // shutting down (no new operations)
+	bool      a_closed;  // close called, but not fini (yet)
+	bool      a_sleep;   // sleeping with no action
+	int       a_sleeprv; // result when sleep wakes
 	nni_task *a_task;
 
 	// Read/write operations.
@@ -205,6 +205,24 @@ nni_aio_stop(nni_aio *aio)
 }
 
 void
+nni_aio_close(nni_aio *aio)
+{
+	if (aio != NULL) {
+		nni_aio_cancelfn cancelfn;
+
+		nni_mtx_lock(&nni_aio_lk);
+		cancelfn           = aio->a_prov_cancel;
+		aio->a_prov_cancel = NULL;
+		aio->a_closed      = true;
+		nni_mtx_unlock(&nni_aio_lk);
+
+		if (cancelfn != NULL) {
+			cancelfn(aio, NNG_ECLOSED);
+		}
+	}
+}
+
+void
 nni_aio_set_timeout(nni_aio *aio, nni_duration when)
 {
 	aio->a_timeout = when;
@@ -306,11 +324,18 @@ nni_aio_begin(nni_aio *aio)
 	aio->a_count       = 0;
 	aio->a_prov_cancel = NULL;
 	aio->a_prov_data   = NULL;
-	aio->a_cancelrv    = 0;
 	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
 		aio->a_outputs[i] = NULL;
 	}
 	nni_task_prep(aio->a_task);
+	if (aio->a_closed) {
+		aio->a_result = NNG_ECLOSED;
+		aio->a_expire = NNI_TIME_NEVER;
+		aio->a_sleep  = false;
+		nni_mtx_unlock(&nni_aio_lk);
+		nni_task_dispatch(aio->a_task);
+		return (NNG_ECLOSED);
+	}
 	nni_mtx_unlock(&nni_aio_lk);
 	return (0);
 }
@@ -318,7 +343,6 @@ nni_aio_begin(nni_aio *aio)
 int
 nni_aio_schedule(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 {
-	int rv;
 	if (!aio->a_sleep) {
 		// Convert the relative timeout to an absolute timeout.
 		switch (aio->a_timeout) {
@@ -339,19 +363,16 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 		nni_mtx_unlock(&nni_aio_lk);
 		return (NNG_ECANCELED);
 	}
-	if ((rv = aio->a_cancelrv) != 0) {
+	if (aio->a_closed) {
 		nni_mtx_unlock(&nni_aio_lk);
-		return (rv);
+		return (NNG_ECLOSED);
 	}
 
 	// If cancellation occurred in between "begin" and "schedule",
 	// then cancel it right now.
 	aio->a_prov_cancel = cancelfn;
 	aio->a_prov_data   = data;
-	if ((rv = aio->a_cancelrv) != 0) {
-		aio->a_expire = 0;
-		nni_aio_expire_add(aio);
-	} else if (aio->a_expire != NNI_TIME_NEVER) {
+	if (aio->a_expire != NNI_TIME_NEVER) {
 		nni_aio_expire_add(aio);
 	}
 	nni_mtx_unlock(&nni_aio_lk);

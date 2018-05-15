@@ -120,8 +120,8 @@ nni_device_init(nni_device_data **dp, nni_sock *s1, nni_sock *s2)
 	if ((s1 == NULL) || (s2 == NULL)) {
 		return (NNG_EINVAL);
 	}
-	if ((nni_sock_peer(s1) != nni_sock_proto(s2)) ||
-	    (nni_sock_peer(s2) != nni_sock_proto(s1))) {
+	if ((nni_sock_peer_id(s1) != nni_sock_proto_id(s2)) ||
+	    (nni_sock_peer_id(s2) != nni_sock_proto_id(s1))) {
 		return (NNG_EINVAL);
 	}
 

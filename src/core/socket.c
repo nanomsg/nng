@@ -253,13 +253,13 @@ nni_sock_setopt_sockname(nni_sock *s, const void *buf, size_t sz, int typ)
 static int
 nni_sock_getopt_proto(nni_sock *s, void *buf, size_t *szp, int typ)
 {
-	return (nni_copyout_int(nni_sock_proto(s), buf, szp, typ));
+	return (nni_copyout_int(nni_sock_proto_id(s), buf, szp, typ));
 }
 
 static int
 nni_sock_getopt_peer(nni_sock *s, void *buf, size_t *szp, int typ)
 {
-	return (nni_copyout_int(nni_sock_peer(s), buf, szp, typ));
+	return (nni_copyout_int(nni_sock_peer_id(s), buf, szp, typ));
 }
 
 static int
@@ -434,9 +434,7 @@ nni_sock_rele(nni_sock *s)
 int
 nni_sock_pipe_start(nni_sock *s, nni_pipe *pipe)
 {
-	void *      pdata = nni_pipe_get_proto_data(pipe);
 	nng_pipe_cb cb;
-	int         rv;
 
 	NNI_ASSERT(s != NULL);
 	nni_mtx_lock(&s->s_mx);
@@ -464,26 +462,13 @@ nni_sock_pipe_start(nni_sock *s, nni_pipe *pipe)
 		return (NNG_ECLOSED);
 	}
 
-	// Protocol can reject for other reasons.
-	// This must be the last operation, until this point
-	// the protocol has not actually "seen" the pipe.
-	rv = s->s_pipe_ops.pipe_start(pdata);
-
 	nni_mtx_unlock(&s->s_mx);
-	return (rv);
+	return (0);
 }
 
 int
 nni_sock_pipe_add(nni_sock *s, nni_pipe *p)
 {
-	int   rv;
-	void *pdata;
-
-	if ((rv = s->s_pipe_ops.pipe_init(&pdata, p, s->s_data)) != 0) {
-		return (rv);
-	}
-	nni_pipe_set_proto_data(p, pdata);
-
 	// Initialize protocol pipe data.
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
@@ -503,7 +488,6 @@ nni_sock_pipe_add(nni_sock *s, nni_pipe *p)
 void
 nni_sock_pipe_remove(nni_sock *sock, nni_pipe *pipe)
 {
-	void *      pdata;
 	nng_pipe_cb cb;
 
 	nni_mtx_lock(&sock->s_mx);
@@ -515,14 +499,8 @@ nni_sock_pipe_remove(nni_sock *sock, nni_pipe *pipe)
 		cb(p, NNG_PIPE_REM, arg);
 		nni_mtx_lock(&sock->s_mx);
 	}
-	pdata = nni_pipe_get_proto_data(pipe);
-	if (pdata != NULL) {
-		sock->s_pipe_ops.pipe_stop(pdata);
-		nni_pipe_set_proto_data(pipe, NULL);
-		if (nni_list_active(&sock->s_pipes, pipe)) {
-			nni_list_remove(&sock->s_pipes, pipe);
-		}
-		sock->s_pipe_ops.pipe_fini(pdata);
+	if (nni_list_active(&sock->s_pipes, pipe)) {
+		nni_list_remove(&sock->s_pipes, pipe);
 	}
 	if (sock->s_closing && nni_list_empty(&sock->s_pipes)) {
 		nni_cv_wake(&sock->s_cv);
@@ -588,9 +566,6 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 
 	NNI_ASSERT(s->s_sock_ops.sock_open != NULL);
 	NNI_ASSERT(s->s_sock_ops.sock_close != NULL);
-
-	NNI_ASSERT(s->s_pipe_ops.pipe_start != NULL);
-	NNI_ASSERT(s->s_pipe_ops.pipe_stop != NULL);
 
 	NNI_LIST_NODE_INIT(&s->s_node);
 	NNI_LIST_INIT(&s->s_options, nni_sockopt, node);
@@ -883,15 +858,16 @@ nni_sock_recv(nni_sock *sock, nni_aio *aio)
 	sock->s_sock_ops.sock_recv(sock->s_data, aio);
 }
 
-// nni_sock_protocol returns the socket's 16-bit protocol number.
+// nni_sock_proto_id returns the socket's 16-bit protocol number.
 uint16_t
-nni_sock_proto(nni_sock *sock)
+nni_sock_proto_id(nni_sock *sock)
 {
 	return (sock->s_self_id.p_id);
 }
 
+// nni_sock_peer_id returns the socket peer's 16-bit protocol number.
 uint16_t
-nni_sock_peer(nni_sock *sock)
+nni_sock_peer_id(nni_sock *sock)
 {
 	return (sock->s_peer_id.p_id);
 }
@@ -906,6 +882,18 @@ const char *
 nni_sock_peer_name(nni_sock *sock)
 {
 	return (sock->s_peer_id.p_name);
+}
+
+struct nni_proto_pipe_ops *
+nni_sock_proto_pipe_ops(nni_sock *sock)
+{
+	return (&sock->s_pipe_ops);
+}
+
+void *
+nni_sock_proto_data(nni_sock *sock)
+{
+	return (sock->s_data);
 }
 
 void

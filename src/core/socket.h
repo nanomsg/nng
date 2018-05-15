@@ -20,10 +20,13 @@ extern int         nni_sock_open(nni_sock **, const nni_proto *);
 extern void        nni_sock_close(nni_sock *);
 extern void        nni_sock_closeall(void);
 extern int         nni_sock_shutdown(nni_sock *);
-extern uint16_t    nni_sock_proto(nni_sock *);
-extern uint16_t    nni_sock_peer(nni_sock *);
+extern uint16_t    nni_sock_proto_id(nni_sock *);
+extern uint16_t    nni_sock_peer_id(nni_sock *);
 extern const char *nni_sock_proto_name(nni_sock *);
 extern const char *nni_sock_peer_name(nni_sock *);
+extern void *      nni_sock_proto_data(nni_sock *);
+
+extern struct nni_proto_pipe_ops *nni_sock_proto_pipe_ops(nni_sock *);
 
 extern int nni_sock_setopt(
     nni_sock *, const char *, const void *, size_t, int);

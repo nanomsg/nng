@@ -81,9 +81,13 @@ nni_tcp_tran_fini(void)
 static void
 nni_tcp_pipe_close(void *arg)
 {
-	nni_tcp_pipe *pipe = arg;
+	nni_tcp_pipe *p = arg;
 
-	nni_plat_tcp_pipe_close(pipe->tpp);
+	nni_aio_close(p->rxaio);
+	nni_aio_close(p->txaio);
+	nni_aio_close(p->negaio);
+
+	nni_plat_tcp_pipe_close(p->tpp);
 }
 
 static void
@@ -666,7 +670,7 @@ nni_tcp_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		nni_tcp_ep_fini(ep);
 		return (rv);
 	}
-	ep->proto     = nni_sock_proto(sock);
+	ep->proto     = nni_sock_proto_id(sock);
 	ep->mode      = mode;
 	ep->nodelay   = true;
 	ep->keepalive = false;
@@ -680,11 +684,11 @@ nni_tcp_ep_close(void *arg)
 {
 	nni_tcp_ep *ep = arg;
 
+	nni_aio_close(ep->aio);
+
 	nni_mtx_lock(&ep->mtx);
 	nni_plat_tcp_ep_close(ep->tep);
 	nni_mtx_unlock(&ep->mtx);
-
-	nni_aio_stop(ep->aio);
 }
 
 static int
@@ -910,7 +914,7 @@ static nni_tran_pipe_option nni_tcp_pipe_options[] = {
 	},
 };
 
-static nni_tran_pipe nni_tcp_pipe_ops = {
+static nni_tran_pipe_ops nni_tcp_pipe_ops = {
 	.p_fini    = nni_tcp_pipe_fini,
 	.p_start   = nni_tcp_pipe_start,
 	.p_send    = nni_tcp_pipe_send,
@@ -951,7 +955,7 @@ static nni_tran_ep_option nni_tcp_ep_options[] = {
 	},
 };
 
-static nni_tran_ep nni_tcp_ep_ops = {
+static nni_tran_ep_ops nni_tcp_ep_ops = {
 	.ep_init    = nni_tcp_ep_init,
 	.ep_fini    = nni_tcp_ep_fini,
 	.ep_connect = nni_tcp_ep_connect,

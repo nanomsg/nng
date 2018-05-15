@@ -91,6 +91,10 @@ nni_tls_pipe_close(void *arg)
 {
 	nni_tls_pipe *p = arg;
 
+	nni_aio_close(p->rxaio);
+	nni_aio_close(p->txaio);
+	nni_aio_close(p->negaio);
+
 	nni_tls_close(p->tls);
 }
 
@@ -687,7 +691,7 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 			return (rv);
 		}
 	}
-	ep->proto    = nni_sock_proto(sock);
+	ep->proto    = nni_sock_proto_id(sock);
 	ep->authmode = authmode;
 
 	*epp = ep;
@@ -699,11 +703,11 @@ nni_tls_ep_close(void *arg)
 {
 	nni_tls_ep *ep = arg;
 
+	nni_aio_close(ep->aio);
+
 	nni_mtx_lock(&ep->mtx);
 	nni_plat_tcp_ep_close(ep->tep);
 	nni_mtx_unlock(&ep->mtx);
-
-	nni_aio_stop(ep->aio);
 }
 
 static int
@@ -1036,7 +1040,7 @@ static nni_tran_pipe_option nni_tls_pipe_options[] = {
 	},
 };
 
-static nni_tran_pipe nni_tls_pipe_ops = {
+static nni_tran_pipe_ops nni_tls_pipe_ops = {
 	.p_fini    = nni_tls_pipe_fini,
 	.p_start   = nni_tls_pipe_start,
 	.p_send    = nni_tls_pipe_send,
@@ -1107,7 +1111,7 @@ static nni_tran_ep_option nni_tls_ep_options[] = {
 	},
 };
 
-static nni_tran_ep nni_tls_ep_ops = {
+static nni_tran_ep_ops nni_tls_ep_ops = {
 	.ep_init    = nni_tls_ep_init,
 	.ep_fini    = nni_tls_ep_fini,
 	.ep_connect = nni_tls_ep_connect,

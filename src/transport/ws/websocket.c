@@ -205,6 +205,9 @@ ws_pipe_close(void *arg)
 {
 	ws_pipe *p = arg;
 
+	nni_aio_close(p->rxaio);
+	nni_aio_close(p->txaio);
+
 	nni_mtx_lock(&p->mtx);
 	nni_ws_close(p->ws);
 	nni_mtx_unlock(&p->mtx);
@@ -588,7 +591,7 @@ static nni_tran_pipe_option ws_pipe_options[] = {
 	}
 };
 
-static nni_tran_pipe ws_pipe_ops = {
+static nni_tran_pipe_ops ws_pipe_ops = {
 	.p_fini    = ws_pipe_fini,
 	.p_send    = ws_pipe_send,
 	.p_recv    = ws_pipe_recv,
@@ -690,6 +693,9 @@ ws_ep_close(void *arg)
 {
 	ws_ep *ep = arg;
 
+	nni_aio_close(ep->accaio);
+	nni_aio_close(ep->connaio);
+
 	if (ep->mode == NNI_EP_MODE_LISTEN) {
 		nni_ws_listener_close(ep->listener);
 	} else {
@@ -750,8 +756,8 @@ ws_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	nni_aio_list_init(&ep->aios);
 
 	ep->mode   = mode;
-	ep->lproto = nni_sock_proto(sock);
-	ep->rproto = nni_sock_peer(sock);
+	ep->lproto = nni_sock_proto_id(sock);
+	ep->rproto = nni_sock_peer_id(sock);
 
 	if (mode == NNI_EP_MODE_DIAL) {
 		pname = nni_sock_peer_name(sock);
@@ -795,7 +801,7 @@ ws_tran_fini(void)
 {
 }
 
-static nni_tran_ep ws_ep_ops = {
+static nni_tran_ep_ops ws_ep_ops = {
 	.ep_init    = ws_ep_init,
 	.ep_fini    = ws_ep_fini,
 	.ep_connect = ws_ep_connect,
@@ -1015,7 +1021,7 @@ static nni_tran_ep_option wss_ep_options[] = {
 	},
 };
 
-static nni_tran_ep wss_ep_ops = {
+static nni_tran_ep_ops wss_ep_ops = {
 	.ep_init    = ws_ep_init,
 	.ep_fini    = ws_ep_fini,
 	.ep_connect = ws_ep_connect,
