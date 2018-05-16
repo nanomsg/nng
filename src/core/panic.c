@@ -48,8 +48,8 @@ nni_show_backtrace(void)
 void
 nni_panic(const char *fmt, ...)
 {
-	char    buf[128];
-	char    fbuf[128];
+	char    buf[100];
+	char    fbuf[93]; // 7 bytes of "panic: "
 	va_list va;
 
 	va_start(va, fmt);

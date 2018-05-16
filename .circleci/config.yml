@@ -8,27 +8,27 @@ jobs:
     docker:
       - image: ubuntu:16.04
         environment:
-          CC: clang-4.0
-          CXX: clang++-4.0
-          CLANG_FORMAT: clang-format-4.0
+          CC: clang-6.0
+          CXX: clang++-6.0
+          CLANG_FORMAT: clang-format-6.0
           CTEST_OUTPUT_ON_FAILURE: 1
     steps:
       - checkout
       - run: apt-get update -qq
       - run: apt-get install -y software-properties-common
       # llvm apt details: https://apt.llvm.org
-      - run: apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-4.0 main"
+      - run: apt-add-repository "deb http://apt.llvm.org/xenial/ llvm-toolchain-xenial-6.0 main"
       - run: apt-get update -qq
       - run: >
-          apt-get install -y
+          apt-get install -y --allow-unauthenticated
           build-essential
           curl
           asciidoctor
           cmake
           libmbedtls-dev
           ninja-build
-          clang-4.0
-          clang-format-4.0
+          clang-6.0
+          clang-format-6.0
       - run: ./etc/format-check.sh
       - run: ./.circleci/build-and-test.sh
 
@@ -36,10 +36,10 @@ jobs:
     docker:
       - image: ubuntu:16.04
         environment:
-          CC: gcc-7
-          CXX: g++-7
+          CC: gcc-8
+          CXX: g++-8
           COVERAGE: "ON"
-          GCOV: gcov-7
+          GCOV: gcov-8
     steps:
       - checkout
       - run: apt-get update -qq
@@ -47,15 +47,15 @@ jobs:
       - run: add-apt-repository ppa:ubuntu-toolchain-r/test
       - run: apt-get update -qq
       - run: >
-          apt-get install -y
+          apt-get install -y --allow-unauthenticated
           build-essential
           curl
           asciidoctor
           cmake
           libmbedtls-dev
           ninja-build
-          gcc-7
-          g++-7
+          gcc-8
+          g++-8
       - run: ./.circleci/build-and-test.sh
       - run: ./etc/codecov.sh
 

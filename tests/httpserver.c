@@ -17,8 +17,8 @@
 
 // Basic HTTP server tests.
 #include "core/nng_impl.h"
-#include "supplemental/tls/tls.h"
 #include "supplemental/http/http.h"
+#include "supplemental/tls/tls.h"
 
 const char *doc1 = "<html><body>Someone <b>is</b> home!</body</html>";
 const char *doc2 = "This is a text file.";
@@ -157,7 +157,6 @@ fail:
 }
 
 TestMain("HTTP Server", {
-
 	nng_http_server * s;
 	nng_http_handler *h;
 
@@ -167,7 +166,7 @@ TestMain("HTTP Server", {
 	Convey("We can start an HTTP server", {
 		nng_aio *aio;
 		char     portbuf[16];
-		char     urlstr[32];
+		char     urlstr[48];
 		nng_url *url;
 
 		trantest_next_address(portbuf, "%u");
@@ -445,6 +444,5 @@ TestMain("HTTP Server", {
 			nng_http_res_free(res);
 			nng_url_free(curl);
 		});
-
 	});
 })
