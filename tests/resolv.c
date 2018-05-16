@@ -147,37 +147,15 @@ TestMain("Resolver", {
 		nng_aio_free(aio);
 	});
 
-	Convey("TCP Name service resolves", {
+	Convey("Name service names not supported", {
 		nng_aio *    aio;
-		const char * str;
 		nng_sockaddr sa;
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		nng_aio_set_input(aio, 0, &sa);
 		nni_plat_tcp_resolv("8.8.4.4", "http", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
-		So(nng_aio_result(aio) == 0);
-		So(sa.s_in.sa_family == NNG_AF_INET);
-		So(sa.s_in.sa_port == ntohs(80));
-		str = ip4tostr(&sa.s_in.sa_addr);
-		So(strcmp(str, "8.8.4.4") == 0);
-		nng_aio_free(aio);
-	});
-
-	Convey("UDP Name service resolves", {
-		nng_aio *    aio;
-		const char * str;
-		nng_sockaddr sa;
-
-		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
-		nng_aio_set_input(aio, 0, &sa);
-		nni_plat_udp_resolv("8.8.4.4", "tftp", NNG_AF_INET, 1, aio);
-		nng_aio_wait(aio);
-		So(nng_aio_result(aio) == 0);
-		So(sa.s_in.sa_family == NNG_AF_INET);
-		So(sa.s_in.sa_port == ntohs(69));
-		str = ip4tostr(&sa.s_in.sa_addr);
-		So(strcmp(str, "8.8.4.4") == 0);
+		So(nng_aio_result(aio) == NNG_EADDRINVAL);
 		nng_aio_free(aio);
 	});
 

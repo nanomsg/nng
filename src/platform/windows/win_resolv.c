@@ -127,15 +127,12 @@ win_resolv_task(void *arg)
 	// We treat these all as IP addresses.  The service and the
 	// host part are split.
 	memset(&hints, 0, sizeof(hints));
+	hints.ai_flags = AI_ADDRCONFIG | AI_NUMERICSERV;
 	if (item->passive) {
 		hints.ai_flags |= AI_PASSIVE;
 	}
-	hints.ai_flags |= AI_ADDRCONFIG;
 	hints.ai_protocol = item->proto;
 	hints.ai_family   = item->family;
-	if (item->family == AF_INET6) {
-		hints.ai_flags |= AI_V4MAPPED;
-	}
 
 	rv = getaddrinfo(item->name, item->serv, &hints, &results);
 	if (rv != 0) {

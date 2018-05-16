@@ -25,7 +25,6 @@
 
 #ifndef _WIN32
 TestMain("IPC Security Descriptor", {
-
 	atexit(nng_fini);
 	Convey("Given a socket and an IPC listener", {
 		nng_socket   s;
@@ -94,7 +93,6 @@ TestMain("IPC Security Descriptor", {
 
 		So(nng_listener_create(&l, s, "ipc://" ADDR) == 0);
 		Convey("We can set security descriptor on Windows", {
-
 			SECURITY_DESCRIPTOR *sdesc;
 			SID                  users;
 			DWORD                size;
@@ -136,7 +134,7 @@ TestMain("IPC Security Descriptor", {
 				Reset({ LocalFree(sd); });
 
 				So(dacl->AceCount == 1);
-				So(GetAce(dacl, 0, &ace) == TRUE);
+				So(GetAce(dacl, 0, (void **) &ace) == TRUE);
 				allowed = (PACCESS_ALLOWED_ACE) ace;
 				asid    = (PSID) &allowed->SidStart;
 				So(IsValidSid(asid));
@@ -145,7 +143,6 @@ TestMain("IPC Security Descriptor", {
 		});
 
 		Convey("We cannot set security descriptor after started", {
-
 			SECURITY_DESCRIPTOR *sdesc;
 			SID                  users;
 			DWORD                size;

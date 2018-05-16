@@ -140,25 +140,15 @@ resolv_task(void *arg)
 	// We treat these all as IP addresses.  The service and the
 	// host part are split.
 	memset(&hints, 0, sizeof(hints));
-	if (item->passive) {
-		hints.ai_flags |= AI_PASSIVE;
-	}
+	hints.ai_flags = AI_NUMERICSERV;
 #ifdef AI_ADDRCONFIG
 	hints.ai_flags |= AI_ADDRCONFIG;
 #endif
+	if (item->passive) {
+		hints.ai_flags |= AI_PASSIVE;
+	}
 	hints.ai_protocol = item->proto;
 	hints.ai_family   = item->family;
-
-	// We prefer to have v4mapped addresses if a remote
-	// v4 address isn't available.  And we prefer to only
-	// do this if we actually support v6.
-	if (item->family == AF_INET6) {
-#if defined(AI_V4MAPPED_CFG)
-		hints.ai_flags |= AI_V4MAPPED_CFG;
-#elif defined(AI_V4MAPPED)
-		hints.ai_flags |= AI_V4MAPPED;
-#endif
-	}
 
 	rv = getaddrinfo(item->name, item->serv, &hints, &results);
 	if (rv != 0) {

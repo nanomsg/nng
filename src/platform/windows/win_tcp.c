@@ -680,17 +680,17 @@ nni_plat_tcp_ep_connect(nni_plat_tcp_ep *ep, nni_aio *aio)
 int
 nni_plat_tcp_ntop(const nni_sockaddr *sa, char *ipstr, char *portstr)
 {
-	const void *ap;
-	uint16_t    port;
-	int         af;
+	void *   ap;
+	uint16_t port;
+	int      af;
 	switch (sa->s_family) {
 	case NNG_AF_INET:
-		ap   = &sa->s_in.sa_addr;
+		ap   = (void *) &sa->s_in.sa_addr;
 		port = sa->s_in.sa_port;
 		af   = AF_INET;
 		break;
 	case NNG_AF_INET6:
-		ap   = &sa->s_in6.sa_addr;
+		ap   = (void *) &sa->s_in6.sa_addr;
 		port = sa->s_in6.sa_port;
 		af   = AF_INET6;
 		break;
