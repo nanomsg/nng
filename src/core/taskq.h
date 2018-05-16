@@ -31,13 +31,12 @@ extern void nni_task_dispatch(nni_task *);
 // doubt, use nni_task_dispatch instead.)
 extern void nni_task_exec(nni_task *);
 
-// nni_task_prep and nni_task_unprep are used by and exclusively for the aio
-// framework.  nni_task_prep marks the task as "scheduled" without actually
+// nni_task_prep is used by and exclusively for the aio framework.
+// nni_task_prep marks the task as "scheduled" without actually
 // dispatching anything to it yet; nni_task_wait will block waiting for the
 // task to complete normally (after a call to nni_task_dispatch or
-// nni_task_exec), or for nni_task_unprep to be called.
+// nni_task_exec).
 extern void nni_task_prep(nni_task *);
-extern void nni_task_unprep(nni_task *);
 
 extern void nni_task_wait(nni_task *);
 extern int  nni_task_init(nni_task **, nni_taskq *, nni_cb, void *);

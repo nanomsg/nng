@@ -315,7 +315,6 @@ nni_aio_begin(nni_aio *aio)
 	nni_mtx_lock(&nni_aio_lk);
 	// We should not reschedule anything at this point.
 	if (aio->a_stop) {
-		nni_task_unprep(aio->a_task);
 		aio->a_result = NNG_ECANCELED;
 		nni_mtx_unlock(&nni_aio_lk);
 		return (NNG_ECANCELED);
