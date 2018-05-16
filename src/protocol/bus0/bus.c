@@ -297,7 +297,12 @@ bus0_sock_getq_cb(void *arg)
 	}
 
 	nni_mtx_lock(&s->mtx);
-	lastp = nni_list_last(&s->pipes);
+	if (((lastp = nni_list_last(&s->pipes)) != NULL) &&
+	    (nni_pipe_id(lastp->npipe) == sender)) {
+		// If the last pipe in the list is our sender,
+		// then ignore it and move to the one just previous.
+		lastp = nni_list_prev(&s->pipes, lastp);
+	}
 	NNI_LIST_FOREACH (&s->pipes, p) {
 		if (nni_pipe_id(p->npipe) == sender) {
 			continue;
@@ -308,16 +313,14 @@ bus0_sock_getq_cb(void *arg)
 			}
 		} else {
 			dup = msg;
+			msg = NULL;
 		}
 		if (nni_msgq_tryput(p->sendq, dup) != 0) {
 			nni_msg_free(dup);
 		}
 	}
 	nni_mtx_unlock(&s->mtx);
-
-	if (lastp == NULL) {
-		nni_msg_free(msg);
-	}
+	nni_msg_free(msg);
 
 	bus0_sock_getq(s);
 }
