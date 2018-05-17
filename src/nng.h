@@ -223,12 +223,18 @@ NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **);
 // Only one callback can be set on a given socket, and there is no way
 // to retrieve the old value.
 typedef enum {
-	NNG_PIPE_ADD, // Pipe added to socket
-	NNG_PIPE_REM  // Pipe removed from socket
-} nng_pipe_action;
+	NNG_PIPE_EV_ADD_PRE,  // Called just before pipe added to socket
+	NNG_PIPE_EV_ADD_POST, // Called just after pipe added to socket
+	NNG_PIPE_EV_REM_POST, // Called just after poipe removed from socket
+	NNG_PIPE_EV_NUM,      // Used internally, must be last.
+} nng_pipe_ev;
 
-typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_action, void *);
-NNG_DECL int nng_pipe_notify(nng_socket, nng_pipe_cb, void *);
+typedef void (*nng_pipe_cb)(nng_pipe, int, void *);
+
+// nng_pipe_notify registers a callback to be executed when the
+// given event is triggered.  To watch for different events, register
+// multiple times.  Each event can have at most one callback registered.
+NNG_DECL int nng_pipe_notify(nng_socket, int, nng_pipe_cb, void *);
 
 // nng_getopt_string is special -- it allocates a string to hold the
 // resulting string, which should be freed with nng_strfree when it is

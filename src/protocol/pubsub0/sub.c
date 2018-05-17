@@ -143,6 +143,11 @@ sub0_pipe_start(void *arg)
 {
 	sub0_pipe *p = arg;
 
+	if (nni_pipe_peer(p->pipe) != NNI_PROTO_PUB_V0) {
+		// Peer protocol mismatch.
+		return (NNG_EPROTO);
+	}
+
 	nni_pipe_recv(p->pipe, p->aio_recv);
 	return (0);
 }

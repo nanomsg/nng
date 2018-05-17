@@ -193,6 +193,11 @@ bus0_pipe_start(void *arg)
 	bus0_pipe *p = arg;
 	bus0_sock *s = p->psock;
 
+	if (nni_pipe_peer(p->npipe) != NNI_PROTO_BUS_V0) {
+		// Peer protocol mismatch.
+		return (NNG_EPROTO);
+	}
+
 	nni_mtx_lock(&s->mtx);
 	nni_list_append(&s->pipes, p);
 	nni_mtx_unlock(&s->mtx);

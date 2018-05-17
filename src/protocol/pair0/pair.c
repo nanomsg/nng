@@ -129,6 +129,11 @@ pair0_pipe_start(void *arg)
 	pair0_pipe *p = arg;
 	pair0_sock *s = p->psock;
 
+	if (nni_pipe_peer(p->npipe) != NNI_PROTO_PAIR_V0) {
+		// Peer protocol mismatch.
+		return (NNG_EPROTO);
+	}
+
 	nni_mtx_lock(&s->mtx);
 	if (s->ppipe != NULL) {
 		nni_mtx_unlock(&s->mtx);

@@ -173,6 +173,11 @@ pair1_pipe_start(void *arg)
 	uint32_t    id;
 	int         rv;
 
+	if (nni_pipe_peer(p->npipe) != NNI_PROTO_PAIR_V1) {
+		// Peer protocol mismatch.
+		return (NNG_EPROTO);
+	}
+
 	id = nni_pipe_id(p->npipe);
 	nni_mtx_lock(&s->mtx);
 	if ((rv = nni_idhash_insert(s->pipes, id, p)) != 0) {

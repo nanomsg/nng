@@ -1015,7 +1015,7 @@ nng_getopt_string(nng_socket s, const char *name, char **valp)
 }
 
 int
-nng_pipe_notify(nng_socket s, nng_pipe_cb cb, void *arg)
+nng_pipe_notify(nng_socket s, int ev, nng_pipe_cb cb, void *arg)
 {
 	int       rv;
 	nni_sock *sock;
@@ -1027,7 +1027,7 @@ nng_pipe_notify(nng_socket s, nng_pipe_cb cb, void *arg)
 		return (rv);
 	}
 
-	nni_sock_set_pipe_cb(sock, cb, arg);
+	nni_sock_set_pipe_cb(sock, ev, cb, arg);
 	nni_sock_rele(sock);
 	return (0);
 }

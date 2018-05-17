@@ -341,6 +341,10 @@ resp0_pipe_start(void *arg)
 	resp0_sock *s = p->psock;
 	int         rv;
 
+	if (nni_pipe_peer(p->npipe) != NNI_PROTO_SURVEYOR_V0) {
+		return (NNG_EPROTO);
+	}
+
 	nni_mtx_lock(&s->mtx);
 	rv = nni_idhash_insert(s->pipes, p->id, p);
 	nni_mtx_unlock(&s->mtx);

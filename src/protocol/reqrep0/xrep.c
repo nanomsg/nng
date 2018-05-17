@@ -178,6 +178,11 @@ xrep0_pipe_start(void *arg)
 	xrep0_sock *s = p->rep;
 	int         rv;
 
+	if (nni_pipe_peer(p->pipe) != NNI_PROTO_REQ_V0) {
+		// Peer protocol mismatch.
+		return (NNG_EPROTO);
+	}
+
 	if ((rv = nni_idhash_insert(s->pipes, nni_pipe_id(p->pipe), p)) != 0) {
 		return (rv);
 	}

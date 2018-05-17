@@ -338,6 +338,10 @@ surv0_pipe_start(void *arg)
 	surv0_pipe *p = arg;
 	surv0_sock *s = p->sock;
 
+	if (nni_pipe_peer(p->npipe) != NNI_PROTO_RESPONDENT_V0) {
+		return (NNG_EPROTO);
+	}
+
 	nni_mtx_lock(&s->mtx);
 	nni_list_append(&s->pipes, p);
 	nni_mtx_unlock(&s->mtx);

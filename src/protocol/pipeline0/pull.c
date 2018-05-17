@@ -112,6 +112,11 @@ pull0_pipe_start(void *arg)
 {
 	pull0_pipe *p = arg;
 
+	if (nni_pipe_peer(p->pipe) != NNI_PROTO_PUSH_V0) {
+		// Peer protocol mismatch.
+		return (NNG_EPROTO);
+	}
+
 	// Start the pending pull...
 	nni_pipe_recv(p->pipe, p->recv_aio);
 

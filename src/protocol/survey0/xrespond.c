@@ -164,6 +164,10 @@ xresp0_pipe_start(void *arg)
 	xresp0_sock *s = p->psock;
 	int          rv;
 
+	if (nni_pipe_peer(p->npipe) != NNI_PROTO_SURVEYOR_V0) {
+		return (NNG_EPROTO);
+	}
+
 	p->id = nni_pipe_id(p->npipe);
 
 	nni_mtx_lock(&s->mtx);
