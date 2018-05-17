@@ -64,8 +64,19 @@ The _bus_ protocol has no protocol-specific options.
 
 === Protocol Headers
 
-The _bus_ protocol has no protocol-specific headers.
-    
+When using a "`<<nng.7#raw_mode,raw>>`" _bus_ socket, received messages will
+contain the incoming <<nng_pipe.5#,pipe>> ID as the sole element in the header.
+If a message containing such a header is sent using a raw _bus_ socket, then,
+the message will be delivered to all connected pipes _except_ the one
+identified in the header.
+This behavior is intended for use with <<nng_device.3#device,device>>
+configurations consisting of just a single socket.
+Such configurations are useful in the creation of rebroadcasters, and this
+capaibility prevents a message from being routed back to its source.
+If no header is present, then a message is sent to all connected pipes.
+
+When using "`cooked`" _bus_ sockets, no message headers are present.
+
 == SEE ALSO
 
 <<nng_bus_open.3#,nng_bus_open(3)>>,
