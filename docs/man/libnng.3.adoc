@@ -77,8 +77,8 @@ Listeners accept incoming connection requets, and dialers make them.
 |<<nng_pipe_getopt.3#,nng_pipe_getopt()>>|get pipe option
 |<<nng_pipe_id.3#,nng_pipe_id()>>|get numeric pipe identifier
 |<<nng_pipe_listener.3#,nng_pipe_listener()>>|return listener that created pipe
-|<<nng_pipe_notify.3#,nng_pipe_notify())>>|register pipe notification callback
-|<<nng_pipe_socket.3#,nng_pipe_socket())>>|return owning socket for pipe
+|<<nng_pipe_notify.3#,nng_pipe_notify()>>|register pipe notification callback
+|<<nng_pipe_socket.3#,nng_pipe_socket()>>|return owning socket for pipe
 |===
 
 === Message Handling Functions
