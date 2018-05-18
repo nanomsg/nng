@@ -609,7 +609,19 @@ Sending messages will attempt to deliver to each directly connected peer.</p>
 <div class="sect2">
 <h3 id="_protocol_headers">Protocol Headers</h3>
 <div class="paragraph">
-<p>The <em>bus</em> protocol has no protocol-specific headers.</p>
+<p>When using a &#8220;<a href="nng.7.html#raw_mode">raw</a>&#8221; <em>bus</em> socket, received messages will
+contain the incoming <a href="nng_pipe.5.html">pipe</a> ID as the sole element in the header.
+If a message containing such a header is sent using a raw <em>bus</em> socket, then,
+the message will be delivered to all connected pipes <em>except</em> the one
+identified in the header.
+This behavior is intended for use with <a href="nng_device.3.html#device">device</a>
+configurations consisting of just a single socket.
+Such configurations are useful in the creation of rebroadcasters, and this
+capaibility prevents a message from being routed back to its source.
+If no header is present, then a message is sent to all connected pipes.</p>
+</div>
+<div class="paragraph">
+<p>When using &#8220;cooked&#8221; <em>bus</em> sockets, no message headers are present.</p>
 </div>
 </div>
 </div>

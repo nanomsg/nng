@@ -612,6 +612,51 @@ either of the following URIs could be used: <code>tls+tcp://127.0.0.1:4433</code
 <code>tls+tcp://localhost:4433</code>.</p>
 </div>
 <div class="paragraph">
+<p>A URI may be restricted to IPv6 using the scheme <code>tls+tcp6://</code>, and may
+be restricted to IPv4 using the scheme <code>tls+tcp4://</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Specifying <code>tls+tcp6://</code> may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
+listeners.
+The details of varies across operating systems.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Both <code>tls+tcp6://</code> and <code>tls+tcp4://</code> are <em>nng</em> extensions, and will not
+be understood by other implementations such as <em>mangos</em>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+We recommend using either numeric IP addresses, or names that are
+specific to either IPv4 or IPv6 to prevent confusion and surprises.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
 <p>When specifying IPv6 addresses, the address must be enclosed in
 square brackets (<code>[]</code>) to avoid confusion with the final colon
 separating the port.</p>
