@@ -35,7 +35,7 @@ GITVERS=$(cd ${srcdir}; git describe --always)
 
 if [[ -z "${VERSION}" ]]
 then
-	if [[ "${GITVERS}" == *-* ]]
+	if [[ "${GITVERS}" == *-g??????? ]]
 	then
 		if [[ "${GITVERS}" == "${TIPVERS}" ]]
 		then
@@ -49,9 +49,11 @@ then
 	fi
 fi
 
+# strip leading v in v1.0.0
+VERSION=${VERSION#v}
 printf "PUBLISHING version ${VERSION}\n"
 
-if [ ${VERSION} == tip ]
+if [ "${VERSION}" == tip ]
 then
 	dstman=${dstdir}/man/tip
 else
