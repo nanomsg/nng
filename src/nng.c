@@ -1695,5 +1695,5 @@ const char *
 nng_version(void)
 {
 	return (xstr(NNG_MAJOR_VERSION) "." xstr(NNG_MINOR_VERSION) "." xstr(
-	    NNG_PATCH_VERSION));
+	    NNG_PATCH_VERSION) NNG_RELEASE_SUFFIX);
 }
