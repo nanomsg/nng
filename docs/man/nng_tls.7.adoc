@@ -26,7 +26,7 @@ int nng_tls_register(void);
 
 (((TLS)))(((Transport Layer Security)))(((transport, _tls_)))
 The ((_tls_ transport)) provides communication support between
-_nng_ sockets across a TCP/IP network using 
+_nng_ sockets across a TCP/IP network using
 https://tools.ietf.org/html/rfc5246[TLS v1.2] on top of
 https://tools.ietf.org/html/rfc793[TCP].
 Both IPv4 and IPv6 are supported when the underlying platform also supports it.
@@ -66,6 +66,20 @@ TCP port number.
 For example, to contact port 4433 on the localhost
 either of the following URIs could be used: `tls+tcp://127.0.0.1:4433` or
 `tls+tcp://localhost:4433`.
+
+A URI may be restricted to IPv6 using the scheme `tls+tcp6://`, and may
+be restricted to IPv4 using the scheme `tls+tcp4://`.
+
+NOTE: Specifying `tls+tcp6://` may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
+listeners.
+The details of varies across operating systems.
+
+NOTE: Both `tls+tcp6://` and `tls+tcp4://` are _nng_ extensions, and will not
+be understood by other implementations such as _mangos_.
+
+TIP: We recommend using either numeric IP addresses, or names that are
+specific to either IPv4 or IPv6 to prevent confusion and surprises.
 
 When specifying IPv6 addresses, the address must be enclosed in
 square brackets (`[]`) to avoid confusion with the final colon

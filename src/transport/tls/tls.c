@@ -622,6 +622,17 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	int               passive;
 	nng_tls_mode      tlsmode;
 	nng_tls_auth_mode authmode;
+	uint16_t          af;
+
+	if (strcmp(url->u_scheme, "tls+tcp") == 0) {
+		af = NNG_AF_UNSPEC;
+	} else if (strcmp(url->u_scheme, "tls+tcp4") == 0) {
+		af = NNG_AF_INET;
+	} else if (strcmp(url->u_scheme, "tls+tcp6") == 0) {
+		af = NNG_AF_INET6;
+	} else {
+		return (NNG_EADDRINVAL);
+	}
 
 	// Check for invalid URL components.
 	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
@@ -651,7 +662,7 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		passive      = 0;
 		tlsmode      = NNG_TLS_MODE_CLIENT;
 		authmode     = NNG_TLS_AUTH_MODE_REQUIRED;
-		lsa.s_family = NNG_AF_UNSPEC;
+		lsa.s_family = af;
 		nni_aio_set_input(aio, 0, &rsa);
 		if ((host == NULL) || (serv == NULL)) {
 			nni_aio_fini(aio);
@@ -661,13 +672,13 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		passive      = 1;
 		tlsmode      = NNG_TLS_MODE_SERVER;
 		authmode     = NNG_TLS_AUTH_MODE_NONE;
-		rsa.s_family = NNG_AF_UNSPEC;
+		rsa.s_family = af;
 		nni_aio_set_input(aio, 0, &lsa);
 	}
 
 	// XXX: arguably we could defer this part to the point we do a bind
 	// or connect!
-	nni_plat_tcp_resolv(host, serv, NNG_AF_UNSPEC, passive, aio);
+	nni_plat_tcp_resolv(host, serv, af, passive, aio);
 	nni_aio_wait(aio);
 	if ((rv = nni_aio_result(aio)) != 0) {
 		nni_aio_fini(aio);
@@ -1137,8 +1148,32 @@ static nni_tran nni_tls_tran = {
 	.tran_fini    = nni_tls_tran_fini,
 };
 
+static nni_tran nni_tls4_tran = {
+	.tran_version = NNI_TRANSPORT_VERSION,
+	.tran_scheme  = "tls+tcp4",
+	.tran_ep      = &nni_tls_ep_ops,
+	.tran_pipe    = &nni_tls_pipe_ops,
+	.tran_init    = nni_tls_tran_init,
+	.tran_fini    = nni_tls_tran_fini,
+};
+
+static nni_tran nni_tls6_tran = {
+	.tran_version = NNI_TRANSPORT_VERSION,
+	.tran_scheme  = "tls+tcp6",
+	.tran_ep      = &nni_tls_ep_ops,
+	.tran_pipe    = &nni_tls_pipe_ops,
+	.tran_init    = nni_tls_tran_init,
+	.tran_fini    = nni_tls_tran_fini,
+};
+
 int
 nng_tls_register(void)
 {
-	return (nni_tran_register(&nni_tls_tran));
+	int rv;
+	if (((rv = nni_tran_register(&nni_tls_tran)) != 0) ||
+	    ((rv = nni_tran_register(&nni_tls4_tran)) != 0) ||
+	    ((rv = nni_tran_register(&nni_tls6_tran)) != 0)) {
+		return (rv);
+	}
+	return (0);
 }

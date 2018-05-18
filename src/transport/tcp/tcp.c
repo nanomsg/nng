@@ -611,6 +611,17 @@ nni_tcp_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	nni_sockaddr rsa, lsa;
 	nni_aio *    aio;
 	int          passive;
+	uint16_t     af;
+
+	if (strcmp(url->u_scheme, "tcp") == 0) {
+		af = NNG_AF_UNSPEC;
+	} else if (strcmp(url->u_scheme, "tcp4") == 0) {
+		af = NNG_AF_INET;
+	} else if (strcmp(url->u_scheme, "tcp6") == 0) {
+		af = NNG_AF_INET6;
+	} else {
+		return (NNG_EADDRINVAL);
+	}
 
 	// Check for invalid URL components.
 	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
@@ -640,7 +651,7 @@ nni_tcp_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	// or connect!
 	if (mode == NNI_EP_MODE_DIAL) {
 		passive      = 0;
-		lsa.s_family = NNG_AF_UNSPEC;
+		lsa.s_family = af;
 		nni_aio_set_input(aio, 0, &rsa);
 		if ((host == NULL) || (serv == NULL)) {
 			nni_aio_fini(aio);
@@ -648,11 +659,11 @@ nni_tcp_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		}
 	} else {
 		passive      = 1;
-		rsa.s_family = NNG_AF_UNSPEC;
+		rsa.s_family = af;
 		nni_aio_set_input(aio, 0, &lsa);
 	}
 
-	nni_plat_tcp_resolv(host, serv, NNG_AF_UNSPEC, passive, aio);
+	nni_plat_tcp_resolv(host, serv, af, passive, aio);
 	nni_aio_wait(aio);
 	if ((rv = nni_aio_result(aio)) != 0) {
 		nni_aio_fini(aio);
@@ -981,8 +992,32 @@ static nni_tran nni_tcp_tran = {
 	.tran_fini    = nni_tcp_tran_fini,
 };
 
+static nni_tran nni_tcp4_tran = {
+	.tran_version = NNI_TRANSPORT_VERSION,
+	.tran_scheme  = "tcp4",
+	.tran_ep      = &nni_tcp_ep_ops,
+	.tran_pipe    = &nni_tcp_pipe_ops,
+	.tran_init    = nni_tcp_tran_init,
+	.tran_fini    = nni_tcp_tran_fini,
+};
+
+static nni_tran nni_tcp6_tran = {
+	.tran_version = NNI_TRANSPORT_VERSION,
+	.tran_scheme  = "tcp6",
+	.tran_ep      = &nni_tcp_ep_ops,
+	.tran_pipe    = &nni_tcp_pipe_ops,
+	.tran_init    = nni_tcp_tran_init,
+	.tran_fini    = nni_tcp_tran_fini,
+};
+
 int
 nng_tcp_register(void)
 {
-	return (nni_tran_register(&nni_tcp_tran));
+	int rv;
+	if (((rv = nni_tran_register(&nni_tcp_tran)) != 0) ||
+	    ((rv = nni_tran_register(&nni_tcp4_tran)) != 0) ||
+	    ((rv = nni_tran_register(&nni_tcp6_tran)) != 0)) {
+		return (rv);
+	}
+	return (0);
 }
