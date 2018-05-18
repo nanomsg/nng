@@ -153,7 +153,7 @@ NOTE: At least one protocol must be selected.
 
 *--respondent, --respondent0*::
   Select the <<nng_respondent.7#,_respondent_>> version 0 protocol.
-  This protocol receives survey requests from <nng_surveyor.7#,_surveyor_>>
+  This protocol receives survey requests from <<nng_surveyor.7#,_surveyor_>>
   version 0 peers, and can send a reply to them.
 
 === Peer Selection Options
