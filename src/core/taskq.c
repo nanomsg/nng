@@ -18,7 +18,6 @@ struct nni_task {
 	nni_taskq *   task_tq;
 	unsigned      task_busy;
 	bool          task_prep;
-	bool          task_fini;
 	nni_mtx       task_mtx;
 	nni_cv        task_cv;
 };
@@ -56,14 +55,6 @@ nni_taskq_thread(void *self)
 			nni_mtx_lock(&task->task_mtx);
 			task->task_busy--;
 			if (task->task_busy == 0) {
-				if (task->task_fini) {
-					task->task_fini = false;
-					nni_mtx_unlock(&task->task_mtx);
-					nni_task_fini(task);
-
-					nni_mtx_lock(&tq->tq_mtx);
-					continue;
-				}
 				nni_cv_wake(&task->task_cv);
 			}
 			nni_mtx_unlock(&task->task_mtx);
@@ -158,12 +149,6 @@ nni_task_exec(nni_task *task)
 	nni_mtx_lock(&task->task_mtx);
 	task->task_busy--;
 	if (task->task_busy == 0) {
-		if (task->task_fini) {
-			task->task_fini = false;
-			nni_mtx_unlock(&task->task_mtx);
-			nni_task_fini(task);
-			return;
-		}
 		nni_cv_wake(&task->task_cv);
 	}
 	nni_mtx_unlock(&task->task_mtx);
@@ -238,11 +223,8 @@ nni_task_fini(nni_task *task)
 {
 	NNI_ASSERT(!nni_list_node_active(&task->task_node));
 	nni_mtx_lock(&task->task_mtx);
-	if (task->task_busy) {
-		// destroy later.
-		task->task_fini = true;
-		nni_mtx_unlock(&task->task_mtx);
-		return;
+	while (task->task_busy) {
+		nni_cv_wait(&task->task_cv);
 	}
 	nni_mtx_unlock(&task->task_mtx);
 	nni_cv_fini(&task->task_cv);
