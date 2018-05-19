@@ -403,10 +403,15 @@ nni_msgq_tryput(nni_msgq *mq, nni_msg *msg)
 	// the queue is empty, otherwise it would have just taken
 	// data from the queue.
 	if ((raio = nni_list_first(&mq->mq_aio_getq)) != NULL) {
-		nni_list_remove(&mq->mq_aio_getq, raio);
 
-		nni_aio_finish_msg(raio, msg);
-		nni_msgq_run_notify(mq);
+		if (mq->mq_filter_fn != NULL) {
+			msg = mq->mq_filter_fn(mq->mq_filter_arg, msg);
+		}
+		if (msg != NULL) {
+			nni_list_remove(&mq->mq_aio_getq, raio);
+			nni_aio_finish_msg(raio, msg);
+			nni_msgq_run_notify(mq);
+		}
 		nni_mtx_unlock(&mq->mq_lock);
 		return (0);
 	}
