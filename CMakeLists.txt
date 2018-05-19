@@ -86,7 +86,6 @@ endif()
 
 # User-defined options.
 
-option (NNG_ENABLE_DOC "Enable building documentation." ON)
 option (NNG_TESTS "Build and run tests" ON)
 option (NNG_TOOLS "Build extra tools" ON)
 option (NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
@@ -420,62 +419,7 @@ if (NNG_ENABLE_NNGCAT)
     add_subdirectory (tools/nngcat)
 endif ()
 
-if (NNG_ENABLE_DOC)
-    find_program (ASCIIDOCTOR_EXE asciidoctor)
-    if (NOT ASCIIDOCTOR_EXE)
-        message (WARNING "Could not find asciidoctor: skipping docs")
-        set (NNG_ENABLE_DOC OFF)
-    else ()
-        message (STATUS "Using asciidoctor at ${ASCIIDOCTOR_EXE}")
-    endif ()
-endif ()
-
-
-# Build the documenation
-if (NNG_ENABLE_DOC)
-
-    set (NNG_DOCDIR ${CMAKE_CURRENT_SOURCE_DIR}/doc)
-    set (NNG_STYLESHEET ${NNG_DOCDIR}/stylesheet.css)
-    set (NNG_TITLE ${PROJECT_NAME} ${NNG_PACKAGE_VERSION})
-    set (NNG_A2M ${ASCIIDOCTOR_EXE} -b manpage -amanmanual='${NNG_TITLE}')
-    set (NNG_A2H ${ASCIIDOCTOR_EXE} -d manpage -b html5 -a stylesheeet=${NNG_STYLESHEET} -aversion-label=${PROJECT_NAME} -arevnumber=${NNG_PACKAGE_VERSION})
-
-    macro (add_libnng_man NAME SECT)
-        add_custom_command (
-            OUTPUT ${NAME}.${SECT}
-            COMMAND ${NNG_A2M} -o ${NAME}.${SECT} ${NNG_DOCDIR}/${NAME}.adoc
-            MAIN_DEPENDENCY ${NNG_DOCDIR}/${NAME}.adoc
-        )
-
-        add_custom_command (
-            OUTPUT ${NAME}.html
-            COMMAND ${NNG_A2H} -o ${NAME}.html ${NNG_DOCDIR}/${NAME}.adoc
-            DEPENDS ${NNG_STYLESHEET}
-            MAIN_DEPENDENCY ${NNG_DOCDIR}/${NAME}.adoc
-        )
-
-        set(NNG_MANS ${NNG_MANS} ${NAME}.${SECT})
-        set(NNG_HTMLS ${NNG_HTMLS} ${NAME}.html)
-
-        install (
-            FILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.html
-            DESTINATION ${CMAKE_INSTALL_DOCDIR}
-        )
-        install (
-            FILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.${SECT}
-            DESTINATION ${CMAKE_INSTALL_MANDIR}/man${SECT}
-        )
-
-    endmacro (add_libnng_man)
-
-    #add_libnng_man (nn_errno 3)
-
-    #add_libnng_man (nanomsg 7)
-
-    #add_custom_target (man ALL DEPENDS ${NNG_MANS})
-    #add_custom_target (html ALL DEPENDS ${NNG_HTMLS})
-
-endif ()
+add_subdirectory (docs/man)
 
 set (CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set (CPACK_PACKAGE_VERSION ${NNG_PACKAGE_VERSION})
