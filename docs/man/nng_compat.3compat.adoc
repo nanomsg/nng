@@ -32,6 +32,11 @@ New applications should use the newer <<nng.7#,_nng_>> API instead.
 Applications making use of this ((compatibility layer)) must take care
 to link with <<libnng.3#,_libnng_>> instead of _libnn_.
 
+TIP: While not recommended for long term use, the value returned by
+<<nng_socket_id.3#,nng_socket_id()>> can be used with these functions
+just like a value returned by <<nn_socket.3compat#,nn_socket()>>.
+This can be way to facilitate incremental transition to the new API.
+
 NOTE: Some capabilities, protocols, and transports, will not be accessible
 using this API, as the compatible API has no provision for expression
 of certain concepts introduced in the newer <<nng.7#,_nng_>> API.

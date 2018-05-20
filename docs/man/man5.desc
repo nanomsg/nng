@@ -1,1 +1,4 @@
 This section documents core macros and types that are available.
+
+These are the core types and macros that most Scalabilty Protocols
+applications need will use.
