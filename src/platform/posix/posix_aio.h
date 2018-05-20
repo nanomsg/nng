@@ -20,6 +20,8 @@
 #include "core/nng_impl.h"
 #include "posix_pollq.h"
 
+#include <sys/types.h> // needed for mode_t
+
 typedef struct nni_posix_pipedesc nni_posix_pipedesc;
 typedef struct nni_posix_epdesc   nni_posix_epdesc;
 
