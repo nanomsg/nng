@@ -28,8 +28,8 @@
 // it for validating the compatibility features of nanomsg.   As much as
 // possible we want to run tests from the nanomsg test suite unmodified.
 
-#ifndef TESTUTIL_H_INCLUDED
-#define TESTUTIL_H_INCLUDED
+#ifndef COMPAT_TESTUTIL_H_INCLUDED
+#define COMPAT_TESTUTIL_H_INCLUDED
 
 #include <assert.h>
 #include <stdio.h>
@@ -80,4 +80,4 @@ struct nn_thread {
 extern int nn_thread_init(struct nn_thread *, void (*)(void *), void *);
 extern void nn_thread_term(struct nn_thread *);
 
-#endif // TESTUTIL_H_INCLUDED
+#endif // COMPAT_TESTUTIL_H_INCLUDED

@@ -17,19 +17,32 @@ nng_compat - compatibility with nanomsg 1.0
 
 [source, c]
 ----
-#include <nn/nn.h>
+#include <nanomsg/nn.h>
+
+#include <nanomsg/bus.h>
+#include <nanomsg/pair.h>
+#include <nanomsg/pipeline.h>
+#include <nanomsg/pubsub.h>
+#include <nanomsg/reqrep.h>
+#include <nanomsg/survey.h>
+
+#include <nanomsg/inproc.h>
+#include <nanomsg/ipc.h>
+#include <nanomsg/tcp.h>
+#include <nanomsg/ws.h>
 ----
 
 == DESCRIPTION
 
+(((compatibility layer)))
 The <<nng.7#,_nng_>> library provides source-level compatibility for
 most _nanomsg_ 1.0 applications.
 
-IMPORTANT: This is intended to faciliate converting legacy applications to
+IMPORTANT: This is intended to faciliate converting ((legacy applications)) to
 use the _nng_ library.
 New applications should use the newer <<nng.7#,_nng_>> API instead.
 
-Applications making use of this ((compatibility layer)) must take care
+Applications making use of this must take care
 to link with <<libnng.3#,_libnng_>> instead of _libnn_.
 
 TIP: While not recommended for long term use, the value returned by
@@ -45,11 +58,38 @@ NOTE: While reasonable efforts have been made to provide for compatibility,
 some things may behave differently, and some less common parts of the
 _nanomsg_ 1.0 API are not supported at this time, including certain
 options and the statistics API.
+See the <<Caveats>> section below.
 
-TIP: If an installation of the older _nanomsg_ library is present on
-the build system, it may be necessary to provide a different search
-path for header files to ensure that the compatibility definitions are
-used in compilation.
+=== Compiling
+
+When compiling legacy _nanomsg_ applications, it will generally be
+necessary to change the include search path to add the "`compat`" subdirectory
+of the directory where headers were installed.
+For example, if _nng_ is installed in `$prefix`, then header files will
+normally be located in `$prefix/include/nng`.
+In this case, to build legacy _nanomsg_ apps against _nng_ you would
+add `$prefix/include/nng/compat` to your compiler's search path.
+
+Alternatively, you can change your source code so that `#include` statements
+referring to `<nanomsg>` instead refer to `<nng/compat/nanomsg>`.
+For example, instead of:
+
+[source,c]
+----
+#include <nanomsg/nn.h>
+#include <nanomsg/reqrep.h>
+----
+
+you would have this:
+
+[source,c]
+----
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/reqrep.h>
+----
+
+Legacy applications built using these methods should be linked against _libnng_
+instead of _libnn_, just like any other _nng_ application.
 
 === Functions
 
@@ -109,51 +149,46 @@ ifdef::backend-pdf[]
 |===
 endif::[]
 
-There are a few caveats, that should be kept in mind.
+=== Caveats
 
-NOTE: Socket numbers can be quite large.
-The legacy _libnanomsg_ attempted to reuse socket numbers, like
-file descriptors in UNIX systems.
-The _nng_ library avoids this to prevent accidental reuse or
-collision after a descriptor is closed.
-Consequently, socket numbers can become quite large, and should
-probably not be used for array indices.
+The following caveats apply when using the legacy API with _nng_.
 
-NOTE: The following options (`nn_getsockopt`) are unsupported:
-`NN_SNDPRIO`, `NN_RCVPRIO`, `NN_IPV4ONLY`.
-The priority options may be supported in the future, when
-the underlying capability is present in _nng_.
+* Socket numbers can be quite large.
+  The legacy _libnanomsg_ attempted to reuse socket numbers, like
+  file descriptors in UNIX systems.
+  The _nng_ library avoids this to prevent accidental reuse or
+  collision after a descriptor is closed.
+  Consequently, socket numbers can become quite large, and should
+  probably not be used for array indices.
 
-NOTE: Access to statistics using this legacy API
-(`<<nn_get_statistic.3compat#,nn_get_statistic()>>`) is unsupported.
+* The following options (`nn_getsockopt`) are unsupported:
+  `NN_SNDPRIO`, `NN_RCVPRIO`, `NN_IPV4ONLY`.
+  The priority options may be supported in the future, when
+  the underlying capability is present in _nng_.
 
-NOTE: Some transports can support longer URLs than legacy _libnanomsg_ can.
-It is a good idea to use short pathnames in URLs if interoperability
-is a concern.
+* Access to statistics using this legacy API
+  (`<<nn_get_statistic.3compat#,nn_get_statistic()>>`) is unsupported.
 
-NOTE: Only absolute paths are supported in `ipc://` URLs.
-For example, `ipc:///tmp/mysocket` is acceptable, but `ipc://mysocket` is not.
+* Some transports can support longer URLs than legacy _libnanomsg_ can.
+  It is a good idea to use short pathnames in URLs if interoperability
+  is a concern.
 
-NOTE: Some transports are unusable from this mode.
-In particular, this legacy API offers no way to configure
-TLS parameters that are required for use.
+* Only absolute paths are supported in `ipc://` URLs.
+  For example, `ipc:///tmp/mysocket` is acceptable, but `ipc://mysocket` is not.
 
-NOTE: ABI versioning is not supported.
-We don't offer the `NN_VERSION_` macros.  Sorry.
+* The WebSocket transport in this implementation (`ws://` URLs)
+  only supports BINARY frames.
 
-NOTE: Runtime symbol information is not implemented.
-Specifically, there is no `nn_symbol()` function yet.
-(This may be addressed later if there is a need.)
+* Some newer transports are unusable from this mode.
+  In particular, this legacy API offers no way to configure
+  TLS or ZeroTier parameters that may be required for use.
 
-IMPORTANT: The `nn_term()` function is destructive and should be avoided.
-This function closes down all sockets, and really there is no good
-reason to ever use it.
-Removal from existing code is advised.
-(Keep track of sockets and close them explicitly if necessary.)
+* ABI versioning of the compatibility layer is not supported,
+  and the `NN_VERSION_` macros are not present.
 
-IMPORTANT: It *is* possible at present to intermix sockets between the new and
-the old APIs, but this is not a guaranteed feature, and should only
-be used temporarily to facilitate transitioning code to the new APIs.
+* Runtime symbol information is not implemented.
+  Specifically, there is no `nn_symbol()` function yet.
+  (This may be addressed later if there is a need.)
 
 == SEE ALSO
 

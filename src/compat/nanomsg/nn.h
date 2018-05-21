@@ -8,12 +8,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifndef NNG_COMPAT_H
-#define NNG_COMPAT_H
+#ifndef NNG_COMPAT_NN_H
+#define NNG_COMPAT_NN_H
 
 // This header contains interfaces that are intended to offer compatibility
 // with nanomsg v1.0.  These are not the "preferred" interfaces for nng,
-// and consumers should only use thse if they are porting software that
+// and consumers should only use these if they are porting software that
 // previously used nanomsg.  New programs should use the nng native APIs.
 
 // Note that compatibility promises are limited to public portions of the
@@ -62,27 +62,6 @@ extern "C" {
 
 #define AF_SP			1
 #define AF_SP_RAW		2
-
-// Protocol stuff
-#define NN_PROTO_PAIR		1
-#define NN_PROTO_PUBSUB		2
-#define NN_PROTO_REQREP		3
-#define NN_PROTO_PIPELINE	5
-#define NN_PROTO_SURVEY		6
-#define NN_PROTO_BUS		7
-
-#define NN_PAIR			(NN_PROTO_PAIR * 16 + 0)
-#define NN_PAIR_v0		(NN_PROTO_PAIR * 16 + 0)
-#define NN_PAIR_V1		(NN_PROTO_PAIR * 16 + 1)
-#define NN_PUB			(NN_PROTO_PUBSUB * 16 + 0)
-#define NN_SUB			(NN_PROTO_PUBSUB * 16 + 1)
-#define NN_REQ			(NN_PROTO_REQREP * 16 + 0)
-#define NN_REP			(NN_PROTO_REQREP * 16 + 1)
-#define NN_PUSH			(NN_PROTO_PIPELINE * 16 + 0)
-#define NN_PULL			(NN_PROTO_PIPELINE * 16 + 1)
-#define NN_SURVEYOR		(NN_PROTO_SURVEY * 16 + 2)
-#define NN_RESPONDENT		(NN_PROTO_SURVEY * 16 + 3)
-#define NN_BUS			(NN_PROTO_BUS * 16 + 0)
 
 #define NN_SOCKADDR_MAX		128
 #define NN_SOL_SOCKET		0
@@ -223,26 +202,6 @@ extern "C" {
 #define NN_RCVMAXSIZE		16
 #define NN_MAXTTL		17
 
-// Protocol-specific options.  To simplify thins we encode the protocol
-// level in the option.
-#define NN_SUB_SUBSCRIBE		(NN_SUB * 16 + 1)
-#define NN_SUB_UNSUBSCRIBE		(NN_SUB * 16 + 2)
-#define NN_REQ_RESEND_IVL		(NN_REQ * 16 + 1)
-#define NN_SURVEYOR_DEADLINE		(NN_SURVEYOR * 16 + 1)
-
-// Level options for tranports
-#define NN_INPROC			(-1)
-#define NN_IPC				(-2)
-#define NN_IPC_SEC_ATTR			1
-#define NN_IPC_OUTBUFSZ			2
-#define NN_IPC_INBUFSZ			3
-#define NN_TCP				(-3)
-#define NN_TCP_NODELAY			1
-#define NN_WS				(-4)
-#define NN_WS_MSG_TYPE			1
-#define NN_WS_MSG_TYPE_TEXT		1
-#define NN_WS_MSG_TYPE_BINARY		2
-
 // from this point on formatting is fine
 // clang-format on
 
@@ -319,4 +278,4 @@ NN_DECL void        nn_term(void);
 }
 #endif
 
-#endif // NNG_COMPAT_H
+#endif // NNG_COMPAT_NN_H

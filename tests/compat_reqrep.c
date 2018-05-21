@@ -23,6 +23,7 @@
 */
 
 #include <nanomsg/nn.h>
+#include <nanomsg/reqrep.h>
 
 #include "compat_testutil.h"
 

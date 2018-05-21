@@ -24,6 +24,8 @@
 */
 
 #include <nanomsg/nn.h>
+#include <nanomsg/pair.h>
+
 #include "compat_testutil.h"
 
 #include <string.h>

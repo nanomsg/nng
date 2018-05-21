@@ -22,6 +22,7 @@
 */
 
 #include <nanomsg/nn.h>
+#include <nanomsg/pair.h>
 #include "compat_testutil.h"
 
 int main (NN_UNUSED int argc, NN_UNUSED const char *argv[])

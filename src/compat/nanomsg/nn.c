@@ -9,6 +9,22 @@
 //
 
 #include "nn.h"
+
+// transports
+#include "inproc.h"
+#include "ipc.h"
+#include "tcp.h"
+#include "ws.h"
+
+// protocols
+#include "bus.h"
+#include "pair.h"
+#include "pipeline.h"
+#include "pubsub.h"
+#include "reqrep.h"
+#include "survey.h"
+
+// underlying NNG headers
 #include "nng.h"
 #include "protocol/bus0/bus.h"
 #include "protocol/pair0/pair.h"

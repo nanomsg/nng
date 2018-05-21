@@ -22,6 +22,7 @@
 */
 
 #include <nanomsg/nn.h>
+#include <nanomsg/pipeline.h>
 #include "compat_testutil.h"
 
 #define SOCKET_ADDRESS "inproc://a"

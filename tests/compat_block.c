@@ -21,6 +21,7 @@
 */
 
 #include <nanomsg/nn.h>
+#include <nanomsg/pair.h>
 #include "compat_testutil.h"
 
 /*  This test checks whether blocking on send/recv works as expected. */

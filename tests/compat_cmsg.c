@@ -23,6 +23,9 @@
 */
 
 #include <nanomsg/nn.h>
+#include <nanomsg/tcp.h>
+#include <nanomsg/reqrep.h>
+
 #include "compat_testutil.h"
 
 int main (int argc, const char *argv[])

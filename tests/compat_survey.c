@@ -22,6 +22,7 @@
 */
 
 #include <nanomsg/nn.h>
+#include <nanomsg/survey.h>
 
 #include "compat_testutil.h"
 

@@ -34,6 +34,8 @@
 #endif
 #include "compat_testutil.h"
 #include <nanomsg/nn.h>
+#include <nanomsg/pair.h>
+#include <nanomsg/inproc.h>
 
 /*  Test of polling via NN_SNDFD/NN_RCVFD mechanism. */
 

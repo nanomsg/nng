@@ -24,6 +24,8 @@
 */
 
 #include <nanomsg/nn.h>
+#include <nanomsg/survey.h>
+#include <nanomsg/tcp.h>
 
 #include "compat_testutil.h"
 
