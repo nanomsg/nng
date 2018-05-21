@@ -39,7 +39,7 @@ nng_options - socket, dialer, listener, and pipe options
 #define NNG_OPT_RECONNMINT    "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT    "reconnect-time-max"
 #define NNG_OPT_TCP_NODELAY   "tcp-nodelay"
-#define NNG_OPT_TCP_KEEPALIVE "tcp-nodelay"
+#define NNG_OPT_TCP_KEEPALIVE "tcp-keepalive"
 ----
 
 == DESCRIPTION
