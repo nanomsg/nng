@@ -10,6 +10,9 @@
 
 #include "core/nng_impl.h"
 
+#include <ctype.h>
+#include <string.h>
+
 #ifdef NNG_PLATFORM_WINDOWS
 
 // Modern Windows has an asynchronous resolver, but there are problems
@@ -33,8 +36,8 @@ struct resolv_item {
 	int          family;
 	int          passive;
 	const char * name;
-	const char * serv;
 	int          proto;
+	uint16_t     port;
 	nni_aio *    aio;
 	nng_sockaddr sa;
 };
@@ -112,8 +115,7 @@ resolv_task(resolv_item *item)
 	hints.ai_protocol = item->proto;
 	hints.ai_family   = item->family;
 
-	rv = getaddrinfo(item->name, item->serv, &hints, &results);
-	if (rv != 0) {
+	if ((rv = getaddrinfo(item->name, "80", &hints, &results)) != 0) {
 		rv = resolv_gai_errno(rv);
 		goto done;
 	}
@@ -139,14 +141,14 @@ resolv_task(resolv_item *item)
 			rv                 = 0;
 			sin                = (void *) probe->ai_addr;
 			sa->s_in.sa_family = NNG_AF_INET;
-			sa->s_in.sa_port   = sin->sin_port;
+			sa->s_in.sa_port   = item->port;
 			sa->s_in.sa_addr   = sin->sin_addr.s_addr;
 			break;
 		case AF_INET6:
 			rv                  = 0;
 			sin6                = (void *) probe->ai_addr;
 			sa->s_in6.sa_family = NNG_AF_INET6;
-			sa->s_in6.sa_port   = sin6->sin6_port;
+			sa->s_in6.sa_port   = item->port;
 			memcpy(sa->s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 			break;
 		}
@@ -167,6 +169,7 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 	resolv_item *item;
 	int          fam;
 	int          rv;
+	int          port;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -186,17 +189,44 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 		return;
 	}
 
+	// We can't use the resolver to look up up ports with AI_NUMERICSERV,
+	// because Windows' resolver is broken.  For example, the resolver
+	// takes a port number of 1000000 and just rips off the high order
+	// bits and lets it through!  (It seems to time out though, so
+	// maybe it is ignoring AI_NUMERICSERV.)
+	port = 0;
+	if (serv != NULL) {
+		while (isdigit(*serv)) {
+			port *= 10;
+			port += (*serv - '0');
+			if (port > 0xffff) {
+				// Port number out of range.
+				nni_aio_finish_error(aio, NNG_EADDRINVAL);
+				return;
+			}
+			serv++;
+		}
+		if (*serv != '\0') {
+			nni_aio_finish_error(aio, NNG_EADDRINVAL);
+			return;
+		}
+	}
+	if ((port == 0) && (!passive)) {
+		nni_aio_finish_error(aio, NNG_EADDRINVAL);
+		return;
+	}
+
 	if ((item = NNI_ALLOC_STRUCT(item)) == NULL) {
 		nni_aio_finish_error(aio, NNG_ENOMEM);
 		return;
 	}
-
+	memset(&item->sa, 0, sizeof(item->sa));
 	item->passive = passive;
 	item->name    = host;
-	item->serv    = serv;
 	item->proto   = proto;
 	item->aio     = aio;
 	item->family  = fam;
+	item->port    = htons((uint16_t) port);
 
 	nni_mtx_lock(&resolv_mtx);
 	if (resolv_fini) {

@@ -196,7 +196,7 @@ add_nng_compat_test(compat_survey 5)
 add_nng_compat_test(compat_reqttl 5)
 add_nng_compat_test(compat_shutdown 5)
 add_nng_compat_test(compat_surveyttl 5)
-add_nng_compat_test(compat_tcp 5)
+add_nng_compat_test(compat_tcp 60)
 
 # These are special tests for compat mode, not inherited from the
 # legacy libnanomsg suite.
