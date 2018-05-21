@@ -186,28 +186,9 @@ more than one peer on a given connection.
 
 === Receive Options
 
-Data messages received can be formatted in different ways.  These
-options can only be specified when using a protocol that receives messages.
-
-*--format*=_FORMAT_::
-  Format data as indicated.  The _FORMAT_ can be any of: +
-  `no`:::
-    No output at all.
-  `raw`:::
-    Raw output, every byte received is sent to standard output.
-  `ascii`:::
-    ((ASCII)) safe, printable ASCII is emitted verbatim, with other bytes
-    substituted with `.` (period).
-  `quoted`:::
-    Messages are printed as ((quoted)) strings, using C language conventions.
-  `hex`:::
-    (((hex))) Messages are printed as quoted strings, with every byte appearing
-    as an escaped hexadecimal value, such as `\x2E`.
-  `msgpack`:::
-    (((msgpack)))
-    (((MessagePack)))
-    Messages are emitted as https://msgpack.org[MessagePack] "bin format"
-    (byte arrays).
+Data messages received can be formatted in different ways.
+These options can only be specified when using a protocol that
+receives messages.
 
 *-A, --ascii*::
   The same as specifying *--format*=`ascii`.
@@ -233,6 +214,25 @@ options can only be specified when using a protocol that receives messages.
   Messages larger than this will be discarded.
   The default is 1048576 (1 MB).
   To eliminate any restriction, use 0.
+
+*--format*=_FORMAT_::
+  Format data as indicated.  The _FORMAT_ can be any of:
+
+`no`::: No output at all.
+
+`raw`::: Raw output, every byte received is sent to standard output.
+
+`ascii`::: ((ASCII)) safe, printable ASCII is emitted verbatim, with other
+bytes substituted with `.` (period).
+
+`quoted`:::  Messages are printed as ((quoted)) strings, using C language
+conventions.
+
+`hex`::: (((hex))) Messages are printed as quoted strings, with every byte appearing as an escaped hexadecimal value, such as `\x2E`.
+
+`msgpack`::: (((msgpack)))(((MessagePack)))
+Messages are emitted as https://msgpack.org[MessagePack] "bin format"
+(byte arrays).
 
 === Transmit Options
 
