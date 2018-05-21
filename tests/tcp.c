@@ -134,7 +134,8 @@ TestMain("TCP Transport", {
 
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
-		So(nng_getopt_bool(s, NNG_OPT_TCP_NODELAY, &v) == NNG_ENOTSUP);
+		So(nng_getopt_bool(s, NNG_OPT_TCP_NODELAY, &v) == 0);
+		So(v == true);
 		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
 		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_NODELAY, &v) == 0);
 		So(v == true);
@@ -183,8 +184,8 @@ TestMain("TCP Transport", {
 
 		So(nng_pair_open(&s) == 0);
 		Reset({ nng_close(s); });
-		So(nng_getopt_bool(s, NNG_OPT_TCP_KEEPALIVE, &v) ==
-		    NNG_ENOTSUP);
+		So(nng_getopt_bool(s, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
+		So(v == false);
 		So(nng_dialer_create(&d, s, "tcp://127.0.0.1:4999") == 0);
 		So(nng_dialer_getopt_bool(d, NNG_OPT_TCP_KEEPALIVE, &v) == 0);
 		So(v == false);

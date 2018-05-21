@@ -64,7 +64,7 @@ static const struct {
 	{ NNG_ENOENT,	    ENOENT	  },
 	{ NNG_EPROTO,	    EPROTO	  },
 	{ NNG_EUNREACHABLE, EHOSTUNREACH  },
-	{ NNG_EADDRINVAL,   EADDRNOTAVAIL },
+	{ NNG_EADDRINVAL,   EINVAL        },
 	{ NNG_EPERM,	    EACCES	  },
 	{ NNG_EMSGSIZE,	    EMSGSIZE	  },
 	{ NNG_ECONNABORTED, ECONNABORTED  },
@@ -237,6 +237,8 @@ nn_socket(int domain, int protocol)
 		return (-1);
 	}
 
+	// Legacy sockets have nodelay disabled.
+	(void) nng_setopt_bool(sock, NNG_OPT_TCP_NODELAY, false);
 	return ((int) sock.id);
 }
 
@@ -747,6 +749,54 @@ nn_setignore(nng_socket s, const void *valp, size_t sz)
 }
 
 static int
+nn_settcpnodelay(nng_socket s, const void *valp, size_t sz)
+{
+	bool val;
+	int  ival;
+	int  rv;
+
+	if (sz != sizeof(ival)) {
+		errno = EINVAL;
+		return (-1);
+	}
+	memcpy(&ival, valp, sizeof(ival));
+	switch (ival) {
+	case 0:
+		val = false;
+		break;
+	case 1:
+		val = true;
+		break;
+	default:
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+
+	if ((rv = nng_setopt_bool(s, NNG_OPT_TCP_NODELAY, val)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	return (0);
+}
+
+static int
+nn_gettcpnodelay(nng_socket s, void *valp, size_t *szp)
+{
+	bool val;
+	int  ival;
+	int  rv;
+
+	if ((rv = nng_getopt_bool(s, NNG_OPT_TCP_NODELAY, &val)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	ival = val ? 1 : 0;
+	memcpy(valp, &ival, *szp < sizeof(ival) ? *szp : sizeof(ival));
+	*szp = sizeof(ival);
+	return (0);
+}
+
+static int
 nn_getrcvbuf(nng_socket s, void *valp, size_t *szp)
 {
 	int cnt;
@@ -769,7 +819,7 @@ nn_setrcvbuf(nng_socket s, const void *valp, size_t sz)
 	int rv;
 
 	if (sz != sizeof(cnt)) {
-		nn_seterror(NNG_EINVAL);
+		errno = EINVAL;
 		return (-1);
 	}
 	memcpy(&cnt, valp, sizeof(cnt));
@@ -808,7 +858,7 @@ nn_setsndbuf(nng_socket s, const void *valp, size_t sz)
 	int rv;
 
 	if (sz != sizeof(cnt)) {
-		nn_seterror(NNG_EINVAL);
+		errno = EINVAL;
 		return (-1);
 	}
 	memcpy(&cnt, valp, sizeof(cnt));
@@ -821,6 +871,61 @@ nn_setsndbuf(nng_socket s, const void *valp, size_t sz)
 		nn_seterror(rv);
 		return (-1);
 	}
+	return (0);
+}
+
+static int
+nn_setrcvmaxsz(nng_socket s, const void *valp, size_t sz)
+{
+	int    ival;
+	size_t val;
+	int    rv;
+
+	if (sz != sizeof(ival)) {
+		errno = EINVAL;
+		return (-1);
+	}
+	memcpy(&ival, valp, sizeof(ival));
+	if (ival == -1) {
+		val = 0;
+	} else if (ival >= 0) {
+		// Note that if the user sets 0, it disables the limit.
+		// This is a different semantic.
+		val = (size_t) ival;
+	} else {
+		errno = EINVAL;
+		return (-1);
+	}
+	if ((rv = nng_setopt_size(s, NNG_OPT_RECVMAXSZ, val)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	return (0);
+}
+
+static int
+nn_getrcvmaxsz(nng_socket s, void *valp, size_t *szp)
+{
+	int    ival;
+	int    rv;
+	size_t val;
+
+	if ((rv = nng_getopt_size(s, NNG_OPT_RECVMAXSZ, &val)) != 0) {
+		nn_seterror(rv);
+		return (-1);
+	}
+	// Legacy uses -1 to mean unlimited.  New code uses 0.  Note that
+	// as a consequence, we can't set a message limit of zero.
+	// We report any size beyond 2GB as effectively unlimited.
+	// There is an implicit assumption here that ints are 32-bits,
+	// but that's generally true of any platform we support.
+	if ((val == 0) || (val > 0x7FFFFFFF)) {
+		ival = -1;
+	} else {
+		ival = (int) val;
+	}
+	memcpy(valp, &ival, *szp < sizeof(ival) ? *szp : sizeof(ival));
+	*szp = sizeof(ival);
 	return (0);
 }
 
@@ -881,7 +986,8 @@ static const struct {
 	{
 	    .nnlevel = NN_SOL_SOCKET,
 	    .nnopt   = NN_RCVMAXSIZE,
-	    .opt     = NNG_OPT_RECVMAXSZ,
+	    .get     = nn_getrcvmaxsz,
+	    .set     = nn_setrcvmaxsz,
 	},
 	{
 	    .nnlevel = NN_SOL_SOCKET,
@@ -928,6 +1034,12 @@ static const struct {
 	    .nnopt   = NN_SURVEYOR_DEADLINE,
 	    .opt     = NNG_OPT_SURVEYOR_SURVEYTIME,
 	},
+	{
+	    .nnlevel = NN_TCP,
+	    .nnopt   = NN_TCP_NODELAY,
+	    .get     = nn_gettcpnodelay,
+	    .set     = nn_settcpnodelay,
+	}
 	// XXX: IPV4ONLY, SNDPRIO, RCVPRIO
 };
 

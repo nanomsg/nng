@@ -532,6 +532,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 {
 	int       rv;
 	nni_sock *s;
+	bool      on;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
@@ -586,6 +587,16 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 		nni_sock_destroy(s);
 		return (rv);
 	}
+
+	// These we *attempt* to call so that we are likely to have initial
+	// values loaded.  They should not fail, but if they do we don't
+	// worry about it.
+	on = true;
+	(void) nni_sock_setopt(
+	    s, NNG_OPT_TCP_NODELAY, &on, sizeof(on), NNI_TYPE_BOOL);
+	on = false;
+	(void) nni_sock_setopt(
+	    s, NNG_OPT_TCP_KEEPALIVE, &on, sizeof(on), NNI_TYPE_BOOL);
 
 	if (s->s_sock_ops.sock_filter != NULL) {
 		nni_msgq_set_filter(

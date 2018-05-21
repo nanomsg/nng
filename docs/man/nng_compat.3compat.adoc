@@ -190,6 +190,23 @@ The following caveats apply when using the legacy API with _nng_.
   Specifically, there is no `nn_symbol()` function yet.
   (This may be addressed later if there is a need.)
 
+* The TCP transport (`tcp://` URLs) does not support specifying the local
+  address or interface when binding.  (This could be fixed in the future,
+  but most likely this will be available only using the new API.)
+
+* The values of `NN_RCVMAXSIZE` are constrained.
+  Specifically, values set larger than 2GB using the new API will be reported
+  as unlimited (`-1`) in the new API, and the value `0` will disable any
+  enforcement, just like `-1`.
+  (There is no practical reason to ever want to limit the receive size to
+  zero.)
+
+* This implementation counts buffers in terms of messages rather than bytes.
+  As a result, the buffer sizes accessed with `NN_SNDBUF` and `NN_RCVBUF` are
+  rounded up to a whole number of kilobytes, then divided by 1024, in order
+  to approximate buffering assuming 1 KB messages.
+  Few applications should need to adjust the default values.
+
 == SEE ALSO
 
 <<libnng.3#,libnng(3)>>,

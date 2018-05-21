@@ -247,6 +247,16 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 		return (rv);
 	}
 
+#if defined(SO_REUSEADDR) && !defined(NNG_PLATFORM_WSL)
+	if (ss->ss_family != AF_UNIX) {
+		int on = 1;
+		// If for some reason this doesn't work, it's probably ok.
+		// Second bind will fail.
+		(void) setsockopt(
+		    fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
+	}
+#endif
+
 	if (bind(fd, (struct sockaddr *) ss, len) < 0) {
 		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&ed->mtx);

@@ -190,12 +190,13 @@ add_nng_compat_test(compat_iovec 5)
 add_nng_compat_test(compat_device 5)
 add_nng_compat_test(compat_pair 5)
 add_nng_compat_test(compat_pipeline 5)
+add_nng_compat_test(compat_poll 5)
 add_nng_compat_test(compat_reqrep 5)
 add_nng_compat_test(compat_survey 5)
 add_nng_compat_test(compat_reqttl 5)
 add_nng_compat_test(compat_shutdown 5)
 add_nng_compat_test(compat_surveyttl 5)
-add_nng_compat_test(compat_poll 5)
+add_nng_compat_test(compat_tcp 5)
 
 # These are special tests for compat mode, not inherited from the
 # legacy libnanomsg suite.
