@@ -102,7 +102,7 @@ TestMain("PUB/SUB pattern", {
 		So(nng_listen(sub, addr, NULL, 0) == 0);
 		So(nng_dial(pub, addr, NULL, 0) == 0);
 
-		nng_msleep(20); // give time for connecting threads
+		nng_msleep(200); // give time for connecting threads
 
 		Convey("Subs can receive from pubs", {
 			nng_msg *msg;
@@ -136,7 +136,6 @@ TestMain("PUB/SUB pattern", {
 		});
 
 		Convey("Subs without subsciptions don't receive", {
-
 			nng_msg *msg;
 			So(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 90) == 0);
 
@@ -145,11 +144,9 @@ TestMain("PUB/SUB pattern", {
 			So(nng_sendmsg(pub, msg, 0) == 0);
 			So(nng_recvmsg(sub, &msg, 0) == NNG_ETIMEDOUT);
 		});
-
 	});
 
 	Convey("Subs in raw receive", {
-
 		nng_msg *  msg;
 		nng_socket pub;
 		nng_socket sub;
@@ -172,7 +169,7 @@ TestMain("PUB/SUB pattern", {
 		So(nng_listen(sub, addr, NULL, 0) == 0);
 		So(nng_dial(pub, addr, NULL, 0) == 0);
 
-		nng_msleep(20); // give time for connecting threads
+		nng_msleep(200); // give time for connecting threads
 
 		So(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 90) == 0);
 		So(nng_getopt_bool(sub, NNG_OPT_RAW, &raw) == 0);
@@ -185,5 +182,4 @@ TestMain("PUB/SUB pattern", {
 		CHECKSTR(msg, "/some/like/it/raw");
 		nng_msg_free(msg);
 	});
-
 })
