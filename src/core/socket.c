@@ -572,7 +572,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	nni_cv_init(&s->s_close_cv, &nni_sock_lk);
 
 	if (((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
-	    ((rv = nni_msgq_init(&s->s_urq, 0)) != 0) ||
+	    ((rv = nni_msgq_init(&s->s_urq, 1)) != 0) ||
 	    ((rv = s->s_sock_ops.sock_init(&s->s_data, s)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_SENDTIMEO, &s->s_sndtimeo,
 	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
