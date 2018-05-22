@@ -55,7 +55,7 @@ set (NNG_DESCRIPTION "High-Performance Scalability Protocols NextGen")
 set (ISSUE_REPORT_MSG "Please consider opening an issue at https://github.com/nanomsg/nng")
 
 # Determine library versions.
-set (NNG_ABI_VERSION "0.0.0")
+set (NNG_ABI_VERSION "1.0.0")
 
 # Determine package version.
 find_package (Git QUIET)
