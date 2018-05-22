@@ -421,6 +421,12 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		s++; // skip over ']', only used with IPv6 addresses
 	}
 	if (s[0] == ':') {
+		// If a colon was present, but no port value present, then
+		// that is an error.
+		if (s[1] == '\0') {
+			rv = NNG_EINVAL;
+			goto error;
+		}
 		url->u_port = nni_strdup(s + 1);
 	} else {
 		url->u_port = nni_strdup(nni_url_default_port(url->u_scheme));

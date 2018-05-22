@@ -75,6 +75,7 @@ struct nni_ws_listener {
 	nni_ws_listen_hook hookfn;
 	void *             hookarg;
 	nni_list           headers; // response headers
+	size_t             maxframe;
 };
 
 // The dialer tracks user aios in two lists. The first list is for aios
@@ -94,6 +95,7 @@ struct nni_ws_dialer {
 	bool             closed;
 	nng_sockaddr     sa;
 	nni_list         headers; // request headers
+	size_t           maxframe;
 };
 
 typedef enum ws_type {
@@ -945,7 +947,7 @@ ws_read_cb(void *arg)
 			break;
 		}
 
-		if (frame->len > ws->maxframe) {
+		if ((frame->len > ws->maxframe) && (ws->maxframe > 0)) {
 			ws_close(ws, WS_CLOSE_TOO_BIG);
 			nni_mtx_unlock(&ws->mtx);
 			return;
@@ -1380,7 +1382,6 @@ ws_init(nni_ws **wsp)
 	nni_aio_set_timeout(ws->httpaio, 2000);
 
 	ws->fragsize = 1 << 20; // we won't send a frame larger than this
-	ws->maxframe = (1 << 20) * 10; // default limit on incoming frame size
 	*wsp         = ws;
 	return (0);
 }
@@ -1557,12 +1558,13 @@ ws_handler(nni_aio *aio)
 		status = NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR;
 		goto err;
 	}
-	ws->http = conn;
-	ws->req  = req;
-	ws->res  = res;
-	ws->mode = NNI_EP_MODE_LISTEN;
+	ws->http     = conn;
+	ws->req      = req;
+	ws->res      = res;
+	ws->mode     = NNI_EP_MODE_LISTEN;
+	ws->maxframe = l->maxframe;
 
-	// XXX: Inherit fragmentation and message size limits!
+	// XXX: Inherit fragmentation? (Frag is limited for now).
 
 	nni_list_append(&l->reply, ws);
 	nni_aio_set_data(ws->httpaio, 0, l);
@@ -1621,7 +1623,8 @@ nni_ws_listener_init(nni_ws_listener **wslp, nni_url *url)
 		return (rv);
 	}
 
-	*wslp = l;
+	l->maxframe = 0;
+	*wslp       = l;
 	return (0);
 }
 
@@ -1785,6 +1788,14 @@ nni_ws_listener_get_tls(nni_ws_listener *l, nng_tls_config **tlsp)
 }
 
 void
+nni_ws_listener_set_maxframe(nni_ws_listener *l, size_t maxframe)
+{
+	nni_mtx_lock(&l->mtx);
+	l->maxframe = maxframe;
+	nni_mtx_unlock(&l->mtx);
+}
+
+void
 ws_conn_cb(void *arg)
 {
 	nni_ws_dialer *d;
@@ -1920,8 +1931,8 @@ nni_ws_dialer_init(nni_ws_dialer **dp, nni_url *url)
 		nni_ws_dialer_fini(d);
 		return (rv);
 	}
-
-	*dp = d;
+	d->maxframe = 0;
+	*dp         = d;
 	return (0);
 }
 
@@ -2021,9 +2032,10 @@ nni_ws_dialer_dial(nni_ws_dialer *d, nni_aio *aio)
 		ws_fini(ws);
 		return;
 	}
-	ws->dialer  = d;
-	ws->useraio = aio;
-	ws->mode    = NNI_EP_MODE_DIAL;
+	ws->dialer   = d;
+	ws->useraio  = aio;
+	ws->mode     = NNI_EP_MODE_DIAL;
+	ws->maxframe = d->maxframe;
 	nni_list_append(&d->wspend, ws);
 	nni_http_client_connect(d->client, ws->connaio);
 	nni_mtx_unlock(&d->mtx);
@@ -2069,6 +2081,14 @@ nni_ws_dialer_header(nni_ws_dialer *d, const char *n, const char *v)
 	rv = ws_set_header(&d->headers, n, v);
 	nni_mtx_unlock(&d->mtx);
 	return (rv);
+}
+
+void
+nni_ws_dialer_set_maxframe(nni_ws_dialer *d, size_t maxframe)
+{
+	nni_mtx_lock(&d->mtx);
+	d->maxframe = maxframe;
+	nni_mtx_unlock(&d->mtx);
 }
 
 // Dialer does not get a hook chance, as it can examine the request

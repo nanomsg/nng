@@ -749,6 +749,33 @@ nn_setignore(nng_socket s, const void *valp, size_t sz)
 }
 
 static int
+nn_getwsmsgtype(nng_socket s, void *valp, size_t *szp)
+{
+	int val = NN_WS_MSG_TYPE_BINARY;
+	NNI_ARG_UNUSED(s);
+	memcpy(valp, &val, *szp < sizeof(val) ? *szp : sizeof(val));
+	*szp = sizeof(val);
+	return (0);
+}
+
+static int
+nn_setwsmsgtype(nng_socket s, const void *valp, size_t sz)
+{
+	int val;
+	NNI_ARG_UNUSED(s);
+	if (sz != sizeof(val)) {
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+	memcpy(&val, valp, sizeof(val));
+	if (val != NN_WS_MSG_TYPE_BINARY) {
+		nn_seterror(NNG_EINVAL);
+		return (-1);
+	}
+	return (0);
+}
+
+static int
 nn_settcpnodelay(nng_socket s, const void *valp, size_t sz)
 {
 	bool val;
@@ -1039,6 +1066,12 @@ static const struct {
 	    .nnopt   = NN_TCP_NODELAY,
 	    .get     = nn_gettcpnodelay,
 	    .set     = nn_settcpnodelay,
+	},
+	{
+	    .nnlevel = NN_WS,
+	    .nnopt   = NN_WS_MSG_TYPE,
+	    .get     = nn_getwsmsgtype,
+	    .set     = nn_setwsmsgtype,
 	}
 	// XXX: IPV4ONLY, SNDPRIO, RCVPRIO
 };

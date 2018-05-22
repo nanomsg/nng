@@ -30,7 +30,7 @@ static nni_initializer http_server_initializer = {
 
 struct nng_http_handler {
 	nni_list_node node;
-	char *        path;
+	char *        uri;
 	char *        method;
 	char *        host;
 	bool          tree;
@@ -75,14 +75,18 @@ struct nng_http_server {
 
 int
 nni_http_handler_init(
-    nni_http_handler **hp, const char *path, void (*cb)(nni_aio *))
+    nni_http_handler **hp, const char *uri, void (*cb)(nni_aio *))
 {
 	nni_http_handler *h;
 
 	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if (((h->path = nni_strdup(path)) == NULL) ||
+	// Default for HTTP is /.
+	if ((uri == NULL) || (strlen(uri) == 0)) {
+		uri = "/";
+	}
+	if (((h->uri = nni_strdup(uri)) == NULL) ||
 	    ((h->method = nni_strdup("GET")) == NULL)) {
 		nni_http_handler_fini(h);
 		return (NNG_ENOMEM);
@@ -108,7 +112,7 @@ nni_http_handler_fini(nni_http_handler *h)
 		h->dtor(h->data);
 	}
 	nni_strfree(h->host);
-	nni_strfree(h->path);
+	nni_strfree(h->uri);
 	nni_strfree(h->method);
 	NNI_FREE_STRUCT(h);
 }
@@ -133,7 +137,7 @@ nni_http_handler_get_data(nni_http_handler *h)
 const char *
 nni_http_handler_get_uri(nni_http_handler *h)
 {
-	return (h->path);
+	return (h->uri);
 }
 
 int
@@ -383,8 +387,7 @@ http_uri_canonify(char *path)
 	}
 	*dst = '\0';
 
-	// XXX: this is where we should also remove /./ and /../ references.
-	return (path);
+	return ((strlen(path) != 0) ? path : "/");
 }
 
 static void
@@ -527,8 +530,8 @@ http_sconn_rxdone(void *arg)
 			}
 		}
 
-		len = strlen(h->path);
-		if (strncmp(path, h->path, len) != 0) {
+		len = strlen(h->uri);
+		if (strncmp(path, h->uri, len) != 0) {
 			continue;
 		}
 		switch (path[len]) {
@@ -957,11 +960,11 @@ nni_http_server_add_handler(nni_http_server *s, nni_http_handler *h)
 	// Must have a legal method (and not one that is HEAD), path,
 	// and handler.  (The reason HEAD is verboten is that we supply
 	// it automatically as part of GET support.)
-	if (((len = strlen(h->path)) == 0) || (h->path[0] != '/') ||
+	if (((len = strlen(h->uri)) == 0) || (h->uri[0] != '/') ||
 	    (h->cb == NULL)) {
 		return (NNG_EINVAL);
 	}
-	while ((len > 0) && (h->path[len - 1] == '/')) {
+	while ((len > 0) && (h->uri[len - 1] == '/')) {
 		len--; // ignore trailing '/' (this collapses them)
 	}
 
@@ -992,22 +995,22 @@ nni_http_server_add_handler(nni_http_server *s, nni_http_handler *h)
 			continue;
 		}
 
-		len2 = strlen(h2->path);
+		len2 = strlen(h2->uri);
 
-		while ((len2 > 0) && (h2->path[len2 - 1] == '/')) {
+		while ((len2 > 0) && (h2->uri[len2 - 1] == '/')) {
 			len2--; // ignore trailing '/'
 		}
-		if (strncmp(h->path, h2->path, len > len2 ? len2 : len) != 0) {
+		if (strncmp(h->uri, h2->uri, len > len2 ? len2 : len) != 0) {
 			continue; // prefixes don't match.
 		}
 
 		if (len2 > len) {
-			if ((h2->path[len] == '/') && (h->tree)) {
+			if ((h2->uri[len] == '/') && (h->tree)) {
 				nni_mtx_unlock(&s->mtx);
 				return (NNG_EADDRINUSE);
 			}
 		} else if (len > len2) {
-			if ((h->path[len2] == '/') && (h2->tree)) {
+			if ((h->uri[len2] == '/') && (h2->tree)) {
 				nni_mtx_unlock(&s->mtx);
 				return (NNG_EADDRINUSE);
 			}
