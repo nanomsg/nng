@@ -22,7 +22,6 @@ jobs:
       - run: >
           apt-get install -y --allow-unauthenticated
           build-essential
-          curl
           asciidoctor
           cmake
           libmbedtls-dev
@@ -30,6 +29,26 @@ jobs:
           clang-6.0
           clang-format-6.0
       - run: ./etc/format-check.sh
+      - run: ./.circleci/build-and-test.sh
+
+  "gcc - static":
+    docker:
+      - image: ubuntu:16.04
+        environment:
+          CC: gcc
+          CXX: g++
+    steps:
+      - checkout
+      - run: apt-get update -qq
+      - run: apt-get install -y software-properties-common
+      - run: add-apt-repository ppa:ubuntu-toolchain-r/test
+      - run: apt-get update -qq
+      - run: >
+          apt-get install -y --allow-unauthenticated
+          build-essential
+          cmake
+          libmbedtls-dev
+          ninja-build
       - run: ./.circleci/build-and-test.sh
 
   "gcc - build, test, coverage":

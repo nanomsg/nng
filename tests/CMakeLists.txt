@@ -40,7 +40,7 @@ if (NNG_TESTS)
 
     # convey tests -- verify the test framework works!
     add_executable(convey_test convey_test.c convey.c)
-    target_link_libraries (convey_test "${NNG_REQUIRED_LIBS}")
+    target_link_libraries (convey_test Threads::Threads)
     add_test (NAME convey_test COMMAND convey_test
         -v -d -p ENV_TEST=ON -p ANOTHERNAME -p AGAIN=yes extra)
     set_tests_properties (convey_test PROPERTIES TIMEOUT 2)
