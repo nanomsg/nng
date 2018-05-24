@@ -191,32 +191,40 @@ foreach (f ${NNG_SOURCES})
     source_group ("${SRC_GROUP}" FILES ${f})
 endforeach ()
 
-# Static libary
-add_library (${PROJECT_NAME}_static STATIC ${NNG_SOURCES})
-target_compile_definitions(${PROJECT_NAME}_static PUBLIC -DNNG_STATIC_LIB)
+# Library
+add_library (${PROJECT_NAME} ${NNG_SOURCES})
 
-# Shared library
-add_library (${PROJECT_NAME} SHARED ${NNG_SOURCES})
-target_compile_definitions(${PROJECT_NAME} PRIVATE -DNNG_SHARED_LIB)
+# When building shared libraries we prefer to suppress default symbol
+# visibility, so that only the symbols that should be exposed in the
+# resulting library are.  This is the default with Windows.
+if (BUILD_SHARED_LIBS)
+    target_compile_definitions(${PROJECT_NAME} PRIVATE -DNNG_SHARED_LIB)
+    if (NNG_HIDDEN_VISIBILITY)
+        target_compile_definitions(${PROJECT_NAME} PRIVATE -DNNG_HIDDEN_VISIBILITY)
+        set_target_properties(${PROJECT_NAME} PROPERTIES C_VISIBILITY_PRESET hidden)
+    endif()
+else()
+    target_compile_definitions(${PROJECT_NAME} PUBLIC -DNNG_STATIC_LIB)
+endif()
 
 set_target_properties (${PROJECT_NAME}
-	PROPERTIES SOVERSION "${NNG_ABI_VERSION}")
+	PROPERTIES SOVERSION ${NNG_ABI_SOVERSION} VERSION "${NNG_ABI_VERSION}")
 
 # Set library outputs same as top-level project binary outputs
-set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}_static
+set_target_properties (${PROJECT_NAME}
 	PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}_static
+set_target_properties (${PROJECT_NAME}
 	PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
-set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}_static
+set_target_properties (${PROJECT_NAME}
 	PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${PROJECT_BINARY_DIR})
 
-set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}_static
+set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}
 	PROPERTIES FRAMEWORK OFF)
 
 target_link_libraries (${PROJECT_NAME} ${NNG_REQUIRED_LIBRARIES})
 target_link_libraries (${PROJECT_NAME} Threads::Threads)
 
-install (TARGETS ${PROJECT_NAME} ${PROJECT_NAME}_static
+install (TARGETS ${PROJECT_NAME}
     FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library

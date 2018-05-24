@@ -8,12 +8,11 @@
 //
 
 #include "convey.h"
-#include "nng.c"
+#include "nng.h"
 #include <errno.h>
 #include <string.h>
 
 TestMain("Error messages work", {
-
 	Convey("Known errors work", {
 		So(strcmp(nng_strerror(NNG_ECLOSED), "Object closed") == 0);
 		So(strcmp(nng_strerror(NNG_ETIMEDOUT), "Timed out") == 0);
@@ -28,6 +27,5 @@ TestMain("Error messages work", {
 		       strerror(ENOENT)) == 0);
 		So(strcmp(nng_strerror(NNG_ESYSERR + EINVAL),
 		       strerror(EINVAL)) == 0);
-
 	});
 })
