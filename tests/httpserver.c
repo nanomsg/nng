@@ -73,7 +73,7 @@ httpdo(nng_url *url, nng_http_req *req, nng_http_res *res, void **datap,
 
 	if (clen > 0) {
 		nng_iov iov;
-		data        = nni_alloc(clen);
+		data        = nng_alloc(clen);
 		iov.iov_buf = data;
 		iov.iov_len = clen;
 		nng_aio_set_iov(aio, 1, &iov);
@@ -128,7 +128,7 @@ httpget(const char *addr, void **datap, size_t *sizep, uint16_t *statp,
 	if (clen > 0) {
 		if ((ptr = nng_http_res_get_header(res, "Content-Type")) !=
 		    NULL) {
-			ctype = nni_strdup(ptr);
+			ctype = strdup(ptr);
 		}
 	}
 
@@ -139,9 +139,9 @@ httpget(const char *addr, void **datap, size_t *sizep, uint16_t *statp,
 fail:
 	if (rv != 0) {
 		if (data != NULL) {
-			nni_free(data, clen);
+			nng_free(data, clen);
 		}
-		nni_strfree(ctype);
+		free(ctype);
 	}
 	if (url != NULL) {
 		nni_url_free(url);
@@ -289,19 +289,19 @@ TestMain("HTTP Server", {
 
 		Reset({
 			nng_http_server_release(s);
-			nni_strfree(tmpdir);
+			free(tmpdir);
 			nni_file_delete(file1);
 			nni_file_delete(file2);
 			nni_file_delete(file3);
 			nni_file_delete(subdir1);
 			nni_file_delete(subdir2);
 			nni_file_delete(workdir);
-			nni_strfree(workdir);
-			nni_strfree(file1);
-			nni_strfree(file2);
-			nni_strfree(file3);
-			nni_strfree(subdir1);
-			nni_strfree(subdir2);
+			free(workdir);
+			free(file1);
+			free(file2);
+			free(file3);
+			free(subdir1);
+			free(subdir2);
 			nng_url_free(url);
 		});
 
@@ -325,7 +325,7 @@ TestMain("HTTP Server", {
 			So(size == strlen(doc1));
 			So(memcmp(data, doc1, size) == 0);
 			So(strcmp(ctype, "text/html") == 0);
-			nni_strfree(ctype);
+			free(ctype);
 			nng_free(data, size);
 		});
 

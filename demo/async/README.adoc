@@ -6,8 +6,11 @@ processing with minimal fuss.
 
 == Compiling
 
-You can override the level of concurrency with the `PARALLEL`
-define.  This determines how many requests the server will accept
+This is set up for configuration with CMake for ease of use.
+
+You can override the level of concurrency with the `PARALLEL` option.
+
+This determines how many requests the server will accept
 at a time, and keep outstanding.  Note that for our toy implementation,
 we create this many "logical" flows of execution (contexts) (these are
 _NOT_ threads), where a request is followed by a reply.
@@ -19,6 +22,8 @@ file descriptors.  (You can create more contexts than this, but generally
 you can't have more than one client per descriptor.  Contexts can be used
 on the client side to support many thousands of concurrent requests over
 even just a single TCP connection, however.)
+
+You can also build this all by hand with Make or whatever.
 
 On UNIX-style systems:
 

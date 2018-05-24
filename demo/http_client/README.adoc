@@ -30,6 +30,17 @@ Linux and macOS:
 % ${CC} ${CPPFLAGS} http_client.c -o http_client ${LDFLAGS}
 ----
 
+Alternatively, CMake can be used.  Here's an example if you have
+Ninja build handy (highly recommended):
+
+[source, bash]
+----
+% mkdir build
+% cd build
+% cmake -G Ninja  ..
+% ninja
+----
+
 == Running
 
 Make sure you specify the full URL (if the root page include
@@ -39,4 +50,3 @@ the simple "/".  The URL parser does not add it for you automatically.)
 ----
 % ./http_client http://httpbin.org/ip
 ----
-

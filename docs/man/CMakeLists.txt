@@ -36,7 +36,7 @@ if (NNG_ENABLE_DOC)
 
     add_custom_command (
         OUTPUT ${NAME}.${SECT}.html
-        COMMAND ${NNG_A2H} -o ${NAME}.html ${NNG_DOCDIR}/${NAME}.${SECT}.adoc
+        COMMAND ${NNG_A2H} -o ${NAME}.${SECT}.html ${NNG_DOCDIR}/${NAME}.${SECT}.adoc
         MAIN_DEPENDENCY ${NNG_DOCDIR}/${NAME}.${SECT}.adoc
     )
 
@@ -44,7 +44,7 @@ if (NNG_ENABLE_DOC)
     set(NNG_HTMLS ${NNG_HTMLS} ${NAME}.${SECT}.html)
 
     install (
-        FILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.{SECT}.html
+        FILES ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.${SECT}.html
         DESTINATION ${CMAKE_INSTALL_DOCDIR}
     )
     install (
@@ -187,7 +187,7 @@ if (NNG_ENABLE_DOC)
 	nn_socket
 	nn_strerror
 	nn_term
-	nng_compat 
+	nng_compat
     )
 
     set(NNG_MAN3HTTP
@@ -328,7 +328,7 @@ if (NNG_ENABLE_DOC)
     foreach(F ${NNG_MAN3})
         nng_man(${F} 3)
     endforeach()
-	
+
     foreach(F ${NNG_MAN3COMPAT})
         nng_man(${F} 3compat)
     endforeach()
