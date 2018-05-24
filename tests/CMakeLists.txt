@@ -89,7 +89,7 @@ if (NNG_TESTS)
             target_link_libraries (${NAME} ${PROJECT_NAME})
             add_test (NAME ${NAME} COMMAND ${NAME} ${TEST_PORT})
             set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
-            math (EXPR TEST_PORT "${TEST_PORT}+10")
+            math (EXPR TEST_PORT "${NNG_TEST_PORT}+20")
         endif()
     endmacro (add_nng_cpp_test)
 
