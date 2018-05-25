@@ -27,9 +27,8 @@ extern "C" {
 
 // NNG_DECL is used on declarations to deal with scope.
 // For building Windows DLLs, it should be the appropriate __declspec().
-// (We recommend *not* building this library as a DLL, but instead linking
-// it statically for your project to minimize concerns about link
-// dependencies later.)
+// For shared libraries with platforms that support hidden visibility,
+// it should evaluate to __attribute__((visibility("default"))).
 #ifndef NNG_DECL
 #if defined(_WIN32) && !defined(NNG_STATIC_LIB)
 #if defined(NNG_SHARED_LIB)
@@ -38,7 +37,11 @@ extern "C" {
 #define NNG_DECL __declspec(dllimport)
 #endif // NNG_SHARED_LIB
 #else
+#if defined(NNG_SHARED_LIB) && defined(NNG_HIDDEN_VISIBILITY)
+#define NNG_DECL __attribute__((visibility("default")))
+#else
 #define NNG_DECL extern
+#endif
 #endif // _WIN32 && !NNG_STATIC_LIB
 #endif // NNG_DECL
 

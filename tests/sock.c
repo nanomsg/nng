@@ -25,7 +25,6 @@
 #define SECONDS(x) ((x) *1000)
 
 TestMain("Socket Operations", {
-
 	atexit(nng_fini);
 	//	Reset({ nng_fini(); });
 	Reset({ nng_closeall(); });
@@ -98,7 +97,7 @@ TestMain("Socket Operations", {
 				So(nng_getopt(
 				       s1, NNG_OPT_SOCKNAME, name, &sz) == 0);
 				So(sz > 0 && sz < 64);
-				So(sz == nni_strnlen(name, 64) + 1);
+				So(sz == strlen(name) + 1);
 				So(atoi(name) == (int) s1.id);
 
 				So(nng_setopt(
@@ -409,7 +408,6 @@ TestMain("Socket Operations", {
 				l.id = ep.id;
 				So(nng_listener_start(l, 0) == NNG_ENOTSUP);
 			});
-
 		});
 
 		Convey("Listener creation ok", {
@@ -496,7 +494,6 @@ TestMain("Socket Operations", {
 			    NNG_ENOENT);
 			So(nng_listener_getopt_ms(l, NNG_OPT_SENDTIMEO, &t) ==
 			    NNG_ENOENT);
-
 		});
 
 		Convey("We can send and receive messages", {

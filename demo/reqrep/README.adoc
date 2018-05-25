@@ -19,8 +19,19 @@ compiled on 64-bit systems.)
 
 == Compiling
 
-The following is an example typical of UNIX and similar systems like
-Linux and macOS:
+CMake with ninja-build is simplest:
+
+[source, bash]
+----
+% mkdir build
+% cd build
+% cmake -G Ninja ..
+% ninja
+----
+
+Or if you prefer a traditional approach, 
+the following is an example typical of UNIX and similar systems like
+Linux and macOS may appeal:
 
 [source, bash]
 ----

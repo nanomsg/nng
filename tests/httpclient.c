@@ -18,6 +18,7 @@
 // Basic HTTP client tests.
 #include "core/nng_impl.h"
 #include "supplemental/http/http.h"
+#include "supplemental/sha1/sha1.c"
 #include "supplemental/sha1/sha1.h"
 #include "supplemental/tls/tls.h"
 
@@ -26,8 +27,6 @@ const uint8_t example_sum[20] = { 0x0e, 0x97, 0x3b, 0x59, 0xf4, 0x76, 0x00,
 	0xc0 };
 
 TestMain("HTTP Client", {
-
-	nni_init();
 	atexit(nng_fini);
 
 	Convey("Given a TCP connection to httpbin.org", {
@@ -86,9 +85,9 @@ TestMain("HTTP Client", {
 				sz = atoi(cstr);
 				So(sz > 0);
 
-				data = nni_alloc(sz);
+				data = nng_alloc(sz);
 				So(data != NULL);
-				Reset({ nni_free(data, sz); });
+				Reset({ nng_free(data, sz); });
 
 				iov.iov_buf = data;
 				iov.iov_len = sz;

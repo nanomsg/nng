@@ -98,7 +98,7 @@ rest_free_job(rest_job *job)
 	if (job->msg != NULL) {
 		nng_msg_free(job->msg);
 	}
-	if (job->ctx != 0) {
+	if (nng_ctx_id(job->ctx) != 0) {
 		nng_ctx_close(job->ctx);
 	}
 	free(job);

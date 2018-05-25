@@ -124,7 +124,7 @@ trantest_next_address(char *out, const char *template)
 
 		// start at a different port each time -- 5000 - 10000 --
 		// unless a specific port is given.
-		trantest_port = nni_clock() % 5000 + 5000;
+		trantest_port = nng_clock() % 5000 + 5000;
 		if (((pstr = ConveyGetEnv("TEST_PORT")) != NULL) &&
 		    (atoi(pstr) != 0)) {
 			trantest_port = atoi(pstr);
@@ -146,7 +146,7 @@ trantest_init(trantest *tt, const char *addr)
 {
 	trantest_next_address(tt->addr, addr);
 
-#if defined(NNG_HAVE_REQ0) && defined(NNG_HAVE_REP0)
+#if defined(NNG_HAVE_REQ0) && defined(NNG_HAVE_REP0) && defined(NNG_STATIC_LIB)
 	So(nng_req_open(&tt->reqsock) == 0);
 	So(nng_rep_open(&tt->repsock) == 0);
 
@@ -426,7 +426,7 @@ trantest_send_recv_large(trantest *tt)
 		So((data = nng_alloc(size)) != NULL);
 
 		for (int i = 0; (size_t) i < size; i++) {
-			data[i] = nni_random() & 0xff;
+			data[i] = nng_random() & 0xff;
 		}
 
 		So(trantest_listen(tt, &l) == 0);

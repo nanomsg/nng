@@ -33,6 +33,7 @@ include (CheckSymbolExists)
 include (CheckStructHasMember)
 include (CheckLibraryExists)
 include (CheckCSourceCompiles)
+include (CheckCCompilerFlag)
 include (CMakeDependentOption)
 include (GNUInstallDirs)
 include (TestBigEndian)
@@ -55,6 +56,7 @@ set (NNG_DESCRIPTION "High-Performance Scalability Protocols NextGen")
 set (ISSUE_REPORT_MSG "Please consider opening an issue at https://github.com/nanomsg/nng")
 
 # Determine library versions.
+set (NNG_ABI_SOVERSION 1)
 set (NNG_ABI_VERSION "1.0.0")
 
 # Determine package version.
@@ -85,6 +87,8 @@ else ()
 endif()
 
 # User-defined options.
+
+option(BUILD_SHARED_LIBS "Build shared library" ${BUILD_SHARED_LIBS})
 
 option (NNG_TESTS "Build and run tests" ON)
 option (NNG_TOOLS "Build extra tools" ON)
@@ -267,6 +271,14 @@ else()
     add_definitions (-DNNG_LITTLE_ENDIAN)
 endif()
 
+# If the compiler is not on Windows, does it support hiding the
+# symbols by default?  For shared libraries we would like to do this.
+if (NOT WIN32 AND NOT CYGWIN)
+    check_c_compiler_flag(-fvisibility=hidden NNG_HIDDEN_VISIBILITY)
+    if (NNG_HIDDEN_VISIBILITY)
+        add_definitions (-DNNG_HIDDEN_VISIBILITY)
+    endif()
+endif()
 
 find_package (Threads REQUIRED)
 
@@ -407,6 +419,16 @@ nng_check_sym (strlcpy string.h NNG_HAVE_STRLCPY)
 nng_check_sym (strnlen string.h NNG_HAVE_STRNLEN)
 nng_check_sym (strcasecmp string.h NNG_HAVE_STRCASECMP)
 nng_check_sym (strncasecmp string.h NNG_HAVE_STRNCASECMP)
+
+# Set a static symbol.  We do this for testing, so that tests can
+# be skipped if they would rely on symbols that might not be exported.
+# For example, idhash depends on private symbols, so don't test it
+# when using a shared library on Windows because the symbols won't
+# resolve.
+if (NOT(BUILD_SHARED_LIBS))
+    set (NNG_STATIC_LIB ON)
+    message(STATUS "Building static libs")
+endif()
 
 add_subdirectory (src)
 
