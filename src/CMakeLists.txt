@@ -225,10 +225,16 @@ target_link_libraries (${PROJECT_NAME} ${NNG_REQUIRED_LIBRARIES})
 target_link_libraries (${PROJECT_NAME} Threads::Threads)
 
 install (TARGETS ${PROJECT_NAME}
+    EXPORT ${PROJECT_NAME}-target
     FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
     ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
     LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
     RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT tools
+)
+
+install (EXPORT ${PROJECT_NAME}-target
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    FILE ${PROJECT_NAME}-config.cmake
 )
 
 # Install the header files.  It would be much better if we could use
