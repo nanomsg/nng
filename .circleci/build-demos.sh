@@ -5,9 +5,9 @@
 #
 
 for dir in demo/*; do
-	demo=$(dirname $dir)
+	demo=$(basename $dir)
 	mkdir build-demo-${demo}
-	( cd build-demo-${demo};
-	cmake -G Ninja ../demo/${demo};
-	ninja )
+	( cd build-demo-${demo} &&
+	cmake -G Ninja ../demo/${demo} &&
+	ninja ) || exit 1
 done
