@@ -25,53 +25,46 @@
 #include <unistd.h>
 
 static pthread_mutex_t nni_plat_init_lock = PTHREAD_MUTEX_INITIALIZER;
-static pthread_mutex_t nni_plat_lock      = PTHREAD_MUTEX_INITIALIZER;
-static pthread_cond_t  nni_plat_cond_cond = PTHREAD_COND_INITIALIZER;
-static pthread_cond_t  nni_plat_lock_cond = PTHREAD_COND_INITIALIZER;
 static int             nni_plat_inited    = 0;
 static int             nni_plat_forked    = 0;
 
 pthread_condattr_t  nni_cvattr;
 pthread_mutexattr_t nni_mxattr;
 
-#ifndef NDEBUG
-int nni_plat_sync_fallback = 0;
-#endif
-
-enum nni_plat_sync_flags {
-	NNI_PLAT_SYNC_INIT   = 0x01,
-	NNI_PLAT_SYNC_LOCKED = 0x04,
-	NNI_PLAT_SYNC_WAIT   = 0x08,
-};
-
 void
 nni_plat_mtx_init(nni_plat_mtx *mtx)
 {
-	if (pthread_mutex_init(&mtx->mtx, &nni_mxattr) != 0) {
-		mtx->fallback = 1;
-	} else {
-		mtx->flags = NNI_PLAT_SYNC_INIT;
+	// On most platforms, pthread_mutex_init cannot ever fail, when
+	// given NULL attributes.  Linux and Solaris fall into this category.
+	// BSD platforms (including OpenBSD, FreeBSD, and macOS) seem to
+	// attempt to allocate memory during mutex initialization.
+
+	// An earlier design worked around failures here by using a global
+	// fallback lock, but this was potentially racy, complex, and led
+	// to some circumstances where we were simply unable to provide
+	// adequate debug.
+
+	// If you find you're spending time in this function, consider
+	// adding more memory, reducing consumption, or moving to an
+	// operating system that doesn't need to do heap allocations
+	// to create mutexes.
+
+	// The symptom will be an apparently stuck application spinning
+	// every 10 ms trying to allocate this lock.
+
+	while ((pthread_mutex_init(&mtx->mtx, &nni_mxattr) != 0) &&
+	    (pthread_mutex_init(&mtx->mtx, NULL) != 0)) {
+		// We must have memory exhaustion -- ENOMEM, or
+		// in some cases EAGAIN.  Wait a bit before we try to
+		// give things a chance to settle down.
+		nni_msleep(10);
 	}
-#ifndef NDEBUG
-	if (nni_plat_sync_fallback || getenv("NNG_SYNC_FALLBACK")) {
-		mtx->fallback = 1;
-	}
-#endif
 }
 
 void
 nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
-	if (mtx->flags & NNI_PLAT_SYNC_INIT) {
-		int rv;
-		// Locking and unlocking makes valgrind/helgrind happier.
-		pthread_mutex_lock(&mtx->mtx);
-		pthread_mutex_unlock(&mtx->mtx);
-		if ((rv = pthread_mutex_destroy(&mtx->mtx)) != 0) {
-			nni_panic("pthread_mutex_destroy: %s", strerror(rv));
-		}
-	}
-	mtx->flags = 0;
+	(void) pthread_mutex_destroy(&mtx->mtx);
 }
 
 static void
@@ -140,230 +133,58 @@ nni_pthread_cond_timedwait(
 	return (NNG_EINVAL);
 }
 
-static void
-nni_plat_mtx_lock_fallback_locked(nni_plat_mtx *mtx)
-{
-	while (mtx->flags & NNI_PLAT_SYNC_LOCKED) {
-		mtx->flags |= NNI_PLAT_SYNC_WAIT;
-		nni_pthread_cond_wait(&nni_plat_lock_cond, &nni_plat_lock);
-	}
-	mtx->flags |= NNI_PLAT_SYNC_LOCKED;
-	mtx->owner = pthread_self();
-}
-
-static void
-nni_plat_mtx_unlock_fallback_locked(nni_plat_mtx *mtx)
-{
-	NNI_ASSERT(mtx->flags & NNI_PLAT_SYNC_LOCKED);
-	mtx->flags &= ~NNI_PLAT_SYNC_LOCKED;
-	if (mtx->flags & NNI_PLAT_SYNC_WAIT) {
-		mtx->flags &= ~NNI_PLAT_SYNC_WAIT;
-		pthread_cond_broadcast(&nni_plat_lock_cond);
-	}
-}
-
-static void
-nni_plat_mtx_lock_fallback(nni_plat_mtx *mtx)
-{
-	nni_pthread_mutex_lock(&nni_plat_lock);
-	nni_plat_mtx_lock_fallback_locked(mtx);
-	nni_pthread_mutex_unlock(&nni_plat_lock);
-}
-
-static void
-nni_plat_mtx_unlock_fallback(nni_plat_mtx *mtx)
-{
-	nni_pthread_mutex_lock(&nni_plat_lock);
-	nni_plat_mtx_unlock_fallback_locked(mtx);
-	nni_pthread_mutex_unlock(&nni_plat_lock);
-}
-
-static void
-nni_plat_cv_wake_fallback(nni_cv *cv)
-{
-	nni_pthread_mutex_lock(&nni_plat_lock);
-	if (cv->flags & NNI_PLAT_SYNC_WAIT) {
-		cv->gen++;
-		cv->wake = 0;
-		nni_pthread_cond_broadcast(&nni_plat_cond_cond);
-	}
-	nni_pthread_mutex_unlock(&nni_plat_lock);
-}
-
-static void
-nni_plat_cv_wake1_fallback(nni_cv *cv)
-{
-	nni_pthread_mutex_lock(&nni_plat_lock);
-	if (cv->flags & NNI_PLAT_SYNC_WAIT) {
-		cv->wake++;
-		nni_pthread_cond_broadcast(&nni_plat_cond_cond);
-	}
-	nni_pthread_mutex_unlock(&nni_plat_lock);
-}
-
-static void
-nni_plat_cv_wait_fallback(nni_cv *cv)
-{
-	int gen;
-
-	nni_pthread_mutex_lock(&nni_plat_lock);
-	if (!cv->mtx->fallback) {
-		// transform the mutex to a fallback one.  we have it held.
-		cv->mtx->fallback = 1;
-		cv->mtx->flags |= NNI_PLAT_SYNC_LOCKED;
-		nni_pthread_mutex_unlock(&cv->mtx->mtx);
-	}
-
-	NNI_ASSERT(cv->mtx->owner == pthread_self());
-	NNI_ASSERT(cv->mtx->flags & NNI_PLAT_SYNC_LOCKED);
-	gen = cv->gen;
-	while ((cv->gen == gen) && (cv->wake == 0)) {
-		nni_plat_mtx_unlock_fallback_locked(cv->mtx);
-		cv->flags |= NNI_PLAT_SYNC_WAIT;
-		nni_pthread_cond_wait(&nni_plat_cond_cond, &nni_plat_lock);
-
-		nni_plat_mtx_lock_fallback_locked(cv->mtx);
-	}
-	if (cv->wake > 0) {
-		cv->wake--;
-	}
-	nni_pthread_mutex_unlock(&nni_plat_lock);
-}
-
-static int
-nni_plat_cv_until_fallback(nni_cv *cv, struct timespec *ts)
-{
-	int gen;
-	int rv = 0;
-
-	if (!cv->mtx->fallback) {
-		// transform the mutex to a fallback one.  we have it held.
-		cv->mtx->fallback = 1;
-		cv->mtx->flags |= NNI_PLAT_SYNC_LOCKED;
-		nni_pthread_mutex_unlock(&cv->mtx->mtx);
-	}
-
-	nni_pthread_mutex_lock(&nni_plat_lock);
-	gen = cv->gen;
-	while ((cv->gen == gen) && (cv->wake == 0)) {
-		nni_plat_mtx_unlock_fallback_locked(cv->mtx);
-		cv->flags |= NNI_PLAT_SYNC_WAIT;
-		rv = nni_pthread_cond_timedwait(
-		    &nni_plat_cond_cond, &nni_plat_lock, ts);
-		nni_plat_mtx_lock_fallback_locked(cv->mtx);
-		if (rv != 0) {
-			break;
-		}
-	}
-	if ((rv == 0) && (cv->wake > 0)) {
-		cv->wake--;
-	}
-	nni_pthread_mutex_unlock(&nni_plat_lock);
-	return (rv);
-}
-
 void
 nni_plat_mtx_lock(nni_plat_mtx *mtx)
 {
-	if (!mtx->fallback) {
-		nni_pthread_mutex_lock(&mtx->mtx);
-
-		// We might have changed to a fallback lock; make
-		// sure this did not occur.  Note that transitions to
-		// fallback locks only happen when a thread accesses
-		// a condition variable already holding this lock,
-		// so this is guranteed to be safe.
-		if (!mtx->fallback) {
-			mtx->owner = pthread_self();
-			return;
-		}
-		nni_pthread_mutex_unlock(&mtx->mtx);
-	}
-
-	// Fallback mode
-	nni_plat_mtx_lock_fallback(mtx);
+	nni_pthread_mutex_lock(&mtx->mtx);
 }
 
 void
 nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 {
-	NNI_ASSERT(mtx->owner == pthread_self());
-	mtx->owner = 0;
-
-	if (mtx->fallback) {
-		nni_plat_mtx_unlock_fallback(mtx);
-	} else {
-		nni_pthread_mutex_unlock(&mtx->mtx);
-	}
+	nni_pthread_mutex_unlock(&mtx->mtx);
 }
 
 void
 nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 {
-	if (mtx->fallback || (pthread_cond_init(&cv->cv, &nni_cvattr) != 0)) {
-		cv->fallback = 1;
-	} else {
-		cv->flags = NNI_PLAT_SYNC_INIT;
+	// See the comments in nni_plat_mtx_init.  Almost everywhere this
+	// simply does not/cannot fail.
+
+	while (pthread_cond_init(&cv->cv, &nni_cvattr) != 0) {
+		nni_msleep(10);
 	}
-#ifndef NDEBUG
-	if (nni_plat_sync_fallback || getenv("NNG_SYNC_FALLBACK")) {
-		cv->fallback = 1;
-	}
-#endif
 	cv->mtx = mtx;
 }
 
 void
 nni_plat_cv_wake(nni_plat_cv *cv)
 {
-	if (cv->fallback) {
-		nni_plat_cv_wake_fallback(cv);
-	} else {
-		nni_pthread_cond_broadcast(&cv->cv);
-	}
+	nni_pthread_cond_broadcast(&cv->cv);
 }
 
 void
 nni_plat_cv_wake1(nni_plat_cv *cv)
 {
-	if (cv->fallback) {
-		nni_plat_cv_wake1_fallback(cv);
-	} else {
-		nni_pthread_cond_signal(&cv->cv);
-	}
+	nni_pthread_cond_signal(&cv->cv);
 }
 
 void
 nni_plat_cv_wait(nni_plat_cv *cv)
 {
-	NNI_ASSERT(cv->mtx->owner == pthread_self());
-	if (cv->fallback) {
-		nni_plat_cv_wait_fallback(cv);
-	} else {
-		nni_pthread_cond_wait(&cv->cv, &cv->mtx->mtx);
-		cv->mtx->owner = pthread_self();
-	}
+	nni_pthread_cond_wait(&cv->cv, &cv->mtx->mtx);
 }
 
 int
 nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 {
 	struct timespec ts;
-	int             rv;
-
-	NNI_ASSERT(cv->mtx->owner == pthread_self());
 
 	// Our caller has already guaranteed a sane value for until.
 	ts.tv_sec  = until / 1000;
 	ts.tv_nsec = (until % 1000) * 1000000;
 
-	if (cv->fallback) {
-		rv = nni_plat_cv_until_fallback(cv, &ts);
-	} else {
-		rv = nni_pthread_cond_timedwait(&cv->cv, &cv->mtx->mtx, &ts);
-		cv->mtx->owner = pthread_self();
-	}
-	return (rv);
+	return (nni_pthread_cond_timedwait(&cv->cv, &cv->mtx->mtx, &ts));
 }
 
 void
@@ -371,12 +192,10 @@ nni_plat_cv_fini(nni_plat_cv *cv)
 {
 	int rv;
 
-	if ((cv->flags & NNI_PLAT_SYNC_INIT) &&
-	    ((rv = pthread_cond_destroy(&cv->cv)) != 0)) {
+	if ((rv = pthread_cond_destroy(&cv->cv)) != 0) {
 		nni_panic("pthread_cond_destroy: %s", strerror(rv));
 	}
-	cv->flags = 0;
-	cv->mtx   = NULL;
+	cv->mtx = NULL;
 }
 
 static void *
