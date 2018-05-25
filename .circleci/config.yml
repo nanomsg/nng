@@ -73,9 +73,9 @@ jobs:
           libmbedtls-dev
           ninja-build
       - run: ./.circleci/run-cmake.sh
-       -run: ninja -C build
-       -run: ninja -C build install
-       -run: ./.circleci/build-demos.sh
+      - run: ninja -C build
+      - run: ninja -C build install
+      - run: ./.circleci/build-demos.sh
 
   "gcc - build, test, coverage":
     docker:
