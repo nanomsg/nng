@@ -83,6 +83,7 @@ workflows:
   build_and_test:
     jobs:
       - "clang - build, test"
+      - "gcc - static"
       - "gcc - build, test, coverage"
 
 notify:
