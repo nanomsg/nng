@@ -3,7 +3,7 @@
 This is a somewhat contrived demonstration, but may be useful
 in a pattern for solving real world problems.
 
-There is a single "server" program, that does these:
+There is a single "server" (rest-server) program, that does these:
 
 . REST API at /api/rest/rot13 - this API takes data from HTTP POST commands,
   and forwards them to an NNG REQ socket.  When the REQ response comes,
@@ -17,9 +17,29 @@ There is a single "server" program, that does these:
 [source, bash]
 ----
 % env PORT=8888  # default
-% ./server &
+% ./rest-server &
 % curl -d ABC http://127.0.0.1:8888/api/rest/rot13; echo
 NOP
 % curl -d ABC http://127.0.0.1:8888/api/rest/rot13; echo
 ABC
+----
+
+== Compiling
+
+To build the program, we recommend CMake and Ninja-Build.
+
+[source, bash]
+----
+% mkdir build
+% cd build
+% cmake -G Ninja ..
+% ninja
+----
+
+Alternatively, you can go old-school.
+Here's the simplest option for Linux:
+
+[source, bash]
+----
+% cc server.c -o rest-server -I /usr/local/include -lnng
 ----
