@@ -221,8 +221,8 @@ set_target_properties (${PROJECT_NAME}
 set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}
 	PROPERTIES FRAMEWORK OFF)
 
-target_link_libraries (${PROJECT_NAME} ${NNG_REQUIRED_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} Threads::Threads)
+target_link_libraries (${PROJECT_NAME} PRIVATE ${NNG_REQUIRED_LIBRARIES})
+target_link_libraries (${PROJECT_NAME} PRIVATE Threads::Threads)
 
 install (TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-target
@@ -233,8 +233,9 @@ install (TARGETS ${PROJECT_NAME}
 )
 
 install (EXPORT ${PROJECT_NAME}-target
-    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
     FILE ${PROJECT_NAME}-config.cmake
+    NAMESPACE nng::
+    DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
 )
 
 # Install the header files.  It would be much better if we could use
