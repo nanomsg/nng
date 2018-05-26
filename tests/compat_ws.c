@@ -156,7 +156,7 @@ int main (int argc, const char *argv[])
     rc = nn_connect (sc, "ws://:5555");
     nn_assert (rc < 0);
     errno_assert (nn_errno () == EINVAL);
-    rc = nn_connect (sc, "ws://-hostname:5555");
+    rc = nn_connect (sc, "ws://-hostname.:5555");
     nn_assert (rc < 0);
     errno_assert (nn_errno () == EINVAL);
     rc = nn_connect (sc, "ws://abc.123.---.#:5555");

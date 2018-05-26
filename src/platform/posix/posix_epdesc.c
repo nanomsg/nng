@@ -469,11 +469,7 @@ nni_epdesc_connect_cb(nni_posix_pfd *pfd, int events, void *arg)
 	nni_mtx_lock(&ed->mtx);
 	if ((ed->closed) || ((aio = nni_list_first(&ed->connectq)) == NULL) ||
 	    (pfd != ed->pfd)) {
-		// Spurious completion.  Ignore it, but discard the PFD.
-		if (ed->pfd == pfd) {
-			ed->pfd = NULL;
-		}
-		nni_posix_pfd_fini(pfd);
+		// Spurious completion.  Just ignore it.
 		nni_mtx_unlock(&ed->mtx);
 		return;
 	}

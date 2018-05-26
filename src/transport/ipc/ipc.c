@@ -803,7 +803,9 @@ nni_ipc_ep_setopt_recvmaxsz(void *arg, const void *data, size_t sz, int typ)
 
 	rv = nni_copyin_size(&val, data, sz, 0, NNI_MAXSZ, typ);
 	if ((rv == 0) && (ep != NULL)) {
+		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
+		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
 }
@@ -833,7 +835,9 @@ nni_ipc_ep_setopt_permissions(void *arg, const void *data, size_t sz, int typ)
 	// meaningful chmod beyond the lower 9 bits.
 	rv = nni_copyin_int(&val, data, sz, 0, 0x7FFFFFFF, typ);
 	if ((rv == 0) && (ep != NULL)) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nni_plat_ipc_ep_set_permissions(ep->iep, val);
+		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
 }

@@ -45,42 +45,39 @@ test_sync(void)
 		So(nng_mtx_alloc(&mx) == 0);
 		Reset({ nng_mtx_free(mx); });
 
-		Convey("We can lock a mutex", {
+		Convey("We can lock and unlock a mutex", {
 			nng_mtx_lock(mx);
 			So(1);
-			Convey("And we can unlock it", {
+			nng_mtx_unlock(mx);
+			So(1);
+			Convey("And then lock it again", {
+				nng_mtx_lock(mx);
+				So(1);
 				nng_mtx_unlock(mx);
 				So(1);
-				Convey("And then lock it again", {
-					nng_mtx_lock(mx);
-					So(1);
-					nng_mtx_unlock(mx);
-					So(1);
-				});
 			});
-			Convey("Things block properly", {
-				So(nng_mtx_alloc(&arg.mx) == 0);
-				So(nng_cv_alloc(&arg.cv, arg.mx) == 0);
-				arg.did  = 0;
-				arg.when = 0;
-				nng_mtx_lock(arg.mx);
-				So(nng_thread_create(
-				       &thr, notifyafter, &arg) == 0);
-				nng_msleep(10);
-				So(arg.did == 0);
-				nng_mtx_unlock(arg.mx);
-				nng_msleep(10);
-				nng_mtx_lock(arg.mx);
-				while (!arg.did) {
-					nng_cv_wait(arg.cv);
-				}
-				So(arg.did != 0);
-				nng_mtx_unlock(arg.mx);
-				nng_thread_destroy(thr);
-				nng_cv_free(arg.cv);
-				nng_mtx_free(arg.mx);
-			})
 		});
+		Convey("Things block properly", {
+			So(nng_mtx_alloc(&arg.mx) == 0);
+			So(nng_cv_alloc(&arg.cv, arg.mx) == 0);
+			arg.did  = 0;
+			arg.when = 0;
+			nng_mtx_lock(arg.mx);
+			So(nng_thread_create(&thr, notifyafter, &arg) == 0);
+			nng_msleep(10);
+			So(arg.did == 0);
+			nng_mtx_unlock(arg.mx);
+			nng_msleep(10);
+			nng_mtx_lock(arg.mx);
+			while (!arg.did) {
+				nng_cv_wait(arg.cv);
+			}
+			So(arg.did != 0);
+			nng_mtx_unlock(arg.mx);
+			nng_thread_destroy(thr);
+			nng_cv_free(arg.cv);
+			nng_mtx_free(arg.mx);
+		})
 	});
 
 	Convey("Condition variables work", {

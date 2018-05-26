@@ -239,11 +239,17 @@ endif()
 #  Platform checks.
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
-	set(NNG_WARN_FLAGS "-Wall -Wextra")
+	set(NNG_WARN_FLAGS "-Wall -Wextra -fno-omit-frame-pointer")
 elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    set(NNG_WARN_FLAGS "-Wall -Wextra")
+    set(NNG_WARN_FLAGS "-Wall -Wextra -fno-omit-frame-pointer")
 elseif (CMAKE_C_COMPILER_ID STREQUAL "AppleClang")
-    set(NNG_WARN_FLAGS "-Wall -Wextra")
+    set(NNG_WARN_FLAGS "-Wall -Wextra -fno-omit-frame-pointer")
+endif()
+
+include (CheckSanitizer)
+CheckSanitizer()
+if (NOT NNG_SANITIZER STREQUAL "none")
+    set (NNG_SANITIZER_FLAGS "-fsanitize=${NNG_SANITIZER}")
 endif()
 
 if (NNG_ENABLE_COVERAGE)
@@ -261,8 +267,8 @@ if (NNG_ENABLE_COVERAGE)
     endif()
 endif()
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_FLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_FLAGS}")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_FLAGS} ${NNG_SANITIZER_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_FLAGS} ${NNG_SANITIZER_FLAGS}")
 
 TEST_BIG_ENDIAN(NNG_BIG_ENDIAN)
 if (NNG_BIG_ENDIAN)
@@ -279,6 +285,8 @@ if (NOT WIN32 AND NOT CYGWIN)
         add_definitions (-DNNG_HIDDEN_VISIBILITY)
     endif()
 endif()
+
+
 
 find_package (Threads REQUIRED)
 

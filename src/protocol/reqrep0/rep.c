@@ -309,6 +309,12 @@ static void
 rep0_pipe_fini(void *arg)
 {
 	rep0_pipe *p = arg;
+	nng_msg *  msg;
+
+	if ((msg = nni_aio_get_msg(p->aio_recv)) != NULL) {
+		nni_aio_set_msg(p->aio_recv, NULL);
+		nni_msg_free(msg);
+	}
 
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
@@ -538,6 +544,7 @@ rep0_pipe_recv_cb(void *arg)
 		if (nni_msg_len(msg) < 4) {
 			// Peer is speaking garbage. Kick it.
 			nni_msg_free(msg);
+			nni_aio_set_msg(p->aio_recv, NULL);
 			nni_pipe_stop(p->pipe);
 			return;
 		}
@@ -593,6 +600,7 @@ rep0_pipe_recv_cb(void *arg)
 
 drop:
 	nni_msg_free(msg);
+	nni_aio_set_msg(p->aio_recv, NULL);
 	nni_pipe_recv(p->pipe, p->aio_recv);
 }
 

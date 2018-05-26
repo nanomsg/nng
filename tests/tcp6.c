@@ -45,30 +45,41 @@ check_props_v6(nng_msg *msg)
 
 	memset(loopback, 0, sizeof(loopback));
 	loopback[15] = 1;
-	Convey("IPv6 Local address property works", {
-		nng_sockaddr la;
-		z = sizeof(nng_sockaddr);
-		p = nng_msg_get_pipe(msg);
-		So(nng_pipe_id(p) > 0);
-		So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
-		So(z == sizeof(la));
-		So(la.s_family == NNG_AF_INET6);
-		// So(la.s_in.sa_port == (trantest_port - 1));
-		So(la.s_in6.sa_port != 0);
-		So(memcmp(la.s_in6.sa_addr, loopback, 16) == 0);
-	});
 
-	Convey("IPv6 Remote address property works", {
-		nng_sockaddr ra;
-		z = sizeof(nng_sockaddr);
-		p = nng_msg_get_pipe(msg);
-		So(nng_pipe_id(p) > 0);
-		So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
-		So(z == sizeof(ra));
-		So(ra.s_family == NNG_AF_INET6);
-		So(ra.s_in6.sa_port != 0);
-		So(memcmp(ra.s_in6.sa_addr, loopback, 16) == 0);
-	});
+	// IPv6 Local address property works
+	nng_sockaddr la;
+	z = sizeof(nng_sockaddr);
+	p = nng_msg_get_pipe(msg);
+	So(nng_pipe_id(p) > 0);
+	So(nng_pipe_getopt(p, NNG_OPT_LOCADDR, &la, &z) == 0);
+	So(z == sizeof(la));
+	So(la.s_family == NNG_AF_INET6);
+	// So(la.s_in.sa_port == (trantest_port - 1));
+	So(la.s_in6.sa_port != 0);
+	So(memcmp(la.s_in6.sa_addr, loopback, 16) == 0);
+
+	// IPv6 Remote address property works
+	nng_sockaddr ra;
+	z = sizeof(nng_sockaddr);
+	p = nng_msg_get_pipe(msg);
+	So(nng_pipe_id(p) > 0);
+	So(nng_pipe_getopt(p, NNG_OPT_REMADDR, &ra, &z) == 0);
+	So(z == sizeof(ra));
+	So(ra.s_family == NNG_AF_INET6);
+	So(ra.s_in6.sa_port != 0);
+	So(memcmp(ra.s_in6.sa_addr, loopback, 16) == 0);
+
+	return (0);
+}
+
+TestMain("TCP (IPv6) Transport", {
+	nni_init();
+
+	if (has_v6()) {
+		trantest_test_extended("tcp://[::1]:%u", check_props_v6);
+	} else {
+		SkipSo("IPv6 not available");
+	}
 
 	Convey("Malformed TCPv6 addresses do not panic", {
 		nng_socket s1;
@@ -79,19 +90,6 @@ check_props_v6(nng_msg *msg)
 		So(nng_dial(s1, "tcp://::1:5055", NULL, 0) == NNG_EADDRINVAL);
 		So(nng_dial(s1, "tcp://[::1]", NULL, 0) == NNG_EADDRINVAL);
 	});
-
-	return (0);
-}
-
-TestMain("TCP (IPv6) Transport", {
-
-	nni_init();
-
-	if (has_v6()) {
-		trantest_test_extended("tcp://[::1]:%u", check_props_v6);
-	} else {
-		SkipSo("IPv6 not available");
-	}
 
 	nng_fini();
 })

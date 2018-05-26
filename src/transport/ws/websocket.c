@@ -375,11 +375,13 @@ ws_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
 
 	rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, typ);
 	if ((rv == 0) && (ep != NULL)) {
+		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
+		nni_mtx_unlock(&ep->mtx);
 		if (ep->mode == NNI_EP_MODE_DIAL) {
-			nni_ws_dialer_set_maxframe(ep->dialer, ep->rcvmax);
+			nni_ws_dialer_set_maxframe(ep->dialer, val);
 		} else {
-			nni_ws_listener_set_maxframe(ep->listener, ep->rcvmax);
+			nni_ws_listener_set_maxframe(ep->listener, val);
 		}
 	}
 	return (rv);

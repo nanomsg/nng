@@ -15,35 +15,24 @@
 
 #include "stubs.h"
 
-// Add is for testing threads.
-void
-add(void *arg)
-{
-	*(int *) arg += 1;
-}
-
-// Notify tests for verifying condvars.
-struct notifyarg {
-	int          did;
-	nng_duration when;
-	nng_mtx *    mx;
-	nng_cv *     cv;
+struct addarg {
+	int      cnt;
+	nng_mtx *mx;
+	nng_cv * cv;
 };
 
 void
-notifyafter(void *arg)
+add(void *arg)
 {
-	struct notifyarg *na = arg;
+	struct addarg *aa = arg;
 
-	nng_msleep(na->when);
-	nng_mtx_lock(na->mx);
-	na->did = 1;
-	nng_cv_wake(na->cv);
-	nng_mtx_unlock(na->mx);
+	nng_mtx_lock(aa->mx);
+	aa->cnt++;
+	nng_cv_wake(aa->cv);
+	nng_mtx_unlock(aa->mx);
 }
 
 TestMain("Platform Operations", {
-
 	// This is required for anything else to work
 	Convey("The clock works", {
 		uint64_t now = getms();
@@ -79,35 +68,46 @@ TestMain("Platform Operations", {
 		So(nng_mtx_alloc(&mx) == 0);
 		Reset({ nng_mtx_free(mx); });
 
-		Convey("We can lock a mutex", {
+		Convey("We can lock and unlock mutex", {
 			nng_mtx_lock(mx);
 			So(1);
-			Convey("And we can unlock it", {
+			nng_mtx_unlock(mx);
+			So(1);
+			Convey("And then lock it again", {
+				nng_mtx_lock(mx);
+				So(1);
 				nng_mtx_unlock(mx);
 				So(1);
-				Convey("And then lock it again", {
-					nng_mtx_lock(mx);
-					So(1);
-					nng_mtx_unlock(mx);
-					So(1);
-				});
 			});
 		});
 	});
 
 	Convey("Threads work", {
 		static nng_thread *thr;
-		int                val = 0;
 		int                rv;
+		struct addarg      aa;
+
+		So(nng_mtx_alloc(&aa.mx) == 0);
+		So(nng_cv_alloc(&aa.cv, aa.mx) == 0);
+		Reset({
+			nng_mtx_free(aa.mx);
+			nng_cv_free(aa.cv);
+		});
+		aa.cnt = 0;
 
 		Convey("We can create threads", {
-			rv = nng_thread_create(&thr, add, &val);
+			rv = nng_thread_create(&thr, add, &aa);
 			So(rv == 0);
 
 			Reset({ nng_thread_destroy(thr); });
 
 			Convey("It ran", {
-				nng_msleep(50); // for context switch
+				int val;
+				nng_mtx_lock(aa.mx);
+				while ((val = aa.cnt) == 0) {
+					nng_cv_wait(aa.cv);
+				}
+				nng_mtx_unlock(aa.mx);
 				So(val == 1);
 			});
 		});

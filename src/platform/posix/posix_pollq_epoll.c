@@ -93,6 +93,10 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	if ((pfd = NNI_ALLOC_STRUCT(pfd)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	nni_mtx_init(&pfd->mtx);
+	nni_cv_init(&pfd->cv, &pq->mtx);
+
+	nni_mtx_lock(&pfd->mtx);
 	pfd->pq      = pq;
 	pfd->fd      = fd;
 	pfd->cb      = NULL;
@@ -101,9 +105,8 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	pfd->closing = false;
 	pfd->closed  = false;
 
-	nni_mtx_init(&pfd->mtx);
-	nni_cv_init(&pfd->cv, &pq->mtx);
 	NNI_LIST_NODE_INIT(&pfd->node);
+	nni_mtx_unlock(&pfd->mtx);
 
 	// notifications disabled to begin with
 	ev.events   = 0;

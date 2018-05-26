@@ -36,7 +36,6 @@ sleepdone(void *arg)
 }
 
 Main({
-
 	Test("AIO operations", {
 		const char *addr = "inproc://aio";
 
@@ -170,7 +169,6 @@ Main({
 				So(done == 1);
 				So(nng_aio_result(a) == NNG_ECANCELED);
 			})
-
 		});
 
 		Convey("We cannot set insane IOVs", {
@@ -179,6 +177,7 @@ Main({
 
 			So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 			So(nng_aio_set_iov(aio, 1024, &iov) == NNG_EINVAL);
+			nng_aio_free(aio);
 		});
 	});
 

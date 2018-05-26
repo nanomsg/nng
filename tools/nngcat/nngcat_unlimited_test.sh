@@ -26,7 +26,7 @@ goodsum=${goodsum%% *}
 ${NNGCAT} --listen ${ADDR} --count=1 --recv-maxsz=0 --pull0 --raw > $OUTPUT 2>/dev/null &
 sleep 1
 # for speed of execution, run these in the background, they should be ignored
-${NNGCAT} --connect ${ADDR} --push0 --file ${INPUT}
+${NNGCAT} --connect ${ADDR} --delay=1 --push0 --file ${INPUT}
 wait $bgid 2>/dev/null
 
 sum=$(cksum ${OUTPUT})

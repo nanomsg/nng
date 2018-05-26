@@ -850,7 +850,9 @@ nni_tls_ep_setopt_nodelay(void *arg, const void *v, size_t sz, int typ)
 	int         rv;
 	rv = nni_copyin_bool(&val, v, sz, typ);
 	if ((rv == 0) && (ep != NULL)) {
+		nni_mtx_lock(&ep->mtx);
 		ep->nodelay = val;
+		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
 }
@@ -870,7 +872,9 @@ nni_tls_ep_setopt_keepalive(void *arg, const void *v, size_t sz, int typ)
 	int         rv;
 	rv = nni_copyin_bool(&val, v, sz, typ);
 	if ((rv == 0) && (ep != NULL)) {
+		nni_mtx_lock(&ep->mtx);
 		ep->keepalive = val;
+		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
 }
@@ -907,7 +911,9 @@ nni_tls_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
 
 	rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, typ);
 	if ((rv == 0) && (ep != NULL)) {
+		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
+		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
 }

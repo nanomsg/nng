@@ -131,6 +131,7 @@ TestMain("SURVEY pattern", {
 			So(nng_sendmsg(surv, msg, 0) == 0);
 			nng_aio_wait(aio);
 			So(nng_aio_result(aio) == NNG_ECANCELED);
+			nng_aio_free(aio);
 		});
 
 		Convey("Sending a NULL message does not panic", {
@@ -331,5 +332,4 @@ TestMain("SURVEY pattern", {
 		So(nng_sendmsg(resp, msg, 0) == 0);
 		So(nng_recvmsg(surv, &msg, 0) == NNG_ETIMEDOUT);
 	});
-
 })

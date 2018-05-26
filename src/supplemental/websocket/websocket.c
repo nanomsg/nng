@@ -1968,7 +1968,9 @@ nni_ws_dialer_close(nni_ws_dialer *d)
 	d->closed = true;
 	while ((ws = nni_list_first(&d->wspend)) != 0) {
 		nni_list_remove(&d->wspend, ws);
-		nni_ws_close(ws);
+		nni_mtx_unlock(&d->mtx);
+		nni_ws_fini(ws);
+		nni_mtx_lock(&d->mtx);
 	}
 	nni_mtx_unlock(&d->mtx);
 }

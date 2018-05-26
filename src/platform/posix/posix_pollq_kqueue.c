@@ -276,9 +276,9 @@ nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
 	if (pq->kq >= 0) {
 		close(pq->kq);
-		pq->kq = -1;
 	}
 	nni_thr_fini(&pq->thr);
+	pq->kq = -1;
 
 	nni_posix_pollq_reap(pq);
 
