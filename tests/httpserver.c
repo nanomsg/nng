@@ -11,7 +11,9 @@
 #include "convey.h"
 #include "trantest.h"
 
-#ifndef _WIN32
+#ifdef _WIN32
+#define strdup _strdup
+#else
 #include <arpa/inet.h>
 #endif
 
