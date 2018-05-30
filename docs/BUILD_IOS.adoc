@@ -1,38 +1,54 @@
 = Building for iOS (and tvOS, watchOS)
 
-NOTE: I am not an iOS developer, so this work is not fully tested.
-It seems to work, but YMMV!
+NOTE: I am not an iOS developer, so this work has had only minimal validation.
+As always, _caveat emptor_!
 
-First, you will need to download a suitable toolchain file.
+== Pre-Requisites
 
-At the time of this writing (May 28, 2018), the toolchain file
-located at https://github.com/leetal/ios-cmake is appears to work
-reasonably well.
+macOS::
+
+  As far as we know, the only way to build iOS applications is on a
+  macOS host system.
+
+Xcode::
+
+  You will need Xcode.  We tested this with Xcode 9.3.
+
+CMake::
+
+  We tested this with CMake 3.9.  Other versions may work.
+
+iOS cmake toolchain file::
+
+  At the time of this writing (May 28, 2018), the toolchain file
+  located at https://github.com/leetal/ios-cmake is appears to work
+  reasonably well.
+
+== Steps
 
 When building for iOS and similar targets, only static libraries may be built.
 (This is good for avoiding dependency nightmares anyway.)
 
 Using the above toolchain file, we can build for iOS using
 the CMake standard CMAKE_TOOLCHAIN_FILE macro, and using
-the IOS_PLATFORM macro to set the target.
+the IOS_PLATFORM macro to set the target.  (See the iOS CMake
+toolchain README for valid options; we select "OS" for iOS.)
 
-We also need to disable tests and tools, since we can't build command line
-executables for that environment.  These are controlled by setting
-NNG_TESTS and NNG_TOOLS both to OFF.
+The test suite and command line tools will automatically be removed
+from the build, since they aren't interesting or useful in cross-compile
+environment.  (There is no way to run them.)
 
-You will also need to use the Xcode generator.
-
-So, for example:
+If you have checked out this repository in $SRC, the following should work:
 
 [source, sh]
 ----
+% cd $SRC
 % mkdir ios-build
 % cd ios-build
+% git clone https://github.com/leetal/ios-cmake
 % cmake -G Xcode \
-	-DCMAKE_TOOLCHAIN_FILE=$GITROOT/ios-cmake/ios.toolchain.cmake \
-	-DIOS_PLATFORM=OS \
-	-DNNG_TESTS=OFF \
-	-DNNG_TOOLS=OFF ..
+	-DCMAKE_TOOLCHAIN_FILE=`pwd`/ios-cmake/ios.toolchain.cmake \
+	-DIOS_PLATFORM=OS ..
 ----
 
 Then you can build using Xcode, or simply use cmake to drive the build:

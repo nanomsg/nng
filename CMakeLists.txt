@@ -86,12 +86,22 @@ else ()
     set (NNG_PACKAGE_VERSION "Unknown")
 endif()
 
+
 # User-defined options.
 
 option(BUILD_SHARED_LIBS "Build shared library" ${BUILD_SHARED_LIBS})
 
-option (NNG_TESTS "Build and run tests" ON)
-option (NNG_TOOLS "Build extra tools" ON)
+if (CMAKE_CROSSCOMPILING)
+    set (NNG_NATIVE_BUILD OFF)
+else()
+    set (NNG_NATIVE_BUILD ON)
+endif()
+
+# We only build command line tools and tests if we are not in a
+# cross-compile situation.  Cross-compiling users who still want to
+# build these must enable them explicitly.
+option (NNG_TESTS "Build and run tests" ${NNG_NATIVE_BUILD})
+option (NNG_TOOLS "Build extra tools" ${NNG_NATIVE_BUILD})
 option (NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
 option (NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
 # Enable access to private APIs for our own use.
@@ -301,6 +311,13 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     endif()
     set(NNG_PLATFORM_POSIX ON)
 
+elseif (CMAKE_SYSTEM_NAME MATCHES "Android")
+    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_LINUX)
+    add_definitions (-DNNG_PLATFORM_ANDROID)
+    add_definitions (-DNNG_USE_EVENTFD)
+    set(NNG_PLATFORM_POSIX ON)
+
 elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     add_definitions (-DNNG_PLATFORM_POSIX)
     add_definitions (-DNNG_PLATFORM_DARWIN)
@@ -404,6 +421,9 @@ else ()
     add_definitions (-D_THREAD_SAFE)
     add_definitions (-D_POSIX_PTHREAD_SEMANTICS)
 
+    nng_check_func (lockf NNG_HAVE_LOCKF)
+    nng_check_func (flock NNG_HAVE_FLOCK)
+
     nng_check_lib (rt clock_gettime  NNG_HAVE_CLOCK_GETTIME)
     nng_check_lib (pthread sem_wait  NNG_HAVE_SEMAPHORE_PTHREAD)
     nng_check_lib (nsl gethostbyname NNG_HAVE_LIBNSL)
@@ -415,7 +435,8 @@ else ()
     nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
     nng_check_sym (kqueue sys/event.h NNG_HAVE_KQUEUE)
     nng_check_sym (port_create port.h NNG_HAVE_PORT_CREATE)
-    nng_check_sym (epoll_wait sys/epoll.h NNG_HAVE_EPOLL)
+    nng_check_sym (epoll_create sys/epoll.h NNG_HAVE_EPOLL)
+    nng_check_sym (epoll_create1 sys/epoll.h NNG_HAVE_EPOLL_CREATE1)
     nng_check_sym (getpeereid unistd.h NNG_HAVE_GETPEEREID)
     nng_check_sym (SO_PEERCRED sys/socket.h NNG_HAVE_SOPEERCRED)
     nng_check_sym (LOCAL_PEERCRED sys/un.h NNG_HAVE_LOCALPEERCRED)

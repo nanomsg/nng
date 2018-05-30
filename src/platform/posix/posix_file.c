@@ -22,6 +22,11 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+// Some systems -- Android -- have BSD flock but not POSIX lockf.
+#if defined(NNG_HAVE_FLOCK) && !defined(NNG_HAVE_LOCKF)
+#include <sys/file.h>
+#endif
+
 // File support.
 
 static int
@@ -264,10 +269,22 @@ int
 nni_plat_file_lock(const char *path, nni_plat_flock *lk)
 {
 	int fd;
+	int rv;
 	if ((fd = open(path, O_RDWR | O_CREAT, S_IRUSR | S_IWUSR)) < 0) {
 		return (nni_plat_errno(errno));
 	}
-	if (lockf(fd, F_TLOCK, 0) < 0) {
+#ifdef NNG_HAVE_LOCKF
+	rv = lockf(fd, F_TLOCK, 0);
+#elif defined NNG_HAVE_FLOCK
+	rv = flock(fd, LOCK_EX | LOCK_NB);
+#else
+	// We don't have locking support.  This means you live dangerously.
+	// For example, ZeroTier cannot be sure that nothing else is using
+	// the same configuration file.  If you're here, its probably an
+	// embedded scenario, and we can live with it.
+	rv = 0;
+#endif
+	if (rv < 0) {
 		int rv = errno;
 		close(fd);
 		if (rv == EAGAIN) {

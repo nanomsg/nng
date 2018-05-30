@@ -1,0 +1,81 @@
+= Building for Android
+
+NOTE: I am not an Android developer, so this work has received only cursory
+testing.  As always, _caveat emptor_.
+
+== Pre-Requisites
+
+Android Studio:::
+
+  There are probably other ways to cross-build for Android, but if you're
+  not using Android Studio, then you probably don't need much help here.
+
+Android NDK::
+
+  A copy of the Android NDK is required to build native code applications.
+  Android Studio has information for downloading it within the app.
+
+== Steps
+
+You need to use the CMake that is included with Android Studio, because
+it knows how to build the Gradle targets.  (At least on macOS, the system
+default cmake does not have the right generator support.)
+
+You will also use the Android toolchain file for CMake that is included
+with the NDK.
+
+NOTE: You *must* use the _NDK_ toolchain, not the one that came with the _SDK_.
+The _SDK_ toolchain file is too old and will not work with modern NDKs!
+
+When building for Android, by default we build static libraries, and
+we do not build tools or tests.  The tools and tests won't work since
+they assume a shell environment, and you don't want to deal with the
+dependency nightmare that is dynamic libraries anyway.  Trust us.
+
+The Android NDK includes documentation for how to run
+CMake including the options that can be set.  Details are located
+here: https://developer.android.com/ndk/guides/cmake
+
+TIP: It is *highly* recommended you review the NDK documentation,
+because you will most likely want to change some of the default values
+for the ABI or API level.
+For the sake of clarity, we are assuming only the defaults here.
+
+Set the following environment variables:
+
+`CMAKE`::
+
+  Path to the Android SDK supplied CMake binary.  For example, on
+  our macOS install of Android Studio, we have it located in
+  `$HOME/Library/Android/sdk/cmake/3.6.4111459/bin/cmake`.
+
+`NDK`::
+
+  Path to the Android NDK.  In the same installation, on our system,
+  it is in `$HOME/Library/Android/sdk/ndk-bundle`
+
+Using the above toolchain file, we can build for Android using
+the CMake standard `CMAKE_TOOLCHAIN_FILE` macro, and using the
+Android supplied CMake:
+
+If you have checked out this repository in `$SRC`, and your copy of the
+Android SDK is located in `$SDK`, the following should work:
+
+[source, sh]
+----
+% cd $SRC
+% mkdir android-build
+% cd android-build
+% ${CMAKE} -DCMAKE_TOOLCHAIN_FILE=${NDK}/build/cmake/android.toolchain.cmake ..
+----
+
+Then you can build using Xcode, or simply use cmake to drive the build:
+
+[source, sh]
+----
+% ${CMAKE} --build .
+----
+
+Extra effort may be required to enable the use of mbedTLS; you will
+need to review the mbedTLS documentation for configuring that for use
+in Android.

@@ -348,9 +348,18 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 {
 	int rv;
 
+#if NNG_HAVE_EPOLL_CREATE1
 	if ((pq->epfd = epoll_create1(EPOLL_CLOEXEC)) < 0) {
 		return (nni_plat_errno(errno));
 	}
+#else
+	// Old Linux.  Size is a "hint" about number of descriptors.
+	// Hopefully not a hard limit, and not used in modern Linux.
+	if ((pq->epfd = epoll_create(16)) < 0) {
+		return (nni_plat_errno(errno));
+	}
+	(void) fcntl(pq->epfd, F_SETFD, FD_CLOEXEC);
+#endif
 
 	pq->close = false;
 

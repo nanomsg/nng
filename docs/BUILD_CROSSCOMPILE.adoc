@@ -1,0 +1,33 @@
+= Building for Cross Compilation
+
+TIP: Cross-compiling is used when the operating system or process architecure
+the software is being built for is different than the system where the software
+is being compiled.  If you don't know what this means, this does not apply to
+and you should ignore this file.
+
+When building for cross-compilation, you can use CMake's native support
+`CMAKE_TOOLCHAIN_FILE` to configure the location of the toolchain.
+
+You'll need that toolchain to have your compiler, linker, header files,
+and possibly any other libraries that need to be linked at build time.
+
+This is all relatively standard stuff for CMake.
+
+A lot more detail is located here: https://gitlab.kitware.com/cmake/community/wikis/doc/cmake/CrossCompiling
+
+NOTE: When _NNG_ detects that it is being built in a Cross-Compile
+situation (i.e. when `CMAKE_CROSSCOMPILING` is true), it will default
+to disabling the building of the test suite and tools.
+This is normally preferable, since many embedded environments cannot host
+command line applications or shell environments. +
+ +
+To enable tools or tests to build anyway, the values of either
+`NNG_TOOLS` or `NNG_TESTS` (or both) may be set to `ON`.
+
+== Cross-compiling for Android
+
+More details for Android are located in the <<BUILD_ANDROID.adoc>> file.
+
+== Cross-compiling for iOS
+
+More details for iOS (and tvOS, etc.) are located in the <<BUILD_IOS.adoc>> file.
