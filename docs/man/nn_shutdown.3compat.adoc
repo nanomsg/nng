@@ -46,6 +46,7 @@ This function returns zero on success, and -1 on error.
 
 == SEE ALSO
 
+[.text-left]
 <<nn_bind.3compat#,nn_bind(3compat)>>,
 <<nn_connect.3compat#,nn_connect(3compat)>>,
 <<nn_errno.3compat#,nn_errno(3compat)>>,

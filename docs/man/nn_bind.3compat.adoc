@@ -58,6 +58,7 @@ This function returns a positive identifier on success, and -1 on error.
 
 == SEE ALSO
 
+[.text-left]
 <<nn_connect.3compat#,nn_connect(3compat)>>,
 <<nn_errno.3compat#,nn_errno(3compat)>>,
 <<nn_shutdown.3compat#,nn_shutdown(3compat)>>,

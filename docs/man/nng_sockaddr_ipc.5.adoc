@@ -65,6 +65,7 @@ longer than 128 bytes, including the `ipc://` prefix.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng_ipc.7#,nng_ipc(7)>>
 <<nng.7#,nng(7)>>

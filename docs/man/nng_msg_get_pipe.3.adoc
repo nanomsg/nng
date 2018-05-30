@@ -53,6 +53,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
 <<nng_msg_set_pipe.3#,nng_msg_set_pipe(3)>>,
 <<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,

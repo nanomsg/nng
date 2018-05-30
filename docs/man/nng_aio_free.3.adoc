@@ -40,6 +40,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_stop.3#,nng_aio_stop(3)>>,
 <<nng_aio.5#,nng_aio(5)>>,

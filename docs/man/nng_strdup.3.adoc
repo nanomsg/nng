@@ -50,6 +50,7 @@ treated the same as `NNG_ENOMEM`.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_alloc.3#,nng_alloc(3)>>,
 <<nng_free.3#,nng_free(3)>>,
 <<nng.7#,nng(7)>>

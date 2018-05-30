@@ -16,17 +16,17 @@ nng_tls_config_alloc - allocate TLS configuration object
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 #include <nng/supplemental/tls/tls.h>
 
 typedef enum nng_tls_mode {
-        NNG_TLS_MODE_CLIENT,
-        NNG_TLS_MODE_SERVER
+    NNG_TLS_MODE_CLIENT,
+    NNG_TLS_MODE_SERVER
 } nng_tls_mode;
 
 int nng_tls_config_alloc(nni_tls_config **cfgp, nng_tls_mode mode);
------------
+----
 
 == DESCRIPTION
 
@@ -59,11 +59,13 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EINVAL`:: An invalid _mode_ was specified.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_strerror.3#,nng_strerror(3)>>,
 <<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode(3tls)>>,
 <<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain(3tls)>>,

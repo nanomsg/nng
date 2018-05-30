@@ -104,6 +104,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_ECLOSED`:: Parameter _s_ does not refer to an open socket.
 `NNG_EINVAL`:: The value being passed is invalid.
 `NNG_ENOTSUP`:: The option _opt_ is not supported.
@@ -112,6 +113,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_getopt.3#,nng_getopt(3)>>,
 <<nng_dialer_setopt.3#,nng_dialer_setopt(3)>>,
 <<nng_listener_setopt.3#,nng_listener_setopt(3)>>,

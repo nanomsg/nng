@@ -36,6 +36,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
 <<nng_msg_realloc.3#,nng_msg_realloc(3)>>,
 <<nng_msg.5#,nng_msg(5)>>,

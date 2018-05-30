@@ -53,6 +53,7 @@ None.  (The operation completes asynchronously.)
 
 == ERRORS
 
+[horizontal]
 `NNG_ECANCELED`:: The operation was aborted.
 `NNG_ECLOSED`:: The context _ctx_ is not open.
 `NNG_ENOMEM`:: Insufficient memory is available.
@@ -62,6 +63,7 @@ None.  (The operation completes asynchronously.)
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_get_msg.3#,nng_aio_get_msg(3)>>,
 <<nng_aio_set_msg.3#,nng_aio_set_msg(3)>>,
 <<nng_msg_alloc.3#,nng_msg_alloc(3)>>,

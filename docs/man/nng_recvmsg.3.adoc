@@ -16,11 +16,11 @@ nng_recvmsg - recv message
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 
 int nng_recvmsg(nng_socket s, nng_msg **msgp, int flags);
------------
+----
 
 == DESCRIPTION
 
@@ -51,6 +51,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EAGAIN`:: The socket _s_ cannot accept data for sending.
 `NNG_ECLOSED`:: The socket _s_ is not open.
 `NNG_EINVAL`:: An invalid set of _flags_ was specified.
@@ -60,6 +61,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_msg_free.3#,nng_msg_free(3)>>,
 <<nng_recv.3#,nng_recv(3)>>,
 <<nng_sendmsg.3#,nng_sendmsg(3)>>,

@@ -71,6 +71,7 @@ to align for another header.
 
 == SEE ALSO
 
+[.text-left]
 <<nn_recvmsg.3compat#,nn_recvmsg(3compat)>>,
 <<nn_sendmsg.3compat#,nn_sendmsg(3compat)>>,
 <<nng_compat.3compat#,nng_compat(3compat)>>,

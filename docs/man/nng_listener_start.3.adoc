@@ -53,11 +53,13 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_ECLOSED`:: Parameter _l_ does not refer to an open listener.
 `NNG_ESTATE`:: The listener _l_ is already started.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_listen.3#,nng_listen(3)>>,
 <<nng_listener_create.3#,nng_listener_create(3)>>
 <<nng_listener.5#,nng_listener(5)>>,

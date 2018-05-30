@@ -61,7 +61,7 @@ global behavior.
 Historically, applications wanting to use a stateful protocol concurrently
 would have to resort to <<nng.7#raw_mode,raw mode>> sockets, which bypasses
 much of the various protocol handling, leaving it to up to the application
-to do so. 
+to do so.
 Contexts make it possible to still benefit from advanced protocol handling,
 including timeouts, retries, and matching requests to responses, while doing so
 concurrently.
@@ -158,6 +158,7 @@ start_echo_service(nng_socket rep_socket)
 
 == SEE ALSO
 
+[.text-left]
 <<libnng.3#,libnng(3)>>,
 <<nng_ctx_close.3#,nng_ctx_close(3)>>,
 <<nng_ctx_open.3#,nng_ctx_open(3)>>,

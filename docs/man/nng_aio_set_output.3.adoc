@@ -24,7 +24,7 @@ void nng_aio_set_output(nng_aio *aio, unsigned int index, void *result);
 
 == DESCRIPTION
 
-The `nng_aio_set_output()` function sets the output result at _index_ 
+The `nng_aio_set_output()` function sets the output result at _index_
 to _result_ for the asynchronous operation associated with _aio_.
 
 The type and semantics of output results are determined by specific
@@ -51,6 +51,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_finish.3#,nng_aio_finish(3)>>,
 <<nng_aio_get_output.3#,nng_aio_get_output(3)>>,

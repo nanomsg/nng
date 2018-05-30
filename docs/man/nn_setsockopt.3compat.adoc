@@ -108,7 +108,7 @@ Applications needing assurance of message delivery should either include an
 explicit notification (automatic with the `NN_REQ` protocol) or allow
 sufficient time for the socket to drain before closing the socket or exiting.
 
-`NN_SNDPRIO`:: 
+`NN_SNDPRIO`::
 This option is not implemented at this time.
 
 `NN_RCVPRIO`::
@@ -197,6 +197,7 @@ This function returns zero on success, and -1 on failure.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_socket.5#,nng_socket(5)>>,
 <<nn_close.3compat#,nn_close(3compat)>>,
 <<nn_errno.3compat#,nn_errno(3compat)>>,

@@ -35,7 +35,7 @@ which will be attached to the dialer's socket.
 Normally, the first attempt to connect to the dialer's address is done
 synchronously, including any necessary name resolution.
 As a result, a failure, such as if the connection is refused, will be returned
-immediately, and no further action will be taken. 
+immediately, and no further action will be taken.
 
 However, if the special value `NNG_FLAG_NONBLOCK` is
 supplied in _flags_, then the connection attempt is made asynchronously.
@@ -55,6 +55,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EADDRINVAL`:: An invalid _url_ was specified.
 `NNG_ECLOSED`:: The socket _s_ is not open.
 `NNG_ECONNREFUSED`:: The remote peer refused the connection.
@@ -68,6 +69,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_dial.3#,nng_dial(3)>>,
 <<nng_dialer_create.3#,nng_dialer_create(3)>>
 <<nng_strerror.3#,nng_strerror(3)>>,

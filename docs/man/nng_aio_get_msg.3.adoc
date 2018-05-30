@@ -41,6 +41,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_set_msg.3#,nng_aio_set_msg(3)>>,
 <<nng_recv_aio.3#,nng_recv_aio(3)>>,
 <<nng_aio.5#,nng_aio(5)>>,

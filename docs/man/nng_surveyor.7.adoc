@@ -96,7 +96,7 @@ The following protocol-specific options is available.
 
    This read/write option is an `<<nng_duration.5#,nng_duration>>`
    representing a postive number of milliseconds that following surveys
-   will last. 
+   will last.
    When a new survey is started, a timer of this duration is also started.
    Any responses arriving this time will be discarded.
    Attempts to receive
@@ -143,6 +143,7 @@ survey ID it originally used for the request.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_surveyor_open.3#,nng_surveyor_open(3)>>,
 <<nng_respondent.7#,nng_respondent(7)>>,
 <<nng.7#,nng(7)>>

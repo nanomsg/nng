@@ -28,7 +28,7 @@ typedef struct nng_pipe_s nng_pipe;
 An `nng_pipe` is a handle to a "`pipe`", which can be thought of as a single
 connection.
 (In most cases this is actually the case -- the pipe is an abstraction for a
-single TCP or IPC connection.) 
+single TCP or IPC connection.)
 Pipes are associated with either the listener or dialer that created them,
 and therefore are also automatically associated with a single socket.
 
@@ -37,7 +37,7 @@ for input parameters and return values), and should be treated opaquely.
 Passing structures this way ensures gives the compiler a chance to perform
 accurate type checks in functions passing values of this type.
 
-TIP: Most applications should never concern themselves with individual pipes. 
+TIP: Most applications should never concern themselves with individual pipes.
 However it is possible to access a pipe when more information about the
 source of a message is needed, or when more control is required over
 message delivery.
@@ -66,6 +66,7 @@ nng_pipe p = NNG_PIPE_INITIALIZER;
 
 == SEE ALSO
 
+[.text-left]
 <<nng_msg_get_pipe.3#,nng_msg_get_pipe(3)>>,
 <<nng_pipe_close.3#,nng_pipe_close(3)>>,
 <<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,

@@ -25,7 +25,7 @@ size_t nng_aio_count(nng_aio *aio);
 == DESCRIPTION
 
 The `nng_aio_count()` returns the number of bytes transferred by the
-asynchronous operation associated with the handle _aio_. 
+asynchronous operation associated with the handle _aio_.
 
 Some asynchronous operations do not provide meaningful data for this
 function; for example operations that establish connections do not
@@ -51,6 +51,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_result.3#,nng_aio_result(3)>>,
 <<nng_aio_set_iov.3#,nng_aio_set_iov(3)>>,

@@ -37,5 +37,6 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_cv_alloc.3supp#,nng_cv_alloc(3supp)>>,
 <<nng.7#,nng(7)>>

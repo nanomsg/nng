@@ -26,7 +26,7 @@ nng_push - push protocol
 The ((_push_ protocol)) is one half of a ((pipeline pattern)).
 The other side is the <<nng_pull.7#,_pull_>> protocol.
 
-In the pipeline pattern, pushers distribute messages to pullers. 
+In the pipeline pattern, pushers distribute messages to pullers.
 Each message sent by a pusher will be sent to one of its peer pullers,
 chosen in a round-robin fashion
 from the set of connected peers available for receiving.
@@ -61,9 +61,10 @@ The _push_ protocol has no protocol-specific options.
 === Protocol Headers
 
 The _push_ protocol has no protocol-specific headers.
-    
+
 == SEE ALSO
 
+[.text-left]
 <<nng_push_open.3#,nng_push(3)>>,
 <<nng_pull.7#,nng_pull(7)>>,
 <<nng_req.7#,nng_req(7)>>,

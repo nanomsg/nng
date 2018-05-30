@@ -16,12 +16,12 @@ nng_http_client_free - free HTTP client
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
 void nng_http_client_free(nng_http_client *client);
------------
+----
 
 == DESCRIPTION
 
@@ -42,6 +42,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_http_client_alloc.3http#,nng_http_client_alloc(3)>>,
 <<nng_http_client_connect.3http#,nng_http_client_connect(3)>>,
 <<nng.7#,nng(7)>>

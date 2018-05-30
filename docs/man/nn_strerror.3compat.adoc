@@ -41,6 +41,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nn_errno.3compat#,nn_errno(3compat)>>,
 <<nng_compat.3compat#,nng_compat(3compat)>>,
 <<nng.7#,nng(7)>>

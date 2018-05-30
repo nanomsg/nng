@@ -54,6 +54,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
 <<nng_aio_free.3#,nng_aio_free(3)>>,
 <<nng_aio_wait.3#,nng_aio_wait(3)>>,

@@ -34,8 +34,8 @@ The ((_pair_ protocol)) implements a peer-to-peer pattern, where
 relationships between peers are one-to-one.
 
 Version 1 of this protocol supports an optional ((_polyamorous_ mode)) where a
-peer can maintain multiple partnerships.  Using this mode requires
-some additional sophistication in the application.
+peer can maintain multiple partnerships.
+Using this mode requires some additional sophistication in the application.
 
 === Socket Operations
 
@@ -121,9 +121,10 @@ used in conjuction with the
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is
 received by a new node.
-    
+
 == SEE ALSO
 
+[.text-left]
 <<nng_pair_open.3#,nng_pair_open(3)>>,
 <<nng_options.5#,nng_options(5)>>,
 <<nng.7#,nng(7)>>

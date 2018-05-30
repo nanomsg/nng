@@ -109,6 +109,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EBADTYPE`:: Incorrect type for option.
 `NNG_ECLOSED`:: Parameter _s_ does not refer to an open socket.
 `NNG_EINVAL`:: Size of destination _val_ too small for object.
@@ -118,6 +119,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_ctx_setopt.3#,nng_ctx_setopt(3)>>,
 <<nng_strdup.3#,nng_strdup(3)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,

@@ -146,5 +146,6 @@ Zones (and this option) are only supported on Solaris and illumos systems.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng.7#,nng(7)>>

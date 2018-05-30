@@ -53,6 +53,7 @@ Furthermore, the size is guaranteed to be at least 128.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng_inproc.7#,nng_inproc(7)>>
 <<nng.7#,nng(7)>>

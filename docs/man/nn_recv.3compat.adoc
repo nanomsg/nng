@@ -66,6 +66,7 @@ This function returns the number of bytes sent on success, and -1 on error.
 
 == SEE ALSO
 
+[.text-left]
 <<nn_errno.3compat#,nn_errno(3compat)>>,
 <<nn_recvmsg.3compat#,nn_recvmsg(3compat)>>,
 <<nn_send.3compat#,nn_send(3compat)>>,

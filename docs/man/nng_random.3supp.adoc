@@ -41,4 +41,5 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng.7#,nng(7)>>

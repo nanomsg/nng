@@ -41,6 +41,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_sleep_aio.3#,nng_sleep_aio(3)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,
 <<nng_clock.3supp#,nng_clock(3supp)>>,

@@ -125,6 +125,7 @@ These functions returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EBADTYPE`:: Incorrect type for option.
 `NNG_ECLOSED`:: Parameter _d_ does not refer to an open dialer.
 `NNG_EINVAL`:: Size of destination _val_ too small for object.
@@ -134,6 +135,7 @@ These functions returns 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_dialer_create.3#,nng_dialer_create(3)>>
 <<nng_dialer_setopt.3#,nng_dialer_setopt(3)>>
 <<nng_strdup.3#,nng_strdup(3)>>,

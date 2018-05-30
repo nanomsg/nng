@@ -344,6 +344,7 @@ middleware from being expiring due to lack of activity.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_dialer_getopt.3#,nng_dialer_getopt(3)>>,
 <<nng_dialer_setopt.3#,nng_dialer_setopt(3)>>,
 <<nng_getopt.3#,nng_getopt(3)>>,

@@ -58,7 +58,7 @@ In this case sockets _s1_ and _s2_ must be "`compatible`" with each other,
 which is to say that they should represent the opposite halves of a two
 protocol pattern, or both be the same protocol for a single protocol
 pattern.
-For example, if _s1_ is a <<nng_pub.7#,_pub_>> socket, then _s2_ must 
+For example, if _s1_ is a <<nng_pub.7#,_pub_>> socket, then _s2_ must
 be a <<nng_sub.7#,_sub_>> socket.
 Or, if _s1_ is a <<nng_bus.7#,_bus_>> socket, then _s2_ must also
 be a _bus_ socket.
@@ -102,12 +102,14 @@ one occurs, or if one of the sockets is closed.
 
 == ERRORS
 
+[horizontal]
 `NNG_ECLOSED`:: At least one of the sockets is not open.
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EINVAL`:: The sockets are not compatible, or are both invalid.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_options.5#,nng_options(5)>>,
 <<nng_socket.5#,nng_socket(5)>>,
 <<nng.7#,nng(7)>>

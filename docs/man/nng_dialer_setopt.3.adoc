@@ -109,6 +109,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EBADTYPE`:: Incorrect type for option.
 `NNG_ECLOSED`:: Parameter _d_ does not refer to an open dialer.
 `NNG_EINVAL`:: The value being passed is invalid.
@@ -118,6 +119,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_dialer_create.3#,nng_dialer_create(3)>>
 <<nng_dialer_getopt.3#,nng_dialer_getopt(3)>>
 <<nng_strerror.3#,nng_strerror(3)>>,

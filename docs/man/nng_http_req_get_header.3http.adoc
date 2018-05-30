@@ -45,6 +45,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
 <<nng_http_req_add_header.3http#,nng_http_req_add_header(3http)>>,
 <<nng_http_req_set_header.3http#,nng_http_req_set_header(3http)>>,

@@ -41,5 +41,6 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_compat.3compat#,nng_compat(3compat)>>,
 <<nng.7#,nng(7)>>

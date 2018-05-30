@@ -38,5 +38,6 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_http_res_alloc.3http#,nng_http_req_alloc(3http)>>,
 <<nng.7#,nng(7)>>

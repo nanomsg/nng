@@ -41,6 +41,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
 <<nng_http_res_get_status.3http#,nng_http_res_get_status(3http)>>,
 <<nng_http_res_set_reason.3http#,nng_http_res_set_reason(3http)>>,

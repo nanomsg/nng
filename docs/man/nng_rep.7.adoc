@@ -77,9 +77,10 @@ The _rep_ protocol has no protocol-specific options.
 (((backtrace)))
 The _rep_ protocol uses a _backtrace_ in the header.
 This is more fully documented in the <<nng_req.7#,_req_>> manual.
-    
+
 == SEE ALSO
 
+[.text-left]
 <<nng_rep_open.3#,nng_rep_open(3)>>,
 <<nng.7#,nng(7)>>,
 <<nng_req.7#,nng_req(7)>>

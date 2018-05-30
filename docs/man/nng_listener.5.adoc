@@ -63,6 +63,7 @@ before it is opened, to prevent confusion with valid open listener.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_listen.3#,nng_listen(3)>>,
 <<nng_listener_close.3#,nng_listener_close(3)>>,
 <<nng_listener_create.3#,nng_listener_create(3)>>,

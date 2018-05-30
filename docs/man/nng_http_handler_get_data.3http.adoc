@@ -40,6 +40,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
 <<nng_http_handler_set_data.3http#,nng_http_server_set_data(3http)>>,
 <<nng_http_server_add_handler.3http#,nng_http_server_add_handler(3http)>>,

@@ -51,11 +51,13 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_ENOTSUP`:: The protocol does not support separate contexts, or the socket was opened in raw mode.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_ctx_close.3#,nng_ctx_close(3)>>,
 <<nng_ctx_getopt.3#,nng_ctx_getopt(3)>>,
 <<nng_ctx_recv.3#,nng_ctx_recv(3)>>,

@@ -48,11 +48,13 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_ENOMEM`:: Insufficient memory to perform the operation.
 `NNG_ENOTSUP`:: No support for HTTP in the library.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_http_conn_write_req.3http#,nng_http_conn_write_req(3http)>>,
 <<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
 <<nng_http_req_set_data.3http#,nng_http_req_set_data(3http)>>,

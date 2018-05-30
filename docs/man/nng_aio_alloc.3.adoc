@@ -57,10 +57,12 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_ENOMEM`:: Insufficient free memory to perform the operation.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_abort.3#,nng_aio_abort(3)>>,
 <<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
 <<nng_aio_count.3#,nng_aio_count(3)>>,

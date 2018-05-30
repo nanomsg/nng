@@ -51,6 +51,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_cv_alloc.3supp#,nng_cv_alloc(3supp)>>,
 <<nng_cv_until.3supp#,nng_cv_until(3supp)>>,
 <<nng_cv_wait.3supp#,nng_cv_wait(3supp)>>,

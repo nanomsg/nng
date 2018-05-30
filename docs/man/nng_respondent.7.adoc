@@ -45,7 +45,7 @@ This socket may be used to receive messages, and then to send replies.
 A reply can only be sent after receiving a survey, and generally the
 reply will be sent to surveyor from whom the last survey was received.
 
-Respondents may discard a survey by simply not replying to it. 
+Respondents may discard a survey by simply not replying to it.
 
 Raw mode sockets (set with `<<nng_options.5#NNG_OPT_RAW,NNG_OPT_RAW>>`)
 ignore all these restrictions.
@@ -85,6 +85,7 @@ This is more fully documented in the <<nng_surveyor.7#,_surveyor_>> manual.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_respondent_open.3#,nng_respondent_open(3)>>,
 <<nng_surveyor.7#,nng_surveyor(7)>>,
 <<nng.7#,nng(7)>>

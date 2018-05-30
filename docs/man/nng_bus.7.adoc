@@ -79,5 +79,6 @@ When using "`cooked`" _bus_ sockets, no message headers are present.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_bus_open.3#,nng_bus_open(3)>>,
 <<nng.7#,nng(7)>>

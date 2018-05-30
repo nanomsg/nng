@@ -42,6 +42,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
 <<nng_mtx_lock.3supp#,nng_mtx_lock(3supp)>>,
 <<nng.7#,nng(7)>>

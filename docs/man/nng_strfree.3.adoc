@@ -51,6 +51,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_alloc.3#,nng_alloc(3)>>,
 <<nng_free.3#,nng_free(3)>>,
 <<nng_strdup.3#,nng_strdup(3)>>,

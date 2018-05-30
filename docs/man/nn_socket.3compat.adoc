@@ -70,6 +70,7 @@ This function returns a valid socket number on success, and -1 on failure.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_socket.5#,nng_socket(5)>>,
 <<nn_close.3compat#,nn_close(3compat)>>,
 <<nn_errno.3compat#,nn_errno(3compat)>>,

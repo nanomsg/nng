@@ -60,9 +60,10 @@ the actual structure is of type
 === Transport Options
 
 The _inproc_ transport has no special options.
-    
+
 == SEE ALSO
 
+[.text-left]
 <<nng_inproc_register.3#,nng_inproc_register(3)>>,
 <<nng_sockaddr_inproc.5#,nng_sockaddr_inproc(5)>>,
 <<nng.7#,nng(7)>>

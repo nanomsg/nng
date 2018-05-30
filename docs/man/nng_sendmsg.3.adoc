@@ -24,7 +24,7 @@ int nng_sendmsg(nng_socket s, nng_msg *msg, int flags);
 
 == DESCRIPTION
 
-The `nng_sendmsg()` sends message _msg_ using the socket _s_. 
+The `nng_sendmsg()` sends message _msg_ using the socket _s_.
 
 If the function returns zero, indicating it has accepted the message for
 delivery, then the _msg_ is "`owned`" by the socket _s_, and the caller
@@ -72,6 +72,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EAGAIN`:: The socket _s_ cannot accept data for sending.
 `NNG_ECLOSED`:: The socket _s_ is not open.
 `NNG_EINVAL`:: An invalid set of _flags_ was specified.
@@ -82,6 +83,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
 <<nng_recvmsg.3#,nng_recvmsg(3)>>,
 <<nng_send.3#,nng_send(3)>>,

@@ -39,5 +39,6 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
 <<nng.7#,nng(7)>>

@@ -16,12 +16,12 @@ nng_http_client_connect - establish HTTP client connection
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
 void nng_http_client_connect(nng_http_client *client, nng_aio *aio);
------------
+----
 
 == DESCRIPTION
 
@@ -44,6 +44,7 @@ None.
 
 == ERRORS
 
+[horizontal]
 `NNG_EADDRINVAL`:: The server is configured with an invalid address.
 `NNG_ECANCELED`:: The operation was aborted.
 `NNG_ECONNREFUSED`:: The TCP connection was refused by the server.
@@ -85,6 +86,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_get_output.3#,nng_aio_get_output(3)>>,
 <<nng_aio_result.3#,nng_aio_result(3)>>,
 <<nng_aio_wait.3#,nng_aio_wait(3)>>,

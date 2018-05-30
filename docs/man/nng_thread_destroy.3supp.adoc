@@ -42,5 +42,6 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_thread_create.3supp#,nng_thread_create(3supp)>>,
 <<nng.7#,nng(7)>>

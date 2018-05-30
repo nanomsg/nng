@@ -40,7 +40,7 @@ It is a programming error for the owner of a mutex to attempt to
 reacquire it.
 
 ****
-_nng_ offers neither a "`trylock`" operation, nor recursive mutexes. 
+_nng_ offers neither a "`trylock`" operation, nor recursive mutexes.
 This is by design, as _nng_ itself does not use such things,
 and most often the need for them is the result of poor design.
 If such capabilities are needed, they may be synthesized fairly
@@ -57,6 +57,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_cv_alloc.3supp#,nng_cv_alloc(3supp)>>,
 <<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
 <<nng_mtx_unlock.3supp#,nng_mtx_unlock(3supp)>>,

@@ -182,6 +182,7 @@ results if peer authentication is disabled with `NNG_TLS_AUTH_MODE_NONE`.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>
 <<nng_sockaddr_in.5#,nng_sockaddr_in(5)>>,
 <<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,

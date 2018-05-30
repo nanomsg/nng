@@ -44,7 +44,7 @@ That result will either be zero or an error code.
 By default, for `HTTP/1.1` connections, the connection is kept open, and
 will be reused to receive new requests.
 
-If however the _res_ contains a header of `Connection:` with a value 
+If however the _res_ contains a header of `Connection:` with a value
 of `Close` (case-insensitive) or the response corresponds to `HTTP/1.0`,
 then the connection is immediately after sending the response.
 
@@ -54,6 +54,7 @@ None.
 
 == ERRORS
 
+[horizontal]
 `NNG_ECANCELED`:: The operation was canceled.
 `NNG_ECLOSED`:: The connection was closed.
 `NNG_ECONNRESET`:: The peer closed the connection.
@@ -63,6 +64,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_result.3#,nng_aio_result(3)>>,
 <<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,

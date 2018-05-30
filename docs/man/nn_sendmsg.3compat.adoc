@@ -61,7 +61,7 @@ has the base address (`iov_base`) and length (`iov_len`) indicated.
 For buffers allocated for zero copy
 (such as by `<<nn_allocmsg.3compat#,nn_allocmsg()>>`), the value
 of `iov_base` should be the address of the pointer to the buffer,
-rather than the address of the buffer itself. 
+rather than the address of the buffer itself.
 In this case, the value of `iov_len` should be `NN_MSG`,
 as the length is inferred from the allocated message.
 If the `msg_iovlen` field is `NN_MSG`, then this function will free
@@ -97,6 +97,7 @@ This function returns the number of bytes sent on success, and -1 on error.
 
 == SEE ALSO
 
+[.text-left]
 <<nn_cmsg.3compat#,nn_cmsg(3compat)>>,
 <<nn_errno.3compat#,nn_errno(3compat)>>,
 <<nn_recv.3compat#,nn_recv(3compat)>>,

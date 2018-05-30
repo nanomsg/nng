@@ -141,10 +141,10 @@ The following transport options are available:
   can store (and reuse) persistent state, such as key materials, node
   identity, and federation membership.
   This option must be set before the ZeroTier transport is first used.
-  If this value is empty, then an ephemeral ZeroTier node is created, 
+  If this value is empty, then an ephemeral ZeroTier node is created,
   nd no persistent state is used.
   The default is to use an ephemeral node.
-+ 
++
 NOTE: If this option is set to different values on different sockets,
 dialers, or listeners, then separate nodes will be created.
 It is perfectly valid for an application to have multiple node identities
@@ -222,8 +222,9 @@ in this fashion.
   This write-only option takes a single `uint64_t` indicating the moon
   ID to "`deorbit`".  If the node is not already orbiting the moon, then
   this has no effect.
-    
+
 == SEE ALSO
 
+[.text-left]
 <<nng_sockaddr_zt.5#,nng_sockaddr_zt(5)>>,
 <<nng.7#,nng(7)>>

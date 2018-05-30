@@ -76,6 +76,7 @@ the Scalability Protocols binding for them.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng_zerotier.7#,nng_zerotier(7)>>,
 <<nng.7#,nng(7)>>

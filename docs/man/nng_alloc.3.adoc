@@ -26,7 +26,7 @@ void *nng_alloc(size_t size);
 
 The `nng_alloc()` function allocates a contiguous memory region of
 at least _size_ bytes.
-The memory will be 64-bit aligned. 
+The memory will be 64-bit aligned.
 
 The returned memory can be used to hold message buffers, in which
 case it can be directly passed to `<<nng_send.3#,nng_send()>>` using
@@ -49,6 +49,7 @@ treated the same as `NNG_ENOMEM`.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_free.3#,nng_free(3)>>,
 <<nng_send.3#,nng_send(3)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,

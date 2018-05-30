@@ -24,7 +24,7 @@ void nng_aio_set_input(nng_aio *aio, unsigned int index, void *param);
 
 == DESCRIPTION
 
-The `nng_aio_set_input()` function sets the input parameter at _index_ 
+The `nng_aio_set_input()` function sets the input parameter at _index_
 to _param_ for the asynchronous operation associated with _aio_.
 
 The type and semantics of input parameters are determined by specific
@@ -54,6 +54,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_get_input.3#,nng_aio_get_input(3)>>,
 <<nng_aio_get_output.3#,nng_aio_get_output(3)>>,

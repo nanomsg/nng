@@ -313,6 +313,7 @@ $ nngcat --sub --dial=${addr} --quoted &
 
 == SEE ALSO
 
+[.text-left]
 <<libnng.3#,libnng(3)>>,
 <<nng.7#,nng(7)>>,
 <<nng_bus.7#,nng_bus(7)>>,

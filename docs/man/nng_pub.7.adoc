@@ -60,9 +60,10 @@ The _pub_ protocol has no protocol-specific options.
 === Protocol Headers
 
 The _pub_ protocol has no protocol-specific headers.
-    
+
 == SEE ALSO
 
+[.text-left]
 <<nng_pub_open.3#,nng_pub_open(3)>>,
 <<nng_sub.7#,nng_sub(7)>>,
 <<nng.7#,nng(7)>>

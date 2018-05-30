@@ -76,9 +76,10 @@ TIP: To receive all messages, an empty topic (zero length) can be used.
 === Protocol Headers
 
 The _sub_ protocol has no protocol-specific headers.
-    
+
 == SEE ALSO
 
+[.text-left]
 <<nng_sub_open.3#,nng_sub_open(3)>>,
 <<nng_pub.7#,nng_pub(7)>>,
 <<nng.7#,nng(7)>>

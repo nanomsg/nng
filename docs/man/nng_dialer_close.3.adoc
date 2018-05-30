@@ -42,10 +42,12 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_ECLOSED`:: Parameter _d_ does not refer to an open listener.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_close.3#,nng_close(3)>>,
 <<nng_dial.3#,nng_dial(3)>>,
 <<nng_dialer_create.3#,nng_dialer_create(3)>>

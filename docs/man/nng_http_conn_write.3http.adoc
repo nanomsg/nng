@@ -53,6 +53,7 @@ None.
 
 == ERRORS
 
+[horizontal]
 `NNG_ECANCELED`:: The operation was canceled.
 `NNG_ECLOSED`:: The connection was closed.
 `NNG_ECONNRESET`:: The peer closed the connection.
@@ -63,6 +64,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_count.3#,nng_aio_count(3)>>,
 <<nng_aio_result.3#,nng_aio_result(3)>>,

@@ -108,7 +108,7 @@ the extension, then `application/octet-stream` is used.
 
 The third member of this family, `nng_http_handler_alloc_file()`, creates
 a handler to serve up a single file; it does not traverse directories
-or search for `index.html` or `index.htm` files. 
+or search for `index.html` or `index.htm` files.
 
 The `Content-Type` will be set automatically based upon the extension
 of the requsted file name.
@@ -129,12 +129,14 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EINVAL`:: An invalid _path_ was specified.
 `NNG_ENOMEM`:: Insufficient free memory exists to allocate a message.
 `NNG_ENOTSUP`:: No support for HTTP in the library.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_finish.3#,nng_aio_finish(3)>>,
 <<nng_aio_get_input.3#,nng_aio_get_input(3)>>,
 <<nng_aio_set_output.3#,nng_aio_set_output(3)>>,

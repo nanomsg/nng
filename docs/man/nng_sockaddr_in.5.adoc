@@ -64,6 +64,7 @@ _not_ the same, and they may not be used interchangeabley.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,
 <<nng_tcp.7#,nng_tcp(7)>>,

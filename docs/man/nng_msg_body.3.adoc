@@ -34,7 +34,7 @@ Such functions are
 `<<nng_msg_realloc.3#,nng_msg_realloc()>>`,
 any of the `<<nng_msg_trim.3#,nng_msg_trim()>>`,
 `<<nng_msg_chop.3#,nng_msg_chop()>>`,
-`<<nng_msg_append.3#,nng_msg_append()>>`, 
+`<<nng_msg_append.3#,nng_msg_append()>>`,
 or `<<nng_msg_insert.3#,nng_msg_insert()>>` variants.
 
 == RETURN VALUES
@@ -47,6 +47,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
 <<nng_msg_append.3#,nng_msg_append(3)>>,
 <<nng_msg_chop.3#,nng_msg_chop(3)>>,

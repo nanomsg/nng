@@ -49,6 +49,7 @@ and destroyed using `<<nng_aio_free.3#,nng_aio_free()>>`.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_abort.3#,nng_aio_abort(3)>>,
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_cancel.3#,nng_aio_cancel(3)>>,

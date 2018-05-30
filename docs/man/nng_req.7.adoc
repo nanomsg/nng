@@ -146,6 +146,7 @@ request ID it originally used for the request.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_ctx_open.3#,nng_ctx_open(3)>>,
 <<nng_device.3#,nng_device(3)>>,
 <<nng_req_open.3#,nng_req_open(3)>>,

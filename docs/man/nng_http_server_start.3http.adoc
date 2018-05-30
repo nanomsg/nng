@@ -35,6 +35,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EADDRINUSE`:: The TCP port is unavaialble.
 `NNG_EADDRINVAL`:: The server is configured with an invalid address.
 `NNG_ENOMEM`:: Insufficient free memory exists.
@@ -42,6 +43,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
 <<nng_http_server_release.3http#,nng_http_server_release(3http)>>,
 <<nng_http_server_stop.3http#,nng_http_server_stop(3http)>>,

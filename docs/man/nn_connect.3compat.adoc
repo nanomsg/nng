@@ -57,6 +57,7 @@ This function returns a positive identifier success, and -1 on error.
 
 == SEE ALSO
 
+[.text-left]
 <<nn_bind.3compat#,nn_bind(3compat)>>,
 <<nn_errno.3compat#,nn_errno(3compat)>>,
 <<nn_shutdown.3compat#,nn_shutdown(3compat)>>,

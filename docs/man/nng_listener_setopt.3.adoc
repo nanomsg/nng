@@ -107,6 +107,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EBADTYPE`:: Incorrect type for option.
 `NNG_ECLOSED`:: Parameter _l_ does not refer to an open listener.
 `NNG_EINVAL`:: The value being passed is invalid.
@@ -116,6 +117,7 @@ These functions return 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_listen.3#,nng_listen(3)>>,
 <<nng_listener_create.3#,nng_listener_create(3)>>
 <<nng_listener_getopt.3#,nng_listener_getopt(3)>>

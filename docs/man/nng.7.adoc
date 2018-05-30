@@ -51,25 +51,38 @@ other languages please check the http://nanomsg.org/[website].
 
 == Protocols
 
-* <<nng_bus.7#,nng_bus(7)>> - Bus protocol
-* <<nng_pair.7#,nng_pair(7)>> - Pair protocol
-* <<nng_pub.7#,nng_pub(7)>> - Publisher side of publish/subscribe protocol
-* <<nng_pull.7#,nng_pull(7)>> - Pull side of pipeline protocol
-* <<nng_push.7#,nng_push(7)>> - Push side of pipeline protocol
-* <<nng_sub.7#,nng_sub(7)>> - Subscriber side of publish/subscribe protocol
-* <<nng_rep.7#,nng_rep(7)>> - Reply side of request/reply protocol
-* <<nng_req.7#,nng_req(7)>> - Request side of request/reply protocol
-* <<nng_respondent.7#,nng_respondent(7)>> - Respondent side of survey protocol
-* <<nng_surveyor.7#,nng_surveyor(7)>> - Surveyor side of survey protocol
+[horizontal]
+<<nng_bus.7#,nng_bus(7)>>:: Bus protocol
+<<nng_pair.7#,nng_pair(7)>>:: Pair protocol
+<<nng_pub.7#,nng_pub(7)>>:: Publisher side of publish/subscribe protocol
+<<nng_pull.7#,nng_pull(7)>>:: Pull side of pipeline protocol
+<<nng_push.7#,nng_push(7)>>:: Push side of pipeline protocol
+<<nng_sub.7#,nng_sub(7)>>:: Subscriber side of publish/subscribe protocol
+<<nng_rep.7#,nng_rep(7)>>:: Reply side of request/reply protocol
+<<nng_req.7#,nng_req(7)>>:: Request side of request/reply protocol
+<<nng_respondent.7#,nng_respondent(7)>>:: Respondent side of survey protocol
+<<nng_surveyor.7#,nng_surveyor(7)>>:: Surveyor side of survey protocol
+
+//* <<nng_bus.7#,nng_bus(7)>> - Bus protocol
+//* <<nng_pair.7#,nng_pair(7)>> - Pair protocol
+//* <<nng_pub.7#,nng_pub(7)>> - Publisher side of publish/subscribe protocol
+//* <<nng_pull.7#,nng_pull(7)>> - Pull side of pipeline protocol
+//* <<nng_push.7#,nng_push(7)>> - Push side of pipeline protocol
+//* <<nng_sub.7#,nng_sub(7)>> - Subscriber side of publish/subscribe protocol
+//* <<nng_rep.7#,nng_rep(7)>> - Reply side of request/reply protocol
+//* <<nng_req.7#,nng_req(7)>> - Request side of request/reply protocol
+//* <<nng_respondent.7#,nng_respondent(7)>> - Respondent side of survey protocol
+//* <<nng_surveyor.7#,nng_surveyor(7)>> - Surveyor side of survey protocol
 
 == Transports
 
-* <<nng_inproc.7#,nng_inproc(7)>> - Intra-process transport
-* <<nng_ipc.7#,nng_ipc(7)>> - Inter-process transport
-* <<nng_tls.7#,nng_tls(7)>> - TLSv1.2 over TCP transport
-* <<nng_tcp.7#,nng_tcp(7)>> - TCP (and TCPv6) transport
-* <<nng_ws.7#,nng_ws(7)>> - WebSocket transport
-* <<nng_zerotier.7#,nng_zerotier(7)>> - ZeroTier transport
+[horizontal]
+<<nng_inproc.7#,nng_inproc(7)>>:: Intra-process transport
+<<nng_ipc.7#,nng_ipc(7)>>:: Inter-process transport
+<<nng_tls.7#,nng_tls(7)>>:: TLSv1.2 over TCP transport
+<<nng_tcp.7#,nng_tcp(7)>>:: TCP (and TCPv6) transport
+<<nng_ws.7#,nng_ws(7)>>:: WebSocket transport
+<<nng_zerotier.7#,nng_zerotier(7)>>:: ZeroTier transport
 
 == Conceptual Overview
 
@@ -118,7 +131,7 @@ other than in a few specific circumstances.
 === Raw Mode
 
 (((cooked mode)))(((raw mode)))
-Most applications will use _nng_ sockets in "`cooked`" mode. 
+Most applications will use _nng_ sockets in "`cooked`" mode.
 This mode provides the full semantics of the protocol.
 For example, <<nng_req.7#,_req_>> sockets will automatically
 match a reply to a request, and resend requests periodically if no reply
@@ -144,7 +157,7 @@ processing is needed.
 
 (((URL)))
 The _nng_ library uses ((universal resource locators)) (URLs)
-following the format specified in 
+following the format specified in
 https://tools.ietf.org/html/rfc3986[RFC 3986],
 including some schemes that are unique
 to SP.
@@ -164,7 +177,7 @@ https://tools.ietf.org/html/rfc3986#section-6.2.2[RFC 3986 6.2.2]:
   . The resulting path is checked for invalid UTF-8 sequences, consisting
     of surrogate pairs, illegal byte sequences, or overlong encodings.
     If this check fails, then the entire URL is considered invalid.
-  . Path segments consisting of `.` and `..` are resolved as per 
+  . Path segments consisting of `.` and `..` are resolved as per
     https://tools.ietf.org/html/rfc3986#section-6.2.2.3[RFC 3986 6.2.2.3].
   . Further, empty path segments are removed, meaning that duplicate
     slash (`/`) separators are removed from the path.
@@ -186,5 +199,6 @@ The library API is documented at <<libnng.3#,libnng(3)>>.
 
 == SEE ALSO
 
+[.text-left]
 <<libnng.3#,libnng(3)>>,
 <<nng_compat.3compat#,nng_compat(3compat)>>

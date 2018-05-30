@@ -16,7 +16,7 @@ nng_tls_config_auth_mode - configure authentication mode
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 #include <nng/supplemental/tls/tls.h>
 
@@ -27,7 +27,7 @@ typedef enum nng_tls_auth_mode {
 } nng_tls_auth_mode;
 
 int nng_tls_config_auth_mode(nni_tls_config *cfg, nng_tls_auth_mode mode);
------------
+----
 
 == DESCRIPTION
 
@@ -48,7 +48,7 @@ then the sesssion is allowed to proceed without authentication.
 
 ((`NNG_TLS_AUTH_MODE_REQUIRED`))::
 A check is made to ensure that the peer has presented a valid certificate
-used for the session. 
+used for the session.
 If the peer's certificate is invalid or missing, then the session is refused.
 This is the default for clients.
 
@@ -58,6 +58,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EINVAL`:: An invalid _mode_ was specified.
 `NNG_EBUSY`:: The configuration _cfg_ is already in use, and cannot be modified.
@@ -65,6 +66,7 @@ This function returns 0 on success, and non-zero otherwise.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_strerror.3#,nng_strerror(3)>>,
 <<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
 <<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain(3tls)>>,

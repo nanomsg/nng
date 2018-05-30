@@ -59,6 +59,7 @@ nng_socket s = NNG_SOCKET_INITIALIZER;
 
 == SEE ALSO
 
+[.text-left]
 <<libnng.3#,libnng(3)>>,
 <<nng_close.3#,nng_close(3)>>,
 <<nng_getopt.3#,nng_getopt(3)>>,

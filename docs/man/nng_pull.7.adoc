@@ -26,7 +26,7 @@ nng_pull - pull protocol
 The ((_pull_ protocol)) is one half of a ((pipeline pattern)).
 The other half is the <<nng_push.7#,_push_>> protocol.
 
-In the pipeline pattern, pushers distribute messages to pullers. 
+In the pipeline pattern, pushers distribute messages to pullers.
 Each message sent
 by a pusher will be sent to one of its peer pullers,
 chosen in a round-robin fashion
@@ -56,9 +56,10 @@ The _pull_ protocol has no protocol-specific options.
 === Protocol Headers
 
 The _pull_ protocol has no protocol-specific headers.
-    
+
 == SEE ALSO
 
+[.text-left]
 <<nng_pull_open.3#,nng_pull_open(3)>>,
 <<nng_push.7#,nng_push(7)>>,
 <<nng.7#,nng(7)>>,

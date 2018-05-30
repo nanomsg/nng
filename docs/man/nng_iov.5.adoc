@@ -49,6 +49,7 @@ The following structure members are present:
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_set_iov.3#,nng_aio_set_iov(3)>>,
 <<nng_aio.5#,nng_aio(5)>>,
 <<nng.7#,nng(7)>>

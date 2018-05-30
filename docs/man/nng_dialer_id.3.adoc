@@ -47,5 +47,6 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_dialer.5#,nng_dialer(5)>>,
 <<nng.7#,nng(7)>>

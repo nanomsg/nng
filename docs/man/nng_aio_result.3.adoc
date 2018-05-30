@@ -37,11 +37,12 @@ callback, or after waiting for the operation to complete with
 
 == RETURN VALUES
 
-The result of the operation, either zero on success, or an error 
+The result of the operation, either zero on success, or an error
 number on failure.
 
 == ERRORS
 
+[horizontal]
 `NNG_ETIMEDOUT`:: The operation timed out.
 `NNG_ECANCELED`:: The operation was canceled.
 
@@ -49,6 +50,7 @@ Various other return values are possible dependending on the operation.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_abort.3#,nng_aio_abort(3)>>,
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_wait.3#,nng_aio_wait(3)>>,

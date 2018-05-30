@@ -58,7 +58,7 @@ an `Content-Length` header, and possibly a `Content-Type` header.
 TIP: An easier solution to sending HTTP content data, is to include the
 conten with the request or reply using a function like
 `<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>`.
-In that case, the body data will be written automatically by the 
+In that case, the body data will be written automatically by the
 `<<nng_http_conn_write_req.3http#,http_conn_write_req()>>` or
 `<<nng_http_conn_write_req.3http#,http_conn_write_res()>>` function.
 
@@ -68,6 +68,7 @@ None.
 
 == ERRORS
 
+[horizontal]
 `NNG_ECANCELED`:: The operation was canceled.
 `NNG_ECLOSED`:: The connection was closed.
 `NNG_ECONNRESET`:: The peer closed the connection.
@@ -78,6 +79,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_count.3#,nng_aio_count(3)>>,
 <<nng_aio_result.3#,nng_aio_result(3)>>,

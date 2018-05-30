@@ -16,12 +16,12 @@ nng_http_server_release - release HTTP server instance
 == SYNOPSIS
 
 [source, c]
------------
+----
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
 void nng_http_server_release(nng_http_server *server);
------------
+----
 
 == DESCRIPTION
 
@@ -48,6 +48,7 @@ None.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
 <<nng_http_server_stop.3http#,nng_http_server_stop(3http)>>,
 <<nng.7#,nng(7)>>

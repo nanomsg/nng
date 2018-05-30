@@ -43,5 +43,6 @@ by a `NUL` byte.
 
 == SEE ALSO
 
+[.text-left]
 <<libnng.3#,libnng(3)>>,
 <<nng.7#,nng(7)>>

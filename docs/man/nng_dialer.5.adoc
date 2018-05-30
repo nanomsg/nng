@@ -66,6 +66,7 @@ before it is opened, to prevent confusion with valid open dialers.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_dial.3#,nng_dial(3)>>,
 <<nng_dialer_close.3#,nng_dialer_close(3)>>,
 <<nng_dialer_create.3#,nng_dialer_create(3)>>,

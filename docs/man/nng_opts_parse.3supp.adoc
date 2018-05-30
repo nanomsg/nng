@@ -24,7 +24,7 @@ typedef struct nng_optspec {
     const char *o_name;  // Long style name (may be NULL for short only)
     int         o_short; // Short option (no clustering!)
     int         o_val;   // Value stored on a good parse (>0)
-    bool        o_arg;   // Option takes an argument if true        
+    bool        o_arg;   // Option takes an argument if true
 } nng_optspec;
 
 int nng_opts_parse(int argc, const char **argv, const nng_optspec *spec, int *val, const char **arg, int *idx);
@@ -94,7 +94,7 @@ This structure has the following members:
 === Long Options
 
 Long options are parsed from the _argv_ array, and are indicated when
-the element being scanned starts with two dashes. 
+the element being scanned starts with two dashes.
 For example, the "verbose" option would be specified as `--verbose` on
 the command line.
 If a long option takes an argument, it can either immediately follow
@@ -173,11 +173,13 @@ no more options are available to be parsed, or an error number otherwise.
 
 == ERRORS
 
+[horizontal]
 `NNG_EAMBIGUOUS`:: Parsed option matches more than one specification.
 `NNG_ENOARG`:: Option requires an argument, but one is not present.
 `NNG_EINVAL`:: An invalid (unknown) argument is present.
 
 == SEE ALSO
 
+[.text-left]
 <<nng_strerror.3#,nng_strerror(3)>>,
 <<nng.7#,nng(7)>>
