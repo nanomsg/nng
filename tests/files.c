@@ -96,9 +96,6 @@ TestMain("Platform File Support", {
 		So((d = nni_plat_temp_dir()) != NULL);
 		nni_strfree(d);
 
-		So((d = nni_plat_home_dir()) != NULL);
-		nni_strfree(d);
-
 		So((d = nni_file_join("a", "b")) != NULL);
 		So(d[0] == 'a');
 		So(d[2] == 'b');
@@ -142,7 +139,6 @@ TestMain("Platform File Support", {
 	    { So(nni_file_delete("/bogus/nng_does_not_exist") == 0); });
 
 	Convey("We can create a pair of files", {
-
 		char *temp;
 		char *mydir;
 		char *a;

@@ -523,12 +523,6 @@ extern int nni_plat_dir_remove(const char *);
 // The result should be freed with nni_strfree().
 extern char *nni_plat_temp_dir(void);
 
-// nni_plat_home_dir returns the "home" directory for the user running the
-// application.  This is a convenient place to store preferences, etc.
-// Applications should append an application specific directory name.
-// The result should be freed with nni_strfree().
-extern char *nni_plat_home_dir(void);
-
 // nni_plat_join_dir joins to path components to make a path name.
 // For example. on UNIX systems nni_plat_join_dir("/tmp", "a") returns
 // "/tmp/a".  The pathname returned should be freed with nni_strfree().

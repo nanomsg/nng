@@ -273,23 +273,6 @@ nni_plat_temp_dir(void)
 	return (nni_strdup(path));
 }
 
-char *
-nni_plat_home_dir(void)
-{
-	char *homedrv;
-	char *homedir;
-	char *result;
-
-	if (((homedrv = getenv("HOMEDRIVE")) == NULL) ||
-	    ((homedir = getenv("HOMEPATH")) == NULL)) {
-		return (NULL);
-	}
-	if (nni_asprintf(&result, "%s%s", homedrv, homedir) == 0) {
-		return (result);
-	}
-	return (NULL);
-}
-
 int
 nni_plat_file_type(const char *name, int *typep)
 {

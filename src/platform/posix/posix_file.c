@@ -317,19 +317,6 @@ nni_plat_temp_dir(void)
 }
 
 char *
-nni_plat_home_dir(void)
-{
-	char *home;
-
-	// POSIX says that $HOME is *REQUIRED*.  We could look in
-	// getpwuid, but realistically this is simply not required.
-	if ((home = getenv("HOME")) != NULL) {
-		return (nni_strdup(home));
-	}
-	return (NULL);
-}
-
-char *
 nni_plat_join_dir(const char *prefix, const char *suffix)
 {
 	char * newdir;
