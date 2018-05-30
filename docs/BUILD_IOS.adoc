@@ -1,0 +1,46 @@
+= Building for iOS (and tvOS, watchOS)
+
+NOTE: I am not an iOS developer, so this work is not fully tested.
+It seems to work, but YMMV!
+
+First, you will need to download a suitable toolchain file.
+
+At the time of this writing (May 28, 2018), the toolchain file
+located at https://github.com/leetal/ios-cmake is appears to work
+reasonably well.
+
+When building for iOS and similar targets, only static libraries may be built.
+(This is good for avoiding dependency nightmares anyway.)
+
+Using the above toolchain file, we can build for iOS using
+the CMake standard CMAKE_TOOLCHAIN_FILE macro, and using
+the IOS_PLATFORM macro to set the target.
+
+We also need to disable tests and tools, since we can't build command line
+executables for that environment.  These are controlled by setting
+NNG_TESTS and NNG_TOOLS both to OFF.
+
+You will also need to use the Xcode generator.
+
+So, for example:
+
+[source, sh]
+----
+% mkdir ios-build
+% cd ios-build
+% cmake -G Xcode \
+	-DCMAKE_TOOLCHAIN_FILE=$GITROOT/ios-cmake/ios.toolchain.cmake \
+	-DIOS_PLATFORM=OS \
+	-DNNG_TESTS=OFF \
+	-DNNG_TOOLS=OFF ..
+----
+
+Then you can build using Xcode, or simply use cmake to drive the build:
+
+[source, sh]
+----
+% cmake --build .
+----
+
+Extra effort may be required to enable the use of mbedTLS (NNG does not
+at the time of writing support Secure Transport.  See issue #497 for status.)
