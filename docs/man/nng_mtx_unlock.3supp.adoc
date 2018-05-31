@@ -25,7 +25,7 @@ void nng_mtx_unlock(nng_mtx *mtx);
 
 == DESCRIPTION
 
-The `nng_mtx_unlock()` reqlinquishes ownership of the mutex _mtx_ that
+The `nng_mtx_unlock()` relinquishes ownership of the mutex _mtx_ that
 was previously acquired via `<<nng_mtx_lock.3supp#,nng_mtx_lock()>>`.
 
 IMPORTANT: A mutex can _only_ be unlocked by the thread that locked it.

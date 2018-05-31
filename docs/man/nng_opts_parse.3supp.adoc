@@ -32,7 +32,7 @@ int nng_opts_parse(int argc, const char **argv, const nng_optspec *spec, int *va
 
 == DESCRIPTION
 
-The `nng_opts_parse()` is function is a supplemental funtion intened to
+The `nng_opts_parse()` is function is a supplemental function intended to
 facilitate parsing command line arguments.
 This function exists largely to stand in for `getopt()` from POSIX
 systems, but it is available everywhere that _NNG_ is, and it includes

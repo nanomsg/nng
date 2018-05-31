@@ -51,7 +51,7 @@ _devices_ (see `<<nng_device.3#,nng_device()>>`) or raw mode sockets
 messages may be discarded.
 Applications that require reliable delivery semantics should consider using
 <<nng_req.7#,_req_>> sockets, or
-implement their own acknowledgement layer on top of _pair_ sockets.
+implement their own acknowledgment layer on top of _pair_ sockets.
 
 In order to avoid head-of-line blocking conditions, _polyamorous_ mode _pair_
 sockets (version 1 only) discard messages if they are unable to deliver them
@@ -83,7 +83,7 @@ peer.
 In ((_polyamorous_ mode)), which is only available with version 1, a socket can
 support many one-to-one connections.
 In this mode, the application must
-choose the remote peer to receive an ougoing message by setting the
+choose the remote peer to receive an outgoing message by setting the
 `<<nng_pipe.5#,nng_pipe>>` to use for the outgoing message with
 the `<<nng_msg_set_pipe.3#,nng_msg_set_pipe()>>` function.
 
@@ -103,7 +103,7 @@ The following protocol-specific options are available.
 ((`NNG_OPT_PAIR1_POLY`))::
 
    (`bool`, version 1 only)  This option enables the use of _polyamorous_ mode.
-   The value is read-write, and takes an integer boolean value.  The default
+   The value is read-write, and takes an integer Boolean value.  The default
    false value (0) indicates that legacy monogamous mode should be used.
 
 `<<nng_options.5#NNG_OPT_MAXTTL,NNG_OPT_MAXTTL>>`::
@@ -116,7 +116,7 @@ Version 0 of the pair protocol has no protocol-specific headers.
 
 Version 1 of the pair protocol uses a single 32-bit unsigned value.  The
 low-order (big-endian) byte of this value contains a "hop" count, and is
-used in conjuction with the
+used in conjunction with the
 `<<nng_options.5#NNG_OPT_MAXTTL,NNG_OPT_MAXTTL>>` option to guard against
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is

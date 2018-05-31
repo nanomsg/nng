@@ -28,8 +28,8 @@ const char *nng_http_req_get_method(nng_http_req *req);
 The `nng_http_req_get_uri()` returns the URI (path) associated with the HTTP
 the request _req_.
 The value returned includes the path, as well as any query information or
-fragment.  The value will look like a filesystem path
-with those optional components appened, such as `/api/get_info.cgi?name=garrett`.
+fragment.  The value will look like a file system path
+with those optional components appended, such as `/api/get_info.cgi?name=garrett`.
 
 == RETURN VALUES
 

@@ -35,7 +35,7 @@ The second function prepends the value _val32_ in network-byte order
 TIP: This function makes use of pre-allocated "`headroom`" in the message if
 available, so it can often avoid performing any reallocation.
 Applications should use this instead of reallocating and copying message
-content themselves, in order to benefit from this capabilitiy.
+content themselves, in order to benefit from this capability.
 
 == RETURN VALUES
 

@@ -42,17 +42,17 @@ The following structure members are present:
     This field will always have the value ((`NNG_AF_IPC`)).
 
 `sa_path`::
-    This field holds the C string corresponding to pathname where the
+    This field holds the C string corresponding to path name where the
     IPC socket is located.
     For systems using UNIX domain sockets, this will be an absolute
-    pathname in the filesystem, where the UNIX domain socket is located.
-    For Windows systems, this is the pathname of the Named Pipe, without
+    path name in the file system, where the UNIX domain socket is located.
+    For Windows systems, this is the path name of the Named Pipe, without
     the leading `\\.pipe\` portion, which will be automatically added.
 
 NOTE: At this time, there is no support for Linux "`abstract sockets`".
 
 TIP: In order to ensure maximum compatibility, applications should avoid
-hard coding the sizeof the `sa_path` member explicitly, but use the
+hard coding the size of the `sa_path` member explicitly, but use the
 `sizeof` operator to determine its actual size at compile time.
 Furthermore, the size is guaranteed to be at least 128, but paths of
 this length may not be supported on all systems.

@@ -26,7 +26,7 @@ char *nng_strdup(const char *src);
 
 The `nng_strdup()` duplicates the string _src_ and returns it.
 
-This is logically equiavlent to using `<<nng_alloc.3#,nng_alloc()>>`
+This is logically equivalent to using `<<nng_alloc.3#,nng_alloc()>>`
 to allocate a region of memory of `strlen(s) + 1` bytes, and then
 using `strcpy()` to copy the string into the destination before
 returning it.

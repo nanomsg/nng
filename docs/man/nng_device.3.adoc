@@ -41,9 +41,9 @@ is closed.
 
 === Reflectors
 
-One of the sockets may be passed an inititalize `-1` (cast to an,
-`<<nng_socket.5#,nng_socket>>` of course).
-If this is the case, then the other socket must be valid, and must be
+One of the sockets passed may be an unopened socket initialized with
+the `NNG_SOCKET_INITIALIZER` special value.
+If this is the case, then the other socket must be valid, and must use
 a protocol that is bidirectional and can peer with itself (such as
 <<nng_pair.7#,_pair_>> or
 <<nng_bus.7#,_bus_>>.)
@@ -73,7 +73,7 @@ header of the output bound message.
 The underlying raw mode protocols supply the necessary header
 adjustments to add or remove routing headers as needed.
 This allows replies to be
-returned to requestors, and responses to be routed back to surveyors.
+returned to requesters, and responses to be routed back to surveyors.
 
 Additionally, some protocols have a maximum ((time-to-live)) to protect
 against forwarding loops and especially amplification loops.
@@ -85,7 +85,7 @@ This is controlled via the `<<nng_options.5#NNG_OPT_MAXTTL,NNG_OPT_MAXTTL>>`
 option.
 
 IMPORTANT: Not all protocols have support for guarding against forwarding loops,
-and even for those that do, forwarding loops can be extremely determintal
+and even for those that do, forwarding loops can be extremely detrimental
 to network performance.
 
 NOTE: Devices (forwarders and reflectors) act in best effort delivery mode only.
@@ -93,7 +93,7 @@ If a message is received from one socket that cannot be accepted by the
 other (due to backpressure or other issues), then the message is discarded.
 
 TIP: Use the request/reply pattern, which includes automatic retries by
-the requestor, if reliable delivery is needed.
+the requester, if reliable delivery is needed.
 
 == RETURN VALUES
 

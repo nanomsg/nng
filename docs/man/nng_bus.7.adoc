@@ -72,7 +72,7 @@ identified in the header.
 This behavior is intended for use with <<nng_device.3#device,device>>
 configurations consisting of just a single socket.
 Such configurations are useful in the creation of rebroadcasters, and this
-capaibility prevents a message from being routed back to its source.
+capability prevents a message from being routed back to its source.
 If no header is present, then a message is sent to all connected pipes.
 
 When using "`cooked`" _bus_ sockets, no message headers are present.

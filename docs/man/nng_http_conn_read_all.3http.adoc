@@ -46,7 +46,7 @@ It is still possible for a partial read to complete in the event of an error.
 The actual number of bytes read can be determined with
 `<<nng_aio_count.3#,nng_aio_count()>>`.
 
-TIP: The main purpose for this function is to faciliate reading HTTP
+TIP: The main purpose for this function is to facilitate reading HTTP
 body content, after first determining the length of the body content
 from the relevant HTTP headers (typically `Content-Length`).
 

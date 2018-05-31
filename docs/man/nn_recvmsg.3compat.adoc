@@ -24,7 +24,7 @@ int nn_recvmsg(int sock, struct nn_msghdr *hdr, int flags);
 
 == DESCRIPTION
 
-The `nn_recvmsg()` function receives a message into the heade described by
+The `nn_recvmsg()` function receives a message into the header described by
 _hdr_ using the socket _sock_.
 
 NOTE: This function is provided for API
@@ -67,7 +67,7 @@ or similar when it is no longer needed.
 
 The values of `msg_control` and `msg_controllen` describe a buffer
 of ancillary data associated with the message.
-This is currenly only useful to obtain the message headers
+This is currently only useful to obtain the message headers
 used with <<nng.7#raw_mode,raw mode>> sockets.
 In all other circumstances these fields should be zero.
 Details about this structure are covered in

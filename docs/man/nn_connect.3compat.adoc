@@ -25,7 +25,7 @@ int nn_connect(int sock, const char *url)
 == DESCRIPTION
 
 The `nn_connect()` function arranges for the socket _sock_ to
-inititate connection to a peer at the address specified by _url_.
+initiate connection to a peer at the address specified by _url_.
 An "`endpoint identifier`" for this socket's association with the _url_ is
 returned to the caller on success.
 This ID can be used with `<<nn_shutdown.3compat#,nn_shutdown()>>` to

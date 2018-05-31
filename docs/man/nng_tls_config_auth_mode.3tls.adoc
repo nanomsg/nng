@@ -44,7 +44,7 @@ TLS servers, which most typically do not authenticate their clients.
 ((`NNG_TLS_AUTH_MODE_OPTIONAL`))::
 If a certificate is presented by the peer, then it is validated.
 However, if the peer does not present a valid certificate,
-then the sesssion is allowed to proceed without authentication.
+then the session is allowed to proceed without authentication.
 
 ((`NNG_TLS_AUTH_MODE_REQUIRED`))::
 A check is made to ensure that the peer has presented a valid certificate

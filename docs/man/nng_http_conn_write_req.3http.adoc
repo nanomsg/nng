@@ -37,7 +37,7 @@ including headers, and if present, the request body data.
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
 may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
-That result willeither be zero or an error code.
+That result will either be zero or an error code.
 
 == RETURN VALUES
 

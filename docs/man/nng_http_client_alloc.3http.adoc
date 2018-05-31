@@ -26,7 +26,7 @@ int nng_http_client_alloc(nng_http_client *clientp, const nng_url *url);
 == DESCRIPTION
 
 The `nng_http_client_alloc()` allocates an HTTP client suitable for
-connecting to the server identifyed by _url_ and stores a pointer to
+connecting to the server identified by _url_ and stores a pointer to
 it in the location referenced by _clientp_.
 
 == RETURN VALUES

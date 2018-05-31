@@ -46,7 +46,7 @@ the <<nng_pipe.5#,pipe>> _p_.
 The actual options that may be retrieved in this way
 vary, and many are documented in <<nng_options.5#,nng_options(5)>>.
 Additionally some transport-specific options and protocol-specific options are
-documented with the transports andp protocols themselves.
+documented with the transports and protocols themselves.
 
 NOTE: All "`options`" on a pipe are read-only values, and intended to
 facilitate understanding the identity of an associated peer.
@@ -72,10 +72,10 @@ buffer shall be stored at the location referenced by _valszp_.
 
 When the function returns, the actual size of the data copied (or that
 would have been copied if sufficient space were present) is stored at
-the location referened by _valszp_.
+the location referenced by _valszp_.
 If the caller's buffer is not large enough to hold the entire object,
 then the copy is truncated.
-Therefore the caller should check for trncation by verifying that the
+Therefore the caller should check for truncation by verifying that the
 size returned in _valszp_ does not exceed the original buffer size.
 
 It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
@@ -86,14 +86,13 @@ TIP: Generally, it will be easier to use one of the typed forms instead.
 
 ==== `nng_pipe_getopt_bool()`
 
-This function is for options which take a boolean (`bool`).
+This function is for options which take a Boolean (`bool`).
 The value will be stored at _bvalp_.
 
 ==== `nng_pipe_getopt_int()`
 
-This function is for options which take an integer (`int`) or boolean (`bool`).
-The value will be stored at _ivalp_.  For booleans the value will be eiher 0
-(`false`) or 1 (`true`).
+This function is for options which take an integer (`int`).
+The value will be stored at _ivalp_.
 
 ==== `nng_pipe_getopt_ms()`
 
@@ -126,7 +125,7 @@ and consequently must be freed by the caller using
 
 ==== `nng_pipe_getopt_uint64()`
 
-This function is used to retriev a 64-bit unsigned value into the value
+This function is used to retrieve a 64-bit unsigned value into the value
 referenced by _u64p_.
 This is typically used for options
 related to identifiers, network numbers, and similar.

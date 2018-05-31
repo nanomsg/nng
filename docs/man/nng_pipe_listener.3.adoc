@@ -24,7 +24,7 @@ nng_listener nng_pipe_listener(nng_pipe p);
 
 == DESCRIPTION
 
-The `nng_pipe_listener()` function returns the `<<nng_listener.5#,nng_lisener>>`
+The `nng_pipe_listener()` function returns the `<<nng_listener.5#,nng_listener>>`
 that created the pipe _p_.
 If the pipe was not created by a listener, then the returned value will
 have an identifier (`<<nng_listener_id.3#,nng_listener_id()>>`) of `-1`.

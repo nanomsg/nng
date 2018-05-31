@@ -55,7 +55,7 @@ The following functions operate on sockets.
 === Connection Management
 
 The following functions are used with either listeners, or dialers.
-Listeners accept incoming connection requets, and dialers make them.
+Listeners accept incoming connection requests, and dialers make them.
 
 |===
 |<<nng_dial.3#,nng_dial()>>|create and start dialer

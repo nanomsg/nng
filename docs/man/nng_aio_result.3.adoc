@@ -46,7 +46,7 @@ number on failure.
 `NNG_ETIMEDOUT`:: The operation timed out.
 `NNG_ECANCELED`:: The operation was canceled.
 
-Various other return values are possible dependending on the operation.
+Various other return values are possible depending on the operation.
 
 == SEE ALSO
 

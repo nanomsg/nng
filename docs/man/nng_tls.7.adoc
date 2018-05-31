@@ -174,7 +174,7 @@ more details.
 
 ((`NNG_OPT_TLS_VERIFIED`))::
 
-This is a read-only option which returns a boolean value (integer 0 or 1).
+This is a read-only option which returns a Boolean value (integer 0 or 1).
 It will true (1) if the remote peer has been properly verified using TLS
 authentication, or false (0) otherwise.
 This option may return incorrect

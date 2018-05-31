@@ -46,7 +46,7 @@ It is still possible for a partial write to complete in the event of an error.
 The actual number of bytes written can be determined with
 `<<nng_aio_count.3#,nng_aio_count()>>`.
 
-TIP: The main purpose for this function is to faciliate writing HTTP
+TIP: The main purpose for this function is to facilitate writing HTTP
 body content.
 
 TIP: Usually an HTTP request or response will have been written immediately
@@ -56,7 +56,7 @@ In that case the request or response should have also contained
 an `Content-Length` header, and possibly a `Content-Type` header.
 
 TIP: An easier solution to sending HTTP content data, is to include the
-conten with the request or reply using a function like
+content with the request or reply using a function like
 `<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>`.
 In that case, the body data will be written automatically by the
 `<<nng_http_conn_write_req.3http#,http_conn_write_req()>>` or

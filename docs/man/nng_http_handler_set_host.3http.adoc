@@ -34,7 +34,7 @@ hosting.
 
 The value of the _host_ can include a colon and port, and should match
 exactly the value of the `Host` header sent by the client.
-(Canonicaliztion of the host name is performed though.)
+(Canonicalization of the host name is performed though.)
 
 TIP: As the server framework does not support listening on multiple
 ports, the port number can be elided.

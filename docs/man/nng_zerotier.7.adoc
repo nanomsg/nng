@@ -142,7 +142,7 @@ The following transport options are available:
   identity, and federation membership.
   This option must be set before the ZeroTier transport is first used.
   If this value is empty, then an ephemeral ZeroTier node is created,
-  nd no persistent state is used.
+  and no persistent state is used.
   The default is to use an ephemeral node.
 +
 NOTE: If this option is set to different values on different sockets,

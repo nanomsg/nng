@@ -40,7 +40,7 @@ client (`NNG_TLS_MODE_CLIENT`) or as a server (`NNG_TLS_MODE_SERVER`),
 depending on the value of _mode_.
 
 A TLS object can be further modified by functions that set the security
-keys used, peeer certificates, protocol policies, and so forth.
+keys used, peer certificates, protocol policies, and so forth.
 
 A single TLS configuration object can be used with multiple TLS streams
 or services.

@@ -63,7 +63,7 @@ The _flags_ may contain the following value:
 NOTE: Regardless of the presence or absence of `NNG_FLAG_NONBLOCK`, there may
 be queues between the sender and the receiver.
 Furthermore, there is no guarantee that the message has actually been delivered.
-Finally, with some protocols, the semantic is implictly `NNG_FLAG_NONBLOCK`,
+Finally, with some protocols, the semantic is implicitly `NNG_FLAG_NONBLOCK`,
 such as with <<nng_pub.7#,_pub_>> sockets, which are best-effort delivery only.
 
 == RETURN VALUES

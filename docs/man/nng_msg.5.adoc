@@ -26,7 +26,7 @@ typedef struct nng_msg nng_msg;
 
 An `nng_msg` represents a single ((message)) sent between Scalability Protocols
 peers.
-Messages internally have a ((body)), containining the application supplied
+Messages internally have a ((body)), containing the application supplied
 payload, and a ((header)), containing protocol specific routing and similar
 related information.
 

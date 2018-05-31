@@ -33,7 +33,7 @@ phrase is supplied based upon the value of the status code (see
 `<<nng_http_res_set_status.3http#,nng_http_res_set_status()>>`).
 
 TIP: The _reason_ is never parsed automatically, but it can be a hint for humans
-     to help them understand the nature of any erroroneous result.
+     to help them understand the nature of any erroneous result.
 
 A local copy of the _reason_ is made in the response _res_.
 

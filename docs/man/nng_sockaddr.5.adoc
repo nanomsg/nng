@@ -47,14 +47,14 @@ addresses, IPC paths, and so forth.
 
 ****
 The name `sockaddr` is based on it's similarity with POSIX `struct sockaddr`,
-but in the _nng_ library, these addreses are more closely affiliated with
+but in the _nng_ library, these addresses are more closely affiliated with
 instances of `<<nng_pipe.5#,nng_pipe>>`
 than of `<<nng_socket.5#,nng_socket>>`.
 The naming confusion is unfortunate.
 ****
 
 This structure is actually a union, with different members for different
-types of addreses.
+types of addresses.
 
 Every member structure has as its first element a `uint16_t` field
 containing the "`((address family))`".

@@ -46,7 +46,7 @@ socket, or in flight over physical media.
 If the operation fails for any reason (including cancellation or timeout),
 then the _aio_ callback will be executed and
 `<<nng_aio_result.3#,nng_aio_result()>>` will return a non-zero error status.
-In this case, the callback has a responsibity to retrieve the message from
+In this case, the callback has a responsibility to retrieve the message from
 the _aio_ with `<<nng_aio_get_msg.3#,nng_aio_get_msg()>>` and dispose of
 it appropriately.
 (This may include retrying the send operation on the same or a different

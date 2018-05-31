@@ -91,7 +91,7 @@ TIP: The best practice for limiting access is to place the socket in a
 directory writable only by the server, and only readable and searchable
 by clients.
 All mainstream POSIX systems will fail to permit a client to connect
-to a socket located in a diretor for which the client lacks search (execute)
+to a socket located in a directory for which the client lacks search (execute)
 permission.
 
 TIP: Also consider using the `NNG_OPT_IPC_PEER_UID` property from within a

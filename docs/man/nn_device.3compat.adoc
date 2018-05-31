@@ -44,7 +44,7 @@ one of the sockets is closed or an error occurs.
 
 == ERRORS
 
-[horizonal]
+[horizontal]
 `EBADF`:: One of the two sockets is invalid or not open, or has
 `EINVAL`:: The sockets are not compatible with each other, or not both raw.
 `ENOMEM`:: Insufficient memory is available.

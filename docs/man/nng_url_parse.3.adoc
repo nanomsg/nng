@@ -38,7 +38,7 @@ struct nng_url {
     char *u_rawurl;   // Unparsed URL, with minimal canonicalization.
     char *u_userinfo; // Userinfo component, or NULL.
     char *u_host;     // Full host, including port if present.
-    char *u_hostname; // Hostname only (or address), or empy string.
+    char *u_hostname; // Hostname only (or address), or empty string.
     char *u_port;     // Port number, may be default or empty string.
     char *u_path;     // Path if present, empty string otherwise.
     char *u_query;    // Query info if present, NULL otherwise.

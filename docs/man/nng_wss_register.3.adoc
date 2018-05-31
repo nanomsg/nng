@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_ws_register - register websocket secure transport
+nng_ws_register - register WebSocket secure transport
 
 == SYNOPSIS
 

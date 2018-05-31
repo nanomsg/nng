@@ -114,7 +114,7 @@ This form uses a "`stack`" of 32-bit big-endian identifiers.
 There *must* be at least one identifier, the __request ID__, which will be the
 last element in the array, and *must* have the most significant bit set.
 
-There may be additional __peer ID__s preceeding the request ID.
+There may be additional __peer ID__s preceding the request ID.
 These will be distinguishable from the request ID by having their most
 significant bit clear.
 
@@ -138,7 +138,7 @@ that the request contained.
 A forwarding node can "`pop`" the peer ID it originally pushed on the
 message, stripping it from the front of the message as it does so.
 
-When the reply finally arrives back at the initiating requestor, it
+When the reply finally arrives back at the initiating requester, it
 should have only a single element in the message, which will be the
 request ID it originally used for the request.
 

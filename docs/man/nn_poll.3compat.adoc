@@ -45,7 +45,7 @@ the socket, and the `events` field set to a mask that can contain either or both
 of the flags `NN_POLLIN` and `NN_POLLOUT`.
 
 The flag `NN_POLLIN` indicates that a socket is ready for receiving without
-blocking (a message is avaiable on the socket), and the flag `NN_POLLOUT`
+blocking (a message is available on the socket), and the flag `NN_POLLOUT`
 indicates that a socket is ready for sending without blocking.
 
 Upon success, the function returns the number of updates the `revents`

@@ -30,7 +30,7 @@ typedef int32_t nng_duration;
 
 An `nng_duration`(((duration))) is a relative time, measured in
 milliseconds.
-This type is most often used in conjuction with timers and timeouts.
+This type is most often used in conjunction with timers and timeouts.
 
 A couple of special values have been set aside, and carry special meanings.
 

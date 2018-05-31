@@ -24,7 +24,7 @@ typedef struct nng_aio nng_aio;
 
 == DESCRIPTION
 
-An `nng_aio`(((aio))) is an opaque structure used in conjuction with
+An `nng_aio`(((aio))) is an opaque structure used in conjunction with
 ((asynchronous I/O)) operations.
 Every asynchronous operation uses one of these structures, each of which
 can only be used with a single operation at a time.

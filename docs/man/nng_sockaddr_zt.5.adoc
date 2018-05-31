@@ -49,7 +49,7 @@ The following structure members are present:
 
 `sa_nwid`::
     (((network number, ZeroTier)))
-    This field holds the ZeroTiero network number (or ID).
+    This field holds the ZeroTier network number (or ID).
     This value is in native byte order.
 
 `sa_nodeid`::

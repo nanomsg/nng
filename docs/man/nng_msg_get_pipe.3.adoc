@@ -45,7 +45,7 @@ is useful in this situation.
 This function returns the pipe associated with this message, which will
 be a positive value.
 If the pipe is non-positive, then that indicates that
-no specific pipe is associated with the messsage.
+no specific pipe is associated with the message.
 
 == ERRORS
 

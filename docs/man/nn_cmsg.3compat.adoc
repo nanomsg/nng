@@ -65,7 +65,7 @@ This macro returns the amount of space required for a header, with _len_
 bytes of following data, and any necessary padding.
 
 `size_t NN_CMSG_LEN(size_t __len__)`::
-This macro evalutes to the length of the header (including alignment),
+This macro evaluates to the length of the header (including alignment),
 and the associated data of length _len_, but without any trailing padding
 to align for another header.
 

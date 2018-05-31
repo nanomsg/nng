@@ -27,7 +27,7 @@ void *nn_allocmsg(size_t size, int type);
 The `nn_allocmsg()` allocates a message structure of size _size_, and is
 primarily used to support zero-copy send operations, making use of the
 `NNG_MSG` special size indicator.
-The value returned is a pointer ot the start of the message payload buffer.
+The value returned is a pointer to the start of the message payload buffer.
 
 The value of _size_ must be positive, and small enough to hold reasonable
 message data plus book-keeping information.

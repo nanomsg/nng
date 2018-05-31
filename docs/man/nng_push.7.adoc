@@ -45,7 +45,7 @@ wait until one is available, or the operation times out.
 
 NOTE: Although the pipeline protocol honors flow control, and attempts
 to avoid dropping messages, no guarantee of delivery is made.
-Furthermore, as there is no capability for message acknowledgement,
+Furthermore, as there is no capability for message acknowledgment,
 applications that need reliable delivery are encouraged to consider the
 <<nng_req.7#,_req_>> protocol instead.
 

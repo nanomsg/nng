@@ -11,7 +11,7 @@
 
 == NAME
 
-nngcat - command line access to Scalabity Protocols
+nngcat - command line access to Scalability Protocols
 
 == SYNOPSIS
 
@@ -130,7 +130,7 @@ NOTE: At least one protocol must be selected.
   messages from <<nng_push.7#,_push_>> version 0 peers.
 
 *--pair0*::
-  Select the <<nng_pair.7#,_pair_>> veresion 0 protocol.
+  Select the <<nng_pair.7#,_pair_>> version 0 protocol.
   This protocol can send and receive messages with one connected _pair_
   version 0 peer.
 
@@ -270,7 +270,7 @@ when using addresses that are not secured with TLS.
 
 *--key*=_FILE_::
   Load own key from _FILE_.
-  Should be used in conjuction with *--cert*.
+  Should be used in conjunction with *--cert*.
   If not specified, and *--cert* is specified, then a single file containing both
   the private key and the associated certificate is assumed.
 

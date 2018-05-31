@@ -38,7 +38,7 @@ nng_compat - compatibility with nanomsg 1.0
 The <<nng.7#,_nng_>> library provides source-level compatibility for
 most _nanomsg_ 1.0 applications.
 
-IMPORTANT: This is intended to faciliate converting ((legacy applications)) to
+IMPORTANT: This is intended to facilitate converting ((legacy applications)) to
 use the _nng_ library.
 New applications should use the newer <<nng.7#,_nng_>> API instead.
 

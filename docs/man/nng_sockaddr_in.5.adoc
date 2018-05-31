@@ -51,16 +51,16 @@ The following structure members are present:
     A zero value here is used when no specific port number is indicated.
 
 `sa_addr`::
-    This field holds the ((IP addresss))(((address, IPv4))) in
+    This field holds the ((IP address))(((address, IPv4))) in
     network-byte order.
 
 TIP: The `sa_port` and `sa_addr` fields are in network-byte order to
 facilitate their use with system APIs such as `inet_ntop()`.
 Most platforms use some form of BSD-derived network API, which uses
-network-byte order in the various structurs (such as `sockaddr_in`).
+network-byte order in the various structures (such as `sockaddr_in`).
 
 IMPORTANT: This field appears similar to BSD `sockaddr_in`, but it is
-_not_ the same, and they may not be used interchangeabley.
+_not_ the same, and they may not be used interchangeably.
 
 == SEE ALSO
 

@@ -123,7 +123,7 @@ If this is non-zero, then the time between successive connection attempts
 will start at the value of `NNG_OPT_RECONNMINT`,
 and grow exponentially, until it reaches this value.
 If this value is zero, then no exponential
-backoff between connection attempts is done, and each attempt will wait
+back-off between connection attempts is done, and each attempt will wait
 the time specified by `NNG_OPT_RECONNMINT`.
 This can be set on a socket, but it can also be overridden on an individual
 dialer.
@@ -156,7 +156,7 @@ on the socket.
 When no message is ready for receiving, then this file descriptor will *not*
 be readable.
 
-IMPORTANT: Appplications should never attempt to read or write to the
+IMPORTANT: Applications should never attempt to read or write to the
 returned file descriptor.
 
 TIP: While this option may help applications integrate into existing polling
@@ -228,7 +228,7 @@ message for sending without blocking.
 When the socket is no longer able to accept such messages without blocking,
 the descriptor will *not* be readable.
 
-IMPORTANT: Appplications should never attempt to read or write to the
+IMPORTANT: Applications should never attempt to read or write to the
 returned file descriptor.
 
 TIP: While this option may help applications integrate into existing polling

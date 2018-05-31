@@ -93,14 +93,14 @@ a handler configured to serve a directory tree.
 The _uri_ is taken as the root, and files are served from the directory
 tree rooted at _path_.
 
-When the client Request-URI resolves to a directory in the filesystem,
+When the client Request-URI resolves to a directory in the file system,
 the handler looks first for a file named `index.html` or `index.htm`.
 If one is found, then that file is returned back to the client.
 If no such index file exists, then an `NNG_HTTP_STATUS_NOT_FOUND` (404) error is
 sent back to the client.
 
 The `Content-Type` will be set automatically based upon the extension
-of the requsted file name.
+of the requested file name.
 If a content type cannot be determined from
 the extension, then `application/octet-stream` is used.
 
@@ -111,7 +111,7 @@ a handler to serve up a single file; it does not traverse directories
 or search for `index.html` or `index.htm` files.
 
 The `Content-Type` will be set automatically based upon the extension
-of the requsted file name.
+of the requested file name.
 If a content type cannot be determined from
 the extension, then `application/octet-stream` is used.
 

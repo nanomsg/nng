@@ -64,7 +64,7 @@ The _val_ pointer addresses the data to copy, and _valsz_ is the
 size of the objected located at _val_.
 
 ==== `nng_listener_setopt_bool()`
-This function is for options which take a boolean (`bool`).
+This function is for options which take a Boolean (`bool`).
 The _bval_ is passed to the option.
 
 ==== `nng_listener_setopt_int()`

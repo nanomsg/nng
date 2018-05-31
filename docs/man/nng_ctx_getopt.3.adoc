@@ -63,10 +63,10 @@ _valszp_.
 
 When the function returns, the actual size of the data copied (or that
 would have been copied if sufficient space were present) is stored at
-the location referened by _valszp_.
+the location referenced by _valszp_.
 If the caller's buffer is not large enough to hold the entire object,
 then the copy is truncated.
-Therefore the caller should check for truncation by verifyng that the
+Therefore the caller should check for truncation by verifying that the
 returned size in _valszp_ does not exceed the original buffer size.
 
 It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
@@ -74,7 +74,7 @@ This can be used to determine the size of the buffer needed to receive
 the object.
 
 ==== `nng_ctx_getopt_bool()`
-This function is for options which take a boolean (`bool`).
+This function is for options which take a Boolean (`bool`).
 The value will be stored at _ivalp_.
 
 ==== `nng_ctx_getopt_int()`

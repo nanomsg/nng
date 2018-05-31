@@ -47,7 +47,7 @@ The following structure members are present:
     The string must be `NUL` terminated, but no other restrictions exist.
 
 TIP: In order to ensure maximum compatibility, applications should avoid
-hard coding the sizeof the `sa_name` member explicitly, but use the
+hard coding the size of the `sa_name` member explicitly, but use the
 `sizeof` operator to determine its actual size at compile time.
 Furthermore, the size is guaranteed to be at least 128.
 
