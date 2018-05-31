@@ -66,7 +66,7 @@ after updating the current status of the sockets.
 If the _timeout_ is -1, then the function waits forever, or until one of the
 requested events occurs.
 
-WARNING: This function is only suitable for use with sockets obtained with the
+IMPORTANT: This function is only suitable for use with sockets obtained with the
 `<<nn_socket.3compat#,nn_socket()>>` function, and is not compatible
 with file descriptors obtained via any other means.
 This includes file descriptors obtained using the `NN_SNDFD` or `NN_RCVFD`
