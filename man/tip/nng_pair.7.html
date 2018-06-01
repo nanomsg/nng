@@ -553,8 +553,8 @@ relationships between peers are one-to-one.</p>
 </div>
 <div class="paragraph">
 <p>Version 1 of this protocol supports an optional <em>polyamorous</em> mode where a
-peer can maintain multiple partnerships.  Using this mode requires
-some additional sophistication in the application.</p>
+peer can maintain multiple partnerships.
+Using this mode requires some additional sophistication in the application.</p>
 </div>
 <div class="sect2">
 <h3 id="_socket_operations">Socket Operations</h3>
@@ -579,7 +579,7 @@ prevents discarding messages most of the time, there are topologies involving
 messages may be discarded.
 Applications that require reliable delivery semantics should consider using
 <a href="nng_req.7.html"><em>req</em></a> sockets, or
-implement their own acknowledgement layer on top of <em>pair</em> sockets.
+implement their own acknowledgment layer on top of <em>pair</em> sockets.
 </td>
 </tr>
 </table>
@@ -641,7 +641,7 @@ peer.</p>
 <p>In <em>polyamorous</em> mode, which is only available with version 1, a socket can
 support many one-to-one connections.
 In this mode, the application must
-choose the remote peer to receive an ougoing message by setting the
+choose the remote peer to receive an outgoing message by setting the
 <code><a href="nng_pipe.5.html">nng_pipe</a></code> to use for the outgoing message with
 the <code><a href="nng_msg_set_pipe.3.html">nng_msg_set_pipe()</a></code> function.</p>
 </div>
@@ -667,7 +667,7 @@ to the sender.</p>
 <dt class="hdlist1"><code>NNG_OPT_PAIR1_POLY</code></dt>
 <dd>
 <p>(<code>bool</code>, version 1 only)  This option enables the use of <em>polyamorous</em> mode.
-The value is read-write, and takes an integer boolean value.  The default
+The value is read-write, and takes an integer Boolean value.  The default
 false value (0) indicates that legacy monogamous mode should be used.</p>
 </dd>
 <dt class="hdlist1"><code><a href="nng_options.5.html#NNG_OPT_MAXTTL">NNG_OPT_MAXTTL</a></code></dt>
@@ -685,7 +685,7 @@ false value (0) indicates that legacy monogamous mode should be used.</p>
 <div class="paragraph">
 <p>Version 1 of the pair protocol uses a single 32-bit unsigned value.  The
 low-order (big-endian) byte of this value contains a "hop" count, and is
-used in conjuction with the
+used in conjunction with the
 <code><a href="nng_options.5.html#NNG_OPT_MAXTTL">NNG_OPT_MAXTTL</a></code> option to guard against
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is
@@ -697,7 +697,7 @@ received by a new node.</p>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_pair_open.3.html">nng_pair_open(3)</a>,
 <a href="nng_options.5.html">nng_options(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>

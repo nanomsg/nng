@@ -563,9 +563,9 @@ is closed.</p>
 <div class="sect2">
 <h3 id="_reflectors">Reflectors</h3>
 <div class="paragraph">
-<p>One of the sockets may be passed an inititalize <code>-1</code> (cast to an,
-<code><a href="nng_socket.5.html">nng_socket</a></code> of course).
-If this is the case, then the other socket must be valid, and must be
+<p>One of the sockets passed may be an unopened socket initialized with
+the <code>NNG_SOCKET_INITIALIZER</code> special value.
+If this is the case, then the other socket must be valid, and must use
 a protocol that is bidirectional and can peer with itself (such as
 <a href="nng_pair.7.html"><em>pair</em></a> or
 <a href="nng_bus.7.html"><em>bus</em></a>.)
@@ -600,7 +600,7 @@ header of the output bound message.
 The underlying raw mode protocols supply the necessary header
 adjustments to add or remove routing headers as needed.
 This allows replies to be
-returned to requestors, and responses to be routed back to surveyors.</p>
+returned to requesters, and responses to be routed back to surveyors.</p>
 </div>
 <div class="paragraph">
 <p>Additionally, some protocols have a maximum time-to-live to protect
@@ -620,7 +620,7 @@ option.</p>
 </td>
 <td class="content">
 Not all protocols have support for guarding against forwarding loops,
-and even for those that do, forwarding loops can be extremely determintal
+and even for those that do, forwarding loops can be extremely detrimental
 to network performance.
 </td>
 </tr>
@@ -648,7 +648,7 @@ other (due to backpressure or other issues), then the message is discarded.
 </td>
 <td class="content">
 Use the request/reply pattern, which includes automatic retries by
-the requestor, if reliable delivery is needed.
+the requester, if reliable delivery is needed.
 </td>
 </tr>
 </table>
@@ -668,28 +668,40 @@ one occurs, or if one of the sockets is closed.</p>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
 <p>At least one of the sockets is not open.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient memory is available.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>The sockets are not compatible, or are both invalid.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_options.5.html">nng_options(5)</a>,
 <a href="nng_socket.5.html">nng_socket(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>

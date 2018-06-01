@@ -561,7 +561,7 @@ TLS servers, which most typically do not authenticate their clients.</p>
 <dd>
 <p>If a certificate is presented by the peer, then it is validated.
 However, if the peer does not present a valid certificate,
-then the sesssion is allowed to proceed without authentication.</p>
+then the session is allowed to proceed without authentication.</p>
 </dd>
 <dt class="hdlist1"><code>NNG_TLS_AUTH_MODE_REQUIRED</code></dt>
 <dd>
@@ -585,28 +585,40 @@ This is the default for clients.</p>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient memory is available.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>An invalid <em>mode</em> was specified.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EBUSY</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EBUSY</code>
+</td>
+<td class="hdlist2">
 <p>The configuration <em>cfg</em> is already in use, and cannot be modified.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_strerror.3.html">nng_strerror(3)</a>,
 <a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(3tls)</a>,
 <a href="nng_tls_config_ca_chain.3tls.html">nng_tls_config_ca_chain(3tls)</a>,

@@ -610,7 +610,7 @@ size of the objected located at <em>val</em>.</p>
 <div class="sect3">
 <h4 id="_code_nng_dialer_setopt_bool_code"><code>nng_dialer_setopt_bool()</code></h4>
 <div class="paragraph">
-<p>This function is for options which take a boolean (<code>bool</code>).
+<p>This function is for options which take a Boolean (<code>bool</code>).
 The <em>bval</em> is passed to the option.</p>
 </div>
 </div>
@@ -680,40 +680,64 @@ and similar.</p>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_EBADTYPE</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EBADTYPE</code>
+</td>
+<td class="hdlist2">
 <p>Incorrect type for option.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
 <p>Parameter <em>d</em> does not refer to an open dialer.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>The value being passed is invalid.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
 <p>The option <em>opt</em> is not supported.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EREADONLY</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EREADONLY</code>
+</td>
+<td class="hdlist2">
 <p>The option <em>opt</em> is read-only.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ESTATE</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ESTATE</code>
+</td>
+<td class="hdlist2">
 <p>The dialer <em>d</em> is already started.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_dialer_create.3.html">nng_dialer_create(3)</a>
 <a href="nng_dialer_getopt.3.html">nng_dialer_getopt(3)</a>
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,

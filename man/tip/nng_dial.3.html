@@ -615,52 +615,88 @@ using <code><a href="nng_dialer_create.3.html">nng_dialer_create()</a></code> an
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_EADDRINVAL</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EADDRINVAL</code>
+</td>
+<td class="hdlist2">
 <p>An invalid <em>url</em> was specified.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
 <p>The socket <em>s</em> is not open.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ECONNREFUSED</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECONNREFUSED</code>
+</td>
+<td class="hdlist2">
 <p>The remote peer refused the connection.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ECONNRESET</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECONNRESET</code>
+</td>
+<td class="hdlist2">
 <p>The remote peer reset the connection.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>An invalid set of <em>flags</em> was specified.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient memory is available.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EPEERAUTH</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EPEERAUTH</code>
+</td>
+<td class="hdlist2">
 <p>Authentication or authorization failure.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EPROTO</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EPROTO</code>
+</td>
+<td class="hdlist2">
 <p>A protocol error occurred.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EUNREACHABLE</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EUNREACHABLE</code>
+</td>
+<td class="hdlist2">
 <p>The remote address is not reachable.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_dialer_close.3.html">nng_dialer_close(3)</a>,
 <a href="nng_dialer_create.3.html">nng_dialer_create(3)</a>
 <a href="nng_dialer_start.3.html">nng_dialer_start(3)</a>,

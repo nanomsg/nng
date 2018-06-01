@@ -470,7 +470,7 @@ with the distribution.</p>
 <tbody>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nngcat.1.html">nngcat(1)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">command line access to Scalabity Protocols</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">command line access to Scalability Protocols</p></td>
 </tr>
 </tbody>
 </table>
@@ -480,8 +480,13 @@ with the distribution.</p>
 <h2 id="_section_3_library_functions">Section 3: Library Functions</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section documents core libary functions that are
-callable by applications.</p>
+<p>This section documents core libary functions supporting Scalability
+Protocols.</p>
+</div>
+<div class="paragraph">
+<p>Most Scalability Protocols applications can be written using just
+the functions documented in this section, as this represents the
+primary API for building such applications.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -895,11 +900,11 @@ callable by applications.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ws_register.3.html">nng_ws_register(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">register websocket transport</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register WebSocket transport</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_wss_register.3.html">nng_wss_register(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">register websocket secure transport</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register WebSocket secure transport</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_zt_register.3.html">nng_zt_register(3)</a></p></td>
@@ -913,9 +918,30 @@ callable by applications.</p>
 <h2 id="_section_3compat_compatible_library_functions">Section 3compat: Compatible Library Functions</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section documents the <em>nanomsg</em> 1.0 libary compatible functions.
-The functions in this section not be used except to aid in transitioning
-from the older <em>libnanomsg</em> library.</p>
+<p>This section documents the <em>nanomsg</em> 1.0 libary compatible functions.</p>
+</div>
+<div class="paragraph">
+<p>These functions are provided as a transition aid, for application
+developers coming to <em>NNG</em> from <em>libnanomsg</em>, and are discouraged
+from use in new applications.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+While this is discouraged for long term use, as a transition aid
+applications may use the value returned by the
+<a href="nng_socket_id.3.html">nng_socket_id()</a> in these functions just like a
+socket descriptor (as if the socket were opened
+via <a href="nn_socket.3compat.html">nn_socket()</a>).
+This sort of API intermixing should only be used during transition from
+the legacy API to the new API.
+</td>
+</tr>
+</table>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -1019,8 +1045,19 @@ from the older <em>libnanomsg</em> library.</p>
 <h2 id="_section_3http_supplemental_http_functions">Section 3http: Supplemental HTTP Functions</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section documents supplemental HTTP support functions
-that are available.</p>
+<p>This section documents supplemental HTTP (HyperText Transport Protocol)
+support functions that are available.</p>
+</div>
+<div class="paragraph">
+<p>These functions can be used in conjunction with the
+<a href="nng_ws.7.html">WebSocket</a> transport for Scalability Protocols, or they
+may be used to construct other types of applications that communicate
+using HTTP.</p>
+</div>
+<div class="paragraph">
+<p>It is also possible to combine the two, such that an HTTP server providing
+static or dynamic content can also be used to host one or more Scalability
+Protocols sockets.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -1273,8 +1310,13 @@ that are available.</p>
 <div class="sectionbody">
 <div class="paragraph">
 <p>This section documents supplemental functions that are available.
-These functions are not intrinsic to building applications with
-this library, but their presence may facilitate writing portable applications.</p>
+These functions are not intrinsic to building Scalability Protocols
+applications with this library.</p>
+</div>
+<div class="paragraph">
+<p>However, their use may facilitate writing portable applications by
+providing uniform functions for common application needs such as
+mutual exclusion locks, threading, time keeping, and similar needs.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -1354,7 +1396,21 @@ this library, but their presence may facilitate writing portable applications.</
 <h2 id="_section_3tls_supplemental_tls_functions">Section 3tls: Supplemental TLS Functions</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This section documents supplemental TLS functions that are available.</p>
+<p>This section documents supplemental TLS (Transport Layer Security)
+functions that are available.
+TLS support is available when using Scalability Protocols with
+the <a href="nng_tls.7.html">TLS</a> transport, or when using WebSocket, either
+with the <a href="nng_ws.7.html">WebSocket</a> transport for Scalability Protocols,
+or combined with other HTTP capabilities.</p>
+</div>
+<div class="paragraph">
+<p>These functions depend on library support that is not included directly
+with <em>NNG</em> however, so their presence will depend on whether this
+additional support was present and enabled with <em>libnng</em> was built.</p>
+</div>
+<div class="paragraph">
+<p>Currently, this extra support can be provided by the
+<a href="https://tls.mbed.org">mbedTLS library</a>.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -1403,6 +1459,10 @@ this library, but their presence may facilitate writing portable applications.</
 <div class="sectionbody">
 <div class="paragraph">
 <p>This section documents core macros and types that are available.</p>
+</div>
+<div class="paragraph">
+<p>These are the core types and macros that most Scalabilty Protocols
+applications need will use.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>
@@ -1484,6 +1544,20 @@ this library, but their presence may facilitate writing portable applications.</
 <div class="paragraph">
 <p>This sections documents various protocols and transports that are
 available in the distribution.</p>
+</div>
+<div class="paragraph">
+<p>
+Protocols represent &#8220;patterns&#8221; of communication, such as
+request/reply, publish/subscribe, and so forth.
+A given <a href="nng_socket.5.html">socket</a> is created with exactly one protocol, and that
+protocol defines the key behavior of the socket.</p>
+</div>
+<div class="paragraph">
+<p>
+Conversely, transports are the underlying mechansims by which messages
+are moved between participants, such as TCP/IP or UNIX domain IPC.
+A given <a href="nng_socket.5.html">socket</a> may be using several transports at the same
+time.</p>
 </div>
 <table class="tableblock frame-all grid-all spread">
 <colgroup>

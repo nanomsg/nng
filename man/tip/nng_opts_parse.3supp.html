@@ -552,7 +552,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_opts_parse()</code> is function is a supplemental funtion intened to
+<p>The <code>nng_opts_parse()</code> is function is a supplemental function intended to
 facilitate parsing command line arguments.
 This function exists largely to stand in for <code>getopt()</code> from POSIX
 systems, but it is available everywhere that <em>NNG</em> is, and it includes
@@ -740,28 +740,40 @@ no more options are available to be parsed, or an error number otherwise.</p>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_EAMBIGUOUS</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EAMBIGUOUS</code>
+</td>
+<td class="hdlist2">
 <p>Parsed option matches more than one specification.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOARG</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOARG</code>
+</td>
+<td class="hdlist2">
 <p>Option requires an argument, but one is not present.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>An invalid (unknown) argument is present.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_strerror.3.html">nng_strerror(3)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>

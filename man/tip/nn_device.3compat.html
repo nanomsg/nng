@@ -574,28 +574,40 @@ one of the sockets is closed or an error occurs.</p>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist horizonal">
-<dl>
-<dt><code>EBADF</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>EBADF</code>
+</td>
+<td class="hdlist2">
 <p>One of the two sockets is invalid or not open, or has</p>
-</dd>
-<dt><code>EINVAL</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>The sockets are not compatible with each other, or not both raw.</p>
-</dd>
-<dt><code>ENOMEM</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient memory is available.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nn_errno.3compat.html">nn_errno(3compat)</a>,
 <a href="nn_socket.3compat.html">nn_socket(3compat)</a>,
 <a href="nng_compat.3compat.html">nng_compat(3compat)</a>,

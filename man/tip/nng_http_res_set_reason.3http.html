@@ -537,7 +537,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_http_res_set_reason()</code> sets the human readable "reason phrase"
+<p>The <code>nng_http_res_set_reason()</code> sets the human readable &#8220;reason phrase&#8221;
 associated with the response <em>res</em> to <em>reason</em>.</p>
 </div>
 <div class="paragraph">
@@ -553,7 +553,7 @@ phrase is supplied based upon the value of the status code (see
 </td>
 <td class="content">
 The <em>reason</em> is never parsed automatically, but it can be a hint for humans
-     to help them understand the nature of any erroroneous result.
+     to help them understand the nature of any erroneous result.
 </td>
 </tr>
 </table>
@@ -574,24 +574,32 @@ The <em>reason</em> is never parsed automatically, but it can be a hint for huma
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient memory to perform the operation.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
 <p>No support for HTTP in the library.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_http_res_alloc.3http.html">nng_http_res_alloc(3http)</a>,
 <a href="nng_http_res_get_reason.3http.html">nng_http_req_get_reason(3http)</a>,
 <a href="nng_http_res_set_status.3http.html">nng_http_req_set_status(3http)</a>,

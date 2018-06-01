@@ -510,7 +510,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_synopsis">SYNOPSIS</a></li>
 <li><a href="#_description">DESCRIPTION</a>
 <ul class="sectlevel2">
+<li><a href="#_compiling">Compiling</a></li>
 <li><a href="#_functions">Functions</a></li>
+<li><a href="#_caveats">Caveats</a></li>
 </ul>
 </li>
 <li><a href="#_see_also">SEE ALSO</a></li>
@@ -527,7 +529,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="listingblock">
 <div class="content">
-<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nn/nn.h&gt;</span><span class="tok-cp"></span></code></pre>
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/bus.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pair.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pipeline.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/pubsub.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/reqrep.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/survey.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/inproc.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/ipc.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/tcp.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/ws.h&gt;</span><span class="tok-cp"></span></code></pre>
 </div>
 </div>
 </div>
@@ -536,7 +550,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <a href="nng.7.html"><em>nng</em></a> library provides source-level compatibility for
+<p>
+The <a href="nng.7.html"><em>nng</em></a> library provides source-level compatibility for
 most <em>nanomsg</em> 1.0 applications.</p>
 </div>
 <div class="admonitionblock important">
@@ -546,7 +561,7 @@ most <em>nanomsg</em> 1.0 applications.</p>
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-This is intended to faciliate converting legacy applications to
+This is intended to facilitate converting legacy applications to
 use the <em>nng</em> library.
 New applications should use the newer <a href="nng.7.html"><em>nng</em></a> API instead.
 </td>
@@ -554,8 +569,23 @@ New applications should use the newer <a href="nng.7.html"><em>nng</em></a> API 
 </table>
 </div>
 <div class="paragraph">
-<p>Applications making use of this compatibility layer must take care
+<p>Applications making use of this must take care
 to link with <a href="libnng.3.html"><em>libnng</em></a> instead of <em>libnn</em>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+While not recommended for long term use, the value returned by
+<a href="nng_socket_id.3.html">nng_socket_id()</a> can be used with these functions
+just like a value returned by <a href="nn_socket.3compat.html">nn_socket()</a>.
+This can be way to facilitate incremental transition to the new API.
+</td>
+</tr>
+</table>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -582,24 +612,46 @@ While reasonable efforts have been made to provide for compatibility,
 some things may behave differently, and some less common parts of the
 <em>nanomsg</em> 1.0 API are not supported at this time, including certain
 options and the statistics API.
+See the <a href="#_caveats">Caveats</a> section below.
 </td>
 </tr>
 </table>
 </div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-If an installation of the older <em>nanomsg</em> library is present on
-the build system, it may be necessary to provide a different search
-path for header files to ensure that the compatibility definitions are
-used in compilation.
-</td>
-</tr>
-</table>
+<div class="sect2">
+<h3 id="_compiling">Compiling</h3>
+<div class="paragraph">
+<p>When compiling legacy <em>nanomsg</em> applications, it will generally be
+necessary to change the include search path to add the &#8220;compat&#8221; subdirectory
+of the directory where headers were installed.
+For example, if <em>nng</em> is installed in <code>$prefix</code>, then header files will
+normally be located in <code>$prefix/include/nng</code>.
+In this case, to build legacy <em>nanomsg</em> apps against <em>nng</em> you would
+add <code>$prefix/include/nng/compat</code> to your compiler&#8217;s search path.</p>
+</div>
+<div class="paragraph">
+<p>Alternatively, you can change your source code so that <code>#include</code> statements
+referring to <code>&lt;nanomsg&gt;</code> instead refer to <code>&lt;nng/compat/nanomsg&gt;</code>.
+For example, instead of:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/reqrep.h&gt;</span><span class="tok-cp"></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>you would have this:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/compat/nanomsg/nn.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/compat/nanomsg/reqrep.h&gt;</span><span class="tok-cp"></span></code></pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Legacy applications built using these methods should be linked against <em>libnng</em>
+instead of <em>libnn</em>, just like any other <em>nng</em> application.</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_functions">Functions</h3>
@@ -778,152 +830,81 @@ used in compilation.
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>There are a few caveats, that should be kept in mind.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Socket numbers can be quite large.
+<div class="sect2">
+<h3 id="_caveats">Caveats</h3>
+<div class="paragraph">
+<p>The following caveats apply when using the legacy API with <em>nng</em>.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>Socket numbers can be quite large.
 The legacy <em>libnanomsg</em> attempted to reuse socket numbers, like
 file descriptors in UNIX systems.
 The <em>nng</em> library avoids this to prevent accidental reuse or
 collision after a descriptor is closed.
 Consequently, socket numbers can become quite large, and should
-probably not be used for array indices.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-The following options (<code>nn_getsockopt</code>) are unsupported:
+probably not be used for array indices.</p>
+</li>
+<li>
+<p>The following options (<code>nn_getsockopt</code>) are unsupported:
 <code>NN_SNDPRIO</code>, <code>NN_RCVPRIO</code>, <code>NN_IPV4ONLY</code>.
 The priority options may be supported in the future, when
-the underlying capability is present in <em>nng</em>.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Access to statistics using this legacy API
-(<code><a href="nn_get_statistic.3compat.html">nn_get_statistic()</a></code>) is unsupported.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Some transports can support longer URLs than legacy <em>libnanomsg</em> can.
+the underlying capability is present in <em>nng</em>.</p>
+</li>
+<li>
+<p>Access to statistics using this legacy API
+(<code><a href="nn_get_statistic.3compat.html">nn_get_statistic()</a></code>) is unsupported.</p>
+</li>
+<li>
+<p>Some transports can support longer URLs than legacy <em>libnanomsg</em> can.
 It is a good idea to use short pathnames in URLs if interoperability
-is a concern.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Only absolute paths are supported in <code>ipc://</code> URLs.
-For example, <code>ipc:///tmp/mysocket</code> is acceptable, but <code>ipc://mysocket</code> is not.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Some transports are unusable from this mode.
+is a concern.</p>
+</li>
+<li>
+<p>Only absolute paths are supported in <code>ipc://</code> URLs.
+For example, <code>ipc:///tmp/mysocket</code> is acceptable, but <code>ipc://mysocket</code> is not.</p>
+</li>
+<li>
+<p>The WebSocket transport in this implementation (<code>ws://</code> URLs)
+only supports BINARY frames.</p>
+</li>
+<li>
+<p>Some newer transports are unusable from this mode.
 In particular, this legacy API offers no way to configure
-TLS parameters that are required for use.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-ABI versioning is not supported.
-We don&#8217;t offer the <code>NN_VERSION_</code> macros.  Sorry.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Runtime symbol information is not implemented.
+TLS or ZeroTier parameters that may be required for use.</p>
+</li>
+<li>
+<p>ABI versioning of the compatibility layer is not supported,
+and the <code>NN_VERSION_</code> macros are not present.</p>
+</li>
+<li>
+<p>Runtime symbol information is not implemented.
 Specifically, there is no <code>nn_symbol()</code> function yet.
-(This may be addressed later if there is a need.)
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-The <code>nn_term()</code> function is destructive and should be avoided.
-This function closes down all sockets, and really there is no good
-reason to ever use it.
-Removal from existing code is advised.
-(Keep track of sockets and close them explicitly if necessary.)
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-It <strong>is</strong> possible at present to intermix sockets between the new and
-the old APIs, but this is not a guaranteed feature, and should only
-be used temporarily to facilitate transitioning code to the new APIs.
-</td>
-</tr>
-</table>
+(This may be addressed later if there is a need.)</p>
+</li>
+<li>
+<p>The TCP transport (<code>tcp://</code> URLs) does not support specifying the local
+address or interface when binding.  (This could be fixed in the future,
+but most likely this will be available only using the new API.)</p>
+</li>
+<li>
+<p>The values of <code>NN_RCVMAXSIZE</code> are constrained.
+Specifically, values set larger than 2GB using the new API will be reported
+as unlimited (<code>-1</code>) in the new API, and the value <code>0</code> will disable any
+enforcement, just like <code>-1</code>.
+(There is no practical reason to ever want to limit the receive size to
+zero.)</p>
+</li>
+<li>
+<p>This implementation counts buffers in terms of messages rather than bytes.
+As a result, the buffer sizes accessed with <code>NN_SNDBUF</code> and <code>NN_RCVBUF</code> are
+rounded up to a whole number of kilobytes, then divided by 1024, in order
+to approximate buffering assuming 1 KB messages.
+Few applications should need to adjust the default values.</p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -931,7 +912,7 @@ be used temporarily to facilitate transitioning code to the new APIs.
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="libnng.3.html">libnng(3)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
