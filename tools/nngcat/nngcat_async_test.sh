@@ -10,10 +10,11 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-echo -n "Verify async connect: "
-
+NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
 ADDR="ipc:///tmp/nngcat_async_test"
+
+echo -n "Verify async connect: "
 
 ${NNGCAT} --async -d 1 --connect ${ADDR} --req0 -D "ping" &
 

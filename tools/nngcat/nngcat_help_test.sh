@@ -10,7 +10,9 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
+NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
+
 echo -n "Verify nngcat help: "
 if ${NNGCAT} --help >/dev/null 2>&1
 then

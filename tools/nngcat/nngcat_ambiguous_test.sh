@@ -10,8 +10,10 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
+NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
 CMD="${NNGCAT} --re --dial=tcp://127.0.0.1:27272"
+
 echo -n "Verify ambiguous options fail: "
 if ${CMD} >/dev/null 2>&1
 then

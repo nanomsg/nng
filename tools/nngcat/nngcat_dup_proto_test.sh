@@ -10,7 +10,9 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
+NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
+
 echo -n "Verify only a single protocol is allowed: "
 if ${NNGCAT} --pub0 --sub0 --dial=tcp://127.0.0.1:8989 >/dev/null 2>&1
 then

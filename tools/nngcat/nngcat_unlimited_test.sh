@@ -10,12 +10,14 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-echo -n "Verify unlimited receive size: "
-
+NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
 ADDR="ipc:///tmp/nngcat_unlimited_test"
 INPUT=/tmp/nngcat_unlimited_test.$$.in
 OUTPUT=/tmp/nngcat_unlimited_test.$$.out
+
+echo -n "Verify unlimited receive size: "
+
 trap "rm $OUTPUT $INPUT" 0
 
 # 4 MB

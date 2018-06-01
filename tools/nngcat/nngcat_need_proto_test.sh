@@ -10,7 +10,9 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
+NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
+
 echo -n "Verify a protocol is needed: "
 if ${NNGCAT} --dial=tcp://127.0.0.1:8989 >/dev/null 2>&1
 then

@@ -10,11 +10,13 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-echo -n "Verify pub sub: "
-
+NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
 ADDR="ipc:///tmp/nngcat_pub_sub_test"
 OUTPUT=/tmp/nngcat_pubsub_test.$$.out
+
+echo -n "Verify pub sub: "
+
 trap "rm $OUTPUT" 0
 
 ${NNGCAT} --listen ${ADDR} --count=3 --recv-timeout=20 --sub0 --subscribe=one --subscribe=two --quoted > $OUTPUT 2>/dev/null &

@@ -10,7 +10,9 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
+NNGCAT=${NNGCAT:=$1}
 NNGCAT=${NNGCAT:-./nngcat}
+
 echo "Verify incompatible options: "
 
 # Just bind something to this so other ones connect
@@ -69,4 +71,3 @@ echo "pass"
 
 echo "PASS."
 exit 0
-
