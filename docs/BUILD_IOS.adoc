@@ -1,7 +1,10 @@
+ifdef::env-github[]
+:note-caption: :information_source:
+endif::[]
+
 = Building for iOS (and tvOS, watchOS)
 
-NOTE: I am not an iOS developer, so this work has had only minimal validation.
-As always, _caveat emptor_!
+NOTE: This work has had only minimal validation.  As always, _caveat emptor_.
 
 == Pre-Requisites
 

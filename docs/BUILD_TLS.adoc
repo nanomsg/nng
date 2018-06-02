@@ -1,3 +1,7 @@
+ifdef::env-github[]
+:important-caption: :heavy_exclamation_mark:
+endif::[]
+
 = Building for TLSv1.2 Support
 
 If you want to include support for Transport Layer Security

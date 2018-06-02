@@ -1,3 +1,7 @@
+ifdef::env-github[]
+:note-caption: :information_source:
+endif::[]
+
 = Building for Cross Compilation
 
 TIP: Cross-compiling is used when the operating system or process architecure

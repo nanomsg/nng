@@ -1,7 +1,10 @@
+ifdef::env-github[]
+:note-caption: :information_source:
+endif::[]
+
 = Building for Android
 
-NOTE: I am not an Android developer, so this work has received only cursory
-testing.  As always, _caveat emptor_.
+NOTE: This work has received only cursory testing.  As always, _caveat emptor_.
 
 == Pre-Requisites
 
