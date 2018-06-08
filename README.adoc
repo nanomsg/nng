@@ -7,7 +7,7 @@ endif::[]
 // Note: This README is optimized for display with Asciidoctor, or
 // on the github status page.  An HTML version is in the same directory
 // and may be more pleasantly formatted for human readers (when opened
-// in a browswer).
+// in a browser).
 
 // Note: If you're updating this file, don't forget to re-run asciidoctor
 // to update the aforementioned HTML file!
@@ -32,11 +32,11 @@ It may help to think of this as "nanomsg-next-generation".
 == NNG: Lightweight Messaging Library
 
 NNG, like its predecessors http://nanomsg.org[nanomsg] (and to some extent
-http://zeromq.org/[ZeroMQ]), is a lightweight, brokerless library,
+http://zeromq.org/[ZeroMQ]), is a lightweight, broker-less library,
 offering a simple API to solve common recurring messaging problems,
 such as publish/subscribe, RPC-style request/reply, or service discovery.
 The API frees the programmer from worrying about details like connection
-management, retries, and other comomon considerations, so that they
+management, retries, and other common considerations, so that they
 can focus on the application instead of the plumbing.
 
 NNG is implemented in C, requiring only C99 and CMake to build.
@@ -86,7 +86,7 @@ concurrent applications vastly simpler than previously possible.
 
 == Compatibility
 
-This project offers both wire compatibility and API compability,
+This project offers both wire compatibility and API compatibility,
 so most nanomsg users can begin using NNG right away.
 
 Existing nanomsg and github.com/go-mangos/mangos[mangos] applications
@@ -125,7 +125,7 @@ system (pass "-G Ninja" to CMake) when you can.
 blindingly fast and has made our lives as developers measurably better.)
 
 If you want to build with TLS support you will also need
-https://tls.mbed.org[mbedTLS].  Seee <<docs/BUILD_TLS.adoc#>> for details.
+https://tls.mbed.org[mbedTLS].  See <<docs/BUILD_TLS.adoc#>> for details.
 
 == Quick Start
 
