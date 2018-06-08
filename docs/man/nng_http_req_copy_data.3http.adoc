@@ -30,7 +30,7 @@ and sets the HTTP body for the request _req_ to it.
 The copy will be deallocated automatically when _req_ is freed.
 
 The copied body data will be automatically sent with the request when it
-is sent using `<<nng_http_conn_write_req.3http#,nni_http_conn_write_req()>>`.
+is sent using `<<nng_http_conn_write_req.3http#,nng_http_conn_write_req()>>`.
 
 This also updates the relevant `Content-Length` header of _req_.
 

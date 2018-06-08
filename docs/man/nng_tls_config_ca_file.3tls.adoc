@@ -20,7 +20,7 @@ nng_tls_config_ca_file - load certificate authority from file
 #include <nng/nng.h>
 #include <nng/supplemental/tls/tls.h>
 
-int nng_tls_config_ca_file(nni_tls_config *cfg, const char *path);
+int nng_tls_config_ca_file(nng_tls_config *cfg, const char *path);
 ----
 
 == DESCRIPTION

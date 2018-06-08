@@ -20,7 +20,7 @@ nng_tls_config_cert_key_file - load own certificate and key from file
 #include <nng/nng.h>
 #include <nng/supplemental/tls/tls.h>
 
-int nng_tls_config_cert_key_file(nni_tls_config *cfg, const char *path,
+int nng_tls_config_cert_key_file(nng_tls_config *cfg, const char *path,
     const char *pass);
 ----
 

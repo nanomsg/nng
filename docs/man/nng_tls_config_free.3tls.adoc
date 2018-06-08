@@ -20,7 +20,7 @@ nng_tls_config_free - deallocate a TLS configuration object
 #include <nng/nng.h>
 #include <nng/supplemental/tls/tls.h>
 
-void nng_tls_config_free(nni_tls_config *cfg);
+void nng_tls_config_free(nng_tls_config *cfg);
 ----
 
 == DESCRIPTION

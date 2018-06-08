@@ -25,7 +25,7 @@ typedef enum nng_tls_mode {
     NNG_TLS_MODE_SERVER
 } nng_tls_mode;
 
-int nng_tls_config_alloc(nni_tls_config **cfgp, nng_tls_mode mode);
+int nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode);
 ----
 
 == DESCRIPTION

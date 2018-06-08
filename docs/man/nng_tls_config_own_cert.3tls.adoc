@@ -20,7 +20,7 @@ nng_tls_config_own_cert - configure own certificate and key
 #include <nng/nng.h>
 #include <nng/supplemental/tls/tls.h>
 
-int nng_tls_config_own_cert(nni_tls_config *cfg, const char *cert,
+int nng_tls_config_own_cert(nng_tls_config *cfg, const char *cert,
     const char *key, const char *pass);
 ----
 

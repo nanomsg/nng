@@ -28,7 +28,7 @@ int nng_http_req_set_data(nng_http_req *req, const void *body, size_t size);
 The `nng_http_req_set_data()` sets the HTTP body associated with
 the request _req_ to _body_, and the size of the body to _size_.
 This body data will be automatically sent with the request when it
-is sent using `<<nng_http_conn_write_req.3http#,nni_http_conn_write_req()>>`.
+is sent using `<<nng_http_conn_write_req.3http#,nng_http_conn_write_req()>>`.
 
 This also updates the relevant `Content-Length` header of _req_.
 

@@ -26,7 +26,7 @@ typedef enum nng_tls_auth_mode {
         NNG_TLS_AUTH_MODE_REQUIRED
 } nng_tls_auth_mode;
 
-int nng_tls_config_auth_mode(nni_tls_config *cfg, nng_tls_auth_mode mode);
+int nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode);
 ----
 
 == DESCRIPTION
