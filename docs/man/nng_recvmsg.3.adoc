@@ -34,8 +34,8 @@ The _flags_ may contain the following value:
 
 `NNG_FLAG_NONBLOCK`::
   The function returns immediately, even if no message is available.
-  Without   this flag, the function will wait until a message is received
-  by the socket   _s_, or any configured timer expires.
+  Without this flag, the function will wait until a message is received
+  by the socket _s_, or any configured timer expires.
 
 NOTE: The semantics of what receiving a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.

@@ -26,25 +26,31 @@ int nng_recv(nng_socket s, void *data, size_t *sizep int flags);
 
 The `nng_recv()` receives a message.
 
-If the special flag `NNG_FLAG_ALLOC` is not specified, then the caller must
-set _data_ to a buffer to receive the message body content, and must store
-the size of that buffer at the location pointed to by _sizep_.
+The _flags_ is a bit mask that may contain any of the following values:
+
+`NNG_FLAG_NONBLOCK`::
+  The function returns immediately, even if no message is available.
+  Without this flag, the function will wait until a message is received
+  by the socket _s_, or any configured timer expires.
+
+`NNG_FLAG_ALLOC`::
+  If this flag is present, then a "`((zero-copy))`" mode is used.
+  In this case the caller must set the value of _data_ to the location
+  of another pointer (of type `void *`), and the _sizep_ pointer must be set
+  to a location to receive the size of the message body.
+  The function will then allocate a message buffer
+  (as if by `<<nng_alloc.3#,nng_alloc()>>`), fill it with
+  the message body, and store it at the address referenced by _data_, and update
+  the size referenced by _sizep_.
+  The caller is responsible for disposing of the received buffer either by
+  the `<<nng_free.3#,nng_free()>>` function or passing the message (also
+  with the `NNG_FLAG_ALLOC` flag) in a call to `<<nng_send.3#,nng_send()>>`.
+
+If the special flag `NNG_FLAG_ALLOC` (see above) is not specified, then the
+caller must set _data_ to a buffer to receive the message body content,
+and must store the size of that buffer at the location pointed to by _sizep_.
 When the function returns, if it is successful, the size at _sizep_ will be
 updated with the actual message body length copied into _data_.
-
-If the special flag `NNG_FLAG_ALLOC` is present, then a "`((zero-copy))`"
-mode is used.
-In this case the caller must set the value of _data_ to the location
-of another pointer (of type `void *`), and the _sizep_ pointer must be set
-to a location to receive the size of the message body.
-The function will then allocate a message buffer
-(as if by `<<nng_alloc.3#,nng_alloc()>>`), fill it with
-the message body, and store it at the address referenced by _data_, and update
-the size referenced by _sizep_.
-When this flag is present, the caller assumes
-responsibility for disposing of the received buffer either by the function
-`<<nng_free.3#,nng_free()>>` or reusing the message for sending (with the same
-size) in a call to `<<nng_send.3#,nng_send()>>`.
 
 NOTE: The semantics of what receiving a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
