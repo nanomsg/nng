@@ -555,7 +555,7 @@ is stored in <em>urlp</em>.</p>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_rawurl</span><span class="tok-p">;</span>   <span class="tok-c1">// Unparsed URL, with minimal canonicalization.</span>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_userinfo</span><span class="tok-p">;</span> <span class="tok-c1">// Userinfo component, or NULL.</span>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_host</span><span class="tok-p">;</span>     <span class="tok-c1">// Full host, including port if present.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_hostname</span><span class="tok-p">;</span> <span class="tok-c1">// Hostname only (or address), or empy string.</span>
+    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_hostname</span><span class="tok-p">;</span> <span class="tok-c1">// Hostname only (or address), or empty string.</span>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_port</span><span class="tok-p">;</span>     <span class="tok-c1">// Port number, may be default or empty string.</span>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_path</span><span class="tok-p">;</span>     <span class="tok-c1">// Path if present, empty string otherwise.</span>
     <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_query</span><span class="tok-p">;</span>    <span class="tok-c1">// Query info if present, NULL otherwise.</span>
@@ -636,24 +636,32 @@ Only the <code>u_userinfo</code>, <code>u_query</code>, and <code>u_fragment</co
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient free memory exists to allocate a message.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>An invalid URL was supplied.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_url_clone.3.html">nng_url_clone(3)</a>,
 <a href="nng_url_free.3.html">nng_url_free(3)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,

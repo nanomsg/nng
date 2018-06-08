@@ -557,11 +557,11 @@ using the <a href="nng_ipc.7.html"><em>ipc</em></a> transport.</p>
 </dd>
 <dt class="hdlist1"><code>sa_path</code></dt>
 <dd>
-<p>This field holds the C string corresponding to pathname where the
+<p>This field holds the C string corresponding to path name where the
 IPC socket is located.
 For systems using UNIX domain sockets, this will be an absolute
-pathname in the filesystem, where the UNIX domain socket is located.
-For Windows systems, this is the pathname of the Named Pipe, without
+path name in the file system, where the UNIX domain socket is located.
+For Windows systems, this is the path name of the Named Pipe, without
 the leading <code>\\.pipe\</code> portion, which will be automatically added.</p>
 </dd>
 </dl>
@@ -586,7 +586,7 @@ At this time, there is no support for Linux &#8220;abstract sockets&#8221;.
 </td>
 <td class="content">
 In order to ensure maximum compatibility, applications should avoid
-hard coding the sizeof the <code>sa_path</code> member explicitly, but use the
+hard coding the size of the <code>sa_path</code> member explicitly, but use the
 <code>sizeof</code> operator to determine its actual size at compile time.
 Furthermore, the size is guaranteed to be at least 128, but paths of
 this length may not be supported on all systems.
@@ -615,7 +615,7 @@ longer than 128 bytes, including the <code>ipc://</code> prefix.
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_sockaddr.5.html">nng_sockaddr(5)</a>,
 <a href="nng_ipc.7.html">nng_ipc(7)</a>
 <a href="nng.7.html">nng(7)</a></p>

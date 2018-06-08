@@ -559,7 +559,7 @@ addresses, IPC paths, and so forth.</p>
 <div class="content">
 <div class="paragraph">
 <p>The name <code>sockaddr</code> is based on it&#8217;s similarity with POSIX <code>struct sockaddr</code>,
-but in the <em>nng</em> library, these addreses are more closely affiliated with
+but in the <em>nng</em> library, these addresses are more closely affiliated with
 instances of <code><a href="nng_pipe.5.html">nng_pipe</a></code>
 than of <code><a href="nng_socket.5.html">nng_socket</a></code>.
 The naming confusion is unfortunate.</p>
@@ -568,7 +568,7 @@ The naming confusion is unfortunate.</p>
 </div>
 <div class="paragraph">
 <p>This structure is actually a union, with different members for different
-types of addreses.</p>
+types of addresses.</p>
 </div>
 <div class="paragraph">
 <p>Every member structure has as its first element a <code>uint16_t</code> field
@@ -579,38 +579,57 @@ specific member should be used.</p>
 <div class="paragraph">
 <p>The values of <code>s_family</code> are as follows:</p>
 </div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_AF_UNSPEC</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_UNSPEC</code>
+</td>
+<td class="hdlist2">
 <p>Invalid address, no other valid fields.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_AF_INPROC</code></dt>
-<dd>
-<p>Address for intraprocess communication (<a href="nng_inproc.7.html">nng_inproc(7)</a>).
-The <code>s_inproc</code> member is valid.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_AF_IPC</code></dt>
-<dd>
-<p>Address for interprocess communication (<a href="nng_ipc.7.html">nng_ipc(7)</a>).
-The <code>s_path</code> member is valid.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_AF_INET</code></dt>
-<dd>
-<p>Address for TCP/IP (v4) communication.
-The <code>s_in</code> member is valid.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_AF_INET6</code></dt>
-<dd>
-<p>Address for TCP/IP (v6) communication.
-The <code>s_in6</code> member is valid.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_AF_ZT</code></dt>
-<dd>
-<p>Address for ZeroTier transport (<a href="nng_zerotier.7.html">nng_zerotier(7)</a>).
-The <code>s_zt</code> member is valid.</p>
-</dd>
-</dl>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_INPROC</code>
+</td>
+<td class="hdlist2">
+<p>Address for intraprocess communication (<a href="nng_inproc.7.html">nng_inproc(7)</a>).  The <code>s_inproc</code> member is valid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_IPC</code>
+</td>
+<td class="hdlist2">
+<p>Address for interprocess communication (<a href="nng_ipc.7.html">nng_ipc(7)</a>).  The <code>s_path</code> member is valid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_INET</code>
+</td>
+<td class="hdlist2">
+<p>Address for TCP/IP (v4) communication.  The <code>s_in</code> member is valid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_INET6</code>
+</td>
+<td class="hdlist2">
+<p>Address for TCP/IP (v6) communication.  The <code>s_in6</code> member is valid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_ZT</code>
+</td>
+<td class="hdlist2">
+<p>Address for ZeroTier transport (<a href="nng_zerotier.7.html">nng_zerotier(7)</a>).  The <code>s_zt</code> member is valid.</p>
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>Please see the manual pages for each individual type for more information.</p>
@@ -620,7 +639,7 @@ The <code>s_zt</code> member is valid.</p>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_sockaddr_in.5.html">nng_sockaddr_in(5)</a>,
 <a href="nng_sockaddr_in6.5.html">nng_sockaddr_in6(5)</a>,
 <a href="nng_sockaddr_inproc.5.html">nng_sockaddr_inproc(5)</a>,

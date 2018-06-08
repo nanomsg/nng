@@ -537,7 +537,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sectionbody">
 <div class="paragraph">
 <p>The <code>nng_dialer_close()</code> function closes the listener <em>d</em>.
-This also closes any <code><a href="nng_pipe.5.html">nng_pipe</a></code> ojects that have
+This also closes any <code><a href="nng_pipe.5.html">nng_pipe</a></code> objects that have
 been created by the dialer.</p>
 </div>
 <div class="paragraph">
@@ -563,20 +563,24 @@ this function has returned.
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
 <p>Parameter <em>d</em> does not refer to an open listener.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_close.3.html">nng_close(3)</a>,
 <a href="nng_dial.3.html">nng_dial(3)</a>,
 <a href="nng_dialer_create.3.html">nng_dialer_create(3)</a>

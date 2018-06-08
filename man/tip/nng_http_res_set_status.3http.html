@@ -610,7 +610,7 @@ that only a valid code is supplied.</p>
     <span class="tok-n">NNG_HTTP_STATUS_LOOP_DETECTED</span>            <span class="tok-o">=</span> <span class="tok-mi">508</span><span class="tok-p">,</span>
     <span class="tok-n">NNG_HTTP_STATUS_NOT_EXTENDED</span>             <span class="tok-o">=</span> <span class="tok-mi">510</span><span class="tok-p">,</span>
     <span class="tok-n">NNG_HTTP_STATUS_NETWORK_AUTH_REQUIRED</span>    <span class="tok-o">=</span> <span class="tok-mi">511</span><span class="tok-p">,</span>
-<span class="tok-p">}</span></code></pre>
+<span class="tok-p">};</span></code></pre>
 </div>
 </div>
 <div class="paragraph">
@@ -644,20 +644,24 @@ This will help any humans who may have to diagnose a failure.
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
 <p>No support for HTTP in the library.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_http_res_alloc.3http.html">nng_http_res_alloc(3http)</a>,
 <a href="nng_http_res_get_status.3http.html">nng_http_req_get_status(3http)</a>,
 <a href="nng_http_res_set_reason.3http.html">nng_http_req_set_reason(3http)</a>,

@@ -619,7 +619,7 @@ thus size 4, unless otherwise indicated.)</p>
 In <em>nng</em> buffers are sized as a count of messages rather than
 bytes, and so an attempt to estimate a conversion based upon a predetermined
 message size of 1kB is made.
-The value supplied is rouned up to the nearest value divisible by 1024, and
+The value supplied is rounded up to the nearest value divisible by 1024, and
 then divided by 1024 to convert to a message count.
 Applications that have unusual message sizes may wish to adjust the value
 used here accordingly.
@@ -683,10 +683,10 @@ The default is 100.</p>
 <dd>
 <p>Maximum reconnect interval in milliseconds.
 Subsequent reconnection attempts after a failed attempt are made at
-exponentially increasing intervals (backoff), but the interval is
+exponentially increasing intervals (back-off), but the interval is
 capped by this value.
 If this value is smaller than <code>NN_RECONNECT_IVL</code>, then no exponential
-backoff is performed, and each reconnect interval will be determined
+back-off is performed, and each reconnect interval will be determined
 solely by <code>NN_RECONNECT_IVL</code>.
 The default is zero.</p>
 </dd>
@@ -917,7 +917,7 @@ in this implementation.</p>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_socket.5.html">nng_socket(5)</a>,
 <a href="nn_close.3compat.html">nn_close(3compat)</a>,
 <a href="nn_errno.3compat.html">nn_errno(3compat)</a>,

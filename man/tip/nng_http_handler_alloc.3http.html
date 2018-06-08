@@ -634,7 +634,7 @@ The <em>uri</em> is taken as the root, and files are served from the directory
 tree rooted at <em>path</em>.</p>
 </div>
 <div class="paragraph">
-<p>When the client Request-URI resolves to a directory in the filesystem,
+<p>When the client Request-URI resolves to a directory in the file system,
 the handler looks first for a file named <code>index.html</code> or <code>index.htm</code>.
 If one is found, then that file is returned back to the client.
 If no such index file exists, then an <code>NNG_HTTP_STATUS_NOT_FOUND</code> (404) error is
@@ -642,7 +642,7 @@ sent back to the client.</p>
 </div>
 <div class="paragraph">
 <p>The <code>Content-Type</code> will be set automatically based upon the extension
-of the requsted file name.
+of the requested file name.
 If a content type cannot be determined from
 the extension, then <code>application/octet-stream</code> is used.</p>
 </div>
@@ -656,7 +656,7 @@ or search for <code>index.html</code> or <code>index.htm</code> files.</p>
 </div>
 <div class="paragraph">
 <p>The <code>Content-Type</code> will be set automatically based upon the extension
-of the requsted file name.
+of the requested file name.
 If a content type cannot be determined from
 the extension, then <code>application/octet-stream</code> is used.</p>
 </div>
@@ -684,28 +684,40 @@ sent the <em>data</em>, with <code>Content-Length</code> of <em>size</em> bytes,
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>An invalid <em>path</em> was specified.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient free memory exists to allocate a message.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
 <p>No support for HTTP in the library.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_aio_finish.3.html">nng_aio_finish(3)</a>,
 <a href="nng_aio_get_input.3.html">nng_aio_get_input(3)</a>,
 <a href="nng_aio_set_output.3.html">nng_aio_set_output(3)</a>,

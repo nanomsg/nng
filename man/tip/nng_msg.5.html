@@ -538,7 +538,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p>An <code>nng_msg</code> represents a single message sent between Scalability Protocols
 peers.
-Messages internally have a body, containining the application supplied
+Messages internally have a body, containing the application supplied
 payload, and a header, containing protocol specific routing and similar
 related information.</p>
 </div>
@@ -581,20 +581,24 @@ by making use of scratch areas at the beginning and end of the message.</p>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient free memory exists to allocate a message.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_aio_get_msg.3.html">nng_aio_get_msg(3)</a>,
 <a href="nng_aio_set_msg.3.html">nng_aio_set_msg(3)</a>,
 <a href="nng_msg_alloc.3.html">nng_msg_alloc(3)</a>,

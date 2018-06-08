@@ -609,7 +609,7 @@ increasing performance.
 Regardless of the presence or absence of <code>NNG_FLAG_NONBLOCK</code>, there may
 be queues between the sender and the receiver.
 Furthermore, there is no guarantee that the message has actually been delivered.
-Finally, with some protocols, the semantic is implictly <code>NNG_FLAG_NONBLOCK</code>,
+Finally, with some protocols, the semantic is implicitly <code>NNG_FLAG_NONBLOCK</code>,
 such as with <a href="nng_pub.7.html"><em>pub</em></a> sockets, which are best-effort delivery only.
 </td>
 </tr>
@@ -626,7 +626,7 @@ When using <code>NNG_FLAG_ALLOC</code>, it is important that the value of <em>si
 match the actual allocated size of the data.
 Using an incorrect size results
 in unspecified behavior, which may include heap corruption, program crashes,
-or transdimensional mutation of the program&#8217;s author.
+or trans-dimensional mutation of the program&#8217;s author.
 </td>
 </tr>
 </table>
@@ -644,44 +644,72 @@ or transdimensional mutation of the program&#8217;s author.
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_EAGAIN</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EAGAIN</code>
+</td>
+<td class="hdlist2">
 <p>The socket <em>s</em> cannot accept data for sending.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ECLOSED</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
 <p>The socket <em>s</em> is not open.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EINVAL</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
 <p>An invalid set of <em>flags</em> was specified.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_EMSGSIZE</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EMSGSIZE</code>
+</td>
+<td class="hdlist2">
 <p>The value of <em>size</em> is too large.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient memory is available.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
 <p>The protocol for socket <em>s</em> does not support sending.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ESTATE</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ESTATE</code>
+</td>
+<td class="hdlist2">
 <p>The socket <em>s</em> cannot send data in this state.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_alloc.3.html">nng_alloc(3)</a>,
 <a href="nng_free.3.html">nng_free(3)</a>,
 <a href="nng_recv.3.html">nng_recv(3)</a>,

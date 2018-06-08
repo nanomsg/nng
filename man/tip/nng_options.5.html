@@ -549,7 +549,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <span class="tok-cp">#define NNG_OPT_RECONNMINT    &quot;reconnect-time-min&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RECONNMAXT    &quot;reconnect-time-max&quot;</span>
 <span class="tok-cp">#define NNG_OPT_TCP_NODELAY   &quot;tcp-nodelay&quot;</span>
-<span class="tok-cp">#define NNG_OPT_TCP_KEEPALIVE &quot;tcp-nodelay&quot;</span></code></pre>
+<span class="tok-cp">#define NNG_OPT_TCP_KEEPALIVE &quot;tcp-keepalive&quot;</span></code></pre>
 </div>
 </div>
 </div>
@@ -657,7 +657,7 @@ If this is non-zero, then the time between successive connection attempts
 will start at the value of <code>NNG_OPT_RECONNMINT</code>,
 and grow exponentially, until it reaches this value.
 If this value is zero, then no exponential
-backoff between connection attempts is done, and each attempt will wait
+back-off between connection attempts is done, and each attempt will wait
 the time specified by <code>NNG_OPT_RECONNMINT</code>.
 This can be set on a socket, but it can also be overridden on an individual
 dialer.
@@ -707,7 +707,7 @@ be readable.</p>
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Appplications should never attempt to read or write to the
+Applications should never attempt to read or write to the
 returned file descriptor.
 </td>
 </tr>
@@ -839,7 +839,7 @@ the descriptor will <strong>not</strong> be readable.</p>
 <i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Appplications should never attempt to read or write to the
+Applications should never attempt to read or write to the
 returned file descriptor.
 </td>
 </tr>
@@ -1071,7 +1071,7 @@ middleware from being expiring due to lack of activity.
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_dialer_getopt.3.html">nng_dialer_getopt(3)</a>,
 <a href="nng_dialer_setopt.3.html">nng_dialer_setopt(3)</a>,
 <a href="nng_getopt.3.html">nng_getopt(3)</a>,

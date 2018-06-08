@@ -685,7 +685,7 @@ There <strong>must</strong> be at least one identifier, the <em>request ID</em>,
 last element in the array, and <strong>must</strong> have the most significant bit set.</p>
 </div>
 <div class="paragraph">
-<p>There may be additional <em>peer ID</em>s preceeding the request ID.
+<p>There may be additional <em>peer ID</em>s preceding the request ID.
 These will be distinguishable from the request ID by having their most
 significant bit clear.</p>
 </div>
@@ -714,7 +714,7 @@ that the request contained.</p>
 message, stripping it from the front of the message as it does so.</p>
 </div>
 <div class="paragraph">
-<p>When the reply finally arrives back at the initiating requestor, it
+<p>When the reply finally arrives back at the initiating requester, it
 should have only a single element in the message, which will be the
 request ID it originally used for the request.</p>
 </div>
@@ -724,7 +724,7 @@ request ID it originally used for the request.</p>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_ctx_open.3.html">nng_ctx_open(3)</a>,
 <a href="nng_device.3.html">nng_device(3)</a>,
 <a href="nng_req_open.3.html">nng_req_open(3)</a>,

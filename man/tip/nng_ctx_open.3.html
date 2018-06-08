@@ -592,24 +592,32 @@ nonsensical, and not supported.
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_ENOMEM</code></dt>
-<dd>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
 <p>Insufficient memory is available.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_ENOTSUP</code></dt>
-<dd>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
 <p>The protocol does not support separate contexts, or the socket was opened in raw mode.</p>
-</dd>
-</dl>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
-<div class="paragraph">
+<div class="paragraph text-left">
 <p><a href="nng_ctx_close.3.html">nng_ctx_close(3)</a>,
 <a href="nng_ctx_getopt.3.html">nng_ctx_getopt(3)</a>,
 <a href="nng_ctx_recv.3.html">nng_ctx_recv(3)</a>,
