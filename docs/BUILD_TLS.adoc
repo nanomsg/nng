@@ -1,0 +1,56 @@
+= Building for TLSv1.2 Support
+
+If you want to include support for Transport Layer Security
+(tls+tcp:// and wss:// URLs) you should follow these directions.
+
+At this time, TLS support depends on the mbedTLS library.
+See https://tls.mbed.org/ for details.
+
+IMPORTANT: mbedTLS is licensed under different terms than NNG.
+You are responsible for reading those license terms, and ensuring
+that your use conforms to them.
+
+On many distributions you may be able to install a pre-packaged version
+of mbedTLS. We recommend doing so if this is an option for you.
+For example, Ubuntu users can install the `libmbedtls-dev` package.
+
+You can also build mbedTLS from source; if you choose to do so,
+please make sure you also *install* it somewhere (even a temporary
+staging directory). 
+
+== Configuring NNG with mbedTLS
+
+TLS support is not enabled by default, but can be enabled by configuring
+with the CMake option `NNG_ENABLE_TLS=ON`.
+
+By default NNG searches for an installed copy of mbedTLS in `/usr/local`,
+as well as the normal installation directories for libraries on your system.
+
+If you have installed mbedTLS elsewhere, you can direct the NNG configuration
+to it by setting the `MBEDTLS_ROOT_DIR` CMake variable.
+
+== Example
+
+The following example would work on either Linux or macOS, and assumes
+that we have checked out github source trees into `$HOME/work`.
+It also assumes that mbedTLS is already installed in /usr/local or
+a standard search path.
+
+[source, sh]
+----
+$ export NNGDIR=$HOME/work/nng
+$ mkdir build
+$ cd build
+
+$ cmake -DNNG_ENABLE_TLS=ON ..
+
+   ... (lots of lines of output from cmake...)
+
+$ make
+
+   ... (lots of lines of output from make...)
+
+$ ./tests/tls
+ok      ./tests/tls                                            1.503s
+
+----

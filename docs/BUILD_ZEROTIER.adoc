@@ -1,0 +1,82 @@
+= Building for ZeroTier Support
+
+If you want to include support for the experimental ZeroTier
+transport (zt:// URLs), you should follow these directions.
+
+You will need a checked out copy of the ZeroTierOne repository.
+The repo is located at github.com/ZeroTier/ZeroTierOne.
+These instructions have been tested with version 1.2.10 (tag)
+of that repository.
+
+IMPORTANT: ZeroTier is licensed under different terms than NNG.
+You are responsible for reading those license terms, and ensuring
+that your use conforms to them.
+
+IMPORTANT: The ZeroTier transport, and these build instructions, are
+experimental.  We expect both to change over time as ZeroTier
+and the NNG zt:// transport both mature.  As always, _caveat emptor_.
+
+== Building libzerotiercore.a
+
+The ZeroTierOne repo is not set up for building this library by default,
+so you'll need to explicitly build it.
+
+=== Using "make"
+If you have a "make" based system such as Linux or macOS, you can
+just do "make core" at the top-level.  The end result will be a
+libzerotiercore.a in that top level.
+
+=== Using "cmake"
+
+If not, you can use the CMakeLists file at the top of the ZeroTierOne tree.
+That CMakeLists file only generates one output, the libzerotiercore.a
+library, which will normally be a static delivery.
+
+Using your usual cmake tool chain, build the library.
+The resulting library (usually `libzerotier.a`) will need to be copied
+into the top-level of the ZeroTierOne tree, as that is where the NNG
+build expects to find it.
+
+== Configuring NNG with ZT
+
+You will need to enable ZeroTier within NNG using the CMake option
+`NNG_TRANSPORT_ZEROTIER=ON` and set the CMake option
+`NNG_TRANSPORT_ZEROTIER_SOURCE` to the directory path of the ZeroTierOne
+tree you have checked out.
+
+== Example
+
+The following example would work on either Linux or macOS, and assumes
+that we have checked out github source trees into `$HOME/work`.
+
+[source, sh]
+----
+$ export NNGDIR=$HOME/work/nng
+$ export ZTDIR=$HOME/work/ZeroTierOne
+$ cd $ZTDIR
+$ mkdir build
+$ cd build
+
+   ... (lots of lines of output from cmake...)
+
+$ cmake ..
+$ make
+
+   ... (lots of lines of output from make...)
+
+$ cp libzerotiercore.a $ZTDIR
+$ cd $NNGDIR
+$ mkdir build
+$ cd build
+$ cmake -DNNG_TRANSPORT_ZEROTIER=ON -DNNG_TRANSPORT_ZEROTIER_SOURCE=${ZTDIR} ..
+
+   ... (lots of lines of output from cmake...)
+
+$ make
+
+   ... (lots of lines of output from make...)
+
+$ ./tests/zt
+
+ok      ./tests/zt                                            22.837s
+----

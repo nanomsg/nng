@@ -29,10 +29,11 @@ The ((_zt_ transport)) provides communication support for
 _nng_ applications over a http://www.zerotier.com[ZeroTier] network,
 using a Virtual Layer 2 packet facility.
 
-IMPORTANT: This transport is very experimental.  To utilize it at
-present, the library must be built with support, and the
-ZeroTierOne `dev` branch must be included; this will require
-linking against a suitable ((`libzerotiercore`)) static library.
+IMPORTANT: This transport is experimental.
+To utilize it at present, the library must be built with support, and linked
+against a suitable ((`libzerotiercore`)) library.
+Further information about building with this support are in the build
+documentation included with the distribution.
 
 IMPORTANT: The `libzerotiercore` library at present is covered under different
 license terms than the rest of _nng_.  Please be careful to review
