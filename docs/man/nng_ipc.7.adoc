@@ -41,23 +41,27 @@ no extra steps to use it should be necessary.
 === URI Format
 
 (((URI, `ipc://`)))
-This transport uses URIs using the scheme `ipc://`, followed by
-an absolute path name in the file system where the socket or named pipe
-should be created.
+This transport uses URIs using the scheme `ipc://`, followed by a path
+name in the file system where the socket or named pipe should be created.
 
 TIP: On Windows, all names are prefixed by `\\.\pipe\` and do not
-occupy the normal file system.
-On POSIX platforms, the path is taken literally,
-and is relative to the root directory.
+reside in the normal file system.
+On POSIX platforms, the path is taken literally, and is relative to
+the current directory, unless it begins with `/`, in which case it is
+relative to the root directory.
+
+NOTE: When using relative paths on POSIX systems, the address used and returned
+in properties like `NNG_OPT_LOCADDR` and `NNG_OPT_URL` will also be relative.
+Consequently, they will only be interpreted the same by processes that have
+the same working directory.
+To ensure maximum portability and safety, absolute paths are recommended
+whenever possible.
 
 NOTE: If compatibility with legacy _nanomsg_ applications is required,
 then pathnames must not be longer than 122 bytes, including the final
 `NUL` byte.
 This is because legacy versions of _nanomsg_ cannot express URLs
 longer than 128 bytes, including the `ipc://` prefix.
-
-NOTE: Legacy _nanomsg_ supported relative IPC path names; modern _nng_ does not.
-Therefore, always use an absolute path name if interoperability is required.
 
 === Socket Address
 

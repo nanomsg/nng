@@ -628,10 +628,6 @@ nni_ipc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	int         rv;
 	size_t      sz;
 
-	if (((url->u_host != NULL) && (strlen(url->u_host) > 0)) ||
-	    (url->u_userinfo != NULL)) {
-		return (NNG_EINVAL);
-	}
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}

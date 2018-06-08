@@ -288,11 +288,30 @@ nni_url_parse(nni_url **urlp, const char *raw)
 		url->u_scheme[i] = (char) tolower(s[i]);
 	}
 	url->u_scheme[len] = '\0';
+	s += len + 3; // strlen("://")
+
+	// For compatibility reasons, we treat ipc:// and inproc:// paths
+	// specially. These names URLs have a path name (ipc) or arbitrary
+	// string (inproc) and don't include anything like a host.  Note that
+	// in the case of path names, it is incumbent upon the application to
+	// ensure that valid and safe path names are used.  Note also that
+	// path names are not canonicalized, which means that the address and
+	// URL properties for relative paths won't be portable to other
+	// processes unless they are in the same directory.  When in doubt,
+	// we recommend using absolute paths, such as ipc:///var/run/mysocket.
+
+	if ((strcmp(url->u_scheme, "ipc") == 0) ||
+	    (strcmp(url->u_scheme, "inproc") == 0)) {
+		if ((url->u_path = nni_strdup(s)) == NULL) {
+			rv = NNG_ENOMEM;
+			goto error;
+		}
+		*urlp = url;
+	}
 
 	// Look for host part (including colon).  Will be terminated by
 	// a path, or NUL.  May also include an "@", separating a user
 	// field.
-	s += len + 3; // strlen("://")
 	for (len = 0; (c = s[len]) != '/'; len++) {
 		if ((c == '\0') || (c == '#') || (c == '?')) {
 			break;
@@ -317,11 +336,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	// If the hostname part is just '*', skip over it.  (We treat it
 	// as an empty host for legacy nanomsg compatibility.  This may be
 	// non-RFC compliant, but we're really only interested in parsing
-	// nanomsg URLs.  One weird side effect of this is that some URLS
-	// which would be invalid (ipc://*/bogus for example) will now parse
-	// to something that might be surprising (ipc:///bogus now), for
-	// example -- although in the IPC case the URL is *always* a local
-	// path without any host component.
+	// nanomsg URLs.)
 	if (((len == 1) && (s[0] == '*')) ||
 	    ((len > 1) && (strncmp(s, "*:", 2) == 0))) {
 		s++;
