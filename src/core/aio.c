@@ -130,7 +130,21 @@ void
 nni_aio_fini(nni_aio *aio)
 {
 	if (aio != NULL) {
-		nni_aio_stop(aio);
+
+		nni_aio_cancelfn cancelfn;
+
+		// This is like aio_close, but we don't want to dispatch
+		// the task.  And unlike aio_stop, we don't want to wait
+		// for the task.  (Because we implicitly do task_fini.)
+		nni_mtx_lock(&nni_aio_lk);
+		cancelfn           = aio->a_prov_cancel;
+		aio->a_prov_cancel = NULL;
+		aio->a_stop        = true;
+		nni_mtx_unlock(&nni_aio_lk);
+
+		if (cancelfn != NULL) {
+			cancelfn(aio, NNG_ECLOSED);
+		}
 
 		// Wait for the aio to be "done"; this ensures that we don't
 		// destroy an aio from a "normal" completion callback while
@@ -138,6 +152,10 @@ nni_aio_fini(nni_aio *aio)
 
 		nni_mtx_lock(&nni_aio_lk);
 		while (nni_aio_expire_aio == aio) {
+			if (nni_thr_is_self(&nni_aio_expire_thr)) {
+				nni_aio_expire_aio = NULL;
+				break;
+			}
 			nni_cv_wait(&nni_aio_expire_cv);
 		}
 		nni_mtx_unlock(&nni_aio_lk);
