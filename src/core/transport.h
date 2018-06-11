@@ -105,10 +105,6 @@ struct nni_tran_ep_ops {
 	// not affect pipes that have already been created.  It is nonblocking.
 	void (*ep_close)(void *);
 
-	// ep_stop stops the endpoint, and *waits* for any outstanding
-	// aio operations to complete.
-	void (*ep_stop)(void *);
-
 	// ep_options is an array of endpoint options.  The final element must
 	// have a NULL name. If this member is NULL, then no transport specific
 	// options are available.

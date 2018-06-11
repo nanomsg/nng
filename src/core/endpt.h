@@ -21,7 +21,6 @@ extern void      nni_ep_rele(nni_ep *);
 extern uint32_t  nni_ep_id(nni_ep *);
 extern int       nni_ep_create_dialer(nni_ep **, nni_sock *, const char *);
 extern int       nni_ep_create_listener(nni_ep **, nni_sock *, const char *);
-extern void      nni_ep_stop(nni_ep *);
 extern int       nni_ep_shutdown(nni_ep *);
 extern void      nni_ep_close(nni_ep *);
 extern int       nni_ep_dial(nni_ep *, int);
