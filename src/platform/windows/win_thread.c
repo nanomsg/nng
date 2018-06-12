@@ -148,6 +148,15 @@ nni_plat_thr_is_self(nni_plat_thr *thr)
 static LONG plat_inited = 0;
 
 int
+nni_plat_ncpu(void)
+{
+	SYSTEM_INFO info;
+
+	GetSystemInfo(&info);
+	return ((int) (info.dwNumberOfProcessors));
+}
+
+int
 nni_plat_init(int (*helper)(void))
 {
 	int            rv   = 0;

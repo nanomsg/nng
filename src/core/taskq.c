@@ -261,11 +261,14 @@ nni_task_fini(nni_task *task)
 int
 nni_taskq_sys_init(void)
 {
-	int rv;
+	int nthrs;
 
-	// XXX: Make the "16" = NCPUs * 2
-	rv = nni_taskq_init(&nni_taskq_systq, 16);
-	return (rv);
+	nthrs = nni_plat_ncpu() * 2;
+	if (nthrs < 2) {
+		nthrs = 2;
+	}
+
+	return (nni_taskq_init(&nni_taskq_systq, nthrs));
 }
 
 void

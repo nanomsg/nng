@@ -190,6 +190,10 @@ extern int nni_plat_init(int (*)(void));
 // will be called until nni_platform_init is called.
 extern void nni_plat_fini(void);
 
+// nni_plat_ncpu returns the number of logical CPUs on the system.  This is
+// used to scale the number of independent threads started.
+extern int nni_plat_ncpu(void);
+
 //
 // TCP Support.
 //

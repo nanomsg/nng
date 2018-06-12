@@ -336,4 +336,16 @@ nni_plat_fini(void)
 	pthread_mutex_unlock(&nni_plat_init_lock);
 }
 
+int
+nni_plat_ncpu(void)
+{
+	// POSIX specifies sysconf exists, but not the value
+	// _SC_NPROCESSORS_ONLN.  Nonetheless, everybody implements it.
+	// If you don't we'll assume you only have a single logical CPU.
+#ifdef _SC_NPROCESSORS_ONLN
+	return (sysconf(_SC_NPROCESSORS_ONLN));
+#else
+	return (1);
+#endif
+}
 #endif // NNG_PLATFORM_POSIX
