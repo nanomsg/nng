@@ -37,23 +37,29 @@ static nni_aio *nni_aio_expire_aio;
 // as well as the expire list on the AIOs.  We will not permit an AIO
 // to be marked done if an expiration is outstanding.
 //
-// In order to synchronize with the expiration, we set a flag when we
-// are going to cancel due to expiration, and then let the expiration
-// thread dispatch the notification to the user (after ensuring that
-// the provider is done with the aio.)  This ensures that the completion
-// task will be dispatch *exactly* once, and only after nothing in
-// the provider or the framework is using it further.  (The consumer
-// will probably still be using, but if the consumer calls nni_aio_wait
-// or nni_aio_stop, then the consumer will have exclusive access to it.
-// Provided, of course, that the consumer does not reuse the aio for
-// another operation in the callback.)
+// In order to synchronize with the expiration, we record the aio as
+// expiring, and wait for that record to be cleared (or at least not
+// equal to the aio) before destroying it.
 //
-// In order to guard against aio reuse during teardown, we set a fini
+// The aio framework is tightly bound up with the taskq framework. We
+// "prepare" the task for an aio when a caller marks an aio as starting
+// (with nni_aio_begin), and that marks the task as bus. Then, all we have
+// to do is wait for the task to complete (the busy flag to be cleared)
+// when we want to know if the aio's operation itself is complete.
+//
+// In order to guard against aio reuse during teardown, we set the a_stop
 // flag.  Any attempt to initialize for a new operation after that point
 // will fail and the caller will get NNG_ECANCELED indicating this.  The
 // provider that calls nni_aio_begin() MUST check the return value, and
 // if it comes back nonzero (NNG_ECANCELED) then it must simply discard the
 // request and return.
+//
+// Calling nni_aio_wait waits for the current outstanding operation to
+// complete, but does not block another one from being started on the
+// same aio.  To synchronously stop the aio and prevent any further
+// operations from starting on it, call nni_aio_stop.  To prevent the
+// operations from starting, without waiting for any existing one to
+// complete, call nni_aio_close.
 
 // An nni_aio is an async I/O handle.
 struct nng_aio {
@@ -64,7 +70,6 @@ struct nng_aio {
 
 	// These fields are private to the aio framework.
 	bool      a_stop;    // shutting down (no new operations)
-	bool      a_closed;  // close called, but not fini (yet)
 	bool      a_sleep;   // sleeping with no action
 	int       a_sleeprv; // result when sleep wakes
 	nni_task *a_task;
@@ -231,7 +236,7 @@ nni_aio_close(nni_aio *aio)
 		nni_mtx_lock(&nni_aio_lk);
 		cancelfn           = aio->a_prov_cancel;
 		aio->a_prov_cancel = NULL;
-		aio->a_closed      = true;
+		aio->a_stop        = true;
 		nni_mtx_unlock(&nni_aio_lk);
 
 		if (cancelfn != NULL) {
@@ -333,11 +338,6 @@ nni_aio_begin(nni_aio *aio)
 	nni_mtx_lock(&nni_aio_lk);
 	// We should not reschedule anything at this point.
 	if (aio->a_stop) {
-		aio->a_result = NNG_ECANCELED;
-		nni_mtx_unlock(&nni_aio_lk);
-		return (NNG_ECANCELED);
-	}
-	if (aio->a_closed) {
 		aio->a_result = NNG_ECLOSED;
 		nni_mtx_unlock(&nni_aio_lk);
 		return (NNG_ECLOSED);
@@ -375,15 +375,9 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 	nni_mtx_lock(&nni_aio_lk);
 	if (aio->a_stop) {
 		nni_mtx_unlock(&nni_aio_lk);
-		return (NNG_ECANCELED);
-	}
-	if (aio->a_closed) {
-		nni_mtx_unlock(&nni_aio_lk);
 		return (NNG_ECLOSED);
 	}
 
-	// If cancellation occurred in between "begin" and "schedule",
-	// then cancel it right now.
 	aio->a_prov_cancel = cancelfn;
 	aio->a_prov_data   = data;
 	if (aio->a_expire != NNI_TIME_NEVER) {
