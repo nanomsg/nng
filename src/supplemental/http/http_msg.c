@@ -660,7 +660,7 @@ nni_http_res_get_version(nni_http_res *res)
 int
 nni_http_req_set_version(nni_http_req *req, const char *vers)
 {
-	if (strcmp(vers, "HTTP/1.1") == 0) {
+	if ((vers != NULL) && (strcmp(vers, "HTTP/1.1") == 0)) {
 		vers = NULL;
 	}
 	return (http_set_string(&req->vers, vers));
@@ -669,7 +669,7 @@ nni_http_req_set_version(nni_http_req *req, const char *vers)
 int
 nni_http_res_set_version(nni_http_res *res, const char *vers)
 {
-	if (strcmp(vers, "HTTP/1.1") == 0) {
+	if ((vers != NULL) && (strcmp(vers, "HTTP/1.1") == 0)) {
 		vers = NULL;
 	}
 	return (http_set_string(&res->vers, vers));
@@ -684,7 +684,7 @@ nni_http_req_set_uri(nni_http_req *req, const char *uri)
 int
 nni_http_req_set_method(nni_http_req *req, const char *meth)
 {
-	if (strcmp(meth, "GET") == 0) {
+	if ((meth != NULL) && (strcmp(meth, "GET") == 0)) {
 		meth = NULL;
 	}
 	return (http_set_string(&req->meth, meth));
@@ -981,7 +981,8 @@ nni_http_res_get_reason(nni_http_res *res)
 int
 nni_http_res_set_reason(nni_http_res *res, const char *reason)
 {
-	if (strcmp(reason, http_reason(res->code)) == 0) {
+	if ((reason != NULL) &&
+	    (strcmp(reason, http_reason(res->code)) == 0)) {
 		reason = NULL;
 	}
 	return (http_set_string(&res->rsn, reason));
