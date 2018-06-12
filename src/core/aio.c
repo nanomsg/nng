@@ -337,6 +337,11 @@ nni_aio_begin(nni_aio *aio)
 		nni_mtx_unlock(&nni_aio_lk);
 		return (NNG_ECANCELED);
 	}
+	if (aio->a_closed) {
+		aio->a_result = NNG_ECLOSED;
+		nni_mtx_unlock(&nni_aio_lk);
+		return (NNG_ECLOSED);
+	}
 	aio->a_result      = 0;
 	aio->a_count       = 0;
 	aio->a_prov_cancel = NULL;
@@ -345,14 +350,6 @@ nni_aio_begin(nni_aio *aio)
 		aio->a_outputs[i] = NULL;
 	}
 	nni_task_prep(aio->a_task);
-	if (aio->a_closed) {
-		aio->a_result = NNG_ECLOSED;
-		aio->a_expire = NNI_TIME_NEVER;
-		aio->a_sleep  = false;
-		nni_mtx_unlock(&nni_aio_lk);
-		nni_task_dispatch(aio->a_task);
-		return (NNG_ECLOSED);
-	}
 	nni_mtx_unlock(&nni_aio_lk);
 	return (0);
 }
