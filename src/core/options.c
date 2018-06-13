@@ -14,11 +14,11 @@
 #include <string.h>
 
 int
-nni_copyin_ms(nni_duration *dp, const void *v, size_t sz, int typ)
+nni_copyin_ms(nni_duration *dp, const void *v, size_t sz, nni_opt_type t)
 {
 	nni_duration dur;
 
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_DURATION:
 		dur = *(nng_duration *) v;
 		break;
@@ -35,22 +35,28 @@ nni_copyin_ms(nni_duration *dp, const void *v, size_t sz, int typ)
 	if (dur < -1) {
 		return (NNG_EINVAL);
 	}
-	*dp = dur;
+	if (dp != NULL) {
+		*dp = dur;
+	}
 	return (0);
 }
 
 int
-nni_copyin_bool(bool *bp, const void *v, size_t sz, int typ)
+nni_copyin_bool(bool *bp, const void *v, size_t sz, nni_opt_type t)
 {
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_BOOL:
-		*bp = *(bool *) v;
+		if (bp != NULL) {
+			*bp = *(bool *) v;
+		}
 		break;
 	case NNI_TYPE_OPAQUE:
 		if (sz != sizeof(bool)) {
 			return (NNG_EINVAL);
 		}
-		memcpy(bp, v, sz);
+		if (bp != NULL) {
+			memcpy(bp, v, sz);
+		}
 		break;
 	default:
 		return (NNG_EBADTYPE);
@@ -60,11 +66,12 @@ nni_copyin_bool(bool *bp, const void *v, size_t sz, int typ)
 }
 
 int
-nni_copyin_int(int *ip, const void *v, size_t sz, int minv, int maxv, int typ)
+nni_copyin_int(
+    int *ip, const void *v, size_t sz, int minv, int maxv, nni_opt_type t)
 {
 	int i;
 
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_INT32:
 		i = *(int *) v;
 		break;
@@ -83,17 +90,19 @@ nni_copyin_int(int *ip, const void *v, size_t sz, int minv, int maxv, int typ)
 	if (i < minv) {
 		return (NNG_EINVAL);
 	}
-	*ip = i;
+	if (ip != NULL) {
+		*ip = i;
+	}
 	return (0);
 }
 
 int
-nni_copyin_size(
-    size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv, int typ)
+nni_copyin_size(size_t *sp, const void *v, size_t sz, size_t minv, size_t maxv,
+    nni_opt_type t)
 {
 	size_t val;
 
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_SIZE:
 		val = *(size_t *) v;
 		break;
@@ -111,16 +120,18 @@ nni_copyin_size(
 	if ((val > maxv) || (val < minv)) {
 		return (NNG_EINVAL);
 	}
-	*sp = val;
+	if (sp != NULL) {
+		*sp = val;
+	}
 	return (0);
 }
 
 int
-nni_copyin_ptr(void **pp, const void *v, size_t sz, int typ)
+nni_copyin_ptr(void **pp, const void *v, size_t sz, nni_opt_type t)
 {
 	void *p;
 
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_POINTER:
 		p = *(void **) v;
 		break;
@@ -133,16 +144,18 @@ nni_copyin_ptr(void **pp, const void *v, size_t sz, int typ)
 	default:
 		return (NNG_EBADTYPE);
 	}
-	*pp = p;
+	if (pp != NULL) {
+		*pp = p;
+	}
 	return (0);
 }
 
 int
-nni_copyin_str(char *s, const void *v, size_t sz, size_t maxsz, int typ)
+nni_copyin_str(char *s, const void *v, size_t sz, size_t maxsz, nni_opt_type t)
 {
 	size_t z;
 
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_STRING:
 		z = strlen(v) + 1;
 		NNI_ASSERT(sz == z);
@@ -158,16 +171,18 @@ nni_copyin_str(char *s, const void *v, size_t sz, size_t maxsz, int typ)
 	if (z > maxsz) {
 		return (NNG_EINVAL); // too long
 	}
-	memcpy(s, v, z);
+	if (s != NULL) {
+		memcpy(s, v, z);
+	}
 	return (0);
 }
 
 int
-nni_copyin_u64(uint64_t *up, const void *v, size_t sz, int typ)
+nni_copyin_u64(uint64_t *up, const void *v, size_t sz, nni_opt_type t)
 {
 	uint64_t u;
 
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_UINT64:
 		u = *(uint64_t *) v;
 		break;
@@ -180,7 +195,9 @@ nni_copyin_u64(uint64_t *up, const void *v, size_t sz, int typ)
 	default:
 		return (NNG_EBADTYPE);
 	}
-	*up = u;
+	if (up != NULL) {
+		*up = u;
+	}
 	return (0);
 }
 
@@ -202,9 +219,9 @@ nni_copyout(const void *src, size_t srcsz, void *dst, size_t *dstszp)
 }
 
 int
-nni_copyout_bool(bool b, void *dst, size_t *szp, int typ)
+nni_copyout_bool(bool b, void *dst, size_t *szp, nni_opt_type t)
 {
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_BOOL:
 		NNI_ASSERT(*szp == sizeof(b));
 		*(bool *) dst = b;
@@ -217,9 +234,9 @@ nni_copyout_bool(bool b, void *dst, size_t *szp, int typ)
 }
 
 int
-nni_copyout_int(int i, void *dst, size_t *szp, int typ)
+nni_copyout_int(int i, void *dst, size_t *szp, nni_opt_type t)
 {
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_INT32:
 		NNI_ASSERT(*szp == sizeof(i));
 		*(int *) dst = i;
@@ -232,9 +249,9 @@ nni_copyout_int(int i, void *dst, size_t *szp, int typ)
 }
 
 int
-nni_copyout_ms(nng_duration d, void *dst, size_t *szp, int typ)
+nni_copyout_ms(nng_duration d, void *dst, size_t *szp, nni_opt_type t)
 {
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_DURATION:
 		NNI_ASSERT(*szp == sizeof(d));
 		*(nng_duration *) dst = d;
@@ -247,9 +264,9 @@ nni_copyout_ms(nng_duration d, void *dst, size_t *szp, int typ)
 }
 
 int
-nni_copyout_ptr(void *p, void *dst, size_t *szp, int typ)
+nni_copyout_ptr(void *p, void *dst, size_t *szp, nni_opt_type t)
 {
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_POINTER:
 		NNI_ASSERT(*szp == sizeof(p));
 		*(void **) dst = p;
@@ -262,9 +279,9 @@ nni_copyout_ptr(void *p, void *dst, size_t *szp, int typ)
 }
 
 int
-nni_copyout_size(size_t s, void *dst, size_t *szp, int typ)
+nni_copyout_size(size_t s, void *dst, size_t *szp, nni_opt_type t)
 {
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_SIZE:
 		NNI_ASSERT(*szp == sizeof(s));
 		*(size_t *) dst = s;
@@ -277,9 +294,10 @@ nni_copyout_size(size_t s, void *dst, size_t *szp, int typ)
 }
 
 int
-nni_copyout_sockaddr(const nng_sockaddr *sap, void *dst, size_t *szp, int typ)
+nni_copyout_sockaddr(
+    const nng_sockaddr *sap, void *dst, size_t *szp, nni_opt_type t)
 {
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_SOCKADDR:
 		NNI_ASSERT(*szp == sizeof(*sap));
 		*(nng_sockaddr *) dst = *sap;
@@ -292,9 +310,9 @@ nni_copyout_sockaddr(const nng_sockaddr *sap, void *dst, size_t *szp, int typ)
 }
 
 int
-nni_copyout_u64(uint64_t u, void *dst, size_t *szp, int typ)
+nni_copyout_u64(uint64_t u, void *dst, size_t *szp, nni_opt_type t)
 {
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_UINT64:
 		NNI_ASSERT(*szp == sizeof(u));
 		*(uint64_t *) dst = u;
@@ -307,11 +325,11 @@ nni_copyout_u64(uint64_t u, void *dst, size_t *szp, int typ)
 }
 
 int
-nni_copyout_str(const char *str, void *dst, size_t *szp, int typ)
+nni_copyout_str(const char *str, void *dst, size_t *szp, nni_opt_type t)
 {
 	char *s;
 
-	switch (typ) {
+	switch (t) {
 	case NNI_TYPE_STRING:
 		NNI_ASSERT(*szp == sizeof(char *));
 		if ((s = nni_strdup(str)) == NULL) {

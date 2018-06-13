@@ -177,7 +177,7 @@ nni_inproc_pipe_peer(void *arg)
 }
 
 static int
-nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, int typ)
+nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	nni_inproc_pipe *p = arg;
 	nni_sockaddr     sa;
@@ -185,7 +185,7 @@ nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, int typ)
 	memset(&sa, 0, sizeof(sa));
 	sa.s_inproc.sa_family = NNG_AF_INPROC;
 	nni_strlcpy(sa.s_inproc.sa_name, p->addr, sizeof(sa.s_inproc.sa_name));
-	return (nni_copyout_sockaddr(&sa, buf, szp, typ));
+	return (nni_copyout_sockaddr(&sa, buf, szp, t));
 }
 
 static int
@@ -435,20 +435,20 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
-static nni_tran_pipe_option nni_inproc_pipe_options[] = {
+static nni_tran_option nni_inproc_pipe_options[] = {
 	{
-	    .po_name   = NNG_OPT_LOCADDR,
-	    .po_type   = NNI_TYPE_SOCKADDR,
-	    .po_getopt = nni_inproc_pipe_get_addr,
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = nni_inproc_pipe_get_addr,
 	},
 	{
-	    .po_name   = NNG_OPT_REMADDR,
-	    .po_type   = NNI_TYPE_SOCKADDR,
-	    .po_getopt = nni_inproc_pipe_get_addr,
+	    .o_name = NNG_OPT_REMADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = nni_inproc_pipe_get_addr,
 	},
 	// terminate list
 	{
-	    .po_name = NULL,
+	    .o_name = NULL,
 	},
 };
 
@@ -461,10 +461,10 @@ static nni_tran_pipe_ops nni_inproc_pipe_ops = {
 	.p_options = nni_inproc_pipe_options,
 };
 
-static nni_tran_ep_option nni_inproc_ep_options[] = {
+static nni_tran_option nni_inproc_ep_options[] = {
 	// terminate list
 	{
-	    .eo_name = NULL,
+	    .o_name = NULL,
 	},
 };
 

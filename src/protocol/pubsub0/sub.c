@@ -194,12 +194,12 @@ sub0_recv_cb(void *arg)
 // to replace this with a patricia trie, like old nanomsg had.
 
 static int
-sub0_subscribe(void *arg, const void *buf, size_t sz, int typ)
+sub0_subscribe(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	sub0_sock * s = arg;
 	sub0_topic *topic;
 	sub0_topic *newtopic;
-	NNI_ARG_UNUSED(typ);
+	NNI_ARG_UNUSED(t);
 
 	nni_mtx_lock(&s->lk);
 	NNI_LIST_FOREACH (&s->topics, topic) {
@@ -245,12 +245,12 @@ sub0_subscribe(void *arg, const void *buf, size_t sz, int typ)
 }
 
 static int
-sub0_unsubscribe(void *arg, const void *buf, size_t sz, int typ)
+sub0_unsubscribe(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	sub0_sock * s = arg;
 	sub0_topic *topic;
 	int         rv;
-	NNI_ARG_UNUSED(typ);
+	NNI_ARG_UNUSED(t);
 
 	nni_mtx_lock(&s->lk);
 	NNI_LIST_FOREACH (&s->topics, topic) {
@@ -348,22 +348,20 @@ static nni_proto_pipe_ops sub0_pipe_ops = {
 	.pipe_stop  = sub0_pipe_stop,
 };
 
-static nni_proto_sock_option sub0_sock_options[] = {
+static nni_proto_option sub0_sock_options[] = {
 	{
-	    .pso_name   = NNG_OPT_SUB_SUBSCRIBE,
-	    .pso_type   = NNI_TYPE_OPAQUE,
-	    .pso_getopt = NULL,
-	    .pso_setopt = sub0_subscribe,
+	    .o_name = NNG_OPT_SUB_SUBSCRIBE,
+	    .o_type = NNI_TYPE_OPAQUE,
+	    .o_set  = sub0_subscribe,
 	},
 	{
-	    .pso_name   = NNG_OPT_SUB_UNSUBSCRIBE,
-	    .pso_type   = NNI_TYPE_OPAQUE,
-	    .pso_getopt = NULL,
-	    .pso_setopt = sub0_unsubscribe,
+	    .o_name = NNG_OPT_SUB_UNSUBSCRIBE,
+	    .o_type = NNI_TYPE_OPAQUE,
+	    .o_set  = sub0_unsubscribe,
 	},
 	// terminate list
 	{
-	    .pso_name = NULL,
+	    .o_name = NULL,
 	},
 };
 

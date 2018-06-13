@@ -268,17 +268,17 @@ xreq0_sock_recv(void *arg, nni_aio *aio)
 }
 
 static int
-xreq0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
+xreq0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	xreq0_sock *s = arg;
-	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, typ));
+	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, t));
 }
 
 static int
-xreq0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp, int typ)
+xreq0_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	xreq0_sock *s = arg;
-	return (nni_copyout_int(s->ttl, buf, szp, typ));
+	return (nni_copyout_int(s->ttl, buf, szp, t));
 }
 
 static nni_proto_pipe_ops xreq0_pipe_ops = {
@@ -289,16 +289,16 @@ static nni_proto_pipe_ops xreq0_pipe_ops = {
 	.pipe_stop  = xreq0_pipe_stop,
 };
 
-static nni_proto_sock_option xreq0_sock_options[] = {
+static nni_proto_option xreq0_sock_options[] = {
 	{
-	    .pso_name   = NNG_OPT_MAXTTL,
-	    .pso_type   = NNI_TYPE_INT32,
-	    .pso_getopt = xreq0_sock_getopt_maxttl,
-	    .pso_setopt = xreq0_sock_setopt_maxttl,
+	    .o_name = NNG_OPT_MAXTTL,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = xreq0_sock_get_maxttl,
+	    .o_set  = xreq0_sock_set_maxttl,
 	},
 	// terminate list
 	{
-	    .pso_name = NULL,
+	    .o_name = NULL,
 	},
 };
 

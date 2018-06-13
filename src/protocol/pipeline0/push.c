@@ -228,10 +228,10 @@ static nni_proto_pipe_ops push0_pipe_ops = {
 	.pipe_stop  = push0_pipe_stop,
 };
 
-static nni_proto_sock_option push0_sock_options[] = {
+static nni_proto_option push0_sock_options[] = {
 	// terminate list
 	{
-	    .pso_name = NULL,
+	    .o_name = NULL,
 	},
 };
 

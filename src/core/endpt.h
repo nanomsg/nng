@@ -26,12 +26,14 @@ extern void      nni_ep_close(nni_ep *);
 extern int       nni_ep_dial(nni_ep *, int);
 extern int       nni_ep_listen(nni_ep *, int);
 extern void      nni_ep_list_init(nni_list *);
-extern int  nni_ep_setopt(nni_ep *, const char *, const void *, size_t, int);
-extern int  nni_ep_getopt(nni_ep *, const char *, void *, size_t *, int);
-extern int  nni_ep_opttype(nni_ep *, const char *, int *);
-extern int  nni_ep_pipe_add(nni_ep *ep, nni_pipe *);
-extern void nni_ep_pipe_remove(nni_ep *, nni_pipe *);
-extern int  nni_ep_mode(nni_ep *);
+extern int       nni_ep_pipe_add(nni_ep *ep, nni_pipe *);
+extern void      nni_ep_pipe_remove(nni_ep *, nni_pipe *);
+extern int       nni_ep_mode(nni_ep *);
+
+extern int nni_ep_setopt(
+    nni_ep *, const char *, const void *, size_t, nni_opt_type);
+extern int nni_ep_getopt(
+    nni_ep *, const char *, void *, size_t *, nni_opt_type);
 
 // Endpoint modes.  Currently used by transports.  Remove this when we make
 // transport dialers and listeners explicit.

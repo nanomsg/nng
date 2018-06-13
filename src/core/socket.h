@@ -29,12 +29,13 @@ extern void *      nni_sock_proto_data(nni_sock *);
 extern struct nni_proto_pipe_ops *nni_sock_proto_pipe_ops(nni_sock *);
 
 extern int nni_sock_setopt(
-    nni_sock *, const char *, const void *, size_t, int);
-extern int  nni_sock_getopt(nni_sock *, const char *, void *, size_t *, int);
-extern int  nni_sock_recvmsg(nni_sock *, nni_msg **, int);
-extern int  nni_sock_sendmsg(nni_sock *, nni_msg *, int);
-extern void nni_sock_send(nni_sock *, nni_aio *);
-extern void nni_sock_recv(nni_sock *, nni_aio *);
+    nni_sock *, const char *, const void *, size_t, nni_opt_type);
+extern int nni_sock_getopt(
+    nni_sock *, const char *, void *, size_t *, nni_opt_type);
+extern int      nni_sock_recvmsg(nni_sock *, nni_msg **, int);
+extern int      nni_sock_sendmsg(nni_sock *, nni_msg *, int);
+extern void     nni_sock_send(nni_sock *, nni_aio *);
+extern void     nni_sock_recv(nni_sock *, nni_aio *);
 extern uint32_t nni_sock_id(nni_sock *);
 
 // nni_sock_pipe_add adds the pipe to the socket. It is called by
@@ -114,9 +115,11 @@ extern void nni_ctx_recv(nni_ctx *, nni_aio *);
 extern void nni_ctx_send(nni_ctx *, nni_aio *);
 
 // nni_ctx_getopt is used to get a context option.
-extern int nni_ctx_getopt(nni_ctx *, const char *, void *, size_t *, int);
+extern int nni_ctx_getopt(
+    nni_ctx *, const char *, void *, size_t *, nni_opt_type);
 
 // nni_ctx_setopt is used to set a context option.
-extern int nni_ctx_setopt(nni_ctx *, const char *, const void *, size_t, int);
+extern int nni_ctx_setopt(
+    nni_ctx *, const char *, const void *, size_t, nni_opt_type);
 
 #endif // CORE_SOCKET_H

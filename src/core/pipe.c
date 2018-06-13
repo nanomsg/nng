@@ -359,18 +359,19 @@ nni_pipe_create(nni_ep *ep, void *tdata)
 }
 
 int
-nni_pipe_getopt(nni_pipe *p, const char *name, void *val, size_t *szp, int typ)
+nni_pipe_getopt(
+    nni_pipe *p, const char *name, void *val, size_t *szp, nni_opt_type t)
 {
-	nni_tran_pipe_option *po;
+	nni_tran_option *o;
 
-	for (po = p->p_tran_ops.p_options; po && po->po_name; po++) {
-		if (strcmp(po->po_name, name) != 0) {
+	for (o = p->p_tran_ops.p_options; o && o->o_name; o++) {
+		if (strcmp(o->o_name, name) != 0) {
 			continue;
 		}
-		return (po->po_getopt(p->p_tran_data, val, szp, typ));
+		return (o->o_get(p->p_tran_data, val, szp, t));
 	}
 	// Maybe the endpoint knows?
-	return (nni_ep_getopt(p->p_ep, name, val, szp, typ));
+	return (nni_ep_getopt(p->p_ep, name, val, szp, t));
 }
 
 void

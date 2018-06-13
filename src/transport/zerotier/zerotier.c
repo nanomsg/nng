@@ -1932,8 +1932,8 @@ zt_pipe_peer(void *arg)
 }
 
 static int
-zt_getopt_nw_status(
-    zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, int typ)
+zt_get_nw_status(
+    zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, nni_opt_type t)
 {
 	ZT_VirtualNetworkConfig *vcfg;
 	int                      status;
@@ -1970,11 +1970,12 @@ zt_getopt_nw_status(
 	ZT_Node_freeQueryResult(ztn->zn_znode, vcfg);
 	nni_mtx_unlock(&zt_lk);
 
-	return (nni_copyout_int(status, buf, szp, typ));
+	return (nni_copyout_int(status, buf, szp, t));
 }
 
 static int
-zt_getopt_nw_name(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, int typ)
+zt_get_nw_name(
+    zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, nni_opt_type t)
 {
 	ZT_VirtualNetworkConfig *vcfg;
 	int                      rv;
@@ -1986,7 +1987,7 @@ zt_getopt_nw_name(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, int typ)
 		return (NNG_ECLOSED);
 	}
 
-	rv = nni_copyout_str(vcfg->name, buf, szp, typ);
+	rv = nni_copyout_str(vcfg->name, buf, szp, t);
 	ZT_Node_freeQueryResult(ztn->zn_znode, vcfg);
 	nni_mtx_unlock(&zt_lk);
 
@@ -1994,24 +1995,24 @@ zt_getopt_nw_name(zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, int typ)
 }
 
 static int
-zt_pipe_get_recvmaxsz(void *arg, void *buf, size_t *szp, int typ)
+zt_pipe_get_recvmaxsz(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	zt_pipe *p = arg;
-	return (nni_copyout_size(p->zp_rcvmax, buf, szp, typ));
+	return (nni_copyout_size(p->zp_rcvmax, buf, szp, t));
 }
 
 static int
-zt_pipe_get_nwid(void *arg, void *buf, size_t *szp, int typ)
+zt_pipe_get_nwid(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	zt_pipe *p = arg;
-	return (nni_copyout_u64(p->zp_nwid, buf, szp, typ));
+	return (nni_copyout_u64(p->zp_nwid, buf, szp, t));
 }
 
 static int
-zt_pipe_get_node(void *arg, void *buf, size_t *szp, int typ)
+zt_pipe_get_node(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	zt_pipe *p = arg;
-	return (nni_copyout_u64(p->zp_laddr >> 24, buf, szp, typ));
+	return (nni_copyout_u64(p->zp_laddr >> 24, buf, szp, t));
 }
 
 static void
@@ -2574,66 +2575,77 @@ zt_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-zt_ep_setopt_recvmaxsz(void *arg, const void *data, size_t sz, int typ)
+zt_ep_chk_recvmaxsz(const void *v, size_t sz, nni_opt_type t)
+{
+	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
+}
+
+static int
+zt_ep_set_recvmaxsz(void *arg, const void *data, size_t sz, nni_opt_type t)
 {
 	zt_ep *ep = arg;
 	size_t val;
 	int    rv;
 
-	rv = nni_copyin_size(&val, data, sz, 0, 0xffffffffu, typ);
-	if ((rv == 0) && (ep != NULL)) {
+	if ((rv = nni_copyin_size(&val, data, sz, 0, NNI_MAXSZ, t)) == 0) {
 		ep->ze_rcvmax = val;
 	}
 	return (rv);
 }
 
 static int
-zt_ep_getopt_recvmaxsz(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_recvmaxsz(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (nni_copyout_size(ep->ze_rcvmax, data, szp, typ));
+	return (nni_copyout_size(ep->ze_rcvmax, data, szp, t));
 }
 
 static int
-zt_ep_setopt_home(void *arg, const void *data, size_t sz, int typ)
+zt_ep_chk_string(const void *data, size_t sz, nni_opt_type t)
 {
 	size_t len;
-	int    rv;
-	zt_ep *ep = arg;
 
-	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
+	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
 		return (NNG_EBADTYPE);
 	}
-
 	len = nni_strnlen(data, sz);
 	if ((len >= sz) || (len >= NNG_MAXADDRLEN)) {
 		return (NNG_EINVAL);
 	}
-	if (ep != NULL) {
+	return (0);
+}
+
+static int
+zt_ep_set_home(void *arg, const void *data, size_t sz, nni_opt_type t)
+{
+	int    rv;
+	zt_ep *ep = arg;
+
+	if ((rv = zt_ep_chk_string(data, sz, t)) == 0) {
 		if (ep->ze_running) {
-			return (NNG_ESTATE);
+			rv = NNG_ESTATE;
+		} else {
+			nni_mtx_lock(&zt_lk);
+			nni_strlcpy(ep->ze_home, data, sizeof(ep->ze_home));
+			if ((rv = zt_node_find(ep)) != 0) {
+				ep->ze_ztn = NULL;
+			}
+			nni_mtx_unlock(&zt_lk);
 		}
-		nni_mtx_lock(&zt_lk);
-		nni_strlcpy(ep->ze_home, data, sizeof(ep->ze_home));
-		if ((rv = zt_node_find(ep)) != 0) {
-			ep->ze_ztn = NULL;
-		}
-		nni_mtx_unlock(&zt_lk);
-	} else {
-		rv = 0;
 	}
+
 	return (rv);
 }
 
 static int
-zt_ep_getopt_home(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_home(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (nni_copyout_str(ep->ze_home, data, szp, typ));
+	return (nni_copyout_str(ep->ze_home, data, szp, t));
 }
 
 static int
-zt_ep_getopt_url(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_url(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	char     ustr[64]; // more than plenty
 	zt_ep *  ep = arg;
@@ -2644,18 +2656,14 @@ zt_ep_getopt_url(void *arg, void *data, size_t *szp, int typ)
 	    (unsigned long long) addr >> zt_port_shift,
 	    (unsigned long long) ep->ze_nwid,
 	    (unsigned) (addr & zt_port_mask));
-	return (nni_copyout_str(ustr, data, szp, typ));
+	return (nni_copyout_str(ustr, data, szp, t));
 }
 
 static int
-zt_ep_setopt_orbit(void *arg, const void *data, size_t sz, int typ)
+zt_ep_chk_orbit(const void *data, size_t sz, nni_opt_type t)
 {
-	uint64_t           moonid;
-	uint64_t           peerid;
-	zt_ep *            ep = arg;
-	enum ZT_ResultCode zrv;
-
-	switch (typ) {
+	NNI_ARG_UNUSED(data);
+	switch (t) {
 	case NNI_TYPE_UINT64:
 		NNI_ASSERT(sz == sizeof(uint64_t));
 		break;
@@ -2667,6 +2675,21 @@ zt_ep_setopt_orbit(void *arg, const void *data, size_t sz, int typ)
 		break;
 	default:
 		return (NNG_EBADTYPE);
+	}
+	return (0);
+}
+
+static int
+zt_ep_set_orbit(void *arg, const void *data, size_t sz, nni_opt_type t)
+{
+	uint64_t           moonid;
+	uint64_t           peerid;
+	zt_ep *            ep = arg;
+	int                rv;
+	enum ZT_ResultCode zrv;
+
+	if ((rv = zt_ep_chk_orbit(data, sz, t)) != 0) {
+		return (rv);
 	}
 
 	if (sz == sizeof(uint64_t)) {
@@ -2687,15 +2710,20 @@ zt_ep_setopt_orbit(void *arg, const void *data, size_t sz, int typ)
 }
 
 static int
-zt_ep_setopt_deorbit(void *arg, const void *data, size_t sz, int typ)
+zt_ep_chk_deorbit(const void *data, size_t sz, nni_opt_type t)
+{
+	return (nni_copyin_u64(NULL, data, sz, t));
+}
+
+static int
+zt_ep_set_deorbit(void *arg, const void *data, size_t sz, nni_opt_type t)
 {
 	uint64_t           moonid;
 	zt_ep *            ep = arg;
 	enum ZT_ResultCode zrv;
 	int                rv;
 
-	rv = nni_copyin_u64(&moonid, data, sz, typ);
-	if ((rv == 0) && (ep != NULL)) {
+	if ((rv = nni_copyin_u64(&moonid, data, sz, t)) == 0) {
 
 		nni_mtx_lock(&zt_lk);
 		zrv = ZT_Node_deorbit(ep->ze_ztn->zn_znode, NULL, moonid);
@@ -2707,117 +2735,127 @@ zt_ep_setopt_deorbit(void *arg, const void *data, size_t sz, int typ)
 }
 
 static int
-zt_ep_getopt_node(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_node(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (nni_copyout_u64(ep->ze_ztn->zn_self, data, szp, typ));
+	return (nni_copyout_u64(ep->ze_ztn->zn_self, data, szp, t));
 }
 
 static int
-zt_ep_getopt_nwid(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_nwid(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (nni_copyout_u64(ep->ze_nwid, data, szp, typ));
+	return (nni_copyout_u64(ep->ze_nwid, data, szp, t));
 }
 
 static int
-zt_ep_getopt_nw_name(void *arg, void *buf, size_t *szp, int typ)
+zt_ep_get_nw_name(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (zt_getopt_nw_name(ep->ze_ztn, ep->ze_nwid, buf, szp, typ));
+	return (zt_get_nw_name(ep->ze_ztn, ep->ze_nwid, buf, szp, t));
 }
 
 static int
-zt_ep_getopt_nw_status(void *arg, void *buf, size_t *szp, int typ)
+zt_ep_get_nw_status(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (zt_getopt_nw_status(ep->ze_ztn, ep->ze_nwid, buf, szp, typ));
+	return (zt_get_nw_status(ep->ze_ztn, ep->ze_nwid, buf, szp, t));
 }
 
 static int
-zt_ep_setopt_ping_time(void *arg, const void *data, size_t sz, int typ)
+zt_ep_chk_time(const void *data, size_t sz, nni_opt_type t)
+{
+	return (nni_copyin_ms(NULL, data, sz, t));
+}
+
+static int
+zt_ep_set_ping_time(void *arg, const void *data, size_t sz, nni_opt_type t)
 {
 	zt_ep *      ep = arg;
 	nng_duration val;
 	int          rv;
 
-	if (((rv = nni_copyin_ms(&val, data, sz, typ)) == 0) && (ep != NULL)) {
+	if ((rv = nni_copyin_ms(&val, data, sz, t)) == 0) {
 		ep->ze_ping_time = val;
 	}
 	return (rv);
 }
 
 static int
-zt_ep_getopt_ping_time(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_ping_time(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (nni_copyout_ms(ep->ze_ping_time, data, szp, typ));
+	return (nni_copyout_ms(ep->ze_ping_time, data, szp, t));
 }
 
 static int
-zt_ep_setopt_ping_tries(void *arg, const void *data, size_t sz, int typ)
+zt_ep_chk_tries(const void *data, size_t sz, nni_opt_type t)
+{
+	return (nni_copyin_int(NULL, data, sz, 0, 1000000, t));
+}
+
+static int
+zt_ep_set_ping_tries(void *arg, const void *data, size_t sz, nni_opt_type t)
 {
 	zt_ep *ep = arg;
 	int    val;
 	int    rv;
 
-	if (((rv = nni_copyin_int(&val, data, sz, 0, 1000000, typ)) == 0) &&
-	    (ep != NULL)) {
+	if ((rv = nni_copyin_int(&val, data, sz, 0, 1000000, t)) == 0) {
 		ep->ze_ping_tries = val;
 	}
 	return (rv);
 }
 
 static int
-zt_ep_getopt_ping_tries(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_ping_tries(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (nni_copyout_int(ep->ze_ping_tries, data, szp, typ));
+	return (nni_copyout_int(ep->ze_ping_tries, data, szp, t));
 }
 
 static int
-zt_ep_setopt_conn_time(void *arg, const void *data, size_t sz, int typ)
+zt_ep_set_conn_time(void *arg, const void *data, size_t sz, nni_opt_type t)
 {
 	zt_ep *      ep = arg;
 	nng_duration val;
 	int          rv;
 
-	if (((rv = nni_copyin_ms(&val, data, sz, typ)) == 0) && (ep != NULL)) {
+	if ((rv = nni_copyin_ms(&val, data, sz, t)) == 0) {
 		ep->ze_conn_time = val;
 	}
 	return (rv);
 }
 
 static int
-zt_ep_getopt_conn_time(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_conn_time(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (nni_copyout_ms(ep->ze_conn_time, data, szp, typ));
+	return (nni_copyout_ms(ep->ze_conn_time, data, szp, t));
 }
 
 static int
-zt_ep_setopt_conn_tries(void *arg, const void *data, size_t sz, int typ)
+zt_ep_set_conn_tries(void *arg, const void *data, size_t sz, nni_opt_type t)
 {
 	zt_ep *ep = arg;
 	int    val;
 	int    rv;
 
-	if (((rv = nni_copyin_int(&val, data, sz, 0, 1000000, typ)) == 0) &&
-	    (ep != NULL)) {
+	if ((rv = nni_copyin_int(&val, data, sz, 0, 1000000, t)) == 0) {
 		ep->ze_conn_tries = val;
 	}
 	return (rv);
 }
 
 static int
-zt_ep_getopt_conn_tries(void *arg, void *data, size_t *szp, int typ)
+zt_ep_get_conn_tries(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (nni_copyout_int(ep->ze_conn_tries, data, szp, typ));
+	return (nni_copyout_int(ep->ze_conn_tries, data, szp, t));
 }
 
 static int
-zt_pipe_getopt_locaddr(void *arg, void *data, size_t *szp, int typ)
+zt_pipe_get_locaddr(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_pipe *    p = arg;
 	nng_sockaddr sa;
@@ -2827,11 +2865,11 @@ zt_pipe_getopt_locaddr(void *arg, void *data, size_t *szp, int typ)
 	sa.s_zt.sa_nwid   = p->zp_nwid;
 	sa.s_zt.sa_nodeid = p->zp_laddr >> zt_port_shift;
 	sa.s_zt.sa_port   = p->zp_laddr & zt_port_mask;
-	return (nni_copyout_sockaddr(&sa, data, szp, typ));
+	return (nni_copyout_sockaddr(&sa, data, szp, t));
 }
 
 static int
-zt_pipe_getopt_remaddr(void *arg, void *data, size_t *szp, int typ)
+zt_pipe_get_remaddr(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_pipe *    p = arg;
 	nng_sockaddr sa;
@@ -2841,50 +2879,50 @@ zt_pipe_getopt_remaddr(void *arg, void *data, size_t *szp, int typ)
 	sa.s_zt.sa_nwid   = p->zp_nwid;
 	sa.s_zt.sa_nodeid = p->zp_raddr >> zt_port_shift;
 	sa.s_zt.sa_port   = p->zp_raddr & zt_port_mask;
-	return (nni_copyout_sockaddr(&sa, data, szp, typ));
+	return (nni_copyout_sockaddr(&sa, data, szp, t));
 }
 
 static int
-zt_pipe_getopt_mtu(void *arg, void *data, size_t *szp, int typ)
+zt_pipe_get_mtu(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_pipe *p = arg;
-	return (nni_copyout_size(p->zp_mtu, data, szp, typ));
+	return (nni_copyout_size(p->zp_mtu, data, szp, t));
 }
 
-static nni_tran_pipe_option zt_pipe_options[] = {
+static nni_tran_option zt_pipe_options[] = {
 	{
-	    .po_name   = NNG_OPT_LOCADDR,
-	    .po_type   = NNI_TYPE_SOCKADDR,
-	    .po_getopt = zt_pipe_getopt_locaddr,
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = zt_pipe_get_locaddr,
 	},
 	{
-	    .po_name   = NNG_OPT_REMADDR,
-	    .po_type   = NNI_TYPE_SOCKADDR,
-	    .po_getopt = zt_pipe_getopt_remaddr,
+	    .o_name = NNG_OPT_REMADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = zt_pipe_get_remaddr,
 	},
 	{
-	    .po_name   = NNG_OPT_ZT_MTU,
-	    .po_type   = NNI_TYPE_SIZE,
-	    .po_getopt = zt_pipe_getopt_mtu,
+	    .o_name = NNG_OPT_ZT_MTU,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = zt_pipe_get_mtu,
 	},
 	{
-	    .po_name   = NNG_OPT_ZT_NWID,
-	    .po_type   = NNI_TYPE_UINT64,
-	    .po_getopt = zt_pipe_get_nwid,
+	    .o_name = NNG_OPT_ZT_NWID,
+	    .o_type = NNI_TYPE_UINT64,
+	    .o_get  = zt_pipe_get_nwid,
 	},
 	{
-	    .po_name   = NNG_OPT_ZT_NODE,
-	    .po_type   = NNI_TYPE_UINT64,
-	    .po_getopt = zt_pipe_get_node,
+	    .o_name = NNG_OPT_ZT_NODE,
+	    .o_type = NNI_TYPE_UINT64,
+	    .o_get  = zt_pipe_get_node,
 	},
 	{
-	    .po_name   = NNG_OPT_RECVMAXSZ,
-	    .po_type   = NNI_TYPE_SIZE,
-	    .po_getopt = zt_pipe_get_recvmaxsz,
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = zt_pipe_get_recvmaxsz,
 	},
 	// terminate list
 	{
-	    .po_name = NULL,
+	    .o_name = NULL,
 	},
 };
 
@@ -2898,88 +2936,89 @@ static nni_tran_pipe_ops zt_pipe_ops = {
 	.p_options = zt_pipe_options,
 };
 
-static nni_tran_ep_option zt_ep_options[] = {
+static nni_tran_option zt_ep_options[] = {
 	{
-	    .eo_name   = NNG_OPT_RECVMAXSZ,
-	    .eo_type   = NNI_TYPE_SIZE,
-	    .eo_getopt = zt_ep_getopt_recvmaxsz,
-	    .eo_setopt = zt_ep_setopt_recvmaxsz,
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = zt_ep_get_recvmaxsz,
+	    .o_set  = zt_ep_set_recvmaxsz,
+	    .o_chk  = zt_ep_chk_recvmaxsz,
 	},
 	{
-	    .eo_name   = NNG_OPT_URL,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = zt_ep_getopt_url,
-	    .eo_setopt = NULL,
+	    .o_name = NNG_OPT_URL,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = zt_ep_get_url,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_HOME,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = zt_ep_getopt_home,
-	    .eo_setopt = zt_ep_setopt_home,
+	    .o_name = NNG_OPT_ZT_HOME,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = zt_ep_get_home,
+	    .o_set  = zt_ep_set_home,
+	    .o_chk  = zt_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_NODE,
-	    .eo_type   = NNI_TYPE_UINT64,
-	    .eo_getopt = zt_ep_getopt_node,
-	    .eo_setopt = NULL,
+	    .o_name = NNG_OPT_ZT_NODE,
+	    .o_type = NNI_TYPE_UINT64,
+	    .o_get  = zt_ep_get_node,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_NWID,
-	    .eo_type   = NNI_TYPE_UINT64,
-	    .eo_getopt = zt_ep_getopt_nwid,
-	    .eo_setopt = NULL,
+	    .o_name = NNG_OPT_ZT_NWID,
+	    .o_type = NNI_TYPE_UINT64,
+	    .o_get  = zt_ep_get_nwid,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_NETWORK_STATUS,
-	    .eo_type   = NNI_TYPE_INT32, // enumeration really
-	    .eo_getopt = zt_ep_getopt_nw_status,
-	    .eo_setopt = NULL,
+	    .o_name = NNG_OPT_ZT_NETWORK_STATUS,
+	    .o_type = NNI_TYPE_INT32, // enumeration really
+	    .o_get  = zt_ep_get_nw_status,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_NETWORK_NAME,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = zt_ep_getopt_nw_name,
-	    .eo_setopt = NULL,
+	    .o_name = NNG_OPT_ZT_NETWORK_NAME,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = zt_ep_get_nw_name,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_PING_TIME,
-	    .eo_type   = NNI_TYPE_DURATION,
-	    .eo_getopt = zt_ep_getopt_ping_time,
-	    .eo_setopt = zt_ep_setopt_ping_time,
+	    .o_name = NNG_OPT_ZT_PING_TIME,
+	    .o_type = NNI_TYPE_DURATION,
+	    .o_get  = zt_ep_get_ping_time,
+	    .o_set  = zt_ep_set_ping_time,
+	    .o_chk  = zt_ep_chk_time,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_PING_TRIES,
-	    .eo_type   = NNI_TYPE_INT32,
-	    .eo_getopt = zt_ep_getopt_ping_tries,
-	    .eo_setopt = zt_ep_setopt_ping_tries,
+	    .o_name = NNG_OPT_ZT_PING_TRIES,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = zt_ep_get_ping_tries,
+	    .o_set  = zt_ep_set_ping_tries,
+	    .o_chk  = zt_ep_chk_tries,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_CONN_TIME,
-	    .eo_type   = NNI_TYPE_DURATION,
-	    .eo_getopt = zt_ep_getopt_conn_time,
-	    .eo_setopt = zt_ep_setopt_conn_time,
+	    .o_name = NNG_OPT_ZT_CONN_TIME,
+	    .o_type = NNI_TYPE_DURATION,
+	    .o_get  = zt_ep_get_conn_time,
+	    .o_set  = zt_ep_set_conn_time,
+	    .o_chk  = zt_ep_chk_time,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_CONN_TRIES,
-	    .eo_type   = NNI_TYPE_INT32,
-	    .eo_getopt = zt_ep_getopt_conn_tries,
-	    .eo_setopt = zt_ep_setopt_conn_tries,
+	    .o_name = NNG_OPT_ZT_CONN_TRIES,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = zt_ep_get_conn_tries,
+	    .o_set  = zt_ep_set_conn_tries,
+	    .o_chk  = zt_ep_chk_tries,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_ORBIT,
-	    .eo_type   = NNI_TYPE_UINT64, // use opaque for two
-	    .eo_getopt = NULL,
-	    .eo_setopt = zt_ep_setopt_orbit,
+	    .o_name = NNG_OPT_ZT_ORBIT,
+	    .o_type = NNI_TYPE_UINT64, // use opaque for two
+	    .o_set  = zt_ep_set_orbit,
+	    .o_chk  = zt_ep_chk_orbit,
 	},
 	{
-	    .eo_name   = NNG_OPT_ZT_DEORBIT,
-	    .eo_type   = NNI_TYPE_UINT64,
-	    .eo_getopt = NULL,
-	    .eo_setopt = zt_ep_setopt_deorbit,
+	    .o_name = NNG_OPT_ZT_DEORBIT,
+	    .o_type = NNI_TYPE_UINT64,
+	    .o_set  = zt_ep_set_deorbit,
+	    .o_chk  = zt_ep_chk_deorbit,
 	},
 	// terminate list
 	{
-	    .eo_name = NULL,
+	    .o_name = NULL,
 	},
 };
 

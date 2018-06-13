@@ -479,17 +479,17 @@ req0_ctx_fini(void *arg)
 }
 
 static int
-req0_ctx_setopt_resendtime(void *arg, const void *buf, size_t sz, int typ)
+req0_ctx_set_resendtime(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	req0_ctx *ctx = arg;
-	return (nni_copyin_ms(&ctx->retry, buf, sz, typ));
+	return (nni_copyin_ms(&ctx->retry, buf, sz, t));
 }
 
 static int
-req0_ctx_getopt_resendtime(void *arg, void *buf, size_t *szp, int typ)
+req0_ctx_get_resendtime(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	req0_ctx *ctx = arg;
-	return (nni_copyout_ms(ctx->retry, buf, szp, typ));
+	return (nni_copyout_ms(ctx->retry, buf, szp, t));
 }
 
 static void
@@ -782,38 +782,38 @@ req0_sock_recv(void *arg, nni_aio *aio)
 }
 
 static int
-req0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
+req0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	req0_sock *s = arg;
-	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, typ));
+	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, t));
 }
 
 static int
-req0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp, int typ)
+req0_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	req0_sock *s = arg;
-	return (nni_copyout_int(s->ttl, buf, szp, typ));
+	return (nni_copyout_int(s->ttl, buf, szp, t));
 }
 
 static int
-req0_sock_setopt_resendtime(void *arg, const void *buf, size_t sz, int typ)
+req0_sock_set_resendtime(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	req0_sock *s = arg;
 	int        rv;
-	rv       = req0_ctx_setopt_resendtime(s->ctx, buf, sz, typ);
+	rv       = req0_ctx_set_resendtime(s->ctx, buf, sz, t);
 	s->retry = s->ctx->retry;
 	return (rv);
 }
 
 static int
-req0_sock_getopt_resendtime(void *arg, void *buf, size_t *szp, int typ)
+req0_sock_get_resendtime(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	req0_sock *s = arg;
-	return (req0_ctx_getopt_resendtime(s->ctx, buf, szp, typ));
+	return (req0_ctx_get_resendtime(s->ctx, buf, szp, t));
 }
 
 static int
-req0_sock_getopt_sendfd(void *arg, void *buf, size_t *szp, int typ)
+req0_sock_get_sendfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	req0_sock *s = arg;
 	int        rv;
@@ -822,11 +822,11 @@ req0_sock_getopt_sendfd(void *arg, void *buf, size_t *szp, int typ)
 	if ((rv = nni_pollable_getfd(s->sendable, &fd)) != 0) {
 		return (rv);
 	}
-	return (nni_copyout_int(fd, buf, szp, typ));
+	return (nni_copyout_int(fd, buf, szp, t));
 }
 
 static int
-req0_sock_getopt_recvfd(void *arg, void *buf, size_t *szp, int typ)
+req0_sock_get_recvfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	req0_sock *s = arg;
 	int        rv;
@@ -836,7 +836,7 @@ req0_sock_getopt_recvfd(void *arg, void *buf, size_t *szp, int typ)
 		return (rv);
 	}
 
-	return (nni_copyout_int(fd, buf, szp, typ));
+	return (nni_copyout_int(fd, buf, szp, t));
 }
 
 static nni_proto_pipe_ops req0_pipe_ops = {
@@ -847,15 +847,15 @@ static nni_proto_pipe_ops req0_pipe_ops = {
 	.pipe_stop  = req0_pipe_stop,
 };
 
-static nni_proto_ctx_option req0_ctx_options[] = {
+static nni_proto_option req0_ctx_options[] = {
 	{
-	    .co_name   = NNG_OPT_REQ_RESENDTIME,
-	    .co_type   = NNI_TYPE_DURATION,
-	    .co_getopt = req0_ctx_getopt_resendtime,
-	    .co_setopt = req0_ctx_setopt_resendtime,
+	    .o_name = NNG_OPT_REQ_RESENDTIME,
+	    .o_type = NNI_TYPE_DURATION,
+	    .o_get  = req0_ctx_get_resendtime,
+	    .o_set  = req0_ctx_set_resendtime,
 	},
 	{
-	    .co_name = NULL,
+	    .o_name = NULL,
 	},
 };
 
@@ -867,34 +867,32 @@ static nni_proto_ctx_ops req0_ctx_ops = {
 	.ctx_options = req0_ctx_options,
 };
 
-static nni_proto_sock_option req0_sock_options[] = {
+static nni_proto_option req0_sock_options[] = {
 	{
-	    .pso_name   = NNG_OPT_MAXTTL,
-	    .pso_type   = NNI_TYPE_INT32,
-	    .pso_getopt = req0_sock_getopt_maxttl,
-	    .pso_setopt = req0_sock_setopt_maxttl,
+	    .o_name = NNG_OPT_MAXTTL,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = req0_sock_get_maxttl,
+	    .o_set  = req0_sock_set_maxttl,
 	},
 	{
-	    .pso_name   = NNG_OPT_REQ_RESENDTIME,
-	    .pso_type   = NNI_TYPE_DURATION,
-	    .pso_getopt = req0_sock_getopt_resendtime,
-	    .pso_setopt = req0_sock_setopt_resendtime,
+	    .o_name = NNG_OPT_REQ_RESENDTIME,
+	    .o_type = NNI_TYPE_DURATION,
+	    .o_get  = req0_sock_get_resendtime,
+	    .o_set  = req0_sock_set_resendtime,
 	},
 	{
-	    .pso_name   = NNG_OPT_RECVFD,
-	    .pso_type   = NNI_TYPE_INT32,
-	    .pso_getopt = req0_sock_getopt_recvfd,
-	    .pso_setopt = NULL,
+	    .o_name = NNG_OPT_RECVFD,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = req0_sock_get_recvfd,
 	},
 	{
-	    .pso_name   = NNG_OPT_SENDFD,
-	    .pso_type   = NNI_TYPE_INT32,
-	    .pso_getopt = req0_sock_getopt_sendfd,
-	    .pso_setopt = NULL,
+	    .o_name = NNG_OPT_SENDFD,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = req0_sock_get_sendfd,
 	},
 	// terminate list
 	{
-	    .pso_name = NULL,
+	    .o_name = NULL,
 	},
 };
 

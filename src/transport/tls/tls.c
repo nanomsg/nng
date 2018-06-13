@@ -22,11 +22,11 @@
 // supplied as well, and uses the supplemental TLS v1.2 code.  It is not
 // an accident that this very closely resembles the TCP transport itself.
 
-typedef struct nni_tls_pipe nni_tls_pipe;
-typedef struct nni_tls_ep   nni_tls_ep;
+typedef struct tls_pipe tls_pipe;
+typedef struct tls_ep   tls_ep;
 
-// nni_tls_pipe is one end of a TLS connection.
-struct nni_tls_pipe {
+// tls_pipe is one end of a TLS connection.
+struct tls_pipe {
 	nni_plat_tcp_pipe *tcp;
 	uint16_t           peer;
 	uint16_t           proto;
@@ -52,7 +52,7 @@ struct nni_tls_pipe {
 	nni_tls *tls;
 };
 
-struct nni_tls_ep {
+struct tls_ep {
 	nni_plat_tcp_ep *tep;
 	uint16_t         proto;
 	size_t           rcvmax;
@@ -68,28 +68,28 @@ struct nni_tls_ep {
 	bool             keepalive;
 };
 
-static void nni_tls_pipe_dorecv(nni_tls_pipe *);
-static void nni_tls_pipe_dosend(nni_tls_pipe *, nni_aio *);
-static void nni_tls_pipe_send_cb(void *);
-static void nni_tls_pipe_recv_cb(void *);
-static void nni_tls_pipe_nego_cb(void *);
-static void nni_tls_ep_cb(void *arg);
+static void tls_pipe_dorecv(tls_pipe *);
+static void tls_pipe_dosend(tls_pipe *, nni_aio *);
+static void tls_pipe_send_cb(void *);
+static void tls_pipe_recv_cb(void *);
+static void tls_pipe_nego_cb(void *);
+static void tls_ep_cb(void *arg);
 
 static int
-nni_tls_tran_init(void)
+tls_tran_init(void)
 {
 	return (0);
 }
 
 static void
-nni_tls_tran_fini(void)
+tls_tran_fini(void)
 {
 }
 
 static void
-nni_tls_pipe_close(void *arg)
+tls_pipe_close(void *arg)
 {
-	nni_tls_pipe *p = arg;
+	tls_pipe *p = arg;
 
 	nni_aio_close(p->rxaio);
 	nni_aio_close(p->txaio);
@@ -99,9 +99,9 @@ nni_tls_pipe_close(void *arg)
 }
 
 static void
-nni_tls_pipe_stop(void *arg)
+tls_pipe_stop(void *arg)
 {
-	nni_tls_pipe *p = arg;
+	tls_pipe *p = arg;
 
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
@@ -109,9 +109,9 @@ nni_tls_pipe_stop(void *arg)
 }
 
 static void
-nni_tls_pipe_fini(void *arg)
+tls_pipe_fini(void *arg)
 {
-	nni_tls_pipe *p = arg;
+	tls_pipe *p = arg;
 
 	nni_aio_fini(p->rxaio);
 	nni_aio_fini(p->txaio);
@@ -125,9 +125,9 @@ nni_tls_pipe_fini(void *arg)
 }
 
 static int
-nni_tls_pipe_init(nni_tls_pipe **pipep, nni_tls_ep *ep, void *tpp)
+tls_pipe_init(tls_pipe **pipep, tls_ep *ep, void *tpp)
 {
-	nni_tls_pipe *     p;
+	tls_pipe *         p;
 	nni_plat_tcp_pipe *tcp = tpp;
 	int                rv;
 
@@ -137,10 +137,10 @@ nni_tls_pipe_init(nni_tls_pipe **pipep, nni_tls_ep *ep, void *tpp)
 	nni_mtx_init(&p->mtx);
 
 	if (((rv = nni_tls_init(&p->tls, ep->cfg, tcp)) != 0) ||
-	    ((rv = nni_aio_init(&p->txaio, nni_tls_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->rxaio, nni_tls_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->negaio, nni_tls_pipe_nego_cb, p)) != 0)) {
-		nni_tls_pipe_fini(p);
+	    ((rv = nni_aio_init(&p->txaio, tls_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->rxaio, tls_pipe_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->negaio, tls_pipe_nego_cb, p)) != 0)) {
+		tls_pipe_fini(p);
 		return (rv);
 	}
 	nni_aio_list_init(&p->recvq);
@@ -157,9 +157,9 @@ nni_tls_pipe_init(nni_tls_pipe **pipep, nni_tls_ep *ep, void *tpp)
 }
 
 static void
-nni_tls_cancel_nego(nni_aio *aio, int rv)
+tls_cancel_nego(nni_aio *aio, int rv)
 {
-	nni_tls_pipe *p = nni_aio_get_prov_data(aio);
+	tls_pipe *p = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&p->mtx);
 	if (p->user_negaio != aio) {
@@ -174,11 +174,11 @@ nni_tls_cancel_nego(nni_aio *aio, int rv)
 }
 
 static void
-nni_tls_pipe_nego_cb(void *arg)
+tls_pipe_nego_cb(void *arg)
 {
-	nni_tls_pipe *p   = arg;
-	nni_aio *     aio = p->negaio;
-	int           rv;
+	tls_pipe *p   = arg;
+	nni_aio * aio = p->negaio;
+	int       rv;
 
 	nni_mtx_lock(&p->mtx);
 	if ((rv = nni_aio_result(aio)) != 0) {
@@ -237,14 +237,14 @@ done:
 }
 
 static void
-nni_tls_pipe_send_cb(void *arg)
+tls_pipe_send_cb(void *arg)
 {
-	nni_tls_pipe *p = arg;
-	int           rv;
-	nni_aio *     aio;
-	size_t        n;
-	nni_msg *     msg;
-	nni_aio *     txaio = p->txaio;
+	tls_pipe *p = arg;
+	int       rv;
+	nni_aio * aio;
+	size_t    n;
+	nni_msg * msg;
+	nni_aio * txaio = p->txaio;
 
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->sendq);
@@ -270,7 +270,7 @@ nni_tls_pipe_send_cb(void *arg)
 	}
 	nni_aio_list_remove(aio);
 	if (!nni_list_empty(&p->sendq)) {
-		nni_tls_pipe_dosend(p, nni_list_first(&p->sendq));
+		tls_pipe_dosend(p, nni_list_first(&p->sendq));
 	}
 	nni_mtx_unlock(&p->mtx);
 
@@ -282,14 +282,14 @@ nni_tls_pipe_send_cb(void *arg)
 }
 
 static void
-nni_tls_pipe_recv_cb(void *arg)
+tls_pipe_recv_cb(void *arg)
 {
-	nni_tls_pipe *p = arg;
-	nni_aio *     aio;
-	int           rv;
-	size_t        n;
-	nni_msg *     msg;
-	nni_aio *     rxaio = p->rxaio;
+	tls_pipe *p = arg;
+	nni_aio * aio;
+	int       rv;
+	size_t    n;
+	nni_msg * msg;
+	nni_aio * rxaio = p->rxaio;
 
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->recvq);
@@ -345,7 +345,7 @@ nni_tls_pipe_recv_cb(void *arg)
 	msg      = p->rxmsg;
 	p->rxmsg = NULL;
 	if (!nni_list_empty(&p->recvq)) {
-		nni_tls_pipe_dorecv(p);
+		tls_pipe_dorecv(p);
 	}
 	nni_mtx_unlock(&p->mtx);
 
@@ -365,9 +365,9 @@ recv_error:
 }
 
 static void
-nni_tls_cancel_tx(nni_aio *aio, int rv)
+tls_cancel_tx(nni_aio *aio, int rv)
 {
-	nni_tls_pipe *p = nni_aio_get_prov_data(aio);
+	tls_pipe *p = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&p->mtx);
 	if (!nni_aio_list_active(aio)) {
@@ -389,7 +389,7 @@ nni_tls_cancel_tx(nni_aio *aio, int rv)
 }
 
 static void
-nni_tls_pipe_dosend(nni_tls_pipe *p, nni_aio *aio)
+tls_pipe_dosend(tls_pipe *p, nni_aio *aio)
 {
 	nni_aio *txaio;
 	nni_msg *msg;
@@ -423,31 +423,31 @@ nni_tls_pipe_dosend(nni_tls_pipe *p, nni_aio *aio)
 }
 
 static void
-nni_tls_pipe_send(void *arg, nni_aio *aio)
+tls_pipe_send(void *arg, nni_aio *aio)
 {
-	nni_tls_pipe *p = arg;
-	int           rv;
+	tls_pipe *p = arg;
+	int       rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_tx, p)) != 0) {
+	if ((rv = nni_aio_schedule(aio, tls_cancel_tx, p)) != 0) {
 		nni_mtx_unlock(&p->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&p->sendq, aio);
 	if (nni_list_first(&p->sendq) == aio) {
-		nni_tls_pipe_dosend(p, aio);
+		tls_pipe_dosend(p, aio);
 	}
 	nni_mtx_unlock(&p->mtx);
 }
 
 static void
-nni_tls_cancel_rx(nni_aio *aio, int rv)
+tls_cancel_rx(nni_aio *aio, int rv)
 {
-	nni_tls_pipe *p = nni_aio_get_prov_data(aio);
+	tls_pipe *p = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&p->mtx);
 	if (!nni_aio_list_active(aio)) {
@@ -468,7 +468,7 @@ nni_tls_cancel_rx(nni_aio *aio, int rv)
 }
 
 static void
-nni_tls_pipe_dorecv(nni_tls_pipe *p)
+tls_pipe_dorecv(tls_pipe *p)
 {
 	nni_aio *rxaio;
 	nni_iov  iov;
@@ -484,16 +484,16 @@ nni_tls_pipe_dorecv(nni_tls_pipe *p)
 }
 
 static void
-nni_tls_pipe_recv(void *arg, nni_aio *aio)
+tls_pipe_recv(void *arg, nni_aio *aio)
 {
-	nni_tls_pipe *p = arg;
-	int           rv;
+	tls_pipe *p = arg;
+	int       rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_rx, p)) != 0) {
+	if ((rv = nni_aio_schedule(aio, tls_cancel_rx, p)) != 0) {
 		nni_mtx_unlock(&p->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -501,74 +501,74 @@ nni_tls_pipe_recv(void *arg, nni_aio *aio)
 
 	nni_aio_list_append(&p->recvq, aio);
 	if (nni_list_first(&p->recvq) == aio) {
-		nni_tls_pipe_dorecv(p);
+		tls_pipe_dorecv(p);
 	}
 	nni_mtx_unlock(&p->mtx);
 }
 
 static uint16_t
-nni_tls_pipe_peer(void *arg)
+tls_pipe_peer(void *arg)
 {
-	nni_tls_pipe *p = arg;
+	tls_pipe *p = arg;
 
 	return (p->peer);
 }
 
 static int
-nni_tls_pipe_getopt_locaddr(void *arg, void *v, size_t *szp, int typ)
+tls_pipe_get_locaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_pipe *p = arg;
-	int           rv;
-	nni_sockaddr  sa;
+	tls_pipe *   p = arg;
+	int          rv;
+	nni_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_tls_sockname(p->tls, &sa)) == 0) {
-		rv = nni_copyout_sockaddr(&sa, v, szp, typ);
+		rv = nni_copyout_sockaddr(&sa, v, szp, t);
 	}
 	return (rv);
 }
 
 static int
-nni_tls_pipe_getopt_remaddr(void *arg, void *v, size_t *szp, int typ)
+tls_pipe_get_remaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_pipe *p = arg;
-	int           rv;
-	nni_sockaddr  sa;
+	tls_pipe *   p = arg;
+	int          rv;
+	nni_sockaddr sa;
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_tls_peername(p->tls, &sa)) == 0) {
-		rv = nni_copyout_sockaddr(&sa, v, szp, typ);
+		rv = nni_copyout_sockaddr(&sa, v, szp, t);
 	}
 	return (rv);
 }
 
 static int
-nni_tls_pipe_getopt_keepalive(void *arg, void *v, size_t *szp, int typ)
+tls_pipe_get_keepalive(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_pipe *p = arg;
-	return (nni_copyout_bool(p->keepalive, v, szp, typ));
+	tls_pipe *p = arg;
+	return (nni_copyout_bool(p->keepalive, v, szp, t));
 }
 
 static int
-nni_tls_pipe_getopt_nodelay(void *arg, void *v, size_t *szp, int typ)
+tls_pipe_get_nodelay(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_pipe *p = arg;
-	return (nni_copyout_bool(p->nodelay, v, szp, typ));
+	tls_pipe *p = arg;
+	return (nni_copyout_bool(p->nodelay, v, szp, t));
 }
 
 static void
-nni_tls_pipe_start(void *arg, nni_aio *aio)
+tls_pipe_start(void *arg, nni_aio *aio)
 {
-	nni_tls_pipe *p = arg;
-	nni_aio *     negaio;
-	nni_iov       iov;
-	int           rv;
+	tls_pipe *p = arg;
+	nni_aio * negaio;
+	nni_iov   iov;
+	int       rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_nego, p)) != 0) {
+	if ((rv = nni_aio_schedule(aio, tls_cancel_nego, p)) != 0) {
 		nni_mtx_unlock(&p->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -594,9 +594,9 @@ nni_tls_pipe_start(void *arg, nni_aio *aio)
 }
 
 static void
-nni_tls_ep_fini(void *arg)
+tls_ep_fini(void *arg)
 {
-	nni_tls_ep *ep = arg;
+	tls_ep *ep = arg;
 
 	nni_aio_stop(ep->aio);
 	if (ep->tep != NULL) {
@@ -611,9 +611,9 @@ nni_tls_ep_fini(void *arg)
 }
 
 static int
-nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
+tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 {
-	nni_tls_ep *      ep;
+	tls_ep *          ep;
 	int               rv;
 	char *            host;
 	char *            serv;
@@ -698,13 +698,13 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	if (((rv = nni_plat_tcp_ep_init(&ep->tep, &lsa, &rsa, mode)) != 0) ||
 	    ((rv = nni_tls_config_init(&ep->cfg, tlsmode)) != 0) ||
 	    ((rv = nng_tls_config_auth_mode(ep->cfg, authmode)) != 0) ||
-	    ((rv = nni_aio_init(&ep->aio, nni_tls_ep_cb, ep)) != 0)) {
-		nni_tls_ep_fini(ep);
+	    ((rv = nni_aio_init(&ep->aio, tls_ep_cb, ep)) != 0)) {
+		tls_ep_fini(ep);
 		return (rv);
 	}
 	if ((tlsmode == NNG_TLS_MODE_CLIENT) && (host != NULL)) {
 		if ((rv = nng_tls_config_server_name(ep->cfg, host)) != 0) {
-			nni_tls_ep_fini(ep);
+			tls_ep_fini(ep);
 			return (rv);
 		}
 	}
@@ -716,9 +716,9 @@ nni_tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 }
 
 static void
-nni_tls_ep_close(void *arg)
+tls_ep_close(void *arg)
 {
-	nni_tls_ep *ep = arg;
+	tls_ep *ep = arg;
 
 	nni_aio_close(ep->aio);
 
@@ -728,10 +728,10 @@ nni_tls_ep_close(void *arg)
 }
 
 static int
-nni_tls_ep_bind(void *arg)
+tls_ep_bind(void *arg)
 {
-	nni_tls_ep *ep = arg;
-	int         rv;
+	tls_ep *ep = arg;
+	int     rv;
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nni_plat_tcp_ep_listen(ep->tep, &ep->bsa);
@@ -741,11 +741,11 @@ nni_tls_ep_bind(void *arg)
 }
 
 static void
-nni_tls_ep_finish(nni_tls_ep *ep)
+tls_ep_finish(tls_ep *ep)
 {
-	nni_aio *     aio;
-	int           rv;
-	nni_tls_pipe *pipe = NULL;
+	nni_aio * aio;
+	int       rv;
+	tls_pipe *pipe = NULL;
 
 	if ((rv = nni_aio_result(ep->aio)) != 0) {
 		goto done;
@@ -754,7 +754,7 @@ nni_tls_ep_finish(nni_tls_ep *ep)
 
 	// Attempt to allocate the parent pipe.  If this fails we'll
 	// drop the connection (ENOMEM probably).
-	rv = nni_tls_pipe_init(&pipe, ep, nni_aio_get_output(ep->aio, 0));
+	rv = tls_pipe_init(&pipe, ep, nni_aio_get_output(ep->aio, 0));
 
 done:
 	aio          = ep->user_aio;
@@ -766,7 +766,7 @@ done:
 		return;
 	}
 	if (pipe != NULL) {
-		nni_tls_pipe_fini(pipe);
+		tls_pipe_fini(pipe);
 	}
 	if (aio != NULL) {
 		NNI_ASSERT(rv != 0);
@@ -775,19 +775,19 @@ done:
 }
 
 static void
-nni_tls_ep_cb(void *arg)
+tls_ep_cb(void *arg)
 {
-	nni_tls_ep *ep = arg;
+	tls_ep *ep = arg;
 
 	nni_mtx_lock(&ep->mtx);
-	nni_tls_ep_finish(ep);
+	tls_ep_finish(ep);
 	nni_mtx_unlock(&ep->mtx);
 }
 
 static void
-nni_tls_cancel_ep(nni_aio *aio, int rv)
+tls_cancel_ep(nni_aio *aio, int rv)
 {
-	nni_tls_ep *ep = nni_aio_get_prov_data(aio);
+	tls_ep *ep = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&ep->mtx);
 	if (ep->user_aio != aio) {
@@ -802,17 +802,17 @@ nni_tls_cancel_ep(nni_aio *aio, int rv)
 }
 
 static void
-nni_tls_ep_accept(void *arg, nni_aio *aio)
+tls_ep_accept(void *arg, nni_aio *aio)
 {
-	nni_tls_ep *ep = arg;
-	int         rv;
+	tls_ep *ep = arg;
+	int     rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
-	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_ep, ep)) != 0) {
+	if ((rv = nni_aio_schedule(aio, tls_cancel_ep, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -823,17 +823,17 @@ nni_tls_ep_accept(void *arg, nni_aio *aio)
 }
 
 static void
-nni_tls_ep_connect(void *arg, nni_aio *aio)
+tls_ep_connect(void *arg, nni_aio *aio)
 {
-	nni_tls_ep *ep = arg;
-	int         rv;
+	tls_ep *ep = arg;
+	int     rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
 	NNI_ASSERT(ep->user_aio == NULL);
-	if ((rv = nni_aio_schedule(aio, nni_tls_cancel_ep, ep)) != 0) {
+	if ((rv = nni_aio_schedule(aio, tls_cancel_ep, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 	}
@@ -843,13 +843,18 @@ nni_tls_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-nni_tls_ep_setopt_nodelay(void *arg, const void *v, size_t sz, int typ)
+tls_ep_chk_bool(const void *v, size_t sz, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	bool        val;
-	int         rv;
-	rv = nni_copyin_bool(&val, v, sz, typ);
-	if ((rv == 0) && (ep != NULL)) {
+	return (nni_copyin_bool(NULL, v, sz, t));
+}
+
+static int
+tls_ep_set_nodelay(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	tls_ep *ep = arg;
+	bool    val;
+	int     rv;
+	if ((rv = nni_copyin_bool(&val, v, sz, t)) == 0) {
 		nni_mtx_lock(&ep->mtx);
 		ep->nodelay = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -858,20 +863,19 @@ nni_tls_ep_setopt_nodelay(void *arg, const void *v, size_t sz, int typ)
 }
 
 static int
-nni_tls_ep_getopt_nodelay(void *arg, void *v, size_t *szp, int typ)
+tls_ep_get_nodelay(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	return (nni_copyout_bool(ep->nodelay, v, szp, typ));
+	tls_ep *ep = arg;
+	return (nni_copyout_bool(ep->nodelay, v, szp, t));
 }
 
 static int
-nni_tls_ep_setopt_keepalive(void *arg, const void *v, size_t sz, int typ)
+tls_ep_set_keepalive(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	bool        val;
-	int         rv;
-	rv = nni_copyin_bool(&val, v, sz, typ);
-	if ((rv == 0) && (ep != NULL)) {
+	tls_ep *ep = arg;
+	bool    val;
+	int     rv;
+	if ((rv = nni_copyin_bool(&val, v, sz, t)) == 0) {
 		nni_mtx_lock(&ep->mtx);
 		ep->keepalive = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -880,37 +884,36 @@ nni_tls_ep_setopt_keepalive(void *arg, const void *v, size_t sz, int typ)
 }
 
 static int
-nni_tls_ep_getopt_keepalive(void *arg, void *v, size_t *szp, int typ)
+tls_ep_get_keepalive(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	return (nni_copyout_bool(ep->keepalive, v, szp, typ));
+	tls_ep *ep = arg;
+	return (nni_copyout_bool(ep->keepalive, v, szp, t));
 }
 
 static int
-nni_tls_ep_getopt_url(void *arg, void *v, size_t *szp, int typ)
+tls_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	char        ustr[128];
-	char        ipstr[48];  // max for IPv6 addresses including []
-	char        portstr[6]; // max for 16-bit port
+	tls_ep *ep = arg;
+	char    ustr[128];
+	char    ipstr[48];  // max for IPv6 addresses including []
+	char    portstr[6]; // max for 16-bit port
 
 	if (ep->mode == NNI_EP_MODE_DIAL) {
-		return (nni_copyout_str(ep->url->u_rawurl, v, szp, typ));
+		return (nni_copyout_str(ep->url->u_rawurl, v, szp, t));
 	}
 	nni_plat_tcp_ntop(&ep->bsa, ipstr, portstr);
 	snprintf(ustr, sizeof(ustr), "tls+tcp://%s:%s", ipstr, portstr);
-	return (nni_copyout_str(ustr, v, szp, typ));
+	return (nni_copyout_str(ustr, v, szp, t));
 }
 
 static int
-nni_tls_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
+tls_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	size_t      val;
-	int         rv;
+	tls_ep *ep = arg;
+	size_t  val;
+	int     rv;
 
-	rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, typ);
-	if ((rv == 0) && (ep != NULL)) {
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -919,27 +922,41 @@ nni_tls_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
 }
 
 static int
-nni_tls_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp, int typ)
+tls_ep_chk_recvmaxsz(const void *v, size_t sz, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	return (nni_copyout_size(ep->rcvmax, v, szp, typ));
+	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
 }
 
 static int
-tls_setopt_config(void *arg, const void *data, size_t sz, int typ)
+tls_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_ep *    ep = arg;
+	tls_ep *ep = arg;
+	return (nni_copyout_size(ep->rcvmax, v, szp, t));
+}
+
+static int
+tls_ep_chk_config(const void *data, size_t sz, nni_opt_type t)
+{
+	void *v;
+	int   rv;
+	if (((rv = nni_copyin_ptr(&v, data, sz, t)) == 0) && (v == NULL)) {
+		rv = NNG_EINVAL;
+	}
+	return (rv);
+}
+
+static int
+tls_ep_set_config(void *arg, const void *data, size_t sz, nni_opt_type t)
+{
+	tls_ep *        ep = arg;
 	nng_tls_config *cfg, *old;
 	int             rv;
 
-	if ((rv = nni_copyin_ptr((void **) &cfg, data, sz, typ)) != 0) {
+	if ((rv = nni_copyin_ptr((void **) &cfg, data, sz, t)) != 0) {
 		return (rv);
 	}
 	if (cfg == NULL) {
 		return (NNG_EINVAL);
-	}
-	if (ep == NULL) {
-		return (0);
 	}
 	old = ep->cfg;
 	nni_tls_config_hold(cfg);
@@ -951,234 +968,241 @@ tls_setopt_config(void *arg, const void *data, size_t sz, int typ)
 }
 
 static int
-tls_getopt_config(void *arg, void *v, size_t *szp, int typ)
+tls_ep_get_config(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	return (nni_copyout_ptr(ep->cfg, v, szp, typ));
+	tls_ep *ep = arg;
+	return (nni_copyout_ptr(ep->cfg, v, szp, t));
 }
 
 static int
-tls_setopt_ca_file(void *arg, const void *v, size_t sz, int typ)
+tls_ep_chk_string(const void *v, size_t sz, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-
-	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
+	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
 		return (NNG_EBADTYPE);
 	}
 	if (nni_strnlen(v, sz) >= sz) {
 		return (NNG_EINVAL);
 	}
-	if (ep == NULL) {
-		return (0);
-	}
-	return (nng_tls_config_ca_file(ep->cfg, v));
+	return (0);
 }
 
 static int
-tls_setopt_auth_mode(void *arg, const void *v, size_t sz, int typ)
+tls_ep_set_ca_file(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
-	int         mode;
-	int         rv;
+	tls_ep *ep = arg;
+	int     rv;
+
+	if ((rv = tls_ep_chk_string(v, sz, t)) == 0) {
+		rv = nng_tls_config_ca_file(ep->cfg, v);
+	}
+	return (rv);
+}
+
+static int
+tls_ep_chk_auth_mode(const void *v, size_t sz, nni_opt_type t)
+{
+	return (nni_copyin_int(NULL, v, sz, NNG_TLS_AUTH_MODE_NONE,
+	    NNG_TLS_AUTH_MODE_REQUIRED, t));
+}
+
+static int
+tls_ep_set_auth_mode(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	tls_ep *ep = arg;
+	int     mode;
+	int     rv;
 
 	rv = nni_copyin_int(&mode, v, sz, NNG_TLS_AUTH_MODE_NONE,
-	    NNG_TLS_AUTH_MODE_REQUIRED, typ);
-	if ((rv != 0) || (ep == NULL)) {
-		return (rv);
+	    NNG_TLS_AUTH_MODE_REQUIRED, t);
+	if (rv == 0) {
+		rv = nng_tls_config_auth_mode(ep->cfg, mode);
 	}
-	return (nng_tls_config_auth_mode(ep->cfg, mode));
+	return (rv);
 }
 
 static int
-tls_setopt_server_name(void *arg, const void *v, size_t sz, int typ)
+tls_ep_set_server_name(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
+	tls_ep *ep = arg;
+	int     rv;
 
-	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
-		return (NNG_EBADTYPE);
+	if ((rv = tls_ep_chk_string(v, sz, t)) == 0) {
+		rv = nng_tls_config_server_name(ep->cfg, v);
 	}
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-	if (ep == NULL) {
-		return (0);
-	}
-	return (nng_tls_config_server_name(ep->cfg, v));
+	return (rv);
 }
 
 static int
-tls_setopt_cert_key_file(void *arg, const void *v, size_t sz, int typ)
+tls_ep_set_cert_key_file(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	nni_tls_ep *ep = arg;
+	tls_ep *ep = arg;
+	int     rv;
 
-	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
-		return (NNG_EBADTYPE);
+	if ((rv = tls_ep_chk_string(v, sz, t)) == 0) {
+		rv = nng_tls_config_cert_key_file(ep->cfg, v, NULL);
 	}
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-	if (ep == NULL) {
-		return (0);
-	}
-	return (nng_tls_config_cert_key_file(ep->cfg, v, NULL));
+	return (rv);
 }
 
 static int
-tls_getopt_verified(void *arg, void *v, size_t *szp, int typ)
+tls_pipe_get_verified(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	nni_tls_pipe *p = arg;
+	tls_pipe *p = arg;
 
-	return (nni_copyout_bool(nni_tls_verified(p->tls), v, szp, typ));
+	return (nni_copyout_bool(nni_tls_verified(p->tls), v, szp, t));
 }
 
-static nni_tran_pipe_option nni_tls_pipe_options[] = {
+static nni_tran_option tls_pipe_options[] = {
 	{
-	    .po_name   = NNG_OPT_LOCADDR,
-	    .po_type   = NNI_TYPE_SOCKADDR,
-	    .po_getopt = nni_tls_pipe_getopt_locaddr,
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = tls_pipe_get_locaddr,
 	},
 	{
-	    .po_name   = NNG_OPT_REMADDR,
-	    .po_type   = NNI_TYPE_SOCKADDR,
-	    .po_getopt = nni_tls_pipe_getopt_remaddr,
+	    .o_name = NNG_OPT_REMADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = tls_pipe_get_remaddr,
 	},
 	{
-	    .po_name   = NNG_OPT_TLS_VERIFIED,
-	    .po_type   = NNI_TYPE_BOOL,
-	    .po_getopt = tls_getopt_verified,
+	    .o_name = NNG_OPT_TLS_VERIFIED,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tls_pipe_get_verified,
 	},
 	{
-	    .po_name   = NNG_OPT_TCP_KEEPALIVE,
-	    .po_type   = NNI_TYPE_BOOL,
-	    .po_getopt = nni_tls_pipe_getopt_keepalive,
+	    .o_name = NNG_OPT_TCP_KEEPALIVE,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tls_pipe_get_keepalive,
 	},
 	{
-	    .po_name   = NNG_OPT_TCP_NODELAY,
-	    .po_type   = NNI_TYPE_BOOL,
-	    .po_getopt = nni_tls_pipe_getopt_nodelay,
+	    .o_name = NNG_OPT_TCP_NODELAY,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tls_pipe_get_nodelay,
 	},
 	// terminate list
 	{
-	    .po_name = NULL,
+	    .o_name = NULL,
 	},
 };
 
-static nni_tran_pipe_ops nni_tls_pipe_ops = {
-	.p_fini    = nni_tls_pipe_fini,
-	.p_start   = nni_tls_pipe_start,
-	.p_stop    = nni_tls_pipe_stop,
-	.p_send    = nni_tls_pipe_send,
-	.p_recv    = nni_tls_pipe_recv,
-	.p_close   = nni_tls_pipe_close,
-	.p_peer    = nni_tls_pipe_peer,
-	.p_options = nni_tls_pipe_options,
+static nni_tran_pipe_ops tls_pipe_ops = {
+	.p_fini    = tls_pipe_fini,
+	.p_start   = tls_pipe_start,
+	.p_stop    = tls_pipe_stop,
+	.p_send    = tls_pipe_send,
+	.p_recv    = tls_pipe_recv,
+	.p_close   = tls_pipe_close,
+	.p_peer    = tls_pipe_peer,
+	.p_options = tls_pipe_options,
 };
 
-static nni_tran_ep_option nni_tls_ep_options[] = {
+static nni_tran_option tls_ep_options[] = {
 	{
-	    .eo_name   = NNG_OPT_RECVMAXSZ,
-	    .eo_type   = NNI_TYPE_SIZE,
-	    .eo_getopt = nni_tls_ep_getopt_recvmaxsz,
-	    .eo_setopt = nni_tls_ep_setopt_recvmaxsz,
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = tls_ep_get_recvmaxsz,
+	    .o_set  = tls_ep_set_recvmaxsz,
+	    .o_chk  = tls_ep_chk_recvmaxsz,
 	},
 	{
-	    .eo_name   = NNG_OPT_URL,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = nni_tls_ep_getopt_url,
-	    .eo_setopt = NULL,
+	    .o_name = NNG_OPT_URL,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = tls_ep_get_url,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_CONFIG,
-	    .eo_type   = NNI_TYPE_POINTER,
-	    .eo_getopt = tls_getopt_config,
-	    .eo_setopt = tls_setopt_config,
+	    .o_name = NNG_OPT_TLS_CONFIG,
+	    .o_type = NNI_TYPE_POINTER,
+	    .o_get  = tls_ep_get_config,
+	    .o_set  = tls_ep_set_config,
+	    .o_chk  = tls_ep_chk_config,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_CERT_KEY_FILE,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = tls_setopt_cert_key_file,
+	    .o_name = NNG_OPT_TLS_CERT_KEY_FILE,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = tls_ep_set_cert_key_file,
+	    .o_chk  = tls_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_CA_FILE,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = tls_setopt_ca_file,
+	    .o_name = NNG_OPT_TLS_CA_FILE,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = tls_ep_set_ca_file,
+	    .o_chk  = tls_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_AUTH_MODE,
-	    .eo_type   = NNI_TYPE_INT32, // enum really
-	    .eo_getopt = NULL,
-	    .eo_setopt = tls_setopt_auth_mode,
+	    .o_name = NNG_OPT_TLS_AUTH_MODE,
+	    .o_type = NNI_TYPE_INT32, // enum really
+	    .o_set  = tls_ep_set_auth_mode,
+	    .o_chk  = tls_ep_chk_auth_mode,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_SERVER_NAME,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = tls_setopt_server_name,
+	    .o_name = NNG_OPT_TLS_SERVER_NAME,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = tls_ep_set_server_name,
+	    .o_chk  = tls_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_TCP_NODELAY,
-	    .eo_type   = NNI_TYPE_BOOL,
-	    .eo_getopt = nni_tls_ep_getopt_nodelay,
-	    .eo_setopt = nni_tls_ep_setopt_nodelay,
+	    .o_name = NNG_OPT_TCP_NODELAY,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tls_ep_get_nodelay,
+	    .o_set  = tls_ep_set_nodelay,
+	    .o_chk  = tls_ep_chk_bool,
 	},
 	{
-	    .eo_name   = NNG_OPT_TCP_KEEPALIVE,
-	    .eo_type   = NNI_TYPE_BOOL,
-	    .eo_getopt = nni_tls_ep_getopt_keepalive,
-	    .eo_setopt = nni_tls_ep_setopt_keepalive,
+	    .o_name = NNG_OPT_TCP_KEEPALIVE,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tls_ep_get_keepalive,
+	    .o_set  = tls_ep_set_keepalive,
+	    .o_chk  = tls_ep_chk_bool,
 	},
 	// terminate list
 	{
-	    .eo_name = NULL,
+	    .o_name = NULL,
 	},
 };
 
-static nni_tran_ep_ops nni_tls_ep_ops = {
-	.ep_init    = nni_tls_ep_init,
-	.ep_fini    = nni_tls_ep_fini,
-	.ep_connect = nni_tls_ep_connect,
-	.ep_bind    = nni_tls_ep_bind,
-	.ep_accept  = nni_tls_ep_accept,
-	.ep_close   = nni_tls_ep_close,
-	.ep_options = nni_tls_ep_options,
+static nni_tran_ep_ops tls_ep_ops = {
+	.ep_init    = tls_ep_init,
+	.ep_fini    = tls_ep_fini,
+	.ep_connect = tls_ep_connect,
+	.ep_bind    = tls_ep_bind,
+	.ep_accept  = tls_ep_accept,
+	.ep_close   = tls_ep_close,
+	.ep_options = tls_ep_options,
 };
 
-static nni_tran nni_tls_tran = {
+static nni_tran tls_tran = {
 	.tran_version = NNI_TRANSPORT_VERSION,
 	.tran_scheme  = "tls+tcp",
-	.tran_ep      = &nni_tls_ep_ops,
-	.tran_pipe    = &nni_tls_pipe_ops,
-	.tran_init    = nni_tls_tran_init,
-	.tran_fini    = nni_tls_tran_fini,
+	.tran_ep      = &tls_ep_ops,
+	.tran_pipe    = &tls_pipe_ops,
+	.tran_init    = tls_tran_init,
+	.tran_fini    = tls_tran_fini,
 };
 
-static nni_tran nni_tls4_tran = {
+static nni_tran tls4_tran = {
 	.tran_version = NNI_TRANSPORT_VERSION,
 	.tran_scheme  = "tls+tcp4",
-	.tran_ep      = &nni_tls_ep_ops,
-	.tran_pipe    = &nni_tls_pipe_ops,
-	.tran_init    = nni_tls_tran_init,
-	.tran_fini    = nni_tls_tran_fini,
+	.tran_ep      = &tls_ep_ops,
+	.tran_pipe    = &tls_pipe_ops,
+	.tran_init    = tls_tran_init,
+	.tran_fini    = tls_tran_fini,
 };
 
-static nni_tran nni_tls6_tran = {
+static nni_tran tls6_tran = {
 	.tran_version = NNI_TRANSPORT_VERSION,
 	.tran_scheme  = "tls+tcp6",
-	.tran_ep      = &nni_tls_ep_ops,
-	.tran_pipe    = &nni_tls_pipe_ops,
-	.tran_init    = nni_tls_tran_init,
-	.tran_fini    = nni_tls_tran_fini,
+	.tran_ep      = &tls_ep_ops,
+	.tran_pipe    = &tls_pipe_ops,
+	.tran_init    = tls_tran_init,
+	.tran_fini    = tls_tran_fini,
 };
 
 int
 nng_tls_register(void)
 {
 	int rv;
-	if (((rv = nni_tran_register(&nni_tls_tran)) != 0) ||
-	    ((rv = nni_tran_register(&nni_tls4_tran)) != 0) ||
-	    ((rv = nni_tran_register(&nni_tls6_tran)) != 0)) {
+	if (((rv = nni_tran_register(&tls_tran)) != 0) ||
+	    ((rv = nni_tran_register(&tls4_tran)) != 0) ||
+	    ((rv = nni_tran_register(&tls6_tran)) != 0)) {
 		return (rv);
 	}
 	return (0);

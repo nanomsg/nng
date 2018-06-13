@@ -21,6 +21,13 @@
 // As a consequence, most of the concurrency in nng exists in the protocol
 // implementations.
 
+struct nni_proto_option {
+	const char *o_name;
+	int         o_type;
+	int (*o_get)(void *, void *, size_t *, nni_opt_type);
+	int (*o_set)(void *, const void *, size_t, nni_opt_type);
+};
+
 // nni_proto_pipe contains protocol-specific per-pipe operations.
 struct nni_proto_pipe_ops {
 	// pipe_init creates the protocol-specific per pipe data structure.
@@ -50,13 +57,6 @@ struct nni_proto_pipe_ops {
 	void (*pipe_stop)(void *);
 };
 
-struct nni_proto_ctx_option {
-	const char *co_name;
-	int         co_type;
-	int (*co_getopt)(void *, void *, size_t *, int);
-	int (*co_setopt)(void *, const void *, size_t, int);
-};
-
 struct nni_proto_ctx_ops {
 	// ctx_init creates a new context. The second argument is the
 	// protocol specific socket structure.
@@ -80,14 +80,7 @@ struct nni_proto_ctx_ops {
 	void (*ctx_drain)(void *, nni_aio *);
 
 	// ctx_options array.
-	nni_proto_ctx_option *ctx_options;
-};
-
-struct nni_proto_sock_option {
-	const char *pso_name;
-	int         pso_type;
-	int (*pso_getopt)(void *, void *, size_t *, int);
-	int (*pso_setopt)(void *, const void *, size_t, int);
+	nni_proto_option *ctx_options;
 };
 
 struct nni_proto_sock_ops {
@@ -130,7 +123,7 @@ struct nni_proto_sock_ops {
 	void (*sock_drain)(void *, nni_aio *);
 
 	// Options. Must not be NULL. Final entry should have NULL name.
-	nni_proto_sock_option *sock_options;
+	nni_proto_option *sock_options;
 };
 
 typedef struct nni_proto_id {

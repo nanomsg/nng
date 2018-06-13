@@ -605,23 +605,23 @@ drop:
 }
 
 static int
-rep0_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
+rep0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	rep0_sock *s = arg;
 
-	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, typ));
+	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, t));
 }
 
 static int
-rep0_sock_getopt_maxttl(void *arg, void *buf, size_t *szp, int typ)
+rep0_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	rep0_sock *s = arg;
 
-	return (nni_copyout_int(s->ttl, buf, szp, typ));
+	return (nni_copyout_int(s->ttl, buf, szp, t));
 }
 
 static int
-rep0_sock_getopt_sendfd(void *arg, void *buf, size_t *szp, int typ)
+rep0_sock_get_sendfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	rep0_sock *s = arg;
 	int        rv;
@@ -630,11 +630,11 @@ rep0_sock_getopt_sendfd(void *arg, void *buf, size_t *szp, int typ)
 	if ((rv = nni_pollable_getfd(s->sendable, &fd)) != 0) {
 		return (rv);
 	}
-	return (nni_copyout_int(fd, buf, szp, typ));
+	return (nni_copyout_int(fd, buf, szp, t));
 }
 
 static int
-rep0_sock_getopt_recvfd(void *arg, void *buf, size_t *szp, int typ)
+rep0_sock_get_recvfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	rep0_sock *s = arg;
 	int        rv;
@@ -644,7 +644,7 @@ rep0_sock_getopt_recvfd(void *arg, void *buf, size_t *szp, int typ)
 		return (rv);
 	}
 
-	return (nni_copyout_int(fd, buf, szp, typ));
+	return (nni_copyout_int(fd, buf, szp, t));
 }
 
 static void
@@ -680,28 +680,26 @@ static nni_proto_ctx_ops rep0_ctx_ops = {
 	.ctx_recv = rep0_ctx_recv,
 };
 
-static nni_proto_sock_option rep0_sock_options[] = {
+static nni_proto_option rep0_sock_options[] = {
 	{
-	    .pso_name   = NNG_OPT_MAXTTL,
-	    .pso_type   = NNI_TYPE_INT32,
-	    .pso_getopt = rep0_sock_getopt_maxttl,
-	    .pso_setopt = rep0_sock_setopt_maxttl,
+	    .o_name = NNG_OPT_MAXTTL,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = rep0_sock_get_maxttl,
+	    .o_set  = rep0_sock_set_maxttl,
 	},
 	{
-	    .pso_name   = NNG_OPT_RECVFD,
-	    .pso_type   = NNI_TYPE_INT32,
-	    .pso_getopt = rep0_sock_getopt_recvfd,
-	    .pso_setopt = NULL,
+	    .o_name = NNG_OPT_RECVFD,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = rep0_sock_get_recvfd,
 	},
 	{
-	    .pso_name   = NNG_OPT_SENDFD,
-	    .pso_type   = NNI_TYPE_INT32,
-	    .pso_getopt = rep0_sock_getopt_sendfd,
-	    .pso_setopt = NULL,
+	    .o_name = NNG_OPT_SENDFD,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = rep0_sock_get_sendfd,
 	},
 	// terminate list
 	{
-	    .pso_name = NULL,
+	    .o_name = NULL,
 	},
 };
 

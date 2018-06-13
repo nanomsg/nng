@@ -428,39 +428,39 @@ pair1_sock_close(void *arg)
 }
 
 static int
-pair1_sock_setopt_maxttl(void *arg, const void *buf, size_t sz, int typ)
+pair1_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	pair1_sock *s = arg;
 	int         rv;
 	nni_mtx_lock(&s->mtx); // Have to be locked against recv cb.
-	rv = nni_copyin_int(&s->ttl, buf, sz, 1, 255, typ);
+	rv = nni_copyin_int(&s->ttl, buf, sz, 1, 255, t);
 	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
 
 static int
-pair1_sock_getopt_maxttl(void *arg, void *buf, size_t *szp, int typ)
+pair1_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	pair1_sock *s = arg;
-	return (nni_copyout_int(s->ttl, buf, szp, typ));
+	return (nni_copyout_int(s->ttl, buf, szp, t));
 }
 
 static int
-pair1_sock_setopt_poly(void *arg, const void *buf, size_t sz, int typ)
+pair1_sock_set_poly(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	pair1_sock *s = arg;
 	int         rv;
 	nni_mtx_lock(&s->mtx);
-	rv = s->started ? NNG_ESTATE : nni_copyin_bool(&s->poly, buf, sz, typ);
+	rv = s->started ? NNG_ESTATE : nni_copyin_bool(&s->poly, buf, sz, t);
 	nni_mtx_unlock(&s->mtx);
 	return (rv);
 }
 
 static int
-pair1_sock_getopt_poly(void *arg, void *buf, size_t *szp, int typ)
+pair1_sock_get_poly(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	pair1_sock *s = arg;
-	return (nni_copyout_bool(s->poly, buf, szp, typ));
+	return (nni_copyout_bool(s->poly, buf, szp, t));
 }
 
 static void
@@ -487,22 +487,22 @@ static nni_proto_pipe_ops pair1_pipe_ops = {
 	.pipe_stop  = pair1_pipe_stop,
 };
 
-static nni_proto_sock_option pair1_sock_options[] = {
+static nni_proto_option pair1_sock_options[] = {
 	{
-	    .pso_name   = NNG_OPT_MAXTTL,
-	    .pso_type   = NNI_TYPE_INT32,
-	    .pso_getopt = pair1_sock_getopt_maxttl,
-	    .pso_setopt = pair1_sock_setopt_maxttl,
+	    .o_name = NNG_OPT_MAXTTL,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = pair1_sock_get_maxttl,
+	    .o_set  = pair1_sock_set_maxttl,
 	},
 	{
-	    .pso_name   = NNG_OPT_PAIR1_POLY,
-	    .pso_type   = NNI_TYPE_BOOL,
-	    .pso_getopt = pair1_sock_getopt_poly,
-	    .pso_setopt = pair1_sock_setopt_poly,
+	    .o_name = NNG_OPT_PAIR1_POLY,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = pair1_sock_get_poly,
+	    .o_set  = pair1_sock_set_poly,
 	},
 	// terminate list
 	{
-	    .pso_name = NULL,
+	    .o_name = NULL,
 	},
 };
 

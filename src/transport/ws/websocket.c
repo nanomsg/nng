@@ -367,14 +367,25 @@ ws_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-ws_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
+ws_ep_chk_string(const void *v, size_t sz, nni_opt_type t)
+{
+	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
+		return (NNG_EBADTYPE);
+	}
+	if (nni_strnlen(v, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
+	return (0);
+}
+
+static int
+ws_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
 	ws_ep *ep = arg;
 	size_t val;
 	int    rv;
 
-	rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, typ);
-	if ((rv == 0) && (ep != NULL)) {
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -388,7 +399,20 @@ ws_ep_setopt_recvmaxsz(void *arg, const void *v, size_t sz, int typ)
 }
 
 static int
-ws_ep_setopt_headers(ws_ep *ep, const char *v)
+ws_ep_chk_recvmaxsz(const void *v, size_t sz, nni_opt_type t)
+{
+	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
+}
+
+static int
+ws_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	ws_ep *ep = arg;
+	return (nni_copyout_size(ep->rcvmax, v, szp, t));
+}
+
+static int
+ws_ep_set_headers(ws_ep *ep, const char *v)
 {
 	char *   dupstr;
 	size_t   duplen;
@@ -471,52 +495,39 @@ done:
 }
 
 static int
-ws_ep_setopt_reqhdrs(void *arg, const void *v, size_t sz, int typ)
+ws_ep_set_reqhdrs(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
 	ws_ep *ep = arg;
+	int    rv;
 
-	if ((typ != NNI_TYPE_STRING) && (typ != NNI_TYPE_OPAQUE)) {
-		return (NNG_EBADTYPE);
+	if ((rv = ws_ep_chk_string(v, sz, t)) == 0) {
+		if (ep->mode == NNI_EP_MODE_LISTEN) {
+			rv = NNG_EREADONLY;
+		} else {
+			rv = ws_ep_set_headers(ep, v);
+		}
 	}
-
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-
-	if ((ep != NULL) && (ep->mode == NNI_EP_MODE_LISTEN)) {
-		return (NNG_EREADONLY);
-	}
-	return (ws_ep_setopt_headers(ep, v));
+	return (rv);
 }
 
 static int
-ws_ep_setopt_reshdrs(void *arg, const void *v, size_t sz, int typ)
+ws_ep_set_reshdrs(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
 	ws_ep *ep = arg;
+	int    rv;
 
-	if ((typ != NNI_TYPE_STRING) && (typ != NNI_TYPE_OPAQUE)) {
-		return (NNG_EBADTYPE);
+	if ((rv = ws_ep_chk_string(v, sz, t)) == 0) {
+		if (ep->mode == NNI_EP_MODE_DIAL) {
+			rv = NNG_EREADONLY;
+		} else {
+			rv = ws_ep_set_headers(ep, v);
+		}
 	}
-
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-
-	if ((ep != NULL) && (ep->mode == NNI_EP_MODE_DIAL)) {
-		return (NNG_EREADONLY);
-	}
-	return (ws_ep_setopt_headers(ep, v));
+	return (rv);
 }
 
 static int
-ws_ep_getopt_recvmaxsz(void *arg, void *v, size_t *szp, int typ)
-{
-	ws_ep *ep = arg;
-	return (nni_copyout_size(ep->rcvmax, v, szp, typ));
-}
-
-static int
-ws_pipe_getopt_locaddr(void *arg, void *v, size_t *szp, int typ)
+ws_pipe_get_locaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_pipe *    p = arg;
 	int          rv;
@@ -524,13 +535,13 @@ ws_pipe_getopt_locaddr(void *arg, void *v, size_t *szp, int typ)
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_ws_sock_addr(p->ws, &sa)) == 0) {
-		rv = nni_copyout_sockaddr(&sa, v, szp, typ);
+		rv = nni_copyout_sockaddr(&sa, v, szp, t);
 	}
 	return (rv);
 }
 
 static int
-ws_pipe_getopt_remaddr(void *arg, void *v, size_t *szp, int typ)
+ws_pipe_get_remaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_pipe *    p = arg;
 	int          rv;
@@ -538,13 +549,13 @@ ws_pipe_getopt_remaddr(void *arg, void *v, size_t *szp, int typ)
 
 	memset(&sa, 0, sizeof(sa));
 	if ((rv = nni_ws_peer_addr(p->ws, &sa)) == 0) {
-		rv = nni_copyout_sockaddr(&sa, v, szp, typ);
+		rv = nni_copyout_sockaddr(&sa, v, szp, t);
 	}
 	return (rv);
 }
 
 static int
-ws_pipe_getopt_reshdrs(void *arg, void *v, size_t *szp, int typ)
+ws_pipe_get_reshdrs(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_pipe *   p = arg;
 	const char *s;
@@ -552,11 +563,11 @@ ws_pipe_getopt_reshdrs(void *arg, void *v, size_t *szp, int typ)
 	if ((s = nni_ws_response_headers(p->ws)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	return (nni_copyout_str(s, v, szp, typ));
+	return (nni_copyout_str(s, v, szp, t));
 }
 
 static int
-ws_pipe_getopt_reqhdrs(void *arg, void *v, size_t *szp, int typ)
+ws_pipe_get_reqhdrs(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_pipe *   p = arg;
 	const char *s;
@@ -564,46 +575,46 @@ ws_pipe_getopt_reqhdrs(void *arg, void *v, size_t *szp, int typ)
 	if ((s = nni_ws_request_headers(p->ws)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	return (nni_copyout_str(s, v, szp, typ));
+	return (nni_copyout_str(s, v, szp, t));
 }
 
 static int
-ws_pipe_getopt_tls_verified(void *arg, void *v, size_t *szp, int typ)
+ws_pipe_get_tls_verified(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_pipe *p = arg;
-	return (nni_copyout_bool(nni_ws_tls_verified(p->ws), v, szp, typ));
+	return (nni_copyout_bool(nni_ws_tls_verified(p->ws), v, szp, t));
 }
 
-static nni_tran_pipe_option ws_pipe_options[] = {
+static nni_tran_option ws_pipe_options[] = {
 
 	{
-	    .po_name   = NNG_OPT_LOCADDR,
-	    .po_type   = NNI_TYPE_SOCKADDR,
-	    .po_getopt = ws_pipe_getopt_locaddr,
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = ws_pipe_get_locaddr,
 	},
 	{
-	    .po_name   = NNG_OPT_REMADDR,
-	    .po_type   = NNI_TYPE_SOCKADDR,
-	    .po_getopt = ws_pipe_getopt_remaddr,
+	    .o_name = NNG_OPT_REMADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = ws_pipe_get_remaddr,
 	},
 	{
-	    .po_name   = NNG_OPT_WS_REQUEST_HEADERS,
-	    .po_type   = NNI_TYPE_STRING,
-	    .po_getopt = ws_pipe_getopt_reqhdrs,
+	    .o_name = NNG_OPT_WS_REQUEST_HEADERS,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = ws_pipe_get_reqhdrs,
 	},
 	{
-	    .po_name   = NNG_OPT_WS_RESPONSE_HEADERS,
-	    .po_type   = NNI_TYPE_STRING,
-	    .po_getopt = ws_pipe_getopt_reshdrs,
+	    .o_name = NNG_OPT_WS_RESPONSE_HEADERS,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = ws_pipe_get_reshdrs,
 	},
 	{
-	    .po_name   = NNG_OPT_TLS_VERIFIED,
-	    .po_type   = NNI_TYPE_BOOL,
-	    .po_getopt = ws_pipe_getopt_tls_verified,
+	    .o_name = NNG_OPT_TLS_VERIFIED,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = ws_pipe_get_tls_verified,
 	},
 	// terminate list
 	{
-	    .po_name = NULL,
+	    .o_name = NULL,
 	}
 };
 
@@ -617,28 +628,29 @@ static nni_tran_pipe_ops ws_pipe_ops = {
 	.p_options = ws_pipe_options,
 };
 
-static nni_tran_ep_option ws_ep_options[] = {
+static nni_tran_option ws_ep_options[] = {
 	{
-	    .eo_name   = NNG_OPT_RECVMAXSZ,
-	    .eo_type   = NNI_TYPE_SIZE,
-	    .eo_getopt = ws_ep_getopt_recvmaxsz,
-	    .eo_setopt = ws_ep_setopt_recvmaxsz,
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = ws_ep_get_recvmaxsz,
+	    .o_set  = ws_ep_set_recvmaxsz,
+	    .o_chk  = ws_ep_chk_recvmaxsz,
 	},
 	{
-	    .eo_name   = NNG_OPT_WS_REQUEST_HEADERS,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = ws_ep_setopt_reqhdrs,
+	    .o_name = NNG_OPT_WS_REQUEST_HEADERS,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = ws_ep_set_reqhdrs,
+	    .o_chk  = ws_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_WS_RESPONSE_HEADERS,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = ws_ep_setopt_reshdrs,
+	    .o_name = NNG_OPT_WS_RESPONSE_HEADERS,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = ws_ep_set_reshdrs,
+	    .o_chk  = ws_ep_chk_string,
 	},
 	// terminate list
 	{
-	    .eo_name = NULL,
+	    .o_name = NULL,
 	},
 };
 
@@ -858,35 +870,43 @@ wss_get_tls(ws_ep *ep, nng_tls_config **tlsp)
 }
 
 static int
-wss_ep_getopt_tlsconfig(void *arg, void *v, size_t *szp, int typ)
+wss_ep_get_tlsconfig(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_ep *         ep = arg;
 	nng_tls_config *tls;
 	int             rv;
 
 	if (((rv = wss_get_tls(ep, &tls)) != 0) ||
-	    ((rv = nni_copyout_ptr(tls, v, szp, typ)) != 0)) {
+	    ((rv = nni_copyout_ptr(tls, v, szp, t)) != 0)) {
 		return (rv);
 	}
 	return (0);
 }
 
 static int
-wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz, int typ)
+wss_ep_chk_tlsconfig(const void *v, size_t sz, nni_opt_type t)
+{
+	void *p;
+	int   rv;
+	if (((rv = nni_copyin_ptr(&p, v, sz, t)) == 0) && (p == NULL)) {
+		rv = NNG_EINVAL;
+	}
+	return (rv);
+}
+
+static int
+wss_ep_set_tlsconfig(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
 	ws_ep *         ep = arg;
 	nng_tls_config *cfg;
 	int             rv;
 
-	if ((rv = nni_copyin_ptr((void **) &cfg, v, sz, typ)) != 0) {
+	if ((rv = nni_copyin_ptr((void **) &cfg, v, sz, t)) != 0) {
 		return (rv);
 	}
 	if (cfg == NULL) {
 		// NULL is clearly invalid.
 		return (NNG_EINVAL);
-	}
-	if (ep == NULL) {
-		return (0);
 	}
 	if (ep->mode == NNI_EP_MODE_LISTEN) {
 		rv = nni_ws_listener_set_tls(ep->listener, cfg);
@@ -897,52 +917,42 @@ wss_ep_setopt_tlsconfig(void *arg, const void *v, size_t sz, int typ)
 }
 
 static int
-wss_ep_setopt_tls_cert_key_file(void *arg, const void *v, size_t sz, int typ)
+wss_ep_set_cert_key_file(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
 	ws_ep *         ep = arg;
 	int             rv;
 	nng_tls_config *tls;
 
-	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
-		return (NNG_EBADTYPE);
-	}
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-	if (ep == NULL) {
-		return (0);
-	}
-	if ((rv = wss_get_tls(ep, &tls)) != 0) {
+	if (((rv = ws_ep_chk_string(v, sz, t)) != 0) ||
+	    ((rv = wss_get_tls(ep, &tls)) != 0)) {
 		return (rv);
 	}
 	return (nng_tls_config_cert_key_file(tls, v, NULL));
 }
 
 static int
-wss_ep_setopt_tls_ca_file(void *arg, const void *v, size_t sz, int typ)
+wss_ep_set_ca_file(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
 	ws_ep *         ep = arg;
 	int             rv;
 	nng_tls_config *tls;
 
-	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
-		return (NNG_EBADTYPE);
-	}
-
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-	if (ep == NULL) {
-		return (0);
-	}
-	if ((rv = wss_get_tls(ep, &tls)) != 0) {
+	if (((rv = ws_ep_chk_string(v, sz, t)) != 0) ||
+	    ((rv = wss_get_tls(ep, &tls)) != 0)) {
 		return (rv);
 	}
 	return (nng_tls_config_ca_file(tls, v));
 }
 
 static int
-wss_ep_setopt_tls_auth_mode(void *arg, const void *v, size_t sz, int typ)
+wss_ep_chk_auth_mode(const void *v, size_t sz, nni_opt_type t)
+{
+	return (nni_copyin_int(NULL, v, sz, NNG_TLS_AUTH_MODE_NONE,
+	    NNG_TLS_AUTH_MODE_REQUIRED, t));
+}
+
+static int
+wss_ep_set_auth_mode(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
 	ws_ep *         ep = arg;
 	int             rv;
@@ -950,91 +960,83 @@ wss_ep_setopt_tls_auth_mode(void *arg, const void *v, size_t sz, int typ)
 	int             mode;
 
 	rv = nni_copyin_int(&mode, v, sz, NNG_TLS_AUTH_MODE_NONE,
-	    NNG_TLS_AUTH_MODE_REQUIRED, typ);
-	if ((rv != 0) || (ep == NULL)) {
-		return (rv);
-	}
-	if ((rv = wss_get_tls(ep, &tls)) != 0) {
+	    NNG_TLS_AUTH_MODE_REQUIRED, t);
+
+	if ((rv != 0) || ((rv = wss_get_tls(ep, &tls)) != 0)) {
 		return (rv);
 	}
 	return (nng_tls_config_auth_mode(tls, mode));
 }
 
 static int
-wss_ep_setopt_tls_server_name(void *arg, const void *v, size_t sz, int typ)
+wss_ep_set_tls_server_name(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
 	ws_ep *         ep = arg;
 	int             rv;
 	nng_tls_config *tls;
 
-	if ((typ != NNI_TYPE_OPAQUE) && (typ != NNI_TYPE_STRING)) {
-		return (NNG_EBADTYPE);
-	}
-
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-	if (ep == NULL) {
-		return (0);
-	}
-	if ((rv = wss_get_tls(ep, &tls)) != 0) {
+	if (((rv = ws_ep_chk_string(v, sz, t)) != 0) ||
+	    ((rv = wss_get_tls(ep, &tls)) != 0)) {
 		return (rv);
 	}
+
 	return (nng_tls_config_server_name(tls, v));
 }
 
-static nni_tran_ep_option wss_ep_options[] = {
+static nni_tran_option wss_ep_options[] = {
 	{
-	    .eo_name   = NNG_OPT_RECVMAXSZ,
-	    .eo_type   = NNI_TYPE_SIZE,
-	    .eo_getopt = ws_ep_getopt_recvmaxsz,
-	    .eo_setopt = ws_ep_setopt_recvmaxsz,
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = ws_ep_get_recvmaxsz,
+	    .o_set  = ws_ep_set_recvmaxsz,
+	    .o_chk  = ws_ep_chk_recvmaxsz,
 	},
 	{
-	    .eo_name   = NNG_OPT_WS_REQUEST_HEADERS,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = ws_ep_setopt_reqhdrs,
+	    .o_name = NNG_OPT_WS_REQUEST_HEADERS,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = ws_ep_set_reqhdrs,
+	    .o_chk  = ws_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_WS_RESPONSE_HEADERS,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = ws_ep_setopt_reshdrs,
+	    .o_name = NNG_OPT_WS_RESPONSE_HEADERS,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = ws_ep_set_reshdrs,
+	    .o_chk  = ws_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_CONFIG,
-	    .eo_type   = NNI_TYPE_POINTER,
-	    .eo_getopt = wss_ep_getopt_tlsconfig,
-	    .eo_setopt = wss_ep_setopt_tlsconfig,
+	    .o_name = NNG_OPT_TLS_CONFIG,
+	    .o_type = NNI_TYPE_POINTER,
+	    .o_get  = wss_ep_get_tlsconfig,
+	    .o_set  = wss_ep_set_tlsconfig,
+	    .o_chk  = wss_ep_chk_tlsconfig,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_CERT_KEY_FILE,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = wss_ep_setopt_tls_cert_key_file,
+	    .o_name = NNG_OPT_TLS_CERT_KEY_FILE,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = wss_ep_set_cert_key_file,
+	    .o_chk  = ws_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_CA_FILE,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = wss_ep_setopt_tls_ca_file,
+	    .o_name = NNG_OPT_TLS_CA_FILE,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = wss_ep_set_ca_file,
+	    .o_chk  = ws_ep_chk_string,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_AUTH_MODE,
-	    .eo_type   = NNI_TYPE_INT32,
-	    .eo_getopt = NULL,
-	    .eo_setopt = wss_ep_setopt_tls_auth_mode,
+	    .o_name = NNG_OPT_TLS_AUTH_MODE,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_set  = wss_ep_set_auth_mode,
+	    .o_chk  = wss_ep_chk_auth_mode,
 	},
 	{
-	    .eo_name   = NNG_OPT_TLS_SERVER_NAME,
-	    .eo_type   = NNI_TYPE_STRING,
-	    .eo_getopt = NULL,
-	    .eo_setopt = wss_ep_setopt_tls_server_name,
+	    .o_name = NNG_OPT_TLS_SERVER_NAME,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = wss_ep_set_tls_server_name,
+	    .o_chk  = ws_ep_chk_string,
 	},
 	// terminate list
 	{
-	    .eo_name = NULL,
+	    .o_name = NULL,
 	},
 };
 
