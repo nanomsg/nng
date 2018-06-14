@@ -662,14 +662,14 @@ ws_ep_fini(void *arg)
 
 	nni_aio_stop(ep->accaio);
 	nni_aio_stop(ep->connaio);
-	nni_aio_fini(ep->accaio);
-	nni_aio_fini(ep->connaio);
 	if (ep->listener != NULL) {
 		nni_ws_listener_fini(ep->listener);
 	}
 	if (ep->dialer != NULL) {
 		nni_ws_dialer_fini(ep->dialer);
 	}
+	nni_aio_fini(ep->accaio);
+	nni_aio_fini(ep->connaio);
 	while ((hdr = nni_list_first(&ep->headers)) != NULL) {
 		nni_list_remove(&ep->headers, hdr);
 		nni_strfree(hdr->name);
