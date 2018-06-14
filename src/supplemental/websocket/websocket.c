@@ -1256,11 +1256,13 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 	uaio = ws->useraio;
 
 	nni_mtx_lock(&d->mtx);
-	NNI_ASSERT(uaio != NULL);
 	// We have two steps.  In step 1, we just sent the request,
 	// and need to retrieve the reply.  In step two we have
 	// received the reply, and need to validate it.
-	if ((rv = nni_aio_result(aio)) != 0) {
+	// Note that its possible that the user canceled the request,
+	// in which case we no longer care, and just go to the error
+	// case to discard the ws.
+	if (((rv = nni_aio_result(aio)) != 0) || (uaio == NULL)) {
 		goto err;
 	}
 
@@ -1343,7 +1345,9 @@ err:
 	if (nni_list_empty(&d->wspend)) {
 		nni_cv_wake(&d->cv);
 	}
-	nni_aio_finish_error(uaio, rv);
+	if (uaio != NULL) {
+		nni_aio_finish_error(uaio, rv);
+	}
 	nni_mtx_unlock(&d->mtx);
 
 	nni_ws_fini(ws);
