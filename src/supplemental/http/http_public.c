@@ -676,6 +676,34 @@ nng_http_server_del_handler(nng_http_server *srv, nng_http_handler *h)
 }
 
 int
+nng_http_server_set_error_page(
+    nng_http_server *srv, uint16_t code, const char *body)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_server_set_error_page(srv, code, body));
+#else
+	NNI_ARG_UNUSED(srv);
+	NNI_ARG_UNUSED(code);
+	NNI_ARG_UNUSED(body);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int
+nng_http_server_set_error_file(
+    nng_http_server *srv, uint16_t code, const char *path)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_server_set_error_file(srv, code, path));
+#else
+	NNI_ARG_UNUSED(srv);
+	NNI_ARG_UNUSED(code);
+	NNI_ARG_UNUSED(path);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int
 nng_http_server_set_tls(nng_http_server *srv, struct nng_tls_config *cfg)
 {
 #if defined(NNG_SUPP_HTTP) && defined(NNG_SUPP_TLS)
@@ -695,6 +723,19 @@ nng_http_server_get_tls(nng_http_server *srv, struct nng_tls_config **cfgp)
 #else
 	NNI_ARG_UNUSED(srv);
 	NNI_ARG_UNUSED(cfgp);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int
+nng_http_server_res_error(nng_http_server *srv, nng_http_res *res)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_server_res_error(srv, res));
+#else
+	NNI_ARG_UNUSED(srv);
+	NNI_ARG_UNUSED(res);
+	NNI_ARG_UNUSED(code);
 	return (NNG_ENOTSUP);
 #endif
 }

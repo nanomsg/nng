@@ -40,7 +40,7 @@ struct nng_http_handler {
 	void (*cb)(nni_aio *);
 };
 
-typedef struct nni_http_ctx {
+typedef struct http_sconn {
 	nni_list_node    node;
 	nni_http_conn *  conn;
 	nni_http_server *server;
@@ -55,6 +55,13 @@ typedef struct nni_http_ctx {
 	nni_aio *        txdataio;
 	nni_reap_item    reap;
 } http_sconn;
+
+typedef struct http_error {
+	nni_list_node node;
+	uint16_t      code;
+	void *        body;
+	size_t        len;
+} http_error;
 
 struct nng_http_server {
 	nng_sockaddr     addr;
@@ -71,6 +78,8 @@ struct nng_http_server {
 	nni_plat_tcp_ep *tep;
 	char *           port;
 	char *           hostname;
+	nni_list         errors;
+	nni_mtx          errors_mtx;
 };
 
 int
@@ -395,13 +404,20 @@ http_sconn_error(http_sconn *sc, uint16_t err)
 {
 	nni_http_res *res;
 
-	if (nni_http_res_alloc_error(&res, err) != 0) {
+	if (nni_http_res_alloc(&res) != 0) {
+		http_sconn_close(sc);
+		return;
+	}
+	nni_http_res_set_status(res, err);
+	if (nni_http_server_res_error(sc->server, res) != 0) {
+		nni_http_res_free(res);
 		http_sconn_close(sc);
 		return;
 	}
 
 	if (sc->close) {
 		if (nni_http_res_set_header(res, "Connection", "close") != 0) {
+			nni_http_res_free(res);
 			http_sconn_close(sc);
 		}
 	}
@@ -651,6 +667,8 @@ http_sconn_cbdone(void *arg)
 			// the HTTP header.
 			nni_http_res_get_data(res, &data, &size);
 			nni_http_res_set_data(res, NULL, size);
+		} else if (nni_http_res_is_error(res)) {
+			(void) nni_http_server_res_error(s, res);
 		}
 		nni_http_write_res(sc->conn, res, sc->txaio);
 	} else if (sc->close) {
@@ -743,6 +761,7 @@ static void
 http_server_fini(nni_http_server *s)
 {
 	nni_http_handler *h;
+	http_error *      epage;
 
 	nni_aio_stop(s->accaio);
 
@@ -764,6 +783,15 @@ http_server_fini(nni_http_server *s)
 		nni_tls_config_fini(s->tls);
 	}
 #endif
+	nni_mtx_lock(&s->errors_mtx);
+	while ((epage = nni_list_first(&s->errors)) != NULL) {
+		nni_list_remove(&s->errors, epage);
+		nni_free(epage->body, epage->len);
+		NNI_FREE_STRUCT(epage);
+	}
+	nni_mtx_unlock(&s->errors_mtx);
+	nni_mtx_fini(&s->errors_mtx);
+
 	nni_aio_fini(s->accaio);
 	nni_cv_fini(&s->cv);
 	nni_mtx_fini(&s->mtx);
@@ -804,8 +832,13 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 	}
 	nni_mtx_init(&s->mtx);
 	nni_cv_init(&s->cv, &s->mtx);
+	nni_mtx_init(&s->errors_mtx);
 	NNI_LIST_INIT(&s->handlers, nni_http_handler, node);
 	NNI_LIST_INIT(&s->conns, http_sconn, node);
+
+	nni_mtx_init(&s->errors_mtx);
+	NNI_LIST_INIT(&s->errors, http_error, node);
+
 	if ((rv = nni_aio_init(&s->accaio, http_server_acccb, s)) != 0) {
 		http_server_fini(s);
 		return (rv);
@@ -949,6 +982,117 @@ nni_http_server_stop(nni_http_server *s)
 		http_server_stop(s);
 	}
 	nni_mtx_unlock(&s->mtx);
+}
+
+static int
+http_server_set_err(nni_http_server *s, uint16_t code, void *body, size_t len)
+{
+	http_error *epage;
+
+	nni_mtx_lock(&s->errors_mtx);
+	NNI_LIST_FOREACH (&s->errors, epage) {
+		if (epage->code == code) {
+			break;
+		}
+	}
+	if (epage == NULL) {
+		if ((epage = NNI_ALLOC_STRUCT(epage)) == NULL) {
+			nni_mtx_unlock(&s->mtx);
+			return (NNG_ENOMEM);
+		}
+		epage->code = code;
+		nni_list_append(&s->errors, epage);
+	}
+	if (epage->len != 0) {
+		nni_free(epage->body, epage->len);
+	}
+	epage->body = body;
+	epage->len  = len;
+	nni_mtx_unlock(&s->errors_mtx);
+	return (0);
+}
+
+int
+nni_http_server_set_error_page(
+    nni_http_server *s, uint16_t code, const char *html)
+{
+	char * body;
+	int    rv;
+	size_t len;
+
+	// We copy the content, without the trailing NUL.
+	len = strlen(html);
+	if ((body = nni_alloc(len)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	memcpy(body, html, len);
+	if ((rv = http_server_set_err(s, code, body, len)) != 0) {
+		nni_free(body, len);
+	}
+	return (rv);
+}
+
+int
+nni_http_server_set_error_file(
+    nni_http_server *s, uint16_t code, const char *path)
+{
+	void * body;
+	size_t len;
+	int    rv;
+	if ((rv = nni_file_get(path, &body, &len)) != 0) {
+		return (rv);
+	}
+	if ((rv = http_server_set_err(s, code, body, len)) != 0) {
+		nni_free(body, len);
+	}
+	return (rv);
+}
+
+int
+nni_http_server_res_error(nni_http_server *s, nni_http_res *res)
+{
+	http_error *epage;
+	char *      body = NULL;
+	size_t      len;
+	uint16_t    code = nni_http_res_get_status(res);
+	int         rv;
+	char        html[512];
+
+	nni_mtx_lock(&s->errors_mtx);
+	NNI_LIST_FOREACH (&s->errors, epage) {
+		if (epage->code == code) {
+			body = epage->body;
+			len  = epage->len;
+			break;
+		}
+	}
+	if (body == NULL) {
+		const char *reason = nni_http_reason(code);
+		// very simple builtin error page
+		(void) snprintf(html, sizeof(html),
+		    "<head><title>%d %s</title></head>"
+		    "<body><p/><h1 align=\"center\">"
+		    "<span style=\"font-size: 36px; border-radius: 5px; "
+		    "background-color: black; color: white; padding: 7px; "
+		    "font-family: Arial, sans serif;\">%d</span></h1>"
+		    "<p align=\"center\">"
+		    "<span style=\"font-size: 24px; font-family: Arial, sans "
+		    "serif;\">"
+		    "%s</span></p></body>",
+		    code, reason, code, reason);
+		body = html;
+		len  = strlen(body);
+	}
+	// NB: The server lock has to be held here to guard against the
+	// error page being tossed or changed.
+	if (((rv = nni_http_res_copy_data(res, body, len)) == 0) &&
+	    ((rv = nni_http_res_set_header(
+	          res, "Content-Type", "text/html; charset=UTF-8")) == 0)) {
+		nni_http_res_set_status(res, code);
+	}
+
+	nni_mtx_unlock(&s->errors_mtx);
+	return (rv);
 }
 
 int

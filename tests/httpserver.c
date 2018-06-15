@@ -25,6 +25,7 @@
 const char *doc1 = "<html><body>Someone <b>is</b> home!</body</html>";
 const char *doc2 = "This is a text file.";
 const char *doc3 = "<html><body>This is doc number 3.</body></html>";
+const char *doc4 = "<html><body>Whoops, Errored!</body></html>";
 
 void
 cleanup(void)
@@ -68,8 +69,7 @@ httpdo(nng_url *url, nng_http_req *req, nng_http_res *res, void **datap,
 	}
 
 	clen = 0;
-	if ((nng_http_res_get_status(res) == NNG_HTTP_STATUS_OK) &&
-	    ((ptr = nng_http_res_get_header(res, "Content-Length")) != NULL)) {
+	if ((ptr = nng_http_res_get_header(res, "Content-Length")) != NULL) {
 		clen = atoi(ptr);
 	}
 
@@ -377,7 +377,21 @@ TestMain("HTTP Server", {
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
 			So(stat == NNG_HTTP_STATUS_NOT_FOUND);
-			So(size == 0);
+		});
+
+		Convey("Custom error page works", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			So(nng_http_server_set_error_page(s, 404, doc4) == 0);
+			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_NOT_FOUND);
+			So(size == strlen(doc4));
+			So(memcmp(data, doc4, size) == 0);
 		});
 
 		Convey("Bad method gives 405", {
@@ -397,7 +411,6 @@ TestMain("HTTP Server", {
 			So(httpdo(curl, req, res, &data, &size) == 0);
 			So(nng_http_res_get_status(res) ==
 			    NNG_HTTP_STATUS_METHOD_NOT_ALLOWED);
-			So(size == 0);
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
@@ -419,7 +432,6 @@ TestMain("HTTP Server", {
 			So(httpdo(curl, req, res, &data, &size) == 0);
 			So(nng_http_res_get_status(res) ==
 			    NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP);
-			So(size == 0);
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
@@ -441,7 +453,6 @@ TestMain("HTTP Server", {
 			So(httpdo(curl, req, res, &data, &size) == 0);
 			So(nng_http_res_get_status(res) ==
 			    NNG_HTTP_STATUS_BAD_REQUEST);
-			So(size == 0);
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);

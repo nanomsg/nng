@@ -341,7 +341,10 @@ These functions are intended for use with HTTP server applications.
 |<<nng_http_server_get_tls.3http#,nng_http_server_get_tls()>>|get HTTP server TLS configuration
 |<<nng_http_server_hold.3http#,nng_http_server_get_tls()>>|get and hold HTTP server instance
 |<<nng_http_server_release.3http#,nng_http_server_get_tls()>>|release HTTP server instance
+|<<nng_http_server_set_error_file.3http#,nng_http_server_set_error_file()>>|set custom HTTP error file
+|<<nng_http_server_set_error_page.3http#,nng_http_server_set_error_page()>>|set custom HTTP error page
 |<<nng_http_server_set_tls.3http#,nng_http_server_set_tls()>>|set HTTP server TLS configuration
+|<<nng_http_server_res_error.3http#,nng_http_server_res_error()>>|use HTTP server error page
 |<<nng_http_server_start.3http#,nng_http_server_start()>>|start HTTP server
 |<<nng_http_server_stop.3http#,nng_http_server_stop()>>|stop HTTP server
 |===

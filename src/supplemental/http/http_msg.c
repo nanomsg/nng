@@ -54,6 +54,7 @@ struct nng_http_res {
 	char *          buf;
 	size_t          bufsz;
 	bool            parsed;
+	bool            iserr;
 };
 
 static int
@@ -375,6 +376,7 @@ nni_http_res_set_data(nni_http_res *res, const void *data, size_t size)
 	if ((rv = http_set_content_length(&res->data, &res->hdrs)) != 0) {
 		http_entity_set_data(&res->data, NULL, 0);
 	}
+	res->iserr = false;
 	return (rv);
 }
 
@@ -401,7 +403,14 @@ nni_http_res_copy_data(nni_http_res *res, const void *data, size_t size)
 		http_entity_set_data(&res->data, NULL, 0);
 		return (rv);
 	}
+	res->iserr = false;
 	return (0);
+}
+
+bool
+nni_http_res_is_error(nni_http_res *res)
+{
+	return (res->iserr);
 }
 
 static int
@@ -962,7 +971,7 @@ static struct {
 };
 
 const char *
-http_reason(uint16_t code)
+nni_http_reason(uint16_t code)
 {
 	for (int i = 0; http_status[i].code != 0; i++) {
 		if (http_status[i].code == code) {
@@ -975,14 +984,14 @@ http_reason(uint16_t code)
 const char *
 nni_http_res_get_reason(nni_http_res *res)
 {
-	return (res->rsn ? res->rsn : http_reason(res->code));
+	return (res->rsn ? res->rsn : nni_http_reason(res->code));
 }
 
 int
 nni_http_res_set_reason(nni_http_res *res, const char *reason)
 {
 	if ((reason != NULL) &&
-	    (strcmp(reason, http_reason(res->code)) == 0)) {
+	    (strcmp(reason, nni_http_reason(res->code)) == 0)) {
 		reason = NULL;
 	}
 	return (http_set_string(&res->rsn, reason));
@@ -1009,7 +1018,7 @@ nni_http_res_alloc_error(nni_http_res **resp, uint16_t err)
 	    "<p align=\"center\">"
 	    "<span style=\"font-size: 24px; font-family: Arial, sans serif;\">"
 	    "%s</span></p></body>",
-	    err, http_reason(err), err, http_reason(err));
+	    err, nni_http_reason(err), err, nni_http_reason(err));
 
 	res->code = err;
 	if (((rv = nni_http_res_set_header(
@@ -1017,7 +1026,8 @@ nni_http_res_alloc_error(nni_http_res **resp, uint16_t err)
 	    ((rv = nni_http_res_copy_data(res, html, strlen(html))) != 0)) {
 		nni_http_res_free(res);
 	} else {
-		*resp = res;
+		res->iserr = true;
+		*resp      = res;
 	}
 	return (rv);
 }

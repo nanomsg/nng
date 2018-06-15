@@ -30,6 +30,9 @@ typedef struct nng_http_client  nni_http_client;
 
 // These functions are private to the internal framework, and really should
 // not be used elsewhere.
+
+extern const char *nni_http_reason(uint16_t);
+
 extern int   nni_http_req_init(nni_http_req **);
 extern void  nni_http_req_reset(nni_http_req *);
 extern int   nni_http_req_get_buf(nni_http_req *, void **, size_t *);
@@ -111,6 +114,11 @@ extern int         nni_http_res_set_version(nni_http_res *, const char *);
 extern const char *nni_http_res_get_reason(nni_http_res *);
 extern int         nni_http_res_set_reason(nni_http_res *, const char *);
 
+// nni_http_res_is_error is true if the status was allocated as part of
+// nni_http_res_alloc_error().  This is a hint to the server to replace
+// the HTML body with customized content if it exists.
+extern bool nni_http_res_is_error(nni_http_res *);
+
 extern void nni_http_read(nni_http_conn *, nni_aio *);
 extern void nni_http_read_full(nni_http_conn *, nni_aio *);
 extern void nni_http_write(nni_http_conn *, nni_aio *);
@@ -169,6 +177,19 @@ extern int nni_http_server_start(nni_http_server *);
 // Connections that have been "upgraded" are unaffected.  Connections
 // associated with a callback will complete their callback, and then close.
 extern void nni_http_server_stop(nni_http_server *);
+
+// nni_http_server_set_error_page sets an error page for the named status.
+extern int nni_http_server_set_error_page(
+    nni_http_server *, uint16_t, const char *);
+
+// nni_http_server_set_error_page sets an error file for the named status.
+extern int nni_http_server_set_error_file(
+    nni_http_server *, uint16_t, const char *);
+
+// nni_http_server_res_error takes replaces the body of the res with
+// a custom error page previously set for the server, using the status
+// of the res.  The res must have the status set first.
+extern int nni_http_server_res_error(nni_http_server *, nni_http_res *);
 
 // nni_http_hijack is intended to be called by a handler that wishes to
 // take over the processing of the HTTP session -- usually to change protocols

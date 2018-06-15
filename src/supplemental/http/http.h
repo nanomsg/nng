@@ -407,6 +407,29 @@ NNG_DECL int nng_http_server_set_tls(
 NNG_DECL int nng_http_server_get_tls(
     nng_http_server *, struct nng_tls_config **);
 
+// nng_http_server_set_error_page sets a custom error page (HTML) content
+// to be sent for the given error code.  This is used when the error is
+// generated internally by the framework, or when the application returns
+// the response back to the server via the handler's aio, and the response
+// was allocated with nng_http_res_alloc_error.  If the response was not
+// allocated this way, or the application writes the response itself instead
+// of letting the server do so, then this setting will be ignored.
+NNG_DECL int nng_http_server_set_error_page(
+    nng_http_server *, uint16_t, const char *);
+
+// nng_http_server_set_error_file works like nng_http_server_error_page,
+// except that the content is loaded from the named file path.  The contents
+// are loaded at the time this function is called, so this function should be
+// called anytime the contents of the named file have changed.
+NNG_DECL int nng_http_server_set_error_file(
+    nng_http_server *, uint16_t, const char *);
+
+// nng_http_server_res_error takes replaces the body of the response with
+// a custom error page previously set for the server, using the status
+// of the response.  The response must have the status set first using
+// nng_http_res_set_status or implicitly via nng_http_res_alloc_error.
+NNG_DECL int nng_http_server_res_error(nng_http_server *, nng_http_res *);
+
 // nng_http_hijack is intended to be called by a handler that wishes to
 // take over the processing of the HTTP session -- usually to change protocols
 // (such as in the case of websocket).  The caller is responsible for the
