@@ -40,45 +40,48 @@ finish(void)
 
 // Fake TCP transport
 struct nni_tran fake_tcp = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "tcp",
-	.tran_ep      = NULL,
-	.tran_pipe    = NULL,
-	.tran_init    = goodinit,
-	.tran_fini    = finish,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "tcp",
+	.tran_dialer   = NULL,
+	.tran_listener = NULL,
+	.tran_pipe     = NULL,
+	.tran_init     = goodinit,
+	.tran_fini     = finish,
 };
 
 // Bad version transport
 struct nni_tran badvers = {
-	.tran_version = NNI_TRANSPORT_VERSION + 1,
-	.tran_scheme  = "badvers",
-	.tran_ep      = NULL,
-	.tran_pipe    = NULL,
-	.tran_init    = goodinit,
-	.tran_fini    = finish,
+	.tran_version  = NNI_TRANSPORT_VERSION + 1,
+	.tran_scheme   = "badvers",
+	.tran_dialer   = NULL,
+	.tran_listener = NULL,
+	.tran_pipe     = NULL,
+	.tran_init     = goodinit,
+	.tran_fini     = finish,
 };
 
 struct nni_tran badtran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "badtran",
-	.tran_ep      = NULL,
-	.tran_pipe    = NULL,
-	.tran_init    = badinit,
-	.tran_fini    = finish,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "badtran",
+	.tran_dialer   = NULL,
+	.tran_listener = NULL,
+	.tran_pipe     = NULL,
+	.tran_init     = badinit,
+	.tran_fini     = finish,
 };
 
 // Bogus good transport
 struct nni_tran goodtran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "goodtran",
-	.tran_ep      = NULL,
-	.tran_pipe    = NULL,
-	.tran_init    = goodinit,
-	.tran_fini    = finish,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "goodtran",
+	.tran_dialer   = NULL,
+	.tran_listener = NULL,
+	.tran_pipe     = NULL,
+	.tran_init     = goodinit,
+	.tran_fini     = finish,
 };
 
 TestMain("Pluggable Transports", {
-
 	Convey("Registering TCP again fails", {
 		So(nni_tran_register(&fake_tcp) == NNG_ESTATE);
 		So(ninits == 0);
@@ -121,5 +124,4 @@ TestMain("Pluggable Transports", {
 			So(nfinis == 1);
 		});
 	});
-
 })

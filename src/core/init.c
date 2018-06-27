@@ -33,7 +33,8 @@ nni_init_helper(void)
 	    ((rv = nni_aio_sys_init()) != 0) ||
 	    ((rv = nni_random_sys_init()) != 0) ||
 	    ((rv = nni_sock_sys_init()) != 0) ||
-	    ((rv = nni_ep_sys_init()) != 0) ||
+	    ((rv = nni_listener_sys_init()) != 0) ||
+	    ((rv = nni_dialer_sys_init()) != 0) ||
 	    ((rv = nni_pipe_sys_init()) != 0) ||
 	    ((rv = nni_proto_sys_init()) != 0) ||
 	    ((rv = nni_tran_sys_init()) != 0)) {
@@ -71,7 +72,8 @@ nni_fini(void)
 	nni_tran_sys_fini();
 	nni_proto_sys_fini();
 	nni_pipe_sys_fini();
-	nni_ep_sys_fini();
+	nni_dialer_sys_fini();
+	nni_listener_sys_fini();
 	nni_sock_sys_fini();
 	nni_reap_sys_fini(); // must be before timer and aio (expire)
 	nni_random_sys_fini();

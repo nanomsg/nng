@@ -48,7 +48,7 @@ struct nni_inproc_pair {
 
 struct nni_inproc_ep {
 	const char *  addr;
-	int           mode;
+	bool          listener;
 	nni_list_node node;
 	uint16_t      proto;
 	nni_cv        cv;
@@ -189,7 +189,7 @@ nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-nni_inproc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
+nni_inproc_dialer_init(void **epp, nni_url *url, nni_sock *sock)
 {
 	nni_inproc_ep *ep;
 
@@ -197,8 +197,26 @@ nni_inproc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		return (NNG_ENOMEM);
 	}
 
-	ep->mode  = mode;
-	ep->proto = nni_sock_proto_id(sock);
+	ep->listener = false;
+	ep->proto    = nni_sock_proto_id(sock);
+	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
+	nni_aio_list_init(&ep->aios);
+
+	ep->addr = url->u_rawurl; // we match on the full URL.
+	*epp     = ep;
+	return (0);
+}
+static int
+nni_inproc_listener_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	nni_inproc_ep *ep;
+
+	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	ep->listener = true;
+	ep->proto    = nni_sock_proto_id(sock);
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -222,8 +240,7 @@ nni_inproc_conn_finish(nni_aio *aio, int rv, nni_inproc_pipe *pipe)
 
 	nni_aio_list_remove(aio);
 
-	if ((ep != NULL) && (ep->mode != NNI_EP_MODE_LISTEN) &&
-	    nni_list_empty(&ep->aios)) {
+	if ((ep != NULL) && (!ep->listener) && nni_list_empty(&ep->aios)) {
 		nni_list_node_remove(&ep->node);
 	}
 
@@ -354,10 +371,7 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
-	if (ep->mode != NNI_EP_MODE_DIAL) {
-		nni_aio_finish_error(aio, NNG_EINVAL);
-		return;
-	}
+
 	nni_mtx_lock(&nni_inproc.mx);
 
 	// Find a server.
@@ -468,25 +482,33 @@ static nni_tran_option nni_inproc_ep_options[] = {
 	},
 };
 
-static nni_tran_ep_ops nni_inproc_ep_ops = {
-	.ep_init    = nni_inproc_ep_init,
-	.ep_fini    = nni_inproc_ep_fini,
-	.ep_connect = nni_inproc_ep_connect,
-	.ep_bind    = nni_inproc_ep_bind,
-	.ep_accept  = nni_inproc_ep_accept,
-	.ep_close   = nni_inproc_ep_close,
-	.ep_options = nni_inproc_ep_options,
+static nni_tran_dialer_ops nni_inproc_dialer_ops = {
+	.d_init    = nni_inproc_dialer_init,
+	.d_fini    = nni_inproc_ep_fini,
+	.d_connect = nni_inproc_ep_connect,
+	.d_close   = nni_inproc_ep_close,
+	.d_options = nni_inproc_ep_options,
+};
+
+static nni_tran_listener_ops nni_inproc_listener_ops = {
+	.l_init    = nni_inproc_listener_init,
+	.l_fini    = nni_inproc_ep_fini,
+	.l_bind    = nni_inproc_ep_bind,
+	.l_accept  = nni_inproc_ep_accept,
+	.l_close   = nni_inproc_ep_close,
+	.l_options = nni_inproc_ep_options,
 };
 
 // This is the inproc transport linkage, and should be the only global
 // symbol in this entire file.
 struct nni_tran nni_inproc_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "inproc",
-	.tran_ep      = &nni_inproc_ep_ops,
-	.tran_pipe    = &nni_inproc_pipe_ops,
-	.tran_init    = nni_inproc_init,
-	.tran_fini    = nni_inproc_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "inproc",
+	.tran_dialer   = &nni_inproc_dialer_ops,
+	.tran_listener = &nni_inproc_listener_ops,
+	.tran_pipe     = &nni_inproc_pipe_ops,
+	.tran_init     = nni_inproc_init,
+	.tran_fini     = nni_inproc_fini,
 };
 
 int

@@ -403,11 +403,6 @@ TestMain("Socket Operations", {
 				So(nng_dialer_setopt(ep, NNG_OPT_RECVMAXSZ,
 				       "a", 1) == NNG_EINVAL);
 			});
-			Convey("Cannot listen", {
-				nng_listener l;
-				l.id = ep.id;
-				So(nng_listener_start(l, 0) == NNG_ENOTSUP);
-			});
 		});
 
 		Convey("Listener creation ok", {
@@ -451,11 +446,6 @@ TestMain("Socket Operations", {
 			Convey("Bad size checks", {
 				So(nng_listener_setopt(ep, NNG_OPT_RECVMAXSZ,
 				       "a", 1) == NNG_EINVAL);
-			});
-			Convey("Cannot dial", {
-				nng_dialer d;
-				d.id = ep.id;
-				So(nng_dialer_start(d, 0) == NNG_ENOTSUP);
 			});
 		});
 

@@ -29,6 +29,10 @@ extern void nni_pipe_send(nni_pipe *, nni_aio *);
 // Pipe operations that protocols use.
 extern uint32_t nni_pipe_id(nni_pipe *);
 
+// nni_pipe_destroy destroys a pipe -- there must not be any other
+// references to it; this is used only during creation failures.
+extern void nni_pipe_destroy(nni_pipe *);
+
 // nni_pipe_close closes the underlying transport for the pipe.  Further
 // operations against will return NNG_ECLOSED.
 extern void nni_pipe_close(nni_pipe *);
@@ -48,7 +52,9 @@ extern void nni_pipe_stop(nni_pipe *);
 // endpoint, grabbing each of those locks.  The function takes ownership of
 // the transport specific pipe (3rd argument), regardless of whether it
 // succeeds or not.  The endpoint should be held when calling this.
-extern int nni_pipe_create(nni_ep *, void *);
+extern int  nni_pipe_create2(nni_pipe **, nni_sock *, nni_tran *, void *);
+extern void nni_pipe_set_dialer(nni_pipe *, nni_dialer *);
+extern void nni_pipe_set_listener(nni_pipe *, nni_listener *);
 
 // nni_pipe_start is called by the socket to begin any startup activities
 // on the pipe before making it ready for use by protocols.  For example,
@@ -82,11 +88,11 @@ extern int nni_pipe_find(nni_pipe **, uint32_t);
 // nni_pipe_sock_id returns the socket id for the pipe (used by public API).
 extern uint32_t nni_pipe_sock_id(nni_pipe *);
 
-// nni_pipe_ep_id returns the endpoint id for the pipe.
-extern uint32_t nni_pipe_ep_id(nni_pipe *);
+// nni_pipe_listener_id returns the listener id for the pipe (or 0 if none).
+extern uint32_t nni_pipe_listener_id(nni_pipe *);
 
-// nni_pipe_ep_mode returns the endpoint mode for the pipe.
-extern int nni_pipe_ep_mode(nni_pipe *);
+// nni_pipe_dialer_id returns the dialer id for the pipe (or 0 if none).
+extern uint32_t nni_pipe_dialer_id(nni_pipe *);
 
 // nni_pipe_closed returns true if nni_pipe_close was called.
 // (This is used by the socket to determine if user closed the pipe

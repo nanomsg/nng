@@ -36,8 +36,8 @@ set (NNG_SOURCES
     core/clock.h
     core/device.c
     core/device.h
-    core/endpt.c
-    core/endpt.h
+    core/dialer.c
+    core/dialer.h
     core/file.c
     core/file.h
     core/idhash.c
@@ -46,6 +46,8 @@ set (NNG_SOURCES
     core/init.h
     core/list.c
     core/list.h
+    core/listener.c
+    core/listener.h
     core/message.c
     core/message.h
     core/msgqueue.c

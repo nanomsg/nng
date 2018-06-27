@@ -40,14 +40,17 @@ typedef struct nng_event  nni_event;
 typedef struct nng_notify nni_notify;
 
 // These are our own names.
-typedef struct nni_socket        nni_sock;
-typedef struct nni_ctx           nni_ctx;
-typedef struct nni_ep            nni_ep;
-typedef struct nni_pipe          nni_pipe;
-typedef struct nni_tran          nni_tran;
-typedef struct nni_tran_option   nni_tran_option;
-typedef struct nni_tran_ep_ops   nni_tran_ep_ops;
-typedef struct nni_tran_pipe_ops nni_tran_pipe_ops;
+typedef struct nni_socket   nni_sock;
+typedef struct nni_ctx      nni_ctx;
+typedef struct nni_dialer   nni_dialer;
+typedef struct nni_listener nni_listener;
+typedef struct nni_pipe     nni_pipe;
+
+typedef struct nni_tran              nni_tran;
+typedef struct nni_tran_option       nni_tran_option;
+typedef struct nni_tran_dialer_ops   nni_tran_dialer_ops;
+typedef struct nni_tran_listener_ops nni_tran_listener_ops;
+typedef struct nni_tran_pipe_ops     nni_tran_pipe_ops;
 
 typedef struct nni_proto_option   nni_proto_option;
 typedef struct nni_proto_ctx_ops  nni_proto_ctx_ops;

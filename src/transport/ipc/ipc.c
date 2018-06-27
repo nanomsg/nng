@@ -656,6 +656,18 @@ ipc_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	return (0);
 }
 
+static int
+ipc_dialer_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	return (ipc_ep_init(epp, url, sock, NNI_EP_MODE_DIAL));
+}
+
+static int
+ipc_listener_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	return (ipc_ep_init(epp, url, sock, NNI_EP_MODE_LISTEN));
+}
+
 static void
 ipc_ep_close(void *arg)
 {
@@ -915,7 +927,26 @@ static nni_tran_pipe_ops ipc_pipe_ops = {
 	.p_options = ipc_pipe_options,
 };
 
-static nni_tran_option ipc_ep_options[] = {
+static nni_tran_option ipc_dialer_options[] = {
+	{
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = ipc_ep_get_recvmaxsz,
+	    .o_set  = ipc_ep_set_recvmaxsz,
+	    .o_chk  = ipc_ep_chk_recvmaxsz,
+	},
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = ipc_ep_get_addr,
+	},
+	// terminate list
+	{
+	    .o_name = NULL,
+	},
+};
+
+static nni_tran_option ipc_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_type = NNI_TYPE_SIZE,
@@ -948,23 +979,31 @@ static nni_tran_option ipc_ep_options[] = {
 	},
 };
 
-static nni_tran_ep_ops ipc_ep_ops = {
-	.ep_init    = ipc_ep_init,
-	.ep_fini    = ipc_ep_fini,
-	.ep_connect = ipc_ep_connect,
-	.ep_bind    = ipc_ep_bind,
-	.ep_accept  = ipc_ep_accept,
-	.ep_close   = ipc_ep_close,
-	.ep_options = ipc_ep_options,
+static nni_tran_dialer_ops ipc_dialer_ops = {
+	.d_init    = ipc_dialer_init,
+	.d_fini    = ipc_ep_fini,
+	.d_connect = ipc_ep_connect,
+	.d_close   = ipc_ep_close,
+	.d_options = ipc_dialer_options,
+};
+
+static nni_tran_listener_ops ipc_listener_ops = {
+	.l_init    = ipc_listener_init,
+	.l_fini    = ipc_ep_fini,
+	.l_bind    = ipc_ep_bind,
+	.l_accept  = ipc_ep_accept,
+	.l_close   = ipc_ep_close,
+	.l_options = ipc_listener_options,
 };
 
 static nni_tran ipc_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "ipc",
-	.tran_ep      = &ipc_ep_ops,
-	.tran_pipe    = &ipc_pipe_ops,
-	.tran_init    = ipc_tran_init,
-	.tran_fini    = ipc_tran_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "ipc",
+	.tran_dialer   = &ipc_dialer_ops,
+	.tran_listener = &ipc_listener_ops,
+	.tran_pipe     = &ipc_pipe_ops,
+	.tran_init     = ipc_tran_init,
+	.tran_fini     = ipc_tran_fini,
 };
 
 int

@@ -2251,6 +2251,18 @@ zt_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	return (0);
 }
 
+static int
+zt_dialer_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	return (zt_ep_init(epp, url, sock, NNI_EP_MODE_DIAL));
+}
+
+static int
+zt_listener_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	return (zt_ep_init(epp, url, sock, NNI_EP_MODE_LISTEN));
+}
+
 static void
 zt_ep_close(void *arg)
 {
@@ -3022,25 +3034,33 @@ static nni_tran_option zt_ep_options[] = {
 	},
 };
 
-static nni_tran_ep_ops zt_ep_ops = {
-	.ep_init    = zt_ep_init,
-	.ep_fini    = zt_ep_fini,
-	.ep_connect = zt_ep_connect,
-	.ep_bind    = zt_ep_bind,
-	.ep_accept  = zt_ep_accept,
-	.ep_close   = zt_ep_close,
-	.ep_options = zt_ep_options,
+static nni_tran_dialer_ops zt_dialer_ops = {
+	.d_init    = zt_dialer_init,
+	.d_fini    = zt_ep_fini,
+	.d_connect = zt_ep_connect,
+	.d_close   = zt_ep_close,
+	.d_options = zt_ep_options,
+};
+
+static nni_tran_listener_ops zt_listener_ops = {
+	.l_init    = zt_listener_init,
+	.l_fini    = zt_ep_fini,
+	.l_bind    = zt_ep_bind,
+	.l_accept  = zt_ep_accept,
+	.l_close   = zt_ep_close,
+	.l_options = zt_ep_options,
 };
 
 // This is the ZeroTier transport linkage, and should be the
 // only global symbol in this entire file.
 static struct nni_tran zt_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "zt",
-	.tran_ep      = &zt_ep_ops,
-	.tran_pipe    = &zt_pipe_ops,
-	.tran_init    = zt_tran_init,
-	.tran_fini    = zt_tran_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "zt",
+	.tran_dialer   = &zt_dialer_ops,
+	.tran_listener = &zt_listener_ops,
+	.tran_pipe     = &zt_pipe_ops,
+	.tran_init     = zt_tran_init,
+	.tran_fini     = zt_tran_fini,
 };
 
 int

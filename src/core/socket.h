@@ -46,8 +46,11 @@ extern uint32_t nni_sock_id(nni_sock *);
 extern int  nni_sock_pipe_add(nni_sock *, nni_pipe *);
 extern void nni_sock_pipe_remove(nni_sock *, nni_pipe *);
 
-extern int  nni_sock_ep_add(nni_sock *, nni_ep *);
-extern void nni_sock_ep_remove(nni_sock *, nni_ep *);
+extern int  nni_sock_add_dialer(nni_sock *, nni_dialer *);
+extern void nni_sock_remove_dialer(nni_sock *, nni_dialer *);
+
+extern int  nni_sock_add_listener(nni_sock *, nni_listener *);
+extern void nni_sock_remove_listener(nni_sock *, nni_listener *);
 
 // These are socket methods that protocol operations can expect to call.
 // Note that each of these should be called without any locks held, since

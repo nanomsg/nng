@@ -691,7 +691,6 @@ tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 	}
 	nni_mtx_init(&ep->mtx);
 	ep->url       = url;
-	ep->mode      = mode;
 	ep->keepalive = false;
 	ep->nodelay   = true;
 
@@ -713,6 +712,18 @@ tls_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 
 	*epp = ep;
 	return (0);
+}
+
+static int
+tls_dialer_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	return (tls_ep_init(epp, url, sock, NNI_EP_MODE_DIAL));
+}
+
+static int
+tls_listener_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	return (tls_ep_init(epp, url, sock, NNI_EP_MODE_LISTEN));
 }
 
 static void
@@ -891,16 +902,21 @@ tls_ep_get_keepalive(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static int
-tls_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
+tls_dialer_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	tls_ep *ep = arg;
+
+	return (nni_copyout_str(ep->url->u_rawurl, v, szp, t));
+}
+
+static int
+tls_listener_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tls_ep *ep = arg;
 	char    ustr[128];
 	char    ipstr[48];  // max for IPv6 addresses including []
 	char    portstr[6]; // max for 16-bit port
 
-	if (ep->mode == NNI_EP_MODE_DIAL) {
-		return (nni_copyout_str(ep->url->u_rawurl, v, szp, t));
-	}
 	nni_plat_tcp_ntop(&ep->bsa, ipstr, portstr);
 	snprintf(ustr, sizeof(ustr), "tls+tcp://%s:%s", ipstr, portstr);
 	return (nni_copyout_str(ustr, v, szp, t));
@@ -1095,7 +1111,7 @@ static nni_tran_pipe_ops tls_pipe_ops = {
 	.p_options = tls_pipe_options,
 };
 
-static nni_tran_option tls_ep_options[] = {
+static nni_tran_option tls_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_type = NNI_TYPE_SIZE,
@@ -1106,7 +1122,7 @@ static nni_tran_option tls_ep_options[] = {
 	{
 	    .o_name = NNG_OPT_URL,
 	    .o_type = NNI_TYPE_STRING,
-	    .o_get  = tls_ep_get_url,
+	    .o_get  = tls_dialer_get_url,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_CONFIG,
@@ -1159,41 +1175,115 @@ static nni_tran_option tls_ep_options[] = {
 	},
 };
 
-static nni_tran_ep_ops tls_ep_ops = {
-	.ep_init    = tls_ep_init,
-	.ep_fini    = tls_ep_fini,
-	.ep_connect = tls_ep_connect,
-	.ep_bind    = tls_ep_bind,
-	.ep_accept  = tls_ep_accept,
-	.ep_close   = tls_ep_close,
-	.ep_options = tls_ep_options,
+static nni_tran_option tls_listener_options[] = {
+	{
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = tls_ep_get_recvmaxsz,
+	    .o_set  = tls_ep_set_recvmaxsz,
+	    .o_chk  = tls_ep_chk_recvmaxsz,
+	},
+	{
+	    .o_name = NNG_OPT_URL,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = tls_listener_get_url,
+	},
+	{
+	    .o_name = NNG_OPT_TLS_CONFIG,
+	    .o_type = NNI_TYPE_POINTER,
+	    .o_get  = tls_ep_get_config,
+	    .o_set  = tls_ep_set_config,
+	    .o_chk  = tls_ep_chk_config,
+	},
+	{
+	    .o_name = NNG_OPT_TLS_CERT_KEY_FILE,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = tls_ep_set_cert_key_file,
+	    .o_chk  = tls_ep_chk_string,
+	},
+	{
+	    .o_name = NNG_OPT_TLS_CA_FILE,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = tls_ep_set_ca_file,
+	    .o_chk  = tls_ep_chk_string,
+	},
+	{
+	    .o_name = NNG_OPT_TLS_AUTH_MODE,
+	    .o_type = NNI_TYPE_INT32, // enum really
+	    .o_set  = tls_ep_set_auth_mode,
+	    .o_chk  = tls_ep_chk_auth_mode,
+	},
+	{
+	    .o_name = NNG_OPT_TLS_SERVER_NAME,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_set  = tls_ep_set_server_name,
+	    .o_chk  = tls_ep_chk_string,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_NODELAY,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tls_ep_get_nodelay,
+	    .o_set  = tls_ep_set_nodelay,
+	    .o_chk  = tls_ep_chk_bool,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_KEEPALIVE,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tls_ep_get_keepalive,
+	    .o_set  = tls_ep_set_keepalive,
+	    .o_chk  = tls_ep_chk_bool,
+	},
+	// terminate list
+	{
+	    .o_name = NULL,
+	},
+};
+
+static nni_tran_dialer_ops tls_dialer_ops = {
+	.d_init    = tls_dialer_init,
+	.d_fini    = tls_ep_fini,
+	.d_connect = tls_ep_connect,
+	.d_close   = tls_ep_close,
+	.d_options = tls_dialer_options,
+};
+
+static nni_tran_listener_ops tls_listener_ops = {
+	.l_init    = tls_listener_init,
+	.l_fini    = tls_ep_fini,
+	.l_bind    = tls_ep_bind,
+	.l_accept  = tls_ep_accept,
+	.l_close   = tls_ep_close,
+	.l_options = tls_listener_options,
 };
 
 static nni_tran tls_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "tls+tcp",
-	.tran_ep      = &tls_ep_ops,
-	.tran_pipe    = &tls_pipe_ops,
-	.tran_init    = tls_tran_init,
-	.tran_fini    = tls_tran_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "tls+tcp",
+	.tran_dialer   = &tls_dialer_ops,
+	.tran_listener = &tls_listener_ops,
+	.tran_pipe     = &tls_pipe_ops,
+	.tran_init     = tls_tran_init,
+	.tran_fini     = tls_tran_fini,
 };
 
 static nni_tran tls4_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "tls+tcp4",
-	.tran_ep      = &tls_ep_ops,
-	.tran_pipe    = &tls_pipe_ops,
-	.tran_init    = tls_tran_init,
-	.tran_fini    = tls_tran_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "tls+tcp4",
+	.tran_dialer   = &tls_dialer_ops,
+	.tran_listener = &tls_listener_ops,
+	.tran_pipe     = &tls_pipe_ops,
+	.tran_init     = tls_tran_init,
+	.tran_fini     = tls_tran_fini,
 };
 
 static nni_tran tls6_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "tls+tcp6",
-	.tran_ep      = &tls_ep_ops,
-	.tran_pipe    = &tls_pipe_ops,
-	.tran_init    = tls_tran_init,
-	.tran_fini    = tls_tran_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "tls+tcp6",
+	.tran_dialer   = &tls_dialer_ops,
+	.tran_listener = &tls_listener_ops,
+	.tran_pipe     = &tls_pipe_ops,
+	.tran_init     = tls_tran_init,
+	.tran_fini     = tls_tran_fini,
 };
 
 int

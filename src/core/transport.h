@@ -11,30 +11,11 @@
 #ifndef CORE_TRANSPORT_H
 #define CORE_TRANSPORT_H
 
-// Transport implementation details.  Transports must implement the
-// interfaces in this file.
-struct nni_tran {
-	// tran_version is the version of the transport ops that this
-	// transport implements.  We only bother to version the main
-	// ops vector.
-	uint32_t tran_version;
-
-	// tran_scheme is the transport scheme, such as "tcp" or "inproc".
-	const char *tran_scheme;
-
-	// tran_ep links our endpoint-specific operations.
-	const nni_tran_ep_ops *tran_ep;
-
-	// tran_pipe links our pipe-specific operations.
-	const nni_tran_pipe_ops *tran_pipe;
-
-	// tran_init, if not NULL, is called once during library
-	// initialization.
-	int (*tran_init)(void);
-
-	// tran_fini, if not NULL, is called during library deinitialization.
-	// It should release any global resources, close any open files, etc.
-	void (*tran_fini)(void);
+// Endpoint modes.  Currently used by transports.  Remove this when we make
+// transport dialers and listeners explicit.
+enum nni_ep_mode {
+	NNI_EP_MODE_DIAL   = 1,
+	NNI_EP_MODE_LISTEN = 2,
 };
 
 // We quite intentionally use a signature where the upper word is nonzero,
@@ -48,7 +29,8 @@ struct nni_tran {
 #define NNI_TRANSPORT_V0 0x54520000
 #define NNI_TRANSPORT_V1 0x54520001
 #define NNI_TRANSPORT_V2 0x54520002
-#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V2
+#define NNI_TRANSPORT_V3 0x54520003
+#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V3
 
 // Option handlers.
 struct nni_tran_option {
@@ -81,40 +63,60 @@ struct nni_tran_option {
 // For a given endpoint, the framework holds a lock so that each entry
 // point is run exclusively of the others. (Transports must still guard
 // against any asynchronous operations they manage themselves, though.)
-struct nni_tran_ep_ops {
-	// ep_init creates a vanilla endpoint. The value created is
-	// used for the first argument for all other endpoint
-	// functions.
-	int (*ep_init)(void **, nni_url *, nni_sock *, int);
 
-	// ep_fini frees the resources associated with the endpoint.
-	// The endpoint will already have been closed.
-	void (*ep_fini)(void *);
+struct nni_tran_dialer_ops {
+	// d_init creates a vanilla dialer. The value created is
+	// used for the first argument for all other dialer functions.
+	int (*d_init)(void **, nni_url *, nni_sock *);
 
-	// ep_connect establishes a connection.  It can return errors
+	// d_fini frees the resources associated with the dialer.
+	// The dialer will already have been closed.
+	void (*d_fini)(void *);
+
+	// d_connect establishes a connection.  It can return errors
 	// NNG_EACCESS, NNG_ECONNREFUSED, NNG_EBADADDR,
 	// NNG_ECONNFAILED, NNG_ETIMEDOUT, and NNG_EPROTO.
-	void (*ep_connect)(void *, nni_aio *);
+	void (*d_connect)(void *, nni_aio *);
 
-	// ep_bind just does the bind() and listen() work,
+	// d_close stops the dialer from operating altogether.  It
+	// does not affect pipes that have already been created.  It is
+	// nonblocking.
+	void (*d_close)(void *);
+
+	// d_options is an array of dialer options.  The final
+	// element must have a NULL name. If this member is NULL, then
+	// no dialer specific options are available.
+	nni_tran_option *d_options;
+};
+
+struct nni_tran_listener_ops {
+	// l_init creates a vanilla listener. The value created is
+	// used for the first argument for all other listener functions.
+	int (*l_init)(void **, nni_url *, nni_sock *);
+
+	// l_fini frees the resources associated with the listener.
+	// The listener will already have been closed.
+	void (*l_fini)(void *);
+
+	// l_bind just does the bind() and listen() work,
 	// reserving the address but not creating any connections.
 	// It should return NNG_EADDRINUSE if the address is already
 	// taken.  It can also return NNG_EBADADDR for an unsuitable
 	// address, or NNG_EACCESS for permission problems.
-	int (*ep_bind)(void *);
+	int (*l_bind)(void *);
 
-	// ep_accept accepts an inbound connection.
-	void (*ep_accept)(void *, nni_aio *);
+	// l_accept accepts an inbound connection.
+	void (*l_accept)(void *, nni_aio *);
 
-	// ep_close stops the endpoint from operating altogether.  It
+	// l_close stops the listener from operating altogether.  It
 	// does not affect pipes that have already been created.  It is
 	// nonblocking.
-	void (*ep_close)(void *);
+	void (*l_close)(void *);
 
-	// ep_options is an array of endpoint options.  The final
+	// l_options is an array of listener options.  The final
 	// element must have a NULL name. If this member is NULL, then
-	// no transport specific options are available.
-	nni_tran_option *ep_options;
+	// no dialer specific options are available.
+	nni_tran_option *l_options;
 };
 
 // Pipe operations are entry points called by the socket. These may be
@@ -166,6 +168,35 @@ struct nni_tran_pipe_ops {
 	// must have a NULL name. If this member is NULL, then no
 	// transport specific options are available.
 	nni_tran_option *p_options;
+};
+
+// Transport implementation details.  Transports must implement the
+// interfaces in this file.
+struct nni_tran {
+	// tran_version is the version of the transport ops that this
+	// transport implements.  We only bother to version the main
+	// ops vector.
+	uint32_t tran_version;
+
+	// tran_scheme is the transport scheme, such as "tcp" or "inproc".
+	const char *tran_scheme;
+
+	// tran_dialer links our dialer-specific operations.
+	const nni_tran_dialer_ops *tran_dialer;
+
+	// tran_listener links our listener-specific operations.
+	const nni_tran_listener_ops *tran_listener;
+
+	// tran_pipe links our pipe-specific operations.
+	const nni_tran_pipe_ops *tran_pipe;
+
+	// tran_init, if not NULL, is called once during library
+	// initialization.
+	int (*tran_init)(void);
+
+	// tran_fini, if not NULL, is called during library deinitialization.
+	// It should release any global resources, close any open files, etc.
+	void (*tran_fini)(void);
 };
 
 // These APIs are used by the framework internally, and not for use by

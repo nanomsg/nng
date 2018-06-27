@@ -56,7 +56,6 @@ struct tcp_ep {
 	nni_aio *        user_aio;
 	nni_url *        url;
 	nng_sockaddr     bsa; // bound addr
-	int              mode;
 	nni_mtx          mtx;
 };
 
@@ -688,12 +687,23 @@ tcp_ep_init(void **epp, nni_url *url, nni_sock *sock, int mode)
 		return (rv);
 	}
 	ep->proto     = nni_sock_proto_id(sock);
-	ep->mode      = mode;
 	ep->nodelay   = true;
 	ep->keepalive = false;
 
 	*epp = ep;
 	return (0);
+}
+
+static int
+tcp_dialer_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	return (tcp_ep_init(epp, url, sock, NNI_EP_MODE_DIAL));
+}
+
+static int
+tcp_listener_init(void **epp, nni_url *url, nni_sock *sock)
+{
+	return (tcp_ep_init(epp, url, sock, NNI_EP_MODE_LISTEN));
 }
 
 static void
@@ -897,16 +907,21 @@ tcp_ep_get_keepalive(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static int
-tcp_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
+tcp_dialer_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	tcp_ep *ep = arg;
+
+	return (nni_copyout_str(ep->url->u_rawurl, v, szp, t));
+}
+
+static int
+tcp_listener_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tcp_ep *ep = arg;
 	char    ustr[128];
 	char    ipstr[48];  // max for IPv6 addresses including []
 	char    portstr[6]; // max for 16-bit port
 
-	if (ep->mode == NNI_EP_MODE_DIAL) {
-		return (nni_copyout_str(ep->url->u_rawurl, v, szp, t));
-	}
 	nni_plat_tcp_ntop(&ep->bsa, ipstr, portstr);
 	snprintf(ustr, sizeof(ustr), "tcp://%s:%s", ipstr, portstr);
 	return (nni_copyout_str(ustr, v, szp, t));
@@ -957,7 +972,7 @@ static nni_tran_pipe_ops tcp_pipe_ops = {
 	.p_options = tcp_pipe_options,
 };
 
-static nni_tran_option tcp_ep_options[] = {
+static nni_tran_option tcp_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_type = NNI_TYPE_SIZE,
@@ -968,7 +983,7 @@ static nni_tran_option tcp_ep_options[] = {
 	{
 	    .o_name = NNG_OPT_URL,
 	    .o_type = NNI_TYPE_STRING,
-	    .o_get  = tcp_ep_get_url,
+	    .o_get  = tcp_dialer_get_url,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
@@ -990,41 +1005,84 @@ static nni_tran_option tcp_ep_options[] = {
 	},
 };
 
-static nni_tran_ep_ops tcp_ep_ops = {
-	.ep_init    = tcp_ep_init,
-	.ep_fini    = tcp_ep_fini,
-	.ep_connect = tcp_ep_connect,
-	.ep_bind    = tcp_ep_bind,
-	.ep_accept  = tcp_ep_accept,
-	.ep_close   = tcp_ep_close,
-	.ep_options = tcp_ep_options,
+static nni_tran_option tcp_listener_options[] = {
+	{
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = tcp_ep_get_recvmaxsz,
+	    .o_set  = tcp_ep_set_recvmaxsz,
+	    .o_chk  = tcp_ep_chk_recvmaxsz,
+	},
+	{
+	    .o_name = NNG_OPT_URL,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = tcp_listener_get_url,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_NODELAY,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tcp_ep_get_nodelay,
+	    .o_set  = tcp_ep_set_nodelay,
+	    .o_chk  = tcp_ep_chk_bool,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_KEEPALIVE,
+	    .o_type = NNI_TYPE_BOOL,
+	    .o_get  = tcp_ep_get_keepalive,
+	    .o_set  = tcp_ep_set_keepalive,
+	    .o_chk  = tcp_ep_chk_bool,
+	},
+	// terminate list
+	{
+	    .o_name = NULL,
+	},
+};
+
+static nni_tran_dialer_ops tcp_dialer_ops = {
+	.d_init    = tcp_dialer_init,
+	.d_fini    = tcp_ep_fini,
+	.d_connect = tcp_ep_connect,
+	.d_close   = tcp_ep_close,
+	.d_options = tcp_dialer_options,
+};
+
+static nni_tran_listener_ops tcp_listener_ops = {
+	.l_init    = tcp_listener_init,
+	.l_fini    = tcp_ep_fini,
+	.l_bind    = tcp_ep_bind,
+	.l_accept  = tcp_ep_accept,
+	.l_close   = tcp_ep_close,
+	.l_options = tcp_listener_options,
 };
 
 static nni_tran tcp_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "tcp",
-	.tran_ep      = &tcp_ep_ops,
-	.tran_pipe    = &tcp_pipe_ops,
-	.tran_init    = tcp_tran_init,
-	.tran_fini    = tcp_tran_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "tcp",
+	.tran_dialer   = &tcp_dialer_ops,
+	.tran_listener = &tcp_listener_ops,
+	.tran_pipe     = &tcp_pipe_ops,
+	.tran_init     = tcp_tran_init,
+	.tran_fini     = tcp_tran_fini,
 };
 
 static nni_tran tcp4_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "tcp4",
-	.tran_ep      = &tcp_ep_ops,
-	.tran_pipe    = &tcp_pipe_ops,
-	.tran_init    = tcp_tran_init,
-	.tran_fini    = tcp_tran_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "tcp4",
+	.tran_dialer   = &tcp_dialer_ops,
+	.tran_listener = &tcp_listener_ops,
+	.tran_pipe     = &tcp_pipe_ops,
+	.tran_init     = tcp_tran_init,
+	.tran_fini     = tcp_tran_fini,
 };
 
 static nni_tran tcp6_tran = {
-	.tran_version = NNI_TRANSPORT_VERSION,
-	.tran_scheme  = "tcp6",
-	.tran_ep      = &tcp_ep_ops,
-	.tran_pipe    = &tcp_pipe_ops,
-	.tran_init    = tcp_tran_init,
-	.tran_fini    = tcp_tran_fini,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "tcp6",
+	.tran_dialer   = &tcp_dialer_ops,
+	.tran_listener = &tcp_listener_ops,
+	.tran_pipe     = &tcp_pipe_ops,
+	.tran_init     = tcp_tran_init,
+	.tran_fini     = tcp_tran_fini,
 };
 
 int
