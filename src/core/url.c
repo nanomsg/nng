@@ -307,6 +307,7 @@ nni_url_parse(nni_url **urlp, const char *raw)
 			goto error;
 		}
 		*urlp = url;
+		return (0);
 	}
 
 	// Look for host part (including colon).  Will be terminated by
