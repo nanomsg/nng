@@ -197,6 +197,30 @@ extern int nni_plat_ncpu(void);
 //
 // TCP Support.
 //
+typedef struct nni_tcp_conn     nni_tcp_conn;
+typedef struct nni_tcp_dialer   nni_tcp_dialer;
+typedef struct nni_tcp_listener nni_tcp_listener;
+
+extern void nni_tcp_conn_fini(nni_tcp_conn *);
+extern void nni_tcp_conn_close(nni_tcp_conn *);
+extern void nni_tcp_conn_send(nni_tcp_conn *, nni_aio *);
+extern void nni_tcp_conn_recv(nni_tcp_conn *, nni_aio *);
+extern int  nni_tcp_conn_peername(nni_tcp_conn *, nni_sockaddr *);
+extern int  nni_tcp_conn_sockname(nni_tcp_conn *, nni_sockaddr *);
+extern int  nni_tcp_conn_set_nodelay(nni_tcp_conn *, bool);
+extern int  nni_tcp_conn_set_keepalive(nni_tcp_conn *, bool);
+
+extern int  nni_tcp_dialer_init(nni_tcp_dialer **);
+extern void nni_tcp_dialer_fini(nni_tcp_dialer *);
+extern void nni_tcp_dialer_close(nni_tcp_dialer *);
+extern void nni_tcp_dialer_dial(
+    nni_tcp_dialer *, const nni_sockaddr *, nni_aio *);
+
+extern int  nni_tcp_listener_init(nni_tcp_listener **);
+extern void nni_tcp_listener_fini(nni_tcp_listener *);
+extern void nni_tcp_listener_close(nni_tcp_listener *);
+extern int  nni_tcp_listener_listen(nni_tcp_listener *, nni_sockaddr *);
+extern void nni_tcp_listener_accept(nni_tcp_listener *, nni_aio *);
 
 typedef struct nni_plat_tcp_ep   nni_plat_tcp_ep;
 typedef struct nni_plat_tcp_pipe nni_plat_tcp_pipe;
