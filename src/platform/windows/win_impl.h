@@ -90,6 +90,10 @@ extern void nni_win_event_complete(nni_win_event *, int);
 
 extern int nni_win_iocp_register(HANDLE);
 
+extern int  nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
+extern void nni_win_tcp_conn_set_addrs(
+    nni_tcp_conn *, const SOCKADDR_STORAGE *, const SOCKADDR_STORAGE *);
+
 extern int  nni_win_iocp_sysinit(void);
 extern void nni_win_iocp_sysfini(void);
 

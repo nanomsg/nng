@@ -142,6 +142,9 @@ if (NNG_PLATFORM_WINDOWS)
         platform/windows/win_resolv.c
         platform/windows/win_sockaddr.c
         platform/windows/win_tcp.c
+        platform/windows/win_tcpconn.c
+        platform/windows/win_tcpdial.c
+        platform/windows/win_tcplisten.c
         platform/windows/win_thread.c
         platform/windows/win_udp.c
         )
