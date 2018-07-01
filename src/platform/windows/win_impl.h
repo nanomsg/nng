@@ -85,7 +85,6 @@ extern int nni_win_error(int);
 extern int  nni_win_event_init(nni_win_event *, nni_win_event_ops *, void *);
 extern void nni_win_event_fini(nni_win_event *);
 extern void nni_win_event_submit(nni_win_event *, nni_aio *);
-extern void nni_win_event_resubmit(nni_win_event *, nni_aio *);
 extern void nni_win_event_close(nni_win_event *);
 extern void nni_win_event_complete(nni_win_event *, int);
 
