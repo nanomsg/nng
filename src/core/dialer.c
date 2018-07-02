@@ -308,26 +308,24 @@ dialer_connect_cb(void *arg)
 	nni_pipe *  p;
 	nni_aio *   aio = d->d_con_aio;
 	int         rv;
+	bool        synch;
 
 	if ((rv = nni_aio_result(aio)) == 0) {
 		void *data = nni_aio_get_output(aio, 0);
 		NNI_ASSERT(data != NULL);
 		rv = nni_pipe_create2(&p, d->d_sock, d->d_tran, data);
 	}
-	if ((rv == 0) && ((rv = nni_sock_pipe_add(d->d_sock, p)) != 0)) {
-		nni_pipe_stop(p);
-	}
-
 	nni_mtx_lock(&d->d_mtx);
-	switch (rv) {
-	case 0:
-		nni_pipe_set_dialer(p, d);
-		nni_list_append(&d->d_pipes, p);
+	synch      = d->d_synch;
+	d->d_synch = false;
+	if (rv == 0) {
 		if (d->d_closing) {
 			nni_mtx_unlock(&d->d_mtx);
 			nni_pipe_stop(p);
 			return;
 		}
+		nni_pipe_set_dialer(p, d);
+		nni_list_append(&d->d_pipes, p);
 
 		// Good connect, so reset the backoff timer.
 		// Note that a host that accepts the connect, but drops
@@ -337,7 +335,16 @@ dialer_connect_cb(void *arg)
 		// trying to connect to some port that does not speak
 		// SP for example.
 		d->d_currtime = d->d_inirtime;
+	}
+	nni_mtx_unlock(&d->d_mtx);
 
+	if ((rv == 0) && ((rv = nni_sock_pipe_add(d->d_sock, p)) != 0)) {
+		nni_pipe_stop(p);
+	}
+
+	nni_mtx_lock(&d->d_mtx);
+	switch (rv) {
+	case 0:
 		// No further outgoing connects -- we will restart a
 		// connection from the pipe when the pipe is removed.
 		break;
@@ -347,17 +354,13 @@ dialer_connect_cb(void *arg)
 		break;
 	default:
 		// redial, but only if we are not synchronous
-		if (!d->d_synch) {
+		if (!synch) {
 			dialer_timer_start(d);
 		}
 		break;
 	}
-	if (d->d_synch) {
-		if (rv != 0) {
-			d->d_started = false;
-		}
+	if (synch) {
 		d->d_lastrv = rv;
-		d->d_synch  = false;
 		nni_cv_wake(&d->d_cv);
 	}
 	nni_mtx_unlock(&d->d_mtx);
@@ -381,7 +384,8 @@ nni_dialer_start(nni_dialer *d, int flags)
 {
 	int rv = 0;
 
-	nni_sock_reconntimes(d->d_sock, &d->d_inirtime, &d->d_maxrtime);
+	//	nni_sock_reconntimes(d->d_sock, &d->d_inirtime,
+	//&d->d_maxrtime);
 	d->d_currtime = d->d_inirtime;
 
 	nni_mtx_lock(&d->d_mtx);
@@ -413,6 +417,9 @@ nni_dialer_start(nni_dialer *d, int flags)
 	rv = d->d_closing ? NNG_ECLOSED : d->d_lastrv;
 	nni_cv_wake(&d->d_cv);
 
+	if (rv != 0) {
+		d->d_started = false;
+	}
 	nni_mtx_unlock(&d->d_mtx);
 	return (rv);
 }
@@ -455,6 +462,20 @@ nni_dialer_setopt(nni_dialer *d, const char *name, const void *val, size_t sz,
 	if (strcmp(name, NNG_OPT_URL) == 0) {
 		return (NNG_EREADONLY);
 	}
+	if (strcmp(name, NNG_OPT_RECONNMAXT) == 0) {
+		int rv;
+		nni_mtx_lock(&d->d_mtx);
+		rv = nni_copyin_ms(&d->d_maxrtime, val, sz, t);
+		nni_mtx_unlock(&d->d_mtx);
+		return (rv);
+	}
+	if (strcmp(name, NNG_OPT_RECONNMINT) == 0) {
+		int rv;
+		nni_mtx_lock(&d->d_mtx);
+		rv = nni_copyin_ms(&d->d_inirtime, val, sz, t);
+		nni_mtx_unlock(&d->d_mtx);
+		return (rv);
+	}
 
 	for (o = d->d_ops.d_options; o && o->o_name; o++) {
 		int rv;
@@ -480,6 +501,21 @@ nni_dialer_getopt(
     nni_dialer *d, const char *name, void *valp, size_t *szp, nni_opt_type t)
 {
 	nni_tran_option *o;
+
+	if (strcmp(name, NNG_OPT_RECONNMAXT) == 0) {
+		int rv;
+		nni_mtx_lock(&d->d_mtx);
+		rv = nni_copyout_ms(d->d_maxrtime, valp, szp, t);
+		nni_mtx_unlock(&d->d_mtx);
+		return (rv);
+	}
+	if (strcmp(name, NNG_OPT_RECONNMINT) == 0) {
+		int rv;
+		nni_mtx_lock(&d->d_mtx);
+		rv = nni_copyout_ms(d->d_inirtime, valp, szp, t);
+		nni_mtx_unlock(&d->d_mtx);
+		return (rv);
+	}
 
 	for (o = d->d_ops.d_options; o && o->o_name; o++) {
 		int rv;

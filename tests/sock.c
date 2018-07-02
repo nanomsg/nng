@@ -387,7 +387,7 @@ TestMain("Socket Operations", {
 				// Not appropriate for dialer.
 				So(nng_dialer_setopt_bool(
 				       ep, NNG_OPT_RAW, true) == NNG_ENOTSUP);
-				So(nng_dialer_setopt_ms(ep, NNG_OPT_RECONNMINT,
+				So(nng_dialer_setopt_ms(ep, NNG_OPT_SENDTIMEO,
 				       1) == NNG_ENOTSUP);
 				So(nng_dialer_setopt_string(ep,
 				       NNG_OPT_SOCKNAME,

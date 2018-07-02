@@ -282,21 +282,16 @@ listener_accept_cb(void *arg)
 		NNI_ASSERT(data != NULL);
 		rv = nni_pipe_create2(&p, l->l_sock, l->l_tran, data);
 	}
-
-	if ((rv == 0) && ((rv = nni_sock_pipe_add(l->l_sock, p)) != 0)) {
-		nni_pipe_stop(p);
-	}
-
 	nni_mtx_lock(&l->l_mtx);
 	switch (rv) {
 	case 0:
-		nni_pipe_set_listener(p, l);
-		nni_list_append(&l->l_pipes, p);
 		if (l->l_closing) {
 			nni_mtx_unlock(&l->l_mtx);
 			nni_pipe_stop(p);
 			return;
 		}
+		nni_pipe_set_listener(p, l);
+		nni_list_append(&l->l_pipes, p);
 		listener_accept_start(l);
 		break;
 	case NNG_ECONNABORTED: // remote condition, no cooldown
@@ -316,6 +311,10 @@ listener_accept_cb(void *arg)
 		break;
 	}
 	nni_mtx_unlock(&l->l_mtx);
+
+	if ((rv == 0) && ((rv = nni_sock_pipe_add(l->l_sock, p)) != 0)) {
+		nni_pipe_stop(p);
+	}
 }
 
 static void

@@ -182,30 +182,6 @@ sock_get_sendtimeo(nni_sock *s, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-sock_set_reconnmint(nni_sock *s, const void *buf, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_ms(&s->s_reconn, buf, sz, t));
-}
-
-static int
-sock_get_reconnmint(nni_sock *s, void *buf, size_t *szp, nni_opt_type t)
-{
-	return (nni_copyout_ms(s->s_reconn, buf, szp, t));
-}
-
-static int
-sock_set_reconnmaxt(nni_sock *s, const void *buf, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_ms(&s->s_reconnmax, buf, sz, t));
-}
-
-static int
-sock_get_reconnmaxt(nni_sock *s, void *buf, size_t *szp, nni_opt_type t)
-{
-	return (nni_copyout_ms(s->s_reconnmax, buf, szp, t));
-}
-
-static int
 sock_set_recvbuf(nni_sock *s, const void *buf, size_t sz, nni_opt_type t)
 {
 	int len;
@@ -315,18 +291,6 @@ static const sock_option sock_options[] = {
 	    .o_type = NNI_TYPE_INT32,
 	    .o_get  = sock_get_sendbuf,
 	    .o_set  = sock_set_sendbuf,
-	},
-	{
-	    .o_name = NNG_OPT_RECONNMINT,
-	    .o_type = NNI_TYPE_DURATION,
-	    .o_get  = sock_get_reconnmint,
-	    .o_set  = sock_set_reconnmint,
-	},
-	{
-	    .o_name = NNG_OPT_RECONNMAXT,
-	    .o_type = NNI_TYPE_DURATION,
-	    .o_get  = sock_get_reconnmaxt,
-	    .o_set  = sock_set_reconnmaxt,
 	},
 	{
 	    .o_name = NNG_OPT_SOCKNAME,
@@ -914,16 +878,6 @@ nni_sock_proto_data(nni_sock *sock)
 	return (sock->s_data);
 }
 
-void
-nni_sock_reconntimes(nni_sock *sock, nni_duration *rcur, nni_duration *rmax)
-{
-	// These two values are linked, so get them atomically.
-	nni_mtx_lock(&sock->s_mx);
-	*rcur = sock->s_reconn;
-	*rmax = sock->s_reconnmax ? sock->s_reconnmax : sock->s_reconn;
-	nni_mtx_unlock(&sock->s_mx);
-}
-
 int
 nni_sock_add_listener(nni_sock *s, nni_listener *l)
 {
@@ -1036,8 +990,7 @@ nni_sock_setopt(
 		return (rv);
 	}
 
-	// Some options do not go down to transports.  Handle them
-	// directly.
+	// Some options do not go down to transports.  Handle them directly.
 	for (sso = sock_options; sso->o_name != NULL; sso++) {
 		if (strcmp(sso->o_name, name) != 0) {
 			continue;
@@ -1058,10 +1011,16 @@ nni_sock_setopt(
 		return (rv);
 	}
 
-	// Validation of transport options.  This is stateless, so
+	// Validation of generic and transport options.  This is stateless, so
 	// transports should not fail to set an option later if they
 	// passed it here.
-	if ((rv = nni_tran_chkopt(name, v, sz, t)) != 0) {
+	if ((strcmp(name, NNG_OPT_RECONNMINT) == 0) ||
+	    (strcmp(name, NNG_OPT_RECONNMAXT) == 0)) {
+		nng_duration ms;
+		if ((rv = nni_copyin_ms(&ms, v, sz, t)) != 0) {
+			return (rv);
+		}
+	} else if ((rv = nni_tran_chkopt(name, v, sz, t)) != 0) {
 		return (rv);
 	}
 
@@ -1194,10 +1153,18 @@ nni_sock_getopt(
 			size_t sz = sopt->sz;
 
 			if ((sopt->typ != NNI_TYPE_OPAQUE) &&
-			    (t != NNI_TYPE_OPAQUE) && (t != sopt->typ)) {
-				nni_mtx_unlock(&s->s_mx);
-				return (NNG_EBADTYPE);
+			    (t != sopt->typ)) {
+
+				if (t != NNI_TYPE_OPAQUE) {
+					nni_mtx_unlock(&s->s_mx);
+					return (NNG_EBADTYPE);
+				}
+				if (*szp != sopt->sz) {
+					nni_mtx_unlock(&s->s_mx);
+					return (NNG_EINVAL);
+				}
 			}
+
 			if (sopt->sz > *szp) {
 				sz = *szp;
 			}
