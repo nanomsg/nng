@@ -103,6 +103,9 @@ if (NNG_PLATFORM_POSIX)
         platform/posix/posix_resolv_gai.c
         platform/posix/posix_sockaddr.c
         platform/posix/posix_tcp.c
+        platform/posix/posix_tcpconn.c
+        platform/posix/posix_tcpdial.c
+        platform/posix/posix_tcplisten.c
         platform/posix/posix_thread.c
         platform/posix/posix_udp.c
     )
@@ -139,6 +142,9 @@ if (NNG_PLATFORM_WINDOWS)
         platform/windows/win_resolv.c
         platform/windows/win_sockaddr.c
         platform/windows/win_tcp.c
+        platform/windows/win_tcpconn.c
+        platform/windows/win_tcpdial.c
+        platform/windows/win_tcplisten.c
         platform/windows/win_thread.c
         platform/windows/win_udp.c
         )

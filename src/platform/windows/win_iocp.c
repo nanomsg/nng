@@ -146,11 +146,6 @@ nni_win_event_start(nni_win_event *evt)
 		nni_win_event_finish(evt);
 	}
 }
-void
-nni_win_event_resubmit(nni_win_event *evt, nni_aio *aio)
-{
-	nni_aio_list_prepend(&evt->aios, aio);
-}
 
 void
 nni_win_event_submit(nni_win_event *evt, nni_aio *aio)
