@@ -147,6 +147,18 @@ extern void nni_plat_thr_fini(nni_plat_thr *);
 extern bool nni_plat_thr_is_self(nni_plat_thr *);
 
 //
+// Atomics support.  This will evolve over time.
+//
+
+// nni_atomic_flag supports only test-and-set and reset operations.
+// This can be implemented without locks on any reasonable system, and
+// it corresponds to C11 atomic flag.
+typedef struct nni_atomic_flag nni_atomic_flag;
+
+extern bool nni_atomic_flag_test_and_set(nni_atomic_flag *);
+extern void nni_atomic_flag_reset(nni_atomic_flag *);
+
+//
 // Clock Support
 //
 

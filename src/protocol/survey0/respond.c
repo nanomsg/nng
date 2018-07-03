@@ -402,15 +402,14 @@ resp0_pipe_send_cb(void *arg)
 	nni_msg *   msg;
 	size_t      len;
 
-	nni_mtx_lock(&s->mtx);
-	p->busy = false;
 	if (nni_aio_result(p->aio_send) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_send));
 		nni_aio_set_msg(p->aio_send, NULL);
 		nni_pipe_stop(p->npipe);
-		nni_mtx_unlock(&s->mtx);
 		return;
 	}
+	nni_mtx_lock(&s->mtx);
+	p->busy = false;
 	if ((ctx = nni_list_first(&p->sendq)) == NULL) {
 		// Nothing else to send.
 		if (p->id == s->ctx->pipe_id) {

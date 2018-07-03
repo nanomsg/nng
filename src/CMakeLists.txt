@@ -92,6 +92,7 @@ if (NNG_PLATFORM_POSIX)
         platform/posix/posix_pollq.h
 
         platform/posix/posix_alloc.c
+        platform/posix/posix_atomic.c
         platform/posix/posix_clock.c
         platform/posix/posix_debug.c
         platform/posix/posix_epdesc.c

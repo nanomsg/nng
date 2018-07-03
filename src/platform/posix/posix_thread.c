@@ -348,4 +348,5 @@ nni_plat_ncpu(void)
 	return (1);
 #endif
 }
+
 #endif // NNG_PLATFORM_POSIX

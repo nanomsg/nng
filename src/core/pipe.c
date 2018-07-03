@@ -29,7 +29,7 @@ struct nni_pipe {
 	nni_listener *     p_listener;
 	nni_dialer *       p_dialer;
 	bool               p_closed;
-	bool               p_stop;
+	nni_atomic_flag    p_stop;
 	bool               p_cbs;
 	int                p_refcnt;
 	nni_mtx            p_mtx;
@@ -102,16 +102,11 @@ nni_pipe_sys_fini(void)
 void
 nni_pipe_destroy(nni_pipe *p)
 {
-	bool cbs;
 	if (p == NULL) {
 		return;
 	}
 
-	nni_mtx_lock(&p->p_mtx);
-	cbs = p->p_cbs;
-	nni_mtx_unlock(&p->p_mtx);
-
-	if (cbs) {
+	if (p->p_cbs) {
 		nni_sock_run_pipe_cb(p->p_sock, NNG_PIPE_EV_REM_POST, p->p_id);
 	}
 
@@ -247,13 +242,9 @@ void
 nni_pipe_stop(nni_pipe *p)
 {
 	// Guard against recursive calls.
-	nni_mtx_lock(&p->p_mtx);
-	if (p->p_stop) {
-		nni_mtx_unlock(&p->p_mtx);
+	if (nni_atomic_flag_test_and_set(&p->p_stop)) {
 		return;
 	}
-	p->p_stop = true;
-	nni_mtx_unlock(&p->p_mtx);
 
 	nni_pipe_close(p);
 
@@ -283,9 +274,7 @@ nni_pipe_start_cb(void *arg)
 		return;
 	}
 
-	nni_mtx_lock(&p->p_mtx);
 	p->p_cbs = true; // We're running all cbs going forward
-	nni_mtx_unlock(&p->p_mtx);
 
 	nni_sock_run_pipe_cb(s, NNG_PIPE_EV_ADD_PRE, id);
 	if (nni_pipe_closed(p)) {
@@ -324,10 +313,10 @@ nni_pipe_create2(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	p->p_proto_data = NULL;
 	p->p_sock       = sock;
 	p->p_closed     = false;
-	p->p_stop       = false;
 	p->p_cbs        = false;
 	p->p_refcnt     = 0;
 
+	nni_atomic_flag_reset(&p->p_stop);
 	NNI_LIST_NODE_INIT(&p->p_reap_node);
 	NNI_LIST_NODE_INIT(&p->p_sock_node);
 	NNI_LIST_NODE_INIT(&p->p_ep_node);

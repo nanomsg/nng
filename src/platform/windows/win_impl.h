@@ -48,6 +48,10 @@ struct nni_plat_cv {
 	PSRWLOCK           srl;
 };
 
+struct nni_atomic_flag {
+	unsigned f;
+};
+
 // nni_win_event is used with io completion ports.  This allows us to get
 // to a specific completion callback without requiring the poller (in the
 // completion port) to know anything about the event itself.  We also use

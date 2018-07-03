@@ -25,7 +25,7 @@ struct nni_listener {
 	int                   l_refcnt;
 	bool                  l_started;
 	bool                  l_closed;  // full shutdown
-	bool                  l_closing; // close pending (waiting on refcnt)
+	nni_atomic_flag       l_closing; // close pending
 	nni_mtx               l_mtx;
 	nni_cv                l_cv;
 	nni_list              l_pipes;
@@ -89,11 +89,9 @@ listener_destroy(nni_listener *l)
 
 	nni_aio_fini(l->l_acc_aio);
 
-	nni_mtx_lock(&l->l_mtx);
 	if (l->l_data != NULL) {
 		l->l_ops.l_fini(l->l_data);
 	}
-	nni_mtx_unlock(&l->l_mtx);
 	nni_cv_fini(&l->l_cv);
 	nni_mtx_fini(&l->l_mtx);
 	nni_url_free(l->l_url);
@@ -123,12 +121,12 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *urlstr)
 	}
 	l->l_url     = url;
 	l->l_closed  = false;
-	l->l_closing = false;
 	l->l_started = false;
 	l->l_data    = NULL;
 	l->l_refcnt  = 1;
 	l->l_sock    = s;
 	l->l_tran    = tran;
+	nni_atomic_flag_reset(&l->l_closing);
 
 	// Make a copy of the endpoint operations.  This allows us to
 	// modify them (to override NULLs for example), and avoids an extra
@@ -198,7 +196,7 @@ nni_listener_rele(nni_listener *l)
 {
 	nni_mtx_lock(&listeners_lk);
 	l->l_refcnt--;
-	if (l->l_closing) {
+	if (l->l_refcnt == 0) {
 		nni_cv_wake(&l->l_cv);
 	}
 	nni_mtx_unlock(&listeners_lk);
@@ -207,13 +205,9 @@ nni_listener_rele(nni_listener *l)
 int
 nni_listener_shutdown(nni_listener *l)
 {
-	nni_mtx_lock(&l->l_mtx);
-	if (l->l_closing) {
-		nni_mtx_unlock(&l->l_mtx);
+	if (nni_atomic_flag_test_and_set(&l->l_closing)) {
 		return (NNG_ECLOSED);
 	}
-	l->l_closing = true;
-	nni_mtx_unlock(&l->l_mtx);
 
 	// Abort any remaining in-flight accepts.
 	nni_aio_close(l->l_acc_aio);
@@ -262,11 +256,9 @@ listener_timer_cb(void *arg)
 	nni_listener *l   = arg;
 	nni_aio *     aio = l->l_tmo_aio;
 
-	nni_mtx_lock(&l->l_mtx);
 	if (nni_aio_result(aio) == 0) {
 		listener_accept_start(l);
 	}
-	nni_mtx_unlock(&l->l_mtx);
 }
 
 static void
@@ -282,16 +274,12 @@ listener_accept_cb(void *arg)
 		NNI_ASSERT(data != NULL);
 		rv = nni_pipe_create2(&p, l->l_sock, l->l_tran, data);
 	}
-	nni_mtx_lock(&l->l_mtx);
 	switch (rv) {
 	case 0:
-		if (l->l_closing) {
-			nni_mtx_unlock(&l->l_mtx);
-			nni_pipe_stop(p);
-			return;
-		}
+		nni_mtx_lock(&l->l_mtx);
 		nni_pipe_set_listener(p, l);
 		nni_list_append(&l->l_pipes, p);
+		nni_mtx_unlock(&l->l_mtx);
 		listener_accept_start(l);
 		break;
 	case NNG_ECONNABORTED: // remote condition, no cooldown
@@ -310,7 +298,6 @@ listener_accept_cb(void *arg)
 		nni_sleep_aio(100, l->l_tmo_aio);
 		break;
 	}
-	nni_mtx_unlock(&l->l_mtx);
 
 	if ((rv == 0) && ((rv = nni_sock_pipe_add(l->l_sock, p)) != 0)) {
 		nni_pipe_stop(p);
@@ -323,9 +310,6 @@ listener_accept_start(nni_listener *l)
 	nni_aio *aio = l->l_acc_aio;
 
 	// Call with the listener lock held.
-	if (l->l_closing) {
-		return;
-	}
 	l->l_ops.l_accept(l->l_data, aio);
 }
 
@@ -336,10 +320,6 @@ nni_listener_start(nni_listener *l, int flags)
 	NNI_ARG_UNUSED(flags);
 
 	nni_mtx_lock(&l->l_mtx);
-	if (l->l_closing) {
-		nni_mtx_unlock(&l->l_mtx);
-		return (NNG_ECLOSED);
-	}
 	if (l->l_started) {
 		nni_mtx_unlock(&l->l_mtx);
 		return (NNG_ESTATE);
@@ -351,8 +331,9 @@ nni_listener_start(nni_listener *l, int flags)
 	}
 
 	l->l_started = true;
-	listener_accept_start(l);
 	nni_mtx_unlock(&l->l_mtx);
+
+	listener_accept_start(l);
 
 	return (0);
 }
@@ -387,8 +368,6 @@ nni_listener_setopt(nni_listener *l, const char *name, const void *val,
 	}
 
 	for (o = l->l_ops.l_options; o && o->o_name; o++) {
-		int rv;
-
 		if (strcmp(o->o_name, name) != 0) {
 			continue;
 		}
@@ -396,10 +375,7 @@ nni_listener_setopt(nni_listener *l, const char *name, const void *val,
 			return (NNG_EREADONLY);
 		}
 
-		nni_mtx_lock(&l->l_mtx);
-		rv = o->o_set(l->l_data, val, sz, t);
-		nni_mtx_unlock(&l->l_mtx);
-		return (rv);
+		return (o->o_set(l->l_data, val, sz, t));
 	}
 
 	return (NNG_ENOTSUP);
@@ -412,17 +388,13 @@ nni_listener_getopt(
 	nni_tran_option *o;
 
 	for (o = l->l_ops.l_options; o && o->o_name; o++) {
-		int rv;
 		if (strcmp(o->o_name, name) != 0) {
 			continue;
 		}
 		if (o->o_get == NULL) {
 			return (NNG_EWRITEONLY);
 		}
-		nni_mtx_lock(&l->l_mtx);
-		rv = o->o_get(l->l_data, valp, szp, t);
-		nni_mtx_unlock(&l->l_mtx);
-		return (rv);
+		return (o->o_get(l->l_data, valp, szp, t));
 	}
 
 	// We provide a fallback on the URL, but let the implementation

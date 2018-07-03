@@ -416,7 +416,11 @@ static int
 ws_dialer_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_dialer *d = arg;
-	return (nni_copyout_size(d->rcvmax, v, szp, t));
+	int        rv;
+	nni_mtx_lock(&d->mtx);
+	rv = nni_copyout_size(d->rcvmax, v, szp, t);
+	nni_mtx_unlock(&d->mtx);
+	return (rv);
 }
 
 static int
@@ -439,7 +443,11 @@ static int
 ws_listener_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_listener *l = arg;
-	return (nni_copyout_size(l->rcvmax, v, szp, t));
+	int          rv;
+	nni_mtx_lock(&l->mtx);
+	rv = nni_copyout_size(l->rcvmax, v, szp, t);
+	nni_mtx_unlock(&l->mtx);
+	return (rv);
 }
 
 static int
@@ -538,7 +546,9 @@ ws_dialer_set_reqhdrs(void *arg, const void *v, size_t sz, nni_opt_type t)
 	}
 
 	if ((rv = ws_check_string(v, sz, t)) == 0) {
+		nni_mtx_lock(&d->mtx);
 		rv = ws_set_headers(&d->headers, v);
+		nni_mtx_unlock(&d->mtx);
 	}
 	return (rv);
 }
@@ -553,7 +563,9 @@ ws_listener_set_reshdrs(void *arg, const void *v, size_t sz, nni_opt_type t)
 		return (NNG_EBUSY);
 	}
 	if ((rv = ws_check_string(v, sz, t)) == 0) {
+		nni_mtx_lock(&l->mtx);
 		rv = ws_set_headers(&l->headers, v);
+		nni_mtx_unlock(&l->mtx);
 	}
 	return (rv);
 }

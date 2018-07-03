@@ -82,7 +82,8 @@ struct req0_pipe {
 	nni_pipe *    pipe;
 	req0_sock *   req;
 	nni_list_node node;
-	nni_list      ctxs; // ctxs with pending traffic
+	nni_list      ctxs;    // ctxs with pending traffic
+	bool          sending; // if busy sending
 	nni_aio *     aio_send;
 	nni_aio *     aio_recv;
 };
@@ -264,6 +265,7 @@ req0_pipe_close(void *arg)
 	nni_mtx_lock(&s->mtx);
 	// This removes the node from either busypipes or readypipes.
 	// It doesn't much matter which.
+	p->sending = false;
 	if (nni_list_node_active(&p->node)) {
 		nni_list_node_remove(&p->node);
 		if (s->closed) {
@@ -311,20 +313,19 @@ req0_send_cb(void *arg)
 	// in the ready list, and re-run the sendq.
 
 	nni_mtx_lock(&s->mtx);
-	if (nni_list_active(&s->busypipes, p)) {
-		nni_list_remove(&s->busypipes, p);
-		nni_list_append(&s->readypipes, p);
-		if (nni_list_empty(&s->sendq)) {
-			nni_pollable_raise(s->sendable);
-		}
-		req0_run_sendq(s, &aios);
-	} else {
-		// We wind up here if stop was called from the reader
-		// side while we were waiting to be scheduled to run for the
-		// writer side.  In this case we can't complete the operation,
-		// and we have to abort.
-		nni_pipe_stop(p->pipe);
+	if (!p->sending) {
+		// This occurs if the req0_pipe_close has been called.
+		// In that case we don't want any more processing.
+		nni_mtx_unlock(&s->mtx);
+		return;
 	}
+	nni_list_remove(&s->busypipes, p);
+	nni_list_append(&s->readypipes, p);
+	p->sending = false;
+	if (nni_list_empty(&s->sendq)) {
+		nni_pollable_raise(s->sendable);
+	}
+	req0_run_sendq(s, &aios);
 	nni_mtx_unlock(&s->mtx);
 
 	while ((aio = nni_list_first(&aios)) != NULL) {
@@ -533,6 +534,7 @@ req0_run_sendq(req0_sock *s, nni_list *aiolist)
 
 		nni_list_remove(&s->readypipes, p);
 		nni_list_append(&s->busypipes, p);
+		p->sending = true;
 
 		if ((aio = ctx->saio) != NULL) {
 			ctx->saio = NULL;

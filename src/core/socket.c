@@ -33,8 +33,8 @@ struct nni_ctx {
 };
 
 typedef struct sock_option {
-	const char *o_name;
-	int         o_type;
+	const char * o_name;
+	nni_opt_type o_type;
 	int (*o_get)(nni_sock *, void *, size_t *, nni_opt_type);
 	int (*o_set)(nni_sock *, const void *, size_t, nni_opt_type);
 } sock_option;
@@ -42,7 +42,7 @@ typedef struct sock_option {
 typedef struct nni_sockopt {
 	nni_list_node node;
 	char *        name;
-	int           typ;
+	nni_opt_type  typ;
 	size_t        sz;
 	void *        data;
 } nni_sockopt;

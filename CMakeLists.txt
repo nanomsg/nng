@@ -442,6 +442,8 @@ else ()
     nng_check_sym (SO_PEERCRED sys/socket.h NNG_HAVE_SOPEERCRED)
     nng_check_sym (LOCAL_PEERCRED sys/un.h NNG_HAVE_LOCALPEERCRED)
     nng_check_sym (getpeerucred ucred.h NNG_HAVE_GETPEERUCRED)
+    nng_check_sym (atomic_flag_test_and_set stdatomic.h NNG_HAVE_STDATOMIC)
+
 endif ()
 
 nng_check_sym (strlcat string.h NNG_HAVE_STRLCAT)

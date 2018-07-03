@@ -827,14 +827,22 @@ static int
 ipc_ep_get_recvmaxsz(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	ipc_ep *ep = arg;
-	return (nni_copyout_size(ep->rcvmax, data, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_size(ep->rcvmax, data, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static int
 ipc_ep_get_addr(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	ipc_ep *ep = arg;
-	return (nni_copyout_sockaddr(&ep->sa, data, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_sockaddr(&ep->sa, data, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static int
@@ -868,7 +876,9 @@ ipc_ep_set_sec_desc(void *arg, const void *data, size_t sz, nni_opt_type t)
 	int     rv;
 
 	if ((rv = nni_copyin_ptr(&ptr, data, sz, t)) == 0) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nni_plat_ipc_ep_set_security_descriptor(ep->iep, ptr);
+		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
 }

@@ -877,7 +877,11 @@ static int
 tls_ep_get_nodelay(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tls_ep *ep = arg;
-	return (nni_copyout_bool(ep->nodelay, v, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_bool(ep->nodelay, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static int
@@ -898,7 +902,11 @@ static int
 tls_ep_get_keepalive(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tls_ep *ep = arg;
-	return (nni_copyout_bool(ep->keepalive, v, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_bool(ep->keepalive, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static int
@@ -947,7 +955,11 @@ static int
 tls_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tls_ep *ep = arg;
-	return (nni_copyout_size(ep->rcvmax, v, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_size(ep->rcvmax, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static int
@@ -974,9 +986,11 @@ tls_ep_set_config(void *arg, const void *data, size_t sz, nni_opt_type t)
 	if (cfg == NULL) {
 		return (NNG_EINVAL);
 	}
+	nni_mtx_lock(&ep->mtx);
 	old = ep->cfg;
 	nni_tls_config_hold(cfg);
 	ep->cfg = cfg;
+	nni_mtx_unlock(&ep->mtx);
 	if (old != NULL) {
 		nni_tls_config_fini(old);
 	}
@@ -987,7 +1001,11 @@ static int
 tls_ep_get_config(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tls_ep *ep = arg;
-	return (nni_copyout_ptr(ep->cfg, v, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_ptr(ep->cfg, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static int
@@ -1055,7 +1073,9 @@ tls_ep_set_cert_key_file(void *arg, const void *v, size_t sz, nni_opt_type t)
 	int     rv;
 
 	if ((rv = tls_ep_chk_string(v, sz, t)) == 0) {
+		nni_mtx_lock(&ep->mtx);
 		rv = nng_tls_config_cert_key_file(ep->cfg, v, NULL);
+		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
 }

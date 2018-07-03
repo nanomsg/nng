@@ -882,7 +882,11 @@ static int
 tcp_ep_get_nodelay(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tcp_ep *ep = arg;
-	return (nni_copyout_bool(ep->nodelay, v, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_bool(ep->nodelay, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static int
@@ -903,7 +907,11 @@ static int
 tcp_ep_get_keepalive(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tcp_ep *ep = arg;
-	return (nni_copyout_bool(ep->keepalive, v, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_bool(ep->keepalive, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static int
@@ -931,7 +939,11 @@ static int
 tcp_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tcp_ep *ep = arg;
-	return (nni_copyout_size(ep->rcvmax, v, szp, t));
+	int     rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_size(ep->rcvmax, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
 }
 
 static nni_tran_option tcp_pipe_options[] = {

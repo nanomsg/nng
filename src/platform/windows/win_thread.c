@@ -103,6 +103,18 @@ nni_plat_cv_fini(nni_plat_cv *cv)
 	NNI_ARG_UNUSED(cv);
 }
 
+bool
+nni_atomic_flag_test_and_set(nni_atomic_flag *f)
+{
+	return (InterlockedExchange(&f->f, 1) != 0);
+}
+
+void
+nni_atomic_flag_reset(nni_atomic_flag *f)
+{
+	InterlockedExchange(&f->f, 0);
+}
+
 static unsigned int __stdcall nni_plat_thr_main(void *arg)
 {
 	nni_plat_thr *thr = arg;

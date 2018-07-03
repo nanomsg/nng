@@ -27,7 +27,7 @@ struct nni_dialer {
 	bool                d_synch;  // synchronous connect in progress?
 	bool                d_started;
 	bool                d_closed;  // full shutdown
-	bool                d_closing; // close pending (waiting on refcnt)
+	nni_atomic_flag     d_closing; // close pending (waiting on refcnt)
 	nni_mtx             d_mtx;
 	nni_cv              d_cv;
 	nni_list            d_pipes;
@@ -96,11 +96,9 @@ dialer_destroy(nni_dialer *d)
 	nni_aio_fini(d->d_con_aio);
 	nni_aio_fini(d->d_tmo_aio);
 
-	nni_mtx_lock(&d->d_mtx);
 	if (d->d_data != NULL) {
 		d->d_ops.d_fini(d->d_data);
 	}
-	nni_mtx_unlock(&d->d_mtx);
 	nni_cv_fini(&d->d_cv);
 	nni_mtx_fini(&d->d_mtx);
 	nni_url_free(d->d_url);
@@ -130,12 +128,12 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 	}
 	d->d_url     = url;
 	d->d_closed  = false;
-	d->d_closing = false;
 	d->d_started = false;
 	d->d_data    = NULL;
 	d->d_refcnt  = 1;
 	d->d_sock    = s;
 	d->d_tran    = tran;
+	nni_atomic_flag_reset(&d->d_closing);
 
 	// Make a copy of the endpoint operations.  This allows us to
 	// modify them (to override NULLs for example), and avoids an extra
@@ -205,7 +203,7 @@ nni_dialer_rele(nni_dialer *d)
 {
 	nni_mtx_lock(&dialers_lk);
 	d->d_refcnt--;
-	if (d->d_closing) {
+	if (d->d_refcnt == 0) {
 		nni_cv_wake(&d->d_cv);
 	}
 	nni_mtx_unlock(&dialers_lk);
@@ -214,13 +212,9 @@ nni_dialer_rele(nni_dialer *d)
 int
 nni_dialer_shutdown(nni_dialer *d)
 {
-	nni_mtx_lock(&d->d_mtx);
-	if (d->d_closing) {
-		nni_mtx_unlock(&d->d_mtx);
+	if (nni_atomic_flag_test_and_set(&d->d_closing)) {
 		return (NNG_ECLOSED);
 	}
-	d->d_closing = true;
-	nni_mtx_unlock(&d->d_mtx);
 
 	// Abort any remaining in-flight operations.
 	nni_aio_close(d->d_con_aio);
@@ -269,9 +263,6 @@ dialer_timer_start(nni_dialer *d)
 {
 	nni_duration backoff;
 
-	if (d->d_closing) {
-		return;
-	}
 	backoff = d->d_currtime;
 	d->d_currtime *= 2;
 	if (d->d_currtime > d->d_maxrtime) {
@@ -319,11 +310,6 @@ dialer_connect_cb(void *arg)
 	synch      = d->d_synch;
 	d->d_synch = false;
 	if (rv == 0) {
-		if (d->d_closing) {
-			nni_mtx_unlock(&d->d_mtx);
-			nni_pipe_stop(p);
-			return;
-		}
 		nni_pipe_set_dialer(p, d);
 		nni_list_append(&d->d_pipes, p);
 
@@ -372,10 +358,6 @@ dialer_connect_start(nni_dialer *d)
 	nni_aio *aio = d->d_con_aio;
 
 	// Call with the Endpoint lock held.
-	if (d->d_closing) {
-		return;
-	}
-
 	d->d_ops.d_connect(d->d_data, aio);
 }
 
@@ -389,11 +371,6 @@ nni_dialer_start(nni_dialer *d, int flags)
 	d->d_currtime = d->d_inirtime;
 
 	nni_mtx_lock(&d->d_mtx);
-
-	if (d->d_closing) {
-		nni_mtx_unlock(&d->d_mtx);
-		return (NNG_ECLOSED);
-	}
 
 	if (d->d_started) {
 		nni_mtx_unlock(&d->d_mtx);
@@ -411,10 +388,10 @@ nni_dialer_start(nni_dialer *d, int flags)
 	d->d_started = true;
 	dialer_connect_start(d);
 
-	while (d->d_synch && !d->d_closing) {
+	while (d->d_synch) {
 		nni_cv_wait(&d->d_cv);
 	}
-	rv = d->d_closing ? NNG_ECLOSED : d->d_lastrv;
+	rv = d->d_lastrv;
 	nni_cv_wake(&d->d_cv);
 
 	if (rv != 0) {
@@ -478,8 +455,6 @@ nni_dialer_setopt(nni_dialer *d, const char *name, const void *val, size_t sz,
 	}
 
 	for (o = d->d_ops.d_options; o && o->o_name; o++) {
-		int rv;
-
 		if (strcmp(o->o_name, name) != 0) {
 			continue;
 		}
@@ -487,10 +462,7 @@ nni_dialer_setopt(nni_dialer *d, const char *name, const void *val, size_t sz,
 			return (NNG_EREADONLY);
 		}
 
-		nni_mtx_lock(&d->d_mtx);
-		rv = o->o_set(d->d_data, val, sz, t);
-		nni_mtx_unlock(&d->d_mtx);
-		return (rv);
+		return (o->o_set(d->d_data, val, sz, t));
 	}
 
 	return (NNG_ENOTSUP);
@@ -518,17 +490,13 @@ nni_dialer_getopt(
 	}
 
 	for (o = d->d_ops.d_options; o && o->o_name; o++) {
-		int rv;
 		if (strcmp(o->o_name, name) != 0) {
 			continue;
 		}
 		if (o->o_get == NULL) {
 			return (NNG_EWRITEONLY);
 		}
-		nni_mtx_lock(&d->d_mtx);
-		rv = o->o_get(d->d_data, valp, szp, t);
-		nni_mtx_unlock(&d->d_mtx);
-		return (rv);
+		return (o->o_get(d->d_data, valp, szp, t));
 	}
 
 	// We provide a fallback on the URL, but let the implementation

@@ -75,6 +75,19 @@ struct nni_plat_flock {
 
 #define NNG_PLATFORM_DIR_SEP "/"
 
+#ifdef NNG_HAVE_STDATOMIC
+
+#include <stdatomic.h>
+
+struct nni_atomic_flag {
+	atomic_flag f;
+};
+#else // NNG_HAVE_C11_ATOMIC
+struct nni_atomic_flag {
+	bool f;
+};
+#endif
+
 #endif
 
 extern int  nni_posix_pollq_sysinit(void);
