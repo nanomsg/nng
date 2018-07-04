@@ -58,7 +58,7 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	nni_posix_pfd *  pf;
 	nni_posix_pollq *pq;
 	struct kevent    ev[2];
-	unsigned         flags = EV_ADD | EV_DISABLE;
+	unsigned         flags = EV_ADD | EV_DISABLE | EV_CLEAR;
 
 	// Set this is as soon as possible (narrow the close-exec race as
 	// much as we can; better options are system calls that suppress
@@ -128,7 +128,8 @@ nni_posix_pfd_fini(nni_posix_pfd *pf)
 		struct kevent ev;
 		nni_mtx_lock(&pq->mtx);
 		nni_list_append(&pq->reapq, pf);
-		EV_SET(&ev, 0, EVFILT_USER, EV_ENABLE, NOTE_TRIGGER, 0, NULL);
+		EV_SET(&ev, 0, EVFILT_USER, EV_ENABLE | EV_CLEAR, NOTE_TRIGGER,
+		    0, NULL);
 
 		// If this fails, the cleanup will stall.  That should
 		// only occur in a memory pressure situation, and it
@@ -167,7 +168,7 @@ nni_posix_pfd_arm(nni_posix_pfd *pf, int events)
 {
 	struct kevent    ev[2];
 	int              nev   = 0;
-	unsigned         flags = EV_ENABLE | EV_DISPATCH;
+	unsigned         flags = EV_ENABLE | EV_DISPATCH | EV_CLEAR;
 	nni_posix_pollq *pq    = pf->pq;
 
 	nni_mtx_lock(&pf->mtx);
@@ -291,7 +292,7 @@ nni_posix_pollq_add_wake_evt(nni_posix_pollq *pq)
 	int           rv;
 	struct kevent ev;
 
-	EV_SET(&ev, 0, EVFILT_USER, EV_ADD, 0, 0, NULL);
+	EV_SET(&ev, 0, EVFILT_USER, EV_ADD | EV_CLEAR, 0, 0, NULL);
 	while ((rv = kevent(pq->kq, &ev, 1, NULL, 0, NULL)) != 0) {
 		if (errno == EINTR) {
 			continue;
