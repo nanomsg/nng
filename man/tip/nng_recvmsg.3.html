@@ -560,8 +560,8 @@ offer more functionality than the simpler <code><a href="nng_recv.3.html">nng_re
 <dt class="hdlist1"><code>NNG_FLAG_NONBLOCK</code></dt>
 <dd>
 <p>The function returns immediately, even if no message is available.
-Without   this flag, the function will wait until a message is received
-by the socket   <em>s</em>, or any configured timer expires.</p>
+Without this flag, the function will wait until a message is received
+by the socket <em>s</em>, or any configured timer expires.</p>
 </dd>
 </dl>
 </div>
@@ -603,7 +603,7 @@ Furthermore, some protocols may not support receiving data at all, such as
 <code>NNG_EAGAIN</code>
 </td>
 <td class="hdlist2">
-<p>The socket <em>s</em> cannot accept data for sending.</p>
+<p>The operation would block, but <code>NNG_FLAG_NONBLOCK</code> was specified.</p>
 </td>
 </tr>
 <tr>
@@ -644,6 +644,14 @@ Furthermore, some protocols may not support receiving data at all, such as
 </td>
 <td class="hdlist2">
 <p>The socket <em>s</em> cannot receive data in this state.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>The operation timed out.</p>
 </td>
 </tr>
 </table>

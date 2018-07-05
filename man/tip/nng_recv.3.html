@@ -539,15 +539,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The <code>nng_recv()</code> receives a message.</p>
 </div>
 <div class="paragraph">
-<p>If the special flag <code>NNG_FLAG_ALLOC</code> is not specified, then the caller must
-set <em>data</em> to a buffer to receive the message body content, and must store
-the size of that buffer at the location pointed to by <em>sizep</em>.
-When the function returns, if it is successful, the size at <em>sizep</em> will be
-updated with the actual message body length copied into <em>data</em>.</p>
+<p>The <em>flags</em> is a bit mask that may contain any of the following values:</p>
 </div>
-<div class="paragraph">
-<p>If the special flag <code>NNG_FLAG_ALLOC</code> is present, then a &#8220;zero-copy&#8221;
-mode is used.
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_FLAG_NONBLOCK</code></dt>
+<dd>
+<p>The function returns immediately, even if no message is available.
+Without this flag, the function will wait until a message is received
+by the socket <em>s</em>, or any configured timer expires.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_FLAG_ALLOC</code></dt>
+<dd>
+<p>If this flag is present, then a &#8220;zero-copy&#8221; mode is used.
 In this case the caller must set the value of <em>data</em> to the location
 of another pointer (of type <code>void *</code>), and the <em>sizep</em> pointer must be set
 to a location to receive the size of the message body.
@@ -555,10 +559,18 @@ The function will then allocate a message buffer
 (as if by <code><a href="nng_alloc.3.html">nng_alloc()</a></code>), fill it with
 the message body, and store it at the address referenced by <em>data</em>, and update
 the size referenced by <em>sizep</em>.
-When this flag is present, the caller assumes
-responsibility for disposing of the received buffer either by the function
-<code><a href="nng_free.3.html">nng_free()</a></code> or reusing the message for sending (with the same
-size) in a call to <code><a href="nng_send.3.html">nng_send()</a></code>.</p>
+The caller is responsible for disposing of the received buffer either by
+the <code><a href="nng_free.3.html">nng_free()</a></code> function or passing the message (also
+with the <code>NNG_FLAG_ALLOC</code> flag) in a call to <code><a href="nng_send.3.html">nng_send()</a></code>.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>If the special flag <code>NNG_FLAG_ALLOC</code> (see above) is not specified, then the
+caller must set <em>data</em> to a buffer to receive the message body content,
+and must store the size of that buffer at the location pointed to by <em>sizep</em>.
+When the function returns, if it is successful, the size at <em>sizep</em> will be
+updated with the actual message body length copied into <em>data</em>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -612,7 +624,7 @@ a response using the same flag.
 <code>NNG_EAGAIN</code>
 </td>
 <td class="hdlist2">
-<p>The socket <em>s</em> cannot accept data for sending.</p>
+<p>The operation would block, but <code>NNG_FLAG_NONBLOCK</code> was specified.</p>
 </td>
 </tr>
 <tr>
@@ -661,6 +673,14 @@ a response using the same flag.
 </td>
 <td class="hdlist2">
 <p>The socket <em>s</em> cannot receive data in this state.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>The operation timed out.</p>
 </td>
 </tr>
 </table>

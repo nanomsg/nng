@@ -547,6 +547,24 @@ in <code>NNG_ECLOSED</code>.
 Threads waiting for operations on the socket when this
 call is executed may also return with an <code>NNG_ECLOSED</code> result.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Closing the socket while data is in transmission will likely lead to loss
+of that data.
+There is no automatic linger or flush to ensure that the socket send buffers
+have completely transmitted.
+It is recommended to wait a brief period after calling
+<code><a href="nng_send.3.html">nng_send()</a></code> or similar functions, before calling this
+function.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">

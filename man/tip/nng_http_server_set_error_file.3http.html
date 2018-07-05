@@ -9,7 +9,7 @@ layout: refman
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>nng_send(3)</title>
+<title>nng_http_server_set_error_file(3http)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -503,7 +503,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_send(3) Manual Page</h1>
+<h1>nng_http_server_set_error_file(3http) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -516,7 +516,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_send - send data</p>
+<p>nng_http_server_set_error_file - set custom HTTP error file</p>
 </div>
 </div>
 <div id="content">
@@ -526,8 +526,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_send</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">data</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">flags</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_http_server_set_error_file</span><span class="tok-p">(</span><span class="tok-n">nng_http_server</span> <span class="tok-o">*</span><span class="tok-n">server</span><span class="tok-p">,</span>
+        <span class="tok-kt">uint16_t</span> <span class="tok-n">code</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">path</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -536,65 +538,33 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_send()</code> function sends a message containing the <em>data</em> of
-length <em>size</em> using the <a href="nng_socket.5.html">socket</a> <em>s</em>.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-The semantics of what sending a message means vary from protocol to
-protocol, so examination of the protocol documentation is encouraged.
-(For example, with an <a href="nng_pub.7.html"><em>nng</em></a> socket the data is broadcast, so that
-any peers who have a suitable subscription will be able to receive it using
-<code><a href="nng_recv.3.html">nng_recv()</a></code> or a similar function.)
-Furthermore, some protocols may not support sending data (such as
-<a href="nng_sub.7.html"><em>sub</em></a>) or may require other conditions.
-(For example, <a href="nng_rep.7.html"><em>rep</em></a> sockets cannot normally send data,
-which are responses to requests, until they have first received a request.)
-</td>
-</tr>
-</table>
+<p>The <code>nng_http_server_set_error_file()</code> sets an error page to be used
+for HTTP status <em>code</em> on the server instance <em>server</em>.
+The body content of the HTTP responses will contain the file contents of
+the file located at <em>path</em>, which should be an HTML file.</p>
 </div>
 <div class="paragraph">
-<p>The <em>flags</em> may contain either of (or neither of) the following values:</p>
+<p>The custom HTML content will be used when the server is returning an
+internally generated error response, or is returning an error response
+that was allocated with the
+<code><a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error()</a></code>
+function.
+This HTML content will also be used if the application calls the
+<code><a href="nng_http_server_res_error.3http.html">nng_http_server_res_error()</a></code>.
+The last custom error page set for <em>code</em> by either this function or
+<code><a href="nng_http_server_set_error_page.3http.html">nng_http_server_error_page()</a></code>
+will be used.</p>
 </div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_FLAG_NONBLOCK</code></dt>
-<dd>
-<p>The function returns immediately, regardless of whether
-the socket is able to accept the data or not.  If the socket is unable
-to accept the data (such as if backpressure exists because the peers
-are consuming messages too slowly, or no peer is present), then the
-function will return with <code>NNG_EAGAIN</code>.  If this flag is not specified,
-then the function will block if such a condition exists.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_FLAG_ALLOC</code></dt>
-<dd>
-<p>The <em>data</em> was allocated using <code><a href="nng_alloc.3.html">nng_alloc()</a></code>, or was
-obtained from a call to <code><a href="nng_recv.3.html">nng_recv()</a></code> with
-the <code>NNG_FLAG_ALLOC</code> flag.
-If this function returns success, then the <em>data</em> is "owned" by the
-function, and it will assume responsibility for calling
-<code><a href="nng_free.3.html">nng_free()</a></code> when it is no longer needed.
-In the absence of this flag, the <em>data</em> is copied by the implementation
-before the function returns to the caller.</p>
-</dd>
-</dl>
-</div>
-<div class="admonitionblock tip">
+<div class="admonitionblock note">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
+<i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <code>NNG_FLAG_ALLOC</code> flag can be used to reduce data copies, thereby
-increasing performance.
+Error responses that have their body content changed after allocation,
+or that are written directly by the application, will not use the body
+content supplied here.
 </td>
 </tr>
 </table>
@@ -606,27 +576,9 @@ increasing performance.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Regardless of the presence or absence of <code>NNG_FLAG_NONBLOCK</code>, there may
-be queues between the sender and the receiver.
-Furthermore, there is no guarantee that the message has actually been delivered.
-Finally, with some protocols, the semantic is implicitly <code>NNG_FLAG_NONBLOCK</code>,
-such as with <a href="nng_pub.7.html"><em>pub</em></a> sockets, which are best-effort delivery only.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-When using <code>NNG_FLAG_ALLOC</code>, it is important that the value of <em>size</em>
-match the actual allocated size of the data.
-Using an incorrect size results
-in unspecified behavior, which may include heap corruption, program crashes,
-or trans-dimensional mutation of the program&#8217;s author.
+The file contents of <em>path</em> are read when this function is called.
+Therefore, if the file contents are changed, then this function should
+be called again to update the error page.
 </td>
 </tr>
 </table>
@@ -648,34 +600,18 @@ or trans-dimensional mutation of the program&#8217;s author.
 <table>
 <tr>
 <td class="hdlist1">
-<code>NNG_EAGAIN</code>
+<code>NNG_ENOENT</code>
 </td>
 <td class="hdlist2">
-<p>The operation would block, but <code>NNG_FLAG_NONBLOCK</code> was specified.</p>
+<p>The file named by <em>path</em> does not exist.</p>
 </td>
 </tr>
 <tr>
 <td class="hdlist1">
-<code>NNG_ECLOSED</code>
+<code>NNG_EPERM</code>
 </td>
 <td class="hdlist2">
-<p>The socket <em>s</em> is not open.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_EINVAL</code>
-</td>
-<td class="hdlist2">
-<p>An invalid set of <em>flags</em> was specified.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_EMSGSIZE</code>
-</td>
-<td class="hdlist2">
-<p>The value of <em>size</em> is too large.</p>
+<p>No permission to read the file named by <em>path</em>.</p>
 </td>
 </tr>
 <tr>
@@ -683,7 +619,7 @@ or trans-dimensional mutation of the program&#8217;s author.
 <code>NNG_ENOMEM</code>
 </td>
 <td class="hdlist2">
-<p>Insufficient memory is available.</p>
+<p>Insufficient free memory exists.</p>
 </td>
 </tr>
 <tr>
@@ -691,23 +627,7 @@ or trans-dimensional mutation of the program&#8217;s author.
 <code>NNG_ENOTSUP</code>
 </td>
 <td class="hdlist2">
-<p>The protocol for socket <em>s</em> does not support sending.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_ESTATE</code>
-</td>
-<td class="hdlist2">
-<p>The socket <em>s</em> cannot send data in this state.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_ETIMEDOUT</code>
-</td>
-<td class="hdlist2">
-<p>The operation timed out.</p>
+<p>HTTP not supported.</p>
 </td>
 </tr>
 </table>
@@ -718,12 +638,11 @@ or trans-dimensional mutation of the program&#8217;s author.
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_alloc.3.html">nng_alloc(3)</a>,
-<a href="nng_free.3.html">nng_free(3)</a>,
-<a href="nng_recv.3.html">nng_recv(3)</a>,
-<a href="nng_sendmsg.3.html">nng_sendmsg(3)</a>,
+<p><a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error(3http)</a>,
+<a href="nng_http_server_hold.3http.html">nng_http_server_hold(3http)</a>,
+<a href="nng_http_server_res_error.3http.html">nng_http_server_res_error(3http)</a>,
+<a href="nng_http_server_set_error_page.3http.html">nng_http_server_set_error_page(3http)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
-<a href="nng_socket.5.html">nng_socket(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>
