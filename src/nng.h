@@ -52,7 +52,7 @@ extern "C" {
 // assumptions.
 #define NNG_MAJOR_VERSION 1
 #define NNG_MINOR_VERSION 0
-#define NNG_PATCH_VERSION 0
+#define NNG_PATCH_VERSION 1
 #define NNG_RELEASE_SUFFIX "" // if non-empty, this is a pre-release
 
 // Maximum length of a socket address. This includes the terminating NUL.
