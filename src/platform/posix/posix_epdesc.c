@@ -44,6 +44,7 @@ struct nni_posix_epdesc {
 	nni_list                acceptq;
 	bool                    closed;
 	bool                    started;
+	bool                    ipcbound; // if true unlink socket on exit
 	struct sockaddr_storage locaddr;
 	struct sockaddr_storage remaddr;
 	socklen_t               loclen;
@@ -176,8 +177,7 @@ nni_epdesc_doclose(nni_posix_epdesc *ed)
 	}
 
 	// clean up stale UNIX socket when closing the server.
-	if ((ed->mode == NNI_EP_MODE_LISTEN) && (ed->loclen != 0) &&
-	    (ed->locaddr.ss_family == AF_UNIX)) {
+	if (ed->ipcbound) {
 		struct sockaddr_un *sun = (void *) &ed->locaddr;
 		(void) unlink(sun->sun_path);
 	}
@@ -271,14 +271,17 @@ nni_posix_epdesc_listen(nni_posix_epdesc *ed)
 	// it is done *before* the listen() operation, whereas fchmod seems to
 	// have no impact.  This behavior was observed on both macOS and Linux.
 	// YMMV on other platforms.
-	if ((ss->ss_family == AF_UNIX) && (ed->perms != 0)) {
-		struct sockaddr_un *sun   = (void *) ss;
-		mode_t              perms = ed->perms & ~(S_IFMT);
-		if ((rv = chmod(sun->sun_path, perms)) != 0) {
-			rv = nni_plat_errno(errno);
-			nni_mtx_unlock(&ed->mtx);
-			nni_posix_pfd_fini(pfd);
-			return (rv);
+	if (ss->ss_family == AF_UNIX) {
+		ed->ipcbound = true;
+		if (ed->perms != 0) {
+			struct sockaddr_un *sun   = (void *) ss;
+			mode_t              perms = ed->perms & ~(S_IFMT);
+			if ((rv = chmod(sun->sun_path, perms)) != 0) {
+				rv = nni_plat_errno(errno);
+				nni_mtx_unlock(&ed->mtx);
+				nni_posix_pfd_fini(pfd);
+				return (rv);
+			}
 		}
 	}
 
