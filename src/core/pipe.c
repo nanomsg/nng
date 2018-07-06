@@ -19,6 +19,9 @@
 
 struct nni_pipe {
 	uint32_t           p_id;
+	uint32_t           p_sock_id;
+	uint32_t           p_dialer_id;
+	uint32_t           p_listener_id;
 	nni_tran_pipe_ops  p_tran_ops;
 	nni_proto_pipe_ops p_proto_ops;
 	void *             p_tran_data;
@@ -312,6 +315,7 @@ nni_pipe_create2(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	p->p_proto_ops  = *pops;
 	p->p_proto_data = NULL;
 	p->p_sock       = sock;
+	p->p_sock_id    = nni_sock_id(sock);
 	p->p_closed     = false;
 	p->p_cbs        = false;
 	p->p_refcnt     = 0;
@@ -346,13 +350,15 @@ nni_pipe_create2(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 void
 nni_pipe_set_listener(nni_pipe *p, nni_listener *l)
 {
-	p->p_listener = l;
+	p->p_listener    = l;
+	p->p_listener_id = nni_listener_id(l);
 }
 
 void
 nni_pipe_set_dialer(nni_pipe *p, nni_dialer *d)
 {
-	p->p_dialer = d;
+	p->p_dialer    = d;
+	p->p_dialer_id = nni_dialer_id(d);
 }
 
 int
@@ -360,6 +366,8 @@ nni_pipe_getopt(
     nni_pipe *p, const char *name, void *val, size_t *szp, nni_opt_type t)
 {
 	nni_tran_option *o;
+	nni_dialer *     d;
+	nni_listener *   l;
 
 	for (o = p->p_tran_ops.p_options; o && o->o_name; o++) {
 		if (strcmp(o->o_name, name) != 0) {
@@ -367,12 +375,25 @@ nni_pipe_getopt(
 		}
 		return (o->o_get(p->p_tran_data, val, szp, t));
 	}
-	// Maybe the endpoint knows?
-	if (p->p_dialer != NULL) {
-		return (nni_dialer_getopt(p->p_dialer, name, val, szp, t));
+
+	// Maybe the endpoint knows?  We look up by ID, instead of using
+	// the links directly, to avoid needing a hold on them.  The pipe
+	// can wind up outliving the endpoint in certain circumstances.
+	// This means that getting these properties from the pipe may wind
+	// up being somewhat more expensive.
+	if ((p->p_dialer_id != 0) &&
+	    (nni_dialer_find(&d, p->p_dialer_id) == 0)) {
+		int rv;
+		rv = nni_dialer_getopt(d, name, val, szp, t);
+		nni_dialer_rele(d);
+		return (rv);
 	}
-	if (p->p_listener != NULL) {
-		return (nni_listener_getopt(p->p_listener, name, val, szp, t));
+	if ((p->p_listener_id != 0) &&
+	    (nni_listener_find(&l, p->p_listener_id) == 0)) {
+		int rv;
+		rv = nni_listener_getopt(l, name, val, szp, t);
+		nni_listener_rele(l);
+		return (rv);
 	}
 	return (NNG_ENOTSUP);
 }
@@ -408,24 +429,19 @@ nni_pipe_ep_list_init(nni_list *list)
 uint32_t
 nni_pipe_sock_id(nni_pipe *p)
 {
-	return (nni_sock_id(p->p_sock));
+	return (p->p_sock_id);
 }
 
 uint32_t
 nni_pipe_listener_id(nni_pipe *p)
 {
-	if (p->p_listener != NULL) {
-		return (nni_listener_id(p->p_listener));
-	}
-	return (0);
+	return (p->p_listener_id);
 }
+
 uint32_t
 nni_pipe_dialer_id(nni_pipe *p)
 {
-	if (p->p_dialer != NULL) {
-		return (nni_dialer_id(p->p_dialer));
-	}
-	return (0);
+	return (p->p_dialer_id);
 }
 
 static void
