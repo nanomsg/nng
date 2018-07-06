@@ -176,7 +176,7 @@ pair0_recv_cb(void *arg)
 	nni_msg *   msg;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
@@ -196,7 +196,7 @@ pair0_putq_cb(void *arg)
 	if (nni_aio_result(p->aio_putq) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_putq));
 		nni_aio_set_msg(p->aio_putq, NULL);
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 	nni_pipe_recv(p->npipe, p->aio_recv);
@@ -208,7 +208,7 @@ pair0_getq_cb(void *arg)
 	pair0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_getq) != 0) {
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
@@ -226,7 +226,7 @@ pair0_send_cb(void *arg)
 	if (nni_aio_result(p->aio_send) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_send));
 		nni_aio_set_msg(p->aio_send, NULL);
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 

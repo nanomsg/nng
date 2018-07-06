@@ -164,7 +164,7 @@ sub0_recv_cb(void *arg)
 	nni_msg *  msg;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
-		nni_pipe_stop(p->pipe);
+		nni_pipe_close(p->pipe);
 		return;
 	}
 
@@ -182,7 +182,7 @@ sub0_recv_cb(void *arg)
 		// Any other error we stop the pipe for.  It's probably
 		// NNG_ECLOSED anyway.
 		nng_msg_free(msg);
-		nni_pipe_stop(p->pipe);
+		nni_pipe_close(p->pipe);
 		return;
 	}
 	nni_pipe_recv(p->pipe, p->aio_recv);

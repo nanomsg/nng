@@ -205,7 +205,7 @@ xsurv0_getq_cb(void *arg)
 	xsurv0_pipe *p = arg;
 
 	if (nni_aio_result(p->aio_getq) != 0) {
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
@@ -223,7 +223,7 @@ xsurv0_send_cb(void *arg)
 	if (nni_aio_result(p->aio_send) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_send));
 		nni_aio_set_msg(p->aio_send, NULL);
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
@@ -238,7 +238,7 @@ xsurv0_putq_cb(void *arg)
 	if (nni_aio_result(p->aio_putq) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_putq));
 		nni_aio_set_msg(p->aio_putq, NULL);
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
@@ -252,7 +252,7 @@ xsurv0_recv_cb(void *arg)
 	nni_msg *    msg;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
@@ -264,7 +264,7 @@ xsurv0_recv_cb(void *arg)
 	if (nni_msg_len(msg) < 4) {
 		// Peer gave us garbage, so kick it.
 		nni_msg_free(msg);
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 	if (nni_msg_header_append(msg, nni_msg_body(msg), 4) != 0) {

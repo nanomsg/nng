@@ -141,7 +141,7 @@ pull0_recv_cb(void *arg)
 
 	if (nni_aio_result(aio) != 0) {
 		// Failed to get a message, probably the pipe is closed.
-		nni_pipe_stop(p->pipe);
+		nni_pipe_close(p->pipe);
 		return;
 	}
 
@@ -163,7 +163,7 @@ pull0_putq_cb(void *arg)
 		// we can do.  Just close the pipe.
 		nni_msg_free(nni_aio_get_msg(aio));
 		nni_aio_set_msg(aio, NULL);
-		nni_pipe_stop(p->pipe);
+		nni_pipe_close(p->pipe);
 		return;
 	}
 

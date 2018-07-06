@@ -14,47 +14,62 @@
 
 #include <stdbool.h>
 
-static nni_list nni_reap_list;
-static nni_mtx  nni_reap_mtx;
-static nni_cv   nni_reap_cv;
-static bool     nni_reap_exit = false;
-static nni_thr  nni_reap_thr;
+static nni_list reap_list;
+static nni_mtx  reap_mtx;
+static nni_cv   reap_cv;
+static nni_cv   reap_empty_cv;
+static bool     reap_exit  = false;
+static bool     reap_empty = false;
+static nni_thr  reap_thr;
 
 static void
-nni_reap_stuff(void *notused)
+reap_worker(void *notused)
 {
 	NNI_ARG_UNUSED(notused);
 
-	nni_mtx_lock(&nni_reap_mtx);
+	nni_mtx_lock(&reap_mtx);
 	for (;;) {
 		nni_reap_item *item;
-		if ((item = nni_list_first(&nni_reap_list)) != NULL) {
-			nni_list_remove(&nni_reap_list, item);
-			nni_mtx_unlock(&nni_reap_mtx);
+		while ((item = nni_list_first(&reap_list)) != NULL) {
+			nni_list_remove(&reap_list, item);
+			nni_mtx_unlock(&reap_mtx);
 
 			item->r_func(item->r_ptr);
-			nni_mtx_lock(&nni_reap_mtx);
-			continue;
+			nni_mtx_lock(&reap_mtx);
 		}
 
-		if (nni_reap_exit) {
+		reap_empty = true;
+		nni_cv_wake(&reap_empty_cv);
+
+		if (reap_exit) {
 			break;
 		}
 
-		nni_cv_wait(&nni_reap_cv);
+		nni_cv_wait(&reap_cv);
 	}
-	nni_mtx_unlock(&nni_reap_mtx);
+	nni_mtx_unlock(&reap_mtx);
 }
 
 void
 nni_reap(nni_reap_item *item, nni_cb func, void *ptr)
 {
-	nni_mtx_lock(&nni_reap_mtx);
+	nni_mtx_lock(&reap_mtx);
 	item->r_func = func;
 	item->r_ptr  = ptr;
-	nni_list_append(&nni_reap_list, item);
-	nni_cv_wake(&nni_reap_cv);
-	nni_mtx_unlock(&nni_reap_mtx);
+	nni_list_append(&reap_list, item);
+	reap_empty = false;
+	nni_cv_wake(&reap_cv);
+	nni_mtx_unlock(&reap_mtx);
+}
+
+void
+nni_reap_drain(void)
+{
+	nni_mtx_lock(&reap_mtx);
+	while (!reap_empty) {
+		nni_cv_wait(&reap_empty_cv);
+	}
+	nni_mtx_unlock(&reap_mtx);
 }
 
 int
@@ -62,28 +77,30 @@ nni_reap_sys_init(void)
 {
 	int rv;
 
-	NNI_LIST_INIT(&nni_reap_list, nni_reap_item, r_link);
-	nni_mtx_init(&nni_reap_mtx);
-	nni_cv_init(&nni_reap_cv, &nni_reap_mtx);
-	nni_reap_exit = false;
+	NNI_LIST_INIT(&reap_list, nni_reap_item, r_link);
+	nni_mtx_init(&reap_mtx);
+	nni_cv_init(&reap_cv, &reap_mtx);
+	nni_cv_init(&reap_empty_cv, &reap_mtx);
+	reap_exit = false;
 
 	// If this fails, we don't fail init, instead we will try to
 	// start up at reap time.
-	if ((rv = nni_thr_init(&nni_reap_thr, nni_reap_stuff, NULL)) != 0) {
-		nni_cv_fini(&nni_reap_cv);
-		nni_mtx_fini(&nni_reap_mtx);
+	if ((rv = nni_thr_init(&reap_thr, reap_worker, NULL)) != 0) {
+		nni_cv_fini(&reap_cv);
+		nni_cv_fini(&reap_empty_cv);
+		nni_mtx_fini(&reap_mtx);
 		return (rv);
 	}
-	nni_thr_run(&nni_reap_thr);
+	nni_thr_run(&reap_thr);
 	return (0);
 }
 
 void
 nni_reap_sys_fini(void)
 {
-	nni_mtx_lock(&nni_reap_mtx);
-	nni_reap_exit = true;
-	nni_cv_wake(&nni_reap_cv);
-	nni_mtx_unlock(&nni_reap_mtx);
-	nni_thr_fini(&nni_reap_thr);
+	nni_mtx_lock(&reap_mtx);
+	reap_exit = true;
+	nni_cv_wake(&reap_cv);
+	nni_mtx_unlock(&reap_mtx);
+	nni_thr_fini(&reap_thr);
 }

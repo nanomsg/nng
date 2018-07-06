@@ -229,7 +229,7 @@ NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **);
 typedef enum {
 	NNG_PIPE_EV_ADD_PRE,  // Called just before pipe added to socket
 	NNG_PIPE_EV_ADD_POST, // Called just after pipe added to socket
-	NNG_PIPE_EV_REM_POST, // Called just after poipe removed from socket
+	NNG_PIPE_EV_REM_POST, // Called just after pipe removed from socket
 	NNG_PIPE_EV_NUM,      // Used internally, must be last.
 } nng_pipe_ev;
 

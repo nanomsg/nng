@@ -38,6 +38,7 @@ typedef struct nni_reap_item {
 // part of a fully reapable graph; otherwise this can lead to an infinite
 // loop in the reap thread.
 extern void nni_reap(nni_reap_item *, nni_cb, void *);
+extern void nni_reap_drain(void);
 extern int  nni_reap_sys_init(void);
 extern void nni_reap_sys_fini(void);
 

@@ -9,29 +9,11 @@
 //
 
 #include "core/nng_impl.h"
+#include "sockimpl.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-struct nni_listener {
-	nni_tran_listener_ops l_ops;  // transport ops
-	nni_tran *            l_tran; // transport pointer
-	void *                l_data; // transport private
-	uint64_t              l_id;   // endpoint id
-	nni_list_node         l_node; // per socket list
-	nni_sock *            l_sock;
-	nni_url *             l_url;
-	int                   l_refcnt;
-	bool                  l_started;
-	bool                  l_closed;  // full shutdown
-	nni_atomic_flag       l_closing; // close pending
-	nni_mtx               l_mtx;
-	nni_cv                l_cv;
-	nni_list              l_pipes;
-	nni_aio *             l_acc_aio;
-	nni_aio *             l_tmo_aio;
-};
 
 // Functionality related to listeners.
 
@@ -60,6 +42,7 @@ nni_listener_sys_init(void)
 void
 nni_listener_sys_fini(void)
 {
+	nni_reap_drain();
 	nni_mtx_fini(&listeners_lk);
 	nni_idhash_fini(listeners);
 	listeners = NULL;
@@ -68,32 +51,21 @@ nni_listener_sys_fini(void)
 uint32_t
 nni_listener_id(nni_listener *l)
 {
-	return ((uint32_t) l->l_id);
+	return (l->l_id);
 }
 
-static void
-listener_destroy(nni_listener *l)
+void
+nni_listener_destroy(nni_listener *l)
 {
-	if (l == NULL) {
-		return;
-	}
-
-	// Remove us from the table so we cannot be found.
-	if (l->l_id != 0) {
-		nni_idhash_remove(listeners, l->l_id);
-	}
-
 	nni_aio_stop(l->l_acc_aio);
-
-	nni_sock_remove_listener(l->l_sock, l);
+	nni_aio_stop(l->l_tmo_aio);
 
 	nni_aio_fini(l->l_acc_aio);
+	nni_aio_fini(l->l_tmo_aio);
 
 	if (l->l_data != NULL) {
 		l->l_ops.l_fini(l->l_data);
 	}
-	nni_cv_fini(&l->l_cv);
-	nni_mtx_fini(&l->l_mtx);
 	nni_url_free(l->l_url);
 	NNI_FREE_STRUCT(l);
 }
@@ -119,14 +91,14 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *urlstr)
 		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	l->l_url     = url;
-	l->l_closed  = false;
-	l->l_started = false;
-	l->l_data    = NULL;
-	l->l_refcnt  = 1;
-	l->l_sock    = s;
-	l->l_tran    = tran;
+	l->l_url    = url;
+	l->l_closed = false;
+	l->l_data   = NULL;
+	l->l_refcnt = 1;
+	l->l_sock   = s;
+	l->l_tran   = tran;
 	nni_atomic_flag_reset(&l->l_closing);
+	nni_atomic_flag_reset(&l->l_started);
 
 	// Make a copy of the endpoint operations.  This allows us to
 	// modify them (to override NULLs for example), and avoids an extra
@@ -134,18 +106,14 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *urlstr)
 	l->l_ops = *tran->tran_listener;
 
 	NNI_LIST_NODE_INIT(&l->l_node);
-
-	nni_pipe_ep_list_init(&l->l_pipes);
-
-	nni_mtx_init(&l->l_mtx);
-	nni_cv_init(&l->l_cv, &l->l_mtx);
+	NNI_LIST_INIT(&l->l_pipes, nni_pipe, p_ep_node);
 
 	if (((rv = nni_aio_init(&l->l_acc_aio, listener_accept_cb, l)) != 0) ||
 	    ((rv = nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l)) != 0) ||
 	    ((rv = l->l_ops.l_init(&l->l_data, url, s)) != 0) ||
-	    ((rv = nni_idhash_alloc(listeners, &l->l_id, l)) != 0) ||
+	    ((rv = nni_idhash_alloc32(listeners, &l->l_id, l)) != 0) ||
 	    ((rv = nni_sock_add_listener(s, l)) != 0)) {
-		listener_destroy(l);
+		nni_listener_destroy(l);
 		return (rv);
 	}
 
@@ -196,58 +164,33 @@ nni_listener_rele(nni_listener *l)
 {
 	nni_mtx_lock(&listeners_lk);
 	l->l_refcnt--;
-	if (l->l_refcnt == 0) {
-		nni_cv_wake(&l->l_cv);
+	if ((l->l_refcnt == 0) && (l->l_closed)) {
+		nni_reap(&l->l_reap, (nni_cb) nni_listener_reap, l);
 	}
 	nni_mtx_unlock(&listeners_lk);
-}
-
-int
-nni_listener_shutdown(nni_listener *l)
-{
-	if (nni_atomic_flag_test_and_set(&l->l_closing)) {
-		return (NNG_ECLOSED);
-	}
-
-	// Abort any remaining in-flight accepts.
-	nni_aio_close(l->l_acc_aio);
-	nni_aio_close(l->l_tmo_aio);
-
-	// Stop the underlying transport.
-	l->l_ops.l_close(l->l_data);
-
-	return (0);
 }
 
 void
 nni_listener_close(nni_listener *l)
 {
-	nni_pipe *p;
-
-	nni_mtx_lock(&l->l_mtx);
+	nni_mtx_lock(&listeners_lk);
 	if (l->l_closed) {
-		nni_mtx_unlock(&l->l_mtx);
+		nni_mtx_unlock(&listeners_lk);
 		nni_listener_rele(l);
 		return;
 	}
 	l->l_closed = true;
-	nni_mtx_unlock(&l->l_mtx);
+	nni_mtx_unlock(&listeners_lk);
+
+	// Remove us from the table so we cannot be found.
+	// This is done fairly early in the teardown process.
+	// If we're here, either the socket or the listener has been
+	// closed at the user request, so there would be a race anyway.
+	nni_idhash_remove(listeners, l->l_id);
 
 	nni_listener_shutdown(l);
 
-	nni_aio_stop(l->l_acc_aio);
-	nni_aio_stop(l->l_tmo_aio);
-
-	nni_mtx_lock(&l->l_mtx);
-	NNI_LIST_FOREACH (&l->l_pipes, p) {
-		nni_pipe_stop(p);
-	}
-	while ((!nni_list_empty(&l->l_pipes)) || (l->l_refcnt != 1)) {
-		nni_cv_wait(&l->l_cv);
-	}
-	nni_mtx_unlock(&l->l_mtx);
-
-	listener_destroy(l);
+	nni_listener_rele(l); // This will trigger a reap if id count is zero.
 }
 
 static void
@@ -272,14 +215,11 @@ listener_accept_cb(void *arg)
 	if ((rv = nni_aio_result(aio)) == 0) {
 		void *data = nni_aio_get_output(aio, 0);
 		NNI_ASSERT(data != NULL);
-		rv = nni_pipe_create2(&p, l->l_sock, l->l_tran, data);
+		rv = nni_pipe_create(&p, l->l_sock, l->l_tran, data);
 	}
 	switch (rv) {
 	case 0:
-		nni_mtx_lock(&l->l_mtx);
-		nni_pipe_set_listener(p, l);
-		nni_list_append(&l->l_pipes, p);
-		nni_mtx_unlock(&l->l_mtx);
+		nni_listener_add_pipe(l, p);
 		listener_accept_start(l);
 		break;
 	case NNG_ECONNABORTED: // remote condition, no cooldown
@@ -298,10 +238,6 @@ listener_accept_cb(void *arg)
 		nni_sleep_aio(100, l->l_tmo_aio);
 		break;
 	}
-
-	if ((rv == 0) && ((rv = nni_sock_pipe_add(l->l_sock, p)) != 0)) {
-		nni_pipe_stop(p);
-	}
 }
 
 static void
@@ -319,42 +255,18 @@ nni_listener_start(nni_listener *l, int flags)
 	int rv = 0;
 	NNI_ARG_UNUSED(flags);
 
-	nni_mtx_lock(&l->l_mtx);
-	if (l->l_started) {
-		nni_mtx_unlock(&l->l_mtx);
+	if (nni_atomic_flag_test_and_set(&l->l_started)) {
 		return (NNG_ESTATE);
 	}
 
 	if ((rv = l->l_ops.l_bind(l->l_data)) != 0) {
-		nni_mtx_unlock(&l->l_mtx);
+		nni_atomic_flag_reset(&l->l_started);
 		return (rv);
 	}
-
-	l->l_started = true;
-	nni_mtx_unlock(&l->l_mtx);
 
 	listener_accept_start(l);
 
 	return (0);
-}
-
-void
-nni_listener_remove_pipe(nni_listener *l, nni_pipe *p)
-{
-	if (l == NULL) {
-		return;
-	}
-	// Break up relationship between listener and pipe.
-	nni_mtx_lock(&l->l_mtx);
-	// During early init, the pipe might not have this set.
-	if (nni_list_active(&l->l_pipes, p)) {
-		nni_list_remove(&l->l_pipes, p);
-	}
-	// Wake up the closer if it is waiting.
-	if (l->l_closed && nni_list_empty(&l->l_pipes)) {
-		nni_cv_wake(&l->l_cv);
-	}
-	nni_mtx_unlock(&l->l_mtx);
 }
 
 int
@@ -405,10 +317,4 @@ nni_listener_getopt(
 	}
 
 	return (nni_sock_getopt(l->l_sock, name, valp, szp, t));
-}
-
-void
-nni_listener_list_init(nni_list *list)
-{
-	NNI_LIST_INIT(list, nni_listener, l_node);
 }

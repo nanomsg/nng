@@ -18,11 +18,8 @@ extern int      nni_dialer_hold(nni_dialer *);
 extern void     nni_dialer_rele(nni_dialer *);
 extern uint32_t nni_dialer_id(nni_dialer *);
 extern int      nni_dialer_create(nni_dialer **, nni_sock *, const char *);
-extern int      nni_dialer_shutdown(nni_dialer *);
 extern void     nni_dialer_close(nni_dialer *);
 extern int      nni_dialer_start(nni_dialer *, int);
-extern void     nni_dialer_list_init(nni_list *);
-extern void     nni_dialer_remove_pipe(nni_dialer *, nni_pipe *);
 
 extern int nni_dialer_setopt(
     nni_dialer *, const char *, const void *, size_t, nni_opt_type);

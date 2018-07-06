@@ -315,6 +315,8 @@ TestMain("Socket Operations", {
 			size_t     sz;
 			nng_socket s2;
 			char *     a = "inproc://asy";
+			So(nng_setopt_ms(s1, NNG_OPT_RECONNMINT, 10) == 0);
+			So(nng_setopt_ms(s1, NNG_OPT_RECONNMAXT, 10) == 0);
 			So(nng_dial(s1, a, NULL, NNG_FLAG_NONBLOCK) == 0);
 			Convey("And connects late", {
 				So(nng_pair_open(&s2) == 0);

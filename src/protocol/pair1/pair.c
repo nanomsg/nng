@@ -244,7 +244,7 @@ pair1_pipe_recv_cb(void *arg)
 	int         rv;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
@@ -257,13 +257,13 @@ pair1_pipe_recv_cb(void *arg)
 	// If the message is missing the hop count header, scrap it.
 	if (nni_msg_len(msg) < sizeof(uint32_t)) {
 		nni_msg_free(msg);
-		nni_pipe_stop(npipe);
+		nni_pipe_close(npipe);
 		return;
 	}
 	hdr = nni_msg_trim_u32(msg);
 	if (hdr & 0xffffff00) {
 		nni_msg_free(msg);
-		nni_pipe_stop(npipe);
+		nni_pipe_close(npipe);
 		return;
 	}
 
@@ -343,7 +343,7 @@ pair1_pipe_putq_cb(void *arg)
 	if (nni_aio_result(p->aio_putq) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_putq));
 		nni_aio_set_msg(p->aio_putq, NULL);
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 	nni_pipe_recv(p->npipe, p->aio_recv);
@@ -358,7 +358,7 @@ pair1_pipe_getq_cb(void *arg)
 	uint32_t    hops;
 
 	if (nni_aio_result(p->aio_getq) != 0) {
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
@@ -405,7 +405,7 @@ pair1_pipe_send_cb(void *arg)
 	if (nni_aio_result(p->aio_send) != 0) {
 		nni_msg_free(nni_aio_get_msg(p->aio_send));
 		nni_aio_set_msg(p->aio_send, NULL);
-		nni_pipe_stop(p->npipe);
+		nni_pipe_close(p->npipe);
 		return;
 	}
 
