@@ -146,15 +146,17 @@ trantest_init(trantest *tt, const char *addr)
 {
 	trantest_next_address(tt->addr, addr);
 
-#if defined(NNG_HAVE_REQ0) && defined(NNG_HAVE_REP0) && defined(NNG_STATIC_LIB)
+#if defined(NNG_HAVE_REQ0) && defined(NNG_HAVE_REP0)
 	So(nng_req_open(&tt->reqsock) == 0);
 	So(nng_rep_open(&tt->repsock) == 0);
 
 	nni_url *url;
-	So(nni_url_parse(&url, tt->addr) == 0);
+	So(nng_url_parse(&url, tt->addr) == 0);
+#if defined(NNG_STATIC_LIB)
 	tt->tran = nni_tran_find(url);
-	nni_url_free(url);
 	So(tt->tran != NULL);
+#endif
+	nng_url_free(url);
 #else
 	ConveySkip("Missing REQ or REP protocols");
 #endif
@@ -218,11 +220,15 @@ trantest_listen(trantest *tt, nng_listener *lp)
 void
 trantest_scheme(trantest *tt)
 {
+#if NNG_STATIC_LIB
 	Convey("Scheme is correct", {
 		size_t l = strlen(tt->tran->tran_scheme);
 		So(strncmp(tt->addr, tt->tran->tran_scheme, l) == 0);
 		So(strncmp(tt->addr + l, "://", 3) == 0);
 	})
+#else
+	(void) tt;
+#endif
 }
 
 void
