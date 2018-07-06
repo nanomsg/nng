@@ -34,6 +34,9 @@ extern int  nni_idhash_remove(nni_idhash *, uint64_t);
 extern int  nni_idhash_insert(nni_idhash *, uint64_t, void *);
 extern int  nni_idhash_alloc(nni_idhash *, uint64_t *, void *);
 
+// 32-bit version of idhash -- limits must have been set accordingly.
+extern int nni_idhash_alloc32(nni_idhash *, uint32_t *, void *);
+
 extern size_t nni_idhash_count(nni_idhash *);
 
 #endif // CORE_IDHASH_H

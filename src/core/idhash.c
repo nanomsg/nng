@@ -306,3 +306,20 @@ nni_idhash_alloc(nni_idhash *h, uint64_t *idp, void *val)
 
 	return (rv);
 }
+
+int
+nni_idhash_alloc32(nni_idhash *h, uint32_t *idp, void *val)
+{
+	uint64_t id64;
+	int      rv;
+
+	if ((rv = nni_idhash_alloc(h, &id64, val)) == 0) {
+		if (id64 > 0xffffffffull) {
+			nni_idhash_remove(h, id64);
+			rv = NNG_EINVAL;
+		} else {
+			*idp = (uint32_t) id64;
+		}
+	}
+	return (rv);
+}
