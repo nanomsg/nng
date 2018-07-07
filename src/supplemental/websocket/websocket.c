@@ -407,8 +407,9 @@ ws_msg_init_rx(ws_msg **wmp, nni_ws *ws, nni_aio *aio)
 static void
 ws_close_cb(void *arg)
 {
-	nni_ws *ws = arg;
-	ws_msg *wm;
+	nni_ws * ws = arg;
+	ws_msg * wm;
+	nni_aio *aio;
 
 	nni_aio_close(ws->txaio);
 	nni_aio_close(ws->rxaio);
@@ -423,17 +424,20 @@ ws_close_cb(void *arg)
 	// This list (receive) should be empty.
 	while ((wm = nni_list_first(&ws->rxmsgs)) != NULL) {
 		nni_list_remove(&ws->rxmsgs, wm);
-		if (wm->aio) {
-			nni_aio_finish_error(wm->aio, NNG_ECLOSED);
+		if ((aio = wm->aio) != NULL) {
+			wm->aio = NULL;
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
 		ws_msg_fini(wm);
 	}
 
 	while ((wm = nni_list_first(&ws->txmsgs)) != NULL) {
 		nni_list_remove(&ws->txmsgs, wm);
-		if (wm->aio) {
-			nni_aio_list_remove(wm->aio);
-			nni_aio_finish_error(wm->aio, NNG_ECLOSED);
+		if ((aio = wm->aio) != NULL) {
+			wm->aio = NULL;
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
 		ws_msg_fini(wm);
 	}
@@ -455,9 +459,12 @@ ws_close(nni_ws *ws, uint16_t code)
 	// Receive stuff gets aborted always.  No further receives
 	// once we get a close.
 	while ((wm = nni_list_first(&ws->rxmsgs)) != NULL) {
+		nni_aio *aio;
 		nni_list_remove(&ws->rxmsgs, wm);
-		if (wm->aio) {
-			nni_aio_finish_error(wm->aio, NNG_ECLOSED);
+		if ((aio = wm->aio) != NULL) {
+			wm->aio = NULL;
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
 		ws_msg_fini(wm);
 	}
@@ -542,6 +549,7 @@ ws_write_cb(void *arg)
 		while ((wm = nni_list_first(&ws->txmsgs)) != NULL) {
 			nni_list_remove(&ws->txmsgs, wm);
 			if ((aio = wm->aio) != NULL) {
+				wm->aio = NULL;
 				nni_aio_list_remove(aio);
 				nni_aio_finish_error(aio, NNG_ECLOSED);
 			}
@@ -563,6 +571,7 @@ ws_write_cb(void *arg)
 		nni_list_remove(&ws->txmsgs, wm);
 		ws_msg_fini(wm);
 		if (aio != NULL) {
+			wm->aio = NULL;
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
 		}
@@ -585,6 +594,7 @@ ws_write_cb(void *arg)
 	}
 
 	if (aio != NULL) {
+		wm->aio = NULL;
 		nni_aio_list_remove(aio);
 	}
 	nni_list_remove(&ws->txmsgs, wm);
@@ -616,11 +626,11 @@ ws_write_cancel(nni_aio *aio, int rv)
 	ws = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&ws->mtx);
-	wm = nni_aio_get_prov_extra(aio, 0);
 	if (!nni_aio_list_active(aio)) {
 		nni_mtx_unlock(&ws->mtx);
 		return;
 	}
+	wm = nni_aio_get_prov_extra(aio, 0);
 	if (((frame = ws->txframe) != NULL) && (frame->wmsg == wm)) {
 		nni_aio_abort(ws->txaio, rv);
 		// We will wait for callback on the txaio to finish aio.
@@ -628,6 +638,7 @@ ws_write_cancel(nni_aio *aio, int rv)
 		// If scheduled, just need to remove node and complete it.
 		nni_list_remove(&ws->txmsgs, wm);
 		wm->aio = NULL;
+		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, rv);
 		ws_msg_fini(wm);
 	}
@@ -766,8 +777,10 @@ ws_start_read(nni_ws *ws)
 
 	if ((frame = NNI_ALLOC_STRUCT(frame)) == NULL) {
 		nni_list_remove(&ws->rxmsgs, wm);
-		if (wm->aio != NULL) {
-			nni_aio_finish_error(wm->aio, NNG_ENOMEM);
+		if ((aio = wm->aio) != NULL) {
+			wm->aio = NULL;
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, NNG_ENOMEM);
 		}
 		ws_msg_fini(wm);
 		return;
@@ -787,7 +800,7 @@ ws_start_read(nni_ws *ws)
 }
 
 static void
-ws_read_frame_cb(nni_ws *ws, ws_frame *frame, ws_msg **wmp)
+ws_read_frame_cb(nni_ws *ws, ws_frame *frame, ws_msg **wmp, nni_aio **aiop)
 {
 	ws_msg *wm = nni_list_first(&ws->rxmsgs);
 
@@ -852,10 +865,10 @@ ws_read_frame_cb(nni_ws *ws, ws_frame *frame, ws_msg **wmp)
 	// control frame.
 	if (((frame = nni_list_last(&wm->frames)) != NULL) && frame->final) {
 		nni_list_remove(&ws->rxmsgs, wm);
+		*wmp  = wm;
+		*aiop = wm->aio;
 		nni_aio_list_remove(wm->aio);
-		*wmp = wm;
-	} else {
-		*wmp = NULL;
+		wm->aio = NULL;
 	}
 }
 
@@ -990,8 +1003,9 @@ ws_read_cb(void *arg)
 	// At this point, we have a complete frame.
 	ws_unmask_frame(frame); // idempotent
 
-	wm = NULL;
-	ws_read_frame_cb(ws, frame, &wm);
+	wm  = NULL;
+	aio = NULL;
+	ws_read_frame_cb(ws, frame, &wm, &aio);
 	ws_start_read(ws);
 	nni_mtx_unlock(&ws->mtx);
 
@@ -999,11 +1013,8 @@ ws_read_cb(void *arg)
 	if (wm != NULL) {
 		size_t   len = 0;
 		nni_msg *msg;
-		nni_aio *aio;
 		uint8_t *body;
 		int      rv;
-
-		aio = wm->aio;
 
 		NNI_LIST_FOREACH (&wm->frames, frame) {
 			len += frame->len;
@@ -1019,8 +1030,8 @@ ws_read_cb(void *arg)
 			memcpy(body, frame->buf, frame->len);
 			body += frame->len;
 		}
-		nni_aio_set_msg(wm->aio, msg);
-		nni_aio_finish_synch(wm->aio, 0, nni_msg_len(msg));
+		nni_aio_set_msg(aio, msg);
+		nni_aio_finish_synch(aio, 0, nni_msg_len(msg));
 		ws_msg_fini(wm);
 	}
 }

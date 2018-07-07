@@ -128,8 +128,8 @@ ws_pipe_recv_cancel(nni_aio *aio, int rv)
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
-	nni_aio_abort(p->rxaio, rv);
 	p->user_rxaio = NULL;
+	nni_aio_abort(p->rxaio, rv);
 	nni_aio_finish_error(aio, rv);
 	nni_mtx_unlock(&p->mtx);
 }
