@@ -45,6 +45,7 @@ const char *tcp4_template   = "tcp://127.0.0.1:%d";
 const char *tcp6_template   = "tcp://[::1]:%d";
 const char *inproc_template = "inproc://nng_multistress_%d";
 const char *ipc_template    = "ipc:///tmp/nng_multistress_%d";
+nng_time    end_time;
 
 const char *templates[] = {
 #ifdef NNG_TRANSPORT_TCP
@@ -125,6 +126,10 @@ rep_server(void *arg)
 		nng_msg *  msg;
 		nng_socket rep = c->socket;
 
+		if (nng_clock() > end_time) {
+			break;
+		}
+
 		if ((rv = nng_recvmsg(rep, &msg, 0)) != 0) {
 			error(c, "recvmsg", rv);
 			return;
@@ -153,6 +158,9 @@ req_client(void *arg)
 		(void) snprintf(buf, sizeof(buf), "%u-%d", req.id, num++);
 
 		nng_msleep(rand() % 10);
+		if (nng_clock() > end_time) {
+			break;
+		}
 
 		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
 			error(c, "alloc fail", rv);
@@ -243,6 +251,9 @@ pair0_bouncer(void *arg)
 		int      rv;
 
 		nng_msleep(rand() % 10);
+		if (nng_clock() > end_time) {
+			break;
+		}
 
 		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
 			error(c, "alloc", rv);
@@ -323,6 +334,9 @@ bus0_bouncer(void *arg)
 		int      rv;
 
 		nng_msleep(rand() % 10);
+		if (nng_clock() > end_time) {
+			break;
+		}
 
 		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
 			error(c, "alloc", rv);
@@ -403,6 +417,9 @@ pub0_sender(void *arg)
 		int      rv;
 
 		nng_msleep(rand() % 10);
+		if (nng_clock() > end_time) {
+			break;
+		}
 
 		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
 			error(c, "alloc", rv);
@@ -436,6 +453,9 @@ sub0_receiver(void *arg)
 	}
 	for (;;) {
 		nng_msg *msg;
+		if (nng_clock() > end_time) {
+			break;
+		}
 
 		if ((rv = nng_recvmsg(c->socket, &msg, 0)) != 0) {
 			error(c, "recvmsg", rv);
@@ -504,6 +524,9 @@ pipeline0_pusher(void *arg)
 		int      rv;
 
 		nng_msleep(rand() % 10);
+		if (nng_clock() > end_time) {
+			break;
+		}
 
 		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
 			error(c, "alloc", rv);
@@ -533,6 +556,9 @@ pipeline0_puller(void *arg)
 
 	for (;;) {
 		nng_msg *msg;
+		if (nng_clock() > end_time) {
+			break;
+		}
 
 		if ((rv = nng_recvmsg(c->socket, &msg, 0)) != 0) {
 			error(c, "recvmsg", rv);
@@ -621,7 +647,8 @@ Main({
 
 	i = ncases;
 
-	cases = calloc(ncases, sizeof(test_case));
+	cases    = calloc(ncases, sizeof(test_case));
+	end_time = nng_clock() + (tmo * 1000);
 	while (i > 1) {
 		int x = rand() % NTEMPLATES;
 		if (x > i) {

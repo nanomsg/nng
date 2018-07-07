@@ -33,11 +33,12 @@
 
 static int next_port = 20000; // port number kind of.
 
-char tcp4_template[]   = "tcp://127.0.0.1:%d";
-char tcp6_template[]   = "tcp://[::1]:%d";
-char inproc_template[] = "inproc://nng_reqstress_%d";
-char ipc_template[]    = "ipc:///tmp/nng_reqstress_%d";
-char ws_template[]     = "ws://127.0.0.1:%d/nng_reqstress";
+char     tcp4_template[]   = "tcp://127.0.0.1:%d";
+char     tcp6_template[]   = "tcp://[::1]:%d";
+char     inproc_template[] = "inproc://nng_reqstress_%d";
+char     ipc_template[]    = "ipc:///tmp/nng_reqstress_%d";
+char     ws_template[]     = "ws://127.0.0.1:%d/nng_reqstress";
+nng_time end_time;
 
 char *templates[] = {
 #ifdef NNG_TRANSPORT_TCP
@@ -121,6 +122,10 @@ rep_server(void *arg)
 		nng_msg *  msg;
 		nng_socket rep = c->socket;
 
+		if (nng_clock() > end_time) {
+			break;
+		}
+
 		if ((rv = nng_recvmsg(rep, &msg, 0)) != 0) {
 			error(c, "recvmsg", rv);
 			return;
@@ -149,6 +154,9 @@ req_client(void *arg)
 		(void) snprintf(buf, sizeof(buf), "%u-%d", req.id, num++);
 
 		nng_msleep(rand() % 10);
+		if (nng_clock() > end_time) {
+			break;
+		}
 
 		if ((rv = nng_msg_alloc(&msg, 0)) != 0) {
 			error(c, "alloc fail", rv);
@@ -257,7 +265,8 @@ Main({
 
 	i = ncases;
 
-	cases = calloc(ncases, sizeof(test_case));
+	cases    = calloc(ncases, sizeof(test_case));
+	end_time = nng_clock() + (tmo * 1000);
 	while (i > 1) {
 		int x = rand() % NTEMPLATES;
 		if (x > i) {
