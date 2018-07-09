@@ -699,17 +699,23 @@ http_init(nni_http_conn **connp, nni_http_tran *tran, void *data)
 	if ((conn = NNI_ALLOC_STRUCT(conn)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	conn->rd_bufsz = HTTP_BUFSIZE;
-	if ((conn->rd_buf = nni_alloc(conn->rd_bufsz)) == NULL) {
-		NNI_FREE_STRUCT(conn);
-		return (NNG_ENOMEM);
-	}
 	nni_mtx_init(&conn->mtx);
 	nni_aio_list_init(&conn->rdq);
 	nni_aio_list_init(&conn->wrq);
 
+	if ((conn->rd_buf = nni_alloc(HTTP_BUFSIZE)) == NULL) {
+		nni_http_conn_fini(conn);
+		return (NNG_ENOMEM);
+	}
+	conn->rd_bufsz = HTTP_BUFSIZE;
+
+	if (((rv = nni_aio_init(&conn->wr_aio, http_wr_cb, conn)) != 0) ||
+	    ((rv = nni_aio_init(&conn->rd_aio, http_rd_cb, conn)) != 0)) {
+		nni_http_conn_fini(conn);
+		return (rv);
+	}
+
 	conn->sock      = data;
-	conn->rd_bufsz  = HTTP_BUFSIZE;
 	conn->rd        = tran->h_read;
 	conn->wr        = tran->h_write;
 	conn->close     = tran->h_close;
@@ -717,12 +723,6 @@ http_init(nni_http_conn **connp, nni_http_tran *tran, void *data)
 	conn->sock_addr = tran->h_sock_addr;
 	conn->peer_addr = tran->h_peer_addr;
 	conn->verified  = tran->h_verified;
-
-	if (((rv = nni_aio_init(&conn->wr_aio, http_wr_cb, conn)) != 0) ||
-	    ((rv = nni_aio_init(&conn->rd_aio, http_rd_cb, conn)) != 0)) {
-		nni_http_conn_fini(conn);
-		return (rv);
-	}
 
 	*connp = conn;
 
@@ -737,19 +737,23 @@ nni_http_verified_tcp(void *arg)
 }
 
 static nni_http_tran http_tcp_ops = {
-	.h_read      = (http_read_fn) nni_plat_tcp_pipe_recv,
-	.h_write     = (http_write_fn) nni_plat_tcp_pipe_send,
-	.h_close     = (http_close_fn) nni_plat_tcp_pipe_close,
-	.h_fini      = (http_fini_fn) nni_plat_tcp_pipe_fini,
-	.h_sock_addr = (http_addr_fn) nni_plat_tcp_pipe_sockname,
-	.h_peer_addr = (http_addr_fn) nni_plat_tcp_pipe_peername,
+	.h_read      = (http_read_fn) nni_tcp_conn_recv,
+	.h_write     = (http_write_fn) nni_tcp_conn_send,
+	.h_close     = (http_close_fn) nni_tcp_conn_close,
+	.h_fini      = (http_fini_fn) nni_tcp_conn_fini,
+	.h_sock_addr = (http_addr_fn) nni_tcp_conn_sockname,
+	.h_peer_addr = (http_addr_fn) nni_tcp_conn_peername,
 	.h_verified  = (http_verified_fn) nni_http_verified_tcp,
 };
 
 int
-nni_http_conn_init_tcp(nni_http_conn **connp, void *tcp)
+nni_http_conn_init_tcp(nni_http_conn **connp, nni_tcp_conn *tcp)
 {
-	return (http_init(connp, &http_tcp_ops, tcp));
+	int rv;
+	if ((rv = http_init(connp, &http_tcp_ops, tcp)) != 0) {
+		nni_tcp_conn_fini(tcp);
+	}
+	return (rv);
 }
 
 #ifdef NNG_SUPP_TLS
@@ -765,26 +769,29 @@ static nni_http_tran http_tls_ops = {
 
 int
 nni_http_conn_init_tls(
-    nni_http_conn **connp, struct nng_tls_config *cfg, void *tcp)
+    nni_http_conn **connp, struct nng_tls_config *cfg, nni_tcp_conn *tcp)
 {
 	nni_tls *tls;
 	int      rv;
 
 	if ((rv = nni_tls_init(&tls, cfg, tcp)) != 0) {
-		nni_plat_tcp_pipe_fini(tcp);
+		nni_tcp_conn_fini(tcp);
 		return (rv);
 	}
 
-	return (http_init(connp, &http_tls_ops, tls));
+	if ((rv = http_init(connp, &http_tls_ops, tls)) != 0) {
+		nni_tls_fini(tls);
+	}
+	return (rv);
 }
 #else
 int
 nni_http_conn_init_tls(
-    nni_http_conn **connp, struct nng_tls_config *cfg, void *tcp)
+    nni_http_conn **connp, struct nng_tls_config *cfg, nni_tcp_conn *tcp)
 {
 	NNI_ARG_UNUSED(connp);
 	NNI_ARG_UNUSED(cfg);
-	nni_plat_tcp_pipe_fini(tcp);
+	nni_tcp_conn_fini(tcp);
 	return (NNG_ENOTSUP);
 }
 #endif // NNG_SUPP_TLS

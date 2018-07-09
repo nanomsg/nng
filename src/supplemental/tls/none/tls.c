@@ -47,7 +47,7 @@ nni_tls_fini(nni_tls *tp)
 }
 
 int
-nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_plat_tcp_pipe *tcp)
+nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_tcp_conn *tcp)
 {
 	NNI_ARG_UNUSED(tpp);
 	NNI_ARG_UNUSED(cfg);
@@ -163,7 +163,8 @@ nng_tls_config_cert_key_file(
 	return (NNG_ENOTSUP);
 }
 
-int nng_tls_config_key(nng_tls_config *cfg, const uint8_t * key, size_t size)
+int
+nng_tls_config_key(nng_tls_config *cfg, const uint8_t *key, size_t size)
 {
 	NNI_ARG_UNUSED(cfg);
 	NNI_ARG_UNUSED(key);
@@ -171,13 +172,13 @@ int nng_tls_config_key(nng_tls_config *cfg, const uint8_t * key, size_t size)
 	return (NNG_ENOTSUP);
 }
 
-int nng_tls_config_pass(nng_tls_config *cfg, const char *pass)
+int
+nng_tls_config_pass(nng_tls_config *cfg, const char *pass)
 {
 	NNI_ARG_UNUSED(cfg);
 	NNI_ARG_UNUSED(pass);
 	return (NNG_ENOTSUP);
 }
-
 
 int
 nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)

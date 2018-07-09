@@ -378,8 +378,10 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 		return (NNG_ECLOSED);
 	}
 
+	NNI_ASSERT(aio->a_prov_cancel == NULL);
 	aio->a_prov_cancel = cancelfn;
 	aio->a_prov_data   = data;
+
 	if (aio->a_expire != NNI_TIME_NEVER) {
 		nni_aio_expire_add(aio);
 	}

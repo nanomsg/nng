@@ -31,7 +31,7 @@ extern void nni_tls_config_fini(nng_tls_config *);
 // the configuration object is created with a hold on it.
 extern void nni_tls_config_hold(nng_tls_config *);
 
-extern int  nni_tls_init(nni_tls **, nng_tls_config *, nni_plat_tcp_pipe *);
+extern int  nni_tls_init(nni_tls **, nng_tls_config *, nni_tcp_conn *);
 extern void nni_tls_close(nni_tls *);
 extern void nni_tls_fini(nni_tls *);
 extern void nni_tls_send(nni_tls *, nng_aio *);

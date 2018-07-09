@@ -119,9 +119,11 @@ int main (int argc, const char *argv[])
     rc = nn_connect (sc, "tcp://:5555");
     nn_assert (rc < 0);
     errno_assert (nn_errno () == EINVAL);
+#if 0 // NNG does not validate names apriori
     rc = nn_connect (sc, "tcp://-hostname:5555");
     nn_assert (rc < 0);
     errno_assert (nn_errno () == EINVAL);
+#endif
     rc = nn_connect (sc, "tcp://abc.123.---.#:5555");
     nn_assert (rc < 0);
     errno_assert (nn_errno () == EINVAL);
@@ -132,12 +134,14 @@ int main (int argc, const char *argv[])
     errno_assert (nn_errno () == EINVAL);
 #endif
 
+#if 0 // Again NNG is not validating names apriori.
     rc = nn_connect (sc, "tcp://abc...123:5555");
     nn_assert (rc < 0);
     errno_assert (nn_errno () == EINVAL);
     rc = nn_connect (sc, "tcp://.123:5555");
     nn_assert (rc < 0);
     errno_assert (nn_errno () == EINVAL);
+#endif
 
     /*  Connect correctly. Do so before binding the peer socket. */
     test_connect (sc, socket_address);
