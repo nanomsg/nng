@@ -188,13 +188,14 @@ nni_epdesc_accept_cb(nni_posix_pfd *pfd, int events, void *arg)
 {
 	nni_posix_epdesc *ed = arg;
 
+	NNI_ARG_UNUSED(pfd);
+
 	nni_mtx_lock(&ed->mtx);
 	if (events & POLLNVAL) {
 		nni_epdesc_doclose(ed);
 		nni_mtx_unlock(&ed->mtx);
 		return;
 	}
-	NNI_ASSERT(pfd == ed->pfd);
 
 	// Anything else will turn up in accept.
 	nni_epdesc_doaccept(ed);
