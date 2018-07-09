@@ -66,12 +66,6 @@ separating the port.
 For example, the same port 80 on the IPv6 loopback address (`::1`) would
 be specified as `tcp://[::1]:80`.
 
-NOTE: When using symbolic names, the name is resolved when the
-name is first used. _nng_ won't become aware of changes in the
-name resolution until restart,
-usually.
-(This is a bug and will likely be fixed in the future.)
-
 The special value of 0 (`INADDR_ANY`)(((`INADDR_ANY`)))
 can be used for a listener to indicate that it should listen on all
 interfaces on the host.

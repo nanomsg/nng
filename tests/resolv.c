@@ -57,8 +57,7 @@ ip6tostr(void *addr)
 		    nng_sockaddr sa;
 		    So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		    So(nng_aio_set_input(aio, 0, &sa) == 0);
-		    nni_plat_tcp_resolv("localhost", "80", NNG_AF_INET6, 1,
-		    aio);
+		    nni_tcp_resolv("localhost", "80", NNG_AF_INET6, 1, aio);
 		    nng_aio_wait(aio);
 		    So(nng_aio_result(aio) == 0);
 		    So(sa.s_in6.sa_family == NNG_AF_INET6);
@@ -79,7 +78,7 @@ TestMain("Resolver", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		nng_aio_set_input(aio, 0, &sa);
-		nni_plat_tcp_resolv("google-public-dns-a.google.com", "80",
+		nni_tcp_resolv("google-public-dns-a.google.com", "80",
 		    NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
@@ -96,7 +95,7 @@ TestMain("Resolver", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		nng_aio_set_input(aio, 0, &sa);
-		nni_plat_udp_resolv("8.8.4.4", "69", NNG_AF_INET, 1, aio);
+		nni_udp_resolv("8.8.4.4", "69", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
 		So(sa.s_in.sa_family == NNG_AF_INET);
@@ -112,7 +111,7 @@ TestMain("Resolver", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		nng_aio_set_input(aio, 0, &sa);
-		nni_plat_tcp_resolv("8.8.4.4", "80", NNG_AF_INET, 1, aio);
+		nni_tcp_resolv("8.8.4.4", "80", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
 		So(sa.s_in.sa_family == NNG_AF_INET);
@@ -137,7 +136,7 @@ TestMain("Resolver", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		nng_aio_set_input(aio, 0, &sa);
-		nni_plat_tcp_resolv("::1", "80", NNG_AF_INET6, 1, aio);
+		nni_tcp_resolv("::1", "80", NNG_AF_INET6, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
 		So(sa.s_in6.sa_family == NNG_AF_INET6);
@@ -153,7 +152,7 @@ TestMain("Resolver", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		nng_aio_set_input(aio, 0, &sa);
-		nni_plat_tcp_resolv("8.8.4.4", "http", NNG_AF_INET, 1, aio);
+		nni_tcp_resolv("8.8.4.4", "http", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == NNG_EADDRINVAL);
 		nng_aio_free(aio);
@@ -166,7 +165,7 @@ TestMain("Resolver", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		nng_aio_set_input(aio, 0, &sa);
-		nni_plat_tcp_resolv("localhost", "80", NNG_AF_INET, 1, aio);
+		nni_tcp_resolv("localhost", "80", NNG_AF_INET, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
 		So(sa.s_in.sa_family == NNG_AF_INET);
@@ -184,7 +183,7 @@ TestMain("Resolver", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 		nng_aio_set_input(aio, 0, &sa);
-		nni_plat_tcp_resolv("localhost", "80", NNG_AF_UNSPEC, 1, aio);
+		nni_tcp_resolv("localhost", "80", NNG_AF_UNSPEC, 1, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == 0);
 		So((sa.s_family == NNG_AF_INET) ||

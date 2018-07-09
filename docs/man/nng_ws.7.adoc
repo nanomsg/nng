@@ -65,11 +65,6 @@ separating the port.
 For example, the same path and port on the IPv6 loopback address (`::1`)
 would be specified as `ws://[::1]/app/pubsub`.
 
-NOTE: When using symbolic names, the name is resolved when the
-name is first used. _nng_ won't become aware of changes in the
-name resolution until restart,
-usually. (This is a bug and will likely be fixed in the future.)
-
 NOTE: The value specified as the host, if any, will also be used
 in the `Host:` ((HTTP header)) during HTTP negotiation.
 

@@ -209,93 +209,103 @@ extern int nni_plat_ncpu(void);
 //
 // TCP Support.
 //
+typedef struct nni_tcp_conn     nni_tcp_conn;
+typedef struct nni_tcp_dialer   nni_tcp_dialer;
+typedef struct nni_tcp_listener nni_tcp_listener;
 
-typedef struct nni_plat_tcp_ep   nni_plat_tcp_ep;
-typedef struct nni_plat_tcp_pipe nni_plat_tcp_pipe;
+extern void nni_tcp_conn_fini(nni_tcp_conn *);
 
-// nni_plat_tcp_ep_init creates a new endpoint associated with the local
-// and remote addresses.
-extern int nni_plat_tcp_ep_init(
-    nni_plat_tcp_ep **, const nni_sockaddr *, const nni_sockaddr *, int);
+// nni_tcp_dialer_close closes the dialer, which might actually be
+// implemented as a shutdown() call.
+// Further operations on it should return NNG_ECLOSED.
+extern void nni_tcp_conn_close(nni_tcp_conn *);
 
-// nni_plat_tcp_ep_fini closes the endpoint and releases resources.
-extern void nni_plat_tcp_ep_fini(nni_plat_tcp_ep *);
-
-// nni_plat_tcp_ep_close closes the endpoint; this might not close the
-// actual underlying socket, but it should call shutdown on it.
-// Further operations on the pipe should return NNG_ECLOSED.
-extern void nni_plat_tcp_ep_close(nni_plat_tcp_ep *);
-
-// nni_plat_tcp_listen creates an TCP socket in listening mode, bound
-// to the specified path.
-extern int nni_plat_tcp_ep_listen(nni_plat_tcp_ep *, nni_sockaddr *);
-
-// nni_plat_tcp_ep_accept starts an accept to receive an incoming connection.
-// An accepted connection will be passed back in the a_pipe member.
-extern void nni_plat_tcp_ep_accept(nni_plat_tcp_ep *, nni_aio *);
-
-// nni_plat_tcp_connect is the client side.
-// An accepted connection will be passed back in the a_pipe member.
-extern void nni_plat_tcp_ep_connect(nni_plat_tcp_ep *, nni_aio *);
-
-// nni_plat_tcp_pipe_fini closes the pipe, and releases all resources
-// associated with it.
-extern void nni_plat_tcp_pipe_fini(nni_plat_tcp_pipe *);
-
-// nni_plat_tcp_pipe_close closes the socket, or at least shuts it down.
-// Further operations on the pipe should return NNG_ECLOSED.
-extern void nni_plat_tcp_pipe_close(nni_plat_tcp_pipe *);
-
-// nni_plat_tcp_pipe_send sends data in the iov buffers to the peer.
+// nni_tcp_conn_send sends data in the iov buffers to the peer.
 // The platform may modify the iovs.
-extern void nni_plat_tcp_pipe_send(nni_plat_tcp_pipe *, nni_aio *);
+extern void nni_tcp_conn_send(nni_tcp_conn *, nni_aio *);
 
-// nni_plat_tcp_pipe_recv receives data into the buffers provided by the
+// nni_tcp_conn_recv receives data into the buffers provided by the
 // I/O vector (iovs).  The platform should attempt to scatter the received
 // data into the iovs if possible.
 //
-// It is an error for the caller to supply any IO vector elements with
-// zero length.
-//
-// It is possible for the TCP reader to return less data than is requested,
+// It is possible for the reader to return less data than is requested,
 // in which case the caller is responsible for resubmitting.  The platform
-// should not return "zero" data however.  (It is an error to attempt to
-// receive zero bytes.)  The platform may not modify the I/O vector.
-extern void nni_plat_tcp_pipe_recv(nni_plat_tcp_pipe *, nni_aio *);
+// must not return "zero" data however.  (It is an error to attempt to
+// receive zero bytes.)  The platform may modify the iovs.
+extern void nni_tcp_conn_recv(nni_tcp_conn *, nni_aio *);
 
-// nni_plat_tcp_pipe_peername gets the peer name.
-extern int nni_plat_tcp_pipe_peername(nni_plat_tcp_pipe *, nni_sockaddr *);
+// nni_tcp_conn_peername gets the peer name.
+extern int nni_tcp_conn_peername(nni_tcp_conn *, nni_sockaddr *);
 
-// nni_plat_tcp_pipe_sockname gets the local name.
-extern int nni_plat_tcp_pipe_sockname(nni_plat_tcp_pipe *, nni_sockaddr *);
+// nni_tcp_conn_sockname gets the local name.
+extern int nni_tcp_conn_sockname(nni_tcp_conn *, nni_sockaddr *);
 
-// nni_plat_tcp_pipe_set_nodelay sets nodelay, disabling Nagle, according
-// to the parameter.  true disables Nagle; false enables Nagle.
-extern int nni_plat_tcp_pipe_set_nodelay(nni_plat_tcp_pipe *, bool);
+// nni_tcp_conn_set_nodelay indicates that the TCP pipe should send
+// data immediately, without any buffering.  (Disable Nagle's algorithm.)
+extern int nni_tcp_conn_set_nodelay(nni_tcp_conn *, bool);
 
-// nni_plat_tcp_pipe_set_keepalive indicates that the TCP pipe should send
+// nni_tcp_conn_set_keepalive indicates that the TCP pipe should send
 // keepalive probes.  Tuning of these keepalives is current unsupported.
-extern int nni_plat_tcp_pipe_set_keepalive(nni_plat_tcp_pipe *, bool);
+extern int nni_tcp_conn_set_keepalive(nni_tcp_conn *, bool);
 
-// nni_plat_tcp_ntop obtains the IP address for the socket (enclosing it
+// nni_tcp_listener_init creates a new dialer object.
+extern int nni_tcp_dialer_init(nni_tcp_dialer **);
+
+// nni_tcp_dialer_fini finalizes the dialer, closing it and freeing
+// all resources.
+extern void nni_tcp_dialer_fini(nni_tcp_dialer *);
+
+// nni_tcp_dialer_close closes the dialer.
+// Further operations on it should return NNG_ECLOSED.  Any in-progress
+// connection will be aborted.
+extern void nni_tcp_dialer_close(nni_tcp_dialer *);
+
+// nni_tcp_dialer_dial attempts to create an outgoing connection,
+// asynchronously, to the address specified. On success, the first (and only)
+// output will be an nni_tcp_conn * associated with the remote server.
+extern void nni_tcp_dialer_dial(
+    nni_tcp_dialer *, const nni_sockaddr *, nni_aio *);
+
+// nni_tcp_listener_init creates a new listener object, unbound.
+extern int nni_tcp_listener_init(nni_tcp_listener **);
+
+// nni_tcp_listener_fini frees the listener and all associated resources.
+// It implictly closes the listener as well.
+extern void nni_tcp_listener_fini(nni_tcp_listener *);
+
+// nni_tcp_listener_close closes the listener.  This will unbind
+// any bound socket, and further operations will result in NNG_ECLOSED.
+extern void nni_tcp_listener_close(nni_tcp_listener *);
+
+// nni_tcp_listener_listen creates the socket in listening mode, bound
+// to the specified address.  The address will be updated to reflect
+// the actual address bound (making it possible to bind to port 0 to
+// specify an ephemeral address, and then the actual address can be
+// examined afterwards.)
+extern int nni_tcp_listener_listen(nni_tcp_listener *, nni_sockaddr *);
+
+// nni_tcp_listener_accept accepts in incoming connect, asynchronously.
+// On success, the first (and only) output will be an nni_tcp_conn *
+// associated with the remote peer.
+extern void nni_tcp_listener_accept(nni_tcp_listener *, nni_aio *);
+
+// nni_ntop obtains the IP address for the socket (enclosing it
 // in brackets if it is IPv6) and port.  Enough space for both must
 // be present (48 bytes and 6 bytes each), although if either is NULL then
-// those components are skipped.
-extern int nni_plat_tcp_ntop(const nni_sockaddr *, char *, char *);
+// those components are skipped.  This is based on inet_ntop.
+extern int nni_ntop(const nni_sockaddr *, char *, char *);
 
-// nni_plat_tcp_resolv resolves a TCP name asynchronously.  The family
+// nni_tcp_resolv resolves a TCP name asynchronously.  The family
 // should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.  The
 // first two constrain the name to those families, while the third will
 // return names of either family.  The passive flag indicates that the
 // name will be used for bind(), otherwise the name will be used with
 // connect().  The host part may be NULL only if passive is true.
-extern void nni_plat_tcp_resolv(
-    const char *, const char *, int, int, nni_aio *);
+extern void nni_tcp_resolv(const char *, const char *, int, int, nni_aio *);
 
-// nni_plat_udp_resolve is just like nni_plat_tcp_resolve, but looks up
+// nni_udp_resolv is just like nni_tcp_resolv, but looks up
 // service names using UDP.
-extern void nni_plat_udp_resolv(
-    const char *, const char *, int, int, nni_aio *);
+extern void nni_udp_resolv(const char *, const char *, int, int, nni_aio *);
 
 //
 // IPC (UNIX Domain Sockets & Named Pipes) Support.
@@ -317,7 +327,7 @@ extern void nni_plat_ipc_ep_fini(nni_plat_ipc_ep *);
 // Further operations on the pipe should return NNG_ECLOSED.
 extern void nni_plat_ipc_ep_close(nni_plat_ipc_ep *);
 
-// nni_plat_tcp_listen creates an IPC socket in listening mode, bound
+// nni_plat_ipc_listen creates an IPC socket in listening mode, bound
 // to the specified path.
 extern int nni_plat_ipc_ep_listen(nni_plat_ipc_ep *);
 

@@ -131,6 +131,9 @@ nni_posix_pfd_fd(nni_posix_pfd *pfd)
 void
 nni_posix_pfd_close(nni_posix_pfd *pfd)
 {
+	nni_mtx_lock(&pfd->mtx);
+	pfd->cb = NULL;
+	nni_mtx_unlock(&pfd->mtx);
 	(void) shutdown(pfd->fd, SHUT_RDWR);
 }
 
@@ -302,7 +305,7 @@ static void
 nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
 	nni_mtx_lock(&pq->mtx);
-	pq->closing = 1;
+	pq->closing = true;
 	nni_mtx_unlock(&pq->mtx);
 
 	nni_plat_pipe_raise(pq->wakewfd);

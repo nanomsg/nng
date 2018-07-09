@@ -20,72 +20,97 @@
 #include "http_api.h"
 
 struct nng_http_client {
-	nni_list               aios;
-	nni_mtx                mtx;
-	bool                   closed;
-	struct nng_tls_config *tls;
-	nni_aio *              connaio;
-	nni_plat_tcp_ep *      tep;
+	nni_list        aios;
+	nni_mtx         mtx;
+	bool            closed;
+	bool            resolving;
+	nng_tls_config *tls;
+	nni_aio *       aio;
+	nng_sockaddr    sa;
+	nni_tcp_dialer *dialer;
+	char *          host;
+	char *          port;
+	nni_url *       url;
 };
 
 static void
-http_conn_start(nni_http_client *c)
+http_dial_start(nni_http_client *c)
 {
-	nni_plat_tcp_ep_connect(c->tep, c->connaio);
+	nni_aio *aio;
+
+	if ((aio = nni_list_first(&c->aios)) == NULL) {
+		return;
+	}
+	c->resolving = true;
+	nni_aio_set_input(c->aio, 0, &c->sa);
+	nni_tcp_resolv(c->host, c->port, NNG_AF_UNSPEC, 0, c->aio);
 }
 
 static void
-http_conn_done(void *arg)
+http_dial_cb(void *arg)
 {
-	nni_http_client *  c = arg;
-	nni_aio *          aio;
-	int                rv;
-	nni_plat_tcp_pipe *p;
-	nni_http_conn *    conn;
+	nni_http_client *c = arg;
+	nni_aio *        aio;
+	int              rv;
+	nni_tcp_conn *   tcp;
+	nni_http_conn *  conn;
 
 	nni_mtx_lock(&c->mtx);
-	rv = nni_aio_result(c->connaio);
-	p  = rv == 0 ? nni_aio_get_output(c->connaio, 0) : NULL;
+	rv = nni_aio_result(c->aio);
+
 	if ((aio = nni_list_first(&c->aios)) == NULL) {
-		if (p != NULL) {
-			nni_plat_tcp_pipe_fini(p);
-		}
+		// User abandoned request, and no residuals left.
 		nni_mtx_unlock(&c->mtx);
+		if ((rv == 0) && !c->resolving) {
+			tcp = nni_aio_get_output(c->aio, 0);
+			nni_tcp_conn_fini(tcp);
+		}
 		return;
 	}
-	nni_aio_list_remove(aio);
 
 	if (rv != 0) {
+		nni_aio_list_remove(aio);
+		http_dial_start(c);
+		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
+	if (c->resolving) {
+		// This was a DNS lookup -- advance to normal TCP connect.
+		c->resolving = false;
+		nni_tcp_dialer_dial(c->dialer, &c->sa, c->aio);
 		nni_mtx_unlock(&c->mtx);
 		return;
 	}
+
+	nni_aio_list_remove(aio);
+	tcp = nni_aio_get_output(c->aio, 0);
+	NNI_ASSERT(tcp != NULL);
 
 	if (c->tls != NULL) {
-		rv = nni_http_conn_init_tls(&conn, c->tls, p);
+		rv = nni_http_conn_init_tls(&conn, c->tls, tcp);
 	} else {
-		rv = nni_http_conn_init_tcp(&conn, p);
+		rv = nni_http_conn_init_tcp(&conn, tcp);
 	}
+	http_dial_start(c);
+	nni_mtx_unlock(&c->mtx);
+
 	if (rv != 0) {
+		// the conn_init function will have already discard tcp.
 		nni_aio_finish_error(aio, rv);
-		nni_mtx_unlock(&c->mtx);
 		return;
 	}
 
 	nni_aio_set_output(aio, 0, conn);
 	nni_aio_finish(aio, 0, 0);
-
-	if (!nni_list_empty(&c->aios)) {
-		http_conn_start(c);
-	}
-	nni_mtx_unlock(&c->mtx);
 }
 
 void
 nni_http_client_fini(nni_http_client *c)
 {
-	nni_aio_fini(c->connaio);
-	nni_plat_tcp_ep_fini(c->tep);
+	nni_aio_fini(c->aio);
+	nni_tcp_dialer_fini(c->dialer);
 	nni_mtx_fini(&c->mtx);
 #ifdef NNG_SUPP_TLS
 	if (c->tls != NULL) {
@@ -100,10 +125,6 @@ nni_http_client_init(nni_http_client **cp, const nni_url *url)
 {
 	int              rv;
 	nni_http_client *c;
-	nni_aio *        aio;
-	nni_sockaddr     sa;
-	char *           host;
-	char *           port;
 
 	if (strlen(url->u_hostname) == 0) {
 		// We require a valid hostname.
@@ -118,29 +139,17 @@ nni_http_client_init(nni_http_client **cp, const nni_url *url)
 		return (NNG_EADDRINVAL);
 	}
 
-	// For now we are looking up the address.  We would really like
-	// to do this later, but we need TcP support for this.  One
-	// imagines the ability to create a tcp dialer that does the
-	// necessary DNS lookups, etc. all asynchronously.
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
-		return (rv);
-	}
-	nni_aio_set_input(aio, 0, &sa);
-	host = (strlen(url->u_hostname) != 0) ? url->u_hostname : NULL;
-	port = (strlen(url->u_port) != 0) ? url->u_port : NULL;
-	nni_plat_tcp_resolv(host, port, NNG_AF_UNSPEC, false, aio);
-	nni_aio_wait(aio);
-	rv = nni_aio_result(aio);
-	nni_aio_fini(aio);
-	if (rv != 0) {
-		return (rv);
-	}
-
 	if ((c = NNI_ALLOC_STRUCT(c)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&c->mtx);
 	nni_aio_list_init(&c->aios);
+	if (((c->host = nni_strdup(url->u_hostname)) == NULL) ||
+	    ((strlen(url->u_port) != 0) &&
+	        ((c->port = nni_strdup(url->u_port)) == NULL))) {
+		nni_http_client_fini(c);
+		return (NNG_ENOMEM);
+	}
 
 #ifdef NNG_SUPP_TLS
 	if ((strcmp(url->u_scheme, "https") == 0) ||
@@ -167,16 +176,12 @@ nni_http_client_init(nni_http_client **cp, const nni_url *url)
 	}
 #endif
 
-	rv = nni_plat_tcp_ep_init(&c->tep, NULL, &sa, NNI_EP_MODE_DIAL);
-	if (rv != 0) {
+	if (((rv = nni_tcp_dialer_init(&c->dialer)) != 0) ||
+	    ((rv = nni_aio_init(&c->aio, http_dial_cb, c)) != 0)) {
 		nni_http_client_fini(c);
 		return (rv);
 	}
 
-	if ((rv = nni_aio_init(&c->connaio, http_conn_done, c)) != 0) {
-		nni_http_client_fini(c);
-		return (rv);
-	}
 	*cp = c;
 	return (0);
 }
@@ -224,7 +229,7 @@ nni_http_client_get_tls(nni_http_client *c, struct nng_tls_config **tlsp)
 }
 
 static void
-http_connect_cancel(nni_aio *aio, int rv)
+http_dial_cancel(nni_aio *aio, int rv)
 {
 	nni_http_client *c = nni_aio_get_prov_data(aio);
 	nni_mtx_lock(&c->mtx);
@@ -233,7 +238,7 @@ http_connect_cancel(nni_aio *aio, int rv)
 		nni_aio_finish_error(aio, rv);
 	}
 	if (nni_list_empty(&c->aios)) {
-		nni_aio_abort(c->connaio, rv);
+		nni_aio_abort(c->aio, rv);
 	}
 	nni_mtx_unlock(&c->mtx);
 }
@@ -246,14 +251,14 @@ nni_http_client_connect(nni_http_client *c, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
-	if ((rv = nni_aio_schedule(aio, http_connect_cancel, c)) != 0) {
+	if ((rv = nni_aio_schedule(aio, http_dial_cancel, c)) != 0) {
 		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&c->aios, aio);
 	if (nni_list_first(&c->aios) == aio) {
-		http_conn_start(c);
+		http_dial_start(c);
 	}
 	nni_mtx_unlock(&c->mtx);
 }

@@ -64,22 +64,22 @@ typedef struct http_error {
 } http_error;
 
 struct nng_http_server {
-	nng_sockaddr     addr;
-	nni_list_node    node;
-	int              refcnt;
-	int              starts;
-	nni_list         handlers;
-	nni_list         conns;
-	nni_mtx          mtx;
-	nni_cv           cv;
-	bool             closed;
-	nng_tls_config * tls;
-	nni_aio *        accaio;
-	nni_plat_tcp_ep *tep;
-	char *           port;
-	char *           hostname;
-	nni_list         errors;
-	nni_mtx          errors_mtx;
+	nng_sockaddr      addr;
+	nni_list_node     node;
+	int               refcnt;
+	int               starts;
+	nni_list          handlers;
+	nni_list          conns;
+	nni_mtx           mtx;
+	nni_cv            cv;
+	bool              closed;
+	nng_tls_config *  tls;
+	nni_aio *         accaio;
+	nni_tcp_listener *listener;
+	char *            port;
+	char *            hostname;
+	nni_list          errors;
+	nni_mtx           errors_mtx;
 };
 
 int
@@ -682,13 +682,13 @@ http_sconn_cbdone(void *arg)
 }
 
 static int
-http_sconn_init(http_sconn **scp, nni_http_server *s, nni_plat_tcp_pipe *tcp)
+http_sconn_init(http_sconn **scp, nni_http_server *s, nni_tcp_conn *tcp)
 {
 	http_sconn *sc;
 	int         rv;
 
 	if ((sc = NNI_ALLOC_STRUCT(sc)) == NULL) {
-		nni_plat_tcp_pipe_fini(tcp);
+		nni_tcp_conn_fini(tcp);
 		return (NNG_ENOMEM);
 	}
 
@@ -720,17 +720,17 @@ http_sconn_init(http_sconn **scp, nni_http_server *s, nni_plat_tcp_pipe *tcp)
 static void
 http_server_acccb(void *arg)
 {
-	nni_http_server *  s   = arg;
-	nni_aio *          aio = s->accaio;
-	nni_plat_tcp_pipe *tcp;
-	http_sconn *       sc;
-	int                rv;
+	nni_http_server *s   = arg;
+	nni_aio *        aio = s->accaio;
+	nni_tcp_conn *   tcp;
+	http_sconn *     sc;
+	int              rv;
 
 	nni_mtx_lock(&s->mtx);
 	if ((rv = nni_aio_result(aio)) != 0) {
 		if (!s->closed) {
 			// try again?
-			nni_plat_tcp_ep_accept(s->tep, s->accaio);
+			nni_tcp_listener_accept(s->listener, s->accaio);
 		}
 		nni_mtx_unlock(&s->mtx);
 		return;
@@ -738,14 +738,14 @@ http_server_acccb(void *arg)
 	tcp = nni_aio_get_output(aio, 0);
 	if (s->closed) {
 		// If we're closing, then reject this one.
-		nni_plat_tcp_pipe_fini(tcp);
+		nni_tcp_conn_fini(tcp);
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
 	if (http_sconn_init(&sc, s, tcp) != 0) {
 		// The TCP structure is already cleaned up.
 		// Start another accept attempt.
-		nni_plat_tcp_ep_accept(s->tep, s->accaio);
+		nni_tcp_listener_accept(s->listener, s->accaio);
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
@@ -753,7 +753,7 @@ http_server_acccb(void *arg)
 	nni_list_append(&s->conns, sc);
 
 	nni_http_read_req(sc->conn, sc->req, sc->rxaio);
-	nni_plat_tcp_ep_accept(s->tep, s->accaio);
+	nni_tcp_listener_accept(s->listener, s->accaio);
 	nni_mtx_unlock(&s->mtx);
 }
 
@@ -769,8 +769,8 @@ http_server_fini(nni_http_server *s)
 	while (!nni_list_empty(&s->conns)) {
 		nni_cv_wait(&s->cv);
 	}
-	if (s->tep != NULL) {
-		nni_plat_tcp_ep_fini(s->tep);
+	if (s->listener != NULL) {
+		nni_tcp_listener_fini(s->listener);
 	}
 	while ((h = nni_list_first(&s->handlers)) != NULL) {
 		nni_list_remove(&s->handlers, h);
@@ -875,7 +875,7 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 		return (rv);
 	}
 	nni_aio_set_input(aio, 0, &s->addr);
-	nni_plat_tcp_resolv(s->hostname, s->port, NNG_AF_UNSPEC, true, aio);
+	nni_tcp_resolv(s->hostname, s->port, NNG_AF_UNSPEC, true, aio);
 	nni_aio_wait(aio);
 	rv = nni_aio_result(aio);
 	nni_aio_fini(aio);
@@ -921,16 +921,15 @@ static int
 http_server_start(nni_http_server *s)
 {
 	int rv;
-	rv = nni_plat_tcp_ep_init(&s->tep, &s->addr, NULL, NNI_EP_MODE_LISTEN);
-	if (rv != 0) {
+	if ((rv = nni_tcp_listener_init(&s->listener)) != 0) {
 		return (rv);
 	}
-	if ((rv = nni_plat_tcp_ep_listen(s->tep, NULL)) != 0) {
-		nni_plat_tcp_ep_fini(s->tep);
-		s->tep = NULL;
+	if ((rv = nni_tcp_listener_listen(s->listener, &s->addr)) != 0) {
+		nni_tcp_listener_fini(s->listener);
+		s->listener = NULL;
 		return (rv);
 	}
-	nni_plat_tcp_ep_accept(s->tep, s->accaio);
+	nni_tcp_listener_accept(s->listener, s->accaio);
 	return (0);
 }
 
@@ -961,8 +960,8 @@ http_server_stop(nni_http_server *s)
 
 	s->closed = true;
 	// Close the TCP endpoint that is listening.
-	if (s->tep) {
-		nni_plat_tcp_ep_close(s->tep);
+	if (s->listener) {
+		nni_tcp_listener_close(s->listener);
 	}
 
 	// Stopping the server is a hard stop -- it aborts any work

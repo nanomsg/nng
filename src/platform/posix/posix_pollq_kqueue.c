@@ -102,6 +102,9 @@ nni_posix_pfd_close(nni_posix_pfd *pf)
 {
 	nni_posix_pollq *pq = pf->pq;
 
+	nni_mtx_lock(&pf->mtx);
+	pf->cb = NULL;
+	nni_mtx_unlock(&pf->mtx);
 	nni_mtx_lock(&pq->mtx);
 	if (!pf->closing) {
 		struct kevent ev[2];
