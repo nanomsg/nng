@@ -103,7 +103,6 @@ if (NNG_PLATFORM_POSIX)
         platform/posix/posix_rand.c
         platform/posix/posix_resolv_gai.c
         platform/posix/posix_sockaddr.c
-        platform/posix/posix_tcp.c
         platform/posix/posix_tcpconn.c
         platform/posix/posix_tcpdial.c
         platform/posix/posix_tcplisten.c
