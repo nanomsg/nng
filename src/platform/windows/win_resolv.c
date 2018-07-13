@@ -11,6 +11,7 @@
 #include "core/nng_impl.h"
 
 #include <ctype.h>
+#include <stdio.h>
 #include <string.h>
 
 #ifdef NNG_PLATFORM_WINDOWS

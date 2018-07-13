@@ -401,7 +401,9 @@ nni_tcp_conn_fini(nni_tcp_conn *c)
 {
 	nni_tcp_conn_close(c);
 	nni_posix_pfd_fini(c->pfd);
+	nni_mtx_lock(&c->mtx); // not strictly needed, but shut up TSAN
 	c->pfd = NULL;
+	nni_mtx_unlock(&c->mtx);
 	nni_mtx_fini(&c->mtx);
 
 	NNI_FREE_STRUCT(c);
