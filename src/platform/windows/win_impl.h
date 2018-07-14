@@ -80,6 +80,16 @@ struct nni_win_event {
 	nni_win_event_ops ops;
 };
 
+typedef struct nni_win_io nni_win_io;
+typedef void (*nni_win_io_cb)(nni_win_io *, int, size_t);
+
+struct nni_win_io {
+	OVERLAPPED    olpd;
+	void *        ptr;
+	nni_aio *     aio;
+	nni_win_io_cb cb;
+};
+
 struct nni_plat_flock {
 	HANDLE h;
 };
@@ -93,6 +103,13 @@ extern void nni_win_event_close(nni_win_event *);
 extern void nni_win_event_complete(nni_win_event *, int);
 
 extern int nni_win_iocp_register(HANDLE);
+
+extern int  nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
+extern void nni_win_tcp_conn_set_addrs(
+    nni_tcp_conn *, const SOCKADDR_STORAGE *, const SOCKADDR_STORAGE *);
+
+extern int  nni_win_io_sysinit(void);
+extern void nni_win_io_sysfini(void);
 
 extern int  nni_win_iocp_sysinit(void);
 extern void nni_win_iocp_sysfini(void);
@@ -108,6 +125,10 @@ extern void nni_win_udp_sysfini(void);
 
 extern int  nni_win_resolv_sysinit(void);
 extern void nni_win_resolv_sysfini(void);
+
+extern int  nni_win_io_init(nni_win_io *, nni_win_io_cb, void *);
+extern void nni_win_io_fini(nni_win_io *);
+extern int  nni_win_io_register(HANDLE);
 
 extern int nni_win_sockaddr2nn(nni_sockaddr *, const SOCKADDR_STORAGE *);
 extern int nni_win_nn2sockaddr(SOCKADDR_STORAGE *, const nni_sockaddr *);

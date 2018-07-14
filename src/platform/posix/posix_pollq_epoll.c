@@ -175,6 +175,7 @@ nni_posix_pfd_close(nni_posix_pfd *pfd)
 		nni_posix_pollq *  pq = pfd->pq;
 		struct epoll_event ev; // Not actually used.
 		pfd->closing = true;
+		pfd->cb      = NULL;
 
 		(void) shutdown(pfd->fd, SHUT_RDWR);
 		(void) epoll_ctl(pq->epfd, EPOLL_CTL_DEL, pfd->fd, &ev);
