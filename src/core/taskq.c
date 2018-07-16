@@ -51,8 +51,11 @@ nni_taskq_thread(void *self)
 		if ((task = nni_list_first(&tq->tq_tasks)) != NULL) {
 			bool reap;
 
+			nni_mtx_lock(&task->task_mtx);
 			nni_list_remove(&tq->tq_tasks, task);
 			task->task_thr = &thr->tqt_thread;
+			nni_mtx_unlock(&task->task_mtx);
+
 			nni_mtx_unlock(&tq->tq_mtx);
 
 			task->task_cb(task->task_arg);

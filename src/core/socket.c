@@ -1574,15 +1574,16 @@ nni_pipe_run_cb(nni_pipe *p, nng_pipe_ev ev)
 	nng_pipe_cb cb;
 	void *      arg;
 
+	nni_mtx_lock(&s->s_pipe_cbs_mtx);
 	if (!p->p_cbs) {
 		if (ev == NNG_PIPE_EV_ADD_PRE) {
 			// First event, after this we want all other events.
 			p->p_cbs = true;
 		} else {
+			nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 			return;
 		}
 	}
-	nni_mtx_lock(&s->s_pipe_cbs_mtx);
 	cb  = s->s_pipe_cbs[ev].cb_fn;
 	arg = s->s_pipe_cbs[ev].cb_arg;
 	nni_mtx_unlock(&s->s_pipe_cbs_mtx);

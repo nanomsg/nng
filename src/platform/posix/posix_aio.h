@@ -20,8 +20,8 @@
 #include "core/nng_impl.h"
 #include "posix_pollq.h"
 
+#include <sys/stat.h>  // needed for musl build
 #include <sys/types.h> // needed for mode_t
-#include <sys/stat.h> // needed for musl build
 
 typedef struct nni_posix_pipedesc nni_posix_pipedesc;
 typedef struct nni_posix_epdesc   nni_posix_epdesc;
@@ -48,5 +48,4 @@ extern int  nni_posix_epdesc_listen(nni_posix_epdesc *);
 extern void nni_posix_epdesc_accept(nni_posix_epdesc *, nni_aio *);
 extern int  nni_posix_epdesc_sockname(nni_posix_epdesc *, nni_sockaddr *);
 extern int  nni_posix_epdesc_set_permissions(nni_posix_epdesc *, mode_t);
-
 #endif // PLATFORM_POSIX_AIO_H

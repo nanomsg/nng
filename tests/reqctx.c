@@ -23,6 +23,7 @@ static struct {
 	nng_socket s;
 	nng_msg *  msg;
 	int        cnt;
+	nng_mtx *  mtx;
 } rep_state;
 
 void
@@ -31,9 +32,11 @@ rep_cb(void *notused)
 	int rv;
 	(void) notused;
 
+	nng_mtx_lock(rep_state.mtx);
 	if (rep_state.state == START) {
 		rep_state.state = RECV;
 		nng_recv_aio(rep_state.s, rep_state.aio);
+		nng_mtx_unlock(rep_state.mtx);
 		return;
 	}
 	if ((rv = nng_aio_result(rep_state.aio)) != 0) {
@@ -41,6 +44,7 @@ rep_cb(void *notused)
 			nng_msg_free(rep_state.msg);
 			rep_state.msg = NULL;
 		}
+		nng_mtx_unlock(rep_state.mtx);
 		return;
 	}
 	switch (rep_state.state) {
@@ -60,6 +64,7 @@ rep_cb(void *notused)
 		rep_state.cnt++;
 		break;
 	}
+	nng_mtx_unlock(rep_state.mtx);
 }
 
 #define NCTX 1000
@@ -95,6 +100,7 @@ TestMain("REQ concurrent contexts", {
 	Convey("We can use REQ contexts concurrently", {
 		nng_socket req;
 
+		So(nng_mtx_alloc(&rep_state.mtx) == 0);
 		So(nng_aio_alloc(&rep_state.aio, rep_cb, NULL) == 0);
 		So(nng_rep_open(&rep_state.s) == 0);
 		So(nng_req_open(&req) == 0);
@@ -130,6 +136,7 @@ TestMain("REQ concurrent contexts", {
 			nng_close(req);
 			nng_close(rep_state.s);
 			nng_aio_free(rep_state.aio);
+			nng_mtx_free(rep_state.mtx);
 		});
 
 		So(nng_listen(rep_state.s, addr, NULL, 0) == 0);

@@ -375,7 +375,9 @@ NNG_DECL void nng_http_server_release(nng_http_server *);
 NNG_DECL int nng_http_server_start(nng_http_server *);
 
 // nng_http_server_stop stops the server.  No new client connections are
-// accepted after this returns.
+// accepted after this returns.  Once a server is stopped fully, the
+// instance will no longer be returned by nng_http_server_hold, as the
+// server may not be reused.
 NNG_DECL void nng_http_server_stop(nng_http_server *);
 
 // nng_http_server_add_handler registers a handler on the server.

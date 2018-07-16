@@ -88,12 +88,6 @@ separating the port.
 For example, the same port 4433 on the IPv6 loopback address ('::1') would
 be specified as `tls+tcp://[::1]:4433`.
 
-NOTE: When using symbolic names, the name is resolved when the
-name is first used. _nng_ won't become aware of changes in the
-name resolution until restart,
-usually.
-(This is a bug and will likely be fixed in the future.)
-
 TIP: Certificate validation generally works when using names
 rather than IP addresses.
 This transport automatically uses the name supplied in the URL when validating

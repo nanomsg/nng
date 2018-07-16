@@ -302,7 +302,7 @@ static void
 nni_posix_pollq_destroy(nni_posix_pollq *pq)
 {
 	nni_mtx_lock(&pq->mtx);
-	pq->closing = 1;
+	pq->closing = true;
 	nni_mtx_unlock(&pq->mtx);
 
 	nni_plat_pipe_raise(pq->wakewfd);
