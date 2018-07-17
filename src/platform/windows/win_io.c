@@ -61,27 +61,18 @@ nni_win_io_register(HANDLE h)
 }
 
 int
-nni_win_io_init(nni_win_io *io, HANDLE f, nni_win_io_cb cb, void *ptr)
+nni_win_io_init(nni_win_io *io, nni_win_io_cb cb, void *ptr)
 {
 	ZeroMemory(&io->olpd, sizeof(io->olpd));
 
 	io->cb          = cb;
 	io->ptr         = ptr;
 	io->aio         = NULL;
-	io->f           = f;
 	io->olpd.hEvent = CreateEvent(NULL, FALSE, FALSE, NULL);
 	if (io->olpd.hEvent == NULL) {
 		return (nni_win_error(GetLastError()));
 	}
 	return (0);
-}
-
-void
-nni_win_io_cancel(nni_win_io *io)
-{
-	if (io->f != INVALID_HANDLE_VALUE) {
-		CancelIoEx(io->f, &io->olpd);
-	}
 }
 
 void

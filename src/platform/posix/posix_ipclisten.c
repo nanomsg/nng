@@ -12,28 +12,28 @@
 
 #ifdef NNG_PLATFORM_POSIX
 
-#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/un.h>
 #include <unistd.h>
 
 #ifndef SOCK_CLOEXEC
 #define SOCK_CLOEXEC 0
 #endif
 
-#include "posix_tcp.h"
+#include "posix_ipc.h"
 
 int
-nni_tcp_listener_init(nni_tcp_listener **lp)
+nni_ipc_listener_init(nni_ipc_listener **lp)
 {
-	nni_tcp_listener *l;
+	nni_ipc_listener *l;
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -43,6 +43,7 @@ nni_tcp_listener_init(nni_tcp_listener **lp)
 	l->pfd     = NULL;
 	l->closed  = false;
 	l->started = false;
+	l->perms   = 0;
 
 	nni_aio_list_init(&l->acceptq);
 	*lp = l;
@@ -50,9 +51,10 @@ nni_tcp_listener_init(nni_tcp_listener **lp)
 }
 
 static void
-tcp_listener_doclose(nni_tcp_listener *l)
+ipc_listener_doclose(nni_ipc_listener *l)
 {
 	nni_aio *aio;
+	char *   path;
 
 	l->closed = true;
 	while ((aio = nni_list_first(&l->acceptq)) != NULL) {
@@ -63,18 +65,23 @@ tcp_listener_doclose(nni_tcp_listener *l)
 	if (l->pfd != NULL) {
 		nni_posix_pfd_close(l->pfd);
 	}
+	if (l->started && ((path = l->path) != NULL)) {
+		l->path = NULL;
+		(void) unlink(path);
+		nni_strfree(path);
+	}
 }
 
 void
-nni_tcp_listener_close(nni_tcp_listener *l)
+nni_ipc_listener_close(nni_ipc_listener *l)
 {
 	nni_mtx_lock(&l->mtx);
-	tcp_listener_doclose(l);
+	ipc_listener_doclose(l);
 	nni_mtx_unlock(&l->mtx);
 }
 
 static void
-tcp_listener_doaccept(nni_tcp_listener *l)
+ipc_listener_doaccept(nni_ipc_listener *l)
 {
 	nni_aio *aio;
 
@@ -83,7 +90,7 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 		int            fd;
 		int            rv;
 		nni_posix_pfd *pfd;
-		nni_tcp_conn * c;
+		nni_ipc_conn * c;
 
 		fd = nni_posix_pfd_fd(l->pfd);
 
@@ -132,7 +139,7 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 			continue;
 		}
 
-		if ((rv = nni_posix_tcp_conn_init(&c, pfd)) != 0) {
+		if ((rv = nni_posix_ipc_conn_init(&c, pfd)) != 0) {
 			nni_posix_pfd_fini(pfd);
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
@@ -140,34 +147,34 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 		}
 
 		nni_aio_list_remove(aio);
-		nni_posix_tcp_conn_start(c);
+		nni_posix_ipc_conn_start(c);
 		nni_aio_set_output(aio, 0, c);
 		nni_aio_finish(aio, 0, 0);
 	}
 }
 
 static void
-tcp_listener_cb(nni_posix_pfd *pfd, int events, void *arg)
+ipc_listener_cb(nni_posix_pfd *pfd, int events, void *arg)
 {
-	nni_tcp_listener *l = arg;
+	nni_ipc_listener *l = arg;
 	NNI_ARG_UNUSED(pfd);
 
 	nni_mtx_lock(&l->mtx);
 	if (events & POLLNVAL) {
-		tcp_listener_doclose(l);
+		ipc_listener_doclose(l);
 		nni_mtx_unlock(&l->mtx);
 		return;
 	}
 
 	// Anything else will turn up in accept.
-	tcp_listener_doaccept(l);
+	ipc_listener_doaccept(l);
 	nni_mtx_unlock(&l->mtx);
 }
 
 static void
-tcp_listener_cancel(nni_aio *aio, int rv)
+ipc_listener_cancel(nni_aio *aio, int rv)
 {
-	nni_tcp_listener *l = nni_aio_get_prov_data(aio);
+	nni_ipc_listener *l = nni_aio_get_prov_data(aio);
 
 	// This is dead easy, because we'll ignore the completion if there
 	// isn't anything to do the accept on!
@@ -180,17 +187,76 @@ tcp_listener_cancel(nni_aio *aio, int rv)
 	nni_mtx_unlock(&l->mtx);
 }
 
+static int
+ipc_remove_stale(const char *path)
+{
+	int                fd;
+	struct sockaddr_un sun;
+	size_t             sz;
+
+	sun.sun_family = AF_UNIX;
+	sz             = sizeof(sun.sun_path);
+
+	if (nni_strlcpy(sun.sun_path, path, sz) >= sz) {
+		return (NNG_EADDRINVAL);
+	}
+
+	if ((fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0) {
+		return (nni_plat_errno(errno));
+	}
+
+	// There is an assumption here that connect() returns immediately
+	// (even when non-blocking) when a server is absent.  This seems
+	// to be true for the platforms we've tried.  If it doesn't work,
+	// then the cleanup will fail.  As this is supposed to be an
+	// exceptional case, don't worry.
+	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
+	if (connect(fd, (void *) &sun, sizeof(sun)) < 0) {
+		if (errno == ECONNREFUSED) {
+			(void) unlink(path);
+		}
+	}
+	(void) close(fd);
+	return (0);
+}
+
 int
-nni_tcp_listener_listen(nni_tcp_listener *l, nni_sockaddr *sa)
+nni_ipc_listener_set_permissions(nni_ipc_listener *l, int mode)
+{
+	if ((mode & S_IFMT) != 0) {
+		return (NNG_EINVAL);
+	}
+	mode |= S_IFSOCK; // set IFSOCK to ensure non-zero
+	nni_mtx_lock(&l->mtx);
+	if (l->started) {
+		nni_mtx_unlock(&l->mtx);
+		return (NNG_EBUSY);
+	}
+	l->perms = mode;
+	nni_mtx_unlock(&l->mtx);
+	return (0);
+}
+
+int
+nni_ipc_listener_set_security_descriptor(nni_ipc_listener *l, void *sd)
+{
+	NNI_ARG_UNUSED(l);
+	NNI_ARG_UNUSED(sd);
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_ipc_listener_listen(nni_ipc_listener *l, const nni_sockaddr *sa)
 {
 	socklen_t               len;
 	struct sockaddr_storage ss;
 	int                     rv;
 	int                     fd;
 	nni_posix_pfd *         pfd;
+	char *                  path;
 
 	if (((len = nni_posix_nn2sockaddr(&ss, sa)) == 0) ||
-	    ((ss.ss_family != AF_INET) && (ss.ss_family != AF_INET6))) {
+	    (ss.ss_family != AF_UNIX)) {
 		return (NNG_EADDRINVAL);
 	}
 
@@ -203,72 +269,61 @@ nni_tcp_listener_listen(nni_tcp_listener *l, nni_sockaddr *sa)
 		nni_mtx_unlock(&l->mtx);
 		return (NNG_ECLOSED);
 	}
-
-	if ((fd = socket(ss.ss_family, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0) {
-		nni_mtx_unlock(&l->mtx);
-		return (nni_plat_errno(errno));
+	path = nni_strdup(sa->s_ipc.sa_path);
+	if (path == NULL) {
+		return (NNG_ENOMEM);
 	}
 
-	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
+	if ((fd = socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0)) < 0) {
+		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&l->mtx);
+		nni_strfree(path);
+		return (rv);
+	}
+
+	if (((rv = ipc_remove_stale(path)) != 0) ||
+	    ((rv = nni_posix_pfd_init(&pfd, fd)) != 0)) {
+		nni_mtx_unlock(&l->mtx);
+		nni_strfree(path);
 		(void) close(fd);
 		return (rv);
 	}
 
-// On the Windows Subsystem for Linux, SO_REUSEADDR behaves like Windows
-// SO_REUSEADDR, which is almost completely different (and wrong!) from
-// traditional SO_REUSEADDR.
-#if defined(SO_REUSEADDR) && !defined(NNG_PLATFORM_WSL)
-	{
-		int on = 1;
-		// If for some reason this doesn't work, it's probably ok.
-		// Second bind will fail.
-		(void) setsockopt(
-		    fd, SOL_SOCKET, SO_REUSEADDR, &on, sizeof(on));
-	}
-#endif
-
 	if (bind(fd, (struct sockaddr *) &ss, len) < 0) {
 		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&l->mtx);
+		nni_strfree(path);
 		nni_posix_pfd_fini(pfd);
 		return (rv);
 	}
 
-	// Listen -- 128 depth is probably sufficient.  If it isn't, other
-	// bad things are going to happen.
-	if (listen(fd, 128) != 0) {
+	if (((l->perms != 0) && (chmod(path, l->perms & ~S_IFMT) != 0)) ||
+	    (listen(fd, 128) != 0)) {
 		rv = nni_plat_errno(errno);
+		(void) unlink(path);
 		nni_mtx_unlock(&l->mtx);
+		nni_strfree(path);
 		nni_posix_pfd_fini(pfd);
 		return (rv);
 	}
 
-	// Lets get the bound sockname, and pass that back to the caller.
-	// This permits ephemeral port binding to work.
-	// If this fails for some reason, we just don't update the
-	// sockaddr structure.  This is kind of suboptimal, but failures
-	// here should never occur.
-	len = sizeof(ss);
-	(void) getsockname(fd, (void *) &ss, &len);
-	(void) nni_posix_sockaddr2nn(sa, &ss);
-
-	nni_posix_pfd_set_cb(pfd, tcp_listener_cb, l);
+	nni_posix_pfd_set_cb(pfd, ipc_listener_cb, l);
 
 	l->pfd     = pfd;
 	l->started = true;
+	l->path    = path;
 	nni_mtx_unlock(&l->mtx);
 
 	return (0);
 }
 
 void
-nni_tcp_listener_fini(nni_tcp_listener *l)
+nni_ipc_listener_fini(nni_ipc_listener *l)
 {
 	nni_posix_pfd *pfd;
 
 	nni_mtx_lock(&l->mtx);
-	tcp_listener_doclose(l);
+	ipc_listener_doclose(l);
 	pfd = l->pfd;
 	nni_mtx_unlock(&l->mtx);
 
@@ -280,7 +335,7 @@ nni_tcp_listener_fini(nni_tcp_listener *l)
 }
 
 void
-nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
+nni_ipc_listener_accept(nni_ipc_listener *l, nni_aio *aio)
 {
 	int rv;
 
@@ -303,14 +358,14 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tcp_listener_cancel, l)) != 0) {
+	if ((rv = nni_aio_schedule(aio, ipc_listener_cancel, l)) != 0) {
 		nni_mtx_unlock(&l->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_aio_list_append(&l->acceptq, aio);
 	if (nni_list_first(&l->acceptq) == aio) {
-		tcp_listener_doaccept(l);
+		ipc_listener_doaccept(l);
 	}
 	nni_mtx_unlock(&l->mtx);
 }

@@ -11,7 +11,6 @@
 #include "core/nng_impl.h"
 
 #ifdef NNG_USE_POSIX_RESOLV_GAI
-#include "platform/posix/posix_aio.h"
 
 #include <arpa/inet.h>
 #include <ctype.h>

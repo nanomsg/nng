@@ -12,11 +12,8 @@
 
 #ifdef NNG_PLATFORM_POSIX
 
-#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <netinet/in.h>
-#include <netinet/tcp.h>
 #include <poll.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -25,7 +22,14 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <sys/uio.h>
+#include <sys/un.h>
 #include <unistd.h>
+#if defined(NNG_HAVE_GETPEERUCRED)
+#include <ucred.h>
+#elif defined(NNG_HAVE_LOCALPEERCRED)
+#include <sys/ucred.h>
+#endif
+
 #ifdef NNG_HAVE_ALLOCA
 #include <alloca.h>
 #endif
@@ -34,10 +38,10 @@
 #define MSG_NOSIGNAL 0
 #endif
 
-#include "posix_tcp.h"
+#include "posix_ipc.h"
 
 static void
-tcp_conn_dowrite(nni_tcp_conn *c)
+ipc_conn_dowrite(nni_ipc_conn *c)
 {
 	nni_aio *aio;
 	int      fd;
@@ -119,7 +123,7 @@ tcp_conn_dowrite(nni_tcp_conn *c)
 }
 
 static void
-tcp_conn_doread(nni_tcp_conn *c)
+ipc_conn_doread(nni_ipc_conn *c)
 {
 	nni_aio *aio;
 	int      fd;
@@ -197,7 +201,7 @@ tcp_conn_doread(nni_tcp_conn *c)
 }
 
 void
-nni_tcp_conn_close(nni_tcp_conn *c)
+nni_ipc_conn_close(nni_ipc_conn *c)
 {
 	nni_mtx_lock(&c->mtx);
 	if (!c->closed) {
@@ -214,20 +218,20 @@ nni_tcp_conn_close(nni_tcp_conn *c)
 }
 
 static void
-tcp_conn_cb(nni_posix_pfd *pfd, int events, void *arg)
+ipc_conn_cb(nni_posix_pfd *pfd, int events, void *arg)
 {
-	nni_tcp_conn *c = arg;
+	nni_ipc_conn *c = arg;
 
 	if (events & (POLLHUP | POLLERR | POLLNVAL)) {
-		nni_tcp_conn_close(c);
+		nni_ipc_conn_close(c);
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
 	if (events & POLLIN) {
-		tcp_conn_doread(c);
+		ipc_conn_doread(c);
 	}
 	if (events & POLLOUT) {
-		tcp_conn_dowrite(c);
+		ipc_conn_dowrite(c);
 	}
 	events = 0;
 	if (!nni_list_empty(&c->writeq)) {
@@ -243,9 +247,9 @@ tcp_conn_cb(nni_posix_pfd *pfd, int events, void *arg)
 }
 
 static void
-tcp_conn_cancel(nni_aio *aio, int rv)
+ipc_conn_cancel(nni_aio *aio, int rv)
 {
-	nni_tcp_conn *c = nni_aio_get_prov_data(aio);
+	nni_ipc_conn *c = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&c->mtx);
 	if (nni_aio_list_active(aio)) {
@@ -256,7 +260,7 @@ tcp_conn_cancel(nni_aio *aio, int rv)
 }
 
 void
-nni_tcp_conn_send(nni_tcp_conn *c, nni_aio *aio)
+nni_ipc_conn_send(nni_ipc_conn *c, nni_aio *aio)
 {
 
 	int rv;
@@ -266,7 +270,7 @@ nni_tcp_conn_send(nni_tcp_conn *c, nni_aio *aio)
 	}
 	nni_mtx_lock(&c->mtx);
 
-	if ((rv = nni_aio_schedule(aio, tcp_conn_cancel, c)) != 0) {
+	if ((rv = nni_aio_schedule(aio, ipc_conn_cancel, c)) != 0) {
 		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -274,7 +278,7 @@ nni_tcp_conn_send(nni_tcp_conn *c, nni_aio *aio)
 	nni_aio_list_append(&c->writeq, aio);
 
 	if (nni_list_first(&c->writeq) == aio) {
-		tcp_conn_dowrite(c);
+		ipc_conn_dowrite(c);
 		// If we are still the first thing on the list, that
 		// means we didn't finish the job, so arm the poller to
 		// complete us.
@@ -286,7 +290,7 @@ nni_tcp_conn_send(nni_tcp_conn *c, nni_aio *aio)
 }
 
 void
-nni_tcp_conn_recv(nni_tcp_conn *c, nni_aio *aio)
+nni_ipc_conn_recv(nni_ipc_conn *c, nni_aio *aio)
 {
 	int rv;
 
@@ -295,7 +299,7 @@ nni_tcp_conn_recv(nni_tcp_conn *c, nni_aio *aio)
 	}
 	nni_mtx_lock(&c->mtx);
 
-	if ((rv = nni_aio_schedule(aio, tcp_conn_cancel, c)) != 0) {
+	if ((rv = nni_aio_schedule(aio, ipc_conn_cancel, c)) != 0) {
 		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -307,7 +311,7 @@ nni_tcp_conn_recv(nni_tcp_conn *c, nni_aio *aio)
 	// many cases.  We also need not arm a list if it was already
 	// armed.
 	if (nni_list_first(&c->readq) == aio) {
-		tcp_conn_doread(c);
+		ipc_conn_doread(c);
 		// If we are still the first thing on the list, that
 		// means we didn't finish the job, so arm the poller to
 		// complete us.
@@ -319,60 +323,139 @@ nni_tcp_conn_recv(nni_tcp_conn *c, nni_aio *aio)
 }
 
 int
-nni_tcp_conn_peername(nni_tcp_conn *c, nni_sockaddr *sa)
+ipc_conn_peerid(nni_ipc_conn *c, uint64_t *euid, uint64_t *egid,
+    uint64_t *prid, uint64_t *znid)
 {
-	struct sockaddr_storage ss;
-	socklen_t               sslen = sizeof(ss);
-	int                     fd    = nni_posix_pfd_fd(c->pfd);
+	int fd = nni_posix_pfd_fd(c->pfd);
+#if defined(NNG_HAVE_GETPEEREID)
+	uid_t uid;
+	gid_t gid;
 
-	if (getpeername(fd, (void *) &ss, &sslen) != 0) {
+	if (getpeereid(fd, &uid, &gid) != 0) {
 		return (nni_plat_errno(errno));
 	}
-	return (nni_posix_sockaddr2nn(sa, &ss));
-}
-
-int
-nni_tcp_conn_sockname(nni_tcp_conn *c, nni_sockaddr *sa)
-{
-	struct sockaddr_storage ss;
-	socklen_t               sslen = sizeof(ss);
-	int                     fd    = nni_posix_pfd_fd(c->pfd);
-
-	if (getsockname(fd, (void *) &ss, &sslen) != 0) {
+	*euid = uid;
+	*egid = gid;
+	*prid = (uint64_t) -1;
+	*znid = (uint64_t) -1;
+	return (0);
+#elif defined(NNG_HAVE_GETPEERUCRED)
+	ucred_t *ucp = NULL;
+	if (getpeerucred(fd, &ucp) != 0) {
 		return (nni_plat_errno(errno));
 	}
-	return (nni_posix_sockaddr2nn(sa, &ss));
-}
-
-int
-nni_tcp_conn_set_keepalive(nni_tcp_conn *c, bool keep)
-{
-	int val = keep ? 1 : 0;
-	int fd  = nni_posix_pfd_fd(c->pfd);
-
-	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val)) != 0) {
+	*euid = ucred_geteuid(ucp);
+	*egid = ucred_getegid(ucp);
+	*prid = ucred_getpid(ucp);
+	*znid = ucred_getzoneid(ucp);
+	ucred_free(ucp);
+	return (0);
+#elif defined(NNG_HAVE_SOPEERCRED)
+	struct ucred uc;
+	socklen_t    len = sizeof(uc);
+	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
 		return (nni_plat_errno(errno));
+	}
+	*euid = uc.uid;
+	*egid = uc.gid;
+	*prid = uc.pid;
+	*znid = (uint64_t) -1;
+	return (0);
+#elif defined(NNG_HAVE_LOCALPEERCRED)
+	struct xucred xu;
+	socklen_t     len = sizeof(xu);
+	if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERCRED, &xu, &len) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	*euid = xu.cr_uid;
+	*egid = xu.cr_gid;
+	*prid = (uint64_t) -1;
+	*znid = (uint64_t) -1;
+#if defined(LOCAL_PEERPID) // present (undocumented) on macOS
+	{
+		pid_t pid;
+		if (getsockopt(fd, SOL_LOCAL, LOCAL_PEERPID, &pid, &len) ==
+		    0) {
+			*prid = (uint64_t) pid;
+		}
+	}
+#endif                     // LOCAL_PEERPID
+	return (0);
+#else
+	if (fd < 0) {
+		return (NNG_ECLOSED);
+	}
+	NNI_ARG_UNUSED(euid);
+	NNI_ARG_UNUSED(egid);
+	NNI_ARG_UNUSED(prid);
+	NNI_ARG_UNUSED(znid);
+	return (NNG_ENOTSUP);
+#endif
+}
+int
+nni_ipc_conn_get_peer_uid(nni_ipc_conn *c, uint64_t *uid)
+{
+	int      rv;
+	uint64_t ignore;
+
+	if ((rv = ipc_conn_peerid(c, uid, &ignore, &ignore, &ignore)) != 0) {
+		return (rv);
 	}
 	return (0);
 }
 
 int
-nni_tcp_conn_set_nodelay(nni_tcp_conn *c, bool nodelay)
+nni_ipc_conn_get_peer_gid(nni_ipc_conn *c, uint64_t *gid)
 {
+	int      rv;
+	uint64_t ignore;
 
-	int val = nodelay ? 1 : 0;
-	int fd  = nni_posix_pfd_fd(c->pfd);
-
-	if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) != 0) {
-		return (nni_plat_errno(errno));
+	if ((rv = ipc_conn_peerid(c, &ignore, gid, &ignore, &ignore)) != 0) {
+		return (rv);
 	}
 	return (0);
 }
 
 int
-nni_posix_tcp_conn_init(nni_tcp_conn **cp, nni_posix_pfd *pfd)
+nni_ipc_conn_get_peer_zoneid(nni_ipc_conn *c, uint64_t *zid)
 {
-	nni_tcp_conn *c;
+	int      rv;
+	uint64_t ignore;
+	uint64_t id;
+
+	if ((rv = ipc_conn_peerid(c, &ignore, &ignore, &ignore, &id)) != 0) {
+		return (rv);
+	}
+	if (id == (uint64_t) -1) {
+		// NB: -1 is not a legal zone id (illumos/Solaris)
+		return (NNG_ENOTSUP);
+	}
+	*zid = id;
+	return (0);
+}
+
+int
+nni_ipc_conn_get_peer_pid(nni_ipc_conn *c, uint64_t *pid)
+{
+	int      rv;
+	uint64_t ignore;
+	uint64_t id;
+
+	if ((rv = ipc_conn_peerid(c, &ignore, &ignore, &id, &ignore)) != 0) {
+		return (rv);
+	}
+	if (id == (uint64_t) -1) {
+		// NB: -1 is not a legal process id
+		return (NNG_ENOTSUP);
+	}
+	*pid = id;
+	return (0);
+}
+
+int
+nni_posix_ipc_conn_init(nni_ipc_conn **cp, nni_posix_pfd *pfd)
+{
+	nni_ipc_conn *c;
 
 	if ((c = NNI_ALLOC_STRUCT(c)) == NULL) {
 		return (NNG_ENOMEM);
@@ -390,15 +473,15 @@ nni_posix_tcp_conn_init(nni_tcp_conn **cp, nni_posix_pfd *pfd)
 }
 
 void
-nni_posix_tcp_conn_start(nni_tcp_conn *c)
+nni_posix_ipc_conn_start(nni_ipc_conn *c)
 {
-	nni_posix_pfd_set_cb(c->pfd, tcp_conn_cb, c);
+	nni_posix_pfd_set_cb(c->pfd, ipc_conn_cb, c);
 }
 
 void
-nni_tcp_conn_fini(nni_tcp_conn *c)
+nni_ipc_conn_fini(nni_ipc_conn *c)
 {
-	nni_tcp_conn_close(c);
+	nni_ipc_conn_close(c);
 	nni_posix_pfd_fini(c->pfd);
 	nni_mtx_lock(&c->mtx); // not strictly needed, but shut up TSAN
 	c->pfd = NULL;

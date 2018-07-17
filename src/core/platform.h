@@ -215,7 +215,7 @@ typedef struct nni_tcp_listener nni_tcp_listener;
 
 extern void nni_tcp_conn_fini(nni_tcp_conn *);
 
-// nni_tcp_dialer_close closes the dialer, which might actually be
+// nni_tcp_conn_close closes the connection, which might actually be
 // implemented as a shutdown() call.
 // Further operations on it should return NNG_ECLOSED.
 extern void nni_tcp_conn_close(nni_tcp_conn *);
@@ -248,7 +248,7 @@ extern int nni_tcp_conn_set_nodelay(nni_tcp_conn *, bool);
 // keepalive probes.  Tuning of these keepalives is current unsupported.
 extern int nni_tcp_conn_set_keepalive(nni_tcp_conn *, bool);
 
-// nni_tcp_listener_init creates a new dialer object.
+// nni_tcp_dialer_init creates a new dialer object.
 extern int nni_tcp_dialer_init(nni_tcp_dialer **);
 
 // nni_tcp_dialer_fini finalizes the dialer, closing it and freeing
@@ -311,81 +311,102 @@ extern void nni_udp_resolv(const char *, const char *, int, int, nni_aio *);
 // IPC (UNIX Domain Sockets & Named Pipes) Support.
 //
 
-typedef struct nni_plat_ipc_ep   nni_plat_ipc_ep;
-typedef struct nni_plat_ipc_pipe nni_plat_ipc_pipe;
+typedef struct nni_ipc_conn     nni_ipc_conn;
+typedef struct nni_ipc_dialer   nni_ipc_dialer;
+typedef struct nni_ipc_listener nni_ipc_listener;
 
-// nni_plat_ipc_ep_init creates a new endpoint associated with the url.
-// The final field is the mode, either for dialing (NNI_EP_MODE_DIAL) or
-// listening (NNI_EP_MODE_LISTEN).
-extern int nni_plat_ipc_ep_init(nni_plat_ipc_ep **, const nni_sockaddr *, int);
+// nni_ipc_conn_fini disposes of the connection.
+extern void nni_ipc_conn_fini(nni_ipc_conn *);
 
-// nni_plat_ipc_ep_fini closes the endpoint and releases resources.
-extern void nni_plat_ipc_ep_fini(nni_plat_ipc_ep *);
+// nni_ipc_conn_close closes the connection, which might actually be
+// implemented as a shutdown() call.
+// Further operations on it should return NNG_ECLOSED.
+extern void nni_ipc_conn_close(nni_ipc_conn *);
 
-// nni_plat_ipc_ep_close closes the endpoint; this might not close the
-// actual underlying socket, but it should call shutdown on it.
-// Further operations on the pipe should return NNG_ECLOSED.
-extern void nni_plat_ipc_ep_close(nni_plat_ipc_ep *);
+// nni_ipc_conn_send sends data in the iov buffers to the peer.
+// The platform may modify the iovs.
+extern void nni_ipc_conn_send(nni_ipc_conn *, nni_aio *);
 
-// nni_plat_ipc_listen creates an IPC socket in listening mode, bound
-// to the specified path.
-extern int nni_plat_ipc_ep_listen(nni_plat_ipc_ep *);
+// nni_ipc_conn_recv receives data into the buffers provided by the
+// I/O vector (iovs).  The platform should attempt to scatter the received
+// data into the iovs if possible.
+//
+// It is possible for the reader to return less data than is requested,
+// in which case the caller is responsible for resubmitting.  The platform
+// must not return "zero" data however.  (It is an error to attempt to
+// receive zero bytes.)  The platform may modify the iovs.
+extern void nni_ipc_conn_recv(nni_ipc_conn *, nni_aio *);
 
-// nni_plat_ipc_ep_accept starts an accept to receive an incoming connection.
-// An accepted connection will be passed back in the a_pipe member.
-extern void nni_plat_ipc_ep_accept(nni_plat_ipc_ep *, nni_aio *);
+// nni_ipc_conn_get_peer_uid obtains the peer user id, if possible.
+// NB: Only POSIX systems support user IDs.
+extern int nni_ipc_conn_get_peer_uid(nni_ipc_conn *, uint64_t *);
 
-// nni_plat_ipc_connect is the client side.
-// An accepted connection will be passed back in the a_pipe member.
-extern void nni_plat_ipc_ep_connect(nni_plat_ipc_ep *, nni_aio *);
+// nni_ipc_conn_get_peer_gid obtains the peer group id, if possible.
+// NB: Only POSIX systems support group IDs.
+extern int nni_ipc_conn_get_peer_gid(nni_ipc_conn *, uint64_t *);
 
-// nni_plat_ipc_ep_set_security_descriptor sets the Windows security
-// descriptor. This is *only* supported for Windows platforms.  All
-// others return NNG_ENOTSUP.  The void argument is a pointer to
-// a SECURITY_DESCRIPTOR object, and must be valid.
-extern int nni_plat_ipc_ep_set_security_descriptor(nni_plat_ipc_ep *, void *);
+// nni_ipc_conn_get_peer_pid obtains the peer process id, if possible.
+extern int nni_ipc_conn_get_peer_pid(nni_ipc_conn *, uint64_t *);
 
-// nni_plat_ipc_ep_set_permissions sets UNIX style permissions
+// nni_ipc_conn_get_peer_zoneid obtains the peer zone id, if possible.
+// NB: Only illumos & SunOS systems have the notion of "zones".
+extern int nni_ipc_conn_get_peer_zoneid(nni_ipc_conn *, uint64_t *);
+
+// nni_ipc_dialer_init creates a new dialer object.
+extern int nni_ipc_dialer_init(nni_ipc_dialer **);
+
+// nni_ipc_dialer_fini finalizes the dialer, closing it and freeing
+// all resources.
+extern void nni_ipc_dialer_fini(nni_ipc_dialer *);
+
+// nni_ipc_dialer_close closes the dialer.
+// Further operations on it should return NNG_ECLOSED.  Any in-progress
+// connection will be aborted.
+extern void nni_ipc_dialer_close(nni_ipc_dialer *);
+
+// nni_ipc_dialer_dial attempts to create an outgoing connection,
+// asynchronously, to the address specified. On success, the first (and only)
+// output will be an nni_ipc_conn * associated with the remote server.
+extern void nni_ipc_dialer_dial(
+    nni_ipc_dialer *, const nni_sockaddr *, nni_aio *);
+
+// nni_ipc_listener_init creates a new listener object, unbound.
+extern int nni_ipc_listener_init(nni_ipc_listener **);
+
+// nni_ipc_listener_fini frees the listener and all associated resources.
+// It implictly closes the listener as well.
+extern void nni_ipc_listener_fini(nni_ipc_listener *);
+
+// nni_ipc_listener_close closes the listener.  This will unbind
+// any bound socket, and further operations will result in NNG_ECLOSED.
+extern void nni_ipc_listener_close(nni_ipc_listener *);
+
+// nni_ipc_listener_listen creates the socket in listening mode, bound
+// to the specified address.  Unlike TCP, this address does not change.
+extern int nni_ipc_listener_listen(nni_ipc_listener *, const nni_sockaddr *);
+
+// nni_ipc_listener_accept accepts in incoming connect, asynchronously.
+// On success, the first (and only) output will be an nni_ipc_conn *
+// associated with the remote peer.
+extern void nni_ipc_listener_accept(nni_ipc_listener *, nni_aio *);
+
+// nni_ipc_listener_set_permissions sets UNIX style permissions
 // on the named pipes.  This basically just does a chmod() on the
 // named pipe, and is only supported o the server side, and only on
 // systems that support this (POSIX, not Windows).  Note that changing
 // ownership is not supported at this time.  Most systems use only
 // 16-bits, the lower 12 of which are user, group, and other, e.g.
 // 0640 gives read/write access to user, read to group, and prevents
-// any other user from accessing it.  This option only has meaning
-// for listeners, on dialers it is ignored.
-extern int nni_plat_ipc_ep_set_permissions(nni_plat_ipc_ep *, uint32_t);
+// any other user from accessing it.  On platforms without this support,
+// ENOTSUP is returned.
+extern int nni_ipc_listener_set_permissions(nni_ipc_listener *, int);
 
-// nni_plat_ipc_pipe_fini closes the pipe, and releases all resources
-// associated with it.
-extern void nni_plat_ipc_pipe_fini(nni_plat_ipc_pipe *);
-
-// nni_plat_ipc_pipe_close closes the socket, or at least shuts it down.
-// Further operations on the pipe should return NNG_ECLOSED.
-extern void nni_plat_ipc_pipe_close(nni_plat_ipc_pipe *);
-
-// nni_plat_ipc_pipe_send sends data in the iov buffers to the peer.
-// The platform may modify the iovs.
-extern void nni_plat_ipc_pipe_send(nni_plat_ipc_pipe *, nni_aio *);
-
-// nni_plat_ipc_pipe_recv recvs data into the buffers provided by the iovs.
-// The platform may modify the iovs.
-extern void nni_plat_ipc_pipe_recv(nni_plat_ipc_pipe *, nni_aio *);
-
-// nni_plat_ipc_pipe_get_peer_uid obtains the peer user id, if possible.
-// NB: Only POSIX systems support user IDs.
-extern int nni_plat_ipc_pipe_get_peer_uid(nni_plat_ipc_pipe *, uint64_t *);
-
-// nni_plat_ipc_pipe_get_peer_gid obtains the peer group id, if possible.
-// NB: Only POSIX systems support group IDs.
-extern int nni_plat_ipc_pipe_get_peer_gid(nni_plat_ipc_pipe *, uint64_t *);
-
-// nni_plat_ipc_pipe_get_peer_pid obtains the peer process id, if possible.
-extern int nni_plat_ipc_pipe_get_peer_pid(nni_plat_ipc_pipe *, uint64_t *);
-
-// nni_plat_ipc_pipe_get_peer_zoneid obtains the peer zone id, if possible.
-// NB: Only illumos & SunOS systems have the notion of "zones".
-extern int nni_plat_ipc_pipe_get_peer_zoneid(nni_plat_ipc_pipe *, uint64_t *);
+// nni_ipc_listener_set_security_descriptor sets the Windows security
+// descriptor. This is *only* supported for Windows platforms.  All
+// others return NNG_ENOTSUP.  The void argument is a pointer to
+// a SECURITY_DESCRIPTOR object, and must be valid.
+extern int nni_ipc_listener_set_security_descriptor(
+    nni_ipc_listener *, void *);
 
 //
 // UDP support. UDP is not connection oriented, and only has the notion

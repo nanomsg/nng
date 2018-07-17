@@ -70,7 +70,7 @@ nni_tcp_dialer_close(nni_tcp_dialer *d)
 
 			if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
 				c->conn_rv = NNG_ECLOSED;
-				nni_win_io_cancel(&c->conn_io);
+				CancelIoEx((HANDLE) c->s, &c->conn_io.olpd);
 			}
 		}
 	}
@@ -104,7 +104,7 @@ tcp_dial_cancel(nni_aio *aio, int rv)
 		if (c->conn_rv == 0) {
 			c->conn_rv = rv;
 		}
-		nni_win_io_cancel(&c->conn_io);
+		CancelIoEx((HANDLE) c->s, &c->conn_io.olpd);
 	}
 	nni_mtx_unlock(&d->mtx);
 }
@@ -187,8 +187,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if ((rv = nni_win_io_init(&c->conn_io, (HANDLE) s, tcp_dial_cb, c)) !=
-	    0) {
+	if ((rv = nni_win_io_init(&c->conn_io, tcp_dial_cb, c)) != 0) {
 		nni_tcp_conn_fini(c);
 		nni_aio_finish_error(aio, rv);
 		return;

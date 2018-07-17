@@ -87,19 +87,20 @@ set (NNG_SOURCES
 if (NNG_PLATFORM_POSIX)
     set (NNG_SOURCES ${NNG_SOURCES}
         platform/posix/posix_impl.h
+        platform/posix/posix_ipc.h
         platform/posix/posix_config.h
-        platform/posix/posix_aio.h
         platform/posix/posix_pollq.h
+        platform/posix/posix_tcp.h
 
         platform/posix/posix_alloc.c
         platform/posix/posix_atomic.c
         platform/posix/posix_clock.c
         platform/posix/posix_debug.c
-        platform/posix/posix_epdesc.c
         platform/posix/posix_file.c
-        platform/posix/posix_ipc.c
+        platform/posix/posix_ipcconn.c
+        platform/posix/posix_ipcdial.c
+        platform/posix/posix_ipclisten.c
         platform/posix/posix_pipe.c
-        platform/posix/posix_pipedesc.c
         platform/posix/posix_rand.c
         platform/posix/posix_resolv_gai.c
         platform/posix/posix_sockaddr.c
@@ -132,12 +133,17 @@ endif()
 if (NNG_PLATFORM_WINDOWS)
     set (NNG_SOURCES ${NNG_SOURCES}
         platform/windows/win_impl.h
+        platform/windows/win_ipc.h
+        platform/windows/win_tcp.h
+
         platform/windows/win_clock.c
         platform/windows/win_debug.c
         platform/windows/win_file.c
         platform/windows/win_io.c
         platform/windows/win_iocp.c
-        platform/windows/win_ipc.c
+        platform/windows/win_ipcconn.c
+        platform/windows/win_ipcdial.c
+        platform/windows/win_ipclisten.c
         platform/windows/win_pipe.c
         platform/windows/win_rand.c
         platform/windows/win_resolv.c

@@ -129,6 +129,7 @@ tcptran_pipe_fini(void *arg)
 		nni_tcp_conn_fini(p->conn);
 	}
 	nni_msg_free(p->rxmsg);
+	nni_mtx_fini(&p->mtx);
 	NNI_FREE_STRUCT(p);
 }
 
@@ -780,7 +781,12 @@ static int
 tcptran_dialer_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tcptran_dialer *d = arg;
-	return (nni_copyout_size(d->rcvmax, v, szp, t));
+	int             rv;
+
+	nni_mtx_lock(&d->mtx);
+	rv = nni_copyout_size(d->rcvmax, v, szp, t);
+	nni_mtx_unlock(&d->mtx);
+	return (rv);
 }
 
 static int
@@ -922,15 +928,12 @@ tcptran_listener_init(void **lp, nni_url *url, nni_sock *sock)
 		return (rv);
 	}
 
-	if ((rv = nni_tcp_listener_init(&l->listener)) != 0) {
+	if (((rv = nni_tcp_listener_init(&l->listener)) != 0) ||
+	    ((rv = nni_aio_init(&l->aio, tcptran_listener_cb, l)) != 0)) {
 		tcptran_listener_fini(l);
 		return (rv);
 	}
 
-	if ((rv = nni_aio_init(&l->aio, tcptran_listener_cb, l)) != 0) {
-		tcptran_listener_fini(l);
-		return (rv);
-	}
 	l->proto     = nni_sock_proto_id(sock);
 	l->nodelay   = true;
 	l->keepalive = false;
@@ -955,9 +958,9 @@ tcptran_listener_bind(void *arg)
 	tcptran_listener *l = arg;
 	int               rv;
 
-	l->bsa = l->sa;
 	nni_mtx_lock(&l->mtx);
-	rv = nni_tcp_listener_listen(l->listener, &l->bsa);
+	l->bsa = l->sa;
+	rv     = nni_tcp_listener_listen(l->listener, &l->bsa);
 	nni_mtx_unlock(&l->mtx);
 
 	return (rv);
@@ -1139,7 +1142,24 @@ static int
 tcptran_listener_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tcptran_listener *l = arg;
-	return (nni_copyout_size(l->rcvmax, v, szp, t));
+	int               rv;
+
+	nni_mtx_lock(&l->mtx);
+	rv = nni_copyout_size(l->rcvmax, v, szp, t);
+	nni_mtx_unlock(&l->mtx);
+	return (rv);
+}
+
+static int
+tcptran_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
+{
+	tcptran_listener *l = arg;
+	int               rv;
+
+	nni_mtx_lock(&l->mtx);
+	rv = nni_copyout_sockaddr(&l->bsa, buf, szp, t);
+	nni_mtx_unlock(&l->mtx);
+	return (rv);
 }
 
 static int
@@ -1232,6 +1252,11 @@ static nni_tran_option tcptran_listener_options[] = {
 	    .o_get  = tcptran_listener_get_recvmaxsz,
 	    .o_set  = tcptran_listener_set_recvmaxsz,
 	    .o_chk  = tcptran_check_recvmaxsz,
+	},
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = tcptran_listener_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_URL,

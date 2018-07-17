@@ -147,7 +147,7 @@ nni_tcp_listener_close(nni_tcp_listener *l)
 
 			if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
 				c->conn_rv = NNG_ECLOSED;
-				nni_win_io_cancel(&c->conn_io);
+				CancelIoEx((HANDLE) c->s, &c->conn_io.olpd);
 			}
 		}
 		closesocket(l->s);
@@ -246,7 +246,7 @@ tcp_accept_cancel(nni_aio *aio, int rv)
 		if (c->conn_rv == 0) {
 			c->conn_rv = rv;
 		}
-		nni_win_io_cancel(&c->conn_io);
+		CancelIoEx((HANDLE) c->s, &c->conn_io.olpd);
 	}
 	nni_mtx_unlock(&l->mtx);
 }
@@ -263,6 +263,11 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&l->mtx);
+	if (!l->started) {
+		nni_mtx_unlock(&l->mtx);
+		nni_aio_finish_error(aio, NNG_ESTATE);
+		return;
+	}
 	if (l->closed) {
 		nni_mtx_unlock(&l->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
@@ -286,8 +291,7 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 	c->listener = l;
 	c->conn_aio = aio;
 	nni_aio_set_prov_extra(aio, 0, c);
-	if (((rv = nni_win_io_init(
-	          &c->conn_io, (HANDLE) l->s, tcp_accept_cb, c)) != 0) ||
+	if (((rv = nni_win_io_init(&c->conn_io, tcp_accept_cb, c)) != 0) ||
 	    ((rv = nni_aio_schedule(aio, tcp_accept_cancel, l)) != 0)) {
 		nni_aio_set_prov_extra(aio, 0, NULL);
 		nni_mtx_unlock(&l->mtx);

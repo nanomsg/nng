@@ -127,9 +127,8 @@ extern void nni_win_udp_sysfini(void);
 extern int  nni_win_resolv_sysinit(void);
 extern void nni_win_resolv_sysfini(void);
 
-extern int  nni_win_io_init(nni_win_io *, HANDLE, nni_win_io_cb, void *);
+extern int  nni_win_io_init(nni_win_io *, nni_win_io_cb, void *);
 extern void nni_win_io_fini(nni_win_io *);
-extern void nni_win_io_cancel(nni_win_io *);
 
 extern int nni_win_io_register(HANDLE);
 

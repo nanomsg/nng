@@ -913,9 +913,9 @@ tlstran_listener_bind(void *arg)
 	tlstran_listener *l = arg;
 	int               rv;
 
-	l->bsa = l->sa;
 	nni_mtx_lock(&l->ep.mtx);
-	rv = nni_tcp_listener_listen(l->listener, &l->bsa);
+	l->bsa = l->sa;
+	rv     = nni_tcp_listener_listen(l->listener, &l->bsa);
 	nni_mtx_unlock(&l->ep.mtx);
 
 	return (rv);
@@ -1119,6 +1119,18 @@ tlstran_listener_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
 	nni_mtx_unlock(&l->ep.mtx);
 	snprintf(ustr, sizeof(ustr), "tls+tcp://%s:%s", ipstr, portstr);
 	return (nni_copyout_str(ustr, v, szp, t));
+}
+
+static int
+tlstran_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
+{
+	tlstran_listener *l = arg;
+	int               rv;
+
+	nni_mtx_lock(&l->ep.mtx);
+	rv = nni_copyout_sockaddr(&l->bsa, buf, szp, t);
+	nni_mtx_unlock(&l->ep.mtx);
+	return (rv);
 }
 
 static int
@@ -1379,6 +1391,11 @@ static nni_tran_option tlstran_listener_options[] = {
 	    .o_name = NNG_OPT_URL,
 	    .o_type = NNI_TYPE_STRING,
 	    .o_get  = tlstran_listener_get_url,
+	},
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = tlstran_listener_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_CONFIG,
