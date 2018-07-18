@@ -28,8 +28,8 @@ struct nni_dialer {
 	int                 d_lastrv; // last result from synchronous
 	bool                d_synch;  // synchronous connect in progress?
 	bool                d_closed; // full shutdown
+	bool                d_closing;
 	nni_atomic_flag     d_started;
-	nni_atomic_flag     d_closing; // close pending (waiting on refcnt)
 	nni_mtx             d_mtx;
 	nni_cv              d_cv;
 	nni_list            d_pipes;
@@ -51,9 +51,9 @@ struct nni_listener {
 	nni_sock *            l_sock;
 	nni_url *             l_url;
 	int                   l_refcnt;
-	bool                  l_closed; // full shutdown
+	bool                  l_closed;  // full shutdown
+	bool                  l_closing; // close started (shutdown)
 	nni_atomic_flag       l_started;
-	nni_atomic_flag       l_closing; // close started (shutdown)
 	nni_list              l_pipes;
 	nni_aio *             l_acc_aio;
 	nni_aio *             l_tmo_aio;
@@ -92,15 +92,16 @@ extern void nni_dialer_shutdown(nni_dialer *);
 extern void nni_dialer_reap(nni_dialer *);
 extern void nni_dialer_destroy(nni_dialer *);
 extern void nni_dialer_timer_start(nni_dialer *);
+extern void nni_dialer_close_rele(nni_dialer *);
 
 extern void nni_listener_add_pipe(nni_listener *, nni_pipe *);
 extern void nni_listener_shutdown(nni_listener *);
 extern void nni_listener_reap(nni_listener *);
 extern void nni_listener_destroy(nni_listener *);
+extern void nni_listener_close_rele(nni_listener *);
 
 extern void nni_pipe_remove(nni_pipe *);
 extern void nni_pipe_run_cb(nni_pipe *, nng_pipe_ev);
-extern void nni_pipe_destroy(nni_pipe *);
 extern int  nni_pipe_create(nni_pipe **, nni_sock *, nni_tran *, void *);
 extern void nni_pipe_start(nni_pipe *);
 

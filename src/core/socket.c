@@ -449,7 +449,6 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	}
 	s->s_sndtimeo  = -1;
 	s->s_rcvtimeo  = -1;
-	s->s_closing   = 0;
 	s->s_reconn    = NNI_SECOND;
 	s->s_reconnmax = 0;
 	s->s_rcvmaxsz  = 1024 * 1024; // 1 MB by default
@@ -665,12 +664,12 @@ nni_sock_shutdown(nni_sock *sock)
 	// we skip past it; it will be removed from another thread.
 	NNI_LIST_FOREACH (&sock->s_listeners, l) {
 		if (nni_listener_hold(l) == 0) {
-			nni_listener_close(l);
+			nni_listener_close_rele(l);
 		}
 	}
 	NNI_LIST_FOREACH (&sock->s_dialers, d) {
 		if (nni_dialer_hold(d) == 0) {
-			nni_dialer_close(d);
+			nni_dialer_close_rele(d);
 		}
 	}
 
@@ -1390,9 +1389,9 @@ nni_dialer_add_pipe(nni_dialer *d, nni_pipe *p)
 
 	nni_mtx_lock(&s->s_mx);
 
-	if (s->s_closed || d->d_closed) {
+	if (s->s_closed || d->d_closing) {
 		nni_mtx_unlock(&s->s_mx);
-		nni_pipe_destroy(p);
+		nni_pipe_close(p);
 		return;
 	}
 
@@ -1427,21 +1426,18 @@ dialer_shutdown_impl(nni_dialer *d)
 static void
 dialer_shutdown_locked(nni_dialer *d)
 {
-	if (nni_atomic_flag_test_and_set(&d->d_closing)) {
-		return;
+	if (!d->d_closing) {
+		d->d_closing = true;
+		dialer_shutdown_impl(d);
 	}
-	dialer_shutdown_impl(d);
 }
 
 void
 nni_dialer_shutdown(nni_dialer *d)
 {
 	nni_sock *s = d->d_sock;
-	if (nni_atomic_flag_test_and_set(&d->d_closing)) {
-		return;
-	}
 	nni_mtx_lock(&s->s_mx);
-	dialer_shutdown_impl(d);
+	dialer_shutdown_locked(d);
 	nni_mtx_unlock(&s->s_mx);
 }
 
@@ -1482,9 +1478,9 @@ nni_listener_add_pipe(nni_listener *l, nni_pipe *p)
 	nni_sock *s = l->l_sock;
 
 	nni_mtx_lock(&s->s_mx);
-	if (s->s_closed || l->l_closed) {
+	if (s->s_closed || l->l_closing) {
 		nni_mtx_unlock(&s->s_mx);
-		nni_pipe_destroy(p);
+		nni_pipe_close(p);
 		return;
 	}
 	p->p_listener = l;
@@ -1516,10 +1512,10 @@ listener_shutdown_impl(nni_listener *l)
 static void
 listener_shutdown_locked(nni_listener *l)
 {
-	if (nni_atomic_flag_test_and_set(&l->l_closing)) {
-		return;
+	if (!l->l_closing) {
+		l->l_closing = true;
+		listener_shutdown_impl(l);
 	}
-	listener_shutdown_impl(l);
 }
 
 void
@@ -1527,12 +1523,8 @@ nni_listener_shutdown(nni_listener *l)
 {
 	nni_sock *s = l->l_sock;
 
-	if (nni_atomic_flag_test_and_set(&l->l_closing)) {
-		return;
-	}
-
 	nni_mtx_lock(&s->s_mx);
-	listener_shutdown_impl(l);
+	listener_shutdown_locked(l);
 	nni_mtx_unlock(&s->s_mx);
 }
 

@@ -92,14 +92,14 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	d->d_url    = url;
-	d->d_closed = false;
-	d->d_data   = NULL;
-	d->d_refcnt = 1;
-	d->d_sock   = s;
-	d->d_tran   = tran;
+	d->d_url     = url;
+	d->d_closed  = false;
+	d->d_closing = false;
+	d->d_data    = NULL;
+	d->d_refcnt  = 1;
+	d->d_sock    = s;
+	d->d_tran    = tran;
 	nni_atomic_flag_reset(&d->d_started);
-	nni_atomic_flag_reset(&d->d_closing);
 
 	// Make a copy of the endpoint operations.  This allows us to
 	// modify them (to override NULLs for example), and avoids an extra
@@ -172,6 +172,27 @@ nni_dialer_rele(nni_dialer *d)
 		nni_reap(&d->d_reap, (nni_cb) nni_dialer_reap, d);
 	}
 	nni_mtx_unlock(&dialers_lk);
+}
+
+void
+nni_dialer_close_rele(nni_dialer *d)
+{
+	nni_mtx_lock(&dialers_lk);
+	if (d->d_closed) {
+		nni_mtx_unlock(&dialers_lk);
+		nni_dialer_rele(d);
+		return;
+	}
+	d->d_closed = true;
+	nni_mtx_unlock(&dialers_lk);
+
+	// Remove us from the table so we cannot be found.
+	// This is done fairly early in the teardown process.
+	// If we're here, either the socket or the listener has been
+	// closed at the user request, so there would be a race anyway.
+	nni_idhash_remove(dialers, d->d_id);
+
+	nni_dialer_rele(d);
 }
 
 void

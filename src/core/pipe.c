@@ -54,8 +54,8 @@ nni_pipe_sys_fini(void)
 	}
 }
 
-void
-nni_pipe_destroy(nni_pipe *p)
+static void
+pipe_destroy(nni_pipe *p)
 {
 	if (p == NULL) {
 		return;
@@ -174,7 +174,7 @@ nni_pipe_close(nni_pipe *p)
 		p->p_tran_ops.p_close(p->p_tran_data);
 	}
 
-	nni_reap(&p->p_reap, (nni_cb) nni_pipe_destroy, p);
+	nni_reap(&p->p_reap, (nni_cb) pipe_destroy, p);
 }
 
 bool
@@ -263,7 +263,7 @@ nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 
 	if ((rv != 0) ||
 	    ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0)) {
-		nni_pipe_destroy(p);
+		nni_pipe_close(p);
 		return (rv);
 	}
 

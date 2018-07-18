@@ -91,13 +91,13 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *urlstr)
 		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	l->l_url    = url;
-	l->l_closed = false;
-	l->l_data   = NULL;
-	l->l_refcnt = 1;
-	l->l_sock   = s;
-	l->l_tran   = tran;
-	nni_atomic_flag_reset(&l->l_closing);
+	l->l_url     = url;
+	l->l_closed  = false;
+	l->l_closing = false;
+	l->l_data    = NULL;
+	l->l_refcnt  = 1;
+	l->l_sock    = s;
+	l->l_tran    = tran;
 	nni_atomic_flag_reset(&l->l_started);
 
 	// Make a copy of the endpoint operations.  This allows us to
@@ -190,6 +190,27 @@ nni_listener_close(nni_listener *l)
 
 	nni_listener_shutdown(l);
 
+	nni_listener_rele(l); // This will trigger a reap if id count is zero.
+}
+
+void
+nni_listener_close_rele(nni_listener *l)
+{
+	// Listener should already be shutdown.  The socket lock may be held.
+	nni_mtx_lock(&listeners_lk);
+	if (l->l_closed) {
+		nni_mtx_unlock(&listeners_lk);
+		nni_listener_rele(l);
+		return;
+	}
+	l->l_closed = true;
+	nni_mtx_unlock(&listeners_lk);
+
+	// Remove us from the table so we cannot be found.
+	// This is done fairly early in the teardown process.
+	// If we're here, either the socket or the listener has been
+	// closed at the user request, so there would be a race anyway.
+	nni_idhash_remove(listeners, l->l_id);
 	nni_listener_rele(l); // This will trigger a reap if id count is zero.
 }
 
