@@ -57,7 +57,7 @@ nni_msgq_init(nni_msgq **mqp, unsigned cap)
 	if ((mq = NNI_ALLOC_STRUCT(mq)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((mq->mq_msgs = nni_alloc(sizeof(nng_msg *) * alloc)) == NULL) {
+	if ((mq->mq_msgs = nni_zalloc(sizeof(nng_msg *) * alloc)) == NULL) {
 		NNI_FREE_STRUCT(mq);
 		return (NNG_ENOMEM);
 	}
@@ -496,7 +496,7 @@ nni_msgq_resize(nni_msgq *mq, int cap)
 	alloc = cap + 2;
 
 	if (alloc > mq->mq_alloc) {
-		newq = nni_alloc(sizeof(nni_msg *) * alloc);
+		newq = nni_zalloc(sizeof(nni_msg *) * alloc);
 		if (newq == NULL) {
 			return (NNG_ENOMEM);
 		}
