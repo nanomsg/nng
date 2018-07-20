@@ -69,10 +69,15 @@ extern const char *nni_plat_strerror(int);
 // to return NULL if memory cannot be allocated.
 extern void *nni_alloc(size_t);
 
-// nni_free frees memory allocated with nni_alloc. It takes a size because
-// some allocators do not track size, or can operate more efficiently if
-// the size is provided with the free call.  Examples of this are slab
-// allocators like this found in Solaris/illumos (see libumem or kmem).
+// nni_zalloc is just like nni_alloc, but ensures that memory is
+// initialized to zero.  It is a separate function because some platforms
+// can use a more efficient zero-based allocation.
+extern void *nni_zalloc(size_t);
+
+// nni_free frees memory allocated with nni_alloc or nni_zalloc. It takes
+// a size because some allocators do not track size, or can operate more
+// efficiently if the size is provided with the free call.  Examples of this
+// are slab allocators like this found in Solaris/illumos (see libumem).
 // This routine does nothing if supplied with a NULL pointer and zero size.
 // Most implementations can just call free() here.
 extern void nni_free(void *, size_t);

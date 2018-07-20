@@ -136,7 +136,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 			newsz = ch->ch_cap - headroom;
 		}
 
-		if ((newbuf = nni_alloc(newsz + headwanted)) == NULL) {
+		if ((newbuf = nni_zalloc(newsz + headwanted)) == NULL) {
 			return (NNG_ENOMEM);
 		}
 		// Copy all the data, but not header or trailer.
@@ -152,7 +152,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 	// the backing store.  In this case, we just check against the
 	// allocated capacity and grow, or don't grow.
 	if ((newsz + headwanted) >= ch->ch_cap) {
-		if ((newbuf = nni_alloc(newsz + headwanted)) == NULL) {
+		if ((newbuf = nni_zalloc(newsz + headwanted)) == NULL) {
 			return (NNG_ENOMEM);
 		}
 		nni_free(ch->ch_buf, ch->ch_cap);
@@ -215,7 +215,7 @@ nni_chunk_trim(nni_chunk *ch, size_t len)
 static int
 nni_chunk_dup(nni_chunk *dst, const nni_chunk *src)
 {
-	if ((dst->ch_buf = nni_alloc(src->ch_cap)) == NULL) {
+	if ((dst->ch_buf = nni_zalloc(src->ch_cap)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	dst->ch_cap = src->ch_cap;
@@ -387,7 +387,7 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 	}
 
 	NNI_LIST_FOREACH (&src->m_options, mo) {
-		newmo = nni_alloc(sizeof(*newmo) + mo->mo_sz);
+		newmo = nni_zalloc(sizeof(*newmo) + mo->mo_sz);
 		if (newmo == NULL) {
 			nni_msg_free(m);
 			return (NNG_ENOMEM);
@@ -436,7 +436,7 @@ nni_msg_setopt(nni_msg *m, int opt, const void *val, size_t sz)
 			break;
 		}
 	}
-	if ((newmo = nni_alloc(sizeof(*newmo) + sz)) == NULL) {
+	if ((newmo = nni_zalloc(sizeof(*newmo) + sz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	newmo->mo_val = ((char *) newmo + sizeof(*newmo));

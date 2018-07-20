@@ -319,11 +319,11 @@ nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_tcp_conn *tcp)
 	if ((tp = NNI_ALLOC_STRUCT(tp)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((tp->recvbuf = nni_alloc(NNG_TLS_MAX_RECV_SIZE)) == NULL) {
+	if ((tp->recvbuf = nni_zalloc(NNG_TLS_MAX_RECV_SIZE)) == NULL) {
 		NNI_FREE_STRUCT(tp);
 		return (NNG_ENOMEM);
 	}
-	if ((tp->sendbuf = nni_alloc(NNG_TLS_MAX_SEND_SIZE)) == NULL) {
+	if ((tp->sendbuf = nni_zalloc(NNG_TLS_MAX_SEND_SIZE)) == NULL) {
 		nni_free(tp->sendbuf, NNG_TLS_MAX_RECV_SIZE);
 		NNI_FREE_STRUCT(tp);
 		return (NNG_ENOMEM);
@@ -957,12 +957,11 @@ nng_tls_config_ca_file(nng_tls_config *cfg, const char *path)
 	if ((rv = nni_file_get(path, &fdata, &fsize)) != 0) {
 		return (rv);
 	}
-	if ((pem = nni_alloc(fsize + 1)) == NULL) {
+	if ((pem = nni_zalloc(fsize + 1)) == NULL) {
 		nni_free(fdata, fsize);
 		return (NNG_ENOMEM);
 	}
 	memcpy(pem, fdata, fsize);
-	pem[fsize] = '\0';
 	nni_free(fdata, fsize);
 	if (strstr(pem, "-----BEGIN X509 CRL-----") != NULL) {
 		rv = nng_tls_config_ca_chain(cfg, pem, pem);
@@ -992,12 +991,11 @@ nng_tls_config_cert_key_file(
 	if ((rv = nni_file_get(path, &fdata, &fsize)) != 0) {
 		return (rv);
 	}
-	if ((pem = nni_alloc(fsize + 1)) == NULL) {
+	if ((pem = nni_zalloc(fsize + 1)) == NULL) {
 		nni_free(fdata, fsize);
 		return (NNG_ENOMEM);
 	}
 	memcpy(pem, fdata, fsize);
-	pem[fsize] = '\0';
 	nni_free(fdata, fsize);
 	rv = nng_tls_config_own_cert(cfg, pem, pem, pass);
 	nni_free(pem, fsize + 1);
