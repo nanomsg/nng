@@ -94,6 +94,7 @@ pipe_destroy(nni_pipe *p)
 		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
 	nni_aio_fini(p->p_start_aio);
+	nni_cv_fini(&p->p_cv);
 	nni_mtx_fini(&p->p_mtx);
 	NNI_FREE_STRUCT(p);
 }
