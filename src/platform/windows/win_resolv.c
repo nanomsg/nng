@@ -38,6 +38,7 @@ struct resolv_item {
 	int          passive;
 	const char * name;
 	int          proto;
+	int          socktype;
 	uint16_t     port;
 	nni_aio *    aio;
 	nng_sockaddr sa;
@@ -115,6 +116,7 @@ resolv_task(resolv_item *item)
 	}
 	hints.ai_protocol = item->proto;
 	hints.ai_family   = item->family;
+	hints.ai_socktype = item->socktype;
 
 	if ((rv = getaddrinfo(item->name, "80", &hints, &results)) != 0) {
 		rv = resolv_errno(rv);
@@ -165,7 +167,7 @@ done:
 
 static void
 resolv_ip(const char *host, const char *serv, int passive, int family,
-    int proto, nni_aio *aio)
+    int proto, int socktype, nni_aio *aio)
 {
 	resolv_item *item;
 	int          fam;
@@ -222,12 +224,13 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 		return;
 	}
 	memset(&item->sa, 0, sizeof(item->sa));
-	item->passive = passive;
-	item->name    = host;
-	item->proto   = proto;
-	item->aio     = aio;
-	item->family  = fam;
-	item->port    = htons((uint16_t) port);
+	item->passive  = passive;
+	item->name     = host;
+	item->proto    = proto;
+	item->aio      = aio;
+	item->family   = fam;
+	item->socktype = socktype;
+	item->port     = htons((uint16_t) port);
 
 	nni_mtx_lock(&resolv_mtx);
 	if (resolv_fini) {
@@ -250,14 +253,14 @@ void
 nni_tcp_resolv(
     const char *host, const char *serv, int family, int passive, nni_aio *aio)
 {
-	resolv_ip(host, serv, passive, family, IPPROTO_TCP, aio);
+	resolv_ip(host, serv, passive, family, IPPROTO_TCP, SOCK_STREAM, aio);
 }
 
 void
 nni_udp_resolv(
     const char *host, const char *serv, int family, int passive, nni_aio *aio)
 {
-	resolv_ip(host, serv, passive, family, IPPROTO_UDP, aio);
+	resolv_ip(host, serv, passive, family, IPPROTO_UDP, SOCK_DGRAM, aio);
 }
 
 void
