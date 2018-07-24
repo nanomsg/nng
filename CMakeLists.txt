@@ -361,6 +361,13 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Windows")
     add_definitions (-D_WIN32_WINNT=0x0600)
     list (APPEND CMAKE_REQUIRED_DEFINITIONS -D_WIN32_WINNT=0x0600)
 
+elseif (CMAKE_SYSTEM_NAME MATCHES "QNX")
+    add_definitions (-DNNG_PLATFORM_POSIX)
+    add_definitions (-D__EXT_BSD)    
+    add_definitions (-D_QNX_SOURCE)
+    add_definitions (-DNNG_PLATFORM_QNX)
+    set(NNG_PLATFORM_POSIX ON)   
+
 else ()
     message (AUTHOR_WARNING "WARNING: This platform may not be supported: ${CMAKE_SYSTEM_NAME}")
     message (AUTHOR_WARNING "${ISSUE_REPORT_MSG}")
