@@ -217,11 +217,17 @@ void
 nni_aio_stop(nni_aio *aio)
 {
 	if (aio != NULL) {
+		nni_aio_cancelfn cancelfn;
+
 		nni_mtx_lock(&nni_aio_lk);
-		aio->a_stop = true;
+		cancelfn           = aio->a_prov_cancel;
+		aio->a_prov_cancel = NULL;
+		aio->a_stop        = true;
 		nni_mtx_unlock(&nni_aio_lk);
 
-		nni_aio_abort(aio, NNG_ECANCELED);
+		if (cancelfn != NULL) {
+			cancelfn(aio, NNG_ECANCELED);
+		}
 
 		nni_aio_wait(aio);
 	}

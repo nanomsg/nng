@@ -30,7 +30,8 @@ enum nni_ep_mode {
 #define NNI_TRANSPORT_V1 0x54520001
 #define NNI_TRANSPORT_V2 0x54520002
 #define NNI_TRANSPORT_V3 0x54520003
-#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V3
+#define NNI_TRANSPORT_V4 0x54520004
+#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V4
 
 // Option handlers.
 struct nni_tran_option {
@@ -131,19 +132,12 @@ struct nni_tran_pipe_ops {
 	// make further calls on the same pipe.
 	void (*p_fini)(void *);
 
-	// p_start starts the pipe running.  This gives the transport a
-	// chance to hook into any transport specific negotiation
-	// phase. The pipe will not have its p_send or p_recv calls
-	// started, and will not be access by the "socket" until the
-	// pipe has indicated its readiness by finishing the aio.
-	void (*p_start)(void *, nni_aio *);
-
 	// p_stop stops the pipe, waiting for any callbacks that are
 	// outstanding to complete.  This is done before tearing down
 	// resources with p_fini.
 	void (*p_stop)(void *);
 
-	// p_aio_send queues the message for transmit.  If this fails,
+	// p_send queues the message for transmit.  If this fails,
 	// then the caller may try again with the same message (or free
 	// it).  If the call succeeds, then the transport has taken
 	// ownership of the message, and the caller may not use it

@@ -23,14 +23,20 @@
 typedef struct ipctran_pipe     ipctran_pipe;
 typedef struct ipctran_dialer   ipctran_dialer;
 typedef struct ipctran_listener ipctran_listener;
+typedef struct ipctran_ep       ipctran_ep;
 
 // ipc_pipe is one end of an IPC connection.
 struct ipctran_pipe {
-	nni_ipc_conn *conn;
-	uint16_t      peer;
-	uint16_t      proto;
-	size_t        rcvmax;
-	nni_sockaddr  sa;
+	nni_ipc_conn *  conn;
+	uint16_t        peer;
+	uint16_t        proto;
+	size_t          rcvmax;
+	nni_atomic_flag reaped;
+	nni_sockaddr    sa;
+	nni_list_node   node;
+	ipctran_ep *    ep;
+	nni_reap_item   reap;
+	bool            closed;
 
 	uint8_t txhead[1 + sizeof(uint64_t)];
 	uint8_t rxhead[1 + sizeof(uint64_t)];
@@ -41,32 +47,34 @@ struct ipctran_pipe {
 
 	nni_list recvq;
 	nni_list sendq;
-	nni_aio *user_negaio;
+	nni_aio *useraio;
 	nni_aio *txaio;
 	nni_aio *rxaio;
-	nni_aio *negaio;
+	nni_aio *negoaio;
+	nni_aio *connaio;
 	nni_msg *rxmsg;
 	nni_mtx  mtx;
 };
 
+struct ipctran_ep {
+	nni_mtx       mtx;
+	nni_list      pipes;
+	bool          fini;
+	size_t        rcvmax;
+	uint16_t      proto;
+	nni_cb        dtor;
+	nni_sockaddr  sa;
+	nni_reap_item reap;
+};
+
 struct ipctran_dialer {
-	nni_sockaddr    sa;
+	ipctran_ep      ep;
 	nni_ipc_dialer *dialer;
-	uint16_t        proto;
-	size_t          rcvmax;
-	nni_aio *       aio;
-	nni_aio *       user_aio;
-	nni_mtx         mtx;
 };
 
 struct ipctran_listener {
-	nni_sockaddr      sa;
+	ipctran_ep        ep;
 	nni_ipc_listener *listener;
-	uint16_t          proto;
-	size_t            rcvmax;
-	nni_aio *         aio;
-	nni_aio *         user_aio;
-	nni_mtx           mtx;
 };
 
 static void ipctran_pipe_send_start(ipctran_pipe *);
@@ -74,8 +82,8 @@ static void ipctran_pipe_recv_start(ipctran_pipe *);
 static void ipctran_pipe_send_cb(void *);
 static void ipctran_pipe_recv_cb(void *);
 static void ipctran_pipe_nego_cb(void *);
-static void ipctran_dialer_cb(void *);
-static void ipctran_listener_cb(void *);
+static void ipctran_pipe_conn_cb(void *);
+static void ipctran_pipe_reap(ipctran_pipe *);
 
 static int
 ipctran_init(void)
@@ -95,7 +103,8 @@ ipctran_pipe_close(void *arg)
 
 	nni_aio_close(p->rxaio);
 	nni_aio_close(p->txaio);
-	nni_aio_close(p->negaio);
+	nni_aio_close(p->negoaio);
+	nni_aio_close(p->connaio);
 
 	nni_ipc_conn_close(p->conn);
 }
@@ -105,19 +114,39 @@ ipctran_pipe_stop(void *arg)
 {
 	ipctran_pipe *p = arg;
 
+	nni_mtx_lock(&p->mtx);
+	p->closed = true;
+	nni_mtx_unlock(&p->mtx);
+
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
-	nni_aio_stop(p->negaio);
+	nni_aio_stop(p->negoaio);
+	nni_aio_stop(p->connaio);
 }
 
 static void
 ipctran_pipe_fini(void *arg)
 {
 	ipctran_pipe *p = arg;
+	ipctran_ep *  ep;
+
+	if (p == NULL) {
+		return;
+	}
+	ipctran_pipe_stop(p);
+	if ((ep = p->ep) != NULL) {
+		nni_mtx_lock(&ep->mtx);
+		nni_list_remove(&ep->pipes, p);
+		if (ep->fini && nni_list_empty(&ep->pipes)) {
+			nni_reap(&ep->reap, ep->dtor, ep);
+		}
+		nni_mtx_unlock(&ep->mtx);
+	}
 
 	nni_aio_fini(p->rxaio);
 	nni_aio_fini(p->txaio);
-	nni_aio_fini(p->negaio);
+	nni_aio_fini(p->negoaio);
+	nni_aio_fini(p->connaio);
 	if (p->conn != NULL) {
 		nni_ipc_conn_fini(p->conn);
 	}
@@ -128,8 +157,16 @@ ipctran_pipe_fini(void *arg)
 	NNI_FREE_STRUCT(p);
 }
 
+static void
+ipctran_pipe_reap(ipctran_pipe *p)
+{
+	if (!nni_atomic_flag_test_and_set(&p->reaped)) {
+		nni_reap(&p->reap, ipctran_pipe_fini, p);
+	}
+}
+
 static int
-ipctran_pipe_init(ipctran_pipe **pipep, void *conn)
+ipctran_pipe_init(ipctran_pipe **pipep, ipctran_ep *ep)
 {
 	ipctran_pipe *p;
 	int           rv;
@@ -138,51 +175,75 @@ ipctran_pipe_init(ipctran_pipe **pipep, void *conn)
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&p->mtx);
+	NNI_LIST_NODE_INIT(&p->node);
 	if (((rv = nni_aio_init(&p->txaio, ipctran_pipe_send_cb, p)) != 0) ||
 	    ((rv = nni_aio_init(&p->rxaio, ipctran_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->negaio, ipctran_pipe_nego_cb, p)) != 0)) {
-		ipctran_pipe_fini(p);
+	    ((rv = nni_aio_init(&p->negoaio, ipctran_pipe_nego_cb, p)) != 0) ||
+	    ((rv = nni_aio_init(&p->connaio, ipctran_pipe_conn_cb, p)) != 0)) {
+		ipctran_pipe_reap(p);
 		return (rv);
 	}
 	nni_aio_list_init(&p->sendq);
 	nni_aio_list_init(&p->recvq);
 
-	p->conn = conn;
-#if 0
-	p->proto              = ep->proto;
-	p->rcvmax             = ep->rcvmax;
-	p->sa.s_ipc.sa_family = NNG_AF_IPC;
-	p->sa                 = ep->sa;
-#endif
+	nni_list_append(&ep->pipes, p);
+	p->ep     = ep;
+	p->proto  = ep->proto;
+	p->rcvmax = ep->rcvmax;
+	p->sa     = ep->sa;
+
 	*pipep = p;
 	return (0);
 }
 
 static void
-ipctran_pipe_nego_cancel(nni_aio *aio, int rv)
+ipctran_pipe_conn_cb(void *arg)
 {
-	ipctran_pipe *p = nni_aio_get_prov_data(aio);
+	ipctran_pipe *p   = arg;
+	nni_aio *     aio = p->connaio;
+	nni_iov       iov;
+	int           rv;
 
-	nni_mtx_lock(&p->mtx);
-	if (p->user_negaio != aio) {
-		nni_mtx_unlock(&p->mtx);
+	nni_mtx_lock(&p->ep->mtx);
+	if ((rv = nni_aio_result(aio)) != 0) {
+		nni_aio *uaio;
+		if ((uaio = p->useraio) != NULL) {
+			p->useraio = NULL;
+			nni_aio_finish_error(uaio, rv);
+		}
+		nni_mtx_unlock(&p->ep->mtx);
+		ipctran_pipe_reap(p);
 		return;
 	}
-	p->user_negaio = NULL;
-	nni_mtx_unlock(&p->mtx);
 
-	nni_aio_abort(p->negaio, rv);
-	nni_aio_finish_error(aio, rv);
+	p->conn      = nni_aio_get_output(aio, 0);
+	p->txhead[0] = 0;
+	p->txhead[1] = 'S';
+	p->txhead[2] = 'P';
+	p->txhead[3] = 0;
+	NNI_PUT16(&p->txhead[4], p->proto);
+	NNI_PUT16(&p->txhead[6], 0);
+
+	p->gotrxhead  = 0;
+	p->gottxhead  = 0;
+	p->wantrxhead = 8;
+	p->wanttxhead = 8;
+	iov.iov_len   = 8;
+	iov.iov_buf   = &p->txhead[0];
+	nni_aio_set_iov(p->negoaio, 1, &iov);
+	nni_ipc_conn_send(p->conn, p->negoaio);
+	nni_mtx_unlock(&p->ep->mtx);
 }
 
 static void
 ipctran_pipe_nego_cb(void *arg)
 {
 	ipctran_pipe *p   = arg;
-	nni_aio *     aio = p->negaio;
+	nni_aio *     aio = p->negoaio;
+	nni_aio *     uaio;
 	int           rv;
 
-	nni_mtx_lock(&p->mtx);
+	nni_mtx_lock(&p->ep->mtx);
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto done;
 	}
@@ -201,7 +262,7 @@ ipctran_pipe_nego_cb(void *arg)
 		nni_aio_set_iov(aio, 1, &iov);
 		// send it down...
 		nni_ipc_conn_send(p->conn, aio);
-		nni_mtx_unlock(&p->mtx);
+		nni_mtx_unlock(&p->ep->mtx);
 		return;
 	}
 	if (p->gotrxhead < p->wantrxhead) {
@@ -210,7 +271,7 @@ ipctran_pipe_nego_cb(void *arg)
 		iov.iov_buf = &p->rxhead[p->gotrxhead];
 		nni_aio_set_iov(aio, 1, &iov);
 		nni_ipc_conn_recv(p->conn, aio);
-		nni_mtx_unlock(&p->mtx);
+		nni_mtx_unlock(&p->ep->mtx);
 		return;
 	}
 	// We have both sent and received the headers.  Lets check the
@@ -225,11 +286,19 @@ ipctran_pipe_nego_cb(void *arg)
 	NNI_GET16(&p->rxhead[4], p->peer);
 
 done:
-	if ((aio = p->user_negaio) != NULL) {
-		p->user_negaio = NULL;
-		nni_aio_finish(aio, rv, 0);
+
+	if ((uaio = p->useraio) != NULL) {
+		p->useraio = NULL;
+		if (rv == 0) {
+			nni_aio_set_output(uaio, 0, p);
+			nni_aio_finish(uaio, 0, 0);
+			nni_mtx_unlock(&p->ep->mtx);
+			return;
+		}
+		nni_aio_finish_error(uaio, rv);
 	}
-	nni_mtx_unlock(&p->mtx);
+	nni_mtx_unlock(&p->ep->mtx);
+	ipctran_pipe_reap(p);
 }
 
 static void
@@ -243,17 +312,20 @@ ipctran_pipe_send_cb(void *arg)
 	nni_aio *     txaio = p->txaio;
 
 	nni_mtx_lock(&p->mtx);
-	aio = nni_list_first(&p->sendq);
 
-	if ((rv = nni_aio_result(txaio)) != 0) {
+	rv = p->closed ? NNG_ECLOSED : nni_aio_result(txaio);
+
+	if (rv != 0) {
 		// Intentionally we do not queue up another transfer.
 		// There's an excellent chance that the pipe is no longer
 		// usable, with a partial transfer.
 		// The protocol should see this error, and close the
 		// pipe itself, we hope.
-		nni_aio_list_remove(aio);
+		while ((aio = nni_list_first(&p->sendq)) != NULL) {
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, rv);
+		}
 		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
@@ -265,6 +337,7 @@ ipctran_pipe_send_cb(void *arg)
 		return;
 	}
 
+	aio = nni_list_first(&p->sendq);
 	nni_aio_list_remove(aio);
 	ipctran_pipe_send_start(p);
 
@@ -288,12 +361,15 @@ ipctran_pipe_recv_cb(void *arg)
 	nni_aio *     rxaio = p->rxaio;
 
 	nni_mtx_lock(&p->mtx);
-	aio = nni_list_first(&p->recvq);
 
 	if ((rv = nni_aio_result(rxaio)) != 0) {
 		// Error on receive.  This has to cause an error back
 		// to the user.  Also, if we had allocated an rxmsg, lets
 		// toss it.
+		goto recv_error;
+	}
+	if (p->closed) {
+		rv = NNG_ECLOSED;
 		goto recv_error;
 	}
 
@@ -354,6 +430,7 @@ ipctran_pipe_recv_cb(void *arg)
 	// Otherwise we got a message read completely.  Let the user know the
 	// good news.
 
+	aio = nni_list_first(&p->recvq);
 	nni_aio_list_remove(aio);
 	msg      = p->rxmsg;
 	p->rxmsg = NULL;
@@ -367,7 +444,10 @@ ipctran_pipe_recv_cb(void *arg)
 	return;
 
 recv_error:
-	nni_aio_list_remove(aio);
+	while ((aio = nni_list_first(&p->recvq)) != NULL) {
+		nni_aio_list_remove(aio);
+		nni_aio_finish_error(aio, rv);
+	}
 	msg      = p->rxmsg;
 	p->rxmsg = NULL;
 	// Intentionally, we do not queue up another receive.
@@ -375,7 +455,6 @@ recv_error:
 	nni_mtx_unlock(&p->mtx);
 
 	nni_msg_free(msg);
-	nni_aio_finish_error(aio, rv);
 }
 
 static void
@@ -452,6 +531,11 @@ ipctran_pipe_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
+	if (p->closed) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
 	if ((rv = nni_aio_schedule(aio, ipctran_pipe_send_cancel, p)) != 0) {
 		nni_mtx_unlock(&p->mtx);
 		nni_aio_finish_error(aio, rv);
@@ -514,6 +598,11 @@ ipctran_pipe_recv(void *arg, nni_aio *aio)
 	}
 	nni_mtx_lock(&p->mtx);
 
+	if (p->closed) {
+		nni_mtx_unlock(&p->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
 	if ((rv = nni_aio_schedule(aio, ipctran_pipe_recv_cancel, p)) != 0) {
 		nni_mtx_unlock(&p->mtx);
 		nni_aio_finish_error(aio, rv);
@@ -524,43 +613,6 @@ ipctran_pipe_recv(void *arg, nni_aio *aio)
 	if (nni_list_first(&p->recvq) == aio) {
 		ipctran_pipe_recv_start(p);
 	}
-	nni_mtx_unlock(&p->mtx);
-}
-
-static void
-ipctran_pipe_start(void *arg, nni_aio *aio)
-{
-	ipctran_pipe *p = arg;
-	nni_aio *     negaio;
-	nni_iov       iov;
-	int           rv;
-
-	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, ipctran_pipe_nego_cancel, p)) != 0) {
-		nni_mtx_unlock(&p->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
-	p->txhead[0] = 0;
-	p->txhead[1] = 'S';
-	p->txhead[2] = 'P';
-	p->txhead[3] = 0;
-	NNI_PUT16(&p->txhead[4], p->proto);
-	NNI_PUT16(&p->txhead[6], 0);
-
-	p->user_negaio = aio;
-	p->gotrxhead   = 0;
-	p->gottxhead   = 0;
-	p->wantrxhead  = 8;
-	p->wanttxhead  = 8;
-	negaio         = p->negaio;
-	iov.iov_len    = 8;
-	iov.iov_buf    = &p->txhead[0];
-	nni_aio_set_iov(negaio, 1, &iov);
-	nni_ipc_conn_send(p->conn, negaio);
 	nni_mtx_unlock(&p->mtx);
 }
 
@@ -632,13 +684,34 @@ ipctran_dialer_fini(void *arg)
 {
 	ipctran_dialer *d = arg;
 
-	nni_aio_stop(d->aio);
+	nni_mtx_lock(&d->ep.mtx);
 	if (d->dialer != NULL) {
 		nni_ipc_dialer_fini(d->dialer);
+		d->dialer = NULL;
 	}
-	nni_aio_fini(d->aio);
-	nni_mtx_fini(&d->mtx);
+	d->ep.fini = true;
+	if (!nni_list_empty(&d->ep.pipes)) {
+		nni_mtx_unlock(&d->ep.mtx);
+		return;
+	}
+	nni_mtx_unlock(&d->ep.mtx);
+
+	nni_mtx_fini(&d->ep.mtx);
 	NNI_FREE_STRUCT(d);
+}
+
+static void
+ipctran_ep_close(void *arg)
+{
+	ipctran_ep *  ep = arg;
+	ipctran_pipe *p;
+
+	nni_mtx_lock(&ep->mtx);
+	NNI_LIST_FOREACH (&ep->pipes, p) {
+		nni_aio_close(p->negoaio);
+		nni_aio_close(p->connaio);
+	}
+	nni_mtx_unlock(&ep->mtx);
 }
 
 static void
@@ -646,7 +719,7 @@ ipctran_dialer_close(void *arg)
 {
 	ipctran_dialer *d = arg;
 
-	nni_aio_close(d->aio);
+	ipctran_ep_close(&d->ep);
 	nni_ipc_dialer_close(d->dialer);
 }
 
@@ -660,90 +733,46 @@ ipctran_dialer_init(void **dp, nni_url *url, nni_sock *sock)
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_mtx_init(&d->mtx);
+	nni_mtx_init(&d->ep.mtx);
+	NNI_LIST_INIT(&d->ep.pipes, ipctran_pipe, node);
 
-	sz                    = sizeof(d->sa.s_ipc.sa_path);
-	d->sa.s_ipc.sa_family = NNG_AF_IPC;
+	sz                       = sizeof(d->ep.sa.s_ipc.sa_path);
+	d->ep.sa.s_ipc.sa_family = NNG_AF_IPC;
+	d->ep.proto              = nni_sock_proto_id(sock);
+	d->ep.dtor               = ipctran_dialer_fini;
 
-	if (nni_strlcpy(d->sa.s_ipc.sa_path, url->u_path, sz) >= sz) {
+	if (nni_strlcpy(d->ep.sa.s_ipc.sa_path, url->u_path, sz) >= sz) {
 		ipctran_dialer_fini(d);
 		return (NNG_EADDRINVAL);
 	}
 
-	if (((rv = nni_ipc_dialer_init(&d->dialer)) != 0) ||
-	    ((rv = nni_aio_init(&d->aio, ipctran_dialer_cb, d)) != 0)) {
+	if ((rv = nni_ipc_dialer_init(&d->dialer)) != 0) {
 		ipctran_dialer_fini(d);
 		return (rv);
 	}
-
-	d->proto = nni_sock_proto_id(sock);
 
 	*dp = d;
 	return (0);
 }
 
 static void
-ipctran_dialer_cb(void *arg)
+ipctran_pipe_conn_cancel(nni_aio *aio, int rv)
 {
-	ipctran_dialer *d = arg;
-	ipctran_pipe *  p;
-	nni_ipc_conn *  conn;
-	nni_aio *       aio;
-	int             rv;
+	ipctran_pipe *p = nni_aio_get_prov_data(aio);
 
-	nni_mtx_lock(&d->mtx);
-	aio = d->user_aio;
-	rv  = nni_aio_result(d->aio);
-
-	if (aio == NULL) {
-		nni_mtx_unlock(&d->mtx);
-		if (rv == 0) {
-			conn = nni_aio_get_output(d->aio, 0);
-			nni_ipc_conn_fini(conn);
-		}
+	nni_mtx_lock(&p->ep->mtx);
+	if (p->useraio != aio) {
+		nni_mtx_unlock(&p->ep->mtx);
 		return;
 	}
 
-	if (rv != 0) {
-		d->user_aio = NULL;
-		nni_mtx_unlock(&d->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
+	// Close the underlying AIOs.  This will abort the operation.
+	// The pipe is removed from pending list at completion callback.
+	p->useraio = NULL;
+	nni_aio_close(p->negoaio);
+	nni_aio_close(p->connaio);
+	nni_mtx_unlock(&p->ep->mtx);
 
-	d->user_aio = NULL;
-	conn        = nni_aio_get_output(d->aio, 0);
-	NNI_ASSERT(conn != NULL);
-	if ((rv = ipctran_pipe_init(&p, conn)) != 0) {
-		nni_mtx_unlock(&d->mtx);
-		nni_ipc_conn_fini(conn);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
-
-	p->proto  = d->proto;
-	p->rcvmax = d->rcvmax;
-	p->sa     = d->sa;
-	nni_mtx_unlock(&d->mtx);
-
-	nni_aio_set_output(aio, 0, p);
-	nni_aio_finish(aio, 0, 0);
-}
-
-static void
-ipctran_dialer_cancel(nni_aio *aio, int rv)
-{
-	ipctran_dialer *d = nni_aio_get_prov_data(aio);
-
-	nni_mtx_lock(&d->mtx);
-	if (d->user_aio != aio) {
-		nni_mtx_unlock(&d->mtx);
-		return;
-	}
-	d->user_aio = NULL;
-	nni_mtx_unlock(&d->mtx);
-
-	nni_aio_abort(d->aio, rv);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -751,47 +780,48 @@ static void
 ipctran_dialer_connect(void *arg, nni_aio *aio)
 {
 	ipctran_dialer *d = arg;
+	ipctran_pipe *  p = NULL;
 	int             rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
-	nni_mtx_lock(&d->mtx);
-	NNI_ASSERT(d->user_aio == NULL);
 
-	if ((rv = nni_aio_schedule(aio, ipctran_dialer_cancel, d)) != 0) {
-		nni_mtx_unlock(&d->mtx);
+	nni_mtx_lock(&d->ep.mtx);
+	if (((rv = ipctran_pipe_init(&p, &d->ep)) != 0) ||
+	    ((rv = nni_aio_schedule(aio, ipctran_pipe_conn_cancel, p)) != 0)) {
+		nni_mtx_unlock(&d->ep.mtx);
 		nni_aio_finish_error(aio, rv);
+		ipctran_pipe_reap(p);
 		return;
 	}
-	d->user_aio = aio;
+	p->useraio = aio;
 
-	nni_ipc_dialer_dial(d->dialer, &d->sa, d->aio);
-	nni_mtx_unlock(&d->mtx);
+	nni_ipc_dialer_dial(d->dialer, &p->sa, p->connaio);
+	nni_mtx_unlock(&d->ep.mtx);
 }
 
 static int
-ipctran_dialer_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
+ipctran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	ipctran_dialer *d = arg;
-	int             rv;
-	nni_mtx_lock(&d->mtx);
-	rv = nni_copyout_size(d->rcvmax, v, szp, t);
-	nni_mtx_unlock(&d->mtx);
+	ipctran_ep *ep = arg;
+	int         rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_size(ep->rcvmax, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }
 
 static int
-ipctran_dialer_set_recvmaxsz(
-    void *arg, const void *v, size_t sz, nni_opt_type t)
+ipctran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	ipctran_dialer *d = arg;
-	size_t          val;
-	int             rv;
+	ipctran_ep *ep = arg;
+	size_t      val;
+	int         rv;
 	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
-		nni_mtx_lock(&d->mtx);
-		d->rcvmax = val;
-		nni_mtx_unlock(&d->mtx);
+		nni_mtx_lock(&ep->mtx);
+		ep->rcvmax = val;
+		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
 }
@@ -801,12 +831,19 @@ ipctran_listener_fini(void *arg)
 {
 	ipctran_listener *l = arg;
 
-	nni_aio_stop(l->aio);
+	nni_mtx_lock(&l->ep.mtx);
 	if (l->listener != NULL) {
 		nni_ipc_listener_fini(l->listener);
+		l->listener = NULL;
 	}
-	nni_aio_fini(l->aio);
-	nni_mtx_fini(&l->mtx);
+	l->ep.fini = true;
+	if (!nni_list_empty(&l->ep.pipes)) {
+		nni_mtx_unlock(&l->ep.mtx);
+		return;
+	}
+	nni_mtx_unlock(&l->ep.mtx);
+
+	nni_mtx_fini(&l->ep.mtx);
 	NNI_FREE_STRUCT(l);
 }
 
@@ -820,23 +857,23 @@ ipctran_listener_init(void **lp, nni_url *url, nni_sock *sock)
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_mtx_init(&l->mtx);
+	nni_mtx_init(&l->ep.mtx);
+	NNI_LIST_INIT(&l->ep.pipes, ipctran_pipe, node);
 
-	sz                    = sizeof(l->sa.s_ipc.sa_path);
-	l->sa.s_ipc.sa_family = NNG_AF_IPC;
+	sz                       = sizeof(l->ep.sa.s_ipc.sa_path);
+	l->ep.sa.s_ipc.sa_family = NNG_AF_IPC;
+	l->ep.proto              = nni_sock_proto_id(sock);
+	l->ep.dtor               = ipctran_listener_fini;
 
-	if (nni_strlcpy(l->sa.s_ipc.sa_path, url->u_path, sz) >= sz) {
+	if (nni_strlcpy(l->ep.sa.s_ipc.sa_path, url->u_path, sz) >= sz) {
 		ipctran_listener_fini(l);
 		return (NNG_EADDRINVAL);
 	}
 
-	if (((rv = nni_ipc_listener_init(&l->listener)) != 0) ||
-	    ((rv = nni_aio_init(&l->aio, ipctran_listener_cb, l)) != 0)) {
+	if ((rv = nni_ipc_listener_init(&l->listener)) != 0) {
 		ipctran_listener_fini(l);
 		return (rv);
 	}
-
-	l->proto = nni_sock_proto_id(sock);
 
 	*lp = l;
 	return (0);
@@ -847,7 +884,7 @@ ipctran_listener_close(void *arg)
 {
 	ipctran_listener *l = arg;
 
-	nni_aio_close(l->aio);
+	ipctran_ep_close(&l->ep);
 	nni_ipc_listener_close(l->listener);
 }
 
@@ -857,128 +894,35 @@ ipctran_listener_bind(void *arg)
 	ipctran_listener *l = arg;
 	int               rv;
 
-	nni_mtx_lock(&l->mtx);
-	rv = nni_ipc_listener_listen(l->listener, &l->sa);
-	nni_mtx_unlock(&l->mtx);
+	nni_mtx_lock(&l->ep.mtx);
+	rv = nni_ipc_listener_listen(l->listener, &l->ep.sa);
+	nni_mtx_unlock(&l->ep.mtx);
 	return (rv);
-}
-
-static void
-ipctran_listener_cb(void *arg)
-{
-	ipctran_listener *l = arg;
-	nni_aio *         aio;
-	int               rv;
-	ipctran_pipe *    p = NULL;
-	nni_ipc_conn *    conn;
-
-	nni_mtx_lock(&l->mtx);
-	rv          = nni_aio_result(l->aio);
-	aio         = l->user_aio;
-	l->user_aio = NULL;
-
-	if (aio == NULL) {
-		nni_mtx_unlock(&l->mtx);
-		if (rv == 0) {
-			conn = nni_aio_get_output(l->aio, 0);
-			nni_ipc_conn_fini(conn);
-		}
-		return;
-	}
-
-	if (rv != 0) {
-		nni_mtx_unlock(&l->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
-
-	conn = nni_aio_get_output(l->aio, 0);
-	NNI_ASSERT(conn != NULL);
-
-	// Attempt to allocate the parent pipe.  If this fails we'll
-	// drop the connection (ENOMEM probably).
-	if ((rv = ipctran_pipe_init(&p, conn)) != 0) {
-		nni_mtx_unlock(&l->mtx);
-		nni_ipc_conn_fini(conn);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
-	p->proto  = l->proto;
-	p->rcvmax = l->rcvmax;
-	p->sa     = l->sa;
-	nni_mtx_unlock(&l->mtx);
-
-	nni_aio_set_output(aio, 0, p);
-	nni_aio_finish(aio, 0, 0);
-}
-
-static void
-ipctran_listener_cancel(nni_aio *aio, int rv)
-{
-	ipctran_listener *l = nni_aio_get_prov_data(aio);
-
-	NNI_ASSERT(rv != 0);
-	nni_mtx_lock(&l->mtx);
-	if (l->user_aio != aio) {
-		nni_mtx_unlock(&l->mtx);
-		return;
-	}
-	l->user_aio = NULL;
-	nni_mtx_unlock(&l->mtx);
-
-	nni_aio_abort(l->aio, rv);
-	nni_aio_finish_error(aio, rv);
 }
 
 static void
 ipctran_listener_accept(void *arg, nni_aio *aio)
 {
 	ipctran_listener *l = arg;
+	ipctran_pipe *    p;
 	int               rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
-	nni_mtx_lock(&l->mtx);
-	NNI_ASSERT(l->user_aio == NULL);
 
-	if ((rv = nni_aio_schedule(aio, ipctran_listener_cancel, l)) != 0) {
-		nni_mtx_unlock(&l->mtx);
+	nni_mtx_lock(&l->ep.mtx);
+	if (((rv = ipctran_pipe_init(&p, &l->ep)) != 0) ||
+	    ((rv = nni_aio_schedule(aio, ipctran_pipe_conn_cancel, p)) != 0)) {
+		nni_mtx_unlock(&l->ep.mtx);
 		nni_aio_finish_error(aio, rv);
+		ipctran_pipe_reap(p);
 		return;
 	}
-	l->user_aio = aio;
+	p->useraio = aio;
 
-	nni_ipc_listener_accept(l->listener, l->aio);
-	nni_mtx_unlock(&l->mtx);
-}
-
-static int
-ipctran_listener_set_recvmaxsz(
-    void *arg, const void *data, size_t sz, nni_opt_type t)
-{
-	ipctran_listener *l = arg;
-	size_t            val;
-	int               rv;
-
-	if ((rv = nni_copyin_size(&val, data, sz, 0, NNI_MAXSZ, t)) == 0) {
-		nni_mtx_lock(&l->mtx);
-		l->rcvmax = val;
-		nni_mtx_unlock(&l->mtx);
-	}
-	return (rv);
-}
-
-static int
-ipctran_listener_get_recvmaxsz(
-    void *arg, void *data, size_t *szp, nni_opt_type t)
-{
-	ipctran_listener *l = arg;
-	int               rv;
-	nni_mtx_lock(&l->mtx);
-	rv = nni_copyout_size(l->rcvmax, data, szp, t);
-	nni_mtx_unlock(&l->mtx);
-	return (rv);
+	nni_ipc_listener_accept(l->listener, p->connaio);
+	nni_mtx_unlock(&l->ep.mtx);
 }
 
 static int
@@ -987,9 +931,9 @@ ipctran_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	ipctran_listener *l = arg;
 	int               rv;
 
-	nni_mtx_lock(&l->mtx);
-	rv = nni_copyout_sockaddr(&l->sa, buf, szp, t);
-	nni_mtx_unlock(&l->mtx);
+	nni_mtx_lock(&l->ep.mtx);
+	rv = nni_copyout_sockaddr(&l->ep.sa, buf, szp, t);
+	nni_mtx_unlock(&l->ep.mtx);
 	return (rv);
 }
 
@@ -1010,9 +954,9 @@ ipctran_listener_set_perms(
 	// Probably we could further limit this -- most systems don't have
 	// meaningful chmod beyond the lower 9 bits.
 	if ((rv = nni_copyin_int(&val, data, sz, 0, 0x7FFFFFFF, t)) == 0) {
-		nni_mtx_lock(&l->mtx);
+		nni_mtx_lock(&l->ep.mtx);
 		rv = nni_ipc_listener_set_permissions(l->listener, val);
-		nni_mtx_unlock(&l->mtx);
+		nni_mtx_unlock(&l->ep.mtx);
 	}
 	return (rv);
 }
@@ -1032,10 +976,10 @@ ipctran_listener_set_sec_desc(
 	int               rv;
 
 	if ((rv = nni_copyin_ptr(&ptr, data, sz, t)) == 0) {
-		nni_mtx_lock(&l->mtx);
+		nni_mtx_lock(&l->ep.mtx);
 		rv =
 		    nni_ipc_listener_set_security_descriptor(l->listener, ptr);
-		nni_mtx_unlock(&l->mtx);
+		nni_mtx_unlock(&l->ep.mtx);
 	}
 	return (rv);
 }
@@ -1085,7 +1029,6 @@ static nni_tran_option ipctran_pipe_options[] = {
 
 static nni_tran_pipe_ops ipctran_pipe_ops = {
 	.p_fini    = ipctran_pipe_fini,
-	.p_start   = ipctran_pipe_start,
 	.p_stop    = ipctran_pipe_stop,
 	.p_send    = ipctran_pipe_send,
 	.p_recv    = ipctran_pipe_recv,
@@ -1098,8 +1041,8 @@ static nni_tran_option ipctran_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_type = NNI_TYPE_SIZE,
-	    .o_get  = ipctran_dialer_get_recvmaxsz,
-	    .o_set  = ipctran_dialer_set_recvmaxsz,
+	    .o_get  = ipctran_ep_get_recvmaxsz,
+	    .o_set  = ipctran_ep_set_recvmaxsz,
 	    .o_chk  = ipctran_check_recvmaxsz,
 	},
 	// terminate list
@@ -1112,8 +1055,8 @@ static nni_tran_option ipctran_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_type = NNI_TYPE_SIZE,
-	    .o_get  = ipctran_listener_get_recvmaxsz,
-	    .o_set  = ipctran_listener_set_recvmaxsz,
+	    .o_get  = ipctran_ep_get_recvmaxsz,
+	    .o_set  = ipctran_ep_set_recvmaxsz,
 	    .o_chk  = ipctran_check_recvmaxsz,
 	},
 	{
