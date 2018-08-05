@@ -97,6 +97,7 @@ TestMain("IPC Security Descriptor", {
 			SID                  users;
 			DWORD                size;
 			PACL                 acl = NULL;
+			int                  rv;
 
 			size = sizeof(users);
 			CreateWellKnownSid(
@@ -112,7 +113,12 @@ TestMain("IPC Security Descriptor", {
 
 			So(nng_listener_setopt_ptr(l,
 			       NNG_OPT_IPC_SECURITY_DESCRIPTOR, sdesc) == 0);
-			So(nng_listener_start(l, 0) == 0);
+			rv = nng_listener_start(l, 0);
+			if (rv != 0) {
+				printf("RV is %d 0x%x %s\n", rv, rv,
+				    nng_strerror(rv));
+			}
+			So(rv == 0);
 
 			Convey("And they are effective", {
 				PACL                 dacl;
