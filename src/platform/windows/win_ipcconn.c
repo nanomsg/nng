@@ -310,6 +310,12 @@ nni_ipc_conn_close(nni_ipc_conn *c)
 			// NB: closing the pipe is dangerous at this point.
 			DisconnectNamedPipe(c->f);
 		}
+		while ((!nni_list_empty(&c->recv_aios)) ||
+		    (!nni_list_empty(&c->send_aios))) {
+			nni_cv_wait(&c->cv);
+		}
+		CloseHandle(c->f);
+		c->f = NULL;
 	}
 	nni_mtx_unlock(&c->mtx);
 }
