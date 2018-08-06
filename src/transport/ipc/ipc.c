@@ -101,6 +101,10 @@ ipctran_pipe_close(void *arg)
 {
 	ipctran_pipe *p = arg;
 
+	nni_mtx_lock(&p->mtx);
+	p->closed = true;
+	nni_mtx_unlock(&p->mtx);
+
 	nni_aio_close(p->rxaio);
 	nni_aio_close(p->txaio);
 	nni_aio_close(p->negoaio);
@@ -113,10 +117,6 @@ static void
 ipctran_pipe_stop(void *arg)
 {
 	ipctran_pipe *p = arg;
-
-	nni_mtx_lock(&p->mtx);
-	p->closed = true;
-	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
