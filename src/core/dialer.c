@@ -232,18 +232,24 @@ dialer_timer_cb(void *arg)
 static void
 dialer_connect_cb(void *arg)
 {
-	nni_dialer *d   = arg;
+	nni_dialer *d = arg;
+	nni_pipe *  p;
 	nni_aio *   aio = d->d_con_aio;
 	int         rv;
 	bool        synch;
 
+	if ((rv = nni_aio_result(aio)) == 0) {
+		void *data = nni_aio_get_output(aio, 0);
+		NNI_ASSERT(data != NULL);
+		rv = nni_pipe_create(&p, d->d_sock, d->d_tran, data);
+	}
 	nni_mtx_lock(&d->d_mtx);
 	synch = d->d_synch;
 	nni_mtx_unlock(&d->d_mtx);
 
-	switch ((rv = nni_aio_result(aio))) {
+	switch (rv) {
 	case 0:
-		nni_dialer_add_pipe(d, nni_aio_get_output(aio, 0));
+		nni_dialer_add_pipe(d, p);
 		break;
 	case NNG_ECLOSED:   // No further action.
 	case NNG_ECANCELED: // No further action.

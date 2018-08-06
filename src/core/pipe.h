@@ -59,6 +59,11 @@ extern uint32_t nni_pipe_listener_id(nni_pipe *);
 // nni_pipe_dialer_id returns the dialer id for the pipe (or 0 if none).
 extern uint32_t nni_pipe_dialer_id(nni_pipe *);
 
+// nni_pipe_closed returns true if nni_pipe_close was called.
+// (This is used by the socket to determine if user closed the pipe
+// during callback.)
+extern bool nni_pipe_closed(nni_pipe *);
+
 // nni_pipe_rele releases the hold on the pipe placed by nni_pipe_find.
 extern void nni_pipe_rele(nni_pipe *);
 

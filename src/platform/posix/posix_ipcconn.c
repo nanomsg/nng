@@ -47,10 +47,6 @@ ipc_conn_dowrite(nni_ipc_conn *c)
 	int      fd;
 
 	if (c->closed || ((fd = nni_posix_pfd_fd(c->pfd)) < 0)) {
-		while ((aio = nni_list_first(&c->writeq)) != NULL) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_ECLOSED);
-		}
 		return;
 	}
 
@@ -133,10 +129,6 @@ ipc_conn_doread(nni_ipc_conn *c)
 	int      fd;
 
 	if (c->closed || ((fd = nni_posix_pfd_fd(c->pfd)) < 0)) {
-		while ((aio = nni_list_first(&c->readq)) != NULL) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_ECLOSED);
-		}
 		return;
 	}
 

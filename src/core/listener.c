@@ -181,8 +181,6 @@ nni_listener_close(nni_listener *l)
 	}
 	l->l_closed = true;
 	nni_mtx_unlock(&listeners_lk);
-	nni_aio_close(l->l_acc_aio);
-	nni_aio_close(l->l_tmo_aio);
 
 	// Remove us from the table so we cannot be found.
 	// This is done fairly early in the teardown process.
@@ -230,25 +228,28 @@ listener_timer_cb(void *arg)
 static void
 listener_accept_cb(void *arg)
 {
-	nni_listener *l   = arg;
+	nni_listener *l = arg;
+	nni_pipe *    p;
 	nni_aio *     aio = l->l_acc_aio;
+	int           rv;
 
-	switch (nni_aio_result(aio)) {
+	if ((rv = nni_aio_result(aio)) == 0) {
+		void *data = nni_aio_get_output(aio, 0);
+		NNI_ASSERT(data != NULL);
+		rv = nni_pipe_create(&p, l->l_sock, l->l_tran, data);
+	}
+	switch (rv) {
 	case 0:
-		nni_listener_add_pipe(l, nni_aio_get_output(aio, 0));
+		nni_listener_add_pipe(l, p);
 		listener_accept_start(l);
 		break;
 	case NNG_ECONNABORTED: // remote condition, no cooldown
 	case NNG_ECONNRESET:   // remote condition, no cooldown
-	case NNG_EPEERAUTH:    // peer validation failure
 		listener_accept_start(l);
 		break;
 	case NNG_ECLOSED:   // no further action
 	case NNG_ECANCELED: // no further action
 		break;
-	case NNG_ENOMEM:
-	case NNG_ENOFILES:
-	case NNG_ENOSPC:
 	default:
 		// We don't really know why we failed, but we backoff
 		// here. This is because errors here are probably due
