@@ -306,16 +306,16 @@ nni_ipc_conn_close(nni_ipc_conn *c)
 			CancelIoEx(c->f, &c->send_io.olpd);
 		}
 
-		if (c->f != INVALID_HANDLE_VALUE) {
-			// NB: closing the pipe is dangerous at this point.
-			DisconnectNamedPipe(c->f);
-		}
 		while ((!nni_list_empty(&c->recv_aios)) ||
 		    (!nni_list_empty(&c->send_aios))) {
 			nni_cv_wait(&c->cv);
 		}
-		CloseHandle(c->f);
-		c->f = NULL;
+		if (c->f != INVALID_HANDLE_VALUE) {
+			// NB: closing the pipe is dangerous at this point.
+			DisconnectNamedPipe(c->f);
+			CloseHandle(c->f);
+			c->f = NULL;
+		}
 	}
 	nni_mtx_unlock(&c->mtx);
 }
