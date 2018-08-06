@@ -19,13 +19,13 @@
 void *
 nni_alloc(size_t sz)
 {
-	return (malloc(sz));
+	return (sz > 0 ? malloc(sz) : NULL);
 }
 
 void *
 nni_zalloc(size_t sz)
 {
-	return (calloc(1, sz));
+	return (sz > 0 ? calloc(1, sz) : NULL);
 }
 
 void
