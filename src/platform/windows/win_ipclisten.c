@@ -29,7 +29,6 @@ ipc_accept_done(nni_ipc_listener *l, int rv)
 
 	if (l->closed) {
 		// Closed, so bail.
-		DisconnectNamedPipe(l->f);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}

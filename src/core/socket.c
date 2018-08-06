@@ -1399,7 +1399,7 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 
 	nni_mtx_lock(&s->s_mx);
 
-	if (s->s_closed || d->d_closing) {
+	if (s->s_closing || d->d_closing) {
 		d->d_tran->tran_pipe->p_fini(tpipe);
 		nni_mtx_unlock(&s->s_mx);
 		return;
@@ -1493,7 +1493,7 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 	nni_pipe *p;
 
 	nni_mtx_lock(&s->s_mx);
-	if (s->s_closed || l->l_closing) {
+	if (s->s_closing || l->l_closing) {
 		l->l_tran->tran_pipe->p_fini(tpipe);
 		nni_mtx_unlock(&s->s_mx);
 		return;
@@ -1620,8 +1620,8 @@ nni_pipe_remove(nni_pipe *p)
 	if ((d != NULL) && (d->d_pipe == p)) {
 		d->d_pipe = NULL;
 		if (!s->s_closing) {
-			dialer_timer_start_locked(
-			    d); // Kick the timer to redial.
+			// Kick the timer to redial.
+			dialer_timer_start_locked(d);
 		}
 	}
 	if (s->s_closing) {
