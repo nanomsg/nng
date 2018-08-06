@@ -27,8 +27,15 @@ ipc_accept_done(nni_ipc_listener *l, int rv)
 	nni_list_remove(&l->aios, aio);
 	nni_cv_wake(&l->cv);
 
+	if (rv != 0) {
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
 	if (l->closed) {
 		// Closed, so bail.
+		if (l->f != INVALID_HANDLE_VALUE) {
+			DisconnectNamedPipe(l->f);
+		}
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
@@ -273,6 +280,7 @@ nni_ipc_listener_close(nni_ipc_listener *l)
 		}
 		DisconnectNamedPipe(l->f);
 		CloseHandle(l->f);
+		l->f = INVALID_HANDLE_VALUE;
 	}
 	nni_mtx_unlock(&l->mtx);
 }
