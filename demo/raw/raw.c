@@ -136,12 +136,9 @@ server(const char *url)
 	int          i;
 
 	/*  Create the socket. */
-	rv = nng_rep0_open(&sock);
+	rv = nng_rep0_open_raw(&sock);
 	if (rv != 0) {
 		fatal("nng_rep0_open", rv);
-	}
-	if ((rv = nng_setopt_int(sock, NNG_OPT_RAW, 1)) != 0) {
-		fatal("nng_setopt_int", rv);
 	}
 
 	for (i = 0; i < PARALLEL; i++) {
