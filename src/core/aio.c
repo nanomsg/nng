@@ -344,9 +344,16 @@ nni_aio_begin(nni_aio *aio)
 	nni_mtx_lock(&nni_aio_lk);
 	// We should not reschedule anything at this point.
 	if (aio->a_stop) {
-		aio->a_result = NNG_ECLOSED;
+		aio->a_result = NNG_ECANCELED;
+		aio->a_count  = 0;
+		nni_list_node_remove(&aio->a_expire_node);
+		aio->a_prov_cancel = NULL;
+		aio->a_expire      = NNI_TIME_NEVER;
+		aio->a_sleep       = false;
 		nni_mtx_unlock(&nni_aio_lk);
-		return (NNG_ECLOSED);
+
+		nni_task_dispatch(aio->a_task);
+		return (NNG_ECANCELED);
 	}
 	aio->a_result      = 0;
 	aio->a_count       = 0;
