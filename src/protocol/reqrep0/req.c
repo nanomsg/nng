@@ -82,8 +82,8 @@ struct req0_pipe {
 	nni_pipe *    pipe;
 	req0_sock *   req;
 	nni_list_node node;
-	nni_list      ctxs;    // ctxs with pending traffic
-	bool          sending; // if busy sending
+	nni_list      ctxs; // ctxs with pending traffic
+	bool          closed;
 	nni_aio *     aio_send;
 	nni_aio *     aio_recv;
 };
@@ -265,7 +265,7 @@ req0_pipe_close(void *arg)
 	nni_mtx_lock(&s->mtx);
 	// This removes the node from either busypipes or readypipes.
 	// It doesn't much matter which.
-	p->sending = false;
+	p->closed = true;
 	if (nni_list_node_active(&p->node)) {
 		nni_list_node_remove(&p->node);
 		if (s->closed) {
@@ -313,7 +313,7 @@ req0_send_cb(void *arg)
 	// in the ready list, and re-run the sendq.
 
 	nni_mtx_lock(&s->mtx);
-	if (!p->sending) {
+	if (p->closed || s->closed) {
 		// This occurs if the req0_pipe_close has been called.
 		// In that case we don't want any more processing.
 		nni_mtx_unlock(&s->mtx);
@@ -321,7 +321,6 @@ req0_send_cb(void *arg)
 	}
 	nni_list_remove(&s->busypipes, p);
 	nni_list_append(&s->readypipes, p);
-	p->sending = false;
 	if (nni_list_empty(&s->sendq)) {
 		nni_pollable_raise(s->sendable);
 	}
@@ -534,7 +533,6 @@ req0_run_sendq(req0_sock *s, nni_list *aiolist)
 
 		nni_list_remove(&s->readypipes, p);
 		nni_list_append(&s->busypipes, p);
-		p->sending = true;
 
 		if ((aio = ctx->saio) != NULL) {
 			ctx->saio = NULL;
@@ -715,6 +713,11 @@ req0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&s->mtx);
+	if (s->closed) {
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(aio, NNG_ECLOSED);
+		return;
+	}
 	// Sending a new request cancels the old one, including any
 	// outstanding reply.
 	if (ctx->raio != NULL) {
