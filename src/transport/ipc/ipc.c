@@ -149,6 +149,9 @@ static void
 ipctran_pipe_reap(ipctran_pipe *p)
 {
 	if (!nni_atomic_flag_test_and_set(&p->reaped)) {
+		if (p->conn != NULL) {
+			nni_ipc_conn_close(p->conn);
+		}
 		nni_reap(&p->reap, ipctran_pipe_fini, p);
 	}
 }
