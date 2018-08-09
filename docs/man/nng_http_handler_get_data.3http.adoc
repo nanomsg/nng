@@ -20,8 +20,7 @@ nng_http_handler_get_data - return extra data for HTTP handler
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-int nng_http_handler_get_data(nng_http_handler *handler, void *data,
-    void (*dtor)(void *));
+void *nng_http_handler_get_data(nng_http_handler *handler);
 ----
 
 == DESCRIPTION

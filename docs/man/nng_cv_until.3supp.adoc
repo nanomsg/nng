@@ -20,7 +20,7 @@ nng_cv_until - wait for condition or timeout
 #include <nng/nng.h>
 #include <nng/supplemental/util/platform.h>
 
-int nng_cv_wait(nng_cv *cv, nng_time when);
+int nng_cv_until(nng_cv *cv, nng_time when);
 ----
 
 == DESCRIPTION
@@ -65,7 +65,7 @@ The following example demonstrates use of this function:
 ----
     nng_mtx_lock(m);
     condition_true = true;
-    cv_wake(cv);
+    nng_cv_wake(cv);
     nng_mtx_unlock(m);
 ----
 

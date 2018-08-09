@@ -245,7 +245,7 @@ as a convenience to aid in creating portable applications.
 |<<nng_cv_until.3supp#,nng_cv_until()>>|wait for condition or timeout
 |<<nng_cv_wait.3supp#,nng_cv_wait()>>|wait for condition
 |<<nng_cv_wake.3supp#,nng_cv_wake()>>|wake all waiters
-|<<nng_cv_wake1.3supp#,nng_cv_wake()>>|wake one waiter
+|<<nng_cv_wake1.3supp#,nng_cv_wake1()>>|wake one waiter
 |<<nng_msleep.3supp#,nng_msleep()>>|sleep for milliseconds
 |<<nng_mtx_alloc.3supp#,nng_mtx_alloc()>>|allocate mutex
 |<<nng_mtx_free.3supp#,nng_mtx_free()>>|free mutex
@@ -275,11 +275,11 @@ and connections.
 |<<nng_http_conn_read.3http#,nng_http_conn_read()>>|read from HTTP connection
 |<<nng_http_conn_read_all.3http#,nng_http_conn_read_all()>>|read all from HTTP connection
 |<<nng_http_conn_read_req.3http#,nng_http_conn_read_req()>>|read HTTP request
-|<<nng_http_conn_read_res.3http#,nng_http_conn_read_req()>>|read HTTP response
+|<<nng_http_conn_read_res.3http#,nng_http_conn_read_res()>>|read HTTP response
 |<<nng_http_conn_write.3http#,nng_http_conn_write()>>|write to HTTP connection
 |<<nng_http_conn_write_all.3http#,nng_http_conn_write_all()>>|write all to HTTP connection
-|<<nng_http_conn_write_req.3http#,nng_http_conn_write()>>|write HTTP request
-|<<nng_http_conn_write_res.3http#,nng_http_conn_write()>>|write HTTP response
+|<<nng_http_conn_write_req.3http#,nng_http_conn_write_req()>>|write HTTP request
+|<<nng_http_conn_write_res.3http#,nng_http_conn_write_res()>>|write HTTP response
 |<<nng_http_req_add_header.3http#,nng_http_req_add_header()>>|add HTTP request header
 |<<nng_http_req_alloc.3http#,nng_http_req_alloc()>>|allocate HTTP request structure
 |<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>|copy HTTP request body
@@ -339,8 +339,8 @@ These functions are intended for use with HTTP server applications.
 |<<nng_http_server_add_handler.3http#,nng_http_server_add_handler()>>|add HTTP server handler
 |<<nng_http_server_del_handler.3http#,nng_http_server_del_handler()>>|delete HTTP server handler
 |<<nng_http_server_get_tls.3http#,nng_http_server_get_tls()>>|get HTTP server TLS configuration
-|<<nng_http_server_hold.3http#,nng_http_server_get_tls()>>|get and hold HTTP server instance
-|<<nng_http_server_release.3http#,nng_http_server_get_tls()>>|release HTTP server instance
+|<<nng_http_server_hold.3http#,nng_http_server_hold()>>|get and hold HTTP server instance
+|<<nng_http_server_release.3http#,nng_http_server_release()>>|release HTTP server instance
 |<<nng_http_server_set_error_file.3http#,nng_http_server_set_error_file()>>|set custom HTTP error file
 |<<nng_http_server_set_error_page.3http#,nng_http_server_set_error_page()>>|set custom HTTP error page
 |<<nng_http_server_set_tls.3http#,nng_http_server_set_tls()>>|set HTTP server TLS configuration
@@ -362,7 +362,7 @@ with TLS support.
 |<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode()>>|set authentication mode
 |<<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain()>>|set certificate authority chain
 |<<nng_tls_config_ca_file.3tls#,nng_tls_config_ca_file()>>|load certificate authority from file
-|<<nng_tls_config_cert_key_file.3tls#,nng_tls_config_cert_key_file_cert()>>|load own certificate and key from file
+|<<nng_tls_config_cert_key_file.3tls#,nng_tls_config_cert_key_file()>>|load own certificate and key from file
 |<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>|set own certificate and key
 |<<nng_tls_config_free.3tls#,nng_tls_config_free()>>|free TLS configuration
 |<<nng_tls_config_server_name.3tls#,nng_tls_config_server_name()>>|set remote server name
