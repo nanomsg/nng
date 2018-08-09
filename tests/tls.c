@@ -448,7 +448,7 @@ TestMain("TLS Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tls+tcp://*:%u");
+		trantest_next_address(addr, "tls+tcp://localhost:%u");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_tls_file(l) == 0);
 		So(nng_listener_start(l, 0) == 0);
