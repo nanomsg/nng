@@ -49,7 +49,10 @@ when filing issues:
 * Please file issues only when filing things that should be fixed by
   changes to the source or documentation in the repository (such as bugs
   or feature requests).  For support questions and other discussion, please
-  instead use the mailing list or Gitter chat.
+  instead use the mailing list 
+  https://www.freelists.org/list/nanomsg 
+  or Gitter chat
+  https://gitter.im/nanomsg/nanomsg .
 
 == Pull Requests
 

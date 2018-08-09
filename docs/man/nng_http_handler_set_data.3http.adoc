@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_http_handler_get_data - set extra data for HTTP handler
+nng_http_handler_set_data - set extra data for HTTP handler
 
 == SYNOPSIS
 
@@ -20,7 +20,7 @@ nng_http_handler_get_data - set extra data for HTTP handler
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-void *nng_http_handler_get_data(nng_http_handler *handler, void *data,
+int nng_http_handler_set_data(nng_http_handler *handler, void *data,
     void (*dtor)(void *));
 ----
 
