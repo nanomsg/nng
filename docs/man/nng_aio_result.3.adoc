@@ -19,7 +19,7 @@ nng_aio_result - return result of asynchronous operation
 ----
 #include <nng/nng.h>
 
-int nng_aio_wait(nng_aio *aio);
+int nng_aio_result(nng_aio *aio);
 ----
 
 == DESCRIPTION
