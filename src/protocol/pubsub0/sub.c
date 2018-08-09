@@ -228,9 +228,13 @@ sub0_subscribe(void *arg, const void *buf, size_t sz, nni_opt_type t)
 		nni_mtx_unlock(&s->lk);
 		return (NNG_ENOMEM);
 	}
-	if ((newtopic->buf = nni_alloc(sz)) == NULL) {
-		nni_mtx_unlock(&s->lk);
-		return (NNG_ENOMEM);
+	if (sz > 0) {
+		if ((newtopic->buf = nni_alloc(sz)) == NULL) {
+			nni_mtx_unlock(&s->lk);
+			return (NNG_ENOMEM);
+		}
+	} else {
+		newtopic->buf = NULL;
 	}
 	NNI_LIST_NODE_INIT(&newtopic->node);
 	newtopic->len = sz;

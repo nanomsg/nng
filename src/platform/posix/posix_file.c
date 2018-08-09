@@ -115,14 +115,18 @@ nni_plat_file_get(const char *name, void **datap, size_t *lenp)
 	}
 
 	len = st.st_size;
-	if ((data = nni_alloc(len)) == NULL) {
-		rv = NNG_ENOMEM;
-		goto done;
-	}
-	if (fread(data, 1, len, f) != len) {
-		rv = nni_plat_errno(errno);
-		nni_free(data, len);
-		goto done;
+	if (len > 0) {
+		if ((data = nni_alloc(len)) == NULL) {
+			rv = NNG_ENOMEM;
+			goto done;
+		}
+		if (fread(data, 1, len, f) != len) {
+			rv = nni_plat_errno(errno);
+			nni_free(data, len);
+			goto done;
+		}
+	} else {
+		data = NULL;
 	}
 	*datap = data;
 	*lenp  = len;

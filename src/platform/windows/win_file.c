@@ -136,14 +136,19 @@ nni_plat_file_get(const char *name, void **datap, size_t *lenp)
 		rv = nni_win_error(GetLastError());
 		goto done;
 	}
-	if ((data = nni_alloc((size_t) sz)) == NULL) {
-		rv = NNG_ENOMEM;
-		goto done;
-	}
-	if (!ReadFile(h, data, sz, &nread, NULL)) {
-		rv = nni_win_error(GetLastError());
-		nni_free(data, sz);
-		goto done;
+	if (sz > 0) {
+		if ((data = nni_alloc((size_t) sz)) == NULL) {
+			rv = NNG_ENOMEM;
+			goto done;
+		}
+		if (!ReadFile(h, data, sz, &nread, NULL)) {
+			rv = nni_win_error(GetLastError());
+			nni_free(data, sz);
+			goto done;
+		}
+	} else {
+		data  = NULL;
+		nread = 0;
 	}
 
 	// We can get a short read, indicating end of file.  We return
