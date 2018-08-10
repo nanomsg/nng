@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_http_req_del_header - del HTTP request header
+nng_http_req_del_header - delete HTTP request header
 
 == SYNOPSIS
 
