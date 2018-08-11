@@ -200,6 +200,7 @@ ipctran_pipe_conn_cb(void *arg)
 		if (uaio != NULL) {
 			nni_aio_finish_error(uaio, rv);
 		}
+		ipctran_pipe_reap(p);
 		return;
 	}
 	p->conn      = nni_aio_get_output(aio, 0);
@@ -802,11 +803,17 @@ ipctran_ep_connect(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	if (((rv = ipctran_pipe_init(&p, ep)) != 0) ||
-	    ((rv = nni_aio_schedule(aio, ipctran_pipe_conn_cancel, p)) != 0)) {
+	if ((rv = ipctran_pipe_init(&p, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
-		ipctran_pipe_reap(p);
+		return;
+	}
+	if ((rv = nni_aio_schedule(aio, ipctran_pipe_conn_cancel, p)) != 0) {
+		nni_list_remove(&ep->pipes, p);
+		p->ep = NULL;
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, rv);
+		ipctran_pipe_fini(p);
 		return;
 	}
 	p->useraio = aio;
@@ -862,11 +869,17 @@ ipctran_ep_accept(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	if (((rv = ipctran_pipe_init(&p, ep)) != 0) ||
-	    ((rv = nni_aio_schedule(aio, ipctran_pipe_conn_cancel, p)) != 0)) {
+	if ((rv = ipctran_pipe_init(&p, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
-		ipctran_pipe_reap(p);
+		return;
+	}
+	if ((rv = nni_aio_schedule(aio, ipctran_pipe_conn_cancel, p)) != 0) {
+		nni_list_remove(&ep->pipes, p);
+		p->ep = NULL;
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(aio, rv);
+		ipctran_pipe_fini(p);
 		return;
 	}
 	p->useraio = aio;
