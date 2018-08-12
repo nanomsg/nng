@@ -683,6 +683,7 @@ ipctran_pipe_conn_cancel(nni_aio *aio, int rv)
 		nni_aio_close(p->connaio);
 		p->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
+		ipctran_pipe_reap(p);
 	}
 	nni_mtx_unlock(&p->ep->mtx);
 }
@@ -720,6 +721,9 @@ ipctran_ep_close(void *arg)
 		nni_aio_close(p->connaio);
 		nni_aio_close(p->txaio);
 		nni_aio_close(p->rxaio);
+		if (p->conn != NULL) {
+			nni_ipc_conn_close(p->conn);
+		}
 	}
 	if (ep->dialer != NULL) {
 		nni_ipc_dialer_close(ep->dialer);
