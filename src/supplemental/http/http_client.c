@@ -117,6 +117,9 @@ nni_http_client_fini(nni_http_client *c)
 		nni_tls_config_fini(c->tls);
 	}
 #endif
+	nni_strfree(c->host);
+	nni_strfree(c->port);
+
 	NNI_FREE_STRUCT(c);
 }
 
