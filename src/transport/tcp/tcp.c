@@ -125,9 +125,6 @@ tcptran_pipe_fini(void *arg)
 	tcptran_pipe *p = arg;
 	tcptran_ep *  ep;
 
-	if (p == NULL) {
-		return;
-	}
 	tcptran_pipe_stop(p);
 	if ((ep = p->ep) != NULL) {
 		nni_mtx_lock(&ep->mtx);
@@ -215,27 +212,27 @@ tcptran_pipe_conn_cancel(nni_aio *aio, int rv)
 static void
 tcptran_pipe_rslv_cb(void *arg)
 {
-	tcptran_pipe *  p   = arg;
-	tcptran_ep *    ep  = p->ep;
-	nni_aio *       aio = p->rslvaio;
-	nni_tcp_dialer *d;
-	int             rv;
+	tcptran_pipe *p   = arg;
+	tcptran_ep *  ep  = p->ep;
+	nni_aio *     aio = p->rslvaio;
+	nni_aio *     uaio;
+	int           rv;
 
 	nni_mtx_lock(&ep->mtx);
-	d  = ep->dialer;
-	rv = (d == NULL) ? NNG_ECLOSED : nni_aio_result(aio);
-	if (rv != 0) {
-		nni_aio *uaio;
-		if ((uaio = p->useraio) != NULL) {
-			p->useraio = NULL;
-			nni_aio_finish_error(uaio, rv);
-		}
+	if ((uaio = p->useraio) == NULL) {
 		nni_mtx_unlock(&ep->mtx);
 		tcptran_pipe_reap(p);
 		return;
 	}
+	if ((rv = nni_aio_result(aio)) != 0) {
+		p->useraio = NULL;
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(uaio, rv);
+		tcptran_pipe_reap(p);
+		return;
+	}
 
-	nni_tcp_dialer_dial(d, &p->sa, p->connaio);
+	nni_tcp_dialer_dial(ep->dialer, &p->sa, p->connaio);
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -245,21 +242,29 @@ tcptran_pipe_conn_cb(void *arg)
 	tcptran_pipe *p   = arg;
 	tcptran_ep *  ep  = p->ep;
 	nni_aio *     aio = p->connaio;
+	nni_aio *     uaio;
 	nni_iov       iov;
 	int           rv;
 
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = nni_aio_result(aio)) != 0) {
-		nni_aio *uaio = p->useraio;
-		p->useraio    = NULL;
+	uaio = p->useraio;
+	if ((rv = nni_aio_result(aio)) == 0) {
+		p->conn = nni_aio_get_output(aio, 0);
+	}
+
+	if ((uaio = p->useraio) == NULL) {
 		nni_mtx_unlock(&ep->mtx);
-		if (uaio != NULL) {
-			nni_aio_finish_error(uaio, rv);
-		}
 		tcptran_pipe_reap(p);
 		return;
 	}
-	p->conn     = nni_aio_get_output(aio, 0);
+
+	if (rv != 0) {
+		p->useraio = NULL;
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(uaio, rv);
+		tcptran_pipe_reap(p);
+		return;
+	}
 	p->txlen[0] = 0;
 	p->txlen[1] = 'S';
 	p->txlen[2] = 'P';
@@ -711,6 +716,7 @@ tcptran_ep_fini(void *arg)
 	if (ep->listener != NULL) {
 		nni_tcp_listener_fini(ep->listener);
 	}
+	nni_mtx_unlock(&ep->mtx);
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
 }

@@ -119,9 +119,6 @@ ipctran_pipe_fini(void *arg)
 	ipctran_pipe *p = arg;
 	ipctran_ep *  ep;
 
-	if (p == NULL) {
-		return;
-	}
 	ipctran_pipe_stop(p);
 	if ((ep = p->ep) != NULL) {
 		nni_mtx_lock(&ep->mtx);
@@ -191,18 +188,26 @@ static void
 ipctran_pipe_conn_cb(void *arg)
 {
 	ipctran_pipe *p   = arg;
+	ipctran_ep *  ep  = p->ep;
 	nni_aio *     aio = p->connaio;
+	nni_aio *     uaio;
 	nni_iov       iov;
 	int           rv;
 
-	nni_mtx_lock(&p->ep->mtx);
-	if ((rv = nni_aio_result(aio)) != 0) {
-		nni_aio *uaio = p->useraio;
-		p->useraio    = NULL;
-		nni_mtx_unlock(&p->ep->mtx);
-		if (uaio != NULL) {
-			nni_aio_finish_error(uaio, rv);
-		}
+	nni_mtx_lock(&ep->mtx);
+	uaio = p->useraio;
+	if ((rv = nni_aio_result(aio)) == 0) {
+		p->conn = nni_aio_get_output(aio, 0);
+	}
+	if (uaio == NULL) {
+		nni_mtx_unlock(&ep->mtx);
+		ipctran_pipe_reap(p);
+		return;
+	}
+	if (rv != 0) {
+		p->useraio = NULL;
+		nni_mtx_unlock(&ep->mtx);
+		nni_aio_finish_error(uaio, rv);
 		ipctran_pipe_reap(p);
 		return;
 	}
@@ -222,7 +227,7 @@ ipctran_pipe_conn_cb(void *arg)
 	iov.iov_buf   = &p->txhead[0];
 	nni_aio_set_iov(p->negoaio, 1, &iov);
 	nni_ipc_conn_send(p->conn, p->negoaio);
-	nni_mtx_unlock(&p->ep->mtx);
+	nni_mtx_unlock(&ep->mtx);
 }
 
 static void
@@ -708,6 +713,7 @@ ipctran_ep_fini(void *arg)
 	if (ep->listener != NULL) {
 		nni_ipc_listener_fini(ep->listener);
 	}
+	nni_mtx_unlock(&ep->mtx);
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
 }
