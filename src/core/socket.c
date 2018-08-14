@@ -643,12 +643,6 @@ nni_sock_shutdown(nni_sock *sock)
 	nni_msgq_close(sock->s_urq);
 	nni_msgq_close(sock->s_uwq);
 
-	// For each pipe, arrange for it to teardown hard.  We would
-	// expect there not to be any here.
-	NNI_LIST_FOREACH (&sock->s_pipes, pipe) {
-		nni_pipe_close(pipe);
-	}
-
 	// Go through the dialers and listeners, attempting to close them.
 	// We might already have a close in progress, in which case
 	// we skip past it; it will be removed from another thread.
@@ -661,6 +655,15 @@ nni_sock_shutdown(nni_sock *sock)
 		if (nni_dialer_hold(d) == 0) {
 			nni_dialer_close_rele(d);
 		}
+	}
+
+	// For each pipe, arrange for it to teardown hard.  We would
+	// expect there not to be any here.  However, it is possible for
+	// a pipe to have been added by an endpoint due to racing conditions
+	// in the shutdown.  Therefore it is important that we shutdown pipes
+	// *last*.
+	NNI_LIST_FOREACH (&sock->s_pipes, pipe) {
+		nni_pipe_close(pipe);
 	}
 
 	// We have to wait for *both* endpoints and pipes to be
@@ -719,13 +722,12 @@ nni_sock_close(nni_sock *s)
 	}
 	nni_mtx_unlock(&sock_lk);
 
-	// Wait for pipes, eps, and contexts to finish closing.
+	// Because we already shut everything down before, we should not
+	// have any child objects.
 	nni_mtx_lock(&s->s_mx);
-	while ((!nni_list_empty(&s->s_pipes)) ||
-	    (!nni_list_empty(&s->s_dialers)) ||
-	    (!nni_list_empty(&s->s_listeners))) {
-		nni_cv_wait(&s->s_cv);
-	}
+	NNI_ASSERT(nni_list_empty(&s->s_dialers));
+	NNI_ASSERT(nni_list_empty(&s->s_listeners));
+	NNI_ASSERT(nni_list_empty(&s->s_pipes));
 	nni_mtx_unlock(&s->s_mx);
 
 	sock_destroy(s);
