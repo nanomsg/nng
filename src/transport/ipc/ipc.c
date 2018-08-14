@@ -175,6 +175,11 @@ ipctran_pipe_init(ipctran_pipe **pipep, ipctran_ep *ep)
 	nni_atomic_flag_reset(&p->reaped);
 	nni_list_append(&ep->pipes, p);
 
+	// 5 seconds each for connection and negotiation; should be more than
+	// sufficient.
+	nni_aio_set_timeout(p->connaio, 5000);
+	nni_aio_set_timeout(p->negoaio, 5000);
+
 	p->proto  = ep->proto;
 	p->rcvmax = ep->rcvmax;
 	p->sa     = ep->sa;
