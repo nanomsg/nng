@@ -228,23 +228,17 @@ listener_timer_cb(void *arg)
 static void
 listener_accept_cb(void *arg)
 {
-	nni_listener *l = arg;
-	nni_pipe *    p;
+	nni_listener *l   = arg;
 	nni_aio *     aio = l->l_acc_aio;
-	int           rv;
 
-	if ((rv = nni_aio_result(aio)) == 0) {
-		void *data = nni_aio_get_output(aio, 0);
-		NNI_ASSERT(data != NULL);
-		rv = nni_pipe_create(&p, l->l_sock, l->l_tran, data);
-	}
-	switch (rv) {
+	switch (nni_aio_result(aio)) {
 	case 0:
-		nni_listener_add_pipe(l, p);
+		nni_listener_add_pipe(l, nni_aio_get_output(aio, 0));
 		listener_accept_start(l);
 		break;
 	case NNG_ECONNABORTED: // remote condition, no cooldown
 	case NNG_ECONNRESET:   // remote condition, no cooldown
+	case NNG_EPEERAUTH:    // peer validation failure
 		listener_accept_start(l);
 		break;
 	case NNG_ECLOSED:   // no further action
