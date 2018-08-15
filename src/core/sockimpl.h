@@ -25,14 +25,12 @@ struct nni_dialer {
 	nni_url *           d_url;
 	nni_pipe *          d_pipe; // active pipe (for redialer)
 	int                 d_refcnt;
-	int                 d_lastrv; // last result from synchronous
-	bool                d_synch;  // synchronous connect in progress?
 	bool                d_closed; // full shutdown
 	bool                d_closing;
 	nni_atomic_flag     d_started;
 	nni_mtx             d_mtx;
-	nni_cv              d_cv;
 	nni_list            d_pipes;
+	nni_aio *           d_user_aio;
 	nni_aio *           d_con_aio;
 	nni_aio *           d_tmo_aio;  // backoff timer
 	nni_duration        d_maxrtime; // maximum time for reconnect
