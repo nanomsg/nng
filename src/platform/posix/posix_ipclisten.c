@@ -281,15 +281,20 @@ nni_ipc_listener_listen(nni_ipc_listener *l, const nni_sockaddr *sa)
 		return (rv);
 	}
 
-	if (((rv = ipc_remove_stale(path)) != 0) ||
-	    ((rv = nni_posix_pfd_init(&pfd, fd)) != 0)) {
+	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
 		nni_mtx_unlock(&l->mtx);
 		nni_strfree(path);
 		(void) close(fd);
 		return (rv);
 	}
 
-	if (bind(fd, (struct sockaddr *) &ss, len) < 0) {
+	if ((rv = bind(fd, (struct sockaddr *) &ss, len)) != 0) {
+		if ((errno == EEXIST) || (errno == EADDRINUSE)) {
+			ipc_remove_stale(path);
+			rv = bind(fd, (struct sockaddr *) &ss, len);
+		}
+	}
+	if (rv != 0) {
 		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&l->mtx);
 		nni_strfree(path);
