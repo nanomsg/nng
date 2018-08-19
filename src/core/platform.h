@@ -265,6 +265,15 @@ extern void nni_tcp_dialer_fini(nni_tcp_dialer *);
 // connection will be aborted.
 extern void nni_tcp_dialer_close(nni_tcp_dialer *);
 
+// nni_tcp_dialer_set_src_addr sets the source address to use for outgoing
+// connections.  Only the IP (or IPv6) address may be specified; the port
+// must be zero.  This must be called before calling nni_tcp_dialer_dial.
+// The source address must be associated with one of the addresses on the
+// local system -- this is not checked until bind() is called just prior to
+// the connect() call.  Likewise the address family must be the same as the
+// address used when dialing, or errors will occur.
+extern int nni_tcp_dialer_set_src_addr(nni_tcp_dialer *, const nng_sockaddr *);
+
 // nni_tcp_dialer_dial attempts to create an outgoing connection,
 // asynchronously, to the address specified. On success, the first (and only)
 // output will be an nni_tcp_conn * associated with the remote server.

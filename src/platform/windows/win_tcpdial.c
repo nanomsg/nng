@@ -145,6 +145,46 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 	}
 }
 
+int
+nni_tcp_dialer_set_src_addr(nni_tcp_dialer *d, const nni_sockaddr *sa)
+{
+	SOCKADDR_STORAGE     ss;
+	struct sockaddr_in * sin;
+	struct sockaddr_in6 *sin6;
+	size_t               sslen;
+
+	if ((sslen = nni_win_nn2sockaddr(&ss, sa)) == 0) {
+		return (NNG_EADDRINVAL);
+	}
+	// Ensure we are either IPv4 or IPv6, and port is not set.  (We
+	// do not allow binding to a specific port.)
+	switch (ss.ss_family) {
+	case AF_INET:
+		sin = (void *) &ss;
+		if (sin->sin_port != 0) {
+			return (NNG_EADDRINVAL);
+		}
+		break;
+	case AF_INET6:
+		sin6 = (void *) &ss;
+		if (sin6->sin6_port != 0) {
+			return (NNG_EADDRINVAL);
+		}
+		break;
+	default:
+		return (NNG_EADDRINVAL);
+	}
+	nni_mtx_lock(&d->mtx);
+	if (d->closed) {
+		nni_mtx_unlock(&d->mtx);
+		return (NNG_ECLOSED);
+	}
+	d->src    = ss;
+	d->srclen = sslen;
+	nni_mtx_unlock(&d->mtx);
+	return (0);
+}
+
 void
 nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 {
@@ -176,19 +216,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 
 	c->peername = ss;
 
-	// Windows ConnectEx requires the socket to be bound
-	// first. We just bind to an ephemeral address in the
-	// same family.
-	ZeroMemory(&c->sockname, sizeof(c->sockname));
-	c->sockname.ss_family = ss.ss_family;
-	if (bind(s, (SOCKADDR *) &c->sockname, len) < 0) {
-		rv = nni_win_error(GetLastError());
-		nni_tcp_conn_fini(c);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
 	if ((rv = nni_win_io_init(&c->conn_io, tcp_dial_cb, c)) != 0) {
-		nni_tcp_conn_fini(c);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -196,13 +224,34 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	nni_mtx_lock(&d->mtx);
 	if (d->closed) {
 		nni_mtx_unlock(&d->mtx);
+		nni_tcp_conn_fini(c);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
+
+	// Windows ConnectEx requires the socket to be bound
+	// first. We just bind to an ephemeral address in the
+	// same family, unless a different default was requested.
+	if (d->srclen != 0) {
+		len = (int) d->srclen;
+		memcpy(&c->sockname, &d->src, len);
+	} else {
+		ZeroMemory(&c->sockname, sizeof(c->sockname));
+		c->sockname.ss_family = ss.ss_family;
+	}
+	if (bind(s, (SOCKADDR *) &c->sockname, len) != 0) {
+		rv = nni_win_error(GetLastError());
+		nni_mtx_unlock(&d->mtx);
+		nni_tcp_conn_fini(c);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
 	c->dialer = d;
 	nni_aio_set_prov_extra(aio, 0, c);
 	if ((rv = nni_aio_schedule(aio, tcp_dial_cancel, d)) != 0) {
 		nni_mtx_unlock(&d->mtx);
+		nni_tcp_conn_fini(c);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}

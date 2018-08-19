@@ -39,11 +39,13 @@ struct nni_tcp_conn {
 };
 
 struct nni_tcp_dialer {
-	LPFN_CONNECTEX connectex; // looked up name via ioctl
-	nni_list       aios;      // in flight connections
-	bool           closed;
-	nni_mtx        mtx;
-	nni_reap_item  reap;
+	LPFN_CONNECTEX   connectex; // looked up name via ioctl
+	nni_list         aios;      // in flight connections
+	bool             closed;
+	SOCKADDR_STORAGE src;
+	size_t           srclen;
+	nni_mtx          mtx;
+	nni_reap_item    reap;
 };
 
 struct nni_tcp_listener {

@@ -61,6 +61,8 @@ struct tcptran_ep {
 	bool              keepalive;
 	bool              fini;
 	nni_url *         url;
+	const char *      host; // for dialers
+	nng_sockaddr      src;
 	nng_sockaddr      sa;
 	nng_sockaddr      bsa;
 	nni_list          pipes;
@@ -750,9 +752,11 @@ tcptran_ep_close(void *arg)
 static int
 tcptran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
 {
-	tcptran_ep *ep;
-	int         rv;
-	uint16_t    af;
+	tcptran_ep * ep;
+	int          rv;
+	uint16_t     af;
+	char *       host;
+	nng_sockaddr srcsa;
 
 	if (strcmp(url->u_scheme, "tcp") == 0) {
 		af = NNG_AF_UNSPEC;
@@ -785,11 +789,52 @@ tcptran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
 	ep->keepalive = false;
 	ep->url       = url;
 
-	if ((rv = nni_tcp_dialer_init(&ep->dialer)) != 0) {
+	// Detect an embedded local interface name in the hostname.  This
+	// syntax is only valid with dialers.
+	if ((host = strchr(url->u_hostname, ';')) != NULL) {
+		size_t   len;
+		char *   src = NULL;
+		nni_aio *aio;
+		len = (uintptr_t) host - (uintptr_t) url->u_hostname;
+		host++;
+		if ((len < 2) || (strlen(host) == 0)) {
+			tcptran_ep_fini(ep);
+			return (NNG_EADDRINVAL);
+		}
+		if ((src = nni_alloc(len + 1)) == NULL) {
+			tcptran_ep_fini(ep);
+			return (NNG_ENOMEM);
+		}
+		memcpy(src, url->u_hostname, len);
+		src[len] = 0;
+
+		if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+			tcptran_ep_fini(ep);
+			nni_strfree(src);
+			return (rv);
+		}
+		nni_aio_set_input(aio, 0, &srcsa);
+		nni_tcp_resolv(src, 0, af, 1, aio);
+		nni_aio_wait(aio);
+		rv = nni_aio_result(aio);
+		nni_aio_fini(aio);
+		nni_strfree(src);
+		ep->host = host;
+	} else {
+		srcsa.s_family = NNG_AF_UNSPEC;
+		ep->host       = url->u_hostname;
+		rv             = 0;
+	}
+
+	if ((rv != 0) || ((rv = nni_tcp_dialer_init(&ep->dialer)) != 0)) {
 		tcptran_ep_fini(ep);
 		return (rv);
 	}
-
+	if ((srcsa.s_family != NNG_AF_UNSPEC) &&
+	    ((rv = nni_tcp_dialer_set_src_addr(ep->dialer, &srcsa)) != 0)) {
+		tcptran_ep_fini(ep);
+		return (rv);
+	}
 	*dp = ep;
 	return (0);
 }
@@ -897,8 +942,7 @@ tcptran_ep_connect(void *arg, nni_aio *aio)
 	p->useraio = aio;
 	// Start the name resolution before we try connecting.
 	nni_aio_set_input(p->rslvaio, 0, &p->sa);
-	nni_tcp_resolv(
-	    ep->url->u_hostname, ep->url->u_port, ep->af, 0, p->rslvaio);
+	nni_tcp_resolv(ep->host, ep->url->u_port, ep->af, 0, p->rslvaio);
 	nni_mtx_unlock(&ep->mtx);
 }
 
