@@ -287,15 +287,6 @@ nni_dialer_start(nni_dialer *d, int flags)
 		}
 		nni_aio_begin(aio);
 	}
-#if 0
-	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
-		nni_mtx_lock(&d->d_mtx);
-		d->d_currtime = d->d_inirtime;
-		nni_mtx_unlock(&d->d_mtx);
-		dialer_connect_start(d);
-		return (0);
-	}
-#endif
 
 	nni_mtx_lock(&d->d_mtx);
 	d->d_user_aio = aio;
