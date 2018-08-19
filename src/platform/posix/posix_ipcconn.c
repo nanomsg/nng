@@ -24,7 +24,6 @@
 #include <sys/uio.h>
 #include <sys/un.h>
 #include <unistd.h>
-#include <sys/ucred.h>
 #if defined(NNG_HAVE_GETPEERUCRED)
 #include <ucred.h>
 #elif defined(NNG_HAVE_LOCALPEERCRED) || defined(NNG_HAVE_SOCKPEERCRED)
