@@ -352,7 +352,7 @@ ipc_conn_peerid(nni_ipc_conn *c, uint64_t *euid, uint64_t *egid,
 	return (0);
 #elif defined(NNG_HAVE_SOCKPEERCRED)
 	struct sockpeercred uc;
-		socklen_t    len = sizeof(uc);
+	socklen_t len = sizeof(uc);
 	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
 		return (nni_plat_errno(errno));
 	}
