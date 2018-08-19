@@ -26,7 +26,7 @@
 #include <unistd.h>
 #if defined(NNG_HAVE_GETPEERUCRED)
 #include <ucred.h>
-#elif defined(NNG_HAVE_LOCALPEERCRED)
+#elif defined(NNG_HAVE_LOCALPEERCRED) || defined(NNG_HAVE_SOCKPEERCRED)
 #include <sys/ucred.h>
 #endif
 
@@ -349,6 +349,17 @@ ipc_conn_peerid(nni_ipc_conn *c, uint64_t *euid, uint64_t *egid,
 	*prid = ucred_getpid(ucp);
 	*znid = ucred_getzoneid(ucp);
 	ucred_free(ucp);
+	return (0);
+#elif defined(NNG_HAVE_SOCKPEERCRED)
+	struct sockpeercred uc;
+	socklen_t len = sizeof(uc);
+	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	*euid = uc.uid;
+	*egid = uc.gid;
+	*prid = uc.pid;
+	*znid = (uint64_t) -1;
 	return (0);
 #elif defined(NNG_HAVE_SOPEERCRED)
 	struct ucred uc;
