@@ -350,12 +350,19 @@ ipc_conn_peerid(nni_ipc_conn *c, uint64_t *euid, uint64_t *egid,
 	*znid = ucred_getzoneid(ucp);
 	ucred_free(ucp);
 	return (0);
-#elif defined(NNG_HAVE_SOPEERCRED)
-#if defined(NNG_HAVE_SOCKPEERCRED)
+#elif defined(NNG_HAVE_SOCKPEERCRED)
 	struct sockpeercred uc;
-#elif
+		socklen_t    len = sizeof(uc);
+	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	*euid = uc.uid;
+	*egid = uc.gid;
+	*prid = uc.pid;
+	*znid = (uint64_t) -1;
+	return (0);
+#elif defined(NNG_HAVE_SOPEERCRED)
 	struct ucred uc;
-#endif
 	socklen_t    len = sizeof(uc);
 	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
 		return (nni_plat_errno(errno));
