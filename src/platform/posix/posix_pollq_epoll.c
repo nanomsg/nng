@@ -35,7 +35,7 @@ typedef struct nni_posix_pollq nni_posix_pollq;
 #define NNI_MAX_EPOLL_EVENTS 64
 
 // flags we always want enabled as long as at least one event is active
-#define NNI_EPOLL_FLAGS (EPOLLONESHOT | EPOLLERR | EPOLLHUP)
+#define NNI_EPOLL_FLAGS (EPOLLONESHOT | EPOLLERR)
 
 // Locking strategy:
 //
@@ -271,7 +271,7 @@ nni_posix_poll_thr(void *arg)
 				int              events;
 
 				events = ev->events &
-				    (EPOLLIN | EPOLLOUT | EPOLLERR | EPOLLHUP);
+				    (EPOLLIN | EPOLLOUT | EPOLLERR);
 
 				nni_mtx_lock(&pfd->mtx);
 				pfd->events &= ~events;
