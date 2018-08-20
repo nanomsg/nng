@@ -618,6 +618,7 @@ nng_http_server_hold(nng_http_server **srvp, const nng_url *url)
 #else
 	NNI_ARG_UNUSED(srvp);
 	NNI_ARG_UNUSED(url);
+	return (NNG_ENOTSUP);
 #endif
 }
 
@@ -638,6 +639,7 @@ nng_http_server_start(nng_http_server *srv)
 	return (nni_http_server_start(srv));
 #else
 	NNI_ARG_UNUSED(srv);
+	return (NNG_ENOTSUP);
 #endif
 }
 
@@ -735,7 +737,6 @@ nng_http_server_res_error(nng_http_server *srv, nng_http_res *res)
 #else
 	NNI_ARG_UNUSED(srv);
 	NNI_ARG_UNUSED(res);
-	NNI_ARG_UNUSED(code);
 	return (NNG_ENOTSUP);
 #endif
 }
