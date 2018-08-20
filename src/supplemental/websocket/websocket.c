@@ -441,6 +441,7 @@ ws_close_cb(void *arg)
 		}
 		ws_msg_fini(wm);
 	}
+	ws->txframe = NULL;
 
 	if (ws->rxframe != NULL) {
 		ws_frame_fini(ws->rxframe);
@@ -1263,10 +1264,10 @@ ws_http_cb_dialer(nni_ws *ws, nni_aio *aio)
 	char           wskey[29];
 	const char *   ptr;
 
-	d    = ws->dialer;
+	d = ws->dialer;
+	nni_mtx_lock(&d->mtx);
 	uaio = ws->useraio;
 
-	nni_mtx_lock(&d->mtx);
 	// We have two steps.  In step 1, we just sent the request,
 	// and need to retrieve the reply.  In step two we have
 	// received the reply, and need to validate it.
