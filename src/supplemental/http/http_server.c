@@ -598,9 +598,7 @@ http_sconn_rxdone(void *arg)
 	nni_aio_set_input(sc->cbaio, 1, h);
 	nni_aio_set_input(sc->cbaio, 2, sc->conn);
 
-	// Technically, probably callback should initialize this with
-	// start, but we do it instead.
-	// This operation cannot at present canceled or timed out.
+	// Documented that we call this on behalf of the callback.
 	if (nni_aio_begin(sc->cbaio) != 0) {
 		nni_mtx_unlock(&s->mtx);
 		return;
