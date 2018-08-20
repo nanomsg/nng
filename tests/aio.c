@@ -35,6 +35,13 @@ sleepdone(void *arg)
 	*(nng_time *) arg = nng_clock();
 }
 
+void
+cancelfn(nng_aio *aio, void *arg, int rv)
+{
+	*(int *) arg = rv;
+	nng_aio_finish(aio, rv);
+}
+
 Main({
 	Test("AIO operations", {
 		const char *addr = "inproc://aio";
@@ -177,6 +184,19 @@ Main({
 
 			So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 			So(nng_aio_set_iov(aio, 1024, &iov) == NNG_EINVAL);
+			nng_aio_free(aio);
+		});
+
+		Convey("Provider cancellation works", {
+			nng_aio *aio;
+			int      rv = 0;
+			// We fake an empty provider that does not do anything.
+			So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+			So(nng_aio_begin(aio) == true);
+			nng_aio_defer(aio, cancelfn, &rv);
+			nng_aio_cancel(aio);
+			nng_aio_wait(aio);
+			So(rv == NNG_ECANCELED);
 			nng_aio_free(aio);
 		});
 	});

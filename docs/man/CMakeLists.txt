@@ -62,8 +62,10 @@ if (NNG_ENABLE_DOC)
 	libnng
 	nng_aio_abort
 	nng_aio_alloc
+	nng_aio_begin
 	nng_aio_cancel
 	nng_aio_count
+	nng_aio_defer
 	nng_aio_finish
 	nng_aio_free
 	nng_aio_get_input

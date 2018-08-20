@@ -1601,6 +1601,21 @@ nng_aio_finish(nng_aio *aio, int rv)
 	nni_aio_finish(aio, rv, nni_aio_count(aio));
 }
 
+void
+nng_aio_defer(nng_aio *aio, nng_aio_cancelfn fn, void *arg)
+{
+	nni_aio_schedule(aio, fn, arg);
+}
+
+bool
+nng_aio_begin(nng_aio *aio)
+{
+	if (nni_aio_begin(aio) != 0) {
+		return (false);
+	}
+	return (true);
+}
+
 #if 0
 int
 nng_snapshot_create(nng_socket sock, nng_snapshot **snapp)

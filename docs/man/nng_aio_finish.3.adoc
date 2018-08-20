@@ -52,7 +52,9 @@ None.
 
 [.text-left]
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
+<<nng_aio_begin.3#,nng_aio_begin(3)>>,
 <<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
+<<nng_aio_defer.3#,nng_aio_defer(3)>>,
 <<nng_aio_result.3#,nng_aio_result(3)>>,
 <<nng_aio.5#,nng_aio(5)>>,
 <<nng.7#,nng(7)>>

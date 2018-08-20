@@ -564,12 +564,30 @@ NNG_DECL void nng_aio_set_timeout(nng_aio *, nng_duration);
 // to succeed if n <= 4, otherwise it may fail due to NNG_ENOMEM.
 NNG_DECL int nng_aio_set_iov(nng_aio *, unsigned, const nng_iov *);
 
+// nng_aio_begin is called by the provider to mark the operation as
+// beginning.  If it returns false, then the provider must take no
+// further action on the aio.
+NNG_DECL bool nng_aio_begin(nng_aio *);
+
 // nng_aio_finish is used to "finish" an asynchronous operation.
 // It should only be called by "providers" (such as HTTP server API users).
 // The argument is the value that nng_aio_result() should return.
 // IMPORTANT: Callers must ensure that this is called EXACTLY ONCE on any
 // given aio.
 NNG_DECL void nng_aio_finish(nng_aio *, int);
+
+// nng_aio_defer is used to register a cancellation routine, and indicate
+// that the operation will be completed asynchronously.  It must only be
+// called once per operation on an aio, and must only be called by providers.
+// If the operation is canceled by the consumer, the cancellation callback
+// will be called.  The provider *must* still ensure that the nng_aio_finish()
+// function is called EXACTLY ONCE.  If the operation cannot be canceled
+// for any reason, the cancellation callback should do nothing.  The
+// final argument is passed to the cancelfn.  The final argument of the
+// cancellation function is the error number (will not be zero) corresponding
+// to the reason for cancellation, e.g. NNG_ETIMEDOUT or NNG_ECANCELED.
+typedef void (*nng_aio_cancelfn)(nng_aio *, void *, int);
+NNG_DECL void nng_aio_defer(nng_aio *, nng_aio_cancelfn, void *);
 
 // nng_aio_sleep does a "sleeping" operation, basically does nothing
 // but wait for the specified number of milliseconds to expire, then
