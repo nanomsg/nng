@@ -211,7 +211,7 @@ nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 
 	nni_mtx_lock(&nni_pipe_lk);
 	if ((rv = nni_idhash_alloc(nni_pipes, &id, p)) == 0) {
-		p->p_id     = id;
+		p->p_id     = (uint32_t) id;
 		p->p_refcnt = 1;
 	}
 	nni_mtx_unlock(&nni_pipe_lk);
