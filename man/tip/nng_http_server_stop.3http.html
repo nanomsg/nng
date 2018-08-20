@@ -537,9 +537,34 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_http_server_stop()</code> stops the HTTP server instance <em>server</em>.
-This will cause it to close any underlying TCP sockets, and to terminate
-any HTTP connections associated with it.</p>
+<p>The <code>nng_http_server_stop()</code> undoes the effect of
+<code><a href="nng_http_server_start.3http.html">nng_http_server_start()</a></code>.</p>
+</div>
+<div class="paragraph">
+<p>Each call by
+<code><a href="nng_http_server_start.3http.html">nng_http_server_start()</a></code> acts as reference
+count, and should be matched by a call to <code>nng_http_server_stop()</code>.
+When the reference count drops to zero, then the server is actually stopped,
+and existing open connections to it are closed.</p>
+</div>
+<div class="paragraph">
+<p>This function does not wait for the connections to close.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Once the server instance is actually stopped, it cannot be started again,
+and any future calls to <code><a href="nng_http_server_hold.3http.html">nng_http_server_hold()</a></code>
+will return a new instance of the server.
+It is expected that the caller will follow this function call with a call to
+<code><a href="nng_http_server_release.3http.html">nng_http_server_release()</a></code>.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -564,6 +589,7 @@ any HTTP connections associated with it.</p>
 <div class="sectionbody">
 <div class="paragraph text-left">
 <p><a href="nng_http_server_hold.3http.html">nng_http_server_hold(3http)</a>,
+<a href="nng_http_server_release.3http.html">nng_http_server_release(3http)</a>,
 <a href="nng_http_server_start.3http.html">nng_http_server_start(3http)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>

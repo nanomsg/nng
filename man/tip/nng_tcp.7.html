@@ -617,22 +617,6 @@ separating the port.</p>
 <p>For example, the same port 80 on the IPv6 loopback address (<code>::1</code>) would
 be specified as <code>tcp://[::1]:80</code>.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-When using symbolic names, the name is resolved when the
-name is first used. <em>nng</em> won&#8217;t become aware of changes in the
-name resolution until restart,
-usually.
-(This is a bug and will likely be fixed in the future.)
-</td>
-</tr>
-</table>
-</div>
 <div class="paragraph">
 <p>The special value of 0 (<code>INADDR_ANY</code>)
 can be used for a listener to indicate that it should listen on all
