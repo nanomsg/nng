@@ -52,33 +52,9 @@ struct nni_atomic_flag {
 	unsigned f;
 };
 
-// nni_win_event is used with io completion ports.  This allows us to get
+// nni_win_io is used with io completion ports.  This allows us to get
 // to a specific completion callback without requiring the poller (in the
-// completion port) to know anything about the event itself.  We also use
-// this to pass back status and counts to the routine, which may not be
-// conveyed in the OVERLAPPED directly.
-typedef struct nni_win_event     nni_win_event;
-typedef struct nni_win_event_ops nni_win_event_ops;
-
-struct nni_win_event_ops {
-	int (*wev_start)(nni_win_event *, nni_aio *);
-	void (*wev_finish)(nni_win_event *, nni_aio *);
-	void (*wev_cancel)(nni_win_event *);
-};
-struct nni_win_event {
-	OVERLAPPED        olpd;
-	void *            ptr;
-	nni_mtx           mtx;
-	nni_cv            cv;
-	unsigned          run : 1;
-	unsigned          fini : 1;
-	unsigned          closed : 1;
-	unsigned          count;
-	int               status;
-	nni_list          aios;
-	nni_aio *         active;
-	nni_win_event_ops ops;
-};
+// completion port) to know anything about the event itself.
 
 typedef struct nni_win_io nni_win_io;
 typedef void (*nni_win_io_cb)(nni_win_io *, int, size_t);
@@ -97,23 +73,12 @@ struct nni_plat_flock {
 
 extern int nni_win_error(int);
 
-extern int  nni_win_event_init(nni_win_event *, nni_win_event_ops *, void *);
-extern void nni_win_event_fini(nni_win_event *);
-extern void nni_win_event_submit(nni_win_event *, nni_aio *);
-extern void nni_win_event_close(nni_win_event *);
-extern void nni_win_event_complete(nni_win_event *, int);
-
-extern int nni_win_iocp_register(HANDLE);
-
 extern int  nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
 extern void nni_win_tcp_conn_set_addrs(
     nni_tcp_conn *, const SOCKADDR_STORAGE *, const SOCKADDR_STORAGE *);
 
 extern int  nni_win_io_sysinit(void);
 extern void nni_win_io_sysfini(void);
-
-extern int  nni_win_iocp_sysinit(void);
-extern void nni_win_iocp_sysfini(void);
 
 extern int  nni_win_ipc_sysinit(void);
 extern void nni_win_ipc_sysfini(void);
