@@ -134,10 +134,10 @@ ipc_dial_thr(void *arg)
 }
 
 static void
-ipc_dial_cancel(nni_aio *aio, int rv)
+ipc_dial_cancel(nni_aio *aio, void *arg, int rv)
 {
+	nni_ipc_dialer *d = arg;
 	ipc_dial_work * w = &ipc_connecter;
-	nni_ipc_dialer *d = nni_aio_get_prov_data(aio);
 
 	nni_mtx_lock(&w->mtx);
 	if (nni_aio_list_active(aio)) {

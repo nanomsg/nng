@@ -87,9 +87,9 @@ nni_win_iocp_handler(void *arg)
 }
 
 static void
-nni_win_event_cancel(nni_aio *aio, int rv)
+nni_win_event_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_win_event *evt = nni_aio_get_prov_data(aio);
+	nni_win_event *evt = arg;
 
 	nni_mtx_lock(&evt->mtx);
 	if (aio == evt->active) {

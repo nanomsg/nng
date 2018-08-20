@@ -165,9 +165,9 @@ tcp_listener_cb(nni_posix_pfd *pfd, int events, void *arg)
 }
 
 static void
-tcp_listener_cancel(nni_aio *aio, int rv)
+tcp_listener_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tcp_listener *l = nni_aio_get_prov_data(aio);
+	nni_tcp_listener *l = arg;
 
 	// This is dead easy, because we'll ignore the completion if there
 	// isn't anything to do the accept on!

@@ -1840,9 +1840,9 @@ zt_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-zt_pipe_cancel_recv(nni_aio *aio, int rv)
+zt_pipe_cancel_recv(nni_aio *aio, void *arg, int rv)
 {
-	zt_pipe *p = nni_aio_get_prov_data(aio);
+	zt_pipe *p = arg;
 	nni_mtx_lock(&zt_lk);
 	if (p->zp_user_rxaio == aio) {
 		p->zp_user_rxaio = NULL;
@@ -2331,9 +2331,9 @@ zt_ep_bind(void *arg)
 }
 
 static void
-zt_ep_cancel(nni_aio *aio, int rv)
+zt_ep_cancel(nni_aio *aio, void *arg, int rv)
 {
-	zt_ep *ep = nni_aio_get_prov_data(aio);
+	zt_ep *ep = arg;
 
 	nni_mtx_lock(&zt_lk);
 	if (nni_aio_list_active(aio)) {
@@ -2417,9 +2417,9 @@ zt_ep_accept(void *arg, nni_aio *aio)
 }
 
 static void
-zt_ep_conn_req_cancel(nni_aio *aio, int rv)
+zt_ep_conn_req_cancel(nni_aio *aio, void *arg, int rv)
 {
-	zt_ep *ep = nni_aio_get_prov_data(aio);
+	zt_ep *ep = arg;
 	// We don't have much to do here.  The AIO will have been
 	// canceled as a result of the "parent" AIO canceling.
 	nni_mtx_lock(&zt_lk);

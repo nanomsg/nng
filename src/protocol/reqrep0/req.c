@@ -590,9 +590,9 @@ req0_ctx_reset(req0_ctx *ctx)
 }
 
 static void
-req0_ctx_cancel_recv(nni_aio *aio, int rv)
+req0_ctx_cancel_recv(nni_aio *aio, void *arg, int rv)
 {
-	req0_ctx * ctx = nni_aio_get_prov_data(aio);
+	req0_ctx * ctx = arg;
 	req0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);
@@ -666,9 +666,9 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 }
 
 static void
-req0_ctx_cancel_send(nni_aio *aio, int rv)
+req0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
 {
-	req0_ctx * ctx = nni_aio_get_prov_data(aio);
+	req0_ctx * ctx = arg;
 	req0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);

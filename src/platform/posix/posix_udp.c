@@ -269,9 +269,9 @@ nni_plat_udp_close(nni_plat_udp *udp)
 }
 
 void
-nni_plat_udp_cancel(nni_aio *aio, int rv)
+nni_plat_udp_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_plat_udp *udp = nni_aio_get_prov_data(aio);
+	nni_plat_udp *udp = arg;
 
 	nni_mtx_lock(&udp->udp_mtx);
 	if (nni_aio_list_active(aio)) {

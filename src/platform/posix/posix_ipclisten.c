@@ -172,9 +172,9 @@ ipc_listener_cb(nni_posix_pfd *pfd, int events, void *arg)
 }
 
 static void
-ipc_listener_cancel(nni_aio *aio, int rv)
+ipc_listener_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ipc_listener *l = nni_aio_get_prov_data(aio);
+	nni_ipc_listener *l = arg;
 
 	// This is dead easy, because we'll ignore the completion if there
 	// isn't anything to do the accept on!

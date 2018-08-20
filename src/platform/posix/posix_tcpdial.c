@@ -78,9 +78,9 @@ nni_tcp_dialer_fini(nni_tcp_dialer *d)
 }
 
 static void
-tcp_dialer_cancel(nni_aio *aio, int rv)
+tcp_dialer_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tcp_dialer *d = nni_aio_get_prov_data(aio);
+	nni_tcp_dialer *d = arg;
 	nni_tcp_conn *  c;
 
 	nni_mtx_lock(&d->mtx);

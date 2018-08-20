@@ -193,9 +193,9 @@ tcptran_pipe_init(tcptran_pipe **pipep, tcptran_ep *ep)
 }
 
 static void
-tcptran_pipe_conn_cancel(nni_aio *aio, int rv)
+tcptran_pipe_conn_cancel(nni_aio *aio, void *arg, int rv)
 {
-	tcptran_pipe *p = nni_aio_get_prov_data(aio);
+	tcptran_pipe *p = arg;
 
 	nni_mtx_lock(&p->ep->mtx);
 	if (aio == p->useraio) {
@@ -483,9 +483,9 @@ recv_error:
 }
 
 static void
-tcptran_pipe_send_cancel(nni_aio *aio, int rv)
+tcptran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
 {
-	tcptran_pipe *p = nni_aio_get_prov_data(aio);
+	tcptran_pipe *p = arg;
 
 	nni_mtx_lock(&p->mtx);
 	if (!nni_aio_list_active(aio)) {
@@ -576,9 +576,9 @@ tcptran_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-tcptran_pipe_recv_cancel(nni_aio *aio, int rv)
+tcptran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
 {
-	tcptran_pipe *p = nni_aio_get_prov_data(aio);
+	tcptran_pipe *p = arg;
 
 	nni_mtx_lock(&p->mtx);
 	if (!nni_aio_list_active(aio)) {

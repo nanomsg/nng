@@ -451,9 +451,9 @@ error:
 }
 
 static void
-ipctran_pipe_send_cancel(nni_aio *aio, int rv)
+ipctran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
 {
-	ipctran_pipe *p = nni_aio_get_prov_data(aio);
+	ipctran_pipe *p = arg;
 
 	nni_mtx_lock(&p->mtx);
 	if (!nni_aio_list_active(aio)) {
@@ -544,9 +544,9 @@ ipctran_pipe_send(void *arg, nni_aio *aio)
 }
 
 static void
-ipctran_pipe_recv_cancel(nni_aio *aio, int rv)
+ipctran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
 {
-	ipctran_pipe *p = nni_aio_get_prov_data(aio);
+	ipctran_pipe *p = arg;
 
 	nni_mtx_lock(&p->mtx);
 	if (!nni_aio_list_active(aio)) {
@@ -686,9 +686,9 @@ ipctran_pipe_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static void
-ipctran_pipe_conn_cancel(nni_aio *aio, int rv)
+ipctran_pipe_conn_cancel(nni_aio *aio, void *arg, int rv)
 {
-	ipctran_pipe *p = nni_aio_get_prov_data(aio);
+	ipctran_pipe *p = arg;
 
 	nni_mtx_lock(&p->ep->mtx);
 	if (aio == p->useraio) {

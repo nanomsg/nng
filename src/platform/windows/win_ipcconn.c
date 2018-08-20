@@ -100,9 +100,9 @@ ipc_recv_cb(nni_win_io *io, int rv, size_t num)
 	nni_aio_finish_synch(aio, rv, num);
 }
 static void
-ipc_recv_cancel(nni_aio *aio, int rv)
+ipc_recv_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ipc_conn *c = nni_aio_get_prov_data(aio);
+	nni_ipc_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
 	if (aio == nni_list_first(&c->recv_aios)) {
 		c->recv_rv = rv;
@@ -226,9 +226,9 @@ ipc_send_cb(nni_win_io *io, int rv, size_t num)
 }
 
 static void
-ipc_send_cancel(nni_aio *aio, int rv)
+ipc_send_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ipc_conn *c = nni_aio_get_prov_data(aio);
+	nni_ipc_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
 	if (aio == nni_list_first(&c->send_aios)) {
 		c->send_rv = rv;

@@ -236,9 +236,9 @@ nni_tcp_listener_listen(nni_tcp_listener *l, nni_sockaddr *sa)
 }
 
 static void
-tcp_accept_cancel(nni_aio *aio, int rv)
+tcp_accept_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tcp_listener *l = nni_aio_get_prov_data(aio);
+	nni_tcp_listener *l = arg;
 	nni_tcp_conn *    c;
 
 	nni_mtx_lock(&l->mtx);

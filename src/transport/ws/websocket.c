@@ -120,9 +120,9 @@ ws_pipe_recv_cb(void *arg)
 }
 
 static void
-ws_pipe_recv_cancel(nni_aio *aio, int rv)
+ws_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
 {
-	ws_pipe *p = nni_aio_get_prov_data(aio);
+	ws_pipe *p = arg;
 	nni_mtx_lock(&p->mtx);
 	if (p->user_rxaio != aio) {
 		nni_mtx_unlock(&p->mtx);
@@ -155,9 +155,9 @@ ws_pipe_recv(void *arg, nni_aio *aio)
 }
 
 static void
-ws_pipe_send_cancel(nni_aio *aio, int rv)
+ws_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
 {
-	ws_pipe *p = nni_aio_get_prov_data(aio);
+	ws_pipe *p = arg;
 	nni_mtx_lock(&p->mtx);
 	if (p->user_txaio != aio) {
 		nni_mtx_unlock(&p->mtx);
@@ -299,9 +299,9 @@ ws_listener_bind(void *arg)
 }
 
 static void
-ws_listener_cancel(nni_aio *aio, int rv)
+ws_listener_cancel(nni_aio *aio, void *arg, int rv)
 {
-	ws_listener *l = nni_aio_get_prov_data(aio);
+	ws_listener *l = arg;
 
 	nni_mtx_lock(&l->mtx);
 	if (nni_aio_list_active(aio)) {
@@ -337,9 +337,9 @@ ws_listener_accept(void *arg, nni_aio *aio)
 }
 
 static void
-ws_dialer_cancel(nni_aio *aio, int rv)
+ws_dialer_cancel(nni_aio *aio, void *arg, int rv)
 {
-	ws_dialer *d = nni_aio_get_prov_data(aio);
+	ws_dialer *d = arg;
 
 	nni_mtx_lock(&d->mtx);
 	if (nni_aio_list_active(aio)) {

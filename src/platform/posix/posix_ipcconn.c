@@ -247,9 +247,9 @@ ipc_conn_cb(nni_posix_pfd *pfd, int events, void *arg)
 }
 
 static void
-ipc_conn_cancel(nni_aio *aio, int rv)
+ipc_conn_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ipc_conn *c = nni_aio_get_prov_data(aio);
+	nni_ipc_conn *c = arg;
 
 	nni_mtx_lock(&c->mtx);
 	if (nni_aio_list_active(aio)) {
@@ -352,7 +352,7 @@ ipc_conn_peerid(nni_ipc_conn *c, uint64_t *euid, uint64_t *egid,
 	return (0);
 #elif defined(NNG_HAVE_SOCKPEERCRED)
 	struct sockpeercred uc;
-	socklen_t len = sizeof(uc);
+	socklen_t           len = sizeof(uc);
 	if (getsockopt(fd, SOL_SOCKET, SO_PEERCRED, &uc, &len) != 0) {
 		return (nni_plat_errno(errno));
 	}

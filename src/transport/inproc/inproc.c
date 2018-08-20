@@ -245,10 +245,9 @@ nni_inproc_ep_fini(void *arg)
 }
 
 static void
-nni_inproc_conn_finish(nni_aio *aio, int rv, nni_inproc_pipe *pipe)
+inproc_conn_finish(
+    nni_aio *aio, int rv, nni_inproc_ep *ep, nni_inproc_pipe *pipe)
 {
-	nni_inproc_ep *ep = nni_aio_get_prov_data(aio);
-
 	nni_aio_list_remove(aio);
 
 	if ((ep != NULL) && (!ep->listener) && nni_list_empty(&ep->aios)) {
@@ -289,12 +288,12 @@ nni_inproc_ep_close(void *arg)
 	// Notify any waiting clients that we are closed.
 	while ((client = nni_list_first(&ep->clients)) != NULL) {
 		while ((aio = nni_list_first(&client->aios)) != NULL) {
-			nni_inproc_conn_finish(aio, NNG_ECONNREFUSED, NULL);
+			inproc_conn_finish(aio, NNG_ECONNREFUSED, ep, NULL);
 		}
 		nni_list_remove(&ep->clients, client);
 	}
 	while ((aio = nni_list_first(&ep->aios)) != NULL) {
-		nni_inproc_conn_finish(aio, NNG_ECLOSED, NULL);
+		inproc_conn_finish(aio, NNG_ECLOSED, ep, NULL);
 	}
 	nni_mtx_unlock(&nni_inproc.mx);
 }
@@ -322,8 +321,10 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 			}
 
 			if ((pair = NNI_ALLOC_STRUCT(pair)) == NULL) {
-				nni_inproc_conn_finish(caio, NNG_ENOMEM, NULL);
-				nni_inproc_conn_finish(saio, NNG_ENOMEM, NULL);
+				inproc_conn_finish(
+				    caio, NNG_ENOMEM, cli, NULL);
+				inproc_conn_finish(
+				    saio, NNG_ENOMEM, srv, NULL);
 				continue;
 			}
 			nni_mtx_init(&pair->mx);
@@ -340,8 +341,8 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 				if (spipe != NULL) {
 					nni_inproc_pipe_fini(spipe);
 				}
-				nni_inproc_conn_finish(caio, rv, NULL);
-				nni_inproc_conn_finish(saio, rv, NULL);
+				inproc_conn_finish(caio, rv, cli, NULL);
+				inproc_conn_finish(saio, rv, srv, NULL);
 				nni_inproc_pair_destroy(pair);
 				continue;
 			}
@@ -357,8 +358,8 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 
 			nni_msgq_set_filter(spipe->rq, inproc_filter, spipe);
 			nni_msgq_set_filter(cpipe->rq, inproc_filter, cpipe);
-			nni_inproc_conn_finish(caio, 0, cpipe);
-			nni_inproc_conn_finish(saio, 0, spipe);
+			inproc_conn_finish(caio, 0, cli, cpipe);
+			inproc_conn_finish(saio, 0, srv, spipe);
 		}
 
 		if (nni_list_first(&cli->aios) == NULL) {
@@ -372,9 +373,9 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 }
 
 static void
-nni_inproc_ep_cancel(nni_aio *aio, int rv)
+nni_inproc_ep_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_inproc_ep *ep = nni_aio_get_prov_data(aio);
+	nni_inproc_ep *ep = arg;
 
 	nni_mtx_lock(&nni_inproc.mx);
 	if (nni_aio_list_active(aio)) {
@@ -405,7 +406,6 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 		}
 	}
 	if (server == NULL) {
-		// nni_inproc_conn_finish(aio, NNG_ECONNREFUSED, NULL);
 		nni_mtx_unlock(&nni_inproc.mx);
 		nni_aio_finish_error(aio, NNG_ECONNREFUSED);
 		return;

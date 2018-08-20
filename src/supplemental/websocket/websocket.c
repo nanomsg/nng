@@ -517,9 +517,9 @@ ws_start_write(nni_ws *ws)
 }
 
 static void
-ws_cancel_close(nni_aio *aio, int rv)
+ws_cancel_close(nni_aio *aio, void *arg, int rv)
 {
-	nni_ws *ws = nni_aio_get_prov_data(aio);
+	nni_ws *ws = arg;
 	nni_mtx_lock(&ws->mtx);
 	if (ws->wclose) {
 		ws->wclose = false;
@@ -616,15 +616,13 @@ ws_write_cb(void *arg)
 }
 
 static void
-ws_write_cancel(nni_aio *aio, int rv)
+ws_write_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ws *  ws;
+	nni_ws *  ws = arg;
 	ws_msg *  wm;
 	ws_frame *frame;
 
-	// Is this aio active?  We can tell by looking at the
-	// active tx frame.
-	ws = nni_aio_get_prov_data(aio);
+	// Is this aio active?  We can tell by looking at the active tx frame.
 
 	nni_mtx_lock(&ws->mtx);
 	if (!nni_aio_list_active(aio)) {
@@ -1038,9 +1036,9 @@ ws_read_cb(void *arg)
 }
 
 static void
-ws_read_cancel(nni_aio *aio, int rv)
+ws_read_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ws *ws = nni_aio_get_prov_data(aio);
+	nni_ws *ws = arg;
 	ws_msg *wm;
 
 	nni_mtx_lock(&ws->mtx);
@@ -1676,9 +1674,9 @@ nni_ws_listener_proto(nni_ws_listener *l, const char *proto)
 }
 
 static void
-ws_accept_cancel(nni_aio *aio, int rv)
+ws_accept_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ws_listener *l = nni_aio_get_prov_data(aio);
+	nni_ws_listener *l = arg;
 
 	nni_mtx_lock(&l->mtx);
 	if (nni_aio_list_active(aio)) {
@@ -2031,9 +2029,9 @@ nni_ws_dialer_proto(nni_ws_dialer *d, const char *proto)
 }
 
 static void
-ws_dial_cancel(nni_aio *aio, int rv)
+ws_dial_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ws *ws = nni_aio_get_prov_data(aio);
+	nni_ws *ws = arg;
 
 	nni_mtx_lock(&ws->mtx);
 	if (aio == ws->useraio) {
