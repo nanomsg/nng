@@ -1,0 +1,47 @@
+= nng_version(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stat_name - get statistic name
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+const char *nng_stat_name(nng_stat *stat);
+----
+
+== DESCRIPTION
+
+The `nng_stat_name()` function returns the name for the statistic _stat_.
+
+NOTE: The global root statistic will have the empty string ("") as it`'s name.
+
+== RETURN VALUES
+
+The name of statistic _stat_.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+<<libnng.3#,libnng(3)>>,
+<<nng_stats_get.3#,nng_stats_get(3)>>,
+<<nng_stat.5#,nng_stat(5)>>,
+<<nng.7#,nng(7)>>

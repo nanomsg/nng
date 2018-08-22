@@ -1,0 +1,51 @@
+= nng_version(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stat_value - get statistic value
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+uint64_t nng_stat_string(nng_stat *stat);
+----
+
+== DESCRIPTION
+
+The `nng_stat_value()` function returns a numeric value for the statistic _stat_.
+If the statistic has a boolean value, then zero is returned for `false`, and
+one is returned for `true`.
+Otherwise, if the string is not of numeric type, then zero is returned.
+See `<<nng_stat_type.3#,nng_stat_type(3)>>` for a description of statistic types.
+
+== RETURN VALUES
+
+The numeric or boolean value associated with _stat_.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+<<libnng.3#,libnng(3)>>,
+<<nng_stats_get.3#,nng_stats_get(3)>>,
+<<nng_stat_type.3#,nng_stat_type(3)>>,
+<<nng_stat_unit.3#,nng_stat_unit(3)>>,
+<<nng_stat.5#,nng_stat(5)>>,
+<<nng.7#,nng(7)>>

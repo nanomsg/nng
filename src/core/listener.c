@@ -24,6 +24,8 @@ static void listener_timer_cb(void *);
 static nni_idhash *listeners;
 static nni_mtx     listeners_lk;
 
+#define BUMPSTAT(x) nni_stat_inc_atomic(x, 1)
+
 int
 nni_listener_sys_init(void)
 {
@@ -33,8 +35,7 @@ nni_listener_sys_init(void)
 		return (rv);
 	}
 	nni_mtx_init(&listeners_lk);
-	nni_idhash_set_limits(
-	    listeners, 1, 0x7fffffff, nni_random() & 0x7fffffff);
+	nni_idhash_set_limits(listeners, 1, 0x7fffffff, 1);
 
 	return (0);
 }
@@ -68,6 +69,55 @@ nni_listener_destroy(nni_listener *l)
 	}
 	nni_url_free(l->l_url);
 	NNI_FREE_STRUCT(l);
+}
+
+static void
+listener_stats_init(nni_listener *l)
+{
+	nni_listener_stats *st   = &l->l_stats;
+	nni_stat_item *     root = &st->s_root;
+
+	nni_stat_init_scope(root, st->s_scope, "listener statistics");
+
+	// NB: This will be updated later.
+	nni_stat_init_id(&st->s_id, "id", "listener id", l->l_id);
+	nni_stat_append(root, &st->s_id);
+
+	nni_stat_init_id(&st->s_sock, "socket", "socket for listener",
+	    nni_sock_id(l->l_sock));
+	nni_stat_append(root, &st->s_sock);
+
+	nni_stat_init_string(
+	    &st->s_url, "url", "listener url", l->l_url->u_rawurl);
+	nni_stat_append(root, &st->s_url);
+
+	nni_stat_init_atomic(&st->s_npipes, "npipes", "open pipes");
+	nni_stat_append(root, &st->s_npipes);
+
+	nni_stat_init_atomic(&st->s_accept, "accept", "connections accepted");
+	nni_stat_append(root, &st->s_accept);
+
+	nni_stat_init_atomic(
+	    &st->s_aborted, "aborted", "accepts aborted remotely");
+	nni_stat_append(root, &st->s_aborted);
+
+	nni_stat_init_atomic(&st->s_timedout, "timedout", "accepts timed out");
+	nni_stat_append(root, &st->s_timedout);
+
+	nni_stat_init_atomic(&st->s_canceled, "canceled", "accepts canceled");
+	nni_stat_append(root, &st->s_canceled);
+
+	nni_stat_init_atomic(
+	    &st->s_othererr, "othererr", "other accept errors");
+	nni_stat_append(root, &st->s_othererr);
+
+	nni_stat_init_atomic(
+	    &st->s_protorej, "protoreject", "pipes rejected by protocol");
+	nni_stat_append(root, &st->s_protorej);
+
+	nni_stat_init_atomic(
+	    &st->s_apprej, "appreject", "pipes rejected by application");
+	nni_stat_append(root, &st->s_apprej);
 }
 
 int
@@ -107,6 +157,7 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *urlstr)
 
 	NNI_LIST_NODE_INIT(&l->l_node);
 	NNI_LIST_INIT(&l->l_pipes, nni_pipe, p_ep_node);
+	listener_stats_init(l);
 
 	if (((rv = nni_aio_init(&l->l_acc_aio, listener_accept_cb, l)) != 0) ||
 	    ((rv = nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l)) != 0) ||
@@ -116,6 +167,12 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *urlstr)
 		nni_listener_destroy(l);
 		return (rv);
 	}
+
+	// Update a few stat bits, and register them.
+	snprintf(l->l_stats.s_scope, sizeof(l->l_stats.s_scope), "listener%u",
+	    l->l_id);
+	nni_stat_set_value(&l->l_stats.s_id, l->l_id);
+	nni_stat_append(NULL, &l->l_stats.s_root);
 
 	*lp = l;
 	return (0);
@@ -165,6 +222,7 @@ nni_listener_rele(nni_listener *l)
 	nni_mtx_lock(&listeners_lk);
 	l->l_refcnt--;
 	if ((l->l_refcnt == 0) && (l->l_closed)) {
+		nni_stat_remove(&l->l_stats.s_root);
 		nni_reap(&l->l_reap, (nni_cb) nni_listener_reap, l);
 	}
 	nni_mtx_unlock(&listeners_lk);
@@ -233,18 +291,30 @@ listener_accept_cb(void *arg)
 
 	switch (nni_aio_result(aio)) {
 	case 0:
+		BUMPSTAT(&l->l_stats.s_accept);
 		nni_listener_add_pipe(l, nni_aio_get_output(aio, 0));
 		listener_accept_start(l);
 		break;
 	case NNG_ECONNABORTED: // remote condition, no cooldown
 	case NNG_ECONNRESET:   // remote condition, no cooldown
-	case NNG_EPEERAUTH:    // peer validation failure
+		BUMPSTAT(&l->l_stats.s_aborted);
+		listener_accept_start(l);
+		break;
+	case NNG_ETIMEDOUT:
+		// No need to sleep since we timed out already.
+		BUMPSTAT(&l->l_stats.s_timedout);
+		listener_accept_start(l);
+		break;
+	case NNG_EPEERAUTH: // peer validation failure
+		BUMPSTAT(&l->l_stats.s_othererr);
 		listener_accept_start(l);
 		break;
 	case NNG_ECLOSED:   // no further action
 	case NNG_ECANCELED: // no further action
+		BUMPSTAT(&l->l_stats.s_canceled);
 		break;
 	default:
+		BUMPSTAT(&l->l_stats.s_othererr);
 		// We don't really know why we failed, but we backoff
 		// here. This is because errors here are probably due
 		// to system failures (resource exhaustion) and we hope
@@ -338,4 +408,10 @@ nni_listener_getopt(
 	}
 
 	return (nni_sock_getopt(l->l_sock, name, valp, szp, t));
+}
+
+void
+nni_listener_add_stat(nni_listener *l, nni_stat_item *stat)
+{
+	nni_stat_append(&l->l_stats.s_root, stat);
 }

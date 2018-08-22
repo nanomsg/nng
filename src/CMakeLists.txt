@@ -70,6 +70,8 @@ set (NNG_SOURCES
     core/reap.h
     core/socket.c
     core/socket.h
+    core/stats.c
+    core/stats.h
     core/strs.c
     core/strs.h
     core/taskq.c

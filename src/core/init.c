@@ -27,7 +27,8 @@ nni_init_helper(void)
 	NNI_LIST_INIT(&nni_init_list, nni_initializer, i_node);
 	nni_inited = true;
 
-	if (((rv = nni_taskq_sys_init()) != 0) ||
+	if (((rv = nni_stat_sys_init()) != 0) ||
+	    ((rv = nni_taskq_sys_init()) != 0) ||
 	    ((rv = nni_reap_sys_init()) != 0) ||
 	    ((rv = nni_timer_sys_init()) != 0) ||
 	    ((rv = nni_aio_sys_init()) != 0) ||
@@ -81,6 +82,7 @@ nni_fini(void)
 	nni_timer_sys_fini();
 	nni_taskq_sys_fini();
 	nni_reap_sys_fini(); // must be before timer and aio (expire)
+	nni_stat_sys_fini();
 
 	nni_mtx_fini(&nni_init_mtx);
 	nni_plat_fini();

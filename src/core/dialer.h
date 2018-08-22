@@ -26,5 +26,6 @@ extern int nni_dialer_setopt(
     nni_dialer *, const char *, const void *, size_t, nni_opt_type);
 extern int nni_dialer_getopt(
     nni_dialer *, const char *, void *, size_t *, nni_opt_type);
+extern void nni_dialer_add_stat(nni_dialer *, nni_stat_item *);
 
 #endif // CORE_DIALER_H

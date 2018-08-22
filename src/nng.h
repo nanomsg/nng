@@ -90,11 +90,10 @@ typedef struct nng_socket_s {
 	uint32_t id;
 } nng_socket;
 
-typedef int32_t             nng_duration; // in milliseconds
-typedef struct nng_msg      nng_msg;
-typedef struct nng_snapshot nng_snapshot;
-typedef struct nng_stat     nng_stat;
-typedef struct nng_aio      nng_aio;
+typedef int32_t         nng_duration; // in milliseconds
+typedef struct nng_msg  nng_msg;
+typedef struct nng_stat nng_stat;
+typedef struct nng_aio  nng_aio;
 
 // Initializers.
 // clang-format off
@@ -762,36 +761,37 @@ enum nng_flag_enum {
 // but the individual statistic names, values, and meanings are all
 // subject to change.
 
-// nng_snapshot_create creates a statistics snapshot. The snapshot
-// object must be deallocated expressly by the user, and may persist beyond
-// the lifetime of any socket object used to update it. Note that the
-// values of the statistics are initially unset.
-// NNG_DECL int nng_snapshot_create(nng_socket, nng_snapshot **);
+// nng_stats_get takes a snapshot of the entire set of statistics.
+// While the operation can be somewhat expensive (allocations), it
+// is done in a way that minimizes impact to running operations.
+// Note that the statistics are provided as tree, with parents
+// used for grouping, and with child statistics underneath.  The
+// top stat returned will be of type NNG_STAT_SCOPE with name "".
+// Applications may choose to consider this root scope as "root", if
+// the empty string is not suitable.
+NNG_DECL int nng_stats_get(nng_stat **);
 
-// nng_snapshot_free frees a snapshot object. All statistic objects
-// contained therein are destroyed as well.
-// NNG_DECL void nng_snapshot_free(nng_snapshot *);
+// nng_stats_free frees a previous list of snapshots.  This should only
+// be called on the parent statistic that obtained via nng_stats_get.
+NNG_DECL void nng_stats_free(nng_stat *);
 
-// nng_snapshot_update updates a snapshot of all the statistics
-// relevant to a particular socket. All prior values are overwritten.
-// NNG_DECL int nng_snapshot_update(nng_snapshot *);
+// nng_stats_dump is a debugging function that dumps the entire set of
+// statistics to stdout.
+NNG_DECL void nng_stats_dump(nng_stat *);
 
-// nng_snapshot_next is used to iterate over the individual statistic
-// objects inside the snapshot. Note that the statistic object, and the
-// meta-data for the object (name, type, units) is fixed, and does not
-// change for the entire life of the snapshot.  Only the value
-// is subject to change, and then only when a snapshot is updated.
-//
-// Iteration begins by providing NULL in the value referenced. Successive
-// calls will update this value, returning NULL when no more statistics
-// are available in the snapshot.
-// NNG_DECL int nng_snapshot_next(nng_snapshot *, nng_stat **);
+// nng_stat_next finds the next sibling for the current stat.  If there
+// are no more siblings, it returns NULL.
+NNG_DECL nng_stat *nng_stat_next(nng_stat *);
+
+// nng_stat_child finds the first child of the current stat.  If no children
+// exist, then NULL is returned.
+NNG_DECL nng_stat *nng_stat_child(nng_stat *);
 
 // nng_stat_name is used to determine the name of the statistic.
 // This is a human readable name.  Statistic names, as well as the presence
 // or absence or semantic of any particular statistic are not part of any
 // stable API, and may be changed without notice in future updates.
-// NNG_DECL const char *nng_stat_name(nng_stat *);
+NNG_DECL const char *nng_stat_name(nng_stat *);
 
 // nng_stat_type is used to determine the type of the statistic.
 // At present, only NNG_STAT_TYPE_LEVEL and and NNG_STAT_TYPE_COUNTER
@@ -799,32 +799,48 @@ enum nng_flag_enum {
 // value over time are likely more interesting than the actual level.  Level
 // values reflect some absolute state however, and should be presented to the
 // user as is.
-// NNG_DECL int nng_stat_type(nng_stat *);
+NNG_DECL int nng_stat_type(nng_stat *);
 
 enum nng_stat_type_enum {
-	NNG_STAT_LEVEL   = 0, // Numeric "absolute" value, diffs meaningless
-	NNG_STAT_COUNTER = 1  // Incrementing value (diffs are meaningful)
+	NNG_STAT_SCOPE   = 0, // Stat is for scoping, and carries no value
+	NNG_STAT_LEVEL   = 1, // Numeric "absolute" value, diffs meaningless
+	NNG_STAT_COUNTER = 2, // Incrementing value (diffs are meaningful)
+	NNG_STAT_STRING  = 3, // Value is a string
+	NNG_STAT_BOOLEAN = 4, // Value is a boolean
+	NNG_STAT_ID      = 5, // Value is a numeric ID
 };
 
 // nng_stat_unit provides information about the unit for the statistic,
 // such as NNG_UNIT_BYTES or NNG_UNIT_BYTES.  If no specific unit is
-// applicable, such as a relative priority, then NN_UNIT_NONE is
-// returned.
-// NNG_DECL int nng_stat_unit(nng_stat *);
+// applicable, such as a relative priority, then NN_UNIT_NONE is returned.
+NNG_DECL int nng_stat_unit(nng_stat *);
 
 enum nng_unit_enum {
-	NNG_UNIT_NONE     = 0,
-	NNG_UNIT_BYTES    = 1,
-	NNG_UNIT_MESSAGES = 2,
-	NNG_UNIT_BOOLEAN  = 3,
-	NNG_UNIT_MILLIS   = 4,
-	NNG_UNIT_EVENTS   = 5
+	NNG_UNIT_NONE     = 0, // No special units
+	NNG_UNIT_BYTES    = 1, // Bytes, e.g. bytes sent, etc.
+	NNG_UNIT_MESSAGES = 2, // Messages, one per message
+	NNG_UNIT_MILLIS   = 3, // Milliseconds
+	NNG_UNIT_EVENTS   = 4  // Some other type of event
 };
 
 // nng_stat_value returns returns the actual value of the statistic.
 // Statistic values reflect their value at the time that the corresponding
 // snapshot was updated, and are undefined until an update is performed.
-// NNG_DECL int64_t nng_stat_value(nng_stat *);
+NNG_DECL uint64_t nng_stat_value(nng_stat *);
+
+// nng_stat_string returns the string associated with a string statistic,
+// or NULL if the statistic is not part of the string.  The value returned
+// is valid until the associated statistic is freed.
+NNG_DECL const char *nng_stat_string(nng_stat *);
+
+// nng_stat_desc returns a human readable description of the statistic.
+// This may be useful for display in diagnostic interfaces, etc.
+NNG_DECL const char *nng_stat_desc(nng_stat *);
+
+// nng_stat_timestamp returns a timestamp (milliseconds) when the statistic
+// was captured.  The base offset is the same as used by nng_clock().
+// We don't use nng_time though, because that's in the supplemental header.
+NNG_DECL uint64_t nng_stat_timestamp(nng_stat *);
 
 // Device functionality.  This connects two sockets together in a device,
 // which means that messages from one side are forwarded to the other.

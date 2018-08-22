@@ -15,6 +15,22 @@
 // and pipes.  This must not be exposed to other subsystems -- these internals
 // are subject to change at any time.
 
+typedef struct nni_dialer_stats {
+	nni_stat_item s_root;
+	nni_stat_item s_id;
+	nni_stat_item s_sock;
+	nni_stat_item s_url;
+	nni_stat_item s_npipes;
+	nni_stat_item s_connok;
+	nni_stat_item s_refused;
+	nni_stat_item s_canceled;
+	nni_stat_item s_timedout;
+	nni_stat_item s_othererr;
+	nni_stat_item s_protorej;
+	nni_stat_item s_apprej;
+	char          s_scope[24]; // scope name for stats
+} nni_dialer_stats;
+
 struct nni_dialer {
 	nni_tran_dialer_ops d_ops;  // transport ops
 	nni_tran *          d_tran; // transport pointer
@@ -38,7 +54,24 @@ struct nni_dialer {
 	nni_duration        d_inirtime; // initial time for reconnect
 	nni_time            d_conntime; // time of last good connect
 	nni_reap_item       d_reap;
+	nni_dialer_stats    d_stats;
 };
+
+typedef struct nni_listener_stats {
+	nni_stat_item s_root;
+	nni_stat_item s_id;
+	nni_stat_item s_sock;
+	nni_stat_item s_url;
+	nni_stat_item s_npipes;
+	nni_stat_item s_accept;
+	nni_stat_item s_aborted; // aborted remotely
+	nni_stat_item s_timedout;
+	nni_stat_item s_canceled;
+	nni_stat_item s_othererr;
+	nni_stat_item s_protorej;
+	nni_stat_item s_apprej;
+	char          s_scope[24]; // scope name for stats
+} nni_listener_stats;
 
 struct nni_listener {
 	nni_tran_listener_ops l_ops;  // transport ops
@@ -56,7 +89,16 @@ struct nni_listener {
 	nni_aio *             l_acc_aio;
 	nni_aio *             l_tmo_aio;
 	nni_reap_item         l_reap;
+	nni_listener_stats    l_stats;
 };
+
+typedef struct nni_pipe_stats {
+	nni_stat_item s_root;
+	nni_stat_item s_id;
+	nni_stat_item s_ep_id;
+	nni_stat_item s_sock_id;
+	char          s_scope[16]; // scope name for stats ("pipe" is short)
+} nni_pipe_stats;
 
 struct nni_pipe {
 	uint32_t           p_id;
@@ -76,13 +118,11 @@ struct nni_pipe {
 	nni_mtx            p_mtx;
 	nni_cv             p_cv;
 	nni_reap_item      p_reap;
+	nni_pipe_stats     p_stats;
 };
 
-extern int  nni_sock_add_dialer(nni_sock *, nni_dialer *);
-extern void nni_sock_remove_dialer(nni_sock *, nni_dialer *);
-
-extern int  nni_sock_add_listener(nni_sock *, nni_listener *);
-extern void nni_sock_remove_listener(nni_sock *, nni_listener *);
+extern int nni_sock_add_dialer(nni_sock *, nni_dialer *);
+extern int nni_sock_add_listener(nni_sock *, nni_listener *);
 
 extern void nni_dialer_add_pipe(nni_dialer *, void *);
 extern void nni_dialer_shutdown(nni_dialer *);
@@ -101,5 +141,6 @@ extern void nni_pipe_remove(nni_pipe *);
 extern void nni_pipe_run_cb(nni_pipe *, nng_pipe_ev);
 extern int  nni_pipe_create(nni_pipe **, nni_sock *, nni_tran *, void *);
 extern void nni_pipe_start(nni_pipe *);
+extern void nni_pipe_stats_init(nni_pipe *);
 
 #endif // CORE_SOCKIMPL_H

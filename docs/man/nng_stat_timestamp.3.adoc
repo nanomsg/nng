@@ -1,0 +1,60 @@
+= nng_version(3)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stat_timestamp - get statistic timestamp
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef struct nng_stat nng_stat;
+
+uint64_t nng_stat_timestamp(nng_stat *stat);
+----
+
+== DESCRIPTION
+
+The `nng_stat_timestamp()` function returns the a timestamp, which is measured
+as a number of milliseconds since some arbitrary value in the past.
+
+Even within the same snapshot, statistics might have different timestamp
+values, as the timestamp represents the time when that particular statistic
+was captured.
+
+TIP: These values are intended to facilitate calculation of rates, by
+comparing values from one snapshot with a subsequent one.
+
+TIP: The values used here have the same offset as the
+`<<nng_clock.3supp#,nng_clock()>>` supplementation function.
+This can be useful when converting these values to local clock time.
+
+== RETURN VALUES
+
+The timestamp when _stat_ was captured, measured as a number of
+milliseconds since some time in the past.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+<<libnng.3#,libnng(3)>>,
+<<nng_stats_get.3#,nng_stats_get(3)>>,
+<<nng_stat_value.3#,nng_stat_value(3)>>,
+<<nng_clock.3supp#,nng_clock(3supp)>>,
+<<nng_stat.5#,nng_stat(5)>>,
+<<nng.7#,nng(7)>>

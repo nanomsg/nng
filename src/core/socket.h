@@ -25,6 +25,7 @@ extern uint16_t    nni_sock_peer_id(nni_sock *);
 extern const char *nni_sock_proto_name(nni_sock *);
 extern const char *nni_sock_peer_name(nni_sock *);
 extern void *      nni_sock_proto_data(nni_sock *);
+extern void        nni_sock_add_stat(nni_sock *, nni_stat_item *);
 
 extern struct nni_proto_pipe_ops *nni_sock_proto_pipe_ops(nni_sock *);
 
@@ -106,5 +107,13 @@ extern int nni_ctx_getopt(
 // nni_ctx_setopt is used to set a context option.
 extern int nni_ctx_setopt(
     nni_ctx *, const char *, const void *, size_t, nni_opt_type);
+
+// nni_sock_bump_rx is called by a protocol when a message is received by
+// a consuming app.  It bumps the rxmsgs by one and rxbytes by the size.
+extern void nni_sock_bump_rx(nni_sock *s, uint64_t sz);
+
+// nni_sock_bump_rx is called by a protocol when a message is sent by
+// a consuming app.  It bumps the txmsgs by one and txbytes by the size.
+extern void nni_sock_bump_tx(nni_sock *s, uint64_t sz);
 
 #endif // CORE_SOCKET_H

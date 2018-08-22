@@ -222,6 +222,25 @@ concurrent applications.
 |<<nng_ctx_setopt.3#,nng_ctx_setopt()>>|set context option
 |===
 
+=== Statistics
+
+The following functions provide access to statistics which can be used
+to observe program behaviors and as an aid in troubleshooting.
+
+|===
+|<<nng_stat_child.3#,nng_stat_child()>>|get child statistic
+|<<nng_stat_desc.3#,nng_stat_name()>>|get statistic description
+|<<nng_stat_name.3#,nng_stat_name()>>|get statistic name
+|<<nng_stat_next.3#,nng_stat_next()>>|get next statistic
+|<<nng_stat_string.3#,nng_stat_string()>>|get statistic string value
+|<<nng_stat_timestamp.3#,nng_stat_timestamp()>>|get statistic timestamp
+|<<nng_stat_type.3#,nng_stat_type()>>|get statistic type
+|<<nng_stat_unit.3#,nng_stat_unit()>>|get statistic unit
+|<<nng_stat_value.3#,nng_stat_valueg()>>|get statistic value
+|<<nng_stats_free.3#,nng_stats_free()>>|free statistics
+|<<nng_stats_get.3#,nng_stats_get()>>|get statistics
+|===
+
 === URL Object
 
 Common functionality is supplied for parsing and handling

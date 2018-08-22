@@ -11,6 +11,7 @@
 #include "core/nng_impl.h"
 #include "sockimpl.h"
 
+#include <stdio.h>
 #include <string.h>
 
 // This file contains functions relating to pipes.
@@ -82,6 +83,7 @@ pipe_destroy(nni_pipe *p)
 		p->p_tran_ops.p_stop(p->p_tran_data);
 	}
 
+	nni_stat_remove(&p->p_stats.s_root);
 	nni_pipe_remove(p);
 
 	if (p->p_proto_data != NULL) {
@@ -177,6 +179,28 @@ nni_pipe_peer(nni_pipe *p)
 	return (p->p_tran_ops.p_peer(p->p_tran_data));
 }
 
+void
+nni_pipe_stats_init(nni_pipe *p)
+{
+#ifdef NNG_ENABLE_STATS
+	nni_pipe_stats *st = &p->p_stats;
+
+	if (p->p_listener != NULL) {
+		st->s_ep_id.si_name  = "listener";
+		st->s_ep_id.si_desc  = "listener for pipe";
+		st->s_ep_id.si_value = nni_listener_id(p->p_listener);
+	} else {
+		st->s_ep_id.si_name  = "dialer";
+		st->s_ep_id.si_desc  = "dialer for pipe";
+		st->s_ep_id.si_value = nni_dialer_id(p->p_dialer);
+	}
+
+	nni_stat_append(NULL, &st->s_root);
+#else
+	NNI_ARG_UNUSED(p);
+#endif
+}
+
 int
 nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 {
@@ -184,7 +208,6 @@ nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	int                 rv;
 	void *              sdata = nni_sock_proto_data(sock);
 	nni_proto_pipe_ops *pops  = nni_sock_proto_pipe_ops(sock);
-	uint64_t            id;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		// In this case we just toss the pipe...
@@ -210,11 +233,26 @@ nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	nni_cv_init(&p->p_cv, &nni_pipe_lk);
 
 	nni_mtx_lock(&nni_pipe_lk);
-	if ((rv = nni_idhash_alloc(nni_pipes, &id, p)) == 0) {
-		p->p_id     = (uint32_t) id;
+	if ((rv = nni_idhash_alloc32(nni_pipes, &p->p_id, p)) == 0) {
 		p->p_refcnt = 1;
 	}
 	nni_mtx_unlock(&nni_pipe_lk);
+
+	nni_pipe_stats *st = &p->p_stats;
+	snprintf(st->s_scope, sizeof(st->s_scope), "pipe%u", p->p_id);
+
+	nni_stat_init_scope(&st->s_root, st->s_scope, "pipe statistics");
+
+	nni_stat_init_id(&st->s_id, "id", "pipe id", p->p_id);
+	nni_stat_append(&st->s_root, &st->s_id);
+
+	// name and description fleshed out later.
+	nni_stat_init_id(&st->s_ep_id, "", "", 0);
+	nni_stat_append(&st->s_root, &st->s_ep_id);
+
+	nni_stat_init_id(&st->s_sock_id, "socket", "socket for pipe",
+	    nni_sock_id(p->p_sock));
+	nni_stat_append(&st->s_root, &st->s_sock_id);
 
 	if ((rv != 0) || ((rv = tran->tran_pipe->p_init(tdata, p)) != 0) ||
 	    ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0)) {
@@ -273,4 +311,10 @@ uint32_t
 nni_pipe_dialer_id(nni_pipe *p)
 {
 	return (p->p_dialer ? nni_dialer_id(p->p_dialer) : 0);
+}
+
+void
+nni_pipe_add_stat(nni_pipe *p, nni_stat_item *item)
+{
+	nni_stat_append(&p->p_stats.s_root, item);
 }

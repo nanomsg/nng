@@ -151,6 +151,17 @@ if (NNG_ENABLE_DOC)
 	nng_setopt
 	nng_sleep_aio
 	nng_socket_id
+	nng_stats_free
+	nng_stats_get
+	nng_stat_child
+	nng_stat_desc
+	nng_stat_name
+	nng_stat_next
+	nng_stat_string
+	nng_stat_timestamp
+	nng_stat_type
+	nng_stat_unit
+	nng_stat_value
 	nng_strdup
 	nng_strerror
 	nng_strfree
@@ -305,6 +316,7 @@ if (NNG_ENABLE_DOC)
 	nng_sockaddr_ipc
 	nng_sockaddr_zt
 	nng_socket
+	nng_stat
     )
 
     set(NNG_MAN7
