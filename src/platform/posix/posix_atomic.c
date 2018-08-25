@@ -28,6 +28,43 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 {
 	atomic_flag_clear(&f->f);
 }
+
+void
+nni_atomic_inc64(nni_atomic_u64 *v, uint64_t bump)
+{
+	(void) atomic_fetch_add_explicit(&v->v, bump, memory_order_relaxed);
+}
+
+void
+nni_atomic_dec64(nni_atomic_u64 *v, uint64_t bump)
+{
+	(void) atomic_fetch_sub_explicit(&v->v, bump, memory_order_relaxed);
+}
+
+uint64_t
+nni_atomic_get64(nni_atomic_u64 *v)
+{
+	return (atomic_load(&v->v));
+}
+
+void
+nni_atomic_set64(nni_atomic_u64 *v, uint64_t u)
+{
+	atomic_store(&v->v, u);
+}
+
+uint64_t
+nni_atomic_swap64(nni_atomic_u64 *v, uint64_t u)
+{
+	return (atomic_exchange(&v->v, u));
+}
+
+void
+nni_atomic_init64(nni_atomic_u64 *v)
+{
+	atomic_init(&v->v, 0);
+}
+
 #else
 
 #include <pthread.h>
@@ -52,6 +89,58 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 	f->f = false;
 	pthread_mutex_unlock(&plat_atomic_lock);
 }
+
+void
+nni_atomic_inc64(nni_atomic_u64 *v, uint64_t bump)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v += bump;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+void
+nni_atomic_dec64(nni_atomic_u64 *v, uint64_t bump)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v -= bump;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+uint64_t
+nni_atomic_get64(nni_atomic_u64 *v)
+{
+	uint64_t rv;
+	pthread_mutex_lock(&plat_atomic_lock);
+	rv = v->v;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (rv);
+}
+
+void
+nni_atomic_set64(nni_atomic_u64 *v, uint64_t u)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v = u;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+uint64_t
+nni_atomic_swap64(nni_atomic_u64 *v, uint64_t u)
+{
+	uint64_t rv;
+	pthread_mutex_lock(&plat_atomic_lock);
+	rv   = v->v;
+	v->v = u;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (rv);
+}
+
+void
+nni_atomic_init64(nni_atomic_u64 *v)
+{
+	v->v = 0;
+}
+
 #endif
 
 #endif // NNG_PLATFORM_POSIX

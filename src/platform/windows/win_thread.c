@@ -121,6 +121,44 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 	InterlockedExchange(&f->f, 0);
 }
 
+void
+nni_atomic_inc64(nni_atomic_u64 *v, uint64_t bump)
+{
+	InterlockedAddNoFence64(&v->v, (LONGLONG) bump);
+}
+
+void
+nni_atomic_dec64(nni_atomic_u64 *v, uint64_t bump)
+{
+	// Windows lacks a sub, so we add the negative.
+	InterlockedAddNoFence64(&v->v, (0ll - (LONGLONG) bump));
+}
+
+uint64_t
+nni_atomic_get64(nni_atomic_u64 *v)
+{
+
+	return ((uint64_t)(InterlockedExchangeAdd64(&v->v, 0)));
+}
+
+void
+nni_atomic_set64(nni_atomic_u64 *v, uint64_t u)
+{
+	return (InterlockedExchange64(&v->v, (LONGLONG) u));
+}
+
+uint64_t
+nni_atomic_swap64(nni_atomic_u64 *v, uint64_t u)
+{
+	return ((uint64_t)(InterlockedExchange64(&v->v, (LONGLONG) u)));
+}
+
+void
+nni_atomic_init64(nni_atomic_u64 *v)
+{
+	InterlockedExchange64(&v->v, 0);
+}
+
 static unsigned int __stdcall nni_plat_thr_main(void *arg)
 {
 	nni_plat_thr *thr = arg;

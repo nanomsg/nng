@@ -52,6 +52,10 @@ struct nni_atomic_flag {
 	unsigned f;
 };
 
+struct nni_atomic_u64 {
+	LONGLONG v;
+};
+
 // nni_win_io is used with io completion ports.  This allows us to get
 // to a specific completion callback without requiring the poller (in the
 // completion port) to know anything about the event itself.
