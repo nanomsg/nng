@@ -30,6 +30,7 @@ typedef struct tlstran_pipe     tlstran_pipe;
 // tlstran_pipe is one end of a TLS connection.
 struct tlstran_pipe {
 	nni_tls *       tls;
+	nni_pipe *      npipe;
 	uint16_t        peer;
 	uint16_t        proto;
 	size_t          rcvmax;
@@ -77,6 +78,8 @@ struct tlstran_ep {
 	nni_tcp_listener *listener;
 	nng_sockaddr      sa;
 	nng_sockaddr      bsa;
+	nni_dialer *      ndialer;
+	nni_listener *    nlistener;
 };
 
 static void tlstran_pipe_send_start(tlstran_pipe *);
@@ -125,6 +128,14 @@ tlstran_pipe_stop(void *arg)
 	nni_aio_stop(p->rslvaio);
 }
 
+static int
+tlstran_pipe_init(void *arg, nni_pipe *npipe)
+{
+	tlstran_pipe *p = arg;
+	p->npipe        = npipe;
+	return (0);
+}
+
 static void
 tlstran_pipe_fini(void *arg)
 {
@@ -153,7 +164,7 @@ tlstran_pipe_fini(void *arg)
 }
 
 static int
-tlstran_pipe_init(tlstran_pipe **pipep, tlstran_ep *ep)
+tlstran_pipe_alloc(tlstran_pipe **pipep, tlstran_ep *ep)
 {
 	tlstran_pipe *p;
 	int           rv;
@@ -742,13 +753,14 @@ tlstran_ep_close(void *arg)
 }
 
 static int
-tlstran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
+tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 {
 	tlstran_ep *ep;
 	int         rv;
 	uint16_t    af;
 	char *      host = url->u_hostname;
 	char *      port = url->u_port;
+	nni_sock *  sock = nni_dialer_sock(ndialer);
 
 	if (strcmp(url->u_scheme, "tls+tcp") == 0) {
 		af = NNG_AF_UNSPEC;
@@ -782,6 +794,7 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
 	ep->proto     = nni_sock_proto_id(sock);
 	ep->nodelay   = true;
 	ep->keepalive = false;
+	ep->ndialer   = ndialer;
 
 	if (((rv = nni_tcp_dialer_init(&ep->dialer)) != 0) ||
 	    ((rv = nni_tls_config_init(&ep->cfg, NNG_TLS_MODE_CLIENT)) != 0) ||
@@ -796,13 +809,14 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
 }
 
 static int
-tlstran_ep_init_listener(void **lp, nni_url *url, nni_sock *sock)
+tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 {
 	tlstran_ep *ep;
 	int         rv;
 	uint16_t    af;
 	char *      host = url->u_hostname;
 	nni_aio *   aio;
+	nni_sock *  sock = nni_listener_sock(nlistener);
 
 	if (strcmp(url->u_scheme, "tls+tcp") == 0) {
 		af = NNG_AF_UNSPEC;
@@ -835,6 +849,7 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_sock *sock)
 	ep->proto     = nni_sock_proto_id(sock);
 	ep->nodelay   = true;
 	ep->keepalive = false;
+	ep->nlistener = nlistener;
 
 	if (strlen(host) == 0) {
 		host = NULL;
@@ -879,7 +894,7 @@ tlstran_ep_connect(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = tlstran_pipe_init(&p, ep)) != 0) {
+	if ((rv = tlstran_pipe_alloc(&p, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -923,7 +938,7 @@ tlstran_ep_accept(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = tlstran_pipe_init(&p, ep)) != 0) {
+	if ((rv = tlstran_pipe_alloc(&p, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -1224,6 +1239,7 @@ static nni_tran_option tlstran_pipe_options[] = {
 };
 
 static nni_tran_pipe_ops tlstran_pipe_ops = {
+	.p_init    = tlstran_pipe_init,
 	.p_fini    = tlstran_pipe_fini,
 	.p_stop    = tlstran_pipe_stop,
 	.p_send    = tlstran_pipe_send,

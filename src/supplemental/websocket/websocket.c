@@ -32,7 +32,7 @@ typedef struct ws_header {
 struct nni_ws {
 	nni_list_node    node;
 	nni_reap_item    reap;
-	int              mode; // NNI_EP_MODE_DIAL or NNI_EP_MODE_LISTEN
+	bool             server;
 	bool             closed;
 	bool             ready;
 	bool             wclose;
@@ -296,10 +296,10 @@ ws_msg_init_control(
 	frame->buf     = frame->sdata;
 	frame->bufsz   = 0;
 
-	if (ws->mode == NNI_EP_MODE_DIAL) {
-		ws_mask_frame(frame);
-	} else {
+	if (ws->server) {
 		frame->masked = false;
+	} else {
+		ws_mask_frame(frame);
 	}
 
 	wm->aio = NULL;
@@ -375,10 +375,10 @@ ws_msg_init_tx(ws_msg **wmp, nni_ws *ws, nni_msg *msg, nni_aio *aio)
 			frame->hlen += 8;
 		}
 
-		if (ws->mode == NNI_EP_MODE_DIAL) {
-			ws_mask_frame(frame);
-		} else {
+		if (ws->server) {
 			frame->masked = false;
+		} else {
+			ws_mask_frame(frame);
 		}
 
 	} while (len);
@@ -960,12 +960,12 @@ ws_read_cb(void *arg)
 		// here, because we don't have data yet.)
 		if (frame->masked) {
 			memcpy(frame->mask, frame->head + frame->hlen - 4, 4);
-			if (ws->mode == NNI_EP_MODE_DIAL) {
+			if (!ws->server) {
 				ws_close(ws, WS_CLOSE_PROTOCOL_ERR);
 				nni_mtx_unlock(&ws->mtx);
 				return;
 			}
-		} else if (ws->mode == NNI_EP_MODE_LISTEN) {
+		} else if (ws->server) {
 			ws_close(ws, WS_CLOSE_PROTOCOL_ERR);
 			nni_mtx_unlock(&ws->mtx);
 			return;
@@ -1369,13 +1369,10 @@ ws_http_cb(void *arg)
 	nni_ws * ws  = arg;
 	nni_aio *aio = ws->httpaio;
 
-	switch (ws->mode) {
-	case NNI_EP_MODE_LISTEN:
+	if (ws->server) {
 		ws_http_cb_listener(ws, aio);
-		break;
-	case NNI_EP_MODE_DIAL:
+	} else {
 		ws_http_cb_dialer(ws, aio);
-		break;
 	}
 }
 
@@ -1586,7 +1583,7 @@ ws_handler(nni_aio *aio)
 	ws->http     = conn;
 	ws->req      = req;
 	ws->res      = res;
-	ws->mode     = NNI_EP_MODE_LISTEN;
+	ws->server   = true;
 	ws->maxframe = l->maxframe;
 
 	// XXX: Inherit fragmentation? (Frag is limited for now).
@@ -2071,7 +2068,7 @@ nni_ws_dialer_dial(nni_ws_dialer *d, nni_aio *aio)
 	}
 	ws->dialer   = d;
 	ws->useraio  = aio;
-	ws->mode     = NNI_EP_MODE_DIAL;
+	ws->server   = false;
 	ws->maxframe = d->maxframe;
 	nni_list_append(&d->wspend, ws);
 	nni_http_client_connect(d->client, ws->connaio);

@@ -216,7 +216,7 @@ nni_pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	}
 	nni_mtx_unlock(&nni_pipe_lk);
 
-	if ((rv != 0) ||
+	if ((rv != 0) || ((rv = tran->tran_pipe->p_init(tdata, p)) != 0) ||
 	    ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0)) {
 		nni_pipe_close(p);
 		nni_pipe_rele(p);

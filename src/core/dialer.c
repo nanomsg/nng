@@ -112,7 +112,7 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 
 	if (((rv = nni_aio_init(&d->d_con_aio, dialer_connect_cb, d)) != 0) ||
 	    ((rv = nni_aio_init(&d->d_tmo_aio, dialer_timer_cb, d)) != 0) ||
-	    ((rv = d->d_ops.d_init(&d->d_data, url, s)) != 0) ||
+	    ((rv = d->d_ops.d_init(&d->d_data, url, d)) != 0) ||
 	    ((rv = nni_idhash_alloc32(dialers, &d->d_id, d)) != 0) ||
 	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
 		nni_dialer_destroy(d);
@@ -300,6 +300,12 @@ nni_dialer_start(nni_dialer *d, int flags)
 	}
 
 	return (rv);
+}
+
+nni_sock *
+nni_dialer_sock(nni_dialer *d)
+{
+	return (d->d_sock);
 }
 
 int

@@ -33,6 +33,7 @@ struct nni_inproc_pipe {
 	nni_inproc_pair *pair;
 	nni_msgq *       rq;
 	nni_msgq *       wq;
+	nni_pipe *       npipe;
 	uint16_t         peer;
 	uint16_t         proto;
 	size_t           rcvmax;
@@ -57,6 +58,8 @@ struct nni_inproc_ep {
 	nni_list      aios;
 	size_t        rcvmax;
 	nni_mtx       mtx;
+	nni_dialer *  ndialer;
+	nni_listener *nlistener;
 };
 
 // nni_inproc is our global state - this contains the list of active endpoints
@@ -103,7 +106,7 @@ nni_inproc_pair_destroy(nni_inproc_pair *pair)
 }
 
 static int
-nni_inproc_pipe_init(nni_inproc_pipe **pipep, nni_inproc_ep *ep)
+nni_inproc_pipe_alloc(nni_inproc_pipe **pipep, nni_inproc_ep *ep)
 {
 	nni_inproc_pipe *pipe;
 
@@ -117,6 +120,14 @@ nni_inproc_pipe_init(nni_inproc_pipe **pipep, nni_inproc_ep *ep)
 	pipe->proto = ep->proto;
 	pipe->addr  = ep->addr;
 	*pipep      = pipe;
+	return (0);
+}
+
+static int
+nni_inproc_pipe_init(void *arg, nni_pipe *p)
+{
+	nni_inproc_pipe *pipe = arg;
+	pipe->npipe           = p;
 	return (0);
 }
 
@@ -196,9 +207,10 @@ nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-nni_inproc_dialer_init(void **epp, nni_url *url, nni_sock *sock)
+nni_inproc_dialer_init(void **epp, nni_url *url, nni_dialer *ndialer)
 {
 	nni_inproc_ep *ep;
+	nni_sock *     sock = nni_dialer_sock(ndialer);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
@@ -208,6 +220,7 @@ nni_inproc_dialer_init(void **epp, nni_url *url, nni_sock *sock)
 	ep->listener = false;
 	ep->proto    = nni_sock_proto_id(sock);
 	ep->rcvmax   = 0;
+	ep->ndialer  = ndialer;
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -215,19 +228,22 @@ nni_inproc_dialer_init(void **epp, nni_url *url, nni_sock *sock)
 	*epp     = ep;
 	return (0);
 }
+
 static int
-nni_inproc_listener_init(void **epp, nni_url *url, nni_sock *sock)
+nni_inproc_listener_init(void **epp, nni_url *url, nni_listener *nlistener)
 {
 	nni_inproc_ep *ep;
+	nni_sock *     sock = nni_listener_sock(nlistener);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&ep->mtx);
 
-	ep->listener = true;
-	ep->proto    = nni_sock_proto_id(sock);
-	ep->rcvmax   = 0;
+	ep->listener  = true;
+	ep->proto     = nni_sock_proto_id(sock);
+	ep->rcvmax    = 0;
+	ep->nlistener = nlistener;
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -330,8 +346,8 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 			nni_mtx_init(&pair->mx);
 
 			spipe = cpipe = NULL;
-			if (((rv = nni_inproc_pipe_init(&cpipe, cli)) != 0) ||
-			    ((rv = nni_inproc_pipe_init(&spipe, srv)) != 0) ||
+			if (((rv = nni_inproc_pipe_alloc(&cpipe, cli)) != 0) ||
+			    ((rv = nni_inproc_pipe_alloc(&spipe, srv)) != 0) ||
 			    ((rv = nni_msgq_init(&pair->q[0], 1)) != 0) ||
 			    ((rv = nni_msgq_init(&pair->q[1], 1)) != 0)) {
 
@@ -522,6 +538,7 @@ static nni_tran_option nni_inproc_pipe_options[] = {
 };
 
 static nni_tran_pipe_ops nni_inproc_pipe_ops = {
+	.p_init    = nni_inproc_pipe_init,
 	.p_fini    = nni_inproc_pipe_fini,
 	.p_send    = nni_inproc_pipe_send,
 	.p_recv    = nni_inproc_pipe_recv,

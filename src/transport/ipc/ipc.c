@@ -32,6 +32,7 @@ struct ipctran_pipe {
 	bool            closed;
 	nni_sockaddr    sa;
 	ipctran_ep *    ep;
+	nni_pipe *      npipe;
 	nni_list_node   node;
 	nni_atomic_flag reaped;
 	nni_reap_item   reap;
@@ -64,6 +65,8 @@ struct ipctran_ep {
 	nni_ipc_dialer *  dialer;
 	nni_ipc_listener *listener;
 	nni_reap_item     reap;
+	nni_dialer *      ndialer;
+	nni_listener *    nlistener;
 };
 
 static void ipctran_pipe_send_start(ipctran_pipe *);
@@ -113,6 +116,14 @@ ipctran_pipe_stop(void *arg)
 	nni_aio_stop(p->connaio);
 }
 
+static int
+ipctran_pipe_init(void *arg, nni_pipe *npipe)
+{
+	ipctran_pipe *p = arg;
+	p->npipe        = npipe;
+	return (0);
+}
+
 static void
 ipctran_pipe_fini(void *arg)
 {
@@ -154,7 +165,7 @@ ipctran_pipe_reap(ipctran_pipe *p)
 }
 
 static int
-ipctran_pipe_init(ipctran_pipe **pipep, ipctran_ep *ep)
+ipctran_pipe_alloc(ipctran_pipe **pipep, ipctran_ep *ep)
 {
 	ipctran_pipe *p;
 	int           rv;
@@ -749,11 +760,12 @@ ipctran_ep_close(void *arg)
 }
 
 static int
-ipctran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
+ipctran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 {
 	ipctran_ep *ep;
 	int         rv;
 	size_t      sz;
+	nni_sock *  sock = nni_dialer_sock(ndialer);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
@@ -764,6 +776,7 @@ ipctran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
 	sz                     = sizeof(ep->sa.s_ipc.sa_path);
 	ep->sa.s_ipc.sa_family = NNG_AF_IPC;
 	ep->proto              = nni_sock_proto_id(sock);
+	ep->ndialer            = ndialer;
 
 	if (nni_strlcpy(ep->sa.s_ipc.sa_path, url->u_path, sz) >= sz) {
 		ipctran_ep_fini(ep);
@@ -780,11 +793,12 @@ ipctran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
 }
 
 static int
-ipctran_ep_init_listener(void **dp, nni_url *url, nni_sock *sock)
+ipctran_ep_init_listener(void **dp, nni_url *url, nni_listener *nlistener)
 {
 	ipctran_ep *ep;
 	int         rv;
 	size_t      sz;
+	nni_sock *  sock = nni_listener_sock(nlistener);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
@@ -795,6 +809,7 @@ ipctran_ep_init_listener(void **dp, nni_url *url, nni_sock *sock)
 	sz                     = sizeof(ep->sa.s_ipc.sa_path);
 	ep->sa.s_ipc.sa_family = NNG_AF_IPC;
 	ep->proto              = nni_sock_proto_id(sock);
+	ep->nlistener          = nlistener;
 
 	if (nni_strlcpy(ep->sa.s_ipc.sa_path, url->u_path, sz) >= sz) {
 		ipctran_ep_fini(ep);
@@ -821,7 +836,7 @@ ipctran_ep_connect(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = ipctran_pipe_init(&p, ep)) != 0) {
+	if ((rv = ipctran_pipe_alloc(&p, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -887,7 +902,7 @@ ipctran_ep_accept(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = ipctran_pipe_init(&p, ep)) != 0) {
+	if ((rv = ipctran_pipe_alloc(&p, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -1006,6 +1021,7 @@ static nni_tran_option ipctran_pipe_options[] = {
 };
 
 static nni_tran_pipe_ops ipctran_pipe_ops = {
+	.p_init    = ipctran_pipe_init,
 	.p_fini    = ipctran_pipe_fini,
 	.p_stop    = ipctran_pipe_stop,
 	.p_send    = ipctran_pipe_send,

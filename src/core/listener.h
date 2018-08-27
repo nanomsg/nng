@@ -20,6 +20,7 @@ extern uint32_t nni_listener_id(nni_listener *);
 extern int      nni_listener_create(nni_listener **, nni_sock *, const char *);
 extern void     nni_listener_close(nni_listener *);
 extern int      nni_listener_start(nni_listener *, int);
+extern nni_sock *nni_listener_sock(nni_listener *);
 
 extern int nni_listener_setopt(
     nni_listener *, const char *, const void *, size_t, nni_opt_type);

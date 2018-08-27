@@ -42,6 +42,7 @@ struct ws_dialer {
 	nni_ws_dialer *dialer;
 	nni_list       headers; // req headers
 	bool           started;
+	nni_dialer *   ndialer;
 };
 
 struct ws_listener {
@@ -55,19 +56,21 @@ struct ws_listener {
 	nni_ws_listener *listener;
 	nni_list         headers; // res headers
 	bool             started;
+	nni_listener *   nlistener;
 };
 
 struct ws_pipe {
-	nni_mtx  mtx;
-	size_t   rcvmax;
-	bool     closed;
-	uint16_t rproto;
-	uint16_t lproto;
-	nni_aio *user_txaio;
-	nni_aio *user_rxaio;
-	nni_aio *txaio;
-	nni_aio *rxaio;
-	nni_ws * ws;
+	nni_mtx   mtx;
+	nni_pipe *npipe;
+	size_t    rcvmax;
+	bool      closed;
+	uint16_t  rproto;
+	uint16_t  lproto;
+	nni_aio * user_txaio;
+	nni_aio * user_rxaio;
+	nni_aio * txaio;
+	nni_aio * rxaio;
+	nni_ws *  ws;
 };
 
 static void
@@ -201,6 +204,14 @@ ws_pipe_stop(void *arg)
 	nni_aio_stop(p->txaio);
 }
 
+static int
+ws_pipe_init(void *arg, nni_pipe *npipe)
+{
+	ws_pipe *p = arg;
+	p->npipe   = npipe;
+	return (0);
+}
+
 static void
 ws_pipe_fini(void *arg)
 {
@@ -230,7 +241,7 @@ ws_pipe_close(void *arg)
 }
 
 static int
-ws_pipe_init(ws_pipe **pipep, void *ws)
+ws_pipe_alloc(ws_pipe **pipep, void *ws)
 {
 	ws_pipe *p;
 	int      rv;
@@ -663,6 +674,7 @@ static nni_tran_option ws_pipe_options[] = {
 };
 
 static nni_tran_pipe_ops ws_pipe_ops = {
+	.p_init    = ws_pipe_init,
 	.p_fini    = ws_pipe_fini,
 	.p_stop    = ws_pipe_stop,
 	.p_send    = ws_pipe_send,
@@ -782,7 +794,7 @@ ws_connect_cb(void *arg)
 	NNI_ASSERT(nni_list_empty(&d->aios));
 	if ((rv = nni_aio_result(caio)) != 0) {
 		nni_aio_finish_error(uaio, rv);
-	} else if ((rv = ws_pipe_init(&p, ws)) != 0) {
+	} else if ((rv = ws_pipe_alloc(&p, ws)) != 0) {
 		nni_ws_fini(ws);
 		nni_aio_finish_error(uaio, rv);
 	} else {
@@ -835,7 +847,7 @@ ws_accept_cb(void *arg)
 			ws_pipe *p;
 			// Make a pipe
 			nni_aio_list_remove(uaio);
-			if ((rv = ws_pipe_init(&p, ws)) != 0) {
+			if ((rv = ws_pipe_alloc(&p, ws)) != 0) {
 				nni_ws_close(ws);
 				nni_aio_finish_error(uaio, rv);
 			} else {
@@ -855,9 +867,10 @@ ws_accept_cb(void *arg)
 }
 
 static int
-ws_dialer_init(void **dp, nni_url *url, nni_sock *s)
+ws_dialer_init(void **dp, nni_url *url, nni_dialer *ndialer)
 {
 	ws_dialer * d;
+	nni_sock *  s = nni_dialer_sock(ndialer);
 	const char *n;
 	int         rv;
 
@@ -869,9 +882,10 @@ ws_dialer_init(void **dp, nni_url *url, nni_sock *s)
 
 	nni_aio_list_init(&d->aios);
 
-	d->lproto = nni_sock_proto_id(s);
-	d->rproto = nni_sock_peer_id(s);
-	n         = nni_sock_peer_name(s);
+	d->lproto  = nni_sock_proto_id(s);
+	d->rproto  = nni_sock_peer_id(s);
+	d->ndialer = ndialer;
+	n          = nni_sock_peer_name(s);
 
 	if (((rv = nni_ws_dialer_init(&d->dialer, url)) != 0) ||
 	    ((rv = nni_aio_init(&d->connaio, ws_connect_cb, d)) != 0) ||
@@ -886,11 +900,12 @@ ws_dialer_init(void **dp, nni_url *url, nni_sock *s)
 }
 
 static int
-ws_listener_init(void **lp, nni_url *url, nni_sock *sock)
+ws_listener_init(void **lp, nni_url *url, nni_listener *nlistener)
 {
 	ws_listener *l;
 	const char * n;
 	int          rv;
+	nni_sock *   sock = nni_listener_sock(nlistener);
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
@@ -900,9 +915,10 @@ ws_listener_init(void **lp, nni_url *url, nni_sock *sock)
 
 	nni_aio_list_init(&l->aios);
 
-	l->lproto = nni_sock_proto_id(sock);
-	l->rproto = nni_sock_peer_id(sock);
-	n         = nni_sock_proto_name(sock);
+	l->lproto    = nni_sock_proto_id(sock);
+	l->rproto    = nni_sock_peer_id(sock);
+	n            = nni_sock_proto_name(sock);
+	l->nlistener = nlistener;
 
 	if (((rv = nni_ws_listener_init(&l->listener, url)) != 0) ||
 	    ((rv = nni_aio_init(&l->accaio, ws_accept_cb, l)) != 0) ||

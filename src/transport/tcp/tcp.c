@@ -23,6 +23,7 @@ typedef struct tcptran_ep   tcptran_ep;
 // tcp_pipe is one end of a TCP connection.
 struct tcptran_pipe {
 	nni_tcp_conn *  conn;
+	nni_pipe *      npipe;
 	uint16_t        peer;
 	uint16_t        proto;
 	size_t          rcvmax;
@@ -69,6 +70,8 @@ struct tcptran_ep {
 	nni_reap_item     reap;
 	nni_tcp_dialer *  dialer;
 	nni_tcp_listener *listener;
+	nni_dialer *      ndialer;
+	nni_listener *    nlistener;
 };
 
 static void tcptran_pipe_send_start(tcptran_pipe *);
@@ -121,6 +124,14 @@ tcptran_pipe_stop(void *arg)
 	nni_aio_stop(p->rslvaio);
 }
 
+static int
+tcptran_pipe_init(void *arg, nni_pipe *npipe)
+{
+	tcptran_pipe *p = arg;
+	p->npipe        = npipe;
+	return (0);
+}
+
 static void
 tcptran_pipe_fini(void *arg)
 {
@@ -162,7 +173,7 @@ tcptran_pipe_reap(tcptran_pipe *p)
 }
 
 static int
-tcptran_pipe_init(tcptran_pipe **pipep, tcptran_ep *ep)
+tcptran_pipe_alloc(tcptran_pipe **pipep, tcptran_ep *ep)
 {
 	tcptran_pipe *p;
 	int           rv;
@@ -750,13 +761,14 @@ tcptran_ep_close(void *arg)
 }
 
 static int
-tcptran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
+tcptran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 {
 	tcptran_ep * ep;
 	int          rv;
 	uint16_t     af;
 	char *       host;
 	nng_sockaddr srcsa;
+	nni_sock *   sock = nni_dialer_sock(ndialer);
 
 	if (strcmp(url->u_scheme, "tcp") == 0) {
 		af = NNG_AF_UNSPEC;
@@ -788,6 +800,7 @@ tcptran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
 	ep->nodelay   = true;
 	ep->keepalive = false;
 	ep->url       = url;
+	ep->ndialer   = ndialer;
 
 	// Detect an embedded local interface name in the hostname.  This
 	// syntax is only valid with dialers.
@@ -839,13 +852,14 @@ tcptran_ep_init_dialer(void **dp, nni_url *url, nni_sock *sock)
 	return (0);
 }
 static int
-tcptran_ep_init_listener(void **lp, nni_url *url, nni_sock *sock)
+tcptran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 {
 	tcptran_ep *ep;
 	int         rv;
 	char *      host;
 	nni_aio *   aio;
 	uint16_t    af;
+	nni_sock *  sock = nni_listener_sock(nlistener);
 
 	if (strcmp(url->u_scheme, "tcp") == 0) {
 		af = NNG_AF_UNSPEC;
@@ -876,6 +890,7 @@ tcptran_ep_init_listener(void **lp, nni_url *url, nni_sock *sock)
 	ep->nodelay   = true;
 	ep->keepalive = false;
 	ep->url       = url;
+	ep->nlistener = nlistener;
 
 	if (strlen(url->u_hostname) == 0) {
 		host = NULL;
@@ -926,7 +941,7 @@ tcptran_ep_connect(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = tcptran_pipe_init(&p, ep)) != 0) {
+	if ((rv = tcptran_pipe_alloc(&p, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -1065,7 +1080,7 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = tcptran_pipe_init(&p, ep)) != 0) {
+	if ((rv = tcptran_pipe_alloc(&p, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -1135,6 +1150,7 @@ static nni_tran_option tcptran_pipe_options[] = {
 };
 
 static nni_tran_pipe_ops tcptran_pipe_ops = {
+	.p_init    = tcptran_pipe_init,
 	.p_fini    = tcptran_pipe_fini,
 	.p_stop    = tcptran_pipe_stop,
 	.p_send    = tcptran_pipe_send,

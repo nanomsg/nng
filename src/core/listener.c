@@ -110,7 +110,7 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *urlstr)
 
 	if (((rv = nni_aio_init(&l->l_acc_aio, listener_accept_cb, l)) != 0) ||
 	    ((rv = nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l)) != 0) ||
-	    ((rv = l->l_ops.l_init(&l->l_data, url, s)) != 0) ||
+	    ((rv = l->l_ops.l_init(&l->l_data, url, l)) != 0) ||
 	    ((rv = nni_idhash_alloc32(listeners, &l->l_id, l)) != 0) ||
 	    ((rv = nni_sock_add_listener(s, l)) != 0)) {
 		nni_listener_destroy(l);
@@ -282,6 +282,12 @@ nni_listener_start(nni_listener *l, int flags)
 	listener_accept_start(l);
 
 	return (0);
+}
+
+nni_sock *
+nni_listener_sock(nni_listener *l)
+{
+	return (l->l_sock);
 }
 
 int
