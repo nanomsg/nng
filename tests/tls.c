@@ -448,14 +448,14 @@ TestMain("TLS Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tls+tcp://*:%u");
+		trantest_next_address(addr, "tls+tcp4://*:%u");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_tls_file(l) == 0);
 		So(nng_listener_start(l, 0) == 0);
 		nng_msleep(100);
 
 		// reset port back one
-		trantest_prev_address(addr, "tls+tcp://localhost:%u");
+		trantest_prev_address(addr, "tls+tcp4://localhost:%u");
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls_file(d) == 0);
 		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
