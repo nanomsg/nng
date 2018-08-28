@@ -25,9 +25,11 @@ struct nni_tcp_conn {
 };
 
 struct nni_tcp_dialer {
-	nni_list connq; // pending connections
-	bool     closed;
-	nni_mtx  mtx;
+	nni_list                connq; // pending connections
+	bool                    closed;
+	struct sockaddr_storage src;
+	size_t                  srclen;
+	nni_mtx                 mtx;
 };
 
 struct nni_tcp_listener {

@@ -33,8 +33,10 @@ struct nni_inproc_pipe {
 	nni_inproc_pair *pair;
 	nni_msgq *       rq;
 	nni_msgq *       wq;
+	nni_pipe *       npipe;
 	uint16_t         peer;
 	uint16_t         proto;
+	size_t           rcvmax;
 };
 
 // nni_inproc_pair represents a pair of pipes.  Because we control both
@@ -54,6 +56,10 @@ struct nni_inproc_ep {
 	nni_cv        cv;
 	nni_list      clients;
 	nni_list      aios;
+	size_t        rcvmax;
+	nni_mtx       mtx;
+	nni_dialer *  ndialer;
+	nni_listener *nlistener;
 };
 
 // nni_inproc is our global state - this contains the list of active endpoints
@@ -100,16 +106,28 @@ nni_inproc_pair_destroy(nni_inproc_pair *pair)
 }
 
 static int
-nni_inproc_pipe_init(nni_inproc_pipe **pipep, nni_inproc_ep *ep)
+nni_inproc_pipe_alloc(nni_inproc_pipe **pipep, nni_inproc_ep *ep)
 {
 	nni_inproc_pipe *pipe;
 
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	nni_mtx_lock(&ep->mtx);
+	pipe->rcvmax = ep->rcvmax;
+	nni_mtx_unlock(&ep->mtx);
+
 	pipe->proto = ep->proto;
 	pipe->addr  = ep->addr;
 	*pipep      = pipe;
+	return (0);
+}
+
+static int
+nni_inproc_pipe_init(void *arg, nni_pipe *p)
+{
+	nni_inproc_pipe *pipe = arg;
+	pipe->npipe           = p;
 	return (0);
 }
 
@@ -189,16 +207,20 @@ nni_inproc_pipe_get_addr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-nni_inproc_dialer_init(void **epp, nni_url *url, nni_sock *sock)
+nni_inproc_dialer_init(void **epp, nni_url *url, nni_dialer *ndialer)
 {
 	nni_inproc_ep *ep;
+	nni_sock *     sock = nni_dialer_sock(ndialer);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	nni_mtx_init(&ep->mtx);
 
 	ep->listener = false;
 	ep->proto    = nni_sock_proto_id(sock);
+	ep->rcvmax   = 0;
+	ep->ndialer  = ndialer;
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -206,17 +228,22 @@ nni_inproc_dialer_init(void **epp, nni_url *url, nni_sock *sock)
 	*epp     = ep;
 	return (0);
 }
+
 static int
-nni_inproc_listener_init(void **epp, nni_url *url, nni_sock *sock)
+nni_inproc_listener_init(void **epp, nni_url *url, nni_listener *nlistener)
 {
 	nni_inproc_ep *ep;
+	nni_sock *     sock = nni_listener_sock(nlistener);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	nni_mtx_init(&ep->mtx);
 
-	ep->listener = true;
-	ep->proto    = nni_sock_proto_id(sock);
+	ep->listener  = true;
+	ep->proto     = nni_sock_proto_id(sock);
+	ep->rcvmax    = 0;
+	ep->nlistener = nlistener;
 	NNI_LIST_INIT(&ep->clients, nni_inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -229,15 +256,14 @@ static void
 nni_inproc_ep_fini(void *arg)
 {
 	nni_inproc_ep *ep = arg;
-
+	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
 }
 
 static void
-nni_inproc_conn_finish(nni_aio *aio, int rv, nni_inproc_pipe *pipe)
+inproc_conn_finish(
+    nni_aio *aio, int rv, nni_inproc_ep *ep, nni_inproc_pipe *pipe)
 {
-	nni_inproc_ep *ep = nni_aio_get_prov_data(aio);
-
 	nni_aio_list_remove(aio);
 
 	if ((ep != NULL) && (!ep->listener) && nni_list_empty(&ep->aios)) {
@@ -251,6 +277,17 @@ nni_inproc_conn_finish(nni_aio *aio, int rv, nni_inproc_pipe *pipe)
 		NNI_ASSERT(pipe == NULL);
 		nni_aio_finish_error(aio, rv);
 	}
+}
+
+static nni_msg *
+inproc_filter(void *arg, nni_msg *msg)
+{
+	nni_inproc_pipe *p = arg;
+	if (p->rcvmax && (nni_msg_len(msg) > p->rcvmax)) {
+		nni_msg_free(msg);
+		return (NULL);
+	}
+	return (msg);
 }
 
 static void
@@ -267,12 +304,12 @@ nni_inproc_ep_close(void *arg)
 	// Notify any waiting clients that we are closed.
 	while ((client = nni_list_first(&ep->clients)) != NULL) {
 		while ((aio = nni_list_first(&client->aios)) != NULL) {
-			nni_inproc_conn_finish(aio, NNG_ECONNREFUSED, NULL);
+			inproc_conn_finish(aio, NNG_ECONNREFUSED, ep, NULL);
 		}
 		nni_list_remove(&ep->clients, client);
 	}
 	while ((aio = nni_list_first(&ep->aios)) != NULL) {
-		nni_inproc_conn_finish(aio, NNG_ECLOSED, NULL);
+		inproc_conn_finish(aio, NNG_ECLOSED, ep, NULL);
 	}
 	nni_mtx_unlock(&nni_inproc.mx);
 }
@@ -300,15 +337,17 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 			}
 
 			if ((pair = NNI_ALLOC_STRUCT(pair)) == NULL) {
-				nni_inproc_conn_finish(caio, NNG_ENOMEM, NULL);
-				nni_inproc_conn_finish(saio, NNG_ENOMEM, NULL);
+				inproc_conn_finish(
+				    caio, NNG_ENOMEM, cli, NULL);
+				inproc_conn_finish(
+				    saio, NNG_ENOMEM, srv, NULL);
 				continue;
 			}
 			nni_mtx_init(&pair->mx);
 
 			spipe = cpipe = NULL;
-			if (((rv = nni_inproc_pipe_init(&cpipe, cli)) != 0) ||
-			    ((rv = nni_inproc_pipe_init(&spipe, srv)) != 0) ||
+			if (((rv = nni_inproc_pipe_alloc(&cpipe, cli)) != 0) ||
+			    ((rv = nni_inproc_pipe_alloc(&spipe, srv)) != 0) ||
 			    ((rv = nni_msgq_init(&pair->q[0], 1)) != 0) ||
 			    ((rv = nni_msgq_init(&pair->q[1], 1)) != 0)) {
 
@@ -318,8 +357,8 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 				if (spipe != NULL) {
 					nni_inproc_pipe_fini(spipe);
 				}
-				nni_inproc_conn_finish(caio, rv, NULL);
-				nni_inproc_conn_finish(saio, rv, NULL);
+				inproc_conn_finish(caio, rv, cli, NULL);
+				inproc_conn_finish(saio, rv, srv, NULL);
 				nni_inproc_pair_destroy(pair);
 				continue;
 			}
@@ -333,8 +372,10 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 			cpipe->rq = spipe->wq = pair->q[0];
 			cpipe->wq = spipe->rq = pair->q[1];
 
-			nni_inproc_conn_finish(caio, 0, cpipe);
-			nni_inproc_conn_finish(saio, 0, spipe);
+			nni_msgq_set_filter(spipe->rq, inproc_filter, spipe);
+			nni_msgq_set_filter(cpipe->rq, inproc_filter, cpipe);
+			inproc_conn_finish(caio, 0, cli, cpipe);
+			inproc_conn_finish(saio, 0, srv, spipe);
 		}
 
 		if (nni_list_first(&cli->aios) == NULL) {
@@ -348,9 +389,9 @@ nni_inproc_accept_clients(nni_inproc_ep *srv)
 }
 
 static void
-nni_inproc_ep_cancel(nni_aio *aio, int rv)
+nni_inproc_ep_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_inproc_ep *ep = nni_aio_get_prov_data(aio);
+	nni_inproc_ep *ep = arg;
 
 	nni_mtx_lock(&nni_inproc.mx);
 	if (nni_aio_list_active(aio)) {
@@ -381,7 +422,6 @@ nni_inproc_ep_connect(void *arg, nni_aio *aio)
 		}
 	}
 	if (server == NULL) {
-		// nni_inproc_conn_finish(aio, NNG_ECONNREFUSED, NULL);
 		nni_mtx_unlock(&nni_inproc.mx);
 		nni_aio_finish_error(aio, NNG_ECONNREFUSED);
 		return;
@@ -449,6 +489,37 @@ nni_inproc_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
+static int
+inproc_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	nni_inproc_ep *ep = arg;
+	int            rv;
+	nni_mtx_lock(&ep->mtx);
+	rv = nni_copyout_size(ep->rcvmax, v, szp, t);
+	nni_mtx_unlock(&ep->mtx);
+	return (rv);
+}
+
+static int
+inproc_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	nni_inproc_ep *ep = arg;
+	size_t         val;
+	int            rv;
+	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
+		nni_mtx_lock(&ep->mtx);
+		ep->rcvmax = val;
+		nni_mtx_unlock(&ep->mtx);
+	}
+	return (rv);
+}
+
+static int
+inproc_check_recvmaxsz(const void *data, size_t sz, nni_opt_type t)
+{
+	return (nni_copyin_size(NULL, data, sz, 0, NNI_MAXSZ, t));
+}
+
 static nni_tran_option nni_inproc_pipe_options[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
@@ -467,6 +538,7 @@ static nni_tran_option nni_inproc_pipe_options[] = {
 };
 
 static nni_tran_pipe_ops nni_inproc_pipe_ops = {
+	.p_init    = nni_inproc_pipe_init,
 	.p_fini    = nni_inproc_pipe_fini,
 	.p_send    = nni_inproc_pipe_send,
 	.p_recv    = nni_inproc_pipe_recv,
@@ -476,6 +548,13 @@ static nni_tran_pipe_ops nni_inproc_pipe_ops = {
 };
 
 static nni_tran_option nni_inproc_ep_options[] = {
+	{
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = inproc_ep_get_recvmaxsz,
+	    .o_set  = inproc_ep_set_recvmaxsz,
+	    .o_chk  = inproc_check_recvmaxsz,
+	},
 	// terminate list
 	{
 	    .o_name = NULL,

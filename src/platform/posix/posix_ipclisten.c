@@ -172,9 +172,9 @@ ipc_listener_cb(nni_posix_pfd *pfd, int events, void *arg)
 }
 
 static void
-ipc_listener_cancel(nni_aio *aio, int rv)
+ipc_listener_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ipc_listener *l = nni_aio_get_prov_data(aio);
+	nni_ipc_listener *l = arg;
 
 	// This is dead easy, because we'll ignore the completion if there
 	// isn't anything to do the accept on!
@@ -281,15 +281,20 @@ nni_ipc_listener_listen(nni_ipc_listener *l, const nni_sockaddr *sa)
 		return (rv);
 	}
 
-	if (((rv = ipc_remove_stale(path)) != 0) ||
-	    ((rv = nni_posix_pfd_init(&pfd, fd)) != 0)) {
+	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
 		nni_mtx_unlock(&l->mtx);
 		nni_strfree(path);
 		(void) close(fd);
 		return (rv);
 	}
 
-	if (bind(fd, (struct sockaddr *) &ss, len) < 0) {
+	if ((rv = bind(fd, (struct sockaddr *) &ss, len)) != 0) {
+		if ((errno == EEXIST) || (errno == EADDRINUSE)) {
+			ipc_remove_stale(path);
+			rv = bind(fd, (struct sockaddr *) &ss, len);
+		}
+	}
+	if (rv != 0) {
 		rv = nni_plat_errno(errno);
 		nni_mtx_unlock(&l->mtx);
 		nni_strfree(path);

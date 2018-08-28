@@ -78,9 +78,9 @@ nni_tcp_dialer_fini(nni_tcp_dialer *d)
 }
 
 static void
-tcp_dialer_cancel(nni_aio *aio, int rv)
+tcp_dialer_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tcp_dialer *d = nni_aio_get_prov_data(aio);
+	nni_tcp_dialer *d = arg;
 	nni_tcp_conn *  c;
 
 	nni_mtx_lock(&d->mtx);
@@ -149,6 +149,46 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 	nni_aio_finish(aio, 0, 0);
 }
 
+int
+nni_tcp_dialer_set_src_addr(nni_tcp_dialer *d, const nni_sockaddr *sa)
+{
+	struct sockaddr_storage ss;
+	struct sockaddr_in *    sin;
+	struct sockaddr_in6 *   sin6;
+	size_t                  sslen;
+
+	if ((sslen = nni_posix_nn2sockaddr(&ss, sa)) == 0) {
+		return (NNG_EADDRINVAL);
+	}
+	// Ensure we are either IPv4 or IPv6, and port is not set.  (We
+	// do not allow binding to a specific port.)
+	switch (ss.ss_family) {
+	case AF_INET:
+		sin = (void *) &ss;
+		if (sin->sin_port != 0) {
+			return (NNG_EADDRINVAL);
+		}
+		break;
+	case AF_INET6:
+		sin6 = (void *) &ss;
+		if (sin6->sin6_port != 0) {
+			return (NNG_EADDRINVAL);
+		}
+		break;
+	default:
+		return (NNG_EADDRINVAL);
+	}
+	nni_mtx_lock(&d->mtx);
+	if (d->closed) {
+		nni_mtx_unlock(&d->mtx);
+		return (NNG_ECLOSED);
+	}
+	d->src    = ss;
+	d->srclen = sslen;
+	nni_mtx_unlock(&d->mtx);
+	return (0);
+}
+
 // We don't give local address binding support.  Outbound dialers always
 // get an ephemeral port.
 void
@@ -195,6 +235,12 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	if (d->closed) {
 		rv = NNG_ECLOSED;
 		goto error;
+	}
+	if (d->srclen != 0) {
+		if ((rv = bind(fd, (void *) &d->src, d->srclen)) != 0) {
+			rv = nni_plat_errno(errno);
+			goto error;
+		}
 	}
 	if ((rv = nni_aio_schedule(aio, tcp_dialer_cancel, d)) != 0) {
 		goto error;

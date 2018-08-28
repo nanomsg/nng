@@ -78,9 +78,9 @@ nni_ipc_dialer_fini(nni_ipc_dialer *d)
 }
 
 static void
-ipc_dialer_cancel(nni_aio *aio, int rv)
+ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ipc_dialer *d = nni_aio_get_prov_data(aio);
+	nni_ipc_dialer *d = arg;
 	nni_ipc_conn *  c;
 
 	nni_mtx_lock(&d->mtx);

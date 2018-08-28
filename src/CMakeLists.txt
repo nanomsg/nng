@@ -140,7 +140,6 @@ if (NNG_PLATFORM_WINDOWS)
         platform/windows/win_debug.c
         platform/windows/win_file.c
         platform/windows/win_io.c
-        platform/windows/win_iocp.c
         platform/windows/win_ipcconn.c
         platform/windows/win_ipcdial.c
         platform/windows/win_ipclisten.c

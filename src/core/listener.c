@@ -110,7 +110,7 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *urlstr)
 
 	if (((rv = nni_aio_init(&l->l_acc_aio, listener_accept_cb, l)) != 0) ||
 	    ((rv = nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l)) != 0) ||
-	    ((rv = l->l_ops.l_init(&l->l_data, url, s)) != 0) ||
+	    ((rv = l->l_ops.l_init(&l->l_data, url, l)) != 0) ||
 	    ((rv = nni_idhash_alloc32(listeners, &l->l_id, l)) != 0) ||
 	    ((rv = nni_sock_add_listener(s, l)) != 0)) {
 		nni_listener_destroy(l);
@@ -228,23 +228,17 @@ listener_timer_cb(void *arg)
 static void
 listener_accept_cb(void *arg)
 {
-	nni_listener *l = arg;
-	nni_pipe *    p;
+	nni_listener *l   = arg;
 	nni_aio *     aio = l->l_acc_aio;
-	int           rv;
 
-	if ((rv = nni_aio_result(aio)) == 0) {
-		void *data = nni_aio_get_output(aio, 0);
-		NNI_ASSERT(data != NULL);
-		rv = nni_pipe_create(&p, l->l_sock, l->l_tran, data);
-	}
-	switch (rv) {
+	switch (nni_aio_result(aio)) {
 	case 0:
-		nni_listener_add_pipe(l, p);
+		nni_listener_add_pipe(l, nni_aio_get_output(aio, 0));
 		listener_accept_start(l);
 		break;
 	case NNG_ECONNABORTED: // remote condition, no cooldown
 	case NNG_ECONNRESET:   // remote condition, no cooldown
+	case NNG_EPEERAUTH:    // peer validation failure
 		listener_accept_start(l);
 		break;
 	case NNG_ECLOSED:   // no further action
@@ -288,6 +282,12 @@ nni_listener_start(nni_listener *l, int flags)
 	listener_accept_start(l);
 
 	return (0);
+}
+
+nni_sock *
+nni_listener_sock(nni_listener *l)
+{
+	return (l->l_sock);
 }
 
 int

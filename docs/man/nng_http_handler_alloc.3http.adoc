@@ -63,7 +63,8 @@ The generic (first) form of this creates a handler that uses a user-supplied
 function to process HTTP requests.
 This function uses the asynchronous I/O framework.
 The function takes a pointer to an `<<nng_aio.5#,nng_aio>>` structure.
-That structure will be passed with the following input values (retrieved with
+
+The _aio_ will be passed with the following input values (retrieved with
 `<<nng_aio_get_input.3#,nng_aio_get_input()>>`):
 
    0: `nng_http_req *` __request__:: The client's HTTP request.
@@ -85,6 +86,13 @@ _aio_ should be completed successfully.
 If any non-zero status is returned back to the caller instead,
 then a generic 500 response will be created and
 sent, if possible, and the connection will be closed.
+
+The _aio_ may be scheduled for deferred completion using the
+`<<nng_aio_defer.3#,nng_aio_defer()>>` function.
+
+NOTE: The callback function should *NOT* call
+`<<nng_aio_begin.3#,nng_aio_begin()>>`,
+as that will already have been done by the server framework.
 
 === Directory Handler
 
@@ -137,6 +145,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
+<<nng_aio_defer.3#,nng_aio_defer(3)>>,
 <<nng_aio_finish.3#,nng_aio_finish(3)>>,
 <<nng_aio_get_input.3#,nng_aio_get_input(3)>>,
 <<nng_aio_set_output.3#,nng_aio_set_output(3)>>,

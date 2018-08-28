@@ -222,9 +222,9 @@ nni_ipc_listener_listen(nni_ipc_listener *l, const nni_sockaddr *sa)
 }
 
 static void
-ipc_accept_cancel(nni_aio *aio, int rv)
+ipc_accept_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ipc_listener *l = nni_aio_get_prov_data(aio);
+	nni_ipc_listener *l = arg;
 
 	nni_mtx_unlock(&l->mtx);
 	if (aio == nni_list_first(&l->aios)) {

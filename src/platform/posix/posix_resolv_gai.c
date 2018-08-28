@@ -57,17 +57,17 @@ struct resolv_item {
 };
 
 static void
-resolv_cancel(nni_aio *aio, int rv)
+resolv_cancel(nni_aio *aio, void *arg, int rv)
 {
-	resolv_item *item;
+	resolv_item *item = arg;
 
 	nni_mtx_lock(&resolv_mtx);
-	if ((item = nni_aio_get_prov_data(aio)) == NULL) {
+	if (item != nni_aio_get_prov_extra(aio, 0)) {
 		// Already canceled?
 		nni_mtx_unlock(&resolv_mtx);
 		return;
 	}
-	nni_aio_set_prov_data(aio, NULL);
+	nni_aio_set_prov_extra(aio, 0, NULL);
 	if (nni_aio_list_active(aio)) {
 		// We have not been picked up by a resolver thread yet,
 		// so we can just discard everything.
@@ -263,6 +263,7 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 	if (resolv_fini) {
 		rv = NNG_ECLOSED;
 	} else {
+		nni_aio_set_prov_extra(aio, 0, item);
 		rv = nni_aio_schedule(aio, resolv_cancel, item);
 	}
 	if (rv != 0) {
@@ -310,7 +311,7 @@ resolv_worker(void *notused)
 			continue;
 		}
 
-		item = nni_aio_get_prov_data(aio);
+		item = nni_aio_get_prov_extra(aio, 0);
 		nni_aio_list_remove(aio);
 
 		// Now attempt to do the work.  This runs synchronously.
@@ -321,7 +322,7 @@ resolv_worker(void *notused)
 		// Check to make sure we were not canceled.
 		if ((aio = item->aio) != NULL) {
 			nng_sockaddr *sa = nni_aio_get_input(aio, 0);
-			nni_aio_set_prov_data(aio, NULL);
+			nni_aio_set_prov_extra(aio, 0, NULL);
 			item->aio = NULL;
 			memcpy(sa, &item->sa, sizeof(*sa));
 			nni_aio_finish(aio, rv, 0);

@@ -25,14 +25,12 @@ struct nni_dialer {
 	nni_url *           d_url;
 	nni_pipe *          d_pipe; // active pipe (for redialer)
 	int                 d_refcnt;
-	int                 d_lastrv; // last result from synchronous
-	bool                d_synch;  // synchronous connect in progress?
 	bool                d_closed; // full shutdown
 	bool                d_closing;
 	nni_atomic_flag     d_started;
 	nni_mtx             d_mtx;
-	nni_cv              d_cv;
 	nni_list            d_pipes;
+	nni_aio *           d_user_aio;
 	nni_aio *           d_con_aio;
 	nni_aio *           d_tmo_aio;  // backoff timer
 	nni_duration        d_maxrtime; // maximum time for reconnect
@@ -78,7 +76,6 @@ struct nni_pipe {
 	nni_mtx            p_mtx;
 	nni_cv             p_cv;
 	nni_reap_item      p_reap;
-	nni_aio *          p_start_aio;
 };
 
 extern int  nni_sock_add_dialer(nni_sock *, nni_dialer *);
@@ -87,14 +84,14 @@ extern void nni_sock_remove_dialer(nni_sock *, nni_dialer *);
 extern int  nni_sock_add_listener(nni_sock *, nni_listener *);
 extern void nni_sock_remove_listener(nni_sock *, nni_listener *);
 
-extern void nni_dialer_add_pipe(nni_dialer *, nni_pipe *);
+extern void nni_dialer_add_pipe(nni_dialer *, void *);
 extern void nni_dialer_shutdown(nni_dialer *);
 extern void nni_dialer_reap(nni_dialer *);
 extern void nni_dialer_destroy(nni_dialer *);
 extern void nni_dialer_timer_start(nni_dialer *);
 extern void nni_dialer_close_rele(nni_dialer *);
 
-extern void nni_listener_add_pipe(nni_listener *, nni_pipe *);
+extern void nni_listener_add_pipe(nni_listener *, void *);
 extern void nni_listener_shutdown(nni_listener *);
 extern void nni_listener_reap(nni_listener *);
 extern void nni_listener_destroy(nni_listener *);

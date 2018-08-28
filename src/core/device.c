@@ -30,28 +30,29 @@ typedef struct nni_device_data {
 	int             npath;
 	nni_device_path paths[2];
 	nni_mtx         mtx;
-	int             running;
+	bool            running;
 } nni_device_data;
 
 typedef struct nni_device_pair nni_device_pair;
 
 static void
-nni_device_cancel(nni_aio *aio, int rv)
+nni_device_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_device_data *dd = nni_aio_get_prov_data(aio);
+	nni_device_data *dd = arg;
 	// cancellation is the only path to shutting it down.
 
 	nni_mtx_lock(&dd->mtx);
-	if (dd->running == 0) {
+	if ((!dd->running) || (dd->user != aio)) {
 		nni_mtx_unlock(&dd->mtx);
 		return;
 	}
-	dd->running = 0;
+	dd->running = false;
+	dd->user    = NULL;
 	nni_mtx_unlock(&dd->mtx);
 
 	nni_sock_shutdown(dd->paths[0].src);
 	nni_sock_shutdown(dd->paths[0].dst);
-	nni_aio_finish_error(dd->user, rv);
+	nni_aio_finish_error(aio, rv);
 }
 
 static void
@@ -209,7 +210,7 @@ nni_device_start(nni_device_data *dd, nni_aio *user)
 		p->state           = NNI_DEVICE_STATE_RECV;
 		nni_sock_recv(p->src, p->aio);
 	}
-	dd->running = 1;
+	dd->running = true;
 	nni_mtx_unlock(&dd->mtx);
 }
 

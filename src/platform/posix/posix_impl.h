@@ -82,10 +82,20 @@ struct nni_plat_flock {
 struct nni_atomic_flag {
 	atomic_flag f;
 };
+
+struct nni_atomic_u64 {
+	_Atomic unsigned long long v;
+};
+
 #else // NNG_HAVE_C11_ATOMIC
 struct nni_atomic_flag {
 	bool f;
 };
+
+struct nni_atomic_flag {
+	uint64_t v;
+};
+
 #endif
 
 #endif

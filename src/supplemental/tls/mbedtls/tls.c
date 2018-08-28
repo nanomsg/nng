@@ -371,9 +371,9 @@ nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_tcp_conn *tcp)
 }
 
 static void
-nni_tls_cancel(nni_aio *aio, int rv)
+nni_tls_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tls *tp = nni_aio_get_prov_data(aio);
+	nni_tls *tp = arg;
 	nni_mtx_lock(&tp->lk);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);

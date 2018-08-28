@@ -315,9 +315,9 @@ nni_msgq_run_notify(nni_msgq *mq)
 }
 
 static void
-nni_msgq_cancel(nni_aio *aio, int rv)
+nni_msgq_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_msgq *mq = nni_aio_get_prov_data(aio);
+	nni_msgq *mq = arg;
 
 	nni_mtx_lock(&mq->mq_lock);
 	if (nni_aio_list_active(aio)) {

@@ -133,9 +133,9 @@ resp0_ctx_init(void **ctxp, void *sarg)
 }
 
 static void
-resp0_ctx_cancel_send(nni_aio *aio, int rv)
+resp0_ctx_cancel_send(nni_aio *aio, void *arg, int rv)
 {
-	resp0_ctx * ctx = nni_aio_get_prov_data(aio);
+	resp0_ctx * ctx = arg;
 	resp0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);
@@ -437,9 +437,9 @@ resp0_pipe_send_cb(void *arg)
 }
 
 static void
-resp0_cancel_recv(nni_aio *aio, int rv)
+resp0_cancel_recv(nni_aio *aio, void *arg, int rv)
 {
-	resp0_ctx * ctx = nni_aio_get_prov_data(aio);
+	resp0_ctx * ctx = arg;
 	resp0_sock *s   = ctx->sock;
 
 	nni_mtx_lock(&s->mtx);

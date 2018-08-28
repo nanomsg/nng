@@ -350,9 +350,9 @@ http_rd_cb(void *arg)
 }
 
 static void
-http_rd_cancel(nni_aio *aio, int rv)
+http_rd_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_http_conn *conn = nni_aio_get_prov_data(aio);
+	nni_http_conn *conn = arg;
 
 	nni_mtx_lock(&conn->mtx);
 	if (aio == conn->rd_uaio) {
@@ -469,9 +469,9 @@ done:
 }
 
 static void
-http_wr_cancel(nni_aio *aio, int rv)
+http_wr_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_http_conn *conn = nni_aio_get_prov_data(aio);
+	nni_http_conn *conn = arg;
 
 	nni_mtx_lock(&conn->mtx);
 	if (aio == conn->wr_uaio) {

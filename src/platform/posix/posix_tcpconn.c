@@ -243,9 +243,9 @@ tcp_conn_cb(nni_posix_pfd *pfd, int events, void *arg)
 }
 
 static void
-tcp_conn_cancel(nni_aio *aio, int rv)
+tcp_conn_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tcp_conn *c = nni_aio_get_prov_data(aio);
+	nni_tcp_conn *c = arg;
 
 	nni_mtx_lock(&c->mtx);
 	if (nni_aio_list_active(aio)) {

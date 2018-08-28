@@ -20,7 +20,7 @@ nng_http_server_res_error - use HTTP server error page
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-int nng_http_server_set_error_file(nng_http_server *server,
+int nng_http_server_res_error(nng_http_server *server, 
         nng_http_res *response);
 ----
 

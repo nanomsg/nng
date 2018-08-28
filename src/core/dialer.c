@@ -65,7 +65,6 @@ nni_dialer_destroy(nni_dialer *d)
 	if (d->d_data != NULL) {
 		d->d_ops.d_fini(d->d_data);
 	}
-	nni_cv_fini(&d->d_cv);
 	nni_mtx_fini(&d->d_mtx);
 	nni_url_free(d->d_url);
 	NNI_FREE_STRUCT(d);
@@ -110,11 +109,10 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 	NNI_LIST_INIT(&d->d_pipes, nni_pipe, p_ep_node);
 
 	nni_mtx_init(&d->d_mtx);
-	nni_cv_init(&d->d_cv, &d->d_mtx);
 
 	if (((rv = nni_aio_init(&d->d_con_aio, dialer_connect_cb, d)) != 0) ||
 	    ((rv = nni_aio_init(&d->d_tmo_aio, dialer_timer_cb, d)) != 0) ||
-	    ((rv = d->d_ops.d_init(&d->d_data, url, s)) != 0) ||
+	    ((rv = d->d_ops.d_init(&d->d_data, url, d)) != 0) ||
 	    ((rv = nni_idhash_alloc32(dialers, &d->d_id, d)) != 0) ||
 	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
 		nni_dialer_destroy(d);
@@ -232,40 +230,33 @@ dialer_timer_cb(void *arg)
 static void
 dialer_connect_cb(void *arg)
 {
-	nni_dialer *d = arg;
-	nni_pipe *  p;
+	nni_dialer *d   = arg;
 	nni_aio *   aio = d->d_con_aio;
+	nni_aio *   uaio;
 	int         rv;
-	bool        synch;
 
-	if ((rv = nni_aio_result(aio)) == 0) {
-		void *data = nni_aio_get_output(aio, 0);
-		NNI_ASSERT(data != NULL);
-		rv = nni_pipe_create(&p, d->d_sock, d->d_tran, data);
-	}
 	nni_mtx_lock(&d->d_mtx);
-	synch = d->d_synch;
+	uaio          = d->d_user_aio;
+	d->d_user_aio = NULL;
 	nni_mtx_unlock(&d->d_mtx);
 
-	switch (rv) {
+	switch ((rv = nni_aio_result(aio))) {
 	case 0:
-		nni_dialer_add_pipe(d, p);
+		nni_dialer_add_pipe(d, nni_aio_get_output(aio, 0));
 		break;
 	case NNG_ECLOSED:   // No further action.
 	case NNG_ECANCELED: // No further action.
 		break;
 	default:
-		if (!synch) {
+		if (uaio == NULL) {
 			nni_dialer_timer_start(d);
+		} else {
+			nni_atomic_flag_reset(&d->d_started);
 		}
 		break;
 	}
-	if (synch) {
-		nni_mtx_lock(&d->d_mtx);
-		d->d_synch  = false;
-		d->d_lastrv = rv;
-		nni_cv_wake(&d->d_cv);
-		nni_mtx_unlock(&d->d_mtx);
+	if (uaio != NULL) {
+		nni_aio_finish(uaio, rv, 0);
 	}
 }
 
@@ -274,44 +265,47 @@ dialer_connect_start(nni_dialer *d)
 {
 	nni_aio *aio = d->d_con_aio;
 
-	// Call with the Endpoint lock held.
 	d->d_ops.d_connect(d->d_data, aio);
 }
 
 int
 nni_dialer_start(nni_dialer *d, int flags)
 {
-	int rv = 0;
+	int      rv = 0;
+	nni_aio *aio;
 
 	if (nni_atomic_flag_test_and_set(&d->d_started)) {
 		return (NNG_ESTATE);
 	}
 
 	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
-		nni_mtx_lock(&d->d_mtx);
-		d->d_currtime = d->d_inirtime;
-		nni_mtx_unlock(&d->d_mtx);
-		dialer_connect_start(d);
-		return (0);
+		aio = NULL;
+	} else {
+		if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+			nni_atomic_flag_reset(&d->d_started);
+			return (rv);
+		}
+		nni_aio_begin(aio);
 	}
 
 	nni_mtx_lock(&d->d_mtx);
-	d->d_synch = true;
-	nni_mtx_unlock(&d->d_mtx);
-
+	d->d_user_aio = aio;
 	dialer_connect_start(d);
-
-	nni_mtx_lock(&d->d_mtx);
-	while (d->d_synch) {
-		nni_cv_wait(&d->d_cv);
-	}
-	rv = d->d_lastrv;
 	nni_mtx_unlock(&d->d_mtx);
 
-	if (rv != 0) {
-		nni_atomic_flag_reset(&d->d_started);
+	if (aio != NULL) {
+		nni_aio_wait(aio);
+		rv = nni_aio_result(aio);
+		nni_aio_fini(aio);
 	}
+
 	return (rv);
+}
+
+nni_sock *
+nni_dialer_sock(nni_dialer *d)
+{
+	return (d->d_sock);
 }
 
 int

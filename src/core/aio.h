@@ -18,7 +18,7 @@
 
 typedef struct nni_aio_ops nni_aio_ops;
 
-typedef void (*nni_aio_cancelfn)(nni_aio *, int);
+typedef void (*nni_aio_cancelfn)(nni_aio *, void *, int);
 
 // nni_aio_init initializes an aio object.  The callback is called with
 // the supplied argument when the operation is complete.  If NULL is

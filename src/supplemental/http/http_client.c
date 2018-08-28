@@ -117,6 +117,9 @@ nni_http_client_fini(nni_http_client *c)
 		nni_tls_config_fini(c->tls);
 	}
 #endif
+	nni_strfree(c->host);
+	nni_strfree(c->port);
+
 	NNI_FREE_STRUCT(c);
 }
 
@@ -229,9 +232,9 @@ nni_http_client_get_tls(nni_http_client *c, struct nng_tls_config **tlsp)
 }
 
 static void
-http_dial_cancel(nni_aio *aio, int rv)
+http_dial_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_http_client *c = nni_aio_get_prov_data(aio);
+	nni_http_client *c = arg;
 	nni_mtx_lock(&c->mtx);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);

@@ -20,13 +20,13 @@ nng_http_req_get_uri - return HTTP request URI
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-const char *nng_http_req_get_method(nng_http_req *req);
+const char *nng_http_req_get_uri(nng_http_req *req);
 ----
 
 == DESCRIPTION
 
 The `nng_http_req_get_uri()` returns the URI (path) associated with the HTTP
-the request _req_.
+request _req_.
 The value returned includes the path, as well as any query information or
 fragment.  The value will look like a file system path
 with those optional components appended, such as `/api/get_info.cgi?name=garrett`.

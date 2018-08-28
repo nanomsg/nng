@@ -59,7 +59,6 @@ check_props_v4(nng_msg *msg)
 }
 
 TestMain("TCP Transport", {
-
 	trantest_test_extended("tcp://127.0.0.1:%u", check_props_v4);
 
 	Convey("We cannot connect to wild cards", {
@@ -107,6 +106,42 @@ TestMain("TCP Transport", {
 		So(memcmp(addr, "tcp://", 6) == 0);
 		So(nng_dial(s2, addr, NULL, 0) == 0);
 		nng_strfree(addr);
+	});
+
+	Convey("We can use local interface to connet", {
+		nng_socket s1;
+		nng_socket s2;
+		char       addr[NNG_MAXADDRLEN];
+
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s2);
+			nng_close(s1);
+		});
+		trantest_next_address(addr, "tcp://127.0.0.1:%u");
+		So(nng_listen(s1, addr, NULL, 0) == 0);
+		// reset port back one
+		trantest_prev_address(addr, "tcp://127.0.0.1;127.0.0.1:%u");
+		So(nng_dial(s2, addr, NULL, 0) == 0);
+	});
+
+	Convey("Botched local interfaces fail resonably", {
+		nng_socket s1;
+
+		So(nng_pair_open(&s1) == 0);
+		Reset({ nng_close(s1); });
+		So(nng_dial(s1, "tcp://1x.2;127.0.0.1:80", NULL, 0) ==
+		    NNG_EADDRINVAL);
+	});
+
+	Convey("Can't specify address that isn't ours", {
+		nng_socket s1;
+
+		So(nng_pair_open(&s1) == 0);
+		Reset({ nng_close(s1); });
+		So(nng_dial(s1, "tcp://8.8.8.8;127.0.0.1:80", NULL, 0) ==
+		    NNG_EADDRINVAL);
 	});
 
 	Convey("Malformed TCP addresses do not panic", {

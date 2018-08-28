@@ -96,9 +96,9 @@ tcp_recv_cb(nni_win_io *io, int rv, size_t num)
 }
 
 static void
-tcp_recv_cancel(nni_aio *aio, int rv)
+tcp_recv_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tcp_conn *c = nni_aio_get_prov_data(aio);
+	nni_tcp_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
 	if (aio == nni_list_first(&c->recv_aios)) {
 		c->recv_rv = rv;
@@ -186,9 +186,9 @@ again:
 }
 
 static void
-tcp_send_cancel(nni_aio *aio, int rv)
+tcp_send_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tcp_conn *c = nni_aio_get_prov_data(aio);
+	nni_tcp_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
 	if (aio == nni_list_first(&c->send_aios)) {
 		c->send_rv = rv;
