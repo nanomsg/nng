@@ -371,7 +371,7 @@ TestMain("WebSocket Secure (TLS) Transport (file based)", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "wss://localhost:%u/test");
+		trantest_next_address(addr, "wss://:%u/test");
 		So(nng_listener_create(&l, s1, addr) == 0);
 		So(init_listener_wss_file(l) == 0);
 		So(nng_listener_start(l, 0) == 0);
