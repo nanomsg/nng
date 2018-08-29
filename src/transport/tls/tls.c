@@ -76,6 +76,8 @@ struct tlstran_ep {
 	nni_reap_item     reap;
 	nni_tcp_dialer *  dialer;
 	nni_tcp_listener *listener;
+	const char *      host;
+	nng_sockaddr      src;
 	nng_sockaddr      sa;
 	nng_sockaddr      bsa;
 	nni_dialer *      ndialer;
@@ -755,12 +757,12 @@ tlstran_ep_close(void *arg)
 static int
 tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 {
-	tlstran_ep *ep;
-	int         rv;
-	uint16_t    af;
-	char *      host = url->u_hostname;
-	char *      port = url->u_port;
-	nni_sock *  sock = nni_dialer_sock(ndialer);
+	tlstran_ep * ep;
+	int          rv;
+	uint16_t     af;
+	char *       host;
+	nng_sockaddr srcsa;
+	nni_sock *   sock = nni_dialer_sock(ndialer);
 
 	if (strcmp(url->u_scheme, "tls+tcp") == 0) {
 		af = NNG_AF_UNSPEC;
@@ -777,8 +779,8 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 		return (NNG_EADDRINVAL);
 	}
 	if ((url->u_fragment != NULL) || (url->u_userinfo != NULL) ||
-	    (url->u_query != NULL) || (host == NULL) || (port == NULL) ||
-	    (strlen(host) == 0) || (strlen(port) == 0)) {
+	    (url->u_query != NULL) || (strlen(url->u_hostname) == 0) ||
+	    (strlen(url->u_port) == 0)) {
 		return (NNG_EADDRINVAL);
 	}
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
@@ -796,10 +798,47 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 	ep->keepalive = false;
 	ep->ndialer   = ndialer;
 
-	if (((rv = nni_tcp_dialer_init(&ep->dialer)) != 0) ||
+	// Detect an embedded local interface name in the hostname.  This
+	// syntax is only valid with dialers.
+	if ((host = strchr(url->u_hostname, ';')) != NULL) {
+		size_t   len;
+		char *   src = NULL;
+		nni_aio *aio;
+		len = (uintptr_t) host - (uintptr_t) url->u_hostname;
+		host++;
+		if ((len < 2) || (strlen(host) == 0)) {
+			tlstran_ep_fini(ep);
+			return (NNG_EADDRINVAL);
+		}
+		if ((src = nni_alloc(len + 1)) == NULL) {
+			tlstran_ep_fini(ep);
+			return (NNG_ENOMEM);
+		}
+		memcpy(src, url->u_hostname, len);
+		src[len] = 0;
+
+		if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+			tlstran_ep_fini(ep);
+			nni_strfree(src);
+			return (rv);
+		}
+		nni_aio_set_input(aio, 0, &srcsa);
+		nni_tcp_resolv(src, 0, af, 1, aio);
+		nni_aio_wait(aio);
+		rv = nni_aio_result(aio);
+		nni_aio_fini(aio);
+		nni_strfree(src);
+		ep->host = host;
+	} else {
+		srcsa.s_family = NNG_AF_UNSPEC;
+		ep->host       = url->u_hostname;
+		rv             = 0;
+	}
+
+	if ((rv != 0) || ((rv = nni_tcp_dialer_init(&ep->dialer)) != 0) ||
 	    ((rv = nni_tls_config_init(&ep->cfg, NNG_TLS_MODE_CLIENT)) != 0) ||
 	    ((rv = nng_tls_config_auth_mode(ep->cfg, ep->authmode)) != 0) ||
-	    ((rv = nng_tls_config_server_name(ep->cfg, host)) != 0)) {
+	    ((rv = nng_tls_config_server_name(ep->cfg, ep->host)) != 0)) {
 		tlstran_ep_fini(ep);
 		return (rv);
 	}
@@ -908,8 +947,7 @@ tlstran_ep_connect(void *arg, nni_aio *aio)
 	}
 	p->useraio = aio;
 	nni_aio_set_input(p->rslvaio, 0, &p->sa);
-	nni_tcp_resolv(
-	    ep->url->u_hostname, ep->url->u_port, ep->af, 0, p->rslvaio);
+	nni_tcp_resolv(ep->host, ep->url->u_port, ep->af, 0, p->rslvaio);
 	nni_mtx_unlock(&ep->mtx);
 }
 

@@ -108,7 +108,7 @@ TestMain("TCP Transport", {
 		nng_strfree(addr);
 	});
 
-	Convey("We can use local interface to connet", {
+	Convey("We can use local interface to connect", {
 		nng_socket s1;
 		nng_socket s2;
 		char       addr[NNG_MAXADDRLEN];

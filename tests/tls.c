@@ -368,6 +368,49 @@ TestMain("TLS Transport", {
 		    NNG_EADDRINVAL);
 	});
 
+	Convey("We can use local interface to connect", {
+		nng_socket   s1;
+		nng_socket   s2;
+		nng_listener l;
+		nng_dialer   d;
+		char         addr[NNG_MAXADDRLEN];
+
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s2);
+			nng_close(s1);
+		});
+		trantest_next_address(addr, "tls+tcp://127.0.0.1:%u");
+		So(nng_listener_create(&l, s1, addr) == 0);
+		So(init_listener_tls(l) == 0);
+		So(nng_listener_start(l, 0) == 0);
+		// reset port back one
+		trantest_prev_address(
+		    addr, "tls+tcp://127.0.0.1;127.0.0.1:%u");
+		So(nng_dialer_create(&d, s2, addr) == 0);
+		So(init_dialer_tls(d) == 0);
+		So(nng_dialer_start(d, 0) == 0);
+	});
+
+	Convey("Botched local interfaces fail resonably", {
+		nng_socket s1;
+
+		So(nng_pair_open(&s1) == 0);
+		Reset({ nng_close(s1); });
+		So(nng_dial(s1, "tcp://1x.2;127.0.0.1:80", NULL, 0) ==
+		    NNG_EADDRINVAL);
+	});
+
+	Convey("Can't specify address that isn't ours", {
+		nng_socket s1;
+
+		So(nng_pair_open(&s1) == 0);
+		Reset({ nng_close(s1); });
+		So(nng_dial(s1, "tcp://8.8.8.8;127.0.0.1:80", NULL, 0) ==
+		    NNG_EADDRINVAL);
+	});
+
 #if 0
 // We really need to have pipe start/negotiate as one of the key steps during
 // connect establish.  Until that happens, we cannot verify the peer.
