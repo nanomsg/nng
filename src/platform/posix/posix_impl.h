@@ -92,7 +92,7 @@ struct nni_atomic_flag {
 	bool f;
 };
 
-struct nni_atomic_flag {
+struct nni_atomic_u64 {
 	uint64_t v;
 };
 
