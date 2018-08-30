@@ -585,8 +585,10 @@ rather than just a single element.
 <p>The generic (first) form of this creates a handler that uses a user-supplied
 function to process HTTP requests.
 This function uses the asynchronous I/O framework.
-The function takes a pointer to an <code><a href="nng_aio.5.html">nng_aio</a></code> structure.
-That structure will be passed with the following input values (retrieved with
+The function takes a pointer to an <code><a href="nng_aio.5.html">nng_aio</a></code> structure.</p>
+</div>
+<div class="paragraph">
+<p>The <em>aio</em> will be passed with the following input values (retrieved with
 <code><a href="nng_aio_get_input.3.html">nng_aio_get_input()</a></code>):</p>
 </div>
 <div class="dlist">
@@ -623,6 +625,24 @@ In that case the output at index 0 of the <em>aio</em> should be NULL.</p>
 If any non-zero status is returned back to the caller instead,
 then a generic 500 response will be created and
 sent, if possible, and the connection will be closed.</p>
+</div>
+<div class="paragraph">
+<p>The <em>aio</em> may be scheduled for deferred completion using the
+<code><a href="nng_aio_defer.3.html">nng_aio_defer()</a></code> function.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The callback function should <strong>NOT</strong> call
+<code><a href="nng_aio_begin.3.html">nng_aio_begin()</a></code>,
+as that will already have been done by the server framework.
+</td>
+</tr>
+</table>
 </div>
 </div>
 <div class="sect2">
@@ -718,7 +738,8 @@ sent the <em>data</em>, with <code>Content-Length</code> of <em>size</em> bytes,
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_aio_finish.3.html">nng_aio_finish(3)</a>,
+<p><a href="nng_aio_defer.3.html">nng_aio_defer(3)</a>,
+<a href="nng_aio_finish.3.html">nng_aio_finish(3)</a>,
 <a href="nng_aio_get_input.3.html">nng_aio_get_input(3)</a>,
 <a href="nng_aio_set_output.3.html">nng_aio_set_output(3)</a>,
 <a href="nng_http_handler_free.3http.html">nng_http_handler_free(3http)</a>,

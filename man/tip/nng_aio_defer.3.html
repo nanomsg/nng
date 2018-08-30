@@ -9,7 +9,7 @@ layout: refman
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>nng_http_conn_read_res(3http)</title>
+<title>nng_aio_defer(3)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -503,7 +503,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_http_conn_read_res(3http) Manual Page</h1>
+<h1>nng_aio_defer(3) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -516,7 +516,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_http_conn_read_res - read HTTP response</p>
+<p>nng_aio_defer - defer asynchronous I/O operation</p>
 </div>
 </div>
 <div id="content">
@@ -526,10 +526,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
-<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">void</span> <span class="tok-nf">nng_http_conn_read_res</span><span class="tok-p">(</span><span class="tok-n">nng_http_conn</span> <span class="tok-o">*</span><span class="tok-n">conn</span><span class="tok-p">,</span> <span class="tok-n">nng_http_res</span> <span class="tok-o">*</span><span class="tok-n">res</span><span class="tok-p">,</span>
-    <span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">);</span></code></pre>
+<span class="tok-k">typedef</span> <span class="tok-nf">void</span> <span class="tok-p">(</span><span class="tok-o">*</span><span class="tok-n">nng_aio_cancelfn</span><span class="tok-p">)(</span><span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">arg</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">err</span><span class="tok-p">);</span>
+
+<span class="tok-kt">void</span> <span class="tok-nf">nng_aio_defer</span><span class="tok-p">(</span><span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">,</span> <span class="tok-n">nng_aio_cancelfn</span> <span class="tok-n">fn</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">arg</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -538,32 +538,53 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_http_conn_read_res()</code> function starts an asynchronous read from the
-HTTP connection <em>conn</em>, reading an HTTP response into the <em>res</em>, including all
-of the related headers.</p>
+<p>The <code>nng_aio_defer()</code> function marks operation associated with <em>aio</em> as
+being deferred for asynchronous completion, and also registers a cancellation
+function <em>fn</em> and associated argument <em>arg</em>, thereby
+permitting the operation to be canceled.</p>
 </div>
-<div class="admonitionblock note">
+<div class="paragraph">
+<p>If the <em>aio</em> is being canceled, the cancellation routine <em>fn</em> will be called
+with the <em>aio</em>, the <em>arg</em> specified by <code>nng_aio_defer()</code>, and an error
+value in <em>err</em>, which is the reason that the operation is being canceled.</p>
+</div>
+<div class="paragraph">
+<p>The operation may not be cancelable; for example it may have already been
+completed, or be in a state where it is no longer possible to unschedule it.
+In this case, the <em>cancelfn</em> should just return without making any changes.</p>
+</div>
+<div class="paragraph">
+<p>If the cancellation routine successfully canceled the operation, it should
+ensure that <code><a href="nng_aio_finish.3.html">nng_aio_finish()</a></code> is called, with the
+error code specified by <em>err</em>.</p>
+</div>
+<div class="admonitionblock important">
 <table>
 <tr>
 <td class="icon">
-<i class="fa icon-note" title="Note"></i>
+<i class="fa icon-important" title="Important"></i>
 </td>
 <td class="content">
-Any HTTP entity/body data associated with the response is <strong>not</strong> read
-automatically.
-The caller should use
-<code><a href="nng_http_conn_read_all.3http.html">nng_http_conn_read_all</a></code> to read the entity
-data, based on the details of the response itself.
+It is mandatory that I/O providers call
+<code><a href="nng_aio_finish.3.html">nng_aio_finish()</a></code>
+<strong>EXACTLY ONCE</strong> when they are finished with the operation.
 </td>
 </tr>
 </table>
 </div>
-<div class="paragraph">
-<p>This function returns immediately, with no return value.
-Completion of
-the operation is signaled via the <em>aio</em>, and the final result may be
-obtained via <code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>.
-That result will either be zero or an error code.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is only for I/O providers (those actually performing
+the operation such as HTTP handler functions or transport providers); ordinary
+users of the <em>aio</em> should not call this function.
+</td>
+</tr>
+</table>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -572,11 +593,23 @@ That result will either be zero or an error code.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Consider using the
-<code><a href="nng_http_client_transact.3http.html">nng_http_client_transact()</a></code> or
-<code><a href="nng_http_conn_transact.3http.html">nng_http_conn_transact()</a></code> functions,
-which provide a simpler interface for performing a complete HTTP client
-transaction.
+Care must be taken to ensure that cancellation and completion of
+the routine are multi-thread safe; this will usually involve the use
+of locks or other synchronization primitives.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+For operations that complete synchronously, without any need to be
+deferred, the provider should not bother to call <code>nng_aio_defer()</code>,
+although it is harmless if it does.
 </td>
 </tr>
 </table>
@@ -594,57 +627,8 @@ transaction.
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="hdlist">
-<table>
-<tr>
-<td class="hdlist1">
-<code>NNG_ECANCELED</code>
-</td>
-<td class="hdlist2">
-<p>The operation was canceled.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_ECLOSED</code>
-</td>
-<td class="hdlist2">
-<p>The connection was closed.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_ECONNRESET</code>
-</td>
-<td class="hdlist2">
-<p>The peer closed the connection.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_ENOMEM</code>
-</td>
-<td class="hdlist2">
-<p>Insufficient free memory to perform the operation.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_ENOTSUP</code>
-</td>
-<td class="hdlist2">
-<p>HTTP operations are not supported.</p>
-</td>
-</tr>
-<tr>
-<td class="hdlist1">
-<code>NNG_ETIMEDOUT</code>
-</td>
-<td class="hdlist2">
-<p>Timeout waiting for data from the connection.</p>
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>None.</p>
 </div>
 </div>
 </div>
@@ -653,12 +637,10 @@ transaction.
 <div class="sectionbody">
 <div class="paragraph text-left">
 <p><a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
+<a href="nng_aio_cancel.3.html">nng_aio_cancel(3)</a>,
+<a href="nng_aio_finish.3.html">nng_aio_finish(3)</a>,
 <a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
-<a href="nng_strerror.3.html">nng_strerror(3)</a>,
-<a href="nng_http_client_connect.3http.html">nng_http_client_connect(3http)</a>,
-<a href="nng_http_client_transact.3http.html">nng_http_client_transact(3http)</a>,
-<a href="nng_http_conn_transact.3http.html">nng_http_conn_transact(3http)</a>,
-<a href="nng_http_conn_read_all.3http.html">nng_http_conn_read_all(3http)</a>,
+<a href="nng_aio.5.html">nng_aio(5)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>

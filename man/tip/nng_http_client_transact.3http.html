@@ -9,7 +9,7 @@ layout: refman
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>nng_http_conn_read_res(3http)</title>
+<title>nng_http_client_transact(3http)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -503,7 +503,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_http_conn_read_res(3http) Manual Page</h1>
+<h1>nng_http_client_transact(3http) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -516,7 +516,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_http_conn_read_res - read HTTP response</p>
+<p>nng_http_client_transact - perform one HTTP transaction</p>
 </div>
 </div>
 <div id="content">
@@ -528,8 +528,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 <span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">void</span> <span class="tok-nf">nng_http_conn_read_res</span><span class="tok-p">(</span><span class="tok-n">nng_http_conn</span> <span class="tok-o">*</span><span class="tok-n">conn</span><span class="tok-p">,</span> <span class="tok-n">nng_http_res</span> <span class="tok-o">*</span><span class="tok-n">res</span><span class="tok-p">,</span>
-    <span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">void</span> <span class="tok-nf">nng_http_client_transact</span><span class="tok-p">(</span><span class="tok-n">nng_http_client</span> <span class="tok-o">*</span><span class="tok-n">client</span><span class="tok-p">,</span> <span class="tok-n">nng_http_req</span> <span class="tok-o">*</span><span class="tok-n">req</span><span class="tok-p">,</span>
+    <span class="tok-n">nng_http_res</span> <span class="tok-o">*</span><span class="tok-n">res</span><span class="tok-p">,</span> <span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -538,9 +538,27 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_http_conn_read_res()</code> function starts an asynchronous read from the
-HTTP connection <em>conn</em>, reading an HTTP response into the <em>res</em>, including all
-of the related headers.</p>
+<p>The <code>nng_http_client_transact()</code> function is used to perform a complete
+HTTP exchange.
+It creates a new connection using <em>client</em>, performs the transaction by
+sending the request <em>req</em>
+(and attached body data) to the remote server, then reading the response
+<em>res</em>, and finally closes the connection that it created.
+The entire response is read, including any associated body, which can
+subsequently be obtained using
+<code><a href="nng_http_res_get_data.3http.html">nng_http_res_get_data()</a></code>.</p>
+</div>
+<div class="paragraph">
+<p>This function is intended to make creation of client applications easier,
+by performing multiple asynchronous operations required to complete an
+entire HTTP transaction.</p>
+</div>
+<div class="paragraph">
+<p>A similar function,
+<code><a href="nng_http_conn_transact.3http.html">nng_http_conn_transact()</a></code>,
+exists.
+That function behaves similarily, but uses an existing connection, which
+can be reused.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -549,37 +567,35 @@ of the related headers.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Any HTTP entity/body data associated with the response is <strong>not</strong> read
-automatically.
-The caller should use
-<code><a href="nng_http_conn_read_all.3http.html">nng_http_conn_read_all</a></code> to read the entity
-data, based on the details of the response itself.
+This function does not support reading data sent using chunked
+transfer encoding, and if the server attempts to do so, the underlying
+connection will be closed and an <code>NNG_ENOTSUP</code> error will be returned.
+This limitation is considered a bug, and a fix is planned for the future.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+If the remote server tries to send an extremely large buffer,
+then a corresponding allocation will be made, which can lead to denial
+of service attacks.
+Client applications should take care to use this only with reasonably
+trust-worthy servers.
 </td>
 </tr>
 </table>
 </div>
 <div class="paragraph">
 <p>This function returns immediately, with no return value.
-Completion of
-the operation is signaled via the <em>aio</em>, and the final result may be
-obtained via <code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>.
+Completion of the operation is signaled via the <em>aio</em>, and the final result
+may be obtained via <code><a href="nng_aio_result.3.html">nng_aio_result()</a></code>.
 That result will either be zero or an error code.</p>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Consider using the
-<code><a href="nng_http_client_transact.3http.html">nng_http_client_transact()</a></code> or
-<code><a href="nng_http_conn_transact.3http.html">nng_http_conn_transact()</a></code> functions,
-which provide a simpler interface for performing a complete HTTP client
-transaction.
-</td>
-</tr>
-</table>
 </div>
 </div>
 </div>
@@ -633,7 +649,15 @@ transaction.
 <code>NNG_ENOTSUP</code>
 </td>
 <td class="hdlist2">
-<p>HTTP operations are not supported.</p>
+<p>HTTP operations are not supported, or peer sent chunked encoding.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EPROTO</code>
+</td>
+<td class="hdlist2">
+<p>An HTTP protocol error occurred.</p>
 </td>
 </tr>
 <tr>
@@ -656,9 +680,8 @@ transaction.
 <a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
 <a href="nng_http_client_connect.3http.html">nng_http_client_connect(3http)</a>,
-<a href="nng_http_client_transact.3http.html">nng_http_client_transact(3http)</a>,
 <a href="nng_http_conn_transact.3http.html">nng_http_conn_transact(3http)</a>,
-<a href="nng_http_conn_read_all.3http.html">nng_http_conn_read_all(3http)</a>,
+<a href="nng_http_res_get_data.3http.html">nng_http_res_get_data(3http)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>

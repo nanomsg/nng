@@ -921,6 +921,10 @@ Only a single asynchronous operation may be associated with an
 <td class="tableblock halign-left valign-top"><p class="tableblock">allocate asynchronous I/O handle</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_begin.3.html">nng_aio_begin()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">begin asynchronous I/O operation</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_cancel.3.html">nng_aio_cancel()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">cancel asynchronous I/O operation</p></td>
 </tr>
@@ -929,8 +933,12 @@ Only a single asynchronous operation may be associated with an
 <td class="tableblock halign-left valign-top"><p class="tableblock">return number of bytes transferred</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_defer.3.html">nng_aio_defer()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defer asynchronous I/O operation</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_finish.3.html">nng_aio_finish()</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">finish an asynchronous I/O operation</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">finish asynchronous I/O operation</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_free.3.html">nng_aio_free()</a></p></td>
@@ -1320,6 +1328,10 @@ and connections.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP request structure</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_data.3http.html">nng_http_req_get_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP request body</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_header.3http.html">nng_http_req_get_header()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP request header</p></td>
 </tr>
@@ -1380,8 +1392,8 @@ and connections.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP response structure</p></td>
 </tr>
 <tr>
-<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_data.3http.html">nng_http_res_set_data()</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP response body</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_data.3http.html">nng_http_res_get_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP response body</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_header.3http.html">nng_http_res_get_header()</a></p></td>
@@ -1398,6 +1410,10 @@ and connections.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_version.3http.html">nng_http_res_get_version()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP response protocol version</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_data.3http.html">nng_http_res_set_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP response body</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_header.3http.html">nng_http_res_set_header()</a></p></td>
@@ -1448,6 +1464,14 @@ and connections.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_set_tls.3http.html">nng_http_client_set_tls()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP client TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_transact.3http.html">nng_http_client_transact()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">perform one HTTP transaction</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_transact.3http.html">nng_http_conn_transact()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">perform one HTTP transaction on connection</p></td>
 </tr>
 </tbody>
 </table>

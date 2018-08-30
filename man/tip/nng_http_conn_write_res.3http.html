@@ -567,6 +567,22 @@ will be reused to receive new requests.</p>
 of <code>Close</code> (case-insensitive) or the response corresponds to <code>HTTP/1.0</code>,
 then the connection is immediately after sending the response.</p>
 </div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Consider using the
+<code><a href="nng_http_client_transact.3http.html">nng_http_client_transact()</a></code> or
+<code><a href="nng_http_conn_transact.3http.html">nng_http_conn_transact()</a></code> functions,
+which provide a simpler interface for performing a complete HTTP client
+transaction.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 </div>
@@ -642,7 +658,9 @@ then the connection is immediately after sending the response.</p>
 <p><a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
 <a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
 <a href="nng_http_client_connect.3http.html">nng_http_client_connect(3http)</a>,
+<a href="nng_http_client_transact.3http.html">nng_http_client_transact(3http)</a>,
 <a href="nng_http_conn_read_all.3http.html">nng_http_conn_read_all(3http)</a>,
+<a href="nng_http_conn_transact.3http.html">nng_http_conn_transact(3http)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>

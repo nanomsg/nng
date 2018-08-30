@@ -507,12 +507,20 @@ primary API for building such applications.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">allocate asynchronous I/O handle</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_begin.3.html">nng_aio_begin(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">begin asynchronous I/O operation</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_cancel.3.html">nng_aio_cancel(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">cancel asynchronous I/O operation</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_count.3.html">nng_aio_count(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return number of bytes transferred</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_defer.3.html">nng_aio_defer(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defer asynchronous I/O operation</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_finish.3.html">nng_aio_finish(3)</a></p></td>
@@ -1086,6 +1094,10 @@ Protocols sockets.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP client TLS configuration</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_transact.3http.html">nng_http_client_transact(3http)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">perform one HTTP transaction</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_close.3http.html">nng_http_conn_close(3http)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">close HTTP connection</p></td>
 </tr>
@@ -1104,6 +1116,10 @@ Protocols sockets.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_read_res.3http.html">nng_http_conn_read_res(3http)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">read HTTP response</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_transact.3http.html">nng_http_conn_transact(3http)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">perform one HTTP transaction on connection</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_write.3http.html">nng_http_conn_write(3http)</a></p></td>
@@ -1174,6 +1190,10 @@ Protocols sockets.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP request structure</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_data.3http.html">nng_http_req_get_data(3http)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP request body</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_header.3http.html">nng_http_req_get_header(3http)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP request header</p></td>
 </tr>
@@ -1232,6 +1252,10 @@ Protocols sockets.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_free.3http.html">nng_http_res_free(3http)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP response structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_data.3http.html">nng_http_res_get_data(3http)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP response body</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_header.3http.html">nng_http_res_get_header(3http)</a></p></td>
