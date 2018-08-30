@@ -22,5 +22,7 @@ extern char * nni_strcasestr(const char *, const char *);
 extern int    nni_strncasecmp(const char *, const char *, size_t);
 extern int    nni_strcasecmp(const char *, const char *);
 extern int    nni_asprintf(char **, const char *, ...);
+extern int    nni_strtou64(const char *, uint64_t *); // parses decimal
+extern int    nni_strtox64(const char *, uint64_t *); // parses hex
 
 #endif // CORE_STRS_H

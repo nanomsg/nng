@@ -202,3 +202,77 @@ nni_asprintf(char **sp, const char *fmt, ...)
 	*sp = s;
 	return (0);
 }
+
+int
+nni_strtou64(const char *s, uint64_t *u)
+{
+	uint64_t v = 0;
+
+	// Arguably we could use strtoull, but Windows doesn't conform
+	// to C99, and so lacks it.
+
+	if ((s == NULL) || (*s == '\0')) {
+		// Require a non-empty string.
+		return (NNG_EINVAL);
+	}
+	while (*s) {
+		uint64_t last = v;
+		if (isdigit(*s)) {
+			v *= 10;
+			v += (*s - '0');
+		} else {
+			return (NNG_EINVAL);
+		}
+		if (v < last) {
+			// Overflow!
+			return (NNG_EINVAL);
+		}
+		s++;
+	}
+	*u = v;
+	return (0);
+}
+
+int
+nni_strtox64(const char *s, uint64_t *u)
+{
+	uint64_t v = 0;
+
+	// Arguably we could use strtoull, but Windows doesn't conform
+	// to C99, and so lacks it.
+
+	if (s == NULL) {
+		return (NNG_EINVAL);
+	}
+	// Skip over 0x if present.
+	if ((s[0] == '0') && ((s[1] == 'x') || (s[1] == 'X'))) {
+		s += 2;
+	}
+	if (*s == '\0') {
+		// Require a non-empty string.
+		return (NNG_EINVAL);
+	}
+
+	while (*s) {
+		uint64_t last = v;
+		if (isdigit(*s)) {
+			v *= 16;
+			v += (*s - '0');
+		} else if ((*s >= 'a') && (*s <= 'f')) {
+			v *= 16;
+			v += (*s - 'a') + 10;
+		} else if ((*s >= 'A') && (*s <= 'F')) {
+			v *= 16;
+			v += (*s - 'A') + 10;
+		} else {
+			return (NNG_EINVAL);
+		}
+		if (v < last) {
+			// Overflow!
+			return (NNG_EINVAL);
+		}
+		s++;
+	}
+	*u = v;
+	return (0);
+}
