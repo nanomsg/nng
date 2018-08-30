@@ -119,7 +119,7 @@ if (NNG_PLATFORM_POSIX)
         set (NNG_SOURCES ${NNG_SOURCES}
             platform/posix/posix_pollq_kqueue.c
         )
-    elseif (NNG_HAVE_EPOLL)
+    elseif (NNG_HAVE_EPOLL AND NNG_HAVE_EVENTFD)
         set (NNG_SOURCES ${NNG_SOURCES}
             platform/posix/posix_pollq_epoll.c
         )
