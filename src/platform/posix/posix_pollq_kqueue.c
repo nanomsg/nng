@@ -252,7 +252,7 @@ nni_posix_poll_thr(void *arg)
 				continue;
 			}
 			pf = (void *) ev->udata;
-			if (ev->flags & (EV_ERROR | EV_EOF)) {
+			if (ev->flags & EV_ERROR) {
 				revents |= POLLHUP;
 			}
 
