@@ -101,6 +101,7 @@ extern int nni_http_req_copy_data(nni_http_req *, const void *, size_t);
 extern int nni_http_res_copy_data(nni_http_res *, const void *, size_t);
 extern int nni_http_req_set_data(nni_http_req *, const void *, size_t);
 extern int nni_http_res_set_data(nni_http_res *, const void *, size_t);
+extern int nni_http_res_alloc_data(nni_http_res *, size_t);
 extern const char *nni_http_req_get_method(nni_http_req *);
 extern const char *nni_http_req_get_version(nni_http_req *);
 extern const char *nni_http_req_get_uri(nni_http_req *);
@@ -305,5 +306,21 @@ extern int nni_http_client_get_tls(
     nni_http_client *, struct nng_tls_config **);
 
 extern void nni_http_client_connect(nni_http_client *, nni_aio *);
+
+// nni_http_transact_conn is used to perform a round-trip exchange (i.e. a
+// single HTTP transaction).  It will not automatically close the connection,
+// unless some kind of significant error occurs.  The caller should dispose
+// of the connection if the aio does not complete successfully.
+// Note that this will fail with NNG_ENOTSUP if the server attempts to reply
+// with a chunked transfer encoding.
+extern void nni_http_transact_conn(
+    nni_http_conn *, nni_http_req *, nni_http_res *, nni_aio *);
+
+// nni_http_transact is used to execute a single transaction to a server.
+// The connection is opened, and will be closed when the transaction is
+// complete.  Note that this will fail with NNG_ENOTSUP if the server attempts
+// to reply with a chunked transfer encoding.
+extern void nni_http_transact(
+    nni_http_client *, nni_http_req *, nni_http_res *, nni_aio *);
 
 #endif // NNG_SUPPLEMENTAL_HTTP_HTTP_API_H

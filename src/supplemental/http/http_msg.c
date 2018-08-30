@@ -399,6 +399,20 @@ nni_http_res_copy_data(nni_http_res *res, const void *data, size_t size)
 	return (0);
 }
 
+// nni_http_res_alloc_data allocates the data region, but does not update any
+// headers.  The intended use is for client implementations that want to
+// allocate a buffer to receive the entity into.
+int
+nni_http_res_alloc_data(nni_http_res *res, size_t size)
+{
+	int rv;
+
+	if ((rv = http_entity_alloc_data(&res->data, size)) != 0) {
+		return (rv);
+	}
+	return (0);
+}
+
 bool
 nni_http_res_is_error(nni_http_res *res)
 {

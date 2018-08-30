@@ -198,11 +198,13 @@ if (NNG_ENABLE_DOC)
 	nng_http_client_free
 	nng_http_client_get_tls
 	nng_http_client_set_tls
+	nng_http_client_transact
 	nng_http_conn_close
 	nng_http_conn_read
 	nng_http_conn_read_all
 	nng_http_conn_read_req
 	nng_http_conn_read_res
+	nng_http_conn_transact
 	nng_http_conn_write
 	nng_http_conn_write_all
 	nng_http_conn_write_req
@@ -220,6 +222,7 @@ if (NNG_ENABLE_DOC)
 	nng_http_req_copy_data
 	nng_http_req_del_header
 	nng_http_req_free
+	nng_http_req_get_data
 	nng_http_req_get_header
 	nng_http_req_get_method
 	nng_http_req_get_uri
@@ -235,6 +238,7 @@ if (NNG_ENABLE_DOC)
 	nng_http_res_copy_data
 	nng_http_res_del_header
 	nng_http_res_free
+	nng_http_res_get_data
 	nng_http_res_get_header
 	nng_http_res_get_reason
 	nng_http_res_get_status

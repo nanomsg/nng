@@ -19,6 +19,8 @@
 
 #include "http_api.h"
 
+static nni_mtx http_txn_lk;
+
 struct nng_http_client {
 	nni_list        aios;
 	nni_mtx         mtx;
@@ -264,4 +266,256 @@ nni_http_client_connect(nni_http_client *c, nni_aio *aio)
 		http_dial_start(c);
 	}
 	nni_mtx_unlock(&c->mtx);
+}
+
+static int  http_client_sys_init(void);
+static void http_client_sys_fini(void);
+
+static nni_initializer http_client_initializer = {
+	.i_init = http_client_sys_init,
+	.i_fini = http_client_sys_fini,
+	.i_once = 0,
+};
+
+typedef enum http_txn_state {
+	HTTP_CONNECTING,
+	HTTP_SENDING,
+	HTTP_RECVING,
+	HTTP_RECVING_BODY,
+} http_txn_state;
+
+typedef struct http_txn {
+	nni_aio *        aio;  // lower level aio
+	nni_list         aios; // upper level aio(s) -- maximum one
+	nni_http_client *client;
+	nni_http_conn *  conn;
+	nni_http_req *   req;
+	nni_http_res *   res;
+	http_txn_state   state;
+	nni_reap_item    reap;
+} http_txn;
+
+static void
+http_txn_reap(void *arg)
+{
+	http_txn *txn = arg;
+	if (txn->client != NULL) {
+		// We only close the connection if we created it.
+		if (txn->conn != NULL) {
+			nni_http_conn_fini(txn->conn);
+		}
+	}
+	nni_aio_fini(txn->aio);
+	NNI_FREE_STRUCT(txn);
+}
+
+static void
+http_txn_cb(void *arg)
+{
+	http_txn *  txn = arg;
+	const char *str;
+	nni_aio *   aio;
+	int         rv;
+	uint64_t    len;
+	nni_iov     iov;
+
+	nni_mtx_lock(&http_txn_lk);
+	if ((rv = nni_aio_result(txn->aio)) != 0) {
+		while ((aio = nni_list_first(&txn->aios)) != NULL) {
+			nni_list_remove(&txn->aios, aio);
+			nni_aio_finish_error(aio, rv);
+		}
+		nni_mtx_unlock(&http_txn_lk);
+		nni_reap(&txn->reap, http_txn_reap, txn);
+		return;
+	}
+	switch (txn->state) {
+	case HTTP_CONNECTING:
+		txn->conn  = nni_aio_get_output(txn->aio, 0);
+		txn->state = HTTP_SENDING;
+		nni_http_write_req(txn->conn, txn->req, txn->aio);
+		nni_mtx_unlock(&http_txn_lk);
+		return;
+
+	case HTTP_SENDING:
+		txn->state = HTTP_RECVING;
+		nni_http_read_res(txn->conn, txn->res, txn->aio);
+		nni_mtx_unlock(&http_txn_lk);
+		return;
+
+	case HTTP_RECVING:
+		if (((str = nni_http_res_get_header(
+		          txn->res, "Transfer-Encoding")) != NULL) &&
+		    (strstr(str, "chunked") != NULL)) {
+			// We refuse to receive chunked encoding data.
+			// This is an implementation limitation, but as HTTP/2
+			// has eliminated this encoding, maybe it's not that
+			// big of a deal.  We forcibly close this.
+			while ((aio = nni_list_first(&txn->aios)) != NULL) {
+				nni_list_remove(&txn->aios, aio);
+				nni_aio_finish_error(aio, NNG_ENOTSUP);
+			}
+			nni_http_conn_close(txn->conn);
+			nni_mtx_unlock(&http_txn_lk);
+			nni_reap(&txn->reap, http_txn_reap, txn);
+			return;
+		}
+		str = nni_http_req_get_method(txn->req);
+		if ((nni_strcasecmp(str, "HEAD") == 0) ||
+		    ((str = nni_http_res_get_header(
+		          txn->res, "Content-Length")) == NULL) ||
+		    (nni_strtou64(str, &len) != 0) || (len == 0)) {
+			// If no content-length, or HEAD (which per RFC
+			// never transfers data), then we are done.
+			while ((aio = nni_list_first(&txn->aios)) != NULL) {
+				nni_list_remove(&txn->aios, aio);
+				nni_aio_finish(aio, 0, 0);
+			}
+			nni_mtx_unlock(&http_txn_lk);
+			nni_reap(&txn->reap, http_txn_reap, txn);
+			return;
+		}
+
+		nni_http_res_alloc_data(txn->res, (size_t) len);
+		nni_http_res_get_data(txn->res, &iov.iov_buf, &iov.iov_len);
+		nni_aio_set_iov(txn->aio, 1, &iov);
+		txn->state = HTTP_RECVING_BODY;
+		nni_http_read_full(txn->conn, txn->aio);
+		nni_mtx_unlock(&http_txn_lk);
+		return;
+
+	case HTTP_RECVING_BODY:
+		// All done!
+		while ((aio = nni_list_first(&txn->aios)) != NULL) {
+			nni_list_remove(&txn->aios, aio);
+			nni_aio_finish(aio, 0, 0);
+		}
+		nni_mtx_unlock(&http_txn_lk);
+		nni_reap(&txn->reap, http_txn_reap, txn);
+		return;
+	}
+
+	NNI_ASSERT(0); // Unknown state!
+}
+
+static void
+http_txn_cancel(nni_aio *aio, void *arg, int rv)
+{
+	http_txn *txn = arg;
+	nni_mtx_lock(&http_txn_lk);
+	if (nni_aio_list_active(aio)) {
+		nni_aio_abort(txn->aio, rv);
+	}
+	nni_mtx_unlock(&http_txn_lk);
+}
+
+// nni_http_transact_conn sends a request to an HTTP server, and reads the
+// response.  It also attempts to read any associated data.  Note that
+// at present it can only read data that comes in normally, as support
+// for Chunked Transfer Encoding is missing.  Note that cancelling the aio
+// is generally fatal to the connection.
+void
+nni_http_transact_conn(
+    nni_http_conn *conn, nni_http_req *req, nni_http_res *res, nni_aio *aio)
+{
+	http_txn *txn;
+	int       rv;
+
+	nni_initialize(&http_client_initializer);
+
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
+	if ((txn = NNI_ALLOC_STRUCT(txn)) == NULL) {
+		nni_aio_finish_error(aio, NNG_ENOMEM);
+		return;
+	}
+	if ((rv = nni_aio_init(&txn->aio, http_txn_cb, txn)) != 0) {
+		NNI_FREE_STRUCT(txn);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+	nni_aio_list_init(&txn->aios);
+	txn->client = NULL;
+	txn->conn   = conn;
+	txn->req    = req;
+	txn->res    = res;
+	txn->state  = HTTP_SENDING;
+
+	nni_mtx_lock(&http_txn_lk);
+	if ((rv = nni_aio_schedule(aio, http_txn_cancel, txn)) != 0) {
+		nni_mtx_unlock(&http_txn_lk);
+		nni_aio_finish_error(aio, rv);
+		nni_reap(&txn->reap, http_txn_reap, txn);
+		return;
+	}
+	nni_http_res_reset(txn->res);
+	nni_list_append(&txn->aios, aio);
+	nni_http_write_req(conn, req, txn->aio);
+	nni_mtx_unlock(&http_txn_lk);
+}
+
+// nni_http_transact_simple does a single transaction, creating a connection
+// just for the purpose, and closing it when done.  (No connection caching.)
+// The reason we require a client to be created first is to deal with TLS
+// settings.  A single global client (per server) may be used.
+void
+nni_http_transact(nni_http_client *client, nni_http_req *req,
+    nni_http_res *res, nni_aio *aio)
+{
+	http_txn *txn;
+	int       rv;
+
+	nni_initialize(&http_client_initializer);
+
+	if (nni_aio_begin(aio) != 0) {
+		return;
+	}
+	if ((txn = NNI_ALLOC_STRUCT(txn)) == NULL) {
+		nni_aio_finish_error(aio, NNG_ENOMEM);
+		return;
+	}
+	if ((rv = nni_aio_init(&txn->aio, http_txn_cb, txn)) != 0) {
+		NNI_FREE_STRUCT(txn);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
+	if ((rv = nni_http_req_set_header(req, "Connection", "close")) != 0) {
+		nni_aio_finish_error(aio, rv);
+		nni_reap(&txn->reap, http_txn_reap, txn);
+		return;
+	}
+
+	nni_aio_list_init(&txn->aios);
+	txn->client = NULL;
+	txn->conn   = NULL;
+	txn->req    = req;
+	txn->res    = res;
+	txn->state  = HTTP_CONNECTING;
+
+	nni_mtx_lock(&http_txn_lk);
+	if ((rv = nni_aio_schedule(aio, http_txn_cancel, txn)) != 0) {
+		nni_mtx_unlock(&http_txn_lk);
+		nni_aio_finish_error(aio, rv);
+		nni_reap(&txn->reap, http_txn_reap, txn);
+		return;
+	}
+	nni_http_res_reset(txn->res);
+	nni_list_append(&txn->aios, aio);
+	nni_http_client_connect(client, txn->aio);
+	nni_mtx_unlock(&http_txn_lk);
+}
+
+static int
+http_client_sys_init(void)
+{
+	nni_mtx_init(&http_txn_lk);
+	return (0);
+}
+
+static void
+http_client_sys_fini(void)
+{
+	nni_mtx_fini(&http_txn_lk);
 }

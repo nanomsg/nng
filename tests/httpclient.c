@@ -29,7 +29,7 @@ const uint8_t example_sum[20] = { 0x0e, 0x97, 0x3b, 0x59, 0xf4, 0x76, 0x00,
 TestMain("HTTP Client", {
 	atexit(nng_fini);
 
-	Convey("Given a TCP connection to httpbin.org", {
+	Convey("Given a TCP connection to example.com", {
 		nng_aio *        aio;
 		nng_http_client *cli;
 		nng_http_conn *  http;
@@ -37,8 +37,9 @@ TestMain("HTTP Client", {
 
 		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
 
-		So(nng_url_parse(&url, "http://example.org/") == 0);
+		So(nng_url_parse(&url, "http://example.com/") == 0);
 
+		nng_aio_set_timeout(aio, 10000);
 		So(nng_http_client_alloc(&cli, url) == 0);
 		nng_http_client_connect(cli, aio);
 		nng_aio_wait(aio);
@@ -103,6 +104,108 @@ TestMain("HTTP Client", {
 				nni_sha1(data, sz, digest);
 				So(memcmp(digest, example_sum, 20) == 0);
 			});
+		});
+	});
+
+	Convey("Given a client", {
+		nng_aio *        aio;
+		nng_http_client *cli;
+		nng_url *        url;
+
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+
+		So(nng_url_parse(&url, "http://example.com/") == 0);
+
+		So(nng_http_client_alloc(&cli, url) == 0);
+		nng_aio_set_timeout(aio, 10000); // 10 sec timeout
+
+		Reset({
+			nng_http_client_free(cli);
+			nng_url_free(url);
+			nng_aio_free(aio);
+		});
+
+		Convey("One off exchange works", {
+			nng_http_req *req;
+			nng_http_res *res;
+			void *        data;
+			size_t        len;
+			uint8_t       digest[20];
+
+			So(nng_http_req_alloc(&req, url) == 0);
+			So(nng_http_res_alloc(&res) == 0);
+			Reset({
+				nng_http_req_free(req);
+				nng_http_res_free(res);
+			});
+
+			nng_http_client_transact(cli, req, res, aio);
+			nng_aio_wait(aio);
+			So(nng_aio_result(aio) == 0);
+			So(nng_http_res_get_status(res) == 200);
+			nng_http_res_get_data(res, &data, &len);
+			nni_sha1(data, len, digest);
+			So(memcmp(digest, example_sum, 20) == 0);
+		});
+
+		Convey("Timeout works", {
+			nng_http_req *req;
+			nng_http_res *res;
+
+			So(nng_http_req_alloc(&req, url) == 0);
+			So(nng_http_res_alloc(&res) == 0);
+			Reset({
+				nng_http_req_free(req);
+				nng_http_res_free(res);
+			});
+
+			nng_aio_set_timeout(aio, 1); // 1 ms, should timeout!
+			nng_http_client_transact(cli, req, res, aio);
+			nng_aio_wait(aio);
+			So(nng_aio_result(aio) == NNG_ETIMEDOUT);
+		});
+
+		Convey("Connection reuse works", {
+			nng_http_req * req;
+			nng_http_res * res1;
+			nng_http_res * res2;
+			void *         data;
+			size_t         len;
+			uint8_t        digest[20];
+			nng_http_conn *conn = NULL;
+
+			So(nng_http_req_alloc(&req, url) == 0);
+			So(nng_http_res_alloc(&res1) == 0);
+			So(nng_http_res_alloc(&res2) == 0);
+			Reset({
+				nng_http_req_free(req);
+				nng_http_res_free(res1);
+				nng_http_res_free(res2);
+				if (conn != NULL) {
+					nng_http_conn_close(conn);
+				}
+			});
+
+			nng_http_client_connect(cli, aio);
+			nng_aio_wait(aio);
+			So(nng_aio_result(aio) == 0);
+			conn = nng_aio_get_output(aio, 0);
+
+			nng_http_conn_transact(conn, req, res1, aio);
+			nng_aio_wait(aio);
+			So(nng_aio_result(aio) == 0);
+			So(nng_http_res_get_status(res1) == 200);
+			nng_http_res_get_data(res1, &data, &len);
+			nni_sha1(data, len, digest);
+			So(memcmp(digest, example_sum, 20) == 0);
+
+			nng_http_conn_transact(conn, req, res2, aio);
+			nng_aio_wait(aio);
+			So(nng_aio_result(aio) == 0);
+			So(nng_http_res_get_status(res2) == 200);
+			nng_http_res_get_data(res2, &data, &len);
+			nni_sha1(data, len, digest);
+			So(memcmp(digest, example_sum, 20) == 0);
 		});
 	});
 })

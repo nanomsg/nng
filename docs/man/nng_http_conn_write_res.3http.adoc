@@ -48,6 +48,12 @@ If however the _res_ contains a header of `Connection:` with a value
 of `Close` (case-insensitive) or the response corresponds to `HTTP/1.0`,
 then the connection is immediately after sending the response.
 
+NOTE: Consider using the
+`<<nng_http_client_transact.3http#,nng_http_client_transact()>>` or
+`<<nng_http_conn_transact.3http#,nng_http_conn_transact()>>` functions,
+which provide a simpler interface for performing a complete HTTP client
+transaction.
+
 == RETURN VALUES
 
 None.
@@ -68,6 +74,8 @@ None.
 <<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
 <<nng_aio_result.3#,nng_aio_result(3)>>,
 <<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
+<<nng_http_client_transact.3http#,nng_http_client_transact(3http)>>,
 <<nng_http_conn_read_all.3http#,nng_http_conn_read_all(3http)>>,
+<<nng_http_conn_transact.3http#,nng_http_conn_transact(3http)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,
 <<nng.7#,nng(7)>>

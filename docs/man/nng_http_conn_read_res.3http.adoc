@@ -42,6 +42,12 @@ the operation is signaled via the _aio_, and the final result may be
 obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
 That result will either be zero or an error code.
 
+NOTE: Consider using the
+`<<nng_http_client_transact.3http#,nng_http_client_transact()>>` or
+`<<nng_http_conn_transact.3http#,nng_http_conn_transact()>>` functions,
+which provide a simpler interface for performing a complete HTTP client
+transaction.
+
 == RETURN VALUES
 
 None.
@@ -63,5 +69,7 @@ None.
 <<nng_aio_result.3#,nng_aio_result(3)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,
 <<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
+<<nng_http_client_transact.3http#,nng_http_client_transact(3http)>>,
+<<nng_http_conn_transact.3http#,nng_http_conn_transact(3http)>>,
 <<nng_http_conn_read_all.3http#,nng_http_conn_read_all(3http)>>,
 <<nng.7#,nng(7)>>

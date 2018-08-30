@@ -154,6 +154,9 @@ NNG_DECL int nng_http_req_set_data(nng_http_req *, const void *, size_t);
 // probably set the content-type header.
 NNG_DECL int nng_http_req_copy_data(nng_http_req *, const void *, size_t);
 
+// nng_http_req_get_data gets the data for the response.
+NNG_DECL void nng_http_req_get_data(nng_http_req *, void **, size_t *);
+
 // nng_http_res represents an HTTP response.
 typedef struct nng_http_res nng_http_res;
 
@@ -207,6 +210,9 @@ NNG_DECL int nng_http_res_set_version(nng_http_res *, const char *);
 
 // nng_http_res_get_version returns the version, usually HTTP/1.1.
 NNG_DECL const char *nng_http_res_get_version(nng_http_res *);
+
+// nng_http_res_get_data gets the data for the response.
+NNG_DECL void nng_http_res_get_data(nng_http_res *, void **, size_t *);
 
 // nng_http_res_set_data adds entity data to the response.  The
 // data object must persist (so only really useful for static data).
@@ -476,6 +482,22 @@ NNG_DECL int nng_http_client_get_tls(
 // is established, the associated nng_http_conn object pointer is returned
 // in the first (index 0) output for the aio.
 NNG_DECL void nng_http_client_connect(nng_http_client *, nng_aio *);
+
+// nng_http_conn_transact is used to perform a round-trip exchange (i.e. a
+// single HTTP transaction).  It will not automatically close the connection,
+// unless some kind of significant error occurs.  The caller should close
+// the connection if the aio does not complete successfully.
+// Note that this will fail with NNG_ENOTSUP if the server attempts to reply
+// with a chunked transfer encoding.
+NNG_DECL void nng_http_conn_transact(
+    nng_http_conn *, nng_http_req *, nng_http_res *, nng_aio *);
+
+// nng_http_client_transact is used to execute a single transaction to a
+// server. The connection is opened, and will be closed when the transaction is
+// complete.  Note that this will fail with NNG_ENOTSUP if the server attempts
+// to reply with a chunked transfer encoding.
+NNG_DECL void nng_http_client_transact(
+    nng_http_client *, nng_http_req *, nng_http_res *, nng_aio *);
 
 #ifdef __cplusplus
 }
