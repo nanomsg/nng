@@ -1329,69 +1329,47 @@ nng_msg_header_append(nng_msg *msg, const void *data, size_t sz)
 	return (nni_msg_header_append(msg, data, sz));
 }
 
-int
-nng_msg_header_append_u32(nng_msg *msg, uint32_t val)
-{
-	return (nni_msg_header_append_u32(msg, val));
-}
-
-int
-nng_msg_header_insert_u32(nng_msg *msg, uint32_t val)
-{
-	return (nni_msg_header_insert_u32(msg, val));
-}
-
-int
-nng_msg_header_chop_u32(nng_msg *msg, uint32_t *valp)
-{
-	if (nni_msg_header_len(msg) < sizeof(uint32_t)) {
-		return (NNG_EINVAL);
+#define DEF_MSG_ADD_N(op, n)                                      \
+	int nng_msg_header_##op##_u##n(nng_msg *m, uint##n##_t v) \
+	{                                                         \
+		return (nni_msg_header_##op##_u##n(m, v));        \
+	}                                                         \
+	int nng_msg_##op##_u##n(nng_msg *m, uint##n##_t v)        \
+	{                                                         \
+		return (nni_msg_##op##_u##n(m, v));               \
 	}
-	*valp = nni_msg_header_chop_u32(msg);
-	return (0);
-}
-
-int
-nng_msg_header_trim_u32(nng_msg *msg, uint32_t *valp)
-{
-	if (nni_msg_header_len(msg) < sizeof(uint32_t)) {
-		return (NNG_EINVAL);
+#define DEF_MSG_REM_N(op, n)                                        \
+	int nng_msg_header_##op##_u##n(nng_msg *m, uint##n##_t *vp) \
+	{                                                           \
+		if (nni_msg_header_len(m) < sizeof(*vp)) {          \
+			return (NNG_EINVAL);                        \
+		}                                                   \
+		*vp = nni_msg_header_##op##_u##n(m);                \
+		return (0);                                         \
+	}                                                           \
+	int nng_msg_##op##_u##n(nng_msg *m, uint##n##_t *vp)        \
+	{                                                           \
+		if (nni_msg_len(m) < sizeof(*vp)) {                 \
+			return (NNG_EINVAL);                        \
+		}                                                   \
+		*vp = nni_msg_##op##_u##n(m);                       \
+		return (0);                                         \
 	}
-	*valp = nni_msg_header_trim_u32(msg);
-	return (0);
-}
 
-int
-nng_msg_append_u32(nng_msg *msg, uint32_t val)
-{
-	return (nni_msg_append_u32(msg, val));
-}
+#define DEF_MSG_ADD(op) \
+	DEF_MSG_ADD_N(op, 16) DEF_MSG_ADD_N(op, 32) DEF_MSG_ADD_N(op, 64)
+#define DEF_MSG_REM(op) \
+	DEF_MSG_REM_N(op, 16) DEF_MSG_REM_N(op, 32) DEF_MSG_REM_N(op, 64)
 
-int
-nng_msg_insert_u32(nng_msg *msg, uint32_t val)
-{
-	return (nni_msg_insert_u32(msg, val));
-}
+DEF_MSG_ADD(append)
+DEF_MSG_ADD(insert)
+DEF_MSG_REM(chop)
+DEF_MSG_REM(trim)
 
-int
-nng_msg_chop_u32(nng_msg *msg, uint32_t *valp)
-{
-	if (nni_msg_len(msg) < sizeof(uint32_t)) {
-		return (NNG_EINVAL);
-	}
-	*valp = nni_msg_chop_u32(msg);
-	return (0);
-}
-
-int
-nng_msg_trim_u32(nng_msg *msg, uint32_t *valp)
-{
-	if (nni_msg_len(msg) < sizeof(uint32_t)) {
-		return (NNG_EINVAL);
-	}
-	*valp = nni_msg_trim_u32(msg);
-	return (0);
-}
+#undef DEF_MSG_ADD_N
+#undef DEF_MSG_REM_N
+#undef DEF_MSG_ADD
+#undef DEF_MSG_REM
 
 int
 nng_msg_header_insert(nng_msg *msg, const void *data, size_t sz)

@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_msg_header_trim, nng_msg_header_trim_u32 - remove data from start of message header
+nng_msg_header_trim - remove data from start of message header
 
 == SYNOPSIS
 
@@ -20,16 +20,18 @@ nng_msg_header_trim, nng_msg_header_trim_u32 - remove data from start of message
 #include <nng/nng.h>
 
 int nng_msg_header_trim(nng_msg *msg, size_t size);
-
+int nng_msg_header_trim_u16(nng_msg *msg, uint16_t *val16);
 int nng_msg_header_trim_u32(nng_msg *msg, uint32_t *val32);
+int nng_msg_header_trim_u64(nng_msg *msg, uint64_t *val64);
 ----
 
 == DESCRIPTION
 
-The `nng_msg_header_trim()` and `nng_msg_header_trim_u32()` functions remove
+The `nng_msg_header_trim()` family of functions remove
 data from the start of the header of message _msg_.
 The first function removes _size_ bytes.
-The second function removes 4 bytes, and stores them in the value _val32_,
+The remaining functions removes 2, 4, or 8 bytes, and stores them in the
+value (such as _val32_),
 after converting them from network-byte order (big-endian) to native
 byte order.
 
