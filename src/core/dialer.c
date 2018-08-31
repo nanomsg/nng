@@ -328,6 +328,9 @@ nni_dialer_setopt(nni_dialer *d, const char *name, const void *val, size_t sz,
 		int rv;
 		nni_mtx_lock(&d->d_mtx);
 		rv = nni_copyin_ms(&d->d_inirtime, val, sz, t);
+		if (rv == 0) {
+			d->d_currtime = d->d_inirtime;
+		}
 		nni_mtx_unlock(&d->d_mtx);
 		return (rv);
 	}

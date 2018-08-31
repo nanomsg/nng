@@ -1355,7 +1355,7 @@ dialer_timer_start_locked(nni_dialer *d)
 	}
 	backoff = d->d_currtime;
 	d->d_currtime *= 2;
-	if (d->d_currtime > d->d_maxrtime) {
+	if ((d->d_maxrtime > 0) && (d->d_currtime > d->d_maxrtime)) {
 		d->d_currtime = d->d_maxrtime;
 	}
 
