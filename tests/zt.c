@@ -21,6 +21,7 @@
 // This network is an open network setup exclusively for nng testing.
 // Do not attach to it in production.
 #define NWID "a09acf02337b057b"
+#define NWID_NUM 0xa09acf02337b057bull
 
 // This network is a closed network, which nothing can join.  We use it for
 // testing permission denied.
@@ -53,7 +54,7 @@ check_props(nng_msg *msg)
 
 		So(la.s_family == NNG_AF_ZT);
 		So(la.s_zt.sa_port == (trantest_port - 1));
-		So(la.s_zt.sa_nwid == 0xa09acf02337b057bull);
+		So(la.s_zt.sa_nwid == NWID_NUM);
 		So(la.s_zt.sa_nodeid != 0);
 	});
 
@@ -65,7 +66,7 @@ check_props(nng_msg *msg)
 		So(nng_pipe_getopt_sockaddr(p, NNG_OPT_REMADDR, &ra) == 0);
 		So(ra.s_family == NNG_AF_ZT);
 		So(ra.s_zt.sa_port != 0);
-		So(ra.s_zt.sa_nwid == 0xa09acf02337b057bull);
+		So(ra.s_zt.sa_nwid == NWID_NUM);
 
 		So(nng_pipe_getopt_uint64(p, NNG_OPT_ZT_NODE, &mynode) == 0);
 		So(mynode != 0);
@@ -124,7 +125,6 @@ check_props(nng_msg *msg)
 }
 
 TestMain("ZeroTier Transport", {
-
 	char     path1[NNG_MAXADDRLEN] = "/tmp/zt_server";
 	char     path2[NNG_MAXADDRLEN] = "/tmp/zt_client";
 	unsigned port;
@@ -150,7 +150,6 @@ TestMain("ZeroTier Transport", {
 		So(nng_listener_create(&l, s, addr) == 0);
 
 		Convey("And it can be started...", {
-
 			mkdir(path1, 0700);
 
 			So(nng_listener_setopt(l, NNG_OPT_ZT_HOME, path1,
@@ -158,6 +157,15 @@ TestMain("ZeroTier Transport", {
 
 			So(nng_listener_start(l, 0) == 0);
 
+			Convey("It has the right local address", {
+				nng_sockaddr sa;
+				So(nng_listener_getopt_sockaddr(
+				       l, NNG_OPT_LOCADDR, &sa) == 0);
+				So(sa.s_zt.sa_family == NNG_AF_ZT);
+				So(sa.s_zt.sa_nwid == NWID_NUM);
+				So(sa.s_zt.sa_port == port);
+				So(sa.s_zt.sa_nodeid != 0);
+			});
 			Convey("And we can orbit a moon", {
 				uint64_t ids[2];
 				// Provided by Janjaap...
@@ -166,7 +174,6 @@ TestMain("ZeroTier Transport", {
 
 				So(nng_listener_setopt(l, NNG_OPT_ZT_ORBIT,
 				       ids, sizeof(ids)) == 0);
-
 			});
 			Convey("And we can deorbit anything", {
 				uint64_t id;
@@ -284,5 +291,4 @@ TestMain("ZeroTier Transport", {
 	nng_listener_close(l_test);
 
 	trantest_test_extended(fmt, check_props);
-
 })

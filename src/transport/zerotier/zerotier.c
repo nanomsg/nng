@@ -2892,6 +2892,22 @@ zt_ep_get_conn_tries(void *arg, void *data, size_t *szp, nni_opt_type t)
 }
 
 static int
+zt_ep_get_locaddr(void *arg, void *data, size_t *szp, nni_opt_type t)
+{
+	zt_ep *      ep = arg;
+	nng_sockaddr sa;
+
+	memset(&sa, 0, sizeof(sa));
+	sa.s_zt.sa_family = NNG_AF_ZT;
+	nni_mtx_lock(&zt_lk);
+	sa.s_zt.sa_nwid   = ep->ze_nwid;
+	sa.s_zt.sa_nodeid = ep->ze_laddr >> zt_port_shift;
+	sa.s_zt.sa_port   = ep->ze_laddr & zt_port_mask;
+	nni_mtx_unlock(&zt_lk);
+	return (nni_copyout_sockaddr(&sa, data, szp, t));
+}
+
+static int
 zt_pipe_get_locaddr(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_pipe *    p = arg;
@@ -2973,7 +2989,7 @@ static nni_tran_pipe_ops zt_pipe_ops = {
 	.p_options = zt_pipe_options,
 };
 
-static nni_tran_option zt_ep_options[] = {
+static nni_tran_option zt_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_type = NNI_TYPE_SIZE,
@@ -3059,12 +3075,89 @@ static nni_tran_option zt_ep_options[] = {
 	},
 };
 
+static nni_tran_option zt_listener_options[] = {
+	{
+	    .o_name = NNG_OPT_RECVMAXSZ,
+	    .o_type = NNI_TYPE_SIZE,
+	    .o_get  = zt_ep_get_recvmaxsz,
+	    .o_set  = zt_ep_set_recvmaxsz,
+	    .o_chk  = zt_ep_chk_recvmaxsz,
+	},
+	{
+	    .o_name = NNG_OPT_URL,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = zt_ep_get_url,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_HOME,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = zt_ep_get_home,
+	    .o_set  = zt_ep_set_home,
+	    .o_chk  = zt_ep_chk_string,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_NODE,
+	    .o_type = NNI_TYPE_UINT64,
+	    .o_get  = zt_ep_get_node,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_NWID,
+	    .o_type = NNI_TYPE_UINT64,
+	    .o_get  = zt_ep_get_nwid,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_NETWORK_STATUS,
+	    .o_type = NNI_TYPE_INT32, // enumeration really
+	    .o_get  = zt_ep_get_nw_status,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_NETWORK_NAME,
+	    .o_type = NNI_TYPE_STRING,
+	    .o_get  = zt_ep_get_nw_name,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_PING_TIME,
+	    .o_type = NNI_TYPE_DURATION,
+	    .o_get  = zt_ep_get_ping_time,
+	    .o_set  = zt_ep_set_ping_time,
+	    .o_chk  = zt_ep_chk_time,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_PING_TRIES,
+	    .o_type = NNI_TYPE_INT32,
+	    .o_get  = zt_ep_get_ping_tries,
+	    .o_set  = zt_ep_set_ping_tries,
+	    .o_chk  = zt_ep_chk_tries,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_ORBIT,
+	    .o_type = NNI_TYPE_UINT64, // use opaque for two
+	    .o_set  = zt_ep_set_orbit,
+	    .o_chk  = zt_ep_chk_orbit,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_DEORBIT,
+	    .o_type = NNI_TYPE_UINT64,
+	    .o_set  = zt_ep_set_deorbit,
+	    .o_chk  = zt_ep_chk_deorbit,
+	},
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_get  = zt_ep_get_locaddr,
+	},
+	// terminate list
+	{
+	    .o_name = NULL,
+	},
+};
+
 static nni_tran_dialer_ops zt_dialer_ops = {
 	.d_init    = zt_dialer_init,
 	.d_fini    = zt_ep_fini,
 	.d_connect = zt_ep_connect,
 	.d_close   = zt_ep_close,
-	.d_options = zt_ep_options,
+	.d_options = zt_dialer_options,
 };
 
 static nni_tran_listener_ops zt_listener_ops = {
@@ -3073,7 +3166,7 @@ static nni_tran_listener_ops zt_listener_ops = {
 	.l_bind    = zt_ep_bind,
 	.l_accept  = zt_ep_accept,
 	.l_close   = zt_ep_close,
-	.l_options = zt_ep_options,
+	.l_options = zt_listener_options,
 };
 
 // This is the ZeroTier transport linkage, and should be the
