@@ -154,8 +154,7 @@ struct zt_node {
 	nni_list        zn_plist;
 	nni_idhash *    zn_ports;
 	nni_idhash *    zn_eps;
-	nni_idhash *    zn_lpipes;
-	nni_idhash *    zn_rpipes;
+	nni_idhash *    zn_pipes;
 	nni_idhash *    zn_peers; // indexed by remote address
 	nni_aio *       zn_rcv4_aio;
 	uint8_t *       zn_rcv4_buf;
@@ -1081,21 +1080,11 @@ zt_virtual_recv(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
 
 	// Look up a pipe, but also we use this chance to check that
 	// the source address matches what the pipe was established with.
-	// If the pipe does not match then we nak it.  Note that pipes can
-	// appear on the znode twice (loopback), so we have to be careful
-	// to check the entire set of parameters, and to check for server
-	// vs. client pipes separately.
+	// If the pipe does not match then we nak it.
 
 	// If its a local address match on a client pipe, process it.
-	if ((nni_idhash_find(ztn->zn_lpipes, laddr, (void *) &p) == 0) &&
+	if ((nni_idhash_find(ztn->zn_pipes, laddr, (void *) &p) == 0) &&
 	    (p->zp_nwid == nwid) && (p->zp_raddr == raddr)) {
-		zt_pipe_virtual_recv(p, op, data, len);
-		return;
-	}
-
-	// If its a remote address match on a server pipe, process it.
-	if ((nni_idhash_find(ztn->zn_rpipes, raddr, (void *) &p) == 0) &&
-	    (p->zp_nwid == nwid) && (p->zp_laddr == laddr)) {
 		zt_pipe_virtual_recv(p, op, data, len);
 		return;
 	}
@@ -1416,8 +1405,7 @@ zt_node_destroy(zt_node *ztn)
 	nni_aio_fini(ztn->zn_rcv4_aio);
 	nni_aio_fini(ztn->zn_rcv6_aio);
 	nni_idhash_fini(ztn->zn_eps);
-	nni_idhash_fini(ztn->zn_lpipes);
-	nni_idhash_fini(ztn->zn_rpipes);
+	nni_idhash_fini(ztn->zn_pipes);
 	nni_idhash_fini(ztn->zn_peers);
 	nni_cv_fini(&ztn->zn_bgcv);
 	NNI_FREE_STRUCT(ztn);
@@ -1458,8 +1446,7 @@ zt_node_create(zt_node **ztnp, const char *path)
 	}
 	if (((rv = nni_idhash_init(&ztn->zn_ports)) != 0) ||
 	    ((rv = nni_idhash_init(&ztn->zn_eps)) != 0) ||
-	    ((rv = nni_idhash_init(&ztn->zn_lpipes)) != 0) ||
-	    ((rv = nni_idhash_init(&ztn->zn_rpipes)) != 0) ||
+	    ((rv = nni_idhash_init(&ztn->zn_pipes)) != 0) ||
 	    ((rv = nni_idhash_init(&ztn->zn_peers)) != 0) ||
 	    ((rv = nni_thr_init(&ztn->zn_bgthr, zt_bgthr, ztn)) != 0) ||
 	    ((rv = nni_plat_udp_open(&ztn->zn_udp4, &sa4)) != 0) ||
@@ -1656,8 +1643,7 @@ zt_pipe_fini(void *arg)
 	// This tosses the connection details and all state.
 	nni_mtx_lock(&zt_lk);
 	nni_idhash_remove(ztn->zn_ports, p->zp_laddr & zt_port_mask);
-	nni_idhash_remove(ztn->zn_lpipes, p->zp_laddr);
-	nni_idhash_remove(ztn->zn_rpipes, p->zp_raddr);
+	nni_idhash_remove(ztn->zn_pipes, p->zp_laddr);
 	nni_idhash_remove(ztn->zn_peers, p->zp_raddr);
 	nni_mtx_unlock(&zt_lk);
 
@@ -1706,13 +1692,8 @@ zt_pipe_alloc(zt_pipe **pipep, zt_ep *ep, uint64_t raddr, uint64_t laddr)
 	p->zp_ping_try   = 0;
 	nni_atomic_flag_reset(&p->zp_reaped);
 
-	if (ep->ze_nlistener != NULL) {
-		// listener
-		rv = nni_idhash_insert(ztn->zn_rpipes, raddr, p);
-	} else {
-		// dialer
-		rv = nni_idhash_insert(ztn->zn_lpipes, laddr, p);
-	}
+	rv = nni_idhash_insert(ztn->zn_pipes, laddr, p);
+
 	if ((rv != 0) ||
 	    ((rv = nni_idhash_insert(ztn->zn_peers, p->zp_raddr, p)) != 0) ||
 	    ((rv = nni_aio_init(&p->zp_ping_aio, zt_pipe_ping_cb, p)) != 0)) {
