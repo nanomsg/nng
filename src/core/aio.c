@@ -116,7 +116,6 @@ nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 	if ((aio = NNI_ALLOC_STRUCT(aio)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	memset(aio, 0, sizeof(*aio));
 	if ((rv = nni_task_init(&aio->a_task, NULL, cb, arg)) != 0) {
 		NNI_FREE_STRUCT(aio);
 		return (rv);
