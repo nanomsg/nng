@@ -144,7 +144,7 @@ nni_atomic_get64(nni_atomic_u64 *v)
 void
 nni_atomic_set64(nni_atomic_u64 *v, uint64_t u)
 {
-	return (InterlockedExchange64(&v->v, (LONGLONG) u));
+	(void) InterlockedExchange64(&v->v, (LONGLONG) u);
 }
 
 uint64_t
