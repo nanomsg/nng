@@ -5,4 +5,5 @@ wbuild
 .vs
 .vscode/.cmaketools.json
 .vscode
+.DS_Store
 etc/nng.sublime-workspace
