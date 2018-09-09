@@ -439,7 +439,7 @@ stat_sprint_scope(nni_stat *stat, char **scope, int *lenp)
 	} else {
 		(*scope)[0] = '\0';
 	}
-	*lenp -= strlen(*scope);
+	*lenp -= (int) strlen(*scope);
 	*scope += strlen(*scope);
 }
 #endif
@@ -461,7 +461,7 @@ nng_stats_dump(nng_stat *stat)
 		scope = buf;
 		len   = sizeof(buf);
 		stat_sprint_scope(stat, &scope, &len);
-		len = strlen(buf);
+		len = (int) strlen(buf);
 		if (len > 0) {
 			if (buf[len - 1] == '.') {
 				buf[--len] = '\0';
