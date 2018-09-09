@@ -13,6 +13,77 @@
 
 #include "core/nng_impl.h"
 
+#define STRESSLOAD 50000
+#define NVALUES 1000
+
+int
+stress(nni_idhash *h, void **values, size_t nvalues, int iter)
+{
+	for (int i = 0; i < iter; i++) {
+		void *x;
+		int   v = rand() % nvalues; // Keep it constrained
+
+		switch (rand() & 3) {
+		case 0:
+			x         = &values[rand() % nvalues];
+			values[v] = x;
+			if (nni_idhash_insert(h, v, x) != 0) {
+				return (-1);
+			}
+			break;
+
+		case 1:
+			if (values[v] == NULL) {
+				if (nni_idhash_remove(h, v) != NNG_ENOENT) {
+					return (-1);
+				} else {
+					break;
+				}
+			} else {
+				if (nni_idhash_remove(h, v) != 0) {
+					return (-1);
+				}
+				values[v] = NULL;
+			}
+			break;
+		case 2:
+			if (values[v] == NULL) {
+				if (nni_idhash_find(h, v, &x) != NNG_ENOENT) {
+					return (-1);
+				}
+
+			} else {
+				if ((nni_idhash_find(h, v, &x) != 0) ||
+				    (x != values[v])) {
+					return (-1);
+				}
+			}
+			break;
+		}
+	}
+	return (0);
+}
+
+int
+poststress(nni_idhash *h, void **values, size_t nvalues)
+{
+	for (size_t i = 0; i < nvalues; i++) {
+		void *x;
+		if (values[i] == NULL) {
+			if ((nni_idhash_find(h, i, &x) != NNG_ENOENT) ||
+			    (nni_idhash_remove(h, i) != NNG_ENOENT)) {
+				return (-1);
+			}
+			continue;
+		}
+		if (((nni_idhash_find(h, i, &x) != 0) || (x != values[i])) ||
+		    (nni_idhash_remove(h, i) != 0)) {
+			return (-1);
+		}
+	}
+	return (0);
+}
+
 Main({
 	nni_init();
 	atexit(nni_fini);
@@ -69,7 +140,6 @@ Main({
 						So(ptr == four);
 					});
 				});
-
 			});
 			Convey("We cannot find bogus values", {
 				void *ptr;
@@ -165,6 +235,24 @@ Main({
 				So(nni_idhash_alloc(h, &id, &expect[1]) == 0);
 				So(id >= 10);
 				So(id <= 13);
+			});
+		});
+	});
+
+	Test("Stress it", {
+		void *values[NVALUES];
+
+		Convey("Given a hash", {
+			nni_idhash *h;
+			So(nni_idhash_init(&h) == 0);
+			Reset({ nni_idhash_fini(h); });
+			memset(values, 0, sizeof(values));
+
+			Convey("A stress run works", {
+				So(stress(h, values, NVALUES, STRESSLOAD) ==
+				    0);
+				So(poststress(h, values, NVALUES) == 0);
+				So(nni_idhash_count(h) == 0);
 			});
 		});
 	});

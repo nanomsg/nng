@@ -95,26 +95,37 @@ nni_idhash_set_limits(
 #define NNI_IDHASH_INDEX(h, j) \
 	(((j & 0xffffffff) ^ (j >> 32)) & (h->ih_cap - 1))
 
-static int
-nni_hash_find(nni_idhash *h, uint64_t id, void **valp)
+static size_t
+nni_hash_find_index(nni_idhash *h, uint64_t id)
 {
-	uint32_t index = NNI_IDHASH_INDEX(h, id);
-
+	size_t index;
 	if (h->ih_count == 0) {
-		return (NNG_ENOENT);
+		return ((size_t) -1);
 	}
 
+	index = NNI_IDHASH_INDEX(h, id);
 	for (;;) {
-		if ((h->ih_entries[index].ihe_val == NULL) &&
-		    (h->ih_entries[index].ihe_skips == 0)) {
-			return (NNG_ENOENT);
+		// The value of ihe_key is only valid if ihe_val is not NULL.
+		if ((h->ih_entries[index].ihe_key == id) &&
+		    (h->ih_entries[index].ihe_val != NULL)) {
+			return (index);
 		}
-		if (h->ih_entries[index].ihe_key == id) {
-			*valp = h->ih_entries[index].ihe_val;
-			return (0);
+		if (h->ih_entries[index].ihe_skips == 0) {
+			return ((size_t) -1);
 		}
 		index = NNI_IDHASH_NEXTPROBE(h, index);
 	}
+}
+
+static int
+nni_hash_find(nni_idhash *h, uint64_t id, void **valp)
+{
+	size_t index;
+	if ((index = nni_hash_find_index(h, id)) == (size_t) -1) {
+		return (NNG_ENOENT);
+	}
+	*valp = h->ih_entries[index].ihe_val;
+	return (0);
 }
 
 int
@@ -148,13 +159,16 @@ nni_hash_resize(nni_idhash *h)
 	while (newsize < (h->ih_count * 2)) {
 		newsize *= 2;
 	}
+	if (newsize == oldsize) {
+		// Same size.
+		return (0);
+	}
 
 	oldents = h->ih_entries;
 	newents = NNI_ALLOC_STRUCTS(newents, newsize);
 	if (newents == NULL) {
 		return (NNG_ENOMEM);
 	}
-	memset(newents, 0, sizeof(nni_idhash_entry) * newsize);
 
 	h->ih_entries = newents;
 	h->ih_cap     = newsize;
@@ -173,6 +187,9 @@ nni_hash_resize(nni_idhash *h)
 		index = oldents[i].ihe_key & (newsize - 1);
 		for (;;) {
 			if (newents[index].ihe_val == NULL) {
+				// As we are hitting this entry for the first
+				// time, it won't have any skips.
+				NNI_ASSERT(newents[index].ihe_skips == 0);
 				h->ih_load++;
 				newents[index].ihe_val = oldents[i].ihe_val;
 				newents[index].ihe_key = oldents[i].ihe_key;
@@ -191,43 +208,41 @@ nni_hash_resize(nni_idhash *h)
 int
 nni_idhash_remove(nni_idhash *h, uint64_t id)
 {
-	int    rv;
-	void * val;
-	size_t index;
+	size_t            index;
+	size_t            srch;
+	nni_idhash_entry *ent;
 
 	nni_mtx_lock(&h->ih_mtx);
-	// First check that it is in the table.  This may double the
-	// lookup time, but it means that if we get past this then we KNOW
-	// we are going to delete an element.
-	if ((rv = nni_hash_find(h, id, &val)) != 0) {
+	if ((index = nni_hash_find_index(h, id)) == (size_t) -1) {
 		nni_mtx_unlock(&h->ih_mtx);
-		return (rv);
+		return (NNG_ENOENT);
 	}
 
-	index = NNI_IDHASH_INDEX(h, id);
-
-	for (;;) {
-		nni_idhash_entry *ent = &h->ih_entries[index];
-		if (ent->ihe_key == id) {
-			ent->ihe_val = NULL;
-			if (ent->ihe_skips == 0) {
-				h->ih_load--;
-			}
-			h->ih_count--;
-			break;
-		}
-		if (ent->ihe_skips < 1) {
-			nni_panic("Skips should be nonzero!");
-		}
+	// Now we have found the index where the object exists.  We are going
+	// to restart the search, until the index matches, to decrement the
+	// skips counter.
+	srch = (int) NNI_IDHASH_INDEX(h, id);
+	while (srch != index) {
+		ent = &h->ih_entries[srch];
+		NNI_ASSERT(ent->ihe_skips > 0);
 		ent->ihe_skips--;
 		if ((ent->ihe_skips == 0) && (ent->ihe_val == NULL)) {
 			h->ih_load--;
 		}
-		index = NNI_IDHASH_NEXTPROBE(h, index);
+		srch = NNI_IDHASH_NEXTPROBE(h, srch);
 	}
 
+	ent = &h->ih_entries[index];
+
+	ent->ihe_val = NULL;
+	ent->ihe_key = (uint64_t) -1; // scribble garbage on the key
+	if (ent->ihe_skips == 0) {
+		h->ih_load--;
+	}
+	h->ih_count--;
 	// Shrink -- but it's ok if we can't.
 	(void) nni_hash_resize(h);
+
 	nni_mtx_unlock(&h->ih_mtx);
 
 	return (0);
@@ -236,25 +251,36 @@ nni_idhash_remove(nni_idhash *h, uint64_t id)
 static int
 nni_hash_insert(nni_idhash *h, uint64_t id, void *val)
 {
-	size_t index;
+	size_t            index;
+	nni_idhash_entry *ent;
 
 	// Try to resize.  If we can't, but we still have room, go ahead
 	// and store it.
 	if ((nni_hash_resize(h) != 0) && (h->ih_count >= (h->ih_cap - 1))) {
 		return (NNG_ENOMEM);
 	}
+
+	// If it already exists, just overwrite the old value.
+	if ((index = nni_hash_find_index(h, id)) != (size_t) -1) {
+		ent          = &h->ih_entries[index];
+		ent->ihe_val = val;
+		return (0);
+	}
+
 	index = NNI_IDHASH_INDEX(h, id);
 	for (;;) {
-		nni_idhash_entry *ent = &h->ih_entries[index];
-		if ((ent->ihe_val == NULL) || (ent->ihe_key == id)) {
-			if (ent->ihe_val == NULL) {
-				h->ih_count++;
+		ent = &h->ih_entries[index];
+		if (ent->ihe_val == NULL) {
+			if (ent->ihe_skips == 0) {
+				// Newly used entry, bump the load.
 				h->ih_load++;
 			}
+			h->ih_count++;
 			ent->ihe_key = id;
 			ent->ihe_val = val;
 			return (0);
 		}
+		// Entry already in use, so don't increment the load.
 		ent->ihe_skips++;
 		index = NNI_IDHASH_NEXTPROBE(h, index);
 	}
@@ -275,9 +301,10 @@ int
 nni_idhash_alloc(nni_idhash *h, uint64_t *idp, void *val)
 {
 	uint64_t id;
-	void *   scrap;
 	int      rv;
 	nni_mtx_lock(&h->ih_mtx);
+
+	NNI_ASSERT(val != NULL);
 
 	if (h->ih_count > (h->ih_maxval - h->ih_minval)) {
 		// Really more like ENOSPC.. the table is filled to max.
@@ -293,7 +320,7 @@ nni_idhash_alloc(nni_idhash *h, uint64_t *idp, void *val)
 			h->ih_dynval = h->ih_minval;
 		}
 
-		if (nni_hash_find(h, id, &scrap) == NNG_ENOENT) {
+		if (nni_hash_find_index(h, id) == (size_t) -1) {
 			break;
 		}
 	}
@@ -322,4 +349,10 @@ nni_idhash_alloc32(nni_idhash *h, uint32_t *idp, void *val)
 		}
 	}
 	return (rv);
+}
+
+size_t
+nni_idhash_count(nni_idhash *h)
+{
+	return (h->ih_count);
 }
