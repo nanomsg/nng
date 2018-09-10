@@ -38,7 +38,7 @@ typedef struct nng_optspec nng_optspec;
 // set to match the option string, and optidx will be increment appropriately.
 // Returns -1 when the end of options is reached, 0 on success, or
 // NNG_EINVAL if the option parse is invalid for any reason.
-NNG_DECL int nng_opts_parse(int argc, const char **argv,
+NNG_DECL int nng_opts_parse(int argc, char *const *argv,
     const nng_optspec *opts, int *val, const char **optarg, int *optidx);
 
 #ifdef __cplusplus

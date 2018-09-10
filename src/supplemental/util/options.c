@@ -16,7 +16,7 @@
 
 // Call with optidx set to 1 to start parsing.
 int
-nng_opts_parse(int argc, const char **argv, const nng_optspec *opts, int *val,
+nng_opts_parse(int argc, char *const *argv, const nng_optspec *opts, int *val,
     const char **optarg, int *optidx)
 {
 	const nng_optspec *opt;
