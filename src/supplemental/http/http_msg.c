@@ -106,6 +106,7 @@ nni_http_req_reset(nni_http_req *req)
 	if (req->bufsz) {
 		req->buf[0] = '\0';
 	}
+	req->parsed = false;
 }
 
 void
@@ -115,9 +116,10 @@ nni_http_res_reset(nni_http_res *res)
 	http_entity_reset(&res->data);
 	nni_strfree(res->rsn);
 	nni_strfree(res->vers);
-	res->vers = NULL;
-	res->rsn  = NULL;
-	res->code = 0;
+	res->vers   = NULL;
+	res->rsn    = NULL;
+	res->code   = 0;
+	res->parsed = false;
 	if (res->bufsz) {
 		res->buf[0] = '\0';
 	}
