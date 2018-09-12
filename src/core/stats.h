@@ -85,23 +85,6 @@ void nni_stat_set_unit(nni_stat_item *, int);
 #define nni_stat_dec_atomic(stat, inc)
 #endif
 
-#if 0
-#define nni_stat_append(a, b)
-#define nni_stat_remove(a)
-#define nni_stat_init(a, b, c)
-#define nni_stat_init_scope(a, b, c)
-#define nni_stat_init_string(a, b, c, d)
-#define nni_stat_init_id(a, b, c, d)
-#define nni_stat_init_bool(a, b, c, d)
-#define nni_stat_dec_atomic(a, b)
-#define nni_stat_set_value(a, b)
-#define nni_stat_set_string(a, b)
-#define nni_stat_set_lock(a, b)
-#define nni_stat_set_update(a, b, c)
-#define nni_stat_set_type(a, b)
-#define nni_stat_set_unit(a, b)
-#endif
-
 int  nni_stat_sys_init(void);
 void nni_stat_sys_fini(void);
 
