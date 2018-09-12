@@ -103,9 +103,9 @@ nni_http_req_reset(nni_http_req *req)
 	nni_strfree(req->meth);
 	nni_strfree(req->uri);
 	req->vers = req->meth = req->uri = NULL;
-	if (req->bufsz) {
-		req->buf[0] = '\0';
-	}
+	nni_free(req->buf, req->bufsz);
+	req->bufsz  = 0;
+	req->buf    = NULL;
 	req->parsed = false;
 }
 
@@ -120,18 +120,15 @@ nni_http_res_reset(nni_http_res *res)
 	res->rsn    = NULL;
 	res->code   = 0;
 	res->parsed = false;
-	if (res->bufsz) {
-		res->buf[0] = '\0';
-	}
+	nni_free(res->buf, res->bufsz);
+	res->buf   = NULL;
+	res->bufsz = 0;
 }
 
 void
 nni_http_req_free(nni_http_req *req)
 {
 	nni_http_req_reset(req);
-	if (req->bufsz) {
-		nni_free(req->buf, req->bufsz);
-	}
 	NNI_FREE_STRUCT(req);
 }
 
@@ -139,9 +136,6 @@ void
 nni_http_res_free(nni_http_res *res)
 {
 	nni_http_res_reset(res);
-	if (res->bufsz) {
-		nni_free(res->buf, res->bufsz);
-	}
 	NNI_FREE_STRUCT(res);
 }
 
@@ -490,7 +484,7 @@ http_asprintf(char **bufp, size_t *szp, nni_list *hdrs, const char *fmt, ...)
 	va_end(ap);
 
 	len += http_sprintf_headers(NULL, 0, hdrs);
-	len += 5; // \r\n\r\n\0
+	len += 3; // \r\n\0
 
 	if (len <= *szp) {
 		buf = *bufp;
@@ -511,6 +505,7 @@ http_asprintf(char **bufp, size_t *szp, nni_list *hdrs, const char *fmt, ...)
 	buf += n;
 	len -= n;
 	snprintf(buf, len, "\r\n");
+	NNI_ASSERT(len == 3);
 	return (0);
 }
 
@@ -572,7 +567,7 @@ nni_http_req_get_buf(nni_http_req *req, void **data, size_t *szp)
 		return (rv);
 	}
 	*data = req->buf;
-	*szp  = strlen(req->buf);
+	*szp  = req->bufsz - 1; // exclude terminating NUL
 	return (0);
 }
 
@@ -585,7 +580,7 @@ nni_http_res_get_buf(nni_http_res *res, void **data, size_t *szp)
 		return (rv);
 	}
 	*data = res->buf;
-	*szp  = strlen(res->buf);
+	*szp  = res->bufsz - 1; // exclude terminating NUL
 	return (0);
 }
 

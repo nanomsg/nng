@@ -1,4 +1,4 @@
-= nng_http_req_free(3http)
+= nng_http_res_reset(3http)
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_http_req_free - free HTTP request structure
+nng_http_res_reset - reset HTTP response structure
 
 == SYNOPSIS
 
@@ -20,16 +20,14 @@ nng_http_req_free - free HTTP request structure
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
 
-void nng_http_req_free(nng_http_req *req);
+void nng_http_res_reset(nng_http_res *res);
 ----
 
 == DESCRIPTION
 
-The `nng_http_req_free()` function deallocates the HTTP request structure
-_req_ entirely.
-
-TIP: Instead of freeing and reallocating request structures, it is possible
-to reuse _req_ with `<<nng_http_req_reset.3http#,nng_http_req_reset()>>`.
+The `nng_http_res_reset()` function resets the response __res__ so that it
+is just as if it had been freshly allocated with
+`<<nng_http_res_alloc.3http#,nng_http_res_alloc()>>`.
 
 == RETURN VALUES
 
@@ -42,6 +40,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
-<<nng_http_req_reset.3http#,nng_http_req_reset(3http)>>,
+<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
 <<nng.7#,nng(7)>>

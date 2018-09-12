@@ -28,6 +28,9 @@ void nng_http_res_free(nng_http_res *req);
 The `nng_http_res_free()` function deallocates the HTTP response structure
 _res_ entirely.
 
+TIP: Instead of freeing and reallocating response structures, it is possible
+to reuse _res_ with `<<nng_http_res_reset.3http#,nng_http_res_reset()>>`.
+
 == RETURN VALUES
 
 None.
@@ -39,5 +42,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc.3http#,nng_http_req_alloc(3http)>>,
+<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
+<<nng_http_res_reset.3http#,nng_http_res_reset(3http)>>,
 <<nng.7#,nng(7)>>

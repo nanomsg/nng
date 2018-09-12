@@ -28,8 +28,8 @@ int nng_http_res_alloc(nng_http_res **resp);
 The `nng_http_res_alloc()` function allocates a new HTTP response structure
 and stores a pointer to it in __resp__.
 The response will be initialized
-with status code 200 (`NNG_HTTP_STATUS_OK`), and a reason phrase of "OK",
-and HTTP protocol version "HTTP/1.1".
+with status code 200 (`NNG_HTTP_STATUS_OK`), and a reason phrase of `"OK`",
+and HTTP protocol version `"HTTP/1.1`".
 
 TIP: When an error response is needed, consider using
 `<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error()>>` instead.
@@ -59,6 +59,7 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_http_res_get_reason.3http#,nng_http_res_get_reason(3http)>>,
 <<nng_http_res_get_status.3http#,nng_http_res_get_status(3http)>>,
 <<nng_http_res_get_version.3http#,nng_http_res_get_version(3http)>>,
+<<nng_http_res_reset.3http#,nng_http_res_reset(3http)>>,
 <<nng_http_res_set_data.3http#,nng_http_res_set_data(3http)>>,
 <<nng_http_res_set_reason.3http#,nng_http_res_set_reason(3http)>>,
 <<nng_http_res_set_status.3http#,nng_http_res_set_status(3http)>>,

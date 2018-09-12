@@ -238,6 +238,7 @@ if (NNG_ENABLE_DOC)
 	nng_http_req_get_method
 	nng_http_req_get_uri
 	nng_http_req_get_version
+	nng_http_req_reset
 	nng_http_req_set_data
 	nng_http_req_set_header
 	nng_http_req_set_method
@@ -254,6 +255,7 @@ if (NNG_ENABLE_DOC)
 	nng_http_res_get_reason
 	nng_http_res_get_status
 	nng_http_res_get_version
+	nng_http_res_reset
 	nng_http_res_set_data
 	nng_http_res_set_header
 	nng_http_res_set_reason

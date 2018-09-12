@@ -30,6 +30,10 @@ and stores a pointer to it in __reqp__.
 The request will be initialized
 to perform an HTTP/1.1 `GET` operation using the URL specified in __url__.
 
+TIP: It is possible to specify `NULL` for the URL.
+In this case the URI for the request must be specified by a subsequent call
+to `<<nng_http_req_set_uri.3http#,nng_http_req_set_uri()>>`.
+
 == RETURN VALUES
 
 This function returns 0 on success, and non-zero otherwise.
@@ -53,6 +57,7 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_http_req_get_method.3http#,nng_http_req_get_method(3http)>>,
 <<nng_http_req_get_uri.3http#,nng_http_req_get_uri(3http)>>,
 <<nng_http_req_get_version.3http#,nng_http_req_get_version(3http)>>,
+<<nng_http_req_reset.3http#,nng_http_req_reset(3http)>>,
 <<nng_http_req_set_data.3http#,nng_http_req_set_data(3http)>>,
 <<nng_http_req_set_method.3http#,nng_http_req_set_method(3http)>>,
 <<nng_http_req_set_uri.3http#,nng_http_req_set_uri(3http)>>,

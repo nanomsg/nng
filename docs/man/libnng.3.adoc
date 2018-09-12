@@ -311,6 +311,7 @@ and connections.
 |<<nng_http_req_get_method.3http#,nng_http_req_get_method()>>|return HTTP request method
 |<<nng_http_req_get_uri.3http#,nng_http_req_get_uri()>>|return HTTP request URI
 |<<nng_http_req_get_version.3http#,nng_http_req_get_version()>>|return HTTP request protocol version
+|<<nng_http_req_reset.3http#,nng_http_req_reset()>>|reset HTTP request structure
 |<<nng_http_req_set_data.3http#,nng_http_req_set_data()>>|set HTTP request body
 |<<nng_http_req_set_header.3http#,nng_http_req_set_header()>>|set HTTP request header
 |<<nng_http_req_set_method.3http#,nng_http_req_set_method()>>|set HTTP request method
@@ -327,6 +328,7 @@ and connections.
 |<<nng_http_res_get_reason.3http#,nng_http_res_get_reason()>>|return HTTP response reason
 |<<nng_http_res_get_status.3http#,nng_http_res_get_status()>>|return HTTP response status
 |<<nng_http_res_get_version.3http#,nng_http_res_get_version()>>|return HTTP response protocol version
+|<<nng_http_res_reset.3http#,nng_http_res_reset()>>|reset HTTP response structure
 |<<nng_http_res_set_data.3http#,nng_http_res_set_data()>>|set HTTP response body
 |<<nng_http_res_set_header.3http#,nng_http_res_set_header()>>|set HTTP response header
 |<<nng_http_res_set_reason.3http#,nng_http_res_set_reason()>>|set HTTP response reason

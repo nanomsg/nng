@@ -275,6 +275,12 @@ NNG_DECL void nng_http_conn_read_req(
 NNG_DECL void nng_http_conn_read_res(
     nng_http_conn *, nng_http_res *, nng_aio *);
 
+// nng_http_req_reset resets the request to an initially allocated state.
+NNG_DECL void nng_http_req_reset(nng_http_req *);
+
+// nng_http_res_reset resets the response to an initially allocated state.
+NNG_DECL void nng_http_res_reset(nng_http_res *);
+
 // nng_http_handler is a handler used on the server side to handle HTTP
 // requests coming into a specific URL.
 typedef struct nng_http_handler nng_http_handler;

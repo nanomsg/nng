@@ -303,6 +303,7 @@ http_txn_reap(void *arg)
 		// We only close the connection if we created it.
 		if (txn->conn != NULL) {
 			nni_http_conn_fini(txn->conn);
+			txn->conn = NULL;
 		}
 	}
 	nni_aio_fini(txn->aio);

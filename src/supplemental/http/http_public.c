@@ -867,3 +867,19 @@ nng_http_conn_transact(
 	}
 #endif
 }
+
+void
+nng_http_req_reset(nng_http_req *req)
+{
+#ifdef NNG_SUPP_HTTP
+	nni_http_req_reset(req);
+#endif
+}
+
+void
+nng_http_res_reset(nng_http_res *res)
+{
+#ifdef NNG_SUPP_HTTP
+	nni_http_res_reset(res);
+#endif
+}
