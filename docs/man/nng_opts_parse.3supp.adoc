@@ -27,7 +27,7 @@ typedef struct nng_optspec {
     bool        o_arg;   // Option takes an argument if true
 } nng_optspec;
 
-int nng_opts_parse(int argc, char *const *argv, const nng_optspec *spec, int *val, const char **arg, int *idx);
+int nng_opts_parse(int argc, char *const *argv, const nng_optspec *spec, int *val, char **arg, int *idx);
 ----
 
 == DESCRIPTION

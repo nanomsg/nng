@@ -200,7 +200,9 @@ static nng_optspec opts[] = {
 	    .o_arg   = true,
 	},
 	{
-	    .o_name = "zt-home", .o_val = OPT_ZTHOME, .o_arg = true,
+	    .o_name = "zt-home",
+	    .o_val  = OPT_ZTHOME,
+	    .o_arg  = true,
 	},
 	{ .o_name = "version", .o_short = 'V', .o_val = OPT_VERSION },
 
@@ -671,10 +673,10 @@ sendrecv(nng_socket sock)
 }
 
 int
-main(int ac, const char **av)
+main(int ac, char **av)
 {
 	int            idx;
-	const char *   arg;
+	char *         arg;
 	int            val;
 	int            rv;
 	char           scratch[512];

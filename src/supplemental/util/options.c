@@ -17,13 +17,13 @@
 // Call with optidx set to 1 to start parsing.
 int
 nng_opts_parse(int argc, char *const *argv, const nng_optspec *opts, int *val,
-    const char **optarg, int *optidx)
+    char **optarg, int *optidx)
 {
 	const nng_optspec *opt;
 	int                matches;
 	bool               shortopt;
 	size_t             l;
-	const char *       arg = argv[*optidx];
+	char *             arg = argv[*optidx];
 	int                i;
 
 	if ((i = *optidx) >= argc) {

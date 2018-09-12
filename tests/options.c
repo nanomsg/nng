@@ -27,14 +27,12 @@ static nng_optspec case1[] = {
 };
 
 TestMain("Option Parsing", {
-
 	Convey("Simple works", {
-
-		int         opti = 1;
-		const char *av[6];
-		int         ac = 5;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[6];
+		int   ac = 5;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "-f";
@@ -55,12 +53,11 @@ TestMain("Option Parsing", {
 	});
 
 	Convey("Long works", {
-
-		int         opti = 1;
-		const char *av[6];
-		int         ac = 5;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[6];
+		int   ac = 5;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "--flag";
@@ -81,12 +78,11 @@ TestMain("Option Parsing", {
 	});
 
 	Convey("Attached short works", {
-
-		int         opti = 1;
-		const char *av[3];
-		int         ac = 3;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[3];
+		int   ac = 3;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "-v123";
@@ -101,12 +97,11 @@ TestMain("Option Parsing", {
 	});
 
 	Convey("Attached long (=) works", {
-
-		int         opti = 1;
-		const char *av[3];
-		int         ac = 3;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[3];
+		int   ac = 3;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "--value=123";
@@ -121,12 +116,11 @@ TestMain("Option Parsing", {
 	});
 
 	Convey("Attached long (:) works", {
-
-		int         opti = 1;
-		const char *av[3];
-		int         ac = 3;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[3];
+		int   ac = 3;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "--value:123";
@@ -141,12 +135,11 @@ TestMain("Option Parsing", {
 	});
 
 	Convey("Negative bad short works", {
-
-		int         opti = 1;
-		const char *av[3];
-		int         ac = 3;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[3];
+		int   ac = 3;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "-Z";
@@ -156,12 +149,11 @@ TestMain("Option Parsing", {
 	});
 
 	Convey("Negative bad long works", {
-
-		int         opti = 1;
-		const char *av[3];
-		int         ac = 3;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[3];
+		int   ac = 3;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "--something";
@@ -171,11 +163,11 @@ TestMain("Option Parsing", {
 	});
 
 	Convey("Separator flag works", {
-		int         opti = 1;
-		const char *av[5];
-		int         ac = 5;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[5];
+		int   ac = 5;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "-f";
@@ -190,22 +182,22 @@ TestMain("Option Parsing", {
 	});
 
 	Convey("No options works", {
-		int         opti = 1;
-		const char *av[1];
-		int         ac = 1;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[1];
+		int   ac = 1;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		So(nng_opts_parse(ac, av, case1, &v, &a, &opti) == -1);
 	});
 
 	Convey("No options (but arguments) works", {
-		int         opti = 1;
-		const char *av[2];
-		int         ac = 2;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[2];
+		int   ac = 2;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "123";
@@ -213,12 +205,11 @@ TestMain("Option Parsing", {
 		So(opti == 1);
 	});
 	Convey("Mixed long and short works", {
-
-		int         opti = 1;
-		const char *av[7];
-		int         ac = 7;
-		int         v;
-		const char *a = NULL;
+		int   opti = 1;
+		char *av[7];
+		int   ac = 7;
+		int   v;
+		char *a = NULL;
 
 		av[0] = "program";
 		av[1] = "--value=123";
