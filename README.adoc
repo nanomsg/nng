@@ -138,6 +138,7 @@ With a Linux or UNIX environment:
   $ cmake -G Ninja ..
   $ ninja
   $ ninja test
+  $ ninja install
 ----
 
 == API Documentation
