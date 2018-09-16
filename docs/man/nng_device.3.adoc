@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_device - send message
+nng_device - message forwarding device
 
 == SYNOPSIS
 
