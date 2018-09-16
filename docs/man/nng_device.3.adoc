@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_sendmsg - send message
+nng_device - send message
 
 == SYNOPSIS
 

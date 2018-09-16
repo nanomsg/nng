@@ -31,7 +31,7 @@ which will be executed when an associated asynchronous operation finishes.
 It will be called with the argument _arg_.
 
 NOTE: The callback _callb_ must not perform any blocking operations, and
-must complete it's execution quickly.  If _callb_ does block, this can
+must complete its execution quickly.  If _callb_ does block, this can
 lead ultimately to an apparent "hang" or deadlock in the application.
 
 Asynchronous I/O operations all take an `<<nng_aio.5#,nng_aio>>`

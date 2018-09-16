@@ -40,12 +40,12 @@ The `nng_stat_type()` function returns the type of the statistic _stat_.
 The returned type will be one of the following values:
 
 ((`NNG_STAT_SCOPE`))::
-This is a placeholder providing scope, and carries no value on it's own.
+This is a placeholder providing scope, and carries no value on its own.
 Instead it is a parent node with child statistics (see
 `<<nng_stat_child.3#,nng_stat_child()>>`.)
 
 ((`NNG_STAT_LEVEL`))::
-This is a numeric statistic, but it's value is a level, so rate calculations
+This is a numeric statistic, but its value is a level, so rate calculations
 based on changes in this value should not be considered significant.
 
 ((`NNG_STAT_COUNTER`))::

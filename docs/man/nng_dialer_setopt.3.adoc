@@ -49,7 +49,7 @@ Additionally some transport-specific options are documented with the
 transports themselves.
 
 NOTE: Once a dialer has started, it is generally not possible to change
-it's configuration.
+its configuration.
 
 === Forms
 

@@ -267,7 +267,7 @@ When this is supported, it can have a value between 1 and 255, inclusive.
 NOTE: Not all protocols support this option.
 Those that do generally have a default value of 8.
 
-TIP: Each node along a forwarding path may have it's own value for the
+TIP: Each node along a forwarding path may have its own value for the
 maximum time-to-live, and performs its own checks before forwarding a message.
 Therefore it is helpful if all nodes in the topology use the same value for
 this option.
