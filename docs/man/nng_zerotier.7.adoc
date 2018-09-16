@@ -186,7 +186,7 @@ in this fashion.
   The maximum number (`int`) of attempts to try to establish a connection
   before reporting a timeout, and is only used with dialers.
   The default is 240, which results in a 2 minute timeout if
-  `NNG_OPT_ZT_CONN_TIME` is at it's default of 500.
+  `NNG_OPT_ZT_CONN_TIME` is at its default of 500.
   If the value is set to 0, then connection attempts will keep retrying forever.
 
 [[NNG_OPT_ZT_PING_TIME]]
@@ -215,7 +215,7 @@ in this fashion.
 ((`NNG_OPT_ZT_ORBIT`))(((orbit, ZeroTier)))(((federation,ZeroTier))):
   This is a write-only option that takes an array of two `uint64_t` values,
   indicating the ID of a ZeroTier "`moon`", and the node ID of the root server
-  for that moon.  (The ID may be zero if the moon ID is the same as it's
+  for that moon.  (The ID may be zero if the moon ID is the same as its
   root server ID, which is conventional.)
 
 [[NNG_OPT_ZT_DEORBIT]]

@@ -35,7 +35,7 @@ establishing TLS sessions using _cfg_.
 It may contain additional certificates leading to a validation chain,
 with the leaf certificate first.
 There is no need to include the self-signed root, as the peer
-will need to have that already in order to perform it's own validation.
+will need to have that already in order to perform its own validation.
 
 The private key may be encrypted with a password, in which can be supplied in
 _pass_.

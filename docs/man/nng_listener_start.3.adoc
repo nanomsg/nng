@@ -32,7 +32,7 @@ dialers.
 Each new connection results in an `<<nng_pipe.5#,nng_pipe>>` object,
 which will be attached to the listener's socket.
 
-Normally, the act of "`binding`" to it's address is done
+Normally, the act of "`binding`" to its address is done
 synchronously, including any necessary name resolution.
 As a result,
 a failure, such as if the address is already in use, will be returned
@@ -45,7 +45,7 @@ TIP: While `NNG_FLAG_NONBLOCK` can help an application be more resilient,
 it also generally makes diagnosing failures somewhat more difficult.
 
 Once a listener has started, it is generally not possible to change
-it's configuration.
+its configuration.
 
 == RETURN VALUES
 

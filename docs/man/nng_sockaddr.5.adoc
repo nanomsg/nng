@@ -46,7 +46,7 @@ representing the addresses used by underlying transports, such as TCP/IP
 addresses, IPC paths, and so forth.
 
 ****
-The name `sockaddr` is based on it's similarity with POSIX `struct sockaddr`,
+The name `sockaddr` is based on its similarity with POSIX `struct sockaddr`,
 but in the _nng_ library, these addresses are more closely affiliated with
 instances of `<<nng_pipe.5#,nng_pipe>>`
 than of `<<nng_socket.5#,nng_socket>>`.

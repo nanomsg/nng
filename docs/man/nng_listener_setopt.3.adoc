@@ -47,7 +47,7 @@ Additionally some transport-specific options and protocol-specific options
 are documented with the transports and protocols themselves.
 
 NOTE: Once a listener has started, it is generally not possible to change
-it's configuration.
+its configuration.
 
 === Forms
 
