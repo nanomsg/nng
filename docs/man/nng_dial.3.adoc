@@ -76,7 +76,7 @@ This function returns 0 on success, and non-zero otherwise.
 `NNG_ECLOSED`:: The socket _s_ is not open.
 `NNG_ECONNREFUSED`:: The remote peer refused the connection.
 `NNG_ECONNRESET`:: The remote peer reset the connection.
-`NNG_EINVAL`:: An invalid set of _flags_ was specified.
+`NNG_EINVAL`:: An invalid set of _flags_ or an invalid _url_ was specified.
 `NNG_ENOMEM`:: Insufficient memory is available.
 `NNG_EPEERAUTH`:: Authentication or authorization failure.
 `NNG_EPROTO`:: A protocol error occurred.
