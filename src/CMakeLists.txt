@@ -240,6 +240,8 @@ set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}
 target_link_libraries (${PROJECT_NAME} PRIVATE ${NNG_REQUIRED_LIBRARIES})
 target_link_libraries (${PROJECT_NAME} PRIVATE Threads::Threads)
 
+target_include_directories (${PROJECT_NAME} INTERFACE $<INSTALL_INTERFACE:include>)
+
 install (TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-target
     FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
