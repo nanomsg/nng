@@ -5,48 +5,41 @@ endif::[]
 = Building for ZeroTier Support
 
 If you want to include support for the experimental ZeroTier
-transport (zt:// URLs), you should follow these directions.
+transport (`zt://` URLs), you should follow these directions.
 
-You will need a checked out copy of the ZeroTierOne repository.
-The repo is located at github.com/ZeroTier/ZeroTierOne.
-These instructions have been tested with version 1.2.10 (tag)
-of that repository.
+Staysail has created a package that builds a clean CMake project
+that you can import.
+Download this from https://github.com/staysail/libzerotiercore[GitHub].
 
-IMPORTANT: ZeroTier is licensed under different terms than NNG.
-You are responsible for reading those license terms, and ensuring
-that your use conforms to them.
 
-IMPORTANT: The ZeroTier transport, and these build instructions, are
-experimental.  We expect both to change over time as ZeroTier
-and the NNG zt:// transport both mature.  As always, _caveat emptor_.
+IMPORTANT: ZeroTierOne is licensed under different terms than NNG.
+You are responsible for reading those license terms, and ensuring that
+your use conforms to them.
 
-== Building libzerotiercore.a
+IMPORTANT: The ZeroTier transport, and these build instructions,
+are experimental.
+We expect both to change over time as ZeroTier and the NNG `zt://` transport
+both mature.
+As always, _caveat emptor_.
 
-The ZeroTierOne repo is not set up for building this library by default,
-so you'll need to explicitly build it.
+== Building libzerotiercore
 
-=== Using "make"
-If you have a "make" based system such as Linux or macOS, you can
-just do "make core" at the top-level.  The end result will be a
-libzerotiercore.a in that top level.
-
-=== Using "cmake"
-
-If not, you can use the CMakeLists file at the top of the ZeroTierOne tree.
-That CMakeLists file only generates one output, the libzerotiercore.a
-library, which will normally be a static delivery.
-
-Using your usual cmake tool chain, build the library.
-The resulting library (usually `libzerotier.a`) will need to be copied
-into the top-level of the ZeroTierOne tree, as that is where the NNG
-build expects to find it.
+Using "CMake", you can build libzerotiercore
+using any normal CMake generator.
+You should install it as well.
+Normally it will install into `/usr/local` on
+Linux and UNIX systems.
 
 == Configuring NNG with ZT
 
-You will need to enable ZeroTier within NNG using the CMake option
-`NNG_TRANSPORT_ZEROTIER=ON` and set the CMake option
-`NNG_TRANSPORT_ZEROTIER_SOURCE` to the directory path of the ZeroTierOne
-tree you have checked out.
+You will need to enable ZeroTier within NNG using the CMake option `NNG_TRANSPORT_ZEROTIER=ON`.
+If you have installed the libzerotiercore in
+one of the default locations, then that should be all
+that is needed.
+
+If you have specified a different location, you will
+need to inform CMake of this by setting the CMake
+variable `-Dzerotier_DIR=<where you installed it>`
 
 == Example
 
@@ -56,23 +49,24 @@ that we have checked out github source trees into `$HOME/work`.
 [source, sh]
 ----
 $ export NNGDIR=$HOME/work/nng
-$ export ZTDIR=$HOME/work/ZeroTierOne
+$ export ZTDIR=$HOME/work/libzerotiercore
+$ git clone https://github.com/staysail/libzerotiercore $ZTDIR
 $ cd $ZTDIR
 $ mkdir build
 $ cd build
+$ cmake ..
 
    ... (lots of lines of output from cmake...)
 
-$ cmake ..
 $ make
 
    ... (lots of lines of output from make...)
 
-$ cp libzerotiercore.a $ZTDIR
+$ make install
 $ cd $NNGDIR
 $ mkdir build
 $ cd build
-$ cmake -DNNG_TRANSPORT_ZEROTIER=ON -DNNG_TRANSPORT_ZEROTIER_SOURCE=${ZTDIR} ..
+$ cmake -DNNG_TRANSPORT_ZEROTIER=ON ..
 
    ... (lots of lines of output from cmake...)
 

@@ -236,6 +236,7 @@ mark_as_advanced(NNG_TRANSPORT_WSS)
 
 option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
 if (NNG_TRANSPORT_ZEROTIER)
+    find_package(zerotiercore REQUIRED)
     add_definitions (-DNNG_TRANSPORT_ZEROTIER)
 endif ()
 mark_as_advanced(NNG_TRANSPORT_ZEROTIER)

@@ -16,7 +16,7 @@
 #include "core/nng_impl.h"
 #include "zerotier.h"
 
-#include <ZeroTierOne.h>
+#include <zerotiercore/ZeroTierOne.h>
 
 // ZeroTier Transport.  This sits on the ZeroTier L2 network, which itself
 // is implemented on top of UDP.  This requires the 3rd party
