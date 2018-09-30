@@ -616,7 +616,7 @@ primary API for building such applications.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_device.3.html">nng_device(3)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">send message</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">message forwarding device</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dial.3.html">nng_dial(3)</a></p></td>
@@ -861,6 +861,50 @@ primary API for building such applications.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_socket_id.3.html">nng_socket_id(3)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return numeric socket identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_child.3.html">nng_stat_child(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get child statistic</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_desc.3.html">nng_stat_desc(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic description</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_name.3.html">nng_stat_name(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_next.3.html">nng_stat_next(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get next statistic</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_string.3.html">nng_stat_string(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic string value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_timestamp.3.html">nng_stat_timestamp(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_type.3.html">nng_stat_type(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_unit.3.html">nng_stat_unit(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_value.3.html">nng_stat_value(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stats_free.3.html">nng_stats_free(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free statistics snapshot</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stats_get.3.html">nng_stats_get(3)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistics snapshot</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strdup.3.html">nng_strdup(3)</a></p></td>
@@ -1142,6 +1186,10 @@ Protocols sockets.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP server handler</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_collect_body.3http.html">nng_http_handler_collect_body(3http)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP handler to collect request body</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_free.3http.html">nng_http_handler_free(3http)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP server handler</p></td>
 </tr>
@@ -1210,6 +1258,10 @@ Protocols sockets.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP request protocol version</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_reset.3http.html">nng_http_req_reset(3http)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reset HTTP request structure</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_set_data.3http.html">nng_http_req_set_data(3http)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP request body</p></td>
 </tr>
@@ -1272,6 +1324,10 @@ Protocols sockets.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_version.3http.html">nng_http_res_get_version(3http)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP response protocol version</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_reset.3http.html">nng_http_res_reset(3http)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reset HTTP response structure</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_data.3http.html">nng_http_res_set_data(3http)</a></p></td>
@@ -1569,6 +1625,10 @@ applications need will use.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_socket.5.html">nng_socket(5)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">socket handle</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat.5.html">nng_stat(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">statistic</p></td>
 </tr>
 </tbody>
 </table>

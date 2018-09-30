@@ -540,6 +540,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>The <code>nng_http_res_free()</code> function deallocates the HTTP response structure
 <em>res</em> entirely.</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Instead of freeing and reallocating response structures, it is possible
+to reuse <em>res</em> with <code><a href="nng_http_res_reset.3http.html">nng_http_res_reset()</a></code>.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -562,7 +575,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_http_res_alloc.3http.html">nng_http_req_alloc(3http)</a>,
+<p><a href="nng_http_res_alloc.3http.html">nng_http_res_alloc(3http)</a>,
+<a href="nng_http_res_reset.3http.html">nng_http_res_reset(3http)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>

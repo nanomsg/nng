@@ -9,7 +9,7 @@ layout: refman
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>nng_msg_append(3)</title>
+<title>nng_socket(5)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -503,20 +503,18 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_msg_append(3) Manual Page</h1>
+<h1>nng_socket(5) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
 <li><a href="#_description">DESCRIPTION</a></li>
-<li><a href="#_return_values">RETURN VALUES</a></li>
-<li><a href="#_errors">ERRORS</a></li>
 <li><a href="#_see_also">SEE ALSO</a></li>
 </ul>
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_msg_append - append to message body</p>
+<p>nng_stat - statistic</p>
 </div>
 </div>
 <div id="content">
@@ -527,10 +525,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_append</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">);</span>
-<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_append_u16</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint16_t</span> <span class="tok-n">val16</span><span class="tok-p">);</span>
-<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_append_u32</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint32_t</span> <span class="tok-n">val32</span><span class="tok-p">);</span>
-<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_append_u64</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-n">val64</span><span class="tok-p">);</span></code></pre>
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_stat</span> <span class="tok-n">nng_stat</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
 </div>
@@ -539,33 +534,63 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_msg_append()</code> family of functions appends data to
-the end of the body of message <em>msg</em>, reallocating it if necessary.
-The first function appends <em>size</em> bytes, copying them from <em>val</em>.
-The remaining functions append the value specified (such as <em>val32</em>) in
-network-byte order (big-endian).</p>
+<p>An <code>nng_stat</code> represents a statistic.
+All statistics have names (<code><a href="nng_stat_name.3.html">nng_stat_name()</a></code>) and
+descriptions (<code><a href="nng_stat_desc.3.html">nng_stat_desc()</a></code>), and are
+typed (<code><a href="nng_stat_type.3.html">nng_stat_type()</a></code>).</p>
 </div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_return_values">RETURN VALUES</h2>
-<div class="sectionbody">
 <div class="paragraph">
-<p>These functions return 0 on success, and non-zero otherwise.</p>
+<p>Most statistics are numeric,
+and thus carry a value (<code><a href="nng_stat_value.3.html">nng_stat_value()</a></code>)
+and frequently also a unit that the value measures (<code><a href="nng_stat_unit.3.html">nng_stat_unit()</a></code>).</p>
 </div>
+<div class="paragraph">
+<p>Some statistics however, are simply strings (<code><a href="nng_stat_string.3.html">nng_stat_string()</a></code>),
+and thus carry no numeric value.</p>
 </div>
+<div class="paragraph">
+<p>Statistics are organized as a tree, and any given statistic can have siblings
+(<code><a href="nng_stat_next.3.html">nng_stat_next()</a></code>).
+Note however that generally only <code>NNG_STAT_SCOPE</code> statistics, which are
+act as placeholders in the tree (and carry no value),
+will have children (<code><a href="nng_stat_child.3.html">nng_stat_child()</a></code>).</p>
 </div>
-<div class="sect1">
-<h2 id="_errors">ERRORS</h2>
-<div class="sectionbody">
-<div class="hdlist">
+<div class="paragraph">
+<p>A tree of statistics is collected using <code><a href="nng_stats_get.3.html">nng_stats_get()</a></code>,
+and can be freed when no longer needed with <code><a href="nng_stats_free.3.html">nng_stats_free()</a></code>.
+This collection process is generally performed in a way to minimize impact
+to running operations, but there is still some impact caused by collection
+of statistics.</p>
+</div>
+<div class="paragraph">
+<p>The time when a statistic&#8217;s value is captured can be obtained using
+<code><a href="nng_stat_timestamp.3.html">nng_stat_timestap()</a></code>, which is useful for
+measuring rates of change in certain statistics.</p>
+</div>
+<div class="admonitionblock note">
 <table>
 <tr>
-<td class="hdlist1">
-<code>NNG_ENOMEM</code>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
 </td>
-<td class="hdlist2">
-<p>Insufficient free memory exists.</p>
+<td class="content">
+The presence, names, and meanings of any given statistic are
+subject to change at any time. These statistics are provided as an aid
+for debugging, and should generally not be relied upon for programmatic
+behaviors.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Statistics may be disabled by build-time configuration options,
+in order to reduce program size and run-time overheads.
 </td>
 </tr>
 </table>
@@ -576,16 +601,18 @@ network-byte order (big-endian).</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_msg_alloc.3.html">nng_msg_alloc(3)</a>,
-<a href="nng_msg_body.3.html">nng_msg_body(3)</a>,
-<a href="nng_msg_chop.3.html">nng_msg_chop(3)</a>,
-<a href="nng_msg_free.3.html">nng_msg_free(3)</a>,
-<a href="nng_msg_insert.3.html">nng_msg_insert(3)</a>,
-<a href="nng_msg_len.3.html">nng_msg_len(3)</a>,
-<a href="nng_msg_realloc.3.html">nng_msg_realloc(3)</a>,
-<a href="nng_msg_trim.3.html">nng_msg_trim(3)</a>,
-<a href="nng_strerror.3.html">nng_strerror(3)</a>,
-<a href="nng_msg.5.html">nng_msg(5)</a>,
+<p><a href="libnng.3.html">libnng(3)</a>,
+<a href="nng_stats_free.3.html">nng_stats_free(3)</a>,
+<a href="nng_stats_get.3.html">nng_stats_get(3)</a>,
+<a href="nng_stat_child.3.html">nng_stat_child(3)</a>,
+<a href="nng_stat_desc.3.html">nng_stat_desc(3)</a>,
+<a href="nng_stat_name.3.html">nng_stat_name(3)</a>,
+<a href="nng_stat_next.3.html">nng_stat_next(3)</a>,
+<a href="nng_stat_string.3.html">nng_stat_string(3)</a>,
+<a href="nng_stat_timestamp.3.html">nng_stat_timestamp(3)</a>,
+<a href="nng_stat_type.3.html">nng_stat_type(3)</a>,
+<a href="nng_stat_unit.3.html">nng_stat_unit(3)</a>,
+<a href="nng_stat_value.3.html">nng_stat_value(3)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>

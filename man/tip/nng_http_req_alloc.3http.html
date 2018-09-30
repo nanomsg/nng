@@ -542,6 +542,20 @@ and stores a pointer to it in <em>reqp</em>.
 The request will be initialized
 to perform an HTTP/1.1 <code>GET</code> operation using the URL specified in <em>url</em>.</p>
 </div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+It is possible to specify <code>NULL</code> for the URL.
+In this case the URI for the request must be specified by a subsequent call
+to <code><a href="nng_http_req_set_uri.3http.html">nng_http_req_set_uri()</a></code>.
+</td>
+</tr>
+</table>
+</div>
 </div>
 </div>
 <div class="sect1">
@@ -591,6 +605,7 @@ to perform an HTTP/1.1 <code>GET</code> operation using the URL specified in <em
 <a href="nng_http_req_get_method.3http.html">nng_http_req_get_method(3http)</a>,
 <a href="nng_http_req_get_uri.3http.html">nng_http_req_get_uri(3http)</a>,
 <a href="nng_http_req_get_version.3http.html">nng_http_req_get_version(3http)</a>,
+<a href="nng_http_req_reset.3http.html">nng_http_req_reset(3http)</a>,
 <a href="nng_http_req_set_data.3http.html">nng_http_req_set_data(3http)</a>,
 <a href="nng_http_req_set_method.3http.html">nng_http_req_set_method(3http)</a>,
 <a href="nng_http_req_set_uri.3http.html">nng_http_req_set_uri(3http)</a>,

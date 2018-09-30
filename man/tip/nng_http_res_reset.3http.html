@@ -9,7 +9,7 @@ layout: refman
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.6.1">
-<title>nng_msg_append(3)</title>
+<title>nng_http_res_reset(3http)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -503,7 +503,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_msg_append(3) Manual Page</h1>
+<h1>nng_http_res_reset(3http) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -516,7 +516,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2>NAME</h2>
 <div class="sectionbody">
-<p>nng_msg_append - append to message body</p>
+<p>nng_http_res_reset - reset HTTP response structure</p>
 </div>
 </div>
 <div id="content">
@@ -526,11 +526,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_append</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">);</span>
-<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_append_u16</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint16_t</span> <span class="tok-n">val16</span><span class="tok-p">);</span>
-<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_append_u32</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint32_t</span> <span class="tok-n">val32</span><span class="tok-p">);</span>
-<span class="tok-kt">int</span> <span class="tok-nf">nng_msg_append_u64</span><span class="tok-p">(</span><span class="tok-n">nng_msg</span> <span class="tok-o">*</span><span class="tok-n">msg</span><span class="tok-p">,</span> <span class="tok-kt">uint64_t</span> <span class="tok-n">val64</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">void</span> <span class="tok-nf">nng_http_res_reset</span><span class="tok-p">(</span><span class="tok-n">nng_http_res</span> <span class="tok-o">*</span><span class="tok-n">res</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -539,11 +537,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_msg_append()</code> family of functions appends data to
-the end of the body of message <em>msg</em>, reallocating it if necessary.
-The first function appends <em>size</em> bytes, copying them from <em>val</em>.
-The remaining functions append the value specified (such as <em>val32</em>) in
-network-byte order (big-endian).</p>
+<p>The <code>nng_http_res_reset()</code> function resets the response <em>res</em> so that it
+is just as if it had been freshly allocated with
+<code><a href="nng_http_res_alloc.3http.html">nng_http_res_alloc()</a></code>.</p>
 </div>
 </div>
 </div>
@@ -551,24 +547,15 @@ network-byte order (big-endian).</p>
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>These functions return 0 on success, and non-zero otherwise.</p>
+<p>None.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="hdlist">
-<table>
-<tr>
-<td class="hdlist1">
-<code>NNG_ENOMEM</code>
-</td>
-<td class="hdlist2">
-<p>Insufficient free memory exists.</p>
-</td>
-</tr>
-</table>
+<div class="paragraph">
+<p>None.</p>
 </div>
 </div>
 </div>
@@ -576,16 +563,7 @@ network-byte order (big-endian).</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_msg_alloc.3.html">nng_msg_alloc(3)</a>,
-<a href="nng_msg_body.3.html">nng_msg_body(3)</a>,
-<a href="nng_msg_chop.3.html">nng_msg_chop(3)</a>,
-<a href="nng_msg_free.3.html">nng_msg_free(3)</a>,
-<a href="nng_msg_insert.3.html">nng_msg_insert(3)</a>,
-<a href="nng_msg_len.3.html">nng_msg_len(3)</a>,
-<a href="nng_msg_realloc.3.html">nng_msg_realloc(3)</a>,
-<a href="nng_msg_trim.3.html">nng_msg_trim(3)</a>,
-<a href="nng_strerror.3.html">nng_strerror(3)</a>,
-<a href="nng_msg.5.html">nng_msg(5)</a>,
+<p><a href="nng_http_res_alloc.3http.html">nng_http_res_alloc(3http)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
 </div>

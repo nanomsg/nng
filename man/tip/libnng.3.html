@@ -518,6 +518,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_protocols">Protocols</a></li>
 <li><a href="#_transports">Transports</a></li>
 <li><a href="#_protocol_contexts">Protocol Contexts</a></li>
+<li><a href="#_statistics">Statistics</a></li>
 <li><a href="#_url_object">URL Object</a></li>
 <li><a href="#_supplemental_api">Supplemental API</a></li>
 <li><a href="#_http_support">HTTP Support</a></li>
@@ -1145,6 +1146,65 @@ concurrent applications.</p>
 </table>
 </div>
 <div class="sect2">
+<h3 id="_statistics">Statistics</h3>
+<div class="paragraph">
+<p>The following functions provide access to statistics which can be used
+to observe program behaviors and as an aid in troubleshooting.</p>
+</div>
+<table class="tableblock frame-all grid-all spread">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_child.3.html">nng_stat_child()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get child statistic</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_desc.3.html">nng_stat_name()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic description</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_name.3.html">nng_stat_name()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_next.3.html">nng_stat_next()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get next statistic</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_string.3.html">nng_stat_string()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic string value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_timestamp.3.html">nng_stat_timestamp()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_type.3.html">nng_stat_type()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_unit.3.html">nng_stat_unit()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic unit</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_value.3.html">nng_stat_valueg()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stats_free.3.html">nng_stats_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free statistics</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stats_get.3.html">nng_stats_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistics</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
 <h3 id="_url_object">URL Object</h3>
 <div class="paragraph">
 <p>Common functionality is supplied for parsing and handling
@@ -1348,6 +1408,10 @@ and connections.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP request protocol version</p></td>
 </tr>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_reset.3http.html">nng_http_req_reset()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reset HTTP request structure</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_set_data.3http.html">nng_http_req_set_data()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP request body</p></td>
 </tr>
@@ -1410,6 +1474,10 @@ and connections.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_version.3http.html">nng_http_res_get_version()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP response protocol version</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_reset.3http.html">nng_http_res_reset()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reset HTTP response structure</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_data.3http.html">nng_http_res_set_data()</a></p></td>
@@ -1490,6 +1558,10 @@ and connections.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_alloc.3http.html">nng_http_handler_alloc()</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_collect_body.3http.html">nng_http_handler_collect_body()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP handler to collect request body</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_free.3http.html">nng_http_handler_free()</a></p></td>
