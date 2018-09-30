@@ -382,6 +382,17 @@ nni_http_req_copy_data(nni_http_req *req, const void *data, size_t size)
 }
 
 int
+nni_http_req_alloc_data(nni_http_req *req, size_t size)
+{
+	int rv;
+
+	if ((rv = http_entity_alloc_data(&req->data, size)) != 0) {
+		return (rv);
+	}
+	return (0);
+}
+
+int
 nni_http_res_copy_data(nni_http_res *res, const void *data, size_t size)
 {
 	int rv;

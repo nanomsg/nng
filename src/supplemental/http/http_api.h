@@ -101,6 +101,7 @@ extern int nni_http_req_copy_data(nni_http_req *, const void *, size_t);
 extern int nni_http_res_copy_data(nni_http_res *, const void *, size_t);
 extern int nni_http_req_set_data(nni_http_req *, const void *, size_t);
 extern int nni_http_res_set_data(nni_http_res *, const void *, size_t);
+extern int nni_http_req_alloc_data(nni_http_req *, size_t);
 extern int nni_http_res_alloc_data(nni_http_res *, size_t);
 extern const char *nni_http_req_get_method(nni_http_req *);
 extern const char *nni_http_req_get_version(nni_http_req *);
@@ -247,6 +248,11 @@ extern int nni_http_handler_init_static(
 // the handler is added, or after it is deleted.  The server automatically
 // calls this for any handlers still registered with it if it is destroyed.
 extern void nni_http_handler_fini(nni_http_handler *);
+
+// nni_http_handler_collect_body informs the server that it should collect
+// the entitty data associated with the client request, and sets the maximum
+// size to accept.
+extern void nni_http_handler_collect_body(nni_http_handler *, bool, size_t);
 
 // nni_http_handler_set_tree marks the handler as servicing the entire
 // tree (e.g. a directory), rather than just a leaf node.  The handler

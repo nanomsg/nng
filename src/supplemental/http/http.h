@@ -350,6 +350,16 @@ NNG_DECL int nng_http_handler_set_method(nng_http_handler *, const char *);
 // that case is not considered.)
 NNG_DECL int nng_http_handler_set_host(nng_http_handler *, const char *);
 
+// nng_http_handler_collect_body is used to indicate the server should
+// check for, and process, data sent by the client, which will be attached
+// to the request.  If this is false, then the handler will need to check
+// for and process any content data.  By default the server will accept
+// up to 1MB.  If the client attempts to send more data than requested,
+// then a 400 Bad Request will be sent back to the client.  To set an
+// unlimited value, use (size_t)-1.  To preclude the client from sending
+// *any* data, use 0.  (The static and file handlers use 0 by default.)
+NNG_DECL int nng_http_handler_collect_body(nng_http_handler *, bool, size_t);
+
 // nng_http_handler_set_tree indicates that the handler is being registered
 // for a heirarchical tree, rather than just a single path, so it will be
 // called for all child paths supplied.  By default the handler is only

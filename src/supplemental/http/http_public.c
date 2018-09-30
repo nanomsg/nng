@@ -587,6 +587,17 @@ nng_http_handler_set_method(nng_http_handler *h, const char *meth)
 }
 
 int
+nng_http_handler_collect_body(nng_http_handler *h, bool want, size_t len)
+{
+#ifdef NNG_SUPP_HTTP
+	nni_http_handler_collect_body(h, want, len);
+	return (0);
+#else
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int
 nng_http_handler_set_host(nng_http_handler *h, const char *host)
 {
 #ifdef NNG_SUPP_HTTP

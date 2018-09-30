@@ -35,25 +35,28 @@ struct nng_http_handler {
 	char *        host;
 	bool          tree;
 	int           refcnt;
+	size_t        maxbody;
+	bool          getbody;
 	void *        data;
 	nni_cb        dtor;
 	void (*cb)(nni_aio *);
 };
 
 typedef struct http_sconn {
-	nni_list_node    node;
-	nni_http_conn *  conn;
-	nni_http_server *server;
-	nni_http_req *   req;
-	nni_http_res *   res;
-	bool             close;
-	bool             closed;
-	bool             finished;
-	nni_aio *        cbaio;
-	nni_aio *        rxaio;
-	nni_aio *        txaio;
-	nni_aio *        txdataio;
-	nni_reap_item    reap;
+	nni_list_node     node;
+	nni_http_conn *   conn;
+	nni_http_server * server;
+	nni_http_req *    req;
+	nni_http_res *    res;
+	nni_http_handler *handler; // set if we deferred to read body
+	bool              close;
+	bool              closed;
+	bool              finished;
+	nni_aio *         cbaio;
+	nni_aio *         rxaio;
+	nni_aio *         txaio;
+	nni_aio *         txdataio;
+	nni_reap_item     reap;
 } http_sconn;
 
 typedef struct http_error {
@@ -101,13 +104,15 @@ nni_http_handler_init(
 		return (NNG_ENOMEM);
 	}
 	NNI_LIST_NODE_INIT(&h->node);
-	h->cb     = cb;
-	h->data   = NULL;
-	h->dtor   = NULL;
-	h->host   = NULL;
-	h->tree   = false;
-	h->refcnt = 0;
-	*hp       = h;
+	h->cb      = cb;
+	h->data    = NULL;
+	h->dtor    = NULL;
+	h->host    = NULL;
+	h->tree    = false;
+	h->refcnt  = 0;
+	h->maxbody = 1024 * 1024; // By default we accept up to 1MB of body
+	h->getbody = true;
+	*hp        = h;
 	return (0);
 }
 
@@ -124,6 +129,13 @@ nni_http_handler_fini(nni_http_handler *h)
 	nni_strfree(h->uri);
 	nni_strfree(h->method);
 	NNI_FREE_STRUCT(h);
+}
+
+void
+nni_http_handler_collect_body(nni_http_handler *h, bool want, size_t maxbody)
+{
+	h->getbody = want;
+	h->maxbody = maxbody;
 }
 
 int
@@ -292,6 +304,7 @@ http_sconn_txdatdone(void *arg)
 		return;
 	}
 
+	sc->handler = NULL;
 	nni_http_req_reset(sc->req);
 	nni_http_read_req(sc->conn, sc->req, sc->rxaio);
 }
@@ -316,6 +329,7 @@ http_sconn_txdone(void *arg)
 		nni_http_res_free(sc->res);
 		sc->res = NULL;
 	}
+	sc->handler = NULL;
 	nni_http_req_reset(sc->req);
 	nni_http_read_req(sc->conn, sc->req, sc->rxaio);
 }
@@ -457,10 +471,16 @@ http_sconn_rxdone(void *arg)
 	bool              badmeth  = false;
 	bool              needhost = false;
 	const char *      host;
+	const char *      cls;
 
 	if ((rv = nni_aio_result(aio)) != 0) {
 		http_sconn_close(sc);
 		return;
+	}
+
+	if ((h = sc->handler) != NULL) {
+		nni_mtx_lock(&s->mtx);
+		goto finish;
 	}
 
 	// Validate the request -- it has to at least look like HTTP
@@ -594,6 +614,35 @@ http_sconn_rxdone(void *arg)
 		return;
 	}
 
+	if ((h->getbody) &&
+	    ((cls = nni_http_req_get_header(req, "Content-Length")) != NULL)) {
+		uint64_t len;
+
+		if ((nni_strtou64(cls, &len) != 0) || (len > h->maxbody)) {
+			nni_mtx_unlock(&s->mtx);
+			http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
+			return;
+		}
+		if (len > 0) {
+			nng_iov iov;
+			if ((nni_http_req_alloc_data(req, (size_t) len)) !=
+			    0) {
+				nni_mtx_unlock(&s->mtx);
+				http_sconn_error(
+				    sc, NNG_HTTP_STATUS_INTERNAL_SERVER_ERROR);
+				return;
+			}
+			nng_http_req_get_data(req, &iov.iov_buf, &iov.iov_len);
+			sc->handler = h;
+			nni_mtx_unlock(&s->mtx);
+			nni_aio_set_iov(sc->rxaio, 1, &iov);
+			nni_http_read_full(sc->conn, aio);
+			return;
+		}
+	}
+
+finish:
+	sc->handler = NULL;
 	nni_aio_set_input(sc->cbaio, 0, sc->req);
 	nni_aio_set_input(sc->cbaio, 1, h);
 	nni_aio_set_input(sc->cbaio, 2, sc->conn);
@@ -671,6 +720,7 @@ http_sconn_cbdone(void *arg)
 	} else {
 		// Presumably client already sent a response.
 		// Wait for another request.
+		sc->handler = NULL;
 		nni_http_req_reset(sc->req);
 		nni_http_read_req(sc->conn, sc->req, sc->rxaio);
 	}
@@ -747,6 +797,7 @@ http_server_acccb(void *arg)
 	sc->server = s;
 	nni_list_append(&s->conns, sc);
 
+	sc->handler = NULL;
 	nni_http_read_req(sc->conn, sc->req, sc->rxaio);
 	nni_tcp_listener_accept(s->listener, s->accaio);
 	nni_mtx_unlock(&s->mtx);
@@ -1345,6 +1396,9 @@ nni_http_handler_init_file_ctype(nni_http_handler **hpp, const char *uri,
 		return (rv);
 	}
 
+	// We don't permit a body for getting a file.
+	nni_http_handler_collect_body(h, true, 0);
+
 	*hpp = h;
 	return (0);
 }
@@ -1505,6 +1559,8 @@ nni_http_handler_init_directory(
 		http_file_free(hf);
 		return (rv);
 	}
+	// We don't permit a body for getting a file.
+	nni_http_handler_collect_body(h, true, 0);
 
 	if (((rv = nni_http_handler_set_tree(h)) != 0) ||
 	    ((rv = nni_http_handler_set_data(h, hf, http_file_free)) != 0)) {
@@ -1595,6 +1651,9 @@ nni_http_handler_init_static(nni_http_handler **hpp, const char *uri,
 		nni_http_handler_fini(h);
 		return (rv);
 	}
+
+	// We don't permit a body for getting static data.
+	nni_http_handler_collect_body(h, true, 0);
 
 	*hpp = h;
 	return (0);

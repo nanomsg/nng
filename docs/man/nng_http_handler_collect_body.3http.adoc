@@ -1,0 +1,78 @@
+= nng_http_handler_collect_body(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_handler_collect_body - set HTTP handler to collect request body
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+int nng_http_handler_collect_body(nng_http_handler *handler, bool want, size_t maxsz);
+----
+
+== DESCRIPTION
+
+The `nng_http_handler_collect_data()` function causes the _handler_ to
+collect any request body that was submitted with the request, and attach
+it to the `nng_http_req` before the handler is called.
+
+Subsequently the data can be retrieved by the handler from the request with the
+`<<nng_http_req_get_data.3http#,nng_http_req_get_data()>>` function.
+
+The collection is enabled if _want_ is true.
+Furthermore, the data that the client may sent is limited by the
+value of _maxsz_.
+If the client attempts to send more data than _maxsz_, then the
+request will be terminated with a 400 "`Bad Request`" status.
+
+TIP: Limiting the size of incoming request data can provide protection
+against denial of service attacks, as a buffer of the client-supplied
+size must be allocated to receive the data.
+
+In order to provide an unlimited size, use `(size_t)-1` for _maxsz_.
+The value `0` for _maxsz_ can be used to prevent any data from being passed
+by the client.
+
+The built-in handlers for files, directories, and static data limit the
+_maxsz_ to zero by default.
+Otherwise the default setting is to enable this capability with a default
+value of _maxsz_ of 1 megabyte.
+
+NOTE: The handler looks for data indicated by the `Content-Length:` HTTP
+header.
+If this header is absent, the request is assumed not to contain any data.
+
+NOTE: This specifically does not support the `Chunked` transfer-encoding.
+This is considered a bug, and is a deficiency for full HTTP/1.1 compliance.
+However, few clients send data in this format, so in practice this should
+not create few limitations.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ENOTSUP`:: No support for HTTP in the library.
+
+== SEE ALSO
+
+[.text-left]
+<<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
+<<nng_http_server_add_handler.3http#,nng_http_server_add_handler(3http)>>,
+<<nng_http_req_get_data.3http#,nng_http_req_get_data(3http)>>,
+<<nng.7#,nng(7)>>

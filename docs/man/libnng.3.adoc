@@ -356,6 +356,7 @@ These functions are intended for use with HTTP server applications.
 
 |===
 |<<nng_http_handler_alloc.3http#,nng_http_handler_alloc()>>|allocate HTTP server handler
+|<<nng_http_handler_collect_body.3http#,nng_http_handler_collect_body()>>|set HTTP handler to collect request body
 |<<nng_http_handler_free.3http#,nng_http_handler_free()>>|free HTTP server handler
 |<<nng_http_handler_get_data.3http#,nng_http_handler_get_data()>>|return extra data for HTTP handler
 |<<nng_http_handler_set_data.3http#,nng_http_handler_set_data()>>|set extra data for HTTP handler
