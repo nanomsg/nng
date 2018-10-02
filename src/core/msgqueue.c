@@ -106,8 +106,7 @@ nni_msgq_fini(nni_msgq *mq)
 
 	/* Free any orphaned messages. */
 	while (mq->mq_len > 0) {
-		nni_msg *msg = mq->mq_msgs[mq->mq_get];
-		mq->mq_get++;
+		nni_msg *msg = mq->mq_msgs[mq->mq_get++];
 		if (mq->mq_get >= mq->mq_alloc) {
 			mq->mq_get = 0;
 		}
@@ -196,8 +195,7 @@ nni_msgq_flush(nni_msgq *mq)
 {
 	nni_mtx_lock(&mq->mq_lock);
 	while (mq->mq_len > 0) {
-		nni_msg *msg = mq->mq_msgs[mq->mq_get];
-		mq->mq_get++;
+		nni_msg *msg = mq->mq_msgs[mq->mq_get++];
 		if (mq->mq_get >= mq->mq_alloc) {
 			mq->mq_get = 0;
 		}
