@@ -41,8 +41,7 @@ extern void nni_msgq_aio_put(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
 
 // nni_msgq_tryput performs a non-blocking attempt to put a message on
-// the message queue.  It is the same as calling nng_msgq_put_until with
-// a zero time.
+// the message queue.
 extern int nni_msgq_tryput(nni_msgq *, nni_msg *);
 
 // nni_msgq_set_error sets an error condition on the message queue,
