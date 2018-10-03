@@ -124,7 +124,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 		if (headwanted < headroom) {
 			headwanted = headroom; // Never shrink this.
 		}
-		if (((newsz + headwanted) < ch->ch_cap) &&
+		if (((newsz + headwanted) <= ch->ch_cap) &&
 		    (headwanted <= headroom)) {
 			// We have enough space at the ends already.
 			return (0);
