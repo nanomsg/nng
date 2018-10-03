@@ -44,7 +44,6 @@ nng_thread_create(nng_thread **thrp, void (*func)(void *), void *arg)
 	if ((thr = NNI_ALLOC_STRUCT(thr)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	memset(thr, 0, sizeof(*thr));
 	*thrp = (void *) thr;
 	if ((rv = nni_thr_init(thr, func, arg)) != 0) {
 		return (rv);

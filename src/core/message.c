@@ -445,7 +445,6 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	memset(m, 0, sizeof(*m));
 	NNI_LIST_INIT(&m->m_options, nni_msgopt, mo_node);
 
 	if ((rv = nni_chunk_dup(&m->m_header, &src->m_header)) != 0) {
