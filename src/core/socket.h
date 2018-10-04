@@ -63,8 +63,6 @@ extern uint32_t nni_sock_flags(nni_sock *);
 // should be executed.
 extern void nni_sock_set_pipe_cb(nni_sock *sock, int, nng_pipe_cb, void *);
 
-extern bool nni_sock_closing(nni_sock *sock);
-
 // nni_ctx_open is used to open/create a new context structure.
 // Contexts are not supported by most protocols, but for those that do,
 // this can offer some improvements for massive concurrency/scalability.
