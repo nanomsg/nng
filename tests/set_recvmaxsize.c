@@ -15,7 +15,8 @@
 #define RCVBUFSIZE 200
 
 const char *addrs[] = {
-    "ipc:///tmp/temptemptemmmmp",
+    "inproc:///tmp/inproctmp_setrecvmaxsz",
+    "ipc:///tmp/ipctemp_setrecvmaxsz",
     "tcp://127.0.0.1:43895",
 };
 
