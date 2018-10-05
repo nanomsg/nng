@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_req_open - create rep socket
+nng_req_open - create req socket
 
 == SYNOPSIS
 
