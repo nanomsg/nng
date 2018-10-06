@@ -18,9 +18,10 @@ const char *addrs[] = {
     "inproc:///tmp/inproctmp_setrecvmaxsz",
     "ipc:///tmp/ipctemp_setrecvmaxsz",
     "tcp://127.0.0.1:43895",
+    "ws://127.0.0.1:43897",
 };
 
-TestMain("SURVEY pattern", {
+TestMain("recvmaxsize", {
 	// we don't actually care what the content of the message is.
 	char msg[SNDBUFSIZE];
 	char rcvbuf[RCVBUFSIZE];
