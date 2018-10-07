@@ -121,6 +121,13 @@ extern int         nni_http_res_set_reason(nni_http_res *, const char *);
 // the HTML body with customized content if it exists.
 extern bool nni_http_res_is_error(nni_http_res *);
 
+// nni_http_alloc_html_error allocates a string corresponding to an
+// HTML error.  This can be set as the body of the res.  The status
+// will be looked up using HTTP status code lookups, but the details
+// will be added if present as further body text.  The result can
+// be freed with nni_strfree() later.
+extern int nni_http_alloc_html_error(char **, uint16_t, const char *);
+
 extern void nni_http_read(nni_http_conn *, nni_aio *);
 extern void nni_http_read_full(nni_http_conn *, nni_aio *);
 extern void nni_http_write(nni_http_conn *, nni_aio *);
@@ -214,7 +221,7 @@ extern int nni_http_hijack(nni_http_conn *);
 //
 // The callback function will receive the following arguments (via
 // nng_aio_get_input(): nni_http_request *, nni_http_handler *, and
-// nni_http_context_t *.  The first is a request object, for convenience.
+// nni_http_conn_t *.  The first is a request object, for convenience.
 // The second is the handler, from which the callback can obtain any other
 // data it has set.  The final is the http context, from which its possible
 // to hijack the session.
@@ -243,6 +250,10 @@ extern int nni_http_handler_init_directory(
 // supplied, with the Content-Type supplied in the final argument.
 extern int nni_http_handler_init_static(
     nni_http_handler **, const char *, const void *, size_t, const char *);
+
+// nni_http_handler_init_redirect creates a handler that redirects the request.
+extern int nni_http_handler_init_redirect(
+    nni_http_handler **, const char *, uint16_t, const char *);
 
 // nni_http_handler_fini destroys a handler.  This should only be done before
 // the handler is added, or after it is deleted.  The server automatically

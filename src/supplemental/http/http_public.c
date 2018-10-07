@@ -559,6 +559,21 @@ nng_http_handler_alloc_directory(
 }
 
 int
+nng_http_handler_alloc_redirect(
+    nng_http_handler **hp, const char *uri, uint16_t status, const char *where)
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_handler_init_redirect(hp, uri, status, where));
+#else
+	NNI_ARG_UNUSED(hp);
+	NNI_ARG_UNUSED(uri);
+	NNI_ARG_UNUSED(status);
+	NNI_ARG_UNUSED(where);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int
 nng_http_handler_alloc_static(nng_http_handler **hp, const char *uri,
     const void *data, size_t size, const char *ctype)
 {
