@@ -328,6 +328,12 @@ NNG_DECL int nng_http_handler_alloc_file(
 NNG_DECL int nng_http_handler_alloc_static(
     nng_http_handler **, const char *, const void *, size_t, const char *);
 
+// nng_http_handler_alloc_redirect creates an HTTP redirect handler.
+// The status is given, along with the new URL.  If the status is 0,
+// then 301 will be used instead.
+NNG_DECL int nng_http_handler_alloc_redirect(
+    nng_http_handler **, const char *, uint16_t, const char *);
+
 // nng_http_handler_alloc_file creates a "directory" based handler, that
 // serves up static content from the given directory tree.  Directories
 // that contain an index.html or index.htm file use that file for the

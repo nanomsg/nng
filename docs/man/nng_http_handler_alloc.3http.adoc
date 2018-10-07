@@ -31,6 +31,9 @@ int nng_http_handler_alloc_directory(nng_http_handler **hp, const char *path,
 int nng_http_handler_alloc_file(nng_http_handler **hp, const char *path,
     const char *filename);
 
+int nng_http_handler_alloc_redirect(nng_http_handler **hp, const char *path,
+    uint16_t status, const char *location);
+
 int nng_http_handler_alloc_static(nng_http_handler **hp, const char *path,
     const void *data, size_t size, const char *content_type);
 ----
@@ -48,7 +51,7 @@ Only the path component of the Request URI is
 considered when determining whether the handler should be called.
 
 Additionally each handler has a method it is registered to handle
-(the default is "GET", see
+(the default is `GET`, see
 `<<nng_http_handler_set_method.3http#,nng_http_handler_set_method()>>`), and
 optionally a 'Host' header it can be matched against (see
 `<<nng_http_handler_set_host.3http#,nng_http_handler_set_host()>>`).
@@ -123,9 +126,30 @@ of the requested file name.
 If a content type cannot be determined from
 the extension, then `application/octet-stream` is used.
 
+=== Redirect Handler
+
+The fourth member is used to arrange for a server redirect from one
+URL to another.
+The reply will be with status code __status__, which should be a 3XX
+code such as 301, and a `Location:` header will contain the URL
+referenced by __location__, with any residual suffix from the request
+URI appended.
+
+TIP: Use `<<nng_http_handler_set_tree#,nng_http_handler_set_tree()>>`
+to redirect an entire tree.
+For example, it is possible to redirect an entire HTTP site to another
+HTTPS site by specifying `/` as the path and then using the base
+of the new site, such as `https://newsite.example.com` as the
+new location.
+
+TIP: Be sure to use the appropriate value for __status__.
+Permanent redirection should use 301 and temporary redirections should use 307.
+In REST APIs, using a redirection to supply the new location of an object
+created with `POST` should use 303.
+
 === Static Handler
 
-The fourth member of this family, `nng_http_handler_alloc_static()`, creates
+The fifth member of this family, `nng_http_handler_alloc_static()`, creates
 a handler to serve up fixed content located in program data.
 The client is
 sent the _data_, with `Content-Length` of _size_ bytes, and `Content-Type` of
@@ -133,7 +157,7 @@ __content_type__.
 
 == RETURN VALUES
 
-This function returns 0 on success, and non-zero otherwise.
+These functions return 0 on success, and non-zero otherwise.
 
 == ERRORS
 
