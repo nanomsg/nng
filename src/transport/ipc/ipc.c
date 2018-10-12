@@ -868,11 +868,11 @@ ipctran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 static int
 ipctran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	ipctran_ep * ep = arg;
-	ipctran_pipe *p;
+	ipctran_ep *ep = arg;
 	size_t      val;
 	int         rv;
 	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
+		ipctran_pipe *p;
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
 		NNI_LIST_FOREACH (&ep->pipes, p) {
