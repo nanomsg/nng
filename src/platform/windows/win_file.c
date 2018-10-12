@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 QXSoftware <lh563566994@126.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -281,18 +282,16 @@ nni_plat_temp_dir(void)
 int
 nni_plat_file_type(const char *name, int *typep)
 {
-	HANDLE          dirh;
-	WIN32_FIND_DATA data;
+	DWORD attrs;
 
-	if ((dirh = FindFirstFile(name, &data)) == INVALID_HANDLE_VALUE) {
+	if ((attrs = GetFileAttributes(name)) == INVALID_FILE_ATTRIBUTES) {
 		return (nni_win_error(GetLastError()));
 	}
-	(void) FindClose(dirh);
-	if (data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+	if (attrs & FILE_ATTRIBUTE_DIRECTORY) {
 		*typep = NNI_PLAT_FILE_TYPE_DIR;
-	} else if (data.dwFileAttributes & FILE_ATTRIBUTE_DEVICE) {
+	} else if (attrs & FILE_ATTRIBUTE_DEVICE) {
 		*typep = NNI_PLAT_FILE_TYPE_OTHER;
-	} else if (data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) {
+	} else if (attrs & FILE_ATTRIBUTE_HIDDEN) {
 		*typep = NNI_PLAT_FILE_TYPE_OTHER;
 	} else {
 		*typep = NNI_PLAT_FILE_TYPE_FILE;
