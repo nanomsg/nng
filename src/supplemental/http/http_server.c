@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 QXSoftware <lh563566994@126.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -1460,9 +1461,9 @@ http_handle_dir(nni_aio *aio)
 		sprintf(dst, "%s%s", NNG_PLATFORM_DIR_SEP, "index.html");
 		if (!nni_file_is_file(pn)) {
 			pn[strlen(pn) - 1] = '\0'; // index.html -> index.htm
-		}
-		if (!nni_file_is_file(pn)) {
-			rv = NNG_ENOENT;
+			if (!nni_file_is_file(pn)) {
+				rv = NNG_ENOENT;
+			}
 		}
 	}
 
