@@ -560,17 +560,21 @@ http_sconn_rxdone(void *arg)
 		if (strncmp(path, h->uri, len) != 0) {
 			continue;
 		}
-		switch (path[len]) {
-		case '\0':
-			break;
-		case '/':
-			if ((path[len + 1] != '\0') && (!h->tree)) {
-				// Trailing component and not a directory.
-				continue;
+		if (len == 1 && h->uri[0] == '/') {
+			// deal with root uri "/"
+		} else {
+			switch (path[len]) {
+			case '\0':
+				break;
+			case '/':
+				if ((path[len + 1] != '\0') && (!h->tree)) {
+					// Trailing component and not a directory.
+					continue;
+				}
+				break;
+			default:
+				continue; // Some other substring, not matched.
 			}
-			break;
-		default:
-			continue; // Some other substring, not matched.
 		}
 
 		if ((h->method == NULL) || (h->method[0] == '\0')) {
@@ -1414,7 +1418,9 @@ http_handle_dir(nni_aio *aio)
 	char *            pn;
 
 	len = strlen(base);
-	if ((strncmp(uri, base, len) != 0) ||
+	if (len == 1 && base[0] == '/') {
+		// deal with root uri "/"
+	} else if ((strncmp(uri, base, len) != 0) ||
 	    ((uri[len] != 0) && (uri[len] != '/'))) {
 		// This should never happen!
 		nni_aio_finish_error(aio, NNG_EINVAL);
