@@ -845,7 +845,7 @@ zt_pipe_recv_data(zt_pipe *p, const uint8_t *data, size_t len)
 	// that we only can catch the case where a message is larger by
 	// more than a fragment, since the final fragment may be shorter,
 	// and we won't know that until we receive it.
-	if ((nfrags * fragsz) >= (p->zp_rcvmax + fragsz)) {
+	if ((size_t)(nfrags * fragsz) >= ((p->zp_rcvmax) + fragsz)) {
 		// Discard, as the forwarder might be on the other side
 		// of a device. This is gentler than just shutting the pipe
 		// down.  Sending a remote error might be polite, but since
@@ -1778,7 +1778,7 @@ zt_pipe_send(void *arg, nni_aio *aio)
 	fragsz = (uint16_t)(p->zp_mtu - zt_offset_data_data);
 
 	bytes = nni_msg_header_len(m) + nni_msg_len(m);
-	if (bytes >= (0xfffe * fragsz)) {
+	if (bytes >= (size_t)(0xfffe * fragsz)) {
 		nni_aio_finish_error(aio, NNG_EMSGSIZE);
 		nni_mtx_unlock(&zt_lk);
 		return;
