@@ -1949,16 +1949,13 @@ zt_pipe_peer(void *arg)
 }
 
 static int
-zt_get_nw_status(
-    zt_node *ztn, uint64_t nwid, void *buf, size_t *szp, nni_opt_type t)
+zt_get_nw_status(zt_node *ztn, uint64_t nwid, int *statusp)
 {
 	ZT_VirtualNetworkConfig *vcfg;
 	int                      status;
 
-	nni_mtx_lock(&zt_lk);
 	vcfg = ZT_Node_networkConfig(ztn->zn_znode, nwid);
 	if (vcfg == NULL) {
-		nni_mtx_unlock(&zt_lk);
 		return (NNG_ECLOSED);
 	}
 	switch (vcfg->status) {
@@ -1985,9 +1982,9 @@ zt_get_nw_status(
 		break;
 	}
 	ZT_Node_freeQueryResult(ztn->zn_znode, vcfg);
-	nni_mtx_unlock(&zt_lk);
 
-	return (nni_copyout_int(status, buf, szp, t));
+	*statusp = status;
+	return (0);
 }
 
 static int
@@ -1997,16 +1994,13 @@ zt_get_nw_name(
 	ZT_VirtualNetworkConfig *vcfg;
 	int                      rv;
 
-	nni_mtx_lock(&zt_lk);
 	vcfg = ZT_Node_networkConfig(ztn->zn_znode, nwid);
 	if (vcfg == NULL) {
-		nni_mtx_unlock(&zt_lk);
 		return (NNG_ECLOSED);
 	}
 
 	rv = nni_copyout_str(vcfg->name, buf, szp, t);
 	ZT_Node_freeQueryResult(ztn->zn_znode, vcfg);
-	nni_mtx_unlock(&zt_lk);
 
 	return (rv);
 }
@@ -2206,15 +2200,6 @@ zt_ep_init(void **epp, nni_url *url, nni_sock *sock, nni_dialer *ndialer,
 		ep->ze_raddr |= port;
 		ep->ze_laddr   = 0;
 		ep->ze_ndialer = ndialer;
-	}
-
-	nni_mtx_lock(&zt_lk);
-	rv = zt_node_find(ep);
-	nni_mtx_unlock(&zt_lk);
-
-	if (rv != 0) {
-		zt_ep_fini(ep);
-		return (rv);
 	}
 
 	*epp = ep;
@@ -2698,6 +2683,10 @@ zt_ep_set_orbit(void *arg, const void *data, size_t sz, nni_opt_type t)
 	}
 
 	nni_mtx_lock(&zt_lk);
+	if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
+		nni_mtx_unlock(&zt_lk);
+		return (rv);
+	}
 	zrv = ZT_Node_orbit(ep->ze_ztn->zn_znode, NULL, moonid, peerid);
 	nni_mtx_unlock(&zt_lk);
 
@@ -2721,9 +2710,12 @@ zt_ep_set_deorbit(void *arg, const void *data, size_t sz, nni_opt_type t)
 	if ((rv = nni_copyin_u64(&moonid, data, sz, t)) == 0) {
 
 		nni_mtx_lock(&zt_lk);
+		if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
+			nni_mtx_unlock(&zt_lk);
+			return (rv);
+		}
 		zrv = ZT_Node_deorbit(ep->ze_ztn->zn_znode, NULL, moonid);
 		nni_mtx_unlock(&zt_lk);
-
 		rv = zt_result(zrv);
 	}
 	return (rv);
@@ -2736,7 +2728,13 @@ zt_ep_get_node(void *arg, void *data, size_t *szp, nni_opt_type t)
 	int    rv;
 
 	nni_mtx_lock(&zt_lk);
+	if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
+		nni_mtx_unlock(&zt_lk);
+		return (rv);
+	}
+
 	rv = nni_copyout_u64(ep->ze_ztn->zn_self, data, szp, t);
+
 	nni_mtx_unlock(&zt_lk);
 	return (rv);
 }
@@ -2748,6 +2746,10 @@ zt_ep_get_nwid(void *arg, void *data, size_t *szp, nni_opt_type t)
 	int    rv;
 
 	nni_mtx_lock(&zt_lk);
+	if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
+		nni_mtx_unlock(&zt_lk);
+		return (rv);
+	}
 	rv = nni_copyout_u64(ep->ze_nwid, data, szp, t);
 	nni_mtx_unlock(&zt_lk);
 	return (rv);
@@ -2757,14 +2759,36 @@ static int
 zt_ep_get_nw_name(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (zt_get_nw_name(ep->ze_ztn, ep->ze_nwid, buf, szp, t));
+	int    rv;
+
+	nni_mtx_lock(&zt_lk);
+	if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
+		nni_mtx_unlock(&zt_lk);
+		return (rv);
+	}
+	rv = zt_get_nw_name(ep->ze_ztn, ep->ze_nwid, buf, szp, t);
+	nni_mtx_unlock(&zt_lk);
+	return (rv);
 }
 
 static int
 zt_ep_get_nw_status(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
-	return (zt_get_nw_status(ep->ze_ztn, ep->ze_nwid, buf, szp, t));
+	int    rv;
+	int    status;
+
+	nni_mtx_lock(&zt_lk);
+	if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
+		nni_mtx_unlock(&zt_lk);
+		return (rv);
+	}
+	if ((rv = zt_get_nw_status(ep->ze_ztn, ep->ze_nwid, &status)) != 0) {
+		nni_mtx_unlock(&zt_lk);
+		return (rv);
+	}
+	nni_mtx_unlock(&zt_lk);
+	return (nni_copyout_int(status, buf, szp, t));
 }
 
 static int
