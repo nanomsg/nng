@@ -174,7 +174,7 @@ struct zt_fraglist {
 	nni_time     fl_time;  // time first frag was received
 	uint32_t     fl_msgid; // message id
 	int          fl_ready; // we have all messages
-	unsigned int fl_fragsz;
+	size_t       fl_fragsz;
 	unsigned int fl_nfrags;
 	uint8_t *    fl_missing;
 	size_t       fl_missingsz;
@@ -821,7 +821,7 @@ zt_pipe_recv_data(zt_pipe *p, const uint8_t *data, size_t len)
 	uint16_t     msgid;
 	uint16_t     fragno;
 	uint16_t     nfrags;
-	uint16_t     fragsz;
+	size_t       fragsz;
 	zt_fraglist *fl;
 	int          i;
 	int          slot;
@@ -1755,7 +1755,7 @@ zt_pipe_send(void *arg, nni_aio *aio)
 	uint16_t id;
 	uint16_t nfrags;
 	uint16_t fragno;
-	uint16_t fragsz;
+	size_t   fragsz;
 	size_t   bytes;
 	nni_msg *m;
 
@@ -1775,7 +1775,8 @@ zt_pipe_send(void *arg, nni_aio *aio)
 		return;
 	}
 
-	fragsz = (uint16_t)(p->zp_mtu - zt_offset_data_data);
+	fragsz = p->zp_mtu - zt_offset_data_data;
+	NNI_ASSERT(fragsz < 0x10000); // Because zp_mtu is 16 bits
 
 	bytes = nni_msg_header_len(m) + nni_msg_len(m);
 	if (bytes >= (0xfffe * fragsz)) {
@@ -1824,7 +1825,7 @@ zt_pipe_send(void *arg, nni_aio *aio)
 
 		nng_msg_trim(m, len);
 		NNI_PUT16(data + zt_offset_data_id, id);
-		NNI_PUT16(data + zt_offset_data_fragsz, fragsz);
+		NNI_PUT16(data + zt_offset_data_fragsz, (uint16_t) fragsz);
 		NNI_PUT16(data + zt_offset_data_frag, fragno);
 		NNI_PUT16(data + zt_offset_data_nfrag, nfrags);
 		offset += len;
