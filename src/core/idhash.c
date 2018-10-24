@@ -92,8 +92,7 @@ nni_idhash_set_limits(
 // Inspired by Python dict implementation.  This probe will visit every
 // cell.  We always hash consecutively assigned IDs.
 #define NNI_IDHASH_NEXTPROBE(h, j) ((((j) *5) + 1) & (h->ih_cap - 1))
-#define NNI_IDHASH_INDEX(h, j) \
-	(((j & 0xffffffff) ^ (j >> 32)) & (h->ih_cap - 1))
+#define NNI_IDHASH_INDEX(h, j) ((j) & (h->ih_cap - 1))
 
 static size_t
 nni_hash_find_index(nni_idhash *h, uint64_t id)
