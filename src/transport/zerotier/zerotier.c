@@ -2723,6 +2723,101 @@ zt_ep_set_deorbit(void *arg, const void *data, size_t sz, nni_opt_type t)
 }
 
 static int
+zt_ep_chk_add_local_addr(const void *data, size_t sz, nni_opt_type t)
+{
+	int          rv;
+	nng_sockaddr sa;
+	rv = nni_copyin_sockaddr(&sa, data, sz, t);
+	if (rv == 0) {
+		switch (sa.s_family) {
+		case NNG_AF_INET:
+		case NNG_AF_INET6:
+			break;
+		default:
+			return (NNG_EINVAL);
+		}
+	}
+	return (0);
+}
+
+static int
+zt_ep_set_add_local_addr(
+    void *arg, const void *data, size_t sz, nni_opt_type t)
+{
+	nng_sockaddr       sa;
+	zt_ep *            ep = arg;
+	enum ZT_ResultCode zrv;
+	int                rv;
+	ZT_Node *          zn;
+
+	if ((rv = nni_copyin_sockaddr(&sa, data, sz, t)) == 0) {
+		struct sockaddr_storage ss;
+		struct sockaddr_in *    sin;
+		struct sockaddr_in6 *   sin6;
+
+		memset(&ss, 0, sizeof(ss));
+		switch (sa.s_family) {
+		case NNG_AF_INET:
+			sin                  = (void *) &ss;
+			sin->sin_family      = AF_INET;
+			sin->sin_addr.s_addr = sa.s_in.sa_addr;
+			sin->sin_port        = 0;
+			break;
+		case NNG_AF_INET6:
+			sin6              = (void *) &ss;
+			sin6->sin6_family = AF_INET6;
+			sin6->sin6_port   = 0;
+			memcpy(&sin6->sin6_addr, sa.s_in6.sa_addr, 16);
+			break;
+		default:
+			return (NNG_EINVAL);
+		}
+
+		nni_mtx_lock(&zt_lk);
+		if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
+			nni_mtx_unlock(&zt_lk);
+			return (rv);
+		}
+		zn  = ep->ze_ztn;
+		zrv = ZT_Node_addLocalInterfaceAddress(zn, &ss);
+		nni_mtx_unlock(&zt_lk);
+		rv = zt_result(zrv);
+	}
+	return (rv);
+}
+
+static int
+zt_ep_chk_clear_local_addrs(const void *data, size_t sz, nni_opt_type t)
+{
+	NNI_ARG_UNUSED(data);
+	NNI_ARG_UNUSED(sz);
+	NNI_ARG_UNUSED(t);
+	return (0);
+}
+
+static int
+zt_ep_set_clear_local_addrs(
+    void *arg, const void *data, size_t sz, nni_opt_type t)
+{
+	zt_ep *  ep = arg;
+	int      rv;
+	ZT_Node *zn;
+	NNI_ARG_UNUSED(data);
+	NNI_ARG_UNUSED(sz);
+	NNI_ARG_UNUSED(t);
+
+	nni_mtx_lock(&zt_lk);
+	if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
+		nni_mtx_unlock(&zt_lk);
+		return (rv);
+	}
+	zn = ep->ze_ztn;
+	ZT_Node_clearLocalInterfaceAddresses(zn);
+	nni_mtx_unlock(&zt_lk);
+	return (0);
+}
+
+static int
 zt_ep_get_node(void *arg, void *data, size_t *szp, nni_opt_type t)
 {
 	zt_ep *ep = arg;
@@ -3090,6 +3185,19 @@ static nni_tran_option zt_dialer_options[] = {
 	    .o_set  = zt_ep_set_deorbit,
 	    .o_chk  = zt_ep_chk_deorbit,
 	},
+	{
+	    .o_name = NNG_OPT_ZT_ADD_LOCAL_ADDR,
+	    .o_type = NNI_TYPE_SOCKADDR,
+	    .o_set  = zt_ep_set_add_local_addr,
+	    .o_chk  = zt_ep_chk_add_local_addr,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_CLEAR_LOCAL_ADDRS,
+	    .o_type = NNI_TYPE_OPAQUE,
+	    .o_set  = zt_ep_set_clear_local_addrs,
+	    .o_chk  = zt_ep_chk_clear_local_addrs,
+	},
+
 	// terminate list
 	{
 	    .o_name = NULL,

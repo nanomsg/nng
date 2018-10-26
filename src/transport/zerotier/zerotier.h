@@ -116,19 +116,32 @@
 // node is not already orbiting, then this operation does nothing.
 #define NNG_OPT_ZT_DEORBIT "zt:deorbit"
 
+// NNG_OPT_ZT_ADD_LOCAL_ADDR adds the local address (IP address) as
+// local interface address.  This facilitates the local startup and
+// discovery.  Note that this can be called multiple times to add
+// additional address.  This is optional, and usually not needed.
+// The value is an nng_sockaddr corresponding to an IP (or IPv6) address.
+#define NNG_OPT_ZT_ADD_LOCAL_ADDR "zt:add-local-addr"
+
+// NNG_OPT_ZT_CLEAR_LOCAL_ADDRS clears ZeroTier's notion of all
+// local addresses.  This may be useful when used on a mobile node,
+// to reset the notion of what the local addresses are.  This
+// option takes no argument really.
+#define NNG_OPT_ZT_CLEAR_LOCAL_ADDRS "zt:clear-local-addrs"
+
 // Network status values.
 // These values are supplied to help folks checking status.  They are the
 // return values from zt_opt_status.  We avoid hard coding them as defines,
 // to keep applications from baking in values that may change if the
 // underlying ZeroTier transport changes.
 enum nng_zt_status {
-        NNG_ZT_STATUS_UP,
-        NNG_ZT_STATUS_CONFIG,
-        NNG_ZT_STATUS_DENIED,
-        NNG_ZT_STATUS_NOTFOUND,
-        NNG_ZT_STATUS_ERROR,
-        NNG_ZT_STATUS_OBSOLETE,
-        NNG_ZT_STATUS_UNKNOWN,
+	NNG_ZT_STATUS_UP,
+	NNG_ZT_STATUS_CONFIG,
+	NNG_ZT_STATUS_DENIED,
+	NNG_ZT_STATUS_NOTFOUND,
+	NNG_ZT_STATUS_ERROR,
+	NNG_ZT_STATUS_OBSOLETE,
+	NNG_ZT_STATUS_UNKNOWN,
 };
 
 NNG_DECL int nng_zt_register(void);
