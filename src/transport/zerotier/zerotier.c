@@ -1300,7 +1300,6 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	struct sockaddr_in6 *sin6 = (void *) remaddr;
 	zt_node *            ztn  = userptr;
 	nni_plat_udp *       udp;
-	uint16_t             port;
 	uint8_t *            buf;
 	zt_send_hdr *        hdr;
 	nni_iov              iov;
@@ -1319,13 +1318,11 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 		addr.s_in.sa_port   = sin->sin_port;
 		addr.s_in.sa_addr   = sin->sin_addr.s_addr;
 		udp                 = ztn->zn_udp4;
-		port                = htons(sin->sin_port);
 		break;
 	case AF_INET6:
 		addr.s_in6.sa_family = NNG_AF_INET6;
 		addr.s_in6.sa_port   = sin6->sin6_port;
 		udp                  = ztn->zn_udp6;
-		port                 = htons(sin6->sin6_port);
 		memcpy(addr.s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 		break;
 	default:
