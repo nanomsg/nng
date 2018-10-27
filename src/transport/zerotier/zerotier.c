@@ -523,11 +523,6 @@ zt_virtual_config(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
 				continue;
 			}
 			ep->ze_mtu = config->mtu;
-
-			if ((ep->ze_ndialer != NULL) &&
-			    (nni_list_first(&ep->ze_aios) != NULL)) {
-				zt_ep_send_conn_req(ep);
-			}
 		}
 		break;
 	case ZT_VIRTUAL_NETWORK_CONFIG_OPERATION_DESTROY:
