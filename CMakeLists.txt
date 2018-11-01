@@ -108,11 +108,25 @@ option (NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
 # Enable access to private APIs for our own use.
 add_definitions (-DNNG_PRIVATE)
 
+# We can use rlimit to configure the stack size for systems
+# that have too small defaults.  This is not used for Windows,
+# which can grow thread stacks sensibly.  (Note that NNG can get
+# by with a smallish stack, but application callbacks might require
+# larger values if using aio completion callbacks.)
+if (NOT WIN32)
+    option (NNG_SETSTACKSIZE "Use rlimit for thread stack size" OFF)
+    if (NNG_SETSTACKSIZE)
+        add_definitions(-DNNG_SETSTACKSIZE)
+    endif()
+    mark_as_advanced(NNG_SETSTACKSIZE)
+endif()
+
+
 option (NNG_ENABLE_TLS "Enable TLS protocol (requires mbedTLS" OFF)
 if (NNG_ENABLE_TLS)
     add_definitions(-DNNG_SUPP_TLS)
     set(NNG_SUPP_TLS ON)
-   endif()
+endif()
 
 option (NNG_ENABLE_HTTP "Enable HTTP API" ON)
 if (NNG_ENABLE_HTTP)
