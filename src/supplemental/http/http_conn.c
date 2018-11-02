@@ -8,6 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <ctype.h>
 #include <stdbool.h>
 #include <string.h>
 
@@ -27,6 +28,7 @@ enum read_flavor {
 	HTTP_RD_FULL,
 	HTTP_RD_REQ,
 	HTTP_RD_RES,
+	HTTP_RD_CHUNK,
 };
 
 enum write_flavor {
@@ -221,6 +223,23 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 
 	case HTTP_RD_RES:
 		rv = nni_http_res_parse(
+		    nni_aio_get_prov_extra(aio, 1), rbuf, cnt, &n);
+		conn->rd_get += n;
+		if (conn->rd_get == conn->rd_put) {
+			conn->rd_get = conn->rd_put = 0;
+		}
+		if (rv == NNG_EAGAIN) {
+			nni_iov iov1;
+			iov1.iov_buf = conn->rd_buf + conn->rd_put;
+			iov1.iov_len = conn->rd_bufsz - conn->rd_put;
+			nni_aio_set_iov(conn->rd_aio, 1, &iov1);
+			nni_aio_set_data(conn->rd_aio, 1, aio);
+			conn->rd(conn->sock, conn->rd_aio);
+		}
+		return (rv);
+
+	case HTTP_RD_CHUNK:
+		rv = nni_http_chunks_parse(
 		    nni_aio_get_prov_extra(aio, 1), rbuf, cnt, &n);
 		conn->rd_get += n;
 		if (conn->rd_get == conn->rd_put) {
@@ -524,6 +543,17 @@ nni_http_read_res(nni_http_conn *conn, nni_http_res *res, nni_aio *aio)
 {
 	SET_RD_FLAVOR(aio, HTTP_RD_RES);
 	nni_aio_set_prov_extra(aio, 1, res);
+
+	nni_mtx_lock(&conn->mtx);
+	http_rd_submit(conn, aio);
+	nni_mtx_unlock(&conn->mtx);
+}
+
+void
+nni_http_read_chunks(nni_http_conn *conn, nni_http_chunks *cl, nni_aio *aio)
+{
+	SET_RD_FLAVOR(aio, HTTP_RD_CHUNK);
+	nni_aio_set_prov_extra(aio, 1, cl);
 
 	nni_mtx_lock(&conn->mtx);
 	http_rd_submit(conn, aio);

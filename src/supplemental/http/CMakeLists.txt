@@ -16,6 +16,7 @@ if (NNG_SUPP_HTTP)
                 supplemental/http/http.h
                 supplemental/http/http_api.h
                 supplemental/http/http_client.c
+                supplemental/http/http_chunk.c
                 supplemental/http/http_conn.c
                 supplemental/http/http_msg.c
                 supplemental/http/http_public.c

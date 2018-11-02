@@ -58,7 +58,7 @@ If this header is absent, the request is assumed not to contain any data.
 NOTE: This specifically does not support the `Chunked` transfer-encoding.
 This is considered a bug, and is a deficiency for full HTTP/1.1 compliance.
 However, few clients send data in this format, so in practice this should
-not create few limitations.
+create few limitations.
 
 == RETURN VALUES
 

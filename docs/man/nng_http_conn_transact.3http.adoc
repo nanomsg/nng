@@ -48,11 +48,6 @@ exists.
 That function behaves similarily, but creates a connection on demand
 for the transaction, and disposes of it when finished.
 
-NOTE: This function does not support reading data sent using chunked
-transfer encoding, and if the server attempts to do so, the underlying
-connection will be closed and an `NNG_ENOTSUP` error will be returned.
-This limitation is considered a bug, and a fix is planned for the future.
-
 WARNING: If the remote server tries to send an extremely large buffer,
 then a corresponding allocation will be made, which can lead to denial
 of service attacks.
@@ -79,7 +74,7 @@ None.
 `NNG_ECLOSED`:: The connection was closed.
 `NNG_ECONNRESET`:: The peer closed the connection.
 `NNG_ENOMEM`:: Insufficient free memory to perform the operation.
-`NNG_ENOTSUP`:: HTTP operations are not supported, or peer sent chunked encoding.
+`NNG_ENOTSUP`:: HTTP operations are not supported.
 `NNG_EPROTO`:: An HTTP protocol error occurred.
 `NNG_ETIMEDOUT`:: Timeout waiting for data from the connection.
 

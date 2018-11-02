@@ -282,6 +282,7 @@ typedef enum http_txn_state {
 	HTTP_SENDING,
 	HTTP_RECVING,
 	HTTP_RECVING_BODY,
+	HTTP_RECVING_CHUNKS,
 } http_txn_state;
 
 typedef struct http_txn {
@@ -291,6 +292,7 @@ typedef struct http_txn {
 	nni_http_conn *  conn;
 	nni_http_req *   req;
 	nni_http_res *   res;
+	nni_http_chunks *chunks;
 	http_txn_state   state;
 	nni_reap_item    reap;
 } http_txn;
@@ -306,26 +308,36 @@ http_txn_reap(void *arg)
 			txn->conn = NULL;
 		}
 	}
+	nni_http_chunks_free(txn->chunks);
 	nni_aio_fini(txn->aio);
 	NNI_FREE_STRUCT(txn);
 }
 
 static void
+http_txn_finish_aios(http_txn *txn, int rv)
+{
+	nni_aio *aio;
+	while ((aio = nni_list_first(&txn->aios)) != NULL) {
+		nni_list_remove(&txn->aios, aio);
+		nni_aio_finish_error(aio, rv);
+	}
+}
+
+static void
 http_txn_cb(void *arg)
 {
-	http_txn *  txn = arg;
-	const char *str;
-	nni_aio *   aio;
-	int         rv;
-	uint64_t    len;
-	nni_iov     iov;
+	http_txn *      txn = arg;
+	const char *    str;
+	int             rv;
+	uint64_t        len;
+	nni_iov         iov;
+	char *          dst;
+	size_t          sz;
+	nni_http_chunk *chunk = NULL;
 
 	nni_mtx_lock(&http_txn_lk);
 	if ((rv = nni_aio_result(txn->aio)) != 0) {
-		while ((aio = nni_list_first(&txn->aios)) != NULL) {
-			nni_list_remove(&txn->aios, aio);
-			nni_aio_finish_error(aio, rv);
-		}
+		http_txn_finish_aios(txn, rv);
 		nni_mtx_unlock(&http_txn_lk);
 		nni_reap(&txn->reap, http_txn_reap, txn);
 		return;
@@ -345,22 +357,22 @@ http_txn_cb(void *arg)
 		return;
 
 	case HTTP_RECVING:
+
+		// Detect chunked encoding.  You poor bastard.
 		if (((str = nni_http_res_get_header(
 		          txn->res, "Transfer-Encoding")) != NULL) &&
 		    (strstr(str, "chunked") != NULL)) {
-			// We refuse to receive chunked encoding data.
-			// This is an implementation limitation, but as HTTP/2
-			// has eliminated this encoding, maybe it's not that
-			// big of a deal.  We forcibly close this.
-			while ((aio = nni_list_first(&txn->aios)) != NULL) {
-				nni_list_remove(&txn->aios, aio);
-				nni_aio_finish_error(aio, NNG_ENOTSUP);
+
+			if ((rv = nni_http_chunks_init(&txn->chunks, 0)) !=
+			    0) {
+				goto error;
 			}
-			nni_http_conn_close(txn->conn);
+			txn->state = HTTP_RECVING_CHUNKS;
+			nni_http_read_chunks(txn->conn, txn->chunks, txn->aio);
 			nni_mtx_unlock(&http_txn_lk);
-			nni_reap(&txn->reap, http_txn_reap, txn);
 			return;
 		}
+
 		str = nni_http_req_get_method(txn->req);
 		if ((nni_strcasecmp(str, "HEAD") == 0) ||
 		    ((str = nni_http_res_get_header(
@@ -368,16 +380,16 @@ http_txn_cb(void *arg)
 		    (nni_strtou64(str, &len) != 0) || (len == 0)) {
 			// If no content-length, or HEAD (which per RFC
 			// never transfers data), then we are done.
-			while ((aio = nni_list_first(&txn->aios)) != NULL) {
-				nni_list_remove(&txn->aios, aio);
-				nni_aio_finish(aio, 0, 0);
-			}
+			http_txn_finish_aios(txn, 0);
 			nni_mtx_unlock(&http_txn_lk);
 			nni_reap(&txn->reap, http_txn_reap, txn);
 			return;
 		}
 
-		nni_http_res_alloc_data(txn->res, (size_t) len);
+		if ((rv = nni_http_res_alloc_data(txn->res, (size_t) len)) !=
+		    0) {
+			goto error;
+		}
 		nni_http_res_get_data(txn->res, &iov.iov_buf, &iov.iov_len);
 		nni_aio_set_iov(txn->aio, 1, &iov);
 		txn->state = HTTP_RECVING_BODY;
@@ -387,16 +399,36 @@ http_txn_cb(void *arg)
 
 	case HTTP_RECVING_BODY:
 		// All done!
-		while ((aio = nni_list_first(&txn->aios)) != NULL) {
-			nni_list_remove(&txn->aios, aio);
-			nni_aio_finish(aio, 0, 0);
+		http_txn_finish_aios(txn, 0);
+		nni_mtx_unlock(&http_txn_lk);
+		nni_reap(&txn->reap, http_txn_reap, txn);
+		return;
+
+	case HTTP_RECVING_CHUNKS:
+		// All done, but now we need to coalesce the chunks, for
+		// yet *another* copy.  Chunked transfers are such crap.
+		sz = nni_http_chunks_size(txn->chunks);
+		if ((rv = nni_http_res_alloc_data(txn->res, sz)) != 0) {
+			goto error;
 		}
+		nni_http_res_get_data(txn->res, (void **) &dst, &sz);
+		while ((chunk = nni_http_chunks_iter(txn->chunks, chunk)) !=
+		    NULL) {
+			memcpy(dst, nni_http_chunk_data(chunk),
+			    nni_http_chunk_size(chunk));
+			dst += nni_http_chunk_size(chunk);
+		}
+		http_txn_finish_aios(txn, 0);
 		nni_mtx_unlock(&http_txn_lk);
 		nni_reap(&txn->reap, http_txn_reap, txn);
 		return;
 	}
 
-	NNI_ASSERT(0); // Unknown state!
+error:
+	http_txn_finish_aios(txn, rv);
+	nni_http_conn_close(txn->conn);
+	nni_mtx_unlock(&http_txn_lk);
+	nni_reap(&txn->reap, http_txn_reap, txn);
 }
 
 static void

@@ -27,6 +27,8 @@ typedef struct nng_http_conn    nni_http_conn;
 typedef struct nng_http_handler nni_http_handler;
 typedef struct nng_http_server  nni_http_server;
 typedef struct nng_http_client  nni_http_client;
+typedef struct nng_http_chunk   nni_http_chunk;
+typedef struct nng_http_chunks  nni_http_chunks;
 
 // These functions are private to the internal framework, and really should
 // not be used elsewhere.
@@ -45,6 +47,33 @@ extern int   nni_http_res_get_buf(nni_http_res *, void **, size_t *);
 extern int   nni_http_res_parse(nni_http_res *, void *, size_t, size_t *);
 extern void  nni_http_res_get_data(nni_http_res *, void **, size_t *);
 extern char *nni_http_res_headers(nni_http_res *);
+
+// Chunked transfer encoding.  For the moment this is not part of our public
+// API.  We can change that later.
+
+// nni_http_chunk_list_init creates a list of chunks, which shall not exceed
+// the specified overall size.  (Size 0 means no limit.)
+extern int nni_http_chunks_init(nni_http_chunks **, size_t);
+
+extern void nni_http_chunks_free(nni_http_chunks *);
+
+// nni_http_chunk_iter iterates over all chunks in the list.
+// Pass NULL for the last chunk to start at the head.  Returns NULL when done.
+extern nni_http_chunk *nni_http_chunks_iter(
+    nni_http_chunks *, nni_http_chunk *);
+
+// nni_http_chunk_list_size returns the combined size of all chunks in list.
+extern size_t nni_http_chunks_size(nni_http_chunks *);
+
+// nni_http_chunk_size returns the size of given chunk.
+extern size_t nni_http_chunk_size(nni_http_chunk *);
+// nni_http_chunk_data returns a pointer to the data.
+extern void *nni_http_chunk_data(nni_http_chunk *);
+
+extern int nni_http_chunks_parse(nni_http_chunks *, void *, size_t, size_t *);
+
+extern void nni_http_read_chunks(
+    nni_http_conn *, nni_http_chunks *, nni_aio *);
 
 // Private to the server. (Used to support session hijacking.)
 extern void  nni_http_conn_set_ctx(nni_http_conn *, void *);
