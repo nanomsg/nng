@@ -122,6 +122,27 @@ TestMain("Socket Operations", {
 				nng_strfree(allocd);
 			});
 
+			Convey("Oversize sockname handled right", {
+				char   name[256]; // 64 is max
+				size_t sz = sizeof(name);
+				memset(name, 'A', sz);
+				So(nng_setopt(s1, NNG_OPT_SOCKNAME, name,
+				       sz) == NNG_EINVAL);
+				name[sz - 1] = '\0';
+				So(nng_setopt(s1, NNG_OPT_SOCKNAME, name,
+				       sz) == NNG_EINVAL);
+
+				strcpy(name, "hello");
+				So(nng_setopt(
+				       s1, NNG_OPT_SOCKNAME, name, sz) == 0);
+				sz = sizeof(name);
+				memset(name, 'B', sz);
+				So(nng_getopt(
+				       s1, NNG_OPT_SOCKNAME, name, &sz) == 0);
+				So(sz == 6);
+				So(strcmp(name, "hello") == 0);
+			});
+
 			Convey("RAW option works", {
 				bool raw;
 				So(nng_getopt_bool(s1, NNG_OPT_RAW, &raw) ==

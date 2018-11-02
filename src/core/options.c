@@ -157,9 +157,6 @@ nni_copyin_str(char *s, const void *v, size_t sz, size_t maxsz, nni_opt_type t)
 
 	switch (t) {
 	case NNI_TYPE_STRING:
-		z = strlen(v) + 1;
-		NNI_ASSERT(sz == z);
-		break;
 	case NNI_TYPE_OPAQUE:
 		if ((z = nni_strnlen(v, sz)) >= sz) {
 			return (NNG_EINVAL); // missing terminator
