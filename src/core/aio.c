@@ -124,10 +124,7 @@ nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 	aio->a_timeout   = NNG_DURATION_INFINITE;
 	aio->a_iov       = aio->a_iovinl;
 	aio->a_niovalloc = 0;
-	if (arg == NULL) {
-		arg = aio;
-	}
-	*aiop = aio;
+	*aiop            = aio;
 	return (0);
 }
 
