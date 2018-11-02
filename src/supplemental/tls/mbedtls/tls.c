@@ -412,7 +412,7 @@ nni_tls_send_cb(void *ctx)
 		tp->tcp_closed = true;
 	} else {
 		size_t n = nni_aio_count(aio);
-		NNI_ASSERT(tp->sendlen <= n);
+		NNI_ASSERT(tp->sendlen >= n);
 		tp->sendlen -= n;
 		if (tp->sendlen) {
 			nni_iov iov;
