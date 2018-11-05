@@ -9,11 +9,15 @@
 #
 
 #  Bus protocol
+option (NNG_PROTO_BUS0 "Enable BUSv0 protocol." ON)
+mark_as_advanced(NNG_PROTO_BUS0)
 
 if (NNG_PROTO_BUS0)
-    set(BUS0_SOURCES protocol/bus0/bus.c protocol/bus0/bus.h)
-    set(BUS0_HEADERS protocol/bus0/bus.h)
-endif()
+    set(_DEFS -DNNG_HAVE_BUS0)
+    set(_SRCS protocol/bus0/bus.c protocol/bus0/bus.h)
+    set(_HDRS protocol/bus0/bus.h)
 
-set(NNG_SOURCES ${NNG_SOURCES} ${BUS0_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${BUS0_HEADERS} PARENT_SCOPE)
+    set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+    set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
+endif()

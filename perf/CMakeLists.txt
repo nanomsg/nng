@@ -4,6 +4,7 @@
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
 #   Copyright 2016 Garrett D'Amore <garrett@damore.org>
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
+#   Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -24,7 +25,7 @@
 #   IN THE SOFTWARE.
 #
 
-#  Build unit tests.
+#  Build performance tests.
 
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src)
 
@@ -32,11 +33,7 @@ if (NNG_TESTS)
      macro (add_nng_perf NAME)
         add_executable (${NAME} perf.c)
         target_link_libraries (${NAME} ${PROJECT_NAME})
-        target_link_libraries (${NAME} ${NNG_REQUIRED_LIBRARIES})
         target_compile_definitions(${NAME} PUBLIC)
-        if (CMAKE_THREAD_LIBS_INIT)
-            target_link_libraries (${NAME} "${CMAKE_THREAD_LIBS_INIT}")
-        endif()
     endmacro (add_nng_perf)
 
     add_nng_perf(remote_lat)

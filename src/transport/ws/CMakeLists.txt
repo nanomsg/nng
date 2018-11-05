@@ -9,11 +9,33 @@
 #
 
 # WebSocket transport
+option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
+mark_as_advanced(NNG_TRANSPORT_WS)
+
+CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_WSS "Enable WSS transport" ON
+    "NNG_ENABLE_TLS" OFF)
+mark_as_advanced(NNG_TRANSPORT_WSS)
+
+set(_DEFS)
 
 if (NNG_TRANSPORT_WS)
-    set(WS_SOURCES transport/ws/websocket.c transport/ws/websocket.h)
-    set(WS_HEADERS transport/ws/websocket.h)
+    list(APPEND _DEFS -DNNG_TRANSPORT_WS)
+endif()
+if (NNG_TRANSPORT_WSS)
+    list(APPEND _DEFS -DNNG_TRANSPORT_WSS)
 endif()
 
-set(NNG_SOURCES ${NNG_SOURCES} ${WS_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${WS_HEADERS} PARENT_SCOPE)
+if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
+
+    # Make sure things we *MUST* have are enabled.
+    set(NNG_SUPP_WEBSOCKET ON PARENT_SCOPE)
+    set(NNG_SUPP_HTTP ON PARENT_SCOPE)
+    set(NNG_SUPP_BASE64 ON PARENT_SCOPE)
+    set(NNG_SUPP_SHA1 ON PARENT_SCOPE)
+
+    set(_SRCS transport/ws/websocket.c transport/ws/websocket.h)
+    set(_HDRS transport/ws/websocket.h)
+    set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+    set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
+endif()

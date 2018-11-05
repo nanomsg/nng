@@ -1,6 +1,6 @@
 #
 # Copyright 2017 Capitar IT Group BV <info@capitar.com>
-# Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -9,8 +9,8 @@
 #
 
 if (NNG_SUPP_BASE64)
-        set(BASE64_SOURCES
+        set(_SRCS
                 supplemental/base64/base64.c
                 supplemental/base64/base64.h)
+        set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
 endif()
-set(NNG_SOURCES ${NNG_SOURCES} ${BASE64_SOURCES} PARENT_SCOPE)

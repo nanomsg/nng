@@ -9,11 +9,15 @@
 #
 
 #  PAIRv1 protocol
+option (NNG_PROTO_PAIR1 "Enable PAIRv1 protocol." ON)
+mark_as_advanced(NNG_PROTO_PAIR1)
 
 if (NNG_PROTO_PAIR1)
-    set(PAIR1_SOURCES protocol/pair1/pair.c protocol/pair1/pair.h)
-    set(PAIR1_HEADERS protocol/pair1/pair.h)
-endif()
+    set(_DEFS -DNNG_HAVE_PAIR1)
+    set(_SRCS protocol/pair1/pair.c protocol/pair1/pair.h)
+    set(_HDRS protocol/pair1/pair.h)
 
-set(NNG_SOURCES ${NNG_SOURCES} ${PAIR1_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${PAIR1_HEADERS} PARENT_SCOPE)
+    set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+    set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
+endif()

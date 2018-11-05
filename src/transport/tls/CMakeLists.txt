@@ -9,11 +9,16 @@
 #
 
 # TLS transport
+CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_TLS "Enable TLS transport" ON
+    "NNG_ENABLE_TLS" OFF)
+mark_as_advanced(NNG_TRANSPORT_TLS)
 
 if (NNG_TRANSPORT_TLS)
-    set(TLS_SOURCES transport/tls/tls.c transport/tls/tls.h)
-    set(TLS_HEADERS transport/tls/tls.h)
-endif()
+    set(_DEFS -DNNG_TRANSPORT_TLS)
+    set(_SRCS transport/tls/tls.c transport/tls/tls.h)
+    set(_HDRS transport/tls/tls.h)
 
-set(NNG_SOURCES ${NNG_SOURCES} ${TLS_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${TLS_HEADERS} PARENT_SCOPE)
+    set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+    set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
+endif()

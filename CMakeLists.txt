@@ -46,6 +46,11 @@ if (POLICY CMP0042)
     cmake_policy (SET CMP0042 NEW)
 endif ()
 
+if (POLICY CMP0028)
+    # Double colon targets are only alias or imports.
+    cmake_policy (SET CMP0028 NEW)
+endif ()
+
 set(CMAKE_C_STANDARD 99)
 set (CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 list (FIND CMAKE_PLATFORM_IMPLICIT_LINK_DIRECTORIES "${CMAKE_INSTALL_PREFIX}/${CMAKE_INSTALL_LIBDIR}" isSystemDir)
@@ -86,7 +91,13 @@ elseif (GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
 else ()
     set (NNG_PACKAGE_VERSION "Unknown")
 endif()
+if ("${NNG_PACKAGE_VERSION}" MATCHES "v[0-9]")
+    string(SUBSTRING "${NNG_PACKAGE_VERSION}" 1 -1 NNG_PACKAGE_VERSION)
+endif()
 
+string(REGEX REPLACE "([0-9]+).[0-9]+.+" "\\1" NNG_VERSION_MAJOR "${NNG_PACKAGE_VERSION}")
+string(REGEX REPLACE "[0-9]+.([0-9]+).[0-9].+" "\\1" NNG_VERSION_MINOR "${NNG_PACKAGE_VERSION}")
+string(REGEX REPLACE "[0-9]+.[0-9]+.([0-9]+).*" "\\1" NNG_VERSION_PATCH "${NNG_PACKAGE_VERSION}")
 
 # User-defined options.
 
@@ -121,152 +132,17 @@ if (NOT WIN32)
     mark_as_advanced(NNG_SETSTACKSIZE)
 endif()
 
-
-option (NNG_ENABLE_TLS "Enable TLS protocol (requires mbedTLS" OFF)
+option (NNG_ENABLE_TLS "Enable TLS protocol (requires mbedTLS)" OFF)
 if (NNG_ENABLE_TLS)
     add_definitions(-DNNG_SUPP_TLS)
     set(NNG_SUPP_TLS ON)
 endif()
-
-option (NNG_ENABLE_HTTP "Enable HTTP API" ON)
-if (NNG_ENABLE_HTTP)
-    set(NNG_SUPP_HTTP ON)
-endif()
-mark_as_advanced(NNG_ENABLE_HTTP)
 
 option (NNG_ENABLE_STATS "Enable statistics" ON)
 if (NNG_ENABLE_STATS)
     add_definitions(-DNNG_ENABLE_STATS)
 endif()
 mark_as_advanced(NNG_ENABLE_STATS)
-
-option (NNG_PROTO_BUS0 "Enable BUSv0 protocol." ON)
-if (NNG_PROTO_BUS0)
-    add_definitions (-DNNG_HAVE_BUS0)
-endif ()
-mark_as_advanced(NNG_PROTO_BUS0)
-
-option (NNG_PROTO_PAIR0 "Enable PAIRv0 protocol." ON)
-if (NNG_PROTO_PAIR0)
-    add_definitions (-DNNG_HAVE_PAIR0)
-endif ()
-mark_as_advanced(NNG_PROTO_PAIR0)
-
-option (NNG_PROTO_PAIR1 "Enable PAIRv1 protocol." ON)
-if (NNG_PROTO_PAIR1)
-    add_definitions (-DNNG_HAVE_PAIR1)
-endif ()
-mark_as_advanced(NNG_PROTO_PAIR1)
-
-option (NNG_PROTO_REQ0 "Enable REQv0 protocol." ON)
-if (NNG_PROTO_REQ0)
-    add_definitions (-DNNG_HAVE_REQ0)
-endif ()
-mark_as_advanced(NNG_PROTO_REQ0)
-
-option (NNG_PROTO_REP0 "Enable REPv0 protocol." ON)
-if (NNG_PROTO_REP0)
-    add_definitions (-DNNG_HAVE_REP0)
-endif ()
-mark_as_advanced(NNG_PROTO_REP0)
-
-option (NNG_PROTO_PUB0 "Enable PUBv0 protocol." ON)
-if (NNG_PROTO_PUB0)
-    add_definitions (-DNNG_HAVE_PUB0)
-endif ()
-mark_as_advanced(NNG_PROTO_PUB0)
-
-option (NNG_PROTO_SUB0 "Enable SUBv0 protocol." ON)
-if (NNG_PROTO_SUB0)
-    add_definitions (-DNNG_HAVE_SUB0)
-endif ()
-mark_as_advanced(NNG_PROTO_SUB0)
-
-option (NNG_PROTO_PUSH0 "Enable PUSHv0 protocol." ON)
-if (NNG_PROTO_PUSH0)
-    add_definitions (-DNNG_HAVE_PUSH0)
-endif ()
-mark_as_advanced(NNG_PROTO_PUSH0)
-
-option (NNG_PROTO_PULL0 "Enable PULLv0 protocol." ON)
-if (NNG_PROTO_PULL0)
-    add_definitions (-DNNG_HAVE_PULL0)
-endif ()
-mark_as_advanced(NNG_PROTO_PULL0)
-
-option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
-if (NNG_PROTO_SURVEYOR0)
-    add_definitions (-DNNG_HAVE_SURVEYOR0)
-endif ()
-mark_as_advanced(NNG_PROTO_SURVEYOR0)
-
-option (NNG_PROTO_RESPONDENT0 "Enable RESPONDENTv0 protocol." ON)
-if (NNG_PROTO_RESPONDENT0)
-    add_definitions (-DNNG_HAVE_RESPONDENT0)
-endif ()
-mark_as_advanced(NNG_PROTO_RESPONDENT0)
-
-option (NNG_TRANSPORT_INPROC "Enable inproc transport." ON)
-if (NNG_TRANSPORT_INPROC)
-    add_definitions (-DNNG_TRANSPORT_INPROC)
-endif ()
-mark_as_advanced(NNG_TRANSPORT_INPROC)
-
-option (NNG_TRANSPORT_IPC "Enable IPC transport." ON)
-if (NNG_TRANSPORT_IPC)
-    add_definitions (-DNNG_TRANSPORT_IPC)
-endif ()
-mark_as_advanced(NNG_TRANSPORT_IPC)
-
-option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
-if (NNG_TRANSPORT_TCP)
-    add_definitions (-DNNG_TRANSPORT_TCP)
-endif ()
-mark_as_advanced(NNG_TRANSPORT_TCP)
-
-CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_TLS "Enable TLS transport" ON
-    "NNG_ENABLE_TLS" OFF)
-
-if (NNG_TRANSPORT_TLS)
-    set(NNG_SUPP_TLS ON)
-    add_definitions (-DNNG_TRANSPORT_TLS)
-endif()
-mark_as_advanced(NNG_TRANSPORT_TLS)
-
-option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
-if (NNG_TRANSPORT_WS)
-    add_definitions (-DNNG_TRANSPORT_WS)
-    set(NNG_SUPP_WEBSOCKET ON)
-endif ()
-mark_as_advanced(NNG_TRANSPORT_WS)
-
-CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_WSS "Enable WSS transport" ON
-    "NNG_ENABLE_TLS" OFF)
-if (NNG_TRANSPORT_WSS)
-    add_definitions (-DNNG_TRANSPORT_WSS)
-    set(NNG_SUPP_WEBSOCKET ON)
-endif ()
-mark_as_advanced(NNG_TRANSPORT_WSS)
-
-option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
-if (NNG_TRANSPORT_ZEROTIER)
-    find_package(zerotiercore REQUIRED)
-    add_definitions (-DNNG_TRANSPORT_ZEROTIER)
-endif ()
-mark_as_advanced(NNG_TRANSPORT_ZEROTIER)
-
-
-# dependencies
-if (NNG_SUPP_WEBSOCKET)
-    set(NNG_SUPP_HTTP ON)
-    set(NNG_SUPP_BASE64 ON)
-    set(NNG_SUPP_SHA1 ON)
-endif()
-
-# Extra defines.
-if (NNG_SUPP_TLS)
-    add_definitions (-DNNG_SUPP_TLS)
-endif()
 
 #  Platform checks.
 
@@ -317,10 +193,6 @@ if (NOT WIN32 AND NOT CYGWIN)
         add_definitions (-DNNG_HIDDEN_VISIBILITY)
     endif()
 endif()
-
-
-
-find_package (Threads REQUIRED)
 
 if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     add_definitions (-DNNG_PLATFORM_POSIX)
@@ -393,7 +265,6 @@ else ()
     message (AUTHOR_WARNING "WARNING: This platform may not be supported: ${CMAKE_SYSTEM_NAME}")
     message (AUTHOR_WARNING "${ISSUE_REPORT_MSG}")
     # blithely hope for POSIX to work
-    find_package (Threads REQUIRED)
     add_definitions (-DPLATFORM_POSIX)
 endif ()
 
@@ -415,7 +286,7 @@ macro (nng_check_lib LIB SYM DEF)
     check_library_exists (${LIB} ${SYM} "" ${DEF})
     if (${DEF})
         add_definitions (-D${DEF}=1)
-        set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} ${LIB})
+        list(APPEND NNG_LIBS ${LIB})
     endif ()
 endmacro (nng_check_lib)
 
@@ -428,9 +299,7 @@ endmacro (nng_check_struct_member)
 
 if (WIN32)
     # Windows is a special snowflake.
-    set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} ws2_32)
-    set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} mswsock)
-    set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} advapi32)
+    list(APPEND NNG_LIBS ws2_32 mswsock advapi32)
     nng_check_sym (InitializeConditionVariable windows.h NNG_HAVE_CONDVAR)
     nng_check_sym (snprintf stdio.h NNG_HAVE_SNPRINTF)
     if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF)
@@ -449,6 +318,8 @@ else ()
     add_definitions (-D_REENTRANT)
     add_definitions (-D_THREAD_SAFE)
     add_definitions (-D_POSIX_PTHREAD_SEMANTICS)
+    list(APPEND NNG_PKGS Threads)
+    find_package(Threads REQUIRED)
 
     nng_check_func (lockf NNG_HAVE_LOCKF)
     nng_check_func (flock NNG_HAVE_FLOCK)
@@ -494,13 +365,17 @@ endif()
 
 add_subdirectory (src)
 
+foreach(_PKG IN ITEMS ${NNG_PKGS})
+	find_package(${_PKG} REQUIRED)
+endforeach ()
+add_definitions(${NNG_DEFS})
+
 if (NNG_TESTS)
 	enable_testing()
 	set(all_tests, "")
 	add_subdirectory (tests)
     add_subdirectory (perf)
 endif()
-
 
 #  Build the tools
 
@@ -518,10 +393,10 @@ set (CPACK_PACKAGE_DESCRIPTION_SUMMARY "nanomsg next generation library")
 set (CPACK_SOURCE_GENERATOR "TBZ2;TGZ;ZIP")
 set (CPACK_SOURCE_IGNORE_FILES "/build/;/.git/;~$;${CPACK_SOURCE_IGNORE_FILES}")
 set (CPACK_SOURCE_PACKAGE_FILE_NAME
-	"${PROJECT_NAME}-${NNG_PACKAGE_VERSION}-src")
+	"${PROJECT_NAME}-v${NNG_PACKAGE_VERSION}-src")
 set (CPACK_RESOURCE_FILE_LICENSE ${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.txt)
 set (CPACK_PACKAGE_INSTALL_DIRECTORY "nng")
-set (CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-${NNG_PACKAGE_VERSION}")
+set (CPACK_PACKAGE_FILE_NAME "${PROJECT_NAME}-v${NNG_PACKAGE_VERSION}")
 
 add_custom_target(dist COMMAND ${CMAKE_MAKE_PROGRAM} package_source)
 include (CPack)

@@ -10,6 +10,9 @@
 
 # ZeroTier protocol
 
+option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
+mark_as_advanced(NNG_TRANSPORT_ZEROTIER)
+
 if (NNG_TRANSPORT_ZEROTIER)
 
     # The zerotiercore project will have been found at the top level
@@ -27,12 +30,18 @@ if (NNG_TRANSPORT_ZEROTIER)
         Consult a lawyer and the license files for details.
         ************************************************************")
 
-    set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} zerotiercore::zerotiercore)
-    set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} PARENT_SCOPE)
+    find_package(zerotiercore REQUIRED)
+    set(_PKGS zerotiercore)
+    set(_LIBS zerotiercore::zerotiercore)
+    set(_DEFS -DNNG_TRANSPORT_ZEROTIER)
 
-    set(ZT_SOURCES transport/zerotier/zerotier.c transport/zerotier/zerotier.h)
-    set(ZT_HEADERS transport/zerotier/zerotier.h)
+    set(_SRCS transport/zerotier/zerotier.c transport/zerotier/zerotier.h)
+    set(_HDRS transport/zerotier/zerotier.h)
 
-    set(NNG_SOURCES ${NNG_SOURCES} ${ZT_SOURCES} PARENT_SCOPE)
-    set(NNG_HEADERS ${NNG_HEADERS} ${ZT_HEADERS} PARENT_SCOPE)
+    set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+    set(NNG_LIBS ${NNG_LIBS} ${_LIBS} PARENT_SCOPE)
+    set(NNG_PKGS ${NNG_PKGS} ${_PKGS} PARENT_SCOPE)
+    set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
+
 endif()

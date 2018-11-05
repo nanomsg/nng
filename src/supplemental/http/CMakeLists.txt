@@ -8,28 +8,26 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
+option (NNG_ENABLE_HTTP "Enable HTTP API" ON)
+if (NNG_ENABLE_HTTP)
+    set(NNG_SUPP_HTTP ON)
+endif()
+mark_as_advanced(NNG_ENABLE_HTTP)
+
+set(_HDRS supplemental/http/http.h)
+set(_SRCS ${_HDRS} supplemental/http/http_public.c supplemental/http/http_api.h)
+
 if (NNG_SUPP_HTTP)
-        set(HTTP_DEFINES -DNNG_SUPP_HTTP)
-        set(HTTP_HEADERS
-                supplemental/http/http.h)
-        set(HTTP_SOURCES
-                supplemental/http/http.h
-                supplemental/http/http_api.h
+        set(_DEFS -DNNG_SUPP_HTTP)
+        list(APPEND _SRCS
                 supplemental/http/http_client.c
                 supplemental/http/http_chunk.c
                 supplemental/http/http_conn.c
                 supplemental/http/http_msg.c
                 supplemental/http/http_public.c
                 supplemental/http/http_server.c)
-else()
-        set(HTTP_SOURCES
-                supplemental/http/http.h
-                supplemental/http/http_api.h
-                supplemental/http/http_public.c)
-        set(HTTP_HEADERS
-                supplemental/http/http.h)
 endif()
 
-set(NNG_DEFINES ${NNG_DEFINES} ${HTTP_DEFINES} PARENT_SCOPE)
-set(NNG_SOURCES ${NNG_SOURCES} ${HTTP_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${HTTP_HEADERS} PARENT_SCOPE)
+set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)

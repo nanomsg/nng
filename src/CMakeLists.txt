@@ -24,7 +24,8 @@
 #   IN THE SOFTWARE.
 #
 
-set (NNG_SOURCES
+set (NNG_HDRS nng.h)
+set (NNG_SRCS
     nng.c
     nng.h
 
@@ -87,7 +88,10 @@ set (NNG_SOURCES
 )
 
 if (NNG_PLATFORM_POSIX)
-    set (NNG_SOURCES ${NNG_SOURCES}
+    find_package (Threads REQUIRED)
+    set(NNG_LIBS Threads::Threads)
+
+    set (NNG_SRCS ${NNG_SRCS}
         platform/posix/posix_impl.h
         platform/posix/posix_ipc.h
         platform/posix/posix_config.h
@@ -114,26 +118,26 @@ if (NNG_PLATFORM_POSIX)
     )
 
     if (NNG_HAVE_PORT_CREATE)
-        set (NNG_SOURCES ${NNG_SOURCES}
+        set (NNG_SRCS ${NNG_SRCS}
             platform/posix/posix_pollq_port.c
         )
     elseif (NNG_HAVE_KQUEUE)
-        set (NNG_SOURCES ${NNG_SOURCES}
+        set (NNG_SRCS ${NNG_SRCS}
             platform/posix/posix_pollq_kqueue.c
         )
     elseif (NNG_HAVE_EPOLL AND NNG_HAVE_EVENTFD)
-        set (NNG_SOURCES ${NNG_SOURCES}
+        set (NNG_SRCS ${NNG_SRCS}
             platform/posix/posix_pollq_epoll.c
         )
     else()
-        set (NNG_SOURCES ${NNG_SOURCES}
+        set (NNG_SRCS ${NNG_SRCS}
             platform/posix/posix_pollq_poll.c
         )
     endif()
 endif()
 
 if (NNG_PLATFORM_WINDOWS)
-    set (NNG_SOURCES ${NNG_SOURCES}
+    set (NNG_SRCS ${NNG_SRCS}
         platform/windows/win_impl.h
         platform/windows/win_ipc.h
         platform/windows/win_tcp.h
@@ -158,16 +162,8 @@ if (NNG_PLATFORM_WINDOWS)
         )
 endif()
 
-set (NNG_HEADERS nng.h)
 
 add_subdirectory(compat/nanomsg)
-
-add_subdirectory(supplemental/base64)
-add_subdirectory(supplemental/http)
-add_subdirectory(supplemental/sha1)
-add_subdirectory(supplemental/tls)
-add_subdirectory(supplemental/util)
-add_subdirectory(supplemental/websocket)
 
 add_subdirectory(protocol/bus0)
 add_subdirectory(protocol/pair0)
@@ -184,14 +180,24 @@ add_subdirectory(transport/tls)
 add_subdirectory(transport/ws)
 add_subdirectory(transport/zerotier)
 
-include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src
-    ${NNG_REQUIRED_INCLUDES})
+add_subdirectory(supplemental/base64)
+add_subdirectory(supplemental/http)
+add_subdirectory(supplemental/sha1)
+add_subdirectory(supplemental/tls)
+add_subdirectory(supplemental/util)
+add_subdirectory(supplemental/websocket)
 
-add_definitions(${NNG_DEFINES})
+include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src ${NNG_INCS})
+
+add_definitions(${NNG_DEFS})
+
+foreach(_PKG IN ITEMS ${NNG_PKGS})
+	find_package(${_PKG} REQUIRED)
+endforeach ()
 
 # Provide same folder structure in IDE as on disk
 # XXX: Consider replacing this with source_group(TREE...)
-foreach (f ${NNG_SOURCES})
+foreach (f ${NNG_SRCS})
     # Get the path of the file relative to source directory
     if (IS_ABSOLUTE "${f}")
         file (RELATIVE_PATH f ${CMAKE_CURRENT_SOURCE_DIR} ${f})
@@ -207,8 +213,9 @@ foreach (f ${NNG_SOURCES})
     source_group ("${SRC_GROUP}" FILES ${f})
 endforeach ()
 
+
 # Library
-add_library (${PROJECT_NAME} ${NNG_SOURCES})
+add_library (${PROJECT_NAME} ${NNG_SRCS})
 
 # When building shared libraries we prefer to suppress default symbol
 # visibility, so that only the symbols that should be exposed in the
@@ -237,33 +244,62 @@ set_target_properties (${PROJECT_NAME}
 set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}
 	PROPERTIES FRAMEWORK OFF)
 
-target_link_libraries (${PROJECT_NAME} PRIVATE ${NNG_REQUIRED_LIBRARIES})
-target_link_libraries (${PROJECT_NAME} PRIVATE Threads::Threads)
+target_link_libraries (${PROJECT_NAME} PRIVATE ${NNG_LIBS})
 
 target_include_directories (${PROJECT_NAME} INTERFACE $<INSTALL_INTERFACE:include>)
 
 install (TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-target
-    FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
-    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
-    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT library
-    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT tools
+    FRAMEWORK DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Library
+    ARCHIVE DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Library
+    LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} COMPONENT Library
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} COMPONENT Tools
 )
 
 install (EXPORT ${PROJECT_NAME}-target
-    FILE ${PROJECT_NAME}-config.cmake
+    FILE ${PROJECT_NAME}-targets.cmake
     NAMESPACE nng::
     DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}
+    COMPONENT Library
 )
 
 # Install the header files.  It would be much better if we could use
 # the PUBLIC_HEADER facility, but it stupidly flattens the directories.
-foreach (f ${NNG_HEADERS})
+foreach (f ${NNG_HDRS})
 	get_filename_component(d ${f} DIRECTORY)
 	install(FILES ${f}
 		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nng/${d}
-		COMPONENT headers)
+		COMPONENT Headers)
 endforeach()
 
 # Promote settings to parent
-set(NNG_REQUIRED_LIBRARIES ${NNG_REQUIRED_LIBRARIES} PARENT_SCOPE)
+set(NNG_LIBS ${NNG_LIBS} PARENT_SCOPE)
+set(NNG_PKGS ${NNG_PKGS} PARENT_SCOPE)
+set(NNG_DEFS ${NNG_DEFS} PARENT_SCOPE)
+
+# These are promoted for testing
+set(NNG_SUPP_BASE64 ${NNG_SUPP_BASE64} PARENT_SCOPE)
+set(NNG_SUPP_HTTP ${NNG_SUPP_HTTP} PARENT_SCOPE)
+set(NNG_SUPP_SHA1 ${NNG_SUPP_SHA1} PARENT_SCOPE)
+set(NNG_SUPP_TLS ${NNG_SUPP_TLS} PARENT_SCOPE)
+set(NNG_SUPP_WEBSOCKET ${NNG_SUPP_WEBSOCKET} PARENT_SCOPE)
+
+# Configure files
+
+set(INCLUDE_INSTALL_DIRS "${CMAKE_INSTALL_INCLUDEDIR}/nng")
+
+include(CMakePackageConfigHelpers)
+set(version_config "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config-version.cmake")
+set(project_config "${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-config.cmake")
+
+write_basic_package_version_file("${version_config}"
+    VERSION ${NNG_PACKAGE_VERSION}
+    COMPATIBILITY SameMajorVersion
+)
+configure_package_config_file(${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in "${project_config}"
+    INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+    PATH_VARS INCLUDE_INSTALL_DIRS)
+
+install(FILES "${project_config}" "${version_config}"
+    DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
+    COMPONENT Library)

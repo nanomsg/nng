@@ -36,6 +36,12 @@
 
 include_directories(AFTER SYSTEM ${PROJECT_SOURCE_DIR}/src)
 
+# convey.c needs its own link to pthreads.
+if (NOT WIN32)
+    find_package(Threads)
+    set(THRLIB Threads::Threads)
+endif()
+
 if (NNG_TESTS)
 
     if (NOT NNG_SANITIZER STREQUAL "none")
@@ -46,7 +52,7 @@ if (NNG_TESTS)
     set (NNG_TEST_PORT 13000)
     macro (add_nng_test NAME TIMEOUT)
         add_executable (${NAME} ${NAME}.c convey.c)
-        target_link_libraries (${NAME} ${PROJECT_NAME} Threads::Threads)
+        target_link_libraries (${NAME} ${PROJECT_NAME} ${THRLIB})
         add_test (NAME ${NAME} COMMAND ${NAME} -v -p TEST_PORT=${NNG_TEST_PORT})
         math (EXPR TIMEOUT ${TIMEOUT}*${TIMEOUT_FACTOR})
         set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})

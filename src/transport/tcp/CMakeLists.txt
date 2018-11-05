@@ -9,11 +9,15 @@
 #
 
 # TCP protocol
+option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
+mark_as_advanced(NNG_TRANSPORT_TCP)
 
 if (NNG_TRANSPORT_TCP)
-    set(TCP_SOURCES transport/tcp/tcp.c transport/tcp/tcp.h)
-    set(TCP_HEADERS transport/tcp/tcp.h)
-endif()
+    set(_DEFS -DNNG_TRANSPORT_TCP)
+    set(_SRCS transport/tcp/tcp.c transport/tcp/tcp.h)
+    set(_HDRS transport/tcp/tcp.h)
 
-set(NNG_SOURCES ${NNG_SOURCES} ${TCP_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${TCP_HEADERS} PARENT_SCOPE)
+    set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
+    set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+endif()

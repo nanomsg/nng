@@ -1,6 +1,6 @@
 #
 # Copyright 2017 Capitar IT Group BV <info@capitar.com>
-# Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -9,8 +9,8 @@
 #
 
 if (NNG_SUPP_WEBSOCKET)
-        set(WEBSOCKET_SOURCES
+        set(_SRCS
                 supplemental/websocket/websocket.c
                 supplemental/websocket/websocket.h)
 endif()
-set(NNG_SOURCES ${NNG_SOURCES} ${WEBSOCKET_SOURCES} PARENT_SCOPE)
+set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)

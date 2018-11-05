@@ -9,11 +9,15 @@
 #
 
 # inproc protocol
+option (NNG_TRANSPORT_INPROC "Enable inproc transport." ON)
+mark_as_advanced(NNG_TRANSPORT_INPROC)
 
 if (NNG_TRANSPORT_INPROC)
-    set(INPROC_SOURCES transport/inproc/inproc.c transport/inproc/inproc.h)
-    set(INPROC_HEADERS transport/inproc/inproc.h)
-endif()
+    set(_SRCS transport/inproc/inproc.c transport/inproc/inproc.h)
+    set(_HDRS transport/inproc/inproc.h)
+    set(_DEFS -DNNG_TRANSPORT_INPROC)
 
-set(NNG_SOURCES ${NNG_SOURCES} ${INPROC_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${INPROC_HEADERS} PARENT_SCOPE)
+    set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
+    set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+endif()

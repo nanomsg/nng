@@ -9,11 +9,15 @@
 #
 
 # ipc protocol
+option (NNG_TRANSPORT_IPC "Enable IPC transport." ON)
+mark_as_advanced(NNG_TRANSPORT_IPC)
 
 if (NNG_TRANSPORT_IPC)
-    set(IPC_SOURCES transport/ipc/ipc.c transport/ipc/ipc.h)
-    set(IPC_HEADERS transport/ipc/ipc.h)
-endif()
+    set(_DEFS -DNNG_TRANSPORT_IPC)
+    set(_SRCS transport/ipc/ipc.c transport/ipc/ipc.h)
+    set(_HDRS transport/ipc/ipc.h)
 
-set(NNG_SOURCES ${NNG_SOURCES} ${IPC_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${IPC_HEADERS} PARENT_SCOPE)
+    set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+    set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
+endif()

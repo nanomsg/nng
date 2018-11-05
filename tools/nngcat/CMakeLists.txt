@@ -12,7 +12,8 @@ if (NNG_ENABLE_NNGCAT)
     add_executable (nngcat nngcat.c)
     target_include_directories (nngcat PUBLIC ${PROJECT_SOURCE_DIR}/src)
     target_link_libraries (nngcat ${PROJECT_NAME})
-    install (TARGETS nngcat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install (TARGETS nngcat RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+        COMPONENT Tools)
 
     if (NNG_TESTS AND NNG_PLATFORM_POSIX AND BASH)
     macro(add_nngcat_test NAME TIMEOUT)

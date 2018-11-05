@@ -9,18 +9,32 @@
 #
 
 # Surveyor/Respondent protocol
+option (NNG_PROTO_RESPONDENT0 "Enable RESPONDENTv0 protocol." ON)
+mark_as_advanced(NNG_PROTO_RESPONDENT0)
+
+option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
+mark_as_advanced(NNG_PROTO_SURVEYOR0)
+
+set(_DEFS)
+set(_HDRS)
+set(_SRCS)
 
 if (NNG_PROTO_SURVEYOR0)
-    set(SURV0_SOURCES protocol/survey0/survey.c protocol/survey0/xsurvey.c
-    protocol/survey0/survey.h)
-    set(SURV0_HEADERS protocol/survey0/survey.h)
+    list(APPEND _DEFS -DNNG_HAVE_SURVEYOR0)
+    list(APPEND _SRCS
+        protocol/survey0/survey.c protocol/survey0/xsurvey.c
+        protocol/survey0/survey.h)
+    list(APPEND _HDRS protocol/survey0/survey.h)
 endif()
 
 if (NNG_PROTO_RESPONDENT0)
-    set(RESP0_SOURCES protocol/survey0/respond.c protocol/survey0/xrespond.c
-    protocol/survey0/respond.h)
-    set(RESP0_HEADERS protocol/survey0/respond.h)
+    list(APPEND _DEFS -DNNG_HAVE_RESPONDENT0)
+    list(APPEND _SRCS
+        protocol/survey0/respond.c protocol/survey0/xrespond.c
+        protocol/survey0/respond.h)
+    list(APPEND _HDRS protocol/survey0/respond.h)
 endif()
 
-set(NNG_SOURCES ${NNG_SOURCES} ${SURV0_SOURCES} ${RESP0_SOURCES} PARENT_SCOPE)
-set(NNG_HEADERS ${NNG_HEADERS} ${SURV0_HEADERS} ${RESP0_HEADERS} PARENT_SCOPE)
+set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
+set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
