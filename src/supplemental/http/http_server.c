@@ -1799,6 +1799,7 @@ nni_http_server_get_tls(nni_http_server *s, nng_tls_config **tp)
 		nni_mtx_unlock(&s->mtx);
 		return (NNG_EINVAL);
 	}
+	nni_tls_config_hold(s->tls);
 	*tp = s->tls;
 	nni_mtx_unlock(&s->mtx);
 	return (0);

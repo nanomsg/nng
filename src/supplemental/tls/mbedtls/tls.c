@@ -1013,3 +1013,9 @@ nng_tls_config_free(nng_tls_config *cfg)
 {
 	nni_tls_config_fini(cfg);
 }
+
+void
+nng_tls_config_hold(nng_tls_config *cfg)
+{
+	nni_tls_config_hold(cfg);
+}

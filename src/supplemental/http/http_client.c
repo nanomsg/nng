@@ -223,6 +223,7 @@ nni_http_client_get_tls(nni_http_client *c, struct nng_tls_config **tlsp)
 		nni_mtx_unlock(&c->mtx);
 		return (NNG_EINVAL);
 	}
+	nni_tls_config_hold(c->tls);
 	*tlsp = c->tls;
 	nni_mtx_unlock(&c->mtx);
 	return (0);

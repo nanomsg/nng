@@ -19,7 +19,13 @@ set(_HDRS supplemental/tls/tls.h)
 # For now we only support the ARM mbedTLS library.
 if (NNG_SUPP_TLS_MBEDTLS)
 
-	Find_Package(mbedTLS REQUIRED)
+    message(WARNING "
+        ************************************************************
+        Linking against mbedTLS changes license terms (Apache 2.0).
+        Consult a lawyer and the license files for details.
+        ************************************************************")
+
+	find_package(mbedTLS REQUIRED)
 	set(_LIBS ${MBEDTLS_LIBRARIES})
 	set(_INCS ${MBEDTLS_INCLUDE_DIR})
 	list(APPEND _SRCS supplemental/tls/mbedtls/tls.c)

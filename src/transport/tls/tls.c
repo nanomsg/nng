@@ -1149,10 +1149,14 @@ tlstran_ep_set_config(void *arg, const void *data, size_t sz, nni_opt_type t)
 static int
 tlstran_ep_get_config(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	tlstran_ep *ep = arg;
-	int         rv;
+	tlstran_ep *    ep = arg;
+	nng_tls_config *cfg;
+	int             rv;
 	nni_mtx_lock(&ep->mtx);
-	rv = nni_copyout_ptr(ep->cfg, v, szp, t);
+	if ((cfg = ep->cfg) != NULL) {
+		nni_tls_config_hold(cfg);
+	}
+	rv = nni_copyout_ptr(cfg, v, szp, t);
 	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }

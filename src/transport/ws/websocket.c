@@ -1060,7 +1060,9 @@ wss_dialer_set_cert_key_file(
 	    ((rv = nni_ws_dialer_get_tls(d->dialer, &tls)) != 0)) {
 		return (rv);
 	}
-	return (nng_tls_config_cert_key_file(tls, v, NULL));
+	rv = nng_tls_config_cert_key_file(tls, v, NULL);
+	nni_tls_config_fini(tls);
+	return (rv);
 }
 
 static int
@@ -1075,7 +1077,9 @@ wss_listener_set_cert_key_file(
 	    ((rv = nni_ws_listener_get_tls(l->listener, &tls)) != 0)) {
 		return (rv);
 	}
-	return (nng_tls_config_cert_key_file(tls, v, NULL));
+	rv = nng_tls_config_cert_key_file(tls, v, NULL);
+	nni_tls_config_fini(tls);
+	return (rv);
 }
 
 static int
@@ -1089,7 +1093,9 @@ wss_dialer_set_ca_file(void *arg, const void *v, size_t sz, nni_opt_type t)
 	    ((rv = nni_ws_dialer_get_tls(d->dialer, &tls)) != 0)) {
 		return (rv);
 	}
-	return (nng_tls_config_ca_file(tls, v));
+	rv = nng_tls_config_ca_file(tls, v);
+	nni_tls_config_fini(tls);
+	return (rv);
 }
 
 static int
@@ -1103,7 +1109,9 @@ wss_listener_set_ca_file(void *arg, const void *v, size_t sz, nni_opt_type t)
 	    ((rv = nni_ws_listener_get_tls(l->listener, &tls)) != 0)) {
 		return (rv);
 	}
-	return (nng_tls_config_ca_file(tls, v));
+	rv = nng_tls_config_ca_file(tls, v);
+	nni_tls_config_fini(tls);
+	return (rv);
 }
 
 static int
@@ -1128,7 +1136,9 @@ wss_dialer_set_auth_mode(void *arg, const void *v, size_t sz, nni_opt_type t)
 	    ((rv = nni_ws_dialer_get_tls(d->dialer, &tls)) != 0)) {
 		return (rv);
 	}
-	return (nng_tls_config_auth_mode(tls, mode));
+	rv = nng_tls_config_auth_mode(tls, mode);
+	nni_tls_config_fini(tls);
+	return (rv);
 }
 
 static int
@@ -1146,7 +1156,9 @@ wss_listener_set_auth_mode(void *arg, const void *v, size_t sz, nni_opt_type t)
 	    ((rv = nni_ws_listener_get_tls(l->listener, &tls)) != 0)) {
 		return (rv);
 	}
-	return (nng_tls_config_auth_mode(tls, mode));
+	rv = nng_tls_config_auth_mode(tls, mode);
+	nni_tls_config_fini(tls);
+	return (rv);
 }
 
 static int
@@ -1162,7 +1174,9 @@ wss_dialer_set_tls_server_name(
 		return (rv);
 	}
 
-	return (nng_tls_config_server_name(tls, v));
+	rv = nng_tls_config_server_name(tls, v);
+	nni_tls_config_fini(tls);
+	return (rv);
 }
 
 static nni_tran_option wss_dialer_options[] = {

@@ -297,6 +297,7 @@ if (NNG_ENABLE_DOC)
 	nng_tls_config_ca_file
 	nng_tls_config_cert_key_file
 	nng_tls_config_free
+	nng_tls_config_hold
 	nng_tls_config_own_cert
 	nng_tls_config_server_name
     )

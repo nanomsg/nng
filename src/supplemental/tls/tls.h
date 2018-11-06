@@ -41,6 +41,11 @@ typedef enum nng_tls_auth_mode {
 // with multiple pipes or services/servers.
 NNG_DECL int nng_tls_config_alloc(nng_tls_config **, nng_tls_mode);
 
+// nng_tls_config_hold increments the reference count on the TLS
+// configuration object.  The hold can be dropped by calling
+// nng_tls_config_free later.
+NNG_DECL void nng_tls_config_hold(nng_tls_config *);
+
 // nng_tls_config_free drops the reference count on the TLS
 // configuration object, and if zero, deallocates it.
 NNG_DECL void nng_tls_config_free(nng_tls_config *);

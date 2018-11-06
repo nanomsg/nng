@@ -47,7 +47,14 @@ or services.
 The underlying system uses reference counting to ensure
 that object is not inadvertently freed while in use.
 
-Also note that a TLS configuration object becomes "read-only" after it
+A configuration object created with `nng_tls_config_alloc()` starts
+with a reference count of one.
+The reference count may be incremented using
+`<<nng_tls_config_hold.3tls#,nng_tls_config_hold()>>` and may be
+decremented with
+`<<nng_tls_config_free.3tls#,nng_tls_config_free()>>`.
+
+Also note that a TLS configuration object becomes "`read-only`" after it
 is first used with a service.
 After this points, attempts to apply
 further changes to the configuration will result in `NNG_EBUSY`.
@@ -71,5 +78,6 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain(3tls)>>,
 <<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert(3tls)>>,
 <<nng_tls_config_free.3tls#,nng_tls_config_free(3tls)>>,
+<<nng_tls_config_hold.3tls#,nng_tls_config_hold(3tls)>>,
 <<nng_tls_config_server_name.3tls#,nng_tls_config_server_name(3tls)>>,
 <<nng.7#,nng(7)>>
