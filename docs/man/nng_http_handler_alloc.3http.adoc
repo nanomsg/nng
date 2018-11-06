@@ -135,7 +135,7 @@ code such as 301, and a `Location:` header will contain the URL
 referenced by __location__, with any residual suffix from the request
 URI appended.
 
-TIP: Use `<<nng_http_handler_set_tree#,nng_http_handler_set_tree()>>`
+TIP: Use `<<nng_http_handler_set_tree.3http#,nng_http_handler_set_tree()>>`
 to redirect an entire tree.
 For example, it is possible to redirect an entire HTTP site to another
 HTTPS site by specifying `/` as the path and then using the base
