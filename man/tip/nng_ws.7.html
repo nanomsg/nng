@@ -687,8 +687,14 @@ This option can be set on listeners, and retrieved from pipes.</p>
 <dt class="hdlist1"><code>NNG_OPT_TLS_CONFIG</code></dt>
 <dd>
 <p>(opaque) This option is used on an endpoint to access the underlying TLS
-configuration object.
-The value is of type <code>nng_tls_config *</code>.</p>
+configuration object for <code>wss://</code> endpoints.
+The value is of type <code>nng_tls_config *</code>.
+A hold is placed on the underlying
+configuration object before returning it (see
+<code><a href="nng_tls_config_hold.3tls.html">nng_tls_config_hold()</a></code>).
+The caller should release the object with
+<code><a href="nng_tls_config_free.3tls.html">nng_tls_config_free()</a></code> when it no
+longer needs the TLS configuration.</p>
 </dd>
 </dl>
 </div>

@@ -513,6 +513,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_custom_handler">Custom Handler</a></li>
 <li><a href="#_directory_handler">Directory Handler</a></li>
 <li><a href="#_file_handler">File Handler</a></li>
+<li><a href="#_redirect_handler">Redirect Handler</a></li>
 <li><a href="#_static_handler">Static Handler</a></li>
 </ul>
 </li>
@@ -546,6 +547,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <span class="tok-kt">int</span> <span class="tok-nf">nng_http_handler_alloc_file</span><span class="tok-p">(</span><span class="tok-n">nng_http_handler</span> <span class="tok-o">**</span><span class="tok-n">hp</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">path</span><span class="tok-p">,</span>
     <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">filename</span><span class="tok-p">);</span>
 
+<span class="tok-kt">int</span> <span class="tok-nf">nng_http_handler_alloc_redirect</span><span class="tok-p">(</span><span class="tok-n">nng_http_handler</span> <span class="tok-o">**</span><span class="tok-n">hp</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">path</span><span class="tok-p">,</span>
+    <span class="tok-kt">uint16_t</span> <span class="tok-n">status</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">location</span><span class="tok-p">);</span>
+
 <span class="tok-kt">int</span> <span class="tok-nf">nng_http_handler_alloc_static</span><span class="tok-p">(</span><span class="tok-n">nng_http_handler</span> <span class="tok-o">**</span><span class="tok-n">hp</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">path</span><span class="tok-p">,</span>
     <span class="tok-k">const</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">data</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">content_type</span><span class="tok-p">);</span></code></pre>
 </div>
@@ -569,7 +573,7 @@ considered when determining whether the handler should be called.</p>
 </div>
 <div class="paragraph">
 <p>Additionally each handler has a method it is registered to handle
-(the default is "GET", see
+(the default is <code>GET</code>, see
 <code><a href="nng_http_handler_set_method.3http.html">nng_http_handler_set_method()</a></code>), and
 optionally a 'Host' header it can be matched against (see
 <code><a href="nng_http_handler_set_host.3http.html">nng_http_handler_set_host()</a></code>).</p>
@@ -682,9 +686,52 @@ the extension, then <code>application/octet-stream</code> is used.</p>
 </div>
 </div>
 <div class="sect2">
+<h3 id="_redirect_handler">Redirect Handler</h3>
+<div class="paragraph">
+<p>The fourth member is used to arrange for a server redirect from one
+URL to another.
+The reply will be with status code <em>status</em>, which should be a 3XX
+code such as 301, and a <code>Location:</code> header will contain the URL
+referenced by <em>location</em>, with any residual suffix from the request
+URI appended.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use <code><a href="nng_http_handler_set_tree.3http.html">nng_http_handler_set_tree()</a></code>
+to redirect an entire tree.
+For example, it is possible to redirect an entire HTTP site to another
+HTTPS site by specifying <code>/</code> as the path and then using the base
+of the new site, such as <code><a href="https://newsite.example.com" class="bare">https://newsite.example.com</a></code> as the
+new location.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Be sure to use the appropriate value for <em>status</em>.
+Permanent redirection should use 301 and temporary redirections should use 307.
+In REST APIs, using a redirection to supply the new location of an object
+created with <code>POST</code> should use 303.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
 <h3 id="_static_handler">Static Handler</h3>
 <div class="paragraph">
-<p>The fourth member of this family, <code>nng_http_handler_alloc_static()</code>, creates
+<p>The fifth member of this family, <code>nng_http_handler_alloc_static()</code>, creates
 a handler to serve up fixed content located in program data.
 The client is
 sent the <em>data</em>, with <code>Content-Length</code> of <em>size</em> bytes, and <code>Content-Type</code> of
@@ -697,7 +744,7 @@ sent the <em>data</em>, with <code>Content-Length</code> of <em>size</em> bytes,
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>This function returns 0 on success, and non-zero otherwise.</p>
+<p>These functions return 0 on success, and non-zero otherwise.</p>
 </div>
 </div>
 </div>

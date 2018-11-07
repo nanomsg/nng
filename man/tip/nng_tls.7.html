@@ -742,7 +742,13 @@ The value is of type <code>bool</code> and defaults to <code>true</code>.</p>
 <dd>
 <p>This option is used on an endpoint to access the underlying TLS
 configuration object.
-The value is of type <code>nng_tls_config *</code>.</p>
+The value is of type <code>nng_tls_config *</code>.
+If the value is not <code>NULL</code>, a hold is placed on the underlying
+configuration object before returning it (see
+<code><a href="nng_tls_config_hold.3tls.html">nng_tls_config_hold()</a></code>).
+The caller should release the object with
+<code><a href="nng_tls_config_free.3tls.html">nng_tls_config_free()</a></code> when it no
+longer needs the TLS configuration object.</p>
 </dd>
 </dl>
 </div>

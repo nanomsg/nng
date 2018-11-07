@@ -563,21 +563,6 @@ exists.
 That function behaves similarily, but creates a connection on demand
 for the transaction, and disposes of it when finished.</p>
 </div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This function does not support reading data sent using chunked
-transfer encoding, and if the server attempts to do so, the underlying
-connection will be closed and an <code>NNG_ENOTSUP</code> error will be returned.
-This limitation is considered a bug, and a fix is planned for the future.
-</td>
-</tr>
-</table>
-</div>
 <div class="admonitionblock warning">
 <table>
 <tr>
@@ -666,7 +651,7 @@ That result will either be zero or an error code.</p>
 <code>NNG_ENOTSUP</code>
 </td>
 <td class="hdlist2">
-<p>HTTP operations are not supported, or peer sent chunked encoding.</p>
+<p>HTTP operations are not supported.</p>
 </td>
 </tr>
 <tr>

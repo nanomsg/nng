@@ -541,8 +541,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 saves a pointer to it in the address referenced by <em>cfgp</em>.</p>
 </div>
 <div class="paragraph">
-<p>The configuration will be <code>NULL</code> if the HTTP client instance is not enabled
-to use HTTPS.</p>
+<p>The object will be returned with an extra hold (see
+<code><a href="nng_tls_config_hold.3tls.html">nng_tls_config_hold()</a></code>)
+placed on it on behalf of the caller.
+The caller should free this hold by calling
+<code><a href="nng_tls_config_free.3tls.html">nng_tls_config_free()</a></code> with it is done
+with the TLS configuration.</p>
 </div>
 </div>
 </div>
@@ -559,6 +563,14 @@ to use HTTPS.</p>
 <div class="sectionbody">
 <div class="hdlist">
 <table>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>TLS not configured on client.</p>
+</td>
+</tr>
 <tr>
 <td class="hdlist1">
 <code>NNG_ENOMEM</code>
@@ -587,6 +599,8 @@ to use HTTPS.</p>
 <a href="nng_http_client_connect.3http.html">nng_http_client_connect(3http)</a>,
 <a href="nng_http_client_set_tls.3http.html">nng_http_client_set_tls(3http)</a>,
 <a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(3tls)</a>,
+<a href="nng_tls_config_free.3tls.html">nng_tls_config_free(3tls)</a>,
+<a href="nng_tls_config_hold.3tls.html">nng_tls_config_hold(3tls)</a>,
 <a href="nng_strerror.3.html">nng_strerror(3)</a>,
 <a href="nng.7.html">nng(7)</a></p>
 </div>
