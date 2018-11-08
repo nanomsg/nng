@@ -67,9 +67,7 @@ set (NNG_ABI_VERSION "1.1.0")
 
 # Determine package version.
 find_package (Git QUIET)
-if (DEFINED ENV{TRAVIS_TAG})
-    set (NNG_PACKAGE_VERSION "$ENV{TRAVIS_TAG}")
-elseif (GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
+if (GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
     # Working off a git repo, using git versioning
 
     # Get version from last tag
