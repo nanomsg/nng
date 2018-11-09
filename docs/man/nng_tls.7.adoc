@@ -73,10 +73,10 @@ be restricted to IPv4 using the scheme `tls+tcp4://`.
 NOTE: Specifying `tls+tcp6://` may not prevent IPv4 hosts from being used with
 IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
 listeners.
-The details of varies across operating systems.
+The details of this varies across operating systems.
 
-NOTE: Both `tls+tcp6://` and `tls+tcp4://` are _nng_ extensions, and will not
-be understood by other implementations such as _mangos_.
+NOTE: Both `tls+tcp6://` and `tls+tcp4://` are _nng_ extensions, and may not
+be understood by other implementations.
 
 TIP: We recommend using either numeric IP addresses, or names that are
 specific to either IPv4 or IPv6 to prevent confusion and surprises.
@@ -153,22 +153,15 @@ information.
 (string) Write-only option naming a file containing the local certificate and
 associated private key.
 The private key used must be unencrypted.
-(Use the `NNG_OPT_TLS_CONFIG` option to access the underlying
-TLS configuration if more advanced configuration is needed.)
 See `<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>` for more
 information.
 
 ((`NNG_OPT_TLS_AUTH_MODE`))::
 (`int`) Write-only option used to configure the authentication mode used.
-Must be one of
-`NNG_TLS_AUTH_MODE_NONE`,
-`NNG_TLS_AUTH_MODE_REQUIRED`, or
-`NNG_TLS_AUTH_MODE_OPTIONAL`.
 See `<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode()>>` for
 more details.
 
 ((`NNG_OPT_TLS_VERIFIED`))::
-
 (`bool`) Whether the remote peer has been properly verified using TLS
 authentication.
 May return incorrect results if peer authentication is disabled.

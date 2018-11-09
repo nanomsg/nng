@@ -51,10 +51,10 @@ be restricted to IPv4 using the scheme `tcp4://`.
 NOTE: Specifying `tcp6://` may not prevent IPv4 hosts from being used with
 IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
 listeners.
-The details of varies across operating systems.
+The details of this varies across operating systems.
 
-NOTE: Both `tcp6://` and `tcp4://` are _nng_ extensions, and will not
-be understood by other implementations such as _libnanomsg_.
+NOTE: Both `tcp6://` and `tcp4://` are _nng_ extensions, and might not
+be understood by other implementations.
 
 TIP: We recommend using either numeric IP addresses, or names that are
 specific to either IPv4 or IPv6 to prevent confusion and surprises.

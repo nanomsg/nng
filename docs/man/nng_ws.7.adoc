@@ -148,17 +148,11 @@ information.
 (string) Write-only option naming a file containing the local certificate and
 associated private key.
 The private key used must be unencrypted.
-(Use the `NNG_OPT_TLS_CONFIG` option to access the underlying
-TLS configuration if more advanced configuration is needed.)
 See `<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>` for more
 information.
 
 ((`NNG_OPT_TLS_AUTH_MODE`))::
 (`int`) Write-only option used to configure the authentication mode used.
-Must be one of
-`NNG_TLS_AUTH_MODE_NONE`,
-`NNG_TLS_AUTH_MODE_REQUIRED`, or
-`NNG_TLS_AUTH_MODE_OPTIONAL`.
 See `<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode()>>` for
 more details.
 
