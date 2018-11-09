@@ -138,7 +138,7 @@ The network is most likely not available.
 The following transport options are available:
 
 ((`NNG_OPT_ZT_HOME`))::
-  This is a string representing the "`home directory`", where the transport
+  (string) This option represents the "`home directory`", where the transport
   can store (and reuse) persistent state, such as key materials, node
   identity, and federation membership.
   This option must be set before the ZeroTier transport is first used.
@@ -152,38 +152,34 @@ It is perfectly valid for an application to have multiple node identities
 in this fashion.
 
 ((`NNG_OPT_ZT_NWID`))::
-  This is a read-only option for listeners, dialers, and pipes, and
-  provides a `uint64_t` in native byte order representing the 64-bit ZeroTier
-  network number.
+  (`uint64_t`) The 64-bit ZeroTier network number (native byte order).
 
 [[NNG_OPT_ZT_NODE]]
 ((`NNG_OPT_ZT_NODE`))::
-  This is a read-only option for listeners, dialers, and pipes, and
-  provides a `uint64_t` in native byte order representing the ZeroTier
-  40-bit node address.
+  (`uint64_t`) The ZeroTier  40-bit node address (native byte order).
 
 [[NNG_OPT_ZT_NETWORK_STATUS]]
 ((`NNG_OPT_ZT_NETWORK_STATUS`))::
   (((status, zerotier network)))
-  This is a read-only integer, representing the ZeroTier network status.
+  (`int`) The ZeroTier network status.
   See <<Network Status>> for an explanation of this option.
 
 [[NNG_OPT_ZT_NETWORK_NAME]]
 ((`NNG_OPT_ZT_NETWORK_NAME`))::
   (((name, zerotier network)))
-  This is a read-only ASCIIZ string containing the name of the network
+  (string) The name of the network
   as established by the ZeroTier network administrator.
 
 [[NNG_OPT_ZT_CONN_TIME]]
 ((`NNG_OPT_ZT_CONN_TIME`))::
-  The time to wait between sending connection attempts.
-  This is an `<<nng_duration.5#,nng_duration>>` (msec),
-  and is only used with dialers.
+  (`<<nng_duration.5#,nng_duration>>`)
+  The time to wait between sending connection attempts,
+  only used with dialers.
   The default is 500 msec.
 
 [[NNG_OPT_ZT_CONN_TRIES]]
 ((`NNG_OPT_ZT_CONN_TRIES`))::
-  The maximum number (`int`) of attempts to try to establish a connection
+  (`int`) The maximum number of attempts to try to establish a connection
   before reporting a timeout, and is only used with dialers.
   The default is 240, which results in a 2 minute timeout if
   `NNG_OPT_ZT_CONN_TIME` is at its default of 500.
@@ -191,36 +187,35 @@ in this fashion.
 
 [[NNG_OPT_ZT_PING_TIME]]
 ((`NNG_OPT_ZT_PING_TIME`))::
-  If no traffic has been received from the ZeroTier peer after this
+  (`<<nng_duration.5#,nng_duration>>`) If no traffic has been received from
+  the ZeroTier peer after this
   period of time, then a "`ping`" message is sent to check if the peer
-  is still alive.  This is an `<<nng_duration.5#,nng_duration>>` (msec).
+  is still alive.
 
 [[NNG_OPT_ZT_PING_TRIES]]
 ((`NNG_OPT_ZT_PING_TRIES`))::
-  If this number (`int`) of consecutive "`ping`" requests are sent to the
+  (`int`) If this number of consecutive "`ping`" requests are sent to the
   peer with no response (and no other intervening traffic), then the
-  peer is assumed to be dead and the connection is closed.  Note that
-  if any traffic is received from the peer, then the underlying counter
-  is reset to zero.
+  peer is assumed to be dead and the connection is closed.
 
 [[NNG_OPT_ZT_MTU]]
 ((`NNG_OPT_ZT_MTU`))::
-  This is a read-only size (`size_t`) representing the ZeroTier virtual
-  network MTU; this is the Virtual Layer 2 MTU.  The headers used by
+  (`size_t`) The ZeroTier virtual network MTU (read-only) as configured
+  on the network; this is the Virtual Layer 2 MTU.  The headers used by
   this transport and the protocols consume some of this for each message
   sent over the network.  (The transport uses 20-bytes of this, and each
   protocol may consume additional space, typically not more than 16-bytes.)
 
 [[NNG_OPT_ZT_ORBIT]]
-((`NNG_OPT_ZT_ORBIT`))(((orbit, ZeroTier)))(((federation,ZeroTier))):
-  This is a write-only option that takes an array of two `uint64_t` values,
+((`NNG_OPT_ZT_ORBIT`))(((orbit, ZeroTier)))(((federation,ZeroTier)))::
+  (`uint64_t[2]`) Write-only array of two `uint64_t` values,
   indicating the ID of a ZeroTier "`moon`", and the node ID of the root server
   for that moon.  (The ID may be zero if the moon ID is the same as its
   root server ID, which is conventional.)
 
 [[NNG_OPT_ZT_DEORBIT]]
 ((`NNG_OPT_ZT_DEORBIT`))::
-  This write-only option takes a single `uint64_t` indicating the moon
+  (`uint64_t`) Write-only option indicating the moon
   ID to "`deorbit`".  If the node is not already orbiting the moon, then
   this has no effect.
 

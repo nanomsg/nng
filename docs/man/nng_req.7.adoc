@@ -97,8 +97,7 @@ The following protocol-specific option is available.
 
 ((`NNG_OPT_REQ_RESENDTIME`))::
 
-   This read/write option is a duration (`<<nng_duration.5#,nng_duration>>`)
-   representing a relative number of milliseconds.
+   (`<<nng_duration.5#,nng_duration>>`)
    When a new request is started, a timer of this duration is also started.
    If no reply is received before this timer expires, then the request will
    be resent.

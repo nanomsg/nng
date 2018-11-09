@@ -94,9 +94,7 @@ The following protocol-specific options is available.
 
 ((`NNG_OPT_SURVEYOR_SURVEYTIME`))::
 
-   This read/write option is an `<<nng_duration.5#,nng_duration>>`
-   representing a positive number of milliseconds that following surveys
-   will last.
+   (`<<nng_duration.5#,nng_duration>>`) Duration of surveys.
    When a new survey is started, a timer of this duration is also started.
    Any responses arriving this time will be discarded.
    Attempts to receive
