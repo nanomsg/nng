@@ -49,39 +49,38 @@ The details will be documented with the protocol.
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
 
-TIP: Generally, it will be easier to use one of the typed versions
-of this function.
-
-==== `nng_ctx_setopt()`
+`nng_ctx_setopt()`::
 This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _valsz_ is the
 size of the objected located at _val_.
 
-==== `nng_ctx_setopt_bool()`
+TIP: It may be easier to use one of the typed forms of this function.
+
+`nng_ctx_setopt_bool()`::
 This function is for options which take a Boolean (`bool`).
 The _bval_ is passed to the option.
 
-==== `nng_ctx_setopt_int()`
+`nng_ctx_setopt_int()`::
 This function is for options which take an integer (`int`).
 The _ival_ is passed to the option.
 
-==== `nng_ctx_setopt_ms()`
+`nng_ctx_setopt_ms()`::
 This function is used to configure time durations (such as timeouts) using
 type `<<nng_duration.5#,nng_duration>>`.
 The duration _dur_ is an integer number of milliseconds.
 
-==== `nng_ctx_setopt_size()`
+`nng_ctx_setopt_size()`::
 This function is used to configure a size, _z_, typically for buffer sizes,
 message maximum sizes, and similar options.
 
-==== `nng_ctx_setopt_string()`
+`nng_ctx_setopt_string()`::
 This function is used to pass configure a string, _str_.
 Strings passed this way must be legal UTF-8 or ASCII strings, terminated
 with a `NUL` (`\0`) byte.
 (Other constraints may apply as well, see the documentation for each option
 for details.)
 
-==== `nng_ctx_setopt_uint64()`
+`nng_ctx_setopt_uint64()`::
 This function is used to configure a 64-bit unsigned value, _u64_.
 This is typically used for options related to identifiers, network numbers,
 and similar.

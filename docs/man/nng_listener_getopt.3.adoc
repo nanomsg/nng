@@ -57,60 +57,59 @@ The forms vary based on the type of the option they take.
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
 
-TIP: Generally, it will be easier to use one of the typed versions of this
-function.
-
-==== `nng_listener_getopt()`
+`nng_listener_getopt()`::
 This function is untyped and can be used to retrieve the value of any option.
 The caller must store a pointer to a buffer to receive the value in _val_,
 and the size of the buffer shall be stored at the location referenced
-by _valszp_.
-
+by _valszp_. +
+ +
 When the function returns, the actual size of the data copied (or that
 would have been copied if sufficient space were present) is stored at
 the location referenced by _valszp_.
 If the caller's buffer is not large
 enough to hold the entire object, then the copy is truncated.  Therefore
 the caller should validate that the returned size in _valszp_ does not
-exceed the original buffer size to check for truncation.
-
+exceed the original buffer size to check for truncation. +
+ +
 It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
 This can be used to determine the size of the buffer needed to receive
 the object.
 
-==== `nng_listener_getopt_bool()`
+TIP: It may be easier to use one of the typed forms of this function.
+
+`nng_listener_getopt_bool()`::
 This function is for options which take a Boolean (`bool`).
 The value will be stored at _bvalp_.
 
-==== `nng_listener_getopt_int()`
+`nng_listener_getopt_int()`::
 This function is for options which take an integer (`int`).
 The value will be stored at _ivalp_.
 
-==== `nng_listener_getopt_ms()`
+`nng_listener_getopt_ms()`::
 This function is used to retrieve time <<nng_duration.5#,durations>>
 (such as timeouts), stored in _durp_ as a number of milliseconds.
 
-==== `nng_listener_getopt_ptr()`
+`nng_listener_getopt_ptr()`::
 This function is used to retrieve a pointer, _ptr_, to structured data.
 The data referenced by _ptr_ is generally managed using other functions.
 Note that this form is somewhat special in that the object is generally
 not copied, but instead the *pointer* to the object is copied.
 
-==== `nng_listener_getopt_size()`
+`nng_listener_getopt_size()`::
 This function is used to retrieve a size into the pointer _zp_,
 typically for buffer sizes, message maximum sizes, and similar options.
 
-==== `nng_listener_getopt_sockaddr()`
+`nng_listener_getopt_sockaddr()`::
 This function is used to retrieve an `<<nng_sockaddr.5#,nng_sockaddr>>`
 into the value referenced by _sap_.
 
-==== `nng_listener_getopt_string()`
+`nng_listener_getopt_string()`::
 This function is used to retrieve a string into _strp_.
 This string is created from the source using `<<nng_strdup.3#,nng_strdup()>>`
 and consequently must be freed by the caller using
 `<<nng_strfree.3#,nng_strfree()>>` when it is no longer needed.
 
-==== `nng_listener_getopt_uint64()`
+`nng_listener_getopt_uint64()`::
 This function is used to retrieve a 64-bit unsigned value into the value
 referenced by _u64p_.
 This is typically used for options related to identifiers, network
