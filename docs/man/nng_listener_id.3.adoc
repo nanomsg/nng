@@ -29,8 +29,8 @@ listener _l_, if it is valid.
 Otherwise it returns `-1`.
 
 NOTE: A listener is considered valid if it was ever created with the
-`<<nng_listener_create.3#,nng_listener_create>>` or
-`<<nng_listen.3#,nng_listen>>` functions.
+`<<nng_listener_create.3#,nng_listener_create()>>` or
+`<<nng_listen.3#,nng_listen()>>` functions.
 listeners that are allocated on the stack or statically should be
 initialized with the macro
 `<<nng_ctx.5#NNG_LISTENER_INITIALIZER,NNG_LISTENER_INITIALIZER>>` to ensure that
