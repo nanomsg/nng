@@ -44,6 +44,7 @@ endif()
 
 if (NNG_TESTS)
 
+    nng_check_sym(nl_langinfo langinfo.h NNG_HAVE_LANGINFO)
     if (NOT NNG_SANITIZER STREQUAL "none")
         set(TIMEOUT_FACTOR 2)
     else()

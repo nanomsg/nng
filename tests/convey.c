@@ -42,8 +42,11 @@
 
 #else
 
+#if NNG_HAVE_LANGINFO
 #include <langinfo.h>
 #include <locale.h>
+#endif
+
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
@@ -860,6 +863,8 @@ convey_init_term(void)
 
 #ifndef _WIN32
 	/* Windows console doesn't do Unicode (consistently). */
+
+#if NNG_HAVE_LANGINFO
 	const char *codeset;
 
 	(void) setlocale(LC_ALL, "");
@@ -869,6 +874,7 @@ convey_init_term(void)
 		convey_sym_fail = "✘";
 		convey_sym_skip = "⚠";
 	}
+#endif
 	term = getenv("TERM");
 	if (!isatty(fileno(stdin))) {
 		term = NULL;
