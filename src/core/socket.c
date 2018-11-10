@@ -1472,12 +1472,11 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 	nni_mtx_lock(&s->s_mx);
 
 	if (s->s_closed || d->d_closing ||
-	    (nni_pipe_create(&p, s, d->d_tran, tpipe) != 0)) {
+	    (nni_pipe_create_dialer(&p, d, tpipe) != 0)) {
 		nni_mtx_unlock(&s->s_mx);
 		return;
 	}
 
-	p->p_dialer = d;
 	nni_list_append(&d->d_pipes, p);
 	nni_list_append(&s->s_pipes, p);
 	d->d_pipe     = p;
@@ -1485,8 +1484,6 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 	nni_mtx_unlock(&s->s_mx);
 	nni_stat_inc_atomic(&s->s_stats.s_npipes, 1);
 	nni_stat_inc_atomic(&d->d_stats.s_npipes, 1);
-
-	nni_pipe_stats_init(p);
 
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_PRE);
 
@@ -1586,19 +1583,16 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closed || l->l_closing ||
-	    (nni_pipe_create(&p, s, l->l_tran, tpipe) != 0)) {
+	    (nni_pipe_create_listener(&p, l, tpipe) != 0)) {
 		nni_mtx_unlock(&s->s_mx);
 		return;
 	}
 
-	p->p_listener = l;
 	nni_list_append(&l->l_pipes, p);
 	nni_list_append(&s->s_pipes, p);
 	nni_mtx_unlock(&s->s_mx);
 	nni_stat_inc_atomic(&l->l_stats.s_npipes, 1);
 	nni_stat_inc_atomic(&s->s_stats.s_npipes, 1);
-
-	nni_pipe_stats_init(p);
 
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_PRE);
 

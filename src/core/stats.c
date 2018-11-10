@@ -88,7 +88,7 @@ nni_stat_init(nni_stat_item *stat, const char *name, const char *desc)
 	stat->si_update  = NULL;
 	stat->si_private = NULL;
 	stat->si_string  = NULL;
-	stat->si_value   = 0;
+	stat->si_number  = 0;
 	stat->si_type    = NNG_STAT_COUNTER;
 	stat->si_unit    = NNG_UNIT_NONE;
 }
@@ -116,9 +116,9 @@ nni_stat_init_id(
     nni_stat_item *stat, const char *name, const char *desc, uint64_t id)
 {
 	nni_stat_init(stat, name, desc);
-	stat->si_value = id;
-	stat->si_type  = NNG_STAT_ID;
-	stat->si_unit  = NNG_UNIT_NONE;
+	stat->si_number = id;
+	stat->si_type   = NNG_STAT_ID;
+	stat->si_unit   = NNG_UNIT_NONE;
 }
 
 void
@@ -126,16 +126,16 @@ nni_stat_init_bool(
     nni_stat_item *stat, const char *name, const char *desc, bool v)
 {
 	nni_stat_init(stat, name, desc);
-	stat->si_value = v ? 1 : 0;
-	stat->si_type  = NNG_STAT_BOOLEAN;
-	stat->si_unit  = NNG_UNIT_NONE;
+	stat->si_number = v ? 1 : 0;
+	stat->si_type   = NNG_STAT_BOOLEAN;
+	stat->si_unit   = NNG_UNIT_NONE;
 }
 
 static void
 stat_atomic_update(nni_stat_item *stat, void *notused)
 {
 	NNI_ARG_UNUSED(notused);
-	stat->si_value = nni_atomic_get64(&stat->si_atomic);
+	stat->si_number = nni_atomic_get64(&stat->si_atomic);
 }
 
 void
@@ -143,7 +143,7 @@ nni_stat_init_atomic(nni_stat_item *stat, const char *name, const char *desc)
 {
 
 	nni_stat_init(stat, name, desc);
-	stat->si_value   = 0;
+	stat->si_number  = 0;
 	stat->si_private = NULL;
 	stat->si_update  = stat_atomic_update;
 	nni_atomic_init64(&stat->si_atomic);
@@ -166,7 +166,7 @@ void
 nni_stat_set_value(nni_stat_item *stat, uint64_t v)
 {
 #ifdef NNG_ENABLE_STATS
-	stat->si_value = v;
+	stat->si_number = v;
 #else
 	NNI_ARG_UNUSED(stat);
 	NNI_ARG_UNUSED(v);
@@ -292,7 +292,7 @@ stat_update(nni_stat *stat)
 	if (item->si_update != NULL) {
 		item->si_update(item, item->si_private);
 	}
-	stat->s_value  = item->si_value;
+	stat->s_value  = item->si_number;
 	stat->s_string = item->si_string;
 	stat->s_time   = nni_clock();
 }

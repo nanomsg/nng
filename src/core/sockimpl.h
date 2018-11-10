@@ -139,8 +139,9 @@ extern void nni_listener_close_rele(nni_listener *);
 
 extern void nni_pipe_remove(nni_pipe *);
 extern void nni_pipe_run_cb(nni_pipe *, nng_pipe_ev);
-extern int  nni_pipe_create(nni_pipe **, nni_sock *, nni_tran *, void *);
+extern int  nni_pipe_create_dialer(nni_pipe **, nni_dialer *, void *);
+extern int  nni_pipe_create_listener(nni_pipe **, nni_listener *, void *);
+
 extern void nni_pipe_start(nni_pipe *);
-extern void nni_pipe_stats_init(nni_pipe *);
 
 #endif // CORE_SOCKIMPL_H

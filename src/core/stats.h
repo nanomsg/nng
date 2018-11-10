@@ -29,7 +29,11 @@ typedef void (*nni_stat_update)(nni_stat_item *, void *);
 typedef enum nng_stat_type_enum nni_stat_type;
 typedef enum nng_unit_enum      nni_stat_unit;
 
-// nni_stat_item is used by providers
+// nni_stat_item is used by providers.  Providers should avoid accessing
+// this directly, but use accessors below.  It is important that we offer
+// this structure so that providers can declare them inline, in order to
+// avoid having to spend dereference costs or (worse) to have to include
+// extra conditionals on hot code paths.
 struct nni_stat_item {
 #ifdef NNG_ENABLE_STATS
 	nni_list_node   si_node;     // list node, framework use only
@@ -43,7 +47,7 @@ struct nni_stat_item {
 	nni_stat_unit   si_unit;     // units, e.g. NNG_UNIT_MILLIS
 	nni_stat_update si_update;   // update function (can be NULL)
 	const char *    si_string;   // string value (NULL for numerics)
-	uint64_t        si_value;    // numeric value
+	uint64_t        si_number;   // numeric value
 	nni_atomic_u64  si_atomic;   // atomic value
 #endif
 };
