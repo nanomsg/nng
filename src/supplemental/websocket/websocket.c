@@ -689,7 +689,6 @@ ws_send_control(nni_ws *ws, uint8_t op, uint8_t *buf, size_t len)
 
 	if ((ws->closed) ||
 	    (ws_msg_init_control(&wm, ws, op, buf, len) != 0)) {
-		nni_mtx_unlock(&ws->mtx);
 		return;
 	}
 
