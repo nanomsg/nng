@@ -687,10 +687,8 @@ ws_send_control(nni_ws *ws, uint8_t op, uint8_t *buf, size_t len)
 
 	// Note that we do not care if this works or not.  So no AIO needed.
 
-	nni_mtx_lock(&ws->mtx);
 	if ((ws->closed) ||
 	    (ws_msg_init_control(&wm, ws, op, buf, len) != 0)) {
-		nni_mtx_unlock(&ws->mtx);
 		return;
 	}
 
@@ -698,7 +696,6 @@ ws_send_control(nni_ws *ws, uint8_t op, uint8_t *buf, size_t len)
 	// the close frame or other ping/pong requests.  Oh well.)
 	nni_list_prepend(&ws->txmsgs, wm);
 	ws_start_write(ws);
-	nni_mtx_unlock(&ws->mtx);
 }
 
 int
