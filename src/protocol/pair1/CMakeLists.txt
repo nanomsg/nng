@@ -14,7 +14,7 @@ mark_as_advanced(NNG_PROTO_PAIR1)
 
 if (NNG_PROTO_PAIR1)
     set(_DEFS -DNNG_HAVE_PAIR1)
-    set(_SRCS protocol/pair1/pair.c ${CMAKE_SOURCE_DIR}/include/nng/protocol/pair1/pair.h)
+    set(_SRCS protocol/pair1/pair.c ${PROJECT_SOURCE_DIR}/include/nng/protocol/pair1/pair.h)
 
     set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
     set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)

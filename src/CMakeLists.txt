@@ -26,7 +26,7 @@
 
 set (NNG_SRCS
     nng.c
-    ${CMAKE_SOURCE_DIR}/include/nng/nng.h
+    ${PROJECT_SOURCE_DIR}/include/nng/nng.h
 
     core/defs.h
 
@@ -246,9 +246,9 @@ set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}
 target_link_libraries (${PROJECT_NAME} PRIVATE ${NNG_LIBS})
 
 target_include_directories (${PROJECT_NAME} INTERFACE $<INSTALL_INTERFACE:include>
-$<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/include>)
+$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
 
-target_include_directories (${PROJECT_NAME} PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
 install (TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-target
@@ -294,7 +294,7 @@ write_basic_package_version_file("${version_config}"
     VERSION ${NNG_PACKAGE_VERSION}
     COMPATIBILITY SameMajorVersion
 )
-configure_package_config_file(${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in "${project_config}"
+configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in "${project_config}"
     INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     PATH_VARS INCLUDE_INSTALL_DIRS)
 

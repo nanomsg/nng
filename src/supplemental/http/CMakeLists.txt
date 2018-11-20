@@ -14,7 +14,7 @@ if (NNG_ENABLE_HTTP)
 endif()
 mark_as_advanced(NNG_ENABLE_HTTP)
 set(_SRCS supplemental/http/http_public.c
-    ${CMAKE_SOURCE_DIR}/include/nng/supplemental/http/http.h
+    ${PROJECT_SOURCE_DIR}/include/nng/supplemental/http/http.h
     supplemental/http/http_api.h)
 
 if (NNG_SUPP_HTTP)

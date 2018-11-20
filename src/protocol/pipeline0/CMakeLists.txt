@@ -19,13 +19,13 @@ set(_DEFS)
 set(_SRCS)
 
 if (NNG_PROTO_PUSH0)
-    list(APPEND _SRCS protocol/pipeline0/push.c ${CMAKE_SOURCE_DIR}/include/nng/protocol/pipeline0/push.h)
+    list(APPEND _SRCS protocol/pipeline0/push.c ${PROJECT_SOURCE_DIR}/include/nng/protocol/pipeline0/push.h)
    
     list(APPEND _DEFS -DNNG_HAVE_PUSH0)
 endif()
 
 if (NNG_PROTO_PULL0)
-    list(APPEND _SRCS protocol/pipeline0/pull.c ${CMAKE_SOURCE_DIR}/include/nng/protocol/pipeline0/pull.h)
+    list(APPEND _SRCS protocol/pipeline0/pull.c ${PROJECT_SOURCE_DIR}/include/nng/protocol/pipeline0/pull.h)
    
     list(APPEND _DEFS -DNNG_HAVE_PULL0)
 endif()

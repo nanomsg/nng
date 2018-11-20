@@ -9,8 +9,8 @@
 #
 
 set(_SRCS supplemental/util/options.c
-    ${CMAKE_SOURCE_DIR}/include/nng/supplemental/util/options.h
+    ${PROJECT_SOURCE_DIR}/include/nng/supplemental/util/options.h
     supplemental/util/platform.c
-    ${CMAKE_SOURCE_DIR}/include/nng/supplemental/util/platform.h)
+    ${PROJECT_SOURCE_DIR}/include/nng/supplemental/util/platform.h)
 
 set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)

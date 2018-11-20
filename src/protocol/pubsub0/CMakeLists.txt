@@ -20,13 +20,13 @@ set(_SRCS)
 
 if (NNG_PROTO_PUB0)
     list(APPEND _DEFS -DNNG_HAVE_PUB0)
-    list(APPEND _SRCS protocol/pubsub0/pub.c ${CMAKE_SOURCE_DIR}/include/nng/protocol/pubsub0/pub.h)
+    list(APPEND _SRCS protocol/pubsub0/pub.c ${PROJECT_SOURCE_DIR}/include/nng/protocol/pubsub0/pub.h)
    
 endif()
 
 if (NNG_PROTO_SUB0)
     list(APPEND _DEFS -DNNG_HAVE_SUB0)
-    list(APPEND _SRCS protocol/pubsub0/sub.c ${CMAKE_SOURCE_DIR}/include/nng/protocol/pubsub0/sub.h)
+    list(APPEND _SRCS protocol/pubsub0/sub.c ${PROJECT_SOURCE_DIR}/include/nng/protocol/pubsub0/sub.h)
    
 endif()
 

@@ -13,7 +13,7 @@ if (NNG_SUPP_TLS)
 	set(_DEFS -DNNG_SUPP_TLS)
 endif()
 
-set(_SRCS ${CMAKE_SOURCE_DIR}/include/nng/supplemental/tls/tls.h)
+set(_SRCS ${PROJECT_SOURCE_DIR}/include/nng/supplemental/tls/tls.h)
 
 # For now we only support the ARM mbedTLS library.
 if (NNG_SUPP_TLS_MBEDTLS)

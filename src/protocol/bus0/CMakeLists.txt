@@ -14,7 +14,7 @@ mark_as_advanced(NNG_PROTO_BUS0)
 
 if (NNG_PROTO_BUS0)
     set(_DEFS -DNNG_HAVE_BUS0)
-    set(_SRCS protocol/bus0/bus.c ${CMAKE_SOURCE_DIR}/include/nng/protocol/bus0/bus.h)
+    set(_SRCS protocol/bus0/bus.c ${PROJECT_SOURCE_DIR}/include/nng/protocol/bus0/bus.h)
 
     set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
     set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
