@@ -22,8 +22,8 @@
     IN THE SOFTWARE.
 */
 
-#include <nanomsg/nn.h>
-#include <nanomsg/reqrep.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/reqrep.h>
 
 #include "compat_testutil.h"
 

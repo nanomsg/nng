@@ -12,7 +12,7 @@
 
 #include "convey.h"
 
-#include "nng.h"
+#include "nng/nng.h"
 
 #include "supplemental/base64/base64.h"
 

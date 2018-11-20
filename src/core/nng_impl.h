@@ -10,7 +10,7 @@
 #ifndef CORE_NNG_IMPL_H
 #define CORE_NNG_IMPL_H
 
-#include "nng.h"
+#include "nng/nng.h"
 
 // Internal implementation things for NNG, common definitions, etc.
 // All internal modules wind up including this file to avoid having

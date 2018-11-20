@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "ipc.h"
+#include "nng/transport/ipc/ipc.h"
 
 // IPC transport.   Platform specific IPC operations must be
 // supplied as well.  Normally the IPC is UNIX domain sockets or

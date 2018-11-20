@@ -10,8 +10,8 @@
 
 #include "convey.h"
 //#include "core/nng_impl.h"
-#include "nng.h"
-#include "supplemental/util/platform.h"
+#include "nng/nng.h"
+#include "nng/supplemental/util/platform.h"
 
 // Notify tests for verifying condvars.
 struct notifyarg {

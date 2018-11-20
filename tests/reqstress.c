@@ -9,15 +9,15 @@
 //
 
 #include "convey.h"
-#include "nng.h"
+#include "nng/nng.h"
 
-#include "protocol/bus0/bus.h"
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "supplemental/util/platform.h"
-#include "transport/inproc/inproc.h"
-#include "transport/ipc/ipc.h"
-#include "transport/tcp/tcp.h"
+#include "nng/protocol/bus0/bus.h"
+#include "nng/protocol/reqrep0/rep.h"
+#include "nng/protocol/reqrep0/req.h"
+#include "nng/supplemental/util/platform.h"
+#include "nng/transport/inproc/inproc.h"
+#include "nng/transport/ipc/ipc.h"
+#include "nng/transport/tcp/tcp.h"
 
 #include <stdio.h>
 #include <string.h>

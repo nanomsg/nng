@@ -10,7 +10,7 @@
 
 #include "convey.h"
 #include "core/nng_impl.h"
-#include "nng.h"
+#include "nng/nng.h"
 
 #include <string.h>
 

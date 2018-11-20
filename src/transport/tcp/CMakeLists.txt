@@ -14,7 +14,7 @@ mark_as_advanced(NNG_TRANSPORT_TCP)
 
 if (NNG_TRANSPORT_TCP)
     set(_DEFS -DNNG_TRANSPORT_TCP)
-    set(_SRCS transport/tcp/tcp.c transport/tcp/tcp.h)
+    set(_SRCS transport/tcp/tcp.c ${CMAKE_SOURCE_DIR}/include/nng/transport/tcp/tcp.h)
     set(_HDRS transport/tcp/tcp.h)
 
     set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)

@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "protocol/survey0/respond.h"
+#include "nng/protocol/survey0/respond.h"
 
 // Respondent protocol.  The RESPONDENT protocol is the "replier" side of
 // the surveyor pattern.  This is useful for building service discovery, or

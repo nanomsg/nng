@@ -11,11 +11,11 @@
 #include "convey.h"
 #include "trantest.h"
 
-#include "nng.h"
+#include "nng/nng.h"
 
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "transport/ipc/ipc.h"
+#include "nng/protocol/reqrep0/rep.h"
+#include "nng/protocol/reqrep0/req.h"
+#include "nng/transport/ipc/ipc.h"
 
 #include "stubs.h"
 

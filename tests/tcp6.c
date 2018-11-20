@@ -13,7 +13,7 @@
 
 #include "core/nng_impl.h"
 // TCP tests for IPv6.
-#include "protocol/pair1/pair.h"
+#include "nng/protocol/pair1/pair.h"
 
 #include "stubs.h"
 

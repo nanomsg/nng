@@ -13,7 +13,7 @@
 
 #include "convey.h"
 
-#include "nng.h"
+#include "nng/nng.h"
 
 #include "supplemental/sha1/sha1.h"
 

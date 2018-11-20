@@ -17,10 +17,10 @@
 
 // Basic HTTP client tests.
 #include "core/nng_impl.h"
-#include "supplemental/http/http.h"
+#include "nng/supplemental/http/http.h"
 #include "supplemental/sha1/sha1.c"
 #include "supplemental/sha1/sha1.h"
-#include "supplemental/tls/tls.h"
+#include "nng/supplemental/tls/tls.h"
 
 const uint8_t example_sum[20] = { 0x0e, 0x97, 0x3b, 0x59, 0xf4, 0x76, 0x00,
 	0x7f, 0xd1, 0x0f, 0x87, 0xf3, 0x47, 0xc3, 0x95, 0x60, 0x65, 0x51, 0x6f,

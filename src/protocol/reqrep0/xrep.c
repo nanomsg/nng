@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "protocol/reqrep0/rep.h"
+#include "nng/protocol/reqrep0/rep.h"
 
 // Response protocol in raw mode.  The REP protocol is the "reply" side of a
 // request-reply pair.  This is useful for building RPC servers, for

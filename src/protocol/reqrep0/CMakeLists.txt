@@ -23,7 +23,7 @@ if (NNG_PROTO_REQ0)
     list(APPEND _DEFS -DNNG_HAVE_REQ0)
     list(APPEND _SRCS
         protocol/reqrep0/req.c protocol/reqrep0/xreq.c
-        protocol/reqrep0/req.h)
+        ${CMAKE_SOURCE_DIR}/include/nng/protocol/reqrep0/req.h)
     list(APPEND _HDRS protocol/reqrep0/req.h)
 endif()
 
@@ -31,7 +31,7 @@ if (NNG_PROTO_REP0)
     list(APPEND _DEFS -DNNG_HAVE_REP0)
     list(APPEND _SRCS
         protocol/reqrep0/rep.c protocol/reqrep0/xrep.c
-        protocol/reqrep0/rep.h)
+        ${CMAKE_SOURCE_DIR}/include/nng/protocol/reqrep0/rep.h)
     list(APPEND _HDRS protocol/reqrep0/rep.h)
 endif()
 

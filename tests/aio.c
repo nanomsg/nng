@@ -9,10 +9,10 @@
 //
 
 #include "convey.h"
-#include "nng.h"
+#include "nng/nng.h"
 
-#include "protocol/pair1/pair.h"
-#include "supplemental/util/platform.h"
+#include "nng/protocol/pair1/pair.h"
+#include "nng/supplemental/util/platform.h"
 
 #include "stubs.h"
 

@@ -13,7 +13,7 @@ option (NNG_TRANSPORT_INPROC "Enable inproc transport." ON)
 mark_as_advanced(NNG_TRANSPORT_INPROC)
 
 if (NNG_TRANSPORT_INPROC)
-    set(_SRCS transport/inproc/inproc.c transport/inproc/inproc.h)
+    set(_SRCS transport/inproc/inproc.c ${CMAKE_SOURCE_DIR}/include/nng/transport/inproc/inproc.h)
     set(_HDRS transport/inproc/inproc.h)
     set(_DEFS -DNNG_TRANSPORT_INPROC)
 

@@ -22,10 +22,10 @@
     IN THE SOFTWARE.
 */
 
-#include <nanomsg/nn.h>
-#include <nanomsg/pair.h>
-#include <nanomsg/pubsub.h>
-#include <nanomsg/tcp.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/pair.h>
+#include <nng/compat/nanomsg/pubsub.h>
+#include <nng/compat/nanomsg/tcp.h>
 
 #include "compat_testutil.h"
 

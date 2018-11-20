@@ -9,14 +9,14 @@
 //
 
 #include "convey.h"
-#include "nng.h"
+#include "nng/nng.h"
 #include "trantest.h"
 
-#include "protocol/pubsub0/sub.h"
+#include "nng/protocol/pubsub0/sub.h"
 
-#include "protocol/pair1/pair.h"
+#include "nng/protocol/pair1/pair.h"
 
-#include "supplemental/util/platform.h"
+#include "nng/supplemental/util/platform.h"
 
 #include "stubs.h"
 

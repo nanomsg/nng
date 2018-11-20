@@ -9,11 +9,11 @@
 //
 
 #include "convey.h"
-#include "nng.h"
-#include "protocol/pubsub0/pub.h"
-#include "protocol/pubsub0/sub.h"
+#include "nng/nng.h"
+#include "nng/protocol/pubsub0/pub.h"
+#include "nng/protocol/pubsub0/sub.h"
 #include "stubs.h"
-#include "supplemental/util/platform.h"
+#include "nng/supplemental/util/platform.h"
 
 #include <string.h>
 

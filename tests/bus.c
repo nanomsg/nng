@@ -9,9 +9,9 @@
 //
 
 #include "convey.h"
-#include "nng.h"
+#include "nng/nng.h"
 
-#include "protocol/bus0/bus.h"
+#include "nng/protocol/bus0/bus.h"
 
 #include "stubs.h"
 

@@ -9,11 +9,11 @@
 //
 
 #include "convey.h"
-#include "nng.h"
-#include "protocol/survey0/respond.h"
-#include "protocol/survey0/survey.h"
+#include "nng/nng.h"
+#include "nng/protocol/survey0/respond.h"
+#include "nng/protocol/survey0/survey.h"
 #include "stubs.h"
-#include "supplemental/util/platform.h"
+#include "nng/supplemental/util/platform.h"
 
 #include <string.h>
 

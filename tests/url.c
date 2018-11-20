@@ -12,7 +12,7 @@
 
 #include "convey.h"
 
-#include "nng.h"
+#include "nng/nng.h"
 
 TestMain("URLs", {
 

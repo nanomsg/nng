@@ -7,8 +7,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng.h"
-#include "protocol/pair1/pair.h"
+#include "nng/nng.h"
+#include "nng/protocol/pair1/pair.h"
 
 #include <cstring>
 #include <iostream>

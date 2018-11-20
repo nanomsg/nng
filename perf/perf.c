@@ -8,7 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng.h"
+#include "nng/nng.h"
 
 #include <ctype.h>
 #include <stdarg.h>
@@ -17,13 +17,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include "supplemental/util/platform.h"
+#include "nng/supplemental/util/platform.h"
 
 #if defined(NNG_HAVE_PAIR1)
-#include "protocol/pair1/pair.h"
+#include "nng/protocol/pair1/pair.h"
 
 #elif defined(NNG_HAVE_PAIR0)
-#include "protocol/pair0/pair.h"
+#include "nng/protocol/pair0/pair.h"
 
 #else
 

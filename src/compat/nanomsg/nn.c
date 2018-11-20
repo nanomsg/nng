@@ -8,34 +8,34 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nn.h"
+#include "nng/compat/nanomsg/nn.h"
 
 // transports
-#include "inproc.h"
-#include "ipc.h"
-#include "tcp.h"
-#include "ws.h"
+#include "nng/compat/nanomsg/inproc.h"
+#include "nng/compat/nanomsg/ipc.h"
+#include "nng/compat/nanomsg/tcp.h"
+#include "nng/compat/nanomsg/ws.h"
 
 // protocols
-#include "bus.h"
-#include "pair.h"
-#include "pipeline.h"
-#include "pubsub.h"
-#include "reqrep.h"
-#include "survey.h"
+#include "nng/compat/nanomsg/bus.h"
+#include "nng/compat/nanomsg/pair.h"
+#include "nng/compat/nanomsg/pipeline.h"
+#include "nng/compat/nanomsg/pubsub.h"
+#include "nng/compat/nanomsg/reqrep.h"
+#include "nng/compat/nanomsg/survey.h"
 
 // underlying NNG headers
-#include "nng.h"
-#include "protocol/bus0/bus.h"
-#include "protocol/pair0/pair.h"
-#include "protocol/pipeline0/pull.h"
-#include "protocol/pipeline0/push.h"
-#include "protocol/pubsub0/pub.h"
-#include "protocol/pubsub0/sub.h"
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "protocol/survey0/respond.h"
-#include "protocol/survey0/survey.h"
+#include "nng/nng.h"
+#include "nng/protocol/bus0/bus.h"
+#include "nng/protocol/pair0/pair.h"
+#include "nng/protocol/pipeline0/pull.h"
+#include "nng/protocol/pipeline0/push.h"
+#include "nng/protocol/pubsub0/pub.h"
+#include "nng/protocol/pubsub0/sub.h"
+#include "nng/protocol/reqrep0/rep.h"
+#include "nng/protocol/reqrep0/req.h"
+#include "nng/protocol/survey0/respond.h"
+#include "nng/protocol/survey0/survey.h"
 
 #include "core/nng_impl.h"
 

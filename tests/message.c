@@ -9,7 +9,7 @@
 //
 
 #include "convey.h"
-#include "nng.h"
+#include "nng/nng.h"
 
 #include <string.h>
 static uint8_t dat123[] = { 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3 };

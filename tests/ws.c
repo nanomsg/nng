@@ -9,9 +9,9 @@
 //
 
 #include "convey.h"
-#include "nng.h"
-#include "protocol/pair1/pair.h"
-#include "transport/ws/websocket.h"
+#include "nng/nng.h"
+#include "nng/protocol/pair1/pair.h"
+#include "nng/transport/ws/websocket.h"
 #include "trantest.h"
 
 #include "stubs.h"

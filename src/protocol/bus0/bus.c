@@ -13,7 +13,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "protocol/bus0/bus.h"
+#include "nng/protocol/bus0/bus.h"
 
 // Bus protocol.  The BUS protocol, each peer sends a message to its peers.
 // However, bus protocols do not "forward" (absent a device).  So in order

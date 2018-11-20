@@ -15,7 +15,7 @@ mark_as_advanced(NNG_TRANSPORT_TLS)
 
 if (NNG_TRANSPORT_TLS)
     set(_DEFS -DNNG_TRANSPORT_TLS)
-    set(_SRCS transport/tls/tls.c transport/tls/tls.h)
+    set(_SRCS transport/tls/tls.c ${CMAKE_SOURCE_DIR}/include/nng/transport/tls/tls.h)
     set(_HDRS transport/tls/tls.h)
 
     set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)

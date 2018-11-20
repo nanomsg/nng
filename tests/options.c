@@ -12,9 +12,9 @@
 
 #include "convey.h"
 
-#include "nng.h"
+#include "nng/nng.h"
 
-#include "supplemental/util/options.h"
+#include "nng/supplemental/util/options.h"
 
 static nng_optspec case1[] = {
 	// clang-format off

@@ -9,10 +9,10 @@
 //
 
 #include "convey.h"
-#include "nng.h"
-#include "protocol/pipeline0/pull.h"
-#include "protocol/pipeline0/push.h"
-#include "supplemental/util/platform.h"
+#include "nng/nng.h"
+#include "nng/protocol/pipeline0/pull.h"
+#include "nng/protocol/pipeline0/push.h"
+#include "nng/supplemental/util/platform.h"
 
 #include "stubs.h"
 #include <stdbool.h>

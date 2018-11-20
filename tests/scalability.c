@@ -9,12 +9,12 @@
 //
 
 #include "convey.h"
-#include "nng.h"
+#include "nng/nng.h"
 
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
+#include "nng/protocol/reqrep0/rep.h"
+#include "nng/protocol/reqrep0/req.h"
 #include "stubs.h"
-#include "supplemental/util/platform.h"
+#include "nng/supplemental/util/platform.h"
 
 #include <string.h>
 

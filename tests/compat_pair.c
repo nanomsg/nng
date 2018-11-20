@@ -20,8 +20,8 @@
     IN THE SOFTWARE.
 */
 
-#include <nanomsg/nn.h>
-#include <nanomsg/pair.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/pair.h>
 
 #include "compat_testutil.h"
 

@@ -8,16 +8,16 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "compat/nanomsg/nn.h"
+#include "nng/compat/nanomsg/nn.h"
 #include "convey.h"
-#include "nng.h"
+#include "nng/nng.h"
 #include "trantest.h"
 
-#include "protocol/pubsub0/sub.h"
+#include "nng/protocol/pubsub0/sub.h"
 
-#include "protocol/pair1/pair.h"
+#include "nng/protocol/pair1/pair.h"
 
-#include "supplemental/util/platform.h"
+#include "nng/supplemental/util/platform.h"
 
 #include "stubs.h"
 

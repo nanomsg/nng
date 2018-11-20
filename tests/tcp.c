@@ -9,8 +9,8 @@
 //
 
 #include "convey.h"
-#include "nng.h"
-#include "protocol/pair1/pair.h"
+#include "nng/nng.h"
+#include "nng/protocol/pair1/pair.h"
 #include "trantest.h"
 
 #include "stubs.h"

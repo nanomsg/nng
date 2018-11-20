@@ -8,7 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng.h"
+#include "nng/nng.h"
 #include "core/nng_impl.h"
 
 // This file provides the "public" API.  This is a thin wrapper around

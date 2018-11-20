@@ -8,10 +8,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng.h"
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "supplemental/util/platform.h"
+#include "nng/nng.h"
+#include "nng/protocol/reqrep0/rep.h"
+#include "nng/protocol/reqrep0/req.h"
+#include "nng/supplemental/util/platform.h"
 
 #include "convey.h"
 #include "stubs.h"

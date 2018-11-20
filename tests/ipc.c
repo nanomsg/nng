@@ -18,7 +18,7 @@
 #endif
 #endif
 
-#include "transport/ipc/ipc.h"
+#include "nng/transport/ipc/ipc.h"
 
 // Inproc tests.
 static int

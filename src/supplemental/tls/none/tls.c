@@ -17,7 +17,7 @@
 // We provide stub functions only to satisfy linkage.
 
 #include "core/nng_impl.h"
-#include "supplemental/tls/tls.h"
+#include "nng/supplemental/tls/tls.h"
 #include "supplemental/tls/tls_api.h"
 
 void

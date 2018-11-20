@@ -35,7 +35,7 @@ if (NNG_TRANSPORT_ZEROTIER)
     set(_LIBS zerotiercore::zerotiercore)
     set(_DEFS -DNNG_TRANSPORT_ZEROTIER)
 
-    set(_SRCS transport/zerotier/zerotier.c transport/zerotier/zerotier.h)
+    set(_SRCS transport/zerotier/zerotier.c ${CMAKE_SOURCE_DIR}/include/nng/transport/zerotier/zerotier.h)
     set(_HDRS transport/zerotier/zerotier.h)
 
     set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)

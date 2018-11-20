@@ -10,8 +10,8 @@
 
 #include "convey.h"
 
-#include "compat/nanomsg/nn.h"
-#include "compat/nanomsg/reqrep.h"
+#include "nng/compat/nanomsg/nn.h"
+#include "nng/compat/nanomsg/reqrep.h"
 
 #include "compat_testutil.h"
 

@@ -23,7 +23,7 @@ if (NNG_PROTO_SURVEYOR0)
     list(APPEND _DEFS -DNNG_HAVE_SURVEYOR0)
     list(APPEND _SRCS
         protocol/survey0/survey.c protocol/survey0/xsurvey.c
-        protocol/survey0/survey.h)
+        ${CMAKE_SOURCE_DIR}/include/nng/protocol/survey0/survey.h)
     list(APPEND _HDRS protocol/survey0/survey.h)
 endif()
 
@@ -31,7 +31,7 @@ if (NNG_PROTO_RESPONDENT0)
     list(APPEND _DEFS -DNNG_HAVE_RESPONDENT0)
     list(APPEND _SRCS
         protocol/survey0/respond.c protocol/survey0/xrespond.c
-        protocol/survey0/respond.h)
+        ${CMAKE_SOURCE_DIR}/include/nng/protocol/survey0/respond.h)
     list(APPEND _HDRS protocol/survey0/respond.h)
 endif()
 

@@ -8,7 +8,7 @@
 //
 
 #include "convey.h"
-#include "nng.h"
+#include "nng/nng.h"
 #include <errno.h>
 #include <string.h>
 
