@@ -8,8 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "trantest.h"
 #ifdef _WIN32
 #else
 #include <unistd.h>
@@ -18,7 +16,11 @@
 #endif
 #endif
 
-#include "transport/ipc/ipc.h"
+#include <nng/nng.h>
+#include <nng/transport/ipc/ipc.h>
+
+#include "convey.h"
+#include "trantest.h"
 
 // Inproc tests.
 static int

@@ -10,12 +10,11 @@
 
 #include <string.h>
 
+#include <nng/nng.h>
+
 #include "convey.h"
 
-#include "nng.h"
-
 TestMain("URLs", {
-
 	nng_url *url;
 
 	Convey("http://www.google.com", {
@@ -316,5 +315,4 @@ TestMain("URLs", {
 		So(strcmp(url->u_path, "/\xc2\xa2_centsign") == 0);
 		nng_url_free(url);
 	});
-
 })

@@ -1,6 +1,6 @@
 //
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2017 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -11,10 +11,9 @@
 #include <stdint.h>
 #include <string.h>
 
+#include <nng/nng.h>
+
 #include "convey.h"
-
-#include "nng.h"
-
 #include "supplemental/sha1/sha1.h"
 
 // The following test vectors are from RFC 3174.
@@ -38,7 +37,6 @@ char *resultarray[4] = {
 };
 
 TestMain("SHA1 Verification", {
-
 	Convey("SHA1 Works", {
 		for (int i = 0; i < 4; i++) {
 			nni_sha1_ctx ctx;

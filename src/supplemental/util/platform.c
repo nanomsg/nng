@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "supplemental/util/platform.h"
+#include "nng/supplemental/util/platform.h"
 
 nng_time
 nng_clock(void)

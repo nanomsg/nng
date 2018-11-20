@@ -1,5 +1,5 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -7,10 +7,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
 #include <errno.h>
 #include <string.h>
+
+#include <nng/nng.h>
+
+#include "convey.h"
 
 TestMain("Error messages work", {
 	Convey("Known errors work", {

@@ -8,10 +8,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-
 #include <string.h>
+
+#include <nng/nng.h>
+
+#include "convey.h"
+
 static uint8_t dat123[] = { 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3 };
 
 TestMain("Message Tests", {

@@ -8,14 +8,15 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "stubs.h"
-#include "supplemental/util/platform.h"
-
 #include <string.h>
+
+#include <nng/nng.h>
+#include <nng/protocol/reqrep0/rep.h>
+#include <nng/protocol/reqrep0/req.h>
+#include <nng/supplemental/util/platform.h>
+
+#include "convey.h"
+#include "stubs.h"
 
 TestMain("REQ/REP pattern", {
 	int         rv;
@@ -43,7 +44,6 @@ TestMain("REQ/REP pattern", {
 		});
 
 		Convey("Resend time option id works", {
-
 			// Set timeout.
 			So(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, 10) ==
 			    0);

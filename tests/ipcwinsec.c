@@ -8,16 +8,14 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <nng/nng.h>
+#include <nng/protocol/reqrep0/rep.h>
+#include <nng/protocol/reqrep0/req.h>
+#include <nng/transport/ipc/ipc.h>
+
 #include "convey.h"
-#include "trantest.h"
-
-#include "nng.h"
-
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "transport/ipc/ipc.h"
-
 #include "stubs.h"
+#include "trantest.h"
 
 #define ADDR "/tmp/ipc_winsec_test"
 

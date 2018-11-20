@@ -20,8 +20,8 @@
     IN THE SOFTWARE.
 */
 
-#include <nanomsg/nn.h>
-#include <nanomsg/pair.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/pair.h>
 #include "compat_testutil.h"
 
 /*  This test checks whether blocking on send/recv works as expected. */

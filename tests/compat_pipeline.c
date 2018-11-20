@@ -21,8 +21,8 @@
     IN THE SOFTWARE.
 */
 
-#include <nanomsg/nn.h>
-#include <nanomsg/pipeline.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/pipeline.h>
 #include "compat_testutil.h"
 
 #define SOCKET_ADDRESS "inproc://a"

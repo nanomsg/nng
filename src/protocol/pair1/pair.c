@@ -13,7 +13,7 @@
 
 #include "core/nng_impl.h"
 
-#include "protocol/pair1/pair.h"
+#include "nng/protocol/pair1/pair.h"
 
 // Pair protocol.  The PAIRv1 protocol is a simple 1:1 messaging pattern,
 // usually, but it can support a polyamorous mode where a single server can

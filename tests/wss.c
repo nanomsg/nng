@@ -8,19 +8,18 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-#include "protocol/pair1/pair.h"
-#include "supplemental/tls/tls.h"
-#include "transport/ws/websocket.h"
-#include "trantest.h"
-
-#include "stubs.h"
-// TCP tests.
-
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
+
+#include <nng/nng.h>
+#include <nng/protocol/pair1/pair.h>
+#include <nng/supplemental/tls/tls.h>
+#include <nng/transport/ws/websocket.h>
+
+#include "convey.h"
+#include "stubs.h"
+#include "trantest.h"
 
 // These keys are for demonstration purposes ONLY.  DO NOT USE.
 // The certificate is valid for 100 years, because I don't want to
@@ -234,7 +233,6 @@ out:
 }
 
 TestMain("WebSocket Secure (TLS) Transport", {
-
 	static trantest tt;
 
 	tt.dialer_init   = init_dialer_wss;

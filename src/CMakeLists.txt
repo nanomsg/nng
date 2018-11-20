@@ -24,10 +24,9 @@
 #   IN THE SOFTWARE.
 #
 
-set (NNG_HDRS nng.h)
 set (NNG_SRCS
     nng.c
-    nng.h
+    ${PROJECT_SOURCE_DIR}/include/nng/nng.h
 
     core/defs.h
 
@@ -246,7 +245,10 @@ set_target_properties (${PROJECT_NAME} ${PROJECT_NAME}
 
 target_link_libraries (${PROJECT_NAME} PRIVATE ${NNG_LIBS})
 
-target_include_directories (${PROJECT_NAME} INTERFACE $<INSTALL_INTERFACE:include> $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
+target_include_directories (${PROJECT_NAME} INTERFACE $<INSTALL_INTERFACE:include>
+$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>)
+
+target_include_directories (${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include)
 
 install (TARGETS ${PROJECT_NAME}
     EXPORT ${PROJECT_NAME}-target
@@ -263,14 +265,10 @@ install (EXPORT ${PROJECT_NAME}-target
     COMPONENT Library
 )
 
-# Install the header files.  It would be much better if we could use
-# the PUBLIC_HEADER facility, but it stupidly flattens the directories.
-foreach (f ${NNG_HDRS})
-	get_filename_component(d ${f} DIRECTORY)
-	install(FILES ${f}
-		DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}/nng/${d}
-		COMPONENT Headers)
-endforeach()
+# Install the header files.
+install(DIRECTORY ../include/nng
+    DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
+    COMPONENT Headers)
 
 # Promote settings to parent
 set(NNG_LIBS ${NNG_LIBS} PARENT_SCOPE)
@@ -296,7 +294,7 @@ write_basic_package_version_file("${version_config}"
     VERSION ${NNG_PACKAGE_VERSION}
     COMPATIBILITY SameMajorVersion
 )
-configure_package_config_file(${CMAKE_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in "${project_config}"
+configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in "${project_config}"
     INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
     PATH_VARS INCLUDE_INSTALL_DIRS)
 

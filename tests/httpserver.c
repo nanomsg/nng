@@ -8,8 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "trantest.h"
 
 #ifdef _WIN32
 #define strdup _strdup
@@ -17,10 +15,15 @@
 #include <arpa/inet.h>
 #endif
 
+#include "trantest.h"
+
 // Basic HTTP server tests.
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+#include <nng/supplemental/tls/tls.h>
+
 #include "core/nng_impl.h"
-#include "supplemental/http/http.h"
-#include "supplemental/tls/tls.h"
+#include "convey.h"
 
 const char *doc1 = "<html><body>Someone <b>is</b> home!</body</html>";
 const char *doc2 = "This is a text file.";

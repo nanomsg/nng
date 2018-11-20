@@ -8,12 +8,12 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-#include "protocol/pair0/pair.h"
-#include "transport/zerotier/zerotier.h"
-#include "trantest.h"
+#include <nng/nng.h>
+#include <nng/protocol/pair0/pair.h>
+#include <nng/transport/zerotier/zerotier.h>
 
+#include "convey.h"
+#include "trantest.h"
 #include "stubs.h"
 
 // zerotier tests.

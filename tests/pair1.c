@@ -8,14 +8,14 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-#include "protocol/pair1/pair.h"
-#include "trantest.h"
-
-#include "stubs.h"
-
 #include <string.h>
+
+#include <nng/nng.h>
+#include <nng/protocol/pair1/pair.h>
+
+#include "convey.h"
+#include "stubs.h"
+#include "trantest.h"
 
 #define SECOND(x) ((x) *1000)
 #define MILLISECOND(x) (x)
@@ -361,7 +361,6 @@ TestMain("PAIRv1 protocol", {
 		});
 
 		Convey("Reserved bits in raw header", {
-
 			Convey("Nonzero bits fail", {
 				So(nng_msg_alloc(&msg, 0) == 0);
 				So(nng_msg_header_append_u32(

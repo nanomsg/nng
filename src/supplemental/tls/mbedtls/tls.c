@@ -28,7 +28,7 @@
 
 #include "core/nng_impl.h"
 
-#include "supplemental/tls/tls.h"
+#include "nng/supplemental/tls/tls.h"
 #include "supplemental/tls/tls_api.h"
 
 // Implementation note.  This implementation buffers data between the TLS

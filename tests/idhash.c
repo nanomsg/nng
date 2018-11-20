@@ -9,9 +9,9 @@
 //
 
 #include "core/idhash.c"
-#include "convey.h"
-
 #include "core/nng_impl.h"
+
+#include "convey.h"
 
 #define STRESSLOAD 50000
 #define NVALUES 1000

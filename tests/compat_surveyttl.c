@@ -23,9 +23,9 @@
     IN THE SOFTWARE.
 */
 
-#include <nanomsg/nn.h>
-#include <nanomsg/survey.h>
-#include <nanomsg/tcp.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/survey.h>
+#include <nng/compat/nanomsg/tcp.h>
 
 #include "compat_testutil.h"
 

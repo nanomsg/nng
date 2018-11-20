@@ -8,17 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "trantest.h"
-
-#include "nng.h"
-
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "transport/ipc/ipc.h"
-
-#include "stubs.h"
-
 #ifndef _WIN32
 #include <errno.h>
 #include <string.h>
@@ -27,6 +16,15 @@
 #include <sys/un.h>
 #include <unistd.h>
 #endif
+
+#include <nng/nng.h>
+#include <nng/protocol/reqrep0/rep.h>
+#include <nng/protocol/reqrep0/req.h>
+#include <nng/transport/ipc/ipc.h>
+
+#include "convey.h"
+#include "stubs.h"
+#include "trantest.h"
 
 #define ADDR "/tmp/ipc_perms_test"
 
@@ -40,7 +38,6 @@
 
 #ifdef _WIN32
 TestMain("IPC Permissions", {
-
 	atexit(nng_fini);
 	Convey("Given a socket and an IPC listener", {
 		nng_socket   s;

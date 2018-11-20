@@ -10,11 +10,10 @@
 
 #include <string.h>
 
+#include <nng/nng.h>
+#include <nng/supplemental/util/options.h>
+
 #include "convey.h"
-
-#include "nng.h"
-
-#include "supplemental/util/options.h"
 
 static nng_optspec case1[] = {
 	// clang-format off

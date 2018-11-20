@@ -32,7 +32,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#include <nanomsg/nn.h>
+#include <nng/compat/nanomsg/nn.h>
 #include "compat_testutil.h"
 
 int  test_socket_impl(char *file, int line, int family, int protocol);

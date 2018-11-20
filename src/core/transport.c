@@ -11,22 +11,22 @@
 #include "core/nng_impl.h"
 
 #ifdef NNG_TRANSPORT_INPROC
-#include "transport/inproc/inproc.h"
+#include "nng/transport/inproc/inproc.h"
 #endif
 #ifdef NNG_TRANSPORT_IPC
-#include "transport/ipc/ipc.h"
+#include "nng/transport/ipc/ipc.h"
 #endif
 #ifdef NNG_TRANSPORT_TCP
-#include "transport/tcp/tcp.h"
+#include "nng/transport/tcp/tcp.h"
 #endif
 #ifdef NNG_TRANSPORT_TLS
-#include "transport/tls/tls.h"
+#include "nng/transport/tls/tls.h"
 #endif
 #ifdef NNG_TRANSPORT_WS
-#include "transport/ws/websocket.h"
+#include "nng/transport/ws/websocket.h"
 #endif
 #ifdef NNG_TRANSPORT_ZEROTIER
-#include "transport/zerotier/zerotier.h"
+#include "nng/transport/zerotier/zerotier.h"
 #endif
 
 #include <stdio.h>

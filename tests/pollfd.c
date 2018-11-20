@@ -29,16 +29,16 @@
 
 #endif
 
+#include <nng/nng.h>
+#include <nng/protocol/pair1/pair.h>
+#include <nng/protocol/pipeline0/pull.h>
+#include <nng/protocol/pipeline0/push.h>
+#include <nng/supplemental/util/platform.h>
+
 #include "convey.h"
-#include "nng.h"
-#include "protocol/pair1/pair.h"
-#include "protocol/pipeline0/pull.h"
-#include "protocol/pipeline0/push.h"
 #include "stubs.h"
-#include "supplemental/util/platform.h"
 
 TestMain("Poll FDs", {
-
 	Convey("Given a connected pair of sockets", {
 		nng_socket s1;
 		nng_socket s2;

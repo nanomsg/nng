@@ -25,12 +25,13 @@
 #include <mswsock.h>
 #endif
 
+#include <nng/nng.h>
+#include <nng/protocol/reqrep0/rep.h>
+#include <nng/protocol/reqrep0/req.h>
+#include <nng/supplemental/util/platform.h>
+
 #include "convey.h"
-#include "nng.h"
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
 #include "stubs.h"
-#include "supplemental/util/platform.h"
 
 bool
 isready(SOCKET fd)
@@ -52,7 +53,6 @@ isready(SOCKET fd)
 }
 
 TestMain("REQ pollable", {
-
 	atexit(nng_fini);
 
 	Convey("Given a REQ/REP pair", {

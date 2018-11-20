@@ -8,11 +8,11 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <string.h>
+
 #include "convey.h"
 #include "core/nng_impl.h"
 #include "stubs.h"
-
-#include <string.h>
 
 #ifndef _WIN32
 #include <arpa/inet.h>

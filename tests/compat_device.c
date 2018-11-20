@@ -21,11 +21,11 @@
  *  IN THE SOFTWARE.
  */
 
-#include <nanomsg/nn.h>
-#include <nanomsg/bus.h>
-#include <nanomsg/pair.h>
-#include <nanomsg/pipeline.h>
-#include <nanomsg/inproc.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/bus.h>
+#include <nng/compat/nanomsg/pair.h>
+#include <nng/compat/nanomsg/pipeline.h>
+#include <nng/compat/nanomsg/inproc.h>
 #include "compat_testutil.h"
 
 #define SOCKET_ADDRESS_A    "inproc://a"

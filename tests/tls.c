@@ -8,22 +8,20 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-
-#include "nng.h"
-
-#include "protocol/pair1/pair.h"
-#include "supplemental/tls/tls.h"
-#include "transport/tls/tls.h"
-
-#include "trantest.h"
-
-#include "stubs.h"
-// TCP tests.
+// TLS tests.
 
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
+
+#include <nng/nng.h>
+#include <nng/protocol/pair1/pair.h>
+#include <nng/supplemental/tls/tls.h>
+#include <nng/transport/tls/tls.h>
+
+#include "convey.h"
+#include "stubs.h"
+#include "trantest.h"
 
 // These keys are for demonstration purposes ONLY.  DO NOT USE.
 // The certificate is valid for 100 years, because I don't want to

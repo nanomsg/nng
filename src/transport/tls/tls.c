@@ -14,9 +14,9 @@
 
 #include "core/nng_impl.h"
 
-#include "supplemental/tls/tls.h"
+#include "nng/supplemental/tls/tls.h"
 #include "supplemental/tls/tls_api.h"
-#include "tls.h"
+#include "nng/transport/tls/tls.h"
 
 // TLS over TCP transport.   Platform specific TCP operations must be
 // supplied as well, and uses the supplemental TLS v1.2 code.  It is not

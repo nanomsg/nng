@@ -8,11 +8,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/reqrep.h>
+
 #include "convey.h"
-
-#include "compat/nanomsg/nn.h"
-#include "compat/nanomsg/reqrep.h"
-
 #include "compat_testutil.h"
 
 #include <string.h>

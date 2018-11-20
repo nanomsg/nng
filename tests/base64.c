@@ -9,11 +9,9 @@
 //
 
 #include <string.h>
+#include <nng/nng.h>
 
 #include "convey.h"
-
-#include "nng.h"
-
 #include "supplemental/base64/base64.h"
 
 typedef struct testcase {

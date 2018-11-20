@@ -13,9 +13,9 @@ if (NNG_ENABLE_HTTP)
     set(NNG_SUPP_HTTP ON)
 endif()
 mark_as_advanced(NNG_ENABLE_HTTP)
-
-set(_HDRS supplemental/http/http.h)
-set(_SRCS ${_HDRS} supplemental/http/http_public.c supplemental/http/http_api.h)
+set(_SRCS supplemental/http/http_public.c
+    ${PROJECT_SOURCE_DIR}/include/nng/supplemental/http/http.h
+    supplemental/http/http_api.h)
 
 if (NNG_SUPP_HTTP)
         set(_DEFS -DNNG_SUPP_HTTP)
@@ -30,4 +30,3 @@ endif()
 
 set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
 set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
-set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)

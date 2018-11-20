@@ -14,7 +14,8 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "zerotier.h"
+
+#include "nng/transport/zerotier/zerotier.h"
 
 #include <zerotiercore/ZeroTierOne.h>
 

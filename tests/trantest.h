@@ -8,14 +8,16 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "core/nng_impl.h"
-#include "nng.h"
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "supplemental/util/platform.h"
 #include <stdlib.h>
 #include <string.h>
+
+#include <nng/nng.h>
+#include <nng/protocol/reqrep0/rep.h>
+#include <nng/protocol/reqrep0/req.h>
+#include <nng/supplemental/util/platform.h>
+
+#include "convey.h"
+#include "core/nng_impl.h"
 
 // Transport common tests.  By making a common test framework for transports,
 // we can avoid rewriting the same tests for each new transport.  Include this
@@ -150,7 +152,7 @@ trantest_init(trantest *tt, const char *addr)
 	So(nng_req_open(&tt->reqsock) == 0);
 	So(nng_rep_open(&tt->repsock) == 0);
 
-	nni_url *url;
+	nng_url *url;
 	So(nng_url_parse(&url, tt->addr) == 0);
 #if defined(NNG_STATIC_LIB)
 	tt->tran = nni_tran_find(url);

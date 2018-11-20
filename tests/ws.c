@@ -8,18 +8,17 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-#include "protocol/pair1/pair.h"
-#include "transport/ws/websocket.h"
-#include "trantest.h"
-
-#include "stubs.h"
-// TCP tests.
-
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
+
+#include <nng/nng.h>
+#include <nng/protocol/pair1/pair.h>
+#include <nng/transport/ws/websocket.h>
+
+#include "convey.h"
+#include "stubs.h"
+#include "trantest.h"
 
 static int
 check_props_v4(nng_msg *msg)
@@ -83,7 +82,6 @@ check_props_v4(nng_msg *msg)
 }
 
 TestMain("WebSocket Transport", {
-
 	trantest_test_extended("ws://127.0.0.1:%u/test", check_props_v4);
 
 	Convey("Empty hostname works", {

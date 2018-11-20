@@ -13,8 +13,7 @@ if (NNG_SUPP_TLS)
 	set(_DEFS -DNNG_SUPP_TLS)
 endif()
 
-set(_SRCS supplemental/tls/tls.h)
-set(_HDRS supplemental/tls/tls.h)
+set(_SRCS ${PROJECT_SOURCE_DIR}/include/nng/supplemental/tls/tls.h)
 
 # For now we only support the ARM mbedTLS library.
 if (NNG_SUPP_TLS_MBEDTLS)
@@ -36,12 +35,10 @@ endif()
 
 list(APPEND NNG_DEFS ${_DEFS})
 list(APPEND NNG_SRCS ${_SRCS})
-list(APPEND NNG_HDRS ${_HDRS})
 list(APPEND NNG_LIBS ${_LIBS})
 list(APPEND NNG_INCS ${_INCS})
 
 set(NNG_DEFS ${NNG_DEFS} PARENT_SCOPE)
 set(NNG_SRCS ${NNG_SRCS} PARENT_SCOPE)
-set(NNG_HDRS ${NNG_HDRS} PARENT_SCOPE)
 set(NNG_LIBS ${NNG_LIBS} PARENT_SCOPE)
 set(NNG_INCS ${NNG_INCS} PARENT_SCOPE)

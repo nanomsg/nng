@@ -8,14 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "nng.h"
-#include "protocol/reqrep0/rep.h"
-#include "protocol/reqrep0/req.h"
-#include "supplemental/util/platform.h"
-
-#include "convey.h"
-#include "stubs.h"
-
 #include <stdlib.h>
 #include <string.h>
 
@@ -23,6 +15,14 @@
 #include <sys/select.h>
 #include <sys/time.h>
 #endif
+
+#include <nng/nng.h>
+#include <nng/protocol/reqrep0/rep.h>
+#include <nng/protocol/reqrep0/req.h>
+#include <nng/supplemental/util/platform.h>
+
+#include "convey.h"
+#include "stubs.h"
 
 const char *addr = "inproc://bug346";
 
@@ -94,11 +94,9 @@ nng_socket reqs[NCLIENTS];
 nng_socket rep;
 
 TestMain("Nonblocking Works", {
-
 	atexit(nng_fini);
 
 	Convey("Running for 15 sec", {
-
 		nng_thread *server;
 		nng_thread *clients[NCLIENTS];
 

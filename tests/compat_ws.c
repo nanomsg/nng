@@ -31,9 +31,9 @@
 // We have improved the maximum receive size test, and verified that option
 // setting for the frame type conforms to NNG constraints.
 
-#include <nanomsg/nn.h>
-#include <nanomsg/pair.h>
-#include <nanomsg/ws.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/pair.h>
+#include <nng/compat/nanomsg/ws.h>
 
 #include "compat_testutil.h"
 

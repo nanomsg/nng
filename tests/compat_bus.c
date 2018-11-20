@@ -20,8 +20,8 @@
     IN THE SOFTWARE.
 */
 
-#include <nanomsg/nn.h>
-#include <nanomsg/bus.h>
+#include <nng/compat/nanomsg/nn.h>
+#include <nng/compat/nanomsg/bus.h>
 #include "compat_testutil.h"
 
 #define SOCKET_ADDRESS_A "inproc://a"

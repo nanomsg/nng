@@ -8,17 +8,18 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-#include "protocol/pair1/pair.h"
-#include "trantest.h"
-
-#include "stubs.h"
-// TCP tests.
-
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
+
+#include <nng/nng.h>
+#include <nng/protocol/pair1/pair.h>
+
+#include "convey.h"
+#include "stubs.h"
+#include "trantest.h"
+
+// TCP tests.
 
 static int
 check_props_v4(nng_msg *msg)

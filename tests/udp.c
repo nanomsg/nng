@@ -8,18 +8,17 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "trantest.h"
+// Basic UDP tests.
 
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
 
-// Basic UDP tests.
+#include "convey.h"
 #include "core/nng_impl.h"
+#include "trantest.h"
 
 TestMain("UDP support", {
-
 	nni_init();
 	atexit(nng_fini);
 
@@ -259,7 +258,6 @@ TestMain("UDP support", {
 			    rv == NNG_EUNREACHABLE);
 			nng_aio_free(aio1);
 		});
-
 	});
 
 	Convey("Cannot open using bogus sockaddr", {

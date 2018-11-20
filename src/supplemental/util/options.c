@@ -12,7 +12,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "supplemental/util/options.h"
+#include "nng/supplemental/util/options.h"
 
 // Call with optidx set to 1 to start parsing.
 int

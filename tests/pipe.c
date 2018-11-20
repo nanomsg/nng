@@ -8,15 +8,16 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "convey.h"
-#include "nng.h"
-#include "protocol/pipeline0/pull.h"
-#include "protocol/pipeline0/push.h"
-#include "supplemental/util/platform.h"
-
-#include "stubs.h"
 #include <stdbool.h>
 #include <string.h>
+
+#include <nng/nng.h>
+#include <nng/protocol/pipeline0/pull.h>
+#include <nng/protocol/pipeline0/push.h>
+#include <nng/supplemental/util/platform.h>
+
+#include "convey.h"
+#include "stubs.h"
 
 #define APPENDSTR(m, s) nng_msg_append(m, s, strlen(s))
 #define CHECKSTR(m, s)                   \
