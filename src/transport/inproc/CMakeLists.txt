@@ -14,10 +14,8 @@ mark_as_advanced(NNG_TRANSPORT_INPROC)
 
 if (NNG_TRANSPORT_INPROC)
     set(_SRCS transport/inproc/inproc.c ${CMAKE_SOURCE_DIR}/include/nng/transport/inproc/inproc.h)
-    set(_HDRS transport/inproc/inproc.h)
     set(_DEFS -DNNG_TRANSPORT_INPROC)
 
     set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
-    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
     set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
 endif()

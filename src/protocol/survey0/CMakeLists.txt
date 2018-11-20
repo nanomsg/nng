@@ -16,7 +16,6 @@ option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
 mark_as_advanced(NNG_PROTO_SURVEYOR0)
 
 set(_DEFS)
-set(_HDRS)
 set(_SRCS)
 
 if (NNG_PROTO_SURVEYOR0)
@@ -24,7 +23,7 @@ if (NNG_PROTO_SURVEYOR0)
     list(APPEND _SRCS
         protocol/survey0/survey.c protocol/survey0/xsurvey.c
         ${CMAKE_SOURCE_DIR}/include/nng/protocol/survey0/survey.h)
-    list(APPEND _HDRS protocol/survey0/survey.h)
+   
 endif()
 
 if (NNG_PROTO_RESPONDENT0)
@@ -32,9 +31,8 @@ if (NNG_PROTO_RESPONDENT0)
     list(APPEND _SRCS
         protocol/survey0/respond.c protocol/survey0/xrespond.c
         ${CMAKE_SOURCE_DIR}/include/nng/protocol/survey0/respond.h)
-    list(APPEND _HDRS protocol/survey0/respond.h)
+   
 endif()
 
 set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
 set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
-set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)

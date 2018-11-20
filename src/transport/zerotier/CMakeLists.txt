@@ -36,12 +36,10 @@ if (NNG_TRANSPORT_ZEROTIER)
     set(_DEFS -DNNG_TRANSPORT_ZEROTIER)
 
     set(_SRCS transport/zerotier/zerotier.c ${CMAKE_SOURCE_DIR}/include/nng/transport/zerotier/zerotier.h)
-    set(_HDRS transport/zerotier/zerotier.h)
 
     set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
     set(NNG_LIBS ${NNG_LIBS} ${_LIBS} PARENT_SCOPE)
     set(NNG_PKGS ${NNG_PKGS} ${_PKGS} PARENT_SCOPE)
     set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
-    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
 
 endif()

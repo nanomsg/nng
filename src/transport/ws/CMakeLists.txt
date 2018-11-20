@@ -34,8 +34,6 @@ if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
     set(NNG_SUPP_SHA1 ON PARENT_SCOPE)
 
     set(_SRCS transport/ws/websocket.c ${CMAKE_SOURCE_DIR}/include/nng/transport/ws/websocket.h)
-    set(_HDRS transport/ws/websocket.h)
     set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
     set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
-    set(NNG_HDRS ${NNG_HDRS} ${_HDRS} PARENT_SCOPE)
 endif()

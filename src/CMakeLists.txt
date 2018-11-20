@@ -24,7 +24,6 @@
 #   IN THE SOFTWARE.
 #
 
-set (NNG_HDRS nng.h)
 set (NNG_SRCS
     nng.c
     ${CMAKE_SOURCE_DIR}/include/nng/nng.h
