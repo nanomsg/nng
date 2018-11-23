@@ -244,9 +244,11 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 {
 	int            rv;
 	nni_tran *     tran = d->d_tran;
-	uint64_t       id   = nni_dialer_id(d);
 	nni_pipe *     p;
 	nni_stat_item *st;
+#ifdef NNG_ENABLE_STATS
+	uint64_t id = nni_dialer_id(d);
+#endif
 
 	if ((rv = pipe_create(&p, d->d_sock, tran, tdata)) != 0) {
 		return (rv);
@@ -265,9 +267,11 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 {
 	int            rv;
 	nni_tran *     tran = l->l_tran;
-	uint64_t       id   = nni_listener_id(l);
 	nni_pipe *     p;
 	nni_stat_item *st;
+#ifdef NNG_ENABLE_STATS
+	uint64_t id = nni_listener_id(l);
+#endif
 
 	if ((rv = pipe_create(&p, l->l_sock, tran, tdata)) != 0) {
 		return (rv);

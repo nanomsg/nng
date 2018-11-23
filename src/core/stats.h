@@ -49,6 +49,8 @@ struct nni_stat_item {
 	const char *    si_string;   // string value (NULL for numerics)
 	uint64_t        si_number;   // numeric value
 	nni_atomic_u64  si_atomic;   // atomic value
+#else
+	char		si_disabled; // place holder, cannot be empty in C
 #endif
 };
 
