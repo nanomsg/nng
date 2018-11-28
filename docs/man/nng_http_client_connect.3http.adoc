@@ -45,7 +45,7 @@ None.
 == ERRORS
 
 [horizontal]
-`NNG_EADDRINVAL`:: The server is configured with an invalid address.
+`NNG_EADDRINVAL`:: The client is configured with an invalid address.
 `NNG_ECANCELED`:: The operation was aborted.
 `NNG_ECONNREFUSED`:: The TCP connection was refused by the server.
 `NNG_ECONNRESET`:: The TCP connection was reset by the server.
