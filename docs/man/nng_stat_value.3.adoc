@@ -30,7 +30,7 @@ The `nng_stat_value()` function returns a numeric value for the statistic _stat_
 If the statistic has a boolean value, then zero is returned for `false`, and
 one is returned for `true`.
 Otherwise, if the string is not of numeric type, then zero is returned.
-See `<<nng_stat_type.3#,nng_stat_type(3)>>` for a description of statistic types.
+See `<<nng_stat_type.3#,nng_stat_type()>>` for a description of statistic types.
 
 == RETURN VALUES
 
