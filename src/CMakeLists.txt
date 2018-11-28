@@ -70,6 +70,7 @@ set (NNG_SRCS
     core/reap.h
     core/socket.c
     core/socket.h
+    core/sockimpl.h
     core/stats.c
     core/stats.h
     core/strs.c
@@ -92,6 +93,7 @@ if (NNG_PLATFORM_POSIX)
 
     set (NNG_SRCS ${NNG_SRCS}
         platform/posix/posix_impl.h
+        platform/posix/posix_aio.h
         platform/posix/posix_ipc.h
         platform/posix/posix_config.h
         platform/posix/posix_pollq.h
