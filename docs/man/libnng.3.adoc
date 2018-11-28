@@ -279,6 +279,30 @@ as a convenience to aid in creating portable applications.
 |===
 
 
+=== Supplemental TCP
+
+|===
+|<<nng_tcp_close.3tcp#,nng_tcp_close()>>|close TCP connection
+|<<nng_tcp_dialer_alloc.3tcp#,nng_tcp_dialer_alloc()>>|allocate TCP dialer
+|<<nng_tcp_dialer_close.3tcp#,nng_tcp_dialer_close()>>|close TCP dialer
+|<<nng_tcp_dialer_dial.3tcp#,nng_tcp_dialer_dial()>>|initiate outgoing TCP connection
+|<<nng_tcp_dialer_free.3tcp#,nng_tcp_dialer_free()>>|free TCP dialer
+|<<nng_tcp_free.3tcp#,nng_tcp_free()>>|free TCP connection
+|<<nng_tcp_listener_accept.3tcp#,nng_tcp_listener_accept()>>|accept incoming TCP connection
+|<<nng_tcp_listener_alloc.3tcp#,nng_tcp_listener_alloc()>>|allocate TCP listener
+|<<nng_tcp_listener_close.3tcp#,nng_tcp_listener_close()>>|close TCP listener
+|<<nng_tcp_listener_free.3tcp#,nng_tcp_listener_free()>>|free TCP listener
+|<<nng_tcp_listener_listen.3tcp#,nng_tcp_listener_listen()>>|bind TCP listener to port
+|<<nng_tcp_peername.3tcp#,nng_tcp_peername()>>|get TCP peer socket address
+|<<nng_tcp_recv.3tcp#,nng_tcp_recv()>>|receive from TCP connection
+|<<nng_tcp_send.3tcp#,nng_tcp_send()>>|send to TCP connection
+|<<nng_tcp_sockname.3tcp#,nng_tcp_sockname()>>|get TCP local socket address
+|<<nng_tcp_set_keepalive.3tcp#,nng_tcp_set_keepalive()>>|enable or disable TCP keepalives
+|<<nng_tcp_set_nodelay.3tcp#,nng_tcp_set_nodelay()>>|disable Nagle's algorithm
+
+|
+
+|===
 === HTTP Support
 
 The library may be configured with support for HTTP, and this will

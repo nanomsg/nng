@@ -1,0 +1,69 @@
+= nng_tcp(5)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tcp - TCP connection
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/tcp/tcp.h>
+
+typedef struct nng_tcp_s nng_tcp;
+----
+
+== DESCRIPTION
+
+An `nng_tcp` (((TCP connection))) represents a connected stream.
+TCP stream objects can be used to send or receive data.
+
+NOTE: The `nng_tcp` object is used for raw TCP connections, and
+should not be confused with a pipe object created using the
+<<nng_tcp.7#,nng_tcp(7)>> transport.
+
+TIP: Most NNG applications should not use this, but instead use the
+`<<nng_tcp.7#,nng_tcp>>` transport instead.
+
+These objects are created either establishing an outgoing connection
+with `<<nng_tcp_dialer_dial.3tcp#,nng_tcp_dialer_dial()>>` or by
+accepting in incoming connection with
+`<<nng_tcp_listener_accept.3tcp#,nng_tcp_listener_accept()>>`.
+
+TCP connections are byte streams, and are "`reliable`" in that data
+will not be delivered out of order, or with portions missing.
+
+Data can be sent using `<<nng_tcp_send.3tcp#,nng_tcp_send()>>` or
+received with `<<nng_tcp_recv.3tcp#,nng_tcp_recv()>>`.
+
+When the connection is no longer needed, it should be freed with
+`<<nng_tcp_free.3tcp#,nng_tcp_free()>>`.
+
+TIP: It is possible to close the connection, without freeing it, by
+using `<<nng_tcp_close.3tcp#,nng_tcp_close()>>`.
+
+== SEE ALSO
+
+[.text-left]
+<<libnng.3#,libnng(3)>>,
+<<nng_tcp_close.3tcp#,nng_tcp_close(3tcp)>>,
+<<nng_tcp_dialer_dial.3tcp#,nng_tcp_dialer_dial(3tcp)>>,
+<<nng_tcp_free.3tcp#,nng_tcp_free(3tcp)>>,
+<<nng_tcp_listener_accept.3tcp#,nng_tcp_listener_accept(3tcp)>>,
+<<nng_tcp_peername.3tcp#,nng_tcp_peername(3tcp)>>,
+<<nng_tcp_recv.3tcp#,nng_tcp_recv(3tcp)>>,
+<<nng_tcp_send.3tcp#,nng_tcp_send(3tcp)>>,
+<<nng_tcp_sockname.3tcp#,nng_tcp_sockname(3tcp)>>,
+<<nng_tcp_set_keepalive.3tcp#,nng_tcp_set_keepalive(3tcp)>>,
+<<nng_tcp_set_nodelay.3tcp#,nng_tcp_set_nodelay(3tcp)>>,
+<<nng.7#,nng(7)>>

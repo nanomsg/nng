@@ -1,0 +1,45 @@
+= nng_tcp_sockname(3tcp)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tcp_sockname - get TCP local socket address
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/tcp/tcp.h>
+
+int nng_tcp_sockname(nng_tcp *conn, nng_sockaddr *sa);
+----
+
+== DESCRIPTION
+
+The `nng_tcp_sockname()` is retrieves the local TCP address associated with
+the connection _conn_, and stores it in _sa_.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ECLOSED`:: The connection _conn_ is closed.
+
+== SEE ALSO
+
+[.text-left]
+<<nng_tcp_peername.3tcp#,nng_tcp_peername(3tcp)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_tcp.5#,nng_tcp(5)>>

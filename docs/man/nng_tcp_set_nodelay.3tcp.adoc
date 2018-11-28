@@ -1,0 +1,56 @@
+= nng_tcp_set_nodelay(3tcp)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tcp_set_nodelay - disable Nagle's algorithm
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/tcp/tcp.h>
+
+int nng_tcp_set_nodelay(nng_tcp *conn, bool nodelay);
+----
+
+== DESCRIPTION
+
+The `nng_tcp_set_nodelay()` is used to disable (or enable) the use of
+((Nagle's algorithm)) on the TCP connection _conn_.
+
+The default setting is platform dependent.
+
+By setting _nodelay_ to `true`, Nagle's algorithm is disabled.
+This is normally the preferred setting for latency sensitive protocols.
+
+Setting the value to `false` can cause messages to be deferred before being
+sent over the network, in order to allow additional data to accumulate.
+This is reduces overhead associated with each message by allowing overheads
+such as packet headers to amortized across more data, giving better network
+efficiency, but comes at a penalty to latency.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ECLOSED`:: The connection _conn_ is closed.
+
+== SEE ALSO
+
+[.text-left]
+<<nng_tcp_send.3tcp#,nng_tcp_send(3tcp)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_tcp.5#,nng_tcp(5)>>

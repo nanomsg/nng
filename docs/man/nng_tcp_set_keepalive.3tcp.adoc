@@ -1,0 +1,55 @@
+= nng_tcp_set_keepalive(3tcp)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tcp_set_keepalive - enable or disable TCP keepalives
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/tcp/tcp.h>
+
+int nng_tcp_set_keepalive(nng_tcp *conn, bool keepalive);
+----
+
+== DESCRIPTION
+
+The `nng_tcp_set_keepalive()` is used to enable or disable ((TCP keepalives))
+on the connection named by _conn_, depending on the value of _keepalive_.
+
+Different platforms have varying degress of support, with different thresholds
+for the interval between keep alive messages, and the duration required for
+a remote peer to be assumed to be offline.
+
+TIP: Keepalives can help keep a connection active, and prevent firewalls or
+other network equipment from discarding routing information as "`stale`",
+but enabling this means interruptions in connectivity will cause a
+connection to fail, which might otherwise be able to recover.
+Keepalives can also prevent a system from going to sleep properly.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ECLOSED`:: The connection _conn_ is closed.
+
+== SEE ALSO
+
+[.text-left]
+<<nng_tcp_recv.3tcp#,nng_tcp_recv(3tcp)>>,
+<<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_tcp.5#,nng_tcp(5)>>

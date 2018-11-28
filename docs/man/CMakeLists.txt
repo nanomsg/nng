@@ -290,6 +290,26 @@ if (NNG_ENABLE_DOC)
 	nng_thread_destroy
     )
 
+	set(NNG_MAN3TCP
+	nng_tcp_close
+	nng_tcp_free
+	nng_tcp_dialer_alloc
+	nng_tcp_dialer_close
+	nng_tcp_dialer_dial
+	nng_tcp_dialer_free
+	nng_tcp_listener_accept
+	nng_tcp_listener_alloc
+	nng_tcp_listener_close
+	nng_tcp_listener_free
+	nng_tcp_listener_listen
+	nng_tcp_peername
+	nng_tcp_recv
+	nng_tcp_send
+	nng_tcp_set_keepalive
+	nng_tcp_set_nodelay
+	nng_tcp_sockname
+	)
+
     set(NNG_MAN3TLS
 	nng_tls_config_alloc
 	nng_tls_config_auth_mode
@@ -320,6 +340,10 @@ if (NNG_ENABLE_DOC)
 	nng_sockaddr_zt
 	nng_socket
 	nng_stat
+
+	nng_tcp
+	nng_tcp_dialer
+	nng_tcp_listener
     )
 
     set(NNG_MAN7
@@ -361,6 +385,10 @@ if (NNG_ENABLE_DOC)
     foreach(F ${NNG_MAN3SUPP})
         nng_man(${F} 3supp)
     endforeach()
+
+    foreach(F ${NNG_MAN3TCP})
+        nng_man(${F} 3tcp)
+	endforeach()
 
     foreach(F ${NNG_MAN3TLS})
         nng_man(${F} 3tls)
