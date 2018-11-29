@@ -13,19 +13,18 @@ if (NNG_ENABLE_HTTP)
     set(NNG_SUPP_HTTP ON)
 endif()
 mark_as_advanced(NNG_ENABLE_HTTP)
-set(_SRCS supplemental/http/http_public.c
-    ${PROJECT_SOURCE_DIR}/include/nng/supplemental/http/http.h
-    supplemental/http/http_api.h)
 
 if (NNG_SUPP_HTTP)
         set(_DEFS -DNNG_SUPP_HTTP)
-        list(APPEND _SRCS
-                supplemental/http/http_client.c
-                supplemental/http/http_chunk.c
-                supplemental/http/http_conn.c
-                supplemental/http/http_msg.c
-                supplemental/http/http_public.c
-                supplemental/http/http_server.c)
+        set(_SRCS supplemental/http/http_public.c
+            ${PROJECT_SOURCE_DIR}/include/nng/supplemental/http/http.h
+            supplemental/http/http_api.h
+            supplemental/http/http_client.c
+            supplemental/http/http_chunk.c
+            supplemental/http/http_conn.c
+            supplemental/http/http_msg.c
+            supplemental/http/http_public.c
+            supplemental/http/http_server.c)
 endif()
 
 set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
