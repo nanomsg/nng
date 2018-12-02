@@ -135,6 +135,8 @@ static nng_optspec opts[] = {
 	{ .o_name = "hex", .o_val = OPT_HEX },
 	{ .o_name = "compat", .o_val = OPT_COMPAT },
 	{ .o_name = "async", .o_val = OPT_ASYNC },
+	{ .o_name = "msgpack", .o_val = OPT_MSGPACK },
+
 	{
 	    .o_name  = "recv-maxsz",
 	    .o_short = 'Z',
