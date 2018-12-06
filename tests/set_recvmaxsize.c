@@ -8,8 +8,8 @@
 
 #include "convey.h"
 
-#include "nng.h"
-#include "protocol/pair1/pair.h"
+#include <nng/nng.h>
+#include <nng/protocol/pair1/pair.h>
 
 #define SNDBUFSIZE 150
 #define RCVBUFSIZE 200
