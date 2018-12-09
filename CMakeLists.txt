@@ -142,6 +142,16 @@ if (NNG_ENABLE_STATS)
 endif()
 mark_as_advanced(NNG_ENABLE_STATS)
 
+if (NNG_RESOLV_CONCURRENCY)
+    add_definitions(-DNNG_RESOLV_CONCURRENCY=${NNG_RESOLV_CONCURRENCY})
+endif()
+mark_as_advanced(NNG_RESOLV_CONCURRENCY)
+
+if (NNG_NUM_TASKQ_THREADS)
+    add_definitions(-DNNG_NUM_TASKQ_THREADS=${NNG_NUM_TASKQ_THREADS})
+endif()
+mark_as_advanced(NNG_NUM_TASKQ_THREADS)
+
 #  Platform checks.
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")

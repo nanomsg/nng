@@ -266,10 +266,14 @@ nni_taskq_sys_init(void)
 {
 	int nthrs;
 
+#ifndef NNG_NUM_TASKQ_THREADS
 	nthrs = nni_plat_ncpu() * 2;
 	if (nthrs < 2) {
 		nthrs = 2;
 	}
+#else
+	nthrs = NNG_NUM_TASKQ_THREADS;
+#endif
 
 	return (nni_taskq_init(&nni_taskq_systq, nthrs));
 }
