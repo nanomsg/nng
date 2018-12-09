@@ -22,15 +22,15 @@
 // host file, WINS, or other naming services.  As a result, we just build
 // our own limited asynchronous resolver with threads.
 
-#ifndef NNG_WIN_RESOLV_CONCURRENCY
-#define NNG_WIN_RESOLV_CONCURRENCY 4
+#ifndef NNG_RESOLV_CONCURRENCY
+#define NNG_RESOLV_CONCURRENCY 4
 #endif
 
 static nni_mtx  resolv_mtx;
 static nni_cv   resolv_cv;
 static bool     resolv_fini;
 static nni_list resolv_aios;
-static nni_thr  resolv_thrs[NNG_WIN_RESOLV_CONCURRENCY];
+static nni_thr  resolv_thrs[NNG_RESOLV_CONCURRENCY];
 
 typedef struct resolv_item resolv_item;
 struct resolv_item {
@@ -355,14 +355,14 @@ nni_win_resolv_sysinit(void)
 	nni_aio_list_init(&resolv_aios);
 
 	resolv_fini = false;
-	for (int i = 0; i < NNG_WIN_RESOLV_CONCURRENCY; i++) {
+	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
 		int rv = nni_thr_init(&resolv_thrs[i], resolv_worker, NULL);
 		if (rv != 0) {
 			nni_win_resolv_sysfini();
 			return (rv);
 		}
 	}
-	for (int i = 0; i < NNG_WIN_RESOLV_CONCURRENCY; i++) {
+	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
 		nni_thr_run(&resolv_thrs[i]);
 	}
 	return (0);
@@ -375,7 +375,7 @@ nni_win_resolv_sysfini(void)
 	resolv_fini = true;
 	nni_cv_wake(&resolv_cv);
 	nni_mtx_unlock(&resolv_mtx);
-	for (int i = 0; i < NNG_WIN_RESOLV_CONCURRENCY; i++) {
+	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
 		nni_thr_fini(&resolv_thrs[i]);
 	}
 	nni_cv_fini(&resolv_cv);
