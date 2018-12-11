@@ -89,6 +89,7 @@ set (NNG_SRCS
 
 if (NNG_PLATFORM_POSIX)
     find_package (Threads REQUIRED)
+    list(APPEND NNG_LIBS Threads::Threads)
 
     set (NNG_SRCS ${NNG_SRCS}
         platform/posix/posix_impl.h
