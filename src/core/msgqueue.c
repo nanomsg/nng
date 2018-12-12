@@ -22,7 +22,6 @@ struct nni_msgq {
 	int       mq_len;
 	int       mq_get;
 	int       mq_put;
-	int       mq_puterr;
 	int       mq_geterr;
 	bool      mq_closed;
 	nni_msg **mq_msgs;
@@ -81,7 +80,6 @@ nni_msgq_init(nni_msgq **mqp, unsigned cap)
 	mq->mq_get      = 0;
 	mq->mq_put      = 0;
 	mq->mq_closed   = 0;
-	mq->mq_puterr   = 0;
 	mq->mq_geterr   = 0;
 	*mqp            = mq;
 
@@ -141,50 +139,6 @@ nni_msgq_set_get_error(nni_msgq *mq, int error)
 			nni_aio_finish_error(aio, error);
 		}
 	}
-	mq->mq_geterr = error;
-	nni_msgq_run_notify(mq);
-	nni_mtx_unlock(&mq->mq_lock);
-}
-
-void
-nni_msgq_set_put_error(nni_msgq *mq, int error)
-{
-	// Let all pending blockers know we are closing the queue.
-	nni_mtx_lock(&mq->mq_lock);
-	if (mq->mq_closed) {
-		// If we were closed, then this error trumps all others.
-		error = NNG_ECLOSED;
-	}
-	if (error != 0) {
-		nni_aio *aio;
-		while ((aio = nni_list_first(&mq->mq_aio_putq)) != NULL) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, error);
-		}
-	}
-	mq->mq_puterr = error;
-	nni_msgq_run_notify(mq);
-	nni_mtx_unlock(&mq->mq_lock);
-}
-
-void
-nni_msgq_set_error(nni_msgq *mq, int error)
-{
-	// Let all pending blockers know we are closing the queue.
-	nni_mtx_lock(&mq->mq_lock);
-	if (mq->mq_closed) {
-		// If we were closed, then this error trumps all others.
-		error = NNG_ECLOSED;
-	}
-	if (error != 0) {
-		nni_aio *aio;
-		while (((aio = nni_list_first(&mq->mq_aio_getq)) != NULL) ||
-		    ((aio = nni_list_first(&mq->mq_aio_putq)) != NULL)) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, error);
-		}
-	}
-	mq->mq_puterr = error;
 	mq->mq_geterr = error;
 	nni_msgq_run_notify(mq);
 	nni_mtx_unlock(&mq->mq_lock);
@@ -375,20 +329,14 @@ nni_msgq_aio_put(nni_msgq *mq, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&mq->mq_lock);
-	if (mq->mq_puterr) {
-		nni_atomic_inc64(&mq->mq_put_errs, 1);
-		nni_aio_finish_error(aio, mq->mq_puterr);
-		nni_mtx_unlock(&mq->mq_lock);
-		return;
-	}
 
 	// If this is an instantaneous poll operation, and the queue has
 	// no room, nobody is waiting to receive, then report NNG_ETIMEDOUT.
 	rv = nni_aio_schedule(aio, nni_msgq_cancel, mq);
 	if ((rv != 0) && (mq->mq_len >= mq->mq_cap) &&
 	    (nni_list_empty(&mq->mq_aio_getq))) {
-		nni_atomic_inc64(&mq->mq_put_errs, 1);
 		nni_mtx_unlock(&mq->mq_lock);
+		nni_atomic_inc64(&mq->mq_put_errs, 1);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -492,7 +440,7 @@ nni_msgq_close(nni_msgq *mq)
 
 	nni_mtx_lock(&mq->mq_lock);
 	mq->mq_closed = true;
-	mq->mq_puterr = mq->mq_geterr = NNG_ECLOSED;
+	mq->mq_geterr = NNG_ECLOSED;
 
 	// Free the messages orphaned in the queue.
 	while (mq->mq_len > 0) {

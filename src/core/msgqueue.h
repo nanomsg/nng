@@ -44,19 +44,6 @@ extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
 // the message queue.
 extern int nni_msgq_tryput(nni_msgq *, nni_msg *);
 
-// nni_msgq_set_error sets an error condition on the message queue,
-// which causes all current and future readers/writes to return the
-// given error condition (if non-zero).  Threads waiting to put or get
-// are woken as well, if non-zero.  If zero, then any present error
-// condition is cleared, and waiters are not woken (there shouldn't be
-// any waiters unless it was already zero.)
-extern void nni_msgq_set_error(nni_msgq *, int);
-
-// nni_msgq_set_put_error sets an error condition on the put side of the
-// message queue, and for that side behaves like nni_msgq_set_error.
-// Readers (nni_msgq_get*) are unaffected.
-extern void nni_msgq_set_put_error(nni_msgq *, int);
-
 // nni_msgq_set_get_error sets an error condition on the get side of the
 // message queue, and for that side behaves like nni_msgq_set_error.
 // Readers (nni_msgq_put*) are unaffected.
