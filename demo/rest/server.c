@@ -41,6 +41,7 @@
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // utility function
 void
@@ -67,9 +68,8 @@ fatal(const char *what, int rv)
 // obtain parallelism.
 
 typedef enum {
-	READ_DATA, // Reading HTTP post payload
-	SEND_REQ,  // Sending REQ request
-	RECV_REP,  // Receiving REQ reply
+	SEND_REQ, // Sending REQ request
+	RECV_REP, // Receiving REQ reply
 } job_state;
 
 typedef struct rest_job {
@@ -160,18 +160,6 @@ rest_job_cb(void *arg)
 	int       rv;
 
 	switch (job->state) {
-	case READ_DATA:
-		if ((rv = nng_aio_result(aio)) != 0) {
-			rest_http_fatal(job, "read POST data failed: %s", rv);
-			return;
-		}
-		// We got good data.  The message should already be set up,
-		// so at this point we need to just update the state and
-		// start the send.
-		nng_aio_set_msg(aio, job->msg);
-		job->state = SEND_REQ;
-		nng_ctx_send(job->ctx, aio);
-		break;
 	case SEND_REQ:
 		if ((rv = nng_aio_result(aio)) != 0) {
 			rest_http_fatal(job, "send REQ failed: %s", rv);
@@ -223,6 +211,7 @@ rest_handle(nng_aio *aio)
 	size_t           sz;
 	nng_iov          iov;
 	int              rv;
+	void *           data;
 
 	if ((job = rest_get_job()) == NULL) {
 		nng_aio_finish(aio, NNG_ENOMEM);
@@ -235,48 +224,18 @@ rest_handle(nng_aio *aio)
 		return;
 	}
 
+	nng_http_req_get_data(req, &data, &sz);
 	job->http_aio = aio;
-	if ((clen = nng_http_req_get_header(req, "Content-Length")) == NULL) {
-		nng_http_res *res = job->http_res;
-		job->http_res     = NULL;
-		nng_http_res_set_status(res, NNG_HTTP_STATUS_LENGTH_REQUIRED);
-		nng_http_res_set_reason(res, NULL);
-		nng_aio_set_output(aio, 0, res);
-		nng_aio_finish(aio, 0);
-		rest_recycle_job(job);
-		return;
-	}
-	// Arbitrary limit, reject jobs with no data, or more than 128KB.
-	// Note that normally REQ/REP sockets don't transport over 1MB, so
-	// if you adjust this to be more than that, you'll need to also
-	// set the NNG_OPT_RECVMAXSIZE option.
-	sz = atoi(clen);
-	if ((sz < 1) || (sz > 128 * 1024)) {
-		nng_http_res *res = job->http_res;
-		job->http_res     = NULL;
-		nng_http_res_set_status(res, NNG_HTTP_STATUS_BAD_REQUEST);
-		nng_aio_set_output(aio, 0, res);
-		nng_aio_finish(aio, 0);
-		rest_recycle_job(job);
-		return;
-	}
 
 	if ((rv = nng_msg_alloc(&job->msg, sz)) != 0) {
 		rest_http_fatal(job, "nng_msg_alloc: %s", rv);
 		return;
 	}
 
-	iov.iov_buf = nng_msg_body(job->msg);
-	iov.iov_len = nng_msg_len(job->msg);
-	if ((rv = nng_aio_set_iov(job->aio, 1, &iov)) != 0) {
-		rest_http_fatal(job, "nng_set_iov: %s", rv);
-		return;
-	}
-
-	job->state = READ_DATA;
-	// This submits the request, and the state machine takes over
-	// all further processing.
-	nng_http_conn_read_all(conn, job->aio);
+	memcpy(nng_msg_body(job->msg), data, sz);
+	nng_aio_set_msg(job->aio, job->msg);
+	job->state = SEND_REQ;
+	nng_ctx_send(job->ctx, job->aio);
 }
 
 void
@@ -325,6 +284,15 @@ rest_start(uint16_t port)
 
 	if ((rv = nng_http_handler_set_method(handler, "POST")) != 0) {
 		fatal("nng_http_handler_set_method", rv);
+	}
+	// We want to collect the body, and we (arbitrarily) limit this to
+	// 128KB.  The default limit is 1MB.  You can explicitly collect
+	// the deta yourself with another HTTP read transaction by disabling
+	// this, but that's a lot of work, especially if you want to handle
+	// chunked transfers.
+	if ((rv = nng_http_handler_collect_body(handler, true, 1024 * 128)) !=
+	    0) {
+		fatal("nng_http_handler_collect_body", rv);
 	}
 	if ((rv = nng_http_server_add_handler(server, handler)) != 0) {
 		fatal("nng_http_handler_add_handler", rv);
