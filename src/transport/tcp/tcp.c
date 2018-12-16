@@ -997,8 +997,12 @@ tcptran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	size_t      val;
 	int         rv;
 	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
+		tcptran_pipe *p;
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
+		NNI_LIST_FOREACH (&ep->pipes, p) {
+			p->rcvmax = val;
+		}
 		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
