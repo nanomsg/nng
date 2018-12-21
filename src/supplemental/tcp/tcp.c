@@ -110,7 +110,7 @@ nng_tcp_dialer_set_source(nng_tcp_dialer *d, const nng_sockaddr *sa)
 void
 nng_tcp_dialer_dial(nng_tcp_dialer *d, const nng_sockaddr *sa, nng_aio *aio)
 {
-	return (nni_tcp_dialer_dial((void *) d, sa, aio));
+	nni_tcp_dialer_dial((void *) d, sa, aio);
 }
 
 int
@@ -149,5 +149,5 @@ nng_tcp_listener_listen(nng_tcp_listener *l, nng_sockaddr *sa)
 void
 nng_tcp_listener_accept(nng_tcp_listener *l, nng_aio *aio)
 {
-	return (nni_tcp_listener_accept((void *) l, aio));
+	nni_tcp_listener_accept((void *) l, aio);
 }
