@@ -9,8 +9,7 @@
 //
 
 #include "core/nng_impl.h"
-
-#ifdef NNG_PLATFORM_WINDOWS
+#include "win_impl.h"
 
 #include <string.h>
 
@@ -69,5 +68,3 @@ nni_win_sockaddr2nn(nni_sockaddr *sa, const SOCKADDR_STORAGE *ss)
 	}
 	return (-1);
 }
-
-#endif // NNG_PLATFORM_WINDOWS

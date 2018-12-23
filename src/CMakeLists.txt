@@ -183,6 +183,7 @@ add_subdirectory(transport/zerotier)
 
 add_subdirectory(supplemental/base64)
 add_subdirectory(supplemental/http)
+add_subdirectory(supplemental/ipc)
 add_subdirectory(supplemental/sha1)
 add_subdirectory(supplemental/tcp)
 add_subdirectory(supplemental/tls)

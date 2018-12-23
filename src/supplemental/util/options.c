@@ -11,8 +11,10 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include <nng/nng.h>
+#include <nng/supplemental/util/options.h>
+
 #include "core/nng_impl.h"
-#include "nng/supplemental/util/options.h"
 
 // Call with optidx set to 1 to start parsing.
 int

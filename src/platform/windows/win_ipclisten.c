@@ -10,8 +10,6 @@
 
 #include "core/nng_impl.h"
 
-#ifdef NNG_PLATFORM_WINDOWS
-
 #include "win_ipc.h"
 
 #include <stdio.h>
@@ -58,8 +56,11 @@ ipc_accept_done(nni_ipc_listener *l, int rv)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	l->f        = f;
-	c->listener = l;
+	l->f                  = f;
+	c->sa.s_ipc.sa_family = NNG_AF_IPC;
+	snprintf(c->sa.s_ipc.sa_path, sizeof(c->sa.s_ipc.sa_path), "%s",
+	    l->path + strlen(IPC_PIPE_PREFIX));
+	c->dialer = false;
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 }
@@ -185,7 +186,7 @@ nni_ipc_listener_listen(nni_ipc_listener *l, const nni_sockaddr *sa)
 		nni_mtx_unlock(&l->mtx);
 		return (NNG_ECLOSED);
 	}
-	rv = nni_asprintf(&path, "\\\\.\\pipe\\%s", sa->s_ipc.sa_path);
+	rv = nni_asprintf(&path, IPC_PIPE_PREFIX "%s", sa->s_ipc.sa_path);
 	if (rv != 0) {
 		nni_mtx_unlock(&l->mtx);
 		return (rv);
@@ -292,5 +293,3 @@ nni_ipc_listener_fini(nni_ipc_listener *l)
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
 }
-
-#endif // NNG_PLATFORM_WINDOWS
