@@ -10,8 +10,6 @@
 
 #include "core/nng_impl.h"
 
-#ifdef NNG_PLATFORM_WINDOWS
-
 #include "win_ipc.h"
 
 #include <stdio.h>
@@ -108,16 +106,21 @@ ipc_dial_thr(void *arg)
 
 			nni_list_remove(&d->aios, aio);
 			nni_aio_set_prov_extra(aio, 0, NULL);
-			nni_strfree(path);
 
 			if (((rv = nni_win_io_register(f)) != 0) ||
 			    ((rv = nni_win_ipc_conn_init(&c, f)) != 0)) {
 				DisconnectNamedPipe(f);
 				CloseHandle(f);
 				nni_aio_finish_error(aio, rv);
+				nni_strfree(path);
 				continue;
 			}
-			c->dialer = d;
+			c->dialer             = true;
+			c->sa.s_ipc.sa_family = NNG_AF_IPC;
+			snprintf(c->sa.s_ipc.sa_path,
+			    sizeof(c->sa.s_ipc.sa_path), "%s",
+			    path + strlen(IPC_PIPE_PREFIX));
+			nni_strfree(path);
 			nni_aio_set_output(aio, 0, c);
 			nni_aio_finish(aio, 0, 0);
 		}
@@ -169,8 +172,8 @@ nni_ipc_dialer_dial(nni_ipc_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
 		return;
 	}
-	if ((rv = nni_asprintf(&path, "\\\\.\\pipe\\%s", sa->s_ipc.sa_path)) !=
-	    0) {
+	if ((rv = nni_asprintf(
+	         &path, IPC_PIPE_PREFIX "%s", sa->s_ipc.sa_path)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -261,5 +264,3 @@ nni_win_ipc_sysfini(void)
 	nni_cv_fini(&worker->cv);
 	nni_mtx_fini(&worker->mtx);
 }
-
-#endif // NNG_PLATFORM_WINDOWS

@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <infos@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -374,6 +375,20 @@ extern int nni_ipc_conn_get_peer_pid(nni_ipc_conn *, uint64_t *);
 // nni_ipc_conn_get_peer_zoneid obtains the peer zone id, if possible.
 // NB: Only illumos & SunOS systems have the notion of "zones".
 extern int nni_ipc_conn_get_peer_zoneid(nni_ipc_conn *, uint64_t *);
+
+// nni_ipc_conn_setopt is like setsockopt, but uses string names. These
+// are the same names from the IPC transport, generally.  There are no
+// options that are generally settable on an IPC connection.
+// NNG_OPT_REMADDR, NNG_OPT_LOCADDR, NNG_OPT_IPC_PERMISSIONS,
+// NNG_OPT_
+extern int nni_ipc_conn_setopt(
+    nni_ipc_conn *, const char *, const void *, size_t);
+
+// nni_ipc_conn_getopt is like getsockopt, but uses string names.
+// We support NNG_OPT_REMADDR and NNG_OPT_LOCADDR (with argument type
+// nng_sockaddr), and on some platforms NNG_OPT_IPC_PEER_[UID,GID,ZONEID]
+// (with type uint64_t.)
+extern int nni_ipc_conn_getopt(nni_ipc_conn *, const char *, void *, size_t *);
 
 // nni_ipc_dialer_init creates a new dialer object.
 extern int nni_ipc_dialer_init(nni_ipc_dialer **);

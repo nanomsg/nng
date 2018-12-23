@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <infos@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,8 +10,6 @@
 //
 
 #include "core/nng_impl.h"
-
-#ifdef NNG_PLATFORM_POSIX
 
 #include <errno.h>
 #include <fcntl.h>
@@ -39,6 +38,8 @@
 #endif
 
 #include "posix_ipc.h"
+
+#include <nng/transport/ipc/ipc.h>
 
 static void
 ipc_conn_dowrite(nni_ipc_conn *c)
@@ -464,6 +465,19 @@ nni_ipc_conn_get_peer_pid(nni_ipc_conn *c, uint64_t *pid)
 }
 
 int
+nni_ipc_conn_sockname(nni_ipc_conn *c, nni_sockaddr *sa)
+{
+	struct sockaddr_storage ss;
+	socklen_t               sslen = sizeof(ss);
+	int                     fd    = nni_posix_pfd_fd(c->pfd);
+
+	if (getsockname(fd, (void *) &ss, &sslen) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	return (nni_posix_sockaddr2nn(sa, &ss));
+}
+
+int
 nni_posix_ipc_conn_init(nni_ipc_conn **cp, nni_posix_pfd *pfd)
 {
 	nni_ipc_conn *c;
@@ -502,4 +516,77 @@ nni_ipc_conn_fini(nni_ipc_conn *c)
 	NNI_FREE_STRUCT(c);
 }
 
-#endif // NNG_PLATFORM_POSIX
+int
+nni_ipc_conn_setopt(
+    nni_ipc_conn *c, const char *name, const void *val, size_t sz)
+{
+	NNI_ARG_UNUSED(c);
+	NNI_ARG_UNUSED(val);
+	NNI_ARG_UNUSED(sz);
+	if ((strcmp(name, NNG_OPT_LOCADDR) == 0) ||
+	    (strcmp(name, NNG_OPT_REMADDR) == 0) ||
+	    (strcmp(name, NNG_OPT_IPC_PEER_PID) == 0) ||
+	    (strcmp(name, NNG_OPT_IPC_PEER_UID) == 0) ||
+	    (strcmp(name, NNG_OPT_IPC_PEER_GID) == 0) ||
+	    (strcmp(name, NNG_OPT_IPC_PEER_ZONEID) == 0)) {
+		return (NNG_EREADONLY);
+	}
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_ipc_conn_getopt(nni_ipc_conn *c, const char *name, void *val, size_t *szp)
+{
+	int       rv;
+	uint64_t *idp = val;
+
+	if ((strcmp(name, NNG_OPT_LOCADDR) == 0) ||
+	    (strcmp(name, NNG_OPT_REMADDR) == 0)) {
+		nng_sockaddr *sa = val;
+		if (*szp < sizeof(*sa)) {
+			return (NNG_EINVAL);
+		}
+
+		if ((rv = nni_ipc_conn_sockname(c, sa)) == 0) {
+			*szp = sizeof(*sa);
+		}
+		return (rv);
+	}
+	if (strcmp(name, NNG_OPT_IPC_PEER_PID) == 0) {
+		if (*szp < sizeof(*idp)) {
+			return (NNG_EINVAL);
+		}
+		if ((rv = nni_ipc_conn_get_peer_pid(c, idp)) == 0) {
+			*szp = sizeof(*idp);
+		}
+		return (rv);
+	}
+	if (strcmp(name, NNG_OPT_IPC_PEER_UID) == 0) {
+		if (*szp < sizeof(*idp)) {
+			return (NNG_EINVAL);
+		}
+		if ((rv = nni_ipc_conn_get_peer_uid(c, idp)) == 0) {
+			*szp = sizeof(*idp);
+		}
+		return (rv);
+	}
+	if (strcmp(name, NNG_OPT_IPC_PEER_GID) == 0) {
+		if (*szp < sizeof(*idp)) {
+			return (NNG_EINVAL);
+		}
+		if ((rv = nni_ipc_conn_get_peer_gid(c, idp)) == 0) {
+			*szp = sizeof(*idp);
+		}
+		return (rv);
+	}
+	if (strcmp(name, NNG_OPT_IPC_PEER_ZONEID) == 0) {
+		if (*szp < sizeof(*idp)) {
+			return (NNG_EINVAL);
+		}
+		if ((rv = nni_ipc_conn_get_peer_zoneid(c, idp)) == 0) {
+			*szp = sizeof(*idp);
+		}
+		return (rv);
+	}
+	return (NNG_ENOTSUP);
+}

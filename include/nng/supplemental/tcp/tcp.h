@@ -37,8 +37,8 @@ typedef struct nng_tcp_dialer_s nng_tcp_dialer;
 // connections.
 typedef struct nng_tcp_listener_s nng_tcp_listener;
 
-// nng_tcp_conn close closes the connection, but does not release
-// the underlying object.  Operations that may be pending on the connect,
+// nng_tcp_close closes the connection, but does not release the
+// underlying object.  Operations that may be pending on the connect,
 // as well as further operations, will result in NNG_ECLOSED.
 NNG_DECL void nng_tcp_close(nng_tcp *);
 
@@ -47,7 +47,7 @@ NNG_DECL void nng_tcp_close(nng_tcp *);
 // (It is an error to refer to the TCP object after this is called.)
 NNG_DECL void nng_tcp_free(nng_tcp *);
 
-// nng_tcp_conn_send sends the data in the aio, which should be stored in
+// nng_tcp_send sends the data in the aio, which should be stored in
 // an iov for the message.  Note that the iov in the aio may be modified,
 // so applications should not assume otherwise.
 NNG_DECL void nng_tcp_send(nng_tcp *, nng_aio *);
@@ -58,8 +58,7 @@ NNG_DECL void nng_tcp_send(nng_tcp *, nng_aio *);
 // the iov's and resubmit as needed.
 NNG_DECL void nng_tcp_recv(nng_tcp *, nng_aio *);
 
-// nng_tcp_sockname obtains an nng_sockaddr associated with our local
-// address.
+// nng_tcp_sockname obtains an nng_sockaddr associated with our local address.
 NNG_DECL int nng_tcp_sockname(nng_tcp *, nng_sockaddr *);
 
 // nng_tcp_peername obtains an nng_sockaddr associated with our peer.

@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <infos@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,11 +11,11 @@
 
 #include "core/nng_impl.h"
 
-#ifdef NNG_PLATFORM_WINDOWS
-
 #include "win_ipc.h"
 
 #include <stdio.h>
+
+#include <nng/transport/ipc/ipc.h>
 
 static void
 ipc_recv_start(nni_ipc_conn *c)
@@ -385,4 +386,45 @@ nni_ipc_conn_get_peer_pid(nni_ipc_conn *c, uint64_t *pid)
 	return (0);
 }
 
-#endif // NNG_PLATFORM_WINDOWS
+int
+nni_ipc_conn_setopt(
+    nni_ipc_conn *c, const char *name, const void *val, size_t sz)
+{
+	NNI_ARG_UNUSED(c);
+	NNI_ARG_UNUSED(val);
+	NNI_ARG_UNUSED(sz);
+	if ((strcmp(name, NNG_OPT_LOCADDR) == 0) ||
+	    (strcmp(name, NNG_OPT_REMADDR) == 0) ||
+	    (strcmp(name, NNG_OPT_IPC_PEER_PID) == 0)) {
+		return (NNG_EREADONLY);
+	}
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_ipc_conn_getopt(nni_ipc_conn *c, const char *name, void *val, size_t *szp)
+{
+	if ((strcmp(name, NNG_OPT_LOCADDR) == 0) ||
+	    (strcmp(name, NNG_OPT_REMADDR) == 0)) {
+		if (*szp < sizeof(c->sa)) {
+			return (NNG_EINVAL);
+		}
+
+		memcpy(val, &c->sa, sizeof(c->sa));
+		*szp = sizeof(c->sa);
+		return (0);
+	}
+	if (strcmp(name, NNG_OPT_IPC_PEER_PID) == 0) {
+		int       rv;
+		uint64_t *idp = val;
+		if (*szp < sizeof(*idp)) {
+			return (NNG_EINVAL);
+		}
+		if ((rv = nni_ipc_conn_get_peer_pid(c, idp)) == 0) {
+			;
+			*szp = sizeof(*idp);
+		}
+		return (rv);
+	}
+	return (NNG_ENOTSUP);
+}
