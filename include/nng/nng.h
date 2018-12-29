@@ -247,19 +247,19 @@ NNG_DECL int nng_getopt_string(nng_socket, const char *, char **);
 // nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy
 // nn_bind(). The underlying endpoint is returned back to the caller in the
-// endpoint pointer, if it is not NULL.  The flags may be NNG_FLAG_SYNCH to
-// indicate that a failure setting the socket up should return an error
-// back to the caller immediately.
+// endpoint pointer, if it is not NULL.  The flags are ignored at present.
 NNG_DECL int nng_listen(nng_socket, const char *, nng_listener *, int);
 
 // nng_dial creates a dialing endpoint, with no special options, and
 // starts it dialing.  Dialers have at most one active connection at a time
 // This is similar to the legacy nn_connect().  The underlying endpoint
 // is returned back to the caller in the endpoint pointer, if it is not NULL.
-// The flags may be NNG_FLAG_SYNCH to indicate that the first attempt to
-// dial will be made synchronously, and a failure condition returned back
-// to the caller.  (If the connection is dropped, it will still be
-// reconnected in the background -- only the initial connect is synchronous.)
+// The flags may be NNG_FLAG_NONBLOCK to indicate that the first attempt to
+// dial will be made in the background, returning control to the caller
+// immediately.  In this case, if the connection fails, the function will
+// keep retrying in the background.  (If the connection is dropped in either
+// case, it will still be reconnected in the background -- only the initial
+// connection attempt is normally synchronous.)
 NNG_DECL int nng_dial(nng_socket, const char *, nng_dialer *, int);
 
 // nng_dialer_create creates a new dialer, that is not yet started.

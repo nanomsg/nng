@@ -36,23 +36,14 @@ An incoming connection generally results in and
 Unlike dialers, listeners generally can create many
 pipes, which may be open concurrently.
 
+The _flags_ argument is ignored, but reserved for future use.
+
 TIP: While it is convenient to think of listeners as "`servers`", the
 relationship between the listener or dialer is orthogonal to any server or
 client status that might be associated with a given protocol.
 For example, a <<nng_req.7#,_req_>>
 socket might have associated dialers, but might also have associated listeners.
 It may even have some of each at the same time!
-
-Normally, the act of "`binding`" to the address indicated by _url_ is done
-synchronously, including any necessary name resolution.
-As a result, a failure, such as if the address is already in use, will be
-returned immediately.
-However, if the special value `NNG_FLAG_NONBLOCK` is supplied in _flags_,
-then this is done asynchronously; furthermore any
-failure to bind will be periodically reattempted in the background.
-
-TIP: While `NNG_FLAG_NONBLOCK` can help an application be more resilient,
-it also generally makes diagnosing failures somewhat more difficult.
 
 Because the listener is started immediately, it is generally not possible
 to apply extra configuration; if that is needed applications should consider
