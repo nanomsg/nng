@@ -642,7 +642,8 @@ inproc_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	nni_inproc_ep *ep = arg;
 	size_t         val;
 	int            rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
+	if (((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) &&
+	    (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
 		nni_stat_set_value(&ep->st_rcvmaxsz, val);
@@ -651,21 +652,13 @@ inproc_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	return (rv);
 }
 
-static int
-inproc_check_recvmaxsz(const void *data, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_size(NULL, data, sz, 0, NNI_MAXSZ, t));
-}
-
-static nni_tran_option nni_inproc_pipe_options[] = {
+static nni_option nni_inproc_pipe_options[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = nni_inproc_pipe_get_addr,
 	},
 	{
 	    .o_name = NNG_OPT_REMADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = nni_inproc_pipe_get_addr,
 	},
 	// terminate list
@@ -684,13 +677,11 @@ static nni_tran_pipe_ops nni_inproc_pipe_ops = {
 	.p_options = nni_inproc_pipe_options,
 };
 
-static nni_tran_option nni_inproc_ep_options[] = {
+static nni_option nni_inproc_ep_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_type = NNI_TYPE_SIZE,
 	    .o_get  = inproc_ep_get_recvmaxsz,
 	    .o_set  = inproc_ep_set_recvmaxsz,
-	    .o_chk  = inproc_check_recvmaxsz,
 	},
 	// terminate list
 	{

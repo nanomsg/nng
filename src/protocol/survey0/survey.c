@@ -551,10 +551,9 @@ static nni_proto_pipe_ops surv0_pipe_ops = {
 	.pipe_stop  = surv0_pipe_stop,
 };
 
-static nni_proto_option surv0_ctx_options[] = {
+static nni_option surv0_ctx_options[] = {
 	{
 	    .o_name = NNG_OPT_SURVEYOR_SURVEYTIME,
-	    .o_type = NNI_TYPE_DURATION,
 	    .o_get  = surv0_ctx_get_surveytime,
 	    .o_set  = surv0_ctx_set_surveytime,
 	},
@@ -570,27 +569,23 @@ static nni_proto_ctx_ops surv0_ctx_ops = {
 	.ctx_options = surv0_ctx_options,
 };
 
-static nni_proto_option surv0_sock_options[] = {
+static nni_option surv0_sock_options[] = {
 	{
 	    .o_name = NNG_OPT_SURVEYOR_SURVEYTIME,
-	    .o_type = NNI_TYPE_DURATION,
 	    .o_get  = surv0_sock_get_surveytime,
 	    .o_set  = surv0_sock_set_surveytime,
 	},
 	{
 	    .o_name = NNG_OPT_MAXTTL,
-	    .o_type = NNI_TYPE_INT32,
 	    .o_get  = surv0_sock_get_maxttl,
 	    .o_set  = surv0_sock_set_maxttl,
 	},
 	{
 	    .o_name = NNG_OPT_RECVFD,
-	    .o_type = NNI_TYPE_INT32,
 	    .o_get  = surv0_sock_get_recvfd,
 	},
 	{
 	    .o_name = NNG_OPT_SENDFD,
-	    .o_type = NNI_TYPE_INT32,
 	    .o_get  = surv0_sock_get_sendfd,
 	},
 	// terminate list

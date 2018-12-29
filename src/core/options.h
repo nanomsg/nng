@@ -51,4 +51,27 @@ extern int nni_copyout_u64(uint64_t, void *, size_t *, nni_opt_type);
 // then it passes through a pointer, created by nni_strdup().
 extern int nni_copyout_str(const char *, void *, size_t *, nni_opt_type);
 
+// nni_option is used for socket, protocol, transport, and similar options.
+// Note that only for transports, the o_set member may be called with a NULL
+// instance parameter, in which case the request should only validate the
+// argument and do nothing further.
+typedef struct nni_option_s nni_option;
+struct nni_option_s {
+	// o_name is the name of the option.
+	const char *o_name;
+
+	// o_get is used to retrieve the value of the option.  The
+	// size supplied will limit how much data is copied.  Regardless,
+	// the actual size of the object that would have been copied
+	// is supplied by the function in the size.  If the object did
+	// not fit, then NNG_EINVAL is returned.
+	int (*o_get)(void *, void *, size_t *, nni_opt_type);
+
+	// o_set is used to set the value of the option.  For transport
+	// endpoints only, the instance parameter (first argument) may be
+	// NULL, in which case only a generic validation of the parameters
+	// is performed.  (This is used when setting socket options before
+	int (*o_set)(void *, const void *, size_t, nni_opt_type);
+};
+
 #endif // CORE_OPTIONS_H

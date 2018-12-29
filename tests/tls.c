@@ -320,7 +320,6 @@ TestMain("TLS Transport", {
 		nng_listener l;
 		nng_dialer   d;
 		char *       addr;
-		size_t       sz;
 
 		So(nng_tls_register() == 0);
 		So(nng_pair_open(&s1) == 0);
@@ -332,7 +331,6 @@ TestMain("TLS Transport", {
 		So(nng_listener_create(&l, s1, "tls+tcp://127.0.0.1:0") == 0);
 		So(init_listener_tls(l) == 0);
 		So(nng_listener_start(l, 0) == 0);
-		sz = NNG_MAXADDRLEN;
 		So(nng_listener_getopt_string(l, NNG_OPT_URL, &addr) == 0);
 		So(nng_dialer_create(&d, s2, addr) == 0);
 		So(init_dialer_tls(d) == 0);

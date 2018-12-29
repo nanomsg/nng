@@ -11,6 +11,8 @@
 #ifndef CORE_PROTOCOL_H
 #define CORE_PROTOCOL_H
 
+#include "core/options.h"
+
 // Protocol implementation details.  Protocols must implement the
 // interfaces in this file.  Note that implementing new protocols is
 // not necessarily intended to be a trivial task.  The protocol developer
@@ -20,13 +22,6 @@
 // work, and the pipe functions generally assume no locking is needed.
 // As a consequence, most of the concurrency in nng exists in the protocol
 // implementations.
-
-struct nni_proto_option {
-	const char *o_name;
-	int         o_type;
-	int (*o_get)(void *, void *, size_t *, nni_opt_type);
-	int (*o_set)(void *, const void *, size_t, nni_opt_type);
-};
 
 // nni_proto_pipe contains protocol-specific per-pipe operations.
 struct nni_proto_pipe_ops {
@@ -80,7 +75,7 @@ struct nni_proto_ctx_ops {
 	void (*ctx_drain)(void *, nni_aio *);
 
 	// ctx_options array.
-	nni_proto_option *ctx_options;
+	nni_option *ctx_options;
 };
 
 struct nni_proto_sock_ops {
@@ -123,7 +118,7 @@ struct nni_proto_sock_ops {
 	void (*sock_drain)(void *, nni_aio *);
 
 	// Options. Must not be NULL. Final entry should have NULL name.
-	nni_proto_option *sock_options;
+	nni_option *sock_options;
 };
 
 typedef struct nni_proto_id {

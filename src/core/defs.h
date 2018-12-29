@@ -47,12 +47,10 @@ typedef struct nni_listener nni_listener;
 typedef struct nni_pipe     nni_pipe;
 
 typedef struct nni_tran              nni_tran;
-typedef struct nni_tran_option       nni_tran_option;
 typedef struct nni_tran_dialer_ops   nni_tran_dialer_ops;
 typedef struct nni_tran_listener_ops nni_tran_listener_ops;
 typedef struct nni_tran_pipe_ops     nni_tran_pipe_ops;
 
-typedef struct nni_proto_option   nni_proto_option;
 typedef struct nni_proto_ctx_ops  nni_proto_ctx_ops;
 typedef struct nni_proto_sock_ops nni_proto_sock_ops;
 typedef struct nni_proto_pipe_ops nni_proto_pipe_ops;

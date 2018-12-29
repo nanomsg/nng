@@ -364,7 +364,7 @@ int
 nni_listener_setopt(nni_listener *l, const char *name, const void *val,
     size_t sz, nni_opt_type t)
 {
-	nni_tran_option *o;
+	nni_option *o;
 
 	if (strcmp(name, NNG_OPT_URL) == 0) {
 		return (NNG_EREADONLY);
@@ -388,7 +388,7 @@ int
 nni_listener_getopt(
     nni_listener *l, const char *name, void *valp, size_t *szp, nni_opt_type t)
 {
-	nni_tran_option *o;
+	nni_option *o;
 
 	for (o = l->l_ops.l_options; o && o->o_name; o++) {
 		if (strcmp(o->o_name, name) != 0) {

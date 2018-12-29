@@ -15,8 +15,8 @@
 #include "core/nng_impl.h"
 
 #include "nng/supplemental/tls/tls.h"
-#include "supplemental/tls/tls_api.h"
 #include "nng/transport/tls/tls.h"
+#include "supplemental/tls/tls_api.h"
 
 // TLS over TCP transport.   Platform specific TCP operations must be
 // supplied as well, and uses the supplemental TLS v1.2 code.  It is not
@@ -1000,7 +1000,7 @@ tlstran_ep_set_nodelay(void *arg, const void *v, size_t sz, nni_opt_type t)
 	tlstran_ep *ep = arg;
 	bool        val;
 	int         rv;
-	if ((rv = nni_copyin_bool(&val, v, sz, t)) == 0) {
+	if (((rv = nni_copyin_bool(&val, v, sz, t)) == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		ep->nodelay = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -1025,7 +1025,8 @@ tlstran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	tlstran_ep *ep = arg;
 	size_t      val;
 	int         rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
+	if (((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) &&
+	    (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -1039,7 +1040,7 @@ tlstran_ep_set_keepalive(void *arg, const void *v, size_t sz, nni_opt_type t)
 	tlstran_ep *ep = arg;
 	bool        val;
 	int         rv;
-	if ((rv = nni_copyin_bool(&val, v, sz, t)) == 0) {
+	if (((rv = nni_copyin_bool(&val, v, sz, t)) == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		ep->keepalive = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -1067,12 +1068,6 @@ tlstran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 	rv = nni_copyout_size(ep->rcvmax, v, szp, t);
 	nni_mtx_unlock(&ep->mtx);
 	return (rv);
-}
-
-static int
-tlstran_check_bool(const void *v, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_bool(NULL, v, sz, t));
 }
 
 static int
@@ -1106,27 +1101,10 @@ tlstran_ep_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-tlstran_check_recvmaxsz(const void *v, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
-static int
-tlstran_check_config(const void *data, size_t sz, nni_opt_type t)
-{
-	void *v;
-	int   rv;
-	if (((rv = nni_copyin_ptr(&v, data, sz, t)) == 0) && (v == NULL)) {
-		rv = NNG_EINVAL;
-	}
-	return (rv);
-}
-
-static int
 tlstran_ep_set_config(void *arg, const void *data, size_t sz, nni_opt_type t)
 {
 	tlstran_ep *    ep = arg;
-	nng_tls_config *cfg, *old;
+	nng_tls_config *cfg;
 	int             rv;
 
 	if ((rv = nni_copyin_ptr((void **) &cfg, data, sz, t)) != 0) {
@@ -1135,13 +1113,17 @@ tlstran_ep_set_config(void *arg, const void *data, size_t sz, nni_opt_type t)
 	if (cfg == NULL) {
 		return (NNG_EINVAL);
 	}
-	nni_mtx_lock(&ep->mtx);
-	old = ep->cfg;
-	nni_tls_config_hold(cfg);
-	ep->cfg = cfg;
-	nni_mtx_unlock(&ep->mtx);
-	if (old != NULL) {
-		nni_tls_config_fini(old);
+	if (ep != NULL) {
+		nng_tls_config *old;
+
+		nni_mtx_lock(&ep->mtx);
+		old = ep->cfg;
+		nni_tls_config_hold(cfg);
+		ep->cfg = cfg;
+		nni_mtx_unlock(&ep->mtx);
+		if (old != NULL) {
+			nni_tls_config_fini(old);
+		}
 	}
 	return (0);
 }
@@ -1179,19 +1161,12 @@ tlstran_ep_set_ca_file(void *arg, const void *v, size_t sz, nni_opt_type t)
 	tlstran_ep *ep = arg;
 	int         rv;
 
-	if ((rv = tlstran_check_string(v, sz, t)) == 0) {
+	if (((rv = tlstran_check_string(v, sz, t)) == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		rv = nng_tls_config_ca_file(ep->cfg, v);
 		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
-}
-
-static int
-tlstran_check_auth_mode(const void *v, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_int(NULL, v, sz, NNG_TLS_AUTH_MODE_NONE,
-	    NNG_TLS_AUTH_MODE_REQUIRED, t));
 }
 
 static int
@@ -1203,7 +1178,7 @@ tlstran_ep_set_auth_mode(void *arg, const void *v, size_t sz, nni_opt_type t)
 
 	rv = nni_copyin_int(&mode, v, sz, NNG_TLS_AUTH_MODE_NONE,
 	    NNG_TLS_AUTH_MODE_REQUIRED, t);
-	if (rv == 0) {
+	if ((rv == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		rv = nng_tls_config_auth_mode(ep->cfg, mode);
 		nni_mtx_unlock(&ep->mtx);
@@ -1217,7 +1192,7 @@ tlstran_ep_set_server_name(void *arg, const void *v, size_t sz, nni_opt_type t)
 	tlstran_ep *ep = arg;
 	int         rv;
 
-	if ((rv = tlstran_check_string(v, sz, t)) == 0) {
+	if (((rv = tlstran_check_string(v, sz, t)) == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		rv = nng_tls_config_server_name(ep->cfg, v);
 		nni_mtx_unlock(&ep->mtx);
@@ -1232,7 +1207,7 @@ tlstran_ep_set_cert_key_file(
 	tlstran_ep *ep = arg;
 	int         rv;
 
-	if ((rv = tlstran_check_string(v, sz, t)) == 0) {
+	if (((rv = tlstran_check_string(v, sz, t)) == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		rv = nng_tls_config_cert_key_file(ep->cfg, v, NULL);
 		nni_mtx_unlock(&ep->mtx);
@@ -1248,30 +1223,25 @@ tlstran_pipe_get_verified(void *arg, void *v, size_t *szp, nni_opt_type t)
 	return (nni_copyout_bool(nni_tls_verified(p->tls), v, szp, t));
 }
 
-static nni_tran_option tlstran_pipe_options[] = {
+static nni_option tlstran_pipe_options[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = tlstran_pipe_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_REMADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = tlstran_pipe_get_remaddr,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_VERIFIED,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tlstran_pipe_get_verified,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tlstran_pipe_get_keepalive,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tlstran_pipe_get_nodelay,
 	},
 	// terminate list
@@ -1291,63 +1261,46 @@ static nni_tran_pipe_ops tlstran_pipe_ops = {
 	.p_options = tlstran_pipe_options,
 };
 
-static nni_tran_option tlstran_dialer_options[] = {
+static nni_option tlstran_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_type = NNI_TYPE_SIZE,
 	    .o_get  = tlstran_ep_get_recvmaxsz,
 	    .o_set  = tlstran_ep_set_recvmaxsz,
-	    .o_chk  = tlstran_check_recvmaxsz,
 	},
 	{
 	    .o_name = NNG_OPT_URL,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_get  = tlstran_ep_get_url,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_CONFIG,
-	    .o_type = NNI_TYPE_POINTER,
 	    .o_get  = tlstran_ep_get_config,
 	    .o_set  = tlstran_ep_set_config,
-	    .o_chk  = tlstran_check_config,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_CERT_KEY_FILE,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_set  = tlstran_ep_set_cert_key_file,
-	    .o_chk  = tlstran_check_string,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_CA_FILE,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_set  = tlstran_ep_set_ca_file,
-	    .o_chk  = tlstran_check_string,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_AUTH_MODE,
-	    .o_type = NNI_TYPE_INT32, // enum really
 	    .o_set  = tlstran_ep_set_auth_mode,
-	    .o_chk  = tlstran_check_auth_mode,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_SERVER_NAME,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_set  = tlstran_ep_set_server_name,
-	    .o_chk  = tlstran_check_string,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tlstran_ep_get_nodelay,
 	    .o_set  = tlstran_ep_set_nodelay,
-	    .o_chk  = tlstran_check_bool,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tlstran_ep_get_keepalive,
 	    .o_set  = tlstran_ep_set_keepalive,
-	    .o_chk  = tlstran_check_bool,
 	},
 	// terminate list
 	{
@@ -1355,68 +1308,50 @@ static nni_tran_option tlstran_dialer_options[] = {
 	},
 };
 
-static nni_tran_option tlstran_listener_options[] = {
+static nni_option tlstran_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_type = NNI_TYPE_SIZE,
 	    .o_get  = tlstran_ep_get_recvmaxsz,
 	    .o_set  = tlstran_ep_set_recvmaxsz,
-	    .o_chk  = tlstran_check_recvmaxsz,
 	},
 	{
 	    .o_name = NNG_OPT_URL,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_get  = tlstran_ep_get_url,
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = tlstran_ep_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_CONFIG,
-	    .o_type = NNI_TYPE_POINTER,
 	    .o_get  = tlstran_ep_get_config,
 	    .o_set  = tlstran_ep_set_config,
-	    .o_chk  = tlstran_check_config,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_CERT_KEY_FILE,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_set  = tlstran_ep_set_cert_key_file,
-	    .o_chk  = tlstran_check_string,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_CA_FILE,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_set  = tlstran_ep_set_ca_file,
-	    .o_chk  = tlstran_check_string,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_AUTH_MODE,
-	    .o_type = NNI_TYPE_INT32, // enum really
 	    .o_set  = tlstran_ep_set_auth_mode,
-	    .o_chk  = tlstran_check_auth_mode,
 	},
 	{
 	    .o_name = NNG_OPT_TLS_SERVER_NAME,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_set  = tlstran_ep_set_server_name,
-	    .o_chk  = tlstran_check_string,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tlstran_ep_get_nodelay,
 	    .o_set  = tlstran_ep_set_nodelay,
-	    .o_chk  = tlstran_check_bool,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tlstran_ep_get_keepalive,
 	    .o_set  = tlstran_ep_set_keepalive,
-	    .o_chk  = tlstran_check_bool,
 	},
 	// terminate list
 	{

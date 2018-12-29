@@ -304,7 +304,7 @@ static nni_proto_pipe_ops pub0_pipe_ops = {
 	.pipe_stop  = pub0_pipe_stop,
 };
 
-static nni_proto_option pub0_sock_options[] = {
+static nni_option pub0_sock_options[] = {
 	// terminate list
 	{
 	    .o_name = NULL,

@@ -996,7 +996,8 @@ tcptran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	tcptran_ep *ep = arg;
 	size_t      val;
 	int         rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
+	if (((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) &&
+	    (ep != NULL)) {
 		tcptran_pipe *p;
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
@@ -1025,7 +1026,7 @@ tcptran_ep_set_nodelay(void *arg, const void *v, size_t sz, nni_opt_type t)
 	tcptran_ep *ep = arg;
 	bool        val;
 	int         rv;
-	if ((rv = nni_copyin_bool(&val, v, sz, t)) == 0) {
+	if (((rv = nni_copyin_bool(&val, v, sz, t)) == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		ep->nodelay = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -1051,7 +1052,7 @@ tcptran_ep_set_keepalive(void *arg, const void *v, size_t sz, nni_opt_type t)
 	tcptran_ep *ep = arg;
 	bool        val;
 	int         rv;
-	if ((rv = nni_copyin_bool(&val, v, sz, t)) == 0) {
+	if (((rv = nni_copyin_bool(&val, v, sz, t)) == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		ep->keepalive = val;
 		nni_mtx_unlock(&ep->mtx);
@@ -1114,37 +1115,21 @@ tcptran_ep_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	return (rv);
 }
 
-static int
-tcptran_check_bool(const void *v, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_bool(NULL, v, sz, t));
-}
-
-static int
-tcptran_check_recvmaxsz(const void *v, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
-static nni_tran_option tcptran_pipe_options[] = {
+static nni_option tcptran_pipe_options[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = tcptran_pipe_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_REMADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = tcptran_pipe_get_remaddr,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tcptran_pipe_get_keepalive,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tcptran_pipe_get_nodelay,
 	},
 	// terminate list
@@ -1164,32 +1149,25 @@ static nni_tran_pipe_ops tcptran_pipe_ops = {
 	.p_options = tcptran_pipe_options,
 };
 
-static nni_tran_option tcptran_dialer_options[] = {
+static nni_option tcptran_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_type = NNI_TYPE_SIZE,
 	    .o_get  = tcptran_ep_get_recvmaxsz,
 	    .o_set  = tcptran_ep_set_recvmaxsz,
-	    .o_chk  = tcptran_check_recvmaxsz,
 	},
 	{
 	    .o_name = NNG_OPT_URL,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_get  = tcptran_ep_get_url,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tcptran_ep_get_nodelay,
 	    .o_set  = tcptran_ep_set_nodelay,
-	    .o_chk  = tcptran_check_bool,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tcptran_ep_get_keepalive,
 	    .o_set  = tcptran_ep_set_keepalive,
-	    .o_chk  = tcptran_check_bool,
 	},
 	// terminate list
 	{
@@ -1197,37 +1175,29 @@ static nni_tran_option tcptran_dialer_options[] = {
 	},
 };
 
-static nni_tran_option tcptran_listener_options[] = {
+static nni_option tcptran_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_type = NNI_TYPE_SIZE,
 	    .o_get  = tcptran_ep_get_recvmaxsz,
 	    .o_set  = tcptran_ep_set_recvmaxsz,
-	    .o_chk  = tcptran_check_recvmaxsz,
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = tcptran_ep_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_URL,
-	    .o_type = NNI_TYPE_STRING,
 	    .o_get  = tcptran_ep_get_url,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_NODELAY,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tcptran_ep_get_nodelay,
 	    .o_set  = tcptran_ep_set_nodelay,
-	    .o_chk  = tcptran_check_bool,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_KEEPALIVE,
-	    .o_type = NNI_TYPE_BOOL,
 	    .o_get  = tcptran_ep_get_keepalive,
 	    .o_set  = tcptran_ep_set_keepalive,
-	    .o_chk  = tcptran_check_bool,
 	},
 	// terminate list
 	{

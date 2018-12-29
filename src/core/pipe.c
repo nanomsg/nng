@@ -289,7 +289,7 @@ int
 nni_pipe_getopt(
     nni_pipe *p, const char *name, void *val, size_t *szp, nni_opt_type t)
 {
-	nni_tran_option *o;
+	nni_option *o;
 
 	for (o = p->p_tran_ops.p_options; o && o->o_name; o++) {
 		if (strcmp(o->o_name, name) != 0) {

@@ -389,7 +389,7 @@ int
 nni_dialer_setopt(nni_dialer *d, const char *name, const void *val, size_t sz,
     nni_opt_type t)
 {
-	nni_tran_option *o;
+	nni_option *o;
 
 	if (strcmp(name, NNG_OPT_URL) == 0) {
 		return (NNG_EREADONLY);
@@ -430,7 +430,7 @@ int
 nni_dialer_getopt(
     nni_dialer *d, const char *name, void *valp, size_t *szp, nni_opt_type t)
 {
-	nni_tran_option *o;
+	nni_option *o;
 
 	if (strcmp(name, NNG_OPT_RECONNMAXT) == 0) {
 		int rv;

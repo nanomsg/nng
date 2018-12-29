@@ -679,21 +679,18 @@ static nni_proto_ctx_ops rep0_ctx_ops = {
 	.ctx_recv = rep0_ctx_recv,
 };
 
-static nni_proto_option rep0_sock_options[] = {
+static nni_option rep0_sock_options[] = {
 	{
 	    .o_name = NNG_OPT_MAXTTL,
-	    .o_type = NNI_TYPE_INT32,
 	    .o_get  = rep0_sock_get_maxttl,
 	    .o_set  = rep0_sock_set_maxttl,
 	},
 	{
 	    .o_name = NNG_OPT_RECVFD,
-	    .o_type = NNI_TYPE_INT32,
 	    .o_get  = rep0_sock_get_recvfd,
 	},
 	{
 	    .o_name = NNG_OPT_SENDFD,
-	    .o_type = NNI_TYPE_INT32,
 	    .o_get  = rep0_sock_get_sendfd,
 	},
 	// terminate list

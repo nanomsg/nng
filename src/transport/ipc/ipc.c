@@ -871,7 +871,9 @@ ipctran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	ipctran_ep *ep = arg;
 	size_t      val;
 	int         rv;
-	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
+	if (((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) &&
+	    (ep != NULL)) {
+
 		ipctran_pipe *p;
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
@@ -937,12 +939,6 @@ ipctran_ep_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-ipctran_check_recvmaxsz(const void *data, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_size(NULL, data, sz, 0, NNI_MAXSZ, t));
-}
-
-static int
 ipctran_ep_set_perms(void *arg, const void *data, size_t sz, nni_opt_type t)
 {
 	ipctran_ep *ep = arg;
@@ -951,18 +947,13 @@ ipctran_ep_set_perms(void *arg, const void *data, size_t sz, nni_opt_type t)
 
 	// Probably we could further limit this -- most systems don't have
 	// meaningful chmod beyond the lower 9 bits.
-	if ((rv = nni_copyin_int(&val, data, sz, 0, 0x7FFFFFFF, t)) == 0) {
+	if (((rv = nni_copyin_int(&val, data, sz, 0, 0x7FFFFFFF, t)) == 0) &&
+	    (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		rv = nni_ipc_listener_set_permissions(ep->listener, val);
 		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);
-}
-
-static int
-ipctran_check_perms(const void *data, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_int(NULL, data, sz, 0, 0x7FFFFFFF, t));
 }
 
 static int
@@ -972,7 +963,7 @@ ipctran_ep_set_sec_desc(void *arg, const void *data, size_t sz, nni_opt_type t)
 	void *      ptr;
 	int         rv;
 
-	if ((rv = nni_copyin_ptr(&ptr, data, sz, t)) == 0) {
+	if (((rv = nni_copyin_ptr(&ptr, data, sz, t)) == 0) && (ep != NULL)) {
 		nni_mtx_lock(&ep->mtx);
 		rv = nni_ipc_listener_set_security_descriptor(
 		    ep->listener, ptr);
@@ -981,41 +972,29 @@ ipctran_ep_set_sec_desc(void *arg, const void *data, size_t sz, nni_opt_type t)
 	return (rv);
 }
 
-static int
-ipctran_check_sec_desc(const void *data, size_t sz, nni_opt_type t)
-{
-	return (nni_copyin_ptr(NULL, data, sz, t));
-}
-
-static nni_tran_option ipctran_pipe_options[] = {
+static nni_option ipctran_pipe_options[] = {
 	{
 	    .o_name = NNG_OPT_REMADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = ipctran_pipe_get_addr,
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = ipctran_pipe_get_addr,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_UID,
-	    .o_type = NNI_TYPE_UINT64,
 	    .o_get  = ipctran_pipe_get_peer_uid,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_GID,
-	    .o_type = NNI_TYPE_UINT64,
 	    .o_get  = ipctran_pipe_get_peer_gid,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_PID,
-	    .o_type = NNI_TYPE_UINT64,
 	    .o_get  = ipctran_pipe_get_peer_pid,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_ZONEID,
-	    .o_type = NNI_TYPE_UINT64,
 	    .o_get  = ipctran_pipe_get_peer_zoneid,
 	},
 	// terminate list
@@ -1035,17 +1014,14 @@ static nni_tran_pipe_ops ipctran_pipe_ops = {
 	.p_options = ipctran_pipe_options,
 };
 
-static nni_tran_option ipctran_ep_dialer_options[] = {
+static nni_option ipctran_ep_dialer_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_type = NNI_TYPE_SIZE,
 	    .o_get  = ipctran_ep_get_recvmaxsz,
 	    .o_set  = ipctran_ep_set_recvmaxsz,
-	    .o_chk  = ipctran_check_recvmaxsz,
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = ipctran_ep_get_locaddr,
 	},
 	// terminate list
@@ -1054,32 +1030,23 @@ static nni_tran_option ipctran_ep_dialer_options[] = {
 	},
 };
 
-static nni_tran_option ipctran_ep_listener_options[] = {
+static nni_option ipctran_ep_listener_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_type = NNI_TYPE_SIZE,
 	    .o_get  = ipctran_ep_get_recvmaxsz,
 	    .o_set  = ipctran_ep_set_recvmaxsz,
-	    .o_chk  = ipctran_check_recvmaxsz,
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_type = NNI_TYPE_SOCKADDR,
 	    .o_get  = ipctran_ep_get_locaddr,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_SECURITY_DESCRIPTOR,
-	    .o_type = NNI_TYPE_POINTER,
-	    .o_get  = NULL,
 	    .o_set  = ipctran_ep_set_sec_desc,
-	    .o_chk  = ipctran_check_sec_desc,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PERMISSIONS,
-	    .o_type = NNI_TYPE_INT32,
-	    .o_get  = NULL,
 	    .o_set  = ipctran_ep_set_perms,
-	    .o_chk  = ipctran_check_perms,
 	},
 	// terminate list
 	{
