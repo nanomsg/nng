@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,8 +10,6 @@
 //
 
 #include "core/nng_impl.h"
-
-#ifdef NNG_PLATFORM_POSIX
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -235,4 +234,22 @@ error:
 	nni_aio_finish_error(aio, rv);
 }
 
-#endif // NNG_PLATFORM_POSIX
+static const nni_option ipc_dialer_options[] = {
+	{
+	    .o_name = NULL,
+	},
+};
+
+int
+nni_ipc_dialer_getopt(
+    nni_ipc_dialer *d, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_getopt(ipc_dialer_options, name, d, buf, szp, t));
+}
+
+int
+nni_ipc_dialer_setopt(nni_ipc_dialer *d, const char *name, const void *buf,
+    size_t sz, nni_type t)
+{
+	return (nni_setopt(ipc_dialer_options, name, d, buf, sz, t));
+}

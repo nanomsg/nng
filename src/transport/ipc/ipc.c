@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -13,7 +14,8 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "nng/transport/ipc/ipc.h"
+
+#include <nng/transport/ipc/ipc.h>
 
 // IPC transport.   Platform specific IPC operations must be
 // supplied as well.  Normally the IPC is UNIX domain sockets or
@@ -869,18 +871,6 @@ ipctran_ep_accept(void *arg, nni_aio *aio)
 	p->useraio = aio;
 	nni_ipc_listener_accept(ep->listener, p->connaio);
 	nni_mtx_unlock(&ep->mtx);
-}
-
-static int
-ipctran_ep_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
-{
-	ipctran_ep *ep = arg;
-	int         rv;
-
-	nni_mtx_lock(&ep->mtx);
-	rv = nni_copyout_sockaddr(&ep->sa, buf, szp, t);
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
 }
 
 static int

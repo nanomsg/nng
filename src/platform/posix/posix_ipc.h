@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -12,6 +13,8 @@
 
 #ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
+
+#include <nng/transport/ipc/ipc.h>
 
 #include <sys/types.h> // For mode_t
 
@@ -34,6 +37,7 @@ struct nni_ipc_dialer {
 
 struct nni_ipc_listener {
 	nni_posix_pfd *pfd;
+	nng_sockaddr   sa;
 	nni_list       acceptq;
 	bool           started;
 	bool           closed;

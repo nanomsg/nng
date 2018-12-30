@@ -260,7 +260,7 @@ extern int nni_tcp_conn_sockname(nni_tcp_conn *, nni_sockaddr *);
 extern int nni_tcp_conn_set_nodelay(nni_tcp_conn *, bool);
 
 // nni_tcp_conn_set_keepalive indicates that the TCP pipe should send
-// keepalive probes.  Tuning of these keepalives is current unsupported.
+// keepalive probes.  Tuning of these keepalives is currently unsupported.
 extern int nni_tcp_conn_set_keepalive(nni_tcp_conn *, bool);
 
 // nni_tcp_dialer_init creates a new dialer object.
@@ -361,21 +361,6 @@ extern void nni_ipc_conn_send(nni_ipc_conn *, nni_aio *);
 // receive zero bytes.)  The platform may modify the iovs.
 extern void nni_ipc_conn_recv(nni_ipc_conn *, nni_aio *);
 
-// nni_ipc_conn_get_peer_uid obtains the peer user id, if possible.
-// NB: Only POSIX systems support user IDs.
-extern int nni_ipc_conn_get_peer_uid(nni_ipc_conn *, uint64_t *);
-
-// nni_ipc_conn_get_peer_gid obtains the peer group id, if possible.
-// NB: Only POSIX systems support group IDs.
-extern int nni_ipc_conn_get_peer_gid(nni_ipc_conn *, uint64_t *);
-
-// nni_ipc_conn_get_peer_pid obtains the peer process id, if possible.
-extern int nni_ipc_conn_get_peer_pid(nni_ipc_conn *, uint64_t *);
-
-// nni_ipc_conn_get_peer_zoneid obtains the peer zone id, if possible.
-// NB: Only illumos & SunOS systems have the notion of "zones".
-extern int nni_ipc_conn_get_peer_zoneid(nni_ipc_conn *, uint64_t *);
-
 // nni_ipc_conn_setopt is like setsockopt, but uses string names. These
 // are the same names from the IPC transport, generally.  There are no
 // options that are generally settable on an IPC connection.
@@ -436,24 +421,6 @@ extern int nni_ipc_listener_listen(nni_ipc_listener *, const nni_sockaddr *);
 // On success, the first (and only) output will be an nni_ipc_conn *
 // associated with the remote peer.
 extern void nni_ipc_listener_accept(nni_ipc_listener *, nni_aio *);
-
-// nni_ipc_listener_set_permissions sets UNIX style permissions
-// on the named pipes.  This basically just does a chmod() on the
-// named pipe, and is only supported o the server side, and only on
-// systems that support this (POSIX, not Windows).  Note that changing
-// ownership is not supported at this time.  Most systems use only
-// 16-bits, the lower 12 of which are user, group, and other, e.g.
-// 0640 gives read/write access to user, read to group, and prevents
-// any other user from accessing it.  On platforms without this support,
-// ENOTSUP is returned.
-extern int nni_ipc_listener_set_permissions(nni_ipc_listener *, int);
-
-// nni_ipc_listener_set_security_descriptor sets the Windows security
-// descriptor. This is *only* supported for Windows platforms.  All
-// others return NNG_ENOTSUP.  The void argument is a pointer to
-// a SECURITY_DESCRIPTOR object, and must be valid.
-extern int nni_ipc_listener_set_security_descriptor(
-    nni_ipc_listener *, void *);
 
 // nni_ipc_listener_getopt is used to get options from the listener.
 // The only valid option is NNG_OPT_LOCADDR, which will only have

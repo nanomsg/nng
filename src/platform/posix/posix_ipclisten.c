@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,8 +10,6 @@
 //
 
 #include "core/nng_impl.h"
-
-#ifdef NNG_PLATFORM_POSIX
 
 #include <errno.h>
 #include <fcntl.h>
@@ -220,29 +219,65 @@ ipc_remove_stale(const char *path)
 	return (0);
 }
 
-int
-nni_ipc_listener_set_permissions(nni_ipc_listener *l, int mode)
+static int
+ipc_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
+	nni_ipc_listener *l = arg;
+	return (nni_copyout_sockaddr(&l->sa, buf, szp, t));
+}
+
+static int
+ipc_listener_set_perms(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_ipc_listener *l = arg;
+	int               mode;
+	int               rv;
+
+	if ((rv = nni_copyin_int(&mode, buf, sz, 0, S_IFMT, t)) != 0) {
+		return (rv);
+	}
 	if ((mode & S_IFMT) != 0) {
 		return (NNG_EINVAL);
 	}
-	mode |= S_IFSOCK; // set IFSOCK to ensure non-zero
-	nni_mtx_lock(&l->mtx);
-	if (l->started) {
+	if (l != NULL) {
+		mode |= S_IFSOCK; // set IFSOCK to ensure non-zero
+		nni_mtx_lock(&l->mtx);
+		if (l->started) {
+			nni_mtx_unlock(&l->mtx);
+			return (NNG_EBUSY);
+		}
+		l->perms = mode;
 		nni_mtx_unlock(&l->mtx);
-		return (NNG_EBUSY);
 	}
-	l->perms = mode;
-	nni_mtx_unlock(&l->mtx);
 	return (0);
 }
 
+static const nni_option ipc_listener_options[] = {
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_get  = ipc_listener_get_addr,
+	},
+	{
+	    .o_name = NNG_OPT_IPC_PERMISSIONS,
+	    .o_set  = ipc_listener_set_perms,
+	},
+	{
+	    .o_name = NULL,
+	},
+};
+
 int
-nni_ipc_listener_set_security_descriptor(nni_ipc_listener *l, void *sd)
+nni_ipc_listener_getopt(
+    nni_ipc_listener *l, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	NNI_ARG_UNUSED(l);
-	NNI_ARG_UNUSED(sd);
-	return (NNG_ENOTSUP);
+	return (nni_getopt(ipc_listener_options, name, l, buf, szp, t));
+}
+
+int
+nni_ipc_listener_setopt(nni_ipc_listener *l, const char *name, const void *buf,
+    size_t sz, nni_type t)
+{
+	return (nni_setopt(ipc_listener_options, name, l, buf, sz, t));
 }
 
 int
@@ -317,6 +352,7 @@ nni_ipc_listener_listen(nni_ipc_listener *l, const nni_sockaddr *sa)
 	l->pfd     = pfd;
 	l->started = true;
 	l->path    = path;
+	l->sa      = *sa;
 	nni_mtx_unlock(&l->mtx);
 
 	return (0);
@@ -374,5 +410,3 @@ nni_ipc_listener_accept(nni_ipc_listener *l, nni_aio *aio)
 	}
 	nni_mtx_unlock(&l->mtx);
 }
-
-#endif // NNG_PLATFORM_POSIX
