@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -17,8 +18,9 @@
 // We provide stub functions only to satisfy linkage.
 
 #include "core/nng_impl.h"
-#include "nng/supplemental/tls/tls.h"
 #include "supplemental/tls/tls_api.h"
+
+#include <nng/supplemental/tls/tls.h>
 
 void
 nni_tls_config_fini(nng_tls_config *cfg)
@@ -72,40 +74,34 @@ nni_tls_recv(nni_tls *tp, nni_aio *aio)
 	nni_aio_finish_error(aio, NNG_ENOTSUP);
 }
 
-int
-nni_tls_peername(nni_tls *tp, nni_sockaddr *sa)
-{
-	NNI_ARG_UNUSED(tp);
-	NNI_ARG_UNUSED(sa);
-	return (NNG_ENOTSUP);
-}
-
-int
-nni_tls_sockname(nni_tls *tp, nni_sockaddr *sa)
-{
-	NNI_ARG_UNUSED(tp);
-	NNI_ARG_UNUSED(sa);
-	return (NNG_ENOTSUP);
-}
-
 void
 nni_tls_close(nni_tls *tp)
 {
 	NNI_ARG_UNUSED(tp);
 }
 
-const char *
-nni_tls_ciphersuite_name(nni_tls *tp)
+int
+nni_tls_getopt(
+    nni_tls *tp, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	NNI_ARG_UNUSED(tp);
-	return (NULL);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(buf);
+	NNI_ARG_UNUSED(szp);
+	NNI_ARG_UNUSED(t);
+	return (NNG_ENOTSUP);
 }
 
-bool
-nni_tls_verified(nni_tls *tp)
+int
+nni_tls_setopt(
+    nni_tls *tp, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	NNI_ARG_UNUSED(tp);
-	return (false);
+	NNI_ARG_UNUSED(name);
+	NNI_ARG_UNUSED(buf);
+	NNI_ARG_UNUSED(sz);
+	NNI_ARG_UNUSED(t);
+	return (NNG_ENOTSUP);
 }
 
 int

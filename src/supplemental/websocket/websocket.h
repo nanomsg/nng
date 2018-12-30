@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -52,18 +53,16 @@ extern int  nni_ws_dialer_get_tls(nni_ws_dialer *, nng_tls_config **);
 // not confirm the server's response at the HTTP level.  (It can still issue
 // a websocket close).
 
-extern void          nni_ws_send_msg(nni_ws *, nng_aio *);
-extern void          nni_ws_recv_msg(nni_ws *, nng_aio *);
-extern nng_http_res *nni_ws_response(nni_ws *);
-extern nng_http_req *nni_ws_request(nni_ws *);
-extern int           nni_ws_sock_addr(nni_ws *, nni_sockaddr *);
-extern int           nni_ws_peer_addr(nni_ws *, nni_sockaddr *);
-extern void          nni_ws_close(nni_ws *);
-extern void          nni_ws_close_error(nni_ws *, uint16_t);
-extern void          nni_ws_fini(nni_ws *);
-extern const char *  nni_ws_response_headers(nni_ws *);
-extern const char *  nni_ws_request_headers(nni_ws *);
-extern bool          nni_ws_tls_verified(nni_ws *);
+extern void        nni_ws_send_msg(nni_ws *, nng_aio *);
+extern void        nni_ws_recv_msg(nni_ws *, nng_aio *);
+extern void        nni_ws_close(nni_ws *);
+extern void        nni_ws_close_error(nni_ws *, uint16_t);
+extern void        nni_ws_fini(nni_ws *);
+extern const char *nni_ws_response_headers(nni_ws *);
+extern const char *nni_ws_request_headers(nni_ws *);
+extern int nni_ws_getopt(nni_ws *, const char *, void *, size_t *, nni_type);
+extern int nni_ws_setopt(
+    nni_ws *, const char *, const void *, size_t, nni_type);
 
 // The implementation will send periodic PINGs, and respond with PONGs.
 

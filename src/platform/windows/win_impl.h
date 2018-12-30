@@ -75,9 +75,7 @@ struct nni_plat_flock {
 
 extern int nni_win_error(int);
 
-extern int  nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
-extern void nni_win_tcp_conn_set_addrs(
-    nni_tcp_conn *, const SOCKADDR_STORAGE *, const SOCKADDR_STORAGE *);
+extern int nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
 
 extern int  nni_win_io_sysinit(void);
 extern void nni_win_io_sysfini(void);

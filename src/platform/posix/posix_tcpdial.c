@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,8 +10,6 @@
 //
 
 #include "core/nng_impl.h"
-
-#ifdef NNG_PLATFORM_POSIX
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -105,6 +104,8 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 	nni_tcp_dialer *d = c->dialer;
 	nni_aio *       aio;
 	int             rv;
+	int             ka;
+	int             nd;
 
 	nni_mtx_lock(&d->mtx);
 	aio = c->dial_aio;
@@ -135,6 +136,9 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 	c->dial_aio = NULL;
 	nni_aio_list_remove(aio);
 	nni_aio_set_prov_extra(aio, 0, NULL);
+	nd = d->nodelay ? 1 : 0;
+	ka = d->keepalive ? 1 : 0;
+
 	nni_mtx_unlock(&d->mtx);
 
 	if (rv != 0) {
@@ -144,49 +148,9 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 		return;
 	}
 
-	nni_posix_tcp_conn_start(c);
+	nni_posix_tcp_conn_start(c, nd, ka);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
-}
-
-int
-nni_tcp_dialer_set_src_addr(nni_tcp_dialer *d, const nni_sockaddr *sa)
-{
-	struct sockaddr_storage ss;
-	struct sockaddr_in *    sin;
-	struct sockaddr_in6 *   sin6;
-	size_t                  sslen;
-
-	if ((sslen = nni_posix_nn2sockaddr(&ss, sa)) == 0) {
-		return (NNG_EADDRINVAL);
-	}
-	// Ensure we are either IPv4 or IPv6, and port is not set.  (We
-	// do not allow binding to a specific port.)
-	switch (ss.ss_family) {
-	case AF_INET:
-		sin = (void *) &ss;
-		if (sin->sin_port != 0) {
-			return (NNG_EADDRINVAL);
-		}
-		break;
-	case AF_INET6:
-		sin6 = (void *) &ss;
-		if (sin6->sin6_port != 0) {
-			return (NNG_EADDRINVAL);
-		}
-		break;
-	default:
-		return (NNG_EADDRINVAL);
-	}
-	nni_mtx_lock(&d->mtx);
-	if (d->closed) {
-		nni_mtx_unlock(&d->mtx);
-		return (NNG_ECLOSED);
-	}
-	d->src    = ss;
-	d->srclen = sslen;
-	nni_mtx_unlock(&d->mtx);
-	return (0);
 }
 
 // We don't give local address binding support.  Outbound dialers always
@@ -200,6 +164,8 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	size_t                  sslen;
 	int                     fd;
 	int                     rv;
+	int                     ka;
+	int                     nd;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -263,8 +229,10 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	// Immediate connect, cool!  This probably only happens
 	// on loopback, and probably not on every platform.
 	nni_aio_set_prov_extra(aio, 0, NULL);
+	nd = d->nodelay ? 1 : 0;
+	ka = d->keepalive ? 1 : 0;
 	nni_mtx_unlock(&d->mtx);
-	nni_posix_tcp_conn_start(c);
+	nni_posix_tcp_conn_start(c, nd, ka);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 	return;
@@ -276,4 +244,153 @@ error:
 	nni_aio_finish_error(aio, rv);
 }
 
-#endif // NNG_PLATFORM_POSIX
+static int
+tcp_dialer_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_dialer *d = arg;
+	int             rv;
+	bool            b;
+
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (d == NULL)) {
+		return (rv);
+	}
+	nni_mtx_lock(&d->mtx);
+	d->nodelay = b;
+	nni_mtx_unlock(&d->mtx);
+	return (0);
+}
+
+static int
+tcp_dialer_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	bool            b;
+	nni_tcp_dialer *d = arg;
+	nni_mtx_lock(&d->mtx);
+	b = d->nodelay;
+	nni_mtx_unlock(&d->mtx);
+	return (nni_copyout_bool(b, buf, szp, t));
+}
+
+static int
+tcp_dialer_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_dialer *d = arg;
+	int             rv;
+	bool            b;
+
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (d == NULL)) {
+		return (rv);
+	}
+	nni_mtx_lock(&d->mtx);
+	d->keepalive = b;
+	nni_mtx_unlock(&d->mtx);
+	return (0);
+}
+
+static int
+tcp_dialer_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	bool            b;
+	nni_tcp_dialer *d = arg;
+	nni_mtx_lock(&d->mtx);
+	b = d->keepalive;
+	nni_mtx_unlock(&d->mtx);
+	return (nni_copyout_bool(b, buf, szp, t));
+}
+
+static int
+tcp_dialer_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_dialer *d = arg;
+	nng_sockaddr    sa;
+
+	nni_mtx_lock(&d->mtx);
+	if (nni_posix_sockaddr2nn(&sa, &d->src) != 0) {
+		sa.s_family = NNG_AF_UNSPEC;
+	}
+	nni_mtx_unlock(&d->mtx);
+	return (nni_copyout_sockaddr(&sa, buf, szp, t));
+}
+
+static int
+tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_dialer *        d = arg;
+	nng_sockaddr            sa;
+	struct sockaddr_storage ss;
+	struct sockaddr_in *    sin;
+	struct sockaddr_in6 *   sin6;
+	size_t                  sslen;
+	int                     rv;
+
+	if ((rv = nni_copyin_sockaddr(&sa, buf, sz, t)) != 0) {
+		return (rv);
+	}
+	if ((sslen = nni_posix_nn2sockaddr(&ss, &sa)) == 0) {
+		return (NNG_EADDRINVAL);
+	}
+	// Ensure we are either IPv4 or IPv6, and port is not set.  (We
+	// do not allow binding to a specific port.)
+	switch (ss.ss_family) {
+	case AF_INET:
+		sin = (void *) &ss;
+		if (sin->sin_port != 0) {
+			return (NNG_EADDRINVAL);
+		}
+		break;
+	case AF_INET6:
+		sin6 = (void *) &ss;
+		if (sin6->sin6_port != 0) {
+			return (NNG_EADDRINVAL);
+		}
+		break;
+	default:
+		return (NNG_EADDRINVAL);
+	}
+	if (d != NULL) {
+		nni_mtx_lock(&d->mtx);
+		if (d->closed) {
+			nni_mtx_unlock(&d->mtx);
+			return (NNG_ECLOSED);
+		}
+		d->src    = ss;
+		d->srclen = sslen;
+		nni_mtx_unlock(&d->mtx);
+	}
+	return (0);
+}
+
+static const nni_option tcp_dialer_options[] = {
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_get  = tcp_dialer_get_locaddr,
+	    .o_set  = tcp_dialer_set_locaddr,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_NODELAY,
+	    .o_get  = tcp_dialer_get_nodelay,
+	    .o_set  = tcp_dialer_set_nodelay,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_KEEPALIVE,
+	    .o_get  = tcp_dialer_get_keepalive,
+	    .o_set  = tcp_dialer_set_keepalive,
+	},
+	{
+	    .o_name = NULL,
+	},
+};
+
+int
+nni_tcp_dialer_getopt(
+    nni_tcp_dialer *d, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_getopt(tcp_dialer_options, name, d, buf, szp, t));
+}
+
+int
+nni_tcp_dialer_setopt(nni_tcp_dialer *d, const char *name, const void *buf,
+    size_t sz, nni_type t)
+{
+	return (nni_setopt(tcp_dialer_options, name, d, buf, sz, t));
+}

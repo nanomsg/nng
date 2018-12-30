@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -366,8 +367,12 @@ tlstran_pipe_nego_cb(void *arg)
 	NNI_GET16(&p->rxlen[4], p->peer);
 	p->useraio = NULL;
 	nni_mtx_unlock(&ep->mtx);
-	(void) nni_tls_set_nodelay(p->tls, p->nodelay);
-	(void) nni_tls_set_keepalive(p->tls, p->keepalive);
+
+	(void) nni_tls_setopt(p->tls, NNG_OPT_TCP_NODELAY, &p->nodelay,
+	    sizeof(p->nodelay), NNI_TYPE_BOOL);
+	(void) nni_tls_setopt(p->tls, NNG_OPT_TCP_KEEPALIVE, &p->keepalive,
+	    sizeof(p->keepalive), NNI_TYPE_BOOL);
+
 	nni_aio_set_output(uaio, 0, p);
 	nni_aio_finish(uaio, 0, 0);
 	return;
@@ -658,48 +663,6 @@ tlstran_pipe_peer(void *arg)
 	tlstran_pipe *p = arg;
 
 	return (p->peer);
-}
-
-static int
-tlstran_pipe_get_locaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	tlstran_pipe *p = arg;
-	int           rv;
-	nni_sockaddr  sa;
-
-	memset(&sa, 0, sizeof(sa));
-	if ((rv = nni_tls_sockname(p->tls, &sa)) == 0) {
-		rv = nni_copyout_sockaddr(&sa, v, szp, t);
-	}
-	return (rv);
-}
-
-static int
-tlstran_pipe_get_remaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	tlstran_pipe *p = arg;
-	int           rv;
-	nni_sockaddr  sa;
-
-	memset(&sa, 0, sizeof(sa));
-	if ((rv = nni_tls_peername(p->tls, &sa)) == 0) {
-		rv = nni_copyout_sockaddr(&sa, v, szp, t);
-	}
-	return (rv);
-}
-
-static int
-tlstran_pipe_get_keepalive(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	tlstran_pipe *p = arg;
-	return (nni_copyout_bool(p->keepalive, v, szp, t));
-}
-
-static int
-tlstran_pipe_get_nodelay(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	tlstran_pipe *p = arg;
-	return (nni_copyout_bool(p->nodelay, v, szp, t));
 }
 
 static void
@@ -1215,50 +1178,35 @@ tlstran_ep_set_cert_key_file(
 	return (rv);
 }
 
-static int
-tlstran_pipe_get_verified(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	tlstran_pipe *p = arg;
-
-	return (nni_copyout_bool(nni_tls_verified(p->tls), v, szp, t));
-}
-
-static nni_option tlstran_pipe_options[] = {
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = tlstran_pipe_get_locaddr,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = tlstran_pipe_get_remaddr,
-	},
-	{
-	    .o_name = NNG_OPT_TLS_VERIFIED,
-	    .o_get  = tlstran_pipe_get_verified,
-	},
-	{
-	    .o_name = NNG_OPT_TCP_KEEPALIVE,
-	    .o_get  = tlstran_pipe_get_keepalive,
-	},
-	{
-	    .o_name = NNG_OPT_TCP_NODELAY,
-	    .o_get  = tlstran_pipe_get_nodelay,
-	},
+static const nni_option tlstran_pipe_opts[] = {
 	// terminate list
 	{
 	    .o_name = NULL,
 	},
 };
 
+static int
+tlstran_pipe_getopt(
+    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	tlstran_pipe *p = arg;
+	int           rv;
+
+	if ((rv = nni_tls_getopt(p->tls, name, buf, szp, t)) == NNG_ENOTSUP) {
+		rv = nni_getopt(tlstran_pipe_opts, name, p, buf, szp, t);
+	}
+	return (rv);
+}
+
 static nni_tran_pipe_ops tlstran_pipe_ops = {
-	.p_init    = tlstran_pipe_init,
-	.p_fini    = tlstran_pipe_fini,
-	.p_stop    = tlstran_pipe_stop,
-	.p_send    = tlstran_pipe_send,
-	.p_recv    = tlstran_pipe_recv,
-	.p_close   = tlstran_pipe_close,
-	.p_peer    = tlstran_pipe_peer,
-	.p_options = tlstran_pipe_options,
+	.p_init   = tlstran_pipe_init,
+	.p_fini   = tlstran_pipe_fini,
+	.p_stop   = tlstran_pipe_stop,
+	.p_send   = tlstran_pipe_send,
+	.p_recv   = tlstran_pipe_recv,
+	.p_close  = tlstran_pipe_close,
+	.p_peer   = tlstran_pipe_peer,
+	.p_getopt = tlstran_pipe_getopt,
 };
 
 static nni_option tlstran_dialer_options[] = {

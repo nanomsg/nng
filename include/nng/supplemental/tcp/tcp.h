@@ -58,22 +58,13 @@ NNG_DECL void nng_tcp_send(nng_tcp *, nng_aio *);
 // the iov's and resubmit as needed.
 NNG_DECL void nng_tcp_recv(nng_tcp *, nng_aio *);
 
-// nng_tcp_sockname obtains an nng_sockaddr associated with our local address.
-NNG_DECL int nng_tcp_sockname(nng_tcp *, nng_sockaddr *);
+// nng_tcp_getopt is used to retrieve socket options, using the named
+// option values, like NNG_OPT_TCP_NODELAY or NNG_OPT_REMADDR.
+NNG_DECL int nng_tcp_getopt(nng_tcp *, const char *, void *, size_t *);
 
-// nng_tcp_peername obtains an nng_sockaddr associated with our peer.
-NNG_DECL int nng_tcp_peername(nng_tcp *, nng_sockaddr *);
-
-// nng_tcp_set_nodelay is used to disable Nagle's algorithm (true) or
-// enable it.  For latency sensitive applications, disable it.  For
-// throughput operations involving tiny messages, leave it enabled.  We
-// usually recommend disabling it.
-NNG_DECL int nng_tcp_set_nodelay(nng_tcp *, bool);
-
-// nng_set_keepalive is used to enable the use of TCP keepalives.
-// At the moment there is no further tuning, because the tunables here
-// tend to be fairly platform specific.
-NNG_DECL int nng_tcp_set_keepalive(nng_tcp *, bool);
+// nng_tcp_setopt is used to set socket options, using the named
+// option values, like NNG_OPT_TCP_KEEPALIVE.
+NNG_DECL int nng_tcp_setopt(nng_tcp *, const char *, const void *, size_t);
 
 // nng_tcp_dialer_alloc is used to allocate a TCP dialer.
 NNG_DECL int nng_tcp_dialer_alloc(nng_tcp_dialer **);
@@ -91,14 +82,6 @@ NNG_DECL void nng_tcp_dialer_close(nng_tcp_dialer *);
 // the dialer after this call.
 NNG_DECL void nng_tcp_dialer_free(nng_tcp_dialer *);
 
-// nng_tcp_dialer_set_source is used to set the source address that the
-// dialer should dial from.  The port component of the socket address is
-// ignored, as a source port is always chosen at random.  If this is not
-// called, then a system specific default source address is chosen.
-// (Usually the local interface IP address chosen based on the route to
-// the destination.)
-NNG_DECL int nng_tcp_dialer_set_source(nng_tcp_dialer *, const nng_sockaddr *);
-
 // nng_tcp_dialer_dial attempts to create a new connection (nng_tcp *)
 // may making an outbound connect call.  If this succeeds, the aio
 // will return a suitable nng_tcp * in the first output of the aio.
@@ -106,6 +89,19 @@ NNG_DECL int nng_tcp_dialer_set_source(nng_tcp_dialer *, const nng_sockaddr *);
 // is stored in the 2nd argument.
 NNG_DECL void nng_tcp_dialer_dial(
     nng_tcp_dialer *, const nng_sockaddr *, nng_aio *);
+
+// nng_tcp_dialer_getopt gets an option.
+NNG_DECL int nng_tcp_dialer_getopt(
+    nng_tcp_dialer *, const char *, void *, size_t *);
+
+// nng_tcp_dialer_setopt sets an option.  This can be done to set the
+// initial values of NNG_OPT_TCP_NODELAY or NNG_OPT_TCP_KEEPALIVE for
+// created connections, for example.  Also, the NNG_OPT_LOCADDR can
+// be set, which sets the source address new connections will be
+// established from -- except that the port is ignored as it is always
+// randomly chosen.
+NNG_DECL int nng_tcp_dialer_setopt(
+    nng_tcp_dialer *, const char *, const void *, size_t);
 
 // nng_tcp_listener_alloc creates a listener.
 NNG_DECL int nng_tcp_listener_alloc(nng_tcp_listener **);
@@ -139,6 +135,18 @@ NNG_DECL int nng_tcp_listener_listen(nng_tcp_listener *, nng_sockaddr *);
 // nng_tcp * object), and returns it in the nng_aio as the first output
 // on success.
 NNG_DECL void nng_tcp_listener_accept(nng_tcp_listener *, nng_aio *);
+
+// nng_tcp_listener_getopt gets an option.  A good example of this is to
+// obtain the NNG_OPT_LOCADDR local address after starting the listener
+// on a wild card port (0).
+NNG_DECL int nng_tcp_listener_getopt(
+    nng_tcp_listener *, const char *, void *, size_t *);
+
+// nng_tcp_listener_setopt sets an option.  This can be done to set the
+// initial values of NNG_OPT_TCP_NODELAY or NNG_OPT_TCP_KEEPALIVE for
+// created connections, for example.
+NNG_DECL int nng_tcp_listener_setopt(
+    nng_tcp_listener *, const char *, const void *, size_t);
 
 #ifdef __cplusplus
 }

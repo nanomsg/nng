@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -13,10 +14,11 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "nng/supplemental/tls/tls.h"
 #include "supplemental/tls/tls_api.h"
 
 #include "http_api.h"
+
+#include <nng/supplemental/tls/tls.h>
 
 // We insist that individual headers fit in 8K.
 // If you need more than that, you need something we can't do.
@@ -42,18 +44,20 @@ typedef void (*http_read_fn)(void *, nni_aio *);
 typedef void (*http_write_fn)(void *, nni_aio *);
 typedef void (*http_close_fn)(void *);
 typedef void (*http_fini_fn)(void *);
-typedef bool (*http_verified_fn)(void *);
 typedef int (*http_addr_fn)(void *, nni_sockaddr *);
+typedef int (*http_getopt_fn)(
+    void *, const char *, void *, size_t *, nni_type);
+typedef int (*http_setopt_fn)(
+    void *, const char *, const void *, size_t, nni_type);
 
-typedef struct nni_http_tran {
-	http_read_fn     h_read;
-	http_write_fn    h_write;
-	http_addr_fn     h_sock_addr;
-	http_addr_fn     h_peer_addr;
-	http_verified_fn h_verified;
-	http_close_fn    h_close;
-	http_fini_fn     h_fini;
-} nni_http_tran;
+typedef struct {
+	http_read_fn   h_read;
+	http_write_fn  h_write;
+	http_getopt_fn h_getopt;
+	http_setopt_fn h_setopt;
+	http_close_fn  h_close;
+	http_fini_fn   h_fini;
+} http_tran;
 
 #define SET_RD_FLAVOR(aio, f) \
 	nni_aio_set_prov_extra(aio, 0, ((void *) (intptr_t)(f)))
@@ -63,18 +67,17 @@ typedef struct nni_http_tran {
 #define GET_WR_FLAVOR(aio) (int) ((intptr_t) nni_aio_get_prov_extra(aio, 0))
 
 struct nng_http_conn {
-	void *           sock;
-	http_read_fn     rd;
-	http_write_fn    wr;
-	http_addr_fn     sock_addr;
-	http_addr_fn     peer_addr;
-	http_verified_fn verified;
-	http_close_fn    close;
-	http_fini_fn     fini;
-	void *           ctx;
-	bool             closed;
-	nni_list         rdq; // high level http read requests
-	nni_list         wrq; // high level http write requests
+	void *         sock;
+	http_read_fn   rd;
+	http_write_fn  wr;
+	http_setopt_fn setopt;
+	http_getopt_fn getopt;
+	http_close_fn  close;
+	http_fini_fn   fini;
+	void *         ctx;
+	bool           closed;
+	nni_list       rdq; // high level http read requests
+	nni_list       wrq; // high level http write requests
 
 	nni_aio *rd_uaio; // user aio for read
 	nni_aio *wr_uaio; // user aio for write
@@ -669,32 +672,31 @@ nni_http_write_full(nni_http_conn *conn, nni_aio *aio)
 }
 
 int
-nni_http_sock_addr(nni_http_conn *conn, nni_sockaddr *sa)
+nni_http_conn_getopt(
+    nni_http_conn *conn, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	int rv;
 	nni_mtx_lock(&conn->mtx);
-	rv = conn->closed ? NNG_ECLOSED : conn->sock_addr(conn->sock, sa);
+	if (conn->closed) {
+		rv = NNG_ECLOSED;
+	} else {
+		rv = conn->getopt(conn->sock, name, buf, szp, t);
+	}
 	nni_mtx_unlock(&conn->mtx);
 	return (rv);
 }
 
 int
-nni_http_peer_addr(nni_http_conn *conn, nni_sockaddr *sa)
+nni_http_conn_setopt(nni_http_conn *conn, const char *name, const void *buf,
+    size_t sz, nni_type t)
 {
 	int rv;
 	nni_mtx_lock(&conn->mtx);
-	rv = conn->closed ? NNG_ECLOSED : conn->peer_addr(conn->sock, sa);
-	nni_mtx_unlock(&conn->mtx);
-	return (rv);
-}
-
-bool
-nni_http_tls_verified(nni_http_conn *conn)
-{
-	bool rv;
-
-	nni_mtx_lock(&conn->mtx);
-	rv = conn->closed ? false : conn->verified(conn->sock);
+	if (conn->closed) {
+		rv = NNG_ECLOSED;
+	} else {
+		rv = conn->setopt(conn->sock, name, buf, sz, t);
+	}
 	nni_mtx_unlock(&conn->mtx);
 	return (rv);
 }
@@ -721,7 +723,7 @@ nni_http_conn_fini(nni_http_conn *conn)
 }
 
 static int
-http_init(nni_http_conn **connp, nni_http_tran *tran, void *data)
+http_init(nni_http_conn **connp, http_tran *tran, void *data)
 {
 	nni_http_conn *conn;
 	int            rv;
@@ -745,35 +747,26 @@ http_init(nni_http_conn **connp, nni_http_tran *tran, void *data)
 		return (rv);
 	}
 
-	conn->sock      = data;
-	conn->rd        = tran->h_read;
-	conn->wr        = tran->h_write;
-	conn->close     = tran->h_close;
-	conn->fini      = tran->h_fini;
-	conn->sock_addr = tran->h_sock_addr;
-	conn->peer_addr = tran->h_peer_addr;
-	conn->verified  = tran->h_verified;
+	conn->sock   = data;
+	conn->rd     = tran->h_read;
+	conn->wr     = tran->h_write;
+	conn->close  = tran->h_close;
+	conn->fini   = tran->h_fini;
+	conn->getopt = tran->h_getopt;
+	conn->setopt = tran->h_setopt;
 
 	*connp = conn;
 
 	return (0);
 }
 
-static bool
-nni_http_verified_tcp(void *arg)
-{
-	NNI_ARG_UNUSED(arg);
-	return (false);
-}
-
-static nni_http_tran http_tcp_ops = {
-	.h_read      = (http_read_fn) nni_tcp_conn_recv,
-	.h_write     = (http_write_fn) nni_tcp_conn_send,
-	.h_close     = (http_close_fn) nni_tcp_conn_close,
-	.h_fini      = (http_fini_fn) nni_tcp_conn_fini,
-	.h_sock_addr = (http_addr_fn) nni_tcp_conn_sockname,
-	.h_peer_addr = (http_addr_fn) nni_tcp_conn_peername,
-	.h_verified  = (http_verified_fn) nni_http_verified_tcp,
+static http_tran http_tcp_ops = {
+	.h_read   = (http_read_fn) nni_tcp_conn_recv,
+	.h_write  = (http_write_fn) nni_tcp_conn_send,
+	.h_close  = (http_close_fn) nni_tcp_conn_close,
+	.h_fini   = (http_fini_fn) nni_tcp_conn_fini,
+	.h_getopt = (http_getopt_fn) nni_tcp_conn_getopt,
+	.h_setopt = (http_setopt_fn) nni_tcp_conn_setopt,
 };
 
 int
@@ -787,14 +780,13 @@ nni_http_conn_init_tcp(nni_http_conn **connp, nni_tcp_conn *tcp)
 }
 
 #ifdef NNG_SUPP_TLS
-static nni_http_tran http_tls_ops = {
-	.h_read      = (http_read_fn) nni_tls_recv,
-	.h_write     = (http_write_fn) nni_tls_send,
-	.h_close     = (http_close_fn) nni_tls_close,
-	.h_fini      = (http_fini_fn) nni_tls_fini,
-	.h_sock_addr = (http_addr_fn) nni_tls_sockname,
-	.h_peer_addr = (http_addr_fn) nni_tls_peername,
-	.h_verified  = (http_verified_fn) nni_tls_verified,
+static http_tran http_tls_ops = {
+	.h_read   = (http_read_fn) nni_tls_recv,
+	.h_write  = (http_write_fn) nni_tls_send,
+	.h_close  = (http_close_fn) nni_tls_close,
+	.h_fini   = (http_fini_fn) nni_tls_fini,
+	.h_getopt = (http_getopt_fn) nni_tls_getopt,
+	.h_setopt = (http_setopt_fn) nni_tls_setopt,
 };
 
 int

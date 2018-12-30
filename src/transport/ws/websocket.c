@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -14,12 +15,12 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "nng/supplemental/tls/tls.h"
 #include "supplemental/http/http_api.h"
 #include "supplemental/tls/tls_api.h"
 #include "supplemental/websocket/websocket.h"
 
-#include "nng/transport/ws/websocket.h"
+#include <nng/supplemental/tls/tls.h>
+#include <nng/transport/ws/websocket.h>
 
 typedef struct ws_dialer   ws_dialer;
 typedef struct ws_listener ws_listener;
@@ -577,34 +578,6 @@ ws_listener_set_reshdrs(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static int
-ws_pipe_get_locaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	ws_pipe *    p = arg;
-	int          rv;
-	nni_sockaddr sa;
-
-	memset(&sa, 0, sizeof(sa));
-	if ((rv = nni_ws_sock_addr(p->ws, &sa)) == 0) {
-		rv = nni_copyout_sockaddr(&sa, v, szp, t);
-	}
-	return (rv);
-}
-
-static int
-ws_pipe_get_remaddr(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	ws_pipe *    p = arg;
-	int          rv;
-	nni_sockaddr sa;
-
-	memset(&sa, 0, sizeof(sa));
-	if ((rv = nni_ws_peer_addr(p->ws, &sa)) == 0) {
-		rv = nni_copyout_sockaddr(&sa, v, szp, t);
-	}
-	return (rv);
-}
-
-static int
 ws_pipe_get_reshdrs(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	ws_pipe *   p = arg;
@@ -628,23 +601,7 @@ ws_pipe_get_reqhdrs(void *arg, void *v, size_t *szp, nni_opt_type t)
 	return (nni_copyout_str(s, v, szp, t));
 }
 
-static int
-ws_pipe_get_tls_verified(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	ws_pipe *p = arg;
-	return (nni_copyout_bool(nni_ws_tls_verified(p->ws), v, szp, t));
-}
-
-static nni_option ws_pipe_options[] = {
-
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ws_pipe_get_locaddr,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = ws_pipe_get_remaddr,
-	},
+static const nni_option ws_pipe_options[] = {
 	{
 	    .o_name = NNG_OPT_WS_REQUEST_HEADERS,
 	    .o_get  = ws_pipe_get_reqhdrs,
@@ -653,25 +610,33 @@ static nni_option ws_pipe_options[] = {
 	    .o_name = NNG_OPT_WS_RESPONSE_HEADERS,
 	    .o_get  = ws_pipe_get_reshdrs,
 	},
-	{
-	    .o_name = NNG_OPT_TLS_VERIFIED,
-	    .o_get  = ws_pipe_get_tls_verified,
-	},
 	// terminate list
 	{
 	    .o_name = NULL,
 	}
 };
 
+static int
+ws_pipe_getopt(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	ws_pipe *p = arg;
+	int      rv;
+
+	if ((rv = nni_ws_getopt(p->ws, name, buf, szp, t)) == NNG_ENOTSUP) {
+		rv = nni_getopt(ws_pipe_options, name, p, buf, szp, t);
+	}
+	return (rv);
+}
+
 static nni_tran_pipe_ops ws_pipe_ops = {
-	.p_init    = ws_pipe_init,
-	.p_fini    = ws_pipe_fini,
-	.p_stop    = ws_pipe_stop,
-	.p_send    = ws_pipe_send,
-	.p_recv    = ws_pipe_recv,
-	.p_close   = ws_pipe_close,
-	.p_peer    = ws_pipe_peer,
-	.p_options = ws_pipe_options,
+	.p_init   = ws_pipe_init,
+	.p_fini   = ws_pipe_fini,
+	.p_stop   = ws_pipe_stop,
+	.p_send   = ws_pipe_send,
+	.p_recv   = ws_pipe_recv,
+	.p_close  = ws_pipe_close,
+	.p_peer   = ws_pipe_peer,
+	.p_getopt = ws_pipe_getopt,
 };
 
 static nni_option ws_dialer_options[] = {

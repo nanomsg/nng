@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -698,22 +699,45 @@ ws_send_control(nni_ws *ws, uint8_t op, uint8_t *buf, size_t len)
 	ws_start_write(ws);
 }
 
+static const nni_option ws_options[] = {
+	{
+	    .o_name = NULL,
+	},
+};
+
 int
-nni_ws_sock_addr(nni_ws *ws, nni_sockaddr *sa)
+nni_ws_getopt(nni_ws *ws, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	int rv;
+
 	nni_mtx_lock(&ws->mtx);
-	rv = ws->closed ? NNG_ECLOSED : nni_http_sock_addr(ws->http, sa);
+	if (ws->closed) {
+		nni_mtx_unlock(&ws->mtx);
+		return (NNG_ECLOSED);
+	}
+	rv = nni_http_conn_getopt(ws->http, name, buf, szp, t);
+	if (rv == NNG_ENOTSUP) {
+		rv = nni_getopt(ws_options, name, ws, buf, szp, t);
+	}
 	nni_mtx_unlock(&ws->mtx);
 	return (rv);
 }
 
 int
-nni_ws_peer_addr(nni_ws *ws, nni_sockaddr *sa)
+nni_ws_setopt(
+    nni_ws *ws, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
+
 	nni_mtx_lock(&ws->mtx);
-	rv = ws->closed ? NNG_ECLOSED : nni_http_peer_addr(ws->http, sa);
+	if (ws->closed) {
+		nni_mtx_unlock(&ws->mtx);
+		return (NNG_ECLOSED);
+	}
+	rv = nni_http_conn_setopt(ws->http, name, buf, sz, t);
+	if (rv == NNG_ENOTSUP) {
+		rv = nni_setopt(ws_options, name, ws, buf, sz, t);
+	}
 	nni_mtx_unlock(&ws->mtx);
 	return (rv);
 }
@@ -1098,18 +1122,6 @@ nni_ws_close(nni_ws *ws)
 	nni_ws_close_error(ws, WS_CLOSE_NORMAL_CLOSE);
 }
 
-nni_http_res *
-nni_ws_response(nni_ws *ws)
-{
-	return (ws->res);
-}
-
-nni_http_req *
-nni_ws_request(nni_ws *ws)
-{
-	return (ws->req);
-}
-
 const char *
 nni_ws_request_headers(nni_ws *ws)
 {
@@ -1130,17 +1142,6 @@ nni_ws_response_headers(nni_ws *ws)
 	}
 	nni_mtx_unlock(&ws->mtx);
 	return (ws->reshdrs);
-}
-
-bool
-nni_ws_tls_verified(nni_ws *ws)
-{
-	bool rv;
-
-	nni_mtx_lock(&ws->mtx);
-	rv = nni_http_tls_verified(ws->http);
-	nni_mtx_unlock(&ws->mtx);
-	return (rv);
 }
 
 static void

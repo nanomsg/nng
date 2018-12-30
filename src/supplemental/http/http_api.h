@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -12,9 +13,8 @@
 #define NNG_SUPPLEMENTAL_HTTP_HTTP_API_H
 
 #include "core/nng_impl.h"
-#include "nng/supplemental/tls/tls.h"
-
-#include "nng/supplemental/http/http.h"
+#include <nng/supplemental/http/http.h>
+#include <nng/supplemental/tls/tls.h>
 
 // This represents the "internal" HTTP API.  It should not be used
 // or exposed to applications directly.
@@ -102,6 +102,10 @@ extern int nni_http_conn_init_tls(
 
 extern void nni_http_conn_close(nni_http_conn *);
 extern void nni_http_conn_fini(nni_http_conn *);
+extern int  nni_http_conn_getopt(
+     nni_http_conn *, const char *, void *, size_t *, nni_type);
+extern int nni_http_conn_setopt(
+    nni_http_conn *, const char *, const void *, size_t, nni_type);
 
 // Reading messages -- the caller must supply a preinitialized (but otherwise
 // idle) message.  We recommend the caller store this in the aio's user data.
@@ -161,11 +165,6 @@ extern void nni_http_read(nni_http_conn *, nni_aio *);
 extern void nni_http_read_full(nni_http_conn *, nni_aio *);
 extern void nni_http_write(nni_http_conn *, nni_aio *);
 extern void nni_http_write_full(nni_http_conn *, nni_aio *);
-extern int  nni_http_sock_addr(nni_http_conn *, nni_sockaddr *);
-extern int  nni_http_peer_addr(nni_http_conn *, nni_sockaddr *);
-
-// nni_http_tls_verified returns true if the peer has been verified using TLS.
-extern bool nni_http_tls_verified(nni_http_conn *);
 
 // nni_http_server will look for an existing server with the same
 // name and port, or create one if one does not exist.  The servers

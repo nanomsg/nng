@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -15,7 +16,7 @@
 
 #include "core/nng_impl.h"
 
-#ifdef NNG_PLATFORM_WINDOWS
+#include <nng/transport/tcp/tcp.h>
 
 struct nni_tcp_conn {
 	SOCKET            s;
@@ -42,6 +43,8 @@ struct nni_tcp_dialer {
 	LPFN_CONNECTEX   connectex; // looked up name via ioctl
 	nni_list         aios;      // in flight connections
 	bool             closed;
+	bool             nodelay;   // initial value for child conns
+	bool             keepalive; // initial value for child conns
 	SOCKADDR_STORAGE src;
 	size_t           srclen;
 	nni_mtx          mtx;
@@ -53,6 +56,8 @@ struct nni_tcp_listener {
 	nni_list                  aios;
 	bool                      closed;
 	bool                      started;
+	bool                      nodelay;   // initial value for child conns
+	bool                      keepalive; // initial value for child conns
 	LPFN_ACCEPTEX             acceptex;
 	LPFN_GETACCEPTEXSOCKADDRS getacceptexsockaddrs;
 	SOCKADDR_STORAGE          ss;
@@ -60,10 +65,6 @@ struct nni_tcp_listener {
 	nni_reap_item             reap;
 };
 
-extern int  nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
-extern void nni_win_tcp_conn_set_addrs(
-    nni_tcp_conn *, const SOCKADDR_STORAGE *, const SOCKADDR_STORAGE *);
-
-#endif // NNG_PLATFORM_WINDOWS
+extern int nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
 
 #endif // NNG_PLATFORM_WIN_WINTCP_H

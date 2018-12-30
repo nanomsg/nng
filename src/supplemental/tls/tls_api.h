@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -12,6 +13,8 @@
 #define NNG_SUPPLEMENTAL_TLS_TLS_API_H
 
 #include <stdbool.h>
+
+#include <nng/supplemental/tls/tls.h>
 
 // nni_tls represents the context for a single TLS stream.
 typedef struct nni_tls nni_tls;
@@ -36,19 +39,10 @@ extern void nni_tls_close(nni_tls *);
 extern void nni_tls_fini(nni_tls *);
 extern void nni_tls_send(nni_tls *, nng_aio *);
 extern void nni_tls_recv(nni_tls *, nng_aio *);
-extern int  nni_tls_sockname(nni_tls *, nni_sockaddr *);
-extern int  nni_tls_peername(nni_tls *, nni_sockaddr *);
-extern int  nni_tls_set_nodelay(nni_tls *, bool);
-extern int  nni_tls_set_keepalive(nni_tls *, bool);
 
-// nni_tls_verified returns true if the peer, or false if the peer did not
-// verify.  (During the handshake phase, the peer is not verified, so this
-// might return false if executed too soon.  The verification status will
-// be accurate once the handshake is finished, however.
-extern bool nni_tls_verified(nni_tls *);
-
-// nni_tls_ciphersuite_name returns the name of the ciphersuite in use.
-extern const char *nni_tls_ciphersuite_name(nni_tls *);
+extern int nni_tls_setopt(
+    nni_tls *, const char *, const void *, size_t, nni_type);
+extern int nni_tls_getopt(nni_tls *, const char *, void *, size_t *, nni_type);
 
 // TBD: getting additional peer certificate information...
 

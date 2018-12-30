@@ -263,6 +263,18 @@ extern int nni_tcp_conn_set_nodelay(nni_tcp_conn *, bool);
 // keepalive probes.  Tuning of these keepalives is currently unsupported.
 extern int nni_tcp_conn_set_keepalive(nni_tcp_conn *, bool);
 
+// nni_tcp_conn_setopt is like setsockopt, but uses string names. These
+// are the same names from the TCP transport, generally.  Examples are
+// NNG_OPT_TCP_NODELAY and NNG_OPT_TCP_KEEPALIVE.
+extern int nni_tcp_conn_setopt(
+    nni_tcp_conn *, const char *, const void *, size_t, nni_type);
+
+// nni_tcp_conn_getopt is like getsockopt, but uses string names.
+// We support NNG_OPT_REMADDR and NNG_OPT_LOCADDR (with argument type
+// nng_sockaddr), and NNG_OPT_TCP_NODELAY and NNG_OPT_TCP_KEEPALIVE.
+extern int nni_tcp_conn_getopt(
+    nni_tcp_conn *, const char *, void *, size_t *, nni_type);
+
 // nni_tcp_dialer_init creates a new dialer object.
 extern int nni_tcp_dialer_init(nni_tcp_dialer **);
 
@@ -275,20 +287,23 @@ extern void nni_tcp_dialer_fini(nni_tcp_dialer *);
 // connection will be aborted.
 extern void nni_tcp_dialer_close(nni_tcp_dialer *);
 
-// nni_tcp_dialer_set_src_addr sets the source address to use for outgoing
-// connections.  Only the IP (or IPv6) address may be specified; the port
-// must be zero.  This must be called before calling nni_tcp_dialer_dial.
-// The source address must be associated with one of the addresses on the
-// local system -- this is not checked until bind() is called just prior to
-// the connect() call.  Likewise the address family must be the same as the
-// address used when dialing, or errors will occur.
-extern int nni_tcp_dialer_set_src_addr(nni_tcp_dialer *, const nng_sockaddr *);
-
 // nni_tcp_dialer_dial attempts to create an outgoing connection,
 // asynchronously, to the address specified. On success, the first (and only)
 // output will be an nni_tcp_conn * associated with the remote server.
 extern void nni_tcp_dialer_dial(
     nni_tcp_dialer *, const nni_sockaddr *, nni_aio *);
+
+// nni_tcp_dialer_getopt gets an option from the dialer.
+extern int nni_tcp_dialer_setopt(
+    nni_tcp_dialer *, const char *, const void *, size_t, nni_type);
+
+// nni_tcp_dialer_setopt sets an option on the dialer. There is special
+// support for NNG_OPT_LOCADDR, which will be the source address (if legal)
+// for new connections, except that the port will be ignored.  The
+// NNG_OPT_TCP_NODELAY and NNG_OPT_TCP_KEEPALIVE options work to set the
+// initial values of those options on newly created connections.
+extern int nni_tcp_dialer_getopt(
+    nni_tcp_dialer *, const char *, void *, size_t *, nni_type);
 
 // nni_tcp_listener_init creates a new listener object, unbound.
 extern int nni_tcp_listener_init(nni_tcp_listener **);
@@ -312,6 +327,16 @@ extern int nni_tcp_listener_listen(nni_tcp_listener *, nni_sockaddr *);
 // On success, the first (and only) output will be an nni_tcp_conn *
 // associated with the remote peer.
 extern void nni_tcp_listener_accept(nni_tcp_listener *, nni_aio *);
+
+// nni_tcp_listener_getopt gets an option from the listener.
+extern int nni_tcp_listener_setopt(
+    nni_tcp_listener *, const char *, const void *, size_t, nni_type);
+
+// nni_tcp_listener_setopt sets an option on the listener.  The most common
+// use for this is to retrieve the setting of the NNG_OPT_TCP_LOCADDR
+// address after binding to wild card port (0).
+extern int nni_tcp_listener_getopt(
+    nni_tcp_listener *, const char *, void *, size_t *, nni_type);
 
 // nni_ntop obtains the IP address for the socket (enclosing it
 // in brackets if it is IPv6) and port.  Enough space for both must

@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -93,6 +94,7 @@ TestMain("TCP Transport", {
 	Convey("We can bind to port zero", {
 		nng_socket   s1;
 		nng_socket   s2;
+		nng_sockaddr sa;
 		nng_listener l;
 		char *       addr;
 
@@ -105,6 +107,10 @@ TestMain("TCP Transport", {
 		So(nng_listen(s1, "tcp://127.0.0.1:0", &l, 0) == 0);
 		So(nng_listener_getopt_string(l, NNG_OPT_URL, &addr) == 0);
 		So(memcmp(addr, "tcp://", 6) == 0);
+		So(nng_listener_getopt_sockaddr(l, NNG_OPT_LOCADDR, &sa) == 0);
+		So(sa.s_in.sa_family == NNG_AF_INET);
+		So(sa.s_in.sa_port != 0);
+		So(sa.s_in.sa_addr = htonl(0x7f000001));
 		So(nng_dial(s2, addr, NULL, 0) == 0);
 		nng_strfree(addr);
 	});

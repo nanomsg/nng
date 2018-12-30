@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -27,9 +28,9 @@
 #include "mbedtls/ssl.h"
 
 #include "core/nng_impl.h"
-
-#include "nng/supplemental/tls/tls.h"
 #include "supplemental/tls/tls_api.h"
+
+#include <nng/supplemental/tls/tls.h>
 
 // Implementation note.  This implementation buffers data between the TLS
 // encryption layer (mbedTLS) and the underlying TCP socket.  As a result,
@@ -310,11 +311,13 @@ nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_tcp_conn *tcp)
 {
 	nni_tls *tp;
 	int      rv;
+	bool     on = true;
 
 	// During the handshake, disable Nagle to shorten the
 	// negotiation.  Once things are set up the caller can
 	// re-enable Nagle if so desired.
-	(void) nni_tcp_conn_set_nodelay(tcp, true);
+	(void) nni_tcp_conn_setopt(
+	    tcp, NNG_OPT_TCP_NODELAY, &on, sizeof(on), NNI_TYPE_BOOL);
 
 	if ((tp = NNI_ALLOC_STRUCT(tp)) == NULL) {
 		return (NNG_ENOMEM);
@@ -612,28 +615,49 @@ nni_tls_recv(nni_tls *tp, nni_aio *aio)
 	nni_mtx_unlock(&tp->lk);
 }
 
-int
-nni_tls_peername(nni_tls *tp, nni_sockaddr *sa)
+static int
+tls_get_verified(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	return (nni_tcp_conn_peername(tp->tcp, sa));
+	nni_tls *tp = arg;
+	bool     v  = (mbedtls_ssl_get_verify_result(&tp->ctx) == 0);
+
+	return (nni_copyout_bool(v, buf, szp, t));
+}
+
+static const nni_option tls_options[] = {
+	{
+	    .o_name = NNG_OPT_TLS_VERIFIED,
+	    .o_get  = tls_get_verified,
+	},
+	{
+	    .o_name = NULL,
+	},
+};
+
+int
+nni_tls_setopt(
+    nni_tls *tp, const char *name, const void *buf, size_t sz, nni_type t)
+{
+	int rv;
+
+	if ((rv = nni_tcp_conn_setopt(tp->tcp, name, buf, sz, t)) !=
+	    NNG_ENOTSUP) {
+		return (rv);
+	}
+	return (nni_setopt(tls_options, name, tp, buf, sz, t));
 }
 
 int
-nni_tls_sockname(nni_tls *tp, nni_sockaddr *sa)
+nni_tls_getopt(
+    nni_tls *tp, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	return (nni_tcp_conn_sockname(tp->tcp, sa));
-}
+	int rv;
 
-int
-nni_tls_set_nodelay(nni_tls *tp, bool val)
-{
-	return (nni_tcp_conn_set_nodelay(tp->tcp, val));
-}
-
-int
-nni_tls_set_keepalive(nni_tls *tp, bool val)
-{
-	return (nni_tcp_conn_set_keepalive(tp->tcp, val));
+	if ((rv = nni_tcp_conn_getopt(tp->tcp, name, buf, szp, t)) !=
+	    NNG_ENOTSUP) {
+		return (rv);
+	}
+	return (nni_getopt(tls_options, name, tp, buf, szp, t));
 }
 
 static void
@@ -788,18 +812,6 @@ nni_tls_close(nni_tls *tp)
 		nni_tcp_conn_close(tp->tcp);
 	}
 	nni_mtx_unlock(&tp->lk);
-}
-
-const char *
-nni_tls_ciphersuite_name(nni_tls *tp)
-{
-	return (mbedtls_ssl_get_ciphersuite(&tp->ctx));
-}
-
-bool
-nni_tls_verified(nni_tls *tp)
-{
-	return (mbedtls_ssl_get_verify_result(&tp->ctx) == 0);
 }
 
 int

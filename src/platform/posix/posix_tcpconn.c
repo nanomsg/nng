@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,8 +10,6 @@
 //
 
 #include "core/nng_impl.h"
-
-#ifdef NNG_PLATFORM_POSIX
 
 #include <arpa/inet.h>
 #include <errno.h>
@@ -369,6 +368,152 @@ nni_tcp_conn_set_nodelay(nni_tcp_conn *c, bool nodelay)
 	return (0);
 }
 
+static int
+tcp_conn_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *          c = arg;
+	struct sockaddr_storage ss;
+	socklen_t               sslen = sizeof(ss);
+	int                     fd    = nni_posix_pfd_fd(c->pfd);
+	int                     rv;
+	nng_sockaddr            sa;
+
+	if (getpeername(fd, (void *) &ss, &sslen) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	if ((rv = nni_posix_sockaddr2nn(&sa, &ss)) == 0) {
+		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
+	}
+	return (rv);
+}
+
+static int
+tcp_conn_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *          c = arg;
+	struct sockaddr_storage ss;
+	socklen_t               sslen = sizeof(ss);
+	int                     fd    = nni_posix_pfd_fd(c->pfd);
+	int                     rv;
+	nng_sockaddr            sa;
+
+	if (getsockname(fd, (void *) &ss, &sslen) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	if ((rv = nni_posix_sockaddr2nn(&sa, &ss)) == 0) {
+		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
+	}
+	return (rv);
+}
+
+static int
+tcp_conn_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_conn *c = arg;
+	int           fd;
+	bool          b;
+	int           val;
+	int           rv;
+
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (c == NULL)) {
+		return (rv);
+	}
+	val = b ? 1 : 0;
+	fd  = nni_posix_pfd_fd(c->pfd);
+	if (setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val)) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	return (0);
+}
+
+static int
+tcp_conn_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_conn *c = arg;
+	int           fd;
+	bool          b;
+	int           val;
+	int           rv;
+
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (c == NULL)) {
+		return (rv);
+	}
+	val = b ? 1 : 0;
+	fd  = nni_posix_pfd_fd(c->pfd);
+	if (setsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val)) != 0) {
+		return (nni_plat_errno(errno));
+	}
+	return (0);
+}
+
+static int
+tcp_conn_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *c     = arg;
+	int           fd    = nni_posix_pfd_fd(c->pfd);
+	int           val   = 0;
+	socklen_t     valsz = sizeof(val);
+
+	if (getsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &val, &valsz) != 0) {
+		return (nni_plat_errno(errno));
+	}
+
+	return (nni_copyout_bool(val, buf, szp, t));
+}
+
+static int
+tcp_conn_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *c     = arg;
+	int           fd    = nni_posix_pfd_fd(c->pfd);
+	int           val   = 0;
+	socklen_t     valsz = sizeof(val);
+
+	if (getsockopt(fd, SOL_SOCKET, SO_KEEPALIVE, &val, &valsz) != 0) {
+		return (nni_plat_errno(errno));
+	}
+
+	return (nni_copyout_bool(val, buf, szp, t));
+}
+
+static const nni_option tcp_conn_options[] = {
+	{
+	    .o_name = NNG_OPT_REMADDR,
+	    .o_get  = tcp_conn_get_peername,
+	},
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_get  = tcp_conn_get_sockname,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_NODELAY,
+	    .o_get  = tcp_conn_get_nodelay,
+	    .o_set  = tcp_conn_set_nodelay,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_KEEPALIVE,
+	    .o_get  = tcp_conn_get_keepalive,
+	    .o_set  = tcp_conn_set_keepalive,
+	},
+	{
+	    .o_name = NULL,
+	},
+};
+
+int
+nni_tcp_conn_getopt(
+    nni_tcp_conn *c, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_getopt(tcp_conn_options, name, c, buf, szp, t));
+}
+
+int
+nni_tcp_conn_setopt(
+    nni_tcp_conn *c, const char *name, const void *buf, size_t sz, nni_type t)
+{
+	return (nni_setopt(tcp_conn_options, name, c, buf, sz, t));
+}
+
 int
 nni_posix_tcp_conn_init(nni_tcp_conn **cp, nni_posix_pfd *pfd)
 {
@@ -390,8 +535,14 @@ nni_posix_tcp_conn_init(nni_tcp_conn **cp, nni_posix_pfd *pfd)
 }
 
 void
-nni_posix_tcp_conn_start(nni_tcp_conn *c)
+nni_posix_tcp_conn_start(nni_tcp_conn *c, int nodelay, int keepalive)
 {
+	// COnfigure the initial socket options.
+	(void) setsockopt(
+	    c->pfd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(int));
+	(void) setsockopt(
+	    c->pfd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(int));
+
 	nni_posix_pfd_set_cb(c->pfd, tcp_conn_cb, c);
 }
 
@@ -407,5 +558,3 @@ nni_tcp_conn_fini(nni_tcp_conn *c)
 
 	NNI_FREE_STRUCT(c);
 }
-
-#endif // NNG_PLATFORM_POSIX

@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -51,27 +52,17 @@ nng_tcp_recv(nng_tcp *tcp, nng_aio *aio)
 }
 
 int
-nng_tcp_sockname(nng_tcp *tcp, nng_sockaddr *sa)
+nng_tcp_getopt(nng_tcp *tcp, const char *name, void *buf, size_t *szp)
 {
-	return (nni_tcp_conn_sockname((void *) tcp, sa));
+	return (nni_tcp_conn_getopt(
+	    (void *) tcp, name, buf, szp, NNI_TYPE_OPAQUE));
 }
 
 int
-nng_tcp_peername(nng_tcp *tcp, nng_sockaddr *sa)
+nng_tcp_setopt(nng_tcp *tcp, const char *name, const void *buf, size_t sz)
 {
-	return (nni_tcp_conn_peername((void *) tcp, sa));
-}
-
-int
-nng_tcp_set_nodelay(nng_tcp *tcp, bool nodelay)
-{
-	return (nni_tcp_conn_set_nodelay((void *) tcp, nodelay));
-}
-
-int
-nng_tcp_set_keepalive(nng_tcp *tcp, bool ka)
-{
-	return (nni_tcp_conn_set_keepalive((void *) tcp, ka));
+	return (
+	    nni_tcp_conn_setopt((void *) tcp, name, buf, sz, NNI_TYPE_OPAQUE));
 }
 
 int
@@ -99,12 +90,6 @@ void
 nng_tcp_dialer_free(nng_tcp_dialer *d)
 {
 	nni_tcp_dialer_fini((void *) d);
-}
-
-int
-nng_tcp_dialer_set_source(nng_tcp_dialer *d, const nng_sockaddr *sa)
-{
-	return (nni_tcp_dialer_set_src_addr((void *) d, sa));
 }
 
 void
@@ -150,4 +135,20 @@ void
 nng_tcp_listener_accept(nng_tcp_listener *l, nng_aio *aio)
 {
 	nni_tcp_listener_accept((void *) l, aio);
+}
+
+int
+nng_tcp_listener_getopt(
+    nng_tcp_listener *l, const char *name, void *buf, size_t *szp)
+{
+	return (nni_tcp_listener_getopt(
+	    (void *) l, name, buf, szp, NNI_TYPE_OPAQUE));
+}
+
+int
+nng_tcp_listener_setopt(
+    nng_tcp_listener *l, const char *name, const void *buf, size_t sz)
+{
+	return (nni_tcp_listener_setopt(
+	    (void *) l, name, buf, sz, NNI_TYPE_OPAQUE));
 }

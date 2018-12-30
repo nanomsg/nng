@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -11,8 +12,6 @@
 #include "core/nng_impl.h"
 
 #include "win_tcp.h"
-
-#ifdef NNG_PLATFORM_WINDOWS
 
 #include <malloc.h>
 #include <stdio.h>
@@ -293,14 +292,6 @@ nni_win_tcp_conn_init(nni_tcp_conn **connp, SOCKET s)
 }
 
 void
-nni_win_tcp_conn_set_addrs(
-    nni_tcp_conn *c, const SOCKADDR_STORAGE *loc, const SOCKADDR_STORAGE *rem)
-{
-	memcpy(&c->sockname, loc, sizeof(*loc));
-	memcpy(&c->peername, rem, sizeof(*rem));
-}
-
-void
 nni_tcp_conn_close(nni_tcp_conn *c)
 {
 	nni_mtx_lock(&c->mtx);
@@ -361,6 +352,133 @@ nni_tcp_conn_set_keepalive(nni_tcp_conn *c, bool val)
 	return (0);
 }
 
+static int
+tcp_conn_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *c = arg;
+	nng_sockaddr  sa;
+
+	if (nni_win_sockaddr2nn(&sa, &c->peername) < 0) {
+		return (NNG_EADDRINVAL);
+	}
+	return (nni_copyout_sockaddr(&sa, buf, szp, t));
+}
+
+static int
+tcp_conn_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *c = arg;
+	nng_sockaddr  sa;
+
+	if (nni_win_sockaddr2nn(&sa, &c->sockname) < 0) {
+		return (NNG_EADDRINVAL);
+	}
+	return (nni_copyout_sockaddr(&sa, buf, szp, t));
+}
+
+static int
+tcp_conn_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_conn *c = arg;
+	bool          val;
+	BOOL          b;
+	int           rv;
+	if ((rv = nni_copyin_bool(&val, buf, sz, t)) != 0) {
+		return (rv);
+	}
+	b = val ? TRUE : FALSE;
+	if (setsockopt(
+	        c->s, IPPROTO_TCP, TCP_NODELAY, (void *) &b, sizeof(b)) != 0) {
+		return (nni_win_error(WSAGetLastError()));
+	}
+	return (0);
+}
+
+static int
+tcp_conn_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_conn *c = arg;
+	bool          val;
+	BOOL          b;
+	int           rv;
+
+	if ((rv = nni_copyin_bool(&val, buf, sz, t)) != 0) {
+		return (rv);
+	}
+	b = val ? TRUE : FALSE;
+	if (setsockopt(
+	        c->s, SOL_SOCKET, SO_KEEPALIVE, (void *) &b, sizeof(b)) != 0) {
+		return (nni_win_error(WSAGetLastError()));
+	}
+	return (0);
+}
+
+static int
+tcp_conn_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *c   = arg;
+	BOOL          b   = 0;
+	int           bsz = sizeof(b);
+
+	if ((getsockopt(c->s, IPPROTO_TCP, TCP_NODELAY, (void *) &b, &bsz)) !=
+	    0) {
+		return (nni_win_error(WSAGetLastError()));
+	}
+	return (nni_copyout_bool(b, buf, szp, t));
+}
+
+static int
+tcp_conn_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_conn *c   = arg;
+	BOOL          b   = 0;
+	int           bsz = sizeof(b);
+
+	if ((getsockopt(c->s, SOL_SOCKET, SO_KEEPALIVE, (void *) &b, &bsz)) !=
+	    0) {
+		return (nni_win_error(WSAGetLastError()));
+	}
+	return (nni_copyout_bool(b, buf, szp, t));
+}
+
+static const nni_option tcp_conn_options[] = {
+	{
+	    .o_name = NNG_OPT_REMADDR,
+	    .o_get  = tcp_conn_get_peername,
+	},
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_get  = tcp_conn_get_sockname,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_NODELAY,
+	    .o_get  = tcp_conn_get_nodelay,
+	    .o_set  = tcp_conn_set_nodelay,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_KEEPALIVE,
+	    .o_get  = tcp_conn_get_keepalive,
+	    .o_set  = tcp_conn_set_keepalive,
+	},
+	{
+	    .o_name = NULL,
+	},
+};
+
+int
+nni_tcp_conn_getopt(
+    nni_tcp_conn *c, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_getopt(tcp_conn_options, name, c, buf, szp, t));
+}
+
+int
+nni_tcp_conn_setopt(
+    nni_tcp_conn *c, const char *name, const void *buf, size_t sz, nni_type t)
+{
+	return (nni_setopt(tcp_conn_options, name, c, buf, sz, t));
+}
+
 void
 nni_tcp_conn_fini(nni_tcp_conn *c)
 {
@@ -384,5 +502,3 @@ nni_tcp_conn_fini(nni_tcp_conn *c)
 	nni_mtx_fini(&c->mtx);
 	NNI_FREE_STRUCT(c);
 }
-
-#endif // NNG_PLATFORM_WINDOWS

@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -9,8 +10,6 @@
 //
 
 #include "core/nng_impl.h"
-
-#ifdef NNG_PLATFORM_WINDOWS
 
 #include <malloc.h>
 #include <stdbool.h>
@@ -76,6 +75,8 @@ tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 	SOCKADDR *        sa1;
 	SOCKADDR *        sa2;
 	DWORD             yes;
+	BOOL              nd;
+	BOOL              ka;
 
 	NNI_ARG_UNUSED(cnt);
 
@@ -92,6 +93,8 @@ tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 	if (c->conn_rv != 0) {
 		rv = c->conn_rv;
 	}
+	nd = l->nodelay ? TRUE : FALSE;
+	ka = l->keepalive ? TRUE : FALSE;
 	nni_mtx_unlock(&l->mtx);
 
 	if (rv != 0) {
@@ -109,6 +112,13 @@ tcp_accept_cb(nni_win_io *io, int rv, size_t cnt)
 	yes = 1;
 	(void) setsockopt(c->s, SOL_SOCKET, SO_UPDATE_ACCEPT_CONTEXT,
 	    (char *) &yes, sizeof(yes));
+
+	(void) setsockopt(
+	    c->s, SOL_SOCKET, SO_KEEPALIVE, (char *) &ka, sizeof(ka));
+
+	(void) setsockopt(
+	    c->s, IPPROTO_TCP, TCP_NODELAY, (char *) &nd, sizeof(nd));
+
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 }
@@ -129,6 +139,11 @@ nni_tcp_listener_init(nni_tcp_listener **lp)
 		nni_tcp_listener_fini(l);
 		return (rv);
 	}
+
+	// We assume these defaults -- not everyone will agree, but anyone
+	// can change them.
+	l->keepalive = false;
+	l->nodelay   = true;
 
 	*lp = l;
 	return (0);
@@ -313,4 +328,105 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 	nni_mtx_unlock(&l->mtx);
 }
 
-#endif // NNG_PLATFORM_WINDOWS
+static int
+tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_tcp_listener *l = arg;
+	nng_sockaddr      sa;
+	nni_mtx_lock(&l->mtx);
+	if (l->started) {
+		nni_win_sockaddr2nn(&sa, &l->ss);
+	} else {
+		sa.s_family = NNG_AF_UNSPEC;
+	}
+	nni_mtx_unlock(&l->mtx);
+	return (nni_copyout_sockaddr(&sa, buf, szp, t));
+}
+
+static int
+tcp_listener_set_nodelay(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_listener *l = arg;
+	int               rv;
+	bool              b;
+
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (l == NULL)) {
+		return (rv);
+	}
+	nni_mtx_lock(&l->mtx);
+	l->nodelay = b;
+	nni_mtx_unlock(&l->mtx);
+	return (0);
+}
+
+static int
+tcp_listener_get_nodelay(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	bool              b;
+	nni_tcp_listener *l = arg;
+	nni_mtx_lock(&l->mtx);
+	b = l->nodelay;
+	nni_mtx_unlock(&l->mtx);
+	return (nni_copyout_bool(b, buf, szp, t));
+}
+
+static int
+tcp_listener_set_keepalive(void *arg, const void *buf, size_t sz, nni_type t)
+{
+	nni_tcp_listener *l = arg;
+	int               rv;
+	bool              b;
+
+	if (((rv = nni_copyin_bool(&b, buf, sz, t)) != 0) || (l == NULL)) {
+		return (rv);
+	}
+	nni_mtx_lock(&l->mtx);
+	l->keepalive = b;
+	nni_mtx_unlock(&l->mtx);
+	return (0);
+}
+
+static int
+tcp_listener_get_keepalive(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	bool              b;
+	nni_tcp_listener *l = arg;
+	nni_mtx_lock(&l->mtx);
+	b = l->keepalive;
+	nni_mtx_unlock(&l->mtx);
+	return (nni_copyout_bool(b, buf, szp, t));
+}
+
+static const nni_option tcp_listener_options[] = {
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_get  = tcp_listener_get_locaddr,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_NODELAY,
+	    .o_set  = tcp_listener_set_nodelay,
+	    .o_get  = tcp_listener_get_nodelay,
+	},
+	{
+	    .o_name = NNG_OPT_TCP_KEEPALIVE,
+	    .o_set  = tcp_listener_set_keepalive,
+	    .o_get  = tcp_listener_get_keepalive,
+	},
+	{
+	    .o_name = NULL,
+	},
+};
+
+int
+nni_tcp_listener_getopt(
+    nni_tcp_listener *l, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_getopt(tcp_listener_options, name, l, buf, szp, t));
+}
+
+int
+nni_tcp_listener_setopt(nni_tcp_listener *l, const char *name, const void *buf,
+    size_t sz, nni_type t)
+{
+	return (nni_setopt(tcp_listener_options, name, l, buf, sz, t));
+}

@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,7 +11,6 @@
 
 #include "core/nng_impl.h"
 
-#ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
 
 struct nni_tcp_conn {
@@ -27,6 +27,8 @@ struct nni_tcp_conn {
 struct nni_tcp_dialer {
 	nni_list                connq; // pending connections
 	bool                    closed;
+	bool                    nodelay;
+	bool                    keepalive;
 	struct sockaddr_storage src;
 	size_t                  srclen;
 	nni_mtx                 mtx;
@@ -37,10 +39,10 @@ struct nni_tcp_listener {
 	nni_list       acceptq;
 	bool           started;
 	bool           closed;
+	bool           nodelay;
+	bool           keepalive;
 	nni_mtx        mtx;
 };
 
 extern int  nni_posix_tcp_conn_init(nni_tcp_conn **, nni_posix_pfd *);
-extern void nni_posix_tcp_conn_start(nni_tcp_conn *);
-
-#endif // NNG_PLATFORM_POSIX
+extern void nni_posix_tcp_conn_start(nni_tcp_conn *, int, int);

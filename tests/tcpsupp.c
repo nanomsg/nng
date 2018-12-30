@@ -90,6 +90,8 @@ TestMain("Supplemental TCP", {
 					nng_sockaddr sa2;
 					char         buf1[5];
 					char         buf2[5];
+					bool         on;
+					size_t       sz;
 
 					So(nng_aio_alloc(&aio1, NULL, NULL) ==
 					    0);
@@ -101,11 +103,34 @@ TestMain("Supplemental TCP", {
 						nng_aio_free(aio2);
 					});
 
-					So(nng_tcp_set_nodelay(c1, true) == 0);
-					So(nng_tcp_set_nodelay(c2, true) == 0);
+					on = true;
+					So(nng_tcp_setopt(c1,
+					       NNG_OPT_TCP_NODELAY, &on,
+					       sizeof(on)) == 0);
+					So(nng_tcp_setopt(c2,
+					       NNG_OPT_TCP_NODELAY, &on,
+					       sizeof(on)) == 0);
 
-					So(nng_tcp_set_keepalive(c1, true) ==
-					    0);
+					So(nng_tcp_setopt(c1,
+					       NNG_OPT_TCP_KEEPALIVE, &on,
+					       sizeof(on)) == 0);
+
+					on = false;
+					sz = sizeof(on);
+					So(nng_tcp_getopt(c1,
+					       NNG_OPT_TCP_NODELAY, &on,
+					       &sz) == 0);
+					So(sz == sizeof(on));
+					So(on == true);
+
+					on = false;
+					sz = sizeof(on);
+					So(nng_tcp_getopt(c1,
+					       NNG_OPT_TCP_KEEPALIVE, &on,
+					       &sz) == 0);
+					So(sz == sizeof(on));
+					So(on == true);
+
 					// This relies on send completing for
 					// for just 5 bytes, and on recv doing
 					// the same.  Technically this isn't
@@ -135,8 +160,11 @@ TestMain("Supplemental TCP", {
 					So(memcmp(buf1, buf2, 5) == 0);
 
 					Convey("Socket name matches", {
-						So(nng_tcp_sockname(
-						       c2, &sa2) == 0);
+						sz = sizeof(sa2);
+						So(nng_tcp_getopt(c2,
+						       NNG_OPT_LOCADDR, &sa2,
+						       &sz) == 0);
+						So(sz == sizeof(sa2));
 						So(sa2.s_in.sa_family ==
 						    NNG_AF_INET);
 						So(sa2.s_in.sa_addr == ip);
@@ -145,8 +173,11 @@ TestMain("Supplemental TCP", {
 					});
 
 					Convey("Peer name matches", {
-						So(nng_tcp_peername(
-						       c1, &sa2) == 0);
+						sz = sizeof(sa2);
+						So(nng_tcp_getopt(c1,
+						       NNG_OPT_REMADDR, &sa2,
+						       &sz) == 0);
+						So(sz == sizeof(sa2));
 						So(sa2.s_in.sa_family ==
 						    NNG_AF_INET);
 						So(sa2.s_in.sa_addr == ip);
