@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -289,20 +290,11 @@ int
 nni_pipe_getopt(
     nni_pipe *p, const char *name, void *val, size_t *szp, nni_opt_type t)
 {
-	nni_option *o;
+	int rv;
 
-	if (p->p_tran_ops.p_getopt != NULL) {
-		int rv;
-		rv = p->p_tran_ops.p_getopt(p->p_tran_data, name, val, szp, t);
-		if (rv != NNG_ENOTSUP) {
-			return (rv);
-		}
-	}
-	for (o = p->p_tran_ops.p_options; o && o->o_name; o++) {
-		if (strcmp(o->o_name, name) != 0) {
-			continue;
-		}
-		return (o->o_get(p->p_tran_data, val, szp, t));
+	rv = p->p_tran_ops.p_getopt(p->p_tran_data, name, val, szp, t);
+	if (rv != NNG_ENOTSUP) {
+		return (rv);
 	}
 
 	// Maybe the endpoint knows? The guarantees on pipes ensure that the

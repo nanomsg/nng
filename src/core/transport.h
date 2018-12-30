@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -153,11 +154,6 @@ struct nni_tran_pipe_ops {
 	// p_getopt is used to obtain an option.  Pipes don't implement
 	// option setting.
 	int (*p_getopt)(void *, const char *, void *, size_t *, nni_type);
-
-	// p_options is an array of pipe options.  The final element
-	// must have a NULL name. If this member is NULL, then no
-	// transport specific options are available.
-	nni_option *p_options;
 };
 
 // Transport implementation details.  Transports must implement the
