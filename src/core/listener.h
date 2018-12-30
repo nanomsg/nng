@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -23,9 +24,9 @@ extern int      nni_listener_start(nni_listener *, int);
 extern nni_sock *nni_listener_sock(nni_listener *);
 
 extern int nni_listener_setopt(
-    nni_listener *, const char *, const void *, size_t, nni_opt_type);
+    nni_listener *, const char *, const void *, size_t, nni_type);
 extern int nni_listener_getopt(
-    nni_listener *, const char *, void *, size_t *, nni_opt_type);
+    nni_listener *, const char *, void *, size_t *, nni_type);
 extern void nni_listener_add_stat(nni_listener *, nni_stat_item *);
 
 #endif // CORE_LISTENER_H

@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -23,9 +24,9 @@ extern int       nni_dialer_start(nni_dialer *, int);
 extern nni_sock *nni_dialer_sock(nni_dialer *);
 
 extern int nni_dialer_setopt(
-    nni_dialer *, const char *, const void *, size_t, nni_opt_type);
+    nni_dialer *, const char *, const void *, size_t, nni_type);
 extern int nni_dialer_getopt(
-    nni_dialer *, const char *, void *, size_t *, nni_opt_type);
+    nni_dialer *, const char *, void *, size_t *, nni_type);
 extern void nni_dialer_add_stat(nni_dialer *, nni_stat_item *);
 
 #endif // CORE_DIALER_H

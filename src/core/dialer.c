@@ -387,8 +387,8 @@ nni_dialer_sock(nni_dialer *d)
 }
 
 int
-nni_dialer_setopt(nni_dialer *d, const char *name, const void *val, size_t sz,
-    nni_opt_type t)
+nni_dialer_setopt(
+    nni_dialer *d, const char *name, const void *val, size_t sz, nni_type t)
 {
 	nni_option *o;
 
@@ -436,7 +436,7 @@ nni_dialer_setopt(nni_dialer *d, const char *name, const void *val, size_t sz,
 
 int
 nni_dialer_getopt(
-    nni_dialer *d, const char *name, void *valp, size_t *szp, nni_opt_type t)
+    nni_dialer *d, const char *name, void *valp, size_t *szp, nni_type t)
 {
 	nni_option *o;
 

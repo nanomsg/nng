@@ -362,8 +362,8 @@ nni_listener_sock(nni_listener *l)
 }
 
 int
-nni_listener_setopt(nni_listener *l, const char *name, const void *val,
-    size_t sz, nni_opt_type t)
+nni_listener_setopt(
+    nni_listener *l, const char *name, const void *val, size_t sz, nni_type t)
 {
 	nni_option *o;
 
@@ -394,7 +394,7 @@ nni_listener_setopt(nni_listener *l, const char *name, const void *val,
 
 int
 nni_listener_getopt(
-    nni_listener *l, const char *name, void *valp, size_t *szp, nni_opt_type t)
+    nni_listener *l, const char *name, void *valp, size_t *szp, nni_type t)
 {
 	nni_option *o;
 

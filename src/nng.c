@@ -318,7 +318,7 @@ nng_ctx_send(nng_ctx cid, nng_aio *aio)
 }
 
 static int
-nng_ctx_getx(nng_ctx id, const char *n, void *v, size_t *szp, nni_opt_type t)
+nng_ctx_getx(nng_ctx id, const char *n, void *v, size_t *szp, nni_type t)
 {
 	nni_ctx *ctx;
 	int      rv;
@@ -369,8 +369,7 @@ nng_ctx_getopt_ms(nng_ctx id, const char *name, nng_duration *vp)
 }
 
 static int
-nng_ctx_setx(
-    nng_ctx id, const char *n, const void *v, size_t sz, nni_opt_type t)
+nng_ctx_setx(nng_ctx id, const char *n, const void *v, size_t sz, nni_type t)
 {
 	nni_ctx *ctx;
 	int      rv;
@@ -561,7 +560,7 @@ nng_dialer_id(nng_dialer d)
 
 static int
 nng_dialer_setx(
-    nng_dialer did, const char *n, const void *v, size_t sz, nni_opt_type t)
+    nng_dialer did, const char *n, const void *v, size_t sz, nni_type t)
 {
 	nni_dialer *d;
 	int         rv;
@@ -579,7 +578,7 @@ nng_dialer_setx(
 
 static int
 nng_dialer_getx(
-    nng_dialer did, const char *n, void *v, size_t *szp, nni_opt_type t)
+    nng_dialer did, const char *n, void *v, size_t *szp, nni_type t)
 {
 	nni_dialer *d;
 	int         rv;
@@ -706,8 +705,8 @@ nng_dialer_getopt_ms(nng_dialer d, const char *name, nng_duration *vp)
 }
 
 int
-nng_listener_setx(nng_listener lid, const char *name, const void *v, size_t sz,
-    nni_opt_type t)
+nng_listener_setx(
+    nng_listener lid, const char *name, const void *v, size_t sz, nni_type t)
 {
 	nni_listener *l;
 	int           rv;
@@ -773,7 +772,7 @@ nng_listener_setopt_string(nng_listener l, const char *n, const char *v)
 
 int
 nng_listener_getx(
-    nng_listener lid, const char *name, void *v, size_t *szp, nni_opt_type t)
+    nng_listener lid, const char *name, void *v, size_t *szp, nni_type t)
 {
 	nni_listener *l;
 	int           rv;
@@ -880,7 +879,7 @@ nng_listener_close(nng_listener lid)
 
 static int
 nng_setx(
-    nng_socket s, const char *name, const void *val, size_t sz, nni_opt_type t)
+    nng_socket s, const char *name, const void *val, size_t sz, nni_type t)
 {
 	nni_sock *sock;
 	int       rv;
@@ -903,8 +902,7 @@ nng_setopt(nng_socket s, const char *name, const void *val, size_t sz)
 }
 
 static int
-nng_getx(
-    nng_socket s, const char *name, void *val, size_t *szp, nni_opt_type t)
+nng_getx(nng_socket s, const char *name, void *val, size_t *szp, nni_type t)
 {
 	nni_sock *sock;
 	int       rv;
@@ -1134,8 +1132,7 @@ nng_strerror(int num)
 }
 
 static int
-nng_pipe_getx(
-    nng_pipe p, const char *name, void *val, size_t *szp, nni_opt_type t)
+nng_pipe_getx(nng_pipe p, const char *name, void *val, size_t *szp, nni_type t)
 {
 	int       rv;
 	nni_pipe *pipe;

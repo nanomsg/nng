@@ -128,6 +128,7 @@ nni_tran_chkopt(const char *name, const void *v, size_t sz, int typ)
 		if ((dops->d_setopt != NULL) &&
 		    ((rv = dops->d_setopt(NULL, name, v, sz, typ)) !=
 		        NNG_ENOTSUP)) {
+			nni_mtx_unlock(&nni_tran_lk);
 			return (rv);
 		}
 		for (o = dops->d_options; o && o->o_name != NULL; o++) {
@@ -146,6 +147,7 @@ nni_tran_chkopt(const char *name, const void *v, size_t sz, int typ)
 		if ((lops->l_setopt != NULL) &&
 		    ((rv = lops->l_setopt(NULL, name, v, sz, typ)) !=
 		        NNG_ENOTSUP)) {
+			nni_mtx_unlock(&nni_tran_lk);
 			return (rv);
 		}
 		for (o = lops->l_options; o && o->o_name != NULL; o++) {
