@@ -125,6 +125,11 @@ nni_tran_chkopt(const char *name, const void *v, size_t sz, int typ)
 		// Generally we look for endpoint options. We check both
 		// dialers and listeners.
 		dops = t->t_tran.tran_dialer;
+		if ((dops->d_setopt != NULL) &&
+		    ((rv = dops->d_setopt(NULL, name, v, sz, typ)) !=
+		        NNG_ENOTSUP)) {
+			return (rv);
+		}
 		for (o = dops->d_options; o && o->o_name != NULL; o++) {
 			if (strcmp(name, o->o_name) != 0) {
 				continue;
@@ -138,6 +143,11 @@ nni_tran_chkopt(const char *name, const void *v, size_t sz, int typ)
 			return (rv);
 		}
 		lops = t->t_tran.tran_listener;
+		if ((lops->l_setopt != NULL) &&
+		    ((rv = lops->l_setopt(NULL, name, v, sz, typ)) !=
+		        NNG_ENOTSUP)) {
+			return (rv);
+		}
 		for (o = lops->l_options; o && o->o_name != NULL; o++) {
 			if (strcmp(name, o->o_name) != 0) {
 				continue;

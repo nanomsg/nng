@@ -291,6 +291,13 @@ nni_pipe_getopt(
 {
 	nni_option *o;
 
+	if (p->p_tran_ops.p_getopt != NULL) {
+		int rv;
+		rv = p->p_tran_ops.p_getopt(p->p_tran_data, name, val, szp, t);
+		if (rv != NNG_ENOTSUP) {
+			return (rv);
+		}
+	}
 	for (o = p->p_tran_ops.p_options; o && o->o_name; o++) {
 		if (strcmp(o->o_name, name) != 0) {
 			continue;

@@ -139,7 +139,7 @@ typedef struct {
 
 // Types.  These are used to provide more structured access to options
 // (and maybe later statistics).  For now these are internal only.
-typedef enum nni_opt_type {
+typedef enum {
 	NNI_TYPE_OPAQUE,
 	NNI_TYPE_BOOL,
 	NNI_TYPE_INT32,
@@ -151,6 +151,8 @@ typedef enum nni_opt_type {
 	NNI_TYPE_STRING,
 	NNI_TYPE_SOCKADDR,
 	NNI_TYPE_POINTER,
-} nni_opt_type;
+} nni_type;
+
+typedef nni_type nni_opt_type;
 
 #endif // CORE_DEFS_H

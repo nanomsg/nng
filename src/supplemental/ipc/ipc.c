@@ -54,13 +54,15 @@ nng_ipc_recv(nng_ipc *ipc, nng_aio *aio)
 int
 nng_ipc_setopt(nng_ipc *ipc, const char *name, const void *val, size_t sz)
 {
-	return (nni_ipc_conn_setopt((void *) ipc, name, val, sz));
+	return (
+	    nni_ipc_conn_setopt((void *) ipc, name, val, sz, NNI_TYPE_OPAQUE));
 }
 
 int
 nng_ipc_getopt(nng_ipc *ipc, const char *name, void *val, size_t *szp)
 {
-	return (nni_ipc_conn_getopt((void *) ipc, name, val, szp));
+	return (nni_ipc_conn_getopt(
+	    (void *) ipc, name, val, szp, NNI_TYPE_OPAQUE));
 }
 
 int

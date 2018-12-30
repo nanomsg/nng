@@ -17,6 +17,8 @@
 
 #include <nng/transport/ipc/ipc.h>
 
+#define CONN(c) ((nni_ipc_conn *) (c))
+
 static void
 ipc_recv_start(nni_ipc_conn *c)
 {
@@ -342,89 +344,60 @@ nni_ipc_conn_fini(nni_ipc_conn *c)
 {
 	nni_ipc_conn_close(c);
 
-	nni_reap(&c->reap, (nni_cb) ipc_conn_reap, c);
+	nni_reap(&c->reap, (nni_cb) ipc_conn_reap, CONN(c));
 }
 
-int
-nni_ipc_conn_get_peer_uid(nni_ipc_conn *c, uint64_t *id)
+static int
+ipc_conn_get_addr(void *c, void *buf, size_t *szp, nni_opt_type t)
 {
-	NNI_ARG_UNUSED(c);
-	NNI_ARG_UNUSED(id);
-	return (NNG_ENOTSUP);
+	return (nni_copyout_sockaddr(&(CONN(c))->sa, buf, szp, t));
 }
 
-int
-nni_ipc_conn_get_peer_gid(nni_ipc_conn *c, uint64_t *id)
-{
-	NNI_ARG_UNUSED(c);
-	NNI_ARG_UNUSED(id);
-	return (NNG_ENOTSUP);
-}
-
-int
-nni_ipc_conn_get_peer_zoneid(nni_ipc_conn *c, uint64_t *id)
-{
-	NNI_ARG_UNUSED(c);
-	NNI_ARG_UNUSED(id);
-	return (NNG_ENOTSUP);
-}
-
-int
-nni_ipc_conn_get_peer_pid(nni_ipc_conn *c, uint64_t *pid)
+static int
+ipc_conn_get_peer_pid(void *c, void *buf, size_t *szp, nni_opt_type t)
 {
 	ULONG id;
-	if (c->dialer) {
-		if (!GetNamedPipeServerProcessId(c->f, &id)) {
+
+	if (CONN(c)->dialer) {
+		if (!GetNamedPipeServerProcessId(CONN(c)->f, &id)) {
 			return (nni_win_error(GetLastError()));
 		}
 	} else {
-		if (!GetNamedPipeClientProcessId(c->f, &id)) {
+		if (!GetNamedPipeClientProcessId(CONN(c)->f, &id)) {
 			return (nni_win_error(GetLastError()));
 		}
 	}
-	*pid = id;
-	return (0);
+	return (nni_copyout_u64(id, buf, szp, t));
+}
+
+static const nni_option ipc_conn_options[] = {
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_get  = ipc_conn_get_addr,
+	},
+	{
+	    .o_name = NNG_OPT_REMADDR,
+	    .o_get  = ipc_conn_get_addr,
+	},
+	{
+	    .o_name = NNG_OPT_IPC_PEER_PID,
+	    .o_get  = ipc_conn_get_peer_pid,
+	},
+	{
+	    .o_name = NULL, // terminator
+	},
+};
+
+int
+nni_ipc_conn_setopt(nni_ipc_conn *c, const char *name, const void *val,
+    size_t sz, nni_opt_type t)
+{
+	return (nni_setopt(ipc_conn_options, name, c, val, sz, t));
 }
 
 int
-nni_ipc_conn_setopt(
-    nni_ipc_conn *c, const char *name, const void *val, size_t sz)
+nni_ipc_conn_getopt(
+    nni_ipc_conn *c, const char *name, void *val, size_t *szp, nni_opt_type t)
 {
-	NNI_ARG_UNUSED(c);
-	NNI_ARG_UNUSED(val);
-	NNI_ARG_UNUSED(sz);
-	if ((strcmp(name, NNG_OPT_LOCADDR) == 0) ||
-	    (strcmp(name, NNG_OPT_REMADDR) == 0) ||
-	    (strcmp(name, NNG_OPT_IPC_PEER_PID) == 0)) {
-		return (NNG_EREADONLY);
-	}
-	return (NNG_ENOTSUP);
-}
-
-int
-nni_ipc_conn_getopt(nni_ipc_conn *c, const char *name, void *val, size_t *szp)
-{
-	if ((strcmp(name, NNG_OPT_LOCADDR) == 0) ||
-	    (strcmp(name, NNG_OPT_REMADDR) == 0)) {
-		if (*szp < sizeof(c->sa)) {
-			return (NNG_EINVAL);
-		}
-
-		memcpy(val, &c->sa, sizeof(c->sa));
-		*szp = sizeof(c->sa);
-		return (0);
-	}
-	if (strcmp(name, NNG_OPT_IPC_PEER_PID) == 0) {
-		int       rv;
-		uint64_t *idp = val;
-		if (*szp < sizeof(*idp)) {
-			return (NNG_EINVAL);
-		}
-		if ((rv = nni_ipc_conn_get_peer_pid(c, idp)) == 0) {
-			;
-			*szp = sizeof(*idp);
-		}
-		return (rv);
-	}
-	return (NNG_ENOTSUP);
+	return (nni_getopt(ipc_conn_options, name, c, val, szp, t));
 }

@@ -641,61 +641,6 @@ ipctran_pipe_peer(void *arg)
 	return (p->peer);
 }
 
-static int
-ipctran_pipe_get_addr(void *arg, void *buf, size_t *szp, nni_opt_type t)
-{
-	ipctran_pipe *p = arg;
-	return (nni_copyout_sockaddr(&p->sa, buf, szp, t));
-}
-
-static int
-ipctran_pipe_get_peer_uid(void *arg, void *buf, size_t *szp, nni_opt_type t)
-{
-	ipctran_pipe *p = arg;
-	uint64_t      id;
-	int           rv;
-	if ((rv = nni_ipc_conn_get_peer_uid(p->conn, &id)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_u64(id, buf, szp, t));
-}
-
-static int
-ipctran_pipe_get_peer_gid(void *arg, void *buf, size_t *szp, nni_opt_type t)
-{
-	ipctran_pipe *p = arg;
-	uint64_t      id;
-	int           rv;
-	if ((rv = nni_ipc_conn_get_peer_gid(p->conn, &id)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_u64(id, buf, szp, t));
-}
-
-static int
-ipctran_pipe_get_peer_pid(void *arg, void *buf, size_t *szp, nni_opt_type t)
-{
-	ipctran_pipe *p = arg;
-	uint64_t      id;
-	int           rv;
-	if ((rv = nni_ipc_conn_get_peer_pid(p->conn, &id)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_u64(id, buf, szp, t));
-}
-
-static int
-ipctran_pipe_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_opt_type t)
-{
-	ipctran_pipe *p = arg;
-	uint64_t      id;
-	int           rv;
-	if ((rv = nni_ipc_conn_get_peer_zoneid(p->conn, &id)) != 0) {
-		return (rv);
-	}
-	return (nni_copyout_u64(id, buf, szp, t));
-}
-
 static void
 ipctran_pipe_conn_cancel(nni_aio *aio, void *arg, int rv)
 {
@@ -972,46 +917,25 @@ ipctran_ep_set_sec_desc(void *arg, const void *data, size_t sz, nni_opt_type t)
 	return (rv);
 }
 
-static nni_option ipctran_pipe_options[] = {
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = ipctran_pipe_get_addr,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipctran_pipe_get_addr,
-	},
-	{
-	    .o_name = NNG_OPT_IPC_PEER_UID,
-	    .o_get  = ipctran_pipe_get_peer_uid,
-	},
-	{
-	    .o_name = NNG_OPT_IPC_PEER_GID,
-	    .o_get  = ipctran_pipe_get_peer_gid,
-	},
-	{
-	    .o_name = NNG_OPT_IPC_PEER_PID,
-	    .o_get  = ipctran_pipe_get_peer_pid,
-	},
-	{
-	    .o_name = NNG_OPT_IPC_PEER_ZONEID,
-	    .o_get  = ipctran_pipe_get_peer_zoneid,
-	},
-	// terminate list
-	{
-	    .o_name = NULL,
-	},
-};
+static int
+ipctran_pipe_getopt(
+    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	ipctran_pipe *p = arg;
+
+	// We defer to the platform getopt code for IPC connections.
+	return (nni_ipc_conn_getopt(p->conn, name, buf, szp, t));
+}
 
 static nni_tran_pipe_ops ipctran_pipe_ops = {
-	.p_init    = ipctran_pipe_init,
-	.p_fini    = ipctran_pipe_fini,
-	.p_stop    = ipctran_pipe_stop,
-	.p_send    = ipctran_pipe_send,
-	.p_recv    = ipctran_pipe_recv,
-	.p_close   = ipctran_pipe_close,
-	.p_peer    = ipctran_pipe_peer,
-	.p_options = ipctran_pipe_options,
+	.p_init   = ipctran_pipe_init,
+	.p_fini   = ipctran_pipe_fini,
+	.p_stop   = ipctran_pipe_stop,
+	.p_send   = ipctran_pipe_send,
+	.p_recv   = ipctran_pipe_recv,
+	.p_close  = ipctran_pipe_close,
+	.p_peer   = ipctran_pipe_peer,
+	.p_getopt = ipctran_pipe_getopt,
 };
 
 static nni_option ipctran_ep_dialer_options[] = {

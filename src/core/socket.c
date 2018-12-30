@@ -36,7 +36,7 @@ struct nni_ctx {
 typedef struct nni_sockopt {
 	nni_list_node node;
 	char *        name;
-	nni_opt_type  typ;
+	nni_type      typ;
 	size_t        sz;
 	void *        data;
 } nni_sockopt;
@@ -145,7 +145,7 @@ sock_get_fd(void *s, int flag, int *fdp)
 }
 
 static int
-sock_get_sendfd(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_sendfd(void *s, void *buf, size_t *szp, nni_type t)
 {
 	int fd;
 	int rv;
@@ -157,7 +157,7 @@ sock_get_sendfd(void *s, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-sock_get_recvfd(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_recvfd(void *s, void *buf, size_t *szp, nni_type t)
 {
 	int fd;
 	int rv;
@@ -169,38 +169,38 @@ sock_get_recvfd(void *s, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-sock_get_raw(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_raw(void *s, void *buf, size_t *szp, nni_type t)
 {
 	bool raw = ((nni_sock_flags(SOCK(s)) & NNI_PROTO_FLAG_RAW) != 0);
 	return (nni_copyout_bool(raw, buf, szp, t));
 }
 
 static int
-sock_set_recvtimeo(void *s, const void *buf, size_t sz, nni_opt_type t)
+sock_set_recvtimeo(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (nni_copyin_ms(&SOCK(s)->s_rcvtimeo, buf, sz, t));
 }
 
 static int
-sock_get_recvtimeo(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_recvtimeo(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_ms(SOCK(s)->s_rcvtimeo, buf, szp, t));
 }
 
 static int
-sock_set_sendtimeo(void *s, const void *buf, size_t sz, nni_opt_type t)
+sock_set_sendtimeo(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (nni_copyin_ms(&SOCK(s)->s_sndtimeo, buf, sz, t));
 }
 
 static int
-sock_get_sendtimeo(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_sendtimeo(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_ms(SOCK(s)->s_sndtimeo, buf, szp, t));
 }
 
 static int
-sock_set_recvbuf(void *s, const void *buf, size_t sz, nni_opt_type t)
+sock_set_recvbuf(void *s, const void *buf, size_t sz, nni_type t)
 {
 	int len;
 	int rv;
@@ -212,7 +212,7 @@ sock_set_recvbuf(void *s, const void *buf, size_t sz, nni_opt_type t)
 }
 
 static int
-sock_get_recvbuf(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_recvbuf(void *s, void *buf, size_t *szp, nni_type t)
 {
 	int len = nni_msgq_cap(SOCK(s)->s_urq);
 
@@ -220,7 +220,7 @@ sock_get_recvbuf(void *s, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-sock_set_sendbuf(void *s, const void *buf, size_t sz, nni_opt_type t)
+sock_set_sendbuf(void *s, const void *buf, size_t sz, nni_type t)
 {
 	int len;
 	int rv;
@@ -232,7 +232,7 @@ sock_set_sendbuf(void *s, const void *buf, size_t sz, nni_opt_type t)
 }
 
 static int
-sock_get_sendbuf(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_sendbuf(void *s, void *buf, size_t *szp, nni_type t)
 {
 	int len = nni_msgq_cap(SOCK(s)->s_uwq);
 
@@ -240,38 +240,38 @@ sock_get_sendbuf(void *s, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-sock_get_sockname(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_sockname(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_str(SOCK(s)->s_name, buf, szp, t));
 }
 
 static int
-sock_set_sockname(void *s, const void *buf, size_t sz, nni_opt_type t)
+sock_set_sockname(void *s, const void *buf, size_t sz, nni_type t)
 {
 	return (nni_copyin_str(
 	    SOCK(s)->s_name, buf, sizeof(SOCK(s)->s_name), sz, t));
 }
 
 static int
-sock_get_proto(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_proto(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_int(nni_sock_proto_id(SOCK(s)), buf, szp, t));
 }
 
 static int
-sock_get_peer(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_peer(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_int(nni_sock_peer_id(SOCK(s)), buf, szp, t));
 }
 
 static int
-sock_get_protoname(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_protoname(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_str(nni_sock_proto_name(SOCK(s)), buf, szp, t));
 }
 
 static int
-sock_get_peername(void *s, void *buf, size_t *szp, nni_opt_type t)
+sock_get_peername(void *s, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_copyout_str(nni_sock_peer_name(SOCK(s)), buf, szp, t));
 }
@@ -957,14 +957,13 @@ nni_sock_add_dialer(nni_sock *s, nni_dialer *d)
 
 int
 nni_sock_setopt(
-    nni_sock *s, const char *name, const void *v, size_t sz, nni_opt_type t)
+    nni_sock *s, const char *name, const void *v, size_t sz, nni_type t)
 {
-	int               rv = NNG_ENOTSUP;
-	nni_dialer *      d;
-	nni_listener *    l;
-	nni_sockopt *     optv;
-	nni_sockopt *     oldv = NULL;
-	const nni_option *opt;
+	int           rv;
+	nni_dialer *  d;
+	nni_listener *l;
+	nni_sockopt * optv;
+	nni_sockopt * oldv = NULL;
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
@@ -975,33 +974,18 @@ nni_sock_setopt(
 	// Protocol options.  The protocol can override options that
 	// the socket framework would otherwise supply, like buffer
 	// sizes.
-	for (opt = s->s_sock_ops.sock_options; opt->o_name != NULL; opt++) {
-		if (strcmp(opt->o_name, name) != 0) {
-			continue;
-		}
-		if (opt->o_set == NULL) {
-			nni_mtx_unlock(&s->s_mx);
-			return (NNG_EREADONLY);
-		}
-		rv = opt->o_set(s->s_data, v, sz, t);
+	rv = nni_setopt(s->s_sock_ops.sock_options, name, s->s_data, v, sz, t);
+	if (rv != NNG_ENOTSUP) {
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}
 
 	// Some options do not go down to transports.  Handle them directly.
-	for (opt = sock_options; opt->o_name != NULL; opt++) {
-		if (strcmp(opt->o_name, name) != 0) {
-			continue;
-		}
-		if (opt->o_set == NULL) {
-			nni_mtx_unlock(&s->s_mx);
-			return (NNG_EREADONLY);
-		}
-		rv = opt->o_set(s, v, sz, t);
+	rv = nni_setopt(sock_options, name, s, v, sz, t);
+	if (rv != NNG_ENOTSUP) {
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}
-
 	nni_mtx_unlock(&s->s_mx);
 
 	// If the option was already handled one way or the other,
@@ -1103,11 +1087,10 @@ nni_sock_setopt(
 
 int
 nni_sock_getopt(
-    nni_sock *s, const char *name, void *val, size_t *szp, nni_opt_type t)
+    nni_sock *s, const char *name, void *val, size_t *szp, nni_type t)
 {
-	int               rv = NNG_ENOTSUP;
-	nni_sockopt *     sopt;
-	const nni_option *opt;
+	int          rv = NNG_ENOTSUP;
+	nni_sockopt *sopt;
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
@@ -1118,29 +1101,16 @@ nni_sock_getopt(
 	// Protocol specific options.  The protocol can override
 	// options like the send buffer or notification descriptors
 	// this way.
-	for (opt = s->s_sock_ops.sock_options; opt->o_name != NULL; opt++) {
-		if (strcmp(name, opt->o_name) != 0) {
-			continue;
-		}
-		if (opt->o_get == NULL) {
-			nni_mtx_unlock(&s->s_mx);
-			return (NNG_EWRITEONLY);
-		}
-		rv = opt->o_get(s->s_data, val, szp, t);
+	rv = nni_getopt(
+	    s->s_sock_ops.sock_options, name, s->s_data, val, szp, t);
+	if (rv != NNG_ENOTSUP) {
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}
 
 	// Socket generic options.
-	for (opt = sock_options; opt->o_name != NULL; opt++) {
-		if (strcmp(name, opt->o_name) != 0) {
-			continue;
-		}
-		if (opt->o_get == NULL) {
-			nni_mtx_unlock(&s->s_mx);
-			return (NNG_EWRITEONLY);
-		}
-		rv = opt->o_get(s, val, szp, t);
+	rv = nni_getopt(sock_options, name, s, val, szp, t);
+	if (rv != NNG_ENOTSUP) {
 		nni_mtx_unlock(&s->s_mx);
 		return (rv);
 	}
@@ -1351,8 +1321,7 @@ nni_ctx_recv(nni_ctx *ctx, nni_aio *aio)
 }
 
 int
-nni_ctx_getopt(
-    nni_ctx *ctx, const char *opt, void *v, size_t *szp, nni_opt_type t)
+nni_ctx_getopt(nni_ctx *ctx, const char *opt, void *v, size_t *szp, nni_type t)
 {
 	nni_sock *  sock = ctx->c_sock;
 	nni_option *o;
@@ -1382,7 +1351,7 @@ nni_ctx_getopt(
 
 int
 nni_ctx_setopt(
-    nni_ctx *ctx, const char *opt, const void *v, size_t sz, nni_opt_type t)
+    nni_ctx *ctx, const char *opt, const void *v, size_t sz, nni_type t)
 {
 	nni_sock *  sock = ctx->c_sock;
 	nni_option *o;

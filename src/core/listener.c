@@ -370,6 +370,13 @@ nni_listener_setopt(nni_listener *l, const char *name, const void *val,
 		return (NNG_EREADONLY);
 	}
 
+	if (l->l_ops.l_setopt != NULL) {
+		int rv = l->l_ops.l_setopt(l->l_data, name, val, sz, t);
+		if (rv != NNG_ENOTSUP) {
+			return (rv);
+		}
+	}
+
 	for (o = l->l_ops.l_options; o && o->o_name; o++) {
 		if (strcmp(o->o_name, name) != 0) {
 			continue;
@@ -389,6 +396,13 @@ nni_listener_getopt(
     nni_listener *l, const char *name, void *valp, size_t *szp, nni_opt_type t)
 {
 	nni_option *o;
+
+	if (l->l_ops.l_getopt != NULL) {
+		int rv = l->l_ops.l_getopt(l->l_data, name, valp, szp, t);
+		if (rv != NNG_ENOTSUP) {
+			return (rv);
+		}
+	}
 
 	for (o = l->l_ops.l_options; o && o->o_name; o++) {
 		if (strcmp(o->o_name, name) != 0) {

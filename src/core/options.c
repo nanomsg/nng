@@ -366,3 +366,35 @@ nni_copyout_str(const char *str, void *dst, size_t *szp, nni_opt_type t)
 		return (NNG_EBADTYPE);
 	}
 }
+
+int
+nni_getopt(const nni_option *opts, const char *nm, void *arg, void *buf,
+    size_t *szp, nni_opt_type otype)
+{
+	while (opts->o_name != NULL) {
+		if (strcmp(opts->o_name, nm) == 0) {
+			if (opts->o_get == NULL) {
+				return (NNG_EWRITEONLY);
+			}
+			return (opts->o_get(arg, buf, szp, otype));
+		}
+		opts++;
+	}
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_setopt(const nni_option *opts, const char *nm, void *arg, const void *buf,
+    size_t sz, nni_opt_type otype)
+{
+	while (opts->o_name != NULL) {
+		if (strcmp(opts->o_name, nm) == 0) {
+			if (opts->o_set == NULL) {
+				return (NNG_EREADONLY);
+			}
+			return (opts->o_set(arg, buf, sz, otype));
+		}
+		opts++;
+	}
+	return (NNG_ENOTSUP);
+}
