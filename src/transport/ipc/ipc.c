@@ -884,40 +884,6 @@ ipctran_ep_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static int
-ipctran_ep_set_perms(void *arg, const void *data, size_t sz, nni_opt_type t)
-{
-	ipctran_ep *ep = arg;
-	int         val;
-	int         rv;
-
-	// Probably we could further limit this -- most systems don't have
-	// meaningful chmod beyond the lower 9 bits.
-	if (((rv = nni_copyin_int(&val, data, sz, 0, 0x7FFFFFFF, t)) == 0) &&
-	    (ep != NULL)) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_ipc_listener_set_permissions(ep->listener, val);
-		nni_mtx_unlock(&ep->mtx);
-	}
-	return (rv);
-}
-
-static int
-ipctran_ep_set_sec_desc(void *arg, const void *data, size_t sz, nni_opt_type t)
-{
-	ipctran_ep *ep = arg;
-	void *      ptr;
-	int         rv;
-
-	if (((rv = nni_copyin_ptr(&ptr, data, sz, t)) == 0) && (ep != NULL)) {
-		nni_mtx_lock(&ep->mtx);
-		rv = nni_ipc_listener_set_security_descriptor(
-		    ep->listener, ptr);
-		nni_mtx_unlock(&ep->mtx);
-	}
-	return (rv);
-}
-
-static int
 ipctran_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
@@ -938,15 +904,11 @@ static nni_tran_pipe_ops ipctran_pipe_ops = {
 	.p_getopt = ipctran_pipe_getopt,
 };
 
-static nni_option ipctran_ep_dialer_options[] = {
+static const nni_option ipctran_ep_options[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
 	    .o_get  = ipctran_ep_get_recvmaxsz,
 	    .o_set  = ipctran_ep_set_recvmaxsz,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipctran_ep_get_locaddr,
 	},
 	// terminate list
 	{
@@ -954,45 +916,81 @@ static nni_option ipctran_ep_dialer_options[] = {
 	},
 };
 
-static nni_option ipctran_ep_listener_options[] = {
-	{
-	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_get  = ipctran_ep_get_recvmaxsz,
-	    .o_set  = ipctran_ep_set_recvmaxsz,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipctran_ep_get_locaddr,
-	},
-	{
-	    .o_name = NNG_OPT_IPC_SECURITY_DESCRIPTOR,
-	    .o_set  = ipctran_ep_set_sec_desc,
-	},
-	{
-	    .o_name = NNG_OPT_IPC_PERMISSIONS,
-	    .o_set  = ipctran_ep_set_perms,
-	},
-	// terminate list
-	{
-	    .o_name = NULL,
-	},
-};
+static int
+ipctran_dialer_getopt(
+    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	ipctran_ep *ep = arg;
+	int         rv;
+
+	rv = nni_getopt(ipctran_ep_options, name, ep, buf, szp, t);
+	if (rv == NNG_ENOTSUP) {
+		rv = nni_ipc_dialer_getopt(ep->dialer, name, buf, szp, t);
+	}
+	return (rv);
+}
+
+static int
+ipctran_dialer_setopt(
+    void *arg, const char *name, const void *buf, size_t sz, nni_type t)
+{
+	ipctran_ep *ep = arg;
+	int         rv;
+
+	rv = nni_setopt(ipctran_ep_options, name, ep, buf, sz, t);
+	if (rv == NNG_ENOTSUP) {
+		rv = nni_ipc_dialer_setopt(
+		    ep != NULL ? ep->dialer : NULL, name, buf, sz, t);
+	}
+	return (rv);
+}
+
+static int
+ipctran_listener_getopt(
+    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	ipctran_ep *ep = arg;
+	int         rv;
+
+	rv = nni_getopt(ipctran_ep_options, name, ep, buf, szp, t);
+	if (rv == NNG_ENOTSUP) {
+		rv = nni_ipc_listener_getopt(ep->listener, name, buf, szp, t);
+	}
+	return (rv);
+}
+
+static int
+ipctran_listener_setopt(
+    void *arg, const char *name, const void *buf, size_t sz, nni_type t)
+{
+	ipctran_ep *ep = arg;
+	int         rv;
+
+	rv = nni_setopt(ipctran_ep_options, name, ep, buf, sz, t);
+	if (rv == NNG_ENOTSUP) {
+		rv = nni_ipc_listener_setopt(
+		    ep != NULL ? ep->listener : NULL, name, buf, sz, t);
+	}
+	return (rv);
+}
 
 static nni_tran_dialer_ops ipctran_dialer_ops = {
 	.d_init    = ipctran_ep_init_dialer,
 	.d_fini    = ipctran_ep_fini,
 	.d_connect = ipctran_ep_connect,
 	.d_close   = ipctran_ep_close,
-	.d_options = ipctran_ep_dialer_options,
+	.d_getopt  = ipctran_dialer_getopt,
+	.d_setopt  = ipctran_dialer_setopt,
 };
 
 static nni_tran_listener_ops ipctran_listener_ops = {
-	.l_init    = ipctran_ep_init_listener,
-	.l_fini    = ipctran_ep_fini,
-	.l_bind    = ipctran_ep_bind,
-	.l_accept  = ipctran_ep_accept,
-	.l_close   = ipctran_ep_close,
-	.l_options = ipctran_ep_listener_options,
+	.l_init   = ipctran_ep_init_listener,
+	.l_fini   = ipctran_ep_fini,
+	.l_bind   = ipctran_ep_bind,
+	.l_accept = ipctran_ep_accept,
+	.l_close  = ipctran_ep_close,
+	.l_getopt = ipctran_listener_getopt,
+	.l_setopt = ipctran_listener_setopt,
 };
 
 static nni_tran ipc_tran = {

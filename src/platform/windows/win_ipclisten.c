@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -146,28 +147,64 @@ nni_ipc_listener_init(nni_ipc_listener **lp)
 	return (0);
 }
 
-int
-nni_ipc_listener_set_permissions(nni_ipc_listener *l, int bits)
+static int
+ipc_listener_set_sec_desc(void *arg, const void *buf, size_t sz, nni_type t)
 {
-	NNI_ARG_UNUSED(l);
-	NNI_ARG_UNUSED(bits);
-	return (NNG_ENOTSUP);
-}
+	nni_ipc_listener *l = arg;
+	void *            desc;
+	int               rv;
 
-int
-nni_ipc_listener_set_security_descriptor(nni_ipc_listener *l, void *desc)
-{
+	if ((rv = nni_copyin_ptr(&desc, buf, sz, t)) != 0) {
+		return (rv);
+	}
 	if (!IsValidSecurityDescriptor((SECURITY_DESCRIPTOR *) desc)) {
 		return (NNG_EINVAL);
 	}
-	nni_mtx_lock(&l->mtx);
-	if (l->started) {
+	if (l != NULL) {
+		nni_mtx_lock(&l->mtx);
+		if (l->started) {
+			nni_mtx_unlock(&l->mtx);
+			return (NNG_EBUSY);
+		}
+		l->sec_attr.lpSecurityDescriptor = desc;
 		nni_mtx_unlock(&l->mtx);
-		return (NNG_EBUSY);
 	}
-	l->sec_attr.lpSecurityDescriptor = desc;
-	nni_mtx_unlock(&l->mtx);
 	return (0);
+}
+
+static int
+ipc_listener_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
+{
+	nni_ipc_listener *l = arg;
+	return ((nni_copyout_sockaddr(&l->sa, buf, szp, t)));
+}
+
+static const nni_option ipc_listener_options[] = {
+	{
+	    .o_name = NNG_OPT_IPC_SECURITY_DESCRIPTOR,
+	    .o_set  = ipc_listener_set_sec_desc,
+	},
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	    .o_get  = ipc_listener_get_addr,
+	},
+	{
+	    .o_name = NULL,
+	},
+};
+
+int
+nni_ipc_listener_setopt(nni_ipc_listener *l, const char *name, const void *buf,
+    size_t sz, nni_type t)
+{
+	return (nni_setopt(ipc_listener_options, name, l, buf, sz, t));
+}
+
+int
+nni_ipc_listener_getopt(
+    nni_ipc_listener *l, const char *name, void *buf, size_t *szp, nni_type t)
+{
+	return (nni_getopt(ipc_listener_options, name, l, buf, szp, t));
 }
 
 int
@@ -218,6 +255,7 @@ nni_ipc_listener_listen(nni_ipc_listener *l, const nni_sockaddr *sa)
 	l->f       = f;
 	l->path    = path;
 	l->started = true;
+	l->sa      = *sa;
 	nni_mtx_unlock(&l->mtx);
 	return (0);
 }
@@ -266,7 +304,6 @@ nni_ipc_listener_accept(nni_ipc_listener *l, nni_aio *aio)
 void
 nni_ipc_listener_close(nni_ipc_listener *l)
 {
-
 	nni_mtx_lock(&l->mtx);
 	if (!l->closed) {
 		l->closed = true;

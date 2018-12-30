@@ -1,7 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <infos@devolutions.net>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -16,6 +16,7 @@
 
 #include "core/nng_impl.h"
 #include "win_impl.h"
+#include <nng/transport/ipc/ipc.h>
 
 #define IPC_PIPE_PREFIX "\\\\.\\pipe\\"
 
@@ -54,6 +55,7 @@ struct nni_ipc_listener {
 	nni_mtx             mtx;
 	nni_cv              cv;
 	nni_win_io          io;
+	nni_sockaddr        sa;
 	int                 rv;
 };
 

@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -412,6 +413,13 @@ nni_dialer_setopt(nni_dialer *d, const char *name, const void *val, size_t sz,
 		return (rv);
 	}
 
+	if (d->d_ops.d_setopt != NULL) {
+		int rv = d->d_ops.d_setopt(d->d_data, name, val, sz, t);
+		if (rv != NNG_ENOTSUP) {
+			return (rv);
+		}
+	}
+
 	for (o = d->d_ops.d_options; o && o->o_name; o++) {
 		if (strcmp(o->o_name, name) != 0) {
 			continue;
@@ -447,6 +455,12 @@ nni_dialer_getopt(
 		return (rv);
 	}
 
+	if (d->d_ops.d_getopt != NULL) {
+		int rv = d->d_ops.d_getopt(d->d_data, name, valp, szp, t);
+		if (rv != NNG_ENOTSUP) {
+			return (rv);
+		}
+	}
 	for (o = d->d_ops.d_options; o && o->o_name; o++) {
 		if (strcmp(o->o_name, name) != 0) {
 			continue;

@@ -1,7 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <infos@devolutions.net>
+// Copyright 2018 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -380,14 +380,14 @@ extern int nni_ipc_conn_get_peer_zoneid(nni_ipc_conn *, uint64_t *);
 // are the same names from the IPC transport, generally.  There are no
 // options that are generally settable on an IPC connection.
 extern int nni_ipc_conn_setopt(
-    nni_ipc_conn *, const char *, const void *, size_t, nni_opt_type);
+    nni_ipc_conn *, const char *, const void *, size_t, nni_type);
 
 // nni_ipc_conn_getopt is like getsockopt, but uses string names.
 // We support NNG_OPT_REMADDR and NNG_OPT_LOCADDR (with argument type
 // nng_sockaddr), and on some platforms NNG_OPT_IPC_PEER_[UID,GID,ZONEID]
 // (with type uint64_t.)
 extern int nni_ipc_conn_getopt(
-    nni_ipc_conn *, const char *, void *, size_t *, nni_opt_type);
+    nni_ipc_conn *, const char *, void *, size_t *, nni_type);
 
 // nni_ipc_dialer_init creates a new dialer object.
 extern int nni_ipc_dialer_init(nni_ipc_dialer **);
@@ -406,6 +406,16 @@ extern void nni_ipc_dialer_close(nni_ipc_dialer *);
 // output will be an nni_ipc_conn * associated with the remote server.
 extern void nni_ipc_dialer_dial(
     nni_ipc_dialer *, const nni_sockaddr *, nni_aio *);
+
+// nni_ipc_dialer_getopt is used to get options from the dialer.
+// At present there aren't any defined options.
+extern int nni_ipc_dialer_getopt(
+    nni_ipc_dialer *, const char *, void *, size_t *, nni_type);
+
+// nni_ipc_dialer_setopt sets an option for the dialer.  There aren't
+// any options defined at present.
+extern int nni_ipc_dialer_setopt(
+    nni_ipc_dialer *, const char *, const void *, size_t, nni_type);
 
 // nni_ipc_listener_init creates a new listener object, unbound.
 extern int nni_ipc_listener_init(nni_ipc_listener **);
@@ -444,6 +454,19 @@ extern int nni_ipc_listener_set_permissions(nni_ipc_listener *, int);
 // a SECURITY_DESCRIPTOR object, and must be valid.
 extern int nni_ipc_listener_set_security_descriptor(
     nni_ipc_listener *, void *);
+
+// nni_ipc_listener_getopt is used to get options from the listener.
+// The only valid option is NNG_OPT_LOCADDR, which will only have
+// a valid value if the socket is bound, otherwise the value returned
+// will be of type NNG_AF_UNSPEC.
+extern int nni_ipc_listener_getopt(
+    nni_ipc_listener *, const char *, void *, size_t *, nni_type);
+
+// nni_ipc_listener_setopt sets an option for the listener.  The only
+// valid options are NNG_OPT_IPC_SECURITY_DESCRIPTORS (Windows) and
+// NNG_OPT_IPC_PERMISSIONS (POSIX).
+extern int nni_ipc_listener_setopt(
+    nni_ipc_listener *, const char *, const void *, size_t, nni_type);
 
 //
 // UDP support. UDP is not connection oriented, and only has the notion
