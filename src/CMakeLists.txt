@@ -198,25 +198,6 @@ foreach(_PKG IN ITEMS ${NNG_PKGS})
 	find_package(${_PKG} REQUIRED)
 endforeach ()
 
-# Provide same folder structure in IDE as on disk
-# XXX: Consider replacing this with source_group(TREE...)
-foreach (f ${NNG_SRCS})
-    # Get the path of the file relative to source directory
-    if (IS_ABSOLUTE "${f}")
-        file (RELATIVE_PATH f ${CMAKE_CURRENT_SOURCE_DIR} ${f})
-    endif ()
-    set (SRC_GROUP "${f}")
-    set (f "${CMAKE_CURRENT_SOURCE_DIR}/${f}")
-
-    # Remove the filename part
-    string (REGEX REPLACE "(.*)(/[^/]*)$" "\\1" SRC_GROUP ${SRC_GROUP})
-
-    # CMake source_group expects \\, not /
-    string (REPLACE / \\ SRC_GROUP ${SRC_GROUP})
-    source_group ("${SRC_GROUP}" FILES ${f})
-endforeach ()
-
-
 # Library
 add_library (${PROJECT_NAME} ${NNG_SRCS})
 
