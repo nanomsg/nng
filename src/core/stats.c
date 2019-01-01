@@ -336,6 +336,10 @@ int
 nng_stats_get(nng_stat **statp)
 {
 #ifdef NNG_ENABLE_STATS
+	int rv;
+	if ((rv = nni_init()) != 0) {
+		return (rv);
+	}
 	return (nni_stat_snapshot(statp, &stats_root));
 #else
 	NNI_ARG_UNUSED(statp);
@@ -413,7 +417,7 @@ nni_stat_sys_init(void)
 	nni_mtx_init(&stats_lock);
 	NNI_LIST_INIT(&stats_root.si_children, nni_stat_item, si_node);
 	stats_root.si_name = "";
-	stats_root.si_desc = "all statistsics";
+	stats_root.si_desc = "all statistics";
 #endif
 
 	return (0);
