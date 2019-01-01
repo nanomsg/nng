@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -18,6 +18,7 @@
 #include "stubs.h"
 
 static uint8_t loopback[4] = { 127, 0, 0, 1 };
+static int     num         = 0;
 
 TestMain("Supplemental IPC", {
 	atexit(nng_fini);
@@ -38,9 +39,10 @@ TestMain("Supplemental IPC", {
 
 			memcpy(&ip, loopback, 4);
 
+			num++;
 			sa.s_ipc.sa_family = NNG_AF_IPC;
 			snprintf(sa.s_ipc.sa_path, sizeof(sa.s_ipc.sa_path),
-			    "%s", "/tmp/ipc_supp_test");
+			    "/tmp/ipc_supp_test%d", num);
 
 			So(nng_ipc_listener_listen(l, &sa) == 0);
 
