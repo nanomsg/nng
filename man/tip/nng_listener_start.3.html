@@ -551,27 +551,7 @@ Each new connection results in an <code><a href="nng_pipe.5">nng_pipe</a></code>
 which will be attached to the listener&#8217;s socket.</p>
 </div>
 <div class="paragraph">
-<p>Normally, the act of &#8220;binding&#8221; to its address is done
-synchronously, including any necessary name resolution.
-As a result,
-a failure, such as if the address is already in use, will be returned
-immediately.
-However, if the special value <code>NNG_FLAG_NONBLOCK</code> is
-supplied in <em>flags</em>, then this is done asynchronously; furthermore any
-failure to bind will be periodically reattempted in the background.</p>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-While <code>NNG_FLAG_NONBLOCK</code> can help an application be more resilient,
-it also generally makes diagnosing failures somewhat more difficult.
-</td>
-</tr>
-</table>
+<p>The <em>flags</em> argument is ignored, but reserved for future use.</p>
 </div>
 <div class="paragraph">
 <p>Once a listener has started, it is generally not possible to change

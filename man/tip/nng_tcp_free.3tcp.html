@@ -9,7 +9,7 @@ layout: refman
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.8">
-<title>nng_version(3)</title>
+<title>nng_tcp_free(3tcp)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -508,7 +508,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_version(3) Manual Page</h1>
+<h1>nng_tcp_free(3tcp) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -521,7 +521,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
-<p>nng_stat_value - get statistic value</p>
+<p>nng_tcp_free - free TCP connection</p>
 </div>
 </div>
 <div id="content">
@@ -531,10 +531,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/tcp/tcp.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_stat</span> <span class="tok-n">nng_stat</span><span class="tok-p">;</span>
-
-<span class="tok-kt">uint64_t</span> <span class="tok-nf">nng_stat_string</span><span class="tok-p">(</span><span class="tok-n">nng_stat</span> <span class="tok-o">*</span><span class="tok-n">stat</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">void</span> <span class="tok-nf">nng_tcp_free</span><span class="tok-p">(</span><span class="tok-n">nng_tcp</span> <span class="tok-o">*</span><span class="tok-n">conn</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -543,11 +542,41 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_stat_value()</code> function returns a numeric value for the statistic <em>stat</em>.
-If the statistic has a boolean value, then zero is returned for <code>false</code>, and
-one is returned for <code>true</code>.
-Otherwise, if the string is not of numeric type, then zero is returned.
-See <code><a href="nng_stat_type.3">nng_stat_type()</a></code> for a description of statistic types.</p>
+<p>The <code>nng_tcp_free()</code> function closes the supplied TCP connection, <em>conn</em>,
+and frees the underlying resources associated with it.</p>
+</div>
+<div class="paragraph">
+<p>If any operations are pending (such as <code><a href="nng_tcp_send.3tcp">nng_tcp_send()</a></code>
+or <code><a href="nng_tcp_recv.3tcp">nng_tcp_recv()</a></code> they will be terminated with
+an <code>NNG_ECLOSED</code> error condition.</p>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+It is important that the application ensure that no further accesses
+are made to <em>conn</em>, as the memory backing it will be reclaimed for other uses.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Closing the connection while data is in transmission will likely
+lead to loss of that data.
+There is no automatic linger or flush to ensure that the socket send buffers
+have completely transmitted.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -555,7 +584,7 @@ See <code><a href="nng_stat_type.3">nng_stat_type()</a></code> for a description
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The numeric or boolean value associated with <em>stat</em>.</p>
+<p>None.</p>
 </div>
 </div>
 </div>
@@ -571,12 +600,11 @@ See <code><a href="nng_stat_type.3">nng_stat_type()</a></code> for a description
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="libnng.3">libnng(3)</a>,
-<a href="nng_stats_get.3">nng_stats_get(3)</a>,
-<a href="nng_stat_type.3">nng_stat_type(3)</a>,
-<a href="nng_stat_unit.3">nng_stat_unit(3)</a>,
-<a href="nng_stat.5">nng_stat(5)</a>,
-<a href="nng.7">nng(7)</a></p>
+<p><a href="nng_strerror.3">nng_strerror(3)</a>,
+<a href="nng_tcp_close.3tcp">nng_tcp_close(3tcp)</a>,
+<a href="nng_tcp_recv.3tcp">nng_tcp_recv(3tcp)</a>,
+<a href="nng_tcp_send.3tcp">nng_tcp_send(3tcp)</a>,
+<a href="nng_tcp.5">nng_tcp(5)</a></p>
 </div>
 </div>
 </div>

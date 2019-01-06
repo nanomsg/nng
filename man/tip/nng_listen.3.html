@@ -554,6 +554,9 @@ An incoming connection generally results in and
 Unlike dialers, listeners generally can create many
 pipes, which may be open concurrently.</p>
 </div>
+<div class="paragraph">
+<p>The <em>flags</em> argument is ignored, but reserved for future use.</p>
+</div>
 <div class="admonitionblock tip">
 <table>
 <tr>
@@ -567,28 +570,6 @@ client status that might be associated with a given protocol.
 For example, a <a href="nng_req.7"><em>req</em></a>
 socket might have associated dialers, but might also have associated listeners.
 It may even have some of each at the same time!
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>Normally, the act of &#8220;binding&#8221; to the address indicated by <em>url</em> is done
-synchronously, including any necessary name resolution.
-As a result, a failure, such as if the address is already in use, will be
-returned immediately.
-However, if the special value <code>NNG_FLAG_NONBLOCK</code> is supplied in <em>flags</em>,
-then this is done asynchronously; furthermore any
-failure to bind will be periodically reattempted in the background.</p>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-While <code>NNG_FLAG_NONBLOCK</code> can help an application be more resilient,
-it also generally makes diagnosing failures somewhat more difficult.
 </td>
 </tr>
 </table>

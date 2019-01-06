@@ -567,25 +567,28 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 retrieved on objects in the <em>nng</em> library.</p>
 </div>
 <div class="paragraph">
-<p>Sockets (<code><a href="nng_socket.5">nng_socket</a></code> objects) use the functions
-<code><a href="nng_getopt.3">nng_getopt()</a></code>
-and <code><a href="nng_setopt.3">nng_setopt()</a></code> to set and retrieve option values.</p>
+<p>Sockets (<a href="nng_socket.5"><code>nng_socket</code></a> objects) use the functions
+<a href="nng_getopt.3"><code>nng_getopt()</code></a>
+and <a href="nng_setopt.3"><code>nng_setopt()</code></a> to set and retrieve option values.</p>
 </div>
 <div class="paragraph">
-<p>Dialers (<code><a href="nng_dialer.5">nng_dialer</a></code> objects) use the functions
-<code><a href="nng_dialer_getopt.3">nng_dialer_getopt()</a></code> and
-<code><a href="nng_dialer_setopt.3">nng_dialer_setopt()</a></code> to set and retrieve option
+<p>Dialers (<a href="nng_dialer.5"><code>nng_dialer</code></a> objects) use the functions
+<a href="nng_dialer_getopt.3"><code>nng_dialer_getopt()</code></a> and
+<a href="nng_dialer_setopt.3"><code>nng_dialer_setopt()</code></a> to set and retrieve option
 values.</p>
 </div>
 <div class="paragraph">
-<p>Listeners (<code><a href="nng_listener.5">nng_listener</a></code> objects) use the functions
-<code><a href="nng_listener_getopt.3">nng_listener_getopt()</a></code>
-and <code><a href="nng_listener_setopt.3">nng_listener_setopt()</a></code> to set and
+<p>Listeners (<a href="nng_listener.5"><code>nng_listener</code></a> objects) use the functions
+<a href="nng_listener_getopt.3"><code>nng_listener_getopt()</code></a>
+and <a href="nng_listener_setopt.3"><code>nng_listener_setopt()</code></a> to set and
 retrieve option values.</p>
 </div>
 <div class="paragraph">
-<p>Pipes (<code><a href="nng_pipe.5">nng_pipe</a></code> objects) can only retrieve option values using
-the <code><a href="nng_pipe_getopt.3">nng_pipe_getopt()</a></code> function.</p>
+<p>Pipes (<a href="nng_pipe.5"><code>nng_pipe</code></a> objects) can only retrieve option values using
+the <a href="nng_pipe_getopt.3"><code>nng_pipe_getopt()</code></a> function.</p>
+</div>
+<div class="paragraph">
+<p>Other object types may have additional methods to access these options.</p>
 </div>
 <div class="paragraph">
 <p>In addition to the options listed here, transports and protocols will generally
@@ -607,11 +610,28 @@ description of the option.</p>
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_LOCADDR</code></dt>
 <dd>
-<p>(<code><a href="nng_sockaddr.5">nng_sockaddr</a></code>)
+<p>(<a href="nng_sockaddr.5"><code>nng_sockaddr</code></a>)
 This read-only option may be used on listeners, dialers and connected pipes, and
-represents the local address used for communication.
-Not all transports support this option, and some transports may support it
-listeners but not dialers.</p>
+represents the local address used for communication.</p>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Not all transports support this option, and some transports may support it on
+listeners but not dialers.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When used on a TCP dialer, this option is used to configure the source IP
+address that will be used when initiating outgoing connections.
+The specific port number will be ignored, however, and the system will
+choose a random ephemeral port instead.</p>
+</div>
 </dd>
 </dl>
 </div>
@@ -624,13 +644,15 @@ listeners but not dialers.</p>
 (<code>bool</code>)
 This read-only option indicates whether the socket is in &#8220;raw&#8221; mode.
 If <code>true</code>, the socket is in &#8220;raw&#8221; mode, and if <code>false</code> the socket is
-in &#8220;cooked&#8221; mode.
-Raw mode sockets generally do not have any protocol-specific semantics applied
+in &#8220;cooked&#8221; mode.</p>
+<div class="paragraph">
+<p>Raw mode sockets generally do not have any protocol-specific semantics applied
 to them; instead the application is expected to perform such semantics itself.
 (For example, in &#8220;cooked&#8221; mode a <a href="nng_rep.7"><em>rep</em></a> socket would
 automatically copy message headers from a received message to the corresponding
 reply, whereas in &#8220;raw&#8221; mode this is not done.)
 See <a href="nng.7#raw_mode">Raw Mode</a> for more details.</p>
+</div>
 </dd>
 </dl>
 </div>
@@ -639,7 +661,7 @@ See <a href="nng.7#raw_mode">Raw Mode</a> for more details.</p>
 <dt class="hdlist1"><code>NNG_OPT_RECONNMINT</code></dt>
 <dd>
 <p>
-(<code><a href="nng_duration.5">nng_duration</a></code>)
+(<a href="nng_duration.5"><code>nng_duration</code></a>)
 This is the minimum amount of time (milliseconds) to wait before attempting
 to establish a connection after a previous attempt has failed.
 This can be set on a socket, but it can also be overridden on an individual
@@ -654,7 +676,7 @@ The option is irrelevant for listeners.</p>
 <dd>
 <p>
 
-(<code><a href="nng_duration.5">nng_duration</a></code>)
+(<a href="nng_duration.5"><code>nng_duration</code></a>)
 This is the maximum amount of time
 (milliseconds) to wait before attempting to establish a connection after
 a previous attempt has failed.
@@ -702,9 +724,6 @@ This descriptor will be <strong>readable</strong> when a message is available fo
 on the socket.
 When no message is ready for receiving, then this file descriptor will <strong>not</strong>
 be readable.</p>
-</dd>
-</dl>
-</div>
 <div class="admonitionblock important">
 <table>
 <tr>
@@ -728,10 +747,13 @@ returned file descriptor.
 While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
 objects instead.
-See <code><a href="nng_aio_alloc.3">nng_aio_alloc()</a></code>.
+See <a href="nng_aio_alloc.3"><code>nng_aio_alloc()</code></a>.
 </td>
 </tr>
 </table>
+</div>
+</dd>
+</dl>
 </div>
 <div id="NNG_OPT_RECVMAXSZ" class="dlist">
 <dl>
@@ -748,9 +770,6 @@ where a malicious agent can claim to want to send an extraordinarily
 large message, without sending any data.
 This option can be set for the socket, but may be overridden for on a
 per-dialer or per-listener basis.</p>
-</dd>
-</dl>
-</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -758,10 +777,13 @@ per-dialer or per-listener basis.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Some transports may have further message size restrictions!
+Some transports may have further message size restrictions.
 </td>
 </tr>
 </table>
+</div>
+</dd>
+</dl>
 </div>
 <div id="NNG_OPT_RECVTIMEO" class="dlist">
 <dl>
@@ -769,7 +791,7 @@ Some transports may have further message size restrictions!
 <dd>
 <p>
 
-(<code><a href="nng_duration.5">nng_duration</a></code>)
+(<a href="nng_duration.5"><code>nng_duration</code></a>)
 This is the socket receive timeout in milliseconds.
 When no message is available for receiving at the socket for this period of
 time, receive operations will fail with a return value of <code>NNG_ETIMEDOUT</code>.</p>
@@ -780,7 +802,7 @@ time, receive operations will fail with a return value of <code>NNG_ETIMEDOUT</c
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_REMADDR</code></dt>
 <dd>
-<p>(<code><a href="nng_sockaddr.5">nng_sockaddr</a></code>)
+<p>(<a href="nng_sockaddr.5"><code>nng_sockaddr</code></a>)
 This read-only option may be used on dialers and connected pipes, and
 represents the address of a remote peer.
 Not all transports support this option.</p>
@@ -798,9 +820,6 @@ This is the depth of the socket send buffer as a number of messages.
 Messages sent by an application may be buffered by the socket until a
 transport is ready to accept them for delivery.
 This value must be an integer between 0 and 8192, inclusive.</p>
-</dd>
-</dl>
-</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -814,6 +833,9 @@ simply discard messages when they cannot be delivered immediately.
 </td>
 </tr>
 </table>
+</div>
+</dd>
+</dl>
 </div>
 <div id="NNG_OPT_SENDFD" class="dlist">
 <dl>
@@ -829,13 +851,12 @@ for use with
 <a href="http://pubs.opengroup.org/onlinepubs/7908799/xsh/select.html"><code>select()</code></a>,
 (or on Windows systems
 <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/ms741669(v=vs.85).aspx"><code>WSAPoll()</code></a>)
-and similar functions.
-This descriptor will be <strong>readable</strong> when the socket is able to accept a
+and similar functions.</p>
+<div class="paragraph">
+<p>This descriptor will be <strong>readable</strong> when the socket is able to accept a
 message for sending without blocking.
 When the socket is no longer able to accept such messages without blocking,
 the descriptor will <strong>not</strong> be readable.</p>
-</dd>
-</dl>
 </div>
 <div class="admonitionblock important">
 <table>
@@ -845,7 +866,7 @@ the descriptor will <strong>not</strong> be readable.</p>
 </td>
 <td class="content">
 Applications should never attempt to read or write to the
-returned file descriptor.
+returned file descriptor; use should be limited to polling system calls only.
 </td>
 </tr>
 </table>
@@ -860,10 +881,13 @@ returned file descriptor.
 While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
 objects instead.
-See <code><a href="nng_aio_alloc.3">nng_aio_alloc()</a></code>.
+See <a href="nng_aio_alloc.3"><code>nng_aio_alloc()</code></a>.
 </td>
 </tr>
 </table>
+</div>
+</dd>
+</dl>
 </div>
 <div id="NNG_OPT_SENDTIMEO" class="dlist">
 <dl>
@@ -871,7 +895,7 @@ See <code><a href="nng_aio_alloc.3">nng_aio_alloc()</a></code>.
 <dd>
 <p>
 
-(<code><a href="nng_duration.5">nng_duration</a></code>)
+(<a href="nng_duration.5"><code>nng_duration</code></a>)
 This is the socket send timeout in milliseconds.
 When a message cannot be queued for delivery by the socket for this period of
 time (such as if send buffers are full), the operation will fail with a
@@ -888,7 +912,9 @@ return value of <code>NNG_ETIMEDOUT</code>.</p>
 This the socket name.
 By default this is a string corresponding to the value of the socket.
 The string must fit within 64-bytes, including the terminating
-<code>NUL</code> byte, but it can be changed for other application uses.</p>
+<code>NUL</code> byte.
+The value is intended for application use, and is not used for anything
+in the library itself.</p>
 </dd>
 </dl>
 </div>
@@ -898,13 +924,10 @@ The string must fit within 64-bytes, including the terminating
 <dd>
 <p>(<code>int</code>)
 
-This is the maximum number of &#8220;hops&#8221; a message may traverse (see
-<code><a href="nng_device.3">nng_device()</a></code>).
+This is the maximum number of &#8220;hops&#8221; a message may traverse across
+a <a href="nng_device.3"><code>nng_device()</code></a> forwarders.
 The intention here is to prevent forwarding loops in device chains.
 When this is supported, it can have a value between 1 and 255, inclusive.</p>
-</dd>
-</dl>
-</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -933,6 +956,9 @@ this option.
 </tr>
 </table>
 </div>
+</dd>
+</dl>
+</div>
 <div id="NNG_OPT_URL" class="dlist">
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_URL</code></dt>
@@ -943,9 +969,6 @@ this option.
 This read-only option is used to obtain the URL with which a listener
 or dialer was configured.
 Accordingly it can only be used with dialers, listeners, and pipes.</p>
-</dd>
-</dl>
-</div>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -958,6 +981,9 @@ application.
 </td>
 </tr>
 </table>
+</div>
+</dd>
+</dl>
 </div>
 <div id="NNG_OPT_PROTO" class="dlist">
 <dl>
@@ -1003,16 +1029,7 @@ the socket.</p>
 <dd>
 <p>(<code>bool</code>)
 This option is used to disable (or enable) the use of Nagle&#8217;s algorithm
-for TCP connections.
-When <code>true</code> (the default), messages are sent immediately by the underlying
-TCP stream without waiting to gather more data.
-When <code>false</code>, Nagle&#8217;s algorithm is enabled, and the TCP stream may
-wait briefly in attempt to coalesce messages.
-Nagle&#8217;s algorithm is useful on low-bandwidth connections to reduce overhead,
-but it comes at a cost to latency.</p>
-</dd>
-</dl>
-</div>
+for TCP connections.</p>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1025,6 +1042,23 @@ See the transport documentation for each transport for details.
 </td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>When <code>true</code> (the default), messages are sent immediately by the underlying
+TCP stream without waiting to gather more data.</p>
+</div>
+<div class="paragraph">
+<p>When <code>false</code>, Nagle&#8217;s algorithm is enabled, and the TCP stream may
+wait briefly in attempt to coalesce messages.
+Nagle&#8217;s algorithm is useful on low-bandwidth connections to reduce overhead,
+but it comes at a cost to latency.</p>
+</div>
+<div class="paragraph">
+<p>When used on a dialer or a listener, the value affects how newly
+created connections will be configured.</p>
+</div>
+</dd>
+</dl>
 </div>
 <div id="NNG_OPT_TCP_KEEPALIVE" class="dlist">
 <dl>
@@ -1033,15 +1067,7 @@ See the transport documentation for each transport for details.
 <p>(<code>bool</code>)
 This option is used to enable the sending of keep-alive messages on
 the underlying TCP stream.
-This option is <code>false</code> by default.
-When enabled, if no messages are seen for a period of time, then
-a zero length TCP message is sent with the ACK flag set in an attempt
-to tickle some traffic from the peer.
-If none is still seen (after some platform-specific number of retries and
-timeouts), then the remote peer is presumed dead, and the connection is closed.</p>
-</dd>
-</dl>
-</div>
+This option is <code>false</code> by default.</p>
 <div class="admonitionblock note">
 <table>
 <tr>
@@ -1054,6 +1080,17 @@ See the transport documentation for each transport for details.
 </td>
 </tr>
 </table>
+</div>
+<div class="paragraph">
+<p>When enabled, if no messages are seen for a period of time, then
+a zero length TCP message is sent with the ACK flag set in an attempt
+to tickle some traffic from the peer.
+If none is still seen (after some platform-specific number of retries and
+timeouts), then the remote peer is presumed dead, and the connection is closed.</p>
+</div>
+<div class="paragraph">
+<p>When used on a dialer or a listener, the value affects how newly
+created connections will be configured.</p>
 </div>
 <div class="admonitionblock tip">
 <table>
@@ -1069,6 +1106,9 @@ middleware from being expiring due to lack of activity.
 </td>
 </tr>
 </table>
+</div>
+</dd>
+</dl>
 </div>
 </div>
 </div>

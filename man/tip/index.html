@@ -446,6 +446,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_section_3compat_compatible_library_functions">Section 3compat: Compatible Library Functions</a></li>
 <li><a href="#_section_3http_supplemental_http_functions">Section 3http: Supplemental HTTP Functions</a></li>
 <li><a href="#_section_3supp_supplemental_functions">Section 3supp: Supplemental Functions</a></li>
+<li><a href="#_section_3tcp_supplemental_tcp_functions">Section 3tcp: Supplemental TCP Functions</a></li>
 <li><a href="#_section_3tls_supplemental_tls_functions">Section 3tls: Supplemental TLS Functions</a></li>
 <li><a href="#_section_5_macros_and_types">Section 5: Macros and Types</a></li>
 <li><a href="#_section_7_protocols_and_transports">Section 7: Protocols and Transports</a></li>
@@ -1490,6 +1491,103 @@ mutual exclusion locks, threading, time keeping, and similar needs.</p>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_section_3tcp_supplemental_tcp_functions">Section 3tcp: Supplemental TCP Functions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This section documents supplemental TCP functions that are available.</p>
+</div>
+<div class="paragraph">
+<p>These functions are made available to facilitate using raw TCP connections
+with the NNG asynchronous I/O API.
+Most applications should never need to use these functions.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 37.5%;">
+<col style="width: 62.5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_close.3tcp">nng_tcp_close(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_dialer_alloc.3tcp">nng_tcp_dialer_alloc(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate TCP dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_dialer_close.3tcp">nng_tcp_dialer_close(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TCP dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_dialer_dial.3tcp">nng_tcp_dialer_dial(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">initiate outgoing TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_dialer_free.3tcp">nng_tcp_dialer_free(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TCP dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_dialer_getopt.3tcp">nng_tcp_dialer_getopt(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TCP dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_dialer_setopt.3tcp">nng_tcp_dialer_setopt(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TCP dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_free.3tcp">nng_tcp_free(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_getopt.3tcp">nng_tcp_getopt(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener_accept.3tcp">nng_tcp_listener_accept(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">accept incoming TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener_alloc.3tcp">nng_tcp_listener_alloc(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate TCP listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener_close.3tcp">nng_tcp_listener_close(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TCP listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener_free.3tcp">nng_tcp_listener_free(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TCP listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener_getopt.3tcp">nng_tcp_listener_getopt(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TCP listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener_listen.3tcp">nng_tcp_listener_listen(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bind listener to TCP port</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener_setopt.3tcp">nng_tcp_listener_setopt(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TCP listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_recv.3tcp">nng_tcp_recv(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive from TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_send.3tcp">nng_tcp_send(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send to TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_setopt.3tcp">nng_tcp_setopt(3tcp)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TCP connection</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_section_3tls_supplemental_tls_functions">Section 3tls: Supplemental TLS Functions</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1638,6 +1736,18 @@ applications need will use.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat.5">nng_stat(5)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">statistic</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp.5">nng_tcp(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_dialer.5">nng_tcp_dialer(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TCP dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener.5">nng_tcp_listener(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TCP listener</p></td>
 </tr>
 </tbody>
 </table>

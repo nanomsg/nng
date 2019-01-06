@@ -9,7 +9,7 @@ layout: refman
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.8">
-<title>nng_version(3)</title>
+<title>nng_tcp_listener_setopt(3tcp)</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -508,12 +508,16 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="manpage toc2 toc-left">
 <div id="header">
-<h1>nng_version(3) Manual Page</h1>
+<h1>nng_tcp_listener_setopt(3tcp) Manual Page</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
 <li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#_options">Options</a></li>
+</ul>
+</li>
 <li><a href="#_return_values">RETURN VALUES</a></li>
 <li><a href="#_errors">ERRORS</a></li>
 <li><a href="#_see_also">SEE ALSO</a></li>
@@ -521,7 +525,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
-<p>nng_stat_value - get statistic value</p>
+<p>nng_tcp_listener_setopt - set option on TCP listener</p>
 </div>
 </div>
 <div id="content">
@@ -531,10 +535,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/tcp/tcp.h&gt;</span><span class="tok-cp"></span>
 
-<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_stat</span> <span class="tok-n">nng_stat</span><span class="tok-p">;</span>
-
-<span class="tok-kt">uint64_t</span> <span class="tok-nf">nng_stat_string</span><span class="tok-p">(</span><span class="tok-n">nng_stat</span> <span class="tok-o">*</span><span class="tok-n">stat</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_tcp_listener_setopt</span><span class="tok-p">(</span><span class="tok-n">nng_tcp_listener</span> <span class="tok-o">*</span><span class="tok-n">l</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">name</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">data</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">size</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -543,11 +546,29 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The <code>nng_stat_value()</code> function returns a numeric value for the statistic <em>stat</em>.
-If the statistic has a boolean value, then zero is returned for <code>false</code>, and
-one is returned for <code>true</code>.
-Otherwise, if the string is not of numeric type, then zero is returned.
-See <code><a href="nng_stat_type.3">nng_stat_type()</a></code> for a description of statistic types.</p>
+<p>The <code>nng_tcp_listener_setopt()</code> is used to set the option <em>name</em> for the
+<a href="nng_tcp_listener.5">TCP listener</a> <em>l</em>.
+The value to set is copied from <em>data</em>, which should be <em>size</em> bytes
+in length.</p>
+</div>
+<div class="sect2">
+<h3 id="_options">Options</h3>
+<div class="paragraph">
+<p>The options specifically suppported for modification on TCP listeners are:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="nng_options.5#NNG_OPT_TCP_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5#NNG_OPT_TCP_KEEPALIVE"><code>NNG_OPT_TCP_KEEPALIVE</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5#NNG_OPT_TCP_NODELAY"><code>NNG_OPT_TCP_NODELAY</code></a></p>
+</li>
+</ul>
+</div>
 </div>
 </div>
 </div>
@@ -555,15 +576,48 @@ See <code><a href="nng_stat_type.3">nng_stat_type()</a></code> for a description
 <h2 id="_return_values">RETURN VALUES</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>The numeric or boolean value associated with <em>stat</em>.</p>
+<p>This function returns 0 on success, and non-zero otherwise.</p>
 </div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_errors">ERRORS</h2>
 <div class="sectionbody">
-<div class="paragraph">
-<p>None.</p>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>The listener is closed.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>Either <em>data</em> or <em>size</em> are invalid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>The option <em>name</em> is not supported.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EREADONLY</code>
+</td>
+<td class="hdlist2">
+<p>The option <em>name</em> may not be modified.</p>
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>
@@ -571,12 +625,12 @@ See <code><a href="nng_stat_type.3">nng_stat_type()</a></code> for a description
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="libnng.3">libnng(3)</a>,
-<a href="nng_stats_get.3">nng_stats_get(3)</a>,
-<a href="nng_stat_type.3">nng_stat_type(3)</a>,
-<a href="nng_stat_unit.3">nng_stat_unit(3)</a>,
-<a href="nng_stat.5">nng_stat(5)</a>,
-<a href="nng.7">nng(7)</a></p>
+<p><a href="nng_tcp_listener_getopt.3tcp">nng_tcp_listener_getopt(3tcp)</a>,
+<a href="nng_tcp_setopt.3tcp">nng_tcp_setopt(3tcp)</a>,
+<a href="nng_options.5">nng_options(5)</a>,
+<a href="nng_strerror.3">nng_strerror(3)</a>,
+<a href="nng_tcp.5">nng_tcp(5)</a>,
+<a href="nng_tcp_listener.5">nng_tcp_listener(5)</a></p>
 </div>
 </div>
 </div>
