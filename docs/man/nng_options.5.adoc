@@ -1,7 +1,8 @@
 = nng_options(5)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -47,22 +48,24 @@ nng_options - socket, dialer, listener, and pipe options
 This page documents the various standard options that can be set or
 retrieved on objects in the _nng_ library.
 
-Sockets (`<<nng_socket.5#,nng_socket>>` objects) use the functions
-`<<nng_getopt.3#,nng_getopt()>>`
-and `<<nng_setopt.3#,nng_setopt()>>` to set and retrieve option values.
+Sockets (<<nng_socket.5#,`nng_socket`>> objects) use the functions
+<<nng_getopt.3#,`nng_getopt()`>>
+and <<nng_setopt.3#,`nng_setopt()`>> to set and retrieve option values.
 
-Dialers (`<<nng_dialer.5#,nng_dialer>>` objects) use the functions
-`<<nng_dialer_getopt.3#,nng_dialer_getopt()>>` and
-`<<nng_dialer_setopt.3#,nng_dialer_setopt()>>` to set and retrieve option
+Dialers (<<nng_dialer.5#,`nng_dialer`>> objects) use the functions
+<<nng_dialer_getopt.3#,`nng_dialer_getopt()`>> and
+<<nng_dialer_setopt.3#,`nng_dialer_setopt()`>> to set and retrieve option
 values.
 
-Listeners (`<<nng_listener.5#,nng_listener>>` objects) use the functions
-`<<nng_listener_getopt.3#,nng_listener_getopt()>>`
-and `<<nng_listener_setopt.3#,nng_listener_setopt()>>` to set and
+Listeners (<<nng_listener.5#,`nng_listener`>> objects) use the functions
+<<nng_listener_getopt.3#,`nng_listener_getopt()`>>
+and <<nng_listener_setopt.3#,`nng_listener_setopt()`>> to set and
 retrieve option values.
 
-Pipes (`<<nng_pipe.5#,nng_pipe>>` objects) can only retrieve option values using
-the `<<nng_pipe_getopt.3#,nng_pipe_getopt()>>` function.
+Pipes (<<nng_pipe.5#,`nng_pipe`>> objects) can only retrieve option values using
+the <<nng_pipe_getopt.3#,`nng_pipe_getopt()`>> function.
+
+Other object types may have additional methods to access these options.
 
 In addition to the options listed here, transports and protocols will generally
 have some of their own options, which will be documented with the transport
@@ -80,11 +83,17 @@ description of the option.
 
 [[NNG_OPT_LOCADDR]]
 ((`NNG_OPT_LOCADDR`))::
-(`<<nng_sockaddr.5#,nng_sockaddr>>`)
+(<<nng_sockaddr.5#,`nng_sockaddr`>>)
 This read-only option may be used on listeners, dialers and connected pipes, and
 represents the local address used for communication.
-Not all transports support this option, and some transports may support it
++
+NOTE: Not all transports support this option, and some transports may support it on
 listeners but not dialers.
++
+When used on a TCP dialer, this option is used to configure the source IP
+address that will be used when initiating outgoing connections.
+The specific port number will be ignored, however, and the system will
+choose a random ephemeral port instead.
 
 [[NNG_OPT_RAW]]
 ((`NNG_OPT_RAW`))::
@@ -94,6 +103,7 @@ listeners but not dialers.
 This read-only option indicates whether the socket is in "`raw`" mode.
 If `true`, the socket is in "`raw`" mode, and if `false` the socket is
 in "`cooked`" mode.
++
 Raw mode sockets generally do not have any protocol-specific semantics applied
 to them; instead the application is expected to perform such semantics itself.
 (For example, in "`cooked`" mode a <<nng_rep.7#,_rep_>> socket would
@@ -104,7 +114,7 @@ See <<nng.7#raw_mode,Raw Mode>> for more details.
 [[NNG_OPT_RECONNMINT]]
 ((`NNG_OPT_RECONNMINT`))::
 (((reconnect time, minimum)))
-(`<<nng_duration.5#,nng_duration>>`)
+(<<nng_duration.5#,`nng_duration`>>)
 This is the minimum amount of time (milliseconds) to wait before attempting
 to establish a connection after a previous attempt has failed.
 This can be set on a socket, but it can also be overridden on an individual
@@ -115,7 +125,7 @@ The option is irrelevant for listeners.
 ((`NNG_OPT_RECONNMAXT`))::
 (((`NNG_OPT_RECONNMAXT`)))
 (((reconnect time, maximum)))
-(`<<nng_duration.5#,nng_duration>>`)
+(<<nng_duration.5#,`nng_duration`>>)
 This is the maximum amount of time
 (milliseconds) to wait before attempting to establish a connection after
 a previous attempt has failed.
@@ -155,14 +165,14 @@ This descriptor will be *readable* when a message is available for receiving
 on the socket.
 When no message is ready for receiving, then this file descriptor will *not*
 be readable.
-
++
 IMPORTANT: Applications should never attempt to read or write to the
 returned file descriptor.
-
++
 TIP: While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
 objects instead.
-See `<<nng_aio_alloc.3#,nng_aio_alloc()>>`.
+See <<nng_aio_alloc.3#,`nng_aio_alloc()`>>.
 
 [[NNG_OPT_RECVMAXSZ]]
 ((`NNG_OPT_RECVMAXSZ`))::
@@ -177,21 +187,21 @@ where a malicious agent can claim to want to send an extraordinarily
 large message, without sending any data.
 This option can be set for the socket, but may be overridden for on a
 per-dialer or per-listener basis.
-
-NOTE: Some transports may have further message size restrictions!
++
+NOTE: Some transports may have further message size restrictions.
 
 [[NNG_OPT_RECVTIMEO]]
 ((`NNG_OPT_RECVTIMEO`))::
 (((receive, timeout)))
 (((timeout, receive)))
-(`<<nng_duration.5#,nng_duration>>`)
+(<<nng_duration.5#,`nng_duration`>>)
 This is the socket receive timeout in milliseconds.
 When no message is available for receiving at the socket for this period of
 time, receive operations will fail with a return value of `NNG_ETIMEDOUT`.
 
 [[NNG_OPT_REMADDR]]
 ((`NNG_OPT_REMADDR`))::
-(`<<nng_sockaddr.5#,nng_sockaddr>>`)
+(<<nng_sockaddr.5#,`nng_sockaddr`>>)
 This read-only option may be used on dialers and connected pipes, and
 represents the address of a remote peer.
 Not all transports support this option.
@@ -205,7 +215,7 @@ This is the depth of the socket send buffer as a number of messages.
 Messages sent by an application may be buffered by the socket until a
 transport is ready to accept them for delivery.
 This value must be an integer between 0 and 8192, inclusive.
-
++
 NOTE: Not all protocols support buffering sent messages;
 generally multicast protocols like <<nng_pub.7#,_pub_>> will
 simply discard messages when they cannot be delivered immediately.
@@ -223,24 +233,25 @@ http://pubs.opengroup.org/onlinepubs/7908799/xsh/select.html[`select()`],
 (or on Windows systems
 https://msdn.microsoft.com/en-us/library/windows/desktop/ms741669(v=vs.85).aspx[`WSAPoll()`])
 and similar functions.
++
 This descriptor will be *readable* when the socket is able to accept a
 message for sending without blocking.
 When the socket is no longer able to accept such messages without blocking,
 the descriptor will *not* be readable.
-
++
 IMPORTANT: Applications should never attempt to read or write to the
-returned file descriptor.
-
+returned file descriptor; use should be limited to polling system calls only.
++
 TIP: While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
 objects instead.
-See `<<nng_aio_alloc.3#,nng_aio_alloc()>>`.
+See <<nng_aio_alloc.3#,`nng_aio_alloc()`>>.
 
 [[NNG_OPT_SENDTIMEO]]
 ((`NNG_OPT_SENDTIMEO`))::
 (((send, timeout)))
 (((timeout, send)))
-(`<<nng_duration.5#,nng_duration>>`)
+(<<nng_duration.5#,`nng_duration`>>)
 This is the socket send timeout in milliseconds.
 When a message cannot be queued for delivery by the socket for this period of
 time (such as if send buffers are full), the operation will fail with a
@@ -253,20 +264,22 @@ return value of `NNG_ETIMEDOUT`.
 This the socket name.
 By default this is a string corresponding to the value of the socket.
 The string must fit within 64-bytes, including the terminating
-`NUL` byte, but it can be changed for other application uses.
+`NUL` byte.
+The value is intended for application use, and is not used for anything
+in the library itself.
 
 [[NNG_OPT_MAXTTL]]
 ((`NNG_OPT_MAXTTL`))::
 (`int`)
 (((time-to-live)))
-This is the maximum number of "`hops`" a message may traverse (see
-`<<nng_device.3#,nng_device()>>`).
+This is the maximum number of "`hops`" a message may traverse across
+a <<nng_device.3#,`nng_device()`>> forwarders.
 The intention here is to prevent ((forwarding loops)) in device chains.
 When this is supported, it can have a value between 1 and 255, inclusive.
-
++
 NOTE: Not all protocols support this option.
 Those that do generally have a default value of 8.
-
++
 TIP: Each node along a forwarding path may have its own value for the
 maximum time-to-live, and performs its own checks before forwarding a message.
 Therefore it is helpful if all nodes in the topology use the same value for
@@ -280,7 +293,7 @@ this option.
 This read-only option is used to obtain the URL with which a listener
 or dialer was configured.
 Accordingly it can only be used with dialers, listeners, and pipes.
-
++
 NOTE: Some transports will canonify URLs before returning them to the
 application.
 
@@ -294,7 +307,6 @@ This read-only option is used to obtain the 16-bit number for the socket's proto
 (`int`)
 This read-only option is used to obtain the 16-bit number of the
 peer protocol for the socket.
-
 
 [[NNG_OPT_PROTONAME]]
 ((`NNG_OPT_PROTONAME`))::
@@ -310,17 +322,22 @@ the socket.
 [[NNG_OPT_TCP_NODELAY]]
 ((`NNG_OPT_TCP_NODELAY`))::
 (`bool`)
-This option is used to disable (or enable) the use of Nagle's algorithm
+This option is used to disable (or enable) the use of ((Nagle's algorithm))
 for TCP connections.
++
+NOTE: This setting may apply to transports that are built on top of TCP.
+See the transport documentation for each transport for details.
++
 When `true` (the default), messages are sent immediately by the underlying
 TCP stream without waiting to gather more data.
++
 When `false`, Nagle's algorithm is enabled, and the TCP stream may
 wait briefly in attempt to coalesce messages.
 Nagle's algorithm is useful on low-bandwidth connections to reduce overhead,
 but it comes at a cost to latency.
-
-NOTE: This setting may apply to transports that are built on top of TCP.
-See the transport documentation for each transport for details.
++
+When used on a dialer or a listener, the value affects how newly
+created connections will be configured.
 
 [[NNG_OPT_TCP_KEEPALIVE]]
 ((`NNG_OPT_TCP_KEEPALIVE`))::
@@ -328,15 +345,19 @@ See the transport documentation for each transport for details.
 This option is used to enable the sending of keep-alive messages on
 the underlying TCP stream.
 This option is `false` by default.
++
+NOTE: This setting may apply to transports that are built on top of TCP.
+See the transport documentation for each transport for details.
++
 When enabled, if no messages are seen for a period of time, then
 a zero length TCP message is sent with the ACK flag set in an attempt
 to tickle some traffic from the peer.
 If none is still seen (after some platform-specific number of retries and
 timeouts), then the remote peer is presumed dead, and the connection is closed.
-
-NOTE: This setting may apply to transports that are built on top of TCP.
-See the transport documentation for each transport for details.
-
++
+When used on a dialer or a listener, the value affects how newly
+created connections will be configured.
++
 TIP: This option has two purposes.
 First, it can be used to detect dead peers on an otherwise quiescent network.
 Second, it can be used to keep connection table entries in NAT and other

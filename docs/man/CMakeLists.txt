@@ -1,6 +1,7 @@
 #
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 # Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2019 Devolutions <info@devolutions.net>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -293,21 +294,23 @@ if (NNG_ENABLE_DOC)
 	set(NNG_MAN3TCP
 	nng_tcp_close
 	nng_tcp_free
+	nng_tcp_getopt
 	nng_tcp_dialer_alloc
 	nng_tcp_dialer_close
 	nng_tcp_dialer_dial
 	nng_tcp_dialer_free
+	nng_tcp_dialer_getopt
+	nng_tcp_dialer_setopt
 	nng_tcp_listener_accept
 	nng_tcp_listener_alloc
 	nng_tcp_listener_close
 	nng_tcp_listener_free
+	nng_tcp_listener_getopt
 	nng_tcp_listener_listen
-	nng_tcp_peername
+	nng_tcp_listener_setopt
 	nng_tcp_recv
 	nng_tcp_send
-	nng_tcp_set_keepalive
-	nng_tcp_set_nodelay
-	nng_tcp_sockname
+	nng_tcp_setopt
 	)
 
     set(NNG_MAN3TLS

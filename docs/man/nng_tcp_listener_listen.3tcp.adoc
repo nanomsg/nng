@@ -2,6 +2,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -20,7 +21,7 @@ nng_tcp_listener_listen - bind listener to TCP port
 #include <nng/nng.h>
 #include <nng/supplemental/tcp/tcp.h>
 
-int nng_tcp_listener_listen(nng_tcp_listener l, nng_sockaddr *sa);
+int nng_tcp_listener_listen(nng_tcp_listener l, const nng_sockaddr *sa);
 ----
 
 == DESCRIPTION
@@ -40,7 +41,10 @@ that all interfaces on the system should be bound.
 
 The TCP port number may also be zero.  In this case the system will
 choose a free TCP port at random, and use it.
-The _sa_ will be updated with the port chosen.
+
+The chosen port number may be retrieved using the
+<<nng_options.5#,`NNG_OPT_LOCADDR`>> option with the
+<<nng_tcp_listener_getopt.3tcp#,`nng_tcp_listener_getopt()`>> function.
 
 == RETURN VALUES
 
@@ -62,5 +66,6 @@ This function returns 0 on success, and non-zero otherwise.
 <<nng_tcp_listener_alloc.3tcp#,nng_tcp_listener_alloc(3tcp)>>,
 <<nng_tcp_listener_close.3tcp#,nng_tcp_listener_close(3tcp)>>,
 <<nng_tcp_listener_free.3tcp#,nng_tcp_listener_free(3tcp)>>,
+<<nng_tcp_listener_getopt.3tcp#,nng_tcp_listener_getopt(3tcp)>>,
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng_tcp_listener.5#,nng_tcp_listener(5)>>
