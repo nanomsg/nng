@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -15,8 +15,6 @@
 // This header file is private to the TCP support for Windows.
 
 #include "core/nng_impl.h"
-
-#include <nng/transport/tcp/tcp.h>
 
 struct nni_tcp_conn {
 	SOCKET            s;

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -13,8 +13,6 @@
 
 #ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
-
-#include <nng/transport/ipc/ipc.h>
 
 #include <sys/types.h> // For mode_t
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -16,7 +16,6 @@
 
 #include "core/nng_impl.h"
 #include "win_impl.h"
-#include <nng/transport/ipc/ipc.h>
 
 #define IPC_PIPE_PREFIX "\\\\.\\pipe\\"
 
