@@ -989,57 +989,6 @@ tcptran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static int
-tcptran_ep_get_nodelay(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	tcptran_ep *ep = arg;
-	int         rv;
-	nni_mtx_lock(&ep->mtx);
-	rv = nni_copyout_bool(ep->nodelay, v, szp, t);
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
-}
-
-static int
-tcptran_ep_set_nodelay(void *arg, const void *v, size_t sz, nni_opt_type t)
-{
-	tcptran_ep *ep = arg;
-	bool        val;
-	int         rv;
-	if (((rv = nni_copyin_bool(&val, v, sz, t)) == 0) && (ep != NULL)) {
-		nni_mtx_lock(&ep->mtx);
-		ep->nodelay = val;
-		nni_mtx_unlock(&ep->mtx);
-	}
-	return (rv);
-}
-
-static int
-tcptran_ep_get_keepalive(void *arg, void *v, size_t *szp, nni_opt_type t)
-{
-	tcptran_ep *ep = arg;
-	int         rv;
-
-	nni_mtx_lock(&ep->mtx);
-	rv = nni_copyout_bool(ep->keepalive, v, szp, t);
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
-}
-
-static int
-tcptran_ep_set_keepalive(void *arg, const void *v, size_t sz, nni_opt_type t)
-{
-	tcptran_ep *ep = arg;
-	bool        val;
-	int         rv;
-	if (((rv = nni_copyin_bool(&val, v, sz, t)) == 0) && (ep != NULL)) {
-		nni_mtx_lock(&ep->mtx);
-		ep->keepalive = val;
-		nni_mtx_unlock(&ep->mtx);
-	}
-	return (rv);
-}
-
-static int
 tcptran_ep_bind(void *arg)
 {
 	tcptran_ep *ep = arg;
@@ -1080,18 +1029,6 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 	p->useraio = aio;
 	nni_tcp_listener_accept(ep->listener, p->connaio);
 	nni_mtx_unlock(&ep->mtx);
-}
-
-static int
-tcptran_ep_get_locaddr(void *arg, void *buf, size_t *szp, nni_opt_type t)
-{
-	tcptran_ep *ep = arg;
-	int         rv;
-
-	nni_mtx_lock(&ep->mtx);
-	rv = nni_copyout_sockaddr(&ep->bsa, buf, szp, t);
-	nni_mtx_unlock(&ep->mtx);
-	return (rv);
 }
 
 static nni_tran_pipe_ops tcptran_pipe_ops = {

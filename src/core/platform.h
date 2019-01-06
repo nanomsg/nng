@@ -317,11 +317,8 @@ extern void nni_tcp_listener_fini(nni_tcp_listener *);
 extern void nni_tcp_listener_close(nni_tcp_listener *);
 
 // nni_tcp_listener_listen creates the socket in listening mode, bound
-// to the specified address.  The address will be updated to reflect
-// the actual address bound (making it possible to bind to port 0 to
-// specify an ephemeral address, and then the actual address can be
-// examined afterwards.)
-extern int nni_tcp_listener_listen(nni_tcp_listener *, nni_sockaddr *);
+// to the specified address.
+extern int nni_tcp_listener_listen(nni_tcp_listener *, const nni_sockaddr *);
 
 // nni_tcp_listener_accept accepts in incoming connect, asynchronously.
 // On success, the first (and only) output will be an nni_tcp_conn *

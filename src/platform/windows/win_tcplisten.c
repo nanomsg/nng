@@ -186,7 +186,7 @@ nni_tcp_listener_fini(nni_tcp_listener *l)
 }
 
 int
-nni_tcp_listener_listen(nni_tcp_listener *l, nni_sockaddr *sa)
+nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 {
 	int   rv;
 	BOOL  yes;
@@ -244,7 +244,6 @@ nni_tcp_listener_listen(nni_tcp_listener *l, nni_sockaddr *sa)
 		nni_mtx_unlock(&l->mtx);
 		return (rv);
 	}
-	nni_win_sockaddr2nn(sa, &l->ss);
 	l->started = true;
 	nni_mtx_unlock(&l->mtx);
 	return (0);

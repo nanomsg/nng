@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -34,14 +34,19 @@ TestMain("Supplemental TCP", {
 		Convey("Listener listens (wildcard)", {
 			nng_sockaddr sa;
 			uint32_t     ip;
+			size_t       sz;
 
 			memcpy(&ip, loopback, 4);
 
 			sa.s_in.sa_family = NNG_AF_INET;
 			sa.s_in.sa_addr   = ip;
 			sa.s_in.sa_port   = 0;
+			sz                = sizeof(sa);
 
 			So(nng_tcp_listener_listen(l, &sa) == 0);
+			So(nng_tcp_listener_getopt(
+			       l, NNG_OPT_LOCADDR, &sa, &sz) == 0);
+			So(sz == sizeof(sa));
 			So(sa.s_in.sa_port != 0);
 			So(sa.s_in.sa_addr == ip);
 

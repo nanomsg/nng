@@ -125,11 +125,10 @@ NNG_DECL void nng_tcp_listener_free(nng_tcp_listener *);
 // the TCP port / address to be allocated.  It does not accept any new
 // incoming connections.  (The listenq depth is configured to some reasonable
 // default -- typically around 128.)  This operation is synchronous.
-// On success, the sockaddr will be update with the actual address bound.
-// This is useful if the TCP port number 0 is specified, which permits
-// the implementation to choose a free random port.  The caller can then
-// inspect the sockaddr to learn the actual bound port.
-NNG_DECL int nng_tcp_listener_listen(nng_tcp_listener *, nng_sockaddr *);
+// A zero valued port may be supplied in the sockaddr, in which case
+// a follow up call to get the NNG_OPT_LOCADDR can be used to determine the
+// bound address.
+NNG_DECL int nng_tcp_listener_listen(nng_tcp_listener *, const nng_sockaddr *);
 
 // nng_tcp_listener_accept accepts an incoming connection (creating an
 // nng_tcp * object), and returns it in the nng_aio as the first output

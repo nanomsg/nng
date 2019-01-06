@@ -184,7 +184,7 @@ tcp_listener_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 int
-nni_tcp_listener_listen(nni_tcp_listener *l, nni_sockaddr *sa)
+nni_tcp_listener_listen(nni_tcp_listener *l, const nni_sockaddr *sa)
 {
 	socklen_t               len;
 	struct sockaddr_storage ss;
@@ -246,15 +246,6 @@ nni_tcp_listener_listen(nni_tcp_listener *l, nni_sockaddr *sa)
 		nni_posix_pfd_fini(pfd);
 		return (rv);
 	}
-
-	// Lets get the bound sockname, and pass that back to the caller.
-	// This permits ephemeral port binding to work.
-	// If this fails for some reason, we just don't update the
-	// sockaddr structure.  This is kind of suboptimal, but failures
-	// here should never occur.
-	len = sizeof(ss);
-	(void) getsockname(fd, (void *) &ss, &len);
-	(void) nni_posix_sockaddr2nn(sa, &ss);
 
 	nni_posix_pfd_set_cb(pfd, tcp_listener_cb, l);
 

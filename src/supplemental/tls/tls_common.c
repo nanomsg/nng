@@ -470,7 +470,7 @@ nng_tls_listener_alloc(nng_tls_listener **lp)
 }
 
 int
-nng_tls_listener_listen(nng_tls_listener *l, nng_sockaddr *sa)
+nng_tls_listener_listen(nng_tls_listener *l, const nng_sockaddr *sa)
 {
 	tls_ep *ep = (void *) l;
 	return (nni_tcp_listener_listen(ep->tcp.l, sa));

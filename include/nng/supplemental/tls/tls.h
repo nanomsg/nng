@@ -164,7 +164,7 @@ NNG_DECL int nng_tls_dialer_setopt(
 NNG_DECL int  nng_tls_listener_alloc(nng_tls_listener **);
 NNG_DECL void nng_tls_listener_close(nng_tls_listener *);
 NNG_DECL void nng_tls_listener_free(nng_tls_listener *);
-NNG_DECL int  nng_tls_listener_listen(nng_tls_listener *, nng_sockaddr *);
+NNG_DECL int nng_tls_listener_listen(nng_tls_listener *, const nng_sockaddr *);
 NNG_DECL void nng_tls_listener_accept(nng_tls_listener *, nng_aio *);
 
 NNG_DECL int nng_tls_listener_getopt(

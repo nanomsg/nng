@@ -126,7 +126,7 @@ nng_tcp_listener_free(nng_tcp_listener *l)
 }
 
 int
-nng_tcp_listener_listen(nng_tcp_listener *l, nng_sockaddr *sa)
+nng_tcp_listener_listen(nng_tcp_listener *l, const nng_sockaddr *sa)
 {
 	return (nni_tcp_listener_listen((void *) l, sa));
 }
