@@ -1,7 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <info@devolutions.net>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -537,11 +537,11 @@ nni_posix_tcp_conn_init(nni_tcp_conn **cp, nni_posix_pfd *pfd)
 void
 nni_posix_tcp_conn_start(nni_tcp_conn *c, int nodelay, int keepalive)
 {
-	// COnfigure the initial socket options.
-	(void) setsockopt(
-	    c->pfd, IPPROTO_TCP, TCP_NODELAY, &nodelay, sizeof(int));
-	(void) setsockopt(
-	    c->pfd, SOL_SOCKET, SO_KEEPALIVE, &keepalive, sizeof(int));
+	// Configure the initial socket options.
+	(void) setsockopt(nni_posix_pfd_fd(c->pfd), IPPROTO_TCP, TCP_NODELAY,
+	    &nodelay, sizeof(int));
+	(void) setsockopt(nni_posix_pfd_fd(c->pfd), SOL_SOCKET, SO_KEEPALIVE,
+	    &keepalive, sizeof(int));
 
 	nni_posix_pfd_set_cb(c->pfd, tcp_conn_cb, c);
 }
