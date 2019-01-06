@@ -1,6 +1,9 @@
 #
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 # Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2019 Devolutions <info@devolutions.net>
+#
+
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -8,12 +11,14 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
+set(_SRCS ${PROJECT_SOURCE_DIR}/include/nng/supplemental/tls/tls.h)
+
 if (NNG_SUPP_TLS)
 	set(NNG_SUPP_TLS_MBEDTLS ON)
 	set(_DEFS -DNNG_SUPP_TLS)
-endif()
 
-set(_SRCS ${PROJECT_SOURCE_DIR}/include/nng/supplemental/tls/tls.h)
+	list(APPEND _SRCS supplemental/tls/tls_common.c)
+endif()
 
 # For now we only support the ARM mbedTLS library.
 if (NNG_SUPP_TLS_MBEDTLS)

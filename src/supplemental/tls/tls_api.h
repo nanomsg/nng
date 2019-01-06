@@ -1,7 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <info@devolutions.net>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -44,6 +44,20 @@ extern int nni_tls_setopt(
     nni_tls *, const char *, const void *, size_t, nni_type);
 extern int nni_tls_getopt(nni_tls *, const char *, void *, size_t *, nni_type);
 
-// TBD: getting additional peer certificate information...
+extern int nni_tls_set(
+    nng_tls *, const char *, const void *, size_t, nni_type);
+extern int nni_tls_get(nng_tls *, const char *, void *, size_t *, nni_type);
+
+extern int nni_tls_dialer_setopt(
+    nng_tls_dialer *, const char *, const void *, size_t, nni_type);
+
+extern int nni_tls_dialer_getopt(
+    nng_tls_dialer *, const char *, void *, size_t *, nni_type);
+
+extern int nni_tls_listener_setopt(
+    nng_tls_listener *, const char *, const void *, size_t, nni_type);
+
+extern int nni_tls_listener_getopt(
+    nng_tls_listener *, const char *, void *, size_t *, nni_type);
 
 #endif // NNG_SUPPLEMENTAL_TLS_TLS_API_H

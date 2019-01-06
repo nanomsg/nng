@@ -1,7 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <info@devolutions.net>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -158,32 +158,34 @@ nni_tls_config_fini(nng_tls_config *cfg)
 {
 	nni_tls_certkey *ck;
 
-	nni_mtx_lock(&cfg->lk);
-	cfg->refcnt--;
-	if (cfg->refcnt != 0) {
+	if (cfg != NULL) {
+		nni_mtx_lock(&cfg->lk);
+		cfg->refcnt--;
+		if (cfg->refcnt != 0) {
+			nni_mtx_unlock(&cfg->lk);
+			return;
+		}
 		nni_mtx_unlock(&cfg->lk);
-		return;
-	}
-	nni_mtx_unlock(&cfg->lk);
 
-	mbedtls_ssl_config_free(&cfg->cfg_ctx);
+		mbedtls_ssl_config_free(&cfg->cfg_ctx);
 #ifdef NNG_TLS_USE_CTR_DRBG
-	mbedtls_ctr_drbg_free(&cfg->rng_ctx);
+		mbedtls_ctr_drbg_free(&cfg->rng_ctx);
 #endif
-	mbedtls_x509_crt_free(&cfg->ca_certs);
-	mbedtls_x509_crl_free(&cfg->crl);
-	if (cfg->server_name) {
-		nni_strfree(cfg->server_name);
-	}
-	while ((ck = nni_list_first(&cfg->certkeys))) {
-		nni_list_remove(&cfg->certkeys, ck);
-		mbedtls_x509_crt_free(&ck->crt);
-		mbedtls_pk_free(&ck->key);
+		mbedtls_x509_crt_free(&cfg->ca_certs);
+		mbedtls_x509_crl_free(&cfg->crl);
+		if (cfg->server_name) {
+			nni_strfree(cfg->server_name);
+		}
+		while ((ck = nni_list_first(&cfg->certkeys))) {
+			nni_list_remove(&cfg->certkeys, ck);
+			mbedtls_x509_crt_free(&ck->crt);
+			mbedtls_pk_free(&ck->key);
 
-		NNI_FREE_STRUCT(ck);
+			NNI_FREE_STRUCT(ck);
+		}
+		nni_mtx_fini(&cfg->lk);
+		NNI_FREE_STRUCT(cfg);
 	}
-	nni_mtx_fini(&cfg->lk);
-	NNI_FREE_STRUCT(cfg);
 }
 
 int
@@ -254,27 +256,29 @@ void
 nni_tls_fini(nni_tls *tp)
 {
 	// Shut it all down first.
-	if (tp->tcp) {
-		nni_tcp_conn_close(tp->tcp);
-	}
-	nni_aio_stop(tp->tcp_send);
-	nni_aio_stop(tp->tcp_recv);
+	if (tp != NULL) {
+		if (tp->tcp) {
+			nni_tcp_conn_close(tp->tcp);
+		}
+		nni_aio_stop(tp->tcp_send);
+		nni_aio_stop(tp->tcp_recv);
 
-	// And finalize / free everything.
-	if (tp->tcp) {
-		nni_tcp_conn_fini(tp->tcp);
+		// And finalize / free everything.
+		if (tp->tcp) {
+			nni_tcp_conn_fini(tp->tcp);
+		}
+		nni_aio_fini(tp->tcp_send);
+		nni_aio_fini(tp->tcp_recv);
+		mbedtls_ssl_free(&tp->ctx);
+		nni_mtx_fini(&tp->lk);
+		nni_free(tp->recvbuf, NNG_TLS_MAX_RECV_SIZE);
+		nni_free(tp->sendbuf, NNG_TLS_MAX_RECV_SIZE);
+		if (tp->cfg != NULL) {
+			// release the hold we got on it
+			nni_tls_config_fini(tp->cfg);
+		}
+		NNI_FREE_STRUCT(tp);
 	}
-	nni_aio_fini(tp->tcp_send);
-	nni_aio_fini(tp->tcp_recv);
-	mbedtls_ssl_free(&tp->ctx);
-	nni_mtx_fini(&tp->lk);
-	nni_free(tp->recvbuf, NNG_TLS_MAX_RECV_SIZE);
-	nni_free(tp->sendbuf, NNG_TLS_MAX_RECV_SIZE);
-	if (tp->cfg != NULL) {
-		// release the hold we got on it
-		nni_tls_config_fini(tp->cfg);
-	}
-	NNI_FREE_STRUCT(tp);
 }
 
 // nni_tls_mkerr converts an mbed error to an NNG error.  In all cases
