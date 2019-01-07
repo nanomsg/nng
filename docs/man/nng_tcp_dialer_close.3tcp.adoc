@@ -28,8 +28,7 @@ void nng_tcp_dialer_close(nng_tcp_dialer *d);
 The `nng_tcp_dialer_close()` function closes the supplied TCP dialer _d_,
 but does not free the underlying resources associated with it.
 
-If any dial operations
-(see `<<nng_tcp_dialer_dial.3tcp#,nng_tcp_dialer_dial()>>`) using _d_ are
+If any <<nng_tcp_dialer_dial.3tcp#,dial>> operations using _d_ are
 in progress, they will be terminated with an `NNG_ECLOSED` error condition.
 
 Furthermore any future accesses to the dialer _d_ will also result in
@@ -37,7 +36,7 @@ Furthermore any future accesses to the dialer _d_ will also result in
 
 NOTE: This function does not release the memory for the dialer, so the
 application should still free the memory using
-`<<nng_tcp_dialer_free.3tcp#,nng_tcp_dialer_free(3tcp)>>`
+<<nng_tcp_dialer_free.3tcp#,`nng_tcp_dialer_free()`>>
 once it is certain that nothing else is using it.
 
 == RETURN VALUES

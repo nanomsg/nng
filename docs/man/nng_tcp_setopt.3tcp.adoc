@@ -27,7 +27,7 @@ int nng_tcp_setopt(nng_tcp *conn, const char *name, const void *data, size_t siz
 == DESCRIPTION
 
 The `nng_tcp_setopt()` is used to set the option _name_ for the
-<<nng_tcp5.#,TCP connection>> _conn_.
+<<nng_tcp.5#,TCP connection>> _conn_.
 The value to set is copied from _data_, which should be _size_ bytes
 in length.
 

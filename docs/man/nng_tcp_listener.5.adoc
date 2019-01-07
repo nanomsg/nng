@@ -1,6 +1,6 @@
 = nng_tcp_listener(5)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -27,7 +27,7 @@ typedef struct nng_tcp_dialer_s nng_tcp_dialer;
 
 (((TCP, listener)))
 An `nng_tcp_listener` is a handle to a TCP "`listener`", which is responsible
-for accepting connections (`<<nng_tcp.5#,nng_tcp>>` objects) from remote
+for accepting connections (<<nng_tcp.5#,`nng_tcp`>> objects) from remote
 systems.
 
 NOTE: The `nng_tcp_listener` object is used for raw TCP connections, and
@@ -35,7 +35,7 @@ should not be confused with a listener object created using the
 <<nng_tcp.7#,nng_tcp(7)>> transport.
 
 TIP: Most NNG applications should not use this, but instead use the
-`<<nng_tcp.7#,nng_tcp>>` transport instead.
+<<nng_tcp.7#,nng_tcp(7)>> transport instead.
 
 == SEE ALSO
 
