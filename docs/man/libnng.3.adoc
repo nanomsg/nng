@@ -308,6 +308,34 @@ Most applications won't need to use these.
 |===
 
 
+=== Supplemental IPC
+
+These IPC functions are available for use with direct interprocess
+communication (IPC).
+Most applications won't need to use these.
+
+|===
+|<<nng_ipc_close.3ipc#,nng_ipc_close()>>|close IPC connection
+|<<nng_ipc_dialer_alloc.3ipc#,nng_ipc_dialer_alloc()>>|allocate IPC dialer
+|<<nng_ipc_dialer_close.3ipc#,nng_ipc_dialer_close()>>|close IPC dialer
+|<<nng_ipc_dialer_dial.3ipc#,nng_ipc_dialer_dial()>>|initiate outgoing IPC connection
+|<<nng_ipc_dialer_free.3ipc#,nng_ipc_dialer_free()>>|free IPC dialer
+|<<nng_ipc_dialer_getopt.3ipc#,nng_ipc_dialer_getopt()>>|get option from IPC dialer
+|<<nng_ipc_dialer_setopt.3ipc#,nng_ipc_dialer_setopt()>>|set option on IPC dialer
+|<<nng_ipc_free.3ipc#,nng_ipc_free()>>|free IPC connection
+|<<nng_ipc_getopt.3ipc#,nng_ipc_getopt()>>|get option from IPC connection
+|<<nng_ipc_listener_accept.3ipc#,nng_ipc_listener_accept()>>|accept incoming IPC connection
+|<<nng_ipc_listener_alloc.3ipc#,nng_ipc_listener_alloc()>>|allocate IPC listener
+|<<nng_ipc_listener_close.3ipc#,nng_ipc_listener_close()>>|close IPC listener
+|<<nng_ipc_listener_free.3ipc#,nng_ipc_listener_free()>>|free IPC listener
+|<<nng_ipc_listener_getopt.3ipc#,nng_ipc_listener_getopt()>>|get option from IPC listener
+|<<nng_ipc_listener_listen.3ipc#,nng_ipc_listener_listen()>>|bind IPC listener
+|<<nng_ipc_listener_setopt.3ipc#,nng_ipc_listener_setopt()>>|set option on IPC listener
+|<<nng_ipc_recv.3ipc#,nng_ipc_recv()>>|receive from IPC connection
+|<<nng_ipc_send.3ipc#,nng_ipc_send()>>|send to IPC connection
+|<<nng_ipc_setopt.3ipc#,nng_ipc_setopt()>>|set option on IPC connection
+|===
+
 === HTTP Support
 
 The library may be configured with support for HTTP, and this will
