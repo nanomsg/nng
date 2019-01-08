@@ -336,6 +336,7 @@ if (NNG_ENABLE_DOC)
     )
 
     set(NNG_MAN3TLS
+	nng_tls_close
 	nng_tls_config_alloc
 	nng_tls_config_auth_mode
 	nng_tls_config_ca_chain
@@ -345,6 +346,24 @@ if (NNG_ENABLE_DOC)
 	nng_tls_config_hold
 	nng_tls_config_own_cert
 	nng_tls_config_server_name
+	nng_tls_free
+	nng_tls_getopt
+	nng_tls_dialer_alloc
+	nng_tls_dialer_close
+	nng_tls_dialer_dial
+	nng_tls_dialer_free
+	nng_tls_dialer_getopt
+	nng_tls_dialer_setopt
+	nng_tls_listener_accept
+	nng_tls_listener_alloc
+	nng_tls_listener_close
+	nng_tls_listener_free
+	nng_tls_listener_getopt
+	nng_tls_listener_listen
+	nng_tls_listener_setopt
+	nng_tls_recv
+	nng_tls_send
+	nng_tls_setopt
     )
 
     set(NNG_MAN5
@@ -369,6 +388,18 @@ if (NNG_ENABLE_DOC)
 	nng_tcp
 	nng_tcp_dialer
 	nng_tcp_listener
+	nng_tcp_options
+
+	nng_ipc
+	nng_ipc_dialer
+	nng_ipc_listener
+	nng_ipc_options
+
+	nng_tls
+	nng_tls_config
+	nng_tls_dialer
+	nng_tls_listener
+	nng_tls_options
     )
 
     set(NNG_MAN7

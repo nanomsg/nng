@@ -1,6 +1,6 @@
 = nng_ipc_dialer_setopt(3ipc)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -52,6 +52,7 @@ This function returns 0 on success, and non-zero otherwise.
 [.text-left]
 <<nng_ipc_dialer_getopt.3ipc#,nng_ipc_dialer_getopt(3ipc)>>,
 <<nng_ipc_setopt.3ipc#,nng_ipc_setopt(3ipc)>>,
+<<nng_ipc_options.5#,nng_ipc_options(5)>>,
 <<nng_options.5#,nng_options(5)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,
 <<nng_ipc.5#,nng_ipc(5)>>,

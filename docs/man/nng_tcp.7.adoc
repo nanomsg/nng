@@ -1,6 +1,6 @@
 = nng_tcp(7)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -82,30 +82,29 @@ The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 
 === Socket Address
 
-When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
+When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
 the actual structure is either of type
-`<<nng_sockaddr_in.5#,nng_sockaddr_in>>` (for IPv4) or
-`<<nng_sockaddr_in6.5#,nng_sockaddr_in6>>` (for IPv6).
+<<nng_sockaddr_in.5#,`nng_sockaddr_in`>> (for IPv4) or
+<<nng_sockaddr_in6.5#,`nng_sockaddr_in6`>> (for IPv6).
 
 === Transport Options
 
-((`NNG_OPT_TCP_KEEPALIVE`))::
-(`bool`) Enable TCP keep-alives, defaults to `false`.
+The following transport options are supported by this transport,
+where supported by the underlying platform.
 
-((`NNG_OPT_TCP_NODELAY`))::
-(`bool`) Disable Nagle's algorithm.
-When enabled (`false`), the underlying TCP stream will attempt
-to buffer and coalesce messages before sending them on, waiting
-a short interval to improve buffering and reduce the overhead
-caused by sending too-small messages.
-This comes at a cost to latency, and is not recommended with modern
-high speed networks.
-Defaults to `true`.
+* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
+* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE,`NNG_OPT_TCP_KEEPALIVE`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_NODELAY,`NNG_OPT_TCP_NODELAY`>>
+* <<nng_options.5#NNG_OPT_URL,`NNG_OPT_URL`>>
+
 
 == SEE ALSO
 
 [.text-left]
+<<nng_options.5#,nng_options(5)>>,
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,
 <<nng_sockaddr_in.5#,nng_sockaddr_in(5)>>,
 <<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,
+<<nng_tcp_options.5#,nng_tcp_options(5)>>,
 <<nng.7#,nng(7)>>

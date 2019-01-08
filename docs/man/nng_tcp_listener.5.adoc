@@ -44,7 +44,9 @@ TIP: Most NNG applications should not use this, but instead use the
 <<nng_tcp_listener_alloc.3tcp#,nng_tcp_listener_alloc(3tcp)>>,
 <<nng_tcp_listener_close.3tcp#,nng_tcp_listener_close(3tcp)>>,
 <<nng_tcp_listener_free.3tcp#,nng_tcp_listener_free(3tcp)>>,
+<<nng_tcp_listener_getopt.3tcp#,nng_tcp_listener_getopt(3tcp)>>,
 <<nng_tcp_listener_listen.3tcp#,nng_tcp_listener_listen(3tcp)>>,
+<<nng_tcp_listener_setopt.3tcp#,nng_tcp_listener_setopt(3tcp)>>,
 <<nng_tcp.5#,nng_tcp(5)>>,
 <<nng_tcp_dialer.5#,nng_tcp_dialer(5)>>,
 <<nng_tcp.7#,nng_tcp(7)>>

@@ -28,7 +28,7 @@ typedef struct nng_ipc_dialer_s nng_ipc_dialer;
 
 (((IPC, dialer)))
 An `nng_ipc_dialer` is a handle to an IPC "`dialer`", which is responsible for
-creating a connections (<<nng_ipc.5#,`nng_ipc`>> objects) by connecting to
+creating connections (<<nng_ipc.5#,`nng_ipc`>> objects) by connecting to
 remote systems.
 
 NOTE: The `nng_ipc_dialer` object is used for raw IPC connections, and
@@ -46,5 +46,6 @@ TIP: Most NNG applications should not use this, but instead use the
 <<nng_ipc_dialer_dial.3ipc#,nng_ipc_dialer_dial(3ipc)>>,
 <<nng_ipc_dialer_free.3ipc#,nng_ipc_dialer_free(3ipc)>>,
 <<nng_ipc.5#,nng_ipc(5)>>,
+<<nng_ipc_options.5#,nng_ipc_options(5)>>,
 <<nng_ipc_listener.5#,nng_ipc_listener(5)>>,
 <<nng_ipc.7#,nng_ipc(7)>>

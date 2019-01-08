@@ -39,8 +39,6 @@ nng_options - socket, dialer, listener, and pipe options
 #define NNG_OPT_RECVMAXSZ     "recv-size-max"
 #define NNG_OPT_RECONNMINT    "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT    "reconnect-time-max"
-#define NNG_OPT_TCP_NODELAY   "tcp-nodelay"
-#define NNG_OPT_TCP_KEEPALIVE "tcp-keepalive"
 ----
 
 == DESCRIPTION
@@ -87,7 +85,6 @@ description of the option.
 (<<nng_sockaddr.5#,`nng_sockaddr`>>)
 This read-only option may be used on listeners, dialers and connected pipes, and
 represents the local address used for communication.
-+
 NOTE: Not all transports support this option, and some transports may support it on
 listeners but not dialers.
 +
@@ -320,133 +317,6 @@ This read-only option is used to obtain the name of the socket's protocol.
 This read-only option is used to obtain the name of the peer protocol for
 the socket.
 
-=== TCP Options
-
-The following options are generally application to objects making use of
-TCP/IP communications.
-
-[[NNG_OPT_TCP_NODELAY]]
-((`NNG_OPT_TCP_NODELAY`))::
-(`bool`)
-This option is used to disable (or enable) the use of ((Nagle's algorithm))
-for TCP connections.
-+
-NOTE: This setting may apply to transports that are built on top of TCP.
-See the transport documentation for each transport for details.
-+
-When `true` (the default), messages are sent immediately by the underlying
-TCP stream without waiting to gather more data.
-+
-When `false`, Nagle's algorithm is enabled, and the TCP stream may
-wait briefly in attempt to coalesce messages.
-Nagle's algorithm is useful on low-bandwidth connections to reduce overhead,
-but it comes at a cost to latency.
-+
-When used on a dialer or a listener, the value affects how newly
-created connections will be configured.
-
-[[NNG_OPT_TCP_KEEPALIVE]]
-((`NNG_OPT_TCP_KEEPALIVE`))::
-(`bool`)
-This option is used to enable the sending of keep-alive messages on
-the underlying TCP stream.
-This option is `false` by default.
-+
-NOTE: This setting may apply to transports that are built on top of TCP.
-See the transport documentation for each transport for details.
-+
-When enabled, if no messages are seen for a period of time, then
-a zero length TCP message is sent with the ACK flag set in an attempt
-to tickle some traffic from the peer.
-If none is still seen (after some platform-specific number of retries and
-timeouts), then the remote peer is presumed dead, and the connection is closed.
-+
-When used on a dialer or a listener, the value affects how newly
-created connections will be configured.
-+
-TIP: This option has two purposes.
-First, it can be used to detect dead peers on an otherwise quiescent network.
-Second, it can be used to keep connection table entries in NAT and other
-middleware from being expiring due to lack of activity.
-
-=== IPC Options
-
-The following options are meaningful for IPC communications.
-
-NOTE: Most of these options are platform-specific, and may not be available
-on every platform.
-
-[[NNG_OPT_IPC_PEER_GID]]((`NNG_OPT_IPC_PEER_GID`))::
-(`uint64_t`)
-This read-only option provides a connected peer's primary
-group id.
-This is the effective group id of the peer when either the underlying
-`listen()` or `connect()` calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.
-
-[[NNG_OPT_IPC_PEER_PID]]((`NNG_OPT_IPC_PEER_PID`))::
-(`uint64_t`)
-This read-only option provides the the process id
-of the connected peer.
-This option is only available on Windows, Linux, and certain other systems.
-+
-NOTE: Applications should not assume that the process ID does not change,
-as it is possible (although unsupported!) for a nefarious process to pass a
-file descriptor between processes.
-However, it is not possible for a nefarious application to forge the identity
-of a well-behaved one using this method.
-
-[[NNG_OPT_IPC_PEER_UID]]((`NNG_OPT_IPC_PEER_UID`))::
-(`uint64_t`)
-This read-only option provides a connected peer's user id.
-This is the effective user id of the peer when either the underlying
-`listen()` or `connect()` calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.
-
-[[NNG_OPT_IPC_PEER_ZONEID]]((`NNG_OPT_IPC_PEER_ZONEID`))::
-(`uint64_t`)
-This read-only option provides a connected peer's the zone id.
-Zones (and this option) are only supported on Solaris and illumos systems.
-
-[[NNG_OPT_IPC_PERMISSIONS]]((`NNG_OPT_IPC_PERMISSIONS`))::
-(`int`)
-This write-only option may be applied to a listener to configure the
-permissions that are used on the UNIX domain socket created by that listener.
-This property is only supported on POSIX systems.
-The value is of type `int`, representing the normal permission bits
-on a file, such as `0600` (typically meaning read-write to the owner, and
-no permissions for anyone else.)
-The default is system-specific, most often `0644`.
-+
-IMPORTANT: Not all systems validate these permissions.
-In particular, illumos and Solaris are known to ignore these permission
-settings when connecting.
-+
-NOTE: Normally both read and write permission will be necessary for a
-peer dialer to connect.
-See your system documentation for UNIX domain sockets for more information.
-+
-NOTE: The _umask_ of the process is *not* applied to these bits.
-+
-TIP: The best practice for limiting access is to place the socket in a
-directory writable only by the server, and only readable and searchable
-by clients.
-All mainstream POSIX systems will fail to permit a client to connect
-to a socket located in a directory for which the client lacks search (execute)
-permission.
-+
-TIP: Also consider using the `NNG_OPT_IPC_PEER_UID` property from within a
-a pipe notification callback (`<<nng_pipe_notify.3#,nng_pipe_notify()>>`)
-to validate peer credentials.
-
-[[NNG_OPT_IPC_SECURITY_DESCRIPTOR]]((`NNG_OPT_IPC_SECURITY_DESCRIPTOR`))::
-(`PSECURITY_DESCRIPTOR`)
-This write-only option may be used on listeners on Windows platforms to
-configure the `SECURITY_DESCRIPTOR` that is used when creating the underlying
-named pipe.
-The value is a pointer, `PSECURITY_DESCRIPTOR`, and may only be
-applied to listeners that have not been started yet.
-
 == SEE ALSO
 
 [.text-left]
@@ -457,4 +327,7 @@ applied to listeners that have not been started yet.
 <<nng_listener_setopt.3#,nng_listener_setopt(3)>>,
 <<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,
 <<nng_setopt.3#,nng_setopt(3)>>,
+<<nng_ipc_options.5#,nng_ipc_options(5)>>,
+<<nng_tcp_options.5#,nng_tcp_options(5)>>,
+<<nng_tls_options.5#,nng_tls_options(5)>>,
 <<nng.7#,nng(7)>>

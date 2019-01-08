@@ -1,6 +1,6 @@
 = nng_tcp_dialer_dial(3tcp)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -33,8 +33,8 @@ The address _sa_ must be in the `NNG_AF_INET` or `NNG_AF_INET6` families,
 and have a valid IPv4 or IPv6 address and TCP port number.
 
 If a connection is successfully established, the _aio_ will have the
-resulting `<<nng_tcp.5#,nng_tcp>>` stored as its first output.
-(See `<<nng_aio_get_output.3#,nng_aio_get_output()>>`.)
+resulting <<nng_tcp.5#,`nng_tcp`>> stored as its first output.
+(See <<nng_aio_get_output.3#,`nng_aio_get_output()`>>.)
 
 == RETURN VALUES
 
@@ -46,8 +46,8 @@ None.
 `NNG_EADDRINVAL`:: The address specified is invalid.
 `NNG_ECANCELED`:: The operation was aborted.
 `NNG_ECLOSED`:: The dialer is closed.
-`NNG_ECONNREFUSED`:: The TCP connection was refused by the server.
-`NNG_ECONNRESET`:: The TCP connection was reset by the server.
+`NNG_ECONNREFUSED`:: The connection was refused by the server.
+`NNG_ECONNRESET`:: The connection was reset by the server.
 `NNG_ENOMEM`:: Insufficient free memory exists.
 
 == SEE ALSO

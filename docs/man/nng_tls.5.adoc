@@ -1,0 +1,86 @@
+= nng_tls(5)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tls - TLS over TCP connection
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
+
+typedef struct nng_tls_s nng_tls;
+----
+
+== DESCRIPTION
+
+An `nng_tls` (((TLS connection))) represents a connected stream.
+TLS stream objects can be used to send or receive data, and
+provide transport level security via cryptography over a TCP connected
+stream.
+
+NOTE: The `nng_tls` object is used for raw TLS connections, and
+should not be confused with a pipe object created using the
+<<nng_tls.7#,nng_tls(7)>> transport.
+
+TIP: Most NNG applications should not use this, but instead use the
+<<nng_tls.7#,nng_tls(7)>> transport instead.
+
+These objects are created either establishing an outgoing connection
+with <<nng_tls_dialer_dial.3tls#,`nng_tls_dialer_dial()`>> or by
+accepting in incoming connection with
+<<nng_tls_listener_accept.3tls#,`nng_tls_listener_accept()`>>.
+
+TLS connections are byte streams, and are "`reliable`" in that data
+will not be delivered out of order, or with portions missing.
+
+Data can be sent using <<nng_tls_send.3tls#,`nng_tls_send()`>> or
+received with <<nng_tls_recv.3tls#,`nng_tls_recv()`>>.
+
+When the connection is no longer needed, it should be freed with
+<<nng_tls_free.3tls#,`nng_tls_free()`>>.
+
+TIP: It is possible to close the connection, without freeing it, by
+using <<nng_tls_close.3tls#,`nng_tls_close()`>>.
+
+=== Options
+
+The following options are applicable to TLS connections, and may be
+accessed using the <<nng_tls_getopt.3tls#,`nng_tls_getopt()`>> and
+<<nng_tls_setopt.3tls#,`nng_tls_setopt()`>> functions.
+
+* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
+* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE,`NNG_OPT_TCP_KEEPALIVE`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_NO_DELAY,`NNG_OPT_TCP_NODELAY`>>
+* <<nng_tls_options.5#NNG_OPT_TLS_VERIFIED,`NNG_OPT_TLS_VERIFIED`>>
+
+Other platform specific options may be available as well.
+
+== SEE ALSO
+
+[.text-left]
+<<libnng.3#,libnng(3)>>,
+<<nng_tls_close.3tls#,nng_tls_close(3tls)>>,
+<<nng_tls_dialer_dial.3tls#,nng_tls_dialer_dial(3tls)>>,
+<<nng_tls_free.3tls#,nng_tls_free(3tls)>>,
+<<nng_tls_getopt.3tls#,nng_tls_getopt(3tls)>>,
+<<nng_tls_listener_accept.3tls#,nng_tls_listener_accept(3tls)>>,
+<<nng_tls_recv.3tls#,nng_tls_recv(3tls)>>,
+<<nng_tls_send.3tls#,nng_tls_send(3tls)>>,
+<<nng_tls_setopt.3tls#,nng_tls_setopt(3tls)>>,
+<<nng_options.5#,nng_options(5)>>,
+<<nng_tls_options.5#,nng_tls_options(5)>>,
+<<nng.7#,nng(7)>>

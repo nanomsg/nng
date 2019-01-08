@@ -29,19 +29,19 @@ The `nng_tcp_send()` function starts an asynchronous send over the
 TCP connection _conn_ from the scatter/gather vector located in the
 asynchronous I/O structure _aio_.
 
-NOTE: The `<<nng_aio_set_iov.3#,nng_aio_set_iov()>>` function must have been
+NOTE: The <<nng_aio_set_iov.3#,`nng_aio_set_iov()`>> function must have been
 called first, to set the scatter/gather vector for _aio_.
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final
-result may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
+result may be obtained via <<nng_aio_result.3#,`nng_aio_result()`>>.
 That result will either be zero or an error code.
 
 The I/O operation completes as soon as at least one byte has been
 sent, or an error has occurred.
 Therefore, the number of bytes sent may be less than requested.
 The actual number of bytes sent can be determined with
-`<<nng_aio_count.3#,nng_aio_count()>>`.
+<<nng_aio_count.3#,`nng_aio_count()`>>.
 
 NOTE: While TCP has the notion of urgent (out-of-band) delivery, that is
 used by very few protocols and this API does not support it.

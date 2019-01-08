@@ -1,6 +1,6 @@
 = nng_ipc_dialer_free(3ipc)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -29,7 +29,7 @@ void nng_ipc_dialer_free(nng_ipc_dialer *d);
 The `nng_ipc_dialer_free()` function closes the supplied IPC dialer _d_,
 and frees the underlying resources associated with it.
 
-If any <<nng_ipc_dialer_dial.3#,dial>> operations
+If any <<nng_ipc_dialer_dial.3ipc#,dial>> operations
  using _d_ are
 in progress, they will be terminated with an `NNG_ECLOSED` error condition.
 

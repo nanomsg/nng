@@ -1,0 +1,116 @@
+= nng_tls_options(5)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tls_options - TLS-specific options
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+#define NNG_OPT_TLS_AUTH_MODE     "tls-authmode"
+#define NNG_OPT_TLS_CA_FILE       "tls-ca-file"
+#define NNG_OPT_TLS_CERT_KEY_FILE "tls-cert-key-file"
+#define NNG_OPT_TLS_CONFIG        "tls-config"
+#define NNG_OPT_TLS_SERVER_NAME   "tls-server-name"
+#define NNG_OPT_TLS_VERIFIED      "tls-verified"
+----
+
+== DESCRIPTION
+
+This page documents the various standard options that can be set or
+retrieved on objects using TLS in the _nng_ library.
+
+The option names should always be used by their symbolic definitions.
+
+In the following list of options, the name of the option is supplied,
+along with the data type of the underlying value.
+
+Some options are only meaningful or supported in certain contexts, or may
+have other access restrictions.
+An attempt has been made to include details about such restrictions in the
+description of the option.
+
+=== TLS Options
+
+[[NNG_OPT_TLS_AUTH_MODE]]((`NNG_OPT_TLS_AUTH_MODE`))::
+(`int`)
+Write-only option used to configure the authentication mode used.
+See <<nng_tls_config_auth_mode.3tls#,`nng_tls_config_auth_mode()`>> for
+more details.
+
+[[NNG_OPT_TLS_CA_FILE]]((`NNG_OPT_TLS_CA_FILE`))::
+(string) Write-only option naming a file containing certificates to
+use for peer validation.
+See <<nng_tls_config_ca_file.3tls#,`nng_tls_config_ca_file()`>> for more
+information.
+
+[[NNG_OPT_TLS_CERT_KEY_FILE]]((`NNG_OPT_TLS_CERT_KEY_FILE`))::
+(string) Write-only option naming a file containing the local certificate and
+associated private key.
+The private key used must be unencrypted.
+See <<nng_tls_config_own_cert.3tls#,`nng_tls_config_own_cert()`>> for more
+information.
+
+[[NNG_OPT_TLS_CONFIG]]((`NNG_OPT_TLS_CONFIG`))::
+(`nng_tls_config *`)
+This option references the underlying
+<<nng_tls_config.5#,TLS configuration object>>.
+A hold is placed on the underlying
+configuration object before returning it.
++
+NOTE: The caller should release the hold with
+<<nng_tls_config_free.3tls#,`nng_tls_config_free()`>> when it no
+longer needs the TLS configuration object.
++
+TIP: Use this option when more advanced TLS configuration is required.
+
+[[NNG_OPT_TLS_SERVER_NAME]]((`NNG_OPT_TLS_SERVER_NAME`))::
+(string)
+This write-only option is used to specify the name of the server.
+When used with a dialer, this potentially configures SNI (server name
+indication, which is used as a hint by a multihosting server to choose the
+appropriate certificate to provide) and also is used to validate the
+name presented in the server's x509 certificate.
+
+[[NNT_OPT_TLS_VERIFIED]]((`NNG_OPT_TLS_VERIFIED`))::
+(`bool`)
+This read-only option indicates whether the remote peer has been properly verified using TLS
+authentication.
+May return incorrect results if peer authentication is disabled.
+
+=== Inherited Options
+
+Generally, the following option values are also available for TLS objects,
+when appropriate for the context:
+
+* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
+* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE,`NNG_OPT_TCP_KEEPALIVE`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_NODELAY,`NNG_OPT_TCP_NODELAY`>>
+
+== SEE ALSO
+
+[.text-left]
+<<nng_tls_dialer_getopt.3tls#,nng_tls_dialer_getopt(3tls)>>,
+<<nng_tls_dialer_setopt.3tls#,nng_tls_dialer_setopt(3tls)>>,
+<<nng_tls_getopt.3tls#,nng_tls_getopt(3tls)>>,
+<<nng_tls_listener_getopt.3tls#,nng_tls_listener_getopt(3tls)>>,
+<<nng_tls_listener_setopt.3tls#,nng_tls_listener_setopt(3tls)>>,
+<<nng_tls_setopt.3tls#,nng_tls_setopt(3tls)>>,
+<<nng_options.5#,nng_options(5)>>
+<<nng_tcp_options.5#,nng_tcp_options(5)>>
+<<nng_tls_config.5#,nng_tls_config(5)>>,
+<<nng.7#,nng(7)>>

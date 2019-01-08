@@ -1,0 +1,136 @@
+= nng_ipc_options(5)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_ipc_options - IPC-specific options
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+#define NNG_OPT_IPC_PEER_GID            "ipc:peer-gid"
+#define NNG_OPT_IPC_PEER_PID            "ipc:peer-pid"
+#define NNG_OPT_IPC_PEER_UID            "ipc:peer-uid"
+#define NNG_OPT_IPC_PEER_ZONEID         "ipc:peer-zoneid"
+#define NNG_OPT_IPC_PERMISSIONS         "ipc:permissions"
+#define NNG_OPT_IPC_SECURITY_DESCRIPTOR "ipc:security-descriptor"
+----
+
+== DESCRIPTION
+
+This page documents the various standard options that can be set or
+retrieved on objects using IPC in the _nng_ library.
+
+The option names should always be used by their symbolic definitions.
+
+In the following list of options, the name of the option is supplied,
+along with the data type of the underlying value.
+
+Some options are only meaningful or supported in certain contexts, or may
+have other access restrictions.
+An attempt has been made to include details about such restrictions in the
+description of the option.
+
+NOTE: The availability of any of the following options is platform-specific,
+as the implementations of IPC are quite different on Windows and POSIX systems.
+
+=== IPC Options
+
+[[NNG_OPT_IPC_PEER_GID]]((`NNG_OPT_IPC_PEER_GID`))::
+(`uint64_t`)
+This read-only option provides a connected peer's primary
+group id.
+This is the effective group id of the peer when either the underlying
+`listen()` or `connect()` calls were made, and is not forgeable.
+This option is generally only available on POSIX systems.
+
+[[NNG_OPT_IPC_PEER_PID]]((`NNG_OPT_IPC_PEER_PID`))::
+(`uint64_t`)
+This read-only option provides the the process id
+of the connected peer.
+This option is only available on Windows, Linux, and certain other systems.
++
+NOTE: Applications should not assume that the process ID does not change,
+as it is possible (although unsupported!) for a nefarious process to pass a
+file descriptor between processes.
+However, it is not possible for a nefarious application to forge the identity
+of a well-behaved one using this method.
+
+[[NNG_OPT_IPC_PEER_UID]]((`NNG_OPT_IPC_PEER_UID`))::
+(`uint64_t`)
+This read-only option provides a connected peer's user id.
+This is the effective user id of the peer when either the underlying
+`listen()` or `connect()` calls were made, and is not forgeable.
+This option is generally only available on POSIX systems.
+
+[[NNG_OPT_IPC_PEER_ZONEID]]((`NNG_OPT_IPC_PEER_ZONEID`))::
+(`uint64_t`)
+This read-only option provides a connected peer's the zone id.
+Zones (and this option) are only supported on Solaris and illumos systems.
+
+[[NNG_OPT_IPC_PERMISSIONS]]((`NNG_OPT_IPC_PERMISSIONS`))::
+(`int`)
+This write-only option may be applied to a listener to configure the
+permissions that are used on the UNIX domain socket created by that listener.
+This property is only supported on POSIX systems.
+The value is of type `int`, representing the normal permission bits
+on a file, such as `0600` (typically meaning read-write to the owner, and
+no permissions for anyone else.)
+The default is system-specific, most often `0644`.
++
+IMPORTANT: Not all systems validate these permissions.
+In particular, illumos and Solaris are known to ignore these permission
+settings when connecting.
++
+NOTE: Normally both read and write permission will be necessary for a
+peer dialer to connect.
+See your system documentation for UNIX domain sockets for more information.
++
+NOTE: The _umask_ of the process is *not* applied to these bits.
++
+TIP: The best practice for limiting access is to place the socket in a
+directory writable only by the server, and only readable and searchable
+by clients.
+All mainstream POSIX systems will fail to permit a client to connect
+to a socket located in a directory for which the client lacks search (execute)
+permission.
+
+[[NNG_OPT_IPC_SECURITY_DESCRIPTOR]]((`NNG_OPT_IPC_SECURITY_DESCRIPTOR`))::
+(`PSECURITY_DESCRIPTOR`)
+This write-only option may be used on listeners on Windows platforms to
+configure the `SECURITY_DESCRIPTOR` that is used when creating the underlying
+named pipe.
+The value is a pointer, `PSECURITY_DESCRIPTOR`, and may only be
+applied to listeners that have not been started yet.
+
+=== Inherited Options
+
+Generally, the following option values are also available for TLS objects,
+when appropriate for the context:
+
+* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
+* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
+
+== SEE ALSO
+
+[.text-left]
+<<nng_ipc_dialer_getopt.3ipc#,nng_ipc_dialer_getopt(3ipc)>>,
+<<nng_ipc_dialer_setopt.3ipc#,nng_ipc_dialer_setopt(3ipc)>>,
+<<nng_ipc_getopt.3ipc#,nng_ipc_getopt(3ipc)>>,
+<<nng_ipc_listener_getopt.3ipc#,nng_ipc_listener_getopt(3ipc)>>,
+<<nng_ipc_listener_setopt.3ipc#,nng_ipc_listener_setopt(3ipc)>>,
+<<nng_ipc_setopt.3ipc#,nng_ipc_setopt(3ipc)>>,
+<<nng_options.5#,nng_options(5)>>
+<<nng.7#,nng(7)>>

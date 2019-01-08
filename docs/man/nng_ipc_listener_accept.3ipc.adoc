@@ -1,6 +1,6 @@
 = nng_ipc_listener_accept(3ipc)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -46,7 +46,7 @@ None.
 [horizontal]
 `NNG_ECANCELED`:: The operation was aborted.
 `NNG_ECLOSED`:: The listener is closed.
-`NNG_ECONNRESET`:: The IPC connection was reset by the peer.
+`NNG_ECONNRESET`:: The connection was reset by the peer.
 `NNG_ENOMEM`:: Insufficient free memory exists.
 `NNG_ESTATE`:: The listener is not not listening.
 

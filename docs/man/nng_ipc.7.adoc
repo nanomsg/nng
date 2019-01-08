@@ -1,6 +1,6 @@
 = nng_ipc(7)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -65,91 +65,28 @@ longer than 128 bytes, including the `ipc://` prefix.
 
 === Socket Address
 
-When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
-the actual structure is of type `<<nng_sockaddr_ipc.5#,nng_sockaddr_ipc>>`.
+When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
+the actual structure is of type <<nng_sockaddr_ipc.5#,`nng_sockaddr_ipc`>>.
 
 === Transport Options
 
-((`NNG_OPT_IPC_PERMISSIONS`))::
+The following transport options are supported by this transport,
+where supported by the underlying platform.
 
-(`int`)
-This write-only option may be applied to a listener to configure the
-permissions that are used on the UNIX domain socket created by that listener.
-This property is only supported on POSIX systems.
-The value is of type `int`, representing the normal permission bits
-on a file, such as `0600` (typically meaning read-write to the owner, and
-no permissions for anyone else.)
-The default is system-specific, most often `0644`.
-
-IMPORTANT: Not all systems validate these permissions.
-In particular, illumos and Solaris are known to ignore these permission
-settings when connecting.
-
-NOTE: Normally both read and write permission will be necessary for a
-peer dialer to connect.
-See your system documentation for UNIX domain sockets for more information.
-
-NOTE: The _umask_ of the process is *not* applied to these bits.
-
-TIP: The best practice for limiting access is to place the socket in a
-directory writable only by the server, and only readable and searchable
-by clients.
-All mainstream POSIX systems will fail to permit a client to connect
-to a socket located in a directory for which the client lacks search (execute)
-permission.
-
-TIP: Also consider using the `NNG_OPT_IPC_PEER_UID` property from within a
-a pipe notification callback (`<<nng_pipe_notify.3#,nng_pipe_notify()>>`)
-to validate peer credentials.
-
-((`NNG_OPT_IPC_SECURITY_DESCRIPTOR`))::
-
-(`PSECURITY_DESCRIPTOR`)
-This write-only option may be used on listeners on Windows platforms to
-configure the `SECURITY_DESCRIPTOR` that is used when creating the underlying
-named pipe.
-The value is a pointer, `PSECURITY_DESCRIPTOR`, and may only be
-applied to listeners that have not been started yet.
-
-((`NNG_OPT_IPC_PEER_UID`))::
-
-(`uint64_t`)
-This read-only option may be read from a pipe to determine the peer user id.
-This is the effective user id of the peer when either the underlying
-`listen()` or `connect()` calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.
-
-((`NNG_OPT_IPC_PEER_GID`))::
-
-(`uint64_t`)
-This read-only option may be read from a pipe to determine the peer primary
-group id.
-This is the effective group id of the peer when either the underlying
-`listen()` or `connect()` calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.
-
-((`NNG_OPT_IPC_PEER_PID`))::
-
-(`uint64_t`)
-This read-only option may be read from a pipe to determine the process id
-of the peer.
-This option is only available on Windows, Linux, and certain other systems.
-
-NOTE: Applications should not assume that the process ID does not change,
-as it is possible (although unsupported!) for a nefarious process to pass a
-file descriptor between processes.
-However, it is not possible for a nefarious application to forge the identity
-of a well-behaved one using this method.
-
-((`NNG_OPT_IPC_PEER_ZONEID`))::
-
-(`uint64_t`)
-This read-only option may be read from a pipe to determine the zone id
-of the peer.
-Zones (and this option) are only supported on Solaris and illumos systems.
+* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_GID,`NNG_OPT_IPC_PEER_GID`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_PID,`NNG_OPT_IPC_PEER_PID`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_UID,`NNG_OPT_IPC_PEER_UID`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_ZONEID,`NNG_OPT_IPC_PEER_ZONEID`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_PERMISSIONS,`NNG_OPT_IPC_PERMISSIONS`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_SECURITY_DESCRIPTOR,`NNG_OPT_IPC_SECURITY_DESCRIPTOR`>>
+* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
+* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
+* <<nng_options.5#NNG_OPT_URL,`NNG_OPT_URL`>>
 
 == SEE ALSO
 
 [.text-left]
 <<nng_sockaddr.5#,nng_sockaddr(5)>>,
+<<nng_ipc_options.5#,nng_ipc_options(5)>>,
+<<nng_options.5#,nng_options(5)>>,
 <<nng.7#,nng(7)>>

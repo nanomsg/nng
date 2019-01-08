@@ -129,7 +129,7 @@ mode may need to access the header of messages.
 === Asynchronous Operations
 
 Most applications will interact with _nng_ synchronously; that is that
-functions such as `<<nng_send.3#,nng_send()>>` will block the calling
+functions such as <<nng_send.3#,`nng_send()`>> will block the calling
 thread until the operation has completed.
 
 NOTE: Synchronous operations which send messages may return before the
@@ -143,7 +143,7 @@ the calling thread.  When the operation is subsequently completed (regardless
 of whether this was successful or not), then a user supplied function
 ("`callback`") is executed.
 
-A context structure, an `<<nng_aio.5#,nng_aio>>`, is allocated and
+A context structure, an <<nng_aio.5#,`nng_aio`>>, is allocated and
 associated with each asynchronous operation.
 Only a single asynchronous operation may be associated with an
 `nng_aio` at any time.
@@ -437,12 +437,14 @@ These functions are intended for use with HTTP server applications.
 === TLS Configuration Objects
 
 The following functions are used to manipulate transport layer security
-(TLS) configuration objects.
+(TLS) configuration objects.  Most of these functions will not be used even
+by TLS applications.
 
 NOTE: These functions will only be present if the library has been built
 with TLS support.
 
 |===
+|<<nng_tls_close.3tls#,nng_tls_close()>>|close TLS connection
 |<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc()>>|allocate TLS configuration
 |<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode()>>|set authentication mode
 |<<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain()>>|set certificate authority chain
@@ -451,6 +453,24 @@ with TLS support.
 |<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>|set own certificate and key
 |<<nng_tls_config_free.3tls#,nng_tls_config_free()>>|free TLS configuration
 |<<nng_tls_config_server_name.3tls#,nng_tls_config_server_name()>>|set remote server name
+|<<nng_tls_dialer_alloc.3tls#,nng_tls_dialer_alloc()>>|allocate TLS dialer
+|<<nng_tls_dialer_close.3tls#,nng_tls_dialer_close()>>|close TLS dialer
+|<<nng_tls_dialer_dial.3tls#,nng_tls_dialer_dial()>>|initiate outgoing TLS connection
+|<<nng_tls_dialer_free.3tls#,nng_tls_dialer_free()>>|free TLS dialer
+|<<nng_tls_dialer_getopt.3tls#,nng_tls_dialer_getopt()>>|get option from TLS dialer
+|<<nng_tls_dialer_setopt.3tls#,nng_tls_dialer_setopt()>>|set option on TLS dialer
+|<<nng_tls_free.3tls#,nng_tls_free()>>|free TLS connection
+|<<nng_tls_getopt.3tls#,nng_tls_getopt()>>|get option from TLS connection
+|<<nng_tls_listener_accept.3tls#,nng_tls_listener_accept()>>|accept incoming TLS connection
+|<<nng_tls_listener_alloc.3tls#,nng_tls_listener_alloc()>>|allocate TLS listener
+|<<nng_tls_listener_close.3tls#,nng_tls_listener_close()>>|close TLS listener
+|<<nng_tls_listener_free.3tls#,nng_tls_listener_free()>>|free TLS listener
+|<<nng_tls_listener_getopt.3tls#,nng_tls_listener_getopt()>>|get option from TLS listener
+|<<nng_tls_listener_listen.3tls#,nng_tls_listener_listen()>>|bind TLS listener to port
+|<<nng_tls_listener_setopt.3tls#,nng_tls_listener_setopt()>>|set option on TLS listener
+|<<nng_tls_recv.3tls#,nng_tls_recv()>>|receive from TLS connection
+|<<nng_tls_send.3tls#,nng_tls_send()>>|send to TLS connection
+|<<nng_tls_setopt.3tls#,nng_tls_setopt()>>|set option on TLS connection
 |===
 
 

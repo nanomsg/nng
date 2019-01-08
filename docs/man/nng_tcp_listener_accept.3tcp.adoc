@@ -33,13 +33,13 @@ This operation can only be done after the listener is already bound to
 a TCP port and is <<nng_tcp_listener_listen.3tcp#,listening>>.
 
 If a connection is successfully established, the _aio_ will have the
-resulting `<<nng_tcp.5#,nng_tcp>>` stored as its first output.
-(See `<<nng_aio_get_output.3#,nng_aio_get_output()>>`.)
+resulting <<nng_tcp.5#,`nng_tcp`>> stored as its first output.
+(See <<nng_aio_get_output.3#,`nng_aio_get_output()`>>.)
 
 The address of the remote peer can be determined using the
 <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>> option with the
 <<nng_tcp_getopt.3tcp#,`nng_tcp_getopt()`>> function on the
-returned `<<nng_tcp.5#,nng_tcp>>`.
+returned <<nng_tcp.5#,`nng_tcp`>>.
 
 == RETURN VALUES
 

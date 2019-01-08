@@ -1,6 +1,6 @@
 = nng_tls(7)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -38,7 +38,7 @@ http://nanomsg.org/rfcs/sp-tls-v1.html[TLS Mapping for Scalability Protocols].
 
 Depending upon how the library was built, it may be necessary to
 register the transport by calling
-`<<nng_tls_register.3#,nng_tls_register()>>`.
+<<nng_tls_register.3#,`nng_tls_register()`>>.
 
 === Availability
 
@@ -108,68 +108,35 @@ The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 
 === Socket Address
 
-When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
+When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
 the actual structure is either of type
-`<<nng_sockaddr_in.5#,nng_sockaddr_in>>` (for IPv4) or
-`<<nng_sockaddr_in6.5#,nng_sockaddr_in6>>` (for IPv6).
+<<nng_sockaddr_in.5#,`nng_sockaddr_in`>> (for IPv4) or
+<<nng_sockaddr_in6.5#,`nng_sockaddr_in6`>> (for IPv6).
 
 === Transport Options
 
 The following transport options are available.
 Note that setting these must be done before the transport is started.
 
-((`NNG_OPT_TCP_KEEPALIVE`))::
-(`bool`) Enable TCP keep-alives, defaults to `false`.
-
-((`NNG_OPT_TCP_NODELAY`))::
-(`bool`) Disable Nagle's algorithm.
-When enabled (`false`), the underlying TCP stream will attempt
-to buffer and coalesce messages before sending them on, waiting
-a short interval to improve buffering and reduce the overhead
-caused by sending too-small messages.
-This comes at a cost to latency, and is not recommended with modern
-high speed networks.
-Defaults to `true`.
-
-((`NNG_OPT_TLS_CONFIG`))::
-(`nng_tls_config *`)
-The underlying TLS
-configuration object.
-A hold is placed on the underlying
-configuration object before returning it.
-The caller should release the hold with
-`<<nng_tls_config_free.3tls#,nng_tls_config_free()>>` when it no
-longer needs the TLS configuration object.
-
-TIP: Use this option when advanced TLS configuration is required.
-
-((`NNG_OPT_TLS_CA_FILE`))::
-(string) Write-only option naming a file containing certificates to
-use for peer validation.
-See `<<nng_tls_config_ca_file.3tls#,nng_tls_config_ca_file()>>` for more
-information.
-
-((`NNG_OPT_TLS_CERT_KEY_FILE`))::
-(string) Write-only option naming a file containing the local certificate and
-associated private key.
-The private key used must be unencrypted.
-See `<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>` for more
-information.
-
-((`NNG_OPT_TLS_AUTH_MODE`))::
-(`int`) Write-only option used to configure the authentication mode used.
-See `<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode()>>` for
-more details.
-
-((`NNG_OPT_TLS_VERIFIED`))::
-(`bool`) Whether the remote peer has been properly verified using TLS
-authentication.
-May return incorrect results if peer authentication is disabled.
+* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
+* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE,`NNG_OPT_TCP_KEEPALIVE`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_NODELAY,`NNG_OPT_TCP_NODELAY`>>
+* <<nng_tls_options.5#NNG_OPT_TLS_AUTH_MODE,`NNG_OPT_TLS_AUTH_MODE`>>
+* <<nng_tls_options.5#NNG_OPT_TLS_CA_FILE,`NNG_OPT_TLS_CA_FILE`>>
+* <<nng_tls_options.5#NNG_OPT_TLS_CERT_KEY_FILE,`NNG_OPT_TLS_CERT_KEY_FILE`>>
+* <<nng_tls_options.5#NNG_OPT_TLS_CONFIG,`NNG_OPT_TLS_CONFIG`>>
+* <<nng_tls_options.5#NNG_OPT_TLS_VERIFIED,`NNG_OPT_TLS_VERIFIED_`>>
+* <<nng_options.5#NNG_OPT_URL,`NNG_OPT_URL`>>
 
 == SEE ALSO
 
 [.text-left]
 <<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>
+<<nng_options.5#,nng_options(5)>>,
 <<nng_sockaddr_in.5#,nng_sockaddr_in(5)>>,
 <<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,
+<<nng_tcp_options.5#,nng_tcp_options(5)>>,
+<<nng_tls_config.5#,nng_tls_config(5)>>,
+<<nng_tls_options.5#,nng_tls_options(5)>>,
 <<nng.7#,nng(7)>>,

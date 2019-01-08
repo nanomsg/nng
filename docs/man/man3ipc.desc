@@ -1,0 +1,5 @@
+This section documents supplemental TCP functions that are available.
+
+These functions are made available to facilitate using raw TCP connections
+with the NNG asynchronous I/O API.
+Most applications should never need to use these functions.

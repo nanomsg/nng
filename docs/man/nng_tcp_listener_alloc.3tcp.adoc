@@ -41,9 +41,11 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
+<<nng_strerror.3#,nng_strerror(3)>>,
 <<nng_tcp_listener_accept.3tcp#,nng_tcp_listener_accept(3tcp)>>,
 <<nng_tcp_listener_close.3tcp#,nng_tcp_listener_close(3tcp)>>,
 <<nng_tcp_listener_free.3tcp#,nng_tcp_listener_free(3tcp)>>,
+<<nng_tcp_listener_getopt.3tcp#,nng_tcp_listener_getopt(3tcp)>>,
 <<nng_tcp_listener_listen.3tcp#,nng_tcp_listener_listen(3tcp)>>,
-<<nng_tcp_listener.5#,nng_tcp_listener(5)>>,
-<<nng_strerror.3#,nng_strerror(3)>>
+<<nng_tcp_listener_setopt.3tcp#,nng_tcp_listener_setopt(3tcp)>>,
+<<nng_tcp_listener.5#,nng_tcp_listener(5)>>

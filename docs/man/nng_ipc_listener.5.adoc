@@ -48,4 +48,5 @@ TIP: Most NNG applications should not use this, but instead use the
 <<nng_ipc_listener_listen.3ipc#,nng_ipc_listener_listen(3ipc)>>,
 <<nng_ipc.5#,nng_ipc(5)>>,
 <<nng_ipc_dialer.5#,nng_ipc_dialer(5)>>,
+<<nng_ipc_options.5#,nng_ipc_options(5)>>,
 <<nng_ipc.7#,nng_ipc(7)>>

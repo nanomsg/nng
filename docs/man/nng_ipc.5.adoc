@@ -62,10 +62,10 @@ accessed using the <<nng_ipc_getopt.3ipc#,`nng_ipc_getopt()`>> and
 
 * <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
 * <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
-* <<nng_options.5#NNG_OPT_IPC_PEER_GID,`NNG_OPT_IPC_PEER_GID`>>
-* <<nng_options.5#NNG_OPT_IPC_PEER_PID,`NNG_OPT_IPC_PEER_PID`>>
-* <<nng_options.5#NNG_OPT_IPC_PEER_UID,`NNG_OPT_IPC_PEER_UID`>>
-* <<nng_options.5#NNG_OPT_IPC_PEER_ZONEID,`NNG_OPT_IPC_PEER_ZONEID`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_GID,`NNG_OPT_IPC_PEER_GID`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_PID,`NNG_OPT_IPC_PEER_PID`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_UID,`NNG_OPT_IPC_PEER_UID`>>
+* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_ZONEID,`NNG_OPT_IPC_PEER_ZONEID`>>
 
 Other platform specific options may be available as well.
 
@@ -81,5 +81,7 @@ Other platform specific options may be available as well.
 <<nng_ipc_recv.3ipc#,nng_ipc_recv(3ipc)>>,
 <<nng_ipc_send.3ipc#,nng_ipc_send(3ipc)>>,
 <<nng_ipc_setopt.3ipc#,nng_ipc_setopt(3ipc)>>,
+<<nng_ipc_options.5#,nng_ipc_options(5)>>,
+<<nng_options.5#,nng_options(5)>>,
 <<nng.7#,nng(7)>>,
 <<nng_ipc.7#,nng_ipc(7)>>
