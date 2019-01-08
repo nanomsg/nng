@@ -49,7 +49,7 @@ to running operations, but there is still some impact caused by collection
 of statistics.
 
 The time when a statistic`'s value is captured can be obtained using
-`<<nng_stat_timestamp.3#,nng_stat_timestap()>>`, which is useful for
+`<<nng_stat_timestamp.3#,nng_stat_timestamp()>>`, which is useful for
 measuring rates of change in certain statistics.
 
 NOTE: The presence, names, and meanings of any given statistic are

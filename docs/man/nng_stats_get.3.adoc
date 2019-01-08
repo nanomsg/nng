@@ -21,7 +21,7 @@ nng_stats_get - get statistics snapshot
 
 typedef struct nng_stat nng_stat;
 
-int nng_stats_get(nng_stat *statsp)
+int nng_stats_get(nng_stat **statsp)
 ----
 
 == DESCRIPTION
