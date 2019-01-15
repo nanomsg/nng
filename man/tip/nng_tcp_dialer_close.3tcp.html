@@ -546,8 +546,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 but does not free the underlying resources associated with it.</p>
 </div>
 <div class="paragraph">
-<p>If any dial operations
-(see <code><a href="nng_tcp_dialer_dial.3tcp">nng_tcp_dialer_dial()</a></code>) using <em>d</em> are
+<p>If any <a href="nng_tcp_dialer_dial.3tcp">dial</a> operations using <em>d</em> are
 in progress, they will be terminated with an <code>NNG_ECLOSED</code> error condition.</p>
 </div>
 <div class="paragraph">
@@ -563,7 +562,7 @@ in progress, they will be terminated with an <code>NNG_ECLOSED</code> error cond
 <td class="content">
 This function does not release the memory for the dialer, so the
 application should still free the memory using
-<code><a href="nng_tcp_dialer_free.3tcp">nng_tcp_dialer_free(3tcp)</a></code>
+<a href="nng_tcp_dialer_free.3tcp"><code>nng_tcp_dialer_free()</code></a>
 once it is certain that nothing else is using it.
 </td>
 </tr>

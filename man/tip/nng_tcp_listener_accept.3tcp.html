@@ -548,19 +548,18 @@ The operation is completed asynchronously, using <em>aio</em>.</p>
 </div>
 <div class="paragraph">
 <p>This operation can only be done after the listener is already bound to
-a TCP port and is listening.
-(See <code><a href="nng_tcp_listener_listen.3tcp">nng_tcp_listener_listen()</a></code>.)</p>
+a TCP port and is <a href="nng_tcp_listener_listen.3tcp">listening</a>.</p>
 </div>
 <div class="paragraph">
 <p>If a connection is successfully established, the <em>aio</em> will have the
-resulting <code><a href="nng_tcp.5">nng_tcp</a></code> stored as its first output.
-(See <code><a href="nng_aio_get_output.3">nng_aio_get_output()</a></code>.)</p>
+resulting <a href="nng_tcp.5"><code>nng_tcp</code></a> stored as its first output.
+(See <a href="nng_aio_get_output.3"><code>nng_aio_get_output()</code></a>.)</p>
 </div>
 <div class="paragraph">
 <p>The address of the remote peer can be determined using the
 <a href="nng_options.5#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a> option with the
 <a href="nng_tcp_getopt.3tcp"><code>nng_tcp_getopt()</code></a> function on the
-returned <code><a href="nng_tcp.5">nng_tcp</a></code>.</p>
+returned <a href="nng_tcp.5"><code>nng_tcp</code></a>.</p>
 </div>
 </div>
 </div>
@@ -590,7 +589,7 @@ returned <code><a href="nng_tcp.5">nng_tcp</a></code>.</p>
 <code>NNG_ECLOSED</code>
 </td>
 <td class="hdlist2">
-<p>The dialer is closed.</p>
+<p>The listener is closed.</p>
 </td>
 </tr>
 <tr>

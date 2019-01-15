@@ -620,161 +620,46 @@ longer than 128 bytes, including the <code>ipc://</code> prefix.
 <div class="sect2">
 <h3 id="_socket_address">Socket Address</h3>
 <div class="paragraph">
-<p>When using an <code><a href="nng_sockaddr.5">nng_sockaddr</a></code> structure,
-the actual structure is of type <code><a href="nng_sockaddr_ipc.5">nng_sockaddr_ipc</a></code>.</p>
+<p>When using an <a href="nng_sockaddr.5"><code>nng_sockaddr</code></a> structure,
+the actual structure is of type <a href="nng_sockaddr_ipc.5"><code>nng_sockaddr_ipc</code></a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_transport_options">Transport Options</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_OPT_IPC_PERMISSIONS</code></dt>
-<dd>
-<p>(<code>int</code>)
-This write-only option may be applied to a listener to configure the
-permissions that are used on the UNIX domain socket created by that listener.
-This property is only supported on POSIX systems.
-The value is of type <code>int</code>, representing the normal permission bits
-on a file, such as <code>0600</code> (typically meaning read-write to the owner, and
-no permissions for anyone else.)
-The default is system-specific, most often <code>0644</code>.</p>
-</dd>
-</dl>
+<div class="paragraph">
+<p>The following transport options are supported by this transport,
+where supported by the underlying platform.</p>
 </div>
-<div class="admonitionblock important">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-important" title="Important"></i>
-</td>
-<td class="content">
-Not all systems validate these permissions.
-In particular, illumos and Solaris are known to ignore these permission
-settings when connecting.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Normally both read and write permission will be necessary for a
-peer dialer to connect.
-See your system documentation for UNIX domain sockets for more information.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-The <em>umask</em> of the process is <strong>not</strong> applied to these bits.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-The best practice for limiting access is to place the socket in a
-directory writable only by the server, and only readable and searchable
-by clients.
-All mainstream POSIX systems will fail to permit a client to connect
-to a socket located in a directory for which the client lacks search (execute)
-permission.
-</td>
-</tr>
-</table>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-Also consider using the <code>NNG_OPT_IPC_PEER_UID</code> property from within a
-a pipe notification callback (<code><a href="nng_pipe_notify.3">nng_pipe_notify()</a></code>)
-to validate peer credentials.
-</td>
-</tr>
-</table>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code></dt>
-<dd>
-<p>(<code>PSECURITY_DESCRIPTOR</code>)
-This write-only option may be used on listeners on Windows platforms to
-configure the <code>SECURITY_DESCRIPTOR</code> that is used when creating the underlying
-named pipe.
-The value is a pointer, <code>PSECURITY_DESCRIPTOR</code>, and may only be
-applied to listeners that have not been started yet.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_IPC_PEER_UID</code></dt>
-<dd>
-<p>(<code>uint64_t</code>)
-This read-only option may be read from a pipe to determine the peer user id.
-This is the effective user id of the peer when either the underlying
-<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_IPC_PEER_GID</code></dt>
-<dd>
-<p>(<code>uint64_t</code>)
-This read-only option may be read from a pipe to determine the peer primary
-group id.
-This is the effective group id of the peer when either the underlying
-<code>listen()</code> or <code>connect()</code> calls were made, and is not forgeable.
-This option is generally only available on POSIX systems.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_IPC_PEER_PID</code></dt>
-<dd>
-<p>(<code>uint64_t</code>)
-This read-only option may be read from a pipe to determine the process id
-of the peer.
-This option is only available on Windows, Linux, and certain other systems.</p>
-</dd>
-</dl>
-</div>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Applications should not assume that the process ID does not change,
-as it is possible (although unsupported!) for a nefarious process to pass a
-file descriptor between processes.
-However, it is not possible for a nefarious application to forge the identity
-of a well-behaved one using this method.
-</td>
-</tr>
-</table>
-</div>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_OPT_IPC_PEER_ZONEID</code></dt>
-<dd>
-<p>(<code>uint64_t</code>)
-This read-only option may be read from a pipe to determine the zone id
-of the peer.
-Zones (and this option) are only supported on Solaris and illumos systems.</p>
-</dd>
-</dl>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="nng_ipc_options.5#NNG_OPT_IPC_PEER_GID"><code>NNG_OPT_IPC_PEER_GID</code></a></p>
+</li>
+<li>
+<p><a href="nng_ipc_options.5#NNG_OPT_IPC_PEER_PID"><code>NNG_OPT_IPC_PEER_PID</code></a></p>
+</li>
+<li>
+<p><a href="nng_ipc_options.5#NNG_OPT_IPC_PEER_UID"><code>NNG_OPT_IPC_PEER_UID</code></a></p>
+</li>
+<li>
+<p><a href="nng_ipc_options.5#NNG_OPT_IPC_PEER_ZONEID"><code>NNG_OPT_IPC_PEER_ZONEID</code></a></p>
+</li>
+<li>
+<p><a href="nng_ipc_options.5#NNG_OPT_IPC_PERMISSIONS"><code>NNG_OPT_IPC_PERMISSIONS</code></a></p>
+</li>
+<li>
+<p><a href="nng_ipc_options.5#NNG_OPT_IPC_SECURITY_DESCRIPTOR"><code>NNG_OPT_IPC_SECURITY_DESCRIPTOR</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5#NNG_OPT_URL"><code>NNG_OPT_URL</code></a></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -784,6 +669,8 @@ Zones (and this option) are only supported on Solaris and illumos systems.</p>
 <div class="sectionbody">
 <div class="paragraph text-left">
 <p><a href="nng_sockaddr.5">nng_sockaddr(5)</a>,
+<a href="nng_ipc_options.5">nng_ipc_options(5)</a>,
+<a href="nng_options.5">nng_options(5)</a>,
 <a href="nng.7">nng(7)</a></p>
 </div>
 </div>

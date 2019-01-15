@@ -515,7 +515,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_synopsis">SYNOPSIS</a></li>
 <li><a href="#_description">DESCRIPTION</a>
 <ul class="sectlevel2">
-<li><a href="#_options">Options</a></li>
+<li><a href="#_generic_options">Generic Options</a></li>
 </ul>
 </li>
 <li><a href="#_see_also">SEE ALSO</a></li>
@@ -552,9 +552,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <span class="tok-cp">#define NNG_OPT_MAXTTL        &quot;ttl-max&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RECVMAXSZ     &quot;recv-size-max&quot;</span>
 <span class="tok-cp">#define NNG_OPT_RECONNMINT    &quot;reconnect-time-min&quot;</span>
-<span class="tok-cp">#define NNG_OPT_RECONNMAXT    &quot;reconnect-time-max&quot;</span>
-<span class="tok-cp">#define NNG_OPT_TCP_NODELAY   &quot;tcp-nodelay&quot;</span>
-<span class="tok-cp">#define NNG_OPT_TCP_KEEPALIVE &quot;tcp-keepalive&quot;</span></code></pre>
+<span class="tok-cp">#define NNG_OPT_RECONNMAXT    &quot;reconnect-time-max&quot;</span></code></pre>
 </div>
 </div>
 </div>
@@ -596,11 +594,13 @@ have some of their own options, which will be documented with the transport
 or protocol.</p>
 </div>
 <div class="sect2">
-<h3 id="_options">Options</h3>
+<h3 id="_generic_options">Generic Options</h3>
 <div class="paragraph">
 <p>In the following list of options, the name of the option is supplied,
-along with the data type of the underlying value.
-Some options are only meaningful or supported in certain contexts; for
+along with the data type of the underlying value.</p>
+</div>
+<div class="paragraph">
+<p>Some options are only meaningful or supported in certain contexts; for
 example there is no single meaningful address for a socket, since sockets
 can have multiple dialers and endpoints associated with them.
 An attempt has been made to include details about such restrictions in the
@@ -612,20 +612,9 @@ description of the option.</p>
 <dd>
 <p>(<a href="nng_sockaddr.5"><code>nng_sockaddr</code></a>)
 This read-only option may be used on listeners, dialers and connected pipes, and
-represents the local address used for communication.</p>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-Not all transports support this option, and some transports may support it on
-listeners but not dialers.
-</td>
-</tr>
-</table>
-</div>
+represents the local address used for communication.
+NOTE: Not all transports support this option, and some transports may support it on
+listeners but not dialers.</p>
 <div class="paragraph">
 <p>When used on a TCP dialer, this option is used to configure the source IP
 address that will be used when initiating outgoing connections.
@@ -1023,93 +1012,6 @@ the socket.</p>
 </dd>
 </dl>
 </div>
-<div id="NNG_OPT_TCP_NODELAY" class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_OPT_TCP_NODELAY</code></dt>
-<dd>
-<p>(<code>bool</code>)
-This option is used to disable (or enable) the use of Nagle&#8217;s algorithm
-for TCP connections.</p>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This setting may apply to transports that are built on top of TCP.
-See the transport documentation for each transport for details.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>When <code>true</code> (the default), messages are sent immediately by the underlying
-TCP stream without waiting to gather more data.</p>
-</div>
-<div class="paragraph">
-<p>When <code>false</code>, Nagle&#8217;s algorithm is enabled, and the TCP stream may
-wait briefly in attempt to coalesce messages.
-Nagle&#8217;s algorithm is useful on low-bandwidth connections to reduce overhead,
-but it comes at a cost to latency.</p>
-</div>
-<div class="paragraph">
-<p>When used on a dialer or a listener, the value affects how newly
-created connections will be configured.</p>
-</div>
-</dd>
-</dl>
-</div>
-<div id="NNG_OPT_TCP_KEEPALIVE" class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_OPT_TCP_KEEPALIVE</code></dt>
-<dd>
-<p>(<code>bool</code>)
-This option is used to enable the sending of keep-alive messages on
-the underlying TCP stream.
-This option is <code>false</code> by default.</p>
-<div class="admonitionblock note">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-note" title="Note"></i>
-</td>
-<td class="content">
-This setting may apply to transports that are built on top of TCP.
-See the transport documentation for each transport for details.
-</td>
-</tr>
-</table>
-</div>
-<div class="paragraph">
-<p>When enabled, if no messages are seen for a period of time, then
-a zero length TCP message is sent with the ACK flag set in an attempt
-to tickle some traffic from the peer.
-If none is still seen (after some platform-specific number of retries and
-timeouts), then the remote peer is presumed dead, and the connection is closed.</p>
-</div>
-<div class="paragraph">
-<p>When used on a dialer or a listener, the value affects how newly
-created connections will be configured.</p>
-</div>
-<div class="admonitionblock tip">
-<table>
-<tr>
-<td class="icon">
-<i class="fa icon-tip" title="Tip"></i>
-</td>
-<td class="content">
-This option has two purposes.
-First, it can be used to detect dead peers on an otherwise quiescent network.
-Second, it can be used to keep connection table entries in NAT and other
-middleware from being expiring due to lack of activity.
-</td>
-</tr>
-</table>
-</div>
-</dd>
-</dl>
-</div>
 </div>
 </div>
 </div>
@@ -1124,6 +1026,9 @@ middleware from being expiring due to lack of activity.
 <a href="nng_listener_setopt.3">nng_listener_setopt(3)</a>,
 <a href="nng_pipe_getopt.3">nng_pipe_getopt(3)</a>,
 <a href="nng_setopt.3">nng_setopt(3)</a>,
+<a href="nng_ipc_options.5">nng_ipc_options(5)</a>,
+<a href="nng_tcp_options.5">nng_tcp_options(5)</a>,
+<a href="nng_tls_options.5">nng_tls_options(5)</a>,
 <a href="nng.7">nng(7)</a></p>
 </div>
 </div>

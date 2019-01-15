@@ -445,6 +445,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_section_3_library_functions">Section 3: Library Functions</a></li>
 <li><a href="#_section_3compat_compatible_library_functions">Section 3compat: Compatible Library Functions</a></li>
 <li><a href="#_section_3http_supplemental_http_functions">Section 3http: Supplemental HTTP Functions</a></li>
+<li><a href="#_section_3ipc_supplemental_tcp_functions">Section 3ipc: Supplemental TCP Functions</a></li>
 <li><a href="#_section_3supp_supplemental_functions">Section 3supp: Supplemental Functions</a></li>
 <li><a href="#_section_3tcp_supplemental_tcp_functions">Section 3tcp: Supplemental TCP Functions</a></li>
 <li><a href="#_section_3tls_supplemental_tls_functions">Section 3tls: Supplemental TLS Functions</a></li>
@@ -1404,6 +1405,103 @@ Protocols sockets.</p>
 </div>
 </div>
 <div class="sect1">
+<h2 id="_section_3ipc_supplemental_tcp_functions">Section 3ipc: Supplemental TCP Functions</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This section documents supplemental TCP functions that are available.</p>
+</div>
+<div class="paragraph">
+<p>These functions are made available to facilitate using raw TCP connections
+with the NNG asynchronous I/O API.
+Most applications should never need to use these functions.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 37.5%;">
+<col style="width: 62.5%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_close.3ipc">nng_ipc_close(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close IPC connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_dialer_alloc.3ipc">nng_ipc_dialer_alloc(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate IPC dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_dialer_close.3ipc">nng_ipc_dialer_close(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close IPC dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_dialer_dial.3ipc">nng_ipc_dialer_dial(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">initiate outgoing IPC connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_dialer_free.3ipc">nng_ipc_dialer_free(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free IPC dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_dialer_getopt.3ipc">nng_ipc_dialer_getopt(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from IPC dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_dialer_setopt.3ipc">nng_ipc_dialer_setopt(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on IPC dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_free.3ipc">nng_ipc_free(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free IPC connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_getopt.3ipc">nng_ipc_getopt(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from IPC connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_listener_accept.3ipc">nng_ipc_listener_accept(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">accept incoming IPC connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_listener_alloc.3ipc">nng_ipc_listener_alloc(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate IPC listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_listener_close.3ipc">nng_ipc_listener_close(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close IPC listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_listener_free.3ipc">nng_ipc_listener_free(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free IPC listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_listener_getopt.3ipc">nng_ipc_listener_getopt(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from IPC listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_listener_listen.3ipc">nng_ipc_listener_listen(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bind IPC listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_listener_setopt.3ipc">nng_ipc_listener_setopt(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on IPC listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_recv.3ipc">nng_ipc_recv(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive from IPC connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_send.3ipc">nng_ipc_send(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send to IPC connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_setopt.3ipc">nng_ipc_setopt(3ipc)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on IPC connection</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect1">
 <h2 id="_section_3supp_supplemental_functions">Section 3supp: Supplemental Functions</h2>
 <div class="sectionbody">
 <div class="paragraph">
@@ -1614,6 +1712,10 @@ additional support was present and enabled with <em>libnng</em> was built.</p>
 </colgroup>
 <tbody>
 <tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_close.3tls">nng_tls_close(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TLS connection</p></td>
+</tr>
+<tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_alloc.3tls">nng_tls_config_alloc(3tls)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">allocate TLS configuration object</p></td>
 </tr>
@@ -1648,6 +1750,78 @@ additional support was present and enabled with <em>libnng</em> was built.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_server_name.3tls">nng_tls_config_server_name(3tls)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">configure remote server name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_alloc.3tls">nng_tls_dialer_alloc(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_close.3tls">nng_tls_dialer_close(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_dial.3tls">nng_tls_dialer_dial(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">initiate outgoing TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_free.3tls">nng_tls_dialer_free(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_getopt.3tls">nng_tls_dialer_getopt(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_setopt.3tls">nng_tls_dialer_setopt(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_free.3tls">nng_tls_free(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_getopt.3tls">nng_tls_getopt(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_accept.3tls">nng_tls_listener_accept(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">accept incoming TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_alloc.3tls">nng_tls_listener_alloc(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_close.3tls">nng_tls_listener_close(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_free.3tls">nng_tls_listener_free(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_getopt.3tls">nng_tls_listener_getopt(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_listen.3tls">nng_tls_listener_listen(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bind listener to TLS port</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_setopt.3tls">nng_tls_listener_setopt(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_recv.3tls">nng_tls_recv(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive from TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_send.3tls">nng_tls_send(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send to TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_setopt.3tls">nng_tls_setopt(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TLS connection</p></td>
 </tr>
 </tbody>
 </table>
@@ -1688,6 +1862,22 @@ applications need will use.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_iov.5">nng_iov(5)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">scatter/gather element</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc.5">nng_ipc(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IPC connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_dialer.5">nng_ipc_dialer(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IPC dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_listener.5">nng_ipc_listener(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IPC listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_options.5">nng_ipc_options(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">IPC-specific options</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener.5">nng_listener(5)</a></p></td>
@@ -1748,6 +1938,30 @@ applications need will use.</p>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_listener.5">nng_tcp_listener(5)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">TCP listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_options.5">nng_tcp_options(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TTCP-specific options</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls.5">nng_tls(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS over TCP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config.5">nng_tls_config(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer.5">nng_tls_dialer(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener.5">nng_tls_listener(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_options.5">nng_tls_options(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS-specific options</p></td>
 </tr>
 </tbody>
 </table>

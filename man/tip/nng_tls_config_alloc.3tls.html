@@ -571,9 +571,9 @@ that object is not inadvertently freed while in use.</p>
 <p>A configuration object created with <code>nng_tls_config_alloc()</code> starts
 with a reference count of one.
 The reference count may be incremented using
-<code><a href="nng_tls_config_hold.3tls">nng_tls_config_hold()</a></code> and may be
+<a href="nng_tls_config_hold.3tls"><code>nng_tls_config_hold()</code></a> and may be
 decremented with
-<code><a href="nng_tls_config_free.3tls">nng_tls_config_free()</a></code>.</p>
+<a href="nng_tls_config_free.3tls"><code>nng_tls_config_free()</code></a>.</p>
 </div>
 <div class="paragraph">
 <p>Also note that a TLS configuration object becomes &#8220;read-only&#8221; after it
@@ -627,6 +627,7 @@ further changes to the configuration will result in <code>NNG_EBUSY</code>.</p>
 <a href="nng_tls_config_free.3tls">nng_tls_config_free(3tls)</a>,
 <a href="nng_tls_config_hold.3tls">nng_tls_config_hold(3tls)</a>,
 <a href="nng_tls_config_server_name.3tls">nng_tls_config_server_name(3tls)</a>,
+<a href="nng_tls_config.5">nng_tls_config(5)</a>,
 <a href="nng.7">nng(7)</a></p>
 </div>
 </div>

@@ -651,32 +651,36 @@ and could be used to listen to port 9999 on the host:</p>
 <div class="sect2">
 <h3 id="_socket_address">Socket Address</h3>
 <div class="paragraph">
-<p>When using an <code><a href="nng_sockaddr.5">nng_sockaddr</a></code> structure,
+<p>When using an <a href="nng_sockaddr.5"><code>nng_sockaddr</code></a> structure,
 the actual structure is either of type
-<code><a href="nng_sockaddr_in.5">nng_sockaddr_in</a></code> (for IPv4) or
-<code><a href="nng_sockaddr_in6.5">nng_sockaddr_in6</a></code> (for IPv6).</p>
+<a href="nng_sockaddr_in.5"><code>nng_sockaddr_in</code></a> (for IPv4) or
+<a href="nng_sockaddr_in6.5"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_transport_options">Transport Options</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><code>NNG_OPT_TCP_KEEPALIVE</code></dt>
-<dd>
-<p>(<code>bool</code>) Enable TCP keep-alives, defaults to <code>false</code>.</p>
-</dd>
-<dt class="hdlist1"><code>NNG_OPT_TCP_NODELAY</code></dt>
-<dd>
-<p>(<code>bool</code>) Disable Nagle&#8217;s algorithm.
-When enabled (<code>false</code>), the underlying TCP stream will attempt
-to buffer and coalesce messages before sending them on, waiting
-a short interval to improve buffering and reduce the overhead
-caused by sending too-small messages.
-This comes at a cost to latency, and is not recommended with modern
-high speed networks.
-Defaults to <code>true</code>.</p>
-</dd>
-</dl>
+<div class="paragraph">
+<p>The following transport options are supported by this transport,
+where supported by the underlying platform.</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="nng_options.5#NNG_OPT_LOCADDR"><code>NNG_OPT_LOCADDR</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5#NNG_OPT_REMADDR"><code>NNG_OPT_REMADDR</code></a></p>
+</li>
+<li>
+<p><a href="nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE"><code>NNG_OPT_TCP_KEEPALIVE</code></a></p>
+</li>
+<li>
+<p><a href="nng_tcp_options.5#NNG_OPT_TCP_NODELAY"><code>NNG_OPT_TCP_NODELAY</code></a></p>
+</li>
+<li>
+<p><a href="nng_options.5#NNG_OPT_URL"><code>NNG_OPT_URL</code></a></p>
+</li>
+</ul>
 </div>
 </div>
 </div>
@@ -685,9 +689,11 @@ Defaults to <code>true</code>.</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_sockaddr.5">nng_sockaddr(5)</a>,
+<p><a href="nng_options.5">nng_options(5)</a>,
+<a href="nng_sockaddr.5">nng_sockaddr(5)</a>,
 <a href="nng_sockaddr_in.5">nng_sockaddr_in(5)</a>,
 <a href="nng_sockaddr_in6.5">nng_sockaddr_in6(5)</a>,
+<a href="nng_tcp_options.5">nng_tcp_options(5)</a>,
 <a href="nng.7">nng(7)</a></p>
 </div>
 </div>

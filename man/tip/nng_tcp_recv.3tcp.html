@@ -553,7 +553,7 @@ asynchronous I/O structure <em>aio</em>.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-The <code><a href="nng_aio_set_iov.3">nng_aio_set_iov()</a></code> function must have been
+The <a href="nng_aio_set_iov.3"><code>nng_aio_set_iov()</code></a> function must have been
 called first, to set the scatter/gather vector for <em>aio</em>.
 </td>
 </tr>
@@ -563,7 +563,7 @@ called first, to set the scatter/gather vector for <em>aio</em>.
 <p>This function returns immediately, with no return value.
 Completion of the operation is signaled via the <em>aio</em>,
 and the final result may be obtained via
-<code><a href="nng_aio_result.3">nng_aio_result()</a></code>.
+<a href="nng_aio_result.3"><code>nng_aio_result()</code></a>.
 That result will either be zero or an error code.</p>
 </div>
 <div class="paragraph">
@@ -571,7 +571,7 @@ That result will either be zero or an error code.</p>
 received, or an error has occurred.
 Therefore, the number of bytes read may be less than requested.
 The actual number of bytes read can be determined with
-<code><a href="nng_aio_count.3">nng_aio_count()</a></code>.</p>
+<a href="nng_aio_count.3"><code>nng_aio_count()</code></a>.</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -661,10 +661,10 @@ used by very few protocols and this API does not support it.
 <a href="nng_aio_count.3">nng_aio_count(3)</a>,
 <a href="nng_aio_result.3">nng_aio_result(3)</a>,
 <a href="nng_aio_set_iov.3">nng_aio_set_iov(3)</a>,
+<a href="nng_strerror.3">nng_strerror(3)</a>,
 <a href="nng_tcp_close.3tcp">nng_tcp_close(3tcp)</a>,
 <a href="nng_tcp_send.3tcp">nng_tcp_send(3tcp)</a>,
-<a href="nng_tcp.5">nng_tcp(5)</a>,
-<a href="nng_strerror.3">nng_strerror(3)</a></p>
+<a href="nng_tcp.5">nng_tcp(5)</a></p>
 </div>
 </div>
 </div>

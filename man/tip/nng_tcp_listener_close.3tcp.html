@@ -546,8 +546,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 but does not free the underlying resources associated with it.</p>
 </div>
 <div class="paragraph">
-<p>If any acceppt operations
-(see <code><a href="nng_tcp_listener_accept.3tcp">nng_tcp_listener_accept()</a></code>) using <em>l</em>
+<p>If any <a href="nng_tcp_listener_accept.3tcp">accept</a> operations using <em>l</em>
 are in progress, they will be terminated with an <code>NNG_ECLOSED</code> error condition.</p>
 </div>
 <div class="paragraph">
@@ -563,7 +562,7 @@ are in progress, they will be terminated with an <code>NNG_ECLOSED</code> error 
 <td class="content">
 This function does not release the memory for the listener, so the
 application should still free the memory using
-<code><a href="nng_tcp_listener_free.3tcp">nng_tcp_listener_free(3tcp)</a></code>
+<a href="nng_tcp_listener_free.3tcp"><code>nng_tcp_listener_free()</code></a>
 once it is certain that nothing else is using it.
 </td>
 </tr>

@@ -798,7 +798,7 @@ This is possible using &#8220;raw&#8221; mode sockets.</p>
 </div>
 <div class="paragraph">
 <p>Raw mode sockets are generally constructed with a different function,
-such as <code><a href="nng_req_open.3">nng_req0_open_raw()</a></code>.
+such as <a href="nng_req_open.3"><code>nng_req0_open_raw()</code></a>.
 Using these sockets, the application can simply send and receive messages,
 and is responsible for supplying any additional socket semantics.
 Typically this means that the application will need to inspect message
@@ -811,7 +811,7 @@ headers on incoming messages, and supply them on outgoing messages.</p>
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-The <code><a href="nng_device.3">nng_device()</a></code> function only works with raw mode
+The <a href="nng_device.3"><code>nng_device()</code></a> function only works with raw mode
 sockets, but as it only forwards the messages, no additional application
 processing is needed.
 </td>
