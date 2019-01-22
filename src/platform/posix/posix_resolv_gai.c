@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -321,10 +321,11 @@ resolv_worker(void *notused)
 
 		// Check to make sure we were not canceled.
 		if ((aio = item->aio) != NULL) {
-			nng_sockaddr *sa = nni_aio_get_input(aio, 0);
+
 			nni_aio_set_prov_extra(aio, 0, NULL);
 			item->aio = NULL;
-			memcpy(sa, &item->sa, sizeof(*sa));
+
+			nni_aio_set_sockaddr(aio, &item->sa);
 			nni_aio_finish(aio, rv, 0);
 
 			NNI_FREE_STRUCT(item);

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -100,6 +100,12 @@ struct nng_aio {
 	void *           a_prov_data;
 	nni_list_node    a_prov_node;
 	void *           a_prov_extra[4]; // Extra data used by provider
+
+	// Socket address.  This turns out to be very useful, as we wind up
+	// needing socket addresses for numerous connection related routines.
+	// It would be cleaner to not have this and avoid burning the space,
+	// but having this hear dramatically simplifies lots of code.
+	nng_sockaddr a_sockaddr;
 
 	// Expire node.
 	nni_list_node a_expire_node;
@@ -764,4 +770,16 @@ nni_aio_sys_init(void)
 	nni_aio_expire_run = 1;
 	nni_thr_run(thr);
 	return (0);
+}
+
+void
+nni_aio_set_sockaddr(nni_aio *aio, const nng_sockaddr *sa)
+{
+	memcpy(&aio->a_sockaddr, sa, sizeof(*sa));
+}
+
+void
+nni_aio_get_sockaddr(nni_aio *aio, nng_sockaddr *sa)
+{
+	memcpy(sa, &aio->a_sockaddr, sizeof(*sa));
 }

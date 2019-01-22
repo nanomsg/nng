@@ -12,5 +12,7 @@ if (NNG_SUPP_WEBSOCKET)
         set(_SRCS
                 supplemental/websocket/websocket.c
                 supplemental/websocket/websocket.h)
+else()
+	set(_SRCS supplemental/websocket/stubs.c)
 endif()
 set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)

@@ -29,6 +29,16 @@
 
 #include "posix_tcp.h"
 
+struct nni_tcp_dialer {
+	nni_list                connq; // pending connections
+	bool                    closed;
+	bool                    nodelay;
+	bool                    keepalive;
+	struct sockaddr_storage src;
+	size_t                  srclen;
+	nni_mtx                 mtx;
+};
+
 // Dialer stuff.
 int
 nni_tcp_dialer_init(nni_tcp_dialer **dp)
@@ -58,9 +68,8 @@ nni_tcp_dialer_close(nni_tcp_dialer *d)
 			if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
 				c->dial_aio = NULL;
 				nni_aio_set_prov_extra(aio, 0, NULL);
-				nni_tcp_conn_close(c);
-				nni_reap(
-				    &c->reap, (nni_cb) nni_tcp_conn_fini, c);
+				nng_stream_close(&c->stream);
+				nng_stream_free(&c->stream);
 			}
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
@@ -94,7 +103,7 @@ tcp_dialer_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&d->mtx);
 
 	nni_aio_finish_error(aio, rv);
-	nni_tcp_conn_fini(c);
+	nng_stream_free(&c->stream);
 }
 
 static void
@@ -142,13 +151,13 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 	nni_mtx_unlock(&d->mtx);
 
 	if (rv != 0) {
-		nni_tcp_conn_close(c);
-		nni_tcp_conn_fini(c);
+		nng_stream_close(&c->stream);
+		nng_stream_free(&c->stream);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	nni_posix_tcp_conn_start(c, nd, ka);
+	nni_posix_tcp_start(c, nd, ka);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 }
@@ -156,7 +165,7 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 // We don't give local address binding support.  Outbound dialers always
 // get an ephemeral port.
 void
-nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
+nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 {
 	nni_tcp_conn *          c;
 	nni_posix_pfd *         pfd = NULL;
@@ -166,12 +175,14 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	int                     rv;
 	int                     ka;
 	int                     nd;
+	nng_sockaddr            sa;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 
-	if (((sslen = nni_posix_nn2sockaddr(&ss, sa)) == 0) ||
+	nni_aio_get_sockaddr(aio, &sa);
+	if (((sslen = nni_posix_nn2sockaddr(&ss, &sa)) == 0) ||
 	    ((ss.ss_family != AF_INET) && (ss.ss_family != AF_INET6))) {
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
 		return;
@@ -189,7 +200,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if ((rv = nni_posix_tcp_conn_init(&c, pfd)) != 0) {
+	if ((rv = nni_posix_tcp_init(&c, pfd)) != 0) {
 		nni_posix_pfd_fini(pfd);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -232,7 +243,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	nd = d->nodelay ? 1 : 0;
 	ka = d->keepalive ? 1 : 0;
 	nni_mtx_unlock(&d->mtx);
-	nni_posix_tcp_conn_start(c, nd, ka);
+	nni_posix_tcp_start(c, nd, ka);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 	return;
@@ -240,7 +251,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 error:
 	nni_aio_set_prov_extra(aio, 0, NULL);
 	nni_mtx_unlock(&d->mtx);
-	nni_reap(&c->reap, (nni_cb) nni_tcp_conn_fini, c);
+	nng_stream_free(&c->stream);
 	nni_aio_finish_error(aio, rv);
 }
 

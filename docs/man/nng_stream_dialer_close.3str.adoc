@@ -1,0 +1,60 @@
+= nng_stream_dialer_close(3str)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stream_dialer_close - close byte stream dialer
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+void nng_stream_dialer_close(nng_stream_dialer *d);
+----
+
+== DESCRIPTION
+
+The `nng_stream_dialer_close()` function closes the supplied byte stream
+dialer _d_,
+but does not free the underlying resources associated with it.
+
+If any
+xref:nng_stream_dialer_dial.3str.adoc[dial]
+operations using _d_ are
+in progress, they will be terminated with an `NNG_ECLOSED` error condition.
+
+Furthermore any future accesses to the dialer _d_ will also result in
+`NNG_ECLOSED`.
+
+NOTE: This function does not release the memory for the dialer, so the
+application should still free the memory using
+xref:nng_stream_dialer_free.3str.adoc[`nng_stream_dialer_free()`]
+once it is certain that nothing else is using it.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_stream_dialer_alloc.3str.adoc[nng_stream_dialer_alloc(3str)],
+xref:nng_stream_dialer_dial.3str.adoc[nng_stream_dialer_dial(3str)],
+xref:nng_stream_dialer_free.3str.adoc[nng_stream_dialer_free(3str)],
+xref:nng_stream_dialer.5.adoc[nng_stream_dialer(5)]

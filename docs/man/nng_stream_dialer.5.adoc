@@ -1,0 +1,46 @@
+= nng_stream_dialer(5)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stream_dialer - byte stream dialer
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef struct nng_stream_dialer nng_stream_dialer;
+----
+
+== DESCRIPTION
+
+(((byte stream, dialer)))
+An `nng_stream_dialer` is a handle to a "`dialer`" for byte streams,
+and is responsible for creating
+xref:nng_stream.5.adoc[`nng_stream`] objects (corresponding to connected byte
+streams) by connecting to remote peers.
+
+NOTE: The `nng_stream_dialer` object is used for low-level byte stream
+connections, and should not be confused with a high-level
+xref:nng_dialer.5.adoc[`nng_dialer`] object.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_stream_dialer_alloc.3str.adoc[nng_stream_dialer_alloc(3str)],
+xref:nng_stream_dialer_close.3str.adoc[nng_stream_dialer_close(3str)],
+xref:nng_stream_dialer_dial.3str.adoc[nng_stream_dialer_dial(3str)],
+xref:nng_stream_dialer_free.3str.adoc[nng_stream_dialer_free(3str)],
+xref:nng_stream.5.adoc[nng_stream(5)],
+xref:nng_stream_listener.5.adoc[nng_stream_listener(5)]

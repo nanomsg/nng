@@ -15,14 +15,6 @@
 
 NNG_DECL int nng_ws_register(void);
 
-// NNG_OPT_WS_REQUEST_HEADERS is a string containing the
-// request headers, formatted as CRLF terminated lines.
-#define NNG_OPT_WS_REQUEST_HEADERS "ws:request-headers"
-
-// NNG_OPT_WS_RESPONSE_HEADERS is a string containing the
-// response headers, formatted as CRLF terminated lines.
-#define NNG_OPT_WS_RESPONSE_HEADERS "ws:response-headers"
-
 // These aliases are for WSS naming consistency.
 #define NNG_OPT_WSS_REQUEST_HEADERS NNG_OPT_WS_REQUEST_HEADERS
 #define NNG_OPT_WSS_RESPONSE_HEADERS NNG_OPT_WS_RESPONSE_HEADERS

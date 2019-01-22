@@ -1,0 +1,144 @@
+= nng_stream_listener_get(3str)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stream_listener_get - get option from byte stream listener
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+int nng_stream_listener_get(nng_stream_listener *l, const char *opt, void *val, size_t *sizep);
+
+int nng_stream_listener_get_bool(nng_stream_listener *l, const char *opt, bool *valp);
+
+int nng_stream_listener_get_int(nng_stream_listener *l, const char *opt, int *valp);
+
+int nng_stream_listener_get_ms(nng_stream_listener *l, const char *opt, nng_duration *valp);
+
+int nng_stream_listener_get_ptr(nng_stream_listener *l, const char *opt, void **valp);
+
+int nng_stream_listener_get_size(nng_stream_listener *l, const char *opt, size_t *valp);
+
+int nng_stream_listener_get_addr(nng_stream_listener *l, const char *opt, nng_sockaddr *valp);
+
+int nng_stream_listener_get_string(nng_stream_listener *l, const char *opt, char **valp);
+
+int nng_stream_listener_get_uint64(nng_stream_listener *l, const char *opt, uint64_t *valp);
+----
+
+== DESCRIPTION
+
+
+The `nng_stream_listener_get()` functions are used to retrieve option values
+for the 
+xref:nng_stream_listener.5.adoc[byte stream listener] _l_.
+
+The actual options that may be retrieved in this way vary.
+A number of them are documented in
+xref:nng_options.5.adoc[nng_options(5)] and additional linked documents.
+
+=== Forms
+
+In all of these forms, the option _opt_ is retrieved from the connected
+byte stream listener _l_.
+The forms vary based on the type of the option they take.
+
+The details of the type, size, and semantics of the option will depend
+on the actual option, and will be documented with the option itself.
+
+`nng_stream_listener_get()`::
+This function is untyped and can be used to retrieve the value of any option.
+The caller must store a pointer to a buffer to receive the value in _val_,
+and the size of the buffer shall be stored at the location referenced by
+_sizep_.
++
+When the function returns, the actual size of the data copied (or that
+would have been copied if sufficient space were present) is stored at
+the location referenced by _sizep_.
+If the caller's buffer is not large enough to hold the entire object,
+then the copy is truncated.
+Therefore the caller should check for truncation by verifying that the
+returned size in _sizep_ does not exceed the original buffer size.
++
+It is acceptable to pass `NULL` for _val_ if the value in _sizep_ is zero.
+This can be used to determine the size of the buffer needed to receive
+the object.
++
+TIP: It may be easier to use one of the typed forms of this function.
+
+`nng_stream_listener_get_bool()`::
+This function is for options which take a Boolean (`bool`).
+
+`nng_stream_listener_get_int()`::
+This function is for options which take an integer (`int`).
+
+`nng_stream_listener_get_ms()`::
+This function is used to retrieve time
+xref:nng_duration.5.adoc[durations]
+(such as timeouts), stored as a number of milliseconds.
+(The special value ((`NNG_DUR_INFINITE`)) means an infinite amount of time, and
+the special value ((`NNG_DUR_DEFAULT`)) means a context-specific default.)
+
+`nng_stream_listener_get_ptr()`::
+This function is used to retrieve a pointer to structured data.
+The data referenced is generally managed using other functions.
+Note that this form is somewhat special in that the object is generally
+not copied, but instead the *pointer* to the object is copied.
++
+NOTE: Care must be taken to ensure that the application respects any
+considerations about the lifetime of the underyling object.
+See the documentation for the option for more specific guidance.
+
+`nng_stream_listener_get_size()`::
+This function is used to retrieve a size,
+typically for buffer sizes, message maximum sizes, and similar options.
+
+`nng_stream_listener_get_addr()`::
+This function is used to retrieve a
+xref:nng_sockaddr.5.adoc[socket address].
+
+`nng_stream_listener_get_string()`::
+This function is used to retrieve a `NULL`-terminated string.
+This string is created from the source using
+xref:nng_strdup.3.adoc[`nng_strdup()`]
+and consequently must be freed by the caller using
+xref:nng_strfree.3.adoc[`nng_strfree()`] when it is no longer needed.
+
+`nng_stream_listener_get_uint64()`::
+This function is used to retrieve a 64-bit unsigned value.
+This is typically used for identifiers, network
+numbers, and similar options.
+
+== RETURN VALUES
+
+These functions return 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ECLOSED`:: The listener is closed.
+`NNG_EINVAL`:: There was insufficient space to receive the object.
+	The amount of data actually needed is returned in _sizep_.
+`NNG_ENOTSUP`:: The option is not supported.
+`NNG_EWRITEONLY`:: The option may not read.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_stream_listener_set.3str.adoc[nng_stream_listener_set(3str)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng_stream_listener.5.adoc[nng_stream_listener(5)]

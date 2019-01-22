@@ -183,6 +183,12 @@ struct nni_tran {
 	// tran_fini, if not NULL, is called during library deinitialization.
 	// It should release any global resources, close any open files, etc.
 	void (*tran_fini)(void);
+
+	// tran_chkopt is used to check option validity; this is used as
+	// an initial filter on the data, without actually setting anything.
+	// This can be useful, for example, before any transports are
+	// configured on the socket.
+	int (*tran_checkopt)(const char *, const void *, size_t, nni_type);
 };
 
 // These APIs are used by the framework internally, and not for use by

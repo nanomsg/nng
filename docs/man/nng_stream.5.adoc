@@ -1,0 +1,80 @@
+= nng_stream(5)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stream - byte stream
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+typedef struct nng_stream nng_stream;
+----
+
+== DESCRIPTION
+
+An `nng_stream` (((byte stream))) represents a byte stream.
+This may correspond to an underlying connection such a TCP connection or
+a connected UNIX domain socket or named pipe.
+
+NOTE: The `nng_stream` object is used for raw byte stream connections, and
+should not be confused with a pipe object created on
+xref:nng_socket.5.adoc[socket] using the
+xref:nng_listen.3.adoc[`nng_listen()`],
+xref:nng_dial.3.adoc[`nng_dial()`] or related functions.
+
+These objects are created either establishing an outgoing connection
+with
+xref:nng_stream_dialer_dial.3str.adoc[`nng_stream_dialer_dial()`]
+or by accepting in incoming connection with
+xref:nng_stream_listener_accept.3str.adoc[`nng_stream_listener_accept()`].
+
+Byte streams are "`reliable`" in that data
+will not be delivered out of order, or with portions missing.
+
+Data can be sent using
+xref:nng_stream_send.3str.adoc[`nng_stream_send()`] or
+received with
+xref:nng_stream_recv.3str.adoc[`nng_stream_recv()`].
+
+When the connection is no longer needed, it should be freed with
+xref:nng_stream_free.3str.adoc[`nng_stream_free()`].
+
+TIP: It is possible to close the connection, without freeing it, by
+using
+xref:nng_stream_close.3str.adoc[`nng_stream_close()`].
+
+Byte streams may, depending on the underlying technology,
+support various
+xref:nng_options.5.adoc[options], which
+can be accessed using the
+xref:nng_stream_get.3str.adoc[`nng_stream_get()`] and
+xref:nng_stream_set.3str.adoc[`nng_stream_set()`] family of
+functions.
+
+== SEE ALSO
+
+[.text-left]
+xref:libnng.3.adoc[libnng(3)],
+xref:nng_stream_close.3str.adoc[nng_stream_close(3str)],
+xref:nng_stream_dialer_dial.3str.adoc[nng_stream_dialer_dial(3str)],
+xref:nng_stream_free.3str.adoc[nng_stream_free(3str)],
+xref:nng_stream_getopt.3str.adoc[nng_stream_getopt(3str)],
+xref:nng_stream_listener_accept.3str.adoc[nng_stream_listener_accept(3str)],
+xref:nng_stream_recv.3str.adoc[nng_stream_recv(3str)],
+xref:nng_stream_send.3str.adoc[nng_stream_send(3str)],
+xref:nng_stream_setopt.3str.adoc[nng_stream_setopt(3str)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng.7.adoc[nng(7)],

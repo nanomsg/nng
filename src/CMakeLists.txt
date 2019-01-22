@@ -73,6 +73,8 @@ set (NNG_SRCS
     core/sockimpl.h
     core/stats.c
     core/stats.h
+    core/stream.c
+    core/stream.h
     core/strs.c
     core/strs.h
     core/taskq.c
@@ -183,7 +185,6 @@ add_subdirectory(transport/zerotier)
 
 add_subdirectory(supplemental/base64)
 add_subdirectory(supplemental/http)
-add_subdirectory(supplemental/ipc)
 add_subdirectory(supplemental/sha1)
 add_subdirectory(supplemental/tcp)
 add_subdirectory(supplemental/tls)

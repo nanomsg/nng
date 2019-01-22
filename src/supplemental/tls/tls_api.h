@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -12,12 +12,28 @@
 #ifndef NNG_SUPPLEMENTAL_TLS_TLS_API_H
 #define NNG_SUPPLEMENTAL_TLS_TLS_API_H
 
-#include <stdbool.h>
-
 #include <nng/supplemental/tls/tls.h>
 
-// nni_tls represents the context for a single TLS stream.
-typedef struct nni_tls nni_tls;
+// This nni_tls_common structure represents the "base" structure for
+// an implementation to extend.  One of these must be the first member
+// of the implementation specific TLS stream struct.
+typedef struct {
+	nng_stream      ops;
+	nni_aio *       aio;  // system aio for connect/accept
+	nni_aio *       uaio; // user aio for connect/accept
+	nng_tls_config *cfg;
+} nni_tls_common;
+
+// The implementation supplies this function to create the TLS connection
+// object.  All fields will be zeroed.
+extern int nni_tls_alloc(nng_stream **);
+extern int nni_tls_dialer_alloc(nng_stream_dialer **, const nng_url *);
+extern int nni_tls_listener_alloc(nng_stream_listener **, const nng_url *);
+extern int nni_tls_checkopt(const char *, const void *, size_t, nni_type);
+
+// nni_tls_start is called by the common TLS dialer/listener completions
+// to start the TLS stream activity.  This may also do allocations, etc.
+extern int nni_tls_start(nng_stream *, nng_stream *);
 
 // nni_tls_config_init creates a new TLS configuration object.
 // The object is created with a reference count of one.
@@ -33,31 +49,5 @@ extern void nni_tls_config_fini(nng_tls_config *);
 // Note that a hold need not be acquired at creation, since
 // the configuration object is created with a hold on it.
 extern void nni_tls_config_hold(nng_tls_config *);
-
-extern int  nni_tls_init(nni_tls **, nng_tls_config *, nni_tcp_conn *);
-extern void nni_tls_close(nni_tls *);
-extern void nni_tls_fini(nni_tls *);
-extern void nni_tls_send(nni_tls *, nng_aio *);
-extern void nni_tls_recv(nni_tls *, nng_aio *);
-
-extern int nni_tls_setopt(
-    nni_tls *, const char *, const void *, size_t, nni_type);
-extern int nni_tls_getopt(nni_tls *, const char *, void *, size_t *, nni_type);
-
-extern int nni_tls_set(
-    nng_tls *, const char *, const void *, size_t, nni_type);
-extern int nni_tls_get(nng_tls *, const char *, void *, size_t *, nni_type);
-
-extern int nni_tls_dialer_setopt(
-    nng_tls_dialer *, const char *, const void *, size_t, nni_type);
-
-extern int nni_tls_dialer_getopt(
-    nng_tls_dialer *, const char *, void *, size_t *, nni_type);
-
-extern int nni_tls_listener_setopt(
-    nng_tls_listener *, const char *, const void *, size_t, nni_type);
-
-extern int nni_tls_listener_getopt(
-    nng_tls_listener *, const char *, void *, size_t *, nni_type);
 
 #endif // NNG_SUPPLEMENTAL_TLS_TLS_API_H

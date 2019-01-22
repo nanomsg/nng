@@ -1,7 +1,7 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <info@devolutions.net>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -39,8 +39,10 @@
 
 #include "posix_ipc.h"
 
+typedef struct nni_ipc_conn ipc_conn;
+
 static void
-ipc_conn_dowrite(nni_ipc_conn *c)
+ipc_dowrite(ipc_conn *c)
 {
 	nni_aio *aio;
 	int      fd;
@@ -122,7 +124,7 @@ ipc_conn_dowrite(nni_ipc_conn *c)
 }
 
 static void
-ipc_conn_doread(nni_ipc_conn *c)
+ipc_doread(ipc_conn *c)
 {
 	nni_aio *aio;
 	int      fd;
@@ -199,9 +201,10 @@ ipc_conn_doread(nni_ipc_conn *c)
 	}
 }
 
-void
-nni_ipc_conn_close(nni_ipc_conn *c)
+static void
+ipc_close(void *arg)
 {
+	ipc_conn *c = arg;
 	nni_mtx_lock(&c->mtx);
 	if (!c->closed) {
 		nni_aio *aio;
@@ -217,20 +220,20 @@ nni_ipc_conn_close(nni_ipc_conn *c)
 }
 
 static void
-ipc_conn_cb(nni_posix_pfd *pfd, int events, void *arg)
+ipc_cb(nni_posix_pfd *pfd, int events, void *arg)
 {
-	nni_ipc_conn *c = arg;
+	ipc_conn *c = arg;
 
 	if (events & (POLLHUP | POLLERR | POLLNVAL)) {
-		nni_ipc_conn_close(c);
+		ipc_close(c);
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
 	if (events & POLLIN) {
-		ipc_conn_doread(c);
+		ipc_doread(c);
 	}
 	if (events & POLLOUT) {
-		ipc_conn_dowrite(c);
+		ipc_dowrite(c);
 	}
 	events = 0;
 	if (!nni_list_empty(&c->writeq)) {
@@ -246,9 +249,9 @@ ipc_conn_cb(nni_posix_pfd *pfd, int events, void *arg)
 }
 
 static void
-ipc_conn_cancel(nni_aio *aio, void *arg, int rv)
+ipc_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_ipc_conn *c = arg;
+	ipc_conn *c = arg;
 
 	nni_mtx_lock(&c->mtx);
 	if (nni_aio_list_active(aio)) {
@@ -258,18 +261,18 @@ ipc_conn_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&c->mtx);
 }
 
-void
-nni_ipc_conn_send(nni_ipc_conn *c, nni_aio *aio)
+static void
+ipc_send(void *arg, nni_aio *aio)
 {
-
-	int rv;
+	ipc_conn *c = arg;
+	int       rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
 
-	if ((rv = nni_aio_schedule(aio, ipc_conn_cancel, c)) != 0) {
+	if ((rv = nni_aio_schedule(aio, ipc_cancel, c)) != 0) {
 		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -277,7 +280,7 @@ nni_ipc_conn_send(nni_ipc_conn *c, nni_aio *aio)
 	nni_aio_list_append(&c->writeq, aio);
 
 	if (nni_list_first(&c->writeq) == aio) {
-		ipc_conn_dowrite(c);
+		ipc_dowrite(c);
 		// If we are still the first thing on the list, that
 		// means we didn't finish the job, so arm the poller to
 		// complete us.
@@ -288,17 +291,18 @@ nni_ipc_conn_send(nni_ipc_conn *c, nni_aio *aio)
 	nni_mtx_unlock(&c->mtx);
 }
 
-void
-nni_ipc_conn_recv(nni_ipc_conn *c, nni_aio *aio)
+static void
+ipc_recv(void *arg, nni_aio *aio)
 {
-	int rv;
+	ipc_conn *c = arg;
+	int       rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
 
-	if ((rv = nni_aio_schedule(aio, ipc_conn_cancel, c)) != 0) {
+	if ((rv = nni_aio_schedule(aio, ipc_cancel, c)) != 0) {
 		nni_mtx_unlock(&c->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -310,7 +314,7 @@ nni_ipc_conn_recv(nni_ipc_conn *c, nni_aio *aio)
 	// many cases.  We also need not arm a list if it was already
 	// armed.
 	if (nni_list_first(&c->readq) == aio) {
-		ipc_conn_doread(c);
+		ipc_doread(c);
 		// If we are still the first thing on the list, that
 		// means we didn't finish the job, so arm the poller to
 		// complete us.
@@ -322,8 +326,8 @@ nni_ipc_conn_recv(nni_ipc_conn *c, nni_aio *aio)
 }
 
 static int
-ipc_conn_peerid(nni_ipc_conn *c, uint64_t *euid, uint64_t *egid,
-    uint64_t *prid, uint64_t *znid)
+ipc_peerid(ipc_conn *c, uint64_t *euid, uint64_t *egid, uint64_t *prid,
+    uint64_t *znid)
 {
 	int fd = nni_posix_pfd_fd(c->pfd);
 #if defined(NNG_HAVE_GETPEEREID)
@@ -403,43 +407,43 @@ ipc_conn_peerid(nni_ipc_conn *c, uint64_t *euid, uint64_t *egid,
 #endif
 }
 
-int
-ipc_conn_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
+static int
+ipc_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_ipc_conn *c = arg;
-	int           rv;
-	uint64_t      ignore;
-	uint64_t      id;
+	ipc_conn *c = arg;
+	int       rv;
+	uint64_t  ignore;
+	uint64_t  id;
 
-	if ((rv = ipc_conn_peerid(c, &id, &ignore, &ignore, &ignore)) != 0) {
+	if ((rv = ipc_peerid(c, &id, &ignore, &ignore, &ignore)) != 0) {
 		return (rv);
 	}
 	return (nni_copyout_u64(id, buf, szp, t));
 }
 
 static int
-ipc_conn_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
+ipc_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_ipc_conn *c = arg;
-	int           rv;
-	uint64_t      ignore;
-	uint64_t      id;
+	ipc_conn *c = arg;
+	int       rv;
+	uint64_t  ignore;
+	uint64_t  id;
 
-	if ((rv = ipc_conn_peerid(c, &ignore, &id, &ignore, &ignore)) != 0) {
+	if ((rv = ipc_peerid(c, &ignore, &id, &ignore, &ignore)) != 0) {
 		return (rv);
 	}
 	return (nni_copyout_u64(id, buf, szp, t));
 }
 
 static int
-ipc_conn_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
+ipc_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_ipc_conn *c = arg;
-	int           rv;
-	uint64_t      ignore;
-	uint64_t      id;
+	ipc_conn *c = arg;
+	int       rv;
+	uint64_t  ignore;
+	uint64_t  id;
 
-	if ((rv = ipc_conn_peerid(c, &ignore, &ignore, &ignore, &id)) != 0) {
+	if ((rv = ipc_peerid(c, &ignore, &ignore, &ignore, &id)) != 0) {
 		return (rv);
 	}
 	if (id == (uint64_t) -1) {
@@ -450,14 +454,14 @@ ipc_conn_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static int
-ipc_conn_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
+ipc_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_ipc_conn *c = arg;
-	int           rv;
-	uint64_t      ignore;
-	uint64_t      id;
+	ipc_conn *c = arg;
+	int       rv;
+	uint64_t  ignore;
+	uint64_t  id;
 
-	if ((rv = ipc_conn_peerid(c, &ignore, &ignore, &id, &ignore)) != 0) {
+	if ((rv = ipc_peerid(c, &ignore, &ignore, &id, &ignore)) != 0) {
 		return (rv);
 	}
 	if (id == (uint64_t) -1) {
@@ -468,9 +472,9 @@ ipc_conn_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static int
-ipc_conn_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
+ipc_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_ipc_conn *          c = arg;
+	ipc_conn *              c = arg;
 	nni_sockaddr            sa;
 	struct sockaddr_storage ss;
 	socklen_t               sslen = sizeof(ss);
@@ -486,36 +490,17 @@ ipc_conn_get_addr(void *arg, void *buf, size_t *szp, nni_type t)
 	return (nni_copyout_sockaddr(&sa, buf, szp, t));
 }
 
-int
-nni_posix_ipc_conn_init(nni_ipc_conn **cp, nni_posix_pfd *pfd)
+void
+nni_posix_ipc_start(nni_ipc_conn *c)
 {
-	nni_ipc_conn *c;
-
-	if ((c = NNI_ALLOC_STRUCT(c)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-
-	c->closed = false;
-	c->pfd    = pfd;
-
-	nni_mtx_init(&c->mtx);
-	nni_aio_list_init(&c->readq);
-	nni_aio_list_init(&c->writeq);
-
-	*cp = c;
-	return (0);
+	nni_posix_pfd_set_cb(c->pfd, ipc_cb, c);
 }
 
-void
-nni_posix_ipc_conn_start(nni_ipc_conn *c)
+static void
+ipc_free(void *arg)
 {
-	nni_posix_pfd_set_cb(c->pfd, ipc_conn_cb, c);
-}
-
-void
-nni_ipc_conn_fini(nni_ipc_conn *c)
-{
-	nni_ipc_conn_close(c);
+	ipc_conn *c = arg;
+	ipc_close(c);
 	nni_posix_pfd_fini(c->pfd);
 	nni_mtx_lock(&c->mtx); // not strictly needed, but shut up TSAN
 	c->pfd = NULL;
@@ -525,46 +510,72 @@ nni_ipc_conn_fini(nni_ipc_conn *c)
 	NNI_FREE_STRUCT(c);
 }
 
-static const nni_option ipc_conn_options[] = {
+static const nni_option ipc_options[] = {
 	{
 	    .o_name = NNG_OPT_LOCADDR,
-	    .o_get  = ipc_conn_get_addr,
+	    .o_get  = ipc_get_addr,
 	},
 	{
 	    .o_name = NNG_OPT_REMADDR,
-	    .o_get  = ipc_conn_get_addr,
+	    .o_get  = ipc_get_addr,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_PID,
-	    .o_get  = ipc_conn_get_peer_pid,
+	    .o_get  = ipc_get_peer_pid,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_UID,
-	    .o_get  = ipc_conn_get_peer_uid,
+	    .o_get  = ipc_get_peer_uid,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_GID,
-	    .o_get  = ipc_conn_get_peer_gid,
+	    .o_get  = ipc_get_peer_gid,
 	},
 	{
 	    .o_name = NNG_OPT_IPC_PEER_ZONEID,
-	    .o_get  = ipc_conn_get_peer_zoneid,
+	    .o_get  = ipc_get_peer_zoneid,
 	},
 	{
 	    .o_name = NULL,
 	},
 };
 
-int
-nni_ipc_conn_getopt(
-    nni_ipc_conn *c, const char *name, void *val, size_t *szp, nni_type t)
+static int
+ipc_getx(void *arg, const char *name, void *val, size_t *szp, nni_type t)
 {
-	return (nni_getopt(ipc_conn_options, name, c, val, szp, t));
+	ipc_conn *c = arg;
+	return (nni_getopt(ipc_options, name, c, val, szp, t));
+}
+
+static int
+ipc_setx(void *arg, const char *name, const void *val, size_t sz, nni_type t)
+{
+	ipc_conn *c = arg;
+	return (nni_setopt(ipc_options, name, c, val, sz, t));
 }
 
 int
-nni_ipc_conn_setopt(
-    nni_ipc_conn *c, const char *name, const void *val, size_t sz, nni_type t)
+nni_posix_ipc_init(nni_ipc_conn **cp, nni_posix_pfd *pfd)
 {
-	return (nni_setopt(ipc_conn_options, name, c, val, sz, t));
+	ipc_conn *c;
+
+	if ((c = NNI_ALLOC_STRUCT(c)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	c->closed         = false;
+	c->pfd            = pfd;
+	c->stream.s_free  = ipc_free;
+	c->stream.s_close = ipc_close;
+	c->stream.s_send  = ipc_send;
+	c->stream.s_recv  = ipc_recv;
+	c->stream.s_getx  = ipc_getx;
+	c->stream.s_setx  = ipc_setx;
+
+	nni_mtx_init(&c->mtx);
+	nni_aio_list_init(&c->readq);
+	nni_aio_list_init(&c->writeq);
+
+	*cp = c;
+	return (0);
 }

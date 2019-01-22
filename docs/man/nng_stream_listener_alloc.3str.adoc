@@ -1,0 +1,70 @@
+= nng_stream_listener_alloc(3str)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stream_listener_alloc - allocate byte stream listener
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+int nng_stream_listener_alloc(nng_stream_listener **lp, const char *addr);
+
+int nng_stream_listener_alloc_url(nng_stream_listener **lp, const nng_url *url);
+----
+
+== DESCRIPTION
+
+These functions allocates a listener for byte streams.
+Listeners create
+xref:nng_stream.5.adoc[`nng_stream`] objects by accepting incoming
+connections, via the
+xref:nng_stream_listener_accept.3str.adoc[`nng_stream_listener_accept()`]
+function.
+
+The first form, `nng_stream_listener_alloc()`, connects to the address
+specified by _addr_, which should be a string representing a URL.
+
+The second form, `nng_stream_listener_alloc_url()`, takes a pre-parsed
+or pre-constructed
+xref:nng_url.5.adoc[`nng_url`] object to determine the remote address.
+
+These functions may support different URL schemes, such as
+`ipc://`, `tcp://`, `tls+tcp://`, or `ws://`.
+
+Both forms store the listener in the location referenced by _lp_.
+
+== RETURN VALUES
+
+These functions return 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_ENOMEM`:: Insufficient free memory exists.
+`NNG_ENOTSUP`:: The URL scheme is not supported by the implementation.
+`NNG_EADDRINVAL`:: The URL requested is invalid.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_stream_listener_accept.3str.adoc[nng_stream_listener_accept(3str)]
+xref:nng_stream_listener_close.3str.adoc[nng_stream_listener_close(3str)]
+xref:nng_stream_listener_free.3str.adoc[nng_stream_listener_free(3str)]
+xref:nng_stream_listener_get.3str.adoc[nng_stream_listener_get(3str)]
+xref:nng_stream_listener_listen.3str.adoc[nng_stream_listener_listen(3str)]
+xref:nng_stream_listener_set.3str.adoc[nng_stream_listener_set(3str)]
+xref:nng_stream_listener.5.adoc[nng_stream_listener(5)]

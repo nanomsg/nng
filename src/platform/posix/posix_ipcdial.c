@@ -1,7 +1,7 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <info@devolutions.net>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -29,25 +29,13 @@
 
 #include "posix_ipc.h"
 
+typedef struct nni_ipc_dialer ipc_dialer;
+
 // Dialer stuff.
-int
-nni_ipc_dialer_init(nni_ipc_dialer **dp)
+static void
+ipc_dialer_close(void *arg)
 {
-	nni_ipc_dialer *d;
-
-	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	nni_mtx_init(&d->mtx);
-	d->closed = false;
-	nni_aio_list_init(&d->connq);
-	*dp = d;
-	return (0);
-}
-
-void
-nni_ipc_dialer_close(nni_ipc_dialer *d)
-{
+	ipc_dialer *d = arg;
 	nni_mtx_lock(&d->mtx);
 	if (!d->closed) {
 		nni_aio *aio;
@@ -58,9 +46,8 @@ nni_ipc_dialer_close(nni_ipc_dialer *d)
 			if ((c = nni_aio_get_prov_extra(aio, 0)) != NULL) {
 				c->dial_aio = NULL;
 				nni_aio_set_prov_extra(aio, 0, NULL);
-				nni_ipc_conn_close(c);
-				nni_reap(
-				    &c->reap, (nni_cb) nni_ipc_conn_fini, c);
+				nng_stream_close(&c->stream);
+				nng_stream_free(&c->stream);
 			}
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
@@ -68,10 +55,11 @@ nni_ipc_dialer_close(nni_ipc_dialer *d)
 	nni_mtx_unlock(&d->mtx);
 }
 
-void
-nni_ipc_dialer_fini(nni_ipc_dialer *d)
+static void
+ipc_dialer_free(void *arg)
 {
-	nni_ipc_dialer_close(d);
+	ipc_dialer *d = arg;
+	ipc_dialer_close(d);
 	nni_mtx_fini(&d->mtx);
 	NNI_FREE_STRUCT(d);
 }
@@ -94,7 +82,7 @@ ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&d->mtx);
 
 	nni_aio_finish_error(aio, rv);
-	nni_ipc_conn_fini(c);
+	nng_stream_free(&c->stream);
 }
 
 static void
@@ -137,13 +125,13 @@ ipc_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 	nni_mtx_unlock(&d->mtx);
 
 	if (rv != 0) {
-		nni_ipc_conn_close(c);
-		nni_ipc_conn_fini(c);
+		nng_stream_close(&c->stream);
+		nng_stream_free(&c->stream);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	nni_posix_ipc_conn_start(c);
+	nni_posix_ipc_start(c);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 }
@@ -151,8 +139,9 @@ ipc_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 // We don't give local address binding support.  Outbound dialers always
 // get an ephemeral port.
 void
-nni_ipc_dialer_dial(nni_ipc_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
+ipc_dialer_dial(void *arg, nni_aio *aio)
 {
+	ipc_dialer *            d = arg;
 	nni_ipc_conn *          c;
 	nni_posix_pfd *         pfd = NULL;
 	struct sockaddr_storage ss;
@@ -164,7 +153,7 @@ nni_ipc_dialer_dial(nni_ipc_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		return;
 	}
 
-	if (((sslen = nni_posix_nn2sockaddr(&ss, sa)) == 0) ||
+	if (((sslen = nni_posix_nn2sockaddr(&ss, &d->sa)) == 0) ||
 	    (ss.ss_family != AF_UNIX)) {
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
 		return;
@@ -182,7 +171,7 @@ nni_ipc_dialer_dial(nni_ipc_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if ((rv = nni_posix_ipc_conn_init(&c, pfd)) != 0) {
+	if ((rv = nni_posix_ipc_init(&c, pfd)) != 0) {
 		nni_posix_pfd_fini(pfd);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -222,7 +211,7 @@ nni_ipc_dialer_dial(nni_ipc_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	// on loopback, and probably not on every platform.
 	nni_aio_set_prov_extra(aio, 0, NULL);
 	nni_mtx_unlock(&d->mtx);
-	nni_posix_ipc_conn_start(c);
+	nni_posix_ipc_start(c);
 	nni_aio_set_output(aio, 0, c);
 	nni_aio_finish(aio, 0, 0);
 	return;
@@ -230,7 +219,7 @@ nni_ipc_dialer_dial(nni_ipc_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 error:
 	nni_aio_set_prov_extra(aio, 0, NULL);
 	nni_mtx_unlock(&d->mtx);
-	nni_reap(&c->reap, (nni_cb) nni_ipc_conn_fini, c);
+	nng_stream_free(&c->stream);
 	nni_aio_finish_error(aio, rv);
 }
 
@@ -241,15 +230,44 @@ static const nni_option ipc_dialer_options[] = {
 };
 
 int
-nni_ipc_dialer_getopt(
-    nni_ipc_dialer *d, const char *name, void *buf, size_t *szp, nni_type t)
+ipc_dialer_getx(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 {
-	return (nni_getopt(ipc_dialer_options, name, d, buf, szp, t));
+	ipc_dialer *d = arg;
+	return (nni_getopt(ipc_dialer_options, nm, d, buf, szp, t));
 }
 
 int
-nni_ipc_dialer_setopt(nni_ipc_dialer *d, const char *name, const void *buf,
-    size_t sz, nni_type t)
+ipc_dialer_setx(
+    void *arg, const char *nm, const void *buf, size_t sz, nni_type t)
 {
-	return (nni_setopt(ipc_dialer_options, name, d, buf, sz, t));
+	ipc_dialer *d = arg;
+	return (nni_setopt(ipc_dialer_options, nm, d, buf, sz, t));
+}
+
+int
+nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
+{
+	ipc_dialer *d;
+
+	if ((strcmp(url->u_scheme, "ipc") != 0) || (url->u_path == NULL) ||
+	    (strlen(url->u_path) == 0) ||
+	    (strlen(url->u_path) >= NNG_MAXADDRLEN)) {
+		return (NNG_EADDRINVAL);
+	}
+	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	nni_mtx_init(&d->mtx);
+	nni_aio_list_init(&d->connq);
+	d->closed             = false;
+	d->sa.s_ipc.sa_family = NNG_AF_IPC;
+	strcpy(d->sa.s_ipc.sa_path, url->u_path);
+	d->sd.sd_free  = ipc_dialer_free;
+	d->sd.sd_close = ipc_dialer_close;
+	d->sd.sd_dial  = ipc_dialer_dial;
+	d->sd.sd_getx  = ipc_dialer_getx;
+	d->sd.sd_setx  = ipc_dialer_setx;
+
+	*dp = (void *) d;
+	return (0);
 }

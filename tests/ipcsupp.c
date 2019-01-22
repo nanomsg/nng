@@ -12,46 +12,38 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/supplemental/ipc/ipc.h>
 
 #include "convey.h"
 #include "stubs.h"
 
-static uint8_t loopback[4] = { 127, 0, 0, 1 };
-static int     num         = 0;
+static int num = 0;
 
 TestMain("Supplemental IPC", {
 	atexit(nng_fini);
 	Convey("We can create a dialer and listener", {
-		nng_ipc_dialer *  d;
-		nng_ipc_listener *l;
-		So(nng_ipc_dialer_alloc(&d) == 0);
-		So(nng_ipc_listener_alloc(&l) == 0);
+		nng_stream_dialer *  d;
+		nng_stream_listener *l;
+		char                 url[64];
+
+		snprintf(url, sizeof(url), "ipc:///tmp/ipcsupp_test%d", num);
+		num++;
+		So(nng_stream_dialer_alloc(&d, url) == 0);
+		So(nng_stream_listener_alloc(&l, url) == 0);
 		Reset({
-			nng_ipc_listener_close(l);
-			nng_ipc_dialer_close(d);
-			nng_ipc_listener_free(l);
-			nng_ipc_dialer_free(d);
+			nng_stream_listener_close(l);
+			nng_stream_dialer_close(d);
+			nng_stream_listener_free(l);
+			nng_stream_dialer_free(d);
 		});
-		Convey("Listener listens (wildcard)", {
-			nng_sockaddr sa;
-			uint32_t     ip;
-
-			memcpy(&ip, loopback, 4);
-
-			num++;
-			sa.s_ipc.sa_family = NNG_AF_IPC;
-			snprintf(sa.s_ipc.sa_path, sizeof(sa.s_ipc.sa_path),
-			    "/tmp/ipc_supp_test%d", num);
-
-			So(nng_ipc_listener_listen(l, &sa) == 0);
+		Convey("Listener listens", {
+			So(nng_stream_listener_listen(l) == 0);
 
 			Convey("We can dial it", {
-				nng_aio *daio = NULL;
-				nng_aio *laio = NULL;
-				nng_aio *maio = NULL;
-				nng_ipc *c1   = NULL;
-				nng_ipc *c2   = NULL;
+				nng_aio *   daio = NULL;
+				nng_aio *   laio = NULL;
+				nng_aio *   maio = NULL;
+				nng_stream *c1   = NULL;
+				nng_stream *c2   = NULL;
 
 				So(nng_aio_alloc(&daio, NULL, NULL) == 0);
 				So(nng_aio_alloc(&laio, NULL, NULL) == 0);
@@ -61,17 +53,17 @@ TestMain("Supplemental IPC", {
 					nng_aio_free(daio);
 					nng_aio_free(laio);
 					if (c1 != NULL) {
-						nng_ipc_close(c1);
-						nng_ipc_free(c1);
+						nng_stream_close(c1);
+						nng_stream_free(c1);
 					}
 					if (c2 != NULL) {
-						nng_ipc_close(c2);
-						nng_ipc_free(c2);
+						nng_stream_close(c2);
+						nng_stream_free(c2);
 					}
 				});
 
-				nng_ipc_dialer_dial(d, &sa, daio);
-				nng_ipc_listener_accept(l, laio);
+				nng_stream_dialer_dial(d, daio);
+				nng_stream_listener_accept(l, laio);
 
 				nng_aio_wait(daio);
 				nng_aio_wait(laio);
@@ -117,8 +109,8 @@ TestMain("Supplemental IPC", {
 					iov.iov_buf = buf2;
 					iov.iov_len = 5;
 					nng_aio_set_iov(aio2, 1, &iov);
-					nng_ipc_send(c1, aio1);
-					nng_ipc_recv(c2, aio2);
+					nng_stream_send(c1, aio1);
+					nng_stream_recv(c2, aio2);
 					nng_aio_wait(aio1);
 					nng_aio_wait(aio2);
 
@@ -131,14 +123,15 @@ TestMain("Supplemental IPC", {
 					So(memcmp(buf1, buf2, 5) == 0);
 
 					Convey("Socket name matches", {
-						size_t rsz = sizeof(sa2);
-						So(nng_ipc_getopt(c2,
-						       NNG_OPT_LOCADDR, &sa2,
-						       &rsz) == 0);
+						So(nng_stream_get_addr(c2,
+						       NNG_OPT_LOCADDR,
+						       &sa2) == 0);
 						So(sa2.s_ipc.sa_family ==
 						    NNG_AF_IPC);
 						So(strcmp(sa2.s_ipc.sa_path,
-						       sa.s_ipc.sa_path) == 0);
+						       url +
+						           strlen("ipc://")) ==
+						    0);
 					});
 				});
 			});

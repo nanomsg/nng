@@ -85,6 +85,15 @@ nosocket(nng_socket *s)
 	return (NNG_ENOTSUP);
 }
 
+uint16_t
+test_htons(uint16_t in)
+{
+#ifdef NNG_LITTLE_ENDIAN
+	in = ((in >> 8) & 0xff) | ((in & 0xff) << 8);
+#endif
+	return (in);
+}
+
 #ifndef NNG_HAVE_REQ0
 #define nng_req0_open nosocket
 #endif

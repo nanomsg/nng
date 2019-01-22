@@ -1,7 +1,7 @@
 //
 // Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <info@devolutions.net>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -17,6 +17,7 @@
 #include "core/nng_impl.h"
 
 struct nni_tcp_conn {
+	nng_stream        ops;
 	SOCKET            s;
 	nni_win_io        recv_io;
 	nni_win_io        send_io;
@@ -35,18 +36,6 @@ struct nni_tcp_conn {
 	char              buf[512]; // to hold acceptex results
 	nni_mtx           mtx;
 	nni_cv            cv;
-};
-
-struct nni_tcp_dialer {
-	LPFN_CONNECTEX   connectex; // looked up name via ioctl
-	nni_list         aios;      // in flight connections
-	bool             closed;
-	bool             nodelay;   // initial value for child conns
-	bool             keepalive; // initial value for child conns
-	SOCKADDR_STORAGE src;
-	size_t           srclen;
-	nni_mtx          mtx;
-	nni_reap_item    reap;
 };
 
 struct nni_tcp_listener {

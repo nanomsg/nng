@@ -11,52 +11,54 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/supplemental/tcp/tcp.h>
 
 #include "convey.h"
 #include "stubs.h"
 
-static uint8_t loopback[4] = { 127, 0, 0, 1 };
-
 TestMain("Supplemental TCP", {
 	atexit(nng_fini);
 	Convey("We can create a dialer and listener", {
-		nng_tcp_dialer *  d;
-		nng_tcp_listener *l;
-		So(nng_tcp_dialer_alloc(&d) == 0);
-		So(nng_tcp_listener_alloc(&l) == 0);
+		nng_stream_dialer *  d = NULL;
+		nng_stream_listener *l = NULL;
 		Reset({
-			nng_tcp_listener_close(l);
-			nng_tcp_dialer_close(d);
-			nng_tcp_listener_free(l);
-			nng_tcp_dialer_free(d);
+			nng_stream_listener_free(l);
+			nng_stream_dialer_free(d);
+			l = NULL;
+			d = NULL;
 		});
 		Convey("Listener listens (wildcard)", {
 			nng_sockaddr sa;
-			uint32_t     ip;
 			size_t       sz;
+			uint8_t      ip[4];
 
-			memcpy(&ip, loopback, 4);
+			So(nng_stream_listener_alloc(&l, "tcp://127.0.0.1") ==
+			    0);
+			So(nng_stream_listener_listen(l) == 0);
 
-			sa.s_in.sa_family = NNG_AF_INET;
-			sa.s_in.sa_addr   = ip;
-			sa.s_in.sa_port   = 0;
-			sz                = sizeof(sa);
-
-			So(nng_tcp_listener_listen(l, &sa) == 0);
-			So(nng_tcp_listener_getopt(
+			sz    = sizeof(sa);
+			ip[0] = 127;
+			ip[1] = 0;
+			ip[2] = 0;
+			ip[3] = 1;
+			So(nng_stream_listener_get(
 			       l, NNG_OPT_LOCADDR, &sa, &sz) == 0);
 			So(sz == sizeof(sa));
 			So(sa.s_in.sa_port != 0);
-			So(sa.s_in.sa_addr == ip);
+			So(memcmp(&sa.s_in.sa_addr, ip, 4) == 0);
 
 			Convey("We can dial it", {
-				nng_aio *daio = NULL;
-				nng_aio *laio = NULL;
-				nng_aio *maio = NULL;
-				nng_tcp *c1   = NULL;
-				nng_tcp *c2   = NULL;
+				nng_aio *   daio = NULL;
+				nng_aio *   laio = NULL;
+				nng_aio *   maio = NULL;
+				nng_stream *c1   = NULL;
+				nng_stream *c2   = NULL;
 
+				char uri[64];
+				snprintf(uri, sizeof(uri),
+				    "tcp://127.0.0.1:%d",
+				    test_htons(sa.s_in.sa_port));
+
+				So(nng_stream_dialer_alloc(&d, uri) == 0);
 				So(nng_aio_alloc(&daio, NULL, NULL) == 0);
 				So(nng_aio_alloc(&laio, NULL, NULL) == 0);
 				So(nng_aio_alloc(&maio, NULL, NULL) == 0);
@@ -65,20 +67,22 @@ TestMain("Supplemental TCP", {
 					nng_aio_free(daio);
 					nng_aio_free(laio);
 					if (c1 != NULL) {
-						nng_tcp_close(c1);
-						nng_tcp_free(c1);
+						nng_stream_close(c1);
+						nng_stream_free(c1);
 					}
 					if (c2 != NULL) {
-						nng_tcp_close(c2);
-						nng_tcp_free(c2);
+						nng_stream_close(c2);
+						nng_stream_free(c2);
 					}
 				});
 
-				nng_tcp_dialer_dial(d, &sa, daio);
-				nng_tcp_listener_accept(l, laio);
+				nng_stream_dialer_dial(d, daio);
+				nng_stream_listener_accept(l, laio);
 
 				nng_aio_wait(daio);
+				So(nng_aio_result(daio) == 0);
 				nng_aio_wait(laio);
+				So(nng_aio_result(laio) == 0);
 
 				So(nng_aio_result(daio) == 0);
 				So(nng_aio_result(laio) == 0);
@@ -109,20 +113,20 @@ TestMain("Supplemental TCP", {
 					});
 
 					on = true;
-					So(nng_tcp_setopt(c1,
+					So(nng_stream_set(c1,
 					       NNG_OPT_TCP_NODELAY, &on,
 					       sizeof(on)) == 0);
-					So(nng_tcp_setopt(c2,
+					So(nng_stream_set(c2,
 					       NNG_OPT_TCP_NODELAY, &on,
 					       sizeof(on)) == 0);
 
-					So(nng_tcp_setopt(c1,
+					So(nng_stream_set(c1,
 					       NNG_OPT_TCP_KEEPALIVE, &on,
 					       sizeof(on)) == 0);
 
 					on = false;
 					sz = sizeof(on);
-					So(nng_tcp_getopt(c1,
+					So(nng_stream_get(c1,
 					       NNG_OPT_TCP_NODELAY, &on,
 					       &sz) == 0);
 					So(sz == sizeof(on));
@@ -130,7 +134,7 @@ TestMain("Supplemental TCP", {
 
 					on = false;
 					sz = sizeof(on);
-					So(nng_tcp_getopt(c1,
+					So(nng_stream_get(c1,
 					       NNG_OPT_TCP_KEEPALIVE, &on,
 					       &sz) == 0);
 					So(sz == sizeof(on));
@@ -151,8 +155,8 @@ TestMain("Supplemental TCP", {
 					iov.iov_buf = buf2;
 					iov.iov_len = 5;
 					nng_aio_set_iov(aio2, 1, &iov);
-					nng_tcp_send(c1, aio1);
-					nng_tcp_recv(c2, aio2);
+					nng_stream_send(c1, aio1);
+					nng_stream_recv(c2, aio2);
 					nng_aio_wait(aio1);
 					nng_aio_wait(aio2);
 
@@ -166,26 +170,29 @@ TestMain("Supplemental TCP", {
 
 					Convey("Socket name matches", {
 						sz = sizeof(sa2);
-						So(nng_tcp_getopt(c2,
+						So(nng_stream_get(c2,
 						       NNG_OPT_LOCADDR, &sa2,
 						       &sz) == 0);
 						So(sz == sizeof(sa2));
 						So(sa2.s_in.sa_family ==
 						    NNG_AF_INET);
-						So(sa2.s_in.sa_addr == ip);
+
+						So(sa2.s_in.sa_addr ==
+						    sa.s_in.sa_addr);
 						So(sa2.s_in.sa_port ==
 						    sa.s_in.sa_port);
 					});
 
 					Convey("Peer name matches", {
 						sz = sizeof(sa2);
-						So(nng_tcp_getopt(c1,
+						So(nng_stream_get(c1,
 						       NNG_OPT_REMADDR, &sa2,
 						       &sz) == 0);
 						So(sz == sizeof(sa2));
 						So(sa2.s_in.sa_family ==
 						    NNG_AF_INET);
-						So(sa2.s_in.sa_addr == ip);
+						So(sa2.s_in.sa_addr ==
+						    sa.s_in.sa_addr);
 						So(sa2.s_in.sa_port ==
 						    sa.s_in.sa_port);
 					});

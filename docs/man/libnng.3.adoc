@@ -20,7 +20,7 @@ libnng - nanomsg next generation library
 
 == DESCRIPTION
 
-The <<nng.7#,_nng_>> library provides a common messaging framework
+The xref:nng.7.adoc[_nng_] library provides a common messaging framework
 intended to solve common communication problems in distributed applications.
 
 It provides a C language API.
@@ -30,12 +30,12 @@ It provides a C language API.
 The following common functions exist in _libnng_.
 
 |===
-|<<nng_alloc.3#,nng_alloc()>>|allocate memory
-|<<nng_free.3#,nng_free()>>|free memory
-|<<nng_strdup.3#,nng_strdup()>>|duplicate string
-|<<nng_strerror.3#,nng_strerror()>>|return an error description
-|<<nng_strfree.3#,nng_strfree()>>|free string
-|<<nng_version.3#,nng_version()>>|report library version
+|xref:nng_alloc.3.adoc[nng_alloc()]|allocate memory
+|xref:nng_free.3.adoc[nng_free()]|free memory
+|xref:nng_strdup.3.adoc[nng_strdup()]|duplicate string
+|xref:nng_strerror.3.adoc[nng_strerror()]|return an error description
+|xref:nng_strfree.3.adoc[nng_strfree()]|free string
+|xref:nng_version.3.adoc[nng_version()]|report library version
 |===
 
 === Socket Functions
@@ -43,14 +43,14 @@ The following common functions exist in _libnng_.
 The following functions operate on sockets.
 
 |===
-|<<nng_close.3#,nng_close()>>|close socket
-|<<nng_dial.3#,nng_dial()>>|create and start dialer
-|<<nng_getopt.3#,nng_getopt()>>|get socket option
-|<<nng_listen.3#,nng_listen()>>|create and start listener
-|<<nng_recv.3#,nng_recv()>>|receive data
-|<<nng_send.3#,nng_send()>>|send data
-|<<nng_setopt.3#,nng_setopt()>>|set socket option
-|<<nng_socket_id.3#,nng_socket_id()>>|get numeric socket identifier
+|xref:nng_close.3.adoc[nng_close()]|close socket
+|xref:nng_dial.3.adoc[nng_dial()]|create and start dialer
+|xref:nng_getopt.3.adoc[nng_getopt()]|get socket option
+|xref:nng_listen.3.adoc[nng_listen()]|create and start listener
+|xref:nng_recv.3.adoc[nng_recv()]|receive data
+|xref:nng_send.3.adoc[nng_send()]|send data
+|xref:nng_setopt.3.adoc[nng_setopt()]|set socket option
+|xref:nng_socket_id.3.adoc[nng_socket_id()]|get numeric socket identifier
 |===
 
 === Connection Management
@@ -59,27 +59,27 @@ The following functions are used with either listeners, or dialers.
 Listeners accept incoming connection requests, and dialers make them.
 
 |===
-|<<nng_dial.3#,nng_dial()>>|create and start dialer
-|<<nng_dialer_close.3#,nng_dialer_close()>>|close dialer
-|<<nng_dialer_create.3#,nng_dialer_create()>>|create dialer
-|<<nng_dialer_getopt.3#,nng_dialer_getopt()>>|get dialer option
-|<<nng_dialer_id.3#,nng_dialer_id()>>|get numeric dialer identifier
-|<<nng_dialer_setopt.3#,nng_dialer_setopt()>>|set dialer option
-|<<nng_dialer_start.3#,nng_dialer_start()>>|start dialer
-|<<nng_listen.3#,nng_listen()>>|create and start listener
-|<<nng_listener_close.3#,nng_listener_close()>>|close listener
-|<<nng_listener_create.3#,nng_listener_create()>>|create listener
-|<<nng_listener_getopt.3#,nng_listener_getopt()>>|get listener option
-|<<nng_listener_id.3#,nng_listener_id()>>|get numeric listener identifier
-|<<nng_listener_setopt.3#,nng_listener_setopt()>>|set listener option
-|<<nng_listener_start.3#,nng_listener_start()>>|start listener
-|<<nng_pipe_close.3#,nng_pipe_close()>>|close pipe
-|<<nng_pipe_dialer.3#,nng_pipe_dialer()>>|return dialer that created pipe
-|<<nng_pipe_getopt.3#,nng_pipe_getopt()>>|get pipe option
-|<<nng_pipe_id.3#,nng_pipe_id()>>|get numeric pipe identifier
-|<<nng_pipe_listener.3#,nng_pipe_listener()>>|return listener that created pipe
-|<<nng_pipe_notify.3#,nng_pipe_notify()>>|register pipe notification callback
-|<<nng_pipe_socket.3#,nng_pipe_socket()>>|return owning socket for pipe
+|xref:nng_dial.3.adoc[nng_dial()]|create and start dialer
+|xref:nng_dialer_close.3.adoc[nng_dialer_close()]|close dialer
+|xref:nng_dialer_create.3.adoc[nng_dialer_create()]|create dialer
+|xref:nng_dialer_getopt.3.adoc[nng_dialer_getopt()]|get dialer option
+|xref:nng_dialer_id.3.adoc[nng_dialer_id()]|get numeric dialer identifier
+|xref:nng_dialer_setopt.3.adoc[nng_dialer_setopt()]|set dialer option
+|xref:nng_dialer_start.3.adoc[nng_dialer_start()]|start dialer
+|xref:nng_listen.3.adoc[nng_listen()]|create and start listener
+|xref:nng_listener_close.3.adoc[nng_listener_close()]|close listener
+|xref:nng_listener_create.3.adoc[nng_listener_create()]|create listener
+|xref:nng_listener_getopt.3.adoc[nng_listener_getopt()]|get listener option
+|xref:nng_listener_id.3.adoc[nng_listener_id()]|get numeric listener identifier
+|xref:nng_listener_setopt.3.adoc[nng_listener_setopt()]|set listener option
+|xref:nng_listener_start.3.adoc[nng_listener_start()]|start listener
+|xref:nng_pipe_close.3.adoc[nng_pipe_close()]|close pipe
+|xref:nng_pipe_dialer.3.adoc[nng_pipe_dialer()]|return dialer that created pipe
+|xref:nng_pipe_getopt.3.adoc[nng_pipe_getopt()]|get pipe option
+|xref:nng_pipe_id.3.adoc[nng_pipe_id()]|get numeric pipe identifier
+|xref:nng_pipe_listener.3.adoc[nng_pipe_listener()]|return listener that created pipe
+|xref:nng_pipe_notify.3.adoc[nng_pipe_notify()]|register pipe notification callback
+|xref:nng_pipe_socket.3.adoc[nng_pipe_socket()]|return owning socket for pipe
 |===
 
 === Message Handling Functions
@@ -93,21 +93,21 @@ user-payload and the header carries protocol specific header information.
 Most applications will only interact with the body.
 
 |===
-|<<nng_msg_alloc.3#,nng_msg_alloc()>>|allocate a message
-|<<nng_msg_append.3#,nng_msg_append()>>|append to message body
-|<<nng_msg_body.3#,nng_msg_body()>>|return message body
-|<<nng_msg_chop.3#,nng_msg_chop()>>|remove data from end of message body
-|<<nng_msg_clear.3#,nng_msg_clear()>>|clear message body
-|<<nng_msg_dup.3#,nng_msg_dup()>>|duplicate a message
-|<<nng_msg_free.3#,nng_msg_free()>>|free a message
-|<<nng_msg_get_pipe.3#,nng_msg_get_pipe()>>|get pipe for message
-|<<nng_msg_insert.3#,nng_msg_insert()>>|prepend to message body
-|<<nng_msg_len.3#,nng_msg_len()>>|return the message body length
-|<<nng_msg_realloc.3#,nng_msg_realloc()>>|reallocate a message
-|<<nng_msg_set_pipe.3#,nng_msg_set_pipe()>>|set pipe for message
-|<<nng_msg_trim.3#,nng_msg_trim()>>|remove data from start of message body
-|<<nng_recvmsg.3#,nng_recvmsg()>>|receive a message
-|<<nng_sendmsg.3#,nng_sendmsg()>>|send a message
+|xref:nng_msg_alloc.3.adoc[nng_msg_alloc()]|allocate a message
+|xref:nng_msg_append.3.adoc[nng_msg_append()]|append to message body
+|xref:nng_msg_body.3.adoc[nng_msg_body()]|return message body
+|xref:nng_msg_chop.3.adoc[nng_msg_chop()]|remove data from end of message body
+|xref:nng_msg_clear.3.adoc[nng_msg_clear()]|clear message body
+|xref:nng_msg_dup.3.adoc[nng_msg_dup()]|duplicate a message
+|xref:nng_msg_free.3.adoc[nng_msg_free()]|free a message
+|xref:nng_msg_get_pipe.3.adoc[nng_msg_get_pipe()]|get pipe for message
+|xref:nng_msg_insert.3.adoc[nng_msg_insert()]|prepend to message body
+|xref:nng_msg_len.3.adoc[nng_msg_len()]|return the message body length
+|xref:nng_msg_realloc.3.adoc[nng_msg_realloc()]|reallocate a message
+|xref:nng_msg_set_pipe.3.adoc[nng_msg_set_pipe()]|set pipe for message
+|xref:nng_msg_trim.3.adoc[nng_msg_trim()]|remove data from start of message body
+|xref:nng_recvmsg.3.adoc[nng_recvmsg()]|receive a message
+|xref:nng_sendmsg.3.adoc[nng_sendmsg()]|send a message
 |===
 
 ==== Message Header Handling
@@ -117,19 +117,19 @@ used to carry protocol-specific content.  However, applications which use raw
 mode may need to access the header of messages.
 
 |===
-|<<nng_msg_header.3#,nng_msg_header()>>|return message header
-|<<nng_msg_header_append.3#,nng_msg_header_append()>>|append to message header
-|<<nng_msg_header_chop.3#,nng_msg_header_chop()>>|remove data from end of message header
-|<<nng_msg_header_clear.3#,nng_msg_header_clear()>>|clear message header
-|<<nng_msg_header_insert.3#,nng_msg_header_insert()>>|prepend to message header
-|<<nng_msg_header_len.3#,nng_msg_header_len()>>|return the message header length
-|<<nng_msg_header_trim.3#,nng_msg_header_trim()>>|remove data from start of message header
+|xref:nng_msg_header.3.adoc[nng_msg_header()]|return message header
+|xref:nng_msg_header_append.3.adoc[nng_msg_header_append()]|append to message header
+|xref:nng_msg_header_chop.3.adoc[nng_msg_header_chop()]|remove data from end of message header
+|xref:nng_msg_header_clear.3.adoc[nng_msg_header_clear()]|clear message header
+|xref:nng_msg_header_insert.3.adoc[nng_msg_header_insert()]|prepend to message header
+|xref:nng_msg_header_len.3.adoc[nng_msg_header_len()]|return the message header length
+|xref:nng_msg_header_trim.3.adoc[nng_msg_header_trim()]|remove data from start of message header
 |===
 
 === Asynchronous Operations
 
 Most applications will interact with _nng_ synchronously; that is that
-functions such as <<nng_send.3#,`nng_send()`>> will block the calling
+functions such as xref:nng_send.3.adoc[`nng_send()`] will block the calling
 thread until the operation has completed.
 
 NOTE: Synchronous operations which send messages may return before the
@@ -143,7 +143,7 @@ the calling thread.  When the operation is subsequently completed (regardless
 of whether this was successful or not), then a user supplied function
 ("`callback`") is executed.
 
-A context structure, an <<nng_aio.5#,`nng_aio`>>, is allocated and
+A context structure, an xref:nng_aio.5.adoc[`nng_aio`], is allocated and
 associated with each asynchronous operation.
 Only a single asynchronous operation may be associated with an
 `nng_aio` at any time.
@@ -151,28 +151,28 @@ Only a single asynchronous operation may be associated with an
 The following functions are used in the asynchronous model:
 
 |===
-|<<nng_aio_abort.3#,nng_aio_abort()>>|abort asynchronous I/O operation
-|<<nng_aio_alloc.3#,nng_aio_alloc()>>|allocate asynchronous I/O handle
-|<<nng_aio_begin.3#,nng_aio_begin()>>|begin asynchronous I/O operation
-|<<nng_aio_cancel.3#,nng_aio_cancel()>>|cancel asynchronous I/O operation
-|<<nng_aio_count.3#,nng_aio_count()>>|return number of bytes transferred
-|<<nng_aio_defer.3#,nng_aio_defer()>>|defer asynchronous I/O operation
-|<<nng_aio_finish.3#,nng_aio_finish()>>|finish asynchronous I/O operation
-|<<nng_aio_free.3#,nng_aio_free()>>|free asynchronous I/O handle
-|<<nng_aio_get_input.3#,nng_aio_get_input()>>|return input parameter
-|<<nng_aio_get_msg.3#,nng_aio_get_msg()>>|get message from an asynchronous receive
-|<<nng_aio_get_output.3#,nng_aio_get_output()>>|return output result
-|<<nng_aio_result.3#,nng_aio_result()>>|return result of asynchronous operation
-|<<nng_aio_set_input.3#,nng_aio_set_input()>>|set input parameter
-|<<nng_aio_set_iov.3#,nng_aio_set_iov()>>|set scatter/gather vector
-|<<nng_aio_set_msg.3#,nng_aio_set_msg()>>|set message for an asynchronous send
-|<<nng_aio_set_output.3#,nng_aio_set_output()>>|set output result
-|<<nng_aio_set_timeout.3#,nng_aio_set_timeout()>>|set asynchronous I/O timeout
-|<<nng_aio_stop.3#,nng_aio_stop()>>|stop asynchronous I/O operation
-|<<nng_aio_wait.3#,nng_aio_wait()>>|wait for asynchronous I/O operation
-|<<nng_recv_aio.3#,nng_recv_aio()>>|receive message asynchronously
-|<<nng_send_aio.3#,nng_send_aio()>>|send message asynchronously
-|<<nng_sleep_aio.3#,nng_sleep_aio()>>|sleep asynchronously
+|xref:nng_aio_abort.3.adoc[nng_aio_abort()]|abort asynchronous I/O operation
+|xref:nng_aio_alloc.3.adoc[nng_aio_alloc()]|allocate asynchronous I/O handle
+|xref:nng_aio_begin.3.adoc[nng_aio_begin()]|begin asynchronous I/O operation
+|xref:nng_aio_cancel.3.adoc[nng_aio_cancel()]|cancel asynchronous I/O operation
+|xref:nng_aio_count.3.adoc[nng_aio_count()]|return number of bytes transferred
+|xref:nng_aio_defer.3.adoc[nng_aio_defer()]|defer asynchronous I/O operation
+|xref:nng_aio_finish.3.adoc[nng_aio_finish()]|finish asynchronous I/O operation
+|xref:nng_aio_free.3.adoc[nng_aio_free()]|free asynchronous I/O handle
+|xref:nng_aio_get_input.3.adoc[nng_aio_get_input()]|return input parameter
+|xref:nng_aio_get_msg.3.adoc[nng_aio_get_msg()]|get message from an asynchronous receive
+|xref:nng_aio_get_output.3.adoc[nng_aio_get_output()]|return output result
+|xref:nng_aio_result.3.adoc[nng_aio_result()]|return result of asynchronous operation
+|xref:nng_aio_set_input.3.adoc[nng_aio_set_input()]|set input parameter
+|xref:nng_aio_set_iov.3.adoc[nng_aio_set_iov()]|set scatter/gather vector
+|xref:nng_aio_set_msg.3.adoc[nng_aio_set_msg()]|set message for an asynchronous send
+|xref:nng_aio_set_output.3.adoc[nng_aio_set_output()]|set output result
+|xref:nng_aio_set_timeout.3.adoc[nng_aio_set_timeout()]|set asynchronous I/O timeout
+|xref:nng_aio_stop.3.adoc[nng_aio_stop()]|stop asynchronous I/O operation
+|xref:nng_aio_wait.3.adoc[nng_aio_wait()]|wait for asynchronous I/O operation
+|xref:nng_recv_aio.3.adoc[nng_recv_aio()]|receive message asynchronously
+|xref:nng_send_aio.3.adoc[nng_send_aio()]|send message asynchronously
+|xref:nng_sleep_aio.3.adoc[nng_sleep_aio()]|sleep asynchronously
 |===
 
 === Protocols
@@ -180,16 +180,16 @@ The following functions are used in the asynchronous model:
 The following functions are used to construct a socket with a specific protocol:
 
 |===
-|<<nng_bus_open.3#,nng_bus_open()>>|open a bus socket
-|<<nng_pair_open.3#,nng_pair_open()>>|open a pair socket
-|<<nng_pub_open.3#,nng_pub_open()>>|open a pub socket
-|<<nng_pull_open.3#,nng_pull_open()>>|open a pull socket
-|<<nng_push_open.3#,nng_push_open()>>|open a push socket
-|<<nng_rep_open.3#,nng_rep_open()>>|open a rep socket
-|<<nng_req_open.3#,nng_req_open()>>|open a req socket
-|<<nng_respondent_open.3#,nng_respondent_open()>>|open a respondent socket
-|<<nng_sub_open.3#,nng_sub_open()>>|open a sub socket
-|<<nng_surveyor_open.3#,nng_surveyor_open()>>|open a surveyor socket
+|xref:nng_bus_open.3.adoc[nng_bus_open()]|open a bus socket
+|xref:nng_pair_open.3.adoc[nng_pair_open()]|open a pair socket
+|xref:nng_pub_open.3.adoc[nng_pub_open()]|open a pub socket
+|xref:nng_pull_open.3.adoc[nng_pull_open()]|open a pull socket
+|xref:nng_push_open.3.adoc[nng_push_open()]|open a push socket
+|xref:nng_rep_open.3.adoc[nng_rep_open()]|open a rep socket
+|xref:nng_req_open.3.adoc[nng_req_open()]|open a req socket
+|xref:nng_respondent_open.3.adoc[nng_respondent_open()]|open a respondent socket
+|xref:nng_sub_open.3.adoc[nng_sub_open()]|open a sub socket
+|xref:nng_surveyor_open.3.adoc[nng_surveyor_open()]|open a surveyor socket
 |===
 
 === Transports
@@ -197,13 +197,13 @@ The following functions are used to construct a socket with a specific protocol:
 The following functions are used to register a transport for use.
 
 |===
-| <<nng_inproc_register.3#,nng_inproc_register()>>|register inproc transport
-| <<nng_ipc_register.3#,nng_ipc_register()>>|register IPC transport
-| <<nng_tcp_register.3#,nng_tcp_register()>>|register TCP transport
-| <<nng_tls_register.3#,nng_tls_register()>>|register TLS transport
-| <<nng_ws_register.3#,nng_ws_register()>>|register WebSocket transport
-| <<nng_wss_register.3#,nng_wss_register()>>|register WebSocket Secure transport
-| <<nng_zt_register.3#,nng_zt_register()>>|register ZeroTier transport
+| xref:nng_inproc_register.3.adoc[nng_inproc_register()]|register inproc transport
+| xref:nng_ipc_register.3.adoc[nng_ipc_register()]|register IPC transport
+| xref:nng_tcp_register.3.adoc[nng_tcp_register()]|register TCP transport
+| xref:nng_tls_register.3.adoc[nng_tls_register()]|register TLS transport
+| xref:nng_ws_register.3.adoc[nng_ws_register()]|register WebSocket transport
+| xref:nng_wss_register.3.adoc[nng_wss_register()]|register WebSocket Secure transport
+| xref:nng_zt_register.3.adoc[nng_zt_register()]|register ZeroTier transport
 |===
 
 === Protocol Contexts
@@ -214,13 +214,13 @@ This can allow multiple contexts to be created on a single socket for
 concurrent applications.
 
 |===
-|<<nng_ctx_close.3#,nng_ctx_close()>>|close context
-|<<nng_ctx_getopt.3#,nng_ctx_getopt()>>|get context option
-|<<nng_ctx_id.3#,nng_ctx_id()>>|get numeric context identifier
-|<<nng_ctx_open.3#,nng_ctx_open()>>|create context
-|<<nng_ctx_recv.3#,nng_ctx_recv()>>|receive message using context asynchronously
-|<<nng_ctx_send.3#,nng_ctx_send()>>|send message using context asynchronously
-|<<nng_ctx_setopt.3#,nng_ctx_setopt()>>|set context option
+|xref:nng_ctx_close.3.adoc[nng_ctx_close()]|close context
+|xref:nng_ctx_getopt.3.adoc[nng_ctx_getopt()]|get context option
+|xref:nng_ctx_id.3.adoc[nng_ctx_id()]|get numeric context identifier
+|xref:nng_ctx_open.3.adoc[nng_ctx_open()]|create context
+|xref:nng_ctx_recv.3.adoc[nng_ctx_recv()]|receive message using context asynchronously
+|xref:nng_ctx_send.3.adoc[nng_ctx_send()]|send message using context asynchronously
+|xref:nng_ctx_setopt.3.adoc[nng_ctx_setopt()]|set context option
 |===
 
 === Statistics
@@ -229,17 +229,17 @@ The following functions provide access to statistics which can be used
 to observe program behaviors and as an aid in troubleshooting.
 
 |===
-|<<nng_stat_child.3#,nng_stat_child()>>|get child statistic
-|<<nng_stat_desc.3#,nng_stat_name()>>|get statistic description
-|<<nng_stat_name.3#,nng_stat_name()>>|get statistic name
-|<<nng_stat_next.3#,nng_stat_next()>>|get next statistic
-|<<nng_stat_string.3#,nng_stat_string()>>|get statistic string value
-|<<nng_stat_timestamp.3#,nng_stat_timestamp()>>|get statistic timestamp
-|<<nng_stat_type.3#,nng_stat_type()>>|get statistic type
-|<<nng_stat_unit.3#,nng_stat_unit()>>|get statistic unit
-|<<nng_stat_value.3#,nng_stat_valueg()>>|get statistic value
-|<<nng_stats_free.3#,nng_stats_free()>>|free statistics
-|<<nng_stats_get.3#,nng_stats_get()>>|get statistics
+|xref:nng_stat_child.3.adoc[nng_stat_child()]|get child statistic
+|xref:nng_stat_desc.3.adoc[nng_stat_name()]|get statistic description
+|xref:nng_stat_name.3.adoc[nng_stat_name()]|get statistic name
+|xref:nng_stat_next.3.adoc[nng_stat_next()]|get next statistic
+|xref:nng_stat_string.3.adoc[nng_stat_string()]|get statistic string value
+|xref:nng_stat_timestamp.3.adoc[nng_stat_timestamp()]|get statistic timestamp
+|xref:nng_stat_type.3.adoc[nng_stat_type()]|get statistic type
+|xref:nng_stat_unit.3.adoc[nng_stat_unit()]|get statistic unit
+|xref:nng_stat_value.3.adoc[nng_stat_valueg()]|get statistic value
+|xref:nng_stats_free.3.adoc[nng_stats_free()]|free statistics
+|xref:nng_stats_get.3.adoc[nng_stats_get()]|get statistics
 |===
 
 === URL Object
@@ -248,9 +248,9 @@ Common functionality is supplied for parsing and handling
 universal resource locators (URLS).
 
 |===
-|<<nng_url_clone.3#,nng_url_clone()>>|clone URL structure
-|<<nng_url_free.3#,nng_url_free()>>|free URL structure
-|<<nng_url_parse.3#,nng_url_parse()>>|create URL structure from string
+|xref:nng_url_clone.3.adoc[nng_url_clone()]|clone URL structure
+|xref:nng_url_free.3.adoc[nng_url_free()]|free URL structure
+|xref:nng_url_parse.3.adoc[nng_url_parse()]|create URL structure from string
 |===
 
 
@@ -261,79 +261,57 @@ network applications with _NNG_, but they are made available
 as a convenience to aid in creating portable applications.
 
 |===
-|<<nng_clock.3supp#,nng_clock()>>|get time
-|<<nng_cv_alloc.3supp#,nng_cv_alloc()>>|allocate condition variable
-|<<nng_cv_free.3supp#,nng_cv_free()>>|free condition variable
-|<<nng_cv_until.3supp#,nng_cv_until()>>|wait for condition or timeout
-|<<nng_cv_wait.3supp#,nng_cv_wait()>>|wait for condition
-|<<nng_cv_wake.3supp#,nng_cv_wake()>>|wake all waiters
-|<<nng_cv_wake1.3supp#,nng_cv_wake1()>>|wake one waiter
-|<<nng_msleep.3supp#,nng_msleep()>>|sleep for milliseconds
-|<<nng_mtx_alloc.3supp#,nng_mtx_alloc()>>|allocate mutex
-|<<nng_mtx_free.3supp#,nng_mtx_free()>>|free mutex
-|<<nng_mtx_lock.3supp#,nng_mtx_lock()>>|lock mutex
-|<<nng_mtx_unlock.3supp#,nng_mtx_unlock()>>|unlock mutex
-|<<nng_opts_parse.3supp#,nng_opts_parse()>>|parse command line options
-|<<nng_random.3supp#,nng_random()>>|get random number
-|<<nng_thread_create.3supp#,nng_thread_create()>>|create thread
-|<<nng_thread_destroy.3supp#,nng_thread_destroy()>>|reap thread
+|xref:nng_clock.3supp.adoc[nng_clock()]|get time
+|xref:nng_cv_alloc.3supp.adoc[nng_cv_alloc()]|allocate condition variable
+|xref:nng_cv_free.3supp.adoc[nng_cv_free()]|free condition variable
+|xref:nng_cv_until.3supp.adoc[nng_cv_until()]|wait for condition or timeout
+|xref:nng_cv_wait.3supp.adoc[nng_cv_wait()]|wait for condition
+|xref:nng_cv_wake.3supp.adoc[nng_cv_wake()]|wake all waiters
+|xref:nng_cv_wake1.3supp.adoc[nng_cv_wake1()]|wake one waiter
+|xref:nng_msleep.3supp.adoc[nng_msleep()]|sleep for milliseconds
+|xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc()]|allocate mutex
+|xref:nng_mtx_free.3supp.adoc[nng_mtx_free()]|free mutex
+|xref:nng_mtx_lock.3supp.adoc[nng_mtx_lock()]|lock mutex
+|xref:nng_mtx_unlock.3supp.adoc[nng_mtx_unlock()]|unlock mutex
+|xref:nng_opts_parse.3supp.adoc[nng_opts_parse()]|parse command line options
+|xref:nng_random.3supp.adoc[nng_random()]|get random number
+|xref:nng_thread_create.3supp.adoc[nng_thread_create()]|create thread
+|xref:nng_thread_destroy.3supp.adoc[nng_thread_destroy()]|reap thread
 |===
 
+=== Byte Streams
 
-=== Supplemental TCP
+These functions are available for use with byte streams.
+They are considered low-level, for uses where the higher level functions
+using Scalability Protocols are inappropriate.
 
-These TCP functions are available for use with direct TCP access.
-Most applications won't need to use these.
-
-|===
-|<<nng_tcp_close.3tcp#,nng_tcp_close()>>|close TCP connection
-|<<nng_tcp_dialer_alloc.3tcp#,nng_tcp_dialer_alloc()>>|allocate TCP dialer
-|<<nng_tcp_dialer_close.3tcp#,nng_tcp_dialer_close()>>|close TCP dialer
-|<<nng_tcp_dialer_dial.3tcp#,nng_tcp_dialer_dial()>>|initiate outgoing TCP connection
-|<<nng_tcp_dialer_free.3tcp#,nng_tcp_dialer_free()>>|free TCP dialer
-|<<nng_tcp_dialer_getopt.3tcp#,nng_tcp_dialer_getopt()>>|get option from TCP dialer
-|<<nng_tcp_dialer_setopt.3tcp#,nng_tcp_dialer_setopt()>>|set option on TCP dialer
-|<<nng_tcp_free.3tcp#,nng_tcp_free()>>|free TCP connection
-|<<nng_tcp_getopt.3tcp#,nng_tcp_getopt()>>|get option from TCP connection
-|<<nng_tcp_listener_accept.3tcp#,nng_tcp_listener_accept()>>|accept incoming TCP connection
-|<<nng_tcp_listener_alloc.3tcp#,nng_tcp_listener_alloc()>>|allocate TCP listener
-|<<nng_tcp_listener_close.3tcp#,nng_tcp_listener_close()>>|close TCP listener
-|<<nng_tcp_listener_free.3tcp#,nng_tcp_listener_free()>>|free TCP listener
-|<<nng_tcp_listener_getopt.3tcp#,nng_tcp_listener_getopt()>>|get option from TCP listener
-|<<nng_tcp_listener_listen.3tcp#,nng_tcp_listener_listen()>>|bind TCP listener to port
-|<<nng_tcp_listener_setopt.3tcp#,nng_tcp_listener_setopt()>>|set option on TCP listener
-|<<nng_tcp_recv.3tcp#,nng_tcp_recv()>>|receive from TCP connection
-|<<nng_tcp_send.3tcp#,nng_tcp_send()>>|send to TCP connection
-|<<nng_tcp_setopt.3tcp#,nng_tcp_setopt()>>|set option on TCP connection
-|===
-
-
-=== Supplemental IPC
-
-These IPC functions are available for use with direct interprocess
-communication (IPC).
-Most applications won't need to use these.
+Byte streams, represented by
+xref:nng_stream.5.adoc[`nng_stream`] objects, correspond to underlying
+connections such as TCP connections or named pipes.
+They are created by either
+xref:nng_stream_dialer.5.adoc[`nng_stream_dialer`] or
+xref:nng_stream_listener.5.adoc[`nng_stream_listener`] objects.
 
 |===
-|<<nng_ipc_close.3ipc#,nng_ipc_close()>>|close IPC connection
-|<<nng_ipc_dialer_alloc.3ipc#,nng_ipc_dialer_alloc()>>|allocate IPC dialer
-|<<nng_ipc_dialer_close.3ipc#,nng_ipc_dialer_close()>>|close IPC dialer
-|<<nng_ipc_dialer_dial.3ipc#,nng_ipc_dialer_dial()>>|initiate outgoing IPC connection
-|<<nng_ipc_dialer_free.3ipc#,nng_ipc_dialer_free()>>|free IPC dialer
-|<<nng_ipc_dialer_getopt.3ipc#,nng_ipc_dialer_getopt()>>|get option from IPC dialer
-|<<nng_ipc_dialer_setopt.3ipc#,nng_ipc_dialer_setopt()>>|set option on IPC dialer
-|<<nng_ipc_free.3ipc#,nng_ipc_free()>>|free IPC connection
-|<<nng_ipc_getopt.3ipc#,nng_ipc_getopt()>>|get option from IPC connection
-|<<nng_ipc_listener_accept.3ipc#,nng_ipc_listener_accept()>>|accept incoming IPC connection
-|<<nng_ipc_listener_alloc.3ipc#,nng_ipc_listener_alloc()>>|allocate IPC listener
-|<<nng_ipc_listener_close.3ipc#,nng_ipc_listener_close()>>|close IPC listener
-|<<nng_ipc_listener_free.3ipc#,nng_ipc_listener_free()>>|free IPC listener
-|<<nng_ipc_listener_getopt.3ipc#,nng_ipc_listener_getopt()>>|get option from IPC listener
-|<<nng_ipc_listener_listen.3ipc#,nng_ipc_listener_listen()>>|bind IPC listener
-|<<nng_ipc_listener_setopt.3ipc#,nng_ipc_listener_setopt()>>|set option on IPC listener
-|<<nng_ipc_recv.3ipc#,nng_ipc_recv()>>|receive from IPC connection
-|<<nng_ipc_send.3ipc#,nng_ipc_send()>>|send to IPC connection
-|<<nng_ipc_setopt.3ipc#,nng_ipc_setopt()>>|set option on IPC connection
+|xref:nng_stream_close.3str.adoc[nng_stream_close()]|close byte stream
+|xref:nng_stream_dialer_alloc.3str.adoc[nng_stream_dialer_alloc()]|allocate byte stream dialer
+|xref:nng_stream_dialer_close.3str.adoc[nng_stream_dialer_close()]|close byte stream dialer
+|xref:nng_stream_dialer_dial.3str.adoc[nng_stream_dialer_dial()]|initiate outgoing byte stream
+|xref:nng_stream_dialer_free.3str.adoc[nng_stream_dialer_free()]|free byte stream dialer
+|xref:nng_stream_dialer_get.3str.adoc[nng_stream_dialer_get()]|get option from byte stream dialer
+|xref:nng_stream_dialer_set.3str.adoc[nng_stream_dialer_set()]|set option on byte stream dialer
+|xref:nng_stream_free.3str.adoc[nng_stream_free()]|free byte stream
+|xref:nng_stream_get.3str.adoc[nng_stream_get()]|get option from byte stream
+|xref:nng_stream_listener_accept.3str.adoc[nng_stream_listener_accept()]|accept incoming byte stream
+|xref:nng_stream_listener_alloc.3str.adoc[nng_stream_listener_alloc()]|allocate byte stream listener
+|xref:nng_stream_listener_close.3str.adoc[nng_stream_listener_close()]|close byte stream listener
+|xref:nng_stream_listener_free.3str.adoc[nng_stream_listener_free()]|free byte stream listener
+|xref:nng_stream_listener_get.3str.adoc[nng_stream_listener_get()]|get option from byte stream listener
+|xref:nng_stream_listener_listen.3str.adoc[nng_stream_listener_listen()]|bind byte stream listener to address
+|xref:nng_stream_listener_set.3str.adoc[nng_stream_listener_set()]|set option on byte stream listener
+|xref:nng_stream_recv.3str.adoc[nng_stream_recv()]|receive from byte stream
+|xref:nng_stream_send.3str.adoc[nng_stream_send()]|send to byte stream
+|xref:nng_stream_set.3str.adoc[nng_stream_set()]|set option on byte stream
 |===
 
 === HTTP Support
@@ -349,48 +327,48 @@ The following functions are used to work with HTTP requests, responses,
 and connections.
 
 |===
-|<<nng_http_conn_close.3http#,nng_http_conn_close()>>|close HTTP connection
-|<<nng_http_conn_read.3http#,nng_http_conn_read()>>|read from HTTP connection
-|<<nng_http_conn_read_all.3http#,nng_http_conn_read_all()>>|read all from HTTP connection
-|<<nng_http_conn_read_req.3http#,nng_http_conn_read_req()>>|read HTTP request
-|<<nng_http_conn_read_res.3http#,nng_http_conn_read_res()>>|read HTTP response
-|<<nng_http_conn_write.3http#,nng_http_conn_write()>>|write to HTTP connection
-|<<nng_http_conn_write_all.3http#,nng_http_conn_write_all()>>|write all to HTTP connection
-|<<nng_http_conn_write_req.3http#,nng_http_conn_write_req()>>|write HTTP request
-|<<nng_http_conn_write_res.3http#,nng_http_conn_write_res()>>|write HTTP response
-|<<nng_http_req_add_header.3http#,nng_http_req_add_header()>>|add HTTP request header
-|<<nng_http_req_alloc.3http#,nng_http_req_alloc()>>|allocate HTTP request structure
-|<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>|copy HTTP request body
-|<<nng_http_req_del_header.3http#,nng_http_req_del_header()>>|delete HTTP request header
-|<<nng_http_req_free.3http#,nng_http_req_free()>>|free HTTP request structure
-|<<nng_http_req_get_data.3http#,nng_http_req_get_data()>>|get HTTP request body
-|<<nng_http_req_get_header.3http#,nng_http_req_get_header()>>|return HTTP request header
-|<<nng_http_req_get_method.3http#,nng_http_req_get_method()>>|return HTTP request method
-|<<nng_http_req_get_uri.3http#,nng_http_req_get_uri()>>|return HTTP request URI
-|<<nng_http_req_get_version.3http#,nng_http_req_get_version()>>|return HTTP request protocol version
-|<<nng_http_req_reset.3http#,nng_http_req_reset()>>|reset HTTP request structure
-|<<nng_http_req_set_data.3http#,nng_http_req_set_data()>>|set HTTP request body
-|<<nng_http_req_set_header.3http#,nng_http_req_set_header()>>|set HTTP request header
-|<<nng_http_req_set_method.3http#,nng_http_req_set_method()>>|set HTTP request method
-|<<nng_http_req_set_uri.3http#,nng_http_req_set_uri()>>|set HTTP request URI
-|<<nng_http_req_set_version.3http#,nng_http_req_set_version()>>|set HTTP request protocol version
-|<<nng_http_res_add_header.3http#,nng_http_res_add_header()>>|add HTTP response header
-|<<nng_http_res_alloc.3http#,nng_http_res_alloc()>>|allocate HTTP response structure
-|<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error()>>|allocate HTTP error response
-|<<nng_http_res_copy_data.3http#,nng_http_res_copy_data()>>|copy HTTP response body
-|<<nng_http_res_del_header.3http#,nng_http_res_del_header()>>|delete HTTP response header
-|<<nng_http_res_free.3http#,nng_http_res_free()>>|free HTTP response structure
-|<<nng_http_res_get_data.3http#,nng_http_res_get_data()>>|get HTTP response body
-|<<nng_http_res_get_header.3http#,nng_http_res_get_header()>>|return HTTP response header
-|<<nng_http_res_get_reason.3http#,nng_http_res_get_reason()>>|return HTTP response reason
-|<<nng_http_res_get_status.3http#,nng_http_res_get_status()>>|return HTTP response status
-|<<nng_http_res_get_version.3http#,nng_http_res_get_version()>>|return HTTP response protocol version
-|<<nng_http_res_reset.3http#,nng_http_res_reset()>>|reset HTTP response structure
-|<<nng_http_res_set_data.3http#,nng_http_res_set_data()>>|set HTTP response body
-|<<nng_http_res_set_header.3http#,nng_http_res_set_header()>>|set HTTP response header
-|<<nng_http_res_set_reason.3http#,nng_http_res_set_reason()>>|set HTTP response reason
-|<<nng_http_res_set_status.3http#,nng_http_res_set_status()>>|set HTTP response status
-|<<nng_http_res_set_version.3http#,nng_http_res_set_version()>>|set HTTP response protocol version
+|xref:nng_http_conn_close.3http.adoc[nng_http_conn_close()]|close HTTP connection
+|xref:nng_http_conn_read.3http.adoc[nng_http_conn_read()]|read from HTTP connection
+|xref:nng_http_conn_read_all.3http.adoc[nng_http_conn_read_all()]|read all from HTTP connection
+|xref:nng_http_conn_read_req.3http.adoc[nng_http_conn_read_req()]|read HTTP request
+|xref:nng_http_conn_read_res.3http.adoc[nng_http_conn_read_res()]|read HTTP response
+|xref:nng_http_conn_write.3http.adoc[nng_http_conn_write()]|write to HTTP connection
+|xref:nng_http_conn_write_all.3http.adoc[nng_http_conn_write_all()]|write all to HTTP connection
+|xref:nng_http_conn_write_req.3http.adoc[nng_http_conn_write_req()]|write HTTP request
+|xref:nng_http_conn_write_res.3http.adoc[nng_http_conn_write_res()]|write HTTP response
+|xref:nng_http_req_add_header.3http.adoc[nng_http_req_add_header()]|add HTTP request header
+|xref:nng_http_req_alloc.3http.adoc[nng_http_req_alloc()]|allocate HTTP request structure
+|xref:nng_http_req_copy_data.3http.adoc[nng_http_req_copy_data()]|copy HTTP request body
+|xref:nng_http_req_del_header.3http.adoc[nng_http_req_del_header()]|delete HTTP request header
+|xref:nng_http_req_free.3http.adoc[nng_http_req_free()]|free HTTP request structure
+|xref:nng_http_req_get_data.3http.adoc[nng_http_req_get_data()]|get HTTP request body
+|xref:nng_http_req_get_header.3http.adoc[nng_http_req_get_header()]|return HTTP request header
+|xref:nng_http_req_get_method.3http.adoc[nng_http_req_get_method()]|return HTTP request method
+|xref:nng_http_req_get_uri.3http.adoc[nng_http_req_get_uri()]|return HTTP request URI
+|xref:nng_http_req_get_version.3http.adoc[nng_http_req_get_version()]|return HTTP request protocol version
+|xref:nng_http_req_reset.3http.adoc[nng_http_req_reset()]|reset HTTP request structure
+|xref:nng_http_req_set_data.3http.adoc[nng_http_req_set_data()]|set HTTP request body
+|xref:nng_http_req_set_header.3http.adoc[nng_http_req_set_header()]|set HTTP request header
+|xref:nng_http_req_set_method.3http.adoc[nng_http_req_set_method()]|set HTTP request method
+|xref:nng_http_req_set_uri.3http.adoc[nng_http_req_set_uri()]|set HTTP request URI
+|xref:nng_http_req_set_version.3http.adoc[nng_http_req_set_version()]|set HTTP request protocol version
+|xref:nng_http_res_add_header.3http.adoc[nng_http_res_add_header()]|add HTTP response header
+|xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc()]|allocate HTTP response structure
+|xref:nng_http_res_alloc_error.3http.adoc[nng_http_res_alloc_error()]|allocate HTTP error response
+|xref:nng_http_res_copy_data.3http.adoc[nng_http_res_copy_data()]|copy HTTP response body
+|xref:nng_http_res_del_header.3http.adoc[nng_http_res_del_header()]|delete HTTP response header
+|xref:nng_http_res_free.3http.adoc[nng_http_res_free()]|free HTTP response structure
+|xref:nng_http_res_get_data.3http.adoc[nng_http_res_get_data()]|get HTTP response body
+|xref:nng_http_res_get_header.3http.adoc[nng_http_res_get_header()]|return HTTP response header
+|xref:nng_http_res_get_reason.3http.adoc[nng_http_res_get_reason()]|return HTTP response reason
+|xref:nng_http_res_get_status.3http.adoc[nng_http_res_get_status()]|return HTTP response status
+|xref:nng_http_res_get_version.3http.adoc[nng_http_res_get_version()]|return HTTP response protocol version
+|xref:nng_http_res_reset.3http.adoc[nng_http_res_reset()]|reset HTTP response structure
+|xref:nng_http_res_set_data.3http.adoc[nng_http_res_set_data()]|set HTTP response body
+|xref:nng_http_res_set_header.3http.adoc[nng_http_res_set_header()]|set HTTP response header
+|xref:nng_http_res_set_reason.3http.adoc[nng_http_res_set_reason()]|set HTTP response reason
+|xref:nng_http_res_set_status.3http.adoc[nng_http_res_set_status()]|set HTTP response status
+|xref:nng_http_res_set_version.3http.adoc[nng_http_res_set_version()]|set HTTP response protocol version
 |===
 
 ==== HTTP Client Functions
@@ -398,13 +376,13 @@ and connections.
 These functions are intended for use with HTTP client applications.
 
 |===
-|<<nng_http_client_alloc.3http#,nng_http_client_alloc()>>|allocate HTTP client
-|<<nng_http_client_connect.3http#,nng_http_client_connect()>>|establish HTTP client connection
-|<<nng_http_client_free.3http#,nng_http_client_free()>>|free HTTP client
-|<<nng_http_client_get_tls.3http#,nng_http_client_get_tls()>>|get HTTP client TLS configuration
-|<<nng_http_client_set_tls.3http#,nng_http_client_set_tls()>>|set HTTP client TLS configuration
-|<<nng_http_client_transact.3http#,nng_http_client_transact()>>|perform one HTTP transaction
-|<<nng_http_conn_transact.3http#,nng_http_conn_transact()>>|perform one HTTP transaction on connection
+|xref:nng_http_client_alloc.3http.adoc[nng_http_client_alloc()]|allocate HTTP client
+|xref:nng_http_client_connect.3http.adoc[nng_http_client_connect()]|establish HTTP client connection
+|xref:nng_http_client_free.3http.adoc[nng_http_client_free()]|free HTTP client
+|xref:nng_http_client_get_tls.3http.adoc[nng_http_client_get_tls()]|get HTTP client TLS configuration
+|xref:nng_http_client_set_tls.3http.adoc[nng_http_client_set_tls()]|set HTTP client TLS configuration
+|xref:nng_http_client_transact.3http.adoc[nng_http_client_transact()]|perform one HTTP transaction
+|xref:nng_http_conn_transact.3http.adoc[nng_http_conn_transact()]|perform one HTTP transaction on connection
 |===
 
 ==== HTTP Server Functions
@@ -412,26 +390,26 @@ These functions are intended for use with HTTP client applications.
 These functions are intended for use with HTTP server applications.
 
 |===
-|<<nng_http_handler_alloc.3http#,nng_http_handler_alloc()>>|allocate HTTP server handler
-|<<nng_http_handler_collect_body.3http#,nng_http_handler_collect_body()>>|set HTTP handler to collect request body
-|<<nng_http_handler_free.3http#,nng_http_handler_free()>>|free HTTP server handler
-|<<nng_http_handler_get_data.3http#,nng_http_handler_get_data()>>|return extra data for HTTP handler
-|<<nng_http_handler_set_data.3http#,nng_http_handler_set_data()>>|set extra data for HTTP handler
-|<<nng_http_handler_set_host.3http#,nng_http_handler_set_host()>>|set host for HTTP handler
-|<<nng_http_handler_set_method.3http#,nng_http_handler_set_method()>>|set HTTP handler method
-|<<nng_http_handler_set_tree.3http#,nng_http_handler_set_tree()>>|set HTTP handler to match trees
-|<<nng_http_hijack.3http#,nng_http_hijack()>>|hijack HTTP server connection
-|<<nng_http_server_add_handler.3http#,nng_http_server_add_handler()>>|add HTTP server handler
-|<<nng_http_server_del_handler.3http#,nng_http_server_del_handler()>>|delete HTTP server handler
-|<<nng_http_server_get_tls.3http#,nng_http_server_get_tls()>>|get HTTP server TLS configuration
-|<<nng_http_server_hold.3http#,nng_http_server_hold()>>|get and hold HTTP server instance
-|<<nng_http_server_release.3http#,nng_http_server_release()>>|release HTTP server instance
-|<<nng_http_server_set_error_file.3http#,nng_http_server_set_error_file()>>|set custom HTTP error file
-|<<nng_http_server_set_error_page.3http#,nng_http_server_set_error_page()>>|set custom HTTP error page
-|<<nng_http_server_set_tls.3http#,nng_http_server_set_tls()>>|set HTTP server TLS configuration
-|<<nng_http_server_res_error.3http#,nng_http_server_res_error()>>|use HTTP server error page
-|<<nng_http_server_start.3http#,nng_http_server_start()>>|start HTTP server
-|<<nng_http_server_stop.3http#,nng_http_server_stop()>>|stop HTTP server
+|xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc()]|allocate HTTP server handler
+|xref:nng_http_handler_collect_body.3http.adoc[nng_http_handler_collect_body()]|set HTTP handler to collect request body
+|xref:nng_http_handler_free.3http.adoc[nng_http_handler_free()]|free HTTP server handler
+|xref:nng_http_handler_get_data.3http.adoc[nng_http_handler_get_data()]|return extra data for HTTP handler
+|xref:nng_http_handler_set_data.3http.adoc[nng_http_handler_set_data()]|set extra data for HTTP handler
+|xref:nng_http_handler_set_host.3http.adoc[nng_http_handler_set_host()]|set host for HTTP handler
+|xref:nng_http_handler_set_method.3http.adoc[nng_http_handler_set_method()]|set HTTP handler method
+|xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree()]|set HTTP handler to match trees
+|xref:nng_http_hijack.3http.adoc[nng_http_hijack()]|hijack HTTP server connection
+|xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler()]|add HTTP server handler
+|xref:nng_http_server_del_handler.3http.adoc[nng_http_server_del_handler()]|delete HTTP server handler
+|xref:nng_http_server_get_tls.3http.adoc[nng_http_server_get_tls()]|get HTTP server TLS configuration
+|xref:nng_http_server_hold.3http.adoc[nng_http_server_hold()]|get and hold HTTP server instance
+|xref:nng_http_server_release.3http.adoc[nng_http_server_release()]|release HTTP server instance
+|xref:nng_http_server_set_error_file.3http.adoc[nng_http_server_set_error_file()]|set custom HTTP error file
+|xref:nng_http_server_set_error_page.3http.adoc[nng_http_server_set_error_page()]|set custom HTTP error page
+|xref:nng_http_server_set_tls.3http.adoc[nng_http_server_set_tls()]|set HTTP server TLS configuration
+|xref:nng_http_server_res_error.3http.adoc[nng_http_server_res_error()]|use HTTP server error page
+|xref:nng_http_server_start.3http.adoc[nng_http_server_start()]|start HTTP server
+|xref:nng_http_server_stop.3http.adoc[nng_http_server_stop()]|stop HTTP server
 |===
 
 === TLS Configuration Objects
@@ -444,38 +422,38 @@ NOTE: These functions will only be present if the library has been built
 with TLS support.
 
 |===
-|<<nng_tls_close.3tls#,nng_tls_close()>>|close TLS connection
-|<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc()>>|allocate TLS configuration
-|<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode()>>|set authentication mode
-|<<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain()>>|set certificate authority chain
-|<<nng_tls_config_ca_file.3tls#,nng_tls_config_ca_file()>>|load certificate authority from file
-|<<nng_tls_config_cert_key_file.3tls#,nng_tls_config_cert_key_file()>>|load own certificate and key from file
-|<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>|set own certificate and key
-|<<nng_tls_config_free.3tls#,nng_tls_config_free()>>|free TLS configuration
-|<<nng_tls_config_server_name.3tls#,nng_tls_config_server_name()>>|set remote server name
-|<<nng_tls_dialer_alloc.3tls#,nng_tls_dialer_alloc()>>|allocate TLS dialer
-|<<nng_tls_dialer_close.3tls#,nng_tls_dialer_close()>>|close TLS dialer
-|<<nng_tls_dialer_dial.3tls#,nng_tls_dialer_dial()>>|initiate outgoing TLS connection
-|<<nng_tls_dialer_free.3tls#,nng_tls_dialer_free()>>|free TLS dialer
-|<<nng_tls_dialer_getopt.3tls#,nng_tls_dialer_getopt()>>|get option from TLS dialer
-|<<nng_tls_dialer_setopt.3tls#,nng_tls_dialer_setopt()>>|set option on TLS dialer
-|<<nng_tls_free.3tls#,nng_tls_free()>>|free TLS connection
-|<<nng_tls_getopt.3tls#,nng_tls_getopt()>>|get option from TLS connection
-|<<nng_tls_listener_accept.3tls#,nng_tls_listener_accept()>>|accept incoming TLS connection
-|<<nng_tls_listener_alloc.3tls#,nng_tls_listener_alloc()>>|allocate TLS listener
-|<<nng_tls_listener_close.3tls#,nng_tls_listener_close()>>|close TLS listener
-|<<nng_tls_listener_free.3tls#,nng_tls_listener_free()>>|free TLS listener
-|<<nng_tls_listener_getopt.3tls#,nng_tls_listener_getopt()>>|get option from TLS listener
-|<<nng_tls_listener_listen.3tls#,nng_tls_listener_listen()>>|bind TLS listener to port
-|<<nng_tls_listener_setopt.3tls#,nng_tls_listener_setopt()>>|set option on TLS listener
-|<<nng_tls_recv.3tls#,nng_tls_recv()>>|receive from TLS connection
-|<<nng_tls_send.3tls#,nng_tls_send()>>|send to TLS connection
-|<<nng_tls_setopt.3tls#,nng_tls_setopt()>>|set option on TLS connection
+|xref:nng_tls_close.3tls.adoc[nng_tls_close()]|close TLS connection
+|xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc()]|allocate TLS configuration
+|xref:nng_tls_config_auth_mode.3tls.adoc[nng_tls_config_auth_mode()]|set authentication mode
+|xref:nng_tls_config_ca_chain.3tls.adoc[nng_tls_config_ca_chain()]|set certificate authority chain
+|xref:nng_tls_config_ca_file.3tls.adoc[nng_tls_config_ca_file()]|load certificate authority from file
+|xref:nng_tls_config_cert_key_file.3tls.adoc[nng_tls_config_cert_key_file()]|load own certificate and key from file
+|xref:nng_tls_config_own_cert.3tls.adoc[nng_tls_config_own_cert()]|set own certificate and key
+|xref:nng_tls_config_free.3tls.adoc[nng_tls_config_free()]|free TLS configuration
+|xref:nng_tls_config_server_name.3tls.adoc[nng_tls_config_server_name()]|set remote server name
+|xref:nng_tls_dialer_alloc.3tls.adoc[nng_tls_dialer_alloc()]|allocate TLS dialer
+|xref:nng_tls_dialer_close.3tls.adoc[nng_tls_dialer_close()]|close TLS dialer
+|xref:nng_tls_dialer_dial.3tls.adoc[nng_tls_dialer_dial()]|initiate outgoing TLS connection
+|xref:nng_tls_dialer_free.3tls.adoc[nng_tls_dialer_free()]|free TLS dialer
+|xref:nng_tls_dialer_getopt.3tls.adoc[nng_tls_dialer_getopt()]|get option from TLS dialer
+|xref:nng_tls_dialer_setopt.3tls.adoc[nng_tls_dialer_setopt()]|set option on TLS dialer
+|xref:nng_tls_free.3tls.adoc[nng_tls_free()]|free TLS connection
+|xref:nng_tls_getopt.3tls.adoc[nng_tls_getopt()]|get option from TLS connection
+|xref:nng_tls_listener_accept.3tls.adoc[nng_tls_listener_accept()]|accept incoming TLS connection
+|xref:nng_tls_listener_alloc.3tls.adoc[nng_tls_listener_alloc()]|allocate TLS listener
+|xref:nng_tls_listener_close.3tls.adoc[nng_tls_listener_close()]|close TLS listener
+|xref:nng_tls_listener_free.3tls.adoc[nng_tls_listener_free()]|free TLS listener
+|xref:nng_tls_listener_getopt.3tls.adoc[nng_tls_listener_getopt()]|get option from TLS listener
+|xref:nng_tls_listener_listen.3tls.adoc[nng_tls_listener_listen()]|bind TLS listener to port
+|xref:nng_tls_listener_setopt.3tls.adoc[nng_tls_listener_setopt()]|set option on TLS listener
+|xref:nng_tls_recv.3tls.adoc[nng_tls_recv()]|receive from TLS connection
+|xref:nng_tls_send.3tls.adoc[nng_tls_send()]|send to TLS connection
+|xref:nng_tls_setopt.3tls.adoc[nng_tls_setopt()]|set option on TLS connection
 |===
 
 
 == SEE ALSO
 
 [.text-left]
-<<nng_compat.3compat#,nng_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nng_compat.3compat.adoc[nng_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

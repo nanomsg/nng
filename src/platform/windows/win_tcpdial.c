@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -15,6 +15,18 @@
 
 #include <malloc.h>
 #include <stdio.h>
+
+struct nni_tcp_dialer {
+	LPFN_CONNECTEX   connectex; // looked up name via ioctl
+	nni_list         aios;      // in flight connections
+	bool             closed;
+	bool             nodelay;   // initial value for child conns
+	bool             keepalive; // initial value for child conns
+	SOCKADDR_STORAGE src;       // source address
+	size_t           srclen;
+	nni_mtx          mtx;
+	nni_reap_item    reap;
+};
 
 int
 nni_tcp_dialer_init(nni_tcp_dialer **dp)
@@ -137,7 +149,7 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 	nni_mtx_unlock(&d->mtx);
 
 	if (rv != 0) {
-		nni_tcp_conn_fini(c);
+		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);
 	} else {
 		DWORD yes = 1;
@@ -156,19 +168,22 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 }
 
 void
-nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
+nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 {
 	SOCKET           s;
 	SOCKADDR_STORAGE ss;
 	int              len;
 	nni_tcp_conn *   c;
 	int              rv;
+	nng_sockaddr     sa;
+
+	nni_aio_get_sockaddr(aio, &sa);
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 
-	if ((len = nni_win_nn2sockaddr(&ss, sa)) <= 0) {
+	if ((len = nni_win_nn2sockaddr(&ss, &sa)) <= 0) {
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
 		return;
 	}
@@ -179,7 +194,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	}
 
 	if ((rv = nni_win_tcp_conn_init(&c, s)) != 0) {
-		nni_tcp_conn_fini(c);
+		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -194,7 +209,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	nni_mtx_lock(&d->mtx);
 	if (d->closed) {
 		nni_mtx_unlock(&d->mtx);
-		nni_tcp_conn_fini(c);
+		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
@@ -212,7 +227,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	if (bind(s, (SOCKADDR *) &c->sockname, len) != 0) {
 		rv = nni_win_error(GetLastError());
 		nni_mtx_unlock(&d->mtx);
-		nni_tcp_conn_fini(c);
+		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -221,7 +236,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 	nni_aio_set_prov_extra(aio, 0, c);
 	if ((rv = nni_aio_schedule(aio, tcp_dial_cancel, d)) != 0) {
 		nni_mtx_unlock(&d->mtx);
-		nni_tcp_conn_fini(c);
+		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -234,8 +249,7 @@ nni_tcp_dialer_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 		if ((rv = GetLastError()) != ERROR_IO_PENDING) {
 			nni_aio_list_remove(aio);
 			nni_mtx_unlock(&d->mtx);
-
-			nni_tcp_conn_fini(c);
+			nng_stream_free(&c->ops);
 			nni_aio_finish_error(aio, rv);
 			return;
 		}

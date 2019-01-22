@@ -29,6 +29,16 @@
 
 #include "posix_tcp.h"
 
+struct nni_tcp_listener {
+	nni_posix_pfd *pfd;
+	nni_list       acceptq;
+	bool           started;
+	bool           closed;
+	bool           nodelay;
+	bool           keepalive;
+	nni_mtx        mtx;
+};
+
 int
 nni_tcp_listener_init(nni_tcp_listener **lp)
 {
@@ -133,7 +143,7 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 			continue;
 		}
 
-		if ((rv = nni_posix_tcp_conn_init(&c, pfd)) != 0) {
+		if ((rv = nni_posix_tcp_init(&c, pfd)) != 0) {
 			nni_posix_pfd_fini(pfd);
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
@@ -143,7 +153,7 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 		ka = l->keepalive ? 1 : 0;
 		nd = l->nodelay ? 1 : 0;
 		nni_aio_list_remove(aio);
-		nni_posix_tcp_conn_start(c, nd, ka);
+		nni_posix_tcp_start(c, nd, ka);
 		nni_aio_set_output(aio, 0, c);
 		nni_aio_finish(aio, 0, 0);
 	}

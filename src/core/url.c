@@ -231,8 +231,21 @@ nni_url_default_port(const char *scheme)
 	const char *s;
 
 	for (int i = 0; (s = nni_url_default_ports[i].scheme) != NULL; i++) {
-		if (strcmp(s, scheme) == 0) {
+		size_t l = strlen(s);
+		if (strncmp(s, scheme, strlen(s)) != 0) {
+			continue;
+		}
+		// It can have a suffix of either "4" or "6" to restrict
+		// the address family.  This is an NNG extension.
+		switch (scheme[l]) {
+		case '\0':
 			return (nni_url_default_ports[i].port);
+		case '4':
+		case '6':
+			if (scheme[l + 1] == '\0') {
+				return (nni_url_default_ports[i].port);
+			}
+			break;
 		}
 	}
 	return ("");
@@ -463,18 +476,22 @@ error:
 void
 nni_url_free(nni_url *url)
 {
-	nni_strfree(url->u_rawurl);
-	nni_strfree(url->u_scheme);
-	nni_strfree(url->u_userinfo);
-	nni_strfree(url->u_host);
-	nni_strfree(url->u_hostname);
-	nni_strfree(url->u_port);
-	nni_strfree(url->u_path);
-	nni_strfree(url->u_query);
-	nni_strfree(url->u_fragment);
-	nni_strfree(url->u_requri);
-	NNI_FREE_STRUCT(url);
+	if (url != NULL) {
+		nni_strfree(url->u_rawurl);
+		nni_strfree(url->u_scheme);
+		nni_strfree(url->u_userinfo);
+		nni_strfree(url->u_host);
+		nni_strfree(url->u_hostname);
+		nni_strfree(url->u_port);
+		nni_strfree(url->u_path);
+		nni_strfree(url->u_query);
+		nni_strfree(url->u_fragment);
+		nni_strfree(url->u_requri);
+		NNI_FREE_STRUCT(url);
+	}
 }
+
+#define URL_COPYSTR(d, s) ((s != NULL) && ((d = nni_strdup(s)) == NULL))
 
 int
 nni_url_clone(nni_url **dstp, const nni_url *src)
@@ -484,7 +501,6 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 	if ((dst = NNI_ALLOC_STRUCT(dst)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-#define URL_COPYSTR(d, s) ((s != NULL) && ((d = nni_strdup(s)) == NULL))
 	if (URL_COPYSTR(dst->u_rawurl, src->u_rawurl) ||
 	    URL_COPYSTR(dst->u_scheme, src->u_scheme) ||
 	    URL_COPYSTR(dst->u_userinfo, src->u_userinfo) ||
@@ -498,7 +514,8 @@ nni_url_clone(nni_url **dstp, const nni_url *src)
 		nni_url_free(dst);
 		return (NNG_ENOMEM);
 	}
-#undef URL_COPYSTR
 	*dstp = dst;
 	return (0);
 }
+
+#undef URL_COPYSTR

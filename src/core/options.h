@@ -74,11 +74,20 @@ struct nni_option_s {
 	int (*o_set)(void *, const void *, size_t, nni_type);
 };
 
+typedef struct nni_chkoption_s nni_chkoption;
+struct nni_chkoption_s {
+	const char *o_name;
+	// o_check can be NULL for read-only options
+	int (*o_check)(const void *, size_t, nni_type);
+};
+
 // nni_getopt and nni_setopt are helper functions to implement options
 // based on arrays of nni_option structures.
 extern int nni_getopt(
     const nni_option *, const char *, void *, void *, size_t *, nni_type);
 extern int nni_setopt(
     const nni_option *, const char *, void *, const void *, size_t, nni_type);
+extern int nni_chkopt(
+    const nni_chkoption *, const char *, const void *, size_t, nni_type);
 
 #endif // CORE_OPTIONS_H

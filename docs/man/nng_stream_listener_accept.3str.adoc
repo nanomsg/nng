@@ -1,0 +1,64 @@
+= nng_stream_listener_accept(3str)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stream_listener_accept - accept incoming byte stream connection
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+void nng_stream_listener_accept(nng_stream_listener *l, nng_aio *aio);
+----
+
+== DESCRIPTION
+
+The `nng_stream_listener_accept()` attempts to accept an incoming byte stream
+connection from a remote peer, using the listener _l_.
+The operation is completed asynchronously, using _aio_.
+
+This operation can only be done after the listener is already
+xref:nng_stream_listener_listen.3str.adoc[listening].
+
+If a connection is successfully established, the _aio_ will have the
+resulting
+xref:nng_stream.5.adoc[`nng_stream`] object stored as its first output,
+which can be retrieved with
+xref:nng_aio_get_output.3.adoc[`nng_aio_get_output()`].
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+[horizontal]
+`NNG_ECANCELED`:: The operation was aborted.
+`NNG_ECLOSED`:: The listener is closed.
+`NNG_ECONNRESET`:: The connection was reset by the peer.
+`NNG_ENOMEM`:: Insufficient free memory exists.
+`NNG_ESTATE`:: The listener is not not listening.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_stream_listener_alloc.3str.adoc[nng_stream_listener_alloc(3str)],
+xref:nng_stream_listener_close.3str.adoc[nng_stream_listener_close(3str)],
+xref:nng_stream_listener_free.3str.adoc[nng_stream_listener_free(3str)],
+xref:nng_stream_listener_listen.3str.adoc[nng_stream_listener_listen(3str)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng_stream.5.adoc[nng_stream(5)],
+xref:nng_stream_listener.5.adoc[nng_stream_listener(5)]

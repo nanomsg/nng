@@ -1,6 +1,6 @@
 #
+# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2019 Devolutions <info@devolutions.net>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -272,28 +272,6 @@ if (NNG_ENABLE_DOC)
 	nng_http_server_stop
     )
 
-    set(NNG_MAN3IPC
-	nng_ipc_close
-	nng_ipc_free
-	nng_ipc_getopt
-	nng_ipc_dialer_alloc
-	nng_ipc_dialer_close
-	nng_ipc_dialer_dial
-	nng_ipc_dialer_free
-	nng_ipc_dialer_getopt
-	nng_ipc_dialer_setopt
-	nng_ipc_listener_accept
-	nng_ipc_listener_alloc
-	nng_ipc_listener_close
-	nng_ipc_listener_free
-	nng_ipc_listener_getopt
-	nng_ipc_listener_listen
-	nng_ipc_listener_setopt
-	nng_ipc_recv
-	nng_ipc_send
-	nng_ipc_setopt
-    )
-
     set(NNG_MAN3SUPP
 	nng_clock
 	nng_cv_alloc
@@ -313,30 +291,29 @@ if (NNG_ENABLE_DOC)
 	nng_thread_destroy
     )
 
-    set(NNG_MAN3TCP
-	nng_tcp_close
-	nng_tcp_free
-	nng_tcp_getopt
-	nng_tcp_dialer_alloc
-	nng_tcp_dialer_close
-	nng_tcp_dialer_dial
-	nng_tcp_dialer_free
-	nng_tcp_dialer_getopt
-	nng_tcp_dialer_setopt
-	nng_tcp_listener_accept
-	nng_tcp_listener_alloc
-	nng_tcp_listener_close
-	nng_tcp_listener_free
-	nng_tcp_listener_getopt
-	nng_tcp_listener_listen
-	nng_tcp_listener_setopt
-	nng_tcp_recv
-	nng_tcp_send
-	nng_tcp_setopt
+    set(NNG_MAN3STR
+        nng_stream_close
+	nng_stream_free
+	nng_stream_get
+	nng_stream_recv
+	nng_stream_send
+	nng_stream_set
+    	nng_stream_dialer_alloc
+	nng_stream_dialer_close
+	nng_stream_dialer_dial
+	nng_stream_dialer_free
+	nng_stream_dialer_get
+	nng_stream_dialer_set
+	nng_stream_listener_accept
+	nng_stream_listener_alloc
+	nng_stream_listener_close
+	nng_stream_listener_free
+	nng_stream_listener_get
+	nng_stream_listener_listen
+	nng_stream_listener_set
     )
 
     set(NNG_MAN3TLS
-	nng_tls_close
 	nng_tls_config_alloc
 	nng_tls_config_auth_mode
 	nng_tls_config_ca_chain
@@ -346,24 +323,6 @@ if (NNG_ENABLE_DOC)
 	nng_tls_config_hold
 	nng_tls_config_own_cert
 	nng_tls_config_server_name
-	nng_tls_free
-	nng_tls_getopt
-	nng_tls_dialer_alloc
-	nng_tls_dialer_close
-	nng_tls_dialer_dial
-	nng_tls_dialer_free
-	nng_tls_dialer_getopt
-	nng_tls_dialer_setopt
-	nng_tls_listener_accept
-	nng_tls_listener_alloc
-	nng_tls_listener_close
-	nng_tls_listener_free
-	nng_tls_listener_getopt
-	nng_tls_listener_listen
-	nng_tls_listener_setopt
-	nng_tls_recv
-	nng_tls_send
-	nng_tls_setopt
     )
 
     set(NNG_MAN5
@@ -385,20 +344,13 @@ if (NNG_ENABLE_DOC)
 	nng_socket
 	nng_stat
 
-	nng_tcp
-	nng_tcp_dialer
-	nng_tcp_listener
+	nng_stream
+	nng_stream_dialer
+	nng_stream_listener
+
 	nng_tcp_options
-
-	nng_ipc
-	nng_ipc_dialer
-	nng_ipc_listener
 	nng_ipc_options
-
-	nng_tls
 	nng_tls_config
-	nng_tls_dialer
-	nng_tls_listener
 	nng_tls_options
     )
 
@@ -438,16 +390,12 @@ if (NNG_ENABLE_DOC)
         nng_man(${F} 3http)
     endforeach()
 
-    foreach(F ${NNG_MAN3IPC})
-        nng_man(${F} 3ipc)
+    foreach(F ${NNG_MAN3STR})
+        nng_man(${F} 3str)
     endforeach()
 
     foreach(F ${NNG_MAN3SUPP})
         nng_man(${F} 3supp)
-    endforeach()
-
-    foreach(F ${NNG_MAN3TCP})
-        nng_man(${F} 3tcp)
     endforeach()
 
     foreach(F ${NNG_MAN3TLS})

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -147,6 +147,9 @@ extern void nni_aio_set_timeout(nni_aio *, nng_duration);
 extern void nni_aio_get_iov(nni_aio *, unsigned *, nni_iov **);
 extern void nni_aio_normalize_timeout(nni_aio *, nng_duration);
 extern void nni_aio_bump_count(nni_aio *, size_t);
+
+extern void nni_aio_set_sockaddr(nni_aio *aio, const nng_sockaddr *);
+extern void nni_aio_get_sockaddr(nni_aio *aio, nng_sockaddr *);
 
 // nni_aio_schedule indicates that the AIO has begun, and is scheduled for
 // asychronous completion. This also starts the expiration timer. Note that

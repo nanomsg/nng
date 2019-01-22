@@ -1,0 +1,54 @@
+= nng_stream_listener_free(3str)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stream_listener_free - free byte stream listener
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+void nng_stream_listener_free(nng_stream_listener *)l;
+----
+
+== DESCRIPTION
+
+The `nng_stream_listener_free()` function closes the supplied
+byte stream listener _l_,
+and frees the underlying resources associated with it.
+
+If any
+xref:nng_stream_listener_accept.3str.adoc[accept] operations using __l are
+in progress, they will be terminated with an `NNG_ECLOSED` error condition.
+
+WARNING: It is important that the application ensure that no further accesses
+are made to _l_, as the memory backing it will be reclaimed for other uses.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_stream_listener_accept.3str.adoc[nng_stream_listener_accept(3str)],
+xref:nng_stream_listener_alloc.3str.adoc[nng_stream_listener_alloc(3str)],
+xref:nng_stream_listener_close.3str.adoc[nng_stream_listener_close(3str)],
+xref:nng_stream_listener.5.adoc[nng_stream_listener(5)]

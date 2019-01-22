@@ -1,7 +1,7 @@
 //
 // Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
-// Copyright 2018 Devolutions <info@devolutions.net>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -10,6 +10,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "core/stream.h"
 
 #ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_aio.h"
@@ -17,6 +18,7 @@
 #include <sys/types.h> // For mode_t
 
 struct nni_ipc_conn {
+	nng_stream      stream;
 	nni_posix_pfd * pfd;
 	nni_list        readq;
 	nni_list        writeq;
@@ -24,27 +26,17 @@ struct nni_ipc_conn {
 	nni_mtx         mtx;
 	nni_aio *       dial_aio;
 	nni_ipc_dialer *dialer;
-	nni_reap_item   reap;
 };
 
 struct nni_ipc_dialer {
-	nni_list connq; // pending connections
-	bool     closed;
-	nni_mtx  mtx;
+	nng_stream_dialer sd;
+	nni_list          connq; // pending connections
+	bool              closed;
+	nni_mtx           mtx;
+	nng_sockaddr      sa;
 };
 
-struct nni_ipc_listener {
-	nni_posix_pfd *pfd;
-	nng_sockaddr   sa;
-	nni_list       acceptq;
-	bool           started;
-	bool           closed;
-	char *         path;
-	mode_t         perms;
-	nni_mtx        mtx;
-};
-
-extern int  nni_posix_ipc_conn_init(nni_ipc_conn **, nni_posix_pfd *);
-extern void nni_posix_ipc_conn_start(nni_ipc_conn *);
+extern int  nni_posix_ipc_init(nni_ipc_conn **, nni_posix_pfd *);
+extern void nni_posix_ipc_start(nni_ipc_conn *);
 
 #endif // NNG_PLATFORM_POSIX

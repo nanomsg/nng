@@ -399,3 +399,19 @@ nni_setopt(const nni_option *opts, const char *nm, void *arg, const void *buf,
 	}
 	return (NNG_ENOTSUP);
 }
+
+int
+nni_chkopt(const nni_chkoption *opts, const char *nm, const void *buf,
+    size_t sz, nni_type t)
+{
+	while (opts->o_name != NULL) {
+		if (strcmp(opts->o_name, nm) == 0) {
+			if (opts->o_check == NULL) {
+				return (NNG_EREADONLY);
+			}
+			return (opts->o_check(buf, sz, t));
+		}
+		opts++;
+	}
+	return (NNG_ENOTSUP);
+}

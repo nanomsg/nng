@@ -59,25 +59,25 @@ on the actual option, and will be documented with the option itself.
 This function is untyped and can be used to retrieve the value of any option.
 The caller must store a pointer to a buffer to receive the value in _val_,
 and the size of the buffer shall be stored at the location referenced by
-_valszp_. +
- +
+_valszp_.
++
 When the function returns, the actual size of the data copied (or that
 would have been copied if sufficient space were present) is stored at
 the location referenced by _valszp_.
 If the caller's buffer is not large enough to hold the entire object,
 then the copy is truncated.
 Therefore the caller should check for truncation by verifying that the
-returned size in _valszp_ does not exceed the original buffer size. +
- +
+returned size in _valszp_ does not exceed the original buffer size.
++
 It is acceptable to pass `NULL` for _val_ if the value in _valszp_ is zero.
 This can be used to determine the size of the buffer needed to receive
 the object.
-
++
 TIP: It may be easier to use one of the typed forms of this function.
 
 `nng_getopt_bool()`::
 This function is for options which take a Boolean (`bool`).
-The value will be stored at _ivalp_.
+The value will be stored at _bvalp_.
 
 `nng_getopt_int()`::
 This function is for options which take an integer (`int`).

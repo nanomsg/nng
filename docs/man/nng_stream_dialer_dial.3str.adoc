@@ -1,0 +1,65 @@
+= nng_stream_dialer_dial(3str)
+//
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_stream_dialer_dial - initiate outgoing byte stream connection
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+
+void nng_stream_dialer_dial(nng_stream_dialer *d, nng_aio *aio);
+----
+
+== DESCRIPTION
+
+The `nng_stream_dialer_dial()` attempts to establish a connection to the
+remote peer for the dialer _d_.
+The operation is completed asynchronously, using _aio_.
+
+TIP: The peer address is determined by the address specified using
+xref:nng_stream_dialer_alloc.3str.adoc[`nng_stream_dialer_alloc()`] or 
+xref:nng_stream_dialer_alloc_url.3str.adoc[`nng_stream_dialer_alloc_url()`]. 
+
+If a connection is successfully established, the _aio_ will have the
+resulting
+xref:nng_stream.5.adoc[`nng_stream`] object stored as its first output.
+(See
+xref:nng_aio_get_output.3.adoc[`nng_aio_get_output()`].)
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+[horizontal]
+`NNG_EADDRINVAL`:: The address specified is invalid.
+`NNG_ECANCELED`:: The operation was aborted.
+`NNG_ECLOSED`:: The dialer is closed.
+`NNG_ECONNREFUSED`:: The connection was refused by the server.
+`NNG_ECONNRESET`:: The connection was reset by the server.
+`NNG_ENOMEM`:: Insufficient free memory exists.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_stream_dialer_alloc.3str.adoc[nng_stream_dialer_alloc(3str)],
+xref:nng_stream_dialer_close.3str.adoc[nng_stream_dialer_close(3str)],
+xref:nng_stream_dialer_free.3str.adoc[nng_stream_dialer_free(3str)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng_stream.5.adoc[nng_stream(5)],
+xref:nng_stream_dialer.5.adoc[nng_stream_dialer(5)]

@@ -42,6 +42,7 @@
 #include "core/random.h"
 #include "core/reap.h"
 #include "core/stats.h"
+#include "core/stream.h"
 #include "core/strs.h"
 #include "core/taskq.h"
 #include "core/thread.h"

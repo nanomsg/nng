@@ -788,6 +788,48 @@ enum nng_flag_enum {
 // or even if processes can use IPC across jail boundaries.)
 #define NNG_OPT_IPC_PEER_ZONEID "ipc:peer-zoneid"
 
+// WebSocket Options.
+
+// NNG_OPT_WS_REQUEST_HEADERS is a string containing the
+// request headers, formatted as CRLF terminated lines.
+#define NNG_OPT_WS_REQUEST_HEADERS "ws:request-headers"
+
+// NNG_OPT_WS_RESPONSE_HEADERS is a string containing the
+// response headers, formatted as CRLF terminated lines.
+#define NNG_OPT_WS_RESPONSE_HEADERS "ws:response-headers"
+
+// NNG_OPT_WS_REQUEST_HEADER is a prefix, for a dynamic
+// property name.  This allows direct access to any named header.
+// Concatenate this with the name of the property (case is not sensitive).
+// Only the first such header is returned.
+#define NNG_OPT_WS_RESPONSE_HEADER "ws:response-header:"
+
+// NNG_OPT_WS_RESPONSE_HEADER is like NNG_OPT_REQUEST_HEADER, but used for
+// accessing the request headers.
+#define NNG_OPT_WS_REQUEST_HEADER "ws:request-header:"
+
+// NNG_OPT_WS_REQUEST_URI is used to obtain the URI sent by the client.
+// This can be useful when a handler supports an entire directory tree.
+#define NNG_OPT_WS_REQUEST_URI "ws:request-uri"
+
+// NNG_OPT_WS_TXFRAMESZ is used to configure the fragmentation size
+// used for frames.  This has a default value of 64k.  Large values
+// are good for throughput, but penalize latency.  They also require
+// additional buffering on the peer.  This value must not be larger
+// than what the peer will accept, and unfortunately there is no way
+// to negotiate this.
+#define NNG_OPT_WS_SENDMAXFRAME "ws:txframe-max"
+
+// NNG_OPT_WS_RXFRAMESZ is the largest frame we will accept.  This should
+// probably not be larger than NNG_OPT_RECVMAXSZ. If the sender attempts
+// to send more data than this in a single message, it will be dropped.
+#define NNG_OPT_WS_RECVMAXFRAME "ws:rxframe-max"
+
+// NNG_OPT_WS_PROTOCOL is the "websocket subprotocol" -- it's a string.
+// This is also known as the Sec-WebSocket-Protocol header. It is treated
+// specially.  This is part of the websocket handshake.
+#define NNG_OPT_WS_PROTOCOL "ws:protocol"
+
 // XXX: TBD: priorities, ipv4only
 
 // Statistics. These are for informational purposes only, and subject
@@ -973,6 +1015,120 @@ NNG_DECL int nng_url_clone(nng_url **, const nng_url *);
 
 // nng_version returns the library version as a human readable string.
 NNG_DECL const char *nng_version(void);
+
+// nng_stream operations permit direct access to low level streams,
+// which can have a variety of uses.  Internally most of the transports
+// are built on top of these.  Streams are created by other dialers or
+// listeners.  The API for creating dialers and listeners varies.
+
+typedef struct nng_stream          nng_stream;
+typedef struct nng_stream_dialer   nng_stream_dialer;
+typedef struct nng_stream_listener nng_stream_listener;
+
+NNG_DECL void nng_stream_free(nng_stream *);
+NNG_DECL void nng_stream_close(nng_stream *);
+NNG_DECL void nng_stream_send(nng_stream *, nng_aio *);
+NNG_DECL void nng_stream_recv(nng_stream *, nng_aio *);
+NNG_DECL int  nng_stream_get(nng_stream *, const char *, void *, size_t *);
+NNG_DECL int  nng_stream_get_bool(nng_stream *, const char *, bool *);
+NNG_DECL int  nng_stream_get_int(nng_stream *, const char *, int *);
+NNG_DECL int  nng_stream_get_ms(nng_stream *, const char *, nng_duration *);
+NNG_DECL int  nng_stream_get_size(nng_stream *, const char *, size_t *);
+NNG_DECL int  nng_stream_get_uint64(nng_stream *, const char *, uint64_t *);
+NNG_DECL int  nng_stream_get_ptr(nng_stream *, const char *, void **);
+NNG_DECL int  nng_stream_get_addr(nng_stream *, const char *, nng_sockaddr *);
+NNG_DECL int  nng_stream_set(nng_stream *, const char *, const void *, size_t);
+NNG_DECL int  nng_stream_set_bool(nng_stream *, const char *, bool);
+NNG_DECL int  nng_stream_set_int(nng_stream *, const char *, int);
+NNG_DECL int  nng_stream_set_ms(nng_stream *, const char *, nng_duration);
+NNG_DECL int  nng_stream_set_size(nng_stream *, const char *, size_t);
+NNG_DECL int  nng_stream_set_uint64(nng_stream *, const char *, uint64_t);
+NNG_DECL int  nng_stream_set_string(nng_stream *, const char *, const char *);
+NNG_DECL int  nng_stream_set_ptr(nng_stream *, const char *, void *);
+NNG_DECL int  nng_stream_set_addr(
+     nng_stream *, const char *, const nng_sockaddr *);
+
+NNG_DECL int nng_stream_dialer_alloc(nng_stream_dialer **, const char *);
+NNG_DECL int nng_stream_dialer_alloc_url(
+    nng_stream_dialer **, const nng_url *);
+NNG_DECL void nng_stream_dialer_free(nng_stream_dialer *);
+NNG_DECL void nng_stream_dialer_close(nng_stream_dialer *);
+NNG_DECL void nng_stream_dialer_dial(nng_stream_dialer *, nng_aio *);
+NNG_DECL int  nng_stream_dialer_set(
+     nng_stream_dialer *, const char *, const void *, size_t);
+NNG_DECL int nng_stream_dialer_get(
+    nng_stream_dialer *, const char *, void *, size_t *);
+NNG_DECL int nng_stream_dialer_get_bool(
+    nng_stream_dialer *, const char *, bool *);
+NNG_DECL int nng_stream_dialer_get_int(
+    nng_stream_dialer *, const char *, int *);
+NNG_DECL int nng_stream_dialer_get_ms(
+    nng_stream_dialer *, const char *, nng_duration *);
+NNG_DECL int nng_stream_dialer_get_size(
+    nng_stream_dialer *, const char *, size_t *);
+NNG_DECL int nng_stream_dialer_get_uint64(
+    nng_stream_dialer *, const char *, uint64_t *);
+NNG_DECL int nng_stream_dialer_get_ptr(
+    nng_stream_dialer *, const char *, void **);
+NNG_DECL int nng_stream_dialer_get_addr(
+    nng_stream_dialer *, const char *, nng_sockaddr *);
+NNG_DECL int nng_stream_dialer_set_bool(
+    nng_stream_dialer *, const char *, bool);
+NNG_DECL int nng_stream_dialer_set_int(nng_stream_dialer *, const char *, int);
+NNG_DECL int nng_stream_dialer_set_ms(
+    nng_stream_dialer *, const char *, nng_duration);
+NNG_DECL int nng_stream_dialer_set_size(
+    nng_stream_dialer *, const char *, size_t);
+NNG_DECL int nng_stream_dialer_set_uint64(
+    nng_stream_dialer *, const char *, uint64_t);
+NNG_DECL int nng_stream_dialer_set_string(
+    nng_stream_dialer *, const char *, const char *);
+NNG_DECL int nng_stream_dialer_set_ptr(
+    nng_stream_dialer *, const char *, void *);
+NNG_DECL int nng_stream_dialer_set_addr(
+    nng_stream_dialer *, const char *, const nng_sockaddr *);
+
+NNG_DECL int nng_stream_listener_alloc(nng_stream_listener **, const char *);
+NNG_DECL int nng_stream_listener_alloc_url(
+    nng_stream_listener **, const nng_url *);
+NNG_DECL void nng_stream_listener_free(nng_stream_listener *);
+NNG_DECL void nng_stream_listener_close(nng_stream_listener *);
+NNG_DECL int  nng_stream_listener_listen(nng_stream_listener *);
+NNG_DECL void nng_stream_listener_accept(nng_stream_listener *, nng_aio *);
+NNG_DECL int  nng_stream_listener_set(
+     nng_stream_listener *, const char *, const void *, size_t);
+NNG_DECL int nng_stream_listener_get(
+    nng_stream_listener *, const char *, void *, size_t *);
+NNG_DECL int nng_stream_listener_get_bool(
+    nng_stream_listener *, const char *, bool *);
+NNG_DECL int nng_stream_listener_get_int(
+    nng_stream_listener *, const char *, int *);
+NNG_DECL int nng_stream_listener_get_ms(
+    nng_stream_listener *, const char *, nng_duration *);
+NNG_DECL int nng_stream_listener_get_size(
+    nng_stream_listener *, const char *, size_t *);
+NNG_DECL int nng_stream_listener_get_uint64(
+    nng_stream_listener *, const char *, uint64_t *);
+NNG_DECL int nng_stream_listener_get_ptr(
+    nng_stream_listener *, const char *, void **);
+NNG_DECL int nng_stream_listener_get_addr(
+    nng_stream_listener *, const char *, nng_sockaddr *);
+NNG_DECL int nng_stream_listener_set_bool(
+    nng_stream_listener *, const char *, bool);
+NNG_DECL int nng_stream_listener_set_int(nng_stream_listener *, const char *, int);
+NNG_DECL int nng_stream_listener_set_ms(
+    nng_stream_listener *, const char *, nng_duration);
+NNG_DECL int nng_stream_listener_set_size(
+    nng_stream_listener *, const char *, size_t);
+NNG_DECL int nng_stream_listener_set_uint64(
+    nng_stream_listener *, const char *, uint64_t);
+NNG_DECL int nng_stream_listener_set_string(
+    nng_stream_listener *, const char *, const char *);
+NNG_DECL int nng_stream_listener_set_ptr(
+    nng_stream_listener *, const char *, void *);
+NNG_DECL int nng_stream_listener_set_addr(
+    nng_stream_listener *, const char *, const nng_sockaddr *);
+
 #ifdef __cplusplus
 }
 #endif

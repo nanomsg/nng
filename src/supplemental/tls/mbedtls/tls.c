@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -28,9 +28,8 @@
 #include "mbedtls/ssl.h"
 
 #include "core/nng_impl.h"
+#include "core/tcp.h"
 #include "supplemental/tls/tls_api.h"
-
-#include <nng/supplemental/tls/tls.h>
 
 // Implementation note.  This implementation buffers data between the TLS
 // encryption layer (mbedTLS) and the underlying TCP socket.  As a result,
@@ -59,8 +58,9 @@ typedef struct nni_tls_certkey {
 	nni_list_node      node;
 } nni_tls_certkey;
 
-struct nni_tls {
-	nni_tcp_conn *      tcp;
+typedef struct {
+	nni_tls_common      com;
+	nng_stream *        tcp;
 	mbedtls_ssl_context ctx;
 	nng_tls_config *    cfg; // kept so we can release it
 	nni_mtx             lk;
@@ -81,7 +81,7 @@ struct nni_tls {
 	nni_list            sends;      // upper side sends
 	nni_list            recvs;      // upper recv aios
 	nni_aio *           handshake;  // handshake aio (upper)
-};
+} tls;
 
 struct nng_tls_config {
 	mbedtls_ssl_config cfg_ctx;
@@ -100,18 +100,18 @@ struct nng_tls_config {
 	nni_list certkeys;
 };
 
-static void nni_tls_send_cb(void *);
-static void nni_tls_recv_cb(void *);
+static void tls_send_cb(void *);
+static void tls_recv_cb(void *);
 
-static void nni_tls_do_send(nni_tls *);
-static void nni_tls_do_recv(nni_tls *);
-static void nni_tls_do_handshake(nni_tls *);
+static void tls_do_send(tls *);
+static void tls_do_recv(tls *);
+static void tls_do_handshake(tls *);
 
-static int nni_tls_net_send(void *, const unsigned char *, size_t);
-static int nni_tls_net_recv(void *, unsigned char *, size_t);
+static int tls_net_send(void *, const unsigned char *, size_t);
+static int tls_net_recv(void *, unsigned char *, size_t);
 
 static void
-nni_tls_dbg(void *ctx, int level, const char *file, int line, const char *s)
+tls_dbg(void *ctx, int level, const char *file, int line, const char *s)
 {
 	char buf[128];
 	NNI_ARG_UNUSED(ctx);
@@ -121,7 +121,7 @@ nni_tls_dbg(void *ctx, int level, const char *file, int line, const char *s)
 }
 
 static int
-nni_tls_get_entropy(void *arg, unsigned char *buf, size_t len)
+tls_get_entropy(void *arg, unsigned char *buf, size_t len)
 {
 	NNI_ARG_UNUSED(arg);
 	while (len) {
@@ -137,7 +137,7 @@ nni_tls_get_entropy(void *arg, unsigned char *buf, size_t len)
 }
 
 static int
-nni_tls_random(void *arg, unsigned char *buf, size_t sz)
+tls_random(void *arg, unsigned char *buf, size_t sz)
 {
 #ifdef NNG_TLS_USE_CTR_DRBG
 	int             rv;
@@ -149,7 +149,7 @@ nni_tls_random(void *arg, unsigned char *buf, size_t sz)
 	nni_mtx_unlock(&cfg->rng_lk);
 	return (rv);
 #else
-	return (nni_tls_get_entropy(arg, buf, sz));
+	return (tls_get_entropy(arg, buf, sz));
 #endif
 }
 
@@ -230,15 +230,15 @@ nni_tls_config_init(nng_tls_config **cpp, enum nng_tls_mode mode)
 #ifdef NNG_TLS_USE_CTR_DRBG
 	mbedtls_ctr_drbg_init(&cfg->rng_ctx);
 	rv = mbedtls_ctr_drbg_seed(
-	    &cfg->rng_ctx, nni_tls_get_entropy, NULL, NULL, 0);
+	    &cfg->rng_ctx, tls_get_entropy, NULL, NULL, 0);
 	if (rv != 0) {
 		nni_tls_config_fini(cfg);
 		return (rv);
 	}
 #endif
-	mbedtls_ssl_conf_rng(&cfg->cfg_ctx, nni_tls_random, cfg);
+	mbedtls_ssl_conf_rng(&cfg->cfg_ctx, tls_random, cfg);
 
-	mbedtls_ssl_conf_dbg(&cfg->cfg_ctx, nni_tls_dbg, cfg);
+	mbedtls_ssl_conf_dbg(&cfg->cfg_ctx, tls_dbg, cfg);
 
 	*cpp = cfg;
 	return (0);
@@ -252,41 +252,12 @@ nni_tls_config_hold(nng_tls_config *cfg)
 	nni_mtx_unlock(&cfg->lk);
 }
 
-void
-nni_tls_fini(nni_tls *tp)
-{
-	// Shut it all down first.
-	if (tp != NULL) {
-		if (tp->tcp) {
-			nni_tcp_conn_close(tp->tcp);
-		}
-		nni_aio_stop(tp->tcp_send);
-		nni_aio_stop(tp->tcp_recv);
-
-		// And finalize / free everything.
-		if (tp->tcp) {
-			nni_tcp_conn_fini(tp->tcp);
-		}
-		nni_aio_fini(tp->tcp_send);
-		nni_aio_fini(tp->tcp_recv);
-		mbedtls_ssl_free(&tp->ctx);
-		nni_mtx_fini(&tp->lk);
-		nni_free(tp->recvbuf, NNG_TLS_MAX_RECV_SIZE);
-		nni_free(tp->sendbuf, NNG_TLS_MAX_RECV_SIZE);
-		if (tp->cfg != NULL) {
-			// release the hold we got on it
-			nni_tls_config_fini(tp->cfg);
-		}
-		NNI_FREE_STRUCT(tp);
-	}
-}
-
-// nni_tls_mkerr converts an mbed error to an NNG error.  In all cases
+// tls_mkerr converts an mbed error to an NNG error.  In all cases
 // we just encode with NNG_ETRANERR.
 static struct {
 	int tls;
 	int nng;
-} nni_tls_errs[] = {
+} tls_errs[] = {
 	{ MBEDTLS_ERR_SSL_NO_CLIENT_CERTIFICATE, NNG_EPEERAUTH },
 	{ MBEDTLS_ERR_SSL_CA_CHAIN_REQUIRED, NNG_EPEERAUTH },
 	{ MBEDTLS_ERR_SSL_PEER_VERIFY_FAILED, NNG_EPEERAUTH },
@@ -300,60 +271,74 @@ static struct {
 };
 
 static int
-nni_tls_mkerr(int err)
+tls_mkerr(int err)
 {
-	for (int i = 0; nni_tls_errs[i].tls != 0; i++) {
-		if (nni_tls_errs[i].tls == err) {
-			return (nni_tls_errs[i].nng);
+	for (int i = 0; tls_errs[i].tls != 0; i++) {
+		if (tls_errs[i].tls == err) {
+			return (tls_errs[i].nng);
 		}
 	}
 	return (NNG_ECRYPTO);
 }
 
-int
-nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_tcp_conn *tcp)
+// The common code should call this only after it has released
+// it's upper layer stuff.
+static void
+tls_free(void *arg)
 {
-	nni_tls *tp;
-	int      rv;
-	bool     on = true;
+	tls *tls = arg;
 
-	// During the handshake, disable Nagle to shorten the
-	// negotiation.  Once things are set up the caller can
-	// re-enable Nagle if so desired.
-	(void) nni_tcp_conn_setopt(
-	    tcp, NNG_OPT_TCP_NODELAY, &on, sizeof(on), NNI_TYPE_BOOL);
+	// Shut it all down first.
+	if (tls != NULL) {
+		if (tls->tcp != NULL) {
+			nng_stream_close(tls->tcp);
+		}
+		nni_aio_stop(tls->tcp_send);
+		nni_aio_stop(tls->tcp_recv);
 
-	if ((tp = NNI_ALLOC_STRUCT(tp)) == NULL) {
-		return (NNG_ENOMEM);
+		nni_aio_fini(tls->com.aio);
+		nng_tls_config_free(tls->com.cfg);
+
+		// And finalize / free everything.
+		nng_stream_free(tls->tcp);
+		nni_aio_fini(tls->tcp_send);
+		nni_aio_fini(tls->tcp_recv);
+		mbedtls_ssl_free(&tls->ctx);
+		if (tls->recvbuf != NULL) {
+			nni_free(tls->recvbuf, NNG_TLS_MAX_RECV_SIZE);
+		}
+		if (tls->sendbuf != NULL) {
+			nni_free(tls->sendbuf, NNG_TLS_MAX_RECV_SIZE);
+		}
+		nni_mtx_fini(&tls->lk);
+		NNI_FREE_STRUCT(tls);
 	}
+}
+
+int
+nni_tls_start(nng_stream *arg, nng_stream *tcp)
+{
+	tls *           tp  = (void *) arg;
+	nng_tls_config *cfg = tp->com.cfg;
+	int             rv;
+
 	if ((tp->recvbuf = nni_zalloc(NNG_TLS_MAX_RECV_SIZE)) == NULL) {
-		NNI_FREE_STRUCT(tp);
 		return (NNG_ENOMEM);
 	}
 	if ((tp->sendbuf = nni_zalloc(NNG_TLS_MAX_SEND_SIZE)) == NULL) {
-		nni_free(tp->sendbuf, NNG_TLS_MAX_RECV_SIZE);
-		NNI_FREE_STRUCT(tp);
 		return (NNG_ENOMEM);
 	}
 
 	nni_mtx_lock(&cfg->lk);
 	// No more changes allowed to config.
 	cfg->active = true;
-	cfg->refcnt++;
-	tp->cfg = cfg;
 	nni_mtx_unlock(&cfg->lk);
 
-	nni_aio_list_init(&tp->sends);
-	nni_aio_list_init(&tp->recvs);
-	nni_mtx_init(&tp->lk);
 	mbedtls_ssl_init(&tp->ctx);
-	mbedtls_ssl_set_bio(
-	    &tp->ctx, tp, nni_tls_net_send, nni_tls_net_recv, NULL);
+	mbedtls_ssl_set_bio(&tp->ctx, tp, tls_net_send, tls_net_recv, NULL);
 
 	if ((rv = mbedtls_ssl_setup(&tp->ctx, &cfg->cfg_ctx)) != 0) {
-		rv = nni_tls_mkerr(rv);
-		nni_tls_fini(tp);
-		return (rv);
+		return (tls_mkerr(rv));
 	}
 
 	if (cfg->server_name) {
@@ -362,25 +347,23 @@ nni_tls_init(nni_tls **tpp, nng_tls_config *cfg, nni_tcp_conn *tcp)
 
 	tp->tcp = tcp;
 
-	if (((rv = nni_aio_init(&tp->tcp_send, nni_tls_send_cb, tp)) != 0) ||
-	    ((rv = nni_aio_init(&tp->tcp_recv, nni_tls_recv_cb, tp)) != 0)) {
-		nni_tls_fini(tp);
+	if (((rv = nni_aio_init(&tp->tcp_send, tls_send_cb, tp)) != 0) ||
+	    ((rv = nni_aio_init(&tp->tcp_recv, tls_recv_cb, tp)) != 0)) {
 		return (rv);
 	}
 
 	nni_mtx_lock(&tp->lk);
 	// Kick off a handshake operation.
-	nni_tls_do_handshake(tp);
+	tls_do_handshake(tp);
 	nni_mtx_unlock(&tp->lk);
 
-	*tpp = tp;
 	return (0);
 }
 
 static void
-nni_tls_cancel(nni_aio *aio, void *arg, int rv)
+tls_cancel(nni_aio *aio, void *arg, int rv)
 {
-	nni_tls *tp = arg;
+	tls *tp = arg;
 	nni_mtx_lock(&tp->lk);
 	if (nni_aio_list_active(aio)) {
 		nni_aio_list_remove(aio);
@@ -389,33 +372,16 @@ nni_tls_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&tp->lk);
 }
 
+// tls_send_cb is called when the underlying TCP send completes.
 static void
-nni_tls_fail(nni_tls *tp, int rv)
+tls_send_cb(void *ctx)
 {
-	nni_aio *aio;
-	tp->tls_closed = true;
-	nni_tcp_conn_close(tp->tcp);
-	tp->tcp_closed = true;
-	while ((aio = nni_list_first(&tp->recvs)) != NULL) {
-		nni_list_remove(&tp->recvs, aio);
-		nni_aio_finish_error(aio, rv);
-	}
-	while ((aio = nni_list_first(&tp->sends)) != NULL) {
-		nni_list_remove(&tp->recvs, aio);
-		nni_aio_finish_error(aio, rv);
-	}
-}
-
-// nni_tls_send_cb is called when the underlying TCP send completes.
-static void
-nni_tls_send_cb(void *ctx)
-{
-	nni_tls *tp  = ctx;
+	tls *    tp  = ctx;
 	nni_aio *aio = tp->tcp_send;
 
 	nni_mtx_lock(&tp->lk);
 	if (nni_aio_result(aio) != 0) {
-		nni_tcp_conn_close(tp->tcp);
+		nng_stream_close(tp->tcp);
 		tp->tcp_closed = true;
 	} else {
 		size_t n = nni_aio_count(aio);
@@ -428,25 +394,24 @@ nni_tls_send_cb(void *ctx)
 			iov.iov_len = tp->sendlen;
 			nni_aio_set_iov(aio, 1, &iov);
 			nni_aio_set_timeout(aio, NNG_DURATION_INFINITE);
-			nni_tcp_conn_send(tp->tcp, aio);
+			nng_stream_send(tp->tcp, aio);
 			nni_mtx_unlock(&tp->lk);
 			return;
 		}
 		tp->sendoff = 0;
 		tp->sending = false;
 	}
-	if (!tp->hsdone) {
-		nni_tls_do_handshake(tp);
-	}
+
+	tls_do_handshake(tp);
 	if (tp->hsdone) {
-		nni_tls_do_send(tp);
-		nni_tls_do_recv(tp);
+		tls_do_send(tp);
+		tls_do_recv(tp);
 	}
 	nni_mtx_unlock(&tp->lk);
 }
 
 static void
-nni_tls_recv_start(nni_tls *tp)
+tls_recv_start(tls *tp)
 {
 	nni_aio *aio;
 	nni_iov  iov;
@@ -467,13 +432,13 @@ nni_tls_recv_start(nni_tls *tp)
 	iov.iov_len = NNG_TLS_MAX_RECV_SIZE;
 	nni_aio_set_iov(aio, 1, &iov);
 	nni_aio_set_timeout(tp->tcp_recv, NNG_DURATION_INFINITE);
-	nni_tcp_conn_recv(tp->tcp, aio);
+	nng_stream_recv(tp->tcp, aio);
 }
 
 static void
-nni_tls_recv_cb(void *ctx)
+tls_recv_cb(void *ctx)
 {
-	nni_tls *tp  = ctx;
+	tls *    tp  = ctx;
 	nni_aio *aio = tp->tcp_recv;
 
 	nni_mtx_lock(&tp->lk);
@@ -481,7 +446,7 @@ nni_tls_recv_cb(void *ctx)
 	if (nni_aio_result(aio) != 0) {
 		// Close the underlying TCP channel, but permit data we
 		// already received to continue to be received.
-		nni_tcp_conn_close(tp->tcp);
+		nng_stream_close(tp->tcp);
 		tp->tcp_closed = true;
 	} else {
 		NNI_ASSERT(tp->recvlen == 0);
@@ -492,12 +457,10 @@ nni_tls_recv_cb(void *ctx)
 	// If we were closed (above), the upper layer will detect and
 	// react properly.  Otherwise the upper layer will consume
 	// data.
-	if (!tp->hsdone) {
-		nni_tls_do_handshake(tp);
-	}
+	tls_do_handshake(tp);
 	if (tp->hsdone) {
-		nni_tls_do_recv(tp);
-		nni_tls_do_send(tp);
+		tls_do_recv(tp);
+		tls_do_send(tp);
 	}
 
 	nni_mtx_unlock(&tp->lk);
@@ -511,10 +474,10 @@ nni_tls_recv_cb(void *ctx)
 // ridiculous over queueing.  This is always called with the pipe
 // lock held, and never blocks.
 static int
-nni_tls_net_send(void *ctx, const unsigned char *buf, size_t len)
+tls_net_send(void *ctx, const unsigned char *buf, size_t len)
 {
-	nni_tls *tp = ctx;
-	nni_iov  iov;
+	tls *   tp = ctx;
+	nni_iov iov;
 
 	if (len > NNG_TLS_MAX_SEND_SIZE) {
 		len = NNG_TLS_MAX_SEND_SIZE;
@@ -538,22 +501,24 @@ nni_tls_net_send(void *ctx, const unsigned char *buf, size_t len)
 	iov.iov_len = len;
 	nni_aio_set_iov(tp->tcp_send, 1, &iov);
 	nni_aio_set_timeout(tp->tcp_send, NNG_DURATION_INFINITE);
-	nni_tcp_conn_send(tp->tcp, tp->tcp_send);
+	nng_stream_send(tp->tcp, tp->tcp_send);
 	return (len);
 }
 
 static int
-nni_tls_net_recv(void *ctx, unsigned char *buf, size_t len)
+tls_net_recv(void *ctx, unsigned char *buf, size_t len)
 {
-	nni_tls *tp = ctx;
+	tls *tp = ctx;
 
 	// We should already be running with the pipe lock held,
 	// as we are running in that context.
-	if (tp->tcp_closed && tp->recvlen == 0) {
-		return (MBEDTLS_ERR_NET_RECV_FAILED);
-	}
 
 	if (tp->recvlen == 0) {
+		if (tp->tcp_closed) {
+			// The underlying TCP transport has closed, and we
+			// have no more data in our receive buffer.
+			return (MBEDTLS_ERR_NET_RECV_FAILED);
+		}
 		len = MBEDTLS_ERR_SSL_WANT_READ;
 	} else {
 		if (len > tp->recvlen) {
@@ -564,16 +529,15 @@ nni_tls_net_recv(void *ctx, unsigned char *buf, size_t len)
 		tp->recvlen -= len;
 	}
 
-	nni_tls_recv_start(tp);
+	tls_recv_start(tp);
 	return ((int) len);
 }
 
-// nni_tls_send is the exported send function.  It has a similar
-// calling convention as the platform TCP pipe.
-void
-nni_tls_send(nni_tls *tp, nni_aio *aio)
+static void
+tls_send(void *arg, nni_aio *aio)
 {
-	int rv;
+	int  rv;
+	tls *tp = arg;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -584,20 +548,21 @@ nni_tls_send(nni_tls *tp, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, nni_tls_cancel, tp)) != 0) {
+	if ((rv = nni_aio_schedule(aio, tls_cancel, tp)) != 0) {
 		nni_mtx_unlock(&tp->lk);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&tp->sends, aio);
-	nni_tls_do_send(tp);
+	tls_do_send(tp);
 	nni_mtx_unlock(&tp->lk);
 }
 
-void
-nni_tls_recv(nni_tls *tp, nni_aio *aio)
+static void
+tls_recv(void *arg, nni_aio *aio)
 {
-	int rv;
+	int  rv;
+	tls *tp = arg;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -608,22 +573,22 @@ nni_tls_recv(nni_tls *tp, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, nni_tls_cancel, tp)) != 0) {
+	if ((rv = nni_aio_schedule(aio, tls_cancel, tp)) != 0) {
 		nni_mtx_unlock(&tp->lk);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
 	nni_list_append(&tp->recvs, aio);
-	nni_tls_do_recv(tp);
+	tls_do_recv(tp);
 	nni_mtx_unlock(&tp->lk);
 }
 
 static int
 tls_get_verified(void *arg, void *buf, size_t *szp, nni_type t)
 {
-	nni_tls *tp = arg;
-	bool     v  = (mbedtls_ssl_get_verify_result(&tp->ctx) == 0);
+	tls *tp = arg;
+	bool v  = (mbedtls_ssl_get_verify_result(&tp->ctx) == 0);
 
 	return (nni_copyout_bool(v, buf, szp, t));
 }
@@ -638,26 +603,28 @@ static const nni_option tls_options[] = {
 	},
 };
 
-int
-nni_tls_setopt(
-    nni_tls *tp, const char *name, const void *buf, size_t sz, nni_type t)
+static int
+tls_setx(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
-	int rv;
+	tls *       tp = arg;
+	int         rv;
+	nng_stream *tcp;
 
-	if ((rv = nni_tcp_conn_setopt(tp->tcp, name, buf, sz, t)) !=
-	    NNG_ENOTSUP) {
+	tcp = (tp != NULL) ? tp->tcp : NULL;
+
+	if ((rv = nni_stream_setx(tcp, name, buf, sz, t)) != NNG_ENOTSUP) {
 		return (rv);
 	}
 	return (nni_setopt(tls_options, name, tp, buf, sz, t));
 }
 
-int
-nni_tls_getopt(
-    nni_tls *tp, const char *name, void *buf, size_t *szp, nni_type t)
+static int
+tls_getx(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	int rv;
+	tls *tp = arg;
+	int  rv;
 
-	if ((rv = nni_tcp_conn_getopt(tp->tcp, name, buf, szp, t)) !=
+	if ((rv = nni_stream_getx(tp->tcp, name, buf, szp, t)) !=
 	    NNG_ENOTSUP) {
 		return (rv);
 	}
@@ -665,11 +632,12 @@ nni_tls_getopt(
 }
 
 static void
-nni_tls_do_handshake(nni_tls *tp)
+tls_do_handshake(tls *tp)
 {
-	int rv;
+	int      rv;
+	nni_aio *aio;
 
-	if (tp->tls_closed) {
+	if (tp->hsdone || tp->tls_closed) {
 		return;
 	}
 	rv = mbedtls_ssl_handshake(&tp->ctx);
@@ -686,15 +654,24 @@ nni_tls_do_handshake(nni_tls *tp)
 
 	default:
 		// some other error occurred, this causes us to tear it down
-		nni_tls_fail(tp, nni_tls_mkerr(rv));
+		nng_stream_close(tp->tcp);
+		tp->tls_closed = true;
+		tp->tcp_closed = true;
+		rv             = tls_mkerr(rv);
+
+		while (((aio = nni_list_first(&tp->recvs)) != NULL) ||
+		    ((aio = nni_list_first(&tp->sends)) != NULL)) {
+			nni_aio_list_remove(aio);
+			nni_aio_finish_error(aio, rv);
+		}
 	}
 }
 
-// nni_tls_do_send is called to try to send more data if we have not
+// tls_do_send is called to try to send more data if we have not
 // yet completed the I/O.  It also completes any transactions that
 // *have* completed.  It must be called with the lock held.
 static void
-nni_tls_do_send(nni_tls *tp)
+tls_do_send(tls *tp)
 {
 	nni_aio *aio;
 
@@ -732,7 +709,7 @@ nni_tls_do_send(nni_tls *tp)
 		// Want better diagnostics.
 		nni_aio_list_remove(aio);
 		if (n < 0) {
-			nni_aio_finish_error(aio, nni_tls_mkerr(n));
+			nni_aio_finish_error(aio, tls_mkerr(n));
 		} else {
 			nni_aio_finish(aio, 0, n);
 		}
@@ -740,7 +717,7 @@ nni_tls_do_send(nni_tls *tp)
 }
 
 static void
-nni_tls_do_recv(nni_tls *tp)
+tls_do_recv(tls *tp)
 {
 	nni_aio *aio;
 
@@ -777,16 +754,17 @@ nni_tls_do_recv(nni_tls *tp)
 		nni_aio_list_remove(aio);
 
 		if (n < 0) {
-			nni_aio_finish_error(aio, nni_tls_mkerr(n));
+			nni_aio_finish_error(aio, tls_mkerr(n));
 		} else {
 			nni_aio_finish(aio, 0, n);
 		}
 	}
 }
 
-void
-nni_tls_close(nni_tls *tp)
+static void
+tls_close(void *arg)
 {
+	tls *    tp = arg;
 	nni_aio *aio;
 
 	nni_aio_close(tp->tcp_send);
@@ -795,12 +773,8 @@ nni_tls_close(nni_tls *tp)
 	nni_mtx_lock(&tp->lk);
 	tp->tls_closed = true;
 
-	while ((aio = nni_list_first(&tp->sends)) != NULL) {
-		nni_aio_list_remove(aio);
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-	}
-
-	while ((aio = nni_list_first(&tp->recvs)) != NULL) {
+	while (((aio = nni_list_first(&tp->sends)) != NULL) ||
+	    ((aio = nni_list_first(&tp->recvs)) != NULL)) {
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 	}
@@ -813,9 +787,34 @@ nni_tls_close(nni_tls *tp)
 		// connection at this point.
 		(void) mbedtls_ssl_close_notify(&tp->ctx);
 	} else {
-		nni_tcp_conn_close(tp->tcp);
+		nng_stream_close(tp->tcp);
 	}
 	nni_mtx_unlock(&tp->lk);
+}
+
+// This allocates a TLS structure, that can be used by the caller.
+// The reason we have this API is so that the base structure can be
+// embedded in the parent structure.
+int
+nni_tls_alloc(nng_stream **tlsp)
+{
+	tls *tp;
+
+	if ((tp = NNI_ALLOC_STRUCT(tp)) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	nni_aio_list_init(&tp->sends);
+	nni_aio_list_init(&tp->recvs);
+	nni_mtx_init(&tp->lk);
+	tp->com.ops.s_close = tls_close;
+	tp->com.ops.s_free  = tls_free;
+	tp->com.ops.s_send  = tls_send;
+	tp->com.ops.s_recv  = tls_recv;
+	tp->com.ops.s_getx  = tls_getx;
+	tp->com.ops.s_setx  = tls_setx;
+
+	*tlsp = (void *) tp;
+	return (0);
 }
 
 int
@@ -882,14 +881,14 @@ nng_tls_config_ca_chain(
 	pem = (const uint8_t *) certs;
 	len = strlen(certs) + 1;
 	if ((rv = mbedtls_x509_crt_parse(&cfg->ca_certs, pem, len)) != 0) {
-		rv = nni_tls_mkerr(rv);
+		rv = tls_mkerr(rv);
 		goto err;
 	}
 	if (crl != NULL) {
 		pem = (const uint8_t *) crl;
 		len = strlen(crl) + 1;
 		if ((rv = mbedtls_x509_crl_parse(&cfg->crl, pem, len)) != 0) {
-			rv = nni_tls_mkerr(rv);
+			rv = tls_mkerr(rv);
 			goto err;
 		}
 	}
@@ -919,7 +918,7 @@ nng_tls_config_own_cert(
 	pem = (const uint8_t *) cert;
 	len = strlen(cert) + 1;
 	if ((rv = mbedtls_x509_crt_parse(&ck->crt, pem, len)) != 0) {
-		rv = nni_tls_mkerr(rv);
+		rv = tls_mkerr(rv);
 		goto err;
 	}
 
@@ -928,7 +927,7 @@ nng_tls_config_own_cert(
 	rv  = mbedtls_pk_parse_key(&ck->key, pem, len, (const uint8_t *) pass,
             pass != NULL ? strlen(pass) : 0);
 	if (rv != 0) {
-		rv = nni_tls_mkerr(rv);
+		rv = tls_mkerr(rv);
 		goto err;
 	}
 
@@ -941,7 +940,7 @@ nng_tls_config_own_cert(
 	rv = mbedtls_ssl_conf_own_cert(&cfg->cfg_ctx, &ck->crt, &ck->key);
 	if (rv != 0) {
 		nni_mtx_unlock(&cfg->lk);
-		rv = nni_tls_mkerr(rv);
+		rv = tls_mkerr(rv);
 		goto err;
 	}
 
