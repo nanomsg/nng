@@ -26,8 +26,7 @@ int nng_ctx_close(nng_ctx ctx);
 
 The `nng_ctx_close()` function closes the context _ctx_.
 Messages that have been submitted for sending may be flushed or delivered,
-depending upon the transport and the setting of the
-`<<nng_options.5#NNG_OPT_LINGER,NNG_OPT_LINGER>>` option.
+depending upon the transport.
 
 Further attempts to use the context after this call returns will result
 in `NNG_ECLOSED`.
