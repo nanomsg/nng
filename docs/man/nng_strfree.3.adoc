@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_free - free memory
+nng_strfree - free memory
 
 == SYNOPSIS
 

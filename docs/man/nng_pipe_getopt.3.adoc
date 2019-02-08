@@ -21,7 +21,7 @@ nng_pipe_getopt - get pipe option
 
 int nng_pipe_getopt(nng_pipe p, const char *opt, void *val, size_t *valszp);
 
-int nng_pipe_getopt_bool(nng_pipe p, const char *opt, int *bvalp);
+int nng_pipe_getopt_bool(nng_pipe p, const char *opt, bool *bvalp);
 
 int nng_pipe_getopt_int(nng_pipe p, const char *opt, int *ivalp);
 

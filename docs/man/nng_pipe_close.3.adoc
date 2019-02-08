@@ -26,8 +26,7 @@ int nng_pipe_close(nng_pipe p);
 
 The `nng_pipe_close()` function closes the supplied pipe, _p_.
 Messages that have been submitted for sending may be flushed or delivered,
-depending upon the transport and the setting of the
-`<<nng_options.5#NNG_OPT_LINGER,NNG_OPT_LINGER>>` option.
+depending upon the transport.
 
 Further attempts to use the pipe after this call returns will result
 in `NNG_ECLOSED`.

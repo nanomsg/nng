@@ -19,7 +19,7 @@ nng_recv - recv data
 ----
 #include <nng/nng.h>
 
-int nng_recv(nng_socket s, void *data, size_t *sizep int flags);
+int nng_recv(nng_socket s, void *data, size_t *sizep, int flags);
 ----
 
 == DESCRIPTION
