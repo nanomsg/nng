@@ -30,7 +30,7 @@ int nng_sub0_open_raw(nng_socket *s);
 The `nng_sub0_open()` function creates a <<nng_sub.7#,_sub_>> version 0
 <<nng_socket.5#,socket>> and returns it at the location pointed to by _s_.
 
-The `nng_sub0_open()` function creates a <<nng_sub.7#,_sub_>> version 0
+The `nng_sub0_open_raw()` function creates a <<nng_sub.7#,_sub_>> version 0
 <<nng_socket.5#,socket>> in
 <<nng.7#raw_mode,raw>> mode and returns it at the location pointed to by _s_.
 
