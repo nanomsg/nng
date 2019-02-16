@@ -17,6 +17,20 @@
 
 #include "win_tcp.h"
 
+struct nni_tcp_listener {
+	SOCKET                    s;
+	nni_list                  aios;
+	bool                      closed;
+	bool                      started;
+	bool                      nodelay;   // initial value for child conns
+	bool                      keepalive; // initial value for child conns
+	LPFN_ACCEPTEX             acceptex;
+	LPFN_GETACCEPTEXSOCKADDRS getacceptexsockaddrs;
+	SOCKADDR_STORAGE          ss;
+	nni_mtx                   mtx;
+	nni_reap_item             reap;
+};
+
 // tcp_listener_funcs looks up function pointers we need for advanced accept
 // functionality on Windows.  Windows is weird.
 static int
@@ -296,7 +310,7 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if ((rv = nni_win_tcp_conn_init(&c, s)) != 0) {
+	if ((rv = nni_win_tcp_init(&c, s)) != 0) {
 		nni_mtx_unlock(&l->mtx);
 		closesocket(s);
 		nni_aio_finish_error(aio, rv);

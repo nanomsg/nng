@@ -45,6 +45,18 @@ TCP/IP communications.
 
 === TCP Options
 
+[[NNG_OPT_TCP_BOUND_PORT]]
+((`NNG_OPT_TCP_BOUND_PORT`))::
+(`int`)
+This option is available on listeners, after the listern has bound to
+a port, and provides the port bound to in native byte order.
+This is most useful when using a listener with an ephemeral port
+(configured by using port 0 at configuration time), as it allows
+the caller to determine the actual ephemeral port that was chosen by the
+system.
+While the value is of type `int`, it will be a legal TCP port number, that
+is a value between 1 and 65535, inclusive.
+
 [[NNG_OPT_TCP_NODELAY]]
 ((`NNG_OPT_TCP_NODELAY`))::
 (`bool`)
@@ -94,17 +106,17 @@ middleware from being expiring due to lack of activity.
 Generally, the following option values are also available for TCP objects,
 when appropriate for the context:
 
-* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
-* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
+* xref:nng_options.5.adoc#NNG_OPT_LOCADDR[`NNG_OPT_LOCADDR`]
+* xref:nng_options.5.adoc#NNG_OPT_REMADDR[`NNG_OPT_REMADDR`]
 
 == SEE ALSO
 
 [.text-left]
-<<nng_tcp_dialer_getopt.3tcp#,nng_tcp_dialer_getopt(3tcp)>>,
-<<nng_tcp_dialer_setopt.3tcp#,nng_tcp_dialer_setopt(3tcp)>>,
-<<nng_tcp_getopt.3tcp#,nng_tcp_getopt(3tcp)>>,
-<<nng_tcp_listener_getopt.3tcp#,nng_tcp_listener_getopt(3tcp)>>,
-<<nng_tcp_listener_setopt.3tcp#,nng_tcp_listener_setopt(3tcp)>>,
-<<nng_tcp_setopt.3tcp#,nng_tcp_setopt(3tcp)>>,
-<<nng_options.5#,nng_options(5)>>
-<<nng.7#,nng(7)>>
+xref:nng_tcp_dialer_getopt.3tcp.adoc[nng_tcp_dialer_getopt(3tcp)],
+xref:nng_tcp_dialer_setopt.3tcp.adoc[nng_tcp_dialer_setopt(3tcp)],
+xref:nng_tcp_getopt.3tcp.adoc[nng_tcp_getopt(3tcp)],
+xref:nng_tcp_listener_getopt.3tcp.adoc[nng_tcp_listener_getopt(3tcp)],
+xref:nng_tcp_listener_setopt.3tcp.adoc[nng_tcp_listener_setopt(3tcp)],
+xref:nng_tcp_setopt.3tcp.adoc[nng_tcp_setopt(3tcp)],
+xref:nng_options.5.adoc[nng_options(5)]
+xref:nng.7.adoc[nng(7)]

@@ -754,6 +754,14 @@ enum nng_flag_enum {
 // state current). This is a boolean.
 #define NNG_OPT_TCP_KEEPALIVE "tcp-keepalive"
 
+// Local TCP port number.  This is used on a listener, and is intended
+// to be used after starting the listener in combination with a wildcard
+// (0) local port.  This determines the actual ephemeral port that was
+// selected and bound.  The value is provied as an int, but only the
+// low order 16 bits will be set.  This is provided in native byte order,
+// which makes it more convienent than using the NNG_OPT_LOCADDR option.
+#define NNG_OPT_TCP_BOUND_PORT "tcp-bound-port"
+
 // IPC options.  These will largely vary depending on the platform,
 // as POSIX systems have very different options than Windows.
 
@@ -1115,7 +1123,8 @@ NNG_DECL int nng_stream_listener_get_addr(
     nng_stream_listener *, const char *, nng_sockaddr *);
 NNG_DECL int nng_stream_listener_set_bool(
     nng_stream_listener *, const char *, bool);
-NNG_DECL int nng_stream_listener_set_int(nng_stream_listener *, const char *, int);
+NNG_DECL int nng_stream_listener_set_int(
+    nng_stream_listener *, const char *, int);
 NNG_DECL int nng_stream_listener_set_ms(
     nng_stream_listener *, const char *, nng_duration);
 NNG_DECL int nng_stream_listener_set_size(

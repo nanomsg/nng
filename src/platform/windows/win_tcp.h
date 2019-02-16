@@ -38,20 +38,6 @@ struct nni_tcp_conn {
 	nni_cv            cv;
 };
 
-struct nni_tcp_listener {
-	SOCKET                    s;
-	nni_list                  aios;
-	bool                      closed;
-	bool                      started;
-	bool                      nodelay;   // initial value for child conns
-	bool                      keepalive; // initial value for child conns
-	LPFN_ACCEPTEX             acceptex;
-	LPFN_GETACCEPTEXSOCKADDRS getacceptexsockaddrs;
-	SOCKADDR_STORAGE          ss;
-	nni_mtx                   mtx;
-	nni_reap_item             reap;
-};
-
-extern int nni_win_tcp_conn_init(nni_tcp_conn **, SOCKET);
+extern int nni_win_tcp_init(nni_tcp_conn **, SOCKET);
 
 #endif // NNG_PLATFORM_WIN_WINTCP_H

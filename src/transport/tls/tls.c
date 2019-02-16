@@ -907,7 +907,7 @@ tlstran_ep_accept(void *arg, nni_aio *aio)
 }
 
 static int
-tlstran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
+tlstran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_type t)
 {
 	tlstran_ep *ep = arg;
 	size_t      val;
@@ -921,7 +921,7 @@ tlstran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static int
-tlstran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
+tlstran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_type t)
 {
 	tlstran_ep *ep = arg;
 	int         rv;
@@ -932,30 +932,22 @@ tlstran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static int
-tlstran_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
+tlstran_ep_get_url(void *arg, void *v, size_t *szp, nni_type t)
 {
-	tlstran_ep * ep = arg;
-	char         ustr[128];
-	char         ipstr[48];  // max for IPv6 addresses including []
-	char         portstr[6]; // max for 16-bit port
-	nng_sockaddr sa;
-	size_t       sz = sizeof(sa);
-	int          rv;
+	tlstran_ep *ep = arg;
+	char *      s;
+	int         rv;
+	int         port = 0;
 
-	if (ep->dialer != NULL) {
-		return (nni_copyout_str(ep->url->u_rawurl, v, szp, t));
+	if (ep->listener != NULL) {
+		(void) nng_stream_listener_get_int(
+		    ep->listener, NNG_OPT_TCP_BOUND_PORT, &port);
 	}
-	rv = nni_stream_listener_getx(
-	    ep->listener, NNG_OPT_LOCADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
-	if (rv != 0) {
-		return (rv);
+	if ((rv = nni_url_asprintf_port(&s, ep->url, port)) == 0) {
+		rv = nni_copyout_str(s, v, szp, t);
+		nni_strfree(s);
 	}
-
-	nni_mtx_lock(&ep->mtx);
-	nni_ntop(&sa, ipstr, portstr);
-	nni_mtx_unlock(&ep->mtx);
-	snprintf(ustr, sizeof(ustr), "tls+tcp://%s:%s", ipstr, portstr);
-	return (nni_copyout_str(ustr, v, szp, t));
+	return (rv);
 }
 
 static const nni_option tlstran_pipe_opts[] = {

@@ -193,7 +193,7 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 		return;
 	}
 
-	if ((rv = nni_win_tcp_conn_init(&c, s)) != 0) {
+	if ((rv = nni_win_tcp_init(&c, s)) != 0) {
 		nng_stream_free(&c->ops);
 		nni_aio_finish_error(aio, rv);
 		return;

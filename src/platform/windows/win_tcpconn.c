@@ -425,7 +425,7 @@ tcp_free(void *arg)
 }
 
 int
-nni_win_tcp_conn_init(nni_tcp_conn **connp, SOCKET s)
+nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s)
 {
 	nni_tcp_conn *c;
 	int           rv;

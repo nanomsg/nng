@@ -57,7 +57,7 @@ struct tcptran_ep {
 	uint16_t             proto;
 	size_t               rcvmax;
 	bool                 fini;
-	nni_url *            url;
+	nng_url *            url;
 	const char *         host; // for dialers
 	nng_sockaddr         src;
 	nni_list             pipes;
@@ -680,7 +680,7 @@ tcptran_ep_close(void *arg)
 // The special handling of this URL format is quite honestly an historical
 // mistake, which we would remove if we could.
 static int
-tcptran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
+tcptran_url_parse_source(nng_url *url, nng_sockaddr *sa, const nng_url *surl)
 {
 	int      af;
 	char *   semi;
@@ -736,13 +736,13 @@ tcptran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
 }
 
 static int
-tcptran_dialer_init(void **dp, nni_url *url, nni_dialer *ndialer)
+tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 {
 	tcptran_ep * ep;
 	int          rv;
 	nng_sockaddr srcsa;
 	nni_sock *   sock = nni_dialer_sock(ndialer);
-	nni_url      myurl;
+	nng_url      myurl;
 
 	// Check for invalid URL components.
 	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
@@ -783,7 +783,7 @@ tcptran_dialer_init(void **dp, nni_url *url, nni_dialer *ndialer)
 	return (0);
 }
 static int
-tcptran_listener_init(void **lp, nni_url *url, nni_listener *nlistener)
+tcptran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 {
 	tcptran_ep *ep;
 	int         rv;
@@ -847,28 +847,20 @@ static int
 tcptran_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
 	tcptran_ep *ep = arg;
+	char *      s;
+	int         rv;
+	int         port = 0;
 
 	if (ep->listener != NULL) {
-		char         ustr[128];
-		char         ipstr[48];  // max for IPv6 addresses including []
-		char         portstr[6]; // max for 16-bit port
-		nng_sockaddr sa;
-		int          rv;
-		rv = nng_stream_listener_get_addr(
-		    ep->listener, NNG_OPT_LOCADDR, &sa);
-		if (rv != 0) {
-			return (rv);
-		}
-
-		nni_ntop(&sa, ipstr, portstr);
-		snprintf(ustr, sizeof(ustr),
-		    sa.s_family == NNG_AF_INET6 ? "tcp://[%s]:%s"
-		                                : "tcp://%s:%s",
-		    ipstr, portstr);
-		return (nni_copyout_str(ustr, v, szp, t));
+		(void) nng_stream_listener_get_int(
+		    ep->listener, NNG_OPT_TCP_BOUND_PORT, &port);
 	}
 
-	return (nni_copyout_str(ep->url->u_rawurl, v, szp, t));
+	if ((rv = nni_url_asprintf_port(&s, ep->url, port)) == 0) {
+		rv = nni_copyout_str(s, v, szp, t);
+		nni_strfree(s);
+	}
+	return (rv);
 }
 
 static int
