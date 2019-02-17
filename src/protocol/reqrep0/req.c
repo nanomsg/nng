@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -515,8 +515,12 @@ req0_run_sendq(req0_sock *s, nni_list *aiolist)
 
 		// Schedule a resubmit timer.  We only do this if we got
 		// a pipe to send to.  Otherwise, we should get handled
-		// the next time that the sendq is run.
-		nni_timer_schedule(&ctx->timer, nni_clock() + ctx->retry);
+		// the next time that the sendq is run.  We don't do this
+		// if the retry is "disabled" with NNG_DURATION_INFINITE.
+		if (ctx->retry > 0) {
+			nni_timer_schedule(
+			    &ctx->timer, nni_clock() + ctx->retry);
+		}
 
 		if (nni_msg_dup(&msg, ctx->reqmsg) != 0) {
 			// Oops.  Well, keep trying each context; maybe
