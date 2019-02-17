@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -480,6 +480,14 @@ rep0_ctx_recv(void *arg, nni_aio *aio)
 		if ((rv = nni_aio_schedule(aio, rep0_cancel_recv, ctx)) != 0) {
 			nni_mtx_unlock(&s->lk);
 			nni_aio_finish_error(aio, rv);
+			return;
+		}
+		if (ctx->raio != NULL) {
+			// Cannot have a second receive operation pending.
+			// This could be ESTATE, or we could cancel the first
+			// with ECANCELED.  We elect the former.
+			nni_mtx_unlock(&s->lk);
+			nni_aio_finish_error(aio, NNG_ESTATE);
 			return;
 		}
 		ctx->raio = aio;
