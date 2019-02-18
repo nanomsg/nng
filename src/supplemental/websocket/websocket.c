@@ -843,6 +843,7 @@ ws_read_finish_str(nni_ws *ws)
 				// This eats the entire iov.
 				n = iov->iov_len;
 			}
+			memcpy(iov->iov_buf, frame->buf, n);
 			iov->iov_buf = ((uint8_t *) iov->iov_buf) + n;
 			iov->iov_len -= n;
 			if (iov->iov_len == 0) {
@@ -2038,7 +2039,7 @@ nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 	l->fragsize      = WS_DEF_MAXTXFRAME;
 	l->maxframe      = WS_DEF_MAXRXFRAME;
 	l->recvmax       = WS_DEF_RECVMAX;
-	l->isstream      = false;
+	l->isstream      = true;
 	l->ops.sl_free   = ws_listener_free;
 	l->ops.sl_close  = ws_listener_close;
 	l->ops.sl_accept = ws_listener_accept;
