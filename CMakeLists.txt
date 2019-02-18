@@ -368,6 +368,7 @@ nng_check_sym (strncasecmp string.h NNG_HAVE_STRNCASECMP)
 # resolve.
 if (NOT(BUILD_SHARED_LIBS))
     set (NNG_STATIC_LIB ON)
+    set(CMAKE_POSITION_INDEPENDENT_CODE ON)
     message(STATUS "Building static libs")
 endif()
 
