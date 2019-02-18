@@ -140,5 +140,20 @@ TestMain("WebSocket Transport", {
 		So(nng_dial(s2, addr, NULL, 0) == NNG_ECONNREFUSED);
 	});
 
+	// This test covers bug 821.
+	Convey("Double wildcard listen works", {
+		nng_socket s1;
+		nng_socket s2;
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s1);
+			nng_close(s2);
+		});
+		So(nng_listen(s1, "ws://*:5599/one", NULL, 0) == 0);
+		So(nng_listen(s1, "ws://*:5599/two", NULL, 0) == 0);
+		So(nng_dial(s2, "ws://127.0.0.1:5599/one", NULL, 0) == 0);
+	});
+
 	nng_fini();
 })

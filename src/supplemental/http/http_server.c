@@ -866,13 +866,11 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 		return (rv);
 	}
 
-	if ((strlen(url->u_port)) &&
-	    ((s->port = nni_strdup(url->u_port)) == NULL)) {
+	if ((s->port = nni_strdup(url->u_port)) == NULL) {
 		http_server_fini(s);
 		return (NNG_ENOMEM);
 	}
-	if ((strlen(url->u_hostname)) &&
-	    ((s->hostname = nni_strdup(url->u_hostname)) == NULL)) {
+	if ((s->hostname = nni_strdup(url->u_hostname)) == NULL) {
 		http_server_fini(s);
 		return (NNG_ENOMEM);
 	}
