@@ -8,7 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-
 #ifdef _WIN32
 #define strdup _strdup
 #else
@@ -22,8 +21,8 @@
 #include <nng/supplemental/http/http.h>
 #include <nng/supplemental/tls/tls.h>
 
-#include "core/nng_impl.h"
 #include "convey.h"
+#include "core/nng_impl.h"
 
 const char *doc1 = "<html><body>Someone <b>is</b> home!</body</html>";
 const char *doc2 = "This is a text file.";
@@ -485,6 +484,7 @@ TestMain("HTTP Server", {
 			nng_url_free(curl);
 		});
 	});
+
 	Convey("Custom POST handler works", {
 		char     urlstr[32];
 		nng_url *url;
@@ -669,4 +669,51 @@ TestMain("HTTP Server", {
 			nng_url_free(curl);
 		});
 	});
-})
+
+	Convey("Root tree handler works", {
+		char     urlstr[32];
+		nng_url *url;
+
+		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		So(nng_url_parse(&url, urlstr) == 0);
+		So(nng_http_server_hold(&s, url) == 0);
+
+		Reset({
+			nng_http_server_release(s);
+			nng_url_free(url);
+		});
+
+		So(nng_http_handler_alloc(&h, "/", httpecho) == 0);
+		So(nng_http_handler_set_method(h, "POST") == 0);
+		So(nng_http_handler_set_tree(h) == 0);
+		So(nng_http_server_add_handler(s, h) == 0);
+		So(nng_http_server_start(s) == 0);
+
+		Convey("Echo POST works", {
+			char          fullurl[256];
+			size_t        size;
+			nng_http_req *req;
+			nng_http_res *res;
+			nng_url *     curl;
+			char          txdata[5];
+			char *        rxdata;
+
+			snprintf(txdata, sizeof(txdata), "1234");
+			So(nng_http_res_alloc(&res) == 0);
+			snprintf(fullurl, sizeof(fullurl),
+			    "%s/some_sub/directory", urlstr);
+			So(nng_url_parse(&curl, fullurl) == 0);
+			So(nng_http_req_alloc(&req, curl) == 0);
+			nng_http_req_set_data(req, txdata, strlen(txdata));
+			So(nng_http_req_set_method(req, "POST") == 0);
+			So(httpdo(curl, req, res, (void **) &rxdata, &size) ==
+			    0);
+			So(nng_http_res_get_status(res) == NNG_HTTP_STATUS_OK);
+			So(size == strlen(txdata));
+			So(strncmp(txdata, rxdata, size) == 0);
+			nng_http_req_free(req);
+			nng_http_res_free(res);
+			nng_url_free(curl);
+		});
+	});
+});

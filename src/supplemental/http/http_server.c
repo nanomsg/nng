@@ -95,9 +95,9 @@ nni_http_handler_init(
 	if ((h = NNI_ALLOC_STRUCT(h)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	// Default for HTTP is /.
-	if ((uri == NULL) || (strlen(uri) == 0)) {
-		uri = "/";
+	// Default for HTTP is /.  But remap it to "" for ease of matching.
+	if ((uri == NULL) || (strlen(uri) == 0) || (strcmp(uri, "/") == 0)) {
+		uri = "";
 	}
 	if (((h->uri = nni_strdup(uri)) == NULL) ||
 	    ((h->method = nni_strdup("GET")) == NULL)) {
@@ -159,6 +159,9 @@ nni_http_handler_get_data(nni_http_handler *h)
 const char *
 nni_http_handler_get_uri(nni_http_handler *h)
 {
+	if (strlen(h->uri) == 0) {
+		return ("/");
+	}
 	return (h->uri);
 }
 
@@ -1089,7 +1092,7 @@ nni_http_server_add_handler(nni_http_server *s, nni_http_handler *h)
 	// Must have a legal method (and not one that is HEAD), path,
 	// and handler.  (The reason HEAD is verboten is that we supply
 	// it automatically as part of GET support.)
-	if (((len = strlen(h->uri)) == 0) || (h->uri[0] != '/') ||
+	if ((((len = strlen(h->uri)) > 0) && (h->uri[0] != '/')) ||
 	    (h->cb == NULL)) {
 		return (NNG_EINVAL);
 	}
