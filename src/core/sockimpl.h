@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,11 +23,14 @@ typedef struct nni_dialer_stats {
 	nni_stat_item s_npipes;
 	nni_stat_item s_connok;
 	nni_stat_item s_refused;
+	nni_stat_item s_discon;
 	nni_stat_item s_canceled;
-	nni_stat_item s_timedout;
 	nni_stat_item s_othererr;
-	nni_stat_item s_protorej;
-	nni_stat_item s_apprej;
+	nni_stat_item s_etimedout;
+	nni_stat_item s_eproto; // protocol error
+	nni_stat_item s_eauth;
+	nni_stat_item s_enomem;
+	nni_stat_item s_reject;
 	char          s_scope[24]; // scope name for stats
 } nni_dialer_stats;
 
@@ -64,12 +67,14 @@ typedef struct nni_listener_stats {
 	nni_stat_item s_url;
 	nni_stat_item s_npipes;
 	nni_stat_item s_accept;
-	nni_stat_item s_aborted; // aborted remotely
-	nni_stat_item s_timedout;
+	nni_stat_item s_discon; // aborted remotely
 	nni_stat_item s_canceled;
 	nni_stat_item s_othererr;
-	nni_stat_item s_protorej;
-	nni_stat_item s_apprej;
+	nni_stat_item s_etimedout;
+	nni_stat_item s_eproto; // protocol error
+	nni_stat_item s_eauth;
+	nni_stat_item s_enomem;
+	nni_stat_item s_reject;
 	char          s_scope[24]; // scope name for stats
 } nni_listener_stats;
 
@@ -97,6 +102,10 @@ typedef struct nni_pipe_stats {
 	nni_stat_item s_id;
 	nni_stat_item s_ep_id;
 	nni_stat_item s_sock_id;
+	nni_stat_item s_rxmsgs;
+	nni_stat_item s_txmsgs;
+	nni_stat_item s_rxbytes;
+	nni_stat_item s_txbytes;
 	char          s_scope[16]; // scope name for stats ("pipe" is short)
 } nni_pipe_stats;
 

@@ -468,6 +468,12 @@ static const nni_chkoption tcp_chkopts[] = {
 	    .o_check = tcp_check_bool,
 	},
 	{
+	    .o_name = NNG_OPT_TCP_BOUND_PORT,
+	},
+	{
+	    .o_name = NNG_OPT_LOCADDR,
+	},
+	{
 	    .o_name = NULL,
 	},
 };

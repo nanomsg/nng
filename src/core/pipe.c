@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -228,6 +228,18 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	nni_stat_init_id(&st->s_sock_id, "socket", "socket for pipe",
 	    nni_sock_id(p->p_sock));
 	nni_stat_append(&st->s_root, &st->s_sock_id);
+	nni_stat_init_atomic(&st->s_rxmsgs, "rxmsgs", "messages received");
+	nni_stat_set_unit(&st->s_rxmsgs, NNG_UNIT_MESSAGES);
+	nni_stat_append(&st->s_root, &st->s_rxmsgs);
+	nni_stat_init_atomic(&st->s_txmsgs, "txmsgs", "messages sent");
+	nni_stat_set_unit(&st->s_txmsgs, NNG_UNIT_MESSAGES);
+	nni_stat_append(&st->s_root, &st->s_txmsgs);
+	nni_stat_init_atomic(&st->s_rxbytes, "rxbytes", "bytes received");
+	nni_stat_set_unit(&st->s_rxbytes, NNG_UNIT_BYTES);
+	nni_stat_append(&st->s_root, &st->s_rxbytes);
+	nni_stat_init_atomic(&st->s_txbytes, "txbytes", "bytes sent");
+	nni_stat_set_unit(&st->s_txbytes, NNG_UNIT_BYTES);
+	nni_stat_append(&st->s_root, &st->s_txbytes);
 
 	if ((rv != 0) || ((rv = p->p_tran_ops.p_init(tdata, p)) != 0) ||
 	    ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0)) {
@@ -336,4 +348,28 @@ void
 nni_pipe_add_stat(nni_pipe *p, nni_stat_item *item)
 {
 	nni_stat_append(&p->p_stats.s_root, item);
+}
+
+void
+nni_pipe_bump_rx(nni_pipe *p, size_t nbytes)
+{
+	nni_stat_inc_atomic(&p->p_stats.s_rxbytes, nbytes);
+	nni_stat_inc_atomic(&p->p_stats.s_rxmsgs, 1);
+}
+
+void
+nni_pipe_bump_tx(nni_pipe *p, size_t nbytes)
+{
+	nni_stat_inc_atomic(&p->p_stats.s_txbytes, nbytes);
+	nni_stat_inc_atomic(&p->p_stats.s_txmsgs, 1);
+}
+
+void
+nni_pipe_bump_error(nni_pipe *p, int err)
+{
+	if (p->p_dialer != NULL) {
+		nni_dialer_bump_error(p->p_dialer, err);
+	} else {
+		nni_listener_bump_error(p->p_listener, err);
+	}
 }

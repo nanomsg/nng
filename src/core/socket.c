@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -58,8 +58,7 @@ typedef struct sock_stats {
 	nni_stat_item s_txbytes;    // number of bytes received
 	nni_stat_item s_rxmsgs;     // number of msgs received
 	nni_stat_item s_txmsgs;     // number of msgs sent
-	nni_stat_item s_protorej;   // pipes rejected by protocol
-	nni_stat_item s_apprej;     // pipes rejected by application
+	nni_stat_item s_reject;     // pipes rejected
 } sock_stats;
 
 struct nni_socket {
@@ -465,13 +464,8 @@ sock_stats_init(nni_sock *s)
 	nni_stat_set_unit(&st->s_txmsgs, NNG_UNIT_MESSAGES);
 	nni_stat_append(root, &st->s_txmsgs);
 
-	nni_stat_init_atomic(
-	    &st->s_protorej, "protoreject", "pipes rejected by protocol");
-	nni_stat_append(root, &st->s_protorej);
-
-	nni_stat_init_atomic(
-	    &st->s_apprej, "appreject", "pipes rejected by application");
-	nni_stat_append(root, &st->s_apprej);
+	nni_stat_init_atomic(&st->s_reject, "reject", "pipes rejected");
+	nni_stat_append(root, &st->s_reject);
 #else
 	NNI_ARG_UNUSED(s);
 #endif
@@ -1441,15 +1435,15 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 	nni_mtx_lock(&s->s_mx);
 	if (p->p_closed) {
 		nni_mtx_unlock(&s->s_mx);
-		nni_stat_inc_atomic(&d->d_stats.s_apprej, 1);
-		nni_stat_inc_atomic(&s->s_stats.s_apprej, 1);
+		nni_stat_inc_atomic(&d->d_stats.s_reject, 1);
+		nni_stat_inc_atomic(&s->s_stats.s_reject, 1);
 		nni_pipe_rele(p);
 		return;
 	}
 	if (p->p_proto_ops.pipe_start(p->p_proto_data) != 0) {
 		nni_mtx_unlock(&s->s_mx);
-		nni_stat_inc_atomic(&d->d_stats.s_protorej, 1);
-		nni_stat_inc_atomic(&s->s_stats.s_protorej, 1);
+		nni_stat_inc_atomic(&d->d_stats.s_reject, 1);
+		nni_stat_inc_atomic(&s->s_stats.s_reject, 1);
 		nni_pipe_close(p);
 		nni_pipe_rele(p);
 		return;
@@ -1550,15 +1544,15 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 	nni_mtx_lock(&s->s_mx);
 	if (p->p_closed) {
 		nni_mtx_unlock(&s->s_mx);
-		nni_stat_inc_atomic(&l->l_stats.s_apprej, 1);
-		nni_stat_inc_atomic(&s->s_stats.s_apprej, 1);
+		nni_stat_inc_atomic(&l->l_stats.s_reject, 1);
+		nni_stat_inc_atomic(&s->s_stats.s_reject, 1);
 		nni_pipe_rele(p);
 		return;
 	}
 	if (p->p_proto_ops.pipe_start(p->p_proto_data) != 0) {
 		nni_mtx_unlock(&s->s_mx);
-		nni_stat_inc_atomic(&l->l_stats.s_protorej, 1);
-		nni_stat_inc_atomic(&s->s_stats.s_protorej, 1);
+		nni_stat_inc_atomic(&l->l_stats.s_reject, 1);
+		nni_stat_inc_atomic(&s->s_stats.s_reject, 1);
 		nni_pipe_close(p);
 		nni_pipe_rele(p);
 		return;

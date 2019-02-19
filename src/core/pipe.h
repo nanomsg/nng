@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -63,6 +63,10 @@ extern uint32_t nni_pipe_dialer_id(nni_pipe *);
 extern void nni_pipe_rele(nni_pipe *);
 
 // nni_pipe_add_stat adds a statistic to the pipe
-extern void nni_pipe_add_stat(nni_pipe *p, nni_stat_item *);
+extern void nni_pipe_add_stat(nni_pipe *, nni_stat_item *);
+
+extern void nni_pipe_bump_rx(nni_pipe *, size_t);
+extern void nni_pipe_bump_tx(nni_pipe *, size_t);
+extern void nni_pipe_bump_error(nni_pipe *, int);
 
 #endif // CORE_PIPE_H
