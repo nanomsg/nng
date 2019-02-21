@@ -21,6 +21,8 @@ nng_rep_open - create rep socket
 #include <nng/protocol/reqrep0/rep.h>
 
 int nng_rep0_open(nng_socket *s);
+
+int nng_rep0_open_raw(nng_socket *);
 ----
 
 == DESCRIPTION

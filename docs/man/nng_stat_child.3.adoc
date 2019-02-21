@@ -1,4 +1,4 @@
-= nng_version(3)
+= nng_stat_child(3)
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>

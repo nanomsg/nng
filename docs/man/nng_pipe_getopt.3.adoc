@@ -27,7 +27,7 @@ int nng_pipe_getopt_int(nng_pipe p, const char *opt, int *ivalp);
 
 int nng_pipe_getopt_ms(nng_pipe p, const char *opt, nng_duration *durp);
 
-int nng_dialer_getopt_ptr(nng_pipe p, const char *opt, void **ptr);
+int nng_pipe_getopt_ptr(nng_pipe p, const char *opt, void **ptr);
 
 int nng_pipe_getopt_sockaddr(nng_pipe p, const char *opt, nng_sockaddr *sap);
 

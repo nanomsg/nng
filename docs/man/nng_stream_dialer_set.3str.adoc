@@ -22,7 +22,7 @@ nng_stream_dialer_set - set option on byte stream dialer
 
 int nng_stream_dialer_set(nng_stream_dialer *d, const char *name, const void *data, size_t size);
 
-int nng_stream_dialer_set_bool(nng_stream_dialer *d, const char *opt, int val);
+int nng_stream_dialer_set_bool(nng_stream_dialer *d, const char *opt, bool val);
 
 int nng_stream_dialer_set_int(nng_stream_dialer *d, const char *opt, int val);
 

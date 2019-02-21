@@ -1,4 +1,4 @@
-= nng_stream_send(3str)
+= nng_stream_recv(3str)
 //
 // Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
@@ -12,7 +12,7 @@
 
 == NAME
 
-nng_stream_send - receive from byte stream
+nng_stream_recv - receive from byte stream
 
 == SYNOPSIS
 
@@ -20,12 +20,12 @@ nng_stream_send - receive from byte stream
 ----
 #include <nng/nng.h>
 
-void nng_stream_send(nng_stream *s, nng_aio *aio);
+void nng_stream_recv(nng_stream *s, nng_aio *aio);
 ----
 
 == DESCRIPTION
 
-The `nng_stream_send()` function starts an asynchronous receive from the
+The `nng_stream_recv()` function starts an asynchronous receive from the
 xref:nng_stream.5.adoc[byte stream] _s_
 into the scatter/gather vector located in the
 asynchronous I/O structure _aio_.

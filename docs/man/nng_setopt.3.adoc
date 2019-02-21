@@ -21,7 +21,7 @@ nng_setopt - set socket option
 
 int nng_setopt(nng_socket s, const char *opt, const void *val, size_t valsz);
 
-int nng_setopt_bool(nng_socket s, const char *opt, int bval);
+int nng_setopt_bool(nng_socket s, const char *opt, bool bval);
 
 int nng_setopt_int(nng_socket s, const char *opt, int ival);
 

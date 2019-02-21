@@ -20,7 +20,7 @@ nng_stream_listener - byte stream listener
 ----
 #include <nng/nng.h>
 
-typedef struct nng_stream_dialer nng_stream_dialer;
+typedef struct nng_stream_listener nng_stream_listener;
 ----
 
 == DESCRIPTION

@@ -20,9 +20,9 @@ nng_tcp_options - TTCP-specific options
 ----
 #include <nng/nng.h>
 
-
-#define NNG_OPT_TCP_NODELAY   "tcp-nodelay"
-#define NNG_OPT_TCP_KEEPALIVE "tcp-keepalive"
+#define NNG_OPT_TCP_NODELAY    "tcp-nodelay"
+#define NNG_OPT_TCP_KEEPALIVE  "tcp-keepalive"
+#define NNG_OPT_TCP_BOUND_PORT "tcp-bound-port"
 ----
 
 == DESCRIPTION
@@ -44,18 +44,6 @@ The following options are generally application to objects making use of
 TCP/IP communications.
 
 === TCP Options
-
-[[NNG_OPT_TCP_BOUND_PORT]]
-((`NNG_OPT_TCP_BOUND_PORT`))::
-(`int`)
-This option is available on listeners, after the listern has bound to
-a port, and provides the port bound to in native byte order.
-This is most useful when using a listener with an ephemeral port
-(configured by using port 0 at configuration time), as it allows
-the caller to determine the actual ephemeral port that was chosen by the
-system.
-While the value is of type `int`, it will be a legal TCP port number, that
-is a value between 1 and 65535, inclusive.
 
 [[NNG_OPT_TCP_NODELAY]]
 ((`NNG_OPT_TCP_NODELAY`))::
@@ -100,6 +88,18 @@ TIP: This option has two purposes.
 First, it can be used to detect dead peers on an otherwise quiescent network.
 Second, it can be used to keep connection table entries in NAT and other
 middleware from being expiring due to lack of activity.
+
+[[NNG_OPT_TCP_BOUND_PORT]]
+((`NNG_OPT_TCP_BOUND_PORT`))::
+(`int`)
+This option is available on listeners, after the listern has bound to
+a port, and provides the port bound to in native byte order.
+This is most useful when using a listener with an ephemeral port
+(configured by using port 0 at configuration time), as it allows
+the caller to determine the actual ephemeral port that was chosen by the
+system.
+While the value is of type `int`, it will be a legal TCP port number, that
+is a value between 1 and 65535, inclusive.
 
 === Inherited Options
 

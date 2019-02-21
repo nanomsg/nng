@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_mtx_lock - lock mutex
+nng_mtx_unlock - unlock mutex
 
 == SYNOPSIS
 
