@@ -61,8 +61,9 @@ accessed using the <<nng_tcp_getopt.3tcp#,`nng_tcp_getopt()`>> and
 
 * <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
 * <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
-* <<nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE,`NNG_OPT_TCP_KEEPALIVE`>>
 * <<nng_tcp_options.5#NNG_OPT_TCP_NO_DELAY,`NNG_OPT_TCP_NODELAY`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE,`NNG_OPT_TCP_KEEPALIVE`>>
+* <<nng_tcp_options.5#NNG_OPT_TCP_BOUND_PORT,`NNG_OPT_TCP_BOUND_PORT`>>
 
 Other platform specific options may be available as well.
 

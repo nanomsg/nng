@@ -22,6 +22,8 @@ nng_listener_setopt - set listener option
 int nng_listener_setopt(nng_listener l, const char *opt, const void *val,
     size_t valsz);
 
+int nng_listener_setopt_bool(nng_listener l, const char *opt, bool bval);
+
 int nng_listener_setopt_int(nng_listener l, const char *opt, int ival);
 
 int nng_listener_setopt_ms(nng_listener l, const char *opt, nng_duration dur);

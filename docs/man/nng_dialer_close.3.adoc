@@ -24,7 +24,7 @@ int nng_dialer_close(nng_dialer d);
 
 == DESCRIPTION
 
-The `nng_dialer_close()` function closes the listener _d_.
+The `nng_dialer_close()` function closes the dialer _d_.
 This also closes any `<<nng_pipe.5#,nng_pipe>>` objects that have
 been created by the dialer.
 

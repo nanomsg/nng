@@ -22,7 +22,7 @@ nng_stream_set - set option on byte stream
 
 int nng_stream_set(nng_stream *s, const char *name, const void *data, size_t size);
 
-int nng_stream_set_bool(nng_stream *s, const char *opt, int val);
+int nng_stream_set_bool(nng_stream *s, const char *opt, bool val);
 
 int nng_stream_set_int(nng_stream *s, const char *opt, int val);
 

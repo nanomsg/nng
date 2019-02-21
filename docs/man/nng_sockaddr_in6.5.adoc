@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_sockaddr_in - IPv6 socket address
+nng_sockaddr_in6 - IPv6 socket address
 
 == SYNOPSIS
 

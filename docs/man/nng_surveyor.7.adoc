@@ -137,7 +137,7 @@ When the response finally arrives back at the initiating surveyor, it
 should have only a single element in the message, which will be the
 survey ID it originally used for the request.
 
-// TODO: Insert reference to RFC.
+https://github.com/nanomsg/nanomsg/blob/master/rfc/sp-surveyor-01.txt[RFC sp-surveyor-01]
 
 == SEE ALSO
 

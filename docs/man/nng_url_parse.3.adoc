@@ -34,8 +34,8 @@ The `nng_url` structure has at least the following members:
 [source, c]
 ----
 struct nng_url {
-    char *u_scheme;   // Scheme, such as "http"; always lower case.
     char *u_rawurl;   // Unparsed URL, with minimal canonicalization.
+    char *u_scheme;   // Scheme, such as "http"; always lower case.
     char *u_userinfo; // Userinfo component, or NULL.
     char *u_host;     // Full host, including port if present.
     char *u_hostname; // Hostname only (or address), or empty string.

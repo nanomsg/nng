@@ -24,7 +24,7 @@ int nng_ctx_open(nng_ctx *ctxp, nng_socket s);
 
 == DESCRIPTION
 
-The `nng_ctx0_open()` function creates a separate ((context)) to be used with
+The `nng_ctx_open()` function creates a separate ((context)) to be used with
 the socket _s_,
 and returns it at the location pointed by _ctxp_.
 

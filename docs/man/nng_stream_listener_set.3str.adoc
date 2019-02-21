@@ -22,7 +22,7 @@ nng_stream_listener_set - set option on byte stream listener
 
 int nng_stream_listener_set(nng_stream_listener *l, const char *name, const void *data, size_t size);
 
-int nng_stream_listener_set_bool(nng_stream_listener *l, const char *opt, int val);
+int nng_stream_listener_set_bool(nng_stream_listener *l, const char *opt, bool val);
 
 int nng_stream_listener_set_int(nng_stream_listener *l, const char *opt, int val);
 
