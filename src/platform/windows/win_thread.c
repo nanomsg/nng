@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -14,9 +14,10 @@
 
 #ifdef NNG_PLATFORM_WINDOWS
 
-//mingw does not define InterlockedAddNoFence64, use the mingw equivelent
-#ifdef __MINGW32__ || __MINGW64__
-#define InterlockedAddNoFence64(a,b) __atomic_add_fetch(a,b,__ATOMIC_RELAXED)
+// mingw does not define InterlockedAddNoFence64, use the mingw equivelent
+#if defined(__MINGW32__) || defined(__MINGW64__)
+#define InterlockedAddNoFence64(a, b) \
+	__atomic_add_fetch(a, b, __ATOMIC_RELAXED)
 #endif
 
 #include <stdlib.h>
