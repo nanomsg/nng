@@ -111,6 +111,16 @@ posix_gai_errno(int rv)
 	case EAI_SOCKTYPE:
 		return (NNG_ENOTSUP);
 
+#ifdef EAI_CANCELED
+	case EAI_CANCELED:
+		return (NNG_ECANCELED);
+#endif
+
+#ifdef EAI_AGAIN
+	case EAI_AGAIN:
+		return (NNG_EAGAIN);
+#endif
+
 	default:
 		return (NNG_ESYSERR + rv);
 	}
