@@ -1017,7 +1017,7 @@ nng_getopt_string(nng_socket s, const char *name, char **valp)
 }
 
 int
-nng_pipe_notify(nng_socket s, int ev, nng_pipe_cb cb, void *arg)
+nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg)
 {
 	int       rv;
 	nni_sock *sock;

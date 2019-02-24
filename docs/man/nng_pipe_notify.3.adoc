@@ -1,7 +1,8 @@
 = nng_pipe_notify(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2019 Devolutions <info@devolutions.net>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -19,15 +20,15 @@ nng_pipe_notify - register pipe notification callback
 ----
 #include <nng/nng.h>
 
-enum {
+typedef enum {
         NNG_PIPE_EV_ADD_PRE,
         NNG_PIPE_EV_ADD_POST,
         NNG_PIPE_EV_REM_POST,
-};
+} nng_pipe_ev;
 
-typedef void (*nng_pipe_cb)(nng_pipe, int, void *);
+typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_ev, void *);
 
-int nng_pipe_notify(nng_socket s, int ev, nng_pipe_cb cb, void *arg);
+int nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg);
 ----
 
 == DESCRIPTION
