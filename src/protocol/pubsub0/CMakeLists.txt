@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -26,7 +26,10 @@ endif()
 
 if (NNG_PROTO_SUB0)
     list(APPEND _DEFS -DNNG_HAVE_SUB0)
-    list(APPEND _SRCS protocol/pubsub0/sub.c ${PROJECT_SOURCE_DIR}/include/nng/protocol/pubsub0/sub.h)
+    list(APPEND _SRCS
+    	protocol/pubsub0/sub.c
+	protocol/pubsub0/xsub.c
+    	${PROJECT_SOURCE_DIR}/include/nng/protocol/pubsub0/sub.h)
    
 endif()
 
