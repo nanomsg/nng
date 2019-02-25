@@ -48,6 +48,8 @@ set (NNG_SRCS
     core/list.h
     core/listener.c
     core/listener.h
+    core/lmq.c
+    core/lmq.h
     core/message.c
     core/message.h
     core/msgqueue.c

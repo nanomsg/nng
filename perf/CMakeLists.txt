@@ -49,4 +49,9 @@ if (NNG_TESTS)
     add_test (NAME inproc_thr COMMAND inproc_thr 1400 10000)
     set_tests_properties (inproc_thr PROPERTIES TIMEOUT 30)
 
+
+    add_executable (pubdrop pubdrop.c)
+    target_link_libraries(pubdrop ${PROJECT_NAME})
+    target_compile_definitions(pubdrop PUBLIC)
+
 endif ()

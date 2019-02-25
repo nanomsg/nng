@@ -33,6 +33,7 @@
 #include "core/idhash.h"
 #include "core/init.h"
 #include "core/list.h"
+#include "core/lmq.h"
 #include "core/message.h"
 #include "core/msgqueue.h"
 #include "core/options.h"
