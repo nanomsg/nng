@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,6 +11,12 @@
 #ifndef NNG_TRANSPORT_WS_WEBSOCKET_H
 #define NNG_TRANSPORT_WS_WEBSOCKET_H
 
+#include <nng/nng.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // WebSocket transport.  This is used for communication via WebSocket.
 
 NNG_DECL int nng_ws_register(void);
@@ -20,5 +26,9 @@ NNG_DECL int nng_ws_register(void);
 #define NNG_OPT_WSS_RESPONSE_HEADERS NNG_OPT_WS_RESPONSE_HEADERS
 
 NNG_DECL int nng_wss_register(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // NNG_TRANSPORT_WS_WEBSOCKET_H

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,6 +10,8 @@
 
 #ifndef NNG_TRANSPORT_ZEROTIER_ZEROTIER_H
 #define NNG_TRANSPORT_ZEROTIER_ZEROTIER_H
+
+#include <nng/nng.h>
 
 // ZeroTier Transport.  This sits on the ZeroTier L2 network, which itself
 // is implemented on top of UDP.  This requires the 3rd party
@@ -129,6 +131,10 @@
 // option takes no argument really.
 #define NNG_OPT_ZT_CLEAR_LOCAL_ADDRS "zt:clear-local-addrs"
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // Network status values.
 // These values are supplied to help folks checking status.  They are the
 // return values from zt_opt_status.  We avoid hard coding them as defines,
@@ -145,5 +151,9 @@ enum nng_zt_status {
 };
 
 NNG_DECL int nng_zt_register(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif // NNG_TRANSPORT_ZEROTIER_ZEROTIER_H
