@@ -59,7 +59,7 @@ expect(struct testcase *t, int *vp, int v)
 }
 
 void
-notify(nng_pipe p, int act, void *arg)
+notify(nng_pipe p, nng_pipe_ev act, void *arg)
 {
 	struct testcase *t = arg;
 
@@ -97,7 +97,7 @@ notify(nng_pipe p, int act, void *arg)
 }
 
 void
-reject(nng_pipe p, int act, void *arg)
+reject(nng_pipe p, nng_pipe_ev act, void *arg)
 {
 	struct testcase *t = arg;
 	notify(p, act, arg);
