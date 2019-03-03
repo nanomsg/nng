@@ -308,6 +308,7 @@ nni_stream_checkopt(const char *scheme, const char *name, const void *data,
 	DEFTYPEDGET(base, bool, bool, NNI_TYPE_BOOL)           \
 	DEFTYPEDGET(base, size, size_t, NNI_TYPE_SIZE)         \
 	DEFTYPEDGET(base, uint64, uint64_t, NNI_TYPE_UINT64)   \
+	DEFTYPEDGET(base, string, char *, NNI_TYPE_STRING)     \
 	DEFTYPEDGET(base, ptr, void *, NNI_TYPE_POINTER)       \
 	DEFTYPEDGET(base, ms, nng_duration, NNI_TYPE_DURATION) \
 	DEFTYPEDGET(base, addr, nng_sockaddr, NNI_TYPE_SOCKADDR)
