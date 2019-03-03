@@ -1043,6 +1043,7 @@ NNG_DECL int  nng_stream_get_int(nng_stream *, const char *, int *);
 NNG_DECL int  nng_stream_get_ms(nng_stream *, const char *, nng_duration *);
 NNG_DECL int  nng_stream_get_size(nng_stream *, const char *, size_t *);
 NNG_DECL int  nng_stream_get_uint64(nng_stream *, const char *, uint64_t *);
+NNG_DECL int  nng_stream_get_string(nng_stream *, const char *, char **);
 NNG_DECL int  nng_stream_get_ptr(nng_stream *, const char *, void **);
 NNG_DECL int  nng_stream_get_addr(nng_stream *, const char *, nng_sockaddr *);
 NNG_DECL int  nng_stream_set(nng_stream *, const char *, const void *, size_t);
@@ -1076,6 +1077,8 @@ NNG_DECL int nng_stream_dialer_get_size(
     nng_stream_dialer *, const char *, size_t *);
 NNG_DECL int nng_stream_dialer_get_uint64(
     nng_stream_dialer *, const char *, uint64_t *);
+NNG_DECL int nng_stream_dialer_get_string(
+    nng_stream_dialer *, const char *, char **);
 NNG_DECL int nng_stream_dialer_get_ptr(
     nng_stream_dialer *, const char *, void **);
 NNG_DECL int nng_stream_dialer_get_addr(
@@ -1117,6 +1120,8 @@ NNG_DECL int nng_stream_listener_get_size(
     nng_stream_listener *, const char *, size_t *);
 NNG_DECL int nng_stream_listener_get_uint64(
     nng_stream_listener *, const char *, uint64_t *);
+NNG_DECL int nng_stream_listener_get_string(
+    nng_stream_listener *, const char *, char **);
 NNG_DECL int nng_stream_listener_get_ptr(
     nng_stream_listener *, const char *, void **);
 NNG_DECL int nng_stream_listener_get_addr(
