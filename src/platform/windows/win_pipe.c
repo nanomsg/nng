@@ -77,7 +77,7 @@ nni_plat_pipe_open(int *wfdp, int *rfdp)
 	}
 
 	// Now we have to do the accept dance.  We don't care about the
-	// peer adddress, since know it.
+	// peer address, since know it.
 	wfd = accept(afd, NULL, 0);
 	if (wfd == INVALID_SOCKET) {
 		goto fail;

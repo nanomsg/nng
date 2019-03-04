@@ -220,6 +220,31 @@ NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
 NNG_DECL int nng_getopt_uint64(nng_socket, const char *, uint64_t *);
 NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **);
 
+// nng_getopt_string is special -- it allocates a string to hold the
+// resulting string, which should be freed with nng_strfree when it is
+// no logner needed.
+NNG_DECL int nng_getopt_string(nng_socket, const char *, char **);
+
+NNG_DECL int nng_socket_set(nng_socket, const char *, const void *, size_t);
+NNG_DECL int nng_socket_set_bool(nng_socket, const char *, bool);
+NNG_DECL int nng_socket_set_int(nng_socket, const char *, int);
+NNG_DECL int nng_socket_set_size(nng_socket, const char *, size_t);
+NNG_DECL int nng_socket_set_uint64(nng_socket, const char *, uint64_t);
+NNG_DECL int nng_socket_set_string(nng_socket, const char *, const char *);
+NNG_DECL int nng_socket_set_ptr(nng_socket, const char *, void *);
+NNG_DECL int nng_socket_set_ms(nng_socket, const char *, nng_duration);
+NNG_DECL int nng_socket_set_addr(nng_socket, const char *, const nng_sockaddr *);
+
+NNG_DECL int nng_socket_get(nng_socket, const char *, void *, size_t *);
+NNG_DECL int nng_socket_get_bool(nng_socket, const char *, bool *);
+NNG_DECL int nng_socket_get_int(nng_socket, const char *, int *);
+NNG_DECL int nng_socket_get_size(nng_socket, const char *, size_t *);
+NNG_DECL int nng_socket_get_uint64(nng_socket, const char *, uint64_t *);
+NNG_DECL int nng_socket_get_string(nng_socket, const char *, char **);
+NNG_DECL int nng_socket_get_ptr(nng_socket, const char *, void **);
+NNG_DECL int nng_socket_get_ms(nng_socket, const char *, nng_duration *);
+NNG_DECL int nng_socket_get_addr(nng_socket, const char *, nng_sockaddr *);
+
 // Arguably the pipe callback functions could be handled as an option,
 // but with the need to specify an argument, we find it best to unify
 // this as a separate function to pass in the argument and the callback.
@@ -238,11 +263,6 @@ typedef void (*nng_pipe_cb)(nng_pipe, nng_pipe_ev, void *);
 // given event is triggered.  To watch for different events, register
 // multiple times.  Each event can have at most one callback registered.
 NNG_DECL int nng_pipe_notify(nng_socket, nng_pipe_ev, nng_pipe_cb, void *);
-
-// nng_getopt_string is special -- it allocates a string to hold the
-// resulting string, which should be freed with nng_strfree when it is
-// no logner needed.
-NNG_DECL int nng_getopt_string(nng_socket, const char *, char **);
 
 // nng_listen creates a listening endpoint with no special options,
 // and starts it listening.  It is functionally equivalent to the legacy
@@ -321,6 +341,26 @@ NNG_DECL int nng_dialer_getopt_ptr(nng_dialer, const char *, void **);
 // no logner needed.
 NNG_DECL int nng_dialer_getopt_string(nng_dialer, const char *, char **);
 
+NNG_DECL int nng_dialer_set(nng_dialer, const char *, const void *, size_t);
+NNG_DECL int nng_dialer_set_bool(nng_dialer, const char *, bool);
+NNG_DECL int nng_dialer_set_int(nng_dialer, const char *, int);
+NNG_DECL int nng_dialer_set_size(nng_dialer, const char *, size_t);
+NNG_DECL int nng_dialer_set_uint64(nng_dialer, const char *, uint64_t);
+NNG_DECL int nng_dialer_set_string(nng_dialer, const char *, const char *);
+NNG_DECL int nng_dialer_set_ptr(nng_dialer, const char *, void *);
+NNG_DECL int nng_dialer_set_ms(nng_dialer, const char *, nng_duration);
+NNG_DECL int nng_dialer_set_addr(nng_dialer, const char *, const nng_sockaddr *);
+
+NNG_DECL int nng_dialer_get(nng_dialer, const char *, void *, size_t *);
+NNG_DECL int nng_dialer_get_bool(nng_dialer, const char *, bool *);
+NNG_DECL int nng_dialer_get_int(nng_dialer, const char *, int *);
+NNG_DECL int nng_dialer_get_size(nng_dialer, const char *, size_t *);
+NNG_DECL int nng_dialer_get_uint64(nng_dialer, const char *, uint64_t *);
+NNG_DECL int nng_dialer_get_string(nng_dialer, const char *, char **);
+NNG_DECL int nng_dialer_get_ptr(nng_dialer, const char *, void **);
+NNG_DECL int nng_dialer_get_ms(nng_dialer, const char *, nng_duration *);
+NNG_DECL int nng_dialer_get_addr(nng_dialer, const char *, nng_sockaddr *);
+
 // nng_listener_setopt sets an option for a dialer.  This value is
 // not stored in the socket.  Subsequent setopts on the socket may
 // override these value however.  Note listener options may not be altered
@@ -355,6 +395,28 @@ NNG_DECL int nng_listener_getopt_ptr(nng_listener, const char *, void **);
 // resulting string, which should be freed with nng_strfree when it is
 // no logner needed.
 NNG_DECL int nng_listener_getopt_string(nng_listener, const char *, char **);
+
+NNG_DECL int nng_listener_set(
+    nng_listener, const char *, const void *, size_t);
+NNG_DECL int nng_listener_set_bool(nng_listener, const char *, bool);
+NNG_DECL int nng_listener_set_int(nng_listener, const char *, int);
+NNG_DECL int nng_listener_set_size(nng_listener, const char *, size_t);
+NNG_DECL int nng_listener_set_uint64(nng_listener, const char *, uint64_t);
+NNG_DECL int nng_listener_set_string(
+    nng_listener, const char *, const char *);
+NNG_DECL int nng_listener_set_ptr(nng_listener, const char *, void *);
+NNG_DECL int nng_listener_set_ms(nng_listener, const char *, nng_duration);
+NNG_DECL int nng_listener_set_addr(nng_listener, const char *, const nng_sockaddr *);
+
+NNG_DECL int nng_listener_get(nng_listener, const char *, void *, size_t *);
+NNG_DECL int nng_listener_get_bool(nng_listener, const char *, bool *);
+NNG_DECL int nng_listener_get_int(nng_listener, const char *, int *);
+NNG_DECL int nng_listener_get_size(nng_listener, const char *, size_t *);
+NNG_DECL int nng_listener_get_uint64(nng_listener, const char *, uint64_t *);
+NNG_DECL int nng_listener_get_string(nng_listener, const char *, char **);
+NNG_DECL int nng_listener_get_ptr(nng_listener, const char *, void **);
+NNG_DECL int nng_listener_get_ms(nng_listener, const char *, nng_duration *);
+NNG_DECL int nng_listener_get_addr(nng_listener, const char *, nng_sockaddr *);
 
 // nng_strerror returns a human readable string associated with the error
 // code supplied.
@@ -454,6 +516,26 @@ NNG_DECL int nng_ctx_setopt_bool(nng_ctx, const char *, bool);
 NNG_DECL int nng_ctx_setopt_int(nng_ctx, const char *, int);
 NNG_DECL int nng_ctx_setopt_ms(nng_ctx, const char *, nng_duration);
 NNG_DECL int nng_ctx_setopt_size(nng_ctx, const char *, size_t);
+
+NNG_DECL int nng_ctx_get(nng_ctx, const char *, void *, size_t *);
+NNG_DECL int nng_ctx_get_bool(nng_ctx, const char *, bool *);
+NNG_DECL int nng_ctx_get_int(nng_ctx, const char *, int *);
+NNG_DECL int nng_ctx_get_size(nng_ctx, const char *, size_t *);
+NNG_DECL int nng_ctx_get_uint64(nng_ctx, const char *, uint64_t *);
+NNG_DECL int nng_ctx_get_string(nng_ctx, const char *, char **);
+NNG_DECL int nng_ctx_get_ptr(nng_ctx, const char *, void **);
+NNG_DECL int nng_ctx_get_ms(nng_ctx, const char *, nng_duration *);
+NNG_DECL int nng_ctx_get_addr(nng_ctx, const char *, nng_sockaddr *);
+
+NNG_DECL int nng_ctx_set(nng_ctx, const char *, const void *, size_t);
+NNG_DECL int nng_ctx_set_bool(nng_ctx, const char *, bool);
+NNG_DECL int nng_ctx_set_int(nng_ctx, const char *, int);
+NNG_DECL int nng_ctx_set_size(nng_ctx, const char *, size_t);
+NNG_DECL int nng_ctx_set_uint64(nng_ctx, const char *, uint64_t);
+NNG_DECL int nng_ctx_set_string(nng_ctx, const char *, const char *);
+NNG_DECL int nng_ctx_set_ptr(nng_ctx, const char *, void *);
+NNG_DECL int nng_ctx_set_ms(nng_ctx, const char *, nng_duration);
+NNG_DECL int nng_ctx_set_addr(nng_ctx, const char *, const nng_sockaddr *);
 
 // nng_alloc is used to allocate memory.  It's intended purpose is for
 // allocating memory suitable for message buffers with nng_send().
@@ -653,6 +735,17 @@ NNG_DECL int nng_pipe_getopt_sockaddr(nng_pipe, const char *, nng_sockaddr *);
 NNG_DECL int nng_pipe_getopt_uint64(nng_pipe, const char *, uint64_t *);
 NNG_DECL int nng_pipe_getopt_ptr(nng_pipe, const char *, void **);
 NNG_DECL int nng_pipe_getopt_string(nng_pipe, const char *, char **);
+
+NNG_DECL int nng_pipe_get(nng_pipe, const char *, void *, size_t *);
+NNG_DECL int nng_pipe_get_bool(nng_pipe, const char *, bool *);
+NNG_DECL int nng_pipe_get_int(nng_pipe, const char *, int *);
+NNG_DECL int nng_pipe_get_ms(nng_pipe, const char *, nng_duration *);
+NNG_DECL int nng_pipe_get_size(nng_pipe, const char *, size_t *);
+NNG_DECL int nng_pipe_get_uint64(nng_pipe, const char *, uint64_t *);
+NNG_DECL int nng_pipe_get_string(nng_pipe, const char *, char **);
+NNG_DECL int nng_pipe_get_ptr(nng_pipe, const char *, void **);
+NNG_DECL int nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
+
 NNG_DECL int nng_pipe_close(nng_pipe);
 NNG_DECL int nng_pipe_id(nng_pipe);
 NNG_DECL nng_socket nng_pipe_socket(nng_pipe);

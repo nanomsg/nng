@@ -1,6 +1,6 @@
 = nng_listener_setopt(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -21,7 +21,7 @@ nng_listener_setopt - set listener option
 
 int nng_listener_setopt(nng_listener l, const char *opt, const void *val,
     size_t valsz);
-
+    
 int nng_listener_setopt_bool(nng_listener l, const char *opt, bool bval);
 
 int nng_listener_setopt_int(nng_listener l, const char *opt, int ival);
@@ -35,9 +35,12 @@ int nng_listener_setopt_size(nng_listener l, const char *opt, size_t z);
 int nng_listener_setopt_string(nng_listener l, const char *opt, const char *str);
 
 int nng_listener_setopt_uint64(nng_listener l, const char *opt, uint64_t u64);
+
 ----
 
 == DESCRIPTION
+
+NOTE: These functions are deprecated.  Please see xref:nng_listener_set.3.adoc[nng_listener_set].
 
 (((options, listener)))
 The `nng_listener_setopt()` functions are used to configure options for

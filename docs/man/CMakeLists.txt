@@ -84,18 +84,22 @@ if (NNG_ENABLE_DOC)
 	nng_bus_open
 	nng_close
 	nng_ctx_close
+	nng_ctx_get
 	nng_ctx_getopt
 	nng_ctx_id
 	nng_ctx_open
 	nng_ctx_recv
 	nng_ctx_send
+	nng_ctx_set
 	nng_ctx_setopt
 	nng_device
 	nng_dial
 	nng_dialer_close
 	nng_dialer_create
+	nng_dialer_get
 	nng_dialer_getopt
 	nng_dialer_id
+	nng_dialer_set
 	nng_dialer_setopt
 	nng_dialer_start
 	nng_free
@@ -105,8 +109,10 @@ if (NNG_ENABLE_DOC)
 	nng_listen
 	nng_listener_close
 	nng_listener_create
+	nng_listener_get
 	nng_listener_getopt
 	nng_listener_id
+	nng_listener_set
 	nng_listener_setopt
 	nng_listener_start
 	nng_msg_alloc
@@ -132,6 +138,7 @@ if (NNG_ENABLE_DOC)
 	nng_pair_open
 	nng_pipe_close
 	nng_pipe_dialer
+	nng_pipe_get
 	nng_pipe_getopt
 	nng_pipe_id
 	nng_pipe_listener
@@ -152,6 +159,8 @@ if (NNG_ENABLE_DOC)
 	nng_setopt
 	nng_sleep_aio
 	nng_socket_id
+	nng_socket_get
+	nng_socket_set
 	nng_stats_free
 	nng_stats_get
 	nng_stat_child

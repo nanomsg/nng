@@ -282,86 +282,10 @@ nni_stream_checkopt(const char *scheme, const char *name, const void *data,
 	return (NNG_ENOTSUP);
 }
 
-//
-// This next block sets up to define the various typed option functions.
-// To make it easier to cover them all at once, we use macros.
-//
+NNI_DEFGETALL_PTR(stream)
+NNI_DEFGETALL_PTR(stream_dialer)
+NNI_DEFGETALL_PTR(stream_listener)
 
-#define DEFGET(base)                                                         \
-	int nng_##base##_get(                                                \
-	    nng_##base *s, const char *nm, void *vp, size_t *szp)            \
-	{                                                                    \
-		return (nni_##base##_getx(s, nm, vp, szp, NNI_TYPE_OPAQUE)); \
-	}
-
-#define DEFTYPEDGET(base, suffix, type, nnitype)                     \
-	int nng_##base##_get_##suffix(                               \
-	    nng_##base *s, const char *nm, type *vp)                 \
-	{                                                            \
-		size_t sz = sizeof(*vp);                             \
-		return (nni_##base##_getx(s, nm, vp, &sz, nnitype)); \
-	}
-
-#define DEFGETALL(base)                                        \
-	DEFGET(base)                                           \
-	DEFTYPEDGET(base, int, int, NNI_TYPE_INT32)            \
-	DEFTYPEDGET(base, bool, bool, NNI_TYPE_BOOL)           \
-	DEFTYPEDGET(base, size, size_t, NNI_TYPE_SIZE)         \
-	DEFTYPEDGET(base, uint64, uint64_t, NNI_TYPE_UINT64)   \
-	DEFTYPEDGET(base, string, char *, NNI_TYPE_STRING)     \
-	DEFTYPEDGET(base, ptr, void *, NNI_TYPE_POINTER)       \
-	DEFTYPEDGET(base, ms, nng_duration, NNI_TYPE_DURATION) \
-	DEFTYPEDGET(base, addr, nng_sockaddr, NNI_TYPE_SOCKADDR)
-
-DEFGETALL(stream)
-DEFGETALL(stream_dialer)
-DEFGETALL(stream_listener)
-
-#define DEFSET(base)                                                        \
-	int nng_##base##_set(                                               \
-	    nng_##base *s, const char *nm, const void *vp, size_t sz)       \
-	{                                                                   \
-		return (nni_##base##_setx(s, nm, vp, sz, NNI_TYPE_OPAQUE)); \
-	}
-
-#define DEFTYPEDSETEX(base, suffix, type, len, nnitype)                      \
-	int nng_##base##_set_##suffix(nng_##base *s, const char *nm, type v) \
-	{                                                                    \
-		return (nni_##base##_setx(s, nm, &v, len, nnitype));         \
-	}
-
-#define DEFTYPEDSET(base, suffix, type, nnitype)                             \
-	int nng_##base##_set_##suffix(nng_##base *s, const char *nm, type v) \
-	{                                                                    \
-		return (nni_##base##_setx(s, nm, &v, sizeof(v), nnitype));   \
-	}
-
-#define DEFSTRINGSET(base)                                            \
-	int nng_##base##_set_string(                                  \
-	    nng_##base *s, const char *nm, const char *v)             \
-	{                                                             \
-		return (nni_##base##_setx(s, nm, v,                   \
-		    v != NULL ? strlen(v) + 1 : 0, NNI_TYPE_STRING)); \
-	}
-
-#define DEFSOCKADDRSET(base)                                      \
-	int nng_##base##_set_adddr(                               \
-	    nng_##base *s, const char *nm, const nng_sockaddr *v) \
-	{                                                         \
-		return (nni_##base##_setx(                        \
-		    s, nm, v, sizeof(*v), NNI_TYPE_SOCKADDR));    \
-	}
-
-#define DEFSETALL(base)                                        \
-	DEFSET(base)                                           \
-	DEFTYPEDSET(base, int, int, NNI_TYPE_INT32)            \
-	DEFTYPEDSET(base, bool, bool, NNI_TYPE_BOOL)           \
-	DEFTYPEDSET(base, size, size_t, NNI_TYPE_SIZE)         \
-	DEFTYPEDSET(base, ms, nng_duration, NNI_TYPE_DURATION) \
-	DEFTYPEDSET(base, ptr, void *, NNI_TYPE_POINTER)       \
-	DEFSTRINGSET(base)                                     \
-	DEFSOCKADDRSET(base)
-
-DEFSETALL(stream)
-DEFSETALL(stream_dialer)
-DEFSETALL(stream_listener)
+NNI_DEFSETALL_PTR(stream)
+NNI_DEFSETALL_PTR(stream_dialer)
+NNI_DEFSETALL_PTR(stream_listener)
