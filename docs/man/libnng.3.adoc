@@ -50,7 +50,9 @@ The following functions operate on sockets.
 |xref:nng_recv.3.adoc[nng_recv()]|receive data
 |xref:nng_send.3.adoc[nng_send()]|send data
 |xref:nng_setopt.3.adoc[nng_setopt()]|set socket option
+|xref:nng_socket_get.3.adoc[nng_socket_get()]|get socket option
 |xref:nng_socket_id.3.adoc[nng_socket_id()]|get numeric socket identifier
+|xref:nng_socket_set.3.adoc[nng_socket_set()]|set socket option
 |===
 
 === Connection Management
@@ -62,19 +64,24 @@ Listeners accept incoming connection requests, and dialers make them.
 |xref:nng_dial.3.adoc[nng_dial()]|create and start dialer
 |xref:nng_dialer_close.3.adoc[nng_dialer_close()]|close dialer
 |xref:nng_dialer_create.3.adoc[nng_dialer_create()]|create dialer
+|xref:nng_dialer_get.3.adoc[nng_dialer_get()]|get dialer option
 |xref:nng_dialer_getopt.3.adoc[nng_dialer_getopt()]|get dialer option
 |xref:nng_dialer_id.3.adoc[nng_dialer_id()]|get numeric dialer identifier
+|xref:nng_dialer_set.3.adoc[nng_dialer_set()]|set dialer option
 |xref:nng_dialer_setopt.3.adoc[nng_dialer_setopt()]|set dialer option
 |xref:nng_dialer_start.3.adoc[nng_dialer_start()]|start dialer
 |xref:nng_listen.3.adoc[nng_listen()]|create and start listener
 |xref:nng_listener_close.3.adoc[nng_listener_close()]|close listener
 |xref:nng_listener_create.3.adoc[nng_listener_create()]|create listener
+|xref:nng_listener_get.3.adoc[nng_listener_get()]|get listener option
 |xref:nng_listener_getopt.3.adoc[nng_listener_getopt()]|get listener option
 |xref:nng_listener_id.3.adoc[nng_listener_id()]|get numeric listener identifier
+|xref:nng_listener_set.3.adoc[nng_listener_set()]|set listener option
 |xref:nng_listener_setopt.3.adoc[nng_listener_setopt()]|set listener option
 |xref:nng_listener_start.3.adoc[nng_listener_start()]|start listener
 |xref:nng_pipe_close.3.adoc[nng_pipe_close()]|close pipe
 |xref:nng_pipe_dialer.3.adoc[nng_pipe_dialer()]|return dialer that created pipe
+|xref:nng_pipe_get.3.adoc[nng_pipe_get()]|get pipe option
 |xref:nng_pipe_getopt.3.adoc[nng_pipe_getopt()]|get pipe option
 |xref:nng_pipe_id.3.adoc[nng_pipe_id()]|get numeric pipe identifier
 |xref:nng_pipe_listener.3.adoc[nng_pipe_listener()]|return listener that created pipe
@@ -215,11 +222,13 @@ concurrent applications.
 
 |===
 |xref:nng_ctx_close.3.adoc[nng_ctx_close()]|close context
+|xref:nng_ctx_get.3.adoc[nng_ctx_get()]|get context option
 |xref:nng_ctx_getopt.3.adoc[nng_ctx_getopt()]|get context option
 |xref:nng_ctx_id.3.adoc[nng_ctx_id()]|get numeric context identifier
 |xref:nng_ctx_open.3.adoc[nng_ctx_open()]|create context
 |xref:nng_ctx_recv.3.adoc[nng_ctx_recv()]|receive message using context asynchronously
 |xref:nng_ctx_send.3.adoc[nng_ctx_send()]|send message using context asynchronously
+|xref:nng_ctx_set.3.adoc[nng_ctx_set()]|set context option
 |xref:nng_ctx_setopt.3.adoc[nng_ctx_setopt()]|set context option
 |===
 

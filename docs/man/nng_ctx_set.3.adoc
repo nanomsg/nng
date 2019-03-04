@@ -1,4 +1,4 @@
-= nng_setopt(3)
+= nng_ctx_set(3)
 //
 // Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_setopt - set socket option
+nng_ctx_set - set context option
 
 == SYNOPSIS
 
@@ -19,85 +19,71 @@ nng_setopt - set socket option
 ----
 #include <nng/nng.h>
 
-int nng_setopt(nng_socket s, const char *opt, const void *val, size_t valsz);
+int nng_ctx_set(nng_ctx ctx, const char *opt, const void *val, size_t valsz);
 
-int nng_setopt_bool(nng_socket s, const char *opt, bool bval);
+int nng_ctx_set_bool(nng_ctx ctx, const char *opt, int bval);
 
-int nng_setopt_int(nng_socket s, const char *opt, int ival);
+int nng_ctx_set_int(nng_ctx ctx, const char *opt, int ival);
 
-int nng_setopt_ms(nng_socket s, const char *opt, nng_duration dur);
+int nng_ctx_set_ms(nng_ctx ctx, const char *opt, nng_duration dur);
 
-int nng_setopt_ptr(nng_socket s, const char *opt, void *ptr);
+int nng_ctx_set_size(nng_ctx ctx, const char *opt, size_t z);
 
-int nng_setopt_size(nng_socket s, const char *opt, size_t z);
+int nng_ctx_set_string(nng_ctx ctx, const char *opt, const char *str);
 
-int nng_setopt_string(nng_socket s, const char *opt, const char *str);
-
-int nng_setopt_uint64(nng_socket s, const char *opt, uint64_t u64);
-
+int nng_ctx_set_uint64(nng_ctx ctx, const char *opt, uint64_t u64);
 ----
 
 == DESCRIPTION
 
-NOTE: These functions are deprecated.  Please see xref:nng_socket_set.3.adoc[nng_socket_set].
+NOTE: These functions are deprecated.  Please see xref:nng_ctx_set.3.adoc[nng_ctx_set].
 
-(((options, socket)))
-The `nng_setopt()` functions are used to configure options for
-the socket _s_.
+(((options, context)))
+The `nng_ctx_set()` functions are used to configure options for
+the context _ctx_.
 The actual options that may be configured in this way vary, and are
 specified by _opt_.
-A number of them are documented in <<nng_options.5#,nng_options(5)>>.
 
-Additionally some transport-specific and protocol-specific options are
-documented with the transports and protocols themselves.
+NOTE: Context options are protocol specific.
+The details will be documented with the protocol.
 
 === Forms
 
 The details of the type, size, and semantics of the option will depend
 on the actual option, and will be documented with the option itself.
 
-`nng_setopt()`::
+`nng_ctx_set()`::
 This function is untyped, and can be used to configure any arbitrary data.
 The _val_ pointer addresses the data to copy, and _valsz_ is the
 size of the objected located at _val_.
 
 TIP: It may be easier to use one of the typed forms of this function.
 
-`nng_setopt_bool()`::
+`nng_ctx_set_bool()`::
 This function is for options which take a Boolean (`bool`).
 The _bval_ is passed to the option.
 
-`nng_setopt_int()`::
+`nng_ctx_set_int()`::
 This function is for options which take an integer (`int`).
 The _ival_ is passed to the option.
 
-`nng_setopt_ms()`::
+`nng_ctx_set_ms()`::
 This function is used to configure time durations (such as timeouts) using
 type `<<nng_duration.5#,nng_duration>>`.
 The duration _dur_ is an integer number of milliseconds.
 
-`nng_setopt_ptr()`::
-This function is used to pass a pointer, _ptr_, to structured data.
-The data referenced by _ptr_ is generally managed by other functions.
-For example, TLS configuration objects created with
-(`<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc()>>`)
-can be passed this way.
-
-NOTE: This form is somewhat special in that the object is generally
-not copied, but instead the *pointer* to the object is copied.
-
-`nng_setopt_size()`::
+`nng_ctx_set_size()`::
 This function is used to configure a size, _z_, typically for buffer sizes,
 message maximum sizes, and similar options.
 
-`nng_setopt_string()`::
+`nng_ctx_set_string()`::
 This function is used to pass configure a string, _str_.
 Strings passed this way must be legal UTF-8 or ASCII strings, terminated
 with a `NUL` (`\0`) byte.
 (Other constraints may apply as well, see the documentation for each option
 for details.)
 
-`nng_setopt_uint64()`::
+`nng_ctx_set_uint64()`::
 This function is used to configure a 64-bit unsigned value, _u64_.
 This is typically used for options related to identifiers, network numbers,
 and similar.
@@ -118,10 +104,10 @@ These functions return 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_getopt.3#,nng_getopt(3)>>,
-<<nng_dialer_setopt.3#,nng_dialer_setopt(3)>>,
-<<nng_listener_setopt.3#,nng_listener_setopt(3)>>,
+<<nng_ctx_get.3#,nng_ctx_get(3)>>,
+<<nng_socket_set.3#,nng_socket_set(3)>>,
 <<nng_strerror.3#,nng_strerror(3)>>,
+<<nng_ctx.5#,nng_ctx(5)>>,
 <<nng_options.5#,nng_options(5)>>,
 <<nng_socket.5#,nng_socket(5)>>,
 <<nng.7#,nng(7)>>
