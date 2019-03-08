@@ -3023,7 +3023,8 @@ static const nni_option zt_pipe_options[] = {
 static int
 zt_pipe_getopt(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	return (nni_getopt(zt_pipe_options, name, buf, szp, t));
+	zt_pipe *p = arg;
+	return (nni_getopt(zt_pipe_options, name, p, buf, szp, t));
 }
 
 static nni_tran_pipe_ops zt_pipe_ops = {
