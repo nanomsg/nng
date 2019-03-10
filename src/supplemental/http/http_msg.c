@@ -919,7 +919,7 @@ static struct {
 
 	// 100 series -- informational
 	{ NNG_HTTP_STATUS_CONTINUE, "Continue" },
-	{ NNG_HTTP_STATUS_SWITCHING, "Swithching Protocols" },
+	{ NNG_HTTP_STATUS_SWITCHING, "Switching Protocols" },
 	{ NNG_HTTP_STATUS_PROCESSING, "Processing" },
 
 	// 200 series -- successful
