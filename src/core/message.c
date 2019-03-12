@@ -469,6 +469,7 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 		memcpy(newmo->mo_val, mo->mo_val, mo->mo_sz);
 		nni_list_append(&m->m_options, newmo);
 	}
+	m->m_pipe = src->m_pipe;
 
 	*dup = m;
 	return (0);
