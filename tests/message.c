@@ -186,6 +186,16 @@ TestMain("Message Tests", {
 			So(strcmp(nng_msg_body(m2), "back2basics") == 0);
 		});
 
+		Convey("Message dup copies pipe", {
+			nng_pipe p  = NNG_PIPE_INITIALIZER;
+			nng_msg *m2;
+			memset(&p, 0x22, sizeof(p));
+			nng_msg_set_pipe(msg, p);
+			So(nng_msg_dup(&m2, msg) == 0);
+			p = nng_msg_get_pipe(m2);
+			So(nng_pipe_id(p) == 0x22222222);
+		});
+
 		Convey("Missing option fails properly", {
 			char   buf[128];
 			size_t sz = sizeof(buf);
