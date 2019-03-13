@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -104,18 +104,6 @@ struct nni_proto_sock_ops {
 
 	// Receive a message.
 	void (*sock_recv)(void *, nni_aio *);
-
-	// Message filter.  This may be NULL, but if it isn't, then
-	// messages coming into the system are routed here just before being
-	// delivered to the application.  To drop the message, the protocol
-	// should return NULL, otherwise the message (possibly modified).
-	nni_msg *(*sock_filter)(void *, nni_msg *);
-
-	// Socket draining is intended to permit protocols to "drain"
-	// before exiting.  For protocols where draining makes no
-	// sense, this may be NULL.  (Example: REQ and SURVEYOR should
-	// not drain, because they cannot receive a reply!)
-	void (*sock_drain)(void *, nni_aio *);
 
 	// Options. Must not be NULL. Final entry should have NULL name.
 	nni_option *sock_options;

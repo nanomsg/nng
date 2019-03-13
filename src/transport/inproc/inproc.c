@@ -37,7 +37,6 @@ struct inproc_pipe {
 	nni_pipe *   npipe;
 	uint16_t     peer;
 	uint16_t     proto;
-	size_t       rcvmax;
 };
 
 // inproc_pair represents a pair of pipes.  Because we control both
@@ -61,7 +60,6 @@ struct inproc_ep {
 	nni_mtx       mtx;
 	nni_dialer *  ndialer;
 	nni_listener *nlistener;
-	nni_stat_item st_rcvmaxsz;
 };
 
 // nni_inproc is our global state - this contains the list of active endpoints
@@ -115,9 +113,6 @@ inproc_pipe_alloc(inproc_pipe **pipep, inproc_ep *ep)
 	if ((pipe = NNI_ALLOC_STRUCT(pipe)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_mtx_lock(&ep->mtx);
-	pipe->rcvmax = ep->rcvmax;
-	nni_mtx_unlock(&ep->mtx);
 
 	pipe->proto = ep->proto;
 	pipe->addr  = ep->addr;
@@ -229,13 +224,6 @@ inproc_dialer_init(void **epp, nni_url *url, nni_dialer *ndialer)
 
 	ep->addr = url->u_rawurl; // we match on the full URL.
 
-	nni_stat_init(&ep->st_rcvmaxsz, "rcvmaxsz", "maximum receive size");
-	nni_stat_set_type(&ep->st_rcvmaxsz, NNG_STAT_LEVEL);
-	nni_stat_set_unit(&ep->st_rcvmaxsz, NNG_UNIT_BYTES);
-	nni_stat_set_lock(&ep->st_rcvmaxsz, &ep->mtx);
-
-	nni_dialer_add_stat(ndialer, &ep->st_rcvmaxsz);
-
 	*epp = ep;
 	return (0);
 }
@@ -259,12 +247,6 @@ inproc_listener_init(void **epp, nni_url *url, nni_listener *nlistener)
 	nni_aio_list_init(&ep->aios);
 
 	ep->addr = url->u_rawurl; // we match on the full URL.
-
-	nni_stat_init(&ep->st_rcvmaxsz, "rcvmaxsz", "maximum receive size");
-	nni_stat_set_type(&ep->st_rcvmaxsz, NNG_STAT_LEVEL);
-	nni_stat_set_unit(&ep->st_rcvmaxsz, NNG_UNIT_BYTES);
-	nni_stat_set_lock(&ep->st_rcvmaxsz, &ep->mtx);
-	nni_listener_add_stat(nlistener, &ep->st_rcvmaxsz);
 
 	*epp = ep;
 	return (0);
@@ -299,18 +281,6 @@ inproc_conn_finish(nni_aio *aio, int rv, inproc_ep *ep, inproc_pipe *pipe)
 		NNI_ASSERT(pipe == NULL);
 		nni_aio_finish_error(aio, rv);
 	}
-}
-
-static nni_msg *
-inproc_filter(void *arg, nni_msg *msg)
-{
-	inproc_pipe *p = arg;
-	if (p->rcvmax && (nni_msg_len(msg) > p->rcvmax)) {
-		nni_pipe_bump_error(p->npipe, NNG_EMSGSIZE);
-		nni_msg_free(msg);
-		return (NULL);
-	}
-	return (msg);
 }
 
 static void
@@ -395,8 +365,6 @@ inproc_accept_clients(inproc_ep *srv)
 			cpipe->rq = spipe->wq = pair->q[0];
 			cpipe->wq = spipe->rq = pair->q[1];
 
-			nni_msgq_set_filter(spipe->rq, inproc_filter, spipe);
-			nni_msgq_set_filter(cpipe->rq, inproc_filter, cpipe);
 			inproc_conn_finish(caio, 0, cli, cpipe);
 			inproc_conn_finish(saio, 0, srv, spipe);
 		}
@@ -541,7 +509,6 @@ inproc_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
-		nni_stat_set_value(&ep->st_rcvmaxsz, val);
 		nni_mtx_unlock(&ep->mtx);
 	}
 	return (rv);

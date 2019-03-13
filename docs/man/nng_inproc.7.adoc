@@ -1,6 +1,6 @@
 = nng_inproc(7)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -53,17 +53,23 @@ that URI.
 
 === Socket Address
 
-When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
+When using an xref:nng_sockaddr.5.adoc[`nng_sockaddr`] structure,
 the actual structure is of type
-`<<nng_sockaddr_inproc.5#,nng_sockaddr_inproc>>`.
+xref:nng_sockaddr_inproc.5.adoc[`nng_sockaddr_inproc`].
 
 === Transport Options
 
 The _inproc_ transport has no special options.
 
+NOTE: While _inproc_ accepts the option
+xref:nng_options.5.adoc#NNG_OPT_RECVMAXSZ[`NNG_OPT_RECVMAXSZ`] for
+compatibility, the value of the option is ignored with no enforcement.
+As _inproc_ peers are in the same address space, they are implicitly trusted,
+and thus it makes no sense to spend cycles protecting a program from itself.
+
 == SEE ALSO
 
 [.text-left]
-<<nng_inproc_register.3#,nng_inproc_register(3)>>,
-<<nng_sockaddr_inproc.5#,nng_sockaddr_inproc(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_inproc_register.3.adoc[nng_inproc_register(3)],
+xref:nng_sockaddr_inproc.5.adoc[nng_sockaddr_inproc(5)],
+xref:nng.7.adoc[nng(7)]

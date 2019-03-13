@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -48,19 +48,6 @@ extern int nni_msgq_tryput(nni_msgq *, nni_msg *);
 // message queue, and for that side behaves like nni_msgq_set_error.
 // Readers (nni_msgq_put*) are unaffected.
 extern void nni_msgq_set_get_error(nni_msgq *, int);
-
-// nni_msgq_filter is a callback function used to filter messages.
-// The function is called on entry (put) or exit (get).  The void
-// argument is an opaque pointer supplied with the function at registration
-// time.  The primary use for these functions is to support the protocol
-// socket needs.
-typedef nni_msg *(*nni_msgq_filter)(void *, nni_msg *);
-
-// nni_msgq_set_filter sets the filter on the queue.  Messages
-// are filtered through this just before they are returned via the get
-// functions.  If the filter returns NULL, then the message is silently
-// discarded instead, and any get waiters remain waiting.
-extern void nni_msgq_set_filter(nni_msgq *, nni_msgq_filter, void *);
 
 // nni_msgq_close closes the queue.  After this all operates on the
 // message queue will return NNG_ECLOSED.  Messages inside the queue

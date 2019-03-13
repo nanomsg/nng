@@ -571,11 +571,6 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	(void) nni_sock_setopt(
 	    s, NNG_OPT_TCP_KEEPALIVE, &on, sizeof(on), NNI_TYPE_BOOL);
 
-	if (s->s_sock_ops.sock_filter != NULL) {
-		nni_msgq_set_filter(
-		    s->s_urq, s->s_sock_ops.sock_filter, s->s_data);
-	}
-
 	*sp = s;
 	return (rv);
 }
