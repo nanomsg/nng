@@ -13,6 +13,7 @@
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
@@ -79,7 +80,7 @@ struct nng_http_server {
 	bool                 closed;
 	nni_aio *            accaio;
 	nng_stream_listener *listener;
-	char *               port;
+	int                  port; // native order
 	char *               hostname;
 	nni_list             errors;
 	nni_mtx              errors_mtx;
@@ -830,7 +831,6 @@ http_server_fini(nni_http_server *s)
 	nni_aio_fini(s->accaio);
 	nni_mtx_fini(&s->mtx);
 	nni_strfree(s->hostname);
-	nni_strfree(s->port);
 	NNI_FREE_STRUCT(s);
 }
 
@@ -869,10 +869,10 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 		return (rv);
 	}
 
-	if ((s->port = nni_strdup(url->u_port)) == NULL) {
-		http_server_fini(s);
-		return (NNG_ENOMEM);
-	}
+	// NB: We only support number port numbers, and the URL framework
+	// expands empty port numbers to 80 or 443 as appropriate.
+	s->port = atoi(url->u_port);
+
 	if ((s->hostname = nni_strdup(url->u_hostname)) == NULL) {
 		http_server_fini(s);
 		return (NNG_ENOMEM);
@@ -898,7 +898,7 @@ nni_http_server_init(nni_http_server **serverp, const nni_url *url)
 
 	nni_mtx_lock(&http_servers_lk);
 	NNI_LIST_FOREACH (&http_servers, s) {
-		if ((!s->closed) && (strcmp(url->u_port, s->port) == 0) &&
+		if ((!s->closed) && (atoi(url->u_port) == s->port) &&
 		    (strcmp(url->u_hostname, s->hostname) == 0)) {
 			*serverp = s;
 			s->refcnt++;
@@ -923,6 +923,10 @@ http_server_start(nni_http_server *s)
 	int rv;
 	if ((rv = nng_stream_listener_listen(s->listener)) != 0) {
 		return (rv);
+	}
+	if (s->port == 0) {
+		nng_stream_listener_get_int(
+		    s->listener, NNG_OPT_TCP_BOUND_PORT, &s->port);
 	}
 	nng_stream_listener_accept(s->listener, s->accaio);
 	return (0);

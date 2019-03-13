@@ -155,5 +155,25 @@ TestMain("WebSocket Transport", {
 		So(nng_dial(s2, "ws://127.0.0.1:5599/one", NULL, 0) == 0);
 	});
 
+	Convey("Wild card port works and can be used again", {
+		nng_socket   s1;
+		nng_socket   s2;
+		nng_listener l1;
+		int          port;
+		char         ws_url[128];
+		So(nng_pair_open(&s1) == 0);
+		So(nng_pair_open(&s2) == 0);
+		Reset({
+			nng_close(s1);
+			nng_close(s2);
+		});
+		So(nng_listen(s1, "ws://*:0/one", &l1, 0) == 0);
+		So(nng_listener_getopt_int(
+		       l1, NNG_OPT_TCP_BOUND_PORT, &port) == 0);
+		So(port != 0);
+		snprintf(ws_url, 1023, "ws://*:%d/two", port);
+		So(nng_listen(s2, ws_url, NULL, 0) == 0);
+	});
+
 	nng_fini();
 })
