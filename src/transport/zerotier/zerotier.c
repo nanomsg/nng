@@ -78,7 +78,7 @@ static const uint32_t     zt_port_mask = 0xffffffu; // mask of valid ports
 static const uint32_t     zt_port_shift = 24;
 static const int          zt_conn_tries = 240;   // max connect attempts
 static const nng_duration zt_conn_time  = 500;   // between attempts (msec)
-static const int          zt_ping_tries = 5;     // max keepalive attempts
+static const int          zt_ping_tries = 10;    // max keepalive attempts
 static const nng_duration zt_ping_time  = 60000; // keepalive time (msec)
 
 // These are compile time tunables for now.
@@ -2037,7 +2037,7 @@ zt_pipe_ping_cb(void *arg)
 		nni_mtx_unlock(&zt_lk);
 		return;
 	}
-	if (p->zp_ping_try >= p->zp_ping_tries) {
+	if (p->zp_ping_try > p->zp_ping_tries) {
 		// Ping count exceeded; the other side is AFK.
 		// Close the pipe, but no need to send a reason to the peer.
 		zt_pipe_close_err(p, NNG_ECLOSED, 0, NULL);
