@@ -285,6 +285,9 @@ pub0_sock_send(void *arg, nni_aio *aio)
 		}
 	}
 	nni_mtx_unlock(&sock->mtx);
+        if (msg != NULL) {
+                nng_msg_free(msg);
+        }
 	nni_aio_finish(aio, 0, len);
 }
 
