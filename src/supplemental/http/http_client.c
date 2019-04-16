@@ -465,7 +465,7 @@ nni_http_transact(nni_http_client *client, nni_http_req *req,
 	}
 
 	nni_aio_list_init(&txn->aios);
-	txn->client = NULL;
+	txn->client = client;
 	txn->conn   = NULL;
 	txn->req    = req;
 	txn->res    = res;
