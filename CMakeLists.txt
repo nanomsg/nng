@@ -225,7 +225,7 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     add_definitions (-DNNG_PLATFORM_DARWIN)
     # macOS 10.12 and later have getentropy, but the older releases
     # have ARC4_RANDOM, and that is sufficient to our needs.
-    add_definitions (-DNNG_USE_ARC4_RANDOM)
+    add_definitions (-DNNG_USE_ARC4RANDOM)
 
     # macOS added some of CLOCK_MONOTONIC, but the implementation is
     # broken and unreliable, so don't use it.
