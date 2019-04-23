@@ -98,11 +98,13 @@ static size_t
 nni_hash_find_index(nni_idhash *h, uint64_t id)
 {
 	size_t index;
+	size_t start;
 	if (h->ih_count == 0) {
 		return ((size_t) -1);
 	}
 
 	index = NNI_IDHASH_INDEX(h, id);
+	start = index;
 	for (;;) {
 		// The value of ihe_key is only valid if ihe_val is not NULL.
 		if ((h->ih_entries[index].ihe_key == id) &&
@@ -113,7 +115,13 @@ nni_hash_find_index(nni_idhash *h, uint64_t id)
 			return ((size_t) -1);
 		}
 		index = NNI_IDHASH_NEXTPROBE(h, index);
+
+		if (index == start) {
+			break;
+		}
 	}
+
+	return ((size_t) -1);
 }
 
 static int
