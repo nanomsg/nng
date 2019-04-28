@@ -434,12 +434,12 @@ sub0_ctx_get_recvbuf(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	sub0_ctx * ctx  = arg;
 	sub0_sock *sock = ctx->sock;
-	size_t     val;
+	int        val;
 	nni_mtx_lock(&sock->lk);
-	val = nni_lmq_cap(&ctx->lmq);
+	val = (int) nni_lmq_cap(&ctx->lmq);
 	nni_mtx_unlock(&sock->lk);
 
-	return (nni_copyout_size(val, buf, szp, t));
+	return (nni_copyout_int(val, buf, szp, t));
 }
 
 static int
@@ -447,14 +447,14 @@ sub0_ctx_set_recvbuf(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	sub0_ctx * ctx  = arg;
 	sub0_sock *sock = ctx->sock;
-	size_t     val;
+	int        val;
 	int        rv;
 
-	if ((rv = nni_copyin_size(&val, buf, sz, 1, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != 0) {
 		return (rv);
 	}
 	nni_mtx_lock(&sock->lk);
-	if ((rv = nni_lmq_resize(&ctx->lmq, val)) != 0) {
+	if ((rv = nni_lmq_resize(&ctx->lmq, (size_t) val)) != 0) {
 		nni_mtx_unlock(&sock->lk);
 		return (rv);
 	}
@@ -462,7 +462,7 @@ sub0_ctx_set_recvbuf(void *arg, const void *buf, size_t sz, nni_type t)
 	// If we change the socket, then this will change the queue for
 	// any new contexts. (Previously constructed contexts are unaffected.)
 	if (sock->ctx == ctx) {
-		sock->recvbuflen = val;
+		sock->recvbuflen = (size_t) val;
 	}
 	nni_mtx_unlock(&sock->lk);
 	return (0);
