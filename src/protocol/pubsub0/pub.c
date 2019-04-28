@@ -314,22 +314,22 @@ pub0_sock_set_sendbuf(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	pub0_sock *sock = arg;
 	pub0_pipe *p;
-	size_t     val;
+	int        val;
 	int        rv;
 
-	if ((rv = nni_copyin_size(&val, buf, sz, 1, 8192, t)) != 0) {
+	if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != 0) {
 		return (rv);
 	}
 
 	nni_mtx_lock(&sock->mtx);
-	sock->sendbuf = val;
+	sock->sendbuf = (size_t) val;
 	NNI_LIST_FOREACH (&sock->pipes, p) {
 		// If we fail part way thru (should only be ENOMEM), we
 		// stop short.  The others would likely fail for ENOMEM as
 		// well anyway.  There is a weird effect here where the
 		// buffers may have been set for *some* of the pipes, but
 		// we have no way to correct, or even report, partial failure.
-		if ((rv = nni_lmq_resize(&p->sendq, val)) != 0) {
+		if ((rv = nni_lmq_resize(&p->sendq, (size_t) val)) != 0) {
 			break;
 		}
 	}
@@ -341,11 +341,11 @@ static int
 pub0_sock_get_sendbuf(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	pub0_sock *sock = arg;
-	size_t     val;
+	int        val;
 	nni_mtx_lock(&sock->mtx);
-	val = sock->sendbuf;
+	val = (int) sock->sendbuf;
 	nni_mtx_unlock(&sock->mtx);
-	return (nni_copyout_size(val, buf, szp, t));
+	return (nni_copyout_int(val, buf, szp, t));
 }
 
 static nni_proto_pipe_ops pub0_pipe_ops = {
