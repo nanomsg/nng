@@ -1443,6 +1443,7 @@ ws_listener_free(void *arg)
 
 	if (l->handler != NULL) {
 		nni_http_handler_fini(l->handler);
+		l->handler = NULL;
 	}
 	if (l->server != NULL) {
 		nni_http_server_fini(l->server);

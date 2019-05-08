@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -453,7 +453,6 @@ nng_stats_dump(nng_stat *stat)
 {
 #ifdef NNG_ENABLE_STATS
 	static char        buf[128]; // to minimize recursion, not thread safe
-	static char        line[128];
 	int                len;
 	char *             scope;
 	char *             indent = "        ";
@@ -472,53 +471,49 @@ nng_stats_dump(nng_stat *stat)
 			}
 		}
 		if (len > 0) {
-			snprintf(line, sizeof(line), "\n%s:", buf);
+			nni_plat_printf("\n%s:\n", buf);
 		}
 		break;
 	case NNG_STAT_STRING:
-		snprintf(line, sizeof(line), "%s%-32s\"%s\"", indent,
-		    nng_stat_name(stat), nng_stat_string(stat));
+		nni_plat_printf("%s%-32s\"%s\"\n", indent, nng_stat_name(stat),
+		    nng_stat_string(stat));
 		break;
 	case NNG_STAT_BOOLEAN:
 		val = nng_stat_value(stat);
-		snprintf(line, sizeof(line), "%s%-32s%s", indent,
-		    nng_stat_name(stat), val != 0 ? "true" : "false");
+		nni_plat_printf("%s%-32s%s\n", indent, nng_stat_name(stat),
+		    val != 0 ? "true" : "false");
 		break;
 	case NNG_STAT_LEVEL:
 	case NNG_STAT_COUNTER:
 		val = nng_stat_value(stat);
+		nni_plat_printf(
+		    "%s%-32s%llu", indent, nng_stat_name(stat), val);
 		switch (nng_stat_unit(stat)) {
 		case NNG_UNIT_BYTES:
-			snprintf(line, sizeof(line), "%s%-32s%llu bytes",
-			    indent, nng_stat_name(stat), val);
+			nni_plat_printf(" bytes\n");
 			break;
 		case NNG_UNIT_MESSAGES:
-			snprintf(line, sizeof(line), "%s%-32s%llu msgs",
-			    indent, nng_stat_name(stat), val);
+			nni_plat_printf(" msgs\n");
 			break;
 		case NNG_UNIT_MILLIS:
-			snprintf(line, sizeof(line), "%s%-32s%llu msec",
-			    indent, nng_stat_name(stat), val);
+			nni_plat_printf(" msec\n");
 			break;
 		case NNG_UNIT_NONE:
 		case NNG_UNIT_EVENTS:
 		default:
-			snprintf(line, sizeof(line), "%s%-32s%llu", indent,
-			    nng_stat_name(stat), val);
+			nni_plat_printf("\n");
 			break;
 		}
 		break;
 	case NNG_STAT_ID:
 		val = nng_stat_value(stat);
-		snprintf(line, (sizeof line), "%s%-32s%llu", indent,
-		    nng_stat_name(stat), val);
+		nni_plat_printf(
+		    "%s%-32s%llu\n", indent, nng_stat_name(stat), val);
 		break;
 	default:
-		snprintf(line, (sizeof line), "%s%-32s<?>", indent,
-		    nng_stat_name(stat));
+		nni_plat_printf("%s%-32s<?>\n", indent, nng_stat_name(stat));
 		break;
 	}
-	nni_plat_println(line);
 
 	NNI_LIST_FOREACH (&stat->s_children, child) {
 		nng_stats_dump(child);

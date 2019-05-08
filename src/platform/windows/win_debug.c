@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -21,6 +21,15 @@ void
 nni_plat_abort(void)
 {
 	abort();
+}
+
+void
+nni_plat_printf(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, fmt);
+	(void) vprintf(fmt, ap);
+	va_end(ap);
 }
 
 void

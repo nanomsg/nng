@@ -52,6 +52,11 @@ extern void nni_plat_abort(void);
 // not contain newlines, but the output will add them.
 extern void nni_plat_println(const char *);
 
+// nni_plat_printf is like printf.  It should conform to C99 standard printf,
+// but is a function to allow platform ports to redirect.  It should go to
+// the same place that nni_plat_println does.
+extern void nni_plat_printf(const char *, ...);
+
 // nni_plat_strerror allows the platform to use additional error messages
 // for additional error codes.  The err code passed in should be the
 // equivalent of errno or GetLastError, without the NNG_ESYSERR component.

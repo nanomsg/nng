@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -12,6 +12,7 @@
 #ifdef NNG_PLATFORM_POSIX
 
 #include <errno.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -20,6 +21,15 @@ void
 nni_plat_abort(void)
 {
 	abort();
+}
+
+void
+nni_plat_printf(const char *fmt, ...)
+{
+	va_list ap;
+	va_start(ap, ap);
+	(void) vprintf(fmt, ap);
+	va_end(ap);
 }
 
 void
