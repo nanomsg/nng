@@ -27,7 +27,7 @@ void
 nni_plat_printf(const char *fmt, ...)
 {
 	va_list ap;
-	va_start(ap, ap);
+	va_start(ap, fmt);
 	(void) vprintf(fmt, ap);
 	va_end(ap);
 }
