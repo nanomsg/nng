@@ -255,6 +255,7 @@ extern int nni_chkopt(
 	NNI_LEGACY_DEFTYPEDSET(base, int, int)            \
 	NNI_LEGACY_DEFTYPEDSET(base, bool, bool)          \
 	NNI_LEGACY_DEFTYPEDSET(base, size, size_t)        \
+	NNI_LEGACY_DEFTYPEDSET(base, uint64, uint64_t)    \
 	NNI_LEGACY_DEFTYPEDSET(base, ms, nng_duration)    \
 	NNI_LEGACY_DEFTYPEDSET(base, ptr, void*)          \
 	NNI_LEGACY_DEFSTRINGSET(base)                     \
