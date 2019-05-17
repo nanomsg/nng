@@ -12,6 +12,7 @@
 
 #ifdef NNG_PLATFORM_POSIX
 #include "platform/posix/posix_pollq.h"
+#include "platform/posix/posix_udp.h"
 
 #include <errno.h>
 #include <fcntl.h>
@@ -33,14 +34,6 @@
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
-
-struct nni_plat_udp {
-	nni_posix_pfd *udp_pfd;
-	int            udp_fd;
-	nni_list       udp_recvq;
-	nni_list       udp_sendq;
-	nni_mtx        udp_mtx;
-};
 
 static void
 nni_posix_udp_doerror(nni_plat_udp *udp, int rv)

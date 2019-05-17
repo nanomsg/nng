@@ -14,6 +14,10 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "core/platform.h"
+
+#include "platform/posix/posix_pollq.h"
+#include "platform/posix/posix_udp.h"
 
 #include "nng/transport/zerotier/zerotier.h"
 
@@ -56,6 +60,7 @@ typedef struct zt_ep       zt_ep;
 typedef struct zt_node     zt_node;
 typedef struct zt_frag     zt_frag;
 typedef struct zt_fraglist zt_fraglist;
+
 
 // Port numbers are stored as 24-bit values in network byte order.
 #define ZT_GET24(ptr, v)                              \
@@ -2696,7 +2701,6 @@ zt_ep_set_add_local_addr(void *arg, const void *data, size_t sz, nni_type t)
 
 	if ((rv = nni_copyin_sockaddr(&sa, data, sz, t)) == 0) {
 		enum ZT_ResultCode      zrv;
-		ZT_Node *               zn;
 		struct sockaddr_storage ss;
 		struct sockaddr_in *    sin;
 		struct sockaddr_in6 *   sin6;
@@ -2706,13 +2710,13 @@ zt_ep_set_add_local_addr(void *arg, const void *data, size_t sz, nni_type t)
 		case NNG_AF_INET:
 			sin                  = (void *) &ss;
 			sin->sin_family      = AF_INET;
+			sin->sin_port        = sa.s_in.sa_port;
 			sin->sin_addr.s_addr = sa.s_in.sa_addr;
-			sin->sin_port        = 0;
 			break;
 		case NNG_AF_INET6:
 			sin6              = (void *) &ss;
 			sin6->sin6_family = AF_INET6;
-			sin6->sin6_port   = 0;
+			sin6->sin6_port        = sa.s_in6.sa_port;
 			memcpy(&sin6->sin6_addr, sa.s_in6.sa_addr, 16);
 			break;
 		default:
@@ -2727,8 +2731,7 @@ zt_ep_set_add_local_addr(void *arg, const void *data, size_t sz, nni_type t)
 			nni_mtx_unlock(&zt_lk);
 			return (rv);
 		}
-		zn  = ep->ze_ztn;
-		zrv = ZT_Node_addLocalInterfaceAddress(zn, &ss);
+		zrv = ZT_Node_addLocalInterfaceAddress(ep->ze_ztn->zn_znode, &ss);
 		nni_mtx_unlock(&zt_lk);
 		rv = zt_result(zrv);
 	}
@@ -2745,14 +2748,12 @@ zt_ep_set_clear_local_addrs(void *arg, const void *data, size_t sz, nni_type t)
 
 	if (ep != NULL) {
 		int      rv;
-		ZT_Node *zn;
 		nni_mtx_lock(&zt_lk);
 		if ((ep->ze_ztn == NULL) && ((rv = zt_node_find(ep)) != 0)) {
 			nni_mtx_unlock(&zt_lk);
 			return (rv);
 		}
-		zn = ep->ze_ztn;
-		ZT_Node_clearLocalInterfaceAddresses(zn);
+		ZT_Node_clearLocalInterfaceAddresses(ep->ze_ztn->zn_znode);
 		nni_mtx_unlock(&zt_lk);
 	}
 	return (0);
@@ -2939,6 +2940,54 @@ zt_ep_get_conn_tries(void *arg, void *data, size_t *szp, nni_type t)
 }
 
 static int
+zt_ep_get_udp4_addr(void *arg, void *data, size_t *szp, nni_type t)
+{
+	zt_ep *      ep = arg;
+	zt_node *ztn = ep->ze_ztn;
+	nng_sockaddr sin;
+	int rv;
+	struct sockaddr_storage ss;
+	socklen_t               sz;
+	nni_plat_udp *udp = ztn->zn_udp4;
+
+	sz = sizeof(ss);
+	if ((rv = getsockname(udp->udp_fd, (struct sockaddr *) &ss, &sz)) <
+	    0) {
+		return (nni_plat_errno(rv));
+	}
+
+	struct sockaddr_in *ssin = (struct sockaddr_in *)&ss;
+
+	sin.s_in.sa_port = ssin->sin_port;
+
+	return (nni_copyout_sockaddr(&sin, data, szp, t));
+}
+
+static int
+zt_ep_get_udp6_addr(void *arg, void *data, size_t *szp, nni_type t)
+{
+	zt_ep *      ep = arg;
+	zt_node *ztn = ep->ze_ztn;
+	nng_sockaddr sin;
+	int rv;
+	struct sockaddr_storage ss;
+	socklen_t               sz;
+	nni_plat_udp *udp = ztn->zn_udp6;
+
+	sz = sizeof(ss);
+	if ((rv = getsockname(udp->udp_fd, (struct sockaddr *) &ss, &sz)) <
+	    0) {
+		return (nni_plat_errno(rv));
+	}
+
+	struct sockaddr_in6 *ssin = (struct sockaddr_in6 *)&ss;
+
+	sin.s_in.sa_port = ssin->sin6_port;
+
+	return (nni_copyout_sockaddr(&sin, data, szp, t));
+}
+
+static int
 zt_ep_get_locaddr(void *arg, void *data, size_t *szp, nni_type t)
 {
 	zt_ep *      ep = arg;
@@ -3104,6 +3153,14 @@ static nni_option zt_dialer_options[] = {
 	    .o_name = NNG_OPT_ZT_CLEAR_LOCAL_ADDRS,
 	    .o_set  = zt_ep_set_clear_local_addrs,
 	},
+	{
+	    .o_name = NNG_OPT_ZT_UDP4_ADDR,
+	    .o_get  = zt_ep_get_udp4_addr,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_UDP6_ADDR,
+	    .o_get  = zt_ep_get_udp6_addr,
+	},
 
 	// terminate list
 	{
@@ -3161,8 +3218,24 @@ static nni_option zt_listener_options[] = {
 	    .o_set  = zt_ep_set_deorbit,
 	},
 	{
+	    .o_name = NNG_OPT_ZT_ADD_LOCAL_ADDR,
+	    .o_set  = zt_ep_set_add_local_addr,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_CLEAR_LOCAL_ADDRS,
+	    .o_set  = zt_ep_set_clear_local_addrs,
+	},
+	{
 	    .o_name = NNG_OPT_LOCADDR,
 	    .o_get  = zt_ep_get_locaddr,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_UDP4_ADDR,
+	    .o_get  = zt_ep_get_udp4_addr,
+	},
+	{
+	    .o_name = NNG_OPT_ZT_UDP6_ADDR,
+	    .o_get  = zt_ep_get_udp6_addr,
 	},
 	// terminate list
 	{

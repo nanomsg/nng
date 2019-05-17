@@ -131,6 +131,9 @@
 // option takes no argument really.
 #define NNG_OPT_ZT_CLEAR_LOCAL_ADDRS "zt:clear-local-addrs"
 
+#define NNG_OPT_ZT_UDP4_ADDR "zt:udp4_addr"
+#define NNG_OPT_ZT_UDP6_ADDR "zt:udp6_addr"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
