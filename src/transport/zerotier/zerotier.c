@@ -2958,6 +2958,7 @@ zt_ep_get_udp4_addr(void *arg, void *data, size_t *szp, nni_type t)
 
 	struct sockaddr_in *ssin = (struct sockaddr_in *)&ss;
 
+	sin.s_in.sa_addr = ssin->sin_addr.s_addr;
 	sin.s_in.sa_port = ssin->sin_port;
 
 	return (nni_copyout_sockaddr(&sin, data, szp, t));
@@ -2982,7 +2983,8 @@ zt_ep_get_udp6_addr(void *arg, void *data, size_t *szp, nni_type t)
 
 	struct sockaddr_in6 *ssin = (struct sockaddr_in6 *)&ss;
 
-	sin.s_in.sa_port = ssin->sin6_port;
+	memcpy(&sin.s_in6.sa_addr, ssin->sin6_addr.s6_addr, 16);
+	sin.s_in6.sa_port = ssin->sin6_port;
 
 	return (nni_copyout_sockaddr(&sin, data, szp, t));
 }
