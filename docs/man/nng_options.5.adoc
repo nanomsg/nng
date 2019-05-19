@@ -46,22 +46,22 @@ nng_options - socket, dialer, listener, and pipe options
 This page documents the various standard options that can be set or
 retrieved on objects in the _nng_ library.
 
-Sockets (<<nng_socket.5#,`nng_socket`>> objects) use the functions
-<<nng_getopt.3#,`nng_getopt()`>>
-and <<nng_setopt.3#,`nng_setopt()`>> to set and retrieve option values.
+Sockets (xref:nng_socket.5.adoc[`nng_socket`] objects) use the functions
+xref:nng_getopt.3.adoc[`nng_getopt()`]
+and xref:nng_setopt.3.adoc[`nng_setopt()`] to set and retrieve option values.
 
-Dialers (<<nng_dialer.5#,`nng_dialer`>> objects) use the functions
-<<nng_dialer_getopt.3#,`nng_dialer_getopt()`>> and
-<<nng_dialer_setopt.3#,`nng_dialer_setopt()`>> to set and retrieve option
+Dialers (xref:nng_dialer.5.adoc[`nng_dialer`] objects) use the functions
+xref:nng_dialer_getopt.3.adoc[`nng_dialer_getopt()`] and
+xref:nng_dialer_setopt.3.adoc[`nng_dialer_setopt()`] to set and retrieve option
 values.
 
-Listeners (<<nng_listener.5#,`nng_listener`>> objects) use the functions
-<<nng_listener_getopt.3#,`nng_listener_getopt()`>>
-and <<nng_listener_setopt.3#,`nng_listener_setopt()`>> to set and
+Listeners (xref:nng_listener.5.adoc[`nng_listener`] objects) use the functions
+xref:nng_listener_getopt.3.adoc[`nng_listener_getopt()`]
+and xref:nng_listener_setopt.3.adoc[`nng_listener_setopt()`] to set and
 retrieve option values.
 
-Pipes (<<nng_pipe.5#,`nng_pipe`>> objects) can only retrieve option values using
-the <<nng_pipe_getopt.3#,`nng_pipe_getopt()`>> function.
+Pipes (xref:nng_pipe.5.adoc[`nng_pipe`] objects) can only retrieve option values using
+the xref:nng_pipe_getopt.3.adoc[`nng_pipe_getopt()`] function.
 
 Other object types may have additional methods to access these options.
 
@@ -82,7 +82,7 @@ description of the option.
 
 [[NNG_OPT_LOCADDR]]
 ((`NNG_OPT_LOCADDR`))::
-(<<nng_sockaddr.5#,`nng_sockaddr`>>)
+(xref:nng_sockaddr.5.adoc[`nng_sockaddr`])
 This read-only option may be used on listeners, dialers and connected pipes, and
 represents the local address used for communication.
 NOTE: Not all transports support this option, and some transports may support it on
@@ -104,15 +104,15 @@ in "`cooked`" mode.
 +
 Raw mode sockets generally do not have any protocol-specific semantics applied
 to them; instead the application is expected to perform such semantics itself.
-(For example, in "`cooked`" mode a <<nng_rep.7#,_rep_>> socket would
+(For example, in "`cooked`" mode a xref:nng_rep.7.adoc[_rep_] socket would
 automatically copy message headers from a received message to the corresponding
 reply, whereas in "`raw`" mode this is not done.)
-See <<nng.7#raw_mode,Raw Mode>> for more details.
+See xref:nng.7#raw_mode[Raw Mode] for more details.
 
 [[NNG_OPT_RECONNMINT]]
 ((`NNG_OPT_RECONNMINT`))::
 (((reconnect time, minimum)))
-(<<nng_duration.5#,`nng_duration`>>)
+(xref:nng_duration.5.adoc[`nng_duration`])
 This is the minimum amount of time (milliseconds) to wait before attempting
 to establish a connection after a previous attempt has failed.
 This can be set on a socket, but it can also be overridden on an individual
@@ -123,7 +123,7 @@ The option is irrelevant for listeners.
 ((`NNG_OPT_RECONNMAXT`))::
 (((`NNG_OPT_RECONNMAXT`)))
 (((reconnect time, maximum)))
-(<<nng_duration.5#,`nng_duration`>>)
+(xref:nng_duration.5.adoc[`nng_duration`])
 This is the maximum amount of time
 (milliseconds) to wait before attempting to establish a connection after
 a previous attempt has failed.
@@ -167,10 +167,14 @@ be readable.
 IMPORTANT: Applications should never attempt to read or write to the
 returned file descriptor.
 +
+IMPORTANT: This option is incompatible with
+xref:nng_ctx.5.adoc[`nng_ctx`] contexts and should be used on a socket
+where they are in use.
++
 TIP: While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
 objects instead.
-See <<nng_aio_alloc.3#,`nng_aio_alloc()`>>.
+See xref:nng_aio_alloc.3.adoc[`nng_aio_alloc()`].
 
 [[NNG_OPT_RECVMAXSZ]]
 ((`NNG_OPT_RECVMAXSZ`))::
@@ -192,14 +196,14 @@ NOTE: Some transports may have further message size restrictions.
 ((`NNG_OPT_RECVTIMEO`))::
 (((receive, timeout)))
 (((timeout, receive)))
-(<<nng_duration.5#,`nng_duration`>>)
+(xref:nng_duration.5.adoc[`nng_duration`])
 This is the socket receive timeout in milliseconds.
 When no message is available for receiving at the socket for this period of
 time, receive operations will fail with a return value of `NNG_ETIMEDOUT`.
 
 [[NNG_OPT_REMADDR]]
 ((`NNG_OPT_REMADDR`))::
-(<<nng_sockaddr.5#,`nng_sockaddr`>>)
+(xref:nng_sockaddr.5.adoc[`nng_sockaddr`])
 This read-only option may be used on dialers and connected pipes, and
 represents the address of a remote peer.
 Not all transports support this option.
@@ -215,7 +219,7 @@ transport is ready to accept them for delivery.
 This value must be an integer between 0 and 8192, inclusive.
 +
 NOTE: Not all protocols support buffering sent messages;
-generally multicast protocols like <<nng_pub.7#,_pub_>> will
+generally multicast protocols like xref:nng_pub.7.adoc[_pub_] will
 simply discard messages when they cannot be delivered immediately.
 
 [[NNG_OPT_SENDFD]]
@@ -240,16 +244,20 @@ the descriptor will *not* be readable.
 IMPORTANT: Applications should never attempt to read or write to the
 returned file descriptor; use should be limited to polling system calls only.
 +
+IMPORTANT: This option is incompatible with
+xref:nng_ctx.5.adoc[`nng_ctx`] contexts and should be used on a socket
+where they are in use.
++
 TIP: While this option may help applications integrate into existing polling
 loops, it is more efficient, and often easier, to use the asynchronous I/O
 objects instead.
-See <<nng_aio_alloc.3#,`nng_aio_alloc()`>>.
+See xref:nng_aio_alloc.3.adoc[`nng_aio_alloc()`].
 
 [[NNG_OPT_SENDTIMEO]]
 ((`NNG_OPT_SENDTIMEO`))::
 (((send, timeout)))
 (((timeout, send)))
-(<<nng_duration.5#,`nng_duration`>>)
+(xref:nng_duration.5.adoc[`nng_duration`])
 This is the socket send timeout in milliseconds.
 When a message cannot be queued for delivery by the socket for this period of
 time (such as if send buffers are full), the operation will fail with a
@@ -271,7 +279,7 @@ in the library itself.
 (`int`)
 (((time-to-live)))
 This is the maximum number of "`hops`" a message may traverse across
-a <<nng_device.3#,`nng_device()`>> forwarders.
+a xref:nng_device.3.adoc[`nng_device()`] forwarders.
 The intention here is to prevent ((forwarding loops)) in device chains.
 When this is supported, it can have a value between 1 and 255, inclusive.
 +
@@ -320,14 +328,14 @@ the socket.
 == SEE ALSO
 
 [.text-left]
-<<nng_dialer_getopt.3#,nng_dialer_getopt(3)>>,
-<<nng_dialer_setopt.3#,nng_dialer_setopt(3)>>,
-<<nng_getopt.3#,nng_getopt(3)>>,
-<<nng_listener_getopt.3#,nng_listener_getopt(3)>>,
-<<nng_listener_setopt.3#,nng_listener_setopt(3)>>,
-<<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,
-<<nng_setopt.3#,nng_setopt(3)>>,
-<<nng_ipc_options.5#,nng_ipc_options(5)>>,
-<<nng_tcp_options.5#,nng_tcp_options(5)>>,
-<<nng_tls_options.5#,nng_tls_options(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_dialer_getopt.3.adoc[nng_dialer_getopt(3)],
+xref:nng_dialer_setopt.3.adoc[nng_dialer_setopt(3)],
+xref:nng_getopt.3.adoc[nng_getopt(3)],
+xref:nng_listener_getopt.3.adoc[nng_listener_getopt(3)],
+xref:nng_listener_setopt.3.adoc[nng_listener_setopt(3)],
+xref:nng_pipe_getopt.3.adoc[nng_pipe_getopt(3)],
+xref:nng_setopt.3.adoc[nng_setopt(3)],
+xref:nng_ipc_options.5.adoc[nng_ipc_options(5)],
+xref:nng_tcp_options.5.adoc[nng_tcp_options(5)],
+xref:nng_tls_options.5.adoc[nng_tls_options(5)],
+xref:nng.7.adoc[nng(7)]

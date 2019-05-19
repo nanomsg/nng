@@ -1,6 +1,6 @@
 = nng_ctx(5)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -28,12 +28,12 @@ An `nng_ctx`(((context))) is a handle to an underlying "`context`" object,
 which keeps the protocol state for some stateful protocols.
 The purpose of a separate context object is to permit applications to
 share a single socket, with its various underlying
-<<nng_dialer.5#,dialers>>,
-<<nng_listener.5#,listeners>>,
-and <<nng_pipe.5#,pipes>>,
+xref:nng_dialer.5.adoc[dialers],
+xref:nng_listener.5.adoc[listeners],
+and xref:nng_pipe.5.adoc[pipes],
 while still benefiting from separate state tracking.
 
-For example, a <<nng_req.7#,_req_>> context will contain the request ID
+For example, a xref:nng_req.7.adoc[_req_] context will contain the request ID
 of any sent request, a timer to retry the request on failure, and so forth.
 A separate context on the same socket can have similar data, but corresponding
 to a completely different request.
@@ -59,24 +59,24 @@ global behavior.
 
 (((concurrent)))(((raw mode)))
 Historically, applications wanting to use a stateful protocol concurrently
-would have to resort to <<nng.7#raw_mode,raw mode>> sockets, which bypasses
+would have to resort to xref:nng.7#raw_mode[raw mode] sockets, which bypasses
 much of the various protocol handling, leaving it to up to the application
 to do so.
 Contexts make it possible to still benefit from advanced protocol handling,
 including timeouts, retries, and matching requests to responses, while doing so
 concurrently.
 
-NOTE: <<nng.7#raw_mode,Raw mode>> sockets do not support contexts, since
+NOTE: xref:nng.7.adoc#raw_mode[Raw mode] sockets do not support contexts, since
 there is generally no state tracked for them, and thus contexts make no sense.
 
 TIP: Contexts are an excellent mechanism to use when building concurrent
 applications, and should be used in lieu of
-<<nng.7#raw_mode,raw mode>> sockets when possible.
+xref:nng.7.adoc#raw_mode[raw mode] sockets when possible.
 
 IMPORTANT: Use of file descriptor polling (with descriptors
 obtained using the
-`<<nng_options.5#NNG_OPT_RECVFD,NNG_OPT_RECVFD>>` or
-`<<nng_options.5#NNG_OPT_SENDFD,NNG_OPT_SENDFD>>` options) while contexts
+xref:nng_options.5.adoc#NNG_OPT_RECVFD[`NNG_OPT_RECVFD`] or
+xref:nng_options.5.adoc#NNG_OPT_SENDFD[`NNG_OPT_SENDFD`] options) while contexts
 are in use on the same socket is not supported, and may lead to unpredictable
 behavior.
 These asynchronous methods should not be mixed on the same socket.
@@ -90,7 +90,7 @@ before it is opened, to prevent confusion with valid open contexts.
 == EXAMPLE
 
 The following program fragment demonstrates the use of contexts to implement
-a concurrent <<nng_rep.7#,_rep_>> service that simply echos messages back
+a concurrent xref:nng_rep.7.adoc[_rep_] service that simply echos messages back
 to the sender.
 
 [source, c]
@@ -132,10 +132,10 @@ echo(void *arg)
 ----
 
 Given the above fragment, the following example shows setting up the
-service.  It assumes that the <<nng_socket.5#,socket>> has already been
+service.  It assumes that the xref:nng_socket.5.adoc[socket] has already been
 created and any transports set up as well with functions such as
-`<<nng_dial.3#,nng_dial()>>`
-or `<<nng_listen.3#,nng_listen()>>`.
+xref:nng_dial.3.adoc[`nng_dial()`]
+or xref:nng_listen.3.adoc[`nng_listen()`].
 
 [source,c]
 ----
@@ -159,16 +159,16 @@ start_echo_service(nng_socket rep_socket)
 == SEE ALSO
 
 [.text-left]
-<<libnng.3#,libnng(3)>>,
-<<nng_ctx_close.3#,nng_ctx_close(3)>>,
-<<nng_ctx_open.3#,nng_ctx_open(3)>>,
-<<nng_ctx_getopt.3#,nng_ctx_getopt(3)>>,
-<<nng_ctx_id.3#,nng_ctx_id(3)>>,
-<<nng_ctx_recv.3#,nng_ctx_recv(3)>>,
-<<nng_ctx_send.3#,nng_ctx_send(3)>>,
-<<nng_ctx_setopt.3#,nng_ctx_setopt(3)>>,
-<<nng_dialer.5#,nng_dialer(5)>>,
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng.7#,nng(7)>>
+xref:libnng.3.adoc[libnng(3)],
+xref:nng_ctx_close.3.adoc[nng_ctx_close(3)],
+xref:nng_ctx_open.3.adoc[nng_ctx_open(3)],
+xref:nng_ctx_getopt.3.adoc[nng_ctx_getopt(3)],
+xref:nng_ctx_id.3.adoc[nng_ctx_id(3)],
+xref:nng_ctx_recv.3.adoc[nng_ctx_recv(3)],
+xref:nng_ctx_send.3.adoc[nng_ctx_send(3)],
+xref:nng_ctx_setopt.3.adoc[nng_ctx_setopt(3)],
+xref:nng_dialer.5.adoc[nng_dialer(5)],
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng.7.adoc[nng(7)]
