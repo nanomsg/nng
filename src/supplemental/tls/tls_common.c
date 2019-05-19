@@ -365,6 +365,7 @@ tls_listener_free(void *arg)
 	if ((l = arg) != NULL) {
 		tls_listener_close(l);
 		nng_tls_config_free(l->cfg);
+		nng_stream_listener_free(l->l);
 		nni_mtx_fini(&l->lk);
 		NNI_FREE_STRUCT(l);
 	}
