@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2019 Staysail Systems. Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -18,8 +18,7 @@ static nni_list reap_list;
 static nni_mtx  reap_mtx;
 static nni_cv   reap_cv;
 static nni_cv   reap_empty_cv;
-static bool     reap_exit  = false;
-static bool     reap_empty = false;
+static bool     reap_exit = false;
 static nni_thr  reap_thr;
 
 static void
@@ -38,7 +37,6 @@ reap_worker(void *notused)
 			nni_mtx_lock(&reap_mtx);
 		}
 
-		reap_empty = true;
 		nni_cv_wake(&reap_empty_cv);
 
 		if (reap_exit) {
@@ -57,7 +55,6 @@ nni_reap(nni_reap_item *item, nni_cb func, void *ptr)
 	item->r_func = func;
 	item->r_ptr  = ptr;
 	nni_list_append(&reap_list, item);
-	reap_empty = false;
 	nni_cv_wake(&reap_cv);
 	nni_mtx_unlock(&reap_mtx);
 }
@@ -66,7 +63,7 @@ void
 nni_reap_drain(void)
 {
 	nni_mtx_lock(&reap_mtx);
-	while (!reap_empty) {
+	while (!nni_list_empty(&reap_list)) {
 		nni_cv_wait(&reap_empty_cv);
 	}
 	nni_mtx_unlock(&reap_mtx);
