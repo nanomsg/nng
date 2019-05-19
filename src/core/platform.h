@@ -172,11 +172,13 @@ extern void nni_atomic_flag_reset(nni_atomic_flag *);
 typedef struct nni_atomic_u64 nni_atomic_u64;
 
 extern void     nni_atomic_init64(nni_atomic_u64 *);
-extern void     nni_atomic_inc64(nni_atomic_u64 *, uint64_t);
-extern void     nni_atomic_dec64(nni_atomic_u64 *, uint64_t);
+extern void     nni_atomic_add64(nni_atomic_u64 *, uint64_t);
+extern void     nni_atomic_sub64(nni_atomic_u64 *, uint64_t);
 extern uint64_t nni_atomic_get64(nni_atomic_u64 *);
 extern void     nni_atomic_set64(nni_atomic_u64 *, uint64_t);
 extern uint64_t nni_atomic_swap64(nni_atomic_u64 *, uint64_t);
+extern uint64_t nni_atomic_dec64_nv(nni_atomic_u64 *);
+extern void     nni_atomic_inc64(nni_atomic_u64 *);
 
 //
 // Clock Support

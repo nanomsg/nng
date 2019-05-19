@@ -152,13 +152,13 @@ nni_stat_init_atomic(nni_stat_item *stat, const char *name, const char *desc)
 void
 nni_stat_inc_atomic(nni_stat_item *stat, uint64_t inc)
 {
-	nni_atomic_inc64(&stat->si_atomic, inc);
+	nni_atomic_add64(&stat->si_atomic, inc);
 }
 
 void
 nni_stat_dec_atomic(nni_stat_item *stat, uint64_t inc)
 {
-	nni_atomic_dec64(&stat->si_atomic, inc);
+	nni_atomic_sub64(&stat->si_atomic, inc);
 }
 #endif
 

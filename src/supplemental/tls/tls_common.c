@@ -160,14 +160,14 @@ tls_dialer_set_config(void *arg, const void *buf, size_t sz, nni_type t)
 	if (cfg == NULL) {
 		return (NNG_EINVAL);
 	}
-	nni_mtx_lock(&d->lk);
-	old = d->cfg;
 	nng_tls_config_hold(cfg);
+
+	nni_mtx_lock(&d->lk);
+	old    = d->cfg;
 	d->cfg = cfg;
 	nni_mtx_unlock(&d->lk);
-	if (old != NULL) {
-		nng_tls_config_free(old);
-	}
+
+	nng_tls_config_free(old);
 	return (0);
 }
 
@@ -432,14 +432,15 @@ tls_listener_set_config(void *arg, const void *buf, size_t sz, nni_type t)
 		return (NNG_EINVAL);
 	}
 
-	nni_mtx_lock(&l->lk);
-	old = l->cfg;
 	nng_tls_config_hold(cfg);
+
+	nni_mtx_lock(&l->lk);
+	old    = l->cfg;
 	l->cfg = cfg;
 	nni_mtx_unlock(&l->lk);
-	if (old != NULL) {
-		nng_tls_config_free(old);
-	}
+
+	nng_tls_config_free(old);
+
 	return (0);
 }
 

@@ -30,13 +30,13 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 }
 
 void
-nni_atomic_inc64(nni_atomic_u64 *v, uint64_t bump)
+nni_atomic_add64(nni_atomic_u64 *v, uint64_t bump)
 {
 	(void) atomic_fetch_add_explicit(&v->v, bump, memory_order_relaxed);
 }
 
 void
-nni_atomic_dec64(nni_atomic_u64 *v, uint64_t bump)
+nni_atomic_sub64(nni_atomic_u64 *v, uint64_t bump)
 {
 	(void) atomic_fetch_sub_explicit(&v->v, bump, memory_order_relaxed);
 }
@@ -65,6 +65,22 @@ nni_atomic_init64(nni_atomic_u64 *v)
 	atomic_init(&v->v, 0);
 }
 
+void
+nni_atomic_inc64(nni_atomic_u64 *v)
+{
+	atomic_fetch_add(&v->v, 1);
+}
+
+uint64_t
+nni_atomic_dec64_nv(nni_atomic_u64 *v)
+{
+	uint64_t ov;
+
+	// C11 atomics give the old rather than new value.
+	ov = atomic_fetch_sub(&v->v, 1);
+	return (ov - 1);
+}
+
 #else
 
 #include <pthread.h>
@@ -91,7 +107,7 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 }
 
 void
-nni_atomic_inc64(nni_atomic_u64 *v, uint64_t bump)
+nni_atomic_add64(nni_atomic_u64 *v, uint64_t bump)
 {
 	pthread_mutex_lock(&plat_atomic_lock);
 	v += bump;
@@ -99,7 +115,7 @@ nni_atomic_inc64(nni_atomic_u64 *v, uint64_t bump)
 }
 
 void
-nni_atomic_dec64(nni_atomic_u64 *v, uint64_t bump)
+nni_atomic_sub64(nni_atomic_u64 *v, uint64_t bump)
 {
 	pthread_mutex_lock(&plat_atomic_lock);
 	v -= bump;
@@ -139,6 +155,25 @@ void
 nni_atomic_init64(nni_atomic_u64 *v)
 {
 	v->v = 0;
+}
+
+void
+nni_atomic_inc64(nni_atomic_u64 *v)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v++;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+void
+nni_atomic_dec64_nv(nni_atomic_u64 *v)
+{
+	uint64_t nv;
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v--;
+	nv = v->v;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (nv);
 }
 
 #endif
