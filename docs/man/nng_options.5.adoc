@@ -168,7 +168,7 @@ IMPORTANT: Applications should never attempt to read or write to the
 returned file descriptor.
 +
 IMPORTANT: This option is incompatible with
-xref:nng_ctx.5.adoc[`nng_ctx`] contexts and should be used on a socket
+xref:nng_ctx.5.adoc[`nng_ctx`] contexts and should not be used on a socket
 where they are in use.
 +
 TIP: While this option may help applications integrate into existing polling
@@ -245,7 +245,7 @@ IMPORTANT: Applications should never attempt to read or write to the
 returned file descriptor; use should be limited to polling system calls only.
 +
 IMPORTANT: This option is incompatible with
-xref:nng_ctx.5.adoc[`nng_ctx`] contexts and should be used on a socket
+xref:nng_ctx.5.adoc[`nng_ctx`] contexts and should not be used on a socket
 where they are in use.
 +
 TIP: While this option may help applications integrate into existing polling
