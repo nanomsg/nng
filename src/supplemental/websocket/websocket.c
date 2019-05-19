@@ -447,10 +447,13 @@ ws_frame_prep_tx(nni_ws *ws, ws_frame *frame)
 	// Potentially allocate space for the data if we need to.
 	// Note that an empty message is legal.
 	if ((frame->bufsz < frame->len) && (frame->len > 0)) {
+		nni_free(frame->buf, frame->bufsz);
 		frame->buf = nni_alloc(frame->len);
 		if (frame->buf == NULL) {
+			frame->bufsz = 0;
 			return (NNG_ENOMEM);
 		}
+		frame->bufsz = frame->len;
 	}
 	buf = frame->buf;
 
