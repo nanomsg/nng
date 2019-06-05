@@ -165,7 +165,7 @@ nni_atomic_inc64(nni_atomic_u64 *v)
 	pthread_mutex_unlock(&plat_atomic_lock);
 }
 
-void
+uint64_t
 nni_atomic_dec64_nv(nni_atomic_u64 *v)
 {
 	uint64_t nv;
