@@ -62,6 +62,8 @@ extern uint32_t nni_sock_flags(nni_sock *);
 // types.)  The second argument is a mask of events for which the callback
 // should be executed.
 extern void nni_sock_set_pipe_cb(nni_sock *sock, int, nng_pipe_cb, void *);
+// the pipe_cbs_mtx must be held whenever pipe callback functions are called.
+extern nni_mtx *nni_sock_pipe_cbs_mtx(nni_sock *);
 
 // nni_ctx_open is used to open/create a new context structure.
 // Contexts are not supported by most protocols, but for those that do,

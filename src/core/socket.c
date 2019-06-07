@@ -1425,11 +1425,15 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 	nni_stat_inc_atomic(&s->s_stats.s_npipes, 1);
 	nni_stat_inc_atomic(&d->d_stats.s_npipes, 1);
 
+	// grab the pipe_cbs_mtx for the entire time between calling pre-connect
+	// callbacks and post-connect callbacks.  This ensures that the post-remove
+	// callback cannot fire before the post-connect callback.
+	nni_mtx_lock(&s->s_pipe_cbs_mtx);
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_PRE);
-
 	nni_mtx_lock(&s->s_mx);
 	if (p->p_closed) {
 		nni_mtx_unlock(&s->s_mx);
+		nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 		nni_stat_inc_atomic(&d->d_stats.s_reject, 1);
 		nni_stat_inc_atomic(&s->s_stats.s_reject, 1);
 		nni_pipe_rele(p);
@@ -1437,6 +1441,7 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 	}
 	if (p->p_proto_ops.pipe_start(p->p_proto_data) != 0) {
 		nni_mtx_unlock(&s->s_mx);
+		nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 		nni_stat_inc_atomic(&d->d_stats.s_reject, 1);
 		nni_stat_inc_atomic(&s->s_stats.s_reject, 1);
 		nni_pipe_close(p);
@@ -1444,8 +1449,8 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 		return;
 	}
 	nni_mtx_unlock(&s->s_mx);
-
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
+	nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 	nni_pipe_rele(p);
 }
 
@@ -1534,11 +1539,13 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 	nni_stat_inc_atomic(&l->l_stats.s_npipes, 1);
 	nni_stat_inc_atomic(&s->s_stats.s_npipes, 1);
 
+	nni_mtx_lock(&s->s_pipe_cbs_mtx);
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_PRE);
 
 	nni_mtx_lock(&s->s_mx);
 	if (p->p_closed) {
 		nni_mtx_unlock(&s->s_mx);
+		nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 		nni_stat_inc_atomic(&l->l_stats.s_reject, 1);
 		nni_stat_inc_atomic(&s->s_stats.s_reject, 1);
 		nni_pipe_rele(p);
@@ -1546,6 +1553,7 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 	}
 	if (p->p_proto_ops.pipe_start(p->p_proto_data) != 0) {
 		nni_mtx_unlock(&s->s_mx);
+		nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 		nni_stat_inc_atomic(&l->l_stats.s_reject, 1);
 		nni_stat_inc_atomic(&s->s_stats.s_reject, 1);
 		nni_pipe_close(p);
@@ -1555,6 +1563,7 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 	nni_mtx_unlock(&s->s_mx);
 
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
+	nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 	nni_pipe_rele(p);
 }
 
@@ -1632,25 +1641,27 @@ nni_pipe_run_cb(nni_pipe *p, nng_pipe_ev ev)
 	nng_pipe_cb cb;
 	void *      arg;
 
-	nni_mtx_lock(&s->s_pipe_cbs_mtx);
 	if (!p->p_cbs) {
 		if (ev == NNG_PIPE_EV_ADD_PRE) {
 			// First event, after this we want all other events.
 			p->p_cbs = true;
 		} else {
-			nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 			return;
 		}
 	}
 	cb  = s->s_pipe_cbs[ev].cb_fn;
 	arg = s->s_pipe_cbs[ev].cb_arg;
-	nni_mtx_unlock(&s->s_pipe_cbs_mtx);
 
 	if (cb != NULL) {
 		nng_pipe pid;
 		pid.id = p->p_id;
 		cb(pid, ev, arg);
 	}
+}
+
+extern
+nni_mtx *nni_sock_pipe_cbs_mtx(nni_sock *s) {
+	return &s->s_pipe_cbs_mtx;
 }
 
 void
