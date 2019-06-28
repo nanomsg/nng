@@ -334,6 +334,7 @@ else ()
 
     nng_check_lib (rt clock_gettime  NNG_HAVE_CLOCK_GETTIME)
     nng_check_lib (pthread sem_wait  NNG_HAVE_SEMAPHORE_PTHREAD)
+    nng_check_lib (pthread pthread_atfork NNG_HAVE_PTHREAD_ATFORK_PTHREAD)
     nng_check_lib (nsl gethostbyname NNG_HAVE_LIBNSL)
     nng_check_lib (socket socket NNG_HAVE_LIBSOCKET)
 
