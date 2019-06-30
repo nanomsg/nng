@@ -25,7 +25,7 @@ int nng_dialer_create(nng_dialer *dialerp, nng_socket s, const char *url);
 == DESCRIPTION
 
 The `nng_dialer_create()` function creates a newly initialized
-`<<nng_dialer.5#,nng_dialer>>` object, associated with socket _s_,
+xref:nng_dialer.5.adoc[`nng_dialer`] object, associated with socket _s_,
 and configured to connect to the
 address specified by _url_, and stores a pointer to at the location
 referenced by _dialerp_.
@@ -42,18 +42,18 @@ fails.
 TIP: While it is convenient to think of dialers as "`clients`", the relationship
 between the listener or dialer is orthogonal to any server or client status
 that might be associated with a given protocol.
-For example, a <<nng_req.7#,_req_>>
+For example, a xref:nng_req.7.adoc[_req_]
 socket might have associated dialers, but might also have associated listeners.
 It may even have some of each at the same time!
 
 The dialer is not started, but may be further configured with
-the `<<nng_dialer_setopt.3#,nng_dialer_setopt()>>` family of functions.
+the xref:nng_dialer_setopt.3.adoc[`nng_dialer_setopt()`] family of functions.
 
 Once it is fully configured, the dialer may be started using the
-`<<nng_dialer_start.3#,nng_dialer_start()>>` function.
+xref:nng_dialer_start.3.adoc[`nng_dialer_start()`] function.
 
 TIP: If no specific configuration is required, consider using the
-simpler `<<nng_dial.3#,nng_dial()>>` function instead.
+simpler xref:nng_dial.3.adoc[`nng_dial()`] function instead.
 
 == RETURN VALUES
 
@@ -69,12 +69,12 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_dial.3#,nng_dial(3)>>,
-<<nng_dialer_close.3#,nng_dialer_close(3)>>,
-<<nng_dialer_getopt.3#,nng_dialer_getopt(3)>>,
-<<nng_dialer_setopt.3#,nng_dialer_setopt(3)>>,
-<<nng_dialer_start.3#,nng_dialer_start(3)>>,
-<<nng_listener_create.3#,nng_listener_create(3)>>
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_dialer.5#,nng_dialer(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_dial.3.adoc[nng_dial(3)],
+xref:nng_dialer_close.3.adoc[nng_dialer_close(3)],
+xref:nng_dialer_getopt.3.adoc[nng_dialer_getopt(3)],
+xref:nng_dialer_setopt.3.adoc[nng_dialer_setopt(3)],
+xref:nng_dialer_start.3.adoc[nng_dialer_start(3)],
+xref:nng_listener_create.3.adoc[nng_listener_create(3)]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_dialer.5.adoc[nng_dialer(5)],
+xref:nng.7.adoc[nng(7)]

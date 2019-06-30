@@ -43,7 +43,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_abort.3#,nng_aio_abort(3)>>,
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_abort.3.adoc[nng_aio_abort(3)],
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

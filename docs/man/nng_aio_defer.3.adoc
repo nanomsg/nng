@@ -40,11 +40,11 @@ completed, or be in a state where it is no longer possible to unschedule it.
 In this case, the _cancelfn_ should just return without making any changes.
 
 If the cancellation routine successfully canceled the operation, it should
-ensure that `<<nng_aio_finish.3#,nng_aio_finish()>>` is called, with the
+ensure that xref:nng_aio_finish.3.adoc[`nng_aio_finish()`] is called, with the
 error code specified by _err_.
 
 IMPORTANT: It is mandatory that I/O providers call
-`<<nng_aio_finish.3#,nng_aio_finish()>>`
+xref:nng_aio_finish.3.adoc[`nng_aio_finish()`]
 *EXACTLY ONCE* when they are finished with the operation.
 
 NOTE: This function is only for I/O providers (those actually performing
@@ -70,9 +70,9 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
-<<nng_aio_finish.3#,nng_aio_finish(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
+xref:nng_aio_finish.3.adoc[nng_aio_finish(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

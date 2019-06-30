@@ -46,5 +46,5 @@ Zero length duration; used to perform a single polling operation.
 == SEE ALSO
 
 [.text-left]
-<<nng_options.5#,nng_options(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng.7.adoc[nng(7)]

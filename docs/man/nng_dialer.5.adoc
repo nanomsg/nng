@@ -26,7 +26,7 @@ typedef struct nng_dialer_s nng_dialer;
 
 (((dialer)))
 An `nng_dialer` is a handle to a "`dialer`" object, which is responsible for
-creating a single `<<nng_pipe.5#,nng_pipe>>` at a time by
+creating a single xref:nng_pipe.5.adoc[`nng_pipe`] at a time by
 establishing an outgoing connection.
 
 If the connection is broken, or fails, the dialer object will automatically
@@ -34,28 +34,28 @@ attempt to reconnect, and will keep doing so until the dialer or socket is
 destroyed.
 
 Dialer objects are created by the
-`<<nng_dialer_create.3#,nng_dialer_create()>>`
-or `<<nng_dial.3#,nng_dial()>>` functions, and are always "`owned`"
-by a single `<<nng_socket.5#,nng_socket>>`.
+xref:nng_dialer_create.3.adoc[`nng_dialer_create()`]
+or xref:nng_dial.3.adoc[`nng_dial()`] functions, and are always "`owned`"
+by a single xref:nng_socket.5.adoc[`nng_socket`].
 
 IMPORTANT: The `nng_dialer` structure is always passed by value (both
 for input parameters and return values), and should be treated opaquely.
 Passing structures this way ensures gives the compiler a chance to perform
 accurate type checks in functions passing values of this type.
 
-TIP: A given `<<nng_socket.5#,nng_socket>>` may have multiple dialer
-objects, multiple <<nng_listener.5#,listener>> objects, or even some
+TIP: A given xref:nng_socket.5.adoc[`nng_socket`] may have multiple dialer
+objects, multiple xref:nng_listener.5.adoc[listener] objects, or even some
 of both.
 
 TIP: The client/server relationship described by dialer/listener is
 completely orthogonal to any similar relationship in the protocols.
-For example, a <<nng_rep.7#,_rep_>> socket may use a dialer
-to connect to a listener on an <<nng_req.7#,_req_>> socket.
+For example, a xref:nng_rep.7.adoc[_rep_] socket may use a dialer
+to connect to a listener on an xref:nng_req.7.adoc[_req_] socket.
 This orthogonality can lead to innovative solutions to otherwise
 challenging communications problems.
 
 Dialer objects may be destroyed by the
-`<<nng_dialer_close.3#,nng_dialer_close()>>` function.
+xref:nng_dialer_close.3.adoc[`nng_dialer_close()`] function.
 They are also closed when their "`owning`" socket is closed.
 
 [[NNG_DIALER_INITIALIZER]]
@@ -67,14 +67,14 @@ before it is opened, to prevent confusion with valid open dialers.
 == SEE ALSO
 
 [.text-left]
-<<nng_dial.3#,nng_dial(3)>>,
-<<nng_dialer_close.3#,nng_dialer_close(3)>>,
-<<nng_dialer_create.3#,nng_dialer_create(3)>>,
-<<nng_dialer_getopt.3#,nng_dialer_getopt(3)>>,
-<<nng_dialer_id.3#,nng_dialer_id(3)>>,
-<<nng_dialer_setopt.3#,nng_dialer_setopt(3)>>,
-<<nng_dialer_start.3#,nng_dialer_start(3)>>,
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng_pipe.5#,nng_pipe(5)>>,
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_dial.3.adoc[nng_dial(3)],
+xref:nng_dialer_close.3.adoc[nng_dialer_close(3)],
+xref:nng_dialer_create.3.adoc[nng_dialer_create(3)],
+xref:nng_dialer_getopt.3.adoc[nng_dialer_getopt(3)],
+xref:nng_dialer_id.3.adoc[nng_dialer_id(3)],
+xref:nng_dialer_setopt.3.adoc[nng_dialer_setopt(3)],
+xref:nng_dialer_start.3.adoc[nng_dialer_start(3)],
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng_pipe.5.adoc[nng_pipe(5)],
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng.7.adoc[nng(7)]

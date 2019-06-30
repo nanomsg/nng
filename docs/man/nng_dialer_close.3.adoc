@@ -25,7 +25,7 @@ int nng_dialer_close(nng_dialer d);
 == DESCRIPTION
 
 The `nng_dialer_close()` function closes the dialer _d_.
-This also closes any `<<nng_pipe.5#,nng_pipe>>` objects that have
+This also closes any xref:nng_pipe.5.adoc[`nng_pipe`] objects that have
 been created by the dialer.
 
 Once this function returns, the dialer _d_ and any of its resources
@@ -43,14 +43,14 @@ This function returns 0 on success, and non-zero otherwise.
 == ERRORS
 
 [horizontal]
-`NNG_ECLOSED`:: Parameter _d_ does not refer to an open listener.
+`NNG_ECLOSED`:: Parameter _d_ does not refer to an open dialer.
 
 == SEE ALSO
 
 [.text-left]
-<<nng_close.3#,nng_close(3)>>,
-<<nng_dial.3#,nng_dial(3)>>,
-<<nng_dialer_create.3#,nng_dialer_create(3)>>
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_dialer.5#,nng_dialer(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_close.3.adoc[nng_close(3)],
+xref:nng_dial.3.adoc[nng_dial(3)],
+xref:nng_dialer_create.3.adoc[nng_dialer_create(3)]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_dialer.5.adoc[nng_dialer(5)],
+xref:nng.7.adoc[nng(7)]

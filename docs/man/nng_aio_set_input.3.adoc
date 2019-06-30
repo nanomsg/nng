@@ -42,7 +42,7 @@ IMPORTANT: It is an error to call this function while the _aio_ is currently
 in use by an active asynchronous operation.
 
 An input parameter set with this function may be retrieved later with
-the `<<nng_aio_get_input.3#,nng_aio_get_input()>>` function.
+the xref:nng_aio_get_input.3.adoc[`nng_aio_get_input()`] function.
 
 == RETURN VALUES
 
@@ -55,9 +55,9 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_get_input.3#,nng_aio_get_input(3)>>,
-<<nng_aio_get_output.3#,nng_aio_get_output(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_get_input.3.adoc[nng_aio_get_input(3)],
+xref:nng_aio_get_output.3.adoc[nng_aio_get_output(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

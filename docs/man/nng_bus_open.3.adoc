@@ -27,12 +27,12 @@ int nng_bus0_open_raw(nng_socket *s);
 
 == DESCRIPTION
 
-The `nng_bus0_open()` function creates a <<nng_bus.7#,_bus_>> version 0
-<<nng_socket.5#,socket>> and returns it at the location pointed to by _s_.
+The `nng_bus0_open()` function creates a xref:nng_bus.7.adoc[_bus_] version 0
+xref:nng_socket.5.adoc[socket] and returns it at the location pointed to by _s_.
 
-The `nng_bus0_open_raw()` function creates a <<nng_bus.7#,_bus_>> version 0
-<<nng_socket.5#,socket>> in
-<<nng.7#raw_mode,raw>> mode, and returns it at the location pointed to by _s_.
+The `nng_bus0_open_raw()` function creates a xref:nng_bus.7.adoc[_bus_] version 0
+xref:nng_socket.5.adoc[socket] in
+xref:nng.7.adoc#raw_mode[raw] mode, and returns it at the location pointed to by _s_.
 
 == RETURN VALUES
 
@@ -47,6 +47,6 @@ These functions return 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng_bus.7#,nng_bus(7)>>,
-<<nng.7#,nng(7)>>
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng_bus.7.adoc[nng_bus(7)],
+xref:nng.7.adoc[nng(7)]

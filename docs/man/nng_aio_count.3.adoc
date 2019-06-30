@@ -33,13 +33,13 @@ transfer user data (they may transfer protocol data though) -- in this case
 this function will generally return zero.
 
 This function is most useful when used with operations that make use of
-of a scatter/gather vector (set by `<<nng_aio_set_iov.3#,nng_aio_set_iov()>>`).
+of a scatter/gather vector (set by xref:nng_aio_set_iov.3.adoc[`nng_aio_set_iov()`]).
 
 NOTE: The return value from this function is undefined if the operation
 has not completed yet.
 Either call this from the handle's completion callback,
 or after waiting for the operation to complete with
-`<<nng_aio_wait.3#,nng_aio_wait()>>`.
+xref:nng_aio_wait.3.adoc[`nng_aio_wait()`].
 
 == RETURN VALUES
 
@@ -52,10 +52,10 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio_set_iov.3#,nng_aio_set_iov(3)>>,
-<<nng_aio_wait.3#,nng_aio_wait(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio_set_iov.3.adoc[nng_aio_set_iov(3)],
+xref:nng_aio_wait.3.adoc[nng_aio_wait(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

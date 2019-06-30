@@ -35,7 +35,7 @@ This operation should be called at the start of any I/O operation, and must
 be called not more than once for a given I/O operation on a given _aio_.
 
 Once this function is called, if `true` is returned, then the provider MUST
-guarantee that `<<nng_aio_finish.3#,nng_aio_finish()>>` is called for the _aio_
+guarantee that xref:nng_aio_finish.3.adoc[`nng_aio_finish()`] is called for the _aio_
 exactly once, when the operation is complete or canceled.
 
 NOTE: This function is only for I/O providers (those actually performing
@@ -55,10 +55,10 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
-<<nng_aio_defer.3#,nng_aio_defer(3)>>,
-<<nng_aio_finish.3#,nng_aio_finish(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
+xref:nng_aio_defer.3.adoc[nng_aio_defer(3)],
+xref:nng_aio_finish.3.adoc[nng_aio_finish(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

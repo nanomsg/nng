@@ -26,9 +26,9 @@ int nng_cv_until(nng_cv *cv, nng_time when);
 == DESCRIPTION
 
 The `nng_cv_until()` waits until either the condition variable _cv_ is signaled
-by another thread calling either `<<nng_cv_wake.3supp#,nng_cv_wake()>>` or
-`<<nng_cv_wake1.3supp#,nng_cv_wake1()>>`, or the system clock (as tracked
-by `<<nng_clock.3supp#,nng_clock()>>`) reaches _when_.
+by another thread calling either xref:nng_cv_wake.3supp.adoc[`nng_cv_wake()`] or
+xref:nng_cv_wake1.3supp.adoc[`nng_cv_wake1()`], or the system clock (as tracked
+by xref:nng_clock.3supp.adoc[`nng_clock()`]) reaches _when_.
 
 The caller must have have ownership of the mutex that was used when
 _cv_ was allocated.
@@ -80,11 +80,11 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_cv_alloc.3supp#,nng_cv_alloc(3supp)>>,
-<<nng_cv_wait.3supp#,nng_cv_wait(3supp)>>,
-<<nng_cv_wake.3supp#,nng_cv_wake(3supp)>>,
-<<nng_cv_wake1.3supp#,nng_cv_wake1(3supp)>>,
-<<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
-<<nng_mtx_lock.3supp#,nng_mtx_lock(3supp)>>,
-<<nng_mtx_unlock.3supp#,nng_mtx_unlock(3supp)>>,
-<<nng.7#,nng(7)>>
+xref:nng_cv_alloc.3supp.adoc[nng_cv_alloc(3supp)],
+xref:nng_cv_wait.3supp.adoc[nng_cv_wait(3supp)],
+xref:nng_cv_wake.3supp.adoc[nng_cv_wake(3supp)],
+xref:nng_cv_wake1.3supp.adoc[nng_cv_wake1(3supp)],
+xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc(3supp)],
+xref:nng_mtx_lock.3supp.adoc[nng_mtx_lock(3supp)],
+xref:nng_mtx_unlock.3supp.adoc[nng_mtx_unlock(3supp)],
+xref:nng.7.adoc[nng(7)]

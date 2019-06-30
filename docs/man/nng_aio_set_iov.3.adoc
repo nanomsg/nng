@@ -27,7 +27,7 @@ int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
 The `nng_aio_set_iov()` function sets a ((scatter/gather)) vector _iov_ on the
 handle _aio_.
 
-The _iov_ is a pointer to an array of _niov_ `<<nng_iov.5#,nng_iov>>`
+The _iov_ is a pointer to an array of _niov_ xref:nng_iov.5.adoc[`nng_iov`]
 structures, which have the following definition:
 
 [source, c]
@@ -67,10 +67,10 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
-<<nng_aio_count.3#,nng_aio_count(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng_iov.5#,nng_iov(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
+xref:nng_aio_count.3.adoc[nng_aio_count(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng_iov.5.adoc[nng_iov(5)],
+xref:nng.7.adoc[nng(7)]

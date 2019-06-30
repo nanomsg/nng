@@ -54,5 +54,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<libnng.3#,libnng(3)>>,
-<<nng.7#,nng(7)>>
+xref:libnng.3.adoc[libnng(3)],
+xref:nng.7.adoc[nng(7)]

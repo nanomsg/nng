@@ -34,22 +34,22 @@ NOTE: The callback _callb_ must not perform any blocking operations, and
 must complete its execution quickly.  If _callb_ does block, this can
 lead ultimately to an apparent "hang" or deadlock in the application.
 
-Asynchronous I/O operations all take an `<<nng_aio.5#,nng_aio>>`
+Asynchronous I/O operations all take an xref:nng_aio.5.adoc[`nng_aio`]
 handle such as allocated by this function.
 Such operations are usually started by a function that returns immediately.
 The operation is then run asynchronously, and completes sometime later.
 When that operation is complete, the callback supplied here is called,
 and that callback is able to determine the result of the operation using
-`<<nng_aio_result.3#,nng_aio_result()>>`,
-`<<nng_aio_count.3#,nng_aio_count()>>`,
-and `<<nng_aio_get_output.3#,nng_aio_get_output()>>`.
+xref:nng_aio_result.3.adoc[`nng_aio_result()`],
+xref:nng_aio_count.3.adoc[`nng_aio_count()`],
+and xref:nng_aio_get_output.3.adoc[`nng_aio_get_output()`].
 
 It is possible to wait synchronously for an otherwise asynchronous operation
-by using the function `<<nng_aio_wait.3#,nng_aio_wait()>>`.
+by using the function xref:nng_aio_wait.3.adoc[`nng_aio_wait()`].
 In that case, it is permissible for _callb_ and _arg_ to both be `NULL`.
 Note that if these are `NULL`, then it will not be possible to determine when the
 operation is complete except by calling the aforementioned
-`<<nng_aio_wait.3#,nng_aio_wait()>>`.
+xref:nng_aio_wait.3.adoc[`nng_aio_wait()`].
 
 == RETURN VALUES
 
@@ -63,20 +63,20 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_abort.3#,nng_aio_abort(3)>>,
-<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
-<<nng_aio_count.3#,nng_aio_count(3)>>,
-<<nng_aio_free.3#,nng_aio_free(3)>>,
-<<nng_aio_get_input.3#,nng_aio_get_input(3)>>,
-<<nng_aio_get_msg.3#,nng_aio_get_msg(3)>>,
-<<nng_aio_get_output.3#,nng_aio_get_output(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio_set_input.3#,nng_aio_set_input(3)>>,
-<<nng_aio_set_iov.3#,nng_aio_set_iov(3)>>,
-<<nng_aio_set_msg.3#,nng_aio_set_msg(3)>>,
-<<nng_aio_set_timeout.3#,nng_aio_set_timeout(3)>>,
-<<nng_aio_stop.3#,nng_aio_stop(3)>>,
-<<nng_aio_wait.3#,nng_aio_wait(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_abort.3.adoc[nng_aio_abort(3)],
+xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
+xref:nng_aio_count.3.adoc[nng_aio_count(3)],
+xref:nng_aio_free.3.adoc[nng_aio_free(3)],
+xref:nng_aio_get_input.3.adoc[nng_aio_get_input(3)],
+xref:nng_aio_get_msg.3.adoc[nng_aio_get_msg(3)],
+xref:nng_aio_get_output.3.adoc[nng_aio_get_output(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio_set_input.3.adoc[nng_aio_set_input(3)],
+xref:nng_aio_set_iov.3.adoc[nng_aio_set_iov(3)],
+xref:nng_aio_set_msg.3.adoc[nng_aio_set_msg(3)],
+xref:nng_aio_set_timeout.3.adoc[nng_aio_set_timeout(3)],
+xref:nng_aio_stop.3.adoc[nng_aio_stop(3)],
+xref:nng_aio_wait.3.adoc[nng_aio_wait(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

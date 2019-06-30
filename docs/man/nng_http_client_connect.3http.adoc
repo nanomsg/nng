@@ -31,12 +31,12 @@ _client_ was configured with.
 
 The result of the operation will be stored in the _aio_ when the operation
 is complete, and will be obtainable via
-`<<nng_aio_result.3#,nng_aio_result()>>`.
+xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 
 On success, a pointer to the underlying HTTP client (type `nng_http_conn *`)
 will be stored in the first output result of the _aio_, and can be
 obtained by
-`<<nng_aio_get_output.3#,nng_aio_get_output()>>` with an _index_ of zero (0).
+xref:nng_aio_get_output.3.adoc[`nng_aio_get_output()`] with an _index_ of zero (0).
 
 == RETURN VALUES
 
@@ -87,12 +87,12 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_get_output.3#,nng_aio_get_output(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio_wait.3#,nng_aio_wait(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_http_client_alloc.3http#,nng_http_client_alloc(3http)>>,
-<<nng_http_conn_close.3http#,nng_http_conn_close(3http)>>,
-<<nng_http_conn_read.3http#,nng_http_conn_read(3http)>>,
-<<nng_http_conn_write.3http#,nng_http_conn_write(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_get_output.3.adoc[nng_aio_get_output(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio_wait.3.adoc[nng_aio_wait(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_http_client_alloc.3http.adoc[nng_http_client_alloc(3http)],
+xref:nng_http_conn_close.3http.adoc[nng_http_conn_close(3http)],
+xref:nng_http_conn_read.3http.adoc[nng_http_conn_read(3http)],
+xref:nng_http_conn_write.3http.adoc[nng_http_conn_write(3http)],
+xref:nng.7.adoc[nng(7)]

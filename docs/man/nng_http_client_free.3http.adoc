@@ -29,7 +29,7 @@ The `nng_http_client_free()` frees the HTTP client and any associated
 resources referenced by _client_.
 
 NOTE: Any connections created by
-`<<nng_http_client_connect.3http#,nng_http_client_connect()>>` are unaffected,
+xref:nng_http_client_connect.3http.adoc[`nng_http_client_connect()`] are unaffected,
 and so the caller must close those explicitly if desired.
 
 == RETURN VALUES
@@ -43,6 +43,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_client_alloc.3http#,nng_http_client_alloc(3)>>,
-<<nng_http_client_connect.3http#,nng_http_client_connect(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_client_alloc.3http.adoc[nng_http_client_alloc(3)],
+xref:nng_http_client_connect.3http.adoc[nng_http_client_connect(3)],
+xref:nng.7.adoc[nng(7)]

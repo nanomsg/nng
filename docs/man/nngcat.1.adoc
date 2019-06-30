@@ -71,11 +71,11 @@ each option must be presented as a separate argument to the program.
   _nanocat_ application.
   In this mode connections are made asynchronously,
   and the *--pair* option selects version 0 of
-  the <<nng_pair.7#,_pair_>> protocol instead of version 1.
+  the xref:nng_pair.7.adoc[_pair_] protocol instead of version 1.
 
 *--subscribe*=_TOPIC_::
   Subscribe to _TOPIC_.  This option can only be used with the
-  <<nng_sub.7#,_sub_>> protocol.
+  xref:nng_sub.7.adoc[_sub_] protocol.
   The _TOPIC_ is checked against the first bytes
   of messages received, and messages are discarded if they do not match.
   This may be specified multiple times to subscribe to multiple topics.
@@ -96,46 +96,46 @@ each option must be presented as a separate argument to the program.
 NOTE: At least one protocol must be selected.
 
 *--bus, --bus0*::
-  Select the <<nng_bus.7#,_bus_>> version 0 protocol.
+  Select the xref:nng_bus.7.adoc[_bus_] version 0 protocol.
   This protocol can send and receive messages to and from other _bus_ version 0
   peers.
 
 *--req, --req0*::
-  Select the <<nng_req.7#,_req_>> version 0 protocol.
-  This protocol sends messages to <<nng_rep.7#,_rep_>> version 0
+  Select the xref:nng_req.7.adoc[_req_] version 0 protocol.
+  This protocol sends messages to xref:nng_rep.7.adoc[_rep_] version 0
   peers and receives replies from them.
 
 *--rep, --rep0*::
-  Select the <<nng_rep.7#,_rep_>> version 0 protocol.
-  This protocol receives messages from <<nng_req.7#,_req_>> version 0 peers
+  Select the xref:nng_rep.7.adoc[_rep_] version 0 protocol.
+  This protocol receives messages from xref:nng_req.7.adoc[_req_] version 0 peers
   and can send replies to them.
 
 *--pub, --pub0*::
-  Select the <<nng_pub.7#,_pub_>> version 0 protocol.
-  This protocol sends messages to <<nng_sub.7#,_sub_>> version peers.
+  Select the xref:nng_pub.7.adoc[_pub_] version 0 protocol.
+  This protocol sends messages to xref:nng_sub.7.adoc[_sub_] version peers.
 
 *--sub, --sub0*::
-  Select the <<nng_sub.7#,_sub_>> version 0 protocol.
-  This protocol receives messages from <<nng_pub.7#,_pub_>> version
+  Select the xref:nng_sub.7.adoc[_sub_] version 0 protocol.
+  This protocol receives messages from xref:nng_pub.7.adoc[_pub_] version
   0 peers, and filters them based on subscriptions set with *--subscribe*.
 
 *--push, --push0*::
-  Select the <<nng_push.7#,_push_>> version 0 protocol.
-  This protocol sends messages to <<nng_pull.7#,_pull_>> version 0 peers.
+  Select the xref:nng_push.7.adoc[_push_] version 0 protocol.
+  This protocol sends messages to xref:nng_pull.7.adoc[_pull_] version 0 peers.
   A given message is normally only delivered to a single peer.
 
 *--pull, --pull0*::
-  Select the <<nng_pull.7#,_pull_>> version 0 protocol.
+  Select the xref:nng_pull.7.adoc[_pull_] version 0 protocol.
   This protocol receives
-  messages from <<nng_push.7#,_push_>> version 0 peers.
+  messages from xref:nng_push.7.adoc[_push_] version 0 peers.
 
 *--pair0*::
-  Select the <<nng_pair.7#,_pair_>> version 0 protocol.
+  Select the xref:nng_pair.7.adoc[_pair_] version 0 protocol.
   This protocol can send and receive messages with one connected _pair_
   version 0 peer.
 
 *--pair1*::
-  Select the <<nng_pair.7#,_pair_>> version 1 protocol.
+  Select the xref:nng_pair.7.adoc[_pair_] version 1 protocol.
   This protocol can send and receive messages with one connected _pair_
   version 1 peer.
   It is not supported in *--compat* mode.
@@ -147,13 +147,13 @@ NOTE: At least one protocol must be selected.
   which case it acts as an alias for *--pair0*.
 
 *--surveyor, --surveyor0*::
-  Select the <<nng_surveyor.7#,_surveyor_>> version 0 protocol.
-  This protocol sends a survey request to <<nng_respondent.7#,_respondent_>>
+  Select the xref:nng_surveyor.7.adoc[_surveyor_] version 0 protocol.
+  This protocol sends a survey request to xref:nng_respondent.7.adoc[_respondent_]
   version 0 peers, and then receives replies from them.
 
 *--respondent, --respondent0*::
-  Select the <<nng_respondent.7#,_respondent_>> version 0 protocol.
-  This protocol receives survey requests from <<nng_surveyor.7#,_surveyor_>>
+  Select the xref:nng_respondent.7.adoc[_respondent_] version 0 protocol.
+  This protocol receives survey requests from xref:nng_surveyor.7.adoc[_surveyor_]
   version 0 peers, and can send a reply to them.
 
 === Peer Selection Options
@@ -314,15 +314,15 @@ $ nngcat --sub --dial=${addr} --quoted &
 == SEE ALSO
 
 [.text-left]
-<<libnng.3#,libnng(3)>>,
-<<nng.7#,nng(7)>>,
-<<nng_bus.7#,nng_bus(7)>>,
-<<nng_pair.7#,nng_pair(7)>>,
-<<nng_pub.7#,nng_pub(7)>>,
-<<nng_pull.7#,nng_pull(7)>>,
-<<nng_push.7#,nng_push(7)>>,
-<<nng_sub.7#,nng_sub(7)>>,
-<<nng_rep.7#,nng_rep(7)>>,
-<<nng_req.7#,nng_req(7)>>,
-<<nng_respondent.7#,nng_respondent(7)>>,
-<<nng_surveyor.7#,nng_surveyor(7)>>
+xref:libnng.3.adoc[libnng(3)],
+xref:nng.7.adoc[nng(7)],
+xref:nng_bus.7.adoc[nng_bus(7)],
+xref:nng_pair.7.adoc[nng_pair(7)],
+xref:nng_pub.7.adoc[nng_pub(7)],
+xref:nng_pull.7.adoc[nng_pull(7)],
+xref:nng_push.7.adoc[nng_push(7)],
+xref:nng_sub.7.adoc[nng_sub(7)],
+xref:nng_rep.7.adoc[nng_rep(7)],
+xref:nng_req.7.adoc[nng_req(7)],
+xref:nng_respondent.7.adoc[nng_respondent(7)],
+xref:nng_surveyor.7.adoc[nng_surveyor(7)]

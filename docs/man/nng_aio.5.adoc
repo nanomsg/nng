@@ -37,34 +37,34 @@ This callback will be executed exactly once.
 
 The asynchronous I/O framework in _nng_ also supports cancellation of
 operations that are already in progress
-(see `<<nng_aio_cancel.3#,nng_aio_cancel()>>`), as well setting a maximum
+(see xref:nng_aio_cancel.3.adoc[`nng_aio_cancel()`]), as well setting a maximum
 timeout for them to complete within
-(see `<<nng_aio_set_timeout.3#,nng_aio_set_timeout()>>`).
+(see xref:nng_aio_set_timeout.3.adoc[`nng_aio_set_timeout()`]).
 
 It is also possible to initiate an asynchronous operation, and wait for it to
-complete using `<<nng_aio_wait.3#,nng_aio_wait()>>`.
+complete using xref:nng_aio_wait.3.adoc[`nng_aio_wait()`].
 
-These structures are created using the `<<nng_aio_alloc.3#,nng_aio_alloc()>>`,
-and destroyed using `<<nng_aio_free.3#,nng_aio_free()>>`.
+These structures are created using the xref:nng_aio_alloc.3.adoc[`nng_aio_alloc()`],
+and destroyed using xref:nng_aio_free.3.adoc[`nng_aio_free()`].
 
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_abort.3#,nng_aio_abort(3)>>,
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
-<<nng_aio_count.3#,nng_aio_count(3)>>,
-<<nng_aio_free.3#,nng_aio_free(3)>>,
-<<nng_aio_get_input.3#,nng_aio_get_input(3)>>,
-<<nng_aio_get_msg.3#,nng_aio_get_msg(3)>>,
-<<nng_aio_get_output.3#,nng_aio_get_output(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio_set_input.3#,nng_aio_set_input(3)>>,
-<<nng_aio_set_iov.3#,nng_aio_set_iov(3)>>,
-<<nng_aio_set_msg.3#,nng_aio_set_msg(3)>>,
-<<nng_aio_set_timeout.3#,nng_aio_set_timeout(3)>>,
-<<nng_aio_stop.3#,nng_aio_stop(3)>>,
-<<nng_aio_wait.3#,nng_aio_wait(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_abort.3.adoc[nng_aio_abort(3)],
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
+xref:nng_aio_count.3.adoc[nng_aio_count(3)],
+xref:nng_aio_free.3.adoc[nng_aio_free(3)],
+xref:nng_aio_get_input.3.adoc[nng_aio_get_input(3)],
+xref:nng_aio_get_msg.3.adoc[nng_aio_get_msg(3)],
+xref:nng_aio_get_output.3.adoc[nng_aio_get_output(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio_set_input.3.adoc[nng_aio_set_input(3)],
+xref:nng_aio_set_iov.3.adoc[nng_aio_set_iov(3)],
+xref:nng_aio_set_msg.3.adoc[nng_aio_set_msg(3)],
+xref:nng_aio_set_timeout.3.adoc[nng_aio_set_timeout(3)],
+xref:nng_aio_stop.3.adoc[nng_aio_stop(3)],
+xref:nng_aio_wait.3.adoc[nng_aio_wait(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

@@ -30,10 +30,10 @@ The `nng_http_client_set_tls()` sets the TLS configuration of _client_ to _cfg_.
 This change overwrites any previous TLS configuration.
 
 IMPORTANT: This also invalidates any previously obtained values from
-`<<nng_http_client_get_tls.3http#,nng_http_client_get_tls()>>`.
+xref:nng_http_client_get_tls.3http.adoc[`nng_http_client_get_tls()`].
 
 NOTE: Any connections established with
-`<<nng_http_client_connect.3http#,nng_http_client_connect()>>`
+xref:nng_http_client_connect.3http.adoc[`nng_http_client_connect()`]
 will continue to use any TLS configuration that they were started with.
 
 == RETURN VALUES
@@ -49,9 +49,9 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_client_alloc.3http#,nng_http_client_alloc(3http)>>,
-<<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
-<<nng_http_client_get_tls.3http#,nng_http_client_get_tls(3http)>>,
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_client_alloc.3http.adoc[nng_http_client_alloc(3http)],
+xref:nng_http_client_connect.3http.adoc[nng_http_client_connect(3http)],
+xref:nng_http_client_get_tls.3http.adoc[nng_http_client_get_tls(3http)],
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

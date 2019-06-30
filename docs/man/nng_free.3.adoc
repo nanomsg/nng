@@ -25,8 +25,8 @@ void nng_free(void *ptr, size_t size);
 == DESCRIPTION
 
 The `nng_free()` function deallocates a memory region of size _size_,
-that was previously allocated by `<<nng_alloc.3#,nng_alloc()>>` or
-`<<nng_recv.3#,nng_recv()>>` with the `NNG_FLAG_ALLOC` flag.
+that was previously allocated by xref:nng_alloc.3.adoc[`nng_alloc()`] or
+xref:nng_recv.3.adoc[`nng_recv()`] with the `NNG_FLAG_ALLOC` flag.
 
 IMPORTANT: It is very important that _size_ match the allocation size
 used to allocate the memory.
@@ -48,6 +48,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_alloc.3#,nng_alloc(3)>>,
-<<nng_recv.3#,nng_recv(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_alloc.3.adoc[nng_alloc(3)],
+xref:nng_recv.3.adoc[nng_recv(3)],
+xref:nng.7.adoc[nng(7)]

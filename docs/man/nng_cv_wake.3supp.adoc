@@ -26,8 +26,8 @@ void nng_cv_wake(nng_cv *cv);
 == DESCRIPTION
 
 The `nng_cv_wake()` wakes any threads waiting for the condition variable _cv_
-to be signaled in the `<<nng_cv_wait.3supp#,nng_cv_wait()>>` or
-`<<nng_cv_until.3supp#,nng_cv_until()>>` functions.
+to be signaled in the xref:nng_cv_wait.3supp.adoc[`nng_cv_wait()`] or
+xref:nng_cv_until.3supp.adoc[`nng_cv_until()`] functions.
 
 The caller must have have ownership of the mutex that was used when
 _cv_ was allocated.
@@ -38,7 +38,7 @@ will check, while holding the mutex.
 TIP: This function wakes all threads, which is generally safer but can
 lead to a problem known as the "`thundering herd`" when there are many
 waiters, as they are all woken simultaneously.
-See `<<nng_cv_wake1.3supp#,nng_cv_wake1()>>` for a solution to this problem.
+See xref:nng_cv_wake1.3supp.adoc[`nng_cv_wake1()`] for a solution to this problem.
 
 == RETURN VALUES
 
@@ -51,11 +51,11 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_cv_alloc.3supp#,nng_cv_alloc(3supp)>>,
-<<nng_cv_until.3supp#,nng_cv_until(3supp)>>,
-<<nng_cv_wait.3supp#,nng_cv_wait(3supp)>>,
-<<nng_cv_wake1.3supp#,nng_cv_wake1(3supp)>>,
-<<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
-<<nng_mtx_lock.3supp#,nng_mtx_lock(3supp)>>,
-<<nng_mtx_unlock.3supp#,nng_mtx_unlock(3supp)>>,
-<<nng.7#,nng(7)>>
+xref:nng_cv_alloc.3supp.adoc[nng_cv_alloc(3supp)],
+xref:nng_cv_until.3supp.adoc[nng_cv_until(3supp)],
+xref:nng_cv_wait.3supp.adoc[nng_cv_wait(3supp)],
+xref:nng_cv_wake1.3supp.adoc[nng_cv_wake1(3supp)],
+xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc(3supp)],
+xref:nng_mtx_lock.3supp.adoc[nng_mtx_lock(3supp)],
+xref:nng_mtx_unlock.3supp.adoc[nng_mtx_unlock(3supp)],
+xref:nng.7.adoc[nng(7)]

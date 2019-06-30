@@ -34,7 +34,7 @@ Threads waiting for operations on the context when this
 call is executed may also return with an `NNG_ECLOSED` result.
 
 NOTE: Closing the socket associated with _ctx_
-(using `<<nng_close.3#,nng_close()>>`) also closes this context.
+(using xref:nng_close.3.adoc[`nng_close()`]) also closes this context.
 
 == RETURN VALUES
 
@@ -48,7 +48,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_ctx_open.3#,nng_ctx_open(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_ctx.5#,nng_ctx(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_ctx_open.3.adoc[nng_ctx_open(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_ctx.5.adoc[nng_ctx(5)],
+xref:nng.7.adoc[nng(7)]

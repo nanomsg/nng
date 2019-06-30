@@ -26,10 +26,10 @@ nng_msg *nng_aio_get_msg(nng_aio *aio);
 
 The `nng_aio_get_msg()` function gets any message stored in _aio_ as
 either a result of a successful receive
-(see `<<nng_recv_aio.3#,nng_recv_aio()>>`)
-or that was previously stored with `<<nng_aio_set_msg.3#,nng_aio_set_msg()>>`.
+(see xref:nng_recv_aio.3.adoc[`nng_recv_aio()`])
+or that was previously stored with xref:nng_aio_set_msg.3.adoc[`nng_aio_set_msg()`].
 
-IMPORTANT: The `<<nng_aio.5#,nng_aio>>` must not have an operation in progress.
+IMPORTANT: The xref:nng_aio.5.adoc[`nng_aio`] must not have an operation in progress.
 
 == RETURN VALUES
 
@@ -42,8 +42,8 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_set_msg.3#,nng_aio_set_msg(3)>>,
-<<nng_recv_aio.3#,nng_recv_aio(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng_msg.5#,nng_msg(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_set_msg.3.adoc[nng_aio_set_msg(3)],
+xref:nng_recv_aio.3.adoc[nng_recv_aio(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng.7.adoc[nng(7)]

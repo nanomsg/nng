@@ -24,15 +24,15 @@ void nng_ctx_send(nng_ctx ctx, nng_aio *aio);
 
 == DESCRIPTION
 
-The `nng_ctx_send()` sends a <<nng_msg.5#,message>> using the
-<<nng_ctx.5#,context>> _ctx_ asynchronously.
+The `nng_ctx_send()` sends a xref:nng_msg.5.adoc[message] using the
+xref:nng_ctx.5.adoc[context] _ctx_ asynchronously.
 
 The message to send must have previously been set on the _aio_
-using the `<<nng_aio_set_msg.3#,nng_aio_set_msg()>>` function.
+using the xref:nng_aio_set_msg.3.adoc[`nng_aio_set_msg()`] function.
 The function assumes "`ownership`" of the message.
 
 If the message was successfully queued for delivery to the socket,
-then the _aio_ will be completed, and `<<nng_aio_result.3#,nng_aio_result()>>`
+then the _aio_ will be completed, and xref:nng_aio_result.3.adoc[`nng_aio_result()`]
 will return zero.
 In this case the socket will dispose of the message when it is finished with it.
 
@@ -45,12 +45,12 @@ socket, or in flight over physical media.
 
 If the operation fails for any reason (including cancellation or timeout),
 then the _aio_ callback will be executed and
-`<<nng_aio_result.3#,nng_aio_result()>>` will return a non-zero error status.
+xref:nng_aio_result.3.adoc[`nng_aio_result()`] will return a non-zero error status.
 In this case, the callback has a responsibility to retrieve the message from
-the _aio_ with `<<nng_aio_get_msg.3#,nng_aio_get_msg()>>` and dispose of
+the _aio_ with xref:nng_aio_get_msg.3.adoc[`nng_aio_get_msg()`] and dispose of
 it appropriately.
 (This may include retrying the send operation on the same or a different
-socket, or deallocating the message with `<<nng_msg_free.3#,nng_msg_free()>>`.)
+socket, or deallocating the message with xref:nng_msg_free.3.adoc[`nng_msg_free()`].)
 
 NOTE: The semantics of what sending a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
@@ -58,7 +58,7 @@ protocol, so examination of the protocol documentation is encouraged.
 TIP: Context send operations are asynchronous.
 If a synchronous operation is needed, one can be constructed by using a
 `NULL` callback on the _aio_ and then waiting for the operation using
-`<<nng_aio_wait.3#,nng_aio_wait()>>`.
+xref:nng_aio_wait.3.adoc[`nng_aio_wait()`].
 
 == RETURN VALUES
 
@@ -78,11 +78,11 @@ None.  (The operation completes asynchronously.)
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_get_msg.3#,nng_aio_get_msg(3)>>,
-<<nng_aio_set_msg.3#,nng_aio_set_msg(3)>>,
-<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng_ctx.5#,nng_ctx(5)>>,
-<<nng_msg.5#,nng_msg(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_get_msg.3.adoc[nng_aio_get_msg(3)],
+xref:nng_aio_set_msg.3.adoc[nng_aio_set_msg(3)],
+xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng_ctx.5.adoc[nng_ctx(5)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng.7.adoc[nng(7)]

@@ -29,9 +29,9 @@ at least _size_ bytes.
 The memory will be 64-bit aligned.
 
 The returned memory can be used to hold message buffers, in which
-case it can be directly passed to `<<nng_send.3#,nng_send()>>` using
+case it can be directly passed to xref:nng_send.3.adoc[`nng_send()`] using
 the flag `NNG_FLAG_ALLOC`.  Alternatively, it can be freed when no
-longer needed using `<<nng_free.3#,nng_free()>>`.
+longer needed using xref:nng_free.3.adoc[`nng_free()`].
 
 IMPORTANT: Do not use the system `free()` function to release this memory.
 On some platforms this may work, but it is not guaranteed and may lead
@@ -50,7 +50,7 @@ treated the same as `NNG_ENOMEM`.
 == SEE ALSO
 
 [.text-left]
-<<nng_free.3#,nng_free(3)>>,
-<<nng_send.3#,nng_send(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_free.3.adoc[nng_free(3)],
+xref:nng_send.3.adoc[nng_send(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

@@ -41,7 +41,7 @@ completing its callback function.
 
 TIP: When multiple asynchronous I/O handles are in use and need to be
 shut down, it is safest to stop all of them, before deallocating any of
-this with `<<nng_aio_free.3#,nng_aio_free()>>`, particularly if the callbacks
+this with xref:nng_aio_free.3.adoc[`nng_aio_free()`], particularly if the callbacks
 might attempt to reschedule additional operations.
 
 == RETURN VALUES
@@ -55,9 +55,9 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
-<<nng_aio_free.3#,nng_aio_free(3)>>,
-<<nng_aio_wait.3#,nng_aio_wait(3)>>,
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
+xref:nng_aio_free.3.adoc[nng_aio_free(3)],
+xref:nng_aio_wait.3.adoc[nng_aio_wait(3)],
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

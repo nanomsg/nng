@@ -34,14 +34,14 @@ sending the request _req_
 _res_, and finally closes the connection that it created.
 The entire response is read, including any associated body, which can
 subsequently be obtained using
-`<<nng_http_res_get_data.3http#,nng_http_res_get_data()>>`.
+xref:nng_http_res_get_data.3http.adoc[`nng_http_res_get_data()`].
 
 This function is intended to make creation of client applications easier,
 by performing multiple asynchronous operations required to complete an
 entire HTTP transaction.
 
 A similar function,
-`<<nng_http_conn_transact.3http#,nng_http_conn_transact()>>`,
+xref:nng_http_conn_transact.3http.adoc[`nng_http_conn_transact()`],
 exists.
 That function behaves similarily, but uses an existing connection, which
 can be reused.
@@ -59,7 +59,7 @@ trust-worthy servers.
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
-may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
+may be obtained via xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 That result will either be zero or an error code.
 
 == RETURN VALUES
@@ -80,10 +80,10 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
-<<nng_http_conn_transact.3http#,nng_http_conn_transact(3http)>>,
-<<nng_http_res_get_data.3http#,nng_http_res_get_data(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_http_client_connect.3http.adoc[nng_http_client_connect(3http)],
+xref:nng_http_conn_transact.3http.adoc[nng_http_conn_transact(3http)],
+xref:nng_http_res_get_data.3http.adoc[nng_http_res_get_data(3http)],
+xref:nng.7.adoc[nng(7)]

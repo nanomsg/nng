@@ -26,8 +26,8 @@ void nng_cv_wait(nng_cv *cv);
 == DESCRIPTION
 
 The `nng_cv_wait()` waits for the condition variable _cv_ to be signaled
-by another thread calling either `<<nng_cv_wake.3supp#,nng_cv_wake()>>` or
-`<<nng_cv_wake1.3supp#,nng_cv_wake1()>>`.
+by another thread calling either xref:nng_cv_wake.3supp.adoc[`nng_cv_wake()`] or
+xref:nng_cv_wake1.3supp.adoc[`nng_cv_wake1()`].
 
 The caller must have have ownership of the mutex that was used when
 _cv_ was allocated.
@@ -76,11 +76,11 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_cv_alloc.3supp#,nng_cv_alloc(3supp)>>,
-<<nng_cv_until.3supp#,nng_cv_until(3supp)>>,
-<<nng_cv_wake.3supp#,nng_cv_wake(3supp)>>,
-<<nng_cv_wake1.3supp#,nng_cv_wake1(3supp)>>,
-<<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
-<<nng_mtx_lock.3supp#,nng_mtx_lock(3supp)>>,
-<<nng_mtx_unlock.3supp#,nng_mtx_unlock(3supp)>>,
-<<nng.7#,nng(7)>>
+xref:nng_cv_alloc.3supp.adoc[nng_cv_alloc(3supp)],
+xref:nng_cv_until.3supp.adoc[nng_cv_until(3supp)],
+xref:nng_cv_wake.3supp.adoc[nng_cv_wake(3supp)],
+xref:nng_cv_wake1.3supp.adoc[nng_cv_wake1(3supp)],
+xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc(3supp)],
+xref:nng_mtx_lock.3supp.adoc[nng_mtx_lock(3supp)],
+xref:nng_mtx_unlock.3supp.adoc[nng_mtx_unlock(3supp)],
+xref:nng.7.adoc[nng(7)]

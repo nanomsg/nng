@@ -69,7 +69,7 @@ The _ival_ is passed to the option.
 
 `nng_ctx_set_ms()`::
 This function is used to configure time durations (such as timeouts) using
-type `<<nng_duration.5#,nng_duration>>`.
+type xref:nng_duration.5.adoc[`nng_duration`].
 The duration _dur_ is an integer number of milliseconds.
 
 `nng_ctx_set_size()`::
@@ -104,10 +104,10 @@ These functions return 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_ctx_get.3#,nng_ctx_get(3)>>,
-<<nng_socket_set.3#,nng_socket_set(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_ctx.5#,nng_ctx(5)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_ctx_get.3.adoc[nng_ctx_get(3)],
+xref:nng_socket_set.3.adoc[nng_socket_set(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_ctx.5.adoc[nng_ctx(5)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng.7.adoc[nng(7)]

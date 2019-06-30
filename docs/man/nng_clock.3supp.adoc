@@ -38,7 +38,7 @@ IMPORTANT: The reference time will be the same for a given program,
 but different programs may have different references.
 
 TIP: This function is intended mostly to help with setting appropriate
-timeouts using <<nng_cv_until.3supp#,nng_cv_until(3supp)>>.
+timeouts using xref:nng_cv_until.3supp.adoc[`nng_cv_until()`].
 
 == RETURN VALUES
 
@@ -51,9 +51,9 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_sleep_aio.3#,nng_sleep_aio(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_cv_until.3supp#,nng_cv_until(3supp)>>,
-<<nng_msleep.3supp#,nng_msleep(3supp)>>,
-<<nng_duration.5#,nng_duration(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_sleep_aio.3.adoc[nng_sleep_aio(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_cv_until.3supp.adoc[nng_cv_until(3supp)],
+xref:nng_msleep.3supp.adoc[nng_msleep(3supp)],
+xref:nng_duration.5.adoc[nng_duration(5)],
+xref:nng.7.adoc[nng(7)]

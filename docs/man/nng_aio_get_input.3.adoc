@@ -26,7 +26,7 @@ void *nng_aio_get_input(nng_aio *aio, unsigned int index);
 
 The `nng_aio_get_input()` function returns the value of the input parameter
 previously set at _index_ on _aio_ with the
-`<<nng_aio_set_input.3#,nng_aio_set_input()>>` function.
+xref:nng_aio_set_input.3.adoc[`nng_aio_set_input()`] function.
 
 The valid values of _index_ range from zero (0) to three (3), as no operation
 currently defined can accept more than four parameters.
@@ -45,9 +45,9 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_get_output.3#,nng_aio_get_output(3)>>,
-<<nng_aio_set_input.3#,nng_aio_set_input(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_get_output.3.adoc[nng_aio_get_output(3)],
+xref:nng_aio_set_input.3.adoc[nng_aio_set_input(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

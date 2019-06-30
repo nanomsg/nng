@@ -27,7 +27,7 @@ void nng_aio_finish(nng_aio *aio, int err);
 The `nng_aio_finish()` function marks operation associated with _aio_ as
 complete, with the status _err_.
 This will be the result returned by
-`<<nng_aio_result.3#,nng_aio_result()>>`.
+xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 
 This function causes the callback associated with the _aio_ to called.
 
@@ -51,10 +51,10 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_begin.3#,nng_aio_begin(3)>>,
-<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
-<<nng_aio_defer.3#,nng_aio_defer(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_begin.3.adoc[nng_aio_begin(3)],
+xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
+xref:nng_aio_defer.3.adoc[nng_aio_defer(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

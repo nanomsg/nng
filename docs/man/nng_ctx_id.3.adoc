@@ -29,10 +29,10 @@ if it is valid.
 Otherwise it returns `-1`.
 
 NOTE: A context is considered valid if it was ever opened with
-`<<nng_ctx_open.3#,nng_ctx_open()>>` function.
+xref:nng_ctx_open.3.adoc[`nng_ctx_open()`] function.
 Contexts that are allocated on the stack or statically should be
 initialized with the macro
-`<<nng_ctx.5#NNG_CTX_INITIALIZER,NNG_CTX_INITIALIZER>>` to ensure that
+xref:nng_ctx.5.adoc#NNG_CTX_INITIALIZER[`NNG_CTX_INITIALIZER`] to ensure that
 they cannot be confused with a valid context before they are opened.
 
 == RETURN VALUES
@@ -47,5 +47,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_ctx.5#,nng_ctx(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_ctx.5.adoc[nng_ctx(5)],
+xref:nng.7.adoc[nng(7)]

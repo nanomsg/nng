@@ -29,11 +29,11 @@ if it is valid.
 Otherwise it returns `-1`.
 
 NOTE: A dialer is considered valid if it was ever created with the
-`<<nng_dialer_create.3#,nng_dialer_create()>>` or
-`<<nng_dial.3#,nng_dial()>>` functions.
+xref:nng_dialer_create.3.adoc[`nng_dialer_create()`] or
+xref:nng_dial.3.adoc[`nng_dial()`] functions.
 Dialers that are allocated on the stack or statically should be
 initialized with the macro
-`<<nng_ctx.5#NNG_DIALER_INITIALIZER,NNG_DIALER_INITIALIZER>>` to ensure that
+xref:nng_ctx.5.adoc#NNG_DIALER_INITIALIZER[`NNG_DIALER_INITIALIZER`] to ensure that
 they cannot be confused with a valid dialer before they are created properly.
 
 == RETURN VALUES
@@ -48,5 +48,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_dialer.5#,nng_dialer(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_dialer.5.adoc[nng_dialer(5)],
+xref:nng.7.adoc[nng(7)]

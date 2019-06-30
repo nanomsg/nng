@@ -25,9 +25,9 @@ void nng_aio_set_msg(nng_aio *aio, nng_msg *msg);
 == DESCRIPTION
 
 The `nng_aio_set_msg()` function sets the message that will be used
-for an asynchronous send operation (see `<<nng_send_aio.3#,nng_send_aio()>>`).
+for an asynchronous send operation (see xref:nng_send_aio.3.adoc[`nng_send_aio()`]).
 
-IMPORTANT: The `<<nng_aio.5#,nng_aio>>` must not have an operation in progress.
+IMPORTANT: The xref:nng_aio.5.adoc[`nng_aio`] must not have an operation in progress.
 
 == RETURN VALUES
 
@@ -40,8 +40,8 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_get_msg.3#,nng_aio_get_msg(3)>>,
-<<nng_send_aio.3#,nng_send_aio(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng_msg.5#,nng_msg(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_get_msg.3.adoc[nng_aio_get_msg(3)],
+xref:nng_send_aio.3.adoc[nng_send_aio(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng.7.adoc[nng(7)]

@@ -28,7 +28,7 @@ The `nng_aio_abort()` function aborts an operation previously started
 with the handle _aio_.
 If the operation is aborted, then the callback
 for the handle will be called, and the function
-`<<nng_aio_result.3#,nng_aio_result()>>` will return the error _err_.
+xref:nng_aio_result.3.adoc[`nng_aio_result()`] will return the error _err_.
 
 This function does not wait for the operation to be fully aborted, but
 returns immediately.
@@ -48,8 +48,8 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_cancel.3#,nng_aio_cancel(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_cancel.3.adoc[nng_aio_cancel(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

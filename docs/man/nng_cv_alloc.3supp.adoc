@@ -32,11 +32,11 @@ the mutex _mtx_, and returns it in _cvp_.
 
 Every condition variable is associated with a mutex, which must be
 owned when a thread waits for the condition using
-`<<nng_cv_wait.3supp#,nng_cv_wait()>>` or
-`<<nng_cv_until.3supp#,nng_cv_until()>>`.
+xref:nng_cv_wait.3supp.adoc[`nng_cv_wait()`] or
+xref:nng_cv_until.3supp.adoc[`nng_cv_until()`].
 The mutex must also be owned when signaling the condition using the
-`<<nng_cv_wake.3supp#,nng_cv_wake()>>` or
-`<<nng_cv_wake1.3supp#,nng_cv_wake1()>>` functions.
+xref:nng_cv_wake.3supp.adoc[`nng_cv_wake()`] or
+xref:nng_cv_wake1.3supp.adoc[`nng_cv_wake1()`] functions.
 
 == RETURN VALUES
 
@@ -50,11 +50,11 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_cv_free.3supp#,nng_cv_free(3supp)>>,
-<<nng_cv_until.3supp#,nng_cv_until(3supp)>>,
-<<nng_cv_wait.3supp#,nng_cv_wait(3supp)>>,
-<<nng_cv_wake.3supp#,nng_cv_wake(3supp)>>,
-<<nng_cv_wake1.3supp#,nng_cv_wake1(3supp)>>,
-<<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_cv_free.3supp.adoc[nng_cv_free(3supp)],
+xref:nng_cv_until.3supp.adoc[nng_cv_until(3supp)],
+xref:nng_cv_wait.3supp.adoc[nng_cv_wait(3supp)],
+xref:nng_cv_wake.3supp.adoc[nng_cv_wake(3supp)],
+xref:nng_cv_wake1.3supp.adoc[nng_cv_wake1(3supp)],
+xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc(3supp)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

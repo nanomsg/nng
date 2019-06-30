@@ -28,7 +28,7 @@ The `nng_aio_free()` function frees an allocated asynchronous I/O handle.
 If any operation is in progress, the operation is canceled, and the
 caller is blocked until the operation is completely canceled, to ensure
 that it is safe to deallocate the handle and any associated resources.
-(This is done by implicitly calling `<<nng_aio_stop.3#,nng_aio_stop()>>`.)
+(This is done by implicitly calling xref:nng_aio_stop.3.adoc[`nng_aio_stop()`].)
 
 == RETURN VALUES
 
@@ -41,7 +41,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_stop.3#,nng_aio_stop(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_stop.3.adoc[nng_aio_stop(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

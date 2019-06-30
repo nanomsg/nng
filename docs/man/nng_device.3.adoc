@@ -25,16 +25,16 @@ int nng_device(nng_socket s1, nng_socket s2);
 == DESCRIPTION
 
 The `nng_device()` function forwards messages received from one
-<<nng_socket.5#,socket>> _s1_ to another socket _s2_, and vice versa.
+xref:nng_socket.5.adoc[socket] _s1_ to another socket _s2_, and vice versa.
 
 This function is used to create forwarders, which can be used to create
 complex network topologies to provide for improved ((horizontal scalability)),
 reliability, and isolation.
 
-Only <<nng_options.5#NNG_OPT_RAW,raw>> mode sockets may be used with this
+Only xref:nng_options.5.adoc#NNG_OPT_RAW[raw] mode sockets may be used with this
 function.
 These can be created using `_raw` forms of the various socket constructors,
-such as `<<nng_req_open.3#,nng_req0_open_raw()>>`.
+such as xref:nng_req_open.3.adoc[`nng_req0_open_raw()`].
 
 The `nng_device()` function does not return until one of the sockets
 is closed.
@@ -45,8 +45,8 @@ One of the sockets passed may be an unopened socket initialized with
 the `NNG_SOCKET_INITIALIZER` special value.
 If this is the case, then the other socket must be valid, and must use
 a protocol that is bidirectional and can peer with itself (such as
-<<nng_pair.7#,_pair_>> or
-<<nng_bus.7#,_bus_>>.)
+xref:nng_pair.7.adoc[_pair_] or
+xref:nng_bus.7.adoc[_bus_].)
 In this case the device acts as a ((reflector)) or loop-back device,
 where messages received from the valid socket are merely returned
 back to the sender.
@@ -58,9 +58,9 @@ In this case sockets _s1_ and _s2_ must be "`compatible`" with each other,
 which is to say that they should represent the opposite halves of a two
 protocol pattern, or both be the same protocol for a single protocol
 pattern.
-For example, if _s1_ is a <<nng_pub.7#,_pub_>> socket, then _s2_ must
-be a <<nng_sub.7#,_sub_>> socket.
-Or, if _s1_ is a <<nng_bus.7#,_bus_>> socket, then _s2_ must also
+For example, if _s1_ is a xref:nng_pub.7.adoc[_pub_] socket, then _s2_ must
+be a xref:nng_sub.7.adoc[_sub_] socket.
+Or, if _s1_ is a xref:nng_bus.7.adoc[_bus_] socket, then _s2_ must also
 be a _bus_ socket.
 
 === Operation
@@ -81,7 +81,7 @@ In these cases, the default limit (usually 8), ensures that messages will
 self-terminate when they have passed through too many forwarders,
 protecting the network from unlimited message amplification that can arise
 through misconfiguration.
-This is controlled via the `<<nng_options.5#NNG_OPT_MAXTTL,NNG_OPT_MAXTTL>>`
+This is controlled via the xref:nng_options.5.adoc#NNG_OPT_MAXTTL[`NNG_OPT_MAXTTL`]
 option.
 
 IMPORTANT: Not all protocols have support for guarding against forwarding loops,
@@ -110,6 +110,6 @@ one occurs, or if one of the sockets is closed.
 == SEE ALSO
 
 [.text-left]
-<<nng_options.5#,nng_options(5)>>,
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng.7.adoc[nng(7)]

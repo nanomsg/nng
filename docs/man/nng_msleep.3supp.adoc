@@ -42,8 +42,8 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_sleep_aio.3#,nng_sleep_aio(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_clock.3supp#,nng_clock(3supp)>>,
-<<nng_duration.5#,nng_duration(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_sleep_aio.3.adoc[nng_sleep_aio(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_clock.3supp.adoc[nng_clock(3supp)],
+xref:nng_duration.5.adoc[nng_duration(5)],
+xref:nng.7.adoc[nng(7)]

@@ -49,7 +49,7 @@ the more likely that message loss is to occur.
 
 === Socket Operations
 
-The `<<nng_bus_open.3#,nng_bus0_open()>>` functions create a bus socket.
+The xref:nng_bus_open.3.adoc[`nng_bus0_open()`] functions create a bus socket.
 This socket may be used to send and receive messages.
 Sending messages will attempt to deliver to each directly connected peer.
 
@@ -64,12 +64,12 @@ The _bus_ protocol has no protocol-specific options.
 
 === Protocol Headers
 
-When using a "`<<nng.7#raw_mode,raw>>`" _bus_ socket, received messages will
-contain the incoming <<nng_pipe.5#,pipe>> ID as the sole element in the header.
+When using a xref:nng.7.adoc#raw_mode["`raw`"] _bus_ socket, received messages will
+contain the incoming xref:nng_pipe.5.adoc[pipe] ID as the sole element in the header.
 If a message containing such a header is sent using a raw _bus_ socket, then,
 the message will be delivered to all connected pipes _except_ the one
 identified in the header.
-This behavior is intended for use with <<nng_device.3#device,device>>
+This behavior is intended for use with xref:nng_device.3#device,device]
 configurations consisting of just a single socket.
 Such configurations are useful in the creation of rebroadcasters, and this
 capability prevents a message from being routed back to its source.
@@ -80,5 +80,5 @@ When using "`cooked`" _bus_ sockets, no message headers are present.
 == SEE ALSO
 
 [.text-left]
-<<nng_bus_open.3#,nng_bus_open(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_bus_open.3.adoc[nng_bus_open(3)],
+xref:nng.7.adoc[nng(7)]
