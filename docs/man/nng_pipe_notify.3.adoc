@@ -34,7 +34,7 @@ int nng_pipe_notify(nng_socket s, nng_pipe_ev ev, nng_pipe_cb cb, void *arg);
 == DESCRIPTION
 
 The `nng_pipe_notify()` function registers the callback function _cb_
-to be called whenever a <<nng_pipe.5#,pipe>> the pipe event specified by
+to be called whenever a xref:nng_pipe.5.adoc[pipe] the pipe event specified by
 _ev_ occurs on the socket _s_.
 The callback _cb_ will be passed _arg_ as its final argument.
 
@@ -46,7 +46,7 @@ The following pipe events are supported:
 
 `NNG_PIPE_EV_ADD_PRE`:: This event occurs after a connection and negotiation
 has completed, but before the pipe is added to the socket.
-If the pipe is closed (using `<<nng_pipe_close.3#,nng_pipe_close()>>`) at
+If the pipe is closed (using xref:nng_pipe_close.3.adoc[`nng_pipe_close()`]) at
 this point, the socket will never see the pipe, and no further events will
 occur for the given pipe.
 
@@ -61,7 +61,7 @@ The underlying transport may be closed at this point, and it is not
 possible communicate using this pipe.
 
 TIP: The callback _cb_ may close a pipe for any reason by simply closing
-it using `<<nng_pipe_close.3#,nng_pipe_close()>>`.
+it using xref:nng_pipe_close.3.adoc[`nng_pipe_close()`].
 This might be done before the pipe is added to the socket (during
 `NNG_PIPE_EV_ADD_PRE`), for example, if the remote peer is not authorized.
 
@@ -82,8 +82,8 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_pipe_close.3#,nng_pipe_close(3)>>,
-<<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,
-<<nng_pipe.5#,nng_pipe(5)>>,
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_pipe_close.3.adoc[nng_pipe_close(3)],
+xref:nng_pipe_getopt.3.adoc[nng_pipe_getopt(3)],
+xref:nng_pipe.5.adoc[nng_pipe(5)],
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng.7.adoc[nng(7)]

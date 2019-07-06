@@ -27,7 +27,7 @@ void *nng_http_handler_get_data(nng_http_handler *handler);
 
 The `nng_http_handler_get_data()` function returns the data previously
 stored on _handler_ using the function
-`<<nng_http_handler_set_data.3http#,nng_http_handler_set_data()>>`.
+xref:nng_http_handler_set_data.3http.adoc[`nng_http_handler_set_data()`].
 
 == RETURN VALUES
 
@@ -40,7 +40,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
-<<nng_http_handler_set_data.3http#,nng_http_server_set_data(3http)>>,
-<<nng_http_server_add_handler.3http#,nng_http_server_add_handler(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc(3http)],
+xref:nng_http_handler_set_data.3http.adoc[nng_http_server_set_data(3http)],
+xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler(3http)],
+xref:nng.7.adoc[nng(7)]

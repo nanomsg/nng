@@ -24,7 +24,7 @@ nng_push - push protocol
 
 (((protocol, _push_)))
 The ((_push_ protocol)) is one half of a ((pipeline pattern)).
-The other side is the <<nng_pull.7#,_pull_>> protocol.
+The other side is the xref:nng_pull.7.adoc[_pull_] protocol.
 
 In the pipeline pattern, pushers distribute messages to pullers.
 Each message sent by a pusher will be sent to one of its peer pullers,
@@ -34,7 +34,7 @@ This property makes this pattern useful in ((load-balancing)) scenarios.
 
 === Socket Operations
 
-The `<<nng_push_open.3#,nng_push0_open()>>` call creates a pusher socket.
+The xref:nng_push_open.3.adoc[`nng_push0_open()`] call creates a pusher socket.
 This socket may be used to send messages, but is unable to receive them.
 Attempts to receive messages will result in `NNG_ENOTSUP`.
 
@@ -47,7 +47,7 @@ NOTE: Although the pipeline protocol honors flow control, and attempts
 to avoid dropping messages, no guarantee of delivery is made.
 Furthermore, as there is no capability for message acknowledgment,
 applications that need reliable delivery are encouraged to consider the
-<<nng_req.7#,_req_>> protocol instead.
+xref:nng_req.7.adoc[_req_] protocol instead.
 
 === Protocol Versions
 
@@ -65,7 +65,7 @@ The _push_ protocol has no protocol-specific headers.
 == SEE ALSO
 
 [.text-left]
-<<nng_push_open.3#,nng_push(3)>>,
-<<nng_pull.7#,nng_pull(7)>>,
-<<nng_req.7#,nng_req(7)>>,
-<<nng.7#,nng(7)>>
+xref:nng_push_open.3.adoc[nng_push(3)],
+xref:nng_pull.7.adoc[nng_pull(7)],
+xref:nng_req.7.adoc[nng_req(7)],
+xref:nng.7.adoc[nng(7)]

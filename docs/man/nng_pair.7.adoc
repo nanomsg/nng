@@ -39,18 +39,18 @@ Using this mode requires some additional sophistication in the application.
 
 === Socket Operations
 
-The `<<nng_pair_open.3#,nng_pair_open()>>` functions create _pair_ socket.
+The xref:nng_pair_open.3.adoc[`nng_pair_open()`] functions create a _pair_ socket.
 
 Normally, this pattern will block when attempting to send a message if
 no peer is able to receive the message.
 
 NOTE: Even though this mode may appear to be "reliable", because back-pressure
 prevents discarding messages most of the time, there are topologies involving
-_devices_ (see `<<nng_device.3#,nng_device()>>`) or raw mode sockets
-(see `<<nng_options.5#NNG_OPT_RAW,NNG_OPT_RAW>>`) where
+_devices_ (see xref:nng_device.3.adoc[`nng_device()`]) or raw mode sockets
+(see xref:nng_options.5.adoc#NNG_OPT_RAW[`NNG_OPT_RAW`]) where
 messages may be discarded.
 Applications that require reliable delivery semantics should consider using
-<<nng_req.7#,_req_>> sockets, or
+xref:nng_req.7.adoc[_req_] sockets, or
 implement their own acknowledgment layer on top of _pair_ sockets.
 
 In order to avoid head-of-line blocking conditions, _polyamorous_ mode _pair_
@@ -68,7 +68,7 @@ including the legacy https://github.com/nanomsg/nanomsg[nanomsg] library or
 https://github.com/go-mangos/mangos[mangos].
 
 Version 1 of the protocol offers improved protection against loops when
-used with `<<nng_device.3#,nng_device()>>`.
+used with xref:nng_device.3.adoc[`nng_device()`].
 It also offers _polyamorous_ mode for forming multiple partnerships
 on a single socket.
 
@@ -84,11 +84,11 @@ In ((_polyamorous_ mode)), which is only available with version 1, a socket can
 support many one-to-one connections.
 In this mode, the application must
 choose the remote peer to receive an outgoing message by setting the
-`<<nng_pipe.5#,nng_pipe>>` to use for the outgoing message with
-the `<<nng_msg_set_pipe.3#,nng_msg_set_pipe()>>` function.
+xref:nng_pipe.5.adoc[`nng_pipe`] to use for the outgoing message with
+the xref:nng_msg_set_pipe.3.adoc[`nng_msg_set_pipe()`] function.
 
 Most often the value of the outgoing pipe will be obtained from an incoming
-message using the `<<nng_msg_get_pipe.3#,nng_msg_get_pipe()>>` function,
+message using the xref:nng_msg_get_pipe.3.adoc[`nng_msg_get_pipe()`] function,
 such as when replying to an incoming message.
 
 In order to prevent head-of-line blocking, if the peer on the given pipe
@@ -106,7 +106,7 @@ The following protocol-specific options are available.
    The value is read-write, and takes an integer Boolean value.  The default
    false value (0) indicates that legacy monogamous mode should be used.
 
-`<<nng_options.5#NNG_OPT_MAXTTL,NNG_OPT_MAXTTL>>`::
+xref:nng_options.5.adoc#NNG_OPT_MAXTTL[`NNG_OPT_MAXTTL`]::
 
    (`int`, version 1 only).  Maximum time-to-live.
 
@@ -117,7 +117,7 @@ Version 0 of the pair protocol has no protocol-specific headers.
 Version 1 of the pair protocol uses a single 32-bit unsigned value.  The
 low-order (big-endian) byte of this value contains a "hop" count, and is
 used in conjunction with the
-`<<nng_options.5#NNG_OPT_MAXTTL,NNG_OPT_MAXTTL>>` option to guard against
+xref:nng_options.5.adoc#NNG_OPT_MAXTTL[`NNG_OPT_MAXTTL`] option to guard against
 device forwarding loops.
 This value is initialized to 1, and incremented each time the message is
 received by a new node.
@@ -125,6 +125,6 @@ received by a new node.
 == SEE ALSO
 
 [.text-left]
-<<nng_pair_open.3#,nng_pair_open(3)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_pair_open.3.adoc[nng_pair_open(3)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng.7.adoc[nng(7)]

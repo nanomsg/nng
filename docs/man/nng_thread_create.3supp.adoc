@@ -42,7 +42,7 @@ programs that use simple sequential execution, using functions in the
 _NNG_ suite that would otherwise normally "`block`".
 
 When the thread is no longer needed, the
-`<<nng_thread_destroy.3supp#,nng_thread_destroy()>>`
+xref:nng_thread_destroy.3supp.adoc[`nng_thread_destroy()`]
 function should be used to reap it.
 (This function will block waiting for _func_ to return.)
 
@@ -59,13 +59,13 @@ to any system threading functions.
 
 TIP: The system may impose limits on the number of threads that can be
 created.
-Typically applications should not create more than a few dozen of these.
+Typically applications should not create more than a dozen of these.
 If greater concurrency or scalability is needed, consider instead using
-an asynchronous model using `<<nng_aio.5#,nng_aio>>` structures.
+an asynchronous model using xref:nng_aio.5.adoc[`nng_aio`] structures.
 
 TIP: Threads can be synchronized using
-<<nng_mtx_alloc.3supp#,mutexes>> and
-<<nng_cv_alloc.3supp#,condition variables>>.
+xref:nng_mtx_alloc.3supp.adoc[mutexes] and
+xref:nng_cv_alloc.3supp.adoc[condition variables].
 
 == RETURN VALUES
 
@@ -79,9 +79,9 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_cv_alloc.3supp#,nng_cv_alloc(3supp)>>,
-<<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
-<<nng_thread_destroy.3supp#,nng_thread_destroy(3supp)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_cv_alloc.3supp.adoc[nng_cv_alloc(3supp)],
+xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc(3supp)],
+xref:nng_thread_destroy.3supp.adoc[nng_thread_destroy(3supp)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

@@ -29,11 +29,11 @@ listener _l_, if it is valid.
 Otherwise it returns `-1`.
 
 NOTE: A listener is considered valid if it was ever created with the
-`<<nng_listener_create.3#,nng_listener_create()>>` or
-`<<nng_listen.3#,nng_listen()>>` functions.
+xref:nng_listener_create.3.adoc[`nng_listener_create()`] or
+xref:nng_listen.3.adoc[`nng_listen()`] functions.
 listeners that are allocated on the stack or statically should be
 initialized with the macro
-`<<nng_ctx.5#NNG_LISTENER_INITIALIZER,NNG_LISTENER_INITIALIZER>>` to ensure that
+xref:nng_ctx.5.adoc#NNG_LISTENER_INITIALIZER[`NNG_LISTENER_INITIALIZER`] to ensure that
 they cannot be confused with a valid listener before they are created properly.
 
 == RETURN VALUES
@@ -48,5 +48,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng.7.adoc[nng(7)]

@@ -25,20 +25,20 @@ void nng_strfree(char *str);
 == DESCRIPTION
 
 The `nng_strfree()` function deallocates the string _str_.
-This is equivalent to using `<<nng_free.3#,nng_free()>>` with
+This is equivalent to using xref:nng_free.3.adoc[`nng_free()`] with
 the length of _str_ plus one (for the `NUL` terminating byte) as
 the size.
 
 IMPORTANT: This should only be used with strings that were allocated
-by `<<nng_strdup.3#,nng_strdup()>>` or
-`<<nng_alloc.3#,nng_alloc()>>`.
+by xref:nng_strdup.3.adoc[`nng_strdup()`] or
+xref:nng_alloc.3.adoc[`nng_alloc()`].
 In all cases, the allocation size of the string must be the same
 as `strlen(__str__) + 1`.
 
 IMPORTANT: Consequently, if the a string created with
-`<<nng_strdup.3#,nng_strdup()>>` is modified to be shorter, then
+xref:nng_strdup.3.adoc[`nng_strdup()`] is modified to be shorter, then
 it is incorrect to call this function.
-(The `<<nng_free.3#,nng_free()>>` function can be used instead in that
+(The xref:nng_free.3.adoc[`nng_free()`] function can be used instead in that
 case, using the length of the original string plus one for the size.)
 
 == RETURN VALUES
@@ -52,7 +52,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_alloc.3#,nng_alloc(3)>>,
-<<nng_free.3#,nng_free(3)>>,
-<<nng_strdup.3#,nng_strdup(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_alloc.3.adoc[nng_alloc(3)],
+xref:nng_free.3.adoc[nng_free(3)],
+xref:nng_strdup.3.adoc[nng_strdup(3)],
+xref:nng.7.adoc[nng(7)]

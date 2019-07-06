@@ -41,6 +41,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
-<<nng_http_req_set_method.3http#,nng_http_req_set_method(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_req_alloc.3http.adoc[nng_http_req_alloc(3http)],
+xref:nng_http_req_set_method.3http.adoc[nng_http_req_set_method(3http)],
+xref:nng.7.adoc[nng(7)]

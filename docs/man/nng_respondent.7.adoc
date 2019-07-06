@@ -35,11 +35,11 @@ election in cluster configurations, as well as certain kinds of service
 discovery problems.
 
 The _respondent_ protocol is the respondent side, and the
-<<nng_surveyor.7#,_surveyor_>> protocol is the surveyor side.
+xref:nng_surveyor.7.adoc[_surveyor_] protocol is the surveyor side.
 
 === Socket Operations
 
-The `<<nng_respondent_open.3#,nng_respondent0_open()>>` functions create a
+The xref:nng_respondent_open.3.adoc[`nng_respondent0_open()`] functions create a
 respondent socket.
 This socket may be used to receive messages, and then to send replies.
 A reply can only be sent after receiving a survey, and generally the
@@ -47,13 +47,13 @@ reply will be sent to surveyor from whom the last survey was received.
 
 Respondents may discard a survey by simply not replying to it.
 
-Raw mode sockets (set with `<<nng_options.5#NNG_OPT_RAW,NNG_OPT_RAW>>`)
+Raw mode sockets (set with xref:nng_options.5.adoc#NNG_OPT_RAW[`NNG_OPT_RAW`])
 ignore all these restrictions.
 
 === Context Operations
 
-This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
-use cases using `<<nng_ctx_open.3#,nng_ctx_open()>>`.
+This protocol supports the creation of xref:nng_ctx.5.adoc[contexts] for concurrent
+use cases using xref:nng_ctx_open.3.adoc[`nng_ctx_open()`].
 
 Incoming surveys will be routed to and received by only one context.
 Additional surveys may be received by other contexts in parallel.
@@ -79,13 +79,13 @@ The _respondent_ protocol has no protocol-specific options.
 
 (((backtrace)))
 The _respondent_ protocol uses a _backtrace_ in the header.
-This is more fully documented in the <<nng_surveyor.7#,_surveyor_>> manual.
+This is more fully documented in the xref:nng_surveyor.7.adoc[_surveyor_] manual.
 
 // TODO: Insert reference to RFC.
 
 == SEE ALSO
 
 [.text-left]
-<<nng_respondent_open.3#,nng_respondent_open(3)>>,
-<<nng_surveyor.7#,nng_surveyor(7)>>,
-<<nng.7#,nng(7)>>
+xref:nng_respondent_open.3.adoc[nng_respondent_open(3)],
+xref:nng_surveyor.7.adoc[nng_surveyor(7)],
+xref:nng.7.adoc[nng(7)]

@@ -31,7 +31,7 @@ Otherwise it returns `-1`.
 NOTE: A pipe is considered valid if it was ever created by the socket.
 Pipes that are allocated on the stack or statically should be
 initialized with the macro
-`<<nng_pipe.5#NNG_PIPE_INITIALIZER,NNG_PIPE_INITIALIZER>>` to ensure that
+xref:nng_pipe.5.adoc#NNG_PIPE_INITIALIZER[`NNG_PIPE_INITIALIZER`] to ensure that
 they cannot be confused with a valid pipe.
 
 == RETURN VALUES
@@ -46,5 +46,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_pipe.5#,nng_pipe(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_pipe.5.adoc[nng_pipe(5)],
+xref:nng.7.adoc[nng(7)]

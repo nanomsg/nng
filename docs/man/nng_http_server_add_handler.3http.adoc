@@ -35,7 +35,7 @@ If a handler is added to a server, and the server is subsequently
 deallocated, the handler and any of its resources will also be deallocated.
 
 Handlers that are added to a server may be subsequently removed using the
-`<<nng_http_server_del_handler.3http#,nng_http_server_del_handler()>>` function.
+xref:nng_http_server_del_handler.3http.adoc[`nng_http_server_del_handler()`] function.
 
 == RETURN VALUES
 
@@ -52,8 +52,8 @@ This function returns 0 on success, and non-zero otherwise.
 
 
 [.text-left]
-<<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
-<<nng_http_server_del_handler.3http#,nng_http_server_del_handler(3http)>>,
-<<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc(3http)],
+xref:nng_http_server_del_handler.3http.adoc[nng_http_server_del_handler(3http)],
+xref:nng_http_server_hold.3http.adoc[nng_http_server_hold(3http)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

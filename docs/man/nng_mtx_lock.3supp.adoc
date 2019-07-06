@@ -27,7 +27,7 @@ void nng_mtx_lock(nng_mtx *mtx);
 
 The `nng_mtx_lock()` acquires exclusive ownership of the mutex _mtx_.
 If the lock is already owned, this function will wait until the current
-owner releases it with `<<nng_mtx_unlock.3supp#,nng_mtx_unlock()>>`.
+owner releases it with xref:nng_mtx_unlock.3supp.adoc[`nng_mtx_unlock()`].
 
 If multiple threads are waiting for the lock, the order of acquisition
 is not specified.
@@ -58,7 +58,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_cv_alloc.3supp#,nng_cv_alloc(3supp)>>,
-<<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
-<<nng_mtx_unlock.3supp#,nng_mtx_unlock(3supp)>>,
-<<nng.7#,nng(7)>>
+xref:nng_cv_alloc.3supp.adoc[nng_cv_alloc(3supp)],
+xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc(3supp)],
+xref:nng_mtx_unlock.3supp.adoc[nng_mtx_unlock(3supp)],
+xref:nng.7.adoc[nng(7)]

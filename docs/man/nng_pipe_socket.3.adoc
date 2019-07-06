@@ -24,7 +24,7 @@ nng_socket nng_pipe_socket(nng_pipe p);
 
 == DESCRIPTION
 
-The `nng_pipe_socket()` function returns the `<<nng_socket.5#,nng_socket>>`
+The `nng_pipe_socket()` function returns the xref:nng_socket.5.adoc[`nng_socket`]
 that owns the pipe _p_.
 
 NOTE: The returned socket may be closed or in the process of closing, in
@@ -41,6 +41,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_pipe.5#,nng_pipe(5)>>,
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_pipe.5.adoc[nng_pipe(5)],
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng.7.adoc[nng(7)]

@@ -43,16 +43,16 @@ int nng_pipe_get_uint64(nng_pipe p, const char *opt, uint64_t *u64p);
 
 (((options, pipe)))
 The `nng_pipe_get()` functions are used to retrieve option values for
-the <<nng_pipe.5#,pipe>> _p_.
+the xref:nng_pipe.5.adoc[pipe] _p_.
 The actual options that may be retrieved in this way
-vary, and many are documented in <<nng_options.5#,nng_options(5)>>.
+vary, and many are documented in xref:nng_options.5.adoc[nng_options(5)].
 Additionally some transport-specific options and protocol-specific options are
 documented with the transports and protocols themselves.
 
 NOTE: All "`options`" on a pipe are read-only values.
 Modification of options may be done before the pipe is created using
-`<<nng_listener_set.3#,nng_listener_set()>>` or
-`<<nng_dialer_get.3#,nng_dialer_set()>>`.
+xref:nng_listener_set.3.adoc[`nng_listener_set()`] or
+xref:nng_dialer_get.3.adoc[`nng_dialer_set()`].
 
 Any option that is set on a dialer or listener will normally be retrievable
 from pipes created by that dialer or listener.
@@ -93,7 +93,7 @@ The value will be stored at _ivalp_.
 
 `nng_pipe_get_ms()`::
 This function is used to retrieve time durations
-(`<<nng_duration.5#,nng_duration>>`) in milliseconds, which are stored in
+(xref:nng_duration.5.adoc[`nng_duration`]) in milliseconds, which are stored in
 _durp_.
 
 `nng_pipe_get_ptr()`::
@@ -107,14 +107,14 @@ This function is used to retrieve a size into the pointer _zp_,
 typically for buffer sizes, message maximum sizes, and similar options.
 
 `nng_pipe_get_addr()`::
-This function is used to retrieve an `<<nng_sockaddr.5#,nng_sockaddr>>`
+This function is used to retrieve an xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
 into _sap_.
 
 `nng_pipe_get_string()`::
 This function is used to retrieve a string into _strp_.
-This string is created from the source using `<<nng_strdup.3#,nng_strdup()>>`
+This string is created from the source using xref:nng_strdup.3.adoc[`nng_strdup()`]
 and consequently must be freed by the caller using
-`<<nng_strfree.3#,nng_strfree()>>` when it is no longer needed.
+xref:nng_strfree.3.adoc[`nng_strfree()`] when it is no longer needed.
 
 `nng_pipe_get_uint64()`::
 This function is used to retrieve a 64-bit unsigned value into the value
@@ -139,15 +139,15 @@ These functions return 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_dialer_set.3#,nng_dialer_set(3)>>
-<<nng_socket_get.3#,nng_socket_get(3)>>,
-<<nng_listener_set.3#,nng_listener_set(3)>>
-<<nng_msg_get_pipe.3#,nng_msg_get_pipe(3)>>
-<<nng_strdup.3#,nng_strdup(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_strfree.3#,nng_strfree(3)>>,
-<<nng_duration.5#,nng_duration(5)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng_pipe.5#,nng_pipe(5)>>,
-<<nng_sockaddr.5#,nng_sockaddr(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_dialer_set.3.adoc[nng_dialer_set(3)]
+xref:nng_socket_get.3.adoc[nng_socket_get(3)],
+xref:nng_listener_set.3.adoc[nng_listener_set(3)]
+xref:nng_msg_get_pipe.3.adoc[nng_msg_get_pipe(3)]
+xref:nng_strdup.3.adoc[nng_strdup(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_strfree.3.adoc[nng_strfree(3)],
+xref:nng_duration.5.adoc[nng_duration(5)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng_pipe.5.adoc[nng_pipe(5)],
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng.7.adoc[nng(7)]

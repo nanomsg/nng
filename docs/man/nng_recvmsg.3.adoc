@@ -28,7 +28,7 @@ The `nng_recvmsg()` receives a message on socket _s_, storing the
 received message at the location pointed to by _msgp_.
 
 TIP: Using this function gives access to the message structure, and thus may
-offer more functionality than the simpler `<<nng_recv.3#,nng_recv()>>` function.
+offer more functionality than the simpler xref:nng_recv.3.adoc[`nng_recv()`] function.
 
 The _flags_ may contain the following value:
 
@@ -39,11 +39,11 @@ The _flags_ may contain the following value:
 
 NOTE: The semantics of what receiving a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
-(For example, with an <<nng_req.7#,_req_>> socket a message may only be received
-after a request has been sent, and an <<nng_sub.7#,_sub_>> socket
+(For example, with an xref:nng_req.7.adoc[_req_] socket a message may only be received
+after a request has been sent, and an xref:nng_sub.7.adoc[_sub_] socket
 may only receive messages corresponding to topics to which it has subscribed.)
 Furthermore, some protocols may not support receiving data at all, such as
-<<nng_pub.7#,_pub_>>.
+xref:nng_pub.7.adoc[_pub_].
 
 == RETURN VALUES
 
@@ -63,8 +63,8 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_msg_free.3#,nng_msg_free(3)>>,
-<<nng_recv.3#,nng_recv(3)>>,
-<<nng_sendmsg.3#,nng_sendmsg(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_msg_free.3.adoc[nng_msg_free(3)],
+xref:nng_recv.3.adoc[nng_recv(3)],
+xref:nng_sendmsg.3.adoc[nng_sendmsg(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

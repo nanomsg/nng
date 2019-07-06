@@ -27,9 +27,9 @@ typedef struct nng_socket_s nng_socket;
 An `nng_socket`(((socket))) is a handle to an underlying "`socket`" object.
 All communication between the application and remote Scalability Protocol
 peers is done through sockets.
-A given socket can have multiple dialers (`<<nng_dialer.5#,nng_dialer>>`)
-and/or listeners (`<<nng_listener.5#,nng_listener>>`), and multiple
-pipes (`<<nng_pipe.5#,nng_pipe>>`), and
+A given socket can have multiple dialers (xref:nng_dialer.5.adoc[`nng_dialer`])
+and/or listeners (xref:nng_listener.5.adoc[`nng_listener`]), and multiple
+pipes (xref:nng_pipe.5.adoc[`nng_pipe`]), and
 may be connected to multiple transports at the same time.
 However, a given socket will have exactly one "`protocol`" associated with it,
 and is responsible for any state machines or other protocol-specific logic.
@@ -40,9 +40,9 @@ Passing structures this way ensures gives the compiler a chance to perform
 accurate type checks in functions passing values of this type.
 
 Each `nng_socket` is created by a protocol-specific constructor, such as
-`<<nng_rep_open.3#,nng_rep_open()>>`.
+xref:nng_rep_open.3.adoc[`nng_rep_open()`].
 When the socket is no longer needed, it can be closed with
-`<<nng_close.3#,nng_close()>>`.
+xref:nng_close.3.adoc[`nng_close()`].
 
 [[NNG_SOCKET_INITIALIZER]]
 === Initialization
@@ -60,12 +60,12 @@ nng_socket s = NNG_SOCKET_INITIALIZER;
 == SEE ALSO
 
 [.text-left]
-<<libnng.3#,libnng(3)>>,
-<<nng_close.3#,nng_close(3)>>,
-<<nng_getopt.3#,nng_getopt(3)>>,
-<<nng_setopt.3#,nng_setopt(3)>>,
-<<nng_socket_id.3#,nng_socket_id(3)>>,
-<<nng_dialer.5#,nng_dialer(5)>>,
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng.7#,nng(7)>>
+xref:libnng.3.adoc[libnng(3)],
+xref:nng_close.3.adoc[nng_close(3)],
+xref:nng_getopt.3.adoc[nng_getopt(3)],
+xref:nng_setopt.3.adoc[nng_setopt(3)],
+xref:nng_socket_id.3.adoc[nng_socket_id(3)],
+xref:nng_dialer.5.adoc[nng_dialer(5)],
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng.7.adoc[nng(7)]

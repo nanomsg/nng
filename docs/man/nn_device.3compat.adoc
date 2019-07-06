@@ -29,13 +29,14 @@ received on one of the two sockets _sock1_ and _sock2_ are forwarded to
 the other.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
-The two sockets must be compatible, and must be <<nng.7#raw_mode,raw mode>>
+The two sockets must be compatible, and must be
+xref:nng.7.adoc#raw_mode[raw mode]
 sockets.
 More detail about devices and how they can be used is available in the
-new style <<nng_device.3#,nng_device()>> documentation.
+new style xref:nng_device.3.adoc[nng_device()] documentation.
 
 == RETURN VALUES
 
@@ -52,7 +53,7 @@ one of the sockets is closed or an error occurs.
 == SEE ALSO
 
 [.text-left]
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nn_socket.3compat#,nn_socket(3compat)>>,
-<<nng_compat.3compat#,nng_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nn_socket.3compat.adoc[nn_socket(3compat)],
+xref:nng_compat.3compat.adoc[nng_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

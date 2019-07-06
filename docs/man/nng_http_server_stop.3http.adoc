@@ -26,10 +26,10 @@ void nng_http_server_stop(nng_http_server *server);
 == DESCRIPTION
 
 The `nng_http_server_stop()` undoes the effect of
-`<<nng_http_server_start.3http#,nng_http_server_start()>>`.
+xref:nng_http_server_start.3http.adoc[`nng_http_server_start()`].
 
 Each call by
-`<<nng_http_server_start.3http#,nng_http_server_start()>>` acts as reference
+xref:nng_http_server_start.3http.adoc[`nng_http_server_start()`] acts as reference
 count, and should be matched by a call to `nng_http_server_stop()`.
 When the reference count drops to zero, then the server is actually stopped,
 and existing open connections to it are closed.
@@ -37,10 +37,10 @@ and existing open connections to it are closed.
 This function does not wait for the connections to close.
 
 NOTE: Once the server instance is actually stopped, it cannot be started again,
-and any future calls to `<<nng_http_server_hold.3http#,nng_http_server_hold()>>`
+and any future calls to xref:nng_http_server_hold.3http.adoc[`nng_http_server_hold()`]
 will return a new instance of the server.
 It is expected that the caller will follow this function call with a call to
-`<<nng_http_server_release.3http#,nng_http_server_release()>>`.
+xref:nng_http_server_release.3http.adoc[`nng_http_server_release()`].
 
 
 == RETURN VALUES
@@ -54,7 +54,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
-<<nng_http_server_release.3http#,nng_http_server_release(3http)>>,
-<<nng_http_server_start.3http#,nng_http_server_start(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_server_hold.3http.adoc[nng_http_server_hold(3http)],
+xref:nng_http_server_release.3http.adoc[nng_http_server_release(3http)],
+xref:nng_http_server_start.3http.adoc[nng_http_server_start(3http)],
+xref:nng.7.adoc[nng(7)]

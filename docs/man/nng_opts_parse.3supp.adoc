@@ -181,5 +181,5 @@ no more options are available to be parsed, or an error number otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

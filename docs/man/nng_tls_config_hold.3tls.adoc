@@ -29,7 +29,7 @@ the configuration object named by _cfg_, thereby preventing it
 from being freed while in use.
 
 The hold can be released by calling
-<<nng_tls_config_free.3tls#,`nng_tls_config_free()`>>.
+xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`].
 
 Multiple holds can be placed on a configuration object; the object
 will not be freed until the last hold is released.
@@ -45,6 +45,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
-<<nng_tls_config_free.3tls#,nng_tls_config_free(3tls)>>,
-<<nng.7#,nng(7)>>
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng_tls_config_free.3tls.adoc[nng_tls_config_free(3tls)],
+xref:nng.7.adoc[nng(7)]

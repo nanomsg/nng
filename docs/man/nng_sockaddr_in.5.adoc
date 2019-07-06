@@ -33,12 +33,12 @@ typedef struct {
 == DESCRIPTION
 
 (((socket, address, IPv4)))
-An `nng_sockaddr_in` is the flavor of `<<nng_sockaddr.5#,nng_sockaddr>>`
+An `nng_sockaddr_in` is the flavor of xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
 used to represent TCP (and sometimes UDP) addresses,
 including the Internet Protocol (IP) address and port number.(((port number, TCP)))
 
 This structure is used with IPv4 addresses.
-A different structure, `<<nng_sockaddr_in6.5#,nng_sockaddr_in6>>`, is used
+A different structure, xref:nng_sockaddr_in6.5.adoc[`nng_sockaddr_in6`], is used
 for IPv6 addresses.
 
 The following structure members are present:
@@ -65,7 +65,7 @@ _not_ the same, and they may not be used interchangeably.
 == SEE ALSO
 
 [.text-left]
-<<nng_sockaddr.5#,nng_sockaddr(5)>>,
-<<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,
-<<nng_tcp.7#,nng_tcp(7)>>,
-<<nng.7#,nng(7)>>
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng_sockaddr_in6.5.adoc[nng_sockaddr_in6(5)],
+xref:nng_tcp.7.adoc[nng_tcp(7)],
+xref:nng.7.adoc[nng(7)]

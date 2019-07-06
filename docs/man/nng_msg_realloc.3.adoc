@@ -31,11 +31,11 @@ and will reuse the existing memory when possible.
 
 TIP: One way to further reduce message allocations is to allocate a message
 larger than needed, then use this function or
-`<<nng_msg_chop.3#,nng_msg_chop()>>` to reduce the message size
+xref:nng_msg_chop.3.adoc[`nng_msg_chop()`] to reduce the message size
 to that actually needed.
 The extra space left
 over will still be present in the message, so that when the message size
-needs to grow due to this function or `<<nng_msg_append.3#,nng_msg_append()>>`
+needs to grow due to this function or xref:nng_msg_append.3.adoc[`nng_msg_append()`]
 no actual memory allocations need to take place.
 
 NOTE: Pointers to message body and header content obtained prior to this
@@ -54,14 +54,14 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
-<<nng_msg_append.3#,nng_msg_append(3)>>,
-<<nng_msg_body.3#,nng_msg_body(3)>>,
-<<nng_msg_chop.3#,nng_msg_chop(3)>>,
-<<nng_msg_free.3#,nng_msg_free(3)>>,
-<<nng_msg_insert.3#,nng_msg_insert(3)>>,
-<<nng_msg_len.3#,nng_msg_len(3)>>,
-<<nng_msg_trim.3#,nng_msg_trim(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_msg.5#,nng_msg(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
+xref:nng_msg_append.3.adoc[nng_msg_append(3)],
+xref:nng_msg_body.3.adoc[nng_msg_body(3)],
+xref:nng_msg_chop.3.adoc[nng_msg_chop(3)],
+xref:nng_msg_free.3.adoc[nng_msg_free(3)],
+xref:nng_msg_insert.3.adoc[nng_msg_insert(3)],
+xref:nng_msg_len.3.adoc[nng_msg_len(3)],
+xref:nng_msg_trim.3.adoc[nng_msg_trim(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng.7.adoc[nng(7)]

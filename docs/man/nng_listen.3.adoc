@@ -25,14 +25,14 @@ int nng_listen(nng_socket s, const char *url, nng_listener *lp, int flags);
 == DESCRIPTION
 
 The `nng_listen()` function creates a newly initialized
-`<<nng_listener.5#,nng_listener>>` object, associated with socket _s_,
+xref:nng_listener.5.adoc[`nng_listener`] object, associated with socket _s_,
 and configured to listen at the address specified by _url_, and starts it.
 If the value of _lp_ is not `NULL`, then
 the newly created listener is stored at the address indicated by _lp_.
 
 Listeners are used to accept connections initiated by remote dialers.
 An incoming connection generally results in and
-`<<nng_pipe.5#,nng_pipe>>` object being created and attached to the socket _s_.
+xref:nng_pipe.5.adoc[`nng_pipe`] object being created and attached to the socket _s_.
 Unlike dialers, listeners generally can create many
 pipes, which may be open concurrently.
 
@@ -41,14 +41,14 @@ The _flags_ argument is ignored, but reserved for future use.
 TIP: While it is convenient to think of listeners as "`servers`", the
 relationship between the listener or dialer is orthogonal to any server or
 client status that might be associated with a given protocol.
-For example, a <<nng_req.7#,_req_>>
+For example, a xref:nng_req.7.adoc[_req_]
 socket might have associated dialers, but might also have associated listeners.
 It may even have some of each at the same time!
 
 Because the listener is started immediately, it is generally not possible
 to apply extra configuration; if that is needed applications should consider
-using `<<nng_listener_create.3#,nng_listener_create()>>` and
-`<<nng_listener_start.3#,nng_listener_start()>>` instead.
+using xref:nng_listener_create.3.adoc[`nng_listener_create()`] and
+xref:nng_listener_start.3.adoc[`nng_listener_start()`] instead.
 
 The created listener will continue to accept new connections, associating
 their pipes with the socket, until either it or the socket _s_ is closed.
@@ -69,10 +69,10 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_dial.3#,nng_dial(3)>>,
-<<nng_listener_close.3#,nng_listener_close(3)>>,
-<<nng_listener_create.3#,nng_listener_create(3)>>
-<<nng_listener_start.3#,nng_listener_start(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_dial.3.adoc[nng_dial(3)],
+xref:nng_listener_close.3.adoc[nng_listener_close(3)],
+xref:nng_listener_create.3.adoc[nng_listener_create(3)]
+xref:nng_listener_start.3.adoc[nng_listener_start(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng.7.adoc[nng(7)]

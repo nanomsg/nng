@@ -28,8 +28,8 @@ The `nn_sendmsg()` function sends the message described by _hdr_ using the
 socket _sock_.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 The _flags_ field may contain the special flag `NN_DONTWAIT`.
 In this case, if the socket is unable to accept more data for sending,
@@ -59,7 +59,7 @@ There are `msg_iovlen` elements in this array, each of which
 has the base address (`iov_base`) and length (`iov_len`) indicated.
 
 For buffers allocated for zero copy
-(such as by `<<nn_allocmsg.3compat#,nn_allocmsg()>>`), the value
+(such as by xref:nn_allocmsg.3compat.adoc[`nn_allocmsg()`]), the value
 of `iov_base` should be the address of the pointer to the buffer,
 rather than the address of the buffer itself.
 In this case, the value of `iov_len` should be `NN_MSG`,
@@ -73,10 +73,10 @@ at its choice.)
 The values of `msg_control` and `msg_controllen` describe a buffer
 of ancillary data to send the message.
 This is currently only useful to provide the message headers
-used with <<nng.7#raw_mode,raw mode>> sockets.
+used with xref:nng.7.adoc#raw_mode[raw mode] sockets.
 In all other circumstances these fields should be zero.
 Details about this structure are covered in
-`<<nn_cmsg.3compat#,nn_cmsg(3compat)>>`.
+xref:nn_cmsg.3compat.adoc[`nn_cmsg(3compat)`].
 
 NOTE: The send operation is performed asynchronously, and may not have
 completed before this function returns control to the caller.
@@ -98,10 +98,10 @@ This function returns the number of bytes sent on success, and -1 on error.
 == SEE ALSO
 
 [.text-left]
-<<nn_cmsg.3compat#,nn_cmsg(3compat)>>,
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nn_recv.3compat#,nn_recv(3compat)>>,
-<<nn_send.3compat#,nn_send(3compat)>>,
-<<nn_socket.3compat#,nn_socket(3compat)>>,
-<<nng_compat.3compat#,nn_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nn_cmsg.3compat.adoc[nn_cmsg(3compat)],
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nn_recv.3compat.adoc[nn_recv(3compat)],
+xref:nn_send.3compat.adoc[nn_send(3compat)],
+xref:nn_socket.3compat.adoc[nn_socket(3compat)],
+xref:nng_compat.3compat.adoc[nn_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

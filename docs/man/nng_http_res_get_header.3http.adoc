@@ -46,7 +46,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_http_res_add_header.3http#,nng_http_res_add_header(3http)>>,
-<<nng_http_res_set_header.3http#,nng_http_res_set_header(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_http_res_add_header.3http.adoc[nng_http_res_add_header(3http)],
+xref:nng_http_res_set_header.3http.adoc[nng_http_res_set_header(3http)],
+xref:nng.7.adoc[nng(7)]

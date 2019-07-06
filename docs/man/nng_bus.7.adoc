@@ -69,7 +69,7 @@ contain the incoming xref:nng_pipe.5.adoc[pipe] ID as the sole element in the he
 If a message containing such a header is sent using a raw _bus_ socket, then,
 the message will be delivered to all connected pipes _except_ the one
 identified in the header.
-This behavior is intended for use with xref:nng_device.3#device,device]
+This behavior is intended for use with xref:nng_device.3.adoc[device]
 configurations consisting of just a single socket.
 Such configurations are useful in the creation of rebroadcasters, and this
 capability prevents a message from being routed back to its source.

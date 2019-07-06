@@ -24,7 +24,7 @@ nng_pull - pull protocol
 
 (((protocol, _pull_)))
 The ((_pull_ protocol)) is one half of a ((pipeline pattern)).
-The other half is the <<nng_push.7#,_push_>> protocol.
+The other half is the xref:nng_push.7.adoc[_push_] protocol.
 
 In the pipeline pattern, pushers distribute messages to pullers.
 Each message sent
@@ -35,7 +35,7 @@ This property makes this pattern useful in ((load-balancing)) scenarios.
 
 === Socket Operations
 
-The `<<nng_pull_open.3#,nng_pull0_open()>>` functions create a puller socket.
+The xref:nng_pull_open.3.adoc[`nng_pull0_open()`] functions create a puller socket.
 This socket may be used to receive messages, but is unable to send them.
 Attempts to send messages will result in `NNG_ENOTSUP`.
 
@@ -60,6 +60,6 @@ The _pull_ protocol has no protocol-specific headers.
 == SEE ALSO
 
 [.text-left]
-<<nng_pull_open.3#,nng_pull_open(3)>>,
-<<nng_push.7#,nng_push(7)>>,
-<<nng.7#,nng(7)>>,
+xref:nng_pull_open.3.adoc[nng_pull_open(3)],
+xref:nng_push.7.adoc[nng_push(7)],
+xref:nng.7.adoc[nng(7)],

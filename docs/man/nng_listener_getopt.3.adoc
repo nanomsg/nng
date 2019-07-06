@@ -45,9 +45,9 @@ NOTE: These functions are deprecated.  Please see xref:nng_listener_get.3.adoc[n
 
 (((options, listener)))
 The `nng_listener_getopt()` functions are used to retrieve option values for
-the <<nng_listener.5#,listener>> _l_.
+the xref:nng_listener.5.adoc[listener] _l_.
 The actual options that may be retrieved in this way
-vary, and many are documented in <<nng_options.5#,nng_options(5)>>.
+vary, and many are documented in xref:nng_options.5.adoc[nng_options(5)].
 
 Additionally some transport-specific options and protocol-specific options
 are documented with the transports and protocols themselves.
@@ -89,7 +89,7 @@ This function is for options which take an integer (`int`).
 The value will be stored at _ivalp_.
 
 `nng_listener_getopt_ms()`::
-This function is used to retrieve time <<nng_duration.5#,durations>>
+This function is used to retrieve time xref:nng_duration.5.adoc[durations]
 (such as timeouts), stored in _durp_ as a number of milliseconds.
 
 `nng_listener_getopt_ptr()`::
@@ -103,14 +103,14 @@ This function is used to retrieve a size into the pointer _zp_,
 typically for buffer sizes, message maximum sizes, and similar options.
 
 `nng_listener_getopt_sockaddr()`::
-This function is used to retrieve an `<<nng_sockaddr.5#,nng_sockaddr>>`
+This function is used to retrieve an xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
 into the value referenced by _sap_.
 
 `nng_listener_getopt_string()`::
 This function is used to retrieve a string into _strp_.
-This string is created from the source using `<<nng_strdup.3#,nng_strdup()>>`
+This string is created from the source using xref:nng_strdup.3.adoc[`nng_strdup()`]
 and consequently must be freed by the caller using
-`<<nng_strfree.3#,nng_strfree()>>` when it is no longer needed.
+xref:nng_strfree.3.adoc[`nng_strfree()`] when it is no longer needed.
 
 `nng_listener_getopt_uint64()`::
 This function is used to retrieve a 64-bit unsigned value into the value
@@ -135,15 +135,15 @@ These functions return 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_listen.3#,nng_listen(3)>>,
-<<nng_listener_create.3#,nng_listener_create(3)>>
-<<nng_listener_setopt.3#,nng_listener_setopt(3)>>
-<<nng_getopt.3#,nng_getopt(3)>>,
-<<nng_strdup.3#,nng_strdup(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_strfree.3#,nng_strfree(3)>>,
-<<nng_duration.5#,nng_duration(5)>>,
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng_sockaddr.5#,nng_sockaddr(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_listen.3.adoc[nng_listen(3)],
+xref:nng_listener_create.3.adoc[nng_listener_create(3)]
+xref:nng_listener_setopt.3.adoc[nng_listener_setopt(3)]
+xref:nng_getopt.3.adoc[nng_getopt(3)],
+xref:nng_strdup.3.adoc[nng_strdup(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_strfree.3.adoc[nng_strfree(3)],
+xref:nng_duration.5.adoc[nng_duration(5)],
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng.7.adoc[nng(7)]

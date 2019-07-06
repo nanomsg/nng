@@ -29,10 +29,10 @@ The `nng_http_server_get_tls()` obtains the TLS configuration of server _s_ and
 saves a pointer to it in the address referenced by _cfgp_.
 
 The object will be returned with an extra hold (see
-`<<nng_tls_config_hold.3tls#,nng_tls_config_hold()>>`)
+xref:nng_tls_config_hold.3tls.adoc[`nng_tls_config_hold()`])
 placed on it on behalf of the caller.
 The caller should free this hold by calling
-`<<nng_tls_config_free.3tls#,nng_tls_config_free()>>` with it is done
+xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] with it is done
 with the TLS configuration.
 
 == RETURN VALUES
@@ -49,11 +49,11 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
-<<nng_http_server_set_tls.3http#,nng_http_server_set_tls(3http)>>,
-<<nng_http_server_start.3http#,nng_http_server_start(3http)>>,
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
-<<nng_tls_config_free.3tls#,nng_tls_config_free(3tls)>>,
-<<nng_tls_config_hold.3tls#,nng_tls_config_hold(3tls)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_server_hold.3http.adoc[nng_http_server_hold(3http)],
+xref:nng_http_server_set_tls.3http.adoc[nng_http_server_set_tls(3http)],
+xref:nng_http_server_start.3http.adoc[nng_http_server_start(3http)],
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng_tls_config_free.3tls.adoc[nng_tls_config_free(3tls)],
+xref:nng_tls_config_hold.3tls.adoc[nng_tls_config_hold(3tls)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

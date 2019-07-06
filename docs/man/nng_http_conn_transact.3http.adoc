@@ -32,18 +32,18 @@ HTTP exchange over the connection _conn_, sending the request _req_
 _res_.
 The entire response is read, including any associated body, which can
 subsequently be obtained using
-`<<nng_http_res_get_data.3http#,nng_http_res_get_data()>>`.
+xref:nng_http_res_get_data.3http.adoc[`nng_http_res_get_data()`].
 
 This function is intended to make creation of client applications easier,
 by performing multiple asynchronous operations required to complete an
 entire HTTP transaction.
 
 If an error occurs, the caller should close _conn_ with
-`<<nng_http_conn_close.3http#,nng_http_conn_close()>>`, as it may not
+xref:nng_http_conn_close.3http.adoc[`nng_http_conn_close()`], as it may not
 necessarily be usable with other transactions.
 
 A similar function,
-`<<nng_http_client_transact.3http#,nng_http_client_transact()>>`,
+xref:nng_http_client_transact.3http.adoc[`nng_http_client_transact()`],
 exists.
 That function behaves similarily, but creates a connection on demand
 for the transaction, and disposes of it when finished.
@@ -60,7 +60,7 @@ request interleaving.
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
-may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
+may be obtained via xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 That result will either be zero or an error code.
 
 == RETURN VALUES
@@ -81,13 +81,13 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
-<<nng_http_client_transact.3http#,nng_http_client_transact(3http)>>,
-<<nng_http_conn_read_res.3http#,nng_http_conn_read_res(3http)>>,
-<<nng_http_conn_read_all.3http#,nng_http_conn_read_all(3http)>>,
-<<nng_http_conn_write_req.3http#,nng_http_conn_write_req(3http)>>,
-<<nng_http_res_get_data.3http#,nng_http_res_get_data(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_http_client_connect.3http.adoc[nng_http_client_connect(3http)],
+xref:nng_http_client_transact.3http.adoc[nng_http_client_transact(3http)],
+xref:nng_http_conn_read_res.3http.adoc[nng_http_conn_read_res(3http)],
+xref:nng_http_conn_read_all.3http.adoc[nng_http_conn_read_all(3http)],
+xref:nng_http_conn_write_req.3http.adoc[nng_http_conn_write_req(3http)],
+xref:nng_http_res_get_data.3http.adoc[nng_http_res_get_data(3http)],
+xref:nng.7.adoc[nng(7)]

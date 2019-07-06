@@ -50,9 +50,9 @@ that object is not inadvertently freed while in use.
 A configuration object created with `nng_tls_config_alloc()` starts
 with a reference count of one.
 The reference count may be incremented using
-<<nng_tls_config_hold.3tls#,`nng_tls_config_hold()`>> and may be
+xref:nng_tls_config_hold.3tls.adoc[`nng_tls_config_hold()`] and may be
 decremented with
-<<nng_tls_config_free.3tls#,`nng_tls_config_free()`>>.
+xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`].
 
 Also note that a TLS configuration object becomes "`read-only`" after it
 is first used with a service.
@@ -73,12 +73,12 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode(3tls)>>,
-<<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain(3tls)>>,
-<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert(3tls)>>,
-<<nng_tls_config_free.3tls#,nng_tls_config_free(3tls)>>,
-<<nng_tls_config_hold.3tls#,nng_tls_config_hold(3tls)>>,
-<<nng_tls_config_server_name.3tls#,nng_tls_config_server_name(3tls)>>,
-<<nng_tls_config.5#,nng_tls_config(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_tls_config_auth_mode.3tls.adoc[nng_tls_config_auth_mode(3tls)],
+xref:nng_tls_config_ca_chain.3tls.adoc[nng_tls_config_ca_chain(3tls)],
+xref:nng_tls_config_own_cert.3tls.adoc[nng_tls_config_own_cert(3tls)],
+xref:nng_tls_config_free.3tls.adoc[nng_tls_config_free(3tls)],
+xref:nng_tls_config_hold.3tls.adoc[nng_tls_config_hold(3tls)],
+xref:nng_tls_config_server_name.3tls.adoc[nng_tls_config_server_name(3tls)],
+xref:nng_tls_config.5.adoc[nng_tls_config(5)],
+xref:nng.7.adoc[nng(7)]

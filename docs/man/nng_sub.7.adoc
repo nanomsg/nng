@@ -29,7 +29,7 @@ In this pattern, a publisher sends data, which is broadcast to all subscribers.
 The subscribing applications only see the data to which they have subscribed.
 
 The _sub_ protocol is the subscriber side, and the
-<<nng_pub.7#,_pub_>> protocol is the publisher side.
+xref:nng_pub.7.adoc[_pub_] protocol is the publisher side.
 
 NOTE: In this implementation, the publisher delivers all messages to all
 subscribers.
@@ -43,7 +43,7 @@ Applications should construct their messages accordingly.
 
 === Socket Operations
 
-The `<<nng_sub_open.3#,nng_sub0_open()>>` functions create a subscriber socket.
+The xref:nng_sub_open.3.adoc[`nng_sub0_open()`] functions create a subscriber socket.
 This socket may be used to receive messages, but is unable to send them.
 Attempts to send messages will result in `NNG_ENOTSUP`.
 
@@ -80,6 +80,6 @@ The _sub_ protocol has no protocol-specific headers.
 == SEE ALSO
 
 [.text-left]
-<<nng_sub_open.3#,nng_sub_open(3)>>,
-<<nng_pub.7#,nng_pub(7)>>,
-<<nng.7#,nng(7)>>
+xref:nng_sub_open.3.adoc[nng_sub_open(3)],
+xref:nng_pub.7.adoc[nng_pub(7)],
+xref:nng.7.adoc[nng(7)]

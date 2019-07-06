@@ -67,9 +67,9 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
-<<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain(3tls)>>,
-<<nng_tls_config_ca_file.3tls#,nng_tls_config_ca_file(3tls)>>,
-<<nng_tls_config_server_name.3tls#,nng_tls_config_server_name(3tls)>>,
-<<nng.7#,nng(7)>>
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng_tls_config_ca_chain.3tls.adoc[nng_tls_config_ca_chain(3tls)],
+xref:nng_tls_config_ca_file.3tls.adoc[nng_tls_config_ca_file(3tls)],
+xref:nng_tls_config_server_name.3tls.adoc[nng_tls_config_server_name(3tls)],
+xref:nng.7.adoc[nng(7)]

@@ -29,7 +29,7 @@ The `nng_http_res_get_reason()` returns a string representing the
 "`reason phrase`" associated with the response _res_.
 This is a human-readable explanation of the status code that
 would be obtained from
-`<<nng_http_res_get_status.3http#,nng_http_res_get_status()>>`.
+xref:nng_http_res_get_status.3http.adoc[`nng_http_res_get_status()`].
 
 == RETURN VALUES
 
@@ -42,7 +42,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_http_res_get_status.3http#,nng_http_res_get_status(3http)>>,
-<<nng_http_res_set_reason.3http#,nng_http_res_set_reason(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_http_res_get_status.3http.adoc[nng_http_res_get_status(3http)],
+xref:nng_http_res_set_reason.3http.adoc[nng_http_res_set_reason(3http)],
+xref:nng.7.adoc[nng(7)]

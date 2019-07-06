@@ -98,7 +98,7 @@ enum {
 
 TIP: When displaying status information to users (or logging such information),
 consider also including the "`reason phrase`" obtained with
-`<<nng_http_res_get_reason.3http#,nng_http_res_get_reason()>>`.
+xref:nng_http_res_get_reason.3http.adoc[`nng_http_res_get_reason()`].
 
 == RETURN VALUES
 
@@ -111,7 +111,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_http_res_get_reason.3http#,nng_http_res_get_reason(3http)>>,
-<<nng_http_res_set_status.3http#,nng_http_res_set_status(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_http_res_get_reason.3http.adoc[nng_http_res_get_reason(3http)],
+xref:nng_http_res_set_status.3http.adoc[nng_http_res_set_status(3http)],
+xref:nng.7.adoc[nng(7)]

@@ -35,8 +35,8 @@ For example, it may be useful to send a message with header data from
 one part of memory, and a user payload from another.
 
 The operations that do this typically store an array of these in
-an `<<nng_aio.5#,nng_aio>>` structure using the
-`<<nng_aio_set_iov.3#,nng_aio_set_iov()>>` function.
+an xref:nng_aio.5.adoc[`nng_aio`] structure using the
+xref:nng_aio_set_iov.3.adoc[`nng_aio_set_iov()`] function.
 
 The following structure members are present:
 
@@ -50,6 +50,6 @@ The following structure members are present:
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_set_iov.3#,nng_aio_set_iov(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_set_iov.3.adoc[nng_aio_set_iov(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

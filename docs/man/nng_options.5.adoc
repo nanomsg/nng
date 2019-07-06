@@ -107,7 +107,7 @@ to them; instead the application is expected to perform such semantics itself.
 (For example, in "`cooked`" mode a xref:nng_rep.7.adoc[_rep_] socket would
 automatically copy message headers from a received message to the corresponding
 reply, whereas in "`raw`" mode this is not done.)
-See xref:nng.7#raw_mode[Raw Mode] for more details.
+See xref:nng.7.adoc#raw_mode[Raw Mode] for more details.
 
 [[NNG_OPT_RECONNMINT]]
 ((`NNG_OPT_RECONNMINT`))::

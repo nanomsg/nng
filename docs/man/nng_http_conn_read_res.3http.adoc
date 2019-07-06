@@ -33,18 +33,18 @@ of the related headers.
 NOTE: Any HTTP entity/body data associated with the response is *not* read
 automatically.
 The caller should use
-`<<nng_http_conn_read_all.3http#,nng_http_conn_read_all>>` to read the entity
+xref:nng_http_conn_read_all.3http.adoc[`nng_http_conn_read_all`] to read the entity
 data, based on the details of the response itself.
 
 This function returns immediately, with no return value.
 Completion of
 the operation is signaled via the _aio_, and the final result may be
-obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
+obtained via xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 That result will either be zero or an error code.
 
 NOTE: Consider using the
-`<<nng_http_client_transact.3http#,nng_http_client_transact()>>` or
-`<<nng_http_conn_transact.3http#,nng_http_conn_transact()>>` functions,
+xref:nng_http_client_transact.3http.adoc[`nng_http_client_transact()`] or
+xref:nng_http_conn_transact.3http.adoc[`nng_http_conn_transact()`] functions,
 which provide a simpler interface for performing a complete HTTP client
 transaction.
 
@@ -65,11 +65,11 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
-<<nng_http_client_transact.3http#,nng_http_client_transact(3http)>>,
-<<nng_http_conn_transact.3http#,nng_http_conn_transact(3http)>>,
-<<nng_http_conn_read_all.3http#,nng_http_conn_read_all(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_http_client_connect.3http.adoc[nng_http_client_connect(3http)],
+xref:nng_http_client_transact.3http.adoc[nng_http_client_transact(3http)],
+xref:nng_http_conn_transact.3http.adoc[nng_http_conn_transact(3http)],
+xref:nng_http_conn_read_all.3http.adoc[nng_http_conn_read_all(3http)],
+xref:nng.7.adoc[nng(7)]

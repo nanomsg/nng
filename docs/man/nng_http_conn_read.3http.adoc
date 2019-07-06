@@ -29,20 +29,20 @@ The `nng_http_conn_read()` function starts an asynchronous read from the
 HTTP connection _conn_, into the scatter/gather vector located in the
 asynchronous I/O structure _aio_.
 
-NOTE: The `<<nng_aio_set_iov.3#,nng_aio_set_iov()>>` function must have been
+NOTE: The xref:nng_aio_set_iov.3.adoc[`nng_aio_set_iov()`] function must have been
 called first, to set the scatter/gather vector for _aio_.
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_,
 and the final result may be obtained via
-`<<nng_aio_result.3#,nng_aio_result()>>`.
+xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 That result will either be zero or an error code.
 
 The I/O operation completes as soon as at least one byte has been
 read, or an error has occurred.
 Therefore, the number of bytes read may be less than requested.
 The actual number of bytes read can be determined with
-`<<nng_aio_count.3#,nng_aio_count()>>`.
+xref:nng_aio_count.3.adoc[`nng_aio_count()`].
 
 TIP: This function is intended to facilitate uses cases that involve changing
 the protocol from HTTP, such as WebSocket.
@@ -66,12 +66,12 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_count.3#,nng_aio_count(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio_set_iov.3#,nng_aio_set_iov(3)>>,
-<<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
-<<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
-<<nng_http_conn_read_all.3http#,nng_http_conn_read_all(3http)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_count.3.adoc[nng_aio_count(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio_set_iov.3.adoc[nng_aio_set_iov(3)],
+xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc(3http)],
+xref:nng_http_client_connect.3http.adoc[nng_http_client_connect(3http)],
+xref:nng_http_conn_read_all.3http.adoc[nng_http_conn_read_all(3http)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

@@ -38,7 +38,7 @@ http://nanomsg.org/rfcs/sp-tls-v1.html[TLS Mapping for Scalability Protocols].
 
 Depending upon how the library was built, it may be necessary to
 register the transport by calling
-<<nng_tls_register.3#,`nng_tls_register()`>>.
+xref:nng_tls_register.3.adoc[`nng_tls_register()`].
 
 === Availability
 
@@ -108,35 +108,35 @@ The entire URI must be less than `NNG_MAXADDRLEN` bytes long.
 
 === Socket Address
 
-When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
+When using an xref:nng_sockaddr.5.adoc[`nng_sockaddr`] structure,
 the actual structure is either of type
-<<nng_sockaddr_in.5#,`nng_sockaddr_in`>> (for IPv4) or
-<<nng_sockaddr_in6.5#,`nng_sockaddr_in6`>> (for IPv6).
+xref:nng_sockaddr_in.5.adoc[`nng_sockaddr_in`] (for IPv4) or
+xref:nng_sockaddr_in6.5.adoc[`nng_sockaddr_in6`] (for IPv6).
 
 === Transport Options
 
 The following transport options are available.
 Note that setting these must be done before the transport is started.
 
-* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
-* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
-* <<nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE,`NNG_OPT_TCP_KEEPALIVE`>>
-* <<nng_tcp_options.5#NNG_OPT_TCP_NODELAY,`NNG_OPT_TCP_NODELAY`>>
-* <<nng_tls_options.5#NNG_OPT_TLS_AUTH_MODE,`NNG_OPT_TLS_AUTH_MODE`>>
-* <<nng_tls_options.5#NNG_OPT_TLS_CA_FILE,`NNG_OPT_TLS_CA_FILE`>>
-* <<nng_tls_options.5#NNG_OPT_TLS_CERT_KEY_FILE,`NNG_OPT_TLS_CERT_KEY_FILE`>>
-* <<nng_tls_options.5#NNG_OPT_TLS_CONFIG,`NNG_OPT_TLS_CONFIG`>>
-* <<nng_tls_options.5#NNG_OPT_TLS_VERIFIED,`NNG_OPT_TLS_VERIFIED_`>>
-* <<nng_options.5#NNG_OPT_URL,`NNG_OPT_URL`>>
+* xref:nng_options.5.adoc#NNG_OPT_LOCADDR[`NNG_OPT_LOCADDR`]
+* xref:nng_options.5.adoc#NNG_OPT_REMADDR[`NNG_OPT_REMADDR`]
+* xref:nng_tcp_options.5.adoc#NNG_OPT_TCP_KEEPALIVE[`NNG_OPT_TCP_KEEPALIVE`]
+* xref:nng_tcp_options.5.adoc#NNG_OPT_TCP_NODELAY[`NNG_OPT_TCP_NODELAY`]
+* xref:nng_tls_options.5.adoc#NNG_OPT_TLS_AUTH_MODE[`NNG_OPT_TLS_AUTH_MODE`]
+* xref:nng_tls_options.5.adoc#NNG_OPT_TLS_CA_FILE[`NNG_OPT_TLS_CA_FILE`]
+* xref:nng_tls_options.5.adoc#NNG_OPT_TLS_CERT_KEY_FILE[`NNG_OPT_TLS_CERT_KEY_FILE`]
+* xref:nng_tls_options.5.adoc#NNG_OPT_TLS_CONFIG[`NNG_OPT_TLS_CONFIG`]
+* xref:nng_tls_options.5.adoc#NNG_OPT_TLS_VERIFIED[`NNG_OPT_TLS_VERIFIED_`]
+* xref:nng_options.5.adoc#NNG_OPT_URL[`NNG_OPT_URL`]
 
 == SEE ALSO
 
 [.text-left]
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>
-<<nng_options.5#,nng_options(5)>>,
-<<nng_sockaddr_in.5#,nng_sockaddr_in(5)>>,
-<<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,
-<<nng_tcp_options.5#,nng_tcp_options(5)>>,
-<<nng_tls_config.5#,nng_tls_config(5)>>,
-<<nng_tls_options.5#,nng_tls_options(5)>>,
-<<nng.7#,nng(7)>>,
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)]
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng_sockaddr_in.5.adoc[nng_sockaddr_in(5)],
+xref:nng_sockaddr_in6.5.adoc[nng_sockaddr_in6(5)],
+xref:nng_tcp_options.5.adoc[nng_tcp_options(5)],
+xref:nng_tls_config.5.adoc[nng_tls_config(5)],
+xref:nng_tls_options.5.adoc[nng_tls_options(5)],
+xref:nng.7.adoc[nng(7)],

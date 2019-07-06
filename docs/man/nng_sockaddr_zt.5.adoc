@@ -34,10 +34,10 @@ typedef struct {
 == DESCRIPTION
 
 (((socket, address, ZeroTier)))
-An `nng_sockaddr_zt` is the flavor of `<<nng_sockaddr.5#,nng_sockaddr>>`
+An `nng_sockaddr_zt` is the flavor of xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
 used to represent ZeroTier addresses, including the
 (((port number, ZeroTier)))port number used by the
-<<nng_zerotier.7#,_zt_>> transport.
+xref:nng_zerotier.7.adoc[_zt_] transport.
 
 IMPORTANT: The ZeroTier transport, and the details of this structure,
 are still considered experimental, and subject to change.
@@ -62,7 +62,7 @@ The following structure members are present:
 
 `sa_port`::
     This field holds the "`port number`" used by the
-    <<nng_zerotier.7#,_zt_>> transport to distinguish different
+    xref:nng_zerotier.7.adoc[_zt_] transport to distinguish different
     sockets.
     This value in native byte order.(((port number, ZeroTier)))
     A zero value here indicates that a port number should be chosen
@@ -77,6 +77,6 @@ the Scalability Protocols binding for them.
 == SEE ALSO
 
 [.text-left]
-<<nng_sockaddr.5#,nng_sockaddr(5)>>,
-<<nng_zerotier.7#,nng_zerotier(7)>>,
-<<nng.7#,nng(7)>>
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng_zerotier.7.adoc[nng_zerotier(7)],
+xref:nng.7.adoc[nng(7)]

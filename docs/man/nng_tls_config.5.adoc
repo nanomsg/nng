@@ -38,20 +38,20 @@ However once a configuration is used, it enters a read-only state that
 precludes further modifications to the configuration.
 
 Messages are allocated using the
-<<nng_tls_config_alloc.3tls#,`nng_tls_config_alloc()`>>
+xref:nng_tls_config_alloc.3tls.adoc[`nng_tls_config_alloc()`]
 function, and are deallocated using the
-<<nng_tls_config_free.3tls#,`nng_tls_config_free()`>>
+xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`]
 function.
 
 == SEE ALSO
 
 [.text-left]
 
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
-<<nng_tls_config_auth_mode.3tls#,nng_tls_config_auth_mode(3tls)>>,
-<<nng_tls_config_ca_chain.3tls#,nng_tls_config_ca_chain(3tls)>>,
-<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert(3tls)>>,
-<<nng_tls_config_free.3tls#,nng_tls_config_free(3tls)>>,
-<<nng_tls_config_hold.3tls#,nng_tls_config_hold(3tls)>>,
-<<nng_tls_config_server_name.3tls#,nng_tls_config_server_name(3tls)>>,
-<<nng.7#,nng(7)>>
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng_tls_config_auth_mode.3tls.adoc[nng_tls_config_auth_mode(3tls)],
+xref:nng_tls_config_ca_chain.3tls.adoc[nng_tls_config_ca_chain(3tls)],
+xref:nng_tls_config_own_cert.3tls.adoc[nng_tls_config_own_cert(3tls)],
+xref:nng_tls_config_free.3tls.adoc[nng_tls_config_free(3tls)],
+xref:nng_tls_config_hold.3tls.adoc[nng_tls_config_hold(3tls)],
+xref:nng_tls_config_server_name.3tls.adoc[nng_tls_config_server_name(3tls)],
+xref:nng.7.adoc[nng(7)]

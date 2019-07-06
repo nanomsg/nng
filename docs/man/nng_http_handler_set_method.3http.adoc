@@ -40,7 +40,7 @@ NOTE: No validation of the _method_ is performed, but HTTP specifications
 insist that the actual method sent over the wire be capitalized.
 
 The handler may always examine the actual method used using the
-`<<nng_http_req_get_method.3http#,nng_http_req_get_method()>>` function.
+xref:nng_http_req_get_method.3http.adoc[`nng_http_req_get_method()`] function.
 
 == RETURN VALUES
 
@@ -55,7 +55,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
-<<nng_http_server_add_handler.3http#,nng_http_server_add_handler(3http)>>,
-<<nng_http_req_get_method.3http#,nng_http_req_get_method(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc(3http)],
+xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler(3http)],
+xref:nng_http_req_get_method.3http.adoc[nng_http_req_get_method(3http)],
+xref:nng.7.adoc[nng(7)]

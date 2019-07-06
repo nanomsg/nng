@@ -25,7 +25,7 @@ int nng_listener_create(nng_listener *listenerp, nng_socket s, const char *url);
 == DESCRIPTION
 
 The `nng_listener_create()` function creates a newly initialized
-`<<nng_listener.5#,nng_listener>>` object, associated with socket _s_,
+xref:nng_listener.5.adoc[`nng_listener`] object, associated with socket _s_,
 and configured to listen at the address specified by _url_,
 and stores a pointer to at the location referenced by _listenerp_.
 
@@ -38,19 +38,19 @@ which may be open concurrently.
 TIP: While it is convenient to think of listeners as "`servers`", the
 relationship between the listener or dialer is orthogonal to any server or
 client status that might be associated with a given protocol.
-For example, a <<nng_req.7#,_req_>> socket might have associated dialers,
+For example, a xref:nng_req.7.adoc[_req_] socket might have associated dialers,
 but might also have associated listeners.
 It may even have some of each at the same time!
 
 The listener is not started, but may be further configured with
-the `<<nng_listener_setopt.3#,nng_listener_setopt()>>` family of
+the xref:nng_listener_setopt.3.adoc[`nng_listener_setopt()`] family of
 functions.
 
 Once it is fully configured, the listener may be started using the
-`<<nng_listener_start.3#,nng_listener_start()>>` function.
+xref:nng_listener_start.3.adoc[`nng_listener_start()`] function.
 
 TIP: If no specific configuration is required, consider using the
-simpler `<<nng_listen.3#,nng_listen()>>` function instead.
+simpler xref:nng_listen.3.adoc[`nng_listen()`] function instead.
 
 == RETURN VALUES
 
@@ -66,12 +66,12 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_dialer_create.3#,nng_dialer_create(3)>>
-<<nng_listen.3#,nng_listen(3)>>,
-<<nng_listener_close.3#,nng_listener_close(3)>>,
-<<nng_listener_getopt.3#,nng_listener_getopt(3)>>,
-<<nng_listener_setopt.3#,nng_listener_setopt(3)>>,
-<<nng_listener_start.3#,nng_listener_start(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_dialer_create.3.adoc[nng_dialer_create(3)]
+xref:nng_listen.3.adoc[nng_listen(3)],
+xref:nng_listener_close.3.adoc[nng_listener_close(3)],
+xref:nng_listener_getopt.3.adoc[nng_listener_getopt(3)],
+xref:nng_listener_setopt.3.adoc[nng_listener_setopt(3)],
+xref:nng_listener_start.3.adoc[nng_listener_start(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng.7.adoc[nng(7)]

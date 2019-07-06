@@ -35,7 +35,7 @@ A local copy of the _uri_ is made in the request _req_.
 
 NOTE: No validation or canonicalization of the _uri_ is performed.
 
-TIP: The `<<nng_url_parse.3#,nng_url_parse()>>` function can be used to
+TIP: The xref:nng_url_parse.3.adoc[`nng_url_parse()`] function can be used to
 perform validation and canonicalization.
 The `u_requri` member will
 contain a suitable value that can be used with this function.
@@ -53,7 +53,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
-<<nng_http_req_get_uri.3http#,nng_http_req_get_uri(3http)>>,
-<<nng_url_parse.3#,nng_url_parse(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_req_alloc.3http.adoc[nng_http_req_alloc(3http)],
+xref:nng_http_req_get_uri.3http.adoc[nng_http_req_get_uri(3http)],
+xref:nng_url_parse.3.adoc[nng_url_parse(3)],
+xref:nng.7.adoc[nng(7)]

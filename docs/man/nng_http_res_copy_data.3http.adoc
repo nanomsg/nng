@@ -30,7 +30,7 @@ and sets the HTTP body for the response _res_ to it.
 The copy will be deallocated automatically when _res_ is freed.
 
 The copied body data will be automatically sent with the response when it
-is sent using `<<nng_http_conn_write_res.3http#,nng_http_conn_write_res()>>`.
+is sent using xref:nng_http_conn_write_res.3http.adoc[`nng_http_conn_write_res()`].
 
 This also updates the relevant `Content-Length` header of _res_.
 
@@ -38,7 +38,7 @@ NOTE: The current framework does not support sending data via chunked
 transfer-encoding.
 
 TIP: To avoid copying data, the
-`<<nng_http_res_set_data.3http#,nng_http_res_set_data()>>` may be used instead.
+xref:nng_http_res_set_data.3http.adoc[`nng_http_res_set_data()`] may be used instead.
 
 TIP: It is a good idea to also set the `Content-Type` header.
 
@@ -55,8 +55,8 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_conn_write_res.3http#,nng_http_conn_write_res(3http)>>,
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_http_res_set_data.3http#,nng_http_res_set_data(3http)>>,
-<<nng_http_res_set_header.3http#,nng_http_res_set_header(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_conn_write_res.3http.adoc[nng_http_conn_write_res(3http)],
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_http_res_set_data.3http.adoc[nng_http_res_set_data(3http)],
+xref:nng_http_res_set_header.3http.adoc[nng_http_res_set_header(3http)],
+xref:nng.7.adoc[nng(7)]

@@ -42,4 +42,4 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng.7#,nng(7)>>
+xref:nng.7.adoc[nng(7)]

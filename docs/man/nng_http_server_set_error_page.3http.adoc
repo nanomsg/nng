@@ -33,12 +33,12 @@ The body content of the HTTP responses will contain _html_.
 The custom HTML content will be used when the server is returning an
 internally generated error response, or is returning an error response
 that was allocated with the
-`<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error()>>`
+xref:nng_http_res_alloc_error.3http.adoc[`nng_http_res_alloc_error()`]
 function.
 This HTML content will also be used if the application calls the
-`<<nng_http_server_res_error.3http#,nng_http_server_res_error()>>`.
+xref:nng_http_server_res_error.3http.adoc[`nng_http_server_res_error()`].
 The last custom error page set for _code_ by either this function or
-`<<nng_http_server_set_error_file.3http#,nng_http_server_error_file()>>`
+xref:nng_http_server_set_error_file.3http.adoc[`nng_http_server_error_file()`]
 will be used.
 
 NOTE: Error responses that have their body content changed after allocation,
@@ -61,9 +61,9 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error(3http)>>,
-<<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
-<<nng_http_server_res_error.3http#,nng_http_server_res_error(3http)>>,
-<<nng_http_server_set_error_file.3http#,nng_http_server_set_error_file(3http)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc_error.3http.adoc[nng_http_res_alloc_error(3http)],
+xref:nng_http_server_hold.3http.adoc[nng_http_server_hold(3http)],
+xref:nng_http_server_res_error.3http.adoc[nng_http_server_res_error(3http)],
+xref:nng_http_server_set_error_file.3http.adoc[nng_http_server_set_error_file(3http)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

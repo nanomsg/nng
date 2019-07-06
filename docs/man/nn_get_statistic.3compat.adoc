@@ -28,8 +28,8 @@ The `nn_get_statistic()` function exists only as a stub, and always returns
 zero.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 == RETURN VALUES
 
@@ -42,5 +42,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_compat.3compat#,nng_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nng_compat.3compat.adoc[nng_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

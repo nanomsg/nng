@@ -33,13 +33,13 @@ WebSocket), where the underlying HTTP connection will be taken over for
 some other purpose, and should not be used any further by the server.
 
 This function is most useful when called from a handler function.
-(See `<<nng_http_handler_alloc.3http#,nng_http_handler_alloc()>>`.)
+(See xref:nng_http_handler_alloc.3http.adoc[`nng_http_handler_alloc()`].)
 
 NOTE: It is the responsibility of the caller to dispose of the underlying
 connection when it is no longer needed.
 Furthermore, the HTTP server will no longer send any responses to the
 hijacked connection, so the caller should do that as well if appropriate.
-(See `<<nng_http_conn_write_res.3http#,nng_http_conn_write_res()>>`.)
+(See xref:nng_http_conn_write_res.3http.adoc[`nng_http_conn_write_res()`].)
 
 TIP: This function is intended to facilitate uses cases that involve changing
 the protocol from HTTP, such as WebSocket.
@@ -59,7 +59,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_http_conn_write_res.3http#,nng_http_conn_write_res(3http)>>,
-<<nng_http_handler_alloc.3http#,nng_http_handler_alloc(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_http_conn_write_res.3http.adoc[nng_http_conn_write_res(3http)],
+xref:nng_http_handler_alloc.3http.adoc[nng_http_handler_alloc(3http)],
+xref:nng.7.adoc[nng(7)]

@@ -48,31 +48,31 @@ description of the option.
 [[NNG_OPT_TLS_AUTH_MODE]]((`NNG_OPT_TLS_AUTH_MODE`))::
 (`int`)
 Write-only option used to configure the authentication mode used.
-See <<nng_tls_config_auth_mode.3tls#,`nng_tls_config_auth_mode()`>> for
+See xref:nng_tls_config_auth_mode.3tls.adoc[`nng_tls_config_auth_mode()`] for
 more details.
 
 [[NNG_OPT_TLS_CA_FILE]]((`NNG_OPT_TLS_CA_FILE`))::
 (string) Write-only option naming a file containing certificates to
 use for peer validation.
-See <<nng_tls_config_ca_file.3tls#,`nng_tls_config_ca_file()`>> for more
+See xref:nng_tls_config_ca_file.3tls.adoc[`nng_tls_config_ca_file()`] for more
 information.
 
 [[NNG_OPT_TLS_CERT_KEY_FILE]]((`NNG_OPT_TLS_CERT_KEY_FILE`))::
 (string) Write-only option naming a file containing the local certificate and
 associated private key.
 The private key used must be unencrypted.
-See <<nng_tls_config_own_cert.3tls#,`nng_tls_config_own_cert()`>> for more
+See xref:nng_tls_config_own_cert.3tls.adoc[`nng_tls_config_own_cert()`] for more
 information.
 
 [[NNG_OPT_TLS_CONFIG]]((`NNG_OPT_TLS_CONFIG`))::
 (`nng_tls_config *`)
 This option references the underlying
-<<nng_tls_config.5#,TLS configuration object>>.
+xref:nng_tls_config.5.adoc[TLS configuration object].
 A hold is placed on the underlying
 configuration object before returning it.
 +
 NOTE: The caller should release the hold with
-<<nng_tls_config_free.3tls#,`nng_tls_config_free()`>> when it no
+xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
 longer needs the TLS configuration object.
 +
 TIP: Use this option when more advanced TLS configuration is required.
@@ -96,21 +96,21 @@ May return incorrect results if peer authentication is disabled.
 Generally, the following option values are also available for TLS objects,
 when appropriate for the context:
 
-* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
-* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
-* <<nng_tcp_options.5#NNG_OPT_TCP_KEEPALIVE,`NNG_OPT_TCP_KEEPALIVE`>>
-* <<nng_tcp_options.5#NNG_OPT_TCP_NODELAY,`NNG_OPT_TCP_NODELAY`>>
+* xref:nng_options.5.adoc#NNG_OPT_LOCADDR[`NNG_OPT_LOCADDR`]
+* xref:nng_options.5.adoc#NNG_OPT_REMADDR[`NNG_OPT_REMADDR`]
+* xref:nng_tcp_options.5.adoc#NNG_OPT_TCP_KEEPALIVE[`NNG_OPT_TCP_KEEPALIVE`]
+* xref:nng_tcp_options.5.adoc#NNG_OPT_TCP_NODELAY[`NNG_OPT_TCP_NODELAY`]
 
 == SEE ALSO
 
 [.text-left]
-<<nng_tls_dialer_getopt.3tls#,nng_tls_dialer_getopt(3tls)>>,
-<<nng_tls_dialer_setopt.3tls#,nng_tls_dialer_setopt(3tls)>>,
-<<nng_tls_getopt.3tls#,nng_tls_getopt(3tls)>>,
-<<nng_tls_listener_getopt.3tls#,nng_tls_listener_getopt(3tls)>>,
-<<nng_tls_listener_setopt.3tls#,nng_tls_listener_setopt(3tls)>>,
-<<nng_tls_setopt.3tls#,nng_tls_setopt(3tls)>>,
-<<nng_options.5#,nng_options(5)>>
-<<nng_tcp_options.5#,nng_tcp_options(5)>>
-<<nng_tls_config.5#,nng_tls_config(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_tls_dialer_getopt.3tls.adoc[nng_tls_dialer_getopt(3tls)],
+xref:nng_tls_dialer_setopt.3tls.adoc[nng_tls_dialer_setopt(3tls)],
+xref:nng_tls_getopt.3tls.adoc[nng_tls_getopt(3tls)],
+xref:nng_tls_listener_getopt.3tls.adoc[nng_tls_listener_getopt(3tls)],
+xref:nng_tls_listener_setopt.3tls.adoc[nng_tls_listener_setopt(3tls)],
+xref:nng_tls_setopt.3tls.adoc[nng_tls_setopt(3tls)],
+xref:nng_options.5.adoc[nng_options(5)]
+xref:nng_tcp_options.5.adoc[nng_tcp_options(5)]
+xref:nng_tls_config.5.adoc[nng_tls_config(5)],
+xref:nng.7.adoc[nng(7)]

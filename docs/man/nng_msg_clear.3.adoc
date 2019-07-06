@@ -37,5 +37,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_msg.5#,nng_msg(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng.7.adoc[nng(7)]

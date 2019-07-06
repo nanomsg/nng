@@ -60,7 +60,7 @@ concepts and administration.
 
 Depending upon how the library was built, it may be necessary to
 register the transport by calling
-`<<nng_zt_register.3#,nng_zt_register()>>`.
+xref:nng_zt_register.3.adoc[`nng_zt_register()`].
 This function
 returns zero on success, or an nng error value if the transport
 cannot be initialized for any reason.
@@ -82,13 +82,13 @@ the node's own node number.
 Listeners may use port 0 to indicate that a suitable port
 number be selected automatically.
 Applications using this must determine the selected port number using the
-`<<nng_listener_getopt.3#,nng_listener_getopt()>>` function.
+xref:nng_listener_getopt.3.adoc[`nng_listener_getopt()`] function.
 
 === Socket Address
 
-When using an `<<nng_sockaddr.5#,nng_sockaddr>>` structure,
+When using an xref:nng_sockaddr.5.adoc[`nng_sockaddr`] structure,
 the actual structure is of type
-`<<nng_sockaddr_zt.5#,nng_sockaddr_zt>>`.
+xref:nng_sockaddr_zt.5.adoc[`nng_sockaddr_zt`].
 
 === Node Presence
 
@@ -172,7 +172,7 @@ in this fashion.
 
 [[NNG_OPT_ZT_CONN_TIME]]
 ((`NNG_OPT_ZT_CONN_TIME`))::
-  (`<<nng_duration.5#,nng_duration>>`)
+  (xref:nng_duration.5.adoc[`nng_duration`])
   The time to wait between sending connection attempts,
   only used with dialers.
   The default is 500 msec.
@@ -187,7 +187,7 @@ in this fashion.
 
 [[NNG_OPT_ZT_PING_TIME]]
 ((`NNG_OPT_ZT_PING_TIME`))::
-  (`<<nng_duration.5#,nng_duration>>`) If no traffic has been received from
+  (xref:nng_duration.5.adoc[`nng_duration`]) If no traffic has been received from
   the ZeroTier peer after this
   period of time, then a "`ping`" message is sent to check if the peer
   is still alive.
@@ -222,5 +222,5 @@ in this fashion.
 == SEE ALSO
 
 [.text-left]
-<<nng_sockaddr_zt.5#,nng_sockaddr_zt(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_sockaddr_zt.5.adoc[nng_sockaddr_zt(5)],
+xref:nng.7.adoc[nng(7)]

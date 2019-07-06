@@ -30,12 +30,12 @@ content of the message _msg_.
 NOTE: The value returned by this is invalidated by a call to any of the
 functions that modify the message itself.
 Such functions are
-`<<nng_msg_free.3#,nng_msg_free()>>`,
-`<<nng_msg_realloc.3#,nng_msg_realloc()>>`,
-any of the `<<nng_msg_trim.3#,nng_msg_trim()>>`,
-`<<nng_msg_chop.3#,nng_msg_chop()>>`,
-`<<nng_msg_append.3#,nng_msg_append()>>`,
-or `<<nng_msg_insert.3#,nng_msg_insert()>>` variants.
+xref:nng_msg_free.3.adoc[`nng_msg_free()`],
+xref:nng_msg_realloc.3.adoc[`nng_msg_realloc()`],
+any of the xref:nng_msg_trim.3.adoc[`nng_msg_trim()`],
+xref:nng_msg_chop.3.adoc[`nng_msg_chop()`],
+xref:nng_msg_append.3.adoc[`nng_msg_append()`],
+or xref:nng_msg_insert.3.adoc[`nng_msg_insert()`] variants.
 
 == RETURN VALUES
 
@@ -48,13 +48,13 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
-<<nng_msg_append.3#,nng_msg_append(3)>>,
-<<nng_msg_chop.3#,nng_msg_chop(3)>>,
-<<nng_msg_free.3#,nng_msg_free(3)>>,
-<<nng_msg_insert.3#,nng_msg_insert(3)>>,
-<<nng_msg_len.3#,nng_msg_len(3)>>,
-<<nng_msg_realloc.3#,nng_msg_realloc(3)>>,
-<<nng_msg_trim.3#,nng_msg_trim(3)>>,
-<<nng_msg.5#,nng_msg(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
+xref:nng_msg_append.3.adoc[nng_msg_append(3)],
+xref:nng_msg_chop.3.adoc[nng_msg_chop(3)],
+xref:nng_msg_free.3.adoc[nng_msg_free(3)],
+xref:nng_msg_insert.3.adoc[nng_msg_insert(3)],
+xref:nng_msg_len.3.adoc[nng_msg_len(3)],
+xref:nng_msg_realloc.3.adoc[nng_msg_realloc(3)],
+xref:nng_msg_trim.3.adoc[nng_msg_trim(3)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng.7.adoc[nng(7)]

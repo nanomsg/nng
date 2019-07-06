@@ -32,9 +32,9 @@ typedef struct {
 == DESCRIPTION
 
 (((socket, address, inproc)))
-An `nng_sockaddr_inproc` is the flavor of `<<nng_sockaddr.5#,nng_sockaddr>>`
+An `nng_sockaddr_inproc` is the flavor of xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
 used to represent addresses associated with intra-process communication
-using the <<nng_inproc.7#,_inproc_>> transport.
+using the xref:nng_inproc.7.adoc[_inproc_] transport.
 
 The following structure members are present:
 
@@ -54,6 +54,6 @@ Furthermore, the size is guaranteed to be at least 128.
 == SEE ALSO
 
 [.text-left]
-<<nng_sockaddr.5#,nng_sockaddr(5)>>,
-<<nng_inproc.7#,nng_inproc(7)>>
-<<nng.7#,nng(7)>>
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng_inproc.7.adoc[nng_inproc(7)]
+xref:nng.7.adoc[nng(7)]

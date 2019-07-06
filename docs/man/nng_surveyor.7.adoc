@@ -36,11 +36,11 @@ TIP: This protocol is useful in solving voting problems, such as
 ((service discovery)) problems.
 
 The _surveyor_ protocol is the surveyor side, and the
-<<nng_respondent.7#,_respondent_>> protocol is the respondent side.
+xref:nng_respondent.7.adoc[_respondent_] protocol is the respondent side.
 
 === Socket Operations
 
-The `<<nng_surveyor_open.3#,nng_surveyor0_open()>>`
+The xref:nng_surveyor_open.3.adoc[`nng_surveyor0_open()`]
 functions create a surveyor socket.
 This socket may be used to send messages (surveys), and then to receive replies.
 A reply can only be received after sending a survey.
@@ -57,12 +57,12 @@ Only one survey can be outstanding at a time; sending another survey will
 cancel the prior one, and any responses from respondents from the prior
 survey that arrive after this will be discarded.
 
-<<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
+xref:nng.7.adoc#raw_mode[Raw] mode sockets ignore all these restrictions.
 
 === Context Operations
 
-This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
-use cases using `<<nng_ctx_open.3#,nng_ctx_open()>>`.
+This protocol supports the creation of xref:nng_ctx.5.adoc[contexts] for concurrent
+use cases using xref:nng_ctx_open.3.adoc[`nng_ctx_open()`].
 
 Each context can initiate its own surveys, and it will receive only
 responses to its own outstanding surveys.
@@ -94,7 +94,7 @@ The following protocol-specific options is available.
 
 ((`NNG_OPT_SURVEYOR_SURVEYTIME`))::
 
-   (`<<nng_duration.5#,nng_duration>>`) Duration of surveys.
+   (xref:nng_duration.5.adoc[`nng_duration`]) Duration of surveys.
    When a new survey is started, a timer of this duration is also started.
    Any responses arriving this time will be discarded.
    Attempts to receive
@@ -114,7 +114,7 @@ These will be distinguishable from the survey ID by having their most
 significant bit clear.
 
 When a survey message is received by a forwarding node (see
-`<<nng_device.3#,nng_device()>>`), the forwarding node prepends a
+xref:nng_device.3.adoc[`nng_device()`]), the forwarding node prepends a
 32-bit peer ID (which *must* have the most significant bit clear),
 which is the forwarder's way of identifying the directly connected
 peer from which it received the message.
@@ -137,11 +137,13 @@ When the response finally arrives back at the initiating surveyor, it
 should have only a single element in the message, which will be the
 survey ID it originally used for the request.
 
+More detail can be found in the
 https://github.com/nanomsg/nanomsg/blob/master/rfc/sp-surveyor-01.txt[RFC sp-surveyor-01]
+document.
 
 == SEE ALSO
 
 [.text-left]
-<<nng_surveyor_open.3#,nng_surveyor_open(3)>>,
-<<nng_respondent.7#,nng_respondent(7)>>,
-<<nng.7#,nng(7)>>
+xref:nng_surveyor_open.3.adoc[nng_surveyor_open(3)],
+xref:nng_respondent.7.adoc[nng_respondent(7)],
+xref:nng.7.adoc[nng(7)]

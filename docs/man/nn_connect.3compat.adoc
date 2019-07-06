@@ -28,12 +28,12 @@ The `nn_connect()` function arranges for the socket _sock_ to
 initiate connection to a peer at the address specified by _url_.
 An "`endpoint identifier`" for this socket's association with the _url_ is
 returned to the caller on success.
-This ID can be used with `<<nn_shutdown.3compat#,nn_shutdown()>>` to
+This ID can be used with xref:nn_shutdown.3compat.adoc[`nn_shutdown()`] to
 "`unbind`" the socket from the address at _url_.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 NOTE: The connect operation is performed asynchronously, and may not have
 completed before this function returns control to the caller.
@@ -42,7 +42,7 @@ IMPORTANT: Only transports supported by legacy _libnanomsg_ may be
 used with this function.
 In particular, only the schemes `tcp://`, `ipc://`, `inproc://`, and `ws://` are
 supported with this function.
-(Use the <<libnng.3#,modern API>> to use other schemes.)
+(Use the xref:libnng.3.adoc[modern API] to use other schemes.)
 
 == RETURN VALUES
 
@@ -58,9 +58,9 @@ This function returns a positive identifier success, and -1 on error.
 == SEE ALSO
 
 [.text-left]
-<<nn_bind.3compat#,nn_bind(3compat)>>,
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nn_shutdown.3compat#,nn_shutdown(3compat)>>,
-<<nn_socket.3compat#,nn_socket(3compat)>>,
-<<nng_compat.3compat#,nn_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nn_bind.3compat.adoc[nn_bind(3compat)],
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nn_shutdown.3compat.adoc[nn_shutdown(3compat)],
+xref:nn_socket.3compat.adoc[nn_socket(3compat)],
+xref:nng_compat.3compat.adoc[nn_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

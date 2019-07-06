@@ -37,6 +37,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
-<<nng_msg_free.3#,nng_msg_free(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
+xref:nng_msg_free.3.adoc[nng_msg_free(3)],
+xref:nng.7.adoc[nng(7)]

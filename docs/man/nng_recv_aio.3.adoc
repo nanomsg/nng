@@ -24,14 +24,14 @@ void nng_recv_aio(nng_socket s, nng_aio *aio);
 
 == DESCRIPTION
 
-The `nng_recv_aio()` receives a <<nng_msg.5#,message>> using the
-<<nng_socket.5#,socket>> _s_ asynchronously.
+The `nng_recv_aio()` receives a xref:nng_msg.5.adoc[message] using the
+xref:nng_socket.5.adoc[socket] _s_ asynchronously.
 
 When a message is successfully received by the socket, it is
 stored in the _aio_ by an internal call equivalent to
-`<<nng_aio_set_msg.3#,nng_aio_set_msg()>>`, then the completion
+xref:nng_aio_set_msg.3.adoc[`nng_aio_set_msg()`], then the completion
 callback on the _aio_ is executed.
-In this case, `<<nng_aio_result.3#,nng_aio_result()>>` will
+In this case, xref:nng_aio_result.3.adoc[`nng_aio_result()`] will
 return zero.
 The callback function is responsible for retrieving the message
 and disposing of it appropriately.
@@ -42,16 +42,16 @@ case can lead to memory leaks.
 If for some reason the asynchronous receive cannot be completed
 successfully (including by being canceled or timing out), then
 the callback will still be executed,
-but `<<nng_aio_result.3#,nng_aio_result()>>` will be non-zero.
+but xref:nng_aio_result.3.adoc[`nng_aio_result()`] will be non-zero.
 
 NOTE: The semantics of what receiving a message means varies from protocol to
 protocol, so examination of the protocol documentation is encouraged.
-(For example, with a <<nng_pub.7#,_pub_>> socket the data is broadcast, so that
+(For example, with a xref:nng_pub.7.adoc[_pub_] socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
-`<<nng_recv.3#,nng_recv()>>` or a similar function.)
+xref:nng_recv.3.adoc[`nng_recv()`] or a similar function.)
 Furthermore, some protocols may not support receiving (such as
-<<nng_pub.7#,_pub_>>) or may require other conditions.
-(For example, <<nng_req.7#,_req_>> sockets cannot normally receive data, which
+xref:nng_pub.7.adoc[_pub_]) or may require other conditions.
+(For example, xref:nng_req.7.adoc[_req_] sockets cannot normally receive data, which
 are replies to requests, until they have first sent a request.)
 
 == RETURN VALUES
@@ -71,11 +71,11 @@ None.  (The operation completes asynchronously.)
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_get_msg.3#,nng_aio_get_msg(3)>>,
-<<nng_aio_set_msg.3#,nng_aio_set_msg(3)>>,
-<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng_msg.5#,nng_msg(5)>>,
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_get_msg.3.adoc[nng_aio_get_msg(3)],
+xref:nng_aio_set_msg.3.adoc[nng_aio_set_msg(3)],
+xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng.7.adoc[nng(7)]

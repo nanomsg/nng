@@ -29,12 +29,12 @@ The `nng_http_conn_write_all()` function starts an asynchronous write to the
 HTTP connection _conn_, into the scatter/gather vector located in the
 asynchronous I/O structure _aio_.
 
-NOTE: The `<<nng_aio_set_iov.3#,nng_aio_set_iov()>>` function must have been
+NOTE: The xref:nng_aio_set_iov.3.adoc[`nng_aio_set_iov()`] function must have been
 called first, to set the scatter/gather vector for _aio_.
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the
-final result may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
+final result may be obtained via xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 That result will either be zero or an error code.
 
 The I/O operation completes only when the entire amount of data
@@ -44,23 +44,23 @@ been written.
 
 It is still possible for a partial write to complete in the event of an error.
 The actual number of bytes written can be determined with
-`<<nng_aio_count.3#,nng_aio_count()>>`.
+xref:nng_aio_count.3.adoc[`nng_aio_count()`].
 
 TIP: The main purpose for this function is to facilitate writing HTTP
 body content.
 
 TIP: Usually an HTTP request or response will have been written immediately
-prior to this with `<<nng_http_conn_write_req.3http#,http_conn_write_req()>>` or
-`<<nng_http_conn_write_res.3http#,http_conn_write_res()>>`.
+prior to this with xref:nng_http_conn_write_req.3http.adoc[`http_conn_write_req()`] or
+xref:nng_http_conn_write_res.3http.adoc[`http_conn_write_res()`].
 In that case the request or response should have also contained
 an `Content-Length` header, and possibly a `Content-Type` header.
 
 TIP: An easier solution to sending HTTP content data, is to include the
 content with the request or reply using a function like
-`<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>`.
+xref:nng_http_req_copy_data.3http.adoc[`nng_http_req_copy_data()`].
 In that case, the body data will be written automatically by the
-`<<nng_http_conn_write_req.3http#,http_conn_write_req()>>` or
-`<<nng_http_conn_write_req.3http#,http_conn_write_res()>>` function.
+xref:nng_http_conn_write_req.3http.adoc[`http_conn_write_req()`] or
+xref:nng_http_conn_write_req.3http.adoc[`http_conn_write_res()`] function.
 
 == RETURN VALUES
 
@@ -80,17 +80,17 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_count.3#,nng_aio_count(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_aio_set_iov.3#,nng_aio_set_iov(3)>>,
-<<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
-<<nng_http_conn_write.3http#,nng_http_conn_write(3http)>>,
-<<nng_http_conn_write_req.3http#,http_conn_write_req(3http)>>,
-<<nng_http_conn_write_res.3http#,http_conn_write_res(3http)>>,
-<<nng_http_req_copy_data.3http#,nng_http_req_copy_data(3http)>>,
-<<nng_http_req_set_data.3http#,nng_http_req_set_data(3http)>>,
-<<nng_http_res_copy_data.3http#,nng_http_res_copy_data(3http)>>,
-<<nng_http_res_set_data.3http#,nng_http_res_set_data(3http)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_count.3.adoc[nng_aio_count(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_aio_set_iov.3.adoc[nng_aio_set_iov(3)],
+xref:nng_http_client_connect.3http.adoc[nng_http_client_connect(3http)],
+xref:nng_http_conn_write.3http.adoc[nng_http_conn_write(3http)],
+xref:nng_http_conn_write_req.3http.adoc[http_conn_write_req(3http)],
+xref:nng_http_conn_write_res.3http.adoc[http_conn_write_res(3http)],
+xref:nng_http_req_copy_data.3http.adoc[nng_http_req_copy_data(3http)],
+xref:nng_http_req_set_data.3http.adoc[nng_http_req_set_data(3http)],
+xref:nng_http_res_copy_data.3http.adoc[nng_http_res_copy_data(3http)],
+xref:nng_http_res_set_data.3http.adoc[nng_http_res_set_data(3http)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

@@ -46,7 +46,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng_pipe.5#,nng_pipe(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng_pipe.5.adoc[nng_pipe(5)],
+xref:nng.7.adoc[nng(7)]

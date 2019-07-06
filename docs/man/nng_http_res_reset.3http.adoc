@@ -27,7 +27,7 @@ void nng_http_res_reset(nng_http_res *res);
 
 The `nng_http_res_reset()` function resets the response __res__ so that it
 is just as if it had been freshly allocated with
-`<<nng_http_res_alloc.3http#,nng_http_res_alloc()>>`.
+xref:nng_http_res_alloc.3http.adoc[`nng_http_res_alloc()`].
 
 == RETURN VALUES
 
@@ -40,5 +40,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng.7.adoc[nng(7)]

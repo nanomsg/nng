@@ -48,8 +48,8 @@ addresses, IPC paths, and so forth.
 ****
 The name `sockaddr` is based on its similarity with POSIX `struct sockaddr`,
 but in the _nng_ library, these addresses are more closely affiliated with
-instances of `<<nng_pipe.5#,nng_pipe>>`
-than of `<<nng_socket.5#,nng_socket>>`.
+instances of xref:nng_pipe.5.adoc[`nng_pipe`]
+than of xref:nng_socket.5.adoc[`nng_socket`].
 The naming confusion is unfortunate.
 ****
 
@@ -65,20 +65,20 @@ The values of `s_family` are as follows:
 
 [horizontal]
 `NNG_AF_UNSPEC`:: Invalid address, no other valid fields.
-`NNG_AF_INPROC`:: Address for intraprocess communication (<<nng_inproc.7#,nng_inproc(7)>>).  The `s_inproc` member is valid.
-`NNG_AF_IPC`:: Address for interprocess communication (<<nng_ipc.7#,nng_ipc(7)>>).  The `s_path` member is valid.
+`NNG_AF_INPROC`:: Address for intraprocess communication (xref:nng_inproc.7.adoc[nng_inproc(7)]).  The `s_inproc` member is valid.
+`NNG_AF_IPC`:: Address for interprocess communication (xref:nng_ipc.7.adoc[nng_ipc(7)]).  The `s_path` member is valid.
 `NNG_AF_INET`:: Address for TCP/IP (v4) communication.  The `s_in` member is valid.
 `NNG_AF_INET6`:: Address for TCP/IP (v6) communication.  The `s_in6` member is valid.
-`NNG_AF_ZT`:: Address for ZeroTier transport (<<nng_zerotier.7#,nng_zerotier(7)>>).  The `s_zt` member is valid.
+`NNG_AF_ZT`:: Address for ZeroTier transport (xref:nng_zerotier.7.adoc[nng_zerotier(7)]).  The `s_zt` member is valid.
 
 Please see the manual pages for each individual type for more information.
 
 == SEE ALSO
 
 [.text-left]
-<<nng_sockaddr_in.5#,nng_sockaddr_in(5)>>,
-<<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,
-<<nng_sockaddr_inproc.5#,nng_sockaddr_inproc(5)>>,
-<<nng_sockaddr_ipc.5#,nng_sockaddr_ipc(5)>>,
-<<nng_sockaddr_zt.5#,nng_sockaddr_zt(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_sockaddr_in.5.adoc[nng_sockaddr_in(5)],
+xref:nng_sockaddr_in6.5.adoc[nng_sockaddr_in6(5)],
+xref:nng_sockaddr_inproc.5.adoc[nng_sockaddr_inproc(5)],
+xref:nng_sockaddr_ipc.5.adoc[nng_sockaddr_ipc(5)],
+xref:nng_sockaddr_zt.5.adoc[nng_sockaddr_zt(5)],
+xref:nng.7.adoc[nng(7)]

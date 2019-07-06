@@ -28,16 +28,16 @@ int nng_http_server_res_error(nng_http_server *server,
 
 The `nng_http_server_res_error()` sets the body of _response_
 to _server_'s error page, which may have been customized using the
-`<<nng_http_server_set_error_file.3http#,nng_http_server_error_file()>>`
+xref:nng_http_server_set_error_file.3http.adoc[`nng_http_server_error_file()`]
 or
-`<<nng_http_server_set_error_page.3http#,nng_http_server_error_page()>>`
+xref:nng_http_server_set_error_page.3http.adoc[`nng_http_server_error_page()`]
 functions.
 
 The status code of the _response_ should have already been set, either
 implicitly by allocating it with
-`<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error()>>`,
+xref:nng_http_res_alloc_error.3http.adoc[`nng_http_res_alloc_error()`],
 or by calling
-`<<nng_http_res_set_status.3http#,nng_http_res_set_status()>>`.
+xref:nng_http_res_set_status.3http.adoc[`nng_http_res_set_status()`].
 
 Any content body previously set for _response_ will be overridden by
 this function.
@@ -55,9 +55,9 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error(3http)>>,
-<<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
-<<nng_http_server_set_error_file.3http#,nng_http_server_set_error_file(3http)>>,
-<<nng_http_server_set_error_page.3http#,nng_http_server_set_error_page(3http)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc_error.3http.adoc[nng_http_res_alloc_error(3http)],
+xref:nng_http_server_hold.3http.adoc[nng_http_server_hold(3http)],
+xref:nng_http_server_set_error_file.3http.adoc[nng_http_server_set_error_file(3http)],
+xref:nng_http_server_set_error_page.3http.adoc[nng_http_server_set_error_page(3http)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

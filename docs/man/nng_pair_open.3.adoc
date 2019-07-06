@@ -38,13 +38,13 @@ int nng_pair1_open_raw(nng_socket *s);
 == DESCRIPTION
 
 The `nng_pair0_open()` and `nng_pair1_open()` functions
-create a <<nng_pair.7#,_pair_>> version 0 or version 1
-<<nng_socket.5#,socket>> and return it at the location pointed to by _s_.
+create a xref:nng_pair.7.adoc[_pair_] version 0 or version 1
+xref:nng_socket.5.adoc[socket] and return it at the location pointed to by _s_.
 
 The `nng_pair0_open_raw()` and `nng_pair1_open_raw()` functions
-create a <<nng_pair.7#,_pair_>> version 0 or version 1
-<<nng_socket.5#,socket>> in
-<<nng.7#raw_mode,raw>> mode and return it at the location pointed to by _s_.
+create a xref:nng_pair.7.adoc[_pair_] version 0 or version 1
+xref:nng_socket.5.adoc[socket] in
+xref:nng.7.adoc#raw_mode[raw] mode and return it at the location pointed to by _s_.
 
 == RETURN VALUES
 
@@ -59,6 +59,6 @@ These functions returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng_pair.7#,nng_pair(7)>>,
-<<nng.7#,nng(7)>>
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng_pair.7.adoc[nng_pair(7)],
+xref:nng.7.adoc[nng(7)]

@@ -29,7 +29,7 @@ The `nng_http_res_free()` function deallocates the HTTP response structure
 _res_ entirely.
 
 TIP: Instead of freeing and reallocating response structures, it is possible
-to reuse _res_ with `<<nng_http_res_reset.3http#,nng_http_res_reset()>>`.
+to reuse _res_ with xref:nng_http_res_reset.3http.adoc[`nng_http_res_reset()`].
 
 == RETURN VALUES
 
@@ -42,6 +42,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_http_res_reset.3http#,nng_http_res_reset(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_http_res_reset.3http.adoc[nng_http_res_reset(3http)],
+xref:nng.7.adoc[nng(7)]

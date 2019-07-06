@@ -40,5 +40,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
-<<nng.7#,nng(7)>>
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng.7.adoc[nng(7)]

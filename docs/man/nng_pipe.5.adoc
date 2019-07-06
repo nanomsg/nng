@@ -42,12 +42,12 @@ However it is possible to access a pipe when more information about the
 source of a message is needed, or when more control is required over
 message delivery.
 
-Pipe objects are created by dialers (`<<nng_dialer.5#,nng_dialer>>` objects)
-and listeners (`<<nng_listener.5#,nng_listener>>` objects), which can be
+Pipe objects are created by dialers (xref:nng_dialer.5.adoc[`nng_dialer`] objects)
+and listeners (xref:nng_listener.5.adoc[`nng_listener`] objects), which can be
 thought of as "`owning`" the pipe.
 
 Pipe objects may be destroyed by the
-`<<nng_pipe_close.3#,nng_pipe_close()>>` function.
+xref:nng_pipe_close.3.adoc[`nng_pipe_close()`] function.
 They are also closed when their "`owning`" dialer or listener is closed,
 or when the remote peer closes the underlying connection.
 
@@ -67,14 +67,14 @@ nng_pipe p = NNG_PIPE_INITIALIZER;
 == SEE ALSO
 
 [.text-left]
-<<nng_msg_get_pipe.3#,nng_msg_get_pipe(3)>>,
-<<nng_pipe_close.3#,nng_pipe_close(3)>>,
-<<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,
-<<nng_pipe_dialer.3#,nng_pipe_dialer(3)>>,
-<<nng_pipe_id.3#,nng_pipe_id(3)>>,
-<<nng_pipe_listener.3#,nng_pipe_listener(3)>>,
-<<nng_pipe_socket.3#,nng_pipe_socket(3)>>,
-<<nng_dialer.5#,nng_dialer(5)>>,
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_msg_get_pipe.3.adoc[nng_msg_get_pipe(3)],
+xref:nng_pipe_close.3.adoc[nng_pipe_close(3)],
+xref:nng_pipe_getopt.3.adoc[nng_pipe_getopt(3)],
+xref:nng_pipe_dialer.3.adoc[nng_pipe_dialer(3)],
+xref:nng_pipe_id.3.adoc[nng_pipe_id(3)],
+xref:nng_pipe_listener.3.adoc[nng_pipe_listener(3)],
+xref:nng_pipe_socket.3.adoc[nng_pipe_socket(3)],
+xref:nng_dialer.5.adoc[nng_dialer(5)],
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng.7.adoc[nng(7)]

@@ -42,14 +42,14 @@ The returned value will be one of the following values:
 ((`NNG_UNIT_NONE`))::
 There are no particular units measured.
 In some cases there may be units, but the type of the unit will be obvious
-from the name (see `<<nng_stat_name.3#,nng_stat_name()>>`) of the statistic.
+from the name (see xref:nng_stat_name.3.adoc[`nng_stat_name()`]) of the statistic.
 
 ((`NNG_UNIT_BYTES`))::
 The statistic is a count of bytes.
 
 ((`NNG_UNIT_MESSAGES`))::
 The statistic is a count of messages.
-Typically, one message corresponds to a single `<<nng_msg.5#,nng_msg>>` structure.
+Typically, one message corresponds to a single xref:nng_msg.5.adoc[`nng_msg`] structure.
 
 ((`NNG_UNIT_MILLIS`))::
 The statistic is a count of milliseconds.
@@ -58,7 +58,7 @@ The statistic is a count of milliseconds.
 The statistic is a count of some other type of event.
 
 For statistics that are neither `NNG_STAT_COUNTER` nor `NNG_STAT_LEVEL`
-type (see `<<nng_stat_type.3#,nng_stat_type()>>`), the unit will
+type (see xref:nng_stat_type.3.adoc[`nng_stat_type()`]), the unit will
 generally be `NNG_UNIT_NONE`.
 
 TIP: Normally rates can be calculated for `NNG_STAT_COUNTER` values for
@@ -76,11 +76,11 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<libnng.3#,libnng(3)>>,
-<<nng_stats_get.3#,nng_stats_get(3)>>,
-<<nng_stat_name.3#,nng_stat_name(3)>>,
-<<nng_stat_type.3#,nng_stat_type(3)>>,
-<<nng_stat_value.3#,nng_stat_value(3)>>,
-<<nng_msg.5#,nng_msg(5)>>,
-<<nng_stat.5#,nng_stat(5)>>,
-<<nng.7#,nng(7)>>
+xref:libnng.3.adoc[libnng(3)],
+xref:nng_stats_get.3.adoc[nng_stats_get(3)],
+xref:nng_stat_name.3.adoc[nng_stat_name(3)],
+xref:nng_stat_type.3.adoc[nng_stat_type(3)],
+xref:nng_stat_value.3.adoc[nng_stat_value(3)],
+xref:nng_msg.5.adoc[nng_msg(5)],
+xref:nng_stat.5.adoc[nng_stat(5)],
+xref:nng.7.adoc[nng(7)]

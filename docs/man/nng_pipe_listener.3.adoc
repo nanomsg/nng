@@ -24,10 +24,10 @@ nng_listener nng_pipe_listener(nng_pipe p);
 
 == DESCRIPTION
 
-The `nng_pipe_listener()` function returns the `<<nng_listener.5#,nng_listener>>`
+The `nng_pipe_listener()` function returns the xref:nng_listener.5.adoc[`nng_listener`]
 that created the pipe _p_.
 If the pipe was not created by a listener, then the returned value will
-have an identifier (`<<nng_listener_id.3#,nng_listener_id()>>`) of `-1`.
+have an identifier (xref:nng_listener_id.3.adoc[`nng_listener_id()`]) of `-1`.
 
 == RETURN VALUES
 
@@ -42,6 +42,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_pipe.5#,nng_pipe(5)>>,
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_pipe.5.adoc[nng_pipe(5)],
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng.7.adoc[nng(7)]

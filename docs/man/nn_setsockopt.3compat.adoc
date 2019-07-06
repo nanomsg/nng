@@ -31,8 +31,8 @@ The value of the option is set by _val_, and _sz_, which are pointers to
 the actual value and the size of the value, respectively.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 The _level_ determines whether the option is a generic socket option,
 or is transport-specific.
@@ -125,7 +125,7 @@ their different application-specific purposes.
 `NN_MAXTTL`::
 Maximum "`hops`" through proxies and devices a message may go through.
 This value, if positive, provides some protection against forwarding loops in
-<<nng_device.3#,device>> chains.
+xref:nng_device.3.adoc[device] chains.
 
 NOTE: Not all protocols offer this protection, so care should still be used
 in configuring device forwarding.
@@ -198,9 +198,9 @@ This function returns zero on success, and -1 on failure.
 == SEE ALSO
 
 [.text-left]
-<<nng_socket.5#,nng_socket(5)>>,
-<<nn_close.3compat#,nn_close(3compat)>>,
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nn_getsockopt.3compat#,nn_getsockopt(3compat)>>,
-<<nng_compat.3compat#,nng_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nn_close.3compat.adoc[nn_close(3compat)],
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nn_getsockopt.3compat.adoc[nn_getsockopt(3compat)],
+xref:nng_compat.3compat.adoc[nng_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

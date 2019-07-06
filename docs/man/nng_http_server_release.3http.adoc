@@ -27,7 +27,7 @@ void nng_http_server_release(nng_http_server *server);
 
 The `nng_http_server_release()` releases an instance of an HTTP _server_
 that was previously held with
-`<<nng_http_server_hold.3http#,nng_http_server_hold()>>`.
+xref:nng_http_server_hold.3http.adoc[`nng_http_server_hold()`].
 
 This effectively drops the reference count on the server instance.  When
 the reference count drops to zero, then the _server_ and all resources
@@ -49,6 +49,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
-<<nng_http_server_stop.3http#,nng_http_server_stop(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_server_hold.3http.adoc[nng_http_server_hold(3http)],
+xref:nng_http_server_stop.3http.adoc[nng_http_server_stop(3http)],
+xref:nng.7.adoc[nng(7)]

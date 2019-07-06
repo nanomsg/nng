@@ -30,7 +30,7 @@ and sets the HTTP body for the request _req_ to it.
 The copy will be deallocated automatically when _req_ is freed.
 
 The copied body data will be automatically sent with the request when it
-is sent using `<<nng_http_conn_write_req.3http#,nng_http_conn_write_req()>>`.
+is sent using xref:nng_http_conn_write_req.3http.adoc[`nng_http_conn_write_req()`].
 
 This also updates the relevant `Content-Length` header of _req_.
 
@@ -38,7 +38,7 @@ NOTE: The current framework does not support sending data via chunked
 transfer-encoding.
 
 TIP: To avoid copying data, the
-`<<nng_http_req_set_data.3http#,nng_http_req_set_data()>>` may be used instead.
+xref:nng_http_req_set_data.3http.adoc[`nng_http_req_set_data()`] may be used instead.
 
 TIP: It is a good idea to also set the `Content-Type` header.
 
@@ -55,8 +55,8 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_conn_write_req.3http#,nng_http_conn_write_req(3http)>>,
-<<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
-<<nng_http_req_set_data.3http#,nng_http_req_set_data(3http)>>,
-<<nng_http_req_set_header.3http#,nng_http_req_set_header(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_conn_write_req.3http.adoc[nng_http_conn_write_req(3http)],
+xref:nng_http_req_alloc.3http.adoc[nng_http_req_alloc(3http)],
+xref:nng_http_req_set_data.3http.adoc[nng_http_req_set_data(3http)],
+xref:nng_http_req_set_header.3http.adoc[nng_http_req_set_header(3http)],
+xref:nng.7.adoc[nng(7)]

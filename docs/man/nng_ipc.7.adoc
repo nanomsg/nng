@@ -65,28 +65,28 @@ longer than 128 bytes, including the `ipc://` prefix.
 
 === Socket Address
 
-When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
-the actual structure is of type <<nng_sockaddr_ipc.5#,`nng_sockaddr_ipc`>>.
+When using an xref:nng_sockaddr.5.adoc[`nng_sockaddr`] structure,
+the actual structure is of type xref:nng_sockaddr_ipc.5.adoc[`nng_sockaddr_ipc`].
 
 === Transport Options
 
 The following transport options are supported by this transport,
 where supported by the underlying platform.
 
-* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_GID,`NNG_OPT_IPC_PEER_GID`>>
-* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_PID,`NNG_OPT_IPC_PEER_PID`>>
-* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_UID,`NNG_OPT_IPC_PEER_UID`>>
-* <<nng_ipc_options.5#NNG_OPT_IPC_PEER_ZONEID,`NNG_OPT_IPC_PEER_ZONEID`>>
-* <<nng_ipc_options.5#NNG_OPT_IPC_PERMISSIONS,`NNG_OPT_IPC_PERMISSIONS`>>
-* <<nng_ipc_options.5#NNG_OPT_IPC_SECURITY_DESCRIPTOR,`NNG_OPT_IPC_SECURITY_DESCRIPTOR`>>
-* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
-* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
-* <<nng_options.5#NNG_OPT_URL,`NNG_OPT_URL`>>
+* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PEER_GID[`NNG_OPT_IPC_PEER_GID`]
+* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PEER_PID[`NNG_OPT_IPC_PEER_PID`]
+* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PEER_UID[`NNG_OPT_IPC_PEER_UID`]
+* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PEER_ZONEID[`NNG_OPT_IPC_PEER_ZONEID`]
+* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_PERMISSIONS[`NNG_OPT_IPC_PERMISSIONS`]
+* xref:nng_ipc_options.5.adoc#NNG_OPT_IPC_SECURITY_DESCRIPTOR[`NNG_OPT_IPC_SECURITY_DESCRIPTOR`]
+* xref:nng_options.5.adoc#NNG_OPT_LOCADDR[`NNG_OPT_LOCADDR`]
+* xref:nng_options.5.adoc#NNG_OPT_REMADDR[`NNG_OPT_REMADDR`]
+* xref:nng_options.5.adoc#NNG_OPT_URL[`NNG_OPT_URL`]
 
 == SEE ALSO
 
 [.text-left]
-<<nng_sockaddr.5#,nng_sockaddr(5)>>,
-<<nng_ipc_options.5#,nng_ipc_options(5)>>,
-<<nng_options.5#,nng_options(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng_ipc_options.5.adoc[nng_ipc_options(5)],
+xref:nng_options.5.adoc[nng_options(5)],
+xref:nng.7.adoc[nng(7)]

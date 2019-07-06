@@ -27,10 +27,10 @@ void nng_http_req_reset(nng_http_req *req);
 
 The `nng_http_req_reset()` function resets the request __req__ so that it
 is just as if it had been freshly allocated with
-`<<nng_http_req_alloc.3http#,nng_http_req_alloc()>>` with a `NULL` URL.
+xref:nng_http_req_alloc.3http.adoc[`nng_http_req_alloc()`] with a `NULL` URL.
 
 NOTE: Before using this with an HTTP operation, the URI must be set using
-`<<nng_http_req_set_uri.3http#,nng_http_req_set_uri()>>`.
+xref:nng_http_req_set_uri.3http.adoc[`nng_http_req_set_uri()`].
 
 == RETURN VALUES
 
@@ -43,6 +43,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
-<<nng_http_req_set_uri.3http#,nng_http_req_set_uri(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_req_alloc.3http.adoc[nng_http_req_alloc(3http)],
+xref:nng_http_req_set_uri.3http.adoc[nng_http_req_set_uri(3http)],
+xref:nng.7.adoc[nng(7)]

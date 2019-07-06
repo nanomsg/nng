@@ -52,49 +52,49 @@ considered when determining whether the handler should be called.
 
 Additionally each handler has a method it is registered to handle
 (the default is `GET`, see
-`<<nng_http_handler_set_method.3http#,nng_http_handler_set_method()>>`), and
+xref:nng_http_handler_set_method.3http.adoc[`nng_http_handler_set_method()`]), and
 optionally a 'Host' header it can be matched against (see
-`<<nng_http_handler_set_host.3http#,nng_http_handler_set_host()>>`).
+xref:nng_http_handler_set_host.3http.adoc[`nng_http_handler_set_host()`]).
 
 In some cases, a handler may reference a logical tree rather (directory)
 rather than just a single element.
-(See `<<nng_http_handler_set_tree.3http#,nng_http_handler_set_tree()>>`).
+(See xref:nng_http_handler_set_tree.3http.adoc[`nng_http_handler_set_tree()`]).
 
 === Custom Handler
 
 The generic (first) form of this creates a handler that uses a user-supplied
 function to process HTTP requests.
 This function uses the asynchronous I/O framework.
-The function takes a pointer to an `<<nng_aio.5#,nng_aio>>` structure.
+The function takes a pointer to an xref:nng_aio.5.adoc[`nng_aio`] structure.
 
 The _aio_ will be passed with the following input values (retrieved with
-`<<nng_aio_get_input.3#,nng_aio_get_input()>>`):
+xref:nng_aio_get_input.3.adoc[`nng_aio_get_input()`]):
 
    0: `nng_http_req *` __request__:: The client's HTTP request.
    1: `nng_http_handler *` __handler__:: Pointer to the handler object.
    2: `nng_http_conn *` __conn__:: The underlying HTTP connection.
 
 The handler should create an `nng_http_res *` response (such as via
-`<<nng_http_res_alloc.3http#,nng_http_res_alloc()>>` or
-`<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error()>>`) and store that
+xref:nng_http_res_alloc.3http.adoc[`nng_http_res_alloc()`] or
+xref:nng_http_res_alloc_error.3http.adoc[`nng_http_res_alloc_error()`]) and store that
 in as the first output (index 0) with
-`<<nng_aio_set_output.3#,nng_aio_set_output()>>`.
+xref:nng_aio_set_output.3.adoc[`nng_aio_set_output()`].
 
 Alternatively, the handler may send the HTTP response (and any associated
 body data) itself using the connection.
 In that case the output at index 0 of the _aio_ should be NULL.
 
-Finally, using the `<<nng_aio_finish.3#,nng_aio_finish()>>` function, the
+Finally, using the xref:nng_aio_finish.3.adoc[`nng_aio_finish()`] function, the
 _aio_ should be completed successfully.
 If any non-zero status is returned back to the caller instead,
 then a generic 500 response will be created and
 sent, if possible, and the connection will be closed.
 
 The _aio_ may be scheduled for deferred completion using the
-`<<nng_aio_defer.3#,nng_aio_defer()>>` function.
+xref:nng_aio_defer.3.adoc[`nng_aio_defer()`] function.
 
 NOTE: The callback function should *NOT* call
-`<<nng_aio_begin.3#,nng_aio_begin()>>`,
+xref:nng_aio_begin.3.adoc[`nng_aio_begin()`],
 as that will already have been done by the server framework.
 
 === Directory Handler
@@ -135,7 +135,7 @@ code such as 301, and a `Location:` header will contain the URL
 referenced by __location__, with any residual suffix from the request
 URI appended.
 
-TIP: Use `<<nng_http_handler_set_tree.3http#,nng_http_handler_set_tree()>>`
+TIP: Use xref:nng_http_handler_set_tree.3http.adoc[`nng_http_handler_set_tree()`]
 to redirect an entire tree.
 For example, it is possible to redirect an entire HTTP site to another
 HTTPS site by specifying `/` as the path and then using the base
@@ -169,18 +169,18 @@ These functions return 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_defer.3#,nng_aio_defer(3)>>,
-<<nng_aio_finish.3#,nng_aio_finish(3)>>,
-<<nng_aio_get_input.3#,nng_aio_get_input(3)>>,
-<<nng_aio_set_output.3#,nng_aio_set_output(3)>>,
-<<nng_http_handler_collect_body.3http#,nng_http_handler_collect_body(3http)>>,
-<<nng_http_handler_free.3http#,nng_http_handler_free(3http)>>,
-<<nng_http_handler_set_host.3http#,nng_http_handler_set_host(3http)>>,
-<<nng_http_handler_set_method.3http#,nng_http_handler_set_method(3http)>>,
-<<nng_http_handler_set_tree.3http#,nng_http_handler_set_tree(3http)>>,
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_http_res_alloc_error.3http#,nng_http_res_alloc_error(3http)>>,
-<<nng_http_server_add_handler.3http#,nng_http_server_add_handler(3http)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng_aio.5#,nng_aio(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_defer.3.adoc[nng_aio_defer(3)],
+xref:nng_aio_finish.3.adoc[nng_aio_finish(3)],
+xref:nng_aio_get_input.3.adoc[nng_aio_get_input(3)],
+xref:nng_aio_set_output.3.adoc[nng_aio_set_output(3)],
+xref:nng_http_handler_collect_body.3http.adoc[nng_http_handler_collect_body(3http)],
+xref:nng_http_handler_free.3http.adoc[nng_http_handler_free(3http)],
+xref:nng_http_handler_set_host.3http.adoc[nng_http_handler_set_host(3http)],
+xref:nng_http_handler_set_method.3http.adoc[nng_http_handler_set_method(3http)],
+xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree(3http)],
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_http_res_alloc_error.3http.adoc[nng_http_res_alloc_error(3http)],
+xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler(3http)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_aio.5.adoc[nng_aio(5)],
+xref:nng.7.adoc[nng(7)]

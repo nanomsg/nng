@@ -31,7 +31,7 @@ _req_ and the _key_ to the _val_.
 The _key_ and _val_ are copied.
 Any previous header with the same _key_ is replaced.
 
-TIP: See `<<nng_http_req_add_header.3http#,nng_http_req_add_header()>>` to
+TIP: See xref:nng_http_req_add_header.3http.adoc[`nng_http_req_add_header()`] to
 add additional headers with the same _key_ without replacing them.
 
 The value of _key_ is case insensitive, and should not include the final
@@ -52,8 +52,8 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_req_alloc.3http#,nng_http_req_alloc(3http)>>,
-<<nng_http_req_add_header.3http#,nng_http_req_add_header(3http)>>,
-<<nng_http_req_del_header.3http#,nng_http_req_del_header(3http)>>,
-<<nng_http_req_get_header.3http#,nng_http_req_get_header(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_req_alloc.3http.adoc[nng_http_req_alloc(3http)],
+xref:nng_http_req_add_header.3http.adoc[nng_http_req_add_header(3http)],
+xref:nng_http_req_del_header.3http.adoc[nng_http_req_del_header(3http)],
+xref:nng_http_req_get_header.3http.adoc[nng_http_req_get_header(3http)],
+xref:nng.7.adoc[nng(7)]

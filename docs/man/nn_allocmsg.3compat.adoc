@@ -33,16 +33,16 @@ The value of _size_ must be positive, and small enough to hold reasonable
 message data plus book-keeping information.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 The value of _type_ *must* be zero.
 (This argument was reserved to support different kinds of memory spaces
 for RDMA devices, but this was never developed in the legacy API.)
 
 The returned message must be disposed of by either
-`<<nn_freemsg.3compat#,nn_freemsg()>>` or
-`<<nn_send.3compat#,nn_send()>>` when the caller is finished with it.
+xref:nn_freemsg.3compat.adoc[`nn_freemsg()`] or
+xref:nn_send.3compat.adoc[`nn_send()`] when the caller is finished with it.
 
 == RETURN VALUES
 
@@ -59,9 +59,9 @@ on failure.
 == SEE ALSO
 
 [.text-left]
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nn_freemsg.3compat#,nn_freemsg(3compat)>>,
-<<nn_reallocmsg.3compat#,nn_reallocmsg(3compat)>>,
-<<nn_send.3compat#,nn_send(3compat)>>,
-<<nng_compat.3compat#,nng_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nn_freemsg.3compat.adoc[nn_freemsg(3compat)],
+xref:nn_reallocmsg.3compat.adoc[nn_reallocmsg(3compat)],
+xref:nn_send.3compat.adoc[nn_send(3compat)],
+xref:nng_compat.3compat.adoc[nng_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

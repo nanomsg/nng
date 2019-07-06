@@ -31,17 +31,17 @@ the HTTP request _req_ to the connection _conn_.
 The entire request is sent,
 including headers, and if present, the request body data.
 (The request body can be set with
-`<<nng_http_req_set_data.3http#,nng_http_req_set_data()>>` or
-`<<nng_http_req_copy_data.3http#,nng_http_req_copy_data()>>`.)
+xref:nng_http_req_set_data.3http.adoc[`nng_http_req_set_data()`] or
+xref:nng_http_req_copy_data.3http.adoc[`nng_http_req_copy_data()`].)
 
 This function returns immediately, with no return value.
 Completion of the operation is signaled via the _aio_, and the final result
-may be obtained via `<<nng_aio_result.3#,nng_aio_result()>>`.
+may be obtained via xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 That result will either be zero or an error code.
 
 NOTE: Consider using the
-`<<nng_http_client_transact.3http#,nng_http_client_transact()>>` or
-`<<nng_http_conn_transact.3http#,nng_http_conn_transact()>>` functions,
+xref:nng_http_client_transact.3http.adoc[`nng_http_client_transact()`] or
+xref:nng_http_conn_transact.3http.adoc[`nng_http_conn_transact()`] functions,
 which provide a simpler interface for performing a complete HTTP client
 transaction.
 
@@ -62,11 +62,11 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_aio_alloc.3#,nng_aio_alloc(3)>>,
-<<nng_aio_result.3#,nng_aio_result(3)>>,
-<<nng_http_client_connect.3http#,nng_http_client_connect(3http)>>,
-<<nng_http_client_transact.3http#,nng_http_client_transact(3http)>>,
-<<nng_http_conn_read_all.3http#,nng_http_conn_read_all(3http)>>,
-<<nng_http_conn_transact.3http#,nng_http_conn_transact(3http)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_aio_alloc.3.adoc[nng_aio_alloc(3)],
+xref:nng_aio_result.3.adoc[nng_aio_result(3)],
+xref:nng_http_client_connect.3http.adoc[nng_http_client_connect(3http)],
+xref:nng_http_client_transact.3http.adoc[nng_http_client_transact(3http)],
+xref:nng_http_conn_read_all.3http.adoc[nng_http_conn_read_all(3http)],
+xref:nng_http_conn_transact.3http.adoc[nng_http_conn_transact(3http)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

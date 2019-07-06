@@ -120,17 +120,17 @@ applied to listeners that have not been started yet.
 Generally, the following option values are also available for TLS objects,
 when appropriate for the context:
 
-* <<nng_options.5#NNG_OPT_LOCADDR,`NNG_OPT_LOCADDR`>>
-* <<nng_options.5#NNG_OPT_REMADDR,`NNG_OPT_REMADDR`>>
+* xref:nng_options.5.adoc#NNG_OPT_LOCADDR[`NNG_OPT_LOCADDR`]
+* xref:nng_options.5.adoc#NNG_OPT_REMADDR[`NNG_OPT_REMADDR`]
 
 == SEE ALSO
 
 [.text-left]
-<<nng_ipc_dialer_getopt.3ipc#,nng_ipc_dialer_getopt(3ipc)>>,
-<<nng_ipc_dialer_setopt.3ipc#,nng_ipc_dialer_setopt(3ipc)>>,
-<<nng_ipc_getopt.3ipc#,nng_ipc_getopt(3ipc)>>,
-<<nng_ipc_listener_getopt.3ipc#,nng_ipc_listener_getopt(3ipc)>>,
-<<nng_ipc_listener_setopt.3ipc#,nng_ipc_listener_setopt(3ipc)>>,
-<<nng_ipc_setopt.3ipc#,nng_ipc_setopt(3ipc)>>,
-<<nng_options.5#,nng_options(5)>>
-<<nng.7#,nng(7)>>
+xref:nng_ipc_dialer_getopt.3ipc.adoc[nng_ipc_dialer_getopt(3ipc)],
+xref:nng_ipc_dialer_setopt.3ipc.adoc[nng_ipc_dialer_setopt(3ipc)],
+xref:nng_ipc_getopt.3ipc.adoc[nng_ipc_getopt(3ipc)],
+xref:nng_ipc_listener_getopt.3ipc.adoc[nng_ipc_listener_getopt(3ipc)],
+xref:nng_ipc_listener_setopt.3ipc.adoc[nng_ipc_listener_setopt(3ipc)],
+xref:nng_ipc_setopt.3ipc.adoc[nng_ipc_setopt(3ipc)],
+xref:nng_options.5.adoc[nng_options(5)]
+xref:nng.7.adoc[nng(7)]

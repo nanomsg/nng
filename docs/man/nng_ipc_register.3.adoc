@@ -40,5 +40,5 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_ipc.7#,nng_ipc(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_ipc.7.adoc[nng_ipc(5)],
+xref:nng.7.adoc[nng(7)]

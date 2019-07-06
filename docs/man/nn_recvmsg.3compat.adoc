@@ -28,8 +28,8 @@ The `nn_recvmsg()` function receives a message into the header described by
 _hdr_ using the socket _sock_.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 The _flags_ field may contain the special flag `NN_DONTWAIT`.
 In this case, if no message is ready for receiving on _sock_,
@@ -62,16 +62,16 @@ The last member of this array may have the `iov_len` field set to `NN_MSG`,
 in which case the function shall allocate a message buffer, and store the
 pointer to it at the address indicated by `iov_base`.
 This can help save an extra copy operation.
-The buffer should be deallocated by `<<nn_freemsg.3compat#,nn_freemsg()>>`
+The buffer should be deallocated by xref:nn_freemsg.3compat.adoc[`nn_freemsg()`]
 or similar when it is no longer needed.
 
 The values of `msg_control` and `msg_controllen` describe a buffer
 of ancillary data associated with the message.
 This is currently only useful to obtain the message headers
-used with <<nng.7#raw_mode,raw mode>> sockets.
+used with xref:nng.7.adoc#raw_mode[raw mode] sockets.
 In all other circumstances these fields should be zero.
 Details about this structure are covered in
-`<<nn_cmsg.3compat#,nn_cmsg(3compat)>>`.
+xref:nn_cmsg.3compat.adoc[`nn_cmsg(3compat)`].
 
 == RETURN VALUES
 
@@ -90,10 +90,10 @@ This function returns the number of bytes received on success, and -1 on error.
 == SEE ALSO
 
 [.text-left]
-<<nn_cmsg.3compat#,nn_cmsg(3compat)>>,
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nn_recv.3compat#,nn_recv(3compat)>>,
-<<nn_send.3compat#,nn_send(3compat)>>,
-<<nn_socket.3compat#,nn_socket(3compat)>>,
-<<nng_compat.3compat#,nn_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nn_cmsg.3compat.adoc[nn_cmsg(3compat)],
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nn_recv.3compat.adoc[nn_recv(3compat)],
+xref:nn_send.3compat.adoc[nn_send(3compat)],
+xref:nn_socket.3compat.adoc[nn_socket(3compat)],
+xref:nng_compat.3compat.adoc[nn_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

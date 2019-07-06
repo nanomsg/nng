@@ -29,12 +29,12 @@ struct nn_cmsghdr {
 == DESCRIPTION
 
 The `nn_cmsghdr` structure describes a block of control data that is
-associated with a message either sent by `<<nn_sendmsg.3compat#,nn_sendmsg()>>`
-or received by `<<nn_recvmsg.3compat#,nn_recvmsg()>>`.
+associated with a message either sent by xref:nn_sendmsg.3compat.adoc[`nn_sendmsg()`]
+or received by xref:nn_recvmsg.3compat.adoc[`nn_recvmsg()`].
 
 NOTE: This structure and supporting macros are provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 Each header is followed by `cmsg_len` bytes of data, plus any padding required
 to align the structure.
@@ -72,7 +72,7 @@ to align for another header.
 == SEE ALSO
 
 [.text-left]
-<<nn_recvmsg.3compat#,nn_recvmsg(3compat)>>,
-<<nn_sendmsg.3compat#,nn_sendmsg(3compat)>>,
-<<nng_compat.3compat#,nng_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nn_recvmsg.3compat.adoc[nn_recvmsg(3compat)],
+xref:nn_sendmsg.3compat.adoc[nn_sendmsg(3compat)],
+xref:nng_compat.3compat.adoc[nng_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

@@ -39,12 +39,12 @@ The _flags_ is a bit mask that may contain any of the following values:
   of another pointer (of type `void *`), and the _sizep_ pointer must be set
   to a location to receive the size of the message body.
   The function will then allocate a message buffer
-  (as if by `<<nng_alloc.3#,nng_alloc()>>`), fill it with
+  (as if by xref:nng_alloc.3.adoc[`nng_alloc()`]), fill it with
   the message body, and store it at the address referenced by _data_, and update
   the size referenced by _sizep_.
   The caller is responsible for disposing of the received buffer either by
-  the `<<nng_free.3#,nng_free()>>` function or passing the message (also
-  with the `NNG_FLAG_ALLOC` flag) in a call to `<<nng_send.3#,nng_send()>>`.
+  the xref:nng_free.3.adoc[`nng_free()`] function or passing the message (also
+  with the `NNG_FLAG_ALLOC` flag) in a call to xref:nng_send.3.adoc[`nng_send()`].
 
 If the special flag `NNG_FLAG_ALLOC` (see above) is not specified, then the
 caller must set _data_ to a buffer to receive the message body content,
@@ -54,11 +54,11 @@ updated with the actual message body length copied into _data_.
 
 NOTE: The semantics of what receiving a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
-(For example, with a <<nng_req.7#,_req_>> socket a message may only be received
-after a request has been sent, and a <<nng_sub.7#,_sub_>> socket
+(For example, with a xref:nng_req.7.adoc[_req_] socket a message may only be received
+after a request has been sent, and a xref:nng_sub.7.adoc[_sub_] socket
 may only receive messages corresponding to topics to which it has subscribed.)
 Furthermore, some protocols may not support receiving data at all, such as
-<<nng_pub.7#,_pub_>>.
+xref:nng_pub.7.adoc[_pub_].
 
 TIP: The `NNG_FLAG_ALLOC` flag can be used to reduce data copies, thereby
 increasing performance, particularly if the buffer is reused to send
@@ -83,9 +83,9 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_alloc.3#,nng_alloc(3)>>,
-<<nng_free.3#,nng_free(3)>>,
-<<nng_recvmsg.3#,nng_recvmsg(3)>>,
-<<nng_send.3#,nng_send(3)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_alloc.3.adoc[nng_alloc(3)],
+xref:nng_free.3.adoc[nng_free(3)],
+xref:nng_recvmsg.3.adoc[nng_recvmsg(3)],
+xref:nng_send.3.adoc[nng_send(3)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

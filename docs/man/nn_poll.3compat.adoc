@@ -36,8 +36,8 @@ int nn_poll(struct nn_pollfd *pfds, int npfd, int timeout);
 The `nn_poll()` function polls a group of sockets for readiness to send or receive.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 The array of _nfds_ sockets to poll for are passed into _pfds_.
 Each member of this array is initialized with the `fd` field set to
@@ -67,10 +67,10 @@ If the _timeout_ is -1, then the function waits forever, or until one of the
 requested events occurs.
 
 IMPORTANT: This function is only suitable for use with sockets obtained with the
-`<<nn_socket.3compat#,nn_socket()>>` function, and is not compatible
+xref:nn_socket.3compat.adoc[`nn_socket()`] function, and is not compatible
 with file descriptors obtained via any other means.
 This includes file descriptors obtained using the `NN_SNDFD` or `NN_RCVFD`
-options with `<<nn_getsockopt.3compat#,nn_getsockopt()>>`
+options with xref:nn_getsockopt.3compat.adoc[`nn_getsockopt()`]
 
 NOTE: This function is significantly less efficient than other polling
 or asynchronous I/O mechanisms, and is provided for API compatibility only.
@@ -94,9 +94,9 @@ This function returns the number of sockets with events on success, or -1 on err
 == SEE ALSO
 
 [.text-left]
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nn_recv.3compat#,nn_recv(3compat)>>,
-<<nn_send.3compat#,nn_send(3compat)>>,
-<<nn_socket.3compat#,nn_socket(3compat)>>,
-<<nng_compat.3compat#,nn_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nn_recv.3compat.adoc[nn_recv(3compat)],
+xref:nn_send.3compat.adoc[nn_send(3compat)],
+xref:nn_socket.3compat.adoc[nn_socket(3compat)],
+xref:nng_compat.3compat.adoc[nn_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

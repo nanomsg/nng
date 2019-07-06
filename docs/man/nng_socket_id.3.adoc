@@ -29,11 +29,11 @@ if it is valid.
 Otherwise it returns `-1`.
 
 NOTE: A socket is considered valid if it was ever opened with a protocol
-constructor, such as the `<<nng_req_open.3#,nng_req0_open()>>` function.
+constructor, such as the xref:nng_req_open.3.adoc[`nng_req0_open()`] function.
 Sockets that are allocated on the stack or statically should be
 initialized with the macro
-`<<nng_socket.5#NNG_SOCKET_INITIALIZER,NNG_SOCKET_INITIALIZER>>` to ensure that
-they cannot be confused with a valid socket before they are opened.
+xref:nng_socket.5.adoc#NNG_SOCKET_INITIALIZER[`NNG_SOCKET_INITIALIZER`]
+to ensure that they cannot be confused with a valid socket before they are opened.
 
 == RETURN VALUES
 
@@ -47,5 +47,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_socket.5#,nng_socket(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nng.7.adoc[nng(7)]

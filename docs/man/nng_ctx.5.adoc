@@ -59,7 +59,7 @@ global behavior.
 
 (((concurrent)))(((raw mode)))
 Historically, applications wanting to use a stateful protocol concurrently
-would have to resort to xref:nng.7#raw_mode[raw mode] sockets, which bypasses
+would have to resort to xref:nng.7.adoc#raw_mode[raw mode] sockets, which bypasses
 much of the various protocol handling, leaving it to up to the application
 to do so.
 Contexts make it possible to still benefit from advanced protocol handling,

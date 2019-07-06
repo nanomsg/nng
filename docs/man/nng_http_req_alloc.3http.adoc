@@ -32,7 +32,7 @@ to perform an HTTP/1.1 `GET` operation using the URL specified in __url__.
 
 TIP: It is possible to specify `NULL` for the URL.
 In this case the URI for the request must be specified by a subsequent call
-to `<<nng_http_req_set_uri.3http#,nng_http_req_set_uri()>>`.
+to xref:nng_http_req_set_uri.3http.adoc[`nng_http_req_set_uri()`].
 
 == RETURN VALUES
 
@@ -47,22 +47,22 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_conn_read_req.3http#,nng_http_conn_read_req(3http)>>,
-<<nng_http_conn_write_req.3http#,nng_http_conn_write_req(3http)>>,
-<<nng_http_req_add_header.3http#,nng_http_req_add_header(3http)>>,
-<<nng_http_req_copy_data.3http#,nng_http_req_copy_data(3http)>>,
-<<nng_http_req_del_header.3http#,nng_http_req_del_header(3http)>>,
-<<nng_http_req_free.3http#,nng_http_req_free(3http)>>,
-<<nng_http_req_get_header.3http#,nng_http_req_get_header(3http)>>,
-<<nng_http_req_get_method.3http#,nng_http_req_get_method(3http)>>,
-<<nng_http_req_get_uri.3http#,nng_http_req_get_uri(3http)>>,
-<<nng_http_req_get_version.3http#,nng_http_req_get_version(3http)>>,
-<<nng_http_req_reset.3http#,nng_http_req_reset(3http)>>,
-<<nng_http_req_set_data.3http#,nng_http_req_set_data(3http)>>,
-<<nng_http_req_set_method.3http#,nng_http_req_set_method(3http)>>,
-<<nng_http_req_set_uri.3http#,nng_http_req_set_uri(3http)>>,
-<<nng_http_req_set_version.3http#,nng_http_req_set_version(3http)>>,
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_url_parse.3#,nng_url_parse(3)>>
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_conn_read_req.3http.adoc[nng_http_conn_read_req(3http)],
+xref:nng_http_conn_write_req.3http.adoc[nng_http_conn_write_req(3http)],
+xref:nng_http_req_add_header.3http.adoc[nng_http_req_add_header(3http)],
+xref:nng_http_req_copy_data.3http.adoc[nng_http_req_copy_data(3http)],
+xref:nng_http_req_del_header.3http.adoc[nng_http_req_del_header(3http)],
+xref:nng_http_req_free.3http.adoc[nng_http_req_free(3http)],
+xref:nng_http_req_get_header.3http.adoc[nng_http_req_get_header(3http)],
+xref:nng_http_req_get_method.3http.adoc[nng_http_req_get_method(3http)],
+xref:nng_http_req_get_uri.3http.adoc[nng_http_req_get_uri(3http)],
+xref:nng_http_req_get_version.3http.adoc[nng_http_req_get_version(3http)],
+xref:nng_http_req_reset.3http.adoc[nng_http_req_reset(3http)],
+xref:nng_http_req_set_data.3http.adoc[nng_http_req_set_data(3http)],
+xref:nng_http_req_set_method.3http.adoc[nng_http_req_set_method(3http)],
+xref:nng_http_req_set_uri.3http.adoc[nng_http_req_set_uri(3http)],
+xref:nng_http_req_set_version.3http.adoc[nng_http_req_set_version(3http)],
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_url_parse.3.adoc[nng_url_parse(3)]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

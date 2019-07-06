@@ -34,11 +34,11 @@ It is also "`reliable`", in that a the requester will keep retrying until
 a reply is received.
 
 The _rep_ protocol is the replier side, and the
-<<nng_req.7#,_req_>> protocol is the requester side.
+xref:nng_req.7.adoc[_req_] protocol is the requester side.
 
 === Socket Operations
 
-The `<<nng_rep_open.3#,nng_rep0_open()>>` functions create a replier socket.
+The xref:nng_rep_open.3.adoc[`nng_rep0_open()`] functions create a replier socket.
 This socket may be used to receive messages (requests), and then to send
 replies.
 
@@ -50,12 +50,12 @@ was previously received.
 Likewise, only one receive operation may be pending at a time.
 Any additional concurrent receive operations will result in `NNG_ESTATE`.
 
-<<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
+xref:nng.7.adoc#raw_mode[Raw] mode sockets ignore all these restrictions.
 
 === Context Operations
 
-This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
-use cases using `<<nng_ctx_open.3#,nng_ctx_open()>>`.
+This protocol supports the creation of xref:nng_ctx.5.adoc[contexts] for concurrent
+use cases using xref:nng_ctx_open.3.adoc[`nng_ctx_open()`].
 
 Each context may have at most one outstanding request, and operates
 independently from the others.
@@ -76,11 +76,11 @@ The _rep_ protocol has no protocol-specific options.
 
 (((backtrace)))
 The _rep_ protocol uses a _backtrace_ in the header.
-This is more fully documented in the <<nng_req.7#,_req_>> manual.
+This is more fully documented in the xref:nng_req.7.adoc[_req_] manual.
 
 == SEE ALSO
 
 [.text-left]
-<<nng_rep_open.3#,nng_rep_open(3)>>,
-<<nng.7#,nng(7)>>,
-<<nng_req.7#,nng_req(7)>>
+xref:nng_rep_open.3.adoc[nng_rep_open(3)],
+xref:nng.7.adoc[nng(7)],
+xref:nng_req.7.adoc[nng_req(7)]

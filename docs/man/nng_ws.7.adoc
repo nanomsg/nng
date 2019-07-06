@@ -37,11 +37,11 @@ http://nanomsg.org/rfcs/sp-websocket-v1.html[WebSocket Mapping for Scalability P
 === Registration
 
 Depending upon how the library was built, it may be necessary to
-register the transport by calling <<nng_ws_register.3#,`nng_ws_register()`>>.
+register the transport by calling xref:nng_ws_register.3.adoc[`nng_ws_register()`].
 
 If ((TLS)) support is enabled in the library, secure WebSockets (over TLS v1.2)
 can be used as well, but the secure transport may have to be registered using
-the <<nng_wss_register.3#,`nng_wss_register()`>> function.
+the xref:nng_wss_register.3.adoc[`nng_wss_register()`] function.
 
 === URI Format
 
@@ -77,10 +77,10 @@ permitted, with IPv4 addresses mapped to IPv6 addresses.)
 
 === Socket Address
 
-When using an <<nng_sockaddr.5#,`nng_sockaddr`>> structure,
+When using an xref:nng_sockaddr.5.adoc[`nng_sockaddr`] structure,
 the actual structure is either of type
-<<nng_sockaddr_in.5#,`nng_sockaddr_in`>> (for IPv4) or
-<<nng_sockaddr_in6.5#,`nng_sockaddr_in6`>> (for IPv6).
+xref:nng_sockaddr_in.5.adoc[`nng_sockaddr_in`] (for IPv4) or
+xref:nng_sockaddr_in6.5.adoc[`nng_sockaddr_in6`] (for IPv6).
 
 === Server Instances
 
@@ -133,7 +133,7 @@ configuration object for `wss://` endpoints.
 A hold is placed on the underlying
 configuration object before returning it.
 The caller should release the object with
-<<nng_tls_config_free.3tls#,`nng_tls_config_free()`>> when it no
+xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`] when it no
 longer needs the TLS configuration.
 
 TIP: Use this option when advanced TLS configuration is required.
@@ -141,19 +141,19 @@ TIP: Use this option when advanced TLS configuration is required.
 ((`NNG_OPT_TLS_CA_FILE`))::
 (string) Write-only option naming a file containing certificates to
 use for peer validation.
-See <<nng_tls_config_ca_file.3tls#,`nng_tls_config_ca_file()`>> for more
+See xref:nng_tls_config_ca_file.3tls.adoc[`nng_tls_config_ca_file()`] for more
 information.
 
 ((`NNG_OPT_TLS_CERT_KEY_FILE`))::
 (string) Write-only option naming a file containing the local certificate and
 associated private key.
 The private key used must be unencrypted.
-See <<nng_tls_config_own_cert.3tls#,`nng_tls_config_own_cert()`>> for more
+See xref:nng_tls_config_own_cert.3tls.adoc[`nng_tls_config_own_cert()`] for more
 information.
 
 ((`NNG_OPT_TLS_AUTH_MODE`))::
 (`int`) Write-only option used to configure the authentication mode used.
-See <<nng_tls_config_auth_mode.3tls#,`nng_tls_config_auth_mode()`>> for
+See xref:nng_tls_config_auth_mode.3tls.adoc[`nng_tls_config_auth_mode()`] for
 more details.
 
 `NNG_OPT_TLS_VERIFIED`::
@@ -170,8 +170,8 @@ May return incorrect results if peer authentication is disabled.
 == SEE ALSO
 
 [.text-left]
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
-<<nng_sockaddr.5#,nng_sockaddr(5)>>,
-<<nng_sockaddr_in.5#,nng_sockaddr_in(5)>>,
-<<nng_sockaddr_in6.5#,nng_sockaddr_in6(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng_sockaddr_in.5.adoc[nng_sockaddr_in(5)],
+xref:nng_sockaddr_in6.5.adoc[nng_sockaddr_in6(5)],
+xref:nng.7.adoc[nng(7)]

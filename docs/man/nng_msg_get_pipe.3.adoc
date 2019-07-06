@@ -24,7 +24,7 @@ nng_pipe nng_msg_get_pipe(nng_msg *msg);
 
 == DESCRIPTION
 
-The `nng_msg_get_pipe()` returns the `<<nng_pipe.5#,nng_pipe>>` object
+The `nng_msg_get_pipe()` returns the xref:nng_pipe.5.adoc[`nng_pipe`] object
 associated with message _msg_.
 On receive, this is the pipe from which a message was received.
 On transmit, this would be the pipe that the message should be delivered
@@ -36,7 +36,7 @@ The most usual use case for this is to obtain information about the peer
 from which the message was received.
 This can be used to provide different behaviors for different peers, such as
 a higher level of authentication for peers located on an untrusted network.
-The `<<nng_pipe_getopt.3#,nng_pipe_getopt()>>` function
+The xref:nng_pipe_getopt.3.adoc[`nng_pipe_getopt()`] function
 is useful in this situation.
 
 
@@ -54,7 +54,7 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_msg_alloc.3#,nng_msg_alloc(3)>>,
-<<nng_msg_set_pipe.3#,nng_msg_set_pipe(3)>>,
-<<nng_pipe_getopt.3#,nng_pipe_getopt(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
+xref:nng_msg_set_pipe.3.adoc[nng_msg_set_pipe(3)],
+xref:nng_pipe_getopt.3.adoc[nng_pipe_getopt(3)],
+xref:nng.7.adoc[nng(7)]

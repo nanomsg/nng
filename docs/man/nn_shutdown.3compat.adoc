@@ -31,8 +31,8 @@ Additionally, any established connections associated with _ep_ will be
 closed.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 == RETURN VALUES
 
@@ -47,9 +47,9 @@ This function returns zero on success, and -1 on error.
 == SEE ALSO
 
 [.text-left]
-<<nn_bind.3compat#,nn_bind(3compat)>>,
-<<nn_connect.3compat#,nn_connect(3compat)>>,
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nn_socket.3compat#,nn_socket(3compat)>>,
-<<nng_compat.3compat#,nn_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nn_bind.3compat.adoc[nn_bind(3compat)],
+xref:nn_connect.3compat.adoc[nn_connect(3compat)],
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nn_socket.3compat.adoc[nn_socket(3compat)],
+xref:nng_compat.3compat.adoc[nn_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

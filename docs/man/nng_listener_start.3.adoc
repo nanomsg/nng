@@ -29,7 +29,7 @@ The `nng_listener_start()` function starts the listener _l_.
 This causes the listener to bind to the address it was created with,
 and to start accepting connections from remote
 dialers.
-Each new connection results in an `<<nng_pipe.5#,nng_pipe>>` object,
+Each new connection results in an xref:nng_pipe.5.adoc[`nng_pipe`] object,
 which will be attached to the listener's socket.
 
 The _flags_ argument is ignored, but reserved for future use.
@@ -50,8 +50,8 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_listen.3#,nng_listen(3)>>,
-<<nng_listener_create.3#,nng_listener_create(3)>>
-<<nng_listener.5#,nng_listener(5)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_listen.3.adoc[nng_listen(3)],
+xref:nng_listener_create.3.adoc[nng_listener_create(3)]
+xref:nng_listener.5.adoc[nng_listener(5)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

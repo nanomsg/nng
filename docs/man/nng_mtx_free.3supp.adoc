@@ -39,5 +39,5 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_mtx_alloc.3supp#,nng_mtx_alloc(3supp)>>,
-<<nng.7#,nng(7)>>
+xref:nng_mtx_alloc.3supp.adoc[nng_mtx_alloc(3supp)],
+xref:nng.7.adoc[nng(7)]

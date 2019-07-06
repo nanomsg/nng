@@ -24,10 +24,10 @@ nng_dialer nng_pipe_dialer(nng_pipe p);
 
 == DESCRIPTION
 
-The `nng_pipe_dialer()` function returns the `<<nng_dialer.5#,nng_dialer>>`
+The `nng_pipe_dialer()` function returns the xref:nng_dialer.5.adoc[`nng_dialer`]
 that created the pipe _p_.
 If the pipe was not created by a dialer, then the returned value will
-have an identifier (`<<nng_dialer_id.3#,nng_dialer_id()>>`) of `-1`.
+have an identifier (xref:nng_dialer_id.3.adoc[`nng_dialer_id()`]) of `-1`.
 
 == RETURN VALUES
 
@@ -42,6 +42,6 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<nng_pipe.5#,nng_pipe(5)>>,
-<<nng_dialer.5#,nng_dialer(5)>>,
-<<nng.7#,nng(7)>>
+xref:nng_pipe.5.adoc[nng_pipe(5)],
+xref:nng_dialer.5.adoc[nng_dialer(5)],
+xref:nng.7.adoc[nng(7)]

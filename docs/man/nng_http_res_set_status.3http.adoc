@@ -103,7 +103,7 @@ Please see the relevant HTTP RFCs for the semantics and correct
 use of these status codes.
 
 TIP: It is a good idea to also set the "`reason phrase`" with
-`<<nng_http_res_set_reason.3http#,nng_http_set_reason()>>`.
+xref:nng_http_res_set_reason.3http.adoc[`nng_http_set_reason()`].
 This will help any humans who may have to diagnose a failure.
 
 == RETURN VALUES
@@ -118,7 +118,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_http_res_get_status.3http#,nng_http_req_get_status(3http)>>,
-<<nng_http_res_set_reason.3http#,nng_http_req_set_reason(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_http_res_get_status.3http.adoc[nng_http_req_get_status(3http)],
+xref:nng_http_res_set_reason.3http.adoc[nng_http_req_set_reason(3http)],
+xref:nng.7.adoc[nng(7)]

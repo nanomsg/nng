@@ -41,8 +41,8 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<libnng.3#,libnng(3)>>,
-<<nng_stat_child.3#,nng_stat_child(3)>>,
-<<nng_stats_get.3#,nng_stats_get(3)>>,
-<<nng_stat.5#,nng_stat(5)>>,
-<<nng.7#,nng(7)>>
+xref:libnng.3.adoc[libnng(3)],
+xref:nng_stat_child.3.adoc[nng_stat_child(3)],
+xref:nng_stats_get.3.adoc[nng_stats_get(3)],
+xref:nng_stat.5.adoc[nng_stat(5)],
+xref:nng.7.adoc[nng(7)]

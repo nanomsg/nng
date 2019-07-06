@@ -40,19 +40,19 @@ some reason.)
 
 (((load-balancing)))
 The requester generally only has one outstanding request at a time unless
-in "raw" mode (via
-`<<nng_options.5#NNG_OPT_RAW,NNG_OPT_RAW>>`),
+in "`raw`" mode (via
+xref:nng_options.5.adoc#NNG_OPT_RAW[`NNG_OPT_RAW`]),
 and it will generally attempt to spread work requests to different peer repliers.
 
-TIP: This property, when combined with `<<nng_device.3#,nng_device()>>`
+TIP: This property, when combined with xref:nng_device.3.adoc[`nng_device()`]
 can help provide a degree of load-balancing.
 
 The _req_ protocol is the requester side, and the
-<<nng_rep.7#,_rep_>> protocol is the replier side.
+xref:nng_rep.7.adoc[_rep_] protocol is the replier side.
 
 === Socket Operations
 
-The `<<nng_req_open.3#,nng_req0_open()>>` functions create a requester socket.
+The xref:nng_req_open.3.adoc[`nng_req0_open()`] functions create a requester socket.
 This socket may be used to send messages (requests), and then to receive replies.
 
 Generally a reply can only be received after sending a request.
@@ -69,12 +69,12 @@ but it will not stop a replier
 from processing a request it has already received or terminate a request
 that has already been placed on the wire.
 
-<<nng.7#raw_mode,Raw>> mode sockets ignore all these restrictions.
+xref:nng.7.adoc#raw_mode[Raw] mode sockets ignore all these restrictions.
 
 === Context Operations
 
-This protocol supports the creation of <<nng_ctx.5#,contexts>> for concurrent
-use cases using `<<nng_ctx_open.3#,nng_ctx_open()>>`.
+This protocol supports the creation of xref:nng_ctx.5.adoc[contexts] for concurrent
+use cases using xref:nng_ctx_open.3.adoc[`nng_ctx_open()`].
 
 The `NNG_OPT_REQ_RESENDTIME` value may be configured differently
 on contexts created this way.
@@ -97,7 +97,7 @@ The following protocol-specific option is available.
 
 ((`NNG_OPT_REQ_RESENDTIME`))::
 
-   (`<<nng_duration.5#,nng_duration>>`)
+   (xref:nng_duration.5.adoc[`nng_duration`])
    When a new request is started, a timer of this duration is also started.
    If no reply is received before this timer expires, then the request will
    be resent.
@@ -118,7 +118,7 @@ These will be distinguishable from the request ID by having their most
 significant bit clear.
 
 When a request message is received by a forwarding node (see
-`<<nng_device.3#,nng_device()>>`), the forwarding node prepends a
+xref:nng_device.3.adoc[`nng_device()`]), the forwarding node prepends a
 32-bit peer ID (which *must* have the most significant bit clear),
 which is the forwarder's way of identifying the directly connected
 peer from which it received the message.
@@ -146,9 +146,9 @@ request ID it originally used for the request.
 == SEE ALSO
 
 [.text-left]
-<<nng_ctx_open.3#,nng_ctx_open(3)>>,
-<<nng_device.3#,nng_device(3)>>,
-<<nng_req_open.3#,nng_req_open(3)>>,
-<<nng_ctx.5#,nng_ctx(5)>>,
-<<nng.7#,nng(7)>>,
-<<nng_rep.7#,nng_rep(7)>>
+xref:nng_ctx_open.3.adoc[nng_ctx_open(3)],
+xref:nng_device.3.adoc[nng_device(3)],
+xref:nng_req_open.3.adoc[nng_req_open(3)],
+xref:nng_ctx.5.adoc[nng_ctx(5)],
+xref:nng.7.adoc[nng(7)],
+xref:nng_rep.7.adoc[nng_rep(7)]

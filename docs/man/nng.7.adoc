@@ -52,37 +52,37 @@ other languages please check the http://nanomsg.org/[website].
 == Protocols
 
 [horizontal]
-<<nng_bus.7#,nng_bus(7)>>:: Bus protocol
-<<nng_pair.7#,nng_pair(7)>>:: Pair protocol
-<<nng_pub.7#,nng_pub(7)>>:: Publisher side of publish/subscribe protocol
-<<nng_pull.7#,nng_pull(7)>>:: Pull side of pipeline protocol
-<<nng_push.7#,nng_push(7)>>:: Push side of pipeline protocol
-<<nng_sub.7#,nng_sub(7)>>:: Subscriber side of publish/subscribe protocol
-<<nng_rep.7#,nng_rep(7)>>:: Reply side of request/reply protocol
-<<nng_req.7#,nng_req(7)>>:: Request side of request/reply protocol
-<<nng_respondent.7#,nng_respondent(7)>>:: Respondent side of survey protocol
-<<nng_surveyor.7#,nng_surveyor(7)>>:: Surveyor side of survey protocol
+xref:nng_bus.7.adoc[nng_bus(7)]:: Bus protocol
+xref:nng_pair.7.adoc[nng_pair(7)]:: Pair protocol
+xref:nng_pub.7.adoc[nng_pub(7)]:: Publisher side of publish/subscribe protocol
+xref:nng_pull.7.adoc[nng_pull(7)]:: Pull side of pipeline protocol
+xref:nng_push.7.adoc[nng_push(7)]:: Push side of pipeline protocol
+xref:nng_sub.7.adoc[nng_sub(7)]:: Subscriber side of publish/subscribe protocol
+xref:nng_rep.7.adoc[nng_rep(7)]:: Reply side of request/reply protocol
+xref:nng_req.7.adoc[nng_req(7)]:: Request side of request/reply protocol
+xref:nng_respondent.7.adoc[nng_respondent(7)]:: Respondent side of survey protocol
+xref:nng_surveyor.7.adoc[nng_surveyor(7)]:: Surveyor side of survey protocol
 
-//* <<nng_bus.7#,nng_bus(7)>> - Bus protocol
-//* <<nng_pair.7#,nng_pair(7)>> - Pair protocol
-//* <<nng_pub.7#,nng_pub(7)>> - Publisher side of publish/subscribe protocol
-//* <<nng_pull.7#,nng_pull(7)>> - Pull side of pipeline protocol
-//* <<nng_push.7#,nng_push(7)>> - Push side of pipeline protocol
-//* <<nng_sub.7#,nng_sub(7)>> - Subscriber side of publish/subscribe protocol
-//* <<nng_rep.7#,nng_rep(7)>> - Reply side of request/reply protocol
-//* <<nng_req.7#,nng_req(7)>> - Request side of request/reply protocol
-//* <<nng_respondent.7#,nng_respondent(7)>> - Respondent side of survey protocol
-//* <<nng_surveyor.7#,nng_surveyor(7)>> - Surveyor side of survey protocol
+//* xref:nng_bus.7.adoc[nng_bus(7)] - Bus protocol
+//* xref:nng_pair.7.adoc[nng_pair(7)] - Pair protocol
+//* xref:nng_pub.7.adoc[nng_pub(7)] - Publisher side of publish/subscribe protocol
+//* xref:nng_pull.7.adoc[nng_pull(7)] - Pull side of pipeline protocol
+//* xref:nng_push.7.adoc[nng_push(7)] - Push side of pipeline protocol
+//* xref:nng_sub.7.adoc[nng_sub(7)] - Subscriber side of publish/subscribe protocol
+//* xref:nng_rep.7.adoc[nng_rep(7)] - Reply side of request/reply protocol
+//* xref:nng_req.7.adoc[nng_req(7)] - Request side of request/reply protocol
+//* xref:nng_respondent.7.adoc[nng_respondent(7)] - Respondent side of survey protocol
+//* xref:nng_surveyor.7.adoc[nng_surveyor(7)] - Surveyor side of survey protocol
 
 == Transports
 
 [horizontal]
-<<nng_inproc.7#,nng_inproc(7)>>:: Intra-process transport
-<<nng_ipc.7#,nng_ipc(7)>>:: Inter-process transport
-<<nng_tls.7#,nng_tls(7)>>:: TLSv1.2 over TCP transport
-<<nng_tcp.7#,nng_tcp(7)>>:: TCP (and TCPv6) transport
-<<nng_ws.7#,nng_ws(7)>>:: WebSocket transport
-<<nng_zerotier.7#,nng_zerotier(7)>>:: ZeroTier transport
+xref:nng_inproc.7.adoc[nng_inproc(7)]:: Intra-process transport
+xref:nng_ipc.7.adoc[nng_ipc(7)]:: Inter-process transport
+xref:nng_tls.7.adoc[nng_tls(7)]:: TLSv1.2 over TCP transport
+xref:nng_tcp.7.adoc[nng_tcp(7)]:: TCP (and TCPv6) transport
+xref:nng_ws.7.adoc[nng_ws(7)]:: WebSocket transport
+xref:nng_zerotier.7.adoc[nng_zerotier(7)]:: ZeroTier transport
 
 == Conceptual Overview
 
@@ -92,14 +92,14 @@ socket implements precisely one _nng_ protocol.
 
 Each socket can be used to send and receive messages (if the protocol)
 supports it, and implements the appropriate protocol semantics.
-For example, <<nng_sub.7#,_sub_>> sockets automatically filter incoming
+For example, xref:nng_sub.7.adoc[_sub_] sockets automatically filter incoming
 messages to discard those for topics that have not been subscribed.
 
 _nng_ sockets are message oriented, so that messages are either delivered
 wholly, or not at all.  Partial delivery is not possible.
 Furthermore, _nng_ does not provide any other delivery or ordering guarantees;
 messages may be dropped or reordered
-(Some protocols, such as <<nng_req.7#,_req_>> may offer stronger
+(Some protocols, such as xref:nng_req.7.adoc[_req_] may offer stronger
 guarantees by performing their own retry and validation schemes.)
 
 Each socket can have zero, one, or many "endpoints", which are either
@@ -133,23 +133,23 @@ other than in a few specific circumstances.
 (((cooked mode)))(((raw mode)))
 Most applications will use _nng_ sockets in "`cooked`" mode.
 This mode provides the full semantics of the protocol.
-For example, <<nng_req.7#,_req_>> sockets will automatically
+For example, xref:nng_req.7.adoc[_req_] sockets will automatically
 match a reply to a request, and resend requests periodically if no reply
 was received.
 
-There are situations, such as with <<nng_device.3#,proxies>>,
+There are situations, such as with xref:nng_device.3.adoc[proxies],
 where it is desirable to bypass these semantics and simply pass messages
 to and from the socket with no extra semantic handling.
 This is possible using "`raw`" mode sockets.
 
 Raw mode sockets are generally constructed with a different function,
-such as <<nng_req_open.3#,`nng_req0_open_raw()`>>.
+such as xref:nng_req_open.3.adoc[`nng_req0_open_raw()`].
 Using these sockets, the application can simply send and receive messages,
 and is responsible for supplying any additional socket semantics.
 Typically this means that the application will need to inspect message
 headers on incoming messages, and supply them on outgoing messages.
 
-TIP: The <<nng_device.3#,`nng_device()`>> function only works with raw mode
+TIP: The xref:nng_device.3.adoc[`nng_device()`] function only works with raw mode
 sockets, but as it only forwards the messages, no additional application
 processing is needed.
 
@@ -195,10 +195,10 @@ confusion when they are parsed on different systems.
 
 == API
 
-The library API is documented at <<libnng.3#,libnng(3)>>.
+The library API is documented at xref:libnng.3.adoc[libnng(3)].
 
 == SEE ALSO
 
 [.text-left]
-<<libnng.3#,libnng(3)>>,
-<<nng_compat.3compat#,nng_compat(3compat)>>
+xref:libnng.3.adoc[libnng(3)],
+xref:nng_compat.3compat.adoc[nng_compat(3compat)]

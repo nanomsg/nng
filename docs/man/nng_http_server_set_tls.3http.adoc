@@ -31,14 +31,14 @@ _cfg_.
 This change overwrites any previous TLS configuration.
 
 IMPORTANT: This also invalidates any previously obtained values from
-`<<nng_http_server_get_tls.3http#,nng_http_server_get_tls()>>`.
+xref:nng_http_server_get_tls.3http.adoc[`nng_http_server_get_tls()`].
 
 If the server is already running (i.e. it has been started with
-`<<nng_http_server_start.3http#,nng_http_server_start()>>`) then this will
+xref:nng_http_server_start.3http.adoc[`nng_http_server_start()`]) then this will
 fail with `NNG_EBUSY`.
 
 TIP: Generally, the _cfg_ must have a configured private key, set with
-`<<nng_tls_config_own_cert.3tls#,nng_tls_config_own_cert()>>` or similar.
+xref:nng_tls_config_own_cert.3tls.adoc[`nng_tls_config_own_cert()`] or similar.
 
 == RETURN VALUES
 
@@ -54,9 +54,9 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_server_get_tls.3http#,nng_http_server_get_tls(3http)>>,
-<<nng_http_server_hold.3http#,nng_http_server_hold(3http)>>,
-<<nng_http_server_start.3http#,nng_http_server_start(3http)>>,
-<<nng_tls_config_alloc.3tls#,nng_tls_config_alloc(3tls)>>,
-<<nng_strerror.3#,nng_strerror(3)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_server_get_tls.3http.adoc[nng_http_server_get_tls(3http)],
+xref:nng_http_server_hold.3http.adoc[nng_http_server_hold(3http)],
+xref:nng_http_server_start.3http.adoc[nng_http_server_start(3http)],
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng.7.adoc[nng(7)]

@@ -27,7 +27,7 @@ const char *nng_stat_string(nng_stat *stat);
 == DESCRIPTION
 
 The `nng_stat_string()` function returns a string value for the statistic _stat_,
-which must be of type `NNG_STAT_STRING` (see `<<nng_stat_type.3#,nng_stat_type(3)>>`).
+which must be of type `NNG_STAT_STRING` (see xref:nng_stat_type.3.adoc[`nng_stat_type(3)`]).
 
 If the statistic is not of type `NNG_STAT_STRING`, then `NULL` will be returned.
 
@@ -43,9 +43,9 @@ None.
 == SEE ALSO
 
 [.text-left]
-<<libnng.3#,libnng(3)>>,
-<<nng_stats_get.3#,nng_stats_get(3)>>,
-<<nng_stat_type.3#,nng_stats_type(3)>>,
-<<nng_stat_value.3#,nng_stats_value(3)>>,
-<<nng_stat.5#,nng_stat(5)>>,
-<<nng.7#,nng(7)>>
+xref:libnng.3.adoc[libnng(3)],
+xref:nng_stats_get.3.adoc[nng_stats_get(3)],
+xref:nng_stat_type.3.adoc[nng_stats_type(3)],
+xref:nng_stat_value.3.adoc[nng_stats_value(3)],
+xref:nng_stat.5.adoc[nng_stat(5)],
+xref:nng.7.adoc[nng(7)]

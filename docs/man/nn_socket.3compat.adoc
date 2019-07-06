@@ -28,8 +28,8 @@ The `nn_socket()` function creates socket using the address family _af_ and
 protocol _proto_ and returns it.
 
 NOTE: This function is provided for API
-<<nng_compat.3compat#,compatibility>> with legacy _libnanomsg_.
-Consider using the relevant <<libnng.3#,modern API>> instead.
+xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.
+Consider using the relevant xref:libnng.3.adoc[modern API] instead.
 
 IMPORTANT: Mixing the compatibility API and the modern API is not supported
 on a given socket.
@@ -40,22 +40,22 @@ The address family _af_ can be one of two values:
 
 [horizontal]
 `AF_SP`:: Normal socket.
-`AF_SP_RAW`:: <<nng.7#raw_mode,"`Raw mode`">> socket.
+`AF_SP_RAW`:: xref:nng.7.adoc#raw_mode["`Raw mode`"] socket.
 
 The protocol indicates the protocol to be used when creating the socket.
 The following protocols are defined:
 
 [horizontal]
-`NN_PAIR`:: <<nng_pair.7#,Pair>> protocol.
-`NN_PUB`:: <<nng_pub.7#,Publisher>> protocol.
-`NN_SUB`:: <<nng_sub.7#,Subscriber>> protocol.
-`NN_REQ`:: <<nng_req.7#,Requestor>> protocol.
-`NN_REP`:: <<nng_rep.7#,Replier>> protocol.
-`NN_PUSH`:: <<nng_push.7#,Push>> protocol.
-`NN_PULL`:: <<nng_pull.7#,Pull>> protocol.
-`NN_SURVEYOR`:: <<nng_surveyor.7#,Surveyor>> protocol.
-`NN_RESPONDENT`:: <<nng_respondent.7#,Respondent>> protocol.
-`NN_BUS`:: <<nng_bus.7#,Bus>> protocol.
+`NN_PAIR`:: xref:nng_pair.7.adoc[Pair] protocol.
+`NN_PUB`:: xref:nng_pub.7.adoc[Publisher] protocol.
+`NN_SUB`:: xref:nng_sub.7.adoc[Subscriber] protocol.
+`NN_REQ`:: xref:nng_req.7.adoc[Requestor] protocol.
+`NN_REP`:: xref:nng_rep.7.adoc[Replier] protocol.
+`NN_PUSH`:: xref:nng_push.7.adoc[Push] protocol.
+`NN_PULL`:: xref:nng_pull.7.adoc[Pull] protocol.
+`NN_SURVEYOR`:: xref:nng_surveyor.7.adoc[Surveyor] protocol.
+`NN_RESPONDENT`:: xref:nng_respondent.7.adoc[Respondent] protocol.
+`NN_BUS`:: xref:nng_bus.7.adoc[Bus] protocol.
 
 == RETURN VALUES
 
@@ -71,8 +71,8 @@ This function returns a valid socket number on success, and -1 on failure.
 == SEE ALSO
 
 [.text-left]
-<<nng_socket.5#,nng_socket(5)>>,
-<<nn_close.3compat#,nn_close(3compat)>>,
-<<nn_errno.3compat#,nn_errno(3compat)>>,
-<<nng_compat.3compat#,nng_compat(3compat)>>,
-<<nng.7#,nng(7)>>
+xref:nng_socket.5.adoc[nng_socket(5)],
+xref:nn_close.3compat.adoc[nn_close(3compat)],
+xref:nn_errno.3compat.adoc[nn_errno(3compat)],
+xref:nng_compat.3compat.adoc[nng_compat(3compat)],
+xref:nng.7.adoc[nng(7)]

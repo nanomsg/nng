@@ -30,7 +30,7 @@ associated with the response _res_ to _reason_.
 
 If the value of _reason_ is `NULL` (the default), then a default reason
 phrase is supplied based upon the value of the status code (see
-`<<nng_http_res_set_status.3http#,nng_http_res_set_status()>>`).
+xref:nng_http_res_set_status.3http.adoc[`nng_http_res_set_status()`]).
 
 TIP: The _reason_ is never parsed automatically, but it can be a hint for humans
      to help them understand the nature of any erroneous result.
@@ -50,7 +50,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-<<nng_http_res_alloc.3http#,nng_http_res_alloc(3http)>>,
-<<nng_http_res_get_reason.3http#,nng_http_req_get_reason(3http)>>,
-<<nng_http_res_set_status.3http#,nng_http_req_set_status(3http)>>,
-<<nng.7#,nng(7)>>
+xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
+xref:nng_http_res_get_reason.3http.adoc[nng_http_req_get_reason(3http)],
+xref:nng_http_res_set_status.3http.adoc[nng_http_req_set_status(3http)],
+xref:nng.7.adoc[nng(7)]
