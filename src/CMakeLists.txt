@@ -253,6 +253,10 @@ install (EXPORT ${PROJECT_NAME}-target
     COMPONENT Library
 )
 
+export (EXPORT ${PROJECT_NAME}-target
+    FILE ${CMAKE_CURRENT_BINARY_DIR}/${PROJECT_NAME}-targets.cmake
+    NAMESPACE nng::)
+
 # Install the header files.
 install(DIRECTORY ../include/nng
     DESTINATION ${CMAKE_INSTALL_INCLUDEDIR}
