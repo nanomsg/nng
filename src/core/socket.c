@@ -514,7 +514,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	s->s_rcvtimeo  = -1;
 	s->s_reconn    = NNI_SECOND;
 	s->s_reconnmax = 0;
-	s->s_rcvmaxsz  = 1024 * 1024; // 1 MB by default
+	s->s_rcvmaxsz  = 0; // unlimited by default
 	s->s_id        = 0;
 	s->s_refcnt    = 0;
 	s->s_self_id   = proto->proto_self;

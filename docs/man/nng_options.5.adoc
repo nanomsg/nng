@@ -190,6 +190,9 @@ large message, without sending any data.
 This option can be set for the socket, but may be overridden for on a
 per-dialer or per-listener basis.
 +
+IMPORTANT: Applications on hostile networks should set this to a non-zero
+value to prevent denial-of-service attacks.
++
 NOTE: Some transports may have further message size restrictions.
 
 [[NNG_OPT_RECVTIMEO]]
