@@ -24,7 +24,7 @@ static char *addr = "inproc:///atscale";
 nng_socket   rep;
 nng_thread * server;
 
-void
+static void
 serve(void *arg)
 {
 	nng_msg *msg;
@@ -43,7 +43,7 @@ serve(void *arg)
 	nng_close(rep);
 }
 
-void
+static void
 stop(void)
 {
 	nng_closeall();
@@ -51,7 +51,7 @@ stop(void)
 	nng_fini();
 }
 
-int
+static int
 openclients(nng_socket *clients, int num)
 {
 	int          rv;
@@ -71,7 +71,7 @@ openclients(nng_socket *clients, int num)
 	return (0);
 }
 
-int
+static int
 transact(nng_socket *clients, int num)
 {
 	nng_msg *msg;

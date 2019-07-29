@@ -84,7 +84,7 @@ nni_device_cb(void *arg)
 	}
 }
 
-void
+static void
 nni_device_fini(nni_device_data *dd)
 {
 	int i;
@@ -100,7 +100,7 @@ nni_device_fini(nni_device_data *dd)
 	NNI_FREE_STRUCT(dd);
 }
 
-int
+static int
 nni_device_init(nni_device_data **dp, nni_sock *s1, nni_sock *s2)
 {
 	nni_device_data *dd;
@@ -184,7 +184,7 @@ nni_device_init(nni_device_data **dp, nni_sock *s1, nni_sock *s2)
 	return (0);
 }
 
-void
+static void
 nni_device_start(nni_device_data *dd, nni_aio *user)
 {
 	int i;

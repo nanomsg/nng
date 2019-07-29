@@ -40,7 +40,7 @@ int devc = -1;
 int devd = -1;
 int deve = -1;
 
-void device1(NN_UNUSED void *arg)
+static void device1(NN_UNUSED void *arg)
 {
     int rc;
 
@@ -56,7 +56,7 @@ void device1(NN_UNUSED void *arg)
 }
 
 
-void device2(NN_UNUSED void *arg)
+static void device2(NN_UNUSED void *arg)
 {
     int rc;
 
@@ -72,7 +72,7 @@ void device2(NN_UNUSED void *arg)
 }
 
 
-void device3(NN_UNUSED void *arg)
+static void device3(NN_UNUSED void *arg)
 {
     int rc;
 

@@ -26,7 +26,7 @@
 
 const char *addr = "inproc://bug346";
 
-void
+static void
 repthr(void *arg)
 {
 	nng_socket   rep = *(nng_socket *) arg;
@@ -70,7 +70,7 @@ repthr(void *arg)
 	}
 }
 
-void
+static void
 reqthr(void *arg)
 {
 	nng_socket req = *(nng_socket *) arg;

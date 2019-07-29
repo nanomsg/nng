@@ -1221,7 +1221,7 @@ static struct content_map {
 	// clang-format on
 };
 
-const char *
+static const char *
 http_lookup_type(const char *path)
 {
 	size_t l1 = strlen(path);

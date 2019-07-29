@@ -87,14 +87,14 @@ static test_case *cases;
 int               ncases;
 int               curcase;
 
-void
+static void
 fatal(const char *msg, int rv)
 {
 	fprintf(stderr, "%s: %s\n", msg, nng_strerror(rv));
 	abort();
 }
 
-void
+static void
 error(test_case *c, const char *msg, int rv)
 {
 	if ((rv == NNG_ECLOSED) || (rv == NNG_ECANCELED)) {
@@ -106,7 +106,7 @@ error(test_case *c, const char *msg, int rv)
 }
 
 // Get a random address -- TCP, IP, whatever.
-char *
+static char *
 getaddr(char *buf)
 {
 	int i;
@@ -218,7 +218,7 @@ req0_sent(void *arg)
 	nng_recv_aio(c->sock, c->recd);
 }
 
-void
+static void
 reqrep0_test(int ntests)
 {
 	test_case *srv, *cli;
@@ -328,7 +328,7 @@ pair0_sent(void *arg)
 	nng_sleep_aio(rand() % 10, c->woke);
 }
 
-void
+static void
 pair0_test(int ntests)
 {
 	test_case *srv, *cli;
@@ -428,7 +428,7 @@ bus0_sent(void *arg)
 	nng_sleep_aio(rand() % 10, c->woke);
 }
 
-void
+static void
 bus0_test(int ntests)
 {
 
@@ -472,7 +472,7 @@ bus0_test(int ntests)
 	}
 }
 
-void
+static void
 pub0_woke(void *arg)
 {
 	test_case *c   = arg;
@@ -493,7 +493,7 @@ pub0_woke(void *arg)
 	nng_send_aio(c->sock, c->sent);
 }
 
-void
+static void
 pub0_sent(void *arg)
 {
 	test_case *c = arg;
@@ -508,7 +508,7 @@ pub0_sent(void *arg)
 	nng_sleep_aio(rand() % 10, c->woke);
 }
 
-void
+static void
 sub0_recd(void *arg)
 {
 	test_case *c = arg;
@@ -524,7 +524,7 @@ sub0_recd(void *arg)
 	nng_recv_aio(c->sock, c->recd);
 }
 
-void
+static void
 pub0_sender(void *arg)
 {
 	test_case *c = arg;
@@ -557,7 +557,7 @@ pub0_sender(void *arg)
 	}
 }
 
-void
+static void
 pubsub0_test(int ntests)
 {
 	test_case *srv;
@@ -612,7 +612,7 @@ pubsub0_test(int ntests)
 	nng_sleep_aio(1, srv->woke);
 }
 
-void
+static void
 push0_sent(void *arg)
 {
 	test_case *c = arg;
@@ -629,7 +629,7 @@ push0_sent(void *arg)
 	nng_sleep_aio(rand() % 10, c->woke);
 }
 
-void
+static void
 push0_woke(void *arg)
 {
 	test_case *c   = arg;
@@ -650,7 +650,7 @@ push0_woke(void *arg)
 	nng_send_aio(c->sock, c->sent);
 }
 
-void
+static void
 pull0_recd(void *arg)
 {
 	test_case *c = arg;
@@ -666,7 +666,7 @@ pull0_recd(void *arg)
 	nng_recv_aio(c->sock, c->recd);
 }
 
-void
+static void
 pipeline0_pusher(void *arg)
 {
 	test_case *c = arg;
@@ -699,7 +699,7 @@ pipeline0_pusher(void *arg)
 	}
 }
 
-void
+static void
 pipeline0_puller(void *arg)
 {
 	test_case *c = arg;
@@ -720,7 +720,7 @@ pipeline0_puller(void *arg)
 	}
 }
 
-void
+static void
 pipeline0_test(int ntests)
 {
 	test_case *srv;

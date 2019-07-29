@@ -43,14 +43,14 @@
 
 int sc;
 
-void
+static void
 routine1(NN_UNUSED void *arg)
 {
 	nn_sleep(10);
 	test_send(sc, "ABC");
 }
 
-void
+static void
 routine2(NN_UNUSED void *arg)
 {
 	nn_sleep(10);
@@ -60,7 +60,7 @@ routine2(NN_UNUSED void *arg)
 #define NN_IN 1
 #define NN_OUT 2
 
-int
+static int
 getevents(int s, int events, int timeout)
 {
 	int    rc;

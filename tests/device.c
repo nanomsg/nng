@@ -27,7 +27,7 @@ struct dev_data {
 	nng_socket s2;
 };
 
-void
+static void
 dodev(void *arg)
 {
 	struct dev_data *d = arg;

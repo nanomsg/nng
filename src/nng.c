@@ -536,7 +536,7 @@ nni_dialer_getx(
 NNI_LEGACY_DEFGETALL(dialer)
 NNI_LEGACY_DEFSETALL(dialer)
 
-int
+static int
 nni_listener_setx(
     nng_listener lid, const char *name, const void *v, size_t sz, nni_type t)
 {
@@ -554,7 +554,7 @@ nni_listener_setx(
 	return (rv);
 }
 
-int
+static int
 nni_listener_getx(
     nng_listener lid, const char *name, void *v, size_t *szp, nni_type t)
 {

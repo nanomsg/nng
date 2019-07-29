@@ -20,7 +20,7 @@ struct addarg {
 	nng_cv * cv;
 };
 
-void
+static void
 add(void *arg)
 {
 	struct addarg *aa = arg;

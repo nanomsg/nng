@@ -33,7 +33,7 @@
 
 // Stub handlers for some common things.
 
-uint64_t
+static inline uint64_t
 getms(void)
 {
 #ifdef _WIN32
@@ -58,7 +58,7 @@ getms(void)
 #endif
 }
 
-bool
+static inline bool
 fdready(int fd)
 {
 	struct pollfd pfd;
@@ -77,7 +77,7 @@ fdready(int fd)
 	}
 }
 
-int
+static inline int
 nosocket(nng_socket *s)
 {
 	(void) s; // not used
@@ -85,7 +85,7 @@ nosocket(nng_socket *s)
 	return (NNG_ENOTSUP);
 }
 
-uint16_t
+static inline uint16_t
 test_htons(uint16_t in)
 {
 #ifdef NNG_LITTLE_ENDIAN

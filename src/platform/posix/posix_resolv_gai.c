@@ -301,7 +301,7 @@ nni_udp_resolv(
 	resolv_ip(host, serv, passive, family, IPPROTO_UDP, SOCK_DGRAM, aio);
 }
 
-void
+static void
 resolv_worker(void *notused)
 {
 

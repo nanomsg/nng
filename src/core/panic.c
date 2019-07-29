@@ -20,7 +20,7 @@
 #include "core/nng_impl.h"
 
 // Panic handling.
-void
+static void
 nni_show_backtrace(void)
 {
 #if NNG_HAVE_BACKTRACE

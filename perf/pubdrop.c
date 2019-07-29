@@ -52,13 +52,13 @@ static void         do_pubdrop(int argc, char **argv);
 static uint64_t     nperusec;
 static volatile int x;
 
-void
+static void
 work(void)
 {
 	x = rand();
 }
 
-void
+static void
 usdelay(unsigned long long nusec)
 {
 	nusec *= nperusec;

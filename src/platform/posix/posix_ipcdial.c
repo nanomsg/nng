@@ -138,7 +138,7 @@ ipc_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 
 // We don't give local address binding support.  Outbound dialers always
 // get an ephemeral port.
-void
+static void
 ipc_dialer_dial(void *arg, nni_aio *aio)
 {
 	ipc_dialer *            d = arg;
@@ -229,14 +229,14 @@ static const nni_option ipc_dialer_options[] = {
 	},
 };
 
-int
+static int
 ipc_dialer_getx(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 {
 	ipc_dialer *d = arg;
 	return (nni_getopt(ipc_dialer_options, nm, d, buf, szp, t));
 }
 
-int
+static int
 ipc_dialer_setx(
     void *arg, const char *nm, const void *buf, size_t sz, nni_type t)
 {

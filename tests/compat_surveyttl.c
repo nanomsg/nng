@@ -34,7 +34,7 @@ static char socket_address_b[128];
 int dev0;
 int dev1;
 
-void device (NN_UNUSED void *arg)
+static void device (NN_UNUSED void *arg)
 {
     int rc;
 

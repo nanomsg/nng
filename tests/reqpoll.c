@@ -33,7 +33,7 @@
 #include "convey.h"
 #include "stubs.h"
 
-bool
+static bool
 isready(SOCKET fd)
 {
 	struct pollfd pfd;

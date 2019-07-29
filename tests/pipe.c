@@ -58,7 +58,7 @@ expect(struct testcase *t, int *vp, int v)
 	return (ok);
 }
 
-void
+static void
 notify(nng_pipe p, nng_pipe_ev act, void *arg)
 {
 	struct testcase *t = arg;
@@ -96,7 +96,7 @@ notify(nng_pipe p, nng_pipe_ev act, void *arg)
 	nng_mtx_unlock(t->lk);
 }
 
-void
+static void
 reject(nng_pipe p, nng_pipe_ev act, void *arg)
 {
 	struct testcase *t = arg;

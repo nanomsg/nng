@@ -268,7 +268,7 @@ nni_plat_udp_close(nni_plat_udp *udp)
 	NNI_FREE_STRUCT(udp);
 }
 
-void
+static void
 nni_plat_udp_cancel(nni_aio *aio, void *arg, int rv)
 {
 	nni_plat_udp *udp = arg;

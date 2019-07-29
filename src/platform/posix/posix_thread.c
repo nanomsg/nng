@@ -253,7 +253,7 @@ nni_plat_thr_is_self(nni_plat_thr *thr)
 	return (pthread_self() == thr->tid);
 }
 
-void
+static void
 nni_atfork_child(void)
 {
 	nni_plat_forked = 1;

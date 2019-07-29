@@ -31,7 +31,7 @@
 int sc;
 int sb;
 
-void worker (NN_UNUSED void *arg)
+static void worker (NN_UNUSED void *arg)
 {
     /*  Wait 0.1 sec for the main thread to block. */
     nn_sleep (100);

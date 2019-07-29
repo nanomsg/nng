@@ -164,7 +164,7 @@ trantest_init(trantest *tt, const char *addr)
 #endif
 }
 
-void
+static void
 trantest_fini(trantest *tt)
 {
 	nng_close(tt->reqsock);
@@ -233,7 +233,7 @@ trantest_scheme(trantest *tt)
 #endif
 }
 
-void
+static void
 trantest_conn_refused(trantest *tt)
 {
 	Convey("Connection refused works", {
@@ -246,7 +246,7 @@ trantest_conn_refused(trantest *tt)
 	});
 }
 
-void
+static void
 trantest_duplicate_listen(trantest *tt)
 {
 	Convey("Duplicate listen rejected", {
@@ -262,7 +262,7 @@ trantest_duplicate_listen(trantest *tt)
 	});
 }
 
-void
+static void
 trantest_listen_accept(trantest *tt)
 {
 	Convey("Listen and accept", {
@@ -279,7 +279,7 @@ trantest_listen_accept(trantest *tt)
 	});
 }
 
-void
+static void
 trantest_send_recv(trantest *tt)
 {
 	Convey("Send and recv", {
@@ -329,7 +329,7 @@ trantest_send_recv(trantest *tt)
 	});
 }
 
-void
+static void
 trantest_send_recv_multi(trantest *tt)
 {
 	Convey("Send and recv multi", {
@@ -384,7 +384,7 @@ trantest_send_recv_multi(trantest *tt)
 	});
 }
 
-void
+static void
 trantest_check_properties(trantest *tt, trantest_proptest_t f)
 {
 	Convey("Properties test", {
@@ -419,7 +419,7 @@ trantest_check_properties(trantest *tt, trantest_proptest_t f)
 	});
 }
 
-void
+static void
 trantest_send_recv_large(trantest *tt)
 {
 	Convey("Send and recv large data", {

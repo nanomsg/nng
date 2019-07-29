@@ -1721,7 +1721,7 @@ ws_listener_close(void *arg)
 }
 
 // XXX: Consider replacing this with an option.
-void
+static void
 nni_ws_listener_hook(
     nni_ws_listener *l, nni_ws_listen_hook hookfn, void *hookarg)
 {

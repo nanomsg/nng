@@ -16,6 +16,10 @@
 #include "core/nng_impl.h"
 #include "core/tcp.h"
 
+#ifdef NNG_TRANSPORT_TCP
+#include "nng/transport/tcp/tcp.h"
+#endif
+
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
 

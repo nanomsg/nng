@@ -273,7 +273,7 @@ ipc_listener_setx(
 	return (nni_setopt(ipc_listener_options, name, l, buf, sz, t));
 }
 
-int
+static int
 ipc_listener_listen(void *arg)
 {
 	ipc_listener *          l = arg;

@@ -21,7 +21,7 @@ struct notifyarg {
 	nng_cv *     cv;
 };
 
-void
+static void
 notifyafter(void *arg)
 {
 	struct notifyarg *na = arg;

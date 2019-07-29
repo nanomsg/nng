@@ -20,7 +20,7 @@
 #include <unistd.h>
 #endif
 
-void
+static void
 test_permissions(void)
 {
 #ifdef NNG_PLATFORM_POSIX

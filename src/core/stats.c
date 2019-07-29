@@ -307,7 +307,7 @@ stat_update_tree(nni_stat *stat)
 	}
 }
 
-int
+static int
 nni_stat_snapshot(nni_stat **statp, nni_stat_item *item)
 {
 	int       rv;
@@ -347,7 +347,7 @@ nng_stats_get(nng_stat **statp)
 #endif
 }
 
-nng_stat *
+static nng_stat *
 nng_stat_parent(nng_stat *stat)
 {
 	return (stat->s_parent);
@@ -432,7 +432,7 @@ nni_stat_sys_fini(void)
 }
 
 #ifdef NNG_ENABLE_STATS
-void
+static void
 stat_sprint_scope(nni_stat *stat, char **scope, int *lenp)
 {
 	if (stat->s_parent != NULL) {

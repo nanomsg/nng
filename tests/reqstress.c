@@ -80,14 +80,14 @@ static test_case *cases;
 int               ncases;
 int               curcase;
 
-void
+static void
 fatal(const char *msg, int rv)
 {
 	fprintf(stderr, "%s: %s\n", msg, nng_strerror(rv));
 	abort();
 }
 
-void
+static void
 error(test_case *c, const char *msg, int rv)
 {
 	if ((rv == NNG_ECLOSED) || (rv == NNG_ECANCELED)) {
@@ -99,7 +99,7 @@ error(test_case *c, const char *msg, int rv)
 }
 
 // Get a random address -- TCP, IP, whatever.
-char *
+static char *
 getaddr(char *buf)
 {
 	int i;
@@ -212,7 +212,7 @@ req_send_cb(void *arg)
 	nng_recv_aio(c->socket, c->recv_aio);
 }
 
-void
+static void
 reqrep_test(int ntests)
 {
 	test_case *srv, *cli;

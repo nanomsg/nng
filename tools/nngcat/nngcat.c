@@ -358,7 +358,7 @@ struct addr {
 	char *       val;
 };
 
-struct addr **
+static struct addr **
 addaddr(struct addr **endp, int mode, const char *a)
 {
 	struct addr *na;
@@ -379,7 +379,7 @@ struct topic {
 	char *        val;
 };
 
-struct topic **
+static struct topic **
 addtopic(struct topic **endp, const char *s)
 {
 	struct topic *t;
@@ -394,7 +394,7 @@ addtopic(struct topic **endp, const char *s)
 	return (&t->next);
 }
 
-void
+static void
 printmsg(char *buf, size_t len)
 {
 	switch (format) {
@@ -475,7 +475,7 @@ printmsg(char *buf, size_t len)
 	fflush(stdout);
 }
 
-void
+static void
 recvloop(nng_socket sock)
 {
 	int iters = 0;
@@ -504,7 +504,7 @@ recvloop(nng_socket sock)
 	}
 }
 
-void
+static void
 resploop(nng_socket sock)
 {
 	int iters = 0;
@@ -534,7 +534,7 @@ resploop(nng_socket sock)
 	nng_msleep(200);
 }
 
-void
+static void
 sendloop(nng_socket sock)
 {
 	int iters = 0;
@@ -583,7 +583,7 @@ sendloop(nng_socket sock)
 	nng_msleep(200);
 }
 
-void
+static void
 sendrecv(nng_socket sock)
 {
 	int iters = 0;

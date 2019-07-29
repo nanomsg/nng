@@ -64,7 +64,7 @@ static void die(const char *, ...);
 // - inproc_thr - inproc throughput
 //
 
-bool
+static bool
 matches(const char *arg, const char *name)
 {
 	const char *ptr = arg;
@@ -131,7 +131,7 @@ main(int argc, char **argv)
 	}
 }
 
-int
+static int
 nop(void)
 {
 	return (0);

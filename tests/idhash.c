@@ -16,7 +16,7 @@
 #define STRESSLOAD 50000
 #define NVALUES 1000
 
-int
+static int
 stress(nni_idhash *h, void **values, size_t nvalues, int iter)
 {
 	for (int i = 0; i < iter; i++) {
@@ -64,7 +64,7 @@ stress(nni_idhash *h, void **values, size_t nvalues, int iter)
 	return (0);
 }
 
-int
+static int
 poststress(nni_idhash *h, void **values, size_t nvalues)
 {
 	for (size_t i = 0; i < nvalues; i++) {

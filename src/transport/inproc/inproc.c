@@ -15,6 +15,10 @@
 
 #include "core/nng_impl.h"
 
+#ifdef NNG_TRANSPORT_INPROC
+#include "nng/transport/inproc/inproc.h"
+#endif
+
 // Inproc transport.  This just transports messages from one
 // peer to another.  The inproc transport is only valid within the same
 // process.

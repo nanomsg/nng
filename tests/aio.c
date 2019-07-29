@@ -22,19 +22,19 @@
 	So(nng_msg_len(m) == strlen(s)); \
 	So(memcmp(nng_msg_body(m), s, strlen(s)) == 0)
 
-void
+static void
 cbdone(void *p)
 {
 	(*(int *) p)++;
 }
 
-void
+static void
 sleepdone(void *arg)
 {
 	*(nng_time *) arg = nng_clock();
 }
 
-void
+static void
 cancelfn(nng_aio *aio, void *arg, int rv)
 {
 	*(int *) arg = rv;

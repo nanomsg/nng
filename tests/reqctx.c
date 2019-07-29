@@ -27,7 +27,7 @@ static struct {
 	nng_mtx *  mtx;
 } rep_state;
 
-void
+static void
 rep_cb(void *notused)
 {
 	int rv;
@@ -70,7 +70,7 @@ rep_cb(void *notused)
 
 #define NCTX 1000
 
-void
+static void
 markr(void *arg)
 {
 	*(bool *) arg = true;

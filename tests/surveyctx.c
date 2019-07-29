@@ -26,7 +26,7 @@ static struct {
 	int        cnt;
 } resp_state;
 
-void
+static void
 resp_cb(void *notused)
 {
 	int rv;
@@ -65,7 +65,7 @@ resp_cb(void *notused)
 
 #define NCTX 10
 
-void
+static void
 markr(void *arg)
 {
 	*(bool *) arg = true;
