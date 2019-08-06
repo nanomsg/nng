@@ -1689,7 +1689,8 @@ zt_pipe_alloc(
 	p->zp_proto      = ep->ze_proto;
 	p->zp_nwid       = ep->ze_nwid;
 	p->zp_mtu        = ep->ze_mtu;
-	p->zp_rcvmax     = ep->ze_rcvmax;
+	/* We need to set a rcvmax for ZeroTier transport, cannot be 0 (unlimited) */
+	p->zp_rcvmax     = ep->ze_rcvmax ? ep->ze_rcvmax : 1024 * 1024 * 1024;
 	p->zp_ping_tries = ep->ze_ping_tries;
 	p->zp_ping_time  = ep->ze_ping_time;
 	p->zp_next_msgid = (uint16_t) nni_random();
