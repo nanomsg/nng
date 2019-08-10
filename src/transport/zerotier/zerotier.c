@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -841,12 +841,13 @@ zt_pipe_recv_data(zt_pipe *p, const uint8_t *data, size_t len)
 	// that we only can catch the case where a message is larger by
 	// more than a fragment, since the final fragment may be shorter,
 	// and we won't know that until we receive it.
-	if ((nfrags * fragsz) >= (p->zp_rcvmax + fragsz)) {
+	if ((p->zp_rcvmax > 0) &&
+	    ((nfrags * fragsz) >= (p->zp_rcvmax + fragsz))) {
 		// Discard, as the forwarder might be on the other side
 		// of a device. This is gentler than just shutting the pipe
 		// down.  Sending a remote error might be polite, but since
 		// most peers will close the pipe on such an error, we
-		// simply silent discard it.
+		// simply silently discard it.
 		return;
 	}
 
@@ -1717,7 +1718,13 @@ zt_pipe_alloc(
 
 	// The largest fragment count we can accept on this pipe.
 	// This is rounded up to account for alignment.
-	maxfrags = (p->zp_rcvmax + (maxfrag - 1)) / maxfrag;
+	if (p->zp_rcvmax > 0) {
+		maxfrags = (p->zp_rcvmax + (maxfrag - 1)) / maxfrag;
+	}
+
+	if ((maxfrags > 0xffff) || (maxfrags == 0)) {
+		maxfrags = 0xffff;
+	}
 
 	for (i = 0; i < zt_recvq; i++) {
 		zt_fraglist *fl  = &p->zp_recvq[i];
