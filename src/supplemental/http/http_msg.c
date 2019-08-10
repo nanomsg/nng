@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -118,7 +118,7 @@ nni_http_res_reset(nni_http_res *res)
 	nni_strfree(res->vers);
 	res->vers   = NULL;
 	res->rsn    = NULL;
-	res->code   = 0;
+	res->code   = NNG_HTTP_STATUS_OK;
 	res->parsed = false;
 	nni_free(res->buf, res->bufsz);
 	res->buf   = NULL;
@@ -655,7 +655,7 @@ nni_http_res_alloc(nni_http_res **resp)
 	res->data.own  = false;
 	res->vers      = NULL;
 	res->rsn       = NULL;
-	res->code      = 0;
+	res->code      = NNG_HTTP_STATUS_OK;
 	*resp          = res;
 	return (0);
 }
