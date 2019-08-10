@@ -233,7 +233,8 @@ NNG_DECL int nng_socket_set_uint64(nng_socket, const char *, uint64_t);
 NNG_DECL int nng_socket_set_string(nng_socket, const char *, const char *);
 NNG_DECL int nng_socket_set_ptr(nng_socket, const char *, void *);
 NNG_DECL int nng_socket_set_ms(nng_socket, const char *, nng_duration);
-NNG_DECL int nng_socket_set_addr(nng_socket, const char *, const nng_sockaddr *);
+NNG_DECL int nng_socket_set_addr(
+    nng_socket, const char *, const nng_sockaddr *);
 
 NNG_DECL int nng_socket_get(nng_socket, const char *, void *, size_t *);
 NNG_DECL int nng_socket_get_bool(nng_socket, const char *, bool *);
@@ -349,7 +350,8 @@ NNG_DECL int nng_dialer_set_uint64(nng_dialer, const char *, uint64_t);
 NNG_DECL int nng_dialer_set_string(nng_dialer, const char *, const char *);
 NNG_DECL int nng_dialer_set_ptr(nng_dialer, const char *, void *);
 NNG_DECL int nng_dialer_set_ms(nng_dialer, const char *, nng_duration);
-NNG_DECL int nng_dialer_set_addr(nng_dialer, const char *, const nng_sockaddr *);
+NNG_DECL int nng_dialer_set_addr(
+    nng_dialer, const char *, const nng_sockaddr *);
 
 NNG_DECL int nng_dialer_get(nng_dialer, const char *, void *, size_t *);
 NNG_DECL int nng_dialer_get_bool(nng_dialer, const char *, bool *);
@@ -402,11 +404,11 @@ NNG_DECL int nng_listener_set_bool(nng_listener, const char *, bool);
 NNG_DECL int nng_listener_set_int(nng_listener, const char *, int);
 NNG_DECL int nng_listener_set_size(nng_listener, const char *, size_t);
 NNG_DECL int nng_listener_set_uint64(nng_listener, const char *, uint64_t);
-NNG_DECL int nng_listener_set_string(
-    nng_listener, const char *, const char *);
+NNG_DECL int nng_listener_set_string(nng_listener, const char *, const char *);
 NNG_DECL int nng_listener_set_ptr(nng_listener, const char *, void *);
 NNG_DECL int nng_listener_set_ms(nng_listener, const char *, nng_duration);
-NNG_DECL int nng_listener_set_addr(nng_listener, const char *, const nng_sockaddr *);
+NNG_DECL int nng_listener_set_addr(
+    nng_listener, const char *, const nng_sockaddr *);
 
 NNG_DECL int nng_listener_get(nng_listener, const char *, void *, size_t *);
 NNG_DECL int nng_listener_get_bool(nng_listener, const char *, bool *);
@@ -1080,6 +1082,7 @@ enum nng_errno_enum {
 	NNG_ENOARG       = 28,
 	NNG_EAMBIGUOUS   = 29,
 	NNG_EBADTYPE     = 30,
+	NNG_ECONNSHUT    = 31,
 	NNG_EINTERNAL    = 1000,
 	NNG_ESYSERR      = 0x10000000,
 	NNG_ETRANERR     = 0x20000000

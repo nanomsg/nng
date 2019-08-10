@@ -116,7 +116,7 @@ ipc_recv_cb(nni_win_io *io, int rv, size_t num)
 
 	if ((rv == 0) && (num == 0)) {
 		// A zero byte receive is a remote close from the peer.
-		rv = NNG_ECLOSED;
+		rv = NNG_ECONNSHUT;
 	}
 	nni_aio_finish_synch(aio, rv, num);
 }
@@ -240,10 +240,6 @@ ipc_send_cb(nni_win_io *io, int rv, size_t num)
 	}
 	nni_mtx_unlock(&c->mtx);
 
-	if ((rv == 0) && (num == 0)) {
-		// A zero byte receive is a remote close from the peer.
-		rv = NNG_ECLOSED;
-	}
 	nni_aio_finish_synch(aio, rv, num);
 }
 

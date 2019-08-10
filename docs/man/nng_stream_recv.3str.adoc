@@ -56,6 +56,7 @@ None.
 `NNG_ECANCELED`:: The operation was canceled.
 `NNG_ECLOSED`:: The connection was closed.
 `NNG_ECONNRESET`:: The peer closed the connection.
+`NNG_ECONNSHUT`:: Remote peer shutdown after sending data.
 `NNG_EINVAL`:: The _aio_ does not contain a valid scatter/gather vector.
 `NNG_ENOMEM`:: Insufficient free memory to perform the operation.
 `NNG_ETIMEDOUT`:: Timeout waiting for data from the connection.
