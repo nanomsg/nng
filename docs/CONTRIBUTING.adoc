@@ -16,7 +16,7 @@ defect, or sending us a message, you agree and certify that:
            repository.)  This grant shall include a right to use for any
            patents covering content in the submission.
 
-        ** You are not aware of any legal encumberances to the use of the
+        ** You are not aware of any legal encumbrances to the use of the
            submission (such as patents held by others) unless explicitly
            stated otherwise.
 
@@ -41,7 +41,7 @@ when filing issues:
 
 * Include CMake configuration used to build NNG.
 
-* Inclue expected results or behavior, and observed results or behavior.
+* Include expected results or behavior, and observed results or behavior.
 
 * If at all possible, a reproducible test case is helpful. We prefer test
   cases as the minimal amount of C code to demonstrate the defect.
@@ -93,7 +93,7 @@ of `clang-format` as older versions can differ in their output.
            PR with partial work in progress, unless you have reached a 
            milestone that can stand on its own merit.)
 
-	** Each commit in a PR should also be "complete", so that the
+	** Each commit in a PR should also be "complete", so that
            a release could be cut in between your commits without
            leaving the tree in a broken or dysfunctional state.
 

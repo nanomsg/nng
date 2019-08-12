@@ -1111,7 +1111,7 @@ typedef struct nng_url {
 // members.  It can be freed with nng_url_free.
 NNG_DECL int nng_url_parse(nng_url **, const char *);
 
-// nng_url_free frees a URL structure that was created by nng_url_parse9().
+// nng_url_free frees a URL structure that was created by nng_url_parse().
 NNG_DECL void nng_url_free(nng_url *);
 
 // nng_url_clone clones a URL structure.

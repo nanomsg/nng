@@ -36,7 +36,7 @@ and is responsible for any state machines or other protocol-specific logic.
 
 IMPORTANT: The `nng_socket` structure is always passed by value (both
 for input parameters and return values), and should be treated opaquely.
-Passing structures this way ensures gives the compiler a chance to perform
+Passing structures this way gives the compiler a chance to perform
 accurate type checks in functions passing values of this type.
 
 Each `nng_socket` is created by a protocol-specific constructor, such as

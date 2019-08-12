@@ -34,7 +34,7 @@ and therefore are also automatically associated with a single socket.
 
 IMPORTANT: The `nng_pipe` structure is always passed by value (both
 for input parameters and return values), and should be treated opaquely.
-Passing structures this way ensures gives the compiler a chance to perform
+Passing structures this way gives the compiler a chance to perform
 accurate type checks in functions passing values of this type.
 
 TIP: Most applications should never concern themselves with individual pipes.
