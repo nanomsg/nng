@@ -40,7 +40,7 @@ by a single xref:nng_socket.5.adoc[`nng_socket`].
 
 IMPORTANT: The `nng_dialer` structure is always passed by value (both
 for input parameters and return values), and should be treated opaquely.
-Passing structures this way ensures gives the compiler a chance to perform
+Passing structures this way gives the compiler a chance to perform
 accurate type checks in functions passing values of this type.
 
 TIP: A given xref:nng_socket.5.adoc[`nng_socket`] may have multiple dialer

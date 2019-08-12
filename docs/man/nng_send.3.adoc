@@ -29,7 +29,7 @@ length _size_ using the xref:nng_socket.5.adoc[socket] _s_.
 
 NOTE: The semantics of what sending a message means vary from protocol to
 protocol, so examination of the protocol documentation is encouraged.
-(For example, with an xref:nng_pub.7.adoc[_nng_] socket the data is broadcast, so that
+(For example, with an xref:nng_pub.7.adoc[_pub_] socket the data is broadcast, so that
 any peers who have a suitable subscription will be able to receive it using
 xref:nng_recv.3.adoc[`nng_recv()`] or a similar function.)
 Furthermore, some protocols may not support sending data (such as
