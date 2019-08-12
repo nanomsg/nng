@@ -22,7 +22,7 @@ NNG_DECL int nng_rep0_open_raw(nng_socket *);
 #define nng_rep_open nng_rep0_open
 #endif
 
-#ifndef nng_rep_open
+#ifndef nng_rep_open_raw
 #define nng_rep_open_raw nng_rep0_open_raw
 #endif
 
