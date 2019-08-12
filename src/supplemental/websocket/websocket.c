@@ -2606,7 +2606,7 @@ ws_str_recv(void *arg, nng_aio *aio)
 	}
 	nni_list_append(&ws->recvq, aio);
 	if (nni_list_first(&ws->recvq) == aio) {
-		ws_read_finish_msg(ws);
+		ws_read_finish(ws);
 	}
 	ws_start_read(ws);
 
