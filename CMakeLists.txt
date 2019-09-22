@@ -273,7 +273,7 @@ else ()
     message (AUTHOR_WARNING "WARNING: This platform may not be supported: ${CMAKE_SYSTEM_NAME}")
     message (AUTHOR_WARNING "${ISSUE_REPORT_MSG}")
     # blithely hope for POSIX to work
-    add_definitions (-DPLATFORM_POSIX)
+    add_definitions (-DNNG_PLATFORM_POSIX)
 endif ()
 
 macro (nng_check_func SYM DEF)
