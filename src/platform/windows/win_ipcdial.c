@@ -143,15 +143,9 @@ static void
 ipc_dialer_dial(ipc_dialer *d, nni_aio *aio)
 {
 	ipc_dial_work *w = &ipc_connecter;
-	char *         path;
 	int            rv;
 
 	if (nni_aio_begin(aio) != 0) {
-		return;
-	}
-	if ((rv = nni_asprintf(
-	         &path, IPC_PIPE_PREFIX "%s", d->sa.s_ipc.sa_path)) != 0) {
-		nni_aio_finish_error(aio, rv);
 		return;
 	}
 

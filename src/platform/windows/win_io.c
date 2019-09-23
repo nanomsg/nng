@@ -138,6 +138,8 @@ nni_win_io_sysfini(void)
 	for (i = 0; i < win_io_nthr; i++) {
 		nni_thr_fini(&win_io_thrs[i]);
 	}
+
+        NNI_FREE_STRUCTS(win_io_thrs, win_io_nthr);
 }
 
 #endif // NNG_PLATFORM_WINDOWS
