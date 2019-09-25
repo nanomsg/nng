@@ -267,9 +267,6 @@ pub0_sock_send(void *arg, nni_aio *aio)
 		if (p->closed) {
 			continue;
 		}
-		if (nni_lmq_full(&p->sendq)) {
-			continue;
-		}
 		if (p == nni_list_last(&sock->pipes)) {
 			dup = msg;
 			msg = NULL;
@@ -277,6 +274,12 @@ pub0_sock_send(void *arg, nni_aio *aio)
 			continue;
 		}
 		if (p->busy) {
+			if (nni_lmq_full(&p->sendq)) {
+				// Make space for the new message.
+				nni_msg * old;
+				(void) nni_lmq_getq(&p->sendq, &old);
+				nni_msg_free(old);
+			}
 			nni_lmq_putq(&p->sendq, dup);
 		} else {
 			p->busy = true;

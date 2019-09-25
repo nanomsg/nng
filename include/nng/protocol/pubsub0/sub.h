@@ -30,6 +30,8 @@ NNG_DECL int nng_sub0_open_raw(nng_socket *);
 #define NNG_OPT_SUB_SUBSCRIBE "sub:subscribe"
 #define NNG_OPT_SUB_UNSUBSCRIBE "sub:unsubscribe"
 
+#define NNG_OPT_SUB_PREFNEW "sub:prefnew"
+
 #ifdef __cplusplus
 }
 #endif
