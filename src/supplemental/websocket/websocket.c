@@ -846,12 +846,14 @@ ws_read_finish_str(nni_ws *ws)
 				// This eats the entire iov.
 				n = iov->iov_len;
 			}
-			memcpy(iov->iov_buf, frame->buf, n);
-			iov->iov_buf = ((uint8_t *) iov->iov_buf) + n;
-			iov->iov_len -= n;
-			if (iov->iov_len == 0) {
-				iov++;
-				niov--;
+			if (n != 0) {
+				memcpy(iov->iov_buf, frame->buf, n);
+				iov->iov_buf = ((uint8_t *) iov->iov_buf) + n;
+				iov->iov_len -= n;
+				if (iov->iov_len == 0) {
+					iov++;
+					niov--;
+				}
 			}
 
 			if (frame->len == n) {
