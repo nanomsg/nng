@@ -18,10 +18,6 @@
 #   )
 #endif()
 
-if (${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.10.0")
-    include_guard(GLOBAL)
-endif()
-
 option (CLANG_FORMAT "Use clang-format to format all source files via custom target `format`" ON)
 
 if (NOT CLANG_FORMAT)
