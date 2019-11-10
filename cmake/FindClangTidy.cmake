@@ -15,8 +15,6 @@
 #    )
 #endif ()
 
-include_guard(GLOBAL)
-
 option (CLANG_TIDY "Use ClangTidy for static code analysis" OFF)
 option (CLANG_TIDY_FIX "Automatically attempt to fix clang-tidy suggestions and errors" OFF)
 
