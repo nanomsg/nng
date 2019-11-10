@@ -65,6 +65,13 @@ The following protocol-specific options are available.
    message is accepted.  If no topic matches, then the message is
    discarded.
 +
+NOTE: This option is a byte array.  Thus if you use
+xref:nng_setopt.3.adoc[`nng_setopt_string()`] the `NUL` terminator byte will
+be included in the topic.
+If that isn't desired, consider using
+xref:nng_setopt.3.adoc[`nng_setopt()`] and using `strlen()` of the topic
+as the topic size.
++
 TIP: To receive all messages, an empty topic (zero length) can be used.
 
 ((`NNG_OPT_SUB_UNSUBSCRIBE`))::
