@@ -1,0 +1,3 @@
+---
+Checks:          '-*,clang-diagnostic-*,clang-analyzer-*,bugprone-*,readability-*,performance-*,-clang-analyzer-osx.*,-clang-analyzer-optin.*'
+...

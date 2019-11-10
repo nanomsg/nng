@@ -394,6 +394,15 @@ endif ()
 
 add_subdirectory (docs/man)
 
+find_package (ClangTidy 9.0 EXACT)
+if (ClangTidy_FOUND)
+    set_target_properties (${PROJECT_NAME}
+        PROPERTIES
+            C_CLANG_TIDY "${CLANG_TIDY_COMMAND}"
+            CXX_CLANG_TIDY "${CLANG_TIDY_COMMAND}"
+    )
+endif ()
+
 set (CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set (CPACK_PACKAGE_VERSION ${NNG_PACKAGE_VERSION})
 set (CPACK_PACKAGE_CONTACT "nanomsg@freelists.org")
