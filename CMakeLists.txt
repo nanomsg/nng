@@ -394,6 +394,24 @@ endif ()
 
 add_subdirectory (docs/man)
 
+find_package(ClangFormat 9.0 EXACT)
+if(ClangFormat_FOUND)
+    set(search_dirs demo etc include perf src test tools)
+    foreach(dir IN LISTS search_dirs)
+        list(APPEND search_paths "${CMAKE_SOURCE_DIR}/${dir}/*.c")
+        list(APPEND search_paths "${CMAKE_SOURCE_DIR}/${dir}/*.h")
+    endforeach()
+    file(GLOB_RECURSE FORMAT_SOURCE_FILES ${search_paths})
+    add_custom_target(format
+                  COMMAND ${CLANG_FORMAT_BIN}
+                          -i
+                          -style=file
+                          ${FORMAT_SOURCE_FILES}
+                  VERBATIM
+                  COMMENT "Auto formatting all source files..."
+    )
+endif()
+
 set (CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set (CPACK_PACKAGE_VERSION ${NNG_PACKAGE_VERSION})
 set (CPACK_PACKAGE_CONTACT "nanomsg@freelists.org")
