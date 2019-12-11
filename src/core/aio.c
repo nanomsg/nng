@@ -546,11 +546,11 @@ nni_aio_expire_add(nni_aio *aio)
 }
 
 static void
-nni_aio_expire_loop(void *arg)
+nni_aio_expire_loop(void *notused)
 {
 	nni_list *aios = &nni_aio_expire_aios;
 
-	NNI_ARG_UNUSED(arg);
+	NNI_ARG_UNUSED(notused);
 
 	for (;;) {
 		nni_aio_cancelfn fn;

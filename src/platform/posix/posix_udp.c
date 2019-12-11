@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,9 +23,6 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
-#ifdef NNG_HAVE_ALLOCA
-#include <alloca.h>
-#endif
 
 // UDP support.
 
@@ -123,26 +120,14 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 		if (len < 1) {
 			rv = NNG_EADDRINVAL;
 		} else {
-			unsigned niov;
-			nni_iov *aiov;
-#ifdef NNG_HAVE_ALLOCA
-			struct iovec *iov;
-#else
+			unsigned     niov;
+			nni_iov *    aiov;
 			struct iovec iov[16];
-#endif
 
 			nni_aio_get_iov(aio, &niov, &aiov);
-#ifdef NNG_HAVE_ALLOCA
-			if (niov > 64) {
-				rv = NNG_EINVAL;
-			} else {
-				iov = alloca(niov * sizeof(*iov));
-			}
-#else
 			if (niov > NNI_NUM_ELEMENTS(iov)) {
 				rv = NNG_EINVAL;
 			}
-#endif
 			if (rv == 0) {
 				struct msghdr hdr = { .msg_name = NULL };
 				for (unsigned i = 0; i < niov; i++) {

@@ -29,10 +29,6 @@
 #include <sys/ucred.h>
 #endif
 
-#ifdef NNG_HAVE_ALLOCA
-#include <alloca.h>
-#endif
-
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
 #endif
@@ -58,29 +54,16 @@ ipc_dowrite(ipc_conn *c)
 		unsigned      naiov;
 		nni_iov *     aiov;
 		struct msghdr hdr;
-#ifdef NNG_HAVE_ALLOCA
-		struct iovec *iovec;
-#else
-		struct iovec iovec[16];
-#endif
+		struct iovec  iovec[16];
 
 		memset(&hdr, 0, sizeof(hdr));
 		nni_aio_get_iov(aio, &naiov, &aiov);
 
-#ifdef NNG_HAVE_ALLOCA
-		if (naiov > 64) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_EINVAL);
-			continue;
-		}
-		iovec = alloca(naiov * sizeof(*iovec));
-#else
 		if (naiov > NNI_NUM_ELEMENTS(iovec)) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_EINVAL);
 			continue;
 		}
-#endif
 
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len > 0) {
@@ -134,32 +117,19 @@ ipc_doread(ipc_conn *c)
 	}
 
 	while ((aio = nni_list_first(&c->readq)) != NULL) {
-		unsigned i;
-		int      n;
-		int      niov;
-		unsigned naiov;
-		nni_iov *aiov;
-#ifdef NNG_HAVE_ALLOCA
-		struct iovec *iovec;
-#else
+		unsigned     i;
+		int          n;
+		int          niov;
+		unsigned     naiov;
+		nni_iov *    aiov;
 		struct iovec iovec[16];
-#endif
 
 		nni_aio_get_iov(aio, &naiov, &aiov);
-#ifdef NNG_HAVE_ALLOCA
-		if (naiov > 64) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_EINVAL);
-			continue;
-		}
-		iovec = alloca(naiov * sizeof(*iovec));
-#else
 		if (naiov > NNI_NUM_ELEMENTS(iovec)) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_EINVAL);
 			continue;
 		}
-#endif
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
 				iovec[niov].iov_len  = aiov[i].iov_len;
@@ -205,7 +175,7 @@ static void
 ipc_error(void *arg, int err)
 {
 	ipc_conn *c = arg;
-	nni_aio *aio;
+	nni_aio * aio;
 
 	nni_mtx_lock(&c->mtx);
 	while (((aio = nni_list_first(&c->readq)) != NULL) ||

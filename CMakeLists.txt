@@ -3,7 +3,7 @@
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
-#   Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 #   Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -340,7 +340,6 @@ else ()
 
     nng_check_sym (AF_UNIX sys/socket.h NNG_HAVE_UNIX_SOCKETS)
     nng_check_sym (backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
-    nng_check_sym (alloca alloca.h NNG_HAVE_ALLOCA)
     nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
     nng_check_sym (eventfd sys/eventfd.h NNG_HAVE_EVENTFD)
     nng_check_sym (kqueue sys/event.h NNG_HAVE_KQUEUE)

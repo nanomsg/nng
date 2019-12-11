@@ -9,6 +9,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#ifndef PLATFORM_POSIX_IPC_H
+#define PLATFORM_POSIX_IPC_H
+
 #include "core/nng_impl.h"
 #include "core/stream.h"
 
@@ -40,3 +43,5 @@ extern int  nni_posix_ipc_init(nni_ipc_conn **, nni_posix_pfd *);
 extern void nni_posix_ipc_start(nni_ipc_conn *);
 
 #endif // NNG_PLATFORM_POSIX
+
+#endif // PLATFORM_POSIX_IPC_H

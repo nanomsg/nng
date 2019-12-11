@@ -9,6 +9,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
+#ifndef PLATFORM_POSIX_TCP_H
+#define PLATFORM_POSIX_TCP_H
+
 #include "core/nng_impl.h"
 
 #include "platform/posix/posix_aio.h"
@@ -26,3 +29,5 @@ struct nni_tcp_conn {
 };
 extern int  nni_posix_tcp_init(nni_tcp_conn **, nni_posix_pfd *);
 extern void nni_posix_tcp_start(nni_tcp_conn *, int, int);
+
+#endif // PLATFORM_POSIX_TCP_H

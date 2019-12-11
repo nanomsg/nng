@@ -25,9 +25,6 @@
 #include <sys/types.h>
 #include <sys/uio.h>
 #include <unistd.h>
-#ifdef NNG_HAVE_ALLOCA
-#include <alloca.h>
-#endif
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
@@ -52,29 +49,16 @@ tcp_dowrite(nni_tcp_conn *c)
 		unsigned      naiov;
 		nni_iov *     aiov;
 		struct msghdr hdr;
-#ifdef NNG_HAVE_ALLOCA
-		struct iovec *iovec;
-#else
-		struct iovec iovec[16];
-#endif
+		struct iovec  iovec[16];
 
 		memset(&hdr, 0, sizeof(hdr));
 		nni_aio_get_iov(aio, &naiov, &aiov);
 
-#ifdef NNG_HAVE_ALLOCA
-		if (naiov > 64) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_EINVAL);
-			continue;
-		}
-		iovec = alloca(naiov * sizeof(*iovec));
-#else
 		if (naiov > NNI_NUM_ELEMENTS(iovec)) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_EINVAL);
 			continue;
 		}
-#endif
 
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len > 0) {
@@ -128,32 +112,19 @@ tcp_doread(nni_tcp_conn *c)
 	}
 
 	while ((aio = nni_list_first(&c->readq)) != NULL) {
-		unsigned i;
-		int      n;
-		int      niov;
-		unsigned naiov;
-		nni_iov *aiov;
-#ifdef NNG_HAVE_ALLOCA
-		struct iovec *iovec;
-#else
+		unsigned     i;
+		int          n;
+		int          niov;
+		unsigned     naiov;
+		nni_iov *    aiov;
 		struct iovec iovec[16];
-#endif
 
 		nni_aio_get_iov(aio, &naiov, &aiov);
-#ifdef NNG_HAVE_ALLOCA
-		if (naiov > 64) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, NNG_EINVAL);
-			continue;
-		}
-		iovec = alloca(naiov * sizeof(*iovec));
-#else
 		if (naiov > NNI_NUM_ELEMENTS(iovec)) {
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_EINVAL);
 			continue;
 		}
-#endif
 		for (niov = 0, i = 0; i < naiov; i++) {
 			if (aiov[i].iov_len != 0) {
 				iovec[niov].iov_len  = aiov[i].iov_len;
@@ -199,7 +170,7 @@ static void
 tcp_error(void *arg, int err)
 {
 	nni_tcp_conn *c = arg;
-	nni_aio *aio;
+	nni_aio *     aio;
 
 	nni_mtx_lock(&c->mtx);
 	while (((aio = nni_list_first(&c->readq)) != NULL) ||
@@ -258,7 +229,7 @@ tcp_cb(nni_posix_pfd *pfd, int events, void *arg)
 	nni_tcp_conn *c = arg;
 
 	if (events & (POLLHUP | POLLERR | POLLNVAL)) {
-                tcp_error(c, NNG_ECONNSHUT);
+		tcp_error(c, NNG_ECONNSHUT);
 		return;
 	}
 	nni_mtx_lock(&c->mtx);

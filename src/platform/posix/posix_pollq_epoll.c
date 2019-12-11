@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Liam Staskawicz <liam@stask.net>
 //
@@ -267,7 +267,7 @@ nni_posix_poll_thr(void *arg)
 			} else {
 				nni_posix_pfd *  pfd = ev->data.ptr;
 				nni_posix_pfd_cb cb;
-				void *           arg;
+				void *           cbarg;
 				int              events;
 
 				events = ev->events &
@@ -276,12 +276,12 @@ nni_posix_poll_thr(void *arg)
 				nni_mtx_lock(&pfd->mtx);
 				pfd->events &= ~events;
 				cb  = pfd->cb;
-				arg = pfd->arg;
+				cbarg = pfd->arg;
 				nni_mtx_unlock(&pfd->mtx);
 
 				// Execute the callback with lock released
 				if (cb != NULL) {
-					cb(pfd, events, arg);
+					cb(pfd, events, cbarg);
 				}
 			}
 		}
