@@ -88,7 +88,7 @@ matches(const char *arg, const char *name)
 
 	switch (*ptr) {
 	case '\0':
-		return (true);
+		/* FALLTHROUGH*/
 	case '.': // extension; ignore it.
 		return (true);
 	default: // some other trailing bit.
@@ -131,12 +131,6 @@ main(int argc, char **argv)
 	}
 }
 
-int
-nop(void)
-{
-	return (0);
-}
-
 static void
 die(const char *fmt, ...)
 {
@@ -156,8 +150,8 @@ parse_int(const char *arg, const char *what)
 	char *eptr;
 
 	val = strtol(arg, &eptr, 10);
-	// Must be a postive number less than around a billion.
-	if ((val < 0) || (val > (1 << 30)) || (*eptr != 0) || (eptr == arg)) {
+	// Must be a positive number less than around a billion.
+	if ((val < 0) || (val > 1000000000) || (*eptr != 0) || (eptr == arg)) {
 		die("Invalid %s", what);
 	}
 	return ((int) val);
@@ -338,7 +332,7 @@ latency_client(const char *addr, size_t msgsize, int trips)
 	nng_close(s);
 
 	total   = (float) ((end - start)) / 1000;
-	latency = ((float) ((total * 1000000)) / (trips * 2));
+	latency = ((float) ((total * 1000000)) / (float)(trips * 2));
 	printf("total time: %.3f [s]\n", total);
 	printf("message size: %d [B]\n", (int) msgsize);
 	printf("round trip count: %d\n", trips);
@@ -369,7 +363,8 @@ latency_server(const char *addr, size_t msgsize, int trips)
 			die("nng_recvmsg: %s", nng_strerror(rv));
 		}
 		if (nng_msg_len(msg) != msgsize) {
-			die("wrong message size: %d != %d", nng_msg_len(msg),
+			die("wrong message size: %lu != %lu",
+			    nng_msg_len(msg),
 			    msgsize);
 		}
 		if ((rv = nng_sendmsg(s, msg, 0)) != 0) {
@@ -424,7 +419,8 @@ throughput_server(const char *addr, size_t msgsize, int count)
 			die("nng_recvmsg: %s", nng_strerror(rv));
 		}
 		if (nng_msg_len(msg) != msgsize) {
-			die("wrong message size: %d != %d", nng_msg_len(msg),
+			die("wrong message size: %lu != %lu",
+                            nng_msg_len(msg),
 			    msgsize);
 		}
 		nng_msg_free(msg);
