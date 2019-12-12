@@ -332,7 +332,11 @@ else ()
     nng_check_func (lockf NNG_HAVE_LOCKF)
     nng_check_func (flock NNG_HAVE_FLOCK)
 
+    nng_check_func (clock_gettime NNG_HAVE_CLOCK_GETTIME)
+    if (NOT(NNG_HAVE_CLOCK_GETTIME))
     nng_check_lib (rt clock_gettime  NNG_HAVE_CLOCK_GETTIME)
+    endif()
+
     nng_check_lib (pthread sem_wait  NNG_HAVE_SEMAPHORE_PTHREAD)
     nng_check_lib (pthread pthread_atfork NNG_HAVE_PTHREAD_ATFORK_PTHREAD)
     nng_check_lib (nsl gethostbyname NNG_HAVE_LIBNSL)
