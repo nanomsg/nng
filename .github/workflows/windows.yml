@@ -1,0 +1,20 @@
+name: windows
+on: [push]
+jobs:
+
+  build:
+    name: build
+    runs-on: [ windows-latest ]
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v1
+
+    - name: Configure
+      run: cmake -B build
+
+    - name: Build
+      run: cmake --build build
+
+    - name: Test
+      run: ctest -C Debug --output-on-failure
+

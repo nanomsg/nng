@@ -1,0 +1,19 @@
+name: linux
+on: [push]
+jobs:
+
+  build:
+    name: build
+    runs-on: [ ubuntu-latest ]
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v1
+
+    - name: Configure
+      run: mkdir build && cd build && cmake ..
+
+    - name: Build
+      run: cmake --build build
+
+    - name: Test
+      run: cd build && ctest --output-on-failure
