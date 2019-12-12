@@ -229,7 +229,7 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
 
     # macOS added some of CLOCK_MONOTONIC, but the implementation is
     # broken and unreliable, so don't use it.
-    add_definitions (-DNNG_USE_CLOCKID=CLOCK_REALTIME)
+    # add_definitions (-DNNG_USE_CLOCKID=CLOCK_REALTIME)
     set(NNG_PLATFORM_POSIX ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
