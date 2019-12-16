@@ -9,9 +9,4 @@
 
 cmake_minimum_required (VERSION 2.8.7)
 
-project(reqrep)
 
-find_package(nng CONFIG REQUIRED)
-
-add_executable(reqrep reqrep.c)
-target_link_libraries(reqrep nng::nng)

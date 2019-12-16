@@ -59,6 +59,19 @@ if (NNG_TESTS)
         set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
         math (EXPR NNG_TEST_PORT "${NNG_TEST_PORT}+20")
     endmacro (add_nng_test)
+	
+	# demos
+	macro (add_nng_demo NAME TIMEOUT)
+        add_executable (${NAME} ../demo/reqrep/${NAME}.c)
+        target_link_libraries (${NAME} ${PROJECT_NAME} ${THRLIB})
+        add_test (NAME ${NAME} COMMAND ${NAME} -v -p TEST_PORT=${NNG_TEST_PORT})
+        math (EXPR TIMEOUT ${TIMEOUT}*${TIMEOUT_FACTOR})
+        set_tests_properties (${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
+        math (EXPR NNG_TEST_PORT "${NNG_TEST_PORT}+20")
+    endmacro (add_nng_demo)
+	
+	add_nng_demo(req 5)
+	add_nng_demo(rep 5)
 
     # Compatibility tests are only added if all of the legacy protocols
     # are present.  It's not worth trying to figure out which of these
