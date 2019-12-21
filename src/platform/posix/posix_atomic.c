@@ -110,7 +110,7 @@ void
 nni_atomic_add64(nni_atomic_u64 *v, uint64_t bump)
 {
 	pthread_mutex_lock(&plat_atomic_lock);
-	v += bump;
+	v->v += bump;
 	pthread_mutex_unlock(&plat_atomic_lock);
 }
 
@@ -118,7 +118,7 @@ void
 nni_atomic_sub64(nni_atomic_u64 *v, uint64_t bump)
 {
 	pthread_mutex_lock(&plat_atomic_lock);
-	v -= bump;
+	v->v -= bump;
 	pthread_mutex_unlock(&plat_atomic_lock);
 }
 
