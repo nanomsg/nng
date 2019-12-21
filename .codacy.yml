@@ -1,0 +1,5 @@
+exclude_paths:
+ - tests/acutest.h
+ - tests/convey.c
+ - tests/convey.h
+ - .circleci/**

@@ -12,5 +12,6 @@ if (NNG_SUPP_BASE64)
         set(_SRCS
                 supplemental/base64/base64.c
                 supplemental/base64/base64.h)
+        nng_test(base64_test)
         set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
 endif()

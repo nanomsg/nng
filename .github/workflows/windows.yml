@@ -16,5 +16,7 @@ jobs:
       run: cmake --build build
 
     - name: Test
-      run: ctest -C Debug --output-on-failure
+      run: |
+        cd build
+        ctest -C Debug --output-on-failure
 

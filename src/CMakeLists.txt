@@ -24,9 +24,22 @@
 #   IN THE SOFTWARE.
 #
 
+add_library (${PROJECT_NAME}
+        nng.c
+        ${PROJECT_SOURCE_DIR}/include/nng/nng.h)
+
+if (NNG_TESTS)
+    add_library(${PROJECT_NAME}_testlib STATIC
+            nng.c
+            ${PROJECT_SOURCE_DIR}/tests/testutil.c
+            ${PROJECT_SOURCE_DIR}/tests/testutil.h
+            ${PROJECT_SOURCE_DIR}/include/nng/nng.h)
+endif()
+
+
+#nng.c
+#${PROJECT_SOURCE_DIR}/include/nng/nng.h
 set (NNG_SRCS
-    nng.c
-    ${PROJECT_SOURCE_DIR}/include/nng/nng.h
 
     core/defs.h
 
@@ -202,7 +215,14 @@ foreach(_PKG IN ITEMS ${NNG_PKGS})
 endforeach ()
 
 # Library
-add_library (${PROJECT_NAME} ${NNG_SRCS})
+target_sources(${PROJECT_NAME} PRIVATE ${NNG_SRCS})
+
+if (NNG_TESTS)
+    target_sources(${PROJECT_NAME}_testlib PRIVATE ${NNG_SRCS})
+    target_link_libraries (${PROJECT_NAME}_testlib PUBLIC ${NNG_LIBS})
+    target_compile_definitions(${PROJECT_NAME}_testlib PUBLIC NNG_STATIC_LIB NNG_TEST_LIB)
+    target_include_directories (${PROJECT_NAME}_testlib PRIVATE ${PROJECT_SOURCE_DIR}/include)
+endif()
 
 # When building shared libraries we prefer to suppress default symbol
 # visibility, so that only the symbols that should be exposed in the

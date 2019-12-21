@@ -8,97 +8,109 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <string.h>
-
-#include <nng/compat/nanomsg/nn.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/pubsub0/sub.h>
 #include <nng/protocol/pair1/pair.h>
 #include <nng/supplemental/util/platform.h>
 
-#include "trantest.h"
-#include "convey.h"
-#include "stubs.h"
+#include <nng/compat/nanomsg/nn.h>
 
-#define SECONDS(x) ((x) *1000)
+#include "acutest.h"
 
-TestMain("Buffer Options", {
+void
+test_buffer_options(void)
+{
+	nng_socket s1;
+	int        val;
+	size_t     sz;
+	char *     opt;
 
-	atexit(nng_fini);
+	char *cases[] = {
+		NNG_OPT_RECVBUF,
+		NNG_OPT_SENDBUF,
+		NULL,
+	};
 
-	Convey("We are able to open a PAIR socket", {
-		nng_socket s1;
+	TEST_CHECK(nng_pair1_open(&s1) == 0);
+	for (int i = 0; (opt = cases[i]) != NULL; i++) {
 
-		So(nng_pair_open(&s1) == 0);
+		TEST_CASE(opt);
 
-		Reset({ nng_close(s1); });
+		// Can't receive a size into zero bytes.
+		sz = 0;
+		TEST_CHECK(nng_getopt(s1, opt, &val, &sz) == NNG_EINVAL);
 
-		Convey("Set/Get Recv Buf Option", {
-			int cnt;
-			So(nng_setopt_int(s1, NNG_OPT_RECVBUF, 10) == 0);
-			So(nng_getopt_int(s1, NNG_OPT_RECVBUF, &cnt) == 0);
-			So(cnt == 10);
-			So(nng_setopt_size(s1, NNG_OPT_RECVBUF, 42) ==
-			    NNG_EBADTYPE);
+		// Can set a valid size
+		TEST_CHECK(nng_setopt_int(s1, opt, 1234) == 0);
+		TEST_CHECK(nng_getopt_int(s1, opt, &val) == 0);
+		TEST_CHECK(val == 1234);
 
-		});
-		Convey("Set/Get Send Buf Option", {
-			int cnt;
-			So(nng_setopt_int(s1, NNG_OPT_SENDBUF, 10) == 0);
-			So(nng_getopt_int(s1, NNG_OPT_SENDBUF, &cnt) == 0);
-			So(cnt == 10);
-			So(nng_setopt_size(s1, NNG_OPT_SENDBUF, 42) ==
-			    NNG_EBADTYPE);
+		val = 0;
+		sz  = sizeof(val);
+		TEST_CHECK(nng_getopt(s1, opt, &val, &sz) == 0);
+		TEST_CHECK(val == 1234);
+		TEST_CHECK(sz == sizeof(val));
 
-		});
+		// Can't set a negative size
+		TEST_CHECK(nng_setopt_int(s1, opt, -5) == NNG_EINVAL);
 
-		// NOTE: We are going to use the compat mode, but
-		// this assumes that the socket is the same between compat
-		// and current mode.  This is true, but normal applications
-		// MUST NOT assume this.  We only do so for testing.
-		Convey("Legacy Recv Buf Option", {
-			int    cnt;
-			int    os = (int) s1.id;
-			size_t sz = sizeof(cnt);
-			So(nng_setopt_int(s1, NNG_OPT_RECVBUF, 10) == 0);
-			So(nn_getsockopt(
-			       os, NN_SOL_SOCKET, NN_RCVBUF, &cnt, &sz) == 0);
-			So(cnt == 10240);
-			cnt = 1;
-			So(nn_setsockopt(
-			       os, NN_SOL_SOCKET, NN_RCVBUF, &cnt, sz) == 0);
-			So(nn_getsockopt(
-			       os, NN_SOL_SOCKET, NN_RCVBUF, &cnt, &sz) == 0);
-			So(cnt == 1024); // round up!
-			So(nng_getopt_int(s1, NNG_OPT_RECVBUF, &cnt) == 0);
-			So(cnt == 1);
+		// Can't pass a buf too small for size
+		sz  = sizeof(val) - 1;
+		val = 1;
+		TEST_CHECK(nng_setopt(s1, opt, &val, sz) == NNG_EINVAL);
+		// Buffer sizes are limited to sane levels
+		TEST_CHECK(nng_setopt_int(s1, opt, 0x100000) == NNG_EINVAL);
+	}
+	TEST_CHECK(nng_close(s1) == 0);
+}
 
-			So(nn_setsockopt(
-			       os, NN_SOL_SOCKET, NN_RCVBUF, &cnt, 100) == -1);
-			So(nn_errno() == EINVAL);
-		});
-		Convey("Legacy Send Buf Option", {
-			int    cnt;
-			int    os = (int) s1.id;
-			size_t sz = sizeof(cnt);
-			So(nng_setopt_int(s1, NNG_OPT_SENDBUF, 10) == 0);
-			So(nn_getsockopt(
-			       os, NN_SOL_SOCKET, NN_SNDBUF, &cnt, &sz) == 0);
-			So(cnt == 10240);
-			cnt = 1;
-			So(nn_setsockopt(
-			       os, NN_SOL_SOCKET, NN_SNDBUF, &cnt, sz) == 0);
-			So(nn_getsockopt(
-			       os, NN_SOL_SOCKET, NN_SNDBUF, &cnt, &sz) == 0);
-			So(cnt == 1024); // round up!
-			So(nng_getopt_int(s1, NNG_OPT_SENDBUF, &cnt) == 0);
-			So(cnt == 1);
+void
+test_buffer_legacy(void)
+{
+	nng_socket s1;
+	char *     opt;
 
-			So(nn_setsockopt(
-			       os, NN_SOL_SOCKET, NN_SNDBUF, &cnt, 100) == -1);
-			So(nn_errno() == EINVAL);
-		});
+	char *cases[] = {
+		NNG_OPT_RECVBUF,
+		NNG_OPT_SENDBUF,
+		NULL,
+	};
+	int legacy[] = {
+		NN_RCVBUF,
+		NN_SNDBUF,
+	};
 
-	});
-})
+	TEST_CHECK(nng_pair1_open(&s1) == 0);
+	for (int i = 0; (opt = cases[i]) != NULL; i++) {
+		int    cnt;
+		int    os = (int) s1.id;
+		size_t sz;
+		int    nnopt = legacy[i];
+
+		TEST_CASE(opt);
+
+		sz = sizeof(cnt);
+		TEST_CHECK(nng_setopt_int(s1, opt, 10) == 0);
+		TEST_CHECK(
+		    nn_getsockopt(os, NN_SOL_SOCKET, nnopt, &cnt, &sz) == 0);
+		TEST_CHECK(cnt == 10240); // 1k multiple
+
+		cnt = 1;
+		TEST_CHECK(
+		    nn_setsockopt(os, NN_SOL_SOCKET, nnopt, &cnt, sz) == 0);
+		TEST_CHECK(nn_getsockopt(os, NN_SOL_SOCKET, nnopt, &cnt, &sz) == 0);
+		TEST_CHECK(cnt == 1024); // round up!
+		TEST_CHECK(nng_getopt_int(s1, opt, &cnt) == 0);
+		TEST_CHECK(cnt == 1);
+
+		TEST_CHECK(nn_setsockopt(os, NN_SOL_SOCKET, nnopt, &cnt, 100) == -1);
+		TEST_CHECK(nn_errno() == EINVAL);
+	}
+	TEST_CHECK(nng_close(s1) == 0);
+}
+
+TEST_LIST = {
+    { "buffer options", test_buffer_options },
+    { "buffer legacy", test_buffer_legacy },
+    { NULL, NULL },
+};

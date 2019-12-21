@@ -1,6 +1,6 @@
 #
+# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2017 Capitar IT Group BV <info@capitar.com>
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -8,9 +8,5 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-if (NNG_SUPP_SHA1)
-        set(_SRCS
-                supplemental/sha1/sha1.c
-                supplemental/sha1/sha1.h)
-        set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
-endif()
+nng_sources_if(NNG_SUPP_SHA1 sha1.c sha1.h)
+nng_test(sha1_test)

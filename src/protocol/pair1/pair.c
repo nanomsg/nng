@@ -12,7 +12,6 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-
 #include "nng/protocol/pair1/pair.h"
 
 // Pair protocol.  The PAIRv1 protocol is a simple 1:1 messaging pattern,
