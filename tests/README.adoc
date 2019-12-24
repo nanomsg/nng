@@ -1,5 +1,4 @@
-About C-Convey
---------------
+== About C-Convey
 
 The convey framework in this directory was originally started for
 this project, but has since been promoted to a project of it's own.
@@ -9,5 +8,7 @@ for updates and further information.
 The convey framework is licensed under the same terms as the rest
 of this project (MIT style license).
 
-If updating the code here, please also work with the upstream to
-ensure that appropriate changes or fixes are made upstream.
+Having said that, we are moving towards a new testing infrastructure.
+See the acutest.h header in this directory, along with testutil.h.
+
+Please do not write new tests in c-convey format.
