@@ -1,5 +1,5 @@
 //
-// Copyright 2016 Garrett D'Amore <garrett@damore.org>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -36,20 +36,30 @@
 // #define NNG_USE_GETENTROPY
 // #define NNG_USE_ARC4RANDOM
 // #define NNG_USE_DEVURANDOM
-//	Thesse are options for obtaining entropy to seed the pRNG.
+//	These are options for obtaining entropy to seed the pRNG.
 //	All known modern UNIX variants can support NNG_USE_DEVURANDOM,
 //	but the other options are better still, but not portable.
 
 #include <time.h>
 
 #ifdef NNG_PLATFORM_POSIX
-
+#if !defined(NNG_USE_DEVURANDOM) && !defined(NNG_USE_GETENTROPY) && \
+    !defined(NNG_USE_GETRANDOM) && !defined(NNG_USE_ARC4RANDOM)
+#if defined(NNG_HAVE_GETENTROPY)
+#define NNG_USE_GETENTROPY 1
+#elif defined(NNG_HAVE_GETRANDOM)
+#define NNG_USE_GETRANDOM 1
+#elif defined(NNG_HAVE_ARC4RANDOM)
+#define NNG_USE_ARC4RANDOM
+#else
 // It should never hurt to use DEVURANDOM, since if the device does not
 // exist then we won't open it.  (Provided: it would be bad if the device
 // exists but has somehow very very different semantics.  We don't know
 // of any such concerns.)  This won't be used if any of the other options
 // are defined and work.
 #define NNG_USE_DEVURANDOM 1
+#endif
+#endif
 
 #define NNG_USE_CLOCKID CLOCK_REALTIME
 #ifndef CLOCK_REALTIME

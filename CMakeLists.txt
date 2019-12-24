@@ -327,6 +327,9 @@ else ()
 
     nng_check_func(lockf NNG_HAVE_LOCKF)
     nng_check_func(flock NNG_HAVE_FLOCK)
+    nng_check_func(getentropy NNG_HAVE_GETENTROPY)
+    nng_check_func(getrandom NNG_HAVE_GETRANDOM)
+    nng_check_func(arc4random_buf NNG_HAVE_ARC4RANDOM)
 
     nng_check_lib(rt clock_gettime NNG_HAVE_CLOCK_GETTIME)
     nng_check_lib(pthread sem_wait NNG_HAVE_SEMAPHORE_PTHREAD)

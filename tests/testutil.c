@@ -203,7 +203,7 @@ testutil_next_port(void)
 	(void) UnlockFileEx(h, 0, MAXDWORD, MAXDWORD, &olp);
 #else
 	fseek(f, 0, SEEK_SET);
-	ftruncate(fileno(f), 0);
+	(void) ftruncate(fileno(f), 0);
 
 	(void) fprintf(f, "%u", port);
 	(void) lockf(fileno(f), 0, F_ULOCK);
