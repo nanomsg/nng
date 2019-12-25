@@ -39,20 +39,14 @@ char ipc_template[]    = "ipc:///tmp/nng_reqstress_%d";
 char ws_template[]     = "ws://127.0.0.1:%d/nng_reqstress";
 
 char *templates[] = {
-#ifdef NNG_TRANSPORT_TCP
 	tcp4_template,
-#endif
 // It would be nice to test TCPv6, but CI doesn't support it.
 // Outside of CI, it does seem to work though.
 #ifdef NNG_TEST_TCPV6
 	tcp6_template,
 #endif
-#ifdef NNG_TRANSPORT_INPROC
 	inproc_template,
-#endif
-#ifdef NNG_TRANSPORT_IPC
 	ipc_template,
-#endif
 #ifdef NNG_TRANSPORT_WS
 	ws_template,
 #endif

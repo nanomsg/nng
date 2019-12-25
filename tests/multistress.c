@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -47,20 +47,14 @@ const char *ipc_template    = "ipc:///tmp/nng_multistress_%d";
 nng_time    end_time;
 
 const char *templates[] = {
-#ifdef NNG_TRANSPORT_TCP
 	"tcp://127.0.0.1:%d",
-#endif
 // It would be nice to test TCPv6, but CI doesn't support it.
 // Outside of CI, it does seem to work though.
 #ifdef NNG_TEST_TCPV6
 	"tcp://[::1]:%d",
 #endif
-#ifdef NNG_TRANSPORT_INPROC
 	"inproc://nng_multistress_%d",
-#endif
-#ifdef NNG_TRANSPORT_IPC
 	"ipc:///tmp/nng_multistress_%d",
-#endif
 };
 
 #define NTEMPLATES (sizeof(templates) / sizeof(templates[0]))

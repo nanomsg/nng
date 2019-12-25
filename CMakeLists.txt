@@ -421,7 +421,7 @@ endif ()
 
 function(nng_sources)
     foreach (f ${ARGN})
-        target_sources(${PROJECT_NAME}_testlib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${f})
+        target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${f})
     endforeach ()
     nng_sources_testlib(${ARGN})
 endfunction()

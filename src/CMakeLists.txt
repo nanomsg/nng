@@ -36,9 +36,6 @@ if (NNG_TESTS)
             ${PROJECT_SOURCE_DIR}/include/nng/nng.h)
 endif()
 
-
-#nng.c
-#${PROJECT_SOURCE_DIR}/include/nng/nng.h
 set (NNG_SRCS
 
     core/defs.h
@@ -221,7 +218,7 @@ if (NNG_TESTS)
     target_sources(${PROJECT_NAME}_testlib PRIVATE ${NNG_SRCS})
     target_link_libraries (${PROJECT_NAME}_testlib PUBLIC ${NNG_LIBS})
     target_compile_definitions(${PROJECT_NAME}_testlib PUBLIC NNG_STATIC_LIB NNG_TEST_LIB)
-    target_include_directories (${PROJECT_NAME}_testlib PRIVATE ${PROJECT_SOURCE_DIR}/include)
+    target_include_directories (${PROJECT_NAME}_testlib PUBLIC ${PROJECT_SOURCE_DIR}/include)
 endif()
 
 # When building shared libraries we prefer to suppress default symbol

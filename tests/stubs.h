@@ -81,16 +81,6 @@ fdready(int fd)
 	}
 }
 
-int
-nosocket(nng_socket *s)
-{
-	(void) s; // not used
-#ifdef CONVEY_H
-	ConveySkip("Protocol unconfigured");
-#endif
-	return (NNG_ENOTSUP);
-}
-
 uint16_t
 test_htons(uint16_t in)
 {
@@ -99,37 +89,5 @@ test_htons(uint16_t in)
 #endif
 	return (in);
 }
-
-#ifndef NNG_HAVE_PUB0
-#define nng_pub0_open nosocket
-#endif
-
-#ifndef NNG_HAVE_SUB0
-#define nng_sub0_open nosocket
-#endif
-
-#ifndef NNG_HAVE_PAIR0
-#define nng_pair0_open nosocket
-#endif
-
-#ifndef NNG_HAVE_PUSH0
-#define nng_push0_open nosocket
-#endif
-
-#ifndef NNG_HAVE_PULL0
-#define nng_pull0_open nosocket
-#endif
-
-#ifndef NNG_HAVE_SURVEYOR0
-#define nng_surveyor0_open nosocket
-#endif
-
-#ifndef NNG_HAVE_RESPONDENT0
-#define nng_respondent0_open nosocket
-#endif
-
-#ifndef NNG_HAVE_BUS0
-#define nng_bus0_open nosocket
-#endif
 
 #endif // STUBS_H

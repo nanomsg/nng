@@ -1,6 +1,5 @@
 #
-# Copyright 2018 Capitar IT Group BV <info@capitar.com>
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -8,9 +7,5 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-set(_SRCS supplemental/util/options.c
-    ${PROJECT_SOURCE_DIR}/include/nng/supplemental/util/options.h
-    supplemental/util/platform.c
-    ${PROJECT_SOURCE_DIR}/include/nng/supplemental/util/platform.h)
-
-set(NNG_SRCS ${NNG_SRCS} ${_SRCS} PARENT_SCOPE)
+nng_sources(options.c platform.c)
+nng_headers(nng/supplemental/util/options.h nng/supplemental/util/platform.h)
