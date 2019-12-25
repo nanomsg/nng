@@ -32,6 +32,12 @@ extern int  nni_posix_pfd_fd(nni_posix_pfd *);
 extern void nni_posix_pfd_close(nni_posix_pfd *);
 extern void nni_posix_pfd_set_cb(nni_posix_pfd *, nni_posix_pfd_cb, void *);
 
+// nni_posix_poll_wait creates a barrier, where the implementation
+// is guaranteed not to be running any callbacks.  This is used to
+// synchronize tear-down operations, where we need to be certain that
+// there are no callbacks running asynchronously.
+extern void nni_posix_poll_wait(void);
+
 #define NNI_POLL_IN ((unsigned) POLLIN)
 #define NNI_POLL_OUT ((unsigned) POLLOUT)
 #define NNI_POLL_HUP ((unsigned) POLLHUP)

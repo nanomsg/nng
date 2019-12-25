@@ -58,6 +58,9 @@ struct nni_posix_pollq {
 	bool     close; // request for worker to exit
 	nni_thr  thr;   // worker thread
 	nni_list reapq;
+	int      cb_start;
+	int      cb_finish;
+	nni_cv   wait_cv;
 };
 
 struct nni_posix_pfd {
@@ -171,6 +174,8 @@ void
 nni_posix_pfd_close(nni_posix_pfd *pfd)
 {
 	nni_mtx_lock(&pfd->mtx);
+	pfd->cb = NULL;
+	pfd->arg = NULL;
 	if (!pfd->closing) {
 		nni_posix_pollq *  pq = pfd->pq;
 		struct epoll_event ev; // Not actually used.
@@ -253,6 +258,9 @@ nni_posix_poll_thr(void *arg)
 			// Epoll fd closed, bail.
 			return;
 		}
+		nni_mtx_lock(&pq->mtx);
+		pq->cb_start++;
+		nni_mtx_unlock(&pq->mtx);
 
 		// dispatch events
 		for (int i = 0; i < n; ++i) {
@@ -287,6 +295,11 @@ nni_posix_poll_thr(void *arg)
 				}
 			}
 		}
+
+		nni_mtx_lock(&pq->mtx);
+		pq->cb_finish++;
+		nni_cv_wake(&pq->wait_cv);
+		nni_mtx_unlock(&pq->mtx);
 
 		if (reap) {
 			nni_posix_pollq_reap(pq);
@@ -367,6 +380,7 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 
 	NNI_LIST_INIT(&pq->reapq, nni_posix_pfd, node);
 	nni_mtx_init(&pq->mtx);
+	nni_cv_init(&pq->wait_cv, &pq->mtx);
 
 	if ((rv = nni_posix_pollq_add_eventfd(pq)) != 0) {
 		(void) close(pq->epfd);
@@ -393,6 +407,22 @@ void
 nni_posix_pollq_sysfini(void)
 {
 	nni_posix_pollq_destroy(&nni_posix_global_pollq);
+}
+
+void
+nni_posix_poll_wait(void)
+{
+	nni_posix_pollq *pq = &nni_posix_global_pollq;
+	int start;
+	nni_mtx_lock(&pq->mtx);
+	start = pq->cb_start;
+	// We are done if we either looped through once, or we finish
+	// this one.  (Basically, if we are still running the callbacks
+	// from this iteration.)
+	while ((pq->cb_start == start) && (pq->cb_finish != start)) {
+		nni_cv_wait(&pq->wait_cv);
+	}
+	nni_mtx_unlock(&pq->mtx);
 }
 
 #endif // NNG_HAVE_EPOLL

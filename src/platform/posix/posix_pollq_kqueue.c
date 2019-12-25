@@ -32,6 +32,9 @@ struct nni_posix_pollq {
 	int      kq;    // kqueue handle
 	nni_thr  thr;   // worker thread
 	nni_list reapq; // items to reap
+	int      cb_start;
+	int      cb_finish;
+	nni_cv   wait_cv;
 };
 
 struct nni_posix_pfd {
@@ -236,6 +239,10 @@ nni_posix_poll_thr(void *arg)
 			reap = true;
 		}
 
+		nni_mtx_lock(&pq->mtx);
+		pq->cb_start++;
+		nni_mtx_unlock(&pq->mtx);
+
 		for (int i = 0; i < n; i++) {
 			struct kevent *ev = &evs[i];
 
@@ -266,6 +273,12 @@ nni_posix_poll_thr(void *arg)
 				cb(pf, revents, cbarg);
 			}
 		}
+
+		nni_mtx_lock(&pq->mtx);
+		pq->cb_finish++;
+		nni_cv_wake(&pq->cv);
+		nni_mtx_unlock(&pq->mtx);
+
 		if (reap) {
 			nni_posix_pollq_reap(pq);
 		}
@@ -312,6 +325,7 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 	}
 
 	nni_mtx_init(&pq->mtx);
+	nni_cv_init(&pq->wait_cv, &pq->mtx);
 	NNI_LIST_INIT(&pq->reapq, nni_posix_pfd, node);
 
 	if (((rv = nni_thr_init(&pq->thr, nni_posix_poll_thr, pq)) != 0) ||
@@ -324,10 +338,25 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 	return (0);
 }
 
+void
+nni_posix_poll_wait(void)
+{
+	nni_posix_pollq *pq = &nni_posix_global_pollq;
+	int start;
+	nni_mtx_lock(&pq->mtx);
+	start = pq->cb_start;
+	// We are done if we either looped through once, or we finish
+	// this one.  (Basically, if we are still running the callbacks
+	// from this iteration.)
+	while ((pq->cb_start == start) && (pq->cb_finish != start)) {
+		nni_cv_wait(&pq->wait_cv);
+	}
+	nni_mtx_unlock(&pq->mtx);
+}
+
 int
 nni_posix_pollq_sysinit(void)
 {
-
 	return (nni_posix_pollq_create(&nni_posix_global_pollq));
 }
 

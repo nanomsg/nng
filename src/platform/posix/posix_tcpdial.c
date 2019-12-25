@@ -69,6 +69,9 @@ nni_tcp_dialer_close(nni_tcp_dialer *d)
 		}
 	}
 	nni_mtx_unlock(&d->mtx);
+
+	// Make sure any outstanding callbacks for the streams are drained.
+	nni_posix_poll_wait();
 }
 
 void
