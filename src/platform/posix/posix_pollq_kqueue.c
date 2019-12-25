@@ -276,7 +276,7 @@ nni_posix_poll_thr(void *arg)
 
 		nni_mtx_lock(&pq->mtx);
 		pq->cb_finish++;
-		nni_cv_wake(&pq->cv);
+		nni_cv_wake(&pq->wait_cv);
 		nni_mtx_unlock(&pq->mtx);
 
 		if (reap) {
