@@ -11,16 +11,10 @@
 
 #include "core/nng_impl.h"
 
-#include <arpa/inet.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/uio.h>
 #include <unistd.h>
 
 #ifndef SOCK_CLOEXEC
@@ -123,7 +117,7 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 		return;
 	}
 
-	if (ev & POLLNVAL) {
+	if ((ev & POLLNVAL) == POLLNVAL) {
 		rv = EBADF;
 
 	} else {
@@ -214,7 +208,7 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 		goto error;
 	}
 	if (d->srclen != 0) {
-		if ((rv = bind(fd, (void *) &d->src, d->srclen)) != 0) {
+		if (bind(fd, (void *) &d->src, d->srclen) != 0) {
 			rv = nni_plat_errno(errno);
 			goto error;
 		}
@@ -222,7 +216,7 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 	if ((rv = nni_aio_schedule(aio, tcp_dialer_cancel, d)) != 0) {
 		goto error;
 	}
-	if ((rv = connect(fd, (void *) &ss, sslen)) != 0) {
+	if (connect(fd, (void *) &ss, sslen) != 0) {
 		if (errno != EINPROGRESS) {
 			rv = nni_plat_errno(errno);
 			goto error;
