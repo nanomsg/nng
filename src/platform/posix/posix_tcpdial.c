@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -101,7 +101,7 @@ tcp_dialer_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
+tcp_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 {
 	nni_tcp_conn *  c = arg;
 	nni_tcp_dialer *d = c->dialer;
@@ -117,7 +117,7 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 		return;
 	}
 
-	if ((ev & POLLNVAL) == POLLNVAL) {
+	if ((ev & NNI_POLL_INVAL) != 0) {
 		rv = EBADF;
 
 	} else {
@@ -187,8 +187,8 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 		return;
 	}
 
-	// This arranges for the fd to be in nonblocking mode, and adds the
-	// pollfd to the list.
+	// This arranges for the fd to be in non-blocking mode, and adds the
+	// poll fd to the list.
 	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
 		(void) close(fd);
 		nni_aio_finish_error(aio, rv);
@@ -222,7 +222,7 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 			goto error;
 		}
 		// Asynchronous connect.
-		if ((rv = nni_posix_pfd_arm(pfd, POLLOUT)) != 0) {
+		if ((rv = nni_posix_pfd_arm(pfd, NNI_POLL_OUT)) != 0) {
 			goto error;
 		}
 		c->dial_aio = aio;

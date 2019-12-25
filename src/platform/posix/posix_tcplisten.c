@@ -114,7 +114,7 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 			case EWOULDBLOCK:
 #endif
 #endif
-				rv = nni_posix_pfd_arm(l->pfd, POLLIN);
+				rv = nni_posix_pfd_arm(l->pfd, NNI_POLL_IN);
 				if (rv != 0) {
 					nni_aio_list_remove(aio);
 					nni_aio_finish_error(aio, rv);
@@ -160,13 +160,13 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 }
 
 static void
-tcp_listener_cb(nni_posix_pfd *pfd, int events, void *arg)
+tcp_listener_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
 {
 	nni_tcp_listener *l = arg;
 	NNI_ARG_UNUSED(pfd);
 
 	nni_mtx_lock(&l->mtx);
-	if (events & POLLNVAL) {
+	if ((events & NNI_POLL_INVAL) != 0) {
 		tcp_listener_doclose(l);
 		nni_mtx_unlock(&l->mtx);
 		return;

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,17 +23,20 @@
 #include <poll.h>
 
 typedef struct nni_posix_pfd nni_posix_pfd;
-typedef void (*nni_posix_pfd_cb)(nni_posix_pfd *, int, void *);
-
-extern int  nni_posix_pollq_sysinit(void);
-extern void nni_posix_pollq_sysfini(void);
+typedef void (*nni_posix_pfd_cb)(nni_posix_pfd *, unsigned, void *);
 
 extern int  nni_posix_pfd_init(nni_posix_pfd **, int);
 extern void nni_posix_pfd_fini(nni_posix_pfd *);
-extern int  nni_posix_pfd_arm(nni_posix_pfd *, int);
+extern int  nni_posix_pfd_arm(nni_posix_pfd *, unsigned);
 extern int  nni_posix_pfd_fd(nni_posix_pfd *);
 extern void nni_posix_pfd_close(nni_posix_pfd *);
 extern void nni_posix_pfd_set_cb(nni_posix_pfd *, nni_posix_pfd_cb, void *);
+
+#define NNI_POLL_IN ((unsigned) POLLIN)
+#define NNI_POLL_OUT ((unsigned) POLLOUT)
+#define NNI_POLL_HUP ((unsigned) POLLHUP)
+#define NNI_POLL_ERR ((unsigned) POLLERR)
+#define NNI_POLL_INVAL ((unsigned) POLLNVAL)
 
 #endif // NNG_PLATFORM_POSIX
 

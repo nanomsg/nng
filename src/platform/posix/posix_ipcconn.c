@@ -15,14 +15,10 @@
 #include <fcntl.h>
 #include <poll.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <sys/uio.h>
 #include <sys/un.h>
-#include <unistd.h>
 #if defined(NNG_HAVE_GETPEERUCRED)
 #include <ucred.h>
 #elif defined(NNG_HAVE_LOCALPEERCRED) || defined(NNG_HAVE_SOCKPEERCRED)
@@ -206,27 +202,27 @@ ipc_close(void *arg)
 }
 
 static void
-ipc_cb(nni_posix_pfd *pfd, int events, void *arg)
+ipc_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
 {
 	ipc_conn *c = arg;
 
-	if (events & (POLLHUP | POLLERR | POLLNVAL)) {
+	if (events & (NNI_POLL_HUP | NNI_POLL_ERR | NNI_POLL_INVAL)) {
 		ipc_error(c, NNG_ECONNSHUT);
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
-	if (events & POLLIN) {
+	if ((events & NNI_POLL_IN) != 0) {
 		ipc_doread(c);
 	}
-	if (events & POLLOUT) {
+	if ((events & NNI_POLL_OUT) != 0) {
 		ipc_dowrite(c);
 	}
 	events = 0;
 	if (!nni_list_empty(&c->writeq)) {
-		events |= POLLOUT;
+		events |= NNI_POLL_OUT;
 	}
 	if (!nni_list_empty(&c->readq)) {
-		events |= POLLIN;
+		events |= NNI_POLL_IN;
 	}
 	if ((!c->closed) && (events != 0)) {
 		nni_posix_pfd_arm(pfd, events);
