@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Liam Staskawicz <liam@stask.net>
 //
@@ -42,7 +42,7 @@ struct nni_posix_pfd {
 	nni_posix_pfd_cb cb;   // user callback on event
 	nni_cv           cv;   // signaled when poller has unregistered
 	nni_mtx          mtx;
-	int              events;
+	unsigned         events;
 	bool             closing;
 	bool             closed;
 };
@@ -164,7 +164,7 @@ nni_posix_pfd_set_cb(nni_posix_pfd *pf, nni_posix_pfd_cb cb, void *arg)
 }
 
 int
-nni_posix_pfd_arm(nni_posix_pfd *pf, int events)
+nni_posix_pfd_arm(nni_posix_pfd *pf, unsigned events)
 {
 	struct kevent    ev[2];
 	int              nev   = 0;
@@ -224,7 +224,7 @@ nni_posix_poll_thr(void *arg)
 		nni_posix_pfd *  pf;
 		nni_posix_pfd_cb cb;
 		void *           cbarg;
-		int              revents;
+		unsigned         revents;
 		bool             reap = false;
 
 		n = kevent(pq->kq, NULL, 0, evs, NNI_MAX_KQUEUE_EVENTS, NULL);

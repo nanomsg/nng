@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -38,7 +38,7 @@ struct nni_posix_pfd {
 	int              fd;
 	nni_mtx          mtx;
 	nni_cv           cv;
-	int              events;
+	unsigned         events;
 	bool             closed;
 	bool             closing;
 	nni_posix_pfd_cb cb;
@@ -130,7 +130,7 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 }
 
 int
-nni_posix_pfd_arm(nni_posix_pfd *pfd, int events)
+nni_posix_pfd_arm(nni_posix_pfd *pfd, unsigned events)
 {
 	nni_posix_pollq *pq = pfd->pq;
 
@@ -138,7 +138,7 @@ nni_posix_pfd_arm(nni_posix_pfd *pfd, int events)
 	if (!pfd->closing) {
 		pfd->events |= events;
 		if (port_associate(pq->port, PORT_SOURCE_FD, pfd->fd,
-		        pfd->events, pfd) != 0) {
+		        (int) pfd->events, pfd) != 0) {
 			int rv = nni_plat_errno(errno);
 			nni_mtx_unlock(&pfd->mtx);
 			return (rv);
@@ -155,7 +155,7 @@ nni_posix_poll_thr(void *arg)
 		nni_posix_pollq *pq = arg;
 		port_event_t     ev[NNI_MAX_PORTEV];
 		nni_posix_pfd *  pfd;
-		int              events;
+		unsigned         events;
 		nni_posix_pfd_cb cb;
 		void *           arg;
 		unsigned         n;

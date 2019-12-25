@@ -35,7 +35,7 @@ typedef struct nni_posix_pollq nni_posix_pollq;
 #define NNI_MAX_EPOLL_EVENTS 64
 
 // flags we always want enabled as long as at least one event is active
-#define NNI_EPOLL_FLAGS (EPOLLONESHOT | EPOLLERR)
+#define NNI_EPOLL_FLAGS ((unsigned) EPOLLONESHOT | (unsigned) EPOLLERR)
 
 // Locking strategy:
 //
@@ -69,7 +69,7 @@ struct nni_posix_pfd {
 	bool             closed;
 	bool             closing;
 	bool             reap;
-	int              events;
+	unsigned         events;
 	nni_mtx          mtx;
 	nni_cv           cv;
 };
@@ -112,7 +112,7 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	ev.events   = 0;
 	ev.data.ptr = pfd;
 
-	if ((rv = epoll_ctl(pq->epfd, EPOLL_CTL_ADD, fd, &ev)) != 0) {
+	if (epoll_ctl(pq->epfd, EPOLL_CTL_ADD, fd, &ev) != 0) {
 		rv = nni_plat_errno(errno);
 		nni_cv_fini(&pfd->cv);
 		NNI_FREE_STRUCT(pfd);
@@ -124,7 +124,7 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 }
 
 int
-nni_posix_pfd_arm(nni_posix_pfd *pfd, int events)
+nni_posix_pfd_arm(nni_posix_pfd *pfd, unsigned events)
 {
 	nni_posix_pollq *pq = pfd->pq;
 
@@ -260,7 +260,8 @@ nni_posix_poll_thr(void *arg)
 
 			ev = &events[i];
 			// If the waker pipe was signaled, read from it.
-			if ((ev->data.ptr == NULL) && (ev->events & POLLIN)) {
+			if ((ev->data.ptr == NULL) &&
+			    (ev->events & (unsigned) POLLIN)) {
 				uint64_t clear;
 				(void) read(pq->evfd, &clear, sizeof(clear));
 				reap = true;
@@ -268,20 +269,21 @@ nni_posix_poll_thr(void *arg)
 				nni_posix_pfd *  pfd = ev->data.ptr;
 				nni_posix_pfd_cb cb;
 				void *           cbarg;
-				int              events;
+				unsigned         mask;
 
-				events = ev->events &
-				    (EPOLLIN | EPOLLOUT | EPOLLERR);
+				mask = ev->events &
+				    ((unsigned) EPOLLIN | (unsigned) EPOLLOUT |
+				        (unsigned) EPOLLERR);
 
 				nni_mtx_lock(&pfd->mtx);
-				pfd->events &= ~events;
-				cb  = pfd->cb;
+				pfd->events &= ~mask;
+				cb    = pfd->cb;
 				cbarg = pfd->arg;
 				nni_mtx_unlock(&pfd->mtx);
 
 				// Execute the callback with lock released
 				if (cb != NULL) {
-					cb(pfd, events, cbarg);
+					cb(pfd, mask, cbarg);
 				}
 			}
 		}

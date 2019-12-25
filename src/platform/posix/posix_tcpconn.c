@@ -11,20 +11,15 @@
 
 #include "core/nng_impl.h"
 
-#include <arpa/inet.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
 #include <netinet/tcp.h>
 #include <poll.h>
 #include <stdbool.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
 #include <sys/uio.h>
-#include <unistd.h>
 
 #ifndef MSG_NOSIGNAL
 #define MSG_NOSIGNAL 0
@@ -224,27 +219,27 @@ tcp_free(void *arg)
 }
 
 static void
-tcp_cb(nni_posix_pfd *pfd, int events, void *arg)
+tcp_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
 {
 	nni_tcp_conn *c = arg;
 
-	if (events & (POLLHUP | POLLERR | POLLNVAL)) {
+	if (events & (NNI_POLL_HUP | NNI_POLL_ERR | NNI_POLL_INVAL)) {
 		tcp_error(c, NNG_ECONNSHUT);
 		return;
 	}
 	nni_mtx_lock(&c->mtx);
-	if (events & POLLIN) {
+	if ((events & NNI_POLL_IN) != 0) {
 		tcp_doread(c);
 	}
-	if (events & POLLOUT) {
+	if ((events & NNI_POLL_OUT) != 0) {
 		tcp_dowrite(c);
 	}
 	events = 0;
 	if (!nni_list_empty(&c->writeq)) {
-		events |= POLLOUT;
+		events |= NNI_POLL_OUT;
 	}
 	if (!nni_list_empty(&c->readq)) {
-		events |= POLLIN;
+		events |= NNI_POLL_IN;
 	}
 	if ((!c->closed) && (events != 0)) {
 		nni_posix_pfd_arm(pfd, events);

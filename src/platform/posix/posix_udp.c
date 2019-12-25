@@ -16,12 +16,8 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/uio.h>
 #include <unistd.h>
 
 // UDP support.
@@ -158,27 +154,28 @@ nni_posix_udp_dosend(nni_plat_udp *udp)
 
 // This function is called by the poller on activity on the FD.
 static void
-nni_posix_udp_cb(nni_posix_pfd *pfd, int events, void *arg)
+nni_posix_udp_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
 {
 	nni_plat_udp *udp = arg;
 	NNI_ARG_UNUSED(pfd);
 
 	nni_mtx_lock(&udp->udp_mtx);
-	if (events & POLLIN) {
+	if (events & (unsigned) POLLIN) {
 		nni_posix_udp_dorecv(udp);
 	}
-	if (events & POLLOUT) {
+	if (events & (unsigned) POLLOUT) {
 		nni_posix_udp_dosend(udp);
 	}
-	if (events & (POLLHUP | POLLERR | POLLNVAL)) {
+	if (events &
+	    ((unsigned) POLLHUP | (unsigned) POLLERR | (unsigned) POLLNVAL)) {
 		nni_posix_udp_doclose(udp);
 	} else {
 		events = 0;
 		if (!nni_list_empty(&udp->udp_sendq)) {
-			events |= POLLOUT;
+			events |= (unsigned) POLLOUT;
 		}
 		if (!nni_list_empty(&udp->udp_recvq)) {
-			events |= POLLIN;
+			events |= (unsigned) POLLIN;
 		}
 		if (events) {
 			int rv;
@@ -317,11 +314,9 @@ nni_plat_udp_sockname(nni_plat_udp *udp, nni_sockaddr *sa)
 {
 	struct sockaddr_storage ss;
 	socklen_t               sz;
-	int                     rv;
 
 	sz = sizeof(ss);
-	if ((rv = getsockname(udp->udp_fd, (struct sockaddr *) &ss, &sz)) <
-	    0) {
+	if (getsockname(udp->udp_fd, (struct sockaddr *) &ss, &sz) < 0) {
 		return (nni_plat_errno(errno));
 	}
 	return (nni_posix_sockaddr2nn(sa, &ss));

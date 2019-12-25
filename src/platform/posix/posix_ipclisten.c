@@ -102,7 +102,7 @@ ipc_listener_doaccept(ipc_listener *l)
 			case EWOULDBLOCK:
 #endif
 #endif
-				rv = nni_posix_pfd_arm(l->pfd, POLLIN);
+				rv = nni_posix_pfd_arm(l->pfd, NNI_POLL_IN);
 				if (rv != 0) {
 					nni_aio_list_remove(aio);
 					nni_aio_finish_error(aio, rv);
@@ -146,13 +146,13 @@ ipc_listener_doaccept(ipc_listener *l)
 }
 
 static void
-ipc_listener_cb(nni_posix_pfd *pfd, int events, void *arg)
+ipc_listener_cb(nni_posix_pfd *pfd, unsigned events, void *arg)
 {
 	ipc_listener *l = arg;
 	NNI_ARG_UNUSED(pfd);
 
 	nni_mtx_lock(&l->mtx);
-	if (events & POLLNVAL) {
+	if ((events & NNI_POLL_INVAL) != 0) {
 		ipc_listener_doclose(l);
 		nni_mtx_unlock(&l->mtx);
 		return;

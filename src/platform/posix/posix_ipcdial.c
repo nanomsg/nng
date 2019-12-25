@@ -11,16 +11,10 @@
 
 #include "core/nng_impl.h"
 
-#include <arpa/inet.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/uio.h>
 #include <unistd.h>
 
 #ifndef SOCK_CLOEXEC
@@ -86,7 +80,7 @@ ipc_dialer_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-ipc_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
+ipc_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 {
 	nni_ipc_conn *  c = arg;
 	nni_ipc_dialer *d = c->dialer;
@@ -100,7 +94,7 @@ ipc_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 		return;
 	}
 
-	if (ev & POLLNVAL) {
+	if ((ev & NNI_POLL_INVAL) != 0) {
 		rv = EBADF;
 
 	} else {
@@ -187,7 +181,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 	if ((rv = nni_aio_schedule(aio, ipc_dialer_cancel, d)) != 0) {
 		goto error;
 	}
-	if ((rv = connect(fd, (void *) &ss, sslen)) != 0) {
+	if (connect(fd, (void *) &ss, sslen) != 0) {
 		if (errno != EINPROGRESS) {
 			if (errno == ENOENT) {
 				// No socket present means nobody listening.
@@ -198,7 +192,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 			goto error;
 		}
 		// Asynchronous connect.
-		if ((rv = nni_posix_pfd_arm(pfd, POLLOUT)) != 0) {
+		if ((rv = nni_posix_pfd_arm(pfd, NNI_POLL_OUT)) != 0) {
 			goto error;
 		}
 		c->dial_aio = aio;

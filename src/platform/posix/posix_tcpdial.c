@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -11,16 +11,10 @@
 
 #include "core/nng_impl.h"
 
-#include <arpa/inet.h>
 #include <errno.h>
-#include <fcntl.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/uio.h>
 #include <unistd.h>
 
 #ifndef SOCK_CLOEXEC
@@ -107,7 +101,7 @@ tcp_dialer_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
+tcp_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 {
 	nni_tcp_conn *  c = arg;
 	nni_tcp_dialer *d = c->dialer;
@@ -123,7 +117,7 @@ tcp_dialer_cb(nni_posix_pfd *pfd, int ev, void *arg)
 		return;
 	}
 
-	if (ev & POLLNVAL) {
+	if ((ev & NNI_POLL_INVAL) != 0) {
 		rv = EBADF;
 
 	} else {
@@ -193,8 +187,8 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 		return;
 	}
 
-	// This arranges for the fd to be in nonblocking mode, and adds the
-	// pollfd to the list.
+	// This arranges for the fd to be in non-blocking mode, and adds the
+	// poll fd to the list.
 	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
 		(void) close(fd);
 		nni_aio_finish_error(aio, rv);
@@ -214,7 +208,7 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 		goto error;
 	}
 	if (d->srclen != 0) {
-		if ((rv = bind(fd, (void *) &d->src, d->srclen)) != 0) {
+		if (bind(fd, (void *) &d->src, d->srclen) != 0) {
 			rv = nni_plat_errno(errno);
 			goto error;
 		}
@@ -222,13 +216,13 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 	if ((rv = nni_aio_schedule(aio, tcp_dialer_cancel, d)) != 0) {
 		goto error;
 	}
-	if ((rv = connect(fd, (void *) &ss, sslen)) != 0) {
+	if (connect(fd, (void *) &ss, sslen) != 0) {
 		if (errno != EINPROGRESS) {
 			rv = nni_plat_errno(errno);
 			goto error;
 		}
 		// Asynchronous connect.
-		if ((rv = nni_posix_pfd_arm(pfd, POLLOUT)) != 0) {
+		if ((rv = nni_posix_pfd_arm(pfd, NNI_POLL_OUT)) != 0) {
 			goto error;
 		}
 		c->dial_aio = aio;
