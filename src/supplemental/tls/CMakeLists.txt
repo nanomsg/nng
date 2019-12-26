@@ -29,9 +29,15 @@ if (NNG_SUPP_TLS_MBEDTLS)
         Consult a lawyer and the license files for details.
         ************************************************************")
 
-	find_package(mbedTLS REQUIRED)
-	set(_LIBS ${MBEDTLS_LIBRARIES})
-	set(_INCS ${MBEDTLS_INCLUDE_DIR})
+	# If mbedTLS was added by a consuming project, then we should use that
+	# instance of it, instead of configuring our own.
+	if (TARGET mbedtls)
+		set(_LIBS mbedtls)
+	else()
+		find_package(mbedTLS REQUIRED)
+		set(_LIBS ${MBEDTLS_LIBRARIES})
+		set(_INCS ${MBEDTLS_INCLUDE_DIR})
+	endif()
 	list(APPEND _SRCS supplemental/tls/mbedtls/tls.c)
 
 else()
