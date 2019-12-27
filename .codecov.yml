@@ -1,5 +1,6 @@
 ignore:
- - tests/*/*
- - **/*_test.c
+ - "tests"
+ - "perf"
+ - "**/*_test.c"
 coverage:
  range: 50..85
