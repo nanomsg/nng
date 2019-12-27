@@ -31,6 +31,8 @@ struct nni_tcp_dialer {
 	struct sockaddr_storage src;
 	size_t                  srclen;
 	nni_mtx                 mtx;
+	int                     refcnt;
+	bool                    fini;
 };
 
 // Dialer stuff.
@@ -71,12 +73,38 @@ nni_tcp_dialer_close(nni_tcp_dialer *d)
 	nni_mtx_unlock(&d->mtx);
 }
 
+static void
+tcp_dialer_fini(nni_tcp_dialer *d)
+{
+	nni_mtx_fini(&d->mtx);
+	NNI_FREE_STRUCT(d);
+}
+
 void
 nni_tcp_dialer_fini(nni_tcp_dialer *d)
 {
 	nni_tcp_dialer_close(d);
-	nni_mtx_fini(&d->mtx);
-	NNI_FREE_STRUCT(d);
+	nni_mtx_lock(&d->mtx);
+	d->fini = true;
+	if (d->refcnt) {
+		nni_mtx_unlock(&d->mtx);
+		return;
+	}
+	nni_mtx_unlock(&d->mtx);
+	tcp_dialer_fini(d);
+}
+
+void
+nni_posix_tcp_dialer_rele(nni_tcp_dialer *d)
+{
+	nni_mtx_lock(&d->mtx);
+	d->refcnt--;
+	if ((d->refcnt > 0) || (!d->fini)) {
+		nni_mtx_unlock(&d->mtx);
+		return;
+	}
+	nni_mtx_unlock(&d->mtx);
+	tcp_dialer_fini(d);
 }
 
 static void
@@ -203,6 +231,7 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 	nni_posix_pfd_set_cb(pfd, tcp_dialer_cb, c);
 
 	nni_mtx_lock(&d->mtx);
+	d->refcnt++;
 	if (d->closed) {
 		rv = NNG_ECLOSED;
 		goto error;

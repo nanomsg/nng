@@ -50,12 +50,39 @@ ipc_dialer_close(void *arg)
 }
 
 static void
+ipc_dialer_fini(ipc_dialer *d)
+{
+	nni_mtx_fini(&d->mtx);
+	NNI_FREE_STRUCT(d);
+}
+
+static void
 ipc_dialer_free(void *arg)
 {
 	ipc_dialer *d = arg;
+
 	ipc_dialer_close(d);
-	nni_mtx_fini(&d->mtx);
-	NNI_FREE_STRUCT(d);
+	nni_mtx_lock(&d->mtx);
+	d->fini = true;
+	if (d->refcnt) {
+		nni_mtx_unlock(&d->mtx);
+		return;
+	}
+	nni_mtx_unlock(&d->mtx);
+	ipc_dialer_fini(d);
+}
+
+void
+nni_posix_ipc_dialer_rele(ipc_dialer *d)
+{
+	nni_mtx_lock(&d->mtx);
+	d->refcnt--;
+	if ((d->refcnt > 0) || (!d->fini)) {
+		nni_mtx_unlock(&d->mtx);
+		return;
+	}
+	nni_mtx_unlock(&d->mtx);
+	ipc_dialer_fini(d);
 }
 
 static void
@@ -174,6 +201,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 	nni_posix_pfd_set_cb(pfd, ipc_dialer_cb, c);
 
 	nni_mtx_lock(&d->mtx);
+	d->refcnt++;
 	if (d->closed) {
 		rv = NNG_ECLOSED;
 		goto error;

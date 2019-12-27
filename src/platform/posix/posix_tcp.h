@@ -29,5 +29,6 @@ struct nni_tcp_conn {
 };
 extern int  nni_posix_tcp_init(nni_tcp_conn **, nni_posix_pfd *);
 extern void nni_posix_tcp_start(nni_tcp_conn *, int, int);
+extern void nni_posix_tcp_dialer_rele(nni_tcp_dialer *);
 
 #endif // PLATFORM_POSIX_TCP_H

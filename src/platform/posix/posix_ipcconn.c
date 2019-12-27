@@ -493,6 +493,10 @@ ipc_free(void *arg)
 	nni_mtx_unlock(&c->mtx);
 	nni_mtx_fini(&c->mtx);
 
+	if (c->dialer != NULL) {
+		nni_posix_ipc_dialer_rele(c->dialer);
+	}
+
 	NNI_FREE_STRUCT(c);
 }
 

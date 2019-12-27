@@ -37,10 +37,13 @@ struct nni_ipc_dialer {
 	bool              closed;
 	nni_mtx           mtx;
 	nng_sockaddr      sa;
+	int               refcnt;
+	bool              fini;
 };
 
 extern int  nni_posix_ipc_init(nni_ipc_conn **, nni_posix_pfd *);
 extern void nni_posix_ipc_start(nni_ipc_conn *);
+extern void nni_posix_ipc_dialer_rele(nni_ipc_dialer *);
 
 #endif // NNG_PLATFORM_POSIX
 
