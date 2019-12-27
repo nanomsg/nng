@@ -10,7 +10,6 @@
 
 // Basic HTTP client tests.
 
-
 #ifndef _WIN32
 #include <arpa/inet.h>
 #endif
@@ -157,23 +156,6 @@ TestMain("HTTP Client", {
 			So(memcmp(digest, example_sum, 20) == 0);
 		});
 
-		Convey("Timeout works", {
-			nng_http_req *req;
-			nng_http_res *res;
-
-			So(nng_http_req_alloc(&req, url) == 0);
-			So(nng_http_res_alloc(&res) == 0);
-			Reset({
-				nng_http_req_free(req);
-				nng_http_res_free(res);
-			});
-
-			nng_aio_set_timeout(aio, 1); // 1 ms, should timeout!
-			nng_http_client_transact(cli, req, res, aio);
-			nng_aio_wait(aio);
-			So(nng_aio_result(aio) == NNG_ETIMEDOUT);
-		});
-
 		Convey("Connection reuse works", {
 			nng_http_req * req;
 			nng_http_res * res1;
@@ -216,6 +198,35 @@ TestMain("HTTP Client", {
 			nni_sha1(data, len, digest);
 			So(memcmp(digest, example_sum, 20) == 0);
 		});
+	});
+
+	Convey("Client times out", {
+		nng_aio *        aio;
+		nng_http_client *cli;
+		nng_url *        url;
+		nng_http_req *   req;
+		nng_http_res *   res;
+
+		So(nng_aio_alloc(&aio, NULL, NULL) == 0);
+
+		So(nng_url_parse(&url, "http://httpbin.org/delay/30") == 0);
+
+		So(nng_http_client_alloc(&cli, url) == 0);
+		So(nng_http_req_alloc(&req, url) == 0);
+		So(nng_http_res_alloc(&res) == 0);
+
+		Reset({
+			nng_http_client_free(cli);
+			nng_url_free(url);
+			nng_aio_free(aio);
+			nng_http_req_free(req);
+			nng_http_res_free(res);
+		});
+		nng_aio_set_timeout(aio, 10); // 10 msec timeout
+
+		nng_http_client_transact(cli, req, res, aio);
+		nng_aio_wait(aio);
+		So(nng_aio_result(aio) == NNG_ETIMEDOUT);
 	});
 
 	Convey("Given a client (chunked)", {
