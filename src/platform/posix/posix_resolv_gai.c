@@ -345,47 +345,6 @@ resolv_worker(void *notused)
 }
 
 int
-nni_ntop(const nni_sockaddr *sa, char *ipstr, char *portstr)
-{
-	const void *ap;
-	uint16_t    port;
-	int         af;
-	switch (sa->s_family) {
-	case NNG_AF_INET:
-		ap   = &sa->s_in.sa_addr;
-		port = sa->s_in.sa_port;
-		af   = AF_INET;
-		break;
-	case NNG_AF_INET6:
-		ap   = &sa->s_in6.sa_addr;
-		port = sa->s_in6.sa_port;
-		af   = AF_INET6;
-		break;
-	default:
-		return (NNG_EINVAL);
-	}
-	if (ipstr != NULL) {
-		if (af == AF_INET6) {
-			size_t l;
-			ipstr[0] = '[';
-			inet_ntop(af, ap, ipstr + 1, INET6_ADDRSTRLEN);
-			l          = strlen(ipstr);
-			ipstr[l++] = ']';
-			ipstr[l++] = '\0';
-		} else {
-			inet_ntop(af, ap, ipstr, INET6_ADDRSTRLEN);
-		}
-	}
-	if (portstr != NULL) {
-#ifdef NNG_LITTLE_ENDIAN
-		port = ((port >> 8) & 0xff) | ((port & 0xff) << 8);
-#endif
-		snprintf(portstr, 6, "%u", port);
-	}
-	return (0);
-}
-
-int
 nni_posix_resolv_sysinit(void)
 {
 	nni_mtx_init(&resolv_mtx);

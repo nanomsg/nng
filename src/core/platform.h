@@ -294,12 +294,6 @@ extern int nni_tcp_listener_setopt(
 extern int nni_tcp_listener_getopt(
     nni_tcp_listener *, const char *, void *, size_t *, nni_type);
 
-// nni_ntop obtains the IP address for the socket (enclosing it
-// in brackets if it is IPv6) and port.  Enough space for both must
-// be present (48 bytes and 6 bytes each), although if either is NULL then
-// those components are skipped.  This is based on inet_ntop.
-extern int nni_ntop(const nni_sockaddr *, char *, char *);
-
 // nni_tcp_resolv resolves a TCP name asynchronously.  The family
 // should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.  The
 // first two constrain the name to those families, while the third will
