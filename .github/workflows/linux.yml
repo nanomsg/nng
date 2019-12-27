@@ -9,11 +9,17 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v1
 
+    - name: Install mbedTLS
+      run: sudo apt-get install libmbedtls-dev
+
+    - name: Install ninja
+      run: sudo apt-get install ninja-build
+
     - name: Configure
-      run: mkdir build && cd build && cmake ..
+      run: mkdir build && cd build && cmake -G Ninja -D NNG_ENABLE_TLS=ON ..
 
     - name: Build
-      run: cmake --build build
+      run: cd build && ninja
 
     - name: Test
       run: cd build && ctest --output-on-failure
