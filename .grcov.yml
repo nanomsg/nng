@@ -1,0 +1,5 @@
+branch: true
+ignore-not-existing: true
+filter: covered
+output-type: lcov
+output-file: lcov.info

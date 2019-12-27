@@ -1,0 +1,31 @@
+name: coverage
+on: [push]
+jobs:
+
+  build:
+    name: build
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, macos-latest ]
+    steps:
+    - name: Check out code
+      uses: actions/checkout@v1
+
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        cmake -D NNG_ENABLE_COVERAGE=ON ..
+
+    - name: build
+      run: cmake --build build
+
+    - name: Test
+      run: cd build && ctest --output-on-failure
+
+    - name: Upload report
+      uses: codecov/codecov-action@v1
+      with:
+        token: ${{ secrets.CODECOV_TOKEN }}
+        yml: ./.codecov.yml
