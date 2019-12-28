@@ -58,9 +58,6 @@ extern void trantest_test_all(const char *addr);
 #ifndef NNG_TRANSPORT_ZEROTIER
 #define nng_zt_register notransport
 #endif
-#ifndef NNG_TRANSPORT_WS
-#define nng_ws_register notransport
-#endif
 #ifndef NNG_TRANSPORT_WSS
 #define nng_wss_register notransport
 #endif
@@ -79,9 +76,6 @@ notransport(void)
 void
 trantest_checktran(const char *url)
 {
-#ifndef NNG_TRANSPORT_WS
-	CHKTRAN(url, "ws:");
-#endif
 #ifndef NNG_TRANSPORT_WSS
 	CHKTRAN(url, "wss:");
 #endif
