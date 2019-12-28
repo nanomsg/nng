@@ -100,9 +100,9 @@ test_rep_send_bad_state(void)
 void
 test_req_rep_exchange(void)
 {
-	nng_socket  req;
-	nng_socket  rep;
-	nng_msg *   msg  = NULL;
+	nng_socket req;
+	nng_socket rep;
+	nng_msg *  msg = NULL;
 
 	TEST_CHECK(nng_req0_open(&req) == 0);
 	TEST_CHECK(nng_rep0_open(&rep) == 0);
@@ -288,6 +288,101 @@ test_req_cancel_abort_recv(void)
 	TEST_CHECK(nng_close(rep) == 0);
 }
 
+void
+test_req_poll_writeable(void)
+{
+	int        fd;
+	nng_socket req;
+	nng_socket rep;
+
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_getopt_int(req, NNG_OPT_SENDFD, &fd));
+	TEST_CHECK(fd >= 0);
+
+	// Not writable before connect.
+	TEST_CHECK(testutil_pollfd(fd) == false);
+
+	TEST_NNG_PASS(testutil_marry(req, rep));
+
+	// It should be writable now.
+	TEST_CHECK(testutil_pollfd(fd) == true);
+
+	// Submit a bunch of jobs.  Note that we have to stall a bit
+	// between each message to let it queue up.
+	for (int i = 0; i < 10; i++) {
+		int rv = nng_send(req, "", 0, NNG_FLAG_NONBLOCK);
+		if (rv == NNG_EAGAIN) {
+			break;
+		}
+		TEST_NNG_PASS(rv);
+		testutil_sleep(50);
+	}
+	TEST_CHECK(testutil_pollfd(fd) == 0);
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+}
+
+void
+test_req_poll_readable(void)
+{
+	int        fd;
+	nng_socket req;
+	nng_socket rep;
+	nng_msg *  msg;
+
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_getopt_int(req, NNG_OPT_RECVFD, &fd));
+	TEST_CHECK(fd >= 0);
+
+	// Not readable if not connected!
+	TEST_CHECK(testutil_pollfd(fd) == false);
+
+	// Even after connect (no message yet)
+	TEST_NNG_PASS(testutil_marry(req, rep));
+	TEST_CHECK(testutil_pollfd(fd) == false);
+
+	// But once we send messages, it is.
+	// We have to send a request, in order to send a reply.
+
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
+	TEST_NNG_PASS(nng_msg_append(msg, "xyz", 3));
+	TEST_NNG_PASS(nng_sendmsg(req, msg, 0));
+	TEST_NNG_PASS(nng_recvmsg(rep, &msg, 0)); // recv on rep
+	TEST_NNG_PASS(nng_sendmsg(rep, msg, 0));  // echo it back
+	testutil_sleep(200); // give time for message to arrive
+
+	TEST_CHECK(testutil_pollfd(fd) == true);
+
+	// and receiving makes it no longer pollable
+	TEST_NNG_PASS(nng_recvmsg(req, &msg, 0));
+	nng_msg_free(msg);
+	TEST_CHECK(testutil_pollfd(fd) == false);
+
+	// TODO verify unsolicited response
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+}
+
+void
+test_req_context_not_pollable(void)
+{
+	int        fd;
+	nng_socket req;
+	nng_ctx    ctx;
+
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_ctx_open(&ctx, req));
+	TEST_NNG_FAIL(
+	    nng_ctx_getopt_int(ctx, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
+	TEST_NNG_FAIL(
+	    nng_ctx_getopt_int(ctx, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
+	TEST_NNG_PASS(nng_ctx_close(ctx));
+	TEST_NNG_PASS(nng_close(req));
+}
+
 TEST_LIST = {
 	{ "req rep identity", test_req_rep_identity },
 	{ "resend option", test_resend_option },
@@ -296,5 +391,8 @@ TEST_LIST = {
 	{ "req rep exchange", test_req_rep_exchange },
 	{ "req cancel", test_req_cancel },
 	{ "req cancel abort recv", test_req_cancel_abort_recv },
+	{ "req poll writable", test_req_poll_writeable },
+	{ "req poll readable", test_req_poll_readable },
+	{ "req context not pollable", test_req_context_not_pollable },
 	{ NULL, NULL },
 };
