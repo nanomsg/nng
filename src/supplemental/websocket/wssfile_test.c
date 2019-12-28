@@ -242,7 +242,7 @@ test_invalid_verify(void)
 	nng_listener l;
 	char         addr[32];
 
-	snprintf(addr, sizeof(addr), "wss://localhost:%u/test", port);
+	snprintf(addr, sizeof(addr), "wss://:%u/test", port);
 
 	TEST_NNG_PASS(nng_pair_open(&s1));
 	TEST_NNG_PASS(nng_pair_open(&s2));
