@@ -123,6 +123,18 @@ testutil_htons(uint16_t in)
 	return (in);
 }
 
+uint32_t
+testutil_htonl(uint32_t in)
+{
+#ifdef NNG_LITTLE_ENDIAN
+	in = ((in >> 24u) & 0xffu) |
+	    ((in >> 8u) & 0xff00u) |
+	    ((in << 8u) & 0xff0000u) |
+	    ((in << 24u) & 0xff000000u);
+#endif
+	return (in);
+}
+
 // testutil_next_port returns a "next" allocation port.
 // Ports are chosen by starting from a random point within a
 // range (normally 38000-40000, but other good places to choose

@@ -31,6 +31,9 @@ extern bool testutil_pollfd(int);
 // testutil_htons is just htons portably.
 extern uint16_t testutil_htons(uint16_t);
 
+// testutil_htonl is just htonl portably.
+extern uint32_t testutil_htonl(uint32_t);
+
 // testutil_sleep sleeps the specified number of msec
 extern void testutil_sleep(int);
 

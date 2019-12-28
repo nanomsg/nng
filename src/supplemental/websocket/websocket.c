@@ -156,7 +156,8 @@ struct ws_frame {
 	enum ws_type  op;
 	bool          final;
 	bool          masked;
-	size_t        bufsz; // allocated size
+	size_t        asize; // allocated size
+	uint8_t *     adata;
 	uint8_t *     buf;
 	nng_aio *     aio;
 };
@@ -341,8 +342,8 @@ ws_make_accept(const char *key, char *accept)
 static void
 ws_frame_fini(ws_frame *frame)
 {
-	if (frame->bufsz != 0) {
-		nni_free(frame->buf, frame->bufsz);
+	if (frame->asize != 0) {
+		nni_free(frame->adata, frame->asize);
 	}
 	NNI_FREE_STRUCT(frame);
 }
@@ -403,7 +404,7 @@ ws_msg_init_control(
 	frame->head[1] = len & 0x7F;
 	frame->hlen    = 2;
 	frame->buf     = frame->sdata;
-	frame->bufsz   = 0;
+	frame->asize   = 0;
 
 	if (ws->server) {
 		frame->masked = false;
@@ -446,14 +447,15 @@ ws_frame_prep_tx(nni_ws *ws, ws_frame *frame)
 	}
 	// Potentially allocate space for the data if we need to.
 	// Note that an empty message is legal.
-	if ((frame->bufsz < frame->len) && (frame->len > 0)) {
-		nni_free(frame->buf, frame->bufsz);
-		frame->buf = nni_alloc(frame->len);
-		if (frame->buf == NULL) {
-			frame->bufsz = 0;
+	if ((frame->asize < frame->len) && (frame->len > 0)) {
+		nni_free(frame->adata, frame->asize);
+		frame->adata = nni_alloc(frame->len);
+		if (frame->adata == NULL) {
+			frame->asize = 0;
 			return (NNG_ENOMEM);
 		}
-		frame->bufsz = frame->len;
+		frame->asize = frame->len;
+		frame->buf = frame->adata;
 	}
 	buf = frame->buf;
 
@@ -1109,15 +1111,16 @@ ws_read_cb(void *arg)
 			// Short frames can avoid an alloc
 			if (frame->len < 126) {
 				frame->buf   = frame->sdata;
-				frame->bufsz = 0;
+				frame->asize = 0;
 			} else {
-				frame->buf = nni_alloc(frame->len);
-				if (frame->buf == NULL) {
+				frame->adata = nni_alloc(frame->len);
+				if (frame->adata == NULL) {
 					ws_close(ws, WS_CLOSE_INTERNAL);
 					nni_mtx_unlock(&ws->mtx);
 					return;
 				}
-				frame->bufsz = frame->len;
+				frame->asize = frame->len;
+				frame->buf = frame->adata;
 			}
 
 			iov.iov_buf = frame->buf;
