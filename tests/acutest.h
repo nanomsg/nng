@@ -384,12 +384,7 @@ static jmp_buf test_abort_jmp_buf__;
     test_timer_init__(void)
     {
         if(test_timer__ == 1)
-    #ifdef CLOCK_MONOTONIC_RAWxx
-            /* linux specific; not subject of NTP adjustments or adjtime() */
-            test_timer_id__ = CLOCK_MONOTONIC_RAW;
-    #else
             test_timer_id__ = CLOCK_MONOTONIC;
-    #endif
         else if(test_timer__ == 2)
             test_timer_id__ = CLOCK_PROCESS_CPUTIME_ID;
     }
@@ -407,14 +402,14 @@ static jmp_buf test_abort_jmp_buf__;
         double startns;
 
         endns = end.tv_sec;
-        endns *= 10e9;
+        endns *= 1e9;
         endns += end.tv_nsec;
 
         startns = start.tv_sec;
-        startns *= 10e9;
+        startns *= 1e9;
         startns += start.tv_nsec;
 
-        return ((endns - startns)/ 10e9);
+        return ((endns - startns)/ 1e9);
     }
 
     static void
