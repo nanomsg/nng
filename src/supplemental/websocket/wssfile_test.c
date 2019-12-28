@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,18 +8,16 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifndef _WIN32
-#include <arpa/inet.h>
-#endif
-
 #include <nng/nng.h>
 #include <nng/protocol/pair1/pair.h>
 #include <nng/supplemental/tls/tls.h>
+#include <nng/supplemental/util/platform.h>
 #include <nng/transport/ws/websocket.h>
 
-#include "convey.h"
-#include "stubs.h"
-#include "trantest.h"
+#include "core/nng_impl.h"
+
+#include "acutest.h"
+#include "testutil.h"
 
 // These keys are for demonstration purposes ONLY.  DO NOT USE.
 // The certificate is valid for 100 years, because I don't want to
@@ -98,6 +96,7 @@ static const char key[] =
     "cL9dYcwse5FhNMjrQ/OKv6B38SIXpoKQUtjgkaMtmpK8cXX1eqEMNkM=\n"
     "-----END RSA PRIVATE KEY-----\n";
 
+#if 0
 static int
 validloopback(nng_sockaddr *sa)
 {
@@ -192,207 +191,198 @@ check_props(nng_msg *msg)
 	return (0);
 }
 
-static int
+#endif
+
+#define CACERT "wss_test_ca_cert.pem"
+#define CERTKEY "wss_test_certkey.pem"
+
+static void
 init_dialer_wss_file(nng_dialer d)
 {
-	int   rv;
 	char *tmpdir;
 	char *pth;
 
-	if ((tmpdir = nni_plat_temp_dir()) == NULL) {
-		return (NNG_ENOTSUP);
-	}
-	if ((pth = nni_file_join(tmpdir, "wss_test_cacert.pem")) == NULL) {
-		nni_strfree(tmpdir);
-		return (NNG_ENOMEM);
-	}
+	TEST_ASSERT((tmpdir = nni_plat_temp_dir()) != NULL);
+	TEST_ASSERT((pth = nni_file_join(tmpdir, CACERT)) != NULL);
 	nni_strfree(tmpdir);
-
-	if ((rv = nni_file_put(pth, cert, strlen(cert))) != 0) {
-		nni_strfree(pth);
-		return (rv);
-	}
-
-	rv = nng_dialer_setopt_string(d, NNG_OPT_TLS_CA_FILE, pth);
+	TEST_NNG_PASS(nni_file_put(pth, cert, strlen(cert)));
+	TEST_NNG_PASS(nng_dialer_setopt_string(d, NNG_OPT_TLS_CA_FILE, pth));
 	nni_file_delete(pth);
 	nni_strfree(pth);
-
-	return (rv);
 }
 
-static int
+static void
 init_listener_wss_file(nng_listener l)
 {
-	int   rv;
 	char *tmpdir;
 	char *pth;
 	char *certkey;
 
-	if ((tmpdir = nni_plat_temp_dir()) == NULL) {
-		return (NNG_ENOTSUP);
-	}
-
-	if ((pth = nni_file_join(tmpdir, "wss_test_certkey.pem")) == NULL) {
-		nni_strfree(tmpdir);
-		return (NNG_ENOMEM);
-	}
+	TEST_ASSERT((tmpdir = nni_plat_temp_dir()) != NULL);
+	TEST_ASSERT((pth = nni_file_join(tmpdir, CERTKEY)) != NULL);
 	nni_strfree(tmpdir);
 
-	if ((rv = nni_asprintf(&certkey, "%s\r\n%s\r\n", cert, key)) != 0) {
-		nni_strfree(pth);
-		return (rv);
-	}
+	TEST_NNG_PASS(nni_asprintf(&certkey, "%s\r\n%s\r\n", cert, key));
 
-	rv = nni_file_put(pth, certkey, strlen(certkey));
+	TEST_NNG_PASS(nni_file_put(pth, certkey, strlen(certkey)));
 	nni_strfree(certkey);
-	if (rv != 0) {
-		nni_strfree(pth);
-		return (rv);
-	}
-
-	rv = nng_listener_setopt_string(l, NNG_OPT_TLS_CERT_KEY_FILE, pth);
-	if (rv != 0) {
-		// We can wind up with EBUSY from the server already
-		// running.
-		if (rv == NNG_EBUSY) {
-			rv = 0;
-		}
-	}
+	TEST_NNG_PASS(
+	    nng_listener_setopt_string(l, NNG_OPT_TLS_CERT_KEY_FILE, pth));
 
 	nni_file_delete(pth);
 	nni_strfree(pth);
-	return (rv);
 }
 
-TestMain("WebSocket Secure (TLS) Transport (file based)", {
-	static trantest tt;
+void
+test_invalid_verify(void)
+{
+	uint16_t     port = testutil_next_port();
+	nng_socket   s1;
+	nng_socket   s2;
+	nng_listener l;
+	char         addr[32];
 
-	tt.dialer_init   = init_dialer_wss_file;
-	tt.listener_init = init_listener_wss_file;
-	tt.tmpl          = "wss://localhost:%u/test";
-	tt.proptest      = check_props;
+	snprintf(addr, sizeof(addr), "wss://localhost:%u/test", port);
 
-	trantest_test(&tt);
+	TEST_NNG_PASS(nng_pair_open(&s1));
+	TEST_NNG_PASS(nng_pair_open(&s2));
+	TEST_NNG_PASS(nng_listener_create(&l, s1, addr));
+	init_listener_wss_file(l);
+	TEST_NNG_PASS(nng_listener_start(l, 0));
 
-	Convey("Invalid verify works", {
-		nng_socket   s1;
-		nng_socket   s2;
-		nng_listener l;
-		char         addr[NNG_MAXADDRLEN];
+	nng_msleep(100);
 
-		So(nng_pair_open(&s1) == 0);
-		So(nng_pair_open(&s2) == 0);
-		Reset({
-			nng_close(s2);
-			nng_close(s1);
-		});
-		trantest_next_address(addr, "wss://:%u/test");
-		So(nng_listener_create(&l, s1, addr) == 0);
-		So(init_listener_wss_file(l) == 0);
-		So(nng_listener_start(l, 0) == 0);
-		nng_msleep(100);
+	snprintf(addr, sizeof(addr), "wss://127.0.0.1:%u/test", port);
 
-		// reset port back one
-		trantest_prev_address(addr, "wss://127.0.0.1:%u/test");
-		So(nng_setopt_int(s2, NNG_OPT_TLS_AUTH_MODE,
-		       NNG_TLS_AUTH_MODE_REQUIRED) == 0);
+	TEST_NNG_PASS(nng_setopt_int(
+	    s2, NNG_OPT_TLS_AUTH_MODE, NNG_TLS_AUTH_MODE_REQUIRED));
 
-		So(nng_dial(s2, addr, NULL, 0) == NNG_EPEERAUTH);
-	});
+	TEST_NNG_FAIL(nng_dial(s2, addr, NULL, 0), NNG_EPEERAUTH);
 
-	Convey("No verify works", {
-		nng_socket   s1;
-		nng_socket   s2;
-		nng_listener l;
-		nng_dialer   d;
-		char         addr[NNG_MAXADDRLEN];
-		nng_msg *    msg;
-		nng_pipe     p;
-		bool         b;
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(s2));
+}
 
-		So(nng_pair_open(&s1) == 0);
-		So(nng_pair_open(&s2) == 0);
-		Reset({
-			nng_close(s2);
-			nng_close(s1);
-		});
-		trantest_next_address(addr, "wss://:%u/test");
-		So(nng_listener_create(&l, s1, addr) == 0);
-		So(init_listener_wss_file(l) == 0);
-		So(nng_listener_start(l, 0) == 0);
-		nng_msleep(100);
+void
+test_no_verify(void)
+{
+	nng_socket   s1;
+	nng_socket   s2;
+	nng_listener l;
+	nng_dialer   d;
+	char         addr[NNG_MAXADDRLEN];
+	nng_msg *    msg;
+	nng_pipe     p;
+	bool         b;
+	uint16_t     port;
 
-		// reset port back one
-		trantest_prev_address(addr, "wss://127.0.0.1:%u/test");
-		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
-		So(nng_dialer_create(&d, s2, addr) == 0);
-		So(init_dialer_wss_file(d) == 0);
-		So(nng_dialer_setopt_int(d, NNG_OPT_TLS_AUTH_MODE,
-		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
-		So(nng_dialer_setopt_string(
-		       d, NNG_OPT_TLS_SERVER_NAME, "example.com") == 0);
-		So(nng_dialer_start(d, 0) == 0);
-#if 0
-		So(nng_setopt_int(s2, NNG_OPT_TLS_AUTH_MODE,
-		       NNG_TLS_AUTH_MODE_OPTIONAL) == 0);
-		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
-		So(nng_dial(s2, addr, NULL, 0) == 0);
-#endif
-		nng_msleep(100);
+	TEST_NNG_PASS(nng_pair_open(&s1));
+	TEST_NNG_PASS(nng_pair_open(&s2));
+	port = testutil_next_port();
+	(void) snprintf(addr, sizeof(addr), "wss://:%u/test", port);
+	TEST_NNG_PASS(nng_listener_create(&l, s1, addr));
+	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, 5000));
+	init_listener_wss_file(l);
+	TEST_NNG_PASS(nng_listener_start(l, 0));
 
-		So(nng_send(s1, "hello", 6, 0) == 0);
-		So(nng_recvmsg(s2, &msg, 0) == 0);
-		So(msg != NULL);
-		So(nng_msg_len(msg) == 6);
-		So(strcmp(nng_msg_body(msg), "hello") == 0);
-		p = nng_msg_get_pipe(msg);
-		So(nng_pipe_id(p) > 0);
-		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
-		So(b == false);
-		nng_msg_free(msg);
-	});
+	nng_msleep(100);
+	snprintf(addr, sizeof(addr), "wss://127.0.0.1:%u/test", port);
+	TEST_NNG_PASS(nng_dialer_create(&d, s2, addr));
+	init_dialer_wss_file(d);
+	TEST_NNG_PASS(nng_dialer_setopt_int(
+	    d, NNG_OPT_TLS_AUTH_MODE, NNG_TLS_AUTH_MODE_OPTIONAL));
+	TEST_NNG_PASS(nng_dialer_setopt_string(
+	    d, NNG_OPT_TLS_SERVER_NAME, "example.com"));
 
-	Convey("Valid verify works", {
-		nng_socket   s1;
-		nng_socket   s2;
-		nng_listener l;
-		nng_dialer   d;
-		char         addr[NNG_MAXADDRLEN];
-		nng_msg *    msg;
-		nng_pipe     p;
-		bool         b;
+	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 5000));
+	TEST_NNG_PASS(nng_dialer_start(d, 0));
+	nng_msleep(100);
 
-		So(nng_pair_open(&s1) == 0);
-		So(nng_pair_open(&s2) == 0);
-		Reset({
-			nng_close(s2);
-			nng_close(s1);
-		});
-		trantest_next_address(addr, "wss://:%u/test");
-		So(nng_listener_create(&l, s1, addr) == 0);
-		So(init_listener_wss_file(l) == 0);
-		So(nng_listener_start(l, 0) == 0);
-		nng_msleep(100);
+	TEST_NNG_PASS(nng_send(s1, "hello", 6, 0));
+	TEST_NNG_PASS(nng_recvmsg(s2, &msg, 0));
+	TEST_ASSERT(msg != NULL);
+	TEST_CHECK(nng_msg_len(msg) == 6);
+	TEST_CHECK(strcmp(nng_msg_body(msg), "hello") == 0);
 
-		// reset port back one
-		trantest_prev_address(addr, "wss://localhost:%u/test");
-		So(nng_dialer_create(&d, s2, addr) == 0);
-		So(init_dialer_wss_file(d) == 0);
-		So(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 200) == 0);
-		So(nng_dialer_start(d, 0) == 0);
-		nng_msleep(100);
+	p = nng_msg_get_pipe(msg);
+	TEST_CHECK(nng_pipe_id(p) > 0);
+	TEST_NNG_PASS(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b));
+	TEST_CHECK(b == false);
 
-		So(nng_send(s1, "hello", 6, 0) == 0);
-		So(nng_recvmsg(s2, &msg, 0) == 0);
-		So(msg != NULL);
-		So(nng_msg_len(msg) == 6);
-		So(strcmp(nng_msg_body(msg), "hello") == 0);
-		p = nng_msg_get_pipe(msg);
-		So(nng_pipe_id(p) > 0);
-		So(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b) == 0);
-		So(b == true);
-		nng_msg_free(msg);
-	});
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(s2));
+}
 
-	nng_fini();
-})
+void
+test_verify_works(void)
+{
+	nng_socket   s1;
+	nng_socket   s2;
+	nng_listener l;
+	nng_dialer   d;
+	char         addr[NNG_MAXADDRLEN];
+	nng_msg *    msg;
+	nng_pipe     p;
+	bool         b;
+	uint16_t     port;
+
+	TEST_NNG_PASS(nng_pair_open(&s1));
+	TEST_NNG_PASS(nng_pair_open(&s2));
+	port = testutil_next_port();
+	(void) snprintf(addr, sizeof(addr), "wss://:%u/test", port);
+	TEST_NNG_PASS(nng_listener_create(&l, s1, addr));
+	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, 5000));
+	init_listener_wss_file(l);
+	TEST_NNG_PASS(nng_listener_start(l, 0));
+
+	nng_msleep(100);
+	snprintf(addr, sizeof(addr), "wss://localhost:%u/test", port);
+	TEST_NNG_PASS(nng_dialer_create(&d, s2, addr));
+	init_dialer_wss_file(d);
+
+	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 5000));
+	TEST_NNG_PASS(nng_dialer_start(d, 0));
+	nng_msleep(100);
+
+	TEST_NNG_PASS(nng_send(s1, "hello", 6, 0));
+	TEST_NNG_PASS(nng_recvmsg(s2, &msg, 0));
+	TEST_ASSERT(msg != NULL);
+	TEST_CHECK(nng_msg_len(msg) == 6);
+	TEST_CHECK(strcmp(nng_msg_body(msg), "hello") == 0);
+
+	p = nng_msg_get_pipe(msg);
+	TEST_CHECK(nng_pipe_id(p) > 0);
+	TEST_NNG_PASS(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b));
+	TEST_CHECK(b == true);
+
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(s2));
+}
+
+void
+test_cert_file_not_present(void)
+{
+	nng_socket   s1;
+	nng_listener l;
+	char         addr[NNG_MAXADDRLEN];
+	uint16_t     port;
+
+	TEST_NNG_PASS(nng_pair_open(&s1));
+	port = testutil_next_port();
+	(void) snprintf(addr, sizeof(addr), "wss://:%u/test", port);
+	TEST_NNG_PASS(nng_listener_create(&l, s1, addr));
+
+	TEST_NNG_FAIL(nng_listener_setopt_string(
+	                  l, NNG_OPT_TLS_CERT_KEY_FILE, "no-such-file.pem"),
+	    NNG_ENOENT);
+
+	TEST_NNG_PASS(nng_close(s1));
+}
+
+TEST_LIST = {
+	{ "wss file invalid verify", test_invalid_verify },
+	{ "wss file no verify", test_no_verify },
+	{ "wss file verify works", test_verify_works },
+	{ "wss file cacert missing", test_cert_file_not_present },
+	{ NULL, NULL },
+};

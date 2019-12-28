@@ -163,7 +163,6 @@ add_nng_test(udp 5)
 add_nng_test(url 5)
 add_nng_test1(ws 30 NNG_TRANSPORT_WS)
 add_nng_test1(wss 30 NNG_TRANSPORT_WSS)
-add_nng_test1(wssfile 30 NNG_TRANSPORT_WSS)
 add_nng_test1(wsstream 10 NNG_TRANSPORT_WS)
 add_nng_test1(zt 60 NNG_TRANSPORT_ZEROTIER)
 
