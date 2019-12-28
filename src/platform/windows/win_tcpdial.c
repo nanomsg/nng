@@ -153,6 +153,8 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 		nni_aio_finish_error(aio, rv);
 	} else {
 		DWORD yes = 1;
+		int   len;
+
 		(void) setsockopt(c->s, SOL_SOCKET, SO_UPDATE_CONNECT_CONTEXT,
 		    (char *) &yes, sizeof(yes));
 
@@ -161,6 +163,9 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 
 		(void) setsockopt(
 		    c->s, IPPROTO_TCP, TCP_NODELAY, (char *) &nd, sizeof(nd));
+
+		len = sizeof (SOCKADDR_STORAGE);
+		(void) getsockname(c->s, (SOCKADDR *) &c->sockname, &len);
 
 		nni_aio_set_output(aio, 0, c);
 		nni_aio_finish(aio, 0, 0);
