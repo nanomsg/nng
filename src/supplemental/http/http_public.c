@@ -9,8 +9,8 @@
 //
 
 #include "core/nng_impl.h"
-#include "nng/supplemental/http/http.h"
 #include "http_api.h"
+#include "nng/supplemental/http/http.h"
 #include "nng/supplemental/tls/tls.h"
 
 // Symbols in this file are "public" versions of the HTTP API.
@@ -775,6 +775,22 @@ nng_http_server_get_tls(nng_http_server *srv, struct nng_tls_config **cfgp)
 #else
 	NNI_ARG_UNUSED(srv);
 	NNI_ARG_UNUSED(cfgp);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int
+nng_http_server_get_addr(nng_http_server *srv, nng_sockaddr *addrp)
+{
+#ifdef NNG_SUPP_HTTP
+	size_t size = sizeof(nng_sockaddr);
+	if (srv == NULL || addrp == NULL)
+		return NNG_EINVAL;
+	return (nni_http_server_getx(
+	    srv, NNG_OPT_LOCADDR, addrp, &size, NNI_TYPE_SOCKADDR));
+#else
+	NNI_ARG_UNUSED(srv);
+	NNI_ARG_UNUSED(addrp);
 	return (NNG_ENOTSUP);
 #endif
 }

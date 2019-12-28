@@ -410,6 +410,7 @@ These functions are intended for use with HTTP server applications.
 |xref:nng_http_hijack.3http.adoc[nng_http_hijack()]|hijack HTTP server connection
 |xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler()]|add HTTP server handler
 |xref:nng_http_server_del_handler.3http.adoc[nng_http_server_del_handler()]|delete HTTP server handler
+|xref:nng_http_server_get_addr.3http.adoc[nng_http_server_get_addr()]|get HTTP server address
 |xref:nng_http_server_get_tls.3http.adoc[nng_http_server_get_tls()]|get HTTP server TLS configuration
 |xref:nng_http_server_hold.3http.adoc[nng_http_server_hold()]|get and hold HTTP server instance
 |xref:nng_http_server_release.3http.adoc[nng_http_server_release()]|release HTTP server instance

@@ -1,0 +1,46 @@
+= nng_http_server_get_addr(3http)
+//
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_http_server_get_addr - get HTTP server address
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/http/http.h>
+
+int nng_http_server_get_addr(nng_http_server *server, nng_sockaddr *sap);
+----
+
+== DESCRIPTION
+
+`nng_http_server_get_addr()`::
+This function is used to retrieve an xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
+into the value referenced by _sap_ for the server _server_.
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+`NNG_EINVAL`:: Either _server_ or _sap_ parameter is NULL.
+`NNG_ENOTSUP`:: HTTP not supported.
+
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng.7.adoc[nng(7)]
