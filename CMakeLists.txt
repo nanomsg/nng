@@ -63,7 +63,7 @@ set(ISSUE_REPORT_MSG "Please consider opening an issue at https://github.com/nan
 
 # Determine library versions.
 set(NNG_ABI_SOVERSION 1)
-set(NNG_ABI_VERSION "1.2.1")
+set(NNG_ABI_VERSION "1.2.2")
 
 # Determine package version.
 find_package(Git QUIET)
