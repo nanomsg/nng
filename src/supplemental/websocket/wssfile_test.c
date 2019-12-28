@@ -335,7 +335,8 @@ test_verify_works(void)
 	init_listener_wss_file(l);
 	TEST_NNG_PASS(nng_listener_start(l, 0));
 
-	nng_msleep(100);
+	// It can take a bit for the listener to start up in clouds.
+	nng_msleep(200);
 	snprintf(addr, sizeof(addr), "wss://localhost:%u/test", port);
 	TEST_NNG_PASS(nng_dialer_create(&d, s2, addr));
 	init_dialer_wss_file(d);
