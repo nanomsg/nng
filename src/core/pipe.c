@@ -59,11 +59,17 @@ nni_pipe_sys_fini(void)
 static void
 pipe_destroy(nni_pipe *p)
 {
+	nni_sock *s;
+	nni_mtx  *pipe_cbs_mtx;
 	if (p == NULL) {
 		return;
 	}
+	s = p->p_sock;
+	pipe_cbs_mtx = nni_sock_pipe_cbs_mtx(s);
 
+	nni_mtx_lock(pipe_cbs_mtx);
 	nni_pipe_run_cb(p, NNG_PIPE_EV_REM_POST);
+	nni_mtx_unlock(pipe_cbs_mtx);
 
 	// Make sure any unlocked holders are done with this.
 	// This happens during initialization for example.
