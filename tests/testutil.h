@@ -44,20 +44,22 @@ extern int testutil_marry(nng_socket, nng_socket);
 
 // TEST_NNG_PASS tests for NNG success.  It reports the failure if it
 // did not.
-#define TEST_NNG_PASS(cond)                                            \
-	do {                                                           \
-		int result_ = (cond);                                  \
-		TEST_CHECK_(result_ == 0, "%s failed: %s (%d)", #cond, \
-		    nng_strerror(result_), result_);                   \
+#define TEST_NNG_PASS(cond)                                          \
+	do {                                                         \
+		int result_ = (cond);                                \
+		TEST_CHECK_(result_ == 0, "%s succeeds", #cond);                    \
+		TEST_MSG("%s: expected success, got %s (%d)", #cond, \
+		    nng_strerror(result_), result_);                 \
 	} while (0)
 
-#define TEST_NNG_FAIL(cond, expect)                                      \
-	do {                                                             \
-		int result_ = (cond);                                    \
-		TEST_CHECK_(result_ == expect,                           \
-		    "%s: expected %s (%d), got %s (%d)", #cond,          \
-		    nng_strerror(expect), expect, nng_strerror(result_), \
-		    result_);                                            \
+#define TEST_NNG_FAIL(cond, expect)                                       \
+	do {                                                              \
+		int result_ = (cond);                                     \
+		TEST_CHECK_(result_ == expect, "%s fails with %s", #cond, \
+		    nng_strerror(expect));                                \
+		TEST_MSG("%s: expected %s (%d), got %s (%d)", #cond,      \
+		    nng_strerror(expect), expect, nng_strerror(result_),  \
+		    result_);                                             \
 	} while (0)
 
 #ifdef __cplusplus
