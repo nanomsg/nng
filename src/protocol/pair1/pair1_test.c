@@ -31,28 +31,28 @@ test_mono_cooked(void)
 	nng_socket c1;
 	nng_msg *  msg;
 
-	TEST_CHECK(nng_pair1_open(&s1) == 0);
-	TEST_CHECK(nng_pair1_open(&c1) == 0);
-	TEST_CHECK(testutil_marry(s1, c1) == 0);
+	TEST_NNG_PASS(nng_pair1_open(&s1));
+	TEST_NNG_PASS(nng_pair1_open(&c1));
+	TEST_NNG_PASS(testutil_marry(s1, c1));
 
-	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
-	TEST_CHECK(nng_msg_append(msg, "ALPHA", strlen("ALPHA") + 1) == 0);
-	TEST_CHECK(nng_sendmsg(c1, msg, 0) == 0);
-	TEST_CHECK(nng_recvmsg(s1, &msg, 0) == 0);
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
+	TEST_NNG_PASS(nng_msg_append(msg, "ALPHA", strlen("ALPHA") + 1));
+	TEST_NNG_PASS(nng_sendmsg(c1, msg, 0));
+	TEST_NNG_PASS(nng_recvmsg(s1, &msg, 0));
 	TEST_CHECK(nng_msg_len(msg) == strlen("ALPHA") + 1);
 	TEST_CHECK(strcmp(nng_msg_body(msg), "ALPHA") == 0);
 	nng_msg_free(msg);
 
-	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
-	TEST_CHECK(nng_msg_append(msg, "BETA", strlen("BETA") + 1) == 0);
-	TEST_CHECK(nng_sendmsg(s1, msg, 0) == 0);
-	TEST_CHECK(nng_recvmsg(c1, &msg, 0) == 0);
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
+	TEST_NNG_PASS(nng_msg_append(msg, "BETA", strlen("BETA") + 1));
+	TEST_NNG_PASS(nng_sendmsg(s1, msg, 0));
+	TEST_NNG_PASS(nng_recvmsg(c1, &msg, 0));
 	TEST_CHECK(nng_msg_len(msg) == strlen("BETA") + 1);
 	TEST_CHECK(strcmp(nng_msg_body(msg), "BETA") == 0);
 
 	nng_msg_free(msg);
-	TEST_CHECK(nng_close(c1) == 0);
-	TEST_CHECK(nng_close(s1) == 0);
+	TEST_NNG_PASS(nng_close(c1));
+	TEST_NNG_PASS(nng_close(s1));
 }
 
 void
@@ -64,33 +64,35 @@ test_mono_faithful(void)
 	nng_msg *   msg;
 	const char *addr = "inproc://pair1_mono_faithful";
 
-	TEST_CHECK(nng_pair1_open(&s1) == 0);
-	TEST_CHECK(nng_pair1_open(&c1) == 0);
-	TEST_CHECK(nng_pair1_open(&c2) == 0);
-	TEST_CHECK(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND / 4) == 0);
-	TEST_CHECK(nng_setopt_ms(c1, NNG_OPT_SENDTIMEO, SECOND) == 0);
-	TEST_CHECK(nng_setopt_ms(c2, NNG_OPT_SENDTIMEO, SECOND) == 0);
+	TEST_NNG_PASS(nng_pair1_open(&s1));
+	TEST_NNG_PASS(nng_pair1_open(&c1));
+	TEST_NNG_PASS(nng_pair1_open(&c2));
+	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND / 4));
+	TEST_NNG_PASS(nng_setopt_ms(c1, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(c2, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_int(c2, NNG_OPT_SENDBUF, 2));
 
-	TEST_CHECK(nng_listen(s1, addr, NULL, 0) == 0);
-	TEST_CHECK(nng_dial(c1, addr, NULL, 0) == 0);
+	TEST_NNG_PASS(nng_listen(s1, addr, NULL, 0));
+	TEST_NNG_PASS(testutil_marry(s1, c1));
+	TEST_NNG_PASS(nng_dial(c2, addr, NULL, 0));
+
 	testutil_sleep(100);
-	TEST_CHECK(nng_dial(c2, addr, NULL, 0) == 0);
 
-	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
 	APPEND_STR(msg, "ONE");
-	TEST_CHECK(nng_sendmsg(c1, msg, 0) == 0);
-	TEST_CHECK(nng_recvmsg(s1, &msg, 0) == 0);
+	TEST_NNG_PASS(nng_sendmsg(c1, msg, 0));
+	TEST_NNG_PASS(nng_recvmsg(s1, &msg, 0));
 	CHECK_STR(msg, "ONE");
 	nng_msg_free(msg);
 
-	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
 	APPEND_STR(msg, "TWO");
-	TEST_CHECK(nng_sendmsg(c2, msg, 0) == 0);
-	TEST_CHECK(nng_recvmsg(s1, &msg, 0) == NNG_ETIMEDOUT);
+	TEST_NNG_PASS(nng_sendmsg(c2, msg, 0));
+	TEST_NNG_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
 
-	TEST_CHECK(nng_close(s1) == 0);
-	TEST_CHECK(nng_close(c1) == 0);
-	TEST_CHECK(nng_close(c2) == 0);
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(c1));
+	TEST_NNG_PASS(nng_close(c2));
 }
 
 void
@@ -103,28 +105,28 @@ test_mono_back_pressure(void)
 	nng_msg *    msg;
 	nng_duration to = 100;
 
-	TEST_CHECK(nng_pair1_open(&s1) == 0);
-	TEST_CHECK(nng_pair1_open(&c1) == 0);
-	TEST_CHECK(nng_setopt_int(s1, NNG_OPT_RECVBUF, 1) == 0);
-	TEST_CHECK(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1) == 0);
-	TEST_CHECK(nng_setopt_int(c1, NNG_OPT_RECVBUF, 1) == 0);
-	TEST_CHECK(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to) == 0);
+	TEST_NNG_PASS(nng_pair1_open(&s1));
+	TEST_NNG_PASS(nng_pair1_open(&c1));
+	TEST_NNG_PASS(nng_setopt_int(s1, NNG_OPT_RECVBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(c1, NNG_OPT_RECVBUF, 1));
+	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to));
 
-	TEST_CHECK(testutil_marry(s1, c1) == 0);
+	TEST_NNG_PASS(testutil_marry(s1, c1));
 
 	// We choose to allow some buffering.  In reality the
 	// buffer size is just 1, and we will fail after 2.
 	for (i = 0, rv = 0; i < 10; i++) {
-		TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
+		TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
 		if ((rv = nng_sendmsg(s1, msg, 0)) != 0) {
 			nng_msg_free(msg);
 			break;
 		}
 	}
-	TEST_CHECK(rv == NNG_ETIMEDOUT);
+	TEST_NNG_FAIL(rv, NNG_ETIMEDOUT);
 	TEST_CHECK(i < 10);
-	TEST_CHECK(nng_close(s1) == 0);
-	TEST_CHECK(nng_close(c1) == 0);
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(c1));
 }
 
 void
@@ -136,45 +138,45 @@ test_mono_raw_exchange(void)
 	nng_msg *msg;
 	uint32_t hops;
 
-	TEST_CHECK(nng_pair1_open_raw(&s1) == 0);
-	TEST_CHECK(nng_pair1_open_raw(&c1) == 0);
+	TEST_NNG_PASS(nng_pair1_open_raw(&s1));
+	TEST_NNG_PASS(nng_pair1_open_raw(&c1));
 
-	TEST_CHECK(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND) == 0);
-	TEST_CHECK(nng_setopt_ms(c1, NNG_OPT_RECVTIMEO, SECOND) == 0);
-	TEST_CHECK(testutil_marry(s1, c1) == 0);
+	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(c1, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(testutil_marry(s1, c1));
 
 	nng_pipe p = NNG_PIPE_INITIALIZER;
-	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0) );
 	APPEND_STR(msg, "GAMMA");
-	TEST_CHECK(nng_msg_header_append_u32(msg, 1) == 0);
+	TEST_NNG_PASS(nng_msg_header_append_u32(msg, 1));
 	TEST_CHECK(nng_msg_header_len(msg) == sizeof(uint32_t));
-	TEST_CHECK(nng_sendmsg(c1, msg, 0) == 0);
-	TEST_CHECK(nng_recvmsg(s1, &msg, 0) == 0);
+	TEST_NNG_PASS(nng_sendmsg(c1, msg, 0));
+	TEST_NNG_PASS(nng_recvmsg(s1, &msg, 0));
 	p = nng_msg_get_pipe(msg);
 	TEST_CHECK(nng_pipe_id(p) > 0);
 
 	CHECK_STR(msg, "GAMMA");
 	TEST_CHECK(nng_msg_header_len(msg) == sizeof(uint32_t));
-	TEST_CHECK(nng_msg_header_trim_u32(msg, &hops) == 0);
+	TEST_NNG_PASS(nng_msg_header_trim_u32(msg, &hops));
 	TEST_CHECK(hops == 2);
 	nng_msg_free(msg);
 
-	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
 	APPEND_STR(msg, "EPSILON");
-	TEST_CHECK(nng_msg_header_append_u32(msg, 1) == 0);
-	TEST_CHECK(nng_sendmsg(s1, msg, 0) == 0);
-	TEST_CHECK(nng_recvmsg(c1, &msg, 0) == 0);
+	TEST_NNG_PASS(nng_msg_header_append_u32(msg, 1));
+	TEST_NNG_PASS(nng_sendmsg(s1, msg, 0));
+	TEST_NNG_PASS(nng_recvmsg(c1, &msg, 0));
 	CHECK_STR(msg, "EPSILON");
 	TEST_CHECK(nng_msg_header_len(msg) == sizeof(uint32_t));
-	TEST_CHECK(nng_msg_header_trim_u32(msg, &hops) == 0);
+	TEST_NNG_PASS(nng_msg_header_trim_u32(msg, &hops));
 	p = nng_msg_get_pipe(msg);
 	TEST_CHECK(nng_pipe_id(p) > 0);
 
 	TEST_CHECK(hops == 2);
 	nng_msg_free(msg);
 
-	TEST_CHECK(nng_close(s1) == 0);
-	TEST_CHECK(nng_close(c1) == 0);
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(c1));
 }
 
 void
