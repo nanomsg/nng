@@ -437,6 +437,11 @@ NNG_DECL int nng_http_server_set_tls(
 NNG_DECL int nng_http_server_get_tls(
     nng_http_server *, struct nng_tls_config **);
 
+// nng_http_server_get_addr obtains the address with which the server was
+// initialized or returns NNG_EINVAL. Useful for instance when the port has
+// been automatically assigned.
+NNG_DECL int nng_http_server_get_addr(nng_http_server *, nng_sockaddr *);
+
 // nng_http_server_set_error_page sets a custom error page (HTML) content
 // to be sent for the given error code.  This is used when the error is
 // generated internally by the framework, or when the application returns
