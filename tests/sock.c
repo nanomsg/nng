@@ -82,6 +82,7 @@ test_send_nonblock(void)
 	TEST_CHECK(nng_sendmsg(s1, msg, NNG_FLAG_NONBLOCK) == NNG_EAGAIN);
 	TEST_CHECK(testutil_clock() < (now + 100));
 	TEST_CHECK(nng_close(s1) == 0);
+	nng_msg_free(msg);
 }
 
 void

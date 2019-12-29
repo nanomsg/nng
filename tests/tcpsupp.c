@@ -66,6 +66,7 @@ TestMain("Supplemental TCP", {
 				Reset({
 					nng_aio_free(daio);
 					nng_aio_free(laio);
+					nng_aio_free(maio);
 					if (c1 != NULL) {
 						nng_stream_close(c1);
 						nng_stream_free(c1);

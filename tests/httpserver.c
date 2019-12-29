@@ -353,7 +353,7 @@ TestMain("HTTP Server", {
 			So(size == strlen(doc1));
 			So(memcmp(data, doc1, size) == 0);
 			So(strcmp(ctype, "text/html") == 0);
-			free(ctype);
+			nng_strfree(ctype);
 			nng_free(data, size);
 		});
 
@@ -403,6 +403,8 @@ TestMain("HTTP Server", {
 			snprintf(fullurl, sizeof(fullurl), "%s/docs/", urlstr);
 			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
 			So(stat == NNG_HTTP_STATUS_NOT_FOUND);
+			nng_strfree(ctype);
+			nng_free(data, size);
 		});
 
 		Convey("Custom error page works", {
@@ -418,6 +420,8 @@ TestMain("HTTP Server", {
 			So(stat == NNG_HTTP_STATUS_NOT_FOUND);
 			So(size == strlen(doc4));
 			So(memcmp(data, doc4, size) == 0);
+			nng_strfree(ctype);
+			nng_free(data, size);
 		});
 
 		Convey("Bad method gives 405", {
@@ -440,6 +444,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(data, size);
 		});
 		Convey("Version 0.9 gives 505", {
 			char          fullurl[256];
@@ -461,6 +466,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(data, size);
 		});
 		Convey("Missing Host gives 400", {
 			char          fullurl[256];
@@ -482,6 +488,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(data, size);
 		});
 	});
 
@@ -529,6 +536,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(rxdata, size);
 		});
 
 		Convey("Get method gives 405", {
@@ -551,6 +559,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(data, size);
 		});
 	});
 
@@ -598,6 +607,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(data, size);
 		});
 
 		Convey("Tree redirect works", {
@@ -633,6 +643,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(data, size);
 		});
 
 		Convey("POST Redirect works", {
@@ -667,6 +678,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(data, size);
 		});
 	});
 
@@ -714,6 +726,7 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(rxdata, size);
 		});
 	});
 });

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -187,11 +187,12 @@ TestMain("Message Tests", {
 		});
 
 		Convey("Message dup copies pipe", {
-			nng_pipe p  = NNG_PIPE_INITIALIZER;
+			nng_pipe p = NNG_PIPE_INITIALIZER;
 			nng_msg *m2;
 			memset(&p, 0x22, sizeof(p));
 			nng_msg_set_pipe(msg, p);
 			So(nng_msg_dup(&m2, msg) == 0);
+			Reset({ nng_msg_free(m2); });
 			p = nng_msg_get_pipe(m2);
 			So(nng_pipe_id(p) == 0x22222222);
 		});

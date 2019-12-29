@@ -337,8 +337,6 @@ test_websocket_fragmentation(void)
 	    nng_stream_listener_set_size(l, NNG_OPT_WS_SENDMAXFRAME, 1000000));
 	TEST_NNG_PASS(nng_stream_listener_listen(l));
 
-	TEST_NNG_PASS(nng_aio_alloc(&laio, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&daio, NULL, NULL));
 	nng_aio_set_timeout(laio, 2000);
 	nng_aio_set_timeout(daio, 2000);
 

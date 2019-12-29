@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2017 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -24,7 +24,7 @@ macro (CheckSanitizer)
     mark_as_advanced (NNG_SANITIZER)
 
     if (NOT NNG_SANITIZER STREQUAL "none")
-        set (NNG_C_FLAG_SANITIZER "-fsanitizer=${NNG_SANITIZER}")
+        set (NNG_C_FLAG_SANITIZER "-fsanitize=${NNG_SANITIZER}")
         message(STATUS "Enabling sanitizer: ${NNG_C_FLAG_SANITIZER}")
     endif()
 endmacro ()

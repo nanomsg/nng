@@ -300,9 +300,8 @@ resolv_worker(void *notused)
 			item->aio = NULL;
 
 			nni_aio_finish(aio, rv, 0);
-
-			NNI_FREE_STRUCT(item);
 		}
+		NNI_FREE_STRUCT(item);
 	}
 	nni_mtx_unlock(&resolv_mtx);
 }

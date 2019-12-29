@@ -35,8 +35,10 @@ test_req_rep_identity(void)
 	TEST_CHECK(p == NNI_PROTO(3u, 1u)); // 49
 	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PROTONAME, &n) == 0);
 	TEST_CHECK(strcmp(n, "req") == 0);
+	nng_strfree(n);
 	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PEERNAME, &n) == 0);
 	TEST_CHECK(strcmp(n, "rep") == 0);
+	nng_strfree(n);
 	TEST_CHECK(nng_close(s) == 0);
 
 	TEST_CHECK(nng_rep0_open(&s) == 0);
@@ -46,8 +48,10 @@ test_req_rep_identity(void)
 	TEST_CHECK(p == NNI_PROTO(3u, 0u)); // 48
 	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PROTONAME, &n) == 0);
 	TEST_CHECK(strcmp(n, "rep") == 0);
+	nng_strfree(n);
 	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PEERNAME, &n) == 0);
 	TEST_CHECK(strcmp(n, "req") == 0);
+	nng_strfree(n);
 	TEST_CHECK(nng_close(s) == 0);
 }
 
