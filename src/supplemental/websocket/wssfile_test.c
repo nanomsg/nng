@@ -257,7 +257,16 @@ test_invalid_verify(void)
 	TEST_NNG_PASS(nng_setopt_int(
 	    s2, NNG_OPT_TLS_AUTH_MODE, NNG_TLS_AUTH_MODE_REQUIRED));
 
-	TEST_NNG_FAIL(nng_dial(s2, addr, NULL, 0), NNG_EPEERAUTH);
+	// We find that sometimes this fails due to NNG_EPEERAUTH, but it
+	// can also fail due to NNG_ECLOSED.  This seems to be timing
+	// dependent, based on receive vs. send timing most likely.
+	// Applications shouldn't really depend that much on this.
+	int rv;
+	rv = nng_dial(s2, addr, NULL, 0);
+	TEST_CHECK(rv != 0);
+	TEST_CHECK_((rv == NNG_EPEERAUTH) || (rv == NNG_ECLOSED) ||
+	        (rv == NNG_ECRYPTO),
+	    "result from dial: %d %s", rv, nng_strerror(rv));
 
 	TEST_NNG_PASS(nng_close(s1));
 	TEST_NNG_PASS(nng_close(s2));
@@ -309,6 +318,7 @@ test_no_verify(void)
 	TEST_NNG_PASS(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b));
 	TEST_CHECK(b == false);
 
+	nng_msg_free(msg);
 	TEST_NNG_PASS(nng_close(s1));
 	TEST_NNG_PASS(nng_close(s2));
 }
@@ -356,6 +366,7 @@ test_verify_works(void)
 	TEST_NNG_PASS(nng_pipe_getopt_bool(p, NNG_OPT_TLS_VERIFIED, &b));
 	TEST_CHECK(b == true);
 
+	nng_msg_free(msg);
 	TEST_NNG_PASS(nng_close(s1));
 	TEST_NNG_PASS(nng_close(s2));
 }

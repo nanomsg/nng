@@ -30,9 +30,9 @@ extern void nni_list_init_offset(nni_list *list, size_t offset);
 	nni_list_init_offset(list, offsetof(type, field))
 
 #define NNI_LIST_NODE_INIT(node)                       \
-	{                                              \
+	do {                                           \
 		(node)->ln_prev = (node)->ln_next = 0; \
-	}
+	} while (0)
 
 extern void *nni_list_first(const nni_list *);
 extern void *nni_list_last(const nni_list *);

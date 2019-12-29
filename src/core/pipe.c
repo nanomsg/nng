@@ -40,7 +40,7 @@ nni_pipe_sys_init(void)
 	// value "1" has a bias -- its roughly twice as likely to be
 	// chosen as any other value.  This does not mater.)
 	nni_idhash_set_limits(
-	    nni_pipes, 1, 0x7fffffff, nni_random() & 0x7fffffff);
+	    nni_pipes, 1, 0x7fffffff, nni_random() & 0x7fffffffu);
 
 	return (0);
 }
@@ -84,7 +84,7 @@ pipe_destroy(nni_pipe *p)
 		p->p_tran_ops.p_stop(p->p_tran_data);
 	}
 
-	nni_stat_remove(&p->p_stats.s_root);
+	nni_stat_unregister(&p->p_stats.s_root);
 	nni_pipe_remove(p);
 
 	if (p->p_proto_data != NULL) {
@@ -223,23 +223,23 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	nni_stat_init_scope(&st->s_root, st->s_scope, "pipe statistics");
 
 	nni_stat_init_id(&st->s_id, "id", "pipe id", p->p_id);
-	nni_stat_append(&st->s_root, &st->s_id);
+	nni_stat_add(&st->s_root, &st->s_id);
 
 	nni_stat_init_id(&st->s_sock_id, "socket", "socket for pipe",
 	    nni_sock_id(p->p_sock));
-	nni_stat_append(&st->s_root, &st->s_sock_id);
+	nni_stat_add(&st->s_root, &st->s_sock_id);
 	nni_stat_init_atomic(&st->s_rxmsgs, "rxmsgs", "messages received");
 	nni_stat_set_unit(&st->s_rxmsgs, NNG_UNIT_MESSAGES);
-	nni_stat_append(&st->s_root, &st->s_rxmsgs);
+	nni_stat_add(&st->s_root, &st->s_rxmsgs);
 	nni_stat_init_atomic(&st->s_txmsgs, "txmsgs", "messages sent");
 	nni_stat_set_unit(&st->s_txmsgs, NNG_UNIT_MESSAGES);
-	nni_stat_append(&st->s_root, &st->s_txmsgs);
+	nni_stat_add(&st->s_root, &st->s_txmsgs);
 	nni_stat_init_atomic(&st->s_rxbytes, "rxbytes", "bytes received");
 	nni_stat_set_unit(&st->s_rxbytes, NNG_UNIT_BYTES);
-	nni_stat_append(&st->s_root, &st->s_rxbytes);
+	nni_stat_add(&st->s_root, &st->s_rxbytes);
 	nni_stat_init_atomic(&st->s_txbytes, "txbytes", "bytes sent");
 	nni_stat_set_unit(&st->s_txbytes, NNG_UNIT_BYTES);
-	nni_stat_append(&st->s_root, &st->s_txbytes);
+	nni_stat_add(&st->s_root, &st->s_txbytes);
 
 	if ((rv != 0) || ((rv = p->p_tran_ops.p_init(tdata, p)) != 0) ||
 	    ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0)) {
@@ -270,7 +270,6 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 	p->p_dialer = d;
 	nni_stat_init_id(st, "dialer", "dialer for pipe", id);
 	nni_pipe_add_stat(p, st);
-	nni_stat_append(NULL, &p->p_stats.s_root);
 	*pp = p;
 	return (0);
 }
@@ -293,7 +292,6 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 	p->p_listener = l;
 	nni_stat_init_id(st, "listener", "listener for pipe", id);
 	nni_pipe_add_stat(p, st);
-	nni_stat_append(NULL, &p->p_stats.s_root);
 	*pp = p;
 	return (0);
 }
@@ -347,7 +345,7 @@ nni_pipe_dialer_id(nni_pipe *p)
 void
 nni_pipe_add_stat(nni_pipe *p, nni_stat_item *item)
 {
-	nni_stat_append(&p->p_stats.s_root, item);
+	nni_stat_add(&p->p_stats.s_root, item);
 }
 
 void

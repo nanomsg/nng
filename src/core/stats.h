@@ -54,8 +54,16 @@ struct nni_stat_item {
 #endif
 };
 
-void nni_stat_append(nni_stat_item *, nni_stat_item *);
-void nni_stat_remove(nni_stat_item *);
+// nni_stat_add adds a statistic, but the operation is unlocked, and the
+// add is to an unregistered stats tree.
+void nni_stat_add(nni_stat_item *, nni_stat_item *);
+
+// nni_stat_register registers a statistic tree into the global tree.
+// The tree is rooted at the root.  This is a locked operation.
+void nni_stat_register(nni_stat_item *);
+
+// nni_stat_unregister removes the entire tree.  This is a locked operation.
+void nni_stat_unregister(nni_stat_item *);
 
 void nni_stat_set_value(nni_stat_item *, uint64_t);
 void nni_stat_set_string(nni_stat_item *, const char *);

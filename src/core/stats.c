@@ -36,13 +36,9 @@ static nni_mtx *     stats_held = NULL;
 #endif
 
 void
-nni_stat_append(nni_stat_item *parent, nni_stat_item *child)
+nni_stat_add(nni_stat_item *parent, nni_stat_item *child)
 {
 #ifdef NNG_ENABLE_STATS
-	if (parent == NULL) {
-		parent = &stats_root;
-	}
-	nni_mtx_lock(&stats_lock);
 	// Make sure that the lists for both children and parents
 	// are correctly initialized.
 	if (parent->si_children.ll_head.ln_next == NULL) {
@@ -53,15 +49,24 @@ nni_stat_append(nni_stat_item *parent, nni_stat_item *child)
 	}
 	nni_list_append(&parent->si_children, child);
 	child->si_parent = parent;
-	nni_mtx_unlock(&stats_lock);
 #else
 	NNI_ARG_UNUSED(parent);
 	NNI_ARG_UNUSED(child);
 #endif
 }
 
+// nni_stat_register registers a stat tree, acquiring the lock
+// on the stats structures before doing so.
 void
-nni_stat_remove(nni_stat_item *child)
+nni_stat_register(nni_stat_item *child)
+{
+	nni_mtx_lock(&stats_lock);
+	nni_stat_add(&stats_root, child);
+	nni_mtx_unlock(&stats_lock);
+}
+
+void
+nni_stat_unregister(nni_stat_item *child)
 {
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item *parent;
@@ -141,7 +146,6 @@ stat_atomic_update(nni_stat_item *stat, void *notused)
 void
 nni_stat_init_atomic(nni_stat_item *stat, const char *name, const char *desc)
 {
-
 	nni_stat_init(stat, name, desc);
 	stat->si_number  = 0;
 	stat->si_private = NULL;

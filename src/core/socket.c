@@ -132,8 +132,7 @@ sock_get_fd(void *s, int flag, int *fdp)
 		rv = nni_msgq_get_recvable(SOCK(s)->s_urq, &p);
 		break;
 	default:
-		rv = NNG_EINVAL;
-		break;
+		return (NNG_EINVAL);
 	}
 
 	if (rv == 0) {
@@ -406,7 +405,7 @@ sock_stats_fini(nni_sock *s)
 {
 #ifdef NNG_ENABLE_STATS
 	sock_stats *st = &s->s_stats;
-	nni_stat_remove(&st->s_root);
+	nni_stat_unregister(&st->s_root);
 #else
 	NNI_ARG_UNUSED(s);
 #endif
@@ -425,47 +424,47 @@ sock_stats_init(nni_sock *s)
 	nni_stat_init_scope(root, s->s_scope, "socket statistics");
 
 	nni_stat_init_id(&st->s_id, "id", "socket id", s->s_id);
-	nni_stat_append(root, &st->s_id);
+	nni_stat_add(root, &st->s_id);
 
 	nni_stat_init_string(&st->s_name, "name", "socket name", s->s_name);
 	nni_stat_set_lock(&st->s_name, &s->s_mx);
-	nni_stat_append(root, &st->s_name);
+	nni_stat_add(root, &st->s_name);
 
 	nni_stat_init_string(&st->s_protocol, "protocol", "socket protocol",
 	    nni_sock_proto_name(s));
-	nni_stat_append(root, &st->s_protocol);
+	nni_stat_add(root, &st->s_protocol);
 
 	nni_stat_init_atomic(&st->s_ndialers, "ndialers", "open dialers");
 	nni_stat_set_type(&st->s_ndialers, NNG_STAT_LEVEL);
-	nni_stat_append(root, &st->s_ndialers);
+	nni_stat_add(root, &st->s_ndialers);
 
 	nni_stat_init_atomic(
 	    &st->s_nlisteners, "nlisteners", "open listeners");
 	nni_stat_set_type(&st->s_nlisteners, NNG_STAT_LEVEL);
-	nni_stat_append(root, &st->s_nlisteners);
+	nni_stat_add(root, &st->s_nlisteners);
 
 	nni_stat_init_atomic(&st->s_npipes, "npipes", "open pipes");
 	nni_stat_set_type(&st->s_npipes, NNG_STAT_LEVEL);
-	nni_stat_append(root, &st->s_npipes);
+	nni_stat_add(root, &st->s_npipes);
 
 	nni_stat_init_atomic(&st->s_rxbytes, "rxbytes", "bytes received");
 	nni_stat_set_unit(&st->s_rxbytes, NNG_UNIT_BYTES);
-	nni_stat_append(root, &st->s_rxbytes);
+	nni_stat_add(root, &st->s_rxbytes);
 
 	nni_stat_init_atomic(&st->s_txbytes, "txbytes", "bytes sent");
 	nni_stat_set_unit(&st->s_txbytes, NNG_UNIT_BYTES);
-	nni_stat_append(root, &st->s_txbytes);
+	nni_stat_add(root, &st->s_txbytes);
 
 	nni_stat_init_atomic(&st->s_rxmsgs, "rxmsgs", "messages received");
 	nni_stat_set_unit(&st->s_rxmsgs, NNG_UNIT_MESSAGES);
-	nni_stat_append(root, &st->s_rxmsgs);
+	nni_stat_add(root, &st->s_rxmsgs);
 
 	nni_stat_init_atomic(&st->s_txmsgs, "txmsgs", "messages sent");
 	nni_stat_set_unit(&st->s_txmsgs, NNG_UNIT_MESSAGES);
-	nni_stat_append(root, &st->s_txmsgs);
+	nni_stat_add(root, &st->s_txmsgs);
 
 	nni_stat_init_atomic(&st->s_reject, "reject", "pipes rejected");
-	nni_stat_append(root, &st->s_reject);
+	nni_stat_add(root, &st->s_reject);
 #else
 	NNI_ARG_UNUSED(s);
 #endif
@@ -624,7 +623,7 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	}
 
 	nni_mtx_lock(&sock_lk);
-	if ((rv = nni_idhash_alloc32(sock_hash, &s->s_id, s)) != 0) {
+	if (nni_idhash_alloc32(sock_hash, &s->s_id, s) != 0) {
 		sock_destroy(s);
 	} else {
 		nni_list_append(&sock_list, s);
@@ -633,7 +632,7 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	}
 	nni_mtx_unlock(&sock_lk);
 
-	// Set the sockname.
+	// Set the socket name.
 	(void) snprintf(s->s_name, sizeof(s->s_name), "%u", s->s_id);
 
 	// Set up basic stat values.
@@ -641,7 +640,7 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	nni_stat_set_value(&s->s_stats.s_id, s->s_id);
 
 	// Add our stats chain.
-	nni_stat_append(NULL, &s->s_stats.s_root);
+	nni_stat_register(&s->s_stats.s_root);
 
 	return (0);
 }
@@ -775,7 +774,7 @@ nni_sock_close(nni_sock *s)
 	// is idempotent.
 	nni_sock_shutdown(s);
 
-	nni_stat_remove(&s->s_stats.s_root);
+	nni_stat_unregister(&s->s_stats.s_root);
 
 	nni_mtx_lock(&sock_lk);
 	if (s->s_closed) {
@@ -977,11 +976,6 @@ nni_sock_setopt(
 	}
 	nni_mtx_unlock(&s->s_mx);
 
-	// If the option was already handled one way or the other,
-	if (rv != NNG_ENOTSUP) {
-		return (rv);
-	}
-
 	// Validation of generic and transport options.  This is stateless, so
 	// transports should not fail to set an option later if they
 	// passed it here.
@@ -1078,7 +1072,7 @@ int
 nni_sock_getopt(
     nni_sock *s, const char *name, void *val, size_t *szp, nni_type t)
 {
-	int          rv = NNG_ENOTSUP;
+	int          rv;
 	nni_sockopt *sopt;
 
 	nni_mtx_lock(&s->s_mx);
@@ -1444,7 +1438,7 @@ nni_dialer_add_pipe(nni_dialer *d, void *tpipe)
 		return;
 	}
 	nni_mtx_unlock(&s->s_mx);
-
+	nni_stat_register(&p->p_stats.s_root);
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
 	nni_pipe_rele(p);
 }
@@ -1491,6 +1485,8 @@ nni_dialer_reap(nni_dialer *d)
 
 	nni_aio_stop(d->d_tmo_aio);
 	nni_aio_stop(d->d_con_aio);
+
+	nni_stat_unregister(&d->d_stats.s_root);
 
 	nni_mtx_lock(&s->s_mx);
 	if (!nni_list_empty(&d->d_pipes)) {
@@ -1553,7 +1549,7 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 		return;
 	}
 	nni_mtx_unlock(&s->s_mx);
-
+	nni_stat_register(&p->p_stats.s_root);
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
 	nni_pipe_rele(p);
 }
@@ -1601,6 +1597,8 @@ nni_listener_reap(nni_listener *l)
 
 	nni_aio_stop(l->l_tmo_aio);
 	nni_aio_stop(l->l_acc_aio);
+
+	nni_stat_unregister(&l->l_stats.s_root);
 
 	nni_mtx_lock(&s->s_mx);
 	if (!nni_list_empty(&l->l_pipes)) {
@@ -1687,7 +1685,7 @@ void
 nni_sock_add_stat(nni_sock *s, nni_stat_item *stat)
 {
 #ifdef NNG_ENABLE_STATS
-	nni_stat_append(&s->s_stats.s_root, stat);
+	nni_stat_add(&s->s_stats.s_root, stat);
 #else
 	NNI_ARG_UNUSED(s);
 	NNI_ARG_UNUSED(stat);

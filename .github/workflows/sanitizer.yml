@@ -1,0 +1,35 @@
+name: sanitize
+on: [push]
+jobs:
+  sanitize:
+    env:
+      CC: clang
+      CXX: clang++
+      CTEST_OUTPUT_ON_FAILURE: 1
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        sanitizer: [ address, undefined, thread ]
+        os: [ ubuntu-latest ]
+
+    steps:
+      - uses: actions/checkout@v1
+
+      - uses: mstksg/get-package@v1
+        with:
+            apt-get: ninja-build libmbedtls-dev
+            brew: ninja mbedtls
+
+      - name: Configure
+        run: |
+          mkdir build
+          cd build
+          cmake -G Ninja -DNNG_SANITIZER=${{ matrix.sanitizer }} -DNNG_ENABLE_TLS=ON -DNNG_TOOLS=OFF ..
+      - name: Build
+        run: |
+          cd build
+          ninja
+      - name: Test
+        run: |
+          cd build
+          ninja test

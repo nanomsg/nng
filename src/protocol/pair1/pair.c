@@ -22,7 +22,7 @@
 #define NNI_PROTO_PAIR_V1 NNI_PROTO(1, 1)
 #endif
 
-#define BUMPSTAT(x) nni_stat_inc_atomic(x, 1)
+#define BUMP_STAT(x) nni_stat_inc_atomic(x, 1)
 
 typedef struct pair1_pipe pair1_pipe;
 typedef struct pair1_sock pair1_sock;
@@ -199,7 +199,7 @@ pair1_pipe_start(void *arg)
 	nni_mtx_lock(&s->mtx);
 	if (nni_pipe_peer(p->npipe) != NNI_PROTO_PAIR_V1) {
 		nni_mtx_unlock(&s->mtx);
-		BUMPSTAT(&s->stat_rejmismatch);
+		BUMP_STAT(&s->stat_rejmismatch);
 		// Peer protocol mismatch.
 		return (NNG_EPROTO);
 	}
@@ -213,7 +213,7 @@ pair1_pipe_start(void *arg)
 		if (!nni_list_empty(&s->plist)) {
 			nni_idhash_remove(s->pipes, id);
 			nni_mtx_unlock(&s->mtx);
-			BUMPSTAT(&s->stat_rejinuse);
+			BUMP_STAT(&s->stat_rejinuse);
 			return (NNG_EBUSY);
 		}
 	} else {
