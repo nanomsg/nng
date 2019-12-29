@@ -12,19 +12,13 @@
 
 #ifdef NNG_USE_POSIX_RESOLV_GAI
 
-#include <arpa/inet.h>
 #include <ctype.h>
 #include <errno.h>
 #include <netdb.h>
 #include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/types.h>
-#include <sys/uio.h>
 #include <sys/un.h>
-#include <unistd.h>
 
 // We use a single resolver taskq - but we allocate a few threads
 // for it to ensure that names can be looked up concurrently.  This isn't
