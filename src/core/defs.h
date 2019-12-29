@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitoar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -16,7 +16,7 @@
 // C compilers may get unhappy when named arguments are not used.  While
 // there are things like __attribute__((unused)) which are arguably
 // superior, support for such are not universal.
-#define NNI_ARG_UNUSED(x) ((void) x);
+#define NNI_ARG_UNUSED(x) ((void) x)
 
 #ifndef NDEBUG
 #define NNI_ASSERT(x) \

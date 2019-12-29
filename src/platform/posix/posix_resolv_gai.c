@@ -22,7 +22,7 @@
 
 // We use a single resolver taskq - but we allocate a few threads
 // for it to ensure that names can be looked up concurrently.  This isn't
-// as elegant or scaleable as a true asynchronous resolver would be, but
+// as elegant or scalable as a true asynchronous resolver would be, but
 // it has the advantage of being fairly portable, and concurrent enough for
 // the vast, vast majority of use cases.  The total thread count can be
 // changed with this define.  Note that some platforms may not have a
@@ -296,10 +296,10 @@ nni_udp_resolv(
 }
 
 void
-resolv_worker(void *notused)
+resolv_worker(void *unused)
 {
 
-	NNI_ARG_UNUSED(notused);
+	NNI_ARG_UNUSED(unused);
 
 	nni_mtx_lock(&resolv_mtx);
 	for (;;) {
