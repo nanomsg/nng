@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -84,12 +84,20 @@ struct nni_atomic_flag {
 };
 
 struct nni_atomic_u64 {
-	_Atomic unsigned long long v;
+	atomic_uint_fast64_t v;
+};
+
+struct nni_atomic_bool {
+	atomic_bool v;
 };
 
 #else // NNG_HAVE_C11_ATOMIC
 struct nni_atomic_flag {
 	bool f;
+};
+
+struct nni_atomic_bol {
+	bool b;
 };
 
 struct nni_atomic_u64 {
