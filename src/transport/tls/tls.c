@@ -770,6 +770,7 @@ error:
 	switch (rv) {
 
 	case NNG_ENOMEM:
+	case NNG_ENOFILES:
 		nng_sleep_aio(10, ep->timeaio);
 		break;
 
@@ -1147,13 +1148,6 @@ tlstran_pipe_getopt(
 	return (rv);
 }
 
-static int
-tlstran_check_recvmaxsz(const void *v, size_t sz, nni_type t)
-{
-	size_t val;
-	return (nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t));
-}
-
 static nni_tran_pipe_ops tlstran_pipe_ops = {
 	.p_init   = tlstran_pipe_init,
 	.p_fini   = tlstran_pipe_fini,
@@ -1181,10 +1175,10 @@ static nni_option tlstran_ep_options[] = {
 	},
 };
 
-static nni_chkoption tlstran_checkopts[] = {
+static nni_chkoption tlstran_check_options[] = {
 	{
 	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = tlstran_check_recvmaxsz,
+	    .o_check = nni_check_opt_size,
 	},
 	{
 	    .o_name = NULL,
@@ -1250,10 +1244,10 @@ tlstran_listener_setopt(
 }
 
 static int
-tlstran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
+tlstran_check_option(const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
-	rv = nni_chkopt(tlstran_checkopts, name, buf, sz, t);
+	rv = nni_chkopt(tlstran_check_options, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_stream_checkopt("tls+tcp", name, buf, sz, t);
 	}
@@ -1287,7 +1281,7 @@ static nni_tran tls_tran = {
 	.tran_pipe     = &tlstran_pipe_ops,
 	.tran_init     = tlstran_init,
 	.tran_fini     = tlstran_fini,
-	.tran_checkopt = tlstran_checkopt,
+	.tran_checkopt = tlstran_check_option,
 };
 
 static nni_tran tls4_tran = {
@@ -1298,7 +1292,7 @@ static nni_tran tls4_tran = {
 	.tran_pipe     = &tlstran_pipe_ops,
 	.tran_init     = tlstran_init,
 	.tran_fini     = tlstran_fini,
-	.tran_checkopt = tlstran_checkopt,
+	.tran_checkopt = tlstran_check_option,
 };
 
 static nni_tran tls6_tran = {
@@ -1309,7 +1303,7 @@ static nni_tran tls6_tran = {
 	.tran_pipe     = &tlstran_pipe_ops,
 	.tran_init     = tlstran_init,
 	.tran_fini     = tlstran_fini,
-	.tran_checkopt = tlstran_checkopt,
+	.tran_checkopt = tlstran_check_option,
 };
 
 int

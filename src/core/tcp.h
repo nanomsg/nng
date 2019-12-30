@@ -18,7 +18,7 @@
 extern int nni_tcp_dialer_alloc(nng_stream_dialer **, const nng_url *);
 extern int nni_tcp_listener_alloc(nng_stream_listener **, const nng_url *);
 
-// nni_tcp_checkopt is used to validate (generically) options.
-extern int nni_tcp_checkopt(const char *, const void *, size_t, nni_type);
+// nni_tcp_check_opt is used to validate (generically) options.
+extern int nni_tcp_check_opt(const char *, const void *, size_t, nni_type);
 
 #endif // CORE_TCP_H

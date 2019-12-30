@@ -369,6 +369,41 @@ nni_copyout_str(const char *str, void *dst, size_t *szp, nni_type t)
 }
 
 int
+nni_check_opt_bool(const void *buf, size_t sz, nni_type t)
+{
+	NNI_ARG_UNUSED(buf);
+
+	switch (t) {
+	case NNI_TYPE_BOOL:
+		return (0);
+	case NNI_TYPE_OPAQUE:
+		if (sz != sizeof(bool)) {
+			return (NNG_EINVAL);
+		}
+		return (0);
+	default:
+		return (NNG_EBADTYPE);
+	}
+}
+int
+nni_check_opt_size(const void *buf, size_t sz, nni_type t)
+{
+	return (nni_copyin_size(NULL, buf,  sz, 0, NNI_MAXSZ, t));
+}
+
+int
+nni_check_opt_string(const void *buf, size_t sz, nni_type t)
+{
+	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
+		return (NNG_EBADTYPE);
+	}
+	if (nni_strnlen(buf, sz) >= sz) {
+		return (NNG_EINVAL);
+	}
+	return (0);
+}
+
+int
 nni_getopt(const nni_option *opts, const char *nm, void *arg, void *buf,
     size_t *szp, nni_type otype)
 {

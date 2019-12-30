@@ -135,18 +135,6 @@ tls_dialer_dial(void *arg, nng_aio *aio)
 }
 
 static int
-tls_check_string(const void *v, size_t sz, nni_opt_type t)
-{
-	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
-		return (NNG_EBADTYPE);
-	}
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-static int
 tls_dialer_set_config(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	int             rv;
@@ -193,7 +181,7 @@ tls_dialer_set_server_name(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	tls_dialer *d = arg;
 	int         rv;
-	if ((rv = tls_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&d->lk);
 		rv = nng_tls_config_server_name(d->cfg, buf);
 		nni_mtx_unlock(&d->lk);
@@ -224,7 +212,7 @@ tls_dialer_set_ca_file(void *arg, const void *buf, size_t sz, nni_opt_type t)
 	tls_dialer *d = arg;
 	int         rv;
 
-	if ((rv = tls_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&d->lk);
 		rv = nng_tls_config_ca_file(d->cfg, buf);
 		nni_mtx_unlock(&d->lk);
@@ -239,7 +227,7 @@ tls_dialer_set_cert_key_file(
 	tls_dialer *d = arg;
 	int         rv;
 
-	if ((rv = tls_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&d->lk);
 		rv = nng_tls_config_cert_key_file(d->cfg, buf, NULL);
 		nni_mtx_unlock(&d->lk);
@@ -467,7 +455,7 @@ tls_listener_set_server_name(void *arg, const void *buf, size_t sz, nni_type t)
 {
 	tls_listener *l = arg;
 	int           rv;
-	if ((rv = tls_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&l->lk);
 		rv = nng_tls_config_server_name(l->cfg, buf);
 		nni_mtx_unlock(&l->lk);
@@ -498,7 +486,7 @@ tls_listener_set_ca_file(void *arg, const void *buf, size_t sz, nni_opt_type t)
 	tls_listener *l = arg;
 	int           rv;
 
-	if ((rv = tls_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&l->lk);
 		rv = nng_tls_config_ca_file(l->cfg, buf);
 		nni_mtx_unlock(&l->lk);
@@ -513,7 +501,7 @@ tls_listener_set_cert_key_file(
 	tls_listener *l = arg;
 	int           rv;
 
-	if ((rv = tls_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&l->lk);
 		rv = nng_tls_config_cert_key_file(l->cfg, buf, NULL);
 		nni_mtx_unlock(&l->lk);
@@ -652,15 +640,15 @@ static const nni_chkoption tls_chkopts[] = {
 	},
 	{
 	    .o_name  = NNG_OPT_TLS_SERVER_NAME,
-	    .o_check = tls_check_string,
+	    .o_check = nni_check_opt_string,
 	},
 	{
 	    .o_name  = NNG_OPT_TLS_CA_FILE,
-	    .o_check = tls_check_string,
+	    .o_check = nni_check_opt_string,
 	},
 	{
 	    .o_name  = NNG_OPT_TLS_CERT_KEY_FILE,
-	    .o_check = tls_check_string,
+	    .o_check = nni_check_opt_string,
 	},
 	{
 	    .o_name  = NNG_OPT_TLS_AUTH_MODE,

@@ -51,6 +51,10 @@ extern int nni_copyout_u64(uint64_t, void *, size_t *, nni_type);
 // then it passes through a pointer, created by nni_strdup().
 extern int nni_copyout_str(const char *, void *, size_t *, nni_type);
 
+extern int nni_check_opt_bool(const void *, size_t, nni_type);
+extern int nni_check_opt_size(const void *, size_t, nni_type);
+extern int nni_check_opt_string(const void *, size_t, nni_type);
+
 // nni_option is used for socket, protocol, transport, and similar options.
 // Note that only for transports, the o_set member may be called with a NULL
 // instance parameter, in which case the request should only validate the

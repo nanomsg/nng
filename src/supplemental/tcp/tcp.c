@@ -452,20 +452,14 @@ nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	return (tcp_listener_alloc_addr(lp, &sa));
 }
 
-static int
-tcp_check_bool(const void *val, size_t sz, nni_type t)
-{
-	return (nni_copyin_bool(NULL, val, sz, t));
-}
-
-static const nni_chkoption tcp_chkopts[] = {
+static const nni_chkoption tcp_check_opts[] = {
 	{
 	    .o_name  = NNG_OPT_TCP_KEEPALIVE,
-	    .o_check = tcp_check_bool,
+	    .o_check = nni_check_opt_bool,
 	},
 	{
 	    .o_name  = NNG_OPT_TCP_NODELAY,
-	    .o_check = tcp_check_bool,
+	    .o_check = nni_check_opt_bool,
 	},
 	{
 	    .o_name = NNG_OPT_TCP_BOUND_PORT,
@@ -479,7 +473,7 @@ static const nni_chkoption tcp_chkopts[] = {
 };
 
 int
-nni_tcp_checkopt(const char *name, const void *data, size_t sz, nni_type t)
+nni_tcp_check_opt(const char *name, const void *data, size_t sz, nni_type t)
 {
-	return (nni_chkopt(tcp_chkopts, name, data, sz, t));
+	return (nni_chkopt(tcp_check_opts, name, data, sz, t));
 }

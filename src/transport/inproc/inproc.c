@@ -9,8 +9,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
@@ -273,10 +271,12 @@ inproc_conn_finish(nni_aio *aio, int rv, inproc_ep *ep, inproc_pipe *pipe)
 		nni_aio_set_output(aio, 0, pipe);
 		nni_aio_finish(aio, 0, 0);
 	} else {
-		if (ep->ndialer != NULL) {
-			nni_dialer_bump_error(ep->ndialer, rv);
-		} else {
-			nni_listener_bump_error(ep->nlistener, rv);
+		if (ep != NULL) {
+			if (ep->ndialer != NULL) {
+				nni_dialer_bump_error(ep->ndialer, rv);
+			} else {
+				nni_listener_bump_error(ep->nlistener, rv);
+			}
 		}
 		NNI_ASSERT(pipe == NULL);
 		nni_aio_finish_error(aio, rv);
@@ -578,28 +578,22 @@ static const nni_option inproc_ep_options[] = {
 };
 
 static int
-inproc_ep_getopt(void *arg, const char *name, void *v, size_t *szp, nni_type t)
+inproc_ep_get_option(void *arg, const char *name, void *v, size_t *szp, nni_type t)
 {
 	return (nni_getopt(inproc_ep_options, name, arg, v, szp, t));
 }
 
 static int
-inproc_ep_setopt(
+inproc_ep_set_option(
     void *arg, const char *name, const void *v, size_t sz, nni_type t)
 {
 	return (nni_setopt(inproc_ep_options, name, arg, v, sz, t));
 }
 
-static int
-inproc_check_recvmaxsz(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
 static nni_chkoption inproc_checkopts[] = {
 	{
 	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = inproc_check_recvmaxsz,
+	    .o_check = nni_check_opt_size,
 	},
 	{
 	    .o_name = NNG_OPT_LOCADDR,
@@ -613,7 +607,7 @@ static nni_chkoption inproc_checkopts[] = {
 };
 
 static int
-inproc_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
+inproc_check_option(const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
 	rv = nni_chkopt(inproc_checkopts, name, buf, sz, t);
@@ -625,8 +619,8 @@ static nni_tran_dialer_ops inproc_dialer_ops = {
 	.d_fini    = inproc_ep_fini,
 	.d_connect = inproc_ep_connect,
 	.d_close   = inproc_ep_close,
-	.d_getopt  = inproc_ep_getopt,
-	.d_setopt  = inproc_ep_setopt,
+	.d_getopt  = inproc_ep_get_option,
+	.d_setopt  = inproc_ep_set_option,
 };
 
 static nni_tran_listener_ops inproc_listener_ops = {
@@ -635,8 +629,8 @@ static nni_tran_listener_ops inproc_listener_ops = {
 	.l_bind   = inproc_ep_bind,
 	.l_accept = inproc_ep_accept,
 	.l_close  = inproc_ep_close,
-	.l_getopt = inproc_ep_getopt,
-	.l_setopt = inproc_ep_setopt,
+	.l_getopt = inproc_ep_get_option,
+	.l_setopt = inproc_ep_set_option,
 };
 
 // This is the inproc transport linkage, and should be the only global
@@ -649,7 +643,7 @@ struct nni_tran nni_inproc_tran = {
 	.tran_pipe     = &inproc_pipe_ops,
 	.tran_init     = inproc_init,
 	.tran_fini     = inproc_fini,
-	.tran_checkopt = inproc_checkopt,
+	.tran_checkopt = inproc_check_option,
 };
 
 int

@@ -180,18 +180,6 @@ static void ws_listener_close(void *);
 static void ws_listener_free(void *);
 
 static int
-ws_check_string(const void *v, size_t sz, nni_opt_type t)
-{
-	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
-		return (NNG_EBADTYPE);
-	}
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-static int
 ws_set_header_ext(nni_list *l, const char *n, const char *v, bool strip_dups)
 {
 	ws_header *hdr;
@@ -1850,7 +1838,7 @@ ws_listener_set_res_headers(void *arg, const void *buf, size_t sz, nni_type t)
 	nni_ws_listener *l = arg;
 	int              rv;
 
-	if ((rv = ws_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&l->mtx);
 		rv = ws_set_headers(&l->headers, buf);
 		nni_mtx_unlock(&l->mtx);
@@ -1864,7 +1852,7 @@ ws_listener_set_proto(void *arg, const void *buf, size_t sz, nni_type t)
 	nni_ws_listener *l = arg;
 	int              rv;
 
-	if ((rv = ws_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		char *ns;
 		if ((ns = nni_strdup(buf)) == NULL) {
 			rv = NNG_ENOMEM;
@@ -1963,7 +1951,7 @@ ws_listener_set_header(nni_ws_listener *l, const char *name, const void *buf,
 {
 	int rv;
 	name += strlen(NNG_OPT_WS_RESPONSE_HEADER);
-	if ((rv = ws_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&l->mtx);
 		rv = ws_set_header(&l->headers, name, buf);
 		nni_mtx_unlock(&l->mtx);
@@ -2347,7 +2335,7 @@ ws_dialer_set_req_headers(void *arg, const void *buf, size_t sz, nni_type t)
 	nni_ws_dialer *d = arg;
 	int            rv;
 
-	if ((rv = ws_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&d->mtx);
 		rv = ws_set_headers(&d->headers, buf);
 		nni_mtx_unlock(&d->mtx);
@@ -2361,7 +2349,7 @@ ws_dialer_set_proto(void *arg, const void *buf, size_t sz, nni_type t)
 	nni_ws_dialer *d = arg;
 	int            rv;
 
-	if ((rv = ws_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		char *ns;
 		if ((ns = nni_strdup(buf)) == NULL) {
 			rv = NNG_ENOMEM;
@@ -2429,7 +2417,7 @@ ws_dialer_set_header(
 {
 	int rv;
 	name += strlen(NNG_OPT_WS_REQUEST_HEADER);
-	if ((rv = ws_check_string(buf, sz, t)) == 0) {
+	if ((rv = nni_check_opt_string(buf, sz, t)) == 0) {
 		nni_mtx_lock(&d->mtx);
 		rv = ws_set_header(&d->headers, name, buf);
 		nni_mtx_unlock(&d->mtx);
@@ -2747,36 +2735,30 @@ ws_str_getx(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 	return (rv);
 }
 
-static int
-ws_check_size(const void *buf, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, buf, sz, 0, NNI_MAXSZ, t));
-}
-
 static const nni_chkoption ws_chkopts[] = {
 	{
 	    .o_name  = NNG_OPT_WS_SENDMAXFRAME,
-	    .o_check = ws_check_size,
+	    .o_check = nni_check_opt_size,
 	},
 	{
 	    .o_name  = NNG_OPT_WS_RECVMAXFRAME,
-	    .o_check = ws_check_size,
+	    .o_check = nni_check_opt_size,
 	},
 	{
 	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = ws_check_size,
+	    .o_check = nni_check_opt_size,
 	},
 	{
 	    .o_name  = NNG_OPT_WS_PROTOCOL,
-	    .o_check = ws_check_string,
+	    .o_check = nni_check_opt_string,
 	},
 	{
 	    .o_name  = NNG_OPT_WS_REQUEST_HEADERS,
-	    .o_check = ws_check_string,
+	    .o_check = nni_check_opt_string,
 	},
 	{
 	    .o_name  = NNG_OPT_WS_RESPONSE_HEADERS,
-	    .o_check = ws_check_string,
+	    .o_check = nni_check_opt_string,
 	},
 	{
 	    .o_name = NULL,
@@ -2784,7 +2766,7 @@ static const nni_chkoption ws_chkopts[] = {
 };
 
 int
-nni_ws_checkopt(const char *name, const void *data, size_t sz, nni_type t)
+nni_ws_check_opt(const char *name, const void *data, size_t sz, nni_type t)
 {
 	int rv;
 
@@ -2798,7 +2780,7 @@ nni_ws_checkopt(const char *name, const void *data, size_t sz, nni_type t)
 	if (rv == NNG_ENOTSUP) {
 		if (startswith(name, NNG_OPT_WS_REQUEST_HEADER) ||
 		    startswith(name, NNG_OPT_WS_RESPONSE_HEADER)) {
-			rv = ws_check_string(data, sz, t);
+			rv = nni_check_opt_string(data, sz, t);
 		}
 	}
 	// Potentially, add checks for header options.

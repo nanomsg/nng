@@ -9,8 +9,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
@@ -46,7 +44,6 @@ struct ipctran_pipe {
 	size_t          wantrxhead;
 	nni_list        recvq;
 	nni_list        sendq;
-	nni_aio *       useraio;
 	nni_aio *       txaio;
 	nni_aio *       rxaio;
 	nni_aio *       negoaio;
@@ -268,7 +265,6 @@ ipctran_pipe_nego_cb(void *arg)
 	return;
 
 error:
-	p->useraio = NULL;
 
 	if (ep->ndialer != NULL) {
 		nni_dialer_bump_error(ep->ndialer, rv);
@@ -347,7 +343,6 @@ ipctran_pipe_recv_cb(void *arg)
 	nni_aio *     rxaio = p->rxaio;
 
 	nni_mtx_lock(&p->mtx);
-	aio = nni_list_first(&p->recvq);
 
 	if ((rv = nni_aio_result(rxaio)) != 0) {
 		// Error on receive.  This has to cause an error back
@@ -786,9 +781,9 @@ ipctran_dial_cb(void *arg)
 		ipctran_pipe_fini(p);
 		nng_stream_free(conn);
 		rv = NNG_ECLOSED;
-	} else {
-		ipctran_pipe_start(p, conn, ep);
+		goto error;
 	}
+	ipctran_pipe_start(p, conn, ep);
 	nni_mtx_unlock(&ep->mtx);
 	return;
 
@@ -802,7 +797,6 @@ error:
 		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&ep->mtx);
-	return;
 }
 
 static int
@@ -1049,7 +1043,7 @@ static const nni_option ipctran_ep_options[] = {
 };
 
 static int
-ipctran_dialer_getopt(
+ipctran_dialer_get_option(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ipctran_ep *ep = arg;
@@ -1063,7 +1057,7 @@ ipctran_dialer_getopt(
 }
 
 static int
-ipctran_dialer_setopt(
+ipctran_dialer_set_option(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	ipctran_ep *ep = arg;
@@ -1077,7 +1071,7 @@ ipctran_dialer_setopt(
 }
 
 static int
-ipctran_listener_getopt(
+ipctran_listener_get_option(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ipctran_ep *ep = arg;
@@ -1091,7 +1085,7 @@ ipctran_listener_getopt(
 }
 
 static int
-ipctran_listener_setopt(
+ipctran_listener_set_option(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	ipctran_ep *ep = arg;
@@ -1104,16 +1098,10 @@ ipctran_listener_setopt(
 	return (rv);
 }
 
-static int
-ipctran_check_recvmaxsz(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
-static nni_chkoption ipctran_checkopts[] = {
+static nni_chkoption ipctran_check_opts[] = {
 	{
 	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = ipctran_check_recvmaxsz,
+	    .o_check = nni_check_opt_size,
 	},
 	{
 	    .o_name = NULL,
@@ -1121,10 +1109,10 @@ static nni_chkoption ipctran_checkopts[] = {
 };
 
 static int
-ipctran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
+ipctran_check_option(const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
-	rv = nni_chkopt(ipctran_checkopts, name, buf, sz, t);
+	rv = nni_chkopt(ipctran_check_opts, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_stream_checkopt("ipc", name, buf, sz, t);
 	}
@@ -1136,8 +1124,8 @@ static nni_tran_dialer_ops ipctran_dialer_ops = {
 	.d_fini    = ipctran_ep_fini,
 	.d_connect = ipctran_ep_connect,
 	.d_close   = ipctran_ep_close,
-	.d_getopt  = ipctran_dialer_getopt,
-	.d_setopt  = ipctran_dialer_setopt,
+	.d_getopt  = ipctran_dialer_get_option,
+	.d_setopt  = ipctran_dialer_set_option,
 };
 
 static nni_tran_listener_ops ipctran_listener_ops = {
@@ -1146,8 +1134,8 @@ static nni_tran_listener_ops ipctran_listener_ops = {
 	.l_bind   = ipctran_ep_bind,
 	.l_accept = ipctran_ep_accept,
 	.l_close  = ipctran_ep_close,
-	.l_getopt = ipctran_listener_getopt,
-	.l_setopt = ipctran_listener_setopt,
+	.l_getopt = ipctran_listener_get_option,
+	.l_setopt = ipctran_listener_set_option,
 };
 
 static nni_tran ipc_tran = {
@@ -1158,7 +1146,7 @@ static nni_tran ipc_tran = {
 	.tran_pipe     = &ipctran_pipe_ops,
 	.tran_init     = ipctran_init,
 	.tran_fini     = ipctran_fini,
-	.tran_checkopt = ipctran_checkopt,
+	.tran_checkopt = ipctran_check_option,
 };
 
 int

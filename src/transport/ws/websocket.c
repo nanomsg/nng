@@ -11,12 +11,9 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "supplemental/http/http_api.h"
-#include "supplemental/tls/tls_api.h"
 #include "supplemental/websocket/websocket.h"
 
 #include <nng/supplemental/tls/tls.h>
@@ -34,7 +31,6 @@ struct ws_dialer {
 	nni_aio *          connaio;
 	nng_stream_dialer *dialer;
 	bool               started;
-	nni_dialer *       ndialer;
 };
 
 struct ws_listener {
@@ -45,7 +41,6 @@ struct ws_listener {
 	nni_aio *            accaio;
 	nng_stream_listener *listener;
 	bool                 started;
-	nni_listener *       nlistener;
 };
 
 struct ws_pipe {
@@ -258,7 +253,7 @@ wstran_pipe_peer(void *arg)
 }
 
 static int
-ws_listener_bind(void *arg)
+wstran_listener_bind(void *arg)
 {
 	ws_listener *l = arg;
 	int          rv;
@@ -509,7 +504,6 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 
 	d->lproto  = nni_sock_proto_id(s);
 	d->rproto  = nni_sock_peer_id(s);
-	d->ndialer = ndialer;
 
 	snprintf(prname, sizeof(prname), "%s.sp.nanomsg.org",
 	    nni_sock_peer_name(s));
@@ -545,7 +539,6 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 
 	l->lproto    = nni_sock_proto_id(s);
 	l->rproto    = nni_sock_peer_id(s);
-	l->nlistener = nlistener;
 
 	snprintf(prname, sizeof(prname), "%s.sp.nanomsg.org",
 	    nni_sock_proto_name(s));
@@ -582,7 +575,7 @@ static const nni_option wstran_ep_opts[] = {
 };
 
 static int
-wstran_dialer_getopt(
+wstran_dialer_get_option(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ws_dialer *d = arg;
@@ -596,7 +589,7 @@ wstran_dialer_getopt(
 }
 
 static int
-wstran_dialer_setopt(
+wstran_dialer_set_option(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	ws_dialer *d = arg;
@@ -610,7 +603,7 @@ wstran_dialer_setopt(
 }
 
 static int
-wstran_listener_getopt(
+wstran_listener_get_option(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ws_listener *l = arg;
@@ -624,7 +617,7 @@ wstran_listener_getopt(
 }
 
 static int
-wstran_listener_setopt(
+wstran_listener_set_option(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	ws_listener *l = arg;
@@ -637,17 +630,17 @@ wstran_listener_setopt(
 	return (rv);
 }
 
-static nni_chkoption wstran_checkopts[] = {
+static nni_chkoption wstran_check_opts[] = {
 	{
 	    .o_name = NULL,
 	},
 };
 
 static int
-wstran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
+wstran_check_option(const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
-	rv = nni_chkopt(wstran_checkopts, name, buf, sz, t);
+	rv = nni_chkopt(wstran_check_opts, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_stream_checkopt("ws", name, buf, sz, t);
 	}
@@ -659,18 +652,18 @@ static nni_tran_dialer_ops ws_dialer_ops = {
 	.d_fini    = wstran_dialer_fini,
 	.d_connect = wstran_dialer_connect,
 	.d_close   = wstran_dialer_close,
-	.d_setopt  = wstran_dialer_setopt,
-	.d_getopt  = wstran_dialer_getopt,
+	.d_setopt  = wstran_dialer_set_option,
+	.d_getopt  = wstran_dialer_get_option,
 };
 
 static nni_tran_listener_ops ws_listener_ops = {
 	.l_init   = wstran_listener_init,
 	.l_fini   = wstran_listener_fini,
-	.l_bind   = ws_listener_bind,
+	.l_bind   = wstran_listener_bind,
 	.l_accept = wstran_listener_accept,
 	.l_close  = wstran_listener_close,
-	.l_setopt = wstran_listener_setopt,
-	.l_getopt = wstran_listener_getopt,
+	.l_setopt = wstran_listener_set_option,
+	.l_getopt = wstran_listener_get_option,
 };
 
 static nni_tran ws_tran = {
@@ -681,7 +674,7 @@ static nni_tran ws_tran = {
 	.tran_pipe     = &ws_pipe_ops,
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
-	.tran_checkopt = wstran_checkopt,
+	.tran_checkopt = wstran_check_option,
 };
 
 int
@@ -700,7 +693,7 @@ static nni_tran wss_tran = {
 	.tran_pipe     = &ws_pipe_ops,
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
-	.tran_checkopt = wstran_checkopt,
+	.tran_checkopt = wstran_check_option,
 };
 
 int

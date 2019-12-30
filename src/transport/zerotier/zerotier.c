@@ -2918,6 +2918,17 @@ zt_ep_get_conn_time(void *arg, void *data, size_t *szp, nni_type t)
 }
 
 static int
+zt_check_opt_time(const void *data, size_t sz, nni_type t)
+{
+	return (nni_copyin_ms(NULL, data, sz, t));
+}
+static int
+zt_check_opt_count(const void *data, size_t sz, nni_type t)
+{
+	return (nni_copyin_int(NULL, data, sz, 0, 1000000, t));
+}
+
+static int
 zt_ep_set_conn_tries(void *arg, const void *data, size_t sz, nni_type t)
 {
 	zt_ep *ep = arg;
@@ -3172,6 +3183,18 @@ static nni_option zt_listener_options[] = {
 	    .o_get  = zt_ep_get_locaddr,
 	},
 	// terminate list
+	{
+	    .o_name = NULL,
+	},
+};
+
+static nni_chkoption zt_check_options[] = {
+	{
+	    .o_name  = NNG_OPT_RECVMAXSZ,
+	    .o_check = nni_check_opt_size,
+	},
+	// The rest of the ZeroTier options should be explicitly
+	// set on a dialer or a listener.
 	{
 	    .o_name = NULL,
 	},

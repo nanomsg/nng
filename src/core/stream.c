@@ -23,62 +23,62 @@ static struct {
 	const char *scheme;
 	int (*dialer_alloc)(nng_stream_dialer **, const nng_url *);
 	int (*listener_alloc)(nng_stream_listener **, const nng_url *);
-	int (*checkopt)(const char *, const void *, size_t, nni_type);
+	int (*check_opt)(const char *, const void *, size_t, nni_type);
 
 } stream_drivers[] = {
 	{
 	    .scheme         = "ipc",
 	    .dialer_alloc   = nni_ipc_dialer_alloc,
 	    .listener_alloc = nni_ipc_listener_alloc,
-	    .checkopt       = nni_ipc_checkopt,
+	    .check_opt      = nni_ipc_checkopt,
 	},
 	{
 	    .scheme         = "tcp",
 	    .dialer_alloc   = nni_tcp_dialer_alloc,
 	    .listener_alloc = nni_tcp_listener_alloc,
-	    .checkopt       = nni_tcp_checkopt,
+	    .check_opt      = nni_tcp_check_opt,
 	},
 	{
 	    .scheme         = "tcp4",
 	    .dialer_alloc   = nni_tcp_dialer_alloc,
 	    .listener_alloc = nni_tcp_listener_alloc,
-	    .checkopt       = nni_tcp_checkopt,
+	    .check_opt      = nni_tcp_check_opt,
 	},
 	{
 	    .scheme         = "tcp6",
 	    .dialer_alloc   = nni_tcp_dialer_alloc,
 	    .listener_alloc = nni_tcp_listener_alloc,
-	    .checkopt       = nni_tcp_checkopt,
+	    .check_opt      = nni_tcp_check_opt,
 	},
 	{
 	    .scheme         = "tls+tcp",
 	    .dialer_alloc   = nni_tls_dialer_alloc,
 	    .listener_alloc = nni_tls_listener_alloc,
-	    .checkopt       = nni_tls_checkopt,
+	    .check_opt      = nni_tls_checkopt,
 	},
 	{
 	    .scheme         = "tls+tcp4",
 	    .dialer_alloc   = nni_tls_dialer_alloc,
 	    .listener_alloc = nni_tls_listener_alloc,
-	    .checkopt       = nni_tls_checkopt,
+	    .check_opt      = nni_tls_checkopt,
 	},
 	{
 	    .scheme         = "tls+tcp6",
 	    .dialer_alloc   = nni_tls_dialer_alloc,
 	    .listener_alloc = nni_tls_listener_alloc,
-	    .checkopt       = nni_tls_checkopt,
+	    .check_opt      = nni_tls_checkopt,
 	},
 	{
 	    .scheme         = "ws",
 	    .dialer_alloc   = nni_ws_dialer_alloc,
 	    .listener_alloc = nni_ws_listener_alloc,
-	    .checkopt       = nni_ws_checkopt,
+	    .check_opt      = nni_ws_check_opt,
 	},
 	{
 	    .scheme         = "wss",
 	    .dialer_alloc   = nni_ws_dialer_alloc,
 	    .listener_alloc = nni_ws_listener_alloc,
-	    .checkopt       = nni_ws_checkopt,
+	    .check_opt      = nni_ws_check_opt,
 	},
 	{
 	    .scheme = NULL,
@@ -274,10 +274,10 @@ nni_stream_checkopt(const char *scheme, const char *name, const void *data,
 		if (strcmp(stream_drivers[i].scheme, scheme) != 0) {
 			continue;
 		}
-		if (stream_drivers[i].checkopt == NULL) {
+		if (stream_drivers[i].check_opt == NULL) {
 			return (NNG_ENOTSUP);
 		}
-		return (stream_drivers[i].checkopt(name, data, sz, t));
+		return (stream_drivers[i].check_opt(name, data, sz, t));
 	}
 	return (NNG_ENOTSUP);
 }

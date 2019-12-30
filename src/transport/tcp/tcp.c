@@ -9,12 +9,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "core/tcp.h"
 
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
@@ -42,7 +39,6 @@ struct tcptran_pipe {
 	size_t          wantrxhead;
 	nni_list        recvq;
 	nni_list        sendq;
-	nni_aio *       useraio;
 	nni_aio *       txaio;
 	nni_aio *       rxaio;
 	nni_aio *       negoaio;
@@ -52,7 +48,6 @@ struct tcptran_pipe {
 
 struct tcptran_ep {
 	nni_mtx              mtx;
-	uint16_t             af;
 	uint16_t             proto;
 	size_t               rcvmax;
 	bool                 fini;
@@ -795,15 +790,13 @@ tcptran_accept_cb(void *arg)
 error:
 	nni_listener_bump_error(ep->nlistener, rv);
 	switch (rv) {
-
+	case NNG_ENOFILES:
 	case NNG_ENOMEM:
 		nng_sleep_aio(10, ep->timeaio);
 		break;
 
 	default:
-		if (!ep->closed) {
-			nng_stream_listener_accept(ep->listener, ep->connaio);
-		}
+		nng_stream_listener_accept(ep->listener, ep->connaio);
 		break;
 	}
 	nni_mtx_unlock(&ep->mtx);
@@ -832,9 +825,9 @@ tcptran_dial_cb(void *arg)
 		tcptran_pipe_fini(p);
 		nng_stream_free(conn);
 		rv = NNG_ECLOSED;
-	} else {
-		tcptran_pipe_start(p, conn, ep);
+		goto error;
 	}
+	tcptran_pipe_start(p, conn, ep);
 	nni_mtx_unlock(&ep->mtx);
 	return;
 
@@ -848,7 +841,6 @@ error:
 		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&ep->mtx);
-	return;
 }
 
 static int
@@ -894,7 +886,7 @@ tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = tcptran_url_parse_source(&myurl, &srcsa, url)) != 0) {
+	if (tcptran_url_parse_source(&myurl, &srcsa, url) != 0) {
 		return (NNG_EADDRINVAL);
 	}
 
@@ -1144,7 +1136,7 @@ static const nni_option tcptran_ep_opts[] = {
 };
 
 static int
-tcptran_dialer_getopt(
+tcptran_dialer_get_option(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcptran_ep *ep = arg;
@@ -1158,7 +1150,7 @@ tcptran_dialer_getopt(
 }
 
 static int
-tcptran_dialer_setopt(
+tcptran_dialer_set_option(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tcptran_ep *ep = arg;
@@ -1172,7 +1164,7 @@ tcptran_dialer_setopt(
 }
 
 static int
-tcptran_listener_getopt(
+tcptran_listener_get_option(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcptran_ep *ep = arg;
@@ -1186,7 +1178,7 @@ tcptran_listener_getopt(
 }
 
 static int
-tcptran_listener_setopt(
+tcptran_listener_set_option(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tcptran_ep *ep = arg;
@@ -1199,16 +1191,10 @@ tcptran_listener_setopt(
 	return (rv);
 }
 
-static int
-tcptran_check_recvmaxsz(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
-static nni_chkoption tcptran_checkopts[] = {
+static nni_chkoption tcpran_check_opts[] = {
 	{
 	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = tcptran_check_recvmaxsz,
+	    .o_check = nni_check_opt_size,
 	},
 	{
 	    .o_name = NULL,
@@ -1216,10 +1202,10 @@ static nni_chkoption tcptran_checkopts[] = {
 };
 
 static int
-tcptran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
+tcptran_check_option(const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
-	rv = nni_chkopt(tcptran_checkopts, name, buf, sz, t);
+	rv = nni_chkopt(tcpran_check_opts, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_stream_checkopt("tcp", name, buf, sz, t);
 	}
@@ -1231,8 +1217,8 @@ static nni_tran_dialer_ops tcptran_dialer_ops = {
 	.d_fini    = tcptran_ep_fini,
 	.d_connect = tcptran_ep_connect,
 	.d_close   = tcptran_ep_close,
-	.d_getopt  = tcptran_dialer_getopt,
-	.d_setopt  = tcptran_dialer_setopt,
+	.d_getopt  = tcptran_dialer_get_option,
+	.d_setopt  = tcptran_dialer_set_option,
 };
 
 static nni_tran_listener_ops tcptran_listener_ops = {
@@ -1241,8 +1227,8 @@ static nni_tran_listener_ops tcptran_listener_ops = {
 	.l_bind   = tcptran_ep_bind,
 	.l_accept = tcptran_ep_accept,
 	.l_close  = tcptran_ep_close,
-	.l_getopt = tcptran_listener_getopt,
-	.l_setopt = tcptran_listener_setopt,
+	.l_getopt = tcptran_listener_get_option,
+	.l_setopt = tcptran_listener_set_option,
 };
 
 static nni_tran tcp_tran = {
@@ -1253,7 +1239,7 @@ static nni_tran tcp_tran = {
 	.tran_pipe     = &tcptran_pipe_ops,
 	.tran_init     = tcptran_init,
 	.tran_fini     = tcptran_fini,
-	.tran_checkopt = tcptran_checkopt,
+	.tran_checkopt = tcptran_check_option,
 };
 
 static nni_tran tcp4_tran = {
@@ -1264,7 +1250,7 @@ static nni_tran tcp4_tran = {
 	.tran_pipe     = &tcptran_pipe_ops,
 	.tran_init     = tcptran_init,
 	.tran_fini     = tcptran_fini,
-	.tran_checkopt = tcptran_checkopt,
+	.tran_checkopt = tcptran_check_option,
 };
 
 static nni_tran tcp6_tran = {
@@ -1275,7 +1261,7 @@ static nni_tran tcp6_tran = {
 	.tran_pipe     = &tcptran_pipe_ops,
 	.tran_init     = tcptran_init,
 	.tran_fini     = tcptran_fini,
-	.tran_checkopt = tcptran_checkopt,
+	.tran_checkopt = tcptran_check_option,
 };
 
 int
