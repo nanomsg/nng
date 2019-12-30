@@ -224,6 +224,8 @@ TestMain("HTTP Client", {
 		});
 		nng_aio_set_timeout(aio, 10); // 10 msec timeout
 
+		So(nng_http_req_set_header(req, "Cache-Control", "no-cache") ==
+		    0);
 		nng_http_client_transact(cli, req, res, aio);
 		nng_aio_wait(aio);
 		So(nng_aio_result(aio) == NNG_ETIMEDOUT);
