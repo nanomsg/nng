@@ -128,6 +128,7 @@ dialer_stats_init(nni_dialer *d)
 void
 nni_dialer_bump_error(nni_dialer *d, int err)
 {
+#ifdef NNG_ENABLE_STATS
 	switch (err) {
 	case NNG_ECONNABORTED:
 	case NNG_ECONNRESET:
@@ -156,6 +157,10 @@ nni_dialer_bump_error(nni_dialer *d, int err)
 		BUMP_STAT(&d->d_stats.s_othererr);
 		break;
 	}
+#else
+	NNI_ARG_UNUSED(d);
+	NNI_ARG_UNUSED(err);
+#endif
 }
 
 int
