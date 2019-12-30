@@ -169,6 +169,15 @@ typedef struct nni_atomic_flag nni_atomic_flag;
 extern bool nni_atomic_flag_test_and_set(nni_atomic_flag *);
 extern void nni_atomic_flag_reset(nni_atomic_flag *);
 
+// nni_atomic_bool is for boolean flags that need to be checked without
+// changing their value.  This might require a lock on some systems.
+typedef struct nni_atomic_bool nni_atomic_bool;
+
+extern void nni_atomic_init_bool(nni_atomic_bool *);
+extern void nni_atomic_set_bool(nni_atomic_bool *, bool);
+extern bool nni_atomic_get_bool(nni_atomic_bool *);
+extern bool nni_atomic_swap_bool(nni_atomic_bool *, bool);
+
 typedef struct nni_atomic_u64 nni_atomic_u64;
 
 extern void     nni_atomic_init64(nni_atomic_u64 *);

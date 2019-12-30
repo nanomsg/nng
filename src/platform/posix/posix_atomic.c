@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -30,33 +30,60 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 }
 
 void
+nni_atomic_set_bool(nni_atomic_bool *v, bool b)
+{
+	atomic_store(&v->v, b);
+}
+
+bool
+nni_atomic_get_bool(nni_atomic_bool *v)
+{
+	return (atomic_load(&v->v));
+}
+
+bool
+nni_atomic_swap_bool(nni_atomic_bool *v, bool b)
+{
+	return (atomic_exchange(&v->v, b));
+
+}
+
+void
+nni_atomic_init_bool(nni_atomic_bool *v)
+{
+	atomic_init(&v->v, false);
+}
+
+void
 nni_atomic_add64(nni_atomic_u64 *v, uint64_t bump)
 {
-	(void) atomic_fetch_add_explicit(&v->v, bump, memory_order_relaxed);
+	(void) atomic_fetch_add_explicit(
+	    &v->v, (uint_fast64_t) bump, memory_order_relaxed);
 }
 
 void
 nni_atomic_sub64(nni_atomic_u64 *v, uint64_t bump)
 {
-	(void) atomic_fetch_sub_explicit(&v->v, bump, memory_order_relaxed);
+	(void) atomic_fetch_sub_explicit(
+	    &v->v, (uint_fast64_t) bump, memory_order_relaxed);
 }
 
 uint64_t
 nni_atomic_get64(nni_atomic_u64 *v)
 {
-	return (atomic_load(&v->v));
+	return ((uint64_t) atomic_load(&v->v));
 }
 
 void
 nni_atomic_set64(nni_atomic_u64 *v, uint64_t u)
 {
-	atomic_store(&v->v, u);
+	atomic_store(&v->v, (uint_fast64_t) u);
 }
 
 uint64_t
 nni_atomic_swap64(nni_atomic_u64 *v, uint64_t u)
 {
-	return (atomic_exchange(&v->v, u));
+	return ((uint64_t) atomic_exchange(&v->v, (uint_fast64_t) u));
 }
 
 void
@@ -77,7 +104,7 @@ nni_atomic_dec64_nv(nni_atomic_u64 *v)
 	uint64_t ov;
 
 	// C11 atomics give the old rather than new value.
-	ov = atomic_fetch_sub(&v->v, 1);
+	ov = (uint64_t) atomic_fetch_sub(&v->v, 1);
 	return (ov - 1);
 }
 
@@ -104,6 +131,41 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 	pthread_mutex_lock(&plat_atomic_lock);
 	f->f = false;
 	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+void
+nni_atomic_set_bool(nni_atomic_bool *b)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	b->b = false;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+void
+nni_atomic_get_bool(nni_atomic_bool *b)
+{
+	bool v;
+	pthread_mutex_lock(&plat_atomic_lock);
+	v = b->b;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (v);
+}
+
+void
+nni_atomic_swap_bool(nni_atomic_bool *b, bool n)
+{
+	bool v;
+	pthread_mutex_lock(&plat_atomic_lock);
+	v = b->b;
+	b->b = n;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (v);
+}
+
+void
+nni_atomic_initbool(nni_atomic_bool *b)
+{
+	b->b = false;
 }
 
 void

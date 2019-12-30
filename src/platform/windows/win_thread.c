@@ -132,6 +132,30 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 }
 
 void
+nni_atomic_set_bool(nni_atomic_bool *v, bool b)
+{
+	InterlockedExchange(&v->v, (LONG) b);
+}
+
+bool
+nni_atomic_get_bool(nni_atomic_bool *v)
+{
+	return ((bool) InterlockedAdd(&v->v, 0));
+}
+
+bool
+nni_atomic_swap_bool(nni_atomic_bool *v, bool b)
+{
+	return ((bool) InterlockedExchange(&v->v, (LONG) b));
+}
+
+void
+nni_atomic_init_bool(nni_atomic_bool *v)
+{
+	InterlockedExchange(&v->v, 0);
+}
+
+void
 nni_atomic_add64(nni_atomic_u64 *v, uint64_t bump)
 {
 	InterlockedAddNoFence64(&v->v, (LONGLONG) bump);
