@@ -5,5 +5,5 @@ layout: default
 
 == NNG Reference Manual
 
-* <</nng/man/v{{site.latest}}/index#,Latest>> (v{{site.latest}}, the most recent release)
-* <</nng/man/tip/index#,Tip>> (reflects unreleased changes)
+* <<v{{site.latest}}/index#,Latest>> (v{{site.latest}}, the most recent release)
+* <<tip/index#,Tip>> (reflects unreleased changes)
