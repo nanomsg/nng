@@ -273,6 +273,7 @@ if (NNG_ENABLE_DOC)
 	nng_http_res_set_version
 	nng_http_server_add_handler
 	nng_http_server_del_handler
+	nng_http_server_get_addr
 	nng_http_server_get_tls
 	nng_http_server_hold
 	nng_http_server_release
