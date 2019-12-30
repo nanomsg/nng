@@ -19,7 +19,7 @@ image:https://img.shields.io/codecov/c/github/nanomsg/nng?logo=codecov&logoColor
 image:https://img.shields.io/codacy/grade/f241cba192974787b66f7e4368777ebf?logo=codacy&logoColor=grey&label=[Codacy,link="https://www.codacy.com/app/gdamore/nng"]
 image:https://img.shields.io/lgtm/grade/cpp/github/nanomsg/nng?logo=lgtm&logoColor=grey&label=[LGTM,link="https://lgtm.com/projects/g/nanomsg/nng/?mode=list"]
 image:https://img.shields.io/discord/639573728212156478?label=&logo=discord[Discord,link="https://discord.gg/Xnac6b9"]
-image:https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue[]
+image:https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue[Manual,link="https://nng.nanomsg.org/man"]
 image:https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue[MIT License,link="https://github.com/nanomsg/nng/blob/master/LICENSE.txt"]
 image:https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=[Latest version,link="https://github.com/nanomsg/nng/releases]
 //image:https://img.shields.io/circleci/project/github/nanomsg/nng.svg?logo=circleci&logoColor=grey&label=[Linux Status,link="https://circleci.com/gh/nanomsg/nng"]
@@ -96,8 +96,8 @@ concurrent applications vastly simpler than previously possible.
 This project offers both wire compatibility and API compatibility,
 so most nanomsg users can begin using NNG right away.
 
-Existing nanomsg and github.com/go-mangos/mangos[mangos] applications
-can interoperate with NNG applications automatically.
+Existing nanomsg and https://github.com/nanomsg/mangos[mangos] applications
+can inter-operate with NNG applications automatically.
 
 That said, there are some areas where legacy nanomsg still offers
 capabilities NNG lacks -- specifically enhanced observability with
