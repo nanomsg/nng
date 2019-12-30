@@ -5,12 +5,18 @@ NNG - nanomsg-NG
 ================
 :nofooter:
 
-image:https://img.shields.io/badge/license-MIT-blue.svg[MIT License]
-image:https://img.shields.io/travis/nanomsg/nng/master.svg?label=linux[Linux Status,link="https://travis-ci.org/nanomsg/nng"]
-image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?label=windows[Windows Status,link="https://ci.appveyor.com/project/nanomsg/nng"]
-image:https://codecov.io/gh/nanomsg/nng/branch/master/graph/badge.svg?label=coverage[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
+image:https://img.shields.io/github/workflow/status/nanomsg/nng/linux/master?logoColor=grey&logo=ubuntu&label=[Linux Status,link="https://github.com/nanomsg/nng/actions"]
+image:https://img.shields.io/github/workflow/status/nanomsg/nng/windows/master?logoColor=grey&logo=windows&label=[Windows Status,link="https://github.com/nanomsg/nng/actions"]
+image:https://img.shields.io/github/workflow/status/nanomsg/nng/darwin/master?logoColor=grey&logo=apple&label=[macOS Status,link="https://github.com/nanomsg/nng/actions"]
+image:https://img.shields.io/codecov/c/github/nanomsg/nng?logo=codecov&logoColor=grey&label=[Coverage,link="https://codecov.io/gh/nanomsg/nng"]
+image:https://img.shields.io/codacy/grade/f241cba192974787b66f7e4368777ebf?logo=codacy&logoColor=grey&label=[Codacy,link="https://www.codacy.com/app/gdamore/nng"]
+image:https://img.shields.io/lgtm/grade/cpp/github/nanomsg/nng?logo=lgtm&logoColor=grey&label=[LGTM,link="https://lgtm.com/projects/g/nanomsg/nng/?mode=list"]
+image:https://img.shields.io/discord/639573728212156478?label=&logo=discord[Discord,link="https://discord.gg/Xnac6b9"]
+image:https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue[MIT License,link="https://github.com/nanomsg/nng/blob/master/LICENSE.txt"]
+image:https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=[Latest version,link="https://github.com/nanomsg/nng/releases]
 
-This is the documentation for NNG.
+
+This is the landing page for NNG.
 
 The Reference Manual is available for browsing <<man/index#,here>>.
 
@@ -18,7 +24,7 @@ You can also support the development and documentation efforts for
 NNG by purchasing your own copy of the
 http://staysail.tech/books/nng_reference/[NNG Reference Manual].
 
-Here is my <<RATIONALE#,rationale>> for why I made _nng_.
+Here is the <<RATIONALE#,rationale>> behind the creation of _nng_.
 
 My presentation, https://staysail.github.io/nng_presentation/nng_presentation.html[Scalability Protocols], from February 2018, also has some more detail
 about these protocols and NNG in particular.
