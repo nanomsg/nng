@@ -125,6 +125,7 @@ listener_stats_init(nni_listener *l)
 void
 nni_listener_bump_error(nni_listener *l, int err)
 {
+#ifdef NNG_ENABLE_STATS
 	switch (err) {
 	case NNG_ECONNABORTED:
 	case NNG_ECONNRESET:
@@ -150,6 +151,10 @@ nni_listener_bump_error(nni_listener *l, int err)
 		BUMP_STAT(&l->l_stats.s_othererr);
 		break;
 	}
+#else
+	NNI_ARG_UNUSED(l);
+	NNI_ARG_UNUSED(err);
+#endif
 }
 
 int

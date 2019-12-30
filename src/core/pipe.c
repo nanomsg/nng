@@ -351,15 +351,25 @@ nni_pipe_add_stat(nni_pipe *p, nni_stat_item *item)
 void
 nni_pipe_bump_rx(nni_pipe *p, size_t nbytes)
 {
+#ifdef NNG_ENABLE_STATS
 	nni_stat_inc_atomic(&p->p_stats.s_rxbytes, nbytes);
 	nni_stat_inc_atomic(&p->p_stats.s_rxmsgs, 1);
+#else
+	NNI_ARG_UNUSED(p);
+	NNI_ARG_UNUSED(nbytes);
+#endif
 }
 
 void
 nni_pipe_bump_tx(nni_pipe *p, size_t nbytes)
 {
+#ifdef NNG_ENABLE_STATS
 	nni_stat_inc_atomic(&p->p_stats.s_txbytes, nbytes);
 	nni_stat_inc_atomic(&p->p_stats.s_txmsgs, 1);
+#else
+	NNI_ARG_UNUSED(p);
+	NNI_ARG_UNUSED(nbytes);
+#endif
 }
 
 void
