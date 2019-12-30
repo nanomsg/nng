@@ -36,7 +36,7 @@ typedef struct resolv_item resolv_item;
 struct resolv_item {
 	int          family;
 	int          passive;
-	const char * name;
+	char *       name;
 	int          proto;
 	int          socktype;
 	uint16_t     port;
@@ -60,6 +60,7 @@ resolv_cancel(nni_aio *aio, void *arg, int rv)
 		// so we can just discard everything.
 		nni_aio_list_remove(aio);
 		nni_mtx_unlock(&resolv_mtx);
+		nni_strfree(item->name);
 		NNI_FREE_STRUCT(item);
 	} else {
 		// Resolver still working, so just unlink our AIO to
@@ -225,9 +226,16 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 		nni_aio_finish_error(aio, NNG_ENOMEM);
 		return;
 	}
+	if (host == NULL) {
+		item->name = NULL;
+	} else if ((item->name = nni_strdup(host)) == NULL) {
+		nni_aio_finish_error(aio, NNG_ENOMEM);
+		NNI_FREE_STRUCT(item);
+		return;
+	}
+
 	memset(&item->sa, 0, sizeof(item->sa));
 	item->passive  = passive;
-	item->name     = host;
 	item->proto    = proto;
 	item->aio      = aio;
 	item->family   = fam;
@@ -243,6 +251,7 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 	}
 	if (rv != 0) {
 		nni_mtx_unlock(&resolv_mtx);
+		nni_strfree(item->name);
 		NNI_FREE_STRUCT(item);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -301,6 +310,7 @@ resolv_worker(void *notused)
 
 			nni_aio_finish(aio, rv, 0);
 		}
+		nni_strfree(item->name);
 		NNI_FREE_STRUCT(item);
 	}
 	nni_mtx_unlock(&resolv_mtx);
