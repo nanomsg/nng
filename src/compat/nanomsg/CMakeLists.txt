@@ -11,3 +11,5 @@
 set(COMPAT_SOURCES compat/nanomsg/nn.c)
 
 set(NNG_SRCS ${NNG_SRCS} ${COMPAT_SOURCES} PARENT_SCOPE)
+
+nng_test(compat_tcp)

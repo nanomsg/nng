@@ -195,7 +195,6 @@ add_nng_compat_test(compat_survey 10)
 add_nng_compat_test(compat_reqttl 10)
 add_nng_compat_test(compat_shutdown 10)
 add_nng_compat_test(compat_surveyttl 10)
-add_nng_compat_test(compat_tcp 60)
 add_nng_compat_test(compat_ws 60)
 
 # These are special tests for compat mode, not inherited from the

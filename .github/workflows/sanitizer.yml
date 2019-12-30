@@ -24,7 +24,7 @@ jobs:
         run: |
           mkdir build
           cd build
-          cmake -G Ninja -DNNG_SANITIZER=${{ matrix.sanitizer }} -DNNG_ENABLE_TLS=ON -DNNG_TOOLS=OFF ..
+          cmake -G Ninja -DNNG_SANITIZER=${{ matrix.sanitizer }} -DCMAKE_BUILD_TYPE=Debug -DNNG_ENABLE_TLS=ON -DNNG_TOOLS=OFF ..
       - name: Build
         run: |
           cd build
