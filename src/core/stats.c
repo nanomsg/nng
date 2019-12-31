@@ -17,8 +17,8 @@ typedef struct nng_stat nni_stat;
 
 struct nng_stat {
 	char *         s_name;
-	const char *   s_desc;
-	const char *   s_string;
+	char *         s_desc;
+	char *         s_string;
 	uint64_t       s_value;
 	nni_time       s_time;
 	nni_stat_type  s_type;
@@ -182,17 +182,6 @@ nni_stat_set_value(nni_stat_item *stat, uint64_t v)
 }
 
 void
-nni_stat_set_string(nni_stat_item *stat, const char *str)
-{
-#ifdef NNG_ENABLE_STATS
-	stat->si_string = str;
-#else
-	NNI_ARG_UNUSED(stat);
-	NNI_ARG_UNUSED(str);
-#endif
-}
-
-void
 nni_stat_set_lock(nni_stat_item *stat, nni_mtx *mtx)
 {
 #ifdef NNG_ENABLE_STATS
@@ -241,6 +230,8 @@ nng_stats_free(nni_stat *st)
 		nng_stats_free(child);
 	}
 	nni_strfree(st->s_name);
+	nni_strfree(st->s_desc);
+	nni_strfree(st->s_string);
 	NNI_FREE_STRUCT(st);
 #else
 	NNI_ARG_UNUSED(st);
@@ -257,15 +248,21 @@ stat_make_tree(nni_stat_item *item, nni_stat **sp)
 	if ((stat = NNI_ALLOC_STRUCT(stat)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((stat->s_name = nni_strdup(item->si_name)) == NULL) {
-		NNI_FREE_STRUCT(stat);
+	NNI_LIST_INIT(&stat->s_children, nni_stat, s_node);
+
+	if (((stat->s_name = nni_strdup(item->si_name)) == NULL) ||
+	    ((stat->s_desc = nni_strdup(item->si_desc)) == NULL)) {
+		nng_stats_free(stat);
 		return (NNG_ENOMEM);
 	}
-	NNI_LIST_INIT(&stat->s_children, nni_stat, s_node);
+	if ((item->si_type == NNG_STAT_STRING) &&
+	    ((stat->s_string = nni_strdup(item->si_string)) == NULL)) {
+		nng_stats_free(stat);
+		return (NNG_ENOMEM);
+	}
 	stat->s_item   = item;
 	stat->s_type   = item->si_type;
 	stat->s_unit   = item->si_unit;
-	stat->s_desc   = item->si_desc;
 	stat->s_parent = NULL;
 
 	NNI_LIST_FOREACH (&item->si_children, child) {
@@ -300,9 +297,8 @@ stat_update(nni_stat *stat)
 	if (item->si_update != NULL) {
 		item->si_update(item, item->si_private);
 	}
-	stat->s_value  = item->si_number;
-	stat->s_string = item->si_string;
-	stat->s_time   = nni_clock();
+	stat->s_value = item->si_number;
+	stat->s_time  = nni_clock();
 }
 
 static void
@@ -418,6 +414,49 @@ nng_stat_desc(nng_stat *stat)
 	return (stat->s_desc);
 }
 
+nng_stat *
+nng_stat_find(nng_stat *stat, const char *name)
+{
+	nng_stat *child;
+	nng_stat *result;
+	if (stat == NULL) {
+		return (NULL);
+	}
+	if (strcmp(name, stat->s_name) == 0) {
+		return (stat);
+	}
+	NNI_LIST_FOREACH(&stat->s_children, child) {
+		if ((result = nng_stat_find(child, name)) != NULL) {
+			return (result);
+		}
+	}
+	return (NULL);
+}
+
+nng_stat *
+nng_stat_find_socket(nng_stat *stat, nng_socket s)
+{
+	char name[16];
+	(void) snprintf(name, sizeof (name), "socket%d", nng_socket_id(s));
+	return (nng_stat_find(stat, name));
+}
+
+nng_stat *
+nng_stat_find_dialer(nng_stat *stat, nng_dialer d)
+{
+	char name[16];
+	(void) snprintf(name, sizeof (name), "dialer%d", nng_dialer_id(d));
+	return (nng_stat_find(stat, name));
+}
+
+nng_stat *
+nng_stat_find_listener(nng_stat *stat, nng_listener l)
+{
+	char name[16];
+	(void) snprintf(name, sizeof (name), "listener%d", nng_listener_id(l));
+	return (nng_stat_find(stat, name));
+}
+
 int
 nni_stat_sys_init(void)
 {
@@ -427,7 +466,6 @@ nni_stat_sys_init(void)
 	stats_root.si_name = "";
 	stats_root.si_desc = "all statistics";
 #endif
-
 	return (0);
 }
 

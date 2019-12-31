@@ -155,5 +155,6 @@ nng_cv_wake1(nng_cv *cv)
 uint32_t
 nng_random(void)
 {
+	(void) nni_init();
 	return (nni_random());
 }

@@ -240,6 +240,10 @@ to observe program behaviors and as an aid in troubleshooting.
 |===
 |xref:nng_stat_child.3.adoc[nng_stat_child()]|get child statistic
 |xref:nng_stat_desc.3.adoc[nng_stat_name()]|get statistic description
+|xref:nng_stat_find.3.adoc[nng_stat_find()]|find statistic by name
+|xref:nng_stat_find_dialer.3.adoc[nng_stat_find_dialer()]|find dialer statistics
+|xref:nng_stat_find_listener.3.adoc[nng_stat_find_listener()]|find listener statistics
+|xref:nng_stat_find_socket.3.adoc[nng_stat_find_socket()]|find socket statistics
 |xref:nng_stat_name.3.adoc[nng_stat_name()]|get statistic name
 |xref:nng_stat_next.3.adoc[nng_stat_next()]|get next statistic
 |xref:nng_stat_string.3.adoc[nng_stat_string()]|get statistic string value

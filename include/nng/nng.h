@@ -915,7 +915,7 @@ enum nng_flag_enum {
 // This can be useful when a handler supports an entire directory tree.
 #define NNG_OPT_WS_REQUEST_URI "ws:request-uri"
 
-// NNG_OPT_WS_TXFRAMESZ is used to configure the fragmentation size
+// NNG_OPT_WS_SENDMAXFRAME is used to configure the fragmentation size
 // used for frames.  This has a default value of 64k.  Large values
 // are good for throughput, but penalize latency.  They also require
 // additional buffering on the peer.  This value must not be larger
@@ -923,7 +923,7 @@ enum nng_flag_enum {
 // to negotiate this.
 #define NNG_OPT_WS_SENDMAXFRAME "ws:txframe-max"
 
-// NNG_OPT_WS_RXFRAMESZ is the largest frame we will accept.  This should
+// NNG_OPT_WS_RECVMAXFRAME is the largest frame we will accept.  This should
 // probably not be larger than NNG_OPT_RECVMAXSZ. If the sender attempts
 // to send more data than this in a single message, it will be dropped.
 #define NNG_OPT_WS_RECVMAXFRAME "ws:rxframe-max"
@@ -943,7 +943,7 @@ enum nng_flag_enum {
 // nng_stats_get takes a snapshot of the entire set of statistics.
 // While the operation can be somewhat expensive (allocations), it
 // is done in a way that minimizes impact to running operations.
-// Note that the statistics are provided as tree, with parents
+// Note that the statistics are provided as a tree, with parents
 // used for grouping, and with child statistics underneath.  The
 // top stat returned will be of type NNG_STAT_SCOPE with name "".
 // Applications may choose to consider this root scope as "root", if
@@ -973,12 +973,24 @@ NNG_DECL nng_stat *nng_stat_child(nng_stat *);
 NNG_DECL const char *nng_stat_name(nng_stat *);
 
 // nng_stat_type is used to determine the type of the statistic.
-// At present, only NNG_STAT_TYPE_LEVEL and and NNG_STAT_TYPE_COUNTER
-// are defined.  Counters generally increment, and therefore changes in the
-// value over time are likely more interesting than the actual level.  Level
+// Counters generally increment, and therefore changes in the value over
+// time are likely more interesting than the actual level.  Level
 // values reflect some absolute state however, and should be presented to the
 // user as is.
 NNG_DECL int nng_stat_type(nng_stat *);
+
+// nng_stat_find is used to find a specific named statistic within
+// a statistic tree.  NULL is returned if no such statistic exists.
+NNG_DECL nng_stat *nng_stat_find(nng_stat *, const char *);
+
+// nng_stat_find_socket is used to find the stats for the given socket.
+NNG_DECL nng_stat *nng_stat_find_socket(nng_stat *, nng_socket);
+
+// nng_stat_find_dialer is used to find the stats for the given dialer.
+NNG_DECL nng_stat *nng_stat_find_dialer(nng_stat *, nng_dialer);
+
+// nng_stat_find_listener is used to find the stats for the given listener.
+NNG_DECL nng_stat *nng_stat_find_listener(nng_stat *, nng_listener);
 
 enum nng_stat_type_enum {
 	NNG_STAT_SCOPE   = 0, // Stat is for scoping, and carries no value

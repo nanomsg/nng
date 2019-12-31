@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -66,7 +66,6 @@ void nni_stat_register(nni_stat_item *);
 void nni_stat_unregister(nni_stat_item *);
 
 void nni_stat_set_value(nni_stat_item *, uint64_t);
-void nni_stat_set_string(nni_stat_item *, const char *);
 void nni_stat_set_lock(nni_stat_item *, nni_mtx *);
 void nni_stat_set_update(nni_stat_item *, nni_stat_update, void *);
 

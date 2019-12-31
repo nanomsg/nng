@@ -387,6 +387,37 @@ test_req_context_not_pollable(void)
 	TEST_NNG_PASS(nng_close(req));
 }
 
+void
+test_req_validate_peer(void)
+{
+	nng_socket s1, s2;
+	nng_stat * stats;
+	nng_stat * reject;
+	char       addr[64];
+
+	testutil_scratch_addr("inproc", sizeof(addr), addr);
+
+	TEST_NNG_PASS(nng_req0_open(&s1));
+	TEST_NNG_PASS(nng_req0_open(&s2));
+
+	TEST_NNG_PASS(nng_listen(s1, addr, NULL, 0));
+	TEST_NNG_PASS(nng_dial(s2, addr, NULL, NNG_FLAG_NONBLOCK));
+
+	testutil_sleep(100);
+	TEST_NNG_PASS(nng_stats_get(&stats));
+
+	TEST_CHECK(stats != NULL);
+	TEST_CHECK((reject = nng_stat_find_socket(stats, s1)) != NULL);
+	TEST_CHECK((reject = nng_stat_find(reject, "reject")) != NULL);
+
+	TEST_CHECK(nng_stat_type(reject) == NNG_STAT_COUNTER);
+	TEST_CHECK(nng_stat_value(reject) > 0);
+
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(s2));
+	nng_stats_free(stats);
+}
+
 TEST_LIST = {
 	{ "req rep identity", test_req_rep_identity },
 	{ "resend option", test_resend_option },
@@ -398,5 +429,6 @@ TEST_LIST = {
 	{ "req poll writable", test_req_poll_writeable },
 	{ "req poll readable", test_req_poll_readable },
 	{ "req context not pollable", test_req_context_not_pollable },
+	{ "req validate peer", test_req_validate_peer },
 	{ NULL, NULL },
 };

@@ -40,6 +40,11 @@ extern void testutil_sleep(int);
 // testutil_next_port returns a new port number (presumably unique)
 extern uint16_t testutil_next_port(void);
 
+// testutil_scratch_addr makes a scratch address for the given scheme.
+// The address buffer must be supplied, and the size should be at least
+// 64 bytes to ensure no truncation occurs.
+extern void testutil_scratch_addr(const char *, size_t, char *);
+
 // testutil_marry connects two sockets using inproc.  It uses socket
 // pipe hooks to ensure that it does not return before both sockets
 // are fully connected.

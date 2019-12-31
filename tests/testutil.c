@@ -127,12 +127,61 @@ uint32_t
 testutil_htonl(uint32_t in)
 {
 #ifdef NNG_LITTLE_ENDIAN
-	in = ((in >> 24u) & 0xffu) |
-	    ((in >> 8u) & 0xff00u) |
-	    ((in << 8u) & 0xff0000u) |
-	    ((in << 24u) & 0xff000000u);
+	in = ((in >> 24u) & 0xffu) | ((in >> 8u) & 0xff00u) |
+	    ((in << 8u) & 0xff0000u) | ((in << 24u) & 0xff000000u);
 #endif
 	return (in);
+}
+
+void
+testutil_scratch_addr(const char *scheme, size_t sz, char *addr)
+{
+	if (strcmp(scheme, "inproc") == 0) {
+		(void) snprintf(addr, sz, "%s://testutil%04x%04x%04x%04x",
+		    scheme, nng_random(), nng_random(), nng_random(),
+		    nng_random());
+		return;
+	}
+
+	if ((strncmp(scheme, "tcp", 3) == 0) ||
+	    (strncmp(scheme, "tls", 3) == 0)) {
+		(void) snprintf(addr, sz, "%s://127.0.0.1:%u", scheme,
+		    testutil_next_port());
+		return;
+	}
+
+	if (strncmp(scheme, "ws", 2) == 0) {
+		(void) snprintf(addr, sz,
+		    "%s://127.0.0.1:%u/testutil%04x%04x%04x%04x", scheme,
+		    testutil_next_port(), nng_random(), nng_random(),
+		    nng_random(), nng_random());
+		return;
+	}
+
+	if (strncmp(scheme, "ipc", 3) == 0) {
+#ifdef _WIN32
+		// Windows doesn't place IPC names in the filesystem.
+		(void) snprintf(addr, sz, "%s://testutil%04x%04x%04x%04x",
+		    scheme, nng_random(), nng_random(), nng_random(),
+		    nng_random());
+#else
+		char *tmpdir;
+
+		if (((tmpdir = getenv("TMPDIR")) == NULL) &&
+		    ((tmpdir = getenv("TEMP")) == NULL) &&
+		    ((tmpdir = getenv("TMP")) == NULL)) {
+			tmpdir = "/tmp";
+		}
+
+		(void) snprintf(addr, sz, "%s://%s/testutil%04x%04x%04x%04x",
+		    scheme, tmpdir, nng_random(), nng_random(), nng_random(),
+		    nng_random());
+		return;
+#endif
+	}
+
+	// We should not be here.
+	abort();
 }
 
 // testutil_next_port returns a "next" allocation port.
