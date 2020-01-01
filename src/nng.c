@@ -817,7 +817,7 @@ static const struct {
 	{ NNG_ENOARG, "Option requires argument" },
 	{ NNG_EAMBIGUOUS, "Ambiguous option" },
 	{ NNG_EBADTYPE, "Incorrect type" },
-	{ NNG_ECONNSHUT, "Connection shutdown"},
+	{ NNG_ECONNSHUT, "Connection shutdown" },
 	{ NNG_EINTERNAL, "Internal error detected" },
 	{ 0, NULL },
 	// clang-format on
