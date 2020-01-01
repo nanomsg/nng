@@ -626,7 +626,8 @@ nng_setopt(nng_socket s, const char *name, const void *val, size_t sz)
 }
 
 static int
-nni_socket_getx(nng_socket s, const char *name, void *val, size_t *szp, nni_type t)
+nni_socket_getx(
+    nng_socket s, const char *name, void *val, size_t *szp, nni_type t)
 {
 	nni_sock *sock;
 	int       rv;
@@ -816,6 +817,7 @@ static const struct {
 	{ NNG_ENOARG, "Option requires argument" },
 	{ NNG_EAMBIGUOUS, "Ambiguous option" },
 	{ NNG_EBADTYPE, "Incorrect type" },
+	{ NNG_ECONNSHUT, "Connection shutdown" },
 	{ NNG_EINTERNAL, "Internal error detected" },
 	{ 0, NULL },
 	// clang-format on
