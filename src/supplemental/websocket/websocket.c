@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -1012,15 +1012,15 @@ ws_read_cb(void *arg)
 
 	if (frame->hlen == 0) {
 		frame->hlen   = 2;
-		frame->op     = frame->head[0] & 0x7f;
-		frame->final  = (frame->head[0] & 0x80) ? 1 : 0;
-		frame->masked = (frame->head[1] & 0x80) ? 1 : 0;
+		frame->op     = frame->head[0] & 0x7fu;
+		frame->final  = (frame->head[0] & 0x80u) ? 1 : 0;
+		frame->masked = (frame->head[1] & 0x80u) ? 1 : 0;
 		if (frame->masked) {
 			frame->hlen += 4;
 		}
-		if ((frame->head[1] & 0x7F) == 127) {
+		if ((frame->head[1] & 0x7Fu) == 127) {
 			frame->hlen += 8;
-		} else if ((frame->head[1] & 0x7F) == 126) {
+		} else if ((frame->head[1] & 0x7Fu) == 126) {
 			frame->hlen += 2;
 		}
 
@@ -1047,7 +1047,7 @@ ws_read_cb(void *arg)
 	if (frame->buf == NULL) {
 
 		// Determine expected frame size.
-		switch ((frame->len = (frame->head[1] & 0x7F))) {
+		switch ((frame->len = (frame->head[1] & 0x7Fu))) {
 		case 127:
 			NNI_GET64(frame->head + 2, frame->len);
 			if (frame->len < 65536) {

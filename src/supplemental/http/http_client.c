@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -34,9 +34,7 @@ struct nng_http_client {
 static void
 http_dial_start(nni_http_client *c)
 {
-	nni_aio *aio;
-
-	if ((aio = nni_list_first(&c->aios)) == NULL) {
+	if (nni_list_empty(&c->aios)) {
 		return;
 	}
 	nng_stream_dialer_dial(c->dialer, c->aio);

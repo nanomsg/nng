@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -418,7 +418,6 @@ nng_stat *
 nng_stat_find(nng_stat *stat, const char *name)
 {
 	nng_stat *child;
-	nng_stat *result;
 	if (stat == NULL) {
 		return (NULL);
 	}
@@ -426,6 +425,7 @@ nng_stat_find(nng_stat *stat, const char *name)
 		return (stat);
 	}
 	NNI_LIST_FOREACH(&stat->s_children, child) {
+		nng_stat *result;
 		if ((result = nng_stat_find(child, name)) != NULL) {
 			return (result);
 		}

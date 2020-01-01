@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -267,7 +267,6 @@ pair1_pipe_recv_cb(void *arg)
 	nni_msg *   msg;
 	uint32_t    hdr;
 	nni_pipe *  npipe = p->npipe;
-	int         rv;
 	size_t      len;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
@@ -305,7 +304,7 @@ pair1_pipe_recv_cb(void *arg)
 	}
 
 	// Store the hop count in the header.
-	if ((rv = nni_msg_header_append_u32(msg, hdr)) != 0) {
+	if (nni_msg_header_append_u32(msg, hdr) != 0) {
 		// STAT: bump allocfail
 		nni_msg_free(msg);
 		nni_pipe_recv(npipe, p->aio_recv);
