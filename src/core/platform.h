@@ -208,11 +208,8 @@ extern void nni_plat_sleep(nni_duration);
 // Entropy Support
 //
 
-// nni_plat_seed_prng seeds the PRNG subsystem.  The specified number
-// of bytes of entropy should be stashed.  When possible, cryptographic
-// quality entropy sources should be used.  Note that today we prefer
-// to seed up to 256 bytes of data.
-extern void nni_plat_seed_prng(void *, size_t);
+// nni_random returns a cryptographically secure random uint32.
+uint32_t nni_random(void);
 
 // nni_plat_init is called to allow the platform the chance to
 // do any necessary initialization.  This routine MUST be idempotent,

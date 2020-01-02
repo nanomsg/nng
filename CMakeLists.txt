@@ -221,9 +221,6 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Android")
 elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
     add_definitions(-DNNG_PLATFORM_POSIX)
     add_definitions(-DNNG_PLATFORM_DARWIN)
-    # macOS 10.12 and later have getentropy, but the older releases
-    # have ARC4_RANDOM, and that is sufficient to our needs.
-    add_definitions(-DNNG_USE_ARC4RANDOM)
     set(NNG_PLATFORM_POSIX ON)
 
 elseif (CMAKE_SYSTEM_NAME MATCHES "FreeBSD")
@@ -325,7 +322,6 @@ else ()
 
     nng_check_func(lockf NNG_HAVE_LOCKF)
     nng_check_func(flock NNG_HAVE_FLOCK)
-    nng_check_func(getentropy NNG_HAVE_GETENTROPY)
     nng_check_func(getrandom NNG_HAVE_GETRANDOM)
     nng_check_func(arc4random_buf NNG_HAVE_ARC4RANDOM)
 

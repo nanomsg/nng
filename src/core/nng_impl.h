@@ -40,7 +40,6 @@
 #include "core/panic.h"
 #include "core/pollable.h"
 #include "core/protocol.h"
-#include "core/random.h"
 #include "core/reap.h"
 #include "core/stats.h"
 #include "core/stream.h"
