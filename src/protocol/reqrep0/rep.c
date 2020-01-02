@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -502,6 +502,9 @@ rep0_ctx_recv(void *arg, nni_aio *aio)
 		nni_pollable_clear(s->recvable);
 	}
 	nni_pipe_recv(p->pipe, p->aio_recv);
+	if ((ctx == s->ctx) && !p->busy) {
+		nni_pollable_raise(s->sendable);
+	}
 
 	len = nni_msg_header_len(msg);
 	memcpy(ctx->btrace, nni_msg_header(msg), len);
@@ -583,6 +586,9 @@ rep0_pipe_recv_cb(void *arg)
 	aio       = ctx->raio;
 	ctx->raio = NULL;
 	nni_aio_set_msg(p->aio_recv, NULL);
+	if ((ctx == s->ctx) && !p->busy) {
+		nni_pollable_raise(s->sendable);
+	}
 
 	// schedule another receive
 	nni_pipe_recv(p->pipe, p->aio_recv);
@@ -591,13 +597,6 @@ rep0_pipe_recv_cb(void *arg)
 	memcpy(ctx->btrace, nni_msg_header(msg), len);
 	nni_msg_header_clear(msg);
 	ctx->pipe_id = p->id;
-
-	// If we got a request on a pipe that wasn't busy, we should
-	// mark it sendable.  (The sendable flag is not set when there
-	// is no request needing a reply.)
-	if ((ctx == s->ctx) && (!p->busy)) {
-		nni_pollable_raise(s->sendable);
-	}
 
 	nni_mtx_unlock(&s->lk);
 

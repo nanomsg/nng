@@ -55,7 +55,7 @@ extern int testutil_marry(nng_socket, nng_socket);
 #define TEST_NNG_PASS(cond)                                          \
 	do {                                                         \
 		int result_ = (cond);                                \
-		TEST_CHECK_(result_ == 0, "%s succeeds", #cond);                    \
+		TEST_CHECK_(result_ == 0, "%s succeeds", #cond);     \
 		TEST_MSG("%s: expected success, got %s (%d)", #cond, \
 		    nng_strerror(result_), result_);                 \
 	} while (0)
@@ -68,6 +68,21 @@ extern int testutil_marry(nng_socket, nng_socket);
 		TEST_MSG("%s: expected %s (%d), got %s (%d)", #cond,      \
 		    nng_strerror(expect), expect, nng_strerror(result_),  \
 		    result_);                                             \
+	} while (0)
+
+#define TEST_NNG_SEND_STR(sock, string) \
+	TEST_NNG_PASS(nng_send(sock, string, strlen(string) + 1, 0))
+
+#define TEST_NNG_RECV_STR(sock, string)                                    \
+	do {                                                               \
+		char * buf_;                                                \
+		size_t sz_;                                                \
+		int    rv_ = nng_recv(sock, &buf_, &sz_, NNG_FLAG_ALLOC);  \
+		TEST_CHECK_(                                               \
+		    rv_ == 0, "nng_recv (%d %s)", rv_, nng_strerror(rv_)); \
+		TEST_CHECK(sz_ == strlen(string) + 1);                     \
+		TEST_CHECK(strcmp(string, buf_) == 0);                     \
+		nng_free(buf_, sz_);                                       \
 	} while (0)
 
 #ifdef __cplusplus
