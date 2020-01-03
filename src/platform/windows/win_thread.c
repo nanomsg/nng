@@ -196,13 +196,21 @@ nni_atomic_init64(nni_atomic_u64 *v)
 void
 nni_atomic_inc64(nni_atomic_u64 *v)
 {
+#ifdef _WIN64
 	(void) InterlockedIncrementAcquire64(&v->v);
+#else
+	(void) InterlockedIncrement64(&v->v);
+#endif
 }
 
 uint64_t
 nni_atomic_dec64_nv(nni_atomic_u64 *v)
 {
+#ifdef _WIN64
 	return ((uint64_t)(InterlockedDecrementRelease64(&v->v)));
+#else
+	return ((uint64_t)(InterlockedDecrement64(&v->v)));
+#endif
 }
 
 static unsigned int __stdcall nni_plat_thr_main(void *arg)
