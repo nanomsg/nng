@@ -200,7 +200,11 @@ TestMain("HTTP Client", {
 		});
 	});
 
-	Convey("Client times out", {
+	// We are skipping this test for now, because it fails all the time
+	// in the cloud -- it appears that there are caches and proxies that
+	// are unavoidable in the infrastructure.  We will revisit when we
+	// provide our own HTTP test server on localhost.
+	SkipConvey("Client times out", {
 		nng_aio *        aio;
 		nng_http_client *cli;
 		nng_url *        url;
