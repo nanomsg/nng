@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -95,7 +95,7 @@ pipe_destroy(nni_pipe *p)
 	}
 	nni_cv_fini(&p->p_cv);
 	nni_mtx_fini(&p->p_mtx);
-	NNI_FREE_STRUCT(p);
+	nni_free(p, p->p_size);
 }
 
 int
@@ -188,17 +188,21 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	void *              sdata = nni_sock_proto_data(sock);
 	nni_proto_pipe_ops *pops  = nni_sock_proto_pipe_ops(sock);
 	nni_pipe_stats *    st;
+	size_t sz;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
+	sz = NNI_ALIGN_UP(sizeof (*p)) + pops->pipe_size;
+
+	if ((p = nni_zalloc(sz)) == NULL) {
 		// In this case we just toss the pipe...
 		tran->tran_pipe->p_fini(tdata);
 		return (NNG_ENOMEM);
 	}
 
+	p->p_size = sz;
+	p->p_proto_data = p + 1;
 	p->p_tran_ops   = *tran->tran_pipe;
 	p->p_tran_data  = tdata;
 	p->p_proto_ops  = *pops;
-	p->p_proto_data = NULL;
 	p->p_sock       = sock;
 	p->p_closed     = false;
 	p->p_cbs        = false;
@@ -242,7 +246,7 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	nni_stat_add(&st->s_root, &st->s_txbytes);
 
 	if ((rv != 0) || ((rv = p->p_tran_ops.p_init(tdata, p)) != 0) ||
-	    ((rv = pops->pipe_init(&p->p_proto_data, p, sdata)) != 0)) {
+	    ((rv = pops->pipe_init(p->p_proto_data, p, sdata)) != 0)) {
 		nni_pipe_close(p);
 		nni_pipe_rele(p);
 		return (rv);

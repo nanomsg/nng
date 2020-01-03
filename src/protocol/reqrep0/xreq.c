@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,8 +9,6 @@
 //
 
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/reqrep0/req.h"
@@ -53,18 +51,13 @@ static void xreq0_recv_cb(void *);
 static void xreq0_putq_cb(void *);
 
 static int
-xreq0_sock_init(void **sp, nni_sock *sock)
+xreq0_sock_init(void *arg, nni_sock *sock)
 {
-	xreq0_sock *s;
-
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
+	xreq0_sock *s = arg;
 
 	s->ttl = 8;
 	s->uwq = nni_sock_sendq(sock);
 	s->urq = nni_sock_recvq(sock);
-	*sp    = s;
 
 	return (0);
 }
@@ -84,9 +77,7 @@ xreq0_sock_close(void *arg)
 static void
 xreq0_sock_fini(void *arg)
 {
-	xreq0_sock *s = arg;
-
-	NNI_FREE_STRUCT(s);
+	NNI_ARG_UNUSED(arg);
 }
 
 static void
@@ -109,18 +100,14 @@ xreq0_pipe_fini(void *arg)
 	nni_aio_fini(p->aio_putq);
 	nni_aio_fini(p->aio_recv);
 	nni_aio_fini(p->aio_send);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-xreq0_pipe_init(void **pp, nni_pipe *pipe, void *s)
+xreq0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
-	xreq0_pipe *p;
+	xreq0_pipe *p = arg;
 	int         rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (((rv = nni_aio_init(&p->aio_getq, xreq0_getq_cb, p)) != 0) ||
 	    ((rv = nni_aio_init(&p->aio_putq, xreq0_putq_cb, p)) != 0) ||
 	    ((rv = nni_aio_init(&p->aio_recv, xreq0_recv_cb, p)) != 0) ||
@@ -131,7 +118,6 @@ xreq0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 
 	p->pipe = pipe;
 	p->req  = s;
-	*pp     = p;
 	return (0);
 }
 
@@ -282,6 +268,7 @@ xreq0_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static nni_proto_pipe_ops xreq0_pipe_ops = {
+	.pipe_size  = sizeof(xreq0_pipe),
 	.pipe_init  = xreq0_pipe_init,
 	.pipe_fini  = xreq0_pipe_fini,
 	.pipe_start = xreq0_pipe_start,
@@ -302,6 +289,7 @@ static nni_option xreq0_sock_options[] = {
 };
 
 static nni_proto_sock_ops xreq0_sock_ops = {
+	.sock_size    = sizeof(xreq0_sock),
 	.sock_init    = xreq0_sock_init,
 	.sock_fini    = xreq0_sock_fini,
 	.sock_open    = xreq0_sock_open,

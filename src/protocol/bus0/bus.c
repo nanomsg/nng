@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,7 +10,6 @@
 
 #include <stdbool.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/bus0/bus.h"
@@ -71,18 +70,14 @@ bus0_sock_fini(void *arg)
 
 	nni_aio_fini(s->aio_getq);
 	nni_mtx_fini(&s->mtx);
-	NNI_FREE_STRUCT(s);
 }
 
 static int
-bus0_sock_init(void **sp, nni_sock *nsock)
+bus0_sock_init(void *arg, nni_sock *nsock)
 {
-	bus0_sock *s;
+	bus0_sock *s = arg;
 	int        rv;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	NNI_LIST_INIT(&s->pipes, bus0_pipe, node);
 	nni_mtx_init(&s->mtx);
 	if ((rv = nni_aio_init(&s->aio_getq, bus0_sock_getq_cb, s)) != 0) {
@@ -93,19 +88,15 @@ bus0_sock_init(void **sp, nni_sock *nsock)
 	s->urq = nni_sock_recvq(nsock);
 	s->raw = false;
 
-	*sp = s;
 	return (0);
 }
 
 static int
-bus0_sock_init_raw(void **sp, nni_sock *nsock)
+bus0_sock_init_raw(void *arg, nni_sock *nsock)
 {
-	bus0_sock *s;
+	bus0_sock *s = arg;
 	int        rv;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	NNI_LIST_INIT(&s->pipes, bus0_pipe, node);
 	nni_mtx_init(&s->mtx);
 	if ((rv = nni_aio_init(&s->aio_getq, bus0_sock_getq_cb_raw, s)) != 0) {
@@ -116,7 +107,6 @@ bus0_sock_init_raw(void **sp, nni_sock *nsock)
 	s->urq = nni_sock_recvq(nsock);
 	s->raw = true;
 
-	*sp = s;
 	return (0);
 }
 
@@ -158,18 +148,14 @@ bus0_pipe_fini(void *arg)
 	nni_aio_fini(p->aio_putq);
 	nni_msgq_fini(p->sendq);
 	nni_mtx_fini(&p->mtx);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-bus0_pipe_init(void **pp, nni_pipe *npipe, void *s)
+bus0_pipe_init(void *arg, nni_pipe *npipe, void *s)
 {
-	bus0_pipe *p;
+	bus0_pipe *p = arg;
 	int        rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	NNI_LIST_NODE_INIT(&p->node);
 	nni_mtx_init(&p->mtx);
 	if (((rv = nni_msgq_init(&p->sendq, 16)) != 0) ||
@@ -183,7 +169,6 @@ bus0_pipe_init(void **pp, nni_pipe *npipe, void *s)
 
 	p->npipe = npipe;
 	p->psock = s;
-	*pp      = p;
 	return (0);
 }
 
@@ -432,6 +417,7 @@ bus0_sock_recv(void *arg, nni_aio *aio)
 }
 
 static nni_proto_pipe_ops bus0_pipe_ops = {
+	.pipe_size  = sizeof(bus0_pipe),
 	.pipe_init  = bus0_pipe_init,
 	.pipe_fini  = bus0_pipe_fini,
 	.pipe_start = bus0_pipe_start,
@@ -447,6 +433,7 @@ static nni_option bus0_sock_options[] = {
 };
 
 static nni_proto_sock_ops bus0_sock_ops = {
+	.sock_size    = sizeof(bus0_sock),
 	.sock_init    = bus0_sock_init,
 	.sock_fini    = bus0_sock_fini,
 	.sock_open    = bus0_sock_open,
@@ -457,6 +444,7 @@ static nni_proto_sock_ops bus0_sock_ops = {
 };
 
 static nni_proto_sock_ops bus0_sock_ops_raw = {
+	.sock_size    = sizeof(bus0_sock),
 	.sock_init    = bus0_sock_init_raw,
 	.sock_fini    = bus0_sock_fini,
 	.sock_open    = bus0_sock_open,

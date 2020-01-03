@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,7 +9,6 @@
 //
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/pipeline0/pull.h"
@@ -46,25 +45,18 @@ struct pull0_pipe {
 };
 
 static int
-pull0_sock_init(void **sp, nni_sock *sock)
+pull0_sock_init(void *arg, nni_sock *sock)
 {
-	pull0_sock *s;
+	pull0_sock *s = arg;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	s->urq = nni_sock_recvq(sock);
-
-	*sp = s;
 	return (0);
 }
 
 static void
 pull0_sock_fini(void *arg)
 {
-	pull0_sock *s = arg;
-
-	NNI_FREE_STRUCT(s);
+	NNI_ARG_UNUSED(arg);
 }
 
 static void
@@ -83,18 +75,14 @@ pull0_pipe_fini(void *arg)
 
 	nni_aio_fini(p->putq_aio);
 	nni_aio_fini(p->recv_aio);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-pull0_pipe_init(void **pp, nni_pipe *pipe, void *s)
+pull0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
-	pull0_pipe *p;
+	pull0_pipe *p = arg;
 	int         rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (((rv = nni_aio_init(&p->putq_aio, pull0_putq_cb, p)) != 0) ||
 	    ((rv = nni_aio_init(&p->recv_aio, pull0_recv_cb, p)) != 0)) {
 		pull0_pipe_fini(p);
@@ -103,7 +91,6 @@ pull0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 
 	p->pipe = pipe;
 	p->pull = s;
-	*pp     = p;
 	return (0);
 }
 
@@ -209,6 +196,7 @@ pull0_sock_recv(void *arg, nni_aio *aio)
 }
 
 static nni_proto_pipe_ops pull0_pipe_ops = {
+	.pipe_size  = sizeof(pull0_pipe),
 	.pipe_init  = pull0_pipe_init,
 	.pipe_fini  = pull0_pipe_fini,
 	.pipe_start = pull0_pipe_start,
@@ -224,6 +212,7 @@ static nni_option pull0_sock_options[] = {
 };
 
 static nni_proto_sock_ops pull0_sock_ops = {
+	.sock_size    = sizeof(pull0_sock),
 	.sock_init    = pull0_sock_init,
 	.sock_fini    = pull0_sock_fini,
 	.sock_open    = pull0_sock_open,

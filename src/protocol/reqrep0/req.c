@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,7 +10,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/reqrep0/req.h"
@@ -35,7 +34,7 @@ static void req0_ctx_reset(req0_ctx *);
 static void req0_ctx_timeout(void *);
 static void req0_pipe_fini(void *);
 static void req0_ctx_fini(void *);
-static int  req0_ctx_init(void **, void *);
+static int  req0_ctx_init(void *, void *);
 
 // A req0_ctx is a "context" for the request.  It uses most of the
 // socket, but keeps track of its own outstanding replays, the request ID,
@@ -57,24 +56,19 @@ struct req0_ctx {
 
 // A req0_sock is our per-socket protocol private structure.
 struct req0_sock {
-	nni_sock *   nsock;
-	nni_duration retry;
-	bool         closed;
-	int          ttl;
-
-	req0_ctx *ctx; // base socket ctx
-
-	nni_list readypipes;
-	nni_list busypipes;
-	nni_list stoppipes;
-	nni_list ctxs;
-
+	nni_duration  retry;
+	bool          closed;
+	int           ttl;
+	req0_ctx      ctx; // base socket ctx
+	nni_list      readypipes;
+	nni_list      busypipes;
+	nni_list      stoppipes;
+	nni_list      ctxs;
 	nni_list      sendq;  // contexts waiting to send.
 	nni_idhash *  reqids; // contexts by request ID
 	nni_pollable *recvable;
 	nni_pollable *sendable;
-
-	nni_mtx mtx;
+	nni_mtx       mtx;
 };
 
 // A req0_pipe is our per-pipe protocol private structure.
@@ -93,16 +87,14 @@ static void req0_send_cb(void *);
 static void req0_recv_cb(void *);
 
 static int
-req0_sock_init(void **sp, nni_sock *sock)
+req0_sock_init(void *arg, nni_sock *sock)
 {
-	req0_sock *s;
+	req0_sock *s = arg;
 	int        rv;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
+	NNI_ARG_UNUSED(sock);
+
 	if ((rv = nni_idhash_init(&s->reqids)) != 0) {
-		NNI_FREE_STRUCT(s);
 		return (rv);
 	}
 
@@ -121,13 +113,10 @@ req0_sock_init(void **sp, nni_sock *sock)
 	NNI_LIST_INIT(&s->ctxs, req0_ctx, snode);
 
 	// this is "semi random" start for request IDs.
-	s->nsock = sock;
 	s->retry = NNI_SECOND * 60;
 
-	if ((rv = req0_ctx_init((void **) &s->ctx, s)) != 0) {
-		req0_sock_fini(s);
-		return (rv);
-	}
+	(void) req0_ctx_init(&s->ctx, s);
+
 	if (((rv = nni_pollable_alloc(&s->sendable)) != 0) ||
 	    ((rv = nni_pollable_alloc(&s->recvable)) != 0)) {
 		req0_sock_fini(s);
@@ -135,8 +124,6 @@ req0_sock_init(void **sp, nni_sock *sock)
 	}
 
 	s->ttl = 8;
-	*sp    = s;
-
 	return (0);
 }
 
@@ -174,14 +161,12 @@ req0_sock_fini(void *arg)
 	NNI_ASSERT(nni_list_empty(&s->stoppipes));
 	NNI_ASSERT(nni_list_empty(&s->readypipes));
 	nni_mtx_unlock(&s->mtx);
-	if (s->ctx) {
-		req0_ctx_fini(s->ctx);
-	}
+
+	req0_ctx_fini(&s->ctx);
 	nni_pollable_free(s->recvable);
 	nni_pollable_free(s->sendable);
 	nni_idhash_fini(s->reqids);
 	nni_mtx_fini(&s->mtx);
-	NNI_FREE_STRUCT(s);
 }
 
 static void
@@ -204,18 +189,14 @@ req0_pipe_fini(void *arg)
 
 	nni_aio_fini(p->aio_recv);
 	nni_aio_fini(p->aio_send);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-req0_pipe_init(void **pp, nni_pipe *pipe, void *s)
+req0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
-	req0_pipe *p;
+	req0_pipe *p = arg;
 	int        rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (((rv = nni_aio_init(&p->aio_recv, req0_recv_cb, p)) != 0) ||
 	    ((rv = nni_aio_init(&p->aio_send, req0_send_cb, p)) != 0)) {
 		req0_pipe_fini(p);
@@ -226,7 +207,6 @@ req0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 	NNI_LIST_INIT(&p->ctxs, req0_ctx, pnode);
 	p->pipe = pipe;
 	p->req  = s;
-	*pp     = p;
 	return (0);
 }
 
@@ -398,7 +378,7 @@ req0_recv_cb(void *arg)
 	} else {
 		// No AIO, so stash msg.  Receive will pick it up later.
 		ctx->repmsg = msg;
-		if (ctx == s->ctx) {
+		if (ctx == &s->ctx) {
 			nni_pollable_raise(s->recvable);
 		}
 		nni_mtx_unlock(&s->mtx);
@@ -427,14 +407,10 @@ req0_ctx_timeout(void *arg)
 }
 
 static int
-req0_ctx_init(void **cpp, void *sarg)
+req0_ctx_init(void *carg, void *sarg)
 {
-	req0_sock *s = sarg;
-	req0_ctx * ctx;
-
-	if ((ctx = NNI_ALLOC_STRUCT(ctx)) == NULL) {
-		return (NNG_ENOMEM);
-	}
+	req0_sock *s   = sarg;
+	req0_ctx * ctx = carg;
 
 	nni_timer_init(&ctx->timer, req0_ctx_timeout, ctx);
 
@@ -445,7 +421,6 @@ req0_ctx_init(void **cpp, void *sarg)
 	nni_list_append(&s->ctxs, ctx);
 	nni_mtx_unlock(&s->mtx);
 
-	*cpp = ctx;
 	return (0);
 }
 
@@ -473,8 +448,6 @@ req0_ctx_fini(void *arg)
 
 	nni_timer_cancel(&ctx->timer);
 	nni_timer_fini(&ctx->timer);
-
-	NNI_FREE_STRUCT(ctx);
 }
 
 static int
@@ -547,7 +520,7 @@ req0_run_sendq(req0_sock *s, nni_list *aiolist)
 			} else {
 				nni_aio_finish(aio, 0, 0);
 			}
-			if (ctx == s->ctx) {
+			if (ctx == &s->ctx) {
 				if (nni_list_empty(&s->readypipes)) {
 					nni_pollable_clear(s->sendable);
 				} else {
@@ -662,7 +635,7 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 
 	// We have got a message to pass up, yay!
 	nni_aio_set_msg(aio, msg);
-	if (ctx == s->ctx) {
+	if (ctx == &s->ctx) {
 		nni_pollable_clear(s->recvable);
 	}
 	nni_mtx_unlock(&s->mtx);
@@ -779,14 +752,14 @@ static void
 req0_sock_send(void *arg, nni_aio *aio)
 {
 	req0_sock *s = arg;
-	req0_ctx_send(s->ctx, aio);
+	req0_ctx_send(&s->ctx, aio);
 }
 
 static void
 req0_sock_recv(void *arg, nni_aio *aio)
 {
 	req0_sock *s = arg;
-	req0_ctx_recv(s->ctx, aio);
+	req0_ctx_recv(&s->ctx, aio);
 }
 
 static int
@@ -808,8 +781,8 @@ req0_sock_set_resendtime(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	req0_sock *s = arg;
 	int        rv;
-	rv       = req0_ctx_set_resendtime(s->ctx, buf, sz, t);
-	s->retry = s->ctx->retry;
+	rv       = req0_ctx_set_resendtime(&s->ctx, buf, sz, t);
+	s->retry = s->ctx.retry;
 	return (rv);
 }
 
@@ -817,7 +790,7 @@ static int
 req0_sock_get_resendtime(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	req0_sock *s = arg;
-	return (req0_ctx_get_resendtime(s->ctx, buf, szp, t));
+	return (req0_ctx_get_resendtime(&s->ctx, buf, szp, t));
 }
 
 static int
@@ -848,6 +821,7 @@ req0_sock_get_recvfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 }
 
 static nni_proto_pipe_ops req0_pipe_ops = {
+	.pipe_size  = sizeof(req0_pipe),
 	.pipe_init  = req0_pipe_init,
 	.pipe_fini  = req0_pipe_fini,
 	.pipe_start = req0_pipe_start,
@@ -867,6 +841,7 @@ static nni_option req0_ctx_options[] = {
 };
 
 static nni_proto_ctx_ops req0_ctx_ops = {
+	.ctx_size    = sizeof(req0_ctx),
 	.ctx_init    = req0_ctx_init,
 	.ctx_fini    = req0_ctx_fini,
 	.ctx_recv    = req0_ctx_recv,
@@ -900,6 +875,7 @@ static nni_option req0_sock_options[] = {
 };
 
 static nni_proto_sock_ops req0_sock_ops = {
+	.sock_size    = sizeof(req0_sock),
 	.sock_init    = req0_sock_init,
 	.sock_fini    = req0_sock_fini,
 	.sock_open    = req0_sock_open,

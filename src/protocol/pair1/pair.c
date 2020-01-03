@@ -9,7 +9,6 @@
 //
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/pair1/pair.h"
@@ -73,21 +72,15 @@ pair1_sock_fini(void *arg)
 	nni_aio_fini(s->aio_getq);
 	nni_idhash_fini(s->pipes);
 	nni_mtx_fini(&s->mtx);
-
-	NNI_FREE_STRUCT(s);
 }
 
 static int
-pair1_sock_init_impl(void **sp, nni_sock *nsock, bool raw)
+pair1_sock_init_impl(void *arg, nni_sock *nsock, bool raw)
 {
-	pair1_sock *s;
+	pair1_sock *s = arg;
 	int         rv;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	if ((rv = nni_idhash_init(&s->pipes)) != 0) {
-		NNI_FREE_STRUCT(s);
+	if (nni_idhash_init(&s->pipes) != 0) {
 		return (NNG_ENOMEM);
 	}
 	NNI_LIST_INIT(&s->plist, pair1_pipe, node);
@@ -122,21 +115,20 @@ pair1_sock_init_impl(void **sp, nni_sock *nsock, bool raw)
 	s->uwq   = nni_sock_sendq(nsock);
 	s->urq   = nni_sock_recvq(nsock);
 	s->ttl   = 8;
-	*sp      = s;
 
 	return (0);
 }
 
 static int
-pair1_sock_init(void **sp, nni_sock *nsock)
+pair1_sock_init(void *arg, nni_sock *nsock)
 {
-	return (pair1_sock_init_impl(sp, nsock, false));
+	return (pair1_sock_init_impl(arg, nsock, false));
 }
 
 static int
-pair1_sock_init_raw(void **sp, nni_sock *nsock)
+pair1_sock_init_raw(void *arg, nni_sock *nsock)
 {
-	return (pair1_sock_init_impl(sp, nsock, true));
+	return (pair1_sock_init_impl(arg, nsock, true));
 }
 
 static void
@@ -160,18 +152,14 @@ pair1_pipe_fini(void *arg)
 	nni_aio_fini(p->aio_putq);
 	nni_aio_fini(p->aio_getq);
 	nni_msgq_fini(p->sendq);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-pair1_pipe_init(void **pp, nni_pipe *npipe, void *psock)
+pair1_pipe_init(void *arg, nni_pipe *npipe, void *psock)
 {
-	pair1_pipe *p;
+	pair1_pipe *p = arg;
 	int         rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (((rv = nni_msgq_init(&p->sendq, 2)) != 0) ||
 	    ((rv = nni_aio_init(&p->aio_send, pair1_pipe_send_cb, p)) != 0) ||
 	    ((rv = nni_aio_init(&p->aio_recv, pair1_pipe_recv_cb, p)) != 0) ||
@@ -183,7 +171,6 @@ pair1_pipe_init(void **pp, nni_pipe *npipe, void *psock)
 
 	p->npipe = npipe;
 	p->psock = psock;
-	*pp      = p;
 
 	return (rv);
 }
@@ -512,6 +499,7 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 }
 
 static nni_proto_pipe_ops pair1_pipe_ops = {
+	.pipe_size  = sizeof(pair1_pipe),
 	.pipe_init  = pair1_pipe_init,
 	.pipe_fini  = pair1_pipe_fini,
 	.pipe_start = pair1_pipe_start,
@@ -537,6 +525,7 @@ static nni_option pair1_sock_options[] = {
 };
 
 static nni_proto_sock_ops pair1_sock_ops = {
+	.sock_size    = sizeof(pair1_sock),
 	.sock_init    = pair1_sock_init,
 	.sock_fini    = pair1_sock_fini,
 	.sock_open    = pair1_sock_open,
@@ -562,6 +551,7 @@ nng_pair1_open(nng_socket *sidp)
 }
 
 static nni_proto_sock_ops pair1_sock_ops_raw = {
+	.sock_size    = sizeof(pair1_sock),
 	.sock_init    = pair1_sock_init_raw,
 	.sock_fini    = pair1_sock_fini,
 	.sock_open    = pair1_sock_open,

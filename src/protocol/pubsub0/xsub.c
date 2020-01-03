@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,7 +9,6 @@
 //
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/pubsub0/sub.h"
@@ -46,17 +45,11 @@ struct xsub0_pipe {
 };
 
 static int
-xsub0_sock_init(void **sp, nni_sock *sock)
+xsub0_sock_init(void *arg, nni_sock *sock)
 {
-	xsub0_sock *s;
-
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	nni_mtx_init(&s->lk);
+	xsub0_sock *s = arg;
 
 	s->urq = nni_sock_recvq(sock);
-	*sp    = s;
 	return (0);
 }
 
@@ -65,7 +58,6 @@ xsub0_sock_fini(void *arg)
 {
 	xsub0_sock *s = arg;
 	nni_mtx_fini(&s->lk);
-	NNI_FREE_STRUCT(s);
 }
 
 static void
@@ -94,18 +86,14 @@ xsub0_pipe_fini(void *arg)
 	xsub0_pipe *p = arg;
 
 	nni_aio_fini(p->aio_recv);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-xsub0_pipe_init(void **pp, nni_pipe *pipe, void *s)
+xsub0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
-	xsub0_pipe *p;
+	xsub0_pipe *p = arg;
 	int         rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if ((rv = nni_aio_init(&p->aio_recv, xsub0_recv_cb, p)) != 0) {
 		xsub0_pipe_fini(p);
 		return (rv);
@@ -113,7 +101,6 @@ xsub0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 
 	p->pipe = pipe;
 	p->sub  = s;
-	*pp     = p;
 	return (0);
 }
 
@@ -190,6 +177,7 @@ xsub0_sock_recv(void *arg, nni_aio *aio)
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
 static nni_proto_pipe_ops xsub0_pipe_ops = {
+	.pipe_size  = sizeof(xsub0_pipe),
 	.pipe_init  = xsub0_pipe_init,
 	.pipe_fini  = xsub0_pipe_fini,
 	.pipe_start = xsub0_pipe_start,
@@ -205,6 +193,7 @@ static nni_option xsub0_sock_options[] = {
 };
 
 static nni_proto_sock_ops xsub0_sock_ops = {
+	.sock_size    = sizeof(xsub0_sock),
 	.sock_init    = xsub0_sock_init,
 	.sock_fini    = xsub0_sock_fini,
 	.sock_open    = xsub0_sock_open,

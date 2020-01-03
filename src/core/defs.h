@@ -134,6 +134,12 @@ typedef struct {
 // This increments a pointer a fixed number of byte cells.
 #define NNI_INCPTR(ptr, n) ((ptr) = (void *) ((char *) (ptr) + (n)))
 
+// Alignment -- this is used when allocating adjacent objects to ensure
+// that each object begins on a natural alignment boundary.
+#define NNI_ALIGN_SIZE sizeof(void *)
+#define NNI_ALIGN_MASK (NNI_ALIGN_SIZE - 1)
+#define NNI_ALIGN_UP(sz) (((sz) + NNI_ALIGN_MASK) & ~NNI_ALIGN_MASK)
+
 // A few assorted other items.
 #define NNI_FLAG_IPV4ONLY 1
 
