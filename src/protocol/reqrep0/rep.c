@@ -36,15 +36,14 @@ static void rep0_pipe_fini(void *);
 
 struct rep0_ctx {
 	rep0_sock *   sock;
-	char *        btrace;
 	size_t        btrace_len;
-	size_t        btrace_size;
 	uint32_t      pipe_id;
 	rep0_pipe *   spipe; // send pipe
 	nni_aio *     saio;  // send aio
 	nni_aio *     raio;  // recv aio
 	nni_list_node sqnode;
 	nni_list_node rqnode;
+	uint32_t      btrace[256]; // backtrace buffer
 };
 
 // rep0_sock is our per-socket protocol private structure.
@@ -100,7 +99,6 @@ rep0_ctx_fini(void *arg)
 	rep0_ctx *ctx = arg;
 
 	rep0_ctx_close(ctx);
-	nni_free(ctx->btrace, ctx->btrace_size);
 	NNI_FREE_STRUCT(ctx);
 }
 
@@ -114,12 +112,6 @@ rep0_ctx_init(void **ctxp, void *sarg)
 		return (NNG_ENOMEM);
 	}
 
-	// this is 1kB, which covers the worst case.
-	ctx->btrace_size = 256 * sizeof(uint32_t);
-	if ((ctx->btrace = nni_alloc(ctx->btrace_size)) == NULL) {
-		NNI_FREE_STRUCT(ctx);
-		return (NNG_ENOMEM);
-	}
 	NNI_LIST_NODE_INIT(&ctx->sqnode);
 	NNI_LIST_NODE_INIT(&ctx->rqnode);
 	ctx->btrace_len = 0;
@@ -541,7 +533,7 @@ rep0_pipe_recv_cb(void *arg)
 	// Move backtrace from body to header
 	hops = 1;
 	for (;;) {
-		bool end = false;
+		bool end;
 
 		if (hops > s->ttl) {
 			// This isn't malformed, but it has gone
@@ -559,7 +551,7 @@ rep0_pipe_recv_cb(void *arg)
 			return;
 		}
 		body = nni_msg_body(msg);
-		end  = ((body[0] & 0x80) != 0);
+		end  = ((body[0] & 0x80u) != 0);
 		if (nni_msg_header_append(msg, body, 4) != 0) {
 			// Out of memory, so drop it.
 			goto drop;

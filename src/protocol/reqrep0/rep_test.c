@@ -176,6 +176,126 @@ test_rep_validate_peer(void)
 	nng_stats_free(stats);
 }
 
+void
+test_rep_double_recv(void)
+{
+	nng_socket s1;
+	nng_aio *  aio1;
+	nng_aio *  aio2;
+
+	TEST_NNG_PASS(nng_rep0_open(&s1));
+	TEST_NNG_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	TEST_NNG_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+
+	nng_recv_aio(s1, aio1);
+	nng_recv_aio(s1, aio2);
+
+	nng_aio_wait(aio2);
+	TEST_NNG_FAIL(nng_aio_result(aio2), NNG_ESTATE);
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_FAIL(nng_aio_result(aio1), NNG_ECLOSED);
+	nng_aio_free(aio1);
+	nng_aio_free(aio2);
+}
+
+void
+test_rep_close_pipe_before_send(void)
+{
+	nng_socket rep;
+	nng_socket req;
+	nng_pipe   p;
+	nng_aio *  aio1;
+	nng_msg *  m;
+
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+
+	TEST_NNG_PASS(testutil_marry(req, rep));
+	TEST_NNG_SEND_STR(req, "test");
+
+	nng_recv_aio(rep, aio1);
+	nng_aio_wait(aio1);
+	TEST_NNG_PASS(nng_aio_result(aio1));
+	TEST_CHECK((m = nng_aio_get_msg(aio1)) != NULL);
+	p = nng_msg_get_pipe(m);
+	TEST_NNG_PASS(nng_pipe_close(p));
+	TEST_NNG_PASS(nng_sendmsg(rep, m, 0));
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+	nng_aio_free(aio1);
+}
+
+void
+test_rep_close_pipe_during_send(void)
+{
+	nng_socket rep;
+	nng_socket req;
+	nng_pipe   p = NNG_PIPE_INITIALIZER;
+	nng_msg *  m;
+
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_req0_open_raw(&req));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 200));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_SENDBUF, 20));
+	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_RECVBUF, 20));
+	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_SENDBUF, 20));
+	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_RECVBUF, 1));
+
+	TEST_NNG_PASS(testutil_marry(req, rep));
+
+	for (int i = 0; i < 100; i++) {
+		int rv;
+		TEST_NNG_PASS(nng_msg_alloc(&m, 4));
+		TEST_NNG_PASS(
+		    nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
+		TEST_NNG_PASS(nng_sendmsg(req, m, 0));
+		TEST_NNG_PASS(nng_recvmsg(rep, &m, 0));
+		p  = nng_msg_get_pipe(m);
+		rv = nng_sendmsg(rep, m, 0);
+		if (rv == NNG_ETIMEDOUT) {
+			// Queue is backed up, senders are busy.
+			nng_msg_free(m);
+			break;
+		}
+		TEST_NNG_PASS(rv);
+	}
+	TEST_NNG_PASS(nng_pipe_close(p));
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+}
+
+void
+test_rep_recv_garbage(void)
+{
+	nng_socket rep;
+	nng_socket req;
+	nng_msg *  m;
+
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_req0_open_raw(&req));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 200));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 200));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+
+	TEST_NNG_PASS(testutil_marry(req, rep));
+
+	TEST_NNG_PASS(nng_msg_alloc(&m, 4));
+	TEST_NNG_PASS(nng_msg_append_u32(m, 1u));
+	TEST_NNG_PASS(nng_sendmsg(req, m, 0));
+	TEST_NNG_FAIL(nng_recvmsg(rep, &m, 0), NNG_ETIMEDOUT);
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+}
+
 TEST_LIST = {
 	{ "rep identity", test_rep_identity },
 	{ "rep send bad state", test_rep_send_bad_state },
@@ -183,5 +303,9 @@ TEST_LIST = {
 	{ "rep poll writable", test_rep_poll_writeable },
 	{ "rep context not pollable", test_rep_context_not_pollable },
 	{ "rep validate peer", test_rep_validate_peer },
+	{ "rep double recv", test_rep_double_recv },
+	{ "rep close pipe before send", test_rep_close_pipe_before_send },
+	{ "rep close pipe during send", test_rep_close_pipe_during_send },
+	{ "rep recv garbage", test_rep_recv_garbage },
 	{ NULL, NULL },
 };
