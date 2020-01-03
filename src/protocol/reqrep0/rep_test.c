@@ -273,6 +273,124 @@ test_rep_close_pipe_during_send(void)
 }
 
 void
+test_rep_close_pipe_context_send(void)
+{
+	nng_socket rep;
+	nng_socket req;
+	nng_pipe   p = NNG_PIPE_INITIALIZER;
+	nng_msg *  m;
+	nng_ctx    ctx[100];
+	nng_aio *  aio[100];
+	int        i;
+
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_req0_open_raw(&req));
+	for (i = 0; i < 100; i++) {
+		TEST_NNG_PASS(nng_ctx_open(&ctx[i], rep));
+		TEST_NNG_PASS(nng_aio_alloc(&aio[i], NULL, NULL));
+	}
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_SENDBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_RECVBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_SENDBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_RECVBUF, 1));
+
+	TEST_NNG_PASS(testutil_marry(req, rep));
+
+	for (i = 0; i < 100; i++) {
+		TEST_NNG_PASS(nng_msg_alloc(&m, 4));
+		TEST_NNG_PASS(
+		    nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
+		TEST_NNG_PASS(nng_sendmsg(req, m, 0));
+		nng_ctx_recv(ctx[i], aio[i]);
+	}
+	for (i = 0; i < 100; i++) {
+		nng_aio_wait(aio[i]);
+		TEST_NNG_PASS(nng_aio_result(aio[i]));
+		TEST_CHECK((m = nng_aio_get_msg(aio[i])) != NULL);
+		p = nng_msg_get_pipe(m);
+		nng_aio_set_msg(aio[i], m);
+		nng_ctx_send(ctx[i], aio[i]);
+	}
+
+	// Note that REQ socket is not reading the results.
+	TEST_NNG_PASS(nng_pipe_close(p));
+
+	for (i = 0; i < 100; i++) {
+		int rv;
+		nng_aio_wait(aio[i]);
+		rv = nng_aio_result(aio[i]);
+		if (rv != 0) {
+			TEST_NNG_FAIL(rv, NNG_ECLOSED);
+			nng_msg_free(nng_aio_get_msg(aio[i]));
+		}
+		nng_aio_free(aio[i]);
+		TEST_NNG_PASS(nng_ctx_close(ctx[i]));
+	}
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+}
+
+void
+test_rep_close_context_send(void)
+{
+	nng_socket rep;
+	nng_socket req;
+	nng_msg *  m;
+	nng_ctx    ctx[100];
+	nng_aio *  aio[100];
+	int        i;
+
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_req0_open_raw(&req));
+	for (i = 0; i < 100; i++) {
+		TEST_NNG_PASS(nng_ctx_open(&ctx[i], rep));
+		TEST_NNG_PASS(nng_aio_alloc(&aio[i], NULL, NULL));
+	}
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_SENDBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_RECVBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_SENDBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_RECVBUF, 1));
+
+	TEST_NNG_PASS(testutil_marry(req, rep));
+
+	for (i = 0; i < 100; i++) {
+		TEST_NNG_PASS(nng_msg_alloc(&m, 4));
+		TEST_NNG_PASS(
+		    nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
+		TEST_NNG_PASS(nng_sendmsg(req, m, 0));
+		nng_ctx_recv(ctx[i], aio[i]);
+	}
+	for (i = 0; i < 100; i++) {
+		nng_aio_wait(aio[i]);
+		TEST_NNG_PASS(nng_aio_result(aio[i]));
+		TEST_CHECK((m = nng_aio_get_msg(aio[i])) != NULL);
+		nng_aio_set_msg(aio[i], m);
+		nng_ctx_send(ctx[i], aio[i]);
+	}
+
+	// Note that REQ socket is not reading the results.
+	for (i = 0; i < 100; i++) {
+		int rv;
+		TEST_NNG_PASS(nng_ctx_close(ctx[i]));
+		nng_aio_wait(aio[i]);
+		rv = nng_aio_result(aio[i]);
+		if (rv != 0) {
+			TEST_NNG_FAIL(rv, NNG_ECLOSED);
+			nng_msg_free(nng_aio_get_msg(aio[i]));
+		}
+		nng_aio_free(aio[i]);
+	}
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+}
+
+void
 test_rep_recv_garbage(void)
 {
 	nng_socket rep;
@@ -306,6 +424,8 @@ TEST_LIST = {
 	{ "rep double recv", test_rep_double_recv },
 	{ "rep close pipe before send", test_rep_close_pipe_before_send },
 	{ "rep close pipe during send", test_rep_close_pipe_during_send },
+	{ "rep close pipe context send", test_rep_close_pipe_context_send },
+	{ "rep close context send", test_rep_close_context_send },
 	{ "rep recv garbage", test_rep_recv_garbage },
 	{ NULL, NULL },
 };
