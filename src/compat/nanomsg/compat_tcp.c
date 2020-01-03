@@ -169,6 +169,8 @@ test_batch(void)
 	int      sb, sc;
 	char     addr[32];
 	uint16_t port = testutil_next_port();
+	int      opt;
+	size_t   sz;
 	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
 
 	TEST_CHECK((sb = nn_socket(AF_SP, NN_PAIR)) >= 0);
@@ -176,15 +178,23 @@ test_batch(void)
 	TEST_CHECK(sb != sc);
 	TEST_CHECK(nn_bind(sb, addr) >= 0);
 	TEST_CHECK(nn_connect(sc, addr) >= 0);
+	opt = 1000;
+	sz  = sizeof(opt);
+	TEST_NN_PASS(nn_setsockopt(sb, NN_SOL_SOCKET, NN_RCVTIMEO, &opt, sz));
+	TEST_NN_PASS(nn_setsockopt(sb, NN_SOL_SOCKET, NN_SNDTIMEO, &opt, sz));
+	TEST_NN_PASS(nn_setsockopt(sc, NN_SOL_SOCKET, NN_RCVTIMEO, &opt, sz));
+	TEST_NN_PASS(nn_setsockopt(sc, NN_SOL_SOCKET, NN_SNDTIMEO, &opt, sz));
 
 	testutil_sleep(200);
 
+	// We can send 10 of these, because TCP buffers a reasonable amount.
+	// Pushing say 100 of them may run into TCP buffering limitations.
 #define DIGITS "0123456789012345678901234567890123456789"
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 10; i++) {
 		TEST_NN_PASS(nn_send(sc, DIGITS, strlen(DIGITS) + 1, 0));
 	}
 
-	for (int i = 0; i < 100; i++) {
+	for (int i = 0; i < 10; i++) {
 		char buf[64];
 		int  n;
 		TEST_NN_PASS(n = nn_recv(sb, buf, sizeof(buf), 0));
@@ -254,7 +264,7 @@ test_max_recv_size(void)
 	TEST_CHECK((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK(sb != sc);
 	opt = 100;
-	sz = sizeof (opt);
+	sz  = sizeof(opt);
 	TEST_NN_PASS(nn_setsockopt(sb, NN_SOL_SOCKET, NN_RCVTIMEO, &opt, sz));
 
 	/*  Test that NN_RCVMAXSIZE can be -1, but not lower */
