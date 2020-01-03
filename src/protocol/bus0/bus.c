@@ -68,7 +68,7 @@ bus0_sock_fini(void *arg)
 {
 	bus0_sock *s = arg;
 
-	nni_aio_fini(s->aio_getq);
+	nni_aio_free(s->aio_getq);
 	nni_mtx_fini(&s->mtx);
 }
 
@@ -80,7 +80,7 @@ bus0_sock_init(void *arg, nni_sock *nsock)
 
 	NNI_LIST_INIT(&s->pipes, bus0_pipe, node);
 	nni_mtx_init(&s->mtx);
-	if ((rv = nni_aio_init(&s->aio_getq, bus0_sock_getq_cb, s)) != 0) {
+	if ((rv = nni_aio_alloc(&s->aio_getq, bus0_sock_getq_cb, s)) != 0) {
 		bus0_sock_fini(s);
 		return (rv);
 	}
@@ -99,7 +99,7 @@ bus0_sock_init_raw(void *arg, nni_sock *nsock)
 
 	NNI_LIST_INIT(&s->pipes, bus0_pipe, node);
 	nni_mtx_init(&s->mtx);
-	if ((rv = nni_aio_init(&s->aio_getq, bus0_sock_getq_cb_raw, s)) != 0) {
+	if ((rv = nni_aio_alloc(&s->aio_getq, bus0_sock_getq_cb_raw, s)) != 0) {
 		bus0_sock_fini(s);
 		return (rv);
 	}
@@ -142,10 +142,10 @@ bus0_pipe_fini(void *arg)
 {
 	bus0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_getq);
-	nni_aio_fini(p->aio_send);
-	nni_aio_fini(p->aio_recv);
-	nni_aio_fini(p->aio_putq);
+	nni_aio_free(p->aio_getq);
+	nni_aio_free(p->aio_send);
+	nni_aio_free(p->aio_recv);
+	nni_aio_free(p->aio_putq);
 	nni_msgq_fini(p->sendq);
 	nni_mtx_fini(&p->mtx);
 }
@@ -159,10 +159,10 @@ bus0_pipe_init(void *arg, nni_pipe *npipe, void *s)
 	NNI_LIST_NODE_INIT(&p->node);
 	nni_mtx_init(&p->mtx);
 	if (((rv = nni_msgq_init(&p->sendq, 16)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, bus0_pipe_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, bus0_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, bus0_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, bus0_pipe_putq_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->aio_getq, bus0_pipe_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_send, bus0_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_recv, bus0_pipe_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_putq, bus0_pipe_putq_cb, p)) != 0)) {
 		bus0_pipe_fini(p);
 		return (rv);
 	}

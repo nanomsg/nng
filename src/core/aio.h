@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -18,23 +18,23 @@
 
 typedef void (*nni_aio_cancelfn)(nni_aio *, void *, int);
 
-// nni_aio_init initializes an aio object.  The callback is called with
+// nni_aio_alloc initializes an aio object.  The callback is called with
 // the supplied argument when the operation is complete.  If NULL is
 // supplied for the callback, then nni_aio_wake is used in its place,
 // and the aio is used for the argument.
-extern int nni_aio_init(nni_aio **, nni_cb, void *);
+extern int nni_aio_alloc(nni_aio **aiop, nni_cb, void *arg);
 
-// nni_aio_fini finalizes the aio, releasing resources (locks)
+// nni_aio_free finalizes the aio, releasing resources (locks)
 // associated with it.  The caller is responsible for ensuring that any
 // associated I/O is unscheduled or complete.  This is safe to call
 // on zero'd memory.
-extern void nni_aio_fini(nni_aio *);
+extern void nni_aio_free(nni_aio *aio);
 
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,
 // but also prevents any new operations from starting (nni_aio_start will
-// return NNG_ESTATE).  This should be called before nni_aio_fini().  The
+// return NNG_ESTATE).  This should be called before nni_aio_free().  The
 // best pattern is to call nni_aio_stop on all linked aios, before calling
-// nni_aio_fini on any of them.  This function will block until any
+// nni_aio_free on any of them.  This function will block until any
 // callbacks are executed, and therefore it should never be executed
 // from a callback itself.  (To abort operations without blocking
 // use nni_aio_cancel instead.)
@@ -129,8 +129,6 @@ extern void nni_aio_abort(nni_aio *, int rv);
 // nng_aio_finish family of functions.)
 extern int nni_aio_begin(nni_aio *);
 
-extern void *nni_aio_get_prov_data(nni_aio *);
-extern void  nni_aio_set_prov_data(nni_aio *, void *);
 extern void *nni_aio_get_prov_extra(nni_aio *, unsigned);
 extern void  nni_aio_set_prov_extra(nni_aio *, unsigned, void *);
 // nni_aio_advance_iov moves up the iov, reflecting that some I/O as
@@ -152,8 +150,8 @@ extern void nni_aio_set_sockaddr(nni_aio *aio, const nng_sockaddr *);
 extern void nni_aio_get_sockaddr(nni_aio *aio, nng_sockaddr *);
 
 // nni_aio_schedule indicates that the AIO has begun, and is scheduled for
-// asychronous completion. This also starts the expiration timer. Note that
-// prior to this, the aio is uncancellable.  If the operation has a zero
+// asynchronous completion. This also starts the expiration timer. Note that
+// prior to this, the aio is un-cancellable.  If the operation has a zero
 // timeout (NNG_FLAG_NONBLOCK) then NNG_ETIMEDOUT is returned.  If the
 // operation has already been canceled, or should not be run, then an error
 // is returned.  (In that case the caller should probably either return an
@@ -165,4 +163,52 @@ extern void nni_sleep_aio(nni_duration, nni_aio *);
 
 extern int  nni_aio_sys_init(void);
 extern void nni_aio_sys_fini(void);
+
+// The contents of this structure are entirely private to the AIO
+// framework.  It is provided here to permit inlining, which should
+// only be done by code that is built as part of the library itself.
+// An nni_aio is an async I/O handle.
+struct nng_aio {
+	int          a_result;  // Result code (nng_errno)
+	size_t       a_count;   // Bytes transferred (I/O only)
+	nni_time     a_expire;  // Absolute timeout
+	nni_duration a_timeout; // Relative timeout
+	bool         a_stop;    // shutting down (no new operations)
+	bool         a_sleep;   // sleeping with no action
+	int          a_sleeprv; // result when sleep wakes
+	nni_task     a_task;    // task used for the callback
+
+	// Read/write scatter gather list.  Predefined limit of eight.
+	nni_iov  a_iov[8];
+	unsigned a_niov;
+
+	// Message operations.
+	nni_msg *a_msg;
+
+	// User scratch data.  Consumers may store values here, which
+	// must be preserved by providers and the framework.
+	void *a_user_data[2];
+
+	// Operation inputs & outputs.  Up to 4 inputs and 4 outputs may be
+	// specified.  The semantics of these will vary, and depend on the
+	// specific operation.
+	void *a_inputs[4];
+	void *a_outputs[4];
+
+	// Provider-use fields.
+	nni_aio_cancelfn a_cancel_fn;
+	void *           a_cancel_arg;
+	nni_list_node    a_prov_node;
+	void *           a_prov_extra[4]; // Extra data used by provider
+
+	// Socket address.  This turns out to be very useful, as we wind up
+	// needing socket addresses for numerous connection related routines.
+	// It would be cleaner to not have this and avoid burning the space,
+	// but having this hear dramatically simplifies lots of code.
+	nng_sockaddr a_sockaddr;
+
+	// Expire node.
+	nni_list_node a_expire_node;
+};
+
 #endif // CORE_AIO_H

@@ -205,8 +205,8 @@ wstran_pipe_fini(void *arg)
 {
 	ws_pipe *p = arg;
 
-	nni_aio_fini(p->rxaio);
-	nni_aio_fini(p->txaio);
+	nni_aio_free(p->rxaio);
+	nni_aio_free(p->txaio);
 
 	nng_stream_free(p->ws);
 	nni_mtx_fini(&p->mtx);
@@ -238,8 +238,8 @@ wstran_pipe_alloc(ws_pipe **pipep, void *ws)
 	nni_mtx_init(&p->mtx);
 
 	// Initialize AIOs.
-	if (((rv = nni_aio_init(&p->txaio, wstran_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->rxaio, wstran_pipe_recv_cb, p)) != 0)) {
+	if (((rv = nni_aio_alloc(&p->txaio, wstran_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->rxaio, wstran_pipe_recv_cb, p)) != 0)) {
 		wstran_pipe_fini(p);
 		return (rv);
 	}
@@ -381,7 +381,7 @@ wstran_dialer_fini(void *arg)
 
 	nni_aio_stop(d->connaio);
 	nng_stream_dialer_free(d->dialer);
-	nni_aio_fini(d->connaio);
+	nni_aio_free(d->connaio);
 	nni_mtx_fini(&d->mtx);
 	NNI_FREE_STRUCT(d);
 }
@@ -393,7 +393,7 @@ wstran_listener_fini(void *arg)
 
 	nni_aio_stop(l->accaio);
 	nng_stream_listener_free(l->listener);
-	nni_aio_fini(l->accaio);
+	nni_aio_free(l->accaio);
 	nni_mtx_fini(&l->mtx);
 	NNI_FREE_STRUCT(l);
 }
@@ -515,7 +515,7 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	    nni_sock_peer_name(s));
 
 	if (((rv = nni_ws_dialer_alloc(&d->dialer, url)) != 0) ||
-	    ((rv = nni_aio_init(&d->connaio, wstran_connect_cb, d)) != 0) ||
+	    ((rv = nni_aio_alloc(&d->connaio, wstran_connect_cb, d)) != 0) ||
 	    ((rv = nng_stream_dialer_set_bool(
 	          d->dialer, NNI_OPT_WS_MSGMODE, true)) != 0) ||
 	    ((rv = nng_stream_dialer_set_string(
@@ -551,7 +551,7 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 	    nni_sock_proto_name(s));
 
 	if (((rv = nni_ws_listener_alloc(&l->listener, url)) != 0) ||
-	    ((rv = nni_aio_init(&l->accaio, wstran_accept_cb, l)) != 0) ||
+	    ((rv = nni_aio_alloc(&l->accaio, wstran_accept_cb, l)) != 0) ||
 	    ((rv = nng_stream_listener_set_bool(
 	          l->listener, NNI_OPT_WS_MSGMODE, true)) != 0) ||
 	    ((rv = nng_stream_listener_set_string(

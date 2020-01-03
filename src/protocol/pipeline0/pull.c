@@ -73,8 +73,8 @@ pull0_pipe_fini(void *arg)
 {
 	pull0_pipe *p = arg;
 
-	nni_aio_fini(p->putq_aio);
-	nni_aio_fini(p->recv_aio);
+	nni_aio_free(p->putq_aio);
+	nni_aio_free(p->recv_aio);
 }
 
 static int
@@ -83,8 +83,8 @@ pull0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	pull0_pipe *p = arg;
 	int         rv;
 
-	if (((rv = nni_aio_init(&p->putq_aio, pull0_putq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->recv_aio, pull0_recv_cb, p)) != 0)) {
+	if (((rv = nni_aio_alloc(&p->putq_aio, pull0_putq_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->recv_aio, pull0_recv_cb, p)) != 0)) {
 		pull0_pipe_fini(p);
 		return (rv);
 	}

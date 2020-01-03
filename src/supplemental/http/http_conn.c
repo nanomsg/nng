@@ -690,8 +690,8 @@ nni_http_conn_fini(nni_http_conn *conn)
 	}
 	nni_mtx_unlock(&conn->mtx);
 
-	nni_aio_fini(conn->wr_aio);
-	nni_aio_fini(conn->rd_aio);
+	nni_aio_free(conn->wr_aio);
+	nni_aio_free(conn->rd_aio);
 	nni_free(conn->rd_buf, conn->rd_bufsz);
 	nni_mtx_fini(&conn->mtx);
 	NNI_FREE_STRUCT(conn);
@@ -716,8 +716,8 @@ http_init(nni_http_conn **connp, nng_stream *data)
 	}
 	conn->rd_bufsz = HTTP_BUFSIZE;
 
-	if (((rv = nni_aio_init(&conn->wr_aio, http_wr_cb, conn)) != 0) ||
-	    ((rv = nni_aio_init(&conn->rd_aio, http_rd_cb, conn)) != 0)) {
+	if (((rv = nni_aio_alloc(&conn->wr_aio, http_wr_cb, conn)) != 0) ||
+	    ((rv = nni_aio_alloc(&conn->rd_aio, http_rd_cb, conn)) != 0)) {
 		nni_http_conn_fini(conn);
 		return (rv);
 	}

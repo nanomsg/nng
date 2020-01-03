@@ -145,9 +145,9 @@ ipctran_pipe_fini(void *arg)
 		}
 		nni_mtx_unlock(&ep->mtx);
 	}
-	nni_aio_fini(p->rxaio);
-	nni_aio_fini(p->txaio);
-	nni_aio_fini(p->negoaio);
+	nni_aio_free(p->rxaio);
+	nni_aio_free(p->txaio);
+	nni_aio_free(p->negoaio);
 	nng_stream_free(p->conn);
 	if (p->rxmsg) {
 		nni_msg_free(p->rxmsg);
@@ -177,9 +177,9 @@ ipctran_pipe_alloc(ipctran_pipe **pipep)
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&p->mtx);
-	if (((rv = nni_aio_init(&p->txaio, ipctran_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->rxaio, ipctran_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->negoaio, ipctran_pipe_nego_cb, p)) != 0)) {
+	if (((rv = nni_aio_alloc(&p->txaio, ipctran_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->rxaio, ipctran_pipe_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->negoaio, ipctran_pipe_nego_cb, p)) != 0)) {
 		ipctran_pipe_fini(p);
 		return (rv);
 	}
@@ -699,8 +699,8 @@ ipctran_ep_fini(void *arg)
 	nni_aio_stop(ep->connaio);
 	nng_stream_dialer_free(ep->dialer);
 	nng_stream_listener_free(ep->listener);
-	nni_aio_fini(ep->timeaio);
-	nni_aio_fini(ep->connaio);
+	nni_aio_free(ep->timeaio);
+	nni_aio_free(ep->connaio);
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
 }
@@ -840,7 +840,7 @@ ipctran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 	}
 	ep->ndialer = ndialer;
 
-	if (((rv = nni_aio_init(&ep->connaio, ipctran_dial_cb, ep)) != 0) ||
+	if (((rv = nni_aio_alloc(&ep->connaio, ipctran_dial_cb, ep)) != 0) ||
 	    ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != 0)) {
 		ipctran_ep_fini(ep);
 		return (rv);
@@ -863,8 +863,8 @@ ipctran_ep_init_listener(void **dp, nni_url *url, nni_listener *nlistener)
 	}
 	ep->nlistener = nlistener;
 
-	if (((rv = nni_aio_init(&ep->connaio, ipctran_accept_cb, ep)) != 0) ||
-	    ((rv = nni_aio_init(&ep->timeaio, ipctran_timer_cb, ep)) != 0) ||
+	if (((rv = nni_aio_alloc(&ep->connaio, ipctran_accept_cb, ep)) != 0) ||
+	    ((rv = nni_aio_alloc(&ep->timeaio, ipctran_timer_cb, ep)) != 0) ||
 	    ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0)) {
 		ipctran_ep_fini(ep);
 		return (rv);

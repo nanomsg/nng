@@ -187,8 +187,8 @@ req0_pipe_fini(void *arg)
 {
 	req0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_recv);
-	nni_aio_fini(p->aio_send);
+	nni_aio_free(p->aio_recv);
+	nni_aio_free(p->aio_send);
 }
 
 static int
@@ -197,8 +197,8 @@ req0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	req0_pipe *p = arg;
 	int        rv;
 
-	if (((rv = nni_aio_init(&p->aio_recv, req0_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, req0_send_cb, p)) != 0)) {
+	if (((rv = nni_aio_alloc(&p->aio_recv, req0_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_send, req0_send_cb, p)) != 0)) {
 		req0_pipe_fini(p);
 		return (rv);
 	}

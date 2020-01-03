@@ -283,9 +283,9 @@ surv0_pipe_fini(void *arg)
 {
 	surv0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_getq);
-	nni_aio_fini(p->aio_send);
-	nni_aio_fini(p->aio_recv);
+	nni_aio_free(p->aio_getq);
+	nni_aio_free(p->aio_send);
+	nni_aio_free(p->aio_recv);
 	nni_msgq_fini(p->sendq);
 }
 
@@ -300,9 +300,9 @@ surv0_pipe_init(void *arg, nni_pipe *npipe, void *s)
 	// is best effort, and a deep queue doesn't really do much for us.
 	// Note that surveys can be *outstanding*, but not yet put on the wire.
 	if (((rv = nni_msgq_init(&p->sendq, 16)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, surv0_pipe_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, surv0_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, surv0_pipe_recv_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->aio_getq, surv0_pipe_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_send, surv0_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_recv, surv0_pipe_recv_cb, p)) != 0)) {
 		surv0_pipe_fini(p);
 		return (rv);
 	}

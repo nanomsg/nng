@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -39,7 +39,7 @@ extern void nni_task_exec(nni_task *);
 extern void nni_task_prep(nni_task *);
 
 extern void nni_task_wait(nni_task *);
-extern int  nni_task_init(nni_task **, nni_taskq *, nni_cb, void *);
+extern void nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
 
 // nni_task_fini destroys the task.  It will reap resources asynchronously
 // if the task is currently executing.  Use nni_task_wait() first if the
@@ -49,5 +49,20 @@ extern void nni_task_fini(nni_task *);
 
 extern int  nni_taskq_sys_init(void);
 extern void nni_taskq_sys_fini(void);
+
+// nni_task structure details are private to the framework.  It is provided
+// here to facilitate inlining when necessary.
+struct nni_task {
+	nni_list_node task_node;
+	void *        task_arg;
+	nni_cb        task_cb;
+	nni_taskq *   task_tq;
+	nni_thr *     task_thr; // non-NULL if the task is running
+	unsigned      task_busy;
+	bool          task_prep;
+	bool          task_reap; // reap task on completion
+	nni_mtx       task_mtx;
+	nni_cv        task_cv;
+};
 
 #endif // CORE_TASKQ_H

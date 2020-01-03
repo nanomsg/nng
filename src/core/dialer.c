@@ -60,8 +60,8 @@ nni_dialer_destroy(nni_dialer *d)
 	nni_aio_stop(d->d_con_aio);
 	nni_aio_stop(d->d_tmo_aio);
 
-	nni_aio_fini(d->d_con_aio);
-	nni_aio_fini(d->d_tmo_aio);
+	nni_aio_free(d->d_con_aio);
+	nni_aio_free(d->d_tmo_aio);
 
 	if (d->d_data != NULL) {
 		d->d_ops.d_fini(d->d_data);
@@ -204,8 +204,8 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 	nni_mtx_init(&d->d_mtx);
 
 	dialer_stats_init(d);
-	if (((rv = nni_aio_init(&d->d_con_aio, dialer_connect_cb, d)) != 0) ||
-	    ((rv = nni_aio_init(&d->d_tmo_aio, dialer_timer_cb, d)) != 0) ||
+	if (((rv = nni_aio_alloc(&d->d_con_aio, dialer_connect_cb, d)) != 0) ||
+	    ((rv = nni_aio_alloc(&d->d_tmo_aio, dialer_timer_cb, d)) != 0) ||
 	    ((rv = d->d_ops.d_init(&d->d_data, url, d)) != 0) ||
 	    ((rv = nni_idhash_alloc32(dialers, &d->d_id, d)) != 0) ||
 	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
@@ -382,7 +382,7 @@ nni_dialer_start(nni_dialer *d, int flags)
 	if ((flags & NNG_FLAG_NONBLOCK) != 0) {
 		aio = NULL;
 	} else {
-		if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+		if ((rv = nni_aio_alloc(&aio, NULL, NULL)) != 0) {
 			nni_atomic_flag_reset(&d->d_started);
 			return (rv);
 		}
@@ -397,7 +397,7 @@ nni_dialer_start(nni_dialer *d, int flags)
 	if (aio != NULL) {
 		nni_aio_wait(aio);
 		rv = nni_aio_result(aio);
-		nni_aio_fini(aio);
+		nni_aio_free(aio);
 	}
 
 	return (rv);

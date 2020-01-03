@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,18 +11,6 @@
 #include "core/nng_impl.h"
 
 typedef struct nni_taskq_thr nni_taskq_thr;
-struct nni_task {
-	nni_list_node task_node;
-	void *        task_arg;
-	nni_cb        task_cb;
-	nni_taskq *   task_tq;
-	nni_thr *     task_thr; // non-NULL if the task is running
-	unsigned      task_busy;
-	bool          task_prep;
-	bool          task_reap; // reap task on completion
-	nni_mtx       task_mtx;
-	nni_cv        task_cv;
-};
 struct nni_taskq_thr {
 	nni_taskq *tqt_tq;
 	nni_thr    tqt_thread;
@@ -218,14 +206,9 @@ nni_task_wait(nni_task *task)
 	nni_mtx_unlock(&task->task_mtx);
 }
 
-int
-nni_task_init(nni_task **taskp, nni_taskq *tq, nni_cb cb, void *arg)
+void
+nni_task_init(nni_task *task, nni_taskq *tq, nni_cb cb, void *arg)
 {
-	nni_task *task;
-
-	if ((task = NNI_ALLOC_STRUCT(task)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	NNI_LIST_NODE_INIT(&task->task_node);
 	nni_mtx_init(&task->task_mtx);
 	nni_cv_init(&task->task_cv, &task->task_mtx);
@@ -235,8 +218,6 @@ nni_task_init(nni_task **taskp, nni_taskq *tq, nni_cb cb, void *arg)
 	task->task_cb   = cb;
 	task->task_arg  = arg;
 	task->task_tq   = tq != NULL ? tq : nni_taskq_systq;
-	*taskp          = task;
-	return (0);
 }
 
 void
@@ -258,7 +239,6 @@ nni_task_fini(nni_task *task)
 	nni_mtx_unlock(&task->task_mtx);
 	nni_cv_fini(&task->task_cv);
 	nni_mtx_fini(&task->task_mtx);
-	NNI_FREE_STRUCT(task);
 }
 
 int

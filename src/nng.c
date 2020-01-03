@@ -1116,7 +1116,7 @@ nng_aio_alloc(nng_aio **app, void (*cb)(void *), void *arg)
 	if ((rv = nni_init()) != 0) {
 		return (rv);
 	}
-	if ((rv = nni_aio_init(&aio, (nni_cb) cb, arg)) == 0) {
+	if ((rv = nni_aio_alloc(&aio, (nni_cb) cb, arg)) == 0) {
 		nng_aio_set_timeout(aio, NNG_DURATION_DEFAULT);
 		*app = aio;
 	}
@@ -1126,7 +1126,7 @@ nng_aio_alloc(nng_aio **app, void (*cb)(void *), void *arg)
 void
 nng_aio_free(nng_aio *aio)
 {
-	nni_aio_fini(aio);
+	nni_aio_free(aio);
 }
 
 void

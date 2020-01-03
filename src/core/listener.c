@@ -61,8 +61,8 @@ nni_listener_destroy(nni_listener *l)
 	nni_aio_stop(l->l_acc_aio);
 	nni_aio_stop(l->l_tmo_aio);
 
-	nni_aio_fini(l->l_acc_aio);
-	nni_aio_fini(l->l_tmo_aio);
+	nni_aio_free(l->l_acc_aio);
+	nni_aio_free(l->l_tmo_aio);
 
 	if (l->l_data != NULL) {
 		l->l_ops.l_fini(l->l_data);
@@ -196,8 +196,8 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	NNI_LIST_INIT(&l->l_pipes, nni_pipe, p_ep_node);
 	listener_stats_init(l);
 
-	if (((rv = nni_aio_init(&l->l_acc_aio, listener_accept_cb, l)) != 0) ||
-	    ((rv = nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l)) != 0) ||
+	if (((rv = nni_aio_alloc(&l->l_acc_aio, listener_accept_cb, l)) != 0) ||
+	    ((rv = nni_aio_alloc(&l->l_tmo_aio, listener_timer_cb, l)) != 0) ||
 	    ((rv = l->l_ops.l_init(&l->l_data, url, l)) != 0) ||
 	    ((rv = nni_idhash_alloc32(listeners, &l->l_id, l)) != 0) ||
 	    ((rv = nni_sock_add_listener(s, l)) != 0)) {
