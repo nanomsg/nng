@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -64,35 +64,6 @@ nni_strlcpy(char *dst, const char *src, size_t len)
 			*dst = '\0';
 		}
 	} while (c);
-	return (n - 1);
-#endif
-}
-
-size_t
-nni_strlcat(char *dst, const char *src, size_t len)
-{
-#ifdef NNG_HAVE_STRLCAT
-	return (strlcat(dst, src, len));
-#else
-	size_t n;
-	char   c;
-
-	n = 0;
-	while ((*dst != '\0') && (n < len)) {
-		n++;
-		dst++;
-	}
-
-	do {
-		c = *src++;
-		n++;
-		if (n < len) {
-			*dst++ = c;
-		} else if (n == len) {
-			*dst = '\0';
-		}
-	} while (c);
-
 	return (n - 1);
 #endif
 }

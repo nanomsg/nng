@@ -1,5 +1,5 @@
 #
-#   Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
@@ -348,7 +348,6 @@ else ()
 
 endif ()
 
-nng_check_sym(strlcat string.h NNG_HAVE_STRLCAT)
 nng_check_sym(strlcpy string.h NNG_HAVE_STRLCPY)
 nng_check_sym(strnlen string.h NNG_HAVE_STRNLEN)
 nng_check_sym(strcasecmp string.h NNG_HAVE_STRCASECMP)

@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -16,7 +16,6 @@
 extern char * nni_strdup(const char *);
 extern void   nni_strfree(char *);
 extern size_t nni_strlcpy(char *, const char *, size_t);
-extern size_t nni_strlcat(char *, const char *, size_t);
 extern size_t nni_strnlen(const char *, size_t);
 extern char * nni_strcasestr(const char *, const char *);
 extern int    nni_strncasecmp(const char *, const char *, size_t);
