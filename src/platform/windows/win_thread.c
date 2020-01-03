@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -156,6 +156,30 @@ nni_atomic_init_bool(nni_atomic_bool *v)
 }
 
 void
+nni_atomic_set_int(nni_atomic_int *v, int i)
+{
+	InterlockedExchange(&v->v, (LONG) i);
+}
+
+int
+nni_atomic_get_int(nni_atomic_int *v)
+{
+	return ((bool) InterlockedAdd(&v->v, 0));
+}
+
+int
+nni_atomic_swap_int(nni_atomic_int *v, int i)
+{
+	return ((int) InterlockedExchange(&v->v, (LONG) i));
+}
+
+void
+nni_atomic_init_int(nni_atomic_int *v)
+{
+	InterlockedExchange(&v->v, 0);
+}
+
+void
 nni_atomic_add64(nni_atomic_u64 *v, uint64_t bump)
 {
 	InterlockedAddNoFence64(&v->v, (LONGLONG) bump);
@@ -211,6 +235,14 @@ nni_atomic_dec64_nv(nni_atomic_u64 *v)
 #else
 	return ((uint64_t)(InterlockedDecrement64(&v->v)));
 #endif
+}
+
+bool
+nni_atomic_cas64(nni_atomic_u64 *v, uint64_t cond, uint64_t val)
+{
+	uint64_t old;
+	old = InterlockedCompareExchange64(&v->v, (LONG64)val, (LONG64)cond);
+	 return (old == cond);
 }
 
 static unsigned int __stdcall nni_plat_thr_main(void *arg)

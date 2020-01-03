@@ -175,24 +175,24 @@ test_websocket_conn_props(void)
 	TEST_NNG_PASS(nng_stream_get_addr(c1, NNG_OPT_LOCADDR, &sa1));
 	TEST_NNG_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
 	TEST_CHECK_(sa1.s_family == sa2.s_family, "families match %x == %x",
-		    sa1.s_family, sa2.s_family);
+	    sa1.s_family, sa2.s_family);
 	TEST_CHECK_(sa1.s_in.sa_addr == sa2.s_in.sa_addr,
-		    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
-		    testutil_htonl(sa2.s_in.sa_addr));
+	    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
+	    testutil_htonl(sa2.s_in.sa_addr));
 	TEST_CHECK_(sa1.s_in.sa_port == sa2.s_in.sa_port,
-		    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
-		    testutil_htons(sa2.s_in.sa_port));
+	    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
+	    testutil_htons(sa2.s_in.sa_port));
 
 	TEST_NNG_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
 	TEST_NNG_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
 	TEST_CHECK_(sa1.s_family == sa2.s_family, "families match %x == %x",
-		    sa1.s_family, sa2.s_family);
+	    sa1.s_family, sa2.s_family);
 	TEST_CHECK_(sa1.s_in.sa_addr == sa2.s_in.sa_addr,
-		    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
-		    testutil_htonl(sa2.s_in.sa_addr));
+	    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
+	    testutil_htonl(sa2.s_in.sa_addr));
 	TEST_CHECK_(sa1.s_in.sa_port == sa2.s_in.sa_port,
-		    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
-		    testutil_htons(sa2.s_in.sa_port));
+	    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
+	    testutil_htons(sa2.s_in.sa_port));
 
 	on = true;
 	TEST_NNG_PASS(nng_stream_set_bool(c1, NNG_OPT_TCP_NODELAY, on));
@@ -236,8 +236,8 @@ test_websocket_conn_props(void)
 
 typedef struct recv_state {
 	nng_stream * c;
-	int          total;
-	int          xfr;
+	size_t       total;
+	size_t       xfr;
 	nng_mtx *    lock;
 	nng_cv *     cv;
 	nng_aio *    aio;
@@ -254,8 +254,8 @@ frag_recv_cb(void *arg)
 	recv_state *s = arg;
 
 	if ((s->err = nng_aio_result(s->aio)) == 0) {
-		int len   = (int) nng_aio_count(s->aio);
-		int resid = s->total - s->xfr;
+		size_t len   = (int) nng_aio_count(s->aio);
+		size_t resid = s->total - s->xfr;
 
 		nni_sha1_update(&s->sum, s->buf, (size_t) len);
 		s->buf += len;
@@ -293,7 +293,7 @@ test_websocket_fragmentation(void)
 	nng_aio *            daio = NULL;
 	nng_aio *            laio = NULL;
 	nng_aio *            caio = NULL;
-	int                  resid;
+	size_t               resid;
 	recv_state           state;
 	uint8_t              sum1[20];
 	uint8_t              sum2[20];
@@ -315,7 +315,7 @@ test_websocket_fragmentation(void)
 	state.buf = recv_buf;
 
 	// Random fill the send buffer.
-	for (int i = 0; i < state.total; i++) {
+	for (size_t i = 0; i < state.total; i++) {
 		send_buf[i] = nng_random() % 0xff;
 	}
 
@@ -360,7 +360,7 @@ test_websocket_fragmentation(void)
 	buf   = send_buf;
 	resid = state.total;
 	while (resid > 0) {
-		int len     = resid < 9500 ? resid : 9500;
+		size_t len  = resid < 9500 ? resid : 9500;
 		iov.iov_len = len;
 		iov.iov_buf = buf;
 

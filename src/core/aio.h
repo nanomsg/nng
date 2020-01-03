@@ -102,7 +102,6 @@ extern void nni_aio_wait(nni_aio *);
 // and append will perform any necessary remove first.
 extern void nni_aio_list_init(nni_list *);
 extern void nni_aio_list_append(nni_list *, nni_aio *);
-extern void nni_aio_list_prepend(nni_list *, nni_aio *);
 extern void nni_aio_list_remove(nni_aio *);
 extern int  nni_aio_list_active(nni_aio *);
 
@@ -169,14 +168,14 @@ extern void nni_aio_sys_fini(void);
 // only be done by code that is built as part of the library itself.
 // An nni_aio is an async I/O handle.
 struct nng_aio {
-	int          a_result;  // Result code (nng_errno)
-	size_t       a_count;   // Bytes transferred (I/O only)
-	nni_time     a_expire;  // Absolute timeout
-	nni_duration a_timeout; // Relative timeout
-	bool         a_stop;    // shutting down (no new operations)
-	bool         a_sleep;   // sleeping with no action
-	int          a_sleeprv; // result when sleep wakes
-	nni_task     a_task;    // task used for the callback
+	int          a_result;    // Result code (nng_errno)
+	size_t       a_count;     // Bytes transferred (I/O only)
+	nni_time     a_expire;    // Absolute timeout
+	nni_duration a_timeout;   // Relative timeout
+	bool         a_stop;      // shutting down (no new operations)
+	bool         a_sleep;     // sleeping with no action
+	bool         a_expire_ok; // if true expire from sleep is success
+	nni_task     a_task;      // task used for the callback
 
 	// Read/write scatter gather list.  Predefined limit of eight.
 	nni_iov  a_iov[8];
@@ -210,5 +209,9 @@ struct nng_aio {
 	// Expire node.
 	nni_list_node a_expire_node;
 };
+
+// inline uses
+void nni_aio_init(nni_aio *, nni_cb, void *);
+void nni_aio_fini(nni_aio *);
 
 #endif // CORE_AIO_H

@@ -47,15 +47,19 @@ struct nni_plat_cv {
 };
 
 struct nni_atomic_flag {
-	unsigned f;
+	volatile LONG f;
 };
 
 struct nni_atomic_bool {
-	LONG v;
+	volatile LONG v;
 };
 
 struct nni_atomic_u64 {
-	LONGLONG v;
+	volatile LONGLONG v;
+};
+
+struct nni_atomic_int {
+	volatile LONG v;
 };
 
 // nni_win_io is used with io completion ports.  This allows us to get

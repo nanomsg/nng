@@ -91,6 +91,10 @@ struct nni_atomic_bool {
 	atomic_bool v;
 };
 
+struct nni_atomic_int {
+	atomic_int v;
+};
+
 #else // NNG_HAVE_C11_ATOMIC
 struct nni_atomic_flag {
 	bool f;
@@ -98,6 +102,10 @@ struct nni_atomic_flag {
 
 struct nni_atomic_bol {
 	bool b;
+};
+
+struct nni_atomic_int {
+	int v;
 };
 
 struct nni_atomic_u64 {

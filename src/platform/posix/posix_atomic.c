@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -45,11 +45,34 @@ bool
 nni_atomic_swap_bool(nni_atomic_bool *v, bool b)
 {
 	return (atomic_exchange(&v->v, b));
-
 }
 
 void
 nni_atomic_init_bool(nni_atomic_bool *v)
+{
+	atomic_init(&v->v, false);
+}
+
+void
+nni_atomic_set_int(nni_atomic_int *v, int i)
+{
+	atomic_store(&v->v, i);
+}
+
+int
+nni_atomic_get_int(nni_atomic_int *v)
+{
+	return (atomic_load(&v->v));
+}
+
+int
+nni_atomic_swap_int(nni_atomic_int *v, int i)
+{
+	return (atomic_exchange(&v->v, i));
+}
+
+void
+nni_atomic_init_int(nni_atomic_int *v)
 {
 	atomic_init(&v->v, false);
 }
@@ -108,6 +131,15 @@ nni_atomic_dec64_nv(nni_atomic_u64 *v)
 	return (ov - 1);
 }
 
+bool
+nni_atomic_cas64(nni_atomic_u64 *v, uint64_t cond, uint64_t val)
+{
+	// We use the weak form. This can fail sporadically, but it's
+	// faster when we use it in loops (which is our main use case).
+	return (atomic_compare_exchange_strong(
+	    &v->v, (uint_fast64_t *) &cond, (uint_fast64_t) val));
+}
+
 #else
 
 #include <pthread.h>
@@ -156,7 +188,7 @@ nni_atomic_swap_bool(nni_atomic_bool *b, bool n)
 {
 	bool v;
 	pthread_mutex_lock(&plat_atomic_lock);
-	v = b->b;
+	v    = b->b;
 	b->b = n;
 	pthread_mutex_unlock(&plat_atomic_lock);
 	return (v);
@@ -236,6 +268,19 @@ nni_atomic_dec64_nv(nni_atomic_u64 *v)
 	nv = v->v;
 	pthread_mutex_unlock(&plat_atomic_lock);
 	return (nv);
+}
+
+bool
+nni_atomic_cas64(nni_atomic_u64 *v, uint64_t cond, uint64_t val)
+{
+	bool result = false;
+	pthread_mutex_lock(&plat_atomic_lock);
+	if (v->v == cond) {
+		v->v = val;
+		result = true;
+	}
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (result);
 }
 
 #endif

@@ -36,26 +36,26 @@ static void rep0_pipe_fini(void *);
 
 struct rep0_ctx {
 	rep0_sock *   sock;
-	size_t        btrace_len;
 	uint32_t      pipe_id;
 	rep0_pipe *   spipe; // send pipe
 	nni_aio *     saio;  // send aio
 	nni_aio *     raio;  // recv aio
 	nni_list_node sqnode;
 	nni_list_node rqnode;
+	size_t        btrace_len;
 	uint32_t      btrace[256]; // backtrace buffer
 };
 
 // rep0_sock is our per-socket protocol private structure.
 struct rep0_sock {
-	nni_mtx       lk;
-	int           ttl;
-	nni_idhash *  pipes;
-	nni_list      recvpipes; // list of pipes with data to receive
-	nni_list      recvq;
-	rep0_ctx      ctx;
-	nni_pollable *recvable;
-	nni_pollable *sendable;
+	nni_mtx      lk;
+	int          ttl;
+	nni_idhash * pipes;
+	nni_list     recvpipes; // list of pipes with data to receive
+	nni_list     recvq;
+	rep0_ctx     ctx;
+	nni_pollable recvable;
+	nni_pollable sendable;
 };
 
 // rep0_pipe is our per-pipe protocol private structure.
@@ -63,8 +63,8 @@ struct rep0_pipe {
 	nni_pipe *    pipe;
 	rep0_sock *   rep;
 	uint32_t      id;
-	nni_aio *     aio_send;
-	nni_aio *     aio_recv;
+	nni_aio       aio_send;
+	nni_aio       aio_recv;
 	nni_list_node rnode; // receivable list linkage
 	nni_list      sendq; // contexts waiting to send
 	bool          busy;
@@ -167,7 +167,7 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 		// to send on the socket (root context).  That's because
 		// we will have finished (successfully or otherwise) the
 		// reply for the single request we got.
-		nni_pollable_clear(s->sendable);
+		nni_pollable_clear(&s->sendable);
 	}
 
 	if (len == 0) {
@@ -193,8 +193,8 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 	if (!p->busy) {
 		p->busy = true;
 		len     = nni_msg_len(msg);
-		nni_aio_set_msg(p->aio_send, msg);
-		nni_pipe_send(p->pipe, p->aio_send);
+		nni_aio_set_msg(&p->aio_send, msg);
+		nni_pipe_send(p->pipe, &p->aio_send);
 		nni_mtx_unlock(&s->lk);
 
 		nni_aio_set_msg(aio, NULL);
@@ -220,8 +220,8 @@ rep0_sock_fini(void *arg)
 
 	nni_idhash_fini(s->pipes);
 	rep0_ctx_fini(&s->ctx);
-	nni_pollable_free(s->sendable);
-	nni_pollable_free(s->recvable);
+	nni_pollable_fini(&s->sendable);
+	nni_pollable_fini(&s->recvable);
 	nni_mtx_fini(&s->lk);
 }
 
@@ -248,11 +248,8 @@ rep0_sock_init(void *arg, nni_sock *sock)
 
 	// We start off without being either readable or pollable.
 	// Readability comes when there is something on the socket.
-	if (((rv = nni_pollable_alloc(&s->sendable)) != 0) ||
-	    ((rv = nni_pollable_alloc(&s->recvable)) != 0)) {
-		rep0_sock_fini(s);
-		return (rv);
-	}
+	nni_pollable_init(&s->sendable);
+	nni_pollable_init(&s->recvable);
 
 	return (0);
 }
@@ -276,8 +273,8 @@ rep0_pipe_stop(void *arg)
 {
 	rep0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(&p->aio_send);
+	nni_aio_stop(&p->aio_recv);
 }
 
 static void
@@ -286,26 +283,22 @@ rep0_pipe_fini(void *arg)
 	rep0_pipe *p = arg;
 	nng_msg *  msg;
 
-	if ((msg = nni_aio_get_msg(p->aio_recv)) != NULL) {
-		nni_aio_set_msg(p->aio_recv, NULL);
+	if ((msg = nni_aio_get_msg(&p->aio_recv)) != NULL) {
+		nni_aio_set_msg(&p->aio_recv, NULL);
 		nni_msg_free(msg);
 	}
 
-	nni_aio_free(p->aio_send);
-	nni_aio_free(p->aio_recv);
+	nni_aio_fini(&p->aio_send);
+	nni_aio_fini(&p->aio_recv);
 }
 
 static int
 rep0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
 	rep0_pipe *p = arg;
-	int        rv;
 
-	if (((rv = nni_aio_alloc(&p->aio_send, rep0_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->aio_recv, rep0_pipe_recv_cb, p)) != 0)) {
-		rep0_pipe_fini(p);
-		return (rv);
-	}
+	nni_aio_init(&p->aio_send, rep0_pipe_send_cb, p);
+	nni_aio_init(&p->aio_recv, rep0_pipe_recv_cb, p);
 
 	NNI_LIST_INIT(&p->sendq, rep0_ctx, sqnode);
 
@@ -332,7 +325,7 @@ rep0_pipe_start(void *arg)
 	}
 	// By definition, we have not received a request yet on this pipe,
 	// so it cannot cause us to become sendable.
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 	return (0);
 }
 
@@ -343,8 +336,8 @@ rep0_pipe_close(void *arg)
 	rep0_sock *s = p->rep;
 	rep0_ctx * ctx;
 
-	nni_aio_close(p->aio_send);
-	nni_aio_close(p->aio_recv);
+	nni_aio_close(&p->aio_send);
+	nni_aio_close(&p->aio_recv);
 
 	nni_mtx_lock(&s->lk);
 	if (nni_list_active(&s->recvpipes, p)) {
@@ -367,7 +360,7 @@ rep0_pipe_close(void *arg)
 	if (p->id == s->ctx.pipe_id) {
 		// We "can" send.  (Well, not really, but we will happily
 		// accept a message and discard it.)
-		nni_pollable_raise(s->sendable);
+		nni_pollable_raise(&s->sendable);
 	}
 	nni_idhash_remove(s->pipes, nni_pipe_id(p->pipe));
 	nni_mtx_unlock(&s->lk);
@@ -383,9 +376,9 @@ rep0_pipe_send_cb(void *arg)
 	nni_msg *  msg;
 	size_t     len;
 
-	if (nni_aio_result(p->aio_send) != 0) {
-		nni_msg_free(nni_aio_get_msg(p->aio_send));
-		nni_aio_set_msg(p->aio_send, NULL);
+	if (nni_aio_result(&p->aio_send) != 0) {
+		nni_msg_free(nni_aio_get_msg(&p->aio_send));
+		nni_aio_set_msg(&p->aio_send, NULL);
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -395,7 +388,7 @@ rep0_pipe_send_cb(void *arg)
 		// Nothing else to send.
 		if (p->id == s->ctx.pipe_id) {
 			// Mark us ready for the other side to send!
-			nni_pollable_raise(s->sendable);
+			nni_pollable_raise(&s->sendable);
 		}
 		nni_mtx_unlock(&s->lk);
 		return;
@@ -409,8 +402,8 @@ rep0_pipe_send_cb(void *arg)
 	msg        = nni_aio_get_msg(aio);
 	len        = nni_msg_len(msg);
 	nni_aio_set_msg(aio, NULL);
-	nni_aio_set_msg(p->aio_send, msg);
-	nni_pipe_send(p->pipe, p->aio_send);
+	nni_aio_set_msg(&p->aio_send, msg);
+	nni_pipe_send(p->pipe, &p->aio_send);
 
 	nni_mtx_unlock(&s->lk);
 
@@ -465,15 +458,15 @@ rep0_ctx_recv(void *arg, nni_aio *aio)
 		nni_mtx_unlock(&s->lk);
 		return;
 	}
-	msg = nni_aio_get_msg(p->aio_recv);
-	nni_aio_set_msg(p->aio_recv, NULL);
+	msg = nni_aio_get_msg(&p->aio_recv);
+	nni_aio_set_msg(&p->aio_recv, NULL);
 	nni_list_remove(&s->recvpipes, p);
 	if (nni_list_empty(&s->recvpipes)) {
-		nni_pollable_clear(s->recvable);
+		nni_pollable_clear(&s->recvable);
 	}
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 	if ((ctx == &s->ctx) && !p->busy) {
-		nni_pollable_raise(s->sendable);
+		nni_pollable_raise(&s->sendable);
 	}
 
 	len = nni_msg_header_len(msg);
@@ -499,12 +492,12 @@ rep0_pipe_recv_cb(void *arg)
 	size_t     len;
 	int        hops;
 
-	if (nni_aio_result(p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
-	msg = nni_aio_get_msg(p->aio_recv);
+	msg = nni_aio_get_msg(&p->aio_recv);
 
 	nni_msg_set_pipe(msg, p->id);
 
@@ -524,7 +517,7 @@ rep0_pipe_recv_cb(void *arg)
 		if (nni_msg_len(msg) < 4) {
 			// Peer is speaking garbage. Kick it.
 			nni_msg_free(msg);
-			nni_aio_set_msg(p->aio_recv, NULL);
+			nni_aio_set_msg(&p->aio_recv, NULL);
 			nni_pipe_close(p->pipe);
 			return;
 		}
@@ -547,7 +540,7 @@ rep0_pipe_recv_cb(void *arg)
 	if ((ctx = nni_list_first(&s->recvq)) == NULL) {
 		// No one waiting to receive yet, holding pattern.
 		nni_list_append(&s->recvpipes, p);
-		nni_pollable_raise(s->recvable);
+		nni_pollable_raise(&s->recvable);
 		nni_mtx_unlock(&s->lk);
 		return;
 	}
@@ -555,13 +548,13 @@ rep0_pipe_recv_cb(void *arg)
 	nni_list_remove(&s->recvq, ctx);
 	aio       = ctx->raio;
 	ctx->raio = NULL;
-	nni_aio_set_msg(p->aio_recv, NULL);
+	nni_aio_set_msg(&p->aio_recv, NULL);
 	if ((ctx == &s->ctx) && !p->busy) {
-		nni_pollable_raise(s->sendable);
+		nni_pollable_raise(&s->sendable);
 	}
 
 	// schedule another receive
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 
 	ctx->btrace_len = len;
 	memcpy(ctx->btrace, nni_msg_header(msg), len);
@@ -576,8 +569,8 @@ rep0_pipe_recv_cb(void *arg)
 
 drop:
 	nni_msg_free(msg);
-	nni_aio_set_msg(p->aio_recv, NULL);
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_aio_set_msg(&p->aio_recv, NULL);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 }
 
 static int
@@ -603,7 +596,7 @@ rep0_sock_get_sendfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int        rv;
 	int        fd;
 
-	if ((rv = nni_pollable_getfd(s->sendable, &fd)) != 0) {
+	if ((rv = nni_pollable_getfd(&s->sendable, &fd)) != 0) {
 		return (rv);
 	}
 	return (nni_copyout_int(fd, buf, szp, t));
@@ -616,7 +609,7 @@ rep0_sock_get_recvfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int        rv;
 	int        fd;
 
-	if ((rv = nni_pollable_getfd(s->recvable, &fd)) != 0) {
+	if ((rv = nni_pollable_getfd(&s->recvable, &fd)) != 0) {
 		return (rv);
 	}
 

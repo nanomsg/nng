@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -178,6 +178,12 @@ extern void nni_atomic_set_bool(nni_atomic_bool *, bool);
 extern bool nni_atomic_get_bool(nni_atomic_bool *);
 extern bool nni_atomic_swap_bool(nni_atomic_bool *, bool);
 
+typedef struct nni_atomic_int nni_atomic_int;
+extern void                   nni_atomic_init_int(nni_atomic_int *);
+extern void                   nni_atomic_set_int(nni_atomic_int *, int);
+extern int                    nni_atomic_get_int(nni_atomic_int *);
+extern int                    nni_atomic_swap_int(nni_atomic_int *, int);
+
 typedef struct nni_atomic_u64 nni_atomic_u64;
 
 extern void     nni_atomic_init64(nni_atomic_u64 *);
@@ -186,6 +192,7 @@ extern void     nni_atomic_sub64(nni_atomic_u64 *, uint64_t);
 extern uint64_t nni_atomic_get64(nni_atomic_u64 *);
 extern void     nni_atomic_set64(nni_atomic_u64 *, uint64_t);
 extern uint64_t nni_atomic_swap64(nni_atomic_u64 *, uint64_t);
+extern bool     nni_atomic_cas64(nni_atomic_u64 *, uint64_t, uint64_t);
 extern uint64_t nni_atomic_dec64_nv(nni_atomic_u64 *);
 extern void     nni_atomic_inc64(nni_atomic_u64 *);
 
