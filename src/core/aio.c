@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -45,7 +45,7 @@ static nni_aio *nni_aio_expire_aio;
 // "prepare" the task for an aio when a caller marks an aio as starting
 // (with nni_aio_begin), and that marks the task as bus. Then, all we have
 // to do is wait for the task to complete (the busy flag to be cleared)
-// when we want to know if the aio's operation itself is complete.
+// when we want to know if the operation itself is complete.
 //
 // In order to guard against aio reuse during teardown, we set the a_stop
 // flag.  Any attempt to initialize for a new operation after that point
@@ -68,18 +68,14 @@ struct nng_aio {
 	nni_time     a_expire;  // Absolute timeout
 	nni_duration a_timeout; // Relative timeout
 
-	// These fields are private to the aio framework.
-	bool      a_stop;    // shutting down (no new operations)
-	bool      a_sleep;   // sleeping with no action
-	int       a_sleeprv; // result when sleep wakes
+	bool      a_stop;      // shutting down (no new operations)
+	bool      a_sleep;     // sleeping with no action
+	bool      a_expire_ok; // expire from sleep is ok
 	nni_task *a_task;
 
 	// Read/write operations.
-	nni_iov *a_iov;
+	nni_iov  a_iov[8];
 	unsigned a_niov;
-	nni_iov  a_iovinl[4]; // inline IOVs - when the IOV list is short
-	nni_iov *a_iovalloc;  // dynamically allocated IOVs
-	unsigned a_niovalloc; // number of allocated IOVs
 
 	// Message operations.
 	nni_msg *a_msg;
@@ -97,7 +93,6 @@ struct nng_aio {
 	// Provider-use fields.
 	nni_aio_cancelfn a_cancel_fn;
 	void *           a_cancel_arg;
-	void *           a_prov_data;
 	nni_list_node    a_prov_node;
 	void *           a_prov_extra[4]; // Extra data used by provider
 
@@ -126,11 +121,9 @@ nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 		NNI_FREE_STRUCT(aio);
 		return (rv);
 	}
-	aio->a_expire    = NNI_TIME_NEVER;
-	aio->a_timeout   = NNG_DURATION_INFINITE;
-	aio->a_iov       = aio->a_iovinl;
-	aio->a_niovalloc = 0;
-	*aiop            = aio;
+	aio->a_expire  = NNI_TIME_NEVER;
+	aio->a_timeout = NNG_DURATION_INFINITE;
+	*aiop          = aio;
 	return (0);
 }
 
@@ -173,11 +166,6 @@ nni_aio_fini(nni_aio *aio)
 
 		nni_task_fini(aio->a_task);
 
-		// At this point the AIO is done.
-		if (aio->a_niovalloc > 0) {
-			NNI_FREE_STRUCTS(aio->a_iovalloc, aio->a_niovalloc);
-		}
-
 		NNI_FREE_STRUCT(aio);
 	}
 }
@@ -185,39 +173,27 @@ nni_aio_fini(nni_aio *aio)
 int
 nni_aio_set_iov(nni_aio *aio, unsigned niov, const nni_iov *iov)
 {
+
+	if (niov > NNI_NUM_ELEMENTS((aio->a_iov))) {
+		return (NNG_EINVAL);
+	}
+
 	// Sometimes we are resubmitting our own io vector, with
-	// just a smaller niov.
-	if (aio->a_iov != iov) {
-		if ((niov > NNI_NUM_ELEMENTS(aio->a_iovinl)) &&
-		    (niov > aio->a_niovalloc)) {
-			nni_iov *newiov = NNI_ALLOC_STRUCTS(newiov, niov);
-			if (newiov == NULL) {
-				return (NNG_ENOMEM);
-			}
-			if (aio->a_niovalloc > 0) {
-				NNI_FREE_STRUCTS(
-				    aio->a_iovalloc, aio->a_niovalloc);
-			}
-			aio->a_iov       = newiov;
-			aio->a_iovalloc  = newiov;
-			aio->a_niovalloc = niov;
+	// just a smaller count.  We copy them only if we are not.
+	if (iov != &aio->a_iov[0]) {
+		for (unsigned i = 0; i < niov; i++) {
+			aio->a_iov[i] = iov[i];
 		}
-		if (niov <= NNI_NUM_ELEMENTS(aio->a_iovinl)) {
-			aio->a_iov = aio->a_iovinl;
-		} else {
-			aio->a_iov = aio->a_iovalloc;
-		}
-		memcpy(aio->a_iov, iov, niov * sizeof(nni_iov));
 	}
 	aio->a_niov = niov;
 	return (0);
 }
 
-// nni_aio_stop cancels any oustanding operation, and waits for the
+// nni_aio_stop cancels any outstanding operation, and waits for the
 // callback to complete, if still running.  It also marks the AIO as
 // stopped, preventing further calls to nni_aio_begin from succeeding.
 // To correctly tear down an AIO, call stop, and make sure any other
-// calles are not also stopped, before calling nni_aio_fini to release
+// callers are not also stopped, before calling nni_aio_fini to release
 // actual memory.
 void
 nni_aio_stop(nni_aio *aio)
@@ -363,6 +339,7 @@ nni_aio_begin(nni_aio *aio)
 		aio->a_cancel_arg = NULL;
 		aio->a_expire     = NNI_TIME_NEVER;
 		aio->a_sleep      = false;
+		aio->a_expire_ok  = false;
 		nni_mtx_unlock(&nni_aio_lk);
 
 		nni_task_dispatch(aio->a_task);
@@ -504,13 +481,6 @@ nni_aio_list_append(nni_list *list, nni_aio *aio)
 }
 
 void
-nni_aio_list_prepend(nni_list *list, nni_aio *aio)
-{
-	nni_aio_list_remove(aio);
-	nni_list_prepend(list, aio);
-}
-
-void
 nni_aio_list_remove(nni_aio *aio)
 {
 	nni_list_node_remove(&aio->a_prov_node);
@@ -546,11 +516,11 @@ nni_aio_expire_add(nni_aio *aio)
 }
 
 static void
-nni_aio_expire_loop(void *notused)
+nni_aio_expire_loop(void *unused)
 {
 	nni_list *aios = &nni_aio_expire_aios;
 
-	NNI_ARG_UNUSED(notused);
+	NNI_ARG_UNUSED(unused);
 
 	for (;;) {
 		nni_aio_cancelfn fn;
@@ -584,7 +554,7 @@ nni_aio_expire_loop(void *notused)
 		// This aio's time has come.  Expire it, canceling any
 		// outstanding I/O.
 		nni_list_remove(aios, aio);
-		rv = aio->a_sleep ? aio->a_sleeprv : NNG_ETIMEDOUT;
+		rv = aio->a_expire_ok ? 0 : NNG_ETIMEDOUT;
 
 		if ((fn = aio->a_cancel_fn) != NULL) {
 			void *arg         = aio->a_cancel_arg;
@@ -607,18 +577,6 @@ nni_aio_expire_loop(void *notused)
 		}
 		nni_mtx_unlock(&nni_aio_lk);
 	}
-}
-
-void *
-nni_aio_get_prov_data(nni_aio *aio)
-{
-	return (aio->a_prov_data);
-}
-
-void
-nni_aio_set_prov_data(nni_aio *aio, void *data)
-{
-	aio->a_prov_data = data;
 }
 
 void *
@@ -678,8 +636,10 @@ nni_aio_iov_advance(nni_aio *aio, size_t n)
 		}
 		resid -= aio->a_iov[0].iov_len;
 		n -= aio->a_iov[0].iov_len;
-		aio->a_iov = &aio->a_iov[1];
 		aio->a_niov--;
+		for (unsigned i = 0; i < aio->a_niov; i++) {
+			aio->a_iov[i] = aio->a_iov[i + 1];
+		}
 	}
 	return (resid); // we might not have used all of n for this iov
 }
@@ -709,8 +669,8 @@ nni_sleep_aio(nng_duration ms, nng_aio *aio)
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
-	aio->a_sleeprv = 0;
-	aio->a_sleep   = true;
+	aio->a_expire_ok = true;
+	aio->a_sleep     = true;
 	switch (aio->a_timeout) {
 	case NNG_DURATION_DEFAULT:
 	case NNG_DURATION_INFINITE:
@@ -720,8 +680,8 @@ nni_sleep_aio(nng_duration ms, nng_aio *aio)
 		// If the timeout on the aio is shorter than our sleep time,
 		// then let it still wake up early, but with NNG_ETIMEDOUT.
 		if (ms > aio->a_timeout) {
-			aio->a_sleeprv = NNG_ETIMEDOUT;
-			ms             = aio->a_timeout;
+			aio->a_expire_ok = false;
+			ms               = aio->a_timeout;
 		}
 	}
 	aio->a_expire = nni_clock() + ms;

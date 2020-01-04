@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -102,7 +102,6 @@ extern void nni_aio_wait(nni_aio *);
 // and append will perform any necessary remove first.
 extern void nni_aio_list_init(nni_list *);
 extern void nni_aio_list_append(nni_list *, nni_aio *);
-extern void nni_aio_list_prepend(nni_list *, nni_aio *);
 extern void nni_aio_list_remove(nni_aio *);
 extern int  nni_aio_list_active(nni_aio *);
 
@@ -129,8 +128,6 @@ extern void nni_aio_abort(nni_aio *, int rv);
 // nng_aio_finish family of functions.)
 extern int nni_aio_begin(nni_aio *);
 
-extern void *nni_aio_get_prov_data(nni_aio *);
-extern void  nni_aio_set_prov_data(nni_aio *, void *);
 extern void *nni_aio_get_prov_extra(nni_aio *, unsigned);
 extern void  nni_aio_set_prov_extra(nni_aio *, unsigned, void *);
 // nni_aio_advance_iov moves up the iov, reflecting that some I/O as

@@ -1,6 +1,6 @@
 = nng_aio_set_iov(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -15,7 +15,7 @@ nng_aio_set_iov - set scatter/gather vector
 
 == SYNOPSIS
 
-[source, c]
+[source,c]
 ----
 #include <nng/nng.h>
 
@@ -24,13 +24,12 @@ int nng_aio_set_iov(nng_aio *aio, unsigned int niov, nng_iov *iov);
 
 == DESCRIPTION
 
-The `nng_aio_set_iov()` function sets a ((scatter/gather)) vector _iov_ on the
-handle _aio_.
+The `nng_aio_set_iov()` function sets a ((scatter/gather)) vector _iov_ on the handle _aio_.
 
 The _iov_ is a pointer to an array of _niov_ xref:nng_iov.5.adoc[`nng_iov`]
 structures, which have the following definition:
 
-[source, c]
+[source,c]
 ----
     typedef struct nng_iov {
         void * iov_buf;
@@ -38,21 +37,14 @@ structures, which have the following definition:
     };
 ----
 
-The _iov_ is copied into storage in the _aio_ itself, so that callers
-may use stack allocated `nng_iov` structures.  The values pointed to
-by the `iov_buf` members are *not* copied by this function though.
+The _iov_ is copied into storage in the _aio_ itself, so that callers may use stack allocated `nng_iov` structures.
+The values pointed to by the `iov_buf` members are *not* copied by this function though.
 
-Up to four `nng_iov` members may be supplied without causing any
-allocations, and thus this operation is guaranteed to succeed for
-values of _niov_ less than four.
+A maximum of eight (8) `nng_iov` members may be supplied.
 
-More than four (4) `nng_iov` members may be supplied, but this may require
-heap allocations, and so the operation may fail with `NNG_ENOMEM`.
-Additionally, not every operation can support longer vectors; the
-actual limit is determined by the system, but is generally at least
-sixteen (16).
-Furthermore, values for _niov_ larger than sixty-four (64) will
-generally result in `NNG_EINVAL`.
+NOTE: Earlier versions of the library could accept longer scatter-gather lists.
+However, no known consumers have ever needed a scatter-gather list longer than 4 vectors.
+As a result, the implementation limit was reduced, and heap allocations which could fail were removed.
 
 == RETURN VALUES
 
@@ -61,7 +53,6 @@ This function returns 0 on success, and non-zero otherwise.
 == ERRORS
 
 [horizontal]
-`NNG_ENOMEM`:: Insufficient free memory to perform operation.
 `NNG_EINVAL`:: Value of specified _niov_ is too large.
 
 == SEE ALSO
