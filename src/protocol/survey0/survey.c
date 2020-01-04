@@ -52,7 +52,7 @@ struct surv0_sock {
 	nni_mtx       mtx;
 	surv0_ctx     ctx;
 	nni_idhash *  surveys;
-	nni_pollable *sendable;
+	nni_pollable writable;
 };
 
 // surv0_pipe is our per-pipe protocol private structure.
@@ -221,7 +221,7 @@ surv0_sock_fini(void *arg)
 
 	surv0_ctx_fini(&sock->ctx);
 	nni_idhash_fini(sock->surveys);
-	nni_pollable_free(sock->sendable);
+	nni_pollable_fini(&sock->writable);
 	nni_mtx_fini(&sock->mtx);
 }
 
@@ -235,6 +235,9 @@ surv0_sock_init(void *arg, nni_sock *nsock)
 
 	NNI_LIST_INIT(&sock->pipes, surv0_pipe, node);
 	nni_mtx_init(&sock->mtx);
+	nni_pollable_init(&sock->writable);
+	// We are always writable.
+	nni_pollable_raise(&sock->writable);
 
 	if (((rv = nni_idhash_init(&sock->surveys)) != 0) ||
 	    ((rv = surv0_ctx_init(&sock->ctx, sock)) != 0)) {
@@ -249,7 +252,7 @@ surv0_sock_init(void *arg, nni_sock *nsock)
 	    nni_random() | 0x80000000u);
 
 	sock->ctx.survtime = NNI_SECOND;
-	sock->ttl           = 8;
+	sock->ttl          = 8;
 
 	return (0);
 }
@@ -478,17 +481,7 @@ surv0_sock_get_sendfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int         rv;
 	int         fd;
 
-	nni_mtx_lock(&sock->mtx);
-	if (sock->sendable == NULL) {
-		if ((rv = nni_pollable_alloc(&sock->sendable)) != 0) {
-			nni_mtx_unlock(&sock->mtx);
-			return (rv);
-		}
-		// We are always sendable.
-		nni_pollable_raise(sock->sendable);
-	}
-	nni_mtx_unlock(&sock->mtx);
-	if ((rv = nni_pollable_getfd(sock->sendable, &fd)) != 0) {
+	if ((rv = nni_pollable_getfd(&sock->writable, &fd)) != 0) {
 		return (rv);
 	}
 	return (nni_copyout_int(fd, buf, szp, t));
@@ -498,12 +491,12 @@ static int
 surv0_sock_get_recvfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	surv0_sock *  sock = arg;
-	nni_pollable *recvable;
+	nni_pollable *readable;
 	int           rv;
 	int           fd;
 
-	if (((rv = nni_msgq_get_recvable(sock->ctx.rq, &recvable)) != 0) ||
-	    ((rv = nni_pollable_getfd(recvable, &fd)) != 0)) {
+	if (((rv = nni_msgq_get_recvable(sock->ctx.rq, &readable)) != 0) ||
+	    ((rv = nni_pollable_getfd(readable, &fd)) != 0)) {
 		return (rv);
 	}
 	return (nni_copyout_int(fd, buf, szp, t));

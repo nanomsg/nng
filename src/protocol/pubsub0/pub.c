@@ -289,7 +289,7 @@ pub0_sock_get_sendfd(void *arg, void *buf, size_t *szp, nni_type t)
 	int        fd;
 	int        rv;
 	nni_mtx_lock(&sock->mtx);
-	// PUB sockets are *always* sendable.
+	// PUB sockets are *always* writable.
 	nni_pollable_raise(sock->sendable);
 	rv = nni_pollable_getfd(sock->sendable, &fd);
 	nni_mtx_unlock(&sock->mtx);

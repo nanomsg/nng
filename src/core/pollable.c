@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -10,13 +10,33 @@
 
 #include "core/nng_impl.h"
 
-struct nni_pollable {
-	int     p_rfd;
-	int     p_wfd;
-	nni_mtx p_lock;
-	bool    p_raised;
-	bool    p_open;
-};
+// We pack the wfd and rfd into a uint64_t so that we can update the pair
+// atomically and use nni_atomic_cas64, to be lock free.
+#define WFD(fds) ((int) ((fds) &0xffffffffu))
+#define RFD(fds) ((int) (((fds) >> 32u) & 0xffffffffu))
+#define FD_JOIN(wfd, rfd) ((uint64_t)(wfd) + ((uint64_t)(rfd) << 32u))
+
+void
+nni_pollable_init(nni_pollable *p)
+{
+	nni_atomic_init_bool(&p->p_raised);
+	nni_atomic_set64(&p->p_fds, (uint64_t) -1);
+}
+
+void
+nni_pollable_fini(nni_pollable *p)
+{
+	uint64_t fds;
+
+	fds = nni_atomic_get64(&p->p_fds);
+	if (fds != (uint64_t) -1) {
+		int rfd, wfd;
+		// Read in the high order, write in the low order.
+		rfd = RFD(fds);
+		wfd = WFD(fds);
+		nni_plat_pipe_close(rfd, wfd);
+	}
+}
 
 int
 nni_pollable_alloc(nni_pollable **pp)
@@ -25,9 +45,7 @@ nni_pollable_alloc(nni_pollable **pp)
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	p->p_open   = false;
-	p->p_raised = false;
-	nni_mtx_init(&p->p_lock);
+	nni_pollable_init(p);
 	*pp = p;
 	return (0);
 }
@@ -38,10 +56,7 @@ nni_pollable_free(nni_pollable *p)
 	if (p == NULL) {
 		return;
 	}
-	if (p->p_open) {
-		nni_plat_pipe_close(p->p_rfd, p->p_wfd);
-	}
-	nni_mtx_fini(&p->p_lock);
+	nni_pollable_fini(p);
 	NNI_FREE_STRUCT(p);
 }
 
@@ -51,16 +66,12 @@ nni_pollable_raise(nni_pollable *p)
 	if (p == NULL) {
 		return;
 	}
-	nni_mtx_lock(&p->p_lock);
-	if (!p->p_raised) {
-		p->p_raised = true;
-		if (p->p_open) {
-			nni_mtx_unlock(&p->p_lock);
-			nni_plat_pipe_raise(p->p_wfd);
-			return;
+	if (!nni_atomic_swap_bool(&p->p_raised, true)) {
+		uint64_t fds;
+		if ((fds = nni_atomic_get64(&p->p_fds)) != (uint64_t) -1) {
+			nni_plat_pipe_raise(WFD(fds));
 		}
 	}
-	nni_mtx_unlock(&p->p_lock);
 }
 
 void
@@ -69,16 +80,12 @@ nni_pollable_clear(nni_pollable *p)
 	if (p == NULL) {
 		return;
 	}
-	nni_mtx_lock(&p->p_lock);
-	if (p->p_raised) {
-		p->p_raised = false;
-		if (p->p_open) {
-			nni_mtx_unlock(&p->p_lock);
-			nni_plat_pipe_clear(p->p_rfd);
-			return;
+	if (nni_atomic_swap_bool(&p->p_raised, false)) {
+		uint64_t fds;
+		if ((fds = nni_atomic_get64(&p->p_fds)) != (uint64_t) -1) {
+			nni_plat_pipe_clear(RFD(fds));
 		}
 	}
-	nni_mtx_unlock(&p->p_lock);
 }
 
 int
@@ -87,19 +94,31 @@ nni_pollable_getfd(nni_pollable *p, int *fdp)
 	if (p == NULL) {
 		return (NNG_EINVAL);
 	}
-	nni_mtx_lock(&p->p_lock);
-	if (!p->p_open) {
-		int rv;
-		if ((rv = nni_plat_pipe_open(&p->p_wfd, &p->p_rfd)) != 0) {
-			nni_mtx_unlock(&p->p_lock);
+
+	for (;;) {
+		int      rfd;
+		int      wfd;
+		int      rv;
+		uint64_t fds;
+
+		if ((fds = nni_atomic_get64(&p->p_fds)) != (uint64_t) -1) {
+			*fdp = RFD(fds);
+			return (0);
+		}
+		if ((rv = nni_plat_pipe_open(&wfd, &rfd)) != 0) {
 			return (rv);
 		}
-		p->p_open = true;
-		if (p->p_raised) {
-			nni_plat_pipe_raise(p->p_wfd);
+		fds = FD_JOIN(wfd, rfd);
+
+		if (nni_atomic_cas64(&p->p_fds, (uint64_t) -1, fds)) {
+			if (nni_atomic_get_bool(&p->p_raised)) {
+				nni_plat_pipe_raise(wfd);
+			}
+			*fdp = rfd;
+			return (0);
 		}
+
+		// Someone beat us.  Close ours, and try again.
+		nni_plat_pipe_close(wfd, rfd);
 	}
-	nni_mtx_unlock(&p->p_lock);
-	*fdp = p->p_rfd;
-	return (0);
 }

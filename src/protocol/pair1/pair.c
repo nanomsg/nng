@@ -213,7 +213,7 @@ pair1_pipe_start(void *arg)
 	nni_mtx_unlock(&s->mtx);
 
 	// Schedule a getq.  In polyamorous mode we get on the per pipe
-	// sendq, as the socket distributes to us. In monogamous mode
+	// send_queue, as the socket distributes to us. In monogamous mode
 	// we bypass and get from the upper writeq directly (saving a
 	// set of context switches).
 	if (s->poly) {
@@ -343,7 +343,7 @@ pair1_sock_getq_cb(void *arg)
 	// Try a non-blocking send.  If this fails we just discard the
 	// message.  We have to do this to avoid head-of-line blocking
 	// for messages sent to other pipes.  Note that there is some
-	// buffering in the sendq.
+	// buffering in the send_queue.
 	if (nni_msgq_tryput(p->sendq, msg) != 0) {
 		nni_msg_free(msg);
 	}
@@ -426,7 +426,7 @@ pair1_pipe_send_cb(void *arg)
 		return;
 	}
 
-	// In polyamorous mode, we want to get from the sendq; in
+	// In polyamorous mode, we want to get from the send_queue; in
 	// monogamous we get from upper writeq.
 	nni_msgq_aio_get(s->poly ? p->sendq : s->uwq, p->aio_getq);
 }

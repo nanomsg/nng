@@ -74,7 +74,7 @@ test_rep_poll_writeable(void)
 	// Still not writable.
 	TEST_CHECK(testutil_pollfd(fd) == false);
 
-	// If we get a job, *then* we become writeable
+	// If we get a job, *then* we become writable
 	TEST_NNG_SEND_STR(req, "abc");
 	TEST_NNG_RECV_STR(rep, "abc");
 	TEST_CHECK(testutil_pollfd(fd) == true);

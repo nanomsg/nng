@@ -213,6 +213,14 @@ nni_atomic_dec64_nv(nni_atomic_u64 *v)
 #endif
 }
 
+bool
+nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
+{
+	uint64_t old;
+	old = InterlockedCompareExchange64(&v->v, (LONG64)new, (LONG64)comp);
+	return (old == comp);
+}
+
 static unsigned int __stdcall nni_plat_thr_main(void *arg)
 {
 	nni_plat_thr *thr = arg;

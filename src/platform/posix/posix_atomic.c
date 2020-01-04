@@ -17,6 +17,7 @@
 #ifdef NNG_HAVE_STDATOMIC
 
 #include <stdatomic.h>
+
 bool
 nni_atomic_flag_test_and_set(nni_atomic_flag *f)
 {
@@ -45,7 +46,6 @@ bool
 nni_atomic_swap_bool(nni_atomic_bool *v, bool b)
 {
 	return (atomic_exchange(&v->v, b));
-
 }
 
 void
@@ -108,6 +108,16 @@ nni_atomic_dec64_nv(nni_atomic_u64 *v)
 	return (ov - 1);
 }
 
+bool
+nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
+{
+	// It's possible that uint_fast64_t is not the same type underneath
+	// as uint64_t.  (Would be unusual!)
+	uint_fast64_t cv = (uint_fast64_t) comp;
+	uint_fast64_t nv = (uint_fast64_t) new;
+	return (atomic_compare_exchange_strong(&v->v, &cv, nv));
+}
+
 #else
 
 #include <pthread.h>
@@ -156,7 +166,7 @@ nni_atomic_swap_bool(nni_atomic_bool *b, bool n)
 {
 	bool v;
 	pthread_mutex_lock(&plat_atomic_lock);
-	v = b->b;
+	v    = b->b;
 	b->b = n;
 	pthread_mutex_unlock(&plat_atomic_lock);
 	return (v);
@@ -236,6 +246,19 @@ nni_atomic_dec64_nv(nni_atomic_u64 *v)
 	nv = v->v;
 	pthread_mutex_unlock(&plat_atomic_lock);
 	return (nv);
+}
+
+bool
+nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
+{
+	bool result = false;
+	pthread_mutex_lock(&plat_atomic_lock);
+	if (v->v == comp) {
+		v->v   = new;
+		result = true;
+	}
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (result);
 }
 
 #endif
