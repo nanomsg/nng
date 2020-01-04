@@ -41,7 +41,7 @@ static int  req0_ctx_init(void *, void *);
 // and so forth.
 struct req0_ctx {
 	nni_list_node  snode;
-	nni_list_node  sqnode; // node on the sendq
+	nni_list_node  sqnode; // node on the send_queue
 	nni_list_node  pnode;  // node on the pipe list
 	uint32_t       reqid;
 	req0_sock *    sock;
@@ -56,19 +56,19 @@ struct req0_ctx {
 
 // A req0_sock is our per-socket protocol private structure.
 struct req0_sock {
-	nni_duration  retry;
-	bool          closed;
-	int           ttl;
-	req0_ctx      ctx; // base socket ctx
-	nni_list      readypipes;
-	nni_list      busypipes;
-	nni_list      stoppipes;
-	nni_list      ctxs;
-	nni_list      sendq;  // contexts waiting to send.
-	nni_idhash *  reqids; // contexts by request ID
-	nni_pollable *recvable;
-	nni_pollable *sendable;
-	nni_mtx       mtx;
+	nni_duration retry;
+	bool         closed;
+	int          ttl;
+	req0_ctx     ctx; // base socket ctx
+	nni_list     ready_pipes;
+	nni_list     busy_pipes;
+	nni_list     stop_pipes;
+	nni_list     ctxs;
+	nni_list     sendq;  // contexts waiting to send.
+	nni_idhash * reqids; // contexts by request ID
+	nni_pollable recvable;
+	nni_pollable sendable;
+	nni_mtx      mtx;
 };
 
 // A req0_pipe is our per-pipe protocol private structure.
@@ -78,8 +78,8 @@ struct req0_pipe {
 	nni_list_node node;
 	nni_list      ctxs; // ctxs with pending traffic
 	bool          closed;
-	nni_aio *     aio_send;
-	nni_aio *     aio_recv;
+	nni_aio       aio_send;
+	nni_aio       aio_recv;
 };
 
 static void req0_sock_fini(void *);
@@ -106,9 +106,9 @@ req0_sock_init(void *arg, nni_sock *sock)
 
 	nni_mtx_init(&s->mtx);
 
-	NNI_LIST_INIT(&s->readypipes, req0_pipe, node);
-	NNI_LIST_INIT(&s->busypipes, req0_pipe, node);
-	NNI_LIST_INIT(&s->stoppipes, req0_pipe, node);
+	NNI_LIST_INIT(&s->ready_pipes, req0_pipe, node);
+	NNI_LIST_INIT(&s->busy_pipes, req0_pipe, node);
+	NNI_LIST_INIT(&s->stop_pipes, req0_pipe, node);
 	NNI_LIST_INIT(&s->sendq, req0_ctx, sqnode);
 	NNI_LIST_INIT(&s->ctxs, req0_ctx, snode);
 
@@ -117,11 +117,8 @@ req0_sock_init(void *arg, nni_sock *sock)
 
 	(void) req0_ctx_init(&s->ctx, s);
 
-	if (((rv = nni_pollable_alloc(&s->sendable)) != 0) ||
-	    ((rv = nni_pollable_alloc(&s->recvable)) != 0)) {
-		req0_sock_fini(s);
-		return (rv);
-	}
+	nni_pollable_init(&s->sendable);
+	nni_pollable_init(&s->recvable);
 
 	s->ttl = 8;
 	return (0);
@@ -157,14 +154,14 @@ req0_sock_fini(void *arg)
 	req0_sock *s = arg;
 
 	nni_mtx_lock(&s->mtx);
-	NNI_ASSERT(nni_list_empty(&s->busypipes));
-	NNI_ASSERT(nni_list_empty(&s->stoppipes));
-	NNI_ASSERT(nni_list_empty(&s->readypipes));
+	NNI_ASSERT(nni_list_empty(&s->busy_pipes));
+	NNI_ASSERT(nni_list_empty(&s->stop_pipes));
+	NNI_ASSERT(nni_list_empty(&s->ready_pipes));
 	nni_mtx_unlock(&s->mtx);
 
 	req0_ctx_fini(&s->ctx);
-	nni_pollable_free(s->recvable);
-	nni_pollable_free(s->sendable);
+	nni_pollable_fini(&s->recvable);
+	nni_pollable_fini(&s->sendable);
 	nni_idhash_fini(s->reqids);
 	nni_mtx_fini(&s->mtx);
 }
@@ -175,8 +172,8 @@ req0_pipe_stop(void *arg)
 	req0_pipe *p = arg;
 	req0_sock *s = p->req;
 
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_send);
+	nni_aio_stop(&p->aio_recv);
+	nni_aio_stop(&p->aio_send);
 	nni_mtx_lock(&s->mtx);
 	nni_list_node_remove(&p->node);
 	nni_mtx_unlock(&s->mtx);
@@ -187,21 +184,17 @@ req0_pipe_fini(void *arg)
 {
 	req0_pipe *p = arg;
 
-	nni_aio_free(p->aio_recv);
-	nni_aio_free(p->aio_send);
+	nni_aio_fini(&p->aio_recv);
+	nni_aio_fini(&p->aio_send);
 }
 
 static int
 req0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
 	req0_pipe *p = arg;
-	int        rv;
 
-	if (((rv = nni_aio_alloc(&p->aio_recv, req0_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->aio_send, req0_send_cb, p)) != 0)) {
-		req0_pipe_fini(p);
-		return (rv);
-	}
+	nni_aio_init(&p->aio_recv, req0_recv_cb, p);
+	nni_aio_init(&p->aio_send, req0_send_cb, p);
 
 	NNI_LIST_NODE_INIT(&p->node);
 	NNI_LIST_INIT(&p->ctxs, req0_ctx, pnode);
@@ -225,12 +218,12 @@ req0_pipe_start(void *arg)
 		nni_mtx_unlock(&s->mtx);
 		return (NNG_ECLOSED);
 	}
-	nni_list_append(&s->readypipes, p);
-	nni_pollable_raise(s->sendable);
+	nni_list_append(&s->ready_pipes, p);
+	nni_pollable_raise(&s->sendable);
 	req0_run_sendq(s, NULL);
 	nni_mtx_unlock(&s->mtx);
 
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 	return (0);
 }
 
@@ -241,26 +234,26 @@ req0_pipe_close(void *arg)
 	req0_sock *s = p->req;
 	req0_ctx * ctx;
 
-	nni_aio_close(p->aio_recv);
-	nni_aio_close(p->aio_send);
+	nni_aio_close(&p->aio_recv);
+	nni_aio_close(&p->aio_send);
 
 	nni_mtx_lock(&s->mtx);
-	// This removes the node from either busypipes or readypipes.
+	// This removes the node from either busy_pipes or ready_pipes.
 	// It doesn't much matter which.  We stick the pipe on the stop
 	// list, so that we can wait for that to close down safely.
 	p->closed = true;
 	nni_list_node_remove(&p->node);
-	nni_list_append(&s->stoppipes, p);
-	if (nni_list_empty(&s->readypipes)) {
-		nni_pollable_clear(s->sendable);
+	nni_list_append(&s->stop_pipes, p);
+	if (nni_list_empty(&s->ready_pipes)) {
+		nni_pollable_clear(&s->sendable);
 	}
 
 	while ((ctx = nni_list_first(&p->ctxs)) != NULL) {
 		nni_list_remove(&p->ctxs, ctx);
 		// Reset the timer on this so it expires immediately.
 		// This is actually easier than canceling the timer and
-		// running the sendq separately.  (In particular, it avoids
-		// a potential deadlock on cancelling the timer.)
+		// running the send_queue separately.  (In particular, it
+		// avoids a potential deadlock on cancelling the timer.)
 		nni_timer_schedule(&ctx->timer, NNI_TIME_ZERO);
 	}
 	nni_mtx_unlock(&s->mtx);
@@ -268,7 +261,7 @@ req0_pipe_close(void *arg)
 
 // For cooked mode, we use a context, and send out that way.  This
 // completely bypasses the upper write queue.  Each context keeps one
-// message pending; these are "scheduled" via the sendq.  The sendq
+// message pending; these are "scheduled" via the send_queue.  The send_queue
 // is ordered, so FIFO ordering between contexts is provided for.
 
 static void
@@ -280,16 +273,16 @@ req0_send_cb(void *arg)
 	nni_list   aios;
 
 	nni_aio_list_init(&aios);
-	if (nni_aio_result(p->aio_send) != 0) {
+	if (nni_aio_result(&p->aio_send) != 0) {
 		// We failed to send... clean up and deal with it.
-		nni_msg_free(nni_aio_get_msg(p->aio_send));
-		nni_aio_set_msg(p->aio_send, NULL);
+		nni_msg_free(nni_aio_get_msg(&p->aio_send));
+		nni_aio_set_msg(&p->aio_send, NULL);
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
 	// We completed a cooked send, so we need to reinsert ourselves
-	// in the ready list, and re-run the sendq.
+	// in the ready list, and re-run the send_queue.
 
 	nni_mtx_lock(&s->mtx);
 	if (p->closed || s->closed) {
@@ -298,10 +291,10 @@ req0_send_cb(void *arg)
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
-	nni_list_remove(&s->busypipes, p);
-	nni_list_append(&s->readypipes, p);
+	nni_list_remove(&s->busy_pipes, p);
+	nni_list_append(&s->ready_pipes, p);
 	if (nni_list_empty(&s->sendq)) {
-		nni_pollable_raise(s->sendable);
+		nni_pollable_raise(&s->sendable);
 	}
 	req0_run_sendq(s, &aios);
 	nni_mtx_unlock(&s->mtx);
@@ -322,13 +315,13 @@ req0_recv_cb(void *arg)
 	nni_aio *  aio;
 	uint32_t   id;
 
-	if (nni_aio_result(p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
-	msg = nni_aio_get_msg(p->aio_recv);
-	nni_aio_set_msg(p->aio_recv, NULL);
+	msg = nni_aio_get_msg(&p->aio_recv);
+	nni_aio_set_msg(&p->aio_recv, NULL);
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
 
 	// We yank 4 bytes from front of body, and move them to the header.
@@ -347,7 +340,7 @@ req0_recv_cb(void *arg)
 
 	// Schedule another receive while we are processing this.
 	nni_mtx_lock(&s->mtx);
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 
 	// Look for a context to receive it.
 	if ((nni_idhash_find(s->reqids, id, (void **) &ctx) != 0) ||
@@ -379,7 +372,7 @@ req0_recv_cb(void *arg)
 		// No AIO, so stash msg.  Receive will pick it up later.
 		ctx->repmsg = msg;
 		if (ctx == &s->ctx) {
-			nni_pollable_raise(s->recvable);
+			nni_pollable_raise(&s->recvable);
 		}
 		nni_mtx_unlock(&s->mtx);
 	}
@@ -475,7 +468,7 @@ req0_run_sendq(req0_sock *s, nni_list *aiolist)
 		nni_msg *  msg;
 		req0_pipe *p;
 
-		if ((p = nni_list_first(&s->readypipes)) == NULL) {
+		if ((p = nni_list_first(&s->ready_pipes)) == NULL) {
 			return;
 		}
 
@@ -488,7 +481,7 @@ req0_run_sendq(req0_sock *s, nni_list *aiolist)
 
 		// Schedule a resubmit timer.  We only do this if we got
 		// a pipe to send to.  Otherwise, we should get handled
-		// the next time that the sendq is run.  We don't do this
+		// the next time that the send_queue is run.  We don't do this
 		// if the retry is "disabled" with NNG_DURATION_INFINITE.
 		if (ctx->retry > 0) {
 			nni_timer_schedule(
@@ -507,8 +500,8 @@ req0_run_sendq(req0_sock *s, nni_list *aiolist)
 		nni_list_node_remove(&ctx->pnode);
 		nni_list_append(&p->ctxs, ctx);
 
-		nni_list_remove(&s->readypipes, p);
-		nni_list_append(&s->busypipes, p);
+		nni_list_remove(&s->ready_pipes, p);
+		nni_list_append(&s->busy_pipes, p);
 
 		if ((aio = ctx->saio) != NULL) {
 			ctx->saio = NULL;
@@ -521,16 +514,16 @@ req0_run_sendq(req0_sock *s, nni_list *aiolist)
 				nni_aio_finish(aio, 0, 0);
 			}
 			if (ctx == &s->ctx) {
-				if (nni_list_empty(&s->readypipes)) {
-					nni_pollable_clear(s->sendable);
+				if (nni_list_empty(&s->ready_pipes)) {
+					nni_pollable_clear(&s->sendable);
 				} else {
-					nni_pollable_raise(s->sendable);
+					nni_pollable_raise(&s->sendable);
 				}
 			}
 		}
 
-		nni_aio_set_msg(p->aio_send, msg);
-		nni_pipe_send(p->pipe, p->aio_send);
+		nni_aio_set_msg(&p->aio_send, msg);
+		nni_pipe_send(p->pipe, &p->aio_send);
 	}
 }
 
@@ -636,7 +629,7 @@ req0_ctx_recv(void *arg, nni_aio *aio)
 	// We have got a message to pass up, yay!
 	nni_aio_set_msg(aio, msg);
 	if (ctx == &s->ctx) {
-		nni_pollable_clear(s->recvable);
+		nni_pollable_clear(&s->recvable);
 	}
 	nni_mtx_unlock(&s->mtx);
 	nni_aio_finish(aio, 0, nni_msg_len(msg));
@@ -726,9 +719,9 @@ req0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	// If no pipes are ready, and the request was a poll (no background
-	// schedule), then fail it.  Should be NNG_TIMEDOUT.
+	// schedule), then fail it.  Should be NNG_ETIMEDOUT.
 	rv = nni_aio_schedule(aio, req0_ctx_cancel_send, ctx);
-	if ((rv != 0) && (nni_list_empty(&s->readypipes))) {
+	if ((rv != 0) && (nni_list_empty(&s->ready_pipes))) {
 		nni_idhash_remove(s->reqids, id);
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_finish_error(aio, rv);
@@ -739,10 +732,10 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	ctx->saio   = aio;
 	nni_aio_set_msg(aio, NULL);
 
-	// Stick us on the sendq list.
+	// Stick us on the send_queue list.
 	nni_list_append(&s->sendq, ctx);
 
-	// Note that this will be synchronous if the readypipes list was
+	// Note that this will be synchronous if the ready_pipes list was
 	// not empty.
 	req0_run_sendq(s, NULL);
 	nni_mtx_unlock(&s->mtx);
@@ -800,7 +793,7 @@ req0_sock_get_sendfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int        rv;
 	int        fd;
 
-	if ((rv = nni_pollable_getfd(s->sendable, &fd)) != 0) {
+	if ((rv = nni_pollable_getfd(&s->sendable, &fd)) != 0) {
 		return (rv);
 	}
 	return (nni_copyout_int(fd, buf, szp, t));
@@ -813,7 +806,7 @@ req0_sock_get_recvfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int        rv;
 	int        fd;
 
-	if ((rv = nni_pollable_getfd(s->recvable, &fd)) != 0) {
+	if ((rv = nni_pollable_getfd(&s->recvable, &fd)) != 0) {
 		return (rv);
 	}
 
@@ -896,7 +889,7 @@ static nni_proto req0_proto = {
 };
 
 int
-nng_req0_open(nng_socket *sidp)
+nng_req0_open(nng_socket *sock)
 {
-	return (nni_proto_open(sidp, &req0_proto));
+	return (nni_proto_open(sock, &req0_proto));
 }
