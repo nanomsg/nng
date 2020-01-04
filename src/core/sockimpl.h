@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -113,6 +113,7 @@ struct nni_pipe {
 	uint32_t           p_id;
 	nni_tran_pipe_ops  p_tran_ops;
 	nni_proto_pipe_ops p_proto_ops;
+	size_t             p_size;
 	void *             p_tran_data;
 	void *             p_proto_data;
 	nni_list_node      p_sock_node;

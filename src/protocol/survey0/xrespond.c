@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,7 +9,6 @@
 //
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/survey0/respond.h"
@@ -66,18 +65,14 @@ xresp0_sock_fini(void *arg)
 	nni_aio_fini(s->aio_getq);
 	nni_idhash_fini(s->pipes);
 	nni_mtx_fini(&s->mtx);
-	NNI_FREE_STRUCT(s);
 }
 
 static int
-xresp0_sock_init(void **sp, nni_sock *nsock)
+xresp0_sock_init(void *arg, nni_sock *nsock)
 {
-	xresp0_sock *s;
+	xresp0_sock *s = arg;
 	int          rv;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	nni_mtx_init(&s->mtx);
 	if (((rv = nni_idhash_init(&s->pipes)) != 0) ||
 	    ((rv = nni_aio_init(&s->aio_getq, xresp0_sock_getq_cb, s)) != 0)) {
@@ -89,7 +84,6 @@ xresp0_sock_init(void **sp, nni_sock *nsock)
 	s->urq = nni_sock_recvq(nsock);
 	s->uwq = nni_sock_sendq(nsock);
 
-	*sp = s;
 	return (0);
 }
 
@@ -130,18 +124,14 @@ xresp0_pipe_fini(void *arg)
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
 	nni_msgq_fini(p->sendq);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-xresp0_pipe_init(void **pp, nni_pipe *npipe, void *s)
+xresp0_pipe_init(void *arg, nni_pipe *npipe, void *s)
 {
-	xresp0_pipe *p;
+	xresp0_pipe *p = arg;
 	int          rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if (((rv = nni_msgq_init(&p->sendq, 2)) != 0) ||
 	    ((rv = nni_aio_init(&p->aio_putq, xresp0_putq_cb, p)) != 0) ||
 	    ((rv = nni_aio_init(&p->aio_recv, xresp0_recv_cb, p)) != 0) ||
@@ -153,7 +143,6 @@ xresp0_pipe_init(void **pp, nni_pipe *npipe, void *s)
 
 	p->npipe = npipe;
 	p->psock = s;
-	*pp      = p;
 	return (0);
 }
 
@@ -298,7 +287,7 @@ xresp0_recv_cb(void *arg)
 	// Move backtrace from body to header
 	hops = 1;
 	for (;;) {
-		bool     end = false;
+		bool     end;
 		uint8_t *body;
 
 		if (hops > s->ttl) {
@@ -312,7 +301,7 @@ xresp0_recv_cb(void *arg)
 			return;
 		}
 		body = nni_msg_body(msg);
-		end  = ((body[0] & 0x80) != 0);
+		end  = ((body[0] & 0x80u) != 0);
 		if (nni_msg_header_append(msg, body, 4) != 0) {
 			goto drop;
 		}
@@ -378,6 +367,7 @@ xresp0_sock_recv(void *arg, nni_aio *aio)
 }
 
 static nni_proto_pipe_ops xresp0_pipe_ops = {
+	.pipe_size  = sizeof(xresp0_pipe),
 	.pipe_init  = xresp0_pipe_init,
 	.pipe_fini  = xresp0_pipe_fini,
 	.pipe_start = xresp0_pipe_start,
@@ -398,6 +388,7 @@ static nni_option xresp0_sock_options[] = {
 };
 
 static nni_proto_sock_ops xresp0_sock_ops = {
+	.sock_size    = sizeof(xresp0_sock),
 	.sock_init    = xresp0_sock_init,
 	.sock_fini    = xresp0_sock_fini,
 	.sock_open    = xresp0_sock_open,

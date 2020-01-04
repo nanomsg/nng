@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,7 +9,6 @@
 //
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/survey0/survey.h"
@@ -51,7 +50,7 @@ struct surv0_sock {
 	int           ttl;
 	nni_list      pipes;
 	nni_mtx       mtx;
-	surv0_ctx *   ctx;
+	surv0_ctx     ctx;
 	nni_idhash *  surveys;
 	nni_pollable *sendable;
 };
@@ -77,27 +76,21 @@ surv0_ctx_fini(void *arg)
 		nni_msgq_fini(ctx->rq);
 	}
 	nni_timer_cancel(&ctx->timer);
-	NNI_FREE_STRUCT(ctx);
 }
 
 static int
-surv0_ctx_init(void **ctxp, void *sarg)
+surv0_ctx_init(void *carg, void *sarg)
 {
-	surv0_ctx * ctx;
+	surv0_ctx * ctx  = carg;
 	surv0_sock *sock = sarg;
 	int         rv;
 
-	if ((ctx = NNI_ALLOC_STRUCT(ctx)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	nni_mtx_lock(&sock->mtx);
-	if (sock->ctx != NULL) {
-		ctx->survtime = sock->ctx->survtime;
-	}
+	ctx->survtime = sock->ctx.survtime;
 	nni_mtx_unlock(&sock->mtx);
 	ctx->sock = sock;
 	// 126 is a deep enough queue, and leaves 2 extra cells for the
-	// pushback bit in msgqs.  This can result in up to 1kB of allocation
+	// push back bit.  This can result in up to 1kB of allocation
 	// for the message queue.
 	if ((rv = nni_msgq_init(&ctx->rq, 126)) != 0) {
 		surv0_ctx_fini(ctx);
@@ -105,7 +98,6 @@ surv0_ctx_init(void **ctxp, void *sarg)
 	}
 
 	nni_timer_init(&ctx->timer, surv0_ctx_timeout, ctx);
-	*ctxp = ctx;
 	return (0);
 }
 
@@ -227,31 +219,25 @@ surv0_sock_fini(void *arg)
 {
 	surv0_sock *sock = arg;
 
-	if (sock->ctx != NULL) {
-		surv0_ctx_fini(sock->ctx);
-	}
+	surv0_ctx_fini(&sock->ctx);
 	nni_idhash_fini(sock->surveys);
 	nni_pollable_free(sock->sendable);
 	nni_mtx_fini(&sock->mtx);
-	NNI_FREE_STRUCT(sock);
 }
 
 static int
-surv0_sock_init(void **sp, nni_sock *nsock)
+surv0_sock_init(void *arg, nni_sock *nsock)
 {
-	surv0_sock *sock;
+	surv0_sock *sock = arg;
 	int         rv;
 
 	NNI_ARG_UNUSED(nsock);
 
-	if ((sock = NNI_ALLOC_STRUCT(sock)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	NNI_LIST_INIT(&sock->pipes, surv0_pipe, node);
 	nni_mtx_init(&sock->mtx);
 
 	if (((rv = nni_idhash_init(&sock->surveys)) != 0) ||
-	    ((rv = surv0_ctx_init((void **) &sock->ctx, sock)) != 0)) {
+	    ((rv = surv0_ctx_init(&sock->ctx, sock)) != 0)) {
 		surv0_sock_fini(sock);
 		return (rv);
 	}
@@ -262,10 +248,9 @@ surv0_sock_init(void **sp, nni_sock *nsock)
 	nni_idhash_set_limits(sock->surveys, 0x80000000u, 0xffffffffu,
 	    nni_random() | 0x80000000u);
 
-	sock->ctx->survtime = NNI_SECOND;
+	sock->ctx.survtime = NNI_SECOND;
 	sock->ttl           = 8;
 
-	*sp = sock;
 	return (0);
 }
 
@@ -280,7 +265,7 @@ surv0_sock_close(void *arg)
 {
 	surv0_sock *s = arg;
 
-	nni_msgq_close(s->ctx->rq);
+	nni_msgq_close(s->ctx.rq);
 }
 
 static void
@@ -302,18 +287,14 @@ surv0_pipe_fini(void *arg)
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
 	nni_msgq_fini(p->sendq);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-surv0_pipe_init(void **pp, nni_pipe *npipe, void *s)
+surv0_pipe_init(void *arg, nni_pipe *npipe, void *s)
 {
-	surv0_pipe *p;
+	surv0_pipe *p = arg;
 	int         rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	// This depth could be tunable.  The deeper the queue, the more
 	// concurrent surveys that can be delivered.  Having said that, this
 	// is best effort, and a deep queue doesn't really do much for us.
@@ -328,7 +309,6 @@ surv0_pipe_init(void **pp, nni_pipe *npipe, void *s)
 
 	p->npipe = npipe;
 	p->sock  = s;
-	*pp      = p;
 	return (0);
 }
 
@@ -481,14 +461,14 @@ surv0_sock_set_surveytime(
     void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	surv0_sock *s = arg;
-	return (surv0_ctx_set_surveytime(s->ctx, buf, sz, t));
+	return (surv0_ctx_set_surveytime(&s->ctx, buf, sz, t));
 }
 
 static int
 surv0_sock_get_surveytime(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	surv0_sock *s = arg;
-	return (surv0_ctx_get_surveytime(s->ctx, buf, szp, t));
+	return (surv0_ctx_get_surveytime(&s->ctx, buf, szp, t));
 }
 
 static int
@@ -522,7 +502,7 @@ surv0_sock_get_recvfd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int           rv;
 	int           fd;
 
-	if (((rv = nni_msgq_get_recvable(sock->ctx->rq, &recvable)) != 0) ||
+	if (((rv = nni_msgq_get_recvable(sock->ctx.rq, &recvable)) != 0) ||
 	    ((rv = nni_pollable_getfd(recvable, &fd)) != 0)) {
 		return (rv);
 	}
@@ -533,17 +513,18 @@ static void
 surv0_sock_recv(void *arg, nni_aio *aio)
 {
 	surv0_sock *s = arg;
-	surv0_ctx_recv(s->ctx, aio);
+	surv0_ctx_recv(&s->ctx, aio);
 }
 
 static void
 surv0_sock_send(void *arg, nni_aio *aio)
 {
 	surv0_sock *s = arg;
-	surv0_ctx_send(s->ctx, aio);
+	surv0_ctx_send(&s->ctx, aio);
 }
 
 static nni_proto_pipe_ops surv0_pipe_ops = {
+	.pipe_size  = sizeof(surv0_pipe),
 	.pipe_init  = surv0_pipe_init,
 	.pipe_fini  = surv0_pipe_fini,
 	.pipe_start = surv0_pipe_start,
@@ -562,6 +543,7 @@ static nni_option surv0_ctx_options[] = {
 	}
 };
 static nni_proto_ctx_ops surv0_ctx_ops = {
+	.ctx_size    = sizeof(surv0_ctx),
 	.ctx_init    = surv0_ctx_init,
 	.ctx_fini    = surv0_ctx_fini,
 	.ctx_send    = surv0_ctx_send,
@@ -595,6 +577,7 @@ static nni_option surv0_sock_options[] = {
 };
 
 static nni_proto_sock_ops surv0_sock_ops = {
+	.sock_size    = sizeof(surv0_sock),
 	.sock_init    = surv0_sock_init,
 	.sock_fini    = surv0_sock_fini,
 	.sock_open    = surv0_sock_open,

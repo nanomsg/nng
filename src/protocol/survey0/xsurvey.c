@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,7 +9,6 @@
 //
 
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/survey0/survey.h"
@@ -63,18 +62,14 @@ xsurv0_sock_fini(void *arg)
 
 	nni_aio_fini(s->aio_getq);
 	nni_mtx_fini(&s->mtx);
-	NNI_FREE_STRUCT(s);
 }
 
 static int
-xsurv0_sock_init(void **sp, nni_sock *nsock)
+xsurv0_sock_init(void *arg, nni_sock *nsock)
 {
-	xsurv0_sock *s;
+	xsurv0_sock *s = arg;
 	int          rv;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if ((rv = nni_aio_init(&s->aio_getq, xsurv0_sock_getq_cb, s)) != 0) {
 		xsurv0_sock_fini(s);
 		return (rv);
@@ -86,7 +81,6 @@ xsurv0_sock_init(void **sp, nni_sock *nsock)
 	s->urq = nni_sock_recvq(nsock);
 	s->ttl = 8;
 
-	*sp = s;
 	return (0);
 }
 
@@ -127,22 +121,18 @@ xsurv0_pipe_fini(void *arg)
 	nni_aio_fini(p->aio_recv);
 	nni_aio_fini(p->aio_putq);
 	nni_msgq_fini(p->sendq);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-xsurv0_pipe_init(void **pp, nni_pipe *npipe, void *s)
+xsurv0_pipe_init(void *arg, nni_pipe *npipe, void *s)
 {
-	xsurv0_pipe *p;
+	xsurv0_pipe *p = arg;
 	int          rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	// This depth could be tunable.  The queue exists so that if we
 	// have multiple requests coming in faster than we can deliver them,
 	// we try to avoid dropping them.  We don't really have a solution
-	// for applying backpressure.  It would be nice if surveys carried
+	// for applying back pressure.  It would be nice if surveys carried
 	// an expiration with them, so that we could discard any that are
 	// not delivered before their expiration date.
 	if (((rv = nni_msgq_init(&p->sendq, 16)) != 0) ||
@@ -156,7 +146,6 @@ xsurv0_pipe_init(void **pp, nni_pipe *npipe, void *s)
 
 	p->npipe = npipe;
 	p->psock = s;
-	*pp      = p;
 	return (0);
 }
 
@@ -349,6 +338,7 @@ xsurv0_sock_send(void *arg, nni_aio *aio)
 }
 
 static nni_proto_pipe_ops xsurv0_pipe_ops = {
+	.pipe_size  = sizeof(xsurv0_pipe),
 	.pipe_init  = xsurv0_pipe_init,
 	.pipe_fini  = xsurv0_pipe_fini,
 	.pipe_start = xsurv0_pipe_start,
@@ -369,6 +359,7 @@ static nni_option xsurv0_sock_options[] = {
 };
 
 static nni_proto_sock_ops xsurv0_sock_ops = {
+	.sock_size    = sizeof(xsurv0_sock),
 	.sock_init    = xsurv0_sock_init,
 	.sock_fini    = xsurv0_sock_fini,
 	.sock_open    = xsurv0_sock_open,

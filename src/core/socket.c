@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -26,6 +26,7 @@ struct nni_ctx {
 	nni_sock *        c_sock;
 	nni_proto_ctx_ops c_ops;
 	void *            c_data;
+	size_t            c_size;
 	bool              c_closed;
 	unsigned          c_refcnt; // protected by global lock
 	uint32_t          c_id;
@@ -71,6 +72,7 @@ struct nni_socket {
 	uint32_t s_flags;
 	unsigned s_refcnt; // protected by global lock
 	void *   s_data;   // Protocol private
+	size_t   s_size;
 
 	nni_msgq *s_uwq; // Upper write queue
 	nni_msgq *s_urq; // Upper read queue
@@ -496,7 +498,7 @@ sock_destroy(nni_sock *s)
 	nni_cv_fini(&s->s_cv);
 	nni_mtx_fini(&s->s_mx);
 	nni_mtx_fini(&s->s_pipe_cbs_mtx);
-	NNI_FREE_STRUCT(s);
+	nni_free(s, s->s_size);
 }
 
 static int
@@ -505,10 +507,13 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	int       rv;
 	nni_sock *s;
 	bool      on;
+	size_t    sz;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
+	sz = NNI_ALIGN_UP(sizeof(*s)) + proto->proto_sock_ops->sock_size;
+	if ((s = nni_zalloc(sz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+	s->s_data      = s + 1;
 	s->s_sndtimeo  = -1;
 	s->s_rcvtimeo  = -1;
 	s->s_reconn    = NNI_SECOND;
@@ -545,7 +550,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 
 	if (((rv = nni_msgq_init(&s->s_uwq, 0)) != 0) ||
 	    ((rv = nni_msgq_init(&s->s_urq, 1)) != 0) ||
-	    ((rv = s->s_sock_ops.sock_init(&s->s_data, s)) != 0) ||
+	    ((rv = s->s_sock_ops.sock_init(s->s_data, s)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_SENDTIMEO, &s->s_sndtimeo,
 	          sizeof(nni_duration), NNI_TYPE_DURATION)) != 0) ||
 	    ((rv = nni_sock_setopt(s, NNG_OPT_RECVTIMEO, &s->s_rcvtimeo,
@@ -989,7 +994,7 @@ nni_sock_setopt(
 		return (rv);
 	}
 
-	// Prepare a copy of the sockoption.
+	// Prepare a copy of the socket option.
 	if ((optv = NNI_ALLOC_STRUCT(optv)) == NULL) {
 		return (NNG_ENOMEM);
 	}
@@ -1187,7 +1192,7 @@ nni_ctx_destroy(nni_ctx *ctx)
 	}
 
 	// Let the socket go, our hold on it is done.
-	NNI_FREE_STRUCT(ctx);
+	nni_free(ctx, ctx->c_size);
 }
 
 void
@@ -1221,39 +1226,43 @@ nni_ctx_open(nni_ctx **ctxp, nni_sock *sock)
 {
 	nni_ctx *ctx;
 	int      rv;
+	size_t   sz;
 
 	if (sock->s_ctx_ops.ctx_init == NULL) {
 		return (NNG_ENOTSUP);
 	}
-	if ((ctx = NNI_ALLOC_STRUCT(ctx)) == NULL) {
+
+	sz = NNI_ALIGN_UP(sizeof(*ctx)) + sock->s_ctx_ops.ctx_size;
+	if ((ctx = nni_zalloc(sz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-
-	nni_mtx_lock(&sock_lk);
-	if (sock->s_closed) {
-		nni_mtx_unlock(&sock_lk);
-		NNI_FREE_STRUCT(ctx);
-		return (NNG_ECLOSED);
-	}
-	if ((rv = nni_idhash_alloc32(ctx_hash, &ctx->c_id, ctx)) != 0) {
-		nni_mtx_unlock(&sock_lk);
-		NNI_FREE_STRUCT(ctx);
-		return (rv);
-	}
-
-	if ((rv = sock->s_ctx_ops.ctx_init(&ctx->c_data, sock->s_data)) != 0) {
-		nni_idhash_remove(ctx_hash, ctx->c_id);
-		nni_mtx_unlock(&sock_lk);
-		NNI_FREE_STRUCT(ctx);
-		return (rv);
-	}
-
+	ctx->c_size = sz;
+	ctx->c_data = ctx + 1;
 	ctx->c_closed   = false;
 	ctx->c_refcnt   = 1; // Caller implicitly gets a reference.
 	ctx->c_sock     = sock;
 	ctx->c_ops      = sock->s_ctx_ops;
 	ctx->c_rcvtimeo = sock->s_rcvtimeo;
 	ctx->c_sndtimeo = sock->s_sndtimeo;
+
+	nni_mtx_lock(&sock_lk);
+	if (sock->s_closed) {
+		nni_mtx_unlock(&sock_lk);
+		nni_free(ctx, ctx->c_size);
+		return (NNG_ECLOSED);
+	}
+	if ((rv = nni_idhash_alloc32(ctx_hash, &ctx->c_id, ctx)) != 0) {
+		nni_mtx_unlock(&sock_lk);
+		nni_free(ctx, ctx->c_size);
+		return (rv);
+	}
+
+	if ((rv = sock->s_ctx_ops.ctx_init(ctx->c_data, sock->s_data)) != 0) {
+		nni_idhash_remove(ctx_hash, ctx->c_id);
+		nni_mtx_unlock(&sock_lk);
+		nni_free(ctx, ctx->c_size);
+		return (rv);
+	}
 
 	nni_list_append(&sock->s_ctxs, ctx);
 	nni_mtx_unlock(&sock_lk);

@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -25,9 +25,13 @@
 
 // nni_proto_pipe contains protocol-specific per-pipe operations.
 struct nni_proto_pipe_ops {
-	// pipe_init creates the protocol-specific per pipe data structure.
+	// pipe_size is the size of a protocol pipe object.  The common
+	// code allocates this memory for the protocol private state.
+	size_t pipe_size;
+
+	// pipe_init2 initializes the protocol-specific pipe data structure.
 	// The last argument is the per-socket protocol private data.
-	int (*pipe_init)(void **, nni_pipe *, void *);
+	int (*pipe_init)(void *, nni_pipe *, void *);
 
 	// pipe_fini releases any pipe data structures.  This is called after
 	// the pipe has been removed from the protocol, and the generic
@@ -53,9 +57,13 @@ struct nni_proto_pipe_ops {
 };
 
 struct nni_proto_ctx_ops {
-	// ctx_init creates a new context. The second argument is the
+	// ctx_size is the size of a protocol context object.  The common
+	// code allocates this memory for the protocol private state.
+	size_t ctx_size;
+
+	// ctx_init initializes a new context. The second argument is the
 	// protocol specific socket structure.
-	int (*ctx_init)(void **, void *);
+	int (*ctx_init)(void *, void *);
 
 	// ctx_fini destroys a context.
 	void (*ctx_fini)(void *);
@@ -79,10 +87,13 @@ struct nni_proto_ctx_ops {
 };
 
 struct nni_proto_sock_ops {
-	// sock_init creates the protocol instance, which will be stored on
-	// the socket. This is run without the sock lock held, and allocates
-	// storage or other resources for the socket.
-	int (*sock_init)(void **, nni_sock *);
+	// ctx_size is the size of a protocol socket object.  The common
+	// code allocates this memory for the protocol private state.
+	size_t sock_size;
+
+	// sock_init2 initializes the protocol instance, which will be stored
+	// on the socket. This is run without the sock lock held.
+	int (*sock_init)(void *, nni_sock *);
 
 	// sock_fini destroys the protocol instance.  This is run without the
 	// socket lock held, and is intended to release resources.  It may
@@ -141,8 +152,9 @@ struct nni_proto {
 // during the life of the project.  If we add a new version, please keep
 // the old version around -- it may be possible to automatically convert
 // older versions in the future.
-#define NNI_PROTOCOL_V0 0x50520000 // "pr\0\0"
-#define NNI_PROTOCOL_VERSION NNI_PROTOCOL_V0
+#define NNI_PROTOCOL_V0 0x50520000u // "pr\0\0"
+#define NNI_PROTOCOL_V1 0x50520001u // "pr\0\0"
+#define NNI_PROTOCOL_VERSION NNI_PROTOCOL_V1
 
 // These flags determine which operations make sense.  We use them so that
 // we can reject attempts to create notification fds for operations that make
@@ -150,11 +162,11 @@ struct nni_proto {
 // that at the socket layer (NNG_PROTO_FLAG_RAW).  Finally, we provide the
 // NNI_PROTO_FLAG_NOMSGQ flag for protocols that do not use the upper write
 // or upper read queues.
-#define NNI_PROTO_FLAG_RCV 1    // Protocol can receive
-#define NNI_PROTO_FLAG_SND 2    // Protocol can send
-#define NNI_PROTO_FLAG_SNDRCV 3 // Protocol can both send & recv
-#define NNI_PROTO_FLAG_RAW 4    // Protocol is raw
-#define NNI_PROTO_FLAG_NOMSGQ 8 // Protocol bypasses the upper queues
+#define NNI_PROTO_FLAG_RCV 1u    // Protocol can receive
+#define NNI_PROTO_FLAG_SND 2u    // Protocol can send
+#define NNI_PROTO_FLAG_SNDRCV 3u // Protocol can both send & recv
+#define NNI_PROTO_FLAG_RAW 4u    // Protocol is raw
+#define NNI_PROTO_FLAG_NOMSGQ 8u // Protocol bypasses the upper queues
 
 // nni_proto_open is called by the protocol to create a socket instance
 // with its ops vector.  The intent is that applications will only see

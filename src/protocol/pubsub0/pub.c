@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -63,27 +63,21 @@ pub0_sock_fini(void *arg)
 
 	nni_pollable_free(s->sendable);
 	nni_mtx_fini(&s->mtx);
-	NNI_FREE_STRUCT(s);
 }
 
 static int
-pub0_sock_init(void **sp, nni_sock *nsock)
+pub0_sock_init(void *arg, nni_sock *nsock)
 {
-	pub0_sock *sock;
+	pub0_sock *sock = arg;
 	int        rv;
 	NNI_ARG_UNUSED(nsock);
 
-	if ((sock = NNI_ALLOC_STRUCT(sock)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	if ((rv = nni_pollable_alloc(&sock->sendable)) != 0) {
-		NNI_FREE_STRUCT(sock);
 		return (rv);
 	}
 	nni_mtx_init(&sock->mtx);
 	NNI_LIST_INIT(&sock->pipes, pub0_pipe, node);
 	sock->sendbuf = 16; // fairly arbitrary
-	*sp           = sock;
 	return (0);
 }
 
@@ -120,20 +114,15 @@ pub0_pipe_fini(void *arg)
 	nni_aio_fini(p->aio_send);
 	nni_aio_fini(p->aio_recv);
 	nni_lmq_fini(&p->sendq);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-pub0_pipe_init(void **pp, nni_pipe *pipe, void *s)
+pub0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
-	pub0_pipe *p;
+	pub0_pipe *p = arg;
 	pub0_sock *sock = s;
 	int        rv;
 	size_t     len;
-
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 
 	nni_mtx_lock(&sock->mtx);
 	len = sock->sendbuf;
@@ -151,7 +140,6 @@ pub0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 	p->busy = false;
 	p->pipe = pipe;
 	p->pub  = s;
-	*pp     = p;
 	return (0);
 }
 
@@ -352,6 +340,7 @@ pub0_sock_get_sendbuf(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static nni_proto_pipe_ops pub0_pipe_ops = {
+    .pipe_size = sizeof (pub0_pipe),
 	.pipe_init  = pub0_pipe_init,
 	.pipe_fini  = pub0_pipe_fini,
 	.pipe_start = pub0_pipe_start,
@@ -376,6 +365,7 @@ static nni_option pub0_sock_options[] = {
 };
 
 static nni_proto_sock_ops pub0_sock_ops = {
+    .sock_size = sizeof (pub0_sock),
 	.sock_init    = pub0_sock_init,
 	.sock_fini    = pub0_sock_fini,
 	.sock_open    = pub0_sock_open,

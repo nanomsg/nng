@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -65,18 +65,14 @@ xrep0_sock_fini(void *arg)
 	nni_aio_fini(s->aio_getq);
 	nni_idhash_fini(s->pipes);
 	nni_mtx_fini(&s->lk);
-	NNI_FREE_STRUCT(s);
 }
 
 static int
-xrep0_sock_init(void **sp, nni_sock *sock)
+xrep0_sock_init(void *arg, nni_sock *sock)
 {
-	xrep0_sock *s;
+	xrep0_sock *s = arg;
 	int         rv;
 
-	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
-		return (NNG_ENOMEM);
-	}
 	nni_mtx_init(&s->lk);
 	if (((rv = nni_idhash_init(&s->pipes)) != 0) ||
 	    ((rv = nni_aio_init(&s->aio_getq, xrep0_sock_getq_cb, s)) != 0)) {
@@ -87,8 +83,6 @@ xrep0_sock_init(void **sp, nni_sock *sock)
 	s->ttl = 8; // Per RFC
 	s->uwq = nni_sock_sendq(sock);
 	s->urq = nni_sock_recvq(sock);
-
-	*sp = s;
 
 	return (0);
 }
@@ -131,20 +125,15 @@ xrep0_pipe_fini(void *arg)
 	nni_aio_fini(p->aio_recv);
 	nni_aio_fini(p->aio_putq);
 	nni_msgq_fini(p->sendq);
-	NNI_FREE_STRUCT(p);
 }
 
 static int
-xrep0_pipe_init(void **pp, nni_pipe *pipe, void *s)
+xrep0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
-	xrep0_pipe *p;
+	xrep0_pipe *p = arg;
 	int         rv;
 
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-
-	// We want a pretty deep sendq on pipes. The rationale here is
+	// We want a pretty deep send queue on pipes. The rationale here is
 	// that the send rate will be mitigated by the receive rate.
 	// If a slow pipe (req pipe not reading its own responses!?)
 	// comes up, then we will start discarding its replies eventually,
@@ -152,7 +141,7 @@ xrep0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 	// smash us with requests, but be unable to handle replies faster
 	// than we can forward them.  If they do that, their replies get
 	// dropped.  (From a DDoS perspective, it might be nice in the
-	// future if we had a way to exert backpressure to the send side --
+	// future if we had a way to exert back pressure to the send side --
 	// essentially don't let peers send requests faster than they are
 	// willing to receive replies.  Something to think about for the
 	// future.)
@@ -167,7 +156,6 @@ xrep0_pipe_init(void **pp, nni_pipe *pipe, void *s)
 
 	p->pipe = pipe;
 	p->rep  = s;
-	*pp     = p;
 	return (0);
 }
 
@@ -331,7 +319,7 @@ xrep0_pipe_recv_cb(void *arg)
 			return;
 		}
 		body = nni_msg_body(msg);
-		end  = ((body[0] & 0x80) != 0);
+		end  = ((body[0] & 0x80u) != 0);
 		if (nni_msg_header_append(msg, body, 4) != 0) {
 			// Out of memory most likely, but keep going to
 			// avoid breaking things.
@@ -401,6 +389,7 @@ xrep0_sock_recv(void *arg, nni_aio *aio)
 // This is the global protocol structure -- our linkage to the core.
 // This should be the only global non-static symbol in this file.
 static nni_proto_pipe_ops xrep0_pipe_ops = {
+	.pipe_size  = sizeof(xrep0_pipe),
 	.pipe_init  = xrep0_pipe_init,
 	.pipe_fini  = xrep0_pipe_fini,
 	.pipe_start = xrep0_pipe_start,
@@ -421,6 +410,7 @@ static nni_option xrep0_sock_options[] = {
 };
 
 static nni_proto_sock_ops xrep0_sock_ops = {
+	.sock_size    = sizeof(xrep0_sock),
 	.sock_init    = xrep0_sock_init,
 	.sock_fini    = xrep0_sock_fini,
 	.sock_open    = xrep0_sock_open,
