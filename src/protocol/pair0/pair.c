@@ -56,6 +56,7 @@ pair0_sock_init(void *arg, nni_sock *nsock)
 {
 	pair0_sock *s = arg;
 
+	nni_mtx_init(&s->mtx);
 	s->ppipe = NULL;
 	s->uwq   = nni_sock_sendq(nsock);
 	s->urq   = nni_sock_recvq(nsock);
