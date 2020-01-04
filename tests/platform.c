@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -40,7 +40,11 @@ test_sleep(void)
 	nng_msleep(100);
 	end = testutil_clock();
 	TEST_CHECK((end - start) >= 100);
+#ifdef __has_feature
+#if !__has_feature(thread_sanitizer) && !__has_feature(memory_sanitizer)
 	TEST_CHECK((end - start) <= 500);
+#endif
+#endif
 }
 
 void
@@ -48,8 +52,6 @@ test_clock(void)
 {
 	uint64_t mstart;
 	uint64_t msend;
-	uint64_t usdelta;
-	uint64_t msdelta;
 	nng_time usend;
 	nng_time usnow;
 
@@ -61,6 +63,11 @@ test_clock(void)
 
 	TEST_CHECK(usend > usnow);
 	TEST_CHECK(msend > mstart);
+
+#ifdef __has_feature
+#if !__has_feature(thread_sanitizer) && !__has_feature(memory_sanitizer)
+	uint64_t usdelta;
+	uint64_t msdelta;
 	usdelta = usend - usnow;
 	msdelta = msend - mstart;
 	TEST_CHECK(usdelta >= 200);
@@ -70,6 +77,8 @@ test_clock(void)
 	} else {
 		TEST_CHECK((usdelta - msdelta) < 50);
 	}
+#endif
+#endif
 }
 
 void
