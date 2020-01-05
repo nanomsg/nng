@@ -149,7 +149,21 @@ nni_taskq_fini(nni_taskq *tq)
 void
 nni_task_exec(nni_task *task)
 {
-	if (!nni_atomic_swap_bool(&task->task_prep, false)) {
+	// Order here is important.  Raising the busy count ensures
+	// that we always have a hold on the task.  We can then drop
+	// the increment that was done during preparation, if that
+	// occurred.
+#if 0
+	nni_atomic_inc64(&task->task_busy);
+	if (nni_atomic_swap_bool(&task->task_prep, false)) {
+		nni_atomic_sub64(&task->task_busy, 1);
+	}
+#endif
+	if (nni_atomic_get_bool(&task->task_prep)) {
+		// We reuse the prep count that we had before.
+		nni_atomic_set_bool(&task->task_prep, false);
+	} else {
+		// Was not prepared, so mark it busy.
 		nni_atomic_inc64(&task->task_busy);
 	}
 #if 0
