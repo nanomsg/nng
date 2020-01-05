@@ -12,14 +12,15 @@
 
 typedef struct nni_taskq_thr nni_taskq_thr;
 struct nni_task {
-	nni_list_node task_node;
-	void *        task_arg;
-	nni_cb        task_cb;
-	nni_taskq *   task_tq;
-	unsigned      task_busy;
-	bool          task_prep;
-	nni_mtx       task_mtx;
-	nni_cv        task_cv;
+	nni_list_node   task_node;
+	void *          task_arg;
+	nni_cb          task_cb;
+	nni_taskq *     task_tq;
+	nni_atomic_u64  task_busy;
+	nni_atomic_bool task_prep;
+	nni_atomic_bool task_wait;
+	nni_mtx         task_mtx;
+	nni_cv          task_cv;
 };
 struct nni_taskq_thr {
 	nni_taskq *tqt_tq;
@@ -48,20 +49,29 @@ nni_taskq_thread(void *self)
 	for (;;) {
 		if ((task = nni_list_first(&tq->tq_tasks)) != NULL) {
 
-			nni_mtx_lock(&task->task_mtx);
+		//	nni_mtx_lock(&task->task_mtx);
 			nni_list_remove(&tq->tq_tasks, task);
-			nni_mtx_unlock(&task->task_mtx);
+		//	nni_mtx_unlock(&task->task_mtx);
 
 			nni_mtx_unlock(&tq->tq_mtx);
 
 			task->task_cb(task->task_arg);
 
+			if ((nni_atomic_dec64_nv(&task->task_busy) == 0) &&
+			    (nni_atomic_get_bool(&task->task_wait))) {
+				nni_mtx_lock(&task->task_mtx);
+				nni_cv_wake(&task->task_cv);
+				nni_mtx_unlock(&task->task_mtx);
+			}
+
+#if 0
 			nni_mtx_lock(&task->task_mtx);
 			task->task_busy--;
 			if (task->task_busy == 0) {
 				nni_cv_wake(&task->task_cv);
 			}
 			nni_mtx_unlock(&task->task_mtx);
+#endif
 
 			nni_mtx_lock(&tq->tq_mtx);
 
@@ -139,6 +149,10 @@ nni_taskq_fini(nni_taskq *tq)
 void
 nni_task_exec(nni_task *task)
 {
+	if (!nni_atomic_swap_bool(&task->task_prep, false)) {
+		nni_atomic_inc64(&task->task_busy);
+	}
+#if 0
 	nni_mtx_lock(&task->task_mtx);
 	if (task->task_prep) {
 		task->task_prep = false;
@@ -146,17 +160,26 @@ nni_task_exec(nni_task *task)
 		task->task_busy++;
 	}
 	nni_mtx_unlock(&task->task_mtx);
+#endif
 
 	if (task->task_cb != NULL) {
 		task->task_cb(task->task_arg);
 	}
 
+	if ((nni_atomic_dec64_nv(&task->task_busy) == 0) &&
+	    (nni_atomic_get_bool(&task->task_wait))) {
+		nni_mtx_lock(&task->task_mtx);
+		nni_cv_wake(&task->task_cv);
+		nni_mtx_unlock(&task->task_mtx);
+	}
+#if 0
 	nni_mtx_lock(&task->task_mtx);
 	task->task_busy--;
 	if (task->task_busy == 0) {
 		nni_cv_wake(&task->task_cv);
 	}
 	nni_mtx_unlock(&task->task_mtx);
+#endif
 }
 
 void
@@ -170,6 +193,12 @@ nni_task_dispatch(nni_task *task)
 		nni_task_exec(task);
 		return;
 	}
+
+	if (!nni_atomic_swap_bool(&task->task_prep, false)) {
+		nni_atomic_inc64(&task->task_busy);
+	}
+
+#if 0
 	nni_mtx_lock(&task->task_mtx);
 	if (task->task_prep) {
 		task->task_prep = false;
@@ -177,6 +206,7 @@ nni_task_dispatch(nni_task *task)
 		task->task_busy++;
 	}
 	nni_mtx_unlock(&task->task_mtx);
+#endif
 
 	nni_mtx_lock(&tq->tq_mtx);
 	nni_list_append(&tq->tq_tasks, task);
@@ -187,17 +217,22 @@ nni_task_dispatch(nni_task *task)
 void
 nni_task_prep(nni_task *task)
 {
+	nni_atomic_inc64(&task->task_busy);
+	nni_atomic_set_bool(&task->task_prep, true);
+#if 0
 	nni_mtx_lock(&task->task_mtx);
 	task->task_busy++;
 	task->task_prep = true;
 	nni_mtx_unlock(&task->task_mtx);
+#endif
 }
 
 void
 nni_task_wait(nni_task *task)
 {
 	nni_mtx_lock(&task->task_mtx);
-	while (task->task_busy) {
+	nni_atomic_set_bool(&task->task_wait, true);
+	while (nni_atomic_get64(&task->task_busy)) {
 		nni_cv_wait(&task->task_cv);
 	}
 	nni_mtx_unlock(&task->task_mtx);
@@ -214,23 +249,19 @@ nni_task_init(nni_task **taskp, nni_taskq *tq, nni_cb cb, void *arg)
 	NNI_LIST_NODE_INIT(&task->task_node);
 	nni_mtx_init(&task->task_mtx);
 	nni_cv_init(&task->task_cv, &task->task_mtx);
-	task->task_prep = false;
-	task->task_busy = 0;
-	task->task_cb   = cb;
-	task->task_arg  = arg;
-	task->task_tq   = tq != NULL ? tq : nni_taskq_systq;
-	*taskp          = task;
+	nni_atomic_init_bool(&task->task_prep);
+	nni_atomic_init64(&task->task_busy);
+	task->task_cb  = cb;
+	task->task_arg = arg;
+	task->task_tq  = tq != NULL ? tq : nni_taskq_systq;
+	*taskp         = task;
 	return (0);
 }
 
 void
 nni_task_fini(nni_task *task)
 {
-	nni_mtx_lock(&task->task_mtx);
-	while (task->task_busy) {
-		nni_cv_wait(&task->task_cv);
-	}
-	nni_mtx_unlock(&task->task_mtx);
+	nni_task_wait(task);
 	nni_cv_fini(&task->task_cv);
 	nni_mtx_fini(&task->task_mtx);
 	NNI_FREE_STRUCT(task);
