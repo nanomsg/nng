@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -23,18 +23,6 @@
 
 #include "posix_tcp.h"
 
-struct nni_tcp_dialer {
-	nni_list                connq; // pending connections
-	bool                    closed;
-	bool                    nodelay;
-	bool                    keepalive;
-	struct sockaddr_storage src;
-	size_t                  srclen;
-	nni_mtx                 mtx;
-	int                     refcnt;
-	bool                    fini;
-};
-
 // Dialer stuff.
 int
 nni_tcp_dialer_init(nni_tcp_dialer **dp)
@@ -47,6 +35,9 @@ nni_tcp_dialer_init(nni_tcp_dialer **dp)
 	nni_mtx_init(&d->mtx);
 	d->closed = false;
 	nni_aio_list_init(&d->connq);
+	nni_atomic_init_bool(&d->fini);
+	nni_atomic_init64(&d->ref);
+	nni_atomic_inc64(&d->ref);
 	*dp = d;
 	return (0);
 }
@@ -84,26 +75,17 @@ void
 nni_tcp_dialer_fini(nni_tcp_dialer *d)
 {
 	nni_tcp_dialer_close(d);
-	nni_mtx_lock(&d->mtx);
-	d->fini = true;
-	if (d->refcnt) {
-		nni_mtx_unlock(&d->mtx);
-		return;
-	}
-	nni_mtx_unlock(&d->mtx);
-	tcp_dialer_fini(d);
+	nni_atomic_set_bool(&d->fini, true);
+	nni_posix_tcp_dialer_rele(d);
 }
 
 void
 nni_posix_tcp_dialer_rele(nni_tcp_dialer *d)
 {
-	nni_mtx_lock(&d->mtx);
-	d->refcnt--;
-	if ((d->refcnt > 0) || (!d->fini)) {
-		nni_mtx_unlock(&d->mtx);
+	if (((nni_atomic_dec64_nv(&d->ref) != 0)) ||
+	    (!nni_atomic_get_bool(&d->fini))) {
 		return;
 	}
-	nni_mtx_unlock(&d->mtx);
 	tcp_dialer_fini(d);
 }
 
@@ -215,23 +197,25 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 		return;
 	}
 
+	nni_atomic_inc64(&d->ref);
+
+	if ((rv = nni_posix_tcp_alloc(&c, d)) != 0) {
+		nni_aio_finish_error(aio, rv);
+		nni_posix_tcp_dialer_rele(d);
+		return;
+	}
+
 	// This arranges for the fd to be in non-blocking mode, and adds the
 	// poll fd to the list.
 	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
 		(void) close(fd);
-		nni_aio_finish_error(aio, rv);
-		return;
+		goto error;
 	}
-	if ((rv = nni_posix_tcp_init(&c, pfd)) != 0) {
-		nni_posix_pfd_fini(pfd);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
-	c->dialer = d;
+
+	nni_posix_tcp_init(c, pfd);
 	nni_posix_pfd_set_cb(pfd, tcp_dialer_cb, c);
 
 	nni_mtx_lock(&d->mtx);
-	d->refcnt++;
 	if (d->closed) {
 		rv = NNG_ECLOSED;
 		goto error;

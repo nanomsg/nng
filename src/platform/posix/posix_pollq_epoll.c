@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Liam Staskawicz <liam@stask.net>
 //
@@ -191,28 +191,27 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 
 	// We have to synchronize with the pollq thread (unless we are
 	// on that thread!)
-	if (!nni_thr_is_self(&pq->thr)) {
+	NNI_ASSERT(!nni_thr_is_self(&pq->thr));
 
-		uint64_t one = 1;
+	uint64_t one = 1;
 
-		nni_mtx_lock(&pq->mtx);
-		nni_list_append(&pq->reapq, pfd);
+	nni_mtx_lock(&pq->mtx);
+	nni_list_append(&pq->reapq, pfd);
 
-		// Wake the remote side.  For now we assume this always
-		// succeeds.  The only failure modes here occur when we
-		// have already excessively signaled this (2^64 times
-		// with no read!!), or when the evfd is closed, or some
-		// kernel bug occurs.  Those errors would manifest as
-		// a hang waiting for the poller to reap the pfd in fini,
-		// if it were possible for them to occur.  (Barring other
-		// bugs, it isn't.)
-		(void) write(pq->evfd, &one, sizeof(one));
+	// Wake the remote side.  For now we assume this always
+	// succeeds.  The only failure modes here occur when we
+	// have already excessively signaled this (2^64 times
+	// with no read!!), or when the evfd is closed, or some
+	// kernel bug occurs.  Those errors would manifest as
+	// a hang waiting for the poller to reap the pfd in fini,
+	// if it were possible for them to occur.  (Barring other
+	// bugs, it isn't.)
+	(void) write(pq->evfd, &one, sizeof(one));
 
-		while (!pfd->closed) {
-			nni_cv_wait(&pfd->cv);
-		}
-		nni_mtx_unlock(&pq->mtx);
+	while (!pfd->closed) {
+		nni_cv_wait(&pfd->cv);
 	}
+	nni_mtx_unlock(&pq->mtx);
 
 	// We're exclusive now.
 

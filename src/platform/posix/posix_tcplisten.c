@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -136,19 +136,22 @@ tcp_listener_doaccept(nni_tcp_listener *l)
 			}
 		}
 
-		if ((rv = nni_posix_pfd_init(&pfd, newfd)) != 0) {
+		if ((rv = nni_posix_tcp_alloc(&c, NULL)) != 0) {
 			close(newfd);
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
 			continue;
 		}
 
-		if ((rv = nni_posix_tcp_init(&c, pfd)) != 0) {
-			nni_posix_pfd_fini(pfd);
+		if ((rv = nni_posix_pfd_init(&pfd, newfd)) != 0) {
+			close(newfd);
+			nng_stream_free(&c->stream);
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, rv);
 			continue;
 		}
+
+		nni_posix_tcp_init(c, pfd);
 
 		ka = l->keepalive ? 1 : 0;
 		nd = l->nodelay ? 1 : 0;

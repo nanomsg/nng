@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -62,26 +62,17 @@ ipc_dialer_free(void *arg)
 	ipc_dialer *d = arg;
 
 	ipc_dialer_close(d);
-	nni_mtx_lock(&d->mtx);
-	d->fini = true;
-	if (d->refcnt) {
-		nni_mtx_unlock(&d->mtx);
-		return;
-	}
-	nni_mtx_unlock(&d->mtx);
-	ipc_dialer_fini(d);
+	nni_atomic_set_bool(&d->fini, true);
+	nni_posix_ipc_dialer_rele(d);
 }
 
 void
 nni_posix_ipc_dialer_rele(ipc_dialer *d)
 {
-	nni_mtx_lock(&d->mtx);
-	d->refcnt--;
-	if ((d->refcnt > 0) || (!d->fini)) {
-		nni_mtx_unlock(&d->mtx);
+	if (((nni_atomic_dec64_nv(&d->ref)) != 0) ||
+	    (!nni_atomic_get_bool(&d->fini))) {
 		return;
 	}
-	nni_mtx_unlock(&d->mtx);
 	ipc_dialer_fini(d);
 }
 
@@ -166,7 +157,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 	nni_ipc_conn *          c;
 	nni_posix_pfd *         pfd = NULL;
 	struct sockaddr_storage ss;
-	size_t                  sslen;
+	size_t                  len;
 	int                     fd;
 	int                     rv;
 
@@ -174,7 +165,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		return;
 	}
 
-	if (((sslen = nni_posix_nn2sockaddr(&ss, &d->sa)) == 0) ||
+	if (((len = nni_posix_nn2sockaddr(&ss, &d->sa)) == 0) ||
 	    (ss.ss_family != AF_UNIX)) {
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
 		return;
@@ -185,23 +176,25 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 		return;
 	}
 
-	// This arranges for the fd to be in nonblocking mode, and adds the
-	// pollfd to the list.
-	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
+	nni_atomic_inc64(&d->ref);
+
+	if ((rv = nni_posix_ipc_alloc(&c, d)) != 0) {
 		(void) close(fd);
+		nni_posix_ipc_dialer_rele(d);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if ((rv = nni_posix_ipc_init(&c, pfd)) != 0) {
-		nni_posix_pfd_fini(pfd);
-		nni_aio_finish_error(aio, rv);
-		return;
+
+	// This arranges for the fd to be in non-blocking mode, and adds the
+	// poll fd to the list.
+	if ((rv = nni_posix_pfd_init(&pfd, fd)) != 0) {
+		goto error;
 	}
-	c->dialer = d;
+
+	nni_posix_ipc_init(c, pfd);
 	nni_posix_pfd_set_cb(pfd, ipc_dialer_cb, c);
 
 	nni_mtx_lock(&d->mtx);
-	d->refcnt++;
 	if (d->closed) {
 		rv = NNG_ECLOSED;
 		goto error;
@@ -209,7 +202,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 	if ((rv = nni_aio_schedule(aio, ipc_dialer_cancel, d)) != 0) {
 		goto error;
 	}
-	if (connect(fd, (void *) &ss, sslen) != 0) {
+	if (connect(fd, (void *) &ss, len) != 0) {
 		if (errno != EINPROGRESS) {
 			if (errno == ENOENT) {
 				// No socket present means nobody listening.
@@ -289,6 +282,9 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->sd.sd_dial  = ipc_dialer_dial;
 	d->sd.sd_getx  = ipc_dialer_getx;
 	d->sd.sd_setx  = ipc_dialer_setx;
+	nni_atomic_init_bool(&d->fini);
+	nni_atomic_init64(&d->ref);
+	nni_atomic_inc64(&d->ref);
 
 	*dp = (void *) d;
 	return (0);

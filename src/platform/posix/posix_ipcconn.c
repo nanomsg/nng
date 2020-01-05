@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -200,7 +200,9 @@ ipc_close(void *arg)
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
-		nni_posix_pfd_close(c->pfd);
+		if (c->pfd != NULL) {
+			nni_posix_pfd_close(c->pfd);
+		}
 	}
 	nni_mtx_unlock(&c->mtx);
 }
@@ -483,14 +485,13 @@ nni_posix_ipc_start(nni_ipc_conn *c)
 }
 
 static void
-ipc_free(void *arg)
+ipc_reap(void *arg)
 {
 	ipc_conn *c = arg;
 	ipc_close(c);
-	nni_posix_pfd_fini(c->pfd);
-	nni_mtx_lock(&c->mtx); // not strictly needed, but shut up TSAN
-	c->pfd = NULL;
-	nni_mtx_unlock(&c->mtx);
+	if (c->pfd != NULL) {
+		nni_posix_pfd_fini(c->pfd);
+	}
 	nni_mtx_fini(&c->mtx);
 
 	if (c->dialer != NULL) {
@@ -498,6 +499,13 @@ ipc_free(void *arg)
 	}
 
 	NNI_FREE_STRUCT(c);
+}
+
+static void
+ipc_free(void *arg)
+{
+	ipc_conn *c = arg;
+	nni_reap(&c->reap, ipc_reap, c);
 }
 
 static const nni_option ipc_options[] = {
@@ -545,7 +553,7 @@ ipc_setx(void *arg, const char *name, const void *val, size_t sz, nni_type t)
 }
 
 int
-nni_posix_ipc_init(nni_ipc_conn **cp, nni_posix_pfd *pfd)
+nni_posix_ipc_alloc(nni_ipc_conn **cp, nni_ipc_dialer *d)
 {
 	ipc_conn *c;
 
@@ -554,7 +562,7 @@ nni_posix_ipc_init(nni_ipc_conn **cp, nni_posix_pfd *pfd)
 	}
 
 	c->closed         = false;
-	c->pfd            = pfd;
+	c->dialer         = d;
 	c->stream.s_free  = ipc_free;
 	c->stream.s_close = ipc_close;
 	c->stream.s_send  = ipc_send;
@@ -568,4 +576,10 @@ nni_posix_ipc_init(nni_ipc_conn **cp, nni_posix_pfd *pfd)
 
 	*cp = c;
 	return (0);
+}
+
+void
+nni_posix_ipc_init(nni_ipc_conn *c, nni_posix_pfd *pfd)
+{
+	c->pfd = pfd;
 }

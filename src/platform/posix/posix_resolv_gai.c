@@ -42,6 +42,7 @@ typedef struct resolv_item resolv_item;
 struct resolv_item {
 	int          family;
 	int          passive;
+	char         name_buf[256];
 	char *       name;
 	int          proto;
 	int          socktype;
@@ -67,7 +68,6 @@ resolv_cancel(nni_aio *aio, void *arg, int rv)
 		// so we can just discard everything.
 		nni_aio_list_remove(aio);
 		nni_mtx_unlock(&resolv_mtx);
-		nni_strfree(item->name);
 		NNI_FREE_STRUCT(item);
 	} else {
 		// This case indicates the resolver is still processing our
@@ -255,14 +255,18 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 	}
 
 	// NB: must remain valid until this is completed.  So we have to
-	// make our own copy.
+	// keep our own copy.
 
 	if (host == NULL) {
 		item->name = NULL;
-	} else if ((item->name = nni_strdup(host)) == NULL) {
+
+	} else if (nni_strnlen(host, sizeof(item->name_buf)) >=
+	    sizeof(item->name_buf)) {
 		NNI_FREE_STRUCT(item);
-		nni_aio_finish_error(aio, NNG_ENOMEM);
-		return;
+		nni_aio_finish_error(aio, NNG_EADDRINVAL);
+	} else {
+		nni_strlcpy(item->name_buf, host, sizeof(item->name_buf));
+		item->name = item->name_buf;
 	}
 
 	memset(&item->sa, 0, sizeof(item->sa));
@@ -282,7 +286,6 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 	}
 	if (rv != 0) {
 		nni_mtx_unlock(&resolv_mtx);
-		nni_strfree(item->name);
 		NNI_FREE_STRUCT(item);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -343,7 +346,6 @@ resolv_worker(void *unused)
 			nni_aio_set_sockaddr(aio, &item->sa);
 			nni_aio_finish(aio, rv, 0);
 		}
-		nni_strfree(item->name);
 		NNI_FREE_STRUCT(item);
 	}
 	nni_mtx_unlock(&resolv_mtx);

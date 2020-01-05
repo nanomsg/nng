@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -29,6 +29,7 @@ struct nni_ipc_conn {
 	nni_mtx         mtx;
 	nni_aio *       dial_aio;
 	nni_ipc_dialer *dialer;
+	nni_reap_item   reap;
 };
 
 struct nni_ipc_dialer {
@@ -37,11 +38,12 @@ struct nni_ipc_dialer {
 	bool              closed;
 	nni_mtx           mtx;
 	nng_sockaddr      sa;
-	int               refcnt;
-	bool              fini;
+	nni_atomic_u64    ref;
+	nni_atomic_bool   fini;
 };
 
-extern int  nni_posix_ipc_init(nni_ipc_conn **, nni_posix_pfd *);
+extern int  nni_posix_ipc_alloc(nni_ipc_conn **, nni_ipc_dialer *);
+extern void nni_posix_ipc_init(nni_ipc_conn *, nni_posix_pfd *);
 extern void nni_posix_ipc_start(nni_ipc_conn *);
 extern void nni_posix_ipc_dialer_rele(nni_ipc_dialer *);
 

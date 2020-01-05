@@ -105,22 +105,21 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 
 	nni_posix_pfd_close(pfd);
 
-	if (!nni_thr_is_self(&pq->thr)) {
+	NNI_ASSERT(!nni_thr_is_self(&pq->thr));
 
-		while (port_send(pq->port, 1, pfd) != 0) {
-			if ((errno == EBADF) || (errno == EBADFD)) {
-				pfd->closed = true;
-				break;
-			}
-			sched_yield(); // try again later...
+	while (port_send(pq->port, 1, pfd) != 0) {
+		if ((errno == EBADF) || (errno == EBADFD)) {
+			pfd->closed = true;
+			break;
 		}
-
-		nni_mtx_lock(&pfd->mtx);
-		while (!pfd->closed) {
-			nni_cv_wait(&pfd->cv);
-		}
-		nni_mtx_unlock(&pfd->mtx);
+		sched_yield(); // try again later...
 	}
+
+	nni_mtx_lock(&pfd->mtx);
+	while (!pfd->closed) {
+		nni_cv_wait(&pfd->cv);
+	}
+	nni_mtx_unlock(&pfd->mtx);
 
 	// We're exclusive now.
 	(void) close(pfd->fd);

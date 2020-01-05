@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -81,6 +81,7 @@ typedef struct {
 	nni_list            sends;      // upper side sends
 	nni_list            recvs;      // upper recv aios
 	nni_aio *           handshake;  // handshake aio (upper)
+	nni_reap_item       reap;
 } tls;
 
 struct nng_tls_config {
@@ -279,36 +280,41 @@ tls_mkerr(int err)
 // The common code should call this only after it has released
 // it's upper layer stuff.
 static void
-tls_free(void *arg)
+tls_reap(void *arg)
 {
 	tls *tls = arg;
 
 	// Shut it all down first.
-	if (tls != NULL) {
-		if (tls->tcp != NULL) {
-			nng_stream_close(tls->tcp);
-		}
-		nni_aio_stop(tls->tcp_send);
-		nni_aio_stop(tls->tcp_recv);
-		nni_aio_fini(tls->com.aio);
-
-		// And finalize / free everything.
-		nng_stream_free(tls->tcp);
-		nni_aio_fini(tls->tcp_send);
-		nni_aio_fini(tls->tcp_recv);
-		mbedtls_ssl_free(&tls->ctx);
-		nng_tls_config_free(tls->com.cfg);
-
-		if (tls->recvbuf != NULL) {
-			nni_free(tls->recvbuf, NNG_TLS_MAX_RECV_SIZE);
-		}
-		if (tls->sendbuf != NULL) {
-			nni_free(tls->sendbuf, NNG_TLS_MAX_RECV_SIZE);
-		}
-		nni_mtx_fini(&tls->lk);
-		memset(tls, 0xff, sizeof(*tls));
-		NNI_FREE_STRUCT(tls);
+	if (tls->tcp != NULL) {
+		nng_stream_close(tls->tcp);
 	}
+	nni_aio_stop(tls->tcp_send);
+	nni_aio_stop(tls->tcp_recv);
+	nni_aio_fini(tls->com.aio);
+
+	// And finalize / free everything.
+	nng_stream_free(tls->tcp);
+	nni_aio_fini(tls->tcp_send);
+	nni_aio_fini(tls->tcp_recv);
+	mbedtls_ssl_free(&tls->ctx);
+	nng_tls_config_free(tls->com.cfg);
+
+	if (tls->recvbuf != NULL) {
+		nni_free(tls->recvbuf, NNG_TLS_MAX_RECV_SIZE);
+	}
+	if (tls->sendbuf != NULL) {
+		nni_free(tls->sendbuf, NNG_TLS_MAX_RECV_SIZE);
+	}
+	nni_mtx_fini(&tls->lk);
+	memset(tls, 0xff, sizeof(*tls));
+	NNI_FREE_STRUCT(tls);
+}
+
+static void
+tls_free(void *arg)
+{
+	tls *tls = arg;
+	nni_reap(&tls->reap, tls_reap, tls);
 }
 
 int

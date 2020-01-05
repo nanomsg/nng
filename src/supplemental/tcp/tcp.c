@@ -155,12 +155,15 @@ tcp_dialer_free(void *arg)
 		return;
 	}
 
+	nni_aio_stop(d->resaio);
+	nni_aio_stop(d->conaio);
+	nni_aio_fini(d->resaio);
+	nni_aio_fini(d->conaio);
+
 	if (d->d != NULL) {
 		nni_tcp_dialer_close(d->d);
 		nni_tcp_dialer_fini(d->d);
 	}
-	nni_aio_fini(d->resaio);
-	nni_aio_fini(d->conaio);
 	nni_mtx_fini(&d->mtx);
 	nni_strfree(d->host);
 	nni_strfree(d->port);

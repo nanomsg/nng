@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -173,7 +173,9 @@ tcp_error(void *arg, int err)
 		nni_aio_list_remove(aio);
 		nni_aio_finish_error(aio, err);
 	}
-	nni_posix_pfd_close(c->pfd);
+	if (c->pfd != NULL) {
+		nni_posix_pfd_close(c->pfd);
+	}
 	nni_mtx_unlock(&c->mtx);
 }
 
@@ -190,7 +192,9 @@ tcp_close(void *arg)
 			nni_aio_list_remove(aio);
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
-		nni_posix_pfd_close(c->pfd);
+		if (c->pfd != NULL) {
+			nni_posix_pfd_close(c->pfd);
+		}
 	}
 	nni_mtx_unlock(&c->mtx);
 }
@@ -202,10 +206,9 @@ tcp_fini(void *arg)
 {
 	nni_tcp_conn *c = arg;
 	tcp_close(c);
-	nni_posix_pfd_fini(c->pfd);
-	nni_mtx_lock(&c->mtx); // not strictly needed, but shut up TSAN
-	c->pfd = NULL;
-	nni_mtx_unlock(&c->mtx);
+	if (c->pfd != NULL) {
+		nni_posix_pfd_fini(c->pfd);
+	}
 	nni_mtx_fini(&c->mtx);
 
 	if (c->dialer != NULL) {
@@ -474,16 +477,15 @@ tcp_setx(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 }
 
 int
-nni_posix_tcp_init(nni_tcp_conn **cp, nni_posix_pfd *pfd)
+nni_posix_tcp_alloc(nni_tcp_conn **cp, nni_tcp_dialer *d)
 {
 	nni_tcp_conn *c;
-
 	if ((c = NNI_ALLOC_STRUCT(c)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 
 	c->closed = false;
-	c->pfd    = pfd;
+	c->dialer = d;
 
 	nni_mtx_init(&c->mtx);
 	nni_aio_list_init(&c->readq);
@@ -498,6 +500,12 @@ nni_posix_tcp_init(nni_tcp_conn **cp, nni_posix_pfd *pfd)
 
 	*cp = c;
 	return (0);
+}
+
+void
+nni_posix_tcp_init(nni_tcp_conn *c, nni_posix_pfd *pfd)
+{
+	c->pfd = pfd;
 }
 
 void

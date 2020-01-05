@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Liam Staskawicz <liam@stask.net>
 //
@@ -124,22 +124,24 @@ nni_posix_pfd_fini(nni_posix_pfd *pf)
 
 	nni_posix_pfd_close(pf);
 
-	if (!nni_thr_is_self(&pq->thr)) {
-		struct kevent ev;
-		nni_mtx_lock(&pq->mtx);
-		nni_list_append(&pq->reapq, pf);
-		EV_SET(&ev, 0, EVFILT_USER, EV_ENABLE | EV_CLEAR, NOTE_TRIGGER,
-		    0, NULL);
+	// All consumers take care to move finalization to the reap thread,
+	// unless they are synchronous on user threads.
+	NNI_ASSERT(!nni_thr_is_self(&pq->thr));
 
-		// If this fails, the cleanup will stall.  That should
-		// only occur in a memory pressure situation, and it
-		// will self-heal when the next event comes in.
-		(void) kevent(pq->kq, &ev, 1, NULL, 0, NULL);
-		while (!pf->closed) {
-			nni_cv_wait(&pf->cv);
-		}
-		nni_mtx_unlock(&pq->mtx);
+	struct kevent ev;
+	nni_mtx_lock(&pq->mtx);
+	nni_list_append(&pq->reapq, pf);
+	EV_SET(
+	    &ev, 0, EVFILT_USER, EV_ENABLE | EV_CLEAR, NOTE_TRIGGER, 0, NULL);
+
+	// If this fails, the cleanup will stall.  That should
+	// only occur in a memory pressure situation, and it
+	// will self-heal when the next event comes in.
+	(void) kevent(pq->kq, &ev, 1, NULL, 0, NULL);
+	while (!pf->closed) {
+		nni_cv_wait(&pf->cv);
 	}
+	nni_mtx_unlock(&pq->mtx);
 
 	(void) close(pf->fd);
 	nni_cv_fini(&pf->cv);
