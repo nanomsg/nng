@@ -68,10 +68,10 @@ struct nng_aio {
 	nni_time     a_expire;  // Absolute timeout
 	nni_duration a_timeout; // Relative timeout
 
-	bool      a_stop;      // shutting down (no new operations)
-	bool      a_sleep;     // sleeping with no action
-	bool      a_expire_ok; // expire from sleep is ok
-	nni_task *a_task;
+	bool     a_stop;      // shutting down (no new operations)
+	bool     a_sleep;     // sleeping with no action
+	bool     a_expire_ok; // expire from sleep is ok
+	nni_task a_task;
 
 	// Read/write operations.
 	nni_iov  a_iov[8];
@@ -112,15 +112,11 @@ int
 nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
 {
 	nni_aio *aio;
-	int      rv;
 
 	if ((aio = NNI_ALLOC_STRUCT(aio)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	if ((rv = nni_task_init(&aio->a_task, NULL, cb, arg)) != 0) {
-		NNI_FREE_STRUCT(aio);
-		return (rv);
-	}
+	nni_task_init(&aio->a_task, NULL, cb, arg);
 	aio->a_expire  = NNI_TIME_NEVER;
 	aio->a_timeout = NNG_DURATION_INFINITE;
 	*aiop          = aio;
@@ -164,7 +160,7 @@ nni_aio_fini(nni_aio *aio)
 		}
 		nni_mtx_unlock(&nni_aio_lk);
 
-		nni_task_fini(aio->a_task);
+		nni_task_fini(&aio->a_task);
 
 		NNI_FREE_STRUCT(aio);
 	}
@@ -323,7 +319,7 @@ nni_aio_count(nni_aio *aio)
 void
 nni_aio_wait(nni_aio *aio)
 {
-	nni_task_wait(aio->a_task);
+	nni_task_wait(&aio->a_task);
 }
 
 int
@@ -342,7 +338,7 @@ nni_aio_begin(nni_aio *aio)
 		aio->a_expire_ok  = false;
 		nni_mtx_unlock(&nni_aio_lk);
 
-		nni_task_dispatch(aio->a_task);
+		nni_task_dispatch(&aio->a_task);
 		return (NNG_ECANCELED);
 	}
 	aio->a_result     = 0;
@@ -352,7 +348,7 @@ nni_aio_begin(nni_aio *aio)
 	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
 		aio->a_outputs[i] = NULL;
 	}
-	nni_task_prep(aio->a_task);
+	nni_task_prep(&aio->a_task);
 	nni_mtx_unlock(&nni_aio_lk);
 	return (0);
 }
@@ -436,9 +432,9 @@ nni_aio_finish_impl(
 	nni_mtx_unlock(&nni_aio_lk);
 
 	if (synch) {
-		nni_task_exec(aio->a_task);
+		nni_task_exec(&aio->a_task);
 	} else {
-		nni_task_dispatch(aio->a_task);
+		nni_task_dispatch(&aio->a_task);
 	}
 }
 

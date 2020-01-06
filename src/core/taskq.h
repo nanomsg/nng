@@ -39,7 +39,7 @@ extern void nni_task_exec(nni_task *);
 extern void nni_task_prep(nni_task *);
 
 extern void nni_task_wait(nni_task *);
-extern int  nni_task_init(nni_task **, nni_taskq *, nni_cb, void *);
+extern void  nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
 
 // nni_task_fini destroys the task.  It will reap resources asynchronously
 // if the task is currently executing.  Use nni_task_wait() first if the
@@ -49,5 +49,19 @@ extern void nni_task_fini(nni_task *);
 
 extern int  nni_taskq_sys_init(void);
 extern void nni_taskq_sys_fini(void);
+
+// nni_task implementation details are not to be used except by the
+// nni_task_framework.  Placing here allows for inlining this in
+// consuming structures.
+struct nni_task {
+	nni_list_node task_node;
+	void *        task_arg;
+	nni_cb        task_cb;
+	nni_taskq *   task_tq;
+	unsigned      task_busy;
+	bool          task_prep;
+	nni_mtx       task_mtx;
+	nni_cv        task_cv;
+};
 
 #endif // CORE_TASKQ_H
