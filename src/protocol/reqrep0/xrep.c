@@ -8,7 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
@@ -38,12 +37,12 @@ static void xrep0_pipe_fini(void *);
 
 // xrep0_sock is our per-socket protocol private structure.
 struct xrep0_sock {
-	nni_msgq *  uwq;
-	nni_msgq *  urq;
-	nni_mtx     lk;
-	int         ttl;
-	nni_idhash *pipes;
-	nni_aio *   aio_getq;
+	nni_msgq *     uwq;
+	nni_msgq *     urq;
+	nni_mtx        lk;
+	nni_atomic_u64 ttl;
+	nni_idhash *   pipes;
+	nni_aio        aio_getq;
 };
 
 // xrep0_pipe is our per-pipe protocol private structure.
@@ -51,10 +50,10 @@ struct xrep0_pipe {
 	nni_pipe *  pipe;
 	xrep0_sock *rep;
 	nni_msgq *  sendq;
-	nni_aio *   aio_getq;
-	nni_aio *   aio_send;
-	nni_aio *   aio_recv;
-	nni_aio *   aio_putq;
+	nni_aio     aio_getq;
+	nni_aio     aio_send;
+	nni_aio     aio_recv;
+	nni_aio     aio_putq;
 };
 
 static void
@@ -62,7 +61,7 @@ xrep0_sock_fini(void *arg)
 {
 	xrep0_sock *s = arg;
 
-	nni_aio_free(s->aio_getq);
+	nni_aio_fini(&s->aio_getq);
 	nni_idhash_fini(s->pipes);
 	nni_mtx_fini(&s->lk);
 }
@@ -74,15 +73,16 @@ xrep0_sock_init(void *arg, nni_sock *sock)
 	int         rv;
 
 	nni_mtx_init(&s->lk);
-	if (((rv = nni_idhash_init(&s->pipes)) != 0) ||
-	    ((rv = nni_aio_alloc(&s->aio_getq, xrep0_sock_getq_cb, s)) != 0)) {
+	nni_aio_init(&s->aio_getq, xrep0_sock_getq_cb, s);
+	nni_atomic_init64(&s->ttl);
+	nni_atomic_set64(&s->ttl, 8); // Per RFC
+	s->uwq = nni_sock_sendq(sock);
+	s->urq = nni_sock_recvq(sock);
+
+	if ((rv = nni_idhash_init(&s->pipes)) != 0) {
 		xrep0_sock_fini(s);
 		return (rv);
 	}
-
-	s->ttl = 8; // Per RFC
-	s->uwq = nni_sock_sendq(sock);
-	s->urq = nni_sock_recvq(sock);
 
 	return (0);
 }
@@ -93,7 +93,7 @@ xrep0_sock_open(void *arg)
 	xrep0_sock *s = arg;
 
 	// This starts us retrieving message from the upper write q.
-	nni_msgq_aio_get(s->uwq, s->aio_getq);
+	nni_msgq_aio_get(s->uwq, &s->aio_getq);
 }
 
 static void
@@ -101,7 +101,7 @@ xrep0_sock_close(void *arg)
 {
 	xrep0_sock *s = arg;
 
-	nni_aio_close(s->aio_getq);
+	nni_aio_close(&s->aio_getq);
 }
 
 static void
@@ -109,10 +109,10 @@ xrep0_pipe_stop(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_getq);
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
-	nni_aio_stop(p->aio_putq);
+	nni_aio_stop(&p->aio_getq);
+	nni_aio_stop(&p->aio_send);
+	nni_aio_stop(&p->aio_recv);
+	nni_aio_stop(&p->aio_putq);
 }
 
 static void
@@ -120,10 +120,10 @@ xrep0_pipe_fini(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	nni_aio_free(p->aio_getq);
-	nni_aio_free(p->aio_send);
-	nni_aio_free(p->aio_recv);
-	nni_aio_free(p->aio_putq);
+	nni_aio_fini(&p->aio_getq);
+	nni_aio_fini(&p->aio_send);
+	nni_aio_fini(&p->aio_recv);
+	nni_aio_fini(&p->aio_putq);
 	nni_msgq_fini(p->sendq);
 }
 
@@ -132,6 +132,14 @@ xrep0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
 	xrep0_pipe *p = arg;
 	int         rv;
+
+	nni_aio_init(&p->aio_getq, xrep0_pipe_getq_cb, p);
+	nni_aio_init(&p->aio_send, xrep0_pipe_send_cb, p);
+	nni_aio_init(&p->aio_recv, xrep0_pipe_recv_cb, p);
+	nni_aio_init(&p->aio_putq, xrep0_pipe_putq_cb, p);
+
+	p->pipe = pipe;
+	p->rep  = s;
 
 	// We want a pretty deep send queue on pipes. The rationale here is
 	// that the send rate will be mitigated by the receive rate.
@@ -145,17 +153,10 @@ xrep0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	// essentially don't let peers send requests faster than they are
 	// willing to receive replies.  Something to think about for the
 	// future.)
-	if (((rv = nni_msgq_init(&p->sendq, 64)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->aio_getq, xrep0_pipe_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->aio_send, xrep0_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->aio_recv, xrep0_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->aio_putq, xrep0_pipe_putq_cb, p)) != 0)) {
+	if ((rv = nni_msgq_init(&p->sendq, 64)) != 0) {
 		xrep0_pipe_fini(p);
 		return (rv);
 	}
-
-	p->pipe = pipe;
-	p->rep  = s;
 	return (0);
 }
 
@@ -175,8 +176,8 @@ xrep0_pipe_start(void *arg)
 		return (rv);
 	}
 
-	nni_msgq_aio_get(p->sendq, p->aio_getq);
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_msgq_aio_get(p->sendq, &p->aio_getq);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 	return (0);
 }
 
@@ -186,10 +187,10 @@ xrep0_pipe_close(void *arg)
 	xrep0_pipe *p = arg;
 	xrep0_sock *s = p->rep;
 
-	nni_aio_close(p->aio_getq);
-	nni_aio_close(p->aio_send);
-	nni_aio_close(p->aio_recv);
-	nni_aio_close(p->aio_putq);
+	nni_aio_close(&p->aio_getq);
+	nni_aio_close(&p->aio_send);
+	nni_aio_close(&p->aio_recv);
+	nni_aio_close(&p->aio_putq);
 	nni_msgq_close(p->sendq);
 
 	nni_mtx_lock(&s->lk);
@@ -211,27 +212,27 @@ xrep0_sock_getq_cb(void *arg)
 	// destination pipe via a separate queue.  This prevents a single bad
 	// or slow pipe from gumming up the works for the entire socket.
 
-	if (nni_aio_result(s->aio_getq) != 0) {
+	if (nni_aio_result(&s->aio_getq) != 0) {
 		// Closed socket?
 		return;
 	}
 
-	msg = nni_aio_get_msg(s->aio_getq);
-	nni_aio_set_msg(s->aio_getq, NULL);
+	msg = nni_aio_get_msg(&s->aio_getq);
+	nni_aio_set_msg(&s->aio_getq, NULL);
 
 	// We yank the outgoing pipe id from the header
 	if (nni_msg_header_len(msg) < 4) {
 		nni_msg_free(msg);
 
 		// Look for another message on the upper write queue.
-		nni_msgq_aio_get(uwq, s->aio_getq);
+		nni_msgq_aio_get(uwq, &s->aio_getq);
 		return;
 	}
 
 	id = nni_msg_header_trim_u32(msg);
 
 	// Look for the pipe, and attempt to put the message there
-	// (nonblocking) if we can.  If we can't for any reason, then we
+	// (non-blocking) if we can.  If we can't for any reason, then we
 	// free the message.
 	nni_mtx_lock(&s->lk);
 	if (((nni_idhash_find(s->pipes, id, (void **) &p)) != 0) ||
@@ -241,7 +242,7 @@ xrep0_sock_getq_cb(void *arg)
 	nni_mtx_unlock(&s->lk);
 
 	// Now look for another message on the upper write queue.
-	nni_msgq_aio_get(uwq, s->aio_getq);
+	nni_msgq_aio_get(uwq, &s->aio_getq);
 }
 
 static void
@@ -249,15 +250,15 @@ xrep0_pipe_getq_cb(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	if (nni_aio_result(p->aio_getq) != 0) {
+	if (nni_aio_result(&p->aio_getq) != 0) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
-	nni_aio_set_msg(p->aio_send, nni_aio_get_msg(p->aio_getq));
-	nni_aio_set_msg(p->aio_getq, NULL);
+	nni_aio_set_msg(&p->aio_send, nni_aio_get_msg(&p->aio_getq));
+	nni_aio_set_msg(&p->aio_getq, NULL);
 
-	nni_pipe_send(p->pipe, p->aio_send);
+	nni_pipe_send(p->pipe, &p->aio_send);
 }
 
 static void
@@ -265,14 +266,14 @@ xrep0_pipe_send_cb(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	if (nni_aio_result(p->aio_send) != 0) {
-		nni_msg_free(nni_aio_get_msg(p->aio_send));
-		nni_aio_set_msg(p->aio_send, NULL);
+	if (nni_aio_result(&p->aio_send) != 0) {
+		nni_msg_free(nni_aio_get_msg(&p->aio_send));
+		nni_aio_set_msg(&p->aio_send, NULL);
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
-	nni_msgq_aio_get(p->sendq, p->aio_getq);
+	nni_msgq_aio_get(p->sendq, &p->aio_getq);
 }
 
 static void
@@ -283,13 +284,13 @@ xrep0_pipe_recv_cb(void *arg)
 	nni_msg *   msg;
 	int         hops;
 
-	if (nni_aio_result(p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
-	msg = nni_aio_get_msg(p->aio_recv);
-	nni_aio_set_msg(p->aio_recv, NULL);
+	msg = nni_aio_get_msg(&p->aio_recv);
+	nni_aio_set_msg(&p->aio_recv, NULL);
 
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
 
@@ -304,7 +305,7 @@ xrep0_pipe_recv_cb(void *arg)
 	for (;;) {
 		bool     end = 0;
 		uint8_t *body;
-		if (hops > s->ttl) {
+		if (hops > (int)nni_atomic_get64(&s->ttl)) {
 			// This isn't malformed, but it has gone through
 			// too many hops.  Do not disconnect, because we
 			// can legitimately receive messages with too many
@@ -332,13 +333,13 @@ xrep0_pipe_recv_cb(void *arg)
 	}
 
 	// Go ahead and send it up.
-	nni_aio_set_msg(p->aio_putq, msg);
-	nni_msgq_aio_put(s->urq, p->aio_putq);
+	nni_aio_set_msg(&p->aio_putq, msg);
+	nni_msgq_aio_put(s->urq, &p->aio_putq);
 	return;
 
 drop:
 	nni_msg_free(msg);
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 }
 
 static void
@@ -346,28 +347,33 @@ xrep0_pipe_putq_cb(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	if (nni_aio_result(p->aio_putq) != 0) {
-		nni_msg_free(nni_aio_get_msg(p->aio_putq));
-		nni_aio_set_msg(p->aio_putq, NULL);
+	if (nni_aio_result(&p->aio_putq) != 0) {
+		nni_msg_free(nni_aio_get_msg(&p->aio_putq));
+		nni_aio_set_msg(&p->aio_putq, NULL);
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 }
 
 static int
 xrep0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	xrep0_sock *s = arg;
-	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, t));
+	int         ttl;
+	int         rv;
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
+		nni_atomic_set64(&s->ttl, (uint64_t) ttl);
+	}
+	return (rv);
 }
 
 static int
 xrep0_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	xrep0_sock *s = arg;
-	return (nni_copyout_int(s->ttl, buf, szp, t));
+	return (nni_copyout_int((int) nni_atomic_get64(&s->ttl), buf, szp, t));
 }
 
 static void

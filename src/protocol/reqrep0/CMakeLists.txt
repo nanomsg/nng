@@ -1,5 +1,5 @@
 #
-# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -25,3 +25,4 @@ nng_defines_if(NNG_PROTO_REP0 NNG_HAVE_REP0)
 
 nng_test(reqrep_test)
 nng_test(rep_test)
+nng_test(xrep_test)
