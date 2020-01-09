@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -151,9 +151,9 @@ tlstran_pipe_fini(void *arg)
 		}
 		nni_mtx_unlock(&ep->mtx);
 	}
-	nni_aio_fini(p->rxaio);
-	nni_aio_fini(p->txaio);
-	nni_aio_fini(p->negoaio);
+	nni_aio_free(p->rxaio);
+	nni_aio_free(p->txaio);
+	nni_aio_free(p->negoaio);
 	nng_stream_free(p->tls);
 	nni_msg_free(p->rxmsg);
 	NNI_FREE_STRUCT(p);
@@ -170,9 +170,9 @@ tlstran_pipe_alloc(tlstran_pipe **pipep)
 	}
 	nni_mtx_init(&p->mtx);
 
-	if (((rv = nni_aio_init(&p->txaio, tlstran_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->rxaio, tlstran_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->negoaio, tlstran_pipe_nego_cb, p)) != 0)) {
+	if (((rv = nni_aio_alloc(&p->txaio, tlstran_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->rxaio, tlstran_pipe_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->negoaio, tlstran_pipe_nego_cb, p)) != 0)) {
 		tlstran_pipe_fini(p);
 		return (rv);
 	}
@@ -626,8 +626,8 @@ tlstran_ep_fini(void *arg)
 	nni_aio_stop(ep->connaio);
 	nng_stream_dialer_free(ep->dialer);
 	nng_stream_listener_free(ep->listener);
-	nni_aio_fini(ep->timeaio);
-	nni_aio_fini(ep->connaio);
+	nni_aio_free(ep->timeaio);
+	nni_aio_free(ep->connaio);
 
 	nni_mtx_fini(&ep->mtx);
 	NNI_FREE_STRUCT(ep);
@@ -709,7 +709,7 @@ tlstran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
 	memcpy(src, surl->u_hostname, len);
 	src[len] = '\0';
 
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+	if ((rv = nni_aio_alloc(&aio, NULL, NULL)) != 0) {
 		nni_free(src, len + 1);
 		return (rv);
 	}
@@ -719,7 +719,7 @@ tlstran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
 	if ((rv = nni_aio_result(aio)) == 0) {
 		nni_aio_get_sockaddr(aio, sa);
 	}
-	nni_aio_fini(aio);
+	nni_aio_free(aio);
 	nni_free(src, len + 1);
 	return (rv);
 }
@@ -872,7 +872,7 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 	}
 
 	if (((rv = tlstran_ep_init(&ep, url, sock)) != 0) ||
-	    ((rv = nni_aio_init(&ep->connaio, tlstran_dial_cb, ep)) != 0)) {
+	    ((rv = nni_aio_alloc(&ep->connaio, tlstran_dial_cb, ep)) != 0)) {
 		return (rv);
 	}
 	ep->authmode = NNG_TLS_AUTH_MODE_REQUIRED;
@@ -923,8 +923,8 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 		return (NNG_EADDRINVAL);
 	}
 	if (((rv = tlstran_ep_init(&ep, url, sock)) != 0) ||
-	    ((rv = nni_aio_init(&ep->connaio, tlstran_accept_cb, ep)) != 0) ||
-	    ((rv = nni_aio_init(&ep->timeaio, tlstran_timer_cb, ep)) != 0)) {
+	    ((rv = nni_aio_alloc(&ep->connaio, tlstran_accept_cb, ep)) != 0) ||
+	    ((rv = nni_aio_alloc(&ep->timeaio, tlstran_timer_cb, ep)) != 0)) {
 		return (rv);
 	}
 
@@ -942,7 +942,7 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 	// be worse than the cost of just waiting here.  We always recommend
 	// using local IP addresses rather than names when possible.
 
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+	if ((rv = nni_aio_alloc(&aio, NULL, NULL)) != 0) {
 		tlstran_ep_fini(ep);
 		return (rv);
 	}
@@ -950,7 +950,7 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 	nni_tcp_resolv(host, url->u_port, af, 1, aio);
 	nni_aio_wait(aio);
 	rv = nni_aio_result(aio);
-	nni_aio_fini(aio);
+	nni_aio_free(aio);
 
 	if ((rv != 0) ||
 	    ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) ||

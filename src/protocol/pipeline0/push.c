@@ -89,9 +89,9 @@ push0_pipe_fini(void *arg)
 {
 	push0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_recv);
-	nni_aio_fini(p->aio_send);
-	nni_aio_fini(p->aio_getq);
+	nni_aio_free(p->aio_recv);
+	nni_aio_free(p->aio_send);
+	nni_aio_free(p->aio_getq);
 }
 
 static int
@@ -100,9 +100,9 @@ push0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	push0_pipe *p = arg;
 	int         rv;
 
-	if (((rv = nni_aio_init(&p->aio_recv, push0_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, push0_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, push0_getq_cb, p)) != 0)) {
+	if (((rv = nni_aio_alloc(&p->aio_recv, push0_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_send, push0_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_getq, push0_getq_cb, p)) != 0)) {
 		push0_pipe_fini(p);
 		return (rv);
 	}

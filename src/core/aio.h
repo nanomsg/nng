@@ -22,19 +22,29 @@ typedef void (*nni_aio_cancelfn)(nni_aio *, void *, int);
 // the supplied argument when the operation is complete.  If NULL is
 // supplied for the callback, then nni_aio_wake is used in its place,
 // and the aio is used for the argument.
-extern int nni_aio_init(nni_aio **, nni_cb, void *);
+extern void nni_aio_init(nni_aio *, nni_cb, void *arg);
 
-// nni_aio_fini finalizes the aio, releasing resources (locks)
-// associated with it.  The caller is responsible for ensuring that any
-// associated I/O is unscheduled or complete.  This is safe to call
-// on zero'd memory.
+// nni_aio_fini finalizes an aio object, releasing associated resources.
+// It waits for the callback to complete.
 extern void nni_aio_fini(nni_aio *);
+
+// nni_aio_alloc allocates an aio object and initializes it.  The callback
+// is called with the supplied argument when the operation is complete.
+// If NULL is supplied for the callback, then nni_aio_wake is used in its
+// place, and the aio is used for the argument.
+extern int nni_aio_alloc(nni_aio **, nni_cb, void *arg);
+
+// nni_aio_free frees the aio, releasing resources (locks)
+// associated with it. This is safe to call on zero'd memory.
+// This must only be called on an object that was allocated
+// with nni_aio_allocate.
+extern void nni_aio_free(nni_aio *aio);
 
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,
 // but also prevents any new operations from starting (nni_aio_start will
-// return NNG_ESTATE).  This should be called before nni_aio_fini().  The
+// return NNG_ESTATE).  This should be called before nni_aio_free().  The
 // best pattern is to call nni_aio_stop on all linked aios, before calling
-// nni_aio_fini on any of them.  This function will block until any
+// nni_aio_free on any of them.  This function will block until any
 // callbacks are executed, and therefore it should never be executed
 // from a callback itself.  (To abort operations without blocking
 // use nni_aio_cancel instead.)
@@ -162,4 +172,54 @@ extern void nni_sleep_aio(nni_duration, nni_aio *);
 
 extern int  nni_aio_sys_init(void);
 extern void nni_aio_sys_fini(void);
+
+// An nni_aio is an async I/O handle.  The details of this aio structure
+// are private to the AIO framework.  The structure has the public name
+// (nng_aio) so that we minimize the pollution in the public API namespace.
+// It is a coding error for anything out side of the AIO framework to access
+// any of these members -- the definition is provided here to facilitate
+// inlining, but that should be the only use.
+struct nng_aio {
+	size_t       a_count;     // Bytes transferred (I/O only)
+	nni_time     a_expire;    // Absolute timeout
+	nni_duration a_timeout;   // Relative timeout
+	int          a_result;    // Result code (nng_errno)
+	bool         a_stop;      // Shutting down (no new operations)
+	bool         a_sleep;     // Sleeping with no action
+	bool         a_expire_ok; // Expire from sleep is ok
+	nni_task     a_task;
+
+	// Read/write operations.
+	nni_iov  a_iov[8];
+	unsigned a_niov;
+
+	// Message operations.
+	nni_msg *a_msg;
+
+	// User scratch data.  Consumers may store values here, which
+	// must be preserved by providers and the framework.
+	void *a_user_data[4];
+
+	// Operation inputs & outputs.  Up to 4 inputs and 4 outputs may be
+	// specified.  The semantics of these will vary, and depend on the
+	// specific operation.
+	void *a_inputs[4];
+	void *a_outputs[4];
+
+	// Provider-use fields.
+	nni_aio_cancelfn a_cancel_fn;
+	void *           a_cancel_arg;
+	nni_list_node    a_prov_node;     // Linkage on provider list.
+	void *           a_prov_extra[4]; // Extra data used by provider
+
+	// Socket address.  This turns out to be very useful, as we wind up
+	// needing socket addresses for numerous connection related routines.
+	// It would be cleaner to not have this and avoid burning the space,
+	// but having this hear dramatically simplifies lots of code.
+	nng_sockaddr a_sockaddr;
+
+	// Expire node.
+	nni_list_node a_expire_node;
+};
+
 #endif // CORE_AIO_H

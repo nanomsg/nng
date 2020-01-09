@@ -290,12 +290,12 @@ tls_reap(void *arg)
 	}
 	nni_aio_stop(tls->tcp_send);
 	nni_aio_stop(tls->tcp_recv);
-	nni_aio_fini(tls->com.aio);
+	nni_aio_free(tls->com.aio);
 
 	// And finalize / free everything.
 	nng_stream_free(tls->tcp);
-	nni_aio_fini(tls->tcp_send);
-	nni_aio_fini(tls->tcp_recv);
+	nni_aio_free(tls->tcp_send);
+	nni_aio_free(tls->tcp_recv);
 	mbedtls_ssl_free(&tls->ctx);
 	nng_tls_config_free(tls->com.cfg);
 
@@ -349,8 +349,8 @@ nni_tls_start(nng_stream *arg, nng_stream *tcp)
 
 	tp->tcp = tcp;
 
-	if (((rv = nni_aio_init(&tp->tcp_send, tls_send_cb, tp)) != 0) ||
-	    ((rv = nni_aio_init(&tp->tcp_recv, tls_recv_cb, tp)) != 0)) {
+	if (((rv = nni_aio_alloc(&tp->tcp_send, tls_send_cb, tp)) != 0) ||
+	    ((rv = nni_aio_alloc(&tp->tcp_recv, tls_recv_cb, tp)) != 0)) {
 		return (rv);
 	}
 

@@ -60,7 +60,7 @@ xsurv0_sock_fini(void *arg)
 {
 	xsurv0_sock *s = arg;
 
-	nni_aio_fini(s->aio_getq);
+	nni_aio_free(s->aio_getq);
 	nni_mtx_fini(&s->mtx);
 }
 
@@ -70,7 +70,7 @@ xsurv0_sock_init(void *arg, nni_sock *nsock)
 	xsurv0_sock *s = arg;
 	int          rv;
 
-	if ((rv = nni_aio_init(&s->aio_getq, xsurv0_sock_getq_cb, s)) != 0) {
+	if ((rv = nni_aio_alloc(&s->aio_getq, xsurv0_sock_getq_cb, s)) != 0) {
 		xsurv0_sock_fini(s);
 		return (rv);
 	}
@@ -116,10 +116,10 @@ xsurv0_pipe_fini(void *arg)
 {
 	xsurv0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_getq);
-	nni_aio_fini(p->aio_send);
-	nni_aio_fini(p->aio_recv);
-	nni_aio_fini(p->aio_putq);
+	nni_aio_free(p->aio_getq);
+	nni_aio_free(p->aio_send);
+	nni_aio_free(p->aio_recv);
+	nni_aio_free(p->aio_putq);
 	nni_msgq_fini(p->sendq);
 }
 
@@ -136,10 +136,10 @@ xsurv0_pipe_init(void *arg, nni_pipe *npipe, void *s)
 	// an expiration with them, so that we could discard any that are
 	// not delivered before their expiration date.
 	if (((rv = nni_msgq_init(&p->sendq, 16)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, xsurv0_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, xsurv0_putq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, xsurv0_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, xsurv0_recv_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->aio_getq, xsurv0_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_putq, xsurv0_putq_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_send, xsurv0_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_recv, xsurv0_recv_cb, p)) != 0)) {
 		xsurv0_pipe_fini(p);
 		return (rv);
 	}

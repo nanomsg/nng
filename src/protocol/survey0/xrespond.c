@@ -62,7 +62,7 @@ xresp0_sock_fini(void *arg)
 {
 	xresp0_sock *s = arg;
 
-	nni_aio_fini(s->aio_getq);
+	nni_aio_free(s->aio_getq);
 	nni_idhash_fini(s->pipes);
 	nni_mtx_fini(&s->mtx);
 }
@@ -75,7 +75,7 @@ xresp0_sock_init(void *arg, nni_sock *nsock)
 
 	nni_mtx_init(&s->mtx);
 	if (((rv = nni_idhash_init(&s->pipes)) != 0) ||
-	    ((rv = nni_aio_init(&s->aio_getq, xresp0_sock_getq_cb, s)) != 0)) {
+	    ((rv = nni_aio_alloc(&s->aio_getq, xresp0_sock_getq_cb, s)) != 0)) {
 		xresp0_sock_fini(s);
 		return (rv);
 	}
@@ -119,10 +119,10 @@ xresp0_pipe_fini(void *arg)
 {
 	xresp0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_putq);
-	nni_aio_fini(p->aio_getq);
-	nni_aio_fini(p->aio_send);
-	nni_aio_fini(p->aio_recv);
+	nni_aio_free(p->aio_putq);
+	nni_aio_free(p->aio_getq);
+	nni_aio_free(p->aio_send);
+	nni_aio_free(p->aio_recv);
 	nni_msgq_fini(p->sendq);
 }
 
@@ -133,10 +133,10 @@ xresp0_pipe_init(void *arg, nni_pipe *npipe, void *s)
 	int          rv;
 
 	if (((rv = nni_msgq_init(&p->sendq, 2)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, xresp0_putq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, xresp0_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, xresp0_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, xresp0_send_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->aio_putq, xresp0_putq_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_recv, xresp0_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_getq, xresp0_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_send, xresp0_send_cb, p)) != 0)) {
 		xresp0_pipe_fini(p);
 		return (rv);
 	}

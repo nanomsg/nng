@@ -61,107 +61,75 @@ static nni_aio *nni_aio_expire_aio;
 // operations from starting, without waiting for any existing one to
 // complete, call nni_aio_close.
 
-// An nni_aio is an async I/O handle.
-struct nng_aio {
-	int          a_result;  // Result code (nng_errno)
-	size_t       a_count;   // Bytes transferred (I/O only)
-	nni_time     a_expire;  // Absolute timeout
-	nni_duration a_timeout; // Relative timeout
-
-	bool     a_stop;      // shutting down (no new operations)
-	bool     a_sleep;     // sleeping with no action
-	bool     a_expire_ok; // expire from sleep is ok
-	nni_task a_task;
-
-	// Read/write operations.
-	nni_iov  a_iov[8];
-	unsigned a_niov;
-
-	// Message operations.
-	nni_msg *a_msg;
-
-	// User scratch data.  Consumers may store values here, which
-	// must be preserved by providers and the framework.
-	void *a_user_data[4];
-
-	// Operation inputs & outputs.  Up to 4 inputs and 4 outputs may be
-	// specified.  The semantics of these will vary, and depend on the
-	// specific operation.
-	void *a_inputs[4];
-	void *a_outputs[4];
-
-	// Provider-use fields.
-	nni_aio_cancelfn a_cancel_fn;
-	void *           a_cancel_arg;
-	nni_list_node    a_prov_node;
-	void *           a_prov_extra[4]; // Extra data used by provider
-
-	// Socket address.  This turns out to be very useful, as we wind up
-	// needing socket addresses for numerous connection related routines.
-	// It would be cleaner to not have this and avoid burning the space,
-	// but having this hear dramatically simplifies lots of code.
-	nng_sockaddr a_sockaddr;
-
-	// Expire node.
-	nni_list_node a_expire_node;
-};
-
 static void nni_aio_expire_add(nni_aio *);
 
+void
+nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
+{
+	memset(aio, 0, sizeof(*aio));
+	nni_task_init(&aio->a_task, NULL, cb, arg);
+	aio->a_expire  = NNI_TIME_NEVER;
+	aio->a_timeout = NNG_DURATION_INFINITE;
+}
+
+void
+nni_aio_fini(nni_aio *aio)
+{
+	nni_aio_cancelfn fn;
+	void *           arg;
+
+	// TODO: This probably could just use nni_aio_stop.
+
+	// This is like aio_close, but we don't want to dispatch
+	// the task.  And unlike aio_stop, we don't want to wait
+	// for the task.  (Because we implicitly do task_fini.)
+	nni_mtx_lock(&nni_aio_lk);
+	fn                = aio->a_cancel_fn;
+	arg               = aio->a_cancel_arg;
+	aio->a_cancel_fn  = NULL;
+	aio->a_cancel_arg = NULL;
+	aio->a_stop       = true;
+	nni_mtx_unlock(&nni_aio_lk);
+
+	if (fn != NULL) {
+		fn(aio, arg, NNG_ECLOSED);
+	}
+
+	// Wait for the aio to be "done"; this ensures that we don't
+	// destroy an aio from a "normal" completion callback while
+	// the expiration thread is working.
+
+	nni_mtx_lock(&nni_aio_lk);
+	while (nni_aio_expire_aio == aio) {
+		// TODO: It should be possible to remove this check!
+		if (nni_thr_is_self(&nni_aio_expire_thr)) {
+			nni_aio_expire_aio = NULL;
+			break;
+		}
+		nni_cv_wait(&nni_aio_expire_cv);
+	}
+	nni_mtx_unlock(&nni_aio_lk);
+	nni_task_fini(&aio->a_task);
+}
+
 int
-nni_aio_init(nni_aio **aiop, nni_cb cb, void *arg)
+nni_aio_alloc(nni_aio **aiop, nni_cb cb, void *arg)
 {
 	nni_aio *aio;
 
 	if ((aio = NNI_ALLOC_STRUCT(aio)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	nni_task_init(&aio->a_task, NULL, cb, arg);
-	aio->a_expire  = NNI_TIME_NEVER;
-	aio->a_timeout = NNG_DURATION_INFINITE;
+	nni_aio_init(aio, cb, arg);
 	*aiop          = aio;
 	return (0);
 }
 
 void
-nni_aio_fini(nni_aio *aio)
+nni_aio_free(nni_aio *aio)
 {
 	if (aio != NULL) {
-
-		nni_aio_cancelfn fn;
-		void *           arg;
-
-		// This is like aio_close, but we don't want to dispatch
-		// the task.  And unlike aio_stop, we don't want to wait
-		// for the task.  (Because we implicitly do task_fini.)
-		nni_mtx_lock(&nni_aio_lk);
-		fn                = aio->a_cancel_fn;
-		arg               = aio->a_cancel_arg;
-		aio->a_cancel_fn  = NULL;
-		aio->a_cancel_arg = NULL;
-		aio->a_stop       = true;
-		nni_mtx_unlock(&nni_aio_lk);
-
-		if (fn != NULL) {
-			fn(aio, arg, NNG_ECLOSED);
-		}
-
-		// Wait for the aio to be "done"; this ensures that we don't
-		// destroy an aio from a "normal" completion callback while
-		// the expiration thread is working.
-
-		nni_mtx_lock(&nni_aio_lk);
-		while (nni_aio_expire_aio == aio) {
-			if (nni_thr_is_self(&nni_aio_expire_thr)) {
-				nni_aio_expire_aio = NULL;
-				break;
-			}
-			nni_cv_wait(&nni_aio_expire_cv);
-		}
-		nni_mtx_unlock(&nni_aio_lk);
-
-		nni_task_fini(&aio->a_task);
-
+		nni_aio_fini(aio);
 		NNI_FREE_STRUCT(aio);
 	}
 }
@@ -189,7 +157,7 @@ nni_aio_set_iov(nni_aio *aio, unsigned niov, const nni_iov *iov)
 // callback to complete, if still running.  It also marks the AIO as
 // stopped, preventing further calls to nni_aio_begin from succeeding.
 // To correctly tear down an AIO, call stop, and make sure any other
-// callers are not also stopped, before calling nni_aio_fini to release
+// callers are not also stopped, before calling nni_aio_free to release
 // actual memory.
 void
 nni_aio_stop(nni_aio *aio)

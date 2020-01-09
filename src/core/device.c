@@ -94,7 +94,7 @@ nni_device_fini(nni_device_data *dd)
 	}
 	for (i = 0; i < dd->npath; i++) {
 		nni_device_path *p = &dd->paths[i];
-		nni_aio_fini(p->aio);
+		nni_aio_free(p->aio);
 	}
 	nni_mtx_fini(&dd->mtx);
 	NNI_FREE_STRUCT(dd);
@@ -172,7 +172,7 @@ nni_device_init(nni_device_data **dp, nni_sock *s1, nni_sock *s2)
 		p->dst             = i == 0 ? s2 : s1;
 		p->state           = NNI_DEVICE_STATE_INIT;
 
-		if ((rv = nni_aio_init(&p->aio, nni_device_cb, p)) != 0) {
+		if ((rv = nni_aio_alloc(&p->aio, nni_device_cb, p)) != 0) {
 			nni_device_fini(dd);
 			return (rv);
 		}
@@ -221,11 +221,11 @@ nni_device(nni_sock *s1, nni_sock *s2)
 	nni_aio *        aio;
 	int              rv;
 
-	if ((rv = nni_aio_init(&aio, NULL, NULL)) != 0) {
+	if ((rv = nni_aio_alloc(&aio, NULL, NULL)) != 0) {
 		return (rv);
 	}
 	if ((rv = nni_device_init(&dd, s1, s2)) != 0) {
-		nni_aio_fini(aio);
+		nni_aio_free(aio);
 		return (rv);
 	}
 	nni_device_start(dd, aio);
@@ -233,6 +233,6 @@ nni_device(nni_sock *s1, nni_sock *s2)
 
 	rv = nni_aio_result(aio);
 	nni_device_fini(dd);
-	nni_aio_fini(aio);
+	nni_aio_free(aio);
 	return (rv);
 }

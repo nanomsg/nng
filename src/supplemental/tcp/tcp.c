@@ -157,8 +157,8 @@ tcp_dialer_free(void *arg)
 
 	nni_aio_stop(d->resaio);
 	nni_aio_stop(d->conaio);
-	nni_aio_fini(d->resaio);
-	nni_aio_fini(d->conaio);
+	nni_aio_free(d->resaio);
+	nni_aio_free(d->conaio);
 
 	if (d->d != NULL) {
 		nni_tcp_dialer_close(d->d);
@@ -234,8 +234,8 @@ tcp_dialer_alloc(tcp_dialer **dp)
 	nni_aio_list_init(&d->resaios);
 	nni_aio_list_init(&d->conaios);
 
-	if (((rv = nni_aio_init(&d->resaio, tcp_dial_res_cb, d)) != 0) ||
-	    ((rv = nni_aio_init(&d->conaio, tcp_dial_con_cb, d)) != 0) ||
+	if (((rv = nni_aio_alloc(&d->resaio, tcp_dial_res_cb, d)) != 0) ||
+	    ((rv = nni_aio_alloc(&d->conaio, tcp_dial_con_cb, d)) != 0) ||
 	    ((rv = nni_tcp_dialer_init(&d->d)) != 0)) {
 		tcp_dialer_free(d);
 		return (rv);
@@ -446,11 +446,11 @@ nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	nni_aio_wait(aio);
 
 	if ((rv = nni_aio_result(aio)) != 0) {
-		nni_aio_fini(aio);
+		nni_aio_free(aio);
 		return (rv);
 	}
 	nni_aio_get_sockaddr(aio, &sa);
-	nni_aio_fini(aio);
+	nni_aio_free(aio);
 
 	return (tcp_listener_alloc_addr(lp, &sa));
 }

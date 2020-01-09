@@ -85,7 +85,7 @@ xsub0_pipe_fini(void *arg)
 {
 	xsub0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_recv);
+	nni_aio_free(p->aio_recv);
 }
 
 static int
@@ -94,7 +94,7 @@ xsub0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	xsub0_pipe *p = arg;
 	int         rv;
 
-	if ((rv = nni_aio_init(&p->aio_recv, xsub0_recv_cb, p)) != 0) {
+	if ((rv = nni_aio_alloc(&p->aio_recv, xsub0_recv_cb, p)) != 0) {
 		xsub0_pipe_fini(p);
 		return (rv);
 	}

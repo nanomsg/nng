@@ -62,7 +62,7 @@ xrep0_sock_fini(void *arg)
 {
 	xrep0_sock *s = arg;
 
-	nni_aio_fini(s->aio_getq);
+	nni_aio_free(s->aio_getq);
 	nni_idhash_fini(s->pipes);
 	nni_mtx_fini(&s->lk);
 }
@@ -75,7 +75,7 @@ xrep0_sock_init(void *arg, nni_sock *sock)
 
 	nni_mtx_init(&s->lk);
 	if (((rv = nni_idhash_init(&s->pipes)) != 0) ||
-	    ((rv = nni_aio_init(&s->aio_getq, xrep0_sock_getq_cb, s)) != 0)) {
+	    ((rv = nni_aio_alloc(&s->aio_getq, xrep0_sock_getq_cb, s)) != 0)) {
 		xrep0_sock_fini(s);
 		return (rv);
 	}
@@ -120,10 +120,10 @@ xrep0_pipe_fini(void *arg)
 {
 	xrep0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_getq);
-	nni_aio_fini(p->aio_send);
-	nni_aio_fini(p->aio_recv);
-	nni_aio_fini(p->aio_putq);
+	nni_aio_free(p->aio_getq);
+	nni_aio_free(p->aio_send);
+	nni_aio_free(p->aio_recv);
+	nni_aio_free(p->aio_putq);
 	nni_msgq_fini(p->sendq);
 }
 
@@ -146,10 +146,10 @@ xrep0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	// willing to receive replies.  Something to think about for the
 	// future.)
 	if (((rv = nni_msgq_init(&p->sendq, 64)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_getq, xrep0_pipe_getq_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, xrep0_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, xrep0_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_putq, xrep0_pipe_putq_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->aio_getq, xrep0_pipe_getq_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_send, xrep0_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_recv, xrep0_pipe_recv_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_putq, xrep0_pipe_putq_cb, p)) != 0)) {
 		xrep0_pipe_fini(p);
 		return (rv);
 	}

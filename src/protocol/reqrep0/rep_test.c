@@ -273,6 +273,26 @@ test_rep_close_pipe_during_send(void)
 }
 
 void
+test_rep_ctx_recv_aio_stopped(void)
+{
+	nng_socket rep;
+	nng_ctx    ctx;
+	nng_aio *  aio;
+
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	TEST_NNG_PASS(nng_ctx_open(&ctx, rep));
+
+	nng_aio_stop(aio);
+	nng_ctx_recv(ctx, aio);
+	nng_aio_wait(aio);
+	TEST_NNG_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	TEST_NNG_PASS(nng_ctx_close(ctx));
+	TEST_NNG_PASS(nng_close(rep));
+	nng_aio_free(aio);
+}
+
+void
 test_rep_close_pipe_context_send(void)
 {
 	nng_socket rep;
@@ -424,6 +444,7 @@ TEST_LIST = {
 	{ "rep double recv", test_rep_double_recv },
 	{ "rep close pipe before send", test_rep_close_pipe_before_send },
 	{ "rep close pipe during send", test_rep_close_pipe_during_send },
+	{ "rep recv aio ctx stopped", test_rep_ctx_recv_aio_stopped },
 	{ "rep close pipe context send", test_rep_close_pipe_context_send },
 	{ "rep close context send", test_rep_close_context_send },
 	{ "rep recv garbage", test_rep_recv_garbage },

@@ -243,10 +243,10 @@ http_sconn_reap(void *arg)
 	}
 	nni_http_req_free(sc->req);
 	nni_http_res_free(sc->res);
-	nni_aio_fini(sc->rxaio);
-	nni_aio_fini(sc->txaio);
-	nni_aio_fini(sc->txdataio);
-	nni_aio_fini(sc->cbaio);
+	nni_aio_free(sc->rxaio);
+	nni_aio_free(sc->txaio);
+	nni_aio_free(sc->txdataio);
+	nni_aio_free(sc->cbaio);
 
 	// Now it is safe to release our reference on the server.
 	nni_mtx_lock(&s->mtx);
@@ -746,11 +746,11 @@ http_sconn_init(http_sconn **scp, nng_stream *stream)
 	}
 
 	if (((rv = nni_http_req_alloc(&sc->req, NULL)) != 0) ||
-	    ((rv = nni_aio_init(&sc->rxaio, http_sconn_rxdone, sc)) != 0) ||
-	    ((rv = nni_aio_init(&sc->txaio, http_sconn_txdone, sc)) != 0) ||
-	    ((rv = nni_aio_init(&sc->txdataio, http_sconn_txdatdone, sc)) !=
+	    ((rv = nni_aio_alloc(&sc->rxaio, http_sconn_rxdone, sc)) != 0) ||
+	    ((rv = nni_aio_alloc(&sc->txaio, http_sconn_txdone, sc)) != 0) ||
+	    ((rv = nni_aio_alloc(&sc->txdataio, http_sconn_txdatdone, sc)) !=
 	        0) ||
-	    ((rv = nni_aio_init(&sc->cbaio, http_sconn_cbdone, sc)) != 0)) {
+	    ((rv = nni_aio_alloc(&sc->cbaio, http_sconn_cbdone, sc)) != 0)) {
 		// Can't even accept the incoming request.  Hard close.
 		http_sconn_close(sc);
 		return (rv);
@@ -838,7 +838,7 @@ http_server_fini(nni_http_server *s)
 	nni_mtx_unlock(&s->errors_mtx);
 	nni_mtx_fini(&s->errors_mtx);
 
-	nni_aio_fini(s->accaio);
+	nni_aio_free(s->accaio);
 	nni_mtx_fini(&s->mtx);
 	nni_strfree(s->hostname);
 	NNI_FREE_STRUCT(s);
@@ -874,7 +874,7 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 	nni_mtx_init(&s->errors_mtx);
 	NNI_LIST_INIT(&s->errors, http_error, node);
 
-	if ((rv = nni_aio_init(&s->accaio, http_server_acccb, s)) != 0) {
+	if ((rv = nni_aio_alloc(&s->accaio, http_server_acccb, s)) != 0) {
 		http_server_fini(s);
 		return (rv);
 	}

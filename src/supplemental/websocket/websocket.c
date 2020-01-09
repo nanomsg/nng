@@ -1230,11 +1230,11 @@ ws_fini(void *arg)
 
 	nni_strfree(ws->reqhdrs);
 	nni_strfree(ws->reshdrs);
-	nni_aio_fini(ws->rxaio);
-	nni_aio_fini(ws->txaio);
-	nni_aio_fini(ws->closeaio);
-	nni_aio_fini(ws->httpaio);
-	nni_aio_fini(ws->connaio);
+	nni_aio_free(ws->rxaio);
+	nni_aio_free(ws->txaio);
+	nni_aio_free(ws->closeaio);
+	nni_aio_free(ws->httpaio);
+	nni_aio_free(ws->connaio);
 	nni_mtx_fini(&ws->mtx);
 	NNI_FREE_STRUCT(ws);
 }
@@ -1411,11 +1411,11 @@ ws_init(nni_ws **wsp)
 	nni_aio_list_init(&ws->sendq);
 	nni_aio_list_init(&ws->recvq);
 
-	if (((rv = nni_aio_init(&ws->closeaio, ws_close_cb, ws)) != 0) ||
-	    ((rv = nni_aio_init(&ws->txaio, ws_write_cb, ws)) != 0) ||
-	    ((rv = nni_aio_init(&ws->rxaio, ws_read_cb, ws)) != 0) ||
-	    ((rv = nni_aio_init(&ws->httpaio, ws_http_cb, ws)) != 0) ||
-	    ((rv = nni_aio_init(&ws->connaio, ws_conn_cb, ws)) != 0)) {
+	if (((rv = nni_aio_alloc(&ws->closeaio, ws_close_cb, ws)) != 0) ||
+	    ((rv = nni_aio_alloc(&ws->txaio, ws_write_cb, ws)) != 0) ||
+	    ((rv = nni_aio_alloc(&ws->rxaio, ws_read_cb, ws)) != 0) ||
+	    ((rv = nni_aio_alloc(&ws->httpaio, ws_http_cb, ws)) != 0) ||
+	    ((rv = nni_aio_alloc(&ws->connaio, ws_conn_cb, ws)) != 0)) {
 		ws_fini(ws);
 		return (rv);
 	}

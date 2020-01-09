@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -110,7 +110,7 @@ tls_dialer_dial(void *arg, nng_aio *aio)
 	}
 
 	com = (void *) tls;
-	if ((rv = nni_aio_init(&com->aio, tls_conn_cb, tls)) != 0) {
+	if ((rv = nni_aio_alloc(&com->aio, tls_conn_cb, tls)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		nng_stream_free(tls);
 		return;
@@ -394,7 +394,7 @@ tls_listener_accept(void *arg, nng_aio *aio)
 		return;
 	}
 	com = (void *) tls;
-	if ((rv = nni_aio_init(&com->aio, tls_conn_cb, tls)) != 0) {
+	if ((rv = nni_aio_alloc(&com->aio, tls_conn_cb, tls)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		nng_stream_free(tls);
 		return;

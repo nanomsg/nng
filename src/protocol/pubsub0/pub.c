@@ -111,8 +111,8 @@ pub0_pipe_fini(void *arg)
 {
 	pub0_pipe *p = arg;
 
-	nni_aio_fini(p->aio_send);
-	nni_aio_fini(p->aio_recv);
+	nni_aio_free(p->aio_send);
+	nni_aio_free(p->aio_recv);
 	nni_lmq_fini(&p->sendq);
 }
 
@@ -130,8 +130,8 @@ pub0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 
 	// XXX: consider making this depth tunable
 	if (((rv = nni_lmq_init(&p->sendq, len)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_send, pub0_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_init(&p->aio_recv, pub0_pipe_recv_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->aio_send, pub0_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->aio_recv, pub0_pipe_recv_cb, p)) != 0)) {
 
 		pub0_pipe_fini(p);
 		return (rv);
