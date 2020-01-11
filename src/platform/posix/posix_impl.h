@@ -83,6 +83,10 @@ struct nni_atomic_flag {
 	atomic_flag f;
 };
 
+struct nni_atomic_int {
+	atomic_int v;
+};
+
 struct nni_atomic_u64 {
 	atomic_uint_fast64_t v;
 };
@@ -98,6 +102,10 @@ struct nni_atomic_flag {
 
 struct nni_atomic_bol {
 	bool b;
+};
+
+struct nni_atomic_int {
+	int v;
 };
 
 struct nni_atomic_u64 {

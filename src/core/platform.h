@@ -192,7 +192,29 @@ extern void     nni_atomic_inc64(nni_atomic_u64 *);
 // nni_atomic_cas64 is a compare and swap.  The second argument is the
 // value to compare against, and the third is the new value. Returns
 // true if the value was set.
-extern bool     nni_atomic_cas64(nni_atomic_u64 *, uint64_t, uint64_t);
+extern bool nni_atomic_cas64(nni_atomic_u64 *, uint64_t, uint64_t);
+
+// In a lot of circumstances, we want a simple atomic reference count,
+// or atomic tunable values for integers like queue lengths or TTLs.
+// These native integer forms should be preferred over the 64 bit versions
+// unless larger bit sizes are truly needed.  They will be more efficient
+// on many platforms.
+typedef struct nni_atomic_int nni_atomic_int;
+
+extern void nni_atomic_init(nni_atomic_int *);
+extern void nni_atomic_add(nni_atomic_int *, int);
+extern void nni_atomic_sub(nni_atomic_int *, int);
+extern int  nni_atomic_get(nni_atomic_int *);
+extern void nni_atomic_set(nni_atomic_int *, int);
+extern int  nni_atomic_swap(nni_atomic_int *, int);
+extern int  nni_atomic_dec_nv(nni_atomic_int *);
+extern void nni_atomic_dec(nni_atomic_int *);
+extern void nni_atomic_inc(nni_atomic_int *);
+
+// nni_atomic_cas is a compare and swap.  The second argument is the
+// value to compare against, and the third is the new value. Returns
+// true if the value was set.
+extern bool nni_atomic_cas(nni_atomic_int *, int, int);
 
 //
 // Clock Support

@@ -117,7 +117,7 @@ test_rep_poll_readable(void)
 
 	TEST_CHECK(testutil_pollfd(fd) == true);
 
-	// and receiving makes it no longer pollable
+	// and receiving makes it no longer ready
 	TEST_NNG_PASS(nng_recvmsg(rep, &msg, 0));
 	nng_msg_free(msg);
 	TEST_CHECK(testutil_pollfd(fd) == false);
@@ -129,7 +129,7 @@ test_rep_poll_readable(void)
 }
 
 void
-test_rep_context_not_pollable(void)
+test_rep_context_no_poll(void)
 {
 	int        fd;
 	nng_socket req;
@@ -439,7 +439,7 @@ TEST_LIST = {
 	{ "rep send bad state", test_rep_send_bad_state },
 	{ "rep poll readable", test_rep_poll_readable },
 	{ "rep poll writable", test_rep_poll_writeable },
-	{ "rep context not pollable", test_rep_context_not_pollable },
+	{ "rep context does not poll", test_rep_context_no_poll },
 	{ "rep validate peer", test_rep_validate_peer },
 	{ "rep double recv", test_rep_double_recv },
 	{ "rep close pipe before send", test_rep_close_pipe_before_send },

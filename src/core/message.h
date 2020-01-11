@@ -62,4 +62,11 @@ extern uint64_t nni_msg_header_chop_u64(nni_msg *);
 extern void     nni_msg_set_pipe(nni_msg *, uint32_t);
 extern uint32_t nni_msg_get_pipe(const nni_msg *);
 
+// These should only be used when the transport or protocol is absolutely
+// certain that there is adequate room.   There is about 32 bytes of
+// header and trailer space for a newly allocated message, and transports
+// should generally not be burning more than half that.
+extern void nni_msg_must_append_u32(nni_msg *, uint32_t);
+extern void nni_msg_header_must_append_u32(nni_msg *, uint32_t);
+
 #endif // CORE_SOCKET_H

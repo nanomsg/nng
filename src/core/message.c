@@ -650,6 +650,23 @@ nni_msg_header_chop(nni_msg *m, size_t len)
 		return (nni_chunk_##z##_u##x(&m->m_header, v));  \
 	}
 
+#define DEF_MSG_MUST_ADD_N(z, x)                                             \
+	void nni_msg_must_##z##_u##x(nni_msg *m, uint##x##_t v)              \
+	{                                                                    \
+		int rv;                                                      \
+		if ((rv = nni_msg_##z##_u##x(m, v)) != 0) {                  \
+			nni_panic("nni_msg_%s_u%s failed: %d", #z, #x, rv);  \
+		}                                                            \
+	}                                                                    \
+	void nni_msg_header_must_##z##_u##x(nni_msg *m, uint##x##_t v)       \
+	{                                                                    \
+		int rv;                                                      \
+		if ((rv = nni_msg_header_##z##_u##x(m, v)) != 0) {           \
+			nni_panic(                                           \
+			    "nni_msg_header_%s_u%s failed: %d", #z, #x, rv); \
+		}                                                            \
+	}
+
 #define DEF_MSG_REM_N(z, x)                                  \
 	uint##x##_t nni_msg_##z##_u##x(nni_msg *m)           \
 	{                                                    \
@@ -662,17 +679,23 @@ nni_msg_header_chop(nni_msg *m, size_t len)
 
 #define DEF_MSG_ADD(op) \
 	DEF_MSG_ADD_N(op, 16) DEF_MSG_ADD_N(op, 32) DEF_MSG_ADD_N(op, 64)
+
+#define DEF_MSG_MUST_ADD(op) DEF_MSG_MUST_ADD_N(op, 32)
+
 #define DEF_MSG_REM(op) \
 	DEF_MSG_REM_N(op, 16) DEF_MSG_REM_N(op, 32) DEF_MSG_REM_N(op, 64)
 
 DEF_MSG_ADD(append)
+DEF_MSG_MUST_ADD(append)
 DEF_MSG_ADD(insert)
 DEF_MSG_REM(chop)
 DEF_MSG_REM(trim)
 
 #undef DEF_MSG_ADD_N
+#undef DEF_MUST_ADD_N
 #undef DEF_MSG_REM_N
 #undef DEF_MSG_ADD
+#undef DEF_MSG_MUST_ADD
 #undef DEF_MSG_REM
 
 void

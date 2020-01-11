@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -303,20 +303,23 @@ struct marriage_notice {
 	int      s2;
 	int      cnt1;
 	int      cnt2;
+	nng_pipe p1;
+	nng_pipe p2;
 };
 
 static void
 married(nng_pipe p, nng_pipe_ev ev, void *arg)
 {
 	struct marriage_notice *notice = arg;
-	(void) p;
 	(void) ev;
 
 	nng_mtx_lock(notice->mx);
 	if (nng_socket_id(nng_pipe_socket(p)) == notice->s1) {
 		notice->cnt1++;
+		notice->p1 = p;
 	} else if (nng_socket_id(nng_pipe_socket(p)) == notice->s2) {
 		notice->cnt2++;
+		notice->p2 = p;
 	}
 	nng_cv_wake(notice->cv);
 	nng_mtx_unlock(notice->mx);
@@ -324,6 +327,12 @@ married(nng_pipe p, nng_pipe_ev ev, void *arg)
 
 int
 testutil_marry(nng_socket s1, nng_socket s2)
+{
+	return (testutil_marry_ex(s1, s2, NULL, NULL));
+}
+
+int
+testutil_marry_ex(nng_socket s1, nng_socket s2, nng_pipe *p1, nng_pipe *p2)
 {
 	struct marriage_notice note;
 	nng_time               timeout;
@@ -357,6 +366,12 @@ testutil_marry(nng_socket s1, nng_socket s2)
 		}
 	}
 	nng_mtx_unlock(note.mx);
+	if (p1 != NULL) {
+		*p1 = note.p1;
+	}
+	if (p2 != NULL) {
+		*p2 = note.p2;
+	}
 
 done:
 	nng_pipe_notify(s1, NNG_PIPE_EV_ADD_POST, NULL, NULL);

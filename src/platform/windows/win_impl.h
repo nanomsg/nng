@@ -54,6 +54,10 @@ struct nni_atomic_bool {
 	LONG v;
 };
 
+struct nni_atomic_int {
+	LONG v;
+};
+
 struct nni_atomic_u64 {
 	LONGLONG v;
 };

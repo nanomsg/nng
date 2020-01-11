@@ -55,6 +55,66 @@ nni_atomic_init_bool(nni_atomic_bool *v)
 }
 
 void
+nni_atomic_init(nni_atomic_int *v)
+{
+	atomic_init(&v->v, 0);
+}
+
+void
+nni_atomic_add(nni_atomic_int *v, int bump)
+{
+	(void) atomic_fetch_add_explicit(&v->v, bump, memory_order_relaxed);
+}
+
+void
+nni_atomic_sub(nni_atomic_int *v, int bump)
+{
+	(void) atomic_fetch_sub_explicit(&v->v, bump, memory_order_relaxed);
+}
+
+int
+nni_atomic_get(nni_atomic_int *v)
+{
+	return (atomic_load(&v->v));
+}
+
+void
+nni_atomic_set(nni_atomic_int *v, int i)
+{
+	return (atomic_store(&v->v, i));
+}
+
+int
+nni_atomic_swap(nni_atomic_int *v, int i)
+{
+	return (atomic_exchange(&v->v, i));
+}
+
+void
+nni_atomic_inc(nni_atomic_int *v)
+{
+	atomic_fetch_add(&v->v, 1);
+}
+
+void
+nni_atomic_dec(nni_atomic_int *v)
+{
+	atomic_fetch_sub(&v->v, 1);
+}
+
+int
+nni_atomic_dec_nv(nni_atomic_int *v)
+{
+	return (atomic_fetch_sub(&v->v, 1) - 1);
+}
+
+bool
+nni_atomic_cas(nni_atomic_int *v, int comp, int new)
+{
+	return (atomic_compare_exchange_strong(&v->v, &comp, new));
+}
+
+void
 nni_atomic_add64(nni_atomic_u64 *v, uint64_t bump)
 {
 	(void) atomic_fetch_add_explicit(
@@ -250,6 +310,97 @@ nni_atomic_dec64_nv(nni_atomic_u64 *v)
 
 bool
 nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
+{
+	bool result = false;
+	pthread_mutex_lock(&plat_atomic_lock);
+	if (v->v == comp) {
+		v->v   = new;
+		result = true;
+	}
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (result);
+}
+
+void
+nni_atomic_init(nni_atomic_int *v)
+{
+	atomic_init(&v->v, 0);
+}
+
+void
+nni_atomic_add(nni_atomic_int *v, int bump)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v += bump;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+void
+nni_atomic_sub(nni_atomic_int *v, int bump)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v -= bump;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+int
+nni_atomic_get(nni_atomic_int *v)
+{
+	int rv;
+	pthread_mutex_lock(&plat_atomic_lock);
+	rv = v->v;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (rv);
+}
+
+void
+nni_atomic_set(nni_atomic_int *v, int i)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v = i;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+int
+nni_atomic_swap(nni_atomic_int *v, int i)
+{
+	int rv;
+	pthread_mutex_lock(&plat_atomic_lock);
+	rv   = v->v;
+	v->v = i;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (rv);
+}
+
+void
+nni_atomic_inc(nni_atomic_int *v)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v++;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+void
+nni_atomic_dec(nni_atomic_int *v)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v--;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+int
+nni_atomic_dec_nv(nni_atomic_int *v)
+{
+	int nv;
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v--;
+	nv = v->v;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (nv);
+}
+
+bool
+nni_atomic_cas(nni_atomic_int *v, int comp, int new)
 {
 	bool result = false;
 	pthread_mutex_lock(&plat_atomic_lock);

@@ -48,14 +48,14 @@ struct rep0_ctx {
 
 // rep0_sock is our per-socket protocol private structure.
 struct rep0_sock {
-	nni_mtx      lk;
-	int          ttl;
-	nni_idhash * pipes;
-	nni_list     recvpipes; // list of pipes with data to receive
-	nni_list     recvq;
-	rep0_ctx     ctx;
-	nni_pollable readable;
-	nni_pollable writable;
+	nni_mtx        lk;
+	nni_atomic_int ttl;
+	nni_idhash *   pipes;
+	nni_list       recvpipes; // list of pipes with data to receive
+	nni_list       recvq;
+	rep0_ctx       ctx;
+	nni_pollable   readable;
+	nni_pollable   writable;
 };
 
 // rep0_pipe is our per-pipe protocol private structure.
@@ -241,8 +241,8 @@ rep0_sock_init(void *arg, nni_sock *sock)
 
 	NNI_LIST_INIT(&s->recvq, rep0_ctx, rqnode);
 	NNI_LIST_INIT(&s->recvpipes, rep0_pipe, rnode);
-
-	s->ttl = 8;
+	nni_atomic_init(&s->ttl);
+	nni_atomic_set(&s->ttl, 8);
 
 	(void) rep0_ctx_init(&s->ctx, s);
 
@@ -506,7 +506,7 @@ rep0_pipe_recv_cb(void *arg)
 	for (;;) {
 		bool end;
 
-		if (hops > s->ttl) {
+		if (hops > nni_atomic_get(&s->ttl)) {
 			// This isn't malformed, but it has gone
 			// through too many hops.  Do not disconnect,
 			// because we can legitimately receive messages
@@ -574,19 +574,24 @@ drop:
 }
 
 static int
-rep0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
+rep0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	rep0_sock *s = arg;
+	int ttl;
+	int rv;
 
-	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, t));
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
+		nni_atomic_set(&s->ttl, ttl);
+	}
+	return (rv);
 }
 
 static int
-rep0_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
+rep0_sock_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	rep0_sock *s = arg;
 
-	return (nni_copyout_int(s->ttl, buf, szp, t));
+	return (nni_copyout_int(nni_atomic_get(&s->ttl), buf, szp, t));
 }
 
 static int
@@ -654,8 +659,8 @@ static nni_proto_ctx_ops rep0_ctx_ops = {
 static nni_option rep0_sock_options[] = {
 	{
 	    .o_name = NNG_OPT_MAXTTL,
-	    .o_get  = rep0_sock_get_maxttl,
-	    .o_set  = rep0_sock_set_maxttl,
+	    .o_get  = rep0_sock_get_max_ttl,
+	    .o_set  = rep0_sock_set_max_ttl,
 	},
 	{
 	    .o_name = NNG_OPT_RECVFD,

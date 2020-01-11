@@ -20,7 +20,7 @@
 #define NNI_PROTO(x, y) (((x) << 4u) | (y))
 #endif
 
-void
+static void
 test_xrep_identity(void)
 {
 	nng_socket s;
@@ -41,7 +41,7 @@ test_xrep_identity(void)
 	TEST_CHECK(nng_close(s) == 0);
 }
 
-void
+static void
 test_xrep_raw(void)
 {
 	nng_socket s;
@@ -53,7 +53,7 @@ test_xrep_raw(void)
 	TEST_NNG_PASS(nng_close(s));
 }
 
-void
+static void
 test_xrep_no_context(void)
 {
 	nng_socket s;
@@ -64,7 +64,7 @@ test_xrep_no_context(void)
 	TEST_NNG_PASS(nng_close(s));
 }
 
-void
+static void
 test_xrep_poll_writeable(void)
 {
 	int        fd;
@@ -91,7 +91,7 @@ test_xrep_poll_writeable(void)
 	TEST_NNG_PASS(nng_close(rep));
 }
 
-void
+static void
 test_xrep_poll_readable(void)
 {
 	int        fd;
@@ -118,7 +118,7 @@ test_xrep_poll_readable(void)
 
 	TEST_CHECK(testutil_pollfd(fd) == true);
 
-	// and receiving makes it no longer pollable
+	// and receiving makes it no longer ready
 	TEST_NNG_PASS(nng_recvmsg(rep, &msg, 0));
 	nng_msg_free(msg);
 	TEST_CHECK(testutil_pollfd(fd) == false);
@@ -127,7 +127,7 @@ test_xrep_poll_readable(void)
 	TEST_NNG_PASS(nng_close(rep));
 }
 
-void
+static void
 test_xrep_validate_peer(void)
 {
 	nng_socket s1, s2;
@@ -158,7 +158,7 @@ test_xrep_validate_peer(void)
 	nng_stats_free(stats);
 }
 
-void
+static void
 test_xrep_close_pipe_before_send(void)
 {
 	nng_socket rep;
@@ -190,7 +190,7 @@ test_xrep_close_pipe_before_send(void)
 	nng_aio_free(aio1);
 }
 
-void
+static void
 test_xrep_close_pipe_during_send(void)
 {
 	nng_socket rep;
@@ -231,7 +231,7 @@ test_xrep_close_pipe_during_send(void)
 	TEST_NNG_PASS(nng_close(rep));
 }
 
-void
+static void
 test_xrep_close_during_recv(void)
 {
 	nng_socket rep;
@@ -261,7 +261,7 @@ test_xrep_close_during_recv(void)
 	TEST_NNG_PASS(nng_close(rep));
 }
 
-void
+static void
 test_xrep_recv_aio_stopped(void)
 {
 	nng_socket rep;
@@ -278,7 +278,7 @@ test_xrep_recv_aio_stopped(void)
 	nng_aio_free(aio);
 }
 
-void
+static void
 test_xrep_send_no_header(void)
 {
 	nng_socket rep;
@@ -302,7 +302,7 @@ test_xrep_send_no_header(void)
 	TEST_NNG_PASS(nng_close(rep));
 }
 
-void
+static void
 test_xrep_recv_garbage(void)
 {
 	nng_socket rep;
@@ -326,13 +326,13 @@ test_xrep_recv_garbage(void)
 	TEST_NNG_PASS(nng_close(rep));
 }
 
-void
+static void
 test_xrep_ttl_option(void)
 {
 	nng_socket  rep;
 	int         v;
 	bool        b;
-	size_t      sz  = sizeof(v);
+	size_t      sz;
 	const char *opt = NNG_OPT_MAXTTL;
 
 	TEST_NNG_PASS(nng_rep0_open_raw(&rep));
@@ -359,7 +359,7 @@ test_xrep_ttl_option(void)
 	TEST_CHECK(nng_close(rep) == 0);
 }
 
-void
+static void
 test_xrep_ttl_drop(void)
 {
 	nng_socket rep;

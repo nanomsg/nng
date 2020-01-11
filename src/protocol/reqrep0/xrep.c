@@ -40,7 +40,7 @@ struct xrep0_sock {
 	nni_msgq *     uwq;
 	nni_msgq *     urq;
 	nni_mtx        lk;
-	nni_atomic_u64 ttl;
+	nni_atomic_int ttl;
 	nni_idhash *   pipes;
 	nni_aio        aio_getq;
 };
@@ -74,8 +74,8 @@ xrep0_sock_init(void *arg, nni_sock *sock)
 
 	nni_mtx_init(&s->lk);
 	nni_aio_init(&s->aio_getq, xrep0_sock_getq_cb, s);
-	nni_atomic_init64(&s->ttl);
-	nni_atomic_set64(&s->ttl, 8); // Per RFC
+	nni_atomic_init(&s->ttl);
+	nni_atomic_set(&s->ttl, 8); // Per RFC
 	s->uwq = nni_sock_sendq(sock);
 	s->urq = nni_sock_recvq(sock);
 
@@ -295,17 +295,14 @@ xrep0_pipe_recv_cb(void *arg)
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
 
 	// Store the pipe id in the header, first thing.
-	if (nni_msg_header_append_u32(msg, nni_pipe_id(p->pipe)) != 0) {
-		// Failure here causes us to drop the message.
-		goto drop;
-	}
+	nni_msg_header_must_append_u32(msg, nni_pipe_id(p->pipe));
 
 	// Move backtrace from body to header
 	hops = 1;
 	for (;;) {
 		bool     end = 0;
 		uint8_t *body;
-		if (hops > (int)nni_atomic_get64(&s->ttl)) {
+		if (hops > (int)nni_atomic_get(&s->ttl)) {
 			// This isn't malformed, but it has gone through
 			// too many hops.  Do not disconnect, because we
 			// can legitimately receive messages with too many
@@ -364,7 +361,7 @@ xrep0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 	int         ttl;
 	int         rv;
 	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
-		nni_atomic_set64(&s->ttl, (uint64_t) ttl);
+		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);
 }
@@ -373,7 +370,7 @@ static int
 xrep0_sock_get_maxttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	xrep0_sock *s = arg;
-	return (nni_copyout_int((int) nni_atomic_get64(&s->ttl), buf, szp, t));
+	return (nni_copyout_int(nni_atomic_get(&s->ttl), buf, szp, t));
 }
 
 static void

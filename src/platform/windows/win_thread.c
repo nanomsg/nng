@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,13 +8,13 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-// POSIX threads.
+// Windows threads.
 
 #include "core/nng_impl.h"
 
 #ifdef NNG_PLATFORM_WINDOWS
 
-// mingw does not define InterlockedAddNoFence64, use the mingw equivelent
+// mingw does not define InterlockedAddNoFence64, use the mingw equivalent
 #if defined(__MINGW32__) || defined(__MINGW64__)
 #define InterlockedAddNoFence64(a, b) \
 	__atomic_add_fetch(a, b, __ATOMIC_RELAXED)
@@ -220,6 +220,66 @@ nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
 	old = InterlockedCompareExchange64(&v->v, (LONG64)new, (LONG64)comp);
 	return (old == comp);
 }
+
+
+void
+nni_atomic_add(nni_atomic_int *v, int bump)
+{
+	InterlockedAddNoFence(&v->v, (LONG) bump);
+}
+
+void
+nni_atomic_sub(nni_atomic_int *v, int bump)
+{
+	// Windows lacks a sub, so we add the negative.
+	InterlockedAddNoFence(&v->v, (LONG) -bump);
+}
+
+int
+nni_atomic_get(nni_atomic_int *v)
+{
+
+	return (InterlockedExchangeAdd(&v->v, 0));
+}
+
+void
+nni_atomic_set(nni_atomic_int *v, int i)
+{
+	(void) InterlockedExchange(&v->v, (LONG) i);
+}
+
+int
+nni_atomic_swap(nni_atomic_int *v, int i)
+{
+	return (InterlockedExchange(&v->v, (LONG) i));
+}
+
+void
+nni_atomic_init(nni_atomic_int *v)
+{
+	InterlockedExchange(&v->v, 0);
+}
+
+void
+nni_atomic_inc(nni_atomic_int *v)
+{
+	(void) InterlockedIncrementAcquire(&v->v);
+}
+
+int
+nni_atomic_dec_nv(nni_atomic_int *v)
+{
+	return (InterlockedDecrementRelease(&v->v));
+}
+
+bool
+nni_atomic_cas(nni_atomic_int *v, int comp, int new)
+{
+	int old;
+	old = InterlockedCompareExchange(&v->v, (LONG)new, (LONG)comp);
+	return (old == comp);
+}
+
 
 static unsigned int __stdcall nni_plat_thr_main(void *arg)
 {
