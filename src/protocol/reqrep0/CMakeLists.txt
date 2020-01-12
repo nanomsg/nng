@@ -23,7 +23,7 @@ nng_sources_if(NNG_PROTO_REP0 rep.c xrep.c)
 nng_headers_if(NNG_PROTO_REP0 nng/protocol/reqrep0/rep.h)
 nng_defines_if(NNG_PROTO_REP0 NNG_HAVE_REP0)
 
-nng_test(reqrep_test)
+nng_test(req_test)
 nng_test(rep_test)
 nng_test(xrep_test)
 nng_test(xreq_test)
