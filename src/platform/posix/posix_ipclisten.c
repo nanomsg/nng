@@ -183,13 +183,13 @@ static int
 ipc_remove_stale(const char *path)
 {
 	int                fd;
-	struct sockaddr_un sun;
+	struct sockaddr_un sa;
 	size_t             sz;
 
-	sun.sun_family = AF_UNIX;
-	sz             = sizeof(sun.sun_path);
+	sa.sun_family = AF_UNIX;
+	sz             = sizeof(sa.sun_path);
 
-	if (nni_strlcpy(sun.sun_path, path, sz) >= sz) {
+	if (nni_strlcpy(sa.sun_path, path, sz) >= sz) {
 		return (NNG_EADDRINVAL);
 	}
 
@@ -203,7 +203,7 @@ ipc_remove_stale(const char *path)
 	// then the cleanup will fail.  As this is supposed to be an
 	// exceptional case, don't worry.
 	(void) fcntl(fd, F_SETFL, O_NONBLOCK);
-	if (connect(fd, (void *) &sun, sizeof(sun)) < 0) {
+	if (connect(fd, (void *) &sa, sizeof(sa)) < 0) {
 		if (errno == ECONNREFUSED) {
 			(void) unlink(path);
 		}
