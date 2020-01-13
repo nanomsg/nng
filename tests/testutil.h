@@ -77,16 +77,18 @@ extern int testutil_marry_ex(nng_socket, nng_socket, nng_pipe *, nng_pipe *);
 #define TEST_NNG_SEND_STR(sock, string) \
 	TEST_NNG_PASS(nng_send(sock, string, strlen(string) + 1, 0))
 
-#define TEST_NNG_RECV_STR(sock, string)                                    \
-	do {                                                               \
-		char * buf_;                                                \
-		size_t sz_;                                                \
-		int    rv_ = nng_recv(sock, &buf_, &sz_, NNG_FLAG_ALLOC);  \
-		TEST_CHECK_(                                               \
-		    rv_ == 0, "nng_recv (%d %s)", rv_, nng_strerror(rv_)); \
-		TEST_CHECK(sz_ == strlen(string) + 1);                     \
-		TEST_CHECK(strcmp(string, buf_) == 0);                     \
-		nng_free(buf_, sz_);                                       \
+#define TEST_NNG_RECV_STR(sock, string)                                     \
+	do {                                                                \
+		char   buf_[64];                                            \
+		size_t sz_ = sizeof(buf_);                                  \
+		int    rv_ = nng_recv(sock, &buf_, &sz_, 0);                \
+		TEST_CHECK_(                                                \
+		    rv_ == 0, "nng_recv (%d %s)", rv_, nng_strerror(rv_));  \
+		TEST_CHECK_(sz_ == strlen(string) + 1, "length %d want %d", \
+		    sz_, strlen(string) + 1);                               \
+		buf_[sizeof(buf_) - 1] = '\0';                              \
+		TEST_CHECK_(                                                 \
+		    strcmp(string, buf_) == 0, "%s == %s", string, buf_);   \
 	} while (0)
 
 #ifdef __cplusplus

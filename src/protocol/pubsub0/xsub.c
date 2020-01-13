@@ -41,7 +41,7 @@ struct xsub0_sock {
 struct xsub0_pipe {
 	nni_pipe *  pipe;
 	xsub0_sock *sub;
-	nni_aio *   aio_recv;
+	nni_aio    aio_recv;
 };
 
 static int
@@ -77,7 +77,7 @@ xsub0_pipe_stop(void *arg)
 {
 	xsub0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(&p->aio_recv);
 }
 
 static void
@@ -85,19 +85,15 @@ xsub0_pipe_fini(void *arg)
 {
 	xsub0_pipe *p = arg;
 
-	nni_aio_free(p->aio_recv);
+	nni_aio_fini(&p->aio_recv);
 }
 
 static int
 xsub0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
 	xsub0_pipe *p = arg;
-	int         rv;
 
-	if ((rv = nni_aio_alloc(&p->aio_recv, xsub0_recv_cb, p)) != 0) {
-		xsub0_pipe_fini(p);
-		return (rv);
-	}
+	nni_aio_init(&p->aio_recv, xsub0_recv_cb, p);
 
 	p->pipe = pipe;
 	p->sub  = s;
@@ -114,7 +110,7 @@ xsub0_pipe_start(void *arg)
 		return (NNG_EPROTO);
 	}
 
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 	return (0);
 }
 
@@ -123,7 +119,7 @@ xsub0_pipe_close(void *arg)
 {
 	xsub0_pipe *p = arg;
 
-	nni_aio_close(p->aio_recv);
+	nni_aio_close(&p->aio_recv);
 }
 
 static void
@@ -134,29 +130,25 @@ xsub0_recv_cb(void *arg)
 	nni_msgq *  urq = s->urq;
 	nni_msg *   msg;
 
-	if (nni_aio_result(p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
-	msg = nni_aio_get_msg(p->aio_recv);
-	nni_aio_set_msg(p->aio_recv, NULL);
+	msg = nni_aio_get_msg(&p->aio_recv);
+	nni_aio_set_msg(&p->aio_recv, NULL);
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
 
-	switch (nni_msgq_tryput(urq, msg)) {
-	case 0:
-		break;
-	case NNG_EAGAIN:
+	if (nni_msgq_tryput(urq, msg) != 0) {
+		// This only happens for two reasons.  For flow control,
+		// in which case we just want to discard the message and
+		// carry on, and for a close of the socket (which is very
+		// hard to achieve, since we close the pipes.)  In either
+		// case the easiest thing to do is just free the message
+		// and try again.
 		nni_msg_free(msg);
-		break;
-	default:
-		// Any other error we stop the pipe for.  It's probably
-		// NNG_ECLOSED anyway.
-		nng_msg_free(msg);
-		nni_pipe_close(p->pipe);
-		return;
 	}
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 }
 
 static void

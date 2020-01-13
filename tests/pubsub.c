@@ -57,13 +57,6 @@ TestMain("PUB/SUB pattern", {
 
 		Reset({ nng_close(sub); });
 
-		Convey("Send fails", {
-			nng_msg *msg;
-			So(nng_msg_alloc(&msg, 0) == 0);
-			So(nng_sendmsg(sub, msg, 0) == NNG_ENOTSUP);
-			nng_msg_free(msg);
-		});
-
 		Convey("It can subscribe", {
 			So(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "ABC", 3) ==
 			    0);

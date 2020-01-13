@@ -1,6 +1,6 @@
 = nng_options(5)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -145,6 +145,9 @@ The option is irrelevant for listeners.
 This is the depth of the socket's receive buffer as a number of messages.
 Messages received by a transport may be buffered until the application
 has accepted them for delivery.
+This value must be an integer between 0 and 8192, inclusive.
+NOTE: Not all protocols support buffering received messages.
+For example xref:nng_req.7.adoc[_req_] can only deal with a single reply at a time.
 
 [[NNG_OPT_RECVFD]]
 ((`NNG_OPT_RECVFD`))::
