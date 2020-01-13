@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -32,7 +32,7 @@ nni_lmq_init(nni_lmq *lmq, size_t cap)
 	}
 	lmq->lmq_cap   = cap;
 	lmq->lmq_alloc = alloc;
-	lmq->lmq_mask  = (cap - 1);
+	lmq->lmq_mask  = (alloc - 1);
 	lmq->lmq_len   = 0;
 	lmq->lmq_get   = 0;
 	lmq->lmq_put   = 0;
