@@ -454,6 +454,10 @@ test_req_poll_contention(void)
 		TEST_NNG_PASS(nng_recvmsg(rep, &msg, 0));
 		nng_msg_free(msg);
 	}
+	// It can take a little bit of time for the eased back-pressure
+	// to reflect across the network.
+	testutil_sleep(100);
+	
 	// Should be come writeable now...
 	TEST_CHECK(testutil_pollfd(fd) == true);
 
