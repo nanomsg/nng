@@ -94,7 +94,7 @@ test_sub_poll_readable(void)
 
 	TEST_NNG_PASS(nng_sub0_open(&sub));
 	TEST_NNG_PASS(nng_pub0_open(&pub));
-	TEST_NNG_PASS(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "", 0));
+	TEST_NNG_PASS(nng_setopt(sub, NNG_OPT_SUB_SUBSCRIBE, "a", 1));
 	TEST_NNG_PASS(nng_setopt_ms(sub, NNG_OPT_RECVTIMEO, 1000));
 	TEST_NNG_PASS(nng_setopt_ms(pub, NNG_OPT_SENDTIMEO, 1000));
 	TEST_NNG_PASS(nng_getopt_int(sub, NNG_OPT_RECVFD, &fd));
@@ -107,11 +107,15 @@ test_sub_poll_readable(void)
 	TEST_NNG_PASS(testutil_marry(pub, sub));
 	TEST_CHECK(testutil_pollfd(fd) == false);
 
+	// If we send a message we didn't subscribe to, that doesn't matter.
+	TEST_NNG_SEND_STR(pub, "def");
+	testutil_sleep(100);
+	TEST_CHECK(testutil_pollfd(fd) == false);
+
 	// But once we send messages, it is.
 	// We have to send a request, in order to send a reply.
 	TEST_NNG_SEND_STR(pub, "abc");
-	testutil_sleep(200);
-
+	testutil_sleep(100);
 	TEST_CHECK(testutil_pollfd(fd) == true);
 
 	// and receiving makes it no longer ready
