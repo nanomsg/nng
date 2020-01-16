@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -43,7 +43,7 @@ nng_close(nng_socket s)
 	}
 	// No release -- close releases it.
 	nni_sock_close(sock);
-	return (rv);
+	return (0);
 }
 
 int
