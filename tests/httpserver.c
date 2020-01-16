@@ -289,6 +289,209 @@ TestMain("HTTP Server", {
 			});
 		});
 	});
+
+	Convey("Directory serving works (root)", {
+		char     urlstr[32];
+		nng_url *url;
+		char *   tmpdir;
+		char *   workdir;
+		char *   file1;
+		char *   file2;
+		char *   file3;
+		char *   subdir1;
+		char *   subdir2;
+
+		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		So(nng_url_parse(&url, urlstr) == 0);
+		So(nng_http_server_hold(&s, url) == 0);
+		So((tmpdir = nni_plat_temp_dir()) != NULL);
+		So((workdir = nni_file_join(tmpdir, "httptest")) != NULL);
+		So((subdir1 = nni_file_join(workdir, "subdir1")) != NULL);
+		So((subdir2 = nni_file_join(workdir, "subdir2")) != NULL);
+		So((file1 = nni_file_join(subdir1, "index.html")) != NULL);
+		So((file2 = nni_file_join(workdir, "file.txt")) != NULL);
+		So((file3 = nni_file_join(subdir2, "index.htm")) != NULL);
+
+		So(nni_file_put(file1, doc1, strlen(doc1)) == 0);
+		So(nni_file_put(file2, doc2, strlen(doc2)) == 0);
+		So(nni_file_put(file3, doc3, strlen(doc3)) == 0);
+
+		Reset({
+			nng_http_server_release(s);
+			free(tmpdir);
+			nni_file_delete(file1);
+			nni_file_delete(file2);
+			nni_file_delete(file3);
+			nni_file_delete(subdir1);
+			nni_file_delete(subdir2);
+			nni_file_delete(workdir);
+			free(workdir);
+			free(file1);
+			free(file2);
+			free(file3);
+			free(subdir1);
+			free(subdir2);
+			nng_url_free(url);
+		});
+
+		So(nng_http_handler_alloc_directory(&h, "/", workdir) == 0);
+		So(nng_http_server_add_handler(s, h) == 0);
+		So(nng_http_server_start(s) == 0);
+		nng_msleep(100);
+
+		Convey("Index.html works", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			snprintf(fullurl, sizeof(fullurl),
+			    "%s/subdir1/index.html", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_OK);
+			So(size == strlen(doc1));
+			So(memcmp(data, doc1, size) == 0);
+			So(strcmp(ctype, "text/html") == 0);
+			nng_strfree(ctype);
+			nng_free(data, size);
+		});
+
+		Convey("Index.htm works", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			snprintf(
+			    fullurl, sizeof(fullurl), "%s/subdir2", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_OK);
+			So(size == strlen(doc3));
+			So(memcmp(data, doc3, size) == 0);
+			So(strcmp(ctype, "text/html") == 0);
+			nni_strfree(ctype);
+			nng_free(data, size);
+		});
+
+		Convey("Named file works", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			snprintf(
+			    fullurl, sizeof(fullurl), "%s/file.txt", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_OK);
+			So(size == strlen(doc2));
+			So(memcmp(data, doc2, size) == 0);
+			So(strcmp(ctype, "text/plain") == 0);
+			nni_strfree(ctype);
+			nng_free(data, size);
+		});
+
+		Convey("Missing index gives 404", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_NOT_FOUND);
+			nng_strfree(ctype);
+			nng_free(data, size);
+		});
+
+		Convey("Custom error page works", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			So(nng_http_server_set_error_page(s, 404, doc4) == 0);
+			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_NOT_FOUND);
+			So(size == strlen(doc4));
+			So(memcmp(data, doc4, size) == 0);
+			nng_strfree(ctype);
+			nng_free(data, size);
+		});
+
+		Convey("Bad method gives 405", {
+			char          fullurl[256];
+			void *        data;
+			size_t        size;
+			nng_http_req *req;
+			nng_http_res *res;
+			nng_url *     curl;
+
+			So(nng_http_res_alloc(&res) == 0);
+			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
+			So(nng_url_parse(&curl, fullurl) == 0);
+			So(nng_http_req_alloc(&req, curl) == 0);
+			So(nng_http_req_set_method(req, "POST") == 0);
+
+			So(httpdo(curl, req, res, &data, &size) == 0);
+			So(nng_http_res_get_status(res) ==
+			    NNG_HTTP_STATUS_METHOD_NOT_ALLOWED);
+			nng_http_req_free(req);
+			nng_http_res_free(res);
+			nng_url_free(curl);
+			nng_free(data, size);
+		});
+		Convey("Version 0.9 gives 505", {
+			char          fullurl[256];
+			void *        data;
+			size_t        size;
+			nng_http_req *req;
+			nng_http_res *res;
+			nng_url *     curl;
+
+			So(nng_http_res_alloc(&res) == 0);
+			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
+			So(nng_url_parse(&curl, fullurl) == 0);
+			So(nng_http_req_alloc(&req, curl) == 0);
+			So(nng_http_req_set_version(req, "HTTP/0.9") == 0);
+
+			So(httpdo(curl, req, res, &data, &size) == 0);
+			So(nng_http_res_get_status(res) ==
+			    NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP);
+			nng_http_req_free(req);
+			nng_http_res_free(res);
+			nng_url_free(curl);
+			nng_free(data, size);
+		});
+		Convey("Missing Host gives 400", {
+			char          fullurl[256];
+			void *        data;
+			size_t        size;
+			nng_http_req *req;
+			nng_http_res *res;
+			nng_url *     curl;
+
+			So(nng_http_res_alloc(&res) == 0);
+			snprintf(fullurl, sizeof(fullurl), "%s/", urlstr);
+			So(nng_url_parse(&curl, fullurl) == 0);
+			So(nng_http_req_alloc(&req, curl) == 0);
+			So(nng_http_req_del_header(req, "Host") == 0);
+
+			So(httpdo(curl, req, res, &data, &size) == 0);
+			So(nng_http_res_get_status(res) ==
+			    NNG_HTTP_STATUS_BAD_REQUEST);
+			nng_http_req_free(req);
+			nng_http_res_free(res);
+			nng_url_free(curl);
+			nng_free(data, size);
+		});
+	});
+
 	Convey("Directory serving works", {
 		char     urlstr[32];
 		nng_url *url;

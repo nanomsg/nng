@@ -676,7 +676,7 @@ http_sconn_cbdone(void *arg)
 	// Get the handler.  It may be set regardless of success or
 	// failure.  Clear it, and drop our reference, since we're
 	// done with the handler for now.
-	h   = nni_aio_get_data(aio, 1);
+	h = nni_aio_get_data(aio, 1);
 	nni_aio_set_data(aio, 1, NULL);
 
 	if (h != NULL) {
@@ -1402,8 +1402,9 @@ http_handle_dir(nni_aio *aio)
 	char *            pn;
 
 	len = strlen(base);
-	if ((strncmp(uri, base, len) != 0) ||
-	    ((uri[len] != 0) && (uri[len] != '/'))) {
+	if (base[1] != '\0' && // Allows "/" as base
+	    ((strncmp(uri, base, len) != 0) ||
+	        ((uri[len] != 0) && (uri[len] != '/')))) {
 		// This should never happen!
 		nni_aio_finish_error(aio, NNG_EINVAL);
 		return;
