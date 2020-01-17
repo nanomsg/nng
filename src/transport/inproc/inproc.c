@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -172,7 +172,7 @@ inproc_pipe_send(void *arg, nni_aio *aio)
 		nni_aio_finish(aio, rv, nni_aio_count(aio));
 		return;
 	}
-	nni_msg_header_chop(msg, l);
+	nni_msg_header_clear(msg);
 	nni_msgq_aio_put(pipe->wq, aio);
 }
 
