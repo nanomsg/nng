@@ -24,4 +24,5 @@ nng_headers_if(NNG_PROTO_RESPONDENT0 nng/protocol/survey0/respond.h)
 nng_defines_if(NNG_PROTO_RESPONDENT0 NNG_HAVE_RESPONDENT0)
 
 nng_test(respond_test)
+nng_test(xrespond_test)
 nng_test(xsurvey_test)
