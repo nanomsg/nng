@@ -273,13 +273,12 @@ xresp0_recv_cb(void *arg)
 	int          hops;
 	int          ttl;
 
-	ttl = nni_atomic_get(&s->ttl);
-
 	if (nni_aio_result(p->aio_recv) != 0) {
 		nni_pipe_close(p->npipe);
 		return;
 	}
 
+	ttl = nni_atomic_get(&s->ttl);
 	msg = nni_aio_get_msg(p->aio_recv);
 	nni_aio_set_msg(p->aio_recv, NULL);
 	nni_msg_set_pipe(msg, p->id);

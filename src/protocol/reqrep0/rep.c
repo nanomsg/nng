@@ -491,6 +491,7 @@ rep0_pipe_recv_cb(void *arg)
 	nni_aio *  aio;
 	size_t     len;
 	int        hops;
+	int        ttl;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
@@ -498,6 +499,7 @@ rep0_pipe_recv_cb(void *arg)
 	}
 
 	msg = nni_aio_get_msg(&p->aio_recv);
+	ttl = nni_atomic_get(&s->ttl);
 
 	nni_msg_set_pipe(msg, p->id);
 
@@ -506,7 +508,7 @@ rep0_pipe_recv_cb(void *arg)
 	for (;;) {
 		bool end;
 
-		if (hops > nni_atomic_get(&s->ttl)) {
+		if (hops > ttl) {
 			// This isn't malformed, but it has gone
 			// through too many hops.  Do not disconnect,
 			// because we can legitimately receive messages
@@ -577,8 +579,8 @@ static int
 rep0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	rep0_sock *s = arg;
-	int ttl;
-	int rv;
+	int        ttl;
+	int        rv;
 
 	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
 		nni_atomic_set(&s->ttl, ttl);

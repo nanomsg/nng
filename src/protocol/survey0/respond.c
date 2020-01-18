@@ -480,12 +480,14 @@ resp0_pipe_recv_cb(void *arg)
 	nni_aio *   aio;
 	int         hops;
 	size_t      len;
+	int         ttl;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->npipe);
 		return;
 	}
 
+	ttl = nni_atomic_get(&s->ttl);
 	msg = nni_aio_get_msg(&p->aio_recv);
 	nni_msg_set_pipe(msg, p->id);
 
@@ -495,7 +497,7 @@ resp0_pipe_recv_cb(void *arg)
 		bool     end = 0;
 		uint8_t *body;
 
-		if (hops > nni_atomic_get(&s->ttl)) {
+		if (hops > ttl) {
 			goto drop;
 		}
 		hops++;

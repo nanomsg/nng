@@ -283,11 +283,14 @@ xrep0_pipe_recv_cb(void *arg)
 	xrep0_sock *s = p->rep;
 	nni_msg *   msg;
 	int         hops;
+	int         ttl;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
+
+	ttl = nni_atomic_get(&s->ttl);
 
 	msg = nni_aio_get_msg(&p->aio_recv);
 	nni_aio_set_msg(&p->aio_recv, NULL);
@@ -302,7 +305,7 @@ xrep0_pipe_recv_cb(void *arg)
 	for (;;) {
 		bool     end = 0;
 		uint8_t *body;
-		if (hops > (int)nni_atomic_get(&s->ttl)) {
+		if (hops > ttl) {
 			// This isn't malformed, but it has gone through
 			// too many hops.  Do not disconnect, because we
 			// can legitimately receive messages with too many
