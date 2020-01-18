@@ -19,14 +19,6 @@
 // multiple use of queues for simplicity.  Typically this is used in cases
 // where a few dozen extra microseconds does not matter.
 
-#ifndef NNI_PROTO_SURVEYOR_V0
-#define NNI_PROTO_SURVEYOR_V0 NNI_PROTO(6, 2)
-#endif
-
-#ifndef NNI_PROTO_RESPONDENT_V0
-#define NNI_PROTO_RESPONDENT_V0 NNI_PROTO(6, 3)
-#endif
-
 typedef struct surv0_pipe surv0_pipe;
 typedef struct surv0_sock surv0_sock;
 typedef struct surv0_ctx  surv0_ctx;
@@ -321,7 +313,7 @@ surv0_pipe_start(void *arg)
 	surv0_pipe *p = arg;
 	surv0_sock *s = p->sock;
 
-	if (nni_pipe_peer(p->npipe) != NNI_PROTO_RESPONDENT_V0) {
+	if (nni_pipe_peer(p->npipe) != NNG_SURVEYOR0_PEER) {
 		return (NNG_EPROTO);
 	}
 
@@ -582,8 +574,8 @@ static nni_proto_sock_ops surv0_sock_ops = {
 
 static nni_proto surv0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNI_PROTO_SURVEYOR_V0, "surveyor" },
-	.proto_peer     = { NNI_PROTO_RESPONDENT_V0, "respondent" },
+	.proto_self     = { NNG_SURVEYOR0_SELF, NNG_SURVEYOR0_SELF_NAME },
+	.proto_peer     = { NNG_SURVEYOR0_PEER, NNG_SURVEYOR0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_NOMSGQ,
 	.proto_sock_ops = &surv0_sock_ops,
 	.proto_pipe_ops = &surv0_pipe_ops,

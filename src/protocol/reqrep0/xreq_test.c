@@ -16,29 +16,26 @@
 #include <acutest.h>
 #include <testutil.h>
 
-#ifndef NNI_PROTO
-#define NNI_PROTO(x, y) (((x) << 4u) | (y))
-#endif
-
 static void
 test_xreq_identity(void)
 {
 	nng_socket s;
-	int        p;
-	char *     n;
+	int        p1, p2;
+	char *     n1;
+	char *     n2;
 
-	TEST_CHECK(nng_req0_open_raw(&s) == 0);
-	TEST_CHECK(nng_getopt_int(s, NNG_OPT_PROTO, &p) == 0);
-	TEST_CHECK(p == NNI_PROTO(3u, 0u)); // 48
-	TEST_CHECK(nng_getopt_int(s, NNG_OPT_PEER, &p) == 0);
-	TEST_CHECK(p == NNI_PROTO(3u, 1u)); // 49
-	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PROTONAME, &n) == 0);
-	TEST_CHECK(strcmp(n, "req") == 0);
-	nng_strfree(n);
-	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PEERNAME, &n) == 0);
-	TEST_CHECK(strcmp(n, "rep") == 0);
-	nng_strfree(n);
-	TEST_CHECK(nng_close(s) == 0);
+	TEST_NNG_PASS(nng_req0_open_raw(&s));
+	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PROTO, &p1));
+	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PEER, &p2));
+	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PROTONAME, &n1));
+	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PEERNAME, &n2));
+	TEST_NNG_PASS(nng_close(s));
+	TEST_CHECK(p1 == NNG_REQ0_SELF);
+	TEST_CHECK(p2 == NNG_REQ0_PEER);
+	TEST_CHECK(strcmp(n1, NNG_REQ0_SELF_NAME) == 0);
+	TEST_CHECK(strcmp(n2, NNG_REQ0_PEER_NAME) == 0);
+	nng_strfree(n1);
+	nng_strfree(n2);
 }
 
 static void
@@ -222,6 +219,48 @@ test_xreq_recv_garbage(void)
 }
 
 static void
+test_xreq_recv_header(void)
+{
+	nng_socket rep;
+	nng_socket req;
+	nng_msg *  m;
+	nng_pipe   p1, p2;
+	uint32_t   id;
+
+	TEST_NNG_PASS(nng_rep0_open_raw(&rep));
+	TEST_NNG_PASS(nng_req0_open_raw(&req));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+
+	TEST_NNG_PASS(testutil_marry_ex(req, rep, &p1, &p2));
+
+	// Simulate a few hops.
+	TEST_NNG_PASS(nng_msg_alloc(&m, 0));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, nng_pipe_id(p2)));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x2));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x1));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x80000123u));
+
+	TEST_NNG_PASS(nng_sendmsg(rep, m, 0));
+
+	TEST_NNG_PASS(nng_recvmsg(req, &m, 0));
+	TEST_CHECK(nng_msg_header_len(m) == 12);
+	TEST_NNG_PASS(nng_msg_header_trim_u32(m, &id));
+	TEST_CHECK(id == 0x2);
+	TEST_NNG_PASS(nng_msg_header_trim_u32(m, &id));
+	TEST_CHECK(id == 0x1);
+	TEST_NNG_PASS(nng_msg_header_trim_u32(m, &id));
+	TEST_CHECK(id == 0x80000123u);
+
+	nng_msg_free(m);
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+}
+
+static void
 test_xreq_close_during_recv(void)
 {
 	nng_socket rep;
@@ -326,6 +365,7 @@ TEST_LIST = {
 	{ "xreq validate peer", test_xreq_validate_peer },
 	{ "xreq recv aio stopped", test_xreq_recv_aio_stopped },
 	{ "xreq recv garbage", test_xreq_recv_garbage },
+	{ "xreq recv header", test_xreq_recv_header },
 	{ "xreq close during recv", test_xreq_close_during_recv },
 	{ "xreq close pipe during send", test_xreq_close_pipe_during_send },
 	{ "xreq ttl option", test_xreq_ttl_option },

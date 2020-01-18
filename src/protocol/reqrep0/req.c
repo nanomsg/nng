@@ -8,21 +8,11 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdio.h>
-
 #include "core/nng_impl.h"
 #include "nng/protocol/reqrep0/req.h"
 
 // Request protocol.  The REQ protocol is the "request" side of a
 // request-reply pair.  This is useful for building RPC clients, for example.
-
-#ifndef NNI_PROTO_REQ_V0
-#define NNI_PROTO_REQ_V0 NNI_PROTO(3, 0)
-#endif
-
-#ifndef NNI_PROTO_REP_V0
-#define NNI_PROTO_REP_V0 NNI_PROTO(3, 1)
-#endif
 
 typedef struct req0_pipe req0_pipe;
 typedef struct req0_sock req0_sock;
@@ -200,7 +190,7 @@ req0_pipe_start(void *arg)
 	req0_pipe *p = arg;
 	req0_sock *s = p->req;
 
-	if (nni_pipe_peer(p->pipe) != NNI_PROTO_REP_V0) {
+	if (nni_pipe_peer(p->pipe) != NNG_REQ0_PEER) {
 		return (NNG_EPROTO);
 	}
 
@@ -851,8 +841,8 @@ static nni_proto_sock_ops req0_sock_ops = {
 
 static nni_proto req0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNI_PROTO_REQ_V0, "req" },
-	.proto_peer     = { NNI_PROTO_REP_V0, "rep" },
+	.proto_self     = { NNG_REQ0_SELF, NNG_REQ0_SELF_NAME },
+	.proto_peer     = { NNG_REQ0_PEER, NNG_REQ0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_NOMSGQ,
 	.proto_sock_ops = &req0_sock_ops,
 	.proto_pipe_ops = &req0_pipe_ops,

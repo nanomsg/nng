@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -25,6 +25,11 @@ NNG_DECL int nng_rep0_open_raw(nng_socket *);
 #ifndef nng_rep_open_raw
 #define nng_rep_open_raw nng_rep0_open_raw
 #endif
+
+#define NNG_REP0_SELF 0x31
+#define NNG_REP0_PEER 0x30
+#define NNG_REP0_SELF_NAME "rep"
+#define NNG_REP0_PEER_NAME "req"
 
 #ifdef __cplusplus
 }

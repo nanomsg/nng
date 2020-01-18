@@ -16,29 +16,26 @@
 #include <acutest.h>
 #include <testutil.h>
 
-#ifndef NNI_PROTO
-#define NNI_PROTO(x, y) (((x) << 4u) | (y))
-#endif
-
 static void
 test_xresp_identity(void)
 {
 	nng_socket s;
-	int        p;
-	char *     n;
+	int        p1, p2;
+	char *     n1;
+	char *     n2;
 
 	TEST_NNG_PASS(nng_respondent0_open_raw(&s));
-	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PROTO, &p));
-	TEST_CHECK(p == NNI_PROTO(6u, 3u));
-	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PEER, &p));
-	TEST_CHECK(p == NNI_PROTO(6u, 2u));
-	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PROTONAME, &n));
-	TEST_CHECK(strcmp(n, "respondent") == 0);
-	nng_strfree(n);
-	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PEERNAME, &n) == 0);
-	TEST_CHECK(strcmp(n, "surveyor") == 0);
-	nng_strfree(n);
-	TEST_CHECK(nng_close(s) == 0);
+	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PROTO, &p1));
+	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PEER, &p2));
+	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PROTONAME, &n1));
+	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PEERNAME, &n2));
+	TEST_NNG_PASS(nng_close(s));
+	TEST_CHECK(p1 == NNG_RESPONDENT0_SELF);
+	TEST_CHECK(p2 == NNG_RESPONDENT0_PEER);
+	TEST_CHECK(strcmp(n1, NNG_RESPONDENT0_SELF_NAME) == 0);
+	TEST_CHECK(strcmp(n2, NNG_RESPONDENT0_PEER_NAME) == 0);
+	nng_strfree(n1);
+	nng_strfree(n2);
 }
 
 static void
@@ -222,7 +219,7 @@ test_xresp_close_pipe_during_send(void)
 		TEST_NNG_PASS(nng_msg_header_append_u32(m, nng_pipe_id(p)));
 		TEST_NNG_PASS(
 		    nng_msg_header_append_u32(m, (unsigned) i | 0x80000000u));
-		// xsrep does not exert back-pressure
+		// protocol does not exert back-pressure
 		TEST_NNG_PASS(nng_sendmsg(resp, m, 0));
 	}
 	TEST_NNG_PASS(nng_pipe_close(p));

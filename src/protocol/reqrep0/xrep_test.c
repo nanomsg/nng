@@ -16,29 +16,26 @@
 #include <acutest.h>
 #include <testutil.h>
 
-#ifndef NNI_PROTO
-#define NNI_PROTO(x, y) (((x) << 4u) | (y))
-#endif
-
 static void
 test_xrep_identity(void)
 {
 	nng_socket s;
-	int        p;
-	char *     n;
+	int        p1, p2;
+	char *     n1;
+	char *     n2;
 
-	TEST_CHECK(nng_rep0_open_raw(&s) == 0);
-	TEST_CHECK(nng_getopt_int(s, NNG_OPT_PROTO, &p) == 0);
-	TEST_CHECK(p == NNI_PROTO(3u, 1u)); // 49
-	TEST_CHECK(nng_getopt_int(s, NNG_OPT_PEER, &p) == 0);
-	TEST_CHECK(p == NNI_PROTO(3u, 0u)); // 48
-	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PROTONAME, &n) == 0);
-	TEST_CHECK(strcmp(n, "rep") == 0);
-	nng_strfree(n);
-	TEST_CHECK(nng_getopt_string(s, NNG_OPT_PEERNAME, &n) == 0);
-	TEST_CHECK(strcmp(n, "req") == 0);
-	nng_strfree(n);
-	TEST_CHECK(nng_close(s) == 0);
+	TEST_NNG_PASS(nng_rep0_open_raw(&s));
+	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PROTO, &p1));
+	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PEER, &p2));
+	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PROTONAME, &n1));
+	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PEERNAME, &n2));
+	TEST_NNG_PASS(nng_close(s));
+	TEST_CHECK(p1 == NNG_REP0_SELF);
+	TEST_CHECK(p2 == NNG_REP0_PEER);
+	TEST_CHECK(strcmp(n1, NNG_REP0_SELF_NAME) == 0);
+	TEST_CHECK(strcmp(n2, NNG_REP0_PEER_NAME) == 0);
+	nng_strfree(n1);
+	nng_strfree(n2);
 }
 
 static void

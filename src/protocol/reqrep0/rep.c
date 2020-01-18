@@ -8,7 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
@@ -17,14 +16,6 @@
 // Response protocol.  The REP protocol is the "reply" side of a
 // request-reply pair.  This is useful for building RPC servers, for
 // example.
-
-#ifndef NNI_PROTO_REQ_V0
-#define NNI_PROTO_REQ_V0 NNI_PROTO(3, 0)
-#endif
-
-#ifndef NNI_PROTO_REP_V0
-#define NNI_PROTO_REP_V0 NNI_PROTO(3, 1)
-#endif
 
 typedef struct rep0_pipe rep0_pipe;
 typedef struct rep0_sock rep0_sock;
@@ -315,7 +306,7 @@ rep0_pipe_start(void *arg)
 	rep0_sock *s = p->rep;
 	int        rv;
 
-	if (nni_pipe_peer(p->pipe) != NNI_PROTO_REQ_V0) {
+	if (nni_pipe_peer(p->pipe) != NNG_REP0_PEER) {
 		// Peer protocol mismatch.
 		return (NNG_EPROTO);
 	}
@@ -691,8 +682,8 @@ static nni_proto_sock_ops rep0_sock_ops = {
 
 static nni_proto rep0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNI_PROTO_REP_V0, "rep" },
-	.proto_peer     = { NNI_PROTO_REQ_V0, "req" },
+	.proto_self     = { NNG_REP0_SELF, NNG_REP0_SELF_NAME },
+	.proto_peer     = { NNG_REP0_PEER, NNG_REP0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_NOMSGQ,
 	.proto_sock_ops = &rep0_sock_ops,
 	.proto_pipe_ops = &rep0_pipe_ops,

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -25,6 +25,11 @@ NNG_DECL int nng_surveyor0_open_raw(nng_socket *);
 #ifndef nng_surveyor_open_raw
 #define nng_surveyor_open_raw nng_surveyor0_open_raw
 #endif
+
+#define NNG_SURVEYOR0_SELF 0x62
+#define NNG_SURVEYOR0_PEER 0x63
+#define NNG_SURVEYOR0_SELF_NAME "surveyor"
+#define NNG_SURVEYOR0_PEER_NAME "respondent"
 
 #define NNG_OPT_SURVEYOR_SURVEYTIME "surveyor:survey-time"
 

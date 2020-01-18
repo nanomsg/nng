@@ -8,20 +8,11 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-
 #include "core/nng_impl.h"
 #include "nng/protocol/survey0/survey.h"
 
 // Surveyor protocol.  The SURVEYOR protocol is the "survey" side of the
 // survey pattern.  This is useful for building service discovery, voting, etc.
-
-#ifndef NNI_PROTO_SURVEYOR_V0
-#define NNI_PROTO_SURVEYOR_V0 NNI_PROTO(6, 2)
-#endif
-
-#ifndef NNI_PROTO_RESPONDENT_V0
-#define NNI_PROTO_RESPONDENT_V0 NNI_PROTO(6, 3)
-#endif
 
 typedef struct xsurv0_pipe xsurv0_pipe;
 typedef struct xsurv0_sock xsurv0_sock;
@@ -152,7 +143,7 @@ xsurv0_pipe_start(void *arg)
 	xsurv0_pipe *p = arg;
 	xsurv0_sock *s = p->psock;
 
-	if (nni_pipe_peer(p->npipe) != NNI_PROTO_RESPONDENT_V0) {
+	if (nni_pipe_peer(p->npipe) != NNG_SURVEYOR0_PEER) {
 		return (NNG_EPROTO);
 	}
 
@@ -236,6 +227,7 @@ xsurv0_recv_cb(void *arg)
 {
 	xsurv0_pipe *p = arg;
 	nni_msg *    msg;
+	bool         end;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->npipe);
@@ -245,19 +237,31 @@ xsurv0_recv_cb(void *arg)
 	msg = nni_aio_get_msg(&p->aio_recv);
 	nni_aio_set_msg(&p->aio_recv, NULL);
 	nni_msg_set_pipe(msg, nni_pipe_id(p->npipe));
+	end = false;
 
-	// We yank 4 bytes of body, and move them to the header.
-	if (nni_msg_len(msg) < 4) {
-		// Peer gave us garbage, so kick it.
-		nni_msg_free(msg);
-		nni_pipe_close(p->npipe);
-		return;
+	while (!end) {
+		uint8_t *body;
+
+		if (nni_msg_len(msg) < 4) {
+			// Peer gave us garbage, so kick it.
+			nni_msg_free(msg);
+			nni_pipe_close(p->npipe);
+			return;
+		}
+		body = nni_msg_body(msg);
+		end  = ((body[0] & 0x80u) != 0);
+
+		if (nni_msg_header_append(msg, body, sizeof(uint32_t)) != 0) {
+			// TODO: bump a no-memory stat
+			nni_msg_free(msg);
+			// Closing the pipe may release some memory.
+			// It at least gives an indication to the peer
+			// that we've lost the message.
+			nni_pipe_close(p->npipe);
+			return;
+		}
+		nni_msg_trim(msg, sizeof(uint32_t));
 	}
-
-	// This cannot fail because the header should be zero bytes with
-	// 32 bytes of room.
-	(void) nni_msg_header_append(msg, nni_msg_body(msg), 4);
-	(void) nni_msg_trim(msg, 4);
 
 	nni_aio_set_msg(&p->aio_putq, msg);
 	nni_msgq_aio_put(p->psock->urq, &p->aio_putq);
@@ -267,8 +271,8 @@ static int
 xsurv0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	xsurv0_sock *s = arg;
-	int ttl;
-	int rv;
+	int          ttl;
+	int          rv;
 	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
@@ -371,8 +375,8 @@ static nni_proto_sock_ops xsurv0_sock_ops = {
 
 static nni_proto xsurv0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNI_PROTO_SURVEYOR_V0, "surveyor" },
-	.proto_peer     = { NNI_PROTO_RESPONDENT_V0, "respondent" },
+	.proto_self     = { NNG_SURVEYOR0_SELF, NNG_SURVEYOR0_SELF_NAME },
+	.proto_peer     = { NNG_SURVEYOR0_PEER, NNG_SURVEYOR0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
 	.proto_sock_ops = &xsurv0_sock_ops,
 	.proto_pipe_ops = &xsurv0_pipe_ops,

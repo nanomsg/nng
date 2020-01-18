@@ -17,10 +17,6 @@
 #include <acutest.h>
 #include <testutil.h>
 
-#ifndef NNI_PROTO
-#define NNI_PROTO(x, y) (((x) << 4u) | (y))
-#endif
-
 static void
 test_req_identity(void)
 {
@@ -30,14 +26,14 @@ test_req_identity(void)
 
 	TEST_NNG_PASS(nng_req0_open(&s));
 	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PROTO, &p));
-	TEST_CHECK(p == NNI_PROTO(3u, 0u)); // 48
+	TEST_CHECK(p == NNG_REQ0_SELF);
 	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PEER, &p));
-	TEST_CHECK(p == NNI_PROTO(3u, 1u)); // 49
+	TEST_CHECK(p == NNG_REQ0_PEER); // 49
 	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PROTONAME, &n));
-	TEST_CHECK(strcmp(n, "req") == 0);
+	TEST_CHECK(strcmp(n, NNG_REQ0_SELF_NAME) == 0);
 	nng_strfree(n);
 	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PEERNAME, &n));
-	TEST_CHECK(strcmp(n, "rep") == 0);
+	TEST_CHECK(strcmp(n, NNG_REQ0_PEER_NAME) == 0);
 	nng_strfree(n);
 	TEST_NNG_PASS(nng_close(s));
 }

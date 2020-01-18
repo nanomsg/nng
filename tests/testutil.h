@@ -87,7 +87,7 @@ extern int testutil_marry_ex(nng_socket, nng_socket, nng_pipe *, nng_pipe *);
 		TEST_CHECK_(sz_ == strlen(string) + 1, "length %d want %d", \
 		    sz_, strlen(string) + 1);                               \
 		buf_[sizeof(buf_) - 1] = '\0';                              \
-		TEST_CHECK_(                                                 \
+		TEST_CHECK_(                                                \
 		    strcmp(string, buf_) == 0, "%s == %s", string, buf_);   \
 	} while (0)
 

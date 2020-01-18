@@ -17,14 +17,6 @@
 // request-reply pair.  This is useful for building RPC servers, for
 // example.
 
-#ifndef NNI_PROTO_REQ_V0
-#define NNI_PROTO_REQ_V0 NNI_PROTO(3, 0)
-#endif
-
-#ifndef NNI_PROTO_REP_V0
-#define NNI_PROTO_REP_V0 NNI_PROTO(3, 1)
-#endif
-
 typedef struct xrep0_pipe xrep0_pipe;
 typedef struct xrep0_sock xrep0_sock;
 
@@ -167,7 +159,7 @@ xrep0_pipe_start(void *arg)
 	xrep0_sock *s = p->rep;
 	int         rv;
 
-	if (nni_pipe_peer(p->pipe) != NNI_PROTO_REQ_V0) {
+	if (nni_pipe_peer(p->pipe) != NNG_REP0_PEER) {
 		// Peer protocol mismatch.
 		return (NNG_EPROTO);
 	}
@@ -303,7 +295,7 @@ xrep0_pipe_recv_cb(void *arg)
 	// Move backtrace from body to header
 	hops = 1;
 	for (;;) {
-		bool     end = 0;
+		bool     end;
 		uint8_t *body;
 		if (hops > ttl) {
 			// This isn't malformed, but it has gone through
@@ -428,8 +420,8 @@ static nni_proto_sock_ops xrep0_sock_ops = {
 
 static nni_proto xrep0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNI_PROTO_REP_V0, "rep" },
-	.proto_peer     = { NNI_PROTO_REQ_V0, "req" },
+	.proto_self     = { NNG_REP0_SELF, NNG_REP0_SELF_NAME },
+	.proto_peer     = { NNG_REP0_PEER, NNG_REP0_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV | NNI_PROTO_FLAG_RAW,
 	.proto_sock_ops = &xrep0_sock_ops,
 	.proto_pipe_ops = &xrep0_pipe_ops,

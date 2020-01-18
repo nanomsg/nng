@@ -222,6 +222,48 @@ test_xsurvey_recv_garbage(void)
 }
 
 static void
+test_xsurvey_recv_header(void)
+{
+	nng_socket resp;
+	nng_socket surv;
+	nng_msg *  m;
+	nng_pipe   p1, p2;
+	uint32_t   id;
+
+	TEST_NNG_PASS(nng_respondent0_open_raw(&resp));
+	TEST_NNG_PASS(nng_surveyor0_open_raw(&surv));
+	TEST_NNG_PASS(nng_setopt_ms(surv, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(surv, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(resp, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(resp, NNG_OPT_SENDTIMEO, 1000));
+
+	TEST_NNG_PASS(testutil_marry_ex(surv, resp, &p1, &p2));
+
+	// Simulate a few hops.
+	TEST_NNG_PASS(nng_msg_alloc(&m, 0));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, nng_pipe_id(p2)));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x2));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x1));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x80000123u));
+
+	TEST_NNG_PASS(nng_sendmsg(resp, m, 0));
+
+	TEST_NNG_PASS(nng_recvmsg(surv, &m, 0));
+	TEST_CHECK(nng_msg_header_len(m) == 12);
+	TEST_NNG_PASS(nng_msg_header_trim_u32(m, &id));
+	TEST_CHECK(id == 0x2);
+	TEST_NNG_PASS(nng_msg_header_trim_u32(m, &id));
+	TEST_CHECK(id == 0x1);
+	TEST_NNG_PASS(nng_msg_header_trim_u32(m, &id));
+	TEST_CHECK(id == 0x80000123u);
+
+	nng_msg_free(m);
+
+	TEST_NNG_PASS(nng_close(surv));
+	TEST_NNG_PASS(nng_close(resp));
+}
+
+static void
 test_xsurvey_close_during_recv(void)
 {
 	nng_socket resp;
@@ -357,6 +399,7 @@ TEST_LIST = {
 	{ "xsurvey validate peer", test_xsurvey_validate_peer },
 	{ "xsurvey recv aio stopped", test_xsurvey_recv_aio_stopped },
 	{ "xsurvey recv garbage", test_xsurvey_recv_garbage },
+	{ "xsurvey recv header", test_xsurvey_recv_header },
 	{ "xsurvey close during recv", test_xsurvey_close_during_recv },
 	{ "xsurvey close pipe during send",
 	    test_xsurvey_close_pipe_during_send },
