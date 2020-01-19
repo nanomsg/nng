@@ -307,7 +307,6 @@ req0_recv_cb(void *arg)
 		goto malformed;
 	}
 	id = nni_msg_trim_u32(msg);
-	nni_msg_header_must_append_u32(msg, id);
 
 	// Schedule another receive while we are processing this.
 	nni_mtx_lock(&s->mtx);
