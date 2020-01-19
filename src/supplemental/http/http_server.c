@@ -43,7 +43,9 @@ struct nng_http_handler {
 	bool            getbody;
 	void *          data;
 	nni_cb          dtor;
+	void *          res_mod_data;
 	void (*cb)(nni_aio *);
+	int (*res_mod_cb)(void *, nni_http_res *);
 };
 
 typedef struct http_sconn {
@@ -88,6 +90,15 @@ struct nng_http_server {
 	nni_reap_item        reap;
 };
 
+static int
+handle_response_modifier(nni_http_handler *h, nni_http_res *res)
+{
+	if (h->res_mod_cb != NULL) {
+		return (h->res_mod_cb)(h->res_mod_data, res);
+	}
+	return (0);
+}
+
 int
 nni_http_handler_init(
     nni_http_handler **hp, const char *uri, void (*cb)(nni_aio *))
@@ -110,11 +121,13 @@ nni_http_handler_init(
 		return (NNG_ENOMEM);
 	}
 	NNI_LIST_NODE_INIT(&h->node);
-	h->cb      = cb;
-	h->data    = NULL;
-	h->dtor    = NULL;
-	h->host    = NULL;
-	h->tree    = false;
+	h->res_mod_cb   = NULL;
+	h->res_mod_data = NULL;
+	h->cb           = cb;
+	h->data         = NULL;
+	h->dtor         = NULL;
+	h->host         = NULL;
+	h->tree         = false;
 	h->maxbody = 1024 * 1024; // By default we accept up to 1MB of body
 	h->getbody = true;
 	*hp        = h;
@@ -160,6 +173,15 @@ void *
 nni_http_handler_get_data(nni_http_handler *h)
 {
 	return (h->data);
+}
+
+extern int
+nni_http_handler_set_response_modifier(
+    nni_http_handler *h, void *data, int (*cb)(void *, nni_http_res *))
+{
+	h->res_mod_data = data;
+	h->res_mod_cb   = cb;
+	return (0);
 }
 
 const char *
@@ -1315,6 +1337,13 @@ http_handle_file(nni_aio *aio)
 		return;
 	}
 
+	if ((rv = handle_response_modifier(h, res)) != 0) {
+		nni_http_res_free(res);
+		nni_free(data, size);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
 	nni_free(data, size);
 	nni_aio_set_output(aio, 0, res);
 	nni_aio_finish(aio, 0, 0);
@@ -1505,6 +1534,13 @@ http_handle_dir(nni_aio *aio)
 		return;
 	}
 
+	if ((rv = handle_response_modifier(h, res)) != 0) {
+		nni_http_res_free(res);
+		nni_free(data, size);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
 	nni_free(data, size);
 	nni_aio_set_output(aio, 0, res);
 	nni_aio_finish(aio, 0, 0);
@@ -1552,7 +1588,7 @@ typedef struct http_redirect {
 static void
 http_handle_redirect(nni_aio *aio)
 {
-	nni_http_res *    r    = NULL;
+	nni_http_res *    res  = NULL;
 	char *            html = NULL;
 	char *            msg  = NULL;
 	char *            loc  = NULL;
@@ -1590,29 +1626,39 @@ http_handle_redirect(nni_aio *aio)
 	// because it is probably going to another server.  This also
 	// keeps us from having to consume the entity body, we can just
 	// discard it.
-	if ((rv != 0) || ((rv = nni_http_res_alloc(&r)) != 0) ||
+	if ((rv != 0) || ((rv = nni_http_res_alloc(&res)) != 0) ||
 	    ((rv = nni_http_alloc_html_error(&html, hr->code, msg)) != 0) ||
-	    ((rv = nni_http_res_set_status(r, hr->code)) != 0) ||
-	    ((rv = nni_http_res_set_header(r, "Connection", "close")) != 0) ||
+	    ((rv = nni_http_res_set_status(res, hr->code)) != 0) ||
+	    ((rv = nni_http_res_set_header(res, "Connection", "close")) !=
+	        0) ||
 	    ((rv = nni_http_res_set_header(
-	          r, "Content-Type", "text/html; charset=UTF-8")) != 0) ||
-	    ((rv = nni_http_res_set_header(r, "Location", loc)) != 0) ||
-	    ((rv = nni_http_res_copy_data(r, html, strlen(html))) != 0)) {
+	          res, "Content-Type", "text/html; charset=UTF-8")) != 0) ||
+	    ((rv = nni_http_res_set_header(res, "Location", loc)) != 0) ||
+	    ((rv = nni_http_res_copy_data(res, html, strlen(html))) != 0)) {
 		if (loc != hr->where) {
 			nni_strfree(loc);
 		}
 		nni_strfree(msg);
 		nni_strfree(html);
-		nni_http_res_free(r);
+		nni_http_res_free(res);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	if (loc != hr->where) {
 		nni_strfree(loc);
 	}
+
+	if ((rv = handle_response_modifier(h, res)) != 0) {
+		nni_strfree(msg);
+		nni_strfree(html);
+		nni_http_res_free(res);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
 	nni_strfree(msg);
 	nni_strfree(html);
-	nni_aio_set_output(aio, 0, r);
+	nni_aio_set_output(aio, 0, res);
 	nni_aio_finish(aio, 0, 0);
 }
 
@@ -1680,7 +1726,7 @@ http_handle_static(nni_aio *aio)
 	http_static *     hs;
 	const char *      ctype;
 	nni_http_handler *h;
-	nni_http_res *    r = NULL;
+	nni_http_res *    res = NULL;
 	int               rv;
 
 	h  = nni_aio_get_input(aio, 1);
@@ -1690,16 +1736,23 @@ http_handle_static(nni_aio *aio)
 		ctype = "application/octet-stream";
 	}
 
-	if (((rv = nni_http_res_alloc(&r)) != 0) ||
-	    ((rv = nni_http_res_set_header(r, "Content-Type", ctype)) != 0) ||
-	    ((rv = nni_http_res_set_status(r, NNG_HTTP_STATUS_OK)) != 0) ||
-	    ((rv = nni_http_res_set_data(r, hs->data, hs->size)) != 0)) {
-		nni_http_res_free(r);
+	if (((rv = nni_http_res_alloc(&res)) != 0) ||
+	    ((rv = nni_http_res_set_header(res, "Content-Type", ctype)) !=
+	        0) ||
+	    ((rv = nni_http_res_set_status(res, NNG_HTTP_STATUS_OK)) != 0) ||
+	    ((rv = nni_http_res_set_data(res, hs->data, hs->size)) != 0)) {
+		nni_http_res_free(res);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
-	nni_aio_set_output(aio, 0, r);
+	if ((rv = handle_response_modifier(h, res)) != 0) {
+		nni_http_res_free(res);
+		nni_aio_finish_error(aio, rv);
+		return;
+	}
+
+	nni_aio_set_output(aio, 0, res);
 	nni_aio_finish(aio, 0, 0);
 }
 

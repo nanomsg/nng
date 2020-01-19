@@ -333,6 +333,11 @@ extern int nni_http_handler_set_data(nni_http_handler *, void *, nni_cb);
 // is supplied.
 extern void *nni_http_handler_get_data(nni_http_handler *);
 
+// nni_http_handler_set_response_modifier sets the handler to be called
+// just before the server returns its response.
+extern int nni_http_handler_set_response_modifier(
+    nni_http_handler *, void *, int (*)(void *, nni_http_res *));
+
 // nni_http_handler_get_uri returns the URI set on the handler.
 extern const char *nni_http_handler_get_uri(nni_http_handler *);
 

@@ -660,6 +660,20 @@ nng_http_handler_get_data(nng_http_handler *h)
 }
 
 int
+nng_http_handler_set_response_modifier(
+    nng_http_handler *h, void *data, int (*cb)(void *, nng_http_res *))
+{
+#ifdef NNG_SUPP_HTTP
+	return (nni_http_handler_set_response_modifier(h, data, cb));
+#else
+	NNI_ARG_UNUSED(h);
+	NNI_ARG_UNUSED(data);
+	NNI_ARG_UNUSED(cb);
+	return (NULL);
+#endif
+}
+
+int
 nng_http_server_hold(nng_http_server **srvp, const nng_url *url)
 {
 #ifdef NNG_SUPP_HTTP

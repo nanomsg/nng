@@ -382,6 +382,11 @@ NNG_DECL int nng_http_handler_set_data(
 // nng_http_handler_get_data returns the data that was previously stored.
 NNG_DECL void *nng_http_handler_get_data(nng_http_handler *);
 
+// nng_http_handler_set_response_modifier sets a function to be called
+// just before a response is sent back to a http client.
+NNG_DECL int nng_http_handler_set_response_modifier(
+    nng_http_handler *, void *, int (*)(void *, nng_http_res *));
+
 // nng_http_server is a handle to an HTTP server instance.  Servers
 // only serve a single port / address at this time.
 
