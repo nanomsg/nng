@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,6 +12,7 @@
 
 #include <nng/nng.h>
 #include <nng/protocol/pair1/pair.h>
+#include <nng/protocol/pair0/pair.h>
 
 #include <testutil.h>
 
@@ -146,7 +147,7 @@ test_mono_raw_exchange(void)
 	TEST_NNG_PASS(testutil_marry(s1, c1));
 
 	nng_pipe p = NNG_PIPE_INITIALIZER;
-	TEST_NNG_PASS(nng_msg_alloc(&msg, 0) );
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
 	APPEND_STR(msg, "GAMMA");
 	TEST_NNG_PASS(nng_msg_header_append_u32(msg, 1));
 	TEST_CHECK(nng_msg_header_len(msg) == sizeof(uint32_t));
@@ -214,6 +215,12 @@ test_mono_raw_header(void)
 	TEST_CHECK(nng_msg_header_append_u32(msg, 0xDEAD0000) == 0);
 	TEST_CHECK(nng_sendmsg(c1, msg, 0) == 0);
 	TEST_CHECK(nng_recvmsg(s1, &msg, 0) == NNG_ETIMEDOUT);
+
+	// Header with no chance to add another hop gets dropped
+	TEST_NNG_PASS(nng_msg_alloc(&msg, 0));
+	TEST_NNG_PASS(nng_msg_header_append_u32(msg, 0xff));
+	TEST_NNG_PASS(nng_sendmsg(c1, msg, 0));
+	TEST_NNG_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
 
 	// With the same bits clear it works
 	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
@@ -591,6 +598,37 @@ test_ttl(void)
 	TEST_CHECK(nng_close(c1) == 0);
 }
 
+void
+test_validate_peer(void)
+{
+	nng_socket s1, s2;
+	nng_stat * stats;
+	nng_stat * reject;
+	char       addr[64];
+
+	testutil_scratch_addr("inproc", sizeof(addr), addr);
+
+	TEST_NNG_PASS(nng_pair1_open(&s1));
+	TEST_NNG_PASS(nng_pair0_open(&s2));
+
+	TEST_NNG_PASS(nng_listen(s1, addr, NULL, 0));
+	TEST_NNG_PASS(nng_dial(s2, addr, NULL, NNG_FLAG_NONBLOCK));
+
+	testutil_sleep(100);
+	TEST_NNG_PASS(nng_stats_get(&stats));
+
+	TEST_CHECK(stats != NULL);
+	TEST_CHECK((reject = nng_stat_find_socket(stats, s1)) != NULL);
+	TEST_CHECK((reject = nng_stat_find(reject, "reject")) != NULL);
+
+	TEST_CHECK(nng_stat_type(reject) == NNG_STAT_COUNTER);
+	TEST_CHECK(nng_stat_value(reject) > 0);
+
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(s2));
+	nng_stats_free(stats);
+}
+
 TEST_LIST = {
 	{ "pair1 monogamous cooked", test_mono_cooked },
 	{ "pair1 monogamous faithful", test_mono_faithful },
@@ -604,6 +642,7 @@ TEST_LIST = {
 	{ "pair1 polyamorous raw", test_poly_raw },
 	{ "pair1 raw", test_raw },
 	{ "pair1 ttl", test_ttl },
+	{ "pair1 validate peer", test_validate_peer },
 
 	{ NULL, NULL },
 };
