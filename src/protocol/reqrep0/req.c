@@ -7,6 +7,7 @@
 // file was obtained (LICENSE.txt).  A copy of the license may also be
 // found online at https://opensource.org/licenses/MIT.
 //
+#include <stdio.h>
 
 #include "core/nng_impl.h"
 #include "nng/protocol/reqrep0/req.h"
@@ -36,7 +37,7 @@ struct req0_ctx {
 	uint32_t       request_id; // request ID, without high bit set
 	nni_aio *      recv_aio;   // user aio waiting to recv - only one!
 	nni_aio *      send_aio;   // user aio waiting to send
-	nng_msg *      req_msg;    // request message
+	nng_msg *      req_msg;    // request message (owned by protocol)
 	size_t         req_len;    // length of request message (for stats)
 	nng_msg *      rep_msg;    // reply message
 	nni_timer_node timer;
@@ -435,7 +436,6 @@ req0_run_send_queue(req0_sock *s, nni_list *sent_list)
 
 	// Note: This routine should be called with the socket lock held.
 	while ((ctx = nni_list_first(&s->send_queue)) != NULL) {
-		nni_msg *  msg;
 		req0_pipe *p;
 
 		if ((p = nni_list_first(&s->ready_pipes)) == NULL) {
@@ -456,12 +456,6 @@ req0_run_send_queue(req0_sock *s, nni_list *sent_list)
 		if (ctx->retry > 0) {
 			nni_timer_schedule(
 			    &ctx->timer, nni_clock() + ctx->retry);
-		}
-
-		if (nni_msg_dup(&msg, ctx->req_msg) != 0) {
-			// Oops.  Well, keep trying each context; maybe
-			// one of them will get lucky.
-			continue;
 		}
 
 		// Put us on the pipe list of active contexts.
@@ -488,7 +482,11 @@ req0_run_send_queue(req0_sock *s, nni_list *sent_list)
 			}
 		}
 
-		nni_aio_set_msg(&p->aio_send, msg);
+		// At this point, we will never give this message back to
+		// to the user, so we don't have to worry about making it
+		// unique.  We can freely clone it.
+		nni_msg_clone(ctx->req_msg);
+		nni_aio_set_msg(&p->aio_send, ctx->req_msg);
 		nni_pipe_send(p->pipe, &p->aio_send);
 	}
 }

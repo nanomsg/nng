@@ -332,9 +332,7 @@ bus0_sock_getq_cb_raw(void *arg)
 {
 	bus0_sock *s = arg;
 	bus0_pipe *p;
-	bus0_pipe *lastp;
 	nni_msg *  msg;
-	nni_msg *  dup;
 	uint32_t   sender;
 
 	if (nni_aio_result(s->aio_getq) != 0) {
@@ -354,26 +352,13 @@ bus0_sock_getq_cb_raw(void *arg)
 	}
 
 	nni_mtx_lock(&s->mtx);
-	if (((lastp = nni_list_last(&s->pipes)) != NULL) &&
-	    (nni_pipe_id(lastp->npipe) == sender)) {
-		// If the last pipe in the list is our sender,
-		// then ignore it and move to the one just previous.
-		lastp = nni_list_prev(&s->pipes, lastp);
-	}
 	NNI_LIST_FOREACH (&s->pipes, p) {
 		if (nni_pipe_id(p->npipe) == sender) {
 			continue;
 		}
-		if (p != lastp) {
-			if (nni_msg_dup(&dup, msg) != 0) {
-				continue;
-			}
-		} else {
-			dup = msg;
-			msg = NULL;
-		}
-		if (nni_msgq_tryput(p->sendq, dup) != 0) {
-			nni_msg_free(dup);
+		nni_msg_clone(msg);
+		if (nni_msgq_tryput(p->sendq, msg) != 0) {
+			nni_msg_free(msg);
 		}
 	}
 	nni_mtx_unlock(&s->mtx);
