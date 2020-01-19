@@ -1101,10 +1101,17 @@ nng_msg_set_pipe(nng_msg *msg, nng_pipe p)
 	nni_msg_set_pipe(msg, p.id);
 }
 
+// This function is not supported, but we keep it around to
+// satisfy link dependencies in old programs.  It has never done
+// anything useful.
 int
 nng_msg_getopt(nng_msg *msg, int opt, void *ptr, size_t *szp)
 {
-	return (nni_msg_getopt(msg, opt, ptr, szp));
+	NNI_ARG_UNUSED(msg);
+	NNI_ARG_UNUSED(opt);
+	NNI_ARG_UNUSED(ptr);
+	NNI_ARG_UNUSED(szp);
+	return (NNG_ENOTSUP);
 }
 
 int

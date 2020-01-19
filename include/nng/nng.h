@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -65,7 +65,7 @@ extern "C" {
 // NNG_PROTOCOL_NUMBER is used by protocol headers to calculate their
 // protocol number from a major and minor number.  Applications should
 // probably not need to use this.
-#define NNG_PROTOCOL_NUMBER(maj, min) (((x)*16)+(y))
+#define NNG_PROTOCOL_NUMBER(maj, min) (((x) *16) + (y))
 
 // Types common to nng.
 
@@ -683,51 +683,54 @@ NNG_DECL void nng_aio_defer(nng_aio *, nng_aio_cancelfn, void *);
 NNG_DECL void nng_sleep_aio(nng_duration, nng_aio *);
 
 // Message API.
-NNG_DECL int   nng_msg_alloc(nng_msg **, size_t);
-NNG_DECL void  nng_msg_free(nng_msg *);
-NNG_DECL int   nng_msg_realloc(nng_msg *, size_t);
-NNG_DECL void *nng_msg_header(nng_msg *);
-NNG_DECL size_t nng_msg_header_len(const nng_msg *);
-NNG_DECL void * nng_msg_body(nng_msg *);
-NNG_DECL size_t nng_msg_len(const nng_msg *);
-NNG_DECL int    nng_msg_append(nng_msg *, const void *, size_t);
-NNG_DECL int    nng_msg_insert(nng_msg *, const void *, size_t);
-NNG_DECL int    nng_msg_trim(nng_msg *, size_t);
-NNG_DECL int    nng_msg_chop(nng_msg *, size_t);
-NNG_DECL int    nng_msg_header_append(nng_msg *, const void *, size_t);
-NNG_DECL int    nng_msg_header_insert(nng_msg *, const void *, size_t);
-NNG_DECL int    nng_msg_header_trim(nng_msg *, size_t);
-NNG_DECL int    nng_msg_header_chop(nng_msg *, size_t);
-NNG_DECL int    nng_msg_header_append_u16(nng_msg *, uint16_t);
-NNG_DECL int    nng_msg_header_append_u32(nng_msg *, uint32_t);
-NNG_DECL int    nng_msg_header_append_u64(nng_msg *, uint64_t);
-NNG_DECL int    nng_msg_header_insert_u16(nng_msg *, uint16_t);
-NNG_DECL int    nng_msg_header_insert_u32(nng_msg *, uint32_t);
-NNG_DECL int    nng_msg_header_insert_u64(nng_msg *, uint64_t);
-NNG_DECL int    nng_msg_header_chop_u16(nng_msg *, uint16_t *);
-NNG_DECL int    nng_msg_header_chop_u32(nng_msg *, uint32_t *);
-NNG_DECL int    nng_msg_header_chop_u64(nng_msg *, uint64_t *);
-NNG_DECL int    nng_msg_header_trim_u16(nng_msg *, uint16_t *);
-NNG_DECL int    nng_msg_header_trim_u32(nng_msg *, uint32_t *);
-NNG_DECL int    nng_msg_header_trim_u64(nng_msg *, uint64_t *);
-NNG_DECL int    nng_msg_append_u16(nng_msg *, uint16_t);
-NNG_DECL int    nng_msg_append_u32(nng_msg *, uint32_t);
-NNG_DECL int    nng_msg_append_u64(nng_msg *, uint64_t);
-NNG_DECL int    nng_msg_insert_u16(nng_msg *, uint16_t);
-NNG_DECL int    nng_msg_insert_u32(nng_msg *, uint32_t);
-NNG_DECL int    nng_msg_insert_u64(nng_msg *, uint64_t);
-NNG_DECL int    nng_msg_chop_u16(nng_msg *, uint16_t *);
-NNG_DECL int    nng_msg_chop_u32(nng_msg *, uint32_t *);
-NNG_DECL int    nng_msg_chop_u64(nng_msg *, uint64_t *);
-NNG_DECL int    nng_msg_trim_u16(nng_msg *, uint16_t *);
-NNG_DECL int    nng_msg_trim_u32(nng_msg *, uint32_t *);
-NNG_DECL int    nng_msg_trim_u64(nng_msg *, uint64_t *);
-NNG_DECL int    nng_msg_dup(nng_msg **, const nng_msg *);
-NNG_DECL void   nng_msg_clear(nng_msg *);
-NNG_DECL void   nng_msg_header_clear(nng_msg *);
-NNG_DECL void   nng_msg_set_pipe(nng_msg *, nng_pipe);
+NNG_DECL int      nng_msg_alloc(nng_msg **, size_t);
+NNG_DECL void     nng_msg_free(nng_msg *);
+NNG_DECL int      nng_msg_realloc(nng_msg *, size_t);
+NNG_DECL void *   nng_msg_header(nng_msg *);
+NNG_DECL size_t   nng_msg_header_len(const nng_msg *);
+NNG_DECL void *   nng_msg_body(nng_msg *);
+NNG_DECL size_t   nng_msg_len(const nng_msg *);
+NNG_DECL int      nng_msg_append(nng_msg *, const void *, size_t);
+NNG_DECL int      nng_msg_insert(nng_msg *, const void *, size_t);
+NNG_DECL int      nng_msg_trim(nng_msg *, size_t);
+NNG_DECL int      nng_msg_chop(nng_msg *, size_t);
+NNG_DECL int      nng_msg_header_append(nng_msg *, const void *, size_t);
+NNG_DECL int      nng_msg_header_insert(nng_msg *, const void *, size_t);
+NNG_DECL int      nng_msg_header_trim(nng_msg *, size_t);
+NNG_DECL int      nng_msg_header_chop(nng_msg *, size_t);
+NNG_DECL int      nng_msg_header_append_u16(nng_msg *, uint16_t);
+NNG_DECL int      nng_msg_header_append_u32(nng_msg *, uint32_t);
+NNG_DECL int      nng_msg_header_append_u64(nng_msg *, uint64_t);
+NNG_DECL int      nng_msg_header_insert_u16(nng_msg *, uint16_t);
+NNG_DECL int      nng_msg_header_insert_u32(nng_msg *, uint32_t);
+NNG_DECL int      nng_msg_header_insert_u64(nng_msg *, uint64_t);
+NNG_DECL int      nng_msg_header_chop_u16(nng_msg *, uint16_t *);
+NNG_DECL int      nng_msg_header_chop_u32(nng_msg *, uint32_t *);
+NNG_DECL int      nng_msg_header_chop_u64(nng_msg *, uint64_t *);
+NNG_DECL int      nng_msg_header_trim_u16(nng_msg *, uint16_t *);
+NNG_DECL int      nng_msg_header_trim_u32(nng_msg *, uint32_t *);
+NNG_DECL int      nng_msg_header_trim_u64(nng_msg *, uint64_t *);
+NNG_DECL int      nng_msg_append_u16(nng_msg *, uint16_t);
+NNG_DECL int      nng_msg_append_u32(nng_msg *, uint32_t);
+NNG_DECL int      nng_msg_append_u64(nng_msg *, uint64_t);
+NNG_DECL int      nng_msg_insert_u16(nng_msg *, uint16_t);
+NNG_DECL int      nng_msg_insert_u32(nng_msg *, uint32_t);
+NNG_DECL int      nng_msg_insert_u64(nng_msg *, uint64_t);
+NNG_DECL int      nng_msg_chop_u16(nng_msg *, uint16_t *);
+NNG_DECL int      nng_msg_chop_u32(nng_msg *, uint32_t *);
+NNG_DECL int      nng_msg_chop_u64(nng_msg *, uint64_t *);
+NNG_DECL int      nng_msg_trim_u16(nng_msg *, uint16_t *);
+NNG_DECL int      nng_msg_trim_u32(nng_msg *, uint32_t *);
+NNG_DECL int      nng_msg_trim_u64(nng_msg *, uint64_t *);
+NNG_DECL int      nng_msg_dup(nng_msg **, const nng_msg *);
+NNG_DECL void     nng_msg_clear(nng_msg *);
+NNG_DECL void     nng_msg_header_clear(nng_msg *);
+NNG_DECL void     nng_msg_set_pipe(nng_msg *, nng_pipe);
 NNG_DECL nng_pipe nng_msg_get_pipe(const nng_msg *);
-NNG_DECL int      nng_msg_getopt(nng_msg *, int, void *, size_t *);
+
+// nng_msg_getopt is defunct, and should not be used by programs. It
+// always returns NNG_ENOTSUP.
+NNG_DECL int nng_msg_getopt(nng_msg *, int, void *, size_t *);
 
 // Pipe API. Generally pipes are only "observable" to applications, but
 // we do permit an application to close a pipe. This can be useful, for
@@ -753,10 +756,10 @@ NNG_DECL int nng_pipe_get_string(nng_pipe, const char *, char **);
 NNG_DECL int nng_pipe_get_ptr(nng_pipe, const char *, void **);
 NNG_DECL int nng_pipe_get_addr(nng_pipe, const char *, nng_sockaddr *);
 
-NNG_DECL int nng_pipe_close(nng_pipe);
-NNG_DECL int nng_pipe_id(nng_pipe);
-NNG_DECL nng_socket nng_pipe_socket(nng_pipe);
-NNG_DECL nng_dialer nng_pipe_dialer(nng_pipe);
+NNG_DECL int          nng_pipe_close(nng_pipe);
+NNG_DECL int          nng_pipe_id(nng_pipe);
+NNG_DECL nng_socket   nng_pipe_socket(nng_pipe);
+NNG_DECL nng_dialer   nng_pipe_dialer(nng_pipe);
 NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 
 // Flags.

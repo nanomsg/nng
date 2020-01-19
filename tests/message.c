@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,6 +23,10 @@ TestMain("Message Tests", {
 		So(nng_msg_alloc(&msg, 0) == 0);
 
 		Reset({ nng_msg_free(msg); });
+
+		Convey("Get opt returns ENOTSUP", {
+			So(nng_msg_getopt(msg, 0, NULL, NULL) == NNG_ENOTSUP);
+		});
 
 		Convey("Lengths are empty", {
 			So(nng_msg_len(msg) == 0);
@@ -195,12 +199,6 @@ TestMain("Message Tests", {
 			Reset({ nng_msg_free(m2); });
 			p = nng_msg_get_pipe(m2);
 			So(nng_pipe_id(p) == 0x22222222);
-		});
-
-		Convey("Missing option fails properly", {
-			char   buf[128];
-			size_t sz = sizeof(buf);
-			So(nng_msg_getopt(msg, 4545, buf, &sz) == NNG_ENOENT);
 		});
 
 		Convey("Uint32 body operations work", {

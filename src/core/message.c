@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -8,7 +8,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stdio.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
@@ -27,17 +26,8 @@ typedef struct {
 struct nng_msg {
 	nni_chunk m_header;
 	nni_chunk m_body;
-	nni_time  m_expire; // usec
-	nni_list  m_options;
 	uint32_t  m_pipe; // set on receive
 };
-
-typedef struct {
-	int           mo_num;
-	size_t        mo_sz;
-	void *        mo_val;
-	nni_list_node mo_node;
-} nni_msgopt;
 
 #if 0
 static void
@@ -433,7 +423,6 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 		nni_panic("chunk_append failed");
 	}
 
-	NNI_LIST_INIT(&m->m_options, nni_msgopt, mo_node);
 	*mp = m;
 	return (0);
 }
@@ -442,14 +431,11 @@ int
 nni_msg_dup(nni_msg **dup, const nni_msg *src)
 {
 	nni_msg *   m;
-	nni_msgopt *mo;
-	nni_msgopt *newmo;
 	int         rv;
 
 	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	NNI_LIST_INIT(&m->m_options, nni_msgopt, mo_node);
 
 	if ((rv = nni_chunk_dup(&m->m_header, &src->m_header)) != 0) {
 		NNI_FREE_STRUCT(m);
@@ -461,20 +447,6 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 		return (rv);
 	}
 
-	NNI_LIST_FOREACH (&src->m_options, mo) {
-		newmo = nni_zalloc(sizeof(*newmo) + mo->mo_sz);
-		if (newmo == NULL) {
-			nni_msg_free(m);
-			return (NNG_ENOMEM);
-		}
-		newmo->mo_val = ((char *) newmo + sizeof(*newmo));
-		newmo->mo_sz  = mo->mo_sz;
-		newmo->mo_num = mo->mo_num;
-		if (mo->mo_sz > 0) {
-			memcpy(newmo->mo_val, mo->mo_val, mo->mo_sz);
-		}
-		nni_list_append(&m->m_options, newmo);
-	}
 	m->m_pipe = src->m_pipe;
 
 	*dup = m;
@@ -484,72 +456,11 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 void
 nni_msg_free(nni_msg *m)
 {
-	nni_msgopt *mo;
-
 	if (m != NULL) {
 		nni_chunk_free(&m->m_header);
 		nni_chunk_free(&m->m_body);
-		while ((mo = nni_list_first(&m->m_options)) != NULL) {
-			nni_list_remove(&m->m_options, mo);
-			nni_free(mo, sizeof(*mo) + mo->mo_sz);
-		}
 		NNI_FREE_STRUCT(m);
 	}
-}
-
-int
-nni_msg_setopt(nni_msg *m, int opt, const void *val, size_t sz)
-{
-	// Find the existing option if present.  Note that if we alter
-	// a value, we can wind up trashing old data due to ENOMEM.
-	nni_msgopt *oldmo, *newmo;
-
-	NNI_LIST_FOREACH (&m->m_options, oldmo) {
-		if (oldmo->mo_num == opt) {
-			if (sz == oldmo->mo_sz && sz > 0) {
-				// nice! we can just overwrite old value
-				memcpy(oldmo->mo_val, val, sz);
-				return (0);
-			}
-			break;
-		}
-	}
-	if ((newmo = nni_zalloc(sizeof(*newmo) + sz)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	newmo->mo_val = ((char *) newmo + sizeof(*newmo));
-	newmo->mo_sz  = sz;
-	newmo->mo_num = opt;
-	if (sz > 0) {
-		memcpy(newmo->mo_val, val, sz);
-	}
-	if (oldmo != NULL) {
-		nni_list_remove(&m->m_options, oldmo);
-		nni_free(oldmo, sizeof(*oldmo) + oldmo->mo_sz);
-	}
-	nni_list_append(&m->m_options, newmo);
-	return (0);
-}
-
-int
-nni_msg_getopt(nni_msg *m, int opt, void *val, size_t *szp)
-{
-	nni_msgopt *mo;
-
-	NNI_LIST_FOREACH (&m->m_options, mo) {
-		if (mo->mo_num == opt) {
-			size_t sz = *szp;
-			if (sz > mo->mo_sz) {
-				sz = mo->mo_sz;
-				if (sz > 0) {
-					memcpy(val, mo->mo_val, sz);
-				}
-				*szp = mo->mo_sz;
-				return (0);
-			}
-		}
-	}
-	return (NNG_ENOENT);
 }
 
 int

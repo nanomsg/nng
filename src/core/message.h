@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -32,8 +32,6 @@ extern void     nni_msg_clear(nni_msg *);
 extern void     nni_msg_header_clear(nni_msg *);
 extern int      nni_msg_header_trim(nni_msg *, size_t);
 extern int      nni_msg_header_chop(nni_msg *, size_t);
-extern int      nni_msg_setopt(nni_msg *, int, const void *, size_t);
-extern int      nni_msg_getopt(nni_msg *, int, void *, size_t *);
 extern void     nni_msg_dump(const char *, const nni_msg *);
 extern int      nni_msg_append_u16(nni_msg *, uint16_t);
 extern int      nni_msg_append_u32(nni_msg *, uint32_t);
