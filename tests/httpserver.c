@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -691,6 +692,101 @@ TestMain("HTTP Server", {
 			nng_http_req_free(req);
 			nng_http_res_free(res);
 			nng_url_free(curl);
+			nng_free(data, size);
+		});
+	});
+
+	Convey("Multiple tree handlers works", {
+		char     urlstr[32];
+		nng_url *url;
+		char *   tmpdir;
+		char *   workdir;
+		char *   workdir2;
+		char *   file1;
+		char *   file2;
+
+		trantest_next_address(urlstr, "http://127.0.0.1:%u");
+		So(nng_url_parse(&url, urlstr) == 0);
+		So(nng_http_server_hold(&s, url) == 0);
+		So((tmpdir = nni_plat_temp_dir()) != NULL);
+		So((workdir = nni_file_join(tmpdir, "httptest")) != NULL);
+		So((workdir2 = nni_file_join(tmpdir, "httptest2")) != NULL);
+		So((file1 = nni_file_join(workdir, "file1.txt")) != NULL);
+		So((file2 = nni_file_join(workdir2, "file2.txt")) != NULL);
+
+		So(nni_file_put(file1, doc1, strlen(doc1)) == 0);
+		So(nni_file_put(file2, doc2, strlen(doc2)) == 0);
+
+		Reset({
+			nng_http_server_release(s);
+			free(tmpdir);
+			nni_file_delete(file1);
+			nni_file_delete(file2);
+			nni_file_delete(workdir);
+			nni_file_delete(workdir2);
+			free(workdir2);
+			free(workdir);
+			free(file1);
+			free(file2);
+			nng_url_free(url);
+		});
+
+		So(nng_http_handler_alloc_directory(&h, "/", workdir) == 0);
+		So(nng_http_handler_set_tree(h) == 0);
+		So(nng_http_server_add_handler(s, h) == 0);
+
+		So(nng_http_handler_alloc_directory(&h, "/", workdir) == 0);
+		So(nng_http_handler_set_tree(h) == 0);
+		So(nng_http_server_add_handler(s, h) == NNG_EADDRINUSE);
+		nng_http_handler_free(h);
+
+		So(nng_http_handler_alloc_directory(&h, "/subdir", workdir2) ==
+		    0);
+		So(nng_http_handler_set_tree(h) == 0);
+		So(nng_http_server_add_handler(s, h) == 0);
+
+		So(nng_http_handler_alloc_directory(&h, "/subdir", workdir2) ==
+		    0);
+		So(nng_http_handler_set_tree(h) == 0);
+		So(nng_http_server_add_handler(s, h) == NNG_EADDRINUSE);
+		nng_http_handler_free(h);
+
+		So(nng_http_server_start(s) == 0);
+		nng_msleep(100);
+
+		Convey("Named file works (1)", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			snprintf(
+			    fullurl, sizeof(fullurl), "%s/file1.txt", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_OK);
+			So(size == strlen(doc1));
+			So(memcmp(data, doc1, size) == 0);
+			So(strcmp(ctype, "text/plain") == 0);
+			nni_strfree(ctype);
+			nng_free(data, size);
+		});
+
+		Convey("Named file works (2)", {
+			char     fullurl[256];
+			void *   data;
+			size_t   size;
+			uint16_t stat;
+			char *   ctype;
+
+			snprintf(fullurl, sizeof(fullurl),
+			    "%s/subdir/file2.txt", urlstr);
+			So(httpget(fullurl, &data, &size, &stat, &ctype) == 0);
+			So(stat == NNG_HTTP_STATUS_OK);
+			So(size == strlen(doc2));
+			So(memcmp(data, doc2, size) == 0);
+			So(strcmp(ctype, "text/plain") == 0);
+			nni_strfree(ctype);
 			nng_free(data, size);
 		});
 	});

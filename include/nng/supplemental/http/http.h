@@ -1,6 +1,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -371,6 +372,14 @@ NNG_DECL int nng_http_handler_collect_body(nng_http_handler *, bool, size_t);
 // called for all child paths supplied.  By default the handler is only
 // called for an exact path match.
 NNG_DECL int nng_http_handler_set_tree(nng_http_handler *);
+
+// nng_http_handler_set_tree_exclusive indicates that the handler is being
+// registered for a heirarchical tree *exclusively*, rather than just a single
+// path, so it will be called for all child paths supplied. By default the
+// handler is only called for an exact path match. Exclusive means that any
+// other handler on a conflicting path will induce an address conflict error
+// when added to a server.
+NNG_DECL int nng_http_handler_set_tree_exclusive(nng_http_handler *);
 
 // nng_http_handler_set_data is used to store additional data, along with
 // a possible clean up routine.  (The clean up is a custom deallocator and
