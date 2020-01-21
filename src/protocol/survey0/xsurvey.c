@@ -273,7 +273,7 @@ xsurv0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 	xsurv0_sock *s = arg;
 	int          ttl;
 	int          rv;
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);
@@ -291,8 +291,7 @@ xsurv0_sock_getq_cb(void *arg)
 {
 	xsurv0_sock *s = arg;
 	xsurv0_pipe *p;
-	xsurv0_pipe *last;
-	nni_msg *    msg, *dup;
+	nni_msg *    msg;
 
 	if (nni_aio_result(&s->aio_getq) != 0) {
 		// Should be NNG_ECLOSED.
@@ -302,27 +301,18 @@ xsurv0_sock_getq_cb(void *arg)
 	nni_aio_set_msg(&s->aio_getq, NULL);
 
 	nni_mtx_lock(&s->mtx);
-	last = nni_list_last(&s->pipes);
 	NNI_LIST_FOREACH (&s->pipes, p) {
-		if (p != last) {
-			if (nni_msg_dup(&dup, msg) != 0) {
-				continue;
-			}
-		} else {
-			dup = msg;
-		}
-		if (nni_msgq_tryput(p->sendq, dup) != 0) {
-			nni_msg_free(dup);
+		nni_msg_clone(msg);
+		if (nni_msgq_tryput(p->sendq, msg) != 0) {
+			nni_msg_free(msg);
 		}
 	}
 
 	nni_msgq_aio_get(s->uwq, &s->aio_getq);
 	nni_mtx_unlock(&s->mtx);
 
-	if (last == NULL) {
-		// If there were no pipes to send on, just toss the message.
-		nni_msg_free(msg);
-	}
+	// If there were no pipes to send on, just toss the message.
+	nni_msg_free(msg);
 }
 
 static void

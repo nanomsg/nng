@@ -470,9 +470,9 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 		return (NNG_ENOMEM);
 	}
 
-	// 64-bytes of header, including room for 32 bytes
-	// of headroom and 32 bytes of trailer.
-	if ((rv = nni_chunk_grow(&m->m_header, 32, 32)) != 0) {
+	// Header size is strictly limited.  We need max hops plus one for
+	// the request or survey ID.  TODO: Inline the header (no chunk).
+	if ((rv = nni_chunk_grow(&m->m_header, NNI_MAX_HEADER_SIZE, 0)) != 0) {
 		NNI_FREE_STRUCT(m);
 		return (rv);
 	}

@@ -43,7 +43,7 @@ struct resp0_ctx {
 	nni_list_node sqnode;
 	nni_list_node rqnode;
 	size_t        btrace_len;
-	uint32_t      btrace[256];
+	uint32_t      btrace[NNI_MAX_MAX_TTL + 1];
 };
 
 // resp0_sock is our per-socket protocol private structure.
@@ -565,7 +565,7 @@ resp0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 	int         ttl;
 	int         rv;
 
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);

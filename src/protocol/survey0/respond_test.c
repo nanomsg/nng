@@ -507,6 +507,7 @@ test_resp_ttl_option(void)
 	TEST_NNG_PASS(nng_setopt_int(resp, opt, 1));
 	TEST_NNG_FAIL(nng_setopt_int(resp, opt, 0), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(resp, opt, -1), NNG_EINVAL);
+	TEST_NNG_FAIL(nng_setopt_int(resp, opt, 16), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(resp, opt, 256), NNG_EINVAL);
 	TEST_NNG_PASS(nng_setopt_int(resp, opt, 3));
 	TEST_NNG_PASS(nng_getopt_int(resp, opt, &v));

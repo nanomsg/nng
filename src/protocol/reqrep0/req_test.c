@@ -52,6 +52,9 @@ test_req_ttl_option(void)
 	TEST_NNG_PASS(nng_setopt_int(req, opt, 1));
 	TEST_NNG_FAIL(nng_setopt_int(req, opt, 0), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(req, opt, -1), NNG_EINVAL);
+	// This test will fail if the NNI_MAX_MAX_TTL is changed from the
+	// builtin default of 15.
+	TEST_NNG_FAIL(nng_setopt_int(req, opt, 16), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(req, opt, 256), NNG_EINVAL);
 	TEST_NNG_PASS(nng_setopt_int(req, opt, 3));
 	TEST_NNG_PASS(nng_getopt_int(req, opt, &v));

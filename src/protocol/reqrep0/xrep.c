@@ -355,7 +355,7 @@ xrep0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 	xrep0_sock *s = arg;
 	int         ttl;
 	int         rv;
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);

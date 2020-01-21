@@ -337,6 +337,7 @@ test_xresp_ttl_option(void)
 	TEST_NNG_PASS(nng_setopt_int(resp, opt, 1));
 	TEST_NNG_FAIL(nng_setopt_int(resp, opt, 0), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(resp, opt, -1), NNG_EINVAL);
+	TEST_NNG_FAIL(nng_setopt_int(resp, opt, 16), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(resp, opt, 256), NNG_EINVAL);
 	TEST_NNG_PASS(nng_setopt_int(resp, opt, 3));
 	TEST_NNG_PASS(nng_getopt_int(resp, opt, &v));
@@ -428,8 +429,10 @@ TEST_LIST = {
 	{ "xrespond poll readable", test_xresp_poll_readable },
 	{ "xrespond poll writable", test_xresp_poll_writeable },
 	{ "xrespond validate peer", test_xresp_validate_peer },
-	{ "xrespond close pipe before send", test_xresp_close_pipe_before_send },
-	{ "xrespond close pipe during send", test_xresp_close_pipe_during_send },
+	{ "xrespond close pipe before send",
+	    test_xresp_close_pipe_before_send },
+	{ "xrespond close pipe during send",
+	    test_xresp_close_pipe_during_send },
 	{ "xrespond close during recv", test_xresp_close_during_recv },
 	{ "xrespond recv aio stopped", test_xresp_recv_aio_stopped },
 	{ "xrespond send no header", test_xresp_send_no_header },

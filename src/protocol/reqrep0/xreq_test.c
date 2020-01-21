@@ -337,6 +337,7 @@ test_xreq_ttl_option(void)
 	TEST_NNG_PASS(nng_setopt_int(rep, opt, 1));
 	TEST_NNG_FAIL(nng_setopt_int(rep, opt, 0), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(rep, opt, -1), NNG_EINVAL);
+	TEST_NNG_FAIL(nng_setopt_int(rep, opt, 16), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(rep, opt, 256), NNG_EINVAL);
 	TEST_NNG_PASS(nng_setopt_int(rep, opt, 3));
 	TEST_NNG_PASS(nng_getopt_int(rep, opt, &v));

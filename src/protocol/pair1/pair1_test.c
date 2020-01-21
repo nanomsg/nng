@@ -575,22 +575,22 @@ test_ttl(void)
 	nng_msg_free(msg);
 
 	// Large TTL passes
-	TEST_CHECK(nng_setopt_int(s1, NNG_OPT_MAXTTL, 0xff) == 0);
+	TEST_CHECK(nng_setopt_int(s1, NNG_OPT_MAXTTL, 15) == 0);
 	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
 	TEST_CHECK(nng_msg_append_u32(msg, 1234) == 0);
-	TEST_CHECK(nng_msg_header_append_u32(msg, 0xfe) == 0);
+	TEST_CHECK(nng_msg_header_append_u32(msg, 14) == 0);
 	TEST_CHECK(nng_sendmsg(c1, msg, 0) == 0);
 	TEST_CHECK(nng_recvmsg(s1, &msg, 0) == 0);
 	TEST_CHECK(nng_msg_trim_u32(msg, &val) == 0);
 	TEST_CHECK(val == 1234);
 	TEST_CHECK(nng_msg_header_trim_u32(msg, &val) == 0);
-	TEST_CHECK(val == 0xff);
+	TEST_CHECK(val == 15);
 	nng_msg_free(msg);
 
 	// Max TTL fails
-	TEST_CHECK(nng_setopt_int(s1, NNG_OPT_MAXTTL, 0xff) == 0);
+	TEST_CHECK(nng_setopt_int(s1, NNG_OPT_MAXTTL, 15) == 0);
 	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
-	TEST_CHECK(nng_msg_header_append_u32(msg, 0xff) == 0);
+	TEST_CHECK(nng_msg_header_append_u32(msg, 15) == 0);
 	TEST_CHECK(nng_sendmsg(c1, msg, 0) == 0);
 	TEST_CHECK(nng_recvmsg(s1, &msg, 0) == NNG_ETIMEDOUT);
 

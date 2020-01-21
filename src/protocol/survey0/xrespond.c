@@ -284,9 +284,7 @@ xresp0_recv_cb(void *arg)
 	nni_msg_set_pipe(msg, p->id);
 
 	// Store the pipe id in the header, first thing.
-	if (nni_msg_header_append_u32(msg, p->id) != 0) {
-		goto drop;
-	}
+	nni_msg_header_must_append_u32(msg, p->id);
 
 	// Move backtrace from body to header
 	hops = 1;
@@ -346,7 +344,7 @@ xresp0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 	xresp0_sock *s = arg;
 	int ttl;
 	int rv;
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);

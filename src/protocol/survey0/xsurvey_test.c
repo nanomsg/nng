@@ -340,6 +340,7 @@ test_xsurvey_ttl_option(void)
 	TEST_NNG_PASS(nng_setopt_int(s, opt, 1));
 	TEST_NNG_FAIL(nng_setopt_int(s, opt, 0), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(s, opt, -1), NNG_EINVAL);
+	TEST_NNG_FAIL(nng_setopt_int(s, opt, 16), NNG_EINVAL);
 	TEST_NNG_FAIL(nng_setopt_int(s, opt, 256), NNG_EINVAL);
 	TEST_NNG_PASS(nng_setopt_int(s, opt, 3));
 	TEST_NNG_PASS(nng_getopt_int(s, opt, &v));

@@ -39,11 +39,11 @@ struct surv0_ctx {
 
 // surv0_sock is our per-socket protocol private structure.
 struct surv0_sock {
-	int           ttl;
-	nni_list      pipes;
-	nni_mtx       mtx;
-	surv0_ctx     ctx;
-	nni_idhash *  surveys;
+	int          ttl;
+	nni_list     pipes;
+	nni_mtx      mtx;
+	surv0_ctx    ctx;
+	nni_idhash * surveys;
 	nni_pollable writable;
 };
 
@@ -161,34 +161,18 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	// Insert it into the message.  We report an error if one occurs,
-	// although arguably at this point we could just discard silently.
-	if ((rv = nni_msg_header_append_u32(msg, (uint32_t) ctx->survid)) !=
-	    0) {
-		nni_idhash_remove(sock->surveys, ctx->survid);
-		ctx->survid = 0;
-		nni_mtx_unlock(&sock->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
+	nni_msg_header_clear(msg);
+	nni_msg_header_must_append_u32(msg, (uint32_t) ctx->survid);
 
 	// From this point, we're committed to success.  Note that we send
 	// regardless of whether there are any pipes or not.  If no pipes,
 	// then it just gets discarded.
 	nni_aio_set_msg(aio, NULL);
 	NNI_LIST_FOREACH (&sock->pipes, pipe) {
-		nni_msg *dmsg;
 
-		if (nni_list_next(&sock->pipes, pipe) != NULL) {
-			if (nni_msg_dup(&dmsg, msg) != 0) {
-				continue;
-			}
-		} else {
-			dmsg = msg;
-			msg  = NULL;
-		}
-		if (nni_msgq_tryput(pipe->sendq, dmsg) != 0) {
-			nni_msg_free(dmsg);
+		nni_msg_clone(msg);
+		if (nni_msgq_tryput(pipe->sendq, msg) != 0) {
+			nni_msg_free(msg);
 		}
 	}
 
@@ -199,9 +183,7 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 	nni_msgq_set_get_error(ctx->rq, 0);
 
 	nni_mtx_unlock(&sock->mtx);
-	if (msg != NULL) {
-		nni_msg_free(msg);
-	}
+	nni_msg_free(msg);
 
 	nni_aio_finish(aio, 0, len);
 }
@@ -441,7 +423,7 @@ static int
 surv0_sock_set_maxttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 {
 	surv0_sock *s = arg;
-	return (nni_copyin_int(&s->ttl, buf, sz, 1, 255, t));
+	return (nni_copyin_int(&s->ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t));
 }
 
 static int

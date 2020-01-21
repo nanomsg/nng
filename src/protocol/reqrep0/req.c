@@ -666,12 +666,9 @@ req0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	ctx->request_id = (uint32_t) id;
-	if ((rv = nni_msg_header_append_u32(msg, ctx->request_id)) != 0) {
-		nni_idhash_remove(s->requests, id);
-		nni_mtx_unlock(&s->mtx);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
+	nni_msg_header_clear(msg);
+	nni_msg_header_must_append_u32(msg, ctx->request_id);
+
 	// If no pipes are ready, and the request was a poll (no background
 	// schedule), then fail it.  Should be NNG_ETIMEDOUT.
 	rv = nni_aio_schedule(aio, req0_ctx_cancel_send, ctx);
@@ -713,7 +710,7 @@ req0_sock_set_max_ttl(void *arg, const void *buf, size_t sz, nni_opt_type t)
 	req0_sock *s = arg;
 	int        ttl;
 	int        rv;
-	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, 255, t)) == 0) {
+	if ((rv = nni_copyin_int(&ttl, buf, sz, 1, NNI_MAX_MAX_TTL, t)) == 0) {
 		nni_atomic_set(&s->ttl, ttl);
 	}
 	return (rv);
