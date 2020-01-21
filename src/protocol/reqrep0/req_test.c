@@ -184,6 +184,105 @@ test_req_rep_exchange(void)
 }
 
 void
+test_req_resend(void)
+{
+	nng_socket req;
+	nng_socket rep;
+
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, 10));
+
+	TEST_NNG_PASS(testutil_marry(rep, req));
+
+	TEST_NNG_SEND_STR(req, "ping");
+	TEST_NNG_RECV_STR(rep, "ping");
+	TEST_NNG_RECV_STR(rep, "ping");
+	TEST_NNG_RECV_STR(rep, "ping");
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
+}
+
+void
+test_req_resend_reconnect(void)
+{
+	nng_socket req;
+	nng_socket rep1;
+	nng_socket rep2;
+
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_rep0_open(&rep1));
+	TEST_NNG_PASS(nng_rep0_open(&rep2));
+
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep1, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep2, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep1, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep2, NNG_OPT_SENDTIMEO, SECOND));
+	// We intentionally set the retry time long; that way we only see
+	// the retry from loss of our original peer.
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, 60 * SECOND));
+
+	TEST_NNG_PASS(testutil_marry(rep1, req));
+
+	TEST_NNG_SEND_STR(req, "ping");
+	TEST_NNG_RECV_STR(rep1, "ping");
+
+	TEST_NNG_PASS(nng_close(rep1));
+	TEST_NNG_PASS(testutil_marry(rep2, req));
+
+	TEST_NNG_RECV_STR(rep2, "ping");
+	TEST_NNG_SEND_STR(rep2, "rep2");
+	TEST_NNG_RECV_STR(req, "rep2");
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep2));
+}
+
+void
+test_req_resend_disconnect(void)
+{
+	nng_socket req;
+	nng_socket rep1;
+	nng_socket rep2;
+
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_rep0_open(&rep1));
+	TEST_NNG_PASS(nng_rep0_open(&rep2));
+
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep1, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep2, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep1, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep2, NNG_OPT_SENDTIMEO, SECOND));
+	// We intentionally set the retry time long; that way we only see
+	// the retry from loss of our original peer.
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, 60 * SECOND));
+
+	TEST_NNG_PASS(testutil_marry(rep1, req));
+	TEST_NNG_SEND_STR(req, "ping");
+	TEST_NNG_RECV_STR(rep1, "ping");
+
+	TEST_NNG_PASS(testutil_marry(rep2, req));
+	TEST_NNG_PASS(nng_close(rep1));
+
+	TEST_NNG_RECV_STR(rep2, "ping");
+	TEST_NNG_SEND_STR(rep2, "rep2");
+	TEST_NNG_RECV_STR(req, "rep2");
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep2));
+}
+
+void
 test_req_cancel(void)
 {
 	nng_msg *    abc;
@@ -193,22 +292,22 @@ test_req_cancel(void)
 	nng_socket   req;
 	nng_socket   rep;
 
-	TEST_CHECK(nng_rep_open(&rep) == 0);
-	TEST_CHECK(nng_req_open(&req) == 0);
+	TEST_NNG_PASS(nng_rep_open(&rep));
+	TEST_NNG_PASS(nng_req_open(&req));
 
-	TEST_CHECK(nng_setopt_ms(req, NNG_OPT_RECVTIMEO, SECOND) == 0);
-	TEST_CHECK(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, SECOND) == 0);
-	TEST_CHECK(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, SECOND) == 0);
-	TEST_CHECK(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, SECOND) == 0);
-	TEST_CHECK(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, retry) == 0);
-	TEST_CHECK(nng_setopt_int(req, NNG_OPT_SENDBUF, 16) == 0);
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 5 * SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 5 * SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, retry));
+	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_SENDBUF, 16));
 
-	TEST_CHECK(nng_msg_alloc(&abc, 0) == 0);
-	TEST_CHECK(nng_msg_append(abc, "abc", 4) == 0);
-	TEST_CHECK(nng_msg_alloc(&def, 0) == 0);
-	TEST_CHECK(nng_msg_append(def, "def", 4) == 0);
+	TEST_NNG_PASS(nng_msg_alloc(&abc, 0));
+	TEST_NNG_PASS(nng_msg_append(abc, "abc", 4));
+	TEST_NNG_PASS(nng_msg_alloc(&def, 0));
+	TEST_NNG_PASS(nng_msg_append(def, "def", 4));
 
-	TEST_CHECK(testutil_marry(rep, req) == 0);
+	TEST_NNG_PASS(testutil_marry(rep, req));
 
 	// Send req #1 (abc).
 	TEST_CHECK(nng_sendmsg(req, abc, 0) == 0);
@@ -221,36 +320,36 @@ test_req_cancel(void)
 	// Send the next next request ("def").  Note that
 	// the REP side server will have already buffered the receive
 	// request, and should simply be waiting for us to reply to abc.
-	TEST_CHECK(nng_sendmsg(req, def, 0) == 0);
+	TEST_NNG_PASS(nng_sendmsg(req, def, 0));
 
 	// Receive the first request (should be abc) on the REP server.
-	TEST_CHECK(nng_recvmsg(rep, &cmd, 0) == 0);
+	TEST_NNG_PASS(nng_recvmsg(rep, &cmd, 0));
 	TEST_ASSERT(cmd != NULL);
 	TEST_CHECK(nng_msg_len(cmd) == 4);
 	TEST_CHECK(strcmp(nng_msg_body(cmd), "abc") == 0);
 
 	// REP sends the reply to first command.  This will be discarded
 	// by the REQ socket.
-	TEST_CHECK(nng_sendmsg(rep, cmd, 0) == 0);
+	TEST_NNG_PASS(nng_sendmsg(rep, cmd, 0));
 
 	// Now get the next command from the REP; should be "def".
-	TEST_CHECK(nng_recvmsg(rep, &cmd, 0) == 0);
+	TEST_NNG_PASS(nng_recvmsg(rep, &cmd, 0));
 	TEST_ASSERT(cmd != NULL);
 	TEST_CHECK(nng_msg_len(cmd) == 4);
 	TEST_CHECK(strcmp(nng_msg_body(cmd), "def") == 0);
 	TEST_MSG("Received body was %s", nng_msg_body(cmd));
 
 	// And send it back to REQ.
-	TEST_CHECK(nng_sendmsg(rep, cmd, 0) == 0);
+	TEST_NNG_PASS(nng_sendmsg(rep, cmd, 0));
 
 	// Try a req command.  This should give back "def"
-	TEST_CHECK(nng_recvmsg(req, &cmd, 0) == 0);
+	TEST_NNG_PASS(nng_recvmsg(req, &cmd, 0));
 	TEST_CHECK(nng_msg_len(cmd) == 4);
 	TEST_CHECK(strcmp(nng_msg_body(cmd), "def") == 0);
 	nng_msg_free(cmd);
 
-	TEST_CHECK(nng_close(req) == 0);
-	TEST_CHECK(nng_close(rep) == 0);
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep));
 }
 
 void
@@ -453,7 +552,7 @@ test_req_poll_contention(void)
 	// It can take a little bit of time for the eased back-pressure
 	// to reflect across the network.
 	testutil_sleep(100);
-	
+
 	// Should be come writeable now...
 	TEST_CHECK(testutil_pollfd(fd) == true);
 
@@ -825,6 +924,9 @@ TEST_LIST = {
 	{ "req recv bad state", test_req_recv_bad_state },
 	{ "req recv garbage", test_req_recv_garbage },
 	{ "req rep exchange", test_req_rep_exchange },
+	{ "req resend", test_req_resend },
+	{ "req resend disconnect", test_req_resend_disconnect },
+	{ "req resend reconnect", test_req_resend_reconnect },
 	{ "req cancel", test_req_cancel },
 	{ "req cancel abort recv", test_req_cancel_abort_recv },
 	{ "req cancel post recv", test_req_cancel_post_recv },
