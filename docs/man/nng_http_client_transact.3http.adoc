@@ -1,6 +1,6 @@
 = nng_http_client_transact(3http)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -45,11 +45,6 @@ xref:nng_http_conn_transact.3http.adoc[`nng_http_conn_transact()`],
 exists.
 That function behaves similarily, but uses an existing connection, which
 can be reused.
-
-NOTE: This function does not support reading data sent using chunked
-transfer encoding, and if the server attempts to do so, the underlying
-connection will be closed and an `NNG_ENOTSUP` error will be returned.
-This limitation is considered a bug, and a fix is planned for the future.
 
 WARNING: If the remote server tries to send an extremely large buffer,
 then a corresponding allocation will be made, which can lead to denial
