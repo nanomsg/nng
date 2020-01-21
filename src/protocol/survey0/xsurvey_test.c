@@ -227,7 +227,7 @@ test_xsurvey_recv_header(void)
 	nng_socket resp;
 	nng_socket surv;
 	nng_msg *  m;
-	nng_pipe   p1, p2;
+	nng_pipe   p;
 	uint32_t   id;
 
 	TEST_NNG_PASS(nng_respondent0_open_raw(&resp));
@@ -237,11 +237,11 @@ test_xsurvey_recv_header(void)
 	TEST_NNG_PASS(nng_setopt_ms(resp, NNG_OPT_SENDTIMEO, 1000));
 	TEST_NNG_PASS(nng_setopt_ms(resp, NNG_OPT_SENDTIMEO, 1000));
 
-	TEST_NNG_PASS(testutil_marry_ex(surv, resp, &p1, &p2));
+	TEST_NNG_PASS(testutil_marry_ex(surv, resp, NULL, NULL, &p));
 
 	// Simulate a few hops.
 	TEST_NNG_PASS(nng_msg_alloc(&m, 0));
-	TEST_NNG_PASS(nng_msg_header_append_u32(m, nng_pipe_id(p2)));
+	TEST_NNG_PASS(nng_msg_header_append_u32(m, nng_pipe_id(p)));
 	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x2));
 	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x1));
 	TEST_NNG_PASS(nng_msg_header_append_u32(m, 0x80000123u));
@@ -279,7 +279,7 @@ test_xsurvey_close_during_recv(void)
 	TEST_NNG_PASS(nng_setopt_int(surv, NNG_OPT_RECVBUF, 1));
 	TEST_NNG_PASS(nng_setopt_int(resp, NNG_OPT_SENDBUF, 20));
 
-	TEST_NNG_PASS(testutil_marry_ex(surv, resp, &p1, &p2));
+	TEST_NNG_PASS(testutil_marry_ex(surv, resp, NULL, &p1, &p2));
 	TEST_CHECK(nng_pipe_id(p1) > 0);
 	TEST_CHECK(nng_pipe_id(p2) > 0);
 
@@ -310,7 +310,7 @@ test_xsurvey_close_pipe_during_send(void)
 	TEST_NNG_PASS(nng_setopt_int(resp, NNG_OPT_RECVBUF, 5));
 	TEST_NNG_PASS(nng_setopt_int(surv, NNG_OPT_SENDBUF, 20));
 
-	TEST_NNG_PASS(testutil_marry_ex(surv, resp, &p1, &p2));
+	TEST_NNG_PASS(testutil_marry_ex(surv, resp, NULL, &p1, &p2));
 	TEST_CHECK(nng_pipe_id(p1) > 0);
 	TEST_CHECK(nng_pipe_id(p2) > 0);
 
@@ -332,7 +332,7 @@ test_xsurvey_ttl_option(void)
 	nng_socket  s;
 	int         v;
 	bool        b;
-	size_t      sz  = sizeof(v);
+	size_t      sz;
 	const char *opt = NNG_OPT_MAXTTL;
 
 	TEST_NNG_PASS(nng_surveyor0_open_raw(&s));
@@ -403,7 +403,7 @@ TEST_LIST = {
 	{ "xsurvey close during recv", test_xsurvey_close_during_recv },
 	{ "xsurvey close pipe during send",
 	    test_xsurvey_close_pipe_during_send },
-	{ "xsurvey ttl option",  test_xsurvey_ttl_option },
-	{ "xsurvey broadcast",  test_xsurvey_broadcast },
+	{ "xsurvey ttl option", test_xsurvey_ttl_option },
+	{ "xsurvey broadcast", test_xsurvey_broadcast },
 	{ NULL, NULL },
 };

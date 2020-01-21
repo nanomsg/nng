@@ -328,19 +328,24 @@ married(nng_pipe p, nng_pipe_ev ev, void *arg)
 int
 testutil_marry(nng_socket s1, nng_socket s2)
 {
-	return (testutil_marry_ex(s1, s2, NULL, NULL));
+	return (testutil_marry_ex(s1, s2, NULL, NULL, NULL));
 }
 
 int
-testutil_marry_ex(nng_socket s1, nng_socket s2, nng_pipe *p1, nng_pipe *p2)
+testutil_marry_ex(
+    nng_socket s1, nng_socket s2, const char *url, nng_pipe *p1, nng_pipe *p2)
 {
 	struct marriage_notice note;
 	nng_time               timeout;
 	int                    rv;
 	char                   addr[32];
 
-	(void) snprintf(addr, sizeof(addr), "inproc://marry%04x%04x%04x%04x",
-	    nng_random(), nng_random(), nng_random(), nng_random());
+	if (url == NULL) {
+		(void) snprintf(addr, sizeof(addr),
+		    "inproc://marry%04x%04x%04x%04x", nng_random(),
+		    nng_random(), nng_random(), nng_random());
+		url = addr;
+	}
 
 	note.cnt1 = 0;
 	note.cnt2 = 0;
@@ -354,8 +359,8 @@ testutil_marry_ex(nng_socket s1, nng_socket s2, nng_pipe *p1, nng_pipe *p2)
 	          s1, NNG_PIPE_EV_ADD_POST, married, &note)) != 0) ||
 	    ((rv = nng_pipe_notify(
 	          s2, NNG_PIPE_EV_ADD_POST, married, &note)) != 0) ||
-	    ((rv = nng_listen(s1, addr, NULL, 0)) != 0) ||
-	    ((rv = nng_dial(s2, addr, NULL, 0)) != 0)) {
+	    ((rv = nng_listen(s1, url, NULL, 0)) != 0) ||
+	    ((rv = nng_dial(s2, url, NULL, 0)) != 0)) {
 		goto done;
 	}
 

@@ -1,6 +1,5 @@
 #
-# Copyright 2018 Capitar IT Group BV <info@capitar.com>
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -8,8 +7,9 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-set(COMPAT_SOURCES compat/nanomsg/nn.c)
+#set(COMPAT_SOURCES compat/nanomsg/nn.c)
+nng_sources(nn.c)
 
-set(NNG_SRCS ${NNG_SRCS} ${COMPAT_SOURCES} PARENT_SCOPE)
+#set(NNG_SRCS ${NNG_SRCS} ${COMPAT_SOURCES} PARENT_SCOPE)
 
-nng_test(compat_tcp)
+nng_test(compat_tcp_test)

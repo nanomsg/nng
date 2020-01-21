@@ -234,7 +234,7 @@ test_xreq_recv_header(void)
 	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
 	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
 
-	TEST_NNG_PASS(testutil_marry_ex(req, rep, &p1, &p2));
+	TEST_NNG_PASS(testutil_marry_ex(req, rep, NULL, &p1, &p2));
 
 	// Simulate a few hops.
 	TEST_NNG_PASS(nng_msg_alloc(&m, 0));
@@ -276,7 +276,7 @@ test_xreq_close_during_recv(void)
 	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_RECVBUF, 5));
 	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_SENDBUF, 20));
 
-	TEST_NNG_PASS(testutil_marry_ex(req, rep, &p1, &p2));
+	TEST_NNG_PASS(testutil_marry_ex(req, rep, NULL, &p1, &p2));
 	TEST_CHECK(nng_pipe_id(p1) > 0);
 	TEST_CHECK(nng_pipe_id(p2) > 0);
 
@@ -307,7 +307,7 @@ test_xreq_close_pipe_during_send(void)
 	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_RECVBUF, 5));
 	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_SENDBUF, 20));
 
-	TEST_NNG_PASS(testutil_marry_ex(req, rep, &p1, &p2));
+	TEST_NNG_PASS(testutil_marry_ex(req, rep, NULL, &p1, &p2));
 	TEST_CHECK(nng_pipe_id(p1) > 0);
 	TEST_CHECK(nng_pipe_id(p2) > 0);
 
@@ -329,7 +329,7 @@ test_xreq_ttl_option(void)
 	nng_socket  rep;
 	int         v;
 	bool        b;
-	size_t      sz  = sizeof(v);
+	size_t      sz;
 	const char *opt = NNG_OPT_MAXTTL;
 
 	TEST_NNG_PASS(nng_req0_open_raw(&rep));

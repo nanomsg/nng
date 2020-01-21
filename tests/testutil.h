@@ -51,8 +51,10 @@ extern void testutil_scratch_addr(const char *, size_t, char *);
 extern int testutil_marry(nng_socket, nng_socket);
 
 // testutil_marry_ex is like testutil_marry, but returns the pipes that
-// were connected.  The pipe pointers may be NULL if not needed.
-extern int testutil_marry_ex(nng_socket, nng_socket, nng_pipe *, nng_pipe *);
+// were connected, and includes an optional URL.  The pipe pointers and the
+// URL may be NULL if not needed.
+extern int testutil_marry_ex(
+    nng_socket, nng_socket, const char *, nng_pipe *, nng_pipe *);
 
 // TEST_NNG_PASS tests for NNG success.  It reports the failure if it
 // did not.

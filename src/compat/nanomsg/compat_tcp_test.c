@@ -1,5 +1,5 @@
 /*
-    Copyright 2019 Garrett D'Amore <garrett@damore.org>
+    Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
     Copyright (c) 2012 Martin Sustrik  All rights reserved.
     Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
 
@@ -28,7 +28,6 @@
 
 #include <nng/compat/nanomsg/nn.h>
 #include <nng/compat/nanomsg/pair.h>
-#include <nng/compat/nanomsg/pubsub.h>
 #include <nng/compat/nanomsg/tcp.h>
 
 #include "compat_testutil.h"
@@ -40,9 +39,8 @@ void
 test_bind_and_close(void)
 {
 	int      sb;
-	char     addr[32];
-	uint16_t port = testutil_next_port();
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
+	char     addr[64];
+	testutil_scratch_addr("tcp", sizeof (addr), addr);
 
 	TEST_CHECK((sb = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK(nn_bind(sb, addr) >= 0);
@@ -53,30 +51,27 @@ void
 test_connect_and_close(void)
 {
 	int      sc;
-	char     addr[32];
-	uint16_t port = testutil_next_port();
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
+	char     addr[64];
+	testutil_scratch_addr("tcp", sizeof (addr), addr);
 
-	TEST_CHECK((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
-	TEST_CHECK(nn_connect(sc, addr) >= 0);
-	TEST_CHECK(nn_close(sc) == 0);
+	TEST_NN_PASS((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
+	TEST_NN_PASS(nn_connect(sc, addr));
+	TEST_NN_PASS(nn_close(sc));
 }
 
 void
 test_bind_and_connect(void)
 {
-	int      sb, sc;
-	char     addr[32];
-	uint16_t port = testutil_next_port();
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
+	int      sb, sc, p1, p2;
+	char     addr[64];
+
+	testutil_scratch_addr("tcp", sizeof (addr), addr);
 
 	TEST_CHECK((sb = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK(sb != sc);
-	TEST_CHECK(nn_bind(sb, addr) >= 0);
-	TEST_CHECK(nn_connect(sc, addr) >= 0);
 
-	testutil_sleep(200);
+	TEST_NN_MARRY_EX(sb, sc, addr, p1, p2);
 
 	TEST_CHECK(nn_close(sb) == 0);
 	TEST_CHECK(nn_close(sc) == 0);
@@ -128,18 +123,17 @@ test_no_delay(void)
 void
 test_ping_pong(void)
 {
-	int      sb, sc;
-	char     addr[32];
-	uint16_t port = testutil_next_port();
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
+	int  sb, sc, p1, p2;
+	char addr[64];
 
-	TEST_CHECK((sb = nn_socket(AF_SP, NN_PAIR)) >= 0);
-	TEST_CHECK((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
+	testutil_scratch_addr("tcp", sizeof(addr), addr);
+
+	TEST_NN_PASS((sb = nn_socket(AF_SP, NN_PAIR)));
+	TEST_NN_PASS((sc = nn_socket(AF_SP, NN_PAIR)));
 	TEST_CHECK(sb != sc);
-	TEST_CHECK(nn_bind(sb, addr) >= 0);
-	TEST_CHECK(nn_connect(sc, addr) >= 0);
-
-	testutil_sleep(200);
+	TEST_NN_MARRY_EX(sc, sb, addr, p1, p2);
+	TEST_CHECK(p1 >= 0);
+	TEST_CHECK(p2 >= 0);
 
 	/*  Ping-pong test. */
 	for (int i = 0; i != 100; ++i) {
@@ -166,18 +160,16 @@ test_ping_pong(void)
 void
 test_batch(void)
 {
-	int      sb, sc;
-	char     addr[32];
-	uint16_t port = testutil_next_port();
+	int      sb, sc, p1, p2;
+	char     addr[64];
 	int      opt;
 	size_t   sz;
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
 
-	TEST_CHECK((sb = nn_socket(AF_SP, NN_PAIR)) >= 0);
-	TEST_CHECK((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
+	testutil_scratch_addr("tcp", sizeof(addr), addr);
+
+	TEST_NN_PASS((sb = nn_socket(AF_SP, NN_PAIR)));
+	TEST_NN_PASS((sc = nn_socket(AF_SP, NN_PAIR)));
 	TEST_CHECK(sb != sc);
-	TEST_CHECK(nn_bind(sb, addr) >= 0);
-	TEST_CHECK(nn_connect(sc, addr) >= 0);
 	opt = 1000;
 	sz  = sizeof(opt);
 	TEST_NN_PASS(nn_setsockopt(sb, NN_SOL_SOCKET, NN_RCVTIMEO, &opt, sz));
@@ -185,7 +177,9 @@ test_batch(void)
 	TEST_NN_PASS(nn_setsockopt(sc, NN_SOL_SOCKET, NN_RCVTIMEO, &opt, sz));
 	TEST_NN_PASS(nn_setsockopt(sc, NN_SOL_SOCKET, NN_SNDTIMEO, &opt, sz));
 
-	testutil_sleep(200);
+	TEST_NN_MARRY_EX(sc, sb, addr, p1, p2);
+	TEST_CHECK(p1 >= 0);
+	TEST_CHECK(p2 >= 0);
 
 	// We can send 10 of these, because TCP buffers a reasonable amount.
 	// Pushing say 100 of them may run into TCP buffering limitations.
@@ -209,20 +203,19 @@ test_batch(void)
 void
 test_pair_reject(void)
 {
-	int      sb, sc, sd;
+	int      sb, sc, sd, p1, p2;
 	char     addr[32];
-	uint16_t port = testutil_next_port();
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
+
+	testutil_scratch_addr("tcp", sizeof(addr), addr);
 
 	TEST_CHECK((sb = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK((sd = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK(sb != sc);
-	TEST_CHECK(nn_bind(sb, addr) >= 0);
-	TEST_CHECK(nn_connect(sc, addr) >= 0);
-	testutil_sleep(100);
-	TEST_CHECK(nn_connect(sd, addr) >= 0);
 
+	TEST_NN_MARRY_EX(sc, sb, addr, p1, p2);
+
+	TEST_CHECK(nn_connect(sd, addr) >= 0);
 	testutil_sleep(200);
 
 	TEST_CHECK(nn_close(sb) == 0);
@@ -234,9 +227,9 @@ void
 test_addr_in_use(void)
 {
 	int      sb, sc;
-	char     addr[32];
-	uint16_t port = testutil_next_port();
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
+	char     addr[64];
+
+	testutil_scratch_addr("tcp", sizeof(addr), addr);
 
 	TEST_CHECK((sb = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
@@ -251,14 +244,14 @@ test_addr_in_use(void)
 void
 test_max_recv_size(void)
 {
-	int      sb, sc;
+	int      sb, sc, p1, p2;
 	int      opt;
 	int      n;
 	size_t   sz;
-	char     addr[32];
+	char     addr[64];
 	char     buf[64];
-	uint16_t port = testutil_next_port();
-	(void) snprintf(addr, sizeof(addr), "tcp://127.0.0.1:%u", port);
+
+	testutil_scratch_addr("tcp", sizeof(addr), addr);
 
 	TEST_CHECK((sb = nn_socket(AF_SP, NN_PAIR)) >= 0);
 	TEST_CHECK((sc = nn_socket(AF_SP, NN_PAIR)) >= 0);
@@ -286,10 +279,7 @@ test_max_recv_size(void)
 	TEST_CHECK(opt == 4);
 	TEST_CHECK(sz == sizeof(opt));
 
-	TEST_CHECK(nn_bind(sb, addr) >= 0);
-	TEST_CHECK(nn_connect(sc, addr) >= 0);
-
-	testutil_sleep(200);
+	TEST_NN_MARRY_EX(sc, sb, addr, p1, p2);
 
 	TEST_NN_PASS(nn_send(sc, "ABC", 4, 0));
 	TEST_NN_PASS(nn_send(sc, "012345", 6, 0));
