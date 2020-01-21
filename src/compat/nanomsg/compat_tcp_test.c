@@ -155,51 +155,6 @@ test_ping_pong(void)
 	TEST_CHECK(nn_close(sc) == 0);
 }
 
-// test_batch tests sending a batch of messages.  It relies on having
-// a reasonably deep buffer in the socket.
-void
-test_batch(void)
-{
-	int      sb, sc, p1, p2;
-	char     addr[64];
-	int      opt;
-	size_t   sz;
-
-	testutil_scratch_addr("tcp", sizeof(addr), addr);
-
-	TEST_NN_PASS((sb = nn_socket(AF_SP, NN_PAIR)));
-	TEST_NN_PASS((sc = nn_socket(AF_SP, NN_PAIR)));
-	TEST_CHECK(sb != sc);
-	opt = 1000;
-	sz  = sizeof(opt);
-	TEST_NN_PASS(nn_setsockopt(sb, NN_SOL_SOCKET, NN_RCVTIMEO, &opt, sz));
-	TEST_NN_PASS(nn_setsockopt(sb, NN_SOL_SOCKET, NN_SNDTIMEO, &opt, sz));
-	TEST_NN_PASS(nn_setsockopt(sc, NN_SOL_SOCKET, NN_RCVTIMEO, &opt, sz));
-	TEST_NN_PASS(nn_setsockopt(sc, NN_SOL_SOCKET, NN_SNDTIMEO, &opt, sz));
-
-	TEST_NN_MARRY_EX(sc, sb, addr, p1, p2);
-	TEST_CHECK(p1 >= 0);
-	TEST_CHECK(p2 >= 0);
-
-	// We can send 10 of these, because TCP buffers a reasonable amount.
-	// Pushing say 100 of them may run into TCP buffering limitations.
-#define DIGITS "0123456789012345678901234567890123456789"
-	for (int i = 0; i < 10; i++) {
-		TEST_NN_PASS(nn_send(sc, DIGITS, strlen(DIGITS) + 1, 0));
-	}
-
-	for (int i = 0; i < 10; i++) {
-		char buf[64];
-		int  n;
-		TEST_NN_PASS(n = nn_recv(sb, buf, sizeof(buf), 0));
-		TEST_CHECK(n == (strlen(DIGITS) + 1));
-		TEST_CHECK(memcmp(DIGITS, buf, n) == 0);
-	}
-
-	TEST_CHECK(nn_close(sb) == 0);
-	TEST_CHECK(nn_close(sc) == 0);
-}
-
 void
 test_pair_reject(void)
 {
@@ -301,7 +256,6 @@ TEST_LIST = {
 	{ "compat tcp invalid addresses", test_bad_addresses },
 	{ "compat tcp no delay option", test_no_delay },
 	{ "compat tcp ping pong", test_ping_pong },
-	{ "compat tcp send recv batch", test_batch },
 	{ "compat tcp pair reject", test_pair_reject },
 	{ "compat tcp addr in use", test_addr_in_use },
 	{ "compat tcp max recv size", test_max_recv_size },
