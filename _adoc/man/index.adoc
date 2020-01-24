@@ -5,5 +5,5 @@ layout: default
 
 == NNG Reference Manual
 
-* <<v{{site.latest}}/index#,Latest>> (v{{site.latest}}, the most recent release)
-* <<tip/index#,Tip>> (reflects unreleased changes)
+* xref:{{site.latest}}/index.adoc[Latest] ({{site.latest}}, the most recent release)
+* xref:tip/index.adoc[Tip] (reflects unreleased changes)
