@@ -17,13 +17,13 @@ else
         tag=${ver}
 fi
 scratch=$(mktemp -d --tmpdir pubrefmanXXXXXX)
-trap 0 "rm -rf ${scratch}"
+trap "rm -rf ${scratch}" 0
 repo=$(dirname $0)/..
 giturl=https://github.com/nanomsg/nng
 
 # checkout the repo
-git clone ${giturl} ${scratch}/nng
-(cd ${scratch}/nng; git checkout $tag)
+git clone -q ${giturl} ${scratch}/nng
+(cd ${scratch}/nng; git checkout -q $tag)
 
 mkdir ${scratch}/html
 mkdir ${scratch}/adoc
@@ -55,7 +55,8 @@ getdesc() {
         done < ${input}
 }
 
-time asciidoctor \
+asciidoctor \
+        -q \
 	-dmanpage \
 	-amansource="NNG" \
 	-amanmanual="NNG Reference Manual" \
@@ -96,7 +97,8 @@ for sect in $(echo ${!pages[@]} | sort ); do
         printf "|===\n" >> ${index}
 done
 
-time asciidoctor \
+asciidoctor \
+        -q \
 	-darticle \
 	-anofooter=yes \
 	-atoc=left \
@@ -106,29 +108,23 @@ time asciidoctor \
 	${scratch}/adoc/index.adoc
 
 
-#
-# Generation is complete, now copy...
-#
-config=${repo}/_config.yml
-if [ ! -f ${config} ]; then
-        echo "Missing config file ${config}"
-        exit 1
-fi
-
-if ! grep -q "man/${ver}" ${config}
-then
-        printf "  - scope:\n" >> ${config}
-        printf "      path: \"man/${ver}\"\n" >> ${config}
-        printf "    values:\n" >> ${config}
-        printf "      layout: \"refman\"\n" >> ${config}
-        printf "      version: \"${ver}\"\n" >> ${config}
-        git add ${config}
-fi
 
 dest=${repo}/man/${ver}
 mkdir -p ${dest}
 add=""
 for f in ${scratch}/html/*; do
+
+        # insert the header - HTML only
+        case $f in
+        *.html)
+                printf "--" "---\nversion: ${ver}\nlayout: refman\n---\n" > ${f}.new
+                cat ${f} >> ${f}.new
+                mv ${f}.new ${f}
+                ;;
+        *.css)
+                ;;
+        esac
+
         base=${f##*/}
         cp $f ${dest}/${base}
         add="${add} ${dest}/${base}"
@@ -142,6 +138,6 @@ for f in ${dest}/*; do
         fi
 done
 
-git commit -m "Publishing updates for ${ver}"
+git commit -q -m "Publishing updates for ${ver}"
 
 printf "A final push should be done once changes are verified.\n"
