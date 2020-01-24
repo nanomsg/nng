@@ -1,0 +1,181 @@
+---
+version: v1.2.3
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_pipe_notify(3)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_pipe_notify(3) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_return_values">RETURN VALUES</a></li>
+<li><a href="#_errors">ERRORS</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_pipe_notify - register pipe notification callback</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">enum</span> <span class="tok-p">{</span>
+        <span class="tok-n">NNG_PIPE_EV_ADD_PRE</span><span class="tok-p">,</span>
+        <span class="tok-n">NNG_PIPE_EV_ADD_POST</span><span class="tok-p">,</span>
+        <span class="tok-n">NNG_PIPE_EV_REM_POST</span><span class="tok-p">,</span>
+<span class="tok-p">}</span> <span class="tok-n">nng_pipe_ev</span><span class="tok-p">;</span>
+
+<span class="tok-k">typedef</span> <span class="tok-nf">void</span> <span class="tok-p">(</span><span class="tok-o">*</span><span class="tok-n">nng_pipe_cb</span><span class="tok-p">)(</span><span class="tok-n">nng_pipe</span><span class="tok-p">,</span> <span class="tok-n">nng_pipe_ev</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_pipe_notify</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span><span class="tok-p">,</span> <span class="tok-n">nng_pipe_ev</span> <span class="tok-n">ev</span><span class="tok-p">,</span> <span class="tok-n">nng_pipe_cb</span> <span class="tok-n">cb</span><span class="tok-p">,</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">arg</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_pipe_notify()</code> function registers the callback function <em>cb</em>
+to be called whenever a <a href="nng_pipe.5.html">pipe</a> the pipe event specified by
+<em>ev</em> occurs on the socket <em>s</em>.
+The callback <em>cb</em> will be passed <em>arg</em> as its final argument.</p>
+</div>
+<div class="paragraph">
+<p>A different callback may be supplied for each event.
+Each event may have at most one callback registered.
+Registering a callback implicitly unregisters any previously registered.</p>
+</div>
+<div class="paragraph">
+<p>The following pipe events are supported:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_PIPE_EV_ADD_PRE</code></dt>
+<dd>
+<p>This event occurs after a connection and negotiation
+has completed, but before the pipe is added to the socket.
+If the pipe is closed (using <a href="nng_pipe_close.3.html"><code>nng_pipe_close()</code></a>) at
+this point, the socket will never see the pipe, and no further events will
+occur for the given pipe.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_PIPE_EV_ADD_POST</code></dt>
+<dd>
+<p>This event occurs after the pipe is fully added to
+the socket.
+Prior to this time, it is not possible to communicate over the pipe with
+the socket.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_PIPE_EV_REM_POST</code></dt>
+<dd>
+<p>This event occurs after the pipe has been removed
+from the socket.
+The underlying transport may be closed at this point, and it is not
+possible communicate using this pipe.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The callback <em>cb</em> may close a pipe for any reason by simply closing
+it using <a href="nng_pipe_close.3.html"><code>nng_pipe_close()</code></a>.
+This might be done before the pipe is added to the socket (during
+<code>NNG_PIPE_EV_ADD_PRE</code>), for example, if the remote peer is not authorized.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+It is possible to register the same <em>cb</em> and <em>arg</em> for different events
+by calling this function separately for different values of <em>ev</em>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function ignores invalid values for <em>ev</em>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>The socket <em>s</em> does not refer to an open socket.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_pipe_close.3.html">nng_pipe_close(3)</a>,
+<a href="nng_pipe_getopt.3.html">nng_pipe_getopt(3)</a>,
+<a href="nng_pipe.5.html">nng_pipe(5)</a>,
+<a href="nng_socket.5.html">nng_socket(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>

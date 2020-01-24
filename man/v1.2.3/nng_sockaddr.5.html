@@ -1,0 +1,168 @@
+---
+version: v1.2.3
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_sockaddr(5)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_sockaddr(5) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_sockaddr - socket address</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">union</span> <span class="tok-n">nng_sockaddr</span> <span class="tok-p">{</span>
+    <span class="tok-kt">uint16_t</span>            <span class="tok-n">s_family</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_ipc</span>    <span class="tok-n">s_ipc</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_inproc</span> <span class="tok-n">s_inproc</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_in</span>     <span class="tok-n">s_in</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_in6</span>    <span class="tok-n">s_in6</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_zt</span>     <span class="tok-n">s_zt</span><span class="tok-p">;</span>
+<span class="tok-p">}</span> <span class="tok-n">nng_sockaddr</span><span class="tok-p">;</span>
+
+<span class="tok-k">enum</span> <span class="tok-n">sockaddr_family</span> <span class="tok-p">{</span>
+    <span class="tok-n">NNG_AF_UNSPEC</span> <span class="tok-o">=</span> <span class="tok-mi">0</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_INPROC</span> <span class="tok-o">=</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_IPC</span>    <span class="tok-o">=</span> <span class="tok-mi">2</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_INET</span>   <span class="tok-o">=</span> <span class="tok-mi">3</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_INET6</span>  <span class="tok-o">=</span> <span class="tok-mi">4</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_ZT</span>     <span class="tok-o">=</span> <span class="tok-mi">5</span><span class="tok-p">,</span>
+<span class="tok-p">};</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>
+An <code>nng_sockaddr</code> is a structure used for
+representing the addresses used by underlying transports, such as TCP/IP
+addresses, IPC paths, and so forth.</p>
+</div>
+<div class="sidebarblock">
+<div class="content">
+<div class="paragraph">
+<p>The name <code>sockaddr</code> is based on its similarity with POSIX <code>struct sockaddr</code>,
+but in the <em>nng</em> library, these addresses are more closely affiliated with
+instances of <a href="nng_pipe.5.html"><code>nng_pipe</code></a>
+than of <a href="nng_socket.5.html"><code>nng_socket</code></a>.
+The naming confusion is unfortunate.</p>
+</div>
+</div>
+</div>
+<div class="paragraph">
+<p>This structure is actually a union, with different members for different
+types of addresses.</p>
+</div>
+<div class="paragraph">
+<p>Every member structure has as its first element a <code>uint16_t</code> field
+containing the &#8220;address family&#8221;.
+This overlaps the <code>s_family</code> member of the union, and indicates which
+specific member should be used.</p>
+</div>
+<div class="paragraph">
+<p>The values of <code>s_family</code> are as follows:</p>
+</div>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_UNSPEC</code>
+</td>
+<td class="hdlist2">
+<p>Invalid address, no other valid fields.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_INPROC</code>
+</td>
+<td class="hdlist2">
+<p>Address for intraprocess communication (<a href="nng_inproc.7.html">nng_inproc(7)</a>).  The <code>s_inproc</code> member is valid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_IPC</code>
+</td>
+<td class="hdlist2">
+<p>Address for interprocess communication (<a href="nng_ipc.7.html">nng_ipc(7)</a>).  The <code>s_path</code> member is valid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_INET</code>
+</td>
+<td class="hdlist2">
+<p>Address for TCP/IP (v4) communication.  The <code>s_in</code> member is valid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_INET6</code>
+</td>
+<td class="hdlist2">
+<p>Address for TCP/IP (v6) communication.  The <code>s_in6</code> member is valid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_ZT</code>
+</td>
+<td class="hdlist2">
+<p>Address for ZeroTier transport (<a href="nng_zerotier.7.html">nng_zerotier(7)</a>).  The <code>s_zt</code> member is valid.</p>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Please see the manual pages for each individual type for more information.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_sockaddr_in.5.html">nng_sockaddr_in(5)</a>,
+<a href="nng_sockaddr_in6.5.html">nng_sockaddr_in6(5)</a>,
+<a href="nng_sockaddr_inproc.5.html">nng_sockaddr_inproc(5)</a>,
+<a href="nng_sockaddr_ipc.5.html">nng_sockaddr_ipc(5)</a>,
+<a href="nng_sockaddr_zt.5.html">nng_sockaddr_zt(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>
