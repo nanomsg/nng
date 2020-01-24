@@ -5,7 +5,7 @@
 # of annoying, since Jekyll on github-pages doesn't support asciidoctor
 # properly.
 
-aargs="-aicons=font"
+aargs="-aicons=font -alinkcss"
 cd $(dirname $0)
 for f in $(find . -name '*.adoc'); do
 
@@ -17,54 +17,12 @@ for f in $(find . -name '*.adoc'); do
 
 	when=$(git log -n1 --format='%ad' '--date=format-local:%s' $f)
 	echo "Processing $input -> $output"
-	infrontmatter=0
-	manpage=0
-	frontmatter=
-        case $input in
-        man/v[0-9]*)
-		vers=${input#*v}
-		vers=${vers%%/*}
-		aargs="${aargs} -aversion-label=nng -arevnumber=${vers}"
-		manpage=1
-		;;
-	esac
-	while read line; do
-		if [ "$line" = "---" ]
-		then
-			if (( $infrontmatter != 0 ))
-			then
-				break
-			else
-				infrontmatter=1
-			fi
-		elif (( $infrontmatter != 0 ))
-		then
-			if [ -z "$frontmater" ]
-			then
-				frontmatter="$line"
-			else
-				frontmatter="$frontmatter\n$line"
-			fi
-		elif (( $manpage != 0 ))
-		then
-			frontmatter="version: ${vers}\nlayout: default"
-			break
-		else
-			break
-		fi
-
-	done < $input
 
 	if [ -n "$indir" ] && [ ! -d "$outdir" ]
 	then
 		mkdir -p $outdir
 	fi
 
-	if [ -n "$frontmatter" ]
-	then
-		echo "---"
-		echo "$frontmatter"
-		echo "---"
-		env SOURCE_DATE_EPOCH=${when} asciidoctor ${aargs} -b html5 -o - -a skip-front-matter $input
-	fi > $output
+	echo generating $output
+	env SOURCE_DATE_EPOCH=${when} asciidoctor ${aargs} -b html5 -o $output -a skip-front-matter $input
 done
