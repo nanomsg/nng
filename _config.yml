@@ -1,2 +1,18 @@
 latest: 1.2.2
 important_icon: http://nanomsg.org/icons/important.png
+exclude: [ _tools ]
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: "default"
+  - scope:
+      path: "man"
+    values:
+      layout: "refman"
+      version: "unknown"
+  - scope:
+      path: "man/tip"
+    values:
+      layout: "refman"
+      version: "tip"

@@ -1,0 +1,5 @@
+= tools
+
+These are tools we use for publishing and maintaining the site -- they themselves should not be
+published.  The scripts in this directory we hereby grant to the public domain -- we are not
+liable for any damage they might cause, however.
