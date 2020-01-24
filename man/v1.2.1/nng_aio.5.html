@@ -1,0 +1,107 @@
+---
+version: v1.2.1
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_aio(5)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_aio(5) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_aio - asynchronous I/O handle</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_aio</span> <span class="tok-n">nng_aio</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>An <code>nng_aio</code> is an opaque structure used in conjunction with
+asynchronous I/O operations.
+Every asynchronous operation uses one of these structures, each of which
+can only be used with a single operation at a time.</p>
+</div>
+<div class="paragraph">
+<p>Asynchronous operations are performed without blocking calling application
+threads.
+Instead the application registers a &#8220;callback&#8221; function to be executed
+when the operation is complete (whether successfully or not).
+This callback will be executed exactly once.</p>
+</div>
+<div class="paragraph">
+<p>The asynchronous I/O framework in <em>nng</em> also supports cancellation of
+operations that are already in progress
+(see <a href="nng_aio_cancel.3.html"><code>nng_aio_cancel()</code></a>), as well setting a maximum
+timeout for them to complete within
+(see <a href="nng_aio_set_timeout.3.html"><code>nng_aio_set_timeout()</code></a>).</p>
+</div>
+<div class="paragraph">
+<p>It is also possible to initiate an asynchronous operation, and wait for it to
+complete using <a href="nng_aio_wait.3.html"><code>nng_aio_wait()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>These structures are created using the <a href="nng_aio_alloc.3.html"><code>nng_aio_alloc()</code></a>,
+and destroyed using <a href="nng_aio_free.3.html"><code>nng_aio_free()</code></a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_aio_abort.3.html">nng_aio_abort(3)</a>,
+<a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
+<a href="nng_aio_cancel.3.html">nng_aio_cancel(3)</a>,
+<a href="nng_aio_count.3.html">nng_aio_count(3)</a>,
+<a href="nng_aio_free.3.html">nng_aio_free(3)</a>,
+<a href="nng_aio_get_input.3.html">nng_aio_get_input(3)</a>,
+<a href="nng_aio_get_msg.3.html">nng_aio_get_msg(3)</a>,
+<a href="nng_aio_get_output.3.html">nng_aio_get_output(3)</a>,
+<a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
+<a href="nng_aio_set_input.3.html">nng_aio_set_input(3)</a>,
+<a href="nng_aio_set_iov.3.html">nng_aio_set_iov(3)</a>,
+<a href="nng_aio_set_msg.3.html">nng_aio_set_msg(3)</a>,
+<a href="nng_aio_set_timeout.3.html">nng_aio_set_timeout(3)</a>,
+<a href="nng_aio_stop.3.html">nng_aio_stop(3)</a>,
+<a href="nng_aio_wait.3.html">nng_aio_wait(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="#">nng_aio(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>
