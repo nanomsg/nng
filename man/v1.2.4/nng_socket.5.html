@@ -1,0 +1,121 @@
+---
+version: v1.2.4
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_socket(5)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_socket(5) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#NNG_SOCKET_INITIALIZER">Initialization</a></li>
+</ul>
+</li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_socket - socket handle</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_socket_s</span> <span class="tok-n">nng_socket</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>An <code>nng_socket</code> is a handle to an underlying &#8220;socket&#8221; object.
+All communication between the application and remote Scalability Protocol
+peers is done through sockets.
+A given socket can have multiple dialers (<a href="nng_dialer.5.html"><code>nng_dialer</code></a>)
+and/or listeners (<a href="nng_listener.5.html"><code>nng_listener</code></a>), and multiple
+pipes (<a href="nng_pipe.5.html"><code>nng_pipe</code></a>), and
+may be connected to multiple transports at the same time.
+However, a given socket will have exactly one &#8220;protocol&#8221; associated with it,
+and is responsible for any state machines or other protocol-specific logic.</p>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+The <code>nng_socket</code> structure is always passed by value (both
+for input parameters and return values), and should be treated opaquely.
+Passing structures this way gives the compiler a chance to perform
+accurate type checks in functions passing values of this type.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Each <code>nng_socket</code> is created by a protocol-specific constructor, such as
+<a href="nng_rep_open.3.html"><code>nng_rep_open()</code></a>.
+When the socket is no longer needed, it can be closed with
+<a href="nng_close.3.html"><code>nng_close()</code></a>.</p>
+</div>
+<div class="sect2">
+<h3 id="NNG_SOCKET_INITIALIZER">Initialization</h3>
+<div class="paragraph">
+<p>A socket may be initialized using the macro <code>NNG_SOCKET_INITIALIZER</code>
+before it is opened, to prevent confusion with valid open sockets.</p>
+</div>
+<div class="paragraph">
+<p>For example:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-n">nng_socket</span> <span class="tok-n">s</span> <span class="tok-o">=</span> <span class="tok-n">NNG_SOCKET_INITIALIZER</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="libnng.3.html">libnng(3)</a>,
+<a href="nng_close.3.html">nng_close(3)</a>,
+<a href="nng_getopt.3.html">nng_getopt(3)</a>,
+<a href="nng_setopt.3.html">nng_setopt(3)</a>,
+<a href="nng_socket_id.3.html">nng_socket_id(3)</a>,
+<a href="nng_dialer.5.html">nng_dialer(5)</a>,
+<a href="nng_listener.5.html">nng_listener(5)</a>,
+<a href="nng_options.5.html">nng_options(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>

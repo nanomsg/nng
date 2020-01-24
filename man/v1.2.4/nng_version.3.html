@@ -1,0 +1,115 @@
+---
+version: v1.2.4
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_version(3)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_version(3) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_return_values">RETURN VALUES</a></li>
+<li><a href="#_errors">ERRORS</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_version - report library version</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span> <span class="tok-nf">nng_version</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_version()</code> function returns a human readable version number
+for the <em>nng</em> library.
+This is intended for output in programs, and so forth.</p>
+</div>
+<div class="paragraph">
+<p>Additionally, compile time version information is available
+via some predefined macros:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_MAJOR_VERSION</code></dt>
+<dd>
+<p>Major version number.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_MINOR_VERSION</code></dt>
+<dd>
+<p>Minor version number.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_PATCH_VERSION</code></dt>
+<dd>
+<p>Patch version number.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>The <em>nng</em> library is developed and released using
+<a href="http://www.semver.org">Semantic Versioning 2.0</a>, and
+the version numbers reported refer to both the API and the
+library itself.
+(The ABI&#8201;&#8212;&#8201;application binary interface&#8201;&#8212;&#8201;between the
+library and the application is controlled in a similar, but different
+manner depending upon the link options and how the library is built.)</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>C string (<code>NUL</code>-terminated) containing the library version number.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="libnng.3.html">libnng(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>
