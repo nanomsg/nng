@@ -1,0 +1,1442 @@
+---
+version: v1.2.0
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>libnng(3)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>libnng(3) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#_common_functions">Common Functions</a></li>
+<li><a href="#_socket_functions">Socket Functions</a></li>
+<li><a href="#_connection_management">Connection Management</a></li>
+<li><a href="#_message_handling_functions">Message Handling Functions</a></li>
+<li><a href="#_asynchronous_operations">Asynchronous Operations</a></li>
+<li><a href="#_protocols">Protocols</a></li>
+<li><a href="#_transports">Transports</a></li>
+<li><a href="#_protocol_contexts">Protocol Contexts</a></li>
+<li><a href="#_statistics">Statistics</a></li>
+<li><a href="#_url_object">URL Object</a></li>
+<li><a href="#_supplemental_api">Supplemental API</a></li>
+<li><a href="#_byte_streams">Byte Streams</a></li>
+<li><a href="#_http_support">HTTP Support</a></li>
+<li><a href="#_tls_configuration_objects">TLS Configuration Objects</a></li>
+</ul>
+</li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>libnng - nanomsg next generation library</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>cc</strong> [<em>flags</em>] <em>files</em> <strong>-lnng</strong> [<em>libraries</em>]</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <a href="nng.7.html"><em>nng</em></a> library provides a common messaging framework
+intended to solve common communication problems in distributed applications.</p>
+</div>
+<div class="paragraph">
+<p>It provides a C language API.</p>
+</div>
+<div class="sect2">
+<h3 id="_common_functions">Common Functions</h3>
+<div class="paragraph">
+<p>The following common functions exist in <em>libnng</em>.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_alloc.3.html">nng_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate memory</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_free.3.html">nng_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free memory</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strdup.3.html">nng_strdup()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">duplicate string</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strerror.3.html">nng_strerror()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return an error description</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_strfree.3.html">nng_strfree()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free string</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_version.3.html">nng_version()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">report library version</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_socket_functions">Socket Functions</h3>
+<div class="paragraph">
+<p>The following functions operate on sockets.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_close.3.html">nng_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dial.3.html">nng_dial()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_getopt.3.html">nng_getopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get socket option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listen.3.html">nng_listen()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recv.3.html">nng_recv()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_send.3.html">nng_send()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send data</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_setopt.3.html">nng_setopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set socket option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_socket_get.3.html">nng_socket_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get socket option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_socket_id.3.html">nng_socket_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric socket identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_socket_set.3.html">nng_socket_set()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set socket option</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_connection_management">Connection Management</h3>
+<div class="paragraph">
+<p>The following functions are used with either listeners, or dialers.
+Listeners accept incoming connection requests, and dialers make them.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dial.3.html">nng_dial()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_close.3.html">nng_dialer_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_create.3.html">nng_dialer_create()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_get.3.html">nng_dialer_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get dialer option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_getopt.3.html">nng_dialer_getopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get dialer option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_id.3.html">nng_dialer_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric dialer identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_set.3.html">nng_dialer_set()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set dialer option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_setopt.3.html">nng_dialer_setopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set dialer option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_dialer_start.3.html">nng_dialer_start()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">start dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listen.3.html">nng_listen()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create and start listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_close.3.html">nng_listener_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_create.3.html">nng_listener_create()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_get.3.html">nng_listener_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get listener option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_getopt.3.html">nng_listener_getopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get listener option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_id.3.html">nng_listener_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric listener identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_set.3.html">nng_listener_set()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set listener option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_setopt.3.html">nng_listener_setopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set listener option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_listener_start.3.html">nng_listener_start()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">start listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_close.3.html">nng_pipe_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close pipe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_dialer.3.html">nng_pipe_dialer()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return dialer that created pipe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_get.3.html">nng_pipe_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get pipe option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_getopt.3.html">nng_pipe_getopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get pipe option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_id.3.html">nng_pipe_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric pipe identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_listener.3.html">nng_pipe_listener()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return listener that created pipe</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_notify.3.html">nng_pipe_notify()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register pipe notification callback</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pipe_socket.3.html">nng_pipe_socket()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return owning socket for pipe</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_message_handling_functions">Message Handling Functions</h3>
+<div class="paragraph">
+<p>Applications desiring to use the richest part of <em>libnng</em> will want to
+use the message API, where a message structure is passed between functions.
+This API provides the most power support for zero-copy.</p>
+</div>
+<div class="paragraph">
+<p>Messages are divided into a header and body, where the body generally carries
+user-payload and the header carries protocol specific header information.
+Most applications will only interact with the body.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_alloc.3.html">nng_msg_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_append.3.html">nng_msg_append()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">append to message body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_body.3.html">nng_msg_body()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return message body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_chop.3.html">nng_msg_chop()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">remove data from end of message body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_clear.3.html">nng_msg_clear()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clear message body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_dup.3.html">nng_msg_dup()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">duplicate a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_free.3.html">nng_msg_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_get_pipe.3.html">nng_msg_get_pipe()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get pipe for message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_insert.3.html">nng_msg_insert()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prepend to message body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_len.3.html">nng_msg_len()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return the message body length</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_realloc.3.html">nng_msg_realloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reallocate a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_set_pipe.3.html">nng_msg_set_pipe()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set pipe for message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_trim.3.html">nng_msg_trim()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">remove data from start of message body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recvmsg.3.html">nng_recvmsg()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive a message</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_sendmsg.3.html">nng_sendmsg()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send a message</p></td>
+</tr>
+</tbody>
+</table>
+<div class="sect3">
+<h4 id="_message_header_handling">Message Header Handling</h4>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Few applications will need these functions, as message headers are only
+used to carry protocol-specific content.  However, applications which use raw
+mode may need to access the header of messages.
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header.3.html">nng_msg_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return message header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header_append.3.html">nng_msg_header_append()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">append to message header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header_chop.3.html">nng_msg_header_chop()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">remove data from end of message header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header_clear.3.html">nng_msg_header_clear()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clear message header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header_insert.3.html">nng_msg_header_insert()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">prepend to message header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header_len.3.html">nng_msg_header_len()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return the message header length</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msg_header_trim.3.html">nng_msg_header_trim()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">remove data from start of message header</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_asynchronous_operations">Asynchronous Operations</h3>
+<div class="paragraph">
+<p>Most applications will interact with <em>nng</em> synchronously; that is that
+functions such as <a href="nng_send.3.html"><code>nng_send()</code></a> will block the calling
+thread until the operation has completed.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Synchronous operations which send messages may return before the
+message has actually been received, or even transmitted.  Instead, These
+functions return as soon as the message was successfully queued for
+delivery.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Asynchronous operations behave differently.  These operations are
+initiated by the calling thread, but control returns immediately to
+the calling thread.  When the operation is subsequently completed (regardless
+of whether this was successful or not), then a user supplied function
+(&#8220;callback&#8221;) is executed.</p>
+</div>
+<div class="paragraph">
+<p>A context structure, an <a href="nng_aio.5.html"><code>nng_aio</code></a>, is allocated and
+associated with each asynchronous operation.
+Only a single asynchronous operation may be associated with an
+<code>nng_aio</code> at any time.</p>
+</div>
+<div class="paragraph">
+<p>The following functions are used in the asynchronous model:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_abort.3.html">nng_aio_abort()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">abort asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_alloc.3.html">nng_aio_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate asynchronous I/O handle</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_begin.3.html">nng_aio_begin()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">begin asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_cancel.3.html">nng_aio_cancel()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">cancel asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_count.3.html">nng_aio_count()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return number of bytes transferred</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_defer.3.html">nng_aio_defer()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">defer asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_finish.3.html">nng_aio_finish()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">finish asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_free.3.html">nng_aio_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free asynchronous I/O handle</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_get_input.3.html">nng_aio_get_input()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return input parameter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_get_msg.3.html">nng_aio_get_msg()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get message from an asynchronous receive</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_get_output.3.html">nng_aio_get_output()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return output result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_result.3.html">nng_aio_result()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return result of asynchronous operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_input.3.html">nng_aio_set_input()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set input parameter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_iov.3.html">nng_aio_set_iov()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set scatter/gather vector</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_msg.3.html">nng_aio_set_msg()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set message for an asynchronous send</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_output.3.html">nng_aio_set_output()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set output result</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_set_timeout.3.html">nng_aio_set_timeout()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set asynchronous I/O timeout</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_stop.3.html">nng_aio_stop()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stop asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_aio_wait.3.html">nng_aio_wait()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wait for asynchronous I/O operation</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_recv_aio.3.html">nng_recv_aio()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive message asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_send_aio.3.html">nng_send_aio()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send message asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_sleep_aio.3.html">nng_sleep_aio()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">sleep asynchronously</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_protocols">Protocols</h3>
+<div class="paragraph">
+<p>The following functions are used to construct a socket with a specific protocol:</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_bus_open.3.html">nng_bus_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a bus socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pair_open.3.html">nng_pair_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a pair socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pub_open.3.html">nng_pub_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a pub socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_pull_open.3.html">nng_pull_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a pull socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_push_open.3.html">nng_push_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a push socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_rep_open.3.html">nng_rep_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a rep socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_req_open.3.html">nng_req_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a req socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_respondent_open.3.html">nng_respondent_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a respondent socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_sub_open.3.html">nng_sub_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a sub socket</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_surveyor_open.3.html">nng_surveyor_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">open a surveyor socket</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_transports">Transports</h3>
+<div class="paragraph">
+<p>The following functions are used to register a transport for use.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_inproc_register.3.html">nng_inproc_register()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register inproc transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ipc_register.3.html">nng_ipc_register()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register IPC transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tcp_register.3.html">nng_tcp_register()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register TCP transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_register.3.html">nng_tls_register()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register TLS transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ws_register.3.html">nng_ws_register()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register WebSocket transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_wss_register.3.html">nng_wss_register()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register WebSocket Secure transport</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_zt_register.3.html">nng_zt_register()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">register ZeroTier transport</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_protocol_contexts">Protocol Contexts</h3>
+<div class="paragraph">
+<p>The following functions are useful to separate the protocol processing
+from a socket object, into a separate context.
+This can allow multiple contexts to be created on a single socket for
+concurrent applications.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_close.3.html">nng_ctx_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close context</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_get.3.html">nng_ctx_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get context option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_getopt.3.html">nng_ctx_getopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get context option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_id.3.html">nng_ctx_id()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get numeric context identifier</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_open.3.html">nng_ctx_open()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create context</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_recv.3.html">nng_ctx_recv()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive message using context asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_send.3.html">nng_ctx_send()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send message using context asynchronously</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_set.3.html">nng_ctx_set()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set context option</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_ctx_setopt.3.html">nng_ctx_setopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set context option</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_statistics">Statistics</h3>
+<div class="paragraph">
+<p>The following functions provide access to statistics which can be used
+to observe program behaviors and as an aid in troubleshooting.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_child.3.html">nng_stat_child()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get child statistic</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_desc.3.html">nng_stat_name()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic description</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_name.3.html">nng_stat_name()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_next.3.html">nng_stat_next()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get next statistic</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_string.3.html">nng_stat_string()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic string value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_timestamp.3.html">nng_stat_timestamp()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic timestamp</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_type.3.html">nng_stat_type()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic type</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_unit.3.html">nng_stat_unit()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic unit</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stat_value.3.html">nng_stat_valueg()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistic value</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stats_free.3.html">nng_stats_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free statistics</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stats_get.3.html">nng_stats_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get statistics</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_url_object">URL Object</h3>
+<div class="paragraph">
+<p>Common functionality is supplied for parsing and handling
+universal resource locators (URLS).</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_url_clone.3.html">nng_url_clone()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">clone URL structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_url_free.3.html">nng_url_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free URL structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_url_parse.3.html">nng_url_parse()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create URL structure from string</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_supplemental_api">Supplemental API</h3>
+<div class="paragraph">
+<p>These supplemental functions are not intrinsic to building
+network applications with <em>NNG</em>, but they are made available
+as a convenience to aid in creating portable applications.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_clock.3supp.html">nng_clock()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get time</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_alloc.3supp.html">nng_cv_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate condition variable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_free.3supp.html">nng_cv_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free condition variable</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_until.3supp.html">nng_cv_until()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wait for condition or timeout</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_wait.3supp.html">nng_cv_wait()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wait for condition</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_wake.3supp.html">nng_cv_wake()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wake all waiters</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_cv_wake1.3supp.html">nng_cv_wake1()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">wake one waiter</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_msleep.3supp.html">nng_msleep()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">sleep for milliseconds</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_mtx_alloc.3supp.html">nng_mtx_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_mtx_free.3supp.html">nng_mtx_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_mtx_lock.3supp.html">nng_mtx_lock()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">lock mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_mtx_unlock.3supp.html">nng_mtx_unlock()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">unlock mutex</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_opts_parse.3supp.html">nng_opts_parse()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">parse command line options</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_random.3supp.html">nng_random()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get random number</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_thread_create.3supp.html">nng_thread_create()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">create thread</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_thread_destroy.3supp.html">nng_thread_destroy()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reap thread</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_byte_streams">Byte Streams</h3>
+<div class="paragraph">
+<p>These functions are available for use with byte streams.
+They are considered low-level, for uses where the higher level functions
+using Scalability Protocols are inappropriate.</p>
+</div>
+<div class="paragraph">
+<p>Byte streams, represented by
+<a href="nng_stream.5.html"><code>nng_stream</code></a> objects, correspond to underlying
+connections such as TCP connections or named pipes.
+They are created by either
+<a href="nng_stream_dialer.5.html"><code>nng_stream_dialer</code></a> or
+<a href="nng_stream_listener.5.html"><code>nng_stream_listener</code></a> objects.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_close.3str.html">nng_stream_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close byte stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_dialer_alloc.3str.html">nng_stream_dialer_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate byte stream dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_dialer_close.3str.html">nng_stream_dialer_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close byte stream dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_dialer_dial.3str.html">nng_stream_dialer_dial()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">initiate outgoing byte stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_dialer_free.3str.html">nng_stream_dialer_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free byte stream dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_dialer_get.3str.html">nng_stream_dialer_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from byte stream dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_dialer_set.3str.html">nng_stream_dialer_set()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on byte stream dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_free.3str.html">nng_stream_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free byte stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_get.3str.html">nng_stream_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from byte stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_listener_accept.3str.html">nng_stream_listener_accept()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">accept incoming byte stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_listener_alloc.3str.html">nng_stream_listener_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate byte stream listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_listener_close.3str.html">nng_stream_listener_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close byte stream listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_listener_free.3str.html">nng_stream_listener_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free byte stream listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_listener_get.3str.html">nng_stream_listener_get()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from byte stream listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_listener_listen.3str.html">nng_stream_listener_listen()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bind byte stream listener to address</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_listener_set.3str.html">nng_stream_listener_set()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on byte stream listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_recv.3str.html">nng_stream_recv()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive from byte stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_send.3str.html">nng_stream_send()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send to byte stream</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_stream_set.3str.html">nng_stream_set()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on byte stream</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_http_support">HTTP Support</h3>
+<div class="paragraph">
+<p>The library may be configured with support for HTTP, and this will
+be the case if WebSocket support is configured as well.
+In this case, it is possible to access functionality to support the creation of
+HTTP (and HTTP/S if TLS support is present) servers and clients.</p>
+</div>
+<div class="sect3">
+<h4 id="_common_http_functions">Common HTTP Functions</h4>
+<div class="paragraph">
+<p>The following functions are used to work with HTTP requests, responses,
+and connections.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_close.3http.html">nng_http_conn_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close HTTP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_read.3http.html">nng_http_conn_read()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">read from HTTP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_read_all.3http.html">nng_http_conn_read_all()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">read all from HTTP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_read_req.3http.html">nng_http_conn_read_req()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">read HTTP request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_read_res.3http.html">nng_http_conn_read_res()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">read HTTP response</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_write.3http.html">nng_http_conn_write()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">write to HTTP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_write_all.3http.html">nng_http_conn_write_all()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">write all to HTTP connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_write_req.3http.html">nng_http_conn_write_req()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">write HTTP request</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_write_res.3http.html">nng_http_conn_write_res()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">write HTTP response</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_add_header.3http.html">nng_http_req_add_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">add HTTP request header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_alloc.3http.html">nng_http_req_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP request structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_copy_data.3http.html">nng_http_req_copy_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">copy HTTP request body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_del_header.3http.html">nng_http_req_del_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">delete HTTP request header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_free.3http.html">nng_http_req_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP request structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_data.3http.html">nng_http_req_get_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP request body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_header.3http.html">nng_http_req_get_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP request header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_method.3http.html">nng_http_req_get_method()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP request method</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_uri.3http.html">nng_http_req_get_uri()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP request URI</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_get_version.3http.html">nng_http_req_get_version()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP request protocol version</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_reset.3http.html">nng_http_req_reset()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reset HTTP request structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_set_data.3http.html">nng_http_req_set_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP request body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_set_header.3http.html">nng_http_req_set_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP request header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_set_method.3http.html">nng_http_req_set_method()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP request method</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_set_uri.3http.html">nng_http_req_set_uri()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP request URI</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_req_set_version.3http.html">nng_http_req_set_version()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP request protocol version</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_add_header.3http.html">nng_http_res_add_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">add HTTP response header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_alloc.3http.html">nng_http_res_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP response structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP error response</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_copy_data.3http.html">nng_http_res_copy_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">copy HTTP response body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_del_header.3http.html">nng_http_res_del_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">delete HTTP response header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_free.3http.html">nng_http_res_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP response structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_data.3http.html">nng_http_res_get_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP response body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_header.3http.html">nng_http_res_get_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP response header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_reason.3http.html">nng_http_res_get_reason()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP response reason</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_status.3http.html">nng_http_res_get_status()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP response status</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_get_version.3http.html">nng_http_res_get_version()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return HTTP response protocol version</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_reset.3http.html">nng_http_res_reset()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">reset HTTP response structure</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_data.3http.html">nng_http_res_set_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP response body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_header.3http.html">nng_http_res_set_header()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP response header</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_reason.3http.html">nng_http_res_set_reason()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP response reason</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_status.3http.html">nng_http_res_set_status()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP response status</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_res_set_version.3http.html">nng_http_res_set_version()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP response protocol version</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_client_functions">HTTP Client Functions</h4>
+<div class="paragraph">
+<p>These functions are intended for use with HTTP client applications.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_alloc.3http.html">nng_http_client_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP client</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_connect.3http.html">nng_http_client_connect()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">establish HTTP client connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_free.3http.html">nng_http_client_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP client</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_get_tls.3http.html">nng_http_client_get_tls()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP client TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_set_tls.3http.html">nng_http_client_set_tls()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP client TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_client_transact.3http.html">nng_http_client_transact()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">perform one HTTP transaction</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_conn_transact.3http.html">nng_http_conn_transact()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">perform one HTTP transaction on connection</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="sect3">
+<h4 id="_http_server_functions">HTTP Server Functions</h4>
+<div class="paragraph">
+<p>These functions are intended for use with HTTP server applications.</p>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_alloc.3http.html">nng_http_handler_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_collect_body.3http.html">nng_http_handler_collect_body()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP handler to collect request body</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_free.3http.html">nng_http_handler_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_get_data.3http.html">nng_http_handler_get_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">return extra data for HTTP handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_set_data.3http.html">nng_http_handler_set_data()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set extra data for HTTP handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_set_host.3http.html">nng_http_handler_set_host()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set host for HTTP handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_set_method.3http.html">nng_http_handler_set_method()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP handler method</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_handler_set_tree.3http.html">nng_http_handler_set_tree()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP handler to match trees</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_hijack.3http.html">nng_http_hijack()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">hijack HTTP server connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_add_handler.3http.html">nng_http_server_add_handler()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">add HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_del_handler.3http.html">nng_http_server_del_handler()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">delete HTTP server handler</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_get_tls.3http.html">nng_http_server_get_tls()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get HTTP server TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_hold.3http.html">nng_http_server_hold()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get and hold HTTP server instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_release.3http.html">nng_http_server_release()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">release HTTP server instance</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_set_error_file.3http.html">nng_http_server_set_error_file()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set custom HTTP error file</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_set_error_page.3http.html">nng_http_server_set_error_page()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set custom HTTP error page</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_set_tls.3http.html">nng_http_server_set_tls()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set HTTP server TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_res_error.3http.html">nng_http_server_res_error()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">use HTTP server error page</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_start.3http.html">nng_http_server_start()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">start HTTP server</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_http_server_stop.3http.html">nng_http_server_stop()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">stop HTTP server</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_tls_configuration_objects">TLS Configuration Objects</h3>
+<div class="paragraph">
+<p>The following functions are used to manipulate transport layer security
+(TLS) configuration objects.  Most of these functions will not be used even
+by TLS applications.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+These functions will only be present if the library has been built
+with TLS support.
+</td>
+</tr>
+</table>
+</div>
+<table class="tableblock frame-all grid-all stretch">
+<colgroup>
+<col style="width: 50%;">
+<col style="width: 50%;">
+</colgroup>
+<tbody>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_close.3tls.html">nng_tls_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_auth_mode.3tls.html">nng_tls_config_auth_mode()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set authentication mode</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_ca_chain.3tls.html">nng_tls_config_ca_chain()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set certificate authority chain</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_ca_file.3tls.html">nng_tls_config_ca_file()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">load certificate authority from file</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_cert_key_file.3tls.html">nng_tls_config_cert_key_file()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">load own certificate and key from file</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_own_cert.3tls.html">nng_tls_config_own_cert()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set own certificate and key</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_free.3tls.html">nng_tls_config_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TLS configuration</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_server_name.3tls.html">nng_tls_config_server_name()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set remote server name</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_alloc.3tls.html">nng_tls_dialer_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_close.3tls.html">nng_tls_dialer_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_dial.3tls.html">nng_tls_dialer_dial()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">initiate outgoing TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_free.3tls.html">nng_tls_dialer_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_getopt.3tls.html">nng_tls_dialer_getopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_dialer_setopt.3tls.html">nng_tls_dialer_setopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TLS dialer</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_free.3tls.html">nng_tls_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_getopt.3tls.html">nng_tls_getopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_accept.3tls.html">nng_tls_listener_accept()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">accept incoming TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_alloc.3tls.html">nng_tls_listener_alloc()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">allocate TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_close.3tls.html">nng_tls_listener_close()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">close TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_free.3tls.html">nng_tls_listener_free()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">free TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_getopt.3tls.html">nng_tls_listener_getopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">get option from TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_listen.3tls.html">nng_tls_listener_listen()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">bind TLS listener to port</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_listener_setopt.3tls.html">nng_tls_listener_setopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TLS listener</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_recv.3tls.html">nng_tls_recv()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">receive from TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_send.3tls.html">nng_tls_send()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">send to TLS connection</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_setopt.3tls.html">nng_tls_setopt()</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">set option on TLS connection</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_compat.3compat.html">nng_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>

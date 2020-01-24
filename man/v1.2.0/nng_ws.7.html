@@ -1,0 +1,273 @@
+---
+version: v1.2.0
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_ws(7)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_ws(7) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#_registration">Registration</a></li>
+<li><a href="#_uri_format">URI Format</a></li>
+<li><a href="#_socket_address">Socket Address</a></li>
+<li><a href="#_server_instances">Server Instances</a></li>
+<li><a href="#_transport_options">Transport Options</a></li>
+</ul>
+</li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_ws - WebSocket transport</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/transport/websocket/ws.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_ws_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_wss_register</span><span class="tok-p">(</span><span class="tok-kt">void</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>
+The <em>ws</em> transport provides communication support between
+<em>nng</em> sockets across a TCP/IP network using
+<a href="https://tools.ietf.org/html/rfc6455">WebSockets</a>.
+Both IPv4 and IPv6 are supported when the underlying platform also supports it.</p>
+</div>
+<div class="paragraph">
+<p>The protocol details are documented in
+<a href="http://nanomsg.org/rfcs/sp-websocket-v1.html">WebSocket Mapping for Scalability Protocols</a>.</p>
+</div>
+<div class="sect2">
+<h3 id="_registration">Registration</h3>
+<div class="paragraph">
+<p>Depending upon how the library was built, it may be necessary to
+register the transport by calling <a href="nng_ws_register.3.html"><code>nng_ws_register()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>If TLS support is enabled in the library, secure WebSockets (over TLS v1.2)
+can be used as well, but the secure transport may have to be registered using
+the <a href="nng_wss_register.3.html"><code>nng_wss_register()</code></a> function.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_uri_format">URI Format</h3>
+<div class="paragraph">
+<p>
+This transport uses URIs using the scheme <code>ws://</code>, followed by
+an IP address or hostname, optionally followed by a colon and an
+TCP port number, optionally followed by a path.
+(If no port number is specified then port 80 is assumed.
+If no path is specified then a path of <code>/</code> is assumed.)
+For example, the URI <code>ws://localhost/app/pubsub</code> would use
+port 80 on localhost, with the path <code>/app/pubsub</code>.</p>
+</div>
+<div class="paragraph">
+<p>Secure WebSockets 
+(if enabled) use the scheme <code>wss://</code>, and the default TCP port number of 443.
+Otherwise the format is the same as for regular WebSockets.</p>
+</div>
+<div class="paragraph">
+<p>When specifying IPv6 addresses, the address must be enclosed in
+square brackets (<code>[]</code>) to avoid confusion with the final colon
+separating the port.</p>
+</div>
+<div class="paragraph">
+<p>For example, the same path and port on the IPv6 loopback address (<code>::1</code>)
+would be specified as <code>ws://[::1]/app/pubsub</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The value specified as the host, if any, will also be used
+in the <code>Host:</code> HTTP header during HTTP negotiation.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>To listen to all ports on the system, the host name may be elided from
+the URL on the listener.  This will wind up listening to all interfaces
+on the system, with possible caveats for IPv4 and IPv6 depending on what
+the underlying system supports.  (On most modern systems it will map to the
+special IPv6 address <code>::</code>, and both IPv4 and IPv6 connections will be
+permitted, with IPv4 addresses mapped to IPv6 addresses.)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_socket_address">Socket Address</h3>
+<div class="paragraph">
+<p>When using an <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a> structure,
+the actual structure is either of type
+<a href="nng_sockaddr_in.5.html"><code>nng_sockaddr_in</code></a> (for IPv4) or
+<a href="nng_sockaddr_in6.5.html"><code>nng_sockaddr_in6</code></a> (for IPv6).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_server_instances">Server Instances</h3>
+<div class="paragraph">
+<p>This transport makes use of shared HTTP server 
+instances, permitting multiple
+sockets or listeners to be configured with the same hostname and port.
+When creating a new listener, it is registered with an existing HTTP server
+instance if one can be found.
+Note that the matching algorithm is somewhat simple,
+using only a string based hostname or IP address and port to match.
+Therefore it is recommended to use only IP addresses or the empty string as
+the hostname in listener URLs.</p>
+</div>
+<div class="paragraph">
+<p>Likewise, when sharing a server instance, it may not be possible to alter
+TLS configuration if the server is already running, as there is only a single
+TLS configuration context for the entire server instance.</p>
+</div>
+<div class="paragraph">
+<p>All sharing of server instances is only typically possible within the same
+process.</p>
+</div>
+<div class="paragraph">
+<p>The server may also be used by other things (for example to serve static
+content), in the same process.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_transport_options">Transport Options</h3>
+<div class="paragraph">
+<p>The following transport options are available. Note that
+setting these must be done before the transport is started.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The TLS specific options (beginning with <code>NNG_OPT_TLS_</code>) are
+only available for <code>wss://</code> endpoints.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_WS_REQUEST_HEADERS</code></dt>
+<dd>
+<p>(string) Concentation of multiple lines terminated
+by CRLF sequences, that can be used to add further headers to the
+HTTP request sent when connecting.
+This option can be set on dialers, and retrieved from pipes.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_WS_RESPONSE_HEADERS</code></dt>
+<dd>
+<p>(string) Concatenation of multiple lines terminated
+by CRLF sequences, that can be used to add further headers to the
+HTTP response sent when connecting.
+This option can be set on listeners, and retrieved from pipes.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_CONFIG</code></dt>
+<dd>
+<p>(<code>nng_tls_config *</code>) The underlying TLS
+configuration object for <code>wss://</code> endpoints.
+A hold is placed on the underlying
+configuration object before returning it.
+The caller should release the object with
+<a href="nng_tls_config_free.3tls.html"><code>nng_tls_config_free()</code></a> when it no
+longer needs the TLS configuration.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use this option when advanced TLS configuration is required.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_TLS_CA_FILE</code></dt>
+<dd>
+<p>(string) Write-only option naming a file containing certificates to
+use for peer validation.
+See <a href="nng_tls_config_ca_file.3tls.html"><code>nng_tls_config_ca_file()</code></a> for more
+information.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_CERT_KEY_FILE</code></dt>
+<dd>
+<p>(string) Write-only option naming a file containing the local certificate and
+associated private key.
+The private key used must be unencrypted.
+See <a href="nng_tls_config_own_cert.3tls.html"><code>nng_tls_config_own_cert()</code></a> for more
+information.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_AUTH_MODE</code></dt>
+<dd>
+<p>(<code>int</code>) Write-only option used to configure the authentication mode used.
+See <a href="nng_tls_config_auth_mode.3tls.html"><code>nng_tls_config_auth_mode()</code></a> for
+more details.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_TLS_VERIFIED</code></dt>
+<dd>
+<p>(<code>bool</code>) Whether the remote peer has been properly verified using TLS
+authentication.
+May return incorrect results if peer authentication is disabled.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc(3tls)</a>,
+<a href="nng_sockaddr.5.html">nng_sockaddr(5)</a>,
+<a href="nng_sockaddr_in.5.html">nng_sockaddr_in(5)</a>,
+<a href="nng_sockaddr_in6.5.html">nng_sockaddr_in6(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>

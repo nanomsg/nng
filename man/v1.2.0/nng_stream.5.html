@@ -1,0 +1,137 @@
+---
+version: v1.2.0
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_stream(5)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_stream(5) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_stream - byte stream</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-n">nng_stream</span> <span class="tok-n">nng_stream</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>An <code>nng_stream</code>  represents a byte stream.
+This may correspond to an underlying connection such a TCP connection or
+a connected UNIX domain socket or named pipe.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>nng_stream</code> object is used for raw byte stream connections, and
+should not be confused with a pipe object created on
+<a href="nng_socket.5.html">socket</a> using the
+<a href="nng_listen.3.html"><code>nng_listen()</code></a>,
+<a href="nng_dial.3.html"><code>nng_dial()</code></a> or related functions.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>These objects are created either establishing an outgoing connection
+with
+<a href="nng_stream_dialer_dial.3str.html"><code>nng_stream_dialer_dial()</code></a>
+or by accepting in incoming connection with
+<a href="nng_stream_listener_accept.3str.html"><code>nng_stream_listener_accept()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>Byte streams are &#8220;reliable&#8221; in that data
+will not be delivered out of order, or with portions missing.</p>
+</div>
+<div class="paragraph">
+<p>Data can be sent using
+<a href="nng_stream_send.3str.html"><code>nng_stream_send()</code></a> or
+received with
+<a href="nng_stream_recv.3str.html"><code>nng_stream_recv()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>When the connection is no longer needed, it should be freed with
+<a href="nng_stream_free.3str.html"><code>nng_stream_free()</code></a>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+It is possible to close the connection, without freeing it, by
+using
+<a href="nng_stream_close.3str.html"><code>nng_stream_close()</code></a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Byte streams may, depending on the underlying technology,
+support various
+<a href="nng_options.5.html">options</a>, which
+can be accessed using the
+<a href="nng_stream_get.3str.html"><code>nng_stream_get()</code></a> and
+<a href="nng_stream_set.3str.html"><code>nng_stream_set()</code></a> family of
+functions.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="libnng.3.html">libnng(3)</a>,
+<a href="nng_stream_close.3str.html">nng_stream_close(3str)</a>,
+<a href="nng_stream_dialer_dial.3str.html">nng_stream_dialer_dial(3str)</a>,
+<a href="nng_stream_free.3str.html">nng_stream_free(3str)</a>,
+<a href="nng_stream_getopt.3str.html">nng_stream_getopt(3str)</a>,
+<a href="nng_stream_listener_accept.3str.html">nng_stream_listener_accept(3str)</a>,
+<a href="nng_stream_recv.3str.html">nng_stream_recv(3str)</a>,
+<a href="nng_stream_send.3str.html">nng_stream_send(3str)</a>,
+<a href="nng_stream_setopt.3str.html">nng_stream_setopt(3str)</a>,
+<a href="nng_options.5.html">nng_options(5)</a>,
+<a href="nng.7.html">nng(7)</a>,</p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>

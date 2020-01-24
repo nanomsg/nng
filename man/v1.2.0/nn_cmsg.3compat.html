@@ -1,0 +1,134 @@
+---
+version: v1.2.0
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nn_cmsg(3compat)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nn_cmsg(3compat) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nn_cmsg - message control data (compatible API)</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-k">struct</span> <span class="tok-n">nn_cmsghdr</span> <span class="tok-p">{</span>
+    <span class="tok-kt">size_t</span> <span class="tok-n">cmsg_len</span><span class="tok-p">;</span>
+    <span class="tok-kt">int</span>    <span class="tok-n">cmsg_level</span><span class="tok-p">;</span>
+    <span class="tok-kt">int</span>    <span class="tok-n">cmsg_type</span><span class="tok-p">;</span>
+<span class="tok-p">};</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_cmsghdr</code> structure describes a block of control data that is
+associated with a message either sent by <a href="nn_sendmsg.3compat.html"><code>nn_sendmsg()</code></a>
+or received by <a href="nn_recvmsg.3compat.html"><code>nn_recvmsg()</code></a>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This structure and supporting macros are provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Each header is followed by <code>cmsg_len</code> bytes of data, plus any padding required
+to align the structure.</p>
+</div>
+<div class="paragraph">
+<p>The only defined ancillary data at this time is the protocol headers used by
+the protocols.
+This uses <code>cmsg_level</code> set to <code>PROTO_SP</code> and the <code>cmsg_type</code> set to
+<code>SP_HDR</code>.
+The actual data for this will vary from depending on the protocol used.</p>
+</div>
+<div class="paragraph">
+<p>Convenience macros are provided to make working with these fields easier.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>struct nn_cmsghdr *NN_CMSG_FIRSTHDR(struct nn_msghdr *<em>hdr</em>)</code></dt>
+<dd>
+<p>This macro returns the first <code>struct nn_cmsghdr</code> header in <em>hdr</em>.</p>
+</dd>
+<dt class="hdlist1"><code>struct nn_cmsghdr *NN_CMSG_NXTHDR(struct nn_msghdr *<em>hdr</em>, struct nn_cmsghdr *<em>ch</em>)</code></dt>
+<dd>
+<p>This macro returns a pointer to the next <code>struct nn_cmsghdr</code> in <em>hdr</em> after <em>ch</em>.</p>
+</dd>
+<dt class="hdlist1"><code>void *NN_CMSG_DATA(struct nn_cmsghdr *<em>ch</em>)</code></dt>
+<dd>
+<p>This macro returns a pointer to the header-specific data for <em>ch</em>.</p>
+</dd>
+<dt class="hdlist1"><code>size_t NN_CMSG_ALIGN(size_t <em>len</em>)</code></dt>
+<dd>
+<p>This macro returns the length specified by <em>len</em>, plus any padding required to
+provide the necessary alignment for another structure.</p>
+</dd>
+<dt class="hdlist1"><code>size_t NN_CMSG_SPACE(size_t <em>len</em>)</code></dt>
+<dd>
+<p>This macro returns the amount of space required for a header, with <em>len</em>
+bytes of following data, and any necessary padding.</p>
+</dd>
+<dt class="hdlist1"><code>size_t NN_CMSG_LEN(size_t <em>len</em>)</code></dt>
+<dd>
+<p>This macro evaluates to the length of the header (including alignment),
+and the associated data of length <em>len</em>, but without any trailing padding
+to align for another header.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nn_recvmsg.3compat.html">nn_recvmsg(3compat)</a>,
+<a href="nn_sendmsg.3compat.html">nn_sendmsg(3compat)</a>,
+<a href="nng_compat.3compat.html">nng_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>

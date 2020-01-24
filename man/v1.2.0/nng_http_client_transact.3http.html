@@ -1,0 +1,205 @@
+---
+version: v1.2.0
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_http_client_transact(3http)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_http_client_transact(3http) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_return_values">RETURN VALUES</a></li>
+<li><a href="#_errors">ERRORS</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_http_client_transact - perform one HTTP transaction</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-kt">void</span> <span class="tok-nf">nng_http_client_transact</span><span class="tok-p">(</span><span class="tok-n">nng_http_client</span> <span class="tok-o">*</span><span class="tok-n">client</span><span class="tok-p">,</span> <span class="tok-n">nng_http_req</span> <span class="tok-o">*</span><span class="tok-n">req</span><span class="tok-p">,</span>
+    <span class="tok-n">nng_http_res</span> <span class="tok-o">*</span><span class="tok-n">res</span><span class="tok-p">,</span> <span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_client_transact()</code> function is used to perform a complete
+HTTP exchange.
+It creates a new connection using <em>client</em>, performs the transaction by
+sending the request <em>req</em>
+(and attached body data) to the remote server, then reading the response
+<em>res</em>, and finally closes the connection that it created.
+The entire response is read, including any associated body, which can
+subsequently be obtained using
+<a href="nng_http_res_get_data.3http.html"><code>nng_http_res_get_data()</code></a>.</p>
+</div>
+<div class="paragraph">
+<p>This function is intended to make creation of client applications easier,
+by performing multiple asynchronous operations required to complete an
+entire HTTP transaction.</p>
+</div>
+<div class="paragraph">
+<p>A similar function,
+<a href="nng_http_conn_transact.3http.html"><code>nng_http_conn_transact()</code></a>,
+exists.
+That function behaves similarily, but uses an existing connection, which
+can be reused.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function does not support reading data sent using chunked
+transfer encoding, and if the server attempts to do so, the underlying
+connection will be closed and an <code>NNG_ENOTSUP</code> error will be returned.
+This limitation is considered a bug, and a fix is planned for the future.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+If the remote server tries to send an extremely large buffer,
+then a corresponding allocation will be made, which can lead to denial
+of service attacks.
+Client applications should take care to use this only with reasonably
+trust-worthy servers.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>This function returns immediately, with no return value.
+Completion of the operation is signaled via the <em>aio</em>, and the final result
+may be obtained via <a href="nng_aio_result.3.html"><code>nng_aio_result()</code></a>.
+That result will either be zero or an error code.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECANCELED</code>
+</td>
+<td class="hdlist2">
+<p>The operation was canceled.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECLOSED</code>
+</td>
+<td class="hdlist2">
+<p>The connection was closed.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ECONNRESET</code>
+</td>
+<td class="hdlist2">
+<p>The peer closed the connection.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory to perform the operation.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>HTTP operations are not supported, or peer sent chunked encoding.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EPROTO</code>
+</td>
+<td class="hdlist2">
+<p>An HTTP protocol error occurred.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ETIMEDOUT</code>
+</td>
+<td class="hdlist2">
+<p>Timeout waiting for data from the connection.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_aio_alloc.3.html">nng_aio_alloc(3)</a>,
+<a href="nng_aio_result.3.html">nng_aio_result(3)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_http_client_connect.3http.html">nng_http_client_connect(3http)</a>,
+<a href="nng_http_conn_transact.3http.html">nng_http_conn_transact(3http)</a>,
+<a href="nng_http_res_get_data.3http.html">nng_http_res_get_data(3http)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>

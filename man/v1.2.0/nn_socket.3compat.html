@@ -1,0 +1,263 @@
+---
+version: v1.2.0
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nn_socket(3compat)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nn_socket(3compat) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_return_values">RETURN VALUES</a></li>
+<li><a href="#_errors">ERRORS</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nn_socket - create socket (compatible API)</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nn_socket</span><span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">af</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">proto</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_socket()</code> function creates socket using the address family <em>af</em> and
+protocol <em>proto</em> and returns it.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock important">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-important" title="Important"></i>
+</td>
+<td class="content">
+Mixing the compatibility API and the modern API is not supported
+on a given socket.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Some protocols, transports, and features are only available in the modern API.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The address family <em>af</em> can be one of two values:</p>
+</div>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>AF_SP</code>
+</td>
+<td class="hdlist2">
+<p>Normal socket.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>AF_SP_RAW</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng.7.html#raw_mode">&#8220;Raw mode&#8221;</a> socket.</p>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The protocol indicates the protocol to be used when creating the socket.
+The following protocols are defined:</p>
+</div>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NN_PAIR</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_pair.7.html">Pair</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_PUB</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_pub.7.html">Publisher</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_SUB</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_sub.7.html">Subscriber</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_REQ</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_req.7.html">Requestor</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_REP</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_rep.7.html">Replier</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_PUSH</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_push.7.html">Push</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_PULL</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_pull.7.html">Pull</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_SURVEYOR</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_surveyor.7.html">Surveyor</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_RESPONDENT</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_respondent.7.html">Respondent</a> protocol.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_BUS</code>
+</td>
+<td class="hdlist2">
+<p><a href="nng_bus.7.html">Bus</a> protocol.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns a valid socket number on success, and -1 on failure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>The protocol is not supported.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ETERM</code>
+</td>
+<td class="hdlist2">
+<p>The library is shutting down.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_socket.5.html">nng_socket(5)</a>,
+<a href="nn_close.3compat.html">nn_close(3compat)</a>,
+<a href="nn_errno.3compat.html">nn_errno(3compat)</a>,
+<a href="nng_compat.3compat.html">nng_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>

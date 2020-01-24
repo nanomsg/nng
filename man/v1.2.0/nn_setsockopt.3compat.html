@@ -1,0 +1,446 @@
+---
+version: v1.2.0
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nn_setsockopt(3compat)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nn_setsockopt(3compat) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_return_values">RETURN VALUES</a></li>
+<li><a href="#_errors">ERRORS</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nn_setsockopt - set socket option (compatible API)</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nanomsg/nn.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nn_setsockopt</span><span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">sock</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">level</span><span class="tok-p">,</span> <span class="tok-kt">int</span> <span class="tok-n">option</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">val</span><span class="tok-p">,</span> <span class="tok-kt">size_t</span> <span class="tok-n">sz</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nn_setsockopt()</code> function sets a socket option on socket <em>sock</em>,
+affecting the behavior of the socket.
+The option set is determined by the <em>level</em> and <em>option</em>.
+The value of the option is set by <em>val</em>, and <em>sz</em>, which are pointers to
+the actual value and the size of the value, respectively.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This function is provided for API
+<a href="nng_compat.3compat.html">compatibility</a> with legacy <em>libnanomsg</em>.
+Consider using the relevant <a href="libnng.3.html">modern API</a> instead.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The <em>level</em> determines whether the option is a generic socket option,
+or is transport-specific.
+The values possible for level are as follows:</p>
+</div>
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NN_SOL_SOCKET</code>
+</td>
+<td class="hdlist2">
+<p>Generic socket option</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_IPC</code>
+</td>
+<td class="hdlist2">
+<p>Transport specific option for IPC.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_TCP</code>
+</td>
+<td class="hdlist2">
+<p>Transport specific option for TCP.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NN_WS</code>
+</td>
+<td class="hdlist2">
+<p>Transport specific option for WebSocket.</p>
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following generic socket options are possible (all are of type <code>int</code> and
+thus size 4, unless otherwise indicated.)</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_SNDBUF</code></dt>
+<dd>
+<p>Send buffer size in bytes.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+In <em>nng</em> buffers are sized as a count of messages rather than
+bytes, and so an attempt to estimate a conversion based upon a predetermined
+message size of 1kB is made.
+The value supplied is rounded up to the nearest value divisible by 1024, and
+then divided by 1024 to convert to a message count.
+Applications that have unusual message sizes may wish to adjust the value
+used here accordingly.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_RCVBUF</code></dt>
+<dd>
+<p>Receive buffer size in bytes.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The same caveats for <code>NN_SNDBUF</code> apply here as well.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_SNDTIMEO</code></dt>
+<dd>
+<p>Send time-out in milliseconds.
+Send operations will fail with <code>ETIMEDOUT</code> if no message can be received
+after this many milliseconds have transpired since the operation was started.
+A value of -1 means that no timeout is applied.</p>
+</dd>
+<dt class="hdlist1"><code>NN_RCVTIMEO</code></dt>
+<dd>
+<p>Receive time-out in milliseconds.
+Receive operations will fail with <code>ETIMEDOUT</code> if no message can be received
+after this many milliseconds have transpired since the operation was started.
+A value of -1 means that no timeout is applied.</p>
+</dd>
+<dt class="hdlist1"><code>NN_RCVMAXSIZE</code></dt>
+<dd>
+<p>Maximum receive size in bytes.
+The socket will discard messages larger than this on receive.
+The default, 1MB, is intended to prevent denial-of-service attacks.
+The value -1 removes any limit.</p>
+</dd>
+<dt class="hdlist1"><code>NN_RECONNECT_IVL</code></dt>
+<dd>
+<p>Reconnect interval in milliseconds.
+After an outgoing connection is closed or fails, the socket will
+automatically attempt to reconnect after this many milliseconds.
+This is the starting value for the time, and is used in the first
+reconnection attempt after a successful connection is made.
+The default is 100.</p>
+</dd>
+<dt class="hdlist1"><code>NN_RECONNECT_IVL_MAX</code></dt>
+<dd>
+<p>Maximum reconnect interval in milliseconds.
+Subsequent reconnection attempts after a failed attempt are made at
+exponentially increasing intervals (back-off), but the interval is
+capped by this value.
+If this value is smaller than <code>NN_RECONNECT_IVL</code>, then no exponential
+back-off is performed, and each reconnect interval will be determined
+solely by <code>NN_RECONNECT_IVL</code>.
+The default is zero.</p>
+</dd>
+<dt class="hdlist1"><code>NN_LINGER</code></dt>
+<dd>
+<p>This option is ignored, and exists only for compatibility.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+This option was unreliable in early releases of <em>libnanomsg</em>, and
+is unsupported in <em>nng</em> and recent <em>libnanomsg</em> releases.
+Applications needing assurance of message delivery should either include an
+explicit notification (automatic with the <code>NN_REQ</code> protocol) or allow
+sufficient time for the socket to drain before closing the socket or exiting.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_SNDPRIO</code></dt>
+<dd>
+<p>This option is not implemented at this time.</p>
+</dd>
+<dt class="hdlist1"><code>NN_RCVPRIO</code></dt>
+<dd>
+<p>This option is not implemented at this time.</p>
+</dd>
+<dt class="hdlist1"><code>NN_IPV4ONLY</code></dt>
+<dd>
+<p>This option is not implemented at this time.</p>
+</dd>
+<dt class="hdlist1"><code>NN_SOCKET_NAME</code></dt>
+<dd>
+<p>This option is a string, and represents the socket name.
+It can be changed to help with identifying different sockets with
+their different application-specific purposes.</p>
+</dd>
+<dt class="hdlist1"><code>NN_MAXTTL</code></dt>
+<dd>
+<p>Maximum &#8220;hops&#8221; through proxies and devices a message may go through.
+This value, if positive, provides some protection against forwarding loops in
+<a href="nng_device.3.html">device</a> chains.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Not all protocols offer this protection, so care should still be used
+in configuring device forwarding.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following option is available for <code>NN_REQ</code> sockets
+using the <code>NN_REQ</code> level:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_REQ_RESEND_IVL</code></dt>
+<dd>
+<p>Request retry interval in milliseconds.
+If an <code>NN_REQ</code> socket does not receive a reply to a request within this
+period of time, the socket will automatically resend the request.
+The default value is 60000 (one minute).</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>The following options are available for <code>NN_SUB</code> sockets using the <code>NN_SUB</code> level:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_SUB_SUBSCRIBE</code></dt>
+<dd>
+<p>Subscription topic, for <code>NN_SUB</code> sockets.
+This sets a subscription topic.
+When a message from a publisher arrives, it is compared against all
+subscriptions.
+If the first <em>sz</em> bytes of the message are not identical to <em>val</em>,
+then the message is silently discarded.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+To receive all messages, subscribe to an empty topic (<em>sz</em> equal to zero).
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_SUB_UNSUBSCRIBE</code></dt>
+<dd>
+<p>Removes a subscription topic that was earlier established.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>The following option is available for <code>NN_SURVEYOR</code> sockets
+using the <code>NN_SURVEYOR</code> level:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_SURVEYOR_DEADLINE</code></dt>
+<dd>
+<p>Survey deadline in milliseconds for <code>NN_SURVEYOR</code> sockets.
+After sending a survey message, the socket will only accept responses
+from respondents for this long.
+Any responses arriving after this expires are silently discarded.</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>In addition, the following transport specific options are offered:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NN_IPC_SEC_ATTR</code></dt>
+<dd>
+<p>This <code>NN_IPC</code> option is not supported at this time.</p>
+</dd>
+<dt class="hdlist1"><code>NN_IPC_OUTBUFSZ</code></dt>
+<dd>
+<p>This <code>NN_IPC</code> option is not supported at this time.</p>
+</dd>
+<dt class="hdlist1"><code>NN_IPC_INBUFSZE</code></dt>
+<dd>
+<p>This <code>NN_IPC</code> option is not supported at this time.</p>
+</dd>
+<dt class="hdlist1"><code>NN_TCP_NODELAY</code></dt>
+<dd>
+<p>This <code>NN_TCP</code> option is not supported at this time.</p>
+</dd>
+<dt class="hdlist1"><code>NN_WS_MSG_TYPE</code></dt>
+<dd>
+<p>This <code>NN_WS</code> option is not supported, as <em>nng</em> only supports binary messages
+in this implementation.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns zero on success, and -1 on failure.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>EBADF</code>
+</td>
+<td class="hdlist2">
+<p>The socket <em>sock</em> is not an open socket.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient memory is available.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ENOPROTOOPT</code>
+</td>
+<td class="hdlist2">
+<p>The level and/or option is invalid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EINVAL</code>
+</td>
+<td class="hdlist2">
+<p>The option, or the value passed, is invalid.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>ETERM</code>
+</td>
+<td class="hdlist2">
+<p>The library is shutting down.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>EACCES</code>
+</td>
+<td class="hdlist2">
+<p>The option cannot be changed.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_socket.5.html">nng_socket(5)</a>,
+<a href="nn_close.3compat.html">nn_close(3compat)</a>,
+<a href="nn_errno.3compat.html">nn_errno(3compat)</a>,
+<a href="nn_getsockopt.3compat.html">nn_getsockopt(3compat)</a>,
+<a href="nng_compat.3compat.html">nng_compat(3compat)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>
