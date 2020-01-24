@@ -1,8 +1,7 @@
 ---
 layout: default
 ---
-NNG - nanomsg-NG
-================
+= NNG - nanomsg-NG
 :nofooter:
 
 image:https://img.shields.io/github/workflow/status/nanomsg/nng/linux/master?logoColor=grey&logo=ubuntu&label=[Linux Status,link="https://github.com/nanomsg/nng/actions"]
@@ -18,13 +17,13 @@ image:https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=[Lat
 
 This is the landing page for NNG.
 
-The Reference Manual is available for browsing <<man/index#,here>>.
+The Reference Manual is available for browsing xref:/man/index.adoc[here].
 
 You can also support the development and documentation efforts for
 NNG by purchasing your own copy of the
 http://staysail.tech/books/nng_reference/[NNG Reference Manual].
 
-Here is the <<RATIONALE#,rationale>> behind the creation of _nng_.
+Here is the xref:RATIONALE.adoc[rationale] behind the creation of _nng_.
 
 My presentation, https://staysail.github.io/nng_presentation/nng_presentation.html[Scalability Protocols], from February 2018, also has some more detail
 about these protocols and NNG in particular.

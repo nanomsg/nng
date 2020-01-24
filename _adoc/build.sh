@@ -25,4 +25,8 @@ for f in $(find . -name '*.adoc'); do
 
 	echo generating $output
 	env SOURCE_DATE_EPOCH=${when} asciidoctor ${aargs} -b html5 -o $output -a skip-front-matter $input
+	mv ${output} ${output}.part
+	printf -- "---\nlayout: default\n---\n" > ${output}
+	cat ${output}.part >> ${output}
+	rm ${output}.part
 done
