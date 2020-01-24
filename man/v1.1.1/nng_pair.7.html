@@ -1,0 +1,223 @@
+---
+version: v1.1.1
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng_pair(7)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng_pair(7) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a>
+<ul class="sectlevel2">
+<li><a href="#_socket_operations">Socket Operations</a></li>
+<li><a href="#_protocol_versions">Protocol Versions</a></li>
+<li><a href="#_polyamorous_mode">Polyamorous Mode</a></li>
+<li><a href="#_protocol_options">Protocol Options</a></li>
+<li><a href="#_protocol_headers">Protocol Headers</a></li>
+</ul>
+</li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_pair - pair protocol</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="title">Version 0</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/pair0/pair.h&gt;</span><span class="tok-cp"></span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Version 1</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/protocol/pair1/pair.h&gt;</span><span class="tok-cp"></span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>
+The <em>pair</em> protocol implements a peer-to-peer pattern, where
+relationships between peers are one-to-one.</p>
+</div>
+<div class="paragraph">
+<p>Version 1 of this protocol supports an optional <em>polyamorous</em> mode where a
+peer can maintain multiple partnerships.
+Using this mode requires some additional sophistication in the application.</p>
+</div>
+<div class="sect2">
+<h3 id="_socket_operations">Socket Operations</h3>
+<div class="paragraph">
+<p>The <code><a href="nng_pair_open.3.html">nng_pair_open()</a></code> functions create <em>pair</em> socket.</p>
+</div>
+<div class="paragraph">
+<p>Normally, this pattern will block when attempting to send a message if
+no peer is able to receive the message.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Even though this mode may appear to be "reliable", because back-pressure
+prevents discarding messages most of the time, there are topologies involving
+<em>devices</em> (see <code><a href="nng_device.3.html">nng_device()</a></code>) or raw mode sockets
+(see <code><a href="nng_options.5.html#NNG_OPT_RAW">NNG_OPT_RAW</a></code>) where
+messages may be discarded.
+Applications that require reliable delivery semantics should consider using
+<a href="nng_req.7.html"><em>req</em></a> sockets, or
+implement their own acknowledgment layer on top of <em>pair</em> sockets.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>In order to avoid head-of-line blocking conditions, <em>polyamorous</em> mode <em>pair</em>
+sockets (version 1 only) discard messages if they are unable to deliver them
+to a peer.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_versions">Protocol Versions</h3>
+<div class="paragraph">
+<p>Version 0 is the legacy version of this protocol.
+It lacks any header
+information, and is suitable when building simple one-to-one topologies.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Use version 0 if you need to communicate with other implementations,
+including the legacy <a href="https://github.com/nanomsg/nanomsg">nanomsg</a> library or
+<a href="https://github.com/go-mangos/mangos">mangos</a>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Version 1 of the protocol offers improved protection against loops when
+used with <code><a href="nng_device.3.html">nng_device()</a></code>.
+It also offers <em>polyamorous</em> mode for forming multiple partnerships
+on a single socket.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Version 1 of this protocol is considered experimental at this time.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_polyamorous_mode">Polyamorous Mode</h3>
+<div class="paragraph">
+<p>Normally pair sockets are for one-to-one communication, and a given peer
+will reject new connections if it already has an active connection to another
+peer.</p>
+</div>
+<div class="paragraph">
+<p>In <em>polyamorous</em> mode, which is only available with version 1, a socket can
+support many one-to-one connections.
+In this mode, the application must
+choose the remote peer to receive an outgoing message by setting the
+<code><a href="nng_pipe.5.html">nng_pipe</a></code> to use for the outgoing message with
+the <code><a href="nng_msg_set_pipe.3.html">nng_msg_set_pipe()</a></code> function.</p>
+</div>
+<div class="paragraph">
+<p>Most often the value of the outgoing pipe will be obtained from an incoming
+message using the <code><a href="nng_msg_get_pipe.3.html">nng_msg_get_pipe()</a></code> function,
+such as when replying to an incoming message.</p>
+</div>
+<div class="paragraph">
+<p>In order to prevent head-of-line blocking, if the peer on the given pipe
+is not able to receive (or the pipe is no longer available, such as if the
+peer has disconnected), then the message will be discarded with no notification
+to the sender.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_options">Protocol Options</h3>
+<div class="paragraph">
+<p>The following protocol-specific options are available.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_PAIR1_POLY</code></dt>
+<dd>
+<p>(<code>bool</code>, version 1 only)  This option enables the use of <em>polyamorous</em> mode.
+The value is read-write, and takes an integer Boolean value.  The default
+false value (0) indicates that legacy monogamous mode should be used.</p>
+</dd>
+<dt class="hdlist1"><code><a href="nng_options.5.html#NNG_OPT_MAXTTL">NNG_OPT_MAXTTL</a></code></dt>
+<dd>
+<p>(<code>int</code>, version 1 only).  Maximum time-to-live.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_headers">Protocol Headers</h3>
+<div class="paragraph">
+<p>Version 0 of the pair protocol has no protocol-specific headers.</p>
+</div>
+<div class="paragraph">
+<p>Version 1 of the pair protocol uses a single 32-bit unsigned value.  The
+low-order (big-endian) byte of this value contains a "hop" count, and is
+used in conjunction with the
+<code><a href="nng_options.5.html#NNG_OPT_MAXTTL">NNG_OPT_MAXTTL</a></code> option to guard against
+device forwarding loops.
+This value is initialized to 1, and incremented each time the message is
+received by a new node.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_pair_open.3.html">nng_pair_open(3)</a>,
+<a href="nng_options.5.html">nng_options(5)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+<link rel="stylesheet" href="./pygments-default.css">
+</body>
+</html>

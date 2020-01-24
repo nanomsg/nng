@@ -1,0 +1,421 @@
+---
+version: v1.1.1
+layout: refman
+---
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="Asciidoctor 2.0.10">
+<title>nng(7)</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
+<link rel="stylesheet" href="./asciidoctor.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+</head>
+<body class="manpage toc2 toc-left">
+<div id="header">
+<h1>nng(7) Manual Page</h1>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_synopsis">SYNOPSIS</a></li>
+<li><a href="#_description">DESCRIPTION</a></li>
+<li><a href="#_protocols">Protocols</a></li>
+<li><a href="#_transports">Transports</a></li>
+<li><a href="#_conceptual_overview">Conceptual Overview</a>
+<ul class="sectlevel2">
+<li><a href="#raw_mode">Raw Mode</a></li>
+<li><a href="#_urls">URLs</a></li>
+</ul>
+</li>
+<li><a href="#_api">API</a></li>
+<li><a href="#_see_also">SEE ALSO</a></li>
+</ul>
+</div>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng - nanomsg next generation</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>cc</strong> ['flags'] 'files' <strong>-lnng</strong> ['libraries']</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <em>nng</em> library provides a common messaging framework intended to
+solve common communication problems in distributed applications.
+It offers a number of <em>protocols</em>, and also a number of <em>transports</em>.</p>
+</div>
+<div class="paragraph">
+<p>The <em>protocols</em> implement the semantics associated with particular
+communications scenarios, such as RPC style services, service discovery,
+publish/subscribe, and so forth.</p>
+</div>
+<div class="paragraph">
+<p>The <em>transports</em> provide support for underlying transport methods, such
+as TCP, IPC, websockets, and so forth.</p>
+</div>
+<div class="paragraph">
+<p>The <em>nng</em> library is designed to permit easy creation of new <em>transports</em> and,
+to a lesser extent, new <em>protocols</em>.</p>
+</div>
+<div class="paragraph">
+<p>The <em>nng</em> library is wire compatible with the SP protocols described in
+the nanomsg project; projects using
+<a href="https://github.com/nanomsg/nanomsg"><em>libnanomsg</em></a> can inter-operate with
+nng as well as other conforming implementations.  (One such implementation
+is <a href="https://github.com/go-mangos/mangos"><em>mangos</em></a>.)  Applications using <em>nng</em>
+which wish to communicate with older libraries must ensure that they only
+use protocols or transports offered by the earlier library.</p>
+</div>
+<div class="paragraph">
+<p>The <em>nng</em> library also offers a compatible API, permitting legacy code to
+be recompiled or relinked against <em>nng</em>.  When doing this, support for
+certain enhancements or features will likely be absent, requiring the
+application developer to use the new-style API.</p>
+</div>
+<div class="paragraph">
+<p>The <em>nng</em> library is implemented in pure C; if you need bindings for
+other languages please check the <a href="http://nanomsg.org/">website</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_protocols">Protocols</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<a href="nng_bus.7.html">nng_bus(7)</a>
+</td>
+<td class="hdlist2">
+<p>Bus protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_pair.7.html">nng_pair(7)</a>
+</td>
+<td class="hdlist2">
+<p>Pair protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_pub.7.html">nng_pub(7)</a>
+</td>
+<td class="hdlist2">
+<p>Publisher side of publish/subscribe protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_pull.7.html">nng_pull(7)</a>
+</td>
+<td class="hdlist2">
+<p>Pull side of pipeline protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_push.7.html">nng_push(7)</a>
+</td>
+<td class="hdlist2">
+<p>Push side of pipeline protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_sub.7.html">nng_sub(7)</a>
+</td>
+<td class="hdlist2">
+<p>Subscriber side of publish/subscribe protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_rep.7.html">nng_rep(7)</a>
+</td>
+<td class="hdlist2">
+<p>Reply side of request/reply protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_req.7.html">nng_req(7)</a>
+</td>
+<td class="hdlist2">
+<p>Request side of request/reply protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_respondent.7.html">nng_respondent(7)</a>
+</td>
+<td class="hdlist2">
+<p>Respondent side of survey protocol</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_surveyor.7.html">nng_surveyor(7)</a>
+</td>
+<td class="hdlist2">
+<p>Surveyor side of survey protocol</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_transports">Transports</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<a href="nng_inproc.7.html">nng_inproc(7)</a>
+</td>
+<td class="hdlist2">
+<p>Intra-process transport</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_ipc.7.html">nng_ipc(7)</a>
+</td>
+<td class="hdlist2">
+<p>Inter-process transport</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_tls.7.html">nng_tls(7)</a>
+</td>
+<td class="hdlist2">
+<p>TLSv1.2 over TCP transport</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_tcp.7.html">nng_tcp(7)</a>
+</td>
+<td class="hdlist2">
+<p>TCP (and TCPv6) transport</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_ws.7.html">nng_ws(7)</a>
+</td>
+<td class="hdlist2">
+<p>WebSocket transport</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<a href="nng_zerotier.7.html">nng_zerotier(7)</a>
+</td>
+<td class="hdlist2">
+<p>ZeroTier transport</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_conceptual_overview">Conceptual Overview</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><em>nng</em> presents a <em>socket</em> view of networking.
+The sockets are constructed using protocol-specific functions, as a given
+socket implements precisely one <em>nng</em> protocol.</p>
+</div>
+<div class="paragraph">
+<p>Each socket can be used to send and receive messages (if the protocol)
+supports it, and implements the appropriate protocol semantics.
+For example, <a href="nng_sub.7.html"><em>sub</em></a> sockets automatically filter incoming
+messages to discard those for topics that have not been subscribed.</p>
+</div>
+<div class="paragraph">
+<p><em>nng</em> sockets are message oriented, so that messages are either delivered
+wholly, or not at all.  Partial delivery is not possible.
+Furthermore, <em>nng</em> does not provide any other delivery or ordering guarantees;
+messages may be dropped or reordered
+(Some protocols, such as <a href="nng_req.7.html"><em>req</em></a> may offer stronger
+guarantees by performing their own retry and validation schemes.)</p>
+</div>
+<div class="paragraph">
+<p>Each socket can have zero, one, or many "endpoints", which are either
+<em>listeners</em> or <em>dialers</em>.
+(A given socket may freely choose whether it uses listeners, dialers, or both.)
+These &#8220;endpoints&#8221; provide access to underlying transports, such as TCP, etc.</p>
+</div>
+<div class="paragraph">
+<p>Each endpoint is associated with a URL, which is a service address.
+For dialers, this will be the service address that will be contacted, whereas
+for listeners this is where the listener will accept new connections.</p>
+</div>
+<div class="paragraph">
+<p>Endpoints do not themselves transport data.
+They are instead responsible for the creation of <em>pipes</em>, which can be
+thought of as message-oriented connected streams.
+Pipes frequently correspond to a single underlying byte stream.
+For example both IPC and TCP transports implement their
+pipes using a 1:1 relationship with a connected operating system socket.</p>
+</div>
+<div class="paragraph">
+<p>Endpoints create pipes as needed.
+Listeners will create them when a new client connection request arrives,
+and dialers will generally create one, then wait for it to disconnect before
+reconnecting.</p>
+</div>
+<div class="paragraph">
+<p>Most applications should not have to worry about endpoints or pipes at
+all; the socket abstraction should provide all the functionality needed
+other than in a few specific circumstances.</p>
+</div>
+<div class="sect2">
+<h3 id="raw_mode">Raw Mode</h3>
+<div class="paragraph">
+<p>
+Most applications will use <em>nng</em> sockets in &#8220;cooked&#8221; mode.
+This mode provides the full semantics of the protocol.
+For example, <a href="nng_req.7.html"><em>req</em></a> sockets will automatically
+match a reply to a request, and resend requests periodically if no reply
+was received.</p>
+</div>
+<div class="paragraph">
+<p>There are situations, such as with <a href="nng_device.3.html">proxies</a>,
+where it is desirable to bypass these semantics and simply pass messages
+to and from the socket with no extra semantic handling.
+This is possible using &#8220;raw&#8221; mode sockets.</p>
+</div>
+<div class="paragraph">
+<p>Raw mode sockets are generally constructed with a different function,
+such as <code><a href="nng_req_open.3.html">nng_req0_open_raw()</a></code>.
+Using these sockets, the application can simply send and receive messages,
+and is responsible for supplying any additional socket semantics.
+Typically this means that the application will need to inspect message
+headers on incoming messages, and supply them on outgoing messages.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The <code><a href="nng_device.3.html">nng_device()</a></code> function only works with raw mode
+sockets, but as it only forwards the messages, no additional application
+processing is needed.
+</td>
+</tr>
+</table>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_urls">URLs</h3>
+<div class="paragraph">
+<p>
+The <em>nng</em> library uses universal resource locators (URLs)
+following the format specified in
+<a href="https://tools.ietf.org/html/rfc3986">RFC 3986</a>,
+including some schemes that are unique
+to SP.
+
+The URLs used in <em>nng</em> are canonicalized as follows, mostly in
+accordance with
+<a href="https://tools.ietf.org/html/rfc3986#section-6.2.2">RFC 3986 6.2.2</a>:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>The URL is parsed into scheme, userinfo, host, port, path, query and
+fragment components.  (Not all of these members are necessarily present.)</p>
+</li>
+<li>
+<p>The scheme, hostname, and port if present, are converted to lower case.</p>
+</li>
+<li>
+<p>Percent-encoded values for
+<a href="https://tools.ietf.org/html/rfc3986#section-2.3">unreserved characters</a>
+converted to their unencoded forms.</p>
+</li>
+<li>
+<p>Additionally URL percent-encoded values for characters in the path
+and with numeric values larger than 127 (i.e. not ASCII) are decoded.</p>
+</li>
+<li>
+<p>The resulting path is checked for invalid UTF-8 sequences, consisting
+of surrogate pairs, illegal byte sequences, or overlong encodings.
+If this check fails, then the entire URL is considered invalid.</p>
+</li>
+<li>
+<p>Path segments consisting of <code>.</code> and <code>..</code> are resolved as per
+<a href="https://tools.ietf.org/html/rfc3986#section-6.2.2.3">RFC 3986 6.2.2.3</a>.</p>
+</li>
+<li>
+<p>Further, empty path segments are removed, meaning that duplicate
+slash (<code>/</code>) separators are removed from the path.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Note that steps 4, 5, and 7 are not specified by RFC 3986, but performing
+them is believed to improve both the usability and security of <em>nng</em>
+applications, without violating RFC 3986 itself.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Port numbers may be service names in some instances, but it is recommended
+that numeric port numbers be used when known.
+If service names are used, it is recommended that they follow the naming
+conventions for C identifiers, and not be longer than 32 characters in length.
+This will maximize compatibility across systems and minimize opportunities for
+confusion when they are parsed on different systems.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_api">API</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The library API is documented at <a href="libnng.3.html">libnng(3)</a>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="libnng.3.html">libnng(3)</a>,
+<a href="nng_compat.3compat.html">nng_compat(3compat)</a></p>
+</div>
+</div>
+</div>
+</div>
+</body>
+</html>
