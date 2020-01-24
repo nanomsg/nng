@@ -1,16 +1,15 @@
-= nng_stat_find(3)
-//
+= nng_stat_find_listener(3)
+
 // Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
 // file was obtained (LICENSE.txt).  A copy of the license may also be
 // found online at https://opensource.org/licenses/MIT.
-//
 
 == NAME
 
-nng_stat_find - find statistic by name
+nng_stat_find_listener - find listener statistics
 
 == SYNOPSIS
 
@@ -19,17 +18,21 @@ nng_stat_find - find statistic by name
 #include <nng/nng.h>
 
 typedef struct nng_stat nng_stat;
+typedef struct nng_listener nng_listener;
 
-nng_stat *nng_stat_find(nng_stat *stat, const char *name);
+nng_stat *nng_stat_find_listener(nng_stat *stat, nng_listener listener);
 ----
 
 == DESCRIPTION
 
-The `nng_stat_find()` function searches the statistics tree _stat_, looking for a statistic whose name is _name_.
-If it finds one, it returns it.
+The `nng_stat_find_listener()` function returns the statistics tree within _stat_ associated with the listener _listener_, if such a tree exists.
 Otherwise `NULL` is returned.
 
-NOTE: If multiple statistics have that name, then only the first match is returned.
+Generally, there will be child statistics of the returned value, each corresponding to a specific metric.
+These can be further scanned using either
+xref:nng_stat_find.3.adoc[nng_stat_find(3)]
+or by walking the tree with
+xref:nng_stat_child.3.adoc[nng_stat_child(3)].
 
 == RETURN VALUES
 
@@ -44,8 +47,8 @@ None.
 [.text-left]
 xref:libnng.3.adoc[libnng(3)],
 xref:nng_stat_child.3.adoc[nng_stat_child(3)],
+xref:nng_stat_find.3.adoc[nng_stat_find(3)],
 xref:nng_stat_find_dialer.3.adoc[nng_stat_find_dialer(3)],
-xref:nng_stat_find_listener.3.adoc[nng_stat_find_listner(3)],
 xref:nng_stat_find_socket.3.adoc[nng_stat_find_socket(3)],
 xref:nng_stats_get.3.adoc[nng_stats_get(3)],
 xref:nng_stat.5.adoc[nng_stat(5)],
