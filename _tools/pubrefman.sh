@@ -81,7 +81,7 @@ for f in ${scratch}/adoc/*.adoc; do
 done
 
 index=${scratch}/adoc/index.adoc
-for sect in $(echo ${!pages[@]} | sort ); do
+for sect in $(echo ${!pages[@]} | tr " " "\n" | sort ); do
         title=$(cat ${scratch}/nng/docs/man/man${sect}.sect)
         desc=$(cat ${scratch}/nng/docs/man/man${sect}.desc)
         printf "\n== Section ${sect}: ${title}\n" >> ${index}
@@ -91,7 +91,9 @@ for sect in $(echo ${!pages[@]} | sort ); do
         printf "|===\n" >> ${index}
 
         for page in $(echo ${pages[$sect]} | tr " " "\n" | sort ); do
-                printf "|xref:${page}[${page%.adoc}(${sect})]\n" >> ${index}
+                name=${page%.adoc}
+                name=${name%.*}
+                printf "|xref:${page}[${name}(${sect})]\n" >> ${index}
                 printf "|${descs[${page}]}\n\n" >> ${index}
         done
         printf "|===\n" >> ${index}
