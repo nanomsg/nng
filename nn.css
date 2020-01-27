@@ -505,6 +505,7 @@ nav.toc2 {
 
 main {
         padding-left: 20em;
+        padding-top: 6em;
         display: inline-block;
         max-width: 62.5em;
         overflow-y: auto
