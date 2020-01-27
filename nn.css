@@ -46,6 +46,10 @@ a.nn-logo {
         text-decoration: none;
 }
 
+a.nn-logo:hover {
+        text-decoration: none;
+}
+
 .nn-nav-item {
         text-decoration: none;
         font-family: 'Roboto', 'Trebuchet MS', sans-serif;
