@@ -140,6 +140,7 @@ process_manpage() {
                         printf "layout: ${layout}\n"
                         printf "title: ${title}\n"
                         printf -- "---\n"
+                        cat ${toc}
                         printf "<main>\n"
                         skip=
                         ;;
