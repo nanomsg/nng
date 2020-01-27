@@ -307,6 +307,11 @@ td p {
         padding: .5em;
 }
 
+td code {
+        margin: auto;
+        padding: .5em;
+}
+
 /* table body */
 
 tbody>tr:nth-of-type(odd) {
