@@ -55,6 +55,16 @@ a.nn-nav-link {
         background: #e0e0e0;
 }
 
+.nn-header {
+	position: fixed;
+	top: 0;
+	left: 0;
+}
+
+.nn-footer {
+	clear: both;
+}
+
 .nn-footer-inner {
         text-align: right;
         font-family: 'Roboto', 'Trebuchet MS', sans-serif;
@@ -64,15 +74,12 @@ a.nn-nav-link {
 }
 
 .nn-header-inner, .nn-footer-inner {
-        max-width: 62.5em;
-        padding: 1em;
-        width: 100%;
+	padding: 0em 4em 0em 2em;
 }
 
 .nn-header-inner {
         display: flex;
         align-items: center;
-        margin: auto;
 }
 
 .nn-nav-menu {
@@ -448,22 +455,34 @@ video {
 
 /* table of Contents sidebar */
 
-.toc2 .toc2 {
-        top: 6em;
-        left: 0;
+.toc2 {
         padding: 1.25em 1em;
-        position: fixed;
         display: flex;
         flex-direction: column;
+	bottom: 0;
+}
+
+nav.toc2 {
+	overflow-y: auto;
+	display:inline-block;
+	vertical-align:top;
+	z-index:10;
+	position:fixed;
+	top:5em;
+	bottom:6em;
 }
 
 @media screen and (maxwidth: 768px) {
-        .toc2 {
+        nav.toc2 {
                 visibility: hidden;
+		overflow: hidden;
         }
-        #toc.toc2 ul {
-                visibility: hidden;
-        }
+	nav.toc2::-webkit-scrollbar {
+		display: none;
+	}
+	nav.toc2 {
+		-ms-overflow-style: none;
+	}
 }
 
 #toc.toc2 ul {
@@ -484,11 +503,23 @@ video {
 
 /* only show the table of contents on screens wide enough to have room */
 
-@media all and (max-width: 92em) {
+main {
+	padding-left: 20em;
+	display:inline-block;
+	max-width:62.5em;
+	overflow-y:auto
+}
+
+@media all and (max-width: 90em) {
         #toctitle {
-                visibility: hidden;
+		display: none;
+		overflow: visible;
         }
         #toc.toc2 ul {
-                visibility: hidden;
+		display: none;
+		overflow: visible;
         }
+	main {
+		padding-left: 2em;
+	}
 }
