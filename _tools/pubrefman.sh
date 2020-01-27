@@ -81,8 +81,8 @@ done
 
 index=${scratch}/adoc/index.adoc
 toc=${scratch}/html/_toc.html
-printf "<nav id=\"toc\" class=\"toc2\">\n" >> ${toc}
-printf "<div id=\"toctitle\">Table of Contents</div>\n" > ${toc}
+printf "<nav id=\"toc\" class=\"toc2\">\n" > ${toc}
+printf "<div id=\"toctitle\">Table of Contents</div>\n" >> ${toc}
 printf "<ul class=\"sectlevel1\n\">\n" >> ${toc}
 printf "# NNG Reference Manual\n" >> ${index}
 for sect in $(echo ${!pages[@]} | tr " " "\n" | sort ); do

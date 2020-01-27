@@ -459,26 +459,16 @@ video {
 
 /* table of Contents sidebar */
 
-.toc2 {
-        display: flex;
-        bottom: 0;
-}
-
-body.toc2 {
-        align-items: flex-start;
-        flex-direction: row;
-}
-
 nav.toc2 {
         overflow-y: auto;
-        display: inline-block;
+        display: flex;
+        flex-direction: column;
         vertical-align: top;
         z-index: 10;
         position: fixed;
         top: 5em;
         bottom: 6.5em;
         padding: 1.25em 1em;
-        flex-direction: column;
 }
 
 @media screen and (maxwidth: 768px) {
@@ -515,7 +505,7 @@ nav.toc2 {
 main {
         padding-left: 20em;
         padding-top: 5em;
-        display: inline-block;
+        display: block;
         max-width: 62.5em;
         overflow-y: auto
 }
