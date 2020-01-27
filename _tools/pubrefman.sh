@@ -142,6 +142,15 @@ process_manpage() {
                         printf -- "---\n"
                         cat ${toc}
                         printf "<main>\n"
+                        cat <<EOF
+{% if page.version and page.version != site.latest  %}
+{% if page.version == "tip" %}
+{% include tip_version.html %}
+{% else %}
+{% include old_version.html %}
+{% endif %}
+{% endif %}
+EOF
                         skip=
                         ;;
                 "</body"*)

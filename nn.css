@@ -27,11 +27,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+
 @import url("https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap");
 @import url("https://fonts.googleapis.com/css?family=Open+Sans&display=swap");
 @import url("https://fonts.googleapis.com/css?family=Inconsolata&display=swap");
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css");
-
 /* This styling is used for our nanomsg specific headers. */
 
 .nn-nav-link:hover {
@@ -56,13 +56,13 @@ a.nn-nav-link {
 }
 
 .nn-header {
-	position: fixed;
-	top: 0;
-	left: 0;
+        position: fixed;
+        top: 0;
+        left: 0;
 }
 
 .nn-footer {
-	clear: both;
+        clear: both;
 }
 
 .nn-footer-inner {
@@ -74,7 +74,7 @@ a.nn-nav-link {
 }
 
 .nn-header-inner, .nn-footer-inner {
-	padding: 0em 4em 0em 2em;
+        padding: 0em 4em 0em 2em;
 }
 
 .nn-header-inner {
@@ -459,30 +459,30 @@ video {
         padding: 1.25em 1em;
         display: flex;
         flex-direction: column;
-	bottom: 0;
+        bottom: 0;
 }
 
 nav.toc2 {
-	overflow-y: auto;
-	display:inline-block;
-	vertical-align:top;
-	z-index:10;
-	position:fixed;
-	top:5em;
-	bottom:6em;
+        overflow-y: auto;
+        display: inline-block;
+        vertical-align: top;
+        z-index: 10;
+        position: fixed;
+        top: 5em;
+        bottom: 6.5em;
 }
 
 @media screen and (maxwidth: 768px) {
         nav.toc2 {
                 visibility: hidden;
-		overflow: hidden;
+                overflow: hidden;
         }
-	nav.toc2::-webkit-scrollbar {
-		display: none;
-	}
-	nav.toc2 {
-		-ms-overflow-style: none;
-	}
+        nav.toc2::-webkit-scrollbar {
+                display: none;
+        }
+        nav.toc2 {
+                -ms-overflow-style: none;
+        }
 }
 
 #toc.toc2 ul {
@@ -504,22 +504,22 @@ nav.toc2 {
 /* only show the table of contents on screens wide enough to have room */
 
 main {
-	padding-left: 20em;
-	display:inline-block;
-	max-width:62.5em;
-	overflow-y:auto
+        padding-left: 20em;
+        display: inline-block;
+        max-width: 62.5em;
+        overflow-y: auto
 }
 
 @media all and (max-width: 90em) {
         #toctitle {
-		display: none;
-		overflow: visible;
+                display: none;
+                overflow: visible;
         }
         #toc.toc2 ul {
-		display: none;
-		overflow: visible;
+                display: none;
+                overflow: visible;
         }
-	main {
-		padding-left: 2em;
-	}
+        main {
+                padding-left: 2em;
+        }
 }
