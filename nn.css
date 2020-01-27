@@ -50,19 +50,17 @@ a.nn-nav-link {
         text-align: right;
 }
 
-.nn-header, .nn-footer {
-        width: 100%;
-        background: #e0e0e0;
-}
-
 .nn-header {
+        width: 100%;
         position: fixed;
         top: 0;
         left: 0;
+        background: #e0e0e0;
 }
 
 .nn-footer {
-        clear: both;
+        width: 100%;
+        margin-left: 20em;
 }
 
 .nn-footer-inner {
@@ -442,15 +440,6 @@ img {
         vertical-align: middle;
 }
 
-/* footer section */
-
-#footer {
-        margin-top: 22px;
-        padding: 14px 16px;
-        color: #666666;
-        background-color: #ffffff;
-}
-
 /* responsiveness fixes */
 
 video {
@@ -467,7 +456,7 @@ nav.toc2 {
         z-index: 10;
         position: fixed;
         top: 5em;
-        bottom: 6.5em;
+        bottom: 0;
         padding: 1.25em 1em;
 }
 
