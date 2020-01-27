@@ -386,6 +386,15 @@ pre {
         font-size: 1.0625em;
 }
 
+.admonitionblock>table td.nn-version-note {
+        padding-left: 1.125em;
+        padding-right: 1.25em;
+        border-left: 1px solid #dddddf;
+        color: rgba(0, 0, 0, .6);
+        border-top: none;
+        font-size: 0.95em;
+}
+
 .admonitionblock>table td.content>:last-child>:last-child {
         margin-bottom: 0
 }
@@ -428,10 +437,6 @@ a span.icon>.fa {
 .admonitionblock td.icon .icon-important::before {
         content: "\f06a";
         color: #bf0000
-}
-
-.nn-version-note {
-        font-size: .95em;
 }
 
 /* image */
