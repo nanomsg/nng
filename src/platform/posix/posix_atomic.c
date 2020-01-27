@@ -233,7 +233,7 @@ nni_atomic_swap_bool(nni_atomic_bool *b, bool n)
 }
 
 void
-nni_atomic_initbool(nni_atomic_bool *b)
+nni_atomic_init_bool(nni_atomic_bool *b)
 {
 	b->b = false;
 }
