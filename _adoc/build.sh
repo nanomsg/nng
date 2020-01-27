@@ -24,9 +24,10 @@ for f in $(find . -name '*.adoc'); do
 	fi
 
 	echo generating $output
+	layout=$(head -5 $input | grep "layout:" | cut -d: -f2)
 	env SOURCE_DATE_EPOCH=${when} asciidoctor ${aargs} -b html5 -o $output -a skip-front-matter $input
 	mv ${output} ${output}.part
-	printf -- "---\nlayout: default\n---\n" > ${output}
+	printf -- "---\nlayout: ${layout}\n---\n" > ${output}
 	cat ${output}.part >> ${output}
 	rm ${output}.part
 done

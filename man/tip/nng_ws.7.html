@@ -1,38 +1,11 @@
 ---
 version: tip
-layout: refman
+layout: manpage
+title: nng_ws(7)
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.10">
-<title>nng_ws(7)</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
-<link rel="stylesheet" href="./asciidoctor.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body class="manpage toc2 toc-left">
+<main>
 <div id="header">
 <h1>nng_ws(7) Manual Page</h1>
-<div id="toc" class="toc2">
-<div id="toctitle">Table of Contents</div>
-<ul class="sectlevel1">
-<li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a>
-<ul class="sectlevel2">
-<li><a href="#_registration">Registration</a></li>
-<li><a href="#_uri_format">URI Format</a></li>
-<li><a href="#_socket_address">Socket Address</a></li>
-<li><a href="#_server_instances">Server Instances</a></li>
-<li><a href="#_transport_options">Transport Options</a></li>
-</ul>
-</li>
-<li><a href="#_see_also">SEE ALSO</a></li>
-</ul>
-</div>
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
 <p>nng_ws - WebSocket transport</p>
@@ -91,7 +64,7 @@ For example, the URI <code>ws://localhost/app/pubsub</code> would use
 port 80 on localhost, with the path <code>/app/pubsub</code>.</p>
 </div>
 <div class="paragraph">
-<p>Secure WebSockets 
+<p>Secure WebSockets
 (if enabled) use the scheme <code>wss://</code>, and the default TCP port number of 443.
 Otherwise the format is the same as for regular WebSockets.</p>
 </div>
@@ -138,7 +111,7 @@ the actual structure is either of type
 <div class="sect2">
 <h3 id="_server_instances">Server Instances</h3>
 <div class="paragraph">
-<p>This transport makes use of shared HTTP server 
+<p>This transport makes use of shared HTTP server
 instances, permitting multiple
 sockets or listeners to be configured with the same hostname and port.
 When creating a new listener, it is registered with an existing HTTP server
@@ -268,6 +241,4 @@ May return incorrect results if peer authentication is disabled.</p>
 </div>
 </div>
 </div>
-<link rel="stylesheet" href="./pygments-default.css">
-</body>
-</html>
+</main>

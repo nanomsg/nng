@@ -1,0 +1,494 @@
+/*
+ * Modified from github.com/darshandsoni/asciidoctor-skins/css/boot-paper.css
+ * Based on Paper from Bootswatch (http://bootswatch.com/paper/)
+ * Significantly hand-edited by Garrett D'Amore for nanomsg uses, it
+ * bears little resemblance to the original.
+ *
+ * The original files were Copyright 2016 Darshan Soni.
+ * This file is Copyright 2020 Garrett D'Amore.
+ * 
+ * The license for the original, as well as this file, is the MIT license.
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
+@import url("https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap");
+@import url("https://fonts.googleapis.com/css?family=Open+Sans&display=swap");
+@import url("https://fonts.googleapis.com/css?family=Inconsolata&display=swap");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css");
+
+/* This styling is used for our nanomsg specific headers. */
+
+.nn-nav-link:hover {
+        text-decoration: underline;
+}
+
+a.nn-nav-link {
+        text-decoration: none;
+}
+
+.nn-nav-item {
+        text-decoration: none;
+        font-family: 'Roboto', 'Trebuchet MS', sans-serif;
+        display: inline-flex;
+        margin-left: 1.5em;
+        text-align: right;
+}
+
+.nn-header, .nn-footer {
+        width: 100%;
+        background: #e0e0e0;
+}
+
+.nn-footer-inner {
+        text-align: right;
+        font-family: 'Roboto', 'Trebuchet MS', sans-serif;
+        font-style: italic;
+        margin: auto;
+        line-height: 1.6;
+}
+
+.nn-header-inner, .nn-footer-inner {
+        max-width: 62.5em;
+        padding: 1em;
+        width: 100%;
+}
+
+.nn-header-inner {
+        display: flex;
+        align-items: center;
+        margin: auto;
+}
+
+.nn-nav-menu {
+        margin-top: 0;
+        margin-bottom: 0;
+        display: inline-flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+        margin-left: auto;
+        font-size: 1.2em;
+        vertical-align: middle;
+        align-content: center;
+}
+
+.nn-logo {
+        font-size: 2.5em;
+        color: black;
+        font-family: 'Roboto', 'Trebuchet MS', sans-serif;
+        font-weight: normal;
+        text-decoration: none;
+        flex: 0 0;
+}
+
+.nn-tan {
+        color: #ba5836;
+}
+
+.nn-black {
+        color: rgba(0, 0, 0, 0.8);
+}
+
+/* document body (contains all content) */
+
+body {
+        font-family: 'Roboto', 'Trebuchet MS', sans-serif;
+        line-height: 1.846;
+        color: #666666;
+        background-color: #ffffff;
+}
+
+/* document header (contains title etc) */
+
+#header, #content {
+        width: 100%;
+        max-width: 62.5em;
+        margin: auto;
+}
+
+/* headings */
+
+h2, h3, h4, h5, h6 {
+        font-family: inherit;
+        font-weight: 400;
+        line-height: 1.1;
+        color: #ba5836;
+}
+
+h1 {
+        font-size: 2.75em;
+        font-weight: 400;
+        font-family: 'Open Sans';
+        color: rgba(0, 0, 0, 0.7);
+}
+
+h2 {
+        font-size: 2.3em;
+}
+
+h3 {
+        font-size: 1.6875em;
+}
+
+h4 {
+        font-size: 1.4375em;
+}
+
+h5 {
+        font-size: 1.2em;
+}
+
+h6 {
+        font-size: 1.1em;
+}
+
+a:hover {
+        text-decoration: underline;
+}
+
+a {
+        text-decoration: none;
+        color: #2156a5;
+}
+
+/* plain paragraph text */
+
+p {
+        font-size: 1.0625rem;
+}
+
+/* blockquote text TODO: review these - they seem too absolute */
+
+blockquote {
+        font-size: 1.0625rem;
+        padding: 11.5px 23px;
+        margin: 0 0 23px;
+        border-left: 5px solid #eeeeee;
+}
+
+blockquote p:last-child, blockquote ul:last-child, blockquote ol:last-child {
+        margin-bottom: 0;
+}
+
+.blockquote-reverse, blockquote.pull-right {
+        padding-right: 15px;
+        padding-left: 0;
+        border-right: 5px solid #eeeeee;
+        border-left: 0;
+        text-align: right;
+}
+
+.blockquote-reverse footer:before, blockquote.pull-right footer:before, .blockquote-reverse small:before, blockquote.pull-right small:before, .blockquote-reverse .small:before, blockquote.pull-right .small:before {
+        content: '';
+}
+
+.blockquote-reverse footer:after, blockquote.pull-right footer:after, .blockquote-reverse small:after, blockquote.pull-right small:after, .blockquote-reverse .small:after, blockquote.pull-right .small:after {
+        content: '\00A0 \2014';
+}
+
+/* blockquote attribution text */
+
+.attribution, .cite, blockquote footer, blockquote small, blockquote .small {
+        display: block;
+        /*   font-size: 80%; */
+        line-height: 1.846;
+        color: #bbbbbb;
+}
+
+.attribution:before, blockquote footer:before, blockquote small:before, blockquote .small:before {
+        content: '\2014 \00A0';
+}
+
+/* unordered list */
+
+ul, ol {
+        margin-top: 0;
+        margin-bottom: 11.5px;
+}
+
+ul ul, ol ul, ul ol, ol ol {
+        margin-bottom: 0;
+}
+
+/* horizontal rules */
+
+hr {
+        border: 0;
+        border-top: 1px solid #eeeeee;
+}
+
+/* table */
+
+table {
+        background-color: #fff;
+        border: solid 1px #dedede;
+        width: 100%;
+        max-width: 100%;
+        margin-bottom: 1.4em;
+        border-collapse: collapse;
+}
+
+table col[class*="col-"] {
+        position: static;
+        float: none;
+        display: table-column;
+}
+
+table td[class*="col-"], table th[class*="col-"] {
+        position: static;
+        float: none;
+        display: table-cell;
+}
+
+/* table caption */
+
+caption {
+        padding-top: .5em;
+        padding-bottom: .5em;
+        ;
+        color: #bbbbbb;
+        text-align: left;
+}
+
+/* table header row */
+
+thead {
+        border-bottom: 2px solid #dddddd;
+}
+
+/* table header cell */
+
+th {
+        text-align: left;
+        padding-left: .5em;
+}
+
+/* table footer */
+
+tfoot {
+        color: #807F81;
+        border-top: 1px solid #dddddd;
+}
+
+/* table cell */
+
+td {
+        border-top: 1px solid #dddddd;
+}
+
+td p {
+        margin: auto;
+        padding: .5em;
+}
+
+/* table body */
+
+tbody>tr:nth-of-type(odd) {
+        background-color: #f9f9f9;
+}
+
+tbody>tr:hover {
+        background-color: #f5f5f5;
+}
+
+/* inline code */
+
+code, kbd, pre, samp {
+        font-family: 'Inconsolata', 'Consolas', monospace;
+}
+
+pre.highlight {
+        background-color: lightblue;
+        border-radius: .5em;
+        border: 1px solid #cccccc;
+}
+
+kbd {
+        padding: 2px 4px;
+        font-size: 90%;
+        color: #ffffff;
+        background-color: #333333;
+        border-radius: 3px;
+        -webkit-box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+        box-shadow: inset 0 -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+kbd kbd {
+        padding: 0;
+        font-size: 100%;
+        font-weight: bold;
+        -webkit-box-shadow: none;
+        box-shadow: none;
+}
+
+pre {
+        display: block;
+        padding: .7em;
+        margin: 0 0 .7em;
+        word-break: break-all;
+        word-wrap: break-word;
+}
+
+/* icon font admonitions */
+
+.admonitionblock>table {
+        border-collapse: separate;
+        border: 0;
+        background: none;
+        width: 100%
+}
+
+.admonitionblock>table td.icon {
+        text-align: center;
+        padding: 0.5em;
+        width: 4em;
+        border-top: none
+}
+
+.admonitionblock>table td.icon img {
+        max-width: none
+}
+
+.admonitionblock>table td.icon .title {
+        font-weight: bold;
+        font-family: "Open Sans", sans-serif;
+        text-transform: uppercase
+}
+
+.admonitionblock>table td.content {
+        padding-left: 1.125em;
+        padding-right: 1.25em;
+        border-left: 1px solid #dddddf;
+        color: rgba(0, 0, 0, .6);
+        border-top: none;
+        font-size: 1.0625em;
+}
+
+.admonitionblock>table td.content>:last-child>:last-child {
+        margin-bottom: 0
+}
+
+span.icon>.fa {
+        cursor: default
+}
+
+a span.icon>.fa {
+        cursor: inherit
+}
+
+.admonitionblock td.icon [class^="fa icon-"] {
+        font-size: 2.5em;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, .5);
+        cursor: default
+}
+
+.admonitionblock td.icon .icon-note::before {
+        content: "\f05a";
+        color: #19407c
+}
+
+.admonitionblock td.icon .icon-tip::before {
+        content: "\f0eb";
+        text-shadow: 1px 1px 2px rgba(155, 155, 0, .8);
+        color: #111
+}
+
+.admonitionblock td.icon .icon-warning::before {
+        content: "\f071";
+        color: #bf6900
+}
+
+.admonitionblock td.icon .icon-caution::before {
+        content: "\f06d";
+        color: #bf3400
+}
+
+.admonitionblock td.icon .icon-important::before {
+        content: "\f06a";
+        color: #bf0000
+}
+
+/* image */
+
+img {
+        max-width: 100%;
+        vertical-align: middle;
+}
+
+/* footer section */
+
+#footer {
+        margin-top: 22px;
+        padding: 14px 16px;
+        color: #666666;
+        background-color: #ffffff;
+}
+
+/* responsiveness fixes */
+
+video {
+        max-width: 100%;
+}
+
+/* table of Contents sidebar */
+
+.toc2 .toc2 {
+        top: 6em;
+        left: 0;
+        padding: 1.25em 1em;
+        position: fixed;
+        display: flex;
+        flex-direction: column;
+}
+
+@media screen and (maxwidth: 768px) {
+        .toc2 {
+                visibility: hidden;
+        }
+        #toc.toc2 ul {
+                visibility: hidden;
+        }
+}
+
+#toc.toc2 ul {
+        font-size: .95em;
+        margin-bottom: 0;
+        padding-left: 0;
+        display: block;
+        list-style: none;
+}
+
+#toc.toc2 ul ul li {
+        padding-left: 1em;
+}
+
+#toctitle {
+        color: #ba5836;
+}
+
+/* only show the table of contents on screens wide enough to have room */
+
+@media all and (max-width: 92em) {
+        #toctitle {
+                visibility: hidden;
+        }
+        #toc.toc2 ul {
+                visibility: hidden;
+        }
+}

@@ -1,42 +1,11 @@
 ---
 version: tip
-layout: refman
+layout: manpage
+title: nngcat(1)
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.10">
-<title>nngcat(1)</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
-<link rel="stylesheet" href="./asciidoctor.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body class="manpage toc2 toc-left">
+<main>
 <div id="header">
 <h1>nngcat(1) Manual Page</h1>
-<div id="toc" class="toc2">
-<div id="toctitle">Table of Contents</div>
-<ul class="sectlevel1">
-<li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
-<li><a href="#_options">OPTIONS</a>
-<ul class="sectlevel2">
-<li><a href="#_generic_options">Generic Options</a></li>
-<li><a href="#_protocol_selection_options">Protocol Selection Options</a></li>
-<li><a href="#_peer_selection_options">Peer Selection Options</a></li>
-<li><a href="#_receive_options">Receive Options</a></li>
-<li><a href="#_transmit_options">Transmit Options</a></li>
-<li><a href="#_tls_options">TLS Options</a></li>
-<li><a href="#_zerotier_options">ZeroTier Options</a></li>
-</ul>
-</li>
-<li><a href="#_examples">EXAMPLES</a></li>
-<li><a href="#_see_also">SEE ALSO</a></li>
-</ul>
-</div>
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
 <p>nngcat - command line access to Scalability Protocols</p>
@@ -129,7 +98,7 @@ each option must be presented as a separate argument to the program.</p>
 </dd>
 <dt class="hdlist1"><strong>--compat</strong></dt>
 <dd>
-<p>Compatible mode. 
+<p>Compatible mode.
 This cause <em>nngcat</em> to behave more like the legacy
 <em>nanocat</em> application.
 In this mode connections are made asynchronously,
@@ -378,7 +347,7 @@ conventions.</p>
 </dd>
 <dt class="hdlist1"><code>hex</code></dt>
 <dd>
-<p> Messages are printed as quoted strings, with every byte appearing as an escaped hexadecimal value, such as <code>\x2E</code>.</p>
+<p> Messages are printed as quoted strings, with every byte appearing as an escaped hexadecimal value, such as <code>x2E</code>.</p>
 </dd>
 <dt class="hdlist1"><code>msgpack</code></dt>
 <dd>
@@ -522,6 +491,4 @@ $ nngcat --sub --dial<span class="tok-o">=</span><span class="tok-si">${</span><
 </div>
 </div>
 </div>
-<link rel="stylesheet" href="./pygments-default.css">
-</body>
-</html>
+</main>

@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="/nn.css">
+        <link rel="stylesheet" href="/nn-pygments.css">
+        <link rel="stylesheet" href="/nn-pygments.css">
+        <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css?family=Inconsolata&display=swap" rel="stylesheet">
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
+                rel="stylesheet">
+        <title>{{page.title}}</title>
+</head>
+
+<body class="manpage toc2 toc-left">
+        {% include header-manpage.html %}
+        {% if page.version and page.version != site.latest  %}
+        {% if page.version == "tip" %}
+        {% include tip_version.html %}
+        {% else %}
+        {% include old_version.html %}
+        {% endif %}
+        {% endif %}
+
+        {% include_relative _toc.html %}
+
+        {{ content }}
+
+        {% include footer-manpage.html %}
+
+</body>
+
+</html>

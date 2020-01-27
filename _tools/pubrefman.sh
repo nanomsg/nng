@@ -61,7 +61,6 @@ asciidoctor \
 	-amansource="NNG" \
 	-amanmanual="NNG Reference Manual" \
 	-anofooter=yes \
-	-atoc=left \
 	-aicons=font \
 	-asource-highlighter=pygments \
 	-alinkcss \
@@ -81,6 +80,10 @@ for f in ${scratch}/adoc/*.adoc; do
 done
 
 index=${scratch}/adoc/index.adoc
+toc=${scratch}/html/_toc.html
+printf "<nav id=\"toc\" class=\"toc2\">\n" > ${toc}
+printf "<ul class=\"sectlevel1\n\">\n" >> ${toc}
+printf "# NNG Reference Manual\n" >> ${index}
 for sect in $(echo ${!pages[@]} | tr " " "\n" | sort ); do
         title=$(cat ${scratch}/nng/docs/man/man${sect}.sect)
         desc=$(cat ${scratch}/nng/docs/man/man${sect}.desc)
@@ -90,26 +93,71 @@ for sect in $(echo ${!pages[@]} | tr " " "\n" | sort ); do
         printf "\n[cols=\"3,5\"]\n" >> ${index}
         printf "|===\n" >> ${index}
 
+        printf "<li>${title}</li>\n" >> ${toc}
+        printf "<ul class=\"sectlevel2\">\n" >> ${toc}
         for page in $(echo ${pages[$sect]} | tr " " "\n" | sort ); do
                 name=${page%.adoc}
                 name=${name%.*}
                 printf "|xref:${page}[${name}(${sect})]\n" >> ${index}
                 printf "|${descs[${page}]}\n\n" >> ${index}
+                printf "<li><a href=\"${page%.adoc}.html\">${name}</a></li>\n" >> ${toc}
+
         done
         printf "|===\n" >> ${index}
+        printf "</ul>\n" >> ${toc}
 done
+printf "</ul>\n" >> ${toc}
+printf "</nav>\n" >> ${toc}
 
 asciidoctor \
         -q \
 	-darticle \
 	-anofooter=yes \
-	-atoc=left \
 	-alinkcss \
 	-bhtml5 \
 	-D ${scratch}/html \
 	${scratch}/adoc/index.adoc
 
 
+process_manpage() {
+        typeset skip=yes
+        typeset layout=$1
+        typeset ver=$2
+        typeset title=""
+        while read line; do
+                # Look for the body tag, so that we strip off all the pointless
+                # front matter, because we're going to replace that.   We
+                # don't actually emit the body tags.  We also strip out any
+                # link tags.
+                case "$line" in
+                "<title>"*)
+                        title=${line#*'>'}
+                        title=${title%'<'*}
+                        ;;
+                "<body"*)
+                        printf -- "---\n"
+                        printf "version: ${ver}\n"
+                        printf "layout: ${layout}\n"
+                        printf "title: ${title}\n"
+                        printf -- "---\n"
+                        printf "<main>\n"
+                        skip=
+                        ;;
+                "</body"*)
+                        printf "</main>\n"
+                        skip=yes
+                        ;;
+                "<link"*)
+                        # discard it
+                        ;;
+                *)
+                        if [[ -z "$skip" ]]; then
+                                printf "%s\n" "$line"
+                        fi
+                        ;;
+                esac
+        done
+}
 
 dest=${repo}/man/${ver}
 mkdir -p ${dest}
@@ -118,12 +166,15 @@ for f in ${scratch}/html/*; do
 
         # insert the header - HTML only
         case $f in
+        */_toc.html)
+                # SKIP the TOC
+                ;;
         *.html)
-                printf "--" "---\nversion: ${ver}\nlayout: refman\n---\n" > ${f}.new
-                cat ${f} >> ${f}.new
+                process_manpage manpage ${ver} < ${f} > ${f}.new
                 mv ${f}.new ${f}
                 ;;
         *.css)
+                continue
                 ;;
         esac
 

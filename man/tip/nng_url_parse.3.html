@@ -1,36 +1,11 @@
 ---
 version: tip
-layout: refman
+layout: manpage
+title: nng_url_parse(3)
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.10">
-<title>nng_url_parse(3)</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
-<link rel="stylesheet" href="./asciidoctor.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body class="manpage toc2 toc-left">
+<main>
 <div id="header">
 <h1>nng_url_parse(3) Manual Page</h1>
-<div id="toc" class="toc2">
-<div id="toctitle">Table of Contents</div>
-<ul class="sectlevel1">
-<li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a>
-<ul class="sectlevel2">
-<li><a href="#_url_canonicalization">URL Canonicalization</a></li>
-</ul>
-</li>
-<li><a href="#_return_values">RETURN VALUES</a></li>
-<li><a href="#_errors">ERRORS</a></li>
-<li><a href="#_see_also">SEE ALSO</a></li>
-</ul>
-</div>
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
 <p>nng_url_parse - create URL structure from a string</p>
@@ -64,16 +39,16 @@ is stored in <em>urlp</em>.</p>
 <div class="listingblock">
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-k">struct</span> <span class="tok-n">nng_url</span> <span class="tok-p">{</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_rawurl</span><span class="tok-p">;</span>   <span class="tok-c1">// Unparsed URL, with minimal canonicalization.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_scheme</span><span class="tok-p">;</span>   <span class="tok-c1">// Scheme, such as &quot;http&quot;; always lower case.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_userinfo</span><span class="tok-p">;</span> <span class="tok-c1">// Userinfo component, or NULL.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_host</span><span class="tok-p">;</span>     <span class="tok-c1">// Full host, including port if present.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_hostname</span><span class="tok-p">;</span> <span class="tok-c1">// Hostname only (or address), or empty string.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_port</span><span class="tok-p">;</span>     <span class="tok-c1">// Port number, may be default or empty string.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_path</span><span class="tok-p">;</span>     <span class="tok-c1">// Path if present, empty string otherwise.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_query</span><span class="tok-p">;</span>    <span class="tok-c1">// Query info if present, NULL otherwise.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_fragment</span><span class="tok-p">;</span> <span class="tok-c1">// Fragment if present, NULL otherwise.</span>
-    <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_requri</span><span class="tok-p">;</span>   <span class="tok-c1">// Request-URI (path[?query][#fragment])</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_rawurl</span><span class="tok-p">;</span>   <span class="tok-c1">// Unparsed URL, with minimal canonicalization.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_scheme</span><span class="tok-p">;</span>   <span class="tok-c1">// Scheme, such as &quot;http&quot;; always lower case.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_userinfo</span><span class="tok-p">;</span> <span class="tok-c1">// Userinfo component, or NULL.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_host</span><span class="tok-p">;</span>     <span class="tok-c1">// Full host, including port if present.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_hostname</span><span class="tok-p">;</span> <span class="tok-c1">// Hostname only (or address), or empty string.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_port</span><span class="tok-p">;</span>     <span class="tok-c1">// Port number, may be default or empty string.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_path</span><span class="tok-p">;</span>     <span class="tok-c1">// Path if present, empty string otherwise.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_query</span><span class="tok-p">;</span>    <span class="tok-c1">// Query info if present, NULL otherwise.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_fragment</span><span class="tok-p">;</span> <span class="tok-c1">// Fragment if present, NULL otherwise.</span>
+<span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">u_requri</span><span class="tok-p">;</span>   <span class="tok-c1">// Request-URI (path[?query][#fragment])</span>
 <span class="tok-p">};</span></code></pre>
 </div>
 </div>
@@ -129,8 +104,8 @@ port, then <code>u_port</code> will be filled in with the value of the default p
 </td>
 <td class="content">
 Only the <code>u_userinfo</code>, <code>u_query</code>, and <code>u_fragment</code> members will ever be
-     <code>NULL</code>.  The other members will be filled in with either default values
-     or the empty string if they cannot be determined from <em>str</em>.
+<code>NULL</code>.  The other members will be filled in with either default values
+or the empty string if they cannot be determined from <em>str</em>.
 </td>
 </tr>
 </table>
@@ -183,6 +158,4 @@ Only the <code>u_userinfo</code>, <code>u_query</code>, and <code>u_fragment</co
 </div>
 </div>
 </div>
-<link rel="stylesheet" href="./pygments-default.css">
-</body>
-</html>
+</main>

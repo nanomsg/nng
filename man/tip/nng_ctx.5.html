@@ -1,35 +1,11 @@
 ---
 version: tip
-layout: refman
+layout: manpage
+title: nng_ctx(5)
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.10">
-<title>nng_ctx(5)</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
-<link rel="stylesheet" href="./asciidoctor.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body class="manpage toc2 toc-left">
+<main>
 <div id="header">
 <h1>nng_ctx(5) Manual Page</h1>
-<div id="toc" class="toc2">
-<div id="toctitle">Table of Contents</div>
-<ul class="sectlevel1">
-<li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a>
-<ul class="sectlevel2">
-<li><a href="#NNG_CTX_INITIALIZER">Initialization</a></li>
-</ul>
-</li>
-<li><a href="#_example">EXAMPLE</a></li>
-<li><a href="#_see_also">SEE ALSO</a></li>
-</ul>
-</div>
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
 <p>nng_ctx - protocol context</p>
@@ -184,37 +160,37 @@ to the sender.</p>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span>
 <span class="tok-k">struct</span> <span class="tok-n">echo_context</span> <span class="tok-p">{</span>
-    <span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">;</span>
-    <span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">;</span>
-    <span class="tok-k">enum</span> <span class="tok-p">{</span> <span class="tok-n">INIT</span><span class="tok-p">,</span> <span class="tok-n">RECV</span><span class="tok-p">,</span> <span class="tok-n">SEND</span> <span class="tok-p">}</span> <span class="tok-n">state</span><span class="tok-p">;</span>
+<span class="tok-n">nng_ctx</span> <span class="tok-n">ctx</span><span class="tok-p">;</span>
+<span class="tok-n">nng_aio</span> <span class="tok-o">*</span><span class="tok-n">aio</span><span class="tok-p">;</span>
+<span class="tok-k">enum</span> <span class="tok-p">{</span> <span class="tok-n">INIT</span><span class="tok-p">,</span> <span class="tok-n">RECV</span><span class="tok-p">,</span> <span class="tok-n">SEND</span> <span class="tok-p">}</span> <span class="tok-n">state</span><span class="tok-p">;</span>
 <span class="tok-p">};</span>
 
 <span class="tok-kt">void</span>
 <span class="tok-nf">echo</span><span class="tok-p">(</span><span class="tok-kt">void</span> <span class="tok-o">*</span><span class="tok-n">arg</span><span class="tok-p">)</span>
 <span class="tok-p">{</span>
-    <span class="tok-k">struct</span> <span class="tok-n">echo_context</span> <span class="tok-o">*</span><span class="tok-n">ec</span> <span class="tok-o">=</span> <span class="tok-n">arg</span><span class="tok-p">;</span>
+<span class="tok-k">struct</span> <span class="tok-n">echo_context</span> <span class="tok-o">*</span><span class="tok-n">ec</span> <span class="tok-o">=</span> <span class="tok-n">arg</span><span class="tok-p">;</span>
 
-    <span class="tok-k">switch</span> <span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">state</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-    <span class="tok-k">case</span> <span class="tok-nl">INIT</span><span class="tok-p">:</span>
-        <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">state</span> <span class="tok-o">=</span> <span class="tok-n">RECV</span><span class="tok-p">;</span>
-        <span class="tok-n">nng_ctx_recv</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">);</span>
-        <span class="tok-k">return</span><span class="tok-p">;</span>
-    <span class="tok-k">case</span> <span class="tok-nl">RECV</span><span class="tok-p">:</span>
-        <span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">nng_aio_result</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">)</span> <span class="tok-o">!=</span> <span class="tok-mi">0</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-            <span class="tok-c1">// ... handle error</span>
-        <span class="tok-p">}</span>
-        <span class="tok-c1">// We reuse the message on the ec-&gt;aio</span>
-        <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">state</span> <span class="tok-o">=</span> <span class="tok-n">SEND</span><span class="tok-p">;</span>
-        <span class="tok-n">nng_ctx_send</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">);</span>
-        <span class="tok-k">return</span><span class="tok-p">;</span>
-    <span class="tok-k">case</span> <span class="tok-nl">SEND</span><span class="tok-p">:</span>
-        <span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">nng_aio_result</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">)</span> <span class="tok-o">!=</span> <span class="tok-mi">0</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-            <span class="tok-c1">// ... handle error</span>
-        <span class="tok-p">}</span>
-        <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">state</span> <span class="tok-o">=</span> <span class="tok-n">RECV</span><span class="tok-p">;</span>
-        <span class="tok-n">nng_ctx_recv</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">);</span>
-        <span class="tok-k">return</span><span class="tok-p">;</span>
-    <span class="tok-p">}</span>
+<span class="tok-k">switch</span> <span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">state</span><span class="tok-p">)</span> <span class="tok-p">{</span>
+<span class="tok-k">case</span> <span class="tok-nl">INIT</span><span class="tok-p">:</span>
+<span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">state</span> <span class="tok-o">=</span> <span class="tok-n">RECV</span><span class="tok-p">;</span>
+<span class="tok-n">nng_ctx_recv</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">);</span>
+<span class="tok-k">return</span><span class="tok-p">;</span>
+<span class="tok-k">case</span> <span class="tok-nl">RECV</span><span class="tok-p">:</span>
+<span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">nng_aio_result</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">)</span> <span class="tok-o">!=</span> <span class="tok-mi">0</span><span class="tok-p">)</span> <span class="tok-p">{</span>
+<span class="tok-c1">// ... handle error</span>
+<span class="tok-p">}</span>
+<span class="tok-c1">// We reuse the message on the ec-&gt;aio</span>
+<span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">state</span> <span class="tok-o">=</span> <span class="tok-n">SEND</span><span class="tok-p">;</span>
+<span class="tok-n">nng_ctx_send</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">);</span>
+<span class="tok-k">return</span><span class="tok-p">;</span>
+<span class="tok-k">case</span> <span class="tok-nl">SEND</span><span class="tok-p">:</span>
+<span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">nng_aio_result</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">)</span> <span class="tok-o">!=</span> <span class="tok-mi">0</span><span class="tok-p">)</span> <span class="tok-p">{</span>
+<span class="tok-c1">// ... handle error</span>
+<span class="tok-p">}</span>
+<span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">state</span> <span class="tok-o">=</span> <span class="tok-n">RECV</span><span class="tok-p">;</span>
+<span class="tok-n">nng_ctx_recv</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-n">ec</span><span class="tok-o">-&gt;</span><span class="tok-n">aio</span><span class="tok-p">);</span>
+<span class="tok-k">return</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
 <span class="tok-p">}</span></code></pre>
 </div>
 </div>
@@ -234,13 +210,13 @@ or <a href="nng_listen.3.html"><code>nng_listen()</code></a>.</p>
 <span class="tok-kt">void</span>
 <span class="tok-nf">start_echo_service</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-n">rep_socket</span><span class="tok-p">)</span>
 <span class="tok-p">{</span>
-    <span class="tok-k">for</span> <span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-mi">0</span><span class="tok-p">;</span> <span class="tok-n">i</span> <span class="tok-o">&lt;</span> <span class="tok-n">CONCURRENCY</span><span class="tok-p">;</span> <span class="tok-n">i</span><span class="tok-o">++</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-        <span class="tok-c1">// error checks elided for clarity</span>
-        <span class="tok-n">nng_ctx_open</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">].</span><span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-n">rep_socket</span><span class="tok-p">)</span>
-        <span class="tok-n">nng_aio_alloc</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">].</span><span class="tok-n">aio</span><span class="tok-p">,</span> <span class="tok-n">echo</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">e</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]);</span>
-        <span class="tok-n">ec</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">].</span><span class="tok-n">state</span> <span class="tok-o">=</span> <span class="tok-n">INIT</span><span class="tok-p">;</span>
-        <span class="tok-n">echo</span><span class="tok-p">(</span><span class="tok-o">&amp;</span><span class="tok-n">ec</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]);</span> <span class="tok-c1">// start it running</span>
-    <span class="tok-p">}</span>
+<span class="tok-k">for</span> <span class="tok-p">(</span><span class="tok-kt">int</span> <span class="tok-n">i</span> <span class="tok-o">=</span> <span class="tok-mi">0</span><span class="tok-p">;</span> <span class="tok-n">i</span> <span class="tok-o">&lt;</span> <span class="tok-n">CONCURRENCY</span><span class="tok-p">;</span> <span class="tok-n">i</span><span class="tok-o">++</span><span class="tok-p">)</span> <span class="tok-p">{</span>
+<span class="tok-c1">// error checks elided for clarity</span>
+<span class="tok-n">nng_ctx_open</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">].</span><span class="tok-n">ctx</span><span class="tok-p">,</span> <span class="tok-n">rep_socket</span><span class="tok-p">)</span>
+<span class="tok-n">nng_aio_alloc</span><span class="tok-p">(</span><span class="tok-n">ec</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">].</span><span class="tok-n">aio</span><span class="tok-p">,</span> <span class="tok-n">echo</span><span class="tok-p">,</span> <span class="tok-o">&amp;</span><span class="tok-n">e</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]);</span>
+<span class="tok-n">ec</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">].</span><span class="tok-n">state</span> <span class="tok-o">=</span> <span class="tok-n">INIT</span><span class="tok-p">;</span>
+<span class="tok-n">echo</span><span class="tok-p">(</span><span class="tok-o">&amp;</span><span class="tok-n">ec</span><span class="tok-p">[</span><span class="tok-n">i</span><span class="tok-p">]);</span> <span class="tok-c1">// start it running</span>
+<span class="tok-p">}</span>
 <span class="tok-p">}</span></code></pre>
 </div>
 </div>
@@ -267,6 +243,4 @@ or <a href="nng_listen.3.html"><code>nng_listen()</code></a>.</p>
 </div>
 </div>
 </div>
-<link rel="stylesheet" href="./pygments-default.css">
-</body>
-</html>
+</main>

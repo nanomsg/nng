@@ -1,33 +1,11 @@
 ---
 version: tip
-layout: refman
+layout: manpage
+title: nng_cv_until(3supp)
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.10">
-<title>nng_cv_until(3supp)</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
-<link rel="stylesheet" href="./asciidoctor.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body class="manpage toc2 toc-left">
+<main>
 <div id="header">
 <h1>nng_cv_until(3supp) Manual Page</h1>
-<div id="toc" class="toc2">
-<div id="toctitle">Table of Contents</div>
-<ul class="sectlevel1">
-<li><a href="#_synopsis">SYNOPSIS</a></li>
-<li><a href="#_description">DESCRIPTION</a></li>
-<li><a href="#_example">EXAMPLE</a></li>
-<li><a href="#_return_values">RETURN VALUES</a></li>
-<li><a href="#_errors">ERRORS</a></li>
-<li><a href="#_see_also">SEE ALSO</a></li>
-</ul>
-</div>
 <h2 id="_name">NAME</h2>
 <div class="sectionbody">
 <p>nng_cv_until - wait for condition or timeout</p>
@@ -90,24 +68,24 @@ tests for true.
 <div class="title">Example 1: Waiting for the condition</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span>
-    <span class="tok-n">nng_mtx_lock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span>  <span class="tok-c1">// assume cv was allocated using m</span>
-    <span class="tok-k">while</span> <span class="tok-p">(</span><span class="tok-o">!</span><span class="tok-n">condition_true</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-        <span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">nng_cv_wait</span><span class="tok-p">(</span><span class="tok-n">cv</span><span class="tok-p">)</span> <span class="tok-o">==</span> <span class="tok-n">NNG_ETIMEDOUT</span><span class="tok-p">)</span> <span class="tok-p">{</span>
-            <span class="tok-n">printf</span><span class="tok-p">(</span><span class="tok-s">&quot;Time out reached!</span><span class="tok-se">\n</span><span class="tok-s">&quot;</span><span class="tok-p">);</span>
-            <span class="tok-k">break</span><span class="tok-p">;</span>
-        <span class="tok-p">}</span>
-    <span class="tok-p">}</span>
-    <span class="tok-c1">// condition_true is true</span>
-    <span class="tok-n">nng_mtx_unlock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span></code></pre>
+<span class="tok-n">nng_mtx_lock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span>  <span class="tok-c1">// assume cv was allocated using m</span>
+<span class="tok-k">while</span> <span class="tok-p">(</span><span class="tok-o">!</span><span class="tok-n">condition_true</span><span class="tok-p">)</span> <span class="tok-p">{</span>
+<span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">nng_cv_wait</span><span class="tok-p">(</span><span class="tok-n">cv</span><span class="tok-p">)</span> <span class="tok-o">==</span> <span class="tok-n">NNG_ETIMEDOUT</span><span class="tok-p">)</span> <span class="tok-p">{</span>
+<span class="tok-n">printf</span><span class="tok-p">(</span><span class="tok-s">&quot;Time out reached!</span><span class="tok-se">n</span><span class="tok-s">&quot;</span><span class="tok-p">);</span>
+<span class="tok-k">break</span><span class="tok-p">;</span>
+<span class="tok-p">}</span>
+<span class="tok-p">}</span>
+<span class="tok-c1">// condition_true is true</span>
+<span class="tok-n">nng_mtx_unlock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 <div class="listingblock">
 <div class="title">Example 2: Signaling the condition</div>
 <div class="content">
 <pre class="pygments highlight"><code data-lang="c"><span></span>    <span class="tok-n">nng_mtx_lock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span>
-    <span class="tok-n">condition_true</span> <span class="tok-o">=</span> <span class="tok-nb">true</span><span class="tok-p">;</span>
-    <span class="tok-n">nng_cv_wake</span><span class="tok-p">(</span><span class="tok-n">cv</span><span class="tok-p">);</span>
-    <span class="tok-n">nng_mtx_unlock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span></code></pre>
+<span class="tok-n">condition_true</span> <span class="tok-o">=</span> <span class="tok-nb">true</span><span class="tok-p">;</span>
+<span class="tok-n">nng_cv_wake</span><span class="tok-p">(</span><span class="tok-n">cv</span><span class="tok-p">);</span>
+<span class="tok-n">nng_mtx_unlock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -144,6 +122,4 @@ tests for true.
 </div>
 </div>
 </div>
-<link rel="stylesheet" href="./pygments-default.css">
-</body>
-</html>
+</main>
