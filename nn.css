@@ -431,8 +431,8 @@ a span.icon>.fa {
         color: #bf0000
 }
 
-#nn-version-note {
-        font-size: .9em;
+.nn-version-note {
+        font-size: .95em;
 }
 
 /* image */
@@ -460,10 +460,13 @@ video {
 /* table of Contents sidebar */
 
 .toc2 {
-        padding: 1.25em 1em;
         display: flex;
         flex-direction: column;
         bottom: 0;
+}
+
+body.toc2 {
+        align-items: flex-start;
 }
 
 nav.toc2 {
@@ -474,6 +477,7 @@ nav.toc2 {
         position: fixed;
         top: 5em;
         bottom: 6.5em;
+        padding: 1.25em 1em;
 }
 
 @media screen and (maxwidth: 768px) {
