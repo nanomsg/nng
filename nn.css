@@ -63,7 +63,6 @@ a.nn-logo {
 }
 
 .nn-footer {
-        width: 100%;
         margin-left: 20em;
 }
 
@@ -75,7 +74,7 @@ a.nn-logo {
         line-height: 1.6;
 }
 
-.nn-header-inner, .nn-footer-inner {
+.nn-header-inner {
         padding: 0em 4em 0em 2em;
 }
 
