@@ -431,6 +431,10 @@ a span.icon>.fa {
         color: #bf0000
 }
 
+#nn-version-note {
+        font-size: .9em;
+}
+
 /* image */
 
 img {
@@ -505,7 +509,7 @@ nav.toc2 {
 
 main {
         padding-left: 20em;
-        padding-top: 6em;
+        padding-top: 5em;
         display: inline-block;
         max-width: 62.5em;
         overflow-y: auto

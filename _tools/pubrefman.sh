@@ -146,9 +146,9 @@ process_manpage() {
                         cat <<EOF
 {% if page.version and page.version != site.latest  %}
 {% if page.version == "tip" %}
-{% include tip_version.html %}
+{% include manpage-tip.html %}
 {% else %}
-{% include old_version.html %}
+{% include manpage-old.html %}
 {% endif %}
 {% endif %}
 EOF
