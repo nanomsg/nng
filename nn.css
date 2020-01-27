@@ -461,12 +461,12 @@ video {
 
 .toc2 {
         display: flex;
-        flex-direction: column;
         bottom: 0;
 }
 
 body.toc2 {
         align-items: flex-start;
+        flex-direction: row;
 }
 
 nav.toc2 {
@@ -478,6 +478,7 @@ nav.toc2 {
         top: 5em;
         bottom: 6.5em;
         padding: 1.25em 1em;
+        flex-direction: column;
 }
 
 @media screen and (maxwidth: 768px) {
