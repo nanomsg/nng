@@ -346,6 +346,13 @@ title: nn_poll(3compat)
 </ul>
 </nav>
 <main>
+{% if page.version and page.version != site.latest  %}
+{% if page.version == "tip" %}
+{% include tip_version.html %}
+{% else %}
+{% include old_version.html %}
+{% endif %}
+{% endif %}
 <div id="header">
 <h1>nn_poll(3compat) Manual Page</h1>
 <h2 id="_name">NAME</h2>

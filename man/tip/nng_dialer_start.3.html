@@ -346,6 +346,13 @@ title: nng_dialer_start(3)
 </ul>
 </nav>
 <main>
+{% if page.version and page.version != site.latest  %}
+{% if page.version == "tip" %}
+{% include tip_version.html %}
+{% else %}
+{% include old_version.html %}
+{% endif %}
+{% endif %}
 <div id="header">
 <h1>nng_dialer_start(3) Manual Page</h1>
 <h2 id="_name">NAME</h2>
