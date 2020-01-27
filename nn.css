@@ -42,6 +42,10 @@ a.nn-nav-link {
         text-decoration: none;
 }
 
+a.nn-logo {
+        text-decoration: none;
+}
+
 .nn-nav-item {
         text-decoration: none;
         font-family: 'Roboto', 'Trebuchet MS', sans-serif;
@@ -95,10 +99,8 @@ a.nn-nav-link {
 
 .nn-logo {
         font-size: 2.5em;
-        color: black;
         font-family: 'Roboto', 'Trebuchet MS', sans-serif;
         font-weight: normal;
-        text-decoration: none;
         flex: 0 0;
 }
 
