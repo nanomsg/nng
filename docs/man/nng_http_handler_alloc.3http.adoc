@@ -2,6 +2,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -111,9 +112,13 @@ If no such index file exists, then an `NNG_HTTP_STATUS_NOT_FOUND` (404) error is
 sent back to the client.
 
 The `Content-Type` will be set automatically based upon the extension
-of the requested file name.
-If a content type cannot be determined from
+of the requested file name. If a content type cannot be determined from
 the extension, then `application/octet-stream` is used.
+
+The directory handler is created as a tree handler initially in exclusive mode (see
+xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree_exclusive
+]). This can be changed by calling xref:nng_http_handler_set_tree.3http.adoc
+[nng_http_handler_set_tree(3http)] after creating the directory handler.
 
 === File Handler
 
@@ -178,6 +183,7 @@ xref:nng_http_handler_free.3http.adoc[nng_http_handler_free(3http)],
 xref:nng_http_handler_set_host.3http.adoc[nng_http_handler_set_host(3http)],
 xref:nng_http_handler_set_method.3http.adoc[nng_http_handler_set_method(3http)],
 xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree(3http)],
+xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree_exclusive(3http)],
 xref:nng_http_res_alloc.3http.adoc[nng_http_res_alloc(3http)],
 xref:nng_http_res_alloc_error.3http.adoc[nng_http_res_alloc_error(3http)],
 xref:nng_http_server_add_handler.3http.adoc[nng_http_server_add_handler(3http)],

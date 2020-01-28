@@ -2,6 +2,7 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -21,6 +22,8 @@ nng_http_handler_set_tree - set HTTP handler to match trees
 #include <nng/supplemental/http/http.h>
 
 int nng_http_handler_set_tree(nng_http_handler *handler);
+
+int nng_http_handler_set_tree_exclusive(nng_http_handler *handler);
 ----
 
 == DESCRIPTION
@@ -29,7 +32,12 @@ The `nng_http_handler_set_tree()` function causes the _handler_ to be
 matched if the Request URI sent by the client is a logical child of
 the path for _handler_.
 
-TIP: This method is useful when constructing API handlers where a single
+The `nng_http_handler_set_tree_exclusive()` function is similar to `nng_http_server_set_tree()`
+with the distinction that the _handler_ will be considered to *exclusively* handling its 
+Request URI. Other handlers will be tested against _handler_ when being added to a server, 
+possibly resulting in a URI conflict error.
+
+TIP: These methods are useful when constructing API handlers where a single
 service address (path) supports dynamically generated children.
 
 == RETURN VALUES

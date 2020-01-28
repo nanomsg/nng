@@ -3,6 +3,7 @@
 // Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
+// Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
 // This document is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this

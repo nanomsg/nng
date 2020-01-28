@@ -301,6 +301,13 @@ extern void nni_http_handler_collect_body(nni_http_handler *, bool, size_t);
 // will probably need to inspect the URL of the request.
 extern int nni_http_handler_set_tree(nni_http_handler *);
 
+// nni_http_handler_set_tree_exclusive marks the handler as servicing the
+// entire tree (e.g. a directory) exclusively, rather than just a leaf node.
+// When servicing a tree exclusively, other handlers sharing parts of the uri
+// will induce an address conflict when adding them to a server. The handler
+// will probably need to inspect the URL of the request.
+extern int nni_http_handler_set_tree_exclusive(nni_http_handler *);
+
 // nni_http_handler_set_host limits the handler to only being called for
 // the given Host: field.  This can be used to set up multiple virtual
 // hosts.  Note that host names must match exactly.  If NULL or an empty
