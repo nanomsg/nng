@@ -62,40 +62,22 @@ set(NNG_DESCRIPTION "High-Performance Scalability Protocols NextGen")
 set(ISSUE_REPORT_MSG "Please consider opening an issue at https://github.com/nanomsg/nng")
 
 # Determine library versions.
+file(READ "include/nng/nng.h" nng_ver_h)
+string(REGEX MATCH "NNG_MAJOR_VERSION ([0-9]*)" _ ${nng_ver_h})
+set(NNG_MAJOR_VERSION ${CMAKE_MATCH_1})
+string(REGEX MATCH "NNG_MINOR_VERSION ([0-9]*)" _ ${nng_ver_h})
+set(NNG_MINOR_VERSION ${CMAKE_MATCH_1})
+string(REGEX MATCH "NNG_PATCH_VERSION ([0-9]*)" _ ${nng_ver_h})
+set(NNG_PATCH_VERSION ${CMAKE_MATCH_1})
+string(REGEX MATCH "NNG_RELEASE_SUFFIX \"([a-z0-9]*)\"" _ ${nng_ver_h})
+if (NOT(${CMAKE_MATCH_1} STREQUAL ""))
+    set(NNG_PRERELEASE "-${CMAKE_MATCH_1}")
+endif ()
+
 set(NNG_ABI_SOVERSION 1)
-set(NNG_ABI_VERSION "1.3.0")
-
-# Determine package version.
-find_package(Git QUIET)
-if (GIT_FOUND AND EXISTS "${PROJECT_SOURCE_DIR}/.git")
-    # Working off a git repo, using git versioning
-
-    # Get version from last tag
-    execute_process(
-            COMMAND "${GIT_EXECUTABLE}" describe --always# | sed -e "s:v::"
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            OUTPUT_VARIABLE NNG_PACKAGE_VERSION
-            OUTPUT_STRIP_TRAILING_WHITESPACE)
-
-    # If the sources have been changed locally, add -dirty to the version.
-    execute_process(
-            COMMAND "${GIT_EXECUTABLE}" diff --quiet
-            WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
-            RESULT_VARIABLE res)
-    if (res EQUAL 1)
-        set(NNG_PACKAGE_VERSION "${NNG_PACKAGE_VERSION}-dirty")
-    endif ()
-
-else ()
-    set(NNG_PACKAGE_VERSION "Unknown")
-endif ()
-if ("${NNG_PACKAGE_VERSION}" MATCHES "v[0-9]")
-    string(SUBSTRING "${NNG_PACKAGE_VERSION}" 1 -1 NNG_PACKAGE_VERSION)
-endif ()
-
-string(REGEX REPLACE "([0-9]+).[0-9]+.+" "\\1" NNG_VERSION_MAJOR "${NNG_PACKAGE_VERSION}")
-string(REGEX REPLACE "[0-9]+.([0-9]+).[0-9].+" "\\1" NNG_VERSION_MINOR "${NNG_PACKAGE_VERSION}")
-string(REGEX REPLACE "[0-9]+.[0-9]+.([0-9]+).*" "\\1" NNG_VERSION_PATCH "${NNG_PACKAGE_VERSION}")
+set(NNG_ABI_VERSION "${NNG_MAJOR_VERSION}.${NNG_MINOR_VERSION}.${NNG_PATCH_VERSION}${NNG_PRERELEASE}")
+set(NNG_PACKAGE_VERSION "${NNG_ABI_VERSION}")
+message("Configuring for NNG version ${NNG_ABI_VERSION}")
 
 # User-defined options.
 
