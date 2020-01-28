@@ -1,6 +1,6 @@
 = nng_http_handler_set_tree(3http)
-//
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -8,7 +8,6 @@
 // copy of which should be located in the distribution where this
 // file was obtained (LICENSE.txt).  A copy of the license may also be
 // found online at https://opensource.org/licenses/MIT.
-//
 
 == NAME
 
@@ -16,7 +15,7 @@ nng_http_handler_set_tree - set HTTP handler to match trees
 
 == SYNOPSIS
 
-[source, c]
+[source,c]
 ----
 #include <nng/nng.h>
 #include <nng/supplemental/http/http.h>
@@ -28,17 +27,26 @@ int nng_http_handler_set_tree_exclusive(nng_http_handler *handler);
 
 == DESCRIPTION
 
-The `nng_http_handler_set_tree()` function causes the _handler_ to be
-matched if the Request URI sent by the client is a logical child of
-the path for _handler_.
+The `nng_http_handler_set_tree()` function causes the _handler_ to be matched if the request URI sent
+by the client is a logical child of the path for _handler_, and no more specific
+_handler_ has been registered.
 
 The `nng_http_handler_set_tree_exclusive()` function is similar to `nng_http_server_set_tree()`
-with the distinction that the _handler_ will be considered to *exclusively* handling its 
-Request URI. Other handlers will be tested against _handler_ when being added to a server, 
-possibly resulting in a URI conflict error.
+with the distinction that the _handler_ will be considered to *exclusively* handle its request URI.
+Unlike `nng_http_server_set_tree()`, it will not be possible to register additional
+handlers in logical subdirectories of _handler_.
+
+This is useful in cases when the handler would like to examine the entire path
+and possibly behave differently; for example a REST API that uses the rest of
+the path to pass additional parameters.
 
 TIP: These methods are useful when constructing API handlers where a single
 service address (path) supports dynamically generated children.
+
+TIP: The non-exclusive form is also useful for providing a default handler to be
+generated when a more specific child does not exist.
+This can provide a better experience for users than the standard 404 error
+handling.
 
 == RETURN VALUES
 
