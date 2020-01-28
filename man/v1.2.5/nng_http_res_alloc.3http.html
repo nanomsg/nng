@@ -1,0 +1,458 @@
+---
+version: v1.2.5
+layout: manpage
+title: nng_http_res_alloc(3http)
+---
+<nav id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1
+">
+<li>Commands and Utilities</li>
+<ul class="sectlevel2">
+<li><a href="nngcat.1.html">nngcat</a></li>
+</ul>
+<li>Library Functions</li>
+<ul class="sectlevel2">
+<li><a href="libnng.3.html">libnng</a></li>
+<li><a href="nng_aio_abort.3.html">nng_aio_abort</a></li>
+<li><a href="nng_aio_alloc.3.html">nng_aio_alloc</a></li>
+<li><a href="nng_aio_begin.3.html">nng_aio_begin</a></li>
+<li><a href="nng_aio_cancel.3.html">nng_aio_cancel</a></li>
+<li><a href="nng_aio_count.3.html">nng_aio_count</a></li>
+<li><a href="nng_aio_defer.3.html">nng_aio_defer</a></li>
+<li><a href="nng_aio_finish.3.html">nng_aio_finish</a></li>
+<li><a href="nng_aio_free.3.html">nng_aio_free</a></li>
+<li><a href="nng_aio_get_input.3.html">nng_aio_get_input</a></li>
+<li><a href="nng_aio_get_msg.3.html">nng_aio_get_msg</a></li>
+<li><a href="nng_aio_get_output.3.html">nng_aio_get_output</a></li>
+<li><a href="nng_aio_result.3.html">nng_aio_result</a></li>
+<li><a href="nng_aio_set_input.3.html">nng_aio_set_input</a></li>
+<li><a href="nng_aio_set_iov.3.html">nng_aio_set_iov</a></li>
+<li><a href="nng_aio_set_msg.3.html">nng_aio_set_msg</a></li>
+<li><a href="nng_aio_set_output.3.html">nng_aio_set_output</a></li>
+<li><a href="nng_aio_set_timeout.3.html">nng_aio_set_timeout</a></li>
+<li><a href="nng_aio_stop.3.html">nng_aio_stop</a></li>
+<li><a href="nng_aio_wait.3.html">nng_aio_wait</a></li>
+<li><a href="nng_alloc.3.html">nng_alloc</a></li>
+<li><a href="nng_bus_open.3.html">nng_bus_open</a></li>
+<li><a href="nng_close.3.html">nng_close</a></li>
+<li><a href="nng_ctx_close.3.html">nng_ctx_close</a></li>
+<li><a href="nng_ctx_get.3.html">nng_ctx_get</a></li>
+<li><a href="nng_ctx_getopt.3.html">nng_ctx_getopt</a></li>
+<li><a href="nng_ctx_id.3.html">nng_ctx_id</a></li>
+<li><a href="nng_ctx_open.3.html">nng_ctx_open</a></li>
+<li><a href="nng_ctx_recv.3.html">nng_ctx_recv</a></li>
+<li><a href="nng_ctx_send.3.html">nng_ctx_send</a></li>
+<li><a href="nng_ctx_set.3.html">nng_ctx_set</a></li>
+<li><a href="nng_ctx_setopt.3.html">nng_ctx_setopt</a></li>
+<li><a href="nng_device.3.html">nng_device</a></li>
+<li><a href="nng_dial.3.html">nng_dial</a></li>
+<li><a href="nng_dialer_close.3.html">nng_dialer_close</a></li>
+<li><a href="nng_dialer_create.3.html">nng_dialer_create</a></li>
+<li><a href="nng_dialer_get.3.html">nng_dialer_get</a></li>
+<li><a href="nng_dialer_getopt.3.html">nng_dialer_getopt</a></li>
+<li><a href="nng_dialer_id.3.html">nng_dialer_id</a></li>
+<li><a href="nng_dialer_set.3.html">nng_dialer_set</a></li>
+<li><a href="nng_dialer_setopt.3.html">nng_dialer_setopt</a></li>
+<li><a href="nng_dialer_start.3.html">nng_dialer_start</a></li>
+<li><a href="nng_free.3.html">nng_free</a></li>
+<li><a href="nng_getopt.3.html">nng_getopt</a></li>
+<li><a href="nng_inproc_register.3.html">nng_inproc_register</a></li>
+<li><a href="nng_ipc_register.3.html">nng_ipc_register</a></li>
+<li><a href="nng_listen.3.html">nng_listen</a></li>
+<li><a href="nng_listener_close.3.html">nng_listener_close</a></li>
+<li><a href="nng_listener_create.3.html">nng_listener_create</a></li>
+<li><a href="nng_listener_get.3.html">nng_listener_get</a></li>
+<li><a href="nng_listener_getopt.3.html">nng_listener_getopt</a></li>
+<li><a href="nng_listener_id.3.html">nng_listener_id</a></li>
+<li><a href="nng_listener_set.3.html">nng_listener_set</a></li>
+<li><a href="nng_listener_setopt.3.html">nng_listener_setopt</a></li>
+<li><a href="nng_listener_start.3.html">nng_listener_start</a></li>
+<li><a href="nng_msg_alloc.3.html">nng_msg_alloc</a></li>
+<li><a href="nng_msg_append.3.html">nng_msg_append</a></li>
+<li><a href="nng_msg_body.3.html">nng_msg_body</a></li>
+<li><a href="nng_msg_chop.3.html">nng_msg_chop</a></li>
+<li><a href="nng_msg_clear.3.html">nng_msg_clear</a></li>
+<li><a href="nng_msg_dup.3.html">nng_msg_dup</a></li>
+<li><a href="nng_msg_free.3.html">nng_msg_free</a></li>
+<li><a href="nng_msg_get_pipe.3.html">nng_msg_get_pipe</a></li>
+<li><a href="nng_msg_header.3.html">nng_msg_header</a></li>
+<li><a href="nng_msg_header_append.3.html">nng_msg_header_append</a></li>
+<li><a href="nng_msg_header_chop.3.html">nng_msg_header_chop</a></li>
+<li><a href="nng_msg_header_clear.3.html">nng_msg_header_clear</a></li>
+<li><a href="nng_msg_header_insert.3.html">nng_msg_header_insert</a></li>
+<li><a href="nng_msg_header_len.3.html">nng_msg_header_len</a></li>
+<li><a href="nng_msg_header_trim.3.html">nng_msg_header_trim</a></li>
+<li><a href="nng_msg_insert.3.html">nng_msg_insert</a></li>
+<li><a href="nng_msg_len.3.html">nng_msg_len</a></li>
+<li><a href="nng_msg_realloc.3.html">nng_msg_realloc</a></li>
+<li><a href="nng_msg_set_pipe.3.html">nng_msg_set_pipe</a></li>
+<li><a href="nng_msg_trim.3.html">nng_msg_trim</a></li>
+<li><a href="nng_pair_open.3.html">nng_pair_open</a></li>
+<li><a href="nng_pipe_close.3.html">nng_pipe_close</a></li>
+<li><a href="nng_pipe_dialer.3.html">nng_pipe_dialer</a></li>
+<li><a href="nng_pipe_get.3.html">nng_pipe_get</a></li>
+<li><a href="nng_pipe_getopt.3.html">nng_pipe_getopt</a></li>
+<li><a href="nng_pipe_id.3.html">nng_pipe_id</a></li>
+<li><a href="nng_pipe_listener.3.html">nng_pipe_listener</a></li>
+<li><a href="nng_pipe_notify.3.html">nng_pipe_notify</a></li>
+<li><a href="nng_pipe_socket.3.html">nng_pipe_socket</a></li>
+<li><a href="nng_pub_open.3.html">nng_pub_open</a></li>
+<li><a href="nng_pull_open.3.html">nng_pull_open</a></li>
+<li><a href="nng_push_open.3.html">nng_push_open</a></li>
+<li><a href="nng_recv.3.html">nng_recv</a></li>
+<li><a href="nng_recv_aio.3.html">nng_recv_aio</a></li>
+<li><a href="nng_recvmsg.3.html">nng_recvmsg</a></li>
+<li><a href="nng_rep_open.3.html">nng_rep_open</a></li>
+<li><a href="nng_req_open.3.html">nng_req_open</a></li>
+<li><a href="nng_respondent_open.3.html">nng_respondent_open</a></li>
+<li><a href="nng_send.3.html">nng_send</a></li>
+<li><a href="nng_send_aio.3.html">nng_send_aio</a></li>
+<li><a href="nng_sendmsg.3.html">nng_sendmsg</a></li>
+<li><a href="nng_setopt.3.html">nng_setopt</a></li>
+<li><a href="nng_sleep_aio.3.html">nng_sleep_aio</a></li>
+<li><a href="nng_socket_get.3.html">nng_socket_get</a></li>
+<li><a href="nng_socket_id.3.html">nng_socket_id</a></li>
+<li><a href="nng_socket_set.3.html">nng_socket_set</a></li>
+<li><a href="nng_stat_child.3.html">nng_stat_child</a></li>
+<li><a href="nng_stat_desc.3.html">nng_stat_desc</a></li>
+<li><a href="nng_stat_name.3.html">nng_stat_name</a></li>
+<li><a href="nng_stat_next.3.html">nng_stat_next</a></li>
+<li><a href="nng_stat_string.3.html">nng_stat_string</a></li>
+<li><a href="nng_stat_timestamp.3.html">nng_stat_timestamp</a></li>
+<li><a href="nng_stat_type.3.html">nng_stat_type</a></li>
+<li><a href="nng_stat_unit.3.html">nng_stat_unit</a></li>
+<li><a href="nng_stat_value.3.html">nng_stat_value</a></li>
+<li><a href="nng_stats_free.3.html">nng_stats_free</a></li>
+<li><a href="nng_stats_get.3.html">nng_stats_get</a></li>
+<li><a href="nng_strdup.3.html">nng_strdup</a></li>
+<li><a href="nng_strerror.3.html">nng_strerror</a></li>
+<li><a href="nng_strfree.3.html">nng_strfree</a></li>
+<li><a href="nng_sub_open.3.html">nng_sub_open</a></li>
+<li><a href="nng_surveyor_open.3.html">nng_surveyor_open</a></li>
+<li><a href="nng_tcp_register.3.html">nng_tcp_register</a></li>
+<li><a href="nng_tls_register.3.html">nng_tls_register</a></li>
+<li><a href="nng_url_clone.3.html">nng_url_clone</a></li>
+<li><a href="nng_url_free.3.html">nng_url_free</a></li>
+<li><a href="nng_url_parse.3.html">nng_url_parse</a></li>
+<li><a href="nng_version.3.html">nng_version</a></li>
+<li><a href="nng_ws_register.3.html">nng_ws_register</a></li>
+<li><a href="nng_wss_register.3.html">nng_wss_register</a></li>
+<li><a href="nng_zt_register.3.html">nng_zt_register</a></li>
+</ul>
+<li>Compatible Library Functions</li>
+<ul class="sectlevel2">
+<li><a href="nn_allocmsg.3compat.html">nn_allocmsg</a></li>
+<li><a href="nn_bind.3compat.html">nn_bind</a></li>
+<li><a href="nn_close.3compat.html">nn_close</a></li>
+<li><a href="nn_cmsg.3compat.html">nn_cmsg</a></li>
+<li><a href="nn_connect.3compat.html">nn_connect</a></li>
+<li><a href="nn_device.3compat.html">nn_device</a></li>
+<li><a href="nn_errno.3compat.html">nn_errno</a></li>
+<li><a href="nn_freemsg.3compat.html">nn_freemsg</a></li>
+<li><a href="nn_get_statistic.3compat.html">nn_get_statistic</a></li>
+<li><a href="nn_getsockopt.3compat.html">nn_getsockopt</a></li>
+<li><a href="nn_poll.3compat.html">nn_poll</a></li>
+<li><a href="nn_reallocmsg.3compat.html">nn_reallocmsg</a></li>
+<li><a href="nn_recv.3compat.html">nn_recv</a></li>
+<li><a href="nn_recvmsg.3compat.html">nn_recvmsg</a></li>
+<li><a href="nn_send.3compat.html">nn_send</a></li>
+<li><a href="nn_sendmsg.3compat.html">nn_sendmsg</a></li>
+<li><a href="nn_setsockopt.3compat.html">nn_setsockopt</a></li>
+<li><a href="nn_shutdown.3compat.html">nn_shutdown</a></li>
+<li><a href="nn_socket.3compat.html">nn_socket</a></li>
+<li><a href="nn_strerror.3compat.html">nn_strerror</a></li>
+<li><a href="nn_term.3compat.html">nn_term</a></li>
+<li><a href="nng_compat.3compat.html">nng_compat</a></li>
+</ul>
+<li>Supplemental HTTP Functions</li>
+<ul class="sectlevel2">
+<li><a href="nng_http_client_alloc.3http.html">nng_http_client_alloc</a></li>
+<li><a href="nng_http_client_connect.3http.html">nng_http_client_connect</a></li>
+<li><a href="nng_http_client_free.3http.html">nng_http_client_free</a></li>
+<li><a href="nng_http_client_get_tls.3http.html">nng_http_client_get_tls</a></li>
+<li><a href="nng_http_client_set_tls.3http.html">nng_http_client_set_tls</a></li>
+<li><a href="nng_http_client_transact.3http.html">nng_http_client_transact</a></li>
+<li><a href="nng_http_conn_close.3http.html">nng_http_conn_close</a></li>
+<li><a href="nng_http_conn_read.3http.html">nng_http_conn_read</a></li>
+<li><a href="nng_http_conn_read_all.3http.html">nng_http_conn_read_all</a></li>
+<li><a href="nng_http_conn_read_req.3http.html">nng_http_conn_read_req</a></li>
+<li><a href="nng_http_conn_read_res.3http.html">nng_http_conn_read_res</a></li>
+<li><a href="nng_http_conn_transact.3http.html">nng_http_conn_transact</a></li>
+<li><a href="nng_http_conn_write.3http.html">nng_http_conn_write</a></li>
+<li><a href="nng_http_conn_write_all.3http.html">nng_http_conn_write_all</a></li>
+<li><a href="nng_http_conn_write_req.3http.html">nng_http_conn_write_req</a></li>
+<li><a href="nng_http_conn_write_res.3http.html">nng_http_conn_write_res</a></li>
+<li><a href="nng_http_handler_alloc.3http.html">nng_http_handler_alloc</a></li>
+<li><a href="nng_http_handler_collect_body.3http.html">nng_http_handler_collect_body</a></li>
+<li><a href="nng_http_handler_free.3http.html">nng_http_handler_free</a></li>
+<li><a href="nng_http_handler_get_data.3http.html">nng_http_handler_get_data</a></li>
+<li><a href="nng_http_handler_set_data.3http.html">nng_http_handler_set_data</a></li>
+<li><a href="nng_http_handler_set_host.3http.html">nng_http_handler_set_host</a></li>
+<li><a href="nng_http_handler_set_method.3http.html">nng_http_handler_set_method</a></li>
+<li><a href="nng_http_handler_set_tree.3http.html">nng_http_handler_set_tree</a></li>
+<li><a href="nng_http_hijack.3http.html">nng_http_hijack</a></li>
+<li><a href="nng_http_req_add_header.3http.html">nng_http_req_add_header</a></li>
+<li><a href="nng_http_req_alloc.3http.html">nng_http_req_alloc</a></li>
+<li><a href="nng_http_req_copy_data.3http.html">nng_http_req_copy_data</a></li>
+<li><a href="nng_http_req_del_header.3http.html">nng_http_req_del_header</a></li>
+<li><a href="nng_http_req_free.3http.html">nng_http_req_free</a></li>
+<li><a href="nng_http_req_get_data.3http.html">nng_http_req_get_data</a></li>
+<li><a href="nng_http_req_get_header.3http.html">nng_http_req_get_header</a></li>
+<li><a href="nng_http_req_get_method.3http.html">nng_http_req_get_method</a></li>
+<li><a href="nng_http_req_get_uri.3http.html">nng_http_req_get_uri</a></li>
+<li><a href="nng_http_req_get_version.3http.html">nng_http_req_get_version</a></li>
+<li><a href="nng_http_req_reset.3http.html">nng_http_req_reset</a></li>
+<li><a href="nng_http_req_set_data.3http.html">nng_http_req_set_data</a></li>
+<li><a href="nng_http_req_set_header.3http.html">nng_http_req_set_header</a></li>
+<li><a href="nng_http_req_set_method.3http.html">nng_http_req_set_method</a></li>
+<li><a href="nng_http_req_set_uri.3http.html">nng_http_req_set_uri</a></li>
+<li><a href="nng_http_req_set_version.3http.html">nng_http_req_set_version</a></li>
+<li><a href="nng_http_res_add_header.3http.html">nng_http_res_add_header</a></li>
+<li><a href="nng_http_res_alloc.3http.html">nng_http_res_alloc</a></li>
+<li><a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error</a></li>
+<li><a href="nng_http_res_copy_data.3http.html">nng_http_res_copy_data</a></li>
+<li><a href="nng_http_res_del_header.3http.html">nng_http_res_del_header</a></li>
+<li><a href="nng_http_res_free.3http.html">nng_http_res_free</a></li>
+<li><a href="nng_http_res_get_data.3http.html">nng_http_res_get_data</a></li>
+<li><a href="nng_http_res_get_header.3http.html">nng_http_res_get_header</a></li>
+<li><a href="nng_http_res_get_reason.3http.html">nng_http_res_get_reason</a></li>
+<li><a href="nng_http_res_get_status.3http.html">nng_http_res_get_status</a></li>
+<li><a href="nng_http_res_get_version.3http.html">nng_http_res_get_version</a></li>
+<li><a href="nng_http_res_reset.3http.html">nng_http_res_reset</a></li>
+<li><a href="nng_http_res_set_data.3http.html">nng_http_res_set_data</a></li>
+<li><a href="nng_http_res_set_header.3http.html">nng_http_res_set_header</a></li>
+<li><a href="nng_http_res_set_reason.3http.html">nng_http_res_set_reason</a></li>
+<li><a href="nng_http_res_set_status.3http.html">nng_http_res_set_status</a></li>
+<li><a href="nng_http_res_set_version.3http.html">nng_http_res_set_version</a></li>
+<li><a href="nng_http_server_add_handler.3http.html">nng_http_server_add_handler</a></li>
+<li><a href="nng_http_server_del_handler.3http.html">nng_http_server_del_handler</a></li>
+<li><a href="nng_http_server_get_tls.3http.html">nng_http_server_get_tls</a></li>
+<li><a href="nng_http_server_hold.3http.html">nng_http_server_hold</a></li>
+<li><a href="nng_http_server_release.3http.html">nng_http_server_release</a></li>
+<li><a href="nng_http_server_res_error.3http.html">nng_http_server_res_error</a></li>
+<li><a href="nng_http_server_set_error_file.3http.html">nng_http_server_set_error_file</a></li>
+<li><a href="nng_http_server_set_error_page.3http.html">nng_http_server_set_error_page</a></li>
+<li><a href="nng_http_server_set_tls.3http.html">nng_http_server_set_tls</a></li>
+<li><a href="nng_http_server_start.3http.html">nng_http_server_start</a></li>
+<li><a href="nng_http_server_stop.3http.html">nng_http_server_stop</a></li>
+</ul>
+<li>Supplemental TCP Functions</li>
+<ul class="sectlevel2">
+<li><a href="nng_stream_close.3str.html">nng_stream_close</a></li>
+<li><a href="nng_stream_dialer_alloc.3str.html">nng_stream_dialer_alloc</a></li>
+<li><a href="nng_stream_dialer_close.3str.html">nng_stream_dialer_close</a></li>
+<li><a href="nng_stream_dialer_dial.3str.html">nng_stream_dialer_dial</a></li>
+<li><a href="nng_stream_dialer_free.3str.html">nng_stream_dialer_free</a></li>
+<li><a href="nng_stream_dialer_get.3str.html">nng_stream_dialer_get</a></li>
+<li><a href="nng_stream_dialer_set.3str.html">nng_stream_dialer_set</a></li>
+<li><a href="nng_stream_free.3str.html">nng_stream_free</a></li>
+<li><a href="nng_stream_get.3str.html">nng_stream_get</a></li>
+<li><a href="nng_stream_listener_accept.3str.html">nng_stream_listener_accept</a></li>
+<li><a href="nng_stream_listener_alloc.3str.html">nng_stream_listener_alloc</a></li>
+<li><a href="nng_stream_listener_close.3str.html">nng_stream_listener_close</a></li>
+<li><a href="nng_stream_listener_free.3str.html">nng_stream_listener_free</a></li>
+<li><a href="nng_stream_listener_get.3str.html">nng_stream_listener_get</a></li>
+<li><a href="nng_stream_listener_listen.3str.html">nng_stream_listener_listen</a></li>
+<li><a href="nng_stream_listener_set.3str.html">nng_stream_listener_set</a></li>
+<li><a href="nng_stream_recv.3str.html">nng_stream_recv</a></li>
+<li><a href="nng_stream_send.3str.html">nng_stream_send</a></li>
+<li><a href="nng_stream_set.3str.html">nng_stream_set</a></li>
+</ul>
+<li>Supplemental Functions</li>
+<ul class="sectlevel2">
+<li><a href="nng_clock.3supp.html">nng_clock</a></li>
+<li><a href="nng_cv_alloc.3supp.html">nng_cv_alloc</a></li>
+<li><a href="nng_cv_free.3supp.html">nng_cv_free</a></li>
+<li><a href="nng_cv_until.3supp.html">nng_cv_until</a></li>
+<li><a href="nng_cv_wait.3supp.html">nng_cv_wait</a></li>
+<li><a href="nng_cv_wake.3supp.html">nng_cv_wake</a></li>
+<li><a href="nng_cv_wake1.3supp.html">nng_cv_wake1</a></li>
+<li><a href="nng_msleep.3supp.html">nng_msleep</a></li>
+<li><a href="nng_mtx_alloc.3supp.html">nng_mtx_alloc</a></li>
+<li><a href="nng_mtx_free.3supp.html">nng_mtx_free</a></li>
+<li><a href="nng_mtx_lock.3supp.html">nng_mtx_lock</a></li>
+<li><a href="nng_mtx_unlock.3supp.html">nng_mtx_unlock</a></li>
+<li><a href="nng_opts_parse.3supp.html">nng_opts_parse</a></li>
+<li><a href="nng_random.3supp.html">nng_random</a></li>
+<li><a href="nng_thread_create.3supp.html">nng_thread_create</a></li>
+<li><a href="nng_thread_destroy.3supp.html">nng_thread_destroy</a></li>
+</ul>
+<li>Supplemental TLS Functions</li>
+<ul class="sectlevel2">
+<li><a href="nng_tls_config_alloc.3tls.html">nng_tls_config_alloc</a></li>
+<li><a href="nng_tls_config_auth_mode.3tls.html">nng_tls_config_auth_mode</a></li>
+<li><a href="nng_tls_config_ca_chain.3tls.html">nng_tls_config_ca_chain</a></li>
+<li><a href="nng_tls_config_ca_file.3tls.html">nng_tls_config_ca_file</a></li>
+<li><a href="nng_tls_config_cert_key_file.3tls.html">nng_tls_config_cert_key_file</a></li>
+<li><a href="nng_tls_config_free.3tls.html">nng_tls_config_free</a></li>
+<li><a href="nng_tls_config_hold.3tls.html">nng_tls_config_hold</a></li>
+<li><a href="nng_tls_config_own_cert.3tls.html">nng_tls_config_own_cert</a></li>
+<li><a href="nng_tls_config_server_name.3tls.html">nng_tls_config_server_name</a></li>
+</ul>
+<li>Macros and Types</li>
+<ul class="sectlevel2">
+<li><a href="nng_aio.5.html">nng_aio</a></li>
+<li><a href="nng_ctx.5.html">nng_ctx</a></li>
+<li><a href="nng_dialer.5.html">nng_dialer</a></li>
+<li><a href="nng_duration.5.html">nng_duration</a></li>
+<li><a href="nng_iov.5.html">nng_iov</a></li>
+<li><a href="nng_ipc_options.5.html">nng_ipc_options</a></li>
+<li><a href="nng_listener.5.html">nng_listener</a></li>
+<li><a href="nng_msg.5.html">nng_msg</a></li>
+<li><a href="nng_options.5.html">nng_options</a></li>
+<li><a href="nng_pipe.5.html">nng_pipe</a></li>
+<li><a href="nng_sockaddr.5.html">nng_sockaddr</a></li>
+<li><a href="nng_sockaddr_in.5.html">nng_sockaddr_in</a></li>
+<li><a href="nng_sockaddr_in6.5.html">nng_sockaddr_in6</a></li>
+<li><a href="nng_sockaddr_inproc.5.html">nng_sockaddr_inproc</a></li>
+<li><a href="nng_sockaddr_ipc.5.html">nng_sockaddr_ipc</a></li>
+<li><a href="nng_sockaddr_zt.5.html">nng_sockaddr_zt</a></li>
+<li><a href="nng_socket.5.html">nng_socket</a></li>
+<li><a href="nng_stat.5.html">nng_stat</a></li>
+<li><a href="nng_stream.5.html">nng_stream</a></li>
+<li><a href="nng_stream_dialer.5.html">nng_stream_dialer</a></li>
+<li><a href="nng_stream_listener.5.html">nng_stream_listener</a></li>
+<li><a href="nng_tcp.5.html">nng_tcp</a></li>
+<li><a href="nng_tcp_options.5.html">nng_tcp_options</a></li>
+<li><a href="nng_tls.5.html">nng_tls</a></li>
+<li><a href="nng_tls_config.5.html">nng_tls_config</a></li>
+<li><a href="nng_tls_options.5.html">nng_tls_options</a></li>
+</ul>
+<li>Protocols and Transports</li>
+<ul class="sectlevel2">
+<li><a href="nng.7.html">nng</a></li>
+<li><a href="nng_bus.7.html">nng_bus</a></li>
+<li><a href="nng_inproc.7.html">nng_inproc</a></li>
+<li><a href="nng_ipc.7.html">nng_ipc</a></li>
+<li><a href="nng_pair.7.html">nng_pair</a></li>
+<li><a href="nng_pub.7.html">nng_pub</a></li>
+<li><a href="nng_pull.7.html">nng_pull</a></li>
+<li><a href="nng_push.7.html">nng_push</a></li>
+<li><a href="nng_rep.7.html">nng_rep</a></li>
+<li><a href="nng_req.7.html">nng_req</a></li>
+<li><a href="nng_respondent.7.html">nng_respondent</a></li>
+<li><a href="nng_sub.7.html">nng_sub</a></li>
+<li><a href="nng_surveyor.7.html">nng_surveyor</a></li>
+<li><a href="nng_tcp.7.html">nng_tcp</a></li>
+<li><a href="nng_tls.7.html">nng_tls</a></li>
+<li><a href="nng_ws.7.html">nng_ws</a></li>
+<li><a href="nng_zerotier.7.html">nng_zerotier</a></li>
+</ul>
+</ul>
+</nav>
+<main>
+{% if page.version and page.version != site.latest  %}
+{% if page.version == "tip" %}
+{% include manpage-tip.html %}
+{% else %}
+{% include manpage-old.html %}
+{% endif %}
+{% endif %}
+<div id="header">
+<h1>nng_http_res_alloc(3http) Manual Page</h1>
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<p>nng_http_res_alloc - allocate HTTP response structure</p>
+</div>
+</div>
+<div id="content">
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span></span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp"></span>
+<span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/http/http.h&gt;</span><span class="tok-cp"></span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_http_res_alloc</span><span class="tok-p">(</span><span class="tok-n">nng_http_res</span> <span class="tok-o">**</span><span class="tok-n">resp</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_http_res_alloc()</code> function allocates a new HTTP response structure
+and stores a pointer to it in <em>resp</em>.
+The response will be initialized
+with status code 200 (<code>NNG_HTTP_STATUS_OK</code>), and a reason phrase of `"OK`",
+and HTTP protocol version `"HTTP/1.1`".</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+When an error response is needed, consider using
+<a href="nng_http_res_alloc_error.3http.html"><code>nng_http_res_alloc_error()</code></a> instead.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>This function returns 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory exists to allocate a message.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>HTTP support not configured.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_http_conn_read_res.3http.html">nng_http_conn_read_res(3http)</a>,
+<a href="nng_http_conn_write_res.3http.html">nng_http_conn_write_res(3http)</a>,
+<a href="nng_http_req_alloc.3http.html">nng_http_req_alloc(3http)</a>,
+<a href="nng_http_res_alloc_error.3http.html">nng_http_res_alloc_error(3http)</a>,
+<a href="nng_http_res_add_header.3http.html">nng_http_res_add_header(3http)</a>,
+<a href="nng_http_res_copy_data.3http.html">nng_http_res_copy_data(3http)</a>,
+<a href="nng_http_res_del_header.3http.html">nng_http_res_del_header(3http)</a>,
+<a href="nng_http_res_free.3http.html">nng_http_res_free(3http)</a>,
+<a href="nng_http_res_get_header.3http.html">nng_http_res_get_header(3http)</a>,
+<a href="nng_http_res_get_reason.3http.html">nng_http_res_get_reason(3http)</a>,
+<a href="nng_http_res_get_status.3http.html">nng_http_res_get_status(3http)</a>,
+<a href="nng_http_res_get_version.3http.html">nng_http_res_get_version(3http)</a>,
+<a href="nng_http_res_reset.3http.html">nng_http_res_reset(3http)</a>,
+<a href="nng_http_res_set_data.3http.html">nng_http_res_set_data(3http)</a>,
+<a href="nng_http_res_set_reason.3http.html">nng_http_res_set_reason(3http)</a>,
+<a href="nng_http_res_set_status.3http.html">nng_http_res_set_status(3http)</a>,
+<a href="nng_http_res_set_version.3http.html">nng_http_res_set_version(3http)</a>,
+<a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
+</div>
+</main>
