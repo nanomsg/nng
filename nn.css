@@ -448,6 +448,38 @@ a span.icon>.fa {
         color: #bf0000
 }
 
+div.sidebarblock {
+	border-radius: .5em;
+	background-color: #e0e0e0;
+}
+
+div.sidebarblock div.content {
+	padding: 1em 2em;
+}
+
+.sidebarblock .content p {
+	font-size: .95em;
+}
+
+/* doc header */
+div.details {
+	border-top: 1px solid #e0e0e0;
+	padding-top: 2em;
+	text-align: right;
+	margin-bottom: 1em;
+}
+
+span.author{
+	font-style: italic;
+}
+span.author::before{
+	content: "\2014  ";
+}
+#revnumber,#revdate{
+	font-size: .9em;
+}
+
+
 /* image */
 
 img {
