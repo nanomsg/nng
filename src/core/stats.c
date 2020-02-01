@@ -60,9 +60,13 @@ nni_stat_add(nni_stat_item *parent, nni_stat_item *child)
 void
 nni_stat_register(nni_stat_item *child)
 {
+#ifdef NNG_ENABLE_STATS
 	nni_mtx_lock(&stats_lock);
 	nni_stat_add(&stats_root, child);
 	nni_mtx_unlock(&stats_lock);
+#else
+	NNI_ARG_UNUSED(child);
+#endif
 }
 
 void
