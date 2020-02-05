@@ -490,6 +490,7 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 	if (rv != 0) {
 		nni_chunk_free(&m->m_header);
 		NNI_FREE_STRUCT(m);
+		return (rv);
 	}
 	if ((rv = nni_chunk_append(&m->m_body, NULL, sz)) != 0) {
 		// Should not happen since we just grew it to fit.
