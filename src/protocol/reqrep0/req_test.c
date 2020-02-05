@@ -921,8 +921,8 @@ test_req_validate_peer(void)
 }
 
 TEST_LIST = {
-	{ "req rep identity", test_req_identity },
-	{ "req resend option", test_req_ttl_option },
+	{ "req identity", test_req_identity },
+	{ "req ttl option", test_req_ttl_option },
 	{ "req resend option", test_req_resend_option },
 	{ "req recv bad state", test_req_recv_bad_state },
 	{ "req recv garbage", test_req_recv_garbage },

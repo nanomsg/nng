@@ -168,10 +168,6 @@ add_nng_test(bus 5)
 add_nng_test(pipeline 5)
 add_nng_test(reqctx 5)
 add_nng_test(reqstress 60)
-add_nng_test(respondpoll 5)
-add_nng_test(survey 5)
-add_nng_test(surveyctx 5)
-add_nng_test(surveypoll 5)
 
 # compatibility tests
 # We only support these if ALL the legacy protocols are supported.  This

@@ -384,12 +384,7 @@ surv0_pipe_recv_cb(void *arg)
 		return;
 	}
 	id = nni_msg_trim_u32(msg);
-	if (nni_msg_header_append_u32(msg, id) != 0) {
-		// Should be NNG_ENOMEM - discard and try again.
-		nni_msg_free(msg);
-		nni_pipe_recv(p->npipe, p->aio_recv);
-		return;
-	}
+	nni_msg_header_must_append_u32(msg ,id);
 
 	nni_mtx_lock(&sock->mtx);
 
