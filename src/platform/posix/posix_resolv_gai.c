@@ -257,13 +257,15 @@ resolv_ip(const char *host, const char *serv, int passive, int family,
 	// NB: must remain valid until this is completed.  So we have to
 	// keep our own copy.
 
-	if (host == NULL) {
-		item->name = NULL;
-
-	} else if (nni_strnlen(host, sizeof(item->name_buf)) >=
+	if (host != NULL && nni_strnlen(host, sizeof(item->name_buf)) >=
 	    sizeof(item->name_buf)) {
 		NNI_FREE_STRUCT(item);
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
+		return;
+	}
+
+	if (host == NULL) {
+		item->name = NULL;
 	} else {
 		nni_strlcpy(item->name_buf, host, sizeof(item->name_buf));
 		item->name = item->name_buf;
