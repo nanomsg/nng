@@ -211,7 +211,7 @@ nni_atomic_set_bool(nni_atomic_bool *b, bool n)
 	pthread_mutex_unlock(&plat_atomic_lock);
 }
 
-void
+bool
 nni_atomic_get_bool(nni_atomic_bool *b)
 {
 	bool v;
@@ -221,7 +221,7 @@ nni_atomic_get_bool(nni_atomic_bool *b)
 	return (v);
 }
 
-void
+bool
 nni_atomic_swap_bool(nni_atomic_bool *b, bool n)
 {
 	bool v;
@@ -324,7 +324,9 @@ nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
 void
 nni_atomic_init(nni_atomic_int *v)
 {
-	atomic_init(&v->v, 0);
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v = 0;
+	pthread_mutex_unlock(&plat_atomic_lock);
 }
 
 void
