@@ -41,7 +41,7 @@ struct pair1_sock {
 	nni_list       plist;
 	bool           started;
 	bool           poly;
-	nni_aio      aio_get;
+	nni_aio        aio_get;
 	nni_stat_item  stat_poly;
 	nni_stat_item  stat_raw;
 	nni_stat_item  stat_reject_mismatch;
@@ -49,7 +49,7 @@ struct pair1_sock {
 	nni_stat_item  stat_ttl_drop;
 	nni_stat_item  stat_rx_malformed;
 	nni_stat_item  stat_tx_malformed;
-	nni_stat_item stat_tx_drop;
+	nni_stat_item  stat_tx_drop;
 };
 
 // pair1_pipe is our per-pipe protocol private structure.
@@ -111,8 +111,8 @@ pair1_sock_init_impl(void *arg, nni_sock *sock, bool raw)
 	nni_sock_add_stat(sock, &s->stat_ttl_drop);
 
 	// This can only increment in polyamorous mode.
-	nni_stat_init_atomic(&s->stat_tx_drop, "tx_drop",
-	    "messages dropped undeliverable");
+	nni_stat_init_atomic(
+	    &s->stat_tx_drop, "tx_drop", "messages dropped undeliverable");
 	nni_stat_set_unit(&s->stat_tx_drop, NNG_UNIT_MESSAGES);
 	nni_sock_add_stat(sock, &s->stat_tx_drop);
 
@@ -129,11 +129,11 @@ pair1_sock_init_impl(void *arg, nni_sock *sock, bool raw)
 		nni_sock_add_stat(sock, &s->stat_tx_malformed);
 	}
 
-	s->sock  = sock;
-	s->raw   = raw;
-	s->poly  = false;
-	s->uwq   = nni_sock_sendq(sock);
-	s->urq   = nni_sock_recvq(sock);
+	s->sock = sock;
+	s->raw  = raw;
+	s->poly = false;
+	s->uwq  = nni_sock_sendq(sock);
+	s->urq  = nni_sock_recvq(sock);
 	nni_atomic_init(&s->ttl);
 	nni_atomic_set(&s->ttl, 8);
 
@@ -191,8 +191,8 @@ pair1_pipe_init(void *arg, nni_pipe *pipe, void *pair)
 		return (rv);
 	}
 
-	p->pipe  = pipe;
-	p->pair  = pair;
+	p->pipe = pipe;
+	p->pair = pair;
 
 	return (0);
 }
