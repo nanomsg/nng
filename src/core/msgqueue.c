@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -22,7 +22,6 @@ struct nni_msgq {
 	int       mq_len;
 	int       mq_get;
 	int       mq_put;
-	int       mq_geterr;
 	bool      mq_closed;
 	nni_msg **mq_msgs;
 
@@ -67,7 +66,6 @@ nni_msgq_init(nni_msgq **mqp, unsigned cap)
 	mq->mq_get      = 0;
 	mq->mq_put      = 0;
 	mq->mq_closed   = 0;
-	mq->mq_geterr   = 0;
 	*mqp            = mq;
 
 	return (0);
@@ -100,43 +98,6 @@ nni_msgq_fini(nni_msgq *mq)
 
 	nni_free(mq->mq_msgs, mq->mq_alloc * sizeof(nng_msg *));
 	NNI_FREE_STRUCT(mq);
-}
-
-void
-nni_msgq_set_get_error(nni_msgq *mq, int error)
-{
-	// Let all pending blockers know we are closing the queue.
-	nni_mtx_lock(&mq->mq_lock);
-	if (mq->mq_closed) {
-		// If we were closed, then this error trumps all others.
-		error = NNG_ECLOSED;
-	}
-	if (error != 0) {
-		nni_aio *aio;
-		while ((aio = nni_list_first(&mq->mq_aio_getq)) != NULL) {
-			nni_aio_list_remove(aio);
-			nni_aio_finish_error(aio, error);
-		}
-	}
-	mq->mq_geterr = error;
-	nni_msgq_run_notify(mq);
-	nni_mtx_unlock(&mq->mq_lock);
-}
-
-void
-nni_msgq_flush(nni_msgq *mq)
-{
-	nni_mtx_lock(&mq->mq_lock);
-	while (mq->mq_len > 0) {
-		nni_msg *msg = mq->mq_msgs[mq->mq_get++];
-		if (mq->mq_get >= mq->mq_alloc) {
-			mq->mq_get = 0;
-		}
-		mq->mq_len--;
-		nni_msg_free(msg);
-	}
-	nni_msgq_run_notify(mq);
-	nni_mtx_unlock(&mq->mq_lock);
 }
 
 static void
@@ -287,11 +248,6 @@ nni_msgq_aio_get(nni_msgq *mq, nni_aio *aio)
 		return;
 	}
 	nni_mtx_lock(&mq->mq_lock);
-	if (mq->mq_geterr) {
-		nni_mtx_unlock(&mq->mq_lock);
-		nni_aio_finish_error(aio, mq->mq_geterr);
-		return;
-	}
 	rv = nni_aio_schedule(aio, nni_msgq_cancel, mq);
 	if ((rv != 0) && (mq->mq_len == 0) &&
 	    (nni_list_empty(&mq->mq_aio_putq))) {
@@ -353,8 +309,6 @@ nni_msgq_close(nni_msgq *mq)
 
 	nni_mtx_lock(&mq->mq_lock);
 	mq->mq_closed = true;
-	mq->mq_geterr = NNG_ECLOSED;
-
 	// Free the messages orphaned in the queue.
 	while (mq->mq_len > 0) {
 		nni_msg *msg = mq->mq_msgs[mq->mq_get++];
@@ -373,17 +327,6 @@ nni_msgq_close(nni_msgq *mq)
 	}
 
 	nni_mtx_unlock(&mq->mq_lock);
-}
-
-int
-nni_msgq_len(nni_msgq *mq)
-{
-	int rv;
-
-	nni_mtx_lock(&mq->mq_lock);
-	rv = mq->mq_len;
-	nni_mtx_unlock(&mq->mq_lock);
-	return (rv);
 }
 
 int

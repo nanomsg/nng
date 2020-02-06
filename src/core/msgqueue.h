@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -33,9 +33,6 @@ extern int nni_msgq_init(nni_msgq **, unsigned);
 // messages that may be in the queue.
 extern void nni_msgq_fini(nni_msgq *);
 
-// nni_msgq_flush discards any messages that are sitting in the queue.
-// It does not wake any writers that might be waiting.
-extern void nni_msgq_flush(nni_msgq *);
 
 extern void nni_msgq_aio_put(nni_msgq *, nni_aio *);
 extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
@@ -43,11 +40,6 @@ extern void nni_msgq_aio_get(nni_msgq *, nni_aio *);
 // nni_msgq_tryput performs a non-blocking attempt to put a message on
 // the message queue.
 extern int nni_msgq_tryput(nni_msgq *, nni_msg *);
-
-// nni_msgq_set_get_error sets an error condition on the get side of the
-// message queue, and for that side behaves like nni_msgq_set_error.
-// Readers (nni_msgq_put*) are unaffected.
-extern void nni_msgq_set_get_error(nni_msgq *, int);
 
 // nni_msgq_close closes the queue.  After this all operates on the
 // message queue will return NNG_ECLOSED.  Messages inside the queue
@@ -65,9 +57,6 @@ extern int nni_msgq_resize(nni_msgq *, int);
 // zero-length message queues possible.  As a consequence, it is possible
 // for the message queue to contain up to 2 more messages than the capacity.
 extern int nni_msgq_cap(nni_msgq *mq);
-
-// nni_msgq_len returns the number of messages currently in the queue.
-extern int nni_msgq_len(nni_msgq *mq);
 
 extern int nni_msgq_get_recvable(nni_msgq *mq, nni_pollable **);
 extern int nni_msgq_get_sendable(nni_msgq *mq, nni_pollable **);
