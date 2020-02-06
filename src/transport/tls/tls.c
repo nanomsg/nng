@@ -172,7 +172,8 @@ tlstran_pipe_alloc(tlstran_pipe **pipep)
 
 	if (((rv = nni_aio_alloc(&p->txaio, tlstran_pipe_send_cb, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->rxaio, tlstran_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->negoaio, tlstran_pipe_nego_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->negoaio, tlstran_pipe_nego_cb, p)) !=
+	        0)) {
 		tlstran_pipe_fini(p);
 		return (rv);
 	}
@@ -671,12 +672,11 @@ tlstran_ep_close(void *arg)
 static int
 tlstran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
 {
-	int      af;
-	char *   semi;
-	char *   src;
-	size_t   len;
-	int      rv;
-	nni_aio *aio;
+	int     af;
+	char *  semi;
+	char *  src;
+	int     rv;
+	nni_aio aio;
 
 	// We modify the URL.  This relies on the fact that the underlying
 	// transport does not free this, so we can just use references.
@@ -690,7 +690,6 @@ tlstran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
 		return (0);
 	}
 
-	len             = (size_t)(semi - url->u_hostname);
 	url->u_hostname = semi + 1;
 
 	if (strcmp(surl->u_scheme, "tls+tcp") == 0) {
@@ -703,24 +702,19 @@ tlstran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((src = nni_alloc(len + 1)) == NULL) {
+	if ((src = nni_strdup(surl->u_hostname)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	memcpy(src, surl->u_hostname, len);
-	src[len] = '\0';
 
-	if ((rv = nni_aio_alloc(&aio, NULL, NULL)) != 0) {
-		nni_free(src, len + 1);
-		return (rv);
-	}
+	nni_aio_init(&aio, NULL, NULL);
 
-	nni_tcp_resolv(src, 0, af, 1, aio);
-	nni_aio_wait(aio);
-	if ((rv = nni_aio_result(aio)) == 0) {
-		nni_aio_get_sockaddr(aio, sa);
+	nni_tcp_resolv(src, 0, af, 1, &aio);
+	nni_aio_wait(&aio);
+	if ((rv = nni_aio_result(&aio)) == 0) {
+		nni_aio_get_sockaddr(&aio, sa);
 	}
-	nni_aio_free(aio);
-	nni_free(src, len + 1);
+	nni_aio_fini(&aio);
+	nni_strfree(src);
 	return (rv);
 }
 

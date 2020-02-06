@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 QXSoftware <lh563566994@126.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
@@ -485,7 +485,6 @@ http_sconn_rxdone(void *arg)
 	const char *      val;
 	nni_http_req *    req = sc->req;
 	char *            uri;
-	size_t            urisz;
 	char *            path;
 	bool              badmeth  = false;
 	bool              needhost = false;
@@ -538,19 +537,17 @@ http_sconn_rxdone(void *arg)
 	}
 
 	val   = nni_http_req_get_uri(req);
-	urisz = strlen(val) + 1;
-	if ((uri = nni_alloc(urisz)) == NULL) {
+	if ((uri = nni_strdup(val)) == NULL) {
 		http_sconn_close(sc); // out of memory
 		return;
 	}
-	strncpy(uri, val, urisz);
 	path = http_uri_canonify(uri);
 
 	host = nni_http_req_get_header(req, "Host");
 	if ((host == NULL) && (needhost)) {
 		// Per RFC 2616 14.23 we have to send 400 status here.
 		http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
-		nni_free(uri, urisz);
+		nni_strfree(uri);
 		return;
 	}
 
@@ -621,7 +618,7 @@ http_sconn_rxdone(void *arg)
 	if ((h == NULL) && (head != NULL)) {
 		h = head;
 	}
-	nni_free(uri, urisz);
+	nni_strfree(uri);
 	if (h == NULL) {
 		nni_mtx_unlock(&s->mtx);
 		if (badmeth) {
@@ -1453,7 +1450,7 @@ http_handle_dir(nni_aio *aio)
 		return;
 	}
 
-	// simple worst case is every character in path is a seperator
+	// simple worst case is every character in path is a separator
 	// It's never actually that bad, because we we have /<something>/.
 	pnsz = (strlen(path) + strlen(uri) + 2) * strlen(NNG_PLATFORM_DIR_SEP);
 	pnsz += strlen("index.html") + 1; // +1 for term nul
