@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -134,14 +134,14 @@ nni_atomic_flag_reset(nni_atomic_flag *f)
 }
 
 void
-nni_atomic_set_bool(nni_atomic_bool *b)
+nni_atomic_set_bool(nni_atomic_bool *b, bool n)
 {
 	pthread_mutex_lock(&plat_atomic_lock);
-	b->b = false;
+	b->b = n;
 	pthread_mutex_unlock(&plat_atomic_lock);
 }
 
-void
+bool
 nni_atomic_get_bool(nni_atomic_bool *b)
 {
 	bool v;
@@ -151,7 +151,7 @@ nni_atomic_get_bool(nni_atomic_bool *b)
 	return (v);
 }
 
-void
+bool
 nni_atomic_swap_bool(nni_atomic_bool *b, bool n)
 {
 	bool v;
