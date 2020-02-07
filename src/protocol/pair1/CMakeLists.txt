@@ -12,7 +12,9 @@
 option (NNG_PROTO_PAIR1 "Enable PAIRv1 protocol." ON)
 mark_as_advanced(NNG_PROTO_PAIR1)
 
-nng_sources_if(NNG_PROTO_PAIR1 pair.c)
+# XXX: break pair1_poly into an ifdef.
+nng_sources_if(NNG_PROTO_PAIR1 pair.c pair1_poly.c)
 nng_headers_if(NNG_PROTO_PAIR1 nng/protocol/pair1/pair.h)
 nng_defines_if(NNG_PROTO_PAIR1 NNG_HAVE_PAIR1)
 nng_test(pair1_test)
+nng_test(pair1_poly_test)

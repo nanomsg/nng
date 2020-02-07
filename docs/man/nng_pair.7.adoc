@@ -49,10 +49,6 @@ Applications that require reliable delivery semantics should consider using
 xref:nng_req.7.adoc[_req_] sockets, or
 implement their own acknowledgment layer on top of _pair_ sockets.
 
-In order to avoid head-of-line blocking conditions, _polyamorous_ mode _pair_
-sockets (version 1 only) discard messages if they are unable to deliver them
-to a peer.
-
 === Protocol Versions
 
 Version 0 is the legacy version of this protocol.
@@ -66,34 +62,39 @@ https://github.com/go-mangos/mangos[mangos].
 Version 1 of the protocol offers improved protection against loops when
 used with xref:nng_device.3.adoc[`nng_device()`].
 
-NOTE: Version 1 of this protocol is considered experimental at this time.
-
 === Polyamorous Mode
 
-CAUTION: Polyamorous mode was provided as an experiment, and that experiment
-is deemed to have failed.
-Thus use of this mode is discouraged.
-In particular, the design cannot function over
-xref:nng_device.3.adoc[device] proxies.
-Consequently, this mode may be removed in a future release.
+WARNING: Polyamorous mode is deprecated, and support for it will likely
+be removed in a future release.
+Applications are strongly discouraged from making further use of it.
 
 Normally pair sockets are for one-to-one communication, and a given peer
 will reject new connections if it already has an active connection to another
 peer.
 
-In ((_polyamorous_ mode)), which is only available with version 1, a socket can
-support many one-to-one connections.
+((_Polyamorous_ mode)) changes this, to allow a socket to communicate with
+multiple directly-connected peers.
+This mode is enabled by opening a socket with the
+xref:nng_pair_open.3.adoc[`nng_pair1_open_poly()`]
+function
+
+NOTE: Polyamorous mode is only available when using pair version 1.
+
+In polyamorous mode a socket can support many one-to-one connections.
 In this mode, the application must
 choose the remote peer to receive an outgoing message by setting the
 xref:nng_pipe.5.adoc[`nng_pipe`] to use for the outgoing message with
 the xref:nng_msg_set_pipe.3.adoc[`nng_msg_set_pipe()`] function.
 
+If no remote peer is specified by the sender, then the protocol will select
+any available connected peer.
+
 Most often the value of the outgoing pipe will be obtained from an incoming
 message using the xref:nng_msg_get_pipe.3.adoc[`nng_msg_get_pipe()`] function,
 such as when replying to an incoming message.
 
-NOTE: This capability _only_ works with directly connected peers.
-It is not possible to use polyamorous mode in the presence of proxies.
+NOTE: Directed send _only_ works with directly connected peers.
+It will not function across xref:nng_device.3.adoc[device] proxies.
 
 In order to prevent head-of-line blocking, if the peer on the given pipe
 is not able to receive (or the pipe is no longer available, such as if the
@@ -104,18 +105,15 @@ to the sender.
 
 The following protocol-specific options are available.
 
-((`NNG_OPT_PAIR1_POLY`))::
-
-   (`bool`, version 1 only)  This option enables the use of _polyamorous_ mode.
-   The value is read-write, and takes an integer Boolean value.  The default
-   false value (0) indicates that legacy monogamous mode should be used.
-
-NOTE: This option, and the associated capability are considered failed experiments.
-Thus, use of it is discouraged, and it may be removed in a future release.
-
 xref:nng_options.5.adoc#NNG_OPT_MAXTTL[`NNG_OPT_MAXTTL`]::
 
    (`int`, version 1 only).  Maximum time-to-live.
+
+((`NNG_OPT_PAIR1_POLY`))::
+
+   (`bool`, version 1 only)  This option is no longer supported.
+   Formerly it was used to configure _polyamorous_ mode, but that mode
+   is now established by using the `nng_pair1_open_poly()` function.
 
 === Protocol Headers
 

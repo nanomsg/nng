@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,6 +17,7 @@ extern "C" {
 
 NNG_DECL int nng_pair1_open(nng_socket *);
 NNG_DECL int nng_pair1_open_raw(nng_socket *);
+NNG_DECL int nng_pair1_open_poly(nng_socket *);
 
 #ifndef nng_pair_open
 #define nng_pair_open nng_pair1_open
