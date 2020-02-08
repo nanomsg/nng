@@ -96,7 +96,7 @@ surv0_ctx_close(surv0_ctx *ctx)
 static void
 surv0_ctx_fini(void *arg)
 {
-	surv0_ctx * ctx  = arg;
+	surv0_ctx *ctx = arg;
 
 	surv0_ctx_close(ctx);
 	nni_timer_cancel(&ctx->timer);
@@ -146,6 +146,10 @@ surv0_ctx_cancel(nni_aio *aio, void *arg, int rv)
 	if (nni_list_active(&ctx->recv_queue, aio)) {
 		nni_list_remove(&ctx->recv_queue, aio);
 		nni_aio_finish_error(aio, rv);
+	}
+	if (ctx->survey_id != 0) {
+		nni_idhash_remove(sock->surveys, ctx->survey_id);
+		ctx->survey_id = 0;
 	}
 	nni_mtx_unlock(&sock->mtx);
 }
@@ -233,7 +237,8 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 	nni_timer_cancel(&ctx->timer);
 
 	// Allocate the new ID.
-	if ((rv = nni_idhash_alloc(sock->surveys, &ctx->survey_id, ctx)) != 0) {
+	if ((rv = nni_idhash_alloc(sock->surveys, &ctx->survey_id, ctx)) !=
+	    0) {
 		nni_mtx_unlock(&sock->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -314,7 +319,7 @@ surv0_sock_init(void *arg, nni_sock *s)
 	nni_idhash_set_limits(sock->surveys, 0x80000000u, 0xffffffffu,
 	    nni_random() | 0x80000000u);
 
-	sock->ttl          = 8;
+	sock->ttl = 8;
 
 	return (0);
 }
@@ -449,7 +454,7 @@ surv0_pipe_recv_cb(void *arg)
 	surv0_ctx * ctx;
 	nni_msg *   msg;
 	uint32_t    id;
-	nni_aio *aio;
+	nni_aio *   aio;
 
 	if (nni_aio_result(p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
@@ -556,9 +561,9 @@ surv0_sock_get_send_fd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 static int
 surv0_sock_get_recv_fd(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
-	surv0_sock *  sock = arg;
-	int           rv;
-	int           fd;
+	surv0_sock *sock = arg;
+	int         rv;
+	int         fd;
 
 	if ((rv = nni_pollable_getfd(&sock->readable, &fd)) != 0) {
 		return (rv);
