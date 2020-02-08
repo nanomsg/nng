@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -36,6 +36,17 @@ typedef enum nng_tls_auth_mode {
 	NNG_TLS_AUTH_MODE_REQUIRED = 2, // Verify cert, close if invalid
 } nng_tls_auth_mode;
 
+// TLS version numbers.  We encode the major number and minor number
+// as separate byte fields.  No support for SSL 3.0 or earlier -- older
+// versions are known to be insecure and should not be used.
+// When possible applications should restrict themselves to TLS 1.2 or better.
+typedef enum nng_tls_version {
+	NNG_TLS_1_0 = 0x301,
+	NNG_TLS_1_1 = 0x302,
+	NNG_TLS_1_2 = 0x303,
+	NNG_TLS_1_3 = 0x304
+} nng_tls_version;
+
 // nng_tls_config_alloc creates a TLS configuration using
 // reasonable defaults.  This configuration can be shared
 // with multiple pipes or services/servers.
@@ -61,7 +72,7 @@ NNG_DECL int nng_tls_config_server_name(nng_tls_config *, const char *);
 // of peer certificates.  Multiple CAs (and their chains) may be configured
 // by either calling this multiple times, or by specifying a list of
 // certificates as concatenated data.  The final argument is an optional CRL
-// (revokation list) for the CA, also in PEM.  Both PEM strings are ASCIIZ
+// (revocation list) for the CA, also in PEM.  Both PEM strings are ASCIIZ
 // format (except that the CRL may be NULL).
 NNG_DECL int nng_tls_config_ca_chain(
     nng_tls_config *, const char *, const char *);
@@ -104,6 +115,25 @@ NNG_DECL int nng_tls_config_ca_file(nng_tls_config *, const char *);
 // different cryptographic algorithms.  Clients only get one.)
 NNG_DECL int nng_tls_config_cert_key_file(
     nng_tls_config *, const char *, const char *);
+
+// Configure supported TLS version.  By default we usually restrict
+// ourselves to TLS 1.2 and newer.  We do not support older versions.
+// If the implementation cannot support any version (for example if
+// the minimum requested is 1.3 but the TLS implementation lacks support
+// for TLS 1.3) then NNG_ENOTSUP will be returned.
+NNG_DECL int nng_tls_config_version(
+    nng_tls_config *, nng_tls_version, nng_tls_version);
+
+// nng_tls_engine_name returns the "name" of the TLS engine.  If no
+// TLS engine support is enabled, then "none" is returned.
+NNG_DECL const char *nng_tls_engine_name(void);
+
+// nng_tls_engine_description returns the "description" of the TLS engine.
+// If no TLS engine support is enabled, then an empty string is returned.
+NNG_DECL const char *nng_tls_engine_description(void);
+
+// nng_tls_engine_fips_mode returns true if the engine is in FIPS 140-2 mode.
+NNG_DECL bool nng_tls_engine_fips_mode(void);
 
 #ifdef __cplusplus
 }

@@ -1,6 +1,6 @@
 #
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2019 Devolutions <info@devolutions.net>
 #
 
@@ -11,38 +11,29 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-set(_SRCS ${PROJECT_SOURCE_DIR}/include/nng/supplemental/tls/tls.h)
 
-if (NNG_SUPP_TLS)
-	set(NNG_SUPP_TLS_MBEDTLS ON)
-	set(_DEFS -DNNG_SUPP_TLS)
+if (NNG_ENABLE_TLS)
+    set(NNG_TLS_ENGINES mbed wolf none)
+    # We assume Mbed for now.  (Someday replaced perhaps with Bear.)
+    set(NNG_TLS_ENGINE mbed CACHE STRING "TLS engine to use.")
+    set_property(CACHE NNG_TLS_ENGINE PROPERTY STRINGS ${NNG_TLS_ENGINES})
+else ()
+    set(NNG_TLS_ENGINE none)
+endif ()
 
-	list(APPEND _SRCS supplemental/tls/tls_common.c)
-endif()
+# default TLS implementation for now is Mbed.
+nng_headers(nng/supplemental/tls/tls.h)
+nng_headers(nng/supplemental/tls/engine.h)
 
-# For now we only support the ARM mbedTLS library.
-if (NNG_SUPP_TLS_MBEDTLS)
+if (NOT NNG_TLS_ENGINE STREQUAL "none")
+    nng_test(tls_test)
+endif ()
 
-    message(WARNING "
-        ************************************************************
-        Linking against mbedTLS changes license terms (Apache 2.0).
-        Consult a lawyer and the license files for details.
-        ************************************************************")
+add_subdirectory(mbedtls)
+add_subdirectory(wolfssl)
 
-	# If mbedTLS was added by a consuming project, then we should use that
-	# instance of it, instead of configuring our own.
-	if (TARGET mbedtls)
-		set(_LIBS mbedtls)
-	else()
-		find_package(mbedTLS REQUIRED)
-		set(_LIBS ${MBEDTLS_LIBRARIES})
-		set(_INCS ${MBEDTLS_INCLUDE_DIR})
-	endif()
-	list(APPEND _SRCS supplemental/tls/mbedtls/tls.c)
-
-else()
-	list(APPEND _SRCS supplemental/tls/none/tls.c)
-endif()
+nng_sources(tls_common.c)
+nng_sources(tls_api.h)
 
 list(APPEND NNG_DEFS ${_DEFS})
 list(APPEND NNG_SRCS ${_SRCS})

@@ -25,7 +25,7 @@
 #   IN THE SOFTWARE.
 #
 
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.13)
 
 project(nng C)
 include(CheckFunctionExists)
@@ -44,6 +44,9 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 if (POLICY CMP0042)
     # Newer cmake on MacOS should use @rpath
     cmake_policy(SET CMP0042 NEW)
+endif ()
+if (POLICY CMP0079)
+    cmake_policy(SET CMP0079 NEW)
 endif ()
 
 if (POLICY CMP0028)
@@ -70,7 +73,7 @@ set(NNG_MINOR_VERSION ${CMAKE_MATCH_1})
 string(REGEX MATCH "NNG_PATCH_VERSION ([0-9]*)" _ ${nng_ver_h})
 set(NNG_PATCH_VERSION ${CMAKE_MATCH_1})
 string(REGEX MATCH "NNG_RELEASE_SUFFIX \"([a-z0-9]*)\"" _ ${nng_ver_h})
-if (NOT(${CMAKE_MATCH_1} STREQUAL ""))
+if (NOT (${CMAKE_MATCH_1} STREQUAL ""))
     set(NNG_PRERELEASE "-${CMAKE_MATCH_1}")
 endif ()
 
@@ -91,11 +94,14 @@ endif ()
 
 # We only build command line tools and tests if we are not in a
 # cross-compile situation.  Cross-compiling users who still want to
-# build these must enable them explicitly.
+# build these must enable them explicitly.  Some of these switches
+# must be enabled rather early as we use their values later.
 option(NNG_TESTS "Build and run tests" ${NNG_NATIVE_BUILD})
 option(NNG_TOOLS "Build extra tools" ${NNG_NATIVE_BUILD})
 option(NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
 option(NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
+
+
 # Enable access to private APIs for our own use.
 add_definitions(-DNNG_PRIVATE)
 
@@ -103,19 +109,14 @@ add_definitions(-DNNG_PRIVATE)
 # that have too small defaults.  This is not used for Windows,
 # which can grow thread stacks sensibly.  (Note that NNG can get
 # by with a smallish stack, but application callbacks might require
-# larger values if using aio completion callbacks.)
+# larger values if using aio completion callbacks.  TLS libraries may
+# require larger stacks however.)
 if (NOT WIN32)
     option(NNG_SETSTACKSIZE "Use rlimit for thread stack size" OFF)
     if (NNG_SETSTACKSIZE)
         add_definitions(-DNNG_SETSTACKSIZE)
     endif ()
     mark_as_advanced(NNG_SETSTACKSIZE)
-endif ()
-
-option(NNG_ENABLE_TLS "Enable TLS protocol (requires mbedTLS)" OFF)
-if (NNG_ENABLE_TLS)
-    add_definitions(-DNNG_SUPP_TLS)
-    set(NNG_SUPP_TLS ON)
 endif ()
 
 option(NNG_ENABLE_STATS "Enable statistics" ON)
@@ -358,9 +359,10 @@ endif ()
 if (NNG_TESTS)
     enable_testing()
     set(all_tests, "")
+endif ()
 
-
-    macro(nng_test NAME)
+macro(nng_test NAME)
+    if (NNG_TESTS)
         add_executable(${NAME} ${NAME}.c ${ARGN})
         target_link_libraries(${NAME} ${PROJECT_NAME}_testlib)
         target_include_directories(${NAME} PRIVATE
@@ -369,37 +371,30 @@ if (NNG_TESTS)
                 ${PROJECT_SOURCE_DIR}/include)
         add_test(NAME ${NAME} COMMAND ${NAME} -t)
         set_tests_properties(${NAME} PROPERTIES TIMEOUT 180)
-    endmacro()
+    endif ()
+endmacro()
 
-    function(nng_sources_testlib)
+function(nng_sources_testlib)
+    if (NNG_TESTS)
         foreach (f ${ARGN})
             target_sources(${PROJECT_NAME}_testlib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${f})
         endforeach ()
-    endfunction()
+    endif ()
+endfunction()
 
-    function(nng_headers_testlib)
+function(nng_headers_testlib)
+    if (NNG_TESTS)
         foreach (f ${ARGN})
             target_sources(${PROJECT_NAME}_testlib PRIVATE ${PROJECT_SOURCE_DIR}/include/${f})
         endforeach ()
-    endfunction()
+    endif ()
+endfunction()
 
-    function(nng_defines_testlib)
+function(nng_defines_testlib)
+    if (NNG_TESTS)
         target_compile_definitions(${PROJECT_NAME}_testlib PRIVATE ${ARGN})
-    endfunction()
-
-else ()
-    function(nng_test NAME)
-    endfunction()
-
-    function(nng_sources_testlib)
-    endfunction()
-
-    function(nng_headers_testlib)
-    endfunction()
-
-    function(nng_defines_testlib)
-    endfunction()
-endif ()
+    endif ()
+endfunction()
 
 function(nng_sources)
     foreach (f ${ARGN})
@@ -465,6 +460,12 @@ endif ()
 
 if (NNG_ENABLE_NNGCAT)
     add_subdirectory(tools/nngcat)
+endif ()
+
+option(NNG_ENABLE_TLS "Enable TLS protocol" OFF)
+if (NNG_ENABLE_TLS)
+    add_definitions(-DNNG_SUPP_TLS)
+    set(NNG_SUPP_TLS ON)
 endif ()
 
 add_subdirectory(docs/man)

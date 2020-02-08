@@ -1,0 +1,3 @@
+[submodule "extern/nng-wolfssl"]
+	path = extern/nng-wolfssl
+	url = https://github.com/staysail/nng-wolfssl

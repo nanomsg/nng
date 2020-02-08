@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -234,6 +234,10 @@ out:
 
 TestMain("WebSocket Secure (TLS) Transport", {
 	static trantest tt;
+
+	if (strcmp(nng_tls_engine_name(), "none") == 0) {
+		Skip("TLS not enabled");
+	}
 
 	tt.dialer_init   = init_dialer_wss;
 	tt.listener_init = init_listener_wss;

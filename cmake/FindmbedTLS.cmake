@@ -1,5 +1,5 @@
 #
-# Copyright 2017 Garrett D'Amore <garrett@damore.org>
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2017 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -9,21 +9,21 @@
 #
 
 #
-# Try to find the mbed TLS libraries.
+# Try to find the Mbed TLS libraries.
 #
 # Sets the following:
 #
-#  MBEDTLS_INCLUDE_DIR - Where to find ssl.h, etc.
-#  MBEDTLS_FOUND       - True if we found mbedtls.
+#  MBEDTLS_INCLUDE_DIR    - Where to find mbedtls/ssl.h, etc.
+#  MBEDTLS_FOUND          - True if we found Mbed TLS.
 #  MBEDTLS_CRYPTO_LIBRARY - The mbedcrypto library.
 #  MBEDTLS_X509_LIBRARY   - The mbedx509 library.
 #  MBEDTLS_TLS_LIBRARY    - The mbedtls library.
-#  MBEDTLS_LIBRARIES      - List of all three mbedtls libraries.
+#  MBEDTLS_LIBRARIES      - List of all three Mbed TLS libraries.
 #  MBEDTLS_VERSION        - $major.$minor.$revision (e.g. ``2.6.0``).
 #
 # Hints:
 #
-# Set ``MBEDTLS_ROOT_DIR`` to the root directory of mbed TLS installation.
+# Set ``MBEDTLS_ROOT_DIR`` to the root directory of Mbed TLS installation.
 #
 
 set(_MBEDTLS_ROOT_HINTS ${MBEDTLS_ROOT_DIR} ENV MBEDTLS_ROOT_DIR)
@@ -60,12 +60,12 @@ set(MBEDTLS_LIBRARIES
     ${MBEDTLS_CRYPTO_LIBRARY})
 
 if (${MBEDTLS_TLS_LIBRARY-NOTFOUND})
-    message(FATAL_ERROR "Failed to find mbed TLS library")
+    message(FATAL_ERROR "Failed to find Mbed TLS library")
 endif()
 
 mark_as_advanced(
     MBEDSSL_INCLUDE_DIR
-    MBEDTLS_LIBRRIES
+    MBEDTLS_LIBRARIES
     MBEDTLS_CRYPTO_LIBRARY
     MBEDTLS_X509_LIBRARY
     MBEDTLS_TLS_LIBRARY)
