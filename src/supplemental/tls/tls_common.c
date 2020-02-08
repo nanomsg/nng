@@ -682,3 +682,84 @@ nni_tls_checkopt(const char *name, const void *data, size_t sz, nni_type t)
 	}
 	return (rv);
 }
+
+int
+nng_tls_config_cert_key_file(
+    nng_tls_config *cfg, const char *path, const char *pass)
+{
+#ifdef NNG_SUPP_TLS
+	int    rv;
+	void * fdata;
+	size_t fsize;
+	char * pem;
+
+	if ((rv = nni_file_get(path, &fdata, &fsize)) != 0) {
+		return (rv);
+	}
+	if ((pem = nni_zalloc(fsize + 1)) == NULL) {
+		nni_free(fdata, fsize);
+		return (NNG_ENOMEM);
+	}
+	memcpy(pem, fdata, fsize);
+	nni_free(fdata, fsize);
+	rv = nng_tls_config_own_cert(cfg, pem, pem, pass);
+	nni_free(pem, fsize + 1);
+	return (rv);
+#else
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(path);
+	NNI_ARG_UNUSED(pass);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+int
+nng_tls_config_ca_file(nng_tls_config *cfg, const char *path)
+{
+#ifdef NNG_SUPP_TLS
+	int    rv;
+	void * fdata;
+	size_t fsize;
+	char * pem;
+
+	if ((rv = nni_file_get(path, &fdata, &fsize)) != 0) {
+		return (rv);
+	}
+	if ((pem = nni_zalloc(fsize + 1)) == NULL) {
+		nni_free(fdata, fsize);
+		return (NNG_ENOMEM);
+	}
+	memcpy(pem, fdata, fsize);
+	nni_free(fdata, fsize);
+	if (strstr(pem, "-----BEGIN X509 CRL-----") != NULL) {
+		rv = nng_tls_config_ca_chain(cfg, pem, pem);
+	} else {
+		rv = nng_tls_config_ca_chain(cfg, pem, NULL);
+	}
+	nni_free(pem, fsize + 1);
+	return (rv);
+#else
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(path);
+	return (NNG_ENOTSUP);
+#endif
+}
+
+
+int
+nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)
+{
+	return (nni_tls_config_init(cfgp, mode));
+}
+
+void
+nng_tls_config_free(nng_tls_config *cfg)
+{
+	nni_tls_config_fini(cfg);
+}
+
+void
+nng_tls_config_hold(nng_tls_config *cfg)
+{
+	nni_tls_config_hold(cfg);
+}

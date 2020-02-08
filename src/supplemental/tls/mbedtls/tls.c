@@ -39,7 +39,7 @@
 // empty state.
 
 // NNG_TLS_MAX_SEND_SIZE limits the amount of data we will buffer for sending,
-// exerting backpressure if this size is exceeded.  The 16K is aligned to the
+// exerting back-pressure if this size is exceeded.  The 16K is aligned to the
 // maximum TLS record size.
 #ifndef NNG_TLS_MAX_SEND_SIZE
 #define NNG_TLS_MAX_SEND_SIZE 16384
@@ -95,6 +95,12 @@ struct nng_tls_config {
 #endif
 	mbedtls_x509_crt ca_certs;
 	mbedtls_x509_crl crl;
+
+	// TLS version range. As of this writing we only support
+	// TLS major version 3.  So these versions are actually the
+	// minor numbers used with mbed TLS.
+	int min_ver;
+	int max_ver;
 
 	nni_atomic_u64 refcnt;
 
@@ -221,9 +227,16 @@ nni_tls_config_init(nng_tls_config **cpp, enum nng_tls_mode mode)
 
 	mbedtls_ssl_conf_authmode(&cfg->cfg_ctx, authmode);
 
-	// We *require* TLS v1.2 or newer, which is also known as SSL v3.3.
+	// Default: we *require* TLS v1.2 or newer, which is also known as
+	// SSL v3.3. As of this writing, Mbed TLS still does not support
+	// version 1.3, and we would want to test it before enabling it here.
+	cfg->min_ver = MBEDTLS_SSL_MINOR_VERSION_3;
+	cfg->max_ver = MBEDTLS_SSL_MINOR_VERSION_3;
+
 	mbedtls_ssl_conf_min_version(&cfg->cfg_ctx,
-	    MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_3);
+	    MBEDTLS_SSL_MAJOR_VERSION_3, cfg->min_ver);
+	mbedtls_ssl_conf_max_version(&cfg->cfg_ctx,
+	    MBEDTLS_SSL_MAJOR_VERSION_3, cfg->max_ver);
 
 #ifdef NNG_TLS_USE_CTR_DRBG
 	mbedtls_ctr_drbg_init(&cfg->rng_ctx);
@@ -959,80 +972,56 @@ err:
 }
 
 int
-nng_tls_config_ca_file(nng_tls_config *cfg, const char *path)
+nng_tls_config_version(
+    nng_tls_config *cfg, nng_tls_version min_ver, nng_tls_version max_ver)
 {
-	int    rv;
-	void * fdata;
-	size_t fsize;
-	char * pem;
-	// Note that while mbedTLS supports its own file methods, we want
-	// to avoid depending on that because it might not have been
-	// included, so we use our own.  We have to read the file, and
-	// then allocate a buffer that has an extra byte so we can
-	// ensure NUL termination.  The file named by path may contain
-	// both a ca chain, and crl chain, or just a ca chain.
-	if ((rv = nni_file_get(path, &fdata, &fsize)) != 0) {
-		return (rv);
-	}
-	if ((pem = nni_zalloc(fsize + 1)) == NULL) {
-		nni_free(fdata, fsize);
-		return (NNG_ENOMEM);
-	}
-	memcpy(pem, fdata, fsize);
-	nni_free(fdata, fsize);
-	if (strstr(pem, "-----BEGIN X509 CRL-----") != NULL) {
-		rv = nng_tls_config_ca_chain(cfg, pem, pem);
-	} else {
-		rv = nng_tls_config_ca_chain(cfg, pem, NULL);
-	}
-	nni_free(pem, fsize + 1);
-	return (rv);
-}
+	int v1, v2;
+	int maj = MBEDTLS_SSL_MAJOR_VERSION_3;
 
-int
-nng_tls_config_cert_key_file(
-    nng_tls_config *cfg, const char *path, const char *pass)
-{
-	int    rv;
-	void * fdata;
-	size_t fsize;
-	char * pem;
-
-	// Note that while mbedTLS supports its own file methods, we want
-	// to avoid depending on that because it might not have been
-	// included, so we use our own.  We have to read the file, and
-	// then allocate a buffer that has an extra byte so we can
-	// ensure NUL termination.  The file named by path must contain
-	// both our certificate, and our private key.  The password
-	// may be NULL if the key is not encrypted.
-	if ((rv = nni_file_get(path, &fdata, &fsize)) != 0) {
-		return (rv);
+	if (min_ver > max_ver) {
+		return (NNG_ENOTSUP);
 	}
-	if ((pem = nni_zalloc(fsize + 1)) == NULL) {
-		nni_free(fdata, fsize);
-		return (NNG_ENOMEM);
+	switch (min_ver) {
+	case NNG_TLS_1_0:
+		v1 = MBEDTLS_SSL_MINOR_VERSION_1;
+		break;
+	case NNG_TLS_1_1:
+		v1 = MBEDTLS_SSL_MINOR_VERSION_2;
+		break;
+	case NNG_TLS_1_2:
+		v1 = MBEDTLS_SSL_MINOR_VERSION_3;
+		break;
+	default:
+		return (NNG_ENOTSUP);
 	}
-	memcpy(pem, fdata, fsize);
-	nni_free(fdata, fsize);
-	rv = nng_tls_config_own_cert(cfg, pem, pem, pass);
-	nni_free(pem, fsize + 1);
-	return (rv);
-}
 
-int
-nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)
-{
-	return (nni_tls_config_init(cfgp, mode));
-}
+	switch (max_ver) {
+	case NNG_TLS_1_0:
+		v2 = MBEDTLS_SSL_MINOR_VERSION_1;
+		break;
+	case NNG_TLS_1_1:
+		v2 = MBEDTLS_SSL_MINOR_VERSION_2;
+		break;
+	case NNG_TLS_1_2:
+	case NNG_TLS_1_3: // We lack support for 1.3, so treat as 1.2.
+		v2 = MBEDTLS_SSL_MINOR_VERSION_3;
+		break;
+	default:
+		// Note that this means that if we ever TLS 1.4 or 2.0,
+		// then this will break.  That's sufficiently far out
+		// to justify not worrying about it.
+		return (NNG_ENOTSUP);
+	}
 
-void
-nng_tls_config_free(nng_tls_config *cfg)
-{
-	nni_tls_config_fini(cfg);
-}
-
-void
-nng_tls_config_hold(nng_tls_config *cfg)
-{
-	nni_tls_config_hold(cfg);
+	nni_mtx_lock(&cfg->lk);
+	if (cfg->active) {
+		nni_mtx_unlock(&cfg->lk);
+		return (NNG_ESTATE);
+	}
+	cfg->min_ver = v1;
+	cfg->max_ver = v2;
+	mbedtls_ssl_conf_min_version(&cfg->cfg_ctx, maj, cfg->min_ver);
+	mbedtls_ssl_conf_max_version(&cfg->cfg_ctx, maj, cfg->max_ver);
+	nni_mtx_unlock(&cfg->lk);
+	return (0);
 }

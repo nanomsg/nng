@@ -128,6 +128,16 @@ nng_tls_config_free(nng_tls_config *cfg)
 }
 
 int
+nng_tls_config_version(
+    nng_tls_config *cfg, nng_tls_version min_ver, nng_tls_version max_ver)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(min_ver);
+	NNI_ARG_UNUSED(max_ver);
+	return (NNG_ENOTSUP);
+}
+
+int
 nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
 	NNI_ARG_UNUSED(dp);

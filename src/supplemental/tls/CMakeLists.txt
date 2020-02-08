@@ -39,7 +39,7 @@ if (NNG_SUPP_TLS_MBEDTLS)
 		set(_INCS ${MBEDTLS_INCLUDE_DIR})
 	endif()
 	list(APPEND _SRCS supplemental/tls/mbedtls/tls.c)
-
+	nng_test(tls_test)
 else()
 	list(APPEND _SRCS supplemental/tls/none/tls.c)
 endif()
