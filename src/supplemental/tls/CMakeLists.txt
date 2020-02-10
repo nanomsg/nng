@@ -1,6 +1,6 @@
 #
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2019 Devolutions <info@devolutions.net>
 #
 
@@ -11,39 +11,17 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-set(_SRCS ${PROJECT_SOURCE_DIR}/include/nng/supplemental/tls/tls.h)
+nng_headers(nng/supplemental/tls/tls.h)
 
 if (NNG_SUPP_TLS)
+	# default TLS implementation for now is Mbed.
 	set(NNG_SUPP_TLS_MBEDTLS ON)
 	set(_DEFS -DNNG_SUPP_TLS)
-
-	list(APPEND _SRCS supplemental/tls/tls_common.c)
 endif()
 
-# For now we only support the ARM mbedTLS library.
-if (NNG_SUPP_TLS_MBEDTLS)
+nng_sources(tls_common.c engine.h)
 
-	set(_DEFS ${DEFS} -DNNG_SUPP_TLS_MBED)
-    message(WARNING "
-        ************************************************************
-        Linking against mbedTLS changes license terms (Apache 2.0).
-        Consult a lawyer and the license files for details.
-        ************************************************************")
-
-	# If mbedTLS was added by a consuming project, then we should use that
-	# instance of it, instead of configuring our own.
-	if (TARGET mbedtls)
-		set(_LIBS mbedtls)
-	else()
-		find_package(mbedTLS REQUIRED)
-		set(_LIBS ${MBEDTLS_LIBRARIES})
-		set(_INCS ${MBEDTLS_INCLUDE_DIR})
-	endif()
-	list(APPEND _SRCS supplemental/tls/mbedtls/tls.c)
-	nng_test(tls_test)
-else()
-	list(APPEND _SRCS supplemental/tls/none/tls.c)
-endif()
+add_subdirectory(mbedtls)
 
 list(APPEND NNG_DEFS ${_DEFS})
 list(APPEND NNG_SRCS ${_SRCS})

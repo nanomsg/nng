@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -11,12 +11,9 @@
 
 #include <stdbool.h>
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "supplemental/http/http_api.h"
-#include "supplemental/tls/tls_api.h"
 #include "supplemental/websocket/websocket.h"
 
 #include <nng/supplemental/tls/tls.h>
@@ -27,33 +24,27 @@ typedef struct ws_listener ws_listener;
 typedef struct ws_pipe     ws_pipe;
 
 struct ws_dialer {
-	uint16_t           lproto; // local protocol
-	uint16_t           rproto; // remote protocol
+	uint16_t           peer; // remote protocol
 	nni_list           aios;
 	nni_mtx            mtx;
 	nni_aio *          connaio;
 	nng_stream_dialer *dialer;
 	bool               started;
-	nni_dialer *       ndialer;
 };
 
 struct ws_listener {
-	uint16_t             lproto; // local protocol
-	uint16_t             rproto; // remote protocol
+	uint16_t             peer; // remote protocol
 	nni_list             aios;
 	nni_mtx              mtx;
 	nni_aio *            accaio;
 	nng_stream_listener *listener;
 	bool                 started;
-	nni_listener *       nlistener;
 };
 
 struct ws_pipe {
 	nni_mtx     mtx;
-	nni_pipe *  npipe;
 	bool        closed;
-	uint16_t    rproto;
-	uint16_t    lproto;
+	uint16_t    peer;
 	nni_aio *   user_txaio;
 	nni_aio *   user_rxaio;
 	nni_aio *   txaio;
@@ -193,10 +184,10 @@ wstran_pipe_stop(void *arg)
 }
 
 static int
-wstran_pipe_init(void *arg, nni_pipe *npipe)
+wstran_pipe_init(void *arg, nni_pipe *pipe)
 {
-	ws_pipe *p = arg;
-	p->npipe   = npipe;
+	NNI_ARG_UNUSED(arg);
+	NNI_ARG_UNUSED(pipe);
 	return (0);
 }
 
@@ -254,7 +245,7 @@ wstran_pipe_peer(void *arg)
 {
 	ws_pipe *p = arg;
 
-	return (p->rproto);
+	return (p->peer);
 }
 
 static int
@@ -426,8 +417,7 @@ wstran_connect_cb(void *arg)
 		nng_stream_free(ws);
 		nni_aio_finish_error(uaio, rv);
 	} else {
-		p->rproto = d->rproto;
-		p->lproto = d->lproto;
+		p->peer = d->peer;
 
 		nni_aio_set_output(uaio, 0, p);
 		nni_aio_finish(uaio, 0, 0);
@@ -478,8 +468,7 @@ wstran_accept_cb(void *arg)
 				nng_stream_close(ws);
 				nni_aio_finish_error(uaio, rv);
 			} else {
-				p->rproto = l->rproto;
-				p->lproto = l->lproto;
+				p->peer = l->peer;
 
 				nni_aio_set_output(uaio, 0, p);
 				nni_aio_finish(uaio, 0, 0);
@@ -498,7 +487,7 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	ws_dialer *d;
 	nni_sock * s = nni_dialer_sock(ndialer);
 	int        rv;
-	char       prname[64];
+	char       name[64];
 
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);
@@ -507,11 +496,10 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 
 	nni_aio_list_init(&d->aios);
 
-	d->lproto  = nni_sock_proto_id(s);
-	d->rproto  = nni_sock_peer_id(s);
-	d->ndialer = ndialer;
+	d->peer = nni_sock_peer_id(s);
 
-	snprintf(prname, sizeof(prname), "%s.sp.nanomsg.org",
+	snprintf(
+	    name, sizeof(name), "%s.sp.nanomsg.org",
 	    nni_sock_peer_name(s));
 
 	if (((rv = nni_ws_dialer_alloc(&d->dialer, url)) != 0) ||
@@ -519,7 +507,7 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	    ((rv = nng_stream_dialer_set_bool(
 	          d->dialer, NNI_OPT_WS_MSGMODE, true)) != 0) ||
 	    ((rv = nng_stream_dialer_set_string(
-	          d->dialer, NNG_OPT_WS_PROTOCOL, prname)) != 0)) {
+	          d->dialer, NNG_OPT_WS_PROTOCOL, name)) != 0)) {
 		wstran_dialer_fini(d);
 		return (rv);
 	}
@@ -529,12 +517,12 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 }
 
 static int
-wstran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
+wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 {
 	ws_listener *l;
 	int          rv;
-	nni_sock *   s = nni_listener_sock(nlistener);
-	char         prname[64];
+	nni_sock *   s = nni_listener_sock(listener);
+	char         name[64];
 
 	if ((l = NNI_ALLOC_STRUCT(l)) == NULL) {
 		return (NNG_ENOMEM);
@@ -543,11 +531,9 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 
 	nni_aio_list_init(&l->aios);
 
-	l->lproto    = nni_sock_proto_id(s);
-	l->rproto    = nni_sock_peer_id(s);
-	l->nlistener = nlistener;
+	l->peer = nni_sock_peer_id(s);
 
-	snprintf(prname, sizeof(prname), "%s.sp.nanomsg.org",
+	snprintf(name, sizeof(name), "%s.sp.nanomsg.org",
 	    nni_sock_proto_name(s));
 
 	if (((rv = nni_ws_listener_alloc(&l->listener, url)) != 0) ||
@@ -555,7 +541,7 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 	    ((rv = nng_stream_listener_set_bool(
 	          l->listener, NNI_OPT_WS_MSGMODE, true)) != 0) ||
 	    ((rv = nng_stream_listener_set_string(
-	          l->listener, NNG_OPT_WS_PROTOCOL, prname)) != 0)) {
+	          l->listener, NNG_OPT_WS_PROTOCOL, name)) != 0)) {
 		wstran_listener_fini(l);
 		return (rv);
 	}
@@ -637,7 +623,7 @@ wstran_listener_setopt(
 	return (rv);
 }
 
-static nni_chkoption wstran_checkopts[] = {
+static nni_chkoption wstran_check_opts[] = {
 	{
 	    .o_name = NULL,
 	},
@@ -647,7 +633,7 @@ static int
 wstran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int rv;
-	rv = nni_chkopt(wstran_checkopts, name, buf, sz, t);
+	rv = nni_chkopt(wstran_check_opts, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_stream_checkopt("ws", name, buf, sz, t);
 	}

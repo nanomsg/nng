@@ -15,15 +15,9 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "core/tcp.h"
 #include "supplemental/tls/engine.h"
-#include "supplemental/tls/tls_api.h"
 
 #include <nng/supplemental/tls/tls.h>
-
-#ifndef NNG_SUPP_TLS // REMOVE ME
-#define NNG_SUPP_TLS
-#endif
 
 // NNG_TLS_MAX_SEND_SIZE limits the amount of data we will buffer for sending,
 // exerting back-pressure if this size is exceeded.  The 16K is aligned to the
@@ -96,11 +90,6 @@ static void tls_free(void *);
 static int  tls_alloc(tls_conn **, nng_tls_config *, nng_aio *);
 static int  tls_start(tls_conn *, nng_stream *);
 static void tls_tcp_error(tls_conn *, int);
-
-#else
-struct nng_tls_config {
-};
-#endif
 
 typedef struct {
 	nng_stream_dialer  ops;
@@ -1173,10 +1162,10 @@ tls_tcp_recv_start(tls_conn *conn)
 	nng_stream_recv(conn->tcp, &conn->tcp_recv);
 }
 
+
 int
 nng_tls_engine_send(void *arg, const uint8_t *buf, size_t *szp)
 {
-#ifdef NNG_SUPP_TLS
 	tls_conn *conn = arg;
 	size_t    len  = *szp;
 	nni_iov   iov;
@@ -1209,18 +1198,11 @@ nng_tls_engine_send(void *arg, const uint8_t *buf, size_t *szp)
 	// We've committed to sending this much data (buffered).
 	*szp = len;
 	return (0);
-#else
-	NNI_ARG_UNUSED(arg);
-	NNI_ARG_UNUSED(buf);
-	NNI_ARG_UNUSED(szp);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_engine_recv(void *arg, uint8_t *buf, size_t *szp)
 {
-#ifdef NNG_SUPP_TLS
 	tls_conn *conn = arg;
 	size_t    len  = *szp;
 
@@ -1244,19 +1226,12 @@ nng_tls_engine_recv(void *arg, uint8_t *buf, size_t *szp)
 
 	*szp = len;
 	return (0);
-#else
-	NNI_ARG_UNUSED(arg);
-	NNI_ARG_UNUSED(buf);
-	NNI_ARG_UNUSED(szp);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_config_cert_key_file(
     nng_tls_config *cfg, const char *path, const char *pass)
 {
-#ifdef NNG_SUPP_TLS
 	int    rv;
 	void * data;
 	size_t size;
@@ -1274,18 +1249,11 @@ nng_tls_config_cert_key_file(
 	rv = nng_tls_config_own_cert(cfg, pem, pem, pass);
 	nni_free(pem, size + 1);
 	return (rv);
-#else
-	NNI_ARG_UNUSED(cfg);
-	NNI_ARG_UNUSED(path);
-	NNI_ARG_UNUSED(pass);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_config_ca_file(nng_tls_config *cfg, const char *path)
 {
-#ifdef NNG_SUPP_TLS
 	int    rv;
 	void * data;
 	size_t size;
@@ -1307,19 +1275,14 @@ nng_tls_config_ca_file(nng_tls_config *cfg, const char *path)
 	}
 	nni_free(pem, size + 1);
 	return (rv);
-#else
-	NNI_ARG_UNUSED(cfg);
-	NNI_ARG_UNUSED(path);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_config_version(
     nng_tls_config *cfg, nng_tls_version min_ver, nng_tls_version max_ver)
 {
-#ifdef NNG_SUPP_TLS
 	int rv;
+
 	nni_mtx_lock(&cfg->lock);
 	if (cfg->busy != 0) {
 		rv = NNG_EBUSY;
@@ -1328,19 +1291,13 @@ nng_tls_config_version(
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
-#else
-	NNI_ARG_UNUSED(cfg);
-	NNI_ARG_UNUSED(min_ver);
-	NNI_ARG_UNUSED(max_ver);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_config_server_name(nng_tls_config *cfg, const char *name)
 {
-#ifdef NNG_SUPP_TLS
 	int rv;
+
 	nni_mtx_lock(&cfg->lock);
 	if (cfg->busy != 0) {
 		rv = NNG_EBUSY;
@@ -1349,19 +1306,14 @@ nng_tls_config_server_name(nng_tls_config *cfg, const char *name)
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
-#else
-	NNI_ARG_UNUSED(cfg);
-	NNI_ARG_UNUSED(name);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_config_ca_chain(
     nng_tls_config *cfg, const char *certs, const char *crl)
 {
-#ifdef NNG_SUPP_TLS
 	int rv;
+
 	nni_mtx_lock(&cfg->lock);
 	if (cfg->busy != 0) {
 		rv = NNG_EBUSY;
@@ -1370,20 +1322,12 @@ nng_tls_config_ca_chain(
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
-#else
-	NNI_ARG_UNUSED(cfg);
-	NNI_ARG_UNUSED(cert);
-	NNI_ARG_UNUSED(key);
-	NNI_ARG_UNUSED(pass);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_config_own_cert(
     nng_tls_config *cfg, const char *cert, const char *key, const char *pass)
 {
-#ifdef NNG_SUPP_TLS
 	int rv;
 	nni_mtx_lock(&cfg->lock);
 	if (cfg->busy != 0) {
@@ -1393,20 +1337,13 @@ nng_tls_config_own_cert(
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
-#else
-	NNI_ARG_UNUSED(cfg);
-	NNI_ARG_UNUSED(cert);
-	NNI_ARG_UNUSED(key);
-	NNI_ARG_UNUSED(pass);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode)
 {
 	int rv;
-#ifdef NNG_SUPP_TLS
+
 	nni_mtx_lock(&cfg->lock);
 	if (cfg->busy != 0) {
 		rv = NNG_EBUSY;
@@ -1415,17 +1352,11 @@ nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode)
 	}
 	nni_mtx_unlock(&cfg->lock);
 	return (rv);
-#else
-	NNI_ARG_UNUSED(cfg);
-	NNI_ARG_UNUSED(mode);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 int
 nng_tls_config_alloc(nng_tls_config **cfg_p, nng_tls_mode mode)
 {
-#ifdef NNG_SUPP_TLS
 	nng_tls_config *      cfg;
 	const nng_tls_engine *eng;
 	size_t                size;
@@ -1462,17 +1393,11 @@ nng_tls_config_alloc(nng_tls_config **cfg_p, nng_tls_mode mode)
 	}
 	*cfg_p = cfg;
 	return (0);
-#else
-	NNI_ARG_UNUSED(cfg_p);
-	NNI_ARG_UNUSED(mode);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 void
 nng_tls_config_free(nng_tls_config *cfg)
 {
-#ifdef NNG_SUPP_TLS
 	nni_mtx_lock(&cfg->lock);
 	cfg->ref--;
 	if (cfg->ref != 0) {
@@ -1483,27 +1408,19 @@ nng_tls_config_free(nng_tls_config *cfg)
 	nni_mtx_fini(&cfg->lock);
 	cfg->ops.fini((void *) (cfg + 1));
 	nni_free(cfg, cfg->size);
-#else
-	NNI_ARG_UNUSED(cfg);
-#endif
 }
 
 void
 nng_tls_config_hold(nng_tls_config *cfg)
 {
-#ifdef NNG_SUPP_TLS
 	nni_mtx_lock(&cfg->lock);
 	cfg->ref++;
 	nni_mtx_unlock(&cfg->lock);
-#else
-	NNI_ARG_UNUSED(cfg);
-#endif
 }
 
 int
 nng_tls_engine_register(const nng_tls_engine *engine)
 {
-#ifdef NNG_SUPP_TLS
 	if (engine->version != NNG_TLS_ENGINE_VERSION) {
 		return (NNG_ENOTSUP);
 	}
@@ -1511,10 +1428,6 @@ nng_tls_engine_register(const nng_tls_engine *engine)
 	tls_engine = engine;
 	nni_mtx_unlock(&tls_engine_lock);
 	return (0);
-#else
-	NNI_ARG_UNUSED(engine);
-	return (NNG_ENOTSUP);
-#endif
 }
 
 static int
@@ -1565,3 +1478,169 @@ void
 nni_tls_sys_fini(void)
 {
 }
+
+#else // NNG_SUPP_TLS
+
+// Provide stubs for the case where TLS is not enabled.
+void
+nni_tls_config_fini(nng_tls_config *cfg)
+{
+	NNI_ARG_UNUSED(cfg);
+}
+
+int
+nni_tls_config_init(nng_tls_config **cpp, enum nng_tls_mode mode)
+{
+	NNI_ARG_UNUSED(cpp);
+	NNI_ARG_UNUSED(mode);
+	return (NNG_ENOTSUP);
+}
+
+void
+nni_tls_config_hold(nng_tls_config *cfg)
+{
+	NNI_ARG_UNUSED(cfg);
+}
+
+int
+nng_tls_config_server_name(nng_tls_config *cfg, const char *name)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(name);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_config_auth_mode(nng_tls_config *cfg, nng_tls_auth_mode mode)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(mode);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_config_ca_chain(
+    nng_tls_config *cfg, const char *certs, const char *crl)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(certs);
+	NNI_ARG_UNUSED(crl);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_config_own_cert(
+    nng_tls_config *cfg, const char *cert, const char *key, const char *pass)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(cert);
+	NNI_ARG_UNUSED(key);
+	NNI_ARG_UNUSED(pass);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_config_ca_file(nng_tls_config *cfg, const char *path)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(path);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_config_cert_key_file(
+    nng_tls_config *cfg, const char *path, const char *pass)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(path);
+	NNI_ARG_UNUSED(pass);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_config_key(nng_tls_config *cfg, const uint8_t *key, size_t size)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(key);
+	NNI_ARG_UNUSED(size);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_config_pass(nng_tls_config *cfg, const char *pass)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(pass);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_config_alloc(nng_tls_config **cfgp, nng_tls_mode mode)
+{
+
+	NNI_ARG_UNUSED(cfgp);
+	NNI_ARG_UNUSED(mode);
+	return (NNG_ENOTSUP);
+}
+
+void
+nng_tls_config_free(nng_tls_config *cfg)
+{
+	NNI_ARG_UNUSED(cfg);
+}
+
+int
+nng_tls_config_version(
+    nng_tls_config *cfg, nng_tls_version min_ver, nng_tls_version max_ver)
+{
+	NNI_ARG_UNUSED(cfg);
+	NNI_ARG_UNUSED(min_ver);
+	NNI_ARG_UNUSED(max_ver);
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
+{
+	NNI_ARG_UNUSED(dp);
+	NNI_ARG_UNUSED(url);
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_tls_listener_alloc(nng_stream_listener **lp, const nng_url *url)
+{
+	NNI_ARG_UNUSED(lp);
+	NNI_ARG_UNUSED(url);
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_tls_checkopt(const char *nm, const void *buf, size_t sz, nni_type t)
+{
+	NNI_ARG_UNUSED(nm);
+	NNI_ARG_UNUSED(buf);
+	NNI_ARG_UNUSED(sz);
+	NNI_ARG_UNUSED(t);
+	return (NNG_ENOTSUP);
+}
+
+int
+nng_tls_engine_register(const nng_tls_engine *engine)
+{
+	NNI_ARG_UNUSED(engine);
+	return (NNG_ENOTSUP);
+}
+
+int
+nni_tls_sys_init(void)
+{
+	return (0);
+}
+
+void
+nni_tls_sys_fini(void)
+{
+}
+
+#endif // !NNG_SUPP_TLS

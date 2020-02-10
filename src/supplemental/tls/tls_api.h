@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -16,13 +16,8 @@
 
 // The implementation supplies this function to create the TLS connection
 // object.  All fields will be zeroed.
-extern int nni_tls_alloc(nng_stream **);
 extern int nni_tls_dialer_alloc(nng_stream_dialer **, const nng_url *);
 extern int nni_tls_listener_alloc(nng_stream_listener **, const nng_url *);
 extern int nni_tls_checkopt(const char *, const void *, size_t, nni_type);
-
-// nni_tls_start is called by the common TLS dialer/listener completions
-// to start the TLS stream activity.  This may also do allocations, etc.
-extern int nni_tls_start(nng_stream *, nng_stream *);
 
 #endif // NNG_SUPPLEMENTAL_TLS_TLS_API_H

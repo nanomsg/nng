@@ -9,13 +9,10 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <ctype.h>
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "supplemental/tls/tls_api.h"
 
 #include <nng/supplemental/tls/tls.h>
 

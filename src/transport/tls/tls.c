@@ -10,14 +10,12 @@
 //
 
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
 
 #include "nng/supplemental/tls/tls.h"
 #include "nng/transport/tls/tls.h"
-#include "supplemental/tls/tls_api.h"
 
 // TLS over TCP transport.   Platform specific TCP operations must be
 // supplied as well, and uses the supplemental TLS v1.2 code.  It is not
@@ -49,7 +47,6 @@ struct tlstran_pipe {
 	size_t          gotrxhead;
 	size_t          wanttxhead;
 	size_t          wantrxhead;
-	nni_aio *       useraio;
 	nni_aio *       txaio;
 	nni_aio *       rxaio;
 	nni_aio *       negoaio;
@@ -821,7 +818,6 @@ error:
 		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&ep->mtx);
-	return;
 }
 
 static int
@@ -868,7 +864,7 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 	}
 
 	if ((rv = tlstran_url_parse_source(&myurl, &srcsa, url)) != 0) {
-		return (NNG_EADDRINVAL);
+		return (rv);
 	}
 
 	if (((rv = tlstran_ep_init(&ep, url, sock)) != 0) ||

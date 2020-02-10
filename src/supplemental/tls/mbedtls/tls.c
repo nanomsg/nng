@@ -542,7 +542,6 @@ nng_tls_init_mbed(void)
 	}
 #endif
 
-	// mbedtls_debug_set_threshold(1);
 	return (rv);
 }
 
