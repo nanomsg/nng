@@ -23,6 +23,7 @@ endif()
 # For now we only support the ARM mbedTLS library.
 if (NNG_SUPP_TLS_MBEDTLS)
 
+	set(_DEFS ${DEFS} -DNNG_SUPP_TLS_MBED)
     message(WARNING "
         ************************************************************
         Linking against mbedTLS changes license terms (Apache 2.0).
