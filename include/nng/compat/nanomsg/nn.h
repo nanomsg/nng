@@ -25,7 +25,7 @@
 // error reporting facility expresses only a subset of the possibilities of
 // nanomsg.
 
-// Note that unlinke nanomsg, nng does not aggressively recycle socket or
+// Note that unlike nanomsg, nng does not aggressively recycle socket or
 // endpoint IDs, which means applications which made assumptions that these
 // would be relatively small integers (e.g. to use them as array indices)
 // may break.  (No promise about values was ever made.)

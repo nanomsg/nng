@@ -43,7 +43,7 @@ static nni_aio *nni_aio_expire_aio;
 //
 // The aio framework is tightly bound up with the taskq framework. We
 // "prepare" the task for an aio when a caller marks an aio as starting
-// (with nni_aio_begin), and that marks the task as bus. Then, all we have
+// (with nni_aio_begin), and that marks the task as busy. Then, all we have
 // to do is wait for the task to complete (the busy flag to be cleared)
 // when we want to know if the operation itself is complete.
 //

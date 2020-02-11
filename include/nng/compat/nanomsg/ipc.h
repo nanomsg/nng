@@ -26,7 +26,7 @@ extern "C" {
 // IPC options.  Note that these are not currently supported.
 // IPC_SEC_ATTR works quite differently in NNG, and must be
 // configured using the new API.  The buffer sizing options are
-// not supported at all.  None of these were ever documente, and
+// not supported at all.  None of these were ever documented, and
 // are offered here only for source compatibility.
 #define NN_IPC_SEC_ATTR 1
 #define NN_IPC_OUTBUFSZ 2

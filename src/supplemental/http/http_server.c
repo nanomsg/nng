@@ -1453,7 +1453,7 @@ http_handle_dir(nni_aio *aio)
 		return;
 	}
 
-	// simple worst case is every character in path is a seperator
+	// simple worst case is every character in path is a separator
 	// It's never actually that bad, because we we have /<something>/.
 	pnsz = (strlen(path) + strlen(uri) + 2) * strlen(NNG_PLATFORM_DIR_SEP);
 	pnsz += strlen("index.html") + 1; // +1 for term nul
