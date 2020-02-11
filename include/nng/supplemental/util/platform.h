@@ -53,13 +53,13 @@ NNG_DECL int nng_thread_create(nng_thread **, void (*)(void *), void *);
 // returns all resources for the thread are cleaned up.
 NNG_DECL void nng_thread_destroy(nng_thread *);
 
-// nng_mtx represents a mutex, which is a simple, non-retrant, boolean lock.
+// nng_mtx represents a mutex, which is a simple, non-reentrant, boolean lock.
 typedef struct nng_mtx nng_mtx;
 
 // nng_mtx_alloc allocates a mutex structure.
 NNG_DECL int nng_mtx_alloc(nng_mtx **);
 
-// nng_mtx_free frees the mutex.  It most not be locked.
+// nng_mtx_free frees the mutex.  It must not be locked.
 NNG_DECL void nng_mtx_free(nng_mtx *);
 
 // nng_mtx_lock locks the mutex; if it is already locked it will block
@@ -93,7 +93,7 @@ NNG_DECL void nng_cv_wake(nng_cv *);
 
 // nng_cv_wake1 wakes only one thread waiting on the condition.  This may
 // reduce the thundering herd problem, but care must be taken to ensure
-// that no waiter starves forvever.
+// that no waiter starves forever.
 NNG_DECL void nng_cv_wake1(nng_cv *);
 
 // nng_random returns a "strong" (cryptographic sense) random number.

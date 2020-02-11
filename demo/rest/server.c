@@ -275,7 +275,7 @@ rest_start(uint16_t port)
 		fatal("nng_http_server_hold", rv);
 	}
 
-	// Allocate the handler - we usea dynamic handler for REST
+	// Allocate the handler - we use a dynamic handler for REST
 	// using the function "rest_handle" declared above.
 	rv = nng_http_handler_alloc(&handler, url->u_path, rest_handle);
 	if (rv != 0) {
@@ -287,7 +287,7 @@ rest_start(uint16_t port)
 	}
 	// We want to collect the body, and we (arbitrarily) limit this to
 	// 128KB.  The default limit is 1MB.  You can explicitly collect
-	// the deta yourself with another HTTP read transaction by disabling
+	// the data yourself with another HTTP read transaction by disabling
 	// this, but that's a lot of work, especially if you want to handle
 	// chunked transfers.
 	if ((rv = nng_http_handler_collect_body(handler, true, 1024 * 128)) !=

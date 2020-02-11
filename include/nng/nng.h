@@ -15,7 +15,7 @@
 // The APIs have changed, and there is no attempt to provide API compatibility
 // with legacy libnanomsg. This file defines the library consumer-facing
 // Public API. Use of definitions or declarations not found in this header
-// file is specfically unsupported and strongly discouraged.
+// file is specifically unsupported and strongly discouraged.
 
 #ifdef __cplusplus
 extern "C" {
@@ -492,7 +492,7 @@ NNG_DECL int nng_ctx_open(nng_ctx *, nng_socket);
 NNG_DECL int nng_ctx_close(nng_ctx);
 
 // nng_ctx_id returns the numeric id for the context; this will be
-// a postive value for a valid context, or < 0 for an invalid context.
+// a positive value for a valid context, or < 0 for an invalid context.
 // A valid context is not necessarily an *open* context.
 NNG_DECL int nng_ctx_id(nng_ctx);
 
@@ -860,9 +860,9 @@ enum nng_flag_enum {
 // Local TCP port number.  This is used on a listener, and is intended
 // to be used after starting the listener in combination with a wildcard
 // (0) local port.  This determines the actual ephemeral port that was
-// selected and bound.  The value is provied as an int, but only the
+// selected and bound.  The value is provided as an int, but only the
 // low order 16 bits will be set.  This is provided in native byte order,
-// which makes it more convienent than using the NNG_OPT_LOCADDR option.
+// which makes it more convenient than using the NNG_OPT_LOCADDR option.
 #define NNG_OPT_TCP_BOUND_PORT "tcp-bound-port"
 
 // IPC options.  These will largely vary depending on the platform,
@@ -1053,7 +1053,7 @@ NNG_DECL int nng_device(nng_socket, nng_socket);
 
 // Error codes.  These generally have different values from UNIX errnos,
 // so take care about converting them.  The one exception is that 0 is
-// unambigiously "success".
+// unambiguously "success".
 //
 // NNG_SYSERR is a special code, which allows us to wrap errors from the
 // underlying operating system.  We generally prefer to map errors to one

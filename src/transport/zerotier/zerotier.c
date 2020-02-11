@@ -31,7 +31,7 @@
 // to the Internet to use this.  (Or at least to your Planetary root.)
 //
 // Because ZeroTier takes a while to establish connectivity, it is even
-// more important that applicaitons using the ZeroTier transport not
+// more important that applications using the ZeroTier transport not
 // assume that a connection will be immediately available.  It can take
 // quite a few seconds for peer-to-peer connectivity to be established.
 //
@@ -131,7 +131,7 @@ enum zt_errors {
 	zt_err_refused = 0x01, // Connection refused
 	zt_err_notconn = 0x02, // Connection does not exit
 	zt_err_wrongsp = 0x03, // SP protocol mismatch
-	zt_err_proto   = 0x04, // Other protocol errror
+	zt_err_proto   = 0x04, // Other protocol error
 	zt_err_msgsize = 0x05, // Message to large
 	zt_err_unknown = 0x06, // Other errors
 };
@@ -263,7 +263,7 @@ struct zt_ep {
 // honest we don't think anyone will be using the ZeroTier transport in
 // performance critical applications; scalability may become a factor for
 // large servers sitting in a ZeroTier hub situation.  (Then again, since
-// only the zerotier procesing is single threaded, it may not
+// only the zerotier processing is single threaded, it may not
 // be that much of a bottleneck -- really depends on how expensive these
 // operations are.  We can use lockstat or other lock-hotness tools to
 // check for this later.)
@@ -432,7 +432,7 @@ static uint64_t
 zt_mac_to_node(uint64_t mac, uint64_t nwid)
 {
 	uint64_t node;
-	// This extracts a node address from a mac addres.  The
+	// This extracts a node address from a mac address.  The
 	// network ID is mixed in, and has to be extricated.  We
 	// the node ID is located in the lower 40 bits, and scrambled
 	// against the nwid.
