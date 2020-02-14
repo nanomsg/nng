@@ -148,6 +148,13 @@ if (NOT NNG_SANITIZER STREQUAL "none")
     set(NNG_SANITIZER_FLAGS "-fsanitize=${NNG_SANITIZER}")
 endif ()
 
+include(CheckAtomicLib)
+CheckAtomicLib()
+if (NOT HAVE_C_ATOMICS_WITHOUT_LIB AND HAVE_C_ATOMICS_WITH_LIB)
+     list(APPEND NNG_LIBS "atomic")
+endif ()
+
+
 if (NNG_ENABLE_COVERAGE)
     # NB: This only works for GCC and Clang 3.0 and newer.  If your stuff
     # is older than that, you will need to find something newer.  For
