@@ -53,7 +53,7 @@ client(const char *url, const char *msecstr)
 		fatal("nng_req0_open", rv);
 	}
 
-	if ((rv = nng_dial(sock, url, NULL, 0)) < 0) {
+	if ((rv = nng_dial(sock, url, NULL, 0)) != 0) {
 		fatal("nng_dial", rv);
 	}
 
