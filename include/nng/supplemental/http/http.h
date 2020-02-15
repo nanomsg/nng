@@ -306,9 +306,9 @@ typedef struct nng_http_handler nng_http_handler;
 // first output using nng_aio_set_output.  If it does not do so, or supplies
 // NULL, then it must send a response itself.
 //
-// The callback should return 0 in most circumstances; if it returns anything
-// other than 0 then the connection is terminated (after possibly sending
-// a 500 error response to the client.)
+// The callback should complete with a result of 0 in most circumstances.
+// If it completes with an error, then the connection is terminated, after
+// possibly sending a 500 error response to the client.
 NNG_DECL int nng_http_handler_alloc(
     nng_http_handler **, const char *, void (*)(nng_aio *));
 
@@ -528,8 +528,7 @@ NNG_DECL void nng_http_conn_transact(
 
 // nng_http_client_transact is used to execute a single transaction to a
 // server. The connection is opened, and will be closed when the transaction is
-// complete.  Note that this will fail with NNG_ENOTSUP if the server attempts
-// to reply with a chunked transfer encoding.
+// complete.
 NNG_DECL void nng_http_client_transact(
     nng_http_client *, nng_http_req *, nng_http_res *, nng_aio *);
 
