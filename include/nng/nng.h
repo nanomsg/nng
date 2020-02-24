@@ -8,8 +8,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifndef NNG_H
-#define NNG_H
+#ifndef NNG_NNG_H
+#define NNG_NNG_H
 
 // NNG (nanomsg-next-gen) is an improved implementation of the SP protocols.
 // The APIs have changed, and there is no attempt to provide API compatibility
@@ -1263,4 +1263,4 @@ NNG_DECL int nng_stream_listener_set_addr(
 }
 #endif
 
-#endif // NNG_H
+#endif // NNG_NNG_H
