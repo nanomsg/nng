@@ -228,6 +228,11 @@ nni_taskq_sys_init(void)
 #else
 	nthrs = NNG_NUM_TASKQ_THREADS;
 #endif
+#if NNG_MAX_TASKQ_THREADS > 0
+	if (nthrs > NNG_MAX_TASKQ_THREADS) {
+		nthrs = NNG_MAX_TASKQ_THREADS;
+	}
+#endif
 
 	return (nni_taskq_init(&nni_taskq_systq, nthrs));
 }

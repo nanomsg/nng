@@ -135,6 +135,12 @@ if (NNG_NUM_TASKQ_THREADS)
 endif ()
 mark_as_advanced(NNG_NUM_TASKQ_THREADS)
 
+set(NNG_MAX_TASKQ_THREADS 16 CACHE STRING "Upper bound on taskq threads, 0 for no limit")
+mark_as_advanced(NNG_MAX_TASKQ_THREADS)
+if (NNG_MAX_TASKQ_THREADS)
+    add_definitions(-DNNG_MAX_TASKQ_THREADS=${NNG_MAX_TASKQ_THREADS})
+endif ()
+
 #  Platform checks.
 
 if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
@@ -152,7 +158,7 @@ endif ()
 include(CheckAtomicLib)
 CheckAtomicLib()
 if (NOT HAVE_C_ATOMICS_WITHOUT_LIB AND HAVE_C_ATOMICS_WITH_LIB)
-     list(APPEND NNG_LIBS "atomic")
+    list(APPEND NNG_LIBS "atomic")
 endif ()
 
 
