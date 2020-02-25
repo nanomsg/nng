@@ -1,0 +1,85 @@
+= nng_tls_config_version(3tls)
+//
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tls_config_version - configure TLS version
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
+
+typedef enum nng_tls_version {
+    NNG_TLS_1_0 = 0x301,
+    NNG_TLS_1_1 = 0x302,
+    NNG_TLS_1_2 = 0x303,
+    NNG_TLS_1_3 = 0x304
+} nng_tls_version;
+
+int nng_tls_config_version(nng_tls_config *cfg, nng_tls_version min, nng_tls_version max);
+----
+
+== DESCRIPTION
+
+The `nng_tls_config_version()` function configures the TLS version numbers that may be used when establishing TLS sessions using this configuration object.
+
+The actual set supported range will further be restricted by the versions that the
+xref:nng_tls_engine.5.adoc[TLS engine] supports.
+If the TLS engine cannot support any TLS version in the requested range, then `NNG_ENOTSUP` is returned.
+
+By default (if this function is not called), NNG will attempt to use both TLS v1.2 and TLS v1.3, provided that the TLS engine supports them.
+
+Clients and servers will generally negotiate for the highest mutually supported TLS version.
+
+TIP: As of this writing, we recommend setting the minimum to
+`NNG_TLS_1_2` (TLS v1.2) and the maximum to `NNG_TLS_1_3` (TLS v1.3).
+This gives the best security, while ensuring good interoperability.
+Nearly all modern TLS implementations support TLS v1.2.
+
+TIP: Support for TLS v1.3 is available via external TLS engines.
+
+NOTE: The cipher-suites supported by TLS v1.3 are different from earlier versions.
+Therefore it may be necessary to generate different certificates.
+
+== CAVEATS
+
+* SSL v2.0 and v3.0 are insecure, and not supported in NNG.
+
+* TLS v1.3 is not supported by the default _Mbed TLS_ engine at this time.
+
+* Some TLS engines may not support limiting the maximum version.
+
+* TLS v1.3 Zero Round Trip Time (0-RTT) is not supported in NNG.
+
+* Session resumption is not supported in NNG (for any TLS version).
+
+* TLS PSK support is not supported in NNG. (This is a limitation planned to be addressed.)
+
+== RETURN VALUES
+
+This function returns 0 on success, and non-zero otherwise.
+
+== ERRORS
+
+[horizontal]
+`NNG_EINVAL`:: An invalid version was specified.
+`NNG_EBUSY`:: The configuration _cfg_ is already in use, and cannot be modified.
+`NNG_ENOTSUP`:: The TLS implementation cannot support any version in the requested range.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
+xref:nng_tls_engine.5.adoc[nng_tls_engine(5)],
+xref:nng.7.adoc[nng(7)]

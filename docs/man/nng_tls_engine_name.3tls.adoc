@@ -1,0 +1,43 @@
+= nng_tls_engine_name(3tls)
+//
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_tls_engine_name - TLS engine name
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/supplemental/tls/tls.h>
+
+const char *nng_tls_engine_name(void);
+----
+
+== DESCRIPTION
+
+The `nng_tls_engine_name()` returns a short name for the current
+xref:tls_engine.5.adoc[TLS engine].
+If no engine is registered, then the special name "none" is returned.
+
+== RETURN VALUES
+
+The name of the engine.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_tls_engine_description.3tls.adoc[nng_tls_engine_description(3tls)],
+xref:nng_tls_engine.5.adoc[nng_tls_engine(5)]
+xref:nng.7.adoc[nng(7)]

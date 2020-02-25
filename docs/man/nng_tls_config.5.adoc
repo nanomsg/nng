@@ -1,6 +1,6 @@
 = nng_tls_config(5)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2019 Devolutions <devolutions.net>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_tls_config - message
+nng_tls_config - TLS configuration object
 
 == SYNOPSIS
 
