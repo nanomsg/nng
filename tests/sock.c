@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -214,6 +214,45 @@ test_send_recv(void)
 
 	TEST_CHECK(nng_close(s1) == 0);
 	TEST_CHECK(nng_close(s2) == 0);
+}
+
+void
+test_send_recv_zero_length(void)
+{
+	nng_socket   s1;
+	nng_socket   s2;
+	int          len;
+	size_t       sz;
+	nng_duration to = 3000; // 3 seconds
+	char *       buf;
+	char *       a = "inproc://send-recv-zero-length";
+
+	TEST_NNG_PASS(nng_pair1_open(&s1));
+	TEST_NNG_PASS(nng_pair1_open(&s2));
+
+	TEST_NNG_PASS(nng_setopt_int(s1, NNG_OPT_RECVBUF, 1));
+	TEST_NNG_PASS(nng_getopt_int(s1, NNG_OPT_RECVBUF, &len));
+	TEST_CHECK(len == 1);
+
+	TEST_NNG_PASS(nng_setopt_int(s1, NNG_OPT_SENDBUF, 1));
+	TEST_NNG_PASS(nng_setopt_int(s2, NNG_OPT_SENDBUF, 1));
+
+	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to));
+	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, to));
+	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_SENDTIMEO, to));
+	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, to));
+
+	TEST_NNG_PASS(nng_listen(s1, a, NULL, 0));
+	TEST_NNG_PASS(nng_dial(s2, a, NULL, 0));
+
+	TEST_NNG_PASS(nng_send(s1, "", 0, 0));
+	TEST_NNG_PASS(nng_recv(s2, &buf, &sz, NNG_FLAG_ALLOC));
+	TEST_CHECK(buf == NULL);
+	TEST_CHECK(sz == 0);
+	nng_free(buf, sz);
+
+	TEST_NNG_PASS(nng_close(s1));
+	TEST_NNG_PASS(nng_close(s2));
 }
 
 void
@@ -611,6 +650,7 @@ TEST_LIST = {
 	{ "socket name", test_socket_name },
 	{ "socket name oversize", test_socket_name_oversize },
 	{ "send recv", test_send_recv },
+	{ "send recv zero length", test_send_recv_zero_length },
 	{ "connection refused", test_connection_refused },
 	{ "late connection", test_late_connection },
 	{ "address busy", test_address_busy },
