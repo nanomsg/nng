@@ -115,8 +115,8 @@ nng_recv(nng_socket s, void *buf, size_t *szp, int flags)
 			memcpy(nbuf, nni_msg_body(msg), nni_msg_len(msg));
 			*szp = nng_msg_len(msg);
 		} else {
-			*(void **)buf = NULL;
-			*szp = 0;
+			*(void **) buf = NULL;
+			*szp           = 0;
 		}
 	}
 	nni_msg_free(msg);
@@ -997,57 +997,111 @@ nng_msg_insert(nng_msg *msg, const void *data, size_t sz)
 }
 
 int
+nng_msg_append_u16(nng_msg *msg, uint16_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT16(buf, v);
+	return (nni_msg_append(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_append_u32(nng_msg *msg, uint32_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT32(buf, v);
+	return (nni_msg_append(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_append_u64(nng_msg *msg, uint64_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT64(buf, v);
+	return (nni_msg_append(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_insert_u16(nng_msg *msg, uint16_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT16(buf, v);
+	return (nni_msg_insert(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_insert_u32(nng_msg *msg, uint32_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT32(buf, v);
+	return (nni_msg_insert(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_insert_u64(nng_msg *msg, uint64_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT64(buf, v);
+	return (nni_msg_insert(msg, buf, sizeof(v)));
+}
+
+int
 nng_msg_header_append(nng_msg *msg, const void *data, size_t sz)
 {
 	return (nni_msg_header_append(msg, data, sz));
 }
 
-#define DEF_MSG_ADD_N(op, n)                                      \
-	int nng_msg_header_##op##_u##n(nng_msg *m, uint##n##_t v) \
-	{                                                         \
-		return (nni_msg_header_##op##_u##n(m, v));        \
-	}                                                         \
-	int nng_msg_##op##_u##n(nng_msg *m, uint##n##_t v)        \
-	{                                                         \
-		return (nni_msg_##op##_u##n(m, v));               \
-	}
-#define DEF_MSG_REM_N(op, n)                                        \
-	int nng_msg_header_##op##_u##n(nng_msg *m, uint##n##_t *vp) \
-	{                                                           \
-		if (nni_msg_header_len(m) < sizeof(*vp)) {          \
-			return (NNG_EINVAL);                        \
-		}                                                   \
-		*vp = nni_msg_header_##op##_u##n(m);                \
-		return (0);                                         \
-	}                                                           \
-	int nng_msg_##op##_u##n(nng_msg *m, uint##n##_t *vp)        \
-	{                                                           \
-		if (nni_msg_len(m) < sizeof(*vp)) {                 \
-			return (NNG_EINVAL);                        \
-		}                                                   \
-		*vp = nni_msg_##op##_u##n(m);                       \
-		return (0);                                         \
-	}
-
-#define DEF_MSG_ADD(op) \
-	DEF_MSG_ADD_N(op, 16) DEF_MSG_ADD_N(op, 32) DEF_MSG_ADD_N(op, 64)
-#define DEF_MSG_REM(op) \
-	DEF_MSG_REM_N(op, 16) DEF_MSG_REM_N(op, 32) DEF_MSG_REM_N(op, 64)
-
-DEF_MSG_ADD(append)
-DEF_MSG_ADD(insert)
-DEF_MSG_REM(chop)
-DEF_MSG_REM(trim)
-
-#undef DEF_MSG_ADD_N
-#undef DEF_MSG_REM_N
-#undef DEF_MSG_ADD
-#undef DEF_MSG_REM
-
 int
 nng_msg_header_insert(nng_msg *msg, const void *data, size_t sz)
 {
 	return (nni_msg_header_insert(msg, data, sz));
+}
+
+int
+nng_msg_header_append_u16(nng_msg *msg, uint16_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT16(buf, v);
+	return (nni_msg_header_append(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_header_append_u32(nng_msg *msg, uint32_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT32(buf, v);
+	return (nni_msg_header_append(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_header_append_u64(nng_msg *msg, uint64_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT64(buf, v);
+	return (nni_msg_header_append(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_header_insert_u16(nng_msg *msg, uint16_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT16(buf, v);
+	return (nni_msg_header_insert(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_header_insert_u32(nng_msg *msg, uint32_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT32(buf, v);
+	return (nni_msg_header_insert(msg, buf, sizeof(v)));
+}
+
+int
+nng_msg_header_insert_u64(nng_msg *msg, uint64_t v)
+{
+	uint8_t buf[sizeof(v)];
+	NNI_PUT64(buf, v);
+	return (nni_msg_header_insert(msg, buf, sizeof(v)));
 }
 
 int
@@ -1072,6 +1126,195 @@ int
 nng_msg_header_chop(nng_msg *msg, size_t sz)
 {
 	return (nni_msg_header_chop(msg, sz));
+}
+
+int
+nng_msg_chop_u16(nng_msg *m, uint16_t *vp)
+{
+	uint8_t *body;
+	uint16_t v;
+	if (nni_msg_len(m) < sizeof(*vp)) {
+		return (NNG_EINVAL);
+	}
+	body = nni_msg_body(m);
+	body += nni_msg_len(m);
+	body -= sizeof(v);
+	NNI_GET16(body, v);
+	(void) nni_msg_chop(m, sizeof(v));
+	*vp = v;
+	return (0);
+}
+
+int
+nng_msg_chop_u32(nng_msg *m, uint32_t *vp)
+{
+	uint8_t *body;
+	uint32_t v;
+	if (nni_msg_len(m) < sizeof(*vp)) {
+		return (NNG_EINVAL);
+	}
+	body = nni_msg_body(m);
+	body += nni_msg_len(m);
+	body -= sizeof(v);
+	NNI_GET32(body, v);
+	(void) nni_msg_chop(m, sizeof(v));
+	*vp = v;
+	return (0);
+}
+
+int
+nng_msg_chop_u64(nng_msg *m, uint64_t *vp)
+{
+	uint8_t *body;
+	uint64_t v;
+	if (nni_msg_len(m) < sizeof(*vp)) {
+		return (NNG_EINVAL);
+	}
+	body = nni_msg_body(m);
+	body += nni_msg_len(m);
+	body -= sizeof(v);
+	NNI_GET64(body, v);
+	(void) nni_msg_chop(m, sizeof(v));
+	*vp = v;
+	return (0);
+}
+
+int
+nng_msg_trim_u16(nng_msg *m, uint16_t *vp)
+{
+	uint8_t *body;
+	uint16_t v;
+	if (nni_msg_len(m) < sizeof(v)) {
+		return (NNG_EINVAL);
+	}
+	body = nni_msg_body(m);
+	NNI_GET16(body, v);
+	(void) nni_msg_trim(m, sizeof(v));
+	*vp = v;
+	return (0);
+}
+
+int
+nng_msg_trim_u32(nng_msg *m, uint32_t *vp)
+{
+	uint8_t *body;
+	uint32_t v;
+	if (nni_msg_len(m) < sizeof(v)) {
+		return (NNG_EINVAL);
+	}
+	body = nni_msg_body(m);
+	NNI_GET32(body, v);
+	(void) nni_msg_trim(m, sizeof(v));
+	*vp = v;
+	return (0);
+}
+
+int
+nng_msg_trim_u64(nng_msg *m, uint64_t *vp)
+{
+	uint8_t *body;
+	uint64_t v;
+	if (nni_msg_len(m) < sizeof(v)) {
+		return (NNG_EINVAL);
+	}
+	body = nni_msg_body(m);
+	NNI_GET64(body, v);
+	(void) nni_msg_trim(m, sizeof(v));
+	*vp = v;
+	return (0);
+}
+
+int
+nng_msg_header_chop_u16(nng_msg *msg, uint16_t *val)
+{
+	uint8_t *header;
+	uint16_t v;
+	if (nng_msg_header_len(msg) < sizeof(*val)) {
+		return (NNG_EINVAL);
+	}
+	header = nng_msg_header(msg);
+	header += nng_msg_header_len(msg);
+	header -= sizeof(v);
+	NNI_GET16(header, v);
+	*val = v;
+	nni_msg_header_chop(msg, sizeof(v));
+	return (0);
+}
+
+int
+nng_msg_header_chop_u32(nng_msg *msg, uint32_t *val)
+{
+	uint8_t *header;
+	uint32_t v;
+	if (nng_msg_header_len(msg) < sizeof(*val)) {
+		return (NNG_EINVAL);
+	}
+	header = nng_msg_header(msg);
+	header += nng_msg_header_len(msg);
+	header -= sizeof(v);
+	NNI_GET32(header, v);
+	*val = v;
+	nni_msg_header_chop(msg, sizeof(v));
+	return (0);
+}
+
+int
+nng_msg_header_chop_u64(nng_msg *msg, uint64_t *val)
+{
+	uint8_t *header;
+	uint64_t v;
+	if (nng_msg_header_len(msg) < sizeof(v)) {
+		return (NNG_EINVAL);
+	}
+	header = nng_msg_header(msg);
+	header += nng_msg_header_len(msg);
+	header -= sizeof(v);
+	NNI_GET64(header, v);
+	*val = v;
+	nni_msg_header_chop(msg, sizeof(*val));
+	return (0);
+}
+
+int
+nng_msg_header_trim_u16(nng_msg *msg, uint16_t *val)
+{
+	uint8_t *header = nni_msg_header(msg);
+	uint16_t v;
+	if (nng_msg_header_len(msg) < sizeof(v)) {
+		return (NNG_EINVAL);
+	}
+	NNI_GET16(header, v);
+	*val = v;
+	nni_msg_header_trim(msg, sizeof(v));
+	return (0);
+}
+
+int
+nng_msg_header_trim_u32(nng_msg *msg, uint32_t *val)
+{
+	uint8_t *header = nni_msg_header(msg);
+	uint32_t v;
+	if (nng_msg_header_len(msg) < sizeof(v)) {
+		return (NNG_EINVAL);
+	}
+	NNI_GET32(header, v);
+	*val = v;
+	nni_msg_header_trim(msg, sizeof(v));
+	return (0);
+}
+
+int
+nng_msg_header_trim_u64(nng_msg *msg, uint64_t *val)
+{
+	uint8_t *header = nni_msg_header(msg);
+	uint64_t v;
+	if (nng_msg_header_len(msg) < sizeof(v)) {
+		return (NNG_EINVAL);
+	}
+	NNI_GET64(header, v);
+	*val = v;
+	nni_msg_header_trim(msg, sizeof(v));
+	return (0);
 }
 
 void

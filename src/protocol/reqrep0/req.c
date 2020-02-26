@@ -667,7 +667,7 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	}
 	ctx->request_id = (uint32_t) id;
 	nni_msg_header_clear(msg);
-	nni_msg_header_must_append_u32(msg, ctx->request_id);
+	nni_msg_header_append_u32(msg, ctx->request_id);
 
 	// If no pipes are ready, and the request was a poll (no background
 	// schedule), then fail it.  Should be NNG_ETIMEDOUT.

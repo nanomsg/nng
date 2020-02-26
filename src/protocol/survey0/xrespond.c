@@ -284,7 +284,7 @@ xresp0_recv_cb(void *arg)
 	nni_msg_set_pipe(msg, p->id);
 
 	// Store the pipe id in the header, first thing.
-	nni_msg_header_must_append_u32(msg, p->id);
+	nni_msg_header_append_u32(msg, p->id);
 
 	// Move backtrace from body to header
 	hops = 1;

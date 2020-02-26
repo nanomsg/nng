@@ -281,7 +281,7 @@ pair1_pipe_recv_cb(void *arg)
 	}
 
 	// Store the hop count in the header.
-	nni_msg_header_must_append_u32(msg, hdr);
+	nni_msg_header_append_u32(msg, hdr);
 
 	// Send the message up.
 	nni_aio_set_msg(&p->aio_put, msg);
@@ -345,7 +345,7 @@ pair1_pipe_get_cb(void *arg)
 	hops++;
 
 	// Insert the hops header.
-	nni_msg_header_must_append_u32(msg, hops);
+	nni_msg_header_append_u32(msg, hops);
 
 	nni_aio_set_msg(&p->aio_send, msg);
 	nni_pipe_send(p->pipe, &p->aio_send);

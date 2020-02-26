@@ -33,30 +33,9 @@ extern void     nni_msg_header_clear(nni_msg *);
 extern int      nni_msg_header_trim(nni_msg *, size_t);
 extern int      nni_msg_header_chop(nni_msg *, size_t);
 extern void     nni_msg_dump(const char *, const nni_msg *);
-extern int      nni_msg_append_u16(nni_msg *, uint16_t);
-extern int      nni_msg_append_u32(nni_msg *, uint32_t);
-extern int      nni_msg_append_u64(nni_msg *, uint64_t);
-extern int      nni_msg_insert_u16(nni_msg *, uint16_t);
-extern int      nni_msg_insert_u32(nni_msg *, uint32_t);
-extern int      nni_msg_insert_u64(nni_msg *, uint64_t);
-extern int      nni_msg_header_append_u16(nni_msg *, uint16_t);
-extern int      nni_msg_header_append_u32(nni_msg *, uint32_t);
-extern int      nni_msg_header_append_u64(nni_msg *, uint64_t);
-extern int      nni_msg_header_insert_u16(nni_msg *, uint16_t);
-extern int      nni_msg_header_insert_u32(nni_msg *, uint32_t);
-extern int      nni_msg_header_insert_u64(nni_msg *, uint64_t);
-extern uint16_t nni_msg_trim_u16(nni_msg *);
-extern uint32_t nni_msg_trim_u32(nni_msg *);
-extern uint64_t nni_msg_trim_u64(nni_msg *);
-extern uint16_t nni_msg_chop_u16(nni_msg *);
-extern uint32_t nni_msg_chop_u32(nni_msg *);
-extern uint64_t nni_msg_chop_u64(nni_msg *);
-extern uint16_t nni_msg_header_trim_u16(nni_msg *);
+extern void     nni_msg_header_append_u32(nni_msg *, uint32_t);
 extern uint32_t nni_msg_header_trim_u32(nni_msg *);
-extern uint64_t nni_msg_header_trim_u64(nni_msg *);
-extern uint16_t nni_msg_header_chop_u16(nni_msg *);
-extern uint32_t nni_msg_header_chop_u32(nni_msg *);
-extern uint64_t nni_msg_header_chop_u64(nni_msg *);
+extern uint32_t nni_msg_trim_u32(nni_msg *);
 extern void     nni_msg_set_pipe(nni_msg *, uint32_t);
 extern uint32_t nni_msg_get_pipe(const nni_msg *);
 
@@ -65,7 +44,7 @@ extern uint32_t nni_msg_get_pipe(const nni_msg *);
 // this functionality MUST be certain to use nni_msg_unique() before
 // passing a message out of their control (e.g. to user programs.)
 // Failure to do so will likely result in corruption.
-extern void nni_msg_clone(nni_msg *);
+extern void     nni_msg_clone(nni_msg *);
 extern nni_msg *nni_msg_unique(nni_msg *);
 // nni_msg_pull_up ensures that the message is unique, and that any
 // header present is "pulled up" into the message body.  If the function
@@ -73,12 +52,5 @@ extern nni_msg *nni_msg_unique(nni_msg *);
 // is returned.  It is the responsibility of the caller to free the
 // original message in that case (same semantics as realloc).
 extern nni_msg *nni_msg_pull_up(nni_msg *);
-
-// These should only be used when the transport or protocol is absolutely
-// certain that there is adequate room.   There is about 32 bytes of
-// header and trailer space for a newly allocated message, and transports
-// should generally not be burning more than half that.
-extern void nni_msg_must_append_u32(nni_msg *, uint32_t);
-extern void nni_msg_header_must_append_u32(nni_msg *, uint32_t);
 
 #endif // CORE_SOCKET_H

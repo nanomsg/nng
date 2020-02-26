@@ -24,7 +24,8 @@ typedef struct {
 
 // Underlying message structure.
 struct nng_msg {
-	nni_chunk      m_header;
+	uint32_t       m_header_buf[(NNI_MAX_MAX_TTL + 1)];
+	size_t         m_header_len;
 	nni_chunk      m_body;
 	uint32_t       m_pipe; // set on receive
 	nni_atomic_int m_refcnt;
@@ -74,7 +75,7 @@ nni_msg_dump(const char *banner, const nni_msg *msg)
 
 	(void) snprintf(buf, sizeof(buf), "--- %s BEGIN ---", banner);
 	nni_println(buf);
-	nni_chunk_dump(&msg->m_header, "HEADER");
+	// TODO: dump the header
 	nni_chunk_dump(&msg->m_body, "BODY");
 	nni_println("--- END ---");
 }
@@ -289,58 +290,6 @@ nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 	return (0);
 }
 
-static int
-nni_chunk_insert_u16(nni_chunk *ch, uint16_t val)
-{
-	unsigned char buf[sizeof(uint16_t)];
-	NNI_PUT16(buf, val);
-	return (nni_chunk_insert(ch, buf, sizeof(buf)));
-}
-
-static int
-nni_chunk_append_u16(nni_chunk *ch, uint16_t val)
-{
-	unsigned char buf[sizeof(uint16_t)];
-	NNI_PUT16(buf, val);
-	return (nni_chunk_append(ch, buf, sizeof(buf)));
-}
-
-static uint16_t
-nni_chunk_trim_u16(nni_chunk *ch)
-{
-	uint16_t v;
-	NNI_ASSERT(ch->ch_len >= sizeof(v));
-	NNI_GET16(ch->ch_ptr, v);
-	nni_chunk_trim(ch, sizeof(v));
-	return (v);
-}
-
-static uint16_t
-nni_chunk_chop_u16(nni_chunk *ch)
-{
-	uint16_t v;
-	NNI_ASSERT(ch->ch_len >= sizeof(v));
-	NNI_GET16(ch->ch_ptr + ch->ch_len - sizeof(v), v);
-	nni_chunk_chop(ch, sizeof(v));
-	return (v);
-}
-
-static int
-nni_chunk_insert_u32(nni_chunk *ch, uint32_t val)
-{
-	unsigned char buf[sizeof(uint32_t)];
-	NNI_PUT32(buf, val);
-	return (nni_chunk_insert(ch, buf, sizeof(buf)));
-}
-
-static int
-nni_chunk_append_u32(nni_chunk *ch, uint32_t val)
-{
-	unsigned char buf[sizeof(uint32_t)];
-	NNI_PUT32(buf, val);
-	return (nni_chunk_append(ch, buf, sizeof(buf)));
-}
-
 static uint32_t
 nni_chunk_trim_u32(nni_chunk *ch)
 {
@@ -348,52 +297,6 @@ nni_chunk_trim_u32(nni_chunk *ch)
 	NNI_ASSERT(ch->ch_len >= sizeof(v));
 	NNI_GET32(ch->ch_ptr, v);
 	nni_chunk_trim(ch, sizeof(v));
-	return (v);
-}
-
-static uint32_t
-nni_chunk_chop_u32(nni_chunk *ch)
-{
-	uint32_t v;
-	NNI_ASSERT(ch->ch_len >= sizeof(v));
-	NNI_GET32(ch->ch_ptr + ch->ch_len - sizeof(v), v);
-	nni_chunk_chop(ch, sizeof(v));
-	return (v);
-}
-
-static int
-nni_chunk_insert_u64(nni_chunk *ch, uint64_t val)
-{
-	unsigned char buf[sizeof(uint64_t)];
-	NNI_PUT64(buf, val);
-	return (nni_chunk_insert(ch, buf, sizeof(buf)));
-}
-
-static int
-nni_chunk_append_u64(nni_chunk *ch, uint64_t val)
-{
-	unsigned char buf[sizeof(uint64_t)];
-	NNI_PUT64(buf, val);
-	return (nni_chunk_append(ch, buf, sizeof(buf)));
-}
-
-static uint64_t
-nni_chunk_trim_u64(nni_chunk *ch)
-{
-	uint64_t v;
-	NNI_ASSERT(ch->ch_len >= sizeof(v));
-	NNI_GET64(ch->ch_ptr, v);
-	nni_chunk_trim(ch, sizeof(v));
-	return (v);
-}
-
-static uint64_t
-nni_chunk_chop_u64(nni_chunk *ch)
-{
-	uint64_t v;
-	NNI_ASSERT(ch->ch_len >= sizeof(v));
-	NNI_GET64(ch->ch_ptr + ch->ch_len - sizeof(v), v);
-	nni_chunk_chop(ch, sizeof(v));
 	return (v);
 }
 
@@ -470,13 +373,6 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 		return (NNG_ENOMEM);
 	}
 
-	// Header size is strictly limited.  We need max hops plus one for
-	// the request or survey ID.  TODO: Inline the header (no chunk).
-	if ((rv = nni_chunk_grow(&m->m_header, NNI_MAX_HEADER_SIZE, 0)) != 0) {
-		NNI_FREE_STRUCT(m);
-		return (rv);
-	}
-
 	// If the message is less than 1024 bytes, or is not power
 	// of two aligned, then we insert a 32 bytes of headroom
 	// to allow for inlining backtraces, etc.  We also allow the
@@ -488,11 +384,10 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 		rv = nni_chunk_grow(&m->m_body, sz, 0);
 	}
 	if (rv != 0) {
-		nni_chunk_free(&m->m_header);
 		NNI_FREE_STRUCT(m);
 		return (rv);
 	}
-	if ((rv = nni_chunk_append(&m->m_body, NULL, sz)) != 0) {
+	if (nni_chunk_append(&m->m_body, NULL, sz) != 0) {
 		// Should not happen since we just grew it to fit.
 		nni_panic("chunk_append failed");
 	}
@@ -514,12 +409,10 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 		return (NNG_ENOMEM);
 	}
 
-	if ((rv = nni_chunk_dup(&m->m_header, &src->m_header)) != 0) {
-		NNI_FREE_STRUCT(m);
-		return (rv);
-	}
+	memcpy(m->m_header_buf, src->m_header_buf, src->m_header_len);
+	m->m_header_len = src->m_header_len;
+
 	if ((rv = nni_chunk_dup(&m->m_body, &src->m_body)) != 0) {
-		nni_chunk_free(&m->m_header);
 		NNI_FREE_STRUCT(m);
 		return (rv);
 	}
@@ -536,7 +429,6 @@ void
 nni_msg_free(nni_msg *m)
 {
 	if ((m != NULL) && (nni_atomic_dec_nv(&m->m_refcnt) == 0)) {
-		nni_chunk_free(&m->m_header);
 		nni_chunk_free(&m->m_body);
 		NNI_FREE_STRUCT(m);
 	}
@@ -561,13 +453,13 @@ nni_msg_realloc(nni_msg *m, size_t sz)
 void *
 nni_msg_header(nni_msg *m)
 {
-	return (m->m_header.ch_ptr);
+	return (m->m_header_buf);
 }
 
 size_t
 nni_msg_header_len(const nni_msg *m)
 {
-	return (m->m_header.ch_len);
+	return (m->m_header_len);
 }
 
 void *
@@ -600,6 +492,12 @@ nni_msg_trim(nni_msg *m, size_t len)
 	return (nni_chunk_trim(&m->m_body, len));
 }
 
+uint32_t
+nni_msg_trim_u32(nni_msg *m)
+{
+	return (nni_chunk_trim_u32(&m->m_body));
+}
+
 int
 nni_msg_chop(nni_msg *m, size_t len)
 {
@@ -609,95 +507,85 @@ nni_msg_chop(nni_msg *m, size_t len)
 int
 nni_msg_header_append(nni_msg *m, const void *data, size_t len)
 {
-	return (nni_chunk_append(&m->m_header, data, len));
+	if ((len + m->m_header_len) > sizeof(m->m_header_buf)) {
+		return (NNG_EINVAL);
+	}
+	memcpy(((uint8_t *) m->m_header_buf) + m->m_header_len, data, len);
+	m->m_header_len += len;
+	return (0);
 }
 
 int
 nni_msg_header_insert(nni_msg *m, const void *data, size_t len)
 {
-	return (nni_chunk_insert(&m->m_header, data, len));
+	if ((len + m->m_header_len) > sizeof(m->m_header_buf)) {
+		return (NNG_EINVAL);
+	}
+	memmove(((uint8_t *) m->m_header_buf) + len, m->m_header_buf,
+	    m->m_header_len);
+	memcpy(m->m_header_buf, data, len);
+	m->m_header_len += len;
+	return (0);
 }
 
 int
 nni_msg_header_trim(nni_msg *m, size_t len)
 {
-	return (nni_chunk_trim(&m->m_header, len));
+	if (len > m->m_header_len) {
+		return (NNG_EINVAL);
+	}
+	memmove(m->m_header_buf, ((uint8_t *) m->m_header_buf) + len,
+	    m->m_header_len - len);
+	m->m_header_len -= len;
+	return (0);
 }
 
 int
 nni_msg_header_chop(nni_msg *m, size_t len)
 {
-	return (nni_chunk_chop(&m->m_header, len));
+	if (len > m->m_header_len) {
+		return (NNG_EINVAL);
+	}
+	m->m_header_len -= len;
+	return (0);
 }
 
-#define DEF_MSG_ADD_N(z, x)                                      \
-	int nni_msg_##z##_u##x(nni_msg *m, uint##x##_t v)        \
-	{                                                        \
-		return (nni_chunk_##z##_u##x(&m->m_body, v));    \
-	}                                                        \
-	int nni_msg_header_##z##_u##x(nni_msg *m, uint##x##_t v) \
-	{                                                        \
-		return (nni_chunk_##z##_u##x(&m->m_header, v));  \
+uint32_t
+nni_msg_header_trim_u32(nni_msg *m)
+{
+	uint32_t val;
+	uint8_t *dst;
+	dst = (void *) m->m_header_buf;
+	NNI_GET32(dst, val);
+	m->m_header_len -= sizeof(val);
+	memmove(m->m_header_buf, &m->m_header_buf[1], m->m_header_len);
+	return (val);
+}
+
+void
+nni_msg_header_append_u32(nni_msg *m, uint32_t val)
+{
+	uint8_t *dst;
+	if ((m->m_header_len + sizeof(val)) >= (sizeof(m->m_header_buf))) {
+		nni_panic("impossible header over-run");
 	}
-
-#define DEF_MSG_MUST_ADD_N(z, x)                                             \
-	void nni_msg_must_##z##_u##x(nni_msg *m, uint##x##_t v)              \
-	{                                                                    \
-		int rv;                                                      \
-		if ((rv = nni_msg_##z##_u##x(m, v)) != 0) {                  \
-			nni_panic("nni_msg_%s_u%s failed: %d", #z, #x, rv);  \
-		}                                                            \
-	}                                                                    \
-	void nni_msg_header_must_##z##_u##x(nni_msg *m, uint##x##_t v)       \
-	{                                                                    \
-		int rv;                                                      \
-		if ((rv = nni_msg_header_##z##_u##x(m, v)) != 0) {           \
-			nni_panic(                                           \
-			    "nni_msg_header_%s_u%s failed: %d", #z, #x, rv); \
-		}                                                            \
-	}
-
-#define DEF_MSG_REM_N(z, x)                                  \
-	uint##x##_t nni_msg_##z##_u##x(nni_msg *m)           \
-	{                                                    \
-		return (nni_chunk_##z##_u##x(&m->m_body));   \
-	}                                                    \
-	uint##x##_t nni_msg_header_##z##_u##x(nni_msg *m)    \
-	{                                                    \
-		return (nni_chunk_##z##_u##x(&m->m_header)); \
-	}
-
-#define DEF_MSG_ADD(op) \
-	DEF_MSG_ADD_N(op, 16) DEF_MSG_ADD_N(op, 32) DEF_MSG_ADD_N(op, 64)
-
-#define DEF_MSG_MUST_ADD(op) DEF_MSG_MUST_ADD_N(op, 32)
-
-#define DEF_MSG_REM(op) \
-	DEF_MSG_REM_N(op, 16) DEF_MSG_REM_N(op, 32) DEF_MSG_REM_N(op, 64)
-
-DEF_MSG_ADD(append)
-DEF_MSG_MUST_ADD(append)
-DEF_MSG_ADD(insert)
-DEF_MSG_REM(chop)
-DEF_MSG_REM(trim)
-
-#undef DEF_MSG_ADD_N
-#undef DEF_MUST_ADD_N
-#undef DEF_MSG_REM_N
-#undef DEF_MSG_ADD
-#undef DEF_MSG_MUST_ADD
-#undef DEF_MSG_REM
+	dst = (void *) m->m_header_buf;
+	dst += m->m_header_len;
+	NNI_PUT32(dst, val);
+	m->m_header_len += sizeof(val);
+}
 
 void
 nni_msg_clear(nni_msg *m)
 {
+	m->m_header_len = 0;
 	nni_chunk_clear(&m->m_body);
 }
 
 void
 nni_msg_header_clear(nni_msg *m)
 {
-	nni_chunk_clear(&m->m_header);
+	m->m_header_len = 0;
 }
 
 void

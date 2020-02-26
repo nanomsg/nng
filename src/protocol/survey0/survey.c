@@ -244,7 +244,7 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_msg_header_clear(msg);
-	nni_msg_header_must_append_u32(msg, (uint32_t) ctx->survey_id);
+	nni_msg_header_append_u32(msg, (uint32_t) ctx->survey_id);
 
 	// From this point, we're committed to success.  Note that we send
 	// regardless of whether there are any pipes or not.  If no pipes,
@@ -473,7 +473,7 @@ surv0_pipe_recv_cb(void *arg)
 		return;
 	}
 	id = nni_msg_trim_u32(msg);
-	nni_msg_header_must_append_u32(msg, id);
+	nni_msg_header_append_u32(msg, id);
 
 	nni_mtx_lock(&sock->mtx);
 	// Best effort at delivery.  Discard if no context or context is

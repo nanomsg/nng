@@ -99,7 +99,8 @@ bus0_sock_init_raw(void *arg, nni_sock *nsock)
 
 	NNI_LIST_INIT(&s->pipes, bus0_pipe, node);
 	nni_mtx_init(&s->mtx);
-	if ((rv = nni_aio_alloc(&s->aio_getq, bus0_sock_getq_cb_raw, s)) != 0) {
+	if ((rv = nni_aio_alloc(&s->aio_getq, bus0_sock_getq_cb_raw, s)) !=
+	    0) {
 		bus0_sock_fini(s);
 		return (rv);
 	}
@@ -257,13 +258,8 @@ bus0_pipe_recv_cb(void *arg)
 	}
 	msg = nni_aio_get_msg(p->aio_recv);
 
-	if (s->raw &&
-	    (nni_msg_header_insert_u32(msg, nni_pipe_id(p->npipe)) != 0)) {
-		// XXX: bump a nomemory stat
-		nni_msg_free(msg);
-		nni_aio_set_msg(p->aio_recv, NULL);
-		nni_pipe_close(p->npipe);
-		return;
+	if (s->raw) {
+		nni_msg_header_append_u32(msg, nni_pipe_id(p->npipe));
 	}
 
 	nni_msg_set_pipe(msg, nni_pipe_id(p->npipe));
