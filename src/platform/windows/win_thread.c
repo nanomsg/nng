@@ -16,6 +16,8 @@
 
 // mingw does not define InterlockedAddNoFence64, use the mingw equivalent
 #if defined(__MINGW32__) || defined(__MINGW64__)
+#define InterlockedAddNoFence(a, b) \
+	__atomic_add_fetch(a, b, __ATOMIC_RELAXED)
 #define InterlockedAddNoFence64(a, b) \
 	__atomic_add_fetch(a, b, __ATOMIC_RELAXED)
 #define InterlockedIncrementAcquire64(a) \
