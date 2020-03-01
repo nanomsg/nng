@@ -294,6 +294,10 @@ title: nng_pair_open(3)
 <li><a href="nng_tls_config_hold.3tls.html">nng_tls_config_hold</a></li>
 <li><a href="nng_tls_config_own_cert.3tls.html">nng_tls_config_own_cert</a></li>
 <li><a href="nng_tls_config_server_name.3tls.html">nng_tls_config_server_name</a></li>
+<li><a href="nng_tls_config_version.3tls.html">nng_tls_config_version</a></li>
+<li><a href="nng_tls_engine_description.3tls.html">nng_tls_engine_description</a></li>
+<li><a href="nng_tls_engine_fips_mode.3tls.html">nng_tls_engine_fips_mode</a></li>
+<li><a href="nng_tls_engine_name.3tls.html">nng_tls_engine_name</a></li>
 </ul>
 <li>Macros and Types</li>
 <ul class="sectlevel2">
@@ -322,6 +326,7 @@ title: nng_pair_open(3)
 <li><a href="nng_tcp_options.5.html">nng_tcp_options</a></li>
 <li><a href="nng_tls.5.html">nng_tls</a></li>
 <li><a href="nng_tls_config.5.html">nng_tls_config</a></li>
+<li><a href="nng_tls_engine.5.html">nng_tls_engine</a></li>
 <li><a href="nng_tls_options.5.html">nng_tls_options</a></li>
 </ul>
 <li>Protocols and Transports</li>
@@ -382,7 +387,9 @@ title: nng_pair_open(3)
 
 <span class="tok-kt">int</span> <span class="tok-nf">nng_pair1_open</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-o">*</span><span class="tok-n">s</span><span class="tok-p">);</span>
 
-<span class="tok-kt">int</span> <span class="tok-nf">nng_pair1_open_raw</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-o">*</span><span class="tok-n">s</span><span class="tok-p">);</span></code></pre>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_pair1_open_raw</span><span class="tok-p">(</span><span class="tok-n">nng_socket</span> <span class="tok-o">*</span><span class="tok-n">s</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_pair1_open_poly</span><span class="tok-p">(</span><span class="tok-n">nng_socktet</span> <span class="tok-o">*</span><span class="tok-n">s</span><span class="tok-p">);</span></code></pre>
 </div>
 </div>
 </div>
@@ -400,6 +407,23 @@ create a <a href="nng_pair.7.html"><em>pair</em></a> version 0 or version 1
 create a <a href="nng_pair.7.html"><em>pair</em></a> version 0 or version 1
 <a href="nng_socket.5.html">socket</a> in
 <a href="nng.7.html#raw_mode">raw</a> mode and return it at the location pointed to by <em>s</em>.</p>
+</div>
+<div class="paragraph">
+<p>The <code>nng_pair1_open_poly()</code> function opens a pair version 1 socket in
+polyamorous mode.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Polyamorous mode is deprecated and should not be used in new applications.
+The <code>nng_pair1_open_poly()</code> function will likely be removed in a future release.
+</td>
+</tr>
+</table>
 </div>
 </div>
 </div>

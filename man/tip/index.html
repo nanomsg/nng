@@ -294,6 +294,10 @@ title: NNG Reference Manual
 <li><a href="nng_tls_config_hold.3tls.html">nng_tls_config_hold</a></li>
 <li><a href="nng_tls_config_own_cert.3tls.html">nng_tls_config_own_cert</a></li>
 <li><a href="nng_tls_config_server_name.3tls.html">nng_tls_config_server_name</a></li>
+<li><a href="nng_tls_config_version.3tls.html">nng_tls_config_version</a></li>
+<li><a href="nng_tls_engine_description.3tls.html">nng_tls_engine_description</a></li>
+<li><a href="nng_tls_engine_fips_mode.3tls.html">nng_tls_engine_fips_mode</a></li>
+<li><a href="nng_tls_engine_name.3tls.html">nng_tls_engine_name</a></li>
 </ul>
 <li>Macros and Types</li>
 <ul class="sectlevel2">
@@ -322,6 +326,7 @@ title: NNG Reference Manual
 <li><a href="nng_tcp_options.5.html">nng_tcp_options</a></li>
 <li><a href="nng_tls.5.html">nng_tls</a></li>
 <li><a href="nng_tls_config.5.html">nng_tls_config</a></li>
+<li><a href="nng_tls_engine.5.html">nng_tls_engine</a></li>
 <li><a href="nng_tls_options.5.html">nng_tls_options</a></li>
 </ul>
 <li>Protocols and Transports</li>
@@ -1604,6 +1609,22 @@ additional support was present and enabled with <em>libnng</em> was built.</p>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_server_name.3tls.html">nng_tls_config_server_name(3tls)</a></p></td>
 <td class="tableblock halign-left valign-top"><p class="tableblock">configure remote server name</p></td>
 </tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config_version.3tls.html">nng_tls_config_version(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">configure TLS version</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_engine_description.3tls.html">nng_tls_engine_description(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS engine description</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_engine_fips_mode.3tls.html">nng_tls_engine_fips_mode(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS FIPS 140-2 mode indicator</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_engine_name.3tls.html">nng_tls_engine_name(3tls)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS engine name</p></td>
+</tr>
 </tbody>
 </table>
 </div>
@@ -1722,7 +1743,11 @@ applications need will use.</p>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_config.5.html">nng_tls_config(5)</a></p></td>
-<td class="tableblock halign-left valign-top"><p class="tableblock">message</p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS configuration object</p></td>
+</tr>
+<tr>
+<td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_engine.5.html">nng_tls_engine(5)</a></p></td>
+<td class="tableblock halign-left valign-top"><p class="tableblock">TLS engine implementation</p></td>
 </tr>
 <tr>
 <td class="tableblock halign-left valign-top"><p class="tableblock"><a href="nng_tls_options.5.html">nng_tls_options(5)</a></p></td>

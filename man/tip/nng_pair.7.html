@@ -294,6 +294,10 @@ title: nng_pair(7)
 <li><a href="nng_tls_config_hold.3tls.html">nng_tls_config_hold</a></li>
 <li><a href="nng_tls_config_own_cert.3tls.html">nng_tls_config_own_cert</a></li>
 <li><a href="nng_tls_config_server_name.3tls.html">nng_tls_config_server_name</a></li>
+<li><a href="nng_tls_config_version.3tls.html">nng_tls_config_version</a></li>
+<li><a href="nng_tls_engine_description.3tls.html">nng_tls_engine_description</a></li>
+<li><a href="nng_tls_engine_fips_mode.3tls.html">nng_tls_engine_fips_mode</a></li>
+<li><a href="nng_tls_engine_name.3tls.html">nng_tls_engine_name</a></li>
 </ul>
 <li>Macros and Types</li>
 <ul class="sectlevel2">
@@ -322,6 +326,7 @@ title: nng_pair(7)
 <li><a href="nng_tcp_options.5.html">nng_tcp_options</a></li>
 <li><a href="nng_tls.5.html">nng_tls</a></li>
 <li><a href="nng_tls_config.5.html">nng_tls_config</a></li>
+<li><a href="nng_tls_engine.5.html">nng_tls_engine</a></li>
 <li><a href="nng_tls_options.5.html">nng_tls_options</a></li>
 </ul>
 <li>Protocols and Transports</li>
@@ -387,11 +392,6 @@ title: nng_pair(7)
 The <em>pair</em> protocol implements a peer-to-peer pattern, where
 relationships between peers are one-to-one.</p>
 </div>
-<div class="paragraph">
-<p>Version 1 of this protocol supports an optional <em>polyamorous</em> mode where a
-peer can maintain multiple partnerships.
-Using this mode requires some additional sophistication in the application.</p>
-</div>
 <div class="sect2">
 <h3 id="_socket_operations">Socket Operations</h3>
 <div class="paragraph">
@@ -408,7 +408,7 @@ no peer is able to receive the message.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Even though this mode may appear to be "reliable", because back-pressure
+Even though this mode may appear to be &#8220;reliable&#8221;, because back-pressure
 prevents discarding messages most of the time, there are topologies involving
 <em>devices</em> (see <a href="nng_device.3.html"><code>nng_device()</code></a>) or raw mode sockets
 (see <a href="nng_options.5.html#NNG_OPT_RAW"><code>NNG_OPT_RAW</code></a>) where
@@ -419,11 +419,6 @@ implement their own acknowledgment layer on top of <em>pair</em> sockets.
 </td>
 </tr>
 </table>
-</div>
-<div class="paragraph">
-<p>In order to avoid head-of-line blocking conditions, <em>polyamorous</em> mode <em>pair</em>
-sockets (version 1 only) discard messages if they are unable to deliver them
-to a peer.</p>
 </div>
 </div>
 <div class="sect2">
@@ -449,9 +444,36 @@ including the legacy <a href="https://github.com/nanomsg/nanomsg">nanomsg</a> li
 </div>
 <div class="paragraph">
 <p>Version 1 of the protocol offers improved protection against loops when
-used with <a href="nng_device.3.html"><code>nng_device()</code></a>.
-It also offers <em>polyamorous</em> mode for forming multiple partnerships
-on a single socket.</p>
+used with <a href="nng_device.3.html"><code>nng_device()</code></a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_polyamorous_mode">Polyamorous Mode</h3>
+<div class="admonitionblock warning">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-warning" title="Warning"></i>
+</td>
+<td class="content">
+Polyamorous mode is deprecated, and support for it will likely
+be removed in a future release.
+Applications are strongly discouraged from making further use of it.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Normally pair sockets are for one-to-one communication, and a given peer
+will reject new connections if it already has an active connection to another
+peer.</p>
+</div>
+<div class="paragraph">
+<p><em>Polyamorous</em> mode changes this, to allow a socket to communicate with
+multiple directly-connected peers.
+This mode is enabled by opening a socket with the
+<a href="nng_pair_open.3.html"><code>nng_pair1_open_poly()</code></a>
+function</p>
 </div>
 <div class="admonitionblock note">
 <table>
@@ -460,31 +482,39 @@ on a single socket.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-Version 1 of this protocol is considered experimental at this time.
+Polyamorous mode is only available when using pair version 1.
 </td>
 </tr>
 </table>
 </div>
-</div>
-<div class="sect2">
-<h3 id="_polyamorous_mode">Polyamorous Mode</h3>
 <div class="paragraph">
-<p>Normally pair sockets are for one-to-one communication, and a given peer
-will reject new connections if it already has an active connection to another
-peer.</p>
-</div>
-<div class="paragraph">
-<p>In <em>polyamorous</em> mode, which is only available with version 1, a socket can
-support many one-to-one connections.
+<p>In polyamorous mode a socket can support many one-to-one connections.
 In this mode, the application must
 choose the remote peer to receive an outgoing message by setting the
 <a href="nng_pipe.5.html"><code>nng_pipe</code></a> to use for the outgoing message with
 the <a href="nng_msg_set_pipe.3.html"><code>nng_msg_set_pipe()</code></a> function.</p>
 </div>
 <div class="paragraph">
+<p>If no remote peer is specified by the sender, then the protocol will select
+any available connected peer.</p>
+</div>
+<div class="paragraph">
 <p>Most often the value of the outgoing pipe will be obtained from an incoming
 message using the <a href="nng_msg_get_pipe.3.html"><code>nng_msg_get_pipe()</code></a> function,
 such as when replying to an incoming message.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Directed send <em>only</em> works with directly connected peers.
+It will not function across <a href="nng_device.3.html">device</a> proxies.
+</td>
+</tr>
+</table>
 </div>
 <div class="paragraph">
 <p>In order to prevent head-of-line blocking, if the peer on the given pipe
@@ -500,15 +530,15 @@ to the sender.</p>
 </div>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><code>NNG_OPT_PAIR1_POLY</code></dt>
-<dd>
-<p>(<code>bool</code>, version 1 only)  This option enables the use of <em>polyamorous</em> mode.
-The value is read-write, and takes an integer Boolean value.  The default
-false value (0) indicates that legacy monogamous mode should be used.</p>
-</dd>
 <dt class="hdlist1"><a href="nng_options.5.html#NNG_OPT_MAXTTL"><code>NNG_OPT_MAXTTL</code></a></dt>
 <dd>
 <p>(<code>int</code>, version 1 only).  Maximum time-to-live.</p>
+</dd>
+<dt class="hdlist1"><code>NNG_OPT_PAIR1_POLY</code></dt>
+<dd>
+<p>(<code>bool</code>, version 1 only)  This option is no longer supported.
+Formerly it was used to configure <em>polyamorous</em> mode, but that mode
+is now established by using the <code>nng_pair1_open_poly()</code> function.</p>
 </dd>
 </dl>
 </div>
