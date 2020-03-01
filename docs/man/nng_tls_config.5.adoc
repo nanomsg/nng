@@ -46,7 +46,6 @@ function.
 == SEE ALSO
 
 [.text-left]
-
 xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc(3tls)],
 xref:nng_tls_config_auth_mode.3tls.adoc[nng_tls_config_auth_mode(3tls)],
 xref:nng_tls_config_ca_chain.3tls.adoc[nng_tls_config_ca_chain(3tls)],
