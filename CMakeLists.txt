@@ -73,7 +73,7 @@ set(NNG_MINOR_VERSION ${CMAKE_MATCH_1})
 string(REGEX MATCH "NNG_PATCH_VERSION ([0-9]*)" _ ${nng_ver_h})
 set(NNG_PATCH_VERSION ${CMAKE_MATCH_1})
 string(REGEX MATCH "NNG_RELEASE_SUFFIX \"([a-z0-9]*)\"" _ ${nng_ver_h})
-if (NOT (${CMAKE_MATCH_1} STREQUAL ""))
+if (NOT ("${CMAKE_MATCH_1}" STREQUAL ""))
     set(NNG_PRERELEASE "-${CMAKE_MATCH_1}")
 endif ()
 
