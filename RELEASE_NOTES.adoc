@@ -1,0 +1,67 @@
+= NNG Release Notes
+
+== Release 1.3.0 (since 1.2.6)
+
+=== Features
+
+* Support for TLS 1.3 and external TLS providers.
+  There is now an API whereby external "`engines`" can be developed
+  for different TLS implementations.  The first of these, for wolfSSL,
+  is available.  Set this with the `NNG_TLS_ENGINE` cmake option.
+  The default is still to use Mbed TLS.  The wolfSSL plugin is
+  available under a different license (GPLv3 or commercial), and also
+  provides support for TLS 1.3 and FIPS 140-2 capable solutions.
+
+* Message cloning and related performance improvements.  This is not
+  a feature, so much as a rather large improvement in terms of performance.
+  All workloads will see some benefit -- some will see substantial benefits.
+
+* Numerous other performance improvements.  Much effort was made to
+  reducing allocations, improving cache effectiveness, and eliminating
+  extra context switches.  This work is not yet done, but this is a big
+  step in the right direction.
+
+* HTTP Server support for "non-exclusive" registration -- a given handler
+  may be registered as a fallback handler (e.g. for a directory), even if
+  more specific handlers are registered.
+
+* Performance test programs grew more options to select different
+  protocols and to change the URL to test across different transports.
+
+=== Notable Bug Fixes
+
+* Thread count is limited.
+  Previously we would spawn potentially vast numbers of threads based on the
+  number of available cores.  By default we set an upper limit on this that
+  is about 20 threads.  Tune this with the `NNG_MAX_TASKQ_WORKERS` cmake option.
+
+* Raw mode fixes for XREQ and XRESPONDENT.  These protocols used the raw mode
+  inconsistently, leaving the header in the message body.  This is corrected
+  and the protocol headers are kept in the message headers.  There is some small
+  risk that some applications broken, but we are not aware of any that used
+  RAW mode to parse message headers.
+
+* HTTP Server root URL handling had a few issues which are resolved.
+
+* Some platforms had difficult building due to inconsistencies in the
+  handling of atomics.
+
+* Numerous test suites uncovered small (rare) races, etc.  The tests
+  themselves were often racy.  Fixes to both NNG and the tests have been
+  made, while increasing overall test coverage.
+
+* REP protocol with SENDFD was inconsistent (#1088).
+
+=== Other Changes
+
+* Polyamorous Pair v1 mode is changed, such that a new API call is needed
+  to use it.  Further, this mode will likely be removed in a future release.
+  Note that this mode also does not work with other implementations, nor
+  does it support operation with `nng_device()`.
+
+* Maximum hop count across `nng_device()` proxies is now limited to 15.
+  This limit should be sufficient for all reasonable configurations,
+  and forcing this allowed us to to inline the header for performance
+  reasons.
+
+* The nng_msg_options support was removed.  It was not used for anything.
