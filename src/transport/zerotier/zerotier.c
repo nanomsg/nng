@@ -2703,7 +2703,7 @@ zt_ep_set_add_local_addr(void *arg, const void *data, size_t sz, nni_type t)
 
 	if ((rv = nni_copyin_sockaddr(&sa, data, sz, t)) == 0) {
 		enum ZT_ResultCode      zrv;
-		ZT_Node *               zn;
+		zt_node *               ztn;
 		struct sockaddr_storage ss;
 		struct sockaddr_in *    sin;
 		struct sockaddr_in6 *   sin6;
@@ -2734,8 +2734,8 @@ zt_ep_set_add_local_addr(void *arg, const void *data, size_t sz, nni_type t)
 			nni_mtx_unlock(&zt_lk);
 			return (rv);
 		}
-		zn  = ep->ze_ztn;
-		zrv = ZT_Node_addLocalInterfaceAddress(zn, &ss);
+		ztn  = ep->ze_ztn;
+		zrv = ZT_Node_addLocalInterfaceAddress(ztn->zn_znode, &ss);
 		nni_mtx_unlock(&zt_lk);
 		rv = zt_result(zrv);
 	}
