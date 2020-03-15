@@ -1,20 +1,9 @@
 ---
-layout: 
+layout: nng
+title: Rationale: Or why am I bothering to rewrite nanomsg?
 ---
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="generator" content="Asciidoctor 2.0.10">
-<meta name="author" content="Garrett D&#8217;Amore">
-<title>Rationale: Or why am I bothering to rewrite nanomsg?</title>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
-<link rel="stylesheet" href="./asciidoctor.css">
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
-</head>
-<body class="article">
+
+<main>
 <div id="header">
 <h1>Rationale: Or why am I bothering to rewrite nanomsg?</h1>
 <div class="details">
@@ -35,8 +24,8 @@ layout:
 </td>
 <td class="content">
 You might want to review
-      <a href="http://nanomsg.org/documentation-zeromq.html">Martin Sustrik&#8217;s rationale</a>
-      for nanomsg vs. ZeroMQ.
+<a href="http://nanomsg.org/documentation-zeromq.html">Martin Sustrik&#8217;s rationale</a>
+for nanomsg vs. ZeroMQ.
 </td>
 </tr>
 </table>
@@ -203,9 +192,9 @@ calls, beyond the 2 required to actually send and receive the message.</p>
 </td>
 <td class="content">
 Its even more hideous to support this on Windows, where there is no
-      <code>pipe(2)</code> system call, so we have to cobble up a loopback TCP connection
-      just for this event notification, in addition to the system call
-      explosion.
+<code>pipe(2)</code> system call, so we have to cobble up a loopback TCP connection
+just for this event notification, in addition to the system call
+explosion.
 </td>
 </tr>
 </table>
@@ -613,11 +602,4 @@ simpler, and more efficient implementation.</p>
 </div>
 </div>
 </div>
-<div id="footer">
-<div id="footer-text">
-Version 0.4<br>
-Last updated 2020-01-29 02:55:19 UTC
-</div>
-</div>
-</body>
-</html>
+</main>
