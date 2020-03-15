@@ -124,7 +124,7 @@ platforms might not work.
 == Requirements
 
 To build this project, you will need a C99 compatible compiler and
-http://www.cmake.org[CMake] version 3.1 or newer.
+http://www.cmake.org[CMake] version 3.13 or newer.
 
 We recommend using the https://ninja-build.org[Ninja] build
 system (pass "-G Ninja" to CMake) when you can.
