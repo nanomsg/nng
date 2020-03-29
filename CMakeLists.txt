@@ -155,13 +155,6 @@ if (NOT NNG_SANITIZER STREQUAL "none")
     set(NNG_SANITIZER_FLAGS "-fsanitize=${NNG_SANITIZER}")
 endif ()
 
-include(CheckAtomicLib)
-CheckAtomicLib()
-if (NOT HAVE_C_ATOMICS_WITHOUT_LIB AND HAVE_C_ATOMICS_WITH_LIB)
-    list(APPEND NNG_LIBS "atomic")
-endif ()
-
-
 if (NNG_ENABLE_COVERAGE)
     # NB: This only works for GCC and Clang 3.0 and newer.  If your stuff
     # is older than that, you will need to find something newer.  For
@@ -326,6 +319,15 @@ else ()
     nng_check_lib(pthread pthread_atfork NNG_HAVE_PTHREAD_ATFORK_PTHREAD)
     nng_check_lib(nsl gethostbyname NNG_HAVE_LIBNSL)
     nng_check_lib(socket socket NNG_HAVE_LIBSOCKET)
+
+    # GCC needs libatomic on some architectures (e.g. ARM) because the
+    # underlying architecture may lack the necessary atomic primitives.
+    # One hopes that the libatomic implementation is superior to just using
+    # a pthread mutex.  The symbol chosen here was identified from GCC's
+    # libatomic map file.
+    #
+    # Arguably when using clang, compiler-rt might be better.
+    nng_check_lib(__atomic_load_1 atomic NNG_HAVE_LIBATOMIC)
 
     nng_check_sym(AF_UNIX sys/socket.h NNG_HAVE_UNIX_SOCKETS)
     nng_check_sym(backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
