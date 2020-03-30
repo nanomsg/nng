@@ -36,7 +36,7 @@ More details for Android are located in the <<BUILD_ANDROID.adoc>> file.
 
 More details for iOS (and tvOS, etc.) are located in the <<BUILD_IOS.adoc>> file.
 
-== Building nng for Windows or Linux or MACOS - Using vcpkg
+== Cross-compiling for Windows or Linux or MACOS - Using vcpkg
 
 You can download and install nng using the [vcpkg](https://github.com/Microsoft/vcpkg) dependency manager:
 
