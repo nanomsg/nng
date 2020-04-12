@@ -242,7 +242,7 @@ Protocols that support sending data can use these options to select the data.
   Use _DATA_ for the body of outgoing messages.
 
 *-F, --file*=_FILE_::
-  Use _FILE_ for the body of outgoing messages.
+  Use _FILE_ for the body of outgoing messages. If _FILE_ is _-_ the message body will be read from standard input.
 
 *-i, --interval*=_SEC_::
   For protocols that send unsolicited data (as opposed to those that
