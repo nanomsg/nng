@@ -1,6 +1,7 @@
 //
 // Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2020 Lager Data, Inc. <support@lagerdata.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -272,7 +273,8 @@ help(void)
 	printf("  --key <file>\n");
 	printf("  --zt-home <path>\n");
 	printf("\n<src> may be one of:\n");
-	printf("  --file <file>          (or alias -F <file>)\n");
+	printf("  --file <file>          (or alias -F <file>). "
+	       "Use - for standard input.\n");
 	printf("  --data <data>          (or alias -D <data>)\n");
 	exit(1);
 }
@@ -309,28 +311,52 @@ static void
 loadfile(const char *path, void **datap, size_t *lenp)
 {
 	FILE * f;
+	size_t total_read = 0;
+	size_t allocation_size = BUFSIZ;
 	char * fdata;
-	size_t len;
+	char * realloc_result;
 
-	if ((f = fopen(path, "r")) == NULL) {
-		fatal("Cannot open file %s: %s", path, strerror(errno));
+	if (strcmp(path, "-") == 0) {
+		f = stdin;
+	} else {
+		if ((f = fopen(path, "rb")) == NULL) {
+			fatal("Cannot open file %s: %s", path, strerror(errno));
+		}
 	}
-	if (fseek(f, 0, SEEK_END) != 0) {
-		fatal("Cannot seek to end of file: %s", strerror(errno));
-	}
-	len = ftell(f);
-	(void) fseek(f, 0, SEEK_SET);
-	if ((fdata = malloc(len + 1)) == NULL) {
+
+	if ((fdata = malloc(allocation_size + 1)) == NULL) {
 		fatal("Out of memory.");
 	}
-	fdata[len] = '\0';
 
-	if (fread(fdata, 1, len, f) != len) {
-		fatal("Read file %s failed: %s", path, strerror(errno));
+	while (1) {
+		total_read += fread(fdata + total_read, 1, allocation_size - total_read, f);
+		if (ferror(f)) {
+			if (errno == EINTR) {
+				continue;
+			}
+			fatal("Read from %s failed: %s", path, strerror(errno));
+		}
+		if (feof(f)) {
+			break;
+		}
+		if (total_read == allocation_size) {
+			if (allocation_size > SIZE_MAX / 2) {
+				fatal("Out of memory.");
+			}
+			allocation_size *= 2;
+			if ((realloc_result = realloc(fdata, allocation_size + 1)) == NULL) {
+				free(fdata);
+				fatal("Out of memory.");
+			}
+			fdata = realloc_result;
+		}
 	}
-	fclose(f);
+	if (f != stdin) {
+		fclose(f);
+	}
+	fdata[total_read] = '\0';
 	*datap = fdata;
-	*lenp  = len;
+	*lenp = total_read;
 }
 
 static void
