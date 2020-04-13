@@ -138,7 +138,7 @@ TestMain("Message Tests", {
 			So(strcmp(nng_msg_body(msg), "abc") == 0);
 			So(nng_msg_realloc(msg, 2) == 0);
 			So(nng_msg_len(msg) == 2);
-			So(memcmp(nng_msg_body(msg), "abc", 2) == 0);
+			So(memcmp(nng_msg_body(msg), "abc", 3) == 0);
 			So(nng_msg_append(msg, "CDEF", strlen("CDEF") + 1) ==
 			    0);
 			So(nng_msg_len(msg) == strlen("abCDEF") + 1);
