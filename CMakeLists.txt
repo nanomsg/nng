@@ -327,7 +327,7 @@ else ()
     # libatomic map file.
     #
     # Arguably when using clang, compiler-rt might be better.
-    nng_check_lib(__atomic_load_1 atomic NNG_HAVE_LIBATOMIC)
+    nng_check_lib(atomic __atomic_load_1 NNG_HAVE_LIBATOMIC)
 
     nng_check_sym(AF_UNIX sys/socket.h NNG_HAVE_UNIX_SOCKETS)
     nng_check_sym(backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
