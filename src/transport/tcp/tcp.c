@@ -547,8 +547,8 @@ tcptran_pipe_recv_start(tcptran_pipe *p)
 
 	if (p->closed) {
 		nni_aio *aio;
-		while ((aio = nni_list_first(&p->sendq)) != NULL) {
-			nni_list_remove(&p->sendq, aio);
+		while ((aio = nni_list_first(&p->recvq)) != NULL) {
+			nni_list_remove(&p->recvq, aio);
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
 		return;

@@ -184,6 +184,20 @@ nni_task_prep(nni_task *task)
 }
 
 void
+nni_task_abort(nni_task *task)
+{
+	// This is called when unscheduling the task.
+	nni_mtx_lock(&task->task_mtx);
+	if (task->task_prep) {
+		task->task_prep = false;
+		task->task_busy--;
+		if (task->task_busy == 0) {
+			nni_cv_wake(&task->task_cv);
+		}
+	}
+	nni_mtx_unlock(&task->task_mtx);
+}
+void
 nni_task_wait(nni_task *task)
 {
 	nni_mtx_lock(&task->task_mtx);

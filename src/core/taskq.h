@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -37,6 +37,11 @@ extern void nni_task_exec(nni_task *);
 // task to complete normally (after a call to nni_task_dispatch or
 // nni_task_exec).
 extern void nni_task_prep(nni_task *);
+
+// nni_task_abort is called to undo the effect of nni_task_prep,
+// basically. The aio framework uses this when nni_aio_schedule()
+// returns an error.
+extern void nni_task_abort(nni_task *);
 
 extern void nni_task_wait(nni_task *);
 extern void  nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);

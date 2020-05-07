@@ -328,6 +328,7 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 		// Convert the relative timeout to an absolute timeout.
 		switch (aio->a_timeout) {
 		case NNG_DURATION_ZERO:
+			nni_task_abort(&aio->a_task);
 			return (NNG_ETIMEDOUT);
 		case NNG_DURATION_INFINITE:
 		case NNG_DURATION_DEFAULT:
@@ -341,6 +342,7 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancelfn cancelfn, void *data)
 
 	nni_mtx_lock(&nni_aio_lk);
 	if (aio->a_stop) {
+		nni_task_abort(&aio->a_task);
 		nni_mtx_unlock(&nni_aio_lk);
 		return (NNG_ECLOSED);
 	}
