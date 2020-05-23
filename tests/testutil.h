@@ -56,6 +56,24 @@ extern int testutil_marry(nng_socket, nng_socket);
 extern int testutil_marry_ex(
     nng_socket, nng_socket, const char *, nng_pipe *, nng_pipe *);
 
+// testutil_stream_send_start and testutil_stream_recv_start are used
+// to initiate transfers asynchronously.  They return a token which can
+// be used with testutil_stream_send_wait and testutil_stream_recv_wait.
+// Those wait functions will return the result of operation (0 on
+// success, an NNG error number otherwise.)
+extern void *testutil_stream_send_start(nng_stream *, void *, size_t);
+extern void *testutil_stream_recv_start(nng_stream *, void *, size_t);
+extern int testutil_stream_send_wait(void *);
+extern int testutil_stream_recv_wait(void *);
+
+// These are TLS certificates.  The client and server are signed with the
+// root.  The server uses CN 127.0.0.1.  Other details are bogus, but
+// designed to prevent accidental use elsewhere.
+extern const char *testutil_server_key;
+extern const char *testutil_server_crt;
+extern const char *testutil_client_key;
+extern const char *testutil_client_crt;
+
 // TEST_NNG_PASS tests for NNG success.  It reports the failure if it
 // did not.
 #define TEST_NNG_PASS(cond)                                          \

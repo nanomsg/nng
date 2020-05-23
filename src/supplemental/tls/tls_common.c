@@ -1228,6 +1228,8 @@ nng_tls_engine_send(void *arg, const uint8_t *buf, size_t *szp)
 	// We are committed at this point to sending out len bytes.
 	// Update this now, so that we can use len to update.
 	*szp = len;
+	conn->tcp_send_len += len;
+	NNI_ASSERT(conn->tcp_send_len <= NNG_TLS_MAX_SEND_SIZE);
 
 	while (len > 0) {
 		if (head >= tail) {
@@ -1243,10 +1245,10 @@ nng_tls_engine_send(void *arg, const uint8_t *buf, size_t *szp)
 		buf += cnt;
 		head += cnt;
 		head %= NNG_TLS_MAX_SEND_SIZE;
-		conn->tcp_send_len += cnt;
-		conn->tcp_send_head = head;
 		len -= cnt;
 	}
+
+	conn->tcp_send_head = head;
 
 	tls_tcp_send_start(conn);
 	return (0);
