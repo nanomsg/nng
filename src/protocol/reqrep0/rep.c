@@ -59,6 +59,7 @@ struct rep0_pipe {
 	nni_list_node rnode; // receivable list linkage
 	nni_list      sendq; // contexts waiting to send
 	bool          busy;
+	bool          closed;
 };
 
 static void
@@ -331,6 +332,7 @@ rep0_pipe_close(void *arg)
 	nni_aio_close(&p->aio_recv);
 
 	nni_mtx_lock(&s->lk);
+	p->closed = true;
 	if (nni_list_active(&s->recvpipes, p)) {
 		// We are no longer "receivable".
 		nni_list_remove(&s->recvpipes, p);
@@ -529,6 +531,14 @@ rep0_pipe_recv_cb(void *arg)
 	len = nni_msg_header_len(msg);
 
 	nni_mtx_lock(&s->lk);
+
+	if (p->closed) {
+		// If we are closed, then we can't return data.
+		nni_aio_set_msg(&p->aio_recv, NULL);
+		nni_mtx_unlock(&s->lk);
+		nni_msg_free(msg);
+		return;
+	}
 
 	if ((ctx = nni_list_first(&s->recvq)) == NULL) {
 		// No one waiting to receive yet, holding pattern.

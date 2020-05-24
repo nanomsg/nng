@@ -311,6 +311,8 @@ req0_recv_cb(void *arg)
 
 	// Schedule another receive while we are processing this.
 	nni_mtx_lock(&s->mtx);
+
+	// NB: If close was called, then this will just abort.
 	nni_pipe_recv(p->pipe, &p->aio_recv);
 
 	// Look for a context to receive it.
