@@ -33,7 +33,6 @@ struct inproc_pipe {
 	inproc_pair * pair;
 	inproc_queue *recv_queue;
 	inproc_queue *send_queue;
-	nni_pipe *    npipe;
 	uint16_t      peer;
 	uint16_t      proto;
 };
@@ -62,8 +61,6 @@ struct inproc_ep {
 	nni_list      aios;
 	size_t        rcvmax;
 	nni_mtx       mtx;
-	nni_dialer *  ndialer;
-	nni_listener *nlistener;
 };
 
 // nni_inproc is our global state - this contains the list of active endpoints
@@ -114,9 +111,8 @@ inproc_pipe_alloc(inproc_pipe **pipep, inproc_ep *ep)
 static int
 inproc_pipe_init(void *arg, nni_pipe *p)
 {
-	inproc_pipe *pipe = arg;
-	pipe->npipe       = p;
-
+	NNI_ARG_UNUSED(arg);
+	NNI_ARG_UNUSED(p);
 	return (0);
 }
 
@@ -298,7 +294,6 @@ inproc_dialer_init(void **epp, nni_url *url, nni_dialer *ndialer)
 	ep->listener = false;
 	ep->proto    = nni_sock_proto_id(sock);
 	ep->rcvmax   = 0;
-	ep->ndialer  = ndialer;
 	NNI_LIST_INIT(&ep->clients, inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -322,7 +317,6 @@ inproc_listener_init(void **epp, nni_url *url, nni_listener *nlistener)
 	ep->listener  = true;
 	ep->proto     = nni_sock_proto_id(sock);
 	ep->rcvmax    = 0;
-	ep->nlistener = nlistener;
 	NNI_LIST_INIT(&ep->clients, inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -353,11 +347,6 @@ inproc_conn_finish(nni_aio *aio, int rv, inproc_ep *ep, inproc_pipe *pipe)
 		nni_aio_set_output(aio, 0, pipe);
 		nni_aio_finish(aio, 0, 0);
 	} else {
-		if (ep->ndialer != NULL) {
-			nni_dialer_bump_error(ep->ndialer, rv);
-		} else {
-			nni_listener_bump_error(ep->nlistener, rv);
-		}
 		NNI_ASSERT(pipe == NULL);
 		nni_aio_finish_error(aio, rv);
 	}
@@ -474,11 +463,6 @@ inproc_ep_cancel(nni_aio *aio, void *arg, int rv)
 		nni_list_node_remove(&ep->node);
 		nni_aio_finish_error(aio, rv);
 	}
-	if (ep->ndialer != NULL) {
-		nni_dialer_bump_error(ep->ndialer, rv);
-	} else {
-		nni_listener_bump_error(ep->nlistener, rv);
-	}
 	nni_mtx_unlock(&nni_inproc.mx);
 }
 
@@ -503,7 +487,6 @@ inproc_ep_connect(void *arg, nni_aio *aio)
 	}
 	if (server == NULL) {
 		nni_mtx_unlock(&nni_inproc.mx);
-		nni_dialer_bump_error(ep->ndialer, NNG_ECONNREFUSED);
 		nni_aio_finish_error(aio, NNG_ECONNREFUSED);
 		return;
 	}
@@ -513,7 +496,6 @@ inproc_ep_connect(void *arg, nni_aio *aio)
 	// that in the upper API.
 	if ((rv = nni_aio_schedule(aio, inproc_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&nni_inproc.mx);
-		nni_dialer_bump_error(ep->ndialer, rv);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -536,7 +518,6 @@ inproc_ep_bind(void *arg)
 	NNI_LIST_FOREACH (list, srch) {
 		if (strcmp(srch->addr, ep->addr) == 0) {
 			nni_mtx_unlock(&nni_inproc.mx);
-			nni_listener_bump_error(ep->nlistener, NNG_EADDRINUSE);
 			return (NNG_EADDRINUSE);
 		}
 	}
@@ -561,7 +542,6 @@ inproc_ep_accept(void *arg, nni_aio *aio)
 	// accept was tried -- there is no API to do such a thing.
 	if ((rv = nni_aio_schedule(aio, inproc_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&nni_inproc.mx);
-		nni_listener_bump_error(ep->nlistener, rv);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}

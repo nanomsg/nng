@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -11,7 +11,6 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
 
 #include "core/nng_impl.h"
 
@@ -46,7 +45,6 @@ struct ipctran_pipe {
 	size_t          wantrxhead;
 	nni_list        recvq;
 	nni_list        sendq;
-	nni_aio *       useraio;
 	nni_aio *       txaio;
 	nni_aio *       rxaio;
 	nni_aio *       negoaio;
@@ -72,8 +70,6 @@ struct ipctran_ep {
 	nni_list             waitpipes; // pipes waiting to match to socket
 	nni_list             negopipes; // pipes busy negotiating
 	nni_reap_item        reap;
-	nni_dialer *         ndialer;
-	nni_listener *       nlistener;
 	nni_stat_item        st_rcvmaxsz;
 };
 
@@ -179,7 +175,8 @@ ipctran_pipe_alloc(ipctran_pipe **pipep)
 	nni_mtx_init(&p->mtx);
 	if (((rv = nni_aio_alloc(&p->txaio, ipctran_pipe_send_cb, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->rxaio, ipctran_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->negoaio, ipctran_pipe_nego_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->negoaio, ipctran_pipe_nego_cb, p)) !=
+	        0)) {
 		ipctran_pipe_fini(p);
 		return (rv);
 	}
@@ -268,18 +265,11 @@ ipctran_pipe_nego_cb(void *arg)
 	return;
 
 error:
-	p->useraio = NULL;
-
-	if (ep->ndialer != NULL) {
-		nni_dialer_bump_error(ep->ndialer, rv);
-	} else {
-		nni_listener_bump_error(ep->nlistener, rv);
-	}
 
 	nng_stream_close(p->conn);
 	// If we are waiting to negotiate on a client side, then a failure
 	// here has to be passed to the user app.
-	if ((ep->dialer != NULL) && ((uaio = ep->useraio) != NULL)) {
+	if ((uaio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(uaio, rv);
 	}
@@ -347,7 +337,6 @@ ipctran_pipe_recv_cb(void *arg)
 	nni_aio *     rxaio = p->rxaio;
 
 	nni_mtx_lock(&p->mtx);
-	aio = nni_list_first(&p->recvq);
 
 	if ((rv = nni_aio_result(rxaio)) != 0) {
 		// Error on receive.  This has to cause an error back
@@ -747,10 +736,17 @@ ipctran_accept_cb(void *arg)
 	return;
 
 error:
-	nni_listener_bump_error(ep->nlistener, rv);
+	// When an error here occurs, let's send a notice up to the consumer.
+	// That way it can be reported properly.
+	if ((aio = ep->useraio) != NULL) {
+		ep->useraio = NULL;
+		nni_aio_finish_error(aio, rv);
+	}
+
 	switch (rv) {
 
 	case NNG_ENOMEM:
+	case NNG_ENOFILES:
 		nng_sleep_aio(10, ep->timeaio);
 		break;
 
@@ -786,6 +782,8 @@ ipctran_dial_cb(void *arg)
 		ipctran_pipe_fini(p);
 		nng_stream_free(conn);
 		rv = NNG_ECLOSED;
+		nni_mtx_unlock(&ep->mtx);
+		goto error;
 	} else {
 		ipctran_pipe_start(p, conn, ep);
 	}
@@ -795,14 +793,12 @@ ipctran_dial_cb(void *arg)
 error:
 	// Error connecting.  We need to pass this straight back
 	// to the user.
-	nni_dialer_bump_error(ep->ndialer, rv);
 	nni_mtx_lock(&ep->mtx);
 	if ((aio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&ep->mtx);
-	return;
 }
 
 static int
@@ -838,7 +834,6 @@ ipctran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 	if ((rv = ipctran_ep_init(&ep, sock)) != 0) {
 		return (rv);
 	}
-	ep->ndialer = ndialer;
 
 	if (((rv = nni_aio_alloc(&ep->connaio, ipctran_dial_cb, ep)) != 0) ||
 	    ((rv = nng_stream_dialer_alloc_url(&ep->dialer, url)) != 0)) {
@@ -861,7 +856,6 @@ ipctran_ep_init_listener(void **dp, nni_url *url, nni_listener *nlistener)
 	if ((rv = ipctran_ep_init(&ep, sock)) != 0) {
 		return (rv);
 	}
-	ep->nlistener = nlistener;
 
 	if (((rv = nni_aio_alloc(&ep->connaio, ipctran_accept_cb, ep)) != 0) ||
 	    ((rv = nni_aio_alloc(&ep->timeaio, ipctran_timer_cb, ep)) != 0) ||
@@ -883,11 +877,6 @@ ipctran_ep_cancel(nni_aio *aio, void *arg, int rv)
 	if (aio == ep->useraio) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
-		if (ep->ndialer) {
-			nni_dialer_bump_error(ep->ndialer, rv);
-		} else {
-			nni_listener_bump_error(ep->nlistener, rv);
-		}
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
@@ -905,19 +894,16 @@ ipctran_ep_connect(void *arg, nni_aio *aio)
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_dialer_bump_error(ep->ndialer, NNG_ECLOSED);
 		return;
 	}
 	if (ep->useraio != NULL) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_EBUSY);
-		nni_dialer_bump_error(ep->ndialer, NNG_EBUSY);
 		return;
 	}
 
 	if ((rv = nni_aio_schedule(aio, ipctran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_dialer_bump_error(ep->ndialer, NNG_EBUSY);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -970,9 +956,7 @@ ipctran_ep_bind(void *arg)
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = nng_stream_listener_listen(ep->listener)) != 0) {
-		nni_listener_bump_error(ep->nlistener, rv);
-	}
+	rv = nng_stream_listener_listen(ep->listener);
 	nni_mtx_unlock(&ep->mtx);
 	return (rv);
 }
@@ -989,20 +973,17 @@ ipctran_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_listener_bump_error(ep->nlistener, NNG_ECLOSED);
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
 	if (ep->useraio != NULL) {
 		nni_aio_finish_error(aio, NNG_EBUSY);
-		nni_listener_bump_error(ep->nlistener, NNG_EBUSY);
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
 	if ((rv = nni_aio_schedule(aio, ipctran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
-		nni_listener_bump_error(ep->nlistener, rv);
 		return;
 	}
 	ep->useraio = aio;

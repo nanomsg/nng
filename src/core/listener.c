@@ -324,8 +324,9 @@ listener_accept_cb(void *arg)
 {
 	nni_listener *l   = arg;
 	nni_aio *     aio = l->l_acc_aio;
+	int rv;
 
-	switch (nni_aio_result(aio)) {
+	switch ((rv = nni_aio_result(aio))) {
 	case 0:
 		BUMP_STAT(&l->l_stats.s_accept);
 		nni_listener_add_pipe(l, nni_aio_get_output(aio, 0));
@@ -335,10 +336,12 @@ listener_accept_cb(void *arg)
 	case NNG_ECONNRESET:   // remote condition, no cool down
 	case NNG_ETIMEDOUT:    // No need to sleep, we timed out already.
 	case NNG_EPEERAUTH:    // peer validation failure
+		nni_listener_bump_error(l, rv);
 		listener_accept_start(l);
 		break;
 	case NNG_ECLOSED:   // no further action
 	case NNG_ECANCELED: // no further action
+		nni_listener_bump_error(l, rv);
 		break;
 	default:
 		// We don't really know why we failed, but we back off
@@ -346,6 +349,7 @@ listener_accept_cb(void *arg)
 		// to system failures (resource exhaustion) and we hope
 		// by not thrashing we give the system a chance to
 		// recover.  100 ms is enough to cool down.
+		nni_listener_bump_error(l, rv);
 		nni_sleep_aio(100, l->l_tmo_aio);
 		break;
 	}
@@ -371,6 +375,7 @@ nni_listener_start(nni_listener *l, int flags)
 	}
 
 	if ((rv = l->l_ops.l_bind(l->l_data)) != 0) {
+		nni_listener_bump_error(l, rv);
 		nni_atomic_flag_reset(&l->l_started);
 		return (rv);
 	}

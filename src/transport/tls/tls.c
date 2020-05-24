@@ -57,7 +57,6 @@ struct tlstran_pipe {
 // Stuff that is common to both dialers and listeners.
 struct tlstran_ep {
 	nni_mtx              mtx;
-	uint16_t             af;
 	uint16_t             proto;
 	size_t               rcvmax;
 	bool                 started;
@@ -79,8 +78,6 @@ struct tlstran_ep {
 	const char *         host;
 	nng_sockaddr         src;
 	nng_sockaddr         sa;
-	nni_dialer *         ndialer;
-	nni_listener *       nlistener;
 	nni_stat_item        st_rcvmaxsz;
 };
 
@@ -169,7 +166,8 @@ tlstran_pipe_alloc(tlstran_pipe **pipep)
 
 	if (((rv = nni_aio_alloc(&p->txaio, tlstran_pipe_send_cb, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->rxaio, tlstran_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->negoaio, tlstran_pipe_nego_cb, p)) != 0)) {
+	    ((rv = nni_aio_alloc(&p->negoaio, tlstran_pipe_nego_cb, p)) !=
+	        0)) {
 		tlstran_pipe_fini(p);
 		return (rv);
 	}
@@ -272,17 +270,9 @@ tlstran_pipe_nego_cb(void *arg)
 	return;
 
 error:
-	if (ep->ndialer != NULL) {
-		nni_dialer_bump_error(ep->ndialer, rv);
-	} else {
-		nni_listener_bump_error(ep->nlistener, rv);
-	}
-
 	nng_stream_close(p->tls);
 
-	// If we are waiting to negotiate on a client side, then a failure
-	// here has to be passed to the user app.
-	if ((ep->dialer != NULL) && ((uaio = ep->useraio) != NULL)) {
+	if ((uaio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(uaio, rv);
 	}
@@ -532,17 +522,17 @@ tlstran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
 static void
 tlstran_pipe_recv_start(tlstran_pipe *p)
 {
-	nni_aio *rxaio;
+	nni_aio *aio;
 	nni_iov  iov;
 	NNI_ASSERT(p->rxmsg == NULL);
 
 	// Schedule a read of the IPC header.
-	rxaio       = p->rxaio;
+	aio         = p->rxaio;
 	iov.iov_buf = p->rxlen;
 	iov.iov_len = sizeof(p->rxlen);
-	nni_aio_set_iov(rxaio, 1, &iov);
+	nni_aio_set_iov(aio, 1, &iov);
 
-	nng_stream_recv(p->tls, rxaio);
+	nng_stream_recv(p->tls, aio);
 }
 
 static void
@@ -763,14 +753,24 @@ tlstran_accept_cb(void *arg)
 	return;
 
 error:
-	nni_listener_bump_error(ep->nlistener, rv);
+	// When an error here occurs, let's send a notice up to the consumer.
+	// That way it can be reported properly.
+	if ((aio = ep->useraio) != NULL) {
+		ep->useraio = NULL;
+		nni_aio_finish_error(aio, rv);
+	}
 	switch (rv) {
 
 	case NNG_ENOMEM:
+	case NNG_ENOFILES:
+		// We need to cool down here, to avoid spinning.
 		nng_sleep_aio(10, ep->timeaio);
 		break;
 
 	default:
+		// Start another accept. This is done because we want to
+		// ensure that TLS negotiations are disconnected from
+		// the upper layer accept logic.
 		if (!ep->closed) {
 			nng_stream_listener_accept(ep->listener, ep->connaio);
 		}
@@ -802,6 +802,8 @@ tlstran_dial_cb(void *arg)
 		tlstran_pipe_fini(p);
 		nng_stream_free(conn);
 		rv = NNG_ECLOSED;
+		nni_mtx_unlock(&ep->mtx);
+		goto error;
 	} else {
 		tlstran_pipe_start(p, conn, ep);
 	}
@@ -809,9 +811,7 @@ tlstran_dial_cb(void *arg)
 	return;
 
 error:
-	// Error connecting.  We need to pass this straight back
-	// to the user.
-	nni_dialer_bump_error(ep->ndialer, rv);
+	// Error connecting.  We need to pass this straight back to the user.
 	nni_mtx_lock(&ep->mtx);
 	if ((aio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
@@ -872,7 +872,6 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 		return (rv);
 	}
 	ep->authmode = NNG_TLS_AUTH_MODE_REQUIRED;
-	ep->ndialer  = ndialer;
 
 	if ((rv != 0) ||
 	    ((rv = nng_stream_dialer_alloc_url(&ep->dialer, &myurl)) != 0)) {
@@ -924,9 +923,7 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 		return (rv);
 	}
 
-	ep->authmode  = NNG_TLS_AUTH_MODE_NONE;
-	ep->af        = af;
-	ep->nlistener = nlistener;
+	ep->authmode = NNG_TLS_AUTH_MODE_NONE;
 
 	if (strlen(host) == 0) {
 		host = NULL;
@@ -970,11 +967,6 @@ tlstran_ep_cancel(nni_aio *aio, void *arg, int rv)
 	if (ep->useraio == aio) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
-		if (ep->ndialer) {
-			nni_dialer_bump_error(ep->ndialer, rv);
-		} else {
-			nni_listener_bump_error(ep->nlistener, rv);
-		}
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
@@ -993,18 +985,15 @@ tlstran_ep_connect(void *arg, nni_aio *aio)
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_dialer_bump_error(ep->ndialer, NNG_ECLOSED);
 		return;
 	}
 	if (ep->useraio != NULL) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_EBUSY);
-		nni_dialer_bump_error(ep->ndialer, NNG_EBUSY);
 		return;
 	}
 	if ((rv = nni_aio_schedule(aio, tlstran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_dialer_bump_error(ep->ndialer, rv);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -1021,9 +1010,7 @@ tlstran_ep_bind(void *arg)
 	int         rv;
 
 	nni_mtx_lock(&ep->mtx);
-	if ((rv = nng_stream_listener_listen(ep->listener)) != 0) {
-		nni_listener_bump_error(ep->nlistener, rv);
-	}
+	rv = nng_stream_listener_listen(ep->listener);
 	nni_mtx_unlock(&ep->mtx);
 
 	return (rv);
@@ -1042,19 +1029,16 @@ tlstran_ep_accept(void *arg, nni_aio *aio)
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_listener_bump_error(ep->nlistener, NNG_ECLOSED);
 		return;
 	}
 	if (ep->useraio != NULL) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_EBUSY);
-		nni_listener_bump_error(ep->nlistener, NNG_EBUSY);
 		return;
 	}
 	if ((rv = nni_aio_schedule(aio, tlstran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
-		nni_listener_bump_error(ep->nlistener, rv);
 		return;
 	}
 	ep->useraio = aio;

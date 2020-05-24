@@ -85,50 +85,50 @@ typedef struct {
 #define NNI_ALLOC_STRUCTS(s, n) nni_zalloc(sizeof(*s) * n)
 #define NNI_FREE_STRUCTS(s, n) nni_free(s, sizeof(*s) * n)
 
-#define NNI_PUT16(ptr, u)                                   \
-	do {                                                \
-		(ptr)[0] = (uint8_t)(((uint16_t)(u)) >> 8); \
-		(ptr)[1] = (uint8_t)((uint16_t)(u));        \
-	} while (0)
-
-#define NNI_PUT32(ptr, u)                                    \
+#define NNI_PUT16(ptr, u)                                    \
 	do {                                                 \
-		(ptr)[0] = (uint8_t)(((uint32_t)(u)) >> 24); \
-		(ptr)[1] = (uint8_t)(((uint32_t)(u)) >> 16); \
-		(ptr)[2] = (uint8_t)(((uint32_t)(u)) >> 8);  \
-		(ptr)[3] = (uint8_t)((uint32_t)(u));         \
+		(ptr)[0] = (uint8_t)(((uint16_t)(u)) >> 8u); \
+		(ptr)[1] = (uint8_t)((uint16_t)(u));         \
 	} while (0)
 
-#define NNI_PUT64(ptr, u)                                    \
-	do {                                                 \
-		(ptr)[0] = (uint8_t)(((uint64_t)(u)) >> 56); \
-		(ptr)[1] = (uint8_t)(((uint64_t)(u)) >> 48); \
-		(ptr)[2] = (uint8_t)(((uint64_t)(u)) >> 40); \
-		(ptr)[3] = (uint8_t)(((uint64_t)(u)) >> 32); \
-		(ptr)[4] = (uint8_t)(((uint64_t)(u)) >> 24); \
-		(ptr)[5] = (uint8_t)(((uint64_t)(u)) >> 16); \
-		(ptr)[6] = (uint8_t)(((uint64_t)(u)) >> 8);  \
-		(ptr)[7] = (uint8_t)((uint64_t)(u));         \
+#define NNI_PUT32(ptr, u)                                     \
+	do {                                                  \
+		(ptr)[0] = (uint8_t)(((uint32_t)(u)) >> 24u); \
+		(ptr)[1] = (uint8_t)(((uint32_t)(u)) >> 16u); \
+		(ptr)[2] = (uint8_t)(((uint32_t)(u)) >> 8u);  \
+		(ptr)[3] = (uint8_t)((uint32_t)(u));          \
 	} while (0)
 
-#define NNI_GET16(ptr, v)                            \
-	v = (((uint16_t)((uint8_t)(ptr)[0])) << 8) + \
+#define NNI_PUT64(ptr, u)                                     \
+	do {                                                  \
+		(ptr)[0] = (uint8_t)(((uint64_t)(u)) >> 56u); \
+		(ptr)[1] = (uint8_t)(((uint64_t)(u)) >> 48u); \
+		(ptr)[2] = (uint8_t)(((uint64_t)(u)) >> 40u); \
+		(ptr)[3] = (uint8_t)(((uint64_t)(u)) >> 32u); \
+		(ptr)[4] = (uint8_t)(((uint64_t)(u)) >> 24u); \
+		(ptr)[5] = (uint8_t)(((uint64_t)(u)) >> 16u); \
+		(ptr)[6] = (uint8_t)(((uint64_t)(u)) >> 8u);  \
+		(ptr)[7] = (uint8_t)((uint64_t)(u));          \
+	} while (0)
+
+#define NNI_GET16(ptr, v)                             \
+	v = (((uint16_t)((uint8_t)(ptr)[0])) << 8u) + \
 	    (((uint16_t)(uint8_t)(ptr)[1]))
 
-#define NNI_GET32(ptr, v)                             \
-	v = (((uint32_t)((uint8_t)(ptr)[0])) << 24) + \
-	    (((uint32_t)((uint8_t)(ptr)[1])) << 16) + \
-	    (((uint32_t)((uint8_t)(ptr)[2])) << 8) +  \
+#define NNI_GET32(ptr, v)                              \
+	v = (((uint32_t)((uint8_t)(ptr)[0])) << 24u) + \
+	    (((uint32_t)((uint8_t)(ptr)[1])) << 16u) + \
+	    (((uint32_t)((uint8_t)(ptr)[2])) << 8u) +  \
 	    (((uint32_t)(uint8_t)(ptr)[3]))
 
-#define NNI_GET64(ptr, v)                             \
-	v = (((uint64_t)((uint8_t)(ptr)[0])) << 56) + \
-	    (((uint64_t)((uint8_t)(ptr)[1])) << 48) + \
-	    (((uint64_t)((uint8_t)(ptr)[2])) << 40) + \
-	    (((uint64_t)((uint8_t)(ptr)[3])) << 32) + \
-	    (((uint64_t)((uint8_t)(ptr)[4])) << 24) + \
-	    (((uint64_t)((uint8_t)(ptr)[5])) << 16) + \
-	    (((uint64_t)((uint8_t)(ptr)[6])) << 8) +  \
+#define NNI_GET64(ptr, v)                              \
+	v = (((uint64_t)((uint8_t)(ptr)[0])) << 56u) + \
+	    (((uint64_t)((uint8_t)(ptr)[1])) << 48u) + \
+	    (((uint64_t)((uint8_t)(ptr)[2])) << 40u) + \
+	    (((uint64_t)((uint8_t)(ptr)[3])) << 32u) + \
+	    (((uint64_t)((uint8_t)(ptr)[4])) << 24u) + \
+	    (((uint64_t)((uint8_t)(ptr)[5])) << 16u) + \
+	    (((uint64_t)((uint8_t)(ptr)[6])) << 8u) +  \
 	    (((uint64_t)(uint8_t)(ptr)[7]))
 
 // This increments a pointer a fixed number of byte cells.

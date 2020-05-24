@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -345,10 +345,12 @@ dialer_connect_cb(void *arg)
 		break;
 	case NNG_ECLOSED:   // No further action.
 	case NNG_ECANCELED: // No further action.
+		nni_dialer_bump_error(d, rv);
 		break;
 	case NNG_ECONNREFUSED:
 	case NNG_ETIMEDOUT:
 	default:
+		nni_dialer_bump_error(d, rv);
 		if (user_aio == NULL) {
 			nni_dialer_timer_start(d);
 		} else {

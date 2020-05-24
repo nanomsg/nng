@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -14,7 +14,6 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "core/tcp.h"
 
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
@@ -42,7 +41,6 @@ struct tcptran_pipe {
 	size_t          wantrxhead;
 	nni_list        recvq;
 	nni_list        sendq;
-	nni_aio *       useraio;
 	nni_aio *       txaio;
 	nni_aio *       rxaio;
 	nni_aio *       negoaio;
@@ -52,7 +50,6 @@ struct tcptran_pipe {
 
 struct tcptran_ep {
 	nni_mtx              mtx;
-	uint16_t             af;
 	uint16_t             proto;
 	size_t               rcvmax;
 	bool                 fini;
@@ -71,8 +68,6 @@ struct tcptran_ep {
 	nni_reap_item        reap;
 	nng_stream_dialer *  dialer;
 	nng_stream_listener *listener;
-	nni_dialer *         ndialer;
-	nni_listener *       nlistener;
 	nni_stat_item        st_rcvmaxsz;
 };
 
@@ -272,17 +267,9 @@ tcptran_pipe_nego_cb(void *arg)
 	return;
 
 error:
-	if (ep->ndialer != NULL) {
-		nni_dialer_bump_error(ep->ndialer, rv);
-	} else {
-		nni_listener_bump_error(ep->nlistener, rv);
-	}
-
 	nng_stream_close(p->conn);
 
-	// If we are waiting to negotiate on a client side, then a failure
-	// here has to be passed to the user app.
-	if ((ep->dialer != NULL) && ((uaio = ep->useraio) != NULL)) {
+	if ((uaio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(uaio, rv);
 	}
@@ -793,10 +780,16 @@ tcptran_accept_cb(void *arg)
 	return;
 
 error:
-	nni_listener_bump_error(ep->nlistener, rv);
+	// When an error here occurs, let's send a notice up to the consumer.
+	// That way it can be reported properly.
+	if ((aio = ep->useraio) != NULL) {
+		ep->useraio = NULL;
+		nni_aio_finish_error(aio, rv);
+	}
 	switch (rv) {
 
 	case NNG_ENOMEM:
+	case NNG_ENOFILES:
 		nng_sleep_aio(10, ep->timeaio);
 		break;
 
@@ -832,6 +825,8 @@ tcptran_dial_cb(void *arg)
 		tcptran_pipe_fini(p);
 		nng_stream_free(conn);
 		rv = NNG_ECLOSED;
+		nni_mtx_unlock(&ep->mtx);
+		goto error;
 	} else {
 		tcptran_pipe_start(p, conn, ep);
 	}
@@ -841,14 +836,12 @@ tcptran_dial_cb(void *arg)
 error:
 	// Error connecting.  We need to pass this straight back
 	// to the user.
-	nni_dialer_bump_error(ep->ndialer, rv);
 	nni_mtx_lock(&ep->mtx);
 	if ((aio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
 	}
 	nni_mtx_unlock(&ep->mtx);
-	return;
 }
 
 static int
@@ -895,13 +888,12 @@ tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	}
 
 	if ((rv = tcptran_url_parse_source(&myurl, &srcsa, url)) != 0) {
-		return (NNG_EADDRINVAL);
+		return (rv);
 	}
 
 	if ((rv = tcptran_ep_init(&ep, url, sock)) != 0) {
 		return (rv);
 	}
-	ep->ndialer = ndialer;
 
 	if ((rv != 0) ||
 	    ((rv = nni_aio_alloc(&ep->connaio, tcptran_dial_cb, ep)) != 0) ||
@@ -940,7 +932,6 @@ tcptran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 	if ((rv = tcptran_ep_init(&ep, url, sock)) != 0) {
 		return (rv);
 	}
-	ep->nlistener = nlistener;
 
 	if (((rv = nni_aio_alloc(&ep->connaio, tcptran_accept_cb, ep)) != 0) ||
 	    ((rv = nni_aio_alloc(&ep->timeaio, tcptran_timer_cb, ep)) != 0) ||
@@ -962,11 +953,6 @@ tcptran_ep_cancel(nni_aio *aio, void *arg, int rv)
 	if (ep->useraio == aio) {
 		ep->useraio = NULL;
 		nni_aio_finish_error(aio, rv);
-		if (ep->ndialer) {
-			nni_dialer_bump_error(ep->ndialer, rv);
-		} else {
-			nni_listener_bump_error(ep->nlistener, rv);
-		}
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
@@ -984,18 +970,15 @@ tcptran_ep_connect(void *arg, nni_aio *aio)
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_dialer_bump_error(ep->ndialer, NNG_ECLOSED);
 		return;
 	}
 	if (ep->useraio != NULL) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_EBUSY);
-		nni_dialer_bump_error(ep->ndialer, NNG_EBUSY);
 		return;
 	}
 	if ((rv = nni_aio_schedule(aio, tcptran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
-		nni_dialer_bump_error(ep->ndialer, rv);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
@@ -1070,9 +1053,6 @@ tcptran_ep_bind(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nng_stream_listener_listen(ep->listener);
-	if (rv != 0) {
-		nni_listener_bump_error(ep->nlistener, rv);
-	}
 	nni_mtx_unlock(&ep->mtx);
 
 	return (rv);
@@ -1091,19 +1071,16 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 	if (ep->closed) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
-		nni_listener_bump_error(ep->nlistener, NNG_ECLOSED);
 		return;
 	}
 	if (ep->useraio != NULL) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, NNG_EBUSY);
-		nni_listener_bump_error(ep->nlistener, NNG_EBUSY);
 		return;
 	}
 	if ((rv = nni_aio_schedule(aio, tcptran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
-		nni_listener_bump_error(ep->nlistener, rv);
 		return;
 	}
 	ep->useraio = aio;
