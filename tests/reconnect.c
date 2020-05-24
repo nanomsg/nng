@@ -13,6 +13,7 @@
 #include <nng/nng.h>
 #include <nng/protocol/pipeline0/pull.h>
 #include <nng/protocol/pipeline0/push.h>
+#include <nng/supplemental/util/platform.h>
 
 #include "acutest.h"
 #include "testutil.h"
@@ -83,7 +84,7 @@ test_reconnect_pipe(void)
 	nng_socket   push;
 	nng_socket   pull;
 	nng_listener l;
-	nng_msg *msg;
+	nng_msg *    msg;
 	char         addr[64];
 
 	testutil_scratch_addr("inproc", sizeof(addr), addr);
@@ -121,9 +122,46 @@ test_reconnect_pipe(void)
 	TEST_NNG_PASS(nng_close(pull));
 }
 
+void
+test_reconnect_back_off_zero(void)
+{
+	nng_socket push;
+	nng_socket pull;
+	nng_time   start;
+	char       addr[64];
+	testutil_scratch_addr("inproc", sizeof(addr), addr);
+
+	TEST_NNG_PASS(nng_push0_open(&push));
+	TEST_NNG_PASS(nng_pull0_open(&pull));
+
+	// redial every 10 ms.
+	TEST_NNG_PASS(nng_setopt_ms(push, NNG_OPT_RECONNMAXT, 0));
+	TEST_NNG_PASS(nng_setopt_ms(push, NNG_OPT_RECONNMINT, 10));
+	TEST_NNG_PASS(nng_dial(push, addr, NULL, NNG_FLAG_NONBLOCK));
+
+	// Start up the dialer first.  It should keep retrying every 10 ms.
+
+	// Wait 500 milliseconds. This gives a chance for an exponential
+	// back-off to increase to a longer time.  It should by this point
+	// be well over 100 and probably closer to 200 ms.
+	nng_msleep(500);
+
+	start = nng_clock();
+	TEST_NNG_PASS(nng_listen(pull, addr, NULL, 0));
+
+	TEST_NNG_SEND_STR(push, "hello");
+	TEST_NNG_RECV_STR(pull, "hello");
+
+	TEST_CHECK(nng_clock() - start < 100);
+
+	TEST_NNG_PASS(nng_close(push));
+	TEST_NNG_PASS(nng_close(pull));
+}
+
 TEST_LIST = {
 	{ "dial before listen", test_dial_before_listen },
 	{ "reconnect", test_reconnect },
+	{ "reconnect back-off zero", test_reconnect_back_off_zero },
 	{ "reconnect pipe", test_reconnect_pipe },
 	{ NULL, NULL },
 };
