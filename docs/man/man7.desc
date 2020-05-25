@@ -4,11 +4,11 @@ available in the distribution.
 (((protocol)))
 Protocols represent "`patterns`" of communication, such as
 request/reply, publish/subscribe, and so forth.
-A given <<nng_socket.5#,socket>> is created with exactly one protocol, and that
+A given xref:nng_socket.5.adoc[socket] is created with exactly one protocol, and that
 protocol defines the key behavior of the socket.
 
 (((transport)))
 Conversely, transports are the underlying mechansims by which messages
 are moved between participants, such as TCP/IP or UNIX domain IPC.
-A given <<nng_socket.5#,socket>> may be using several transports at the same
+A given xref:nng_socket.5.adoc[socket] may be using several transports at the same
 time.

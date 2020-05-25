@@ -6,8 +6,8 @@ from use in new applications.
 
 TIP: While this is discouraged for long term use, as a transition aid
 applications may use the value returned by the
-<<nng_socket_id.3#,nng_socket_id()>> in these functions just like a
-socket descriptor (as if the socket were opened
-via <<nn_socket.3compat#,nn_socket()>>).
+xref:nng_socket_id.3.adoc[`nng_socket_id()`] in these functions just like a
+socket descriptor (as if the socket were opened via
+xref:nn_socket.3compat.adoc[`nn_socket()`]).
 This sort of API intermixing should only be used during transition from
 the legacy API to the new API.
