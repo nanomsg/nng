@@ -360,6 +360,7 @@ if (NNG_ENABLE_DOC)
             nng_sockaddr_zt
             nng_socket
             nng_stat
+            nng_url
 
             nng_stream
             nng_stream_dialer
