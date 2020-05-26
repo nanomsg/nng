@@ -1,6 +1,6 @@
 = libnng(3)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
@@ -251,7 +251,7 @@ to observe program behaviors and as an aid in troubleshooting.
 |xref:nng_stat_timestamp.3.adoc[nng_stat_timestamp()]|get statistic timestamp
 |xref:nng_stat_type.3.adoc[nng_stat_type()]|get statistic type
 |xref:nng_stat_unit.3.adoc[nng_stat_unit()]|get statistic unit
-|xref:nng_stat_value.3.adoc[nng_stat_valueg()]|get statistic value
+|xref:nng_stat_value.3.adoc[nng_stat_value()]|get statistic value
 |xref:nng_stats_free.3.adoc[nng_stats_free()]|free statistics
 |xref:nng_stats_get.3.adoc[nng_stats_get()]|get statistics
 |===
@@ -437,7 +437,6 @@ NOTE: These functions will only be present if the library has been built
 with TLS support.
 
 |===
-|xref:nng_tls_close.3tls.adoc[nng_tls_close()]|close TLS connection
 |xref:nng_tls_config_alloc.3tls.adoc[nng_tls_config_alloc()]|allocate TLS configuration
 |xref:nng_tls_config_auth_mode.3tls.adoc[nng_tls_config_auth_mode()]|set authentication mode
 |xref:nng_tls_config_ca_chain.3tls.adoc[nng_tls_config_ca_chain()]|set certificate authority chain
@@ -446,24 +445,6 @@ with TLS support.
 |xref:nng_tls_config_own_cert.3tls.adoc[nng_tls_config_own_cert()]|set own certificate and key
 |xref:nng_tls_config_free.3tls.adoc[nng_tls_config_free()]|free TLS configuration
 |xref:nng_tls_config_server_name.3tls.adoc[nng_tls_config_server_name()]|set remote server name
-|xref:nng_tls_dialer_alloc.3tls.adoc[nng_tls_dialer_alloc()]|allocate TLS dialer
-|xref:nng_tls_dialer_close.3tls.adoc[nng_tls_dialer_close()]|close TLS dialer
-|xref:nng_tls_dialer_dial.3tls.adoc[nng_tls_dialer_dial()]|initiate outgoing TLS connection
-|xref:nng_tls_dialer_free.3tls.adoc[nng_tls_dialer_free()]|free TLS dialer
-|xref:nng_tls_dialer_getopt.3tls.adoc[nng_tls_dialer_getopt()]|get option from TLS dialer
-|xref:nng_tls_dialer_setopt.3tls.adoc[nng_tls_dialer_setopt()]|set option on TLS dialer
-|xref:nng_tls_free.3tls.adoc[nng_tls_free()]|free TLS connection
-|xref:nng_tls_getopt.3tls.adoc[nng_tls_getopt()]|get option from TLS connection
-|xref:nng_tls_listener_accept.3tls.adoc[nng_tls_listener_accept()]|accept incoming TLS connection
-|xref:nng_tls_listener_alloc.3tls.adoc[nng_tls_listener_alloc()]|allocate TLS listener
-|xref:nng_tls_listener_close.3tls.adoc[nng_tls_listener_close()]|close TLS listener
-|xref:nng_tls_listener_free.3tls.adoc[nng_tls_listener_free()]|free TLS listener
-|xref:nng_tls_listener_getopt.3tls.adoc[nng_tls_listener_getopt()]|get option from TLS listener
-|xref:nng_tls_listener_listen.3tls.adoc[nng_tls_listener_listen()]|bind TLS listener to port
-|xref:nng_tls_listener_setopt.3tls.adoc[nng_tls_listener_setopt()]|set option on TLS listener
-|xref:nng_tls_recv.3tls.adoc[nng_tls_recv()]|receive from TLS connection
-|xref:nng_tls_send.3tls.adoc[nng_tls_send()]|send to TLS connection
-|xref:nng_tls_setopt.3tls.adoc[nng_tls_setopt()]|set option on TLS connection
 |===
 
 
