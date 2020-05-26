@@ -1,6 +1,6 @@
 = nng_stream_dialer_dial(3str)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -31,7 +31,7 @@ The operation is completed asynchronously, using _aio_.
 
 TIP: The peer address is determined by the address specified using
 xref:nng_stream_dialer_alloc.3str.adoc[`nng_stream_dialer_alloc()`] or 
-xref:nng_stream_dialer_alloc_url.3str.adoc[`nng_stream_dialer_alloc_url()`]. 
+xref:nng_stream_dialer_alloc.3str.adoc[`nng_stream_dialer_alloc_url()`].
 
 If a connection is successfully established, the _aio_ will have the
 resulting

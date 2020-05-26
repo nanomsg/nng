@@ -116,9 +116,10 @@ of the requested file name. If a content type cannot be determined from
 the extension, then `application/octet-stream` is used.
 
 The directory handler is created as a tree handler initially in exclusive mode (see
-xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree_exclusive
-]). This can be changed by calling xref:nng_http_handler_set_tree.3http.adoc
-[nng_http_handler_set_tree(3http)] after creating the directory handler.
+xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree_exclusive]).
+This can be changed by calling
+xref:nng_http_handler_set_tree.3http.adoc[nng_http_handler_set_tree(3http)]
+after creating the directory handler.
 
 === File Handler
 
