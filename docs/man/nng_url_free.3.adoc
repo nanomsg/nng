@@ -1,6 +1,6 @@
 = nng_url_free(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -40,4 +40,5 @@ None.
 [.text-left]
 xref:nng_url_clone.3.adoc[nng_url_clone(3)],
 xref:nng_url_parse.3.adoc[nng_url_parse(3)],
+xref:nng_url.5.adoc[nng_url(5)],
 xref:nng.7.adoc[nng(7)]

@@ -1,6 +1,6 @@
 = nng_url_parse(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -26,26 +26,12 @@ int nng_url_parse(nng_url **urlp, const char *str);
 
 The `nng_url_parse()` function parses the string _str_ containing an
 https://tools.ietf.org/html/rfc3986[RFC 3986] compliant URL, and creates
-a structure containing the results.  A pointer to the resulting structure
-is stored in _urlp_.
+an
+xref:nng_url.5.adoc[`nng_url`] structure containing the results.
+A pointer to the resulting structure is stored in _urlp_.
 
-The `nng_url` structure has at least the following members:
-
-[source, c]
-----
-struct nng_url {
-    char *u_rawurl;   // Unparsed URL, with minimal canonicalization.
-    char *u_scheme;   // Scheme, such as "http"; always lower case.
-    char *u_userinfo; // Userinfo component, or NULL.
-    char *u_host;     // Full host, including port if present.
-    char *u_hostname; // Hostname only (or address), or empty string.
-    char *u_port;     // Port number, may be default or empty string.
-    char *u_path;     // Path if present, empty string otherwise.
-    char *u_query;    // Query info if present, NULL otherwise.
-    char *u_fragment; // Fragment if present, NULL otherwise.
-    char *u_requri;   // Request-URI (path[?query][#fragment])
-};
-----
+The structure may disposed of when no longer needed by calling
+xref:nng_url_free.3.adoc[`nng_url_free()`].
 
 === URL Canonicalization
 
@@ -93,4 +79,5 @@ This function returns 0 on success, and non-zero otherwise.
 xref:nng_url_clone.3.adoc[nng_url_clone(3)],
 xref:nng_url_free.3.adoc[nng_url_free(3)],
 xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_url.5.adoc[nng_url(5)],
 xref:nng.7.adoc[nng(7)]

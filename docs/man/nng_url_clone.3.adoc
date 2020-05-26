@@ -1,6 +1,6 @@
 = nng_url_clone(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -28,6 +28,11 @@ The `nng_url_clone()` makes a clone of the original URL structure _orig_, and
 saves the result in the location pointed by _dup_.
 This clone includes fully duplicating each of the member fields.
 
+The new
+xref:nng_url.5.adoc[`nng_url`] structure can be disposed of
+using
+xref:nng_url_free.3.adoc[`nng_url_free()`] when it is no longer needed.
+
 == RETURN VALUES
 
 This function returns 0 on success, and non-zero otherwise.
@@ -43,4 +48,5 @@ This function returns 0 on success, and non-zero otherwise.
 xref:nng_url_free.3.adoc[nng_url_free(3)],
 xref:nng_url_parse.3.adoc[nng_url_parse(3)],
 xref:nng_strerror.3.adoc[nng_strerror(3)],
+xref:nng_url.5.adoc[nng_url(5)],
 xref:nng.7.adoc[nng(7)]

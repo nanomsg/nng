@@ -1,4 +1,4 @@
-= nng_sockaddr(5)
+= nng_url(5)
 //
 // Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
@@ -19,16 +19,16 @@ nng_url - Universal Resource Locator object
 #include <nng/nng.h>
 
 typedef struct nng_url {
-    char *u_rawurl;   // never NULL
-    char *u_scheme;   // never NULL
-    char *u_userinfo; // will be NULL if not specified
-    char *u_host;     // including colon and port
-    char *u_hostname; // name only, will be "" if not specified
-    char *u_port;     // port, will be "" if not specified
-    char *u_path;     // path, will be "" if not specified
-    char *u_query;    // without '?', will be NULL if not specified
-    char *u_fragment; // without '#', will be NULL if not specified
-    char *u_requri;   // includes query and fragment, "" if not specified
+    char *u_rawurl;
+    char *u_scheme;
+    char *u_userinfo;
+    char *u_host;
+    char *u_hostname;
+    char *u_port;
+    char *u_path;
+    char *u_query;
+    char *u_fragment;
+    char *u_requri;
 } nng_url;
 ----
 
@@ -46,16 +46,21 @@ alter them, as the underlying memory is managed by the library.
 The fields are as follows:
 
 [horizontal]
-`u_rawurl`:: The raw URL string, un-modified.  This will never be `NULL`.
-`u_scheme`:: The URL scheme, such as "`http`" or "`inproc`".  This will never be `NULL`.
+`u_rawurl`:: The unparsed URL string.  This will never be `NULL`.
+`u_scheme`:: The URL scheme, such as "`http`" or "`inproc`". Always lower case. This will never be `NULL`.
 `u_userinfo`:: This username and password if supplied in the URL string.  Will be `NULL` when not present.
-`u_host`:: The full host and port, separated by a colon.
+`u_host`:: The full host part of the URL, including the port if present (separated by a colon.)
 `u_hostname`:: The name of the host, and may be the empty string in some cases.
 `u_port`:: The port.  May be empty if irrelevant or not specified.
-`u_path`:: The extended path, typically used with HTTP or WebSockets.  Will be empty string if not specified.
-`u_query`:: The query string (typically following `?` in the URL.)  Will be `NULL` if not present.
+`u_path`:: The path, typically used with HTTP or WebSockets.  Will be empty string if not specified.
+`u_query`:: The query info (typically following `?` in the URL.)  Will be `NULL` if not present.
 `u_fragment`:: This is used for specifying an anchor, the part after `#` in a URL.  Will be `NULL` if not present.
-`u_requri`:: The full URI (the part after the host and port). Will be the empty string if not specified.
+`u_requri`:: The full Request-URI  (path[?query][#fragment]). Will be the empty string if not specified.
+
+NOTE: Other fields may also be present, but only those documented here are safe for application use.
+
+TIP: More information about Universal Resource Locators can be found in
+https://tools.ietf.org/html/rfc3986[RFC 3986].
 
 == SEE ALSO
 
