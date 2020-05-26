@@ -1,6 +1,6 @@
 = nng_stream_dialer_get(3str)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -98,7 +98,7 @@ Note that this form is somewhat special in that the object is generally
 not copied, but instead the *pointer* to the object is copied.
 +
 NOTE: Care must be taken to ensure that the application respects any
-considerations about the lifetime of the underyling object.
+considerations about the lifetime of the underlying object.
 See the documentation for the option for more specific guidance.
 
 `nng_stream_dialer_get_size()`::

@@ -1,6 +1,6 @@
 = nng_stream_dialer_set(3str)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -80,7 +80,7 @@ The duration is an integer number of milliseconds.
 This function is used to pass a pointer to structured data.
 The data referenced by is generally managed by other functions.
 For example, TLS configuration objects created with
-xref:nng_tls_config.3tls.adoc[`nng_tls_config_alloc()`]
+xref:nng_tls_config_alloc.3tls.adoc[`nng_tls_config_alloc()`]
 can be passed this way.
 +
 NOTE: This form is somewhat special in that the object is generally

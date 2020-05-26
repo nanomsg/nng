@@ -24,7 +24,7 @@ bool nng_tls_engine_fips_mode(void);
 == DESCRIPTION
 
 The `nng_tls_engine_fips_mode()` returns `true` if the
-xref:tls_engine.5.adoc[TLS engine] is operating in FIPS 140-2 mode,
+xref:nng_tls_engine.5.adoc[TLS engine] is operating in FIPS 140-2 mode,
 and `false` otherwise.
 
 TIP: FIPS 140-2 references a United States standard for the use

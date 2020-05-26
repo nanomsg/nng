@@ -24,7 +24,7 @@ const char *nng_tls_engine_name(void);
 == DESCRIPTION
 
 The `nng_tls_engine_name()` returns a short name for the current
-xref:tls_engine.5.adoc[TLS engine].
+xref:nng_tls_engine.5.adoc[TLS engine].
 If no engine is registered, then the special name "none" is returned.
 
 == RETURN VALUES

@@ -85,7 +85,7 @@ indication, which is used as a hint by a multihosting server to choose the
 appropriate certificate to provide) and also is used to validate the
 name presented in the server's x509 certificate.
 
-[[NNT_OPT_TLS_VERIFIED]]((`NNG_OPT_TLS_VERIFIED`))::
+[[NNG_OPT_TLS_VERIFIED]]((`NNG_OPT_TLS_VERIFIED`))::
 (`bool`)
 This read-only option indicates whether the remote peer has been properly verified using TLS
 authentication.
