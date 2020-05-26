@@ -1,6 +1,6 @@
 = nng_tls_options(5)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -104,12 +104,6 @@ when appropriate for the context:
 == SEE ALSO
 
 [.text-left]
-xref:nng_tls_dialer_getopt.3tls.adoc[nng_tls_dialer_getopt(3tls)],
-xref:nng_tls_dialer_setopt.3tls.adoc[nng_tls_dialer_setopt(3tls)],
-xref:nng_tls_getopt.3tls.adoc[nng_tls_getopt(3tls)],
-xref:nng_tls_listener_getopt.3tls.adoc[nng_tls_listener_getopt(3tls)],
-xref:nng_tls_listener_setopt.3tls.adoc[nng_tls_listener_setopt(3tls)],
-xref:nng_tls_setopt.3tls.adoc[nng_tls_setopt(3tls)],
 xref:nng_options.5.adoc[nng_options(5)]
 xref:nng_tcp_options.5.adoc[nng_tcp_options(5)]
 xref:nng_tls_config.5.adoc[nng_tls_config(5)],
