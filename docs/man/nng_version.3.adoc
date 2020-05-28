@@ -1,6 +1,6 @@
 = nng_version(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -31,6 +31,7 @@ This is intended for output in programs, and so forth.
 Additionally, compile time version information is available
 via some predefined macros:
 
+[horizontal]
 ((`NNG_MAJOR_VERSION`)):: Major version number.
 ((`NNG_MINOR_VERSION`)):: Minor version number.
 ((`NNG_PATCH_VERSION`)):: Patch version number.
@@ -45,7 +46,7 @@ manner depending upon the link options and how the library is built.)
 
 == RETURN VALUES
 
-C string (`NUL`-terminated) containing the library version number.
+Null-terminated string containing the library version number.
 
 == ERRORS
 
