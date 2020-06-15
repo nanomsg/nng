@@ -63,7 +63,8 @@ check_props(nng_msg *msg)
 	So(nng_pipe_getopt_uint64(p, NNG_OPT_IPC_PEER_GID, &id) == 0);
 	So(id == (uint64_t) getgid());
 
-#if defined(NNG_HAVE_SOPEERCRED) || defined(NNG_HAVE_GETPEERUCRED)
+#if defined(NNG_HAVE_SOPEERCRED) || defined(NNG_HAVE_GETPEERUCRED) || \
+    (defined(NNG_HAVE_LOCALPEERCRED) && defined(NNG_HAVE_LOCALPEERPID))
 	So(nng_pipe_getopt_uint64(p, NNG_OPT_IPC_PEER_PID, &id) == 0);
 	So(id == (uint64_t) getpid());
 #else
