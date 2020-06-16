@@ -578,7 +578,6 @@ nni_msg_header_append_u32(nni_msg *m, uint32_t val)
 void
 nni_msg_clear(nni_msg *m)
 {
-	m->m_header_len = 0;
 	nni_chunk_clear(&m->m_body);
 }
 
