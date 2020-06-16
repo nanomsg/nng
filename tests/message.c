@@ -91,10 +91,13 @@ TestMain("Message Tests", {
 		});
 
 		Convey("Clearing the body works", {
+			nng_msg_header_append(msg, "bogus", 6);
 			So(nng_msg_append(msg, "bogus", 6) == 0);
 			So(nng_msg_len(msg) == 6);
 			nng_msg_clear(msg);
 			So(nng_msg_len(msg) == 0);
+			// It shouldn't clear the header
+			So(nng_msg_header_len(msg) == 6);
 		});
 
 		Convey("We cannot delete more header than exists", {
