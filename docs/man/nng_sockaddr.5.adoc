@@ -47,7 +47,7 @@ addresses, IPC paths, and so forth.
 
 ****
 The name `sockaddr` is based on its similarity with POSIX `struct sockaddr`,
-but in the _nng_ library, these addresses are more closely affiliated with
+but in _NNG_, these addresses are more closely affiliated with
 instances of xref:nng_pipe.5.adoc[`nng_pipe`]
 than of xref:nng_socket.5.adoc[`nng_socket`].
 The naming confusion is unfortunate.

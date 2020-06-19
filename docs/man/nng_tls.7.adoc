@@ -26,7 +26,7 @@ int nng_tls_register(void);
 
 (((TLS)))(((Transport Layer Security)))(((transport, _tls_)))
 The ((_tls_ transport)) provides communication support between
-_nng_ sockets across a TCP/IP network using
+peers across a TCP/IP network using
 https://tools.ietf.org/html/rfc5246[TLS v1.2] on top of
 https://tools.ietf.org/html/rfc793[TCP].
 Both IPv4 and IPv6 are supported when the underlying platform also supports it.
@@ -48,14 +48,14 @@ or later is required.
 
 TIP: Applications may need to add this library (or libraries) to
 their link line, particularly when using a statically built
-_nng_ library.
+library.
 
 NOTE: The mbedTLS library uses different licensing terms than
-_nng_ itself; as of this writing it is offered under either
+_NNG_ itself; as of this writing it is offered under either
 https://opensource.org/licenses/Apache-2.0[Apache License 2.0] or
 https://opensource.org/licenses/gpl-license[GNU GPL] terms.
 You are responsible for understanding and adhering to the
-license terms of any libraries you make use of.
+license terms of any libraries you use.
 
 === URI Format
 
@@ -75,7 +75,7 @@ IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
 listeners.
 The details of this varies across operating systems.
 
-NOTE: Both `tls+tcp6://` and `tls+tcp4://` are _nng_ extensions, and may not
+NOTE: Both `tls+tcp6://` and `tls+tcp4://` are specific to _NNG_, and may not
 be understood by other implementations.
 
 TIP: We recommend using either numeric IP addresses, or names that are

@@ -26,14 +26,14 @@ int nng_tcp_register(void);
 
 (((transport, _tcp_)))
 The ((_tcp_ transport)) provides communication support between
-_nng_ sockets across a ((TCP/IP)) network.
+sockets across a ((TCP/IP)) network.
 Both IPv4 and IPv6 are supported when the underlying platform also supports it.
 
 // We need to insert a reference to the nanomsg RFC.
 
 === Registration
 
-The _nng_tcp_ transport is generally built-in to the _nng_ core, so
+This transport is generally built-in to the core of _NNG_, so
 no extra steps to use it should be necessary.
 
 === URI Format
@@ -53,7 +53,7 @@ IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
 listeners.
 The details of this varies across operating systems.
 
-NOTE: Both `tcp6://` and `tcp4://` are _nng_ extensions, and might not
+NOTE: Both `tcp6://` and `tcp4://` are specific to _NNG_, and might not
 be understood by other implementations.
 
 TIP: We recommend using either numeric IP addresses, or names that are

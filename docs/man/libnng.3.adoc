@@ -21,7 +21,7 @@ libnng - nanomsg next generation library
 
 == DESCRIPTION
 
-The xref:nng.7.adoc[_nng_] library provides a common messaging framework
+xref:nng.7.adoc[_NNG_] provides a common messaging framework
 intended to solve common communication problems in distributed applications.
 
 It provides a C language API.
@@ -136,7 +136,7 @@ mode may need to access the header of messages.
 
 === Asynchronous Operations
 
-Most applications will interact with _nng_ synchronously; that is that
+Most applications will interact with _NNG_ synchronously; that is that
 functions such as xref:nng_send.3.adoc[`nng_send()`] will block the calling
 thread until the operation has completed.
 

@@ -44,7 +44,7 @@ nng_options - socket, dialer, listener, and pipe options
 == DESCRIPTION
 
 This page documents the various standard options that can be set or
-retrieved on objects in the _nng_ library.
+retrieved on objects.
 
 Sockets (xref:nng_socket.5.adoc[`nng_socket`] objects) use the functions
 xref:nng_getopt.3.adoc[`nng_getopt()`]

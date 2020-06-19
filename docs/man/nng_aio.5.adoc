@@ -35,7 +35,7 @@ Instead the application registers a callback function to be executed
 when the operation is complete (whether successfully or not).
 This callback will be executed exactly once.
 
-The asynchronous I/O framework in _nng_ also supports cancellation of
+The asynchronous I/O framework also supports cancellation of
 operations that are already in progress
 (see xref:nng_aio_cancel.3.adoc[`nng_aio_cancel()`]), as well setting a maximum
 timeout for them to complete within

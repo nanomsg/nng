@@ -30,9 +30,8 @@ Messages internally have a ((body)), containing the application supplied
 payload, and a ((header)), containing protocol specific routing and similar
 related information.
 
-TIP: Using the message-oriented functions in the xref:nng.7.adoc[_nng_] API is
-a good way to reduce the likelihood of data copies and improve application
-performance.
+TIP: Using message-oriented functions is a good way to reduce the likelihood
+of data copies and improve application performance.
 
 Messages are allocated using the xref:nng_msg_alloc.3.adoc[`nng_msg_alloc()`]
 function, and are deallocated using the xref:nng_msg_free.3.adoc[`nng_msg_free()`]

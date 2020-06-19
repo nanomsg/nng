@@ -27,7 +27,7 @@ int nng_inproc_register(void);
 (((transport, _inproc_)))
 (((intra-process)))
 The ((_inproc_ transport)) provides communication support between
-_nng_ sockets within the same process.
+sockets within the same process.
 This may be used as an alternative
 to slower transports when data must be moved within the same process.
 
@@ -36,7 +36,7 @@ light-weight.
 
 === Registration
 
-The _inproc_ transport is generally built-in to the _nng_ core, so
+This transport is generally built-in to the core, so
 no extra steps to use it should be necessary.
 
 === URI Format

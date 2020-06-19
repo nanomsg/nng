@@ -50,7 +50,7 @@ thus size 4, unless otherwise indicated.)
 `NN_SNDBUF`::
 Send buffer size in bytes.
 
-NOTE: In _nng_ buffers are sized as a count of messages rather than
+NOTE: In _NNG_ buffers are sized as a count of messages rather than
 bytes, and so an attempt to estimate a conversion based upon a predetermined
 message size of 1kB is made.
 The value supplied is rounded up to the nearest value divisible by 1024, and
@@ -103,7 +103,7 @@ The default is zero.
 This option is ignored, and exists only for compatibility.
 
 NOTE: This option was unreliable in early releases of _libnanomsg_, and
-is unsupported in _nng_ and recent _libnanomsg_ releases.
+is unsupported in _NNG_ and recent _libnanomsg_ releases.
 Applications needing assurance of message delivery should either include an
 explicit notification (automatic with the `NN_REQ` protocol) or allow
 sufficient time for the socket to drain before closing the socket or exiting.
@@ -178,8 +178,7 @@ This `NN_IPC` option is not supported at this time.
 This `NN_TCP` option is not supported at this time.
 
 `NN_WS_MSG_TYPE`::
-This `NN_WS` option is not supported, as _nng_ only supports binary messages
-in this implementation.
+This `NN_WS` option is not supported at this time.
 
 == RETURN VALUES
 

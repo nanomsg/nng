@@ -19,7 +19,7 @@ nng - nanomsg next generation
 
 == DESCRIPTION
 
-The _nng_ library provides a common messaging framework intended to
+_NNG_ provides a common messaging framework intended to
 solve common communication problems in distributed applications.
 It offers a number of _protocols_, and also a number of _transports_.
 
@@ -30,23 +30,24 @@ publish/subscribe, and so forth.
 The _transports_ provide support for underlying transport methods, such
 as TCP, IPC, websockets, and so forth.
 
-The _nng_ library is designed to permit easy creation of new _transports_ and,
+_NNG_ is designed to permit easy creation of new _transports_ and,
 to a lesser extent, new _protocols_.
 
-The _nng_ library is wire compatible with the SP protocols described in
+_NNG_ is wire compatible with the SP protocols described in
 the nanomsg project; projects using
 https://github.com/nanomsg/nanomsg[_libnanomsg_] can inter-operate with
 nng as well as other conforming implementations.  (One such implementation
-is https://github.com/go-mangos/mangos[_mangos_].)  Applications using _nng_
-which wish to communicate with older libraries must ensure that they only
-use protocols or transports offered by the earlier library.
+is https://github.com/go-mangos/mangos[_mangos_].)
+Applications using _NNG_
+which wish to communicate with other libraries must ensure that they only
+use protocols or transports offered by the other library.
 
-The _nng_ library also offers a compatible API, permitting legacy code to
-be recompiled or relinked against _nng_.  When doing this, support for
+_NNG_ also offers a compatible API, permitting legacy code to
+be recompiled or relinked against _NNG_.  When doing this, support for
 certain enhancements or features will likely be absent, requiring the
 application developer to use the new-style API.
 
-The _nng_ library is implemented in pure C; if you need bindings for
+_NNG_ is implemented in pure C; if you need bindings for
 other languages please check the http://nanomsg.org/[website].
 
 === Protocols
@@ -63,17 +64,6 @@ xref:nng_req.7.adoc[nng_req(7)]:: Request side of request/reply protocol
 xref:nng_respondent.7.adoc[nng_respondent(7)]:: Respondent side of survey protocol
 xref:nng_surveyor.7.adoc[nng_surveyor(7)]:: Surveyor side of survey protocol
 
-//* xref:nng_bus.7.adoc[nng_bus(7)] - Bus protocol
-//* xref:nng_pair.7.adoc[nng_pair(7)] - Pair protocol
-//* xref:nng_pub.7.adoc[nng_pub(7)] - Publisher side of publish/subscribe protocol
-//* xref:nng_pull.7.adoc[nng_pull(7)] - Pull side of pipeline protocol
-//* xref:nng_push.7.adoc[nng_push(7)] - Push side of pipeline protocol
-//* xref:nng_sub.7.adoc[nng_sub(7)] - Subscriber side of publish/subscribe protocol
-//* xref:nng_rep.7.adoc[nng_rep(7)] - Reply side of request/reply protocol
-//* xref:nng_req.7.adoc[nng_req(7)] - Request side of request/reply protocol
-//* xref:nng_respondent.7.adoc[nng_respondent(7)] - Respondent side of survey protocol
-//* xref:nng_surveyor.7.adoc[nng_surveyor(7)] - Surveyor side of survey protocol
-
 === Transports
 
 [horizontal]
@@ -86,18 +76,18 @@ xref:nng_zerotier.7.adoc[nng_zerotier(7)]:: ZeroTier transport
 
 === Conceptual Overview
 
-_nng_ presents a _socket_ view of networking.
+_NNG_ presents a _socket_ view of networking.
 The sockets are constructed using protocol-specific functions, as a given
-socket implements precisely one _nng_ protocol.
+socket implements precisely one protocol.
 
 Each socket can be used to send and receive messages (if the protocol)
 supports it, and implements the appropriate protocol semantics.
 For example, xref:nng_sub.7.adoc[_sub_] sockets automatically filter incoming
 messages to discard those for topics that have not been subscribed.
 
-_nng_ sockets are message oriented, so that messages are either delivered
+_NNG_ sockets are message oriented, so that messages are either delivered
 wholly, or not at all.  Partial delivery is not possible.
-Furthermore, _nng_ does not provide any other delivery or ordering guarantees;
+Furthermore, _NNG_ does not provide any other delivery or ordering guarantees;
 messages may be dropped or reordered
 (Some protocols, such as xref:nng_req.7.adoc[_req_] may offer stronger
 guarantees by performing their own retry and validation schemes.)
@@ -131,7 +121,7 @@ other than in a few specific circumstances.
 ==== Raw Mode
 
 (((cooked mode)))(((raw mode)))
-Most applications will use _nng_ sockets in normal, or _cooked_, mode.
+Most applications will use sockets in normal, or _cooked_, mode.
 This mode provides the full semantics of the protocol.
 For example, xref:nng_req.7.adoc[_req_] sockets will automatically
 match a reply to a request, and resend requests periodically if no reply
@@ -156,13 +146,13 @@ processing is needed.
 ==== URLs
 
 (((URL)))
-The _nng_ library uses ((universal resource locators)) (URLs)
+_NNG_ uses ((universal resource locators)) (URLs)
 following the format specified in
 https://tools.ietf.org/html/rfc3986[RFC 3986],
 including some schemes that are unique
 to SP.
 (((URL, canonicalized)))
-The URLs used in _nng_ are canonicalized as follows, mostly in
+The URLs used in _NNG_ are canonicalized as follows, mostly in
 accordance with
 https://tools.ietf.org/html/rfc3986#section-6.2.2[RFC 3986 6.2.2]:
 
@@ -183,7 +173,7 @@ https://tools.ietf.org/html/rfc3986#section-6.2.2[RFC 3986 6.2.2]:
     slash (`/`) separators are removed from the path.
 
 Note that steps 4, 5, and 7 are not specified by RFC 3986, but performing
-them is believed to improve both the usability and security of _nng_
+them is believed to improve both the usability and security of 
 applications, without violating RFC 3986 itself.
 
 TIP: Port numbers may be service names in some instances, but it is recommended

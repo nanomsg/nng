@@ -25,8 +25,7 @@ const char * nng_version(void);
 == DESCRIPTION
 
 The `nng_version()` function returns a human readable ((version number))
-for the _nng_ library.
-This is intended for output in programs, and so forth.
+for _NNG_.
 
 Additionally, compile time version information is available
 via some predefined macros:
@@ -36,7 +35,7 @@ via some predefined macros:
 ((`NNG_MINOR_VERSION`)):: Minor version number.
 ((`NNG_PATCH_VERSION`)):: Patch version number.
 
-The _nng_ library is developed and released using
+_NNG_ is developed and released using
 http://www.semver.org[Semantic Versioning 2.0], and
 the version numbers reported refer to both the API and the
 library itself.

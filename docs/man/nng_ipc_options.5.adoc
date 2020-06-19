@@ -31,7 +31,7 @@ nng_ipc_options - IPC-specific options
 == DESCRIPTION
 
 This page documents the various standard options that can be set or
-retrieved on objects using IPC in the _nng_ library.
+retrieved on objects using IPC.
 
 The option names should always be used by their symbolic definitions.
 

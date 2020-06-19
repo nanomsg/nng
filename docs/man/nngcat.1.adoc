@@ -159,7 +159,7 @@ NOTE: At least one protocol must be selected.
 === Peer Selection Options
 NOTE: At least one peer address must be selected.
 
-TIP: While legacy _nanocat_ only supported one peer, _nng_ can support
+TIP: While legacy _nanocat_ only supported one peer, _nngcat_ can support
 more than one peer on a given connection.
 
 *--connect, --dial*=_URL_::

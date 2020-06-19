@@ -35,12 +35,12 @@ nng_compat - compatibility with nanomsg 1.0
 == DESCRIPTION
 
 (((compatibility layer)))
-The xref:nng.7.adoc[_nng_] library provides source-level compatibility for
-most _nanomsg_ 1.0 applications.
+xref:nng.7.adoc[_NNG_] provides source-level compatibility for
+most _libnanomsg_ 1.0 applications.
 
 IMPORTANT: This is intended to facilitate converting ((legacy applications)) to
-use the _nng_ library.
-New applications should use the newer xref:nng.7.adoc[_nng_] API instead.
+use _NNG_.
+New applications should use the newer xref:nng.7.adoc[_NNG_] API instead.
 
 Applications making use of this must take care
 to link with xref:libnng.3.adoc[_libnng_] instead of _libnn_.
@@ -52,11 +52,11 @@ This can be way to facilitate incremental transition to the new API.
 
 NOTE: Some capabilities, protocols, and transports, will not be accessible
 using this API, as the compatible API has no provision for expression
-of certain concepts introduced in the newer xref:nng.7.adoc[_nng_] API.
+of certain concepts introduced in the new API.
 
 NOTE: While reasonable efforts have been made to provide for compatibility,
 some things may behave differently, and some less common parts of the
-_nanomsg_ 1.0 API are not supported at this time, including certain
+_libnanomsg_ 1.0 API are not supported at this time, including certain
 options and the statistics API.
 See the <<Caveats>> section below.
 
@@ -65,9 +65,9 @@ See the <<Caveats>> section below.
 When compiling legacy _nanomsg_ applications, it will generally be
 necessary to change the include search path to add the `compat` subdirectory
 of the directory where headers were installed.
-For example, if _nng_ is installed in `$prefix`, then header files will
+For example, if _NNG_ is installed in `$prefix`, then header files will
 normally be located in `$prefix/include/nng`.
-In this case, to build legacy _nanomsg_ apps against _nng_ you would
+In this case, to build legacy _nanomsg_ apps against _NNG_ you would
 add `$prefix/include/nng/compat` to your compiler's search path.
 
 Alternatively, you can change your source code so that `#include` statements
@@ -89,7 +89,7 @@ you would have this:
 ----
 
 Legacy applications built using these methods should be linked against _libnng_
-instead of _libnn_, just like any other _nng_ application.
+instead of _libnn_, just like any other _NNG_ application.
 
 === Functions
 
@@ -151,12 +151,12 @@ endif::[]
 
 === Caveats
 
-The following caveats apply when using the legacy API with _nng_.
+The following caveats apply when using the legacy API with _NNG_.
 
 * Socket numbers can be quite large.
   The legacy _libnanomsg_ attempted to reuse socket numbers, like
   file descriptors in UNIX systems.
-  The _nng_ library avoids this to prevent accidental reuse or
+  _NNG_ avoids this to prevent accidental reuse or
   collision after a descriptor is closed.
   Consequently, socket numbers can become quite large, and should
   probably not be used for array indices.
@@ -164,7 +164,7 @@ The following caveats apply when using the legacy API with _nng_.
 * The following options (`nn_getsockopt`) are unsupported:
   `NN_SNDPRIO`, `NN_RCVPRIO`, `NN_IPV4ONLY`.
   The priority options may be supported in the future, when
-  the underlying capability is present in _nng_.
+  the underlying capability is present in _NNG_.
 
 * Access to statistics using this legacy API
   (xref:nn_get_statistic.3compat.adoc[`nn_get_statistic()`]) is unsupported.

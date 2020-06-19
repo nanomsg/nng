@@ -26,7 +26,7 @@ int nng_ipc_register(void);
 
 (((IPC)))(((transport, _ipc_)))
 The ((_ipc_ transport)) provides communication support between
-_nng_ sockets within different processes on the same host.
+sockets within different processes on the same host.
 For POSIX platforms, this is implemented using ((UNIX domain sockets)).
 For Windows, this is implemented using Windows ((Named Pipes)).
 Other platforms may have different implementation strategies.
@@ -35,7 +35,7 @@ Other platforms may have different implementation strategies.
 
 === Registration
 
-The _ipc_ transport is generally built-in to the _nng_ core, so
+This transport is generally built-in to the core, so
 no extra steps to use it should be necessary.
 
 === URI Format

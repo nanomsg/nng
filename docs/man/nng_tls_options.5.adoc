@@ -31,7 +31,7 @@ nng_tls_options - TLS-specific options
 == DESCRIPTION
 
 This page documents the various standard options that can be set or
-retrieved on objects using TLS in the _nng_ library.
+retrieved on objects using TLS.
 
 The option names should always be used by their symbolic definitions.
 

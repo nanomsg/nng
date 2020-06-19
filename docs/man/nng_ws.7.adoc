@@ -27,7 +27,7 @@ int nng_wss_register(void);
 
 (((WebSocket)))(((transport, _ws_ and _wss_)))
 The ((_ws_ transport)) provides communication support between
-_nng_ sockets across a TCP/IP network using
+peers across a TCP/IP network using
 https://tools.ietf.org/html/rfc6455[WebSockets].
 Both IPv4 and IPv6 are supported when the underlying platform also supports it.
 

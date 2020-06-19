@@ -26,7 +26,7 @@ int nng_zt_register(void);
 
 (((ZeroTier)))(((transport, _zt_)))
 The ((_zt_ transport)) provides communication support for
-_nng_ applications over a http://www.zerotier.com[ZeroTier] network,
+_NNG_ applications over a http://www.zerotier.com[ZeroTier] network,
 using a Virtual Layer 2 packet facility.
 
 IMPORTANT: This transport is experimental.
@@ -36,7 +36,7 @@ Further information about building with this support are in the build
 documentation included with the distribution.
 
 IMPORTANT: The `libzerotiercore` library at present is covered under different
-license terms than the rest of _nng_.  Please be careful to review
+license terms than the rest of _NNG_.  Please be careful to review
 and adhere to the licensing terms.
 
 IMPORTANT: The ZeroTier transport can take a long time to establish an
