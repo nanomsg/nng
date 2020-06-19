@@ -49,7 +49,7 @@ application developer to use the new-style API.
 The _nng_ library is implemented in pure C; if you need bindings for
 other languages please check the http://nanomsg.org/[website].
 
-== Protocols
+=== Protocols
 
 [horizontal]
 xref:nng_bus.7.adoc[nng_bus(7)]:: Bus protocol
@@ -74,7 +74,7 @@ xref:nng_surveyor.7.adoc[nng_surveyor(7)]:: Surveyor side of survey protocol
 //* xref:nng_respondent.7.adoc[nng_respondent(7)] - Respondent side of survey protocol
 //* xref:nng_surveyor.7.adoc[nng_surveyor(7)] - Surveyor side of survey protocol
 
-== Transports
+=== Transports
 
 [horizontal]
 xref:nng_inproc.7.adoc[nng_inproc(7)]:: Intra-process transport
@@ -84,7 +84,7 @@ xref:nng_tcp.7.adoc[nng_tcp(7)]:: TCP (and TCPv6) transport
 xref:nng_ws.7.adoc[nng_ws(7)]:: WebSocket transport
 xref:nng_zerotier.7.adoc[nng_zerotier(7)]:: ZeroTier transport
 
-== Conceptual Overview
+=== Conceptual Overview
 
 _nng_ presents a _socket_ view of networking.
 The sockets are constructed using protocol-specific functions, as a given
@@ -128,7 +128,7 @@ all; the socket abstraction should provide all the functionality needed
 other than in a few specific circumstances.
 
 [[raw_mode]]
-=== Raw Mode
+==== Raw Mode
 
 (((cooked mode)))(((raw mode)))
 Most applications will use _nng_ sockets in "`cooked`" mode.
@@ -153,7 +153,7 @@ TIP: The xref:nng_device.3.adoc[`nng_device()`] function only works with raw mod
 sockets, but as it only forwards the messages, no additional application
 processing is needed.
 
-=== URLs
+==== URLs
 
 (((URL)))
 The _nng_ library uses ((universal resource locators)) (URLs)
@@ -193,7 +193,7 @@ conventions for C identifiers, and not be longer than 32 characters in length.
 This will maximize compatibility across systems and minimize opportunities for
 confusion when they are parsed on different systems.
 
-== API
+=== API
 
 The library API is documented at xref:libnng.3.adoc[libnng(3)].
 
