@@ -27,7 +27,7 @@ const char *nng_stat_name(nng_stat *stat);
 
 The `nng_stat_name()` function returns the name for the statistic _stat_.
 
-NOTE: The global root statistic will have the empty string ("") as it`'s name.
+NOTE: The global root statistic will have the empty string ("") as it's name.
 
 == RETURN VALUES
 

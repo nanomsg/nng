@@ -47,7 +47,7 @@ This collection process is generally performed in a way to minimize impact
 to running operations, but there is still some impact caused by collection
 of statistics.
 
-The time when a statistic`'s value is captured can be obtained using
+The time when a statistic's value is captured can be obtained using
 xref:nng_stat_timestamp.3.adoc[`nng_stat_timestamp()`], which is useful for
 measuring rates of change in certain statistics.
 
