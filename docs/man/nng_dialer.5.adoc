@@ -25,7 +25,7 @@ typedef struct nng_dialer_s nng_dialer;
 == DESCRIPTION
 
 (((dialer)))
-An `nng_dialer` is a handle to a "`dialer`" object, which is responsible for
+An `nng_dialer` is a handle to a dialer object, which is responsible for
 creating a single xref:nng_pipe.5.adoc[`nng_pipe`] at a time by
 establishing an outgoing connection.
 
@@ -35,8 +35,8 @@ destroyed.
 
 Dialer objects are created by the
 xref:nng_dialer_create.3.adoc[`nng_dialer_create()`]
-or xref:nng_dial.3.adoc[`nng_dial()`] functions, and are always "`owned`"
-by a single xref:nng_socket.5.adoc[`nng_socket`].
+or xref:nng_dial.3.adoc[`nng_dial()`] functions, and are always associated
+with a single xref:nng_socket.5.adoc[`nng_socket`].
 
 IMPORTANT: The `nng_dialer` structure is always passed by value (both
 for input parameters and return values), and should be treated opaquely.
@@ -56,7 +56,7 @@ challenging communications problems.
 
 Dialer objects may be destroyed by the
 xref:nng_dialer_close.3.adoc[`nng_dialer_close()`] function.
-They are also closed when their "`owning`" socket is closed.
+They are also closed when their associated socket is closed.
 
 [[NNG_DIALER_INITIALIZER]]
 === Initialization

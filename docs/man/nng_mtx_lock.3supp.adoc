@@ -40,8 +40,9 @@ It is a programming error for the owner of a mutex to attempt to
 reacquire it.
 
 ****
-_nng_ offers neither a "`trylock`" operation, nor recursive mutexes.
-This is by design, as _nng_ itself does not use such things,
+_NNG_ offers neither a non-blocking variant that can fail,
+nor recursive mutexes.
+This is by design, as _NNG_ itself does not use such things,
 and most often the need for them is the result of poor design.
 If such capabilities are needed, they may be synthesized fairly
 easily from mutexes and condition variables.

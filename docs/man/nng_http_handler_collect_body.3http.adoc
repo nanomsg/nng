@@ -36,7 +36,7 @@ The collection is enabled if _want_ is true.
 Furthermore, the data that the client may sent is limited by the
 value of _maxsz_.
 If the client attempts to send more data than _maxsz_, then the
-request will be terminated with a 400 "`Bad Request`" status.
+request will be terminated with a 400 `Bad Request` status.
 
 TIP: Limiting the size of incoming request data can provide protection
 against denial of service attacks, as a buffer of the client-supplied

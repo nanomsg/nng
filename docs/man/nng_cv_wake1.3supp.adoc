@@ -36,8 +36,7 @@ _cv_ was allocated.
 NOTE: The caller should already have set the condition that the waiters
 will check, while holding the mutex.
 
-TIP: While this function avoids the "`thundering herd`" problem, the
-caller cannot predict which waiter will be woken, and so the design must
+NOTE: The caller cannot predict which waiter will be woken, and so the design must
 ensure that it is sufficient that _any_ waiter be woken.
 When in doubt, it is safer to use xref:nng_cv_wake.3supp.adoc[`nng_cv_wake()`].
 

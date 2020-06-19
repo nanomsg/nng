@@ -1,6 +1,6 @@
 = nng_zerotier(7)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -138,7 +138,7 @@ The network is most likely not available.
 The following transport options are available:
 
 ((`NNG_OPT_ZT_HOME`))::
-  (string) This option represents the "`home directory`", where the transport
+  (string) This option represents the home directory, where the transport
   can store (and reuse) persistent state, such as key materials, node
   identity, and federation membership.
   This option must be set before the ZeroTier transport is first used.
@@ -189,12 +189,12 @@ in this fashion.
 ((`NNG_OPT_ZT_PING_TIME`))::
   (xref:nng_duration.5.adoc[`nng_duration`]) If no traffic has been received from
   the ZeroTier peer after this
-  period of time, then a "`ping`" message is sent to check if the peer
+  period of time, then a ping message is sent to check if the peer
   is still alive.
 
 [[NNG_OPT_ZT_PING_TRIES]]
 ((`NNG_OPT_ZT_PING_TRIES`))::
-  (`int`) If this number of consecutive "`ping`" requests are sent to the
+  (`int`) If this number of consecutive ping requests are sent to the
   peer with no response (and no other intervening traffic), then the
   peer is assumed to be dead and the connection is closed.
 
@@ -209,15 +209,14 @@ in this fashion.
 [[NNG_OPT_ZT_ORBIT]]
 ((`NNG_OPT_ZT_ORBIT`))(((orbit, ZeroTier)))(((federation,ZeroTier)))::
   (`uint64_t[2]`) Write-only array of two `uint64_t` values,
-  indicating the ID of a ZeroTier "`moon`", and the node ID of the root server
+  indicating the ID of a ZeroTier <em>moon</em>, and the node ID of the root server
   for that moon.  (The ID may be zero if the moon ID is the same as its
   root server ID, which is conventional.)
 
 [[NNG_OPT_ZT_DEORBIT]]
 ((`NNG_OPT_ZT_DEORBIT`))::
-  (`uint64_t`) Write-only option indicating the moon
-  ID to "`deorbit`".  If the node is not already orbiting the moon, then
-  this has no effect.
+  (`uint64_t`) Write-only option indicating the moon ID to deorbit.
+  If the node is not already orbiting the moon, then this has no effect.
 
 == SEE ALSO
 

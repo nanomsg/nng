@@ -41,7 +41,7 @@ xref:nng_stream_dialer_dial.3str.adoc[`nng_stream_dialer_dial()`]
 or by accepting in incoming connection with
 xref:nng_stream_listener_accept.3str.adoc[`nng_stream_listener_accept()`].
 
-Byte streams are "`reliable`" in that data
+Byte streams are reliable in that data
 will not be delivered out of order, or with portions missing.
 
 Data can be sent using

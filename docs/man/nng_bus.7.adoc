@@ -64,7 +64,7 @@ The _bus_ protocol has no protocol-specific options.
 
 === Protocol Headers
 
-When using a xref:nng.7.adoc#raw_mode["`raw`"] _bus_ socket, received messages will
+When using a _bus_ socket in xref:nng.7.adoc#raw_mode[raw mode], received messages will
 contain the incoming xref:nng_pipe.5.adoc[pipe] ID as the sole element in the header.
 If a message containing such a header is sent using a raw _bus_ socket, then,
 the message will be delivered to all connected pipes _except_ the one
@@ -75,7 +75,7 @@ Such configurations are useful in the creation of rebroadcasters, and this
 capability prevents a message from being routed back to its source.
 If no header is present, then a message is sent to all connected pipes.
 
-When using "`cooked`" _bus_ sockets, no message headers are present.
+When using normal (cooked mode) _bus_ sockets, no message headers are present.
 
 == SEE ALSO
 

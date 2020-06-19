@@ -26,7 +26,7 @@ const char *nng_http_res_get_reason(nng_http_res *res);
 == DESCRIPTION
 
 The `nng_http_res_get_reason()` returns a string representing the
-"`reason phrase`" associated with the response _res_.
+reason associated with the response _res_.
 This is a human-readable explanation of the status code that
 would be obtained from
 xref:nng_http_res_get_status.3http.adoc[`nng_http_res_get_status()`].

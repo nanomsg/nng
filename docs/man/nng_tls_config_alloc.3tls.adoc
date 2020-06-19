@@ -54,7 +54,7 @@ xref:nng_tls_config_hold.3tls.adoc[`nng_tls_config_hold()`] and may be
 decremented with
 xref:nng_tls_config_free.3tls.adoc[`nng_tls_config_free()`].
 
-Also note that a TLS configuration object becomes "`read-only`" after it
+Also note that a TLS configuration object becomes read-only after it
 is first used with a service.
 After this points, attempts to apply
 further changes to the configuration will result in `NNG_EBUSY`.

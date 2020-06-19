@@ -1,6 +1,6 @@
 = nng_pipe(5)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -25,7 +25,7 @@ typedef struct nng_pipe_s nng_pipe;
 == DESCRIPTION
 
 (((pipe)))(((connection)))
-An `nng_pipe` is a handle to a "`pipe`", which can be thought of as a single
+An `nng_pipe` is a handle to a pipe object, which can be thought of as a single
 connection.
 (In most cases this is actually the case -- the pipe is an abstraction for a
 single TCP or IPC connection.)
@@ -43,12 +43,11 @@ source of a message is needed, or when more control is required over
 message delivery.
 
 Pipe objects are created by dialers (xref:nng_dialer.5.adoc[`nng_dialer`] objects)
-and listeners (xref:nng_listener.5.adoc[`nng_listener`] objects), which can be
-thought of as "`owning`" the pipe.
+and listeners (xref:nng_listener.5.adoc[`nng_listener`] objects).
 
 Pipe objects may be destroyed by the
 xref:nng_pipe_close.3.adoc[`nng_pipe_close()`] function.
-They are also closed when their "`owning`" dialer or listener is closed,
+They are also closed when the dialer or listener that created them is closed,
 or when the remote peer closes the underlying connection.
 
 [[NNG_PIPE_INITIALIZER]]

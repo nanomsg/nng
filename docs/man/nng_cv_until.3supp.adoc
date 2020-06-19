@@ -37,7 +37,7 @@ atomically just before returning to the caller.
 (The waiting is done without holding the mutex.)
 
 NOTE: Any condition may be used or checked, but the condition must be
-checked, as it is possible for this function to wake up "`spuriously`".
+checked, as it is possible for this function to wake up spuriously.
 The best way to do this is inside a loop that repeats until the condition
 tests for true.
 

@@ -40,7 +40,7 @@ The address family _af_ can be one of two values:
 
 [horizontal]
 `AF_SP`:: Normal socket.
-`AF_SP_RAW`:: xref:nng.7.adoc#raw_mode["`Raw mode`"] socket.
+`AF_SP_RAW`:: xref:nng.7.adoc#raw_mode[Raw mode] socket.
 
 The protocol indicates the protocol to be used when creating the socket.
 The following protocols are defined:

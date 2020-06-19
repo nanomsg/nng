@@ -42,8 +42,7 @@ The following structure members are present:
     This field will always have the value ((`NNG_AF_INPROC`)).
 
 `sa_name`::
-    This field holds an arbitrary C string, which is the "`name`" of
-    the address.
+    This field holds an arbitrary C string, which is the name of the address.
     The string must be `NUL` terminated, but no other restrictions exist.
 
 TIP: In order to ensure maximum compatibility, applications should avoid

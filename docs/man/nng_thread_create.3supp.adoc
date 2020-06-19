@@ -35,19 +35,19 @@ A pointer to the thread object is returned in _thrp_.
 The intention of this program is to facilitate writing parallel programs.
 Threads created by this program will be based upon the underlying
 threading mechanism of the system that _NNG_ is running on.
-This may include use of so-called "`green threads`" or coroutines.
+This may include use of coroutines.
 
 Using threads created by this function can make it easy to write
 programs that use simple sequential execution, using functions in the
-_NNG_ suite that would otherwise normally "`block`".
+_NNG_ suite that would otherwise normally wait synchronously for completion.
 
 When the thread is no longer needed, the
 xref:nng_thread_destroy.3supp.adoc[`nng_thread_destroy()`]
 function should be used to reap it.
 (This function will block waiting for _func_ to return.)
 
-IMPORTANT: Thread objects created by this function may not be "`real`"
-threads capable of performing blocking I/O operations using normal blocking
+IMPORTANT: Thread objects created by this function may not be real system
+level threads capable of performing blocking I/O operations using normal blocking
 system calls.
 If use of blocking system calls is required (not including APIs provided
 by the _NNG_ library itself of course), then real OS-specific threads

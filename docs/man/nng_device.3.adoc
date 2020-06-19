@@ -54,7 +54,7 @@ back to the sender.
 === Forwarders
 
 When both sockets are valid, then the result is a ((forwarder)) or proxy.
-In this case sockets _s1_ and _s2_ must be "`compatible`" with each other,
+In this case sockets _s1_ and _s2_ must be compatible with each other,
 which is to say that they should represent the opposite halves of a two
 protocol pattern, or both be the same protocol for a single protocol
 pattern.

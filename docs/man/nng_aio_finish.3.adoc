@@ -31,9 +31,9 @@ xref:nng_aio_result.3.adoc[`nng_aio_result()`].
 
 This function causes the callback associated with the _aio_ to called.
 
-IMPORTANT: It is mandatory that operation "`providers`" call this function
-*EXACTLY ONCE* when they are finished with the operation.
-After calling this function they *MUST NOT* perform any further accesses
+IMPORTANT: It is mandatory that operation providers call this function
+*exactly once* when they are finished with the operation.
+After calling this function they *must not* perform any further accesses
 to the _aio_.
 
 NOTE: This function is only for I/O providers (those actually performing

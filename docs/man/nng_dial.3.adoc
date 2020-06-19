@@ -39,7 +39,7 @@ When the pipe is closed, the dialer attempts to re-establish the connection.
 Dialers will also periodically retry a connection automatically if an attempt
 to connect asynchronously fails.
 
-TIP: While it is convenient to think of dialers as "`clients`", the relationship
+TIP: While it is convenient to think of dialers as clients, the relationship
 between the listener or dialer is orthogonal to any server or client status
 that might be associated with a given protocol.
 For example, a xref:nng_req.7.adoc[_req_]

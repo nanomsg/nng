@@ -1,6 +1,6 @@
 = nn_shutdown(3compat)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -24,11 +24,11 @@ int nn_shutdown(int sock, int ep)
 
 == DESCRIPTION
 
-The `nn_shutdown()` shuts down the "`endpoint`"  _ep_ on the socket _sock_.
+The `nn_shutdown()` shuts down the endpoint _ep_, which is either a listener or
+a dialer) on the socket _sock_.
 This will stop the socket from either accepting new connections, or establishing
 old ones.
-Additionally, any established connections associated with _ep_ will be
-closed.
+Additionally, any established connections associated with _ep_ will be closed.
 
 NOTE: This function is provided for API
 xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.

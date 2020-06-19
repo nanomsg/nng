@@ -61,7 +61,7 @@ The following structure members are present:
     caller's own node number be used.
 
 `sa_port`::
-    This field holds the "`port number`" used by the
+    This field holds the port number used by the
     xref:nng_zerotier.7.adoc[_zt_] transport to distinguish different
     sockets.
     This value in native byte order.(((port number, ZeroTier)))

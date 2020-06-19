@@ -97,7 +97,7 @@ enum {
 ----
 
 TIP: When displaying status information to users (or logging such information),
-consider also including the "`reason phrase`" obtained with
+consider also including the reason obtained with
 xref:nng_http_res_get_reason.3http.adoc[`nng_http_res_get_reason()`].
 
 == RETURN VALUES

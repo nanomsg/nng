@@ -26,7 +26,7 @@ typedef struct nng_stream_dialer nng_stream_dialer;
 == DESCRIPTION
 
 (((byte stream, dialer)))
-An `nng_stream_dialer` is a handle to a "`dialer`" for byte streams,
+An `nng_stream_dialer` is a handle to a dialer for byte streams,
 and is responsible for creating
 xref:nng_stream.5.adoc[`nng_stream`] objects (corresponding to connected byte
 streams) by connecting to remote peers.

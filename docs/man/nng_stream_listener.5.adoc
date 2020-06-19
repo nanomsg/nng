@@ -26,7 +26,7 @@ typedef struct nng_stream_listener nng_stream_listener;
 == DESCRIPTION
 
 (((IPC, listener)))
-An `nng_stream_listener` is a handle to a byte stream "`listener`",
+An `nng_stream_listener` is a handle to a byte stream listener,
 which is responsible for accepting incoming connections and creating
 corresponding
 xref:nng_stream.5.adoc[`nng_stream`] from them.

@@ -102,7 +102,7 @@ enum {
 Please see the relevant HTTP RFCs for the semantics and correct
 use of these status codes.
 
-TIP: It is a good idea to also set the "`reason phrase`" with
+TIP: It is a good idea to also set the reason message with
 xref:nng_http_res_set_reason.3http.adoc[`nng_http_set_reason()`].
 This will help any humans who may have to diagnose a failure.
 

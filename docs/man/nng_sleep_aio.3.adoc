@@ -1,6 +1,6 @@
 = nng_sleep_aio(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -24,7 +24,7 @@ void nng_sleep_aio(nng_duration msec, nng_aio *aio);
 
 == DESCRIPTION
 
-The `nng_sleep_aio()` function performs an asynchronous "`sleep`",
+The `nng_sleep_aio()` function provides an asynchronous delay mechanism,
 causing the callback for _aio_ to be executed after _msec_ milliseconds.
 If the sleep finishes completely, the result will always be zero.
 

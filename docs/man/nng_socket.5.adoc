@@ -24,14 +24,14 @@ typedef struct nng_socket_s nng_socket;
 
 == DESCRIPTION
 
-An `nng_socket`(((socket))) is a handle to an underlying "`socket`" object.
+An `nng_socket`(((socket))) is a handle to an underlying socket object.
 All communication between the application and remote Scalability Protocol
 peers is done through sockets.
 A given socket can have multiple dialers (xref:nng_dialer.5.adoc[`nng_dialer`])
 and/or listeners (xref:nng_listener.5.adoc[`nng_listener`]), and multiple
 pipes (xref:nng_pipe.5.adoc[`nng_pipe`]), and
 may be connected to multiple transports at the same time.
-However, a given socket will have exactly one "`protocol`" associated with it,
+However, a given socket will have exactly one protocol associated with it,
 and is responsible for any state machines or other protocol-specific logic.
 
 IMPORTANT: The `nng_socket` structure is always passed by value (both

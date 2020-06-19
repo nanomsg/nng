@@ -98,15 +98,15 @@ choose a random ephemeral port instead.
 (((raw mode)))
 (((cooked mode)))
 (`bool`)
-This read-only option indicates whether the socket is in "`raw`" mode.
-If `true`, the socket is in "`raw`" mode, and if `false` the socket is
-in "`cooked`" mode.
+This read-only option indicates whether the socket is in raw mode.
+If `true`, the socket is in raw mode, and if `false` the socket is
+in normal mode.
 +
 Raw mode sockets generally do not have any protocol-specific semantics applied
 to them; instead the application is expected to perform such semantics itself.
-(For example, in "`cooked`" mode a xref:nng_rep.7.adoc[_rep_] socket would
+(For example, in normal mode a xref:nng_rep.7.adoc[_rep_] socket would
 automatically copy message headers from a received message to the corresponding
-reply, whereas in "`raw`" mode this is not done.)
+reply, whereas in raw mode this is not done.)
 See xref:nng.7.adoc#raw_mode[Raw Mode] for more details.
 
 [[NNG_OPT_RECONNMINT]]
@@ -284,7 +284,7 @@ in the library itself.
 ((`NNG_OPT_MAXTTL`))::
 (`int`)
 (((time-to-live)))
-This is the maximum number of "`hops`" a message may traverse across
+This is the maximum number of times a message may traverse across
 a xref:nng_device.3.adoc[`nng_device()`] forwarders.
 The intention here is to prevent ((forwarding loops)) in device chains.
 When this is supported, it can have a value between 1 and 255, inclusive.

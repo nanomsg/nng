@@ -31,7 +31,7 @@ can only be used with a single operation at a time.
 
 Asynchronous operations are performed without blocking calling application
 threads.
-Instead the application registers a "`callback`" function to be executed
+Instead the application registers a callback function to be executed
 when the operation is complete (whether successfully or not).
 This callback will be executed exactly once.
 

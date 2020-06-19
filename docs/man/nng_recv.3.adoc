@@ -34,7 +34,7 @@ The _flags_ is a bit mask that may contain any of the following values:
   by the socket _s_, or any configured timer expires.
 
 `NNG_FLAG_ALLOC`::
-  If this flag is present, then a "`((zero-copy))`" mode is used.
+  If this flag is present, then a ((zero-copy)) mode is used.
   In this case the caller must set the value of _data_ to the location
   of another pointer (of type `void *`), and the _sizep_ pointer must be set
   to a location to receive the size of the message body.

@@ -49,7 +49,7 @@ The following structure members are present:
     For Windows systems, this is the path name of the Named Pipe, without
     the leading `\\.pipe\` portion, which will be automatically added.
 
-NOTE: At this time, there is no support for Linux "`abstract sockets`".
+NOTE: At this time, there is no support for Linux abstract sockets.
 
 TIP: In order to ensure maximum compatibility, applications should avoid
 hard coding the size of the `sa_path` member explicitly, but use the

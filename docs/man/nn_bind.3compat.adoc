@@ -1,6 +1,6 @@
 = nn_bind(3compat)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -26,10 +26,11 @@ int nn_bind(int sock, const char *url)
 
 The `nn_bind()` function arranges for the socket _sock_ to
 accept connections at the address specified by _url_.
-An "`endpoint identifier`" for this socket's association with the _url_ is
+An identifier for this socket's association with the _url_ is
 returned to the caller on success.
-This ID can be used with xref:nn_shutdown.3compat.adoc[`nn_shutdown()`] to
-"`unbind`" the socket from the address at _url_.
+This identfier can be used with
+xref:nn_shutdown.3compat.adoc[`nn_shutdown()`] to
+remove the association later.
 
 NOTE: This function is provided for API
 xref:nng_compat.3compat.adoc[compatibility] with legacy _libnanomsg_.

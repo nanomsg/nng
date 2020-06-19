@@ -25,7 +25,7 @@ int nng_http_res_set_reason(nng_http_res *res, const char *reason);
 
 == DESCRIPTION
 
-The `nng_http_res_set_reason()` sets the human readable "`reason phrase`"
+The `nng_http_res_set_reason()` sets the human readable reason
 associated with the response _res_ to _reason_.
 
 If the value of _reason_ is `NULL` (the default), then a default reason

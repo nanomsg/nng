@@ -1,6 +1,6 @@
 = nng_msg_insert(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,9 +20,9 @@ nng_msg_insert - prepend to message body
 #include <nng/nng.h>
 
 int nng_msg_insert(nng_msg *msg, const void *val, size_t size);
-int nng_msg_insert(nng_msg *msg, uint16_t val16);
-int nng_msg_insert(nng_msg *msg, uint32_t val32);
-int nng_msg_insert(nng_msg *msg, uint64_t val64);
+int nng_msg_insert_u16(nng_msg *msg, uint16_t val16);
+int nng_msg_insert_u32(nng_msg *msg, uint32_t val32);
+int nng_msg_insert_u64(nng_msg *msg, uint64_t val64);
 ----
 
 == DESCRIPTION
@@ -33,9 +33,9 @@ The first function prepends _size_ bytes, copying them from _val_.
 The remaining functions prepend the specified value (such as _val32_)
 in network-byte order (big-endian).
 
-TIP: These functions make use of pre-allocated "`headroom`" in the message if
-available, so it can often avoid performing any reallocation.
-Applications should use this instead of reallocating and copying message
+TIP: These functions make use of space pre-allocated in front of the
+message body if available, so they can often avoid performing any reallocation.
+Applications should use these instead of reallocating and copying message
 content themselves, in order to benefit from this capability.
 
 == RETURN VALUES

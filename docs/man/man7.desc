@@ -2,7 +2,7 @@ This sections documents various protocols and transports that are
 available in the distribution.
 
 (((protocol)))
-Protocols represent "`patterns`" of communication, such as
+Protocols implement communication patterns, such as
 request/reply, publish/subscribe, and so forth.
 A given xref:nng_socket.5.adoc[socket] is created with exactly one protocol, and that
 protocol defines the key behavior of the socket.

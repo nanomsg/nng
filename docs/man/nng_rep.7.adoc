@@ -30,7 +30,7 @@ The request is resent if no reply arrives,
 until a reply is received or the request times out.
 
 TIP: This protocol is useful in setting up RPC-like services.
-It is also "`reliable`", in that a the requester will keep retrying until
+It is also reliable, in that a the requester will keep retrying until
 a reply is received.
 
 The _rep_ protocol is the replier side, and the

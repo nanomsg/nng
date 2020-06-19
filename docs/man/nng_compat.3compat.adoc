@@ -63,7 +63,7 @@ See the <<Caveats>> section below.
 === Compiling
 
 When compiling legacy _nanomsg_ applications, it will generally be
-necessary to change the include search path to add the "`compat`" subdirectory
+necessary to change the include search path to add the `compat` subdirectory
 of the directory where headers were installed.
 For example, if _nng_ is installed in `$prefix`, then header files will
 normally be located in `$prefix/include/nng`.

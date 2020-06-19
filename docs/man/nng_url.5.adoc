@@ -47,7 +47,7 @@ The fields are as follows:
 
 [horizontal]
 `u_rawurl`:: The unparsed URL string.  This will never be `NULL`.
-`u_scheme`:: The URL scheme, such as "`http`" or "`inproc`". Always lower case. This will never be `NULL`.
+`u_scheme`:: The URL scheme, such as "http" or "inproc". Always lower case. This will never be `NULL`.
 `u_userinfo`:: This username and password if supplied in the URL string.  Will be `NULL` when not present.
 `u_host`:: The full host part of the URL, including the port if present (separated by a colon.)
 `u_hostname`:: The name of the host, and may be the empty string in some cases.

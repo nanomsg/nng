@@ -40,7 +40,7 @@ The xref:nng_pair_open.3.adoc[`nng_pair_open()`] functions create a _pair_ socke
 Normally, this pattern will block when attempting to send a message if
 no peer is able to receive the message.
 
-NOTE: Even though this mode may appear to be "`reliable`", because back-pressure
+NOTE: Even though this mode may appear to be reliable, because back-pressure
 prevents discarding messages most of the time, there are topologies involving
 _devices_ (see xref:nng_device.3.adoc[`nng_device()`]) or raw mode sockets
 (see xref:nng_options.5.adoc#NNG_OPT_RAW[`NNG_OPT_RAW`]) where

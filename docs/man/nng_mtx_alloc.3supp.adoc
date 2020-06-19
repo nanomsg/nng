@@ -34,7 +34,7 @@ simple lock and unlock operations, and are not recursive.
 Every effort has been made to use light-weight underlying primitives when available.
 
 Mutex (mutual exclusion) objects can be thought of as binary semaphores,
-where only a single thread of execution is permitted to "`own`" the semaphore.
+where only a single thread of execution is permitted to acquire the semaphore.
 
 Furthermore, a mutex can only be unlocked by the thread that locked it.
 

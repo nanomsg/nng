@@ -1,6 +1,6 @@
 = nng_cv_wake(3supp)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -36,8 +36,8 @@ NOTE: The caller should already have set the condition that the waiters
 will check, while holding the mutex.
 
 TIP: This function wakes all threads, which is generally safer but can
-lead to a problem known as the "`thundering herd`" when there are many
-waiters, as they are all woken simultaneously.
+lead to a performance problem when there are many waiters, as they are all
+woken simultaneously and may contend for resources.
 See xref:nng_cv_wake1.3supp.adoc[`nng_cv_wake1()`] for a solution to this problem.
 
 == RETURN VALUES

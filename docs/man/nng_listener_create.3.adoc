@@ -35,7 +35,7 @@ to the socket _s_.
 Unlike dialers, listeners generally can create many pipes,
 which may be open concurrently.
 
-TIP: While it is convenient to think of listeners as "`servers`", the
+TIP: While it is convenient to think of listeners as servers, the
 relationship between the listener or dialer is orthogonal to any server or
 client status that might be associated with a given protocol.
 For example, a xref:nng_req.7.adoc[_req_] socket might have associated dialers,

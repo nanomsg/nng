@@ -38,7 +38,7 @@ is a pointer to the pointer, an extra level of pointer indirection.
 The message must have been previously allocated by
 xref:nn_allocmsg.3compat.adoc[`nn_allocmsg()`] or
 xref:nn_recvmsg.3compat.adoc[`nn_recvmsg()`]`, using the same `NN_MSG` size.
-In this case, the "`ownership`" of the message shall remain with
+In this case, the ownership of the message shall remain with
 the caller, unless the function returns 0, indicating that the
 function has taken responsibility for delivering or disposing of the
 message.

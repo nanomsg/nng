@@ -123,7 +123,7 @@ It can be changed to help with identifying different sockets with
 their different application-specific purposes.
 
 `NN_MAXTTL`::
-Maximum "`hops`" through proxies and devices a message may go through.
+Maximum number of times a message may traverse devices or proxies.
 This value, if positive, provides some protection against forwarding loops in
 xref:nng_device.3.adoc[device] chains.
 

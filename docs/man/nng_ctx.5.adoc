@@ -24,7 +24,7 @@ typedef struct nng_ctx_s nng_ctx
 
 == DESCRIPTION
 
-An `nng_ctx`(((context))) is a handle to an underlying "`context`" object,
+An `nng_ctx`(((context))) is a handle to an underlying context object,
 which keeps the protocol state for some stateful protocols.
 The purpose of a separate context object is to permit applications to
 share a single socket, with its various underlying
@@ -51,7 +51,7 @@ See the protocol-specific documentation for further details about whether
 contexts are supported, and details about what options are supported for
 contexts.
 
-Protocols that make use of contexts will also have a "`default`" context
+Protocols that make use of contexts will also have a default context
 that is used when the socket global operations are used.
 Operations using the global context will generally not interfere with
 any other contexts, except that certain socket options may affect socket

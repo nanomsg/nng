@@ -29,14 +29,14 @@ xref:nng_socket.5.adoc[socket] _s_ asynchronously.
 
 The message to send must have previously been set on the _aio_
 using the xref:nng_aio_set_msg.3.adoc[`nng_aio_set_msg()`] function.
-The function assumes "`ownership`" of the message.
+The function assumes ownership of the message.
 
 If the message was successfully queued for delivery to the socket,
 then the _aio_ will be completed, and xref:nng_aio_result.3.adoc[`nng_aio_result()`]
 will return zero.  In this case the socket will dispose of the
 message when it is finished with it.
 
-NOTE: The operation will be "`completed`", and the callback associated
+NOTE: The operation will be completed, and the callback associated
 with the _aio_ executed, as soon as the socket accepts the message
 for sending.
 This does _not_ indicate that the message was actually delivered, as it

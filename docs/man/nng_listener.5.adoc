@@ -25,15 +25,15 @@ typedef struct nng_listener_s nng_listener;
 == DESCRIPTION
 
 (((listener)))
-An `nng_listener` is a handle to a "`listener`" object, which is responsible for
+An `nng_listener` is a handle to a listener object, which is responsible for
 creating xref:nng_pipe.5.adoc[`nng_pipe`] objects by accepting incoming connections.
 A given listener object may create many pipes at the same time, much like an
 HTTP server can have many connections to multiple clients simultaneously.
 
 Listener objects are created by the
 xref:nng_listener_create.3.adoc[`nng_listener_create()`]
-or xref:nng_listen.3.adoc[`nng_listen()`] functions, and are always "`owned`"
-by a single xref:nng_socket.5.adoc[`nng_socket`].
+or xref:nng_listen.3.adoc[`nng_listen()`] functions, and are always associated
+with a single xref:nng_socket.5.adoc[`nng_socket`].
 
 IMPORTANT: The `nng_listener` structure is always passed by value (both
 for input parameters and return values), and should be treated opaquely.
@@ -53,7 +53,7 @@ challenging communications problems.
 
 Listener objects may be destroyed by the
 xref:nng_listener_close.3.adoc[`nng_listener_close()`] function.
-They are also closed when their "`owning`" socket is closed.
+They are also closed when their associated socket is closed.
 
 [[NNG_LISTENER_INITIALIZER]]
 === Initialization

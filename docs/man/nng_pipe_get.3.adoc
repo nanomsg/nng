@@ -49,7 +49,7 @@ vary, and many are documented in xref:nng_options.5.adoc[nng_options(5)].
 Additionally some transport-specific options and protocol-specific options are
 documented with the transports and protocols themselves.
 
-NOTE: All "`options`" on a pipe are read-only values.
+NOTE: All options on a pipe are read-only values.
 Modification of options may be done before the pipe is created using
 xref:nng_listener_set.3.adoc[`nng_listener_set()`] or
 xref:nng_dialer_get.3.adoc[`nng_dialer_set()`].

@@ -57,7 +57,7 @@ This structure is actually a union, with different members for different
 types of addresses.
 
 Every member structure has as its first element a `uint16_t` field
-containing the "`((address family))`".
+containing the ((address family)).
 This overlaps the `s_family` member of the union, and indicates which
 specific member should be used.
 

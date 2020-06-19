@@ -105,7 +105,7 @@ The following protocol-specific options is available.
 === Protocol Headers
 
 (((backtrace)))
-This form uses a "`stack`" of 32-bit big-endian identifiers.
+This form uses a stack of 32-bit big-endian identifiers.
 There *must* be at least one identifier, the __survey ID__, which will be the
 last element in the array, and *must* have the most significant bit set.
 
@@ -121,7 +121,7 @@ peer from which it received the message.
 (This peer ID, except for the
 most significant bit, has meaning only to the forwarding node itself.)
 
-It may help to think of prepending a peer ID as "`pushing`" a peer ID onto the
+It may help to think of prepending a peer ID as pushing a peer ID onto the
 front of the stack of headers for the message.
 (It will use the peer ID
 it popped from the front to determine the next intermediate destination
@@ -130,7 +130,7 @@ for the response.)
 When a response message is created, it is created using the same headers
 that the survey contained.
 
-A forwarding node can "`pop`" the peer ID it originally pushed on the
+A forwarding node can pop the peer ID it originally pushed on the
 message, stripping it from the front of the message as it does so.
 
 When the response finally arrives back at the initiating surveyor, it
