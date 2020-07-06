@@ -80,7 +80,7 @@ endif ()
 set(NNG_ABI_SOVERSION 1)
 set(NNG_ABI_VERSION "${NNG_MAJOR_VERSION}.${NNG_MINOR_VERSION}.${NNG_PATCH_VERSION}${NNG_PRERELEASE}")
 set(NNG_PACKAGE_VERSION "${NNG_ABI_VERSION}")
-message("Configuring for NNG version ${NNG_ABI_VERSION}")
+message(STATUS "Configuring for NNG version ${NNG_ABI_VERSION}")
 
 # User-defined options.
 
