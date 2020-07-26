@@ -36,6 +36,8 @@ struct nng_http_handler {
 	char *          uri;
 	char *          method;
 	char *          host;
+	nng_sockaddr    host_addr;
+	bool            host_ip;
 	bool            tree;
 	bool            tree_exclusive;
 	nni_atomic_u64  ref;
@@ -203,10 +205,34 @@ nni_http_handler_set_host(nni_http_handler *h, const char *host)
 	if (nni_atomic_get_bool(&h->busy) != 0) {
 		return (NNG_EBUSY);
 	}
-	if (host == NULL) {
+	if ((host == NULL) || (strcmp(host, "*") == 0) ||
+	    strcmp(host, "") == 0) {
 		nni_strfree(h->host);
 		h->host = NULL;
 		return (0);
+	}
+	if (nni_parse_ip(host, &h->host_addr) == 0) {
+		uint8_t wild[16] = { 0 };
+
+		// Check for wild card addresses.
+		switch (h->host_addr.s_family) {
+		case NNG_AF_INET:
+			if (h->host_addr.s_in.sa_addr == 0) {
+				nni_strfree(h->host);
+				h->host = NULL;
+				return (0);
+			}
+			break;
+		case NNG_AF_INET6:
+			if (memcmp(h->host_addr.s_in6.sa_addr, wild, 16) ==
+			    0) {
+				nni_strfree(h->host);
+				h->host = NULL;
+				return (0);
+			}
+			break;
+		}
+		h->host_ip = true;
 	}
 	if ((dup = nni_strdup(host)) == NULL) {
 		return (NNG_ENOMEM);
@@ -472,6 +498,64 @@ nni_http_hijack(nni_http_conn *conn)
 	return (0);
 }
 
+static bool
+http_handler_host_match(nni_http_handler *h, const char *host)
+{
+	nng_sockaddr sa;
+	size_t       len;
+
+	if (h->host == NULL) {
+		return (true);
+	}
+	if (host == NULL) {
+		// Virtual hosts not possible under HTTP/1.0
+		return (false);
+	}
+	if (h->host_ip) {
+		if (nni_parse_ip_port(host, &sa) != 0) {
+			return (false);
+		}
+		switch (h->host_addr.s_family) {
+		case NNG_AF_INET:
+			if ((sa.s_in.sa_family != NNG_AF_INET) ||
+			    (sa.s_in.sa_addr != h->host_addr.s_in.sa_addr)) {
+				return (false);
+			}
+			return (true);
+		case NNG_AF_INET6:
+			if (sa.s_in6.sa_family != NNG_AF_INET6) {
+				return (false);
+			}
+			if (memcmp(sa.s_in6.sa_addr,
+			        h->host_addr.s_in6.sa_addr, 16) != 0) {
+				return (false);
+			}
+			return (true);
+		}
+	}
+
+	len = strlen(h->host);
+
+	if ((nni_strncasecmp(host, h->host, len) != 0)) {
+		return (false);
+	}
+
+	// At least the first part matches.  If the ending
+	// part is a lone "." (legal in DNS), or a port
+	// number, we match it.  (We do not validate the
+	// port number.)  Note that there may be false matches
+	// with IPv6 addresses, but addresses shouldn't be
+	// used with virtual hosts anyway.  With both addresses
+	// and ports, a false match would be unlikely since
+	// they'd still have to *connect* using that info.
+	if ((host[len] != '\0') && (host[len] != ':') &&
+	    ((host[len] != '.') || (host[len + 1] != '\0'))) {
+		return (false);
+	}
+
+	return (true);
+}
+
 static void
 http_sconn_rxdone(void *arg)
 {
@@ -556,29 +640,9 @@ http_sconn_rxdone(void *arg)
 	nni_mtx_lock(&s->mtx);
 	NNI_LIST_FOREACH (&s->handlers, h) {
 		size_t len;
-		if (h->host != NULL) {
-			if (host == NULL) {
-				// HTTP/1.0 cannot access virtual hosts.
-				continue;
-			}
 
-			len = strlen(h->host);
-			if ((nni_strncasecmp(host, h->host, len) != 0)) {
-				continue;
-			}
-
-			// At least the first part matches.  If the ending
-			// part is a lone "." (legal in DNS), or a port
-			// number, we match it.  (We do not validate the
-			// port number.)  Note that there may be false matches
-			// with IPv6 addresses, but addresses shouldn't be
-			// used with virtual hosts anyway.  With both addresses
-			// and ports, a false match would be unlikely since
-			// they'd still have to *connect* using that info.
-			if ((host[len] != '\0') && (host[len] != ':') &&
-			    ((host[len] != '.') || (host[len + 1] != '\0'))) {
-				continue;
-			}
+		if (!http_handler_host_match(h, host)) {
+			continue;
 		}
 
 		len = strlen(h->uri);

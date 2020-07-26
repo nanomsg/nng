@@ -439,7 +439,7 @@ nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	h = url->u_hostname;
 
 	// Wildcard special case, which means bind to INADDR_ANY.
-	if ((h != NULL) && ((strcmp(h, "*") == 0) || (strlen(h) == 0))) {
+	if ((h != NULL) && ((strcmp(h, "*") == 0) || (strcmp(h, "") == 0))) {
 		h = NULL;
 	}
 	nni_tcp_resolv(h, url->u_port, af, 1, aio);

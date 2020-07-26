@@ -339,6 +339,12 @@ extern void nni_tcp_resolv(const char *, const char *, int, int, nni_aio *);
 // service names using UDP.
 extern void nni_udp_resolv(const char *, const char *, int, int, nni_aio *);
 
+// nni_parse_ip parses an IP address, without a port.
+extern int nni_parse_ip(const char *, nng_sockaddr *);
+
+// nni_parse_ip_port parses an IP address with an optional port appended.
+extern int nni_parse_ip_port(const char *, nng_sockaddr *);
+
 //
 // IPC (UNIX Domain Sockets & Named Pipes) Support.
 //
