@@ -333,7 +333,9 @@ else ()
     nng_check_sym(backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
     nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
     nng_check_sym(eventfd sys/eventfd.h NNG_HAVE_EVENTFD)
-    nng_check_sym(kqueue sys/event.h NNG_HAVE_KQUEUE)
+    # While some systems (NetBSD) have kqueue, our use depends on EVFILT_USER
+    # This means that NetBSD and OpenBSD will be stuck with poll().
+    nng_check_sym(EVFILT_USER sys/event.h NNG_HAVE_KQUEUE)
     nng_check_sym(port_create port.h NNG_HAVE_PORT_CREATE)
     nng_check_sym(epoll_create sys/epoll.h NNG_HAVE_EPOLL)
     nng_check_sym(epoll_create1 sys/epoll.h NNG_HAVE_EPOLL_CREATE1)
