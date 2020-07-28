@@ -164,6 +164,7 @@ testutil_scratch_addr(const char *scheme, size_t sz, char *addr)
 		(void) snprintf(addr, sz, "%s://testutil%04x%04x%04x%04x",
 		    scheme, nng_random(), nng_random(), nng_random(),
 		    nng_random());
+		return;
 #else
 		char *tmpdir;
 
