@@ -126,6 +126,7 @@ endif ()
 
 nng_test(aio)
 nng_test(bufsz)
+nng_test(bug1247)
 nng_test(platform)
 nng_test(reconnect)
 nng_test(sock)
