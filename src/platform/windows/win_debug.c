@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -108,6 +108,7 @@ static struct {
 	{ ERROR_OUT_OF_STRUCTURES,  NNG_ENOMEM	     },
 	{ ERROR_INVALID_PARAMETER,  NNG_EINVAL	     },
 	{ ERROR_CONNECTION_REFUSED, NNG_ECONNREFUSED },
+        { ERROR_DUP_NAME,           NNG_EADDRINUSE   },
 	{ ERROR_BROKEN_PIPE,	    NNG_ECLOSED	     },
 	{ ERROR_BAD_PIPE,	    NNG_ECLOSED	     },
 	{ ERROR_NO_DATA,	    NNG_ECLOSED	     },
