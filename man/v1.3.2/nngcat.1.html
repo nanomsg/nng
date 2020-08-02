@@ -1,0 +1,490 @@
+---
+version: v1.3.2
+layout: manpage_v2
+---
+<h1>nngcat(1)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nngcat - command line access to Scalability Protocols</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p><strong>nngcat</strong> --help</p>
+</div>
+<div class="paragraph">
+<p><strong>nngcat</strong> --version</p>
+</div>
+<div class="paragraph">
+<p><strong>nngcat</strong> [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <em>nngcat</em> utility provides command line access to the Scalability
+Protocols, making it possible to write shell scripts that interact
+with other peers in a Scalability Protocols topology, by both sending and
+receiving messages.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_options">OPTIONS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The possible values for <em>OPTION</em> are described below.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+The <em>nngcat</em> utility accepts shortened versions of these options, as long
+as the supplied option is unambiguous.
+For example <code>--comp</code> can be used in lieu
+of <code>--compat</code>, but <code>--re</code> may not be used for anything because it could mean
+any of <code>--req</code>, <code>--rep</code>, or <code>--respondent</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>When using the long form of an option (names prefixed with with <code>--</code>), if the
+option takes a value then the value may be supplied by appending the option
+with an equals sign and the value (e.g. <code>--subscribe=times</code>), by appending
+the option with a colon and the value (e.g. <code>--subscribe:tribune</code>) or by
+providing the data as the next program argument (e.g. <code>--subscribe herald</code>).</p>
+</div>
+<div class="paragraph">
+<p>When using short form options (a single letter prefixed with a <code>-</code>),
+if the option takes a value it may either be immediately appended to
+the value (e.g. <code>-L5678</code>) or provided as the next program argument
+(e.g. <code>-L 5678</code>).</p>
+</div>
+<div class="paragraph">
+<p>POSIX style option clustering of single letter options is not supported;
+each option must be presented as a separate argument to the program.</p>
+</div>
+<div class="sect2">
+<h3 id="_generic_options">Generic Options</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Get usage help.</p>
+</dd>
+<dt class="hdlist1"><strong>-V, --version</strong></dt>
+<dd>
+<p>Print the version and exit.</p>
+</dd>
+<dt class="hdlist1"><strong>-v, --verbose</strong></dt>
+<dd>
+<p>Select verbose operation.</p>
+</dd>
+<dt class="hdlist1"><strong>-q, --silent</strong></dt>
+<dd>
+<p>Select silent operation.</p>
+</dd>
+<dt class="hdlist1"><strong>--compat</strong></dt>
+<dd>
+<p>Compatible mode. 
+  This cause <em>nngcat</em> to behave more like the legacy
+  <em>nanocat</em> application.
+  In this mode connections are made asynchronously,
+  and the <strong>--pair</strong> option selects version 0 of
+  the <a href="nng_pair.7.html"><em>pair</em></a> protocol instead of version 1.</p>
+</dd>
+<dt class="hdlist1"><strong>--subscribe</strong>=<em>TOPIC</em></dt>
+<dd>
+<p>Subscribe to <em>TOPIC</em>.  This option can only be used with the
+  <a href="nng_sub.7.html"><em>sub</em></a> protocol.
+  The <em>TOPIC</em> is checked against the first bytes
+  of messages received, and messages are discarded if they do not match.
+  This may be specified multiple times to subscribe to multiple topics.
+  If not specified at all, then a default subscription to everything is assumed.</p>
+</dd>
+<dt class="hdlist1"><strong>--count=</strong>=<em>COUNT</em></dt>
+<dd>
+<p>Limit the number of iterations when looping to <em>COUNT</em> iterations.
+  For protocols that only send, this will only send <em>COUNT</em> messages before
+  exiting.
+  For protocols that only receive, this will only receive <em>COUNT</em> messages
+  before exiting.
+  For protocols that involve a full exchange, this will only perform <em>COUNT</em>
+  exchanges (each exchange is characterized by at most a single send, and
+  one or more receives.)
+  If <em>COUNT</em> is zero, then an infinite number of iterations is performed.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_protocol_selection_options">Protocol Selection Options</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+At least one protocol must be selected.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>--bus, --bus0</strong></dt>
+<dd>
+<p>Select the <a href="nng_bus.7.html"><em>bus</em></a> version 0 protocol.
+  This protocol can send and receive messages to and from other <em>bus</em> version 0
+  peers.</p>
+</dd>
+<dt class="hdlist1"><strong>--req, --req0</strong></dt>
+<dd>
+<p>Select the <a href="nng_req.7.html"><em>req</em></a> version 0 protocol.
+  This protocol sends messages to <a href="nng_rep.7.html"><em>rep</em></a> version 0
+  peers and receives replies from them.</p>
+</dd>
+<dt class="hdlist1"><strong>--rep, --rep0</strong></dt>
+<dd>
+<p>Select the <a href="nng_rep.7.html"><em>rep</em></a> version 0 protocol.
+  This protocol receives messages from <a href="nng_req.7.html"><em>req</em></a> version 0 peers
+  and can send replies to them.</p>
+</dd>
+<dt class="hdlist1"><strong>--pub, --pub0</strong></dt>
+<dd>
+<p>Select the <a href="nng_pub.7.html"><em>pub</em></a> version 0 protocol.
+  This protocol sends messages to <a href="nng_sub.7.html"><em>sub</em></a> version peers.</p>
+</dd>
+<dt class="hdlist1"><strong>--sub, --sub0</strong></dt>
+<dd>
+<p>Select the <a href="nng_sub.7.html"><em>sub</em></a> version 0 protocol.
+  This protocol receives messages from <a href="nng_pub.7.html"><em>pub</em></a> version
+  0 peers, and filters them based on subscriptions set with <strong>--subscribe</strong>.</p>
+</dd>
+<dt class="hdlist1"><strong>--push, --push0</strong></dt>
+<dd>
+<p>Select the <a href="nng_push.7.html"><em>push</em></a> version 0 protocol.
+  This protocol sends messages to <a href="nng_pull.7.html"><em>pull</em></a> version 0 peers.
+  A given message is normally only delivered to a single peer.</p>
+</dd>
+<dt class="hdlist1"><strong>--pull, --pull0</strong></dt>
+<dd>
+<p>Select the <a href="nng_pull.7.html"><em>pull</em></a> version 0 protocol.
+  This protocol receives
+  messages from <a href="nng_push.7.html"><em>push</em></a> version 0 peers.</p>
+</dd>
+<dt class="hdlist1"><strong>--pair0</strong></dt>
+<dd>
+<p>Select the <a href="nng_pair.7.html"><em>pair</em></a> version 0 protocol.
+  This protocol can send and receive messages with one connected <em>pair</em>
+  version 0 peer.</p>
+</dd>
+<dt class="hdlist1"><strong>--pair1</strong></dt>
+<dd>
+<p>Select the <a href="nng_pair.7.html"><em>pair</em></a> version 1 protocol.
+  This protocol can send and receive messages with one connected <em>pair</em>
+  version 1 peer.
+  It is not supported in <strong>--compat</strong> mode.
+  (Polyamorous mode is not supported
+  in <em>nngcat</em>, although peers may be using polyamorous mode.)</p>
+</dd>
+<dt class="hdlist1"><strong>--pair</strong></dt>
+<dd>
+<p>Acts as an alias for <strong>--pair1</strong>, unless <strong>--compat</strong> mode is selected, in
+  which case it acts as an alias for <strong>--pair0</strong>.</p>
+</dd>
+<dt class="hdlist1"><strong>--surveyor, --surveyor0</strong></dt>
+<dd>
+<p>Select the <a href="nng_surveyor.7.html"><em>surveyor</em></a> version 0 protocol.
+  This protocol sends a survey request to <a href="nng_respondent.7.html"><em>respondent</em></a>
+  version 0 peers, and then receives replies from them.</p>
+</dd>
+<dt class="hdlist1"><strong>--respondent, --respondent0</strong></dt>
+<dd>
+<p>Select the <a href="nng_respondent.7.html"><em>respondent</em></a> version 0 protocol.
+  This protocol receives survey requests from <a href="nng_surveyor.7.html"><em>surveyor</em></a>
+  version 0 peers, and can send a reply to them.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_peer_selection_options">Peer Selection Options</h3>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+At least one peer address must be selected.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+While legacy <em>nanocat</em> only supported one peer, <em>nngcat</em> can support
+more than one peer on a given connection.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>--connect, --dial</strong>=<em>URL</em></dt>
+<dd>
+<p>Connect to the peer at the address specified by <em>URL</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>--bind, --listen</strong>=<em>URL</em></dt>
+<dd>
+<p>Bind to, and accept connections from peers, at the address specified by <em>URL</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-x, --connect-ipc</strong>=<em>PATH</em></dt>
+<dd>
+<p>Connect to the IPC path specified by <em>PATH</em>.  This is the same as
+  <strong>--connect</strong>=ipc://<em>PATH</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-X, --bind-ipc</strong>=<em>PATH</em></dt>
+<dd>
+<p>Bind to the IPC path specified by <em>PATH</em>.  This is the same as
+  <strong>--bind</strong>=ipc://<em>PATH</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-l, --connect-local</strong>=<em>PORT</em></dt>
+<dd>
+<p>Connect to <code>localhost</code> at the TCP port specified by <em>PORT</em>.  This is the same
+  as <strong>--connect</strong>=tcp://127.0.0.1:<em>PORT</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-L, --bind-local</strong>=<em>PORT</em></dt>
+<dd>
+<p>Bind to the TCP port specified by <em>PORT</em>.  This is the same as
+  <strong>--bind</strong>=tcp://127.0.0.1:<em>PORT</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_receive_options">Receive Options</h3>
+<div class="paragraph">
+<p>Data messages received can be formatted in different ways.
+These options can only be specified when using a protocol that
+receives messages.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-A, --ascii</strong></dt>
+<dd>
+<p>The same as specifying <strong>--format</strong>=<code>ascii</code>.</p>
+</dd>
+<dt class="hdlist1"><strong>-Q, --quoted</strong></dt>
+<dd>
+<p>The same as specifying <strong>--format</strong>=<code>quoted</code>.</p>
+</dd>
+<dt class="hdlist1"><strong>--hex</strong></dt>
+<dd>
+<p>The same as specifying <strong>--format</strong>=<code>hex</code>.</p>
+</dd>
+<dt class="hdlist1"><strong>--msgpack</strong></dt>
+<dd>
+<p>The same as specifying <strong>--format</strong>=<code>msgpack</code>.</p>
+</dd>
+<dt class="hdlist1"><strong>--raw</strong></dt>
+<dd>
+<p>The same as specifying <strong>--format</strong>=<code>raw</code>.</p>
+</dd>
+<dt class="hdlist1"><strong>--receive-timeout</strong>=<em>SEC</em></dt>
+<dd>
+<p>Give up receiving messages after <em>SEC</em> seconds pass without any received
+  messages.</p>
+</dd>
+<dt class="hdlist1"><strong>--recv-maxsz</strong>=<em>COUNT</em></dt>
+<dd>
+<p>Set the maximum message size socket will accept to <em>COUNT</em> bytes.
+  Messages larger than this will be discarded.
+  The default is 1048576 (1 MB).
+  To eliminate any restriction, use 0.</p>
+</dd>
+<dt class="hdlist1"><strong>--format</strong>=<em>FORMAT</em></dt>
+<dd>
+<p>Format data as indicated.  The <em>FORMAT</em> can be any of:</p>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>no</code></dt>
+<dd>
+<p>No output at all.</p>
+</dd>
+<dt class="hdlist1"><code>raw</code></dt>
+<dd>
+<p>Raw output, every byte received is sent to standard output.</p>
+</dd>
+<dt class="hdlist1"><code>ascii</code></dt>
+<dd>
+<p>ASCII safe, printable ASCII is emitted verbatim, with other
+bytes substituted with <code>.</code> (period).</p>
+</dd>
+<dt class="hdlist1"><code>quoted</code></dt>
+<dd>
+<p>Messages are printed as quoted strings, using C language
+conventions.</p>
+</dd>
+<dt class="hdlist1"><code>hex</code></dt>
+<dd>
+<p> Messages are printed as quoted strings, with every byte appearing as an escaped hexadecimal value, such as <code>\x2E</code>.</p>
+</dd>
+<dt class="hdlist1"><code>msgpack</code></dt>
+<dd>
+<p>Messages are emitted as <a href="https://msgpack.org">MessagePack</a> &#34;bin format&#34;
+(byte arrays).</p>
+</dd>
+</dl>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_transmit_options">Transmit Options</h3>
+<div class="paragraph">
+<p>Protocols that support sending data can use these options to select the data.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-D, --data</strong>=<em>DATA</em></dt>
+<dd>
+<p>Use <em>DATA</em> for the body of outgoing messages.</p>
+</dd>
+<dt class="hdlist1"><strong>-F, --file</strong>=<em>FILE</em></dt>
+<dd>
+<p>Use <em>FILE</em> for the body of outgoing messages. If <em>FILE</em> is <em>-</em> the message body will be read from standard input.</p>
+</dd>
+<dt class="hdlist1"><strong>-i, --interval</strong>=<em>SEC</em></dt>
+<dd>
+<p>For protocols that send unsolicited data (as opposed to those that
+  send data only in response to received messages), this will resend the
+  outgoing message at repeating intervals of <em>SEC</em> seconds.</p>
+</dd>
+<dt class="hdlist1"><strong>-d, --delay</strong>=<em>SEC</em></dt>
+<dd>
+<p>Wait <em>SEC</em> seconds before sending the first outgoing message.
+  This is useful to let connections establish before sending data, thereby
+  avoiding message loss.</p>
+</dd>
+<dt class="hdlist1"><strong>--send-timeout</strong>=<em>SEC</em></dt>
+<dd>
+<p>Give up trying to send a message after <em>SEC</em> seconds.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_tls_options">TLS Options</h3>
+<div class="paragraph">
+<p>These options are only present if TLS is configured; they are ignored
+when using addresses that are not secured with TLS.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-k, --insecure</strong></dt>
+<dd>
+<p>Skip peer validation.</p>
+</dd>
+<dt class="hdlist1"><strong>-E, --cert</strong>=<em>FILE</em></dt>
+<dd>
+<p>Load own certificate from <em>FILE</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>--key</strong>=<em>FILE</em></dt>
+<dd>
+<p>Load own key from <em>FILE</em>.
+  Should be used in conjunction with <strong>--cert</strong>.
+  If not specified, and <strong>--cert</strong> is specified, then a single file containing both
+  the private key and the associated certificate is assumed.</p>
+</dd>
+<dt class="hdlist1"><strong>--cacert</strong>=<em>FILE</em></dt>
+<dd>
+<p>Load CA certificates from <em>FILE</em>.
+  These CAs (&#34;Certificate Authorities&#34;) are
+  used as trust roots when validating certificates presented by peers.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_zerotier_options">ZeroTier Options</h3>
+<div class="paragraph">
+<p>These options are only present if ZeroTier is configured; they are ignored
+otherwise.</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>--zt-home</strong>=<em>DIRECTORY</em></dt>
+<dd>
+<p>Directory for persistent ZeroTier node (key material, etc.)
+  This directory must already exist.
+  Only one program may use a ZeroTier node at a time;
+  file locking is used to prevent this.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_examples">EXAMPLES</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="title">Echo service using request/reply.</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="sh">$ <span class="tok-nv">addr</span><span class="tok-o">=</span><span class="tok-s2">&#34;tcp://127.0.0.1:4567&#34;</span>
+$ nngcat --rep --listen<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data<span class="tok-o">=</span><span class="tok-s2">&#34;42&#34;</span> --quoted <span class="tok-p">&amp;</span>
+$ nngcat --req --dial<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data<span class="tok-o">=</span><span class="tok-s2">&#34;what is the answer?&#34;</span> --quoted
+<span class="tok-s2">&#34;what is the answer?&#34;</span>
+<span class="tok-s2">&#34;42&#34;</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Send a chime every hour (3600 seconds).</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="sh">$ <span class="tok-nv">addr</span><span class="tok-o">=</span>ipc:///grandpa_clock
+$ nngcat --pub --listen<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data <span class="tok-s2">&#34;cuckoo&#34;</span> --interval <span class="tok-m">3600</span> <span class="tok-p">&amp;</span>
+$ nngcat --sub --dial<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --quoted <span class="tok-p">&amp;</span>
+<span class="tok-s2">&#34;cuckoo&#34;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="libnng.3.html">libnng(3)</a>,
+<a href="nng.7.html">nng(7)</a>,
+<a href="nng_bus.7.html">nng_bus(7)</a>,
+<a href="nng_pair.7.html">nng_pair(7)</a>,
+<a href="nng_pub.7.html">nng_pub(7)</a>,
+<a href="nng_pull.7.html">nng_pull(7)</a>,
+<a href="nng_push.7.html">nng_push(7)</a>,
+<a href="nng_sub.7.html">nng_sub(7)</a>,
+<a href="nng_rep.7.html">nng_rep(7)</a>,
+<a href="nng_req.7.html">nng_req(7)</a>,
+<a href="nng_respondent.7.html">nng_respondent(7)</a>,
+<a href="nng_surveyor.7.html">nng_surveyor(7)</a></p>
+</div>
+</div>
+</div>

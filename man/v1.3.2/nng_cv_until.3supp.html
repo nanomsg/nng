@@ -1,0 +1,122 @@
+---
+version: v1.3.2
+layout: manpage_v2
+---
+<h1>nng_cv_until(3supp)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_cv_until - wait for condition or timeout</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
+</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/util/platform.h&gt;</span><span class="tok-cp">
+</span><span class="tok-cp"></span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_cv_until</span><span class="tok-p">(</span><span class="tok-n">nng_cv</span> <span class="tok-o">*</span><span class="tok-n">cv</span><span class="tok-p">,</span> <span class="tok-n">nng_time</span> <span class="tok-n">when</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_cv_until()</code> waits until either the condition variable <em>cv</em> is signaled
+by another thread calling either <a href="nng_cv_wake.3supp.html"><code>nng_cv_wake()</code></a> or
+<a href="nng_cv_wake1.3supp.html"><code>nng_cv_wake1()</code></a>, or the system clock (as tracked
+by <a href="nng_clock.3supp.html"><code>nng_clock()</code></a>) reaches <em>when</em>.</p>
+</div>
+<div class="paragraph">
+<p>The caller must have have ownership of the mutex that was used when
+<em>cv</em> was allocated.
+This function will drop the ownership of that mutex, and reacquire it
+atomically just before returning to the caller.
+(The waiting is done without holding the mutex.)</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Any condition may be used or checked, but the condition must be
+checked, as it is possible for this function to wake up spuriously.
+The best way to do this is inside a loop that repeats until the condition
+tests for true.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_example">EXAMPLE</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The following example demonstrates use of this function:</p>
+</div>
+<div class="listingblock">
+<div class="title">Example 1: Waiting for the condition</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c">
+    <span class="tok-n">nng_mtx_lock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span>  <span class="tok-c1">// assume cv was allocated using m
+</span><span class="tok-c1"></span>    <span class="tok-k">while</span> <span class="tok-p">(</span><span class="tok-o">!</span><span class="tok-n">condition_true</span><span class="tok-p">)</span> <span class="tok-p">{</span>
+        <span class="tok-k">if</span> <span class="tok-p">(</span><span class="tok-n">nng_cv_wait</span><span class="tok-p">(</span><span class="tok-n">cv</span><span class="tok-p">)</span> <span class="tok-o">==</span> <span class="tok-n">NNG_ETIMEDOUT</span><span class="tok-p">)</span> <span class="tok-p">{</span>
+            <span class="tok-n">printf</span><span class="tok-p">(</span><span class="tok-s">&#34;Time out reached!</span><span class="tok-se">\n</span><span class="tok-s">&#34;</span><span class="tok-p">);</span>
+            <span class="tok-k">break</span><span class="tok-p">;</span>
+        <span class="tok-p">}</span>
+    <span class="tok-p">}</span>
+    <span class="tok-c1">// condition_true is true
+</span><span class="tok-c1"></span>    <span class="tok-n">nng_mtx_unlock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">Example 2: Signaling the condition</div>
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c">    <span class="tok-n">nng_mtx_lock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span>
+    <span class="tok-n">condition_true</span> <span class="tok-o">=</span> <span class="tok-nb">true</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_cv_wake</span><span class="tok-p">(</span><span class="tok-n">cv</span><span class="tok-p">);</span>
+    <span class="tok-n">nng_mtx_unlock</span><span class="tok-p">(</span><span class="tok-n">m</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_cv_alloc.3supp.html">nng_cv_alloc(3supp)</a>,
+<a href="nng_cv_wait.3supp.html">nng_cv_wait(3supp)</a>,
+<a href="nng_cv_wake.3supp.html">nng_cv_wake(3supp)</a>,
+<a href="nng_cv_wake1.3supp.html">nng_cv_wake1(3supp)</a>,
+<a href="nng_mtx_alloc.3supp.html">nng_mtx_alloc(3supp)</a>,
+<a href="nng_mtx_lock.3supp.html">nng_mtx_lock(3supp)</a>,
+<a href="nng_mtx_unlock.3supp.html">nng_mtx_unlock(3supp)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>
