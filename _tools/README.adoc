@@ -3,3 +3,6 @@
 These are tools we use for publishing and maintaining the site -- they themselves should not be
 published.  The scripts in this directory we hereby grant to the public domain -- we are not
 liable for any damage they might cause, however.
+
+Note that the pubrefman script and program have moved to the tools/ directory of the main NNG
+branch.
