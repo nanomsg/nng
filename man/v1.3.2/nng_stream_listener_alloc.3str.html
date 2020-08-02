@@ -1,0 +1,112 @@
+---
+version: v1.3.2
+layout: manpage_v2
+---
+<h1>nng_stream_listener_alloc(3str)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_stream_listener_alloc - allocate byte stream listener</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
+</span><span class="tok-cp"></span>
+<span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_alloc</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">**</span><span class="tok-n">lp</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">addr</span><span class="tok-p">);</span>
+
+<span class="tok-kt">int</span> <span class="tok-nf">nng_stream_listener_alloc_url</span><span class="tok-p">(</span><span class="tok-n">nng_stream_listener</span> <span class="tok-o">**</span><span class="tok-n">lp</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-n">nng_url</span> <span class="tok-o">*</span><span class="tok-n">url</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These functions allocates a listener for byte streams.
+Listeners create
+<a href="nng_stream.5.html"><code>nng_stream</code></a> objects by accepting incoming
+connections, via the
+<a href="nng_stream_listener_accept.3str.html"><code>nng_stream_listener_accept()</code></a>
+function.</p>
+</div>
+<div class="paragraph">
+<p>The first form, <code>nng_stream_listener_alloc()</code>, connects to the address
+specified by <em>addr</em>, which should be a string representing a URL.</p>
+</div>
+<div class="paragraph">
+<p>The second form, <code>nng_stream_listener_alloc_url()</code>, takes a pre-parsed
+or pre-constructed
+<a href="nng_url.5.html"><code>nng_url</code></a> object to determine the remote address.</p>
+</div>
+<div class="paragraph">
+<p>These functions may support different URL schemes, such as
+<code>ipc://</code>, <code>tcp://</code>, <code>tls&#43;tcp://</code>, or <code>ws://</code>.</p>
+</div>
+<div class="paragraph">
+<p>Both forms store the listener in the location referenced by <em>lp</em>.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>These functions return 0 on success, and non-zero otherwise.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="hdlist">
+<table>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOMEM</code>
+</td>
+<td class="hdlist2">
+<p>Insufficient free memory exists.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_ENOTSUP</code>
+</td>
+<td class="hdlist2">
+<p>The URL scheme is not supported by the implementation.</p>
+</td>
+</tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_EADDRINVAL</code>
+</td>
+<td class="hdlist2">
+<p>The URL requested is invalid.</p>
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_strerror.3.html">nng_strerror(3)</a>,
+<a href="nng_stream_listener_accept.3str.html">nng_stream_listener_accept(3str)</a>
+<a href="nng_stream_listener_close.3str.html">nng_stream_listener_close(3str)</a>
+<a href="nng_stream_listener_free.3str.html">nng_stream_listener_free(3str)</a>
+<a href="nng_stream_listener_get.3str.html">nng_stream_listener_get(3str)</a>
+<a href="nng_stream_listener_listen.3str.html">nng_stream_listener_listen(3str)</a>
+<a href="nng_stream_listener_set.3str.html">nng_stream_listener_set(3str)</a>
+<a href="nng_stream_listener.5.html">nng_stream_listener(5)</a></p>
+</div>
+</div>
+</div>
