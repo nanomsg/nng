@@ -15,15 +15,23 @@
 </head>
 
 <body class="manpage toc2 toc-left">
-        {% include header-manpage.html %}
+{% include header-manpage.html %}
 
-	{% include_relative _toc.html %}
+{% include_relative _toc.html %}
 
-	<main>
-        {{ content }}
-	</main>
+<main>
+{% if page.version and page.version != site.latest %}
+{% if page.version == "tip" %}
+{% include manpage-tip.html %}
+{% else %}
+{% include manpage-old.html %}
+{% endif %}
+{% endif %}
 
-        {% include footer-manpage.html %}
+{{ content }}
+</main>
+
+{% include footer-manpage.html %}
 
 </body>
 
