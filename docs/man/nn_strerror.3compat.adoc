@@ -1,4 +1,4 @@
-= nn_errno(3compat)
+= nn_strerror(3compat)
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
