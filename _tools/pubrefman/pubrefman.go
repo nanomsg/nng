@@ -1,6 +1,9 @@
 // Copyright 2020 Staysail Systems, Inc.
 //
-// Provided under...
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
 //
 
 package main
@@ -280,11 +283,11 @@ func (g *Global) GenerateToC() {
 	idx := &strings.Builder{}
 
 	for _, page := range g.Pages {
-		sect := g.Sections[page.Section]
-		if sect == nil {
+		if sect := g.Sections[page.Section]; sect == nil {
 			fatal(fmt.Errorf("page %s section %s not found", page.Name, page.Section))
+		} else {
+			sect.Pages = append(sect.Pages, page)
 		}
-		sect.Pages = append(sect.Pages, page)
 	}
 
 	var sects []string
@@ -354,10 +357,13 @@ func (g *Global) CreateBranch() {
 		fatal(err)
 	}
 
-	g.WorkTree.Checkout(&git.CheckoutOptions{
+	err = g.WorkTree.Checkout(&git.CheckoutOptions{
 		Branch: refName,
 		Create: true,
 	})
+	if err != nil {
+		fatal(err)
+	}
 	g.Debug("Branch name will be %v", brName)
 }
 
@@ -419,7 +425,9 @@ func (g *Global) WriteOutput() {
 	g.WriteFile("_toc.html", g.ToC)
 	g.WriteFile("index.html", g.Index)
 
-	g.WorkTree.Add(g.DstDir)
+	if _, err := g.WorkTree.Add(g.DstDir); err != nil {
+		fatal(err)
+	}
 	files, err := g.DstFs.ReadDir(g.DstDir)
 	if err != nil {
 		fatal(err)
