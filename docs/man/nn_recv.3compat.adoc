@@ -11,7 +11,7 @@
 
 == NAME
 
-nn_send - receive data (compatible API)
+nn_recv - receive data (compatible API)
 
 == SYNOPSIS
 
