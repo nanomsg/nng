@@ -1,4 +1,4 @@
-= nng_http_req_get_method(3http)
+= nng_http_req_get_uri(3http)
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
