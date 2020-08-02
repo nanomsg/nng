@@ -149,6 +149,9 @@ func (g *Global) CloneSource() {
 		tag = "master"
 	}
 	ref := plumbing.NewBranchReferenceName(tag)
+	if strings.HasPrefix(tag, "v") {
+		ref = plumbing.NewTagReferenceName(tag)
+	}
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
 
