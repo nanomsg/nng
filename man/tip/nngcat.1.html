@@ -451,7 +451,7 @@ otherwise.</p>
 <div class="listingblock">
 <div class="title">Echo service using request/reply.</div>
 <div class="content">
-<pre class="chroma highlight"><code data-lang="sh">$ <span class="tok-nv">addr</span><span class="tok-o">=</span><span class="tok-s2">&#34;tcp://127.0.0.1:4567&#34;</span>
+<pre class="pygments highlight"><code data-lang="sh">$ <span class="tok-nv">addr</span><span class="tok-o">=</span><span class="tok-s2">&#34;tcp://127.0.0.1:4567&#34;</span>
 $ nngcat --rep --listen<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data<span class="tok-o">=</span><span class="tok-s2">&#34;42&#34;</span> --quoted <span class="tok-p">&amp;</span>
 $ nngcat --req --dial<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data<span class="tok-o">=</span><span class="tok-s2">&#34;what is the answer?&#34;</span> --quoted
 <span class="tok-s2">&#34;what is the answer?&#34;</span>
@@ -461,7 +461,7 @@ $ nngcat --req --dial<span class="tok-o">=</span><span class="tok-si">${</span><
 <div class="listingblock">
 <div class="title">Send a chime every hour (3600 seconds).</div>
 <div class="content">
-<pre class="chroma highlight"><code data-lang="sh">$ <span class="tok-nv">addr</span><span class="tok-o">=</span>ipc:///grandpa_clock
+<pre class="pygments highlight"><code data-lang="sh">$ <span class="tok-nv">addr</span><span class="tok-o">=</span>ipc:///grandpa_clock
 $ nngcat --pub --listen<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --data <span class="tok-s2">&#34;cuckoo&#34;</span> --interval <span class="tok-m">3600</span> <span class="tok-p">&amp;</span>
 $ nngcat --sub --dial<span class="tok-o">=</span><span class="tok-si">${</span><span class="tok-nv">addr</span><span class="tok-si">}</span> --quoted <span class="tok-p">&amp;</span>
 <span class="tok-s2">&#34;cuckoo&#34;</span></code></pre>
