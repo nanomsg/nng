@@ -1,0 +1,10 @@
+= pubrefman
+
+This directory contains a tool to publish (update) the reference manual
+on the NNG documentation site.
+
+Run it with --help for options.  You can build it with Go.
+
+It normally uploads to github, and will require a working SSH agent.
+
+If you're not a project maintainer, you probably don't need this tool.
