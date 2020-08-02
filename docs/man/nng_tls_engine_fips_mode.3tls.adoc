@@ -1,4 +1,4 @@
-= nng_tls_fips_mode(3tls)
+= nng_tls_engine_fips_mode(3tls)
 //
 // Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
