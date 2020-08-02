@@ -33,6 +33,12 @@
 #define MSG_NOSIGNAL 0
 #endif
 
+#ifndef SOL_LOCAL
+#ifdef __FreeBSD__
+#define SOL_LOCAL 0
+#endif
+#endif
+
 #include "posix_ipc.h"
 
 typedef struct nni_ipc_conn ipc_conn;
