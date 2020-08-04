@@ -34,9 +34,7 @@
 #endif
 
 #ifndef SOL_LOCAL
-#ifdef __FreeBSD__
 #define SOL_LOCAL 0
-#endif
 #endif
 
 #include "posix_ipc.h"
