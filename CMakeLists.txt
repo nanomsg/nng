@@ -380,8 +380,8 @@ macro(nng_test NAME)
                 ${PROJECT_SOURCE_DIR}/tests
                 ${PROJECT_SOURCE_DIR}/src
                 ${PROJECT_SOURCE_DIR}/include)
-        add_test(NAME ${NAME} COMMAND ${NAME} -t)
-        set_tests_properties(${NAME} PROPERTIES TIMEOUT 180)
+        add_test(NAME ${PROJECT_NAME}.${NAME} COMMAND ${NAME} -t)
+        set_tests_properties(${PROJECT_NAME}.${NAME} PROPERTIES TIMEOUT 180)
     endif ()
 endmacro()
 
