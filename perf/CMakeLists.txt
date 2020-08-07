@@ -43,11 +43,11 @@ if (NNG_TESTS)
     add_nng_perf(inproc_thr)
     add_nng_perf(inproc_lat)
 
-    add_test (NAME inproc_lat COMMAND inproc_lat 64 10000)
-    set_tests_properties (inproc_lat PROPERTIES TIMEOUT 30)
+    add_test (NAME ${PROJECT_NAME}.inproc_lat COMMAND inproc_lat 64 10000)
+    set_tests_properties (${PROJECT_NAME}.inproc_lat PROPERTIES TIMEOUT 30)
 
-    add_test (NAME inproc_thr COMMAND inproc_thr 1400 10000)
-    set_tests_properties (inproc_thr PROPERTIES TIMEOUT 30)
+    add_test (NAME ${PROJECT_NAME}.inproc_thr COMMAND inproc_thr 1400 10000)
+    set_tests_properties (${PROJECT_NAME}.inproc_thr PROPERTIES TIMEOUT 30)
 
 
     add_executable (pubdrop pubdrop.c)
