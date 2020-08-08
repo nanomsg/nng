@@ -670,10 +670,40 @@ static nni_tran ws_tran = {
 	.tran_checkopt = wstran_checkopt,
 };
 
+static nni_tran ws4_tran = {
+    .tran_version  = NNI_TRANSPORT_VERSION,
+    .tran_scheme   = "ws4",
+    .tran_dialer   = &ws_dialer_ops,
+    .tran_listener = &ws_listener_ops,
+    .tran_pipe     = &ws_pipe_ops,
+    .tran_init     = wstran_init,
+    .tran_fini     = wstran_fini,
+    .tran_checkopt = wstran_checkopt,
+};
+
+static nni_tran ws6_tran = {
+    .tran_version  = NNI_TRANSPORT_VERSION,
+    .tran_scheme   = "ws6",
+    .tran_dialer   = &ws_dialer_ops,
+    .tran_listener = &ws_listener_ops,
+    .tran_pipe     = &ws_pipe_ops,
+    .tran_init     = wstran_init,
+    .tran_fini     = wstran_fini,
+    .tran_checkopt = wstran_checkopt,
+};
+
+
 int
 nng_ws_register(void)
 {
-	return (nni_tran_register(&ws_tran));
+	int rv;
+        if (((rv = nni_tran_register(&ws_tran)) != 0) ||
+            ((rv = nni_tran_register(&ws4_tran)) != 0) ||
+            ((rv = nni_tran_register(&ws6_tran)) != 0)) {
+                return (rv);
+        }
+
+        return (0);
 }
 
 #ifdef NNG_TRANSPORT_WSS

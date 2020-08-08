@@ -84,7 +84,7 @@ TestMain("TCP Transport", {
 			nng_close(s2);
 			nng_close(s1);
 		});
-		trantest_next_address(addr, "tcp://*:%u");
+		trantest_next_address(addr, "tcp4://*:%u");
 		So(nng_listen(s1, addr, NULL, 0) == 0);
 		// reset port back one
 		trantest_prev_address(addr, "tcp://127.0.0.1:%u");

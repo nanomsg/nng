@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -229,7 +229,7 @@ TestMain("UDP support", {
 			nng_aio_wait(aio1);
 			So((rv = nng_aio_result(aio1)) != 0);
 			So(rv == NNG_EADDRINVAL || rv == NNG_ENOTSUP ||
-			    rv == NNG_EUNREACHABLE);
+			    rv == NNG_EUNREACHABLE || rv == NNG_EINVAL);
 			nng_aio_free(aio1);
 		});
 
@@ -255,7 +255,7 @@ TestMain("UDP support", {
 			nng_aio_wait(aio1);
 			So((rv = nng_aio_result(aio1)) != 0);
 			So(rv == NNG_EADDRINVAL || rv == NNG_ENOTSUP ||
-			    rv == NNG_EUNREACHABLE);
+			    rv == NNG_EUNREACHABLE || rv == NNG_EINVAL);
 			nng_aio_free(aio1);
 		});
 	});

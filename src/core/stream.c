@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -74,7 +74,19 @@ static struct {
 	    .listener_alloc = nni_ws_listener_alloc,
 	    .checkopt       = nni_ws_checkopt,
 	},
-	{
+        {
+            .scheme         = "ws4",
+            .dialer_alloc   = nni_ws_dialer_alloc,
+            .listener_alloc = nni_ws_listener_alloc,
+            .checkopt       = nni_ws_checkopt,
+        },
+        {
+            .scheme         = "ws6",
+            .dialer_alloc   = nni_ws_dialer_alloc,
+            .listener_alloc = nni_ws_listener_alloc,
+            .checkopt       = nni_ws_checkopt,
+        },
+        {
 	    .scheme         = "wss",
 	    .dialer_alloc   = nni_ws_dialer_alloc,
 	    .listener_alloc = nni_ws_listener_alloc,

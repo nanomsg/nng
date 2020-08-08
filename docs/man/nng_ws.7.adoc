@@ -1,6 +1,6 @@
 = nng_ws(7)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -57,6 +57,20 @@ port 80 on localhost, with the path `/app/pubsub`.
 Secure WebSockets (((WebSockets, Secure)))(((URI, `wss://`)))
 (if enabled) use the scheme `wss://`, and the default TCP port number of 443.
 Otherwise the format is the same as for regular WebSockets.
+
+A URI may be restricted to IPv6 using the scheme `ws6://` or `wss6://`, and may
+be restricted to IPv4 using the scheme `ws4://` or `wss4://`.
+
+NOTE: Specifying `ws6://`  or `wss6://` may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
+listeners.
+The details of this varies across operating systems.
+
+NOTE: The `ws4://` , `ws6://`, `wss4://` and `wss6://` schemes are specific to _NNG_,
+and might not be understood by other implementations.
+
+TIP: We recommend using either numeric IP addresses, or names that are
+specific to either IPv4 or IPv6 to prevent confusion and surprises.
 
 When specifying IPv6 addresses, the address must be enclosed in
 square brackets (`[]`) to avoid confusion with the final colon

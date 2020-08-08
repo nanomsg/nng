@@ -937,6 +937,14 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 	} else if ((strcmp(url->u_scheme, "https") == 0) ||
 	    (strcmp(url->u_scheme, "wss") == 0)) {
 		myurl.u_scheme = "tls+tcp";
+	} else if (strcmp(url->u_scheme, "ws4") == 0) {
+		myurl.u_scheme = "tcp4";
+	} else if (strcmp(url->u_scheme, "ws6") == 0) {
+		myurl.u_scheme = "tcp6";
+	} else if (strcmp(url->u_scheme, "wss4") == 0) {
+		myurl.u_scheme = "tls+tcp4";
+	} else if (strcmp(url->u_scheme, "wss6") == 0) {
+		myurl.u_scheme = "tls+tcp6";
 	} else {
 		return (NNG_EADDRINVAL);
 	}
