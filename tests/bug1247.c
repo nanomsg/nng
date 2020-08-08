@@ -10,9 +10,7 @@
 #include <string.h>
 
 #include <nng/nng.h>
-#include <nng/protocol/pipeline0/pull.h>
-#include <nng/protocol/pipeline0/push.h>
-#include <nng/supplemental/util/platform.h>
+#include <nng/protocol/bus0/bus.h>
 
 #include "acutest.h"
 #include "testutil.h"
