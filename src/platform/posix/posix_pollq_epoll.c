@@ -61,8 +61,8 @@ struct nni_posix_pollq {
 };
 
 struct nni_posix_pfd {
+        nni_list_node    node;
 	nni_posix_pollq *pq;
-	nni_list_node    node;
 	int              fd;
 	nni_posix_pfd_cb cb;
 	void *           arg;
@@ -96,7 +96,6 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	nni_mtx_init(&pfd->mtx);
 	nni_cv_init(&pfd->cv, &pq->mtx);
 
-	nni_mtx_lock(&pfd->mtx);
 	pfd->pq      = pq;
 	pfd->fd      = fd;
 	pfd->cb      = NULL;
@@ -106,7 +105,6 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	pfd->closed  = false;
 
 	NNI_LIST_NODE_INIT(&pfd->node);
-	nni_mtx_unlock(&pfd->mtx);
 
 	// notifications disabled to begin with
 	ev.events   = 0;
@@ -115,6 +113,7 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	if (epoll_ctl(pq->epfd, EPOLL_CTL_ADD, fd, &ev) != 0) {
 		rv = nni_plat_errno(errno);
 		nni_cv_fini(&pfd->cv);
+		nni_mtx_fini(&pfd->mtx);
 		NNI_FREE_STRUCT(pfd);
 		return (rv);
 	}
