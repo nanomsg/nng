@@ -138,7 +138,7 @@ enum zt_errors {
 
 // This node structure is wrapped around the ZT_node; this allows us to
 // have multiple endpoints referencing the same ZT_node, but also to
-// support different nodes (identities) based on different homedirs.
+// support different nodes (identities) based on different home dirs.
 // This means we need to stick these on a global linked list, manage
 // them with a reference count, and uniquely identify them using the
 // homedir.
@@ -1612,6 +1612,104 @@ zt_tran_fini(void)
 	nni_mtx_fini(&zt_lk);
 }
 
+static int
+zt_check_recvmaxsz(const void *v, size_t sz, nni_type t)
+{
+	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
+}
+
+static int
+zt_check_orbit(const void *v, size_t sz, nni_type t)
+{
+	NNI_ARG_UNUSED(v);
+	if ((t != NNI_TYPE_UINT64) && (t != NNI_TYPE_OPAQUE)) {
+		return (NNG_EBADTYPE);
+	}
+	if (sz != sizeof(uint64_t) && sz != sizeof(uint64_t) * 2) {
+		return (NNG_EINVAL);
+	}
+	return (0);
+}
+
+static int
+zt_check_deorbit(const void *v, size_t sz, nni_type t)
+{
+	return (nni_copyin_u64(NULL, v, sz, t));
+}
+
+static int
+zt_check_string(const void *v, size_t sz, nni_type t)
+{
+	size_t len;
+
+	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
+		return (NNG_EBADTYPE);
+	}
+	len = nni_strnlen(v, sz);
+	if ((len >= sz) || (len >= NNG_MAXADDRLEN)) {
+		return (NNG_EINVAL);
+	}
+	return (0);
+}
+
+static int
+zt_check_time(const void *v, size_t sz, nni_type t)
+{
+	return (nni_copyin_ms(NULL, v, sz, t));
+}
+
+static int
+zt_check_tries(const void *v, size_t sz, nni_type t)
+{
+	return (nni_copyin_int(NULL, v, sz, 0, 1000000, t));
+}
+
+static nni_chkoption zt_tran_check_opts[] = {
+	{
+	    .o_name  = NNG_OPT_RECVMAXSZ,
+	    .o_check = zt_check_recvmaxsz,
+	},
+	{
+	    .o_name  = NNG_OPT_ZT_HOME,
+	    .o_check = zt_check_string,
+	},
+	{
+	    .o_name  = NNG_OPT_ZT_ORBIT,
+	    .o_check = zt_check_orbit,
+	},
+	{
+	    .o_name  = NNG_OPT_ZT_DEORBIT,
+	    .o_check = zt_check_deorbit,
+	},
+	{
+	    .o_name  = NNG_OPT_ZT_CONN_TIME,
+	    .o_check = zt_check_time,
+	},
+	{
+	    .o_name  = NNG_OPT_ZT_PING_TIME,
+	    .o_check = zt_check_time,
+	},
+	{
+	    .o_name  = NNG_OPT_ZT_PING_TRIES,
+	    .o_check = zt_check_tries,
+	},
+	{
+	    .o_name  = NNG_OPT_ZT_CONN_TRIES,
+	    .o_check = zt_check_tries,
+	},
+	{
+	    .o_name = NULL,
+	},
+};
+
+static int
+zt_tran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
+{
+	int rv;
+	rv = nni_chkopt(zt_tran_check_opts, name, buf, sz, t);
+	return (rv);
+}
+
 static void
 zt_pipe_close(void *arg)
 {
@@ -2570,21 +2668,6 @@ zt_ep_get_recvmaxsz(void *arg, void *data, size_t *szp, nni_type t)
 }
 
 static int
-zt_check_string(const void *data, size_t sz, nni_type t)
-{
-	size_t len;
-
-	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
-		return (NNG_EBADTYPE);
-	}
-	len = nni_strnlen(data, sz);
-	if ((len >= sz) || (len >= NNG_MAXADDRLEN)) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-static int
 zt_ep_set_home(void *arg, const void *data, size_t sz, nni_type t)
 {
 	int    rv;
@@ -2735,7 +2818,7 @@ zt_ep_set_add_local_addr(void *arg, const void *data, size_t sz, nni_type t)
 			nni_mtx_unlock(&zt_lk);
 			return (rv);
 		}
-		ztn  = ep->ze_ztn;
+		ztn = ep->ze_ztn;
 		zrv = ZT_Node_addLocalInterfaceAddress(ztn->zn_znode, &ss);
 		nni_mtx_unlock(&zt_lk);
 		rv = zt_result(zrv);
@@ -3205,6 +3288,7 @@ static struct nni_tran zt_tran = {
 	.tran_pipe     = &zt_pipe_ops,
 	.tran_init     = zt_tran_init,
 	.tran_fini     = zt_tran_fini,
+	.tran_checkopt = zt_tran_checkopt,
 };
 
 int
