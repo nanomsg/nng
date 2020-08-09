@@ -499,8 +499,7 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	d->peer = nni_sock_peer_id(s);
 
 	snprintf(
-	    name, sizeof(name), "%s.sp.nanomsg.org",
-	    nni_sock_peer_name(s));
+	    name, sizeof(name), "%s.sp.nanomsg.org", nni_sock_peer_name(s));
 
 	if (((rv = nni_ws_dialer_alloc(&d->dialer, url)) != 0) ||
 	    ((rv = nni_aio_alloc(&d->connaio, wstran_connect_cb, d)) != 0) ||
@@ -533,8 +532,8 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 
 	l->peer = nni_sock_peer_id(s);
 
-	snprintf(name, sizeof(name), "%s.sp.nanomsg.org",
-	    nni_sock_proto_name(s));
+	snprintf(
+	    name, sizeof(name), "%s.sp.nanomsg.org", nni_sock_proto_name(s));
 
 	if (((rv = nni_ws_listener_alloc(&l->listener, url)) != 0) ||
 	    ((rv = nni_aio_alloc(&l->accaio, wstran_accept_cb, l)) != 0) ||
@@ -671,39 +670,38 @@ static nni_tran ws_tran = {
 };
 
 static nni_tran ws4_tran = {
-    .tran_version  = NNI_TRANSPORT_VERSION,
-    .tran_scheme   = "ws4",
-    .tran_dialer   = &ws_dialer_ops,
-    .tran_listener = &ws_listener_ops,
-    .tran_pipe     = &ws_pipe_ops,
-    .tran_init     = wstran_init,
-    .tran_fini     = wstran_fini,
-    .tran_checkopt = wstran_checkopt,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "ws4",
+	.tran_dialer   = &ws_dialer_ops,
+	.tran_listener = &ws_listener_ops,
+	.tran_pipe     = &ws_pipe_ops,
+	.tran_init     = wstran_init,
+	.tran_fini     = wstran_fini,
+	.tran_checkopt = wstran_checkopt,
 };
 
 static nni_tran ws6_tran = {
-    .tran_version  = NNI_TRANSPORT_VERSION,
-    .tran_scheme   = "ws6",
-    .tran_dialer   = &ws_dialer_ops,
-    .tran_listener = &ws_listener_ops,
-    .tran_pipe     = &ws_pipe_ops,
-    .tran_init     = wstran_init,
-    .tran_fini     = wstran_fini,
-    .tran_checkopt = wstran_checkopt,
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "ws6",
+	.tran_dialer   = &ws_dialer_ops,
+	.tran_listener = &ws_listener_ops,
+	.tran_pipe     = &ws_pipe_ops,
+	.tran_init     = wstran_init,
+	.tran_fini     = wstran_fini,
+	.tran_checkopt = wstran_checkopt,
 };
-
 
 int
 nng_ws_register(void)
 {
 	int rv;
-        if (((rv = nni_tran_register(&ws_tran)) != 0) ||
-            ((rv = nni_tran_register(&ws4_tran)) != 0) ||
-            ((rv = nni_tran_register(&ws6_tran)) != 0)) {
-                return (rv);
-        }
+	if (((rv = nni_tran_register(&ws_tran)) != 0) ||
+	    ((rv = nni_tran_register(&ws4_tran)) != 0) ||
+	    ((rv = nni_tran_register(&ws6_tran)) != 0)) {
+		return (rv);
+	}
 
-        return (0);
+	return (0);
 }
 
 #ifdef NNG_TRANSPORT_WSS
@@ -719,12 +717,43 @@ static nni_tran wss_tran = {
 	.tran_checkopt = wstran_checkopt,
 };
 
+static nni_tran wss4_tran = {
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "wss4",
+	.tran_dialer   = &ws_dialer_ops,
+	.tran_listener = &ws_listener_ops,
+	.tran_pipe     = &ws_pipe_ops,
+	.tran_init     = wstran_init,
+	.tran_fini     = wstran_fini,
+	.tran_checkopt = wstran_checkopt,
+};
+
+static nni_tran wss6_tran = {
+	.tran_version  = NNI_TRANSPORT_VERSION,
+	.tran_scheme   = "wss6",
+	.tran_dialer   = &ws_dialer_ops,
+	.tran_listener = &ws_listener_ops,
+	.tran_pipe     = &ws_pipe_ops,
+	.tran_init     = wstran_init,
+	.tran_fini     = wstran_fini,
+	.tran_checkopt = wstran_checkopt,
+};
+
 int
 nng_wss_register(void)
 {
-	return (nni_tran_register(&wss_tran));
+	int rv;
+	if (((rv = nni_tran_register(&wss_tran)) != 0) ||
+	    ((rv = nni_tran_register(&wss4_tran)) != 0) ||
+	    ((rv = nni_tran_register(&wss6_tran)) != 0)) {
+		return (rv);
+	}
+
+	return (0);
 }
+
 #else
+
 int
 nng_wss_register(void)
 {
