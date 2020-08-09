@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -114,6 +114,7 @@ nni_win_io_sysinit(void)
 		if (rv != 0) {
 			goto fail;
 		}
+		nni_thr_set_name(&win_io_thrs[i], "nng:iocp");
 	}
 	for (i = 0; i < win_io_nthr; i++) {
 		nni_thr_run(&win_io_thrs[i]);

@@ -228,6 +228,7 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 		nni_posix_pollq_destroy(pq);
 		return (rv);
 	}
+	nni_thr_set_name(&pq->thr, "nng:poll:port");
 
 	nni_thr_run(&pq->thr);
 	return (0);

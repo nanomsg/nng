@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -135,6 +135,8 @@ nni_timer_loop(void *arg)
 	nni_timer *     timer = arg;
 	nni_time        now;
 	nni_timer_node *node;
+
+        nni_thr_set_name(NULL, "nng:timer");
 
 	for (;;) {
 		nni_mtx_lock(&timer->t_mx);

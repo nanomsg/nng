@@ -303,6 +303,7 @@ if (NNG_ENABLE_DOC)
             nng_random
             nng_thread_create
             nng_thread_destroy
+            nng_thread_set_name
             )
 
     set(NNG_MAN3STR

@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -181,4 +181,10 @@ nni_thr_is_self(nni_thr *thr)
 		return (false);
 	}
 	return (nni_plat_thr_is_self(&thr->thr));
+}
+
+void
+nni_thr_set_name(nni_thr *thr, const char *name)
+{
+	nni_plat_thr_set_name(&thr->thr, name);
 }

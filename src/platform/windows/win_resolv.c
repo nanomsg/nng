@@ -432,6 +432,7 @@ nni_win_resolv_sysinit(void)
 			nni_win_resolv_sysfini();
 			return (rv);
 		}
+		nni_thr_set_name(&resolv_thrs[i], "nng:resolver");
 	}
 	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
 		nni_thr_run(&resolv_thrs[i]);

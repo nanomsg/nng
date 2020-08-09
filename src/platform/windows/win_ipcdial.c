@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -269,7 +269,7 @@ nni_win_ipc_sysinit(void)
 	if (rv != 0) {
 		return (rv);
 	}
-
+        nni_thr_set_name(&worker->thr, "nng:ipc:dial");
 	nni_thr_run(&worker->thr);
 
 	return (0);

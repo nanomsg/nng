@@ -157,6 +157,10 @@ extern void nni_plat_thr_fini(nni_plat_thr *);
 // prevention in callbacks, for example.)
 extern bool nni_plat_thr_is_self(nni_plat_thr *);
 
+// nni_plat_thr_set_name is used to set the thread name, which
+// should be a short ASCII string.  It may or may not be supported --
+// this is intended to facilitate debugging.
+extern void nni_plat_thr_set_name(nni_plat_thr *, const char *);
 //
 // Atomics support.  This will evolve over time.
 //

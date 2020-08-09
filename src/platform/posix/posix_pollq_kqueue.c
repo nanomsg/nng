@@ -229,6 +229,8 @@ nni_posix_poll_thr(void *arg)
 {
 	nni_posix_pollq *pq = arg;
 
+	nni_thr_set_name(NULL, "nng:poll:kqueue");
+
 	for (;;) {
 		int              n;
 		struct kevent    evs[NNI_MAX_KQUEUE_EVENTS];
@@ -335,7 +337,6 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 int
 nni_posix_pollq_sysinit(void)
 {
-
 	return (nni_posix_pollq_create(&nni_posix_global_pollq));
 }
 

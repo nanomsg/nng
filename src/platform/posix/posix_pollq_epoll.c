@@ -377,6 +377,7 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 		nni_mtx_fini(&pq->mtx);
 		return (rv);
 	}
+	nni_thr_set_name(&pq->thr, "nng:poll:epoll");
 	nni_thr_run(&pq->thr);
 	return (0);
 }

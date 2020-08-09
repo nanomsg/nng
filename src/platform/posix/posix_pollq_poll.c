@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -329,6 +329,7 @@ nni_posix_pollq_create(nni_posix_pollq *pq)
 		nni_plat_pipe_close(pq->wakewfd, pq->wakerfd);
 		return (rv);
 	}
+	nni_thr_set_name(&pq->thr, "nng:poll:poll");
 	nni_mtx_init(&pq->mtx);
 	nni_thr_run(&pq->thr);
 	return (0);

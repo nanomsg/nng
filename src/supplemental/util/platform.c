@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -52,12 +52,18 @@ nng_thread_create(nng_thread **thrp, void (*func)(void *), void *arg)
 	return (0);
 }
 
+void
+nng_thread_set_name(nng_thread *thr, const char *name)
+{
+	nni_thr_set_name((void *)thr, name);
+}
+
 // Destroy a thread (waiting for it to complete.)  When this function
 // returns all resources for the thread are cleaned up.
 void
-nng_thread_destroy(nng_thread *thrp)
+nng_thread_destroy(nng_thread *thr)
 {
-	nni_thr *t = (void *) thrp;
+	nni_thr *t = (void *) thr;
 	nni_thr_fini(t);
 	NNI_FREE_STRUCT(t);
 }

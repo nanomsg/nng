@@ -49,6 +49,11 @@ typedef struct nng_thread nng_thread;
 // I/O APIs provided by nng.  The thread runs until completion.
 NNG_DECL int nng_thread_create(nng_thread **, void (*)(void *), void *);
 
+// Set the thread name.  Support for this is platform specific and varies.
+// It is intended to provide information for use when debugging applications,
+// and not for programmatic use beyond that.
+NNG_DECL void nng_thread_set_name(nng_thread *, const char *);
+
 // Destroy a thread (waiting for it to complete.)  When this function
 // returns all resources for the thread are cleaned up.
 NNG_DECL void nng_thread_destroy(nng_thread *);

@@ -14,10 +14,14 @@
 
 #ifdef NNG_PLATFORM_WINDOWS
 
+typedef HRESULT(WINAPI *pfnSetThreadDescription)(HANDLE, PCWSTR);
+static HMODULE hKernel32;
+
+static pfnSetThreadDescription set_thread_desc;
+
 // mingw does not define InterlockedAddNoFence64, use the mingw equivalent
 #if defined(__MINGW32__) || defined(__MINGW64__)
-#define InterlockedAddNoFence(a, b) \
-	__atomic_add_fetch(a, b, __ATOMIC_RELAXED)
+#define InterlockedAddNoFence(a, b) __atomic_add_fetch(a, b, __ATOMIC_RELAXED)
 #define InterlockedAddNoFence64(a, b) \
 	__atomic_add_fetch(a, b, __ATOMIC_RELAXED)
 #define InterlockedIncrementAcquire64(a) \
@@ -219,10 +223,9 @@ bool
 nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
 {
 	uint64_t old;
-	old = InterlockedCompareExchange64(&v->v, (LONG64)new, (LONG64)comp);
+	old = InterlockedCompareExchange64(&v->v, (LONG64) new, (LONG64) comp);
 	return (old == comp);
 }
-
 
 void
 nni_atomic_add(nni_atomic_int *v, int bump)
@@ -278,10 +281,9 @@ bool
 nni_atomic_cas(nni_atomic_int *v, int comp, int new)
 {
 	int old;
-	old = InterlockedCompareExchange(&v->v, (LONG)new, (LONG)comp);
+	old = InterlockedCompareExchange(&v->v, (LONG) new, (LONG) comp);
 	return (old == comp);
 }
-
 
 static unsigned int __stdcall nni_plat_thr_main(void *arg)
 {
@@ -325,6 +327,30 @@ nni_plat_thr_is_self(nni_plat_thr *thr)
 	return (GetCurrentThreadId() == thr->id);
 }
 
+void
+nni_plat_thr_set_name(nni_plat_thr *thr, const char *name)
+{
+	if (set_thread_desc != NULL) {
+                wchar_t *wcs;
+                size_t len;
+		HANDLE h;
+
+		if (thr == NULL) {
+			h = GetCurrentThread();
+		} else {
+			h = thr->handle;
+		}
+
+                len = strlen(name) + 1;
+		if ((wcs = nni_alloc(len * 2)) == NULL) {
+			return;
+		}
+		(void) MultiByteToWideChar(CP_UTF8, 0, name, len, wcs, len);
+		set_thread_desc(h, wcs);
+		nni_free(wcs, len * 2);
+	}
+}
+
 static LONG plat_inited = 0;
 
 int
@@ -346,10 +372,18 @@ nni_plat_init(int (*helper)(void))
 		return (0); // fast path
 	}
 
-	AcquireSRWLockExclusive(&lock);
+
+        AcquireSRWLockExclusive(&lock);
 
 	if (!plat_inited) {
-		if (((rv = nni_win_io_sysinit()) != 0) ||
+                // Let's look up the function to set thread descriptions.
+                hKernel32 = LoadLibrary(TEXT("kernel32.dll"));
+                if (hKernel32 != NULL) {
+                        set_thread_desc = (pfnSetThreadDescription)
+                            GetProcAddress(hKernel32, "SetThreadDescription");
+                }
+
+                if (((rv = nni_win_io_sysinit()) != 0) ||
 		    ((rv = nni_win_ipc_sysinit()) != 0) ||
 		    ((rv = nni_win_tcp_sysinit()) != 0) ||
 		    ((rv = nni_win_udp_sysinit()) != 0) ||
@@ -376,6 +410,9 @@ nni_plat_fini(void)
 	nni_win_tcp_sysfini();
 	nni_win_io_sysfini();
 	WSACleanup();
+	if (hKernel32 != NULL) {
+		FreeLibrary(hKernel32);
+	}
 	plat_inited = 0;
 }
 

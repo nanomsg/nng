@@ -1458,6 +1458,7 @@ zt_node_create(zt_node **ztnp, const char *path)
 		zt_node_destroy(ztn);
 		return (rv);
 	}
+	nni_thr_set_name(&ztn->zn_bgthr, "nng:zt");
 
 	if (strlen(path) > 0) {
 		char *lkfile;

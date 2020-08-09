@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -27,7 +27,9 @@ reap_worker(void *notused)
 {
 	NNI_ARG_UNUSED(notused);
 
-	nni_mtx_lock(&reap_mtx);
+        nni_thr_set_name(NULL, "nng:reap");
+
+        nni_mtx_lock(&reap_mtx);
 	for (;;) {
 		nni_reap_item *item;
 		while ((item = nni_list_first(&reap_list)) != NULL) {

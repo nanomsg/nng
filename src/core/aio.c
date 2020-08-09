@@ -488,6 +488,8 @@ nni_aio_expire_loop(void *unused)
 
 	NNI_ARG_UNUSED(unused);
 
+        nni_thr_set_name(NULL, "nng:aio:expire");
+
 	for (;;) {
 		nni_aio_cancelfn fn;
 		nni_time         now;

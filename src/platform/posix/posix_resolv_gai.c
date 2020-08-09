@@ -318,7 +318,9 @@ resolv_worker(void *unused)
 
 	NNI_ARG_UNUSED(unused);
 
-	nni_mtx_lock(&resolv_mtx);
+        nni_thr_set_name(NULL, "nng:resolver");
+
+        nni_mtx_lock(&resolv_mtx);
 	for (;;) {
 		nni_aio *    aio;
 		resolv_item *item;

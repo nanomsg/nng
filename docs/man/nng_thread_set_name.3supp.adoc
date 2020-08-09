@@ -1,0 +1,48 @@
+= nng_thread_set_name(3supp)
+//
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_thread_set_name - set thread name
+
+== SYNOPSIS
+
+[source, c]
+----
+#include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
+
+void nng_set_thread_name(nng_thread *thread, const char *name);
+----
+
+== DESCRIPTION
+
+The `nng_thread_set_name()` function attempts to set the name for the _thread_ to _name_.
+
+If _thread_ is `NULL`, then the name is set for the current thread.
+
+Support for this, and how names are exposed, varies between platform implementations.
+This function is intended to facilitate debugging applications that may have many threads.
+
+TIP: Internal threads created by _NNG_ will have names beginning with `nng:`.
+
+== RETURN VALUES
+
+None.
+
+== ERRORS
+
+None.
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_thread_create.3supp.adoc[nng_thread_create(3supp)],
+xref:nng.7.adoc[nng(7)]

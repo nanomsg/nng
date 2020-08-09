@@ -34,7 +34,9 @@ nni_taskq_thread(void *self)
 	nni_taskq *    tq  = thr->tqt_tq;
 	nni_task *     task;
 
-	nni_mtx_lock(&tq->tq_mtx);
+        nni_thr_set_name(NULL, "nng:task");
+
+        nni_mtx_lock(&tq->tq_mtx);
 	for (;;) {
 		if ((task = nni_list_first(&tq->tq_tasks)) != NULL) {
 
