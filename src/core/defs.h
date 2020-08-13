@@ -85,30 +85,30 @@ typedef struct {
 #define NNI_ALLOC_STRUCTS(s, n) nni_zalloc(sizeof(*s) * n)
 #define NNI_FREE_STRUCTS(s, n) nni_free(s, sizeof(*s) * n)
 
-#define NNI_PUT16(ptr, u)                                    \
+#define NNI_PUT16(ptr, n)                                    \
 	do {                                                 \
-		(ptr)[0] = (uint8_t)(((uint16_t)(u)) >> 8u); \
-		(ptr)[1] = (uint8_t)((uint16_t)(u));         \
+		(ptr)[0] = (uint8_t)(((uint16_t)(n)) >> 8u); \
+		(ptr)[1] = (uint8_t)((uint16_t)(n));         \
 	} while (0)
 
-#define NNI_PUT32(ptr, u)                                     \
+#define NNI_PUT32(ptr, n)                                     \
 	do {                                                  \
-		(ptr)[0] = (uint8_t)(((uint32_t)(u)) >> 24u); \
-		(ptr)[1] = (uint8_t)(((uint32_t)(u)) >> 16u); \
-		(ptr)[2] = (uint8_t)(((uint32_t)(u)) >> 8u);  \
-		(ptr)[3] = (uint8_t)((uint32_t)(u));          \
+		(ptr)[0] = (uint8_t)(((uint32_t)(n)) >> 24u); \
+		(ptr)[1] = (uint8_t)(((uint32_t)(n)) >> 16u); \
+		(ptr)[2] = (uint8_t)(((uint32_t)(n)) >> 8u);  \
+		(ptr)[3] = (uint8_t)((uint32_t)(n));          \
 	} while (0)
 
-#define NNI_PUT64(ptr, u)                                     \
+#define NNI_PUT64(ptr, n)                                     \
 	do {                                                  \
-		(ptr)[0] = (uint8_t)(((uint64_t)(u)) >> 56u); \
-		(ptr)[1] = (uint8_t)(((uint64_t)(u)) >> 48u); \
-		(ptr)[2] = (uint8_t)(((uint64_t)(u)) >> 40u); \
-		(ptr)[3] = (uint8_t)(((uint64_t)(u)) >> 32u); \
-		(ptr)[4] = (uint8_t)(((uint64_t)(u)) >> 24u); \
-		(ptr)[5] = (uint8_t)(((uint64_t)(u)) >> 16u); \
-		(ptr)[6] = (uint8_t)(((uint64_t)(u)) >> 8u);  \
-		(ptr)[7] = (uint8_t)((uint64_t)(u));          \
+		(ptr)[0] = (uint8_t)(((uint64_t)(n)) >> 56u); \
+		(ptr)[1] = (uint8_t)(((uint64_t)(n)) >> 48u); \
+		(ptr)[2] = (uint8_t)(((uint64_t)(n)) >> 40u); \
+		(ptr)[3] = (uint8_t)(((uint64_t)(n)) >> 32u); \
+		(ptr)[4] = (uint8_t)(((uint64_t)(n)) >> 24u); \
+		(ptr)[5] = (uint8_t)(((uint64_t)(n)) >> 16u); \
+		(ptr)[6] = (uint8_t)(((uint64_t)(n)) >> 8u);  \
+		(ptr)[7] = (uint8_t)((uint64_t)(n));          \
 	} while (0)
 
 #define NNI_GET16(ptr, v)                             \

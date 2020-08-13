@@ -25,6 +25,10 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+#if USE_NNG_SNPRINTF
+#include "supplemental/util/nng_snprintf.h"
+#endif
+
 // NNG_DECL is used on declarations to deal with scope.
 // For building Windows DLLs, it should be the appropriate __declspec().
 // For shared libraries with platforms that support hidden visibility,

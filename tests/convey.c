@@ -59,6 +59,10 @@
 
 #include "convey.h"
 
+#if USE_NNG_SNPRINTF
+#include "nng/supplemental/util/nng_snprintf.h"
+#endif
+
 /*
  * About symbol naming.  We use Go-like conventions to help set expectations,
  * even though we cannot necessarily count on the linker to prevent
