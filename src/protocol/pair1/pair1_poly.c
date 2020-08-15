@@ -40,7 +40,7 @@ struct pair1poly_sock {
 	nni_sock *     sock;
 	nni_atomic_int ttl;
 	nni_mtx        mtx;
-	nni_idhash *   pipes;
+	nni_id_map     pipes;
 	nni_list       plist;
 	bool           started;
 	nni_aio        aio_get;
@@ -72,7 +72,7 @@ pair1poly_sock_fini(void *arg)
 	pair1poly_sock *s = arg;
 
 	nni_aio_fini(&s->aio_get);
-	nni_idhash_fini(s->pipes);
+	nni_id_map_fini(&s->pipes);
 	nni_mtx_fini(&s->mtx);
 }
 
@@ -81,9 +81,7 @@ pair1poly_sock_init(void *arg, nni_sock *sock)
 {
 	pair1poly_sock *s = arg;
 
-	if (nni_idhash_init(&s->pipes) != 0) {
-		return (NNG_ENOMEM);
-	}
+	nni_id_map_init(&s->pipes, 0, 0, false);
 	NNI_LIST_INIT(&s->plist, pair1poly_pipe, node);
 
 	// Raw mode uses this.
@@ -196,7 +194,7 @@ pair1poly_pipe_start(void *arg)
 	}
 
 	id = nni_pipe_id(p->pipe);
-	if ((rv = nni_idhash_insert(s->pipes, id, p)) != 0) {
+	if ((rv = nni_id_set(&s->pipes, id, p)) != 0) {
 		nni_mtx_unlock(&s->mtx);
 		return (rv);
 	}
@@ -231,7 +229,7 @@ pair1poly_pipe_close(void *arg)
 	nni_aio_close(&p->aio_get);
 
 	nni_mtx_lock(&s->mtx);
-	nni_idhash_remove(s->pipes, nni_pipe_id(p->pipe));
+	nni_id_remove(&s->pipes, nni_pipe_id(p->pipe));
 	nni_list_node_remove(&p->node);
 	nni_mtx_unlock(&s->mtx);
 
@@ -311,7 +309,7 @@ pair1poly_sock_get_cb(void *arg)
 	    (!nni_list_empty(&s->plist))) {
 		p = nni_list_first(&s->plist);
 	} else {
-		nni_idhash_find(s->pipes, id, (void **) &p);
+		p = nni_id_get(&s->pipes, id);
 	}
 
 	// Try a non-blocking send.  If this fails we just discard the

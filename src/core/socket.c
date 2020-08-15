@@ -16,10 +16,11 @@
 
 // Socket implementation.
 
-static nni_list    sock_list;
-static nni_idhash *sock_hash;
-static nni_mtx     sock_lk;
-static nni_idhash *ctx_hash;
+static nni_list   sock_list;
+static nni_id_map sock_ids;
+static nni_mtx    sock_lk;
+static nni_id_map ctx_ids;
+static bool       inited;
 
 struct nni_ctx {
 	nni_list_node     c_node;
@@ -117,7 +118,7 @@ static void listener_shutdown_locked(nni_listener *);
 #define SOCK(s) ((nni_sock *) (s))
 
 static int
-sock_get_fd(void *s, int flag, int *fdp)
+sock_get_fd(void *s, unsigned flag, int *fdp)
 {
 	int           rv;
 	nni_pollable *p;
@@ -374,19 +375,17 @@ nni_sock_find(nni_sock **sockp, uint32_t id)
 		return (rv);
 	}
 	nni_mtx_lock(&sock_lk);
-	if ((rv = nni_idhash_find(sock_hash, id, (void **) &s)) == 0) {
+	if ((s = nni_id_get(&sock_ids, id)) != NULL) {
 		if (s->s_closed) {
 			rv = NNG_ECLOSED;
 		} else {
 			s->s_refcnt++;
 			*sockp = s;
 		}
-	}
-	nni_mtx_unlock(&sock_lk);
-
-	if (rv == NNG_ENOENT) {
+	} else {
 		rv = NNG_ECLOSED;
 	}
+	nni_mtx_unlock(&sock_lk);
 
 	return (rv);
 }
@@ -582,33 +581,22 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 int
 nni_sock_sys_init(void)
 {
-	int rv;
-
 	NNI_LIST_INIT(&sock_list, nni_sock, s_node);
 	nni_mtx_init(&sock_lk);
 
-	if (((rv = nni_idhash_init(&sock_hash)) != 0) ||
-	    ((rv = nni_idhash_init(&ctx_hash)) != 0)) {
-		nni_sock_sys_fini();
-		return (rv);
-	}
-	nni_idhash_set_limits(sock_hash, 1, 0x7fffffff, 1);
-	nni_idhash_set_limits(ctx_hash, 1, 0x7fffffff, 1);
+	nni_id_map_init(&sock_ids, 1, 0x7fffffff, false);
+	nni_id_map_init(&ctx_ids, 1, 0x7fffffff, false);
+	inited = true;
 	return (0);
 }
 
 void
 nni_sock_sys_fini(void)
 {
-	if (sock_hash != NULL) {
-		nni_idhash_fini(sock_hash);
-		sock_hash = NULL;
-	}
-	if (ctx_hash != NULL) {
-		nni_idhash_fini(ctx_hash);
-		ctx_hash = NULL;
-	}
+	nni_id_map_fini(&sock_ids);
+	nni_id_map_fini(&ctx_ids);
 	nni_mtx_fini(&sock_lk);
+	inited = false;
 }
 
 int
@@ -628,7 +616,7 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	}
 
 	nni_mtx_lock(&sock_lk);
-	if (nni_idhash_alloc32(sock_hash, &s->s_id, s) != 0) {
+	if (nni_id_alloc(&sock_ids, &s->s_id, s) != 0) {
 		sock_destroy(s);
 	} else {
 		nni_list_append(&sock_list, s);
@@ -691,7 +679,7 @@ nni_sock_shutdown(nni_sock *sock)
 		ctx->c_closed = true;
 		if (ctx->c_refcnt == 0) {
 			// No open operations.  So close it.
-			nni_idhash_remove(ctx_hash, ctx->c_id);
+			nni_id_remove(&ctx_ids, ctx->c_id);
 			nni_list_remove(&sock->s_ctxs, ctx);
 			nni_ctx_destroy(ctx);
 		}
@@ -790,7 +778,7 @@ nni_sock_close(nni_sock *s)
 		return;
 	}
 	s->s_closed = true;
-	nni_idhash_remove(sock_hash, s->s_id);
+	nni_id_remove(&sock_ids, s->s_id);
 
 	// We might have been removed from the list already, e.g. by
 	// nni_sock_closeall.  This is idempotent.
@@ -820,7 +808,7 @@ nni_sock_closeall(void)
 {
 	nni_sock *s;
 
-	if (sock_hash == NULL) {
+	if (!inited) {
 		return;
 	}
 	for (;;) {
@@ -1152,7 +1140,7 @@ nni_sock_set_pipe_cb(nni_sock *s, int ev, nng_pipe_cb cb, void *arg)
 }
 
 int
-nni_ctx_find(nni_ctx **ctxp, uint32_t id, bool closing)
+nni_ctx_find(nni_ctx **cp, uint32_t id, bool closing)
 {
 	int      rv;
 	nni_ctx *ctx;
@@ -1161,7 +1149,7 @@ nni_ctx_find(nni_ctx **ctxp, uint32_t id, bool closing)
 		return (rv);
 	}
 	nni_mtx_lock(&sock_lk);
-	if ((rv = nni_idhash_find(ctx_hash, id, (void **) &ctx)) == 0) {
+	if ((ctx = nni_id_get(&ctx_ids, id)) != NULL) {
 		// We refuse a reference if either the socket is
 		// closed, or the context is closed.  (If the socket
 		// is closed, and we are only getting the reference so
@@ -1172,14 +1160,12 @@ nni_ctx_find(nni_ctx **ctxp, uint32_t id, bool closing)
 			rv = NNG_ECLOSED;
 		} else {
 			ctx->c_refcnt++;
-			*ctxp = ctx;
+			*cp = ctx;
 		}
-	}
-	nni_mtx_unlock(&sock_lk);
-
-	if (rv == NNG_ENOENT) {
+	} else {
 		rv = NNG_ECLOSED;
 	}
+	nni_mtx_unlock(&sock_lk);
 
 	return (rv);
 }
@@ -1211,7 +1197,7 @@ nni_ctx_rele(nni_ctx *ctx)
 	// Remove us from the hash, so we can't be found any more.
 	// This allows our ID to be reused later, although the system
 	// tries to avoid ID reuse.
-	nni_idhash_remove(ctx_hash, ctx->c_id);
+	nni_id_remove(&ctx_ids, ctx->c_id);
 	nni_list_remove(&sock->s_ctxs, ctx);
 	if (sock->s_closed || sock->s_ctxwait) {
 		nni_cv_wake(&sock->s_close_cv);
@@ -1236,8 +1222,8 @@ nni_ctx_open(nni_ctx **ctxp, nni_sock *sock)
 	if ((ctx = nni_zalloc(sz)) == NULL) {
 		return (NNG_ENOMEM);
 	}
-	ctx->c_size = sz;
-	ctx->c_data = ctx + 1;
+	ctx->c_size     = sz;
+	ctx->c_data     = ctx + 1;
 	ctx->c_closed   = false;
 	ctx->c_refcnt   = 1; // Caller implicitly gets a reference.
 	ctx->c_sock     = sock;
@@ -1251,14 +1237,14 @@ nni_ctx_open(nni_ctx **ctxp, nni_sock *sock)
 		nni_free(ctx, ctx->c_size);
 		return (NNG_ECLOSED);
 	}
-	if ((rv = nni_idhash_alloc32(ctx_hash, &ctx->c_id, ctx)) != 0) {
+	if ((rv = nni_id_alloc(&ctx_ids, &ctx->c_id, ctx)) != 0) {
 		nni_mtx_unlock(&sock_lk);
 		nni_free(ctx, ctx->c_size);
 		return (rv);
 	}
 
 	if ((rv = sock->s_ctx_ops.ctx_init(ctx->c_data, sock->s_data)) != 0) {
-		nni_idhash_remove(ctx_hash, ctx->c_id);
+		nni_id_remove(&ctx_ids, ctx->c_id);
 		nni_mtx_unlock(&sock_lk);
 		nni_free(ctx, ctx->c_size);
 		return (rv);
@@ -1396,7 +1382,7 @@ dialer_timer_start_locked(nni_dialer *d)
 	// This algorithm may lead to slight biases because we don't
 	// have a statistically perfect distribution with the modulo of
 	// the random number, but this really doesn't matter.
-	nni_sleep_aio(back_off ? nni_random() % back_off : 0, d->d_tmo_aio);
+	nni_sleep_aio(back_off ? nni_random() % back_off : 0, &d->d_tmo_aio);
 }
 
 void
@@ -1460,8 +1446,8 @@ dialer_shutdown_impl(nni_dialer *d)
 	nni_pipe *p;
 
 	// Abort any remaining in-flight operations.
-	nni_aio_close(d->d_con_aio);
-	nni_aio_close(d->d_tmo_aio);
+	nni_aio_close(&d->d_con_aio);
+	nni_aio_close(&d->d_tmo_aio);
 
 	// Stop the underlying transport.
 	d->d_ops.d_close(d->d_data);
@@ -1494,8 +1480,8 @@ nni_dialer_reap(nni_dialer *d)
 {
 	nni_sock *s = d->d_sock;
 
-	nni_aio_stop(d->d_tmo_aio);
-	nni_aio_stop(d->d_con_aio);
+	nni_aio_stop(&d->d_tmo_aio);
+	nni_aio_stop(&d->d_con_aio);
 
 	nni_stat_unregister(&d->d_stats.s_root);
 
@@ -1571,8 +1557,8 @@ listener_shutdown_impl(nni_listener *l)
 	nni_pipe *p;
 
 	// Abort any remaining in-flight accepts.
-	nni_aio_close(l->l_acc_aio);
-	nni_aio_close(l->l_tmo_aio);
+	nni_aio_close(&l->l_acc_aio);
+	nni_aio_close(&l->l_tmo_aio);
 
 	// Stop the underlying transport.
 	l->l_ops.l_close(l->l_data);
@@ -1606,8 +1592,8 @@ nni_listener_reap(nni_listener *l)
 {
 	nni_sock *s = l->l_sock;
 
-	nni_aio_stop(l->l_tmo_aio);
-	nni_aio_stop(l->l_acc_aio);
+	nni_aio_stop(&l->l_tmo_aio);
+	nni_aio_stop(&l->l_acc_aio);
 
 	nni_stat_unregister(&l->l_stats.s_root);
 

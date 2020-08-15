@@ -50,7 +50,7 @@ struct resp0_ctx {
 struct resp0_sock {
 	nni_mtx        mtx;
 	nni_atomic_int ttl;
-	nni_idhash *   pipes;
+	nni_id_map     pipes;
 	resp0_ctx      ctx;
 	nni_list       recvpipes;
 	nni_list       recvq;
@@ -181,7 +181,7 @@ resp0_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 
-	if (nni_idhash_find(s->pipes, pid, (void **) &p) != 0) {
+	if ((p = nni_id_get(&s->pipes, pid)) == NULL) {
 		// Surveyor has left the building.  Just discard the reply.
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_set_msg(aio, NULL);
@@ -213,7 +213,7 @@ resp0_sock_fini(void *arg)
 {
 	resp0_sock *s = arg;
 
-	nni_idhash_fini(s->pipes);
+	nni_id_map_fini(&s->pipes);
 	resp0_ctx_fini(&s->ctx);
 	nni_pollable_fini(&s->writable);
 	nni_pollable_fini(&s->readable);
@@ -224,15 +224,11 @@ static int
 resp0_sock_init(void *arg, nni_sock *nsock)
 {
 	resp0_sock *s = arg;
-	int         rv;
 
 	NNI_ARG_UNUSED(nsock);
 
 	nni_mtx_init(&s->mtx);
-	if ((rv = nni_idhash_init(&s->pipes)) != 0) {
-		resp0_sock_fini(s);
-		return (rv);
-	}
+	nni_id_map_init(&s->pipes, 0, 0, false);
 
 	NNI_LIST_INIT(&s->recvq, resp0_ctx, rqnode);
 	NNI_LIST_INIT(&s->recvpipes, resp0_pipe, rnode);
@@ -316,7 +312,7 @@ resp0_pipe_start(void *arg)
 	}
 
 	nni_mtx_lock(&s->mtx);
-	rv = nni_idhash_insert(s->pipes, p->id, p);
+	rv = nni_id_set(&s->pipes, p->id, p);
 	nni_mtx_unlock(&s->mtx);
 	if (rv != 0) {
 		return (rv);
@@ -354,7 +350,7 @@ resp0_pipe_close(void *arg)
 		// which we will happily discard.
 		nni_pollable_raise(&s->writable);
 	}
-	nni_idhash_remove(s->pipes, p->id);
+	nni_id_remove(&s->pipes, p->id);
 	nni_mtx_unlock(&s->mtx);
 }
 

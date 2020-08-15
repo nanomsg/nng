@@ -34,7 +34,7 @@ struct pair1_sock {
 	bool           raw;
 	nni_atomic_int ttl;
 	nni_mtx        mtx;
-	nni_idhash *   pipes;
+	nni_id_map     pipes;
 	nni_list       plist;
 	bool           started;
 	nni_stat_item  stat_poly;
@@ -66,7 +66,7 @@ pair1_sock_fini(void *arg)
 {
 	pair1_sock *s = arg;
 
-	nni_idhash_fini(s->pipes);
+	nni_id_map_fini(&s->pipes);
 	nni_mtx_fini(&s->mtx);
 }
 
@@ -75,9 +75,7 @@ pair1_sock_init_impl(void *arg, nni_sock *sock, bool raw)
 {
 	pair1_sock *s = arg;
 
-	if (nni_idhash_init(&s->pipes) != 0) {
-		return (NNG_ENOMEM);
-	}
+	nni_id_map_init(&s->pipes, 0, 0, false);
 	NNI_LIST_INIT(&s->plist, pair1_pipe, node);
 
 	// Raw mode uses this.
@@ -199,12 +197,12 @@ pair1_pipe_start(void *arg)
 	}
 
 	id = nni_pipe_id(p->pipe);
-	if ((rv = nni_idhash_insert(s->pipes, id, p)) != 0) {
+	if ((rv = nni_id_set(&s->pipes, id, p)) != 0) {
 		nni_mtx_unlock(&s->mtx);
 		return (rv);
 	}
 	if (!nni_list_empty(&s->plist)) {
-		nni_idhash_remove(s->pipes, id);
+		nni_id_remove(&s->pipes, id);
 		nni_mtx_unlock(&s->mtx);
 		BUMP_STAT(&s->stat_reject_already);
 		return (NNG_EBUSY);
@@ -234,7 +232,7 @@ pair1_pipe_close(void *arg)
 	nni_aio_close(&p->aio_get);
 
 	nni_mtx_lock(&s->mtx);
-	nni_idhash_remove(s->pipes, nni_pipe_id(p->pipe));
+	nni_id_remove(&s->pipes, nni_pipe_id(p->pipe));
 	nni_list_node_remove(&p->node);
 	nni_mtx_unlock(&s->mtx);
 }
@@ -399,7 +397,6 @@ pair1_sock_get_max_ttl(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	pair1_sock *s = arg;
 	return (nni_copyout_int(nni_atomic_get(&s->ttl), buf, szp, t));
 }
-
 
 #ifdef NNG_TEST_LIB
 static int

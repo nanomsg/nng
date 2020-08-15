@@ -50,8 +50,8 @@ struct nni_dialer {
 	nni_mtx             d_mtx;
 	nni_list            d_pipes;
 	nni_aio *           d_user_aio;
-	nni_aio *           d_con_aio;
-	nni_aio *           d_tmo_aio;  // backoff timer
+	nni_aio             d_con_aio;
+	nni_aio             d_tmo_aio;  // backoff timer
 	nni_duration        d_maxrtime; // maximum time for reconnect
 	nni_duration        d_currtime; // current time for reconnect
 	nni_duration        d_inirtime; // initial time for reconnect
@@ -91,8 +91,8 @@ struct nni_listener {
 	bool                  l_closing; // close started (shutdown)
 	nni_atomic_flag       l_started;
 	nni_list              l_pipes;
-	nni_aio *             l_acc_aio;
-	nni_aio *             l_tmo_aio;
+	nni_aio               l_acc_aio;
+	nni_aio               l_tmo_aio;
 	nni_reap_item         l_reap;
 	nni_listener_stats    l_stats;
 };

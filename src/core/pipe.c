@@ -13,34 +13,23 @@
 #include "sockimpl.h"
 
 #include <stdio.h>
-#include <string.h>
 
 // This file contains functions relating to pipes.
 //
 // Operations on pipes (to the transport) are generally blocking operations,
 // performed in the context of the protocol.
 
-static nni_idhash *nni_pipes;
-static nni_mtx     nni_pipe_lk;
+static nni_id_map pipes;
+static nni_mtx    pipes_lk;
 
 int
 nni_pipe_sys_init(void)
 {
-	int rv;
+	nni_mtx_init(&pipes_lk);
 
-	nni_mtx_init(&nni_pipe_lk);
-
-	if ((rv = nni_idhash_init(&nni_pipes)) != 0) {
-		return (rv);
-	}
-
-	// Note that pipes have their own namespace.  ID hash will
-	// guarantee the that the first value is reasonable (non-zero),
-	// if we supply an out of range value (0).  (Consequently the
-	// value "1" has a bias -- its roughly twice as likely to be
-	// chosen as any other value.  This does not mater.)
-	nni_idhash_set_limits(
-	    nni_pipes, 1, 0x7fffffff, nni_random() & 0x7fffffffu);
+	// Pipe IDs needs to have high order bit clear, and we want
+	// them to start at a random value.
+	nni_id_map_init(&pipes, 1, 0x7fffffff, true);
 
 	return (0);
 }
@@ -49,11 +38,8 @@ void
 nni_pipe_sys_fini(void)
 {
 	nni_reap_drain();
-	nni_mtx_fini(&nni_pipe_lk);
-	if (nni_pipes != NULL) {
-		nni_idhash_fini(nni_pipes);
-		nni_pipes = NULL;
-	}
+	nni_mtx_fini(&pipes_lk);
+	nni_id_map_fini(&pipes);
 }
 
 static void
@@ -67,15 +53,15 @@ pipe_destroy(nni_pipe *p)
 
 	// Make sure any unlocked holders are done with this.
 	// This happens during initialization for example.
-	nni_mtx_lock(&nni_pipe_lk);
+	nni_mtx_lock(&pipes_lk);
 	if (p->p_id != 0) {
-		nni_idhash_remove(nni_pipes, p->p_id);
+		nni_id_remove(&pipes, p->p_id);
 	}
 	// This wait guarantees that all callers are done with us.
 	while (p->p_refcnt != 0) {
 		nni_cv_wait(&p->p_cv);
 	}
-	nni_mtx_unlock(&nni_pipe_lk);
+	nni_mtx_unlock(&pipes_lk);
 
 	if (p->p_proto_data != NULL) {
 		p->p_proto_ops.pipe_stop(p->p_proto_data);
@@ -101,31 +87,30 @@ pipe_destroy(nni_pipe *p)
 int
 nni_pipe_find(nni_pipe **pp, uint32_t id)
 {
-	int       rv;
 	nni_pipe *p;
-	nni_mtx_lock(&nni_pipe_lk);
 
 	// We don't care if the pipe is "closed".  End users only have
 	// access to the pipe in order to obtain properties (which may
 	// be retried during the post-close notification callback) or to
 	// close the pipe.
-	if ((rv = nni_idhash_find(nni_pipes, id, (void **) &p)) == 0) {
+        nni_mtx_lock(&pipes_lk);
+	if ((p = nni_id_get(&pipes, id)) != NULL) {
 		p->p_refcnt++;
 		*pp = p;
 	}
-	nni_mtx_unlock(&nni_pipe_lk);
-	return (rv);
+	nni_mtx_unlock(&pipes_lk);
+	return (p == NULL ? NNG_ENOENT : 0);
 }
 
 void
 nni_pipe_rele(nni_pipe *p)
 {
-	nni_mtx_lock(&nni_pipe_lk);
+	nni_mtx_lock(&pipes_lk);
 	p->p_refcnt--;
 	if (p->p_refcnt == 0) {
 		nni_cv_wake(&p->p_cv);
 	}
-	nni_mtx_unlock(&nni_pipe_lk);
+	nni_mtx_unlock(&pipes_lk);
 }
 
 // nni_pipe_id returns the 32-bit pipe id, which can be used in backtraces.
@@ -188,9 +173,9 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	void *              sdata = nni_sock_proto_data(sock);
 	nni_proto_pipe_ops *pops  = nni_sock_proto_pipe_ops(sock);
 	nni_pipe_stats *    st;
-	size_t sz;
+	size_t              sz;
 
-	sz = NNI_ALIGN_UP(sizeof (*p)) + pops->pipe_size;
+	sz = NNI_ALIGN_UP(sizeof(*p)) + pops->pipe_size;
 
 	if ((p = nni_zalloc(sz)) == NULL) {
 		// In this case we just toss the pipe...
@@ -198,7 +183,7 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 		return (NNG_ENOMEM);
 	}
 
-	p->p_size = sz;
+	p->p_size       = sz;
 	p->p_proto_data = p + 1;
 	p->p_tran_ops   = *tran->tran_pipe;
 	p->p_tran_data  = tdata;
@@ -214,13 +199,13 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
 	nni_mtx_init(&p->p_mtx);
-	nni_cv_init(&p->p_cv, &nni_pipe_lk);
+	nni_cv_init(&p->p_cv, &pipes_lk);
 
-	nni_mtx_lock(&nni_pipe_lk);
-	if ((rv = nni_idhash_alloc32(nni_pipes, &p->p_id, p)) == 0) {
+	nni_mtx_lock(&pipes_lk);
+	if ((rv = nni_id_alloc(&pipes, &p->p_id, p)) == 0) {
 		p->p_refcnt = 1;
 	}
-	nni_mtx_unlock(&nni_pipe_lk);
+	nni_mtx_unlock(&pipes_lk);
 
 	snprintf(st->s_scope, sizeof(st->s_scope), "pipe%u", p->p_id);
 

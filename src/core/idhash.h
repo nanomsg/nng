@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,20 +23,28 @@
 // use table sizes that are powers of two.  Note that hash items
 // must be non-NULL.  The table is protected by an internal lock.
 
-typedef struct nni_idhash       nni_idhash;
-typedef struct nni_idhash_entry nni_idhash_entry;
+typedef struct nni_id_map       nni_id_map;
+typedef struct nni_id_entry     nni_id_entry;
 
-extern int  nni_idhash_init(nni_idhash **);
-extern void nni_idhash_fini(nni_idhash *);
-extern void nni_idhash_set_limits(nni_idhash *, uint64_t, uint64_t, uint64_t);
-extern int  nni_idhash_find(nni_idhash *, uint64_t, void **);
-extern int  nni_idhash_remove(nni_idhash *, uint64_t);
-extern int  nni_idhash_insert(nni_idhash *, uint64_t, void *);
-extern int  nni_idhash_alloc(nni_idhash *, uint64_t *, void *);
+// NB: These details are entirely private to the hash implementation.
+// They are provided here to facilitate inlining in structures.
+struct nni_id_map {
+	size_t        id_cap;
+	size_t        id_count;
+	size_t        id_load;
+	size_t        id_min_load; // considers placeholders
+	size_t        id_max_load;
+	uint32_t      id_min_val;
+	uint32_t      id_max_val;
+	uint32_t      id_dyn_val;
+	nni_id_entry *id_entries;
+};
 
-// 32-bit version of idhash -- limits must have been set accordingly.
-extern int nni_idhash_alloc32(nni_idhash *, uint32_t *, void *);
-
-extern size_t nni_idhash_count(nni_idhash *);
+extern void nni_id_map_init(nni_id_map *, uint32_t, uint32_t, bool);
+extern void nni_id_map_fini(nni_id_map *);
+extern void *nni_id_get(nni_id_map *, uint32_t);
+extern int nni_id_set(nni_id_map *, uint32_t, void *);
+extern int nni_id_alloc(nni_id_map *, uint32_t *, void *);
+extern int nni_id_remove(nni_id_map *, uint32_t);
 
 #endif // CORE_IDHASH_H

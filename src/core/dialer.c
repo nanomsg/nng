@@ -20,21 +20,16 @@ static void dialer_connect_start(nni_dialer *);
 static void dialer_connect_cb(void *);
 static void dialer_timer_cb(void *);
 
-static nni_idhash *dialers;
-static nni_mtx     dialers_lk;
+static nni_id_map dialers;
+static nni_mtx    dialers_lk;
 
 #define BUMP_STAT(x) nni_stat_inc_atomic(x, 1)
 
 int
 nni_dialer_sys_init(void)
 {
-	int rv;
-
-	if ((rv = nni_idhash_init(&dialers)) != 0) {
-		return (rv);
-	}
+	nni_id_map_init(&dialers, 1, 0x7fffffff, false);
 	nni_mtx_init(&dialers_lk);
-	nni_idhash_set_limits(dialers, 1, 0x7fffffff, 1);
 
 	return (0);
 }
@@ -44,8 +39,7 @@ nni_dialer_sys_fini(void)
 {
 	nni_reap_drain();
 	nni_mtx_fini(&dialers_lk);
-	nni_idhash_fini(dialers);
-	dialers = NULL;
+	nni_id_map_fini(&dialers);
 }
 
 uint32_t
@@ -57,11 +51,11 @@ nni_dialer_id(nni_dialer *d)
 void
 nni_dialer_destroy(nni_dialer *d)
 {
-	nni_aio_stop(d->d_con_aio);
-	nni_aio_stop(d->d_tmo_aio);
+	nni_aio_stop(&d->d_con_aio);
+	nni_aio_stop(&d->d_tmo_aio);
 
-	nni_aio_free(d->d_con_aio);
-	nni_aio_free(d->d_tmo_aio);
+	nni_aio_fini(&d->d_con_aio);
+	nni_aio_fini(&d->d_tmo_aio);
 
 	if (d->d_data != NULL) {
 		d->d_ops.d_fini(d->d_data);
@@ -112,7 +106,7 @@ dialer_stats_init(nni_dialer *d)
 	nni_stat_init_atomic(&st->s_etimedout, "timedout", "timed out");
 	nni_stat_add(root, &st->s_etimedout);
 
-	nni_stat_init_atomic(&st->s_eproto, "protoerr", "protcol errors");
+	nni_stat_init_atomic(&st->s_eproto, "protoerr", "protocol errors");
 	nni_stat_add(root, &st->s_eproto);
 
 	nni_stat_init_atomic(&st->s_eauth, "autherr", "auth errors");
@@ -204,11 +198,18 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 	nni_mtx_init(&d->d_mtx);
 
 	dialer_stats_init(d);
-	if (((rv = nni_aio_alloc(&d->d_con_aio, dialer_connect_cb, d)) != 0) ||
-	    ((rv = nni_aio_alloc(&d->d_tmo_aio, dialer_timer_cb, d)) != 0) ||
-	    ((rv = d->d_ops.d_init(&d->d_data, url, d)) != 0) ||
-	    ((rv = nni_idhash_alloc32(dialers, &d->d_id, d)) != 0) ||
+	nni_aio_init(&d->d_con_aio, dialer_connect_cb, d);
+	nni_aio_init(&d->d_tmo_aio, dialer_timer_cb, d);
+
+	nni_mtx_lock(&dialers_lk);
+	rv = nni_id_alloc(&dialers, &d->d_id, d);
+	nni_mtx_unlock(&dialers_lk);
+
+	if ((rv != 0) || ((rv = d->d_ops.d_init(&d->d_data, url, d)) != 0) ||
 	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
+		nni_mtx_lock(&dialers_lk);
+		nni_id_remove(&dialers, d->d_id);
+		nni_mtx_unlock(&dialers_lk);
 		nni_dialer_destroy(d);
 		return (rv);
 	}
@@ -232,16 +233,12 @@ nni_dialer_find(nni_dialer **dp, uint32_t id)
 	}
 
 	nni_mtx_lock(&dialers_lk);
-	if ((rv = nni_idhash_find(dialers, id, (void **) &d)) == 0) {
-		if (d->d_closed) {
-			rv = NNG_ECLOSED;
-		} else {
-			d->d_refcnt++;
-			*dp = d;
-		}
+	if ((d = nni_id_get(&dialers, id)) != NULL) {
+		d->d_refcnt++;
+		*dp = d;
 	}
 	nni_mtx_unlock(&dialers_lk);
-	return (rv);
+	return (d == NULL ? NNG_ENOENT : 0);
 }
 
 int
@@ -280,13 +277,8 @@ nni_dialer_close_rele(nni_dialer *d)
 		return;
 	}
 	d->d_closed = true;
+	nni_id_remove(&dialers, d->d_id);
 	nni_mtx_unlock(&dialers_lk);
-
-	// Remove us from the table so we cannot be found.
-	// This is done fairly early in the teardown process.
-	// If we're here, either the socket or the listener has been
-	// closed at the user request, so there would be a race anyway.
-	nni_idhash_remove(dialers, d->d_id);
 
 	nni_dialer_rele(d);
 }
@@ -301,13 +293,8 @@ nni_dialer_close(nni_dialer *d)
 		return;
 	}
 	d->d_closed = true;
+	nni_id_remove(&dialers, d->d_id);
 	nni_mtx_unlock(&dialers_lk);
-
-	// Remove us from the table so we cannot be found.
-	// This is done fairly early in the teardown process.
-	// If we're here, either the socket or the listener has been
-	// closed at the user request, so there would be a race anyway.
-	nni_idhash_remove(dialers, d->d_id);
 
 	nni_dialer_shutdown(d);
 
@@ -317,10 +304,9 @@ nni_dialer_close(nni_dialer *d)
 static void
 dialer_timer_cb(void *arg)
 {
-	nni_dialer *d   = arg;
-	nni_aio *   aio = d->d_tmo_aio;
+	nni_dialer *d = arg;
 
-	if (nni_aio_result(aio) == 0) {
+	if (nni_aio_result(&d->d_tmo_aio) == 0) {
 		dialer_connect_start(d);
 	}
 }
@@ -329,7 +315,7 @@ static void
 dialer_connect_cb(void *arg)
 {
 	nni_dialer *d   = arg;
-	nni_aio *   aio = d->d_con_aio;
+	nni_aio *   aio = &d->d_con_aio;
 	nni_aio *   user_aio;
 	int         rv;
 
@@ -366,13 +352,11 @@ dialer_connect_cb(void *arg)
 static void
 dialer_connect_start(nni_dialer *d)
 {
-	nni_aio *aio = d->d_con_aio;
-
-	d->d_ops.d_connect(d->d_data, aio);
+	d->d_ops.d_connect(d->d_data, &d->d_con_aio);
 }
 
 int
-nni_dialer_start(nni_dialer *d, int flags)
+nni_dialer_start(nni_dialer *d, unsigned flags)
 {
 	int      rv = 0;
 	nni_aio *aio;

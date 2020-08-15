@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "zthash.h"
 
 #include "nng/transport/zerotier/zerotier.h"
 
@@ -153,10 +154,10 @@ struct zt_node {
 	nni_plat_udp *  zn_udp6;
 	nni_list        zn_eplist;
 	nni_list        zn_plist;
-	nni_idhash *    zn_ports;
-	nni_idhash *    zn_eps;
-	nni_idhash *    zn_lpipes;
-	nni_idhash *    zn_rpipes;
+	zt_hash *       zn_ports;
+	zt_hash *       zn_eps;
+	zt_hash *       zn_lpipes;
+	zt_hash *       zn_rpipes;
 	nni_aio *       zn_rcv4_aio;
 	uint8_t *       zn_rcv4_buf;
 	nng_sockaddr    zn_rcv4_addr;
@@ -657,8 +658,7 @@ zt_ep_recv_conn_ack(zt_ep *ep, uint64_t raddr, const uint8_t *data, size_t len)
 	// Do we already have a matching pipe?  If so, we can discard
 	// the operation.  This should not happen, since we normally,
 	// deregister the endpoint when we create the pipe.
-	if ((nni_idhash_find(ztn->zn_lpipes, ep->ze_laddr, (void **) &p)) ==
-	    0) {
+	if ((zt_hash_find(ztn->zn_lpipes, ep->ze_laddr, (void **) &p)) == 0) {
 		return;
 	}
 
@@ -672,7 +672,7 @@ zt_ep_recv_conn_ack(zt_ep *ep, uint64_t raddr, const uint8_t *data, size_t len)
 	// Reset the address of the endpoint, so that the next call to
 	// ep_connect will bind a new one -- we are using this one for the
 	// pipe.
-	nni_idhash_remove(ztn->zn_eps, ep->ze_laddr);
+	zt_hash_remove(ztn->zn_eps, ep->ze_laddr);
 	ep->ze_laddr = 0;
 
 	nni_aio_set_output(aio, 0, p);
@@ -699,7 +699,7 @@ zt_ep_recv_conn_req(zt_ep *ep, uint64_t raddr, const uint8_t *data, size_t len)
 
 	// If we already have created a pipe for this connection
 	// then just reply the conn ack.
-	if ((nni_idhash_find(ztn->zn_rpipes, raddr, (void **) &p)) == 0) {
+	if ((zt_hash_find(ztn->zn_rpipes, raddr, (void **) &p)) == 0) {
 		zt_pipe_send_conn_ack(p);
 		return;
 	}
@@ -1083,21 +1083,21 @@ zt_virtual_recv(ZT_Node *node, void *userptr, void *thr, uint64_t nwid,
 	// vs. client pipes separately.
 
 	// If its a local address match on a client pipe, process it.
-	if ((nni_idhash_find(ztn->zn_lpipes, laddr, (void *) &p) == 0) &&
+	if ((zt_hash_find(ztn->zn_lpipes, laddr, (void *) &p) == 0) &&
 	    (p->zp_nwid == nwid) && (p->zp_raddr == raddr)) {
 		zt_pipe_virtual_recv(p, op, data, len);
 		return;
 	}
 
 	// If its a remote address match on a server pipe, process it.
-	if ((nni_idhash_find(ztn->zn_rpipes, raddr, (void *) &p) == 0) &&
+	if ((zt_hash_find(ztn->zn_rpipes, raddr, (void *) &p) == 0) &&
 	    (p->zp_nwid == nwid) && (p->zp_laddr == laddr)) {
 		zt_pipe_virtual_recv(p, op, data, len);
 		return;
 	}
 
 	// No pipe, so look for an endpoint.
-	if ((nni_idhash_find(ztn->zn_eps, laddr, (void **) &ep) == 0) &&
+	if ((zt_hash_find(ztn->zn_eps, laddr, (void **) &ep) == 0) &&
 	    (ep->ze_nwid == nwid)) {
 		// direct this to an endpoint.
 		zt_ep_virtual_recv(ep, op, raddr, data, len);
@@ -1408,9 +1408,9 @@ zt_node_destroy(zt_node *ztn)
 	}
 	nni_aio_free(ztn->zn_rcv4_aio);
 	nni_aio_free(ztn->zn_rcv6_aio);
-	nni_idhash_fini(ztn->zn_eps);
-	nni_idhash_fini(ztn->zn_lpipes);
-	nni_idhash_fini(ztn->zn_rpipes);
+	zt_hash_fini(ztn->zn_eps);
+	zt_hash_fini(ztn->zn_lpipes);
+	zt_hash_fini(ztn->zn_rpipes);
 	nni_cv_fini(&ztn->zn_bgcv);
 	NNI_FREE_STRUCT(ztn);
 }
@@ -1448,10 +1448,10 @@ zt_node_create(zt_node **ztnp, const char *path)
 		zt_node_destroy(ztn);
 		return (NNG_ENOMEM);
 	}
-	if (((rv = nni_idhash_init(&ztn->zn_ports)) != 0) ||
-	    ((rv = nni_idhash_init(&ztn->zn_eps)) != 0) ||
-	    ((rv = nni_idhash_init(&ztn->zn_lpipes)) != 0) ||
-	    ((rv = nni_idhash_init(&ztn->zn_rpipes)) != 0) ||
+	if (((rv = zt_hash_init(&ztn->zn_ports)) != 0) ||
+	    ((rv = zt_hash_init(&ztn->zn_eps)) != 0) ||
+	    ((rv = zt_hash_init(&ztn->zn_lpipes)) != 0) ||
+	    ((rv = zt_hash_init(&ztn->zn_rpipes)) != 0) ||
 	    ((rv = nni_thr_init(&ztn->zn_bgthr, zt_bgthr, ztn)) != 0) ||
 	    ((rv = nni_plat_udp_open(&ztn->zn_udp4, &sa4)) != 0) ||
 	    ((rv = nni_plat_udp_open(&ztn->zn_udp6, &sa6)) != 0)) {
@@ -1480,7 +1480,7 @@ zt_node_create(zt_node **ztnp, const char *path)
 	// higher than the max port, and starting with an
 	// initial random value.  Note that this should give us
 	// about 8 million possible ephemeral ports.
-	nni_idhash_set_limits(ztn->zn_ports, zt_ephemeral, zt_max_port,
+	zt_hash_limits(ztn->zn_ports, zt_ephemeral, zt_max_port,
 	    (nni_random() % (zt_max_port - zt_ephemeral)) + zt_ephemeral);
 
 	nni_strlcpy(ztn->zn_path, path, sizeof(ztn->zn_path));
@@ -1745,9 +1745,9 @@ zt_pipe_fini(void *arg)
 
 	// This tosses the connection details and all state.
 	nni_mtx_lock(&zt_lk);
-	nni_idhash_remove(ztn->zn_ports, p->zp_laddr & zt_port_mask);
-	nni_idhash_remove(ztn->zn_lpipes, p->zp_laddr);
-	nni_idhash_remove(ztn->zn_rpipes, p->zp_raddr);
+	zt_hash_remove(ztn->zn_ports, p->zp_laddr & zt_port_mask);
+	zt_hash_remove(ztn->zn_lpipes, p->zp_laddr);
+	zt_hash_remove(ztn->zn_rpipes, p->zp_raddr);
 	nni_mtx_unlock(&zt_lk);
 
 	for (int i = 0; i < zt_recvq; i++) {
@@ -1798,10 +1798,10 @@ zt_pipe_alloc(
 
 	if (listener) {
 		// listener
-		rv = nni_idhash_insert(ztn->zn_rpipes, raddr, p);
+		rv = zt_hash_insert(ztn->zn_rpipes, raddr, p);
 	} else {
 		// dialer
-		rv = nni_idhash_insert(ztn->zn_lpipes, laddr, p);
+		rv = zt_hash_insert(ztn->zn_lpipes, laddr, p);
 	}
 	if ((rv != 0) ||
 	    ((rv = nni_aio_alloc(&p->zp_ping_aio, zt_pipe_ping_cb, p)) != 0)) {
@@ -2342,8 +2342,8 @@ zt_ep_close(void *arg)
 	// If we're on the ztn node list, pull us off.
 	if (ztn != NULL) {
 		nni_list_node_remove(&ep->ze_link);
-		nni_idhash_remove(ztn->zn_ports, ep->ze_laddr & zt_port_mask);
-		nni_idhash_remove(ztn->zn_eps, ep->ze_laddr);
+		zt_hash_remove(ztn->zn_ports, ep->ze_laddr & zt_port_mask);
+		zt_hash_remove(ztn->zn_eps, ep->ze_laddr);
 	}
 
 	nni_mtx_unlock(&zt_lk);
@@ -2374,7 +2374,7 @@ zt_ep_bind_locked(zt_ep *ep)
 
 	if ((ep->ze_laddr & zt_port_mask) == 0) {
 		// ask for an ephemeral port
-		if ((rv = nni_idhash_alloc(ztn->zn_ports, &port, ep)) != 0) {
+		if ((rv = zt_hash_alloc(ztn->zn_ports, &port, ep)) != 0) {
 			return (rv);
 		}
 		NNI_ASSERT(port & zt_ephemeral);
@@ -2383,10 +2383,10 @@ zt_ep_bind_locked(zt_ep *ep)
 		// make sure port requested is free.
 		port = ep->ze_laddr & zt_port_mask;
 
-		if (nni_idhash_find(ztn->zn_ports, port, &conflict) == 0) {
+		if (zt_hash_find(ztn->zn_ports, port, &conflict) == 0) {
 			return (NNG_EADDRINUSE);
 		}
-		if ((rv = nni_idhash_insert(ztn->zn_ports, port, ep)) != 0) {
+		if ((rv = zt_hash_insert(ztn->zn_ports, port, ep)) != 0) {
 			return (rv);
 		}
 	}
@@ -2398,8 +2398,8 @@ zt_ep_bind_locked(zt_ep *ep)
 	ep->ze_laddr |= port;
 	ep->ze_running = true;
 
-	if ((rv = nni_idhash_insert(ztn->zn_eps, ep->ze_laddr, ep)) != 0) {
-		nni_idhash_remove(ztn->zn_ports, port);
+	if ((rv = zt_hash_insert(ztn->zn_eps, ep->ze_laddr, ep)) != 0) {
+		zt_hash_remove(ztn->zn_ports, port);
 		return (rv);
 	}
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -20,7 +20,7 @@ extern void      nni_dialer_rele(nni_dialer *);
 extern uint32_t  nni_dialer_id(nni_dialer *);
 extern int       nni_dialer_create(nni_dialer **, nni_sock *, const char *);
 extern void      nni_dialer_close(nni_dialer *);
-extern int       nni_dialer_start(nni_dialer *, int);
+extern int       nni_dialer_start(nni_dialer *, unsigned);
 extern nni_sock *nni_dialer_sock(nni_dialer *);
 
 extern int nni_dialer_setopt(

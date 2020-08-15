@@ -33,7 +33,7 @@ struct xrep0_sock {
 	nni_msgq *     urq;
 	nni_mtx        lk;
 	nni_atomic_int ttl;
-	nni_idhash *   pipes;
+	nni_id_map     pipes;
 	nni_aio        aio_getq;
 };
 
@@ -54,7 +54,7 @@ xrep0_sock_fini(void *arg)
 	xrep0_sock *s = arg;
 
 	nni_aio_fini(&s->aio_getq);
-	nni_idhash_fini(s->pipes);
+	nni_id_map_fini(&s->pipes);
 	nni_mtx_fini(&s->lk);
 }
 
@@ -62,7 +62,6 @@ static int
 xrep0_sock_init(void *arg, nni_sock *sock)
 {
 	xrep0_sock *s = arg;
-	int         rv;
 
 	nni_mtx_init(&s->lk);
 	nni_aio_init(&s->aio_getq, xrep0_sock_getq_cb, s);
@@ -71,11 +70,7 @@ xrep0_sock_init(void *arg, nni_sock *sock)
 	s->uwq = nni_sock_sendq(sock);
 	s->urq = nni_sock_recvq(sock);
 
-	if ((rv = nni_idhash_init(&s->pipes)) != 0) {
-		xrep0_sock_fini(s);
-		return (rv);
-	}
-
+	nni_id_map_init(&s->pipes, 0, 0, false);
 	return (0);
 }
 
@@ -164,7 +159,10 @@ xrep0_pipe_start(void *arg)
 		return (NNG_EPROTO);
 	}
 
-	if ((rv = nni_idhash_insert(s->pipes, nni_pipe_id(p->pipe), p)) != 0) {
+	nni_mtx_lock(&s->lk);
+	rv = nni_id_set(&s->pipes, nni_pipe_id(p->pipe), p);
+	nni_mtx_unlock(&s->lk);
+	if (rv != 0) {
 		return (rv);
 	}
 
@@ -186,7 +184,7 @@ xrep0_pipe_close(void *arg)
 	nni_msgq_close(p->sendq);
 
 	nni_mtx_lock(&s->lk);
-	nni_idhash_remove(s->pipes, nni_pipe_id(p->pipe));
+	nni_id_remove(&s->pipes, nni_pipe_id(p->pipe));
 	nni_mtx_unlock(&s->lk);
 }
 
@@ -227,7 +225,7 @@ xrep0_sock_getq_cb(void *arg)
 	// (non-blocking) if we can.  If we can't for any reason, then we
 	// free the message.
 	nni_mtx_lock(&s->lk);
-	if (((nni_idhash_find(s->pipes, id, (void **) &p)) != 0) ||
+	if (((p = nni_id_get(&s->pipes, id)) == NULL) ||
 	    (nni_msgq_tryput(p->sendq, msg) != 0)) {
 		nni_msg_free(msg);
 	}

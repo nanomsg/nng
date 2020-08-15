@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -26,7 +26,7 @@ if (NNG_TRANSPORT_ZEROTIER)
 
     message(WARNING "
         ************************************************************
-        Linking against zerotiercore changes license terms (GPLv3).
+        Linking against zerotiercore changes license terms.
         Consult a lawyer and the license files for details.
         ************************************************************")
 
@@ -35,7 +35,9 @@ if (NNG_TRANSPORT_ZEROTIER)
     set(_LIBS zerotiercore::zerotiercore)
     set(_DEFS -DNNG_TRANSPORT_ZEROTIER)
 
-    set(_SRCS transport/zerotier/zerotier.c ${PROJECT_SOURCE_DIR}/include/nng/transport/zerotier/zerotier.h)
+    set(_SRCS transport/zerotier/zerotier.c
+            transport/zerotier/zthash.c
+            ${PROJECT_SOURCE_DIR}/include/nng/transport/zerotier/zerotier.h)
 
     set(NNG_DEFS ${NNG_DEFS} ${_DEFS} PARENT_SCOPE)
     set(NNG_LIBS ${NNG_LIBS} ${_LIBS} PARENT_SCOPE)

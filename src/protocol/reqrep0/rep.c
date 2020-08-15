@@ -41,7 +41,7 @@ struct rep0_ctx {
 struct rep0_sock {
 	nni_mtx        lk;
 	nni_atomic_int ttl;
-	nni_idhash *   pipes;
+	nni_id_map     pipes;
 	nni_list       recvpipes; // list of pipes with data to receive
 	nni_list       recvq;
 	rep0_ctx       ctx;
@@ -177,7 +177,7 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if (nni_idhash_find(s->pipes, p_id, (void **) &p) != 0) {
+	if ((p = nni_id_get(&s->pipes, p_id)) == NULL) {
 		// Pipe is gone.  Make this look like a good send to avoid
 		// disrupting the state machine.  We don't care if the peer
 		// lost interest in our reply.
@@ -210,7 +210,7 @@ rep0_sock_fini(void *arg)
 {
 	rep0_sock *s = arg;
 
-	nni_idhash_fini(s->pipes);
+	nni_id_map_fini(&s->pipes);
 	rep0_ctx_fini(&s->ctx);
 	nni_pollable_fini(&s->writable);
 	nni_pollable_fini(&s->readable);
@@ -221,16 +221,11 @@ static int
 rep0_sock_init(void *arg, nni_sock *sock)
 {
 	rep0_sock *s = arg;
-	int        rv;
 
 	NNI_ARG_UNUSED(sock);
 
 	nni_mtx_init(&s->lk);
-	if ((rv = nni_idhash_init(&s->pipes)) != 0) {
-		rep0_sock_fini(s);
-		return (rv);
-	}
-
+	nni_id_map_init(&s->pipes, 0, 0, false);
 	NNI_LIST_INIT(&s->recvq, rep0_ctx, rqnode);
 	NNI_LIST_INIT(&s->recvpipes, rep0_pipe, rnode);
 	nni_atomic_init(&s->ttl);
@@ -312,7 +307,10 @@ rep0_pipe_start(void *arg)
 		return (NNG_EPROTO);
 	}
 
-	if ((rv = nni_idhash_insert(s->pipes, nni_pipe_id(p->pipe), p)) != 0) {
+	nni_mtx_lock(&s->lk);
+	rv = nni_id_set(&s->pipes, nni_pipe_id(p->pipe), p);
+	nni_mtx_unlock(&s->lk);
+	if (rv != 0) {
 		return (rv);
 	}
 	// By definition, we have not received a request yet on this pipe,
@@ -355,7 +353,7 @@ rep0_pipe_close(void *arg)
 		// accept a message and discard it.)
 		nni_pollable_raise(&s->writable);
 	}
-	nni_idhash_remove(s->pipes, nni_pipe_id(p->pipe));
+	nni_id_remove(&s->pipes, nni_pipe_id(p->pipe));
 	nni_mtx_unlock(&s->lk);
 }
 

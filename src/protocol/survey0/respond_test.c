@@ -13,9 +13,6 @@
 #include <nng/protocol/survey0/respond.h>
 #include <nng/protocol/survey0/survey.h>
 
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
-
 #include <acutest.h>
 #include <testutil.h>
 

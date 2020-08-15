@@ -29,7 +29,7 @@ static void surv0_ctx_timeout(void *);
 
 struct surv0_ctx {
 	surv0_sock *   sock;
-	uint64_t       survey_id; // survey id
+	uint32_t       survey_id; // survey id
 	nni_timer_node timer;
 	nni_time       expire;
 	nni_lmq        recv_lmq;
@@ -45,7 +45,7 @@ struct surv0_sock {
 	nni_list       pipes;
 	nni_mtx        mtx;
 	surv0_ctx      ctx;
-	nni_idhash *   surveys;
+	nni_id_map     surveys;
 	nni_pollable   writable;
 	nni_pollable   readable;
 	nni_atomic_int send_buf;
@@ -57,8 +57,8 @@ struct surv0_pipe {
 	surv0_sock *  sock;
 	nni_lmq       send_queue;
 	nni_list_node node;
-	nni_aio *     aio_send;
-	nni_aio *     aio_recv;
+	nni_aio       aio_send;
+	nni_aio       aio_recv;
 	bool          busy;
 	bool          closed;
 };
@@ -75,7 +75,7 @@ surv0_ctx_abort(surv0_ctx *ctx, int err)
 	}
 	nni_lmq_flush(&ctx->recv_lmq);
 	if (ctx->survey_id != 0) {
-		nni_idhash_remove(sock->surveys, ctx->survey_id);
+		nni_id_remove(&sock->surveys, ctx->survey_id);
 		ctx->survey_id = 0;
 	}
 	if (ctx == &sock->ctx) {
@@ -148,7 +148,7 @@ surv0_ctx_cancel(nni_aio *aio, void *arg, int rv)
 		nni_aio_finish_error(aio, rv);
 	}
 	if (ctx->survey_id != 0) {
-		nni_idhash_remove(sock->surveys, ctx->survey_id);
+		nni_id_remove(&sock->surveys, ctx->survey_id);
 		ctx->survey_id = 0;
 	}
 	nni_mtx_unlock(&sock->mtx);
@@ -237,8 +237,7 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 	nni_timer_cancel(&ctx->timer);
 
 	// Allocate the new ID.
-	if ((rv = nni_idhash_alloc(sock->surveys, &ctx->survey_id, ctx)) !=
-	    0) {
+	if ((rv = nni_id_alloc(&sock->surveys, &ctx->survey_id, ctx)) != 0) {
 		nni_mtx_unlock(&sock->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -256,8 +255,8 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 		if (!pipe->busy) {
 			pipe->busy = true;
 			nni_msg_clone(msg);
-			nni_aio_set_msg(pipe->aio_send, msg);
-			nni_pipe_send(pipe->pipe, pipe->aio_send);
+			nni_aio_set_msg(&pipe->aio_send, msg);
+			nni_pipe_send(pipe->pipe, &pipe->aio_send);
 		} else if (!nni_lmq_full(&pipe->send_queue)) {
 			nni_msg_clone(msg);
 			nni_lmq_putq(&pipe->send_queue, msg);
@@ -279,7 +278,7 @@ surv0_sock_fini(void *arg)
 	surv0_sock *sock = arg;
 
 	surv0_ctx_fini(&sock->ctx);
-	nni_idhash_fini(sock->surveys);
+	nni_id_map_fini(&sock->surveys);
 	nni_pollable_fini(&sock->writable);
 	nni_pollable_fini(&sock->readable);
 	nni_mtx_fini(&sock->mtx);
@@ -307,17 +306,15 @@ surv0_sock_init(void *arg, nni_sock *s)
 	nni_atomic_init(&sock->send_buf);
 	nni_atomic_set(&sock->send_buf, 8);
 
-	if (((rv = nni_idhash_init(&sock->surveys)) != 0) ||
-	    ((rv = surv0_ctx_init(&sock->ctx, sock)) != 0)) {
-		surv0_sock_fini(sock);
-		return (rv);
-	}
-
 	// Survey IDs are 32 bits, with the high order bit set.
 	// We start at a random point, to minimize likelihood of
 	// accidental collision across restarts.
-	nni_idhash_set_limits(sock->surveys, 0x80000000u, 0xffffffffu,
-	    nni_random() | 0x80000000u);
+	nni_id_map_init(&sock->surveys, 0x80000000u, 0xffffffffu, true);
+
+	if ((rv = surv0_ctx_init(&sock->ctx, sock)) != 0) {
+		surv0_sock_fini(sock);
+		return (rv);
+	}
 
 	sock->ttl = 8;
 
@@ -343,8 +340,8 @@ surv0_pipe_stop(void *arg)
 {
 	surv0_pipe *p = arg;
 
-	nni_aio_stop(p->aio_send);
-	nni_aio_stop(p->aio_recv);
+	nni_aio_stop(&p->aio_send);
+	nni_aio_stop(&p->aio_recv);
 }
 
 static void
@@ -352,8 +349,8 @@ surv0_pipe_fini(void *arg)
 {
 	surv0_pipe *p = arg;
 
-	nni_aio_free(p->aio_send);
-	nni_aio_free(p->aio_recv);
+	nni_aio_fini(&p->aio_send);
+	nni_aio_fini(&p->aio_recv);
 	nni_lmq_fini(&p->send_queue);
 }
 
@@ -366,13 +363,13 @@ surv0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	int         len;
 
 	len = nni_atomic_get(&sock->send_buf);
+	nni_aio_init(&p->aio_send, surv0_pipe_send_cb, p);
+	nni_aio_init(&p->aio_recv, surv0_pipe_recv_cb, p);
 
 	// This depth could be tunable.  The deeper the queue, the more
 	// concurrent surveys that can be delivered (multiple contexts).
 	// Note that surveys can be *outstanding*, but not yet put on the wire.
-	if (((rv = nni_lmq_init(&p->send_queue, len)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->aio_send, surv0_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->aio_recv, surv0_pipe_recv_cb, p)) != 0)) {
+	if ((rv = nni_lmq_init(&p->send_queue, len)) != 0) {
 		surv0_pipe_fini(p);
 		return (rv);
 	}
@@ -396,7 +393,7 @@ surv0_pipe_start(void *arg)
 	nni_list_append(&s->pipes, p);
 	nni_mtx_unlock(&s->mtx);
 
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 	return (0);
 }
 
@@ -406,8 +403,8 @@ surv0_pipe_close(void *arg)
 	surv0_pipe *p = arg;
 	surv0_sock *s = p->sock;
 
-	nni_aio_close(p->aio_send);
-	nni_aio_close(p->aio_recv);
+	nni_aio_close(&p->aio_send);
+	nni_aio_close(&p->aio_recv);
 
 	nni_mtx_lock(&s->mtx);
 	p->closed = true;
@@ -425,9 +422,9 @@ surv0_pipe_send_cb(void *arg)
 	surv0_sock *sock = p->sock;
 	nni_msg *   msg;
 
-	if (nni_aio_result(p->aio_send) != 0) {
-		nni_msg_free(nni_aio_get_msg(p->aio_send));
-		nni_aio_set_msg(p->aio_send, NULL);
+	if (nni_aio_result(&p->aio_send) != 0) {
+		nni_msg_free(nni_aio_get_msg(&p->aio_send));
+		nni_aio_set_msg(&p->aio_send, NULL);
 		nni_pipe_close(p->pipe);
 		return;
 	}
@@ -438,8 +435,8 @@ surv0_pipe_send_cb(void *arg)
 		return;
 	}
 	if (nni_lmq_getq(&p->send_queue, &msg) == 0) {
-		nni_aio_set_msg(p->aio_send, msg);
-		nni_pipe_send(p->pipe, p->aio_send);
+		nni_aio_set_msg(&p->aio_send, msg);
+		nni_pipe_send(p->pipe, &p->aio_send);
 	} else {
 		p->busy = false;
 	}
@@ -456,13 +453,13 @@ surv0_pipe_recv_cb(void *arg)
 	uint32_t    id;
 	nni_aio *   aio;
 
-	if (nni_aio_result(p->aio_recv) != 0) {
+	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
 		return;
 	}
 
-	msg = nni_aio_get_msg(p->aio_recv);
-	nni_aio_set_msg(p->aio_recv, NULL);
+	msg = nni_aio_get_msg(&p->aio_recv);
+	nni_aio_set_msg(&p->aio_recv, NULL);
 	nni_msg_set_pipe(msg, nni_pipe_id(p->pipe));
 
 	// We yank 4 bytes of body, and move them to the header.
@@ -478,7 +475,7 @@ surv0_pipe_recv_cb(void *arg)
 	nni_mtx_lock(&sock->mtx);
 	// Best effort at delivery.  Discard if no context or context is
 	// unable to receive it.
-	if ((nni_idhash_find(sock->surveys, id, (void **) &ctx) != 0) ||
+	if (((ctx = nni_id_get(&sock->surveys, id)) == NULL) ||
 	    (nni_lmq_full(&ctx->recv_lmq))) {
 		nni_msg_free(msg);
 	} else if ((aio = nni_list_first(&ctx->recv_queue)) != NULL) {
@@ -492,7 +489,7 @@ surv0_pipe_recv_cb(void *arg)
 	}
 	nni_mtx_unlock(&sock->mtx);
 
-	nni_pipe_recv(p->pipe, p->aio_recv);
+	nni_pipe_recv(p->pipe, &p->aio_recv);
 }
 
 static int

@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -21,21 +21,16 @@ static void listener_accept_start(nni_listener *);
 static void listener_accept_cb(void *);
 static void listener_timer_cb(void *);
 
-static nni_idhash *listeners;
-static nni_mtx     listeners_lk;
+static nni_id_map listeners;
+static nni_mtx    listeners_lk;
 
 #define BUMP_STAT(x) nni_stat_inc_atomic(x, 1)
 
 int
 nni_listener_sys_init(void)
 {
-	int rv;
-
-	if ((rv = nni_idhash_init(&listeners)) != 0) {
-		return (rv);
-	}
+	nni_id_map_init(&listeners, 1, 0x7fffffff, false);
 	nni_mtx_init(&listeners_lk);
-	nni_idhash_set_limits(listeners, 1, 0x7fffffff, 1);
 
 	return (0);
 }
@@ -45,8 +40,7 @@ nni_listener_sys_fini(void)
 {
 	nni_reap_drain();
 	nni_mtx_fini(&listeners_lk);
-	nni_idhash_fini(listeners);
-	listeners = NULL;
+	nni_id_map_fini(&listeners);
 }
 
 uint32_t
@@ -58,11 +52,11 @@ nni_listener_id(nni_listener *l)
 void
 nni_listener_destroy(nni_listener *l)
 {
-	nni_aio_stop(l->l_acc_aio);
-	nni_aio_stop(l->l_tmo_aio);
+	nni_aio_stop(&l->l_acc_aio);
+	nni_aio_stop(&l->l_tmo_aio);
 
-	nni_aio_free(l->l_acc_aio);
-	nni_aio_free(l->l_tmo_aio);
+	nni_aio_fini(&l->l_acc_aio);
+	nni_aio_fini(&l->l_tmo_aio);
 
 	if (l->l_data != NULL) {
 		l->l_ops.l_fini(l->l_data);
@@ -109,7 +103,7 @@ listener_stats_init(nni_listener *l)
 	nni_stat_init_atomic(&st->s_etimedout, "timedout", "timed out");
 	nni_stat_add(root, &st->s_etimedout);
 
-	nni_stat_init_atomic(&st->s_eproto, "protoerr", "protcol errors");
+	nni_stat_init_atomic(&st->s_eproto, "protoerr", "protocol errors");
 	nni_stat_add(root, &st->s_eproto);
 
 	nni_stat_init_atomic(&st->s_eauth, "autherr", "auth errors");
@@ -196,11 +190,18 @@ nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 	NNI_LIST_INIT(&l->l_pipes, nni_pipe, p_ep_node);
 	listener_stats_init(l);
 
-	if (((rv = nni_aio_alloc(&l->l_acc_aio, listener_accept_cb, l)) != 0) ||
-	    ((rv = nni_aio_alloc(&l->l_tmo_aio, listener_timer_cb, l)) != 0) ||
-	    ((rv = l->l_ops.l_init(&l->l_data, url, l)) != 0) ||
-	    ((rv = nni_idhash_alloc32(listeners, &l->l_id, l)) != 0) ||
+	nni_aio_init(&l->l_acc_aio, listener_accept_cb, l);
+	nni_aio_init(&l->l_tmo_aio, listener_timer_cb, l);
+
+	nni_mtx_lock(&listeners_lk);
+	rv = nni_id_alloc(&listeners, &l->l_id, l);
+	nni_mtx_unlock(&listeners_lk);
+
+	if ((rv != 0) || ((rv = l->l_ops.l_init(&l->l_data, url, l)) != 0) ||
 	    ((rv = nni_sock_add_listener(s, l)) != 0)) {
+		nni_mtx_lock(&listeners_lk);
+		nni_id_remove(&listeners, l->l_id);
+		nni_mtx_unlock(&listeners_lk);
 		nni_listener_destroy(l);
 		return (rv);
 	}
@@ -226,16 +227,12 @@ nni_listener_find(nni_listener **lp, uint32_t id)
 	}
 
 	nni_mtx_lock(&listeners_lk);
-	if ((rv = nni_idhash_find(listeners, id, (void **) &l)) == 0) {
-		if (l->l_closed) {
-			rv = NNG_ECLOSED;
-		} else {
-			l->l_refcnt++;
-			*lp = l;
-		}
+	if ((l = nni_id_get(&listeners, id)) != NULL) {
+		l->l_refcnt++;
+		*lp = l;
 	}
 	nni_mtx_unlock(&listeners_lk);
-	return (rv);
+	return (l == NULL ? NNG_ENOENT : 0);
 }
 
 int
@@ -274,13 +271,8 @@ nni_listener_close(nni_listener *l)
 		return;
 	}
 	l->l_closed = true;
+	nni_id_remove(&listeners, l->l_id);
 	nni_mtx_unlock(&listeners_lk);
-
-	// Remove us from the table so we cannot be found.
-	// This is done fairly early in the teardown process.
-	// If we're here, either the socket or the listener has been
-	// closed at the user request, so there would be a race anyway.
-	nni_idhash_remove(listeners, l->l_id);
 
 	nni_listener_shutdown(l);
 
@@ -298,23 +290,18 @@ nni_listener_close_rele(nni_listener *l)
 		return;
 	}
 	l->l_closed = true;
+	nni_id_remove(&listeners, l->l_id);
 	nni_mtx_unlock(&listeners_lk);
 
-	// Remove us from the table so we cannot be found.
-	// This is done fairly early in the teardown process.
-	// If we're here, either the socket or the listener has been
-	// closed at the user request, so there would be a race anyway.
-	nni_idhash_remove(listeners, l->l_id);
 	nni_listener_rele(l); // This will trigger a reap if id count is zero.
 }
 
 static void
 listener_timer_cb(void *arg)
 {
-	nni_listener *l   = arg;
-	nni_aio *     aio = l->l_tmo_aio;
+	nni_listener *l = arg;
 
-	if (nni_aio_result(aio) == 0) {
+	if (nni_aio_result(&l->l_tmo_aio) == 0) {
 		listener_accept_start(l);
 	}
 }
@@ -323,8 +310,8 @@ static void
 listener_accept_cb(void *arg)
 {
 	nni_listener *l   = arg;
-	nni_aio *     aio = l->l_acc_aio;
-	int rv;
+	nni_aio *     aio = &l->l_acc_aio;
+	int           rv;
 
 	switch ((rv = nni_aio_result(aio))) {
 	case 0:
@@ -350,7 +337,7 @@ listener_accept_cb(void *arg)
 		// by not thrashing we give the system a chance to
 		// recover.  100 ms is enough to cool down.
 		nni_listener_bump_error(l, rv);
-		nni_sleep_aio(100, l->l_tmo_aio);
+		nni_sleep_aio(100, &l->l_tmo_aio);
 		break;
 	}
 }
@@ -358,16 +345,14 @@ listener_accept_cb(void *arg)
 static void
 listener_accept_start(nni_listener *l)
 {
-	nni_aio *aio = l->l_acc_aio;
-
 	// Call with the listener lock held.
-	l->l_ops.l_accept(l->l_data, aio);
+	l->l_ops.l_accept(l->l_data, &l->l_acc_aio);
 }
 
 int
 nni_listener_start(nni_listener *l, int flags)
 {
-	int rv = 0;
+	int rv;
 	NNI_ARG_UNUSED(flags);
 
 	if (nni_atomic_flag_test_and_set(&l->l_started)) {

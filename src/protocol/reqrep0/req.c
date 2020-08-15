@@ -55,7 +55,7 @@ struct req0_sock {
 	nni_list       stop_pipes;
 	nni_list       contexts;
 	nni_list       send_queue; // contexts waiting to send.
-	nni_idhash *   requests;   // contexts by request ID
+	nni_id_map     requests;   // contexts by request ID
 	nni_pollable   readable;
 	nni_pollable   writable;
 	nni_mtx        mtx;
@@ -80,19 +80,13 @@ static int
 req0_sock_init(void *arg, nni_sock *sock)
 {
 	req0_sock *s = arg;
-	int        rv;
 
 	NNI_ARG_UNUSED(sock);
-
-	if ((rv = nni_idhash_init(&s->requests)) != 0) {
-		return (rv);
-	}
 
 	// Request IDs are 32 bits, with the high order bit set.
 	// We start at a random point, to minimize likelihood of
 	// accidental collision across restarts.
-	nni_idhash_set_limits(
-	    s->requests, 0x80000000u, 0xffffffffu, nni_random() | 0x80000000u);
+	nni_id_map_init(&s->requests, 0x80000000u, 0xffffffffu, true);
 
 	nni_mtx_init(&s->mtx);
 
@@ -145,7 +139,7 @@ req0_sock_fini(void *arg)
 	req0_ctx_fini(&s->master);
 	nni_pollable_fini(&s->readable);
 	nni_pollable_fini(&s->writable);
-	nni_idhash_fini(s->requests);
+	nni_id_map_fini(&s->requests);
 	nni_mtx_fini(&s->mtx);
 }
 
@@ -316,7 +310,7 @@ req0_recv_cb(void *arg)
 	nni_pipe_recv(p->pipe, &p->aio_recv);
 
 	// Look for a context to receive it.
-	if ((nni_idhash_find(s->requests, id, (void **) &ctx) != 0) ||
+	if (((ctx = nni_id_get(&s->requests, id)) == NULL) ||
 	    (ctx->send_aio != NULL) || (ctx->rep_msg != NULL)) {
 		nni_mtx_unlock(&s->mtx);
 		// No waiting context, we have not sent the request out to
@@ -328,7 +322,7 @@ req0_recv_cb(void *arg)
 
 	// We have our match, so we can remove this.
 	nni_list_node_remove(&ctx->send_node);
-	nni_idhash_remove(s->requests, id);
+	nni_id_remove(&s->requests, id);
 	ctx->request_id = 0;
 	if (ctx->req_msg != NULL) {
 		nni_msg_free(ctx->req_msg);
@@ -512,7 +506,7 @@ req0_ctx_reset(req0_ctx *ctx)
 	nni_list_node_remove(&ctx->pipe_node);
 	nni_list_node_remove(&ctx->send_node);
 	if (ctx->request_id != 0) {
-		nni_idhash_remove(s->requests, ctx->request_id);
+		nni_id_remove(&s->requests, ctx->request_id);
 		ctx->request_id = 0;
 	}
 	if (ctx->req_msg != NULL) {
@@ -631,7 +625,6 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	req0_ctx * ctx = arg;
 	req0_sock *s   = ctx->sock;
 	nng_msg *  msg = nni_aio_get_msg(aio);
-	uint64_t   id;
 	int        rv;
 
 	if (nni_aio_begin(aio) != 0) {
@@ -662,12 +655,11 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	req0_ctx_reset(ctx);
 
 	// Insert us on the per ID hash list, so that receives can find us.
-	if ((rv = nni_idhash_alloc(s->requests, &id, ctx)) != 0) {
+	if ((rv = nni_id_alloc(&s->requests, &ctx->request_id, ctx)) != 0) {
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	ctx->request_id = (uint32_t) id;
 	nni_msg_header_clear(msg);
 	nni_msg_header_append_u32(msg, ctx->request_id);
 
@@ -675,7 +667,7 @@ req0_ctx_send(void *arg, nni_aio *aio)
 	// schedule), then fail it.  Should be NNG_ETIMEDOUT.
 	rv = nni_aio_schedule(aio, req0_ctx_cancel_send, ctx);
 	if ((rv != 0) && (nni_list_empty(&s->ready_pipes))) {
-		nni_idhash_remove(s->requests, id);
+		nni_id_remove(&s->requests, ctx->request_id);
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;

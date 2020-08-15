@@ -761,10 +761,8 @@ NNG_DECL nng_dialer   nng_pipe_dialer(nng_pipe);
 NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 
 // Flags.
-enum nng_flag_enum {
-	NNG_FLAG_ALLOC    = 1, // Recv to allocate receive buffer.
-	NNG_FLAG_NONBLOCK = 2  // Non-blocking operations.
-};
+#define NNG_FLAG_ALLOC 1u // Recv to allocate receive buffer
+#define NNG_FLAG_NONBLOCK 2u // Non-blocking operations
 
 // Options.
 #define NNG_OPT_SOCKNAME "socket-name"
