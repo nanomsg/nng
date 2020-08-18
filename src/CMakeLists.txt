@@ -153,7 +153,6 @@ if (NNG_PLATFORM_WINDOWS)
             platform/windows/win_impl.h
             platform/windows/win_ipc.h
             platform/windows/win_tcp.h
-
             platform/windows/win_clock.c
             platform/windows/win_debug.c
             platform/windows/win_file.c
@@ -171,6 +170,7 @@ if (NNG_PLATFORM_WINDOWS)
             platform/windows/win_tcplisten.c
             platform/windows/win_thread.c
             platform/windows/win_udp.c
+            platform/windows/win_snprintf.c
             )
 endif ()
 

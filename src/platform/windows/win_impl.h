@@ -25,6 +25,12 @@
 
 #include "core/list.h"
 
+#if !NNG_HAVE_SNPRINTF
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
+extern int snprintf(char *buffer, size_t count, const char *format, ...);
+#endif
+#endif
+
 // These types are provided for here, to permit them to be directly inlined
 // elsewhere.
 

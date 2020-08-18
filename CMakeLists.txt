@@ -290,7 +290,10 @@ if (WIN32)
     list(APPEND NNG_LIBS ws2_32 mswsock advapi32)
     nng_check_sym(InitializeConditionVariable windows.h NNG_HAVE_CONDVAR)
     nng_check_sym(snprintf stdio.h NNG_HAVE_SNPRINTF)
-    if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF)
+    if(NNG_HAVE_SNPRINTF)
+        add_definitions(-DNNG_HAVE_SNPRINTF=1)
+    endif()
+    if (NOT NNG_HAVE_CONDVAR)
         message(FATAL_ERROR
                 "Modern Windows API support is missing. "
                 "Versions of Windows prior to Vista are not supported.  "
