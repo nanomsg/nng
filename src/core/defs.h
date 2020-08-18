@@ -87,27 +87,27 @@ typedef struct {
 
 #define NNI_PUT16(ptr, u)                                    \
 	do {                                                 \
-		(ptr)[0] = (uint8_t)(((uint16_t)(u)) >> 8u); \
+		(ptr)[0] = (uint8_t)(((uint16_t)(u)) >> 8U); \
 		(ptr)[1] = (uint8_t)((uint16_t)(u));         \
 	} while (0)
 
 #define NNI_PUT32(ptr, u)                                     \
 	do {                                                  \
-		(ptr)[0] = (uint8_t)(((uint32_t)(u)) >> 24u); \
-		(ptr)[1] = (uint8_t)(((uint32_t)(u)) >> 16u); \
-		(ptr)[2] = (uint8_t)(((uint32_t)(u)) >> 8u);  \
+		(ptr)[0] = (uint8_t)(((uint32_t)(u)) >> 24U); \
+		(ptr)[1] = (uint8_t)(((uint32_t)(u)) >> 16U); \
+		(ptr)[2] = (uint8_t)(((uint32_t)(u)) >> 8U);  \
 		(ptr)[3] = (uint8_t)((uint32_t)(u));          \
 	} while (0)
 
 #define NNI_PUT64(ptr, u)                                     \
 	do {                                                  \
-		(ptr)[0] = (uint8_t)(((uint64_t)(u)) >> 56u); \
-		(ptr)[1] = (uint8_t)(((uint64_t)(u)) >> 48u); \
-		(ptr)[2] = (uint8_t)(((uint64_t)(u)) >> 40u); \
-		(ptr)[3] = (uint8_t)(((uint64_t)(u)) >> 32u); \
-		(ptr)[4] = (uint8_t)(((uint64_t)(u)) >> 24u); \
-		(ptr)[5] = (uint8_t)(((uint64_t)(u)) >> 16u); \
-		(ptr)[6] = (uint8_t)(((uint64_t)(u)) >> 8u);  \
+		(ptr)[0] = (uint8_t)(((uint64_t)(u)) >> 56U); \
+		(ptr)[1] = (uint8_t)(((uint64_t)(u)) >> 48U); \
+		(ptr)[2] = (uint8_t)(((uint64_t)(u)) >> 40U); \
+		(ptr)[3] = (uint8_t)(((uint64_t)(u)) >> 32U); \
+		(ptr)[4] = (uint8_t)(((uint64_t)(u)) >> 24U); \
+		(ptr)[5] = (uint8_t)(((uint64_t)(u)) >> 16U); \
+		(ptr)[6] = (uint8_t)(((uint64_t)(u)) >> 8U);  \
 		(ptr)[7] = (uint8_t)((uint64_t)(u));          \
 	} while (0)
 
