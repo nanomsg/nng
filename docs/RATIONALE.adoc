@@ -165,7 +165,7 @@ As a C programmer coming from UNIX systems, this really attracted me.
 
 The problem is that the POSIX APIs are actually really horrible.  In
 particular the semantics around `cmsg` are about as arcane and painful as
-one can imagine.  Largely, this has meant that extensions to the `cmsg
+one can imagine.  Largely, this has meant that extensions to the `cmsg`
 API simply have not occurred in _nanomsg_.
 
 The `cmsg` API specified by POSIX is as bad as it is because POSIX had
