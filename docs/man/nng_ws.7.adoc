@@ -128,7 +128,7 @@ only available for `wss://` endpoints.
 
 ((`NNG_OPT_WS_REQUEST_HEADERS`))::
 
-(string) Concentation of multiple lines terminated
+(string) Concatenation of multiple lines terminated
 by CRLF sequences, that can be used to add further headers to the
 HTTP request sent when connecting.
 This option can be set on dialers, and retrieved from pipes.
@@ -139,6 +139,30 @@ This option can be set on dialers, and retrieved from pipes.
 by CRLF sequences, that can be used to add further headers to the
 HTTP response sent when connecting.
 This option can be set on listeners, and retrieved from pipes.
+
+((`NNG_OPT_WS_RECV_TEXT`))::
+
+(bool) Enable receiving of TEXT frames at the WebSocket layer.
+This option should only be used with the low level
+xref:nng_stream.5.adoc[`nng_stream`] API.
+When set, the stream will accept in-bound TEXT frames as well as BINARY frames.
+
+NOTE: The SP protocols (such as xref:nng_req.7.adoc[REQ]) require BINARY frames as they pass binary protocol data.
+Hence this option should not be used with such protocols.
+
+NOTE: RFC 6455 requires that TEXT frames be discarded and the connection closed if the frame does not contain valid UTF-8 data.
+NNG does not perform any such validation.
+Applications that need to be strictly conformant should check for this themselves.
+
+((`NNG_OPT_WS_SEND_TEXT`))::
+
+(bool) Enable sending of TEXT frames at the WebSocket layer.
+This option should only be used with the low level
+xref:nng_stream.5.adoc[`nng_stream`] API.
+When set, the stream will send TEXT frames instead of BINARY frames.
+
+NOTE: NNG does not check the frame data, and will attempt to send whatever the client requests.
+Peers that are compliant with RFC 6455 will discard TEXT frames (and break the connection) if they do not contain valid UTF-8.
 
 ((`NNG_OPT_TLS_CONFIG`))::
 

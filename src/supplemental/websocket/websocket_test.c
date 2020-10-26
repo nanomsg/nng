@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -175,24 +175,24 @@ test_websocket_conn_props(void)
 	TEST_NNG_PASS(nng_stream_get_addr(c1, NNG_OPT_LOCADDR, &sa1));
 	TEST_NNG_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
 	TEST_CHECK_(sa1.s_family == sa2.s_family, "families match %x == %x",
-		    sa1.s_family, sa2.s_family);
+	    sa1.s_family, sa2.s_family);
 	TEST_CHECK_(sa1.s_in.sa_addr == sa2.s_in.sa_addr,
-		    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
-		    testutil_htonl(sa2.s_in.sa_addr));
+	    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
+	    testutil_htonl(sa2.s_in.sa_addr));
 	TEST_CHECK_(sa1.s_in.sa_port == sa2.s_in.sa_port,
-		    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
-		    testutil_htons(sa2.s_in.sa_port));
+	    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
+	    testutil_htons(sa2.s_in.sa_port));
 
 	TEST_NNG_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
 	TEST_NNG_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
 	TEST_CHECK_(sa1.s_family == sa2.s_family, "families match %x == %x",
-		    sa1.s_family, sa2.s_family);
+	    sa1.s_family, sa2.s_family);
 	TEST_CHECK_(sa1.s_in.sa_addr == sa2.s_in.sa_addr,
-		    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
-		    testutil_htonl(sa2.s_in.sa_addr));
+	    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
+	    testutil_htonl(sa2.s_in.sa_addr));
 	TEST_CHECK_(sa1.s_in.sa_port == sa2.s_in.sa_port,
-		    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
-		    testutil_htons(sa2.s_in.sa_port));
+	    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
+	    testutil_htons(sa2.s_in.sa_port));
 
 	on = true;
 	TEST_NNG_PASS(nng_stream_set_bool(c1, NNG_OPT_TCP_NODELAY, on));
@@ -228,6 +228,135 @@ test_websocket_conn_props(void)
 	nng_stream_free(c1);
 	nng_stream_close(c2);
 	nng_stream_free(c2);
+	nng_aio_free(daio);
+	nng_aio_free(laio);
+	nng_stream_listener_free(l);
+	nng_stream_dialer_free(d);
+}
+
+void
+test_websocket_text_mode(void)
+{
+	nng_stream_dialer *  d    = NULL;
+	nng_stream_listener *l    = NULL;
+	nng_aio *            daio = NULL;
+	nng_aio *            laio = NULL;
+	nng_aio *            aio1 = NULL;
+	nng_aio *            aio2 = NULL;
+	nng_stream *         c1   = NULL;
+	nng_stream *         c2   = NULL;
+	char                 uri[64];
+	char                 txb[5];
+	char                 rxb[5];
+	bool                 on;
+	uint16_t             port = testutil_next_port();
+	nng_iov              iov;
+
+	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
+
+	TEST_NNG_PASS(nng_aio_alloc(&daio, NULL, NULL));
+	TEST_NNG_PASS(nng_aio_alloc(&laio, NULL, NULL));
+	TEST_NNG_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	TEST_NNG_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+	nng_aio_set_timeout(daio, 5000); // 5 seconds
+	nng_aio_set_timeout(laio, 5000);
+	nng_aio_set_timeout(aio1, 5000);
+	nng_aio_set_timeout(aio2, 5000);
+
+	TEST_NNG_PASS(nng_stream_listener_alloc(&l, uri));
+	TEST_NNG_PASS(nng_stream_dialer_alloc(&d, uri));
+
+	on = true;
+	TEST_NNG_PASS(nng_stream_dialer_set_bool(d, NNG_OPT_WS_SEND_TEXT, on));
+	TEST_NNG_PASS(
+	    nng_stream_listener_set_bool(l, NNG_OPT_WS_RECV_TEXT, on));
+
+        TEST_NNG_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_SEND_TEXT, &on));
+        TEST_ASSERT(on == true);
+        TEST_NNG_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
+        TEST_ASSERT(on == false);
+
+
+        TEST_NNG_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_SEND_TEXT, &on));
+        TEST_ASSERT(on == false);
+        TEST_NNG_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_RECV_TEXT, &on));
+        TEST_ASSERT(on == true);
+
+	on = false;
+        TEST_NNG_PASS(nng_stream_dialer_set_bool(d, NNG_OPT_WS_RECV_TEXT, on));
+        TEST_NNG_PASS(
+            nng_stream_listener_set_bool(l, NNG_OPT_WS_SEND_TEXT, on));
+        TEST_NNG_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_SEND_TEXT, &on));
+        TEST_ASSERT(on == false);
+        TEST_NNG_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
+        TEST_ASSERT(on == false);
+
+        TEST_NNG_PASS(nng_stream_listener_listen(l));
+        nng_stream_dialer_dial(d, daio);
+	nng_stream_listener_accept(l, laio);
+
+	nng_aio_wait(laio);
+	nng_aio_wait(daio);
+
+	TEST_NNG_PASS(nng_aio_result(laio));
+	TEST_NNG_PASS(nng_aio_result(daio));
+	c1 = nng_aio_get_output(laio, 0);
+	c2 = nng_aio_get_output(daio, 0);
+	TEST_CHECK(c1 != NULL);
+	TEST_CHECK(c2 != NULL);
+
+	TEST_NNG_PASS(nng_stream_get_bool(c1, NNG_OPT_WS_SEND_TEXT, &on));
+	TEST_ASSERT(on == false);
+	TEST_NNG_PASS(nng_stream_get_bool(c1, NNG_OPT_WS_RECV_TEXT, &on));
+	TEST_ASSERT(on == true);
+	TEST_NNG_PASS(
+	    nng_stream_listener_set_bool(l, NNG_OPT_WS_RECV_TEXT, on));
+
+	TEST_NNG_PASS(nng_stream_get_bool(c2, NNG_OPT_WS_SEND_TEXT, &on));
+	TEST_ASSERT(on == true);
+	TEST_NNG_PASS(nng_stream_get_bool(c2, NNG_OPT_WS_RECV_TEXT, &on));
+	TEST_ASSERT(on == false);
+
+	memcpy(txb, "PING", 5);
+	iov.iov_buf = txb;
+	iov.iov_len = 5;
+	nng_aio_set_iov(aio1, 1, &iov);
+	nng_stream_send(c1, aio1);
+	iov.iov_buf = rxb;
+	iov.iov_len = 5;
+	nng_aio_set_iov(aio2, 1, &iov);
+	nng_stream_recv(c2, aio2);
+
+	nng_aio_wait(aio1);
+	nng_aio_wait(aio2);
+	TEST_NNG_PASS(nng_aio_result(aio1));
+	TEST_NNG_PASS(nng_aio_result(aio2));
+	TEST_ASSERT(memcmp(rxb, txb, 5) == 0);
+
+	memset(rxb, 0, 5);
+	memcpy(txb, "PONG", 5);
+
+	iov.iov_buf = txb;
+	iov.iov_len = 5;
+	nng_aio_set_iov(aio2, 1, &iov);
+	nng_stream_send(c2, aio2);
+	iov.iov_buf = rxb;
+	iov.iov_len = 5;
+	nng_aio_set_iov(aio1, 1, &iov);
+	nng_stream_recv(c1, aio1);
+
+	nng_aio_wait(aio1);
+	nng_aio_wait(aio2);
+	TEST_NNG_PASS(nng_aio_result(aio1));
+	TEST_NNG_PASS(nng_aio_result(aio2));
+	TEST_ASSERT(memcmp(rxb, txb, 5) == 0);
+
+	nng_stream_close(c1);
+	nng_stream_free(c1);
+	nng_stream_close(c2);
+	nng_stream_free(c2);
+	nng_aio_free(aio1);
+	nng_aio_free(aio2);
 	nng_aio_free(daio);
 	nng_aio_free(laio);
 	nng_stream_listener_free(l);
@@ -410,5 +539,6 @@ TEST_LIST = {
 	{ "websocket stream wildcard", test_websocket_wildcard },
 	{ "websocket conn properties", test_websocket_conn_props },
 	{ "websocket fragmentation", test_websocket_fragmentation },
+	{ "websocket text mode", test_websocket_text_mode },
 	{ NULL, NULL },
 };

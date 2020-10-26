@@ -932,10 +932,31 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 // to send more data than this in a single message, it will be dropped.
 #define NNG_OPT_WS_RECVMAXFRAME "ws:rxframe-max"
 
-// NNG_OPT_WS_PROTOCOL is the "websocket subprotocol" -- it's a string.
+// NNG_OPT_WS_PROTOCOL is the "websocket sub-protocol" -- it's a string.
 // This is also known as the Sec-WebSocket-Protocol header. It is treated
 // specially.  This is part of the websocket handshake.
 #define NNG_OPT_WS_PROTOCOL "ws:protocol"
+
+// NNG_OPT_WS_SEND_TEXT is a boolean used to tell the WS stream
+// transport to send text messages.  This is not supported for the
+// core WebSocket transport, but when using streams it might be useful
+// to speak with 3rd party WebSocket applications.  This mode should
+// not be used unless absolutely required. No validation of the message
+// contents is performed by NNG; applications are expected to honor
+// the requirement to send only valid UTF-8.  (Compliant applications
+// will close the socket if they see this message type with invalid UTF-8.)
+#define NNG_OPT_WS_SEND_TEXT "ws:send-text"
+
+// NNG_OPT_WS_RECV_TEXT is a boolean that enables NNG to receive
+// TEXT frames.  This is only useful for stream mode applications --
+// SP protocol requires the use of binary frames.  Note also that
+// NNG does not validate the message contents for valid UTF-8; this
+// means it will not be conformant with RFC-6455 on it's own. Applications
+// that need this should check the message contents themselves, and
+// close the connection if invalid UTF-8 is received.  This option
+// should not be used unless required to communication with 3rd party
+// peers that cannot be coerced into sending binary frames.
+#define NNG_OPT_WS_RECV_TEXT "ws:recv-text"
 
 // XXX: TBD: priorities, ipv4only
 
