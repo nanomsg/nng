@@ -161,12 +161,6 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 		// reply for the single request we got.
 		nni_pollable_clear(&s->writable);
 	}
-	if ((rv = nni_aio_schedule(aio, rep0_ctx_cancel_send, ctx)) != 0) {
-		nni_mtx_unlock(&s->lk);
-		nni_aio_finish_error(aio, rv);
-		return;
-	}
-
 	if (len == 0) {
 		nni_mtx_unlock(&s->lk);
 		nni_aio_finish_error(aio, NNG_ESTATE);
@@ -196,6 +190,12 @@ rep0_ctx_send(void *arg, nni_aio *aio)
 
 		nni_aio_set_msg(aio, NULL);
 		nni_aio_finish(aio, 0, len);
+		return;
+	}
+
+	if ((rv = nni_aio_schedule(aio, rep0_ctx_cancel_send, ctx)) != 0) {
+		nni_mtx_unlock(&s->lk);
+		nni_aio_finish_error(aio, rv);
 		return;
 	}
 
