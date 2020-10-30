@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -53,8 +53,9 @@ nni_posix_nn2sockaddr(void *sa, const nni_sockaddr *na)
 #ifdef SIN6_LEN
 		sin6->sin6_len = sizeof(*sin6);
 #endif
-		sin6->sin6_family = PF_INET6;
-		sin6->sin6_port   = nsin6->sa_port;
+		sin6->sin6_family   = PF_INET6;
+		sin6->sin6_port     = nsin6->sa_port;
+		sin6->sin6_scope_id = nsin6->sa_scope;
 		memcpy(sin6->sin6_addr.s6_addr, nsin6->sa_addr, 16);
 		return (sizeof(*sin6));
 
@@ -99,6 +100,7 @@ nni_posix_sockaddr2nn(nni_sockaddr *na, const void *sa)
 		nsin6            = &na->s_in6;
 		nsin6->sa_family = NNG_AF_INET6;
 		nsin6->sa_port   = sin6->sin6_port;
+		nsin6->sa_scope  = sin6->sin6_scope_id;
 		memcpy(nsin6->sa_addr, sin6->sin6_addr.s6_addr, 16);
 		break;
 	case AF_UNIX:

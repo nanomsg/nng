@@ -27,6 +27,7 @@ typedef struct {
     uint16_t sa_family;
     uint16_t sa_port;
     uint8_t  sa_addr[16];
+    uint32_t sa_scope;
 } nng_sockaddr_in6;
 ----
 
@@ -53,6 +54,13 @@ The following structure members are present:
 `sa_addr`::
     This field holds the ((IP address))(((address, IPv6))) in
     network-byte order.
+
+`sa_scope`::
+    This is the scope, and is typically used with link local
+    addresses to identify a specific interface.  The details of
+    this are specific to the operating system.  This value is
+    presented identically to the underlying system's, including
+    any byte order considerations.
 
 TIP: The `sa_port` and `sa_addr` fields are in network-byte order to
 facilitate their use with system APIs such as `inet_ntop()`.

@@ -128,6 +128,7 @@ struct nng_sockaddr_in6 {
 	uint16_t sa_family;
 	uint16_t sa_port;
 	uint8_t  sa_addr[16];
+	uint32_t sa_scope;
 };
 typedef struct nng_sockaddr_in6 nng_sockaddr_in6;
 typedef struct nng_sockaddr_in6 nng_sockaddr_udp6;

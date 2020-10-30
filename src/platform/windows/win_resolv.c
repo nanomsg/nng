@@ -154,6 +154,7 @@ resolv_task(resolv_item *item)
 			sin6               = (void *) probe->ai_addr;
 			sa.s_in6.sa_family = NNG_AF_INET6;
 			sa.s_in6.sa_port   = item->port;
+			sa.s_in6.sa_scope  = sin6->sin6_scope_id;
 			memcpy(sa.s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 			nni_aio_set_sockaddr(item->aio, &sa);
 			break;

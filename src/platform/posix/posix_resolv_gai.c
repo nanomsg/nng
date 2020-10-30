@@ -182,6 +182,7 @@ resolv_task(resolv_item *item)
 			sin6                = (void *) probe->ai_addr;
 			sa->s_in6.sa_family = NNG_AF_INET6;
 			sa->s_in6.sa_port   = item->port;
+			sa->s_in6.sa_scope  = sin6->sin6_scope_id;
 			memcpy(sa->s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 			break;
 		}
@@ -318,9 +319,9 @@ resolv_worker(void *unused)
 
 	NNI_ARG_UNUSED(unused);
 
-        nni_thr_set_name(NULL, "nng:resolver");
+	nni_thr_set_name(NULL, "nng:resolver");
 
-        nni_mtx_lock(&resolv_mtx);
+	nni_mtx_lock(&resolv_mtx);
 	for (;;) {
 		nni_aio *    aio;
 		resolv_item *item;

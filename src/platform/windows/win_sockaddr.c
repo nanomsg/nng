@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,7 +9,6 @@
 //
 
 #include "core/nng_impl.h"
-#include "win_impl.h"
 
 #include <string.h>
 
@@ -34,8 +33,9 @@ nni_win_nn2sockaddr(SOCKADDR_STORAGE *ss, const nni_sockaddr *sa)
 	case NNG_AF_INET6:
 		sin6 = (void *) ss;
 		memset(sin6, 0, sizeof(*sin6));
-		sin6->sin6_family = PF_INET6;
-		sin6->sin6_port   = sa->s_in6.sa_port;
+		sin6->sin6_family   = PF_INET6;
+		sin6->sin6_port     = sa->s_in6.sa_port;
+		sin6->sin6_scope_id = sa->s_in6.sa_scope;
 		memcpy(sin6->sin6_addr.s6_addr, sa->s_in6.sa_addr, 16);
 		return (sizeof(*sin6));
 	}
@@ -63,6 +63,7 @@ nni_win_sockaddr2nn(nni_sockaddr *sa, const SOCKADDR_STORAGE *ss)
 		sin6                = (void *) ss;
 		sa->s_in6.sa_family = NNG_AF_INET6;
 		sa->s_in6.sa_port   = sin6->sin6_port;
+		sa->s_in6.sa_scope  = sin6->sin6_scope_id;
 		memcpy(sa->s_in6.sa_addr, sin6->sin6_addr.s6_addr, 16);
 		return (0);
 	}
