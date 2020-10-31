@@ -286,6 +286,81 @@ test_req_resend_disconnect(void)
 }
 
 void
+test_req_disconnect_no_retry(void)
+{
+	nng_socket req;
+	nng_socket rep1;
+	nng_socket rep2;
+
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_rep0_open(&rep1));
+	TEST_NNG_PASS(nng_rep0_open(&rep2));
+
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep1, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep2, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep1, NNG_OPT_SENDTIMEO, SECOND / 10));
+	// Setting the resend time to zero so we will force an error
+	// if the peer disconnects without sending us an answer.
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, 0));
+
+	TEST_NNG_PASS(testutil_marry(rep1, req));
+	TEST_NNG_SEND_STR(req, "ping");
+	TEST_NNG_RECV_STR(rep1, "ping");
+
+	TEST_NNG_PASS(testutil_marry(rep2, req));
+	TEST_NNG_PASS(nng_close(rep1));
+
+	nng_msg *msg = NULL;
+	TEST_NNG_FAIL(nng_recvmsg(req, &msg, 0), NNG_ECONNRESET);
+	TEST_NNG_FAIL(nng_recvmsg(rep2, &msg, 0), NNG_ETIMEDOUT);
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep2));
+}
+
+void
+test_req_disconnect_abort(void)
+{
+	nng_socket req;
+	nng_socket rep1;
+	nng_socket rep2;
+	nng_aio *  aio;
+
+	TEST_NNG_PASS(nng_req0_open(&req));
+	TEST_NNG_PASS(nng_rep0_open(&rep1));
+	TEST_NNG_PASS(nng_rep0_open(&rep2));
+	TEST_NNG_PASS(nng_aio_alloc(&aio, 0, 0));
+
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep1, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep2, NNG_OPT_RECVTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, SECOND));
+	TEST_NNG_PASS(nng_setopt_ms(rep1, NNG_OPT_SENDTIMEO, SECOND / 10));
+	// Setting the resend time to zero so we will force an error
+	// if the peer disconnects without sending us an answer.
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_REQ_RESENDTIME, 0));
+
+	TEST_NNG_PASS(testutil_marry(rep1, req));
+	TEST_NNG_SEND_STR(req, "ping");
+	TEST_NNG_RECV_STR(rep1, "ping");
+	nng_recv_aio(req, aio);
+
+	TEST_NNG_PASS(testutil_marry(rep2, req));
+	TEST_NNG_PASS(nng_close(rep1));
+
+	nng_msg *msg = NULL;
+	nng_aio_wait(aio);
+	TEST_NNG_FAIL(nng_aio_result(aio), NNG_ECONNRESET);
+	TEST_NNG_FAIL(nng_recvmsg(rep2, &msg, 0), NNG_ETIMEDOUT);
+	nng_aio_free(aio);
+
+	TEST_NNG_PASS(nng_close(req));
+	TEST_NNG_PASS(nng_close(rep2));
+}
+
+void
 test_req_cancel(void)
 {
 	nng_msg *    abc;
@@ -929,6 +1004,8 @@ TEST_LIST = {
 	{ "req rep exchange", test_req_rep_exchange },
 	{ "req resend", test_req_resend },
 	{ "req resend disconnect", test_req_resend_disconnect },
+	{ "req disconnect no retry", test_req_disconnect_no_retry },
+	{ "req disconnect abort", test_req_disconnect_abort },
 	{ "req resend reconnect", test_req_resend_reconnect },
 	{ "req cancel", test_req_cancel },
 	{ "req cancel abort recv", test_req_cancel_abort_recv },
