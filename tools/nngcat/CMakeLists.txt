@@ -1,5 +1,5 @@
 #
-# Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -21,11 +21,11 @@ if (NNG_ENABLE_NNGCAT)
         set_tests_properties (${PROJECT_NAME}.${NAME} PROPERTIES TIMEOUT ${TIMEOUT})
     endmacro()
     add_nngcat_test (nngcat_async 10)
-    add_nngcat_test (nngcat_ambiguous 2)
-    add_nngcat_test (nngcat_need_proto 2)
-    add_nngcat_test (nngcat_dup_proto 2)
-    add_nngcat_test (nngcat_help 2)
-    add_nngcat_test (nngcat_incompat 2)
+    add_nngcat_test (nngcat_ambiguous 10)
+    add_nngcat_test (nngcat_need_proto 10)
+    add_nngcat_test (nngcat_dup_proto 10)
+    add_nngcat_test (nngcat_help 10)
+    add_nngcat_test (nngcat_incompat 10)
     add_nngcat_test (nngcat_pubsub 20)
     add_nngcat_test (nngcat_recvmaxsz 20)
     add_nngcat_test (nngcat_unlimited 20)
