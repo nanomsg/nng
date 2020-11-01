@@ -1,6 +1,6 @@
 = nng_sockaddr_ipc(5)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -15,7 +15,7 @@ nng_sockaddr_ipc - IPC socket address
 
 == SYNOPSIS
 
-[source, c]
+[source,c]
 ----
 #include <nng/nng.h>
 
@@ -25,43 +25,37 @@ enum sockaddr_family {
 
 typedef struct {
     uint16_t sa_family;
-    uint16_t sa_path[128];
+    char     sa_path[128];
 } nng_sockaddr_ipc;
 ----
 
 == DESCRIPTION
 
-(((socket, address, IPC)))
-An `nng_sockaddr_ipc` is the flavor of xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
-used to represent addresses associated with IPC communication
-using the xref:nng_ipc.7.adoc[_ipc_] transport.
+(((socket, address, IPC))) An `nng_sockaddr_ipc` is the flavor of xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
+used to represent addresses associated with IPC communication using the xref:nng_ipc.7.adoc[_ipc_] transport.
 
 The following structure members are present:
 
 `sa_family`::
-    This field will always have the value ((`NNG_AF_IPC`)).
+This field will always have the value ((`NNG_AF_IPC`)).
 
 `sa_path`::
-    This field holds the C string corresponding to path name where the
-    IPC socket is located.
-    For systems using UNIX domain sockets, this will be an absolute
-    path name in the file system, where the UNIX domain socket is located.
-    For Windows systems, this is the path name of the Named Pipe, without
-    the leading `\\.pipe\` portion, which will be automatically added.
+This field holds the C string corresponding to path name where the IPC socket is located.
+For systems using UNIX domain sockets, this will be a path name in the file system, where the UNIX domain socket is located.
+For Windows systems, this is the path name of the Named Pipe, without the leading `\\.pipe\` portion, which will be automatically added.
 
-NOTE: At this time, there is no support for Linux abstract sockets.
+NOTE: At this time, there is no support for abstract sockets.
 
-TIP: In order to ensure maximum compatibility, applications should avoid
-hard coding the size of the `sa_path` member explicitly, but use the
+TIP: In order to ensure maximum compatibility, applications should avoid hard coding the size of the `sa_path` member explicitly, but use the
 `sizeof` operator to determine its actual size at compile time.
-Furthermore, the size is guaranteed to be at least 128, but paths of
-this length may not be supported on all systems.
+Furthermore, the size is guaranteed to be at least 128, but paths of this length may not be supported on all systems.
 
-NOTE: If compatibility with legacy _nanomsg_ applications is required,
-then pathnames must not be longer than 122 bytes, including the final
+TIP: Portable applications should restrict themselves to path names of not more than 90 bytes.  Most systems have
+limits around 100 bytes, but at least one system (HP-UX) is restricted to not more than 92 bytes including the `NUL`.
+
+NOTE: If compatibility with legacy _nanomsg_ applications is required, then path names must not be longer than 122 bytes, including the final
 `NUL` byte.
-This is because legacy versions of _nanomsg_ cannot express URLs
-longer than 128 bytes, including the `ipc://` prefix.
+This is because legacy versions of _nanomsg_ cannot express URLs longer than 128 bytes, including the `ipc://` prefix.
 
 == SEE ALSO
 
