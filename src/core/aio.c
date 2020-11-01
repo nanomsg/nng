@@ -699,15 +699,3 @@ nni_aio_sys_init(void)
 	nni_thr_run(thr);
 	return (0);
 }
-
-void
-nni_aio_set_sockaddr(nni_aio *aio, const nng_sockaddr *sa)
-{
-	memcpy(&aio->a_sockaddr, sa, sizeof(*sa));
-}
-
-void
-nni_aio_get_sockaddr(nni_aio *aio, nng_sockaddr *sa)
-{
-	memcpy(sa, &aio->a_sockaddr, sizeof(*sa));
-}

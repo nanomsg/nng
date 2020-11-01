@@ -701,11 +701,8 @@ tlstran_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl)
 		return (rv);
 	}
 
-	nni_tcp_resolv(src, 0, af, 1, aio);
+	nni_resolv_ip(src, "0", af, 1, sa, aio);
 	nni_aio_wait(aio);
-	if ((rv = nni_aio_result(aio)) == 0) {
-		nni_aio_get_sockaddr(aio, sa);
-	}
 	nni_aio_free(aio);
 	nni_free(src, len + 1);
 	return (rv);
@@ -939,8 +936,7 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 		tlstran_ep_fini(ep);
 		return (rv);
 	}
-	nni_aio_set_input(aio, 0, &ep->sa);
-	nni_tcp_resolv(host, url->u_port, af, 1, aio);
+	nni_resolv_ip(host, url->u_port, af, true, &ep->sa, aio);
 	nni_aio_wait(aio);
 	rv = nni_aio_result(aio);
 	nni_aio_free(aio);

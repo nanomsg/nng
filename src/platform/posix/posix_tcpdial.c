@@ -169,7 +169,7 @@ tcp_dialer_cb(nni_posix_pfd *pfd, unsigned ev, void *arg)
 // We don't give local address binding support.  Outbound dialers always
 // get an ephemeral port.
 void
-nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
+nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 {
 	nni_tcp_conn *          c;
 	nni_posix_pfd *         pfd = NULL;
@@ -179,14 +179,12 @@ nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
 	int                     rv;
 	int                     ka;
 	int                     nd;
-	nng_sockaddr            sa;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 
-	nni_aio_get_sockaddr(aio, &sa);
-	if (((sslen = nni_posix_nn2sockaddr(&ss, &sa)) == 0) ||
+	if (((sslen = nni_posix_nn2sockaddr(&ss, sa)) == 0) ||
 	    ((ss.ss_family != AF_INET) && (ss.ss_family != AF_INET6))) {
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
 		return;

@@ -1,5 +1,5 @@
 #
-#   Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 #   Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
@@ -130,7 +130,9 @@ nng_test(bug1247)
 nng_test(id)
 nng_test(platform)
 nng_test(reconnect)
+nng_test(resolv)
 nng_test(sock)
+
 
 add_nng_test(device 5)
 add_nng_test(errors 2)
@@ -149,7 +151,6 @@ add_nng_test(nonblock 60)
 add_nng_test(options 5)
 add_nng_test(pipe 5)
 add_nng_test(pollfd 5)
-add_nng_test1(resolv 10 NNG_STATIC_LIB)
 add_nng_test(scalability 20 ON)
 add_nng_test(set_recvmaxsize 2)
 add_nng_test1(stats 5 NNG_ENABLE_STATS)

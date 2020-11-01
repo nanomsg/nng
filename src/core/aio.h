@@ -155,12 +155,9 @@ extern void nni_aio_get_iov(nni_aio *, unsigned *, nni_iov **);
 extern void nni_aio_normalize_timeout(nni_aio *, nng_duration);
 extern void nni_aio_bump_count(nni_aio *, size_t);
 
-extern void nni_aio_set_sockaddr(nni_aio *aio, const nng_sockaddr *);
-extern void nni_aio_get_sockaddr(nni_aio *aio, nng_sockaddr *);
-
 // nni_aio_schedule indicates that the AIO has begun, and is scheduled for
-// asychronous completion. This also starts the expiration timer. Note that
-// prior to this, the aio is uncancellable.  If the operation has a zero
+// asynchronous completion. This also starts the expiration timer. Note that
+// prior to this, the aio cannot be canceled.  If the operation has a zero
 // timeout (NNG_FLAG_NONBLOCK) then NNG_ETIMEDOUT is returned.  If the
 // operation has already been canceled, or should not be run, then an error
 // is returned.  (In that case the caller should probably either return an
@@ -198,7 +195,7 @@ struct nng_aio {
 
 	// User scratch data.  Consumers may store values here, which
 	// must be preserved by providers and the framework.
-	void *a_user_data[4];
+	void *a_user_data[2];
 
 	// Operation inputs & outputs.  Up to 4 inputs and 4 outputs may be
 	// specified.  The semantics of these will vary, and depend on the
@@ -210,13 +207,7 @@ struct nng_aio {
 	nni_aio_cancelfn a_cancel_fn;
 	void *           a_cancel_arg;
 	nni_list_node    a_prov_node;     // Linkage on provider list.
-	void *           a_prov_extra[4]; // Extra data used by provider
-
-	// Socket address.  This turns out to be very useful, as we wind up
-	// needing socket addresses for numerous connection related routines.
-	// It would be cleaner to not have this and avoid burning the space,
-	// but having this hear dramatically simplifies lots of code.
-	nng_sockaddr a_sockaddr;
+	void *           a_prov_extra[2]; // Extra data used by provider
 
 	// Expire node.
 	nni_list_node a_expire_node;

@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -9,7 +9,6 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <stddef.h>
 #include <stdint.h>
 #include <string.h>
 
@@ -28,7 +27,6 @@ typedef struct {
 	nni_tcp_dialer *  d;      // platform dialer implementation
 	nni_aio *         resaio; // resolver aio
 	nni_aio *         conaio; // platform connection aio
-	nni_list          resaios;
 	nni_list          conaios;
 	nni_mtx           mtx;
 } tcp_dialer;
@@ -45,12 +43,19 @@ tcp_dial_cancel(nni_aio *aio, void *arg, int rv)
 
 		if (nni_list_empty(&d->conaios)) {
 			nni_aio_abort(d->conaio, NNG_ECANCELED);
-		}
-		if (nni_list_empty(&d->resaios)) {
 			nni_aio_abort(d->resaio, NNG_ECANCELED);
 		}
 	}
 	nni_mtx_unlock(&d->mtx);
+}
+
+static void
+tcp_dial_start_next(tcp_dialer *d)
+{
+	if (nni_list_empty(&d->conaios)) {
+		return;
+	}
+	nni_resolv_ip(d->host, d->port, d->af, false, &d->sa, d->resaio);
 }
 
 static void
@@ -61,34 +66,27 @@ tcp_dial_res_cb(void *arg)
 	int         rv;
 
 	nni_mtx_lock(&d->mtx);
-	if (d->closed || ((aio = nni_list_first(&d->resaios)) == NULL)) {
+	if (d->closed || ((aio = nni_list_first(&d->conaios)) == NULL)) {
 		// ignore this.
-		while ((aio = nni_list_first(&d->resaios)) != NULL) {
-			nni_list_remove(&d->resaios, aio);
+		while ((aio = nni_list_first(&d->conaios)) != NULL) {
+			nni_list_remove(&d->conaios, aio);
 			nni_aio_finish_error(aio, NNG_ECLOSED);
 		}
 		nni_mtx_unlock(&d->mtx);
 		return;
 	}
 
-	nni_list_remove(&d->resaios, aio);
-
 	if ((rv = nni_aio_result(d->resaio)) != 0) {
+		nni_list_remove(&d->conaios, aio);
 		nni_aio_finish_error(aio, rv);
+
+		// try DNS again for next connection...
+		tcp_dial_start_next(d);
+
 	} else {
-		nng_sockaddr sa;
-		nni_aio_get_sockaddr(d->resaio, &sa);
-		nni_aio_set_sockaddr(aio, &sa);
-		nni_list_append(&d->conaios, aio);
-		if (nni_list_first(&d->conaios) == aio) {
-			nni_aio_set_sockaddr(d->conaio, &sa);
-			nni_tcp_dial(d->d, d->conaio);
-		}
+		nni_tcp_dial(d->d, &d->sa, d->conaio);
 	}
 
-	if (!nni_list_empty(&d->resaios)) {
-		nni_tcp_resolv(d->host, d->port, d->af, 0, d->resaio);
-	}
 	nni_mtx_unlock(&d->mtx);
 }
 
@@ -118,12 +116,7 @@ tcp_dial_con_cb(void *arg)
 		nni_aio_finish(aio, 0, 0);
 	}
 
-	if ((aio = nni_list_first(&d->conaios)) != NULL) {
-		nng_sockaddr sa;
-		nni_aio_get_sockaddr(aio, &sa);
-		nni_aio_set_sockaddr(d->conaio, &sa);
-		nni_tcp_dial(d->d, d->conaio);
-	}
+	tcp_dial_start_next(d);
 	nni_mtx_unlock(&d->mtx);
 }
 
@@ -134,10 +127,6 @@ tcp_dialer_close(void *arg)
 	nni_aio *   aio;
 	nni_mtx_lock(&d->mtx);
 	d->closed = true;
-	while ((aio = nni_list_first(&d->resaios)) != NULL) {
-		nni_list_remove(&d->resaios, aio);
-		nni_aio_finish_error(aio, NNG_ECLOSED);
-	}
 	while ((aio = nni_list_first(&d->conaios)) != NULL) {
 		nni_list_remove(&d->conaios, aio);
 		nni_aio_finish_error(aio, NNG_ECLOSED);
@@ -189,17 +178,9 @@ tcp_dialer_dial(void *arg, nng_aio *aio)
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
-	if (d->host != NULL) {
-		nni_list_append(&d->resaios, aio);
-		if (nni_list_first(&d->resaios) == aio) {
-			nni_tcp_resolv(d->host, d->port, d->af, 0, d->resaio);
-		}
-	} else {
-		nni_list_append(&d->conaios, aio);
-		if (nni_list_first(&d->conaios) == aio) {
-			nni_aio_set_sockaddr(d->conaio, &d->sa);
-			nni_tcp_dial(d->d, d->conaio);
-		}
+	nni_list_append(&d->conaios, aio);
+	if (nni_list_first(&d->conaios) == aio) {
+		tcp_dial_start_next(d);
 	}
 	nni_mtx_unlock(&d->mtx);
 }
@@ -231,7 +212,6 @@ tcp_dialer_alloc(tcp_dialer **dp)
 	}
 
 	nni_mtx_init(&d->mtx);
-	nni_aio_list_init(&d->resaios);
 	nni_aio_list_init(&d->conaios);
 
 	if (((rv = nni_aio_alloc(&d->resaio, tcp_dial_res_cb, d)) != 0) ||
@@ -352,8 +332,9 @@ tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 		break;
 
 	case NNG_AF_INET6:
-		paddr = (void *) &sa.s_in.sa_port;
+		paddr = (void *) &sa.s_in6.sa_port;
 		break;
+
 	default:
 		paddr = NULL;
 		break;
@@ -442,14 +423,13 @@ nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	if ((h != NULL) && ((strcmp(h, "*") == 0) || (strcmp(h, "") == 0))) {
 		h = NULL;
 	}
-	nni_tcp_resolv(h, url->u_port, af, 1, aio);
+	nni_resolv_ip(h, url->u_port, af, true, &sa, aio);
 	nni_aio_wait(aio);
 
 	if ((rv = nni_aio_result(aio)) != 0) {
 		nni_aio_free(aio);
 		return (rv);
 	}
-	nni_aio_get_sockaddr(aio, &sa);
 	nni_aio_free(aio);
 
 	return (tcp_listener_alloc_addr(lp, &sa));

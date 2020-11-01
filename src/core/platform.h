@@ -287,7 +287,7 @@ extern void nni_tcp_dialer_close(nni_tcp_dialer *);
 // nni_tcp_dial attempts to create an outgoing connection,
 // asynchronously, to the address in the aio. On success, the first (and only)
 // output will be an nni_tcp_conn * associated with the remote server.
-extern void nni_tcp_dial(nni_tcp_dialer *, nni_aio *);
+extern void nni_tcp_dial(nni_tcp_dialer *, const nng_sockaddr *, nni_aio *);
 
 // nni_tcp_dialer_getopt gets an option from the dialer.
 extern int nni_tcp_dialer_setopt(
@@ -331,17 +331,16 @@ extern int nni_tcp_listener_setopt(
 extern int nni_tcp_listener_getopt(
     nni_tcp_listener *, const char *, void *, size_t *, nni_type);
 
-// nni_tcp_resolv resolves a TCP name asynchronously.  The family
-// should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.  The
-// first two constrain the name to those families, while the third will
+// nni_resolv_ip resolves a DNS host and service name asynchronously.
+// The family should be one of NNG_AF_INET, NNG_AF_INET6, or NNG_AF_UNSPEC.
+// The first two constrain the name to those families, while the third will
 // return names of either family.  The passive flag indicates that the
 // name will be used for bind(), otherwise the name will be used with
 // connect().  The host part may be NULL only if passive is true.
-extern void nni_tcp_resolv(const char *, const char *, int, int, nni_aio *);
-
-// nni_udp_resolv is just like nni_tcp_resolv, but looks up
-// service names using UDP.
-extern void nni_udp_resolv(const char *, const char *, int, int, nni_aio *);
+// Symbolic service names will be looked up assuming SOCK_STREAM, so
+// they may not work with UDP.
+extern void nni_resolv_ip(const char *, const char *, int, bool,
+    nng_sockaddr *sa, nni_aio *);
 
 // nni_parse_ip parses an IP address, without a port.
 extern int nni_parse_ip(const char *, nng_sockaddr *);

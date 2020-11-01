@@ -173,22 +173,19 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 }
 
 void
-nni_tcp_dial(nni_tcp_dialer *d, nni_aio *aio)
+nni_tcp_dial(nni_tcp_dialer *d, const nni_sockaddr *sa, nni_aio *aio)
 {
 	SOCKET           s;
 	SOCKADDR_STORAGE ss;
 	int              len;
 	nni_tcp_conn *   c;
 	int              rv;
-	nng_sockaddr     sa;
-
-	nni_aio_get_sockaddr(aio, &sa);
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 
-	if ((len = nni_win_nn2sockaddr(&ss, &sa)) <= 0) {
+	if ((len = nni_win_nn2sockaddr(&ss, sa)) <= 0) {
 		nni_aio_finish_error(aio, NNG_EADDRINVAL);
 		return;
 	}
