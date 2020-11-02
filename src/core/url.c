@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,8 +17,8 @@
 
 #include "url.h"
 
-static char
-url_hexval(char c)
+static uint8_t
+url_hex_val(char c)
 {
 	if ((c >= '0') && (c <= '9')) {
 		return (c - '0');
@@ -44,21 +44,21 @@ url_utf8_validate(void *arg)
 	int      nb;
 
 	while (*s) {
-		if ((s[0] & 0x80) == 0) {
+		if ((s[0] & 0x80u) == 0) {
 			s++;
 			continue;
 		}
-		if ((s[0] & 0xe0) == 0xc0) {
+		if ((s[0] & 0xe0u) == 0xc0) {
 			// 0x80 thru 0x7ff
-			v    = (s[0] & 0x1f);
+			v    = (s[0] & 0x1fu);
 			minv = 0x80;
 			nb   = 1;
-		} else if ((s[0] & 0xf0) == 0xe0) {
-			v    = (s[0] & 0xf);
+		} else if ((s[0] & 0xf0u) == 0xe0) {
+			v    = (s[0] & 0xfu);
 			minv = 0x800;
 			nb   = 2;
-		} else if ((s[0] & 0xf8) == 0xf0) {
-			v    = (s[0] & 0x7);
+		} else if ((s[0] & 0xf8u) == 0xf0) {
+			v    = (s[0] & 0x7u);
 			minv = 0x10000;
 			nb   = 3;
 		} else {
@@ -68,12 +68,12 @@ url_utf8_validate(void *arg)
 		}
 		s++;
 		for (int i = 0; i < nb; i++) {
-			if ((s[0] & 0xc0) != 0x80) {
+			if ((s[0] & 0xc0u) != 0x80) {
 				return (NNG_EINVAL); // not continuation
 			}
 			s++;
-			v <<= 6;
-			v += s[0] & 0x3f;
+			v <<= 6u;
+			v += s[0] & 0x3fu;
 		}
 		if (v < minv) {
 			return (NNG_EINVAL);
@@ -88,14 +88,42 @@ url_utf8_validate(void *arg)
 	return (0);
 }
 
+size_t
+nni_url_decode(uint8_t *out, const char *in, size_t max_len)
+{
+	size_t  len;
+	uint8_t c;
+
+	len = 0;
+	while ((c = (uint8_t) *in) != '\0') {
+		if (len >= max_len) {
+			return ((size_t) -1);
+		}
+		if (c == '%') {
+			in++;
+			if ((!isxdigit(in[0])) || (!isxdigit(in[1]))) {
+				return ((size_t) -1);
+			}
+			out[len] = url_hex_val(*in++);
+			out[len] <<= 4u;
+			out[len] += url_hex_val(*in++);
+			len++;
+		} else {
+			out[len++] = c;
+			in++;
+		}
+	}
+	return (len);
+}
+
 static int
 url_canonify_uri(char **outp, const char *in)
 {
-	char * out;
-	size_t src, dst, len;
-	int    c;
-	int    rv;
-	bool   skip;
+	char *  out;
+	size_t  src, dst, len;
+	uint8_t c;
+	int     rv;
+	bool    skip;
 
 	// We know that the transform is strictly "reducing".
 	if ((out = nni_strdup(in)) == NULL) {
@@ -112,9 +140,9 @@ url_canonify_uri(char **outp, const char *in)
 				nni_free(out, len);
 				return (NNG_EINVAL);
 			}
-			c = url_hexval(out[src + 1]);
+			c = url_hex_val(out[src + 1]);
 			c *= 16;
-			c += url_hexval(out[src + 2]);
+			c += url_hex_val(out[src + 2]);
 			// If it's a safe character, decode, otherwise leave
 			// it alone.  We also decode valid high-bytes for
 			// UTF-8, which will let us validate them and use
@@ -127,8 +155,8 @@ url_canonify_uri(char **outp, const char *in)
 				out[dst++] = (char) c;
 			} else {
 				out[dst++] = '%';
-				out[dst++] = (char) toupper(out[src + 1]);
-				out[dst++] = (char) toupper(out[src + 2]);
+				out[dst++] = toupper((uint8_t) out[src + 1]);
+				out[dst++] = toupper((uint8_t) out[src + 2]);
 			}
 			src += 3;
 			continue;
@@ -311,9 +339,11 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	// path names are not canonicalized, which means that the address and
 	// URL properties for relative paths won't be portable to other
 	// processes unless they are in the same directory.  When in doubt,
-	// we recommend using absolute paths, such as ipc:///var/run/mysocket.
+	// we recommend using absolute paths, such as ipc:///var/run/socket.
 
 	if ((strcmp(url->u_scheme, "ipc") == 0) ||
+	    (strcmp(url->u_scheme, "unix") == 0) ||
+	    (strcmp(url->u_scheme, "abstract") == 0) ||
 	    (strcmp(url->u_scheme, "inproc") == 0)) {
 		if ((url->u_path = nni_strdup(s)) == NULL) {
 			rv = NNG_ENOMEM;
@@ -388,7 +418,6 @@ nni_url_parse(nni_url **urlp, const char *raw)
 	url->u_path[len] = '\0';
 
 	s += len;
-	len = 0;
 
 	// Look for query info portion.
 	if (s[0] == '?') {
@@ -500,7 +529,10 @@ nni_url_asprintf(char **str, const nni_url *url)
 	const char *hostob = "";
 	const char *hostcb = "";
 
-	if ((strcmp(scheme, "ipc") == 0) || (strcmp(scheme, "inproc") == 0)) {
+	if ((strcmp(scheme, "ipc") == 0) || (strcmp(scheme, "inproc") == 0) ||
+            (strcmp(scheme, "unix") == 0) ||
+            (strcmp(scheme, "ipc+abstract") == 0) ||
+	    (strcmp(scheme, "unix+abstract") == 0)) {
 		return (nni_asprintf(str, "%s://%s", scheme, url->u_path));
 	}
 

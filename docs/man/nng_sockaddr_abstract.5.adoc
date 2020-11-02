@@ -1,0 +1,77 @@
+= nng_sockaddr_abstract(5)
+//
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+//
+// This document is supplied under the terms of the MIT License, a
+// copy of which should be located in the distribution where this
+// file was obtained (LICENSE.txt).  A copy of the license may also be
+// found online at https://opensource.org/licenses/MIT.
+//
+
+== NAME
+
+nng_sockaddr_abstract - abstract IPC socket address
+
+== SYNOPSIS
+
+[source,c]
+----
+#include <nng/nng.h>
+
+enum sockaddr_family {
+    NNG_AF_ABSTRACT = 6,
+};
+
+typedef struct {
+    uint16_t sa_family;
+    uint16_t sa_len;
+    char     sa_name[107];
+} nng_sockaddr_abstract;
+----
+
+== DESCRIPTION
+
+(((socket, address, abstract))) An `nng_sockaddr_abstract` is the flavor of xref:nng_sockaddr.5.adoc[`nng_sockaddr`]
+used to represent addresses associated with IPC communication using "`abstract`" sockets.
+
+Abstract sockets are only supported on Linux at present.
+These sockets have a name that is simply an array of bytes, with no special meaning.
+Abstract sockets also have no presence in the file system, do not honor any permissions, and are automatically
+cleaned up by the operating system when no longer in use.
+
+NOTE: Support for abstract sockets is a new feature in _NNG_, and it is only available on Linux.
+As such their use is not recommended for portable applications.
+
+The following structure members are present:
+
+`sa_family`::
+This field will always have the value ((`NNG_AF_ABSTRACT`)).
+
+`sa_len`::
+This field provides the name of the length stored in `sa_name`.
+
+`sa_name`::
+This field holds the name of the abstract socket.
+The bytes of name can have any value, including zero.
+
+NOTE: The name does _not_ include the leading `NUL` byte used on Linux to discriminate between
+abstract and path name sockets.
+
+=== Auto Bind
+
+An empty value (`sa_len` equal to zero) can be used on listening sockets to request the
+system allocate a name.
+On Linux systems, this will result in a name with either 5 or 8 hexadecimal ASCII characters.
+The name chosen can be obtained by retrieving the `NNG_OPT_LOCADDR` option on the listening entity.
+
+NOTE: Because a zero length name is used to indicate auto bind be used, it is impossible to specify
+an actual empty name.  This name are not supported by _NNG_, although the underlying system can support it.
+The use of that name is inadvisable anyway.
+
+
+== SEE ALSO
+
+[.text-left]
+xref:nng_sockaddr.5.adoc[nng_sockaddr(5)],
+xref:nng_ipc.7.adoc[nng_ipc(7)]
+xref:nng.7.adoc[nng(7)]

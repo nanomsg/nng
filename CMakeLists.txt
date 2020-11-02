@@ -193,6 +193,7 @@ if (CMAKE_SYSTEM_NAME MATCHES "Linux")
     add_definitions(-DNNG_PLATFORM_POSIX)
     add_definitions(-DNNG_PLATFORM_LINUX)
     add_definitions(-DNNG_USE_EVENTFD)
+    add_definitions(-DNNG_HAVE_ABSTRACT_SOCKETS)
     # Windows subsystem for Linux -- smells like Linux, but it has
     # some differences (SO_REUSEADDR for one).
     if (CMAKE_SYSTEM_VERSION MATCHES "Microsoft")
@@ -384,6 +385,20 @@ macro(nng_test NAME)
         set_tests_properties(${PROJECT_NAME}.${NAME} PROPERTIES TIMEOUT 180)
     endif ()
 endmacro()
+
+macro(nng_test_if COND NAME)
+    if (${COND} AND NNG_TESTS)
+        add_executable(${NAME} ${NAME}.c ${ARGN})
+        target_link_libraries(${NAME} ${PROJECT_NAME}_testlib)
+        target_include_directories(${NAME} PRIVATE
+                ${PROJECT_SOURCE_DIR}/tests
+                ${PROJECT_SOURCE_DIR}/src
+                ${PROJECT_SOURCE_DIR}/include)
+        add_test(NAME ${PROJECT_NAME}.${NAME} COMMAND ${NAME} -t)
+        set_tests_properties(${PROJECT_NAME}.${NAME} PROPERTIES TIMEOUT 180)
+    endif ()
+endmacro()
+
 
 function(nng_sources_testlib)
     if (NNG_TESTS)

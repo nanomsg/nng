@@ -115,14 +115,11 @@ struct nng_sockaddr_inproc {
 	uint16_t sa_family;
 	char     sa_name[NNG_MAXADDRLEN];
 };
-typedef struct nng_sockaddr_inproc nng_sockaddr_inproc;
 
 struct nng_sockaddr_path {
 	uint16_t sa_family;
 	char     sa_path[NNG_MAXADDRLEN];
 };
-typedef struct nng_sockaddr_path nng_sockaddr_path;
-typedef struct nng_sockaddr_path nng_sockaddr_ipc;
 
 struct nng_sockaddr_in6 {
 	uint16_t sa_family;
@@ -130,10 +127,6 @@ struct nng_sockaddr_in6 {
 	uint8_t  sa_addr[16];
 	uint32_t sa_scope;
 };
-typedef struct nng_sockaddr_in6 nng_sockaddr_in6;
-typedef struct nng_sockaddr_in6 nng_sockaddr_udp6;
-typedef struct nng_sockaddr_in6 nng_sockaddr_tcp6;
-
 struct nng_sockaddr_in {
 	uint16_t sa_family;
 	uint16_t sa_port;
@@ -147,27 +140,48 @@ struct nng_sockaddr_zt {
 	uint32_t sa_port;
 };
 
-typedef struct nng_sockaddr_in nng_sockaddr_in;
-typedef struct nng_sockaddr_in nng_sockaddr_udp;
-typedef struct nng_sockaddr_in nng_sockaddr_tcp;
-typedef struct nng_sockaddr_zt nng_sockaddr_zt;
+struct nng_sockaddr_abstract {
+	uint16_t sa_family;
+	uint16_t sa_len;       // will be 0 - 107 max.
+	uint8_t  sa_name[107]; // 108 linux/windows, without leading NUL
+};
+
+// nng_sockaddr_storage is the the size required to store any nng_sockaddr.
+// This size must not change, and no individual nng_sockaddr type may grow
+// larger than this without breaking binary compatibility.
+struct nng_sockaddr_storage {
+	uint16_t sa_family;
+	uint16_t sa_pad[64];
+};
+
+typedef struct nng_sockaddr_inproc   nng_sockaddr_inproc;
+typedef struct nng_sockaddr_path     nng_sockaddr_path;
+typedef struct nng_sockaddr_path     nng_sockaddr_ipc;
+typedef struct nng_sockaddr_in       nng_sockaddr_in;
+typedef struct nng_sockaddr_in6      nng_sockaddr_in6;
+typedef struct nng_sockaddr_zt       nng_sockaddr_zt;
+typedef struct nng_sockaddr_abstract nng_sockaddr_abstract;
+typedef struct nng_sockaddr_storage  nng_sockaddr_storage;
 
 typedef union nng_sockaddr {
-	uint16_t            s_family;
-	nng_sockaddr_ipc    s_ipc;
-	nng_sockaddr_inproc s_inproc;
-	nng_sockaddr_in6    s_in6;
-	nng_sockaddr_in     s_in;
-	nng_sockaddr_zt     s_zt;
+	uint16_t              s_family;
+	nng_sockaddr_ipc      s_ipc;
+	nng_sockaddr_inproc   s_inproc;
+	nng_sockaddr_in6      s_in6;
+	nng_sockaddr_in       s_in;
+	nng_sockaddr_zt       s_zt;
+	nng_sockaddr_abstract s_abstract;
+	nng_sockaddr_storage  s_storage;
 } nng_sockaddr;
 
 enum nng_sockaddr_family {
-	NNG_AF_UNSPEC = 0,
-	NNG_AF_INPROC = 1,
-	NNG_AF_IPC    = 2,
-	NNG_AF_INET   = 3,
-	NNG_AF_INET6  = 4,
-	NNG_AF_ZT     = 5 // ZeroTier
+	NNG_AF_UNSPEC   = 0,
+	NNG_AF_INPROC   = 1,
+	NNG_AF_IPC      = 2,
+	NNG_AF_INET     = 3,
+	NNG_AF_INET6    = 4,
+	NNG_AF_ZT       = 5, // ZeroTier
+	NNG_AF_ABSTRACT = 6
 };
 
 // Scatter/gather I/O.

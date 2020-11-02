@@ -228,7 +228,8 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	int         rv;
 
 	if ((strcmp(url->u_scheme, "ipc") != 0) || (url->u_path == NULL) ||
-	    (strlen(url->u_path) == 0)) {
+	    (strlen(url->u_path) == 0)||
+	    (strlen(url->u_path) >= NNG_MAXADDRLEN)) {
 		return (NNG_EADDRINVAL);
 	}
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {

@@ -1,6 +1,6 @@
 = nng_ipc(7)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -38,7 +38,9 @@ Other platforms may have different implementation strategies.
 This transport is generally built-in to the core, so
 no extra steps to use it should be necessary.
 
-=== URI Format
+=== URI Formats
+
+==== Traditional Names
 
 (((URI, `ipc://`)))
 This transport uses URIs using the scheme `ipc://`, followed by a path
@@ -58,15 +60,47 @@ To ensure maximum portability and safety, absolute paths are recommended
 whenever possible.
 
 NOTE: If compatibility with legacy _nanomsg_ applications is required,
-then pathnames must not be longer than 122 bytes, including the final
+then path names must not be longer than 122 bytes, including the final
 `NUL` byte.
 This is because legacy versions of _nanomsg_ cannot express URLs
 longer than 128 bytes, including the `ipc://` prefix.
 
+==== UNIX Aliases
+
+(((URI, `unix://`)))
+The `unix://` scheme is an alias for `ipc://` and can be used inter-changeably, but only
+on POSIX systems.
+
+The purpose of this scheme is to support a future transport making use of `AF_UNIX`
+on Windows systems, at which time it will be necessary to discriminate between
+the Named Pipes and the `AF_UNIX` based transports.
+
+==== Abstract Names
+
+(((URI, `abstract://`)))
+On Linux, this transport also can support abstract sockets.
+Abstract sockets use a URI-encoded name after the scheme, which allows arbitrary values to be conveyed
+in the path, including embedded `NUL` bytes.
+For example, the name `"a\0b"`  would be represented as `abstract://a%00b`.
+
+TIP: An empty name may be used with a listener to request "`auto bind`" be used to select a name.
+In this case the system will allocate a free name.
+The name assigned may be retrieved using `NNG_OPT_LOCADDR`.
+
+NOTE: _NNG_ cannot represent an abstract socket with the empty name.
+
+NOTE: Abstract names do not include the leading `NUL` byte used in the low-level socket address.
+
+Abstract sockets do not have any representation in the file system, and are automatically freed by
+the system when no longer in use.
+Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
+of the peer with `NNG_OPT_PEER_UID`, etc.
+
 === Socket Address
 
 When using an xref:nng_sockaddr.5.adoc[`nng_sockaddr`] structure,
-the actual structure is of type xref:nng_sockaddr_ipc.5.adoc[`nng_sockaddr_ipc`].
+the actual structure is of type xref:nng_sockaddr_ipc.5.adoc[`nng_sockaddr_ipc`],
+except for abstract sockets, which use xref:nng_sockaddr_abstract.5.adoc[`nng_sockaddr_abstract`].
 
 === Transport Options
 

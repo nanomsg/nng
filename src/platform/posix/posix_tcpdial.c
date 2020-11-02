@@ -321,7 +321,7 @@ tcp_dialer_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 	nng_sockaddr    sa;
 
 	nni_mtx_lock(&d->mtx);
-	if (nni_posix_sockaddr2nn(&sa, &d->src) != 0) {
+	if (nni_posix_sockaddr2nn(&sa, &d->src, d->srclen) != 0) {
 		sa.s_family = NNG_AF_UNSPEC;
 	}
 	nni_mtx_unlock(&d->mtx);
@@ -336,13 +336,13 @@ tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 	struct sockaddr_storage ss;
 	struct sockaddr_in *    sin;
 	struct sockaddr_in6 *   sin6;
-	size_t                  sslen;
+	size_t                  len;
 	int                     rv;
 
 	if ((rv = nni_copyin_sockaddr(&sa, buf, sz, t)) != 0) {
 		return (rv);
 	}
-	if ((sslen = nni_posix_nn2sockaddr(&ss, &sa)) == 0) {
+	if ((len = nni_posix_nn2sockaddr(&ss, &sa)) == 0) {
 		return (NNG_EADDRINVAL);
 	}
 	// Ensure we are either IPv4 or IPv6, and port is not set.  (We
@@ -370,7 +370,7 @@ tcp_dialer_set_locaddr(void *arg, const void *buf, size_t sz, nni_type t)
 			return (NNG_ECLOSED);
 		}
 		d->src    = ss;
-		d->srclen = sslen;
+		d->srclen = len;
 		nni_mtx_unlock(&d->mtx);
 	}
 	return (0);

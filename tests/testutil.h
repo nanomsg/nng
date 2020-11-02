@@ -63,8 +63,8 @@ extern int testutil_marry_ex(
 // success, an NNG error number otherwise.)
 extern void *testutil_stream_send_start(nng_stream *, void *, size_t);
 extern void *testutil_stream_recv_start(nng_stream *, void *, size_t);
-extern int testutil_stream_send_wait(void *);
-extern int testutil_stream_recv_wait(void *);
+extern int   testutil_stream_send_wait(void *);
+extern int   testutil_stream_recv_wait(void *);
 
 // These are TLS certificates.  The client and server are signed with the
 // root.  The server uses CN 127.0.0.1.  Other details are bogus, but
@@ -109,6 +109,16 @@ extern const char *testutil_client_crt;
 		buf_[sizeof(buf_) - 1] = '\0';                              \
 		TEST_CHECK_(                                                \
 		    strcmp(string, buf_) == 0, "%s == %s", string, buf_);   \
+	} while (0)
+
+#define TEST_STREQUAL(s1, s2)                                         \
+	do {                                                          \
+		TEST_CHECK_(strcmp(s1, s2) == 0, "%s == %s", s1, s2); \
+	} while (0)
+
+#define TEST_NULL(x)                                       \
+	do {                                               \
+		TEST_CHECK_((x) == NULL, "%p == NULL", x); \
 	} while (0)
 
 #ifdef __cplusplus

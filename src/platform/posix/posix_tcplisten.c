@@ -333,7 +333,7 @@ tcp_listener_get_locaddr(void *arg, void *buf, size_t *szp, nni_type t)
 		socklen_t               len = sizeof(ss);
 		(void) getsockname(
 		    nni_posix_pfd_fd(l->pfd), (void *) &ss, &len);
-		(void) nni_posix_sockaddr2nn(&sa, &ss);
+		(void) nni_posix_sockaddr2nn(&sa, &ss, len);
 	} else {
 		sa.s_family = NNG_AF_UNSPEC;
 	}

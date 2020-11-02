@@ -136,7 +136,8 @@ testutil_htonl(uint32_t in)
 void
 testutil_scratch_addr(const char *scheme, size_t sz, char *addr)
 {
-	if (strcmp(scheme, "inproc") == 0) {
+	if ((strcmp(scheme, "inproc") == 0) ||
+	    (strcmp(scheme, "abstract") == 0)) {
 		(void) snprintf(addr, sz, "%s://testutil%04x%04x%04x%04x",
 		    scheme, nng_random(), nng_random(), nng_random(),
 		    nng_random());
@@ -158,7 +159,8 @@ testutil_scratch_addr(const char *scheme, size_t sz, char *addr)
 		return;
 	}
 
-	if (strncmp(scheme, "ipc", 3) == 0) {
+	if ((strncmp(scheme, "ipc", 3) == 0) ||
+	    (strncmp(scheme, "unix", 4) == 0)) {
 #ifdef _WIN32
 		// Windows doesn't place IPC names in the filesystem.
 		(void) snprintf(addr, sz, "%s://testutil%04x%04x%04x%04x",
@@ -476,10 +478,10 @@ stream_xfr_alloc(nng_stream *s, void (*submit)(nng_stream *, nng_aio *),
 
 	nng_aio_begin(x->upper_aio);
 
-	x->s           = s;
-	x->rem         = size;
-	x->base        = buf;
-	x->submit      = submit;
+	x->s      = s;
+	x->rem    = size;
+	x->base   = buf;
+	x->submit = submit;
 
 	return (x);
 }

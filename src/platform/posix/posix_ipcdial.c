@@ -178,7 +178,7 @@ ipc_dialer_dial(void *arg, nni_aio *aio)
 
 	nni_atomic_inc64(&d->ref);
 
-	if ((rv = nni_posix_ipc_alloc(&c, d)) != 0) {
+	if ((rv = nni_posix_ipc_alloc(&c, &d->sa, d)) != 0) {
 		(void) close(fd);
 		nni_posix_ipc_dialer_rele(d);
 		nni_aio_finish_error(aio, rv);
@@ -263,20 +263,46 @@ int
 nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 {
 	ipc_dialer *d;
+	size_t      len;
 
-	if ((strcmp(url->u_scheme, "ipc") != 0) || (url->u_path == NULL) ||
-	    (strlen(url->u_path) == 0) ||
-	    (strlen(url->u_path) >= NNG_MAXADDRLEN)) {
-		return (NNG_EADDRINVAL);
-	}
 	if ((d = NNI_ALLOC_STRUCT(d)) == NULL) {
 		return (NNG_ENOMEM);
 	}
+
+	if ((strcmp(url->u_scheme, "ipc") == 0) ||
+	    (strcmp(url->u_scheme, "unix") == 0)) {
+		if ((url->u_path == NULL) ||
+		    ((len = strlen(url->u_path)) == 0) ||
+		    (len > NNG_MAXADDRLEN)) {
+			NNI_FREE_STRUCT(d);
+			return (NNG_EADDRINVAL);
+		}
+		d->sa.s_ipc.sa_family = NNG_AF_IPC;
+		nni_strlcpy(d->sa.s_ipc.sa_path, url->u_path, NNG_MAXADDRLEN);
+
+#ifdef NNG_HAVE_ABSTRACT_SOCKETS
+	} else if (strcmp(url->u_scheme, "abstract") == 0) {
+
+		// path is url encoded.
+		len = nni_url_decode(d->sa.s_abstract.sa_name, url->u_path,
+		    sizeof(d->sa.s_abstract.sa_name));
+		if (len == (size_t) -1) {
+			NNI_FREE_STRUCT(d);
+			return (NNG_EADDRINVAL);
+		}
+
+		d->sa.s_abstract.sa_family = NNG_AF_ABSTRACT;
+		d->sa.s_abstract.sa_len    = len;
+#endif
+
+	} else {
+		NNI_FREE_STRUCT(d);
+		return (NNG_EADDRINVAL);
+	}
+
 	nni_mtx_init(&d->mtx);
 	nni_aio_list_init(&d->connq);
-	d->closed             = false;
-	d->sa.s_ipc.sa_family = NNG_AF_IPC;
-	strcpy(d->sa.s_ipc.sa_path, url->u_path);
+	d->closed      = false;
 	d->sd.sd_free  = ipc_dialer_free;
 	d->sd.sd_close = ipc_dialer_close;
 	d->sd.sd_dial  = ipc_dialer_dial;

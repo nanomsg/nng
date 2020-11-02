@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -91,7 +91,8 @@ nni_posix_udp_dorecv(nni_plat_udp *udp)
 			// We need to store the address information.
 			// It is incumbent on the AIO submitter to supply
 			// storage for the address.
-			nni_posix_sockaddr2nn(sa, (void *) &ss);
+			nni_posix_sockaddr2nn(
+			    sa, (void *) &ss, hdr.msg_namelen);
 		}
 		nni_list_remove(q, aio);
 		nni_aio_finish(aio, rv, cnt);
@@ -319,7 +320,7 @@ nni_plat_udp_sockname(nni_plat_udp *udp, nni_sockaddr *sa)
 	if (getsockname(udp->udp_fd, (struct sockaddr *) &ss, &sz) < 0) {
 		return (nni_plat_errno(errno));
 	}
-	return (nni_posix_sockaddr2nn(sa, &ss));
+	return (nni_posix_sockaddr2nn(sa, &ss, sz));
 }
 
 #endif // NNG_PLATFORM_POSIX

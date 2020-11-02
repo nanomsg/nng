@@ -335,15 +335,15 @@ tcp_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *          c = arg;
 	struct sockaddr_storage ss;
-	socklen_t               sslen = sizeof(ss);
+	socklen_t               len = sizeof(ss);
 	int                     fd    = nni_posix_pfd_fd(c->pfd);
 	int                     rv;
 	nng_sockaddr            sa;
 
-	if (getpeername(fd, (void *) &ss, &sslen) != 0) {
+	if (getpeername(fd, (void *) &ss, &len) != 0) {
 		return (nni_plat_errno(errno));
 	}
-	if ((rv = nni_posix_sockaddr2nn(&sa, &ss)) == 0) {
+	if ((rv = nni_posix_sockaddr2nn(&sa, &ss, len)) == 0) {
 		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
 	}
 	return (rv);
@@ -354,15 +354,15 @@ tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *          c = arg;
 	struct sockaddr_storage ss;
-	socklen_t               sslen = sizeof(ss);
+	socklen_t               len = sizeof(ss);
 	int                     fd    = nni_posix_pfd_fd(c->pfd);
 	int                     rv;
 	nng_sockaddr            sa;
 
-	if (getsockname(fd, (void *) &ss, &sslen) != 0) {
+	if (getsockname(fd, (void *) &ss, &len) != 0) {
 		return (nni_plat_errno(errno));
 	}
-	if ((rv = nni_posix_sockaddr2nn(&sa, &ss)) == 0) {
+	if ((rv = nni_posix_sockaddr2nn(&sa, &ss, len)) == 0) {
 		rv = nni_copyout_sockaddr(&sa, buf, szp, t);
 	}
 	return (rv);

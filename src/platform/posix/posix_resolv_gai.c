@@ -419,7 +419,8 @@ parse_ip(const char *addr, nng_sockaddr *sa, bool want_port)
 		rv = nni_plat_errno(rv);
 		goto done;
 	}
-	nni_posix_sockaddr2nn(sa, (void *) results->ai_addr);
+	nni_posix_sockaddr2nn(
+	    sa, (void *) results->ai_addr, results->ai_addrlen);
 	freeaddrinfo(results);
 
 done:

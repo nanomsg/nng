@@ -32,7 +32,23 @@ static struct {
 	    .listener_alloc = nni_ipc_listener_alloc,
 	    .checkopt       = nni_ipc_checkopt,
 	},
+#ifdef NNG_PLATFORM_POSIX
 	{
+	    .scheme         = "unix",
+	    .dialer_alloc   = nni_ipc_dialer_alloc,
+	    .listener_alloc = nni_ipc_listener_alloc,
+	    .checkopt       = nni_ipc_checkopt,
+	},
+#endif
+#ifdef NNG_HAVE_ABSTRACT_SOCKETS
+	{
+            .scheme         = "abstract",
+            .dialer_alloc   = nni_ipc_dialer_alloc,
+            .listener_alloc = nni_ipc_listener_alloc,
+            .checkopt       = nni_ipc_checkopt,
+        },
+#endif
+        {
 	    .scheme         = "tcp",
 	    .dialer_alloc   = nni_tcp_dialer_alloc,
 	    .listener_alloc = nni_tcp_listener_alloc,

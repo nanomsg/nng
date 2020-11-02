@@ -29,6 +29,7 @@ struct nni_ipc_conn {
 	nni_mtx         mtx;
 	nni_aio *       dial_aio;
 	nni_ipc_dialer *dialer;
+	nng_sockaddr    sa;
 	nni_reap_item   reap;
 };
 
@@ -42,7 +43,8 @@ struct nni_ipc_dialer {
 	nni_atomic_bool   fini;
 };
 
-extern int  nni_posix_ipc_alloc(nni_ipc_conn **, nni_ipc_dialer *);
+extern int nni_posix_ipc_alloc(
+    nni_ipc_conn **, nni_sockaddr *, nni_ipc_dialer *);
 extern void nni_posix_ipc_init(nni_ipc_conn *, nni_posix_pfd *);
 extern void nni_posix_ipc_start(nni_ipc_conn *);
 extern void nni_posix_ipc_dialer_rele(nni_ipc_dialer *);
