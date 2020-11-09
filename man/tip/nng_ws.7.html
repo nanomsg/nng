@@ -68,6 +68,51 @@ port 80 on localhost, with the path <code>/app/pubsub</code>.</p>
 Otherwise the format is the same as for regular WebSockets.</p>
 </div>
 <div class="paragraph">
+<p>A URI may be restricted to IPv6 using the scheme <code>ws6://</code> or <code>wss6://</code>, and may
+be restricted to IPv4 using the scheme <code>ws4://</code> or <code>wss4://</code>.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Specifying <code>ws6://</code>  or <code>wss6://</code> may not prevent IPv4 hosts from being used with
+IPv4-in-IPv6 addresses, particularly when using a wildcard hostname with
+listeners.
+The details of this varies across operating systems.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The <code>ws4://</code> , <code>ws6://</code>, <code>wss4://</code> and <code>wss6://</code> schemes are specific to <em>NNG</em>,
+and might not be understood by other implementations.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+We recommend using either numeric IP addresses, or names that are
+specific to either IPv4 or IPv6 to prevent confusion and surprises.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
 <p>When specifying IPv6 addresses, the address must be enclosed in
 square brackets (<code>[]</code>) to avoid confusion with the final colon
 separating the port.</p>
@@ -157,7 +202,7 @@ only available for <code>wss://</code> endpoints.
 <dl>
 <dt class="hdlist1"><code>NNG_OPT_WS_REQUEST_HEADERS</code></dt>
 <dd>
-<p>(string) Concentation of multiple lines terminated
+<p>(string) Concatenation of multiple lines terminated
 by CRLF sequences, that can be used to add further headers to the
 HTTP request sent when connecting.
 This option can be set on dialers, and retrieved from pipes.</p>
@@ -169,6 +214,68 @@ by CRLF sequences, that can be used to add further headers to the
 HTTP response sent when connecting.
 This option can be set on listeners, and retrieved from pipes.</p>
 </dd>
+<dt class="hdlist1"><code>NNG_OPT_WS_RECV_TEXT</code></dt>
+<dd>
+<p>(bool) Enable receiving of TEXT frames at the WebSocket layer.
+This option should only be used with the low level
+<a href="nng_stream.5.html"><code>nng_stream</code></a> API.
+When set, the stream will accept in-bound TEXT frames as well as BINARY frames.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The SP protocols (such as <a href="nng_req.7.html">REQ</a>) require BINARY frames as they pass binary protocol data.
+Hence this option should not be used with such protocols.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+RFC 6455 requires that TEXT frames be discarded and the connection closed if the frame does not contain valid UTF-8 data.
+NNG does not perform any such validation.
+Applications that need to be strictly conformant should check for this themselves.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>NNG_OPT_WS_SEND_TEXT</code></dt>
+<dd>
+<p>(bool) Enable sending of TEXT frames at the WebSocket layer.
+This option should only be used with the low level
+<a href="nng_stream.5.html"><code>nng_stream</code></a> API.
+When set, the stream will send TEXT frames instead of BINARY frames.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+NNG does not check the frame data, and will attempt to send whatever the client requests.
+Peers that are compliant with RFC 6455 will discard TEXT frames (and break the connection) if they do not contain valid UTF-8.
+</td>
+</tr>
+</table>
+</div>
+<div class="dlist">
+<dl>
 <dt class="hdlist1"><code>NNG_OPT_TLS_CONFIG</code></dt>
 <dd>
 <p>(<code>nng_tls_config *</code>) The underlying TLS

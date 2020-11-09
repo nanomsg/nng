@@ -19,21 +19,23 @@ layout: manpage_v2
 <pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
 </span><span class="tok-cp"></span>
 <span class="tok-k">typedef</span> <span class="tok-k">union</span> <span class="tok-n">nng_sockaddr</span> <span class="tok-p">{</span>
-    <span class="tok-n">uint16_t</span>            <span class="tok-n">s_family</span><span class="tok-p">;</span>
-    <span class="tok-n">nng_sockaddr_ipc</span>    <span class="tok-n">s_ipc</span><span class="tok-p">;</span>
-    <span class="tok-n">nng_sockaddr_inproc</span> <span class="tok-n">s_inproc</span><span class="tok-p">;</span>
-    <span class="tok-n">nng_sockaddr_in</span>     <span class="tok-n">s_in</span><span class="tok-p">;</span>
-    <span class="tok-n">nng_sockaddr_in6</span>    <span class="tok-n">s_in6</span><span class="tok-p">;</span>
-    <span class="tok-n">nng_sockaddr_zt</span>     <span class="tok-n">s_zt</span><span class="tok-p">;</span>
+    <span class="tok-n">uint16_t</span>              <span class="tok-n">s_family</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_ipc</span>      <span class="tok-n">s_ipc</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_inproc</span>   <span class="tok-n">s_inproc</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_in</span>       <span class="tok-n">s_in</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_in6</span>      <span class="tok-n">s_in6</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_zt</span>       <span class="tok-n">s_zt</span><span class="tok-p">;</span>
+    <span class="tok-n">nng_sockaddr_abstract</span> <span class="tok-n">s_abstract</span><span class="tok-p">;</span>
 <span class="tok-p">}</span> <span class="tok-n">nng_sockaddr</span><span class="tok-p">;</span>
 
 <span class="tok-k">enum</span> <span class="tok-n">sockaddr_family</span> <span class="tok-p">{</span>
-    <span class="tok-n">NNG_AF_UNSPEC</span> <span class="tok-o">=</span> <span class="tok-mi">0</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_AF_INPROC</span> <span class="tok-o">=</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_AF_IPC</span>    <span class="tok-o">=</span> <span class="tok-mi">2</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_AF_INET</span>   <span class="tok-o">=</span> <span class="tok-mi">3</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_AF_INET6</span>  <span class="tok-o">=</span> <span class="tok-mi">4</span><span class="tok-p">,</span>
-    <span class="tok-n">NNG_AF_ZT</span>     <span class="tok-o">=</span> <span class="tok-mi">5</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_UNSPEC</span>   <span class="tok-o">=</span> <span class="tok-mi">0</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_INPROC</span>   <span class="tok-o">=</span> <span class="tok-mi">1</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_IPC</span>      <span class="tok-o">=</span> <span class="tok-mi">2</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_INET</span>     <span class="tok-o">=</span> <span class="tok-mi">3</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_INET6</span>    <span class="tok-o">=</span> <span class="tok-mi">4</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_ZT</span>       <span class="tok-o">=</span> <span class="tok-mi">5</span><span class="tok-p">,</span>
+    <span class="tok-n">NNG_AF_ABSTRACT</span> <span class="tok-o">=</span> <span class="tok-mi">6</span>
 <span class="tok-p">};</span></code></pre>
 </div>
 </div>
@@ -121,6 +123,14 @@ specific member should be used.</p>
 <p>Address for ZeroTier transport (<a href="nng_zerotier.7.html">nng_zerotier(7)</a>).  The <code>s_zt</code> member is valid.</p>
 </td>
 </tr>
+<tr>
+<td class="hdlist1">
+<code>NNG_AF_ABSTRACT</code>
+</td>
+<td class="hdlist2">
+<p>Address for an abstract UNIX domain socket.  The <code>s_abstract</code> member is valid.</p>
+</td>
+</tr>
 </table>
 </div>
 <div class="paragraph">
@@ -132,7 +142,8 @@ specific member should be used.</p>
 <h2 id="_see_also">SEE ALSO</h2>
 <div class="sectionbody">
 <div class="paragraph text-left">
-<p><a href="nng_sockaddr_in.5.html">nng_sockaddr_in(5)</a>,
+<p><a href="nng_sockaddr_abstract.5.html">nng_sockaddr_abstract(5)</a>,
+<a href="nng_sockaddr_in.5.html">nng_sockaddr_in(5)</a>,
 <a href="nng_sockaddr_in6.5.html">nng_sockaddr_in6(5)</a>,
 <a href="nng_sockaddr_inproc.5.html">nng_sockaddr_inproc(5)</a>,
 <a href="nng_sockaddr_ipc.5.html">nng_sockaddr_ipc(5)</a>,

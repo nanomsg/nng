@@ -42,7 +42,9 @@ no extra steps to use it should be necessary.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_uri_format">URI Format</h3>
+<h3 id="_uri_formats">URI Formats</h3>
+<div class="sect3">
+<h4 id="_traditional_names">Traditional Names</h4>
 <div class="paragraph">
 <p>(URI, <code>ipc://</code>)
 This transport uses URIs using the scheme <code>ipc://</code>, followed by a path
@@ -89,7 +91,7 @@ whenever possible.
 </td>
 <td class="content">
 If compatibility with legacy <em>nanomsg</em> applications is required,
-then pathnames must not be longer than 122 bytes, including the final
+then path names must not be longer than 122 bytes, including the final
 <code>NUL</code> byte.
 This is because legacy versions of <em>nanomsg</em> cannot express URLs
 longer than 128 bytes, including the <code>ipc://</code> prefix.
@@ -98,11 +100,80 @@ longer than 128 bytes, including the <code>ipc://</code> prefix.
 </table>
 </div>
 </div>
+<div class="sect3">
+<h4 id="_unix_aliases">UNIX Aliases</h4>
+<div class="paragraph">
+<p>(URI, <code>unix://</code>)
+The <code>unix://</code> scheme is an alias for <code>ipc://</code> and can be used inter-changeably, but only
+on POSIX systems.</p>
+</div>
+<div class="paragraph">
+<p>The purpose of this scheme is to support a future transport making use of <code>AF_UNIX</code>
+on Windows systems, at which time it will be necessary to discriminate between
+the Named Pipes and the <code>AF_UNIX</code> based transports.</p>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_abstract_names">Abstract Names</h4>
+<div class="paragraph">
+<p>(URI, <code>abstract://</code>)
+On Linux, this transport also can support abstract sockets.
+Abstract sockets use a URI-encoded name after the scheme, which allows arbitrary values to be conveyed
+in the path, including embedded <code>NUL</code> bytes.
+For example, the name <code>&#34;a\0b&#34;</code>  would be represented as <code>abstract://a%00b</code>.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+An empty name may be used with a listener to request &#8220;auto bind&#8221; be used to select a name.
+In this case the system will allocate a free name.
+The name assigned may be retrieved using <code>NNG_OPT_LOCADDR</code>.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+<em>NNG</em> cannot represent an abstract socket with the empty name.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Abstract names do not include the leading <code>NUL</code> byte used in the low-level socket address.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>Abstract sockets do not have any representation in the file system, and are automatically freed by
+the system when no longer in use.
+Abstract sockets ignore socket permissions, but it is still possible to determine the credentials
+of the peer with <code>NNG_OPT_PEER_UID</code>, etc.</p>
+</div>
+</div>
+</div>
 <div class="sect2">
 <h3 id="_socket_address">Socket Address</h3>
 <div class="paragraph">
 <p>When using an <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a> structure,
-the actual structure is of type <a href="nng_sockaddr_ipc.5.html"><code>nng_sockaddr_ipc</code></a>.</p>
+the actual structure is of type <a href="nng_sockaddr_ipc.5.html"><code>nng_sockaddr_ipc</code></a>,
+except for abstract sockets, which use <a href="nng_sockaddr_abstract.5.html"><code>nng_sockaddr_abstract</code></a>.</p>
 </div>
 </div>
 <div class="sect2">

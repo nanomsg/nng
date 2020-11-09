@@ -24,7 +24,7 @@ layout: manpage_v2
 
 <span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
     <span class="tok-n">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
-    <span class="tok-n">uint16_t</span> <span class="tok-n">sa_path</span><span class="tok-p">[</span><span class="tok-mi">128</span><span class="tok-p">];</span>
+    <span class="tok-kt">char</span>     <span class="tok-n">sa_path</span><span class="tok-p">[</span><span class="tok-mi">128</span><span class="tok-p">];</span>
 <span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_ipc</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
@@ -34,9 +34,8 @@ layout: manpage_v2
 <h2 id="_description">DESCRIPTION</h2>
 <div class="sectionbody">
 <div class="paragraph">
-<p>An <code>nng_sockaddr_ipc</code> is the flavor of <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>
-used to represent addresses associated with IPC communication
-using the <a href="nng_ipc.7.html"><em>ipc</em></a> transport.</p>
+<p> An <code>nng_sockaddr_ipc</code> is the flavor of <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>
+used to represent addresses associated with IPC communication using the <a href="nng_ipc.7.html"><em>ipc</em></a> transport.</p>
 </div>
 <div class="paragraph">
 <p>The following structure members are present:</p>
@@ -49,12 +48,9 @@ using the <a href="nng_ipc.7.html"><em>ipc</em></a> transport.</p>
 </dd>
 <dt class="hdlist1"><code>sa_path</code></dt>
 <dd>
-<p>This field holds the C string corresponding to path name where the
-    IPC socket is located.
-    For systems using UNIX domain sockets, this will be an absolute
-    path name in the file system, where the UNIX domain socket is located.
-    For Windows systems, this is the path name of the Named Pipe, without
-    the leading <code>\\.pipe\</code> portion, which will be automatically added.</p>
+<p>This field holds the C string corresponding to path name where the IPC socket is located.
+For systems using UNIX domain sockets, this will be a path name in the file system, where the UNIX domain socket is located.
+For Windows systems, this is the path name of the Named Pipe, without the leading <code>\\.pipe\</code> portion, which will be automatically added.</p>
 </dd>
 </dl>
 </div>
@@ -65,7 +61,7 @@ using the <a href="nng_ipc.7.html"><em>ipc</em></a> transport.</p>
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-At this time, there is no support for Linux abstract sockets.
+At this time, there is no support for abstract sockets.
 </td>
 </tr>
 </table>
@@ -77,11 +73,22 @@ At this time, there is no support for Linux abstract sockets.
 <i class="fa icon-tip" title="Tip"></i>
 </td>
 <td class="content">
-In order to ensure maximum compatibility, applications should avoid
-hard coding the size of the <code>sa_path</code> member explicitly, but use the
+In order to ensure maximum compatibility, applications should avoid hard coding the size of the <code>sa_path</code> member explicitly, but use the
 <code>sizeof</code> operator to determine its actual size at compile time.
-Furthermore, the size is guaranteed to be at least 128, but paths of
-this length may not be supported on all systems.
+Furthermore, the size is guaranteed to be at least 128, but paths of this length may not be supported on all systems.
+</td>
+</tr>
+</table>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Portable applications should restrict themselves to path names of not more than 90 bytes.  Most systems have
+limits around 100 bytes, but at least one system (HP-UX) is restricted to not more than 92 bytes including the <code>NUL</code>.
 </td>
 </tr>
 </table>
@@ -93,11 +100,9 @@ this length may not be supported on all systems.
 <i class="fa icon-note" title="Note"></i>
 </td>
 <td class="content">
-If compatibility with legacy <em>nanomsg</em> applications is required,
-then pathnames must not be longer than 122 bytes, including the final
+If compatibility with legacy <em>nanomsg</em> applications is required, then path names must not be longer than 122 bytes, including the final
 <code>NUL</code> byte.
-This is because legacy versions of <em>nanomsg</em> cannot express URLs
-longer than 128 bytes, including the <code>ipc://</code> prefix.
+This is because legacy versions of <em>nanomsg</em> cannot express URLs longer than 128 bytes, including the <code>ipc://</code> prefix.
 </td>
 </tr>
 </table>
