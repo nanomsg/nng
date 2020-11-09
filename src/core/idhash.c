@@ -256,7 +256,7 @@ nni_id_set(nni_id_map *m, uint32_t id, void *val)
 int
 nni_id_alloc(nni_id_map *m, uint32_t *idp, void *val)
 {
-	uint64_t id;
+	uint32_t id;
 	int      rv;
 
 	NNI_ASSERT(val != NULL);
