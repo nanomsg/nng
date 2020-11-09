@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -103,7 +103,10 @@ nni_plat_pipe_raise(int wfd)
 {
 	char c = 1;
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
 	(void) write(wfd, &c, 1);
+#pragma GCC diagnostic pop
 }
 
 void

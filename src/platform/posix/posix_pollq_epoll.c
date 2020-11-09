@@ -61,7 +61,7 @@ struct nni_posix_pollq {
 };
 
 struct nni_posix_pfd {
-        nni_list_node    node;
+	nni_list_node    node;
 	nni_posix_pollq *pq;
 	int              fd;
 	nni_posix_pfd_cb cb;
@@ -205,7 +205,9 @@ nni_posix_pfd_fini(nni_posix_pfd *pfd)
 	// a hang waiting for the poller to reap the pfd in fini,
 	// if it were possible for them to occur.  (Barring other
 	// bugs, it isn't.)
-	(void) write(pq->evfd, &one, sizeof(one));
+	if (write(pq->evfd, &one, sizeof(one)) != sizeof(one)) {
+		nni_panic("BUG! write to epoll fd incorrect!");
+	}
 
 	while (!pfd->closed) {
 		nni_cv_wait(&pfd->cv);
@@ -261,7 +263,10 @@ nni_posix_poll_thr(void *arg)
 			if ((ev->data.ptr == NULL) &&
 			    (ev->events & (unsigned) POLLIN)) {
 				uint64_t clear;
-				(void) read(pq->evfd, &clear, sizeof(clear));
+				if (read(pq->evfd, &clear, sizeof(clear)) !=
+				    sizeof(clear)) {
+					nni_panic("read from evfd incorrect!");
+				}
 				reap = true;
 			} else {
 				nni_posix_pfd *  pfd = ev->data.ptr;
@@ -305,7 +310,12 @@ nni_posix_pollq_destroy(nni_posix_pollq *pq)
 
 	nni_mtx_lock(&pq->mtx);
 	pq->close = true;
-	(void) write(pq->evfd, &one, sizeof(one));
+
+	if (write(pq->evfd, &one, sizeof(one)) != sizeof(one)) {
+		// This should never occur, and if it does it could
+		// lead to a hang.
+		nni_panic("BUG! unable to write to evfd!");
+	}
 	nni_mtx_unlock(&pq->mtx);
 
 	nni_thr_fini(&pq->thr);
