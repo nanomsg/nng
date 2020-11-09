@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -25,7 +25,7 @@
 
 typedef struct nni_stat_item nni_stat_item;
 
-typedef void (*nni_stat_update)(nni_stat_item *, void *);
+typedef void (*nni_stat_update)(nni_stat_item *);
 typedef enum nng_stat_type_enum nni_stat_type;
 typedef enum nng_unit_enum      nni_stat_unit;
 
@@ -37,12 +37,10 @@ typedef enum nng_unit_enum      nni_stat_unit;
 struct nni_stat_item {
 #ifdef NNG_ENABLE_STATS
 	nni_list_node   si_node;     // list node, framework use only
-	nni_stat_item * si_parent;   // link back to parent, framework use only
 	nni_list        si_children; // children, framework use only
 	const char *    si_name;     // name of statistic
 	const char *    si_desc;     // description of statistic (English)
 	nni_mtx *       si_lock;     // lock for accessing, can be NULL
-	void *          si_private;  // provider private pointer
 	nni_stat_type   si_type;     // type of stat, e.g. NNG_STAT_LEVEL
 	nni_stat_unit   si_unit;     // units, e.g. NNG_UNIT_MILLIS
 	nni_stat_update si_update;   // update function (can be NULL)
@@ -50,7 +48,7 @@ struct nni_stat_item {
 	uint64_t        si_number;   // numeric value
 	nni_atomic_u64  si_atomic;   // atomic value
 #else
-	char		si_disabled; // place holder, cannot be empty in C
+	char si_disabled; // place holder, cannot be empty in C
 #endif
 };
 
@@ -67,7 +65,6 @@ void nni_stat_unregister(nni_stat_item *);
 
 void nni_stat_set_value(nni_stat_item *, uint64_t);
 void nni_stat_set_lock(nni_stat_item *, nni_mtx *);
-void nni_stat_set_update(nni_stat_item *, nni_stat_update, void *);
 
 #ifdef NNG_ENABLE_STATS
 void nni_stat_init(nni_stat_item *, const char *, const char *);
