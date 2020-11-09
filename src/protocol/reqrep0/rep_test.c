@@ -407,6 +407,29 @@ test_rep_close_context_send(void)
 	TEST_NNG_PASS(nng_close(rep));
 }
 
+void
+test_rep_close_recv(void)
+{
+	nng_socket rep;
+	nng_socket req;
+	nng_aio *  aio;
+
+	TEST_NNG_PASS(nng_rep0_open(&rep));
+	TEST_NNG_PASS(nng_req0_open_raw(&req));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+
+	TEST_NNG_PASS(testutil_marry(req, rep));
+	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	nng_recv_aio(rep, aio);
+	TEST_NNG_PASS(nng_close(rep));
+	TEST_NNG_PASS(nng_close(req));
+	nng_aio_wait(aio);
+	TEST_NNG_FAIL(nng_aio_result(aio), NNG_ECLOSED);
+	nng_aio_free(aio);
+}
+
 static void
 test_rep_ctx_recv_nonblock(void)
 {
@@ -489,9 +512,9 @@ test_rep_ctx_send_nonblock2(void)
 	for (int i = 0; i < 10; i++) {
 		nng_msg *msg;
 		TEST_NNG_PASS(nng_msg_alloc(&msg, 4));
-                TEST_NNG_PASS(
-                    nng_msg_append_u32(msg, (unsigned) i | 0x80000000u));
-                nng_ctx_recv(rep_ctx[i], rep_aio[i]);
+		TEST_NNG_PASS(
+		    nng_msg_append_u32(msg, (unsigned) i | 0x80000000u));
+		nng_ctx_recv(rep_ctx[i], rep_aio[i]);
 		TEST_NNG_PASS(nng_sendmsg(req, msg, 0));
 	}
 	for (int i = 0; i < 10; i++) {
@@ -593,6 +616,7 @@ TEST_LIST = {
 	{ "rep recv aio ctx stopped", test_rep_ctx_recv_aio_stopped },
 	{ "rep close pipe context send", test_rep_close_pipe_context_send },
 	{ "rep close context send", test_rep_close_context_send },
+	{ "rep close recv", test_rep_close_recv },
 	{ "rep context send nonblock", test_rep_ctx_send_nonblock },
 	{ "rep context send nonblock 2", test_rep_ctx_send_nonblock2 },
 	{ "rep context recv nonblock", test_rep_ctx_recv_nonblock },
