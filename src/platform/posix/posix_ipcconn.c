@@ -405,7 +405,7 @@ ipc_get_peer_uid(void *arg, void *buf, size_t *szp, nni_type t)
 	ipc_conn *c = arg;
 	int       rv;
 	uint64_t  ignore;
-	uint64_t  id;
+	uint64_t  id = 0;
 
 	if ((rv = ipc_peerid(c, &id, &ignore, &ignore, &ignore)) != 0) {
 		return (rv);
@@ -419,7 +419,7 @@ ipc_get_peer_gid(void *arg, void *buf, size_t *szp, nni_type t)
 	ipc_conn *c = arg;
 	int       rv;
 	uint64_t  ignore;
-	uint64_t  id;
+	uint64_t  id = 0;
 
 	if ((rv = ipc_peerid(c, &ignore, &id, &ignore, &ignore)) != 0) {
 		return (rv);
@@ -433,7 +433,7 @@ ipc_get_peer_zoneid(void *arg, void *buf, size_t *szp, nni_type t)
 	ipc_conn *c = arg;
 	int       rv;
 	uint64_t  ignore;
-	uint64_t  id;
+	uint64_t  id = 0;
 
 	if ((rv = ipc_peerid(c, &ignore, &ignore, &ignore, &id)) != 0) {
 		return (rv);
@@ -451,7 +451,7 @@ ipc_get_peer_pid(void *arg, void *buf, size_t *szp, nni_type t)
 	ipc_conn *c = arg;
 	int       rv;
 	uint64_t  ignore;
-	uint64_t  id;
+	uint64_t  id = 0;
 
 	if ((rv = ipc_peerid(c, &ignore, &ignore, &id, &ignore)) != 0) {
 		return (rv);

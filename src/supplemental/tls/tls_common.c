@@ -153,7 +153,9 @@ static void
 tls_conn_cancel(nni_aio *aio, void *arg, int rv)
 {
 	tls_conn *conn = arg;
-	NNI_ASSERT(conn->user_aio == aio);
+
+	NNI_ARG_UNUSED(aio);
+
 	// Just pass this down.  If the connection is already done, this
 	// will have no effect.
 	nni_aio_abort(&conn->conn_aio, rv);
