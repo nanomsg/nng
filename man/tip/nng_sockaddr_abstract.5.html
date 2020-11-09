@@ -1,0 +1,127 @@
+---
+version: tip
+layout: manpage_v2
+---
+<h1>nng_sockaddr_abstract(5)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_sockaddr_abstract - abstract IPC socket address</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
+</span><span class="tok-cp"></span>
+<span class="tok-k">enum</span> <span class="tok-n">sockaddr_family</span> <span class="tok-p">{</span>
+    <span class="tok-n">NNG_AF_ABSTRACT</span> <span class="tok-o">=</span> <span class="tok-mi">6</span><span class="tok-p">,</span>
+<span class="tok-p">};</span>
+
+<span class="tok-k">typedef</span> <span class="tok-k">struct</span> <span class="tok-p">{</span>
+    <span class="tok-n">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
+    <span class="tok-n">uint16_t</span> <span class="tok-n">sa_len</span><span class="tok-p">;</span>
+    <span class="tok-kt">char</span>     <span class="tok-n">sa_name</span><span class="tok-p">[</span><span class="tok-mi">107</span><span class="tok-p">];</span>
+<span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_abstract</span><span class="tok-p">;</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p> An <code>nng_sockaddr_abstract</code> is the flavor of <a href="nng_sockaddr.5.html"><code>nng_sockaddr</code></a>
+used to represent addresses associated with IPC communication using &#8220;abstract&#8221; sockets.</p>
+</div>
+<div class="paragraph">
+<p>Abstract sockets are only supported on Linux at present.
+These sockets have a name that is simply an array of bytes, with no special meaning.
+Abstract sockets also have no presence in the file system, do not honor any permissions, and are automatically
+cleaned up by the operating system when no longer in use.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Support for abstract sockets is a new feature in <em>NNG</em>, and it is only available on Linux.
+As such their use is not recommended for portable applications.
+</td>
+</tr>
+</table>
+</div>
+<div class="paragraph">
+<p>The following structure members are present:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><code>sa_family</code></dt>
+<dd>
+<p>This field will always have the value <code>NNG_AF_ABSTRACT</code>.</p>
+</dd>
+<dt class="hdlist1"><code>sa_len</code></dt>
+<dd>
+<p>This field provides the name of the length stored in <code>sa_name</code>.</p>
+</dd>
+<dt class="hdlist1"><code>sa_name</code></dt>
+<dd>
+<p>This field holds the name of the abstract socket.
+The bytes of name can have any value, including zero.</p>
+</dd>
+</dl>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+The name does <em>not</em> include the leading <code>NUL</code> byte used on Linux to discriminate between
+abstract and path name sockets.
+</td>
+</tr>
+</table>
+</div>
+<div class="sect2">
+<h3 id="_auto_bind">Auto Bind</h3>
+<div class="paragraph">
+<p>An empty value (<code>sa_len</code> equal to zero) can be used on listening sockets to request the
+system allocate a name.
+On Linux systems, this will result in a name with either 5 or 8 hexadecimal ASCII characters.
+The name chosen can be obtained by retrieving the <code>NNG_OPT_LOCADDR</code> option on the listening entity.</p>
+</div>
+<div class="admonitionblock note">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-note" title="Note"></i>
+</td>
+<td class="content">
+Because a zero length name is used to indicate auto bind be used, it is impossible to specify
+an actual empty name.  This name are not supported by <em>NNG</em>, although the underlying system can support it.
+The use of that name is inadvisable anyway.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_sockaddr.5.html">nng_sockaddr(5)</a>,
+<a href="nng_ipc.7.html">nng_ipc(7)</a>
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

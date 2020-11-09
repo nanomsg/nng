@@ -1,0 +1,78 @@
+---
+version: tip
+layout: manpage_v2
+---
+<h1>nng_thread_set_name(3supp)</h1>
+<div class="sect1">
+<h2 id="_name">NAME</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>nng_thread_set_name - set thread name</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_synopsis">SYNOPSIS</h2>
+<div class="sectionbody">
+<div class="listingblock">
+<div class="content">
+<pre class="pygments highlight"><code data-lang="c"><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/nng.h&gt;</span><span class="tok-cp">
+</span><span class="tok-cp">#include</span> <span class="tok-cpf">&lt;nng/supplemental/util/platform.h&gt;</span><span class="tok-cp">
+</span><span class="tok-cp"></span>
+<span class="tok-kt">void</span> <span class="tok-nf">nng_set_thread_name</span><span class="tok-p">(</span><span class="tok-n">nng_thread</span> <span class="tok-o">*</span><span class="tok-kr">thread</span><span class="tok-p">,</span> <span class="tok-k">const</span> <span class="tok-kt">char</span> <span class="tok-o">*</span><span class="tok-n">name</span><span class="tok-p">);</span></code></pre>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_description">DESCRIPTION</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>The <code>nng_thread_set_name()</code> function attempts to set the name for the <em>thread</em> to <em>name</em>.</p>
+</div>
+<div class="paragraph">
+<p>If <em>thread</em> is <code>NULL</code>, then the name is set for the current thread.</p>
+</div>
+<div class="paragraph">
+<p>Support for this, and how names are exposed, varies between platform implementations.
+This function is intended to facilitate debugging applications that may have many threads.</p>
+</div>
+<div class="admonitionblock tip">
+<table>
+<tr>
+<td class="icon">
+<i class="fa icon-tip" title="Tip"></i>
+</td>
+<td class="content">
+Internal threads created by <em>NNG</em> will have names beginning with <code>nng:</code>.
+</td>
+</tr>
+</table>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_return_values">RETURN VALUES</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_errors">ERRORS</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>None.</p>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_see_also">SEE ALSO</h2>
+<div class="sectionbody">
+<div class="paragraph text-left">
+<p><a href="nng_thread_create.3supp.html">nng_thread_create(3supp)</a>,
+<a href="nng.7.html">nng(7)</a></p>
+</div>
+</div>
+</div>

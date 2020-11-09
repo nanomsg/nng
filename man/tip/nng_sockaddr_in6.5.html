@@ -26,6 +26,7 @@ layout: manpage_v2
     <span class="tok-n">uint16_t</span> <span class="tok-n">sa_family</span><span class="tok-p">;</span>
     <span class="tok-n">uint16_t</span> <span class="tok-n">sa_port</span><span class="tok-p">;</span>
     <span class="tok-n">uint8_t</span>  <span class="tok-n">sa_addr</span><span class="tok-p">[</span><span class="tok-mi">16</span><span class="tok-p">];</span>
+    <span class="tok-n">uint32_t</span> <span class="tok-n">sa_scope</span><span class="tok-p">;</span>
 <span class="tok-p">}</span> <span class="tok-n">nng_sockaddr_in6</span><span class="tok-p">;</span></code></pre>
 </div>
 </div>
@@ -62,6 +63,14 @@ for IPv4 addresses.</p>
 <dd>
 <p>This field holds the IP address in
     network-byte order.</p>
+</dd>
+<dt class="hdlist1"><code>sa_scope</code></dt>
+<dd>
+<p>This is the scope, and is typically used with link local
+    addresses to identify a specific interface.  The details of
+    this are specific to the operating system.  This value is
+    presented identically to the underlying system&#8217;s, including
+    any byte order considerations.</p>
 </dd>
 </dl>
 </div>
