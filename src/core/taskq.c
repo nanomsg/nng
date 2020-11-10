@@ -40,9 +40,7 @@ nni_taskq_thread(void *self)
 	for (;;) {
 		if ((task = nni_list_first(&tq->tq_tasks)) != NULL) {
 
-			nni_mtx_lock(&task->task_mtx);
 			nni_list_remove(&tq->tq_tasks, task);
-			nni_mtx_unlock(&task->task_mtx);
 
 			nni_mtx_unlock(&tq->tq_mtx);
 
