@@ -321,7 +321,7 @@ tcptran_pipe_send_cb(void *arg)
 
 	nni_aio_set_msg(aio, NULL);
 	nni_msg_free(msg);
-	nni_aio_finish_synch(aio, 0, n);
+	nni_aio_finish_sync(aio, 0, n);
 }
 
 static void
@@ -393,7 +393,7 @@ tcptran_pipe_recv_cb(void *arg)
 	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_set_msg(aio, msg);
-	nni_aio_finish_synch(aio, 0, n);
+	nni_aio_finish_sync(aio, 0, n);
 	return;
 
 recv_error:

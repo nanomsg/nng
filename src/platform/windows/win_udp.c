@@ -216,7 +216,7 @@ udp_recv_cb(nni_win_io *io, int rv, size_t num)
 	udp_recv_start(u);
 	nni_mtx_unlock(&u->lk);
 
-	nni_aio_finish_synch(aio, rv, num);
+	nni_aio_finish_sync(aio, rv, num);
 }
 
 static void

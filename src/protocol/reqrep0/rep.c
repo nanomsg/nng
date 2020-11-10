@@ -398,7 +398,7 @@ rep0_pipe_send_cb(void *arg)
 
 	nni_mtx_unlock(&s->lk);
 
-	nni_aio_finish_synch(aio, 0, len);
+	nni_aio_finish_sync(aio, 0, len);
 }
 
 static void
@@ -565,7 +565,7 @@ rep0_pipe_recv_cb(void *arg)
 	nni_mtx_unlock(&s->lk);
 
 	nni_aio_set_msg(aio, msg);
-	nni_aio_finish_synch(aio, 0, nni_msg_len(msg));
+	nni_aio_finish_sync(aio, 0, nni_msg_len(msg));
 	return;
 
 drop:

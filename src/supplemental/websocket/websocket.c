@@ -697,7 +697,7 @@ ws_write_cb(void *arg)
 			nni_aio_set_msg(aio, NULL);
 			nni_msg_free(msg);
 		}
-		nni_aio_finish_synch(aio, 0, nni_aio_count(aio));
+		nni_aio_finish_sync(aio, 0, nni_aio_count(aio));
 	}
 }
 

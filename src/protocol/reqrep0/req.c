@@ -290,7 +290,7 @@ req0_send_cb(void *arg)
 
 	while ((aio = nni_list_first(&sent_list)) != NULL) {
 		nni_list_remove(&sent_list, aio);
-		nni_aio_finish_synch(aio, 0, 0);
+		nni_aio_finish_sync(aio, 0, 0);
 	}
 }
 
@@ -351,7 +351,7 @@ req0_recv_cb(void *arg)
 		ctx->recv_aio = NULL;
 		nni_mtx_unlock(&s->mtx);
 		nni_aio_set_msg(aio, msg);
-		nni_aio_finish_synch(aio, 0, nni_msg_len(msg));
+		nni_aio_finish_sync(aio, 0, nni_msg_len(msg));
 	} else {
 		// No AIO, so stash msg.  Receive will pick it up later.
 		ctx->rep_msg = msg;

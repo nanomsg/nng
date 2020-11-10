@@ -413,7 +413,7 @@ sub0_recv_cb(void *arg)
 
 	while ((aio = nni_list_first(&finish)) != NULL) {
 		nni_list_remove(&finish, aio);
-		nni_aio_finish_synch(aio, 0, len);
+		nni_aio_finish_sync(aio, 0, len);
 	}
 
 	if (submatch) {

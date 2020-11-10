@@ -16,7 +16,7 @@
 #include "core/taskq.h"
 #include "core/thread.h"
 
-typedef void (*nni_aio_cancelfn)(nni_aio *, void *, int);
+typedef void (*nni_aio_cancel_fn)(nni_aio *, void *, int);
 
 // nni_aio_init initializes an aio object.  The callback is called with
 // the supplied argument when the operation is complete.  If NULL is
@@ -35,7 +35,7 @@ extern void nni_aio_fini(nni_aio *);
 extern int nni_aio_alloc(nni_aio **, nni_cb, void *arg);
 
 // nni_aio_free frees the aio, releasing resources (locks)
-// associated with it. This is safe to call on zero'd memory.
+// associated with it. This is safe to call on zeroed memory.
 // This must only be called on an object that was allocated
 // with nni_aio_allocate.
 extern void nni_aio_free(nni_aio *aio);
@@ -43,8 +43,8 @@ extern void nni_aio_free(nni_aio *aio);
 // nni_aio_stop cancels any unfinished I/O, running completion callbacks,
 // but also prevents any new operations from starting (nni_aio_start will
 // return NNG_ESTATE).  This should be called before nni_aio_free().  The
-// best pattern is to call nni_aio_stop on all linked aios, before calling
-// nni_aio_free on any of them.  This function will block until any
+// best pattern is to call nni_aio_stop on all linked aio objects, before
+// calling nni_aio_free on any of them.  This function will block until any
 // callbacks are executed, and therefore it should never be executed
 // from a callback itself.  (To abort operations without blocking
 // use nni_aio_cancel instead.)
@@ -53,7 +53,8 @@ extern void nni_aio_stop(nni_aio *);
 // nni_aio_close closes the aio for further activity. It aborts any in-progress
 // transaction (if it can), and future calls nni_aio_begin or nni_aio_schedule
 // with both result in NNG_ECLOSED. The expectation is that protocols call this
-// for all their aios in a stop routine, before calling fini on any of them.
+// for all their aio objects in a stop routine, before calling fini on any of
+// them.
 extern void nni_aio_close(nni_aio *);
 
 // nni_aio_set_data sets user data.  This should only be done by the
@@ -117,11 +118,11 @@ extern int  nni_aio_list_active(nni_aio *);
 
 // nni_aio_finish is called by the provider when an operation is complete.
 extern void nni_aio_finish(nni_aio *, int, size_t);
-// nni_aio_finish_synch is to be called when a synchronous completion is
+// nni_aio_finish_sync is to be called when a synchronous completion is
 // desired.  It is very important that the caller not hold any locks when
 // calling this, but it is useful for chaining completions to minimize
 // context switch overhead during completions.
-extern void nni_aio_finish_synch(nni_aio *, int, size_t);
+extern void nni_aio_finish_sync(nni_aio *, int, size_t);
 extern void nni_aio_finish_error(nni_aio *, int);
 extern void nni_aio_finish_msg(nni_aio *, nni_msg *);
 
@@ -145,7 +146,7 @@ extern void  nni_aio_set_prov_extra(nni_aio *, unsigned, void *);
 // i.e. if the count refers to more data than the iov can support, then
 // the result will be left over count.
 extern size_t nni_aio_iov_advance(nni_aio *, size_t);
-// nni_aio_iov_count returns the number of bytes referenced by the aio's iov.
+// nni_aio_iov_count returns the number of bytes referenced by the aio iov.
 extern size_t nni_aio_iov_count(nni_aio *);
 
 extern int nni_aio_set_iov(nni_aio *, unsigned, const nni_iov *);
@@ -163,7 +164,7 @@ extern void nni_aio_bump_count(nni_aio *, size_t);
 // is returned.  (In that case the caller should probably either return an
 // error to its caller, or possibly cause an asynchronous error by calling
 // nni_aio_finish_error on this aio.)
-extern int nni_aio_schedule(nni_aio *, nni_aio_cancelfn, void *);
+extern int nni_aio_schedule(nni_aio *, nni_aio_cancel_fn, void *);
 
 extern void nni_sleep_aio(nni_duration, nni_aio *);
 
@@ -188,7 +189,7 @@ struct nng_aio {
 
 	// Read/write operations.
 	nni_iov  a_iov[8];
-	unsigned a_niov;
+	unsigned a_nio;
 
 	// Message operations.
 	nni_msg *a_msg;
@@ -204,10 +205,10 @@ struct nng_aio {
 	void *a_outputs[4];
 
 	// Provider-use fields.
-	nni_aio_cancelfn a_cancel_fn;
-	void *           a_cancel_arg;
-	nni_list_node    a_prov_node;     // Linkage on provider list.
-	void *           a_prov_extra[2]; // Extra data used by provider
+	nni_aio_cancel_fn a_cancel_fn;
+	void *            a_cancel_arg;
+	nni_list_node     a_prov_node;     // Linkage on provider list.
+	void *            a_prov_extra[2]; // Extra data used by provider
 
 	// Expire node.
 	nni_list_node a_expire_node;
