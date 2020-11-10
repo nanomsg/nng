@@ -15,6 +15,7 @@
 
 // The following headers are provided for test code convenience.
 #include <nng/nng.h>
+#include <nng/supplemental/util/platform.h>
 
 #ifdef __cplusplus
 extern "C" {

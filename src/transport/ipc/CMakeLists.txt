@@ -1,5 +1,5 @@
 #
-# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -15,4 +15,4 @@ mark_as_advanced(NNG_TRANSPORT_IPC)
 nng_sources_if(NNG_TRANSPORT_IPC ipc.c)
 nng_headers_if(NNG_TRANSPORT_IPC nng/transport/ipc/ipc.h)
 nng_defines_if(NNG_TRANSPORT_IPC NNG_TRANSPORT_IPC)
-nng_test(ipc_test)
+nng_test_if(NNG_TRANSPORT_IPC ipc_test)
