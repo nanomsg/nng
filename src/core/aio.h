@@ -194,10 +194,6 @@ struct nng_aio {
 	// Message operations.
 	nni_msg *a_msg;
 
-	// User scratch data.  Consumers may store values here, which
-	// must be preserved by providers and the framework.
-	void *a_user_data[2];
-
 	// Operation inputs & outputs.  Up to 4 inputs and 4 outputs may be
 	// specified.  The semantics of these will vary, and depend on the
 	// specific operation.

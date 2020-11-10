@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -65,6 +65,7 @@ struct nng_http_conn {
 	size_t   rd_get;
 	size_t   rd_put;
 	size_t   rd_bufsz;
+	bool     rd_buffered;
 };
 
 void
@@ -135,7 +136,7 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 	int      rv;
 	bool     raw = false;
 	nni_iov *iov;
-	unsigned niov;
+	unsigned nio;
 
 	rbuf += conn->rd_get;
 
@@ -143,8 +144,8 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 	case HTTP_RD_RAW:
 		raw = true; // FALLTHROUGH
 	case HTTP_RD_FULL:
-		nni_aio_get_iov(aio, &niov, &iov);
-		while ((niov != 0) && (cnt != 0)) {
+		nni_aio_get_iov(aio, &nio, &iov);
+		while ((nio != 0) && (cnt != 0)) {
 			// Pull up data from the buffer if possible.
 			n = iov[0].iov_len;
 			if (n > cnt) {
@@ -159,14 +160,14 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 			cnt -= n;
 
 			if (iov[0].iov_len == 0) {
-				niov--;
+				nio--;
 				iov = &iov[1];
 			}
 		}
 
-		nni_aio_set_iov(aio, niov, iov);
+		nni_aio_set_iov(aio, nio, iov);
 
-		if ((niov == 0) || (raw && (nni_aio_count(aio) != 0))) {
+		if ((nio == 0) || (raw && (nni_aio_count(aio) != 0))) {
 			// Finished the read.  (We are finished if we either
 			// got *all* the data, or we got *some* data for
 			// a raw read.)
@@ -177,8 +178,8 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		// (Note that we get here if we either have not completed
 		// a full transaction on a FULL read, or were not even able
 		// to get *any* data for a partial RAW read.)
-		nni_aio_set_data(conn->rd_aio, 1, NULL);
-		nni_aio_set_iov(conn->rd_aio, niov, iov);
+		conn->rd_buffered = false;
+		nni_aio_set_iov(conn->rd_aio, nio, iov);
 		nng_stream_recv(conn->sock, conn->rd_aio);
 		return (NNG_EAGAIN);
 
@@ -191,10 +192,10 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		}
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
-			iov1.iov_buf = conn->rd_buf + conn->rd_put;
-			iov1.iov_len = conn->rd_bufsz - conn->rd_put;
+			iov1.iov_buf      = conn->rd_buf + conn->rd_put;
+			iov1.iov_len      = conn->rd_bufsz - conn->rd_put;
+			conn->rd_buffered = true;
 			nni_aio_set_iov(conn->rd_aio, 1, &iov1);
-			nni_aio_set_data(conn->rd_aio, 1, aio);
 			nng_stream_recv(conn->sock, conn->rd_aio);
 		}
 		return (rv);
@@ -208,10 +209,10 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		}
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
-			iov1.iov_buf = conn->rd_buf + conn->rd_put;
-			iov1.iov_len = conn->rd_bufsz - conn->rd_put;
+			iov1.iov_buf      = conn->rd_buf + conn->rd_put;
+			iov1.iov_len      = conn->rd_bufsz - conn->rd_put;
+			conn->rd_buffered = true;
 			nni_aio_set_iov(conn->rd_aio, 1, &iov1);
-			nni_aio_set_data(conn->rd_aio, 1, aio);
 			nng_stream_recv(conn->sock, conn->rd_aio);
 		}
 		return (rv);
@@ -225,10 +226,10 @@ http_rd_buf(nni_http_conn *conn, nni_aio *aio)
 		}
 		if (rv == NNG_EAGAIN) {
 			nni_iov iov1;
-			iov1.iov_buf = conn->rd_buf + conn->rd_put;
-			iov1.iov_len = conn->rd_bufsz - conn->rd_put;
+			iov1.iov_buf      = conn->rd_buf + conn->rd_put;
+			iov1.iov_len      = conn->rd_bufsz - conn->rd_put;
+			conn->rd_buffered = true;
 			nni_aio_set_iov(conn->rd_aio, 1, &iov1);
-			nni_aio_set_data(conn->rd_aio, 1, aio);
 			nng_stream_recv(conn->sock, conn->rd_aio);
 		}
 		return (rv);
@@ -299,7 +300,7 @@ http_rd_cb(void *arg)
 	cnt = nni_aio_count(aio);
 
 	// If we were reading into the buffer, then advance location(s).
-	if ((uaio = nni_aio_get_data(aio, 1)) != NULL) {
+	if (conn->rd_buffered) {
 		conn->rd_put += cnt;
 		NNI_ASSERT(conn->rd_put <= conn->rd_bufsz);
 		http_rd_start(conn);
@@ -602,22 +603,22 @@ nni_http_write_res(nni_http_conn *conn, nni_http_res *res, nni_aio *aio)
 	void *  data;
 	size_t  size;
 	nni_iov iov[2];
-	int     niov;
+	int     nio;
 
 	if ((rv = nni_http_res_get_buf(res, &buf, &bufsz)) != 0) {
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_http_res_get_data(res, &data, &size);
-	niov           = 1;
+	nio            = 1;
 	iov[0].iov_len = bufsz;
 	iov[0].iov_buf = buf;
 	if ((size > 0) && (data != NULL)) {
-		niov++;
+		nio++;
 		iov[1].iov_len = size;
 		iov[1].iov_buf = data;
 	}
-	nni_aio_set_iov(aio, niov, iov);
+	nni_aio_set_iov(aio, nio, iov);
 
 	SET_WR_FLAVOR(aio, HTTP_WR_RES);
 

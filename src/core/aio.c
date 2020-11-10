@@ -222,23 +222,6 @@ nni_aio_get_msg(nni_aio *aio)
 }
 
 void
-nni_aio_set_data(nni_aio *aio, unsigned index, void *data)
-{
-	if (index < NNI_NUM_ELEMENTS(aio->a_user_data)) {
-		aio->a_user_data[index] = data;
-	}
-}
-
-void *
-nni_aio_get_data(nni_aio *aio, unsigned index)
-{
-	if (index < NNI_NUM_ELEMENTS(aio->a_user_data)) {
-		return (aio->a_user_data[index]);
-	}
-	return (NULL);
-}
-
-void
 nni_aio_set_input(nni_aio *aio, unsigned index, void *data)
 {
 	if (index < NNI_NUM_ELEMENTS(aio->a_inputs)) {

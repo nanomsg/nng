@@ -1260,8 +1260,7 @@ ws_reap(nni_ws *ws)
 static void
 ws_http_cb_listener(nni_ws *ws, nni_aio *aio)
 {
-	nni_ws_listener *l;
-	l = nni_aio_get_data(aio, 0);
+	nni_ws_listener *l = ws->listener;
 
 	nni_mtx_lock(&l->mtx);
 	nni_list_remove(&l->reply, ws);
@@ -1646,9 +1645,9 @@ ws_handler(nni_aio *aio)
 	ws->isstream  = l->isstream;
 	ws->recv_text = l->recv_text;
 	ws->send_text = l->send_text;
+	ws->listener  = l;
 
 	nni_list_append(&l->reply, ws);
-	nni_aio_set_data(ws->httpaio, 0, l);
 	nni_http_write_res(conn, res, ws->httpaio);
 	(void) nni_http_hijack(conn);
 	nni_aio_set_output(aio, 0, NULL);

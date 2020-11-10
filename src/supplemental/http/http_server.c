@@ -56,6 +56,7 @@ typedef struct http_sconn {
 	nni_http_req *    req;
 	nni_http_res *    res;
 	nni_http_handler *handler; // set if we deferred to read body
+	nni_http_handler *release; // set if we dispatched handler
 	bool              close;
 	bool              closed;
 	bool              finished;
@@ -724,6 +725,7 @@ http_sconn_rxdone(void *arg)
 	}
 
 finish:
+	sc->release = h;
 	sc->handler = NULL;
 	nni_aio_set_input(sc->cbaio, 0, sc->req);
 	nni_aio_set_input(sc->cbaio, 1, h);
@@ -734,7 +736,6 @@ finish:
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
-	nni_aio_set_data(sc->cbaio, 1, h);
 	// Set a reference -- this because the callback may be running
 	// asynchronously even after it gets removed from the server.
 	nni_atomic_inc64(&h->ref);
@@ -754,10 +755,8 @@ http_sconn_cbdone(void *arg)
 	// Get the handler.  It may be set regardless of success or
 	// failure.  Clear it, and drop our reference, since we're
 	// done with the handler for now.
-	h = nni_aio_get_data(aio, 1);
-	nni_aio_set_data(aio, 1, NULL);
-
-	if (h != NULL) {
+	if ((h = sc->release) != NULL) {
+		sc->release = NULL;
 		nni_http_handler_fini(h);
 	}
 
