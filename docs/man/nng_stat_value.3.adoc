@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_stat_value - get statistic value
+nng_stat_value - get statistic numeric value
 
 == SYNOPSIS
 
