@@ -1,6 +1,6 @@
 = nng_stat_value(3)
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -21,18 +21,18 @@ nng_stat_value - get statistic value
 
 typedef struct nng_stat nng_stat;
 
-uint64_t nng_stat_value(nng_stat *stat);
+bool nng_stat_bool(nng_stat *stat);
 ----
 
 == DESCRIPTION
 
-The `nng_stat_value()` function returns a numeric value for the statistic _stat_.
-If the statistic is not of numeric type, then zero is returned.
+The `nng_stat_bool()` function returns the Boolean value for the statistic _stat_.
+Otherwise, if the statistic is not of Boolean type, the result is indeterminate.
 See xref:nng_stat_type.3.adoc[`nng_stat_type()`] for a description of statistic types.
 
 == RETURN VALUES
 
-The numeric value associated with _stat_.
+The boolean value associated with _stat_.
 
 == ERRORS
 
@@ -43,8 +43,8 @@ None.
 [.text-left]
 xref:libnng.3.adoc[libnng(3)],
 xref:nng_stats_get.3.adoc[nng_stats_get(3)],
-xref:nng_stat_bool.3.adoc[nng_stat_bool(3)],
 xref:nng_stat_type.3.adoc[nng_stat_type(3)],
 xref:nng_stat_unit.3.adoc[nng_stat_unit(3)],
+xref:nng_stat_value.3.adoc[nng_stat_value(3)],
 xref:nng_stat.5.adoc[nng_stat(5)],
 xref:nng.7.adoc[nng(7)]

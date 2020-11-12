@@ -1059,6 +1059,11 @@ enum nng_unit_enum {
 // snapshot was updated, and are undefined until an update is performed.
 NNG_DECL uint64_t nng_stat_value(nng_stat *);
 
+// nng_stat_value returns returns the actual value of the statistic.
+// Statistic values reflect their value at the time that the corresponding
+// snapshot was updated, and are undefined until an update is performed.
+NNG_DECL bool nng_stat_bool(nng_stat *);
+
 // nng_stat_string returns the string associated with a string statistic,
 // or NULL if the statistic is not part of the string.  The value returned
 // is valid until the associated statistic is freed.

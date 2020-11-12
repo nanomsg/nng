@@ -70,7 +70,9 @@ struct ipc_ep {
 	nni_list             wait_pipes; // pipes waiting to match to socket
 	nni_list             neg_pipes;  // pipes busy negotiating
 	nni_reap_item        reap;
-	nni_stat_item        st_rcv_max;
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item st_rcv_max;
+#endif
 };
 
 static void ipc_pipe_send_start(ipc_pipe *p);
@@ -807,9 +809,16 @@ ipc_ep_init(ipc_ep **epp, nni_sock *sock)
 
 	ep->proto = nni_sock_proto_id(sock);
 
-	nni_stat_init(&ep->st_rcv_max, "rcvmaxsz", "maximum receive size");
-	nni_stat_set_type(&ep->st_rcv_max, NNG_STAT_LEVEL);
-	nni_stat_set_unit(&ep->st_rcv_max, NNG_UNIT_BYTES);
+#ifdef NNG_ENABLE_STATS
+	static const nni_stat_info rcv_max_info = {
+		.si_name   = "rcv_max",
+		.si_desc   = "maximum receive size",
+		.si_type   = NNG_STAT_LEVEL,
+		.si_unit   = NNG_UNIT_BYTES,
+		.si_atomic = true,
+	};
+	nni_stat_init(&ep->st_rcv_max, &rcv_max_info);
+#endif
 
 	*epp = ep;
 	return (0);
@@ -831,8 +840,9 @@ ipc_ep_init_dialer(void **dp, nni_url *url, nni_dialer *dialer)
 		ipc_ep_fini(ep);
 		return (rv);
 	}
-
+#ifdef NNG_ENABLE_STATS
 	nni_dialer_add_stat(dialer, &ep->st_rcv_max);
+#endif
 	*dp = ep;
 	return (0);
 }
@@ -855,7 +865,9 @@ ipc_ep_init_listener(void **dp, nni_url *url, nni_listener *listener)
 		return (rv);
 	}
 
+#ifdef NNG_ENABLE_STATS
 	nni_listener_add_stat(listener, &ep->st_rcv_max);
+#endif
 	*dp = ep;
 	return (0);
 }
@@ -934,8 +946,10 @@ ipc_ep_set_recv_max_sz(void *arg, const void *v, size_t sz, nni_type t)
 		NNI_LIST_FOREACH (&ep->busy_pipes, p) {
 			p->rcv_max = val;
 		}
-		nni_stat_set_value(&ep->st_rcv_max, val);
 		nni_mtx_unlock(&ep->mtx);
+#ifdef NNG_ENABLE_STATS
+		nni_stat_set_value(&ep->st_rcv_max, val);
+#endif
 	}
 	return (rv);
 }

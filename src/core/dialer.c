@@ -23,8 +23,6 @@ static void dialer_timer_cb(void *);
 static nni_id_map dialers;
 static nni_mtx    dialers_lk;
 
-#define BUMP_STAT(x) nni_stat_inc_atomic(x, 1)
-
 int
 nni_dialer_sys_init(void)
 {
@@ -65,59 +63,129 @@ nni_dialer_destroy(nni_dialer *d)
 	NNI_FREE_STRUCT(d);
 }
 
+#if NNG_ENABLE_STATS
+static void
+dialer_stat_init(nni_dialer *d, nni_stat_item *item, const nni_stat_info *info)
+{
+	nni_stat_init(item, info);
+	nni_stat_add(&d->st_root, item);
+}
+
 static void
 dialer_stats_init(nni_dialer *d)
 {
-	nni_dialer_stats *st   = &d->d_stats;
-	nni_stat_item *   root = &st->s_root;
+	static const nni_stat_info root_info = {
+		.si_name = "dialer",
+		.si_desc = "dialer statistics",
+		.si_type = NNG_STAT_SCOPE,
+	};
+	static const nni_stat_info id_info = {
+		.si_name = "id",
+		.si_desc = "dialer id",
+		.si_type = NNG_STAT_ID,
+	};
+	static const nni_stat_info socket_info = {
+		.si_name = "socket",
+		.si_desc = "socket for dialer",
+		.si_type = NNG_STAT_ID,
+	};
+	static const nni_stat_info url_info = {
+		.si_name  = "url",
+		.si_desc  = "dialer url",
+		.si_type  = NNG_STAT_STRING,
+		.si_alloc = true,
+	};
+	static const nni_stat_info pipes_info = {
+		.si_name   = "pipes",
+		.si_desc   = "open pipes",
+		.si_type   = NNG_STAT_LEVEL,
+		.si_atomic = true,
+	};
+	static const nni_stat_info connect_info = {
+		.si_name   = "connect",
+		.si_desc   = "connections established",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info refused_info = {
+		.si_name   = "refused",
+		.si_desc   = "connections refused",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info disconnect_info = {
+		.si_name   = "disconnect",
+		.si_desc   = "remote disconnects",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info canceled_info = {
+		.si_name   = "canceled",
+		.si_desc   = "canceled connections",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info other_info = {
+		.si_name   = "other",
+		.si_desc   = "other errors",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info timeout_info = {
+		.si_name   = "timeout",
+		.si_desc   = "timeout errors",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info proto_info = {
+		.si_name   = "proto",
+		.si_desc   = "protocol errors",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info auth_info = {
+		.si_name   = "auth",
+		.si_desc   = "auth errors",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info oom_info = {
+		.si_name   = "oom",
+		.si_desc   = "allocation failures",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
+	static const nni_stat_info reject_info = {
+		.si_name   = "reject",
+		.si_desc   = "rejected pipes",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_atomic = true,
+	};
 
-	nni_stat_init_scope(root, st->s_scope, "dialer statistics");
+	nni_stat_init(&d->st_root, &root_info);
 
-	nni_stat_init_id(&st->s_id, "id", "dialer id", d->d_id);
-	nni_stat_add(root, &st->s_id);
+	dialer_stat_init(d, &d->st_id, &id_info);
+	dialer_stat_init(d, &d->st_sock, &socket_info);
+	dialer_stat_init(d, &d->st_url, &url_info);
+	dialer_stat_init(d, &d->st_pipes, &pipes_info);
+	dialer_stat_init(d, &d->st_connect, &connect_info);
+	dialer_stat_init(d, &d->st_refused, &refused_info);
+	dialer_stat_init(d, &d->st_disconnect, &disconnect_info);
+	dialer_stat_init(d, &d->st_canceled, &canceled_info);
+	dialer_stat_init(d, &d->st_other, &other_info);
+	dialer_stat_init(d, &d->st_timeout, &timeout_info);
+	dialer_stat_init(d, &d->st_proto, &proto_info);
+	dialer_stat_init(d, &d->st_auth, &auth_info);
+	dialer_stat_init(d, &d->st_oom, &oom_info);
+	dialer_stat_init(d, &d->st_reject, &reject_info);
 
-	nni_stat_init_id(&st->s_sock, "socket", "socket for dialer",
-	    nni_sock_id(d->d_sock));
-	nni_stat_add(root, &st->s_sock);
-
-	nni_stat_init_string(
-	    &st->s_url, "url", "dialer url", d->d_url->u_rawurl);
-	nni_stat_add(root, &st->s_url);
-
-	nni_stat_init_atomic(&st->s_npipes, "npipes", "open pipes");
-	nni_stat_add(root, &st->s_npipes);
-
-	nni_stat_init_atomic(
-	    &st->s_connok, "connect", "connections established");
-	nni_stat_add(root, &st->s_connok);
-
-	nni_stat_init_atomic(&st->s_refused, "refused", "connections refused");
-	nni_stat_add(root, &st->s_refused);
-
-	nni_stat_init_atomic(&st->s_discon, "discon", "remote disconnects");
-	nni_stat_add(root, &st->s_discon);
-
-	nni_stat_init_atomic(&st->s_canceled, "canceled", "canceled");
-	nni_stat_add(root, &st->s_canceled);
-
-	nni_stat_init_atomic(&st->s_othererr, "othererr", "other errors");
-	nni_stat_add(root, &st->s_othererr);
-
-	nni_stat_init_atomic(&st->s_etimedout, "timedout", "timed out");
-	nni_stat_add(root, &st->s_etimedout);
-
-	nni_stat_init_atomic(&st->s_eproto, "protoerr", "protocol errors");
-	nni_stat_add(root, &st->s_eproto);
-
-	nni_stat_init_atomic(&st->s_eauth, "autherr", "auth errors");
-	nni_stat_add(root, &st->s_eauth);
-
-	nni_stat_init_atomic(&st->s_enomem, "nomem", "out of memory");
-	nni_stat_add(root, &st->s_enomem);
-
-	nni_stat_init_atomic(&st->s_reject, "reject", "pipes rejected");
-	nni_stat_add(root, &st->s_reject);
+	nni_stat_set_id(&d->st_root, d->d_id);
+	nni_stat_set_id(&d->st_id, d->d_id);
+	nni_stat_set_id(&d->st_sock, nni_sock_id(d->d_sock));
+	nni_stat_set_string(&d->st_url, d->d_url->u_rawurl);
+	nni_stat_register(&d->st_root);
 }
+#endif // NNG_ENABLE_STATS
 
 void
 nni_dialer_bump_error(nni_dialer *d, int err)
@@ -126,34 +194,31 @@ nni_dialer_bump_error(nni_dialer *d, int err)
 	switch (err) {
 	case NNG_ECONNABORTED:
 	case NNG_ECONNRESET:
-		BUMP_STAT(&d->d_stats.s_discon);
+		nni_stat_inc(&d->st_disconnect, 1);
 		break;
 	case NNG_ECONNREFUSED:
-		BUMP_STAT(&d->d_stats.s_refused);
+		nni_stat_inc(&d->st_refused, 1);
 		break;
 	case NNG_ECANCELED:
-		BUMP_STAT(&d->d_stats.s_canceled);
+		nni_stat_inc(&d->st_canceled, 1);
 		break;
 	case NNG_ETIMEDOUT:
-		BUMP_STAT(&d->d_stats.s_etimedout);
+		nni_stat_inc(&d->st_timeout, 1);
 		break;
 	case NNG_EPROTO:
-		BUMP_STAT(&d->d_stats.s_eproto);
+		nni_stat_inc(&d->st_proto, 1);
 		break;
 	case NNG_EPEERAUTH:
 	case NNG_ECRYPTO:
-		BUMP_STAT(&d->d_stats.s_eauth);
+		nni_stat_inc(&d->st_auth, 1);
 		break;
 	case NNG_ENOMEM:
-		BUMP_STAT(&d->d_stats.s_enomem);
+		nni_stat_inc(&d->st_oom, 1);
 		break;
 	default:
-		BUMP_STAT(&d->d_stats.s_othererr);
+		nni_stat_inc(&d->st_other, 1);
 		break;
 	}
-#else
-	NNI_ARG_UNUSED(d);
-	NNI_ARG_UNUSED(err);
 #endif
 }
 
@@ -182,7 +247,7 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 	d->d_closed  = false;
 	d->d_closing = false;
 	d->d_data    = NULL;
-	d->d_refcnt  = 1;
+	d->d_ref     = 1;
 	d->d_sock    = s;
 	d->d_tran    = tran;
 	nni_atomic_flag_reset(&d->d_started);
@@ -197,7 +262,6 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 
 	nni_mtx_init(&d->d_mtx);
 
-	dialer_stats_init(d);
 	nni_aio_init(&d->d_con_aio, dialer_connect_cb, d);
 	nni_aio_init(&d->d_tmo_aio, dialer_timer_cb, d);
 
@@ -205,19 +269,22 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 	rv = nni_id_alloc(&dialers, &d->d_id, d);
 	nni_mtx_unlock(&dialers_lk);
 
+#ifdef NNG_ENABLE_STATS
+	dialer_stats_init(d);
+#endif
+
 	if ((rv != 0) || ((rv = d->d_ops.d_init(&d->d_data, url, d)) != 0) ||
 	    ((rv = nni_sock_add_dialer(s, d)) != 0)) {
 		nni_mtx_lock(&dialers_lk);
 		nni_id_remove(&dialers, d->d_id);
 		nni_mtx_unlock(&dialers_lk);
+#ifdef NNG_ENABLE_STATS
+		nni_stat_unregister(&d->st_root);
+#endif
 		nni_dialer_destroy(d);
 		return (rv);
 	}
 
-	snprintf(d->d_stats.s_scope, sizeof(d->d_stats.s_scope), "dialer%u",
-	    d->d_id);
-	nni_stat_set_value(&d->d_stats.s_id, d->d_id);
-	nni_stat_register(&d->d_stats.s_root);
 	*dp = d;
 	return (0);
 }
@@ -234,7 +301,7 @@ nni_dialer_find(nni_dialer **dp, uint32_t id)
 
 	nni_mtx_lock(&dialers_lk);
 	if ((d = nni_id_get(&dialers, id)) != NULL) {
-		d->d_refcnt++;
+		d->d_ref++;
 		*dp = d;
 	}
 	nni_mtx_unlock(&dialers_lk);
@@ -249,7 +316,7 @@ nni_dialer_hold(nni_dialer *d)
 	if (d->d_closed) {
 		rv = NNG_ECLOSED;
 	} else {
-		d->d_refcnt++;
+		d->d_ref++;
 		rv = 0;
 	}
 	nni_mtx_unlock(&dialers_lk);
@@ -260,8 +327,8 @@ void
 nni_dialer_rele(nni_dialer *d)
 {
 	nni_mtx_lock(&dialers_lk);
-	d->d_refcnt--;
-	if ((d->d_refcnt == 0) && (d->d_closed)) {
+	d->d_ref--;
+	if ((d->d_ref == 0) && (d->d_closed)) {
 		nni_reap(&d->d_reap, (nni_cb) nni_dialer_reap, d);
 	}
 	nni_mtx_unlock(&dialers_lk);
@@ -326,7 +393,9 @@ dialer_connect_cb(void *arg)
 
 	switch ((rv = nni_aio_result(aio))) {
 	case 0:
-		BUMP_STAT(&d->d_stats.s_connok);
+#ifdef NNG_ENABLE_STATS
+		nni_stat_inc(&d->st_connect, 1);
+#endif
 		nni_dialer_add_pipe(d, nni_aio_get_output(aio, 0));
 		break;
 	case NNG_ECLOSED:   // No further action.
@@ -491,7 +560,12 @@ nni_dialer_getopt(
 }
 
 void
-nni_dialer_add_stat(nni_dialer *d, nni_stat_item *stat)
+nni_dialer_add_stat(nni_dialer *d, nni_stat_item *item)
 {
-	nni_stat_add(&d->d_stats.s_root, stat);
+#ifdef NNG_ENABLE_STATS
+	nni_stat_add(&d->st_root, item);
+#else
+	NNI_ARG_UNUSED(d);
+	NNI_ARG_UNUSED(item);
+#endif
 }

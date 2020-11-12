@@ -16,23 +16,24 @@
 typedef struct nng_stat nni_stat;
 
 struct nng_stat {
-	char *         s_name;
-	char *         s_desc;
-	char *         s_string;
-	uint64_t       s_value;
-	nni_time       s_time;
-	nni_stat_type  s_type;
-	nni_stat_unit  s_unit;
-	nni_stat_item *s_item; // Used during snapshot collection
-	nni_list       s_children;
-	nni_stat *     s_parent;
-	nni_list_node  s_node;
+	const nni_stat_info *s_info;
+	const nni_stat_item *s_item; // Used during snapshot collection
+	nni_list             s_children;
+	nni_stat *           s_parent;
+	nni_list_node        s_node;
+	nni_time             s_timestamp;
+	union {
+		int      sv_id;
+		bool     sv_bool;
+		uint64_t sv_value;
+		char *   sv_string;
+	} s_val;
 };
 
 #ifdef NNG_ENABLE_STATS
 static nni_stat_item stats_root;
 static nni_mtx       stats_lock;
-static nni_mtx *     stats_held = NULL;
+static nni_mtx       stats_val_lock;
 #endif
 
 void
@@ -68,134 +69,148 @@ nni_stat_register(nni_stat_item *child)
 #endif
 }
 
+#ifdef NNG_ENABLE_STATS
 void
-nni_stat_unregister(nni_stat_item *stat)
+stat_unregister(nni_stat_item *item)
+{
+	nni_stat_item *child;
+	while ((child = nni_list_first(&item->si_children)) != NULL) {
+		stat_unregister(child);
+	}
+	if ((item->si_info->si_alloc) &&
+	    (item->si_info->si_type == NNG_STAT_STRING)) {
+		nni_strfree(item->si_value.sv_string);
+		item->si_value.sv_string = NULL;
+	}
+	nni_list_node_remove(&item->si_node);
+}
+#endif
+
+void
+nni_stat_unregister(nni_stat_item *item)
 {
 #ifdef NNG_ENABLE_STATS
 	nni_mtx_lock(&stats_lock);
-	nni_list_node_remove(&stat->si_node);
+	stat_unregister(item);
 	nni_mtx_unlock(&stats_lock);
 #else
-	NNI_ARG_UNUSED(child);
+	NNI_ARG_UNUSED(item);
 #endif
 }
 
+void
+nni_stat_init(nni_stat_item *item, const nni_stat_info *info)
+{
 #ifdef NNG_ENABLE_STATS
-void
-nni_stat_init(nni_stat_item *stat, const char *name, const char *desc)
-{
-	NNI_LIST_INIT(&stat->si_children, nni_stat_item, si_node);
-	stat->si_name   = name;
-	stat->si_desc   = desc;
-	stat->si_lock   = NULL;
-	stat->si_update = NULL;
-	stat->si_string = NULL;
-	stat->si_number = 0;
-	stat->si_type   = NNG_STAT_COUNTER;
-	stat->si_unit   = NNG_UNIT_NONE;
-}
-
-void
-nni_stat_init_scope(nni_stat_item *stat, const char *name, const char *desc)
-{
-	nni_stat_init(stat, name, desc);
-	stat->si_type = NNG_STAT_SCOPE;
-	stat->si_unit = NNG_UNIT_NONE;
-}
-
-void
-nni_stat_init_string(
-    nni_stat_item *stat, const char *name, const char *desc, const char *str)
-{
-	nni_stat_init(stat, name, desc);
-	stat->si_string = str;
-	stat->si_type   = NNG_STAT_STRING;
-	stat->si_unit   = NNG_UNIT_NONE;
-}
-
-void
-nni_stat_init_id(
-    nni_stat_item *stat, const char *name, const char *desc, uint64_t id)
-{
-	nni_stat_init(stat, name, desc);
-	stat->si_number = id;
-	stat->si_type   = NNG_STAT_ID;
-	stat->si_unit   = NNG_UNIT_NONE;
-}
-
-void
-nni_stat_init_bool(
-    nni_stat_item *stat, const char *name, const char *desc, bool v)
-{
-	nni_stat_init(stat, name, desc);
-	stat->si_number = v ? 1 : 0;
-	stat->si_type   = NNG_STAT_BOOLEAN;
-	stat->si_unit   = NNG_UNIT_NONE;
-}
-
-static void
-stat_atomic_update(nni_stat_item *stat)
-{
-	stat->si_number = nni_atomic_get64(&stat->si_atomic);
-}
-
-void
-nni_stat_init_atomic(nni_stat_item *stat, const char *name, const char *desc)
-{
-	nni_stat_init(stat, name, desc);
-	stat->si_number = 0;
-	stat->si_update = stat_atomic_update;
-	nni_atomic_init64(&stat->si_atomic);
-}
-
-void
-nni_stat_inc_atomic(nni_stat_item *stat, uint64_t inc)
-{
-	nni_atomic_add64(&stat->si_atomic, inc);
-}
-
-void
-nni_stat_dec_atomic(nni_stat_item *stat, uint64_t inc)
-{
-	nni_atomic_sub64(&stat->si_atomic, inc);
-}
+	memset(item, 0, sizeof(*item));
+	NNI_LIST_INIT(&item->si_children, nni_stat_item, si_node);
+	item->si_info = info;
+#else
+	NNI_ARG_UNUSED(item);
+	NNI_ARG_UNUSED(info);
 #endif
+}
 
 void
-nni_stat_set_value(nni_stat_item *stat, uint64_t v)
+nni_stat_inc(nni_stat_item *item, uint64_t inc)
 {
 #ifdef NNG_ENABLE_STATS
-	stat->si_number = v;
+	if (item->si_info->si_atomic) {
+		nni_atomic_add64(&item->si_value.sv_atomic, inc);
+	} else {
+		item->si_value.sv_number += inc;
+	}
+#else
+	NNI_ARG_UNUSED(item);
+	NNI_ARG_UNUSED(inc);
+#endif
+}
+
+void
+nni_stat_dec(nni_stat_item *item, uint64_t inc)
+{
+#ifdef NNG_ENABLE_STATS
+
+	if (item->si_info->si_atomic) {
+		nni_atomic_sub64(&item->si_value.sv_atomic, inc);
+	} else {
+		item->si_value.sv_number -= inc;
+	}
+#else
+	NNI_ARG_UNUSED(item);
+	NNI_ARG_UNUSED(inc);
+#endif
+}
+
+void
+nni_stat_set_id(nni_stat_item *item, int id)
+{
+#ifdef NNG_ENABLE_STATS
+	// IDs don't change, so just set it.
+	item->si_value.sv_id = id;
+#else
+	NNI_ARG_UNUSED(item);
+	NNI_ARG_UNUSED(id);
+#endif
+}
+
+void
+nni_stat_set_bool(nni_stat_item *item, bool b)
+{
+#ifdef NNG_ENABLE_STATS
+	// bool is atomic by definitions.
+	item->si_value.sv_bool = b;
+#else
+	NNI_ARG_UNUSED(item);
+	NNI_ARG_UNUSED(id);
+#endif
+}
+
+void
+nni_stat_set_string(nni_stat_item *item, const char *s)
+{
+#ifdef NNG_ENABLE_STATS
+	const nni_stat_info *info = item->si_info;
+	char *               old  = item->si_value.sv_string;
+
+	nni_mtx_lock(&stats_val_lock);
+	if ((s != NULL) && (old != NULL) && (strcmp(s, old) == 0)) {
+		// no change
+		nni_mtx_unlock(&stats_val_lock);
+		return;
+	}
+
+	if (!info->si_alloc) {
+		// no allocation, just set it.
+		item->si_value.sv_string = (char *) s;
+		nni_mtx_unlock(&stats_val_lock);
+		return;
+	}
+
+	item->si_value.sv_string = nni_strdup(s);
+	nni_mtx_unlock(&stats_val_lock);
+
+	nni_strfree(old);
+#else
+	NNG_ARG_UNUSED(item);
+	NNG_ARG_UNUSED(s);
+#endif
+}
+
+void
+nni_stat_set_value(nni_stat_item *item, uint64_t v)
+{
+#ifdef NNG_ENABLE_STATS
+	if (item->si_info->si_atomic) {
+		nni_atomic_set64(&item->si_value.sv_atomic, v);
+	} else {
+		item->si_value.sv_number = v;
+	}
 #else
 	NNI_ARG_UNUSED(stat);
 	NNI_ARG_UNUSED(v);
 #endif
 }
-
-void
-nni_stat_set_lock(nni_stat_item *stat, nni_mtx *mtx)
-{
-#ifdef NNG_ENABLE_STATS
-	stat->si_lock = mtx;
-#else
-	NNI_ARG_UNUSED(stat);
-	NNI_ARG_UNUSED(mtx);
-#endif
-}
-
-#ifdef NNG_ENABLE_STATS
-void
-nni_stat_set_type(nni_stat_item *stat, int type)
-{
-	stat->si_type = type;
-}
-
-void
-nni_stat_set_unit(nni_stat_item *stat, int unit)
-{
-	stat->si_unit = unit;
-}
-#endif
 
 void
 nng_stats_free(nni_stat *st)
@@ -207,9 +222,9 @@ nng_stats_free(nni_stat *st)
 		nni_list_remove(&st->s_children, child);
 		nng_stats_free(child);
 	}
-	nni_strfree(st->s_name);
-	nni_strfree(st->s_desc);
-	nni_strfree(st->s_string);
+	if (st->s_info->si_alloc) {
+		nni_strfree(st->s_val.sv_string);
+	}
 	NNI_FREE_STRUCT(st);
 #else
 	NNI_ARG_UNUSED(st);
@@ -228,19 +243,8 @@ stat_make_tree(nni_stat_item *item, nni_stat **sp)
 	}
 	NNI_LIST_INIT(&stat->s_children, nni_stat, s_node);
 
-	if (((stat->s_name = nni_strdup(item->si_name)) == NULL) ||
-	    ((stat->s_desc = nni_strdup(item->si_desc)) == NULL)) {
-		nng_stats_free(stat);
-		return (NNG_ENOMEM);
-	}
-	if ((item->si_type == NNG_STAT_STRING) &&
-	    ((stat->s_string = nni_strdup(item->si_string)) == NULL)) {
-		nng_stats_free(stat);
-		return (NNG_ENOMEM);
-	}
+	stat->s_info   = item->si_info;
 	stat->s_item   = item;
-	stat->s_type   = item->si_type;
-	stat->s_unit   = item->si_unit;
 	stat->s_parent = NULL;
 
 	NNI_LIST_FOREACH (&item->si_children, child) {
@@ -260,23 +264,52 @@ stat_make_tree(nni_stat_item *item, nni_stat **sp)
 static void
 stat_update(nni_stat *stat)
 {
-	nni_stat_item *item = stat->s_item;
+	const nni_stat_item *item = stat->s_item;
+	const nni_stat_info *info = item->si_info;
+	char *               old;
+	char *               str;
 
-	if (item->si_lock != stats_held) {
-		if (stats_held != NULL) {
-			nni_mtx_unlock(stats_held);
-			stats_held = NULL;
+	switch (info->si_type) {
+	case NNG_STAT_SCOPE:
+	case NNG_STAT_ID:
+		stat->s_val.sv_id = item->si_value.sv_id;
+		break;
+	case NNG_STAT_BOOLEAN:
+		stat->s_val.sv_bool = item->si_value.sv_bool;
+		break;
+	case NNG_STAT_COUNTER:
+	case NNG_STAT_LEVEL:
+		if (info->si_atomic) {
+			stat->s_val.sv_value = nni_atomic_get64(
+			    (nni_atomic_u64 *) &item->si_value.sv_atomic);
+		} else {
+			stat->s_val.sv_value = item->si_value.sv_number;
 		}
-		if (item->si_lock != NULL) {
-			nni_mtx_lock(item->si_lock);
-			stats_held = item->si_lock;
+		break;
+	case NNG_STAT_STRING:
+		nni_mtx_lock(&stats_val_lock);
+		old = stat->s_val.sv_string;
+		str = item->si_value.sv_string;
+
+		// If we have to allocate a new string, do so.  But
+		// only do it if new string is different.
+		if ((info->si_alloc) && (str != NULL) &&
+		    ((old == NULL) || (strcmp(str, old) != 0))) {
+
+			stat->s_val.sv_string = nni_strdup(str);
+			nni_strfree(old);
+
+		} else if (info->si_alloc) {
+			nni_strfree(stat->s_val.sv_string);
+			stat->s_val.sv_string = NULL;
+
+		} else {
+			stat->s_val.sv_string = str;
 		}
+		nni_mtx_unlock(&stats_val_lock);
+		break;
 	}
-	if (item->si_update != NULL) {
-		item->si_update(item);
-	}
-	stat->s_value = item->si_number;
-	stat->s_time  = nni_clock();
+	stat->s_timestamp = nni_clock();
 }
 
 static void
@@ -304,10 +337,6 @@ nni_stat_snapshot(nni_stat **statp, nni_stat_item *item)
 		return (rv);
 	}
 	stat_update_tree(stat);
-	if (stats_held != NULL) {
-		nni_mtx_unlock(stats_held);
-		stats_held = NULL;
-	}
 	nni_mtx_unlock(&stats_lock);
 	*statp = stat;
 	return (0);
@@ -353,43 +382,53 @@ nng_stat_child(nng_stat *stat)
 const char *
 nng_stat_name(nni_stat *stat)
 {
-	return (stat->s_name);
+	return (stat->s_info->si_name);
 }
 
 uint64_t
 nng_stat_value(nni_stat *stat)
 {
-	return (stat->s_value);
+	return (stat->s_val.sv_value);
 }
+
+bool
+nng_stat_bool(nni_stat *stat)
+{
+	return (stat->s_val.sv_bool);
+}
+
 
 const char *
 nng_stat_string(nng_stat *stat)
 {
-	return (stat->s_string);
+	if (stat->s_info->si_type != NNG_STAT_STRING) {
+		return ("");
+	}
+	return (stat->s_val.sv_string);
 }
 
 uint64_t
 nng_stat_timestamp(nng_stat *stat)
 {
-	return ((uint64_t) stat->s_time);
+	return ((uint64_t) stat->s_timestamp);
 }
 
 int
 nng_stat_type(nng_stat *stat)
 {
-	return (stat->s_type);
+	return (stat->s_info->si_type);
 }
 
 int
 nng_stat_unit(nng_stat *stat)
 {
-	return (stat->s_unit);
+	return (stat->s_info->si_unit);
 }
 
 const char *
 nng_stat_desc(nng_stat *stat)
 {
-	return (stat->s_desc);
+	return (stat->s_info->si_desc);
 }
 
 nng_stat *
@@ -399,7 +438,28 @@ nng_stat_find(nng_stat *stat, const char *name)
 	if (stat == NULL) {
 		return (NULL);
 	}
-	if (strcmp(name, stat->s_name) == 0) {
+	if (strcmp(name, stat->s_info->si_name) == 0) {
+		return (stat);
+	}
+	NNI_LIST_FOREACH (&stat->s_children, child) {
+		nng_stat *result;
+		if ((result = nng_stat_find(child, name)) != NULL) {
+			return (result);
+		}
+	}
+	return (NULL);
+}
+
+nng_stat *
+nng_stat_find_scope(nng_stat *stat, const char *name, int id)
+{
+	nng_stat *child;
+	if (stat == NULL) {
+		return (NULL);
+	}
+	if ((stat->s_val.sv_id == id) &&
+	    (stat->s_info->si_type == NNG_STAT_SCOPE) &&
+	    (strcmp(name, stat->s_info->si_name) == 0)) {
 		return (stat);
 	}
 	NNI_LIST_FOREACH (&stat->s_children, child) {
@@ -414,35 +474,33 @@ nng_stat_find(nng_stat *stat, const char *name)
 nng_stat *
 nng_stat_find_socket(nng_stat *stat, nng_socket s)
 {
-	char name[16];
-	(void) snprintf(name, sizeof(name), "socket%d", nng_socket_id(s));
-	return (nng_stat_find(stat, name));
+	return (nng_stat_find_scope(stat, "socket", nng_socket_id(s)));
 }
 
 nng_stat *
 nng_stat_find_dialer(nng_stat *stat, nng_dialer d)
 {
-	char name[16];
-	(void) snprintf(name, sizeof(name), "dialer%d", nng_dialer_id(d));
-	return (nng_stat_find(stat, name));
+	return (nng_stat_find_scope(stat, "dialer", nng_dialer_id(d)));
 }
 
 nng_stat *
 nng_stat_find_listener(nng_stat *stat, nng_listener l)
 {
-	char name[16];
-	(void) snprintf(name, sizeof(name), "listener%d", nng_listener_id(l));
-	return (nng_stat_find(stat, name));
+	return (nng_stat_find_scope(stat, "listener", nng_listener_id(l)));
 }
 
 int
 nni_stat_sys_init(void)
 {
 #ifdef NNG_ENABLE_STATS
+	static const nni_stat_info root = {
+		.si_name = "",
+		.si_desc = "all statistics",
+		.si_type = NNG_STAT_SCOPE,
+	};
 	nni_mtx_init(&stats_lock);
-	NNI_LIST_INIT(&stats_root.si_children, nni_stat_item, si_node);
-	stats_root.si_name = "";
-	stats_root.si_desc = "all statistics";
+	nni_mtx_init(&stats_val_lock);
+	nni_stat_init(&stats_root, &root);
 #endif
 	return (0);
 }
@@ -452,6 +510,7 @@ nni_stat_sys_fini(void)
 {
 #ifdef NNG_ENABLE_STATS
 	nni_mtx_fini(&stats_lock);
+	nni_mtx_fini(&stats_val_lock);
 #endif
 }
 
@@ -462,8 +521,9 @@ stat_sprint_scope(nni_stat *stat, char **scope, int *lenp)
 	if (stat->s_parent != NULL) {
 		stat_sprint_scope(stat->s_parent, scope, lenp);
 	}
-	if (strlen(stat->s_name) > 0) {
-		snprintf(*scope, *lenp, "%s.", stat->s_name);
+	if (strlen(stat->s_info->si_name) > 0) {
+		snprintf(*scope, *lenp, "%s#%d.", stat->s_info->si_name,
+		    stat->s_val.sv_id);
 	} else {
 		(*scope)[0] = '\0';
 	}
@@ -503,9 +563,8 @@ nng_stats_dump(nng_stat *stat)
 		    nng_stat_string(stat));
 		break;
 	case NNG_STAT_BOOLEAN:
-		val = nng_stat_value(stat);
 		nni_plat_printf("%s%-32s%s\n", indent, nng_stat_name(stat),
-		    val != 0 ? "true" : "false");
+		    nng_stat_bool(stat) ? "true" : "false");
 		break;
 	case NNG_STAT_LEVEL:
 	case NNG_STAT_COUNTER:
@@ -520,7 +579,7 @@ nng_stats_dump(nng_stat *stat)
 			nni_plat_printf(" msgs\n");
 			break;
 		case NNG_UNIT_MILLIS:
-			nni_plat_printf(" msec\n");
+			nni_plat_printf(" ms\n");
 			break;
 		case NNG_UNIT_NONE:
 		case NNG_UNIT_EVENTS:

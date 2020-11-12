@@ -163,6 +163,7 @@ if (NNG_ENABLE_DOC)
             nng_socket_set
             nng_stats_free
             nng_stats_get
+            nng_stat_bool
             nng_stat_child
             nng_stat_desc
             nng_stat_find
@@ -354,6 +355,7 @@ if (NNG_ENABLE_DOC)
             nng_options
             nng_pipe
             nng_sockaddr
+            nng_sockaddr_abstract
             nng_sockaddr_in
             nng_sockaddr_in6
             nng_sockaddr_inproc
