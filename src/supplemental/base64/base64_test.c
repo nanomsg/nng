@@ -68,7 +68,7 @@ test_decode(void)
 		TEST_CASE(name);
 
 		sz = nni_base64_decode(enc, strlen(enc), (void *) buf, 1024);
-		TEST_CHECK(sz >= 0);
+		TEST_CHECK(sz != (size_t) -1);
 		TEST_CHECK(sz == strlen(cases[i].decoded));
 		buf[sz] = 0;
 		TEST_CHECK(strcmp(buf, cases[i].decoded) == 0);

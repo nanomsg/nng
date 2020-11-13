@@ -9,11 +9,13 @@
 
 #  Windows.
 
-nng_sources_if(NNG_PLATFORM_WINDOWS
+# We cannot use nng_sources_if because these tests don't go into
+# the static library unless they also go into the dynamic.
+if (NNG_PLATFORM_WINDOWS)
+nng_sources(
         win_impl.h
         win_ipc.h
         win_tcp.h
-
         win_clock.c
         win_debug.c
         win_file.c
@@ -32,3 +34,4 @@ nng_sources_if(NNG_PLATFORM_WINDOWS
         win_thread.c
         win_udp.c
         )
+endif()
