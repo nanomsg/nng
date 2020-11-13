@@ -162,7 +162,7 @@ nni_stat_set_bool(nni_stat_item *item, bool b)
 	item->si_value.sv_bool = b;
 #else
 	NNI_ARG_UNUSED(item);
-	NNI_ARG_UNUSED(id);
+	NNI_ARG_UNUSED(b);
 #endif
 }
 
@@ -192,8 +192,8 @@ nni_stat_set_string(nni_stat_item *item, const char *s)
 
 	nni_strfree(old);
 #else
-	NNG_ARG_UNUSED(item);
-	NNG_ARG_UNUSED(s);
+	NNI_ARG_UNUSED(item);
+	NNI_ARG_UNUSED(s);
 #endif
 }
 
@@ -207,7 +207,7 @@ nni_stat_set_value(nni_stat_item *item, uint64_t v)
 		item->si_value.sv_number = v;
 	}
 #else
-	NNI_ARG_UNUSED(stat);
+	NNI_ARG_UNUSED(item);
 	NNI_ARG_UNUSED(v);
 #endif
 }

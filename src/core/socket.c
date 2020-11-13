@@ -668,11 +668,13 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 	// Set the socket name.
 	(void) snprintf(s->s_name, sizeof(s->s_name), "%u", s->s_id);
 
+#ifdef NNG_ENABLE_STATS
 	// Set up basic stat values.
 	nni_stat_set_id(&s->st_id, s->s_id);
 
 	// Add our stats chain.
 	nni_stat_register(&s->st_root);
+#endif
 
 	return (0);
 }
@@ -1603,7 +1605,9 @@ nni_listener_add_pipe(nni_listener *l, void *tpipe)
 		return;
 	}
 	nni_mtx_unlock(&s->s_mx);
+#ifdef NNG_ENABLE_STATS
 	nni_stat_register(&p->st_root);
+#endif
 	nni_pipe_run_cb(p, NNG_PIPE_EV_ADD_POST);
 	nni_pipe_rele(p);
 }
