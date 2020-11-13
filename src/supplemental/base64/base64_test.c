@@ -60,17 +60,17 @@ test_decode(void)
 	void *enc;
 
 	for (i = 0; (enc = cases[i].encoded) != NULL; i++) {
-		char buf[1024];
-		char name[8];
-		int  rv;
+		char   buf[1024];
+		char   name[8];
+		size_t sz;
 
 		(void) snprintf(name, sizeof(name), "%d", i);
 		TEST_CASE(name);
 
-		rv = nni_base64_decode(enc, strlen(enc), (void *) buf, 1024);
-		TEST_CHECK(rv >= 0);
-		TEST_CHECK(rv == (int) strlen(cases[i].decoded));
-		buf[rv] = 0;
+		sz = nni_base64_decode(enc, strlen(enc), (void *) buf, 1024);
+		TEST_CHECK(sz >= 0);
+		TEST_CHECK(sz == strlen(cases[i].decoded));
+		buf[sz] = 0;
 		TEST_CHECK(strcmp(buf, cases[i].decoded) == 0);
 	}
 }
@@ -88,13 +88,15 @@ test_overflow(void)
 		(void) snprintf(name, sizeof(name), "%d", i);
 		TEST_CASE(name);
 
-		TEST_CHECK(nni_base64_encode(
-		               dec, strlen(dec), buf, strlen(enc) - 1) == -1);
-		TEST_CHECK(nni_base64_encode(dec, strlen(dec), buf, 0) == -1);
+		TEST_CHECK(nni_base64_encode(dec, strlen(dec), buf,
+		               strlen(enc) - 1) == (size_t) -1);
+		TEST_CHECK(nni_base64_encode(dec, strlen(dec), buf, 0) ==
+		    (size_t) -1);
 
-		TEST_CHECK(nni_base64_decode(
-		               enc, strlen(enc), buf, strlen(dec) - 1) == -1);
-		TEST_CHECK(nni_base64_encode(enc, strlen(enc), buf, 0) == -1);
+		TEST_CHECK(nni_base64_decode(enc, strlen(enc), buf,
+		               strlen(dec) - 1) == (size_t) -1);
+		TEST_CHECK(nni_base64_encode(enc, strlen(enc), buf, 0) ==
+		    (size_t) -1);
 	}
 }
 

@@ -148,33 +148,7 @@ if (NNG_PLATFORM_POSIX)
     endif ()
 endif ()
 
-if (NNG_PLATFORM_WINDOWS)
-    set(NNG_SRCS ${NNG_SRCS}
-            platform/windows/win_impl.h
-            platform/windows/win_ipc.h
-            platform/windows/win_tcp.h
-
-            platform/windows/win_clock.c
-            platform/windows/win_debug.c
-            platform/windows/win_file.c
-            platform/windows/win_io.c
-            platform/windows/win_ipcconn.c
-            platform/windows/win_ipcdial.c
-            platform/windows/win_ipclisten.c
-            platform/windows/win_pipe.c
-            platform/windows/win_rand.c
-            platform/windows/win_resolv.c
-            platform/windows/win_sockaddr.c
-            platform/windows/win_tcp.c
-            platform/windows/win_tcpconn.c
-            platform/windows/win_tcpdial.c
-            platform/windows/win_tcplisten.c
-            platform/windows/win_thread.c
-            platform/windows/win_udp.c
-            )
-endif ()
-
-
+add_subdirectory(platform/windows)
 add_subdirectory(compat/nanomsg)
 
 add_subdirectory(protocol/bus0)

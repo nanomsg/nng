@@ -1,6 +1,6 @@
 //
 // Copyright (c) 2014 Wirebird Labs LLC.  All rights reserved.
-// Copyright 2017 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"),
@@ -31,10 +31,12 @@
 // Base64 is defined in RFC 2045, section 6.8.
 
 // This function encodes an arbitrary byte array into base64
-// null-terminated string.
-int nni_base64_encode(const uint8_t *, size_t, char *, size_t);
+// null-terminated string.  It returns the number of characters
+// emitted.
+size_t nni_base64_encode(const uint8_t *, size_t, char *, size_t);
 
 // This function decodes a base64 string into supplied buffer.
-int nni_base64_decode(const char *, size_t, uint8_t *, size_t);
+// It returns the number of bytes emitted.
+size_t nni_base64_decode(const char *, size_t, uint8_t *, size_t);
 
 #endif
