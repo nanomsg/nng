@@ -385,10 +385,16 @@ nni_pipe_dialer_id(nni_pipe *p)
 	return (p->p_dialer ? nni_dialer_id(p->p_dialer) : 0);
 }
 
+
 void
 nni_pipe_add_stat(nni_pipe *p, nni_stat_item *item)
 {
+#ifdef NNG_ENABLE_STATS
 	nni_stat_add(&p->st_root, item);
+#else
+	NNI_ARG_UNUSED(p);
+	NNI_ARG_UNUSED(item);
+#endif
 }
 
 void
