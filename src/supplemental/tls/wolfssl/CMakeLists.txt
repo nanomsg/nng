@@ -13,14 +13,10 @@
 
 if (NNG_TLS_ENGINE STREQUAL "wolf")
     add_subdirectory(${PROJECT_SOURCE_DIR}/extern/nng-wolfssl nng-wolfssl)
-    target_include_directories(nng-wolfssl PRIVATE )
-    target_link_libraries(nng PRIVATE nng-wolfssl)
-    if (TARGET nng_testlib)
-        target_link_libraries(nng_testlib PRIVATE nng-wolfssl)
-    endif ()
+    target_include_directories(nng-wolfssl PRIVATE)
+    nng_check_lib(nng-wolfssl)
 
     nng_defines(NNG_TLS_ENGINE_INIT=nng_tls_engine_init_wolf)
     nng_defines(NNG_TLS_ENGINE_FINI=nng_tls_engine_fini_wolf)
     nng_defines(NNG_SUPP_TLS)
-
 endif ()

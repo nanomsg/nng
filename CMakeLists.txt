@@ -28,31 +28,13 @@
 cmake_minimum_required(VERSION 3.13)
 
 project(nng C)
-include(CheckFunctionExists)
-include(CheckSymbolExists)
-include(CheckStructHasMember)
-include(CheckLibraryExists)
-include(CheckCSourceCompiles)
 include(CheckCCompilerFlag)
 include(CMakeDependentOption)
 include(GNUInstallDirs)
-include(TestBigEndian)
-include(FindUnixCommands)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
-if (POLICY CMP0042)
-    # Newer cmake on MacOS should use @rpath
-    cmake_policy(SET CMP0042 NEW)
-endif ()
-if (POLICY CMP0079)
-    cmake_policy(SET CMP0079 NEW)
-endif ()
-
-if (POLICY CMP0028)
-    # Double colon targets are only alias or imports.
-    cmake_policy(SET CMP0028 NEW)
-endif ()
+include(NNGHelpers)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -104,6 +86,28 @@ option(NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
 
 # Enable access to private APIs for our own use.
 add_definitions(-DNNG_PRIVATE)
+
+if (NOT (BUILD_SHARED_LIBS))
+    set(NNG_STATIC_LIB ON)
+    message(STATUS "Building static libs")
+endif ()
+
+# These are library targets.  The "nng" library is the main public library.
+# The "nng_testing" is a full build of the library for test cases
+# only, which is done statically and includes even portions of the code
+# that are not part of the public library (things that may have been elided.)
+# The "nng_private" library is an interface that allows some internal tools
+# to obtain details about how the public library was built, so that we can
+# include or not include code based on what's actually present.
+add_library(nng)
+
+add_library(nng_testing STATIC EXCLUDE_FROM_ALL
+        ${PROJECT_SOURCE_DIR}/tests/testutil.c
+        ${PROJECT_SOURCE_DIR}/tests/testutil.h)
+target_compile_definitions(nng_testing PUBLIC NNG_STATIC_LIB NNG_TEST_LIB NNG_PRIVATE)
+
+add_library(nng_private INTERFACE)
+target_compile_definitions(nng_private INTERFACE NNG_PRIVATE)
 
 # We can use rlimit to configure the stack size for systems
 # that have too small defaults.  This is not used for Windows,
@@ -172,13 +176,6 @@ endif ()
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_C_FLAGS} ${NNG_SANITIZER_FLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${NNG_WARN_FLAGS} ${NNG_COVERAGE_C_FLAGS} ${NNG_SANITIZER_FLAGS}")
-
-TEST_BIG_ENDIAN(NNG_BIG_ENDIAN)
-if (NNG_BIG_ENDIAN)
-    add_definitions(-DNNG_BIG_ENDIAN)
-else ()
-    add_definitions(-DNNG_LITTLE_ENDIAN)
-endif ()
 
 # If the compiler is not on Windows, does it support hiding the
 # symbols by default?  For shared libraries we would like to do this.
@@ -255,227 +252,15 @@ else ()
     message(AUTHOR_WARNING "${ISSUE_REPORT_MSG}")
     # blithely hope for POSIX to work
     add_definitions(-DNNG_PLATFORM_POSIX)
+    set(NNG_PLATFORM_POSIX ON)
 endif ()
 
-macro(nng_check_func SYM DEF)
-    check_function_exists(${SYM} ${DEF})
-    if (${DEF})
-        add_definitions(-D${DEF}=1)
-    endif ()
-endmacro(nng_check_func)
-
-macro(nng_check_sym SYM HDR DEF)
-    check_symbol_exists(${SYM} ${HDR} ${DEF})
-    if (${DEF})
-        add_definitions(-D${DEF}=1)
-    endif ()
-endmacro(nng_check_sym)
-
-macro(nng_check_lib LIB SYM DEF)
-    check_library_exists(${LIB} ${SYM} "" ${DEF})
-    if (${DEF})
-        add_definitions(-D${DEF}=1)
-        list(APPEND NNG_LIBS ${LIB})
-    endif ()
-endmacro(nng_check_lib)
-
-macro(nng_check_struct_member STR MEM HDR DEF)
-    check_struct_has_member("struct ${STR}" ${MEM} ${HDR} ${DEF})
-    if (${DEF})
-        add_definitions(-D${DEF}=1)
-    endif ()
-endmacro(nng_check_struct_member)
-
-if (WIN32)
-    # Windows is a special snowflake.
-    list(APPEND NNG_LIBS ws2_32 mswsock advapi32)
-    nng_check_sym(InitializeConditionVariable windows.h NNG_HAVE_CONDVAR)
-    nng_check_sym(snprintf stdio.h NNG_HAVE_SNPRINTF)
-    if (NOT NNG_HAVE_CONDVAR OR NOT NNG_HAVE_SNPRINTF)
-        message(FATAL_ERROR
-                "Modern Windows API support is missing. "
-                "Versions of Windows prior to Vista are not supported.  "
-                "Further, the 32-bit MinGW environment is not supported. "
-                "Ensure you have at least Windows Vista or newer, and are "
-                "using either Visual Studio 2013 or newer or MinGW-W64.")
-    endif ()
-else ()
-    # Unconditionally declare the following feature test macros.  These are
-    # needed for some platforms (glibc and SunOS/illumos) and are harmless
-    # on the others.
-    add_definitions(-D_GNU_SOURCE)
-    add_definitions(-D_REENTRANT)
-    add_definitions(-D_THREAD_SAFE)
-    add_definitions(-D_POSIX_PTHREAD_SEMANTICS)
-    list(APPEND NNG_PKGS Threads)
-    find_package(Threads REQUIRED)
-
-    nng_check_func(lockf NNG_HAVE_LOCKF)
-    nng_check_func(flock NNG_HAVE_FLOCK)
-    nng_check_func(getrandom NNG_HAVE_GETRANDOM)
-    nng_check_func(arc4random_buf NNG_HAVE_ARC4RANDOM)
-
-    nng_check_lib(rt clock_gettime NNG_HAVE_CLOCK_GETTIME)
-    nng_check_lib(pthread sem_wait NNG_HAVE_SEMAPHORE_PTHREAD)
-    nng_check_lib(pthread pthread_atfork NNG_HAVE_PTHREAD_ATFORK_PTHREAD)
-    nng_check_lib(pthread pthread_set_name_np NNG_HAVE_PTHREAD_SET_NAME_NP)
-    nng_check_lib(pthread pthread_setname_np NNG_HAVE_PTHREAD_SETNAME_NP)
-    nng_check_lib(nsl gethostbyname NNG_HAVE_LIBNSL)
-    nng_check_lib(socket socket NNG_HAVE_LIBSOCKET)
-
-    # GCC needs libatomic on some architectures (e.g. ARM) because the
-    # underlying architecture may lack the necessary atomic primitives.
-    # One hopes that the libatomic implementation is superior to just using
-    # a pthread mutex.  The symbol chosen here was identified from GCC's
-    # libatomic map file.
-    #
-    # Arguably when using clang, compiler-rt might be better.
-    nng_check_lib(atomic __atomic_load_1 NNG_HAVE_LIBATOMIC)
-
-    nng_check_sym(AF_UNIX sys/socket.h NNG_HAVE_UNIX_SOCKETS)
-    nng_check_sym(backtrace_symbols_fd execinfo.h NNG_HAVE_BACKTRACE)
-    nng_check_struct_member(msghdr msg_control sys/socket.h NNG_HAVE_MSG_CONTROL)
-    nng_check_sym(eventfd sys/eventfd.h NNG_HAVE_EVENTFD)
-    nng_check_sym(kqueue sys/event.h NNG_HAVE_KQUEUE)
-    nng_check_sym(port_create port.h NNG_HAVE_PORT_CREATE)
-    nng_check_sym(epoll_create sys/epoll.h NNG_HAVE_EPOLL)
-    nng_check_sym(epoll_create1 sys/epoll.h NNG_HAVE_EPOLL_CREATE1)
-    nng_check_sym(getpeereid unistd.h NNG_HAVE_GETPEEREID)
-    nng_check_sym(SO_PEERCRED sys/socket.h NNG_HAVE_SOPEERCRED)
-    nng_check_struct_member(sockpeercred uid sys/socket.h NNG_HAVE_SOCKPEERCRED)
-    nng_check_sym(LOCAL_PEERCRED sys/un.h NNG_HAVE_LOCALPEERCRED)
-    nng_check_sym(LOCAL_PEERPID sys/un.h NNG_HAVE_LOCALPEERPID)
-    nng_check_sym(getpeerucred ucred.h NNG_HAVE_GETPEERUCRED)
-    nng_check_sym(atomic_flag_test_and_set stdatomic.h NNG_HAVE_STDATOMIC)
-
-endif ()
-
-nng_check_sym(strlcpy string.h NNG_HAVE_STRLCPY)
-nng_check_sym(strnlen string.h NNG_HAVE_STRNLEN)
-nng_check_sym(strcasecmp string.h NNG_HAVE_STRCASECMP)
-nng_check_sym(strncasecmp string.h NNG_HAVE_STRNCASECMP)
-
-# Set a static symbol.  We do this for testing, so that tests can
-# be skipped if they would rely on symbols that might not be exported.
-# For example, idhash depends on private symbols, so don't test it
-# when using a shared library on Windows because the symbols won't
-# resolve.
-if (NOT (BUILD_SHARED_LIBS))
-    set(NNG_STATIC_LIB ON)
-    message(STATUS "Building static libs")
-endif ()
-
-# In order to facilitate testing, we want to add a library that includes
-# our common test code.  We do this before iterating everywhere else so
-# that we can locate our tests inside the directories where we want.
 if (NNG_TESTS)
     enable_testing()
     set(all_tests, "")
 endif ()
 
-macro(nng_test NAME)
-    if (NNG_TESTS)
-        add_executable(${NAME} ${NAME}.c ${ARGN})
-        target_link_libraries(${NAME} ${PROJECT_NAME}_testlib)
-        target_include_directories(${NAME} PRIVATE
-                ${PROJECT_SOURCE_DIR}/tests
-                ${PROJECT_SOURCE_DIR}/src
-                ${PROJECT_SOURCE_DIR}/include)
-        add_test(NAME ${PROJECT_NAME}.${NAME} COMMAND ${NAME} -t)
-        set_tests_properties(${PROJECT_NAME}.${NAME} PROPERTIES TIMEOUT 180)
-    endif ()
-endmacro()
-
-macro(nng_test_if COND NAME)
-    if (${COND} AND NNG_TESTS)
-        add_executable(${NAME} ${NAME}.c ${ARGN})
-        target_link_libraries(${NAME} ${PROJECT_NAME}_testlib)
-        target_include_directories(${NAME} PRIVATE
-                ${PROJECT_SOURCE_DIR}/tests
-                ${PROJECT_SOURCE_DIR}/src
-                ${PROJECT_SOURCE_DIR}/include)
-        add_test(NAME ${PROJECT_NAME}.${NAME} COMMAND ${NAME} -t)
-        set_tests_properties(${PROJECT_NAME}.${NAME} PROPERTIES TIMEOUT 180)
-    endif ()
-endmacro()
-
-
-function(nng_sources_testlib)
-    if (NNG_TESTS)
-        foreach (f ${ARGN})
-            target_sources(${PROJECT_NAME}_testlib PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${f})
-        endforeach ()
-    endif ()
-endfunction()
-
-function(nng_headers_testlib)
-    if (NNG_TESTS)
-        foreach (f ${ARGN})
-            target_sources(${PROJECT_NAME}_testlib PRIVATE ${PROJECT_SOURCE_DIR}/include/${f})
-        endforeach ()
-    endif ()
-endfunction()
-
-function(nng_defines_testlib)
-    if (NNG_TESTS)
-        target_compile_definitions(${PROJECT_NAME}_testlib PRIVATE ${ARGN})
-    endif ()
-endfunction()
-
-function(nng_sources)
-    foreach (f ${ARGN})
-        target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${f})
-    endforeach ()
-    nng_sources_testlib(${ARGN})
-endfunction()
-
-function(nng_headers)
-    foreach (f ${ARGN})
-        target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include/${f})
-    endforeach ()
-    nng_headers_testlib(${ARGN})
-endfunction()
-
-function(nng_defines)
-    target_compile_definitions(${PROJECT_NAME} PRIVATE ${ARGN})
-    nng_defines_testlib(${ARGN})
-endfunction()
-
-# nng_sources_if adds the sources unconditionally to the test library,
-# but conditionally to the production library.  This allows us to get
-# full test coverage while allowing a minimized delivery.
-function(nng_sources_if COND)
-    if (${COND})
-        foreach (f ${ARGN})
-            target_sources(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/${f})
-        endforeach ()
-    endif ()
-    nng_sources_testlib(${ARGN})
-endfunction()
-
-function(nng_headers_if COND)
-    if (COND)
-        foreach (f ${ARGN})
-            target_sources(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include/${f})
-        endforeach ()
-    endif ()
-    nng_headers_testlib(${ARGN})
-endfunction()
-
-function(nng_defines_if COND)
-    if (${COND})
-        # Revisit this one
-        target_compile_definitions(${PROJECT_NAME} PUBLIC ${ARGN})
-    endif ()
-    nng_defines_testlib(${ARGN})
-endfunction()
-
 add_subdirectory(src)
-
-foreach (_PKG IN ITEMS ${NNG_PKGS})
-    find_package(${_PKG} REQUIRED)
-endforeach ()
-add_definitions(${NNG_DEFS})
 
 if (NNG_TESTS)
     add_subdirectory(tests)

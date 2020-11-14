@@ -21,16 +21,10 @@ if (NNG_TLS_ENGINE STREQUAL "mbed")
     # If Mbed TLS was added by a consuming project, then we should use that
     # instance of it, instead of configuring our own.
     if (TARGET mbedtls)
-        set(_LIBS mbedtls)
+        nng_link_libraries(mbedtls)
     else()
         find_package(mbedTLS REQUIRED)
-        set(_LIBS ${MBEDTLS_LIBRARIES})
-        set(_INCS ${MBEDTLS_INCLUDE_DIR})
+        nng_link_libraries(${MBEDTLS_LIBRARIES})
+        nng_include_directories(${MBEDTLS_INCLUDE_DIR})
     endif()
-
-    list(APPEND NNG_LIBS ${_LIBS})
-    list(APPEND NNG_INCS ${_INCS})
-
-    set(NNG_LIBS ${NNG_LIBS} PARENT_SCOPE)
-    set(NNG_INCS ${NNG_INCS} PARENT_SCOPE)
 endif()

@@ -84,9 +84,10 @@ fdready(int fd)
 uint16_t
 test_htons(uint16_t in)
 {
-#ifdef NNG_LITTLE_ENDIAN
-	in = ((in >> 8) & 0xff) | ((in & 0xff) << 8);
-#endif
+	short one = 1;
+	if (*((char *)(void *)&one) == 1) {
+		in = ((in / 256) + ((in % 256) * 256));
+	}
 	return (in);
 }
 

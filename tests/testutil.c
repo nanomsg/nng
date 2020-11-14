@@ -114,22 +114,30 @@ testutil_pollfd(int fd)
 	return (false);
 }
 
+bool
+testutil_is_little_endian(void)
+{
+	uint16_t num = 0x1;
+	uint8_t *ptr = (uint8_t *) (void *) (&num);
+	return (ptr[0] == 1);
+}
+
 uint16_t
 testutil_htons(uint16_t in)
 {
-#ifdef NNG_LITTLE_ENDIAN
-	in = ((in >> 8u) & 0xffu) | ((in & 0xffu) << 8u);
-#endif
+	if (testutil_is_little_endian()) {
+		in = ((in / 0x100) + ((in % 0x100) * 0x100));
+	}
 	return (in);
 }
 
 uint32_t
 testutil_htonl(uint32_t in)
 {
-#ifdef NNG_LITTLE_ENDIAN
-	in = ((in >> 24u) & 0xffu) | ((in >> 8u) & 0xff00u) |
-	    ((in << 8u) & 0xff0000u) | ((in << 24u) & 0xff000000u);
-#endif
+	if (testutil_is_little_endian()) {
+		in = ((in >> 24u) & 0xffu) | ((in >> 8u) & 0xff00u) |
+		    ((in << 8u) & 0xff0000u) | ((in << 24u) & 0xff000000u);
+	}
 	return (in);
 }
 
