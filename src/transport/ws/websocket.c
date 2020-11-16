@@ -348,7 +348,7 @@ wstran_pipe_getopt(
 	ws_pipe *p = arg;
 	int      rv;
 
-	if ((rv = nni_stream_getx(p->ws, name, buf, szp, t)) == NNG_ENOTSUP) {
+	if ((rv = nni_stream_get(p->ws, name, buf, szp, t)) == NNG_ENOTSUP) {
 		rv = nni_getopt(ws_pipe_options, name, p, buf, szp, t);
 	}
 	return (rv);
@@ -573,7 +573,7 @@ wstran_dialer_getopt(
 	ws_dialer *d = arg;
 	int        rv;
 
-	rv = nni_stream_dialer_getx(d->dialer, name, buf, szp, t);
+	rv = nni_stream_dialer_get(d->dialer, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_getopt(wstran_ep_opts, name, d, buf, szp, t);
 	}
@@ -587,7 +587,7 @@ wstran_dialer_setopt(
 	ws_dialer *d = arg;
 	int        rv;
 
-	rv = nni_stream_dialer_setx(d->dialer, name, buf, sz, t);
+	rv = nni_stream_dialer_set(d->dialer, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(wstran_ep_opts, name, d, buf, sz, t);
 	}
@@ -595,13 +595,13 @@ wstran_dialer_setopt(
 }
 
 static int
-wstran_listener_getopt(
+wstran_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ws_listener *l = arg;
 	int          rv;
 
-	rv = nni_stream_listener_getx(l->listener, name, buf, szp, t);
+	rv = nni_stream_listener_get(l->listener, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_getopt(wstran_ep_opts, name, l, buf, szp, t);
 	}
@@ -609,32 +609,15 @@ wstran_listener_getopt(
 }
 
 static int
-wstran_listener_setopt(
+wstran_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	ws_listener *l = arg;
 	int          rv;
 
-	rv = nni_stream_listener_setx(l->listener, name, buf, sz, t);
+	rv = nni_stream_listener_set(l->listener, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(wstran_ep_opts, name, l, buf, sz, t);
-	}
-	return (rv);
-}
-
-static nni_chkoption wstran_check_opts[] = {
-	{
-	    .o_name = NULL,
-	},
-};
-
-static int
-wstran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
-{
-	int rv;
-	rv = nni_chkopt(wstran_check_opts, name, buf, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_checkopt("ws", name, buf, sz, t);
 	}
 	return (rv);
 }
@@ -654,8 +637,8 @@ static nni_tran_listener_ops ws_listener_ops = {
 	.l_bind   = ws_listener_bind,
 	.l_accept = wstran_listener_accept,
 	.l_close  = wstran_listener_close,
-	.l_setopt = wstran_listener_setopt,
-	.l_getopt = wstran_listener_getopt,
+	.l_setopt = wstran_listener_set,
+	.l_getopt = wstran_listener_get,
 };
 
 static nni_tran ws_tran = {
@@ -666,7 +649,6 @@ static nni_tran ws_tran = {
 	.tran_pipe     = &ws_pipe_ops,
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
-	.tran_checkopt = wstran_checkopt,
 };
 
 static nni_tran ws4_tran = {
@@ -677,7 +659,6 @@ static nni_tran ws4_tran = {
 	.tran_pipe     = &ws_pipe_ops,
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
-	.tran_checkopt = wstran_checkopt,
 };
 
 static nni_tran ws6_tran = {
@@ -688,7 +669,6 @@ static nni_tran ws6_tran = {
 	.tran_pipe     = &ws_pipe_ops,
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
-	.tran_checkopt = wstran_checkopt,
 };
 
 int
@@ -714,7 +694,6 @@ static nni_tran wss_tran = {
 	.tran_pipe     = &ws_pipe_ops,
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
-	.tran_checkopt = wstran_checkopt,
 };
 
 static nni_tran wss4_tran = {
@@ -725,7 +704,6 @@ static nni_tran wss4_tran = {
 	.tran_pipe     = &ws_pipe_ops,
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
-	.tran_checkopt = wstran_checkopt,
 };
 
 static nni_tran wss6_tran = {
@@ -736,7 +714,6 @@ static nni_tran wss6_tran = {
 	.tran_pipe     = &ws_pipe_ops,
 	.tran_init     = wstran_init,
 	.tran_fini     = wstran_fini,
-	.tran_checkopt = wstran_checkopt,
 };
 
 int

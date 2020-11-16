@@ -1,6 +1,6 @@
 = nng_dialer_get(3)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -47,8 +47,7 @@ the xref:nng_dialer.5.adoc[dialer] _d_.
 The actual options that may be retrieved in this way
 vary, and many are documented in xref:nng_options.5.adoc[nng_options(5)].
 
-Additionally some transport-specific options and protocol-specific options
-are documented with the transports and protocols themselves.
+Additionally some transport-specific options are documented with the transports themselves.
 
 === Forms
 

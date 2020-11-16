@@ -186,19 +186,19 @@ tcp_dialer_dial(void *arg, nng_aio *aio)
 }
 
 static int
-tcp_dialer_getx(
+tcp_dialer_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcp_dialer *d = arg;
-	return (nni_tcp_dialer_getopt(d->d, name, buf, szp, t));
+	return (nni_tcp_dialer_get(d->d, name, buf, szp, t));
 }
 
 static int
-tcp_dialer_setx(
+tcp_dialer_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tcp_dialer *d = arg;
-	return (nni_tcp_dialer_setopt(d->d, name, buf, sz, t));
+	return (nni_tcp_dialer_set(d->d, name, buf, sz, t));
 }
 
 static int
@@ -224,8 +224,8 @@ tcp_dialer_alloc(tcp_dialer **dp)
 	d->ops.sd_close = tcp_dialer_close;
 	d->ops.sd_free  = tcp_dialer_free;
 	d->ops.sd_dial  = tcp_dialer_dial;
-	d->ops.sd_getx  = tcp_dialer_getx;
-	d->ops.sd_setx  = tcp_dialer_setx;
+	d->ops.sd_get   = tcp_dialer_get;
+	d->ops.sd_set   = tcp_dialer_set;
 
 	*dp = d;
 	return (0);
@@ -320,7 +320,7 @@ tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 	uint8_t *     paddr;
 
 	sz = sizeof(sa);
-	rv = nni_tcp_listener_getopt(
+	rv = nni_tcp_listener_get(
 	    l->l, NNG_OPT_LOCADDR, &sa, &sz, NNI_TYPE_SOCKADDR);
 	if (rv != 0) {
 		return (rv);
@@ -349,22 +349,22 @@ tcp_listener_get_port(void *arg, void *buf, size_t *szp, nni_type t)
 }
 
 static int
-tcp_listener_getx(
+tcp_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcp_listener *l = arg;
 	if (strcmp(name, NNG_OPT_TCP_BOUND_PORT) == 0) {
 		return (tcp_listener_get_port(l, buf, szp, t));
 	}
-	return (nni_tcp_listener_getopt(l->l, name, buf, szp, t));
+	return (nni_tcp_listener_get(l->l, name, buf, szp, t));
 }
 
 static int
-tcp_listener_setx(
+tcp_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tcp_listener *l = arg;
-	return (nni_tcp_listener_setopt(l->l, name, buf, sz, t));
+	return (nni_tcp_listener_set(l->l, name, buf, sz, t));
 }
 
 static int
@@ -386,8 +386,8 @@ tcp_listener_alloc_addr(nng_stream_listener **lp, const nng_sockaddr *sa)
 	l->ops.sl_close  = tcp_listener_close;
 	l->ops.sl_listen = tcp_listener_listen;
 	l->ops.sl_accept = tcp_listener_accept;
-	l->ops.sl_getx   = tcp_listener_getx;
-	l->ops.sl_setx   = tcp_listener_setx;
+	l->ops.sl_get    = tcp_listener_get;
+	l->ops.sl_set    = tcp_listener_set;
 
 	*lp = (void *) l;
 	return (0);
@@ -433,36 +433,4 @@ nni_tcp_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	nni_aio_free(aio);
 
 	return (tcp_listener_alloc_addr(lp, &sa));
-}
-
-static int
-tcp_check_bool(const void *val, size_t sz, nni_type t)
-{
-	return (nni_copyin_bool(NULL, val, sz, t));
-}
-
-static const nni_chkoption tcp_chkopts[] = {
-	{
-	    .o_name  = NNG_OPT_TCP_KEEPALIVE,
-	    .o_check = tcp_check_bool,
-	},
-	{
-	    .o_name  = NNG_OPT_TCP_NODELAY,
-	    .o_check = tcp_check_bool,
-	},
-	{
-	    .o_name = NNG_OPT_TCP_BOUND_PORT,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
-
-int
-nni_tcp_checkopt(const char *name, const void *data, size_t sz, nni_type t)
-{
-	return (nni_chkopt(tcp_chkopts, name, data, sz, t));
 }

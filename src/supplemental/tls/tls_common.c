@@ -188,13 +188,18 @@ tls_dialer_dial(void *arg, nng_aio *aio)
 static int
 tls_check_string(const void *v, size_t sz, nni_opt_type t)
 {
-	if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
+	switch (t) {
+	case NNI_TYPE_OPAQUE:
+		if (nni_strnlen(v, sz) >= sz) {
+			return (NNG_EINVAL);
+		}
+		return (0);
+	case NNI_TYPE_STRING:
+		// Caller is assumed to pass a good string.
+		return (0);
+	default:
 		return (NNG_EBADTYPE);
 	}
-	if (nni_strnlen(v, sz) >= sz) {
-		return (NNG_EINVAL);
-	}
-	return (0);
 }
 
 static int
@@ -326,13 +331,13 @@ static const nni_option tls_dialer_opts[] = {
 };
 
 static int
-tls_dialer_getx(
+tls_dialer_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tls_dialer *d = arg;
 	int         rv;
 
-	rv = nni_stream_dialer_getx(d->d, name, buf, szp, t);
+	rv = nni_stream_dialer_get(d->d, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_getopt(tls_dialer_opts, name, d, buf, szp, t);
 	}
@@ -340,13 +345,13 @@ tls_dialer_getx(
 }
 
 static int
-tls_dialer_setx(
+tls_dialer_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tls_dialer *d = arg;
 	int         rv;
 
-	rv = nni_stream_dialer_setx(d->d, name, buf, sz, t);
+	rv = nni_stream_dialer_set(d->d, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(tls_dialer_opts, name, d, buf, sz, t);
 	}
@@ -391,8 +396,8 @@ nni_tls_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->ops.sd_close = tls_dialer_close;
 	d->ops.sd_free  = tls_dialer_free;
 	d->ops.sd_dial  = tls_dialer_dial;
-	d->ops.sd_getx  = tls_dialer_getx;
-	d->ops.sd_setx  = tls_dialer_setx;
+	d->ops.sd_get   = tls_dialer_get;
+	d->ops.sd_set   = tls_dialer_set;
 	*dp             = (void *) d;
 	return (rv);
 }
@@ -586,13 +591,13 @@ static const nni_option tls_listener_opts[] = {
 };
 
 static int
-tls_listener_getx(
+tls_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	int           rv;
 	tls_listener *l = arg;
 
-	rv = nni_stream_listener_getx(l->l, name, buf, szp, t);
+	rv = nni_stream_listener_get(l->l, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_getopt(tls_listener_opts, name, l, buf, szp, t);
 	}
@@ -600,13 +605,13 @@ tls_listener_getx(
 }
 
 static int
-tls_listener_setx(
+tls_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int           rv;
 	tls_listener *l = arg;
 
-	rv = nni_stream_listener_setx(l->l, name, buf, sz, t);
+	rv = nni_stream_listener_set(l->l, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(tls_listener_opts, name, l, buf, sz, t);
 	}
@@ -649,78 +654,10 @@ nni_tls_listener_alloc(nng_stream_listener **lp, const nng_url *url)
 	l->ops.sl_close  = tls_listener_close;
 	l->ops.sl_accept = tls_listener_accept;
 	l->ops.sl_listen = tls_listener_listen;
-	l->ops.sl_getx   = tls_listener_getx;
-	l->ops.sl_setx   = tls_listener_setx;
+	l->ops.sl_get    = tls_listener_get;
+	l->ops.sl_set    = tls_listener_set;
 	*lp              = (void *) l;
 	return (0);
-}
-
-// The following checks exist for socket configuration, when we need to
-// configure an option on a socket before any transport is configured
-// underneath.
-
-static int
-tls_check_config(const void *buf, size_t sz, nni_type t)
-{
-	int             rv;
-	nng_tls_config *cfg;
-
-	if ((rv = nni_copyin_ptr((void **) &cfg, buf, sz, t)) != 0) {
-		return (rv);
-	}
-	if (cfg == NULL) {
-		return (NNG_EINVAL);
-	}
-	return (0);
-}
-
-static int
-tls_check_auth_mode(const void *buf, size_t sz, nni_type t)
-{
-	int mode;
-	int rv;
-
-	rv = nni_copyin_int(&mode, buf, sz, NNG_TLS_AUTH_MODE_NONE,
-	    NNG_TLS_AUTH_MODE_REQUIRED, t);
-	return (rv);
-}
-
-static const nni_chkoption tls_check_opts[] = {
-	{
-	    .o_name  = NNG_OPT_TLS_CONFIG,
-	    .o_check = tls_check_config,
-	},
-	{
-	    .o_name  = NNG_OPT_TLS_SERVER_NAME,
-	    .o_check = tls_check_string,
-	},
-	{
-	    .o_name  = NNG_OPT_TLS_CA_FILE,
-	    .o_check = tls_check_string,
-	},
-	{
-	    .o_name  = NNG_OPT_TLS_CERT_KEY_FILE,
-	    .o_check = tls_check_string,
-	},
-	{
-	    .o_name  = NNG_OPT_TLS_AUTH_MODE,
-	    .o_check = tls_check_auth_mode,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
-
-int
-nni_tls_checkopt(const char *name, const void *data, size_t sz, nni_type t)
-{
-	int rv;
-
-	rv = nni_chkopt(tls_check_opts, name, data, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_checkopt("tcp", name, data, sz, t);
-	}
-	return (rv);
 }
 
 static void
@@ -826,7 +763,7 @@ static const nni_option tls_options[] = {
 };
 
 static int
-tls_setx(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
+tls_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	tls_conn *  conn = arg;
 	int         rv;
@@ -834,19 +771,19 @@ tls_setx(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 
 	tcp = (conn != NULL) ? conn->tcp : NULL;
 
-	if ((rv = nni_stream_setx(tcp, name, buf, sz, t)) != NNG_ENOTSUP) {
+	if ((rv = nni_stream_set(tcp, name, buf, sz, t)) != NNG_ENOTSUP) {
 		return (rv);
 	}
 	return (nni_setopt(tls_options, name, conn, buf, sz, t));
 }
 
 static int
-tls_getx(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+tls_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tls_conn *conn = arg;
 	int       rv;
 
-	if ((rv = nni_stream_getx(conn->tcp, name, buf, szp, t)) !=
+	if ((rv = nni_stream_get(conn->tcp, name, buf, szp, t)) !=
 	    NNG_ENOTSUP) {
 		return (rv);
 	}
@@ -893,8 +830,8 @@ tls_alloc(tls_conn **conn_p, nng_tls_config *cfg, nng_aio *user_aio)
 	conn->stream.s_free  = tls_free;
 	conn->stream.s_send  = tls_send;
 	conn->stream.s_recv  = tls_recv;
-	conn->stream.s_getx  = tls_getx;
-	conn->stream.s_setx  = tls_setx;
+	conn->stream.s_get   = tls_get;
+	conn->stream.s_set   = tls_set;
 
 	nng_tls_config_hold(cfg);
 	*conn_p = conn;

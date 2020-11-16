@@ -196,6 +196,14 @@ per-dialer or per-listener basis.
 IMPORTANT: Applications on hostile networks should set this to a non-zero
 value to prevent denial-of-service attacks.
 +
+IMPORTANT: This option should be set before any listeners or dialers are added.
+Ideally this option should be set on specific dialers or listeners; setting it
+on the socket globally is deprecated behavior, and might not work in a future release,
+or might only work for endpoints that have not yet been created.
+(Maximum receive sizes might be negotiated during connection establishment for
+future transports, which means that the option needs to be set before any connections
+are established.)
++
 NOTE: Some transports may have further message size restrictions.
 
 [[NNG_OPT_RECVTIMEO]]

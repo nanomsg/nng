@@ -280,8 +280,8 @@ extern int nni_tcp_dialer_init(nni_tcp_dialer **);
 extern void nni_tcp_dialer_fini(nni_tcp_dialer *);
 
 // nni_tcp_dialer_close closes the dialer.
-// Further operations on it should return NNG_ECLOSED.  Any in-progress
-// connection will be aborted.
+// Further operations on it should return NNG_ECLOSED.
+// Any in-progress connection will be aborted.
 extern void nni_tcp_dialer_close(nni_tcp_dialer *);
 
 // nni_tcp_dial attempts to create an outgoing connection,
@@ -289,16 +289,12 @@ extern void nni_tcp_dialer_close(nni_tcp_dialer *);
 // output will be an nni_tcp_conn * associated with the remote server.
 extern void nni_tcp_dial(nni_tcp_dialer *, const nng_sockaddr *, nni_aio *);
 
-// nni_tcp_dialer_getopt gets an option from the dialer.
-extern int nni_tcp_dialer_setopt(
+// nni_tcp_dialer_set sets an option on the dialer.
+extern int nni_tcp_dialer_set(
     nni_tcp_dialer *, const char *, const void *, size_t, nni_type);
 
-// nni_tcp_dialer_setopt sets an option on the dialer. There is special
-// support for NNG_OPT_LOCADDR, which will be the source address (if legal)
-// for new connections, except that the port will be ignored.  The
-// NNG_OPT_TCP_NODELAY and NNG_OPT_TCP_KEEPALIVE options work to set the
-// initial values of those options on newly created connections.
-extern int nni_tcp_dialer_getopt(
+// nni_tcp_dialer_get gets an option on the dialer.
+extern int nni_tcp_dialer_get(
     nni_tcp_dialer *, const char *, void *, size_t *, nni_type);
 
 // nni_tcp_listener_init creates a new listener object, unbound.
@@ -321,14 +317,14 @@ extern int nni_tcp_listener_listen(nni_tcp_listener *, const nni_sockaddr *);
 // associated with the remote peer.
 extern void nni_tcp_listener_accept(nni_tcp_listener *, nni_aio *);
 
-// nni_tcp_listener_getopt gets an option from the listener.
-extern int nni_tcp_listener_setopt(
+// nni_tcp_listener_set sets an option on the listener.
+extern int nni_tcp_listener_set(
     nni_tcp_listener *, const char *, const void *, size_t, nni_type);
 
-// nni_tcp_listener_setopt sets an option on the listener.  The most common
+// nni_tcp_listener_get gets an option from the listener.  The most common
 // use for this is to retrieve the setting of the NNG_OPT_TCP_LOCADDR
 // address after binding to wild card port (0).
-extern int nni_tcp_listener_getopt(
+extern int nni_tcp_listener_get(
     nni_tcp_listener *, const char *, void *, size_t *, nni_type);
 
 // nni_resolv_ip resolves a DNS host and service name asynchronously.
@@ -339,8 +335,8 @@ extern int nni_tcp_listener_getopt(
 // connect().  The host part may be NULL only if passive is true.
 // Symbolic service names will be looked up assuming SOCK_STREAM, so
 // they may not work with UDP.
-extern void nni_resolv_ip(const char *, const char *, int, bool,
-    nng_sockaddr *sa, nni_aio *);
+extern void nni_resolv_ip(
+    const char *, const char *, int, bool, nng_sockaddr *sa, nni_aio *);
 
 // nni_parse_ip parses an IP address, without a port.
 extern int nni_parse_ip(const char *, nng_sockaddr *);
@@ -361,7 +357,6 @@ typedef struct nni_ipc_listener nni_ipc_listener;
 // be stubs that just return NNG_ENOTSUP.
 extern int nni_ipc_dialer_alloc(nng_stream_dialer **, const nng_url *);
 extern int nni_ipc_listener_alloc(nng_stream_listener **, const nng_url *);
-extern int nni_ipc_checkopt(const char *, const void *, size_t, nni_type);
 
 //
 // UDP support. UDP is not connection oriented, and only has the notion

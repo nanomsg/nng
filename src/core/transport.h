@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -29,7 +29,8 @@
 #define NNI_TRANSPORT_V4 0x54520004
 #define NNI_TRANSPORT_V5 0x54520005
 #define NNI_TRANSPORT_V6 0x54220006
-#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V6
+#define NNI_TRANSPORT_V7 0x54220006
+#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V7
 
 // Endpoint operations are called by the socket in a
 // protocol-independent fashion.  The socket makes individual calls,
@@ -183,18 +184,11 @@ struct nni_tran {
 	// tran_fini, if not NULL, is called during library deinitialization.
 	// It should release any global resources, close any open files, etc.
 	void (*tran_fini)(void);
-
-	// tran_chkopt is used to check option validity; this is used as
-	// an initial filter on the data, without actually setting anything.
-	// This can be useful, for example, before any transports are
-	// configured on the socket.
-	int (*tran_checkopt)(const char *, const void *, size_t, nni_type);
 };
 
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
 extern nni_tran *nni_tran_find(nni_url *);
-extern int       nni_tran_chkopt(const char *, const void *, size_t, int);
 extern int       nni_tran_sys_init(void);
 extern void      nni_tran_sys_fini(void);
 extern int       nni_tran_register(const nni_tran *);

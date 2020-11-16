@@ -654,36 +654,6 @@ inproc_ep_setopt(
 	return (nni_setopt(inproc_ep_options, name, arg, v, sz, t));
 }
 
-static int
-inproc_check_recvmaxsz(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
-static nni_chkoption inproc_checkopts[] = {
-	{
-	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = inproc_check_recvmaxsz,
-	},
-	{
-	    .o_name = NNG_OPT_LOCADDR,
-	},
-	{
-	    .o_name = NNG_OPT_REMADDR,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
-
-static int
-inproc_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
-{
-	int rv;
-	rv = nni_chkopt(inproc_checkopts, name, buf, sz, t);
-	return (rv);
-}
-
 static nni_tran_dialer_ops inproc_dialer_ops = {
 	.d_init    = inproc_dialer_init,
 	.d_fini    = inproc_ep_fini,
@@ -713,7 +683,6 @@ struct nni_tran nni_inproc_tran = {
 	.tran_pipe     = &inproc_pipe_ops,
 	.tran_init     = inproc_init,
 	.tran_fini     = inproc_fini,
-	.tran_checkopt = inproc_checkopt,
 };
 
 int

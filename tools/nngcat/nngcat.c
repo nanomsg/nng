@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Lager Data, Inc. <support@lagerdata.com>
 //
@@ -311,7 +311,7 @@ static void
 loadfile(const char *path, void **datap, size_t *lenp)
 {
 	FILE * f;
-	size_t total_read = 0;
+	size_t total_read      = 0;
 	size_t allocation_size = BUFSIZ;
 	char * fdata;
 	char * realloc_result;
@@ -320,7 +320,8 @@ loadfile(const char *path, void **datap, size_t *lenp)
 		f = stdin;
 	} else {
 		if ((f = fopen(path, "rb")) == NULL) {
-			fatal("Cannot open file %s: %s", path, strerror(errno));
+			fatal(
+			    "Cannot open file %s: %s", path, strerror(errno));
 		}
 	}
 
@@ -329,12 +330,14 @@ loadfile(const char *path, void **datap, size_t *lenp)
 	}
 
 	while (1) {
-		total_read += fread(fdata + total_read, 1, allocation_size - total_read, f);
+		total_read += fread(
+		    fdata + total_read, 1, allocation_size - total_read, f);
 		if (ferror(f)) {
 			if (errno == EINTR) {
 				continue;
 			}
-			fatal("Read from %s failed: %s", path, strerror(errno));
+			fatal(
+			    "Read from %s failed: %s", path, strerror(errno));
 		}
 		if (feof(f)) {
 			break;
@@ -344,7 +347,8 @@ loadfile(const char *path, void **datap, size_t *lenp)
 				fatal("Out of memory.");
 			}
 			allocation_size *= 2;
-			if ((realloc_result = realloc(fdata, allocation_size + 1)) == NULL) {
+			if ((realloc_result = realloc(
+			         fdata, allocation_size + 1)) == NULL) {
 				free(fdata);
 				fatal("Out of memory.");
 			}
@@ -355,8 +359,8 @@ loadfile(const char *path, void **datap, size_t *lenp)
 		fclose(f);
 	}
 	fdata[total_read] = '\0';
-	*datap = fdata;
-	*lenp = total_read;
+	*datap            = fdata;
+	*lenp             = total_read;
 }
 
 static void
@@ -657,7 +661,8 @@ sendrecv(nng_socket sock)
 			if ((recvtimeo >= 0) && (expire > recvtimeo)) {
 				expire = recvtimeo;
 			}
-			rv = nng_setopt_ms(sock, NNG_OPT_RECVTIMEO, expire);
+			rv =
+			    nng_socket_set_ms(sock, NNG_OPT_RECVTIMEO, expire);
 			if (rv != 0) {
 				fatal("Cannot set recv timeout: %s",
 				    nng_strerror(rv));
@@ -887,7 +892,7 @@ main(int ac, char **av)
 		fatal("Option %s requires argument.", av[idx]);
 		break;
 	default:
-	        break;
+		break;
 	}
 
 	if (addrs == NULL) {
@@ -969,8 +974,8 @@ main(int ac, char **av)
 		}
 		break;
 	default:
-	        // Will be caught in next switch statement.
-	        break;
+		// Will be caught in next switch statement.
+		break;
 	}
 
 	switch (proto) {
@@ -1061,7 +1066,7 @@ main(int ac, char **av)
 	}
 
 	for (struct topic *t = topics; t != NULL; t = t->next) {
-		rv = nng_setopt(
+		rv = nng_socket_set(
 		    sock, NNG_OPT_SUB_SUBSCRIBE, t->val, strlen(t->val));
 		if (rv != 0) {
 			fatal("Unable to subscribe to topic %s: %s", t->val,
@@ -1070,16 +1075,18 @@ main(int ac, char **av)
 	}
 
 	if ((sendtimeo > 0) &&
-	    ((rv = nng_setopt_ms(sock, NNG_OPT_SENDTIMEO, sendtimeo)) != 0)) {
+	    ((rv = nng_socket_set_ms(sock, NNG_OPT_SENDTIMEO, sendtimeo)) !=
+	        0)) {
 		fatal("Unable to set send timeout: %s", nng_strerror(rv));
 	}
 	if ((recvtimeo > 0) &&
-	    ((rv = nng_setopt_ms(sock, NNG_OPT_RECVTIMEO, recvtimeo)) != 0)) {
+	    ((rv = nng_socket_set_ms(sock, NNG_OPT_RECVTIMEO, recvtimeo)) !=
+	        0)) {
 		fatal("Unable to set send timeout: %s", nng_strerror(rv));
 	}
 
 	if ((recvmaxsz >= 0) &&
-	    ((rv = nng_setopt_size(sock, NNG_OPT_RECVMAXSZ, recvmaxsz)) !=
+	    ((rv = nng_socket_set_size(sock, NNG_OPT_RECVMAXSZ, recvmaxsz)) !=
 	        0)) {
 		fatal("Unable to set max receive size: %s", nng_strerror(rv));
 	}
@@ -1107,7 +1114,7 @@ main(int ac, char **av)
 				    nng_strerror(rv));
 			}
 			if (zthome != NULL) {
-				rv = nng_dialer_setopt(d, NNG_OPT_ZT_HOME,
+				rv = nng_dialer_set(d, NNG_OPT_ZT_HOME,
 				    zthome, strlen(zthome) + 1);
 				if ((rv != 0) && (rv != NNG_ENOTSUP)) {
 					fatal("Unable to set ZT home: %s",
@@ -1143,7 +1150,7 @@ main(int ac, char **av)
 				    nng_strerror(rv));
 			}
 			if (zthome != NULL) {
-				rv = nng_listener_setopt(l, NNG_OPT_ZT_HOME,
+				rv = nng_listener_set(l, NNG_OPT_ZT_HOME,
 				    zthome, strlen(zthome) + 1);
 				if ((rv != 0) && (rv != NNG_ENOTSUP)) {
 					fatal("Unable to set ZT home: %s",

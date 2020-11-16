@@ -1,6 +1,6 @@
 = nng_socket_set(3)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -45,13 +45,17 @@ The actual options that may be configured in this way vary, and are
 specified by _opt_.
 A number of them are documented in xref:nng_options.5.adoc[nng_options(5)].
 
-Additionally some transport-specific and protocol-specific options are
-documented with the transports and protocols themselves.
+Protocol-specific options are documented with the protocol in question.
+
+IMPORTANT: Access to transport options via this function is deprecated, and may be
+removed from a future release.  Applications should instead make use of
+xref:nng_dialer_set.3.adoc[nng_dialer_get] or
+xref:nng_listener_set.3.adoc[nng_listener_get] for specific dialers or listeners.
 
 === Forms
 
 The details of the type, size, and semantics of the option will depend
-on the actual option, and will be documented with the option itself.
+on the actual option, and is documented with the option itself.
 
 `nng_socket_set()`::
 This function is untyped, and can be used to configure any arbitrary data.

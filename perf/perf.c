@@ -554,9 +554,9 @@ throughput_server(const char *addr, size_t msgsize, int count)
 	if ((rv = nng_pair_open(&s)) != 0) {
 		die("nng_socket: %s", nng_strerror(rv));
 	}
-	rv = nng_setopt_int(s, NNG_OPT_RECVBUF, 128);
+	rv = nng_socket_set_int(s, NNG_OPT_RECVBUF, 128);
 	if (rv != 0) {
-		die("nng_setopt(nng_opt_recvbuf): %s", nng_strerror(rv));
+		die("nng_socket_set(nng_opt_recvbuf): %s", nng_strerror(rv));
 	}
 
 	// XXX: set no delay
@@ -617,14 +617,14 @@ throughput_client(const char *addr, size_t msgsize, int count)
 	// XXX: set no delay
 	// XXX: other options (TLS in the future?, Linger?)
 
-	rv = nng_setopt_int(s, NNG_OPT_SENDBUF, 128);
+	rv = nng_socket_set_int(s, NNG_OPT_SENDBUF, 128);
 	if (rv != 0) {
-		die("nng_setopt(nng_opt_sendbuf): %s", nng_strerror(rv));
+		die("nng_socket_set(nng_opt_sendbuf): %s", nng_strerror(rv));
 	}
 
-	rv = nng_setopt_ms(s, NNG_OPT_RECVTIMEO, 5000);
+	rv = nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 5000);
 	if (rv != 0) {
-		die("nng_setopt(nng_opt_recvtimeo): %s", nng_strerror(rv));
+		die("nng_socket_set(nng_opt_recvtimeo): %s", nng_strerror(rv));
 	}
 
 	if ((rv = nng_dial(s, addr, NULL, 0)) != 0) {

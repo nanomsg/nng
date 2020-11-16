@@ -92,7 +92,6 @@ test_readonly_options(void)
 	TEST_CHECK(nng_pair1_open(&s1) == 0);
 	TEST_CHECK(nng_setopt_int(s1, NNG_OPT_RECVFD, 0) == NNG_EREADONLY);
 	TEST_CHECK(nng_setopt_int(s1, NNG_OPT_SENDFD, 0) == NNG_EREADONLY);
-	TEST_CHECK(nng_setopt(s1, NNG_OPT_LOCADDR, "a", 1) == NNG_EREADONLY);
 	TEST_CHECK(nng_close(s1) == 0);
 }
 

@@ -1869,7 +1869,7 @@ int
 nni_http_server_set_tls(nni_http_server *s, nng_tls_config *tls)
 {
 	int rv;
-	rv = nni_stream_listener_setx(s->listener, NNG_OPT_TLS_CONFIG, &tls,
+	rv = nni_stream_listener_set(s->listener, NNG_OPT_TLS_CONFIG, &tls,
 	    sizeof(tls), NNI_TYPE_POINTER);
 	return (rv);
 }
@@ -1879,24 +1879,24 @@ nni_http_server_get_tls(nni_http_server *s, nng_tls_config **tlsp)
 {
 	size_t sz = sizeof(*tlsp);
 	int    rv;
-	rv = nni_stream_listener_getx(
+	rv = nni_stream_listener_get(
 	    s->listener, NNG_OPT_TLS_CONFIG, tlsp, &sz, NNI_TYPE_POINTER);
 	return (rv);
 }
 
 int
-nni_http_server_setx(nni_http_server *s, const char *name, const void *buf,
+nni_http_server_set(nni_http_server *s, const char *name, const void *buf,
     size_t sz, nni_type t)
 {
 	// We have no local options, but we just pass them straight through.
-	return (nni_stream_listener_setx(s->listener, name, buf, sz, t));
+	return (nni_stream_listener_set(s->listener, name, buf, sz, t));
 }
 
 int
-nni_http_server_getx(
+nni_http_server_get(
     nni_http_server *s, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	return (nni_stream_listener_getx(s->listener, name, buf, szp, t));
+	return (nni_stream_listener_get(s->listener, name, buf, szp, t));
 }
 
 void

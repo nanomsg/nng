@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -397,14 +397,14 @@ static const nni_option tcp_dialer_options[] = {
 };
 
 int
-nni_tcp_dialer_getopt(
+nni_tcp_dialer_get(
     nni_tcp_dialer *d, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	return (nni_getopt(tcp_dialer_options, name, d, buf, szp, t));
 }
 
 int
-nni_tcp_dialer_setopt(nni_tcp_dialer *d, const char *name, const void *buf,
+nni_tcp_dialer_set(nni_tcp_dialer *d, const char *name, const void *buf,
     size_t sz, nni_type t)
 {
 	return (nni_setopt(tcp_dialer_options, name, d, buf, sz, t));

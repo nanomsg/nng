@@ -386,14 +386,14 @@ static const nni_option tcp_options[] = {
 };
 
 static int
-tcp_getx(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+tcp_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	nni_tcp_conn *c = arg;
 	return (nni_getopt(tcp_options, name, c, buf, szp, t));
 }
 
 static int
-tcp_setx(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
+tcp_set(void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	nni_tcp_conn *c = arg;
 	return (nni_setopt(tcp_options, name, c, buf, sz, t));
@@ -448,8 +448,8 @@ nni_win_tcp_init(nni_tcp_conn **connp, SOCKET s)
 	c->ops.s_free  = tcp_free;
 	c->ops.s_send  = tcp_send;
 	c->ops.s_recv  = tcp_recv;
-	c->ops.s_getx  = tcp_getx;
-	c->ops.s_setx  = tcp_setx;
+	c->ops.s_get   = tcp_get;
+	c->ops.s_set   = tcp_set;
 
 	if (((rv = nni_win_io_init(&c->recv_io, tcp_recv_cb, c)) != 0) ||
 	    ((rv = nni_win_io_init(&c->send_io, tcp_send_cb, c)) != 0) ||

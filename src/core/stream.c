@@ -23,90 +23,76 @@ static struct {
 	const char *scheme;
 	int (*dialer_alloc)(nng_stream_dialer **, const nng_url *);
 	int (*listener_alloc)(nng_stream_listener **, const nng_url *);
-	int (*checkopt)(const char *, const void *, size_t, nni_type);
 
 } stream_drivers[] = {
 	{
 	    .scheme         = "ipc",
 	    .dialer_alloc   = nni_ipc_dialer_alloc,
 	    .listener_alloc = nni_ipc_listener_alloc,
-	    .checkopt       = nni_ipc_checkopt,
 	},
 #ifdef NNG_PLATFORM_POSIX
 	{
 	    .scheme         = "unix",
 	    .dialer_alloc   = nni_ipc_dialer_alloc,
 	    .listener_alloc = nni_ipc_listener_alloc,
-	    .checkopt       = nni_ipc_checkopt,
 	},
 #endif
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
 	{
-            .scheme         = "abstract",
-            .dialer_alloc   = nni_ipc_dialer_alloc,
-            .listener_alloc = nni_ipc_listener_alloc,
-            .checkopt       = nni_ipc_checkopt,
-        },
+	    .scheme         = "abstract",
+	    .dialer_alloc   = nni_ipc_dialer_alloc,
+	    .listener_alloc = nni_ipc_listener_alloc,
+	},
 #endif
-        {
+	{
 	    .scheme         = "tcp",
 	    .dialer_alloc   = nni_tcp_dialer_alloc,
 	    .listener_alloc = nni_tcp_listener_alloc,
-	    .checkopt       = nni_tcp_checkopt,
 	},
 	{
 	    .scheme         = "tcp4",
 	    .dialer_alloc   = nni_tcp_dialer_alloc,
 	    .listener_alloc = nni_tcp_listener_alloc,
-	    .checkopt       = nni_tcp_checkopt,
 	},
 	{
 	    .scheme         = "tcp6",
 	    .dialer_alloc   = nni_tcp_dialer_alloc,
 	    .listener_alloc = nni_tcp_listener_alloc,
-	    .checkopt       = nni_tcp_checkopt,
 	},
 	{
 	    .scheme         = "tls+tcp",
 	    .dialer_alloc   = nni_tls_dialer_alloc,
 	    .listener_alloc = nni_tls_listener_alloc,
-	    .checkopt       = nni_tls_checkopt,
 	},
 	{
 	    .scheme         = "tls+tcp4",
 	    .dialer_alloc   = nni_tls_dialer_alloc,
 	    .listener_alloc = nni_tls_listener_alloc,
-	    .checkopt       = nni_tls_checkopt,
 	},
 	{
 	    .scheme         = "tls+tcp6",
 	    .dialer_alloc   = nni_tls_dialer_alloc,
 	    .listener_alloc = nni_tls_listener_alloc,
-	    .checkopt       = nni_tls_checkopt,
 	},
 	{
 	    .scheme         = "ws",
 	    .dialer_alloc   = nni_ws_dialer_alloc,
 	    .listener_alloc = nni_ws_listener_alloc,
-	    .checkopt       = nni_ws_checkopt,
 	},
-        {
-            .scheme         = "ws4",
-            .dialer_alloc   = nni_ws_dialer_alloc,
-            .listener_alloc = nni_ws_listener_alloc,
-            .checkopt       = nni_ws_checkopt,
-        },
-        {
-            .scheme         = "ws6",
-            .dialer_alloc   = nni_ws_dialer_alloc,
-            .listener_alloc = nni_ws_listener_alloc,
-            .checkopt       = nni_ws_checkopt,
-        },
-        {
+	{
+	    .scheme         = "ws4",
+	    .dialer_alloc   = nni_ws_dialer_alloc,
+	    .listener_alloc = nni_ws_listener_alloc,
+	},
+	{
+	    .scheme         = "ws6",
+	    .dialer_alloc   = nni_ws_dialer_alloc,
+	    .listener_alloc = nni_ws_listener_alloc,
+	},
+	{
 	    .scheme         = "wss",
 	    .dialer_alloc   = nni_ws_dialer_alloc,
 	    .listener_alloc = nni_ws_listener_alloc,
-	    .checkopt       = nni_ws_checkopt,
 	},
 	{
 	    .scheme = NULL,
@@ -140,17 +126,17 @@ nng_stream_recv(nng_stream *s, nng_aio *aio)
 }
 
 int
-nni_stream_getx(
+nni_stream_get(
     nng_stream *s, const char *nm, void *data, size_t *szp, nni_type t)
 {
-	return (s->s_getx(s, nm, data, szp, t));
+	return (s->s_get(s, nm, data, szp, t));
 }
 
 int
-nni_stream_setx(
+nni_stream_set(
     nng_stream *s, const char *nm, const void *data, size_t sz, nni_type t)
 {
-	return (s->s_setx(s, nm, data, sz, t));
+	return (s->s_set(s, nm, data, sz, t));
 }
 
 void
@@ -208,17 +194,17 @@ nng_stream_dialer_alloc(nng_stream_dialer **dp, const char *uri)
 }
 
 int
-nni_stream_dialer_getx(
+nni_stream_dialer_get(
     nng_stream_dialer *d, const char *nm, void *data, size_t *szp, nni_type t)
 {
-	return (d->sd_getx(d, nm, data, szp, t));
+	return (d->sd_get(d, nm, data, szp, t));
 }
 
 int
-nni_stream_dialer_setx(nng_stream_dialer *d, const char *nm, const void *data,
+nni_stream_dialer_set(nng_stream_dialer *d, const char *nm, const void *data,
     size_t sz, nni_type t)
 {
-	return (d->sd_setx(d, nm, data, sz, t));
+	return (d->sd_set(d, nm, data, sz, t));
 }
 
 void
@@ -246,17 +232,17 @@ nng_stream_listener_accept(nng_stream_listener *l, nng_aio *aio)
 }
 
 int
-nni_stream_listener_getx(nng_stream_listener *l, const char *nm, void *data,
+nni_stream_listener_get(nng_stream_listener *l, const char *nm, void *data,
     size_t *szp, nni_type t)
 {
-	return (l->sl_getx(l, nm, data, szp, t));
+	return (l->sl_get(l, nm, data, szp, t));
 }
 
 int
-nni_stream_listener_setx(nng_stream_listener *l, const char *nm,
+nni_stream_listener_set(nng_stream_listener *l, const char *nm,
     const void *data, size_t sz, nni_type t)
 {
-	return (l->sl_setx(l, nm, data, sz, t));
+	return (l->sl_set(l, nm, data, sz, t));
 }
 
 int
@@ -294,26 +280,348 @@ nng_stream_listener_alloc(nng_stream_listener **lp, const char *uri)
 	return (rv);
 }
 
+// Public stream options.
+
 int
-nni_stream_checkopt(const char *scheme, const char *name, const void *data,
-    size_t sz, nni_type t)
+nng_stream_get(nng_stream *s, const char *n, void *v, size_t *szp)
 {
-	for (int i = 0; stream_drivers[i].scheme != NULL; i++) {
-		if (strcmp(stream_drivers[i].scheme, scheme) != 0) {
-			continue;
-		}
-		if (stream_drivers[i].checkopt == NULL) {
-			return (NNG_ENOTSUP);
-		}
-		return (stream_drivers[i].checkopt(name, data, sz, t));
-	}
-	return (NNG_ENOTSUP);
+	return (nni_stream_get(s, n, v, szp, NNI_TYPE_OPAQUE));
 }
 
-NNI_DEFGETALL_PTR(stream)
-NNI_DEFGETALL_PTR(stream_dialer)
-NNI_DEFGETALL_PTR(stream_listener)
+int
+nng_stream_get_int(nng_stream *s, const char *n, int *v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_INT32));
+}
 
-NNI_DEFSETALL_PTR(stream)
-NNI_DEFSETALL_PTR(stream_dialer)
-NNI_DEFSETALL_PTR(stream_listener)
+int
+nng_stream_get_bool(nng_stream *s, const char *n, bool *v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_BOOL));
+}
+
+int
+nng_stream_get_size(nng_stream *s, const char *n, size_t *v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_SIZE));
+}
+
+int
+nng_stream_get_uint64(nng_stream *s, const char *n, uint64_t *v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_UINT64));
+}
+
+int
+nng_stream_get_string(nng_stream *s, const char *n, char **v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_STRING));
+}
+
+int
+nng_stream_get_ptr(nng_stream *s, const char *n, void **v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_POINTER));
+}
+
+int
+nng_stream_get_ms(nng_stream *s, const char *n, nng_duration *v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_DURATION));
+}
+
+int
+nng_stream_get_addr(nng_stream *s, const char *n, nng_sockaddr *v)
+{
+	return (nni_stream_get(s, n, v, NULL, NNI_TYPE_SOCKADDR));
+}
+
+int
+nng_stream_dialer_get(
+    nng_stream_dialer *d, const char *n, void *v, size_t *szp)
+{
+	return (nni_stream_dialer_get(d, n, v, szp, NNI_TYPE_OPAQUE));
+}
+
+int
+nng_stream_dialer_get_int(nng_stream_dialer *d, const char *n, int *v)
+{
+	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_INT32));
+}
+
+int
+nng_stream_dialer_get_bool(nng_stream_dialer *d, const char *n, bool *v)
+{
+	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_BOOL));
+}
+
+int
+nng_stream_dialer_get_size(nng_stream_dialer *d, const char *n, size_t *v)
+{
+	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_SIZE));
+}
+
+int
+nng_stream_dialer_get_uint64(nng_stream_dialer *d, const char *n, uint64_t *v)
+{
+	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_UINT64));
+}
+
+int
+nng_stream_dialer_get_string(nng_stream_dialer *d, const char *n, char **v)
+{
+	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_STRING));
+}
+
+int
+nng_stream_dialer_get_ptr(nng_stream_dialer *d, const char *n, void **v)
+{
+	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_POINTER));
+}
+
+int
+nng_stream_dialer_get_ms(nng_stream_dialer *d, const char *n, nng_duration *v)
+{
+	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_DURATION));
+}
+
+int
+nng_stream_dialer_get_addr(
+    nng_stream_dialer *d, const char *n, nng_sockaddr *v)
+{
+	return (nni_stream_dialer_get(d, n, v, NULL, NNI_TYPE_SOCKADDR));
+}
+
+int
+nng_stream_listener_get(
+    nng_stream_listener *l, const char *n, void *v, size_t *szp)
+{
+	return (nni_stream_listener_get(l, n, v, szp, NNI_TYPE_OPAQUE));
+}
+
+int
+nng_stream_listener_get_int(nng_stream_listener *l, const char *n, int *v)
+{
+	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_INT32));
+}
+
+int
+nng_stream_listener_get_bool(nng_stream_listener *l, const char *n, bool *v)
+{
+	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_BOOL));
+}
+
+int
+nng_stream_listener_get_size(nng_stream_listener *l, const char *n, size_t *v)
+{
+	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_SIZE));
+}
+
+int
+nng_stream_listener_get_uint64(
+    nng_stream_listener *l, const char *n, uint64_t *v)
+{
+	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_UINT64));
+}
+
+int
+nng_stream_listener_get_string(nng_stream_listener *l, const char *n, char **v)
+{
+	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_STRING));
+}
+
+int
+nng_stream_listener_get_ptr(nng_stream_listener *l, const char *n, void **v)
+{
+	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_POINTER));
+}
+
+int
+nng_stream_listener_get_ms(
+    nng_stream_listener *l, const char *n, nng_duration *v)
+{
+	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_DURATION));
+}
+
+int
+nng_stream_listener_get_addr(
+    nng_stream_listener *l, const char *n, nng_sockaddr *v)
+{
+	return (nni_stream_listener_get(l, n, v, NULL, NNI_TYPE_SOCKADDR));
+}
+
+int
+nng_stream_set(nng_stream *s, const char *n, const void *v, size_t sz)
+{
+	return (nni_stream_set(s, n, v, sz, NNI_TYPE_OPAQUE));
+}
+
+int
+nng_stream_set_int(nng_stream *s, const char *n, int v)
+{
+	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_INT32));
+}
+
+int
+nng_stream_set_bool(nng_stream *s, const char *n, bool v)
+{
+	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_BOOL));
+}
+
+int
+nng_stream_set_size(nng_stream *s, const char *n, size_t v)
+{
+	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_SIZE));
+}
+
+int
+nng_stream_set_uint64(nng_stream *s, const char *n, uint64_t v)
+{
+	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_UINT64));
+}
+
+int
+nng_stream_set_ms(nng_stream *s, const char *n, nng_duration v)
+{
+	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_DURATION));
+}
+
+int
+nng_stream_set_ptr(nng_stream *s, const char *n, void *v)
+{
+	return (nni_stream_set(s, n, &v, sizeof(v), NNI_TYPE_POINTER));
+}
+
+int
+nng_stream_set_string(nng_stream *s, const char *n, const char *v)
+{
+	return (nni_stream_set(
+	    s, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
+}
+
+int
+nng_stream_set_addr(nng_stream *s, const char *n, const nng_sockaddr *v)
+{
+	return (nni_stream_set(s, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
+}
+
+int
+nng_stream_dialer_set(
+    nng_stream_dialer *d, const char *n, const void *v, size_t sz)
+{
+	return (nni_stream_dialer_set(d, n, v, sz, NNI_TYPE_OPAQUE));
+}
+
+int
+nng_stream_dialer_set_int(nng_stream_dialer *d, const char *n, int v)
+{
+	return (nni_stream_dialer_set(d, n, &v, sizeof(v), NNI_TYPE_INT32));
+}
+
+int
+nng_stream_dialer_set_bool(nng_stream_dialer *d, const char *n, bool v)
+{
+	return (nni_stream_dialer_set(d, n, &v, sizeof(v), NNI_TYPE_BOOL));
+}
+
+int
+nng_stream_dialer_set_size(nng_stream_dialer *d, const char *n, size_t v)
+{
+	return (nni_stream_dialer_set(d, n, &v, sizeof(v), NNI_TYPE_SIZE));
+}
+
+int
+nng_stream_dialer_set_uint64(nng_stream_dialer *d, const char *n, uint64_t v)
+{
+	return (nni_stream_dialer_set(d, n, &v, sizeof(v), NNI_TYPE_UINT64));
+}
+
+int
+nng_stream_dialer_set_ms(nng_stream_dialer *d, const char *n, nng_duration v)
+{
+	return (nni_stream_dialer_set(d, n, &v, sizeof(v), NNI_TYPE_DURATION));
+}
+
+int
+nng_stream_dialer_set_ptr(nng_stream_dialer *d, const char *n, void *v)
+{
+	return (nni_stream_dialer_set(d, n, &v, sizeof(v), NNI_TYPE_POINTER));
+}
+
+int
+nng_stream_dialer_set_string(
+    nng_stream_dialer *d, const char *n, const char *v)
+{
+	return (nni_stream_dialer_set(
+	    d, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
+}
+
+int
+nng_stream_dialer_set_addr(
+    nng_stream_dialer *d, const char *n, const nng_sockaddr *v)
+{
+	return (nni_stream_dialer_set(d, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
+}
+
+int
+nng_stream_listener_set(
+    nng_stream_listener *l, const char *n, const void *v, size_t sz)
+{
+	return (nni_stream_listener_set(l, n, v, sz, NNI_TYPE_OPAQUE));
+}
+
+int
+nng_stream_listener_set_int(nng_stream_listener *l, const char *n, int v)
+{
+	return (nni_stream_listener_set(l, n, &v, sizeof(v), NNI_TYPE_INT32));
+}
+
+int
+nng_stream_listener_set_bool(nng_stream_listener *l, const char *n, bool v)
+{
+	return (nni_stream_listener_set(l, n, &v, sizeof(v), NNI_TYPE_BOOL));
+}
+
+int
+nng_stream_listener_set_size(nng_stream_listener *l, const char *n, size_t v)
+{
+	return (nni_stream_listener_set(l, n, &v, sizeof(v), NNI_TYPE_SIZE));
+}
+
+int
+nng_stream_listener_set_uint64(
+    nng_stream_listener *l, const char *n, uint64_t v)
+{
+	return (nni_stream_listener_set(l, n, &v, sizeof(v), NNI_TYPE_UINT64));
+}
+
+int
+nng_stream_listener_set_ms(
+    nng_stream_listener *l, const char *n, nng_duration v)
+{
+	return (
+	    nni_stream_listener_set(l, n, &v, sizeof(v), NNI_TYPE_DURATION));
+}
+
+int
+nng_stream_listener_set_ptr(nng_stream_listener *l, const char *n, void *v)
+{
+	return (
+	    nni_stream_listener_set(l, n, &v, sizeof(v), NNI_TYPE_POINTER));
+}
+
+int
+nng_stream_listener_set_string(
+    nng_stream_listener *l, const char *n, const char *v)
+{
+	return (nni_stream_listener_set(
+	    l, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
+}
+
+int
+nng_stream_listener_set_addr(
+    nng_stream_listener *l, const char *n, const nng_sockaddr *v)
+{
+	return (
+	    nni_stream_listener_set(l, n, v, sizeof(*v), NNI_TYPE_SOCKADDR));
+}

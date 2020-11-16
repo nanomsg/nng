@@ -179,8 +179,8 @@ static void ws_str_free(void *);
 static void ws_str_close(void *);
 static void ws_str_send(void *, nng_aio *);
 static void ws_str_recv(void *, nng_aio *);
-static int  ws_str_getx(void *, const char *, void *, size_t *, nni_type);
-static int  ws_str_setx(void *, const char *, const void *, size_t, nni_type);
+static int  ws_str_get(void *, const char *, void *, size_t *, nni_type);
+static int  ws_str_set(void *, const char *, const void *, size_t, nni_type);
 
 static void ws_listener_close(void *);
 static void ws_listener_free(void *);
@@ -1438,8 +1438,8 @@ ws_init(nni_ws **wsp)
 	ws->ops.s_free  = ws_str_free;
 	ws->ops.s_send  = ws_str_send;
 	ws->ops.s_recv  = ws_str_recv;
-	ws->ops.s_getx  = ws_str_getx;
-	ws->ops.s_setx  = ws_str_setx;
+	ws->ops.s_get   = ws_str_get;
+	ws->ops.s_set   = ws_str_set;
 
 	ws->fragsize = 1 << 20; // we won't send a frame larger than this
 	*wsp         = ws;
@@ -2047,7 +2047,7 @@ ws_listener_set_header(nni_ws_listener *l, const char *name, const void *buf,
 }
 
 static int
-ws_listener_setx(
+ws_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	nni_ws_listener *l = arg;
@@ -2055,7 +2055,7 @@ ws_listener_setx(
 
 	rv = nni_setopt(ws_listener_options, name, l, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_http_server_setx(l->server, name, buf, sz, t);
+		rv = nni_http_server_set(l->server, name, buf, sz, t);
 	}
 
 	if (rv == NNG_ENOTSUP) {
@@ -2067,7 +2067,7 @@ ws_listener_setx(
 }
 
 static int
-ws_listener_getx(
+ws_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	nni_ws_listener *l = arg;
@@ -2075,7 +2075,7 @@ ws_listener_getx(
 
 	rv = nni_getopt(ws_listener_options, name, l, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_http_server_getx(l->server, name, buf, szp, t);
+		rv = nni_http_server_get(l->server, name, buf, szp, t);
 	}
 	return (rv);
 }
@@ -2128,8 +2128,8 @@ nni_ws_listener_alloc(nng_stream_listener **wslp, const nng_url *url)
 	l->ops.sl_close  = ws_listener_close;
 	l->ops.sl_accept = ws_listener_accept;
 	l->ops.sl_listen = ws_listener_listen;
-	l->ops.sl_setx   = ws_listener_setx;
-	l->ops.sl_getx   = ws_listener_getx;
+	l->ops.sl_set    = ws_listener_set;
+	l->ops.sl_get    = ws_listener_get;
 	*wslp            = (void *) l;
 	return (0);
 }
@@ -2578,7 +2578,7 @@ ws_dialer_set_header(
 }
 
 static int
-ws_dialer_setx(
+ws_dialer_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	nni_ws_dialer *d = arg;
@@ -2586,7 +2586,7 @@ ws_dialer_setx(
 
 	rv = nni_setopt(ws_dialer_options, name, d, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_http_client_setx(d->client, name, buf, sz, t);
+		rv = nni_http_client_set(d->client, name, buf, sz, t);
 	}
 
 	if (rv == NNG_ENOTSUP) {
@@ -2598,14 +2598,14 @@ ws_dialer_setx(
 }
 
 static int
-ws_dialer_getx(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+ws_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	nni_ws_dialer *d = arg;
 	int            rv;
 
 	rv = nni_getopt(ws_dialer_options, name, d, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_http_client_getx(d->client, name, buf, szp, t);
+		rv = nni_http_client_get(d->client, name, buf, szp, t);
 	}
 	return (rv);
 }
@@ -2641,8 +2641,8 @@ nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->ops.sd_free  = ws_dialer_free;
 	d->ops.sd_close = ws_dialer_close;
 	d->ops.sd_dial  = ws_dialer_dial;
-	d->ops.sd_setx  = ws_dialer_setx;
-	d->ops.sd_getx  = ws_dialer_getx;
+	d->ops.sd_set   = ws_dialer_set;
+	d->ops.sd_get   = ws_dialer_get;
 	*dp             = (void *) d;
 	return (0);
 }
@@ -2651,9 +2651,6 @@ nni_ws_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 // and reply after dial is done; this is not a 3-way handshake, so
 // the dialer does not confirm the server's response at the HTTP
 // level. (It can still issue a websocket close).
-
-// The implementation will send periodic PINGs, and respond with
-// PONGs.
 
 static void
 ws_str_free(void *arg)
@@ -2840,7 +2837,7 @@ static const nni_option ws_options[] = {
 };
 
 static int
-ws_str_setx(void *arg, const char *nm, const void *buf, size_t sz, nni_type t)
+ws_str_set(void *arg, const char *nm, const void *buf, size_t sz, nni_type t)
 {
 	nni_ws *ws = arg;
 	int     rv;
@@ -2893,7 +2890,7 @@ ws_get_res_header(
 }
 
 static int
-ws_str_getx(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
+ws_str_get(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 {
 	nni_ws *ws = arg;
 	int     rv;
@@ -2916,77 +2913,5 @@ ws_str_getx(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 			rv = ws_get_res_header(ws, nm, buf, szp, t);
 		}
 	}
-	return (rv);
-}
-
-static int
-ws_check_size(const void *buf, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, buf, sz, 0, NNI_MAXSZ, t));
-}
-
-static int
-ws_check_bool(const void *buf, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, buf, sz, 0, NNI_MAXSZ, t));
-}
-
-static const nni_chkoption ws_chkopts[] = {
-	{
-	    .o_name  = NNG_OPT_WS_SENDMAXFRAME,
-	    .o_check = ws_check_size,
-	},
-	{
-	    .o_name  = NNG_OPT_WS_RECVMAXFRAME,
-	    .o_check = ws_check_size,
-	},
-	{
-	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = ws_check_size,
-	},
-	{
-	    .o_name  = NNG_OPT_WS_PROTOCOL,
-	    .o_check = ws_check_string,
-	},
-	{
-	    .o_name  = NNG_OPT_WS_REQUEST_HEADERS,
-	    .o_check = ws_check_string,
-	},
-	{
-	    .o_name  = NNG_OPT_WS_RESPONSE_HEADERS,
-	    .o_check = ws_check_string,
-	},
-	{
-	    .o_name  = NNG_OPT_WS_RECV_TEXT,
-	    .o_check = ws_check_bool,
-	},
-	{
-	    .o_name  = NNG_OPT_WS_SEND_TEXT,
-	    .o_check = ws_check_bool,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
-
-int
-nni_ws_checkopt(const char *name, const void *data, size_t sz, nni_type t)
-{
-	int rv;
-
-	rv = nni_chkopt(ws_chkopts, name, data, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_checkopt("tcp", name, data, sz, t);
-	}
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_checkopt("tls+tcp", name, data, sz, t);
-	}
-	if (rv == NNG_ENOTSUP) {
-		if (startswith(name, NNG_OPT_WS_REQUEST_HEADER) ||
-		    startswith(name, NNG_OPT_WS_RESPONSE_HEADER)) {
-			rv = ws_check_string(data, sz, t);
-		}
-	}
-	// Potentially, add checks for header options.
 	return (rv);
 }

@@ -142,7 +142,7 @@ int
 nni_http_client_set_tls(nni_http_client *c, nng_tls_config *tls)
 {
 	int rv;
-	rv = nni_stream_dialer_setx(c->dialer, NNG_OPT_TLS_CONFIG, &tls,
+	rv = nni_stream_dialer_set(c->dialer, NNG_OPT_TLS_CONFIG, &tls,
 	    sizeof(tls), NNI_TYPE_POINTER);
 	return (rv);
 }
@@ -152,24 +152,24 @@ nni_http_client_get_tls(nni_http_client *c, nng_tls_config **tlsp)
 {
 	size_t sz = sizeof(*tlsp);
 	int    rv;
-	rv = nni_stream_dialer_getx(
+	rv = nni_stream_dialer_get(
 	    c->dialer, NNG_OPT_TLS_CONFIG, tlsp, &sz, NNI_TYPE_POINTER);
 	return (rv);
 }
 
 int
-nni_http_client_setx(nni_http_client *c, const char *name, const void *buf,
+nni_http_client_set(nni_http_client *c, const char *name, const void *buf,
     size_t sz, nni_type t)
 {
 	// We have no local options, but we just pass them straight through.
-	return (nni_stream_dialer_setx(c->dialer, name, buf, sz, t));
+	return (nni_stream_dialer_set(c->dialer, name, buf, sz, t));
 }
 
 int
-nni_http_client_getx(
+nni_http_client_get(
     nni_http_client *c, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	return (nni_stream_dialer_getx(c->dialer, name, buf, szp, t));
+	return (nni_stream_dialer_get(c->dialer, name, buf, szp, t));
 }
 
 static void

@@ -656,7 +656,7 @@ nni_http_conn_getopt(
 	if (conn->closed) {
 		rv = NNG_ECLOSED;
 	} else {
-		rv = nni_stream_getx(conn->sock, name, buf, szp, t);
+		rv = nni_stream_get(conn->sock, name, buf, szp, t);
 	}
 	nni_mtx_unlock(&conn->mtx);
 	return (rv);
@@ -671,7 +671,7 @@ nni_http_conn_setopt(nni_http_conn *conn, const char *name, const void *buf,
 	if (conn->closed) {
 		rv = NNG_ECLOSED;
 	} else {
-		rv = nni_stream_setx(conn->sock, name, buf, sz, t);
+		rv = nni_stream_set(conn->sock, name, buf, sz, t);
 	}
 	nni_mtx_unlock(&conn->mtx);
 	return (rv);

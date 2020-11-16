@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -16,23 +16,20 @@
 #include "core/nng_impl.h"
 
 // Private property operations (these include the types.)
-extern int nni_stream_getx(
+extern int nni_stream_get(
     nng_stream *, const char *, void *, size_t *, nni_type);
-extern int nni_stream_setx(
+extern int nni_stream_set(
     nng_stream *, const char *, const void *, size_t, nni_type);
 
-extern int nni_stream_dialer_getx(
+extern int nni_stream_dialer_get(
     nng_stream_dialer *, const char *, void *, size_t *, nni_type);
-extern int nni_stream_dialer_setx(
+extern int nni_stream_dialer_set(
     nng_stream_dialer *, const char *, const void *, size_t, nni_type);
 
-extern int nni_stream_listener_getx(
+extern int nni_stream_listener_get(
     nng_stream_listener *, const char *, void *, size_t *, nni_type);
-extern int nni_stream_listener_setx(
+extern int nni_stream_listener_set(
     nng_stream_listener *, const char *, const void *, size_t, nni_type);
-
-extern int nni_stream_checkopt(
-    const char *, const char *, const void *, size_t, nni_type);
 
 // This is the common implementation of a connected byte stream.  It should be
 // the first element of any implementation.  Applications are not permitted to
@@ -42,8 +39,8 @@ struct nng_stream {
 	void (*s_close)(void *);
 	void (*s_recv)(void *, nng_aio *);
 	void (*s_send)(void *, nng_aio *);
-	int (*s_getx)(void *, const char *, void *, size_t *, nni_type);
-	int (*s_setx)(void *, const char *, const void *, size_t, nni_type);
+	int (*s_get)(void *, const char *, void *, size_t *, nni_type);
+	int (*s_set)(void *, const char *, const void *, size_t, nni_type);
 };
 
 // Dialer implementation.  Stream dialers create streams.
@@ -51,8 +48,8 @@ struct nng_stream_dialer {
 	void (*sd_free)(void *);
 	void (*sd_close)(void *);
 	void (*sd_dial)(void *, nng_aio *);
-	int (*sd_getx)(void *, const char *, void *, size_t *, nni_type);
-	int (*sd_setx)(void *, const char *, const void *, size_t, nni_type);
+	int (*sd_get)(void *, const char *, void *, size_t *, nni_type);
+	int (*sd_set)(void *, const char *, const void *, size_t, nni_type);
 };
 
 // Listener implementation.  Stream listeners accept connections and create
@@ -62,8 +59,8 @@ struct nng_stream_listener {
 	void (*sl_close)(void *);
 	int (*sl_listen)(void *);
 	void (*sl_accept)(void *, nng_aio *);
-	int (*sl_getx)(void *, const char *, void *, size_t *, nni_type);
-	int (*sl_setx)(void *, const char *, const void *, size_t, nni_type);
+	int (*sl_get)(void *, const char *, void *, size_t *, nni_type);
+	int (*sl_set)(void *, const char *, const void *, size_t, nni_type);
 };
 
 #endif // CORE_STREAM_H

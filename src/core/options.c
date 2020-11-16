@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -55,6 +55,7 @@ nni_copyin_bool(bool *bp, const void *v, size_t sz, nni_type t)
 		if (sz != sizeof(bool)) {
 			return (NNG_EINVAL);
 		}
+		// NB: C99 does not require that sizeof (bool) == 1.
 		if (bp != NULL) {
 			memcpy(bp, v, sz);
 		}
@@ -158,15 +159,18 @@ nni_copyin_str(char *s, const void *v, size_t sz, size_t maxsz, nni_type t)
 
 	switch (t) {
 	case NNI_TYPE_STRING:
+		z = v == NULL ? 0 : strlen(v);
+		break;
 	case NNI_TYPE_OPAQUE:
-		if ((z = nni_strnlen(v, sz)) >= sz) {
+		z = v == NULL ? 0 : nni_strnlen(v, sz);
+		if (z >= sz) {
 			return (NNG_EINVAL); // missing terminator
 		}
 		break;
 	default:
 		return (NNG_EBADTYPE);
 	}
-	if (z > maxsz) {
+	if (z >= maxsz) {
 		return (NNG_EINVAL); // too long
 	}
 	if (s != NULL) {
@@ -245,7 +249,6 @@ nni_copyout_bool(bool b, void *dst, size_t *szp, nni_type t)
 {
 	switch (t) {
 	case NNI_TYPE_BOOL:
-		NNI_ASSERT(*szp == sizeof(b));
 		*(bool *) dst = b;
 		return (0);
 	case NNI_TYPE_OPAQUE:
@@ -260,7 +263,6 @@ nni_copyout_int(int i, void *dst, size_t *szp, nni_type t)
 {
 	switch (t) {
 	case NNI_TYPE_INT32:
-		NNI_ASSERT(*szp == sizeof(i));
 		*(int *) dst = i;
 		return (0);
 	case NNI_TYPE_OPAQUE:
@@ -275,7 +277,6 @@ nni_copyout_ms(nng_duration d, void *dst, size_t *szp, nni_type t)
 {
 	switch (t) {
 	case NNI_TYPE_DURATION:
-		NNI_ASSERT(*szp == sizeof(d));
 		*(nng_duration *) dst = d;
 		return (0);
 	case NNI_TYPE_OPAQUE:
@@ -290,7 +291,6 @@ nni_copyout_ptr(void *p, void *dst, size_t *szp, nni_type t)
 {
 	switch (t) {
 	case NNI_TYPE_POINTER:
-		NNI_ASSERT(*szp == sizeof(p));
 		*(void **) dst = p;
 		return (0);
 	case NNI_TYPE_OPAQUE:
@@ -305,7 +305,6 @@ nni_copyout_size(size_t s, void *dst, size_t *szp, nni_type t)
 {
 	switch (t) {
 	case NNI_TYPE_SIZE:
-		NNI_ASSERT(*szp == sizeof(s));
 		*(size_t *) dst = s;
 		return (0);
 	case NNI_TYPE_OPAQUE:
@@ -321,7 +320,6 @@ nni_copyout_sockaddr(
 {
 	switch (t) {
 	case NNI_TYPE_SOCKADDR:
-		NNI_ASSERT(*szp == sizeof(*sap));
 		*(nng_sockaddr *) dst = *sap;
 		return (0);
 	case NNI_TYPE_OPAQUE:
@@ -336,7 +334,6 @@ nni_copyout_u64(uint64_t u, void *dst, size_t *szp, nni_type t)
 {
 	switch (t) {
 	case NNI_TYPE_UINT64:
-		NNI_ASSERT(*szp == sizeof(u));
 		*(uint64_t *) dst = u;
 		return (0);
 	case NNI_TYPE_OPAQUE:
@@ -353,7 +350,6 @@ nni_copyout_str(const char *str, void *dst, size_t *szp, nni_type t)
 
 	switch (t) {
 	case NNI_TYPE_STRING:
-		NNI_ASSERT(*szp == sizeof(char *));
 		if ((s = nni_strdup(str)) == NULL) {
 			return (NNG_ENOMEM);
 		}
@@ -394,22 +390,6 @@ nni_setopt(const nni_option *opts, const char *nm, void *arg, const void *buf,
 				return (NNG_EREADONLY);
 			}
 			return (opts->o_set(arg, buf, sz, otype));
-		}
-		opts++;
-	}
-	return (NNG_ENOTSUP);
-}
-
-int
-nni_chkopt(const nni_chkoption *opts, const char *nm, const void *buf,
-    size_t sz, nni_type t)
-{
-	while (opts->o_name != NULL) {
-		if (strcmp(opts->o_name, nm) == 0) {
-			if (opts->o_check == NULL) {
-				return (NNG_EREADONLY);
-			}
-			return (opts->o_check(buf, sz, t));
 		}
 		opts++;
 	}

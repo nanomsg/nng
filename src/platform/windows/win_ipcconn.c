@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -381,14 +381,14 @@ static const nni_option ipc_conn_options[] = {
 };
 
 static int
-ipc_setx(void *arg, const char *nm, const void *val, size_t sz, nni_opt_type t)
+ipc_set(void *arg, const char *nm, const void *val, size_t sz, nni_opt_type t)
 {
 	ipc_conn *c = arg;
 	return (nni_setopt(ipc_conn_options, nm, c, val, sz, t));
 }
 
 static int
-ipc_getx(void *arg, const char *nm, void *val, size_t *szp, nni_opt_type t)
+ipc_get(void *arg, const char *nm, void *val, size_t *szp, nni_opt_type t)
 {
 	ipc_conn *c = arg;
 	return (nni_getopt(ipc_conn_options, nm, c, val, szp, t));
@@ -415,8 +415,8 @@ nni_win_ipc_init(
 	c->stream.s_close = ipc_close;
 	c->stream.s_send  = ipc_send;
 	c->stream.s_recv  = ipc_recv;
-	c->stream.s_getx  = ipc_getx;
-	c->stream.s_setx  = ipc_setx;
+	c->stream.s_get   = ipc_get;
+	c->stream.s_set   = ipc_set;
 
 	if (((rv = nni_win_io_init(&c->recv_io, ipc_recv_cb, c)) != 0) ||
 	    ((rv = nni_win_io_init(&c->send_io, ipc_send_cb, c)) != 0)) {

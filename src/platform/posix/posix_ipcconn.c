@@ -531,14 +531,14 @@ static const nni_option ipc_options[] = {
 };
 
 static int
-ipc_getx(void *arg, const char *name, void *val, size_t *szp, nni_type t)
+ipc_get(void *arg, const char *name, void *val, size_t *szp, nni_type t)
 {
 	ipc_conn *c = arg;
 	return (nni_getopt(ipc_options, name, c, val, szp, t));
 }
 
 static int
-ipc_setx(void *arg, const char *name, const void *val, size_t sz, nni_type t)
+ipc_set(void *arg, const char *name, const void *val, size_t sz, nni_type t)
 {
 	ipc_conn *c = arg;
 	return (nni_setopt(ipc_options, name, c, val, sz, t));
@@ -559,8 +559,8 @@ nni_posix_ipc_alloc(nni_ipc_conn **cp, nni_sockaddr *sa, nni_ipc_dialer *d)
 	c->stream.s_close = ipc_close;
 	c->stream.s_send  = ipc_send;
 	c->stream.s_recv  = ipc_recv;
-	c->stream.s_getx  = ipc_getx;
-	c->stream.s_setx  = ipc_setx;
+	c->stream.s_get   = ipc_get;
+	c->stream.s_set   = ipc_set;
 	c->sa             = *sa;
 
 	nni_mtx_init(&c->mtx);

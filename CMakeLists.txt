@@ -78,18 +78,17 @@ endif ()
 # cross-compile situation.  Cross-compiling users who still want to
 # build these must enable them explicitly.  Some of these switches
 # must be enabled rather early as we use their values later.
-option(NNG_TESTS "Build and run tests" ${NNG_NATIVE_BUILD})
-option(NNG_TOOLS "Build extra tools" ${NNG_NATIVE_BUILD})
+option(NNG_TESTS "Build and run tests." ${NNG_NATIVE_BUILD})
+option(NNG_TOOLS "Build extra tools." ${NNG_NATIVE_BUILD})
 option(NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
 option(NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
-
 
 # Enable access to private APIs for our own use.
 add_definitions(-DNNG_PRIVATE)
 
 if (NOT (BUILD_SHARED_LIBS))
     set(NNG_STATIC_LIB ON)
-    message(STATUS "Building static libs")
+    message(STATUS "Building static libs.")
 endif ()
 
 # These are library targets.  The "nng" library is the main public library.
@@ -108,6 +107,21 @@ target_compile_definitions(nng_testing PUBLIC NNG_STATIC_LIB NNG_TEST_LIB NNG_PR
 
 add_library(nng_private INTERFACE)
 target_compile_definitions(nng_private INTERFACE NNG_PRIVATE)
+
+# Eliding deprecated functionality can be used to build a slimmed down
+# version of the library, or alternatively to test for application
+# preparedness for expected feature removals (in the next major release.)
+# Applications can also set the NNG_ELIDE_DEPRECATED preprocessor symbol
+# before including <nng/nng.h> -- this will prevent declarations from
+# being exposed to applications, but it will not affect their ABI
+# availability for existing compiled applications.
+# Note: Currently this breaks the test suite, so we only do it
+# for the public library.
+option(NNG_ELIDE_DEPRECATED "Elide deprecated functionality." OFF)
+if (NNG_ELIDE_DEPRECATED)
+    target_compile_definitions(nng, NNG_ELIDE_DEPRECATED)
+endif()
+
 
 # We can use rlimit to configure the stack size for systems
 # that have too small defaults.  This is not used for Windows,

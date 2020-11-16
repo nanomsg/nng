@@ -244,15 +244,15 @@ static const nni_option ipc_dialer_options[] = {
 	},
 };
 
-int
-ipc_dialer_getx(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
+static int
+ipc_dialer_get(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 {
 	ipc_dialer *d = arg;
 	return (nni_getopt(ipc_dialer_options, nm, d, buf, szp, t));
 }
 
-int
-ipc_dialer_setx(
+static int
+ipc_dialer_set(
     void *arg, const char *nm, const void *buf, size_t sz, nni_type t)
 {
 	ipc_dialer *d = arg;
@@ -306,8 +306,8 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->sd.sd_free  = ipc_dialer_free;
 	d->sd.sd_close = ipc_dialer_close;
 	d->sd.sd_dial  = ipc_dialer_dial;
-	d->sd.sd_getx  = ipc_dialer_getx;
-	d->sd.sd_setx  = ipc_dialer_setx;
+	d->sd.sd_get   = ipc_dialer_get;
+	d->sd.sd_set   = ipc_dialer_set;
 	nni_atomic_init_bool(&d->fini);
 	nni_atomic_init64(&d->ref);
 	nni_atomic_inc64(&d->ref);

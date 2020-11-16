@@ -883,7 +883,7 @@ tlstran_ep_init_dialer(void **dp, nni_url *url, nni_dialer *ndialer)
 		return (rv);
 	}
 	if ((srcsa.s_family != NNG_AF_UNSPEC) &&
-	    ((rv = nni_stream_dialer_setx(ep->dialer, NNG_OPT_LOCADDR, &srcsa,
+	    ((rv = nni_stream_dialer_set(ep->dialer, NNG_OPT_LOCADDR, &srcsa,
 	          sizeof(srcsa), NNI_TYPE_SOCKADDR)) != 0)) {
 		tlstran_ep_fini(ep);
 		return (rv);
@@ -952,7 +952,7 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 
 	if ((rv != 0) ||
 	    ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) ||
-	    ((rv = nni_stream_listener_setx(ep->listener,
+	    ((rv = nni_stream_listener_set(ep->listener,
 	          NNG_OPT_TLS_AUTH_MODE, &ep->authmode, sizeof(ep->authmode),
 	          NNI_TYPE_INT32)) != 0)) {
 		tlstran_ep_fini(ep);
@@ -1128,17 +1128,10 @@ tlstran_pipe_getopt(
 	tlstran_pipe *p = arg;
 	int           rv;
 
-	if ((rv = nni_stream_getx(p->tls, name, buf, szp, t)) == NNG_ENOTSUP) {
+	if ((rv = nni_stream_get(p->tls, name, buf, szp, t)) == NNG_ENOTSUP) {
 		rv = nni_getopt(tlstran_pipe_opts, name, p, buf, szp, t);
 	}
 	return (rv);
-}
-
-static int
-tlstran_check_recvmaxsz(const void *v, size_t sz, nni_type t)
-{
-	size_t val;
-	return (nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t));
 }
 
 static nni_tran_pipe_ops tlstran_pipe_ops = {
@@ -1168,16 +1161,6 @@ static nni_option tlstran_ep_options[] = {
 	},
 };
 
-static nni_chkoption tlstran_checkopts[] = {
-	{
-	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = tlstran_check_recvmaxsz,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
-
 static int
 tlstran_dialer_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
@@ -1185,7 +1168,7 @@ tlstran_dialer_getopt(
 	int         rv;
 	tlstran_ep *ep = arg;
 
-	rv = nni_stream_dialer_getx(ep->dialer, name, buf, szp, t);
+	rv = nni_stream_dialer_get(ep->dialer, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_getopt(tlstran_ep_options, name, ep, buf, szp, t);
 	}
@@ -1199,7 +1182,7 @@ tlstran_dialer_setopt(
 	int         rv;
 	tlstran_ep *ep = arg;
 
-	rv = nni_stream_dialer_setx(
+	rv = nni_stream_dialer_set(
 	    ep != NULL ? ep->dialer : NULL, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(tlstran_ep_options, name, ep, buf, sz, t);
@@ -1208,13 +1191,13 @@ tlstran_dialer_setopt(
 }
 
 static int
-tlstran_listener_getopt(
+tlstran_listener_get(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	int         rv;
 	tlstran_ep *ep = arg;
 
-	rv = nni_stream_listener_getx(ep->listener, name, buf, szp, t);
+	rv = nni_stream_listener_get(ep->listener, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_getopt(tlstran_ep_options, name, ep, buf, szp, t);
 	}
@@ -1222,27 +1205,16 @@ tlstran_listener_getopt(
 }
 
 static int
-tlstran_listener_setopt(
+tlstran_listener_set(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
 	int         rv;
 	tlstran_ep *ep = arg;
 
-	rv = nni_stream_listener_setx(
+	rv = nni_stream_listener_set(
 	    ep != NULL ? ep->listener : NULL, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(tlstran_ep_options, name, ep, buf, sz, t);
-	}
-	return (rv);
-}
-
-static int
-tlstran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
-{
-	int rv;
-	rv = nni_chkopt(tlstran_checkopts, name, buf, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_checkopt("tls+tcp", name, buf, sz, t);
 	}
 	return (rv);
 }
@@ -1262,8 +1234,8 @@ static nni_tran_listener_ops tlstran_listener_ops = {
 	.l_bind   = tlstran_ep_bind,
 	.l_accept = tlstran_ep_accept,
 	.l_close  = tlstran_ep_close,
-	.l_getopt = tlstran_listener_getopt,
-	.l_setopt = tlstran_listener_setopt,
+	.l_getopt = tlstran_listener_get,
+	.l_setopt = tlstran_listener_set,
 };
 
 static nni_tran tls_tran = {
@@ -1274,7 +1246,6 @@ static nni_tran tls_tran = {
 	.tran_pipe     = &tlstran_pipe_ops,
 	.tran_init     = tlstran_init,
 	.tran_fini     = tlstran_fini,
-	.tran_checkopt = tlstran_checkopt,
 };
 
 static nni_tran tls4_tran = {
@@ -1285,7 +1256,6 @@ static nni_tran tls4_tran = {
 	.tran_pipe     = &tlstran_pipe_ops,
 	.tran_init     = tlstran_init,
 	.tran_fini     = tlstran_fini,
-	.tran_checkopt = tlstran_checkopt,
 };
 
 static nni_tran tls6_tran = {
@@ -1296,7 +1266,6 @@ static nni_tran tls6_tran = {
 	.tran_pipe     = &tlstran_pipe_ops,
 	.tran_init     = tlstran_init,
 	.tran_fini     = tlstran_fini,
-	.tran_checkopt = tlstran_checkopt,
 };
 
 int

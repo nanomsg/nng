@@ -1007,7 +1007,7 @@ ipc_pipe_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	ipc_pipe *p = arg;
 
-	return (nni_stream_getx(p->conn, name, buf, szp, t));
+	return (nni_stream_get(p->conn, name, buf, szp, t));
 }
 
 static nni_tran_pipe_ops ipc_tran_pipe_ops = {
@@ -1041,7 +1041,7 @@ ipc_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 
 	rv = nni_getopt(ipc_ep_options, name, ep, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_dialer_getx(ep->dialer, name, buf, szp, t);
+		rv = nni_stream_dialer_get(ep->dialer, name, buf, szp, t);
 	}
 	return (rv);
 }
@@ -1055,7 +1055,7 @@ ipc_dialer_set(
 
 	rv = nni_setopt(ipc_ep_options, name, ep, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_dialer_setx(ep->dialer, name, buf, sz, t);
+		rv = nni_stream_dialer_set(ep->dialer, name, buf, sz, t);
 	}
 	return (rv);
 }
@@ -1069,7 +1069,7 @@ ipc_listener_get(
 
 	rv = nni_getopt(ipc_ep_options, name, ep, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_listener_getx(ep->listener, name, buf, szp, t);
+		rv = nni_stream_listener_get(ep->listener, name, buf, szp, t);
 	}
 	return (rv);
 }
@@ -1083,34 +1083,7 @@ ipc_listener_set(
 
 	rv = nni_setopt(ipc_ep_options, name, ep, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_listener_setx(ep->listener, name, buf, sz, t);
-	}
-	return (rv);
-}
-
-static int
-ipc_check_recv_max_sz(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
-static nni_chkoption ipc_check_opts[] = {
-	{
-	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = ipc_check_recv_max_sz,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
-
-static int
-ipc_check_opt(const char *name, const void *buf, size_t sz, nni_type t)
-{
-	int rv;
-	rv = nni_chkopt(ipc_check_opts, name, buf, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_checkopt("ipc", name, buf, sz, t);
+		rv = nni_stream_listener_set(ep->listener, name, buf, sz, t);
 	}
 	return (rv);
 }
@@ -1142,7 +1115,6 @@ static nni_tran ipc_tran = {
 	.tran_pipe     = &ipc_tran_pipe_ops,
 	.tran_init     = ipc_tran_init,
 	.tran_fini     = ipc_tran_fini,
-	.tran_checkopt = ipc_check_opt,
 };
 
 #ifdef NNG_PLATFORM_POSIX
@@ -1154,7 +1126,6 @@ static nni_tran ipc_tran_unix = {
 	.tran_pipe     = &ipc_tran_pipe_ops,
 	.tran_init     = ipc_tran_init,
 	.tran_fini     = ipc_tran_fini,
-	.tran_checkopt = ipc_check_opt,
 };
 #endif
 
@@ -1167,7 +1138,6 @@ static nni_tran ipc_tran_abstract = {
 	.tran_pipe     = &ipc_tran_pipe_ops,
 	.tran_init     = ipc_tran_init,
 	.tran_fini     = ipc_tran_fini,
-	.tran_checkopt = ipc_check_opt,
 };
 #endif
 

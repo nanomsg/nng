@@ -38,7 +38,7 @@ typedef struct ipc_dial_work {
 	int      exit;
 } ipc_dial_work;
 
-static ipc_dial_work ipc_connecter;
+static ipc_dial_work ipc_connector;
 
 static void
 ipc_dial_thr(void *arg)
@@ -125,7 +125,7 @@ static void
 ipc_dial_cancel(nni_aio *aio, void *arg, int rv)
 {
 	ipc_dialer *   d = arg;
-	ipc_dial_work *w = &ipc_connecter;
+	ipc_dial_work *w = &ipc_connector;
 
 	nni_mtx_lock(&w->mtx);
 	if (nni_aio_list_active(aio)) {
@@ -140,9 +140,10 @@ ipc_dial_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-ipc_dialer_dial(ipc_dialer *d, nni_aio *aio)
+ipc_dialer_dial(void *arg, nni_aio *aio)
 {
-	ipc_dial_work *w = &ipc_connecter;
+	ipc_dialer *   d = arg;
+	ipc_dial_work *w = &ipc_connector;
 	int            rv;
 
 	if (nni_aio_begin(aio) != 0) {
@@ -174,7 +175,7 @@ static void
 ipc_dialer_close(void *arg)
 {
 	ipc_dialer *   d = arg;
-	ipc_dial_work *w = &ipc_connecter;
+	ipc_dial_work *w = &ipc_connector;
 	nni_aio *      aio;
 
 	nni_mtx_lock(&w->mtx);
@@ -206,16 +207,16 @@ static const nni_option ipc_dialer_options[] = {
 	},
 };
 
-int
-ipc_dialer_setx(
+static int
+ipc_dialer_set(
     void *arg, const char *nm, const void *buf, size_t sz, nni_type t)
 {
 	ipc_dialer *d = arg;
 	return (nni_setopt(ipc_dialer_options, nm, d, buf, sz, t));
 }
 
-int
-ipc_dialer_getx(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
+static int
+ipc_dialer_get(void *arg, const char *nm, void *buf, size_t *szp, nni_type t)
 {
 	ipc_dialer *d = arg;
 	return (nni_getopt(ipc_dialer_options, nm, d, buf, szp, t));
@@ -228,7 +229,7 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	int         rv;
 
 	if ((strcmp(url->u_scheme, "ipc") != 0) || (url->u_path == NULL) ||
-	    (strlen(url->u_path) == 0)||
+	    (strlen(url->u_path) == 0) ||
 	    (strlen(url->u_path) >= NNG_MAXADDRLEN)) {
 		return (NNG_EADDRINVAL);
 	}
@@ -247,8 +248,8 @@ nni_ipc_dialer_alloc(nng_stream_dialer **dp, const nng_url *url)
 	d->sd.sd_free         = ipc_dialer_free;
 	d->sd.sd_close        = ipc_dialer_close;
 	d->sd.sd_dial         = ipc_dialer_dial;
-	d->sd.sd_getx         = ipc_dialer_getx;
-	d->sd.sd_setx         = ipc_dialer_setx;
+	d->sd.sd_get          = ipc_dialer_get;
+	d->sd.sd_set          = ipc_dialer_set;
 	nni_aio_list_init(&d->aios);
 	*dp = (void *) d;
 	return (0);
@@ -258,7 +259,7 @@ int
 nni_win_ipc_sysinit(void)
 {
 	int            rv;
-	ipc_dial_work *worker = &ipc_connecter;
+	ipc_dial_work *worker = &ipc_connector;
 
 	NNI_LIST_INIT(&worker->workers, ipc_dialer, node);
 	NNI_LIST_INIT(&worker->waiters, ipc_dialer, node);
@@ -270,7 +271,7 @@ nni_win_ipc_sysinit(void)
 	if (rv != 0) {
 		return (rv);
 	}
-        nni_thr_set_name(&worker->thr, "nng:ipc:dial");
+	nni_thr_set_name(&worker->thr, "nng:ipc:dial");
 	nni_thr_run(&worker->thr);
 
 	return (0);
@@ -279,7 +280,7 @@ nni_win_ipc_sysinit(void)
 void
 nni_win_ipc_sysfini(void)
 {
-	ipc_dial_work *worker = &ipc_connecter;
+	ipc_dial_work *worker = &ipc_connector;
 
 	nni_reap_drain(); // so that listeners get cleaned up.
 

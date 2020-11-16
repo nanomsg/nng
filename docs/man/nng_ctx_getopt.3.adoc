@@ -1,6 +1,6 @@
 = nng_ctx_getopt(3)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -37,7 +37,8 @@ int nng_ctx_getopt_uint64(nng_ctx ctx, const char *opt, uint64_t *u64p);
 
 == DESCRIPTION
 
-NOTE: These functions are deprecated.  Please see xref:nng_ctx_get.3.adoc[nng_ctx_get].
+IMPORTANT: These functions are deprecated.  Please see xref:nng_ctx_get.3.adoc[nng_ctx_get].
+They may not be present if the library was built with `NNG_ELIDE_DEPRECATED`.
 
 (((options, context)))
 The `nng_ctx_getopt()` functions are used to retrieve option values for

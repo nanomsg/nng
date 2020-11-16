@@ -1,6 +1,6 @@
 = nng_getopt(3)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -39,7 +39,8 @@ int nng_getopt_uint64(nng_socket s, const char *opt, uint64_t *u64p);
 
 == DESCRIPTION
 
-NOTE: These functions are deprecated.  Please see xref:nng_socket_get.3.adoc[nng_socket_get].
+IMPORTANT: These functions are deprecated.  Please see xref:nng_socket_get.3.adoc[nng_socket_get].
+They may not be present if the library was built with `NNG_ELIDE_DEPRECATED`.
 
 (((options, socket)))
 The `nng_getopt()` functions are used to retrieve option values for

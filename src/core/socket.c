@@ -983,11 +983,9 @@ int
 nni_sock_setopt(
     nni_sock *s, const char *name, const void *v, size_t sz, nni_type t)
 {
-	int           rv;
-	nni_dialer *  d;
-	nni_listener *l;
-	nni_sockopt * optv;
-	nni_sockopt * oldv = NULL;
+	int          rv;
+	nni_sockopt *optv;
+	nni_sockopt *oldv = NULL;
 
 	nni_mtx_lock(&s->s_mx);
 	if (s->s_closing) {
@@ -1012,17 +1010,67 @@ nni_sock_setopt(
 	}
 	nni_mtx_unlock(&s->s_mx);
 
-	// Validation of generic and transport options.  This is stateless, so
-	// transports should not fail to set an option later if they
-	// passed it here.
+	// Validation of generic and transport options.
+	// NOTE: Setting transport options via socket is deprecated.
+	// These options should be set on the endpoint to which they apply.
 	if ((strcmp(name, NNG_OPT_RECONNMINT) == 0) ||
 	    (strcmp(name, NNG_OPT_RECONNMAXT) == 0)) {
-		nng_duration ms;
-		if ((rv = nni_copyin_ms(&ms, v, sz, t)) != 0) {
+		if ((rv = nni_copyin_ms(NULL, v, sz, t)) != 0) {
 			return (rv);
 		}
-	} else if ((rv = nni_tran_chkopt(name, v, sz, t)) != 0) {
-		return (rv);
+
+	} else if (strcmp(name, NNG_OPT_RECVMAXSZ) == 0) {
+		if ((rv = nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t)) !=
+		    0) {
+			return (rv);
+		}
+
+#if !defined(NNG_ELIDE_DEPRECATED)
+		// TCP options, set via socket is deprecated.
+	} else if ((strcmp(name, NNG_OPT_TCP_KEEPALIVE) == 0) ||
+	    (strcmp(name, NNG_OPT_TCP_NODELAY)) == 0) {
+		if ((rv = nni_copyin_bool(NULL, v, sz, t)) != 0) {
+			return (rv);
+		}
+#endif
+
+#if defined(NNG_SUPP_TLS) && !defined(NNG_ELIDE_DEPRECATED)
+		// TLS options may not be supported if TLS is not
+		// compiled in.  Supporting all these is deprecated.
+	} else if (strcmp(name, NNG_OPT_TLS_CONFIG) == 0) {
+		if ((rv = nni_copyin_ptr(NULL, v, sz, t)) != 0) {
+			return (rv);
+		}
+	} else if ((strcmp(name, NNG_OPT_TLS_SERVER_NAME) == 0) ||
+	    (strcmp(name, NNG_OPT_TLS_CA_FILE) == 0) ||
+	    (strcmp(name, NNG_OPT_TLS_CERT_KEY_FILE) == 0)) {
+		if ((t != NNI_TYPE_OPAQUE) && (t != NNI_TYPE_STRING)) {
+			return (NNG_EBADTYPE);
+		}
+		if (nni_strnlen(v, sz) >= sz) {
+			return (NNG_EINVAL);
+		}
+	} else if ((strcmp(name, NNG_OPT_TLS_AUTH_MODE) == 0)) {
+		// 0, 1, or 2 (none, optional, required)
+		if ((rv = nni_copyin_int(NULL, v, sz, 0, 2, t)) != 0) {
+			return (rv);
+		}
+#endif
+
+#if defined(NNG_PLATFORM_POSIX) && !defined(NNG_SUPPRESS_DEPRECATED)
+	} else if (strcmp(name, NNG_OPT_IPC_PERMISSIONS) == 0) {
+		// UNIX mode bits are 0777, but allow set id and sticky bits
+		if ((rv = nni_copyin_int(NULL, v, sz, 0, 07777, t)) != 0) {
+			return (rv);
+		}
+#endif
+
+#if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_SUPPRESS_DEPRECATED)
+	} else if (strcmp(name, NNG_OPT_IPC_SECURITY_DESCRIPTOR) == 0) {
+		if ((rv = nni_copyin_ptr(NULL, v, sz, t)) == 0) {
+			return (rv);
+		}
+#endif
 	}
 
 	// Prepare a copy of the socket option.
@@ -1058,6 +1106,10 @@ nni_sock_setopt(
 		}
 	}
 
+#ifndef NNG_ELIDE_DEPRCATED
+	nni_dialer *  d;
+	nni_listener *l;
+
 	// Apply the options.  Failure to set any option on any
 	// transport (other than ENOTSUP) stops the operation
 	// altogether.  Its important that transport wide checks
@@ -1084,6 +1136,7 @@ nni_sock_setopt(
 			}
 		}
 	}
+#endif
 
 	if (rv == 0) {
 		// Remove and toss the old value; we are using a new one.
@@ -1151,10 +1204,12 @@ nni_sock_getopt(
 				}
 			}
 
-			if (sopt->sz > *szp) {
-				sz = *szp;
+			if (szp != NULL) {
+				if (sopt->sz > *szp) {
+					sz = *szp;
+				}
+				*szp = sopt->sz;
 			}
-			*szp = sopt->sz;
 			memcpy(val, sopt->data, sz);
 			rv = 0;
 			break;

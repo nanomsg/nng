@@ -18,6 +18,5 @@
 // object.  All fields will be zeroed.
 extern int nni_tls_dialer_alloc(nng_stream_dialer **, const nng_url *);
 extern int nni_tls_listener_alloc(nng_stream_listener **, const nng_url *);
-extern int nni_tls_checkopt(const char *, const void *, size_t, nni_type);
 
 #endif // NNG_SUPPLEMENTAL_TLS_TLS_API_H

@@ -1,6 +1,6 @@
 = nng_socket_get(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -47,8 +47,12 @@ the xref:nng_socket.5.adoc[socket] _s_.
 The actual options that may be retrieved in this way vary.
 A number of them are documented in xref:nng_options.5.adoc[nng_options(5)].
 
-Additionally transport-specific options and protocol-specific options are
-documented with the transports and protocols themselves.
+Additionally protocol-specific options are documented with the protocols themselves.
+
+IMPORTANT: Access to transport options via this function is deprecated, and may be
+removed from a future release.  Applications should instead make use of
+xref:nng_dialer_get.3.adoc[nng_dialer_get] or
+xref:nng_listener_get.3.adoc[nng_listener_get] for specific dialers or listeners.
 
 === Forms
 

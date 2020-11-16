@@ -8,7 +8,7 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-nng_sources(nng.c)
+nng_sources(nng.c nng_legacy.c)
 nng_headers(nng/nng.h)
 
 

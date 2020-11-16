@@ -593,7 +593,7 @@ tcptran_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcptran_pipe *p = arg;
-	return (nni_stream_getx(p->conn, name, buf, szp, t));
+	return (nni_stream_get(p->conn, name, buf, szp, t));
 }
 
 static void
@@ -863,11 +863,11 @@ tcptran_ep_init(tcptran_ep **epp, nng_url *url, nni_sock *sock)
 
 #ifdef NNG_ENABLE_STATS
 	static const nni_stat_info rcv_max_info = {
-	    .si_name   = "rcv_max",
-	    .si_desc   = "maximum receive size",
-	    .si_type   = NNG_STAT_LEVEL,
-	    .si_unit   = NNG_UNIT_BYTES,
-	    .si_atomic = true,
+		.si_name   = "rcv_max",
+		.si_desc   = "maximum receive size",
+		.si_type   = NNG_STAT_LEVEL,
+		.si_unit   = NNG_UNIT_BYTES,
+		.si_atomic = true,
 	};
 	nni_stat_init(&ep->st_rcv_max, &rcv_max_info);
 #endif
@@ -910,7 +910,7 @@ tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 		return (rv);
 	}
 	if ((srcsa.s_family != NNG_AF_UNSPEC) &&
-	    ((rv = nni_stream_dialer_setx(ep->dialer, NNG_OPT_LOCADDR, &srcsa,
+	    ((rv = nni_stream_dialer_set(ep->dialer, NNG_OPT_LOCADDR, &srcsa,
 	          sizeof(srcsa), NNI_TYPE_SOCKADDR)) != 0)) {
 		tcptran_ep_fini(ep);
 		return (rv);
@@ -1141,7 +1141,7 @@ tcptran_dialer_getopt(
 	tcptran_ep *ep = arg;
 	int         rv;
 
-	rv = nni_stream_dialer_getx(ep->dialer, name, buf, szp, t);
+	rv = nni_stream_dialer_get(ep->dialer, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_getopt(tcptran_ep_opts, name, ep, buf, szp, t);
 	}
@@ -1155,7 +1155,7 @@ tcptran_dialer_setopt(
 	tcptran_ep *ep = arg;
 	int         rv;
 
-	rv = nni_stream_dialer_setx(ep->dialer, name, buf, sz, t);
+	rv = nni_stream_dialer_set(ep->dialer, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(tcptran_ep_opts, name, ep, buf, sz, t);
 	}
@@ -1169,7 +1169,7 @@ tcptran_listener_getopt(
 	tcptran_ep *ep = arg;
 	int         rv;
 
-	rv = nni_stream_listener_getx(ep->listener, name, buf, szp, t);
+	rv = nni_stream_listener_get(ep->listener, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_getopt(tcptran_ep_opts, name, ep, buf, szp, t);
 	}
@@ -1183,36 +1183,9 @@ tcptran_listener_setopt(
 	tcptran_ep *ep = arg;
 	int         rv;
 
-	rv = nni_stream_listener_setx(ep->listener, name, buf, sz, t);
+	rv = nni_stream_listener_set(ep->listener, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(tcptran_ep_opts, name, ep, buf, sz, t);
-	}
-	return (rv);
-}
-
-static int
-tcptran_check_recvmaxsz(const void *v, size_t sz, nni_type t)
-{
-	return (nni_copyin_size(NULL, v, sz, 0, NNI_MAXSZ, t));
-}
-
-static nni_chkoption tcptran_checkopts[] = {
-	{
-	    .o_name  = NNG_OPT_RECVMAXSZ,
-	    .o_check = tcptran_check_recvmaxsz,
-	},
-	{
-	    .o_name = NULL,
-	},
-};
-
-static int
-tcptran_checkopt(const char *name, const void *buf, size_t sz, nni_type t)
-{
-	int rv;
-	rv = nni_chkopt(tcptran_checkopts, name, buf, sz, t);
-	if (rv == NNG_ENOTSUP) {
-		rv = nni_stream_checkopt("tcp", name, buf, sz, t);
 	}
 	return (rv);
 }
@@ -1244,7 +1217,6 @@ static nni_tran tcp_tran = {
 	.tran_pipe     = &tcptran_pipe_ops,
 	.tran_init     = tcptran_init,
 	.tran_fini     = tcptran_fini,
-	.tran_checkopt = tcptran_checkopt,
 };
 
 static nni_tran tcp4_tran = {
@@ -1255,7 +1227,6 @@ static nni_tran tcp4_tran = {
 	.tran_pipe     = &tcptran_pipe_ops,
 	.tran_init     = tcptran_init,
 	.tran_fini     = tcptran_fini,
-	.tran_checkopt = tcptran_checkopt,
 };
 
 static nni_tran tcp6_tran = {
@@ -1266,7 +1237,6 @@ static nni_tran tcp6_tran = {
 	.tran_pipe     = &tcptran_pipe_ops,
 	.tran_init     = tcptran_init,
 	.tran_fini     = tcptran_fini,
-	.tran_checkopt = tcptran_checkopt,
 };
 
 int

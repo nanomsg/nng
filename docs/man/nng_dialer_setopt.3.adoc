@@ -1,6 +1,6 @@
 = nng_dialer_setopt(3)
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -40,7 +40,8 @@ int nng_dialer_setopt_uint64(nng_dialer d, const char *opt, uint64_t u64);
 
 == DESCRIPTION
 
-NOTE: These functions are deprecated.  Please see xref:nng_dialer_set.3.adoc[nng_dialer_set].
+IMPORTANT: These functions are deprecated.  Please see xref:nng_dialer_set.3.adoc[nng_dialer_set].
+They may not be present if the library was built with `NNG_ELIDE_DEPRECATED`.
 
 (((options, dialer)))
 The `nng_dialer_setopt()` functions are used to configure options for
