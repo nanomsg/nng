@@ -16,8 +16,8 @@
 #include <acutest.h>
 
 #ifdef NNG_PLATFORM_POSIX
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #endif
 
@@ -34,8 +34,8 @@ test_path_too_long(void)
 
 	TEST_ASSERT(strlen(addr) == 255);
 	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
 	TEST_NNG_FAIL(nng_listen(s1, addr, NULL, 0), NNG_EADDRINVAL);
 	TEST_NNG_FAIL(
 	    nng_dial(s1, addr, NULL, NNG_FLAG_NONBLOCK), NNG_EADDRINVAL);
@@ -54,9 +54,38 @@ test_ipc_dialer_perms(void)
 
 	TEST_NNG_PASS(nng_pair0_open(&s));
 	TEST_NNG_PASS(nng_dialer_create(&d, s, addr));
-	TEST_NNG_FAIL(nng_dialer_setopt_int(d, NNG_OPT_IPC_PERMISSIONS, 0444),
-	    NNG_ENOTSUP);
+	TEST_NNG_FAIL(
+	    nng_dialer_set_int(d, NNG_OPT_IPC_PERMISSIONS, 0444), NNG_ENOTSUP);
 
+	TEST_NNG_PASS(nng_close(s));
+}
+
+void
+test_ipc_dialer_properties(void)
+{
+	nng_socket   s;
+	nng_dialer   d;
+	nng_sockaddr sa;
+	size_t       z;
+	char         addr[64];
+
+	testutil_scratch_addr("ipc", sizeof(addr), addr);
+
+	TEST_NNG_PASS(nng_pair0_open(&s));
+	TEST_NNG_PASS(nng_dial(s, addr, &d, NNG_FLAG_NONBLOCK));
+	// Dialers don't have local addresses.
+	TEST_NNG_FAIL(
+	    nng_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
+
+	TEST_NNG_FAIL(
+	    nng_dialer_set(d, NNG_OPT_LOCADDR, &sa, sizeof(sa)), NNG_ENOTSUP);
+
+	z = 8192;
+	TEST_NNG_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, z));
+	z = 0;
+	TEST_NNG_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &z));
+	TEST_CHECK(z == 8192);
+	TEST_NNG_FAIL(nng_dialer_set_bool(d, NNG_OPT_RAW, true), NNG_ENOTSUP);
 	TEST_NNG_PASS(nng_close(s));
 }
 
@@ -66,6 +95,7 @@ test_ipc_listener_perms(void)
 	nng_socket   s;
 	nng_listener l;
 	char         addr[64];
+
 #ifndef _WIN32
 	char *      path;
 	struct stat st;
@@ -100,6 +130,35 @@ test_ipc_listener_perms(void)
 	    NNG_EBUSY);
 #endif
 
+	TEST_NNG_PASS(nng_close(s));
+}
+
+void
+test_ipc_listener_properties(void)
+{
+	nng_socket   s;
+	nng_listener l;
+	nng_sockaddr sa;
+	size_t       z;
+	char         addr[64];
+
+	testutil_scratch_addr("ipc", sizeof(addr), addr);
+
+	TEST_NNG_PASS(nng_pair0_open(&s));
+	TEST_NNG_PASS(nng_listen(s, addr, &l, 0));
+	TEST_NNG_PASS(nng_listener_getopt_sockaddr(l, NNG_OPT_LOCADDR, &sa));
+	TEST_CHECK(sa.s_ipc.sa_family == NNG_AF_IPC);
+	TEST_STREQUAL(sa.s_ipc.sa_path, addr+strlen("ipc://"));
+
+	TEST_NNG_FAIL(nng_listener_setopt(l, NNG_OPT_LOCADDR, &sa, sizeof(sa)),
+	    NNG_EREADONLY);
+	z = 8192;
+	TEST_NNG_PASS(nng_listener_setopt_size(l, NNG_OPT_RECVMAXSZ, z));
+	z = 0;
+	TEST_NNG_PASS(nng_listener_getopt_size(l, NNG_OPT_RECVMAXSZ, &z));
+	TEST_CHECK(z == 8192);
+	TEST_NNG_FAIL(
+	    nng_listener_setopt_bool(l, NNG_OPT_RAW, true), NNG_ENOTSUP);
 	TEST_NNG_PASS(nng_close(s));
 }
 
@@ -308,7 +367,9 @@ test_unix_alias(void)
 TEST_LIST = {
 	{ "ipc path too long", test_path_too_long },
 	{ "ipc dialer perms", test_ipc_dialer_perms },
+	{ "ipc dialer props", test_ipc_dialer_properties },
 	{ "ipc listener perms", test_ipc_listener_perms },
+	{ "ipc listener props", test_ipc_listener_properties },
 	{ "ipc abstract sockets", test_abstract_sockets },
 	{ "ipc abstract auto bind", test_abstract_auto_bind },
 	{ "ipc abstract name too long", test_abstract_too_long },

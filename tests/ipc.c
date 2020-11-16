@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -85,55 +85,5 @@ check_props(nng_msg *msg)
 
 TestMain("IPC Transport", {
 	trantest_test_extended("ipc:///tmp/nng_ipc_test_%u", check_props);
-
-	Convey("IPC listener properties", {
-		nng_socket   s;
-		nng_listener l;
-		nng_sockaddr sa2;
-		size_t       z;
-
-		So(nng_req0_open(&s) == 0);
-		Reset({ nng_close(s); });
-		So(nng_listen(s, "ipc:///tmp/nng_ipc_addr_test", &l, 0) == 0);
-		So(nng_listener_getopt_sockaddr(l, NNG_OPT_LOCADDR, &sa2) ==
-		    0);
-		So(sa2.s_ipc.sa_family == NNG_AF_IPC);
-		So(strcmp(sa2.s_ipc.sa_path, "/tmp/nng_ipc_addr_test") == 0);
-
-		So(nng_listener_setopt(l, NNG_OPT_LOCADDR, &sa2,
-		       sizeof(sa2)) == NNG_EREADONLY);
-		z = 8192;
-		So(nng_listener_setopt_size(l, NNG_OPT_RECVMAXSZ, z) == 0);
-		z = 0;
-		So(nng_listener_getopt_size(l, NNG_OPT_RECVMAXSZ, &z) == 0);
-		So(z == 8192);
-		So(nng_listener_setopt_bool(l, NNG_OPT_RAW, true) ==
-		    NNG_ENOTSUP);
-	});
-	Convey("IPC dialer properties", {
-		nng_socket   s;
-		nng_dialer   d;
-		nng_sockaddr sa2;
-		size_t       z;
-
-		So(nng_req0_open(&s) == 0);
-		Reset({ nng_close(s); });
-		So(nng_dial(s, "ipc:///tmp/nng_ipc_addr_test", &d,
-		       NNG_FLAG_NONBLOCK) == 0);
-		// Dialers don't have local addresses.
-		So(nng_dialer_getopt_sockaddr(d, NNG_OPT_LOCADDR, &sa2) ==
-		    NNG_ENOTSUP);
-
-		So(nng_dialer_setopt(d, NNG_OPT_LOCADDR, &sa2, sizeof(sa2)) ==
-		    NNG_ENOTSUP);
-		z = 8192;
-		So(nng_dialer_setopt_size(d, NNG_OPT_RECVMAXSZ, z) == 0);
-		z = 0;
-		So(nng_dialer_getopt_size(d, NNG_OPT_RECVMAXSZ, &z) == 0);
-		So(z == 8192);
-		So(nng_dialer_setopt_bool(d, NNG_OPT_RAW, true) ==
-		    NNG_ENOTSUP);
-	});
-
 	nng_fini();
 })
