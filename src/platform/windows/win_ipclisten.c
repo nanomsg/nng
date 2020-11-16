@@ -282,6 +282,7 @@ ipc_listener_accept(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_ECLOSED);
 		return;
 	}
+	nni_aio_schedule(aio, ipc_accept_cancel, l);
 	nni_list_append(&l->aios, aio);
 	if (nni_list_first(&l->aios) == aio) {
 		ipc_accept_start(l);
