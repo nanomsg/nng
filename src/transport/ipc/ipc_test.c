@@ -148,7 +148,7 @@ test_ipc_listener_properties(void)
 	TEST_NNG_PASS(nng_listen(s, addr, &l, 0));
 	TEST_NNG_PASS(nng_listener_getopt_sockaddr(l, NNG_OPT_LOCADDR, &sa));
 	TEST_CHECK(sa.s_ipc.sa_family == NNG_AF_IPC);
-	TEST_STREQUAL(sa.s_ipc.sa_path, addr+strlen("ipc://"));
+	TEST_STREQUAL(sa.s_ipc.sa_path, addr + strlen("ipc://"));
 
 	TEST_NNG_FAIL(nng_listener_setopt(l, NNG_OPT_LOCADDR, &sa, sizeof(sa)),
 	    NNG_EREADONLY);
@@ -160,6 +160,40 @@ test_ipc_listener_properties(void)
 	TEST_NNG_FAIL(
 	    nng_listener_setopt_bool(l, NNG_OPT_RAW, true), NNG_ENOTSUP);
 	TEST_NNG_PASS(nng_close(s));
+}
+
+void
+test_ipc_recv_max(void)
+{
+	char         msg[256];
+	char         rcvbuf[256];
+	nng_socket   s0;
+	nng_socket   s1;
+	nng_listener l;
+	size_t       sz;
+	char         addr[64];
+
+	testutil_scratch_addr("ipc", sizeof(addr), addr);
+
+	TEST_NNG_PASS(nng_pair0_open(&s0));
+	TEST_NNG_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	TEST_NNG_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
+	TEST_NNG_PASS(nng_listener_create(&l, s0, addr));
+	TEST_NNG_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
+	TEST_CHECK(sz == 200);
+	TEST_NNG_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 100));
+	TEST_NNG_PASS(nng_listener_start(l, 0));
+
+	TEST_NNG_PASS(nng_pair0_open(&s1));
+	TEST_NNG_PASS(nng_dial(s1, addr, NULL, 0));
+	TEST_NNG_PASS(nng_send(s1, msg, 95, 0));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	TEST_NNG_PASS(nng_recv(s0, rcvbuf, &sz, 0));
+	TEST_CHECK(sz == 95);
+	TEST_NNG_PASS(nng_send(s1, msg, 150, 0));
+	TEST_NNG_FAIL(nng_recv(s0, rcvbuf, &sz, 0), NNG_ETIMEDOUT);
+	TEST_NNG_PASS(nng_close(s0));
+	TEST_NNG_PASS(nng_close(s1));
 }
 
 void
@@ -370,6 +404,7 @@ TEST_LIST = {
 	{ "ipc dialer props", test_ipc_dialer_properties },
 	{ "ipc listener perms", test_ipc_listener_perms },
 	{ "ipc listener props", test_ipc_listener_properties },
+	{ "ipc recv max", test_ipc_recv_max },
 	{ "ipc abstract sockets", test_abstract_sockets },
 	{ "ipc abstract auto bind", test_abstract_auto_bind },
 	{ "ipc abstract name too long", test_abstract_too_long },
