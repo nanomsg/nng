@@ -10,10 +10,8 @@
 
 if (NNG_SUPP_WEBSOCKET)
     nng_sources(websocket.c websocket.h)
-    if (NNG_SUPP_TLS)
-        nng_test(wssfile_test)
-    endif ()
 else ()
     nng_sources(stub.c)
 endif ()
+nng_test(wssfile_test)
 nng_test(websocket_test)

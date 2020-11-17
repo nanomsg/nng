@@ -99,16 +99,28 @@ nni_http_client_init(nni_http_client **cp, const nni_url *url)
 {
 	int              rv;
 	nni_http_client *c;
-	nng_url          myurl;
+	nng_url          my_url;
 
 	// Rewrite URLs to either TLS or TCP.
-	memcpy(&myurl, url, sizeof(myurl));
+	memcpy(&my_url, url, sizeof(my_url));
 	if ((strcmp(url->u_scheme, "http") == 0) ||
 	    (strcmp(url->u_scheme, "ws") == 0)) {
-		myurl.u_scheme = "tcp";
+		my_url.u_scheme = "tcp";
 	} else if ((strcmp(url->u_scheme, "https") == 0) ||
 	    (strcmp(url->u_scheme, "wss") == 0)) {
-		myurl.u_scheme = "tls+tcp";
+		my_url.u_scheme = "tls+tcp";
+	} else if ((strcmp(url->u_scheme, "ws4") == 0) ||
+	    (strcmp(url->u_scheme, "http4") == 0)) {
+		my_url.u_scheme = "tcp4";
+	} else if ((strcmp(url->u_scheme, "ws6") == 0) ||
+	    (strcmp(url->u_scheme, "http6") == 0)) {
+		my_url.u_scheme = "tcp6";
+	} else if ((strcmp(url->u_scheme, "wss4") == 0) ||
+	    (strcmp(url->u_scheme, "https4") == 0)) {
+		my_url.u_scheme = "tls+tcp4";
+	} else if ((strcmp(url->u_scheme, "wss6") == 0) ||
+	    (strcmp(url->u_scheme, "https6") == 0)) {
+		my_url.u_scheme = "tls+tcp6";
 	} else {
 		return (NNG_EADDRINVAL);
 	}
@@ -124,7 +136,7 @@ nni_http_client_init(nni_http_client **cp, const nni_url *url)
 	nni_mtx_init(&c->mtx);
 	nni_aio_list_init(&c->aios);
 
-	if ((rv = nng_stream_dialer_alloc_url(&c->dialer, &myurl)) != 0) {
+	if ((rv = nng_stream_dialer_alloc_url(&c->dialer, &my_url)) != 0) {
 		nni_http_client_fini(c);
 		return (rv);
 	}
