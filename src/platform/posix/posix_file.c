@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -323,15 +323,12 @@ nni_plat_temp_dir(void)
 char *
 nni_plat_join_dir(const char *prefix, const char *suffix)
 {
-	char * newdir;
-	size_t len;
+	char *result;
 
-	len    = strlen(prefix) + strlen(suffix) + 2;
-	newdir = nni_alloc(strlen(prefix) + strlen(suffix) + 2);
-	if (newdir != NULL) {
-		(void) snprintf(newdir, len, "%s/%s", prefix, suffix);
+	if (nni_asprintf(&result, "%s/%s", prefix, suffix) == 0) {
+		return (result);
 	}
-	return (newdir);
+	return (NULL);
 }
 
 #endif // NNG_PLATFORM_POSIX

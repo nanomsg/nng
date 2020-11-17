@@ -9,8 +9,7 @@
 #
 
 # TLS transport
-option (NNG_TRANSPORT_TLS "Enable TLS transport." ON)
-mark_as_advanced(NNG_TRANSPORT_TLS)
+nng_directory(tls)
 
 nng_sources_if(NNG_TRANSPORT_TLS tls.c)
 nng_headers_if(NNG_TRANSPORT_TLS nng/transport/tls/tls.h)

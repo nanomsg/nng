@@ -1,5 +1,5 @@
 #
-# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -9,8 +9,7 @@
 #
 
 # inproc protocol
-option (NNG_TRANSPORT_INPROC "Enable inproc transport." ON)
-mark_as_advanced(NNG_TRANSPORT_INPROC)
+nng_directory(inproc)
 
 nng_sources_if(NNG_TRANSPORT_INPROC inproc.c)
 nng_headers_if(NNG_TRANSPORT_INPROC nng/transport/inproc/inproc.h)

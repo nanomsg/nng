@@ -13,6 +13,8 @@
 option (NNG_TRANSPORT_ZEROTIER "Enable ZeroTier transport (requires libzerotiercore)." OFF)
 mark_as_advanced(NNG_TRANSPORT_ZEROTIER)
 
+nng_directory(zerotier)
+
 if (NNG_TRANSPORT_ZEROTIER)
 
     # NB: As we wind up linking libzerotiercore.a into the application,

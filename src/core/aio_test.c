@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -17,20 +17,20 @@
 #include "acutest.h"
 #include "testutil.h"
 
-void
-cbdone(void *p)
+static void
+cb_done(void *p)
 {
 	(*(int *) p)++;
 }
 
-void
-sleepdone(void *arg)
+static void
+sleep_done(void *arg)
 {
 	*(nng_time *) arg = nng_clock();
 }
 
-void
-cancelfn(nng_aio *aio, void *arg, int rv)
+static void
+cancel(nng_aio *aio, void *arg, int rv)
 {
 	*(int *) arg = rv;
 	nng_aio_finish(aio, rv);
@@ -39,46 +39,46 @@ cancelfn(nng_aio *aio, void *arg, int rv)
 void
 test_sleep(void)
 {
-	nng_time start = 0;
+	nng_time start;
 	nng_time end   = 0;
-	nng_aio *saio;
+	nng_aio *aio;
 
-	TEST_NNG_PASS(nng_aio_alloc(&saio, sleepdone, &end));
+	TEST_NNG_PASS(nng_aio_alloc(&aio, sleep_done, &end));
 	start = nng_clock();
-	nng_sleep_aio(200, saio);
-	nng_aio_wait(saio);
-	TEST_NNG_PASS(nng_aio_result(saio));
+	nng_sleep_aio(200, aio);
+	nng_aio_wait(aio);
+	TEST_NNG_PASS(nng_aio_result(aio));
 	TEST_CHECK(end != 0);
 	TEST_CHECK((end - start) >= 200);
 	TEST_CHECK((end - start) <= 1000);
 	TEST_CHECK((nng_clock() - start) >= 200);
 	TEST_CHECK((nng_clock() - start) <= 1000);
-	nng_aio_free(saio);
+	nng_aio_free(aio);
 }
 
 void
 test_sleep_timeout(void)
 {
-	nng_time start = 0;
+	nng_time start;
 	nng_time end   = 0;
-	nng_aio *saio;
+	nng_aio *aio;
 
-	TEST_CHECK(nng_aio_alloc(&saio, sleepdone, &end) == 0);
-	nng_aio_set_timeout(saio, 100);
+	TEST_CHECK(nng_aio_alloc(&aio, sleep_done, &end) == 0);
+	nng_aio_set_timeout(aio, 100);
 	start = nng_clock();
-	nng_sleep_aio(2000, saio);
-	nng_aio_wait(saio);
-	TEST_NNG_FAIL(nng_aio_result(saio), NNG_ETIMEDOUT);
+	nng_sleep_aio(2000, aio);
+	nng_aio_wait(aio);
+	TEST_NNG_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
 	TEST_CHECK(end != 0);
 	TEST_CHECK((end - start) >= 100);
 	TEST_CHECK((end - start) <= 1000);
 	TEST_CHECK((nng_clock() - start) >= 100);
 	TEST_CHECK((nng_clock() - start) <= 1000);
-	nng_aio_free(saio);
+	nng_aio_free(aio);
 }
 
 void
-test_insane_niov(void)
+test_insane_nio(void)
 {
 	nng_aio *aio;
 	nng_iov  iov;
@@ -96,7 +96,7 @@ test_provider_cancel(void)
 	// We fake an empty provider that does not do anything.
 	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	TEST_CHECK(nng_aio_begin(aio) == true);
-	nng_aio_defer(aio, cancelfn, &rv);
+	nng_aio_defer(aio, cancel, &rv);
 	nng_aio_cancel(aio);
 	nng_aio_wait(aio);
 	TEST_CHECK(rv == NNG_ECANCELED);
@@ -111,7 +111,7 @@ test_consumer_cancel(void)
 	int        done = 0;
 
 	TEST_CHECK(nng_pair1_open(&s1) == 0);
-	TEST_CHECK(nng_aio_alloc(&a, cbdone, &done) == 0);
+	TEST_CHECK(nng_aio_alloc(&a, cb_done, &done) == 0);
 
 	nng_aio_set_timeout(a, NNG_DURATION_INFINITE);
 	nng_recv_aio(s1, a);
@@ -129,10 +129,10 @@ test_traffic(void)
 {
 	nng_socket s1;
 	nng_socket s2;
-	nng_aio *  txaio;
-	nng_aio *  rxaio;
-	int        txdone = 0;
-	int        rxdone = 0;
+	nng_aio *  tx_aio;
+	nng_aio *  rx_aio;
+	int        tx_done = 0;
+	int        rx_done = 0;
 	nng_msg *  m;
 	char *     addr = "inproc://traffic";
 
@@ -142,37 +142,37 @@ test_traffic(void)
 	TEST_NNG_PASS(nng_listen(s1, addr, NULL, 0));
 	TEST_NNG_PASS(nng_dial(s2, addr, NULL, 0));
 
-	TEST_NNG_PASS(nng_aio_alloc(&rxaio, cbdone, &rxdone));
-	TEST_NNG_PASS(nng_aio_alloc(&txaio, cbdone, &txdone));
+	TEST_NNG_PASS(nng_aio_alloc(&rx_aio, cb_done, &rx_done));
+	TEST_NNG_PASS(nng_aio_alloc(&tx_aio, cb_done, &tx_done));
 
-	nng_aio_set_timeout(rxaio, 1000);
-	nng_aio_set_timeout(txaio, 1000);
+	nng_aio_set_timeout(rx_aio, 1000);
+	nng_aio_set_timeout(tx_aio, 1000);
 
 	TEST_NNG_PASS(nng_msg_alloc(&m, 0));
 	TEST_NNG_PASS(nng_msg_append(m, "hello", strlen("hello")));
 
-	nng_recv_aio(s2, rxaio);
+	nng_recv_aio(s2, rx_aio);
 
-	nng_aio_set_msg(txaio, m);
-	nng_send_aio(s1, txaio);
+	nng_aio_set_msg(tx_aio, m);
+	nng_send_aio(s1, tx_aio);
 
-	nng_aio_wait(txaio);
-	nng_aio_wait(rxaio);
+	nng_aio_wait(tx_aio);
+	nng_aio_wait(rx_aio);
 
-	TEST_NNG_PASS(nng_aio_result(rxaio));
-	TEST_NNG_PASS(nng_aio_result(txaio));
+	TEST_NNG_PASS(nng_aio_result(rx_aio));
+	TEST_NNG_PASS(nng_aio_result(tx_aio));
 
-	TEST_CHECK((m = nng_aio_get_msg(rxaio)) != NULL);
+	TEST_CHECK((m = nng_aio_get_msg(rx_aio)) != NULL);
 	TEST_CHECK(nng_msg_len(m) == strlen("hello"));
 	TEST_CHECK(memcmp(nng_msg_body(m), "hello", strlen("hello")) == 0);
 
 	nng_msg_free(m);
 
-	TEST_CHECK(rxdone == 1);
-	TEST_CHECK(txdone == 1);
+	TEST_CHECK(rx_done == 1);
+	TEST_CHECK(tx_done == 1);
 
-	nng_aio_free(rxaio);
-	nng_aio_free(txaio);
+	nng_aio_free(rx_aio);
+	nng_aio_free(tx_aio);
 	TEST_NNG_PASS(nng_close(s1));
 	TEST_NNG_PASS(nng_close(s2));
 }
@@ -185,7 +185,7 @@ test_explicit_timeout(void)
 	int        done = 0;
 
 	TEST_NNG_PASS(nng_pair1_open(&s));
-	TEST_NNG_PASS(nng_aio_alloc(&a, cbdone, &done));
+	TEST_NNG_PASS(nng_aio_alloc(&a, cb_done, &done));
 	nng_aio_set_timeout(a, 40);
 	nng_recv_aio(s, a);
 	nng_aio_wait(a);
@@ -203,8 +203,8 @@ test_inherited_timeout(void)
 	int        done = 0;
 
 	TEST_NNG_PASS(nng_pair1_open(&s));
-	TEST_NNG_PASS(nng_aio_alloc(&a, cbdone, &done));
-	TEST_NNG_PASS(nng_setopt_ms(s, NNG_OPT_RECVTIMEO, 40));
+	TEST_NNG_PASS(nng_aio_alloc(&a, cb_done, &done));
+	TEST_NNG_PASS(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 40));
 	nng_recv_aio(s, a);
 	nng_aio_wait(a);
 	TEST_CHECK(done == 1);
@@ -221,7 +221,7 @@ test_zero_timeout(void)
 	int        done = 0;
 
 	TEST_NNG_PASS(nng_pair1_open(&s));
-	TEST_NNG_PASS(nng_aio_alloc(&a, cbdone, &done));
+	TEST_NNG_PASS(nng_aio_alloc(&a, cb_done, &done));
 	nng_aio_set_timeout(a, NNG_DURATION_ZERO);
 	nng_recv_aio(s, a);
 	nng_aio_wait(a);
@@ -234,7 +234,7 @@ test_zero_timeout(void)
 TEST_LIST = {
 	{ "sleep", test_sleep },
 	{ "sleep timeout", test_sleep_timeout },
-	{ "insane niov", test_insane_niov },
+	{ "insane nio", test_insane_nio },
 	{ "provider cancel", test_provider_cancel },
 	{ "consumer cancel", test_consumer_cancel },
 	{ "traffic", test_traffic },

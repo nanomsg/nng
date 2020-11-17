@@ -15,7 +15,7 @@
 
 #include "acutest.h"
 
-struct addarg {
+struct add_arg {
 	int      cnt;
 	nng_mtx *mx;
 	nng_cv * cv;
@@ -24,7 +24,7 @@ struct addarg {
 void
 add(void *arg)
 {
-	struct addarg *aa = arg;
+	struct add_arg *aa = arg;
 
 	nng_mtx_lock(aa->mx);
 	aa->cnt++;
@@ -105,9 +105,9 @@ test_mutex(void)
 void
 test_thread(void)
 {
-	nng_thread *  thr;
-	int           rv;
-	struct addarg aa;
+	nng_thread *   thr;
+	int            rv;
+	struct add_arg aa;
 
 	TEST_CHECK(nng_mtx_alloc(&aa.mx) == 0);
 	TEST_CHECK(nng_cv_alloc(&aa.cv, aa.mx) == 0);
@@ -122,11 +122,11 @@ test_thread(void)
 }
 
 void
-test_condvar(void)
+test_cond_var(void)
 {
 	nng_thread *  thr;
 	int           rv;
-	struct addarg aa;
+	struct add_arg aa;
 
 	TEST_CHECK(nng_mtx_alloc(&aa.mx) == 0);
 	TEST_CHECK(nng_cv_alloc(&aa.cv, aa.mx) == 0);
@@ -175,7 +175,7 @@ TEST_LIST = {
 	{ "clock", test_clock },
 	{ "mutex", test_mutex },
 	{ "thread", test_thread },
-	{ "condvar", test_condvar },
+	{ "cond var", test_cond_var },
 	{ "random", test_random },
 	{ NULL, NULL },
 };

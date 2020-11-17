@@ -9,8 +9,7 @@
 #
 
 # ipc protocol
-option (NNG_TRANSPORT_IPC "Enable IPC transport." ON)
-mark_as_advanced(NNG_TRANSPORT_IPC)
+nng_directory(ipc)
 
 nng_sources_if(NNG_TRANSPORT_IPC ipc.c)
 nng_headers_if(NNG_TRANSPORT_IPC nng/transport/ipc/ipc.h)

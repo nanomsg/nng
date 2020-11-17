@@ -137,7 +137,7 @@ init_listener_wss_file(nng_listener l)
 	nni_strfree(pth);
 }
 
-void
+static void
 test_invalid_verify(void)
 {
 	uint16_t     port = testutil_next_port();
@@ -180,14 +180,14 @@ test_invalid_verify(void)
 	TEST_NNG_PASS(nng_close(s2));
 }
 
-void
+static void
 test_no_verify(void)
 {
 	nng_socket   s1;
 	nng_socket   s2;
 	nng_listener l;
 	nng_dialer   d;
-	char         addr[NNG_MAXADDRLEN];
+	char         addr[64];
 	nng_msg *    msg;
 	nng_pipe     p;
 	bool         b;
@@ -232,7 +232,7 @@ test_no_verify(void)
 	TEST_NNG_PASS(nng_close(s2));
 }
 
-void
+static void
 test_verify_works(void)
 {
 	nng_socket   s1;
@@ -280,7 +280,7 @@ test_verify_works(void)
 	TEST_NNG_PASS(nng_close(s2));
 }
 
-void
+static void
 test_cert_file_not_present(void)
 {
 	nng_socket   s1;

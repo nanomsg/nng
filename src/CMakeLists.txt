@@ -11,30 +11,16 @@
 nng_sources(nng.c nng_legacy.c)
 nng_headers(nng/nng.h)
 
-
 target_include_directories(nng PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(nng_testing PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
 add_subdirectory(core)
 
-add_subdirectory(platform/windows)
-add_subdirectory(platform/posix)
+add_subdirectory(platform)
 add_subdirectory(compat/nanomsg)
 
-add_subdirectory(protocol/bus0)
-add_subdirectory(protocol/pair0)
-add_subdirectory(protocol/pair1)
-add_subdirectory(protocol/pipeline0)
-add_subdirectory(protocol/pubsub0)
-add_subdirectory(protocol/reqrep0)
-add_subdirectory(protocol/survey0)
-
-add_subdirectory(transport/inproc)
-add_subdirectory(transport/ipc)
-add_subdirectory(transport/tcp)
-add_subdirectory(transport/tls)
-add_subdirectory(transport/ws)
-add_subdirectory(transport/zerotier)
+add_subdirectory(protocol)
+add_subdirectory(transport)
 
 add_subdirectory(supplemental/base64)
 add_subdirectory(supplemental/http)

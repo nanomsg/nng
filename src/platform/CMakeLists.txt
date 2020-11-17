@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -7,8 +7,11 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-nng_sources(nn.c)
+#  Platforms.
+nng_directory(platform)
 
-set(NNG_TEST_PREFIX ${NNG_TEST_PREFIX}.compat.nanomsg)
+add_subdirectory(posix)
+add_subdirectory(windows)
 
-nng_test(compat_tcp_test)
+nng_test(platform_test)
+nng_test(resolver_test)

@@ -9,11 +9,7 @@
 #
 
 # Surveyor/Respondent protocol
-option (NNG_PROTO_RESPONDENT0 "Enable RESPONDENTv0 protocol." ON)
-mark_as_advanced(NNG_PROTO_RESPONDENT0)
-
-option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
-mark_as_advanced(NNG_PROTO_SURVEYOR0)
+nng_directory(survey0)
 
 nng_sources_if(NNG_PROTO_SURVEYOR0 survey.c xsurvey.c)
 nng_headers_if(NNG_PROTO_SURVEYOR0 nng/protocol/survey0/survey.h)

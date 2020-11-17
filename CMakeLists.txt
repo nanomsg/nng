@@ -29,12 +29,12 @@ cmake_minimum_required(VERSION 3.13)
 
 project(nng C)
 include(CheckCCompilerFlag)
-include(CMakeDependentOption)
 include(GNUInstallDirs)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 include(NNGHelpers)
+include(NNGOptions)
 
 set(CMAKE_C_STANDARD 99)
 set(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -66,22 +66,9 @@ message(STATUS "Configuring for NNG version ${NNG_ABI_VERSION}")
 
 # User-defined options.
 
-option(BUILD_SHARED_LIBS "Build shared library" ${BUILD_SHARED_LIBS})
-
-if (CMAKE_CROSSCOMPILING)
-    set(NNG_NATIVE_BUILD OFF)
-else ()
-    set(NNG_NATIVE_BUILD ON)
-endif ()
-
-# We only build command line tools and tests if we are not in a
-# cross-compile situation.  Cross-compiling users who still want to
-# build these must enable them explicitly.  Some of these switches
-# must be enabled rather early as we use their values later.
-option(NNG_TESTS "Build and run tests." ${NNG_NATIVE_BUILD})
-option(NNG_TOOLS "Build extra tools." ${NNG_NATIVE_BUILD})
-option(NNG_ENABLE_NNGCAT "Enable building nngcat utility." ${NNG_TOOLS})
-option(NNG_ENABLE_COVERAGE "Enable coverage reporting." OFF)
+# This prefix is appended to by subdirectories, so that each test
+# gets named based on where it is in the tree.
+set(NNG_TEST_PREFIX nng)
 
 # Enable access to private APIs for our own use.
 add_definitions(-DNNG_PRIVATE)
@@ -108,16 +95,6 @@ target_compile_definitions(nng_testing PUBLIC NNG_STATIC_LIB NNG_TEST_LIB NNG_PR
 add_library(nng_private INTERFACE)
 target_compile_definitions(nng_private INTERFACE NNG_PRIVATE)
 
-# Eliding deprecated functionality can be used to build a slimmed down
-# version of the library, or alternatively to test for application
-# preparedness for expected feature removals (in the next major release.)
-# Applications can also set the NNG_ELIDE_DEPRECATED preprocessor symbol
-# before including <nng/nng.h> -- this will prevent declarations from
-# being exposed to applications, but it will not affect their ABI
-# availability for existing compiled applications.
-# Note: Currently this breaks the test suite, so we only do it
-# for the public library.
-option(NNG_ELIDE_DEPRECATED "Elide deprecated functionality." OFF)
 if (NNG_ELIDE_DEPRECATED)
     target_compile_definitions(nng, NNG_ELIDE_DEPRECATED)
 endif()
@@ -137,11 +114,7 @@ if (NOT WIN32)
     mark_as_advanced(NNG_SETSTACKSIZE)
 endif ()
 
-option(NNG_ENABLE_STATS "Enable statistics" ON)
-if (NNG_ENABLE_STATS)
-    add_definitions(-DNNG_ENABLE_STATS)
-endif ()
-mark_as_advanced(NNG_ENABLE_STATS)
+nng_defines_if(NNG_ENABLE_STATS NNG_ENABLE_STATS)
 
 if (NNG_RESOLV_CONCURRENCY)
     add_definitions(-DNNG_RESOLV_CONCURRENCY=${NNG_RESOLV_CONCURRENCY})
@@ -269,6 +242,10 @@ else ()
     set(NNG_PLATFORM_POSIX ON)
 endif ()
 
+if (NNG_ENABLE_TLS)
+    add_definitions(-DNNG_SUPP_TLS)
+endif ()
+
 if (NNG_TESTS)
     enable_testing()
     set(all_tests, "")
@@ -285,12 +262,6 @@ endif ()
 
 if (NNG_ENABLE_NNGCAT)
     add_subdirectory(tools/nngcat)
-endif ()
-
-option(NNG_ENABLE_TLS "Enable TLS protocol" OFF)
-if (NNG_ENABLE_TLS)
-    add_definitions(-DNNG_SUPP_TLS)
-    set(NNG_SUPP_TLS ON)
 endif ()
 
 add_subdirectory(docs/man)

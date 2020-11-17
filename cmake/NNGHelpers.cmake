@@ -98,8 +98,8 @@ function(nng_test NAME)
                 ${PROJECT_SOURCE_DIR}/tests
                 ${PROJECT_SOURCE_DIR}/src
                 ${PROJECT_SOURCE_DIR}/include)
-        add_test(NAME ${PROJECT_NAME}.${NAME} COMMAND ${NAME} -t)
-        set_tests_properties(${PROJECT_NAME}.${NAME} PROPERTIES TIMEOUT 180)
+        add_test(NAME ${NNG_TEST_PREFIX}.${NAME} COMMAND ${NAME} -t -v)
+        set_tests_properties(${NNG_TEST_PREFIX}.${NAME} PROPERTIES TIMEOUT 180)
     endif ()
 endfunction()
 
@@ -111,8 +111,8 @@ function(nng_test_if COND NAME)
                 ${PROJECT_SOURCE_DIR}/tests
                 ${PROJECT_SOURCE_DIR}/src
                 ${PROJECT_SOURCE_DIR}/include)
-        add_test(NAME ${PROJECT_NAME}.${NAME} COMMAND ${NAME} -t)
-        set_tests_properties(${PROJECT_NAME}.${NAME} PROPERTIES TIMEOUT 180)
+        add_test(NAME ${NNG_TEST_PREFIX}.${NAME} COMMAND ${NAME} -t -v)
+        set_tests_properties(${NNG_TEST_PREFIX}.${NAME} PROPERTIES TIMEOUT 180)
     endif ()
 endfunction()
 
@@ -153,3 +153,7 @@ function(nng_check_struct_member STR MEM HDR DEF)
         target_compile_definitions(nng_private INTERFACE ${DEF}=1)
     endif ()
 endfunction(nng_check_struct_member)
+
+macro(nng_directory DIR)
+    set(NNG_TEST_PREFIX ${NNG_TEST_PREFIX}.${DIR})
+endmacro(nng_directory)

@@ -1,5 +1,6 @@
 //
 // Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2018 Cody Piersall <cody.piersall@gmail.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -107,27 +108,24 @@ test_ipc_listener_perms(void)
 	TEST_NNG_PASS(nng_listener_create(&l, s, addr));
 
 #ifdef _WIN32
-	TEST_NNG_FAIL(
-	    nng_listener_setopt_int(l, NNG_OPT_IPC_PERMISSIONS, 0444),
+	TEST_NNG_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, 0444),
 	    NNG_ENOTSUP);
 #else
 	path = &addr[strlen("ipc://")];
 
 	// Attempt to set invalid permissions fails.
 	TEST_NNG_FAIL(
-	    nng_listener_setopt_int(l, NNG_OPT_IPC_PERMISSIONS, S_IFREG),
+	    nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, S_IFREG),
 	    NNG_EINVAL);
 
-	TEST_NNG_PASS(
-	    nng_listener_setopt_int(l, NNG_OPT_IPC_PERMISSIONS, 0444));
+	TEST_NNG_PASS(nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, 0444));
 	TEST_NNG_PASS(nng_listener_start(l, 0));
 	TEST_CHECK(stat(path, &st) == 0);
 	TEST_CHECK((st.st_mode & 0777) == 0444);
 
 	// Now that it's running, we cannot set it.
 	TEST_NNG_FAIL(
-	    nng_listener_setopt_int(l, NNG_OPT_IPC_PERMISSIONS, 0644),
-	    NNG_EBUSY);
+	    nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, 0644), NNG_EBUSY);
 #endif
 
 	TEST_NNG_PASS(nng_close(s));
@@ -146,19 +144,19 @@ test_ipc_listener_properties(void)
 
 	TEST_NNG_PASS(nng_pair0_open(&s));
 	TEST_NNG_PASS(nng_listen(s, addr, &l, 0));
-	TEST_NNG_PASS(nng_listener_getopt_sockaddr(l, NNG_OPT_LOCADDR, &sa));
+	TEST_NNG_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
 	TEST_CHECK(sa.s_ipc.sa_family == NNG_AF_IPC);
 	TEST_STREQUAL(sa.s_ipc.sa_path, addr + strlen("ipc://"));
 
-	TEST_NNG_FAIL(nng_listener_setopt(l, NNG_OPT_LOCADDR, &sa, sizeof(sa)),
+	TEST_NNG_FAIL(nng_listener_set(l, NNG_OPT_LOCADDR, &sa, sizeof(sa)),
 	    NNG_EREADONLY);
 	z = 8192;
-	TEST_NNG_PASS(nng_listener_setopt_size(l, NNG_OPT_RECVMAXSZ, z));
+	TEST_NNG_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, z));
 	z = 0;
-	TEST_NNG_PASS(nng_listener_getopt_size(l, NNG_OPT_RECVMAXSZ, &z));
+	TEST_NNG_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &z));
 	TEST_CHECK(z == 8192);
 	TEST_NNG_FAIL(
-	    nng_listener_setopt_bool(l, NNG_OPT_RAW, true), NNG_ENOTSUP);
+	    nng_listener_set_bool(l, NNG_OPT_RAW, true), NNG_ENOTSUP);
 	TEST_NNG_PASS(nng_close(s));
 }
 
@@ -242,10 +240,10 @@ test_abstract_auto_bind(void)
 
 	TEST_NNG_PASS(nng_pair0_open(&s1));
 	TEST_NNG_PASS(nng_pair0_open(&s2));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
 	TEST_NNG_PASS(nng_listen(s1, addr, &l, 0));
 
 	TEST_NNG_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
@@ -287,8 +285,8 @@ test_abstract_too_long(void)
 
 	TEST_ASSERT(strlen(addr) == 255);
 	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
 	TEST_NNG_FAIL(nng_listen(s1, addr, NULL, 0), NNG_EADDRINVAL);
 	TEST_NNG_FAIL(
 	    nng_dial(s1, addr, NULL, NNG_FLAG_NONBLOCK), NNG_EADDRINVAL);
@@ -317,10 +315,10 @@ test_abstract_null(void)
 
 	TEST_NNG_PASS(nng_pair0_open(&s1));
 	TEST_NNG_PASS(nng_pair0_open(&s2));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
 	TEST_NNG_PASS(nng_listen(s1, addr, &l, 0));
 
 	TEST_NNG_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
@@ -372,10 +370,10 @@ test_unix_alias(void)
 
 	TEST_NNG_PASS(nng_pair0_open(&s1));
 	TEST_NNG_PASS(nng_pair0_open(&s2));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
 	TEST_NNG_PASS(nng_listen(s1, addr1, NULL, 0));
 	TEST_NNG_PASS(nng_dial(s2, addr2, NULL, 0));
 

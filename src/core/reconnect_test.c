@@ -30,8 +30,8 @@ test_dial_before_listen(void)
 	TEST_NNG_PASS(nng_push0_open(&push));
 	TEST_NNG_PASS(nng_pull0_open(&pull));
 
-	TEST_NNG_PASS(nng_setopt_ms(pull, NNG_OPT_RECONNMINT, 10));
-	TEST_NNG_PASS(nng_setopt_ms(pull, NNG_OPT_RECONNMAXT, 10));
+	TEST_NNG_PASS(nng_socket_set_ms(pull, NNG_OPT_RECONNMINT, 10));
+	TEST_NNG_PASS(nng_socket_set_ms(pull, NNG_OPT_RECONNMAXT, 10));
 
 	TEST_NNG_PASS(nng_dial(pull, addr, NULL, NNG_FLAG_NONBLOCK));
 	testutil_sleep(100);
@@ -57,8 +57,8 @@ test_reconnect(void)
 	TEST_NNG_PASS(nng_push0_open(&push));
 	TEST_NNG_PASS(nng_pull0_open(&pull));
 
-	TEST_NNG_PASS(nng_setopt_ms(pull, NNG_OPT_RECONNMINT, 10));
-	TEST_NNG_PASS(nng_setopt_ms(pull, NNG_OPT_RECONNMAXT, 10));
+	TEST_NNG_PASS(nng_socket_set_ms(pull, NNG_OPT_RECONNMINT, 10));
+	TEST_NNG_PASS(nng_socket_set_ms(pull, NNG_OPT_RECONNMAXT, 10));
 
 	TEST_NNG_PASS(nng_dial(pull, addr, NULL, NNG_FLAG_NONBLOCK));
 	testutil_sleep(100);
@@ -92,8 +92,8 @@ test_reconnect_pipe(void)
 	TEST_NNG_PASS(nng_push0_open(&push));
 	TEST_NNG_PASS(nng_pull0_open(&pull));
 
-	TEST_NNG_PASS(nng_setopt_ms(pull, NNG_OPT_RECONNMINT, 10));
-	TEST_NNG_PASS(nng_setopt_ms(pull, NNG_OPT_RECONNMAXT, 10));
+	TEST_NNG_PASS(nng_socket_set_ms(pull, NNG_OPT_RECONNMINT, 10));
+	TEST_NNG_PASS(nng_socket_set_ms(pull, NNG_OPT_RECONNMAXT, 10));
 
 	TEST_NNG_PASS(nng_dial(pull, addr, NULL, NNG_FLAG_NONBLOCK));
 	testutil_sleep(100);
@@ -135,8 +135,8 @@ test_reconnect_back_off_zero(void)
 	TEST_NNG_PASS(nng_pull0_open(&pull));
 
 	// redial every 10 ms.
-	TEST_NNG_PASS(nng_setopt_ms(push, NNG_OPT_RECONNMAXT, 0));
-	TEST_NNG_PASS(nng_setopt_ms(push, NNG_OPT_RECONNMINT, 10));
+	TEST_NNG_PASS(nng_socket_set_ms(push, NNG_OPT_RECONNMAXT, 0));
+	TEST_NNG_PASS(nng_socket_set_ms(push, NNG_OPT_RECONNMINT, 10));
 	TEST_NNG_PASS(nng_dial(push, addr, NULL, NNG_FLAG_NONBLOCK));
 
 	// Start up the dialer first.  It should keep retrying every 10 ms.

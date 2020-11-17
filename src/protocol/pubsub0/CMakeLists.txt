@@ -9,11 +9,7 @@
 #
 
 #  Pub/Sub protocol
-option (NNG_PROTO_PUB0 "Enable PUBv0 protocol." ON)
-mark_as_advanced(NNG_PROTO_PUB0)
-
-option (NNG_PROTO_SUB0 "Enable SUBv0 protocol." ON)
-mark_as_advanced(NNG_PROTO_SUB0)
+nng_directory(pubsub0)
 
 nng_sources_if(NNG_PROTO_PUB0 pub.c)
 nng_headers_if(NNG_PROTO_PUB0 nng/protocol/pubsub0/pub.h)

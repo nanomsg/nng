@@ -9,19 +9,9 @@
 #
 
 # WebSocket transport
-option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
-mark_as_advanced(NNG_TRANSPORT_WS)
-
-CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_WSS "Enable WSS transport" ON
-    "NNG_ENABLE_TLS" OFF)
-mark_as_advanced(NNG_TRANSPORT_WSS)
+nng_directory(ws)
 
 if (NNG_TRANSPORT_WS OR NNG_TRANSPORT_WSS)
-    # Make sure things we *MUST* have are enabled.
-    set(NNG_SUPP_WEBSOCKET ON PARENT_SCOPE)
-    set(NNG_SUPP_HTTP ON PARENT_SCOPE)
-    set(NNG_SUPP_BASE64 ON PARENT_SCOPE)
-    set(NNG_SUPP_SHA1 ON PARENT_SCOPE)
     set(WS_ON ON)
 endif()
 

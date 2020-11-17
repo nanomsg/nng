@@ -8,6 +8,7 @@
 #
 
 #  Core.
+nng_directory(core)
 
 nng_check_sym(strlcpy string.h NNG_HAVE_STRLCPY)
 nng_check_sym(strnlen string.h NNG_HAVE_STRNLEN)
@@ -75,3 +76,11 @@ nng_sources(
         url.c
         url.h
 )
+
+nng_test(aio_test)
+nng_test(buf_size_test)
+nng_test(errors_test)
+nng_test(id_test)
+nng_test(reconnect_test)
+nng_test(sock_test)
+nng_test(url_test)

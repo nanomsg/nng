@@ -10,7 +10,7 @@
 #include "acutest.h"
 #include "testutil.h"
 
-#include "core/idhash.h"
+#include "idhash.h"
 
 void
 test_basic(void)

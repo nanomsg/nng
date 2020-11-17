@@ -1,5 +1,5 @@
 #
-# Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -9,8 +9,7 @@
 #
 
 #  PAIRv0 protocol
-option (NNG_PROTO_PAIR0 "Enable PAIRv0 protocol." ON)
-mark_as_advanced(NNG_PROTO_PAIR0)
+nng_directory(pair0)
 
 nng_sources_if(NNG_PROTO_PAIR0 pair.c)
 nng_headers_if(NNG_PROTO_PAIR0 nng/protocol/pair0/pair.h)
