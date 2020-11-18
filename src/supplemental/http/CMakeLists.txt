@@ -24,4 +24,5 @@ nng_sources_if(NNG_SUPP_HTTP
         http_conn.c
         http_msg.c
         http_public.c
+        http_schemes.c
         http_server.c)

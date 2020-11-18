@@ -382,4 +382,8 @@ extern void nni_http_transact_conn(
 extern void nni_http_transact(
     nni_http_client *, nni_http_req *, nni_http_res *, nni_aio *);
 
+// nni_http_stream_scheme returns the underlying stream scheme for a given
+// upper layer scheme.
+extern const char *nni_http_stream_scheme(const char *);
+
 #endif // NNG_SUPPLEMENTAL_HTTP_HTTP_API_H

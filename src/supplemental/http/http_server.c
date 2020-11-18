@@ -931,31 +931,15 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 {
 	nni_http_server *s;
 	int              rv;
-	nng_url          myurl;
+	nng_url          my_url;
+	const char *     scheme;
 
-	// Rewrite URLs to either TLS or TCP.
-	memcpy(&myurl, url, sizeof(myurl));
-	if ((strcmp(url->u_scheme, "http") == 0) ||
-	    (strcmp(url->u_scheme, "ws") == 0)) {
-		myurl.u_scheme = "tcp";
-	} else if ((strcmp(url->u_scheme, "https") == 0) ||
-	    (strcmp(url->u_scheme, "wss") == 0)) {
-		myurl.u_scheme = "tls+tcp";
-	} else if ((strcmp(url->u_scheme, "ws4") == 0) ||
-	    (strcmp(url->u_scheme, "http4")) == 0) {
-		myurl.u_scheme = "tcp4";
-	} else if ((strcmp(url->u_scheme, "ws6") == 0) ||
-	    (strcmp(url->u_scheme, "http6") == 0)) {
-		myurl.u_scheme = "tcp6";
-	} else if ((strcmp(url->u_scheme, "wss4") == 0) ||
-	    (strcmp(url->u_scheme, "https4") == 0)) {
-		myurl.u_scheme = "tls+tcp4";
-	} else if ((strcmp(url->u_scheme, "wss6") == 0) ||
-	    (strcmp(url->u_scheme, "https6") == 0)) {
-		myurl.u_scheme = "tls+tcp6";
-	} else {
+	if ((scheme = nni_http_stream_scheme(url->u_scheme)) == NULL) {
 		return (NNG_EADDRINVAL);
 	}
+	// Rewrite URLs to either TLS or TCP.
+	memcpy(&my_url, url, sizeof(my_url));
+	my_url.u_scheme = (char *) scheme;
 
 	if ((s = NNI_ALLOC_STRUCT(s)) == NULL) {
 		return (NNG_ENOMEM);
@@ -983,7 +967,7 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 		return (NNG_ENOMEM);
 	}
 
-	if ((rv = nng_stream_listener_alloc_url(&s->listener, &myurl)) != 0) {
+	if ((rv = nng_stream_listener_alloc_url(&s->listener, &my_url)) != 0) {
 		http_server_fini(s);
 		return (rv);
 	}
@@ -1882,20 +1866,15 @@ nni_http_handler_init_static(nni_http_handler **hpp, const char *uri,
 int
 nni_http_server_set_tls(nni_http_server *s, nng_tls_config *tls)
 {
-	int rv;
-	rv = nni_stream_listener_set(s->listener, NNG_OPT_TLS_CONFIG, &tls,
-	    sizeof(tls), NNI_TYPE_POINTER);
-	return (rv);
+	return (
+	    nng_stream_listener_set_ptr(s->listener, NNG_OPT_TLS_CONFIG, tls));
 }
 
 int
 nni_http_server_get_tls(nni_http_server *s, nng_tls_config **tlsp)
 {
-	size_t sz = sizeof(*tlsp);
-	int    rv;
-	rv = nni_stream_listener_get(
-	    s->listener, NNG_OPT_TLS_CONFIG, tlsp, &sz, NNI_TYPE_POINTER);
-	return (rv);
+	return (nng_stream_listener_get_ptr(
+	    s->listener, NNG_OPT_TLS_CONFIG, (void **) tlsp));
 }
 
 int
