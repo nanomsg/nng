@@ -82,6 +82,7 @@ struct nng_http_server {
 	nni_list             handlers;
 	nni_list             conns;
 	nni_mtx              mtx;
+	nni_cv               cv;
 	bool                 closed;
 	nni_aio *            accaio;
 	nng_stream_listener *listener;
@@ -293,6 +294,9 @@ http_sconn_reap(void *arg)
 	nni_mtx_lock(&s->mtx);
 	if (nni_list_node_active(&sc->node)) {
 		nni_list_remove(&s->conns, sc);
+	}
+	if (nni_list_empty(&s->conns)) {
+		nni_cv_wake(&s->cv);
 	}
 	nni_mtx_unlock(&s->mtx);
 
@@ -916,6 +920,7 @@ http_server_fini(nni_http_server *s)
 	nni_mtx_fini(&s->errors_mtx);
 
 	nni_aio_free(s->accaio);
+	nni_cv_fini(&s->cv);
 	nni_mtx_fini(&s->mtx);
 	nni_strfree(s->hostname);
 	NNI_FREE_STRUCT(s);
@@ -957,6 +962,7 @@ http_server_init(nni_http_server **serverp, const nni_url *url)
 	}
 	nni_mtx_init(&s->mtx);
 	nni_mtx_init(&s->errors_mtx);
+	nni_cv_init(&s->cv, &s->mtx);
 	NNI_LIST_INIT(&s->handlers, nni_http_handler, node);
 	NNI_LIST_INIT(&s->conns, http_sconn, node);
 
@@ -1068,6 +1074,10 @@ http_server_stop(nni_http_server *s)
 	// being done by clients.  (No graceful shutdown).
 	NNI_LIST_FOREACH (&s->conns, sc) {
 		http_sconn_close_locked(sc);
+	}
+
+	while (!nni_list_empty(&s->conns)) {
+		nni_cv_wait(&s->cv);
 	}
 }
 
