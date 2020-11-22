@@ -7,30 +7,26 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <string.h>
+#include <nuts.h>
 
-#include <nng/nng.h>
 #include <nng/protocol/bus0/bus.h>
-
-#include "acutest.h"
-#include "testutil.h"
 
 void
 test_bug1247(void)
 {
 	nng_socket bus1, bus2;
-	char       addr[64];
+	char *     addr;
 
-	testutil_scratch_addr("tcp", sizeof(addr), addr);
+	NUTS_ADDR(addr, "tcp");
 
-	TEST_NNG_PASS(nng_bus0_open(&bus1));
-	TEST_NNG_PASS(nng_bus0_open(&bus2));
+	NUTS_PASS(nng_bus0_open(&bus1));
+	NUTS_PASS(nng_bus0_open(&bus2));
 
-	TEST_NNG_PASS(nng_listen(bus1, addr, NULL, 0));
-	TEST_NNG_FAIL(nng_listen(bus2, addr, NULL, 0), NNG_EADDRINUSE);
+	NUTS_PASS(nng_listen(bus1, addr, NULL, 0));
+	NUTS_FAIL(nng_listen(bus2, addr, NULL, 0), NNG_EADDRINUSE);
 
-	TEST_NNG_PASS(nng_close(bus2));
-	TEST_NNG_PASS(nng_close(bus1));
+	NUTS_PASS(nng_close(bus2));
+	NUTS_PASS(nng_close(bus1));
 }
 
 TEST_LIST = {

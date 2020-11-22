@@ -1,5 +1,6 @@
 ignore:
  - "tests"
+ - "src/testing"
  - "perf"
  - "**/*_test.c"
 coverage:

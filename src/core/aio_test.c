@@ -10,12 +10,7 @@
 
 #include <string.h>
 
-#include <nng/nng.h>
-#include <nng/protocol/pair1/pair.h>
-#include <nng/supplemental/util/platform.h>
-
-#include "acutest.h"
-#include "testutil.h"
+#include <nuts.h>
 
 static void
 cb_done(void *p)
@@ -43,16 +38,16 @@ test_sleep(void)
 	nng_time end   = 0;
 	nng_aio *aio;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, sleep_done, &end));
+	NUTS_PASS(nng_aio_alloc(&aio, sleep_done, &end));
 	start = nng_clock();
 	nng_sleep_aio(200, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_CHECK(end != 0);
-	TEST_CHECK((end - start) >= 200);
-	TEST_CHECK((end - start) <= 1000);
-	TEST_CHECK((nng_clock() - start) >= 200);
-	TEST_CHECK((nng_clock() - start) <= 1000);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(end != 0);
+	NUTS_TRUE((end - start) >= 200);
+	NUTS_TRUE((end - start) <= 1000);
+	NUTS_TRUE((nng_clock() - start) >= 200);
+	NUTS_TRUE((nng_clock() - start) <= 1000);
 	nng_aio_free(aio);
 }
 
@@ -63,17 +58,17 @@ test_sleep_timeout(void)
 	nng_time end   = 0;
 	nng_aio *aio;
 
-	TEST_CHECK(nng_aio_alloc(&aio, sleep_done, &end) == 0);
+	NUTS_TRUE(nng_aio_alloc(&aio, sleep_done, &end) == 0);
 	nng_aio_set_timeout(aio, 100);
 	start = nng_clock();
 	nng_sleep_aio(2000, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
-	TEST_CHECK(end != 0);
-	TEST_CHECK((end - start) >= 100);
-	TEST_CHECK((end - start) <= 1000);
-	TEST_CHECK((nng_clock() - start) >= 100);
-	TEST_CHECK((nng_clock() - start) <= 1000);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
+	NUTS_TRUE(end != 0);
+	NUTS_TRUE((end - start) >= 100);
+	NUTS_TRUE((end - start) <= 1000);
+	NUTS_TRUE((nng_clock() - start) >= 100);
+	NUTS_TRUE((nng_clock() - start) <= 1000);
 	nng_aio_free(aio);
 }
 
@@ -83,8 +78,8 @@ test_insane_nio(void)
 	nng_aio *aio;
 	nng_iov  iov;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	TEST_NNG_FAIL(nng_aio_set_iov(aio, 1024, &iov), NNG_EINVAL);
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_FAIL(nng_aio_set_iov(aio, 1024, &iov), NNG_EINVAL);
 	nng_aio_free(aio);
 }
 
@@ -94,12 +89,12 @@ test_provider_cancel(void)
 	nng_aio *aio;
 	int      rv = 0;
 	// We fake an empty provider that does not do anything.
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	TEST_CHECK(nng_aio_begin(aio) == true);
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_TRUE(nng_aio_begin(aio) == true);
 	nng_aio_defer(aio, cancel, &rv);
 	nng_aio_cancel(aio);
 	nng_aio_wait(aio);
-	TEST_CHECK(rv == NNG_ECANCELED);
+	NUTS_TRUE(rv == NNG_ECANCELED);
 	nng_aio_free(aio);
 }
 
@@ -110,18 +105,18 @@ test_consumer_cancel(void)
 	nng_socket s1;
 	int        done = 0;
 
-	TEST_CHECK(nng_pair1_open(&s1) == 0);
-	TEST_CHECK(nng_aio_alloc(&a, cb_done, &done) == 0);
+	NUTS_TRUE(nng_pair1_open(&s1) == 0);
+	NUTS_TRUE(nng_aio_alloc(&a, cb_done, &done) == 0);
 
 	nng_aio_set_timeout(a, NNG_DURATION_INFINITE);
 	nng_recv_aio(s1, a);
 	nng_aio_cancel(a);
 	nng_aio_wait(a);
-	TEST_CHECK(done == 1);
-	TEST_CHECK(nng_aio_result(a) == NNG_ECANCELED);
+	NUTS_TRUE(done == 1);
+	NUTS_TRUE(nng_aio_result(a) == NNG_ECANCELED);
 
 	nng_aio_free(a);
-	TEST_CHECK(nng_close(s1) == 0);
+	NUTS_TRUE(nng_close(s1) == 0);
 }
 
 void
@@ -136,20 +131,20 @@ test_traffic(void)
 	nng_msg *  m;
 	char *     addr = "inproc://traffic";
 
-	TEST_NNG_PASS(nng_pair1_open(&s1));
-	TEST_NNG_PASS(nng_pair1_open(&s2));
+	NUTS_PASS(nng_pair1_open(&s1));
+	NUTS_PASS(nng_pair1_open(&s2));
 
-	TEST_NNG_PASS(nng_listen(s1, addr, NULL, 0));
-	TEST_NNG_PASS(nng_dial(s2, addr, NULL, 0));
+	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
+	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
 
-	TEST_NNG_PASS(nng_aio_alloc(&rx_aio, cb_done, &rx_done));
-	TEST_NNG_PASS(nng_aio_alloc(&tx_aio, cb_done, &tx_done));
+	NUTS_PASS(nng_aio_alloc(&rx_aio, cb_done, &rx_done));
+	NUTS_PASS(nng_aio_alloc(&tx_aio, cb_done, &tx_done));
 
 	nng_aio_set_timeout(rx_aio, 1000);
 	nng_aio_set_timeout(tx_aio, 1000);
 
-	TEST_NNG_PASS(nng_msg_alloc(&m, 0));
-	TEST_NNG_PASS(nng_msg_append(m, "hello", strlen("hello")));
+	NUTS_PASS(nng_msg_alloc(&m, 0));
+	NUTS_PASS(nng_msg_append(m, "hello", strlen("hello")));
 
 	nng_recv_aio(s2, rx_aio);
 
@@ -159,22 +154,22 @@ test_traffic(void)
 	nng_aio_wait(tx_aio);
 	nng_aio_wait(rx_aio);
 
-	TEST_NNG_PASS(nng_aio_result(rx_aio));
-	TEST_NNG_PASS(nng_aio_result(tx_aio));
+	NUTS_PASS(nng_aio_result(rx_aio));
+	NUTS_PASS(nng_aio_result(tx_aio));
 
-	TEST_CHECK((m = nng_aio_get_msg(rx_aio)) != NULL);
-	TEST_CHECK(nng_msg_len(m) == strlen("hello"));
-	TEST_CHECK(memcmp(nng_msg_body(m), "hello", strlen("hello")) == 0);
+	NUTS_TRUE((m = nng_aio_get_msg(rx_aio)) != NULL);
+	NUTS_TRUE(nng_msg_len(m) == strlen("hello"));
+	NUTS_TRUE(memcmp(nng_msg_body(m), "hello", strlen("hello")) == 0);
 
 	nng_msg_free(m);
 
-	TEST_CHECK(rx_done == 1);
-	TEST_CHECK(tx_done == 1);
+	NUTS_TRUE(rx_done == 1);
+	NUTS_TRUE(tx_done == 1);
 
 	nng_aio_free(rx_aio);
 	nng_aio_free(tx_aio);
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_PASS(nng_close(s1));
+	NUTS_PASS(nng_close(s2));
 }
 
 void
@@ -184,15 +179,15 @@ test_explicit_timeout(void)
 	nng_aio *  a;
 	int        done = 0;
 
-	TEST_NNG_PASS(nng_pair1_open(&s));
-	TEST_NNG_PASS(nng_aio_alloc(&a, cb_done, &done));
+	NUTS_PASS(nng_pair1_open(&s));
+	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
 	nng_aio_set_timeout(a, 40);
 	nng_recv_aio(s, a);
 	nng_aio_wait(a);
-	TEST_CHECK(done == 1);
-	TEST_NNG_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
+	NUTS_TRUE(done == 1);
+	NUTS_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
 	nng_aio_free(a);
-	TEST_NNG_PASS(nng_close(s));
+	NUTS_PASS(nng_close(s));
 }
 
 void
@@ -202,15 +197,15 @@ test_inherited_timeout(void)
 	nng_aio *  a;
 	int        done = 0;
 
-	TEST_NNG_PASS(nng_pair1_open(&s));
-	TEST_NNG_PASS(nng_aio_alloc(&a, cb_done, &done));
-	TEST_NNG_PASS(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 40));
+	NUTS_PASS(nng_pair1_open(&s));
+	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
+	NUTS_PASS(nng_socket_set_ms(s, NNG_OPT_RECVTIMEO, 40));
 	nng_recv_aio(s, a);
 	nng_aio_wait(a);
-	TEST_CHECK(done == 1);
-	TEST_NNG_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
+	NUTS_TRUE(done == 1);
+	NUTS_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
 	nng_aio_free(a);
-	TEST_NNG_PASS(nng_close(s));
+	NUTS_PASS(nng_close(s));
 }
 
 void
@@ -220,18 +215,18 @@ test_zero_timeout(void)
 	nng_aio *  a;
 	int        done = 0;
 
-	TEST_NNG_PASS(nng_pair1_open(&s));
-	TEST_NNG_PASS(nng_aio_alloc(&a, cb_done, &done));
+	NUTS_PASS(nng_pair1_open(&s));
+	NUTS_PASS(nng_aio_alloc(&a, cb_done, &done));
 	nng_aio_set_timeout(a, NNG_DURATION_ZERO);
 	nng_recv_aio(s, a);
 	nng_aio_wait(a);
-	TEST_CHECK(done == 1);
-	TEST_NNG_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
+	NUTS_TRUE(done == 1);
+	NUTS_FAIL(nng_aio_result(a), NNG_ETIMEDOUT);
 	nng_aio_free(a);
-	TEST_NNG_PASS(nng_close(s));
+	NUTS_PASS(nng_close(s));
 }
 
-TEST_LIST = {
+NUTS_TESTS = {
 	{ "sleep", test_sleep },
 	{ "sleep timeout", test_sleep_timeout },
 	{ "insane nio", test_insane_nio },

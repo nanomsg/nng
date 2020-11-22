@@ -14,7 +14,7 @@
 #include "core/defs.h"
 
 // Statistics support.  This is inspired in part by the Solaris
-// kstats framework, but we've simplified and tuned it for our use.
+// kernel stats framework, but we've simplified and tuned it for our use.
 //
 // Collection of the stats will be done in two steps.  First we
 // will walk the list of stats, with the chain held, allocating
@@ -45,7 +45,7 @@ struct nni_stat_item {
 		char *         sv_string;
 		bool           sv_bool;
 		int            sv_id;
-	} si_value;
+	} si_u;
 };
 
 struct nni_stat_info {

@@ -87,9 +87,7 @@ endif ()
 # include or not include code based on what's actually present.
 add_library(nng)
 
-add_library(nng_testing STATIC EXCLUDE_FROM_ALL
-        ${PROJECT_SOURCE_DIR}/tests/testutil.c
-        ${PROJECT_SOURCE_DIR}/tests/testutil.h)
+add_library(nng_testing STATIC EXCLUDE_FROM_ALL)
 target_compile_definitions(nng_testing PUBLIC NNG_STATIC_LIB NNG_TEST_LIB NNG_PRIVATE)
 
 add_library(nng_private INTERFACE)

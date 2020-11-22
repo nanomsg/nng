@@ -8,16 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <nng/nng.h>
-#include <nng/protocol/pair1/pair.h>
-#include <nng/supplemental/tls/tls.h>
-#include <nng/supplemental/util/platform.h>
-#include <nng/transport/ws/websocket.h>
-
 #include "core/nng_impl.h"
 
-#include "acutest.h"
-#include "testutil.h"
+#include <nuts.h>
 
 #ifdef NNG_SUPP_TLS
 // These keys are for demonstration purposes ONLY.  DO NOT USE.
@@ -106,13 +99,13 @@ init_dialer_wss_file(nng_dialer d)
 	char *tmpdir;
 	char *pth;
 
-	TEST_ASSERT((tmpdir = nni_plat_temp_dir()) != NULL);
-	TEST_ASSERT((pth = nni_file_join(tmpdir, CACERT)) != NULL);
-	nni_strfree(tmpdir);
-	TEST_NNG_PASS(nni_file_put(pth, cert, strlen(cert)));
-	TEST_NNG_PASS(nng_dialer_set_string(d, NNG_OPT_TLS_CA_FILE, pth));
+	NUTS_ASSERT((tmpdir = nni_plat_temp_dir()) != NULL);
+	NUTS_ASSERT((pth = nni_file_join(tmpdir, CACERT)) != NULL);
+	nng_strfree(tmpdir);
+	NUTS_PASS(nni_file_put(pth, cert, strlen(cert)));
+	NUTS_PASS(nng_dialer_set_string(d, NNG_OPT_TLS_CA_FILE, pth));
 	nni_file_delete(pth);
-	nni_strfree(pth);
+	nng_strfree(pth);
 }
 
 static void
@@ -122,25 +115,24 @@ init_listener_wss_file(nng_listener l)
 	char *pth;
 	char *cert_key;
 
-	TEST_ASSERT((tmpdir = nni_plat_temp_dir()) != NULL);
-	TEST_ASSERT((pth = nni_file_join(tmpdir, CERT_KEY)) != NULL);
-	nni_strfree(tmpdir);
+	NUTS_ASSERT((tmpdir = nni_plat_temp_dir()) != NULL);
+	NUTS_ASSERT((pth = nni_file_join(tmpdir, CERT_KEY)) != NULL);
+	nng_strfree(tmpdir);
 
-	TEST_NNG_PASS(nni_asprintf(&cert_key, "%s\r\n%s\r\n", cert, key));
+	NUTS_PASS(nni_asprintf(&cert_key, "%s\r\n%s\r\n", cert, key));
 
-	TEST_NNG_PASS(nni_file_put(pth, cert_key, strlen(cert_key)));
-	nni_strfree(cert_key);
-	TEST_NNG_PASS(
-	    nng_listener_set_string(l, NNG_OPT_TLS_CERT_KEY_FILE, pth));
+	NUTS_PASS(nni_file_put(pth, cert_key, strlen(cert_key)));
+	nng_strfree(cert_key);
+	NUTS_PASS(nng_listener_set_string(l, NNG_OPT_TLS_CERT_KEY_FILE, pth));
 
 	nni_file_delete(pth);
-	nni_strfree(pth);
+	nng_strfree(pth);
 }
 
 static void
 test_invalid_verify(void)
 {
-	uint16_t     port = testutil_next_port();
+	uint16_t     port = nuts_next_port();
 	nng_socket   s1;
 	nng_socket   s2;
 	nng_listener l;
@@ -149,11 +141,11 @@ test_invalid_verify(void)
 
 	(void) snprintf(addr, sizeof(addr), "wss4://:%u/test", port);
 
-	TEST_NNG_PASS(nng_pair_open(&s1));
-	TEST_NNG_PASS(nng_pair_open(&s2));
-	TEST_NNG_PASS(nng_listener_create(&l, s1, addr));
+	NUTS_PASS(nng_pair_open(&s1));
+	NUTS_PASS(nng_pair_open(&s2));
+	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	init_listener_wss_file(l);
-	TEST_NNG_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_start(l, 0));
 
 	nng_msleep(100);
 
@@ -164,20 +156,18 @@ test_invalid_verify(void)
 	// dependent, based on receive vs. send timing most likely.
 	// Applications shouldn't really depend that much on this.
 	int rv;
-	rv = nng_dial(s2, addr, NULL, 0);
 
-	TEST_NNG_PASS(nng_dialer_create(&d, s2, addr));
-	TEST_NNG_PASS(nng_dialer_set_int(
+	NUTS_PASS(nng_dialer_create(&d, s2, addr));
+	NUTS_PASS(nng_dialer_set_int(
 	    d, NNG_OPT_TLS_AUTH_MODE, NNG_TLS_AUTH_MODE_REQUIRED));
 	rv = nng_dialer_start(d, 0);
 
-	TEST_CHECK(rv != 0);
-	TEST_CHECK_((rv == NNG_EPEERAUTH) || (rv == NNG_ECLOSED) ||
-	        (rv == NNG_ECRYPTO),
-	    "result from dial: %d %s", rv, nng_strerror(rv));
+	NUTS_TRUE(rv != 0);
+	NUTS_TRUE((rv == NNG_EPEERAUTH) || (rv == NNG_ECLOSED) ||
+	    (rv == NNG_ECRYPTO));
 
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_PASS(nng_close(s1));
+	NUTS_PASS(nng_close(s2));
 }
 
 static void
@@ -193,43 +183,43 @@ test_no_verify(void)
 	bool         b;
 	uint16_t     port;
 
-	TEST_NNG_PASS(nng_pair_open(&s1));
-	TEST_NNG_PASS(nng_pair_open(&s2));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
-	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
+	NUTS_PASS(nng_pair_open(&s1));
+	NUTS_PASS(nng_pair_open(&s2));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
 
-	port = testutil_next_port();
+	port = nuts_next_port();
 	(void) snprintf(addr, sizeof(addr), "wss4://:%u/test", port);
-	TEST_NNG_PASS(nng_listener_create(&l, s1, addr));
+	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	init_listener_wss_file(l);
-	TEST_NNG_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_start(l, 0));
 
 	nng_msleep(100);
 	snprintf(addr, sizeof(addr), "wss://127.0.0.1:%u/test", port);
-	TEST_NNG_PASS(nng_dialer_create(&d, s2, addr));
+	NUTS_PASS(nng_dialer_create(&d, s2, addr));
 	init_dialer_wss_file(d);
-	TEST_NNG_PASS(nng_dialer_set_int(
+	NUTS_PASS(nng_dialer_set_int(
 	    d, NNG_OPT_TLS_AUTH_MODE, NNG_TLS_AUTH_MODE_OPTIONAL));
-	TEST_NNG_PASS(
+	NUTS_PASS(
 	    nng_dialer_set_string(d, NNG_OPT_TLS_SERVER_NAME, "example.com"));
 
-	TEST_NNG_PASS(nng_dialer_start(d, 0));
+	NUTS_PASS(nng_dialer_start(d, 0));
 	nng_msleep(100);
 
-	TEST_NNG_PASS(nng_send(s1, "hello", 6, 0));
-	TEST_NNG_PASS(nng_recvmsg(s2, &msg, 0));
-	TEST_ASSERT(msg != NULL);
-	TEST_CHECK(nng_msg_len(msg) == 6);
-	TEST_STREQUAL(nng_msg_body(msg), "hello");
+	NUTS_PASS(nng_send(s1, "hello", 6, 0));
+	NUTS_PASS(nng_recvmsg(s2, &msg, 0));
+	NUTS_ASSERT(msg != NULL);
+	NUTS_TRUE(nng_msg_len(msg) == 6);
+	NUTS_MATCH(nng_msg_body(msg), "hello");
 
 	p = nng_msg_get_pipe(msg);
-	TEST_CHECK(nng_pipe_id(p) > 0);
-	TEST_NNG_PASS(nng_pipe_get_bool(p, NNG_OPT_TLS_VERIFIED, &b));
-	TEST_CHECK(b == false);
+	NUTS_TRUE(nng_pipe_id(p) > 0);
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TLS_VERIFIED, &b));
+	NUTS_TRUE(b == false);
 
 	nng_msg_free(msg);
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 }
 
 static void
@@ -245,39 +235,39 @@ test_verify_works(void)
 	bool         b;
 	uint16_t     port;
 
-	TEST_NNG_PASS(nng_pair_open(&s1));
-	TEST_NNG_PASS(nng_pair_open(&s2));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
-	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
-	port = testutil_next_port();
+	NUTS_PASS(nng_pair_open(&s1));
+	NUTS_PASS(nng_pair_open(&s2));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 5000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 5000));
+	port = nuts_next_port();
 	(void) snprintf(addr, sizeof(addr), "wss4://:%u/test", port);
-	TEST_NNG_PASS(nng_listener_create(&l, s1, addr));
+	NUTS_PASS(nng_listener_create(&l, s1, addr));
 	init_listener_wss_file(l);
-	TEST_NNG_PASS(nng_listener_start(l, 0));
+	NUTS_PASS(nng_listener_start(l, 0));
 
 	// It can take a bit for the listener to start up in clouds.
 	nng_msleep(200);
 	snprintf(addr, sizeof(addr), "wss4://localhost:%u/test", port);
-	TEST_NNG_PASS(nng_dialer_create(&d, s2, addr));
+	NUTS_PASS(nng_dialer_create(&d, s2, addr));
 	init_dialer_wss_file(d);
 
-	TEST_NNG_PASS(nng_dialer_start(d, 0));
+	NUTS_PASS(nng_dialer_start(d, 0));
 	nng_msleep(100);
 
-	TEST_NNG_PASS(nng_send(s1, "hello", 6, 0));
-	TEST_NNG_PASS(nng_recvmsg(s2, &msg, 0));
-	TEST_ASSERT(msg != NULL);
-	TEST_CHECK(nng_msg_len(msg) == 6);
-	TEST_STREQUAL(nng_msg_body(msg), "hello");
+	NUTS_PASS(nng_send(s1, "hello", 6, 0));
+	NUTS_PASS(nng_recvmsg(s2, &msg, 0));
+	NUTS_ASSERT(msg != NULL);
+	NUTS_TRUE(nng_msg_len(msg) == 6);
+	NUTS_MATCH(nng_msg_body(msg), "hello");
 
 	p = nng_msg_get_pipe(msg);
-	TEST_CHECK(nng_pipe_id(p) > 0);
-	TEST_NNG_PASS(nng_pipe_get_bool(p, NNG_OPT_TLS_VERIFIED, &b));
-	TEST_CHECK(b == true);
+	NUTS_TRUE(nng_pipe_id(p) > 0);
+	NUTS_PASS(nng_pipe_get_bool(p, NNG_OPT_TLS_VERIFIED, &b));
+	NUTS_TRUE(b == true);
 
 	nng_msg_free(msg);
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_PASS(nng_close(s1));
+	NUTS_PASS(nng_close(s2));
 }
 
 static void
@@ -285,24 +275,20 @@ test_cert_file_not_present(void)
 {
 	nng_socket   s1;
 	nng_listener l;
-	char         addr[NNG_MAXADDRLEN];
-	uint16_t     port;
 
-	TEST_NNG_PASS(nng_pair_open(&s1));
-	port = testutil_next_port();
-	(void) snprintf(addr, sizeof(addr), "wss4://:%u/test", port);
-	TEST_NNG_PASS(nng_listener_create(&l, s1, addr));
+	NUTS_PASS(nng_pair_open(&s1));
+	NUTS_PASS(nng_listener_create(&l, s1, "wss4://:0/test"));
 
-	TEST_NNG_FAIL(nng_listener_set_string(
-	                  l, NNG_OPT_TLS_CERT_KEY_FILE, "no-such-file.pem"),
+	NUTS_FAIL(nng_listener_set_string(
+	              l, NNG_OPT_TLS_CERT_KEY_FILE, "no-such-file.pem"),
 	    NNG_ENOENT);
 
-	TEST_NNG_PASS(nng_close(s1));
+	NUTS_PASS(nng_close(s1));
 }
 
 #endif
 
-TEST_LIST = {
+NUTS_TESTS = {
 #ifdef NNG_SUPP_TLS
 	{ "wss file invalid verify", test_invalid_verify },
 	{ "wss file no verify", test_no_verify },

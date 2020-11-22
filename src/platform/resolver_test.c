@@ -8,18 +8,9 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include "testutil.h"
-
-#include <string.h>
-
 #include "core/nng_impl.h"
-#include "stubs.h"
 
-#include "acutest.h"
-
-#ifndef _WIN32
-#include <arpa/inet.h> // for htons, htonl
-#endif
+#include <nuts.h>
 
 uint8_t v6loop[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1 };
 
@@ -29,14 +20,14 @@ test_google_dns(void)
 	nng_aio *    aio;
 	nng_sockaddr sa;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("google-public-dns-a.google.com", "80", NNG_AF_INET,
 	    true, &sa, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_CHECK(sa.s_in.sa_family == NNG_AF_INET);
-	TEST_CHECK(sa.s_in.sa_port == ntohs(80));
-	TEST_CHECK(sa.s_in.sa_addr == 0x08080808); // aka 8.8.8.8
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
+	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));
+	NUTS_TRUE(sa.s_in.sa_addr == 0x08080808); // aka 8.8.8.8
 	nng_aio_free(aio);
 }
 
@@ -46,13 +37,13 @@ test_numeric_addr(void)
 	nng_aio *    aio;
 	nng_sockaddr sa;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("8.8.4.4", "69", NNG_AF_INET, true, &sa, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_CHECK(sa.s_in.sa_family == NNG_AF_INET);
-	TEST_CHECK(sa.s_in.sa_port == ntohs(69));
-	TEST_CHECK(sa.s_in.sa_addr == ntohl(0x08080404)); // 8.8.4.4.
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
+	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(69));
+	NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x08080404)); // 8.8.4.4.
 	nng_aio_free(aio);
 }
 
@@ -69,13 +60,13 @@ test_numeric_v6(void)
 		return; // skip this one.
 	}
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("::1", "80", NNG_AF_INET6, true, &sa, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_CHECK(sa.s_in6.sa_family == NNG_AF_INET6);
-	TEST_CHECK(sa.s_in6.sa_port == ntohs(80));
-	TEST_CHECK(memcmp(sa.s_in6.sa_addr, v6loop, 16) == 0);
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(sa.s_in6.sa_family == NNG_AF_INET6);
+	NUTS_TRUE(sa.s_in6.sa_port == nuts_be16(80));
+	NUTS_TRUE(memcmp(sa.s_in6.sa_addr, v6loop, 16) == 0);
 	nng_aio_free(aio);
 }
 
@@ -85,12 +76,12 @@ test_service_names(void)
 	nng_aio *    aio;
 	nng_sockaddr sa;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("8.8.4.4", "http", NNG_AF_INET, true, &sa, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_CHECK(sa.s_in.sa_port == ntohs(80));
-	TEST_CHECK(sa.s_in.sa_addr = ntohl(0x08080404));
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));
+	NUTS_TRUE(sa.s_in.sa_addr = nuts_be32(0x08080404));
 	nng_aio_free(aio);
 }
 
@@ -100,36 +91,36 @@ test_localhost_v4(void)
 	nng_aio *    aio;
 	nng_sockaddr sa;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("localhost", "80", NNG_AF_INET, true, &sa, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_CHECK(sa.s_in.sa_family == NNG_AF_INET);
-	TEST_CHECK(sa.s_in.sa_port == ntohs(80));
-	TEST_CHECK(sa.s_in.sa_addr == ntohl(0x7f000001));
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
+	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));
+	NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7f000001));
 	nng_aio_free(aio);
 }
 
 void
-test_localhost_unspec(void)
+test_localhost_unspecified(void)
 {
 	nng_aio *    aio;
 	nng_sockaddr sa;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("localhost", "80", NNG_AF_UNSPEC, true, &sa, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_CHECK(
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(
 	    (sa.s_family == NNG_AF_INET) || (sa.s_family == NNG_AF_INET6));
 	switch (sa.s_family) {
 	case NNG_AF_INET:
-		TEST_CHECK(sa.s_in.sa_port == ntohs(80));
-		TEST_CHECK(sa.s_in.sa_addr == ntohl(0x7f000001));
+		NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));
+		NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7f000001));
 		break;
 	case NNG_AF_INET6:
-		TEST_CHECK(sa.s_in6.sa_port == ntohs(80));
-		TEST_CHECK(memcmp(sa.s_in6.sa_addr, v6loop, 16) == 0);
+		NUTS_TRUE(sa.s_in6.sa_port == nuts_be16(80));
+		NUTS_TRUE(memcmp(sa.s_in6.sa_addr, v6loop, 16) == 0);
 		break;
 	}
 	nng_aio_free(aio);
@@ -141,13 +132,13 @@ test_null_passive(void)
 	nng_aio *    aio;
 	nng_sockaddr sa;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip(NULL, "80", NNG_AF_INET, true, &sa, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_CHECK(sa.s_in.sa_family == NNG_AF_INET);
-	TEST_CHECK(sa.s_in.sa_port == ntohs(80));
-	TEST_CHECK(sa.s_in.sa_addr == 0); // INADDR_ANY
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_TRUE(sa.s_in.sa_family == NNG_AF_INET);
+	NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));
+	NUTS_TRUE(sa.s_in.sa_addr == 0); // any local address
 	nng_aio_free(aio);
 }
 
@@ -157,17 +148,17 @@ test_null_not_passive(void)
 	nng_aio *    aio;
 	nng_sockaddr sa;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip(NULL, "80", NNG_AF_INET, false, &sa, aio);
 	nng_aio_wait(aio);
-	// We can either get NNG_EADDRINVAL, or a loopback address.
+	// We can either get invalid address, or a loopback address.
 	// Most systems do the former, but Linux does the latter.
 	if (nng_aio_result(aio) == 0) {
-		TEST_CHECK(sa.s_family == NNG_AF_INET);
-		TEST_CHECK(sa.s_in.sa_addr == htonl(0x7f000001));
-		TEST_CHECK(sa.s_in.sa_port == htons(80));
+		NUTS_TRUE(sa.s_family == NNG_AF_INET);
+		NUTS_TRUE(sa.s_in.sa_addr == nuts_be32(0x7f000001));
+		NUTS_TRUE(sa.s_in.sa_port == nuts_be16(80));
 	} else {
-		TEST_NNG_FAIL(nng_aio_result(aio), NNG_EADDRINVAL);
+		NUTS_FAIL(nng_aio_result(aio), NNG_EADDRINVAL);
 	}
 	nng_aio_free(aio);
 }
@@ -178,20 +169,20 @@ test_bad_port_number(void)
 	nng_aio *    aio;
 	nng_sockaddr sa;
 
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nni_resolv_ip("1.1.1.1", "1000000", NNG_AF_INET, true, &sa, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_FAIL(nng_aio_result(aio), NNG_EADDRINVAL);
+	NUTS_FAIL(nng_aio_result(aio), NNG_EADDRINVAL);
 	nng_aio_free(aio);
 }
 
-TEST_LIST = {
+NUTS_TESTS = {
 	{ "resolve google dns", test_google_dns },
 	{ "resolve numeric addr", test_numeric_addr },
 	{ "resolve numeric v6", test_numeric_v6 },
 	{ "resolve service names", test_service_names },
 	{ "resolve localhost v4", test_localhost_v4 },
-	{ "resolve localhost unspec", test_localhost_unspec },
+	{ "resolve localhost unspecified", test_localhost_unspecified },
 	{ "resolve null passive", test_null_passive },
 	{ "resolve null not passive", test_null_not_passive },
 	{ "resolve bad port number", test_bad_port_number },

@@ -12,10 +12,7 @@
 #include <nng/nng.h>
 #include <nng/supplemental/util/platform.h>
 
-#include "supplemental/sha1/sha1.h"
-
-#include <acutest.h>
-#include <testutil.h>
+#include <nuts.h>
 
 void
 test_websocket_wildcard(void)
@@ -36,27 +33,27 @@ test_websocket_wildcard(void)
 	char                 buf2[8];
 	char                 uri[64];
 
-	TEST_NNG_PASS(nng_stream_listener_alloc(&l, "ws://127.0.0.1:0/test"));
+	NUTS_PASS(nng_stream_listener_alloc(&l, "ws://127.0.0.1:0/test"));
 
-	TEST_NNG_PASS(nng_stream_listener_listen(l));
+	NUTS_PASS(nng_stream_listener_listen(l));
 
 	// Let's get the address we're going to use to dial -- also check
 	// that it is correct.
 	sz = sizeof(sa1);
-	TEST_NNG_PASS(nng_stream_listener_get(l, NNG_OPT_LOCADDR, &sa1, &sz));
-	TEST_CHECK(sz == sizeof(sa1));
-	TEST_CHECK(sa1.s_in.sa_port != 0);
-	TEST_CHECK(sa1.s_family == NNG_AF_INET);
-	TEST_CHECK(testutil_htonl(sa1.s_in.sa_addr) == 0x7F000001u);
+	NUTS_PASS(nng_stream_listener_get(l, NNG_OPT_LOCADDR, &sa1, &sz));
+	NUTS_TRUE(sz == sizeof(sa1));
+	NUTS_TRUE(sa1.s_in.sa_port != 0);
+	NUTS_TRUE(sa1.s_family == NNG_AF_INET);
+	NUTS_TRUE(nuts_be32(sa1.s_in.sa_addr) == 0x7F000001u);
 
 	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test",
-	    testutil_htons(sa1.s_in.sa_port));
+	    nuts_be16(sa1.s_in.sa_port));
 
-	TEST_NNG_PASS(nng_stream_dialer_alloc(&d, uri));
-	TEST_NNG_PASS(nng_aio_alloc(&daio, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&laio, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&aio1, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+	NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
+	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
 	nng_aio_set_timeout(daio, 5000); // 5 seconds
 	nng_aio_set_timeout(laio, 5000);
 	nng_aio_set_timeout(aio1, 5000);
@@ -68,29 +65,24 @@ test_websocket_wildcard(void)
 	nng_aio_wait(laio);
 	nng_aio_wait(daio);
 
-	TEST_NNG_PASS(nng_aio_result(laio));
-	TEST_NNG_PASS(nng_aio_result(daio));
+	NUTS_PASS(nng_aio_result(laio));
+	NUTS_PASS(nng_aio_result(daio));
 	c1 = nng_aio_get_output(laio, 0);
 	c2 = nng_aio_get_output(daio, 0);
-	TEST_CHECK(c1 != NULL);
-	TEST_CHECK(c2 != NULL);
+	NUTS_TRUE(c1 != NULL);
+	NUTS_TRUE(c2 != NULL);
 
 	//  Let's compare the peer addresses
-	TEST_NNG_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
-	TEST_CHECK(sa1.s_family == sa2.s_family);
-	TEST_CHECK(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
-	TEST_CHECK(sa1.s_in.sa_port == sa2.s_in.sa_port);
+	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
+	NUTS_TRUE(sa1.s_family == sa2.s_family);
+	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
+	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
 
-	TEST_NNG_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
-	TEST_NNG_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
-	TEST_CHECK_(sa1.s_family == sa2.s_family, "families match %x == %x",
-	    sa1.s_family, sa2.s_family);
-	TEST_CHECK_(sa1.s_in.sa_addr == sa2.s_in.sa_addr,
-	    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
-	    testutil_htonl(sa2.s_in.sa_addr));
-	TEST_CHECK_(sa1.s_in.sa_port == sa2.s_in.sa_port,
-	    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
-	    testutil_htons(sa2.s_in.sa_port));
+	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
+	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
+	NUTS_TRUE(sa1.s_family == sa2.s_family);
+	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
+	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
 
 	// This relies on send completing for for just 5 bytes, and on
 	// recv doing the same.  Technically this isn't/ guaranteed, but
@@ -100,23 +92,23 @@ test_websocket_wildcard(void)
 	memset(buf2, 0, 5);
 	iov.iov_buf = buf1;
 	iov.iov_len = 5;
-	TEST_NNG_PASS(nng_aio_set_iov(aio1, 1, &iov));
+	NUTS_PASS(nng_aio_set_iov(aio1, 1, &iov));
 
 	iov.iov_buf = buf2;
 	iov.iov_len = 5;
-	TEST_NNG_PASS(nng_aio_set_iov(aio2, 1, &iov));
+	NUTS_PASS(nng_aio_set_iov(aio2, 1, &iov));
 
 	nng_stream_send(c1, aio1);
 	nng_stream_recv(c2, aio2);
 	nng_aio_wait(aio1);
 	nng_aio_wait(aio2);
 
-	TEST_NNG_PASS(nng_aio_result(aio1));
-	TEST_CHECK(nng_aio_count(aio1) == 5);
+	NUTS_PASS(nng_aio_result(aio1));
+	NUTS_TRUE(nng_aio_count(aio1) == 5);
 
-	TEST_NNG_PASS(nng_aio_result(aio2));
-	TEST_CHECK(nng_aio_count(aio2) == 5);
-	TEST_CHECK(memcmp(buf1, buf2, 5) == 0);
+	NUTS_PASS(nng_aio_result(aio2));
+	NUTS_TRUE(nng_aio_count(aio2) == 5);
+	NUTS_TRUE(memcmp(buf1, buf2, 5) == 0);
 
 	nng_stream_close(c1);
 	nng_stream_free(c1);
@@ -145,18 +137,18 @@ test_websocket_conn_props(void)
 	char                 uri[64];
 	bool                 on;
 	char *               str;
-	uint16_t             port = testutil_next_port();
+	uint16_t             port = nuts_next_port();
 
 	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
 
-	TEST_NNG_PASS(nng_aio_alloc(&daio, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&laio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
 	nng_aio_set_timeout(daio, 5000); // 5 seconds
 	nng_aio_set_timeout(laio, 5000);
 
-	TEST_NNG_PASS(nng_stream_listener_alloc(&l, uri));
-	TEST_NNG_PASS(nng_stream_listener_listen(l));
-	TEST_NNG_PASS(nng_stream_dialer_alloc(&d, uri));
+	NUTS_PASS(nng_stream_listener_alloc(&l, uri));
+	NUTS_PASS(nng_stream_listener_listen(l));
+	NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
 
 	nng_stream_dialer_dial(d, daio);
 	nng_stream_listener_accept(l, laio);
@@ -164,64 +156,54 @@ test_websocket_conn_props(void)
 	nng_aio_wait(laio);
 	nng_aio_wait(daio);
 
-	TEST_NNG_PASS(nng_aio_result(laio));
-	TEST_NNG_PASS(nng_aio_result(daio));
+	NUTS_PASS(nng_aio_result(laio));
+	NUTS_PASS(nng_aio_result(daio));
 	c1 = nng_aio_get_output(laio, 0);
 	c2 = nng_aio_get_output(daio, 0);
-	TEST_CHECK(c1 != NULL);
-	TEST_CHECK(c2 != NULL);
+	NUTS_TRUE(c1 != NULL);
+	NUTS_TRUE(c2 != NULL);
 
 	//  Let's compare the peer addresses
-	TEST_NNG_PASS(nng_stream_get_addr(c1, NNG_OPT_LOCADDR, &sa1));
-	TEST_NNG_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
-	TEST_CHECK_(sa1.s_family == sa2.s_family, "families match %x == %x",
-	    sa1.s_family, sa2.s_family);
-	TEST_CHECK_(sa1.s_in.sa_addr == sa2.s_in.sa_addr,
-	    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
-	    testutil_htonl(sa2.s_in.sa_addr));
-	TEST_CHECK_(sa1.s_in.sa_port == sa2.s_in.sa_port,
-	    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
-	    testutil_htons(sa2.s_in.sa_port));
+	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_LOCADDR, &sa1));
+	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_REMADDR, &sa2));
+	NUTS_TRUE(sa1.s_family == sa2.s_family);
+	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
+	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
 
-	TEST_NNG_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
-	TEST_NNG_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
-	TEST_CHECK_(sa1.s_family == sa2.s_family, "families match %x == %x",
-	    sa1.s_family, sa2.s_family);
-	TEST_CHECK_(sa1.s_in.sa_addr == sa2.s_in.sa_addr,
-	    "addresses match %x == %x", testutil_htonl(sa1.s_in.sa_addr),
-	    testutil_htonl(sa2.s_in.sa_addr));
-	TEST_CHECK_(sa1.s_in.sa_port == sa2.s_in.sa_port,
-	    "ports match %u == %u", testutil_htons(sa1.s_in.sa_port),
-	    testutil_htons(sa2.s_in.sa_port));
+	NUTS_PASS(nng_stream_get_addr(c1, NNG_OPT_REMADDR, &sa1));
+	NUTS_PASS(nng_stream_get_addr(c2, NNG_OPT_LOCADDR, &sa2));
+	NUTS_TRUE(sa1.s_family == sa2.s_family);
+	NUTS_TRUE(sa1.s_in.sa_addr == sa2.s_in.sa_addr);
+	NUTS_TRUE(sa1.s_in.sa_port == sa2.s_in.sa_port);
 
 	on = true;
-	TEST_NNG_PASS(nng_stream_set_bool(c1, NNG_OPT_TCP_NODELAY, on));
-	TEST_NNG_PASS(nng_stream_set_bool(c2, NNG_OPT_TCP_NODELAY, on));
+	NUTS_PASS(nng_stream_set_bool(c1, NNG_OPT_TCP_NODELAY, on));
+	NUTS_PASS(nng_stream_set_bool(c2, NNG_OPT_TCP_NODELAY, on));
 
-	TEST_NNG_PASS(nng_stream_set_bool(c1, NNG_OPT_TCP_KEEPALIVE, on));
-	TEST_NNG_PASS(nng_stream_set_bool(c2, NNG_OPT_TCP_KEEPALIVE, on));
-	TEST_NNG_FAIL(nng_stream_set_string(c1, NNG_OPT_TCP_KEEPALIVE, "nope"),
+	NUTS_PASS(nng_stream_set_bool(c1, NNG_OPT_TCP_KEEPALIVE, on));
+	NUTS_PASS(nng_stream_set_bool(c2, NNG_OPT_TCP_KEEPALIVE, on));
+	NUTS_FAIL(nng_stream_set_string(c1, NNG_OPT_TCP_KEEPALIVE, "nope"),
 	    NNG_EBADTYPE);
 
 	on = false;
 	sz = sizeof(on);
-	TEST_NNG_PASS(nng_stream_get(c1, NNG_OPT_TCP_NODELAY, &on, &sz));
-	TEST_CHECK(sz == sizeof(on));
-	TEST_CHECK(on == true);
+	NUTS_PASS(nng_stream_get(c1, NNG_OPT_TCP_NODELAY, &on, &sz));
+	NUTS_TRUE(sz == sizeof(on));
+	NUTS_TRUE(on == true);
 
 	on = false;
 	sz = sizeof(on);
-	TEST_NNG_PASS(nng_stream_get(c2, NNG_OPT_TCP_KEEPALIVE, &on, &sz));
-	TEST_CHECK(sz == sizeof(on));
-	TEST_CHECK(on == true);
+	NUTS_PASS(nng_stream_get(c2, NNG_OPT_TCP_KEEPALIVE, &on, &sz));
+	NUTS_TRUE(sz == sizeof(on));
+	NUTS_TRUE(on == true);
 
-	TEST_NNG_FAIL(
+	NUTS_FAIL(
 	    nng_stream_get_size(c1, NNG_OPT_TCP_NODELAY, &sz), NNG_EBADTYPE);
 
-	TEST_NNG_PASS(nng_stream_get_string(
+	NUTS_PASS(nng_stream_get_string(
 	    c1, NNG_OPT_WS_REQUEST_HEADER "Sec-WebSocket-Version", &str));
-	TEST_CHECK(str != NULL);
-	TEST_CHECK(strcmp(str, "13") == 0);
+	NUTS_TRUE(str != NULL);
+	NUTS_TRUE(strcmp(str, "13") == 0);
 	nng_strfree(str);
 
 	nng_stream_close(c1);
@@ -249,73 +231,69 @@ test_websocket_text_mode(void)
 	char                 txb[5];
 	char                 rxb[5];
 	bool                 on;
-	uint16_t             port = testutil_next_port();
+	uint16_t             port = nuts_next_port();
 	nng_iov              iov;
 
 	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
 
-	TEST_NNG_PASS(nng_aio_alloc(&daio, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&laio, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&aio1, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
 	nng_aio_set_timeout(daio, 5000); // 5 seconds
 	nng_aio_set_timeout(laio, 5000);
 	nng_aio_set_timeout(aio1, 5000);
 	nng_aio_set_timeout(aio2, 5000);
 
-	TEST_NNG_PASS(nng_stream_listener_alloc(&l, uri));
-	TEST_NNG_PASS(nng_stream_dialer_alloc(&d, uri));
+	NUTS_PASS(nng_stream_listener_alloc(&l, uri));
+	NUTS_PASS(nng_stream_dialer_alloc(&d, uri));
 
 	on = true;
-	TEST_NNG_PASS(nng_stream_dialer_set_bool(d, NNG_OPT_WS_SEND_TEXT, on));
-	TEST_NNG_PASS(
-	    nng_stream_listener_set_bool(l, NNG_OPT_WS_RECV_TEXT, on));
+	NUTS_PASS(nng_stream_dialer_set_bool(d, NNG_OPT_WS_SEND_TEXT, on));
+	NUTS_PASS(nng_stream_listener_set_bool(l, NNG_OPT_WS_RECV_TEXT, on));
 
-        TEST_NNG_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_SEND_TEXT, &on));
-        TEST_ASSERT(on == true);
-        TEST_NNG_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
-        TEST_ASSERT(on == false);
+	NUTS_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_SEND_TEXT, &on));
+	NUTS_TRUE(on);
+	NUTS_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
+	NUTS_TRUE(on == false);
 
-
-        TEST_NNG_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_SEND_TEXT, &on));
-        TEST_ASSERT(on == false);
-        TEST_NNG_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_RECV_TEXT, &on));
-        TEST_ASSERT(on == true);
+	NUTS_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_SEND_TEXT, &on));
+	NUTS_TRUE(on == false);
+	NUTS_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_RECV_TEXT, &on));
+	NUTS_TRUE(on);
 
 	on = false;
-        TEST_NNG_PASS(nng_stream_dialer_set_bool(d, NNG_OPT_WS_RECV_TEXT, on));
-        TEST_NNG_PASS(
-            nng_stream_listener_set_bool(l, NNG_OPT_WS_SEND_TEXT, on));
-        TEST_NNG_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_SEND_TEXT, &on));
-        TEST_ASSERT(on == false);
-        TEST_NNG_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
-        TEST_ASSERT(on == false);
+	NUTS_PASS(nng_stream_dialer_set_bool(d, NNG_OPT_WS_RECV_TEXT, on));
+	NUTS_PASS(nng_stream_listener_set_bool(l, NNG_OPT_WS_SEND_TEXT, on));
+	NUTS_PASS(nng_stream_listener_get_bool(l, NNG_OPT_WS_SEND_TEXT, &on));
+	NUTS_TRUE(on == false);
+	NUTS_PASS(nng_stream_dialer_get_bool(d, NNG_OPT_WS_RECV_TEXT, &on));
+	NUTS_TRUE(on == false);
 
-        TEST_NNG_PASS(nng_stream_listener_listen(l));
-        nng_stream_dialer_dial(d, daio);
+	NUTS_PASS(nng_stream_listener_listen(l));
+	nng_stream_dialer_dial(d, daio);
 	nng_stream_listener_accept(l, laio);
 
 	nng_aio_wait(laio);
 	nng_aio_wait(daio);
 
-	TEST_NNG_PASS(nng_aio_result(laio));
-	TEST_NNG_PASS(nng_aio_result(daio));
+	NUTS_PASS(nng_aio_result(laio));
+	NUTS_PASS(nng_aio_result(daio));
 	c1 = nng_aio_get_output(laio, 0);
 	c2 = nng_aio_get_output(daio, 0);
-	TEST_CHECK(c1 != NULL);
-	TEST_CHECK(c2 != NULL);
+	NUTS_TRUE(c1 != NULL);
+	NUTS_TRUE(c2 != NULL);
 
-	TEST_NNG_PASS(nng_stream_get_bool(c1, NNG_OPT_WS_SEND_TEXT, &on));
-	TEST_ASSERT(on == false);
-	TEST_NNG_PASS(nng_stream_get_bool(c1, NNG_OPT_WS_RECV_TEXT, &on));
-	TEST_ASSERT(on == true);
-	TEST_NNG_PASS(
-	    nng_stream_listener_set_bool(l, NNG_OPT_WS_RECV_TEXT, on));
+	NUTS_PASS(nng_stream_get_bool(c1, NNG_OPT_WS_SEND_TEXT, &on));
+	NUTS_TRUE(on == false);
+	NUTS_PASS(nng_stream_get_bool(c1, NNG_OPT_WS_RECV_TEXT, &on));
+	NUTS_TRUE(on);
+	NUTS_PASS(nng_stream_listener_set_bool(l, NNG_OPT_WS_RECV_TEXT, on));
 
-	TEST_NNG_PASS(nng_stream_get_bool(c2, NNG_OPT_WS_SEND_TEXT, &on));
-	TEST_ASSERT(on == true);
-	TEST_NNG_PASS(nng_stream_get_bool(c2, NNG_OPT_WS_RECV_TEXT, &on));
-	TEST_ASSERT(on == false);
+	NUTS_PASS(nng_stream_get_bool(c2, NNG_OPT_WS_SEND_TEXT, &on));
+	NUTS_TRUE(on);
+	NUTS_PASS(nng_stream_get_bool(c2, NNG_OPT_WS_RECV_TEXT, &on));
+	NUTS_TRUE(on == false);
 
 	memcpy(txb, "PING", 5);
 	iov.iov_buf = txb;
@@ -329,9 +307,9 @@ test_websocket_text_mode(void)
 
 	nng_aio_wait(aio1);
 	nng_aio_wait(aio2);
-	TEST_NNG_PASS(nng_aio_result(aio1));
-	TEST_NNG_PASS(nng_aio_result(aio2));
-	TEST_ASSERT(memcmp(rxb, txb, 5) == 0);
+	NUTS_PASS(nng_aio_result(aio1));
+	NUTS_PASS(nng_aio_result(aio2));
+	NUTS_TRUE(memcmp(rxb, txb, 5) == 0);
 
 	memset(rxb, 0, 5);
 	memcpy(txb, "PONG", 5);
@@ -347,9 +325,9 @@ test_websocket_text_mode(void)
 
 	nng_aio_wait(aio1);
 	nng_aio_wait(aio2);
-	TEST_NNG_PASS(nng_aio_result(aio1));
-	TEST_NNG_PASS(nng_aio_result(aio2));
-	TEST_ASSERT(memcmp(rxb, txb, 5) == 0);
+	NUTS_PASS(nng_aio_result(aio1));
+	NUTS_PASS(nng_aio_result(aio2));
+	NUTS_TRUE(memcmp(rxb, txb, 5) == 0);
 
 	nng_stream_close(c1);
 	nng_stream_free(c1);
@@ -435,11 +413,11 @@ test_websocket_fragmentation(void)
 	state.total = 200000; // total to send
 	state.xfr   = 0;
 	state.err   = 0;
-	TEST_CHECK((recv_buf = nng_alloc(state.total)) != NULL);
-	TEST_CHECK((send_buf = nng_alloc(state.total)) != NULL);
-	TEST_NNG_PASS(nng_mtx_alloc(&state.lock));
-	TEST_NNG_PASS(nng_cv_alloc(&state.cv, state.lock));
-	TEST_NNG_PASS(nng_aio_alloc(&state.aio, frag_recv_cb, &state));
+	NUTS_TRUE((recv_buf = nng_alloc(state.total)) != NULL);
+	NUTS_TRUE((send_buf = nng_alloc(state.total)) != NULL);
+	NUTS_PASS(nng_mtx_alloc(&state.lock));
+	NUTS_PASS(nng_cv_alloc(&state.cv, state.lock));
+	NUTS_PASS(nng_aio_alloc(&state.aio, frag_recv_cb, &state));
 	nng_aio_set_timeout(state.aio, 2000);
 	state.buf = recv_buf;
 
@@ -451,20 +429,19 @@ test_websocket_fragmentation(void)
 	nni_sha1(send_buf, state.total, sum1);
 	nni_sha1_init(&state.sum);
 
-	port = testutil_next_port();
+	port = nuts_next_port();
 	(void) snprintf(url, sizeof(url), "ws://127.0.0.1:%u", port);
 
-	TEST_NNG_PASS(nng_stream_listener_alloc(&l, url));
-	TEST_NNG_PASS(nng_stream_dialer_alloc(&d, url));
-	TEST_NNG_PASS(nng_aio_alloc(&daio, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&laio, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&caio, NULL, NULL));
+	NUTS_PASS(nng_stream_listener_alloc(&l, url));
+	NUTS_PASS(nng_stream_dialer_alloc(&d, url));
+	NUTS_PASS(nng_aio_alloc(&daio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&laio, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&caio, NULL, NULL));
 
-	TEST_NNG_PASS(
-	    nng_stream_listener_set_bool(l, NNG_OPT_TCP_NODELAY, true));
-	TEST_NNG_PASS(
+	NUTS_PASS(nng_stream_listener_set_bool(l, NNG_OPT_TCP_NODELAY, true));
+	NUTS_PASS(
 	    nng_stream_listener_set_size(l, NNG_OPT_WS_SENDMAXFRAME, 1000000));
-	TEST_NNG_PASS(nng_stream_listener_listen(l));
+	NUTS_PASS(nng_stream_listener_listen(l));
 
 	nng_aio_set_timeout(laio, 2000);
 	nng_aio_set_timeout(daio, 2000);
@@ -475,8 +452,8 @@ test_websocket_fragmentation(void)
 	nng_aio_wait(laio);
 	nng_aio_wait(daio);
 
-	TEST_NNG_PASS(nng_aio_result(laio));
-	TEST_NNG_PASS(nng_aio_result(daio));
+	NUTS_PASS(nng_aio_result(laio));
+	NUTS_PASS(nng_aio_result(daio));
 	state.c = nng_aio_get_output(daio, 0);
 	c       = nng_aio_get_output(laio, 0);
 
@@ -493,11 +470,11 @@ test_websocket_fragmentation(void)
 		iov.iov_len = len;
 		iov.iov_buf = buf;
 
-		TEST_NNG_PASS(nng_aio_set_iov(caio, 1, &iov));
+		NUTS_PASS(nng_aio_set_iov(caio, 1, &iov));
 		nng_stream_send(c, caio);
 		nng_aio_wait(caio);
-		TEST_NNG_PASS(nng_aio_result(caio));
-		TEST_CHECK(nng_aio_count(caio) > 0);
+		NUTS_PASS(nng_aio_result(caio));
+		NUTS_TRUE(nng_aio_count(caio) > 0);
 		len = nng_aio_count(caio);
 
 		resid -= len;
@@ -510,13 +487,12 @@ test_websocket_fragmentation(void)
 	}
 	nng_mtx_unlock(state.lock);
 
-	TEST_NNG_PASS(state.err);
-	TEST_CHECK_(state.xfr == state.total,
-	    "send count (%d) == recv count (%d)", state.total, state.xfr);
+	NUTS_PASS(state.err);
+	NUTS_TRUE(state.xfr == state.total);
 
 	nni_sha1_final(&state.sum, sum2);
-	TEST_CHECK(memcmp(recv_buf, send_buf, state.total) == 0);
-	TEST_CHECK(memcmp(sum1, sum2, 20) == 0);
+	NUTS_TRUE(memcmp(recv_buf, send_buf, state.total) == 0);
+	NUTS_TRUE(memcmp(sum1, sum2, 20) == 0);
 
 	nng_aio_free(caio);
 	nng_stream_close(c);
@@ -535,7 +511,7 @@ test_websocket_fragmentation(void)
 	nng_stream_listener_free(l);
 }
 
-TEST_LIST = {
+NUTS_TESTS = {
 	{ "websocket stream wildcard", test_websocket_wildcard },
 	{ "websocket conn properties", test_websocket_conn_props },
 	{ "websocket fragmentation", test_websocket_fragmentation },

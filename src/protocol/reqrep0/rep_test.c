@@ -7,15 +7,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <string.h>
-
-#include <nng/nng.h>
-#include <nng/protocol/reqrep0/rep.h>
-#include <nng/protocol/reqrep0/req.h>
-#include <nng/supplemental/util/platform.h>
-
-#include <acutest.h>
-#include <testutil.h>
+#include <nuts.h>
 
 static void
 test_rep_identity(void)
@@ -25,16 +17,16 @@ test_rep_identity(void)
 	char *     n1;
 	char *     n2;
 
-	TEST_NNG_PASS(nng_rep0_open(&s));
-	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PROTO, &p1));
-	TEST_NNG_PASS(nng_getopt_int(s, NNG_OPT_PEER, &p2));
-	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PROTONAME, &n1));
-	TEST_NNG_PASS(nng_getopt_string(s, NNG_OPT_PEERNAME, &n2));
-	TEST_NNG_PASS(nng_close(s));
-	TEST_CHECK(p1 == NNG_REP0_SELF);
-	TEST_CHECK(p2 == NNG_REP0_PEER);
-	TEST_CHECK(strcmp(n1, NNG_REP0_SELF_NAME) == 0);
-	TEST_CHECK(strcmp(n2, NNG_REP0_PEER_NAME) == 0);
+	NUTS_PASS(nng_rep0_open(&s));
+	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p1));
+	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PEER, &p2));
+	NUTS_PASS(nng_socket_get_string(s, NNG_OPT_PROTONAME, &n1));
+	NUTS_PASS(nng_socket_get_string(s, NNG_OPT_PEERNAME, &n2));
+	NUTS_CLOSE(s);
+	NUTS_TRUE(p1 == NNG_REP0_SELF);
+	NUTS_TRUE(p2 == NNG_REP0_PEER);
+	NUTS_MATCH(n1, NNG_REP0_SELF_NAME);
+	NUTS_MATCH(n2, NNG_REP0_PEER_NAME);
 	nng_strfree(n1);
 	nng_strfree(n2);
 }
@@ -45,11 +37,11 @@ test_rep_send_bad_state(void)
 	nng_socket rep;
 	nng_msg *  msg = NULL;
 
-	TEST_CHECK(nng_rep0_open(&rep) == 0);
-	TEST_CHECK(nng_msg_alloc(&msg, 0) == 0);
-	TEST_CHECK(nng_sendmsg(rep, msg, 0) == NNG_ESTATE);
+	NUTS_TRUE(nng_rep0_open(&rep) == 0);
+	NUTS_TRUE(nng_msg_alloc(&msg, 0) == 0);
+	NUTS_TRUE(nng_sendmsg(rep, msg, 0) == NNG_ESTATE);
 	nng_msg_free(msg);
-	TEST_CHECK(nng_close(rep) == 0);
+	NUTS_CLOSE(rep);
 }
 
 void
@@ -59,33 +51,33 @@ test_rep_poll_writeable(void)
 	nng_socket req;
 	nng_socket rep;
 
-	TEST_NNG_PASS(nng_req0_open(&req));
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_getopt_int(rep, NNG_OPT_SENDFD, &fd));
-	TEST_CHECK(fd >= 0);
+	NUTS_PASS(nng_req0_open(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_socket_get_int(rep, NNG_OPT_SENDFD, &fd));
+	NUTS_TRUE(fd >= 0);
 
 	// Not writable before connect.
-	TEST_CHECK(testutil_pollfd(fd) == false);
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
-	TEST_NNG_PASS(testutil_marry(req, rep));
+	NUTS_MARRY(req, rep);
 
 	// Still not writable.
-	TEST_CHECK(testutil_pollfd(fd) == false);
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
 	// If we get a job, *then* we become writable
-	TEST_NNG_SEND_STR(req, "abc");
-	TEST_NNG_RECV_STR(rep, "abc");
-	TEST_CHECK(testutil_pollfd(fd) == true);
+	NUTS_SEND(req, "abc");
+	NUTS_RECV(rep, "abc");
+	NUTS_TRUE(nuts_poll_fd(fd) == true);
 
 	// And is no longer writable once we send a message
-	TEST_NNG_SEND_STR(rep, "def");
-	TEST_CHECK(testutil_pollfd(fd) == false);
+	NUTS_SEND(rep, "def");
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
 	// Even after receiving it
-	TEST_NNG_RECV_STR(req, "def");
-	TEST_CHECK(testutil_pollfd(fd) == false);
+	NUTS_RECV(req, "def");
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
-	TEST_NNG_PASS(nng_close(req));
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
 }
 
 void
@@ -96,34 +88,34 @@ test_rep_poll_readable(void)
 	nng_socket rep;
 	nng_msg *  msg;
 
-	TEST_NNG_PASS(nng_req0_open(&req));
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_getopt_int(rep, NNG_OPT_RECVFD, &fd));
-	TEST_CHECK(fd >= 0);
+	NUTS_PASS(nng_req0_open(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_socket_get_int(rep, NNG_OPT_RECVFD, &fd));
+	NUTS_TRUE(fd >= 0);
 
 	// Not readable if not connected!
-	TEST_CHECK(testutil_pollfd(fd) == false);
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
 	// Even after connect (no message yet)
-	TEST_NNG_PASS(testutil_marry(req, rep));
-	TEST_CHECK(testutil_pollfd(fd) == false);
+	NUTS_MARRY(req, rep);
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
 	// But once we send messages, it is.
 	// We have to send a request, in order to send a reply.
-	TEST_NNG_SEND_STR(req, "abc");
-	testutil_sleep(100);
+	NUTS_SEND(req, "abc");
+	NUTS_SLEEP(100);
 
-	TEST_CHECK(testutil_pollfd(fd) == true);
+	NUTS_TRUE(nuts_poll_fd(fd) == true);
 
 	// and receiving makes it no longer ready
-	TEST_NNG_PASS(nng_recvmsg(rep, &msg, 0));
+	NUTS_PASS(nng_recvmsg(rep, &msg, 0));
 	nng_msg_free(msg);
-	TEST_CHECK(testutil_pollfd(fd) == false);
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
 
 	// TODO verify unsolicited response
 
-	TEST_NNG_PASS(nng_close(req));
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
 }
 
 void
@@ -133,14 +125,12 @@ test_rep_context_no_poll(void)
 	nng_socket req;
 	nng_ctx    ctx;
 
-	TEST_NNG_PASS(nng_rep0_open(&req));
-	TEST_NNG_PASS(nng_ctx_open(&ctx, req));
-	TEST_NNG_FAIL(
-	    nng_ctx_getopt_int(ctx, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
-	TEST_NNG_FAIL(
-	    nng_ctx_getopt_int(ctx, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
-	TEST_NNG_PASS(nng_ctx_close(ctx));
-	TEST_NNG_PASS(nng_close(req));
+	NUTS_PASS(nng_rep0_open(&req));
+	NUTS_PASS(nng_ctx_open(&ctx, req));
+	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_SENDFD, &fd), NNG_ENOTSUP);
+	NUTS_FAIL(nng_ctx_get_int(ctx, NNG_OPT_RECVFD, &fd), NNG_ENOTSUP);
+	NUTS_PASS(nng_ctx_close(ctx));
+	NUTS_CLOSE(req);
 }
 
 void
@@ -149,28 +139,27 @@ test_rep_validate_peer(void)
 	nng_socket s1, s2;
 	nng_stat * stats;
 	nng_stat * reject;
-	char       addr[64];
+	char *     addr;
 
-	testutil_scratch_addr("inproc", sizeof(addr), addr);
+	NUTS_ADDR(addr, "inproc");
+	NUTS_PASS(nng_rep0_open(&s1));
+	NUTS_PASS(nng_rep0_open(&s2));
 
-	TEST_NNG_PASS(nng_rep0_open(&s1));
-	TEST_NNG_PASS(nng_rep0_open(&s2));
+	NUTS_PASS(nng_listen(s1, addr, NULL, 0));
+	NUTS_PASS(nng_dial(s2, addr, NULL, NNG_FLAG_NONBLOCK));
 
-	TEST_NNG_PASS(nng_listen(s1, addr, NULL, 0));
-	TEST_NNG_PASS(nng_dial(s2, addr, NULL, NNG_FLAG_NONBLOCK));
+	NUTS_SLEEP(100);
+	NUTS_PASS(nng_stats_get(&stats));
 
-	testutil_sleep(100);
-	TEST_NNG_PASS(nng_stats_get(&stats));
+	NUTS_TRUE(stats != NULL);
+	NUTS_TRUE((reject = nng_stat_find_socket(stats, s1)) != NULL);
+	NUTS_TRUE((reject = nng_stat_find(reject, "reject")) != NULL);
 
-	TEST_CHECK(stats != NULL);
-	TEST_CHECK((reject = nng_stat_find_socket(stats, s1)) != NULL);
-	TEST_CHECK((reject = nng_stat_find(reject, "reject")) != NULL);
+	NUTS_TRUE(nng_stat_type(reject) == NNG_STAT_COUNTER);
+	NUTS_TRUE(nng_stat_value(reject) > 0);
 
-	TEST_CHECK(nng_stat_type(reject) == NNG_STAT_COUNTER);
-	TEST_CHECK(nng_stat_value(reject) > 0);
-
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 	nng_stats_free(stats);
 }
 
@@ -181,17 +170,17 @@ test_rep_double_recv(void)
 	nng_aio *  aio1;
 	nng_aio *  aio2;
 
-	TEST_NNG_PASS(nng_rep0_open(&s1));
-	TEST_NNG_PASS(nng_aio_alloc(&aio1, NULL, NULL));
-	TEST_NNG_PASS(nng_aio_alloc(&aio2, NULL, NULL));
+	NUTS_PASS(nng_rep0_open(&s1));
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_aio_alloc(&aio2, NULL, NULL));
 
 	nng_recv_aio(s1, aio1);
 	nng_recv_aio(s1, aio2);
 
 	nng_aio_wait(aio2);
-	TEST_NNG_FAIL(nng_aio_result(aio2), NNG_ESTATE);
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_FAIL(nng_aio_result(aio1), NNG_ECLOSED);
+	NUTS_FAIL(nng_aio_result(aio2), NNG_ESTATE);
+	NUTS_CLOSE(s1);
+	NUTS_FAIL(nng_aio_result(aio1), NNG_ECLOSED);
 	nng_aio_free(aio1);
 	nng_aio_free(aio2);
 }
@@ -205,26 +194,26 @@ test_rep_close_pipe_before_send(void)
 	nng_aio *  aio1;
 	nng_msg *  m;
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_req0_open(&req));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_aio_alloc(&aio1, NULL, NULL));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open(&req));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_aio_alloc(&aio1, NULL, NULL));
 
-	TEST_NNG_PASS(testutil_marry(req, rep));
-	TEST_NNG_SEND_STR(req, "test");
+	NUTS_MARRY(req, rep);
+	NUTS_SEND(req, "test");
 
 	nng_recv_aio(rep, aio1);
 	nng_aio_wait(aio1);
-	TEST_NNG_PASS(nng_aio_result(aio1));
-	TEST_CHECK((m = nng_aio_get_msg(aio1)) != NULL);
+	NUTS_PASS(nng_aio_result(aio1));
+	NUTS_TRUE((m = nng_aio_get_msg(aio1)) != NULL);
 	p = nng_msg_get_pipe(m);
-	TEST_NNG_PASS(nng_pipe_close(p));
-	TEST_NNG_PASS(nng_sendmsg(rep, m, 0));
+	NUTS_PASS(nng_pipe_close(p));
+	NUTS_PASS(nng_sendmsg(rep, m, 0));
 
-	TEST_NNG_PASS(nng_close(req));
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
 	nng_aio_free(aio1);
 }
 
@@ -236,25 +225,24 @@ test_rep_close_pipe_during_send(void)
 	nng_pipe   p = NNG_PIPE_INITIALIZER;
 	nng_msg *  m;
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_req0_open_raw(&req));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 200));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_SENDBUF, 20));
-	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_RECVBUF, 20));
-	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_SENDBUF, 20));
-	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_RECVBUF, 1));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 200));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_SENDBUF, 20));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_RECVBUF, 20));
+	NUTS_PASS(nng_socket_set_int(req, NNG_OPT_SENDBUF, 20));
+	NUTS_PASS(nng_socket_set_int(req, NNG_OPT_RECVBUF, 1));
 
-	TEST_NNG_PASS(testutil_marry(req, rep));
+	NUTS_MARRY(req, rep);
 
 	for (int i = 0; i < 100; i++) {
 		int rv;
-		TEST_NNG_PASS(nng_msg_alloc(&m, 4));
-		TEST_NNG_PASS(
-		    nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
-		TEST_NNG_PASS(nng_sendmsg(req, m, 0));
-		TEST_NNG_PASS(nng_recvmsg(rep, &m, 0));
+		NUTS_PASS(nng_msg_alloc(&m, 4));
+		NUTS_PASS(nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
+		NUTS_PASS(nng_sendmsg(req, m, 0));
+		NUTS_PASS(nng_recvmsg(rep, &m, 0));
 		p  = nng_msg_get_pipe(m);
 		rv = nng_sendmsg(rep, m, 0);
 		if (rv == NNG_ETIMEDOUT) {
@@ -262,12 +250,12 @@ test_rep_close_pipe_during_send(void)
 			nng_msg_free(m);
 			break;
 		}
-		TEST_NNG_PASS(rv);
+		NUTS_PASS(rv);
 	}
-	TEST_NNG_PASS(nng_pipe_close(p));
+	NUTS_PASS(nng_pipe_close(p));
 
-	TEST_NNG_PASS(nng_close(req));
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
 }
 
 void
@@ -277,16 +265,16 @@ test_rep_ctx_recv_aio_stopped(void)
 	nng_ctx    ctx;
 	nng_aio *  aio;
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	TEST_NNG_PASS(nng_ctx_open(&ctx, rep));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_ctx_open(&ctx, rep));
 
 	nng_aio_stop(aio);
 	nng_ctx_recv(ctx, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_FAIL(nng_aio_result(aio), NNG_ECANCELED);
-	TEST_NNG_PASS(nng_ctx_close(ctx));
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	NUTS_PASS(nng_ctx_close(ctx));
+	NUTS_CLOSE(rep);
 	nng_aio_free(aio);
 }
 
@@ -301,54 +289,53 @@ test_rep_close_pipe_context_send(void)
 	nng_aio *  aio[100];
 	int        i;
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open_raw(&req));
 	for (i = 0; i < 100; i++) {
-		TEST_NNG_PASS(nng_ctx_open(&ctx[i], rep));
-		TEST_NNG_PASS(nng_aio_alloc(&aio[i], NULL, NULL));
+		NUTS_PASS(nng_ctx_open(&ctx[i], rep));
+		NUTS_PASS(nng_aio_alloc(&aio[i], NULL, NULL));
 	}
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_SENDBUF, 1));
-	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_RECVBUF, 1));
-	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_SENDBUF, 1));
-	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_RECVBUF, 1));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_SENDBUF, 1));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_RECVBUF, 1));
+	NUTS_PASS(nng_socket_set_int(req, NNG_OPT_SENDBUF, 1));
+	NUTS_PASS(nng_socket_set_int(req, NNG_OPT_RECVBUF, 1));
 
-	TEST_NNG_PASS(testutil_marry(req, rep));
+	NUTS_MARRY(req, rep);
 
 	for (i = 0; i < 100; i++) {
-		TEST_NNG_PASS(nng_msg_alloc(&m, 4));
-		TEST_NNG_PASS(
-		    nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
-		TEST_NNG_PASS(nng_sendmsg(req, m, 0));
+		NUTS_PASS(nng_msg_alloc(&m, 4));
+		NUTS_PASS(nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
+		NUTS_PASS(nng_sendmsg(req, m, 0));
 		nng_ctx_recv(ctx[i], aio[i]);
 	}
 	for (i = 0; i < 100; i++) {
 		nng_aio_wait(aio[i]);
-		TEST_NNG_PASS(nng_aio_result(aio[i]));
-		TEST_CHECK((m = nng_aio_get_msg(aio[i])) != NULL);
+		NUTS_PASS(nng_aio_result(aio[i]));
+		NUTS_TRUE((m = nng_aio_get_msg(aio[i])) != NULL);
 		p = nng_msg_get_pipe(m);
 		nng_aio_set_msg(aio[i], m);
 		nng_ctx_send(ctx[i], aio[i]);
 	}
 
 	// Note that REQ socket is not reading the results.
-	TEST_NNG_PASS(nng_pipe_close(p));
+	NUTS_PASS(nng_pipe_close(p));
 
 	for (i = 0; i < 100; i++) {
 		int rv;
 		nng_aio_wait(aio[i]);
 		rv = nng_aio_result(aio[i]);
 		if (rv != 0) {
-			TEST_NNG_FAIL(rv, NNG_ECLOSED);
+			NUTS_FAIL(rv, NNG_ECLOSED);
 			nng_msg_free(nng_aio_get_msg(aio[i]));
 		}
 		nng_aio_free(aio[i]);
-		TEST_NNG_PASS(nng_ctx_close(ctx[i]));
+		NUTS_PASS(nng_ctx_close(ctx[i]));
 	}
-	TEST_NNG_PASS(nng_close(req));
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
 }
 
 void
@@ -361,33 +348,32 @@ test_rep_close_context_send(void)
 	nng_aio *  aio[100];
 	int        i;
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open_raw(&req));
 	for (i = 0; i < 100; i++) {
-		TEST_NNG_PASS(nng_ctx_open(&ctx[i], rep));
-		TEST_NNG_PASS(nng_aio_alloc(&aio[i], NULL, NULL));
+		NUTS_PASS(nng_ctx_open(&ctx[i], rep));
+		NUTS_PASS(nng_aio_alloc(&aio[i], NULL, NULL));
 	}
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_SENDBUF, 1));
-	TEST_NNG_PASS(nng_setopt_int(rep, NNG_OPT_RECVBUF, 1));
-	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_SENDBUF, 1));
-	TEST_NNG_PASS(nng_setopt_int(req, NNG_OPT_RECVBUF, 1));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_SENDBUF, 1));
+	NUTS_PASS(nng_socket_set_int(rep, NNG_OPT_RECVBUF, 1));
+	NUTS_PASS(nng_socket_set_int(req, NNG_OPT_SENDBUF, 1));
+	NUTS_PASS(nng_socket_set_int(req, NNG_OPT_RECVBUF, 1));
 
-	TEST_NNG_PASS(testutil_marry(req, rep));
+	NUTS_MARRY(req, rep);
 
 	for (i = 0; i < 100; i++) {
-		TEST_NNG_PASS(nng_msg_alloc(&m, 4));
-		TEST_NNG_PASS(
-		    nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
-		TEST_NNG_PASS(nng_sendmsg(req, m, 0));
+		NUTS_PASS(nng_msg_alloc(&m, 4));
+		NUTS_PASS(nng_msg_append_u32(m, (unsigned) i | 0x80000000u));
+		NUTS_PASS(nng_sendmsg(req, m, 0));
 		nng_ctx_recv(ctx[i], aio[i]);
 	}
 	for (i = 0; i < 100; i++) {
 		nng_aio_wait(aio[i]);
-		TEST_NNG_PASS(nng_aio_result(aio[i]));
-		TEST_CHECK((m = nng_aio_get_msg(aio[i])) != NULL);
+		NUTS_PASS(nng_aio_result(aio[i]));
+		NUTS_TRUE((m = nng_aio_get_msg(aio[i])) != NULL);
 		nng_aio_set_msg(aio[i], m);
 		nng_ctx_send(ctx[i], aio[i]);
 	}
@@ -395,17 +381,17 @@ test_rep_close_context_send(void)
 	// Note that REQ socket is not reading the results.
 	for (i = 0; i < 100; i++) {
 		int rv;
-		TEST_NNG_PASS(nng_ctx_close(ctx[i]));
+		NUTS_PASS(nng_ctx_close(ctx[i]));
 		nng_aio_wait(aio[i]);
 		rv = nng_aio_result(aio[i]);
 		if (rv != 0) {
-			TEST_NNG_FAIL(rv, NNG_ECLOSED);
+			NUTS_FAIL(rv, NNG_ECLOSED);
 			nng_msg_free(nng_aio_get_msg(aio[i]));
 		}
 		nng_aio_free(aio[i]);
 	}
-	TEST_NNG_PASS(nng_close(req));
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
 }
 
 void
@@ -415,19 +401,19 @@ test_rep_close_recv(void)
 	nng_socket req;
 	nng_aio *  aio;
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_req0_open_raw(&req));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
 
-	TEST_NNG_PASS(testutil_marry(req, rep));
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_MARRY(req, rep);
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 	nng_recv_aio(rep, aio);
-	TEST_NNG_PASS(nng_close(rep));
-	TEST_NNG_PASS(nng_close(req));
+	NUTS_CLOSE(rep);
+	NUTS_CLOSE(req);
 	nng_aio_wait(aio);
-	TEST_NNG_FAIL(nng_aio_result(aio), NNG_ECLOSED);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECLOSED);
 	nng_aio_free(aio);
 }
 
@@ -461,28 +447,28 @@ test_rep_close_recv_cb(void)
 	struct rep_close_recv_cb_state state;
 
 	memset(&state, 0, sizeof(state));
-	TEST_NNG_PASS(nng_mtx_alloc(&state.mtx));
-	TEST_NNG_PASS(nng_cv_alloc(&state.cv, state.mtx));
+	NUTS_PASS(nng_mtx_alloc(&state.mtx));
+	NUTS_PASS(nng_cv_alloc(&state.cv, state.mtx));
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_req0_open_raw(&req));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
 
-	TEST_NNG_PASS(testutil_marry(req, rep));
-	TEST_NNG_PASS(nng_aio_alloc(&state.aio, rep_close_recv_cb, &state));
+	NUTS_MARRY(req, rep);
+	NUTS_PASS(nng_aio_alloc(&state.aio, rep_close_recv_cb, &state));
 	nng_recv_aio(rep, state.aio);
-	TEST_NNG_PASS(nng_close(rep));
-	TEST_NNG_PASS(nng_close(req));
+	NUTS_CLOSE(rep);
+	NUTS_CLOSE(req);
 	nng_mtx_lock(state.mtx);
 	while (!state.done) {
-		TEST_NNG_PASS(nng_cv_until(state.cv, nng_clock() + 1000));
+		NUTS_PASS(nng_cv_until(state.cv, nng_clock() + 1000));
 	}
 	nng_mtx_unlock(state.mtx);
-	TEST_CHECK(state.done != 0);
-	TEST_NNG_FAIL(nng_aio_result(state.aio), NNG_ECLOSED);
-	TEST_CHECK(nng_aio_get_msg(state.aio) == NULL);
+	NUTS_TRUE(state.done != 0);
+	NUTS_FAIL(nng_aio_result(state.aio), NNG_ECLOSED);
+	NUTS_TRUE(nng_aio_get_msg(state.aio) == NULL);
 	nng_aio_free(state.aio);
 	nng_cv_free(state.cv);
 	nng_mtx_free(state.mtx);
@@ -495,16 +481,16 @@ test_rep_ctx_recv_nonblock(void)
 	nng_ctx    ctx;
 	nng_aio *  aio;
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_ctx_open(&ctx, rep));
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_ctx_open(&ctx, rep));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
 
 	nng_aio_set_timeout(aio, 0); // Instant timeout
 	nng_ctx_recv(ctx, aio);
 
 	nng_aio_wait(aio);
-	TEST_NNG_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_FAIL(nng_aio_result(aio), NNG_ETIMEDOUT);
+	NUTS_CLOSE(rep);
 	nng_aio_free(aio);
 }
 
@@ -517,19 +503,19 @@ test_rep_ctx_send_nonblock(void)
 	nng_aio *  aio;
 	nng_msg *  msg;
 
-	TEST_NNG_PASS(nng_req0_open(&req));
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 2000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_ctx_open(&ctx, rep));
-	TEST_NNG_PASS(nng_aio_alloc(&aio, NULL, NULL));
-	TEST_NNG_PASS(testutil_marry(req, rep));
+	NUTS_PASS(nng_req0_open(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 2000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_ctx_open(&ctx, rep));
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_MARRY(req, rep);
 
-	TEST_NNG_SEND_STR(req, "SEND");
+	NUTS_SEND(req, "SEND");
 	nng_ctx_recv(ctx, aio);
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
+	NUTS_PASS(nng_aio_result(aio));
 	// message carries over
 	msg = nng_aio_get_msg(aio);
 	nng_aio_set_msg(aio, msg);
@@ -537,9 +523,9 @@ test_rep_ctx_send_nonblock(void)
 	nng_ctx_send(ctx, aio);
 
 	nng_aio_wait(aio);
-	TEST_NNG_PASS(nng_aio_result(aio));
-	TEST_NNG_PASS(nng_close(rep));
-	TEST_NNG_PASS(nng_close(req));
+	NUTS_PASS(nng_aio_result(aio));
+	NUTS_CLOSE(rep);
+	NUTS_CLOSE(req);
 	nng_aio_free(aio);
 }
 
@@ -556,29 +542,28 @@ test_rep_ctx_send_nonblock2(void)
 	// We are going to send a bunch of requests, receive them,
 	// but then see that non-block pressure exerts for some, but
 	// that at least one non-blocking send works.
-	TEST_NNG_PASS(nng_req0_open_raw(&req));
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
 	for (int i = 0; i < 10; i++) {
-		TEST_NNG_PASS(nng_ctx_open(&rep_ctx[i], rep));
-		TEST_NNG_PASS(nng_aio_alloc(&rep_aio[i], NULL, NULL));
+		NUTS_PASS(nng_ctx_open(&rep_ctx[i], rep));
+		NUTS_PASS(nng_aio_alloc(&rep_aio[i], NULL, NULL));
 	}
-	TEST_NNG_PASS(testutil_marry(req, rep));
+	NUTS_MARRY(req, rep);
 
 	for (int i = 0; i < 10; i++) {
 		nng_msg *msg;
-		TEST_NNG_PASS(nng_msg_alloc(&msg, 4));
-		TEST_NNG_PASS(
-		    nng_msg_append_u32(msg, (unsigned) i | 0x80000000u));
+		NUTS_PASS(nng_msg_alloc(&msg, 4));
+		NUTS_PASS(nng_msg_append_u32(msg, (unsigned) i | 0x80000000u));
 		nng_ctx_recv(rep_ctx[i], rep_aio[i]);
-		TEST_NNG_PASS(nng_sendmsg(req, msg, 0));
+		NUTS_PASS(nng_sendmsg(req, msg, 0));
 	}
 	for (int i = 0; i < 10; i++) {
 		nng_msg *msg;
 		nng_aio_wait(rep_aio[i]);
-		TEST_NNG_PASS(nng_aio_result(rep_aio[i]));
+		NUTS_PASS(nng_aio_result(rep_aio[i]));
 		msg = nng_aio_get_msg(rep_aio[i]);
 		nng_aio_set_timeout(rep_aio[i], 0);
 		nng_aio_set_msg(rep_aio[i], msg);
@@ -592,7 +577,7 @@ test_rep_ctx_send_nonblock2(void)
 		if (rv == 0) {
 			num_good++;
 		} else {
-			TEST_NNG_FAIL(rv, NNG_ETIMEDOUT);
+			NUTS_FAIL(rv, NNG_ETIMEDOUT);
 			nng_msg_free(nng_aio_get_msg(rep_aio[i]));
 			num_fail++;
 		}
@@ -605,8 +590,8 @@ test_rep_ctx_send_nonblock2(void)
 		nng_aio_free(rep_aio[i]);
 		nng_ctx_close(rep_ctx[i]);
 	}
-	TEST_NNG_PASS(nng_close(rep));
-	TEST_NNG_PASS(nng_close(req));
+	NUTS_CLOSE(rep);
+	NUTS_CLOSE(req);
 }
 
 static void
@@ -616,24 +601,24 @@ test_rep_send_nonblock(void)
 	nng_socket req;
 	int        rv;
 
-	TEST_NNG_PASS(nng_req0_open(&req));
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(testutil_marry(req, rep));
+	NUTS_PASS(nng_req0_open(&req));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_MARRY(req, rep);
 
-	TEST_NNG_SEND_STR(req, "SEND");
-	TEST_NNG_RECV_STR(rep, "SEND");
+	NUTS_SEND(req, "SEND");
+	NUTS_RECV(rep, "SEND");
 
 	// Use the nonblock flag
 	rv = nng_send(rep, "RECV", 5, NNG_FLAG_NONBLOCK);
 
-	TEST_NNG_PASS(rv);
-	TEST_NNG_RECV_STR(req, "RECV");
-	TEST_NNG_PASS(nng_close(rep));
-	TEST_NNG_PASS(nng_close(req));
+	NUTS_PASS(rv);
+	NUTS_RECV(req, "RECV");
+	NUTS_CLOSE(rep);
+	NUTS_CLOSE(req);
 }
 
 void
@@ -643,24 +628,24 @@ test_rep_recv_garbage(void)
 	nng_socket req;
 	nng_msg *  m;
 
-	TEST_NNG_PASS(nng_rep0_open(&rep));
-	TEST_NNG_PASS(nng_req0_open_raw(&req));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_RECVTIMEO, 200));
-	TEST_NNG_PASS(nng_setopt_ms(rep, NNG_OPT_SENDTIMEO, 200));
-	TEST_NNG_PASS(nng_setopt_ms(req, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_rep0_open(&rep));
+	NUTS_PASS(nng_req0_open_raw(&req));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_RECVTIMEO, 200));
+	NUTS_PASS(nng_socket_set_ms(rep, NNG_OPT_SENDTIMEO, 200));
+	NUTS_PASS(nng_socket_set_ms(req, NNG_OPT_SENDTIMEO, 1000));
 
-	TEST_NNG_PASS(testutil_marry(req, rep));
+	NUTS_MARRY(req, rep);
 
-	TEST_NNG_PASS(nng_msg_alloc(&m, 4));
-	TEST_NNG_PASS(nng_msg_append_u32(m, 1u));
-	TEST_NNG_PASS(nng_sendmsg(req, m, 0));
-	TEST_NNG_FAIL(nng_recvmsg(rep, &m, 0), NNG_ETIMEDOUT);
+	NUTS_PASS(nng_msg_alloc(&m, 4));
+	NUTS_PASS(nng_msg_append_u32(m, 1u));
+	NUTS_PASS(nng_sendmsg(req, m, 0));
+	NUTS_FAIL(nng_recvmsg(rep, &m, 0), NNG_ETIMEDOUT);
 
-	TEST_NNG_PASS(nng_close(req));
-	TEST_NNG_PASS(nng_close(rep));
+	NUTS_CLOSE(req);
+	NUTS_CLOSE(rep);
 }
 
-TEST_LIST = {
+NUTS_TESTS = {
 	{ "rep identity", test_rep_identity },
 	{ "rep send bad state", test_rep_send_bad_state },
 	{ "rep poll readable", test_rep_poll_readable },

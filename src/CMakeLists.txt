@@ -30,6 +30,8 @@ add_subdirectory(supplemental/tls)
 add_subdirectory(supplemental/util)
 add_subdirectory(supplemental/websocket)
 
+add_subdirectory(testing)
+
 # When building shared libraries we prefer to suppress default symbol
 # visibility, so that only the symbols that should be exposed in the
 # resulting library are.  This is the default with Windows.

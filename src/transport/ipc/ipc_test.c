@@ -8,13 +8,7 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#include <nng/nng.h>
-#include <nng/protocol/pair0/pair.h>
-#include <nng/supplemental/util/platform.h>
-
-#include <testutil.h>
-
-#include <acutest.h>
+#include <nuts.h>
 
 #ifdef NNG_PLATFORM_POSIX
 #include <sys/stat.h>
@@ -33,15 +27,14 @@ test_path_too_long(void)
 	addr[255] = 0;
 	memcpy(addr, "ipc://", strlen("ipc://"));
 
-	TEST_ASSERT(strlen(addr) == 255);
-	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_FAIL(nng_listen(s1, addr, NULL, 0), NNG_EADDRINVAL);
-	TEST_NNG_FAIL(
-	    nng_dial(s1, addr, NULL, NNG_FLAG_NONBLOCK), NNG_EADDRINVAL);
+	NUTS_ASSERT(strlen(addr) == 255);
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_FAIL(nng_listen(s1, addr, NULL, 0), NNG_EADDRINVAL);
+	NUTS_FAIL(nng_dial(s1, addr, NULL, NNG_FLAG_NONBLOCK), NNG_EADDRINVAL);
 
-	TEST_NNG_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 }
 
 void
@@ -49,16 +42,14 @@ test_ipc_dialer_perms(void)
 {
 	nng_socket s;
 	nng_dialer d;
-	char       addr[64];
+	char *     addr;
 
-	testutil_scratch_addr("ipc", sizeof(addr), addr);
-
-	TEST_NNG_PASS(nng_pair0_open(&s));
-	TEST_NNG_PASS(nng_dialer_create(&d, s, addr));
-	TEST_NNG_FAIL(
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dialer_create(&d, s, addr));
+	NUTS_FAIL(
 	    nng_dialer_set_int(d, NNG_OPT_IPC_PERMISSIONS, 0444), NNG_ENOTSUP);
-
-	TEST_NNG_PASS(nng_close(s));
+	NUTS_CLOSE(s);
 }
 
 void
@@ -68,26 +59,24 @@ test_ipc_dialer_properties(void)
 	nng_dialer   d;
 	nng_sockaddr sa;
 	size_t       z;
-	char         addr[64];
+	char         *addr;
 
-	testutil_scratch_addr("ipc", sizeof(addr), addr);
-
-	TEST_NNG_PASS(nng_pair0_open(&s));
-	TEST_NNG_PASS(nng_dial(s, addr, &d, NNG_FLAG_NONBLOCK));
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_dial(s, addr, &d, NNG_FLAG_NONBLOCK));
 	// Dialers don't have local addresses.
-	TEST_NNG_FAIL(
-	    nng_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
+	NUTS_FAIL(nng_dialer_get_addr(d, NNG_OPT_LOCADDR, &sa), NNG_ENOTSUP);
 
-	TEST_NNG_FAIL(
+	NUTS_FAIL(
 	    nng_dialer_set(d, NNG_OPT_LOCADDR, &sa, sizeof(sa)), NNG_ENOTSUP);
 
 	z = 8192;
-	TEST_NNG_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, z));
+	NUTS_PASS(nng_dialer_set_size(d, NNG_OPT_RECVMAXSZ, z));
 	z = 0;
-	TEST_NNG_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &z));
-	TEST_CHECK(z == 8192);
-	TEST_NNG_FAIL(nng_dialer_set_bool(d, NNG_OPT_RAW, true), NNG_ENOTSUP);
-	TEST_NNG_PASS(nng_close(s));
+	NUTS_PASS(nng_dialer_get_size(d, NNG_OPT_RECVMAXSZ, &z));
+	NUTS_TRUE(z == 8192);
+	NUTS_FAIL(nng_dialer_set_bool(d, NNG_OPT_RAW, true), NNG_ENOTSUP);
+	NUTS_CLOSE(s);
 }
 
 void
@@ -95,40 +84,38 @@ test_ipc_listener_perms(void)
 {
 	nng_socket   s;
 	nng_listener l;
-	char         addr[64];
+	char         *addr;
 
 #ifndef _WIN32
 	char *      path;
 	struct stat st;
 #endif
 
-	testutil_scratch_addr("ipc", sizeof(addr), addr);
-
-	TEST_NNG_PASS(nng_pair0_open(&s));
-	TEST_NNG_PASS(nng_listener_create(&l, s, addr));
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listener_create(&l, s, addr));
 
 #ifdef _WIN32
-	TEST_NNG_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, 0444),
+	NUTS_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, 0444),
 	    NNG_ENOTSUP);
 #else
 	path = &addr[strlen("ipc://")];
 
 	// Attempt to set invalid permissions fails.
-	TEST_NNG_FAIL(
-	    nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, S_IFREG),
+	NUTS_FAIL(nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, S_IFREG),
 	    NNG_EINVAL);
 
-	TEST_NNG_PASS(nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, 0444));
-	TEST_NNG_PASS(nng_listener_start(l, 0));
-	TEST_CHECK(stat(path, &st) == 0);
-	TEST_CHECK((st.st_mode & 0777) == 0444);
+	NUTS_PASS(nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, 0444));
+	NUTS_PASS(nng_listener_start(l, 0));
+	NUTS_TRUE(stat(path, &st) == 0);
+	NUTS_TRUE((st.st_mode & 0777) == 0444);
 
 	// Now that it's running, we cannot set it.
-	TEST_NNG_FAIL(
+	NUTS_FAIL(
 	    nng_listener_set_int(l, NNG_OPT_IPC_PERMISSIONS, 0644), NNG_EBUSY);
 #endif
 
-	TEST_NNG_PASS(nng_close(s));
+	NUTS_CLOSE(s);
 }
 
 void
@@ -138,26 +125,24 @@ test_ipc_listener_properties(void)
 	nng_listener l;
 	nng_sockaddr sa;
 	size_t       z;
-	char         addr[64];
+	char         *addr;
 
-	testutil_scratch_addr("ipc", sizeof(addr), addr);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s);
+	NUTS_PASS(nng_listen(s, addr, &l, 0));
+	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
+	NUTS_TRUE(sa.s_ipc.sa_family == NNG_AF_IPC);
+	NUTS_MATCH(sa.s_ipc.sa_path, addr + strlen("ipc://"));
 
-	TEST_NNG_PASS(nng_pair0_open(&s));
-	TEST_NNG_PASS(nng_listen(s, addr, &l, 0));
-	TEST_NNG_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
-	TEST_CHECK(sa.s_ipc.sa_family == NNG_AF_IPC);
-	TEST_STREQUAL(sa.s_ipc.sa_path, addr + strlen("ipc://"));
-
-	TEST_NNG_FAIL(nng_listener_set(l, NNG_OPT_LOCADDR, &sa, sizeof(sa)),
+	NUTS_FAIL(nng_listener_set(l, NNG_OPT_LOCADDR, &sa, sizeof(sa)),
 	    NNG_EREADONLY);
 	z = 8192;
-	TEST_NNG_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, z));
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, z));
 	z = 0;
-	TEST_NNG_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &z));
-	TEST_CHECK(z == 8192);
-	TEST_NNG_FAIL(
-	    nng_listener_set_bool(l, NNG_OPT_RAW, true), NNG_ENOTSUP);
-	TEST_NNG_PASS(nng_close(s));
+	NUTS_PASS(nng_listener_get_size(l, NNG_OPT_RECVMAXSZ, &z));
+	NUTS_TRUE(z == 8192);
+	NUTS_FAIL(nng_listener_set_bool(l, NNG_OPT_RAW, true), NNG_ENOTSUP);
+	NUTS_CLOSE(s);
 }
 
 void
@@ -169,29 +154,28 @@ test_ipc_recv_max(void)
 	nng_socket   s1;
 	nng_listener l;
 	size_t       sz;
-	char         addr[64];
+	char         *addr;
 
-	testutil_scratch_addr("ipc", sizeof(addr), addr);
+	NUTS_ADDR(addr, "ipc");
+	NUTS_OPEN(s0);
+	NUTS_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
+	NUTS_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
+	NUTS_PASS(nng_listener_create(&l, s0, addr));
+	NUTS_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
+	NUTS_TRUE(sz == 200);
+	NUTS_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 100));
+	NUTS_PASS(nng_listener_start(l, 0));
 
-	TEST_NNG_PASS(nng_pair0_open(&s0));
-	TEST_NNG_PASS(nng_socket_set_ms(s0, NNG_OPT_RECVTIMEO, 100));
-	TEST_NNG_PASS(nng_socket_set_size(s0, NNG_OPT_RECVMAXSZ, 200));
-	TEST_NNG_PASS(nng_listener_create(&l, s0, addr));
-	TEST_NNG_PASS(nng_socket_get_size(s0, NNG_OPT_RECVMAXSZ, &sz));
-	TEST_CHECK(sz == 200);
-	TEST_NNG_PASS(nng_listener_set_size(l, NNG_OPT_RECVMAXSZ, 100));
-	TEST_NNG_PASS(nng_listener_start(l, 0));
-
-	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_dial(s1, addr, NULL, 0));
-	TEST_NNG_PASS(nng_send(s1, msg, 95, 0));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
-	TEST_NNG_PASS(nng_recv(s0, rcvbuf, &sz, 0));
-	TEST_CHECK(sz == 95);
-	TEST_NNG_PASS(nng_send(s1, msg, 150, 0));
-	TEST_NNG_FAIL(nng_recv(s0, rcvbuf, &sz, 0), NNG_ETIMEDOUT);
-	TEST_NNG_PASS(nng_close(s0));
-	TEST_NNG_PASS(nng_close(s1));
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_dial(s1, addr, NULL, 0));
+	NUTS_PASS(nng_send(s1, msg, 95, 0));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 100));
+	NUTS_PASS(nng_recv(s0, rcvbuf, &sz, 0));
+	NUTS_TRUE(sz == 95);
+	NUTS_PASS(nng_send(s1, msg, 150, 0));
+	NUTS_FAIL(nng_recv(s0, rcvbuf, &sz, 0), NNG_ETIMEDOUT);
+	NUTS_CLOSE(s0);
+	NUTS_CLOSE(s1);
 }
 
 void
@@ -200,27 +184,27 @@ test_abstract_sockets(void)
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
 	nng_socket   s1;
 	nng_socket   s2;
-	char         addr[64];
+	char         *addr;
 	nng_pipe     p1;
 	nng_pipe     p2;
 	nng_sockaddr sa1;
 	nng_sockaddr sa2;
 	char *       prefix = "abstract://";
-	testutil_scratch_addr("abstract", sizeof(addr), addr);
 
-	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_pair0_open(&s2));
-	TEST_NNG_PASS(testutil_marry_ex(s1, s2, addr, &p1, &p2));
-	TEST_NNG_PASS(nng_pipe_get_addr(p1, NNG_OPT_REMADDR, &sa1));
-	TEST_NNG_PASS(nng_pipe_get_addr(p2, NNG_OPT_LOCADDR, &sa2));
-	TEST_CHECK(sa1.s_family == sa2.s_family);
-	TEST_CHECK(sa1.s_family == NNG_AF_ABSTRACT);
-	TEST_CHECK(sa1.s_abstract.sa_len == strlen(addr) - strlen(prefix));
-	TEST_CHECK(sa2.s_abstract.sa_len == strlen(addr) - strlen(prefix));
-	TEST_NNG_SEND_STR(s1, "ping");
-	TEST_NNG_RECV_STR(s2, "ping");
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_ADDR(addr, "abstract");
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_MARRY_EX(s1, s2, addr, &p1, &p2);
+	NUTS_PASS(nng_pipe_get_addr(p1, NNG_OPT_REMADDR, &sa1));
+	NUTS_PASS(nng_pipe_get_addr(p2, NNG_OPT_LOCADDR, &sa2));
+	NUTS_TRUE(sa1.s_family == sa2.s_family);
+	NUTS_TRUE(sa1.s_family == NNG_AF_ABSTRACT);
+	NUTS_TRUE(sa1.s_abstract.sa_len == strlen(addr) - strlen(prefix));
+	NUTS_TRUE(sa2.s_abstract.sa_len == strlen(addr) - strlen(prefix));
+	NUTS_SEND(s1, "ping");
+	NUTS_RECV(s2, "ping");
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 #endif
 }
 
@@ -238,36 +222,36 @@ test_abstract_auto_bind(void)
 
 	snprintf(addr, sizeof(addr), "abstract://");
 
-	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_pair0_open(&s2));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_listen(s1, addr, &l, 0));
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_listen(s1, addr, &l, 0));
 
-	TEST_NNG_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
+	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
 	// Under linux there are either 8 or 5 hex characters.
-	TEST_CHECK(sa.s_family == NNG_AF_ABSTRACT);
-	TEST_CHECK(sa.s_abstract.sa_len < 10);
+	NUTS_TRUE(sa.s_family == NNG_AF_ABSTRACT);
+	NUTS_TRUE(sa.s_abstract.sa_len < 10);
 
 	len = sa.s_abstract.sa_len;
 	memcpy(name, sa.s_abstract.sa_name, len);
 	name[len] = '\0';
-	TEST_CHECK(strlen(name) == len);
+	NUTS_TRUE(strlen(name) == len);
 
 	(void) snprintf(addr, sizeof(addr), "abstract://%s", name);
-	TEST_NNG_PASS(nng_dial(s2, addr, NULL, 0));
+	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
 
 	// first send the ping
-	TEST_NNG_SEND_STR(s1, "ping");
-	TEST_NNG_RECV_STR(s2, "ping");
+	NUTS_SEND(s1, "ping");
+	NUTS_RECV(s2, "ping");
 
-	TEST_NNG_SEND_STR(s2, "pong");
-	TEST_NNG_RECV_STR(s1, "pong");
+	NUTS_SEND(s2, "pong");
+	NUTS_RECV(s1, "pong");
 
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 #endif
 }
 
@@ -283,15 +267,14 @@ test_abstract_too_long(void)
 	addr[255] = 0;
 	memcpy(addr, "abstract://", strlen("abstract://"));
 
-	TEST_ASSERT(strlen(addr) == 255);
-	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_FAIL(nng_listen(s1, addr, NULL, 0), NNG_EADDRINVAL);
-	TEST_NNG_FAIL(
-	    nng_dial(s1, addr, NULL, NNG_FLAG_NONBLOCK), NNG_EADDRINVAL);
+	NUTS_ASSERT(strlen(addr) == 255);
+	NUTS_OPEN(s1);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_FAIL(nng_listen(s1, addr, NULL, 0), NNG_EADDRINVAL);
+	NUTS_FAIL(nng_dial(s1, addr, NULL, NNG_FLAG_NONBLOCK), NNG_EADDRINVAL);
 
-	TEST_NNG_PASS(nng_close(s1));
+	NUTS_CLOSE(s1);
 #endif
 }
 
@@ -313,37 +296,37 @@ test_abstract_null(void)
 	snprintf(name, sizeof(name), "a%%00b_%s", rng);
 	snprintf(addr, sizeof(addr), "abstract://%s", name);
 
-	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_pair0_open(&s2));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_listen(s1, addr, &l, 0));
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_listen(s1, addr, &l, 0));
 
-	TEST_NNG_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
+	NUTS_PASS(nng_listener_get_addr(l, NNG_OPT_LOCADDR, &sa));
 	// Under linux there are either 8 or 5 hex characters.
-	TEST_CHECK(sa.s_family == NNG_AF_ABSTRACT);
-	TEST_CHECK(sa.s_abstract.sa_len < 32);
+	NUTS_TRUE(sa.s_family == NNG_AF_ABSTRACT);
+	NUTS_TRUE(sa.s_abstract.sa_len < 32);
 	len = sa.s_abstract.sa_len;
-	TEST_CHECK(len == 20);
-	TEST_CHECK(sa.s_abstract.sa_name[0] == 'a');
-	TEST_CHECK(sa.s_abstract.sa_name[1] == '\0');
-	TEST_CHECK(sa.s_abstract.sa_name[2] == 'b');
-	TEST_CHECK(sa.s_abstract.sa_name[3] == '_');
-	TEST_CHECK(memcmp(&sa.s_abstract.sa_name[4], rng, 16) == 0);
+	NUTS_TRUE(len == 20);
+	NUTS_TRUE(sa.s_abstract.sa_name[0] == 'a');
+	NUTS_TRUE(sa.s_abstract.sa_name[1] == '\0');
+	NUTS_TRUE(sa.s_abstract.sa_name[2] == 'b');
+	NUTS_TRUE(sa.s_abstract.sa_name[3] == '_');
+	NUTS_TRUE(memcmp(&sa.s_abstract.sa_name[4], rng, 16) == 0);
 
-	TEST_NNG_PASS(nng_dial(s2, addr, NULL, 0));
+	NUTS_PASS(nng_dial(s2, addr, NULL, 0));
 
 	// first send the ping
-	TEST_NNG_SEND_STR(s1, "1234");
-	TEST_NNG_RECV_STR(s2, "1234");
+	NUTS_SEND(s1, "1234");
+	NUTS_RECV(s2, "1234");
 
-	TEST_NNG_SEND_STR(s2, "5678");
-	TEST_NNG_RECV_STR(s1, "5678");
+	NUTS_SEND(s2, "5678");
+	NUTS_RECV(s1, "5678");
 
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 #endif
 }
 
@@ -368,31 +351,31 @@ test_unix_alias(void)
 	snprintf(addr1, sizeof(addr1), "ipc:///tmp/%s", rng);
 	snprintf(addr2, sizeof(addr2), "unix:///tmp/%s", rng);
 
-	TEST_NNG_PASS(nng_pair0_open(&s1));
-	TEST_NNG_PASS(nng_pair0_open(&s2));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
-	TEST_NNG_PASS(nng_listen(s1, addr1, NULL, 0));
-	TEST_NNG_PASS(nng_dial(s2, addr2, NULL, 0));
+	NUTS_OPEN(s1);
+	NUTS_OPEN(s2);
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_listen(s1, addr1, NULL, 0));
+	NUTS_PASS(nng_dial(s2, addr2, NULL, 0));
 
 	// first send the ping
-	TEST_NNG_SEND_STR(s1, "ping");
-	TEST_NNG_PASS(nng_recvmsg(s2, &msg, 0));
-	TEST_ASSERT(msg != NULL);
-	TEST_CHECK(nng_msg_len(msg) == 5);
-	TEST_STREQUAL(nng_msg_body(msg), "ping");
+	NUTS_SEND(s1, "ping");
+	NUTS_PASS(nng_recvmsg(s2, &msg, 0));
+	NUTS_ASSERT(msg != NULL);
+	NUTS_TRUE(nng_msg_len(msg) == 5);
+	NUTS_MATCH(nng_msg_body(msg), "ping");
 	p = nng_msg_get_pipe(msg);
-	TEST_NNG_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &sa1));
-	TEST_NNG_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &sa2));
-	TEST_CHECK(sa1.s_family == sa2.s_family);
-	TEST_CHECK(sa1.s_family == NNG_AF_IPC);
-	TEST_STREQUAL(sa1.s_ipc.sa_path, sa2.s_ipc.sa_path);
+	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &sa1));
+	NUTS_PASS(nng_pipe_get_addr(p, NNG_OPT_REMADDR, &sa2));
+	NUTS_TRUE(sa1.s_family == sa2.s_family);
+	NUTS_TRUE(sa1.s_family == NNG_AF_IPC);
+	NUTS_MATCH(sa1.s_ipc.sa_path, sa2.s_ipc.sa_path);
 	nng_msg_free(msg);
 
-	TEST_NNG_PASS(nng_close(s1));
-	TEST_NNG_PASS(nng_close(s2));
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
 #endif
 }
 

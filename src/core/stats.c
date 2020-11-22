@@ -79,8 +79,8 @@ stat_unregister(nni_stat_item *item)
 	}
 	if ((item->si_info->si_alloc) &&
 	    (item->si_info->si_type == NNG_STAT_STRING)) {
-		nni_strfree(item->si_value.sv_string);
-		item->si_value.sv_string = NULL;
+		nni_strfree(item->si_u.sv_string);
+		item->si_u.sv_string = NULL;
 	}
 	nni_list_node_remove(&item->si_node);
 }
@@ -116,9 +116,9 @@ nni_stat_inc(nni_stat_item *item, uint64_t inc)
 {
 #ifdef NNG_ENABLE_STATS
 	if (item->si_info->si_atomic) {
-		nni_atomic_add64(&item->si_value.sv_atomic, inc);
+		nni_atomic_add64(&item->si_u.sv_atomic, inc);
 	} else {
-		item->si_value.sv_number += inc;
+		item->si_u.sv_number += inc;
 	}
 #else
 	NNI_ARG_UNUSED(item);
@@ -132,9 +132,9 @@ nni_stat_dec(nni_stat_item *item, uint64_t inc)
 #ifdef NNG_ENABLE_STATS
 
 	if (item->si_info->si_atomic) {
-		nni_atomic_sub64(&item->si_value.sv_atomic, inc);
+		nni_atomic_sub64(&item->si_u.sv_atomic, inc);
 	} else {
-		item->si_value.sv_number -= inc;
+		item->si_u.sv_number -= inc;
 	}
 #else
 	NNI_ARG_UNUSED(item);
@@ -147,7 +147,7 @@ nni_stat_set_id(nni_stat_item *item, int id)
 {
 #ifdef NNG_ENABLE_STATS
 	// IDs don't change, so just set it.
-	item->si_value.sv_id = id;
+	item->si_u.sv_id = id;
 #else
 	NNI_ARG_UNUSED(item);
 	NNI_ARG_UNUSED(id);
@@ -159,7 +159,7 @@ nni_stat_set_bool(nni_stat_item *item, bool b)
 {
 #ifdef NNG_ENABLE_STATS
 	// bool is atomic by definitions.
-	item->si_value.sv_bool = b;
+	item->si_u.sv_bool = b;
 #else
 	NNI_ARG_UNUSED(item);
 	NNI_ARG_UNUSED(b);
@@ -171,7 +171,7 @@ nni_stat_set_string(nni_stat_item *item, const char *s)
 {
 #ifdef NNG_ENABLE_STATS
 	const nni_stat_info *info = item->si_info;
-	char *               old  = item->si_value.sv_string;
+	char *               old  = item->si_u.sv_string;
 
 	nni_mtx_lock(&stats_val_lock);
 	if ((s != NULL) && (old != NULL) && (strcmp(s, old) == 0)) {
@@ -182,12 +182,12 @@ nni_stat_set_string(nni_stat_item *item, const char *s)
 
 	if (!info->si_alloc) {
 		// no allocation, just set it.
-		item->si_value.sv_string = (char *) s;
+		item->si_u.sv_string = (char *) s;
 		nni_mtx_unlock(&stats_val_lock);
 		return;
 	}
 
-	item->si_value.sv_string = nni_strdup(s);
+	item->si_u.sv_string = nni_strdup(s);
 	nni_mtx_unlock(&stats_val_lock);
 
 	nni_strfree(old);
@@ -202,9 +202,9 @@ nni_stat_set_value(nni_stat_item *item, uint64_t v)
 {
 #ifdef NNG_ENABLE_STATS
 	if (item->si_info->si_atomic) {
-		nni_atomic_set64(&item->si_value.sv_atomic, v);
+		nni_atomic_set64(&item->si_u.sv_atomic, v);
 	} else {
-		item->si_value.sv_number = v;
+		item->si_u.sv_number = v;
 	}
 #else
 	NNI_ARG_UNUSED(item);
@@ -272,24 +272,24 @@ stat_update(nni_stat *stat)
 	switch (info->si_type) {
 	case NNG_STAT_SCOPE:
 	case NNG_STAT_ID:
-		stat->s_val.sv_id = item->si_value.sv_id;
+		stat->s_val.sv_id = item->si_u.sv_id;
 		break;
 	case NNG_STAT_BOOLEAN:
-		stat->s_val.sv_bool = item->si_value.sv_bool;
+		stat->s_val.sv_bool = item->si_u.sv_bool;
 		break;
 	case NNG_STAT_COUNTER:
 	case NNG_STAT_LEVEL:
 		if (info->si_atomic) {
 			stat->s_val.sv_value = nni_atomic_get64(
-			    (nni_atomic_u64 *) &item->si_value.sv_atomic);
+			    (nni_atomic_u64 *) &item->si_u.sv_atomic);
 		} else {
-			stat->s_val.sv_value = item->si_value.sv_number;
+			stat->s_val.sv_value = item->si_u.sv_number;
 		}
 		break;
 	case NNG_STAT_STRING:
 		nni_mtx_lock(&stats_val_lock);
 		old = stat->s_val.sv_string;
-		str = item->si_value.sv_string;
+		str = item->si_u.sv_string;
 
 		// If we have to allocate a new string, do so.  But
 		// only do it if new string is different.
