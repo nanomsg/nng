@@ -10,6 +10,7 @@
 //
 
 #include <stdbool.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "core/nng_impl.h"
@@ -257,6 +258,7 @@ http_txn_cb(void *arg)
 {
 	http_txn *      txn = arg;
 	const char *    str;
+	char *          end;
 	int             rv;
 	uint64_t        len;
 	nni_iov         iov;
@@ -306,7 +308,8 @@ http_txn_cb(void *arg)
 		if ((nni_strcasecmp(str, "HEAD") == 0) ||
 		    ((str = nni_http_res_get_header(
 		          txn->res, "Content-Length")) == NULL) ||
-		    (nni_strtou64(str, &len) != 0) || (len == 0)) {
+		    ((len = (uint64_t) strtoull(str, &end, 10)) == 0) ||
+		    (end == NULL) || (*end != '\0')) {
 			// If no content-length, or HEAD (which per RFC
 			// never transfers data), then we are done.
 			http_txn_finish_aios(txn, 0);

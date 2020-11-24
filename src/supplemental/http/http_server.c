@@ -704,8 +704,10 @@ http_sconn_rxdone(void *arg)
 	if ((h->getbody) &&
 	    ((cls = nni_http_req_get_header(req, "Content-Length")) != NULL)) {
 		uint64_t len;
+		char *end;
 
-		if ((nni_strtou64(cls, &len) != 0) || (len > h->maxbody)) {
+		len = strtoull(cls, &end, 10);
+		if ((end == NULL) || (*end != '\0') || (len > h->maxbody)) {
 			nni_mtx_unlock(&s->mtx);
 			http_sconn_error(sc, NNG_HTTP_STATUS_BAD_REQUEST);
 			return;

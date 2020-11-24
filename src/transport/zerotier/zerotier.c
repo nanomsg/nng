@@ -1521,12 +1521,14 @@ zt_walk_moons(const char *path, void *arg)
 {
 	zt_node *   ztn = arg;
 	const char *bn  = nni_file_basename(path);
+	char *      end;
 	uint64_t    moonid;
 
 	if (strncmp(bn, "moon.", 5) != 0) {
 		return (NNI_FILE_WALK_CONTINUE);
 	}
-	if (nni_strtox64(bn + 5, &moonid) == 0) {
+	if (((moonid = (uint64_t) strtoull(bn + 5, &end, 16)) != 0) &&
+	    (*end == '\0')) {
 		ZT_Node_orbit(ztn->zn_znode, NULL, moonid, 0);
 	}
 	return (NNI_FILE_WALK_CONTINUE);
