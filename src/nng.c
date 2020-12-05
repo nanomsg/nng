@@ -138,7 +138,8 @@ nng_recvmsg(nng_socket s, nng_msg **msgp, int flags)
 	if ((rv = nng_aio_result(ap)) == 0) {
 		*msgp = nng_aio_get_msg(ap);
 
-	} else if ((rv == NNG_ETIMEDOUT) && (flags == NNG_FLAG_NONBLOCK)) {
+	} else if ((rv == NNG_ETIMEDOUT) &&
+	    ((flags & NNG_FLAG_NONBLOCK) == NNG_FLAG_NONBLOCK)) {
 		rv = NNG_EAGAIN;
 	}
 	nng_aio_free(ap);
@@ -176,7 +177,7 @@ nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 	if ((rv = nng_aio_alloc(&ap, NULL, NULL)) != 0) {
 		return (rv);
 	}
-	if (flags & NNG_FLAG_NONBLOCK) {
+	if ((flags & NNG_FLAG_NONBLOCK) == NNG_FLAG_NONBLOCK) {
 		nng_aio_set_timeout(ap, NNG_DURATION_ZERO);
 	} else {
 		nng_aio_set_timeout(ap, NNG_DURATION_DEFAULT);
@@ -191,7 +192,8 @@ nng_sendmsg(nng_socket s, nng_msg *msg, int flags)
 
 	// Possibly massage nonblocking attempt.  Note that nonblocking is
 	// still done asynchronously, and the calling thread loses context.
-	if ((rv == NNG_ETIMEDOUT) && (flags == NNG_FLAG_NONBLOCK)) {
+	if ((rv == NNG_ETIMEDOUT) &&
+	    ((flags & NNG_FLAG_NONBLOCK) == NNG_FLAG_NONBLOCK)) {
 		rv = NNG_EAGAIN;
 	}
 
@@ -449,8 +451,8 @@ nng_ctx_set_ptr(nng_ctx id, const char *n, void *v)
 int
 nng_ctx_set_string(nng_ctx id, const char *n, const char *v)
 {
-	return (ctx_set(
-	    id, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
+	return (
+	    ctx_set(id, n, v, v == NULL ? 0 : strlen(v) + 1, NNI_TYPE_STRING));
 }
 
 int
