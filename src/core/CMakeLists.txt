@@ -67,6 +67,8 @@ nng_sources(
         strs.h
         taskq.c
         taskq.h
+        tcp.c
+        tcp.h
         thread.c
         thread.h
         timer.c
