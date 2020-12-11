@@ -1737,6 +1737,12 @@ nng_aio_free(nng_aio *aio)
 }
 
 void
+nng_aio_reap(nng_aio *aio)
+{
+	nni_aio_reap(aio);
+}
+
+void
 nng_sleep_aio(nng_duration ms, nng_aio *aio)
 {
 	nni_sleep_aio(ms, aio);

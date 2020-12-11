@@ -35,7 +35,7 @@ void
 test_sleep(void)
 {
 	nng_time start;
-	nng_time end   = 0;
+	nng_time end = 0;
 	nng_aio *aio;
 
 	NUTS_PASS(nng_aio_alloc(&aio, sleep_done, &end));
@@ -55,7 +55,7 @@ void
 test_sleep_timeout(void)
 {
 	nng_time start;
-	nng_time end   = 0;
+	nng_time end = 0;
 	nng_aio *aio;
 
 	NUTS_TRUE(nng_aio_alloc(&aio, sleep_done, &end) == 0);
@@ -226,6 +226,22 @@ test_zero_timeout(void)
 	NUTS_PASS(nng_close(s));
 }
 
+static void
+aio_sleep_cb(void *arg)
+{
+	nng_aio *aio = *(nng_aio **) arg;
+	nng_aio_reap(aio);
+}
+
+void
+test_aio_reap(void)
+{
+	nng_aio *a;
+	NUTS_PASS(nng_aio_alloc(&a, aio_sleep_cb, &a));
+	nng_sleep_aio(10, a);
+	nng_msleep(20);
+}
+
 NUTS_TESTS = {
 	{ "sleep", test_sleep },
 	{ "sleep timeout", test_sleep_timeout },
@@ -236,5 +252,6 @@ NUTS_TESTS = {
 	{ "explicit timeout", test_explicit_timeout },
 	{ "inherited timeout", test_inherited_timeout },
 	{ "zero timeout", test_zero_timeout },
+	{ "aio reap", test_aio_reap },
 	{ NULL, NULL },
 };

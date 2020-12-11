@@ -1,6 +1,6 @@
 = nng_aio_free(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -20,6 +20,7 @@ nng_aio_free - free asynchronous I/O handle
 #include <nng/nng.h>
 
 void nng_aio_free(nng_aio *aio);
+void nng_aio_reap(nng_aio *aio);
 ----
 
 == DESCRIPTION
@@ -29,6 +30,12 @@ If any operation is in progress, the operation is canceled, and the
 caller is blocked until the operation is completely canceled, to ensure
 that it is safe to deallocate the handle and any associated resources.
 (This is done by implicitly calling xref:nng_aio_stop.3.adoc[`nng_aio_stop()`].)
+
+The `nng_aio_reap()` function is the same as `nng_aio_free()`, but does
+it's work in a background thread.
+This can be useful to discard the _aio_ object from within the callback for the _aio_.
+
+IMPORTANT: Once either of these functions are called, the _aio_ object is invalid and must not be used again.
 
 == RETURN VALUES
 

@@ -488,6 +488,13 @@ NNG_DECL int nng_aio_alloc(nng_aio **, void (*)(void *), void *);
 // It *must not* be in use at the time it is freed.
 NNG_DECL void nng_aio_free(nng_aio *);
 
+// nng_aio_reap is like nng_aio_free, but calls it from a background
+// reaper thread.  This can be useful to free aio objects from aio
+// callbacks (e.g. when the result of the callback is to discard
+// the object in question.)  The aio object must be in further use
+// when this is called.
+NNG_DECL void nng_aio_reap(nng_aio *);
+
 // nng_aio_stop stops any outstanding operation, and waits for the
 // AIO to be free, including for the callback to have completed
 // execution.  Therefore the caller must NOT hold any locks that

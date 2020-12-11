@@ -224,11 +224,10 @@ typedef struct http_txn {
 	nni_http_res *   res;
 	nni_http_chunks *chunks;
 	http_txn_state   state;
-	nni_reap_item    reap;
 } http_txn;
 
 static void
-http_txn_reap(void *arg)
+http_txn_fini(void *arg)
 {
 	http_txn *txn = arg;
 	if (txn->client != NULL) {
@@ -239,7 +238,7 @@ http_txn_reap(void *arg)
 		}
 	}
 	nni_http_chunks_free(txn->chunks);
-	nni_aio_free(txn->aio);
+	nni_aio_reap(txn->aio);
 	NNI_FREE_STRUCT(txn);
 }
 
@@ -270,7 +269,7 @@ http_txn_cb(void *arg)
 	if ((rv = nni_aio_result(txn->aio)) != 0) {
 		http_txn_finish_aios(txn, rv);
 		nni_mtx_unlock(&http_txn_lk);
-		nni_reap(&txn->reap, http_txn_reap, txn);
+		http_txn_fini(txn);
 		return;
 	}
 	switch (txn->state) {
@@ -314,7 +313,7 @@ http_txn_cb(void *arg)
 			// never transfers data), then we are done.
 			http_txn_finish_aios(txn, 0);
 			nni_mtx_unlock(&http_txn_lk);
-			nni_reap(&txn->reap, http_txn_reap, txn);
+			http_txn_fini(txn);
 			return;
 		}
 
@@ -333,7 +332,7 @@ http_txn_cb(void *arg)
 		// All done!
 		http_txn_finish_aios(txn, 0);
 		nni_mtx_unlock(&http_txn_lk);
-		nni_reap(&txn->reap, http_txn_reap, txn);
+		http_txn_fini(txn);
 		return;
 
 	case HTTP_RECVING_CHUNKS:
@@ -352,7 +351,7 @@ http_txn_cb(void *arg)
 		}
 		http_txn_finish_aios(txn, 0);
 		nni_mtx_unlock(&http_txn_lk);
-		nni_reap(&txn->reap, http_txn_reap, txn);
+		http_txn_fini(txn);
 		return;
 	}
 
@@ -360,7 +359,7 @@ error:
 	http_txn_finish_aios(txn, rv);
 	nni_http_conn_close(txn->conn);
 	nni_mtx_unlock(&http_txn_lk);
-	nni_reap(&txn->reap, http_txn_reap, txn);
+	http_txn_fini(txn);
 }
 
 static void
@@ -411,7 +410,7 @@ nni_http_transact_conn(
 	if ((rv = nni_aio_schedule(aio, http_txn_cancel, txn)) != 0) {
 		nni_mtx_unlock(&http_txn_lk);
 		nni_aio_finish_error(aio, rv);
-		nni_reap(&txn->reap, http_txn_reap, txn);
+		http_txn_fini(txn);
 		return;
 	}
 	nni_http_res_reset(txn->res);
@@ -448,7 +447,7 @@ nni_http_transact(nni_http_client *client, nni_http_req *req,
 
 	if ((rv = nni_http_req_set_header(req, "Connection", "close")) != 0) {
 		nni_aio_finish_error(aio, rv);
-		nni_reap(&txn->reap, http_txn_reap, txn);
+		http_txn_fini(txn);
 		return;
 	}
 
@@ -463,7 +462,7 @@ nni_http_transact(nni_http_client *client, nni_http_req *req,
 	if ((rv = nni_aio_schedule(aio, http_txn_cancel, txn)) != 0) {
 		nni_mtx_unlock(&http_txn_lk);
 		nni_aio_finish_error(aio, rv);
-		nni_reap(&txn->reap, http_txn_reap, txn);
+		http_txn_fini(txn);
 		return;
 	}
 	nni_http_res_reset(txn->res);

@@ -170,6 +170,7 @@ The following functions are used in the asynchronous model:
 |xref:nng_aio_get_input.3.adoc[nng_aio_get_input()]|return input parameter
 |xref:nng_aio_get_msg.3.adoc[nng_aio_get_msg()]|get message from an asynchronous receive
 |xref:nng_aio_get_output.3.adoc[nng_aio_get_output()]|return output result
+|xref:nng_aio_free.3.adoc[nng_aio_reap()]|reap asynchronous I/O handle
 |xref:nng_aio_result.3.adoc[nng_aio_result()]|return result of asynchronous operation
 |xref:nng_aio_set_input.3.adoc[nng_aio_set_input()]|set input parameter
 |xref:nng_aio_set_iov.3.adoc[nng_aio_set_iov()]|set scatter/gather vector

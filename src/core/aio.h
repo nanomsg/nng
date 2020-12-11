@@ -28,6 +28,10 @@ extern void nni_aio_init(nni_aio *, nni_cb, void *arg);
 // It waits for the callback to complete.
 extern void nni_aio_fini(nni_aio *);
 
+// nni_aio_reap is used to asynchronously reap the aio.  It can
+// be called even from the callback of the aio itself.
+extern void nni_aio_reap(nni_aio *);
+
 // nni_aio_alloc allocates an aio object and initializes it.  The callback
 // is called with the supplied argument when the operation is complete.
 // If NULL is supplied for the callback, then nni_aio_wake is used in its
@@ -195,8 +199,8 @@ struct nng_aio {
 	nni_list_node     a_prov_node;     // Linkage on provider list.
 	void *            a_prov_extra[2]; // Extra data used by provider
 
-	// Expire node.
-	nni_list_node a_expire_node;
+	nni_list_node   a_expire_node; // Expiration node
+	struct nng_aio *a_reap_next;
 };
 
 #endif // CORE_AIO_H
