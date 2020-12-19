@@ -1300,8 +1300,8 @@ nn_poll(struct nn_pollfd *fds, int nfds, int timeout)
 	return (rv);
 
 #else // NNG_PLATFORM_WINDOWS or NNG_PLATFORM_POSIX
-	NNI_ARG_UNUSED(pfds);
-	NNI_ARG_UNUSED(npfd);
+	NNI_ARG_UNUSED(fds);
+	NNI_ARG_UNUSED(nfds);
 	NNI_ARG_UNUSED(timeout);
 	errno = ENOTSUP;
 	return (-1);
