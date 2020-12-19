@@ -493,11 +493,15 @@ ipc_reap(void *arg)
 	NNI_FREE_STRUCT(c);
 }
 
+static nni_reap_list ipc_reap_list = {
+	.rl_offset = offsetof(ipc_conn, reap),
+	.rl_func   = ipc_reap,
+};
 static void
 ipc_free(void *arg)
 {
 	ipc_conn *c = arg;
-	nni_reap(&c->reap, ipc_reap, c);
+	nni_reap(&ipc_reap_list, c);
 }
 
 static const nni_option ipc_options[] = {

@@ -13,6 +13,7 @@
 
 #include "core/defs.h"
 #include "core/list.h"
+#include "core/reap.h"
 #include "core/taskq.h"
 #include "core/thread.h"
 
@@ -200,7 +201,7 @@ struct nng_aio {
 	void *            a_prov_extra[2]; // Extra data used by provider
 
 	nni_list_node   a_expire_node; // Expiration node
-	struct nng_aio *a_reap_next;
+	nni_reap_node   a_reap_node;
 };
 
 #endif // CORE_AIO_H

@@ -42,10 +42,6 @@ extern uint16_t nni_pipe_peer(nni_pipe *);
 extern int nni_pipe_getopt(
     nni_pipe *, const char *, void *, size_t *, nni_opt_type);
 
-// nni_pipe_get_proto_data gets the protocol private data set with the
-// nni_pipe_set_proto_data function.  No locking is performed.
-extern void *nni_pipe_get_proto_data(nni_pipe *);
-
 // nni_pipe_find finds a pipe given its ID.  It places a hold on the
 // pipe, which must be released by the caller when it is done.
 extern int nni_pipe_find(nni_pipe **, uint32_t);

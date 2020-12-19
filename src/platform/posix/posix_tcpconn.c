@@ -217,11 +217,15 @@ tcp_fini(void *arg)
 	NNI_FREE_STRUCT(c);
 }
 
+static nni_reap_list tcp_reap_list = {
+	.rl_offset = offsetof(nni_tcp_conn, reap),
+	.rl_func   = tcp_fini,
+};
 static void
 tcp_free(void *arg)
 {
 	nni_tcp_conn *c = arg;
-	nni_reap(&c->reap, tcp_fini, arg);
+	nni_reap(&tcp_reap_list, c);
 }
 
 static void
@@ -336,7 +340,7 @@ tcp_get_peername(void *arg, void *buf, size_t *szp, nni_type t)
 	nni_tcp_conn *          c = arg;
 	struct sockaddr_storage ss;
 	socklen_t               len = sizeof(ss);
-	int                     fd    = nni_posix_pfd_fd(c->pfd);
+	int                     fd  = nni_posix_pfd_fd(c->pfd);
 	int                     rv;
 	nng_sockaddr            sa;
 
@@ -355,7 +359,7 @@ tcp_get_sockname(void *arg, void *buf, size_t *szp, nni_type t)
 	nni_tcp_conn *          c = arg;
 	struct sockaddr_storage ss;
 	socklen_t               len = sizeof(ss);
-	int                     fd    = nni_posix_pfd_fd(c->pfd);
+	int                     fd  = nni_posix_pfd_fd(c->pfd);
 	int                     rv;
 	nng_sockaddr            sa;
 

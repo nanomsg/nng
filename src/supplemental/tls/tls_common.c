@@ -78,7 +78,7 @@ typedef struct {
 	size_t                  tcp_send_len;
 	size_t                  tcp_send_head;
 	size_t                  tcp_send_tail;
-	struct nni_reap_item    reap;
+	nni_reap_node           reap;
 
 	// ... engine connection data follows
 } tls_conn;
@@ -89,9 +89,15 @@ static void tls_do_send(tls_conn *);
 static void tls_do_recv(tls_conn *);
 static void tls_tcp_send_start(tls_conn *);
 static void tls_free(void *);
+static void tls_reap(void *);
 static int  tls_alloc(tls_conn **, nng_tls_config *, nng_aio *);
 static int  tls_start(tls_conn *, nng_stream *);
 static void tls_tcp_error(tls_conn *, int);
+
+static nni_reap_list tls_conn_reap_list = {
+	.rl_offset = offsetof(tls_conn, reap),
+	.rl_func   = tls_reap,
+};
 
 typedef struct {
 	nng_stream_dialer  ops;
@@ -331,8 +337,7 @@ static const nni_option tls_dialer_opts[] = {
 };
 
 static int
-tls_dialer_get(
-    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+tls_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tls_dialer *d = arg;
 	int         rv;
@@ -873,7 +878,7 @@ tls_free(void *arg)
 {
 	tls_conn *conn = arg;
 
-	nni_reap(&conn->reap, tls_reap, conn);
+	nni_reap(&tls_conn_reap_list, conn);
 }
 
 static int
@@ -1501,6 +1506,7 @@ nni_tls_sys_init(void)
 void
 nni_tls_sys_fini(void)
 {
+	nni_reap_drain();
 	NNG_TLS_ENGINE_FINI();
 }
 

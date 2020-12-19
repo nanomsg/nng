@@ -1581,10 +1581,18 @@ nni_dialer_shutdown(nni_dialer *d)
 	nni_mtx_unlock(&s->s_mx);
 }
 
-void
-nni_dialer_reap(nni_dialer *d)
+static void dialer_reap(void *);
+
+static nni_reap_list dialer_reap_list = {
+	.rl_offset = offsetof(nni_dialer, d_reap),
+	.rl_func   = dialer_reap,
+};
+
+static void
+dialer_reap(void *arg)
 {
-	nni_sock *s = d->d_sock;
+	nni_dialer *d = arg;
+	nni_sock *  s = d->d_sock;
 
 	nni_aio_stop(&d->d_tmo_aio);
 	nni_aio_stop(&d->d_con_aio);
@@ -1602,7 +1610,7 @@ nni_dialer_reap(nni_dialer *d)
 		}
 		nni_mtx_unlock(&s->s_mx);
 		// Go back to the end of reap list.
-		nni_reap(&d->d_reap, (nni_cb) nni_dialer_reap, d);
+		nni_dialer_reap(d);
 		return;
 	}
 
@@ -1614,6 +1622,12 @@ nni_dialer_reap(nni_dialer *d)
 	nni_mtx_unlock(&s->s_mx);
 
 	nni_dialer_destroy(d);
+}
+
+void
+nni_dialer_reap(nni_dialer *d)
+{
+	nni_reap(&dialer_reap_list, d);
 }
 
 void
@@ -1703,10 +1717,18 @@ nni_listener_shutdown(nni_listener *l)
 	nni_mtx_unlock(&s->s_mx);
 }
 
-void
-nni_listener_reap(nni_listener *l)
+static void listener_reap(void *);
+
+static nni_reap_list listener_reap_list = {
+	.rl_offset = offsetof(nni_listener, l_reap),
+	.rl_func   = listener_reap,
+};
+
+static void
+listener_reap(void *arg)
 {
-	nni_sock *s = l->l_sock;
+	nni_listener *l = arg;
+	nni_sock *    s = l->l_sock;
 
 	nni_aio_stop(&l->l_tmo_aio);
 	nni_aio_stop(&l->l_acc_aio);
@@ -1724,7 +1746,7 @@ nni_listener_reap(nni_listener *l)
 		}
 		nni_mtx_unlock(&s->s_mx);
 		// Go back to the end of reap list.
-		nni_reap(&l->l_reap, (nni_cb) nni_listener_reap, l);
+		nni_reap(&listener_reap_list, l);
 		return;
 	}
 
@@ -1736,6 +1758,12 @@ nni_listener_reap(nni_listener *l)
 	nni_mtx_unlock(&s->s_mx);
 
 	nni_listener_destroy(l);
+}
+
+void
+nni_listener_reap(nni_listener *l)
+{
+	nni_reap(&listener_reap_list, l);
 }
 
 void

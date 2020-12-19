@@ -36,7 +36,7 @@ struct ipc_pipe {
 	nni_pipe *      pipe;
 	nni_list_node   node;
 	nni_atomic_flag reaped;
-	nni_reap_item   reap;
+	nni_reap_node   reap;
 	uint8_t         tx_head[1 + sizeof(uint64_t)];
 	uint8_t         rx_head[1 + sizeof(uint64_t)];
 	size_t          got_tx_head;
@@ -69,7 +69,7 @@ struct ipc_ep {
 	nni_list             busy_pipes; // busy pipes -- ones passed to socket
 	nni_list             wait_pipes; // pipes waiting to match to socket
 	nni_list             neg_pipes;  // pipes busy negotiating
-	nni_reap_item        reap;
+	nni_reap_node        reap;
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_rcv_max;
 #endif
@@ -80,7 +80,18 @@ static void ipc_pipe_recv_start(ipc_pipe *p);
 static void ipc_pipe_send_cb(void *);
 static void ipc_pipe_recv_cb(void *);
 static void ipc_pipe_neg_cb(void *);
+static void ipc_pipe_fini(void *);
 static void ipc_ep_fini(void *);
+
+static nni_reap_list ipc_ep_reap_list = {
+	.rl_offset = offsetof(ipc_ep, reap),
+	.rl_func   = ipc_ep_fini,
+};
+
+static nni_reap_list ipc_pipe_reap_list = {
+	.rl_offset = offsetof(ipc_pipe, reap),
+	.rl_func   = ipc_pipe_fini,
+};
 
 static int
 ipc_tran_init(void)
@@ -139,7 +150,7 @@ ipc_pipe_fini(void *arg)
 		nni_list_node_remove(&p->node);
 		ep->ref_cnt--;
 		if (ep->fini && (ep->ref_cnt == 0)) {
-			nni_reap(&ep->reap, ipc_ep_fini, ep);
+			nni_reap(&ipc_ep_reap_list, ep);
 		}
 		nni_mtx_unlock(&ep->mtx);
 	}
@@ -161,7 +172,7 @@ ipc_pipe_reap(ipc_pipe *p)
 		if (p->conn != NULL) {
 			nng_stream_close(p->conn);
 		}
-		nni_reap(&p->reap, ipc_pipe_fini, p);
+		nni_reap(&ipc_pipe_reap_list, p);
 	}
 }
 

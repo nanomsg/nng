@@ -25,7 +25,7 @@ struct nni_tcp_conn {
 	nni_mtx         mtx;
 	nni_aio *       dial_aio;
 	nni_tcp_dialer *dialer;
-	nni_reap_item   reap;
+	nni_reap_node   reap;
 };
 
 struct nni_tcp_dialer {

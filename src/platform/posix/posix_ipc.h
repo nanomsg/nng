@@ -30,7 +30,7 @@ struct nni_ipc_conn {
 	nni_aio *       dial_aio;
 	nni_ipc_dialer *dialer;
 	nng_sockaddr    sa;
-	nni_reap_item   reap;
+	nni_reap_node   reap;
 };
 
 struct nni_ipc_dialer {

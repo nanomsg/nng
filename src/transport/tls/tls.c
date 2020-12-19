@@ -40,7 +40,7 @@ struct tlstran_pipe {
 	tlstran_ep *    ep;
 	nni_sockaddr    sa;
 	nni_atomic_flag reaped;
-	nni_reap_item   reap;
+	nni_reap_node   reap;
 	uint8_t         txlen[sizeof(uint64_t)];
 	uint8_t         rxlen[sizeof(uint64_t)];
 	size_t          gottxhead;
@@ -66,7 +66,7 @@ struct tlstran_ep {
 	int                  authmode;
 	nni_url *            url;
 	nni_list             pipes;
-	nni_reap_item        reap;
+	nni_reap_node        reap;
 	nng_stream_dialer *  dialer;
 	nng_stream_listener *listener;
 	nni_aio *            useraio;
@@ -87,6 +87,17 @@ static void tlstran_pipe_send_cb(void *);
 static void tlstran_pipe_recv_cb(void *);
 static void tlstran_pipe_nego_cb(void *);
 static void tlstran_ep_fini(void *);
+static void tlstran_pipe_fini(void *);
+
+static nni_reap_list tlstran_ep_reap_list = {
+	.rl_offset = offsetof(tlstran_ep, reap),
+	.rl_func   = tlstran_ep_fini,
+};
+
+static nni_reap_list tlstran_pipe_reap_list = {
+	.rl_offset = offsetof(tlstran_pipe, reap),
+	.rl_func   = tlstran_pipe_fini,
+};
 
 static int
 tlstran_init(void)
@@ -141,7 +152,7 @@ tlstran_pipe_fini(void *arg)
 		nni_list_node_remove(&p->node);
 		ep->refcnt--;
 		if (ep->fini && (ep->refcnt == 0)) {
-			nni_reap(&ep->reap, tlstran_ep_fini, ep);
+			nni_reap(&tlstran_ep_reap_list, ep);
 		}
 		nni_mtx_unlock(&ep->mtx);
 	}
@@ -186,7 +197,7 @@ tlstran_pipe_reap(tlstran_pipe *p)
 		if (p->tls != NULL) {
 			nng_stream_close(p->tls);
 		}
-		nni_reap(&p->reap, tlstran_pipe_fini, p);
+		nni_reap(&tlstran_pipe_reap_list, p);
 	}
 }
 
@@ -952,9 +963,9 @@ tlstran_ep_init_listener(void **lp, nni_url *url, nni_listener *nlistener)
 
 	if ((rv != 0) ||
 	    ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0) ||
-	    ((rv = nni_stream_listener_set(ep->listener,
-	          NNG_OPT_TLS_AUTH_MODE, &ep->authmode, sizeof(ep->authmode),
-	          NNI_TYPE_INT32)) != 0)) {
+	    ((rv = nni_stream_listener_set(ep->listener, NNG_OPT_TLS_AUTH_MODE,
+	          &ep->authmode, sizeof(ep->authmode), NNI_TYPE_INT32)) !=
+	        0)) {
 		tlstran_ep_fini(ep);
 		return (rv);
 	}

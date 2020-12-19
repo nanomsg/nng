@@ -314,12 +314,15 @@ nni_listener_hold(nni_listener *l)
 void
 nni_listener_rele(nni_listener *l)
 {
+	bool reap;
+
 	nni_mtx_lock(&listeners_lk);
 	l->l_ref--;
-	if ((l->l_ref == 0) && (l->l_closed)) {
-		nni_reap(&l->l_reap, (nni_cb) nni_listener_reap, l);
-	}
+	reap = ((l->l_ref == 0) && (l->l_closed));
 	nni_mtx_unlock(&listeners_lk);
+	if (reap) {
+		nni_listener_reap(l);
+	}
 }
 
 void

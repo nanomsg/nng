@@ -14,53 +14,79 @@
 
 #include <stdbool.h>
 
-static nni_list reap_list;
-static nni_mtx  reap_mtx;
-static nni_cv   reap_cv;
-static nni_cv   reap_empty_cv;
-static bool     reap_exit  = false;
-static bool     reap_empty = false;
-static nni_thr  reap_thr;
+// New stuff.
+static nni_reap_list *reap_list = NULL;
+static nni_thr        reap_thr;
+static bool           reap_exit;
+static nni_mtx        reap_mtx;
+static bool           reap_empty;
+static nni_cv         reap_work_cv;
+static nni_cv         reap_empty_cv;
 
 static void
-reap_worker(void *notused)
+reap_worker(void *unused)
 {
-	NNI_ARG_UNUSED(notused);
+	NNI_ARG_UNUSED(unused);
+	nni_thr_set_name(NULL, "nng:reap2");
 
-        nni_thr_set_name(NULL, "nng:reap");
-
-        nni_mtx_lock(&reap_mtx);
+	nni_mtx_lock(&reap_mtx);
 	for (;;) {
-		nni_reap_item *item;
-		while ((item = nni_list_first(&reap_list)) != NULL) {
-			nni_list_remove(&reap_list, item);
-			nni_mtx_unlock(&reap_mtx);
+		nni_reap_list *list;
+		bool           reaped = false;
 
-			item->r_func(item->r_ptr);
+		for (list = reap_list; list != NULL; list = list->rl_next) {
+			nni_reap_node *node;
+			size_t         offset;
+			nni_cb         func;
+
+			if ((node = list->rl_nodes) == NULL) {
+				continue;
+			}
+
+			reaped         = true;
+			offset         = list->rl_offset;
+			func           = list->rl_func;
+			list->rl_nodes = NULL;
+
+			// We process our list of nodes while not holding
+			// the lock.
+			nni_mtx_unlock(&reap_mtx);
+			while (node != NULL) {
+				void *ptr;
+				ptr  = ((char *) node) - offset;
+				node = node->rn_next;
+				func(ptr);
+			}
 			nni_mtx_lock(&reap_mtx);
 		}
-
-		reap_empty = true;
-		nni_cv_wake(&reap_empty_cv);
-
-		if (reap_exit) {
-			break;
+		if (!reaped) {
+			reap_empty = true;
+			nni_cv_wake(&reap_empty_cv);
+			if (reap_exit) {
+				nni_mtx_unlock(&reap_mtx);
+				return;
+			}
+			nni_cv_wait(&reap_work_cv);
 		}
-
-		nni_cv_wait(&reap_cv);
 	}
-	nni_mtx_unlock(&reap_mtx);
 }
 
 void
-nni_reap(nni_reap_item *item, nni_cb func, void *ptr)
+nni_reap(nni_reap_list *rl, void *item)
 {
+	nni_reap_node *node;
+
 	nni_mtx_lock(&reap_mtx);
-	item->r_func = func;
-	item->r_ptr  = ptr;
-	nni_list_append(&reap_list, item);
-	reap_empty = false;
-	nni_cv_wake(&reap_cv);
+	if (!rl->rl_inited) {
+		rl->rl_inited = true;
+		rl->rl_next   = reap_list;
+		reap_list     = rl;
+	}
+	reap_empty    = false;
+	node          = (void *) ((char *) item + rl->rl_offset);
+	node->rn_next = rl->rl_nodes;
+	rl->rl_nodes  = node;
+	nni_cv_wake1(&reap_work_cv);
 	nni_mtx_unlock(&reap_mtx);
 }
 
@@ -79,16 +105,15 @@ nni_reap_sys_init(void)
 {
 	int rv;
 
-	NNI_LIST_INIT(&reap_list, nni_reap_item, r_link);
-	nni_mtx_init(&reap_mtx);
-	nni_cv_init(&reap_cv, &reap_mtx);
-	nni_cv_init(&reap_empty_cv, &reap_mtx);
 	reap_exit = false;
+	nni_mtx_init(&reap_mtx);
+	nni_cv_init(&reap_work_cv, &reap_mtx);
+	nni_cv_init(&reap_empty_cv, &reap_mtx);
 
 	// If this fails, we don't fail init, instead we will try to
 	// start up at reap time.
 	if ((rv = nni_thr_init(&reap_thr, reap_worker, NULL)) != 0) {
-		nni_cv_fini(&reap_cv);
+		nni_cv_fini(&reap_work_cv);
 		nni_cv_fini(&reap_empty_cv);
 		nni_mtx_fini(&reap_mtx);
 		return (rv);
@@ -102,7 +127,10 @@ nni_reap_sys_fini(void)
 {
 	nni_mtx_lock(&reap_mtx);
 	reap_exit = true;
-	nni_cv_wake(&reap_cv);
+	nni_cv_wake1(&reap_work_cv);
 	nni_mtx_unlock(&reap_mtx);
 	nni_thr_fini(&reap_thr);
+
+	// NB: The subsystem linkages remain in place.  We don't need
+	// to reinitialize them across future initializations.
 }

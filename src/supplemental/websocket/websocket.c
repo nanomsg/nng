@@ -47,7 +47,7 @@ typedef struct ws_header {
 struct nni_ws {
 	nng_stream       ops;
 	nni_list_node    node;
-	nni_reap_item    reap;
+	nni_reap_node    reap;
 	bool             server;
 	bool             closed;
 	bool             ready;
@@ -1251,10 +1251,15 @@ ws_fini(void *arg)
 	NNI_FREE_STRUCT(ws);
 }
 
+static nni_reap_list ws_reap_list = {
+	.rl_offset = offsetof(nni_ws, reap),
+	.rl_func   = ws_fini,
+};
+
 static void
 ws_reap(nni_ws *ws)
 {
-	nni_reap(&ws->reap, ws_fini, ws);
+	nni_reap(&ws_reap_list, ws);
 }
 
 static void
@@ -2656,7 +2661,7 @@ static void
 ws_str_free(void *arg)
 {
 	nni_ws *ws = arg;
-	nni_reap(&ws->reap, ws_fini, ws);
+	ws_reap(ws);
 }
 
 static void

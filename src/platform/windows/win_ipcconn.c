@@ -34,7 +34,7 @@ typedef struct ipc_conn {
 	bool          closed;
 	nni_mtx       mtx;
 	nni_cv        cv;
-	nni_reap_item reap;
+	nni_reap_node reap;
 } ipc_conn;
 
 static void
@@ -309,8 +309,10 @@ ipc_close(void *arg)
 }
 
 static void
-ipc_conn_reap(ipc_conn *c)
+ipc_conn_reap(void *arg)
 {
+	ipc_conn *c = arg;
+
 	nni_mtx_lock(&c->mtx);
 	while ((!nni_list_empty(&c->recv_aios)) ||
 	    (!nni_list_empty(&c->send_aios))) {
@@ -330,13 +332,18 @@ ipc_conn_reap(ipc_conn *c)
 	NNI_FREE_STRUCT(c);
 }
 
+static nni_reap_list ipc_reap_list = {
+	.rl_offset = offsetof(ipc_conn, reap),
+	.rl_func   = ipc_conn_reap,
+};
+
 static void
 ipc_free(void *arg)
 {
 	ipc_conn *c = arg;
 	ipc_close(c);
 
-	nni_reap(&c->reap, (nni_cb) ipc_conn_reap, CONN(c));
+	nni_reap(&ipc_reap_list, c);
 }
 
 static int

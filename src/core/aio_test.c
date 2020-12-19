@@ -236,10 +236,10 @@ aio_sleep_cb(void *arg)
 void
 test_aio_reap(void)
 {
-	nng_aio *a;
+	static nng_aio *a;
 	NUTS_PASS(nng_aio_alloc(&a, aio_sleep_cb, &a));
 	nng_sleep_aio(10, a);
-	nng_msleep(20);
+	nng_msleep(100);
 }
 
 NUTS_TESTS = {

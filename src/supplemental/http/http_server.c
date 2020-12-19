@@ -64,7 +64,7 @@ typedef struct http_sconn {
 	nni_aio *         rxaio;
 	nni_aio *         txaio;
 	nni_aio *         txdataio;
-	nni_reap_item     reap;
+	nni_reap_node     reap;
 } http_sconn;
 
 typedef struct http_error {
@@ -90,7 +90,21 @@ struct nng_http_server {
 	char *               hostname;
 	nni_list             errors;
 	nni_mtx              errors_mtx;
-	nni_reap_item        reap;
+	nni_reap_node        reap;
+};
+
+static void http_sc_reap(void *);
+
+static nni_reap_list http_sc_reap_list = {
+	.rl_offset = offsetof(http_sconn, reap),
+	.rl_func   = http_sc_reap,
+};
+
+static void http_server_fini(nni_http_server *);
+
+static nni_reap_list http_server_reap_list = {
+	.rl_offset = offsetof(nni_http_server, reap),
+	.rl_func   = (nni_cb) http_server_fini,
 };
 
 int
@@ -269,7 +283,7 @@ static nni_list http_servers;
 static nni_mtx  http_servers_lk;
 
 static void
-http_sconn_reap(void *arg)
+http_sc_reap(void *arg)
 {
 	http_sconn *     sc = arg;
 	nni_http_server *s  = sc->server;
@@ -304,7 +318,7 @@ http_sconn_reap(void *arg)
 }
 
 static void
-http_sconn_close_locked(http_sconn *sc)
+http_sc_close_locked(http_sconn *sc)
 {
 	nni_http_conn *conn;
 
@@ -322,7 +336,7 @@ http_sconn_close_locked(http_sconn *sc)
 	if ((conn = sc->conn) != NULL) {
 		nni_http_conn_close(conn);
 	}
-	nni_reap(&sc->reap, http_sconn_reap, sc);
+	nni_reap(&http_sc_reap_list, sc);
 }
 
 static void
@@ -332,7 +346,7 @@ http_sconn_close(http_sconn *sc)
 	s = sc->server;
 
 	nni_mtx_lock(&s->mtx);
-	http_sconn_close_locked(sc);
+	http_sc_close_locked(sc);
 	nni_mtx_unlock(&s->mtx);
 }
 
@@ -704,7 +718,7 @@ http_sconn_rxdone(void *arg)
 	if ((h->getbody) &&
 	    ((cls = nni_http_req_get_header(req, "Content-Length")) != NULL)) {
 		uint64_t len;
-		char *end;
+		char *   end;
 
 		len = strtoull(cls, &end, 10);
 		if ((end == NULL) || (*end != '\0') || (len > h->maxbody)) {
@@ -900,9 +914,9 @@ http_server_fini(nni_http_server *s)
 
 	nni_mtx_lock(&s->mtx);
 	if (!nni_list_empty(&s->conns)) {
-		// Try to reap later, after the sconns are done reaping.
-		// (Note, sconns will all have been closed already.)
-		nni_reap(&s->reap, (nni_cb) http_server_fini, s);
+		// Try to reap later, after the connections are done reaping.
+		// (Note, connections will all have been closed already.)
+		nni_reap(&http_server_reap_list, s);
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
@@ -1059,7 +1073,7 @@ http_server_stop(nni_http_server *s)
 	// Stopping the server is a hard stop -- it aborts any work
 	// being done by clients.  (No graceful shutdown).
 	NNI_LIST_FOREACH (&s->conns, sc) {
-		http_sconn_close_locked(sc);
+		http_sc_close_locked(sc);
 	}
 
 	while (!nni_list_empty(&s->conns)) {
@@ -1904,7 +1918,7 @@ nni_http_server_fini(nni_http_server *s)
 		http_server_stop(s);
 		nni_mtx_unlock(&s->mtx);
 		nni_list_remove(&http_servers, s);
-		nni_reap(&s->reap, (nni_cb) http_server_fini, s);
+		nni_reap(&http_server_reap_list, s);
 	}
 	nni_mtx_unlock(&http_servers_lk);
 }

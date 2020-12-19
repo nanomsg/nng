@@ -22,6 +22,13 @@
 static nni_id_map pipes;
 static nni_mtx    pipes_lk;
 
+static void pipe_destroy(void *);
+
+static nni_reap_list pipe_reap_list = {
+	.rl_offset = offsetof(nni_pipe, p_reap),
+	.rl_func   = pipe_destroy,
+};
+
 int
 nni_pipe_sys_init(void)
 {
@@ -43,8 +50,9 @@ nni_pipe_sys_fini(void)
 }
 
 static void
-pipe_destroy(nni_pipe *p)
+pipe_destroy(void *arg)
 {
+	nni_pipe *p = arg;
 	if (p == NULL) {
 		return;
 	}
@@ -158,7 +166,7 @@ nni_pipe_close(nni_pipe *p)
 		p->p_tran_ops.p_close(p->p_tran_data);
 	}
 
-	nni_reap(&p->p_reap, (nni_cb) pipe_destroy, p);
+	nni_reap(&pipe_reap_list, p);
 }
 
 uint16_t
@@ -201,25 +209,25 @@ pipe_stats_init(nni_pipe *p)
 		.si_atomic = true,
 	};
 	static const nni_stat_info tx_msgs_info = {
-	    .si_name   = "tx_msgs",
-	    .si_desc   = "messages sent",
-	    .si_type   = NNG_STAT_COUNTER,
-	    .si_unit   = NNG_UNIT_MESSAGES,
-	    .si_atomic = true,
+		.si_name   = "tx_msgs",
+		.si_desc   = "messages sent",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_unit   = NNG_UNIT_MESSAGES,
+		.si_atomic = true,
 	};
 	static const nni_stat_info rx_bytes_info = {
-	    .si_name   = "rx_bytes",
-	    .si_desc   = "bytes received",
-	    .si_type   = NNG_STAT_COUNTER,
-	    .si_unit   = NNG_UNIT_BYTES,
-	    .si_atomic = true,
+		.si_name   = "rx_bytes",
+		.si_desc   = "bytes received",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_unit   = NNG_UNIT_BYTES,
+		.si_atomic = true,
 	};
 	static const nni_stat_info tx_bytes_info = {
-	    .si_name   = "tx_bytes",
-	    .si_desc   = "bytes sent",
-	    .si_type   = NNG_STAT_COUNTER,
-	    .si_unit   = NNG_UNIT_BYTES,
-	    .si_atomic = true,
+		.si_name   = "tx_bytes",
+		.si_desc   = "bytes sent",
+		.si_type   = NNG_STAT_COUNTER,
+		.si_unit   = NNG_UNIT_BYTES,
+		.si_atomic = true,
 	};
 
 	nni_stat_init(&p->st_root, &root_info);
@@ -294,9 +302,9 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
 int
 nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 {
-	int            rv;
-	nni_tran *     tran = d->d_tran;
-	nni_pipe *     p;
+	int       rv;
+	nni_tran *tran = d->d_tran;
+	nni_pipe *p;
 
 	if ((rv = pipe_create(&p, d->d_sock, tran, tdata)) != 0) {
 		return (rv);
@@ -318,9 +326,9 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 int
 nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 {
-	int            rv;
-	nni_tran *     tran = l->l_tran;
-	nni_pipe *     p;
+	int       rv;
+	nni_tran *tran = l->l_tran;
+	nni_pipe *p;
 
 	if ((rv = pipe_create(&p, l->l_sock, tran, tdata)) != 0) {
 		return (rv);
@@ -328,9 +336,9 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 	p->p_listener = l;
 #if NNG_ENABLE_STATS
 	static const nni_stat_info listener_info = {
-	    .si_name = "listener",
-	    .si_desc = "listener for pipe",
-	    .si_type = NNG_STAT_ID,
+		.si_name = "listener",
+		.si_desc = "listener for pipe",
+		.si_type = NNG_STAT_ID,
 	};
 	pipe_stat_init(p, &p->st_ep_id, &listener_info);
 	nni_stat_set_id(&p->st_ep_id, nni_listener_id(l));
@@ -361,12 +369,6 @@ nni_pipe_getopt(
 	return (NNG_ENOTSUP);
 }
 
-void *
-nni_pipe_get_proto_data(nni_pipe *p)
-{
-	return (p->p_proto_data);
-}
-
 uint32_t
 nni_pipe_sock_id(nni_pipe *p)
 {
@@ -384,7 +386,6 @@ nni_pipe_dialer_id(nni_pipe *p)
 {
 	return (p->p_dialer ? nni_dialer_id(p->p_dialer) : 0);
 }
-
 
 void
 nni_pipe_add_stat(nni_pipe *p, nni_stat_item *item)

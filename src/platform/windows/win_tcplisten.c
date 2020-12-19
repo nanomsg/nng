@@ -28,7 +28,7 @@ struct nni_tcp_listener {
 	LPFN_GETACCEPTEXSOCKADDRS getacceptexsockaddrs;
 	SOCKADDR_STORAGE          ss;
 	nni_mtx                   mtx;
-	nni_reap_item             reap;
+	nni_reap_node             reap;
 };
 
 // tcp_listener_funcs looks up function pointers we need for advanced accept
@@ -184,6 +184,11 @@ nni_tcp_listener_close(nni_tcp_listener *l)
 	nni_mtx_unlock(&l->mtx);
 }
 
+static nni_reap_list tcp_listener_reap_list = {
+	.rl_offset = offsetof(nni_tcp_listener, reap),
+	.rl_func   = (nni_cb) nni_tcp_listener_fini,
+};
+
 void
 nni_tcp_listener_fini(nni_tcp_listener *l)
 {
@@ -191,7 +196,7 @@ nni_tcp_listener_fini(nni_tcp_listener *l)
 	nni_mtx_lock(&l->mtx);
 	if (!nni_list_empty(&l->aios)) {
 		nni_mtx_unlock(&l->mtx);
-		nni_reap(&l->reap, (nni_cb) nni_tcp_listener_fini, l);
+		nni_reap(&tcp_listener_reap_list, l);
 		return;
 	}
 	nni_mtx_unlock(&l->mtx);
@@ -302,7 +307,7 @@ nni_tcp_listener_accept(nni_tcp_listener *l, nni_aio *aio)
 		return;
 	}
 
-	// Windows requires us to explicity create the socket before
+	// Windows requires us to explicitly create the socket before
 	// calling accept on it.
 	if ((s = socket(l->ss.ss_family, SOCK_STREAM, 0)) == INVALID_SOCKET) {
 		rv = nni_win_error(GetLastError());

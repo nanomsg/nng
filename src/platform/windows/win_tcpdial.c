@@ -25,7 +25,7 @@ struct nni_tcp_dialer {
 	SOCKADDR_STORAGE src;       // source address
 	size_t           srclen;
 	nni_mtx          mtx;
-	nni_reap_item    reap;
+	nni_reap_node    reap;
 };
 
 int
@@ -88,6 +88,11 @@ nni_tcp_dialer_close(nni_tcp_dialer *d)
 	nni_mtx_unlock(&d->mtx);
 }
 
+static nni_reap_list tcp_dialer_reap_list = {
+	.rl_offset = offsetof(nni_tcp_dialer, reap),
+	.rl_func   = (nni_cb) nni_tcp_dialer_fini,
+};
+
 void
 nni_tcp_dialer_fini(nni_tcp_dialer *d)
 {
@@ -95,7 +100,7 @@ nni_tcp_dialer_fini(nni_tcp_dialer *d)
 	nni_mtx_lock(&d->mtx);
 	if (!nni_list_empty(&d->aios)) {
 		nni_mtx_unlock(&d->mtx);
-		nni_reap(&d->reap, (nni_cb) nni_tcp_dialer_fini, d);
+		nni_reap(&tcp_dialer_reap_list, nni_tcp_dialer_fini);
 		return;
 	}
 	nni_mtx_unlock(&d->mtx);
@@ -164,7 +169,7 @@ tcp_dial_cb(nni_win_io *io, int rv, size_t cnt)
 		(void) setsockopt(
 		    c->s, IPPROTO_TCP, TCP_NODELAY, (char *) &nd, sizeof(nd));
 
-		len = sizeof (SOCKADDR_STORAGE);
+		len = sizeof(SOCKADDR_STORAGE);
 		(void) getsockname(c->s, (SOCKADDR *) &c->sockname, &len);
 
 		nni_aio_set_output(aio, 0, c);

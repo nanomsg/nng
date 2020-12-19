@@ -32,7 +32,7 @@ struct tcptran_pipe {
 	nni_list_node   node;
 	tcptran_ep *    ep;
 	nni_atomic_flag reaped;
-	nni_reap_item   reap;
+	nni_reap_node   reap;
 	uint8_t         txlen[sizeof(uint64_t)];
 	uint8_t         rxlen[sizeof(uint64_t)];
 	size_t          gottxhead;
@@ -65,7 +65,7 @@ struct tcptran_ep {
 	nni_list             busypipes; // busy pipes -- ones passed to socket
 	nni_list             waitpipes; // pipes waiting to match to socket
 	nni_list             negopipes; // pipes busy negotiating
-	nni_reap_item        reap;
+	nni_reap_node        reap;
 	nng_stream_dialer *  dialer;
 	nng_stream_listener *listener;
 
@@ -80,6 +80,17 @@ static void tcptran_pipe_send_cb(void *);
 static void tcptran_pipe_recv_cb(void *);
 static void tcptran_pipe_nego_cb(void *);
 static void tcptran_ep_fini(void *);
+static void tcptran_pipe_fini(void *);
+
+static nni_reap_list tcptran_ep_reap_list = {
+	.rl_offset = offsetof(tcptran_ep, reap),
+	.rl_func = tcptran_ep_fini,
+};
+
+static nni_reap_list tcptran_pipe_reap_list = {
+	.rl_offset = offsetof (tcptran_pipe, reap),
+	.rl_func = tcptran_pipe_fini,
+};
 
 static int
 tcptran_init(void)
@@ -139,7 +150,7 @@ tcptran_pipe_fini(void *arg)
 		nni_list_node_remove(&p->node);
 		ep->refcnt--;
 		if (ep->fini && (ep->refcnt == 0)) {
-			nni_reap(&ep->reap, tcptran_ep_fini, ep);
+			nni_reap(&tcptran_ep_reap_list, ep);
 		}
 		nni_mtx_unlock(&ep->mtx);
 	}
@@ -160,7 +171,7 @@ tcptran_pipe_reap(tcptran_pipe *p)
 		if (p->conn != NULL) {
 			nng_stream_close(p->conn);
 		}
-		nni_reap(&p->reap, tcptran_pipe_fini, p);
+		nni_reap(&tcptran_pipe_reap_list, p);
 	}
 }
 

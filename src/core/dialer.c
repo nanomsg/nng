@@ -326,12 +326,16 @@ nni_dialer_hold(nni_dialer *d)
 void
 nni_dialer_rele(nni_dialer *d)
 {
+	bool reap;
+
 	nni_mtx_lock(&dialers_lk);
 	d->d_ref--;
-	if ((d->d_ref == 0) && (d->d_closed)) {
-		nni_reap(&d->d_reap, (nni_cb) nni_dialer_reap, d);
-	}
+	reap = ((d->d_ref == 0) && (d->d_closed));
 	nni_mtx_unlock(&dialers_lk);
+
+	if (reap) {
+		nni_dialer_reap(d);
+	}
 }
 
 void
