@@ -165,6 +165,8 @@ extern void nni_sleep_aio(nni_duration, nni_aio *);
 extern int  nni_aio_sys_init(void);
 extern void nni_aio_sys_fini(void);
 
+typedef struct nni_aio_expire_q nni_aio_expire_q;
+
 // An nni_aio is an async I/O handle.  The details of this aio structure
 // are private to the AIO framework.  The structure has the public name
 // (nng_aio) so that we minimize the pollution in the public API namespace.
@@ -200,8 +202,9 @@ struct nng_aio {
 	nni_list_node     a_prov_node;     // Linkage on provider list.
 	void *            a_prov_extra[2]; // Extra data used by provider
 
-	nni_list_node   a_expire_node; // Expiration node
-	nni_reap_node   a_reap_node;
+	nni_aio_expire_q *a_expire_q;
+	nni_list_node     a_expire_node; // Expiration node
+	nni_reap_node     a_reap_node;
 };
 
 #endif // CORE_AIO_H
