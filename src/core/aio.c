@@ -83,37 +83,28 @@ nni_aio_fini(nni_aio *aio)
 	nni_aio_cancel_fn fn;
 	void *            arg;
 
-	// TODO: This probably could just use nni_aio_stop.
-
 	// This is like aio_close, but we don't want to dispatch
 	// the task.  And unlike aio_stop, we don't want to wait
 	// for the task.  (Because we implicitly do task_fini.)
+	// We also wait if the aio is being expired.
 	nni_mtx_lock(&nni_aio_lk);
+	aio->a_stop = true;
+	if (nni_list_active(&nni_aio_expire_list, aio)) {
+		nni_list_remove(&nni_aio_expire_list, aio);
+	}
+	while (nni_aio_expire_aio == aio) {
+		nni_cv_wait(&nni_aio_expire_cv);
+	}
 	fn                = aio->a_cancel_fn;
 	arg               = aio->a_cancel_arg;
 	aio->a_cancel_fn  = NULL;
 	aio->a_cancel_arg = NULL;
-	aio->a_stop       = true;
 	nni_mtx_unlock(&nni_aio_lk);
 
 	if (fn != NULL) {
 		fn(aio, arg, NNG_ECLOSED);
 	}
 
-	// Wait for the aio to be "done"; this ensures that we don't
-	// destroy an aio from a "normal" completion callback while
-	// the expiration thread is working.
-
-	nni_mtx_lock(&nni_aio_lk);
-	while (nni_aio_expire_aio == aio) {
-		// TODO: It should be possible to remove this check!
-		if (nni_thr_is_self(&nni_aio_expire_thr)) {
-			nni_aio_expire_aio = NULL;
-			break;
-		}
-		nni_cv_wait(&nni_aio_expire_cv);
-	}
-	nni_mtx_unlock(&nni_aio_lk);
 	nni_task_fini(&aio->a_task);
 }
 
@@ -658,9 +649,9 @@ nni_sleep_aio(nng_duration ms, nng_aio *aio)
 void
 nni_aio_sys_fini(void)
 {
-	nni_mtx *mtx  = &nni_aio_lk;
-	nni_cv * cv   = &nni_aio_expire_cv;
-	nni_thr *thr  = &nni_aio_expire_thr;
+	nni_mtx *mtx = &nni_aio_lk;
+	nni_cv * cv  = &nni_aio_expire_cv;
+	nni_thr *thr = &nni_aio_expire_thr;
 
 	if (!nni_aio_expire_exit) {
 		nni_mtx_lock(mtx);
