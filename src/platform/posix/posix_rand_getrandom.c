@@ -18,6 +18,7 @@
 #include <sys/random.h>
 
 #include "core/nng_impl.h"
+#include <sys/syscall.h>
 
 #ifdef NNG_HAVE_GETRANDOM
 
@@ -31,10 +32,12 @@ nni_random(void)
 	// The exception here is that we could fail if for some
 	// reason we got a signal while blocked at very early boot
 	// (i.e. /dev/urandom was not yet seeded).
-	if (getrandom(&val, sizeof(val), 0) != sizeof(val)) {
+
+    int r = syscall(SYS_getrandom, &val, sizeof(val), 0);
+    if (r == -1) {
 		nni_panic("getrandom failed");
 	}
-	return (val);
+	return val;
 }
 
 #endif
