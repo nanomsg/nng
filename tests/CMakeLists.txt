@@ -152,7 +152,6 @@ add_nng_test(wss 30)
 add_nng_test1(zt 60 NNG_TRANSPORT_ZEROTIER)
 
 add_nng_test(bus 5)
-add_nng_test(pipeline 5)
 add_nng_test(reqctx 5)
 add_nng_test(reqstress 60)
 

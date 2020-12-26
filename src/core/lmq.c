@@ -22,7 +22,7 @@ nni_lmq_init(nni_lmq *lmq, size_t cap)
 	// operations as a power of two, for efficiency.  It does possibly
 	// waste some space, but never more than 2x.  Consumers should try
 	// for powers of two if they are concerned about efficiency.
-	alloc = 1;
+	alloc = 2;
 	while (alloc < cap) {
 		alloc *= 2;
 	}
@@ -127,7 +127,7 @@ nni_lmq_resize(nni_lmq *lmq, size_t cap)
 	size_t    alloc;
 	size_t    len;
 
-	alloc = 1;
+	alloc = 2;
 	while (alloc < cap) {
 		alloc *= 2;
 	}

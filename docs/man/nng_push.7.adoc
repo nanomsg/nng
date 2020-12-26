@@ -1,6 +1,6 @@
 = nng_push(7)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -56,7 +56,16 @@ Only version 0 of this protocol is supported.
 
 === Protocol Options
 
-The _push_ protocol has no protocol-specific options.
+xref:nng_options.5.adoc#NNG_OPT_SENDBUF[`NNG_OPT_SENDBUF`]::
+
+    (`int`, 0 - 8192)
+    Normally this is set to zero, indicating that send operations are unbuffered.
+    In unbuffered operation, send operations will wait until a suitable peer is available to receive the message.
+    If this is set to a positive value (up to 8192), then an intermediate buffer is
+    provided for the socket with the specified depth (in messages).
+
+NOTE: Transport layer buffering may occur in addition to any socket
+    buffer determined by this option.
 
 === Protocol Headers
 

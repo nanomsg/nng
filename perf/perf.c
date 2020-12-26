@@ -419,6 +419,10 @@ do_inproc_thr(int argc, char **argv)
 			open_client = nng_pair1_open;
 			open_server = nng_pair1_open;
 			break;
+		case OPT_PIPELINE0:
+			open_client = nng_pull0_open;
+			open_server = nng_push0_open;
+			break;
 		case OPT_URL:
 			addr = arg;
 			break;
