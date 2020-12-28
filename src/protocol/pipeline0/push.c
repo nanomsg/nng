@@ -353,7 +353,7 @@ static int
 push0_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 {
 	push0_sock *s = arg;
-	int val;
+	int         val;
 
 	nni_mtx_lock(&s->m);
 	val = nni_lmq_cap(&s->wq);
@@ -394,7 +394,7 @@ static nni_option push0_sock_options[] = {
 	    .o_get  = push0_get_send_buf_len,
 	    .o_set  = push0_set_send_buf_len,
 	},
-    // terminate list
+	// terminate list
 	{
 	    .o_name = NULL,
 	},
@@ -415,17 +415,16 @@ static nni_proto push0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_PUSH_V0, "push" },
 	.proto_peer     = { NNI_PROTO_PULL_V0, "pull" },
-	.proto_flags    = NNI_PROTO_FLAG_SND | NNI_PROTO_FLAG_NOMSGQ,
+	.proto_flags    = NNI_PROTO_FLAG_SND,
 	.proto_pipe_ops = &push0_pipe_ops,
 	.proto_sock_ops = &push0_sock_ops,
 };
 
 static nni_proto push0_proto_raw = {
-	.proto_version = NNI_PROTOCOL_VERSION,
-	.proto_self    = { NNI_PROTO_PUSH_V0, "push" },
-	.proto_peer    = { NNI_PROTO_PULL_V0, "pull" },
-	.proto_flags =
-	    NNI_PROTO_FLAG_SND | NNI_PROTO_FLAG_RAW | NNI_PROTO_FLAG_NOMSGQ,
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_PUSH_V0, "push" },
+	.proto_peer     = { NNI_PROTO_PULL_V0, "pull" },
+	.proto_flags    = NNI_PROTO_FLAG_SND | NNI_PROTO_FLAG_RAW,
 	.proto_pipe_ops = &push0_pipe_ops,
 	.proto_sock_ops = &push0_sock_ops,
 };

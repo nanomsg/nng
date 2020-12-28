@@ -186,7 +186,7 @@ static void
 pull0_sock_close(void *arg)
 {
 	pull0_sock *s = arg;
-	nni_aio *a;
+	nni_aio *   a;
 	nni_mtx_lock(&s->m);
 	while ((a = nni_list_first(&s->rq)) != NULL) {
 		nni_aio_list_remove(a);
@@ -298,17 +298,16 @@ static nni_proto pull0_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
 	.proto_self     = { NNI_PROTO_PULL_V0, "pull" },
 	.proto_peer     = { NNI_PROTO_PUSH_V0, "push" },
-	.proto_flags    = NNI_PROTO_FLAG_RCV | NNI_PROTO_FLAG_NOMSGQ,
+	.proto_flags    = NNI_PROTO_FLAG_RCV,
 	.proto_pipe_ops = &pull0_pipe_ops,
 	.proto_sock_ops = &pull0_sock_ops,
 };
 
 static nni_proto pull0_proto_raw = {
-	.proto_version = NNI_PROTOCOL_VERSION,
-	.proto_self    = { NNI_PROTO_PULL_V0, "pull" },
-	.proto_peer    = { NNI_PROTO_PUSH_V0, "push" },
-	.proto_flags =
-	    NNI_PROTO_FLAG_RCV | NNI_PROTO_FLAG_RAW | NNI_PROTO_FLAG_NOMSGQ,
+	.proto_version  = NNI_PROTOCOL_VERSION,
+	.proto_self     = { NNI_PROTO_PULL_V0, "pull" },
+	.proto_peer     = { NNI_PROTO_PUSH_V0, "push" },
+	.proto_flags    = NNI_PROTO_FLAG_RCV | NNI_PROTO_FLAG_RAW,
 	.proto_pipe_ops = &pull0_pipe_ops,
 	.proto_sock_ops = &pull0_sock_ops,
 };

@@ -166,7 +166,6 @@ struct nni_proto {
 #define NNI_PROTO_FLAG_SND 2u    // Protocol can send
 #define NNI_PROTO_FLAG_SNDRCV 3u // Protocol can both send & recv
 #define NNI_PROTO_FLAG_RAW 4u    // Protocol is raw
-#define NNI_PROTO_FLAG_NOMSGQ 8u // Protocol bypasses the upper queues
 
 // nni_proto_open is called by the protocol to create a socket instance
 // with its ops vector.  The intent is that applications will only see
