@@ -76,12 +76,6 @@ extern void nni_thr_fini(nni_thr *thr);
 // nni_thr_run runs the given thread, which must have been initialized.
 extern void nni_thr_run(nni_thr *thr);
 
-// nni_thr_wait waits for the thread to complete execution, but does not
-// release resources associated with it.  It is idempotent.  If the this
-// is called before nni_thr_run is called, then the thread will not run
-// at all.
-extern void nni_thr_wait(nni_thr *thr);
-
 // nni_thr_is_self returns true if the caller is the named thread.
 extern bool nni_thr_is_self(nni_thr *thr);
 
