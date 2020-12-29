@@ -36,11 +36,9 @@ struct pair1_sock {
 	nni_msgq *     urq;
 	nni_sock *     sock;
 	bool           raw;
+	pair1_pipe *   p;
 	nni_atomic_int ttl;
 	nni_mtx        mtx;
-	nni_id_map     pipes;
-	nni_list       plist;
-	bool           started;
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item stat_poly;
 	nni_stat_item stat_raw;
@@ -58,13 +56,12 @@ struct pair1_sock {
 
 // pair1_pipe is our per-pipe protocol private structure.
 struct pair1_pipe {
-	nni_pipe *    pipe;
-	pair1_sock *  pair;
-	nni_aio       aio_send;
-	nni_aio       aio_recv;
-	nni_aio       aio_get;
-	nni_aio       aio_put;
-	nni_list_node node;
+	nni_pipe *  pipe;
+	pair1_sock *pair;
+	nni_aio     aio_send;
+	nni_aio     aio_recv;
+	nni_aio     aio_get;
+	nni_aio     aio_put;
 };
 
 static void
@@ -72,7 +69,6 @@ pair1_sock_fini(void *arg)
 {
 	pair1_sock *s = arg;
 
-	nni_id_map_fini(&s->pipes);
 	nni_mtx_fini(&s->mtx);
 }
 
@@ -90,9 +86,6 @@ static int
 pair1_sock_init_impl(void *arg, nni_sock *sock, bool raw)
 {
 	pair1_sock *s = arg;
-
-	nni_id_map_init(&s->pipes, 0, 0, false);
-	NNI_LIST_INIT(&s->plist, pair1_pipe, node);
 
 	// Raw mode uses this.
 	nni_mtx_init(&s->mtx);
@@ -193,7 +186,13 @@ static void
 pair1_pipe_stop(void *arg)
 {
 	pair1_pipe *p = arg;
+	pair1_sock *s = p->pair;
 
+	nni_mtx_lock(&s->mtx);
+	if (s->p == p) {
+		s->p = NULL;
+	}
+	nni_mtx_unlock(&s->mtx);
 	nni_aio_stop(&p->aio_send);
 	nni_aio_stop(&p->aio_recv);
 	nni_aio_stop(&p->aio_put);
@@ -232,30 +231,20 @@ pair1_pipe_start(void *arg)
 {
 	pair1_pipe *p = arg;
 	pair1_sock *s = p->pair;
-	uint32_t    id;
-	int         rv;
 
-	nni_mtx_lock(&s->mtx);
 	if (nni_pipe_peer(p->pipe) != NNG_PAIR1_PEER) {
-		nni_mtx_unlock(&s->mtx);
 		BUMP_STAT(&s->stat_reject_mismatch);
 		// Peer protocol mismatch.
 		return (NNG_EPROTO);
 	}
 
-	id = nni_pipe_id(p->pipe);
-	if ((rv = nni_id_set(&s->pipes, id, p)) != 0) {
-		nni_mtx_unlock(&s->mtx);
-		return (rv);
-	}
-	if (!nni_list_empty(&s->plist)) {
-		nni_id_remove(&s->pipes, id);
+	nni_mtx_lock(&s->mtx);
+	if (s->p != NULL) {
 		nni_mtx_unlock(&s->mtx);
 		BUMP_STAT(&s->stat_reject_already);
 		return (NNG_EBUSY);
 	}
-	nni_list_append(&s->plist, p);
-	s->started = true;
+	s->p = p;
 	nni_mtx_unlock(&s->mtx);
 
 	// Schedule a get.
@@ -271,17 +260,11 @@ static void
 pair1_pipe_close(void *arg)
 {
 	pair1_pipe *p = arg;
-	pair1_sock *s = p->pair;
 
 	nni_aio_close(&p->aio_send);
 	nni_aio_close(&p->aio_recv);
 	nni_aio_close(&p->aio_put);
 	nni_aio_close(&p->aio_get);
-
-	nni_mtx_lock(&s->mtx);
-	nni_id_remove(&s->pipes, nni_pipe_id(p->pipe));
-	nni_list_node_remove(&p->node);
-	nni_mtx_unlock(&s->mtx);
 }
 
 static void
