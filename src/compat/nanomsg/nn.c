@@ -238,7 +238,7 @@ nn_socket(int domain, int protocol)
 	}
 
 	// Legacy sockets have nodelay disabled.
-	(void) nng_setopt_bool(sock, NNG_OPT_TCP_NODELAY, false);
+	(void) nng_socket_set_bool(sock, NNG_OPT_TCP_NODELAY, false);
 	return ((int) sock.id);
 }
 
@@ -683,7 +683,7 @@ nn_getdomain(nng_socket s, void *valp, size_t *szp)
 	bool b;
 	int  rv;
 
-	if ((rv = nng_getopt_bool(s, NNG_OPT_RAW, &b)) != 0) {
+	if ((rv = nng_socket_get_bool(s, NNG_OPT_RAW, &b)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -704,7 +704,7 @@ nn_getfd(nng_socket s, void *valp, size_t *szp, const char *opt)
 	int    rv;
 	SOCKET sfd;
 
-	if ((rv = nng_getopt_int(s, opt, &ifd)) != 0) {
+	if ((rv = nng_socket_get_int(s, opt, &ifd)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -799,7 +799,7 @@ nn_settcpnodelay(nng_socket s, const void *valp, size_t sz)
 		return (-1);
 	}
 
-	if ((rv = nng_setopt_bool(s, NNG_OPT_TCP_NODELAY, val)) != 0) {
+	if ((rv = nng_socket_set_bool(s, NNG_OPT_TCP_NODELAY, val)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -813,7 +813,7 @@ nn_gettcpnodelay(nng_socket s, void *valp, size_t *szp)
 	int  ival;
 	int  rv;
 
-	if ((rv = nng_getopt_bool(s, NNG_OPT_TCP_NODELAY, &val)) != 0) {
+	if ((rv = nng_socket_get_bool(s, NNG_OPT_TCP_NODELAY, &val)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -829,7 +829,7 @@ nn_getrcvbuf(nng_socket s, void *valp, size_t *szp)
 	int cnt;
 	int rv;
 
-	if ((rv = nng_getopt_int(s, NNG_OPT_RECVBUF, &cnt)) != 0) {
+	if ((rv = nng_socket_get_int(s, NNG_OPT_RECVBUF, &cnt)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -855,7 +855,7 @@ nn_setrcvbuf(nng_socket s, const void *valp, size_t sz)
 	// estimate, and assumes messages are 1kB on average.
 	cnt += 1023;
 	cnt /= 1024;
-	if ((rv = nng_setopt_int(s, NNG_OPT_RECVBUF, cnt)) != 0) {
+	if ((rv = nng_socket_set_int(s, NNG_OPT_RECVBUF, cnt)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -868,7 +868,7 @@ nn_getsndbuf(nng_socket s, void *valp, size_t *szp)
 	int cnt;
 	int rv;
 
-	if ((rv = nng_getopt_int(s, NNG_OPT_SENDBUF, &cnt)) != 0) {
+	if ((rv = nng_socket_get_int(s, NNG_OPT_SENDBUF, &cnt)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -894,7 +894,7 @@ nn_setsndbuf(nng_socket s, const void *valp, size_t sz)
 	// estimate, and assumes messages are 1kB on average.
 	cnt += 1023;
 	cnt /= 1024;
-	if ((rv = nng_setopt_int(s, NNG_OPT_SENDBUF, cnt)) != 0) {
+	if ((rv = nng_socket_set_int(s, NNG_OPT_SENDBUF, cnt)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -923,7 +923,7 @@ nn_setrcvmaxsz(nng_socket s, const void *valp, size_t sz)
 		errno = EINVAL;
 		return (-1);
 	}
-	if ((rv = nng_setopt_size(s, NNG_OPT_RECVMAXSZ, val)) != 0) {
+	if ((rv = nng_socket_set_size(s, NNG_OPT_RECVMAXSZ, val)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -937,7 +937,7 @@ nn_getrcvmaxsz(nng_socket s, void *valp, size_t *szp)
 	int    rv;
 	size_t val;
 
-	if ((rv = nng_getopt_size(s, NNG_OPT_RECVMAXSZ, &val)) != 0) {
+	if ((rv = nng_socket_get_size(s, NNG_OPT_RECVMAXSZ, &val)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -1104,7 +1104,7 @@ nn_getsockopt(int s, int nnlevel, int nnopt, void *valp, size_t *szp)
 		return (-1);
 	}
 
-	if ((rv = nng_getopt(sid, name, valp, szp)) != 0) {
+	if ((rv = nng_socket_get(sid, name, valp, szp)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -1141,7 +1141,7 @@ nn_setsockopt(int s, int nnlevel, int nnopt, const void *valp, size_t sz)
 		return (-1);
 	}
 
-	if ((rv = nng_setopt(sid, name, valp, sz)) != 0) {
+	if ((rv = nng_socket_set(sid, name, valp, sz)) != 0) {
 		nn_seterror(rv);
 		return (-1);
 	}
@@ -1234,7 +1234,7 @@ nn_poll(struct nn_pollfd *fds, int nfds, int timeout)
 		if (fds[i].events & NN_POLLIN) {
 			nng_socket s;
 			s.id = fds[i].fd;
-			if ((rv = nng_getopt_int(s, NNG_OPT_RECVFD, &fd)) !=
+			if ((rv = nng_socket_get_int(s, NNG_OPT_RECVFD, &fd)) !=
 			    0) {
 				nn_seterror(rv);
 				NNI_FREE_STRUCTS(pfd, nfds * 2);
@@ -1251,7 +1251,7 @@ nn_poll(struct nn_pollfd *fds, int nfds, int timeout)
 		if (fds[i].events & NN_POLLOUT) {
 			nng_socket s;
 			s.id = fds[i].fd;
-			if ((rv = nng_getopt_int(s, NNG_OPT_SENDFD, &fd)) !=
+			if ((rv = nng_socket_get_int(s, NNG_OPT_SENDFD, &fd)) !=
 			    0) {
 				nn_seterror(rv);
 				NNI_FREE_STRUCTS(pfd, nfds * 2);
@@ -1317,7 +1317,7 @@ nn_term(void)
 	// all sockets in the process, including those
 	// in use by libraries, etc.  Accordingly, do not use this
 	// in a library -- only e.g. atexit() and similar.
-	nng_closeall();
+	nni_sock_closeall();
 }
 
 uint64_t

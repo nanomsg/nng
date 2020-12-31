@@ -1105,7 +1105,7 @@ main(int ac, char **av)
 				fatal("Unable to create dialer for %s: %s",
 				    a->val, nng_strerror(rv));
 			}
-			rv = nng_dialer_getopt_ptr(
+			rv = nng_dialer_get_ptr(
 			    d, NNG_OPT_TLS_CONFIG, (void **) &tls);
 			if (rv == 0) {
 				configtls(tls);
@@ -1127,7 +1127,7 @@ main(int ac, char **av)
 				char   ustr[256];
 				size_t sz;
 				sz = sizeof(ustr);
-				if (nng_dialer_getopt(
+				if (nng_dialer_get(
 				        d, NNG_OPT_URL, ustr, &sz) == 0) {
 					printf("Connected to: %s\n", ustr);
 				}
@@ -1141,7 +1141,7 @@ main(int ac, char **av)
 				fatal("Unable to create listener for %s: %s",
 				    a->val, nng_strerror(rv));
 			}
-			rv = nng_listener_getopt_ptr(
+			rv = nng_listener_get_ptr(
 			    l, NNG_OPT_TLS_CONFIG, (void **) &tls);
 			if (rv == 0) {
 				configtls(tls);
@@ -1163,7 +1163,7 @@ main(int ac, char **av)
 				char   ustr[256];
 				size_t sz;
 				sz = sizeof(ustr);
-				if (nng_listener_getopt(
+				if (nng_listener_get(
 				        l, NNG_OPT_URL, ustr, &sz) == 0) {
 					printf("Listening at: %s\n", ustr);
 				}

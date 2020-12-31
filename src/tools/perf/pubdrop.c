@@ -202,13 +202,13 @@ sub_client(void *arg)
 	if ((rv = nng_dial(sock, pa->addr, NULL, 0)) != 0) {
 		die("Cannot listen: %s", nng_strerror(rv));
 	}
-	if ((rv = nng_setopt_ms(sock, NNG_OPT_RECONNMINT, 51)) != 0) {
+	if ((rv = nng_socket_set_ms(sock, NNG_OPT_RECONNMINT, 51)) != 0) {
 		die("setopt: %s", nng_strerror(rv));
 	}
-	if ((rv = nng_setopt(sock, NNG_OPT_SUB_SUBSCRIBE, "", 0)) != 0) {
+	if ((rv = nng_socket_set(sock, NNG_OPT_SUB_SUBSCRIBE, "", 0)) != 0) {
 		die("setopt: %s", nng_strerror(rv));
 	}
-	if ((rv = nng_setopt_ms(sock, NNG_OPT_RECVTIMEO, 10000)) != 0) {
+	if ((rv = nng_socket_set_ms(sock, NNG_OPT_RECVTIMEO, 10000)) != 0) {
 		die("setopt: %s", nng_strerror(rv));
 	}
 
