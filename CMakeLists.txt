@@ -1,5 +1,5 @@
 #
-#   Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
@@ -253,14 +253,9 @@ add_subdirectory(src)
 
 if (NNG_TESTS)
     add_subdirectory(tests)
-    add_subdirectory(perf)
 endif ()
 
 #  Build the tools
-
-if (NNG_ENABLE_NNGCAT)
-    add_subdirectory(tools/nngcat)
-endif ()
 
 add_subdirectory(docs/man)
 

@@ -1,12 +1,9 @@
-About This Directory
-====================
+= About This Directory
 
 This directory contains support files that I use for developing this
-project.  I recommend others consider doing the same.
+project.
 
-
-Coding Style
-~~~~~~~~~~~~~~~~~~~~~~~~~
+== Coding Style
 
 A clang-format configuration file is included in the project, you should
 use that.  (clang format requires that the style file live at the top of
@@ -17,54 +14,29 @@ the Convey framework has a style all it's own.
 The style is based loosely on WebKit, but is really modified -- someday
 if clang-format ever learns about BSD KNF I'll probably switch to that.
 
-Once upon a time this used uncrustify. However, the frequent breaking changes
-in uncrustify versions, and the fact that the latest (at this time 0.65) does
-not actually support one of the most common language constructs (extern "C"
-opening braces) has driven me towards clang-format.  The good news is that
-this is probably actually easier for most folks to use.
-
-
-Sublime Text
-~~~~~~~~~~~~
+== Sublime Text
 
 I've also arranged for Sublime text to understand that .h is C, not C++ (this
 is important!)
 
+Having said that, these days I do most development on this project using CLion
+from JetBrains.
 
-ISO Standard C
-~~~~~~~~~~~~~~
+== ISO Standard C 99
 
-I've decided, after some gnashing of teeth, to finally accept that C99
-is here to stay.  Therefore, I'm *not* spending any effort into supporting
-older C89/C90 compilers.  That said I do understand that compiler support
-for C99 is not always complete.  I will stick to the mainstream features,
-like <stdint.h>, the ability to use variadic macros, // comments, and perhaps
-the occasional use of for() locally scoped variables.
+This project uses C99. You may need to have modern compilers and
+a modern SDK.  (Famously Windows Visual Studio releases older than
+2015 will either work poorly, or not at all.)
 
-We also insist that you have working vsnprintf, snprintf.  Microsoft famously
-did not, or worse, had broken ones (that didn't guarantee NULL termination).
-Visual Studio 2015 reportedly fixes this.  Building with older versions of
-Visual Studio for Microsoft platforms may leave you with some brittle code
-that could break in some bad ways -- use the latest to avoid this issue.
-(I'm not aware of any other platform with this kind of brain damage.)
+== Naming Conventions
 
-Naming Conventions
-~~~~~~~~~~~~~~~~~~
-
-Because not everyone wants to deal with CMake all the time, I anticipate that
-there will be folks who in the future want to just create one monster .c
-file that contains all these things, or even a .h that they just inline into
-their programmer.  As vile as this idea seems to me, I can understand the
-motivations for it.  In order to facilitate those cases, its important that
-all global symbols use names prefixed with nni_ or nng_ (or NNI_ or NNG_ for
-macro names).  This is true even for static symbols that won't show up in
-a more conventional symbol table.
-
-We use nng_ (and NNG_) for symbols that are intended to be expoed to consumers.
+We use nng_ (and NNG_) for symbols that are intended to be exported to consumers.
 These symbols form part of our public API.
 
 We use nni_ and NNI_ for symbols that are *NOT* part of our public API and
 should not be used by users.
+
+Statics may have any non-conflicting name.
 
 Note that for the most part we try to avoid exposing structures directly to
 users so that they don't get baked into binaries -- preferring instead to

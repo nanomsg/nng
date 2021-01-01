@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -8,6 +8,8 @@
 #
 
 #  Build performance tests.
+
+nng_directory(perf)
 
 if (NNG_TESTS)
      macro (add_nng_perf NAME)

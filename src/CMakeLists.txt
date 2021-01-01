@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+# Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 # Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #
 # This software is supplied under the terms of the MIT License, a
@@ -15,20 +15,11 @@ target_include_directories(nng PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(nng_testing PRIVATE ${PROJECT_SOURCE_DIR}/src)
 
 add_subdirectory(core)
-
 add_subdirectory(platform)
-add_subdirectory(compat/nanomsg)
-
-add_subdirectory(protocol)
-add_subdirectory(transport)
-
-add_subdirectory(supplemental/base64)
-add_subdirectory(supplemental/http)
-add_subdirectory(supplemental/sha1)
-add_subdirectory(supplemental/tls)
-add_subdirectory(supplemental/util)
-add_subdirectory(supplemental/websocket)
-
+add_subdirectory(compat)
+add_subdirectory(sp)
+add_subdirectory(supplemental)
+add_subdirectory(tools)
 add_subdirectory(testing)
 
 # When building shared libraries we prefer to suppress default symbol
