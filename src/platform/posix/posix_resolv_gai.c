@@ -253,7 +253,7 @@ nni_resolv_ip(const char *host, const char *serv, int af, bool passive,
 		return;
 	}
 
-	if (serv == NULL) {
+	if (serv == NULL || strcmp(serv, "") == 0) {
 		item->serv = NULL;
 	} else if ((item->serv = nni_strdup(serv)) == NULL) {
 		nni_aio_finish_error(aio, NNG_ENOMEM);
