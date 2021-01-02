@@ -94,7 +94,7 @@ add_library(nng_private INTERFACE)
 target_compile_definitions(nng_private INTERFACE NNG_PRIVATE)
 
 if (NNG_ELIDE_DEPRECATED)
-    target_compile_definitions(nng, NNG_ELIDE_DEPRECATED)
+    target_compile_definitions(nng PRIVATE NNG_ELIDE_DEPRECATED)
 endif()
 
 
