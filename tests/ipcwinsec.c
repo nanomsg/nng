@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,7 +23,6 @@
 
 #ifndef _WIN32
 TestMain("IPC Security Descriptor", {
-	atexit(nng_fini);
 	Convey("Given a socket and an IPC listener", {
 		nng_socket   s;
 		nng_listener l;
@@ -80,8 +79,6 @@ sdescAuthUsers(PSID sid, PACL *aclp)
 }
 
 TestMain("IPC Security Descriptor", {
-	atexit(nng_fini);
-
 	Convey("Given a socket and an IPC listener", {
 		nng_socket   s;
 		nng_listener l;

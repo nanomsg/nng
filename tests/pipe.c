@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -114,7 +114,6 @@ char       addr[64];
 static int cnt;
 
 TestMain("Pipe notify works", {
-	atexit(nng_fini);
 
 	Convey("We can create a pipeline", {
 		struct testcase push;

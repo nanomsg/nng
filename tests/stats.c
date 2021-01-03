@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -22,7 +22,6 @@
 #define SECONDS(x) ((x) *1000)
 
 TestMain("Stats Test", {
-	atexit(nng_fini);
 
 	Convey("We are able to open a PAIR socket", {
 		nng_socket s1;

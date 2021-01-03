@@ -64,7 +64,7 @@ if (NNG_TESTS)
     # are present.  It's not worth trying to figure out which of these
     # should work and which shouldn't.
     macro(add_nng_compat_test NAME TIMEOUT)
-        add_executable(${NAME} ${NAME}.c nuts_compat.c)
+        add_executable(${NAME} ${NAME}.c compat_testutil.c)
         target_link_libraries(${NAME} nng_testing)
         target_include_directories(${NAME} PRIVATE
                 ${PROJECT_SOURCE_DIR}/src/compat

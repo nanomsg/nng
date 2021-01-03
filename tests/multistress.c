@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -769,8 +769,6 @@ Main({
 	int   i;
 	char *str;
 	int   tmo;
-
-	atexit(nng_fini);
 
 	// Each run should truly be random.
 	srand((int) time(NULL));

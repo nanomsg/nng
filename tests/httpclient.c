@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -35,8 +35,6 @@ const uint8_t chunked_sum[20] = { 0x9b, 0x06, 0xfb, 0xee, 0x51, 0xc6, 0x42,
 	0x68 };
 
 TestMain("HTTP Client", {
-	atexit(nng_fini);
-
 	Convey("Given a TCP connection to example.com", {
 		nng_aio *        aio;
 		nng_http_client *cli;

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Garrett D'Amore <garrett@damore.org>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -23,8 +23,6 @@
 
 TestMain("BUS pattern", {
 	const char *addr = "inproc://test";
-
-	Reset({ nng_fini(); });
 
 	Convey("We can create a BUS socket", {
 		nng_socket bus;

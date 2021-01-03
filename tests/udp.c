@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -20,7 +20,6 @@
 
 TestMain("UDP support", {
 	nni_init();
-	atexit(nng_fini);
 
 	trantest_port = trantest_port ? trantest_port : 5555;
 

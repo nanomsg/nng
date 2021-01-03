@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -29,6 +29,13 @@ nni_init_helper(void)
 	nni_mtx_init(&nni_init_mtx);
 	NNI_LIST_INIT(&nni_init_list, nni_initializer, i_node);
 	nni_inited = true;
+#ifdef NNG_TEST_LIB
+	static bool cleanup = false;
+	if (!cleanup) {
+		atexit(nng_fini);
+		cleanup = true;
+	}
+#endif
 
 	if (((rv = nni_stat_sys_init()) != 0) ||
 	    ((rv = nni_taskq_sys_init()) != 0) ||

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -94,8 +94,6 @@ nng_socket reqs[NCLIENTS];
 nng_socket rep;
 
 TestMain("Nonblocking Works", {
-	atexit(nng_fini);
-
 	Convey("Running for 15 sec", {
 		nng_thread *server;
 		nng_thread *clients[NCLIENTS];

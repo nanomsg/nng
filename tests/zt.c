@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -130,7 +130,6 @@ TestMain("ZeroTier Transport", {
 	unsigned port;
 
 	port = 5555;
-	atexit(nng_fini);
 
 	Convey("We can register the zero tier transport",
 	    { So(nng_zt_register() == 0); });

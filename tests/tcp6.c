@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staystail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staystail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -92,6 +92,4 @@ TestMain("TCP (IPv6) Transport", {
 		So(nng_dial(s1, "tcp://::1:5055", NULL, 0) == NNG_EADDRINVAL);
 		So(nng_dial(s1, "tcp://[::1]", NULL, 0) == NNG_EADDRINVAL);
 	});
-
-	nng_fini();
 })

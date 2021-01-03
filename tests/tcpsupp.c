@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -16,7 +16,6 @@
 #include "stubs.h"
 
 TestMain("Supplemental TCP", {
-	atexit(nng_fini);
 	Convey("We can create a dialer and listener", {
 		nng_stream_dialer *  d = NULL;
 		nng_stream_listener *l = NULL;

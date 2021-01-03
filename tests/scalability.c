@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -41,14 +41,6 @@ serve(void *arg)
 		nng_msg_free(msg);
 	}
 	nng_close(rep);
-}
-
-void
-stop(void)
-{
-	nng_closeall();
-	nng_thread_destroy(server);
-	nng_fini();
 }
 
 int
@@ -97,8 +89,6 @@ Main({
 	nng_socket *clients;
 	int *       results;
 
-	atexit(stop);
-
 	clients = calloc(nclients, sizeof(nng_socket));
 	results = calloc(nclients, sizeof(int));
 
@@ -121,6 +111,9 @@ Main({
 			}
 		});
 	});
+
+	nng_close(rep);
+	nng_thread_destroy(server);
 
 	free(clients);
 	free(results);

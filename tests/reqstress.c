@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -269,8 +269,6 @@ Main({
 	int   i;
 	int   tmo;
 	char *str;
-
-	atexit(nng_fini);
 
 	if (((str = ConveyGetEnv("STRESSTIME")) == NULL) ||
 	    ((tmo = atoi(str)) < 1)) {

@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Dirac Research <robert.bielik@dirac.com>
 //
@@ -29,12 +29,6 @@ const char *doc1 = "<html><body>Someone <b>is</b> home!</body</html>";
 const char *doc2 = "This is a text file.";
 const char *doc3 = "<html><body>This is doc number 3.</body></html>";
 const char *doc4 = "<html><body>Whoops, Errored!</body></html>";
-
-void
-cleanup(void)
-{
-	nng_fini();
-}
 
 static int
 httpdo(nng_url *url, nng_http_req *req, nng_http_res *res, void **datap,
@@ -190,7 +184,6 @@ TestMain("HTTP Server", {
 	nng_http_handler *h;
 
 	nni_init();
-	atexit(cleanup);
 
 	Convey("We can start an HTTP server", {
 		nng_aio *aio;

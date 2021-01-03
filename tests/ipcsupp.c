@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -19,7 +19,6 @@
 static int num = 0;
 
 TestMain("Supplemental IPC", {
-	atexit(nng_fini);
 	Convey("We can create a dialer and listener", {
 		nng_stream_dialer *  d;
 		nng_stream_listener *l;

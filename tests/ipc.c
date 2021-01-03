@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -85,5 +85,4 @@ check_props(nng_msg *msg)
 
 TestMain("IPC Transport", {
 	trantest_test_extended("ipc:///tmp/nng_ipc_test_%u", check_props);
-	nng_fini();
 })
