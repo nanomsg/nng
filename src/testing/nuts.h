@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -131,15 +131,16 @@ extern const char *nuts_client_crt;
 		TEST_CHECK_(                                                \
 		    rv_ == 0, "nng_recv (%d %s)", rv_, nng_strerror(rv_));  \
 		TEST_CHECK_(sz_ == strlen(string) + 1, "length %d want %d", \
-		    sz_, strlen(string) + 1);                               \
+		    (int) sz_, (int) strlen(string) + 1);                   \
 		buf_[sizeof(buf_) - 1] = '\0';                              \
 		TEST_CHECK_(                                                \
 		    strcmp(string, buf_) == 0, "%s == %s", string, buf_);   \
 	} while (0)
 
-#define NUTS_MATCH(s1, s2)                                            \
-	do {                                                          \
-		TEST_CHECK_(strcmp(s1, s2) == 0, "%s == %s", s1, s2); \
+#define NUTS_MATCH(s1, s2)                                                \
+	do {                                                              \
+		TEST_CHECK_(strcmp(s1, s2) == 0, "%s == %s", (char *) s1, \
+		    (char *) s2);                                         \
 	} while (0)
 
 #define NUTS_NULL(x)                                       \
