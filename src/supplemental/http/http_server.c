@@ -751,14 +751,16 @@ finish:
 	nni_aio_set_input(sc->cbaio, 1, h);
 	nni_aio_set_input(sc->cbaio, 2, sc->conn);
 
+	// Set a reference -- this because the callback may be running
+	// asynchronously even after it gets removed from the server.
+	nni_atomic_inc64(&h->ref);
+
 	// Documented that we call this on behalf of the callback.
 	if (nni_aio_begin(sc->cbaio) != 0) {
 		nni_mtx_unlock(&s->mtx);
 		return;
 	}
-	// Set a reference -- this because the callback may be running
-	// asynchronously even after it gets removed from the server.
-	nni_atomic_inc64(&h->ref);
+
 	nni_mtx_unlock(&s->mtx);
 	h->cb(sc->cbaio);
 }
