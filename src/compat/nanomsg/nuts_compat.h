@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -7,8 +7,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifndef COMPAT_TESTUTIL_H
-#define COMPAT_TESTUTIL_H
+#ifndef NUTS_COMPAT_H
+#define NUTS_COMPAT_H
 
 #include <stdbool.h>
 #include <stdint.h>
@@ -20,9 +20,8 @@
 extern "C" {
 #endif
 
-// TEST_NNG_PASS tests for NNG success.  It reports the failure if it
-// did not.
-#define TEST_NN_PASS(cond)                                           \
+// NUTS_NN_PASS tests for NN success.  It reports the failure if it did not.
+#define NUTS_NN_PASS(cond)                                           \
 	do {                                                         \
 		int result_ = (cond);                                \
 		TEST_CHECK_(result_ >= 0, "%s succeeds", #cond);     \
@@ -30,22 +29,22 @@ extern "C" {
 		    nn_strerror(errno), errno);                      \
 	} while (0)
 
-#define TEST_NN_FAIL(cond, expect)                                       \
-	do {                                                             \
-		int result_ = (cond);                                    \
-		int err_    = errno;                                     \
-		TEST_CHECK_(result_ < 0, "%s did not succeed", #cond);   \
-		TEST_CHECK_(                                             \
-		    err_ = expect, "%s fails with %s", #cond, #expect);  \
-		TEST_MSG("%s: expected %s, got %s (%d)", #cond, #expect, \
-		    expect, nng_strerror(err_), result_);                \
+#define NUTS_NN_FAIL(cond, expect)                                            \
+	do {                                                                  \
+		int result_ = (cond);                                         \
+		int err_    = errno;                                          \
+		TEST_CHECK_(result_ < 0, "%s did not succeed", #cond);        \
+		TEST_CHECK_(                                                  \
+		    err_ == (expect), "%s fails with %s", #cond, #expect);    \
+		TEST_MSG("%s: expected %s, got %d / %d (%s)", #cond, #expect, \
+		    result_, (expect), nng_strerror(err_));                   \
 	} while (0)
 
 // These macros use some details of the socket and pipe which are not public.
 // We do that to facilitate testing.  Don't rely on this equivalence in your
 // own application code.
 
-#define TEST_NN_MARRY(s1, s2)         \
+#define NUTS_NN_MARRY(s1, s2)         \
 	do {                          \
 		nng_socket s1_, s2_;  \
 		s1_.id = s1;          \
@@ -54,21 +53,21 @@ extern "C" {
 		NUTS_MARRY(s1_, s2_); \
 	} while (0)
 
-#define TEST_NN_MARRY_EX(s1, s2, url, p1, p2)             \
+#define NUTS_NN_MARRY_EX(s1, s2, url, p1, p2)             \
 	do {                                              \
 		nng_socket s1_, s2_;                      \
 		nng_pipe   p1_, p2_;                      \
 		s1_.id = s1;                              \
 		s2_.id = s2;                              \
 		NUTS_MARRY_EX(s1_, s2_, url, &p1_, &p2_); \
-		p1 = p1_.id;                              \
-		p2 = p2_.id;                              \
-		NUTS_TRUE(p1 >= 0);                       \
-		NUTS_TRUE(p2 >= 0);                       \
+		(p1) = p1_.id;                            \
+		(p2) = p2_.id;                            \
+		NUTS_TRUE((p1) >= 0);                     \
+		NUTS_TRUE((p2) >= 0);                     \
 	} while (0)
 
 #ifdef __cplusplus
 };
 #endif
 
-#endif // COMPAT_TESTUTIL_H
+#endif // NUTS_COMPAT
