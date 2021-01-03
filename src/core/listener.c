@@ -209,6 +209,9 @@ nni_listener_bump_error(nni_listener *l, int err)
 		nni_stat_inc(&l->st_other, 1);
 		break;
 	}
+#else
+	NNI_ARG_UNUSED(l);
+	NNI_ARG_UNUSED(err);
 #endif
 }
 

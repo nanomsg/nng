@@ -608,6 +608,9 @@ nng_http_handler_collect_body(nng_http_handler *h, bool want, size_t len)
 	nni_http_handler_collect_body(h, want, len);
 	return (0);
 #else
+	NNI_ARG_UNUSED(h);
+	NNI_ARG_UNUSED(want);
+	NNI_ARG_UNUSED(len);
 	return (NNG_ENOTSUP);
 #endif
 }
@@ -926,6 +929,8 @@ nng_http_req_reset(nng_http_req *req)
 {
 #ifdef NNG_SUPP_HTTP
 	nni_http_req_reset(req);
+#else
+	NNI_ARG_UNUSED(req);
 #endif
 }
 
@@ -934,5 +939,7 @@ nng_http_res_reset(nng_http_res *res)
 {
 #ifdef NNG_SUPP_HTTP
 	nni_http_res_reset(res);
+#else
+	NNI_ARG_UNUSED(res);
 #endif
 }

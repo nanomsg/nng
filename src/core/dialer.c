@@ -219,6 +219,9 @@ nni_dialer_bump_error(nni_dialer *d, int err)
 		nni_stat_inc(&d->st_other, 1);
 		break;
 	}
+#else
+	NNI_ARG_UNUSED(d);
+	NNI_ARG_UNUSED(err);
 #endif
 }
 
