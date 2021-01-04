@@ -15,6 +15,7 @@ if (NNG_PLATFORM_POSIX)
 
     find_package(Threads REQUIRED)
     nng_link_libraries(Threads::Threads)
+    set_property(GLOBAL APPEND PROPERTY NNG_PKGS Threads)
 
     # Unconditionally declare the following feature test macros.  These are
     # needed for some platforms (glibc and SunOS/illumos) and are harmless

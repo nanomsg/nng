@@ -90,6 +90,7 @@ write_basic_package_version_file("${version_config}"
         VERSION ${NNG_PACKAGE_VERSION}
         COMPATIBILITY SameMajorVersion
         )
+get_property(NNG_PKGS GLOBAL PROPERTY NNG_PKGS)
 configure_package_config_file(${PROJECT_SOURCE_DIR}/cmake/${PROJECT_NAME}-config.cmake.in "${project_config}"
         INSTALL_DESTINATION "${CMAKE_INSTALL_LIBDIR}/cmake/${PROJECT_NAME}"
         PATH_VARS INCLUDE_INSTALL_DIRS)
