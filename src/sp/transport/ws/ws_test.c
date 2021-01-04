@@ -56,19 +56,16 @@ test_wild_card_port(void)
 	NUTS_OPEN(s5);
 	NUTS_OPEN(s6);
 	NUTS_PASS(nng_listen(s1, "ws://127.0.0.1:0/one", &l1, 0));
-	NUTS_PASS(
-	    nng_listener_get_int(l1, NNG_OPT_TCP_BOUND_PORT, &port1));
+	NUTS_PASS(nng_listener_get_int(l1, NNG_OPT_TCP_BOUND_PORT, &port1));
 	NUTS_TRUE(port1 != 0);
 	snprintf(ws_url, sizeof(ws_url), "ws4://127.0.0.1:%d/two", port1);
 	NUTS_PASS(nng_listen(s2, ws_url, &l2, 0));
-	NUTS_PASS(
-	    nng_listener_get_int(l2, NNG_OPT_TCP_BOUND_PORT, &port2));
+	NUTS_PASS(nng_listener_get_int(l2, NNG_OPT_TCP_BOUND_PORT, &port2));
 	NUTS_TRUE(port1 != 0);
 	NUTS_TRUE(port1 == port2);
 	// Now try a different wild card port.
 	NUTS_PASS(nng_listen(s3, "ws4://127.0.0.1:0/three", &l3, 0));
-	NUTS_PASS(
-	    nng_listener_get_int(l3, NNG_OPT_TCP_BOUND_PORT, &port3));
+	NUTS_PASS(nng_listener_get_int(l3, NNG_OPT_TCP_BOUND_PORT, &port3));
 	NUTS_TRUE(port3 != 0);
 	NUTS_TRUE(port3 != port1);
 
@@ -147,7 +144,9 @@ test_ws_recv_max(void)
 	nng_socket   s1;
 	nng_listener l;
 	size_t       sz;
-	char         *addr;
+	char *       addr;
+
+	memset(msg, 0, sizeof(msg)); // required to silence valgrind
 
 	NUTS_ADDR(addr, "ws");
 	NUTS_OPEN(s0);

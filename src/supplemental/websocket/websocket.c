@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -1510,6 +1510,12 @@ ws_handler(nni_aio *aio)
 	conn = nni_aio_get_input(aio, 2);
 	l    = nni_http_handler_get_data(h);
 
+	nni_mtx_lock(&l->mtx);
+	if (l->closed) {
+		status = NNG_HTTP_STATUS_SERVICE_UNAVAILABLE;
+		goto err;
+	}
+
 	// Now check the headers, etc.
 	if (strcmp(nni_http_req_get_version(req), "HTTP/1.1") != 0) {
 		status = NNG_HTTP_STATUS_HTTP_VERSION_NOT_SUPP;
@@ -1609,6 +1615,7 @@ ws_handler(nni_aio *aio)
 		if (rv != 0) {
 			nni_http_res_free(res);
 			nni_aio_finish_error(aio, rv);
+			nni_mtx_unlock(&l->mtx);
 			return;
 		}
 
@@ -1625,6 +1632,7 @@ ws_handler(nni_aio *aio)
 			nni_http_req_free(req);
 			nni_aio_set_output(aio, 0, res);
 			nni_aio_finish(aio, 0, 0);
+			nni_mtx_unlock(&l->mtx);
 			return;
 		}
 	}
@@ -1657,6 +1665,7 @@ ws_handler(nni_aio *aio)
 	(void) nni_http_hijack(conn);
 	nni_aio_set_output(aio, 0, NULL);
 	nni_aio_finish(aio, 0, 0);
+	nni_mtx_unlock(&l->mtx);
 	return;
 
 err:
@@ -1666,6 +1675,7 @@ err:
 		nni_aio_set_output(aio, 0, res);
 		nni_aio_finish(aio, 0, 0);
 	}
+	nni_mtx_unlock(&l->mtx);
 }
 
 static void

@@ -254,7 +254,7 @@ test_verify_works(void)
 	NUTS_PASS(nng_dialer_start(d, 0));
 	nng_msleep(100);
 
-	NUTS_PASS(nng_send(s1, "hello", 6, 0));
+	NUTS_SEND(s1, "hello");
 	NUTS_PASS(nng_recvmsg(s2, &msg, 0));
 	NUTS_ASSERT(msg != NULL);
 	NUTS_TRUE(nng_msg_len(msg) == 6);
