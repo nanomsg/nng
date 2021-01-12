@@ -64,6 +64,10 @@ test_reconnect(void)
 	// Close the listener
 	NUTS_PASS(nng_listener_close(l));
 
+	// We need to wait 100 ms, or so, to allow the receiver to
+	// the disconnect.
+	NUTS_SLEEP(100);
+
 	NUTS_PASS(nng_listen(s1, addr, &l, 0));
 	NUTS_SEND(s1, "again");
 	NUTS_RECV(s2, "again");

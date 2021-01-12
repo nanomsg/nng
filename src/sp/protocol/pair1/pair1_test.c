@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -144,6 +144,22 @@ test_mono_back_pressure(void)
 }
 
 void
+test_send_no_peer(void)
+{
+	nng_socket   s1;
+	nng_msg *    msg;
+	nng_duration to = 100;
+
+	NUTS_PASS(nng_pair1_open(&s1));
+	NUTS_PASS(nng_setopt_ms(s1, NNG_OPT_SENDTIMEO, to));
+
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_FAIL(nng_sendmsg(s1, msg, 0), NNG_ETIMEDOUT);
+	nng_msg_free(msg);
+	NUTS_CLOSE(s1);
+}
+
+void
 test_mono_raw_exchange(void)
 {
 	nng_socket s1;
@@ -210,8 +226,8 @@ test_mono_raw_header(void)
 
 	// Missing bits in the header
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
-	NUTS_PASS(nng_sendmsg(c1, msg, 0));
-	NUTS_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
+	NUTS_FAIL(nng_sendmsg(c1, msg, 0), NNG_EPROTO);
+	nng_msg_free(msg);
 
 	// Valid header works
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
@@ -226,14 +242,14 @@ test_mono_raw_header(void)
 	// Header with reserved bits set dropped
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_PASS(nng_msg_header_append_u32(msg, 0xDEAD0000));
-	NUTS_PASS(nng_sendmsg(c1, msg, 0));
-	NUTS_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
+	NUTS_FAIL(nng_sendmsg(c1, msg, 0), NNG_EPROTO);
+	nng_msg_free(msg);
 
 	// Header with no chance to add another hop gets dropped
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_PASS(nng_msg_header_append_u32(msg, 0xff));
-	NUTS_PASS(nng_sendmsg(c1, msg, 0));
-	NUTS_FAIL(nng_recvmsg(s1, &msg, 0), NNG_ETIMEDOUT);
+	NUTS_FAIL(nng_sendmsg(c1, msg, 0), NNG_EPROTO);
+	nng_msg_free(msg);
 
 	// With the same bits clear it works
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
@@ -247,6 +263,26 @@ test_mono_raw_header(void)
 
 	NUTS_CLOSE(s1);
 	NUTS_CLOSE(c1);
+}
+
+void
+test_pair1_send_closed_aio(void)
+{
+	nng_socket s1;
+	nng_aio *  aio;
+	nng_msg *  msg;
+
+	NUTS_PASS(nng_aio_alloc(&aio, NULL, NULL));
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+	NUTS_PASS(nng_pair1_open(&s1));
+	nng_aio_set_msg(aio, msg);
+	nng_aio_stop(aio);
+	nng_send_aio(s1, aio);
+	nng_aio_wait(aio);
+	NUTS_FAIL(nng_aio_result(aio), NNG_ECANCELED);
+	nng_msg_free(msg);
+	nng_aio_free(aio);
+	NUTS_PASS(nng_close(s1));
 }
 
 void
@@ -408,7 +444,7 @@ test_pair1_recv_garbage(void)
 
 	// ridiculous hop count
 	NUTS_PASS(nng_msg_alloc(&m, 0));
-	NUTS_PASS(nng_msg_append_u32(m, 0x1000));
+	NUTS_PASS(nng_msg_header_append_u32(m, 0x1000));
 	NUTS_PASS(nng_sendmsg(c, m, 0));
 	NUTS_FAIL(nng_recvmsg(s, &m, 0), NNG_ETIMEDOUT);
 
@@ -416,18 +452,176 @@ test_pair1_recv_garbage(void)
 	NUTS_CLOSE(s);
 }
 
+static void
+test_pair1_no_context(void)
+{
+	nng_socket s;
+	nng_ctx    ctx;
+
+	NUTS_PASS(nng_pair1_open(&s));
+	NUTS_FAIL(nng_ctx_open(&ctx, s), NNG_ENOTSUP);
+	NUTS_CLOSE(s);
+}
+
+static void
+test_pair1_send_buffer(void)
+{
+	nng_socket s;
+	int        v;
+	bool       b;
+	size_t     sz;
+
+	NUTS_PASS(nng_pair1_open(&s));
+	NUTS_PASS(nng_getopt_int(s, NNG_OPT_SENDBUF, &v));
+	NUTS_TRUE(v == 0);
+	NUTS_FAIL(nng_getopt_bool(s, NNG_OPT_SENDBUF, &b), NNG_EBADTYPE);
+	sz = 1;
+	NUTS_FAIL(nng_getopt(s, NNG_OPT_SENDBUF, &b, &sz), NNG_EINVAL);
+	NUTS_FAIL(nng_setopt_int(s, NNG_OPT_SENDBUF, -1), NNG_EINVAL);
+	NUTS_FAIL(nng_setopt_int(s, NNG_OPT_SENDBUF, 100000), NNG_EINVAL);
+	NUTS_FAIL(nng_setopt_bool(s, NNG_OPT_SENDBUF, false), NNG_EBADTYPE);
+	NUTS_FAIL(nng_setopt(s, NNG_OPT_SENDBUF, &b, 1), NNG_EINVAL);
+	NUTS_PASS(nng_setopt_int(s, NNG_OPT_SENDBUF, 100));
+	NUTS_PASS(nng_getopt_int(s, NNG_OPT_SENDBUF, &v));
+	NUTS_TRUE(v == 100);
+	NUTS_CLOSE(s);
+}
+
+static void
+test_pair1_recv_buffer(void)
+{
+	nng_socket s;
+	int        v;
+	bool       b;
+	size_t     sz;
+
+	NUTS_PASS(nng_pair1_open(&s));
+	NUTS_PASS(nng_getopt_int(s, NNG_OPT_RECVBUF, &v));
+	NUTS_TRUE(v == 0);
+	NUTS_FAIL(nng_getopt_bool(s, NNG_OPT_RECVBUF, &b), NNG_EBADTYPE);
+	sz = 1;
+	NUTS_FAIL(nng_getopt(s, NNG_OPT_RECVBUF, &b, &sz), NNG_EINVAL);
+	NUTS_FAIL(nng_setopt_int(s, NNG_OPT_RECVBUF, -1), NNG_EINVAL);
+	NUTS_FAIL(nng_setopt_int(s, NNG_OPT_RECVBUF, 100000), NNG_EINVAL);
+	NUTS_FAIL(nng_setopt_bool(s, NNG_OPT_RECVBUF, false), NNG_EBADTYPE);
+	NUTS_FAIL(nng_setopt(s, NNG_OPT_RECVBUF, &b, 1), NNG_EINVAL);
+	NUTS_PASS(nng_setopt_int(s, NNG_OPT_RECVBUF, 100));
+	NUTS_PASS(nng_getopt_int(s, NNG_OPT_RECVBUF, &v));
+	NUTS_TRUE(v == 100);
+	NUTS_CLOSE(s);
+}
+
+static void
+test_pair1_poll_readable(void)
+{
+	int        fd;
+	nng_socket s1;
+	nng_socket s2;
+
+	NUTS_PASS(nng_pair1_open(&s1));
+	NUTS_PASS(nng_pair1_open(&s2));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_get_int(s1, NNG_OPT_RECVFD, &fd));
+	NUTS_TRUE(fd >= 0);
+
+	// Not readable if not connected!
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+
+	// Even after connect (no message yet)
+	NUTS_MARRY(s1, s2);
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+
+	// But once we send messages, it is.
+	// We have to send a request, in order to send a reply.
+	NUTS_SEND(s2, "abc");
+	NUTS_SLEEP(100);
+	NUTS_TRUE(nuts_poll_fd(fd));
+
+	// and receiving makes it no longer ready
+	NUTS_RECV(s1, "abc");
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+
+	// also let's confirm handling when we shrink the buffer size.
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_RECVBUF, 1));
+	NUTS_SEND(s2, "def");
+	NUTS_SLEEP(100);
+	NUTS_TRUE(nuts_poll_fd(fd));
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_RECVBUF, 0));
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+	// growing doesn't magically make it readable either
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_RECVBUF, 10));
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+
+	NUTS_CLOSE(s1);
+	NUTS_CLOSE(s2);
+}
+
+static void
+test_pair1_poll_writable(void)
+{
+	int        fd;
+	nng_socket s1;
+	nng_socket s2;
+
+	NUTS_PASS(nng_pair1_open(&s1));
+	NUTS_PASS(nng_pair1_open(&s2));
+	NUTS_PASS(nng_socket_set_ms(s1, NNG_OPT_RECVTIMEO, 1000));
+	NUTS_PASS(nng_socket_set_ms(s2, NNG_OPT_SENDTIMEO, 1000));
+	NUTS_PASS(nng_socket_get_int(s1, NNG_OPT_SENDFD, &fd));
+	NUTS_TRUE(fd >= 0);
+
+	// Not writable if not connected!
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+
+	// But after connect, we can.
+	NUTS_MARRY(s1, s2);
+	NUTS_TRUE(nuts_poll_fd(fd));
+
+	// We are unbuffered.
+	NUTS_SEND(s1, "abc"); // first one in the receiver
+	NUTS_SEND(s1, "def"); // second one on the sending pipe
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+
+	// and receiving makes it ready
+	NUTS_RECV(s2, "abc");
+	NUTS_SLEEP(100); // time for the sender to complete
+	NUTS_TRUE(nuts_poll_fd(fd));
+
+	// close the peer for now.
+	NUTS_CLOSE(s2);
+	NUTS_SLEEP(100);
+
+	// resize up, makes us writable.
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_SENDBUF, 1));
+	NUTS_TRUE(nuts_poll_fd(fd));
+	// resize down and we aren't anymore.
+	NUTS_PASS(nng_socket_set_int(s1, NNG_OPT_SENDBUF, 0));
+	NUTS_TRUE(nuts_poll_fd(fd) == false);
+
+	NUTS_CLOSE(s1);
+}
+
 NUTS_TESTS = {
 	{ "pair1 mono identity", test_mono_identity },
 	{ "pair1 mono cooked", test_mono_cooked },
 	{ "pair1 mono faithful", test_mono_faithful },
 	{ "pair1 mono back pressure", test_mono_back_pressure },
+	{ "pair1 send no peer", test_send_no_peer },
 	{ "pair1 mono raw exchange", test_mono_raw_exchange },
 	{ "pair1 mono raw header", test_mono_raw_header },
+	{ "pair1 send closed aio", test_pair1_send_closed_aio },
 	{ "pair1 raw", test_pair1_raw },
 	{ "pair1 ttl", test_pair1_ttl },
 	{ "pair1 validate peer", test_pair1_validate_peer },
 	{ "pair1 recv no header", test_pair1_recv_no_header },
 	{ "pair1 recv garbage", test_pair1_recv_garbage },
+	{ "pair1 no context", test_pair1_no_context },
+	{ "pair1 send buffer", test_pair1_send_buffer },
+	{ "pair1 recv buffer", test_pair1_recv_buffer },
+	{ "pair1 poll readable", test_pair1_poll_readable },
+	{ "pair1 poll writable", test_pair1_poll_writable },
 
 	{ NULL, NULL },
 };

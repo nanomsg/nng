@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -326,6 +326,12 @@ nni_msg_unique(nni_msg *m)
 	return (m2);
 }
 
+bool
+nni_msg_shared(nni_msg *m)
+{
+	return (nni_atomic_get(&m->m_refcnt) > 1);
+}
+
 // nni_msg_pull_up ensures that the message is unique, and that any header
 // is merged with the message.  The main purpose of doing this is to break
 // up the inproc binding -- protocols send messages to inproc with a
@@ -573,6 +579,24 @@ nni_msg_header_append_u32(nni_msg *m, uint32_t val)
 	dst += m->m_header_len;
 	NNI_PUT32(dst, val);
 	m->m_header_len += sizeof(val);
+}
+
+uint32_t
+nni_msg_header_peek_u32(nni_msg *m)
+{
+	uint32_t val;
+	uint8_t *dst;
+	dst = (void *) m->m_header_buf;
+	NNI_GET32(dst, val);
+	return (val);
+}
+
+void
+nni_msg_header_poke_u32(nni_msg *m, uint32_t val)
+{
+	uint8_t *dst;
+	dst = (void *) m->m_header_buf;
+	NNI_PUT32(dst, val);
 }
 
 void
