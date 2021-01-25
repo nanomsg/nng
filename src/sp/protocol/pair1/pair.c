@@ -374,7 +374,7 @@ pair1_send_sched(pair1_sock *s)
 	pair1_pipe *p;
 	nni_msg *   m;
 	nni_aio *   a = NULL;
-	size_t      l;
+	size_t      l = 0;
 
 	nni_mtx_lock(&s->mtx);
 

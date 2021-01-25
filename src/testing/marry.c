@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -220,7 +220,7 @@ replace_port_zero(const char *addr, char *buf, int port)
 {
 	int  i;
 	int  j;
-	bool colon;
+	bool colon = false;
 	char c;
 
 	for (i = 0, j = 0; (c = addr[i]) != '\0'; i++) {
