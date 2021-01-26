@@ -96,10 +96,12 @@ void
 test_tcp_bad_local_interface(void)
 {
 	nng_socket s1;
+	int rv;
 
 	NUTS_OPEN(s1);
-	NUTS_FAIL(nng_dial(s1, "tcp://bogus1;127.0.0.1:80", NULL, 0),
-	    NNG_EADDRINVAL);
+	rv = nng_dial(s1, "tcp://bogus1;127.0.0.1:80", NULL, 0),
+	NUTS_TRUE(rv != 0);
+	NUTS_TRUE(rv != NNG_ECONNREFUSED);
 	NUTS_CLOSE(s1);
 }
 

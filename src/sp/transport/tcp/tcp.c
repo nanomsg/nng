@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -84,12 +84,12 @@ static void tcptran_pipe_fini(void *);
 
 static nni_reap_list tcptran_ep_reap_list = {
 	.rl_offset = offsetof(tcptran_ep, reap),
-	.rl_func = tcptran_ep_fini,
+	.rl_func   = tcptran_ep_fini,
 };
 
 static nni_reap_list tcptran_pipe_reap_list = {
-	.rl_offset = offsetof (tcptran_pipe, reap),
-	.rl_func = tcptran_pipe_fini,
+	.rl_offset = offsetof(tcptran_pipe, reap),
+	.rl_func   = tcptran_pipe_fini,
 };
 
 static int
@@ -745,6 +745,7 @@ tcptran_url_parse_source(nng_url *url, nng_sockaddr *sa, const nng_url *surl)
 
 	nni_resolv_ip(src, "0", af, true, sa, aio);
 	nni_aio_wait(aio);
+	rv = nni_aio_result(aio);
 	nni_aio_free(aio);
 	nni_free(src, len + 1);
 	return (rv);
