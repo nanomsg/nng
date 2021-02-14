@@ -167,9 +167,7 @@ conn_fini(nng_tls_engine_conn *ec)
 	mbedtls_ssl_free(&ec->ctx);
 }
 
-// The common code should call this only after it has released
-// it's upper layer stuff.
-int
+static int
 conn_init(nng_tls_engine_conn *ec, void *tls, nng_tls_engine_config *cfg)
 {
 	int rv;
