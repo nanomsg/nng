@@ -24,6 +24,10 @@
 #include <time.h>
 #include <unistd.h>
 
+#ifdef NNG_PLATFORM_OPENBSD
+#include <pthread_np.h>
+#endif
+
 #ifdef NNG_SETSTACKSIZE
 #include <limits.h>
 #include <sys/resource.h>
