@@ -682,6 +682,9 @@ void
 nni_sleep_aio(nng_duration ms, nng_aio *aio)
 {
 	int rv;
+	if (aio->a_stop == true) {
+		return;
+	}
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
