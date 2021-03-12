@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -242,6 +242,114 @@ test_aio_reap(void)
 	nng_msleep(100);
 }
 
+typedef struct sleep_loop {
+	nng_aio *    aio;
+	int          limit;
+	int          count;
+	int          result;
+	bool         done;
+	nng_duration interval;
+	nng_cv *     cv;
+	nng_mtx *    mx;
+} sleep_loop;
+
+static void
+aio_sleep_loop(void *arg)
+{
+	sleep_loop *sl = arg;
+	nng_mtx_lock(sl->mx);
+	if (nng_aio_result(sl->aio) != 0) {
+		printf("HERE!\n");
+		sl->result = nng_aio_result(sl->aio);
+		sl->done   = true;
+		nng_cv_wake(sl->cv);
+		nng_mtx_unlock(sl->mx);
+		return;
+	}
+	sl->count++;
+	if (sl->count >= sl->limit) {
+		sl->done   = true;
+		sl->result = 0;
+		nng_cv_wake(sl->cv);
+		nng_mtx_unlock(sl->mx);
+		return;
+	}
+	nng_mtx_unlock(sl->mx);
+	nng_sleep_aio(sl->interval, sl->aio);
+}
+
+void
+test_sleep_loop(void)
+{
+	sleep_loop   sl;
+	nng_time     start;
+	nng_duration dur;
+
+	sl.limit    = 3;
+	sl.count    = 0;
+	sl.interval = 50; // ms
+	sl.done     = false;
+
+	NUTS_PASS(nng_aio_alloc(&sl.aio, aio_sleep_loop, &sl));
+	NUTS_PASS(nng_mtx_alloc(&sl.mx));
+	NUTS_PASS(nng_cv_alloc(&sl.cv, sl.mx));
+
+	start = nng_clock();
+	nng_sleep_aio(50, sl.aio);
+	nng_mtx_lock(sl.mx);
+	while (!sl.done) {
+		nng_cv_until(sl.cv, 2000);
+	}
+	nng_mtx_unlock(sl.mx);
+	dur = nng_clock() - start;
+	NUTS_ASSERT(dur >= 150);
+	NUTS_ASSERT(dur <= 500); // allow for sloppy clocks
+	NUTS_ASSERT(sl.done);
+	NUTS_PASS(sl.result);
+	NUTS_ASSERT(sl.count == 3);
+
+	nng_aio_free(sl.aio);
+	nng_cv_free(sl.cv);
+	nng_mtx_free(sl.mx);
+}
+
+void
+test_sleep_cancel(void)
+{
+	sleep_loop   sl;
+	nng_time     start;
+	nng_duration dur;
+
+	sl.limit    = 10;
+	sl.count    = 0;
+	sl.interval = 50; // ms
+	sl.done     = false;
+
+	NUTS_PASS(nng_aio_alloc(&sl.aio, aio_sleep_loop, &sl));
+	NUTS_PASS(nng_mtx_alloc(&sl.mx));
+	NUTS_PASS(nng_cv_alloc(&sl.cv, sl.mx));
+
+	start = nng_clock();
+	nng_sleep_aio(50, sl.aio);
+	nng_msleep(75);
+	nng_aio_cancel(sl.aio);
+	nng_mtx_lock(sl.mx);
+	while (!sl.done) {
+		nng_cv_until(sl.cv, 2000);
+	}
+	nng_mtx_unlock(sl.mx);
+	dur = nng_clock() - start;
+	NUTS_ASSERT(dur >= 50);
+	NUTS_ASSERT(dur <= 200); // allow for sloppy clocks
+	NUTS_ASSERT(sl.done);
+	NUTS_FAIL(sl.result, NNG_ECANCELED);
+	NUTS_ASSERT(sl.count == 1);
+
+	nng_aio_free(sl.aio);
+	nng_cv_free(sl.cv);
+	nng_mtx_free(sl.mx);
+}
+
 NUTS_TESTS = {
 	{ "sleep", test_sleep },
 	{ "sleep timeout", test_sleep_timeout },
@@ -253,5 +361,7 @@ NUTS_TESTS = {
 	{ "inherited timeout", test_inherited_timeout },
 	{ "zero timeout", test_zero_timeout },
 	{ "aio reap", test_aio_reap },
+	{ "sleep loop", test_sleep_loop },
+	{ "sleep cancel", test_sleep_cancel },
 	{ NULL, NULL },
 };
