@@ -493,7 +493,9 @@ sub0_ctx_subscribe(void *arg, const void *buf, size_t sz, nni_type t)
 		NNI_FREE_STRUCT(new_topic);
 		return (NNG_ENOMEM);
 	}
-	memcpy(new_topic->buf, buf, sz);
+	if (buf && new_topic->buf) {
+		memcpy(new_topic->buf, buf, sz);
+	}
 	new_topic->len = sz;
 	nni_list_append(&ctx->topics, new_topic);
 	nni_mtx_unlock(&sock->lk);
