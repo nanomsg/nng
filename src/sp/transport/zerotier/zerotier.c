@@ -1843,7 +1843,7 @@ zt_pipe_send(void *arg, nni_aio *aio)
 
 	msg_header_len = nni_msg_header_len(m);
 	msg_len = nni_msg_len(m);
-	bytes = nni_msg_header_len(m) + msg_len;
+	bytes = msg_header_len + msg_len;
 	if (bytes >= (0xfffe * fragsz)) {
 		nni_aio_finish_error(aio, NNG_EMSGSIZE);
 		nni_mtx_unlock(&zt_lk);
