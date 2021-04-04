@@ -90,11 +90,11 @@ server(const char *url)
 		printf("The server and client instances must run in separate directories.\n");
 		nng_listener_setopt_string(listener, NNG_OPT_ZT_HOME, ".");
 		nng_listener_setopt_ms(listener, NNG_OPT_RECONNMINT, 1);
-                nng_listener_setopt_ms(listener, NNG_OPT_RECONNMAXT, 1000);
+		nng_listener_setopt_ms(listener, NNG_OPT_RECONNMAXT, 1000);
 		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
 		nng_setopt_ms(sock, NNG_OPT_RECVMAXSZ, 0);
-                nng_listener_setopt_ms(listener, NNG_OPT_ZT_PING_TIME, 10000);
-                nng_listener_setopt_ms(listener, NNG_OPT_ZT_CONN_TIME, 1000);
+		nng_listener_setopt_ms(listener, NNG_OPT_ZT_PING_TIME, 10000);
+		nng_listener_setopt_ms(listener, NNG_OPT_ZT_CONN_TIME, 1000);
 	} else {
 		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
 	}
@@ -160,11 +160,11 @@ client(const char *url)
 		printf("The server and client instances must run in separate directories.\n");
 		nng_dialer_setopt_string(dialer, NNG_OPT_ZT_HOME, ".");
 		nng_dialer_setopt_ms(dialer, NNG_OPT_RECONNMINT, 1);
-                nng_dialer_setopt_ms(dialer, NNG_OPT_RECONNMAXT, 1000);
+		nng_dialer_setopt_ms(dialer, NNG_OPT_RECONNMAXT, 1000);
 		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
 		nng_setopt_ms(sock, NNG_OPT_RECVMAXSZ, 0);
-                nng_dialer_setopt_ms(dialer, NNG_OPT_ZT_PING_TIME, 10000);
-                nng_dialer_setopt_ms(dialer, NNG_OPT_ZT_CONN_TIME, 1000);
+		nng_dialer_setopt_ms(dialer, NNG_OPT_ZT_PING_TIME, 10000);
+		nng_dialer_setopt_ms(dialer, NNG_OPT_ZT_CONN_TIME, 1000);
 	} else {
 		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
 	}
