@@ -1,6 +1,6 @@
 //
+// Copyright 2021 Capitar IT Group BV <info@capitar.com>
 // Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -57,6 +57,7 @@ typedef struct zt_ep       zt_ep;
 typedef struct zt_node     zt_node;
 typedef struct zt_frag     zt_frag;
 typedef struct zt_fraglist zt_fraglist;
+
 
 // Port numbers are stored as 24-bit values in network byte order.
 #define ZT_GET24(ptr, v)                              \
@@ -205,7 +206,7 @@ struct zt_pipe {
 	nni_aio *       zp_ping_aio;
 	uint8_t *       zp_send_buf;
 	nni_atomic_flag zp_reaped;
-	nni_reap_item   zp_reap;
+	nni_reap_node   zp_reap;
 };
 
 typedef struct zt_creq zt_creq;
@@ -895,6 +896,7 @@ zt_pipe_recv_data(zt_pipe *p, const uint8_t *data, size_t len)
 		memset(fl->fl_missing, 0xff, nfrags / 8);
 		fl->fl_missing[nfrags / 8] |= ((1 << (nfrags % 8)) - 1);
 	}
+
 	if ((nfrags != fl->fl_nfrags) || (fragsz != fl->fl_fragsz) ||
 	    (fragno >= nfrags) || (fragsz == 0) || (nfrags == 0) ||
 	    ((fragno != (nfrags - 1)) && (len != fragsz))) {
@@ -1340,7 +1342,6 @@ zt_wire_packet_send(ZT_Node *node, void *userptr, void *thr, int64_t socket,
 	buf += sizeof(*hdr);
 
 	memcpy(buf, data, len);
-	nni_aio_set_data(aio, 0, hdr);
 	hdr->sa  = addr;
 	hdr->len = len;
 	nni_aio_set_input(aio, 0, &hdr->sa);
@@ -1713,11 +1714,16 @@ zt_pipe_fini(void *arg)
 	NNI_FREE_STRUCT(p);
 }
 
+static nni_reap_list zt_reap_list = {
+       .rl_offset = offsetof(zt_pipe, zp_reap),
+       .rl_func   = zt_pipe_fini,
+};
+
 static void
 zt_pipe_reap(zt_pipe *p)
 {
 	if (!nni_atomic_flag_test_and_set(&p->zp_reaped)) {
-		nni_reap(&p->zp_reap, zt_pipe_fini, p);
+		nni_reap(&zt_reap_list, p);
 	}
 }
 
@@ -1812,6 +1818,8 @@ zt_pipe_send(void *arg, nni_aio *aio)
 	uint16_t fragno;
 	size_t   fragsz;
 	size_t   bytes;
+	size_t   msg_header_len;
+	size_t   msg_len;
 	nni_msg *m;
 
 	if (nni_aio_begin(aio) != 0) {
@@ -1833,7 +1841,9 @@ zt_pipe_send(void *arg, nni_aio *aio)
 	fragsz = p->zp_mtu - zt_offset_data_data;
 	NNI_ASSERT(fragsz < 0x10000); // Because zp_mtu is 16 bits
 
-	bytes = nni_msg_header_len(m) + nni_msg_len(m);
+	msg_header_len = nni_msg_header_len(m);
+	msg_len = nni_msg_len(m);
+	bytes = nni_msg_header_len(m) + msg_len;
 	if (bytes >= (0xfffe * fragsz)) {
 		nni_aio_finish_error(aio, NNG_EMSGSIZE);
 		nni_mtx_unlock(&zt_lk);
@@ -1856,29 +1866,27 @@ zt_pipe_send(void *arg, nni_aio *aio)
 		size_t   len;
 
 		// Prepend the header first.
-		if ((len = nni_msg_header_len(m)) > 0) {
-			if (len > fragsz) {
+		if ( (!offset)  && (msg_header_len > 0)) {
+			if (msg_header_len > fragsz) {
 				// This shouldn't happen!  SP headers are
 				// supposed to be quite small.
 				nni_aio_finish_error(aio, NNG_EMSGSIZE);
 				nni_mtx_unlock(&zt_lk);
 				return;
 			}
-			memcpy(dest, nni_msg_header(m), len);
-			dest += len;
-			room -= len;
-			offset += len;
-			fraglen += len;
-			nni_msg_header_clear(m);
+			memcpy(dest, nni_msg_header(m), msg_header_len);
+			dest += msg_header_len;
+			room -= msg_header_len;
+			offset += msg_header_len;
+			fraglen += msg_header_len;
 		}
 
-		len = nni_msg_len(m);
+		len = msg_header_len + msg_len - offset;
 		if (len > room) {
 			len = room;
 		}
-		memcpy(dest, nni_msg_body(m), len);
+		memcpy(dest, nni_msg_body(m) + offset - msg_header_len, len);
 
-		nng_msg_trim(m, len);
 		NNI_PUT16(data + zt_offset_data_id, id);
 		NNI_PUT16(data + zt_offset_data_fragsz, (uint16_t) fragsz);
 		NNI_PUT16(data + zt_offset_data_frag, fragno);
@@ -1888,7 +1896,7 @@ zt_pipe_send(void *arg, nni_aio *aio)
 		fragno++;
 		zt_send(p->zp_ztn, p->zp_nwid, zt_op_data, p->zp_raddr,
 		    p->zp_laddr, data, fraglen + zt_offset_data_data);
-	} while (nni_msg_len(m) != 0);
+	} while (msg_header_len  + msg_len -offset != 0);
 	nni_mtx_unlock(&zt_lk);
 
 	// NB, We never bothered to call nn_aio_sched, because we run this
@@ -2789,7 +2797,7 @@ zt_ep_set_clear_local_addrs(void *arg, const void *data, size_t sz, nni_type t)
 		nni_mtx_unlock(&zt_lk);
 		return (rv);
 	}
-	zn = ep->ze_ztn;
+	zn = ep->ze_ztn->zn_znode;
 	ZT_Node_clearLocalInterfaceAddresses(zn);
 	nni_mtx_unlock(&zt_lk);
 	return (0);
