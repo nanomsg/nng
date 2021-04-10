@@ -1,6 +1,6 @@
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
-// Copyright 2018 Capitar IT Group BV <info@capitar.com>
+// Copyright 2021 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -26,6 +26,8 @@
 #include <nng/nng.h>
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
+#include <nng/transport/zerotier/zerotier.h>
+#include <nng/supplemental/util/platform.h>
 
 #define CLIENT "client"
 #define SERVER "server"
@@ -71,18 +73,38 @@ int
 server(const char *url)
 {
 	nng_socket sock;
+	nng_listener listener;
 	int        rv;
+	int        count = 0;
 
 	if ((rv = nng_rep0_open(&sock)) != 0) {
 		fatal("nng_rep0_open", rv);
 	}
-	if ((rv = nng_listen(sock, url, NULL, 0)) != 0) {
-		fatal("nng_listen", rv);
+
+	if ((rv = nng_listener_create(&listener, sock, url)) != 0) {
+		fatal("nng_listener_create", rv);
 	}
+
+	if (strncmp(url, "zt://", 5) == 0) {
+		printf("ZeroTier transport will store its keys in current working directory.\n");
+		printf("The server and client instances must run in separate directories.\n");
+		nng_listener_setopt_string(listener, NNG_OPT_ZT_HOME, ".");
+		nng_listener_setopt_ms(listener, NNG_OPT_RECONNMINT, 1);
+		nng_listener_setopt_ms(listener, NNG_OPT_RECONNMAXT, 1000);
+		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
+		nng_setopt_ms(sock, NNG_OPT_RECVMAXSZ, 0);
+		nng_listener_setopt_ms(listener, NNG_OPT_ZT_PING_TIME, 10000);
+		nng_listener_setopt_ms(listener, NNG_OPT_ZT_CONN_TIME, 1000);
+	} else {
+		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
+	}
+	nng_listener_start(listener, 0);
+
 	for (;;) {
 		char *   buf = NULL;
 		size_t   sz;
 		uint64_t val;
+		count++;
 		if ((rv = nng_recv(sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0) {
 			fatal("nng_recv", rv);
 		}
@@ -91,6 +113,11 @@ server(const char *url)
 			time_t now;
 			printf("SERVER: RECEIVED DATE REQUEST\n");
 			now = time(&now);
+			if (count == 6) {
+				printf("SERVER: SKIP SENDING REPLY\n");
+				nng_free(buf, sz);
+				continue;
+			}
 			printf("SERVER: SENDING DATE: ");
 			showdate(now);
 
@@ -111,34 +138,62 @@ int
 client(const char *url)
 {
 	nng_socket sock;
+	nng_dialer dialer;
 	int        rv;
 	size_t     sz;
 	char *     buf = NULL;
 	uint8_t    cmd[sizeof(uint64_t)];
+	int        sleep = 0;
 
 	PUT64(cmd, DATECMD);
 
 	if ((rv = nng_req0_open(&sock)) != 0) {
 		fatal("nng_socket", rv);
 	}
-	if ((rv = nng_dial(sock, url, NULL, 0)) != 0) {
-		fatal("nng_dial", rv);
-	}
-	printf("CLIENT: SENDING DATE REQUEST\n");
-	if ((rv = nng_send(sock, cmd, sizeof(cmd), 0)) != 0) {
-		fatal("nng_send", rv);
-	}
-	if ((rv = nng_recv(sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0) {
-		fatal("nng_recv", rv);
+
+	if ((rv = nng_dialer_create(&dialer, sock, url)) != 0) {
+		fatal("nng_dialer_create", rv);
 	}
 
-	if (sz == sizeof(uint64_t)) {
-		uint64_t now;
-		GET64(buf, now);
-		printf("CLIENT: RECEIVED DATE: ");
-		showdate((time_t) now);
+	if (strncmp(url, "zt://", 5) == 0) {
+		printf("ZeroTier transport will store its keys in current working directory\n");
+		printf("The server and client instances must run in separate directories.\n");
+		nng_dialer_setopt_string(dialer, NNG_OPT_ZT_HOME, ".");
+		nng_dialer_setopt_ms(dialer, NNG_OPT_RECONNMINT, 1);
+		nng_dialer_setopt_ms(dialer, NNG_OPT_RECONNMAXT, 1000);
+		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
+		nng_setopt_ms(sock, NNG_OPT_RECVMAXSZ, 0);
+		nng_dialer_setopt_ms(dialer, NNG_OPT_ZT_PING_TIME, 10000);
+		nng_dialer_setopt_ms(dialer, NNG_OPT_ZT_CONN_TIME, 1000);
 	} else {
-		printf("CLIENT: GOT WRONG SIZE!\n");
+		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
+	}
+
+	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
+
+	while (1) {
+
+		printf("CLIENT: SENDING DATE REQUEST\n");
+		if ((rv = nng_send(sock, cmd, sizeof(cmd), 0)) != 0) {
+			fatal("nng_send", rv);
+		}
+		if ((rv = nng_recv(sock, &buf, &sz, NNG_FLAG_ALLOC)) != 0) {
+			fatal("nng_recv", rv);
+		}
+
+		if (sz == sizeof(uint64_t)) {
+			uint64_t now;
+			GET64(buf, now);
+			printf("CLIENT: RECEIVED DATE: ");
+			showdate((time_t) now);
+		} else {
+			printf("CLIENT: GOT WRONG SIZE!\n");
+		}
+		nng_msleep(sleep);
+		sleep++;
+		if (sleep == 4) {
+			sleep = 4000;
+		}
 	}
 
 	// This assumes that buf is ASCIIZ (zero terminated).
