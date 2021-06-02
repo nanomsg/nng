@@ -1,6 +1,6 @@
 = nng_aio_alloc(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -33,6 +33,12 @@ It will be called with the argument _arg_.
 NOTE: The callback _callb_ must not perform any blocking operations, and
 must complete its execution quickly.  If _callb_ does block, this can
 lead ultimately to an apparent "hang" or deadlock in the application.
+This also means you should avoid operations such as allocating new objects,
+which also means opening or closing sockets, dialers, and so forth.
+
+TIP: If more complex or blocking work needs to be performed by _callb_, a separate
+thread can be used, along with a xref:nng_cv_alloc.3.adoc[condition variable]
+which can be signaled by the callback.
 
 Asynchronous I/O operations all take an xref:nng_aio.5.adoc[`nng_aio`]
 handle such as allocated by this function.
