@@ -232,9 +232,9 @@ Messages sent by an application may be buffered by the socket until a
 transport is ready to accept them for delivery.
 This value must be an integer between 0 and 8192, inclusive.
 +
-NOTE: Not all protocols support buffering sent messages;
-generally multicast protocols like xref:nng_pub.7.adoc[_pub_] will
-simply discard messages when they cannot be delivered immediately.
+NOTE: Not all protocols support buffering sent messages.
+For example, xref:nng_req.7.adoc[_req_] can only have a single request
+outstanding at a time (per context).
 
 [[NNG_OPT_SENDFD]]
 ((`NNG_OPT_SENDFD`))::
