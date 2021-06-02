@@ -40,7 +40,7 @@ structures, which have the following definition:
 The _iov_ is copied into storage in the _aio_ itself, so that callers may use stack allocated `nng_iov` structures.
 The values pointed to by the `iov_buf` members are *not* copied by this function though.
 
-A maximum of eight (8) `nng_iov` members may be supplied.
+A maximum of four (4) `nng_iov` members may be supplied.
 
 NOTE: Earlier versions of the library could accept longer scatter-gather lists.
 However, no known consumers have ever needed a scatter-gather list longer than 4 vectors.
