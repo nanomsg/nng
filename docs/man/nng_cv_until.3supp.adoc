@@ -1,6 +1,6 @@
 = nng_cv_until(3supp)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -49,9 +49,10 @@ The following example demonstrates use of this function:
 [source, c]
 ----
 
+    expire = nng_clock() + 1000; // 1 second in the future
     nng_mtx_lock(m);  // assume cv was allocated using m
     while (!condition_true) {
-        if (nng_cv_wait(cv) == NNG_ETIMEDOUT) {
+        if (nng_cv_until(cv, expire) == NNG_ETIMEDOUT) {
             printf("Time out reached!\n");
             break;
         }
