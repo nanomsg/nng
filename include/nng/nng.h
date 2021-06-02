@@ -151,7 +151,7 @@ struct nng_sockaddr_abstract {
 // larger than this without breaking binary compatibility.
 struct nng_sockaddr_storage {
 	uint16_t sa_family;
-	uint16_t sa_pad[64];
+	uint64_t sa_pad[16];
 };
 
 typedef struct nng_sockaddr_inproc   nng_sockaddr_inproc;
