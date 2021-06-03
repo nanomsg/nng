@@ -29,7 +29,7 @@ struct nni_proto_pipe_ops {
 	// code allocates this memory for the protocol private state.
 	size_t pipe_size;
 
-	// pipe_init2 initializes the protocol-specific pipe data structure.
+	// pipe_init initializes the protocol-specific pipe data structure.
 	// The last argument is the per-socket protocol private data.
 	int (*pipe_init)(void *, nni_pipe *, void *);
 
@@ -91,7 +91,7 @@ struct nni_proto_sock_ops {
 	// code allocates this memory for the protocol private state.
 	size_t sock_size;
 
-	// sock_init2 initializes the protocol instance, which will be stored
+	// sock_init initializes the protocol instance, which will be stored
 	// on the socket. This is run without the sock lock held.
 	int (*sock_init)(void *, nni_sock *);
 
@@ -153,7 +153,7 @@ struct nni_proto {
 // the old version around -- it may be possible to automatically convert
 // older versions in the future.
 #define NNI_PROTOCOL_V0 0x50520000u // "pr\0\0"
-#define NNI_PROTOCOL_V1 0x50520001u // "pr\0\0"
+#define NNI_PROTOCOL_V1 0x50520001u // "pr\0\1"
 #define NNI_PROTOCOL_VERSION NNI_PROTOCOL_V1
 
 // These flags determine which operations make sense.  We use them so that
@@ -201,6 +201,7 @@ extern int nni_proto_open(nng_socket *, const nni_proto *);
 // RESPONDENTv0  6   3  respondent
 // BUSv0         7   0  bus
 // STARv0      100   0  star       mangos only, experimental
+//
 
 extern int  nni_proto_sys_init(void);
 extern void nni_proto_sys_fini(void);
