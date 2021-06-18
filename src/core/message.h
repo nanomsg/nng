@@ -62,4 +62,48 @@ extern bool     nni_msg_shared(nni_msg *);
 // original message in that case (same semantics as realloc).
 extern nni_msg *nni_msg_pull_up(nni_msg *);
 
+// Message option handling.  Message options are intended for protocol
+// specific use.  For this reason, their API is not made public -- instead
+// protocols should provide protocol specific functions for accessing them.
+// Note that manipulation of message options must not be performed while the
+// message is shared.  If a copy is made with nni_msg_unique(), then the
+// options will be cloned appropriately.
+
+// nni_msg_set_opt sets a given option.  This will replace another option
+// on the message set using the same name.  The supplied functions are
+// used when freeing the message, or when duplicating the message.
+// If the value was created using nni_alloc, then nni_free and nni_mem_dup
+// can be supplied.  Note that the message must not be shared when this
+// is called.
+//
+// NB: It is possible to use a non-NULL dup function, but have a NULL
+// free function.  This is appropriate if the content of the buffer is
+// located in the message header, for example.
+extern int nni_msg_set_opt(nng_msg *, const char *, void *, size_t,
+    void (*)(void *, size_t), int (*)(void **, void *, size_t));
+
+// nni_msg_add_opt adds a given option, regardless of whether another
+// instance of the option with the same name exists. In all other respects
+// it behaves like nng_msg_set_opt.
+extern int nni_msg_add_opt(nng_msg *, const char *, void *, size_t,
+    void (*)(void *, size_t), int (*)(void **, void *, size_t));
+
+// nni_msg_rem_opt removes any (and all) instances of the named option
+// from the message. It returns zero if any instances are removed, or
+// NNG_ENOENT if no instance of the option was found on the message.
+// The message must not be shared.
+extern int nni_msg_rem_opt(nng_msg *, const char *);
+
+// nni_msg_get_opt is used to get the first instance of a message option.
+// If the option cannot be found, then NNG_ENOENT is returned.
+extern int nni_msg_get_opt(nng_msg *, const char *, void **, size_t *);
+
+// nni_msg_walk_opt is used to iterate over all options with a function.
+// The called function should return true to keep iterating, or false
+// to stop the iteration.  The argument is supplied as the first parameter
+// to the function.
+extern void
+nni_msg_walk_opt(
+    nng_msg *, void *, bool (*)(void *, const char *, void *, size_t))
+
 #endif // CORE_SOCKET_H
