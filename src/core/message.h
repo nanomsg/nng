@@ -62,48 +62,33 @@ extern bool     nni_msg_shared(nni_msg *);
 // original message in that case (same semantics as realloc).
 extern nni_msg *nni_msg_pull_up(nni_msg *);
 
-// Message option handling.  Message options are intended for protocol
-// specific use.  For this reason, their API is not made public -- instead
-// protocols should provide protocol specific functions for accessing them.
-// Note that manipulation of message options must not be performed while the
-// message is shared.  If a copy is made with nni_msg_unique(), then the
-// options will be cloned appropriately.
+// Message protocol private data.  This is specific for protocol use,
+// and not exposed to library users.
 
-// nni_msg_set_opt sets a given option.  This will replace another option
-// on the message set using the same name.  The supplied functions are
-// used when freeing the message, or when duplicating the message.
-// If the value was created using nni_alloc, then nni_free and nni_mem_dup
-// can be supplied.  Note that the message must not be shared when this
-// is called.
-//
-// NB: It is possible to use a non-NULL dup function, but have a NULL
-// free function.  This is appropriate if the content of the buffer is
-// located in the message header, for example.
-extern int nni_msg_set_opt(nng_msg *, const char *, void *, size_t,
-    void (*)(void *, size_t), int (*)(void **, void *, size_t));
+// nni_proto_msg_ops is used to handle the protocol private data
+// associated with a message.
+typedef struct nni_proto_msg_ops {
+	// This is used to free protocol specific data previously
+	// attached to the message, and is called when the message
+	// itself is freed, or when protocol private is replaced.
+	int (*msg_free)(void *);
 
-// nni_msg_add_opt adds a given option, regardless of whether another
-// instance of the option with the same name exists. In all other respects
-// it behaves like nng_msg_set_opt.
-extern int nni_msg_add_opt(nng_msg *, const char *, void *, size_t,
-    void (*)(void *, size_t), int (*)(void **, void *, size_t));
+	// Duplicate protocol private data when duplicating a message,
+	// such as by nni_msg_dup() or calling nni_msg_unique() on a
+	// shared message.
+	int (*msg_dup)(void **, const void *);
+} nni_proto_msg_ops;
 
-// nni_msg_rem_opt removes any (and all) instances of the named option
-// from the message. It returns zero if any instances are removed, or
-// NNG_ENOENT if no instance of the option was found on the message.
-// The message must not be shared.
-extern int nni_msg_rem_opt(nng_msg *, const char *);
+// nni_msg_set_proto_data is used to set protocol private data, and
+// callbacks for freeing and duplicating said data, on the message.
+// If other protocol private data exists on the message, it will be freed.
+// NULL can be used for the ops and the pointer to clear any previously
+// set data. The message must not be shared when this is called.
+extern void nni_msg_set_proto_data(nng_msg *, nni_proto_msg_ops *, void *);
 
-// nni_msg_get_opt is used to get the first instance of a message option.
-// If the option cannot be found, then NNG_ENOENT is returned.
-extern int nni_msg_get_opt(nng_msg *, const char *, void **, size_t *);
-
-// nni_msg_walk_opt is used to iterate over all options with a function.
-// The called function should return true to keep iterating, or false
-// to stop the iteration.  The argument is supplied as the first parameter
-// to the function.
-extern void
-nni_msg_walk_opt(
-    nng_msg *, void *, bool (*)(void *, const char *, void *, size_t))
+// nni_msg_get_proto_data returns the data previously set on the message.
+// Note that the protocol is responsible for ensuring that the data on
+// the message is set by it alone.
+extern void *nni_msg_get_proto_data(nng_msg *);
 
 #endif // CORE_SOCKET_H
