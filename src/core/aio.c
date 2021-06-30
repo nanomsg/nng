@@ -17,7 +17,7 @@ struct nni_aio_expire_q {
 	nni_aio **eq_list;
 	uint32_t  eq_len;
 	uint32_t  eq_cap;
-	nni_aio  *eq_aio; // currently expiring (task dispatch)
+	nni_aio * eq_aio; // currently expiring (task dispatch)
 	nni_thr   eq_thr;
 	bool      eq_exit;
 };
@@ -508,30 +508,9 @@ nni_aio_list_active(nni_aio *aio)
 static void
 nni_aio_expire_add(nni_aio *aio)
 {
-	/*
-	nni_list *list = &aio->a_expire_q->eq_list;
-	nni_aio * prev;
-
-	// This is a reverse walk of the list.  We're more likely to find
-	// a match at the end of the list.
-	for (prev = nni_list_last(list); prev != NULL;
-	     prev = nni_list_prev(list, prev)) {
-		if (aio->a_expire >= prev->a_expire) {
-			nni_list_insert_after(list, aio, prev);
-			break;
-		}
-	}
-	if (prev == NULL) {
-		// This has the shortest time, so insert at the start.
-		nni_list_prepend(list, aio);
-		// And, as we are the latest, kick the thing.
-		nni_cv_wake(&aio->a_expire_q->eq_cv);
-	}
-	*/
-
-	nni_aio_expire_q * eq = aio->a_expire_q;
-	if (eq->eq_len > eq->eq_cap * 2 / 3) {
-		nni_aio ** new_list =
+	nni_aio_expire_q *eq = aio->a_expire_q;
+	if (eq->eq_len >= eq->eq_cap) {
+		nni_aio **new_list =
 		    nni_zalloc(eq->eq_cap * 2 * sizeof(nni_aio *));
 		for (uint32_t i = 0; i < eq->eq_len; i++) {
 			new_list[i] = eq->eq_list[i];
@@ -553,17 +532,15 @@ nni_aio_expire_rm(nni_aio *aio)
 	nni_aio_expire_q *eq      = aio->a_expire_q;
 	for (aio_idx = 0; aio_idx < eq->eq_len; aio_idx++) {
 		if (aio == eq->eq_list[aio_idx]) {
-			for (uint32_t i = aio_idx + 1; i < eq->eq_len; i++) {
-				eq->eq_list[i - 1] = eq->eq_list[i];
-			}
-			eq->eq_len --;
+			eq->eq_list[aio_idx] = eq->eq_list[eq->eq_len - 1];
+			eq->eq_len--;
 			break;
 		}
 	}
 
-	if (eq->eq_len < eq->eq_cap / 3 && eq->eq_cap > NNI_EXPIRE_Q_SIZE) {
-		nni_aio ** new_list =
-		    nni_zalloc(eq->eq_cap * sizeof(nni_aio *) / 2);
+	if (eq->eq_len < eq->eq_cap / 4 && eq->eq_cap > NNI_EXPIRE_Q_SIZE) {
+		nni_aio **new_list =
+		    nni_zalloc(eq->eq_cap * sizeof(nni_aio *) / 4);
 		for (uint32_t i = 0; i < eq->eq_len; i++) {
 			new_list[i] = eq->eq_list[i];
 		}
@@ -606,17 +583,17 @@ nni_aio_expire_loop(void *arg)
 		}
 
 		// Find the timer with min expire time.
-		list = q->eq_list;
+		list    = q->eq_list;
 		aio_idx = 0;
-		aio = list[aio_idx];
+		aio     = list[aio_idx];
 		for (uint32_t i = 0; i < q->eq_len; i++) {
 			if (list[i]->a_expire < aio->a_expire) {
-				aio = list[i];
+				aio     = list[i];
 				aio_idx = i;
 			}
 		}
 		if (now < aio->a_expire) {
-			// Unexpired; we just wait the next expired aio.
+			// Unexpired; we just wait for the next expired aio.
 			nni_cv_until(cv, aio->a_expire);
 			now = nni_clock();
 			continue;
@@ -624,9 +601,7 @@ nni_aio_expire_loop(void *arg)
 
 		// The time has come for this aio.  Expire it, canceling any
 		// outstanding I/O.
-		for (uint32_t i = aio_idx+1; i < q->eq_len; i++) {
-			list[i-1] = list[i];
-		}
+		list[aio_idx] = list[q->eq_len - 1];
 		q->eq_len--;
 		rv = aio->a_expire_ok ? 0 : NNG_ETIMEDOUT;
 
@@ -839,7 +814,6 @@ nni_aio_sys_init(void)
 	if (num_thr > 256) {
 		num_thr = 256;
 	}
-
 
 	nni_aio_expire_q_list =
 	    nni_zalloc(sizeof(nni_aio_expire_q *) * num_thr);
