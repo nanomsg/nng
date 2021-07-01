@@ -294,7 +294,7 @@ test_sleep_loop(void)
 	NUTS_PASS(nng_cv_alloc(&sl.cv, sl.mx));
 
 	start = nng_clock();
-	nng_sleep_aio(50, sl.aio);
+	nng_sleep_aio(100, sl.aio);
 	nng_mtx_lock(sl.mx);
 	while (!sl.done) {
 		nng_cv_until(sl.cv, 2000);
@@ -330,7 +330,7 @@ test_sleep_cancel(void)
 
 	start = nng_clock();
 	nng_sleep_aio(100, sl.aio);
-	nng_msleep(125);
+	nng_msleep(150);
 	nng_aio_cancel(sl.aio);
 	nng_mtx_lock(sl.mx);
 	while (!sl.done) {
@@ -338,8 +338,8 @@ test_sleep_cancel(void)
 	}
 	nng_mtx_unlock(sl.mx);
 	dur = (nng_duration) (nng_clock() - start);
-	NUTS_ASSERT(dur >= 50);
-	NUTS_ASSERT(dur <= 200); // allow for sloppy clocks
+	NUTS_ASSERT(dur >= 100);
+	NUTS_ASSERT(dur <= 500); // allow for sloppy clocks
 	NUTS_ASSERT(sl.done);
 	NUTS_FAIL(sl.result, NNG_ECANCELED);
 	NUTS_ASSERT(sl.count == 1);
