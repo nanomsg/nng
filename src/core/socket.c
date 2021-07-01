@@ -519,13 +519,11 @@ sock_destroy(nni_sock *s)
 		s->s_sock_ops.sock_fini(s->s_data);
 	}
 
+	nni_mtx_lock(&s->s_mx);
 	while ((sopt = nni_list_first(&s->s_options)) != NULL) {
 		nni_list_remove(&s->s_options, sopt);
 		nni_free_opt(sopt);
 	}
-
-	// This exists to silence a false positive in helgrind.
-	nni_mtx_lock(&s->s_mx);
 	nni_mtx_unlock(&s->s_mx);
 
 	nni_msgq_fini(s->s_urq);
