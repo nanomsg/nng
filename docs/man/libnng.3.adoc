@@ -104,6 +104,7 @@ Most applications will only interact with the body.
 |xref:nng_msg_alloc.3.adoc[nng_msg_alloc()]|allocate a message
 |xref:nng_msg_append.3.adoc[nng_msg_append()]|append to message body
 |xref:nng_msg_body.3.adoc[nng_msg_body()]|return message body
+|xref:nng_msg_capacity.3.adoc[nng_msg_capacity()]|return capacity allocated for message body
 |xref:nng_msg_chop.3.adoc[nng_msg_chop()]|remove data from end of message body
 |xref:nng_msg_clear.3.adoc[nng_msg_clear()]|clear message body
 |xref:nng_msg_dup.3.adoc[nng_msg_dup()]|duplicate a message
@@ -112,6 +113,7 @@ Most applications will only interact with the body.
 |xref:nng_msg_insert.3.adoc[nng_msg_insert()]|prepend to message body
 |xref:nng_msg_len.3.adoc[nng_msg_len()]|return the message body length
 |xref:nng_msg_realloc.3.adoc[nng_msg_realloc()]|reallocate a message
+|xref:nng_msg_reserve.3.adoc[nng_msg_reserve()]|reserve storage for message body
 |xref:nng_msg_set_pipe.3.adoc[nng_msg_set_pipe()]|set pipe for message
 |xref:nng_msg_trim.3.adoc[nng_msg_trim()]|remove data from start of message body
 |xref:nng_recvmsg.3.adoc[nng_recvmsg()]|receive a message
