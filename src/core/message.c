@@ -110,7 +110,7 @@ nni_chunk_grow(nni_chunk *ch, size_t newsz, size_t headwanted)
 		newsz = ch->ch_len;
 	}
 
-	if ((ch->ch_ptr >= ch->ch_buf) &&
+	if ((ch->ch_ptr >= ch->ch_buf) && (ch->ch_ptr != NULL) &&
 	    (ch->ch_ptr < (ch->ch_buf + ch->ch_cap))) {
 		size_t headroom = (size_t)(ch->ch_ptr - ch->ch_buf);
 		if (headwanted < headroom) {
