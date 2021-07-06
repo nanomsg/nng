@@ -52,6 +52,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
+xref:nng_msg_reserve.3.adoc[nng_msg_reserve(3)],
 xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
 xref:nng_msg_append.3.adoc[nng_msg_append(3)],
 xref:nng_msg_body.3.adoc[nng_msg_body(3)],
