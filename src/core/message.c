@@ -459,13 +459,13 @@ nni_msg_realloc(nni_msg *m, size_t sz)
 int
 nni_msg_reserve(nni_msg *m, size_t capacity)
 {
-	return nni_chunk_grow(&m->m_body, capacity, 0);
+	return (nni_chunk_grow(&m->m_body, capacity, 0));
 }
 
 size_t
 nni_msg_capacity(nni_msg *m)
 {
-	return (size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) - m->m_body.ch_ptr);
+	return ((size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) - m->m_body.ch_ptr));
 }
 
 void *
