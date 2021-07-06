@@ -594,6 +594,8 @@ NNG_DECL void nng_sleep_aio(nng_duration, nng_aio *);
 NNG_DECL int      nng_msg_alloc(nng_msg **, size_t);
 NNG_DECL void     nng_msg_free(nng_msg *);
 NNG_DECL int      nng_msg_realloc(nng_msg *, size_t);
+NNG_DECL int      nng_msg_reserve(nng_msg *, size_t);
+NNG_DECL size_t   nng_msg_capacity(nng_msg *);
 NNG_DECL void *   nng_msg_header(nng_msg *);
 NNG_DECL size_t   nng_msg_header_len(const nng_msg *);
 NNG_DECL void *   nng_msg_body(nng_msg *);

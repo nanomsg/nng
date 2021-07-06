@@ -1325,6 +1325,18 @@ nng_msg_free(nng_msg *msg)
 	nni_msg_free(msg);
 }
 
+int
+nng_msg_reserve(nng_msg *msg, size_t capacity)
+{
+	return (nni_msg_reserve(msg, capacity));
+}
+
+size_t
+nng_msg_capacity(nng_msg *msg)
+{
+	return (nni_msg_capacity(msg));
+}
+
 void *
 nng_msg_body(nng_msg *msg)
 {

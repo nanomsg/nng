@@ -1,4 +1,4 @@
-= nng_msg_realloc(3)
+= nng_msg_reserve(3)
 //
 // Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
@@ -11,7 +11,7 @@
 
 == NAME
 
-nng_msg_realloc - reallocate a message
+nng_msg_reserve - reserve storage for a message
 
 == SYNOPSIS
 
@@ -19,26 +19,23 @@ nng_msg_realloc - reallocate a message
 ----
 #include <nng/nng.h>
 
-int nng_msg_realloc(nng_msg *msg, size_t size);
+int nng_msg_reserve(nng_msg *msg, size_t capacity);
 ----
 
 == DESCRIPTION
 
-The `nng_msg_realloc()` function re-allocates a message so that it has
-a body of length _size_.
+The `nng_msg_reserve()` function ensures a message has allocated enough storage 
+to accommodate a body of the given length.
 This message attempts to avoid extra allocations,
 and will reuse the existing memory when possible.
 
-TIP: `nng_msg_realloc` is suitable for creating space for direct writing of data.
-When appending many small pieces of data to a message using xref:nng_msg_append.3.adoc[`nng_msg_append()`],
-allocations may be reduced by first using xref:nng_msg_reserve.3.adoc[`nng_msg_reserve()`]
-to create sufficient space.
-In any case, reallocating or appending to a message is guaranteed to succeed if the resulting
-body length is less than xref:nng_msg_capacity.3.adoc[`nng_msg_capacity()`]. 
+TIP: Using this message before xref:nng_msg_append.3.adoc[`nng_msg_append()`]
+will prevent additional memory allocations until the message's length exceeds
+the alotted capacity.
 
 NOTE: Pointers to message body and header content obtained prior to this
 function must not be in use, as the underlying memory used for the message
-may have changed, particularly if the message size is increasing.
+may have changed, particularly if the message capacity is increasing.
 
 == RETURN VALUES
 
@@ -52,7 +49,7 @@ This function returns 0 on success, and non-zero otherwise.
 == SEE ALSO
 
 [.text-left]
-xref:nng_msg_reserve.3.adoc[nng_msg_reserve(3)],
+xref:nng_msg_capacity.3.adoc[nng_msg_capacity(3)],
 xref:nng_msg_alloc.3.adoc[nng_msg_alloc(3)],
 xref:nng_msg_append.3.adoc[nng_msg_append(3)],
 xref:nng_msg_body.3.adoc[nng_msg_body(3)],
