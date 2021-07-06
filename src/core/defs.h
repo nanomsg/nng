@@ -175,4 +175,9 @@ typedef nni_type nni_opt_type;
 // NNI_MAX_HEADER_SIZE is our header size.
 #define NNI_MAX_HEADER_SIZE ((NNI_MAX_MAX_TTL + 1) * sizeof(uint32_t))
 
+// NNI_EXPIRE_Q_SIZE is the default size of aio expire queue
+#ifndef NNI_EXPIRE_Q_SIZE
+#define NNI_EXPIRE_Q_SIZE 256
+#endif
+
 #endif // CORE_DEFS_H
