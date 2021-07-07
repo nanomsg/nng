@@ -302,7 +302,10 @@ test_sleep_loop(void)
 	nng_mtx_unlock(sl.mx);
 	dur = (nng_duration) (nng_clock() - start);
 	NUTS_ASSERT(dur >= 150);
-	NUTS_ASSERT(dur <= 500); // allow for sloppy clocks
+	if ((getenv("GITHUB_ACTIONS") == "") ||
+	    (getenv("RUNNER_OS") != "macOS")) {
+		NUTS_ASSERT(dur <= 500); // allow for sloppy clocks
+	}
 	NUTS_ASSERT(sl.done);
 	NUTS_PASS(sl.result);
 	NUTS_ASSERT(sl.count == 3);
@@ -339,7 +342,10 @@ test_sleep_cancel(void)
 	nng_mtx_unlock(sl.mx);
 	dur = (nng_duration) (nng_clock() - start);
 	NUTS_ASSERT(dur >= 100);
-	NUTS_ASSERT(dur <= 500); // allow for sloppy clocks
+	if ((getenv("GITHUB_ACTIONS") == "") ||
+	    (getenv("RUNNER_OS") != "macOS")) {
+		NUTS_ASSERT(dur <= 500); // allow for sloppy clocks
+	}
 	NUTS_ASSERT(sl.done);
 	NUTS_FAIL(sl.result, NNG_ECANCELED);
 	NUTS_ASSERT(sl.count == 1);
