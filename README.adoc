@@ -21,9 +21,6 @@ image:https://img.shields.io/discord/639573728212156478?label=&logo=discord[Disc
 image:https://img.shields.io/static/v1?label=&message=docs&logo=asciidoctor&logoColor=silver&color=blue[Manual,link="https://nng.nanomsg.org/man"]
 image:https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue[MIT License,link="https://github.com/nanomsg/nng/blob/master/LICENSE.txt"]
 image:https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=[Latest version,link="https://github.com/nanomsg/nng/releases"]
-//image:https://img.shields.io/circleci/project/github/nanomsg/nng.svg?logo=circleci&logoColor=grey&label=[Linux Status,link="https://circleci.com/gh/nanomsg/nng"]
-//image:https://img.shields.io/appveyor/ci/nanomsg/nng/master.svg?logo=appveyor&logoColor=grey&label=[Windows Status,link="https://ci.appveyor.com/project/nanomsg/nng"]
-
 
 NOTE: If you are looking for the legacy version of nanomsg, please
 see the https://github.com/nanomsg/nanomsg[nanomsg] repository.
