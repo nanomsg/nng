@@ -1,5 +1,5 @@
 #
-#   Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+#   Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 #   Copyright 2018 Capitar IT Group BV <info@capitar.com>
 #   Copyright (c) 2012 Martin Sustrik  All rights reserved.
 #   Copyright (c) 2013 GoPivotal, Inc.  All rights reserved.
@@ -132,7 +132,6 @@ add_nng_test(inproc 5)
 add_nng_test(ipc 5)
 add_nng_test(ipcsupp 10)
 add_nng_test(ipcwinsec 5)
-add_nng_test(message 5)
 add_nng_test(multistress 60)
 add_nng_test(nonblock 60)
 add_nng_test(options 5)
