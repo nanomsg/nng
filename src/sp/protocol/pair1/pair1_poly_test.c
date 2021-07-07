@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -128,7 +128,7 @@ test_poly_cooked(void)
 	CHECK_STR(msg, "DOS");
 	nng_msg_free(msg);
 
-	NUTS_PASS(nng_close(c1));
+	NUTS_CLOSE(c1);
 
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	nng_msg_set_pipe(msg, p1);

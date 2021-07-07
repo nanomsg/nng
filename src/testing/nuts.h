@@ -17,6 +17,9 @@
 #ifndef NNG_TESTING_NUTS_H
 #define NNG_TESTING_NUTS_H
 
+// Call nng_fini during test finalization -- this avoids leak warnings.
+extern void nng_fini(void);
+#define TEST_FINI nng_fini()
 #include "acutest.h"
 
 #include <stdbool.h>
