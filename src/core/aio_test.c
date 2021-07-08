@@ -277,6 +277,17 @@ aio_sleep_loop(void *arg)
 	nng_sleep_aio(sl->interval, sl->aio);
 }
 
+static bool
+is_github_macos(void)
+{
+	char *env;
+	if (((env = getenv("RUNNER_OS")) != NULL) &&
+	    (strcmp(env, "macOS") == 0)) {
+		return (true);
+	}
+	return (true);
+}
+
 void
 test_sleep_loop(void)
 {
@@ -302,13 +313,12 @@ test_sleep_loop(void)
 	nng_mtx_unlock(sl.mx);
 	dur = (nng_duration) (nng_clock() - start);
 	NUTS_ASSERT(dur >= 150);
-	if ((getenv("GITHUB_ACTIONS") == "") ||
-	    (getenv("RUNNER_OS") != "macOS")) {
+	if (!is_github_macos()) {
 		NUTS_ASSERT(dur <= 500); // allow for sloppy clocks
+		NUTS_ASSERT(sl.count == 3);
 	}
 	NUTS_ASSERT(sl.done);
 	NUTS_PASS(sl.result);
-	NUTS_ASSERT(sl.count == 3);
 
 	nng_aio_free(sl.aio);
 	nng_cv_free(sl.cv);
@@ -342,13 +352,12 @@ test_sleep_cancel(void)
 	nng_mtx_unlock(sl.mx);
 	dur = (nng_duration) (nng_clock() - start);
 	NUTS_ASSERT(dur >= 100);
-	if ((getenv("GITHUB_ACTIONS") == "") ||
-	    (getenv("RUNNER_OS") != "macOS")) {
+	if (!is_github_macos()) {
 		NUTS_ASSERT(dur <= 500); // allow for sloppy clocks
+		NUTS_ASSERT(sl.count == 1);
 	}
 	NUTS_ASSERT(sl.done);
 	NUTS_FAIL(sl.result, NNG_ECANCELED);
-	NUTS_ASSERT(sl.count == 1);
 
 	nng_aio_free(sl.aio);
 	nng_cv_free(sl.cv);

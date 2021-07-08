@@ -14,8 +14,6 @@
 
 #include "nuts.h"
 
-static uint8_t dat123[] = { 0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 3 };
-
 void
 test_msg_option(void)
 {
