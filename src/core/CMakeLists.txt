@@ -73,8 +73,6 @@ nng_sources(
         thread.h
         timer.c
         timer.h
-        transport.c
-        transport.h
         url.c
         url.h
 )

@@ -11,3 +11,8 @@ nng_directory(sp)
 
 add_subdirectory(protocol)
 add_subdirectory(transport)
+
+nng_sources(
+        transport.c
+        transport.h
+)

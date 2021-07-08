@@ -17,7 +17,7 @@
 
 #include "core/defs.h"
 #include "core/thread.h"
-#include "core/transport.h"
+#include "sp/transport.h"
 
 extern int  nni_pipe_sys_init(void);
 extern void nni_pipe_sys_fini(void);
