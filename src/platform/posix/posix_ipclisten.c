@@ -284,7 +284,6 @@ ipc_listener_set(
 	return (nni_setopt(ipc_listener_options, name, l, buf, sz, t));
 }
 
-#ifndef NNG_PLATFORM_LINUX
 static int
 ipc_listener_chmod(ipc_listener *l, const char *path)
 {
@@ -299,7 +298,6 @@ ipc_listener_chmod(ipc_listener *l, const char *path)
 	}
 	return (0);
 }
-#endif
 
 int
 ipc_listener_listen(void *arg)
@@ -347,19 +345,6 @@ ipc_listener_listen(void *arg)
 		nni_strfree(path);
 		return (rv);
 	}
-	// Linux supports fchmod on a socket, which will
-	// be race condition free.
-#ifdef NNG_PLATFORM_LINUX
-	if ((l->perms != 0) && (path != NULL)) {
-		if (fchmod(fd, l->perms & ~S_IFMT) != 0) {
-			rv = nni_plat_errno(errno);
-			nni_mtx_unlock(&l->mtx);
-			(void) close(fd);
-			nni_strfree(path);
-			return (rv);
-		}
-	}
-#endif
 
 	if ((rv = bind(fd, (struct sockaddr *) &ss, len)) != 0) {
 		if ((l->sa.s_family == NNG_AF_IPC) &&
@@ -372,11 +357,9 @@ ipc_listener_listen(void *arg)
 			path = NULL;
 		}
 	}
+
 	if ((rv != 0) ||
-#ifndef NNG_PLATFORM_LINUX
-	    // Linux uses fchmod instead (which is race free).
 	    (ipc_listener_chmod(l, path) != 0) ||
-#endif
 	    (listen(fd, 128) != 0)) {
 		rv = nni_plat_errno(errno);
 	}
