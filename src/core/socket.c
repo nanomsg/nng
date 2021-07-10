@@ -124,15 +124,10 @@ sock_get_fd(void *s, unsigned flag, int *fdp)
 		return (NNG_ENOTSUP);
 	}
 
-	switch (flag) {
-	case NNI_PROTO_FLAG_SND:
+	if (flag == NNI_PROTO_FLAG_SND) {
 		rv = nni_msgq_get_sendable(SOCK(s)->s_uwq, &p);
-		break;
-	case NNI_PROTO_FLAG_RCV:
+	} else {
 		rv = nni_msgq_get_recvable(SOCK(s)->s_urq, &p);
-		break;
-	default:
-		return (NNG_EINVAL);
 	}
 
 	if (rv == 0) {
@@ -499,7 +494,7 @@ sock_stats_init(nni_sock *s)
 	sock_stat_init(s, &s->st_tx_bytes, &tx_bytes_info);
 	sock_stat_init(s, &s->st_rx_bytes, &rx_bytes_info);
 
-	nni_stat_set_id(&s->st_id, s->s_id);
+	nni_stat_set_id(&s->st_id, (int) s->s_id);
 	nni_stat_set_string(&s->st_name, s->s_name);
 	nni_stat_set_string(&s->st_protocol, nni_sock_proto_name(s));
 }
@@ -668,7 +663,7 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 
 #ifdef NNG_ENABLE_STATS
 	// Set up basic stat values.
-	nni_stat_set_id(&s->st_id, s->s_id);
+	nni_stat_set_id(&s->st_id, (int) s->s_id);
 
 	// Add our stats chain.
 	nni_stat_register(&s->st_root);
@@ -1478,7 +1473,8 @@ dialer_timer_start_locked(nni_dialer *d)
 	// This algorithm may lead to slight biases because we don't
 	// have a statistically perfect distribution with the modulo of
 	// the random number, but this really doesn't matter.
-	nni_sleep_aio(back_off ? nni_random() % back_off : 0, &d->d_tmo_aio);
+	nni_sleep_aio(
+	    back_off ? (int) nni_random() % back_off : 0, &d->d_tmo_aio);
 }
 
 void

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -179,9 +179,9 @@ dialer_stats_init(nni_dialer *d)
 	dialer_stat_init(d, &d->st_oom, &oom_info);
 	dialer_stat_init(d, &d->st_reject, &reject_info);
 
-	nni_stat_set_id(&d->st_root, d->d_id);
-	nni_stat_set_id(&d->st_id, d->d_id);
-	nni_stat_set_id(&d->st_sock, nni_sock_id(d->d_sock));
+	nni_stat_set_id(&d->st_root, (int) d->d_id);
+	nni_stat_set_id(&d->st_id, (int) d->d_id);
+	nni_stat_set_id(&d->st_sock, (int) nni_sock_id(d->d_sock));
 	nni_stat_set_string(&d->st_url, d->d_url->u_rawurl);
 	nni_stat_register(&d->st_root);
 }

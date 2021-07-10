@@ -74,14 +74,6 @@ struct nni_proto_ctx_ops {
 	// ctx_send is an asynchronous send.
 	void (*ctx_send)(void *, nni_aio *);
 
-	// ctx_drain drains the context, signaling the aio when done.
-	// This should prevent any further receives from completing,
-	// and only sends that had already been submitted should be
-	// permitted to continue.  It may be NULL for protocols where
-	// draining without an ability to receive makes no sense
-	// (e.g. REQ or SURVEY).
-	void (*ctx_drain)(void *, nni_aio *);
-
 	// ctx_options array.
 	nni_option *ctx_options;
 };
@@ -152,9 +144,8 @@ struct nni_proto {
 // during the life of the project.  If we add a new version, please keep
 // the old version around -- it may be possible to automatically convert
 // older versions in the future.
-#define NNI_PROTOCOL_V0 0x50520000u // "pr\0\0"
-#define NNI_PROTOCOL_V1 0x50520001u // "pr\0\1"
-#define NNI_PROTOCOL_VERSION NNI_PROTOCOL_V1
+#define NNI_PROTOCOL_V2 0x50520002u // "pr\0\2"
+#define NNI_PROTOCOL_VERSION NNI_PROTOCOL_V2
 
 // These flags determine which operations make sense.  We use them so that
 // we can reject attempts to create notification fds for operations that make
@@ -167,14 +158,14 @@ struct nni_proto {
 
 // nni_proto_open is called by the protocol to create a socket instance
 // with its ops vector.  The intent is that applications will only see
-// the single protocol-specific constructure, like nng_pair_v0_open(),
+// the single protocol-specific constructor, like nng_pair_v0_open(),
 // which should just be a thin wrapper around this.  If the protocol has
 // not been initialized yet, this routine will do so.
 extern int nni_proto_open(nng_socket *, const nni_proto *);
 
-// Protocol numbers.  These are to be used with nng_socket_create().
+// Protocol numbers.
 // These values are used on the wire, so must not be changed.  The major
-// number of the protocol is shifted left by 4 bits, and a subprotocol is
+// number of the protocol is shifted left by 4 bits, and a sub-protocol is
 // assigned in the lower 4 bits.
 //
 // There are gaps in the list, which are obsolete or unsupported protocols.

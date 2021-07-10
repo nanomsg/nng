@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -173,8 +173,9 @@ listener_stats_init(nni_listener *l)
 	listener_stat_init(l, &l->st_oom, &oom_info);
 	listener_stat_init(l, &l->st_reject, &reject_info);
 
-	nni_stat_set_id(&l->st_root, l->l_id);
-	nni_stat_set_id(&l->st_id, l->l_id);
+	nni_stat_set_id(&l->st_root, (int) l->l_id);
+	nni_stat_set_id(&l->st_id, (int) l->l_id);
+	nni_stat_set_id(&l->st_sock, (int) nni_sock_id(l->l_sock));
 	nni_stat_set_string(&l->st_url, l->l_url->u_rawurl);
 	nni_stat_register(&l->st_root);
 }
