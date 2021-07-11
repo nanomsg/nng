@@ -245,7 +245,7 @@ pipe_stats_init(nni_pipe *p)
 #endif // NNG_ENABLE_STATS
 
 static int
-pipe_create(nni_pipe **pp, nni_sock *sock, nni_tran *tran, void *tdata)
+pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 {
 	nni_pipe *          p;
 	int                 rv;
@@ -303,7 +303,7 @@ int
 nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 {
 	int       rv;
-	nni_tran *tran = d->d_tran;
+	nni_sp_tran *tran = d->d_tran;
 	nni_pipe *p;
 
 	if ((rv = pipe_create(&p, d->d_sock, tran, tdata)) != 0) {
@@ -327,7 +327,7 @@ int
 nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 {
 	int       rv;
-	nni_tran *tran = l->l_tran;
+	nni_sp_tran *tran = l->l_tran;
 	nni_pipe *p;
 
 	if ((rv = pipe_create(&p, l->l_sock, tran, tdata)) != 0) {

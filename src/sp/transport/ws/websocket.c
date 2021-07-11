@@ -354,7 +354,7 @@ wstran_pipe_getopt(
 	return (rv);
 }
 
-static nni_tran_pipe_ops ws_pipe_ops = {
+static nni_sp_pipe_ops ws_pipe_ops = {
 	.p_init   = wstran_pipe_init,
 	.p_fini   = wstran_pipe_fini,
 	.p_stop   = wstran_pipe_stop,
@@ -622,7 +622,7 @@ wstran_listener_set(
 	return (rv);
 }
 
-static nni_tran_dialer_ops ws_dialer_ops = {
+static nni_sp_dialer_ops ws_dialer_ops = {
 	.d_init    = wstran_dialer_init,
 	.d_fini    = wstran_dialer_fini,
 	.d_connect = wstran_dialer_connect,
@@ -631,7 +631,7 @@ static nni_tran_dialer_ops ws_dialer_ops = {
 	.d_getopt  = wstran_dialer_getopt,
 };
 
-static nni_tran_listener_ops ws_listener_ops = {
+static nni_sp_listener_ops ws_listener_ops = {
 	.l_init   = wstran_listener_init,
 	.l_fini   = wstran_listener_fini,
 	.l_bind   = ws_listener_bind,
@@ -641,7 +641,7 @@ static nni_tran_listener_ops ws_listener_ops = {
 	.l_getopt = wstran_listener_get,
 };
 
-static nni_tran ws_tran = {
+static nni_sp_tran ws_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "ws",
 	.tran_dialer   = &ws_dialer_ops,
@@ -651,7 +651,7 @@ static nni_tran ws_tran = {
 	.tran_fini     = wstran_fini,
 };
 
-static nni_tran ws4_tran = {
+static nni_sp_tran ws4_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "ws4",
 	.tran_dialer   = &ws_dialer_ops,
@@ -661,7 +661,7 @@ static nni_tran ws4_tran = {
 	.tran_fini     = wstran_fini,
 };
 
-static nni_tran ws6_tran = {
+static nni_sp_tran ws6_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "ws6",
 	.tran_dialer   = &ws_dialer_ops,
@@ -686,7 +686,7 @@ nng_ws_register(void)
 
 #ifdef NNG_TRANSPORT_WSS
 
-static nni_tran wss_tran = {
+static nni_sp_tran wss_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "wss",
 	.tran_dialer   = &ws_dialer_ops,
@@ -696,7 +696,7 @@ static nni_tran wss_tran = {
 	.tran_fini     = wstran_fini,
 };
 
-static nni_tran wss4_tran = {
+static nni_sp_tran wss4_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "wss4",
 	.tran_dialer   = &ws_dialer_ops,
@@ -706,7 +706,7 @@ static nni_tran wss4_tran = {
 	.tran_fini     = wstran_fini,
 };
 
-static nni_tran wss6_tran = {
+static nni_sp_tran wss6_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "wss6",
 	.tran_dialer   = &ws_dialer_ops,

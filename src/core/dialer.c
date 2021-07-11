@@ -228,7 +228,7 @@ nni_dialer_bump_error(nni_dialer *d, int err)
 int
 nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 {
-	nni_tran *  tran;
+	nni_sp_tran *  tran;
 	nni_dialer *d;
 	int         rv;
 	nni_url *   url;

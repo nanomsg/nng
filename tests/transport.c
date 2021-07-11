@@ -40,7 +40,7 @@ finish(void)
 }
 
 // Fake TCP transport
-struct nni_tran fake_tcp = {
+struct nni_sp_tran fake_tcp = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "tcp",
 	.tran_dialer   = NULL,
@@ -51,7 +51,7 @@ struct nni_tran fake_tcp = {
 };
 
 // Bad version transport
-struct nni_tran badvers = {
+struct nni_sp_tran badvers = {
 	.tran_version  = NNI_TRANSPORT_VERSION + 1,
 	.tran_scheme   = "badvers",
 	.tran_dialer   = NULL,
@@ -61,7 +61,7 @@ struct nni_tran badvers = {
 	.tran_fini     = finish,
 };
 
-struct nni_tran badtran = {
+struct nni_sp_tran badtran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "badtran",
 	.tran_dialer   = NULL,
@@ -72,7 +72,7 @@ struct nni_tran badtran = {
 };
 
 // Bogus good transport
-struct nni_tran goodtran = {
+struct nni_sp_tran goodtran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "goodtran",
 	.tran_dialer   = NULL,

@@ -1119,7 +1119,7 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 	nni_mtx_unlock(&ep->mtx);
 }
 
-static nni_tran_pipe_ops tcptran_pipe_ops = {
+static nni_sp_pipe_ops tcptran_pipe_ops = {
 	.p_init   = tcptran_pipe_init,
 	.p_fini   = tcptran_pipe_fini,
 	.p_stop   = tcptran_pipe_stop,
@@ -1202,7 +1202,7 @@ tcptran_listener_setopt(
 	return (rv);
 }
 
-static nni_tran_dialer_ops tcptran_dialer_ops = {
+static nni_sp_dialer_ops tcptran_dialer_ops = {
 	.d_init    = tcptran_dialer_init,
 	.d_fini    = tcptran_ep_fini,
 	.d_connect = tcptran_ep_connect,
@@ -1211,7 +1211,7 @@ static nni_tran_dialer_ops tcptran_dialer_ops = {
 	.d_setopt  = tcptran_dialer_setopt,
 };
 
-static nni_tran_listener_ops tcptran_listener_ops = {
+static nni_sp_listener_ops tcptran_listener_ops = {
 	.l_init   = tcptran_listener_init,
 	.l_fini   = tcptran_ep_fini,
 	.l_bind   = tcptran_ep_bind,
@@ -1221,7 +1221,7 @@ static nni_tran_listener_ops tcptran_listener_ops = {
 	.l_setopt = tcptran_listener_setopt,
 };
 
-static nni_tran tcp_tran = {
+static nni_sp_tran tcp_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "tcp",
 	.tran_dialer   = &tcptran_dialer_ops,
@@ -1231,7 +1231,7 @@ static nni_tran tcp_tran = {
 	.tran_fini     = tcptran_fini,
 };
 
-static nni_tran tcp4_tran = {
+static nni_sp_tran tcp4_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "tcp4",
 	.tran_dialer   = &tcptran_dialer_ops,
@@ -1241,7 +1241,7 @@ static nni_tran tcp4_tran = {
 	.tran_fini     = tcptran_fini,
 };
 
-static nni_tran tcp6_tran = {
+static nni_sp_tran tcp6_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "tcp6",
 	.tran_dialer   = &tcptran_dialer_ops,

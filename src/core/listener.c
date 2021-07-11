@@ -219,7 +219,7 @@ nni_listener_bump_error(nni_listener *l, int err)
 int
 nni_listener_create(nni_listener **lp, nni_sock *s, const char *url_str)
 {
-	nni_tran *    tran;
+	nni_sp_tran *    tran;
 	nni_listener *l;
 	int           rv;
 	nni_url *     url;

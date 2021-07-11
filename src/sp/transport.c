@@ -35,11 +35,11 @@
 
 // For now the list of transports is hard-wired.  Adding new transports
 // to the system dynamically is something that might be considered later.
-extern nni_tran nni_tcp_tran;
-extern nni_tran nni_ipc_tran;
+extern nni_sp_tran nni_tcp_tran;
+extern nni_sp_tran nni_ipc_tran;
 
 typedef struct nni_transport {
-	nni_tran      t_tran;
+	nni_sp_tran   t_tran;
 	nni_list_node t_node;
 } nni_transport;
 
@@ -48,7 +48,7 @@ static nni_mtx  nni_tran_lk;
 static int      nni_tran_inited;
 
 int
-nni_tran_register(const nni_tran *tran)
+nni_tran_register(const nni_sp_tran *tran)
 {
 	nni_transport *t;
 	int            rv;
@@ -94,7 +94,7 @@ nni_tran_register(const nni_tran *tran)
 	return (0);
 }
 
-nni_tran *
+nni_sp_tran *
 nni_tran_find(nni_url *url)
 {
 	// address is of the form "<scheme>://blah..."

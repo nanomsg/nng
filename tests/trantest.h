@@ -32,7 +32,7 @@ struct trantest {
 	char        addr[NNG_MAXADDRLEN + 1];
 	nng_socket  reqsock;
 	nng_socket  repsock;
-	nni_tran *  tran;
+	nni_sp_tran *  tran;
 	int (*init)(struct trantest *);
 	void (*fini)(struct trantest *);
 	int (*dialer_init)(nng_dialer);

@@ -611,7 +611,7 @@ inproc_pipe_getopt(
 	return (nni_getopt(inproc_pipe_options, name, arg, v, szp, t));
 }
 
-static nni_tran_pipe_ops inproc_pipe_ops = {
+static nni_sp_pipe_ops inproc_pipe_ops = {
 	.p_init   = inproc_pipe_init,
 	.p_fini   = inproc_pipe_fini,
 	.p_send   = inproc_pipe_send,
@@ -654,7 +654,7 @@ inproc_ep_setopt(
 	return (nni_setopt(inproc_ep_options, name, arg, v, sz, t));
 }
 
-static nni_tran_dialer_ops inproc_dialer_ops = {
+static nni_sp_dialer_ops inproc_dialer_ops = {
 	.d_init    = inproc_dialer_init,
 	.d_fini    = inproc_ep_fini,
 	.d_connect = inproc_ep_connect,
@@ -663,7 +663,7 @@ static nni_tran_dialer_ops inproc_dialer_ops = {
 	.d_setopt  = inproc_ep_setopt,
 };
 
-static nni_tran_listener_ops inproc_listener_ops = {
+static nni_sp_listener_ops inproc_listener_ops = {
 	.l_init   = inproc_listener_init,
 	.l_fini   = inproc_ep_fini,
 	.l_bind   = inproc_ep_bind,
@@ -675,7 +675,7 @@ static nni_tran_listener_ops inproc_listener_ops = {
 
 // This is the inproc transport linkage, and should be the only global
 // symbol in this entire file.
-struct nni_tran nni_inproc_tran = {
+struct nni_sp_tran nni_inproc_tran = {
 	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "inproc",
 	.tran_dialer   = &inproc_dialer_ops,

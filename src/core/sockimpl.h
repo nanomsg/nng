@@ -16,8 +16,8 @@
 // are subject to change at any time.
 
 struct nni_dialer {
-	nni_tran_dialer_ops d_ops;  // transport ops
-	nni_tran *          d_tran; // transport pointer
+	nni_sp_dialer_ops   d_ops;  // transport ops
+	nni_sp_tran *          d_tran; // transport pointer
 	void *              d_data; // transport private
 	uint32_t            d_id;   // endpoint id
 	nni_list_node       d_node; // per socket list
@@ -59,8 +59,8 @@ struct nni_dialer {
 };
 
 struct nni_listener {
-	nni_tran_listener_ops l_ops;  // transport ops
-	nni_tran *            l_tran; // transport pointer
+	nni_sp_listener_ops   l_ops;  // transport ops
+	nni_sp_tran *            l_tran; // transport pointer
 	void *                l_data; // transport private
 	uint32_t              l_id;   // endpoint id
 	nni_list_node         l_node; // per socket list
@@ -95,7 +95,7 @@ struct nni_listener {
 
 struct nni_pipe {
 	uint32_t           p_id;
-	nni_tran_pipe_ops  p_tran_ops;
+	nni_sp_pipe_ops    p_tran_ops;
 	nni_proto_pipe_ops p_proto_ops;
 	size_t             p_size;
 	void *             p_tran_data;
