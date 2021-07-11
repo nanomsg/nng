@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -81,7 +81,6 @@ static void
 nni_pthread_mutex_lock(pthread_mutex_t *m)
 {
 	int rv;
-
 	if ((rv = pthread_mutex_lock(m)) != 0) {
 		nni_panic("pthread_mutex_lock: %s", strerror(rv));
 	}
@@ -91,7 +90,6 @@ static void
 nni_pthread_mutex_unlock(pthread_mutex_t *m)
 {
 	int rv;
-
 	if ((rv = pthread_mutex_unlock(m)) != 0) {
 		nni_panic("pthread_mutex_unlock: %s", strerror(rv));
 	}
@@ -101,7 +99,6 @@ static void
 nni_pthread_cond_broadcast(pthread_cond_t *c)
 {
 	int rv;
-
 	if ((rv = pthread_cond_broadcast(c)) != 0) {
 		nni_panic("pthread_cond_broadcast: %s", strerror(rv));
 	}
@@ -153,6 +150,53 @@ void
 nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 {
 	nni_pthread_mutex_unlock(&mtx->mtx);
+}
+
+void
+nni_rwlock_init(nni_rwlock *rwl)
+{
+	while (pthread_rwlock_init(&rwl->rwl, NULL) != 0) {
+		// We must have memory exhaustion -- ENOMEM, or
+		// in some cases EAGAIN.  Wait a bit before we try to
+		// give things a chance to settle down.
+		nni_msleep(10);
+	}
+}
+
+void
+nni_rwlock_fini(nni_rwlock *rwl)
+{
+	int rv;
+	if ((rv = pthread_rwlock_destroy(&rwl->rwl)) != 0) {
+		nni_panic("pthread_rwlock_destroy: %s", strerror(rv));
+	}
+}
+
+void
+nni_rwlock_rdlock(nni_rwlock *rwl)
+{
+	int rv;
+	if ((rv = pthread_rwlock_rdlock(&rwl->rwl)) != 0) {
+		nni_panic("pthread_rwlock_rdlock: %s", strerror(rv));
+	}
+}
+
+void
+nni_rwlock_wrlock(nni_rwlock *rwl)
+{
+	int rv;
+	if ((rv = pthread_rwlock_wrlock(&rwl->rwl)) != 0) {
+		nni_panic("pthread_rwlock_wrlock: %s", strerror(rv));
+	}
+}
+
+void
+nni_rwlock_unlock(nni_rwlock *rwl)
+{
+	int rv;
+	if ((rv = pthread_rwlock_unlock(&rwl->rwl)) != 0) {
+		nni_panic("pthread_rwlock_unlock: %s", strerror(rv));
+	}
 }
 
 void
@@ -264,7 +308,7 @@ nni_plat_thr_set_name(nni_plat_thr *thr, const char *name)
 #if defined(__APPLE__)
 	// Darwin is weird, it can only set the name of pthread_self.
 	if ((thr == NULL) || (pthread_self() == thr->tid)) {
-        	pthread_setname_np(name);
+		pthread_setname_np(name);
 	}
 #elif defined(__NetBSD__)
 	if (thr == NULL) {
@@ -283,7 +327,7 @@ nni_plat_thr_set_name(nni_plat_thr *thr, const char *name)
 	if (thr == NULL) {
 		pthread_set_name_np(pthread_self(), name);
 	} else {
-        	pthread_set_name_np(thr->tid, name);
+		pthread_set_name_np(thr->tid, name);
 	}
 #endif
 }

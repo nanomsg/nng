@@ -43,9 +43,9 @@ typedef struct nni_sp_transport {
 	nni_list_node t_node;
 } nni_sp_transport;
 
-static nni_list nni_sp_tran_list;
-static nni_mtx  nni_sp_tran_lk;
-static int      nni_sp_tran_inited;
+static nni_list   nni_sp_tran_list;
+static nni_rwlock nni_sp_tran_lk;
+static int        nni_sp_tran_inited;
 
 int
 nni_sp_tran_register(const nni_sp_tran *tran)
@@ -65,32 +65,32 @@ nni_sp_tran_register(const nni_sp_tran *tran)
 		return (NNG_ENOTSUP);
 	}
 
-	nni_mtx_lock(&nni_sp_tran_lk);
+	nni_rwlock_wrlock(&nni_sp_tran_lk);
 	// Check to see if the transport is already registered...
 	NNI_LIST_FOREACH (&nni_sp_tran_list, t) {
 		if (strcmp(tran->tran_scheme, t->t_tran.tran_scheme) == 0) {
 			if (tran->tran_init == t->t_tran.tran_init) {
 				// duplicate.
-				nni_mtx_unlock(&nni_sp_tran_lk);
+				nni_rwlock_unlock(&nni_sp_tran_lk);
 				return (0);
 			}
-			nni_mtx_unlock(&nni_sp_tran_lk);
+			nni_rwlock_unlock(&nni_sp_tran_lk);
 			return (NNG_ESTATE);
 		}
 	}
 	if ((t = NNI_ALLOC_STRUCT(t)) == NULL) {
-		nni_mtx_unlock(&nni_sp_tran_lk);
+		nni_rwlock_unlock(&nni_sp_tran_lk);
 		return (NNG_ENOMEM);
 	}
 
 	t->t_tran = *tran;
 	if ((rv = t->t_tran.tran_init()) != 0) {
-		nni_mtx_unlock(&nni_sp_tran_lk);
+		nni_rwlock_unlock(&nni_sp_tran_lk);
 		NNI_FREE_STRUCT(t);
 		return (rv);
 	}
 	nni_list_append(&nni_sp_tran_list, t);
-	nni_mtx_unlock(&nni_sp_tran_lk);
+	nni_rwlock_unlock(&nni_sp_tran_lk);
 	return (0);
 }
 
@@ -100,14 +100,14 @@ nni_sp_tran_find(nni_url *url)
 	// address is of the form "<scheme>://blah..."
 	nni_sp_transport *t;
 
-	nni_mtx_lock(&nni_sp_tran_lk);
+	nni_rwlock_rdlock(&nni_sp_tran_lk);
 	NNI_LIST_FOREACH (&nni_sp_tran_list, t) {
 		if (strcmp(url->u_scheme, t->t_tran.tran_scheme) == 0) {
-			nni_mtx_unlock(&nni_sp_tran_lk);
+			nni_rwlock_unlock(&nni_sp_tran_lk);
 			return (&t->t_tran);
 		}
 	}
-	nni_mtx_unlock(&nni_sp_tran_lk);
+	nni_rwlock_unlock(&nni_sp_tran_lk);
 	return (NULL);
 }
 
@@ -150,7 +150,7 @@ nni_sp_tran_sys_init(void)
 
 	nni_sp_tran_inited = 1;
 	NNI_LIST_INIT(&nni_sp_tran_list, nni_sp_transport, t_node);
-	nni_mtx_init(&nni_sp_tran_lk);
+	nni_rwlock_init(&nni_sp_tran_lk);
 
 	for (i = 0; nni_sp_tran_ctors[i] != NULL; i++) {
 		int rv;
@@ -174,6 +174,6 @@ nni_sp_tran_sys_fini(void)
 		t->t_tran.tran_fini();
 		NNI_FREE_STRUCT(t);
 	}
-	nni_mtx_fini(&nni_sp_tran_lk);
+	nni_rwlock_fini(&nni_sp_tran_lk);
 	nni_sp_tran_inited = 0;
 }

@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -56,6 +56,10 @@ extern int nni_plat_errno(int);
 
 struct nni_plat_mtx {
 	pthread_mutex_t mtx;
+};
+
+struct nni_rwlock {
+	pthread_rwlock_t rwl;
 };
 
 struct nni_plat_cv {

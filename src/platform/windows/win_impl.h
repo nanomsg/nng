@@ -41,6 +41,11 @@ struct nni_plat_mtx {
 	int     init;
 };
 
+struct nni_rwlock {
+	SRWLOCK rwl;
+	BOOLEAN exclusive;
+};
+
 struct nni_plat_cv {
 	CONDITION_VARIABLE cv;
 	PSRWLOCK           srl;

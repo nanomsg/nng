@@ -77,6 +77,42 @@ nni_plat_mtx_unlock(nni_plat_mtx *mtx)
 }
 
 void
+nni_rwlock_init(nni_rwlock *rwl)
+{
+	InitializeSRWLock(&rwl->rwl);
+}
+
+void
+nni_rwlock_fini(nni_rwlock *rwl)
+{
+	rwl->exclusive = FALSE;
+}
+
+void
+nni_rwlock_rdlock(nni_rwlock *rwl)
+{
+	AcquireSRWLockShared(&rwl->rwl);
+}
+
+void
+nni_rwlock_wrlock(nni_rwlock *rwl)
+{
+	AcquireSRWLockExclusive(&rwl->rwl);
+	rwl->exclusive = TRUE;
+}
+
+void
+nni_rwlock_unlock(nni_rwlock *rwl)
+{
+	if (rwl->exclusive) {
+		rwl->exclusive = FALSE;
+		ReleaseSRWLockExclusive(&rwl->rwl);
+	} else {
+		ReleaseSRWLockShared(&rwl->rwl);
+	}
+}
+
+void
 nni_plat_cv_init(nni_plat_cv *cv, nni_plat_mtx *mtx)
 {
 	InitializeConditionVariable(&cv->cv);
@@ -112,7 +148,7 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 	if (now > until) {
 		msec = 0;
 	} else {
-		msec = (DWORD)(until - now);
+		msec = (DWORD) (until - now);
 	}
 
 	ok = SleepConditionVariableSRW(&cv->cv, cv->srl, msec, 0);
@@ -178,7 +214,7 @@ uint64_t
 nni_atomic_get64(nni_atomic_u64 *v)
 {
 
-	return ((uint64_t)(InterlockedExchangeAdd64(&v->v, 0)));
+	return ((uint64_t) (InterlockedExchangeAdd64(&v->v, 0)));
 }
 
 void
@@ -190,7 +226,7 @@ nni_atomic_set64(nni_atomic_u64 *v, uint64_t u)
 uint64_t
 nni_atomic_swap64(nni_atomic_u64 *v, uint64_t u)
 {
-	return ((uint64_t)(InterlockedExchange64(&v->v, (LONGLONG) u)));
+	return ((uint64_t) (InterlockedExchange64(&v->v, (LONGLONG) u)));
 }
 
 void
@@ -213,9 +249,9 @@ uint64_t
 nni_atomic_dec64_nv(nni_atomic_u64 *v)
 {
 #ifdef _WIN64
-	return ((uint64_t)(InterlockedDecrementRelease64(&v->v)));
+	return ((uint64_t) (InterlockedDecrementRelease64(&v->v)));
 #else
-	return ((uint64_t)(InterlockedDecrement64(&v->v)));
+	return ((uint64_t) (InterlockedDecrement64(&v->v)));
 #endif
 }
 
@@ -331,9 +367,9 @@ void
 nni_plat_thr_set_name(nni_plat_thr *thr, const char *name)
 {
 	if (set_thread_desc != NULL) {
-                wchar_t *wcs;
-                size_t len;
-		HANDLE h;
+		wchar_t *wcs;
+		size_t   len;
+		HANDLE   h;
 
 		if (thr == NULL) {
 			h = GetCurrentThread();
@@ -341,7 +377,7 @@ nni_plat_thr_set_name(nni_plat_thr *thr, const char *name)
 			h = thr->handle;
 		}
 
-                len = strlen(name) + 1;
+		len = strlen(name) + 1;
 		if ((wcs = nni_alloc(len * 2)) == NULL) {
 			return;
 		}
@@ -372,18 +408,18 @@ nni_plat_init(int (*helper)(void))
 		return (0); // fast path
 	}
 
-
-        AcquireSRWLockExclusive(&lock);
+	AcquireSRWLockExclusive(&lock);
 
 	if (!plat_inited) {
-                // Let's look up the function to set thread descriptions.
-                hKernel32 = LoadLibrary(TEXT("kernel32.dll"));
-                if (hKernel32 != NULL) {
-                        set_thread_desc = (pfnSetThreadDescription)
-                            GetProcAddress(hKernel32, "SetThreadDescription");
-                }
+		// Let's look up the function to set thread descriptions.
+		hKernel32 = LoadLibrary(TEXT("kernel32.dll"));
+		if (hKernel32 != NULL) {
+			set_thread_desc =
+			    (pfnSetThreadDescription) GetProcAddress(
+			        hKernel32, "SetThreadDescription");
+		}
 
-                if (((rv = nni_win_io_sysinit()) != 0) ||
+		if (((rv = nni_win_io_sysinit()) != 0) ||
 		    ((rv = nni_win_ipc_sysinit()) != 0) ||
 		    ((rv = nni_win_tcp_sysinit()) != 0) ||
 		    ((rv = nni_win_udp_sysinit()) != 0) ||
