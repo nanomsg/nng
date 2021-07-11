@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -49,8 +49,8 @@ extern "C" {
 // We use SemVer, and these versions are about the API, and
 // may not necessarily match the ABI versions.
 #define NNG_MAJOR_VERSION 1
-#define NNG_MINOR_VERSION 4
-#define NNG_PATCH_VERSION 0
+#define NNG_MINOR_VERSION 5
+#define NNG_PATCH_VERSION 1
 #define NNG_RELEASE_SUFFIX "" // if non-empty, this is a pre-release
 
 // Maximum length of a socket address. This includes the terminating NUL.
