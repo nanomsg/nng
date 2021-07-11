@@ -238,9 +238,9 @@ pipe_stats_init(nni_pipe *p)
 	pipe_stat_init(p, &p->st_rx_bytes, &rx_bytes_info);
 	pipe_stat_init(p, &p->st_tx_bytes, &tx_bytes_info);
 
-	nni_stat_set_id(&p->st_root, p->p_id);
-	nni_stat_set_id(&p->st_id, p->p_id);
-	nni_stat_set_id(&p->st_sock_id, nni_sock_id(p->p_sock));
+	nni_stat_set_id(&p->st_root, (int) p->p_id);
+	nni_stat_set_id(&p->st_id, (int) p->p_id);
+	nni_stat_set_id(&p->st_sock_id, (int) nni_sock_id(p->p_sock));
 }
 #endif // NNG_ENABLE_STATS
 
@@ -302,9 +302,9 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 int
 nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 {
-	int       rv;
+	int          rv;
 	nni_sp_tran *tran = d->d_tran;
-	nni_pipe *p;
+	nni_pipe *   p;
 
 	if ((rv = pipe_create(&p, d->d_sock, tran, tdata)) != 0) {
 		return (rv);
@@ -317,7 +317,7 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 		.si_type = NNG_STAT_ID,
 	};
 	pipe_stat_init(p, &p->st_ep_id, &dialer_info);
-	nni_stat_set_id(&p->st_ep_id, nni_dialer_id(d));
+	nni_stat_set_id(&p->st_ep_id, (int) nni_dialer_id(d));
 #endif
 	*pp = p;
 	return (0);
@@ -326,9 +326,9 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 int
 nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 {
-	int       rv;
+	int          rv;
 	nni_sp_tran *tran = l->l_tran;
-	nni_pipe *p;
+	nni_pipe *   p;
 
 	if ((rv = pipe_create(&p, l->l_sock, tran, tdata)) != 0) {
 		return (rv);
@@ -341,7 +341,7 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 		.si_type = NNG_STAT_ID,
 	};
 	pipe_stat_init(p, &p->st_ep_id, &listener_info);
-	nni_stat_set_id(&p->st_ep_id, nni_listener_id(l));
+	nni_stat_set_id(&p->st_ep_id, (int) nni_listener_id(l));
 #endif
 	*pp = p;
 	return (0);
