@@ -64,13 +64,6 @@ typedef int32_t  nni_duration; // Rel. time (ms).
 
 typedef void (*nni_cb)(void *);
 
-// Notify descriptor.
-typedef struct {
-	int sn_wfd; // written to in order to flag an event
-	int sn_rfd; // read from in order to clear an event
-	int sn_init;
-} nni_notifyfd;
-
 // Some default timing things.
 #define NNI_TIME_NEVER ((nni_time) -1)
 #define NNI_TIME_ZERO ((nni_time) 0)
