@@ -236,7 +236,7 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 	if ((rv = nni_url_parse(&url, urlstr)) != 0) {
 		return (rv);
 	}
-	if (((tran = nni_tran_find(url)) == NULL) ||
+	if (((tran = nni_sp_tran_find(url)) == NULL) ||
 	    (tran->tran_dialer == NULL)) {
 		nni_url_free(url);
 		return (NNG_ENOTSUP);

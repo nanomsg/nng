@@ -1255,9 +1255,9 @@ int
 nng_tcp_register(void)
 {
 	int rv;
-	if (((rv = nni_tran_register(&tcp_tran)) != 0) ||
-	    ((rv = nni_tran_register(&tcp4_tran)) != 0) ||
-	    ((rv = nni_tran_register(&tcp6_tran)) != 0)) {
+	if (((rv = nni_sp_tran_register(&tcp_tran)) != 0) ||
+	    ((rv = nni_sp_tran_register(&tcp4_tran)) != 0) ||
+	    ((rv = nni_sp_tran_register(&tcp6_tran)) != 0)) {
 		return (rv);
 	}
 	return (0);

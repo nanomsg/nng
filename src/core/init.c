@@ -48,7 +48,7 @@ nni_init_helper(void)
 	    ((rv = nni_pipe_sys_init()) != 0) ||
 	    ((rv = nni_tls_sys_init()) != 0) ||
 	    ((rv = nni_proto_sys_init()) != 0) ||
-	    ((rv = nni_tran_sys_init()) != 0)) {
+	    ((rv = nni_sp_tran_sys_init()) != 0)) {
 		nni_fini();
 	}
 
@@ -80,7 +80,7 @@ nni_fini(void)
 		}
 		nni_mtx_unlock(&nni_init_mtx);
 	}
-	nni_tran_sys_fini();
+	nni_sp_tran_sys_fini();
 	nni_proto_sys_fini();
 	nni_tls_sys_fini();
 	nni_pipe_sys_fini();

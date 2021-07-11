@@ -84,14 +84,14 @@ struct nni_sp_tran goodtran = {
 
 TestMain("Pluggable Transports", {
 	Convey("Registering TCP again fails", {
-		So(nni_tran_register(&fake_tcp) == NNG_ESTATE);
+		So(nni_sp_tran_register(&fake_tcp) == NNG_ESTATE);
 		So(ninits == 0);
 		So(nfinis == 0);
 		So(nbads == 0);
 	});
 
 	Convey("Registering bad version fails", {
-		So(nni_tran_register(&badvers) == NNG_ENOTSUP);
+		So(nni_sp_tran_register(&badvers) == NNG_ENOTSUP);
 		So(ninits == 0);
 		So(nfinis == 0);
 		So(nbads == 0);
@@ -99,7 +99,7 @@ TestMain("Pluggable Transports", {
 
 	Convey("Registering bad init fails", {
 		if (nbads == 0) {
-			So(nni_tran_register(&badtran) == NNG_ENOMEM);
+			So(nni_sp_tran_register(&badtran) == NNG_ENOMEM);
 		}
 		So(ninits == 0);
 		So(nfinis == 0);
@@ -114,7 +114,7 @@ TestMain("Pluggable Transports", {
 
 	Convey("Registering good init passes", {
 		if (ninits == 0) {
-			So(nni_tran_register(&goodtran) == 0);
+			So(nni_sp_tran_register(&goodtran) == 0);
 			So(nfinis == 0);
 		}
 		So(ninits == 1);

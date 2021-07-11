@@ -1156,12 +1156,12 @@ int
 nng_ipc_register(void)
 {
 	int rv;
-	if (((rv = nni_tran_register(&ipc_tran)) != 0)
+	if (((rv = nni_sp_tran_register(&ipc_tran)) != 0)
 #ifdef NNG_PLATFORM_POSIX
-	    || ((rv = nni_tran_register(&ipc_tran_unix)) != 0)
+	    || ((rv = nni_sp_tran_register(&ipc_tran_unix)) != 0)
 #endif
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
-	    || ((rv = nni_tran_register(&ipc_tran_abstract)) != 0)
+	    || ((rv = nni_sp_tran_register(&ipc_tran_abstract)) != 0)
 #endif
 	) {
 		return (rv);

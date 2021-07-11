@@ -688,5 +688,5 @@ struct nni_sp_tran nni_inproc_tran = {
 int
 nng_inproc_register(void)
 {
-	return (nni_tran_register(&nni_inproc_tran));
+	return (nni_sp_tran_register(&nni_inproc_tran));
 }

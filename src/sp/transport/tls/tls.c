@@ -1284,9 +1284,9 @@ int
 nng_tls_register(void)
 {
 	int rv;
-	if (((rv = nni_tran_register(&tls_tran)) != 0) ||
-	    ((rv = nni_tran_register(&tls4_tran)) != 0) ||
-	    ((rv = nni_tran_register(&tls6_tran)) != 0)) {
+	if (((rv = nni_sp_tran_register(&tls_tran)) != 0) ||
+	    ((rv = nni_sp_tran_register(&tls4_tran)) != 0) ||
+	    ((rv = nni_sp_tran_register(&tls6_tran)) != 0)) {
 		return (rv);
 	}
 	return (0);

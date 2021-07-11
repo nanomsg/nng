@@ -675,9 +675,9 @@ int
 nng_ws_register(void)
 {
 	int rv;
-	if (((rv = nni_tran_register(&ws_tran)) != 0) ||
-	    ((rv = nni_tran_register(&ws4_tran)) != 0) ||
-	    ((rv = nni_tran_register(&ws6_tran)) != 0)) {
+	if (((rv = nni_sp_tran_register(&ws_tran)) != 0) ||
+	    ((rv = nni_sp_tran_register(&ws4_tran)) != 0) ||
+	    ((rv = nni_sp_tran_register(&ws6_tran)) != 0)) {
 		return (rv);
 	}
 
@@ -720,9 +720,9 @@ int
 nng_wss_register(void)
 {
 	int rv;
-	if (((rv = nni_tran_register(&wss_tran)) != 0) ||
-	    ((rv = nni_tran_register(&wss4_tran)) != 0) ||
-	    ((rv = nni_tran_register(&wss6_tran)) != 0)) {
+	if (((rv = nni_sp_tran_register(&wss_tran)) != 0) ||
+	    ((rv = nni_sp_tran_register(&wss4_tran)) != 0) ||
+	    ((rv = nni_sp_tran_register(&wss6_tran)) != 0)) {
 		return (rv);
 	}
 

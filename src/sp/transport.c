@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -38,26 +38,26 @@
 extern nni_sp_tran nni_tcp_tran;
 extern nni_sp_tran nni_ipc_tran;
 
-typedef struct nni_transport {
+typedef struct nni_sp_transport {
 	nni_sp_tran   t_tran;
 	nni_list_node t_node;
-} nni_transport;
+} nni_sp_transport;
 
-static nni_list nni_tran_list;
-static nni_mtx  nni_tran_lk;
-static int      nni_tran_inited;
+static nni_list nni_sp_tran_list;
+static nni_mtx  nni_sp_tran_lk;
+static int      nni_sp_tran_inited;
 
 int
-nni_tran_register(const nni_sp_tran *tran)
+nni_sp_tran_register(const nni_sp_tran *tran)
 {
-	nni_transport *t;
-	int            rv;
+	nni_sp_transport *t;
+	int               rv;
 
 	// Its entirely possible that we are called before any sockets
 	// are opened.  Make sure we are initialized.  This has to be
 	// protected by a guard to prevent infinite recursion, since
 	// nni_init also winds up calling us.
-	if (!nni_tran_inited) {
+	if (!nni_sp_tran_inited) {
 		nni_init();
 	}
 
@@ -65,60 +65,60 @@ nni_tran_register(const nni_sp_tran *tran)
 		return (NNG_ENOTSUP);
 	}
 
-	nni_mtx_lock(&nni_tran_lk);
+	nni_mtx_lock(&nni_sp_tran_lk);
 	// Check to see if the transport is already registered...
-	NNI_LIST_FOREACH (&nni_tran_list, t) {
+	NNI_LIST_FOREACH (&nni_sp_tran_list, t) {
 		if (strcmp(tran->tran_scheme, t->t_tran.tran_scheme) == 0) {
 			if (tran->tran_init == t->t_tran.tran_init) {
 				// duplicate.
-				nni_mtx_unlock(&nni_tran_lk);
+				nni_mtx_unlock(&nni_sp_tran_lk);
 				return (0);
 			}
-			nni_mtx_unlock(&nni_tran_lk);
+			nni_mtx_unlock(&nni_sp_tran_lk);
 			return (NNG_ESTATE);
 		}
 	}
 	if ((t = NNI_ALLOC_STRUCT(t)) == NULL) {
-		nni_mtx_unlock(&nni_tran_lk);
+		nni_mtx_unlock(&nni_sp_tran_lk);
 		return (NNG_ENOMEM);
 	}
 
 	t->t_tran = *tran;
 	if ((rv = t->t_tran.tran_init()) != 0) {
-		nni_mtx_unlock(&nni_tran_lk);
+		nni_mtx_unlock(&nni_sp_tran_lk);
 		NNI_FREE_STRUCT(t);
 		return (rv);
 	}
-	nni_list_append(&nni_tran_list, t);
-	nni_mtx_unlock(&nni_tran_lk);
+	nni_list_append(&nni_sp_tran_list, t);
+	nni_mtx_unlock(&nni_sp_tran_lk);
 	return (0);
 }
 
 nni_sp_tran *
-nni_tran_find(nni_url *url)
+nni_sp_tran_find(nni_url *url)
 {
 	// address is of the form "<scheme>://blah..."
-	nni_transport *t;
+	nni_sp_transport *t;
 
-	nni_mtx_lock(&nni_tran_lk);
-	NNI_LIST_FOREACH (&nni_tran_list, t) {
+	nni_mtx_lock(&nni_sp_tran_lk);
+	NNI_LIST_FOREACH (&nni_sp_tran_list, t) {
 		if (strcmp(url->u_scheme, t->t_tran.tran_scheme) == 0) {
-			nni_mtx_unlock(&nni_tran_lk);
+			nni_mtx_unlock(&nni_sp_tran_lk);
 			return (&t->t_tran);
 		}
 	}
-	nni_mtx_unlock(&nni_tran_lk);
+	nni_mtx_unlock(&nni_sp_tran_lk);
 	return (NULL);
 }
 
-// nni_tran_sys_init initializes the entire transport subsystem, including
+// nni_sp_tran_sys_init initializes the entire transport subsystem, including
 // each individual transport.
 
-typedef int (*nni_tran_ctor)(void);
+typedef int (*nni_sp_tran_ctor)(void);
 
 // These are just the statically compiled in constructors.
 // In the future we might want to support dynamic additions.
-static nni_tran_ctor nni_tran_ctors[] = {
+static nni_sp_tran_ctor nni_sp_tran_ctors[] = {
 #ifdef NNG_TRANSPORT_INPROC
 	nng_inproc_register,
 #endif
@@ -144,36 +144,36 @@ static nni_tran_ctor nni_tran_ctors[] = {
 };
 
 int
-nni_tran_sys_init(void)
+nni_sp_tran_sys_init(void)
 {
 	int i;
 
-	nni_tran_inited = 1;
-	NNI_LIST_INIT(&nni_tran_list, nni_transport, t_node);
-	nni_mtx_init(&nni_tran_lk);
+	nni_sp_tran_inited = 1;
+	NNI_LIST_INIT(&nni_sp_tran_list, nni_sp_transport, t_node);
+	nni_mtx_init(&nni_sp_tran_lk);
 
-	for (i = 0; nni_tran_ctors[i] != NULL; i++) {
+	for (i = 0; nni_sp_tran_ctors[i] != NULL; i++) {
 		int rv;
-		if ((rv = (nni_tran_ctors[i])()) != 0) {
-			nni_tran_sys_fini();
+		if ((rv = (nni_sp_tran_ctors[i]) ()) != 0) {
+			nni_sp_tran_sys_fini();
 			return (rv);
 		}
 	}
 	return (0);
 }
 
-// nni_tran_sys_fini finalizes the entire transport system, including all
+// nni_sp_tran_sys_fini finalizes the entire transport system, including all
 // transports.
 void
-nni_tran_sys_fini(void)
+nni_sp_tran_sys_fini(void)
 {
-	nni_transport *t;
+	nni_sp_transport *t;
 
-	while ((t = nni_list_first(&nni_tran_list)) != NULL) {
-		nni_list_remove(&nni_tran_list, t);
+	while ((t = nni_list_first(&nni_sp_tran_list)) != NULL) {
+		nni_list_remove(&nni_sp_tran_list, t);
 		t->t_tran.tran_fini();
 		NNI_FREE_STRUCT(t);
 	}
-	nni_mtx_fini(&nni_tran_lk);
-	nni_tran_inited = 0;
+	nni_mtx_fini(&nni_sp_tran_lk);
+	nni_sp_tran_inited = 0;
 }
