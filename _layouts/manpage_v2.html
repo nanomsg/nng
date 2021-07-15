@@ -4,35 +4,33 @@
 <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <link rel="stylesheet" href="/nn.css">
-        <link rel="stylesheet" href="/nn-pygments.css">
+        <link rel="stylesheet" href="/assets/css/nn.css">
+        <link rel="stylesheet" href="/assets/css/nn-pygments.css">
+        <link rel="stylesheet" href="/assets/css/man.css">
         <link href="https://fonts.googleapis.com/css?family=Roboto&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Open+Sans&display=swap" rel="stylesheet">
         <link href="https://fonts.googleapis.com/css?family=Inconsolata&display=swap" rel="stylesheet">
         <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
                 rel="stylesheet">
+        <link rel="stylesheet" href="//at.alicdn.com/t/font_2668178_wdjo3p78tv.css">
         <title>{{page.title}}</title>
 </head>
 
 <body class="manpage toc2 toc-left">
-{% include header-nng.html %}
+        {% include header-manpage.html %}
+        {% include_relative _toc.html %}
 
-{% include_relative _toc.html %}
-
-<main>
-{% if page.version and page.version != site.latest %}
-{% if page.version == "tip" %}
-{% include manpage-tip.html %}
-{% else %}
-{% include manpage-old.html %}
-{% endif %}
-{% endif %}
-
-{{ content }}
-</main>
-
-{% include footer-manpage.html %}
-
+        <main>
+                {% if page.version and page.version != site.latest %}
+                {% if page.version == "tip" %}
+                {% include manpage-tip.html %}
+                {% else %}
+                {% include manpage-old.html %}
+                {% endif %}
+                {% endif %}
+                {{ content }}
+                {% include footer-nng.html %}
+        </main>
 </body>
 
 </html>

@@ -12,7 +12,7 @@ image:https://img.shields.io/codacy/grade/f241cba192974787b66f7e4368777ebf?logo=
 image:https://img.shields.io/lgtm/grade/cpp/github/nanomsg/nng?logo=lgtm&logoColor=grey&label=[LGTM,link="https://lgtm.com/projects/g/nanomsg/nng/?mode=list"]
 image:https://img.shields.io/discord/639573728212156478?label=&logo=discord[Discord,link="https://discord.gg/Xnac6b9"]
 image:https://img.shields.io/github/license/nanomsg/nng.svg?logoColor=silver&logo=open-source-initiative&label=&color=blue[MIT License,link="https://github.com/nanomsg/nng/blob/master/LICENSE.txt"]
-image:https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=[Latest version,link="https://github.com/nanomsg/nng/releases]
+image:https://img.shields.io/github/v/tag/nanomsg/nng.svg?logo=github&label=[Latest version,link="https://github.com/nanomsg/nng/releases"]
 
 
 This is the landing page for NNG.
