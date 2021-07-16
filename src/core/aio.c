@@ -519,6 +519,7 @@ nni_aio_expire_add(nni_aio *aio)
 		eq->eq_list = new_list;
 		eq->eq_cap *= 2;
 	}
+
 	eq->eq_list[eq->eq_len++] = aio;
 	if (eq->eq_len == 1) {
 		nni_cv_wake(&eq->eq_cv);
@@ -528,8 +529,9 @@ nni_aio_expire_add(nni_aio *aio)
 static void
 nni_aio_expire_rm(nni_aio *aio)
 {
-	uint32_t          aio_idx = 0;
-	nni_aio_expire_q *eq      = aio->a_expire_q;
+	uint32_t     aio_idx = 0;
+	nni_aio_expire_q *eq = aio->a_expire_q;
+
 	for (aio_idx = 0; aio_idx < eq->eq_len; aio_idx++) {
 		if (aio == eq->eq_list[aio_idx]) {
 			eq->eq_list[aio_idx] = eq->eq_list[eq->eq_len - 1];
@@ -546,7 +548,7 @@ nni_aio_expire_rm(nni_aio *aio)
 		}
 		nni_free(eq->eq_list, eq->eq_cap * sizeof(nni_aio *));
 		eq->eq_list = new_list;
-		eq->eq_cap /= 2;
+		eq->eq_cap /= 4;
 	}
 }
 
