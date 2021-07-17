@@ -107,6 +107,7 @@ nni_posix_pfd_init(nni_posix_pfd **pfdp, int fd)
 	NNI_LIST_NODE_INIT(&pfd->node);
 
 	// notifications disabled to begin with
+	memset(&ev, 0, sizeof(ev));
 	ev.events   = 0;
 	ev.data.ptr = pfd;
 
@@ -138,6 +139,7 @@ nni_posix_pfd_arm(nni_posix_pfd *pfd, unsigned events)
 		pfd->events |= events;
 		events = pfd->events;
 
+		memset(&ev, 0, sizeof(ev));
 		ev.events   = events | NNI_EPOLL_FLAGS;
 		ev.data.ptr = pfd;
 
