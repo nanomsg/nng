@@ -190,7 +190,7 @@ elseif (CMAKE_SYSTEM_NAME MATCHES "Android")
     add_definitions(-DNNG_USE_EVENTFD)
     set(NNG_PLATFORM_POSIX ON)
 
-elseif (CMAKE_SYSTEM_NAME MATCHES "Darwin")
+elseif (APPLE)
     add_definitions(-DNNG_PLATFORM_POSIX)
     add_definitions(-DNNG_PLATFORM_DARWIN)
     set(NNG_PLATFORM_POSIX ON)
