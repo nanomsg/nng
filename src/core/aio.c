@@ -528,12 +528,11 @@ nni_aio_expire_add(nni_aio *aio)
 static void
 nni_aio_expire_rm(nni_aio *aio)
 {
-	uint32_t     aio_idx = 0;
 	nni_aio_expire_q *eq = aio->a_expire_q;
 
-	for (aio_idx = 0; aio_idx < eq->eq_len; aio_idx++) {
-		if (aio == eq->eq_list[aio_idx]) {
-			eq->eq_list[aio_idx] = eq->eq_list[eq->eq_len - 1];
+	for (uint32_t i = 0; i < eq->eq_len; i++) {
+		if (aio == eq->eq_list[i]) {
+			eq->eq_list[i] = eq->eq_list[eq->eq_len - 1];
 			eq->eq_len--;
 			break;
 		}
@@ -554,10 +553,10 @@ nni_aio_expire_rm(nni_aio *aio)
 static void
 nni_aio_expire_loop(void *arg)
 {
-	nni_aio_expire_q *q    = arg;
-	nni_aio **        list = q->eq_list;
-	nni_mtx *         mtx  = &q->eq_mtx;
-	nni_cv *          cv   = &q->eq_cv;
+	nni_aio_expire_q *q   = arg;
+	nni_mtx *         mtx = &q->eq_mtx;
+	nni_cv *          cv  = &q->eq_cv;
+	nni_aio **        list;
 	nni_time          now;
 	uint32_t          aio_idx;
 
