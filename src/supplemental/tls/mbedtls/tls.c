@@ -334,7 +334,7 @@ static int
 config_server_name(nng_tls_engine_config *cfg, const char *name)
 {
 	char *dup;
-	if ((dup = strdup(name)) == NULL) {
+	if ((dup = nni_strdup(name)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	if (cfg->server_name) {
