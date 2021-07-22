@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -9,8 +9,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifndef CORE_TRANSPORT_H
-#define CORE_TRANSPORT_H
+#ifndef PROTOCOL_SP_TRANSPORT_H
+#define PROTOCOL_SP_TRANSPORT_H
 
 #include "core/options.h"
 
@@ -186,4 +186,4 @@ extern int          nni_sp_tran_sys_init(void);
 extern void         nni_sp_tran_sys_fini(void);
 extern int          nni_sp_tran_register(const nni_sp_tran *tran);
 
-#endif // CORE_TRANSPORT_H
+#endif // PROTOCOL_SP_TRANSPORT_H
