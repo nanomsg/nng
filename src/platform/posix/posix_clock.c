@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2021 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -21,7 +21,7 @@
 
 // Use POSIX realtime stuff
 nni_time
-nni_plat_clock(void)
+nni_clock(void)
 {
 	struct timespec ts;
 	nni_time        msec;
@@ -38,7 +38,7 @@ nni_plat_clock(void)
 }
 
 void
-nni_plat_sleep(nni_duration ms)
+nni_msleep(nni_duration ms)
 {
 	struct timespec ts;
 
@@ -69,7 +69,7 @@ nni_plat_sleep(nni_duration ms)
 #include <sys/time.h>
 
 nni_time
-nni_plat_clock(void)
+nni_clock(void)
 {
 	nni_time ms;
 
@@ -86,7 +86,7 @@ nni_plat_clock(void)
 }
 
 void
-nni_plat_sleep(nni_duration ms)
+nni_msleep(nni_duration ms)
 {
 	// So probably there is no nanosleep.  We could in theory use
 	// pthread condition variables, but that means doing memory
@@ -105,12 +105,12 @@ nni_plat_sleep(nni_duration ms)
 	pfd.fd     = -1;
 	pfd.events = 0;
 
-	now    = nni_plat_clock(); // XXX: until nni_plat_clock returns ms.
+	now    = nni_clock();
 	expire = now + ms;
 
 	while (now < expire) {
 		(void) poll(&pfd, 0, (int) (expire - now));
-		now = nni_plat_clock();
+		now = nni_clock();
 	}
 }
 

@@ -1,5 +1,5 @@
 //
-// Copyright 2017 Garrett D'Amore <garrett@damore.org>
+// Copyright 2021 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -27,7 +27,6 @@
 #include "core/platform.h"
 
 #include "core/aio.h"
-#include "core/clock.h"
 #include "core/device.h"
 #include "core/file.h"
 #include "core/idhash.h"

@@ -13,14 +13,14 @@
 #ifdef NNG_PLATFORM_WINDOWS
 
 nni_time
-nni_plat_clock(void)
+nni_clock(void)
 {
 	// We are limited by the system clock, but that is ok.
 	return (GetTickCount64());
 }
 
 void
-nni_plat_sleep(nni_duration dur)
+nni_msleep(nni_duration dur)
 {
 	uint64_t exp;
 

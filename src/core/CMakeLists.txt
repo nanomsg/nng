@@ -20,8 +20,6 @@ nng_sources(
 
         aio.c
         aio.h
-        clock.c
-        clock.h
         device.c
         device.h
         dialer.c

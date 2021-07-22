@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -144,7 +144,7 @@ nni_plat_cv_until(nni_plat_cv *cv, nni_time until)
 	DWORD    msec;
 	BOOL     ok;
 
-	now = nni_plat_clock();
+	now = nni_clock();
 	if (now > until) {
 		msec = 0;
 	} else {

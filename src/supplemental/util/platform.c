@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -18,7 +18,7 @@ nng_time
 nng_clock(void)
 {
 	(void) nni_init();
-	return (nni_plat_clock());
+	return (nni_clock());
 }
 
 // Sleep for specified msecs.
