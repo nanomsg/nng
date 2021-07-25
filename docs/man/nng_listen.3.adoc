@@ -31,7 +31,7 @@ If the value of _lp_ is not `NULL`, then
 the newly created listener is stored at the address indicated by _lp_.
 
 Listeners are used to accept connections initiated by remote dialers.
-An incoming connection generally results in and
+An incoming connection generally results in an
 xref:nng_pipe.5.adoc[`nng_pipe`] object being created and attached to the socket _s_.
 Unlike dialers, listeners generally can create many
 pipes, which may be open concurrently.
