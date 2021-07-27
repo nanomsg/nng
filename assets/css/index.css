@@ -12,11 +12,11 @@ a {
 }
 
 a:hover {
-  color: #BA5836;
+  color: #112D4E;
 }
 
 a.is-brown {
-  color: #BA5836;
+  color: #3F72AF;
 }
 
 .button {
@@ -37,7 +37,7 @@ a.is-brown {
   position: fixed;
   z-index: 40;
   width: 100%;
-  background: linear-gradient(135deg, #3A3654 0%, #515C85 100%);
+  background: linear-gradient(135deg, #112D4E 0%, #171D41 100%);
 }
 
 i.iconfont {
@@ -46,7 +46,7 @@ i.iconfont {
 }
 
 .navbar-burger {
-  color: #BA5836;
+  color: #3F72AF
 }
 
 /* navbar link  */
@@ -59,21 +59,13 @@ i.iconfont {
 }
 
 .nn-header-inner a:hover {
-  color: #BA5836;
-}
-
-.nn-header a.btn-github {
-  padding: 5px 28px;
-  display: inline-block;
-  border-radius: 4px;
-  border: 1px solid #DEDEDE;
-  color: #fff;
+  color: #3F72AF
 }
 
 .nn-header a.btn-download {
   padding: 5px 12px;
   display: inline-block;
-  background: #BA5836;
+  background: #3F72AF;
   border-radius: 4px;
   color: #fff;
 }
@@ -107,7 +99,7 @@ i.iconfont {
   width: 100%;
   padding: 175px 0 110px;
   text-align: center;
-  background: linear-gradient(135deg, #3A3654 0%, #515C85 100%);
+  background: linear-gradient(135deg, #112D4E 0%, #171D41 100%);
 }
 
 #nn-banner .nn-banner-title {
@@ -125,7 +117,7 @@ i.iconfont {
 
 #nn-banner .nn-btn-download {
   padding: 15px 44px;
-  background: #BA5836;
+  background: #3F72AF;
   border-radius: 4px;
   color: #fff;
 }
@@ -151,7 +143,7 @@ h2.nn-subtitle {
 #nn-intro .nn-intro-container {
   padding: 60px 110px;
   position: relative;
-  border: #BA5836 solid 4px;
+  border: #112D4E solid 4px;
   border-radius: 4px;
 }
 
@@ -215,7 +207,7 @@ h2.nn-subtitle {
 #nn-feat .feat-card .card-title {
   font-size: 16px;
   font-weight: bold;
-  color: #4F5880;
+  color: #112D4E;
   line-height: 24px;
 }
 
@@ -248,7 +240,7 @@ h2.nn-subtitle {
 /* nn-quick-start */
 #nn-quick-start {
   padding: 100px 0;
-  background: linear-gradient(135deg, #3A3654 0%, #515C85 100%);
+  background: linear-gradient(135deg, #112D4E 0%, #171D41 100%);
 }
 
 #nn-quick-start .container {
