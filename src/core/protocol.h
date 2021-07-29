@@ -122,9 +122,9 @@ struct nni_proto {
 	nni_proto_id              proto_self;     // Our identity
 	nni_proto_id              proto_peer;     // Peer identity
 	uint32_t                  proto_flags;    // Protocol flags
-	const nni_proto_sock_ops *proto_sock_ops; // Per-socket opeations
-	const nni_proto_pipe_ops *proto_pipe_ops; // Per-pipe operations.
-	const nni_proto_ctx_ops * proto_ctx_ops;  // Context operations.
+	const nni_proto_sock_ops *proto_sock_ops; // Per-socket operations
+	const nni_proto_pipe_ops *proto_pipe_ops; // Per-pipe operations
+	const nni_proto_ctx_ops * proto_ctx_ops;  // Context operations
 
 	// proto_init, if not NULL, provides a function that initializes
 	// global values.  The main purpose of this may be to initialize
