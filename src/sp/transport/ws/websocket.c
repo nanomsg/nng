@@ -548,10 +548,9 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 	return (0);
 }
 
-static int
+static void
 wstran_init(void)
 {
-	return (0);
 }
 
 static void
@@ -642,7 +641,6 @@ static nni_sp_listener_ops ws_listener_ops = {
 };
 
 static nni_sp_tran ws_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "ws",
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
@@ -652,7 +650,6 @@ static nni_sp_tran ws_tran = {
 };
 
 static nni_sp_tran ws4_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "ws4",
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
@@ -662,7 +659,6 @@ static nni_sp_tran ws4_tran = {
 };
 
 static nni_sp_tran ws6_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "ws6",
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
@@ -674,12 +670,9 @@ static nni_sp_tran ws6_tran = {
 int
 nng_ws_register(void)
 {
-	int rv;
-	if (((rv = nni_sp_tran_register(&ws_tran)) != 0) ||
-	    ((rv = nni_sp_tran_register(&ws4_tran)) != 0) ||
-	    ((rv = nni_sp_tran_register(&ws6_tran)) != 0)) {
-		return (rv);
-	}
+	nni_sp_tran_register(&ws_tran);
+	nni_sp_tran_register(&ws4_tran);
+	nni_sp_tran_register(&ws6_tran);
 
 	return (0);
 }
@@ -687,7 +680,6 @@ nng_ws_register(void)
 #ifdef NNG_TRANSPORT_WSS
 
 static nni_sp_tran wss_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "wss",
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
@@ -697,7 +689,6 @@ static nni_sp_tran wss_tran = {
 };
 
 static nni_sp_tran wss4_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "wss4",
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
@@ -707,7 +698,6 @@ static nni_sp_tran wss4_tran = {
 };
 
 static nni_sp_tran wss6_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "wss6",
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
@@ -719,12 +709,9 @@ static nni_sp_tran wss6_tran = {
 int
 nng_wss_register(void)
 {
-	int rv;
-	if (((rv = nni_sp_tran_register(&wss_tran)) != 0) ||
-	    ((rv = nni_sp_tran_register(&wss4_tran)) != 0) ||
-	    ((rv = nni_sp_tran_register(&wss6_tran)) != 0)) {
-		return (rv);
-	}
+	nni_sp_tran_register(&wss_tran);
+	nni_sp_tran_register(&wss4_tran);
+	nni_sp_tran_register(&wss6_tran);
 
 	return (0);
 }

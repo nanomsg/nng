@@ -14,17 +14,6 @@
 
 #include "core/options.h"
 
-// We quite intentionally use a signature where the upper word is nonzero,
-// which ensures that if we get garbage we will reject it.  This is more
-// likely to mismatch than all zero bytes would.  The actual version is
-// stored in the lower word; this is not semver -- the numbers are just
-// increasing - we doubt it will increase more than a handful of times
-// during the life of the project.  If we add a new version, please keep
-// the old version around -- it may be possible to automatically convert
-// older versions in the future.
-#define NNI_TRANSPORT_V8 0x54220008
-#define NNI_TRANSPORT_VERSION NNI_TRANSPORT_V8
-
 // Endpoint operations are called by the socket in a
 // protocol-independent fashion.  The socket makes individual calls,
 // which are expected to block if appropriate (except for destroy), or
@@ -153,10 +142,9 @@ struct nni_sp_pipe_ops {
 // Transport implementation details.  Transports must implement the
 // interfaces in this file.
 struct nni_sp_tran {
-	// tran_version is the version of the transport ops that this
-	// transport implements.  We only bother to version the main
-	// ops vector.
-	uint32_t tran_version;
+	// tran_link is for framework use only - it must initialized
+	// to zero before registration.
+	nni_list_node tran_link;
 
 	// tran_scheme is the transport scheme, such as "tcp" or "inproc".
 	const char *tran_scheme;
@@ -170,20 +158,19 @@ struct nni_sp_tran {
 	// tran_pipe links our pipe-specific operations.
 	const nni_sp_pipe_ops *tran_pipe;
 
-	// tran_init, if not NULL, is called once during library
-	// initialization.
-	int (*tran_init)(void);
+	// tran_init is called once during library initialization.
+	void (*tran_init)(void);
 
-	// tran_fini, if not NULL, is called during library deinitialization.
-	// It should release any global resources, close any open files, etc.
+	// tran_fini is called during library shutdown.
+	// It should release any global resources.
 	void (*tran_fini)(void);
 };
 
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.
-extern nni_sp_tran *nni_sp_tran_find(nni_url *url);
+extern nni_sp_tran *nni_sp_tran_find(nni_url *);
 extern int          nni_sp_tran_sys_init(void);
 extern void         nni_sp_tran_sys_fini(void);
-extern int          nni_sp_tran_register(const nni_sp_tran *tran);
+extern void         nni_sp_tran_register(nni_sp_tran *);
 
 #endif // PROTOCOL_SP_TRANSPORT_H

@@ -93,10 +93,9 @@ static nni_reap_list ipc_pipe_reap_list = {
 	.rl_func   = ipc_pipe_fini,
 };
 
-static int
+static void
 ipc_tran_init(void)
 {
-	return (0);
 }
 
 static void
@@ -1119,7 +1118,6 @@ static nni_sp_listener_ops ipc_listener_ops = {
 };
 
 static nni_sp_tran ipc_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "ipc",
 	.tran_dialer   = &ipc_dialer_ops,
 	.tran_listener = &ipc_listener_ops,
@@ -1130,7 +1128,6 @@ static nni_sp_tran ipc_tran = {
 
 #ifdef NNG_PLATFORM_POSIX
 static nni_sp_tran ipc_tran_unix = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "unix",
 	.tran_dialer   = &ipc_dialer_ops,
 	.tran_listener = &ipc_listener_ops,
@@ -1142,7 +1139,6 @@ static nni_sp_tran ipc_tran_unix = {
 
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
 static nni_sp_tran ipc_tran_abstract = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "abstract",
 	.tran_dialer   = &ipc_dialer_ops,
 	.tran_listener = &ipc_listener_ops,
@@ -1155,17 +1151,13 @@ static nni_sp_tran ipc_tran_abstract = {
 int
 nng_ipc_register(void)
 {
-	int rv;
-	if (((rv = nni_sp_tran_register(&ipc_tran)) != 0)
+	nni_sp_tran_register(&ipc_tran);
 #ifdef NNG_PLATFORM_POSIX
-	    || ((rv = nni_sp_tran_register(&ipc_tran_unix)) != 0)
+	nni_sp_tran_register(&ipc_tran_unix);
 #endif
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
-	    || ((rv = nni_sp_tran_register(&ipc_tran_abstract)) != 0)
+	nni_sp_tran_register(&ipc_tran_abstract);
 #endif
-	) {
-		return (rv);
-	}
 
 	return (0);
 }

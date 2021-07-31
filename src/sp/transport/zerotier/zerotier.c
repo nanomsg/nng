@@ -1579,12 +1579,11 @@ done:
 	return (0);
 }
 
-static int
+static void
 zt_tran_init(void)
 {
 	nni_mtx_init(&zt_lk);
 	NNI_LIST_INIT(&zt_nodes, zt_node, zn_link);
-	return (0);
 }
 
 static void
@@ -3233,7 +3232,6 @@ static nni_tran_listener_ops zt_listener_ops = {
 // This is the ZeroTier transport linkage, and should be the
 // only global symbol in this entire file.
 static struct nni_tran zt_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "zt",
 	.tran_dialer   = &zt_dialer_ops,
 	.tran_listener = &zt_listener_ops,
@@ -3245,5 +3243,6 @@ static struct nni_tran zt_tran = {
 int
 nng_zt_register(void)
 {
-	return (nni_tran_register(&zt_tran));
+	nni_tran_register(&zt_tran);
+	return (0);
 }

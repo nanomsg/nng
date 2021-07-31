@@ -92,10 +92,9 @@ static nni_reap_list tcptran_pipe_reap_list = {
 	.rl_func   = tcptran_pipe_fini,
 };
 
-static int
+static void
 tcptran_init(void)
 {
-	return (0);
 }
 
 static void
@@ -719,7 +718,7 @@ tcptran_url_parse_source(nng_url *url, nng_sockaddr *sa, const nng_url *surl)
 		return (0);
 	}
 
-	len             = (size_t)(semi - url->u_hostname);
+	len             = (size_t) (semi - url->u_hostname);
 	url->u_hostname = semi + 1;
 
 	if (strcmp(surl->u_scheme, "tcp") == 0) {
@@ -1222,7 +1221,6 @@ static nni_sp_listener_ops tcptran_listener_ops = {
 };
 
 static nni_sp_tran tcp_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "tcp",
 	.tran_dialer   = &tcptran_dialer_ops,
 	.tran_listener = &tcptran_listener_ops,
@@ -1232,7 +1230,6 @@ static nni_sp_tran tcp_tran = {
 };
 
 static nni_sp_tran tcp4_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "tcp4",
 	.tran_dialer   = &tcptran_dialer_ops,
 	.tran_listener = &tcptran_listener_ops,
@@ -1242,7 +1239,6 @@ static nni_sp_tran tcp4_tran = {
 };
 
 static nni_sp_tran tcp6_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "tcp6",
 	.tran_dialer   = &tcptran_dialer_ops,
 	.tran_listener = &tcptran_listener_ops,
@@ -1254,11 +1250,8 @@ static nni_sp_tran tcp6_tran = {
 int
 nng_tcp_register(void)
 {
-	int rv;
-	if (((rv = nni_sp_tran_register(&tcp_tran)) != 0) ||
-	    ((rv = nni_sp_tran_register(&tcp4_tran)) != 0) ||
-	    ((rv = nni_sp_tran_register(&tcp6_tran)) != 0)) {
-		return (rv);
-	}
+	nni_sp_tran_register(&tcp_tran);
+	nni_sp_tran_register(&tcp4_tran);
+	nni_sp_tran_register(&tcp6_tran);
 	return (0);
 }

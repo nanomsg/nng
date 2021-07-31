@@ -67,13 +67,12 @@ struct inproc_ep {
 // which we use for coordinating rendezvous.
 static inproc_global nni_inproc;
 
-static int
+static void
 inproc_init(void)
 {
 	NNI_LIST_INIT(&nni_inproc.servers, inproc_ep, node);
 
 	nni_mtx_init(&nni_inproc.mx);
-	return (0);
 }
 
 static void
@@ -676,7 +675,6 @@ static nni_sp_listener_ops inproc_listener_ops = {
 // This is the inproc transport linkage, and should be the only global
 // symbol in this entire file.
 struct nni_sp_tran nni_inproc_tran = {
-	.tran_version  = NNI_TRANSPORT_VERSION,
 	.tran_scheme   = "inproc",
 	.tran_dialer   = &inproc_dialer_ops,
 	.tran_listener = &inproc_listener_ops,
@@ -688,5 +686,6 @@ struct nni_sp_tran nni_inproc_tran = {
 int
 nng_inproc_register(void)
 {
-	return (nni_sp_tran_register(&nni_inproc_tran));
+	nni_sp_tran_register(&nni_inproc_tran);
+	return (0);
 }
