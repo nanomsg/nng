@@ -1,0 +1,85 @@
+<header class="man-header">
+  <div class="man-header-container">
+    <nav class="navbar" role="navigation" aria-label="navigation">
+      <div class="navbar-brand">
+        <a class="navbar-item" href="/">
+          <img width="54" height="36" src="/assets/image/NNg-black.png">
+        </a>
+        <a role="button" class="navbar-burger" aria-label="menu" aria-expanded="false" data-target="navbarBasicExample">
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+          <span aria-hidden="true"></span>
+        </a>
+      </div>
+      <div id="navbarBasicExample" class="navbar-menu">
+        <div class="navbar-start">
+          <div class="navbar-item is-hidden-touch search-container">
+            <i class="iconfont icon-search"></i>
+            <input type="text" placeholder="Search" id="man-search">
+          </div>
+        </div>
+        <div class="navbar-end">
+          <div class="navbar-item navbar-highlight">
+            <a href="/man/">Documentation</a>
+          </div>
+          <div class="navbar-item">
+            <a href="https://discord.gg/Xnac6b9">Discord</a>
+          </div>
+          <div class="navbar-item is-hidden-desktop">
+            <a href="https://github.com/nanomsg/nng">
+              Github
+            </a>
+          </div>
+          <div class="navbar-item is-hidden-touch">
+            <a href="https://github.com/nanomsg/nng" class="btn-github">
+              <i class="iconfont icon-github"></i> Github
+            </a>
+          </div>
+          <div class="navbar-item is-hidden-touch">
+            <a href="https://github.com/nanomsg/nng/releases" class="btn-download">
+              <i class="iconfont icon-download"></i> Download
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+  </div>
+  <script defer>
+    document.addEventListener('DOMContentLoaded', () => {
+      // Get all "navbar-burger" elements
+      const $navbarBurgers = Array.prototype.slice.call(document.querySelectorAll(
+        '.navbar-burger'), 0);
+      // Check if there are any navbar burgers
+      if ($navbarBurgers.length > 0) {
+        // Add a click event on each of them
+        $navbarBurgers.forEach(el => {
+          el.addEventListener('click', () => {
+            // Get the target from the "data-target" attribute
+            const target = el
+              .dataset.target;
+            const $target = document
+              .getElementById(
+                target);
+            el.classList.toggle(
+              'is-active'
+            );
+            $target.classList
+              .toggle(
+                'is-active'
+              );
+          });
+        });
+      }
+
+      const $searchInput = document.getElementById('man-search');
+      $searchInput.addEventListener('keydown', event => {
+        if (event.isComposing || event.keyCode !== 13) {
+          return;
+        }
+        if (event.target && event.target.value) {
+          window.open(`https://www.google.com/search?q=site:nng.nanomsg.org ${event.target.value}`)
+        }
+      })
+    });
+  </script>
+</header>

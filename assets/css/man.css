@@ -1,0 +1,272 @@
+/* bulma */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  margin: 24px 0 16px;
+}
+
+p {
+  font-size: 14px;
+  font-weight: 400;
+  color: #424242;
+  line-height: 22px;
+  margin: 16px 0 24px;
+}
+
+.search-container {
+  position: relative;
+}
+
+/* man-search */
+#man-search {
+  outline: none;
+  border: 0;
+  border-left: 1px solid #dedede;
+  border-radius: 0;
+  padding-left: 35px;
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 14px;
+}
+
+.icon-search.icon-search {
+  font-size: 8px;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-40%);
+  left: 30px;
+}
+
+
+/* header */
+.man-header {
+  background: #FFFFFF;
+  position: fixed;
+  z-index: 40;
+  width: 100%;
+  box-shadow: 0px 2px 9px 0px rgba(227, 227, 227, 0.5);
+}
+
+.man-header a {
+  color: #424242;
+  font-size: 16px;
+}
+
+.man-header a.btn-github {
+  padding: 5px 28px;
+  display: inline-block;
+  border-radius: 4px;
+  border: 1px solid #DEDEDE;
+  color: #424242;
+}
+
+.man-header a.btn-download {
+  padding: 5px 12px;
+  display: inline-block;
+  background: #BA5836;
+  border-radius: 4px;
+  color: #fff;
+}
+
+i.iconfont {
+  font-size: 18px;
+  margin-right: 4px;
+}
+
+.man-header .navbar-highlight {
+  border-top: 3px solid #BA5836;
+  align-items: center;
+  border-bottom: 3px solid transparent;
+}
+
+/* nn-footer */
+.nn-footer .nn-footer-top {
+  border-bottom: 1px solid #E3E3E3;
+}
+
+.nn-footer .nn-footer-email {
+  font-size: 14px;
+  color: #4F5880;
+  line-height: 20px;
+}
+
+.nn-footer .nn-footer-copyright {
+  font-size: 14px;
+  font-weight: bold;
+  color: #B9B9B9;
+  line-height: 16px;
+}
+
+/* bulma */
+.navbar-brand {
+  align-items: stretch;
+  display: flex;
+  flex-shrink: 0;
+  min-height: 3.25rem;
+}
+
+.navbar {
+  align-items: stretch;
+  background-color: #fff;
+  min-height: 3.25rem;
+  position: relative;
+  z-index: 30;
+  margin: 0 48px;
+}
+
+@media screen and (max-width: 1023px) {
+  .navbar {
+    margin: 0;
+  }
+
+}
+
+.navbar-menu {
+  display: none;
+}
+
+.navbar-item {
+  cursor: pointer;
+  flex-grow: 0;
+  flex-shrink: 0;
+  color: #4a4a4a;
+  display: block;
+  line-height: 1.5;
+  padding: .5rem .75rem;
+  position: relative;
+}
+
+.navbar-burger {
+  color: #4a4a4a;
+  cursor: pointer;
+  display: block;
+  height: 3.25rem;
+  width: 3.25rem;
+  position: relative;
+  -moz-appearance: none;
+  -webkit-appearance: none;
+  appearance: none;
+  background: 0 0;
+  border: none;
+  font-family: inherit;
+  font-size: 1em;
+  margin: 0;
+  padding: 0;
+  margin-left: auto;
+}
+
+.navbar-burger:hover {
+  background-color: rgba(0, 0, 0, .05);
+}
+
+.navbar-burger span {
+  background-color: currentColor;
+  display: block;
+  height: 1px;
+  left: calc(50% - 8px);
+  position: absolute;
+  transform-origin: center;
+  transition-duration: 86ms;
+  transition-property: background-color, opacity, transform;
+  transition-timing-function: ease-out;
+  width: 16px;
+}
+
+.navbar-burger.is-active span:nth-child(1) {
+  transform: translateY(5px) rotate(45deg);
+}
+
+.navbar-burger span:nth-child(1) {
+  top: calc(50% - 6px);
+}
+
+.navbar-burger.is-active span:nth-child(2) {
+  opacity: 0;
+}
+
+.navbar-burger span:nth-child(2) {
+  top: calc(50% - 1px);
+}
+
+.navbar-burger.is-active span:nth-child(3) {
+  transform: translateY(-5px) rotate(-45deg);
+}
+
+.navbar-burger span:nth-child(3) {
+  top: calc(50% + 4px);
+}
+
+
+@media screen and (max-width: 1023px) {
+  .man-header .navbar-highlight {
+    border-top: none;
+  }
+
+  .navbar-menu.is-active {
+    display: block;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .navbar {
+    min-height: 3.25rem;
+  }
+
+  .navbar,
+  .navbar-end,
+  .navbar-menu,
+  .navbar-start {
+    align-items: stretch;
+    display: flex;
+  }
+
+  .navbar-menu {
+    flex-grow: 1;
+    flex-shrink: 0;
+  }
+
+  .navbar-item,
+  .navbar-link {
+    align-items: center;
+    display: flex;
+  }
+
+  .navbar-burger {
+    display: none;
+  }
+
+  .navbar-start {
+    justify-content: flex-start;
+    margin-right: auto;
+  }
+
+  .navbar-end {
+    justify-content: flex-end;
+    margin-left: auto;
+  }
+}
+
+@media screen and (max-width: 1023px) {
+  .is-hidden-touch {
+    display: none !important;
+  }
+}
+
+@media screen and (min-width: 1024px) {
+  .is-hidden-desktop {
+    display: none !important;
+  }
+}
+
+.level {
+  display: flex;
+  justify-content: space-between;
+}
+
+.level-left,
+.level-right {
+  align-items: center;
+}

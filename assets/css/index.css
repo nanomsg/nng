@@ -1,0 +1,266 @@
+#content {
+  padding: 64px 0 48px;
+  padding-left: 12px;
+  padding-right: 12px;
+  margin: 0 auto;
+  max-width: 1344px;
+}
+
+a {
+  text-decoration: none;
+  color: #2156a5;
+}
+
+a:hover {
+  color: #112D4E;
+}
+
+a.is-brown {
+  color: #3F72AF;
+}
+
+.button {
+  border: none;
+}
+
+.button.is-hovered,
+.button:hover {
+  border: none;
+}
+
+/* This styling is used for our nanomsg specific headers. */
+.navbar {
+  background: transparent;
+}
+
+.nn-header {
+  position: fixed;
+  z-index: 40;
+  width: 100%;
+  background: linear-gradient(135deg, #112D4E 0%, #171D41 100%);
+}
+
+i.iconfont {
+  font-size: 18px;
+  margin-right: 4px;
+}
+
+.navbar-burger {
+  color: #3F72AF
+}
+
+/* navbar link  */
+.nn-header-inner a {
+  color: #fff;
+}
+
+.nn-header-inner .is-active a {
+  color: #424242;
+}
+
+.nn-header-inner a:hover {
+  color: #3F72AF
+}
+
+.nn-header a.btn-download {
+  padding: 5px 12px;
+  display: inline-block;
+  background: #3F72AF;
+  border-radius: 4px;
+  color: #fff;
+}
+
+.nn-nav-link {
+  color: #fff;
+  text-decoration: none;
+}
+
+/* nn-footer */
+.nn-footer .nn-footer-top {
+  border-bottom: 1px solid #E3E3E3;
+}
+
+.nn-footer .nn-footer-email {
+  font-size: 14px;
+  color: #4F5880;
+  line-height: 20px;
+}
+
+.nn-footer .nn-footer-copyright {
+  font-size: 14px;
+  font-weight: bold;
+  color: #B9B9B9;
+  line-height: 16px;
+}
+
+/* nn-page style sheet */
+
+#nn-banner {
+  width: 100%;
+  padding: 175px 0 110px;
+  text-align: center;
+  background: linear-gradient(135deg, #112D4E 0%, #171D41 100%);
+}
+
+#nn-banner .nn-banner-title {
+  font-size: 48px;
+  font-weight: bold;
+  color: #FFF;
+  margin-bottom: 40px;
+}
+
+#nn-banner .nn-banner-desc {
+  font-size: 24px;
+  color: #FFF;
+  margin-bottom: 48px;
+}
+
+#nn-banner .nn-btn-download {
+  padding: 15px 44px;
+  background: #3F72AF;
+  border-radius: 4px;
+  color: #fff;
+}
+
+/* content */
+#nn-content {
+  padding-top: 0px;
+}
+
+h2.nn-subtitle {
+  font-size: 44px;
+  font-weight: bold;
+  color: #2E2E2E;
+  line-height: 44px;
+}
+
+
+/* nn-intro */
+#nn-intro {
+  padding: 100px 0;
+}
+
+#nn-intro .nn-intro-container {
+  padding: 60px 110px;
+  position: relative;
+  border: #112D4E solid 4px;
+  border-radius: 4px;
+}
+
+#nn-intro .nn-intro-title {
+  z-index: 10;
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  transform: translateY(-50%);
+}
+
+#nn-intro .nn-intro-desc {
+  font-size: 14px;
+  font-weight: 400;
+  line-height: 24px;
+}
+
+#nn-intro .nn-intro-cov {
+  position: absolute;
+  background-color: #fff;
+}
+
+@media screen and (max-width: 1200px) {
+  #nn-intro .nn-intro-container {
+    padding: 60px 24px;
+  }
+
+  #nn-intro .nn-intro-container {
+    border: none;
+  }
+}
+
+/* nn-feat */
+#nn-feat {
+  padding: 100px 0;
+  background: rgba(78, 87, 126, 0.05);
+}
+
+#nn-feat .nn-feat-title {
+  margin: 0 0 64px;
+}
+
+#nn-feat .card {
+  box-shadow: none;
+  background: #FFFFFF;
+  border: 1px solid #DEDEDE;
+  border-radius: 0;
+  height: 100%;
+}
+
+#nn-feat .feat-card {
+  padding: 34px 32px;
+}
+
+#nn-feat .feat-card img {
+  width: 36px;
+  height: 36px;
+}
+
+#nn-feat .feat-card .card-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #112D4E;
+  line-height: 24px;
+}
+
+#nn-feat .feat-card .card-desc {
+  font-size: 14px;
+  color: #424242;
+  line-height: 22px;
+}
+
+
+/* nn-detail */
+
+#nn-detail {
+  padding: 100px 0;
+}
+
+#nn-detail .platforms {
+  margin-top: 140px;
+}
+
+#nn-detail .nn-detail-title {
+  margin-bottom: 50px;
+}
+
+#nn-detail .nn-detail-desc {
+  font-weight: 400;
+  line-height: 16px;
+}
+
+/* nn-quick-start */
+#nn-quick-start {
+  padding: 100px 0;
+  background: linear-gradient(135deg, #112D4E 0%, #171D41 100%);
+}
+
+#nn-quick-start .container {
+  background: url('/assets/image/quick-start-bg.png') no-repeat bottom right/ auto 250px;
+}
+
+#nn-quick-start .nn-quick-start-title {
+  margin-bottom: 48px;
+}
+
+#nn-quick-start .nn-quick-start-desc {
+  font-weight: 400;
+  color: #fff;
+  line-height: 24px;
+}
+
+#nn-quick-start .nn-quick-start-pre {
+  background: rgba(122, 129, 159, 0.29);
+  border-radius: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.58);
+  color: #fff;
+  padding: 16px;
+}

@@ -1,0 +1,22 @@
+/* bulma setting */
+body {
+  font-family: 'Roboto', 'Trebuchet MS', sans-serif;
+  line-height: 1.846;
+  color: #666666;
+  background-color: #ffffff;
+  margin: 0;
+}
+
+img {
+  height: auto;
+  max-width: 100%;
+}
+
+.container {
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.is-order-2 {
+  order: 2;
+}

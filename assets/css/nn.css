@@ -32,83 +32,15 @@
 @import url("https://fonts.googleapis.com/css?family=Open+Sans&display=swap");
 @import url("https://fonts.googleapis.com/css?family=Inconsolata&display=swap");
 @import url("https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css");
-/* This styling is used for our nanomsg specific headers. */
 
-.nn-nav-link:hover {
-        text-decoration: underline;
-}
-
-a.nn-nav-link {
+/* bulma setting */
+a {
         text-decoration: none;
+        color: #2156a5;
 }
 
-a.nn-logo {
-        text-decoration: none;
-}
-
-a.nn-logo:hover {
-        text-decoration: none;
-}
-
-.nn-nav-item {
-        text-decoration: none;
-        font-family: 'Roboto', 'Trebuchet MS', sans-serif;
-        display: inline-flex;
-        margin-left: 1.5em;
-        text-align: right;
-}
-
-.nn-header {
-        width: 100%;
-        position: fixed;
-        top: 0;
-        left: 0;
-        background: #e0e0e0;
-}
-
-.nn-footer-inner {
-        text-align: right;
-        font-family: 'Roboto', 'Trebuchet MS', sans-serif;
-        font-style: italic;
-        margin: auto;
-        line-height: 1.6;
-}
-
-.nn-header-inner {
-        padding: 0em 4em 0em 2em;
-}
-
-.nn-header-inner {
-        display: flex;
-        align-items: center;
-}
-
-.nn-nav-menu {
-        margin-top: 0;
-        margin-bottom: 0;
-        display: inline-flex;
-        flex-direction: row;
-        flex-wrap: wrap;
-        justify-content: flex-end;
-        margin-left: auto;
-        font-size: 1.2em;
-        vertical-align: middle;
-        align-content: center;
-}
-
-.nn-logo {
-        font-size: 2.5em;
-        font-family: 'Roboto', 'Trebuchet MS', sans-serif;
-        font-weight: normal;
-        flex: 0 0;
-}
-
-.nn-tan {
-        color: #ba5836;
-}
-
-.nn-black {
-        color: rgba(0, 0, 0, 0.8);
+a:hover {
+        color: #BA5836;
 }
 
 /* document body (contains all content) */
@@ -118,63 +50,42 @@ body {
         line-height: 1.846;
         color: #666666;
         background-color: #ffffff;
-}
-
-/* document header (contains title etc) */
-
-#header, #content {
-        width: 100%;
-        max-width: 62.5em;
-        margin: auto;
+        margin: 0;
 }
 
 /* headings */
-
-h2, h3, h4, h5, h6 {
-        font-family: inherit;
-        font-weight: 400;
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
         line-height: 1.1;
-        color: #ba5836;
+        color: #424242;
+        font-weight: 500;
+        font-family: 'Roboto-Medium', 'Roboto', inherit;
 }
 
 h1 {
-        font-size: 2.75em;
-        font-weight: 400;
-        font-family: 'Open Sans';
-        color: rgba(0, 0, 0, 0.7);
+        font-size: 32px;
 }
 
 h2 {
-        font-size: 2.3em;
+        font-size: 20px;
 }
 
 h3 {
-        font-size: 1.6875em;
+        font-size: 16px;
 }
 
-h4 {
-        font-size: 1.4375em;
-}
-
-h5 {
-        font-size: 1.2em;
-}
-
+h4,
+h5,
 h6 {
-        font-size: 1.1em;
+        font-size: 14px;
 }
 
 h2#_name {
-	display: none;
-}
-
-a:hover {
-        text-decoration: underline;
-}
-
-a {
-        text-decoration: none;
-        color: #2156a5;
+        display: none;
 }
 
 /* plain paragraph text */
@@ -192,11 +103,14 @@ blockquote {
         border-left: 5px solid #eeeeee;
 }
 
-blockquote p:last-child, blockquote ul:last-child, blockquote ol:last-child {
+blockquote p:last-child,
+blockquote ul:last-child,
+blockquote ol:last-child {
         margin-bottom: 0;
 }
 
-.blockquote-reverse, blockquote.pull-right {
+.blockquote-reverse,
+blockquote.pull-right {
         padding-right: 15px;
         padding-left: 0;
         border-right: 5px solid #eeeeee;
@@ -204,35 +118,56 @@ blockquote p:last-child, blockquote ul:last-child, blockquote ol:last-child {
         text-align: right;
 }
 
-.blockquote-reverse footer:before, blockquote.pull-right footer:before, .blockquote-reverse small:before, blockquote.pull-right small:before, .blockquote-reverse .small:before, blockquote.pull-right .small:before {
+.blockquote-reverse footer:before,
+blockquote.pull-right footer:before,
+.blockquote-reverse small:before,
+blockquote.pull-right small:before,
+.blockquote-reverse .small:before,
+blockquote.pull-right .small:before {
         content: '';
 }
 
-.blockquote-reverse footer:after, blockquote.pull-right footer:after, .blockquote-reverse small:after, blockquote.pull-right small:after, .blockquote-reverse .small:after, blockquote.pull-right .small:after {
+.blockquote-reverse footer:after,
+blockquote.pull-right footer:after,
+.blockquote-reverse small:after,
+blockquote.pull-right small:after,
+.blockquote-reverse .small:after,
+blockquote.pull-right .small:after {
         content: '\00A0 \2014';
 }
 
 /* blockquote attribution text */
 
-.attribution, .cite, blockquote footer, blockquote small, blockquote .small {
+.attribution,
+.cite,
+blockquote footer,
+blockquote small,
+blockquote .small {
         display: block;
         /*   font-size: 80%; */
         line-height: 1.846;
         color: #bbbbbb;
 }
 
-.attribution:before, blockquote footer:before, blockquote small:before, blockquote .small:before {
+.attribution:before,
+blockquote footer:before,
+blockquote small:before,
+blockquote .small:before {
         content: '\2014 \00A0';
 }
 
 /* unordered list */
 
-ul, ol {
+ul,
+ol {
         margin-top: 0;
         margin-bottom: 11.5px;
 }
 
-ul ul, ol ul, ul ol, ol ol {
+ul ul,
+ol ul,
+ul ol,
+ol ol {
         margin-bottom: 0;
 }
 
@@ -260,7 +195,8 @@ table col[class*="col-"] {
         display: table-column;
 }
 
-table td[class*="col-"], table th[class*="col-"] {
+table td[class*="col-"],
+table th[class*="col-"] {
         position: static;
         float: none;
         display: table-cell;
@@ -324,7 +260,10 @@ tbody>tr:hover {
 
 /* inline code */
 
-code, kbd, pre, samp {
+code,
+kbd,
+pre,
+samp {
         font-family: 'Inconsolata', 'Consolas', monospace;
 }
 
@@ -449,42 +388,45 @@ a span.icon>.fa {
 }
 
 div.sidebarblock {
-	border-radius: .5em;
-	background-color: #e0e0e0;
+        border-radius: .5em;
+        background-color: #e0e0e0;
 }
 
 div.sidebarblock div.content {
-	padding: 1em 2em;
+        padding: 1em 2em;
 }
 
 .sidebarblock .content p {
-	font-size: .95em;
+        font-size: .95em;
 }
 
 /* doc header */
 div.details {
-	border-top: 1px solid #e0e0e0;
-	padding-top: 2em;
-	text-align: right;
-	margin-bottom: 1em;
+        border-top: 1px solid #e0e0e0;
+        padding-top: 2em;
+        text-align: right;
+        margin-bottom: 1em;
 }
 
-span.author{
-	font-style: italic;
+span.author {
+        font-style: italic;
 }
-span.author::before{
-	content: "\2014  ";
+
+span.author::before {
+        content: "\2014  ";
 }
-#revnumber,#revdate{
-	font-size: .9em;
+
+#revnumber,
+#revdate {
+        font-size: .9em;
 }
 
 
 /* image */
 
 img {
+        height: auto;
         max-width: 100%;
-        vertical-align: middle;
 }
 
 /* responsiveness fixes */
@@ -502,19 +444,21 @@ nav.toc2 {
         vertical-align: top;
         z-index: 10;
         position: fixed;
-        top: 5em;
+        top: 3.4em;
         bottom: 0;
         padding: 1.25em 1em;
 }
 
-@media screen and (maxwidth: 768px) {
+@media screen and (max-width: 768px) {
         nav.toc2 {
                 visibility: hidden;
                 overflow: hidden;
         }
+
         nav.toc2::-webkit-scrollbar {
                 display: none;
         }
+
         nav.toc2 {
                 -ms-overflow-style: none;
         }
@@ -540,21 +484,24 @@ nav.toc2 {
 
 main {
         padding-left: 20em;
-        padding-top: 5em;
         display: block;
-        max-width: 62.5em;
-        overflow-y: auto
+        padding-top: 53px;
+        overflow-y: auto;
+        margin: 0 auto;
+        max-width: 1200px;
 }
 
-@media all and (max-width: 90em) {
+@media all and (max-width: 1440px) {
         #toctitle {
                 display: none;
                 overflow: visible;
         }
+
         #toc.toc2 ul {
                 display: none;
                 overflow: visible;
         }
+
         main {
                 padding-left: 2em;
         }

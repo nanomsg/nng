@@ -1,0 +1,162 @@
+<section id="nn-banner">
+  <h1 class="nn-banner-title">NNG: Lightweight Messaging Library</h1>
+  <p class="nn-banner-desc">A lightweight, broker-less library</p>
+  <a class="nn-btn-download" href="https://github.com/nanomsg/nng/releases">Download</a>
+</section>
+<div id="nn-content">
+  <section id="nn-intro">
+    <div class="container">
+      <div class="nn-intro-container">
+        <div class="nn-intro-cov"
+          style="z-index: 10; width: 10px; height: 35%; top: 0; left: 0; transform: translateX(-8px);">
+        </div>
+        <div class="nn-intro-cov"
+          style="z-index: 10; width: 30%; height: 10px; top: 0; left: 0; transform: translate(-8px ,-8px);">
+        </div>
+        <h2 class="nn-intro-title nn-subtitle">Introduction</h2>
+        <p class="nn-intro-desc">NNG, like its predecessors <a class="is-brown"
+            href="https://github.com/nanomsg/nanomsg">nanomsg</a>
+          (and
+          to some extent <a class="is-brown" href="https://zeromq.org">ZeroMQ</a>),
+          is a
+          lightweight, broker-less library, offering a simple API to solve common
+          recurring messaging problems, such as publish/subscribe, RPC-style
+          request/reply, or service discovery. The API frees the programmer from worrying
+          about details like connection management, retries, and other common
+          considerations, so that they can focus on the application instead of the
+          plumbing.</p>
+      </div>
+    </div>
+  </section>
+  <section id="nn-feat">
+    <div class="container">
+      <h2 class="nn-subtitle has-text-centered nn-feat-title">
+        Features
+      </h2>
+      <div class="columns is-multiline">
+        <div class="column is-6">
+          <div class="card feat-card">
+            <img src="/assets/image/feat-reliability.png" class="mb-4" />
+            <h3 class="card-title mb-2">Reliability</h3>
+            <p class="card-desc">NNG is designed for production use from the beginning. Every error case is considered,
+              and it is designed to avoid crashing except in cases of gross developer error. (Hopefully we don’t have
+              any of these in our own code.)</p>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card feat-card">
+            <img src="/assets/image/feat-scalability.png" class="mb-4" />
+            <h3 class="card-title mb-2">Scalability</h3>
+            <p class="card-desc">NNG scales out to engage multiple cores using a bespoke asynchronous I/O framework,
+              using thread pools to spread load without exceeding typical system limits.</p>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card feat-card">
+            <img src="/assets/image/feat-maintainability.png" class="mb-4" />
+            <h3 class="card-title mb-2">Maintainability</h3>
+            <p class="card-desc">NNG’s architecture is designed to be modular and easily grasped by developers
+              unfamiliar with the code base. The code is also well documented.</p>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card feat-card">
+            <img src="/assets/image/feat-extensibility.png" class="mb-4" />
+            <h3 class="card-title mb-2">Extensibility</h3>
+            <p class="card-desc">Because it avoids ties to file descriptors, and avoids confusing interlocking state
+              machines, it is easier to add new protocols and transports to NNG. This was demonstrated by the addition
+              of the TLS and ZeroTier transports.</p>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card feat-card">
+            <img src="/assets/image/feat-security.png" class="mb-4" />
+            <h3 class="card-title mb-2">Security</h3>
+            <p class="card-desc">NNG provides TLS 1.2 and ZeroTier transports, offering support for robust and industry
+              standard authentication and encryption. In addition, it is hardened to be resilient against malicious
+              attackers, with special consideration given to use in a hostile Internet.</p>
+          </div>
+        </div>
+        <div class="column is-6">
+          <div class="card feat-card">
+            <img src="/assets/image/feat-usability.png" class="mb-4" />
+            <h3 class="card-title mb-2">Usability</h3>
+            <p class="card-desc">NNG eschews slavish adherence parts of the more complex and less well understood POSIX
+              APIs, while adopting the semantics that are familiar and useful. New APIs are intuitive, and the optional
+              support for separating protocol context and state from sockets makes creating concurrent applications
+              vastly simpler than previously possible.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="nn-detail">
+    <div class="container compatibility">
+      <div class="columns">
+        <div class="column is-7">
+          <h2 class="nn-subtitle has-text-left nn-detail-title">Compatibility</h2>
+          <p class="nn-detail-desc">This project offers both wire compatibility and API compatibility, so most nanomsg
+            users can begin using
+            NNG right away.</p>
+          <p class="nn-detail-desc">
+            Existing nanomsg and mangos applications can inter-operate with NNG applications automatically.</p>
+        </div>
+        <div class="column is-4 is-offset-1">
+          <img src="/assets/image/compatibility.png">
+        </div>
+      </div>
+    </div>
+    <div class="container platforms">
+      <div class="columns">
+        <div class="column is-7 is-order-2 is-offset-1">
+          <h2 class="nn-subtitle has-text-right nn-detail-title">Supported Platforms</h2>
+          <p class="nn-detail-desc has-text-right">NNG supports Linux, macOS, Windows (Vista or better), illumos,
+            Solaris, FreeBSD,
+            Android, and iOS. Most other POSIX platforms should work out of the box but have not been tested. Very old
+            versions of otherwise supported platforms might not work.</p>
+        </div>
+        <div class="column is-4">
+          <img src="/assets/image/platforms.png">
+        </div>
+      </div>
+    </div>
+  </section>
+  <section id="nn-quick-start">
+    <div class="container">
+      <h2 class="nn-subtitle has-text-centered nn-quick-start-title has-text-white">
+        Quick Start
+      </h2>
+      <div class="columns is-8-desktop is-variable">
+        <div class="column is-6">
+          <p class="nn-quick-start-desc mb-3">
+            To build this project, you will need a C99 compatible compiler and <a class="is-brown"
+              href="http://www.cmake.org/">CMake</a> version 3.13 or
+            newer.
+          </p>
+          <p class="nn-quick-start-desc mb-3">We recommend using the <a class="is-brown"
+              href="https://ninja-build.org/">Ninja</a> build system (pass "-G Ninja"
+            to CMake) when
+            you
+            can. (And not just because
+            Ninja sounds like "NNG" — it’s also blindingly fast and has made our lives as developers measurably better.)
+          </p>
+          <p class="nn-quick-start-desc mb-3">If you want to build with <a class="is-brown"
+              href="https://tls.mbed.org/">TLS</a> support you will also need
+            mbedTLS. See
+            <a class="is-brown"
+              href="https://github.com/nanomsg/nng/blob/master/docs/BUILD_TLS.adoc">docs/BUILD_TLS.adoc</a> for details.
+          </p>
+        </div>
+        <div class="column is-6">
+          <p class="mb-4 has-text-white has-text-weight-medium">With a Linux or UNIX environment:</p>
+          <pre class="nn-quick-start-pre">$ mkdir build
+$ cd build
+$ cmake -G Ninja ..
+$ ninja
+$ ninja test
+$ ninja install</pre>
+        </div>
+      </div>
+    </div>
+  </section>
+</div>
