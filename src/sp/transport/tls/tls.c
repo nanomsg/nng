@@ -1279,8 +1279,13 @@ static nni_sp_tran tls6_tran = {
 int
 nng_tls_register(void)
 {
+	return (nni_init());
+}
+
+void
+nni_sp_tls_register(void)
+{
 	nni_sp_tran_register(&tls_tran);
 	nni_sp_tran_register(&tls4_tran);
 	nni_sp_tran_register(&tls6_tran);
-	return (0);
 }

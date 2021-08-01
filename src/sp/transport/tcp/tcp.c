@@ -1467,11 +1467,18 @@ static nni_sp_tran tcp6_tran_mqtt = {
 	.tran_fini     = tcptran_fini,
 };
 
+#ifndef NNG_ELIDE_DEPRECATED
 int
 nng_tcp_register(void)
+{
+	return (nni_init());
+}
+#endif
+
+void
+nni_sp_tcp_register(void)
 {
 	nni_sp_tran_register(&tcp_tran_mqtt);
 	nni_sp_tran_register(&tcp4_tran_mqtt);
 	nni_sp_tran_register(&tcp6_tran_mqtt);
-	return (0);
 }

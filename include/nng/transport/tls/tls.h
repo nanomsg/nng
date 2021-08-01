@@ -19,7 +19,9 @@ extern "C" {
 
 // TLS transport.  This is used for communication via TLS v1.2 over TCP/IP.
 
+#ifndef NNG_ELIDE_DEPRECATED
 NNG_DECL int nng_tls_register(void);
+#endif
 
 #ifdef __cplusplus
 }

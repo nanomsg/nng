@@ -667,14 +667,26 @@ static nni_sp_tran ws6_tran = {
 	.tran_fini     = wstran_fini,
 };
 
+#ifndef NNG_ELIDE_DEPRECATED
 int
 nng_ws_register(void)
+{
+	return (nni_init());
+}
+
+int
+nng_wss_register(void)
+{
+	return (nni_init());
+}
+#endif
+
+void
+nni_sp_ws_register(void)
 {
 	nni_sp_tran_register(&ws_tran);
 	nni_sp_tran_register(&ws4_tran);
 	nni_sp_tran_register(&ws6_tran);
-
-	return (0);
 }
 
 #ifdef NNG_TRANSPORT_WSS
@@ -706,22 +718,12 @@ static nni_sp_tran wss6_tran = {
 	.tran_fini     = wstran_fini,
 };
 
-int
-nng_wss_register(void)
+void
+nni_sp_wss_register(void)
 {
 	nni_sp_tran_register(&wss_tran);
 	nni_sp_tran_register(&wss4_tran);
 	nni_sp_tran_register(&wss6_tran);
-
-	return (0);
-}
-
-#else
-
-int
-nng_wss_register(void)
-{
-	return (0);
 }
 
 #endif // NNG_TRANSPORT_WSS

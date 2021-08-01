@@ -313,9 +313,9 @@ inproc_listener_init(void **epp, nni_url *url, nni_listener *nlistener)
 	}
 	nni_mtx_init(&ep->mtx);
 
-	ep->listener  = true;
-	ep->proto     = nni_sock_proto_id(sock);
-	ep->rcvmax    = 0;
+	ep->listener = true;
+	ep->proto    = nni_sock_proto_id(sock);
+	ep->rcvmax   = 0;
 	NNI_LIST_INIT(&ep->clients, inproc_ep, node);
 	nni_aio_list_init(&ep->aios);
 
@@ -683,9 +683,16 @@ struct nni_sp_tran nni_inproc_tran = {
 	.tran_fini     = inproc_fini,
 };
 
+#ifndef NNG_ELIDE_DEPRECATED
 int
 nng_inproc_register(void)
 {
+	return (nni_init());
+}
+#endif
+
+void
+nni_sp_inproc_register(void)
+{
 	nni_sp_tran_register(&nni_inproc_tran);
-	return (0);
 }

@@ -1,6 +1,6 @@
 = nng_tcp_register(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -26,6 +26,9 @@ int nng_tcp_register(void);
 
 The `nng_tcp_register()` function registers the
 ((_tcp_ transport))(((transport, _tcp_))) for use.
+
+NOTE: This function is deprecated, and may be removed from a future release.
+It is no longer necessary to explicitly register transports.
 
 == RETURN VALUES
 
