@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -19,13 +19,14 @@ extern "C" {
 
 // WebSocket transport.  This is used for communication via WebSocket.
 
-NNG_DECL int nng_ws_register(void);
-
 // These aliases are for WSS naming consistency.
 #define NNG_OPT_WSS_REQUEST_HEADERS NNG_OPT_WS_REQUEST_HEADERS
 #define NNG_OPT_WSS_RESPONSE_HEADERS NNG_OPT_WS_RESPONSE_HEADERS
 
+#ifndef NNG_ELIDE_DEPRECATED
+NNG_DECL int nng_ws_register(void);
 NNG_DECL int nng_wss_register(void);
+#endif
 
 #ifdef __cplusplus
 }

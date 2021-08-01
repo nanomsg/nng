@@ -58,18 +58,17 @@ typedef struct zt_node     zt_node;
 typedef struct zt_frag     zt_frag;
 typedef struct zt_fraglist zt_fraglist;
 
-
 // Port numbers are stored as 24-bit values in network byte order.
-#define ZT_GET24(ptr, v)                              \
-	v = (((uint32_t)((uint8_t)(ptr)[0])) << 16) + \
-	    (((uint32_t)((uint8_t)(ptr)[1])) << 8) +  \
-	    (((uint32_t)(uint8_t)(ptr)[2]))
+#define ZT_GET24(ptr, v)                                \
+	v = (((uint32_t) ((uint8_t) (ptr)[0])) << 16) + \
+	    (((uint32_t) ((uint8_t) (ptr)[1])) << 8) +  \
+	    (((uint32_t) (uint8_t) (ptr)[2]))
 
-#define ZT_PUT24(ptr, u)                                     \
-	do {                                                 \
-		(ptr)[0] = (uint8_t)(((uint32_t)(u)) >> 16); \
-		(ptr)[1] = (uint8_t)(((uint32_t)(u)) >> 8);  \
-		(ptr)[2] = (uint8_t)((uint32_t)(u));         \
+#define ZT_PUT24(ptr, u)                                       \
+	do {                                                   \
+		(ptr)[0] = (uint8_t) (((uint32_t) (u)) >> 16); \
+		(ptr)[1] = (uint8_t) (((uint32_t) (u)) >> 8);  \
+		(ptr)[2] = (uint8_t) ((uint32_t) (u));         \
 	} while (0)
 
 static const uint16_t     zt_ethertype = 0x901;
@@ -455,7 +454,7 @@ zt_node_to_mac(uint64_t node, uint64_t nwid)
 	// multicast and set local administration -- this is the first
 	// octet of the 48 bit mac address.  We also avoid 0x52, which
 	// is known to be used in KVM, libvirt, etc.
-	mac = ((uint8_t)(nwid & 0xfe) | 0x02);
+	mac = ((uint8_t) (nwid & 0xfe) | 0x02);
 	if (mac == 0x52) {
 		mac = 0x32;
 	}
@@ -907,7 +906,7 @@ zt_pipe_recv_data(zt_pipe *p, const uint8_t *data, size_t len)
 		return;
 	}
 
-	bit = (uint8_t)(1 << (fragno % 8));
+	bit = (uint8_t) (1 << (fragno % 8));
 	if ((fl->fl_missing[fragno / 8] & bit) == 0) {
 		// We've already got this fragment, ignore it.  We don't
 		// bother to check for changed data.
@@ -1714,8 +1713,8 @@ zt_pipe_fini(void *arg)
 }
 
 static nni_reap_list zt_reap_list = {
-       .rl_offset = offsetof(zt_pipe, zp_reap),
-       .rl_func   = zt_pipe_fini,
+	.rl_offset = offsetof(zt_pipe, zp_reap),
+	.rl_func   = zt_pipe_fini,
 };
 
 static void
@@ -1841,15 +1840,15 @@ zt_pipe_send(void *arg, nni_aio *aio)
 	NNI_ASSERT(fragsz < 0x10000); // Because zp_mtu is 16 bits
 
 	msg_header_len = nni_msg_header_len(m);
-	msg_len = nni_msg_len(m);
-	bytes = msg_header_len + msg_len;
+	msg_len        = nni_msg_len(m);
+	bytes          = msg_header_len + msg_len;
 	if (bytes >= (0xfffe * fragsz)) {
 		nni_aio_finish_error(aio, NNG_EMSGSIZE);
 		nni_mtx_unlock(&zt_lk);
 		return;
 	}
 	// above check means nfrags will fit in 16-bits.
-	nfrags = (uint16_t)((bytes + (fragsz - 1)) / fragsz);
+	nfrags = (uint16_t) ((bytes + (fragsz - 1)) / fragsz);
 
 	// get the next message ID, but skip 0
 	if ((id = p->zp_next_msgid++) == 0) {
@@ -1865,7 +1864,7 @@ zt_pipe_send(void *arg, nni_aio *aio)
 		size_t   len;
 
 		// Prepend the header first.
-		if ( (!offset)  && (msg_header_len > 0)) {
+		if ((!offset) && (msg_header_len > 0)) {
 			if (msg_header_len > fragsz) {
 				// This shouldn't happen!  SP headers are
 				// supposed to be quite small.
@@ -1895,7 +1894,7 @@ zt_pipe_send(void *arg, nni_aio *aio)
 		fragno++;
 		zt_send(p->zp_ztn, p->zp_nwid, zt_op_data, p->zp_raddr,
 		    p->zp_laddr, data, fraglen + zt_offset_data_data);
-	} while (msg_header_len  + msg_len -offset != 0);
+	} while (msg_header_len + msg_len - offset != 0);
 	nni_mtx_unlock(&zt_lk);
 
 	// NB, We never bothered to call nn_aio_sched, because we run this
@@ -3240,9 +3239,16 @@ static struct nni_tran zt_tran = {
 	.tran_fini     = zt_tran_fini,
 };
 
+#ifndef NNG_ELIDE_DEPRECATED
 int
 nng_zt_register(void)
 {
+	return (nni_init());
+}
+#endif
+
+void
+nni_sp_zt_register(void)
+{
 	nni_tran_register(&zt_tran);
-	return (0);
 }

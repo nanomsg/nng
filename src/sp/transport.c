@@ -11,25 +11,6 @@
 
 #include "core/nng_impl.h"
 
-#ifdef NNG_TRANSPORT_INPROC
-#include "nng/transport/inproc/inproc.h"
-#endif
-#ifdef NNG_TRANSPORT_IPC
-#include "nng/transport/ipc/ipc.h"
-#endif
-#ifdef NNG_TRANSPORT_TCP
-#include "nng/transport/tcp/tcp.h"
-#endif
-#ifdef NNG_TRANSPORT_TLS
-#include "nng/transport/tls/tls.h"
-#endif
-#ifdef NNG_TRANSPORT_WS
-#include "nng/transport/ws/websocket.h"
-#endif
-#ifdef NNG_TRANSPORT_ZEROTIER
-#include "nng/transport/zerotier/zerotier.h"
-#endif
-
 #include <stdio.h>
 #include <string.h>
 
@@ -67,6 +48,28 @@ nni_sp_tran_find(nni_url *url)
 // nni_sp_tran_sys_init initializes the entire transport subsystem, including
 // each individual transport.
 
+#ifdef NNG_TRANSPORT_INPROC
+extern void nni_sp_inproc_register(void);
+#endif
+#ifdef NNG_TRANSPORT_IPC
+extern void nni_sp_ipc_register(void);
+#endif
+#ifdef NNG_TRANSPORT_TCP
+extern void nni_sp_tcp_register(void);
+#endif
+#ifdef NNG_TRANSPORT_TLS
+extern void nni_sp_tls_register(void);
+#endif
+#ifdef NNG_TRANSPORT_WS
+extern void nni_sp_ws_register(void);
+#endif
+#ifdef NNG_TRANSPORT_WSS
+extern void nni_sp_wss_register(void);
+#endif
+#ifdef NNG_TRANSPORT_ZEROTIER
+extern void nni_sp_zt_register(void);
+#endif
+
 int
 nni_sp_tran_sys_init(void)
 {
@@ -74,25 +77,25 @@ nni_sp_tran_sys_init(void)
 	nni_rwlock_init(&sp_tran_lk);
 
 #ifdef NNG_TRANSPORT_INPROC
-	nng_inproc_register();
+	nni_sp_inproc_register();
 #endif
 #ifdef NNG_TRANSPORT_IPC
-	nng_ipc_register();
+	nni_sp_ipc_register();
 #endif
 #ifdef NNG_TRANSPORT_TCP
-	nng_tcp_register();
+	nni_sp_tcp_register();
 #endif
 #ifdef NNG_TRANSPORT_TLS
-	nng_tls_register();
+	nni_sp_tls_register();
 #endif
 #ifdef NNG_TRANSPORT_WS
-	nng_ws_register();
+	nni_sp_ws_register();
 #endif
 #ifdef NNG_TRANSPORT_WSS
-	nng_wss_register();
+	nni_sp_wss_register();
 #endif
 #ifdef NNG_TRANSPORT_ZEROTIER
-	nng_zt_register();
+	nni_sp_zt_register();
 #endif
 	return (0);
 }

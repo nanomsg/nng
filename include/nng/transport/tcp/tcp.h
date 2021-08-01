@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -19,7 +19,9 @@ extern "C" {
 
 // TCP transport.  This is used for communication over TCP/IP.
 
+#ifndef NNG_ELIDE_DEPRECATED
 NNG_DECL int nng_tcp_register(void);
+#endif
 
 #ifdef __cplusplus
 }

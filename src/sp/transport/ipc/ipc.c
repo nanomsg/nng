@@ -1148,8 +1148,17 @@ static nni_sp_tran ipc_tran_abstract = {
 };
 #endif
 
+
+#ifndef NNG_ELIDE_DEPRECATED
 int
 nng_ipc_register(void)
+{
+	return (nni_init());
+}
+#endif
+
+void
+nni_sp_ipc_register(void)
 {
 	nni_sp_tran_register(&ipc_tran);
 #ifdef NNG_PLATFORM_POSIX
@@ -1158,6 +1167,4 @@ nng_ipc_register(void)
 #ifdef NNG_HAVE_ABSTRACT_SOCKETS
 	nni_sp_tran_register(&ipc_tran_abstract);
 #endif
-
-	return (0);
 }

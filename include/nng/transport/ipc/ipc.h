@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -20,7 +20,9 @@ extern "C" {
 // ipc transport.  This is used for inter-process communication on
 // the same host computer.
 
+#ifndef NNG_ELIDE_DEPRECATED
 NNG_DECL int nng_ipc_register(void);
+#endif
 
 #ifdef __cplusplus
 }

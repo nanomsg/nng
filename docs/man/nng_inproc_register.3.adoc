@@ -1,6 +1,6 @@
 = nng_inproc_register(3)
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This document is supplied under the terms of the MIT License, a
@@ -26,6 +26,9 @@ int nng_inproc_register(void);
 
 The `nng_inproc_register()` function registers the
 ((_inproc_ transport))(((transport, _inproc_))) for use.
+
+NOTE: This function is deprecated, and may be removed from a future release.
+It is no longer necessary to explicitly register transports.
 
 == RETURN VALUES
 
