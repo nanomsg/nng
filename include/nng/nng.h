@@ -1,5 +1,5 @@
-//
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Jaylin <neverfail2012@hotmail.com>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -49,9 +49,9 @@ extern "C" {
 // We use SemVer, and these versions are about the API, and
 // may not necessarily match the ABI versions.
 #define NNG_MAJOR_VERSION 1
-#define NNG_MINOR_VERSION 5
-#define NNG_PATCH_VERSION 1
-#define NNG_RELEASE_SUFFIX "" // if non-empty, this is a pre-release
+#define NNG_MINOR_VERSION 4
+#define NNG_PATCH_VERSION 0
+#define NNG_RELEASE_SUFFIX "DEV" // if non-empty, this is a pre-release
 
 // Maximum length of a socket address. This includes the terminating NUL.
 // This limit is built into other implementations, so do not change it.
@@ -91,6 +91,7 @@ typedef struct nng_pipe_s {
 
 typedef struct nng_socket_s {
 	uint32_t id;
+	void    *data;
 } nng_socket;
 
 typedef int32_t         nng_duration; // in milliseconds
@@ -456,6 +457,7 @@ NNG_DECL void *nng_alloc(size_t);
 // As the application is required to keep track of the size of memory, this
 // is probably less convenient for general uses than the C library malloc and
 // calloc.
+NNG_DECL void *nng_zalloc(size_t sz);
 NNG_DECL void nng_free(void *, size_t);
 
 // nng_strdup duplicates the source string, using nng_alloc. The result
@@ -1179,7 +1181,6 @@ NNG_DECL int nng_stream_listener_set_ptr(
 NNG_DECL int nng_stream_listener_set_addr(
     nng_stream_listener *, const char *, const nng_sockaddr *);
 
-
 #ifndef NNG_ELIDE_DEPRECATED
 // These are legacy APIs that have been deprecated.
 // Their use is strongly discouraged.
@@ -1279,6 +1280,47 @@ NNG_DECL void nng_closeall(void);
 
 #endif
 
+// NANOMQ MQTT variables & APIs
+typedef struct conn_param        conn_param;
+typedef struct pub_packet_struct pub_packet_struct;
+typedef struct pipe_db           nano_pipe_db;
+
+NNG_DECL void   nng_aio_finish_error(nng_aio *aio, int rv);
+NNG_DECL void   nng_aio_finish_sync(nng_aio *aio, int rv);
+NNG_DECL int    nng_msg_cmd_type(nng_msg *msg);
+NNG_DECL void * nng_msg_get_conn_param(nng_msg *msg);
+NNG_DECL size_t nng_msg_remaining_len(nng_msg *msg);
+NNG_DECL uint8_t *nng_msg_header_ptr(nng_msg *msg);
+NNG_DECL uint8_t *nng_msg_variable_ptr(nng_msg *msg);
+NNG_DECL uint8_t *nng_msg_payload_ptr(nng_msg *msg);
+NNG_DECL void     nng_msg_set_payload_ptr(nng_msg *msg, uint8_t *ptr);
+NNG_DECL void     nng_msg_set_remaining_len(nng_msg *msg, size_t len);
+NNG_DECL void     nng_msg_clone(nng_msg *msg);
+NNG_DECL void     nng_msg_set_cmd_type(nng_msg *m, uint8_t cmd);
+NNG_DECL nng_msg *nng_msg_unique(nng_msg *m);
+NNG_DECL int      nng_file_put(const char *name, const void *data, size_t sz);
+NNG_DECL int      nng_file_get(const char *name, void **datap, size_t *szp);
+NNG_DECL int      nng_file_delete(const char *name);
+NNG_DECL void     nng_msg_set_timestamp(nng_msg *m, uint64_t time);
+
+NNG_DECL void  nng_aio_set_dbtree(nng_aio *aio, void *db);
+NNG_DECL void *nng_msg_get_conn_param(nng_msg *msg);
+
+NNG_DECL const uint8_t *conn_param_get_clientid(conn_param *cparam);
+NNG_DECL const uint8_t *conn_param_get_pro_name(conn_param *cparam);
+NNG_DECL const void *   conn_param_get_will_topic(conn_param *cparam);
+NNG_DECL const void *   conn_param_get_will_msg(conn_param *cparam);
+NNG_DECL const uint8_t *conn_param_get_username(conn_param *cparam);
+NNG_DECL const uint8_t *conn_param_get_password(conn_param *cparam);
+NNG_DECL uint8_t        conn_param_get_con_flag(conn_param *cparam);
+NNG_DECL uint8_t        conn_param_get_clean_start(conn_param *cparam);
+NNG_DECL uint8_t        conn_param_get_will_flag(conn_param *cparam);
+NNG_DECL uint8_t        conn_param_get_will_qos(conn_param *cparam);
+NNG_DECL uint8_t        conn_param_get_will_retain(conn_param *cparam);
+NNG_DECL uint16_t       conn_param_get_keepalive(conn_param *cparam);
+NNG_DECL uint8_t        conn_param_get_protover(conn_param *cparam);
+
+NNG_DECL void     nng_taskq_setter (int num_taskq_threads, int max_taskq_threads);
 #ifdef __cplusplus
 }
 #endif
