@@ -5,6 +5,7 @@
 #   Copyright (c) 2015-2016 Jack R. Dunaway. All rights reserved.
 #   Copyright 2016 Franklin "Snaipe" Mathieu <franklinmathieu@gmail.com>
 #   Copyright 2018 Capitar IT Group BV <info@capitar.com>
+#   Copyright 2020 EMQX. All rights reserved.
 #
 #   Permission is hereby granted, free of charge, to any person obtaining a copy
 #   of this software and associated documentation files (the "Software"),
@@ -252,12 +253,15 @@ endif ()
 add_subdirectory(src)
 
 if (NNG_TESTS)
-    add_subdirectory(tests)
+#    add_subdirectory(tests)
 endif ()
 
 #  Build the tools
 
-add_subdirectory(docs/man)
+# add_subdirectory(docs/man)
+
+include_directories(${CMAKE_SOURCE_DIR}/nanolib/include)
+include_directories(${CMAKE_SOURCE_DIR}/nanomq/include)
 
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME})
 set(CPACK_PACKAGE_VERSION ${NNG_PACKAGE_VERSION})
