@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -9,6 +9,7 @@
 //
 
 #include "core/nng_impl.h"
+#include "nng/nng_debug.h"
 #include <string.h>
 
 struct nni_aio_expire_q {
@@ -109,6 +110,7 @@ nni_aio_init(nni_aio *aio, nni_cb cb, void *arg)
 	nni_task_init(&aio->a_task, NULL, cb, arg);
 	aio->a_expire  = NNI_TIME_NEVER;
 	aio->a_timeout = NNG_DURATION_INFINITE;
+	aio->packet_id = 0;
 	aio->a_expire_q =
 	    nni_aio_expire_q_list[nni_random() % nni_aio_expire_q_cnt];
 }
@@ -329,7 +331,7 @@ nni_aio_begin(nni_aio *aio)
 	aio_safe_lock(&eq->eq_mtx);
 
 	NNI_ASSERT(!nni_aio_list_active(aio));
-	NNI_ASSERT(aio->a_cancel_fn == NULL);
+	//NNI_ASSERT(aio->a_cancel_fn == NULL);
 	NNI_ASSERT(!nni_list_node_active(&aio->a_expire_node));
 
 	// Some initialization can be done outside of the lock, because
@@ -388,7 +390,12 @@ nni_aio_schedule(nni_aio *aio, nni_aio_cancel_fn cancel, void *data)
 		return (NNG_ECLOSED);
 	}
 
+#if defined(DEBUG)
+	debug_msg("aio->a_cancel_fn NULL %d?", (aio->a_cancel_fn == NULL));
+#else
+
 	NNI_ASSERT(aio->a_cancel_fn == NULL);
+#endif
 	aio->a_cancel_fn  = cancel;
 	aio->a_cancel_arg = data;
 
@@ -457,18 +464,21 @@ nni_aio_finish_impl(
 void
 nni_aio_finish(nni_aio *aio, int result, size_t count)
 {
+	debug_msg("aio finish");
 	nni_aio_finish_impl(aio, result, count, NULL, false);
 }
 
 void
 nni_aio_finish_sync(nni_aio *aio, int result, size_t count)
 {
+	debug_msg("nni_aio_finish_sync");
 	nni_aio_finish_impl(aio, result, count, NULL, true);
 }
 
 void
 nni_aio_finish_error(nni_aio *aio, int result)
 {
+	debug_msg("nni_aio_finish_error");
 	nni_aio_finish_impl(aio, result, 0, NULL, false);
 }
 
@@ -829,3 +839,47 @@ nni_aio_sys_init(void)
 
 	return (0);
 }
+
+// NANOMQ APIs
+void
+nni_aio_set_packetid(nni_aio *aio, uint16_t id)
+{
+	aio->packet_id = id;
+}
+
+uint16_t
+nni_aio_get_packetid(nni_aio *aio)
+{
+	return aio->packet_id;
+}
+
+/*
+void
+nni_aio_set_pipes(nni_aio *aio, uint32_t *pipes)
+{
+    aio->pipes = pipes;
+}
+
+uint32_t*
+nni_aio_get_pipes(nni_aio *aio)
+{
+    return aio->pipes;
+}
+
+
+void
+nni_aio_set_pipelength(nni_aio *aio, uint32_t len)
+{
+    if (aio->pipes == NULL) {
+        aio->pipe_len = 0;
+        return;
+    }
+    aio->pipe_len = len;
+}
+
+uint32_t
+nni_aio_get_pipelength(nni_aio *aio)
+{
+    return aio->pipe_len;
+}
+*/

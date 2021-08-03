@@ -197,4 +197,9 @@ extern int nni_proto_open(nng_socket *, const nni_proto *);
 extern int  nni_proto_sys_init(void);
 extern void nni_proto_sys_fini(void);
 
+// For Nanomq
+
+extern int nni_proto_mqtt_open(nng_socket *, const nni_proto *, void (*sock_setdb)(void *, void *));
+
+
 #endif // CORE_PROTOCOL_H

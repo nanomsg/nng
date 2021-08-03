@@ -201,7 +201,7 @@ test_max_recv_size(void)
 	int    n;
 	size_t sz;
 	char   buf[64];
-	char *addr;
+	char * addr;
 
 	NUTS_ADDR(addr, "tcp");
 

@@ -11,6 +11,8 @@
 #ifndef CORE_MESSAGE_H
 #define CORE_MESSAGE_H
 
+#include <packet.h>
+
 // Internally used message API.  Again, this is not part of our public API.
 // "trim" operations work from the front, and "chop" work from the end.
 
@@ -61,5 +63,81 @@ extern bool     nni_msg_shared(nni_msg *);
 // is returned.  It is the responsibility of the caller to free the
 // original message in that case (same semantics as realloc).
 extern nni_msg *nni_msg_pull_up(nni_msg *);
+
+// NANOMQ MQTT
+extern nni_time      nni_msg_get_timestamp(nni_msg *m);
+extern void          nni_msg_set_timestamp(nni_msg *m, nni_time time);
+extern int           nni_msg_cmd_type(nni_msg *m);
+extern uint8_t *     nni_msg_header_ptr(const nni_msg *m);
+extern uint8_t *     nni_msg_variable_ptr(const nni_msg *m);
+extern uint8_t *     nni_msg_payload_ptr(const nni_msg *m);
+extern uint8_t       nni_msg_get_pub_qos(nni_msg *m);
+extern size_t        nni_msg_remaining_len(const nni_msg *m);
+extern void          nni_msg_set_payload_ptr(nni_msg *m, uint8_t *ptr);
+extern void          nni_msg_set_remaining_len(nni_msg *m, size_t len);
+extern void          nni_msg_set_cmd_type(nni_msg *m, uint8_t cmd);
+extern void          nni_msg_set_conn_param(nni_msg *m, void *ptr);
+extern nano_pipe_db *nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root);
+extern void          nano_msg_free_pipedb(nano_pipe_db *db);
+extern void          nano_msg_ubsub_free(nano_pipe_db *db);
+extern uint8_t       nni_msg_get_preset_qos(nni_msg *m);
+extern uint16_t      nni_msg_get_pub_pid(nni_msg *m);
+
+extern conn_param *nni_msg_get_conn_param(nni_msg *m);
+
+typedef struct conn_propt conn_propt;
+
+struct conn_propt {
+	uint8_t session_exp_int[5];
+};
+
+struct pipe_db {
+	// uint32_t           p_id;
+	uint8_t qos;
+	char *  topic;
+	// conn_param *       conn_param;
+	// TODO MQTT5 property
+	struct pipe_db *next;
+	struct pipe_db *prev;
+	struct pipe_db *root;
+};
+
+// TODO use ZALLOC later
+struct conn_param {
+	uint8_t            pro_ver;
+	uint8_t            con_flag;
+	uint16_t           keepalive_mqtt;
+	uint8_t            clean_start;
+	uint8_t            will_flag;
+	uint8_t            will_retain;
+	uint8_t            will_qos;
+	nni_id_map *       nano_qos_db;
+	struct mqtt_string pro_name;
+	struct mqtt_string clientid;
+	struct mqtt_string will_topic;
+	struct mqtt_string will_msg;
+	struct mqtt_string username;
+	struct mqtt_binary password;
+	// conn_propt    ppt;
+	// mqtt_v5
+	// variable header
+	uint32_t             session_expiry_interval;
+	uint16_t             rx_max;
+	uint32_t             max_packet_size;
+	uint16_t             topic_alias_max;
+	uint8_t              req_resp_info;
+	uint8_t              req_problem_info;
+	struct mqtt_string   auth_method;
+	struct mqtt_binary   auth_data;
+	struct mqtt_str_pair user_property;
+	// payload
+	uint32_t             will_delay_interval;
+	uint8_t              payload_format_indicator;
+	uint32_t             msg_expiry_interval;
+	struct mqtt_string   content_type;
+	struct mqtt_string   resp_topic;
+	struct mqtt_binary   corr_data;
+	struct mqtt_str_pair payload_user_property;
+};
 
 #endif // CORE_SOCKET_H

@@ -58,6 +58,12 @@ nng_alloc(size_t sz)
 	return (nni_alloc(sz));
 }
 
+void *
+nng_zalloc(size_t sz)
+{
+	return (nni_zalloc(sz));
+}
+
 void
 nng_free(void *buf, size_t sz)
 {
@@ -286,6 +292,7 @@ nng_ctx_recv(nng_ctx cid, nng_aio *aio)
 	int      rv;
 	nni_ctx *ctx;
 
+	debug_msg(" ######## nng_ctx_recv context id %d ######## ", cid.id);
 	if ((rv = nni_ctx_find(&ctx, cid.id, false)) != 0) {
 		if (nni_aio_begin(aio) == 0) {
 			nni_aio_finish_error(aio, rv);
@@ -1328,13 +1335,13 @@ nng_msg_free(nng_msg *msg)
 int
 nng_msg_reserve(nng_msg *msg, size_t capacity)
 {
-	return (nni_msg_reserve(msg, capacity));
+       return (nni_msg_reserve(msg, capacity));
 }
 
 size_t
 nng_msg_capacity(nng_msg *msg)
 {
-	return (nni_msg_capacity(msg));
+       return (nni_msg_capacity(msg));
 }
 
 void *
@@ -1899,4 +1906,226 @@ nng_version(void)
 {
 	return (xstr(NNG_MAJOR_VERSION) "." xstr(NNG_MINOR_VERSION) "." xstr(
 	    NNG_PATCH_VERSION) NNG_RELEASE_SUFFIX);
+}
+
+// NANOMQ MQTT APIs
+int
+nng_msg_cmd_type(nng_msg *msg)
+{
+	return (nni_msg_cmd_type(msg));
+}
+
+size_t
+nng_msg_remaining_len(nng_msg *msg)
+{
+	return (nni_msg_remaining_len(msg));
+}
+
+uint8_t *
+nng_msg_header_ptr(nng_msg *msg)
+{
+	return (nni_msg_header_ptr(msg));
+}
+
+uint8_t *
+nng_msg_variable_ptr(nng_msg *msg)
+{
+	return (nni_msg_variable_ptr(msg));
+}
+
+uint8_t *
+nng_msg_payload_ptr(nng_msg *msg)
+{
+	return (nni_msg_payload_ptr(msg));
+}
+
+void
+nng_msg_set_payload_ptr(nng_msg *msg, uint8_t *ptr)
+{
+	nni_msg_set_payload_ptr(msg, ptr);
+}
+
+void
+nng_msg_set_remaining_len(nng_msg *msg, size_t len)
+{
+	nni_msg_set_remaining_len(msg, len);
+}
+
+void
+nng_msg_clone(nng_msg *msg)
+{
+	nni_msg_clone(msg);
+}
+
+nng_msg *
+nng_msg_unique(nng_msg *m)
+{
+	nng_msg *m2;
+	m2 = nni_msg_unique(m);
+	return m2;
+}
+
+void *
+nng_msg_get_conn_param(nng_msg *msg)
+{
+	return nni_msg_get_conn_param(msg);
+}
+
+void
+nng_msg_set_cmd_type(nng_msg *m, uint8_t cmd)
+{
+	nni_msg_set_cmd_type(m, cmd);
+}
+
+const uint8_t *
+conn_param_get_clientid(conn_param *cparam)
+{
+	return (const uint8_t *) cparam->clientid.body;
+}
+
+const uint8_t *
+conn_param_get_pro_name(conn_param *cparam)
+{
+	return (const uint8_t *) cparam->pro_name.body;
+}
+
+const void *
+conn_param_get_will_topic(conn_param *cparam)
+{
+	if (cparam->will_flag) {
+		return (void *) &(cparam->will_topic);
+	} else {
+		return NULL;
+	}
+}
+
+const void *
+conn_param_get_will_msg(conn_param *cparam)
+{
+	if (cparam->will_flag) {
+		return (void *) &(cparam->will_msg);
+	} else {
+		return NULL;
+	}
+}
+
+const uint8_t *
+conn_param_get_username(conn_param *cparam)
+{
+	if (cparam->con_flag & 0x80) {
+		return (const uint8_t *)cparam->username.body;
+	} else {
+		return NULL;
+	}
+}
+
+const uint8_t *
+conn_param_get_password(conn_param *cparam)
+{
+	if (cparam->con_flag & 0x40) {
+		return cparam->password.body;
+	} else {
+		return NULL;
+	}
+}
+
+uint8_t
+conn_param_get_con_flag(conn_param *cparam)
+{
+	return cparam->con_flag;
+}
+
+uint8_t
+conn_param_get_clean_start(conn_param *cparam)
+{
+	return cparam->clean_start;
+}
+
+uint8_t
+conn_param_get_will_flag(conn_param *cparam)
+{
+	return cparam->will_flag;
+}
+
+uint8_t
+conn_param_get_will_qos(conn_param *cparam)
+{
+	return cparam->will_qos;
+}
+
+uint8_t
+conn_param_get_will_retain(conn_param *cparam)
+{
+	return cparam->will_retain;
+}
+
+uint16_t
+conn_param_get_keepalive(conn_param *cparam)
+{
+	return cparam->keepalive_mqtt;
+}
+
+uint8_t
+conn_param_get_protover(conn_param *cparam)
+{
+	if (NULL == cparam)
+		return 0;
+	else
+		return cparam->pro_ver;
+}
+
+void
+nng_msg_set_timestamp(nni_msg *m, uint64_t time)
+{
+	nni_msg_set_timestamp(m, (nni_time)time);
+}
+
+/*
+void
+nng_aio_set_pipelength(nng_aio *aio, uint32_t len)
+{
+    nni_aio_set_pipelength(aio, len);
+}
+
+void
+nng_aio_set_pipes(nng_aio *aio, uint32_t *pipes)
+{
+    nni_aio_set_pipes(aio, pipes);
+}
+*/
+
+void
+nng_aio_finish_error(nng_aio *aio, int rv)
+{
+	nni_aio_finish_error(aio, rv);
+}
+
+void
+nng_aio_finish_sync(nng_aio *aio, int rv)
+{
+	nni_aio_finish_sync(aio, rv, 0);
+}
+
+int
+nng_file_put(const char *name, const void *data, size_t sz)
+{
+	return nni_file_put(name, data, sz);
+}
+
+int
+nng_file_get(const char *name, void **datap, size_t *szp)
+{
+	return nni_file_get(name, datap, szp);
+}
+
+int
+nng_file_delete(const char *name)
+{
+	return nni_file_delete(name);
+}
+
+void
+nng_taskq_setter (int num_taskq_threads, int max_taskq_threads)
+{
+	nni_taskq_setter(num_taskq_threads, max_taskq_threads);
 }

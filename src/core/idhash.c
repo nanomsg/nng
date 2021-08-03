@@ -102,6 +102,36 @@ nni_id_get(nni_id_map *m, uint32_t id)
 	return (m->id_entries[index].val);
 }
 
+/*
+ * return any solid value in hash, with key returned.
+ */
+void *
+nni_id_get_any(nni_id_map *m, uint16_t *pid)
+{
+	size_t index;
+	size_t start;
+	if (m->id_count == 0 || m->id_entries == NULL) {
+		return NULL;
+	}
+
+	index = 1;
+	start = index;
+	for (;;) {
+		// The value of ihe_key is only valid if ihe_val is not NULL.
+		if (m->id_entries[index].val != NULL) {
+			*pid = m->id_entries[index].key;
+			return m->id_entries[index].val;
+		}
+		index = ID_NEXT(m, index);
+
+		if (index == start) {
+			break;
+		}
+	}
+
+	return NULL;
+}
+
 static int
 id_resize(nni_id_map *m)
 {
@@ -284,4 +314,45 @@ nni_id_alloc(nni_id_map *m, uint32_t *idp, void *val)
 		*idp = id;
 	}
 	return (rv);
+}
+
+void
+nni_id_msgfree_cb(nni_msg* msg)
+{
+	nni_msg_free(msg);
+	msg = NULL;
+}
+
+void
+nni_id_show_cb(nni_msg* msg)
+{
+	NNI_ARG_UNUSED(msg);
+	debug_msg("message has an address: %p", msg);
+}
+
+// this function iterates through the the idhash table, and store the entries in a linked list
+// the implementation of the linked list used the structure of the idhash entry 
+void
+nni_id_iterate(nni_id_map *m, void (func_cb)(nni_msg*))
+{
+	//int count = 0;
+	for (int i = 0; i < (int) m->id_cap; i++) {
+		if ((m->id_entries[i].val) != NULL) {
+			//count++;
+			func_cb(m->id_entries[i].val);
+		}
+	}
+	//debug_msg("This id_map has %d entries.\n", count);
+}
+
+void*
+nni_id_get_one(nni_id_map *m, uint32_t *key)
+{
+	for (int i = 0; i < (int) m->id_cap; i++) {
+		if ((m->id_entries[i].val) != NULL) {
+			*key = m->id_entries[i].key;
+			return &m->id_entries[i];
+		}
+	}
+	return NULL;
 }

@@ -69,6 +69,8 @@ pipe_destroy(void *arg)
 	while (p->p_ref != 0) {
 		nni_cv_wait(&p->p_cv);
 	}
+	nni_id_map_fini(&p->nano_db);
+	// nni_id_map_fini(&p->nano_qos_db);
 	nni_mtx_unlock(&pipes_lk);
 
 	if (p->p_proto_data != NULL) {
@@ -241,6 +243,7 @@ pipe_stats_init(nni_pipe *p)
 	nni_stat_set_id(&p->st_root, (int) p->p_id);
 	nni_stat_set_id(&p->st_id, (int) p->p_id);
 	nni_stat_set_id(&p->st_sock_id, (int) nni_sock_id(p->p_sock));
+
 }
 #endif // NNG_ENABLE_STATS
 
@@ -270,6 +273,8 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 	p->p_closed     = false;
 	p->p_cbs        = false;
 	p->p_ref        = 0;
+	// NanoMQ
+	p->packet_id = 0;
 
 	nni_atomic_flag_reset(&p->p_stop);
 	NNI_LIST_NODE_INIT(&p->p_sock_node);
@@ -277,6 +282,9 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 
 	nni_mtx_init(&p->p_mtx);
 	nni_cv_init(&p->p_cv, &pipes_lk);
+	nni_id_map_init(&p->nano_db, 0, 0, false);
+	p->nano_qos_db = nng_alloc(sizeof(struct nni_id_map));
+	nni_id_map_init(p->nano_qos_db, 0, 0, false);
 
 	nni_mtx_lock(&pipes_lk);
 	if ((rv = nni_id_alloc(&pipes, &p->p_id, p)) == 0) {
@@ -302,9 +310,9 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 int
 nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 {
-	int          rv;
+	int       rv;
 	nni_sp_tran *tran = d->d_tran;
-	nni_pipe *   p;
+	nni_pipe *p;
 
 	if ((rv = pipe_create(&p, d->d_sock, tran, tdata)) != 0) {
 		return (rv);
@@ -326,9 +334,9 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 int
 nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 {
-	int          rv;
+	int       rv;
 	nni_sp_tran *tran = l->l_tran;
-	nni_pipe *   p;
+	nni_pipe *p;
 
 	if ((rv = pipe_create(&p, l->l_sock, tran, tdata)) != 0) {
 		return (rv);
@@ -431,3 +439,31 @@ nni_pipe_bump_error(nni_pipe *p, int err)
 		nni_listener_bump_error(p->p_listener, err);
 	}
 }
+
+// NanoMQ APIs
+void
+nni_pipe_set_conn_param(nni_pipe *p, void *c)
+{
+	p->conn_param = c;
+}
+
+void *
+nni_pipe_get_conn_param(nni_pipe *p)
+{
+	return p->conn_param;
+}
+
+uint16_t
+nni_pipe_inc_packetid(nni_pipe *p)
+{
+	p->packet_id++;
+	return p->packet_id;
+}
+
+/*
+nni_id_map *
+nni_pipe_get_idhash(nni_pipe *p)
+{
+        return &p->pipedb;
+}
+*/

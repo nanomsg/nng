@@ -165,6 +165,16 @@ extern void nni_sleep_aio(nni_duration, nni_aio *);
 extern int  nni_aio_sys_init(void);
 extern void nni_aio_sys_fini(void);
 
+// NANOMQ APIs
+extern void     nni_aio_set_sockaddr(nni_aio *aio, const nng_sockaddr *);
+extern void     nni_aio_get_sockaddr(nni_aio *aio, nng_sockaddr *);
+extern uint16_t nni_aio_get_packetid(nni_aio *aio);
+extern void     nni_aio_set_packetid(nni_aio *aio, uint16_t id);
+
+// extern void      nni_aio_set_pipelength(nni_aio *aio, uint32_t len);
+// extern void      nni_aio_set_pipes(nni_aio *aio, uint32_t *pipes);
+// extern uint32_t *nni_aio_get_pipes(nni_aio *aio);
+
 typedef struct nni_aio_expire_q nni_aio_expire_q;
 
 // An nni_aio is an async I/O handle.  The details of this aio structure
@@ -205,6 +215,8 @@ struct nng_aio {
 	nni_aio_expire_q *a_expire_q;
 	nni_list_node     a_expire_node; // Expiration node
 	nni_reap_node     a_reap_node;
+	// NanoMQ var
+	uint16_t packet_id;
 };
 
 #endif // CORE_AIO_H

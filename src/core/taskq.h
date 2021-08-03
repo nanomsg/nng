@@ -44,7 +44,7 @@ extern void nni_task_prep(nni_task *);
 extern void nni_task_abort(nni_task *);
 
 extern void nni_task_wait(nni_task *);
-extern void  nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
+extern void nni_task_init(nni_task *, nni_taskq *, nni_cb, void *);
 
 // nni_task_fini destroys the task.  It will reap resources asynchronously
 // if the task is currently executing.  Use nni_task_wait() first if the
@@ -68,5 +68,8 @@ struct nni_task {
 	nni_mtx       task_mtx;
 	nni_cv        task_cv;
 };
+
+// NanoMQ
+extern void nni_taskq_setter(int num_taskq_threads, int max_taskq_threads);
 
 #endif // CORE_TASKQ_H

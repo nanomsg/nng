@@ -186,8 +186,7 @@ tcp_dialer_dial(void *arg, nng_aio *aio)
 }
 
 static int
-tcp_dialer_get(
-    void *arg, const char *name, void *buf, size_t *szp, nni_type t)
+tcp_dialer_get(void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
 	tcp_dialer *d = arg;
 	return (nni_tcp_dialer_get(d->d, name, buf, szp, t));

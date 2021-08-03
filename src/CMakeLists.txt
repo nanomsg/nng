@@ -11,6 +11,8 @@
 nng_sources(nng.c nng_legacy.c)
 nng_headers(nng/nng.h)
 
+include_directories(${CMAKE_SOURCE_DIR}/nanolib/include)
+include_directories(${CMAKE_SOURCE_DIR}/nanomq/include)
 target_include_directories(nng PRIVATE ${PROJECT_SOURCE_DIR}/src)
 target_include_directories(nng_testing PRIVATE ${PROJECT_SOURCE_DIR}/src)
 

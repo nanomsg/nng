@@ -1,5 +1,5 @@
 //
-// Copyright 2021 Garrett D'Amore <garrett@damore.org>
+// Copyright 2017 Garrett D'Amore <garrett@damore.org>
 // Copyright 2017 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -11,7 +11,8 @@
 #define CORE_NNG_IMPL_H
 
 #include "nng/nng.h"
-
+// NanoMQ
+#include "nng/nng_debug.h"
 // Internal implementation things for NNG, common definitions, etc.
 // All internal modules wind up including this file to avoid having
 // to figure out which header(s) to include.
