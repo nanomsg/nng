@@ -28,7 +28,10 @@ test_tls_config_version(void)
 	NUTS_FAIL(nng_tls_config_version(cfg, NNG_TLS_1_0, NNG_TLS_1_3 + 1),
 	    NNG_ENOTSUP);
 
-	// Verify that we *can* configure some various ranges.
+	// Verify that we *can* configure some various ranges starting with
+	// TLS v1.2.  Note that some libraries no longer support TLS 1.0
+	// and TLS 1.1, so we don't test for them.
+#if 0
 	NUTS_PASS(nng_tls_config_version(cfg, NNG_TLS_1_0, NNG_TLS_1_0));
 	NUTS_PASS(nng_tls_config_version(cfg, NNG_TLS_1_0, NNG_TLS_1_1));
 	NUTS_PASS(nng_tls_config_version(cfg, NNG_TLS_1_0, NNG_TLS_1_2));
@@ -36,6 +39,7 @@ test_tls_config_version(void)
 	NUTS_PASS(nng_tls_config_version(cfg, NNG_TLS_1_1, NNG_TLS_1_1));
 	NUTS_PASS(nng_tls_config_version(cfg, NNG_TLS_1_1, NNG_TLS_1_2));
 	NUTS_PASS(nng_tls_config_version(cfg, NNG_TLS_1_1, NNG_TLS_1_3));
+#endif
 	NUTS_PASS(nng_tls_config_version(cfg, NNG_TLS_1_2, NNG_TLS_1_2));
 	NUTS_PASS(nng_tls_config_version(cfg, NNG_TLS_1_2, NNG_TLS_1_3));
 

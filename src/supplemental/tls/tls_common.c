@@ -1374,7 +1374,7 @@ nng_tls_config_alloc(nng_tls_config **cfg_p, nng_tls_mode mode)
 		return (NNG_ENOTSUP);
 	}
 
-	size = NNI_ALIGN_UP(sizeof(*cfg) + eng->config_ops->size);
+	size = NNI_ALIGN_UP(sizeof(*cfg)) + eng->config_ops->size;
 
 	if ((cfg = nni_zalloc(size)) == NULL) {
 		return (NNG_ENOMEM);
