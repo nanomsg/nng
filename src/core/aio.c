@@ -520,9 +520,8 @@ nni_aio_expire_add(nni_aio *aio)
 	}
 
 	eq->eq_list[eq->eq_len++] = aio;
-	if (eq->eq_len == 1) {
-		nni_cv_wake(&eq->eq_cv);
-	}
+	// Fire the latest aio, but it cames with performance punishment
+	nni_cv_wake(&eq->eq_cv);
 }
 
 static void
