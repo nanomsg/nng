@@ -232,7 +232,7 @@ trantest_listen_accept(trantest *tt)
 		So(trantest_listen(tt, &l) == 0);
 		So(nng_listener_id(l) > 0);
 
-		nng_msleep(200);
+		nng_msleep(500);
 		So(trantest_dial(tt, &d) == 0);
 		So(nng_dialer_id(d) > 0);
 		So(nng_dialer_id(d0) < 0);
