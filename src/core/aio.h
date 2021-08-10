@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -167,10 +167,10 @@ extern void nni_aio_sys_fini(void);
 
 typedef struct nni_aio_expire_q nni_aio_expire_q;
 
-// An nni_aio is an async I/O handle.  The details of this aio structure
+// nng_aio is an async I/O handle.  The details of this aio structure
 // are private to the AIO framework.  The structure has the public name
 // (nng_aio) so that we minimize the pollution in the public API namespace.
-// It is a coding error for anything out side of the AIO framework to access
+// It is a coding error for anything outside the AIO framework to access
 // any of these members -- the definition is provided here to facilitate
 // inlining, but that should be the only use.
 struct nng_aio {
@@ -181,6 +181,7 @@ struct nng_aio {
 	bool         a_stop;      // Shutting down (no new operations)
 	bool         a_sleep;     // Sleeping with no action
 	bool         a_expire_ok; // Expire from sleep is ok
+	bool         a_expiring;  // Expiration in progress
 	nni_task     a_task;
 
 	// Read/write operations.
@@ -198,9 +199,9 @@ struct nng_aio {
 
 	// Provider-use fields.
 	nni_aio_cancel_fn a_cancel_fn;
-	void *            a_cancel_arg;
+	void	     *a_cancel_arg;
 	nni_list_node     a_prov_node;     // Linkage on provider list.
-	void *            a_prov_extra[2]; // Extra data used by provider
+	void	     *a_prov_extra[2]; // Extra data used by provider
 
 	nni_aio_expire_q *a_expire_q;
 	nni_list_node     a_expire_node; // Expiration node
