@@ -185,9 +185,10 @@ typedef struct conn_propt nano_conn_propt;
 #define NNI_NANO_MAX_HEADER_SIZE sizeof(uint8_t) * 5 // ONLY FIXED HEADER
 #endif
 
-// NNI_EXPIRE_Q_SIZE is the default size of aio expire queue
-#ifndef NNI_EXPIRE_Q_SIZE
-#define NNI_EXPIRE_Q_SIZE 256
+// NNI_EXPIRE_BATCH lets us handle expiration in batches,
+// reducing the number of traverses of the expiration list we perform.
+#ifndef NNI_EXPIRE_BATCH
+#define NNI_EXPIRE_BATCH 100
 #endif
 
 
