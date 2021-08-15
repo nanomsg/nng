@@ -796,13 +796,13 @@ nano_msg_notify_disconnect(conn_param *cparam, uint8_t code)
 	nni_msg *   msg;
 	mqtt_string string, topic;
 	uint8_t     buff[256];
-	snprintf(buff, 256, DISCONNECT_MSG, cparam->username.body,
-	    (uint64_t) nni_clock(), code, cparam->clientid.body);
+	snprintf(buff, 256, DISCONNECT_MSG, cparam->username.body, nni_clock(),
+	    code, cparam->clientid.body);
 	string.body = buff;
 	string.len  = strlen(string.body);
-	topic.body = DISCONNECT_TOPIC;
-	topic.len  = strlen(DISCONNECT_TOPIC);
-	msg        = nano_msg_composer(0, 0, &string, &topic);
+	topic.body  = DISCONNECT_TOPIC;
+	topic.len   = strlen(DISCONNECT_TOPIC);
+	msg         = nano_msg_composer(0, 0, &string, &topic);
 	return msg;
 }
 
@@ -812,12 +812,13 @@ nano_msg_notify_connect(conn_param *cparam, uint8_t code)
 	nni_msg *   msg;
 	mqtt_string string, topic;
 	uint8_t     buff[256];
-	snprintf(buff, 256, CONNECT_MSG, cparam->username.body,
-	    (uint64_t) nni_clock(), cparam->pro_name.body, cparam->keepalive_mqtt, code, cparam->pro_ver, cparam->clientid.body, cparam->clean_start);
+	snprintf(buff, 256, CONNECT_MSG, cparam->username.body, nni_clock(),
+	    cparam->pro_name.body, cparam->keepalive_mqtt, code,
+	    cparam->pro_ver, cparam->clientid.body, cparam->clean_start);
 	string.body = buff;
 	string.len  = strlen(string.body);
-	topic.body = CONNECT_TOPIC;
-	topic.len  = strlen(CONNECT_TOPIC);
-	msg        = nano_msg_composer(0, 0, &string, &topic);
+	topic.body  = CONNECT_TOPIC;
+	topic.len   = strlen(CONNECT_TOPIC);
+	msg         = nano_msg_composer(0, 0, &string, &topic);
 	return msg;
 }
