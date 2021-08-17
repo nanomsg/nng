@@ -309,7 +309,7 @@ sizeof(struct conn_param));
 
 /**
  * only use in nego_cb !!!
- *
+ * TODO CONNECT packet validation
  */
 int32_t
 conn_handler(uint8_t *packet, conn_param *cparam)
@@ -325,7 +325,7 @@ conn_handler(uint8_t *packet, conn_param *cparam)
 		return rv;
 	} else {
 		pos++;
-	}
+    }
 
 	init_conn_param(cparam);
 	// remaining length

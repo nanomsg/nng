@@ -285,8 +285,7 @@ tcptran_pipe_nego_cb(void *arg)
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	if (p->gotrxhead == NNI_NANO_MAX_HEADER_SIZE &&
-	    p->wantrxhead == NANO_CONNECT_PACKET_LEN) {
+	if (p->gotrxhead == NNI_NANO_MAX_HEADER_SIZE) {
 		if (p->rxlen[0] != CMD_CONNECT) {
 			debug_msg("CMD TYPE %x", p->rxlen[0]);
 			rv = NNG_EPROTO;
@@ -295,10 +294,13 @@ tcptran_pipe_nego_cb(void *arg)
 		len =
 		    get_var_integer(p->rxlen + 1, (uint32_t *) &len_of_varint);
 		p->wantrxhead = len + 1 + len_of_varint;
+		rv = (p->wantrxhead >= NANO_CONNECT_PACKET_LEN)? 0 : NNG_EPROTO;
+		if (rv !=0) {
+			goto error;
+		}
 	}
 
-	if (p->gotrxhead == NNI_NANO_MAX_HEADER_SIZE ||
-	    p->gotrxhead < p->wantrxhead) {
+	if (p->gotrxhead < p->wantrxhead) {
 		nni_iov iov;
 		iov.iov_len = p->wantrxhead - p->gotrxhead;
 		if (p->conn_buf == NULL) {
@@ -963,7 +965,7 @@ tcptran_pipe_recv_start(tcptran_pipe *p)
 {
 	nni_aio *rxaio;
 	nni_iov  iov;
-	debug_msg("second oder! tcptran_pipe_recv_start\n");
+	debug_msg("*** tcptran_pipe_recv_start ***\n");
 	NNI_ASSERT(p->rxmsg == NULL);
 
 	if (p->closed) {
