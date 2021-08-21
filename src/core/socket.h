@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -33,8 +33,6 @@ extern int nni_sock_setopt(
     nni_sock *, const char *, const void *, size_t, nni_opt_type);
 extern int nni_sock_getopt(
     nni_sock *, const char *, void *, size_t *, nni_opt_type);
-extern int      nni_sock_recvmsg(nni_sock *, nni_msg **, int);
-extern int      nni_sock_sendmsg(nni_sock *, nni_msg *, int);
 extern void     nni_sock_send(nni_sock *, nni_aio *);
 extern void     nni_sock_recv(nni_sock *, nni_aio *);
 extern uint32_t nni_sock_id(nni_sock *);
