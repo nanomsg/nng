@@ -50,7 +50,6 @@ nng_sources(
         pipe.c
         pipe.h
         platform.h
-        protocol.c
         protocol.h
         reap.c
         reap.h

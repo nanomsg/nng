@@ -13,6 +13,7 @@ add_subdirectory(protocol)
 add_subdirectory(transport)
 
 nng_sources(
+        protocol.c
         transport.c
         transport.h
 )
