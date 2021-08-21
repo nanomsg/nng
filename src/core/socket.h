@@ -41,11 +41,11 @@ extern uint32_t nni_sock_id(nni_sock *);
 // Note that each of these should be called without any locks held, since
 // the socket can reenter the protocol.
 
-// nni_socket_sendq obtains the upper writeq.  The protocol should
+// nni_socket_sendq obtains the upper write queue.  The protocol should
 // receive messages from this, and place them on the appropriate pipe.
 extern nni_msgq *nni_sock_sendq(nni_sock *);
 
-// nni_socket_recvq obtains the upper readq.  The protocol should
+// nni_socket_recvq obtains the upper read queue.  The protocol should
 // inject incoming messages from pipes to it.
 extern nni_msgq *nni_sock_recvq(nni_sock *);
 
@@ -54,7 +54,7 @@ extern nni_msgq *nni_sock_recvq(nni_sock *);
 extern uint32_t nni_sock_flags(nni_sock *);
 
 // This function is used by the public API to set callbacks.  It is
-// one of the only cases (the only?) where the socket core understands
+// one of the few cases (the only?) where the socket core understands
 // the public data types.  (Other solutions might exist, but they require
 // keeping extra state to support conversion between public and internal
 // types.)  The second argument is a mask of events for which the callback
@@ -90,10 +90,10 @@ extern void nni_ctx_close(nni_ctx *);
 // nni_ctx_id returns the context ID, which can be used with nni_ctx_find.
 extern uint32_t nni_ctx_id(nni_ctx *);
 
-// nni_ctx_recv is an asychronous receive.
+// nni_ctx_recv receives asynchronously.
 extern void nni_ctx_recv(nni_ctx *, nni_aio *);
 
-// nni_ctx_send is an asychronous receive.
+// nni_ctx_send sends asynchronously.
 extern void nni_ctx_send(nni_ctx *, nni_aio *);
 
 // nni_ctx_getopt is used to get a context option.

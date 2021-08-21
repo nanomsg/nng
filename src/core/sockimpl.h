@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -36,7 +36,6 @@ struct nni_dialer {
 	nni_duration      d_maxrtime; // maximum time for reconnect
 	nni_duration      d_currtime; // current time for reconnect
 	nni_duration      d_inirtime; // initial time for reconnect
-	nni_time          d_conntime; // time of last good connect
 	nni_reap_node     d_reap;
 
 #ifdef NNG_ENABLE_STATS
