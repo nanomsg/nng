@@ -538,6 +538,16 @@ wstran_listener_close(void *arg)
 }
 
 static void
+ws_pipe_start(ws_pipe *pipe, nng_stream *conn)
+{
+	ws_pipe *p = pipe;
+	int      rv;
+	debug_msg("ws_pipe_start!");
+
+	nng_stream_recv(p->ws, p->rxaio);
+}
+
+static void
 wstran_accept_cb(void *arg)
 {
 	ws_listener *l    = arg;
