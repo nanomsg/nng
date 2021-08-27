@@ -19,6 +19,10 @@
 #include <nng/supplemental/tls/tls.h>
 #include <nng/transport/ws/websocket.h>
 
+#include "nng/nng_debug.h"
+#include "nng/protocol/mqtt/mqtt.h"
+#include "nng/protocol/mqtt/mqtt_parser.h"
+
 typedef struct ws_dialer   ws_dialer;
 typedef struct ws_listener ws_listener;
 typedef struct ws_pipe     ws_pipe;
@@ -45,10 +49,17 @@ struct ws_pipe {
 	nni_mtx     mtx;
 	bool        closed;
 	uint16_t    peer;
+	size_t      gotrxhead;
+	size_t      wantrxhead;
+	nni_msg *   tmp_msg;
 	nni_aio *   user_txaio;
 	nni_aio *   user_rxaio;
+	nni_aio *   ep_aio;
 	nni_aio *   txaio;
 	nni_aio *   rxaio;
+	nni_pipe *  npipe;
+	uint8_t *   qos_buf;
+	conn_param *ws_param;
 	nng_stream *ws;
 };
 
@@ -78,27 +89,103 @@ wstran_pipe_send_cb(void *arg)
 static void
 wstran_pipe_recv_cb(void *arg)
 {
-	ws_pipe *p    = arg;
+	ws_pipe *p   = arg;
+	uint32_t len = 0, rv, pos = 1;
 	nni_aio *raio = p->rxaio;
 	nni_aio *uaio;
-	int      rv;
 
 	nni_mtx_lock(&p->mtx);
-	uaio          = p->user_rxaio;
-	p->user_rxaio = NULL;
+	uaio = p->user_rxaio;
+	// p->user_rxaio = NULL;
+	// process scatterd msgs
 	if ((rv = nni_aio_result(raio)) != 0) {
-		if (uaio != NULL) {
-			nni_aio_finish_error(uaio, rv);
-		}
-	} else {
-		nni_msg *msg = nni_aio_get_msg(raio);
-		if (uaio != NULL) {
-			nni_aio_finish_msg(uaio, msg);
-		} else {
-			nni_msg_free(msg);
+		goto reset;
+	}
+	nni_msg *msg = nni_aio_get_msg(raio);
+	uint8_t *ptr = nni_msg_body(msg);
+	uint8_t *hdr = nni_msg_header(msg);
+	p->gotrxhead += nni_msg_len(msg);
+	debug_msg("#### wstran_pipe_recv_cb got %d msg: %p %x %p %x %d",
+	    p->gotrxhead, *hdr, ptr, *ptr, nni_msg_len(msg));
+	// first we collect complete Fixheader
+	if (p->tmp_msg == NULL) {
+		if ((rv = nni_msg_alloc(&p->tmp_msg, 0)) != 0) {
+			debug_syslog("mem error %ld\n", (size_t) len);
+			goto reset;
 		}
 	}
+	nni_msg_append(p->tmp_msg, ptr, nni_msg_len(msg));
+	ptr = nni_msg_body(p->tmp_msg); // packet might be sticky?
+
+	if (p->wantrxhead == 0) {
+		if (p->gotrxhead == 1) {
+			goto recv;
+		}
+		len = get_var_integer(ptr, &pos);
+		if (*(ptr + pos) > 0x7f) { // continue to next byte of
+			                   // remaining length
+			if (p->gotrxhead >= NNI_NANO_MAX_HEADER_SIZE) {
+				// length error
+				rv = NNG_EMSGSIZE;
+				goto reset;
+			}
+			// goto recv;
+		} else {
+			// Fixed header finished
+			p->wantrxhead = len + pos;
+			nni_msg_set_cmd_type(p->tmp_msg, *ptr & 0xf0);
+			// goto recv;
+		}
+	}
+	if (p->gotrxhead >= p->wantrxhead) {
+		p->gotrxhead = 0;
+		goto done;
+	}
+	debug_msg("?????????????? len : %d", len);
+
+recv:
+	nni_msg_free(msg);
+	nng_stream_recv(p->ws, raio);
 	nni_mtx_unlock(&p->mtx);
+	return;
+done:
+	if (uaio == NULL) {
+		uaio = p->ep_aio;
+	}
+	if (uaio != NULL) {
+		p->gotrxhead  = 0;
+		p->wantrxhead = 0;
+		nni_msg_free(msg);
+		if (nni_msg_cmd_type(p->tmp_msg) == CMD_CONNECT) {
+			// end of nego
+			if (p->ws_param == NULL) {
+				p->ws_param =
+				    nng_alloc(sizeof(struct conn_param));
+			}
+			if (conn_handler(
+			        nni_msg_body(p->tmp_msg), p->ws_param) == 0) {
+				nni_msg_set_conn_param(
+				    p->tmp_msg, p->ws_param);
+			}
+		}
+		nni_aio_set_msg(uaio, p->tmp_msg);
+		nni_aio_set_output(uaio, 0, p);
+		nni_aio_finish(uaio, 0, nni_msg_len(p->tmp_msg));
+		p->tmp_msg = NULL;
+	}
+	nni_mtx_unlock(&p->mtx);
+	return;
+reset:
+	// reset the connection, remember to free the message before enter here
+	p->gotrxhead  = 0;
+	p->wantrxhead = 0;
+	if (uaio != NULL) {
+		nni_aio_finish_error(uaio, rv);
+	} else if (p->ep_aio != NULL) {
+		nni_aio_finish_error(p->ep_aio, rv);
+	}
+	nni_mtx_unlock(&p->mtx);
+	return;
 }
 
 static void
@@ -186,8 +273,15 @@ wstran_pipe_stop(void *arg)
 static int
 wstran_pipe_init(void *arg, nni_pipe *pipe)
 {
-	NNI_ARG_UNUSED(arg);
-	NNI_ARG_UNUSED(pipe);
+	debug_msg("************wstran_pipe_init************");
+	ws_pipe *p = arg;
+
+	nni_pipe_set_conn_param(pipe, p->ws_param);
+	p->npipe      = pipe;
+	p->gotrxhead  = 0;
+	p->wantrxhead = 0;
+	// p->qos_buf    = nng_alloc(16 + NNI_NANO_MAX_PACKET_SIZE);
+	p->ep_aio = NULL;
 	return (0);
 }
 
@@ -469,12 +563,12 @@ wstran_accept_cb(void *arg)
 				nni_aio_finish_error(uaio, rv);
 			} else {
 				p->peer = l->peer;
-
-				nni_aio_set_output(uaio, 0, p);
-				nni_aio_finish(uaio, 0, 0);
+				ws_pipe_start(p, p->ws);
+				p->ep_aio = uaio;
 			}
 		}
 	}
+
 	if (!nni_list_empty(&l->aios)) {
 		nng_stream_listener_accept(l->listener, aaio);
 	}
@@ -498,8 +592,7 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 
 	d->peer = nni_sock_peer_id(s);
 
-	snprintf(
-	    name, sizeof(name), "%s.sp.nanomsg.org", nni_sock_peer_name(s));
+	snprintf(name, sizeof(name), "mqtt");
 
 	if (((rv = nni_ws_dialer_alloc(&d->dialer, url)) != 0) ||
 	    ((rv = nni_aio_alloc(&d->connaio, wstran_connect_cb, d)) != 0) ||
@@ -515,6 +608,7 @@ wstran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	return (0);
 }
 
+// TODO proto name modify
 static int
 wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 {
@@ -532,8 +626,7 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 
 	l->peer = nni_sock_peer_id(s);
 
-	snprintf(
-	    name, sizeof(name), "%s.sp.nanomsg.org", nni_sock_proto_name(s));
+	snprintf(name, sizeof(name), "mqtt");
 
 	if (((rv = nni_ws_listener_alloc(&l->listener, url)) != 0) ||
 	    ((rv = nni_aio_alloc(&l->accaio, wstran_accept_cb, l)) != 0) ||
