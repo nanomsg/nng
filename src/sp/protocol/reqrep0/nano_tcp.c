@@ -1069,6 +1069,7 @@ nano_pipe_recv_cb(void *arg)
 	case CMD_UNSUBSCRIBE:
 	case CMD_CONNACK:
 	case CMD_CONNECT:
+	case CMD_PINGREQ:
 		break;
 	case CMD_PUBACK:
 	case CMD_PUBCOMP:

@@ -270,16 +270,18 @@ get_variable_binary(uint8_t **dest, const uint8_t *src)
 	return len;
 }
 
+//set header & remaining length of msg
 int
 fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
 {
 	nni_msg *m;
 	int      rv;
+	uint32_t len;
 	size_t   pos = 1;
 
-	m = (nni_msg *) dst;
-	get_var_integer(packet, (uint32_t *) &pos);
-
+	m   = (nni_msg *) dst;
+	len = get_var_integer(packet, (uint32_t *) &pos);
+	nni_msg_set_remaining_len(m, len);
 	rv = nni_msg_header_append(m, packet, pos);
 	return rv;
 }

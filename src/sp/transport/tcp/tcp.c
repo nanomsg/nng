@@ -544,7 +544,7 @@ tcptran_pipe_recv_cb(void *arg)
 
 	fixed_header_adaptor(p->rxlen, msg);
 	nni_msg_set_conn_param(msg, cparam);
-	nni_msg_set_remaining_len(msg, len);
+	nni_msg_set_remaining_len(msg, len);		//duplicated with fixed_header_adaptor
 	nni_msg_set_cmd_type(msg, type);
 	debug_msg("remain_len %d cparam %p clientid %s username %s proto %d\n",
 	    len, cparam, cparam->clientid.body, cparam->username.body,

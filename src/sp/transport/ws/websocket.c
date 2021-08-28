@@ -74,6 +74,7 @@ wstran_pipe_send_cb(void *arg)
 	taio          = p->txaio;
 	uaio          = p->user_txaio;
 	p->user_txaio = NULL;
+	p->tmp_msg = NULL;
 
 	if (uaio != NULL) {
 		int rv;
@@ -92,11 +93,13 @@ wstran_pipe_recv_cb(void *arg)
 	ws_pipe *p   = arg;
 	uint32_t len = 0, rv, pos = 1;
 	nni_aio *raio = p->rxaio;
-	nni_aio *uaio;
+	nni_aio *uaio = NULL;
 
 	nni_mtx_lock(&p->mtx);
-	uaio = p->user_rxaio;
-	// p->user_rxaio = NULL;
+	//only sets uaio at first time
+	if (p->user_rxaio != NULL) {
+		uaio = p->user_rxaio;
+	}
 	// process scatterd msgs
 	if ((rv = nni_aio_result(raio)) != 0) {
 		goto reset;
@@ -129,19 +132,16 @@ wstran_pipe_recv_cb(void *arg)
 				rv = NNG_EMSGSIZE;
 				goto reset;
 			}
-			// goto recv;
 		} else {
 			// Fixed header finished
 			p->wantrxhead = len + pos;
 			nni_msg_set_cmd_type(p->tmp_msg, *ptr & 0xf0);
-			// goto recv;
+			nni_msg_set_payload_ptr(p->tmp_msg, ptr + pos);
 		}
 	}
 	if (p->gotrxhead >= p->wantrxhead) {
-		p->gotrxhead = 0;
 		goto done;
 	}
-	debug_msg("?????????????? len : %d", len);
 
 recv:
 	nni_msg_free(msg);
@@ -159,19 +159,20 @@ done:
 		if (nni_msg_cmd_type(p->tmp_msg) == CMD_CONNECT) {
 			// end of nego
 			if (p->ws_param == NULL) {
-				p->ws_param =
-				    nng_alloc(sizeof(struct conn_param));
+				p->ws_param = nng_alloc(sizeof(struct conn_param));
 			}
-			if (conn_handler(
-			        nni_msg_body(p->tmp_msg), p->ws_param) == 0) {
-				nni_msg_set_conn_param(
-				    p->tmp_msg, p->ws_param);
+			if (conn_handler(nni_msg_body(p->tmp_msg), p->ws_param) != 0) {
+				goto reset;
 			}
+		} else {
+			fixed_header_adaptor(nni_msg_body(p->tmp_msg), p->tmp_msg);
+			nni_msg_set_conn_param(p->tmp_msg, p->ws_param);
 		}
 		nni_aio_set_msg(uaio, p->tmp_msg);
 		nni_aio_set_output(uaio, 0, p);
 		nni_aio_finish(uaio, 0, nni_msg_len(p->tmp_msg));
-		p->tmp_msg = NULL;
+	} else {
+		goto reset;
 	}
 	nni_mtx_unlock(&p->mtx);
 	return;
