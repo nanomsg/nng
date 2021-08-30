@@ -92,6 +92,8 @@ wstran_pipe_recv_cb(void *arg)
 {
 	ws_pipe *p   = arg;
 	uint32_t len = 0, rv, pos = 1;
+	uint8_t *ptr;
+	nni_msg  *smsg, *msg;
 	nni_aio *raio = p->rxaio;
 	nni_aio *uaio = NULL;
 
@@ -104,12 +106,11 @@ wstran_pipe_recv_cb(void *arg)
 	if ((rv = nni_aio_result(raio)) != 0) {
 		goto reset;
 	}
-	nni_msg *msg = nni_aio_get_msg(raio);
-	uint8_t *ptr = nni_msg_body(msg);
-	uint8_t *hdr = nni_msg_header(msg);
+	msg = nni_aio_get_msg(raio);
+	ptr = nni_msg_body(msg);
 	p->gotrxhead += nni_msg_len(msg);
-	debug_msg("#### wstran_pipe_recv_cb got %d msg: %p %x %p %x %d",
-	    p->gotrxhead, *hdr, ptr, *ptr, nni_msg_len(msg));
+	debug_msg("#### wstran_pipe_recv_cb got %d msg: %p %x %d",
+	    p->gotrxhead, ptr, *ptr, nni_msg_len(msg));
 	// first we collect complete Fixheader
 	if (p->tmp_msg == NULL) {
 		if ((rv = nni_msg_alloc(&p->tmp_msg, 0)) != 0) {
@@ -125,8 +126,7 @@ wstran_pipe_recv_cb(void *arg)
 			goto recv;
 		}
 		len = get_var_integer(ptr, &pos);
-		if (*(ptr + pos) > 0x7f) { // continue to next byte of
-			                   // remaining length
+		if (*(ptr + pos) > 0x7f) { // continue to next byte of remaining length
 			if (p->gotrxhead >= NNI_NANO_MAX_HEADER_SIZE) {
 				// length error
 				rv = NNG_EMSGSIZE;
@@ -136,7 +136,6 @@ wstran_pipe_recv_cb(void *arg)
 			// Fixed header finished
 			p->wantrxhead = len + pos;
 			nni_msg_set_cmd_type(p->tmp_msg, *ptr & 0xf0);
-			nni_msg_set_payload_ptr(p->tmp_msg, ptr + pos);
 		}
 	}
 	if (p->gotrxhead >= p->wantrxhead) {
@@ -165,13 +164,18 @@ done:
 				goto reset;
 			}
 		} else {
-			ptr = nni_msg_body(p->tmp_msg);
-			fixed_header_adaptor(ptr, p->tmp_msg);
+			if (nni_msg_alloc(&smsg, 0) != 0) {
+				goto reset;
+			}
+			ws_fixed_header_adaptor(ptr, smsg);
+			nni_msg_free(p->tmp_msg);
+			p->tmp_msg = smsg;
 			nni_msg_set_conn_param(p->tmp_msg, p->ws_param);
 		}
 		nni_aio_set_msg(uaio, p->tmp_msg);
 		nni_aio_set_output(uaio, 0, p);
 		nni_aio_finish(uaio, 0, nni_msg_len(p->tmp_msg));
+		p->tmp_msg = NULL;
 	} else {
 		goto reset;
 	}
@@ -185,6 +189,10 @@ reset:
 		nni_aio_finish_error(uaio, rv);
 	} else if (p->ep_aio != NULL) {
 		nni_aio_finish_error(p->ep_aio, rv);
+	}
+	if (p->tmp_msg != NULL) {
+		nni_msg_free(p->tmp_msg);
+		p->tmp_msg = NULL;
 	}
 	nni_mtx_unlock(&p->mtx);
 	return;

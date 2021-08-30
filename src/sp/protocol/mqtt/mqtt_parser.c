@@ -285,7 +285,30 @@ fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
 	rv = nni_msg_header_append(m, packet, pos);
 	return rv;
 }
+/**
+ * @brief copy packet (original msg suppose have full MQTT bytes in payload) to dst msg (new empty one)
+ * 
+ * @param packet 
+ * @param dst assume it as an empty message
+ * @return int 
+ */
+int
+ws_fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
+{
+	nni_msg *m;
+	int      rv;
+	uint32_t len;
+	uint8_t *ptr;
+	size_t   pos = 1;
 
+	m   = (nni_msg *) dst;
+	len = get_var_integer(packet, (uint32_t *) &pos);
+	nni_msg_set_cmd_type(m, *packet & 0xf0);
+	nni_msg_set_remaining_len(m, len);
+	rv = nni_msg_header_append(m, packet, pos);
+	nni_msg_append(m, packet + pos, len);
+	return rv;
+}
 /*
 int variable_header_adaptor(uint8_t *packet, nni_msg *dst)
 {

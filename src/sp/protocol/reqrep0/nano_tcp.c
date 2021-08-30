@@ -1028,13 +1028,12 @@ nano_pipe_recv_cb(void *arg)
 	nano_pipe *   p = arg;
 	nano_sock *   s = p->rep;
 	nano_ctx *    ctx;
-	nni_msg *     msg;
+	nni_msg *     msg, *qos_msg;
 	nni_aio *     aio;
 	nano_pipe_db *pipe_db;
 	nni_pipe *    npipe = p->pipe;
-			uint8_t * ptr;
-		uint16_t  ackid;
-		nni_msg * qos_msg;
+	uint8_t *     ptr;
+	uint16_t      ackid;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
 		//unexpected disconnect
@@ -1050,21 +1049,45 @@ nano_pipe_recv_cb(void *arg)
 
 	// ttl = nni_atomic_get(&s->ttl);
 	nni_msg_set_pipe(msg, p->id);
+	//nni_msg_set_conn_param(msg, p->conn_param);
+	ptr = nni_msg_body(msg);
 	// TODO HOOK
 	switch (nng_msg_cmd_type(msg)) {
+		conn_param *cparam;
+		uint32_t    len, len_of_varint = 0;
+		uint8_t     qos_pac;
+		size_t      tlen;
 	case CMD_SUBSCRIBE:
 		// TODO only cache topic hash when it is above qos 1/2
 		nni_mtx_lock(&p->lk);
+		cparam = p->conn_param;
+		if (cparam->pro_ver == PROTOCOL_VERSION_v5) {
+			len = get_var_integer(ptr + 2, &len_of_varint);
+			nni_msg_set_payload_ptr(
+			    msg, ptr + 2 + len + len_of_varint);
+		} else {
+			nni_msg_set_payload_ptr(msg, ptr + 2);
+		}
 		pipe_db        = nano_msg_get_subtopic(msg,
                     p->pipedb_root); // TODO potential memleak when sub failed
 		p->pipedb_root = pipe_db;
 		while (pipe_db) {
-			nni_id_set(&npipe->nano_db, DJBHash(pipe_db->topic), pipe_db);
+			nni_id_set(
+			    &npipe->nano_db, DJBHash(pipe_db->topic), pipe_db);
 			pipe_db = pipe_db->next;
 		}
 		nni_mtx_unlock(&p->lk);
 		break;
 	case CMD_PUBLISH:
+		NNI_GET16(ptr, tlen);
+		cparam = p->conn_param;
+		qos_pac = nni_msg_get_pub_qos(msg);
+		if (cparam->pro_ver != PROTOCOL_VERSION_v5) {
+			nni_msg_set_payload_ptr(
+			    msg, ptr + tlen + 2 + (qos_pac > 0 ? 2 : 0));
+		} else {
+		}
+		break;
 	case CMD_DISCONNECT:
 	case CMD_UNSUBSCRIBE:
 	case CMD_CONNACK:
@@ -1073,8 +1096,7 @@ nano_pipe_recv_cb(void *arg)
 		break;
 	case CMD_PUBACK:
 	case CMD_PUBCOMP:
-	nni_mtx_lock(&p->lk);
-		ptr   = nni_msg_body(msg);
+	    nni_mtx_lock(&p->lk);
 		NNI_GET16(ptr, ackid);
 		if ((qos_msg = nni_id_get(npipe->nano_qos_db, ackid)) !=
 		    NULL) {
