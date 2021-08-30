@@ -165,7 +165,8 @@ done:
 				goto reset;
 			}
 		} else {
-			fixed_header_adaptor(nni_msg_body(p->tmp_msg), p->tmp_msg);
+			ptr = nni_msg_body(p->tmp_msg);
+			fixed_header_adaptor(ptr, p->tmp_msg);
 			nni_msg_set_conn_param(p->tmp_msg, p->ws_param);
 		}
 		nni_aio_set_msg(uaio, p->tmp_msg);

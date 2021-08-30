@@ -549,7 +549,7 @@ tcptran_pipe_recv_cb(void *arg)
 	debug_msg("remain_len %d cparam %p clientid %s username %s proto %d\n",
 	    len, cparam, cparam->clientid.body, cparam->username.body,
 	    cparam->pro_ver);
-	variable_ptr = nni_msg_variable_ptr(msg);
+	variable_ptr = nni_msg_body(msg);
 
 	// set the payload pointer of msg according to packet_type
 	debug_msg("The type of msg is %x", type);

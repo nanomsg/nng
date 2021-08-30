@@ -1291,7 +1291,6 @@ NNG_DECL int    nng_msg_cmd_type(nng_msg *msg);
 NNG_DECL void * nng_msg_get_conn_param(nng_msg *msg);
 NNG_DECL size_t nng_msg_remaining_len(nng_msg *msg);
 NNG_DECL uint8_t *nng_msg_header_ptr(nng_msg *msg);
-NNG_DECL uint8_t *nng_msg_variable_ptr(nng_msg *msg);
 NNG_DECL uint8_t *nng_msg_payload_ptr(nng_msg *msg);
 NNG_DECL void     nng_msg_set_payload_ptr(nng_msg *msg, uint8_t *ptr);
 NNG_DECL void     nng_msg_set_remaining_len(nng_msg *msg, size_t len);

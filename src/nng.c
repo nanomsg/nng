@@ -1928,12 +1928,6 @@ nng_msg_header_ptr(nng_msg *msg)
 }
 
 uint8_t *
-nng_msg_variable_ptr(nng_msg *msg)
-{
-	return (nni_msg_variable_ptr(msg));
-}
-
-uint8_t *
 nng_msg_payload_ptr(nng_msg *msg)
 {
 	return (nni_msg_payload_ptr(msg));

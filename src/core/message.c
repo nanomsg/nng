@@ -659,12 +659,6 @@ nni_msg_header_ptr(const nni_msg *m)
 }
 
 uint8_t *
-nni_msg_variable_ptr(const nni_msg *m)
-{
-	return (m->m_body.ch_ptr);
-}
-
-uint8_t *
 nni_msg_payload_ptr(const nni_msg *m)
 {
 	return (m->payload_ptr);
