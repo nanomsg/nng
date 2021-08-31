@@ -74,7 +74,6 @@ wstran_pipe_send_cb(void *arg)
 	taio          = p->txaio;
 	uaio          = p->user_txaio;
 	p->user_txaio = NULL;
-	p->tmp_msg = NULL;
 
 	if (uaio != NULL) {
 		int rv;
@@ -112,12 +111,13 @@ wstran_pipe_recv_cb(void *arg)
 	debug_msg("#### wstran_pipe_recv_cb got %d msg: %p %x %d",
 	    p->gotrxhead, ptr, *ptr, nni_msg_len(msg));
 	// first we collect complete Fixheader
-	if (p->tmp_msg == NULL) {
+	if (p->tmp_msg == NULL && p->gotrxhead > 0) {
 		if ((rv = nni_msg_alloc(&p->tmp_msg, 0)) != 0) {
 			debug_syslog("mem error %ld\n", (size_t) len);
 			goto reset;
 		}
 	}
+	//TODO use IOV instead of appending msg
 	nni_msg_append(p->tmp_msg, ptr, nni_msg_len(msg));
 	ptr = nni_msg_body(p->tmp_msg); // packet might be sticky?
 
@@ -126,7 +126,7 @@ wstran_pipe_recv_cb(void *arg)
 			goto recv;
 		}
 		len = get_var_integer(ptr, &pos);
-		if (*(ptr + pos) > 0x7f) { // continue to next byte of remaining length
+		if (*(ptr + pos - 1) > 0x7f) { // continue to next byte of remaining length
 			if (p->gotrxhead >= NNI_NANO_MAX_HEADER_SIZE) {
 				// length error
 				rv = NNG_EMSGSIZE;
@@ -151,7 +151,7 @@ done:
 	if (uaio == NULL) {
 		uaio = p->ep_aio;
 	}
-	if (uaio != NULL) {
+    if (uaio != NULL) {
 		p->gotrxhead  = 0;
 		p->wantrxhead = 0;
 		nni_msg_free(msg);
@@ -163,18 +163,25 @@ done:
 			if (conn_handler(nni_msg_body(p->tmp_msg), p->ws_param) != 0) {
 				goto reset;
 			}
+			nni_msg_free(p->tmp_msg);
+			p->tmp_msg = NULL;
+			nni_aio_set_msg(uaio, smsg);
+			nni_aio_set_output(uaio, 0, p);
+			nni_aio_finish(uaio, 0, 0);
+			nni_mtx_unlock(&p->mtx);
+	        return;
 		} else {
 			if (nni_msg_alloc(&smsg, 0) != 0) {
 				goto reset;
 			}
 			ws_fixed_header_adaptor(ptr, smsg);
 			nni_msg_free(p->tmp_msg);
-			p->tmp_msg = smsg;
-			nni_msg_set_conn_param(p->tmp_msg, p->ws_param);
+			p->tmp_msg = NULL;
+			nni_msg_set_conn_param(smsg, p->ws_param);
 		}
-		nni_aio_set_msg(uaio, p->tmp_msg);
+		nni_aio_set_msg(uaio, smsg);
 		nni_aio_set_output(uaio, 0, p);
-		nni_aio_finish(uaio, 0, nni_msg_len(p->tmp_msg));
+		nni_aio_finish(uaio, 0, nni_msg_len(smsg));
 		p->tmp_msg = NULL;
 	} else {
 		goto reset;
@@ -191,7 +198,8 @@ reset:
 		nni_aio_finish_error(p->ep_aio, rv);
 	}
 	if (p->tmp_msg != NULL) {
-		nni_msg_free(p->tmp_msg);
+		smsg = p->tmp_msg;
+		nni_msg_free(smsg);
 		p->tmp_msg = NULL;
 	}
 	nni_mtx_unlock(&p->mtx);
@@ -304,6 +312,7 @@ wstran_pipe_fini(void *arg)
 	nni_aio_free(p->txaio);
 
 	nng_stream_free(p->ws);
+	nni_msg_free(p->tmp_msg);
 	nni_mtx_fini(&p->mtx);
 	NNI_FREE_STRUCT(p);
 }

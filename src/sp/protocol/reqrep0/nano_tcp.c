@@ -775,32 +775,6 @@ nano_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	return (0);
 }
 
-/*
-static int
-nano_ctx_set_qsize(
-    void *arg, void *arg2, const void *buf, size_t sz, nni_type t)
-{
-        nano_ctx * ctx  = arg;
-        nano_sock *sock = ctx->sock;
-        nano_pipe *p    = arg2;
-        int        val;
-        int        rv;
-
-        if ((rv = nni_copyin_int(&val, buf, sz, 1, 8192, t)) != 0) {
-                return (rv);
-        }
-
-        nni_mtx_lock(&sock->lk);
-        if ((rv = nni_lmq_resize(&p->rlmq, (size_t) val)) != 0) {
-                nni_mtx_unlock(&sock->lk);
-                return (rv);
-        }
-
-        nni_mtx_unlock(&sock->lk);
-        return (0);
-}
-*/
-
 static int
 nano_pipe_start(void *arg)
 {
