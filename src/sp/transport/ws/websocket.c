@@ -92,12 +92,12 @@ wstran_pipe_recv_cb(void *arg)
 	ws_pipe *p   = arg;
 	uint32_t len = 0, rv, pos = 1;
 	uint8_t *ptr;
-	nni_msg  *smsg, *msg;
+	nni_msg *smsg, *msg;
 	nni_aio *raio = p->rxaio;
 	nni_aio *uaio = NULL;
 
 	nni_mtx_lock(&p->mtx);
-	//only sets uaio at first time
+	// only sets uaio at first time
 	if (p->user_rxaio != NULL) {
 		uaio = p->user_rxaio;
 	}
@@ -117,7 +117,7 @@ wstran_pipe_recv_cb(void *arg)
 			goto reset;
 		}
 	}
-	//TODO use IOV instead of appending msg
+	// TODO use IOV instead of appending msg
 	nni_msg_append(p->tmp_msg, ptr, nni_msg_len(msg));
 	ptr = nni_msg_body(p->tmp_msg); // packet might be sticky?
 
@@ -126,7 +126,8 @@ wstran_pipe_recv_cb(void *arg)
 			goto recv;
 		}
 		len = get_var_integer(ptr, &pos);
-		if (*(ptr + pos - 1) > 0x7f) { // continue to next byte of remaining length
+		if (*(ptr + pos - 1) >
+		    0x7f) { // continue to next byte of remaining length
 			if (p->gotrxhead >= NNI_NANO_MAX_HEADER_SIZE) {
 				// length error
 				rv = NNG_EMSGSIZE;
@@ -151,16 +152,18 @@ done:
 	if (uaio == NULL) {
 		uaio = p->ep_aio;
 	}
-    if (uaio != NULL) {
+	if (uaio != NULL) {
 		p->gotrxhead  = 0;
 		p->wantrxhead = 0;
 		nni_msg_free(msg);
 		if (nni_msg_cmd_type(p->tmp_msg) == CMD_CONNECT) {
 			// end of nego
 			if (p->ws_param == NULL) {
-				p->ws_param = nng_alloc(sizeof(struct conn_param));
+				p->ws_param =
+				    nng_alloc(sizeof(struct conn_param));
 			}
-			if (conn_handler(nni_msg_body(p->tmp_msg), p->ws_param) != 0) {
+			if (conn_handler(
+			        nni_msg_body(p->tmp_msg), p->ws_param) != 0) {
 				goto reset;
 			}
 			nni_msg_free(p->tmp_msg);
@@ -169,7 +172,7 @@ done:
 			nni_aio_set_output(uaio, 0, p);
 			nni_aio_finish(uaio, 0, 0);
 			nni_mtx_unlock(&p->mtx);
-	        return;
+			return;
 		} else {
 			if (nni_msg_alloc(&smsg, 0) != 0) {
 				goto reset;

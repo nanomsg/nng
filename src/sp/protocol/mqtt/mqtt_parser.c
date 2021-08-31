@@ -306,7 +306,7 @@ ws_fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
 	nni_msg_set_cmd_type(m, *packet & 0xf0);
 	nni_msg_set_remaining_len(m, len);
 	rv = nni_msg_header_append(m, packet, pos);
-	printf("len !!!! 2  %d\n", len);
+
 	if (len > 0) {
 		nni_msg_append(m, packet + pos, len);
 	}
@@ -945,4 +945,53 @@ nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 	}
 
 	return root;
+}
+
+void
+nano_msg_free_pipedb(nano_pipe_db *db)
+{
+	uint8_t       len;
+	nano_pipe_db *db_next;
+
+	if (NULL == db) {
+		return;
+	}
+	db = db->root;
+
+	while (db) {
+		len = strlen(db->topic);
+		nng_free(db->topic, len);
+		db_next = db->next;
+		nng_free(db, sizeof(nano_pipe_db));
+		db = db_next;
+	}
+	return;
+}
+
+void
+nano_msg_ubsub_free(nano_pipe_db *db)
+{
+	nano_pipe_db *ptr, *tmp;
+	uint8_t       len;
+
+	if (NULL == db) {
+		return;
+	}
+	if (db == db->root) {
+		ptr = db;
+		tmp = db->next;
+		while (ptr) {
+			ptr->root = tmp;
+			ptr       = ptr->next;
+		}
+	} else {
+		tmp            = db->prev;
+		tmp->next      = db->next;
+		db->next->prev = tmp;
+	}
+
+	len = strlen(db->topic);
+	nng_free(db->topic, len);
+	nng_free(db, sizeof(nano_pipe_db));
+	return;
 }
