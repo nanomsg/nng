@@ -1040,7 +1040,7 @@ nano_pipe_recv_cb(void *arg)
 		nni_pipe_close(p->pipe);
 		return;
 	}
-	debug_msg("#########nano_pipe_recv_cb !############");
+	debug_msg("######### nano_pipe_recv_cb ############");
 	p->ka_refresh = 0;
 	msg           = nni_aio_get_msg(&p->aio_recv);
 	if (msg == NULL) {
@@ -1049,8 +1049,8 @@ nano_pipe_recv_cb(void *arg)
 
 	// ttl = nni_atomic_get(&s->ttl);
 	nni_msg_set_pipe(msg, p->id);
-	//nni_msg_set_conn_param(msg, p->conn_param);
 	ptr = nni_msg_body(msg);
+
 	// TODO HOOK
 	switch (nng_msg_cmd_type(msg)) {
 		conn_param *cparam;
@@ -1061,6 +1061,14 @@ nano_pipe_recv_cb(void *arg)
 		// TODO only cache topic hash when it is above qos 1/2
 		nni_mtx_lock(&p->lk);
 		cparam = p->conn_param;
+		pipe_db        = nano_msg_get_subtopic(msg, p->pipedb_root, cparam); // TODO potential memleak when sub failed
+		p->pipedb_root = pipe_db;
+		while (pipe_db) {
+			nni_id_set(&npipe->nano_db, DJBHash(pipe_db->topic), pipe_db);
+			pipe_db = pipe_db->next;
+		}
+		nni_mtx_unlock(&p->lk);
+	case CMD_UNSUBSCRIBE:
 		if (cparam->pro_ver == PROTOCOL_VERSION_v5) {
 			len = get_var_integer(ptr + 2, &len_of_varint);
 			nni_msg_set_payload_ptr(
@@ -1068,15 +1076,7 @@ nano_pipe_recv_cb(void *arg)
 		} else {
 			nni_msg_set_payload_ptr(msg, ptr + 2);
 		}
-		pipe_db        = nano_msg_get_subtopic(msg,
-                    p->pipedb_root); // TODO potential memleak when sub failed
-		p->pipedb_root = pipe_db;
-		while (pipe_db) {
-			nni_id_set(
-			    &npipe->nano_db, DJBHash(pipe_db->topic), pipe_db);
-			pipe_db = pipe_db->next;
-		}
-		nni_mtx_unlock(&p->lk);
+		//TODO remove topic from pipe_db
 		break;
 	case CMD_PUBLISH:
 		NNI_GET16(ptr, tlen);
@@ -1089,9 +1089,9 @@ nano_pipe_recv_cb(void *arg)
 		}
 		break;
 	case CMD_DISCONNECT:
-	case CMD_UNSUBSCRIBE:
+		nni_pipe_close(p->pipe);
+		break;
 	case CMD_CONNACK:
-	case CMD_CONNECT:
 	case CMD_PINGREQ:
 		break;
 	case CMD_PUBACK:
@@ -1110,6 +1110,7 @@ nano_pipe_recv_cb(void *arg)
 		goto drop;
 	case CMD_PUBREC:
 	case CMD_PUBREL:
+	case CMD_CONNECT:
 		goto drop;
 	default:
 		goto drop;

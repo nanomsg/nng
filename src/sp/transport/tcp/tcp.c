@@ -553,16 +553,7 @@ tcptran_pipe_recv_cb(void *arg)
 
 	// set the payload pointer of msg according to packet_type
 	debug_msg("The type of msg is %x", type);
-    if (type == CMD_UNSUBSCRIBE) {
-		if (cparam->pro_ver == PROTOCOL_VERSION_v5) {
-			len_of_varint = 0;
-			len =
-			    get_var_integer(variable_ptr + 2, &len_of_varint);
-			payload_ptr = variable_ptr + 2 + len + len_of_varint;
-		} else {
-			payload_ptr = variable_ptr + 2;
-		}
-	} else if (type == CMD_PUBLISH) {
+    if (type == CMD_PUBLISH) {
 		uint8_t  qos_pac;
 		uint16_t pid;
 		size_t   tlen;
