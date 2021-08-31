@@ -306,7 +306,11 @@ ws_fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
 	nni_msg_set_cmd_type(m, *packet & 0xf0);
 	nni_msg_set_remaining_len(m, len);
 	rv = nni_msg_header_append(m, packet, pos);
-	nni_msg_append(m, packet + pos, len);
+	printf("len !!!! 2  %d\n", len);
+	if (len > 0) {
+		nni_msg_append(m, packet + pos, len);
+	}
+
 	return rv;
 }
 /*
@@ -846,4 +850,99 @@ nano_msg_notify_connect(conn_param *cparam, uint8_t code)
 	topic.len   = strlen(CONNECT_TOPIC);
 	msg         = nano_msg_composer(0, 0, &string, &topic);
 	return msg;
+}
+
+
+nano_pipe_db *
+nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
+{
+	char *topic;
+	nano_pipe_db *db = NULL, *tmp = NULL, *iter = NULL;
+	uint8_t       len_of_topic = 0, *payload_ptr;
+	uint32_t      len, len_of_varint;
+	size_t        bpos = 0, remain = 0;
+	bool          repeat = false;
+
+	if (nni_msg_cmd_type(msg) != CMD_SUBSCRIBE)
+		return NULL;
+
+	if (root != NULL) {
+		db = root;
+		while (db->next != NULL) {
+			db = db->next;
+		}
+	}
+
+	if (cparam->pro_ver == PROTOCOL_VERSION_v5) {
+		len = get_var_integer(nni_msg_body(msg) + 2, &len_of_varint);
+		payload_ptr = nni_msg_body(msg) + 2 + len + len_of_varint;
+	} else {
+		payload_ptr = nni_msg_body(msg) + 2;
+	}
+	remain      = nni_msg_remaining_len(msg) - 2;
+
+	while (bpos < remain) {
+		NNI_GET16(payload_ptr + bpos, len_of_topic);
+
+		if (len_of_topic != 0) {
+
+			debug_msg("The current process topic is %s",
+			    payload_ptr + bpos + 2);
+			iter = root;
+			while (iter) {
+				if (strlen(iter->topic) == len_of_topic &&
+				    !strncmp(payload_ptr + bpos + 2,
+				        iter->topic, len_of_topic)) {
+					repeat = true;
+					bpos += (2 + len_of_topic);
+					if (iter->qos !=
+					    *(payload_ptr + bpos)) {
+						iter->qos =
+						    *(payload_ptr + bpos);
+					}
+					bpos += 1;
+				}
+				iter = iter->next;
+			}
+
+			if (repeat) {
+				repeat = false;
+				continue;
+			}
+
+			if (NULL != db) {
+				tmp = db;
+				db  = db->next;
+			}
+			db       = nng_alloc(sizeof(nano_pipe_db));
+			topic    = nng_alloc(len_of_topic + 1);
+			db->prev = tmp;
+			if (bpos == 0 && root == NULL) {
+				root = db;
+			} else {
+				tmp->next = db;
+			}
+			db->root = root;
+			if (topic == NULL || db == NULL) {
+				NNI_ASSERT("ERROR: nng_alloc");
+				return NULL;
+			} else {
+				bpos += 2;
+			}
+			strncpy(
+			    topic, (char *) payload_ptr + bpos, len_of_topic);
+			topic[len_of_topic] = 0x00;
+			db->topic           = topic;
+			bpos += len_of_topic;
+		} else {
+			NNI_ASSERT("ERROR : topic length error.");
+			return NULL;
+		}
+		db->qos  = *(payload_ptr + bpos);
+		db->next = NULL;
+		debug_msg("sub topic: %s qos : %x\n", db->topic, db->qos);
+		bpos += 1;
+	}
+
+	return root;
 }

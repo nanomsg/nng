@@ -52,5 +52,6 @@ NNG_DECL nng_msg *nano_msg_composer(
     uint8_t retain, uint8_t qos, mqtt_string *payload, mqtt_string *topic);
 NNG_DECL nng_msg *nano_msg_notify_disconnect(conn_param *cparam, uint8_t code);
 NNG_DECL nng_msg *nano_msg_notify_connect(conn_param *cparam, uint8_t code);
+NNG_DECL nano_pipe_db * nano_msg_get_subtopic(nng_msg *msg, nano_pipe_db *root, conn_param *cparam);
 
 #endif // NNG_MQTT_H
