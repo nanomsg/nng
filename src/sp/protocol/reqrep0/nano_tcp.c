@@ -17,7 +17,6 @@
 #include "core/sockimpl.h"
 #include "nng/protocol/mqtt/mqtt_parser.h"
 #include "nng/protocol/mqtt/nano_tcp.h"
-
 #include "nng/protocol/mqtt/mqtt.h"
 
 #include <sub_handler.h>
@@ -33,8 +32,8 @@ typedef struct cs_msg_list        cs_msg_list;
 static void        nano_pipe_send_cb(void *);
 static void        nano_pipe_recv_cb(void *);
 static void        nano_pipe_fini(void *);
-static void        nano_pipe_close(void *, uint8_t reason_code);
-static inline void close_pipe(nano_pipe *p, uint8_t reason_code);
+static void        nano_pipe_close(void *);
+static inline void close_pipe(nano_pipe *p);
 // static void nano_period_check(nano_sock *s, nni_list *sent_list, void *arg);
 // static void nano_keepalive(nano_pipe *p, void *arg);
 
@@ -120,7 +119,8 @@ nano_pipe_timer_cb(void *arg)
 		       "timeout!");
 		// TODO check keepalived timer interval
 		nni_mtx_unlock(&p->lk);
-		nano_pipe_close(p,0x8D);
+		p->reason_code = 0x8D;
+		nano_pipe_close(p);
 		return;
 	}
 	p->ka_refresh++;
@@ -301,7 +301,7 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	debug_msg("WARNING: pipe %d occupied! resending in cb!", pipe);
 	if (nni_lmq_full(&p->rlmq)) {
 		// Make space for the new message. TODO add max limit of msgq len in conf
-		if (rv = nni_lmq_resize(&p->rlmq, nni_lmq_cap(&p->rlmq) * 2) != 0) {
+		if ((rv = nni_lmq_resize(&p->rlmq, nni_lmq_cap(&p->rlmq) * 2)) != 0) {
 			debug_syslog("warning msg dropped!");
 			nni_msg *old;
 			(void) nni_lmq_getq(&p->rlmq, &old);
@@ -822,7 +822,7 @@ nano_pipe_start(void *arg)
 }
 
 static inline void
-close_pipe(nano_pipe *p, uint8_t reason_code)
+close_pipe(nano_pipe *p)
 {
 	nano_sock *s = p->rep;
 	nano_ctx * ctx;
@@ -855,21 +855,21 @@ close_pipe(nano_pipe *p, uint8_t reason_code)
 }
 
 static void
-nano_pipe_close(void *arg, uint8_t reason_code)
+nano_pipe_close(void *arg)
 {
 	nano_pipe * p = arg;
 	nano_sock * s = p->rep;
 	nano_ctx *  ctx;
-	conn_param *cparam;
+	// conn_param *cparam;
 	nni_aio *   aio = NULL;
 	nni_msg *   msg;
 
 	debug_msg("################# nano_pipe_close ##############");
 	nni_mtx_lock(&s->lk);
-	close_pipe(p, reason_code);
+	close_pipe(p);
 	// pub disconnect event
 	if ((ctx = nni_list_first(&s->recvq)) != NULL) {
-		msg = nano_msg_notify_disconnect(p->conn_param, reason_code);
+		msg = nano_msg_notify_disconnect(p->conn_param, p->reason_code);
 		if (msg == NULL) {
 			nni_mtx_unlock(&s->lk);
 			return;
@@ -1025,24 +1025,30 @@ nano_pipe_recv_cb(void *arg)
 	nni_msg_set_pipe(msg, p->id);
 	ptr = nni_msg_body(msg);
 
+	conn_param *cparam;
+	uint32_t    len, len_of_varint = 0;
+	uint8_t     qos_pac;
+	size_t      tlen;
+
 	// TODO HOOK
 	switch (nng_msg_cmd_type(msg)) {
-		conn_param *cparam;
-		uint32_t    len, len_of_varint = 0;
-		uint8_t     qos_pac;
-		size_t      tlen;
+	case CMD_UNSUBSCRIBE:
+		goto unsub;
 	case CMD_SUBSCRIBE:
 		// TODO only cache topic hash when it is above qos 1/2
 		nni_mtx_lock(&p->lk);
-		cparam = p->conn_param;
-		pipe_db        = nano_msg_get_subtopic(msg, p->pipedb_root, cparam); // TODO potential memleak when sub failed
+		cparam         = p->conn_param;
+		pipe_db        = nano_msg_get_subtopic(msg, p->pipedb_root,
+                    cparam); // TODO potential memleak when sub failed
 		p->pipedb_root = pipe_db;
-		while (pipe_db) {
-			nni_id_set(&npipe->nano_db, DJBHash(pipe_db->topic), pipe_db);
-			pipe_db = pipe_db->next;
+		for (; pipe_db != NULL; pipe_db = pipe_db->next) {
+			nni_id_set(
+			    &npipe->nano_db, DJBHash(pipe_db->topic), pipe_db);
 		}
 		nni_mtx_unlock(&p->lk);
-	case CMD_UNSUBSCRIBE:
+
+		// __attribute__((fallthrough))
+	unsub:
 		if (cparam->pro_ver == PROTOCOL_VERSION_v5) {
 			len = get_var_integer(ptr + 2, &len_of_varint);
 			nni_msg_set_payload_ptr(
@@ -1050,7 +1056,7 @@ nano_pipe_recv_cb(void *arg)
 		} else {
 			nni_msg_set_payload_ptr(msg, ptr + 2);
 		}
-		//TODO remove topic from pipe_db
+		// TODO remove topic from pipe_db
 		break;
 	case CMD_PUBLISH:
 		NNI_GET16(ptr, tlen);

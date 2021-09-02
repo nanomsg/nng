@@ -426,7 +426,7 @@ tcptran_pipe_send_cb(void *arg)
 static void
 tcptran_pipe_recv_cb(void *arg)
 {
-	uint8_t *variable_ptr = NULL, *payload_ptr = NULL;
+	uint8_t *payload_ptr = NULL;
 	// uint8_t *     header_ptr;
 	nni_aio *aio;
 	nni_iov  iov;
@@ -438,7 +438,6 @@ tcptran_pipe_recv_cb(void *arg)
 	tcptran_pipe *p     = arg;
 	nni_aio *     rxaio = p->rxaio;
 	conn_param *  cparam;
-	uint32_t      len_of_varint = 0;
 
 	debug_msg("tcptran_pipe_recv_cb %p\n", p);
 	nni_mtx_lock(&p->mtx);
@@ -549,14 +548,12 @@ tcptran_pipe_recv_cb(void *arg)
 	debug_msg("remain_len %d cparam %p clientid %s username %s proto %d\n",
 	    len, cparam, cparam->clientid.body, cparam->username.body,
 	    cparam->pro_ver);
-	variable_ptr = nni_msg_body(msg);
 
 	// set the payload pointer of msg according to packet_type
 	debug_msg("The type of msg is %x", type);
     if (type == CMD_PUBLISH) {
 		uint8_t  qos_pac;
 		uint16_t pid;
-		size_t   tlen;
 
 		qos_pac = nni_msg_get_pub_qos(msg);
 		if (qos_pac > 0) {
