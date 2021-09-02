@@ -298,7 +298,6 @@ ws_fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
 	nni_msg *m;
 	int      rv;
 	uint32_t len;
-	uint8_t *ptr;
 	size_t   pos = 1;
 
 	m   = (nni_msg *) dst;
@@ -344,9 +343,9 @@ int32_t
 conn_handler(uint8_t *packet, conn_param *cparam)
 {
 
-	uint32_t len, tmp, pos = 0, len_of_properties = 0;
-	int      len_of_str = 0, len_of_var = 0;
-	int32_t  rv = 0;
+	uint32_t len, tmp, pos = 0, len_of_properties = 0, len_of_var = 0;
+	int      len_of_str = 0;
+	int32_t  rv         = 0;
 	uint8_t  property_id;
 
 	if (packet[pos] != CMD_CONNECT) {
@@ -354,7 +353,7 @@ conn_handler(uint8_t *packet, conn_param *cparam)
 		return rv;
 	} else {
 		pos++;
-    }
+	}
 
 	init_conn_param(cparam);
 	// remaining length
@@ -789,8 +788,8 @@ uint8_t
 verify_connect(conn_param *cparam, conf *conf)
 {
 	int   i, n = conf->auths.count;
-	char *username = cparam->username.body;
-	char *password = cparam->password.body;
+	char *username = (char *) cparam->username.body;
+	char *password = (char *) cparam->password.body;
 
 	if (conf->auths.count == 0 || conf->allow_anonymous == true) {
 		debug_msg("WARNING: no valid entry in "
@@ -824,9 +823,9 @@ nano_msg_notify_disconnect(conn_param *cparam, uint8_t code)
 {
 	nni_msg *   msg;
 	mqtt_string string, topic;
-	uint8_t     buff[256];
-	snprintf(buff, 256, DISCONNECT_MSG, cparam->username.body, nni_clock(),
-	    code, cparam->clientid.body);
+	char        buff[256];
+	snprintf(buff, 256, DISCONNECT_MSG, (char *) cparam->username.body,
+	    nni_clock(), code, (char *) cparam->clientid.body);
 	string.body = buff;
 	string.len  = strlen(string.body);
 	topic.body  = DISCONNECT_TOPIC;
@@ -840,7 +839,7 @@ nano_msg_notify_connect(conn_param *cparam, uint8_t code)
 {
 	nni_msg *   msg;
 	mqtt_string string, topic;
-	uint8_t     buff[256];
+	char        buff[256];
 	snprintf(buff, 256, CONNECT_MSG, cparam->username.body, nni_clock(),
 	    cparam->pro_name.body, cparam->keepalive_mqtt, code,
 	    cparam->pro_ver, cparam->clientid.body, cparam->clean_start);
@@ -891,7 +890,7 @@ nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 			iter = root;
 			while (iter) {
 				if (strlen(iter->topic) == len_of_topic &&
-				    !strncmp(payload_ptr + bpos + 2,
+				    !strncmp((char *)(payload_ptr + bpos + 2),
 				        iter->topic, len_of_topic)) {
 					repeat = true;
 					bpos += (2 + len_of_topic);
