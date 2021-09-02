@@ -13,6 +13,7 @@
 #include "nng/protocol/mqtt/mqtt.h"
 
 #include <conf.h>
+#include <packet.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -682,6 +683,17 @@ conn_handler(uint8_t *packet, conn_param *cparam)
 	return rv;
 }
 
+int
+new_conn_param(conn_param **cparamp)
+{
+	conn_param * new_cp;
+	if ((new_cp = nng_alloc(sizeof(conn_param))) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	*cparamp = new_cp;
+	return 0;
+}
+
 void
 destroy_conn_param(conn_param *cparam)
 {
@@ -743,6 +755,41 @@ init_conn_param(conn_param *cparam)
 	cparam->payload_user_property.len_key = 0;
 	cparam->payload_user_property.val     = NULL;
 	cparam->payload_user_property.len_val = 0;
+}
+
+void
+deep_copy_conn_param(conn_param *new_cp, conn_param *cp)
+{
+//	UPDATE_FIELD_INT(pro_ver, new_cp, cp);
+//	UPDATE_FIELD_INT(con_flag, new_cp, cp);
+//	UPDATE_FIELD_INT(keepalive_mqtt, new_cp, cp);
+//	UPDATE_FIELD_INT(clean_start, new_cp, cp);
+	UPDATE_FIELD_INT(will_flag, new_cp, cp);
+	UPDATE_FIELD_INT(will_retain, new_cp, cp);
+	UPDATE_FIELD_INT(will_qos, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(pro_name, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(clientid, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(will_topic, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(will_msg, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(username, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(password, body, new_cp, cp);
+	UPDATE_FIELD_INT(session_expiry_interval, new_cp, cp);
+	UPDATE_FIELD_INT(rx_max, new_cp, cp);
+	UPDATE_FIELD_INT(max_packet_size, new_cp, cp);
+	UPDATE_FIELD_INT(topic_alias_max, new_cp, cp);
+	UPDATE_FIELD_INT(req_resp_info, new_cp, cp);
+	UPDATE_FIELD_INT(req_problem_info, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(auth_method, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(auth_data, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING_PAIR(user_property, key, val, new_cp, cp);
+	UPDATE_FIELD_INT(will_delay_interval, new_cp, cp);
+	UPDATE_FIELD_INT(payload_format_indicator, new_cp, cp);
+	UPDATE_FIELD_INT(msg_expiry_interval, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(content_type, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(resp_topic, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING(corr_data, body, new_cp, cp);
+	UPDATE_FIELD_MQTT_STRING_PAIR(
+	    payload_user_property, key, val, new_cp, cp);
 }
 
 uint32_t
