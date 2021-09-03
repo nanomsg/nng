@@ -32,7 +32,6 @@ struct tcptran_pipe {
 	size_t          wantrxhead;
 	size_t          qlength; // length of qos_buf
 	bool            closed;
-	uint8_t         cmd;
 	uint8_t         txlen[NANO_MIN_PACKET_LEN];
 	uint8_t         rxlen[NNI_NANO_MAX_HEADER_SIZE];
 	uint8_t *       conn_buf;
@@ -488,7 +487,6 @@ tcptran_pipe_recv_cb(void *arg)
 			iov.iov_buf = &p->txlen;
 			// send it down...
 			nni_aio_set_iov(p->qsaio, 1, &iov);
-			p->cmd = CMD_PINGRESP;
 			nng_stream_send(p->conn, p->qsaio);
 			goto notify;
 		} else if ((p->rxlen[0] & 0XFF) == CMD_DISCONNECT) {
@@ -551,61 +549,6 @@ tcptran_pipe_recv_cb(void *arg)
 
 	// set the payload pointer of msg according to packet_type
 	debug_msg("The type of msg is %x", type);
-    if (type == CMD_PUBLISH) {
-		uint8_t  qos_pac;
-		uint16_t pid;
-
-		qos_pac = nni_msg_get_pub_qos(msg);
-		if (qos_pac > 0) {
-			nng_aio_wait(p->rsaio);
-			if (qos_pac == 1) {
-				p->txlen[0] = CMD_PUBACK;
-			} else if (qos_pac == 2) {
-				p->txlen[0] = CMD_PUBREC;
-			}
-			p->txlen[1] = 0x02;
-			pid         = nni_msg_get_pub_pid(msg);
-			NNI_PUT16(p->txlen + 2, pid);
-			iov.iov_len = 4;
-			iov.iov_buf = &p->txlen;
-			// send it down...
-			nni_aio_set_iov(p->rsaio, 1, &iov);
-
-			p->cmd = CMD_PUBREC;
-			nng_stream_send(p->conn, p->rsaio);
-		}
-	} else if (type == CMD_PUBREC) {
-		// TODO
-		uint8_t *tmp;
-		nng_aio_wait(p->rpaio);
-		p->txlen[0] = 0X62;
-		p->txlen[1] = 0x02;
-		tmp         = nni_msg_body(msg);
-		memcpy(p->txlen + 2, tmp, 2);
-		iov.iov_len = 4;
-		iov.iov_buf = &p->txlen;
-		// send it down...
-		nni_aio_set_iov(p->rpaio, 1, &iov);
-		p->cmd = CMD_PUBREL;
-		nng_stream_send(p->conn, p->rpaio);
-	} else if (type == CMD_PUBREL) {
-		uint8_t *tmp;
-		nng_aio_wait(p->qsaio);
-		p->txlen[0] = CMD_PUBCOMP;
-		p->txlen[1] = 0x02;
-		tmp         = nni_msg_body(msg);
-		memcpy(p->txlen + 2, tmp, 2);
-		iov.iov_len = 4;
-		iov.iov_buf = &p->txlen;
-		// send it down...
-		nni_aio_set_iov(p->qsaio, 1, &iov);
-		p->cmd = CMD_PUBCOMP;
-		nng_stream_send(p->conn, p->qsaio);
-	} else if (type == CMD_PUBACK || type == CMD_PUBCOMP) {
-        //TODO move keepalive timer & ACK checker to transport layer
-	} else {
-		payload_ptr = NULL;
-	}
 	nni_msg_set_payload_ptr(msg, payload_ptr);
 
 	// keep connection & Schedule next receive
@@ -635,8 +578,7 @@ notify:
 	tcptran_pipe_recv_start(p);
 	nni_mtx_unlock(&p->mtx);
 	nni_aio_set_msg(aio, NULL);
-	nni_aio_finish(aio, 0, 0);		//only finishes when we need
-	// PINGREQ event
+	nni_aio_finish(aio, 0, 0);
 	return;
 }
 

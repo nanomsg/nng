@@ -1001,6 +1001,10 @@ nano_pipe_recv_cb(void *arg)
 {
 	nano_pipe *   p = arg;
 	nano_sock *   s = p->rep;
+	conn_param *  cparam;
+	uint32_t      len, len_of_varint = 0;
+	uint8_t       qos_pac, buf[4];
+	size_t        tlen;
 	nano_ctx *    ctx;
 	nni_msg *     msg, *qos_msg;
 	nni_aio *     aio;
@@ -1024,11 +1028,6 @@ nano_pipe_recv_cb(void *arg)
 	// ttl = nni_atomic_get(&s->ttl);
 	nni_msg_set_pipe(msg, p->id);
 	ptr = nni_msg_body(msg);
-
-	conn_param *cparam;
-	uint32_t    len, len_of_varint = 0;
-	uint8_t     qos_pac;
-	size_t      tlen;
 
 	// TODO HOOK
 	switch (nng_msg_cmd_type(msg)) {
@@ -1060,20 +1059,87 @@ nano_pipe_recv_cb(void *arg)
 		break;
 	case CMD_PUBLISH:
 		NNI_GET16(ptr, tlen);
-		cparam = p->conn_param;
+		cparam  = p->conn_param;
 		qos_pac = nni_msg_get_pub_qos(msg);
 		if (cparam->pro_ver != PROTOCOL_VERSION_v5) {
 			nni_msg_set_payload_ptr(
 			    msg, ptr + tlen + 2 + (qos_pac > 0 ? 2 : 0));
 		} else {
 		}
+
+		if (qos_pac > 0) {
+			nni_msg_alloc(&qos_msg, 0);
+			if (qos_pac == 1) {
+				buf[0] = CMD_PUBACK;
+			} else if (qos_pac == 2) {
+				buf[0] = CMD_PUBREC;
+			}
+			buf[1] = 0x02;
+			
+			ackid      = nni_msg_get_pub_pid(msg);
+			NNI_PUT16(buf+2, ackid);
+			nni_msg_header_append(qos_msg, buf, 4);
+		}
+	if (qos_msg != NULL) {
+		nni_mtx_lock(&p->lk);
+		if (!p->busy) {
+			p->busy = true;
+			nni_aio_set_msg(&p->aio_send, qos_msg);
+			nni_pipe_send(p->pipe, &p->aio_send);
+		} else {
+			if (nni_lmq_full(&p->rlmq)) {
+				// Make space for the new message. TODO add max
+				// limit of msgq len in conf
+				debug_syslog("warning msg dropped!");
+				nni_msg *old;
+				(void) nni_lmq_getq(&p->rlmq, &old);
+				nni_msg_free(old);
+			}
+			nni_lmq_putq(&p->rlmq, qos_msg);
+		}
+		nni_mtx_unlock(&p->lk);
+	}
 		break;
 	case CMD_DISCONNECT:
 		nni_pipe_close(p->pipe);
 		break;
 	case CMD_CONNACK:
 	case CMD_PINGREQ:
-		break;
+		//TODO check if this is necessary?
+	    break;
+	case CMD_PUBREC:
+	case CMD_PUBREL:
+		nni_msg_header_clear(msg);
+			if (nni_msg_cmd_type(msg) == CMD_PUBREC) {
+				buf[0] = 0X62;
+			} else if (nni_msg_cmd_type(msg) == CMD_PUBREL) {
+				buf[0] = CMD_PUBCOMP;
+			}
+			buf[1] = 0x02;
+			ptr         = nni_msg_body(msg);
+		    memcpy(buf + 2, ptr, 2);
+			nni_msg_clear(msg);
+			nni_msg_header_append(msg, buf, 4);
+		if (msg != NULL) {
+		nni_mtx_lock(&p->lk);
+		if (!p->busy) {
+			p->busy = true;
+			nni_aio_set_msg(&p->aio_send, msg);
+			nni_pipe_send(p->pipe, &p->aio_send);
+		} else {
+			if (nni_lmq_full(&p->rlmq)) {
+				// Make space for the new message. TODO add max
+				// limit of msgq len in conf
+				debug_syslog("warning msg dropped!");
+				nni_msg *old;
+				(void) nni_lmq_getq(&p->rlmq, &old);
+				nni_msg_free(old);
+			}
+			nni_lmq_putq(&p->rlmq, msg);
+		}
+		nni_mtx_unlock(&p->lk);
+	}
+		goto end;
 	case CMD_PUBACK:
 	case CMD_PUBCOMP:
 	    nni_mtx_lock(&p->lk);
@@ -1088,8 +1154,6 @@ nano_pipe_recv_cb(void *arg)
 		}
 		nni_mtx_unlock(&p->lk);
 		goto drop;
-	case CMD_PUBREC:
-	case CMD_PUBREL:
 	case CMD_CONNECT:
 		goto drop;
 	default:
@@ -1138,9 +1202,9 @@ nano_pipe_recv_cb(void *arg)
 	return;
 
 drop:
-	nni_aio_set_msg(&p->aio_recv, NULL);
 	nni_msg_free(msg);
 end:
+    nni_aio_set_msg(&p->aio_recv, NULL);
 	nni_pipe_recv(p->pipe, &p->aio_recv);
 	debug_msg("Warning:dropping msg");
 	return;
