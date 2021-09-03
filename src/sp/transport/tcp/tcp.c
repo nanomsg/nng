@@ -39,8 +39,6 @@ struct tcptran_pipe {
 	nni_aio *       txaio;
 	nni_aio *       rxaio;
 	nni_aio *       qsaio;
-	nni_aio *       rsaio;
-	nni_aio *       rpaio;
 	nni_aio *       negoaio;
 	nni_msg *       rxmsg, *cnmsg;
 	nni_mtx         mtx;
@@ -117,9 +115,7 @@ tcptran_pipe_close(void *arg)
 	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_close(p->rxaio);
-	nni_aio_close(p->rpaio);
 	nni_aio_close(p->txaio);
-	nni_aio_close(p->rsaio);
 	nni_aio_close(p->qsaio);
 	nni_aio_close(p->negoaio);
 
@@ -133,8 +129,6 @@ tcptran_pipe_stop(void *arg)
 	tcptran_pipe *p = arg;
 
 	nni_aio_stop(p->qsaio);
-	nni_aio_stop(p->rsaio);
-	nni_aio_stop(p->rpaio);
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
 	nni_aio_stop(p->negoaio);
@@ -158,7 +152,6 @@ tcptran_pipe_fini(void *arg)
 {
 	tcptran_pipe *p = arg;
 	tcptran_ep *  ep;
-	// nni_pipe *    npipe = p->npipe;
 
 	tcptran_pipe_stop(p);
 	if ((ep = p->ep) != NULL) {
@@ -172,10 +165,7 @@ tcptran_pipe_fini(void *arg)
 	}
 
 	nng_free(p->qos_buf, 16 + NNI_NANO_MAX_PACKET_SIZE);
-	// nng_free(p->tcp_cparam, sizeof(struct conn_param));
 	nni_aio_free(p->qsaio);
-	nni_aio_free(p->rpaio);
-	nni_aio_free(p->rsaio);
 	nni_aio_free(p->rxaio);
 	nni_aio_free(p->txaio);
 	nni_aio_free(p->negoaio);
@@ -208,8 +198,6 @@ tcptran_pipe_alloc(tcptran_pipe **pipep)
 	nni_mtx_init(&p->mtx);
 	if (((rv = nni_aio_alloc(&p->txaio, tcptran_pipe_send_cb, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->qsaio, NULL, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->rpaio, NULL, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->rsaio, NULL, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->rxaio, tcptran_pipe_recv_cb, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->negoaio, tcptran_pipe_nego_cb, p)) !=
 	        0)) {
@@ -425,8 +413,6 @@ tcptran_pipe_send_cb(void *arg)
 static void
 tcptran_pipe_recv_cb(void *arg)
 {
-	uint8_t *payload_ptr = NULL;
-	// uint8_t *     header_ptr;
 	nni_aio *aio;
 	nni_iov  iov;
 	uint8_t  type;
@@ -549,7 +535,6 @@ tcptran_pipe_recv_cb(void *arg)
 
 	// set the payload pointer of msg according to packet_type
 	debug_msg("The type of msg is %x", type);
-	nni_msg_set_payload_ptr(msg, payload_ptr);
 
 	// keep connection & Schedule next receive
 	// nni_pipe_bump_rx(p->npipe, n);
