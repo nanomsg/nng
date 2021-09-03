@@ -851,7 +851,14 @@ nano_msg_notify_connect(conn_param *cparam, uint8_t code)
 	return msg;
 }
 
-
+/**
+ * @brief 
+ * 
+ * @param msg SUB/UNSUB packet
+ * @param root root node of nano_pipe_db linked table
+ * @param cparam connection param
+ * @return nano_pipe_db* pointer of newly added pipe_db 
+ */
 nano_pipe_db *
 nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 {
@@ -878,6 +885,7 @@ nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 	} else {
 		payload_ptr = nni_msg_body(msg) + 2;
 	}
+	nni_msg_set_payload_ptr(msg, payload_ptr);
 	remain      = nni_msg_remaining_len(msg) - 2;
 
 	while (bpos < remain) {

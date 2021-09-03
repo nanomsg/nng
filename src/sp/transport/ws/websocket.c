@@ -192,9 +192,9 @@ done:
 	nni_mtx_unlock(&p->mtx);
 	return;
 reset:
-	// reset the connection, remember to free the message before enter here
 	p->gotrxhead  = 0;
 	p->wantrxhead = 0;
+	nng_stream_close(p->ws);
 	if (uaio != NULL) {
 		nni_aio_finish_error(uaio, rv);
 	} else if (p->ep_aio != NULL) {
