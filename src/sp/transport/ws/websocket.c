@@ -48,6 +48,7 @@ struct ws_listener {
 struct ws_pipe {
 	nni_mtx     mtx;
 	bool        closed;
+	uint8_t     txlen[NANO_MIN_PACKET_LEN];
 	uint16_t    peer;
 	size_t      gotrxhead;
 	size_t      wantrxhead;
@@ -57,6 +58,7 @@ struct ws_pipe {
 	nni_aio *   ep_aio;
 	nni_aio *   txaio;
 	nni_aio *   rxaio;
+	nni_aio *   qsaio;
 	nni_pipe *  npipe;
 	uint8_t *   qos_buf;
 	conn_param *ws_param;
@@ -95,6 +97,7 @@ wstran_pipe_recv_cb(void *arg)
 	nni_msg *smsg, *msg;
 	nni_aio *raio = p->rxaio;
 	nni_aio *uaio = NULL;
+	nni_iov  iov;
 
 	nni_mtx_lock(&p->mtx);
 	// only sets uaio at first time
@@ -182,6 +185,30 @@ done:
 			p->tmp_msg = NULL;
 			nni_msg_set_conn_param(smsg, p->ws_param);
 		}
+
+		if (nni_msg_cmd_type(smsg) == CMD_PUBLISH) {
+			uint8_t  qos_pac;
+			uint16_t pid;
+			nni_msg  * qos_msg;
+
+			qos_pac = nni_msg_get_pub_qos(smsg);
+			if (qos_pac > 0) {
+				nng_aio_wait(p->qsaio);
+				if (qos_pac == 1) {
+					p->txlen[0] = CMD_PUBACK;
+				} else if (qos_pac == 2) {
+					p->txlen[0] = CMD_PUBREC;
+				}
+				p->txlen[1] = 0x02;
+				pid         = nni_msg_get_pub_pid(smsg);
+				NNI_PUT16(p->txlen + 2, pid);
+				nni_msg_alloc(&qos_msg, 0);
+				nni_msg_header_append(qos_msg, p->txlen, 4);
+				nni_aio_set_msg(p->qsaio, qos_msg);
+				nng_stream_send(p->ws, p->qsaio);
+			}
+		}
+
 		nni_aio_set_msg(uaio, smsg);
 		nni_aio_set_output(uaio, 0, p);
 		nni_aio_finish(uaio, 0, nni_msg_len(smsg));
@@ -289,6 +316,7 @@ wstran_pipe_stop(void *arg)
 
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
+	nni_aio_stop(p->qsaio);
 }
 
 static int
@@ -313,6 +341,7 @@ wstran_pipe_fini(void *arg)
 
 	nni_aio_free(p->rxaio);
 	nni_aio_free(p->txaio);
+	nni_aio_free(p->qsaio);
 
 	nng_stream_free(p->ws);
 	nni_msg_free(p->tmp_msg);
@@ -326,6 +355,7 @@ wstran_pipe_close(void *arg)
 	ws_pipe *p = arg;
 
 	nni_aio_close(p->rxaio);
+	nni_aio_close(p->qsaio);
 	nni_aio_close(p->txaio);
 
 	nni_mtx_lock(&p->mtx);
@@ -346,6 +376,7 @@ wstran_pipe_alloc(ws_pipe **pipep, void *ws)
 
 	// Initialize AIOs.
 	if (((rv = nni_aio_alloc(&p->txaio, wstran_pipe_send_cb, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->qsaio, NULL, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->rxaio, wstran_pipe_recv_cb, p)) != 0)) {
 		wstran_pipe_fini(p);
 		return (rv);

@@ -39,6 +39,8 @@ struct tcptran_pipe {
 	nni_aio *       txaio;
 	nni_aio *       rxaio;
 	nni_aio *       qsaio;
+	nni_aio *       rsaio;
+	nni_aio *       rpaio;
 	nni_aio *       negoaio;
 	nni_msg *       rxmsg, *cnmsg;
 	nni_mtx         mtx;
@@ -115,7 +117,9 @@ tcptran_pipe_close(void *arg)
 	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_close(p->rxaio);
+	nni_aio_close(p->rpaio);
 	nni_aio_close(p->txaio);
+	nni_aio_close(p->rsaio);
 	nni_aio_close(p->qsaio);
 	nni_aio_close(p->negoaio);
 
@@ -129,6 +133,8 @@ tcptran_pipe_stop(void *arg)
 	tcptran_pipe *p = arg;
 
 	nni_aio_stop(p->qsaio);
+	nni_aio_stop(p->rsaio);
+	nni_aio_stop(p->rpaio);
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
 	nni_aio_stop(p->negoaio);
@@ -165,7 +171,10 @@ tcptran_pipe_fini(void *arg)
 	}
 
 	nng_free(p->qos_buf, 16 + NNI_NANO_MAX_PACKET_SIZE);
+	// nng_free(p->tcp_cparam, sizeof(struct conn_param));
 	nni_aio_free(p->qsaio);
+	nni_aio_free(p->rpaio);
+	nni_aio_free(p->rsaio);
 	nni_aio_free(p->rxaio);
 	nni_aio_free(p->txaio);
 	nni_aio_free(p->negoaio);
@@ -198,6 +207,8 @@ tcptran_pipe_alloc(tcptran_pipe **pipep)
 	nni_mtx_init(&p->mtx);
 	if (((rv = nni_aio_alloc(&p->txaio, tcptran_pipe_send_cb, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->qsaio, NULL, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->rpaio, NULL, p)) != 0) ||
+	    ((rv = nni_aio_alloc(&p->rsaio, NULL, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->rxaio, tcptran_pipe_recv_cb, p)) != 0) ||
 	    ((rv = nni_aio_alloc(&p->negoaio, tcptran_pipe_nego_cb, p)) !=
 	        0)) {
@@ -281,8 +292,9 @@ tcptran_pipe_nego_cb(void *arg)
 		len =
 		    get_var_integer(p->rxlen + 1, (uint32_t *) &len_of_varint);
 		p->wantrxhead = len + 1 + len_of_varint;
-		rv = (p->wantrxhead >= NANO_CONNECT_PACKET_LEN)? 0 : NNG_EPROTO;
-		if (rv !=0) {
+		rv            = (p->wantrxhead >= NANO_CONNECT_PACKET_LEN) ? 0
+		                                                : NNG_EPROTO;
+		if (rv != 0) {
 			goto error;
 		}
 	}
@@ -413,10 +425,9 @@ tcptran_pipe_send_cb(void *arg)
 static void
 tcptran_pipe_recv_cb(void *arg)
 {
-	nni_aio *aio;
-	nni_iov  iov;
-	uint8_t  type;
-	// uint16_t      fixed_header;
+	nni_aio *     aio;
+	nni_iov       iov;
+	uint8_t       type;
 	uint32_t      len = 0, rv, pos = 1;
 	size_t        n;
 	nni_msg *     msg;
@@ -475,7 +486,6 @@ tcptran_pipe_recv_cb(void *arg)
 			nni_aio_set_iov(p->qsaio, 1, &iov);
 			nng_stream_send(p->conn, p->qsaio);
 			goto notify;
-		} else if ((p->rxlen[0] & 0XFF) == CMD_DISCONNECT) {
 		}
 	}
 
@@ -519,7 +529,7 @@ tcptran_pipe_recv_cb(void *arg)
 
 	// We read a message completely.  Let the user know the good news. use
 	// as application message callback of users
-	nni_aio_list_remove(aio); // need this to align with nng
+	nni_aio_list_remove(aio);
 	msg      = p->rxmsg;
 	p->rxmsg = NULL;
 	n        = nni_msg_len(msg);
@@ -527,7 +537,8 @@ tcptran_pipe_recv_cb(void *arg)
 
 	fixed_header_adaptor(p->rxlen, msg);
 	nni_msg_set_conn_param(msg, cparam);
-	nni_msg_set_remaining_len(msg, len);		//duplicated with fixed_header_adaptor
+	nni_msg_set_remaining_len(
+	    msg, len); // duplicated with fixed_header_adaptor
 	nni_msg_set_cmd_type(msg, type);
 	debug_msg("remain_len %d cparam %p clientid %s username %s proto %d\n",
 	    len, cparam, cparam->clientid.body, cparam->username.body,
@@ -535,6 +546,53 @@ tcptran_pipe_recv_cb(void *arg)
 
 	// set the payload pointer of msg according to packet_type
 	debug_msg("The type of msg is %x", type);
+	if (type == CMD_PUBLISH) {
+		uint8_t  qos_pac;
+		uint16_t pid;
+
+		qos_pac = nni_msg_get_pub_qos(msg);
+		if (qos_pac > 0) {
+			nng_aio_wait(p->rsaio);
+			if (qos_pac == 1) {
+				p->txlen[0] = CMD_PUBACK;
+			} else if (qos_pac == 2) {
+				p->txlen[0] = CMD_PUBREC;
+			}
+			p->txlen[1] = 0x02;
+			pid         = nni_msg_get_pub_pid(msg);
+			NNI_PUT16(p->txlen + 2, pid);
+			iov.iov_len = 4;
+			iov.iov_buf = &p->txlen;
+			// send it down...
+			nni_aio_set_iov(p->rsaio, 1, &iov);
+			nng_stream_send(p->conn, p->rsaio);
+		}
+	} else if (type == CMD_PUBREC) {
+		// TODO
+		uint8_t *tmp;
+		nng_aio_wait(p->rpaio);
+		p->txlen[0] = 0X62;
+		p->txlen[1] = 0x02;
+		tmp         = nni_msg_body(msg);
+		memcpy(p->txlen + 2, tmp, 2);
+		iov.iov_len = 4;
+		iov.iov_buf = &p->txlen;
+		// send it down...
+		nni_aio_set_iov(p->rpaio, 1, &iov);
+		nng_stream_send(p->conn, p->rpaio);
+	} else if (type == CMD_PUBREL) {
+		uint8_t *tmp;
+		nng_aio_wait(p->qsaio);
+		p->txlen[0] = CMD_PUBCOMP;
+		p->txlen[1] = 0x02;
+		tmp         = nni_msg_body(msg);
+		memcpy(p->txlen + 2, tmp, 2);
+		iov.iov_len = 4;
+		iov.iov_buf = &p->txlen;
+		// send it down...
+		nni_aio_set_iov(p->qsaio, 1, &iov);
+		nng_stream_send(p->conn, p->qsaio);
+	}
 
 	// keep connection & Schedule next receive
 	// nni_pipe_bump_rx(p->npipe, n);
