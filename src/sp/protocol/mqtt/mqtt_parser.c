@@ -695,7 +695,7 @@ DJBHash(char *str)
 	while (*str) {
 		hash = ((hash << 5) + hash) + (*str++); /* times 33 */
 	}
-	hash &= ~(1 << 31); /* strip the highest bit */
+	hash &= ~(1U << 31); /* strip the highest bit */
 	return hash;
 }
 
@@ -858,7 +858,7 @@ nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 	char *topic;
 	nano_pipe_db *db = NULL, *tmp = NULL, *iter = NULL;
 	uint8_t       len_of_topic = 0, *payload_ptr;
-	uint32_t      len, len_of_varint;
+	uint32_t      len, len_of_varint = 0;
 	size_t        bpos = 0, remain = 0;
 	bool          repeat = false;
 
