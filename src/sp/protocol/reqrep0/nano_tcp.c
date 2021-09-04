@@ -61,7 +61,8 @@ struct nano_sock {
 	nni_mtx        lk;
 	nni_atomic_int ttl;
 	nni_id_map     pipes;
-	nni_id_map     clean_session_db;
+//	nni_id_map     clean_session_db;
+	nni_lmq        waitlmq;
 	nni_list       recvpipes; // list of pipes with data to receive
 	nni_list       recvq;
 	nano_ctx       ctx; // base socket
@@ -327,6 +328,7 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	return;
 }
 
+/*
 void
 nano_clean_session_db_fini(nni_id_map *m)
 {
@@ -346,6 +348,7 @@ nano_clean_session_db_fini(nni_id_map *m)
 	}
 	nni_id_map_fini(m);
 }
+*/
 
 static void
 nano_sock_fini(void *arg)
@@ -353,7 +356,10 @@ nano_sock_fini(void *arg)
 	nano_sock *s = arg;
 
 	nni_id_map_fini(&s->pipes);
+/*
 	nano_clean_session_db_fini(&s->clean_session_db);
+*/
+	nni_lmq_fini(&s->waitlmq);
 	nano_ctx_fini(&s->ctx);
 	nni_pollable_fini(&s->writable);
 	nni_pollable_fini(&s->readable);
@@ -372,7 +378,8 @@ nano_sock_init(void *arg, nni_sock *sock)
 	nni_mtx_init(&s->lk);
 
 	nni_id_map_init(&s->pipes, 0, 0, false);
-	nni_id_map_init(&s->clean_session_db, 0, 0, false);
+//	nni_id_map_init(&s->clean_session_db, 0, 0, false);
+	nni_lmq_init(&s->waitlmq, 256);
 	NNI_LIST_INIT(&s->recvq, nano_ctx, rqnode);
 	NNI_LIST_INIT(&s->recvpipes, nano_pipe, rnode);
 
@@ -802,17 +809,19 @@ nano_pipe_close(void *arg)
 	debug_msg("################# nano_pipe_close ##############");
 	nni_mtx_lock(&s->lk);
 	close_pipe(p);
-	// pub disconnect event
+
+	// create disconnect event msg
+	msg = nano_msg_notify_disconnect(p->conn_param, reason_code);
+	if (msg == NULL) {
+		nni_mtx_unlock(&s->lk);
+		return;
+	}
+	nni_msg_set_conn_param(msg, p->conn_param);
+	nni_msg_set_cmd_type(msg, CMD_DISCONNECT_EV);
+	nni_msg_set_pipe(msg, p->id);
+
+	// expose disconnect event
 	if ((ctx = nni_list_first(&s->recvq)) != NULL) {
-		msg =
-		    nano_msg_notify_disconnect(p->conn_param, p->reason_code);
-		if (msg == NULL) {
-			nni_mtx_unlock(&s->lk);
-			return;
-		}
-		nni_msg_set_conn_param(msg, p->conn_param);
-		nni_msg_set_cmd_type(msg, CMD_DISCONNECT_EV);
-		nni_msg_set_pipe(msg, p->id);
 		aio       = ctx->raio;
 		ctx->raio = NULL;
 		nni_list_remove(&s->recvq, ctx);
@@ -821,8 +830,13 @@ nano_pipe_close(void *arg)
 		nni_aio_finish_sync(aio, 0, nni_msg_len(msg));
 		return;
 	} else {
-		debug_msg("Warning: no ctx left!! faied to send disconnect "
-		          "notification");
+		// no enough ctx, so cache to waitlmq
+		if (nni_lmq_full(&s->waitlmq)) {
+			if (nni_lmq_resize(&s->waitlmq, nni_lmq_cap(&s->waitlmq) * 2) != 0) {
+				debug_msg("wait lmq resize failed.");
+			}
+		}
+		nni_lmq_putq(&s->waitlmq, msg);
 	}
 	nni_mtx_unlock(&s->lk);
 }
@@ -889,13 +903,23 @@ nano_ctx_recv(void *arg, nni_aio *aio)
 	nano_sock *s   = ctx->sock;
 	nano_pipe *p;
 	// size_t     len;
-	nni_msg *msg;
+	nni_msg *msg = NULL;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
+
 	debug_msg("nano_ctx_recv start %p", ctx);
 	nni_mtx_lock(&s->lk);
+
+	if (nni_lmq_getq(&s->waitlmq, &msg) == 0) {
+		nni_mtx_unlock(&s->lk);
+		debug_msg("handle msg in waitlmq.");
+		nni_aio_set_msg(aio, msg);
+		nni_aio_finish_sync(aio, 0, nni_msg_len(msg));
+		return;
+	}
+
 	if ((p = nni_list_first(&s->recvpipes)) == NULL) {
 		int rv;
 		if ((rv = nni_aio_schedule(aio, nano_cancel_recv, ctx)) != 0) {
