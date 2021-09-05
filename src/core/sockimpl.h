@@ -17,20 +17,20 @@
 
 struct nni_dialer {
 	nni_sp_dialer_ops d_ops;  // transport ops
-	nni_sp_tran *     d_tran; // transport pointer
-	void *            d_data; // transport private
+	nni_sp_tran      *d_tran; // transport pointer
+	void	     *d_data; // transport private
 	uint32_t          d_id;   // endpoint id
 	nni_list_node     d_node; // per socket list
-	nni_sock *        d_sock;
-	nni_url *         d_url;
-	nni_pipe *        d_pipe; // active pipe (for re-dialer)
+	nni_sock         *d_sock;
+	nni_url          *d_url;
+	nni_pipe         *d_pipe; // active pipe (for re-dialer)
 	int               d_ref;
 	bool              d_closed; // full shutdown
-	bool              d_closing;
+	nni_atomic_flag   d_closing;
 	nni_atomic_flag   d_started;
 	nni_mtx           d_mtx;
 	nni_list          d_pipes;
-	nni_aio *         d_user_aio;
+	nni_aio          *d_user_aio;
 	nni_aio           d_con_aio;
 	nni_aio           d_tmo_aio;  // backoff timer
 	nni_duration      d_maxrtime; // maximum time for reconnect
@@ -59,15 +59,15 @@ struct nni_dialer {
 
 struct nni_listener {
 	nni_sp_listener_ops l_ops;  // transport ops
-	nni_sp_tran *       l_tran; // transport pointer
-	void *              l_data; // transport private
+	nni_sp_tran        *l_tran; // transport pointer
+	void               *l_data; // transport private
 	uint32_t            l_id;   // endpoint id
 	nni_list_node       l_node; // per socket list
-	nni_sock *          l_sock;
-	nni_url *           l_url;
+	nni_sock           *l_sock;
+	nni_url            *l_url;
 	int                 l_ref;
 	bool                l_closed;  // full shutdown
-	bool                l_closing; // close started (shutdown)
+	nni_atomic_flag     l_closing; // close started (shutdown)
 	nni_atomic_flag     l_started;
 	nni_list            l_pipes;
 	nni_aio             l_acc_aio;
@@ -97,13 +97,13 @@ struct nni_pipe {
 	nni_sp_pipe_ops    p_tran_ops;
 	nni_proto_pipe_ops p_proto_ops;
 	size_t             p_size;
-	void *             p_tran_data;
-	void *             p_proto_data;
+	void              *p_tran_data;
+	void              *p_proto_data;
 	nni_list_node      p_sock_node;
 	nni_list_node      p_ep_node;
-	nni_sock *         p_sock;
-	nni_dialer *       p_dialer;
-	nni_listener *     p_listener;
+	nni_sock          *p_sock;
+	nni_dialer        *p_dialer;
+	nni_listener      *p_listener;
 	bool               p_closed;
 	nni_atomic_flag    p_stop;
 	bool               p_cbs;
@@ -138,13 +138,13 @@ extern void nni_dialer_shutdown(nni_dialer *);
 extern void nni_dialer_reap(nni_dialer *);
 extern void nni_dialer_destroy(nni_dialer *);
 extern void nni_dialer_timer_start(nni_dialer *);
-extern void nni_dialer_close_rele(nni_dialer *);
+extern void nni_dialer_stop(nni_dialer *);
 
 extern void nni_listener_add_pipe(nni_listener *, void *);
 extern void nni_listener_shutdown(nni_listener *);
 extern void nni_listener_reap(nni_listener *);
 extern void nni_listener_destroy(nni_listener *);
-extern void nni_listener_close_rele(nni_listener *);
+extern void nni_listener_stop(nni_listener *);
 
 extern void nni_pipe_remove(nni_pipe *);
 extern void nni_pipe_run_cb(nni_pipe *, nng_pipe_ev);

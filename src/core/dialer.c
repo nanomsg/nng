@@ -225,15 +225,20 @@ nni_dialer_bump_error(nni_dialer *d, int err)
 #endif
 }
 
+// nni_dialer_create creates a dialer on the socket.
+// The caller should have a hold on the socket, and on success
+// the dialer inherits the callers hold.  (If the caller wants
+// an additional hold, it should get an extra hold before calling this
+// function.)
 int
-nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
+nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *url_str)
 {
-	nni_sp_tran *  tran;
-	nni_dialer *d;
-	int         rv;
-	nni_url *   url;
+	nni_sp_tran *tran;
+	nni_dialer  *d;
+	int          rv;
+	nni_url     *url;
 
-	if ((rv = nni_url_parse(&url, urlstr)) != 0) {
+	if ((rv = nni_url_parse(&url, url_str)) != 0) {
 		return (rv);
 	}
 	if (((tran = nni_sp_tran_find(url)) == NULL) ||
@@ -246,13 +251,12 @@ nni_dialer_create(nni_dialer **dp, nni_sock *s, const char *urlstr)
 		nni_url_free(url);
 		return (NNG_ENOMEM);
 	}
-	d->d_url     = url;
-	d->d_closed  = false;
-	d->d_closing = false;
-	d->d_data    = NULL;
-	d->d_ref     = 1;
-	d->d_sock    = s;
-	d->d_tran    = tran;
+	d->d_url    = url;
+	d->d_closed = false;
+	d->d_data   = NULL;
+	d->d_ref    = 1;
+	d->d_sock   = s;
+	d->d_tran   = tran;
 	nni_atomic_flag_reset(&d->d_started);
 
 	// Make a copy of the endpoint operations.  This allows us to
@@ -342,22 +346,6 @@ nni_dialer_rele(nni_dialer *d)
 }
 
 void
-nni_dialer_close_rele(nni_dialer *d)
-{
-	nni_mtx_lock(&dialers_lk);
-	if (d->d_closed) {
-		nni_mtx_unlock(&dialers_lk);
-		nni_dialer_rele(d);
-		return;
-	}
-	d->d_closed = true;
-	nni_id_remove(&dialers, d->d_id);
-	nni_mtx_unlock(&dialers_lk);
-
-	nni_dialer_rele(d);
-}
-
-void
 nni_dialer_close(nni_dialer *d)
 {
 	nni_mtx_lock(&dialers_lk);
@@ -389,8 +377,8 @@ static void
 dialer_connect_cb(void *arg)
 {
 	nni_dialer *d   = arg;
-	nni_aio *   aio = &d->d_con_aio;
-	nni_aio *   user_aio;
+	nni_aio    *aio = &d->d_con_aio;
+	nni_aio    *user_aio;
 	int         rv;
 
 	nni_mtx_lock(&d->d_mtx);
@@ -463,6 +451,14 @@ nni_dialer_start(nni_dialer *d, unsigned flags)
 	}
 
 	return (rv);
+}
+
+void
+nni_dialer_stop(nni_dialer *d)
+{
+	nni_aio_stop(&d->d_tmo_aio);
+	nni_aio_stop(&d->d_con_aio);
+	d->d_ops.d_close(d->d_data);
 }
 
 nni_sock *

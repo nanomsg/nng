@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -484,7 +484,6 @@ nng_dial(nng_socket sid, const char *addr, nng_dialer *dp, int flags)
 	}
 	if ((rv = nni_dialer_start(d, flags)) != 0) {
 		nni_dialer_close(d);
-		nni_sock_rele(s);
 		return (rv);
 	}
 	if (dp != NULL) {
@@ -493,7 +492,6 @@ nng_dial(nng_socket sid, const char *addr, nng_dialer *dp, int flags)
 		*dp    = did;
 	}
 	nni_dialer_rele(d);
-	nni_sock_rele(s);
 	return (0);
 }
 
@@ -513,7 +511,6 @@ nng_listen(nng_socket sid, const char *addr, nng_listener *lp, int flags)
 	}
 	if ((rv = nni_listener_start(l, flags)) != 0) {
 		nni_listener_close(l);
-		nni_sock_rele(s);
 		return (rv);
 	}
 
@@ -523,7 +520,6 @@ nng_listen(nng_socket sid, const char *addr, nng_listener *lp, int flags)
 		*lp    = lid;
 	}
 	nni_listener_rele(l);
-	nni_sock_rele(s);
 	return (rv);
 }
 
@@ -545,7 +541,6 @@ nng_listener_create(nng_listener *lp, nng_socket sid, const char *addr)
 	lid.id = nni_listener_id(l);
 	*lp    = lid;
 	nni_listener_rele(l);
-	nni_sock_rele(s);
 	return (0);
 }
 
@@ -587,7 +582,6 @@ nng_dialer_create(nng_dialer *dp, nng_socket sid, const char *addr)
 	did.id = nni_dialer_id(d);
 	*dp    = did;
 	nni_dialer_rele(d);
-	nni_sock_rele(s);
 	return (0);
 }
 
