@@ -104,11 +104,10 @@ struct nni_pipe {
 	nni_sock          *p_sock;
 	nni_dialer        *p_dialer;
 	nni_listener      *p_listener;
-	bool               p_closed;
+	nni_atomic_bool    p_closed;
 	nni_atomic_flag    p_stop;
 	bool               p_cbs;
 	int                p_ref;
-	nni_mtx            p_mtx;
 	nni_cv             p_cv;
 	nni_reap_node      p_reap;
 
@@ -141,6 +140,7 @@ extern void nni_listener_destroy(nni_listener *);
 extern void nni_listener_stop(nni_listener *);
 
 extern void nni_pipe_remove(nni_pipe *);
+extern bool nni_pipe_is_closed(nni_pipe *);
 extern void nni_pipe_run_cb(nni_pipe *, nng_pipe_ev);
 extern int  nni_pipe_create_dialer(nni_pipe **, nni_dialer *, void *);
 extern int  nni_pipe_create_listener(nni_pipe **, nni_listener *, void *);

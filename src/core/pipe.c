@@ -88,7 +88,6 @@ pipe_destroy(void *arg)
 		p->p_tran_ops.p_fini(p->p_tran_data);
 	}
 	nni_cv_fini(&p->p_cv);
-	nni_mtx_fini(&p->p_mtx);
 	nni_free(p, p->p_size);
 }
 
@@ -146,14 +145,9 @@ nni_pipe_send(nni_pipe *p, nni_aio *aio)
 void
 nni_pipe_close(nni_pipe *p)
 {
-	nni_mtx_lock(&p->p_mtx);
-	if (p->p_closed) {
-		// We already did a close.
-		nni_mtx_unlock(&p->p_mtx);
-		return;
+	if (nni_atomic_swap_bool(&p->p_closed, true)) {
+		return; // We already did a close.
 	}
-	p->p_closed = true;
-	nni_mtx_unlock(&p->p_mtx);
 
 	if (p->p_proto_data != NULL) {
 		p->p_proto_ops.pipe_close(p->p_proto_data);
@@ -165,6 +159,12 @@ nni_pipe_close(nni_pipe *p)
 	}
 
 	nni_reap(&pipe_reap_list, p);
+}
+
+bool
+nni_pipe_is_closed(nni_pipe *p)
+{
+	return (nni_atomic_get_bool(&p->p_closed));
 }
 
 uint16_t
@@ -245,9 +245,9 @@ pipe_stats_init(nni_pipe *p)
 static int
 pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 {
-	nni_pipe *          p;
+	nni_pipe           *p;
 	int                 rv;
-	void *              sdata = nni_sock_proto_data(sock);
+	void               *sdata = nni_sock_proto_data(sock);
 	nni_proto_pipe_ops *pops  = nni_sock_proto_pipe_ops(sock);
 	size_t              sz;
 
@@ -265,15 +265,14 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 	p->p_tran_data  = tdata;
 	p->p_proto_ops  = *pops;
 	p->p_sock       = sock;
-	p->p_closed     = false;
 	p->p_cbs        = false;
 	p->p_ref        = 0;
 
+	nni_atomic_init_bool(&p->p_closed);
 	nni_atomic_flag_reset(&p->p_stop);
 	NNI_LIST_NODE_INIT(&p->p_sock_node);
 	NNI_LIST_NODE_INIT(&p->p_ep_node);
 
-	nni_mtx_init(&p->p_mtx);
 	nni_cv_init(&p->p_cv, &pipes_lk);
 
 	nni_mtx_lock(&pipes_lk);
@@ -302,7 +301,7 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 {
 	int          rv;
 	nni_sp_tran *tran = d->d_tran;
-	nni_pipe *   p;
+	nni_pipe    *p;
 
 	if ((rv = pipe_create(&p, d->d_sock, tran, tdata)) != 0) {
 		return (rv);
@@ -326,7 +325,7 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
 {
 	int          rv;
 	nni_sp_tran *tran = l->l_tran;
-	nni_pipe *   p;
+	nni_pipe    *p;
 
 	if ((rv = pipe_create(&p, l->l_sock, tran, tdata)) != 0) {
 		return (rv);
