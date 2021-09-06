@@ -14,7 +14,7 @@
 
 #include <stdio.h>
 
-// This file contains functions relating to pipes.
+// This file contains functions related to pipe objects.
 //
 // Operations on pipes (to the transport) are generally blocking operations,
 // performed in the context of the protocol.
@@ -34,7 +34,7 @@ nni_pipe_sys_init(void)
 {
 	nni_mtx_init(&pipes_lk);
 
-	// Pipe IDs needs to have high order bit clear, and we want
+	// Pipe IDs need their high bit clear, and we want
 	// them to start at a random value.
 	nni_id_map_init(&pipes, 1, 0x7fffffff, true);
 }
@@ -245,11 +245,11 @@ pipe_stats_init(nni_pipe *p)
 #endif // NNG_ENABLE_STATS
 
 static int
-pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
+pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 {
 	nni_pipe           *p;
 	int                 rv;
-	void               *sdata = nni_sock_proto_data(sock);
+	void               *sock_data = nni_sock_proto_data(sock);
 	nni_proto_pipe_ops *pops  = nni_sock_proto_pipe_ops(sock);
 	size_t              sz;
 
@@ -257,14 +257,14 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 
 	if ((p = nni_zalloc(sz)) == NULL) {
 		// In this case we just toss the pipe...
-		tran->tran_pipe->p_fini(tdata);
+		tran->tran_pipe->p_fini(tran_data);
 		return (NNG_ENOMEM);
 	}
 
 	p->p_size       = sz;
 	p->p_proto_data = p + 1;
 	p->p_tran_ops   = *tran->tran_pipe;
-	p->p_tran_data  = tdata;
+	p->p_tran_data  = tran_data;
 	p->p_proto_ops  = *pops;
 	p->p_sock       = sock;
 	p->p_cbs        = false;
@@ -291,8 +291,8 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 	pipe_stats_init(p);
 #endif
 
-	if ((rv != 0) || ((rv = p->p_tran_ops.p_init(tdata, p)) != 0) ||
-	    ((rv = pops->pipe_init(p->p_proto_data, p, sdata)) != 0)) {
+	if ((rv != 0) || ((rv = p->p_tran_ops.p_init(tran_data, p)) != 0) ||
+	    ((rv = pops->pipe_init(p->p_proto_data, p, sock_data)) != 0)) {
 		nni_pipe_close(p);
 		nni_pipe_rele(p);
 		return (rv);
@@ -303,13 +303,13 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tdata)
 }
 
 int
-nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
+nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tran_data)
 {
 	int          rv;
 	nni_sp_tran *tran = d->d_tran;
 	nni_pipe *   p;
 
-	if ((rv = pipe_create(&p, d->d_sock, tran, tdata)) != 0) {
+	if ((rv = pipe_create(&p, d->d_sock, tran, tran_data)) != 0) {
 		return (rv);
 	}
 	p->p_dialer = d;
@@ -327,13 +327,13 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tdata)
 }
 
 int
-nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tdata)
+nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tran_data)
 {
 	int       rv;
 	nni_sp_tran *tran = l->l_tran;
 	nni_pipe *   p;
 
-	if ((rv = pipe_create(&p, l->l_sock, tran, tdata)) != 0) {
+	if ((rv = pipe_create(&p, l->l_sock, tran, tran_data)) != 0) {
 		return (rv);
 	}
 	p->p_listener = l;
@@ -402,26 +402,26 @@ nni_pipe_add_stat(nni_pipe *p, nni_stat_item *item)
 }
 
 void
-nni_pipe_bump_rx(nni_pipe *p, size_t nbytes)
+nni_pipe_bump_rx(nni_pipe *p, size_t bytes)
 {
 #ifdef NNG_ENABLE_STATS
-	nni_stat_inc(&p->st_rx_bytes, nbytes);
+	nni_stat_inc(&p->st_rx_bytes, bytes);
 	nni_stat_inc(&p->st_rx_msgs, 1);
 #else
 	NNI_ARG_UNUSED(p);
-	NNI_ARG_UNUSED(nbytes);
+	NNI_ARG_UNUSED(bytes);
 #endif
 }
 
 void
-nni_pipe_bump_tx(nni_pipe *p, size_t nbytes)
+nni_pipe_bump_tx(nni_pipe *p, size_t bytes)
 {
 #ifdef NNG_ENABLE_STATS
-	nni_stat_inc(&p->st_tx_bytes, nbytes);
+	nni_stat_inc(&p->st_tx_bytes, bytes);
 	nni_stat_inc(&p->st_tx_msgs, 1);
 #else
 	NNI_ARG_UNUSED(p);
-	NNI_ARG_UNUSED(nbytes);
+	NNI_ARG_UNUSED(bytes);
 #endif
 }
 
