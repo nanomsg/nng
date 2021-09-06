@@ -70,7 +70,7 @@ extern void nni_sp_wss_register(void);
 extern void nni_sp_zt_register(void);
 #endif
 
-int
+void
 nni_sp_tran_sys_init(void)
 {
 	NNI_LIST_INIT(&sp_tran_list, nni_sp_tran, tran_link);
@@ -97,7 +97,6 @@ nni_sp_tran_sys_init(void)
 #ifdef NNG_TRANSPORT_ZEROTIER
 	nni_sp_zt_register();
 #endif
-	return (0);
 }
 
 // nni_sp_tran_sys_fini finalizes the entire transport system, including all

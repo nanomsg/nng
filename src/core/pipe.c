@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2018 Devolutions <info@devolutions.net>
 //
@@ -29,7 +29,7 @@ static nni_reap_list pipe_reap_list = {
 	.rl_func   = pipe_destroy,
 };
 
-int
+void
 nni_pipe_sys_init(void)
 {
 	nni_mtx_init(&pipes_lk);
@@ -37,8 +37,6 @@ nni_pipe_sys_init(void)
 	// Pipe IDs needs to have high order bit clear, and we want
 	// them to start at a random value.
 	nni_id_map_init(&pipes, 1, 0x7fffffff, true);
-
-	return (0);
 }
 
 void

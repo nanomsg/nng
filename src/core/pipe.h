@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -12,14 +12,14 @@
 #define CORE_PIPE_H
 
 // NB: This structure is supplied here for use by the CORE. Use of this
-// OUSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
+// OUTSIDE of the core is STRICTLY VERBOTEN.  NO DIRECT ACCESS BY PROTOCOLS OR
 // TRANSPORTS.
 
 #include "core/defs.h"
 #include "core/thread.h"
 #include "sp/transport.h"
 
-extern int  nni_pipe_sys_init(void);
+extern void  nni_pipe_sys_init(void);
 extern void nni_pipe_sys_fini(void);
 
 // AIO
@@ -34,7 +34,6 @@ extern uint32_t nni_pipe_id(nni_pipe *);
 // actual pipe will be reaped asynchronously.
 extern void nni_pipe_close(nni_pipe *);
 
-extern uint16_t nni_pipe_proto(nni_pipe *);
 extern uint16_t nni_pipe_peer(nni_pipe *);
 
 // nni_pipe_getopt looks up the option.  The last argument is the type,
