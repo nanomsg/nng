@@ -15,6 +15,7 @@
 
 #include "core/nng_impl.h"
 #include "core/sockimpl.h"
+#include "nng/nng.h"
 #include "nng/protocol/mqtt/mqtt.h"
 #include "nng/protocol/mqtt/mqtt_parser.h"
 #include "nng/protocol/mqtt/nano_tcp.h"
@@ -71,33 +72,33 @@ struct nano_sock {
 
 // nano_pipe is our per-pipe protocol private structure.
 struct nano_pipe {
-	nni_mtx       lk;
-	nni_pipe *    pipe;
-	nano_sock *   rep;
-	uint32_t      id;
-	void *        tree; // root node of db tree
-	nni_aio       aio_send;
-	nni_aio       aio_recv;
-	nni_aio       aio_timer;
-	nni_list_node rnode; // receivable list linkage
-	nni_list      sendq; // contexts waiting to send
-	bool          busy;
-	bool          closed;
-	bool          kicked;
-	uint8_t       reason_code;
-	uint8_t       ka_refresh;
-	conn_param *  conn_param;
-	nano_pipe_db *pipedb_root;
-	nni_lmq       rlmq;
+	nni_mtx          lk;
+	nni_pipe *       pipe;
+	nano_sock *      rep;
+	uint32_t         id;
+	void *           tree; // root node of db tree
+	nni_aio          aio_send;
+	nni_aio          aio_recv;
+	nni_aio          aio_timer;
+	nni_list_node    rnode; // receivable list linkage
+	nni_list         sendq; // contexts waiting to send
+	bool             busy;
+	bool             closed;
+	bool             kicked;
+	uint8_t          reason_code;
+	uint8_t          ka_refresh;
+	nano_conn_param *conn_param;
+	nano_pipe_db *   pipedb_root;
+	nni_lmq          rlmq;
 };
 
 struct nano_clean_session {
-	client_ctx *  cltx;
-	conn_param *  cparam;
-	nni_id_map *  msg_map;
-	nano_pipe_db *pipe_db;
-	uint32_t      pipeid; // corresponding pipe id of nng
-	bool          clean;
+	client_ctx *     cltx;
+	nano_conn_param *cparam;
+	nni_id_map *     msg_map;
+	nano_pipe_db *   pipe_db;
+	uint32_t         pipeid; // corresponding pipe id of nng
+	bool             clean;
 };
 
 static void
@@ -289,6 +290,12 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	nni_mtx_lock(&p->lk);
 	if (!p->busy) {
 		p->busy = true;
+		pub_extra *pub_extra_info =
+		    (pub_extra *) nni_aio_get_prov_extra(aio, 0);
+		if (pub_extra_info) {
+			nni_aio_set_prov_extra(
+			    &p->aio_send, 0, pub_extra_info);
+		}
 		nni_aio_set_msg(&p->aio_send, msg);
 		nni_pipe_send(p->pipe, &p->aio_send);
 		nni_mtx_unlock(&p->lk);
@@ -326,8 +333,8 @@ nano_clean_session_db_fini(nni_id_map *m)
 	uint32_t            key = 0;
 	nano_clean_session *cs  = NULL;
 	while ((cs = nni_id_get_one(m, &key)) != NULL) {
-		conn_param *cparam  = cs->cparam;
-		nni_id_map *msg_map = cs->msg_map;
+		nano_conn_param *cparam  = cs->cparam;
+		nni_id_map *     msg_map = cs->msg_map;
 
 		destroy_conn_param(cparam);
 		nni_id_iterate(msg_map, nni_id_msgfree_cb);
@@ -1005,19 +1012,19 @@ nano_ctx_recv(void *arg, nni_aio *aio)
 static void
 nano_pipe_recv_cb(void *arg)
 {
-	nano_pipe *   p = arg;
-	nano_sock *   s = p->rep;
-	conn_param *  cparam;
-	uint32_t      len, len_of_varint = 0;
-	uint8_t       qos_pac, buf[4];
-	size_t        tlen;
-	nano_ctx *    ctx;
-	nni_msg *     msg, *qos_msg;
-	nni_aio *     aio;
-	nano_pipe_db *pipe_db;
-	nni_pipe *    npipe = p->pipe;
-	uint8_t *     ptr;
-	uint16_t      ackid;
+	nano_pipe *      p      = arg;
+	nano_sock *      s      = p->rep;
+	nano_conn_param *cparam = NULL;
+	uint32_t         len, len_of_varint = 0;
+	uint8_t          qos_pac = 0, buf[4];
+	size_t           tlen;
+	nano_ctx *       ctx;
+	nni_msg *        msg, *qos_msg = NULL;
+	nni_aio *        aio;
+	nano_pipe_db *   pipe_db;
+	nni_pipe *       npipe = p->pipe;
+	uint8_t *        ptr;
+	uint16_t         ackid;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
 		// unexpected disconnect

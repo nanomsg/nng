@@ -293,7 +293,7 @@ tcptran_pipe_nego_cb(void *arg)
 		    get_var_integer(p->rxlen + 1, (uint32_t *) &len_of_varint);
 		p->wantrxhead = len + 1 + len_of_varint;
 		rv            = (p->wantrxhead >= NANO_CONNECT_PACKET_LEN) ? 0
-		                                                : NNG_EPROTO;
+		                                                           : NNG_EPROTO;
 		if (rv != 0) {
 			goto error;
 		}
@@ -537,8 +537,8 @@ tcptran_pipe_recv_cb(void *arg)
 
 	fixed_header_adaptor(p->rxlen, msg);
 	nni_msg_set_conn_param(msg, cparam);
-	nni_msg_set_remaining_len(
-	    msg, len); // duplicated with fixed_header_adaptor
+	// duplicated with fixed_header_adaptor
+	nni_msg_set_remaining_len(msg, len);
 	nni_msg_set_cmd_type(msg, type);
 	debug_msg("remain_len %d cparam %p clientid %s username %s proto %d\n",
 	    len, cparam, cparam->clientid.body, cparam->username.body,
@@ -687,10 +687,9 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		uint8_t  varheader[2],
 		    fixheader[NNI_NANO_MAX_HEADER_SIZE] = { 0 },
 		    tmp[4]                              = { 0 };
-		nni_pipe *    pipe;
-		uint16_t      pid;
-		size_t        tlen, rlen;
-		nano_pipe_db *db;
+		nni_pipe *pipe;
+		uint16_t  pid;
+		size_t    tlen, rlen;
 
 		pipe       = p->npipe;
 		body       = nni_msg_body(msg);
@@ -698,24 +697,33 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		p->qlength = 0;
 		NNI_GET16(body, tlen);
 
-		if ((db = nni_id_get(&pipe->nano_db,
-		         DJBHashn((char *) body + 2, tlen))) == NULL) {
-			// shouldn't get here BUG TODO
-			nni_println(
-			    "ERROR: nano_db subscription topic missing!");
+		pub_extra *pub_extra_info =
+		    (pub_extra *) nni_aio_get_prov_extra(aio, 0);
+
+		if (pub_extra_info == NULL) {
 			goto send;
 		}
+
+		debug_msg("get pub_extra :%p", pub_extra_info);
+		debug_msg("get pub_extra, qos: %d, packet id: %d",
+		    pub_extra_get_qos(pub_extra_info),
+		    pub_extra_get_packet_id(pub_extra_info));
+
+		uint8_t qos = pub_extra_get_qos(pub_extra_info);
+
+		pub_extra_free(pub_extra_info);
+
 		qos_pac = nni_msg_get_pub_qos(msg);
 		if (qos_pac == 0) {
 			// save time & space for QoS 0 publish
 			goto send;
 		}
 
-		debug_msg("qos_pac %d sub %d\n", qos_pac, db->qos);
+		debug_msg("qos_pac %d sub %d\n", qos_pac, qos);
 		memcpy(fixheader, header, nni_msg_header_len(msg));
 
-		if (qos_pac > db->qos) {
-			if (db->qos == 1) {
+		if (qos_pac > qos) {
+			if (qos == 1) {
 				// set qos to 1
 				fixheader[0] = fixheader[0] & 0xF9;
 				fixheader[0] = fixheader[0] | 0x02;
@@ -729,7 +737,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 				    tmp, nni_msg_remaining_len(msg) - 2);
 				memcpy(fixheader + 1, tmp, rlen);
 			}
-		} else if (qos_pac < db->qos) {
+		} else if (qos_pac < qos) {
 			if (qos_pac == 1) {
 				// QoS 1 publish to Qos 2
 				// TODO
@@ -750,7 +758,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 
 		p->qlength += tlen + 2; // get topic length
 		// packet id
-		if (db->qos > 0 && qos_pac > 0) {
+		if (qos > 0 && qos_pac > 0) {
 			// set pid
 			nni_msg *old;
 			pid = nni_aio_get_packetid(aio);
@@ -787,7 +795,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		}
 		memcpy(p->qos_buf, fixheader, rlen + 1);
 		memcpy(p->qos_buf + rlen + 1, body, tlen + 2);
-		if (db->qos > 0 && qos_pac > 0) {
+		if (qos > 0 && qos_pac > 0) {
 			memcpy(p->qos_buf + rlen + tlen + 3, varheader, 2);
 		}
 		iov[niov].iov_buf = p->qos_buf;
@@ -1057,7 +1065,7 @@ tcptran_url_parse_source(nng_url *url, nng_sockaddr *sa, const nng_url *surl)
 		return (0);
 	}
 
-	len             = (size_t)(semi - url->u_hostname);
+	len             = (size_t) (semi - url->u_hostname);
 	url->u_hostname = semi + 1;
 
 	if (strcmp(surl->u_scheme, "tcp") == 0) {

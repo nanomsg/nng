@@ -21,9 +21,17 @@
 #define CONNECT_TOPIC "$SYS/brokers/connected"
 
 // Variables & Structs
+typedef struct pub_extra pub_extra;
 
 // int hex_to_oct(char *str);
 // uint32_t htoi(char *str);
+
+extern pub_extra *pub_extra_alloc(pub_extra *);
+extern void       pub_extra_free(pub_extra *pub_extra);
+extern uint8_t    pub_extra_get_qos(pub_extra *pub_extra);
+extern uint16_t   pub_extra_get_packet_id(pub_extra *pub_extra);
+extern void       pub_extra_set_qos(pub_extra *pub_extra, uint8_t qos);
+extern void pub_extra_set_packet_id(pub_extra *pub_extra, uint16_t packet_id);
 
 // MQTT CONNECT
 int32_t conn_handler(uint8_t *packet, conn_param *conn_param);

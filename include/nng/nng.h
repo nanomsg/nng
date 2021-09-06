@@ -548,6 +548,9 @@ NNG_DECL int nng_aio_set_output(nng_aio *, unsigned, void *);
 // nng_aio_get_output retrieves the output result at the given index.
 NNG_DECL void *nng_aio_get_output(nng_aio *, unsigned);
 
+NNG_DECL void nng_aio_set_prov_extra(nng_aio *, unsigned , void *);
+NNG_DECL void *nng_aio_get_prov_extra(nng_aio *, unsigned );
+
 // nng_aio_set_timeout sets a timeout on the AIO.  This should be called for
 // operations that should time out after a period.  The timeout should be
 // either a positive number of milliseconds, or NNG_DURATION_INFINITE to

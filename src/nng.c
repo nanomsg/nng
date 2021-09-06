@@ -1858,6 +1858,21 @@ nng_aio_get_output(nng_aio *aio, unsigned index)
 	return (nni_aio_get_output(aio, index));
 }
 
+void *nng_aio_get_prov_extra(nng_aio *aio, unsigned index){
+	if(index < 2) {
+		return nni_aio_get_prov_extra(aio, index);
+	}else {
+		return NULL;
+	}
+}
+
+void
+nng_aio_set_prov_extra(nng_aio *aio, unsigned index, void *data){
+	if(index < 2) {
+		 nni_aio_set_prov_extra(aio, index ,data);
+	}
+}
+
 void
 nng_aio_finish(nng_aio *aio, int rv)
 {

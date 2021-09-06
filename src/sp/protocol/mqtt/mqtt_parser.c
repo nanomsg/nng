@@ -16,8 +16,51 @@
 #include <stdio.h>
 #include <string.h>
 
+struct pub_extra {
+	uint8_t  qos;
+	uint16_t packet_id;
+};
+
 static uint8_t  get_value_size(uint64_t value);
 static uint64_t power(uint64_t x, uint32_t n);
+
+pub_extra *
+pub_extra_alloc(pub_extra *extra)
+{
+	return NNI_ALLOC_STRUCT(extra);
+}
+
+void
+pub_extra_free(pub_extra *pub_extra)
+{
+	if (pub_extra) {
+		NNI_FREE_STRUCT(pub_extra);
+	}
+}
+
+uint8_t
+pub_extra_get_qos(pub_extra *pub_extra)
+{
+	return pub_extra->qos;
+}
+
+uint16_t
+pub_extra_get_packet_id(pub_extra *pub_extra)
+{
+	return pub_extra->packet_id;
+}
+
+void
+pub_extra_set_qos(pub_extra *pub_extra, uint8_t qos)
+{
+	pub_extra->qos = qos;
+}
+
+void
+pub_extra_set_packet_id(pub_extra *pub_extra, uint16_t packet_id)
+{
+	pub_extra->packet_id = packet_id;
+}
 
 static uint64_t
 power(uint64_t x, uint32_t n)
@@ -98,7 +141,7 @@ get_var_integer(const uint8_t *buf, uint32_t *pos)
 
 	do {
 		temp   = *(buf + p);
-		result = result + (uint32_t)(temp & 0x7f) * (power(0x80, i));
+		result = result + (uint32_t) (temp & 0x7f) * (power(0x80, i));
 		p++;
 	} while ((temp & 0x80) > 0 && i++ < 4);
 	*pos = p;
@@ -270,7 +313,7 @@ get_variable_binary(uint8_t **dest, const uint8_t *src)
 	return len;
 }
 
-//set header & remaining length of msg
+// set header & remaining length of msg
 int
 fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
 {
@@ -286,11 +329,12 @@ fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
 	return rv;
 }
 /**
- * @brief copy packet (original msg suppose have full MQTT bytes in payload) to dst msg (new empty one)
- * 
- * @param packet 
+ * @brief copy packet (original msg suppose have full MQTT bytes in payload) to
+ * dst msg (new empty one)
+ *
+ * @param packet
  * @param dst assume it as an empty message
- * @return int 
+ * @return int
  */
 int
 ws_fixed_header_adaptor(uint8_t *packet, nng_msg *dst)
@@ -852,17 +896,17 @@ nano_msg_notify_connect(conn_param *cparam, uint8_t code)
 }
 
 /**
- * @brief 
- * 
+ * @brief
+ *
  * @param msg SUB/UNSUB packet
  * @param root root node of nano_pipe_db linked table
  * @param cparam connection param
- * @return nano_pipe_db* pointer of newly added pipe_db 
+ * @return nano_pipe_db* pointer of newly added pipe_db
  */
 nano_pipe_db *
 nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 {
-	char *topic;
+	char *        topic;
 	nano_pipe_db *db = NULL, *tmp = NULL, *iter = NULL;
 	uint8_t       len_of_topic = 0, *payload_ptr;
 	uint32_t      len, len_of_varint = 0;
@@ -886,7 +930,7 @@ nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 		payload_ptr = nni_msg_body(msg) + 2;
 	}
 	nni_msg_set_payload_ptr(msg, payload_ptr);
-	remain      = nni_msg_remaining_len(msg) - 2;
+	remain = nni_msg_remaining_len(msg) - 2;
 
 	while (bpos < remain) {
 		NNI_GET16(payload_ptr + bpos, len_of_topic);
@@ -898,7 +942,7 @@ nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 			iter = root;
 			while (iter) {
 				if (strlen(iter->topic) == len_of_topic &&
-				    !strncmp((char *)(payload_ptr + bpos + 2),
+				    !strncmp((char *) (payload_ptr + bpos + 2),
 				        iter->topic, len_of_topic)) {
 					repeat = true;
 					bpos += (2 + len_of_topic);

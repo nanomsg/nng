@@ -94,7 +94,7 @@ wstran_pipe_recv_cb(void *arg)
 	ws_pipe *p   = arg;
 	uint32_t len = 0, rv, pos = 1;
 	uint8_t *ptr;
-	nni_msg *smsg, *msg;
+	nni_msg *smsg = NULL, *msg = NULL;
 	nni_aio *raio = p->rxaio;
 	nni_aio *uaio = NULL;
 	nni_iov  iov;
@@ -111,7 +111,7 @@ wstran_pipe_recv_cb(void *arg)
 	msg = nni_aio_get_msg(raio);
 	ptr = nni_msg_body(msg);
 	p->gotrxhead += nni_msg_len(msg);
-	debug_msg("#### wstran_pipe_recv_cb got %d msg: %p %x %d",
+	debug_msg("#### wstran_pipe_recv_cb got %ld msg: %p %x %ld",
 	    p->gotrxhead, ptr, *ptr, nni_msg_len(msg));
 	// first we collect complete Fixheader
 	if (p->tmp_msg == NULL && p->gotrxhead > 0) {
