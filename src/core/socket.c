@@ -608,7 +608,7 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 	return (rv);
 }
 
-int
+void
 nni_sock_sys_init(void)
 {
 	NNI_LIST_INIT(&sock_list, nni_sock, s_node);
@@ -617,7 +617,6 @@ nni_sock_sys_init(void)
 	nni_id_map_init(&sock_ids, 1, 0x7fffffff, false);
 	nni_id_map_init(&ctx_ids, 1, 0x7fffffff, false);
 	inited = true;
-	return (0);
 }
 
 void

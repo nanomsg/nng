@@ -24,13 +24,11 @@ static void listener_timer_cb(void *);
 static nni_id_map listeners;
 static nni_mtx    listeners_lk;
 
-int
+void
 nni_listener_sys_init(void)
 {
 	nni_id_map_init(&listeners, 1, 0x7fffffff, false);
 	nni_mtx_init(&listeners_lk);
-
-	return (0);
 }
 
 void

@@ -23,13 +23,11 @@ static void dialer_timer_cb(void *);
 static nni_id_map dialers;
 static nni_mtx    dialers_lk;
 
-int
+void
 nni_dialer_sys_init(void)
 {
 	nni_id_map_init(&dialers, 1, 0x7fffffff, false);
 	nni_mtx_init(&dialers_lk);
-
-	return (0);
 }
 
 void

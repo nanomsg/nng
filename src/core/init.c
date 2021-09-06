@@ -42,16 +42,19 @@ nni_init_helper(void)
 	    ((rv = nni_reap_sys_init()) != 0) ||
 	    ((rv = nni_timer_sys_init()) != 0) ||
 	    ((rv = nni_aio_sys_init()) != 0) ||
-	    ((rv = nni_sock_sys_init()) != 0) ||
-	    ((rv = nni_listener_sys_init()) != 0) ||
-	    ((rv = nni_dialer_sys_init()) != 0) ||
-	    ((rv = nni_pipe_sys_init()) != 0) ||
-	    ((rv = nni_tls_sys_init()) != 0) ||
-	    ((rv = nni_sp_tran_sys_init()) != 0)) {
+	    ((rv = nni_tls_sys_init()) != 0)) {
 		nni_fini();
+		return (rv);
 	}
 
-	return (rv);
+	// following never fail
+	nni_sock_sys_init();
+	nni_listener_sys_init();
+	nni_dialer_sys_init();
+	nni_pipe_sys_init();
+	nni_sp_tran_sys_init();
+
+	return (0);
 }
 
 int
