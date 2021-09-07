@@ -294,14 +294,10 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	pub_extra *pub_extra_info =
 	    (pub_extra *) nni_aio_get_prov_extra(aio, 0);
 
-	debug_msg("pub_extra_info: %p", pub_extra_info);
-
 	if (!p->busy) {
 		p->busy = true;
-		if (pub_extra_info) {
-			nni_aio_set_prov_extra(
-			    &p->aio_send, 0, pub_extra_info);
-		}
+		nni_aio_set_prov_extra(&p->aio_send, 0, pub_extra_info);
+
 		nni_aio_set_msg(&p->aio_send, msg);
 		nni_pipe_send(p->pipe, &p->aio_send);
 		nni_mtx_unlock(&p->lk);
@@ -330,15 +326,11 @@ nano_ctx_send(void *arg, nni_aio *aio)
 				nni_msg_free(old_msg);
 				pub_extra_free(old);
 			}
-		} else {
-			debug_msg("nano_lmq_resize error: %d", rv);
 		}
 	}
 
 	pub_extra_set_msg(pub_extra_info, msg);
-	rv = nano_lmq_putq(&p->rlmq, pub_extra_info);
-
-	debug_msg("nano_lmq_putq %p, %d", pub_extra_info, rv);
+	nano_lmq_putq(&p->rlmq, pub_extra_info);
 
 	nni_mtx_unlock(&p->lk);
 	nni_aio_set_msg(aio, NULL);
