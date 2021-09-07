@@ -19,6 +19,7 @@
 struct pub_extra {
 	uint8_t  qos;
 	uint16_t packet_id;
+	void *   msg;
 };
 
 static uint8_t  get_value_size(uint64_t value);
@@ -44,6 +45,12 @@ pub_extra_get_qos(pub_extra *pub_extra)
 	return pub_extra->qos;
 }
 
+void
+pub_extra_set_qos(pub_extra *pub_extra, uint8_t qos)
+{
+	pub_extra->qos = qos;
+}
+
 uint16_t
 pub_extra_get_packet_id(pub_extra *pub_extra)
 {
@@ -51,15 +58,21 @@ pub_extra_get_packet_id(pub_extra *pub_extra)
 }
 
 void
-pub_extra_set_qos(pub_extra *pub_extra, uint8_t qos)
-{
-	pub_extra->qos = qos;
-}
-
-void
 pub_extra_set_packet_id(pub_extra *pub_extra, uint16_t packet_id)
 {
 	pub_extra->packet_id = packet_id;
+}
+
+void *
+pub_extra_get_msg(pub_extra *pub_extra)
+{
+	return pub_extra->msg;
+}
+
+void
+pub_extra_set_msg(pub_extra *pub_extra, void *msg)
+{
+	pub_extra->msg = msg;
 }
 
 static uint64_t
@@ -752,7 +765,7 @@ DJBHashn(char *str, uint16_t len)
 		hash = ((hash << 5) + hash) + (*str++); /* times 33 */
 		i++;
 	}
-	hash &= ~(1 << 31); /* strip the highest bit */
+	hash &= ~(1U << 31); /* strip the highest bit */
 	return hash;
 }
 

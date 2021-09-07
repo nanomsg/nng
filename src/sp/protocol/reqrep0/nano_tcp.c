@@ -15,6 +15,7 @@
 
 #include "core/nng_impl.h"
 #include "core/sockimpl.h"
+#include "nano_lmq.h"
 #include "nng/nng.h"
 #include "nng/protocol/mqtt/mqtt.h"
 #include "nng/protocol/mqtt/mqtt_parser.h"
@@ -89,7 +90,7 @@ struct nano_pipe {
 	uint8_t          ka_refresh;
 	nano_conn_param *conn_param;
 	nano_pipe_db *   pipedb_root;
-	nni_lmq          rlmq;
+	nano_lmq         rlmq;
 };
 
 struct nano_clean_session {
@@ -287,11 +288,16 @@ nano_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_unlock(&s->lk);
+
 	nni_mtx_lock(&p->lk);
+
+	pub_extra *pub_extra_info =
+	    (pub_extra *) nni_aio_get_prov_extra(aio, 0);
+
+	debug_msg("pub_extra_info: %p", pub_extra_info);
+
 	if (!p->busy) {
 		p->busy = true;
-		pub_extra *pub_extra_info =
-		    (pub_extra *) nni_aio_get_prov_extra(aio, 0);
 		if (pub_extra_info) {
 			nni_aio_set_prov_extra(
 			    &p->aio_send, 0, pub_extra_info);
@@ -309,18 +315,30 @@ nano_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	debug_msg("WARNING: pipe %d occupied! resending in cb!", pipe);
-	if (nni_lmq_full(&p->rlmq)) {
+	if (nano_lmq_full(&p->rlmq)) {
 		// Make space for the new message. TODO add max limit of msgq
 		// len in conf
-		if ((rv = nni_lmq_resize(
-		         &p->rlmq, nni_lmq_cap(&p->rlmq) * 2)) != 0) {
-			debug_syslog("warning msg dropped!");
-			nni_msg *old;
-			(void) nni_lmq_getq(&p->rlmq, &old);
-			nni_msg_free(old);
+		if ((rv = nano_lmq_resize_with_cb(&p->rlmq,
+		         nano_lmq_cap(&p->rlmq) * 2,
+		         (nano_lmq_free) nni_msg_free,
+		         (nano_lmq_get_sub_msg) pub_extra_get_msg)) != 0) {
+			debug_msg("warning msg dropped!");
+			pub_extra *old;
+			if (nano_lmq_getq(&p->rlmq, (void **) &old) == 0) {
+				nni_msg *old_msg =
+				    (nni_msg *) pub_extra_get_msg(old);
+				nni_msg_free(old_msg);
+				pub_extra_free(old);
+			}
+		} else {
+			debug_msg("nano_lmq_resize error: %d", rv);
 		}
 	}
-	nni_lmq_putq(&p->rlmq, msg);
+
+	pub_extra_set_msg(pub_extra_info, msg);
+	rv = nano_lmq_putq(&p->rlmq, pub_extra_info);
+
+	debug_msg("nano_lmq_putq %p, %d", pub_extra_info, rv);
 
 	nni_mtx_unlock(&p->lk);
 	nni_aio_set_msg(aio, NULL);
@@ -753,7 +771,9 @@ nano_pipe_fini(void *arg)
 	nni_aio_fini(&p->aio_send);
 	nni_aio_fini(&p->aio_recv);
 	nni_aio_fini(&p->aio_timer);
-	nni_lmq_fini(&p->rlmq);
+
+	nano_lmq_fini_with_cb(&p->rlmq, (nano_lmq_free) nni_msg_free,
+	    (nano_lmq_get_sub_msg) pub_extra_get_msg);
 }
 
 static int
@@ -765,7 +785,7 @@ nano_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	debug_msg("##########nano_pipe_init###############");
 
 	nni_mtx_init(&p->lk);
-	nni_lmq_init(&p->rlmq, sock->conf->msq_len);
+	nano_lmq_init(&p->rlmq, sock->conf->msq_len);
 	nni_aio_init(&p->aio_send, nano_pipe_send_cb, p);
 	// TODO move keepalive monitor to transport layer?
 	nni_aio_init(&p->aio_timer, nano_pipe_timer_cb, p);
@@ -847,7 +867,9 @@ close_pipe(nano_pipe *p)
 	if (nni_list_active(&s->recvpipes, p)) {
 		nni_list_remove(&s->recvpipes, p);
 	}
-	nni_lmq_flush(&p->rlmq);
+	// nni_lmq_flush(&p->rlmq);
+	nano_lmq_flush_with_cb(&p->rlmq, (nano_lmq_free) nni_msg_free,
+	    (nano_lmq_get_sub_msg) pub_extra_get_msg);
 
 	// TODO delete
 	while ((ctx = nni_list_first(&p->sendq)) != NULL) {
@@ -906,9 +928,7 @@ static void
 nano_pipe_send_cb(void *arg)
 {
 	nano_pipe *p = arg;
-	nni_msg *  msg;
-	// uint32_t   index = 0;
-	// uint32_t * pipes;
+	pub_extra *extra;
 
 	debug_msg(
 	    "################ nano_pipe_send_cb %d ################", p->id);
@@ -922,13 +942,20 @@ nano_pipe_send_cb(void *arg)
 	nni_mtx_lock(&p->lk);
 
 	nni_aio_set_packetid(&p->aio_send, 0);
-	if (nni_lmq_getq(&p->rlmq, &msg) == 0) {
+	int rv = nano_lmq_getq(&p->rlmq, (void **) &extra);
+	if (rv == 0) {
+		nni_msg *msg = (nni_msg *) pub_extra_get_msg(extra);
+		debug_msg("get nng_msg from pub_extra: %p", msg);
+		nni_aio_set_prov_extra(&p->aio_send, 0, extra);
 		nni_aio_set_msg(&p->aio_send, msg);
+
 		debug_msg("rlmq msg resending! %ld msgs left\n",
-		    nni_lmq_len(&p->rlmq));
+		    nano_lmq_len(&p->rlmq));
 		nni_pipe_send(p->pipe, &p->aio_send);
 		nni_mtx_unlock(&p->lk);
 		return;
+	} else {
+		debug_msg("nano_lmq_getq error: %d", rv);
 	}
 
 	p->busy = false;
@@ -1016,8 +1043,6 @@ nano_pipe_recv_cb(void *arg)
 	nano_sock *      s      = p->rep;
 	nano_conn_param *cparam = NULL;
 	uint32_t         len, len_of_varint = 0;
-	uint8_t          qos_pac = 0, buf[4];
-	size_t           tlen;
 	nano_ctx *       ctx;
 	nni_msg *        msg, *qos_msg = NULL;
 	nni_aio *        aio;

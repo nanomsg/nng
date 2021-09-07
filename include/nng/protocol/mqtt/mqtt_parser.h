@@ -31,6 +31,8 @@ extern void       pub_extra_free(pub_extra *pub_extra);
 extern uint8_t    pub_extra_get_qos(pub_extra *pub_extra);
 extern uint16_t   pub_extra_get_packet_id(pub_extra *pub_extra);
 extern void       pub_extra_set_qos(pub_extra *pub_extra, uint8_t qos);
+extern void *     pub_extra_get_msg(pub_extra *pub_extra);
+extern void       pub_extra_set_msg(pub_extra *pub_extra, void *msg);
 extern void pub_extra_set_packet_id(pub_extra *pub_extra, uint16_t packet_id);
 
 // MQTT CONNECT
