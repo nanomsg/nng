@@ -400,7 +400,6 @@ nano_pipe_fini(void *arg)
 	nano_pipe *         p = arg;
 	nng_msg *           msg;
 	uint32_t            key;
-	nano_clean_session *temp_cs;
 	conn_param *        cp = p->conn_param;
 	nano_sock *         s  = p->rep;
 
