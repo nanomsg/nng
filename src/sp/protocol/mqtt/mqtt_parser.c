@@ -840,7 +840,7 @@ nano_msg_set_dup(nng_msg *msg)
 // alloc a publish msg according to the need
 nng_msg *
 nano_msg_composer(
-    uint8_t retain, uint8_t qos, mqtt_string *payload, mqtt_string *topic)
+    nng_msg ** msgp, uint8_t retain, uint8_t qos, mqtt_string *payload, mqtt_string *topic)
 {
 	size_t   rlen;
 	uint8_t *ptr, buf[5] = { '\0' };
@@ -848,8 +848,15 @@ nano_msg_composer(
 	nni_msg *msg;
 
 	len = payload->len + topic->len + 2;
+
+	msg = *msgp;
+	if (msg == NULL) {
+		nni_msg_alloc(&msg, len + (qos>0?2:0));
+	} else {
+		nni_msg_realloc(msg, len + (qos>0?2:0));
+	}
+
 	if (qos > 0) {
-		nni_msg_alloc(&msg, len + 2);
 		rlen = put_var_integer(buf + 1, len + 2);
 		nni_msg_set_remaining_len(msg, len + 2);
 		if (qos == 1) {
@@ -861,7 +868,6 @@ nano_msg_composer(
 			return NULL;
 		}
 	} else {
-		nni_msg_alloc(&msg, len);
 		rlen = put_var_integer(buf + 1, len);
 		nni_msg_set_remaining_len(msg, len);
 		buf[0] = CMD_PUBLISH;
@@ -925,7 +931,7 @@ verify_connect(conn_param *cparam, conf *conf)
 nng_msg *
 nano_msg_notify_disconnect(conn_param *cparam, uint8_t code)
 {
-	nni_msg *   msg;
+	nni_msg *   msg = NULL;
 	mqtt_string string, topic;
 	char        buff[256];
 	snprintf(buff, 256, DISCONNECT_MSG, (char *) cparam->username.body,
@@ -934,14 +940,14 @@ nano_msg_notify_disconnect(conn_param *cparam, uint8_t code)
 	string.len  = strlen(string.body);
 	topic.body  = DISCONNECT_TOPIC;
 	topic.len   = strlen(DISCONNECT_TOPIC);
-	msg         = nano_msg_composer(0, 0, &string, &topic);
+	msg         = nano_msg_composer(&msg, 0, 0, &string, &topic);
 	return msg;
 }
 
 nng_msg *
 nano_msg_notify_connect(conn_param *cparam, uint8_t code)
 {
-	nni_msg *   msg;
+	nni_msg *   msg = NULL;
 	mqtt_string string, topic;
 	char        buff[256];
 	snprintf(buff, 256, CONNECT_MSG, cparam->username.body, nni_clock(),
@@ -951,7 +957,7 @@ nano_msg_notify_connect(conn_param *cparam, uint8_t code)
 	string.len  = strlen(string.body);
 	topic.body  = CONNECT_TOPIC;
 	topic.len   = strlen(CONNECT_TOPIC);
-	msg         = nano_msg_composer(0, 0, &string, &topic);
+	msg         = nano_msg_composer(&msg, 0, 0, &string, &topic);
 	return msg;
 }
 

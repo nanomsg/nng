@@ -399,9 +399,6 @@ nano_pipe_fini(void *arg)
 {
 	nano_pipe *         p = arg;
 	nng_msg *           msg;
-	uint32_t            key;
-	conn_param *        cp = p->conn_param;
-	nano_sock *         s  = p->rep;
 
 	debug_msg("########## nano_pipe_fini ###############");
 	if ((msg = nni_aio_get_msg(&p->aio_recv)) != NULL) {
