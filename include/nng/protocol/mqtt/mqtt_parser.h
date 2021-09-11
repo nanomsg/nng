@@ -37,10 +37,10 @@ extern void       pub_extra_set_packet_id(pub_extra *, uint16_t);
 
 // MQTT CONNECT
 int32_t conn_handler(uint8_t *packet, conn_param *conn_param);
-int     new_conn_param(conn_param **cparam);
-void    init_conn_param(conn_param *cparam);
-void    destroy_conn_param(conn_param *cparam);
-void    deep_copy_conn_param(conn_param *new_cp, conn_param *cp);
+int     conn_param_alloc(conn_param **cparam);
+void    conn_param_free(conn_param *cparam);
+void    conn_param_clone(conn_param *cparam);
+// void    deep_copy_conn_param(conn_param *new_cp, conn_param *cp);
 int     fixed_header_adaptor(uint8_t *packet, nng_msg *dst);
 int     ws_fixed_header_adaptor(uint8_t *packet, nng_msg *dst);
 

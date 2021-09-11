@@ -400,7 +400,6 @@ sizeof(struct conn_param));
 int32_t
 conn_handler(uint8_t *packet, conn_param *cparam)
 {
-
 	uint32_t len, tmp, pos = 0, len_of_properties = 0, len_of_var = 0;
 	int      len_of_str = 0;
 	int32_t  rv         = 0;
@@ -413,7 +412,6 @@ conn_handler(uint8_t *packet, conn_param *cparam)
 		pos++;
 	}
 
-	init_conn_param(cparam);
 	// remaining length
 	len = (uint32_t) get_var_integer(packet + pos, &len_of_var);
 	pos += len_of_var;
@@ -683,47 +681,8 @@ conn_handler(uint8_t *packet, conn_param *cparam)
 	return rv;
 }
 
-int
-new_conn_param(conn_param **cparamp)
-{
-	conn_param * new_cp;
-	if ((new_cp = nng_alloc(sizeof(conn_param))) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	*cparamp = new_cp;
-	return 0;
-}
-
-void
-destroy_conn_param(conn_param *cparam)
-{
-	if (cparam == NULL) {
-		return;
-	}
-	debug_msg("destroy conn param");
-	nng_free(cparam->pro_name.body, cparam->pro_name.len);
-	nng_free(cparam->clientid.body, cparam->clientid.len);
-	nng_free(cparam->will_topic.body, cparam->will_topic.len);
-	nng_free(cparam->will_msg.body, cparam->will_msg.len);
-	nng_free(cparam->username.body, cparam->username.len);
-	nng_free(cparam->password.body, cparam->password.len);
-	nng_free(cparam->auth_method.body, cparam->auth_method.len);
-	nng_free(cparam->auth_data.body, cparam->auth_data.len);
-	nng_free(cparam->user_property.key, cparam->user_property.len_key);
-	nng_free(cparam->user_property.val, cparam->user_property.len_val);
-	nng_free(cparam->content_type.body, cparam->content_type.len);
-	nng_free(cparam->resp_topic.body, cparam->resp_topic.len);
-	nng_free(cparam->corr_data.body, cparam->corr_data.len);
-	nng_free(cparam->payload_user_property.key,
-	    cparam->payload_user_property.len_key);
-	nng_free(cparam->payload_user_property.val,
-	    cparam->payload_user_property.len_val);
-	nng_free(cparam, sizeof(struct conn_param));
-	cparam = NULL;
-}
-
-void
-init_conn_param(conn_param *cparam)
+static void
+conn_param_init(conn_param *cparam)
 {
 	cparam->pro_name.len                  = 0;
 	cparam->pro_name.body                 = NULL;
@@ -757,6 +716,61 @@ init_conn_param(conn_param *cparam)
 	cparam->payload_user_property.len_val = 0;
 }
 
+int
+conn_param_alloc(conn_param **cparamp)
+{
+	conn_param * new_cp;
+	if ((new_cp = nng_alloc(sizeof(conn_param))) == NULL) {
+		return (NNG_ENOMEM);
+	}
+	nni_atomic_init(&new_cp->refcnt);
+	nni_atomic_set(&new_cp->refcnt, 1);
+	conn_param_init(new_cp);
+	*cparamp = new_cp;
+	return 0;
+}
+
+void
+conn_param_free(conn_param *cparam)
+{
+	if (cparam == NULL) {
+		return;
+	}
+	if (nni_atomic_dec_nv(&cparam->refcnt) != 0) {
+		return;
+	}
+	debug_msg("destroy conn param");
+	nng_free(cparam->pro_name.body, cparam->pro_name.len);
+	nng_free(cparam->clientid.body, cparam->clientid.len);
+	nng_free(cparam->will_topic.body, cparam->will_topic.len);
+	nng_free(cparam->will_msg.body, cparam->will_msg.len);
+	nng_free(cparam->username.body, cparam->username.len);
+	nng_free(cparam->password.body, cparam->password.len);
+	nng_free(cparam->auth_method.body, cparam->auth_method.len);
+	nng_free(cparam->auth_data.body, cparam->auth_data.len);
+	nng_free(cparam->user_property.key, cparam->user_property.len_key);
+	nng_free(cparam->user_property.val, cparam->user_property.len_val);
+	nng_free(cparam->content_type.body, cparam->content_type.len);
+	nng_free(cparam->resp_topic.body, cparam->resp_topic.len);
+	nng_free(cparam->corr_data.body, cparam->corr_data.len);
+	nng_free(cparam->payload_user_property.key,
+	    cparam->payload_user_property.len_key);
+	nng_free(cparam->payload_user_property.val,
+	    cparam->payload_user_property.len_val);
+	nng_free(cparam, sizeof(struct conn_param));
+	cparam = NULL;
+}
+
+void
+conn_param_clone(conn_param * cparam)
+{
+	if (cparam == NULL) {
+		return;
+	}
+	nni_atomic_inc(&cparam->refcnt);
+}
+
+/*
 void
 deep_copy_conn_param(conn_param *new_cp, conn_param *cp)
 {
@@ -791,6 +805,7 @@ deep_copy_conn_param(conn_param *new_cp, conn_param *cp)
 	UPDATE_FIELD_MQTT_STRING_PAIR(
 	    payload_user_property, key, val, new_cp, cp);
 }
+*/
 
 uint32_t
 DJBHash(char *str)

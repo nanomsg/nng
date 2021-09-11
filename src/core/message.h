@@ -100,6 +100,7 @@ struct pipe_db {
 
 // TODO use ZALLOC later
 struct conn_param {
+	nni_atomic_int     refcnt;
 	uint8_t            pro_ver;
 	uint8_t            con_flag;
 	uint16_t           keepalive_mqtt;
