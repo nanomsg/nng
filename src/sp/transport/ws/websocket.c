@@ -97,7 +97,6 @@ wstran_pipe_recv_cb(void *arg)
 	nni_msg *smsg = NULL, *msg = NULL;
 	nni_aio *raio = p->rxaio;
 	nni_aio *uaio = NULL;
-	nni_iov  iov;
 
 	nni_mtx_lock(&p->mtx);
 	// only sets uaio at first time
