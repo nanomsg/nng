@@ -697,22 +697,8 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		p->qlength = 0;
 		NNI_GET16(body, tlen);
 
-		pub_extra *pub_extra_info =
-		    (pub_extra *) nni_aio_get_prov_extra(aio, 0);
-
-		if (pub_extra_info == NULL) {
-			goto send;
-		}
-
-		debug_msg("get pub_extra :%p", pub_extra_info);
-		debug_msg("get pub_extra, qos: %d, packet id: %d",
-		    pub_extra_get_qos(pub_extra_info),
-		    pub_extra_get_packet_id(pub_extra_info));
-
-		uint8_t qos = pub_extra_get_qos(pub_extra_info);
-
-		pub_extra_free(pub_extra_info);
-
+		// uint8_t qos = nni_aio_get_prov_extra(aio, 0);
+		uint8_t qos = 0;
 		qos_pac = nni_msg_get_pub_qos(msg);
 		if (qos_pac == 0) {
 			// save time & space for QoS 0 publish
@@ -722,6 +708,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		debug_msg("qos_pac %d sub %d\n", qos_pac, qos);
 		memcpy(fixheader, header, nni_msg_header_len(msg));
 
+        // use qos from aio directly. no need such redundant logic here
 		if (qos_pac > qos) {
 			if (qos == 1) {
 				// set qos to 1
