@@ -15,7 +15,6 @@
 
 #include "core/nng_impl.h"
 #include "core/sockimpl.h"
-#include "nano_lmq.h"
 #include "nng/nng.h"
 #include "nng/protocol/mqtt/mqtt.h"
 #include "nng/protocol/mqtt/mqtt_parser.h"
@@ -89,7 +88,7 @@ struct nano_pipe {
 	uint8_t          ka_refresh;
 	nano_conn_param *conn_param;
 	nano_pipe_db *   pipedb_root;
-	nano_lmq         rlmq;
+	nni_lmq          rlmq;
 };
 
 static void
@@ -261,9 +260,7 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	}
 
 	nni_mtx_lock(&s->lk);
-	debug_msg("*************************** working with pipe id : %d "
-	          "ctx***************************",
-	    pipe);
+	debug_msg(" ******** working with pipe id : %d ctx ********", pipe);
 	if ((p = nni_id_get(&s->pipes, pipe)) == NULL) {
 		// Pipe is gone.  Make this look like a good send to avoid
 		// disrupting the state machine.  We don't care if the peer
@@ -277,16 +274,10 @@ nano_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	nni_mtx_unlock(&s->lk);
-
 	nni_mtx_lock(&p->lk);
-
-	pub_extra *pub_extra_info =
-	    (pub_extra *) nni_aio_get_prov_extra(aio, 0);
 
 	if (!p->busy) {
 		p->busy = true;
-		nni_aio_set_prov_extra(&p->aio_send, 0, pub_extra_info);
-
 		nni_aio_set_msg(&p->aio_send, msg);
 		nni_pipe_send(p->pipe, &p->aio_send);
 		nni_mtx_unlock(&p->lk);
@@ -300,26 +291,19 @@ nano_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 	debug_msg("WARNING: pipe %d occupied! resending in cb!", pipe);
-	if (nano_lmq_full(&p->rlmq)) {
+	if (nni_lmq_full(&p->rlmq)) {
 		// Make space for the new message. TODO add max limit of msgq
 		// len in conf
-		if ((rv = nano_lmq_resize_with_cb(&p->rlmq,
-		         nano_lmq_cap(&p->rlmq) * 2,
-		         (nano_lmq_free) nni_msg_free,
-		         (nano_lmq_get_sub_msg) pub_extra_get_msg)) != 0) {
-			debug_msg("warning msg dropped!");
-			pub_extra *old;
-			if (nano_lmq_getq(&p->rlmq, (void **) &old) == 0) {
-				nni_msg *old_msg =
-				    (nni_msg *) pub_extra_get_msg(old);
-				nni_msg_free(old_msg);
-				pub_extra_free(old);
-			}
+		if ((rv = nni_lmq_resize(
+		         &p->rlmq, nni_lmq_cap(&p->rlmq) * 2)) != 0) {
+			debug_syslog("warning msg dropped!");
+			nni_msg *old;
+			(void) nni_lmq_getq(&p->rlmq, &old);
+			nni_msg_free(old);
 		}
 	}
 
-	pub_extra_set_msg(pub_extra_info, msg);
-	nano_lmq_putq(&p->rlmq, pub_extra_info);
+	nni_lmq_putq(&p->rlmq, msg);
 
 	nni_mtx_unlock(&p->lk);
 	nni_aio_set_msg(aio, NULL);
@@ -424,9 +408,7 @@ nano_pipe_fini(void *arg)
 	nni_aio_fini(&p->aio_send);
 	nni_aio_fini(&p->aio_recv);
 	nni_aio_fini(&p->aio_timer);
-
-	nano_lmq_fini_with_cb(&p->rlmq, (nano_lmq_free) nni_msg_free,
-	    (nano_lmq_get_sub_msg) pub_extra_get_msg);
+    nni_lmq_fini(&p->rlmq);
 }
 
 static int
@@ -438,7 +420,7 @@ nano_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	debug_msg("##########nano_pipe_init###############");
 
 	nni_mtx_init(&p->lk);
-	nano_lmq_init(&p->rlmq, sock->conf->msq_len);
+	nni_lmq_init(&p->rlmq, sock->conf->msq_len);
 	nni_aio_init(&p->aio_send, nano_pipe_send_cb, p);
 	// TODO move keepalive monitor to transport layer?
 	nni_aio_init(&p->aio_timer, nano_pipe_timer_cb, p);
@@ -519,9 +501,7 @@ close_pipe(nano_pipe *p)
 	if (nni_list_active(&s->recvpipes, p)) {
 		nni_list_remove(&s->recvpipes, p);
 	}
-	// nni_lmq_flush(&p->rlmq);
-	nano_lmq_flush_with_cb(&p->rlmq, (nano_lmq_free) nni_msg_free,
-	    (nano_lmq_get_sub_msg) pub_extra_get_msg);
+	nni_lmq_flush(&p->rlmq);
 
 	// TODO delete
 	while ((ctx = nni_list_first(&p->sendq)) != NULL) {
@@ -587,7 +567,7 @@ static void
 nano_pipe_send_cb(void *arg)
 {
 	nano_pipe *p = arg;
-	pub_extra *extra;
+	nni_msg *  msg;
 
 	debug_msg(
 	    "################ nano_pipe_send_cb %d ################", p->id);
@@ -601,20 +581,15 @@ nano_pipe_send_cb(void *arg)
 	nni_mtx_lock(&p->lk);
 
 	nni_aio_set_packetid(&p->aio_send, 0);
-	int rv = nano_lmq_getq(&p->rlmq, (void **) &extra);
-	if (rv == 0) {
-		nni_msg *msg = (nni_msg *) pub_extra_get_msg(extra);
-		debug_msg("get nng_msg from pub_extra: %p", msg);
-		nni_aio_set_prov_extra(&p->aio_send, 0, extra);
+    if (nni_lmq_getq(&p->rlmq, &msg) == 0) {
+		//TODO get qos from aio_extra
 		nni_aio_set_msg(&p->aio_send, msg);
 
 		debug_msg("rlmq msg resending! %ld msgs left\n",
-		    nano_lmq_len(&p->rlmq));
+		    nni_lmq_len(&p->rlmq));
 		nni_pipe_send(p->pipe, &p->aio_send);
 		nni_mtx_unlock(&p->lk);
 		return;
-	} else {
-		debug_msg("nano_lmq_getq error: %d", rv);
 	}
 
 	p->busy = false;
