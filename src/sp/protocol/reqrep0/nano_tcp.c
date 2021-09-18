@@ -22,6 +22,17 @@
 
 #include <sub_handler.h>
 
+// strip off and return the QoS bits
+#define NANO_NNI_LMQ_GET_QOS_BITS(msg) ((size_t)(msg) &0x03)
+
+// strip off and return the msg pointer
+#define NANO_NNI_LMQ_GET_MSG_POINTER(msg) \
+	((nng_msg *) ((size_t)(msg) & (~0x03)))
+
+// packed QoS bits to the least two significant bits of msg pointer
+#define NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos) \
+	((nng_msg *) ((size_t)(msg) | ((qos) &0x03)))
+
 // TODO rewrite as nano_mq protocol with RPC support
 
 typedef struct nano_pipe          nano_pipe;
@@ -90,6 +101,93 @@ struct nano_pipe {
 	nano_pipe_db *   pipedb_root;
 	nni_lmq          rlmq;
 };
+
+static inline int
+nano_nni_lmq_putq(nni_lmq *lmq, nng_msg *msg, uint8_t qos)
+{
+	msg = NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos);
+	return nni_lmq_putq(lmq, msg);
+}
+
+static inline int
+nano_nni_lmq_getq(nni_lmq *lmq, nng_msg **msg, uint8_t *qos)
+{
+	int rv = nni_lmq_getq(lmq, msg);
+	if (rv == 0) {
+		*msg = NANO_NNI_LMQ_GET_MSG_POINTER(*msg);
+		if (qos) {
+			*qos = NANO_NNI_LMQ_GET_QOS_BITS(*msg);
+		}
+	}
+	return rv;
+}
+
+void
+nano_nni_lmq_flush(nni_lmq *lmq)
+{
+	while (lmq->lmq_len > 0) {
+		nng_msg *msg = lmq->lmq_msgs[lmq->lmq_get++];
+		lmq->lmq_get &= lmq->lmq_mask;
+		lmq->lmq_len--;
+		nni_msg_free(NANO_NNI_LMQ_GET_MSG_POINTER(msg));
+	}
+}
+
+int
+nano_nni_lmq_resize(nni_lmq *lmq, size_t cap)
+{
+	nng_msg * msg;
+	nng_msg **newq;
+	size_t    alloc;
+	size_t    len;
+
+	alloc = 2;
+	while (alloc < cap) {
+		alloc *= 2;
+	}
+
+	newq = nni_alloc(sizeof(nng_msg *) * alloc);
+	if (newq == NULL) {
+		return (NNG_ENOMEM);
+	}
+
+	len = 0;
+	while ((len < cap) && (nni_lmq_getq(lmq, &msg) == 0)) {
+		newq[len++] = msg;
+	}
+
+	// Flush anything left over.
+	nano_nni_lmq_flush(lmq);
+
+	nni_free(lmq->lmq_msgs, lmq->lmq_alloc * sizeof(nng_msg *));
+	lmq->lmq_msgs  = newq;
+	lmq->lmq_cap   = cap;
+	lmq->lmq_alloc = alloc;
+	lmq->lmq_mask  = alloc - 1;
+	lmq->lmq_len   = len;
+	lmq->lmq_put   = len;
+	lmq->lmq_get   = 0;
+
+	return (0);
+}
+
+void
+nano_nni_lmq_fini(nni_lmq *lmq)
+{
+	if (lmq == NULL) {
+		return;
+	}
+
+	/* Free any orphaned messages. */
+	while (lmq->lmq_len > 0) {
+		nng_msg *msg = lmq->lmq_msgs[lmq->lmq_get++];
+		lmq->lmq_get &= lmq->lmq_mask;
+		lmq->lmq_len--;
+		nni_msg_free(NANO_NNI_LMQ_GET_MSG_POINTER(msg));
+	}
+
+	nni_free(lmq->lmq_msgs, lmq->lmq_alloc * sizeof(nng_msg *));
+}
 
 static void
 nano_pipe_timer_cb(void *arg)
@@ -294,16 +392,17 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	if (nni_lmq_full(&p->rlmq)) {
 		// Make space for the new message. TODO add max limit of msgq
 		// len in conf
-		if ((rv = nni_lmq_resize(
+		if ((rv = nano_nni_lmq_resize(
 		         &p->rlmq, nni_lmq_cap(&p->rlmq) * 2)) != 0) {
 			debug_syslog("warning msg dropped!");
 			nni_msg *old;
-			(void) nni_lmq_getq(&p->rlmq, &old);
+			(void) nano_nni_lmq_getq(&p->rlmq, &old, NULL);
 			nni_msg_free(old);
 		}
 	}
 
-	nni_lmq_putq(&p->rlmq, msg);
+	size_t qos = (size_t) nni_aio_get_prov_extra(aio, 0);
+	nano_nni_lmq_putq(&p->rlmq, msg, qos);
 
 	nni_mtx_unlock(&p->lk);
 	nni_aio_set_msg(aio, NULL);
@@ -408,7 +507,7 @@ nano_pipe_fini(void *arg)
 	nni_aio_fini(&p->aio_send);
 	nni_aio_fini(&p->aio_recv);
 	nni_aio_fini(&p->aio_timer);
-    nni_lmq_fini(&p->rlmq);
+	nano_nni_lmq_fini(&p->rlmq);
 }
 
 static int
@@ -501,7 +600,7 @@ close_pipe(nano_pipe *p)
 	if (nni_list_active(&s->recvpipes, p)) {
 		nni_list_remove(&s->recvpipes, p);
 	}
-	nni_lmq_flush(&p->rlmq);
+	nano_nni_lmq_flush(&p->rlmq);
 
 	// TODO delete
 	while ((ctx = nni_list_first(&p->sendq)) != NULL) {
@@ -568,6 +667,7 @@ nano_pipe_send_cb(void *arg)
 {
 	nano_pipe *p = arg;
 	nni_msg *  msg;
+	uint8_t    qos;
 
 	debug_msg(
 	    "################ nano_pipe_send_cb %d ################", p->id);
@@ -581,9 +681,10 @@ nano_pipe_send_cb(void *arg)
 	nni_mtx_lock(&p->lk);
 
 	nni_aio_set_packetid(&p->aio_send, 0);
-    if (nni_lmq_getq(&p->rlmq, &msg) == 0) {
-		//TODO get qos from aio_extra
-		nni_aio_set_msg(&p->aio_send, msg);
+	if (nni_lmq_getq(&p->rlmq, &msg) == 0) {
+		qos = nng_aio_get_prov_extra(&p->aio_send, 0);
+		nni_aio_set_msg(
+		    &p->aio_send, NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos));
 
 		debug_msg("rlmq msg resending! %ld msgs left\n",
 		    nni_lmq_len(&p->rlmq));
