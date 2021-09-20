@@ -22,17 +22,6 @@
 
 #include <sub_handler.h>
 
-// strip off and return the QoS bits
-#define NANO_NNI_LMQ_GET_QOS_BITS(msg) ((size_t)(msg) &0x03)
-
-// strip off and return the msg pointer
-#define NANO_NNI_LMQ_GET_MSG_POINTER(msg) \
-	((nng_msg *) ((size_t)(msg) & (~0x03)))
-
-// packed QoS bits to the least two significant bits of msg pointer
-#define NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos) \
-	((nng_msg *) ((size_t)(msg) | ((qos) &0x03)))
-
 // TODO rewrite as nano_mq protocol with RPC support
 
 typedef struct nano_pipe          nano_pipe;
@@ -103,21 +92,14 @@ struct nano_pipe {
 };
 
 static inline int
-nano_nni_lmq_putq(nni_lmq *lmq, nng_msg *msg, uint8_t qos)
-{
-	msg = NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos);
-	return nni_lmq_putq(lmq, msg);
-}
-
-static inline int
 nano_nni_lmq_getq(nni_lmq *lmq, nng_msg **msg, uint8_t *qos)
 {
 	int rv = nni_lmq_getq(lmq, msg);
 	if (rv == 0) {
-		*msg = NANO_NNI_LMQ_GET_MSG_POINTER(*msg);
 		if (qos) {
 			*qos = NANO_NNI_LMQ_GET_QOS_BITS(*msg);
 		}
+		*msg = NANO_NNI_LMQ_GET_MSG_POINTER(*msg);
 	}
 	return rv;
 }
@@ -193,18 +175,19 @@ static void
 nano_pipe_timer_cb(void *arg)
 {
 	nano_pipe *p = arg;
-	nni_msg *  msg;
+	int        qos_timer = p->rep->conf->qos_timer;
+	nni_msg *  msg, *rmsg;
 	nni_time   time;
 	nni_pipe * npipe = p->pipe;
 	uint16_t   pid;
-	int        qos_timer = p->rep->conf->qos_timer;
+	uint8_t    qos;
 
 	if (nng_aio_result(&p->aio_timer) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->lk);
 	if (p->ka_refresh * (qos_timer) > p->conn_param->keepalive_mqtt) {
-		printf("Warning: close pipe & kick client due to KeepAlive "
+		nni_println("Warning: close pipe & kick client due to KeepAlive "
 		       "timeout!");
 		// TODO check keepalived timer interval
 		nni_mtx_unlock(&p->lk);
@@ -215,14 +198,15 @@ nano_pipe_timer_cb(void *arg)
 	p->ka_refresh++;
 	if (!p->busy) {
 		msg = nni_id_get_any(npipe->nano_qos_db, &pid);
-
 		if (msg != NULL) {
+			qos = NANO_NNI_LMQ_GET_QOS_BITS(msg);
+			rmsg = NANO_NNI_LMQ_GET_MSG_POINTER(msg);
 			time = nni_msg_get_timestamp(msg);
 			if ((nni_clock() - time) >=
 			    (long unsigned) qos_timer * 1250) {
 				p->busy = true;
-				nni_msg_clone(msg);
-				nano_msg_set_dup(msg);
+				nni_msg_clone(rmsg);
+				nano_msg_set_dup(rmsg);
 				nni_aio_set_packetid(&p->aio_send, pid);
 				nni_aio_set_msg(&p->aio_send, msg);
 				debug_msg("resending qos msg!\n");
@@ -335,6 +319,7 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	nni_msg *  msg;
 	int        rv;
 	uint32_t   pipe;
+	size_t     qos = 0;
 
 	msg = nni_aio_get_msg(aio);
 
@@ -373,7 +358,8 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	}
 	nni_mtx_unlock(&s->lk);
 	nni_mtx_lock(&p->lk);
-
+	qos = (size_t) nni_aio_get_prov_extra(aio, 0);
+	msg = NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos);
 	if (!p->busy) {
 		p->busy = true;
 		nni_aio_set_msg(&p->aio_send, msg);
@@ -401,8 +387,7 @@ nano_ctx_send(void *arg, nni_aio *aio)
 		}
 	}
 
-	size_t qos = (size_t) nni_aio_get_prov_extra(aio, 0);
-	nano_nni_lmq_putq(&p->rlmq, msg, qos);
+	nni_lmq_putq(&p->rlmq, msg);
 
 	nni_mtx_unlock(&p->lk);
 	nni_aio_set_msg(aio, NULL);
@@ -551,7 +536,7 @@ nano_pipe_start(void *arg)
 
 	debug_msg("##########nano_pipe_start################");
 	/*
-	// TODO check peer protocol ver
+	// TODO check peer protocol ver (websocket or tcp or quic??)
 	if (nni_pipe_peer(p->pipe) != NNG_NANO_TCP_PEER) {
 	        // Peer protocol mismatch.
 	        return (NNG_EPROTO);
@@ -669,8 +654,7 @@ nano_pipe_send_cb(void *arg)
 	nni_msg *  msg;
 	uint8_t    qos;
 
-	debug_msg(
-	    "################ nano_pipe_send_cb %d ################", p->id);
+	debug_msg("******** nano_pipe_send_cb %d ****", p->id);
 	// retry here
 	if (nni_aio_result(&p->aio_send) != 0) {
 		nni_msg_free(nni_aio_get_msg(&p->aio_send));
@@ -682,12 +666,9 @@ nano_pipe_send_cb(void *arg)
 
 	nni_aio_set_packetid(&p->aio_send, 0);
 	if (nni_lmq_getq(&p->rlmq, &msg) == 0) {
-		qos = nng_aio_get_prov_extra(&p->aio_send, 0);
-		nni_aio_set_msg(
-		    &p->aio_send, NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos));
-
-		debug_msg("rlmq msg resending! %ld msgs left\n",
-		    nni_lmq_len(&p->rlmq));
+		// msg = NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos);
+		nni_aio_set_msg(&p->aio_send, msg);
+		debug_msg("rlmq msg resending! %ld msgs left\n", nni_lmq_len(&p->rlmq));
 		nni_pipe_send(p->pipe, &p->aio_send);
 		nni_mtx_unlock(&p->lk);
 		return;
@@ -853,6 +834,7 @@ nano_pipe_recv_cb(void *arg)
 		NNI_GET16(ptr, ackid);
 		if ((qos_msg = nni_id_get(npipe->nano_qos_db, ackid)) !=
 		    NULL) {
+		        qos_msg = NANO_NNI_LMQ_GET_MSG_POINTER(qos_msg);
 			nni_msg_free(qos_msg);
 			nni_id_remove(npipe->nano_qos_db, ackid);
 		} else {

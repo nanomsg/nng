@@ -568,7 +568,6 @@ tcptran_pipe_recv_cb(void *arg)
 			nng_stream_send(p->conn, p->rsaio);
 		}
 	} else if (type == CMD_PUBREC) {
-		// TODO
 		uint8_t *tmp;
 		nng_aio_wait(p->rpaio);
 		p->txlen[0] = 0X62;
@@ -679,7 +678,10 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		nni_println("ERROR: sending NULL msg!");
 		return;
 	}
-
+	uint8_t qos = NANO_NNI_LMQ_GET_QOS_BITS(msg);
+	//qos default to 0 if the msg is not PUBLISH
+	msg = NANO_NNI_LMQ_GET_MSG_POINTER(msg);
+	nni_aio_set_msg(aio, msg);
 	// never modify msg
 	if (nni_msg_header_len(msg) > 0 &&
 	    nni_msg_cmd_type(msg) == CMD_PUBLISH) {
@@ -697,8 +699,6 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		p->qlength = 0;
 		NNI_GET16(body, tlen);
 
-		// uint8_t qos = nni_aio_get_prov_extra(aio, 0);
-		uint8_t qos = 0;
 		qos_pac = nni_msg_get_pub_qos(msg);
 		if (qos_pac == 0) {
 			// save time & space for QoS 0 publish
@@ -707,8 +707,8 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 
 		debug_msg("qos_pac %d sub %d\n", qos_pac, qos);
 		memcpy(fixheader, header, nni_msg_header_len(msg));
+		qos = qos_pac > qos ? qos : qos_pac;
 
-        // use qos from aio directly. no need such redundant logic here
 		if (qos_pac > qos) {
 			if (qos == 1) {
 				// set qos to 1
@@ -718,23 +718,19 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 			} else {
 				// set qos to 0
 				fixheader[0] = fixheader[0] & 0xF9;
-				// mdf remaining length TODO get remaining len
-				// from packet
+				uint32_t pos = 1;
 				rlen = put_var_integer(
-				    tmp, nni_msg_remaining_len(msg) - 2);
+				    tmp, get_var_integer(header, &pos) - 2);
 				memcpy(fixheader + 1, tmp, rlen);
 			}
-		} else if (qos_pac < qos) {
+		} else {
 			if (qos_pac == 1) {
 				// QoS 1 publish to Qos 2
-				// TODO
 				rlen = nni_msg_header_len(msg) - 1;
 			} else {
 				// QoS 0 publish to QoS 1/2 nothing to do
 				goto send;
 			}
-		} else {
-			rlen = nni_msg_header_len(msg) - 1;
 		}
 
 		txaio = p->txaio;
@@ -745,37 +741,35 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 
 		p->qlength += tlen + 2; // get topic length
 		// packet id
-		if (qos > 0 && qos_pac > 0) {
+		if (qos > 0) {
 			// set pid
 			nni_msg *old;
 			pid = nni_aio_get_packetid(aio);
-			if (pid == 0) { // first time deal with "pid", it's not
-				        // resending
+			if (pid == 0) {
+				//first time send this msg
 				pid = nni_pipe_inc_packetid(pipe);
 				// store msg for qos retrying
-				debug_msg(
-				    "* processing QoS pubmsg with pipe: %p *",
-				    p);
+				debug_msg("* processing QoS pubmsg with pipe: %p *", p);
 				nni_msg_clone(msg);
 				if ((old = nni_id_get(
 				         pipe->nano_qos_db, pid)) != NULL) {
 					// TODO packetid already exists.
-					// replace old with new one shouldn't
-					// get here BUG
+					// do we need to replace old with new one ?
+					// print warning to users
 					nni_println(
 					    "ERROR: packet id duplicates in "
 					    "nano_qos_db");
+					old = NANO_NNI_LMQ_GET_MSG_POINTER(old);
 					nni_msg_free(old);
 					// nni_id_remove(&pipe->nano_qos_db,
 					// pid);
 				}
-				nni_id_set(pipe->nano_qos_db, pid, msg);
+				old = NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos);
+				nni_id_set(pipe->nano_qos_db, pid, old);
 			}
 			NNI_PUT16(varheader, pid);
 			p->qlength += 2;
 		}
-		// TODO optimize the performance of QoS 1to1 2to2 by reduce the
-		// length of qlength
 		if (p->qlength > 16 + NNI_NANO_MAX_PACKET_SIZE) {
 			nng_free(p->qos_buf, 16 + NNI_NANO_MAX_PACKET_SIZE);
 			p->qos_buf = nng_alloc(sizeof(uint8_t) * (p->qlength));
@@ -842,6 +836,7 @@ tcptran_pipe_send(void *arg, nni_aio *aio)
 	}
 	nni_list_append(&p->sendq, aio);
 	if (nni_list_first(&p->sendq) == aio) {
+		//send publish msg or send others
 		tcptran_pipe_send_start(p);
 	}
 	nni_mtx_unlock(&p->mtx);
@@ -958,7 +953,6 @@ tcptran_pipe_start(tcptran_pipe *p, nng_stream *conn, tcptran_ep *ep)
 	// p->proto = ep->proto;
 
 	debug_msg("tcptran_pipe_start!");
-	// TODO abide with CONNECT header
 	p->gotrxhead  = 0;
 	p->wantrxhead = NANO_CONNECT_PACKET_LEN; // packet type 1 + remaining
 	                                         // length 1 + protocal name 7
