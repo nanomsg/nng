@@ -20,6 +20,17 @@
 
 #define CONNECT_TOPIC "$SYS/brokers/connected"
 
+// strip off and return the QoS bits
+#define NANO_NNI_LMQ_GET_QOS_BITS(msg) ((size_t)(msg) &0x03)
+
+// strip off and return the msg pointer
+#define NANO_NNI_LMQ_GET_MSG_POINTER(msg) \
+	((nng_msg *) ((size_t)(msg) & (~0x03)))
+
+// packed QoS bits to the least two significant bits of msg pointer
+#define NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos) \
+	((nng_msg *) ((size_t)(msg) | ((qos) &0x03)))
+
 // Variables & Structs
 typedef struct pub_extra pub_extra;
 
