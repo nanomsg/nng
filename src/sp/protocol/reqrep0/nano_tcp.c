@@ -87,7 +87,6 @@ struct nano_pipe {
 	uint8_t          reason_code;
 	uint8_t          ka_refresh;
 	nano_conn_param *conn_param;
-	nano_pipe_db *   pipedb_root;
 	nni_lmq          rlmq;
 };
 
@@ -485,9 +484,6 @@ nano_pipe_fini(void *arg)
 	nni_id_map_fini(nano_qos_db);
 	nng_free(nano_qos_db, sizeof(struct nni_id_map));
 
-	nano_msg_free_pipedb(p->pipedb_root);
-	p->pipedb_root = NULL;
-
 	nni_mtx_fini(&p->lk);
 	nni_aio_fini(&p->aio_send);
 	nni_aio_fini(&p->aio_recv);
@@ -772,7 +768,6 @@ nano_pipe_recv_cb(void *arg)
 	nano_ctx *       ctx;
 	nni_msg *        msg, *qos_msg = NULL;
 	nni_aio *        aio;
-	nano_pipe_db *   pipe_db;
 	nni_pipe *       npipe = p->pipe;
 	uint8_t *        ptr;
 	uint16_t         ackid;
@@ -796,22 +791,8 @@ nano_pipe_recv_cb(void *arg)
 	// TODO HOOK
 	switch (nng_msg_cmd_type(msg)) {
 	case CMD_UNSUBSCRIBE:
-		goto unsub;
 	case CMD_SUBSCRIBE:
-		// TODO only cache topic hash when it is above qos 1/2
-		nni_mtx_lock(&p->lk);
-		cparam         = p->conn_param;
-		pipe_db        = nano_msg_get_subtopic(msg, p->pipedb_root,
-                    cparam); // TODO potential memleak when sub failed
-		p->pipedb_root = pipe_db;
-		for (; pipe_db != NULL; pipe_db = pipe_db->next) {
-			nni_id_set(
-			    &npipe->nano_db, DJBHash(pipe_db->topic), pipe_db);
-		}
-		nni_mtx_unlock(&p->lk);
-
-		// __attribute__((fallthrough))
-	unsub:
+		cparam = p->conn_param;
 		if (cparam->pro_ver == PROTOCOL_VERSION_v5) {
 			len = get_var_integer(ptr + 2, &len_of_varint);
 			nni_msg_set_payload_ptr(
@@ -819,7 +800,6 @@ nano_pipe_recv_cb(void *arg)
 		} else {
 			nni_msg_set_payload_ptr(msg, ptr + 2);
 		}
-		// TODO remove topic from pipe_db
 		break;
 	case CMD_DISCONNECT:
 		nni_pipe_close(p->pipe);

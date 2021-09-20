@@ -289,6 +289,8 @@ static void
 wstran_pipe_send(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
+	nni_msg *msg;
+	uint8_t qos;
 	int      rv;
 
 	if (nni_aio_begin(aio) != 0) {
@@ -301,7 +303,12 @@ wstran_pipe_send(void *arg, nni_aio *aio)
 		return;
 	}
 	p->user_txaio = aio;
-	nni_aio_set_msg(p->txaio, nni_aio_get_msg(aio));
+	msg = nni_aio_get_msg(aio);
+	qos = NANO_NNI_LMQ_GET_QOS_BITS(msg);
+	//qos default to 0 if the msg is not PUBLISH
+	msg = NANO_NNI_LMQ_GET_MSG_POINTER(msg);
+	nni_aio_set_msg(aio, msg);
+	nni_aio_set_msg(p->txaio, msg);
 	nni_aio_set_msg(aio, NULL);
 
 	nng_stream_send(p->ws, p->txaio);
