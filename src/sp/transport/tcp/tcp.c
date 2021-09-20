@@ -656,6 +656,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 	nni_msg *msg;
 	int      niov;
 	nni_iov  iov[4];
+	uint8_t  qos;
 
 	debug_msg("########### tcptran_pipe_send_start ###########");
 	if (p->closed) {
@@ -678,7 +679,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		nni_println("ERROR: sending NULL msg!");
 		return;
 	}
-	uint8_t qos = NANO_NNI_LMQ_GET_QOS_BITS(msg);
+	qos = NANO_NNI_LMQ_GET_QOS_BITS(msg);
 	//qos default to 0 if the msg is not PUBLISH
 	msg = NANO_NNI_LMQ_GET_MSG_POINTER(msg);
 	nni_aio_set_msg(aio, msg);
