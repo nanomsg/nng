@@ -191,7 +191,7 @@ nano_pipe_timer_cb(void *arg)
 		// TODO check keepalived timer interval
 		nni_mtx_unlock(&p->lk);
 		p->reason_code = 0x8D;
-		nano_pipe_close(p);
+		nni_aio_finish_error(&p->aio_recv, NNG_ECONNREFUSED);
 		return;
 	}
 	p->ka_refresh++;

@@ -171,7 +171,6 @@ tcptran_pipe_fini(void *arg)
 	}
 
 	nng_free(p->qos_buf, 16 + NNI_NANO_MAX_PACKET_SIZE);
-	// nng_free(p->tcp_cparam, sizeof(struct conn_param));
 	nni_aio_free(p->qsaio);
 	nni_aio_free(p->rpaio);
 	nni_aio_free(p->rsaio);
@@ -399,6 +398,7 @@ tcptran_pipe_send_cb(void *arg)
 	cmd = nni_msg_cmd_type(msg);
 	if (cmd == CMD_CONNACK) {
 		header = nni_msg_header(msg);
+		// parse result code TODO verify bug
 		flag   = header[3];
 	}
 	// nni_pipe_bump_tx(p->npipe, n);
