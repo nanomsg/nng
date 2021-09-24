@@ -12,7 +12,7 @@
 #ifndef PROTOCOL_SP_TRANSPORT_H
 #define PROTOCOL_SP_TRANSPORT_H
 
-#include "core/options.h"
+#include "core/nng_impl.h"
 
 // Endpoint operations are called by the socket in a
 // protocol-independent fashion.  The socket makes individual calls,
@@ -165,6 +165,95 @@ struct nni_sp_tran {
 	// It should release any global resources.
 	void (*tran_fini)(void);
 };
+
+// nni_sp_tran_pipe is one end of a connection.
+struct nni_sp_tran_pipe {
+	nni_mtx              mtx;
+	bool                 closed;
+	nni_atomic_flag      reaped;
+	nni_sp_tran_ep *     ep;
+	nng_stream *         conn;
+	nni_pipe *           pipe;
+	uint16_t             peer;
+	uint16_t             proto;
+	size_t               rcvmax;
+	uint8_t              rxbuf[sizeof(uint64_t)];
+	uint8_t              txbuf[sizeof(uint64_t)];
+	size_t               gottxhead;
+	size_t               gotrxhead;
+	size_t               wanttxhead;
+	size_t               wantrxhead;
+	nni_list             recvq;
+	nni_list             sendq;
+	nni_aio              txaio;
+	nni_aio              rxaio;
+	nni_aio              negoaio;
+	nni_msg *            rxmsg;
+	nni_list_node        node;
+	nni_reap_node        reap;
+};
+
+// Stuff that is common to both dialers and listeners.
+struct nni_sp_tran_ep {
+	nni_mtx              mtx;
+	uint16_t             proto;
+	size_t               rcvmax;
+	bool                 fini;
+	bool                 started;
+	bool                 closed;
+	int                  authmode;
+	nng_url *            url;
+	const char *         host; // for dialers
+	nni_sockaddr         sa;
+	int                  refcnt; // active pipes
+	nni_aio *            useraio;
+	nni_aio *            connaio;
+	nni_aio *            timeaio;
+	nni_list             busypipes; // busy pipes -- ones passed to socket
+	nni_list             waitpipes; // pipes waiting to match to socket
+	nni_list             negopipes; // pipes busy negotiating
+	nni_reap_node        reap;
+	nng_stream_dialer *  dialer;
+	nng_stream_listener *listener;
+
+#ifdef NNG_ENABLE_STATS
+	nni_stat_item st_rcv_max;
+#endif
+};
+
+// Some common routines.
+
+void     nni_sp_tran_init(void);
+void     nni_sp_tran_fini(void);
+
+int      nni_sp_pipe_init(void *, nni_pipe *);
+void     nni_sp_pipe_fini(void *);
+void     nni_sp_pipe_stop(void *);
+void     nni_sp_pipe_send(void *, nni_aio *);
+void     nni_sp_pipe_recv(void *, nni_aio *);
+void     nni_sp_pipe_close(void *);
+uint16_t nni_sp_pipe_peer(void *);
+int      nni_sp_pipe_getopt(void *, const char *, void *, size_t *, nni_type);
+
+int      nni_sp_ep_dialer_init(nni_sp_tran_ep **, nng_url *, nng_url *, nni_sock *);
+int      nni_sp_ep_dialer_get(nni_sp_tran_ep *, const nni_option *, const char *, void *, size_t *, nni_type);
+int      nni_sp_ep_dialer_set(nni_sp_tran_ep *, const nni_option *, const char *, const void *, size_t, nni_type);
+int      nni_sp_ep_listener_init(nni_sp_tran_ep **, nng_url *, nni_sock *);
+int      nni_sp_ep_listener_get(nni_sp_tran_ep *, const nni_option *, const char *, void *, size_t *, nni_type);
+int      nni_sp_ep_listener_set(nni_sp_tran_ep *, const nni_option *, const char *, const void *, size_t, nni_type);
+void     nni_sp_ep_fini(void *);
+void     nni_sp_ep_close(void *);
+int      nni_sp_ep_bind(void *);
+void     nni_sp_ep_accept(void *, nni_aio *);
+void     nni_sp_ep_connect(void *, nni_aio *);
+void     nni_sp_ep_match(nni_sp_tran_ep *);
+
+int      nni_sp_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t);
+int      nni_sp_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t);
+int      nni_sp_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t);
+
+int      nni_sp_url_parse_source(nni_url *url, nng_sockaddr *sa, const nni_url *surl,
+				 int (* getaf)(const nni_url *, int *));
 
 // These APIs are used by the framework internally, and not for use by
 // transport implementations.

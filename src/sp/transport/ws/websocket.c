@@ -548,16 +548,6 @@ wstran_listener_init(void **lp, nng_url *url, nni_listener *listener)
 	return (0);
 }
 
-static void
-wstran_init(void)
-{
-}
-
-static void
-wstran_fini(void)
-{
-}
-
 static const nni_option wstran_ep_opts[] = {
 	// terminate list
 	{
@@ -645,8 +635,8 @@ static nni_sp_tran ws_tran = {
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
 	.tran_pipe     = &ws_pipe_ops,
-	.tran_init     = wstran_init,
-	.tran_fini     = wstran_fini,
+	.tran_init     = nni_sp_tran_init,
+	.tran_fini     = nni_sp_tran_fini,
 };
 
 static nni_sp_tran ws4_tran = {
@@ -654,8 +644,8 @@ static nni_sp_tran ws4_tran = {
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
 	.tran_pipe     = &ws_pipe_ops,
-	.tran_init     = wstran_init,
-	.tran_fini     = wstran_fini,
+	.tran_init     = nni_sp_tran_init,
+	.tran_fini     = nni_sp_tran_fini,
 };
 
 static nni_sp_tran ws6_tran = {
@@ -663,8 +653,8 @@ static nni_sp_tran ws6_tran = {
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
 	.tran_pipe     = &ws_pipe_ops,
-	.tran_init     = wstran_init,
-	.tran_fini     = wstran_fini,
+	.tran_init     = nni_sp_tran_init,
+	.tran_fini     = nni_sp_tran_fini,
 };
 
 #ifndef NNG_ELIDE_DEPRECATED
@@ -696,8 +686,8 @@ static nni_sp_tran wss_tran = {
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
 	.tran_pipe     = &ws_pipe_ops,
-	.tran_init     = wstran_init,
-	.tran_fini     = wstran_fini,
+	.tran_init     = nni_sp_tran_init,
+	.tran_fini     = nni_sp_tran_fini,
 };
 
 static nni_sp_tran wss4_tran = {
@@ -705,8 +695,8 @@ static nni_sp_tran wss4_tran = {
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
 	.tran_pipe     = &ws_pipe_ops,
-	.tran_init     = wstran_init,
-	.tran_fini     = wstran_fini,
+	.tran_init     = nni_sp_tran_init,
+	.tran_fini     = nni_sp_tran_fini,
 };
 
 static nni_sp_tran wss6_tran = {
@@ -714,8 +704,8 @@ static nni_sp_tran wss6_tran = {
 	.tran_dialer   = &ws_dialer_ops,
 	.tran_listener = &ws_listener_ops,
 	.tran_pipe     = &ws_pipe_ops,
-	.tran_init     = wstran_init,
-	.tran_fini     = wstran_fini,
+	.tran_init     = nni_sp_tran_init,
+	.tran_fini     = nni_sp_tran_fini,
 };
 
 void

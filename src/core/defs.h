@@ -45,6 +45,8 @@ typedef struct nni_listener nni_listener;
 typedef struct nni_pipe     nni_pipe;
 
 typedef struct nni_sp_tran           nni_sp_tran;
+typedef struct nni_sp_tran_ep        nni_sp_tran_ep;
+typedef struct nni_sp_tran_pipe      nni_sp_tran_pipe;
 typedef struct nni_sp_dialer_ops     nni_sp_dialer_ops;
 typedef struct nni_sp_listener_ops   nni_sp_listener_ops;
 typedef struct nni_sp_pipe_ops       nni_sp_pipe_ops;
