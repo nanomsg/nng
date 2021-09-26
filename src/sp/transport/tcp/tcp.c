@@ -725,13 +725,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 				memcpy(fixheader + 1, tmp, rlen);
 			}
 		} else {
-			if (qos_pac == 1) {
-				// QoS 1 publish to Qos 2
-				rlen = nni_msg_header_len(msg) - 1;
-			} else {
-				// QoS 0 publish to QoS 1/2 nothing to do
-				goto send;
-			}
+			rlen = nni_msg_header_len(msg) - 1;
 		}
 
 		txaio = p->txaio;
