@@ -568,24 +568,20 @@ tcptran_pipe_recv_cb(void *arg)
 			nng_stream_send(p->conn, p->rsaio);
 		}
 	} else if (type == CMD_PUBREC) {
-		uint8_t *tmp;
 		nng_aio_wait(p->rpaio);
 		p->txlen[0] = 0X62;
 		p->txlen[1] = 0x02;
-		tmp         = nni_msg_body(msg);
-		memcpy(p->txlen + 2, tmp, 2);
+		memcpy(p->txlen + 2, nni_msg_body(msg), 2);
 		iov.iov_len = 4;
 		iov.iov_buf = &p->txlen;
 		// send it down...
 		nni_aio_set_iov(p->rpaio, 1, &iov);
 		nng_stream_send(p->conn, p->rpaio);
 	} else if (type == CMD_PUBREL) {
-		uint8_t *tmp;
 		nng_aio_wait(p->qsaio);
 		p->txlen[0] = CMD_PUBCOMP;
 		p->txlen[1] = 0x02;
-		tmp         = nni_msg_body(msg);
-		memcpy(p->txlen + 2, tmp, 2);
+		memcpy(p->txlen + 2, nni_msg_body(msg), 2);
 		iov.iov_len = 4;
 		iov.iov_buf = &p->txlen;
 		// send it down...
@@ -771,7 +767,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 		}
 		memcpy(p->qos_buf, fixheader, rlen + 1);
 		memcpy(p->qos_buf + rlen + 1, body, tlen + 2);
-		if (qos > 0 && qos_pac > 0) {
+		if (qos > 0) {
 			memcpy(p->qos_buf + rlen + tlen + 3, varheader, 2);
 		}
 		iov[niov].iov_buf = p->qos_buf;
