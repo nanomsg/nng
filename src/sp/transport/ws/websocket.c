@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "core/sockimpl.h"
 #include "supplemental/websocket/websocket.h"
 
 #include <nng/supplemental/tls/tls.h>
@@ -60,7 +61,6 @@ struct ws_pipe {
 	nni_aio *   rxaio;
 	nni_aio *   qsaio;
 	nni_pipe *  npipe;
-	uint8_t *   qos_buf;
 	conn_param *ws_param;
 	nng_stream *ws;
 };
@@ -128,8 +128,8 @@ wstran_pipe_recv_cb(void *arg)
 			goto recv;
 		}
 		len = get_var_integer(ptr, &pos);
-		if (*(ptr + pos - 1) >
-		    0x7f) { // continue to next byte of remaining length
+		if (*(ptr + pos - 1) >0x7f) {
+			// continue to next byte of remaining length
 			if (p->gotrxhead >= NNI_NANO_MAX_HEADER_SIZE) {
 				// length error
 				rv = NNG_EMSGSIZE;
@@ -161,8 +161,7 @@ done:
 		if (nni_msg_cmd_type(p->tmp_msg) == CMD_CONNECT) {
 			// end of nego
 			if (p->ws_param == NULL) {
-				p->ws_param =
-				    nng_alloc(sizeof(struct conn_param));
+				conn_param_alloc(&p->ws_param);
 			}
 			if (conn_handler(
 			        nni_msg_body(p->tmp_msg), p->ws_param) != 0) {
@@ -172,6 +171,7 @@ done:
 			p->tmp_msg = NULL;
 			nni_aio_set_msg(uaio, smsg);
 			nni_aio_set_output(uaio, 0, p);
+			// let pipe_start_cb in protocol layer deal with CONNACK
 			nni_aio_finish(uaio, 0, 0);
 			nni_mtx_unlock(&p->mtx);
 			return;
@@ -179,17 +179,17 @@ done:
 			if (nni_msg_alloc(&smsg, 0) != 0) {
 				goto reset;
 			}
+			//parse fixed header
 			ws_fixed_header_adaptor(ptr, smsg);
 			nni_msg_free(p->tmp_msg);
 			p->tmp_msg = NULL;
 			nni_msg_set_conn_param(smsg, p->ws_param);
 		}
 
+		uint8_t  qos_pac;
+		uint16_t pid;
+		nni_msg *qos_msg;
 		if (nni_msg_cmd_type(smsg) == CMD_PUBLISH) {
-			uint8_t  qos_pac;
-			uint16_t pid;
-			nni_msg  * qos_msg;
-
 			qos_pac = nni_msg_get_pub_qos(smsg);
 			if (qos_pac > 0) {
 				nng_aio_wait(p->qsaio);
@@ -206,6 +206,24 @@ done:
 				nni_aio_set_msg(p->qsaio, qos_msg);
 				nng_stream_send(p->ws, p->qsaio);
 			}
+		} else if (nni_msg_cmd_type(smsg) == CMD_PUBREC) {
+			nng_aio_wait(p->qsaio);
+			p->txlen[0] = 0X62;
+			p->txlen[1] = 0x02;
+			memcpy(p->txlen + 2, nni_msg_body(smsg), 2);
+			nni_msg_alloc(&qos_msg, 0);
+			nni_msg_header_append(qos_msg, p->txlen, 4);
+			nni_aio_set_msg(p->qsaio, qos_msg);
+			nng_stream_send(p->ws, p->qsaio);
+		} else if (nni_msg_cmd_type(smsg) == CMD_PUBREL) {
+			nng_aio_wait(p->qsaio);
+			p->txlen[0] = CMD_PUBCOMP;
+			p->txlen[1] = 0x02;
+			memcpy(p->txlen + 2, nni_msg_body(smsg), 2);
+			nni_msg_alloc(&qos_msg, 0);
+			nni_msg_header_append(qos_msg, p->txlen, 4);
+			nni_aio_set_msg(p->qsaio, qos_msg);
+			nng_stream_send(p->ws, p->qsaio);
 		}
 
 		nni_aio_set_msg(uaio, smsg);
@@ -230,6 +248,9 @@ reset:
 		smsg = p->tmp_msg;
 		nni_msg_free(smsg);
 		p->tmp_msg = NULL;
+	}
+	if (p->ws_param != NULL) {
+		conn_param_free(p->ws_param);
 	}
 	nni_mtx_unlock(&p->mtx);
 	return;
@@ -285,11 +306,16 @@ wstran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
 	nni_mtx_unlock(&p->mtx);
 }
 
+static inline void
+wstran_mqtt_publish(){
+
+}
+
 static void
 wstran_pipe_send(void *arg, nni_aio *aio)
 {
 	ws_pipe *p = arg;
-	nni_msg *msg;
+	nni_msg *msg, *smsg;
 	uint8_t qos;
 	int      rv;
 
@@ -306,11 +332,102 @@ wstran_pipe_send(void *arg, nni_aio *aio)
 	msg = nni_aio_get_msg(aio);
 	qos = NANO_NNI_LMQ_GET_QOS_BITS(msg);
 	//qos default to 0 if the msg is not PUBLISH
-	msg = NANO_NNI_LMQ_GET_MSG_POINTER(msg);
+	msg  = NANO_NNI_LMQ_GET_MSG_POINTER(msg);
+	if (nni_msg_cmd_type(msg) == CMD_PUBLISH) {
+		uint8_t *body, *header, qos_pac;
+		uint8_t  varheader[2],
+		    fixheader[NNI_NANO_MAX_HEADER_SIZE] = { 0 },
+		    tmp[4]                              = { 0 };
+		nni_pipe *pipe;
+		uint16_t  pid;
+		size_t    tlen, rlen;
+
+		qos_pac = nni_msg_get_pub_qos(msg);
+		qos = qos_pac > qos ? qos : qos_pac;
+		if (qos_pac == 0) {
+			// save time & space for QoS 0 publish
+			goto send;
+		}
+
+		pipe       = p->npipe;
+		body       = nni_msg_body(msg);
+		header     = nni_msg_header(msg);
+		NNI_GET16(body, tlen);
+		memcpy(fixheader, header, nni_msg_header_len(msg));
+		if (qos_pac > qos) {
+			// need to modify the packets
+			if (qos == 1) {
+				// set qos to 1 (send qos 2 to 1)
+				fixheader[0] = fixheader[0] & 0xF9;
+				fixheader[0] = fixheader[0] | 0x02;
+				rlen         = nni_msg_header_len(msg) - 1;
+			} else {
+				// set qos to 0 (send qos 2/1 to 0)
+				fixheader[0] = fixheader[0] & 0xF9;
+				uint32_t pos = 1;
+				rlen = put_var_integer(
+				    tmp, get_var_integer(header, &pos) - 2);
+				memcpy(fixheader + 1, tmp, rlen);
+			}
+		} else {
+			// send msg as it is (qos_pac)
+			rlen         = nni_msg_header_len(msg) - 1;
+		}
+		if (qos > 0) {
+			nni_msg *old;
+			pid = nni_aio_get_packetid(aio);
+			if (pid == 0) {
+				// first time send this msg
+				pid = nni_pipe_inc_packetid(pipe);
+				// store msg for qos retrying
+				debug_msg(
+				    "* processing QoS pubmsg with pipe: %p *",
+				    p);
+				nni_msg_clone(msg);
+				if ((old = nni_id_get(
+				         pipe->nano_qos_db, pid)) != NULL) {
+					// TODO packetid already exists.
+					// do we need to replace old with new
+					// one ? print warning to users
+					nni_println(
+					    "ERROR: packet id duplicates in "
+					    "nano_qos_db");
+					old =
+					    NANO_NNI_LMQ_GET_MSG_POINTER(old);
+					nni_msg_free(old);
+					// nni_id_remove(&pipe->nano_qos_db,
+					// pid);
+				}
+				old = NANO_NNI_LMQ_PACKED_MSG_QOS(msg, qos);
+				nni_id_set(pipe->nano_qos_db, pid, old);
+			}
+			NNI_PUT16(varheader, pid);
+		}
+		nni_msg_alloc(&smsg, 0);
+		nni_msg_header_append(smsg, fixheader, rlen + 1);
+		nni_msg_append(smsg, body, tlen + 2);
+		if (qos > 0) {
+			//packetid
+			nni_msg_append(smsg, varheader, 2);
+		}
+		//payload
+		nni_msg_append(smsg, body + 4 + tlen, nni_msg_len(msg) - 4 - tlen);
+		//duplicated msg is gonna be freed by http. so we free old one here
+		nni_msg_free(msg);
+		msg = smsg;
+	}
+// normal sending if it is not PUBLISH
+send:
 	nni_aio_set_msg(aio, msg);
 	nni_aio_set_msg(p->txaio, msg);
 	nni_aio_set_msg(aio, NULL);
-
+	// verify connect
+    if (nni_msg_cmd_type(msg) == CMD_CONNACK) {
+		uint8_t *header = nni_msg_header(msg);
+		if (*(header+3) != 0x00) {
+			nni_pipe_close(p->npipe);
+	    }
+	}
 	nng_stream_send(p->ws, p->txaio);
 	nni_mtx_unlock(&p->mtx);
 }
@@ -335,7 +452,6 @@ wstran_pipe_init(void *arg, nni_pipe *pipe)
 	p->npipe      = pipe;
 	p->gotrxhead  = 0;
 	p->wantrxhead = 0;
-	// p->qos_buf    = nng_alloc(16 + NNI_NANO_MAX_PACKET_SIZE);
 	p->ep_aio = NULL;
 	return (0);
 }
