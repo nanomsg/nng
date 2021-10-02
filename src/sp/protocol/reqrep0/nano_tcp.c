@@ -204,11 +204,12 @@ nano_pipe_timer_cb(void *arg)
 			if ((nni_clock() - time) >=
 			    (long unsigned) qos_timer * 1250) {
 				p->busy = true;
+				//TODO set max retrying times in nanomq.conf
 				nni_msg_clone(rmsg);
 				nano_msg_set_dup(rmsg);
 				nni_aio_set_packetid(&p->aio_send, pid);
-				nni_aio_set_msg(&p->aio_send, msg);
-				debug_msg("resending qos msg!\n");
+				nni_aio_set_msg(&p->aio_send, rmsg);
+				debug_msg("resending qos msg packetid: %d", pid);
 				nni_pipe_send(p->pipe, &p->aio_send);
 				nni_id_remove(npipe->nano_qos_db, pid);
 			}
@@ -281,8 +282,6 @@ nano_ctx_init(void *carg, void *sarg)
 	NNI_LIST_NODE_INIT(&ctx->sqnode);
 	NNI_LIST_NODE_INIT(&ctx->rqnode);
 
-	// TODO send list??
-	// ctx->pp_len = 0;
 	ctx->sock    = s;
 	ctx->pipe_id = 0;
 
@@ -326,8 +325,7 @@ nano_ctx_send(void *arg, nni_aio *aio)
 		return;
 	}
 
-	debug_msg("############### nano_ctx_send with ctx %p msg type %x "
-	          "###############",
+	debug_msg("#### nano_ctx_send with ctx %p msg type %x ####",
 	    ctx, nni_msg_cmd_type(msg));
 
 	if ((pipe = nni_msg_get_pipe(msg)) != 0) {
@@ -860,7 +858,6 @@ nano_pipe_recv_cb(void *arg)
 	// schedule another receive
 	nni_pipe_recv(p->pipe, &p->aio_recv);
 
-	// ctx->pp_len = len;		//TODO Rewrite mqtt header length
 	ctx->pipe_id = p->id;
 	debug_msg("currently processing pipe_id: %d", p->id);
 

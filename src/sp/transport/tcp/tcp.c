@@ -671,7 +671,7 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 	// This runs to send the message.
 	msg = nni_aio_get_msg(aio);
 	if (msg == NULL) {
-		// TODO error handle
+		// TODO error handler
 		nni_println("ERROR: sending NULL msg!");
 		return;
 	}
