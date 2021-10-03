@@ -525,6 +525,11 @@ nano_pipe_start(void *arg)
 	nni_msg *  msg;
 	uint8_t    rv, *reason; // reason code of CONNACK
 	uint8_t    buf[4] = { 0x20, 0x02, 0x00, 0x00 };
+	nni_pipe * npipe = p->pipe;
+	char *     clientid = NULL;
+	uint32_t   clientid_key = 0;
+	nni_msg ** msgq = NULL;
+	uint16_t   pid = 0;
 
 	debug_msg("##########nano_pipe_start################");
 	/*
@@ -548,6 +553,17 @@ nano_pipe_start(void *arg)
 		*(reason + 1) = rv; // set return code
 	}
 	nni_mtx_unlock(&s->lk);
+
+	// restore cached qos msg
+	clientid = (char *) conn_param_get_clientid(p->conn_param);
+	clientid_key = DJBHashn(clientid, strlen(clientid));
+	if (cached_check_id(clientid_key)) {
+		msgq = (nni_msg **)dbtree_restore_session_msg(p->tree, clientid_key);
+		for(int i=0; i< (int) cvector_size(msgq); i++) {
+			pid = nni_pipe_inc_packetid(npipe);
+			nni_id_set(npipe->nano_qos_db, pid, msgq[i]);
+		}
+	}
 
 	// TODO MQTT V5 check return code
 	if (*(reason + 1) == 0) {
@@ -600,13 +616,26 @@ nano_pipe_close(void *arg)
 	nano_pipe *p = arg;
 	nano_sock *s = p->rep;
 	nano_ctx * ctx;
-	// conn_param *cparam;
-	nni_aio *aio = NULL;
-	nni_msg *msg;
+	nni_aio *  aio = NULL;
+	nni_msg *  msg;
+	nni_pipe * npipe = p->pipe;
+	uint16_t   packetid = 0;
+	char *     clientid = NULL;
+	uint32_t   clientid_key = 0;
 
 	debug_msg("################# nano_pipe_close ##############");
 	nni_mtx_lock(&s->lk);
 	close_pipe(p);
+
+	// cache qos msg TODO optimization in processing
+	if (p->conn_param->clean_start == 0) {
+		clientid = (char *)conn_param_get_clientid(p->conn_param);
+		clientid_key = DJBHashn(clientid, strlen(clientid));
+		while((msg = nni_id_get_any(npipe->nano_qos_db, &packetid)) != NULL) {
+			dbtree_cache_session_msg(p->tree, msg, clientid_key);
+			nni_id_remove(npipe->nano_qos_db, packetid);
+		}
+	}
 
 	// create disconnect event msg
 	msg = nano_msg_notify_disconnect(p->conn_param, p->reason_code);
