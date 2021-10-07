@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 ADDR=ipc:///tmp/async_demo
 COUNT=10
