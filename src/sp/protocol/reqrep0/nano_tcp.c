@@ -189,9 +189,9 @@ nano_pipe_timer_cb(void *arg)
 		nni_println("Warning: close pipe & kick client due to KeepAlive "
 		       "timeout!");
 		// TODO check keepalived timer interval
-		nni_mtx_unlock(&p->lk);
 		p->reason_code = 0x8D;
 		nni_aio_finish_error(&p->aio_recv, NNG_ECONNREFUSED);
+		nni_mtx_unlock(&p->lk);
 		return;
 	}
 	p->ka_refresh++;
@@ -478,6 +478,7 @@ nano_pipe_fini(void *arg)
 
 	nni_id_map * nano_qos_db = p->pipe->nano_qos_db;
 
+	//TODO safely free the msgs in qos_db
 //	nni_id_iterate(nano_qos_db, nni_id_msgfree_cb);
 	nni_id_map_fini(nano_qos_db);
 	nng_free(nano_qos_db, sizeof(struct nni_id_map));
@@ -500,11 +501,8 @@ nano_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	nni_mtx_init(&p->lk);
 	nni_lmq_init(&p->rlmq, sock->conf->msq_len);
 	nni_aio_init(&p->aio_send, nano_pipe_send_cb, p);
-	// TODO move keepalive monitor to transport layer?
 	nni_aio_init(&p->aio_timer, nano_pipe_timer_cb, p);
 	nni_aio_init(&p->aio_recv, nano_pipe_recv_cb, p);
-
-	// NNI_LIST_INIT(&p->sendq, nano_ctx, sqnode);
 
 	p->reason_code             = 0x00;
 	p->id                      = nni_pipe_id(pipe);
