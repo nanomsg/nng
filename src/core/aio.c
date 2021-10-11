@@ -16,7 +16,6 @@ struct nni_aio_expire_q {
 	nni_mtx  eq_mtx;
 	nni_cv   eq_cv;
 	nni_list eq_list;
-	uint32_t eq_len;
 	nni_thr  eq_thr;
 	nni_time eq_next; // next expiration
 	bool     eq_exit;
@@ -39,8 +38,8 @@ static int                nni_aio_expire_q_cnt;
 // free to examine the aio for list membership, etc.  The provider must
 // not call finish more than once though.
 //
-// We use an array of expiration queues, each with it's own lock and
-// condition variable, and expiration thread.  By default this is one
+// We use an array of expiration queues, each with its own lock and
+// condition variable, and expiration thread.  By default, this is one
 // per CPU core present -- the goal being to reduce overall pressure
 // caused by a single lock.  The number of queues (and threads) can
 // be tuned using the NNG_EXPIRE_THREADS tunable.
@@ -90,8 +89,8 @@ static int                nni_aio_expire_q_cnt;
 #define aio_safe_lock(l) nni_mtx_lock(l)
 #define aio_safe_unlock(l) nni_mtx_unlock(l)
 #else
-#define aio_safe_lock(l)
-#define aio_safe_unlock(l)
+#define aio_safe_lock(l) ((void) 1)
+#define aio_safe_unlock(l) ((void) 1)
 #endif
 
 static nni_reap_list aio_reap_list = {
@@ -333,7 +332,7 @@ nni_aio_begin(nni_aio *aio)
 	//NNI_ASSERT(aio->a_cancel_fn == NULL);
 	NNI_ASSERT(!nni_list_node_active(&aio->a_expire_node));
 
-	// Some initialization can be done outside of the lock, because
+	// Some initialization can be done outside the lock, because
 	// we must have exclusive access to the aio.
 	for (unsigned i = 0; i < NNI_NUM_ELEMENTS(aio->a_outputs); i++) {
 		aio->a_outputs[i] = NULL;
@@ -556,8 +555,8 @@ nni_aio_expire_loop(void *arg)
 		int      rv;
 		nni_time next;
 
-		next       = q->eq_next;
-		now        = nni_clock();
+		next = q->eq_next;
+		now  = nni_clock();
 
 		// Each time we wake up, we scan the entire list of elements.
 		// We scan forward, moving up to NNI_EXPIRE_Q_SIZE elements
@@ -576,7 +575,7 @@ nni_aio_expire_loop(void *arg)
 			continue;
 		}
 		q->eq_next = NNI_TIME_NEVER;
-		exp_idx = 0;
+		exp_idx    = 0;
 		while (aio != NULL) {
 			if ((aio->a_expire < now) &&
 			    (exp_idx < NNI_EXPIRE_BATCH)) {
@@ -601,7 +600,7 @@ nni_aio_expire_loop(void *arg)
 
 		for (uint32_t i = 0; i < exp_idx; i++) {
 			aio = expires[i];
-			rv = aio->a_expire_ok ? 0 : NNG_ETIMEDOUT;
+			rv  = aio->a_expire_ok ? 0 : NNG_ETIMEDOUT;
 
 			nni_aio_cancel_fn cancel_fn  = aio->a_cancel_fn;
 			void             *cancel_arg = aio->a_cancel_arg;
