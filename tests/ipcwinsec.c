@@ -12,6 +12,7 @@
 #include <nng/protocol/reqrep0/rep.h>
 #include <nng/protocol/reqrep0/req.h>
 #include <nng/transport/ipc/ipc.h>
+#include <nng/supplemental/util/platform.h>
 
 #include "convey.h"
 #include "stubs.h"
@@ -86,7 +87,7 @@ TestMain("IPC Security Descriptor", {
 		So(nng_rep0_open(&s) == 0);
 		Reset({
 			nng_close(s);
-			nng_sleep(100);
+			nng_msleep(100);
 		});
 
 		So(nng_listener_create(&l, s, "ipc://" ADDR) == 0);
