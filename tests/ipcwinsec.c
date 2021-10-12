@@ -57,7 +57,7 @@ sdescAuthUsers(PSID sid, PACL *aclp)
 {
 	SECURITY_DESCRIPTOR *sdesc;
 	EXPLICIT_ACCESS      xa;
-	ACL *                acl;
+	ACL                 *acl;
 
 	sdesc = calloc(SECURITY_DESCRIPTOR_MIN_LENGTH, 1);
 	assert(sdesc != NULL);
@@ -84,7 +84,10 @@ TestMain("IPC Security Descriptor", {
 		nng_listener l;
 
 		So(nng_rep0_open(&s) == 0);
-		Reset({ nng_close(s); });
+		Reset({
+			nng_close(s);
+			nng_sleep(100);
+		});
 
 		So(nng_listener_create(&l, s, "ipc://" ADDR) == 0);
 		Convey("We can set security descriptor on Windows", {
