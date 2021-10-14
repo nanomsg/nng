@@ -174,7 +174,7 @@ static void
 nano_pipe_timer_cb(void *arg)
 {
 	nano_pipe *p = arg;
-	int        qos_timer = p->rep->conf->qos_timer;
+	int        qos_duration = p->rep->conf->qos_duration;
 	nni_msg *  msg, *rmsg;
 	nni_time   time;
 	nni_pipe * npipe = p->pipe;
@@ -185,7 +185,7 @@ nano_pipe_timer_cb(void *arg)
 		return;
 	}
 	nni_mtx_lock(&p->lk);
-	if (p->ka_refresh * (qos_timer) > p->conn_param->keepalive_mqtt) {
+	if (p->ka_refresh * (qos_duration) > p->conn_param->keepalive_mqtt) {
 		nni_println("Warning: close pipe & kick client due to KeepAlive "
 		       "timeout!");
 		// TODO check keepalived timer interval
@@ -202,7 +202,7 @@ nano_pipe_timer_cb(void *arg)
 			rmsg = NANO_NNI_LMQ_GET_MSG_POINTER(msg);
 			time = nni_msg_get_timestamp(msg);
 			if ((nni_clock() - time) >=
-			    (long unsigned) qos_timer * 1250) {
+			    (long unsigned) qos_duration * 1250) {
 				p->busy = true;
 				//TODO set max retrying times in nanomq.conf
 				nni_msg_clone(rmsg);
@@ -217,7 +217,7 @@ nano_pipe_timer_cb(void *arg)
 	}
 
 	nni_mtx_unlock(&p->lk);
-	nni_sleep_aio(qos_timer * 1000, &p->aio_timer);
+	nni_sleep_aio(qos_duration * 1000, &p->aio_timer);
 	return;
 }
 
@@ -567,7 +567,7 @@ nano_pipe_start(void *arg)
 
 	// TODO MQTT V5 check return code
 	if (*(reason + 1) == 0) {
-		nni_sleep_aio(s->conf->qos_timer * 1500, &p->aio_timer);
+		nni_sleep_aio(s->conf->qos_duration * 1500, &p->aio_timer);
 	}
 	nni_msg_set_cmd_type(msg, CMD_CONNACK);
 	nni_msg_set_conn_param(msg, p->conn_param);
