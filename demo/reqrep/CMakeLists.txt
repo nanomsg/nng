@@ -19,4 +19,5 @@ find_package(Threads)
 # find_package(zerotiercore)
 
 add_executable(reqrep reqrep.c)
-target_link_libraries(reqrep nng::nng)
+target_link_libraries(reqrep nng)
+target_link_libraries(reqrep ${CMAKE_THREAD_LIBS_INIT})
