@@ -8,10 +8,5 @@
 # found online at https://opensource.org/licenses/MIT.
 #
 
-# TCP protocol
-nng_directory(tcp)
-
-nng_sources_if(NNG_TRANSPORT_TCP tcp.c)
-nng_headers_if(NNG_TRANSPORT_TCP nng/transport/tcp/tcp.h)
-nng_defines_if(NNG_TRANSPORT_TCP NNG_TRANSPORT_TCP)
-nng_test(tcp_test)
+#  Req/Rep protocol
+nng_directory(mqtt)

@@ -163,11 +163,10 @@ int
 nng_stream_dialer_alloc_url(nng_stream_dialer **dp, const nng_url *url)
 {
 	int rv;
-
 	if ((rv = nni_init()) != 0) {
 		return (rv);
 	}
-
+// check this part
 	for (int i = 0; stream_drivers[i].scheme != NULL; i++) {
 		if (strcmp(stream_drivers[i].scheme, url->u_scheme) == 0) {
 			return (stream_drivers[i].dialer_alloc(dp, url));

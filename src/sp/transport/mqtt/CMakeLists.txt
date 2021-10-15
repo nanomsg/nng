@@ -9,9 +9,8 @@
 #
 
 # TCP protocol
-nng_directory(tcp)
+nng_directory(mqtt)
 
-nng_sources_if(NNG_TRANSPORT_TCP tcp.c)
-nng_headers_if(NNG_TRANSPORT_TCP nng/transport/tcp/tcp.h)
-nng_defines_if(NNG_TRANSPORT_TCP NNG_TRANSPORT_TCP)
-nng_test(tcp_test)
+nng_sources_if(NNG_TRANSPORT_TCP mqtt_tcp.c)
+nng_headers_if(NNG_TRANSPORT_TCP nng/transport/tcp/mqtt_tcp.h)
+nng_defines_if(NNG_TRANSPORT_MQTT_TCP NNG_TRANSPORT_MQTT_TCP)
