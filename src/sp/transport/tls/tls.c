@@ -258,8 +258,8 @@ tlstran_pipe_nego_cb(void *arg)
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	// We have both sent and received the headers.  Lets check the
-	// receive side header.
+	// We have both sent and received the headers.  Let's check the
+	// receiver.
 	if ((p->rxlen[0] != 0) || (p->rxlen[1] != 'S') ||
 	    (p->rxlen[2] != 'P') || (p->rxlen[3] != 0) || (p->rxlen[6] != 0) ||
 	    (p->rxlen[7] != 0)) {
@@ -269,7 +269,7 @@ tlstran_pipe_nego_cb(void *arg)
 
 	NNI_GET16(&p->rxlen[4], p->peer);
 
-	// We are all ready now.  We put this in the wait list, and
+	// We are ready now.  We put this in the wait list, and
 	// then try to run the matcher.
 	nni_list_remove(&ep->negopipes, p);
 	nni_list_append(&ep->waitpipes, p);
@@ -280,6 +280,13 @@ tlstran_pipe_nego_cb(void *arg)
 	return;
 
 error:
+	// If the connection is closed, we need to pass back a different
+	// error code.  This is necessary to avoid a problem where the
+	// closed status is confused with the accept file descriptor
+	// being closed.
+	if (rv == NNG_ECLOSED) {
+		rv = NNG_ECONNSHUT;
+	}
 	nng_stream_close(p->tls);
 
 	if ((uaio = ep->useraio) != NULL) {
