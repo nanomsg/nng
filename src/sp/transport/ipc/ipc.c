@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -10,7 +10,6 @@
 //
 
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "core/nng_impl.h"
 
@@ -251,8 +250,8 @@ ipc_pipe_neg_cb(void *arg)
 		nni_mtx_unlock(&p->ep->mtx);
 		return;
 	}
-	// We have both sent and received the headers.  Lets check the
-	// receive side header.
+	// We have both sent and received the headers.  Let's check the
+	// receiver.
 	if ((p->rx_head[0] != 0) || (p->rx_head[1] != 'S') ||
 	    (p->rx_head[2] != 'P') || (p->rx_head[3] != 0) ||
 	    (p->rx_head[6] != 0) || (p->rx_head[7] != 0)) {
@@ -262,7 +261,7 @@ ipc_pipe_neg_cb(void *arg)
 
 	NNI_GET16(&p->rx_head[4], p->peer);
 
-	// We are all ready now.  We put this in the wait list, and
+	// We are ready now.  We put this in the wait list, and
 	// then try to run the matcher.
 	nni_list_remove(&ep->neg_pipes, p);
 	nni_list_append(&ep->wait_pipes, p);
@@ -272,7 +271,13 @@ ipc_pipe_neg_cb(void *arg)
 	return;
 
 error:
-
+	// If the connection is closed, we need to pass back a different
+	// error code.  This is necessary to avoid a problem where the
+	// closed status is confused with the accept file descriptor
+	// being closed.
+	if (rv == NNG_ECLOSED) {
+		rv = NNG_ECONNSHUT;
+	}
 	nng_stream_close(p->conn);
 	// If we are waiting to negotiate on a client side, then a failure
 	// here has to be passed to the user app.
@@ -347,7 +352,7 @@ ipc_pipe_recv_cb(void *arg)
 
 	if ((rv = nni_aio_result(rx_aio)) != 0) {
 		// Error on receive.  This has to cause an error back
-		// to the user.  Also, if we had allocated an rx_msg, lets
+		// to the user.  Also, if we had an allocated rx_msg, lets
 		// toss it.
 		goto error;
 	}
@@ -406,7 +411,7 @@ ipc_pipe_recv_cb(void *arg)
 		}
 	}
 
-	// Otherwise we got a message read completely.  Let the user know the
+	// Otherwise, we got a message read completely.  Let the user know the
 	// good news.
 
 	aio = nni_list_first(&p->recv_q);
