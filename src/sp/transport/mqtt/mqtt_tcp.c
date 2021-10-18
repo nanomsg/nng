@@ -897,7 +897,6 @@ tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	nng_url      myurl;
 
 	// Check for invalid URL components. only one dialer is allowed
-    printf("mqtt dialer init\n");
 	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
 		return (NNG_EADDRINVAL);
 	}
@@ -921,14 +920,12 @@ tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 		tcptran_ep_fini(ep);
 		return (rv);
 	}
-    printf("mqtt dialer init2\n");
 	if ((srcsa.s_family != NNG_AF_UNSPEC) &&
 	    ((rv = nni_stream_dialer_set(ep->dialer, NNG_OPT_LOCADDR, &srcsa,
 	          sizeof(srcsa), NNI_TYPE_SOCKADDR)) != 0)) {
 		tcptran_ep_fini(ep);
 		return (rv);
 	}
-    printf("mqtt dialer init3\n");
 
 #ifdef NNG_ENABLE_STATS
 	nni_dialer_add_stat(ndialer, &ep->st_rcv_max);

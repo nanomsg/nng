@@ -115,6 +115,10 @@ mark_as_advanced(NNG_TRANSPORT_IPC)
 option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
 mark_as_advanced(NNG_TRANSPORT_TCP)
 
+# TCP transport
+option (NNG_TRANSPORT_MQTT_TCP "Enable TCP transport." ON)
+mark_as_advanced(NNG_TRANSPORT_MQTT_TCP)
+
 # TLS transport
 option (NNG_TRANSPORT_TLS "Enable TLS transport." ON)
 mark_as_advanced(NNG_TRANSPORT_TLS)
