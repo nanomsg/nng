@@ -18,37 +18,37 @@
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
 
-typedef struct tcptran_pipe tcptran_pipe;
-typedef struct tcptran_ep   tcptran_ep;
+typedef struct mqtt_tcptran_pipe mqtt_tcptran_pipe;
+typedef struct mqtt_tcptran_ep   mqtt_tcptran_ep;
 
 // tcp_pipe is one end of a TCP connection.
-struct tcptran_pipe {
-	nng_stream *    conn;
-	nni_pipe *      npipe;
-	uint16_t        peer;
-	uint16_t        proto;
-	size_t          rcvmax;
-	bool            closed;
-	nni_list_node   node;
-	tcptran_ep *    ep;
-	nni_atomic_flag reaped;
-	nni_reap_node   reap;
-	uint8_t         txlen[sizeof(uint64_t)];
-	uint8_t         rxlen[sizeof(uint64_t)];
-	size_t          gottxhead;
-	size_t          gotrxhead;
-	size_t          wanttxhead;
-	size_t          wantrxhead;
-	nni_list        recvq;
-	nni_list        sendq;
-	nni_aio *       txaio;
-	nni_aio *       rxaio;
-	nni_aio *       negoaio;
-	nni_msg *       rxmsg;
-	nni_mtx         mtx;
+struct mqtt_tcptran_pipe {
+	nng_stream *     conn;
+	nni_pipe *       npipe;
+	uint16_t         peer;
+	uint16_t         proto;
+	size_t           rcvmax;
+	bool             closed;
+	nni_list_node    node;
+	mqtt_tcptran_ep *ep;
+	nni_atomic_flag  reaped;
+	nni_reap_node    reap;
+	uint8_t          txlen[sizeof(uint64_t)];
+	uint8_t          rxlen[sizeof(uint64_t)];
+	size_t           gottxhead;
+	size_t           gotrxhead;
+	size_t           wanttxhead;
+	size_t           wantrxhead;
+	nni_list         recvq;
+	nni_list         sendq;
+	nni_aio *        txaio;
+	nni_aio *        rxaio;
+	nni_aio *        negoaio;
+	nni_msg *        rxmsg;
+	nni_mtx          mtx;
 };
 
-struct tcptran_ep {
+struct mqtt_tcptran_ep {
 	nni_mtx              mtx;
 	uint16_t             proto;
 	size_t               rcvmax;
@@ -74,38 +74,38 @@ struct tcptran_ep {
 #endif
 };
 
-static void tcptran_pipe_send_start(tcptran_pipe *);
-static void tcptran_pipe_recv_start(tcptran_pipe *);
-static void tcptran_pipe_send_cb(void *);
-static void tcptran_pipe_recv_cb(void *);
-static void tcptran_pipe_nego_cb(void *);
-static void tcptran_ep_fini(void *);
-static void tcptran_pipe_fini(void *);
+static void mqtt_tcptran_pipe_send_start(mqtt_tcptran_pipe *);
+static void mqtt_tcptran_pipe_recv_start(mqtt_tcptran_pipe *);
+static void mqtt_tcptran_pipe_send_cb(void *);
+static void mqtt_tcptran_pipe_recv_cb(void *);
+static void mqtt_tcptran_pipe_nego_cb(void *);
+static void mqtt_tcptran_ep_fini(void *);
+static void mqtt_tcptran_pipe_fini(void *);
 
 static nni_reap_list tcptran_ep_reap_list = {
-	.rl_offset = offsetof(tcptran_ep, reap),
-	.rl_func   = tcptran_ep_fini,
+	.rl_offset = offsetof(mqtt_tcptran_ep, reap),
+	.rl_func   = mqtt_tcptran_ep_fini,
 };
 
 static nni_reap_list tcptran_pipe_reap_list = {
-	.rl_offset = offsetof(tcptran_pipe, reap),
-	.rl_func   = tcptran_pipe_fini,
+	.rl_offset = offsetof(mqtt_tcptran_pipe, reap),
+	.rl_func   = mqtt_tcptran_pipe_fini,
 };
 
 static void
-tcptran_init(void)
+mqtt_tcptran_init(void)
 {
 }
 
 static void
-tcptran_fini(void)
+mqtt_tcptran_fini(void)
 {
 }
 
 static void
-tcptran_pipe_close(void *arg)
+mqtt_tcptran_pipe_close(void *arg)
 {
-	tcptran_pipe *p = arg;
+	mqtt_tcptran_pipe *p = arg;
 
 	nni_mtx_lock(&p->mtx);
 	p->closed = true;
@@ -119,9 +119,9 @@ tcptran_pipe_close(void *arg)
 }
 
 static void
-tcptran_pipe_stop(void *arg)
+mqtt_tcptran_pipe_stop(void *arg)
 {
-	tcptran_pipe *p = arg;
+	mqtt_tcptran_pipe *p = arg;
 
 	nni_aio_stop(p->rxaio);
 	nni_aio_stop(p->txaio);
@@ -129,21 +129,21 @@ tcptran_pipe_stop(void *arg)
 }
 
 static int
-tcptran_pipe_init(void *arg, nni_pipe *npipe)
+mqtt_tcptran_pipe_init(void *arg, nni_pipe *npipe)
 {
-	tcptran_pipe *p = arg;
-	p->npipe        = npipe;
+	mqtt_tcptran_pipe *p = arg;
+	p->npipe             = npipe;
 
 	return (0);
 }
 
 static void
-tcptran_pipe_fini(void *arg)
+mqtt_tcptran_pipe_fini(void *arg)
 {
-	tcptran_pipe *p = arg;
-	tcptran_ep *  ep;
+	mqtt_tcptran_pipe *p = arg;
+	mqtt_tcptran_ep *  ep;
 
-	tcptran_pipe_stop(p);
+	mqtt_tcptran_pipe_stop(p);
 	if ((ep = p->ep) != NULL) {
 		nni_mtx_lock(&ep->mtx);
 		nni_list_node_remove(&p->node);
@@ -164,7 +164,7 @@ tcptran_pipe_fini(void *arg)
 }
 
 static void
-tcptran_pipe_reap(tcptran_pipe *p)
+mqtt_tcptran_pipe_reap(mqtt_tcptran_pipe *p)
 {
 	if (!nni_atomic_flag_test_and_set(&p->reaped)) {
 		if (p->conn != NULL) {
@@ -175,20 +175,22 @@ tcptran_pipe_reap(tcptran_pipe *p)
 }
 
 static int
-tcptran_pipe_alloc(tcptran_pipe **pipep)
+mqtt_tcptran_pipe_alloc(mqtt_tcptran_pipe **pipep)
 {
-	tcptran_pipe *p;
-	int           rv;
+	mqtt_tcptran_pipe *p;
+	int                rv;
 
 	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&p->mtx);
-	if (((rv = nni_aio_alloc(&p->txaio, tcptran_pipe_send_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->rxaio, tcptran_pipe_recv_cb, p)) != 0) ||
-	    ((rv = nni_aio_alloc(&p->negoaio, tcptran_pipe_nego_cb, p)) !=
+	if (((rv = nni_aio_alloc(&p->txaio, mqtt_tcptran_pipe_send_cb, p)) !=
+	        0) ||
+	    ((rv = nni_aio_alloc(&p->rxaio, mqtt_tcptran_pipe_recv_cb, p)) !=
+	        0) ||
+	    ((rv = nni_aio_alloc(&p->negoaio, mqtt_tcptran_pipe_nego_cb, p)) !=
 	        0)) {
-		tcptran_pipe_fini(p);
+		mqtt_tcptran_pipe_fini(p);
 		return (rv);
 	}
 	nni_aio_list_init(&p->recvq);
@@ -201,10 +203,10 @@ tcptran_pipe_alloc(tcptran_pipe **pipep)
 }
 
 static void
-tcptran_ep_match(tcptran_ep *ep)
+mqtt_tcptran_ep_match(mqtt_tcptran_ep *ep)
 {
-	nni_aio *     aio;
-	tcptran_pipe *p;
+	nni_aio *          aio;
+	mqtt_tcptran_pipe *p;
 
 	if (((aio = ep->useraio) == NULL) ||
 	    ((p = nni_list_first(&ep->waitpipes)) == NULL)) {
@@ -219,13 +221,13 @@ tcptran_ep_match(tcptran_ep *ep)
 }
 
 static void
-tcptran_pipe_nego_cb(void *arg)
+mqtt_tcptran_pipe_nego_cb(void *arg)
 {
-	tcptran_pipe *p   = arg;
-	tcptran_ep *  ep  = p->ep;
-	nni_aio *     aio = p->negoaio;
-	nni_aio *     uaio;
-	int           rv;
+	mqtt_tcptran_pipe *p   = arg;
+	mqtt_tcptran_ep *  ep  = p->ep;
+	nni_aio *          aio = p->negoaio;
+	nni_aio *          uaio;
+	int                rv;
 
 	nni_mtx_lock(&ep->mtx);
 
@@ -275,7 +277,7 @@ tcptran_pipe_nego_cb(void *arg)
 	nni_list_remove(&ep->negopipes, p);
 	nni_list_append(&ep->waitpipes, p);
 
-	tcptran_ep_match(ep);
+	mqtt_tcptran_ep_match(ep);
 	nni_mtx_unlock(&ep->mtx);
 
 	return;
@@ -288,18 +290,18 @@ error:
 		nni_aio_finish_error(uaio, rv);
 	}
 	nni_mtx_unlock(&ep->mtx);
-	tcptran_pipe_reap(p);
+	mqtt_tcptran_pipe_reap(p);
 }
 
 static void
-tcptran_pipe_send_cb(void *arg)
+mqtt_tcptran_pipe_send_cb(void *arg)
 {
-	tcptran_pipe *p = arg;
-	int           rv;
-	nni_aio *     aio;
-	size_t        n;
-	nni_msg *     msg;
-	nni_aio *     txaio = p->txaio;
+	mqtt_tcptran_pipe *p = arg;
+	int                rv;
+	nni_aio *          aio;
+	size_t             n;
+	nni_msg *          msg;
+	nni_aio *          txaio = p->txaio;
 
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->sendq);
@@ -326,7 +328,7 @@ tcptran_pipe_send_cb(void *arg)
 	}
 
 	nni_aio_list_remove(aio);
-	tcptran_pipe_send_start(p);
+	mqtt_tcptran_pipe_send_start(p);
 
 	msg = nni_aio_get_msg(aio);
 	n   = nni_msg_len(msg);
@@ -339,14 +341,14 @@ tcptran_pipe_send_cb(void *arg)
 }
 
 static void
-tcptran_pipe_recv_cb(void *arg)
+mqtt_tcptran_pipe_recv_cb(void *arg)
 {
-	tcptran_pipe *p = arg;
-	nni_aio *     aio;
-	int           rv;
-	size_t        n;
-	nni_msg *     msg;
-	nni_aio *     rxaio = p->rxaio;
+	mqtt_tcptran_pipe *p = arg;
+	nni_aio *          aio;
+	int                rv;
+	size_t             n;
+	nni_msg *          msg;
+	nni_aio *          rxaio = p->rxaio;
 
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->recvq);
@@ -403,7 +405,7 @@ tcptran_pipe_recv_cb(void *arg)
 	n        = nni_msg_len(msg);
 
 	nni_pipe_bump_rx(p->npipe, n);
-	tcptran_pipe_recv_start(p);
+	mqtt_tcptran_pipe_recv_start(p);
 	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_set_msg(aio, msg);
@@ -424,9 +426,9 @@ recv_error:
 }
 
 static void
-tcptran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
+mqtt_tcptran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
 {
-	tcptran_pipe *p = arg;
+	mqtt_tcptran_pipe *p = arg;
 
 	nni_mtx_lock(&p->mtx);
 	if (!nni_aio_list_active(aio)) {
@@ -448,7 +450,7 @@ tcptran_pipe_send_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-tcptran_pipe_send_start(tcptran_pipe *p)
+mqtt_tcptran_pipe_send_start(mqtt_tcptran_pipe *p)
 {
 	nni_aio *aio;
 	nni_aio *txaio;
@@ -495,31 +497,32 @@ tcptran_pipe_send_start(tcptran_pipe *p)
 }
 
 static void
-tcptran_pipe_send(void *arg, nni_aio *aio)
+mqtt_tcptran_pipe_send(void *arg, nni_aio *aio)
 {
-	tcptran_pipe *p = arg;
-	int           rv;
+	mqtt_tcptran_pipe *p = arg;
+	int                rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, tcptran_pipe_send_cancel, p)) != 0) {
+	if ((rv = nni_aio_schedule(aio, mqtt_tcptran_pipe_send_cancel, p)) !=
+	    0) {
 		nni_mtx_unlock(&p->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
 	}
 	nni_list_append(&p->sendq, aio);
 	if (nni_list_first(&p->sendq) == aio) {
-		tcptran_pipe_send_start(p);
+		mqtt_tcptran_pipe_send_start(p);
 	}
 	nni_mtx_unlock(&p->mtx);
 }
 
 static void
-tcptran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
+mqtt_tcptran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
 {
-	tcptran_pipe *p = arg;
+	mqtt_tcptran_pipe *p = arg;
 
 	nni_mtx_lock(&p->mtx);
 	if (!nni_aio_list_active(aio)) {
@@ -540,7 +543,7 @@ tcptran_pipe_recv_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-tcptran_pipe_recv_start(tcptran_pipe *p)
+mqtt_tcptran_pipe_recv_start(mqtt_tcptran_pipe *p)
 {
 	nni_aio *rxaio;
 	nni_iov  iov;
@@ -568,16 +571,17 @@ tcptran_pipe_recv_start(tcptran_pipe *p)
 }
 
 static void
-tcptran_pipe_recv(void *arg, nni_aio *aio)
+mqtt_tcptran_pipe_recv(void *arg, nni_aio *aio)
 {
-	tcptran_pipe *p = arg;
-	int           rv;
+	mqtt_tcptran_pipe *p = arg;
+	int                rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
 	nni_mtx_lock(&p->mtx);
-	if ((rv = nni_aio_schedule(aio, tcptran_pipe_recv_cancel, p)) != 0) {
+	if ((rv = nni_aio_schedule(aio, mqtt_tcptran_pipe_recv_cancel, p)) !=
+	    0) {
 		nni_mtx_unlock(&p->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -585,29 +589,30 @@ tcptran_pipe_recv(void *arg, nni_aio *aio)
 
 	nni_list_append(&p->recvq, aio);
 	if (nni_list_first(&p->recvq) == aio) {
-		tcptran_pipe_recv_start(p);
+		mqtt_tcptran_pipe_recv_start(p);
 	}
 	nni_mtx_unlock(&p->mtx);
 }
 
 static uint16_t
-tcptran_pipe_peer(void *arg)
+mqtt_tcptran_pipe_peer(void *arg)
 {
-	tcptran_pipe *p = arg;
+	mqtt_tcptran_pipe *p = arg;
 
 	return (p->peer);
 }
 
 static int
-tcptran_pipe_getopt(
+mqtt_tcptran_pipe_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	tcptran_pipe *p = arg;
+	mqtt_tcptran_pipe *p = arg;
 	return (nni_stream_get(p->conn, name, buf, szp, t));
 }
 
 static void
-tcptran_pipe_start(tcptran_pipe *p, nng_stream *conn, tcptran_ep *ep)
+mqtt_tcptran_pipe_start(
+    mqtt_tcptran_pipe *p, nng_stream *conn, mqtt_tcptran_ep *ep)
 {
 	nni_iov iov;
 
@@ -638,9 +643,9 @@ tcptran_pipe_start(tcptran_pipe *p, nng_stream *conn, tcptran_ep *ep)
 }
 
 static void
-tcptran_ep_fini(void *arg)
+mqtt_tcptran_ep_fini(void *arg)
 {
-	tcptran_ep *ep = arg;
+	mqtt_tcptran_ep *ep = arg;
 
 	nni_mtx_lock(&ep->mtx);
 	ep->fini = true;
@@ -661,10 +666,10 @@ tcptran_ep_fini(void *arg)
 }
 
 static void
-tcptran_ep_close(void *arg)
+mqtt_tcptran_ep_close(void *arg)
 {
-	tcptran_ep *  ep = arg;
-	tcptran_pipe *p;
+	mqtt_tcptran_ep *  ep = arg;
+	mqtt_tcptran_pipe *p;
 
 	nni_mtx_lock(&ep->mtx);
 
@@ -677,13 +682,13 @@ tcptran_ep_close(void *arg)
 		nng_stream_listener_close(ep->listener);
 	}
 	NNI_LIST_FOREACH (&ep->negopipes, p) {
-		tcptran_pipe_close(p);
+		mqtt_tcptran_pipe_close(p);
 	}
 	NNI_LIST_FOREACH (&ep->waitpipes, p) {
-		tcptran_pipe_close(p);
+		mqtt_tcptran_pipe_close(p);
 	}
 	NNI_LIST_FOREACH (&ep->busypipes, p) {
-		tcptran_pipe_close(p);
+		mqtt_tcptran_pipe_close(p);
 	}
 	if (ep->useraio != NULL) {
 		nni_aio_finish_error(ep->useraio, NNG_ECLOSED);
@@ -697,7 +702,8 @@ tcptran_ep_close(void *arg)
 // The special handling of this URL format is quite honestly an historical
 // mistake, which we would remove if we could.
 static int
-tcptran_url_parse_source(nng_url *url, nng_sockaddr *sa, const nng_url *surl)
+mqtt_tcptran_url_parse_source(
+    nng_url *url, nng_sockaddr *sa, const nng_url *surl)
 {
 	int      af;
 	char *   semi;
@@ -751,22 +757,22 @@ tcptran_url_parse_source(nng_url *url, nng_sockaddr *sa, const nng_url *surl)
 }
 
 static void
-tcptran_timer_cb(void *arg)
+mqtt_tcptran_timer_cb(void *arg)
 {
-	tcptran_ep *ep = arg;
+	mqtt_tcptran_ep *ep = arg;
 	if (nni_aio_result(ep->timeaio) == 0) {
 		nng_stream_listener_accept(ep->listener, ep->connaio);
 	}
 }
 
 static void
-tcptran_accept_cb(void *arg)
+mqtt_tcptran_accept_cb(void *arg)
 {
-	tcptran_ep *  ep  = arg;
-	nni_aio *     aio = ep->connaio;
-	tcptran_pipe *p;
-	int           rv;
-	nng_stream *  conn;
+	mqtt_tcptran_ep *  ep  = arg;
+	nni_aio *          aio = ep->connaio;
+	mqtt_tcptran_pipe *p;
+	int                rv;
+	nng_stream *       conn;
 
 	nni_mtx_lock(&ep->mtx);
 
@@ -775,18 +781,18 @@ tcptran_accept_cb(void *arg)
 	}
 
 	conn = nni_aio_get_output(aio, 0);
-	if ((rv = tcptran_pipe_alloc(&p)) != 0) {
+	if ((rv = mqtt_tcptran_pipe_alloc(&p)) != 0) {
 		nng_stream_free(conn);
 		goto error;
 	}
 
 	if (ep->closed) {
-		tcptran_pipe_fini(p);
+		mqtt_tcptran_pipe_fini(p);
 		nng_stream_free(conn);
 		rv = NNG_ECLOSED;
 		goto error;
 	}
-	tcptran_pipe_start(p, conn, ep);
+	mqtt_tcptran_pipe_start(p, conn, ep);
 	nng_stream_listener_accept(ep->listener, ep->connaio);
 	nni_mtx_unlock(&ep->mtx);
 	return;
@@ -815,32 +821,32 @@ error:
 }
 
 static void
-tcptran_dial_cb(void *arg)
+mqtt_tcptran_dial_cb(void *arg)
 {
-	tcptran_ep *  ep  = arg;
-	nni_aio *     aio = ep->connaio;
-	tcptran_pipe *p;
-	int           rv;
-	nng_stream *  conn;
+	mqtt_tcptran_ep *  ep  = arg;
+	nni_aio *          aio = ep->connaio;
+	mqtt_tcptran_pipe *p;
+	int                rv;
+	nng_stream *       conn;
 
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto error;
 	}
 
 	conn = nni_aio_get_output(aio, 0);
-	if ((rv = tcptran_pipe_alloc(&p)) != 0) {
+	if ((rv = mqtt_tcptran_pipe_alloc(&p)) != 0) {
 		nng_stream_free(conn);
 		goto error;
 	}
 	nni_mtx_lock(&ep->mtx);
 	if (ep->closed) {
-		tcptran_pipe_fini(p);
+		mqtt_tcptran_pipe_fini(p);
 		nng_stream_free(conn);
 		rv = NNG_ECLOSED;
 		nni_mtx_unlock(&ep->mtx);
 		goto error;
 	} else {
-		tcptran_pipe_start(p, conn, ep);
+		mqtt_tcptran_pipe_start(p, conn, ep);
 	}
 	nni_mtx_unlock(&ep->mtx);
 	return;
@@ -857,17 +863,17 @@ error:
 }
 
 static int
-tcptran_ep_init(tcptran_ep **epp, nng_url *url, nni_sock *sock)
+mqtt_tcptran_ep_init(mqtt_tcptran_ep **epp, nng_url *url, nni_sock *sock)
 {
-	tcptran_ep *ep;
+	mqtt_tcptran_ep *ep;
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 	nni_mtx_init(&ep->mtx);
-	NNI_LIST_INIT(&ep->busypipes, tcptran_pipe, node);
-	NNI_LIST_INIT(&ep->waitpipes, tcptran_pipe, node);
-	NNI_LIST_INIT(&ep->negopipes, tcptran_pipe, node);
+	NNI_LIST_INIT(&ep->busypipes, mqtt_tcptran_pipe, node);
+	NNI_LIST_INIT(&ep->waitpipes, mqtt_tcptran_pipe, node);
+	NNI_LIST_INIT(&ep->negopipes, mqtt_tcptran_pipe, node);
 
 	ep->proto = nni_sock_proto_id(sock);
 	ep->url   = url;
@@ -888,13 +894,13 @@ tcptran_ep_init(tcptran_ep **epp, nng_url *url, nni_sock *sock)
 }
 
 static int
-tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
+mqtt_tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 {
-	tcptran_ep * ep;
-	int          rv;
-	nng_sockaddr srcsa;
-	nni_sock *   sock = nni_dialer_sock(ndialer);
-	nng_url      myurl;
+	mqtt_tcptran_ep *ep;
+	int              rv;
+	nng_sockaddr     srcsa;
+	nni_sock *       sock = nni_dialer_sock(ndialer);
+	nng_url          myurl;
 
 	// Check for invalid URL components. only one dialer is allowed
 	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
@@ -906,40 +912,39 @@ tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = tcptran_url_parse_source(&myurl, &srcsa, url)) != 0) {
+	if ((rv = mqtt_tcptran_url_parse_source(&myurl, &srcsa, url)) != 0) {
 		return (rv);
 	}
 
-	if ((rv = tcptran_ep_init(&ep, url, sock)) != 0) {
+	if ((rv = mqtt_tcptran_ep_init(&ep, url, sock)) != 0) {
 		return (rv);
 	}
 
 	if ((rv != 0) ||
-	    ((rv = nni_aio_alloc(&ep->connaio, tcptran_dial_cb, ep)) != 0) ||
+	    ((rv = nni_aio_alloc(&ep->connaio, mqtt_tcptran_dial_cb, ep)) !=
+	        0) ||
 	    ((rv = nng_stream_dialer_alloc_url(&ep->dialer, &myurl)) != 0)) {
-		tcptran_ep_fini(ep);
+		mqtt_tcptran_ep_fini(ep);
 		return (rv);
 	}
 	if ((srcsa.s_family != NNG_AF_UNSPEC) &&
 	    ((rv = nni_stream_dialer_set(ep->dialer, NNG_OPT_LOCADDR, &srcsa,
 	          sizeof(srcsa), NNI_TYPE_SOCKADDR)) != 0)) {
-		tcptran_ep_fini(ep);
+		mqtt_tcptran_ep_fini(ep);
 		return (rv);
 	}
-
 #ifdef NNG_ENABLE_STATS
-	nni_dialer_add_stat(ndialer, &ep->st_rcv_max);
 #endif
 	*dp = ep;
 	return (0);
 }
 
 static int
-tcptran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
+mqtt_tcptran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 {
-	tcptran_ep *ep;
-	int         rv;
-	nni_sock *  sock = nni_listener_sock(nlistener);
+	mqtt_tcptran_ep *ep;
+	int              rv;
+	nni_sock *       sock = nni_listener_sock(nlistener);
 
 	// Check for invalid URL components.
 	if ((strlen(url->u_path) != 0) && (strcmp(url->u_path, "/") != 0)) {
@@ -950,14 +955,16 @@ tcptran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 		return (NNG_EADDRINVAL);
 	}
 
-	if ((rv = tcptran_ep_init(&ep, url, sock)) != 0) {
+	if ((rv = mqtt_tcptran_ep_init(&ep, url, sock)) != 0) {
 		return (rv);
 	}
 
-	if (((rv = nni_aio_alloc(&ep->connaio, tcptran_accept_cb, ep)) != 0) ||
-	    ((rv = nni_aio_alloc(&ep->timeaio, tcptran_timer_cb, ep)) != 0) ||
+	if (((rv = nni_aio_alloc(&ep->connaio, mqtt_tcptran_accept_cb, ep)) !=
+	        0) ||
+	    ((rv = nni_aio_alloc(&ep->timeaio, mqtt_tcptran_timer_cb, ep)) !=
+	        0) ||
 	    ((rv = nng_stream_listener_alloc_url(&ep->listener, url)) != 0)) {
-		tcptran_ep_fini(ep);
+		mqtt_tcptran_ep_fini(ep);
 		return (rv);
 	}
 #ifdef NNG_ENABLE_STATS
@@ -969,9 +976,9 @@ tcptran_listener_init(void **lp, nng_url *url, nni_listener *nlistener)
 }
 
 static void
-tcptran_ep_cancel(nni_aio *aio, void *arg, int rv)
+mqtt_tcptran_ep_cancel(nni_aio *aio, void *arg, int rv)
 {
-	tcptran_ep *ep = arg;
+	mqtt_tcptran_ep *ep = arg;
 	nni_mtx_lock(&ep->mtx);
 	if (ep->useraio == aio) {
 		ep->useraio = NULL;
@@ -981,10 +988,10 @@ tcptran_ep_cancel(nni_aio *aio, void *arg, int rv)
 }
 
 static void
-tcptran_ep_connect(void *arg, nni_aio *aio)
+mqtt_tcptran_ep_connect(void *arg, nni_aio *aio)
 {
-	tcptran_ep *ep = arg;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1000,7 +1007,7 @@ tcptran_ep_connect(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tcptran_ep_cancel, ep)) != 0) {
+	if ((rv = nni_aio_schedule(aio, mqtt_tcptran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -1012,12 +1019,12 @@ tcptran_ep_connect(void *arg, nni_aio *aio)
 }
 
 static int
-tcptran_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
+mqtt_tcptran_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	tcptran_ep *ep = arg;
-	char *      s;
-	int         rv;
-	int         port = 0;
+	mqtt_tcptran_ep *ep = arg;
+	char *           s;
+	int              rv;
+	int              port = 0;
 
 	if (ep->listener != NULL) {
 		(void) nng_stream_listener_get_int(
@@ -1032,10 +1039,10 @@ tcptran_ep_get_url(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static int
-tcptran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
+mqtt_tcptran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	tcptran_ep *ep = arg;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nni_copyout_size(ep->rcvmax, v, szp, t);
@@ -1044,13 +1051,14 @@ tcptran_ep_get_recvmaxsz(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static int
-tcptran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
+mqtt_tcptran_ep_set_recvmaxsz(
+    void *arg, const void *v, size_t sz, nni_opt_type t)
 {
-	tcptran_ep *ep = arg;
-	size_t      val;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	size_t           val;
+	int              rv;
 	if ((rv = nni_copyin_size(&val, v, sz, 0, NNI_MAXSZ, t)) == 0) {
-		tcptran_pipe *p;
+		mqtt_tcptran_pipe *p;
 		nni_mtx_lock(&ep->mtx);
 		ep->rcvmax = val;
 		NNI_LIST_FOREACH (&ep->waitpipes, p) {
@@ -1071,10 +1079,10 @@ tcptran_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 }
 
 static int
-tcptran_ep_bind(void *arg)
+mqtt_tcptran_ep_bind(void *arg)
 {
-	tcptran_ep *ep = arg;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
 
 	nni_mtx_lock(&ep->mtx);
 	rv = nng_stream_listener_listen(ep->listener);
@@ -1084,10 +1092,10 @@ tcptran_ep_bind(void *arg)
 }
 
 static void
-tcptran_ep_accept(void *arg, nni_aio *aio)
+mqtt_tcptran_ep_accept(void *arg, nni_aio *aio)
 {
-	tcptran_ep *ep = arg;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1103,7 +1111,7 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 		nni_aio_finish_error(aio, NNG_EBUSY);
 		return;
 	}
-	if ((rv = nni_aio_schedule(aio, tcptran_ep_cancel, ep)) != 0) {
+	if ((rv = nni_aio_schedule(aio, mqtt_tcptran_ep_cancel, ep)) != 0) {
 		nni_mtx_unlock(&ep->mtx);
 		nni_aio_finish_error(aio, rv);
 		return;
@@ -1113,31 +1121,31 @@ tcptran_ep_accept(void *arg, nni_aio *aio)
 		ep->started = true;
 		nng_stream_listener_accept(ep->listener, ep->connaio);
 	} else {
-		tcptran_ep_match(ep);
+		mqtt_tcptran_ep_match(ep);
 	}
 	nni_mtx_unlock(&ep->mtx);
 }
 
-static nni_sp_pipe_ops tcptran_pipe_ops = {
-	.p_init   = tcptran_pipe_init,
-	.p_fini   = tcptran_pipe_fini,
-	.p_stop   = tcptran_pipe_stop,
-	.p_send   = tcptran_pipe_send,
-	.p_recv   = tcptran_pipe_recv,
-	.p_close  = tcptran_pipe_close,
-	.p_peer   = tcptran_pipe_peer,
-	.p_getopt = tcptran_pipe_getopt,
+static nni_sp_pipe_ops mqtt_tcptran_pipe_ops = {
+	.p_init   = mqtt_tcptran_pipe_init,
+	.p_fini   = mqtt_tcptran_pipe_fini,
+	.p_stop   = mqtt_tcptran_pipe_stop,
+	.p_send   = mqtt_tcptran_pipe_send,
+	.p_recv   = mqtt_tcptran_pipe_recv,
+	.p_close  = mqtt_tcptran_pipe_close,
+	.p_peer   = mqtt_tcptran_pipe_peer,
+	.p_getopt = mqtt_tcptran_pipe_getopt,
 };
 
-static const nni_option tcptran_ep_opts[] = {
+static const nni_option mqtt_tcptran_ep_opts[] = {
 	{
 	    .o_name = NNG_OPT_RECVMAXSZ,
-	    .o_get  = tcptran_ep_get_recvmaxsz,
-	    .o_set  = tcptran_ep_set_recvmaxsz,
+	    .o_get  = mqtt_tcptran_ep_get_recvmaxsz,
+	    .o_set  = mqtt_tcptran_ep_set_recvmaxsz,
 	},
 	{
 	    .o_name = NNG_OPT_URL,
-	    .o_get  = tcptran_ep_get_url,
+	    .o_get  = mqtt_tcptran_ep_get_url,
 	},
 	// terminate list
 	{
@@ -1146,105 +1154,105 @@ static const nni_option tcptran_ep_opts[] = {
 };
 
 static int
-tcptran_dialer_getopt(
+mqtt_tcptran_dialer_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	tcptran_ep *ep = arg;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
 
 	rv = nni_stream_dialer_get(ep->dialer, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_getopt(tcptran_ep_opts, name, ep, buf, szp, t);
+		rv = nni_getopt(mqtt_tcptran_ep_opts, name, ep, buf, szp, t);
 	}
 	return (rv);
 }
 
 static int
-tcptran_dialer_setopt(
+mqtt_tcptran_dialer_setopt(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
-	tcptran_ep *ep = arg;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
 
 	rv = nni_stream_dialer_set(ep->dialer, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_setopt(tcptran_ep_opts, name, ep, buf, sz, t);
+		rv = nni_setopt(mqtt_tcptran_ep_opts, name, ep, buf, sz, t);
 	}
 	return (rv);
 }
 
 static int
-tcptran_listener_getopt(
+mqtt_tcptran_listener_getopt(
     void *arg, const char *name, void *buf, size_t *szp, nni_type t)
 {
-	tcptran_ep *ep = arg;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
 
 	rv = nni_stream_listener_get(ep->listener, name, buf, szp, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_getopt(tcptran_ep_opts, name, ep, buf, szp, t);
+		rv = nni_getopt(mqtt_tcptran_ep_opts, name, ep, buf, szp, t);
 	}
 	return (rv);
 }
 
 static int
-tcptran_listener_setopt(
+mqtt_tcptran_listener_setopt(
     void *arg, const char *name, const void *buf, size_t sz, nni_type t)
 {
-	tcptran_ep *ep = arg;
-	int         rv;
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
 
 	rv = nni_stream_listener_set(ep->listener, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
-		rv = nni_setopt(tcptran_ep_opts, name, ep, buf, sz, t);
+		rv = nni_setopt(mqtt_tcptran_ep_opts, name, ep, buf, sz, t);
 	}
 	return (rv);
 }
 
-static nni_sp_dialer_ops tcptran_dialer_ops = {
-	.d_init    = tcptran_dialer_init,
-	.d_fini    = tcptran_ep_fini,
-	.d_connect = tcptran_ep_connect,
-	.d_close   = tcptran_ep_close,
-	.d_getopt  = tcptran_dialer_getopt,
-	.d_setopt  = tcptran_dialer_setopt,
+static nni_sp_dialer_ops mqtt_tcptran_dialer_ops = {
+	.d_init    = mqtt_tcptran_dialer_init,
+	.d_fini    = mqtt_tcptran_ep_fini,
+	.d_connect = mqtt_tcptran_ep_connect,
+	.d_close   = mqtt_tcptran_ep_close,
+	.d_getopt  = mqtt_tcptran_dialer_getopt,
+	.d_setopt  = mqtt_tcptran_dialer_setopt,
 };
 
-static nni_sp_listener_ops tcptran_listener_ops = {
-	.l_init   = tcptran_listener_init,
-	.l_fini   = tcptran_ep_fini,
-	.l_bind   = tcptran_ep_bind,
-	.l_accept = tcptran_ep_accept,
-	.l_close  = tcptran_ep_close,
-	.l_getopt = tcptran_listener_getopt,
-	.l_setopt = tcptran_listener_setopt,
+static nni_sp_listener_ops mqtt_tcptran_listener_ops = {
+	.l_init   = mqtt_tcptran_listener_init,
+	.l_fini   = mqtt_tcptran_ep_fini,
+	.l_bind   = mqtt_tcptran_ep_bind,
+	.l_accept = mqtt_tcptran_ep_accept,
+	.l_close  = mqtt_tcptran_ep_close,
+	.l_getopt = mqtt_tcptran_listener_getopt,
+	.l_setopt = mqtt_tcptran_listener_setopt,
 };
 
-static nni_sp_tran tcp_tran = {
+static nni_sp_tran mqtt_tcp_tran = {
 	.tran_scheme   = "mqtt-tcp",
-	.tran_dialer   = &tcptran_dialer_ops,
-	.tran_listener = &tcptran_listener_ops,
-	.tran_pipe     = &tcptran_pipe_ops,
-	.tran_init     = tcptran_init,
-	.tran_fini     = tcptran_fini,
+	.tran_dialer   = &mqtt_tcptran_dialer_ops,
+	.tran_listener = &mqtt_tcptran_listener_ops,
+	.tran_pipe     = &mqtt_tcptran_pipe_ops,
+	.tran_init     = mqtt_tcptran_init,
+	.tran_fini     = mqtt_tcptran_fini,
 };
 
-static nni_sp_tran tcp4_tran = {
+static nni_sp_tran mqtt_tcp4_tran = {
 	.tran_scheme   = "mqtt-tcp4",
-	.tran_dialer   = &tcptran_dialer_ops,
-	.tran_listener = &tcptran_listener_ops,
-	.tran_pipe     = &tcptran_pipe_ops,
-	.tran_init     = tcptran_init,
-	.tran_fini     = tcptran_fini,
+	.tran_dialer   = &mqtt_tcptran_dialer_ops,
+	.tran_listener = &mqtt_tcptran_listener_ops,
+	.tran_pipe     = &mqtt_tcptran_pipe_ops,
+	.tran_init     = mqtt_tcptran_init,
+	.tran_fini     = mqtt_tcptran_fini,
 };
 
-static nni_sp_tran tcp6_tran = {
+static nni_sp_tran mqtt_tcp6_tran = {
 	.tran_scheme   = "mqtt-tcp6",
-	.tran_dialer   = &tcptran_dialer_ops,
-	.tran_listener = &tcptran_listener_ops,
-	.tran_pipe     = &tcptran_pipe_ops,
-	.tran_init     = tcptran_init,
-	.tran_fini     = tcptran_fini,
+	.tran_dialer   = &mqtt_tcptran_dialer_ops,
+	.tran_listener = &mqtt_tcptran_listener_ops,
+	.tran_pipe     = &mqtt_tcptran_pipe_ops,
+	.tran_init     = mqtt_tcptran_init,
+	.tran_fini     = mqtt_tcptran_fini,
 };
 
 #ifndef NNG_ELIDE_DEPRECATED
@@ -1258,7 +1266,7 @@ nng_mqtt_tcp_register(void)
 void
 nni_mqtt_tcp_register(void)
 {
-	nni_sp_tran_register(&tcp_tran);
-	nni_sp_tran_register(&tcp4_tran);
-	nni_sp_tran_register(&tcp6_tran);
+	nni_sp_tran_register(&mqtt_tcp_tran);
+	nni_sp_tran_register(&mqtt_tcp4_tran);
+	nni_sp_tran_register(&mqtt_tcp6_tran);
 }
