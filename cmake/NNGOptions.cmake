@@ -116,7 +116,7 @@ option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
 mark_as_advanced(NNG_TRANSPORT_TCP)
 
 # TCP transport
-option (NNG_TRANSPORT_MQTT_TCP "Enable TCP transport." ON)
+option (NNG_TRANSPORT_MQTT_TCP "Enable MQTT TCP transport." ON)
 mark_as_advanced(NNG_TRANSPORT_MQTT_TCP)
 
 # TLS transport

@@ -36,7 +36,7 @@ nni_sp_tran_find(nni_url *url)
 
 	nni_rwlock_rdlock(&sp_tran_lk);
 	NNI_LIST_FOREACH (&sp_tran_list, t) {
-        printf("tran %s %s\n", url->u_scheme, t->tran_scheme);
+		printf("tran %s %s\n", url->u_scheme, t->tran_scheme);
 		if (strcmp(url->u_scheme, t->tran_scheme) == 0) {
 			nni_rwlock_unlock(&sp_tran_lk);
 			return (t);
@@ -92,7 +92,7 @@ nni_sp_tran_sys_init(void)
 #ifdef NNG_TRANSPORT_MQTT_TCP
 	nni_mqtt_tcp_register();
 #endif
-#ifdef NNG_TRANSPORT_TCP
+#ifdef NNG_TRANSPORT_TLS
 	nni_sp_tls_register();
 #endif
 #ifdef NNG_TRANSPORT_WS

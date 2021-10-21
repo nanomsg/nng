@@ -12,5 +12,5 @@
 nng_directory(mqtt)
 
 nng_sources_if(NNG_TRANSPORT_MQTT_TCP mqtt_tcp.c)
-nng_headers_if(NNG_TRANSPORT_MQTT_TCP nng/transport/tcp/mqtt_tcp.h)
+nng_headers_if(NNG_TRANSPORT_MQTT_TCP nng/transport/mqtt/mqtt_tcp.h)
 nng_defines_if(NNG_TRANSPORT_MQTT_TCP NNG_TRANSPORT_MQTT_TCP)
