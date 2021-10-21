@@ -563,6 +563,7 @@ nano_pipe_start(void *arg)
 			pid = nni_pipe_inc_packetid(npipe);
 			nni_id_set(npipe->nano_qos_db, pid, msgq[i]);
 		}
+		cvector_free(msgq);
 	}
 
 	// TODO MQTT V5 check return code
