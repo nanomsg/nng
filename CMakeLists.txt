@@ -249,8 +249,6 @@ if (NNG_TESTS)
     set(all_tests, "")
 endif ()
 
-add_subdirectory(extern/mqtt-codec)
-
 add_subdirectory(src)
 
 if (NNG_TESTS)

@@ -487,7 +487,8 @@ nni_msg_reserve(nni_msg *m, size_t capacity)
 size_t
 nni_msg_capacity(nni_msg *m)
 {
-	return ((size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) - m->m_body.ch_ptr));
+	return ((size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) -
+	    m->m_body.ch_ptr));
 }
 
 void *
