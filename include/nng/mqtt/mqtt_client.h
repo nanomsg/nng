@@ -144,7 +144,7 @@ extern "C" {
 
 // Note that MQTT sockets can be connected to at most a single server.
 // Creating the client does not connect it.
-NNG_DECL int nng_mqtt_client_open(nng_socket **);
+NNG_DECL int nng_mqtt_client_open(nng_socket *);
 
 // Note that there is a single implicit dialer for the client,
 // and options may be set on the socket to configure dial options.
@@ -208,7 +208,6 @@ extern int nng_mqtt_user_props_alloc(nng_mqtt_user_props_t **);
 extern int nng_mqtt_user_props_add(
     nng_mqtt_user_props_t *, const char *, const char *);
 extern void nng_mqtt_user_props_free(nng_mqtt_user_props_t *);
-
 
 #ifdef __cplusplus
 }
