@@ -14,12 +14,16 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "mqtt/mqtt-codec/include/mqtt.h"
+// #include "mqtt.h"
 
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
 
 typedef struct mqtt_tcptran_pipe mqtt_tcptran_pipe;
 typedef struct mqtt_tcptran_ep   mqtt_tcptran_ep;
+
+#define NNI_NANO_MAX_HEADER_SIZE 5
 
 // tcp_pipe is one end of a TCP connection.
 struct mqtt_tcptran_pipe {
@@ -45,6 +49,7 @@ struct mqtt_tcptran_pipe {
 	nni_aio *        rxaio;
 	nni_aio *        negoaio;
 	nni_msg *        rxmsg;
+    nni_msg *        smsg;
 	nni_mtx          mtx;
 };
 
@@ -81,6 +86,7 @@ static void mqtt_tcptran_pipe_recv_cb(void *);
 static void mqtt_tcptran_pipe_nego_cb(void *);
 static void mqtt_tcptran_ep_fini(void *);
 static void mqtt_tcptran_pipe_fini(void *);
+
 
 static nni_reap_list tcptran_ep_reap_list = {
 	.rl_offset = offsetof(mqtt_tcptran_ep, reap),
@@ -231,10 +237,11 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 
+// connack
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto error;
 	}
-
+    printf("mqtt_tcptran_pipe_nego_cb \n");
 	// We start transmitting before we receive.
 	if (p->gottxhead < p->wanttxhead) {
 		p->gottxhead += nni_aio_count(aio);
@@ -343,14 +350,18 @@ mqtt_tcptran_pipe_send_cb(void *arg)
 static void
 mqtt_tcptran_pipe_recv_cb(void *arg)
 {
-	mqtt_tcptran_pipe *p = arg;
-	nni_aio *          aio;
-	int                rv;
-	size_t             n;
-	nni_msg *          msg;
-	nni_aio *          rxaio = p->rxaio;
+	nni_aio *     aio;
+	nni_iov       iov;
+	uint8_t       type;
+	uint32_t      len = 0, rv, pos = 1;
+	size_t        n;
+	nni_msg *     msg;
+	mqtt_tcptran_pipe *p     = arg;
+	nni_aio *     rxaio = p->rxaio;
 
+	printf("tcptran_pipe_recv_cb %p\n", p);
 	nni_mtx_lock(&p->mtx);
+
 	aio = nni_list_first(&p->recvq);
 
 	if ((rv = nni_aio_result(rxaio)) != 0) {
@@ -358,58 +369,138 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	}
 
 	n = nni_aio_count(rxaio);
+	p->gotrxhead += n;
+
 	nni_aio_iov_advance(rxaio, n);
+	// not receive enough bytes, deal with remaining length
+    read_packet_length(p->rxlen, &len);
+	printf("new %ld recevied %ld header %x %d len : %d", n,
+	    p->gotrxhead, p->rxlen[0], p->rxlen[1], len);
+	printf("still need byte count:%ld > 0\n", nni_aio_iov_count(rxaio));
+
 	if (nni_aio_iov_count(rxaio) > 0) {
+		printf("got: %x %x, %ld!!\n", p->rxlen[0], p->rxlen[1],
+		    strlen((char *) p->rxlen));
+		nng_stream_recv(p->conn, rxaio);
+		nni_mtx_unlock(&p->mtx);
+		return;
+	} else if (p->gotrxhead <= NNI_NANO_MAX_HEADER_SIZE &&
+	    p->rxlen[p->gotrxhead - 1] > 0x7f) {
+		// length error
+		if (p->gotrxhead == NNI_NANO_MAX_HEADER_SIZE) {
+			rv = NNG_EMSGSIZE;
+			goto recv_error;
+		}
+		// same packet, continue receving next byte of remaining length
+		iov.iov_buf = &p->rxlen[p->gotrxhead];
+		iov.iov_len = 1;
+		nni_aio_set_iov(rxaio, 1, &iov);
 		nng_stream_recv(p->conn, rxaio);
 		nni_mtx_unlock(&p->mtx);
 		return;
 	}
 
-	// If we don't have a message yet, we were reading the TCP message
-	// header, which is just the length.  This tells us the size of the
-	// message to allocate and how much more to expect.
-	if (p->rxmsg == NULL) {
-		uint64_t len;
-		// We should have gotten a message header.
-		NNI_GET64(p->rxlen, len);
+	// finish fixed header
+	p->wantrxhead = len + p->gotrxhead;
 
+	if (p->rxmsg == NULL) {
+		// We should have gotten a message header. len -> remaining
+		// length to define how many bytes left
+		printf("pipe %p header got: %x %x %x %x %x, %ld!!\n", p,
+		    p->rxlen[0], p->rxlen[1], p->rxlen[2], p->rxlen[3],
+		    p->rxlen[4], p->wantrxhead);
 		// Make sure the message payload is not too big.  If it is
 		// the caller will shut down the pipe.
 		if ((len > p->rcvmax) && (p->rcvmax > 0)) {
+			printf("size error\n");
 			rv = NNG_EMSGSIZE;
 			goto recv_error;
 		}
 
 		if ((rv = nni_msg_alloc(&p->rxmsg, (size_t) len)) != 0) {
+			printf("mem error %ld\n", (size_t) len);
 			goto recv_error;
 		}
 
-		// Submit the rest of the data for a read -- we want to
-		// read the entire message now.
+		// Submit the rest of the data for a read -- seperate Fixed
+		// header with variable header and so on
+		//  we want to read the entire message now.
 		if (len != 0) {
-			nni_iov iov;
 			iov.iov_buf = nni_msg_body(p->rxmsg);
 			iov.iov_len = (size_t) len;
 
 			nni_aio_set_iov(rxaio, 1, &iov);
+			// second recv action
 			nng_stream_recv(p->conn, rxaio);
 			nni_mtx_unlock(&p->mtx);
 			return;
 		}
 	}
 
-	// We read a message completely.  Let the user know the good news.
+	// We read a message completely.  Let the user know the good news. use
+	// as application message callback of users
 	nni_aio_list_remove(aio);
 	msg      = p->rxmsg;
 	p->rxmsg = NULL;
 	n        = nni_msg_len(msg);
+	type     = p->rxlen[0] & 0xf0;
 
-	nni_pipe_bump_rx(p->npipe, n);
+	// fixed_header_adaptor(p->rxlen, msg);
+    read_packet_length(p->rxlen, &len);
+    nni_msg_header_append(msg, p->rxlen, len);
+
+	// set the payload pointer of msg according to packet_type
+	// if (type == CMD_PUBLISH) {
+	// 	uint8_t  qos_pac;
+	// 	uint16_t pid;
+
+	// 	qos_pac = nni_msg_get_pub_qos(msg);
+	// 	if (qos_pac > 0) {
+	// 		nng_aio_wait(p->rsaio);
+	// 		if (qos_pac == 1) {
+	// 			p->txlen[0] = CMD_PUBACK;
+	// 		} else if (qos_pac == 2) {
+	// 			p->txlen[0] = CMD_PUBREC;
+	// 		}
+	// 		p->txlen[1] = 0x02;
+	// 		pid         = nni_msg_get_pub_pid(msg);
+	// 		NNI_PUT16(p->txlen + 2, pid);
+	// 		iov.iov_len = 4;
+	// 		iov.iov_buf = &p->txlen;
+	// 		// send it down...
+	// 		nni_aio_set_iov(p->rsaio, 1, &iov);
+	// 		nng_stream_send(p->conn, p->rsaio);
+	// 	}
+	// } else if (type == CMD_PUBREC) {
+	// 	nng_aio_wait(p->rpaio);
+	// 	p->txlen[0] = 0X62;
+	// 	p->txlen[1] = 0x02;
+	// 	memcpy(p->txlen + 2, nni_msg_body(msg), 2);
+	// 	iov.iov_len = 4;
+	// 	iov.iov_buf = &p->txlen;
+	// 	// send it down...
+	// 	nni_aio_set_iov(p->rpaio, 1, &iov);
+	// 	nng_stream_send(p->conn, p->rpaio);
+	// } else if (type == CMD_PUBREL) {
+	// 	nng_aio_wait(p->qsaio);
+	// 	p->txlen[0] = CMD_PUBCOMP;
+	// 	p->txlen[1] = 0x02;
+	// 	memcpy(p->txlen + 2, nni_msg_body(msg), 2);
+	// 	iov.iov_len = 4;
+	// 	iov.iov_buf = &p->txlen;
+	// 	// send it down...
+	// 	nni_aio_set_iov(p->qsaio, 1, &iov);
+	// 	nng_stream_send(p->conn, p->qsaio);
+	// }
+
+	// keep connection & Schedule next receive
+	// nni_pipe_bump_rx(p->npipe, n);
 	mqtt_tcptran_pipe_recv_start(p);
 	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_set_msg(aio, msg);
 	nni_aio_finish_sync(aio, 0, n);
+	printf("end of tcptran_pipe_recv_cb: synch! %p\n", p);
 	return;
 
 recv_error:
@@ -417,12 +508,20 @@ recv_error:
 	msg      = p->rxmsg;
 	p->rxmsg = NULL;
 	nni_pipe_bump_error(p->npipe, rv);
-	// Intentionally, we do not queue up another receive.
-	// The protocol should notice this error and close the pipe.
 	nni_mtx_unlock(&p->mtx);
 
 	nni_msg_free(msg);
 	nni_aio_finish_error(aio, rv);
+	printf("tcptran_pipe_recv_cb: recv error rv: %d\n", rv);
+	return;
+notify:
+	// nni_pipe_bump_rx(p->npipe, n);
+	nni_aio_list_remove(aio);
+	tcptran_pipe_recv_start(p);
+	nni_mtx_unlock(&p->mtx);
+	nni_aio_set_msg(aio, NULL);
+	nni_aio_finish(aio, 0, 0);
+	return;
 }
 
 static void
@@ -614,13 +713,21 @@ static void
 mqtt_tcptran_pipe_start(
     mqtt_tcptran_pipe *p, nng_stream *conn, mqtt_tcptran_ep *ep)
 {
-	nni_iov iov;
+	nni_iov   iov;
+    nni_msg * cmsg;
 
 	ep->refcnt++;
 
 	p->conn  = conn;
 	p->ep    = ep;
 	p->proto = ep->proto;
+
+    // CONNECT packet
+    nni_msg_alloc(&cmsg, 0);
+    nni_mqtt_msg_set_packet_type(cmsg, MQTT_CONNECT);
+    nni_mqtt_msg_set_connect_proto_version(cmsg, MQTT_VERSION_3_1_1);
+    nni_mqtt_msg_encode(cmsg);
+
 
 	p->txlen[0] = 0;
 	p->txlen[1] = 'S';
@@ -638,8 +745,13 @@ mqtt_tcptran_pipe_start(
 	nni_aio_set_iov(p->negoaio, 1, &iov);
 	nni_list_append(&ep->negopipes, p);
 
-	nni_aio_set_timeout(p->negoaio, 10000); // 10 sec timeout to negotiate
-	nng_stream_send(p->conn, p->negoaio);
+	nni_list_remove(&ep->negopipes, p);
+	nni_list_append(&ep->waitpipes, p);
+
+	mqtt_tcptran_ep_match(ep);
+	// nni_mtx_unlock(&ep->mtx);
+	// nni_aio_set_timeout(p->negoaio, 10000); // 10 sec timeout to negotiate
+	// nng_stream_send(p->conn, p->negoaio);
 }
 
 static void
@@ -1174,6 +1286,7 @@ mqtt_tcptran_dialer_setopt(
 	mqtt_tcptran_ep *ep = arg;
 	int              rv;
 
+    //TODO get mqtt dialer's option
 	rv = nni_stream_dialer_set(ep->dialer, name, buf, sz, t);
 	if (rv == NNG_ENOTSUP) {
 		rv = nni_setopt(mqtt_tcptran_ep_opts, name, ep, buf, sz, t);
