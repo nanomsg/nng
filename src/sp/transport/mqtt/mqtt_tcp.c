@@ -14,8 +14,6 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
-#include "mqtt/mqtt-codec/include/mqtt.h"
-// #include "mqtt.h"
 
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
@@ -368,74 +366,123 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 		goto recv_error;
 	}
 
-	n = nni_aio_count(rxaio);
-	p->gotrxhead += n;
+	if (NULL == p->rxmsg) {
+		// receiving the header first to determine the packet size
+		n = nni_aio_count(rxaio);
+		p->gotrxhead += n;
 
-	nni_aio_iov_advance(rxaio, n);
-	// not receive enough bytes, deal with remaining length
-    read_packet_length(p->rxlen, &len);
-	printf("new %ld recevied %ld header %x %d len : %d", n,
-	    p->gotrxhead, p->rxlen[0], p->rxlen[1], len);
-	printf("still need byte count:%ld > 0\n", nni_aio_iov_count(rxaio));
-
-	if (nni_aio_iov_count(rxaio) > 0) {
-		printf("got: %x %x, %ld!!\n", p->rxlen[0], p->rxlen[1],
-		    strlen((char *) p->rxlen));
-		nng_stream_recv(p->conn, rxaio);
-		nni_mtx_unlock(&p->mtx);
-		return;
-	} else if (p->gotrxhead <= NNI_NANO_MAX_HEADER_SIZE &&
-	    p->rxlen[p->gotrxhead - 1] > 0x7f) {
-		// length error
-		if (p->gotrxhead == NNI_NANO_MAX_HEADER_SIZE) {
-			rv = NNG_EMSGSIZE;
-			goto recv_error;
-		}
-		// same packet, continue receving next byte of remaining length
-		iov.iov_buf = &p->rxlen[p->gotrxhead];
-		iov.iov_len = 1;
-		nni_aio_set_iov(rxaio, 1, &iov);
-		nng_stream_recv(p->conn, rxaio);
-		nni_mtx_unlock(&p->mtx);
-		return;
-	}
-
-	// finish fixed header
-	p->wantrxhead = len + p->gotrxhead;
-
-	if (p->rxmsg == NULL) {
-		// We should have gotten a message header. len -> remaining
-		// length to define how many bytes left
-		printf("pipe %p header got: %x %x %x %x %x, %ld!!\n", p,
-		    p->rxlen[0], p->rxlen[1], p->rxlen[2], p->rxlen[3],
-		    p->rxlen[4], p->wantrxhead);
-		// Make sure the message payload is not too big.  If it is
-		// the caller will shut down the pipe.
-		if ((len > p->rcvmax) && (p->rcvmax > 0)) {
-			printf("size error\n");
-			rv = NNG_EMSGSIZE;
-			goto recv_error;
-		}
-
-		if ((rv = nni_msg_alloc(&p->rxmsg, (size_t) len)) != 0) {
-			printf("mem error %ld\n", (size_t) len);
-			goto recv_error;
-		}
-
-		// Submit the rest of the data for a read -- seperate Fixed
-		// header with variable header and so on
-		//  we want to read the entire message now.
-		if (len != 0) {
-			iov.iov_buf = nni_msg_body(p->rxmsg);
-			iov.iov_len = (size_t) len;
-
-			nni_aio_set_iov(rxaio, 1, &iov);
-			// second recv action
+		struct pos_buf buf = { .curpos = p->rxlen + 1,
+			.endpos                = p->rxlen + p->gotrxhead };
+		if (read_packet_length(&buf, &len) != 0) {
+			// not enough header, schedule another receive
+			nni_aio_bump_count(rxaio, n);
 			nng_stream_recv(p->conn, rxaio);
 			nni_mtx_unlock(&p->mtx);
 			return;
 		}
+
+		// we have decode the remaining length from the header
+		// the total packet length is one byte for the packet type,
+		// plus the number of bytes to encode the remaining length
+		// field, plus the remaining length.
+		size_t tot = 1 + byte_number_for_variable_length(len) + len;
+		nni_msg_alloc(&p->rxmsg, tot);
+		memcpy(nni_msg_body(p->rxmsg), p->rxlen, p->gotrxhead);
+		if (tot > p->gotrxhead) {
+			// schedule to receive the bulk of the packet
+			iov.iov_buf  = nni_msg_body(p->rxmsg) + p->gotrxhead;
+			iov.iov_len  = tot - p->gotrxhead;
+			p->gotrxhead = 0;
+			nni_aio_set_iov(rxaio, 1, &iov);
+			nng_stream_recv(p->conn, rxaio);
+			nni_mtx_unlock(&p->mtx);
+			return;
+		} else {
+			// good news, this is very small packet
+			// we have done receiving
+			p->gotrxhead = 0;
+		}
+	} else {
+		// we are receiving the bulk of the packet
+		n = nni_aio_count(rxaio);
+		nni_aio_bump_count(rxaio, n);
+		if (nni_aio_iov_advance(rxaio, n) > 0) {
+			// still data remaining, schedule to receive
+			nng_stream_recv(p->conn, rxaio);
+			nni_mtx_unlock(&p->mtx);
+			return;
+		}
+		// good news, the whole packet is received
 	}
+
+	//// not receive enough bytes, deal with remaining length
+	// read_packet_length(p->rxlen, &len);
+	// printf("new %ld recevied %ld header %x %d len : %d", n,
+	// p->gotrxhead,
+	//    p->rxlen[0], p->rxlen[1], len);
+	// printf("still need byte count:%ld > 0\n", nni_aio_iov_count(rxaio));
+
+	//	//if (nni_aio_iov_count(rxaio) > 0) {
+	//	printf("got: %x %x, %ld!!\n", p->rxlen[0], p->rxlen[1],
+	//	    strlen((char *) p->rxlen));
+	//	nng_stream_recv(p->conn, rxaio);
+	//	nni_mtx_unlock(&p->mtx);
+	//	return;
+	//} else if (p->gotrxhead <= NNI_NANO_MAX_HEADER_SIZE &&
+	//    p->rxlen[p->gotrxhead - 1] > 0x7f) {
+	//	// length error
+	//	if (p->gotrxhead == NNI_NANO_MAX_HEADER_SIZE) {
+	//		rv = NNG_EMSGSIZE;
+	//		goto recv_error;
+	//	}
+	//	// same packet, continue receving next byte of remaining length
+	//	iov.iov_buf = &p->rxlen[p->gotrxhead];
+	//	iov.iov_len = 1;
+	//	nni_aio_set_iov(rxaio, 1, &iov);
+	//	nng_stream_recv(p->conn, rxaio);
+	//	nni_mtx_unlock(&p->mtx);
+	//	return;
+	//}
+
+	// finish fixed header
+	//	p->wantrxhead = len + p->gotrxhead;
+	//
+	//	if (p->rxmsg == NULL) {
+	//		// We should have gotten a message header. len ->
+	// remaining
+	//		// length to define how many bytes left
+	//		printf("pipe %p header got: %x %x %x %x %x, %ld!!\n",
+	// p, 		    p->rxlen[0], p->rxlen[1], p->rxlen[2], p->rxlen[3],
+	// p->rxlen[4], p->wantrxhead);
+	//		// Make sure the message payload is not too big.  If it
+	// is
+	//		// the caller will shut down the pipe.
+	//		if ((len > p->rcvmax) && (p->rcvmax > 0)) {
+	//			printf("size error\n");
+	//			rv = NNG_EMSGSIZE;
+	//			goto recv_error;
+	//		}
+	//
+	//		if ((rv = nni_msg_alloc(&p->rxmsg, (size_t) len)) != 0)
+	//{ 			printf("mem error %ld\n", (size_t) len);
+	// goto recv_error;
+	//		}
+	//
+	//		// Submit the rest of the data for a read -- seperate
+	// Fixed
+	//		// header with variable header and so on
+	//		//  we want to read the entire message now.
+	//		if (len != 0) {
+	//			iov.iov_buf = nni_msg_body(p->rxmsg);
+	//			iov.iov_len = (size_t) len;
+	//
+	//			nni_aio_set_iov(rxaio, 1, &iov);
+	//			// second recv action
+	//			nng_stream_recv(p->conn, rxaio);
+	//			nni_mtx_unlock(&p->mtx);
+	//			return;
+	//		}
+	//	}
 
 	// We read a message completely.  Let the user know the good news. use
 	// as application message callback of users
@@ -443,11 +490,11 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	msg      = p->rxmsg;
 	p->rxmsg = NULL;
 	n        = nni_msg_len(msg);
-	type     = p->rxlen[0] & 0xf0;
+	// type     = p->rxlen[0] & 0xf0;
 
 	// fixed_header_adaptor(p->rxlen, msg);
-    read_packet_length(p->rxlen, &len);
-    nni_msg_header_append(msg, p->rxlen, len);
+	// read_packet_length(p->rxlen, &len);
+	// nni_msg_header_append(msg, p->rxlen, len);
 
 	// set the payload pointer of msg according to packet_type
 	// if (type == CMD_PUBLISH) {
@@ -574,13 +621,13 @@ mqtt_tcptran_pipe_send_start(mqtt_tcptran_pipe *p)
 	msg = nni_aio_get_msg(aio);
 	len = nni_msg_len(msg) + nni_msg_header_len(msg);
 
-	NNI_PUT64(p->txlen, len);
+	// NNI_PUT64(p->txlen, len);
 
-	txaio          = p->txaio;
-	niov           = 0;
-	iov[0].iov_buf = p->txlen;
-	iov[0].iov_len = sizeof(p->txlen);
-	niov++;
+	txaio = p->txaio;
+	niov  = 0;
+	// iov[0].iov_buf = p->txlen;
+	// iov[0].iov_len = sizeof(p->txlen);
+	// niov++;
 	if (nni_msg_header_len(msg) > 0) {
 		iov[niov].iov_buf = nni_msg_header(msg);
 		iov[niov].iov_len = nni_msg_header_len(msg);
@@ -722,12 +769,11 @@ mqtt_tcptran_pipe_start(
 	p->ep    = ep;
 	p->proto = ep->proto;
 
-    // CONNECT packet
-    nni_msg_alloc(&cmsg, 0);
-    nni_mqtt_msg_set_packet_type(cmsg, MQTT_CONNECT);
-    nni_mqtt_msg_set_connect_proto_version(cmsg, MQTT_VERSION_3_1_1);
-    nni_mqtt_msg_encode(cmsg);
-
+	// CONNECT packet
+	// nni_msg_alloc(&cmsg, 0);
+	// nni_mqtt_msg_set_packet_type(cmsg, MQTT_CONNECT);
+	// nni_mqtt_msg_set_connect_proto_version(cmsg, MQTT_VERSION_3_1_1);
+	// nni_mqtt_msg_encode(cmsg);
 
 	p->txlen[0] = 0;
 	p->txlen[1] = 'S';
