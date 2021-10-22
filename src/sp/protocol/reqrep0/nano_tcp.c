@@ -633,6 +633,8 @@ nano_pipe_close(void *arg)
 		clientid = (char *)conn_param_get_clientid(p->conn_param);
 		clientid_key = DJBHashn(clientid, strlen(clientid));
 		while((msg = nni_id_get_any(npipe->nano_qos_db, &packetid)) != NULL) {
+			while(nni_msg_shared(msg))
+				nni_msg_free(msg);
 			dbtree_cache_session_msg(p->tree, msg, clientid_key);
 			nni_id_remove(npipe->nano_qos_db, packetid);
 		}
