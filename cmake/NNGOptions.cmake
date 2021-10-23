@@ -76,6 +76,9 @@ mark_as_advanced(NNG_PROTO_RESPONDENT0)
 option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
 mark_as_advanced(NNG_PROTO_SURVEYOR0)
 
+option (NNG_PROTO_MQTT_CLIENT "Enable MQTT Client protocol." ON)
+mark_as_advanced(NNG_PROTO_MQTT_CLIENT)
+
 # TLS support.
 
 # Enabling TLS is required to enable support for the TLS transport
