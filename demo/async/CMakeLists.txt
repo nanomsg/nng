@@ -15,6 +15,7 @@ set(PARALLEL 128 CACHE STRING "Parallelism (min 4, max 1000)")
 
 # Call this from your own project's makefile.
 find_package(nng CONFIG REQUIRED)
+find_package(Threads)
 
 add_executable(server server.c)
 target_link_libraries(server nng::nng)

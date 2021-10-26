@@ -522,6 +522,87 @@ test_msg_reserve(void)
 	nng_msg_free(msg);
 }
 
+void
+test_msg_mqtt_alloc(void)
+{
+	nng_msg *msg;
+
+	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
+
+	nng_msg_free(msg);
+}
+
+void
+test_msg_mqtt_encode_connect(void)
+{
+	nng_msg *msg;
+
+	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
+
+	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_CONNECT);
+	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_CONNECT);
+
+	nng_mqtt_msg_set_connect_client_id(msg, "nanomq-mqtt");
+	NUTS_ASSERT(strcmp(nng_mqtt_msg_get_connect_client_id(msg),
+	                "nanomq-mqtt") == 0);
+
+	NUTS_PASS(nng_mqtt_msg_encode(msg));
+
+	uint8_t print_buf[1024] = { 0 };
+	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
+	// printf("%s\n", print_buf);
+	nng_msg_free(msg);
+}
+
+void
+test_msg_mqtt_encode_subscribe(void)
+{
+	nng_msg *msg;
+
+	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
+
+	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_SUBSCRIBE);
+	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_SUBSCRIBE);
+
+	size_t              sz        = 2;
+	nng_mqtt_topic_qos *topic_qos = nng_mqtt_topic_qos_array_create(sz);
+	nng_mqtt_topic_qos_array_set(topic_qos, 0, "/nanomq/mqtt/msg/0", 1);
+	nng_mqtt_topic_qos_array_set(topic_qos, 1, "/nanomq/mqtt/msg/1", 1);
+
+	nng_mqtt_msg_set_subscribe_topics(msg, topic_qos, sz);
+
+	NUTS_PASS(nng_mqtt_msg_encode(msg));
+
+	uint8_t print_buf[1024] = { 0 };
+	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
+	// printf("%s\n", print_buf);
+	nng_msg_free(msg);
+}
+
+void
+test_msg_mqtt_encode_unsubscribe(void)
+{
+	nng_msg *msg;
+
+	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
+
+	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_UNSUBSCRIBE);
+	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_UNSUBSCRIBE);
+
+	size_t          sz        = 2;
+	nng_mqtt_topic *topic_qos = nng_mqtt_topic_array_create(sz);
+	nng_mqtt_topic_array_set(topic_qos, 0, "/nanomq/mqtt/1");
+	nng_mqtt_topic_array_set(topic_qos, 1, "/nanomq/mqtt/2");
+
+	nng_mqtt_msg_set_unsubscribe_topics(msg, topic_qos, sz);
+
+	NUTS_PASS(nng_mqtt_msg_encode(msg));
+	uint8_t print_buf[1024] = { 0 };
+	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
+	// printf("%s\n", print_buf);
+	nng_msg_free(msg);
+}
+
 TEST_LIST = {
 	{ "msg option", test_msg_option },
 	{ "msg empty", test_msg_empty },
@@ -541,13 +622,16 @@ TEST_LIST = {
 	{ "msg dup", test_msg_dup },
 	{ "msg dup pipe", test_msg_dup_pipe },
 	{ "msg body u16", test_msg_body_uint16 },
-	{ "msg header u16", test_msg_body_uint16 },
 	{ "msg header u32", test_msg_header_uint16 },
 	{ "msg body u32", test_msg_body_uint32 },
 	{ "msg header u32", test_msg_header_uint32 },
-	{ "msg body u32", test_msg_body_uint64 },
-	{ "msg header u32", test_msg_header_uint64 },
+	{ "msg body u64", test_msg_body_uint64 },
+	{ "msg header u64", test_msg_header_uint64 },
 	{ "msg capacity", test_msg_capacity },
 	{ "msg reserve", test_msg_reserve },
+	{ "msg mqtt msg alloc", test_msg_mqtt_alloc },
+	{ "msg mqtt encode connect", test_msg_mqtt_encode_connect },
+	{ "msg mqtt encode subscribe", test_msg_mqtt_encode_subscribe },
+	{ "msg mqtt encode unsubscribe", test_msg_mqtt_encode_unsubscribe },
 	{ NULL, NULL },
 };
