@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env bash
 
 #
 # Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
