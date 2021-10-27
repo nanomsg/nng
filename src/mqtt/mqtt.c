@@ -1,8 +1,48 @@
 #include "mqtt.h"
+#include <stdlib.h>
 #include <string.h>
+
+static void nni_mqtt_msg_append_u8(nni_msg *, uint8_t);
+static void nni_mqtt_msg_append_u16(nni_msg *, uint16_t);
+static void nni_mqtt_msg_append_byte_str(nni_msg *, nni_mqtt_buffer *);
+static void nni_mqtt_msg_encode_fixed_header(nni_msg *, nni_mqtt_proto_data *);
+static int  nni_mqtt_msg_encode_connect(nni_msg *);
+static int  nni_mqtt_msg_encode_connack(nni_msg *);
+static int  nni_mqtt_msg_encode_subscribe(nni_msg *);
+static int  nni_mqtt_msg_encode_suback(nni_msg *);
+static int  nni_mqtt_msg_encode_publish(nni_msg *);
+static int  nni_mqtt_msg_encode_puback(nni_msg *);
+static int  nni_mqtt_msg_encode_pubrec(nni_msg *);
+static int  nni_mqtt_msg_encode_pubrel(nni_msg *);
+static int  nni_mqtt_msg_encode_pubcomp(nni_msg *);
+static int  nni_mqtt_msg_encode_unsubscribe(nni_msg *);
+static int  nni_mqtt_msg_encode_unsuback(nni_msg *);
+static int  nni_mqtt_msg_encode_base(nni_msg *);
 
 static int nni_mqtt_msg_free(void *);
 static int nni_mqtt_msg_dup(void **, const void *);
+
+typedef struct {
+	nni_mqtt_packet_type packet_type;
+	int (*encode)(nni_msg *);
+} mqtt_msg_encode_handler;
+
+static mqtt_msg_encode_handler encode_funcs[] = {
+	{ NNG_MQTT_CONNECT, nni_mqtt_msg_encode_connect },
+	{ NNG_MQTT_CONNACK, nni_mqtt_msg_encode_connack },
+	{ NNG_MQTT_PUBLISH, nni_mqtt_msg_encode_publish },
+	{ NNG_MQTT_PUBACK, nni_mqtt_msg_encode_puback },
+	{ NNG_MQTT_PUBREC, nni_mqtt_msg_encode_pubrec },
+	{ NNG_MQTT_PUBREL, nni_mqtt_msg_encode_pubrel },
+	{ NNG_MQTT_PUBCOMP, nni_mqtt_msg_encode_pubcomp },
+	{ NNG_MQTT_SUBSCRIBE, nni_mqtt_msg_encode_subscribe },
+	{ NNG_MQTT_SUBACK, nni_mqtt_msg_encode_suback },
+	{ NNG_MQTT_UNSUBSCRIBE, nni_mqtt_msg_encode_unsubscribe },
+	{ NNG_MQTT_UNSUBACK, nni_mqtt_msg_encode_unsuback },
+	{ NNG_MQTT_PINGREQ, nni_mqtt_msg_encode_base },
+	{ NNG_MQTT_PINGRESP, nni_mqtt_msg_encode_base },
+	{ NNG_MQTT_DISCONNECT, nni_mqtt_msg_encode_base }
+};
 
 static nni_proto_msg_ops proto_msg_ops = {
 
@@ -14,13 +54,23 @@ static nni_proto_msg_ops proto_msg_ops = {
 static int
 nni_mqtt_msg_free(void *self)
 {
-	return mqtt_msg_destroy((mqtt_msg *) self);
+	if (self) {
+		free(self);
+		return (0);
+	}
+	return (1);
 }
 
 static int
 nni_mqtt_msg_dup(void **dest, const void *src)
 {
-	return mqtt_msg_dup((mqtt_msg **) dest, (const mqtt_msg *) src);
+	nni_mqtt_proto_data *mqtt;
+
+	mqtt = NNI_ALLOC_STRUCT(mqtt);
+	memcpy(mqtt, (nni_mqtt_proto_data *) src, sizeof(nni_mqtt_proto_data));
+	*dest = mqtt;
+
+	return (0);
 }
 
 int
@@ -63,14 +113,20 @@ nni_mqtt_msg_alloc(nni_msg **msg, size_t sz)
 int
 nni_mqtt_msg_encode(nni_msg *msg)
 {
-	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
-
-	mqtt_msg_encode(proto_data);
-
 	nni_msg_clear(msg);
+	nni_msg_header_clear(msg);
 
-	return nni_msg_append(msg, proto_data->entire_raw_msg.buf,
-	    proto_data->entire_raw_msg.length);
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+
+	for (size_t i = 0;
+	     i < sizeof(encode_funcs) / sizeof(mqtt_msg_encode_handler); i++) {
+		if (encode_funcs[i].packet_type ==
+		    mqtt->fixed_header.common.packet_type) {
+			return encode_funcs[i].encode(msg);
+		}
+	}
+
+	return MQTT_ERR_PROTOCOL;
 }
 
 int
@@ -583,4 +639,440 @@ nni_mqtt_topic_qos_array_free(nni_mqtt_topic_qos *topic_qos, size_t n)
 		nni_strfree((char *) topic_qos[i].topic.buf);
 	}
 	NNI_FREE_STRUCTS(topic_qos, n);
+}
+
+static void
+nni_mqtt_msg_append_u8(nni_msg *msg, uint8_t val)
+{
+	nni_msg_append(msg, &val, 1);
+}
+
+static void
+nni_mqtt_msg_append_u16(nni_msg *msg, uint16_t val)
+{
+	uint8_t buf[2] = { 0 };
+	NNI_PUT16(buf, val);
+	nni_msg_append(msg, buf, 2);
+}
+
+static void
+nni_mqtt_msg_append_byte_str(nni_msg *msg, nni_mqtt_buffer *str)
+{
+	nni_mqtt_msg_append_u16(msg, (uint16_t) str->length);
+	nni_msg_append(msg, str->buf, str->length);
+}
+
+static void
+nni_mqtt_msg_encode_fixed_header(nni_msg *msg, nni_mqtt_proto_data *data)
+{
+	uint8_t        rlen[4] = { 0 };
+	struct pos_buf buf     = { .curpos = &rlen[0],
+                .endpos = &rlen[sizeof(rlen) / sizeof(rlen[0]) - 1] };
+
+	nni_msg_header_clear(msg);
+	uint8_t header = *(uint8_t *) &data->fixed_header.common;
+
+	nni_msg_header_append_u32(msg, (uint32_t) header);
+
+	int len = write_variable_length_value(
+	    data->fixed_header.remaining_length, &buf);
+
+	for (int i = 0; i < len; i++) {
+		nni_msg_header_append_u32(msg, rlen[i]);
+	}
+}
+
+static int
+nni_mqtt_msg_encode_connect(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+
+	nni_msg_clear(msg);
+
+	int poslength = 6;
+
+	mqtt_connect_vhdr *var_header = &mqtt->var_header.connect;
+
+	/* length of protocol-name (consider "MQTT" by default */
+	poslength += (var_header->protocol_name.length == 0)
+	    ? 4
+	    : var_header->protocol_name.length;
+
+	/* add the length of payload part */
+	mqtt_connect_payload *payload = &mqtt->payload.connect;
+
+	/* Will Topic */
+	if (payload->will_topic.length > 0) {
+		poslength += 2 + payload->will_topic.length;
+		var_header->conn_flags.will_flag = 1;
+	}
+	/* Will Message */
+	if (payload->will_msg.length > 0) {
+		poslength += 2 + payload->will_msg.length;
+		var_header->conn_flags.will_flag = 1;
+	}
+	/* User Name */
+	if (payload->user_name.length > 0) {
+		poslength += 2 + payload->user_name.length;
+		var_header->conn_flags.username_flag = 1;
+	}
+	/* Password */
+	if (payload->password.length > 0) {
+		poslength += 2 + payload->password.length;
+		var_header->conn_flags.password_flag = 1;
+	}
+
+	mqtt->fixed_header.remaining_length = poslength;
+	if (mqtt->fixed_header.remaining_length > MQTT_MAX_MSG_LEN) {
+		return MQTT_ERR_PAYLOAD_SIZE;
+	}
+
+	nni_mqtt_msg_append_byte_str(msg, &var_header->protocol_name);
+
+	nni_mqtt_msg_append_u8(msg, var_header->protocol_version);
+
+	/* Connect Flags */
+	nni_mqtt_msg_append_u8(msg, *(uint8_t *) &var_header->conn_flags);
+
+	/* Keep Alive */
+	nni_mqtt_msg_append_u16(msg, var_header->keep_alive);
+
+	/* Now we are in payload part */
+
+	/* Client Identifier */
+	/* Client Identifier is mandatory */
+	nni_mqtt_msg_append_byte_str(msg, &payload->client_id);
+
+	/* Will Topic */
+	if (payload->will_topic.length) {
+		if (!(var_header->conn_flags.will_flag)) {
+			return MQTT_ERR_PROTOCOL;
+		}
+		nni_mqtt_msg_append_byte_str(msg, &payload->will_topic);
+	} else {
+		if (var_header->conn_flags.will_flag) {
+			return MQTT_ERR_PROTOCOL;
+		}
+	}
+
+	/* Will Message */
+	if (payload->will_msg.length) {
+		if (!(var_header->conn_flags.will_flag)) {
+			return MQTT_ERR_PROTOCOL;
+		}
+		nni_mqtt_msg_append_byte_str(msg, &payload->will_msg);
+	} else {
+		if (var_header->conn_flags.will_flag) {
+			return MQTT_ERR_PROTOCOL;
+		}
+	}
+
+	/* User-Name */
+	if (payload->user_name.length) {
+		if (!(var_header->conn_flags.username_flag)) {
+			return MQTT_ERR_PROTOCOL;
+		}
+		nni_mqtt_msg_append_byte_str(msg, &payload->user_name);
+	} else {
+		if (var_header->conn_flags.username_flag) {
+			return MQTT_ERR_PROTOCOL;
+		}
+	}
+
+	/* Password */
+	if (payload->password.length) {
+		if (!(var_header->conn_flags.password_flag)) {
+			return MQTT_ERR_PROTOCOL;
+		}
+		nni_mqtt_msg_append_byte_str(msg, &payload->password);
+	} else {
+		if (var_header->conn_flags.password_flag) {
+			return MQTT_ERR_PROTOCOL;
+		}
+	}
+
+	// Append mqtt fixed header to nng_msg header
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_connack(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 2; /* ConnAck Flags(1) + Connect Return Code(1) */
+
+	mqtt_connack_vhdr *var_header = &mqtt->var_header.connack;
+
+	mqtt->fixed_header.remaining_length = poslength;
+
+	/* Connect Acknowledge Flags */
+	nni_mqtt_msg_append_u8(msg, *(uint8_t *) &var_header->connack_flags);
+
+	/* Connect Return Code */
+	nni_mqtt_msg_append_u8(
+	    msg, *(uint8_t *) &var_header->conn_return_code);
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_subscribe(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 0;
+
+	poslength += 2; /* for Packet Identifier */
+
+	mqtt_subscribe_payload *spld = &mqtt->payload.subscribe;
+
+	/* Go through topic filters to calculate length information */
+	for (size_t i = 0; i < spld->topic_count; i++) {
+		mqtt_topic_qos *topic = &spld->topic_arr[i];
+		poslength += topic->topic.length;
+		poslength += 1; // for 'options' byte
+		poslength += 2; // for 'length' field of Topic Filter, which is
+		                // encoded as UTF-8 encoded strings */
+	}
+
+	mqtt->fixed_header.remaining_length = poslength;
+	mqtt->fixed_header.common.bit_1     = 1;
+
+	mqtt_subscribe_vhdr *var_header = &mqtt->var_header.subscribe;
+	/* Packet Id */
+	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+
+	/* Subscribe topic_arr */
+	for (size_t i = 0; i < spld->topic_count; i++) {
+		mqtt_topic_qos *topic = &spld->topic_arr[i];
+		nni_mqtt_msg_append_byte_str(msg, &topic->topic);
+		nni_mqtt_msg_append_u8(msg, topic->qos);
+	}
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_suback(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 2; /* for Packet Identifier */
+
+	mqtt_suback_vhdr *   var_header = &mqtt->var_header.suback;
+	mqtt_suback_payload *spld       = &mqtt->payload.suback;
+
+	poslength += spld->ret_code_count;
+
+	mqtt->fixed_header.remaining_length = poslength;
+
+	/* Packet Identifier */
+	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+
+	/* Return Codes */
+	nni_msg_append(msg, spld->ret_code_arr, spld->ret_code_count);
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_publish(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 0;
+
+	poslength += 2; /* for Topic Name length field */
+	poslength += mqtt->var_header.publish.topic_name.length;
+	/* Packet Identifier is requested if QoS>0 */
+	if (mqtt->fixed_header.publish.qos > 0) {
+		poslength += 2; /* for Packet Identifier */
+	}
+	poslength += mqtt->payload.publish.payload.length;
+
+	mqtt->fixed_header.remaining_length = poslength;
+
+	mqtt_publish_vhdr *var_header = &mqtt->var_header.publish;
+
+	/* Topic Name */
+	nni_mqtt_msg_append_byte_str(msg, &var_header->topic_name);
+
+	if (mqtt->fixed_header.publish.qos > 0) {
+		/* Packet Id */
+		nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+	}
+
+	/* Payload */
+	if (mqtt->payload.publish.payload.length > 0) {
+		nni_msg_append(msg, mqtt->payload.publish.payload.buf,
+		    mqtt->payload.publish.payload.length);
+	}
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_puback(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 2; /* for Packet Identifier */
+
+	mqtt_puback_vhdr *var_header = &mqtt->var_header.puback;
+
+	mqtt->fixed_header.remaining_length = poslength;
+
+	/* Packet Identifier */
+	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_pubrec(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 2; /* for Packet Identifier */
+
+	mqtt_pubrec_vhdr *var_header = &mqtt->var_header.pubrec;
+
+	mqtt->fixed_header.remaining_length = poslength;
+
+	/* Packet Identifier */
+	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_pubrel(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 2; /* for Packet Identifier */
+
+	mqtt_pubrec_vhdr *var_header = &mqtt->var_header.pubrec;
+
+	mqtt->fixed_header.common.bit_1     = 1;
+	mqtt->fixed_header.remaining_length = poslength;
+
+	/* Packet Identifier */
+	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_pubcomp(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 2; /* for Packet Identifier */
+
+	mqtt_pubcomp_vhdr *var_header = &mqtt->var_header.pubcomp;
+
+	mqtt->fixed_header.remaining_length = poslength;
+
+	/* Packet Identifier */
+	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_unsubscribe(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 0;
+
+	poslength += 2; /* for Packet Identifier */
+
+	mqtt_unsubscribe_payload *uspld = &mqtt->payload.unsubscribe;
+
+	/* Go through topic filters to calculate length information */
+	for (size_t i = 0; i < uspld->topic_count; i++) {
+		mqtt_buf *topic = &uspld->topic_arr[i];
+		poslength += topic->length;
+		poslength += 2; // for 'length' field of Topic Filter, which is
+		                // encoded as UTF-8 encoded strings */
+	}
+
+	mqtt->fixed_header.remaining_length = poslength;
+	mqtt->fixed_header.common.bit_1     = 1;
+
+	mqtt_subscribe_vhdr *var_header = &mqtt->var_header.subscribe;
+	/* Packet Id */
+	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+
+	/* Subscribe topic_arr */
+	for (size_t i = 0; i < uspld->topic_count; i++) {
+		mqtt_buf *topic = &uspld->topic_arr[i];
+		nni_mqtt_msg_append_byte_str(msg, topic);
+	}
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_unsuback(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	int poslength = 2; /* for Packet Identifier */
+
+	mqtt_unsuback_vhdr *var_header = &mqtt->var_header.unsuback;
+
+	mqtt->fixed_header.remaining_length = poslength;
+
+	/* Packet Identifier */
+	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+	return MQTT_SUCCESS;
+}
+
+static int
+nni_mqtt_msg_encode_base(nni_msg *msg)
+{
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_msg_clear(msg);
+
+	mqtt->fixed_header.remaining_length = 0;
+
+	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
+
+	return MQTT_SUCCESS;
 }
