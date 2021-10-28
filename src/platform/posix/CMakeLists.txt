@@ -105,4 +105,7 @@ if (NNG_PLATFORM_POSIX)
     else ()
         nng_sources(posix_rand_urandom.c)
     endif ()
+
+    nng_test(posix_ipcwinsec_test)
+
 endif ()

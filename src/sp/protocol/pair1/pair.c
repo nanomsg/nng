@@ -32,9 +32,9 @@ static void pair1_pipe_send(pair1_pipe *, nni_msg *);
 
 // pair1_sock is our per-socket protocol private structure.
 struct pair1_sock {
-	nni_sock *     sock;
+	nni_sock      *sock;
 	bool           raw;
-	pair1_pipe *   p;
+	pair1_pipe    *p;
 	nni_atomic_int ttl;
 	nni_mtx        mtx;
 	nni_lmq        wmq;
@@ -63,7 +63,7 @@ struct pair1_sock {
 
 // pair1_pipe is our per-pipe protocol private structure.
 struct pair1_pipe {
-	nni_pipe *  pipe;
+	nni_pipe   *pipe;
 	pair1_sock *pair;
 	nni_aio     aio_send;
 	nni_aio     aio_recv;
@@ -302,11 +302,11 @@ pair1_pipe_recv_cb(void *arg)
 {
 	pair1_pipe *p = arg;
 	pair1_sock *s = p->pair;
-	nni_msg *   msg;
+	nni_msg    *msg;
 	uint32_t    hdr;
-	nni_pipe *  pipe = p->pipe;
+	nni_pipe   *pipe = p->pipe;
 	size_t      len;
-	nni_aio *   a;
+	nni_aio    *a;
 
 	if (nni_aio_result(&p->aio_recv) != 0) {
 		nni_pipe_close(p->pipe);
@@ -372,8 +372,8 @@ static void
 pair1_send_sched(pair1_sock *s)
 {
 	pair1_pipe *p;
-	nni_msg *   m;
-	nni_aio *   a = NULL;
+	nni_msg    *m;
+	nni_aio    *a = NULL;
 	size_t      l = 0;
 
 	nni_mtx_lock(&s->mtx);
@@ -444,8 +444,8 @@ static void
 pair1_sock_close(void *arg)
 {
 	pair1_sock *s = arg;
-	nni_aio *   a;
-	nni_msg *   m;
+	nni_aio    *a;
+	nni_msg    *m;
 	nni_mtx_lock(&s->mtx);
 	while (((a = nni_list_first(&s->raq)) != NULL) ||
 	    ((a = nni_list_first(&s->waq)) != NULL)) {
@@ -521,7 +521,7 @@ static void
 pair1_sock_send(void *arg, nni_aio *aio)
 {
 	pair1_sock *s = arg;
-	nni_msg *   m;
+	nni_msg    *m;
 	size_t      len;
 	int         rv;
 
@@ -599,7 +599,7 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 {
 	pair1_sock *s = arg;
 	pair1_pipe *p;
-	nni_msg *   m;
+	nni_msg    *m;
 	int         rv;
 
 	if (nni_aio_begin(aio) != 0) {
@@ -678,7 +678,7 @@ pair1_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int         val;
 
 	nni_mtx_lock(&s->mtx);
-	val = nni_lmq_cap(&s->wmq);
+	val = (int) nni_lmq_cap(&s->wmq);
 	nni_mtx_unlock(&s->mtx);
 
 	return (nni_copyout_int(val, buf, szp, t));
@@ -713,7 +713,7 @@ pair1_get_recv_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int         val;
 
 	nni_mtx_lock(&s->mtx);
-	val = nni_lmq_cap(&s->rmq);
+	val = (int) nni_lmq_cap(&s->rmq);
 	nni_mtx_unlock(&s->mtx);
 
 	return (nni_copyout_int(val, buf, szp, t));

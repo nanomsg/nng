@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -43,8 +43,8 @@ struct push0_sock {
 
 // push0_pipe is our per-pipe protocol private structure.
 struct push0_pipe {
-	nni_pipe *    pipe;
-	push0_sock *  push;
+	nni_pipe     *pipe;
+	push0_sock   *push;
 	nni_list_node node;
 
 	nni_aio aio_recv;
@@ -85,7 +85,7 @@ static void
 push0_sock_close(void *arg)
 {
 	push0_sock *s = arg;
-	nni_aio *   a;
+	nni_aio    *a;
 	nni_mtx_lock(&s->m);
 	while ((a = nni_list_first(&s->aq)) != NULL) {
 		nni_aio_list_remove(a);
@@ -182,8 +182,8 @@ static void
 push0_pipe_ready(push0_pipe *p)
 {
 	push0_sock *s = p->push;
-	nni_msg *   m;
-	nni_aio *   a = NULL;
+	nni_msg    *m;
+	nni_aio    *a = NULL;
 	size_t      l;
 	bool        blocked;
 
@@ -266,7 +266,7 @@ push0_sock_send(void *arg, nni_aio *aio)
 {
 	push0_sock *s = arg;
 	push0_pipe *p;
-	nni_msg *   m;
+	nni_msg    *m;
 	size_t      l;
 	int         rv;
 
@@ -356,7 +356,7 @@ push0_get_send_buf_len(void *arg, void *buf, size_t *szp, nni_opt_type t)
 	int         val;
 
 	nni_mtx_lock(&s->m);
-	val = nni_lmq_cap(&s->wq);
+	val = (int) nni_lmq_cap(&s->wq);
 	nni_mtx_unlock(&s->m);
 
 	return (nni_copyout_int(val, buf, szp, t));
