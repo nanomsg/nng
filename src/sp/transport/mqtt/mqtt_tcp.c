@@ -71,6 +71,8 @@ struct mqtt_tcptran_ep {
 	nni_reap_node        reap;
 	nng_stream_dialer *  dialer;
 	nng_stream_listener *listener;
+	nni_dialer *         ndialer;
+	void *               connmsg;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_rcv_max;
@@ -310,6 +312,7 @@ mqtt_tcptran_pipe_send_cb(void *arg)
 
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->sendq);
+	fprintf(stderr, "mqtt_tcptran_pipe_send_cb.\n");
 
 	if ((rv = nni_aio_result(txaio)) != 0) {
 		nni_pipe_bump_error(p->npipe, rv);
@@ -767,7 +770,9 @@ mqtt_tcptran_pipe_start(
     mqtt_tcptran_pipe *p, nng_stream *conn, mqtt_tcptran_ep *ep)
 {
 	nni_iov   iov;
-    nni_msg * cmsg;
+	nni_msg * connmsg;
+	char *    buf;
+	uint32_t  buf_len;
 
 	ep->refcnt++;
 
@@ -775,12 +780,28 @@ mqtt_tcptran_pipe_start(
 	p->ep    = ep;
 	p->proto = ep->proto;
 
+	fprintf(stderr, "mqtt_tcptran_pipe_start\n");
+	int rv = nni_dialer_getopt(ep->ndialer, "connmsg", &connmsg, NULL, NNI_TYPE_POINTER);
+	if (rv != 0) {
+		fprintf(stderr, "connmsg ptr error [%d] \n", rv);
+	}
+	buf = nni_msg_get_proto_data(connmsg);
+	buf_len = strlen(buf);
+
+	p->gotrxhead  = 0;
+	p->gottxhead  = 0;
+	p->wantrxhead = 2; // TODO
+	p->wanttxhead = buf_len;
+	iov.iov_len   = buf_len;
+	iov.iov_buf   = buf;
+
 	// CONNECT packet
 	// nni_msg_alloc(&cmsg, 0);
 	// nni_mqtt_msg_set_packet_type(cmsg, MQTT_CONNECT);
 	// nni_mqtt_msg_set_connect_proto_version(cmsg, MQTT_VERSION_3_1_1);
 	// nni_mqtt_msg_encode(cmsg);
 
+	/*
 	p->txlen[0] = 0;
 	p->txlen[1] = 'S';
 	p->txlen[2] = 'P';
@@ -794,16 +815,18 @@ mqtt_tcptran_pipe_start(
 	p->wanttxhead = 8;
 	iov.iov_len   = 8;
 	iov.iov_buf   = &p->txlen[0];
+	*/
+
 	nni_aio_set_iov(p->negoaio, 1, &iov);
 	nni_list_append(&ep->negopipes, p);
 
 	nni_list_remove(&ep->negopipes, p);
 	nni_list_append(&ep->waitpipes, p);
 
-	mqtt_tcptran_ep_match(ep);
+	// mqtt_tcptran_ep_match(ep);
 	// nni_mtx_unlock(&ep->mtx);
 	// nni_aio_set_timeout(p->negoaio, 10000); // 10 sec timeout to negotiate
-	// nng_stream_send(p->conn, p->negoaio);
+	nng_stream_send(p->conn, p->negoaio);
 }
 
 static void
@@ -1083,6 +1106,7 @@ mqtt_tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 	if ((rv = mqtt_tcptran_ep_init(&ep, url, sock)) != 0) {
 		return (rv);
 	}
+	ep->ndialer = ndialer;
 
 	if ((rv != 0) ||
 	    ((rv = nni_aio_alloc(&ep->connaio, mqtt_tcptran_dial_cb, ep)) !=
@@ -1156,6 +1180,7 @@ mqtt_tcptran_ep_connect(void *arg, nni_aio *aio)
 {
 	mqtt_tcptran_ep *ep = arg;
 	int              rv;
+	fprintf(stderr, "mqtt_tcptran_ep_connect\n");
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1243,6 +1268,38 @@ mqtt_tcptran_ep_set_recvmaxsz(
 }
 
 static int
+mqtt_tcptran_ep_get_connmsg(void *arg, void *v, size_t *szp, nni_opt_type t)
+{
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
+
+//	nni_mtx_lock(&ep->mtx);
+	nni_copyout_ptr(ep->connmsg, v, szp, t);
+	fprintf(stderr, "connmsgp [%p] v [%p] \n", ep->connmsg, v);
+//	ep->connmsg = NULL;
+//	nni_mtx_unlock(&ep->mtx);
+	rv = 0;
+
+	return (rv);
+}
+
+static int
+mqtt_tcptran_ep_set_connmsg(
+    void *arg, const void *v, size_t sz, nni_opt_type t)
+{
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
+
+	nni_mtx_lock(&ep->mtx);
+	nni_copyin_ptr(&ep->connmsg, v, sz, t);
+	fprintf(stderr, "set connmsg [%p] v [%p] \n", ep->connmsg, v);
+	nni_mtx_unlock(&ep->mtx);
+	rv = 0;
+
+	return (rv);
+}
+
+static int
 mqtt_tcptran_ep_bind(void *arg)
 {
 	mqtt_tcptran_ep *ep = arg;
@@ -1310,6 +1367,11 @@ static const nni_option mqtt_tcptran_ep_opts[] = {
 	{
 	    .o_name = NNG_OPT_URL,
 	    .o_get  = mqtt_tcptran_ep_get_url,
+	},
+	{
+	    .o_name = "connmsg",
+	    .o_get  = mqtt_tcptran_ep_get_connmsg,
+	    .o_set  = mqtt_tcptran_ep_set_connmsg,
 	},
 	// terminate list
 	{
@@ -1431,6 +1493,7 @@ nng_mqtt_tcp_register(void)
 void
 nni_mqtt_tcp_register(void)
 {
+	fprintf(stderr, "==============mqtt tcp register=========\n");
 	nni_sp_tran_register(&mqtt_tcp_tran);
 	nni_sp_tran_register(&mqtt_tcp4_tran);
 	nni_sp_tran_register(&mqtt_tcp6_tran);
