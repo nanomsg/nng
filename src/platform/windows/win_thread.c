@@ -381,7 +381,8 @@ nni_plat_thr_set_name(nni_plat_thr *thr, const char *name)
 		if ((wcs = nni_alloc(len * 2)) == NULL) {
 			return;
 		}
-		(void) MultiByteToWideChar(CP_UTF8, 0, name, len, wcs, len);
+		(void) MultiByteToWideChar(
+		    CP_UTF8, 0, name, (int) len, wcs, (int) len);
 		set_thread_desc(h, wcs);
 		nni_free(wcs, len * 2);
 	}

@@ -17,17 +17,17 @@
 void
 test_websocket_wildcard(void)
 {
-	nng_stream_dialer *  d = NULL;
+	nng_stream_dialer   *d = NULL;
 	nng_stream_listener *l = NULL;
 	nng_sockaddr         sa1;
 	nng_sockaddr         sa2;
 	size_t               sz;
-	nng_aio *            daio = NULL;
-	nng_aio *            laio = NULL;
-	nng_aio *            aio1 = NULL;
-	nng_aio *            aio2 = NULL;
-	nng_stream *         c1   = NULL;
-	nng_stream *         c2   = NULL;
+	nng_aio             *daio = NULL;
+	nng_aio             *laio = NULL;
+	nng_aio             *aio1 = NULL;
+	nng_aio             *aio2 = NULL;
+	nng_stream          *c1   = NULL;
+	nng_stream          *c2   = NULL;
 	nng_iov              iov;
 	char                 buf1[8];
 	char                 buf2[8];
@@ -125,18 +125,18 @@ test_websocket_wildcard(void)
 void
 test_websocket_conn_props(void)
 {
-	nng_stream_dialer *  d = NULL;
+	nng_stream_dialer   *d = NULL;
 	nng_stream_listener *l = NULL;
 	nng_sockaddr         sa1;
 	nng_sockaddr         sa2;
 	size_t               sz;
-	nng_aio *            daio = NULL;
-	nng_aio *            laio = NULL;
-	nng_stream *         c1   = NULL;
-	nng_stream *         c2   = NULL;
+	nng_aio             *daio = NULL;
+	nng_aio             *laio = NULL;
+	nng_stream          *c1   = NULL;
+	nng_stream          *c2   = NULL;
 	char                 uri[64];
 	bool                 on;
-	char *               str;
+	char                *str;
 	uint16_t             port = nuts_next_port();
 
 	(void) snprintf(uri, sizeof(uri), "ws://127.0.0.1:%d/test", port);
@@ -219,14 +219,14 @@ test_websocket_conn_props(void)
 void
 test_websocket_text_mode(void)
 {
-	nng_stream_dialer *  d    = NULL;
+	nng_stream_dialer   *d    = NULL;
 	nng_stream_listener *l    = NULL;
-	nng_aio *            daio = NULL;
-	nng_aio *            laio = NULL;
-	nng_aio *            aio1 = NULL;
-	nng_aio *            aio2 = NULL;
-	nng_stream *         c1   = NULL;
-	nng_stream *         c2   = NULL;
+	nng_aio             *daio = NULL;
+	nng_aio             *laio = NULL;
+	nng_aio             *aio1 = NULL;
+	nng_aio             *aio2 = NULL;
+	nng_stream          *c1   = NULL;
+	nng_stream          *c2   = NULL;
 	char                 uri[64];
 	char                 txb[5];
 	char                 rxb[5];
@@ -342,16 +342,16 @@ test_websocket_text_mode(void)
 }
 
 typedef struct recv_state {
-	nng_stream * c;
+	nng_stream  *c;
 	int          total;
 	int          xfr;
-	nng_mtx *    lock;
-	nng_cv *     cv;
-	nng_aio *    aio;
+	nng_mtx     *lock;
+	nng_cv      *cv;
+	nng_aio     *aio;
 	int          err;
 	bool         done;
-	uint8_t *    send_buf;
-	uint8_t *    buf;
+	uint8_t     *send_buf;
+	uint8_t     *buf;
 	nni_sha1_ctx sum;
 } recv_state;
 
@@ -393,20 +393,20 @@ void
 test_websocket_fragmentation(void)
 {
 	nng_stream_listener *l = NULL;
-	nng_stream_dialer *  d = NULL;
-	nng_stream *         c = NULL;
+	nng_stream_dialer   *d = NULL;
+	nng_stream          *c = NULL;
 	uint16_t             port;
 	char                 url[64];
-	nng_aio *            daio = NULL;
-	nng_aio *            laio = NULL;
-	nng_aio *            caio = NULL;
+	nng_aio             *daio = NULL;
+	nng_aio             *laio = NULL;
+	nng_aio             *caio = NULL;
 	int                  resid;
 	recv_state           state;
 	uint8_t              sum1[20];
 	uint8_t              sum2[20];
-	uint8_t *            recv_buf;
-	uint8_t *            send_buf;
-	uint8_t *            buf;
+	uint8_t             *recv_buf;
+	uint8_t             *send_buf;
+	uint8_t             *buf;
 	nng_iov              iov;
 
 	memset(&state, 0, sizeof(state));
@@ -475,7 +475,7 @@ test_websocket_fragmentation(void)
 		nng_aio_wait(caio);
 		NUTS_PASS(nng_aio_result(caio));
 		NUTS_TRUE(nng_aio_count(caio) > 0);
-		len = nng_aio_count(caio);
+		len = (int) nng_aio_count(caio);
 
 		resid -= len;
 		buf += len;

@@ -1,5 +1,5 @@
 #
-# Copyright 2020 Staysail Systems, Inc. <info@staystail.tech>
+# Copyright 2021 Staysail Systems, Inc. <info@staystail.tech>
 #
 # This software is supplied under the terms of the MIT License, a
 # copy of which should be located in the distribution where this
@@ -46,4 +46,7 @@ if (NNG_PLATFORM_WINDOWS)
             win_thread.c
             win_udp.c
     )
+
+    nng_test(win_ipc_sec_test)
+
 endif ()

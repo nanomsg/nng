@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -15,8 +15,8 @@ void
 test_basic(void)
 {
 	nni_id_map m;
-	char *     five = "five";
-	char *     four = "four";
+	char      *five = "five";
+	char      *four = "four";
 
 	nni_id_map_init(&m, 0, 0, false);
 
@@ -60,8 +60,8 @@ void
 test_collision(void)
 {
 	nni_id_map m;
-	char *     five = "five";
-	char *     four = "four";
+	char      *five = "five";
+	char      *four = "four";
 
 	nni_id_map_init(&m, 0, 0, false);
 
@@ -141,7 +141,7 @@ test_dynamic(void)
 
 	nni_id_map_init(&m, 10, 13, false);
 
-        // We can fill the table.
+	// We can fill the table.
 	NUTS_PASS(nni_id_alloc(&m, &id, &expect[0]));
 	NUTS_TRUE(id == 10);
 	NUTS_PASS(nni_id_alloc(&m, &id, &expect[1]));
@@ -186,11 +186,11 @@ test_set_out_of_range(void)
 void
 test_stress(void)
 {
-	void *     values[NUM_VALUES];
+	void      *values[NUM_VALUES];
 	nni_id_map m;
 	size_t     i;
 	int        rv;
-	void *     x;
+	void      *x;
 	int        v;
 
 	nni_id_map_init(&m, 0, 0, false);
@@ -240,15 +240,15 @@ out:
 
 	// Post stress check.
 	for (i = 0; i < NUM_VALUES; i++) {
-		x = nni_id_get(&m, i);
+		x = nni_id_get(&m, (uint32_t) i);
 		if (x != values[i]) {
 			NUTS_TRUE(x == values[i]);
 			break;
 		}
 
 		// We only use the test macros if we know they are going
-		// to fail.  Otherwise there will be too many errors reported.
-		rv = nni_id_remove(&m, i);
+		// to fail.  Otherwise, there will be too many errors reported.
+		rv = nni_id_remove(&m, (uint32_t) i);
 		if ((x == NULL) && (rv != NNG_ENOENT)) {
 			NUTS_FAIL(rv, NNG_ENOENT);
 		} else if ((x != NULL) && (rv != 0)) {
