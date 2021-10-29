@@ -387,9 +387,9 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 		// field, plus the remaining length.
 		size_t tot = 1 + byte_number_for_variable_length(len) + len;
 		nni_msg_alloc(&p->rxmsg, tot);
-		memcpy(nni_msg_body(p->rxmsg), p->rxlen, p->gotrxhead);
 		if (tot > p->gotrxhead) {
 			// schedule to receive the bulk of the packet
+			memcpy(nni_msg_body(p->rxmsg), p->rxlen, p->gotrxhead);
 			iov.iov_buf  = nni_msg_body(p->rxmsg) + p->gotrxhead;
 			iov.iov_len  = tot - p->gotrxhead;
 			p->gotrxhead = 0;
@@ -397,9 +397,15 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 			nng_stream_recv(p->conn, rxaio);
 			nni_mtx_unlock(&p->mtx);
 			return;
+		} else if (tot < p->gotrxhead) {
+			// rxlen contains more than one packet
+			memcpy(nni_msg_body(p->rxmsg), p->rxlen, tot);
+			p->gotrxhead -= tot;
+			memmove(p->rxlen, p->rxlen + tot, p->gotrxhead);
 		} else {
 			// good news, this is very small packet
 			// we have done receiving
+			memcpy(nni_msg_body(p->rxmsg), p->rxlen, tot);
 			p->gotrxhead = 0;
 		}
 	} else {
@@ -709,8 +715,8 @@ mqtt_tcptran_pipe_recv_start(mqtt_tcptran_pipe *p)
 
 	// Schedule a read of the header.
 	rxaio       = p->rxaio;
-	iov.iov_buf = p->rxlen;
-	iov.iov_len = sizeof(p->rxlen);
+	iov.iov_buf = p->rxlen + p->gotrxhead;
+	iov.iov_len = sizeof(p->rxlen) - p->gotrxhead;
 	nni_aio_set_iov(rxaio, 1, &iov);
 
 	nng_stream_recv(p->conn, rxaio);
