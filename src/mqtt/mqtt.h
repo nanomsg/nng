@@ -256,12 +256,13 @@ typedef struct mqtt_msg_t {
 
 } mqtt_msg;
 
-extern uint32_t mqtt_get_remaining_length(uint8_t *, uint32_t, uint8_t *);
-extern int      byte_number_for_variable_length(uint32_t);
-extern int      write_variable_length_value(uint32_t, struct pos_buf *);
-extern int      write_byte(uint8_t, struct pos_buf *);
-extern int      write_uint16(uint16_t, struct pos_buf *);
-extern int      write_byte_string(mqtt_buf *, struct pos_buf *);
+extern int mqtt_get_remaining_length(uint8_t *packet, uint32_t len,
+    uint32_t *remainning_length, uint8_t *used_bytes);
+extern int byte_number_for_variable_length(uint32_t);
+extern int write_variable_length_value(uint32_t, struct pos_buf *);
+extern int write_byte(uint8_t, struct pos_buf *);
+extern int write_uint16(uint16_t, struct pos_buf *);
+extern int write_byte_string(mqtt_buf *, struct pos_buf *);
 
 extern int read_byte(struct pos_buf *, uint8_t *);
 extern int read_uint16(struct pos_buf *, uint16_t *);

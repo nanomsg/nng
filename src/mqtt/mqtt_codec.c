@@ -554,11 +554,17 @@ nni_mqtt_msg_decode_fixed_header(nni_msg *msg)
 
 	memcpy(&mqtt->fixed_header.common, &first, 1);
 
-	uint8_t used_bytes;
-	mqtt->fixed_header.remaining_length =
-	    mqtt_get_remaining_length(header, len, &used_bytes);
+	uint8_t  used_bytes;
+	uint32_t remain_len = 0;
 
-	mqtt->used_bytes = used_bytes;
+	int ret;
+	if ((ret = mqtt_get_remaining_length(
+	         header, len, &remain_len, &used_bytes)) != MQTT_SUCCESS) {
+		return ret;
+	}
+
+	mqtt->fixed_header.remaining_length = remain_len;
+	mqtt->used_bytes                    = used_bytes;
 
 	return MQTT_SUCCESS;
 }
@@ -1115,16 +1121,15 @@ read_packet_length(struct pos_buf *buf, uint32_t *length)
 	return 0;
 }
 
-uint32_t
-mqtt_get_remaining_length(uint8_t *packet, uint32_t len, uint8_t *used_bytes)
+int
+mqtt_get_remaining_length(uint8_t *packet, uint32_t len,
+    uint32_t *remainning_length, uint8_t *used_bytes)
 {
 	int      multiplier = 1;
 	int32_t  lword      = 0;
 	uint8_t  lbytes     = 0;
 	uint8_t *ptr        = packet + 1;
 	uint8_t *start      = ptr;
-
-	uint32_t remain_len = 0;
 
 	for (size_t i = 0; i < 4; i++) {
 		if ((size_t)(ptr - start + 1) > len) {
@@ -1139,14 +1144,16 @@ mqtt_get_remaining_length(uint8_t *packet, uint32_t len, uint8_t *used_bytes)
 			if (lbytes > 1 && byte == 0) {
 				return MQTT_ERR_INVAL;
 			} else {
-				remain_len  = lword;
-				*used_bytes = lbytes;
-				break;
+				*remainning_length = lword;
+				if (used_bytes) {
+					*used_bytes = lbytes;
+				}
+				return MQTT_SUCCESS;
 			}
 		}
 	}
 
-	return remain_len;
+	return MQTT_ERR_INVAL;
 }
 
 mqtt_buf

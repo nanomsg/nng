@@ -35,12 +35,12 @@ test_dup(void)
 	nng_msg *msg2;
 	NUTS_PASS(nng_msg_dup(&msg2, msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("msg: \n%s\n", print_buf);
+	// uint8_t print_buf[1024] = { 0 };
+	// nng_mqtt_msg_dump(msg, print_buf, 1024, true);
+	// printf("msg: \n%s\n", print_buf);
 
-	nng_mqtt_msg_dump(msg2, print_buf, 1024, true);
-	printf("msg2: \n%s\n", print_buf);
+	// nng_mqtt_msg_dump(msg2, print_buf, 1024, true);
+	// printf("msg2: \n%s\n", print_buf);
 
 	nng_mqtt_topic_qos_array_free(topic_qos, sz);
 
@@ -166,9 +166,9 @@ test_decode_connect(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	// uint8_t print_buf[1024] = { 0 };
+	// nng_mqtt_msg_dump(msg, print_buf, 1024, true);
+	// printf("%s\n", print_buf);
 	nng_msg_free(msg);
 }
 
@@ -231,9 +231,9 @@ test_decode_publish(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[2048] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 2048, true);
-	printf("%s\n", print_buf);
+	// uint8_t print_buf[2048] = { 0 };
+	// nng_mqtt_msg_dump(msg, print_buf, 2048, true);
+	// printf("%s\n", print_buf);
 
 	nng_msg_free(msg);
 }
@@ -251,9 +251,9 @@ test_decode_disconnect(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	// uint8_t print_buf[1024] = { 0 };
+	// nng_mqtt_msg_dump(msg, print_buf, 1024, true);
+	// printf("%s\n", print_buf);
 	nng_msg_free(msg);
 }
 
