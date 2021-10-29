@@ -554,37 +554,11 @@ nni_mqtt_msg_decode_fixed_header(nni_msg *msg)
 
 	memcpy(&mqtt->fixed_header.common, &first, 1);
 
-	int      multiplier = 1;
-	int32_t  lword      = 0;
-	uint8_t  lbytes     = 0;
-	uint8_t *ptr        = header + 1;
-	uint8_t *start      = ptr;
+	uint8_t used_bytes;
+	mqtt->fixed_header.remaining_length =
+	    mqtt_get_remaining_length(header, len, &used_bytes);
 
-	uint32_t remain_len = 0;
-	uint8_t  count      = 0;
-
-	for (size_t i = 0; i < 4; i++) {
-		if ((size_t)(ptr - start + 1) > len) {
-			return MQTT_ERR_PAYLOAD_SIZE;
-		}
-		lbytes++;
-		uint8_t byte = ptr[0];
-		lword += (byte & 127) * multiplier;
-		multiplier *= 128;
-		ptr++;
-		if ((byte & 128) == 0) {
-			if (lbytes > 1 && byte == 0) {
-				return MQTT_ERR_INVAL;
-			} else {
-				remain_len = lword;
-				count      = lbytes;
-				break;
-			}
-		}
-	}
-
-	mqtt->fixed_header.remaining_length = remain_len;
-	mqtt->used_bytes                    = count;
+	mqtt->used_bytes = used_bytes;
 
 	return MQTT_SUCCESS;
 }
@@ -925,8 +899,6 @@ nni_mqtt_msg_decode_unsubscribe(nni_msg *msg)
 	/* Allocate topic array */
 	uspld->topic_arr =
 	    (mqtt_buf *) nni_alloc(topic_count * sizeof(mqtt_buf));
-	// uspld->topic_arr = (mqtt_buf *) malloc(topic_count *
-	// sizeof(mqtt_buf));
 
 	/* Set back current position */
 	buf.curpos = saved_current_pos;
@@ -1141,6 +1113,40 @@ read_packet_length(struct pos_buf *buf, uint32_t *length)
 	}
 
 	return 0;
+}
+
+uint32_t
+mqtt_get_remaining_length(uint8_t *packet, uint32_t len, uint8_t *used_bytes)
+{
+	int      multiplier = 1;
+	int32_t  lword      = 0;
+	uint8_t  lbytes     = 0;
+	uint8_t *ptr        = packet + 1;
+	uint8_t *start      = ptr;
+
+	uint32_t remain_len = 0;
+
+	for (size_t i = 0; i < 4; i++) {
+		if ((size_t)(ptr - start + 1) > len) {
+			return MQTT_ERR_PAYLOAD_SIZE;
+		}
+		lbytes++;
+		uint8_t byte = ptr[0];
+		lword += (byte & 127) * multiplier;
+		multiplier *= 128;
+		ptr++;
+		if ((byte & 128) == 0) {
+			if (lbytes > 1 && byte == 0) {
+				return MQTT_ERR_INVAL;
+			} else {
+				remain_len  = lword;
+				*used_bytes = lbytes;
+				break;
+			}
+		}
+	}
+
+	return remain_len;
 }
 
 mqtt_buf

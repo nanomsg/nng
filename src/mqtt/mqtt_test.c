@@ -2,6 +2,7 @@
 
 #include "nng/nng.h"
 
+#include "mqtt.h"
 #include "nuts.h"
 
 void
@@ -167,7 +168,7 @@ test_decode_connect(void)
 
 	uint8_t print_buf[1024] = { 0 };
 	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	// printf("%s\n", print_buf);
+	printf("%s\n", print_buf);
 	nng_msg_free(msg);
 }
 
@@ -232,7 +233,7 @@ test_decode_publish(void)
 
 	uint8_t print_buf[2048] = { 0 };
 	nng_mqtt_msg_dump(msg, print_buf, 2048, true);
-	// printf("%s\n", print_buf);
+	printf("%s\n", print_buf);
 
 	nng_msg_free(msg);
 }
@@ -252,7 +253,7 @@ test_decode_disconnect(void)
 
 	uint8_t print_buf[1024] = { 0 };
 	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	// printf("%s\n", print_buf);
+	printf("%s\n", print_buf);
 	nng_msg_free(msg);
 }
 

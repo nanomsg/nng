@@ -250,35 +250,31 @@ typedef struct mqtt_msg_t {
 	                         representation This information (combined with
 	                         packetType and packetFlags)  may be used to
 	                         jump the point where the actual data starts */
-
 	bool is_decoded : 1; /* message is obtained from decoded or encoded */
 	bool attached_raw : 1; /* indicates if entire_raw_msg is to be owned */
 	uint8_t _unused : 2;
 
 } mqtt_msg;
 
-extern int byte_number_for_variable_length(uint32_t variable);
-extern int write_variable_length_value(uint32_t value, struct pos_buf *buf);
-extern int write_byte(uint8_t val, struct pos_buf *buf);
-extern int write_uint16(uint16_t value, struct pos_buf *buf);
-extern int write_byte_string(mqtt_buf *str, struct pos_buf *buf);
+extern uint32_t mqtt_get_remaining_length(uint8_t *, uint32_t, uint8_t *);
+extern int      byte_number_for_variable_length(uint32_t);
+extern int      write_variable_length_value(uint32_t, struct pos_buf *);
+extern int      write_byte(uint8_t, struct pos_buf *);
+extern int      write_uint16(uint16_t, struct pos_buf *);
+extern int      write_byte_string(mqtt_buf *, struct pos_buf *);
 
-extern int read_byte(struct pos_buf *buf, uint8_t *val);
-extern int read_uint16(struct pos_buf *buf, uint16_t *val);
-extern int read_utf8_str(struct pos_buf *buf, mqtt_buf *val);
-extern int read_str_data(struct pos_buf *buf, mqtt_buf *val);
-extern int read_packet_length(struct pos_buf *buf, uint32_t *length);
+extern int read_byte(struct pos_buf *, uint8_t *);
+extern int read_uint16(struct pos_buf *, uint16_t *);
+extern int read_utf8_str(struct pos_buf *, mqtt_buf *);
+extern int read_str_data(struct pos_buf *, mqtt_buf *);
+extern int read_packet_length(struct pos_buf *, uint32_t *);
 
-extern mqtt_buf mqtt_buf_dup(const mqtt_buf *src);
-extern void     mqtt_buf_free(mqtt_buf *buf);
+extern mqtt_buf mqtt_buf_dup(const mqtt_buf *);
+extern void     mqtt_buf_free(mqtt_buf *);
 
-extern mqtt_msg *mqtt_msg_create(mqtt_packet_type packet_type);
+extern mqtt_msg *mqtt_msg_create(mqtt_packet_type);
 
-extern int mqtt_msg_dump(
-    mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes);
-
-extern int nni_mqtt_msg_encode(nni_msg *msg);
-extern int nni_mqtt_msg_decode(nni_msg *msg);
+extern int mqtt_msg_dump(mqtt_msg *, mqtt_buf *, mqtt_buf *, bool);
 
 // nni_msg proto_data alloc/free
 extern int  nni_mqtt_msg_proto_data_alloc(nni_msg *);
@@ -286,8 +282,8 @@ extern void nni_mqtt_msg_proto_data_free(nni_msg *);
 
 // mqtt message alloc/encode/decode
 extern int nni_mqtt_msg_alloc(nni_msg **, size_t);
-// extern int nni_mqtt_msg_encode(nni_msg *);
-// extern int nni_mqtt_msg_decode(nni_msg *);
+extern int nni_mqtt_msg_encode(nni_msg *);
+extern int nni_mqtt_msg_decode(nni_msg *);
 
 // mqtt packet_type
 extern void nni_mqtt_msg_set_packet_type(nni_msg *, nni_mqtt_packet_type);
