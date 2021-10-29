@@ -15,10 +15,13 @@ nng_check_sym(strnlen string.h NNG_HAVE_STRNLEN)
 nng_check_sym(strcasecmp string.h NNG_HAVE_STRCASECMP)
 nng_check_sym(strncasecmp string.h NNG_HAVE_STRNCASECMP)
 
-nng_sources(
+nng_sources_if(
+   NNG_TRANSPORT_MQTT_TCP
+   
+   mqtt_codec.c
    mqtt.c     
    mqtt.h
-   mqtt_codec.c
-   mqtt_codec.h
 )
+
+nng_test_if(NNG_TRANSPORT_MQTT_TCP mqtt_test)
 

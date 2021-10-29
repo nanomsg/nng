@@ -78,12 +78,6 @@ if (NOT (BUILD_SHARED_LIBS))
     message(STATUS "Building static libs.")
 endif ()
 
-configure_file(${CMAKE_SOURCE_DIR}/extern/mqtt-codec/src/mqtt_codec.c
-               ${CMAKE_SOURCE_DIR}/src/mqtt/mqtt_codec.c COPYONLY)
-               
-configure_file(${CMAKE_SOURCE_DIR}/extern/mqtt-codec/src/mqtt_codec.h
-               ${CMAKE_SOURCE_DIR}/src/mqtt/mqtt_codec.h COPYONLY)
-
 # These are library targets.  The "nng" library is the main public library.
 # The "nng_testing" is a full build of the library for test cases
 # only, which is done statically and includes even portions of the code

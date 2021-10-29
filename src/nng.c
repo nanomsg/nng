@@ -1895,6 +1895,8 @@ nng_version(void)
 	    NNG_PATCH_VERSION) NNG_RELEASE_SUFFIX);
 }
 
+#ifdef NNG_TRANSPORT_MQTT_TCP
+
 int
 nng_mqtt_msg_proto_data_alloc(nng_msg *msg)
 {
@@ -2322,3 +2324,5 @@ nng_mqtt_msg_dump(
 {
 	nni_mqtt_msg_dump(msg, buffer, len, print_bytes);
 }
+
+#endif // NNG_TRANSPORT_MQTT_TCP

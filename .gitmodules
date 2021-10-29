@@ -1,6 +1,3 @@
 [submodule "extern/nng-wolfssl"]
 path = extern/nng-wolfssl
 url = https://github.com/staysail/nng-wolfssl
-[submodule "extern/mqtt-codec"]
-path = extern/mqtt-codec
-url = https://github.com/nanomq/mqtt-codec.git/
