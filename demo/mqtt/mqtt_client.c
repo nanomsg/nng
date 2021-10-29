@@ -112,17 +112,15 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 		printf("%s\n", buff);
 	}
 
+	printf("Connecting to server ...");
 	nng_dialer_set_ptr(dialer, "connmsg", connmsg);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
-//	printf("Connecting to server ...");
-//	if ((rv = nng_sendmsg(*sock, connmsg, 0)) != 0) {
-//		fatal("nng_sendmsg", rv);
-//	}
-//	printf("connected\n");
+	printf("connected\n");
 
-//	Free in dialer cb or connect finite
+//	TODO Connmsg would be free when client disconnected
 //	nng_msg_free(connmsg);
+	nni_mqtt_msg_proto_data_free(connmsg);
 
 	return (0);
 }

@@ -36,7 +36,7 @@ struct mqtt_tcptran_pipe {
 	nni_atomic_flag  reaped;
 	nni_reap_node    reap;
 	uint8_t          txlen[sizeof(uint64_t)];
-	uint8_t          rxlen[sizeof(uint64_t)];
+	uint8_t          rxlen[sizeof(uint64_t)]; // fixed header
 	size_t           gottxhead;
 	size_t           gotrxhead;
 	size_t           wanttxhead;
@@ -49,6 +49,7 @@ struct mqtt_tcptran_pipe {
 	nni_msg *        rxmsg;
     nni_msg *        smsg;
 	nni_mtx          mtx;
+	void *           conn_buf;
 };
 
 struct mqtt_tcptran_ep {
@@ -241,13 +242,15 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto error;
 	}
-    printf("mqtt_tcptran_pipe_nego_cb \n");
+	printf("mqtt_tcptran_pipe_nego_cb \n");
 	// We start transmitting before we receive.
 	if (p->gottxhead < p->wanttxhead) {
 		p->gottxhead += nni_aio_count(aio);
 	} else if (p->gotrxhead < p->wantrxhead) {
 		p->gotrxhead += nni_aio_count(aio);
 	}
+	printf("mqtt_tcptran_pipe_nego_cb gotrx %ld wantrx %ld gottx %ld wanttx %ld.\n",
+	    p->gotrxhead, p->wantrxhead, p->gottxhead, p->wanttxhead);
 
 	if (p->gottxhead < p->wanttxhead) {
 		nni_iov iov;
@@ -259,6 +262,56 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
+
+	// receving fixed header
+	if (p->gotrxhead < 4) {
+		nni_iov iov;
+		iov.iov_len = p->wantrxhead - p->gotrxhead;
+		iov.iov_buf = &p->rxlen[p->gotrxhead];
+		nni_aio_set_iov(aio, 1, &iov);
+		nng_stream_recv(p->conn, aio);
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
+	// finish recevied fixed header
+	if (p->gotrxhead == 4) {
+		if ((p->rxlen[0] & 0x20) != 0x20) {
+			fprintf(stderr, "not recv connack [%x].\n", p->rxlen[0]);
+			rv = NNG_EPROTO;
+			goto error;
+		}
+		int var_int;
+		uint8_t * pos = p->rxlen + 1;
+		int rv = mqtt_msg_read_variable_int(p->rxlen + 1, 4, &var_int, pos);
+		int len = pos - (p->rxlen + 1);
+		p->wantrxhead = var_int + 1 + len;
+		if ((rv = (p->wantrxhead < 4) ? 0 : NNG_EPROTO) != 0) {
+			fprintf(stderr, "wantrxhead error rv[%d].\n", rv);
+			goto error;
+		}
+	}
+	// remaining length
+	if (p->gotrxhead < p->wantrxhead) {
+		nni_iov iov;
+		iov.iov_len = p->wantrxhead - p->gotrxhead;
+		if (p->conn_buf == NULL) {
+			p->conn_buf = nni_alloc(p->wantrxhead);
+			memcpy(p->conn_buf, p->rxlen, p->gotrxhead);
+		}
+		iov.iov_buf = &p->conn_buf[p->gotrxhead];
+		nni_aio_set_iov(aio, 1, &iov);
+		nng_stream_recv(p->conn, aio);
+		nni_mtx_unlock(&ep->mtx);
+		return;
+	}
+	if (p->gotrxhead >= p->wantrxhead) {
+		fprintf(stderr, "finish recv connack. [%ld]\n", p->gotrxhead);
+		nng_free(p->conn_buf, p->gotrxhead);
+		p->conn_buf = NULL;
+		// nng_msg_free(ep->connmsg);
+	}
+
+/*
 	if (p->gotrxhead < p->wantrxhead) {
 		nni_iov iov;
 		iov.iov_len = p->wantrxhead - p->gotrxhead;
@@ -268,16 +321,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
-	// We have both sent and received the headers.  Lets check the
-	// receive side header.
-	if ((p->rxlen[0] != 0) || (p->rxlen[1] != 'S') ||
-	    (p->rxlen[2] != 'P') || (p->rxlen[3] != 0) || (p->rxlen[6] != 0) ||
-	    (p->rxlen[7] != 0)) {
-		rv = NNG_EPROTO;
-		goto error;
-	}
-
-	NNI_GET16(&p->rxlen[4], p->peer);
+*/
 
 	// We are all ready now.  We put this in the wait list, and
 	// then try to run the matcher.
@@ -773,6 +817,7 @@ mqtt_tcptran_pipe_start(
 	nni_msg * connmsg;
 	char *    buf;
 	uint32_t  buf_len;
+	int       rv;
 
 	ep->refcnt++;
 
@@ -780,48 +825,24 @@ mqtt_tcptran_pipe_start(
 	p->ep    = ep;
 	p->proto = ep->proto;
 
-	fprintf(stderr, "mqtt_tcptran_pipe_start\n");
-	int rv = nni_dialer_getopt(ep->ndialer, "connmsg", &connmsg, NULL, NNI_TYPE_POINTER);
+	rv = nni_dialer_getopt(ep->ndialer,
+	    "connmsg", &connmsg, NULL, NNI_TYPE_POINTER);
 	if (rv != 0) {
-		fprintf(stderr, "connmsg ptr error [%d] \n", rv);
+		fprintf(stderr, "Connmsg get error [%d] \n", rv);
 	}
-	buf = nni_msg_get_proto_data(connmsg);
-	buf_len = strlen(buf);
+	buf = nni_msg_body(connmsg);
+	buf_len = nni_msg_len(connmsg);
 
 	p->gotrxhead  = 0;
 	p->gottxhead  = 0;
-	p->wantrxhead = 2; // TODO
+	p->wantrxhead = 4; // TODO
 	p->wanttxhead = buf_len;
+
 	iov.iov_len   = buf_len;
 	iov.iov_buf   = buf;
 
-	// CONNECT packet
-	// nni_msg_alloc(&cmsg, 0);
-	// nni_mqtt_msg_set_packet_type(cmsg, MQTT_CONNECT);
-	// nni_mqtt_msg_set_connect_proto_version(cmsg, MQTT_VERSION_3_1_1);
-	// nni_mqtt_msg_encode(cmsg);
-
-	/*
-	p->txlen[0] = 0;
-	p->txlen[1] = 'S';
-	p->txlen[2] = 'P';
-	p->txlen[3] = 0;
-	NNI_PUT16(&p->txlen[4], p->proto);
-	NNI_PUT16(&p->txlen[6], 0);
-
-	p->gotrxhead  = 0;
-	p->gottxhead  = 0;
-	p->wantrxhead = 8;
-	p->wanttxhead = 8;
-	iov.iov_len   = 8;
-	iov.iov_buf   = &p->txlen[0];
-	*/
-
 	nni_aio_set_iov(p->negoaio, 1, &iov);
 	nni_list_append(&ep->negopipes, p);
-
-	nni_list_remove(&ep->negopipes, p);
-	nni_list_append(&ep->waitpipes, p);
 
 	// mqtt_tcptran_ep_match(ep);
 	// nni_mtx_unlock(&ep->mtx);
@@ -1493,7 +1514,6 @@ nng_mqtt_tcp_register(void)
 void
 nni_mqtt_tcp_register(void)
 {
-	fprintf(stderr, "==============mqtt tcp register=========\n");
 	nni_sp_tran_register(&mqtt_tcp_tran);
 	nni_sp_tran_register(&mqtt_tcp4_tran);
 	nni_sp_tran_register(&mqtt_tcp6_tran);
