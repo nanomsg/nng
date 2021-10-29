@@ -17,7 +17,6 @@ nng_check_sym(strncasecmp string.h NNG_HAVE_STRNCASECMP)
 
 nng_sources_if(
    NNG_TRANSPORT_MQTT_TCP
-   
    mqtt_codec.c
    mqtt.c     
    mqtt.h

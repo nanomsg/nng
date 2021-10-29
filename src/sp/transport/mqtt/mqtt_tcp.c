@@ -14,6 +14,7 @@
 #include <string.h>
 
 #include "core/nng_impl.h"
+#include "mqtt/mqtt.h"
 
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
@@ -282,7 +283,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		}
 		int var_int;
 		uint8_t * pos = p->rxlen + 1;
-		int rv = mqtt_msg_read_variable_int(p->rxlen + 1, 4, &var_int, pos);
+        int rv = mqtt_get_remaining_length(p->rxlen, p->gotrxhead, &var_int, NULL);
 		int len = pos - (p->rxlen + 1);
 		p->wantrxhead = var_int + 1 + len;
 		if ((rv = (p->wantrxhead < 4) ? 0 : NNG_EPROTO) != 0) {
@@ -681,11 +682,11 @@ mqtt_tcptran_pipe_send_start(mqtt_tcptran_pipe *p)
 	// iov[0].iov_buf = p->txlen;
 	// iov[0].iov_len = sizeof(p->txlen);
 	// niov++;
-	if (nni_msg_header_len(msg) > 0) {
-		iov[niov].iov_buf = nni_msg_header(msg);
-		iov[niov].iov_len = nni_msg_header_len(msg);
-		niov++;
-	}
+	// if (nni_msg_header_len(msg) > 0) {
+	// 	iov[niov].iov_buf = nni_msg_header(msg);
+	// 	iov[niov].iov_len = nni_msg_header_len(msg);
+	// 	niov++;
+	// }
 	if (nni_msg_len(msg) > 0) {
 		iov[niov].iov_buf = nni_msg_body(msg);
 		iov[niov].iov_len = nni_msg_len(msg);
@@ -846,8 +847,9 @@ mqtt_tcptran_pipe_start(
 
 	// mqtt_tcptran_ep_match(ep);
 	// nni_mtx_unlock(&ep->mtx);
-	// nni_aio_set_timeout(p->negoaio, 10000); // 10 sec timeout to negotiate
-	nng_stream_send(p->conn, p->negoaio);
+	nni_aio_set_timeout(p->negoaio, 10000); // 10 sec timeout to negotiate
+	printf("send connect\n");
+    nng_stream_send(p->conn, p->negoaio);
 }
 
 static void
