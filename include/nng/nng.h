@@ -1298,7 +1298,6 @@ typedef struct mqtt_buf_t       nng_mqtt_buffer;
 typedef struct mqtt_buf_t       nng_mqtt_topic;
 typedef struct mqtt_topic_qos_t nng_mqtt_topic_qos;
 
-#ifdef NNG_TRANSPORT_MQTT_TCP
 NNG_DECL int  nng_mqtt_msg_alloc(nng_msg **, size_t);
 NNG_DECL int  nng_mqtt_msg_encode(nng_msg *);
 NNG_DECL int  nng_mqtt_msg_decode(nng_msg *);
@@ -1355,7 +1354,6 @@ NNG_DECL void                nng_mqtt_topic_qos_array_set(
                    nng_mqtt_topic_qos *, size_t, const char *, uint8_t);
 NNG_DECL void nng_mqtt_topic_qos_array_free(nng_mqtt_topic_qos *, size_t);
 NNG_DECL void nng_mqtt_msg_dump(nng_msg *, uint8_t *, uint32_t, bool);
-#endif // NNG_TRANSPORT_MQTT_TCP
 
 #endif
 
