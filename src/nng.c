@@ -2302,7 +2302,7 @@ nng_mqtt_topic_array_free(nng_mqtt_topic *topic, size_t n)
 nng_mqtt_topic_qos *
 nng_mqtt_topic_qos_array_create(size_t n)
 {
-	return nni_mqtt_topic_qos_array_create(n);
+    return nni_mqtt_topic_qos_array_create(n);
 }
 
 void

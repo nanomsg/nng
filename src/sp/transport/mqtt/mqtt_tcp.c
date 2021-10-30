@@ -239,11 +239,9 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 
 	nni_mtx_lock(&ep->mtx);
 
-// connack
 	if ((rv = nni_aio_result(aio)) != 0) {
 		goto error;
 	}
-	printf("mqtt_tcptran_pipe_nego_cb \n");
 	// We start transmitting before we receive.
 	if (p->gottxhead < p->wanttxhead) {
 		p->gottxhead += nni_aio_count(aio);
@@ -311,18 +309,6 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		p->conn_buf = NULL;
 		// nng_msg_free(ep->connmsg);
 	}
-
-/*
-	if (p->gotrxhead < p->wantrxhead) {
-		nni_iov iov;
-		iov.iov_len = p->wantrxhead - p->gotrxhead;
-		iov.iov_buf = &p->rxlen[p->gotrxhead];
-		nni_aio_set_iov(aio, 1, &iov);
-		nng_stream_recv(p->conn, aio);
-		nni_mtx_unlock(&ep->mtx);
-		return;
-	}
-*/
 
 	// We are all ready now.  We put this in the wait list, and
 	// then try to run the matcher.
@@ -682,11 +668,11 @@ mqtt_tcptran_pipe_send_start(mqtt_tcptran_pipe *p)
 	// iov[0].iov_buf = p->txlen;
 	// iov[0].iov_len = sizeof(p->txlen);
 	// niov++;
-	// if (nni_msg_header_len(msg) > 0) {
-	// 	iov[niov].iov_buf = nni_msg_header(msg);
-	// 	iov[niov].iov_len = nni_msg_header_len(msg);
-	// 	niov++;
-	// }
+	if (nni_msg_header_len(msg) > 0) {
+		iov[niov].iov_buf = nni_msg_header(msg);
+		iov[niov].iov_len = 1;
+		niov++;
+	}
 	if (nni_msg_len(msg) > 0) {
 		iov[niov].iov_buf = nni_msg_body(msg);
 		iov[niov].iov_len = nni_msg_len(msg);
@@ -814,11 +800,10 @@ static void
 mqtt_tcptran_pipe_start(
     mqtt_tcptran_pipe *p, nng_stream *conn, mqtt_tcptran_ep *ep)
 {
-	nni_iov   iov;
+	nni_iov   iov[2];
 	nni_msg * connmsg;
-	char *    buf;
 	uint32_t  buf_len;
-	int       rv;
+	int       rv, niov = 0;
 
 	ep->refcnt++;
 
@@ -826,29 +811,36 @@ mqtt_tcptran_pipe_start(
 	p->ep    = ep;
 	p->proto = ep->proto;
 
-	rv = nni_dialer_getopt(ep->ndialer,
-	    "connmsg", &connmsg, NULL, NNI_TYPE_POINTER);
-	if (rv != 0) {
+	rv = nni_dialer_getopt(
+	    ep->ndialer, "connmsg", &connmsg, NULL, NNI_TYPE_POINTER);
+	if (!connmsg) {
 		fprintf(stderr, "Connmsg get error [%d] \n", rv);
+		nni_list_append(&ep->waitpipes, p);
+		mqtt_tcptran_ep_match(ep);
+		mqtt_tcptran_ep_match(ep);
+		return;
 	}
-	buf = nni_msg_body(connmsg);
-	buf_len = nni_msg_len(connmsg);
 
-	p->gotrxhead  = 0;
-	p->gottxhead  = 0;
-	p->wantrxhead = 4; // TODO
-	p->wanttxhead = buf_len;
+	p->gotrxhead = 0;
+	p->gottxhead = 0;
+	// TODO TX length for MQTT 5
+	p->wantrxhead = 4;
+	p->wanttxhead = nni_msg_header_len(connmsg) + nni_msg_len(connmsg);
 
-	iov.iov_len   = buf_len;
-	iov.iov_buf   = buf;
-
-	nni_aio_set_iov(p->negoaio, 1, &iov);
+	if (nni_msg_header_len(connmsg) > 0) {
+		iov[niov].iov_buf = nni_msg_header(connmsg);
+		iov[niov].iov_len = nni_msg_header_len(connmsg);
+		niov++;
+	}
+	if (nni_msg_len(connmsg) > 0) {
+		iov[niov].iov_buf = nni_msg_body(connmsg);
+		iov[niov].iov_len = nni_msg_len(connmsg);
+		niov++;
+	}
+	nni_aio_set_iov(p->negoaio, niov, iov);
 	nni_list_append(&ep->negopipes, p);
 
-	// mqtt_tcptran_ep_match(ep);
-	// nni_mtx_unlock(&ep->mtx);
 	nni_aio_set_timeout(p->negoaio, 10000); // 10 sec timeout to negotiate
-	printf("send connect\n");
     nng_stream_send(p->conn, p->negoaio);
 }
 

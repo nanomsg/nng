@@ -157,13 +157,16 @@ nni_mqtt_msg_encode_fixed_header(nni_msg *msg, nni_mqtt_proto_data *data)
 static int
 nni_mqtt_msg_encode_connect(nni_msg *msg)
 {
-	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+	nni_mqtt_proto_data *mqtt    = nni_msg_get_proto_data(msg);
+	char                 name[4] = "MQTT";
 
 	nni_msg_clear(msg);
 
 	int poslength = 6;
 
-	mqtt_connect_vhdr *var_header = &mqtt->var_header.connect;
+	mqtt_connect_vhdr *var_header    = &mqtt->var_header.connect;
+	var_header->protocol_name.buf    = name;
+	var_header->protocol_name.length = 4;
 
 	/* length of protocol-name (consider "MQTT" by default */
 	poslength += (var_header->protocol_name.length == 0)
@@ -172,6 +175,8 @@ nni_mqtt_msg_encode_connect(nni_msg *msg)
 
 	/* add the length of payload part */
 	mqtt_connect_payload *payload = &mqtt->payload.connect;
+	/* Clientid length */
+	poslength += payload->client_id.length + 2;
 
 	/* Will Topic */
 	if (payload->will_topic.length > 0) {
