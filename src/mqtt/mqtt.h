@@ -260,6 +260,11 @@ extern int nni_mqtt_msg_decode(nni_msg *);
 extern void nni_mqtt_msg_set_packet_type(nni_msg *, nni_mqtt_packet_type);
 extern nni_mqtt_packet_type nni_mqtt_msg_get_packet_type(nni_msg *);
 
+// mqtt packet id
+// NOTE: not all packet have a packet id field
+extern void     nni_mqtt_msg_set_packet_id(nni_msg *, uint16_t);
+extern uint16_t nni_mqtt_msg_get_packet_id(nni_msg *);
+
 // mqtt connect
 extern void     nni_mqtt_msg_set_connect_clean_session(nni_msg *, bool);
 extern void     nni_mqtt_msg_set_connect_will_retain(nni_msg *, bool);

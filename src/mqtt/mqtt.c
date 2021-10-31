@@ -88,6 +88,63 @@ nni_mqtt_msg_get_packet_type(nni_msg *msg)
 }
 
 void
+nni_mqtt_msg_set_packet_id(nni_msg *msg, uint16_t packet_id)
+{
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+	switch (proto_data->fixed_header.common.packet_type) {
+	case NNG_MQTT_PUBACK:
+		proto_data->var_header.puback.packet_id = packet_id;
+		break;
+	case NNG_MQTT_PUBCOMP:
+		proto_data->var_header.pubcomp.packet_id = packet_id;
+		break;
+	case NNG_MQTT_PUBREC:
+		proto_data->var_header.pubrec.packet_id = packet_id;
+		break;
+	case NNG_MQTT_PUBREL:
+		proto_data->var_header.pubrel.packet_id = packet_id;
+		break;
+	case NNG_MQTT_PUBLISH:
+		proto_data->var_header.publish.packet_id = packet_id;
+		break;
+	case NNG_MQTT_SUBACK:
+		proto_data->var_header.suback.packet_id = packet_id;
+		break;
+	case NNG_MQTT_SUBSCRIBE:
+		proto_data->var_header.subscribe.packet_id = packet_id;
+		break;
+	default:
+		// logic error
+		NNI_ASSERT(false);
+	}
+}
+
+uint16_t
+nni_mqtt_msg_get_packet_id(nni_msg *msg)
+{
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+	switch (proto_data->fixed_header.common.packet_type) {
+	case NNG_MQTT_PUBACK:
+		return proto_data->var_header.puback.packet_id;
+	case NNG_MQTT_PUBCOMP:
+		return proto_data->var_header.pubcomp.packet_id;
+	case NNG_MQTT_PUBREC:
+		return proto_data->var_header.pubrec.packet_id;
+	case NNG_MQTT_PUBREL:
+		return proto_data->var_header.pubrel.packet_id;
+	case NNG_MQTT_PUBLISH:
+		return proto_data->var_header.publish.packet_id;
+	case NNG_MQTT_SUBACK:
+		return proto_data->var_header.suback.packet_id;
+	case NNG_MQTT_SUBSCRIBE:
+		return proto_data->var_header.subscribe.packet_id;
+	default:
+		// logic error
+		NNI_ASSERT(false);
+	}
+}
+
+void
 nni_mqtt_msg_set_publish_qos(nni_msg *msg, uint8_t qos)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
