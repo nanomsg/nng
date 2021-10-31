@@ -132,7 +132,7 @@ work_init(work_t *work, mqtt_sock_t *s)
 static inline void
 work_fini(work_t *work)
 {
-	NNI_ARG_UNUSED(work);
+	nni_msg_free(work->msg);
 }
 
 static inline void
@@ -162,6 +162,7 @@ work_close(work_t *work)
 {
 	if (NULL != work->user_aio) {
 		nni_aio_finish_error(work->user_aio, NNG_ECONNRESET);
+		nni_msg_free(work->msg);
 		work->msg      = NULL;
 		work->user_aio = NULL;
 	}
@@ -429,7 +430,7 @@ mqtt_send_cb(void *arg)
 		nni_id_remove(&p->recv_unack, work->packet_id);
 		nni_lmq_putq(&p->recv_messages, work->msg);
 		mqtt_run_recv_queue(s);
-		work->msg = NULL;
+		work->msg = NULL; // ownership to the lmq
 		work_reset(work);
 		nni_list_append(&s->free_list, work);
 		mqtt_send_start(s);
@@ -564,14 +565,13 @@ mqtt_recv_cb(void *arg)
 		// we have received a UNSUBACK, successful unsubcription
 		// FIXME: check packet type match
 		packet_id = nni_mqtt_msg_get_packet_id(msg);
-		work      = nni_id_get(&p->send_unack, packet_id);
+		nni_msg_free(msg);
+		work = nni_id_get(&p->send_unack, packet_id);
 		if (NULL == work) {
-			nni_msg_free(msg);
 			nni_mtx_unlock(&s->mtx);
 			nni_pipe_close(p->pipe);
 			return;
 		}
-		nni_msg_free(msg);
 		nni_id_remove(&p->send_unack, packet_id);
 		work->state = WORK_END;
 		break;
@@ -580,10 +580,10 @@ mqtt_recv_cb(void *arg)
 		// we have received a PUBRECV in the QoS 2 delivery,
 		// then send a PUBREL
 		packet_id = nni_mqtt_msg_get_pubrec_packet_id(msg);
-		work      = nni_id_get(&p->send_unack, packet_id);
+		nni_msg_free(msg);
+		work = nni_id_get(&p->send_unack, packet_id);
 		if (NULL == work) {
 			// ignore this message
-			nni_msg_free(msg);
 			nni_mtx_unlock(&s->mtx);
 			return;
 		}
@@ -614,8 +614,8 @@ mqtt_recv_cb(void *arg)
 		nni_id_remove(&p->recv_unack, work->packet_id);
 		nni_lmq_putq(&p->recv_messages, work->msg);
 		mqtt_run_recv_queue(s);
-		work->msg = msg;
-		work_reset(work);
+		work->msg = msg;  // ownership of work->msg to the lmq
+		work_reset(work); // will release msg
 		nni_list_append(&s->free_list, work);
 		nni_mtx_unlock(&s->mtx);
 		return;
