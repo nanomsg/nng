@@ -559,7 +559,7 @@ mqtt_recv_cb(void *arg)
 	case NNG_MQTT_UNSUBACK:
 		// we have received a UNSUBACK, successful unsubcription
 		// FIXME: check packet type match
-		packet_id = nni_mqtt_msg_get_unsuback_packet_id(msg);
+		packet_id = nni_mqtt_msg_get_packet_id(msg);
 		work      = nni_id_get(&p->send_unack, packet_id);
 		if (NULL == work) {
 			nni_msg_free(msg);
