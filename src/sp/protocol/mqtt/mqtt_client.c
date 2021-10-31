@@ -723,7 +723,8 @@ mqtt_run_recv_queue(mqtt_sock_t *s)
 		nni_list_remove(&s->recv_queue, work);
 		// nni_pipe_recv(p->pipe, &work->recv_aio);
 		nni_aio_set_msg(work->user_aio, msg);
-		nni_aio_finish_sync(work->user_aio, 0, nni_msg_len(msg));
+		nni_aio_finish_sync(work->user_aio, 0,
+		    nni_msg_header_len(msg) + nni_msg_len(msg));
 		nni_list_append(&s->free_list, work);
 		work = nni_list_first(&s->recv_queue);
 	}
@@ -787,7 +788,8 @@ mqtt_send_start(mqtt_sock_t *s)
 
 		nni_msg_clone(msg);
 		nni_aio_set_msg(work->user_aio, NULL);
-		nni_aio_bump_count(work->user_aio, nni_msg_len(msg));
+		nni_aio_bump_count(work->user_aio,
+		    nni_msg_header_len(msg) + nni_msg_len(msg));
 		work->msg = msg;
 		p->work   = work;
 		nni_aio_set_msg(&p->send_aio, msg);
