@@ -794,7 +794,6 @@ mqtt_run_send_queue(mqtt_sock_t *s)
 			break;
 		default:
 			work->state = WORK_ERROR;
-			nni_mtx_unlock(&s->mtx);
 			nni_aio_finish_error(work->user_aio, NNG_EPROTO);
 			return;
 		}
