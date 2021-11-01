@@ -535,28 +535,28 @@ mqtt_recv_cb(void *arg)
 
 	// state transitions
 	switch (packet_type) {
-	case MQTT_CONNACK:
+	case NNG_MQTT_CONNACK:
 		// FIXME
 		// we have received the CONNACK
 		nni_mtx_unlock(&s->mtx);
 		return;
 
-	case MQTT_PUBACK:
+	case NNG_MQTT_PUBACK:
 		// we have received a PUBACK, successful delivery of a QoS 1
 
 		// fall through
 
-	case MQTT_PUBCOMP:
+	case NNG_MQTT_PUBCOMP:
 		// we have received a PUBCOMP, successful delivery of a QoS 2
 
 		// fall through
 
-	case MQTT_SUBACK:
+	case NNG_MQTT_SUBACK:
 		// we have received a SUBACK, successful subcription
 
 		// fall through
 
-	case MQTT_UNSUBACK:
+	case NNG_MQTT_UNSUBACK:
 		// we have received a UNSUBACK, successful unsubcription
 		// FIXME: check packet type match
 		packet_id = nni_mqtt_msg_get_unsuback_packet_id(msg);
@@ -572,7 +572,7 @@ mqtt_recv_cb(void *arg)
 		work->state = WORK_END;
 		break;
 
-	case MQTT_PUBREC:
+	case NNG_MQTT_PUBREC:
 		// we have received a PUBRECV in the QoS 2 delivery,
 		// then send a PUBREL
 		packet_id = nni_mqtt_msg_get_pubrec_packet_id(msg);
@@ -585,14 +585,14 @@ mqtt_recv_cb(void *arg)
 		}
 		work->state = WORK_PUBREL;
 		// reuse msg
-		nni_mqtt_msg_set_packet_type(msg, MQTT_PUBREL);
+		nni_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBREL);
 		nni_mqtt_msg_set_pubrel_packet_id(msg, packet_id);
 		nni_mqtt_msg_encode(msg);
 		nni_aio_set_msg(&work->send_aio, msg);
 		nni_pipe_send(p->pipe, &work->send_aio);
 		break;
 
-	case MQTT_PUBREL:
+	case NNG_MQTT_PUBREL:
 		// we have received a PUBREL, then send a PUBCOMP
 		packet_id = nni_mqtt_msg_get_pubrel_packet_id(msg);
 		work      = nni_id_get(&p->recv_unack, packet_id);
@@ -604,14 +604,14 @@ mqtt_recv_cb(void *arg)
 		}
 		work->state = WORK_PUBCOMP;
 		// reuse msg
-		nni_mqtt_msg_set_packet_type(msg, MQTT_PUBCOMP);
+		nni_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBCOMP);
 		nni_mqtt_msg_set_pubcomp_packet_id(msg, packet_id);
 		nni_mqtt_msg_encode(msg);
 		nni_aio_set_msg(&work->send_aio, msg);
 		nni_pipe_send(p->pipe, &work->send_aio);
 		break;
 
-	case MQTT_PUBLISH:
+	case NNG_MQTT_PUBLISH:
 		// we have received a PUBLISH
 		qos = nni_mqtt_msg_get_publish_qos(msg);
 		if (0 == qos) {
@@ -633,13 +633,13 @@ mqtt_recv_cb(void *arg)
 			if (1 == qos) {
 				// QoS 1, then send a PUBACK
 				work->state = WORK_PUBACK;
-				nni_mqtt_msg_set_packet_type(msg, MQTT_PUBACK);
+				nni_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBACK);
 				nni_mqtt_msg_set_puback_packet_id(
 				    msg, work->packet_id);
 			} else {
 				// QoS 2, then send a PUBRECV
 				work->state = WORK_PUBRECV;
-				nni_mqtt_msg_set_packet_type(msg, MQTT_PUBREC);
+				nni_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBREC);
 				nni_mqtt_msg_set_pubrec_packet_id(
 				    msg, work->packet_id);
 			}
@@ -764,23 +764,23 @@ mqtt_run_send_queue(mqtt_sock_t *s)
 
 		// only allow to send PUBLISH, SUBSCRIBE and UNSUBSCRIBE packet
 		switch (packet_type) {
-		case MQTT_CONNECT:
+		case NNG_MQTT_CONNECT:
 			work->state = WORK_CONNECT;
 			break;
-		case MQTT_PUBLISH:
+		case NNG_MQTT_PUBLISH:
 			work->state     = WORK_PUBLISH;
 			work->packet_id = mqtt_pipe_get_next_packet_id(p);
 			nni_mqtt_msg_set_publish_packet_id(
 			    msg, work->packet_id);
 			work->qos = nni_mqtt_msg_get_publish_qos(msg);
 			break;
-		case MQTT_SUBSCRIBE:
+		case NNG_MQTT_SUBSCRIBE:
 			work->state     = WORK_SUBSCRIBE;
 			work->packet_id = mqtt_pipe_get_next_packet_id(p);
 			nni_mqtt_msg_set_subscribe_packet_id(
 			    msg, work->packet_id);
 			break;
-		case MQTT_UNSUBSCRIBE:
+		case NNG_MQTT_UNSUBSCRIBE:
 			work->state     = WORK_UNSUBSCRIBE;
 			work->packet_id = mqtt_pipe_get_next_packet_id(p);
 			nni_mqtt_msg_set_unsubscribe_packet_id(

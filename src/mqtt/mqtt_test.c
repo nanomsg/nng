@@ -64,6 +64,20 @@ test_encode_connect(void)
 	NUTS_ASSERT(strcmp(nng_mqtt_msg_get_connect_client_id(msg),
 	                "nanomq-mqtt") == 0);
 
+	char will_topic[] = "/nanomq/will_msg";
+	nng_mqtt_msg_set_connect_will_topic(msg, will_topic);
+
+	char will_msg[] = "Bye-bye";
+	nng_mqtt_msg_set_connect_will_msg(msg, will_msg);
+
+	char user[]   = "alvin";
+	char passwd[] = "HHH0000";
+
+	nng_mqtt_msg_set_connect_user_name(msg, user);
+	nng_mqtt_msg_set_connect_password(msg, passwd);
+
+	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
+
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
 	uint8_t print_buf[1024] = { 0 };
@@ -72,9 +86,31 @@ test_encode_connect(void)
 	nng_msg_free(msg);
 }
 
-void test_encode_publish(void)
+void
+test_encode_publish(void)
 {
-	
+	nng_msg *msg;
+
+	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
+
+	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBLISH);
+	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_PUBLISH);
+
+	nng_mqtt_msg_set_publish_qos(msg, 2);
+
+	char *topic = "/nanomq/msg/18234";
+	nng_mqtt_msg_set_publish_topic(msg, topic);
+
+	char *payload = "hello";
+	nng_mqtt_msg_set_publish_payload(
+	    msg, (uint8_t *) payload, strlen(payload));
+
+	NUTS_PASS(nng_mqtt_msg_encode(msg));
+
+	uint8_t print_buf[1024] = { 0 };
+	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
+	printf("%s\n", print_buf);
+	nng_msg_free(msg);
 }
 
 void
@@ -274,6 +310,7 @@ TEST_LIST = {
 	{ "alloc message", test_alloc },
 	{ "dup message", test_dup },
 	{ "encode connect", test_encode_connect },
+	{ "encode publish", test_encode_publish },
 	{ "encode disconnect", test_encode_disconnect },
 	{ "encode subscribe", test_encode_subscribe },
 	{ "encode unsubscribe", test_encode_unsubscribe },

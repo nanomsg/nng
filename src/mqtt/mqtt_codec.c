@@ -150,7 +150,7 @@ nni_mqtt_msg_encode_fixed_header(nni_msg *msg, nni_mqtt_proto_data *data)
 
 	int len = write_variable_length_value(
 	    data->fixed_header.remaining_length, &buf);
-
+	data->used_bytes = len;
 	nni_msg_header_append(msg, rlen, len);
 }
 
@@ -165,8 +165,12 @@ nni_mqtt_msg_encode_connect(nni_msg *msg)
 	int poslength = 6;
 
 	mqtt_connect_vhdr *var_header    = &mqtt->var_header.connect;
-	var_header->protocol_name.buf    = name;
+	var_header->protocol_name.buf    = (uint8_t *) name;
 	var_header->protocol_name.length = 4;
+
+	if (var_header->protocol_version == 0) {
+		var_header->protocol_version = 4;
+	}
 
 	/* length of protocol-name (consider "MQTT" by default */
 	poslength += (var_header->protocol_name.length == 0)

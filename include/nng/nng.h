@@ -1276,8 +1276,6 @@ NNG_DECL int nng_pipe_getopt_string(nng_pipe, const char *, char **);
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void);
 
-#ifdef NNG_TRANSPORT_MQTT_TCP
-
 typedef enum {
 	NNG_MQTT_CONNECT     = 0x01,
 	NNG_MQTT_CONNACK     = 0x02,

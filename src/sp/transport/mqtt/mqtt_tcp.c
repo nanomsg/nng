@@ -312,7 +312,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		int     var_int;
 		uint8_t pos = 0;
 		int     rv  = mqtt_get_remaining_length(
-                    p->rxlen, p->gotrxhead, &var_int, &pos);
+                    p->rxlen, p->gotrxhead, (uint32_t *) &var_int, &pos);
 		p->wantrxhead = var_int + 1 + pos;
 		if ((rv = (p->wantrxhead <= 4) ? 0 : NNG_EPROTO) != 0) {
 			fprintf(stderr, "wantrxhead error rv[%d].\n", rv);
