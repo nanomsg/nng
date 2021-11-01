@@ -178,6 +178,24 @@ test_encode_puback(void)
 }
 
 void
+test_encode_puback(void)
+{
+	nng_msg *msg;
+
+	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
+
+	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBACK);
+	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_PUBACK);
+
+	NUTS_PASS(nng_mqtt_msg_encode(msg));
+
+	uint8_t print_buf[1024] = { 0 };
+	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
+	printf("%s\n", print_buf);
+	nng_msg_free(msg);
+}
+
+void
 test_encode_subscribe(void)
 {
 	nng_msg *msg;
