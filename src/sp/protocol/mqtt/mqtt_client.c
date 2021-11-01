@@ -831,11 +831,15 @@ mqtt_send_start(mqtt_sock_t *s)
 			break;
 
 		case NNG_MQTT_PUBLISH:
-			work->state     = WORK_PUBLISH;
-			work->packet_id = mqtt_pipe_get_next_packet_id(p);
-			nni_mqtt_msg_set_publish_packet_id(
-			    work->msg, work->packet_id);
-			work->qos = nni_mqtt_msg_get_publish_qos(work->msg);
+			work->state = WORK_PUBLISH;
+			work->qos   = nni_mqtt_msg_get_publish_qos(work->msg);
+			if (work->qos > 0) {
+				work->packet_id =
+				    mqtt_pipe_get_next_packet_id(p);
+				nni_mqtt_msg_set_publish_packet_id(
+				    work->msg, work->packet_id);
+				nni_mqtt_msg_encode(work->msg);
+			}
 			break;
 
 		case NNG_MQTT_SUBSCRIBE:
@@ -843,6 +847,7 @@ mqtt_send_start(mqtt_sock_t *s)
 			work->packet_id = mqtt_pipe_get_next_packet_id(p);
 			nni_mqtt_msg_set_subscribe_packet_id(
 			    work->msg, work->packet_id);
+			nni_mqtt_msg_encode(work->msg);
 			break;
 
 		case NNG_MQTT_UNSUBSCRIBE:
@@ -850,6 +855,7 @@ mqtt_send_start(mqtt_sock_t *s)
 			work->packet_id = mqtt_pipe_get_next_packet_id(p);
 			nni_mqtt_msg_set_unsubscribe_packet_id(
 			    work->msg, work->packet_id);
+			nni_mqtt_msg_encode(work->msg);
 			break;
 
 		default:
