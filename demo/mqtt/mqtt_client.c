@@ -83,8 +83,6 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 		fatal("nng_dialer_create", rv);
 	}
 
-	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
-
 	// create a CONNECT message
 	/* CONNECT */
 	nng_msg *connmsg;
@@ -118,9 +116,8 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 
 	printf("connected\n");
 
-//	TODO Connmsg would be free when client disconnected
-//	nng_msg_free(connmsg);
-	nng_mqtt_msg_proto_data_free(connmsg);
+	// TODO: connmsg would be free when client disconnected
+	// nng_msg_free(connmsg);
 
 	return (0);
 }
@@ -205,7 +202,7 @@ client_publish(nng_socket sock, const char *topic, const char *payload,
 	nng_mqtt_msg_set_publish_qos(pubmsg, qos);
 	nng_mqtt_msg_set_publish_retain(pubmsg, 0);
 	nng_mqtt_msg_set_publish_payload(
-	    pubmsg, (uint8_t *) payload, sizeof(payload));
+	    pubmsg, (uint8_t *) payload, strlen(payload));
 	nng_mqtt_msg_set_publish_topic(pubmsg, topic);
 
 	rv = nng_mqtt_msg_encode(pubmsg);
