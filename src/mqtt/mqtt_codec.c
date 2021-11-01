@@ -157,8 +157,9 @@ nni_mqtt_msg_encode_fixed_header(nni_msg *msg, nni_mqtt_proto_data *data)
 static int
 nni_mqtt_msg_encode_connect(nni_msg *msg)
 {
-	nni_mqtt_proto_data *mqtt    = nni_msg_get_proto_data(msg);
-	char                 name[4] = "MQTT";
+	nni_mqtt_proto_data *mqtt          = nni_msg_get_proto_data(msg);
+	char                 name[4]       = "MQTT";
+	char                 client_id[20] = { 0 };
 
 	nni_msg_clear(msg);
 
@@ -170,6 +171,12 @@ nni_mqtt_msg_encode_connect(nni_msg *msg)
 
 	if (var_header->protocol_version == 0) {
 		var_header->protocol_version = 4;
+	}
+
+	if (mqtt->payload.connect.client_id.length == 0) {
+		snprintf(client_id, 20, "nanomq-%04x", nni_random());
+		mqtt->payload.connect.client_id.buf    = (uint8_t *) client_id;
+		mqtt->payload.connect.client_id.length = strlen(client_id);
 	}
 
 	/* length of protocol-name (consider "MQTT" by default */
@@ -502,11 +509,11 @@ nni_mqtt_msg_encode_unsubscribe(nni_msg *msg)
 	mqtt->fixed_header.common.bit_1     = 1;
 	nni_mqtt_msg_encode_fixed_header(msg, mqtt);
 
-	mqtt_subscribe_vhdr *var_header = &mqtt->var_header.subscribe;
+	mqtt_unsubscribe_vhdr *var_header = &mqtt->var_header.unsubscribe;
 	/* Packet Id */
 	nni_mqtt_msg_append_u16(msg, var_header->packet_id);
 
-	/* Subscribe topic_arr */
+	/* Unsubscribe topic_arr */
 	for (size_t i = 0; i < uspld->topic_count; i++) {
 		mqtt_buf *topic = &uspld->topic_arr[i];
 		nni_mqtt_msg_append_byte_str(msg, topic);
@@ -921,7 +928,7 @@ nni_mqtt_msg_decode_unsubscribe(nni_msg *msg)
 		/* Topic Name */
 		ret =
 		    read_utf8_str(&buf, &uspld->topic_arr[uspld->topic_count]);
-		if (ret != 0) {
+		if (ret != MQTT_SUCCESS) {
 			ret = MQTT_ERR_PROTOCOL;
 			goto ERROR;
 		}
@@ -1280,7 +1287,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		}
 		pos += ret;
 		ret = sprintf((char *) &buf->buf[pos],
-		    "client identifier     : %.*s\n",
+		    "client id              : %.*s\n",
 		    msg->payload.connect.client_id.length,
 		    msg->payload.connect.client_id.buf);
 		if ((ret < 0) || ((pos + ret) > buf->length)) {
