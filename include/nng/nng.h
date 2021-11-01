@@ -1276,6 +1276,8 @@ NNG_DECL int nng_pipe_getopt_string(nng_pipe, const char *, char **);
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void);
 
+#ifdef NNG_TRANSPORT_MQTT_TCP
+
 typedef enum {
 	NNG_MQTT_CONNECT     = 0x01,
 	NNG_MQTT_CONNACK     = 0x02,
@@ -1294,8 +1296,20 @@ typedef enum {
 	NNG_MQTT_AUTH        = 0x0F
 } nng_mqtt_packet_type;
 
-typedef struct mqtt_buf_t       nng_mqtt_buffer;
-typedef struct mqtt_buf_t       nng_mqtt_topic;
+struct mqtt_buf_t {
+	uint32_t length;
+	uint8_t *buf;
+};
+
+typedef struct mqtt_buf_t mqtt_buf;
+typedef struct mqtt_buf_t nng_mqtt_buffer;
+typedef struct mqtt_buf_t nng_mqtt_topic;
+
+typedef struct mqtt_topic_qos_t {
+	nng_mqtt_topic topic;
+	uint8_t        qos;
+} mqtt_topic_qos;
+
 typedef struct mqtt_topic_qos_t nng_mqtt_topic_qos;
 
 NNG_DECL int  nng_mqtt_msg_alloc(nng_msg **, size_t);
@@ -1346,13 +1360,13 @@ NNG_DECL void     nng_mqtt_msg_set_unsubscribe_topics(
         nng_msg *, nng_mqtt_topic *, uint32_t);
 NNG_DECL nng_mqtt_topic *nng_mqtt_msg_get_unsubscribe_topics(
     nng_msg *, uint32_t *);
-NNG_DECL nng_mqtt_topic *nng_mqtt_topic_array_create(size_t);
-NNG_DECL void nng_mqtt_topic_array_set(nng_mqtt_topic *, size_t, const char *);
-NNG_DECL void nng_mqtt_topic_array_free(nng_mqtt_topic *, size_t);
-NNG_DECL nng_mqtt_topic_qos *nng_mqtt_topic_qos_array_create(size_t);
-NNG_DECL void                nng_mqtt_topic_qos_array_set(
-                   nng_mqtt_topic_qos *, size_t, const char *, uint8_t);
-NNG_DECL void nng_mqtt_topic_qos_array_free(nng_mqtt_topic_qos *, size_t);
+// NNG_DECL nng_mqtt_topic *nng_mqtt_topic_array_create(size_t);
+// NNG_DECL void nng_mqtt_topic_array_set(nng_mqtt_topic *, size_t, const char
+// *); NNG_DECL void nng_mqtt_topic_array_free(nng_mqtt_topic *, size_t);
+// NNG_DECL nng_mqtt_topic_qos *nng_mqtt_topic_qos_array_create(size_t);
+// NNG_DECL void                nng_mqtt_topic_qos_array_set(
+//                    nng_mqtt_topic_qos *, size_t, const char *, uint8_t);
+// NNG_DECL void nng_mqtt_topic_qos_array_free(nng_mqtt_topic_qos *, size_t);
 NNG_DECL void nng_mqtt_msg_dump(nng_msg *, uint8_t *, uint32_t, bool);
 
 #endif

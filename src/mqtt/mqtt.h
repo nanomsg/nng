@@ -29,31 +29,12 @@ extern "C" {
 #define MQTT_LENGTH_CONTINUATION_BIT 0x80
 #define MQTT_LENGTH_SHIFT 7
 
-typedef struct mqtt_msg_t       nni_mqtt_proto_data;
-typedef enum mqtt_packet_type_t nni_mqtt_packet_type;
-typedef union mqtt_payload      nni_mqtt_payload;
-typedef struct mqtt_topic_qos_t nni_mqtt_topic_qos;
-typedef struct mqtt_buf_t       nni_mqtt_buffer;
-typedef struct mqtt_buf_t       nni_mqtt_topic;
-
-/* Packet types */
-typedef enum mqtt_packet_type_t {
-	MQTT_CONNECT     = 0x01,
-	MQTT_CONNACK     = 0x02,
-	MQTT_PUBLISH     = 0x03,
-	MQTT_PUBACK      = 0x04,
-	MQTT_PUBREC      = 0x05,
-	MQTT_PUBREL      = 0x06,
-	MQTT_PUBCOMP     = 0x07,
-	MQTT_SUBSCRIBE   = 0x08,
-	MQTT_SUBACK      = 0x09,
-	MQTT_UNSUBSCRIBE = 0x0A,
-	MQTT_UNSUBACK    = 0x0B,
-	MQTT_PINGREQ     = 0x0C,
-	MQTT_PINGRESP    = 0x0D,
-	MQTT_DISCONNECT  = 0x0E,
-	MQTT_AUTH        = 0x0F
-} mqtt_packet_type;
+typedef struct mqtt_msg_t    nni_mqtt_proto_data;
+typedef nng_mqtt_packet_type nni_mqtt_packet_type;
+typedef union mqtt_payload   nni_mqtt_payload;
+typedef nng_mqtt_topic_qos   nni_mqtt_topic_qos;
+typedef nng_mqtt_buffer      nni_mqtt_buffer;
+typedef nng_mqtt_topic       nni_mqtt_topic;
 
 /* Quality of Service types. */
 #define MQTT_QOS_0_AT_MOST_ONCE 0
@@ -82,12 +63,6 @@ struct pos_buf {
 	uint8_t *curpos;
 	uint8_t *endpos;
 };
-
-/* Compact string type */
-typedef struct mqtt_buf_t {
-	uint32_t length;
-	uint8_t *buf;
-} mqtt_buf;
 
 /* CONNECT flags */
 typedef struct conn_flags_t {
@@ -169,11 +144,6 @@ union mqtt_variable_header {
 	mqtt_unsuback_vhdr    unsuback;
 };
 
-typedef struct mqtt_topic_qos_t {
-	mqtt_buf topic;
-	uint8_t  qos;
-} mqtt_topic_qos;
-
 /*****************************************************************************
  * Payloads
  ****************************************************************************/
@@ -217,18 +187,18 @@ union mqtt_payload {
 };
 
 typedef struct {
-	uint8_t          bit_0 : 1;
-	uint8_t          bit_1 : 1;
-	uint8_t          bit_2 : 1;
-	uint8_t          bit_3 : 1;
-	mqtt_packet_type packet_type : 4;
+	uint8_t              bit_0 : 1;
+	uint8_t              bit_1 : 1;
+	uint8_t              bit_2 : 1;
+	uint8_t              bit_3 : 1;
+	nni_mqtt_packet_type packet_type : 4;
 } mqtt_common_hdr;
 
 typedef struct {
-	uint8_t          retain : 1;
-	uint8_t          qos : 2;
-	uint8_t          dup : 1;
-	mqtt_packet_type packet_type : 4;
+	uint8_t              retain : 1;
+	uint8_t              qos : 2;
+	uint8_t              dup : 1;
+	nni_mqtt_packet_type packet_type : 4;
 } mqtt_pub_hdr;
 
 typedef struct mqtt_fixed_hdr_t {
@@ -256,8 +226,8 @@ typedef struct mqtt_msg_t {
 
 } mqtt_msg;
 
-extern int mqtt_get_remaining_length(uint8_t *packet, uint32_t len,
-    uint32_t *remainning_length, uint8_t *used_bytes);
+extern int mqtt_get_remaining_length(
+    uint8_t *, uint32_t, uint32_t *, uint8_t *);
 extern int byte_number_for_variable_length(uint32_t);
 extern int write_variable_length_value(uint32_t, struct pos_buf *);
 extern int write_byte(uint8_t, struct pos_buf *);
@@ -273,7 +243,7 @@ extern int read_packet_length(struct pos_buf *, uint32_t *);
 extern mqtt_buf mqtt_buf_dup(const mqtt_buf *);
 extern void     mqtt_buf_free(mqtt_buf *);
 
-extern mqtt_msg *mqtt_msg_create(mqtt_packet_type);
+extern mqtt_msg *mqtt_msg_create(nni_mqtt_packet_type);
 
 extern int mqtt_msg_dump(mqtt_msg *, mqtt_buf *, mqtt_buf *, bool);
 

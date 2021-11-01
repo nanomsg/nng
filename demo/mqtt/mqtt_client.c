@@ -136,6 +136,7 @@ client_subscribe(nng_socket sock, nng_mqtt_topic_qos *subscriptions, int count,
 	nng_msg *submsg;
 	nng_mqtt_msg_alloc(&submsg, 0);
 	nng_mqtt_msg_set_packet_type(submsg, NNG_MQTT_SUBSCRIBE);
+
 	nng_mqtt_msg_set_subscribe_topics(submsg, subscriptions, count);
 
 	rv = nng_mqtt_msg_encode(submsg);

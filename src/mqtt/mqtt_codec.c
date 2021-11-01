@@ -1188,7 +1188,7 @@ mqtt_msg_create_empty(void)
 }
 
 mqtt_msg *
-mqtt_msg_create(mqtt_packet_type packet_type)
+mqtt_msg_create(nni_mqtt_packet_type packet_type)
 {
 	mqtt_msg *msg                        = mqtt_msg_create_empty();
 	msg->fixed_header.common.packet_type = packet_type;
@@ -1205,7 +1205,7 @@ mqtt_msg_destroy(mqtt_msg *self)
 }
 
 const char *
-get_packet_type_str(mqtt_packet_type packtype)
+get_packet_type_str(nni_mqtt_packet_type packtype)
 {
 	static const char *packTypeNames[16] = { "Forbidden-0", "CONNECT",
 		"CONNACK", "PUBLISH", "PUBACK", "PUBREC", "PUBREL", "PUBCOMP",
@@ -1242,7 +1242,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 
 	/* Print variable header part */
 	switch (msg->fixed_header.common.packet_type) {
-	case MQTT_CONNECT: {
+	case NNG_MQTT_CONNECT: {
 		ret = sprintf((char *) &buf->buf[pos],
 		    "protocol name      :   %.*s\n"
 		    "protocol version   :   %d\n"
@@ -1317,7 +1317,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		pos += ret;
 	} break;
 
-	case MQTT_CONNACK:
+	case NNG_MQTT_CONNACK:
 		ret = sprintf((char *) &buf->buf[pos],
 		    "connack flags      : %d\n"
 		    "connack return-code: %d\n",
@@ -1329,7 +1329,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		pos += ret;
 		break;
 
-	case MQTT_PUBLISH: {
+	case NNG_MQTT_PUBLISH: {
 
 		ret = sprintf((char *) &buf->buf[pos],
 		    "publis flags:\n"
@@ -1358,7 +1358,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		pos += ret;
 	} break;
 
-	case MQTT_PUBACK:
+	case NNG_MQTT_PUBACK:
 		ret = sprintf((char *) &buf->buf[pos], "packet-id: %d\n",
 		    msg->var_header.puback.packet_id);
 		if ((ret < 0) || ((pos + ret) > buf->length)) {
@@ -1367,7 +1367,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		pos += ret;
 		break;
 
-	case MQTT_PUBREC:
+	case NNG_MQTT_PUBREC:
 		ret = sprintf((char *) &buf->buf[pos], "packet-id: %d\n",
 		    msg->var_header.pubrec.packet_id);
 		if ((ret < 0) || ((pos + ret) > buf->length)) {
@@ -1376,7 +1376,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		pos += ret;
 		break;
 
-	case MQTT_PUBREL:
+	case NNG_MQTT_PUBREL:
 		ret = sprintf((char *) &buf->buf[pos], "packet-id: %d\n",
 		    msg->var_header.pubrel.packet_id);
 		if ((ret < 0) || ((pos + ret) > buf->length)) {
@@ -1385,7 +1385,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		pos += ret;
 		break;
 
-	case MQTT_PUBCOMP:
+	case NNG_MQTT_PUBCOMP:
 		ret = sprintf((char *) &buf->buf[pos], "packet-id: %d\n",
 		    msg->var_header.pubcomp.packet_id);
 		if ((ret < 0) || ((pos + ret) > buf->length)) {
@@ -1394,7 +1394,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		pos += ret;
 		break;
 
-	case MQTT_SUBSCRIBE: {
+	case NNG_MQTT_SUBSCRIBE: {
 		ret = sprintf((char *) &buf->buf[pos],
 		    "packet-id          : %d\n",
 		    msg->var_header.subscribe.packet_id);
@@ -1418,7 +1418,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		}
 	} break;
 
-	case MQTT_SUBACK: {
+	case NNG_MQTT_SUBACK: {
 		ret = sprintf((char *) &buf->buf[pos],
 		    "packet-id          : %d\n",
 		    msg->var_header.suback.packet_id);
@@ -1438,7 +1438,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		}
 	} break;
 
-	case MQTT_UNSUBSCRIBE: {
+	case NNG_MQTT_UNSUBSCRIBE: {
 		ret = sprintf((char *) &buf->buf[pos],
 		    "packet-id          : %d\n",
 		    msg->var_header.unsubscribe.packet_id);
@@ -1459,7 +1459,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		}
 	} break;
 
-	case MQTT_UNSUBACK:
+	case NNG_MQTT_UNSUBACK:
 		ret = sprintf((char *) &buf->buf[pos],
 		    "packet-id          : %d\n",
 		    msg->var_header.unsuback.packet_id);
@@ -1469,14 +1469,14 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		pos += ret;
 		break;
 
-	case MQTT_PINGREQ:
-	case MQTT_PINGRESP:
+	case NNG_MQTT_PINGREQ:
+	case NNG_MQTT_PINGRESP:
 		break;
 
-	case MQTT_DISCONNECT:
+	case NNG_MQTT_DISCONNECT:
 		break;
 
-	case MQTT_AUTH:
+	case NNG_MQTT_AUTH:
 		break;
 	}
 
