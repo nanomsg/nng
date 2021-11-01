@@ -321,7 +321,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 
 		pos = 0;
 		if ((rv = mqtt_get_remaining_length(p->rxlen,
-		        p->gotrxhead, &var_int, &pos)) != 0) {
+		        p->gotrxhead, (uint32_t *)&var_int, &pos)) != 0) {
 			goto error;
 		}
 
@@ -622,7 +622,7 @@ mqtt_tcptran_pipe_send_start(mqtt_tcptran_pipe *p)
 	nni_msg *msg;
 	int      niov;
 	nni_iov  iov[3];
-	uint64_t len;
+	// uint64_t len;
 
 	if (p->closed) {
 		while ((aio = nni_list_first(&p->sendq)) != NULL) {
@@ -638,8 +638,8 @@ mqtt_tcptran_pipe_send_start(mqtt_tcptran_pipe *p)
 
 	// This runs to send the message.
 	msg = nni_aio_get_msg(aio);
-	len = nni_msg_len(msg) + nni_msg_header_len(msg);
 
+	// len = nni_msg_len(msg) + nni_msg_header_len(msg);
 	// NNI_PUT64(p->txlen, len);
 
 	txaio = p->txaio;
@@ -1055,8 +1055,10 @@ mqtt_tcptran_ep_init(mqtt_tcptran_ep **epp, nng_url *url, nni_sock *sock)
 	NNI_LIST_INIT(&ep->waitpipes, mqtt_tcptran_pipe, node);
 	NNI_LIST_INIT(&ep->negopipes, mqtt_tcptran_pipe, node);
 
-	ep->proto = nni_sock_proto_id(sock);
-	ep->url   = url;
+	ep->proto  = nni_sock_proto_id(sock);
+	ep->url    = url;
+	ep->conncb = NULL;
+	ep->arg    = NULL;
 
 #ifdef NNG_ENABLE_STATS
 	static const nni_stat_info rcv_max_info = {
