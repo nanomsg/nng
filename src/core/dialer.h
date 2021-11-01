@@ -30,4 +30,7 @@ extern int nni_dialer_getopt(
 extern void nni_dialer_add_stat(nni_dialer *, nni_stat_item *);
 extern void nni_dialer_bump_error(nni_dialer *, int);
 
+// NNG-MQTT
+extern void nni_dialer_setcb(nni_dialer *, void (*cb)(void *, nng_msg *), void *);
+
 #endif // CORE_DIALER_H

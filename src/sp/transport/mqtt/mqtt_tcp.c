@@ -53,7 +53,6 @@ struct mqtt_tcptran_pipe {
 	nni_msg *        rxmsg;
 	nni_msg *        smsg;
 	nni_mtx          mtx;
-	void *           conn_buf;
 };
 
 struct mqtt_tcptran_ep {
@@ -78,6 +77,8 @@ struct mqtt_tcptran_ep {
 	nng_stream_listener *listener;
 	nni_dialer *         ndialer;
 	void *               connmsg;
+	void                 (*conncb)(void *, nng_msg *);
+	void *               arg;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_rcv_max;
@@ -263,6 +264,8 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	nni_aio *          aio = p->negoaio;
 	nni_aio *          uaio;
 	int                rv;
+	uint8_t            pos = 0;
+	int                var_int;
 
 	nni_mtx_lock(&ep->mtx);
 
@@ -291,28 +294,44 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	}
 
 	// receving fixed header
-	if (p->gotrxhead < 4) {
+	if (p->gotrxhead == 0 ||
+	        (p->gotrxhead <= 5 &&
+	         p->rxlen[p->gotrxhead - 1] > 0x7f &&
+	         p->rxmsg == NULL)) {
 		nni_iov iov;
-		iov.iov_len = p->wantrxhead - p->gotrxhead;
 		iov.iov_buf = &p->rxlen[p->gotrxhead];
+		if (p->gotrxhead == 0) {
+			iov.iov_len = p->wantrxhead - p->gotrxhead;
+		} else {
+			iov.iov_len = 1;
+		}
 		nni_aio_set_iov(aio, 1, &iov);
 		nng_stream_recv(p->conn, aio);
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
 	// finish recevied fixed header
-	// TODO only deal with CONNACK, so just use rxlen at all time
-	if (p->gotrxhead == 4) {
+	//TODO only deal with CONNACK, so just use rxlen at all time
+	if (p->rxmsg == NULL) {
 		if ((p->rxlen[0] & 0x20) != 0x20) {
-			fprintf(
-			    stderr, "not recv connack [%x].\n", p->rxlen[0]);
+			fprintf(stderr, "not recv connack [%x].\n", p->rxlen[0]);
 			rv = NNG_EPROTO;
 			goto error;
 		}
-		int     var_int;
-		uint8_t pos = 0;
-		int     rv  = mqtt_get_remaining_length(
-                    p->rxlen, p->gotrxhead, (uint32_t *) &var_int, &pos);
+
+		pos = 0;
+		if ((rv = mqtt_get_remaining_length(p->rxlen,
+		        p->gotrxhead, &var_int, &pos)) != 0) {
+			goto error;
+		}
+
+		if ((rv = nni_mqtt_msg_alloc(&p->rxmsg, var_int)) != 0) {
+			rv = NNG_ENOMEM;
+			goto error;
+		}
+
+		nni_msg_header_append(p->rxmsg, p->rxlen, pos + 1);
+
 		p->wantrxhead = var_int + 1 + pos;
 		if ((rv = (p->wantrxhead <= 4) ? 0 : NNG_EPROTO) != 0) {
 			fprintf(stderr, "wantrxhead error rv[%d].\n", rv);
@@ -325,11 +344,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	if (p->gotrxhead < p->wantrxhead) {
 		nni_iov iov;
 		iov.iov_len = p->wantrxhead - p->gotrxhead;
-		if (p->conn_buf == NULL) {
-			p->conn_buf = nni_alloc(p->wantrxhead);
-			memcpy(p->conn_buf, p->rxlen, p->gotrxhead);
-		}
-		iov.iov_buf = &p->conn_buf[p->gotrxhead];
+		iov.iov_buf = nni_msg_body(p->rxmsg);
 		nni_aio_set_iov(aio, 1, &iov);
 		nng_stream_recv(p->conn, aio);
 		nni_mtx_unlock(&ep->mtx);
@@ -337,9 +352,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	}
 	if (p->gotrxhead >= p->wantrxhead) {
 		fprintf(stderr, "finish recv connack. [%ld]\n", p->gotrxhead);
-		nng_free(p->conn_buf, p->gotrxhead);
-		p->conn_buf = NULL;
-		// nng_msg_free(ep->connmsg);
+		nni_mqtt_msg_decode(p->rxmsg);
 	}
 
 	// We are all ready now.  We put this in the wait list, and
@@ -350,10 +363,21 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	mqtt_tcptran_ep_match(ep);
 	nni_mtx_unlock(&ep->mtx);
 
+	// Run user callback
+	if (ep->conncb != NULL) {
+		ep->conncb(ep->arg, p->rxmsg);
+	}
+	p->rxmsg = NULL;
+
 	return;
 
 error:
 	nng_stream_close(p->conn);
+
+	if (p->rxmsg != NULL) {
+		nni_msg_free(p->rxmsg);
+		p->rxmsg = NULL;
+	}
 
 	if ((uaio = ep->useraio) != NULL) {
 		ep->useraio = NULL;
@@ -754,10 +778,9 @@ static void
 mqtt_tcptran_pipe_start(
     mqtt_tcptran_pipe *p, nng_stream *conn, mqtt_tcptran_ep *ep)
 {
-	nni_iov  iov[2];
-	nni_msg *connmsg;
-	uint32_t buf_len;
-	int      rv, niov = 0;
+	nni_iov   iov[2];
+	nni_msg * connmsg;
+	int       rv, niov = 0;
 
 	ep->refcnt++;
 
@@ -778,8 +801,9 @@ mqtt_tcptran_pipe_start(
 	p->gotrxhead = 0;
 	p->gottxhead = 0;
 	// TODO TX length for MQTT 5
-	p->wantrxhead = 4;
+	p->wantrxhead = 2;
 	p->wanttxhead = nni_msg_header_len(connmsg) + nni_msg_len(connmsg);
+	p->rxmsg = NULL;
 
 	if (nni_msg_header_len(connmsg) > 0) {
 		iov[niov].iov_buf = nni_msg_header(connmsg);
@@ -1253,6 +1277,21 @@ mqtt_tcptran_ep_get_connmsg(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static int
+mqtt_tcptran_dialer_setcb(void *arg, void (*cb)(void *, nng_msg *), void *args)
+{
+	mqtt_tcptran_ep *ep = arg;
+	int              rv;
+
+	nni_mtx_lock(&ep->mtx);
+	ep->conncb = cb;
+	ep->arg = args;
+	nni_mtx_unlock(&ep->mtx);
+
+	rv = 0;
+	return (rv);
+}
+
+static int
 mqtt_tcptran_ep_set_connmsg(
     void *arg, const void *v, size_t sz, nni_opt_type t)
 {
@@ -1406,12 +1445,13 @@ mqtt_tcptran_listener_setopt(
 }
 
 static nni_sp_dialer_ops mqtt_tcptran_dialer_ops = {
-	.d_init    = mqtt_tcptran_dialer_init,
-	.d_fini    = mqtt_tcptran_ep_fini,
-	.d_connect = mqtt_tcptran_ep_connect,
-	.d_close   = mqtt_tcptran_ep_close,
-	.d_getopt  = mqtt_tcptran_dialer_getopt,
-	.d_setopt  = mqtt_tcptran_dialer_setopt,
+	.d_init      = mqtt_tcptran_dialer_init,
+	.d_fini      = mqtt_tcptran_ep_fini,
+	.d_connect   = mqtt_tcptran_ep_connect,
+	.d_close     = mqtt_tcptran_ep_close,
+	.d_getopt    = mqtt_tcptran_dialer_getopt,
+	.d_setopt    = mqtt_tcptran_dialer_setopt,
+	.d_connsetcb = mqtt_tcptran_dialer_setcb,
 };
 
 static nni_sp_listener_ops mqtt_tcptran_listener_ops = {

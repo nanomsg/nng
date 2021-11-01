@@ -68,6 +68,19 @@ print80(const char *prefix, const char *str, size_t len, bool quote)
 	}
 }
 
+static void
+connect_cb(void *arg, nng_msg *ackmsg)
+{
+	char * userarg = (char *)arg;
+	uint8_t status = nng_mqtt_msg_get_conack_return_code(ackmsg);
+	printf("Connected cb. \n"
+	       "  -> Status  [%d]\n"
+		   "  -> Userarg [%s].\n", status, userarg);
+
+	// Free ConnAck msg
+	nng_msg_free(ackmsg);
+}
+
 // Connect to the given address.
 int
 client_connect(nng_socket *sock, const char *url, bool verbose)
@@ -112,6 +125,7 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 
 	printf("Connecting to server ...");
 	nng_dialer_set_ptr(dialer, "connmsg", connmsg);
+	nng_dialer_setcb(dialer, connect_cb, "Yeap");
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
 	printf("connected\n");
