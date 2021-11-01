@@ -137,6 +137,20 @@ test_encode_publish(void)
 	nng_mqtt_msg_set_publish_payload(
 	    msg, (uint8_t *) payload, strlen(payload));
 
+	char will_topic[] = "/nanomq/will_msg";
+	nng_mqtt_msg_set_connect_will_topic(msg, will_topic);
+
+	char will_msg[] = "Bye-bye";
+	nng_mqtt_msg_set_connect_will_msg(msg, will_msg);
+
+	char user[]   = "alvin";
+	char passwd[] = "HHH0000";
+
+	nng_mqtt_msg_set_connect_user_name(msg, user);
+	nng_mqtt_msg_set_connect_password(msg, passwd);
+
+	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
+
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
 	uint8_t print_buf[1024] = { 0 };

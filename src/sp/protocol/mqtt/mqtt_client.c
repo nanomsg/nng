@@ -849,7 +849,6 @@ mqtt_send_start(mqtt_sock_t *s)
 			    work->msg, work->packet_id);
 			nni_mqtt_msg_encode(work->msg);
 			break;
-
 		case NNG_MQTT_UNSUBSCRIBE:
 			work->state     = WORK_UNSUBSCRIBE;
 			work->packet_id = mqtt_pipe_get_next_packet_id(p);
