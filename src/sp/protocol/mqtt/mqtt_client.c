@@ -310,7 +310,7 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	// FIXME: passing keep alive timeout
 	work_init(&p->ping_work, s, sock->retry, mqtt_keep_alive_cb);
 	nni_mqtt_msg_alloc(&p->ping_work.msg, 0);
-	nni_mqtt_msg_set_packet_type(p->ping_work.msg, MQTT_PINGREQ);
+	nni_mqtt_msg_set_packet_type(p->ping_work.msg, NNG_MQTT_PINGREQ);
 	nni_mqtt_msg_encode(p->ping_work.msg);
 	nni_aio_init(&p->send_aio, mqtt_send_cb, p);
 	nni_aio_init(&p->recv_aio, mqtt_recv_cb, p);
