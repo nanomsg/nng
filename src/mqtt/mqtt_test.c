@@ -178,24 +178,6 @@ test_encode_puback(void)
 }
 
 void
-test_encode_puback(void)
-{
-	nng_msg *msg;
-
-	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
-
-	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBACK);
-	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_PUBACK);
-
-	NUTS_PASS(nng_mqtt_msg_encode(msg));
-
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
-	nng_msg_free(msg);
-}
-
-void
 test_encode_subscribe(void)
 {
 	nng_msg *msg;
@@ -208,10 +190,10 @@ test_encode_subscribe(void)
 	nng_mqtt_topic_qos topic_qos[] = {
 		{ .qos     = 0,
 		    .topic = { .buf = (uint8_t *) "/nanomq/mqtt/msg/0",
-		        .length     = strlen("/nanomq/mqtt/msg/0") } },
+		        .length     = strlen("/nanomq/mqtt/msg/0") + 1 } },
 		{ .qos     = 1,
 		    .topic = { .buf = (uint8_t *) "/nanomq/mqtt/msg/1",
-		        .length     = strlen("/nanomq/mqtt/msg/1") } }
+		        .length     = strlen("/nanomq/mqtt/msg/1") + 1 } }
 	};
 
 	nng_mqtt_msg_set_subscribe_topics(
@@ -261,9 +243,9 @@ test_encode_unsubscribe(void)
 
 	nng_mqtt_topic topic_qos[] = {
 		{ .buf      = (uint8_t *) "/nanomq/mqtt/1",
-		    .length = strlen("/nanomq/mqtt/1") },
+		    .length = strlen("/nanomq/mqtt/1") + 1 },
 		{ .buf      = (uint8_t *) "/nanomq/mqtt/2",
-		    .length = strlen("/nanomq/mqtt/2") },
+		    .length = strlen("/nanomq/mqtt/2") + 1 },
 	};
 
 	nng_mqtt_msg_set_unsubscribe_topics(
@@ -427,7 +409,7 @@ test_decode_subscribe(void)
 	size_t sz = sizeof(subscribe) / sizeof(uint8_t);
 	nng_mqtt_msg_alloc(&msg, 0);
 
-	nng_msg_header_append(msg, subscribe, sz - 2);
+	nng_msg_header_append(msg, subscribe, 2);
 
 	nng_msg_append(msg, subscribe + 2, sz - 2);
 
@@ -441,7 +423,12 @@ test_decode_subscribe(void)
 	nng_mqtt_topic_qos *tq =
 	    nng_mqtt_msg_get_subscribe_topics(msg, &count);
 
-	nng_free(tq, count);
+	for (size_t i = 0; i < count; i++) {
+		printf("[%ld]: %.*s, qos: %d\n", i, tq[i].topic.length,
+		    (char *) tq[i].topic.buf, tq[i].qos);
+	}
+
+	nng_free(tq, count * sizeof(nng_mqtt_topic_qos));
 
 	nng_msg_free(msg);
 }
@@ -451,15 +438,16 @@ test_decode_unsubscribe(void)
 {
 	nng_msg *msg;
 
-	uint8_t unsubscribe[] = { 0xa2, 0x22, 0x01, 0x10, 0x00, 0x0e, 0x2f,
+	uint8_t unsubscribe[] = { 0xa2, 0x24, 0x00, 0x00, 0x00, 0x0f, 0x2f,
 		0x6e, 0x61, 0x6e, 0x6f, 0x6d, 0x71, 0x2f, 0x6d, 0x71, 0x74,
-		0x74, 0x2f, 0x31, 0x00, 0x0e, 0x2f, 0x6e, 0x61, 0x6e, 0x6f,
-		0x6d, 0x71, 0x2f, 0x6d, 0x71, 0x74, 0x74, 0x2f, 0x32 };
+		0x74, 0x2f, 0x31, 0x00, 0x00, 0x0f, 0x2f, 0x6e, 0x61, 0x6e,
+		0x6f, 0x6d, 0x71, 0x2f, 0x6d, 0x71, 0x74, 0x74, 0x2f, 0x32,
+		0x00 };
 
 	size_t sz = sizeof(unsubscribe) / sizeof(uint8_t);
 	nng_mqtt_msg_alloc(&msg, 0);
 
-	nng_msg_header_append(msg, unsubscribe, sz - 2);
+	nng_msg_header_append(msg, unsubscribe, 2);
 	nng_msg_append(msg, unsubscribe + 2, sz - 2);
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
@@ -468,7 +456,17 @@ test_decode_unsubscribe(void)
 	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
 	printf("%s\n", print_buf);
 
+	uint32_t        count;
+	nng_mqtt_topic *topics =
+	    nng_mqtt_msg_get_unsubscribe_topics(msg, &count);
+
+	for (size_t i = 0; i < count; i++) {
+		printf("[%ld]:  %.*s\n", i, topics[i].length,
+		    (char *) topics[i].buf);
+	}
+
 	nng_msg_free(msg);
+	nni_free(topics, count * sizeof(nng_mqtt_topic));
 }
 
 void

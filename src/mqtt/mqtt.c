@@ -142,6 +142,7 @@ nni_mqtt_msg_get_packet_id(nni_msg *msg)
 		// logic error
 		NNI_ASSERT(false);
 	}
+	return 0;
 }
 
 void

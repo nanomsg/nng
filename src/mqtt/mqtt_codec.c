@@ -730,7 +730,6 @@ nni_mqtt_msg_decode_subscribe(nni_msg *msg)
 		ret = read_utf8_str(
 		    &buf, &spld->topic_arr[spld->topic_count].topic);
 		if (ret != MQTT_SUCCESS) {
-
 			ret = MQTT_ERR_PROTOCOL;
 			goto ERROR;
 		}
@@ -742,10 +741,10 @@ nni_mqtt_msg_decode_subscribe(nni_msg *msg)
 		}
 		spld->topic_count++;
 	}
-	return ret;
+	return MQTT_SUCCESS;
 
 ERROR:
-	nni_free(spld->topic_arr, topic_count);
+	nni_free(spld->topic_arr, sizeof(mqtt_topic_qos) * topic_count);
 	return ret;
 }
 
@@ -934,9 +933,10 @@ nni_mqtt_msg_decode_unsubscribe(nni_msg *msg)
 		}
 		uspld->topic_count++;
 	}
+	return MQTT_SUCCESS;
 
 ERROR:
-	nni_free(uspld->topic_arr, topic_count);
+	nni_free(uspld->topic_arr, topic_count * sizeof(mqtt_buf));
 
 	return ret;
 }
@@ -1270,12 +1270,12 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 
 		ret = sprintf((char *) &buf->buf[pos],
 		    "connect flags:\n"
-		    "   clean session flag :    %s,\n"
-		    "   will flag          :    %s,\n"
-		    "   will retain flag   :    %s,\n"
-		    "   will qos flag      :    %d,\n"
-		    "   user name flag     :    %s,\n"
-		    "   password flag      :    %s\n",
+		    "   clean session flag : %s\n"
+		    "   will flag          : %s\n"
+		    "   will retain flag   : %s\n"
+		    "   will qos flag      : %d\n"
+		    "   user name flag     : %s\n"
+		    "   password flag      : %s\n",
 		    ((flags_set.clean_session) ? "true" : "false"),
 		    ((flags_set.will_flag) ? "true" : "false"),
 		    ((flags_set.will_retain) ? "true" : "false"),
@@ -1287,7 +1287,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 		}
 		pos += ret;
 		ret = sprintf((char *) &buf->buf[pos],
-		    "client id              : %.*s\n",
+		    "client id             : %.*s\n",
 		    msg->payload.connect.client_id.length,
 		    msg->payload.connect.client_id.buf);
 		if ((ret < 0) || ((pos + ret) > buf->length)) {
@@ -1344,9 +1344,9 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 
 		ret = sprintf((char *) &buf->buf[pos],
 		    "publis flags:\n"
-		    "   retain   :     %s\n"
-		    "   qos      :     %d\n"
-		    "   dup      :     %s\n",
+		    "   retain   : %s\n"
+		    "   qos      : %d\n"
+		    "   dup      : %s\n",
 		    ((msg->fixed_header.publish.retain) ? "true" : "false"),
 		    msg->fixed_header.publish.qos,
 		    ((msg->fixed_header.publish.dup) ? "true" : "false"));
@@ -1407,7 +1407,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 
 	case NNG_MQTT_SUBSCRIBE: {
 		ret = sprintf((char *) &buf->buf[pos],
-		    "packet-id          : %d\n",
+		    "packet-id          :   %d\n",
 		    msg->var_header.subscribe.packet_id);
 		if ((ret < 0) || ((pos + ret) > buf->length)) {
 			return 1;
@@ -1431,7 +1431,7 @@ mqtt_msg_dump(mqtt_msg *msg, mqtt_buf *buf, mqtt_buf *packet, bool print_bytes)
 
 	case NNG_MQTT_SUBACK: {
 		ret = sprintf((char *) &buf->buf[pos],
-		    "packet-id          : %d\n",
+		    "packet-id          :   %d\n",
 		    msg->var_header.suback.packet_id);
 		if ((ret < 0) || ((pos + ret) > buf->length)) {
 			return 1;
