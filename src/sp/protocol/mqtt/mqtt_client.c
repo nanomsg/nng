@@ -663,7 +663,6 @@ mqtt_recv_cb(void *arg)
 		// nni_mqtt_msg_encode(msg);
 		// nni_aio_set_msg(&work->send_aio, msg);
 		// nni_pipe_send(p->pipe, &work->send_aio);
-		nni_id_remove(&p->send_unack, packet_id);
 		work->state = WORK_PUBCOMP;
 		break;
 
