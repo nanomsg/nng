@@ -29,6 +29,7 @@ if (NNG_TRANSPORT_ZEROTIER)
         ************************************************************")
 
     find_package(zerotiercore REQUIRED)
+    set_property(GLOBAL APPEND PROPERTY NNG_PKGS zerotiercore)
 
     nng_link_libraries(zerotiercore::zerotiercore)
     nng_defines(NNG_TRANSPORT_ZEROTIER)
