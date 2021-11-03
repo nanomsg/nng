@@ -5,7 +5,6 @@
 // file was obtained (LICENSE.txt).  A copy of the license may also be
 // found online at https://opensource.org/licenses/MIT.
 //
-#include <stdio.h>
 
 #include "core/nng_impl.h"
 
@@ -319,7 +318,7 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	// accidental collision across restarts.
 	nni_id_map_init(&p->send_unack, 0x0000u, 0xffffu, true);
 	nni_id_map_init(&p->recv_unack, 0x0000u, 0xffffu, true);
-	nni_lmq_init(&p->recv_messages, 1024); // FIXME: remove hard code value
+	nni_lmq_init(&p->recv_messages, 128); // FIXME: remove hard code value
 	return (0);
 }
 
@@ -397,6 +396,23 @@ mqtt_pipe_get_next_packet_id(mqtt_pipe_t *p)
 	} while (
 	    !nni_atomic_cas(&p->next_packet_id, packet_id, packet_id + 1));
 	return packet_id & 0xFFFF;
+}
+
+static inline void
+mqtt_pipe_recv_msgq_putq(mqtt_pipe_t *p, nni_msg *msg)
+{
+	if (0 != nni_lmq_putq(&p->recv_messages, msg)) {
+		// resize to ensure we do not lost messages
+		// TODO: add option to drop messages
+		if (0 !=
+		    nni_lmq_resize(&p->recv_messages,
+		        nni_lmq_len(&p->recv_messages) * 2)) {
+			// drop the message when no memory available
+			nni_msg_free(msg);
+			return;
+		}
+		nni_lmq_putq(&p->recv_messages, msg);
+	}
 }
 
 // Keep alive timer callback to send ping request.
@@ -486,7 +502,7 @@ mqtt_send_cb(void *arg)
 		// indicating a successful receipt of a QoS 2 message
 		work->state = WORK_END;
 		nni_id_remove(&p->recv_unack, work->packet_id);
-		nni_lmq_putq(&p->recv_messages, work->msg);
+		mqtt_pipe_recv_msgq_putq(p, work->msg);
 		mqtt_run_recv_queue(s);
 		work->msg = NULL; // ownership to the lmq
 		work_reset(work);
@@ -555,16 +571,21 @@ mqtt_send_cb(void *arg)
 		return;
 	} else if (WORK_END == work->state) {
 		// good news, protocol state machine run to the end
-		if (NULL != work->user_aio) {
-			nni_aio_finish_sync(work->user_aio, 0, 0);
-		}
+		nni_aio *aio = work->user_aio;
 		work_reset(work);
+		p->work = NULL;
 		nni_list_append(&s->free_list, work);
+		mqtt_send_start(s);
+		nni_mtx_unlock(&s->mtx);
+		if (NULL != aio) {
+			nni_aio_finish(aio, 0, 0);
+		}
+		return;
 	}
 
-	p->work = NULL;
 	mqtt_send_start(s);
 	nni_mtx_unlock(&s->mtx);
+	return;
 }
 
 static void
@@ -633,8 +654,9 @@ mqtt_recv_cb(void *arg)
 		nni_msg_free(msg);
 		work = nni_id_get(&p->send_unack, packet_id);
 		if (NULL == work) {
+			// ignore this message
 			nni_mtx_unlock(&s->mtx);
-			nni_pipe_close(p->pipe);
+			// nni_pipe_close(p->pipe);
 			return;
 		}
 		nni_id_remove(&p->send_unack, packet_id);
@@ -681,7 +703,7 @@ mqtt_recv_cb(void *arg)
 		// the transport handled sending the PUBCOMP for us
 		work->state = WORK_END;
 		nni_id_remove(&p->recv_unack, work->packet_id);
-		nni_lmq_putq(&p->recv_messages, work->msg);
+		mqtt_pipe_recv_msgq_putq(p, work->msg);
 		mqtt_run_recv_queue(s);
 		work->msg = msg;  // ownership of work->msg to the lmq
 		work_reset(work); // will release msg
@@ -703,7 +725,7 @@ mqtt_recv_cb(void *arg)
 		if (2 > qos) {
 			// QoS 0, successful receipt
 			// QoS 1, the transport handled sending a PUBACK
-			nni_lmq_putq(&p->recv_messages, msg);
+			mqtt_pipe_recv_msgq_putq(p, msg);
 			mqtt_run_recv_queue(s);
 			nni_mtx_unlock(&s->mtx);
 			return;
@@ -737,15 +759,18 @@ mqtt_recv_cb(void *arg)
 
 	if (WORK_ERROR == work->state) {
 		// protocol error, just close the connection
-		nni_aio_finish_error(work->user_aio, NNG_EPROTO);
 		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish_error(work->user_aio, NNG_EPROTO);
 		nni_pipe_close(p->pipe);
 		return;
 	} else if (WORK_END == work->state) {
 		// good news, protocol state machine run to the end
-		nni_aio_finish_sync(work->user_aio, 0, 0);
+		nni_aio *aio = work->user_aio;
 		work_reset(work);
 		nni_list_append(&s->free_list, work);
+		nni_mtx_unlock(&s->mtx);
+		nni_aio_finish(aio, 0, 0);
+		return;
 	}
 
 	nni_mtx_unlock(&s->mtx);
@@ -753,12 +778,16 @@ mqtt_recv_cb(void *arg)
 	return;
 }
 
+// Note: This routine should be called with the sock lock held.
 static void
 mqtt_recv_start(mqtt_sock_t *s, nni_aio *aio)
 {
-	work_t *work;
+	mqtt_pipe_t *p = s->mqtt_pipe;
+	work_t *     work;
 
-	nni_mtx_lock(&s->mtx);
+	if (NULL == p || nni_atomic_get_bool(&p->closed)) {
+		return;
+	}
 
 	work = nni_list_first(&s->free_list);
 
@@ -773,8 +802,6 @@ mqtt_recv_start(mqtt_sock_t *s, nni_aio *aio)
 	nni_list_remove(&s->free_list, work);
 	nni_list_append(&s->recv_queue, work); // enqueue to recv
 	mqtt_run_recv_queue(s);
-
-	nni_mtx_unlock(&s->mtx);
 }
 
 // Note: This routine should be called with the sock lock held.
@@ -786,13 +813,13 @@ mqtt_run_recv_queue(mqtt_sock_t *s)
 	nni_msg *    msg;
 
 	while (NULL != work) {
-		if (nni_lmq_getq(&p->recv_messages, &msg)) {
+		if (0 != nni_lmq_getq(&p->recv_messages, &msg)) {
 			break;
 		}
 		nni_list_remove(&s->recv_queue, work);
 		// nni_pipe_recv(p->pipe, &work->recv_aio);
 		nni_aio_set_msg(work->user_aio, msg);
-		nni_aio_finish_sync(work->user_aio, 0,
+		nni_aio_finish(work->user_aio, 0,
 		    nni_msg_header_len(msg) + nni_msg_len(msg));
 		nni_list_append(&s->free_list, work);
 		work = nni_list_first(&s->recv_queue);
@@ -941,6 +968,8 @@ mqtt_ctx_recv(void *arg, nni_aio *aio)
 	mqtt_ctx_t * ctx = arg;
 	mqtt_sock_t *s   = ctx->mqtt_sock;
 
+	nni_mtx_lock(&s->mtx);
+
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
@@ -951,6 +980,8 @@ mqtt_ctx_recv(void *arg, nni_aio *aio)
 	}
 
 	mqtt_recv_start(s, aio);
+
+	nni_mtx_unlock(&s->mtx);
 }
 
 /******************************************************************************
