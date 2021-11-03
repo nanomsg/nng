@@ -141,7 +141,7 @@ nni_mqtt_msg_encode_fixed_header(nni_msg *msg, nni_mqtt_proto_data *data)
 {
 	uint8_t        rlen[4] = { 0 };
 	struct pos_buf buf     = { .curpos = &rlen[0],
-                .endpos = &rlen[sizeof(rlen) / sizeof(rlen[0]) - 1] };
+                .endpos                = &rlen[sizeof(rlen)] };
 
 	nni_msg_header_clear(msg);
 	uint8_t header = *(uint8_t *) &data->fixed_header.common;

@@ -77,8 +77,8 @@ struct mqtt_tcptran_ep {
 	nng_stream_listener *listener;
 	nni_dialer *         ndialer;
 	void *               connmsg;
-	void                 (*conncb)(void *, nng_msg *);
-	void *               arg;
+	void (*conncb)(void *, nng_msg *);
+	void *arg;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_rcv_max;
@@ -296,9 +296,8 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 
 	// receving fixed header
 	if (p->gotrxhead == 0 ||
-	        (p->gotrxhead <= 5 &&
-	         p->rxlen[p->gotrxhead - 1] > 0x7f &&
-	         p->rxmsg == NULL)) {
+	    (p->gotrxhead <= 5 && p->rxlen[p->gotrxhead - 1] > 0x7f &&
+	        p->rxmsg == NULL)) {
 		nni_iov iov;
 		iov.iov_buf = &p->rxlen[p->gotrxhead];
 		if (p->gotrxhead == 0) {
@@ -312,17 +311,18 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		return;
 	}
 	// finish recevied fixed header
-	//TODO only deal with CONNACK, so just use rxlen at all time
+	// TODO only deal with CONNACK, so just use rxlen at all time
 	if (p->rxmsg == NULL) {
 		if ((p->rxlen[0] & 0x20) != 0x20) {
-			fprintf(stderr, "not recv connack [%x].\n", p->rxlen[0]);
+			fprintf(
+			    stderr, "not recv connack [%x].\n", p->rxlen[0]);
 			rv = NNG_EPROTO;
 			goto error;
 		}
 
 		pos = 0;
-		if ((rv = mqtt_get_remaining_length(p->rxlen,
-		        p->gotrxhead, (uint32_t *)&var_int, &pos)) != 0) {
+		if ((rv = mqtt_get_remaining_length(p->rxlen, p->gotrxhead,
+		         (uint32_t *) &var_int, &pos)) != 0) {
 			goto error;
 		}
 
@@ -448,7 +448,7 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	mqtt_tcptran_pipe *p     = arg;
 	nni_aio *          rxaio = p->rxaio;
 
-	printf("tcptran_pipe_recv_cb %p\n", p);
+	printf("mqtt_tcptran_pipe_recv_cb %p\n", p);
 	nni_mtx_lock(&p->mtx);
 
 	aio = nni_list_first(&p->recvq);
@@ -563,11 +563,11 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	// keep connection & Schedule next receive
 	// nni_pipe_bump_rx(p->npipe, n);
 	mqtt_tcptran_pipe_recv_start(p);
-	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_set_msg(aio, msg);
 	nni_aio_finish_sync(aio, 0, n);
-	printf("end of tcptran_pipe_recv_cb: synch! %p\n", p);
+	nni_mtx_unlock(&p->mtx);
+	printf("end of mqtt_tcptran_pipe_recv_cb: synch! %p\n", p);
 	return;
 
 recv_error:
@@ -579,12 +579,12 @@ recv_error:
 
 	nni_msg_free(msg);
 	nni_aio_finish_error(aio, rv);
-	printf("tcptran_pipe_recv_cb: recv error rv: %d\n", rv);
+	printf("mqtt_tcptran_pipe_recv_cb: recv error rv: %d\n", rv);
 	return;
 notify:
 	// nni_pipe_bump_rx(p->npipe, n);
 	nni_aio_list_remove(aio);
-	tcptran_pipe_recv_start(p);
+	mqtt_tcptran_pipe_recv_start(p);
 	nni_mtx_unlock(&p->mtx);
 	nni_aio_set_msg(aio, NULL);
 	nni_aio_finish(aio, 0, 0);
@@ -779,9 +779,9 @@ static void
 mqtt_tcptran_pipe_start(
     mqtt_tcptran_pipe *p, nng_stream *conn, mqtt_tcptran_ep *ep)
 {
-	nni_iov   iov[2];
-	nni_msg * connmsg;
-	int       rv, niov = 0;
+	nni_iov  iov[2];
+	nni_msg *connmsg;
+	int      rv, niov = 0;
 
 	ep->refcnt++;
 
@@ -804,7 +804,7 @@ mqtt_tcptran_pipe_start(
 	// TODO TX length for MQTT 5
 	p->wantrxhead = 2;
 	p->wanttxhead = nni_msg_header_len(connmsg) + nni_msg_len(connmsg);
-	p->rxmsg = NULL;
+	p->rxmsg      = NULL;
 
 	if (nni_msg_header_len(connmsg) > 0) {
 		iov[niov].iov_buf = nni_msg_header(connmsg);
@@ -1176,7 +1176,7 @@ mqtt_tcptran_ep_connect(void *arg, nni_aio *aio)
 {
 	mqtt_tcptran_ep *ep = arg;
 	int              rv;
-	fprintf(stderr, "mqtt_tcptran_ep_connect\n");
+	// fprintf(stderr, "mqtt_tcptran_ep_connect\n");
 
 	if (nni_aio_begin(aio) != 0) {
 		return;
@@ -1271,7 +1271,6 @@ mqtt_tcptran_ep_get_connmsg(void *arg, void *v, size_t *szp, nni_opt_type t)
 
 	//	nni_mtx_lock(&ep->mtx);
 	nni_copyout_ptr(ep->connmsg, v, szp, t);
-//	fprintf(stderr, "connmsgp [%p] v [%p] \n", ep->connmsg, v);
 	//	ep->connmsg = NULL;
 	//	nni_mtx_unlock(&ep->mtx);
 	rv = 0;
@@ -1287,7 +1286,7 @@ mqtt_tcptran_dialer_setcb(void *arg, void (*cb)(void *, nng_msg *), void *args)
 
 	nni_mtx_lock(&ep->mtx);
 	ep->conncb = cb;
-	ep->arg = args;
+	ep->arg    = args;
 	nni_mtx_unlock(&ep->mtx);
 
 	rv = 0;
@@ -1303,7 +1302,6 @@ mqtt_tcptran_ep_set_connmsg(
 
 	nni_mtx_lock(&ep->mtx);
 	nni_copyin_ptr(&ep->connmsg, v, sz, t);
-//	fprintf(stderr, "set connmsg [%p] v [%p] \n", ep->connmsg, v);
 	nni_mtx_unlock(&ep->mtx);
 	rv = 0;
 

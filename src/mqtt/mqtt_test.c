@@ -91,6 +91,9 @@ test_encode_connect(void)
 	nng_mqtt_msg_dump(dup_msg, print_buf, 1024, true);
 	printf("dup msg:\n%s\n", print_buf);
 
+	NUTS_ASSERT(memcmp(nng_msg_body(msg), nng_msg_body(dup_msg),
+	                nng_msg_len(msg)) == 0);
+
 	nng_msg_free(msg);
 	nng_msg_free(dup_msg);
 }
