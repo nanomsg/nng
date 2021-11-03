@@ -440,6 +440,8 @@ mqtt_send_cb(void *arg)
 
 	nni_mtx_lock(&s->mtx);
 
+	nni_list_remove(&s->send_queue, work);
+
 	if (nni_aio_result(&p->send_aio) != 0) {
 		// We failed to send... clean up and deal with it.
 		nni_msg_free(nni_aio_get_msg(&p->send_aio));
@@ -814,7 +816,6 @@ mqtt_send_start(mqtt_sock_t *s)
 
 	// TODO: handle retry
 	if (NULL != (work = nni_list_first(&s->send_queue))) {
-		nni_list_remove(&s->send_queue, work);
 		packet_type = nni_mqtt_msg_get_packet_type(work->msg);
 
 		// only allow to send CONNECT, PINGREQ, PUBLISH, SUBSCRIBE
