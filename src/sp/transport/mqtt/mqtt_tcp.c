@@ -266,6 +266,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	int                rv;
 	uint8_t            pos = 0;
 	int                var_int;
+	nni_msg *          rmsg = p->rxmsg;
 
 	nni_mtx_lock(&ep->mtx);
 
@@ -353,6 +354,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	if (p->gotrxhead >= p->wantrxhead) {
 		fprintf(stderr, "finish recv connack. [%ld]\n", p->gotrxhead);
 		nni_mqtt_msg_decode(p->rxmsg);
+		p->rxmsg = NULL;
 	}
 
 	// We are all ready now.  We put this in the wait list, and
@@ -365,9 +367,8 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 
 	// Run user callback
 	if (ep->conncb != NULL) {
-		ep->conncb(ep->arg, p->rxmsg);
+		ep->conncb(ep->arg, rmsg);
 	}
-	p->rxmsg = NULL;
 
 	return;
 
@@ -440,7 +441,7 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 {
 	nni_aio *          aio;
 	nni_iov            iov;
-	uint8_t            type, pos;
+	uint8_t            type, pos = 0;
 	uint32_t           len = 0, rv;
 	size_t             n;
 	nni_msg *          msg;
