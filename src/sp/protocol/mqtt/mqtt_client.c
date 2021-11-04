@@ -95,7 +95,6 @@ struct mqtt_pipe_s {
 	nni_atomic_int  next_packet_id; // next packet id to use
 	nni_pipe *      pipe;
 	mqtt_sock_t *   mqtt_sock;
-	work_t *        work;          // work the pipe is sending
 	work_t          ping_work;     // work to send a ping request
 	nni_id_map      send_unack;    // send messages unacknowledged
 	nni_id_map      recv_unack;    // recv messages unacknowledged
@@ -305,7 +304,6 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	nni_atomic_set(&p->next_packet_id, 0);
 	p->pipe      = pipe;
 	p->mqtt_sock = s;
-	p->work      = NULL;
 	// FIXME: passing keep alive timeout
 	work_init(&p->ping_work, s, sock->retry, mqtt_keep_alive_cb);
 	nni_mqtt_msg_alloc(&p->ping_work.msg, 0);
@@ -377,7 +375,6 @@ mqtt_pipe_close(void *arg)
 	nni_mtx_lock(&s->mtx);
 	mqtt_sock_close(s);
 	s->mqtt_pipe = NULL;
-	p->work      = NULL;
 	nni_aio_close(&p->send_aio);
 	nni_aio_close(&p->recv_aio);
 	work_close_queue(&s->send_queue);
@@ -450,12 +447,13 @@ mqtt_timer_cb(void *arg)
 static void
 mqtt_send_cb(void *arg)
 {
-	mqtt_pipe_t *p    = arg;
-	mqtt_sock_t *s    = p->mqtt_sock;
-	work_t *     work = p->work;
+	mqtt_pipe_t *p = arg;
+	mqtt_sock_t *s = p->mqtt_sock;
+	work_t *     work;
 
 	nni_mtx_lock(&s->mtx);
 
+	work = nni_list_first(&s->send_queue); // will not be NULL
 	nni_list_remove(&s->send_queue, work);
 
 	if (nni_aio_result(&p->send_aio) != 0) {
@@ -573,7 +571,6 @@ mqtt_send_cb(void *arg)
 		// good news, protocol state machine run to the end
 		nni_aio *aio = work->user_aio;
 		work_reset(work);
-		p->work = NULL;
 		nni_list_append(&s->free_list, work);
 		mqtt_send_start(s);
 		nni_mtx_unlock(&s->mtx);
@@ -891,7 +888,6 @@ mqtt_send_start(mqtt_sock_t *s)
 		}
 
 		nni_msg_clone(work->msg);
-		p->work = work;
 		nni_aio_set_msg(&p->send_aio, work->msg);
 		nni_pipe_send(p->pipe, &p->send_aio);
 	} else {
