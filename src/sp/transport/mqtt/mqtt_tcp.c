@@ -441,14 +441,14 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 {
 	nni_aio *          aio;
 	nni_iov            iov;
-	uint8_t            type, pos = 0;
+	uint8_t            type, pos, flags;
 	uint32_t           len = 0, rv;
 	size_t             n;
 	nni_msg *          msg;
 	mqtt_tcptran_pipe *p     = arg;
 	nni_aio *          rxaio = p->rxaio;
 
-	printf("mqtt_tcptran_pipe_recv_cb %p\n", p);
+	// printf("mqtt_tcptran_pipe_recv_cb %p\n", p);
 	nni_mtx_lock(&p->mtx);
 
 	aio = nni_list_first(&p->recvq);
@@ -514,6 +514,7 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	p->rxmsg = NULL;
 	n        = nni_msg_len(msg);
 	type     = p->rxlen[0] & 0xf0;
+	flags    = p->rxlen[0] & 0x0f;
 	// set the payload pointer of msg according to packet_type
 	if (type == 0x30) {
 		uint8_t  qos_pac;
@@ -547,7 +548,7 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 		// send it down...
 		nni_aio_set_iov(p->qsaio, 1, &iov);
 		nng_stream_send(p->conn, p->qsaio);
-	} else if (type == 0x60) {
+	} else if (type == 0x60 && flags == 0x02) {
 		nng_aio_wait(p->rpaio);
 		p->txlen[0] = 0x70;
 		p->txlen[1] = 0x02;
@@ -567,7 +568,6 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	nni_aio_set_msg(aio, msg);
 	nni_aio_finish_sync(aio, 0, n);
 	nni_mtx_unlock(&p->mtx);
-	printf("end of mqtt_tcptran_pipe_recv_cb: synch! %p\n", p);
 	return;
 
 recv_error:

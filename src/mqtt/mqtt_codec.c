@@ -874,6 +874,13 @@ nni_mqtt_msg_decode_pubrel(nni_msg *msg)
 {
 	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
 
+	if (!mqtt->fixed_header.common.bit_0 &&
+	    mqtt->fixed_header.common.bit_1 &&
+	    !mqtt->fixed_header.common.bit_2 &&
+	    !mqtt->fixed_header.common.bit_3) {
+		return MQTT_ERR_PROTOCOL;
+	}
+
 	return nni_mqtt_msg_decode_base_with_packet_id(
 	    msg, &mqtt->var_header.pubrel.packet_id);
 }
@@ -890,9 +897,17 @@ nni_mqtt_msg_decode_pubcomp(nni_msg *msg)
 static int
 nni_mqtt_msg_decode_unsubscribe(nni_msg *msg)
 {
-	nni_mqtt_proto_data *mqtt   = nni_msg_get_proto_data(msg);
-	uint8_t *            body   = nni_msg_body(msg);
-	size_t               length = nni_msg_len(msg);
+	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
+
+	if (!mqtt->fixed_header.common.bit_0 &&
+	    mqtt->fixed_header.common.bit_1 &&
+	    !mqtt->fixed_header.common.bit_2 &&
+	    !mqtt->fixed_header.common.bit_3) {
+		return MQTT_ERR_PROTOCOL;
+	}
+
+	uint8_t *body   = nni_msg_body(msg);
+	size_t   length = nni_msg_len(msg);
 
 	struct pos_buf buf;
 	buf.curpos                      = &body[0];

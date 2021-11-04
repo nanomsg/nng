@@ -10,7 +10,7 @@
 #include <nng/supplemental/util/platform.h>
 
 #ifndef PARALLEL
-#define PARALLEL 4
+#define PARALLEL 32
 #endif
 
 static void subscribe(void *arg, nng_mqtt_topic_qos *array, uint32_t count);
@@ -66,7 +66,6 @@ client_cb(void *arg)
 	switch (work->state) {
 	case INIT:
 		printf("INIT\n");
-
 		if (work->index == 0) {
 			nng_mqtt_msg_alloc(&msg, 0);
 			nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_SUBSCRIBE);
@@ -99,13 +98,20 @@ client_cb(void *arg)
 			return;
 		}
 
-		uint8_t buff[1024] = { 0 };
-		nng_mqtt_msg_dump(msg, buff, sizeof(buff), true);
-		printf("%s\n", buff);
+		printf("packet type: %d\n", nng_mqtt_msg_get_packet_type(msg));
 
-		work->msg   = msg;
-		work->state = WAIT;
-		// nng_sleep_aio(50, work->aio);
+		nng_msg_free(msg);
+		work->msg   = NULL;
+		work->state = RECV;
+		nng_ctx_recv(work->ctx, work->aio);
+
+		// uint8_t buff[1024] = { 0 };
+		// nng_mqtt_msg_dump(msg, buff, sizeof(buff), true);
+		// printf("%s\n", buff);
+
+		// work->msg   = msg;
+		// work->state = WAIT;
+		// nng_sleep_aio(1, work->aio);
 		break;
 	case WAIT:
 		printf("WAIT\n");
@@ -164,44 +170,6 @@ connect_cb(void *arg, nng_msg *ackmsg)
 	nng_msg_free(ackmsg);
 }
 
-static void
-subscribe(void *arg, nng_mqtt_topic_qos *array, uint32_t count)
-{
-	struct work *work = (struct work *) arg;
-
-	int rv;
-
-	// create a SUBSCRIBE message
-	nng_msg *submsg;
-	nng_mqtt_msg_alloc(&submsg, 0);
-	nng_mqtt_msg_set_packet_type(submsg, NNG_MQTT_SUBSCRIBE);
-
-	nng_mqtt_msg_set_subscribe_topics(submsg, array, count);
-
-	rv = nng_mqtt_msg_encode(submsg);
-
-	if (rv != 0) {
-		fatal("problem on building SUBSCRIBE message: %d\n", rv);
-	}
-
-	uint8_t buff[1024] = { 0 };
-
-	// nng_mqtt_msg_dump(submsg, buff, sizeof(buff), true);
-	// printf("%s\n", buff);
-
-	printf("subscribing ...");
-	work->msg = submsg;
-
-	nng_aio_set_msg(work->aio, work->msg);
-	work->msg   = NULL;
-	work->state = SEND;
-	nng_ctx_send(work->ctx, work->aio);
-
-	printf("done.\n");
-
-	// nng_msg_free(submsg);
-}
-
 int
 client(const char *url)
 {
@@ -241,7 +209,7 @@ client(const char *url)
 	// printf("%s\n", dump);
 
 	nng_dialer_set_ptr(dialer, "connmsg", connmsg);
-	nng_dialer_setcb(dialer, connect_cb, works[0]);
+	// nng_dialer_setcb(dialer, connect_cb, works[0]);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
 	nng_msleep(1000); // neither pause() nor sleep() portable
