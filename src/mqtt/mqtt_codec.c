@@ -874,10 +874,10 @@ nni_mqtt_msg_decode_pubrel(nni_msg *msg)
 {
 	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
 
-	if (!mqtt->fixed_header.common.bit_0 &&
-	    mqtt->fixed_header.common.bit_1 &&
-	    !mqtt->fixed_header.common.bit_2 &&
-	    !mqtt->fixed_header.common.bit_3) {
+	if (mqtt->fixed_header.common.bit_0 != 0 ||
+	    mqtt->fixed_header.common.bit_1 != 1 ||
+	    mqtt->fixed_header.common.bit_2 != 0 ||
+	    mqtt->fixed_header.common.bit_3 != 0) {
 		return MQTT_ERR_PROTOCOL;
 	}
 
@@ -899,10 +899,10 @@ nni_mqtt_msg_decode_unsubscribe(nni_msg *msg)
 {
 	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
 
-	if (!mqtt->fixed_header.common.bit_0 &&
-	    mqtt->fixed_header.common.bit_1 &&
-	    !mqtt->fixed_header.common.bit_2 &&
-	    !mqtt->fixed_header.common.bit_3) {
+	if (mqtt->fixed_header.common.bit_0 != 0 ||
+	    mqtt->fixed_header.common.bit_1 != 1 ||
+	    mqtt->fixed_header.common.bit_2 != 0 ||
+	    mqtt->fixed_header.common.bit_3 != 0) {
 		return MQTT_ERR_PROTOCOL;
 	}
 

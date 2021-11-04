@@ -59,13 +59,10 @@ client_cb(void *arg)
 	struct work *work = arg;
 	nng_msg *    msg;
 	int          rv;
-	printf(" work[%d]: ", work->index);
-	size_t topic_index = 0;
 
-	// uint8_t buff[1024] = { 0 };
 	switch (work->state) {
 	case INIT:
-		printf("INIT\n");
+		printf("INIT: work[%02d]\n", work->index);
 		if (work->index == 0) {
 			nng_mqtt_msg_alloc(&msg, 0);
 			nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_SUBSCRIBE);
@@ -85,7 +82,6 @@ client_cb(void *arg)
 		}
 		break;
 	case RECV:
-		printf("RECV\n");
 		if ((rv = nng_aio_result(work->aio)) != 0) {
 			fatal("nng_recv_aio", rv);
 		}
@@ -98,23 +94,24 @@ client_cb(void *arg)
 			return;
 		}
 
-		printf("packet type: %d\n", nng_mqtt_msg_get_packet_type(msg));
-
-		nng_msg_free(msg);
-		work->msg   = NULL;
-		work->state = RECV;
-		nng_ctx_recv(work->ctx, work->aio);
-
-		// uint8_t buff[1024] = { 0 };
-		// nng_mqtt_msg_dump(msg, buff, sizeof(buff), true);
-		// printf("%s\n", buff);
-
-		// work->msg   = msg;
-		// work->state = WAIT;
-		// nng_sleep_aio(1, work->aio);
+		work->msg   = msg;
+		work->state = WAIT;
+		nng_sleep_aio(1, work->aio);
 		break;
 	case WAIT:
-		printf("WAIT\n");
+		nng_msg_header_clear(work->msg);
+		nng_msg_clear(work->msg);
+
+		char topic[50] = { 0 };
+
+		snprintf(topic, 50, "/nanomq/msg/%02d/rep", work->index);
+
+		nng_mqtt_msg_set_packet_type(work->msg, NNG_MQTT_PUBLISH);
+		nng_mqtt_msg_set_publish_topic(work->msg, topic);
+		nng_mqtt_msg_set_publish_payload(
+		    work->msg, (uint8_t *) topic, strlen(topic));
+
+		nng_mqtt_msg_encode(work->msg);
 		// We could add more data to the message here.
 		nng_aio_set_msg(work->aio, work->msg);
 		work->msg   = NULL;
@@ -122,7 +119,6 @@ client_cb(void *arg)
 		nng_ctx_send(work->ctx, work->aio);
 		break;
 	case SEND:
-		printf("SEND\n");
 		if ((rv = nng_aio_result(work->aio)) != 0) {
 			nng_msg_free(work->msg);
 			fatal("nng_send_aio", rv);

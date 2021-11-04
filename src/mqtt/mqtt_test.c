@@ -5,6 +5,26 @@
 #include "mqtt.h"
 #include "nuts.h"
 
+#define MQTT_MSG_DUMP 0
+
+#if MQTT_MSG_DUMP
+static void
+#define DUMP_LENGTH 2048
+print_mqtt_msg(nng_msg *msg)
+{
+	uint8_t print_buf[DUMP_LENGTH] = { 0 };
+	nng_mqtt_msg_dump(msg, print_buf, DUMP_LENGTH, true);
+	printf("\nmsg: \n%s\n", (char *) print_buf);
+}
+#else
+static void
+print_mqtt_msg(nng_msg *msg)
+{
+	NNI_ARG_UNUSED(msg);
+	return;
+}
+#endif
+
 void
 test_alloc(void)
 {
@@ -39,12 +59,14 @@ test_dup(void)
 	nng_msg *msg2;
 	NUTS_PASS(nng_msg_dup(&msg2, msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("msg: \n%s\n", print_buf);
+	print_mqtt_msg(msg);
+	print_mqtt_msg(msg2);
 
-	nng_mqtt_msg_dump(msg2, print_buf, 1024, true);
-	printf("msg2: \n%s\n", print_buf);
+	NUTS_ASSERT(memcmp(nng_msg_header(msg), nng_msg_header(msg2),
+	                nng_msg_header_len(msg)) == 0);
+
+	NUTS_ASSERT(memcmp(nng_msg_body(msg), nng_msg_body(msg2),
+	                nng_msg_len(msg)) == 0);
 
 	nng_msg_free(msg);
 	nng_msg_free(msg2);
@@ -69,8 +91,8 @@ test_get_remaining_length(void)
 	uint32_t len;
 	uint8_t  used_bytes;
 
-	mqtt_get_remaining_length(
-	    invalid_buf, sizeof(invalid_buf), &len, &used_bytes);
+	NUTS_ASSERT(mqtt_get_remaining_length(invalid_buf, sizeof(invalid_buf),
+	                &len, &used_bytes) == 0);
 
 	NUTS_ASSERT(len == 97);
 	NUTS_ASSERT(used_bytes == 1);
@@ -86,9 +108,9 @@ test_encode_connect(void)
 	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_CONNECT);
 	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_CONNECT);
 
-	// nng_mqtt_msg_set_connect_client_id(msg, "nanomq-mqtt");
-	// NUTS_ASSERT(strcmp(nng_mqtt_msg_get_connect_client_id(msg),
-	// "nanomq-mqtt") == 0);
+	nng_mqtt_msg_set_connect_client_id(msg, "nanomq-mqtt");
+	NUTS_ASSERT(strcmp(nng_mqtt_msg_get_connect_client_id(msg),
+	                "nanomq-mqtt") == 0);
 
 	char will_topic[] = "/nanomq/will_msg";
 	nng_mqtt_msg_set_connect_will_topic(msg, will_topic);
@@ -96,8 +118,8 @@ test_encode_connect(void)
 	char will_msg[] = "Bye-bye";
 	nng_mqtt_msg_set_connect_will_msg(msg, will_msg);
 
-	char user[]   = "alvin";
-	char passwd[] = "HHH0000";
+	char user[]   = "nanomq";
+	char passwd[] = "nanomq";
 
 	nng_mqtt_msg_set_connect_user_name(msg, user);
 	nng_mqtt_msg_set_connect_password(msg, passwd);
@@ -105,23 +127,19 @@ test_encode_connect(void)
 	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
 
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
+	print_mqtt_msg(msg);
 
-	nng_msg *dup_msg;
-	nng_msg_dup(&dup_msg, msg);
-	NUTS_PASS(nng_mqtt_msg_decode(dup_msg));
+	nng_msg *decode_msg;
+	nng_msg_dup(&decode_msg, msg);
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("msg:\n%s\n", print_buf);
+	NUTS_PASS(nng_mqtt_msg_decode(decode_msg));
+	print_mqtt_msg(decode_msg);
 
-	nng_mqtt_msg_dump(dup_msg, print_buf, 1024, true);
-	printf("dup msg:\n%s\n", print_buf);
-
-	NUTS_ASSERT(memcmp(nng_msg_body(msg), nng_msg_body(dup_msg),
+	NUTS_ASSERT(memcmp(nng_msg_body(msg), nng_msg_body(decode_msg),
 	                nng_msg_len(msg)) == 0);
 
 	nng_msg_free(msg);
-	nng_msg_free(dup_msg);
+	nng_msg_free(decode_msg);
 }
 
 void
@@ -140,9 +158,7 @@ test_encode_connack(void)
 
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 	nng_msg_free(msg);
 }
 
@@ -172,8 +188,8 @@ test_encode_publish(void)
 	char will_msg[] = "Bye-bye";
 	nng_mqtt_msg_set_connect_will_msg(msg, will_msg);
 
-	char user[]   = "alvin";
-	char passwd[] = "HHH0000";
+	char user[]   = "nanomq";
+	char passwd[] = "nanomq";
 
 	nng_mqtt_msg_set_connect_user_name(msg, user);
 	nng_mqtt_msg_set_connect_password(msg, passwd);
@@ -182,9 +198,8 @@ test_encode_publish(void)
 
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
+
 	nng_msg_free(msg);
 }
 
@@ -200,9 +215,7 @@ test_encode_puback(void)
 
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 	nng_msg_free(msg);
 }
 
@@ -230,10 +243,7 @@ test_encode_subscribe(void)
 
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 	nng_msg_free(msg);
 }
 
@@ -254,9 +264,7 @@ test_encode_suback(void)
 
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 	nng_msg_free(msg);
 }
 
@@ -281,10 +289,7 @@ test_encode_unsubscribe(void)
 	    msg, topic_qos, sizeof(topic_qos) / sizeof(nng_mqtt_topic));
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 	nng_msg_free(msg);
 }
 
@@ -299,9 +304,7 @@ test_encode_disconnect(void)
 	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_UNSUBSCRIBE);
 	NUTS_PASS(nng_mqtt_msg_encode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 
 	nng_msg_free(msg);
 }
@@ -331,9 +334,8 @@ test_decode_connect(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
+
 	nng_msg_free(msg);
 }
 
@@ -396,9 +398,7 @@ test_decode_publish(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[2048] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 2048, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 
 	nng_msg_free(msg);
 }
@@ -418,9 +418,7 @@ test_decode_puback(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 	nng_msg_free(msg);
 }
 
@@ -444,18 +442,11 @@ test_decode_subscribe(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 
 	uint32_t            count;
 	nng_mqtt_topic_qos *tq =
 	    nng_mqtt_msg_get_subscribe_topics(msg, &count);
-
-	for (size_t i = 0; i < count; i++) {
-		printf("[%ld]: %.*s, qos: %d\n", i, tq[i].topic.length,
-		    (char *) tq[i].topic.buf, tq[i].qos);
-	}
 
 	nng_free(tq, count * sizeof(nng_mqtt_topic_qos));
 
@@ -481,18 +472,11 @@ test_decode_unsubscribe(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 
 	uint32_t        count;
 	nng_mqtt_topic *topics =
 	    nng_mqtt_msg_get_unsubscribe_topics(msg, &count);
-
-	for (size_t i = 0; i < count; i++) {
-		printf("[%ld]:  %.*s\n", i, topics[i].length,
-		    (char *) topics[i].buf);
-	}
 
 	nng_msg_free(msg);
 	nni_free(topics, count * sizeof(nng_mqtt_topic));
@@ -511,9 +495,7 @@ test_decode_disconnect(void)
 
 	NUTS_PASS(nng_mqtt_msg_decode(msg));
 
-	uint8_t print_buf[1024] = { 0 };
-	nng_mqtt_msg_dump(msg, print_buf, 1024, true);
-	printf("%s\n", print_buf);
+	print_mqtt_msg(msg);
 	nng_msg_free(msg);
 }
 

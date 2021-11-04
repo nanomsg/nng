@@ -400,7 +400,7 @@ mqtt_tcptran_pipe_send_cb(void *arg)
 
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->sendq);
-	fprintf(stderr, "mqtt_tcptran_pipe_send_cb.\n");
+	// fprintf(stderr, "mqtt_tcptran_pipe_send_cb.\n");
 
 	if ((rv = nni_aio_result(txaio)) != 0) {
 		nni_pipe_bump_error(p->npipe, rv);
