@@ -686,6 +686,9 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_RECONNMINT "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT "reconnect-time-max"
 
+// NNG-MQTT
+#define NNG_OPT_MQTT_CONNMSG "mqtt-connect-msg"
+
 // TLS options are only used when the underlying transport supports TLS.
 
 // NNG_OPT_TLS_CONFIG is a pointer to an nng_tls_config object.  Generally

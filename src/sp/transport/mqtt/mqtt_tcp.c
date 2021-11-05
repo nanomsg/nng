@@ -790,7 +790,7 @@ mqtt_tcptran_pipe_start(
 	p->proto = ep->proto;
 
 	rv = nni_dialer_getopt(
-	    ep->ndialer, "connmsg", &connmsg, NULL, NNI_TYPE_POINTER);
+	    ep->ndialer, NNG_OPT_MQTT_CONNMSG, &connmsg, NULL, NNI_TYPE_POINTER);
 	if (!connmsg) {
 		fprintf(stderr, "Connmsg get error [%d] \n", rv);
 		nni_list_append(&ep->waitpipes, p);
@@ -1271,7 +1271,7 @@ mqtt_tcptran_ep_get_connmsg(void *arg, void *v, size_t *szp, nni_opt_type t)
 
 	//	nni_mtx_lock(&ep->mtx);
 	nni_copyout_ptr(ep->connmsg, v, szp, t);
-	fprintf(stderr, "connmsgp [%p] v [%p] \n", ep->connmsg, v);
+//	fprintf(stderr, "connmsgp [%p] v [%p] \n", ep->connmsg, v);
 	//	ep->connmsg = NULL;
 	//	nni_mtx_unlock(&ep->mtx);
 	rv = 0;
@@ -1303,7 +1303,7 @@ mqtt_tcptran_ep_set_connmsg(
 
 	nni_mtx_lock(&ep->mtx);
 	nni_copyin_ptr(&ep->connmsg, v, sz, t);
-	fprintf(stderr, "set connmsg [%p] v [%p] \n", ep->connmsg, v);
+//	fprintf(stderr, "set connmsg [%p] v [%p] \n", ep->connmsg, v);
 	nni_mtx_unlock(&ep->mtx);
 	rv = 0;
 
@@ -1380,7 +1380,7 @@ static const nni_option mqtt_tcptran_ep_opts[] = {
 	    .o_get  = mqtt_tcptran_ep_get_url,
 	},
 	{
-	    .o_name = "connmsg",
+	    .o_name = NNG_OPT_MQTT_CONNMSG,
 	    .o_get  = mqtt_tcptran_ep_get_connmsg,
 	    .o_set  = mqtt_tcptran_ep_set_connmsg,
 	},
