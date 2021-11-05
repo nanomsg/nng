@@ -198,9 +198,10 @@ nni_mqtt_msg_set_publish_topic(nni_msg *msg, const char *topic)
 }
 
 const char *
-nni_mqtt_msg_get_publish_topic(nni_msg *msg)
+nni_mqtt_msg_get_publish_topic(nni_msg *msg, uint32_t *topic_len)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+	*topic_len = proto_data->var_header.publish.topic_name.length;
 	return (const char *) proto_data->var_header.publish.topic_name.buf;
 }
 

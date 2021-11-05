@@ -579,7 +579,7 @@ nng_dialer_create(nng_dialer *dp, nng_socket sid, const char *addr)
 }
 
 int
-nng_dialer_setcb(nng_dialer did, void (*cb)(void *, nng_msg *), void *arg)
+nng_dialer_set_cb(nng_dialer did, void (*cb)(void *, nng_msg *), void *arg)
 {
 	nni_dialer *d;
 	int         rv;
@@ -2127,9 +2127,9 @@ nng_mqtt_msg_set_publish_topic(nng_msg *msg, const char *topic)
 }
 
 const char *
-nng_mqtt_msg_get_publish_topic(nng_msg *msg)
+nng_mqtt_msg_get_publish_topic(nng_msg *msg, uint32_t *topic_len)
 {
-	return nni_mqtt_msg_get_publish_topic(msg);
+	return nni_mqtt_msg_get_publish_topic(msg, topic_len);
 }
 
 void
@@ -2316,7 +2316,7 @@ nng_mqtt_topic_array_free(nng_mqtt_topic *topic, size_t n)
 nng_mqtt_topic_qos *
 nng_mqtt_topic_qos_array_create(size_t n)
 {
-    return nni_mqtt_topic_qos_array_create(n);
+	return nni_mqtt_topic_qos_array_create(n);
 }
 
 void

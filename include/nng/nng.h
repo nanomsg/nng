@@ -279,8 +279,9 @@ NNG_DECL int nng_dialer_create(nng_dialer *, nng_socket, const char *);
 // nng_listener_create creates a new listener, that is not yet started.
 NNG_DECL int nng_listener_create(nng_listener *, nng_socket, const char *);
 
-// nng_dialer_setcb set the cb to the dialer. Cb runs when dialer finished.
-NNG_DECL int nng_dialer_setcb(nng_dialer, void (*)(void *, nng_msg *), void *);
+// nng_dialer_set_cb set the cb to the dialer. Cb runs when dialer finished.
+NNG_DECL int nng_dialer_set_cb(
+    nng_dialer, void (*)(void *, nng_msg *), void *);
 
 // nng_dialer_start starts the endpoint dialing.  This is only possible if
 // the dialer is not already dialing.
@@ -1352,7 +1353,7 @@ NNG_DECL bool        nng_mqtt_msg_get_publish_retain(nng_msg *);
 NNG_DECL void        nng_mqtt_msg_set_publish_dup(nng_msg *, bool);
 NNG_DECL bool        nng_mqtt_msg_get_publish_dup(nng_msg *);
 NNG_DECL void        nng_mqtt_msg_set_publish_topic(nng_msg *, const char *);
-NNG_DECL const char *nng_mqtt_msg_get_publish_topic(nng_msg *);
+NNG_DECL const char *nng_mqtt_msg_get_publish_topic(nng_msg *, uint32_t *);
 NNG_DECL void nng_mqtt_msg_set_publish_payload(nng_msg *, uint8_t *, uint32_t);
 NNG_DECL uint8_t *nng_mqtt_msg_get_publish_payload(nng_msg *, uint32_t *);
 NNG_DECL nng_mqtt_topic_qos *nng_mqtt_msg_get_subscribe_topics(
