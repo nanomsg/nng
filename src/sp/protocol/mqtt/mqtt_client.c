@@ -61,7 +61,7 @@ typedef enum {
 	WORK_PUBACK,      // send/recv PUBACK
 	WORK_PUBCOMP,     // send/recv PUBCOMP
 	WORK_PUBLISH,     // send/recv PUBLISH
-	WORK_PUBRECV,     // send/recv PUBRECV
+	WORK_PUBRECV,     // send/recv PUBREC
 	WORK_PUBREL,      // send/recv PUBREL
 	WORK_SUBSCRIBE,   // send      SUBSCRIBE
 	WORK_SUBACK,      // recv      SUBACK
@@ -523,7 +523,7 @@ mqtt_send_cb(void *arg)
 			work->state = WORK_END;
 		} else {
 			// for QoS 1, expect receiving a PUBACK
-			// for QoS 2, expect receiving a PUBRECV
+			// for QoS 2, expect receiving a PUBREC
 			work->state =
 			    (1 == work->qos) ? WORK_PUBACK : WORK_PUBRECV;
 			if (0 !=
@@ -535,7 +535,7 @@ mqtt_send_cb(void *arg)
 		break;
 
 	case WORK_PUBRECV:
-		// we have sent a PUBRECV, expect receiving a PUBREL
+		// we have sent a PUBREC, expect receiving a PUBREL
 		work->state = WORK_PUBREL;
 		break;
 
@@ -666,7 +666,7 @@ mqtt_recv_cb(void *arg)
 		return;
 
 	case NNG_MQTT_PUBREC:
-		// we have received a PUBRECV in the QoS 2 delivery,
+		// we have received a PUBREC in the QoS 2 delivery,
 		// then send a PUBREL
 		packet_id = nni_mqtt_msg_get_pubrec_packet_id(msg);
 		nni_msg_free(msg);
@@ -719,7 +719,7 @@ mqtt_recv_cb(void *arg)
 			work->msg = msg; // keep the message
 			work->packet_id =
 			    nni_mqtt_msg_get_publish_packet_id(msg);
-			// the transport handled sending PUBRECV,
+			// the transport handled sending PUBREC,
 			// expect to receive a PUBREL
 			work->state = WORK_PUBREL;
 			nni_id_set(&p->recv_unack, work->packet_id, work);
