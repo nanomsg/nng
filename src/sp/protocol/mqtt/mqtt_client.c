@@ -77,6 +77,7 @@ typedef uint8_t work_state_t;
 // A work_t represents an asynchronous send/recv of MQTT packet.
 typedef struct {
 	work_state_t   state;
+	uint8_t        ntrial;    // number of times we transmit
 	uint8_t        qos;       // QoS of the MQTT PUBLISH packet
 	uint16_t       packet_id; // packet id of the message that have it
 	mqtt_sock_t *  mqtt_sock;
@@ -129,6 +130,7 @@ work_init(
     work_t *work, mqtt_sock_t *s, nni_duration timeout_ms, nni_cb timer_cb)
 {
 	work_set_init(work);
+	work->ntrial    = 0;
 	work->qos       = 0;
 	work->packet_id = 0;
 	work->msg       = NULL;
@@ -151,6 +153,7 @@ static inline void
 work_reset(work_t *work)
 {
 	work_set_init(work);
+	work->ntrial    = 0;
 	work->qos       = 0;
 	work->packet_id = 0;
 	nni_msg_free(work->msg);
@@ -203,7 +206,14 @@ work_close_queue(nni_list *queue)
 static inline void
 work_timer_schedule(work_t *work)
 {
+	++work->ntrial;
 	nni_timer_schedule(&work->timer, nni_clock() + work->timeout);
+}
+
+static inline void
+work_timer_cancel(work_t *work)
+{
+	nni_timer_schedule(&work->timer, NNI_TIME_NEVER);
 }
 
 /******************************************************************************
@@ -311,6 +321,7 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	work_init(&p->ping_work, s, sock->retry, mqtt_keep_alive_cb);
 	nni_mqtt_msg_alloc(&p->ping_work.msg, 0);
 	nni_mqtt_msg_set_packet_type(p->ping_work.msg, NNG_MQTT_PINGREQ);
+	work_set_send(&p->ping_work, NNG_MQTT_PINGREQ);
 	nni_mqtt_msg_encode(p->ping_work.msg);
 	nni_aio_init(&p->send_aio, mqtt_send_cb, p);
 	nni_aio_init(&p->recv_aio, mqtt_recv_cb, p);
@@ -441,10 +452,36 @@ mqtt_keep_alive_cb(void *arg)
 	nni_mtx_unlock(&s->mtx);
 }
 
+// Timer callback, we use it for retransmitting.
 static void
 mqtt_timer_cb(void *arg)
 {
-	// TODO: handle retry
+	work_t *     work = arg;
+	mqtt_sock_t *s    = work->mqtt_sock;
+
+	nni_mtx_lock(&s->mtx);
+
+	mqtt_pipe_t *p = s->mqtt_pipe;
+
+	if (NULL == p || nni_atomic_get_bool(&p->closed)) {
+		return;
+	}
+
+	if (work->ntrial < nni_atomic_get(&s->ttl)) {
+		// try again
+		nni_list_append(&s->send_queue, work);
+		if (nni_list_first(&s->send_queue) == work) {
+			mqtt_send_start(s);
+		}
+	} else {
+		// reach max retransmitting, quit
+		nni_aio_finish_error(work->user_aio, NNG_EAGAIN);
+		nni_id_remove(&p->send_unack, work->packet_id);
+		work_reset(work);
+		nni_list_append(&s->free_list, work);
+	}
+
+	nni_mtx_unlock(&s->mtx);
 }
 
 static void
@@ -537,6 +574,7 @@ mqtt_send_cb(void *arg)
 			        &p->send_unack, work->packet_id, work)) {
 				// FIXME
 			}
+			work_timer_schedule(work);
 		}
 		break;
 
@@ -554,12 +592,14 @@ mqtt_send_cb(void *arg)
 		// we have sent a SUBSCRIBE, expect receiving a SUBACK
 		work_set_recv(work, NNG_MQTT_SUBACK);
 		nni_id_set(&p->send_unack, work->packet_id, work);
+		work_timer_schedule(work);
 		break;
 
 	case NNG_MQTT_UNSUBSCRIBE:
 		// we have sent a UNSUBSCRIBE, expect receiving a UNSUBACK
 		work_set_recv(work, NNG_MQTT_UNSUBACK);
 		nni_id_set(&p->send_unack, work->packet_id, work);
+		work_timer_schedule(work);
 		break;
 
 	default:
@@ -667,6 +707,7 @@ mqtt_recv_cb(void *arg)
 		} else {
 			work_set_error(work);
 		}
+		work_timer_cancel(work);
 		break;
 
 	case NNG_MQTT_PINGRESP:
@@ -692,6 +733,7 @@ mqtt_recv_cb(void *arg)
 		} else {
 			work_set_error(work);
 		}
+		work_timer_cancel(work);
 		break;
 
 	case NNG_MQTT_PUBREL:
@@ -834,44 +876,39 @@ mqtt_send_start(mqtt_sock_t *s)
 	if (NULL != (work = nni_list_first(&s->send_queue))) {
 		packet_type = nni_mqtt_msg_get_packet_type(work->msg);
 
-		// only allow to send CONNECT, PINGREQ, PUBLISH, SUBSCRIBE
-		// and UNSUBSCRIBE
-		switch (packet_type) {
-		case NNG_MQTT_CONNECT:
-			// NOTE: the transport dialer will send a CONNECT
-			break;
+		// we are not retransmitting the work
+		if (0 == work->ntrial) {
+			// only allow to send CONNECT, PINGREQ, PUBLISH,
+			// SUBSCRIBE and UNSUBSCRIBE
+			switch (packet_type) {
+			case NNG_MQTT_CONNECT:
+				// NOTE: the transport dialer handle CONNECT
+				// fall through
+			case NNG_MQTT_PINGREQ:
+				break;
 
-		case NNG_MQTT_PINGREQ:
-			break;
-
-		case NNG_MQTT_PUBLISH:
-			work->qos = nni_mqtt_msg_get_publish_qos(work->msg);
-			if (work->qos > 0) {
+			case NNG_MQTT_PUBLISH:
+				work->qos =
+				    nni_mqtt_msg_get_publish_qos(work->msg);
+				if (0 == work->qos) {
+					break; // QoS 0 need no packet id
+				}
+				// fall through
+			case NNG_MQTT_SUBSCRIBE:
+			case NNG_MQTT_UNSUBSCRIBE:
 				work->packet_id =
 				    mqtt_pipe_get_next_packet_id(p);
-				nni_mqtt_msg_set_publish_packet_id(
+				nni_mqtt_msg_set_packet_id(
 				    work->msg, work->packet_id);
 				nni_mqtt_msg_encode(work->msg);
+				break;
+
+			default:
+				work_set_error(work);
+				nni_aio_finish_error(
+				    work->user_aio, NNG_EPROTO);
+				return;
 			}
-			break;
-
-		case NNG_MQTT_SUBSCRIBE:
-			work->packet_id = mqtt_pipe_get_next_packet_id(p);
-			nni_mqtt_msg_set_subscribe_packet_id(
-			    work->msg, work->packet_id);
-			nni_mqtt_msg_encode(work->msg);
-			break;
-		case NNG_MQTT_UNSUBSCRIBE:
-			work->packet_id = mqtt_pipe_get_next_packet_id(p);
-			nni_mqtt_msg_set_unsubscribe_packet_id(
-			    work->msg, work->packet_id);
-			nni_mqtt_msg_encode(work->msg);
-			break;
-
-		default:
-			work_set_error(work);
-			nni_aio_finish_error(work->user_aio, NNG_EPROTO);
-			return;
 		}
 
 		work_set_send(work, packet_type);
