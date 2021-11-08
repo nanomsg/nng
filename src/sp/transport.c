@@ -36,7 +36,6 @@ nni_sp_tran_find(nni_url *url)
 
 	nni_rwlock_rdlock(&sp_tran_lk);
 	NNI_LIST_FOREACH (&sp_tran_list, t) {
-		printf("tran %s %s\n", url->u_scheme, t->tran_scheme);
 		if (strcmp(url->u_scheme, t->tran_scheme) == 0) {
 			nni_rwlock_unlock(&sp_tran_lk);
 			return (t);

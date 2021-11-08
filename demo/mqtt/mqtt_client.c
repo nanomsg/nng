@@ -126,7 +126,7 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 
 	printf("Connecting to server ...");
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, connmsg);
-	nng_dialer_setcb(dialer, connect_cb, "Yeap");
+	nng_dialer_set_cb(dialer, connect_cb, "Yeap");
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
 	printf("connected\n");
