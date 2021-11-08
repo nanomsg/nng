@@ -676,14 +676,8 @@ mqtt_recv_cb(void *arg)
 			nni_mtx_unlock(&s->mtx);
 			return;
 		}
-		// the transport handled sending the PUBREL for us
-		// work->state = WORK_PUBREL;
-		// reuse msg
-		// nni_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBREL);
-		// nni_mqtt_msg_set_pubrel_packet_id(msg, packet_id);
-		// nni_mqtt_msg_encode(msg);
-		// nni_aio_set_msg(&work->send_aio, msg);
-		// nni_pipe_send(p->pipe, &work->send_aio);
+		// the transport handled sending the PUBREL for us,
+		// expect to receive a PUBCOMP
 		work->state = WORK_PUBCOMP;
 		break;
 
@@ -707,14 +701,6 @@ mqtt_recv_cb(void *arg)
 		nni_list_append(&s->free_list, work);
 		nni_mtx_unlock(&s->mtx);
 		return;
-		// work->state = WORK_PUBCOMP;
-		// reuse msg
-		// nni_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBCOMP);
-		// nni_mqtt_msg_set_pubcomp_packet_id(msg, packet_id);
-		// nni_mqtt_msg_encode(msg);
-		// nni_aio_set_msg(&work->send_aio, msg);
-		// nni_pipe_send(p->pipe, &work->send_aio);
-		break;
 
 	case NNG_MQTT_PUBLISH:
 		// we have received a PUBLISH
@@ -729,23 +715,14 @@ mqtt_recv_cb(void *arg)
 		} else {
 			work = nni_list_first(&s->free_list);
 			nni_list_remove(&s->free_list, work);
-			// keep the message, and alloc a new ack message
 			work->qos = qos;
-			work->msg = msg;
+			work->msg = msg; // keep the message
 			work->packet_id =
 			    nni_mqtt_msg_get_publish_packet_id(msg);
-			// the transport handled sending PUBACK/PUBRECV
+			// the transport handled sending PUBRECV,
+			// expect to receive a PUBREL
 			work->state = WORK_PUBREL;
 			nni_id_set(&p->recv_unack, work->packet_id, work);
-			// nni_mqtt_msg_alloc(&msg, 0);
-			// QoS 2, then send a PUBRECV
-			// work->state = WORK_PUBRECV;
-			// nni_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBREC);
-			// nni_mqtt_msg_set_pubrec_packet_id(msg,
-			// work->packet_id);
-			// nni_mqtt_msg_encode(msg);
-			// nni_aio_set_msg(&work->send_aio, msg);
-			// nni_pipe_send(p->pipe, &work->send_aio);
 		}
 		break;
 
