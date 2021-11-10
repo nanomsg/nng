@@ -2061,27 +2061,27 @@ nng_mqtt_msg_get_connect_password(nng_msg *msg)
 }
 
 void
-nng_mqtt_msg_set_conack_return_code(nng_msg *msg, uint8_t return_code)
+nng_mqtt_msg_set_connack_return_code(nng_msg *msg, uint8_t return_code)
 {
-	nni_mqtt_msg_set_conack_return_code(msg, return_code);
+	nni_mqtt_msg_set_connack_return_code(msg, return_code);
 }
 
 void
-nng_mqtt_msg_set_conack_flags(nng_msg *msg, uint8_t flags)
+nng_mqtt_msg_set_connack_flags(nng_msg *msg, uint8_t flags)
 {
-	nni_mqtt_msg_set_conack_flags(msg, flags);
+	nni_mqtt_msg_set_connack_flags(msg, flags);
 }
 
 uint8_t
-nng_mqtt_msg_get_conack_return_code(nng_msg *msg)
+nng_mqtt_msg_get_connack_return_code(nng_msg *msg)
 {
-	return nni_mqtt_msg_get_conack_return_code(msg);
+	return nni_mqtt_msg_get_connack_return_code(msg);
 }
 
 uint8_t
-nng_mqtt_msg_get_conack_flags(nng_msg *msg)
+nng_mqtt_msg_get_connack_flags(nng_msg *msg)
 {
-	return nni_mqtt_msg_get_conack_flags(msg);
+	return nni_mqtt_msg_get_connack_flags(msg);
 }
 
 void

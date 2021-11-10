@@ -564,7 +564,6 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	// keep connection & Schedule next receive
 	// nni_pipe_bump_rx(p->npipe, n);
 	mqtt_tcptran_pipe_recv_start(p);
-	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_set_msg(aio, msg);
 	nni_mtx_unlock(&p->mtx);	

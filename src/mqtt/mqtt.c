@@ -2,9 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static int nni_mqtt_msg_free(void *);
-static int nni_mqtt_msg_dup(void **, const void *);
-
 static nni_proto_msg_ops proto_msg_ops = {
 
 	.msg_free = nni_mqtt_msg_free,
@@ -12,27 +9,6 @@ static nni_proto_msg_ops proto_msg_ops = {
 	.msg_dup = nni_mqtt_msg_dup
 };
 
-static int
-nni_mqtt_msg_free(void *self)
-{
-	if (self) {
-		free(self);
-		return (0);
-	}
-	return (1);
-}
-
-static int
-nni_mqtt_msg_dup(void **dest, const void *src)
-{
-	nni_mqtt_proto_data *mqtt;
-
-	mqtt = NNI_ALLOC_STRUCT(mqtt);
-	memcpy(mqtt, (nni_mqtt_proto_data *) src, sizeof(nni_mqtt_proto_data));
-	*dest = mqtt;
-
-	return (0);
-}
 
 int
 nni_mqtt_msg_proto_data_alloc(nni_msg *msg)
@@ -52,7 +28,7 @@ void
 nni_mqtt_msg_proto_data_free(nni_msg *msg)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
-	NNI_FREE_STRUCT(proto_data);
+	nni_mqtt_msg_free(proto_data);
 }
 
 int
@@ -193,8 +169,8 @@ void
 nni_mqtt_msg_set_publish_topic(nni_msg *msg, const char *topic)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
-	proto_data->var_header.publish.topic_name.buf    = (uint8_t *) topic;
-	proto_data->var_header.publish.topic_name.length = strlen(topic);
+	mqtt_buf_create(&proto_data->var_header.publish.topic_name,
+	    (uint8_t *) topic, strlen(topic));
 }
 
 const char *
@@ -208,9 +184,8 @@ nni_mqtt_msg_get_publish_topic(nni_msg *msg, uint32_t *topic_len)
 void
 nni_mqtt_msg_set_publish_payload(nni_msg *msg, uint8_t *payload, uint32_t len)
 {
-	nni_mqtt_proto_data *proto_data         = nni_msg_get_proto_data(msg);
-	proto_data->payload.publish.payload.buf = payload;
-	proto_data->payload.publish.payload.length = len;
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+	mqtt_buf_create(&proto_data->payload.publish.payload, payload, len);
 }
 
 uint8_t *
@@ -307,11 +282,19 @@ nni_mqtt_msg_set_subscribe_packet_id(nni_msg *msg, uint16_t packet_id)
 
 void
 nni_mqtt_msg_set_subscribe_topics(
-    nni_msg *msg, nni_mqtt_topic_qos *topic, uint32_t topic_count)
+    nni_msg *msg, nni_mqtt_topic_qos *topics, uint32_t topic_count)
 {
-	nni_mqtt_proto_data *proto_data         = nni_msg_get_proto_data(msg);
-	proto_data->payload.subscribe.topic_arr = topic;
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+
+	proto_data->payload.subscribe.topic_arr =
+	    nni_mqtt_topic_qos_array_create(topic_count);
 	proto_data->payload.subscribe.topic_count = topic_count;
+
+	for (size_t i = 0; i < topic_count; i++) {
+		nni_mqtt_topic_qos_array_set(
+		    proto_data->payload.subscribe.topic_arr, i,
+		    (const char *) topics[i].topic.buf, topics[i].qos);
+	}
 }
 
 nni_mqtt_topic_qos *
@@ -341,7 +324,9 @@ nni_mqtt_msg_set_suback_return_codes(
     nni_msg *msg, uint8_t *ret_codes, uint32_t ret_codes_count)
 {
 	nni_mqtt_proto_data *proto_data         = nni_msg_get_proto_data(msg);
-	proto_data->payload.suback.ret_code_arr = ret_codes;
+	proto_data->payload.suback.ret_code_arr = nni_alloc(ret_codes_count);
+	memcpy(proto_data->payload.suback.ret_code_arr, ret_codes,
+	    ret_codes_count);
 	proto_data->payload.suback.ret_code_count = ret_codes_count;
 }
 
@@ -369,11 +354,19 @@ nni_mqtt_msg_set_unsubscribe_packet_id(nni_msg *msg, uint16_t packet_id)
 
 void
 nni_mqtt_msg_set_unsubscribe_topics(
-    nni_msg *msg, nni_mqtt_topic *topic, uint32_t topic_count)
+    nni_msg *msg, nni_mqtt_topic *topics, uint32_t topic_count)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
-	proto_data->payload.unsubscribe.topic_arr   = (nni_mqtt_topic *) topic;
+
+	proto_data->payload.unsubscribe.topic_arr =
+	    nni_mqtt_topic_array_create(topic_count);
 	proto_data->payload.unsubscribe.topic_count = topic_count;
+
+	for (size_t i = 0; i < topic_count; i++) {
+		nni_mqtt_topic_array_set(
+		    proto_data->payload.unsubscribe.topic_arr, i,
+		    (const char *) topics[i].buf);
+	}
 }
 
 nni_mqtt_topic *
@@ -459,40 +452,40 @@ void
 nni_mqtt_msg_set_connect_client_id(nni_msg *msg, const char *client_id)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
-	proto_data->payload.connect.client_id.buf    = (uint8_t *) client_id;
-	proto_data->payload.connect.client_id.length = strlen(client_id);
+	mqtt_buf_create(&proto_data->payload.connect.client_id,
+	    (const uint8_t *) client_id, strlen(client_id) + 1);
 }
 
 void
 nni_mqtt_msg_set_connect_will_topic(nni_msg *msg, const char *will_topic)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
-	proto_data->payload.connect.will_topic.buf    = (uint8_t *) will_topic;
-	proto_data->payload.connect.will_topic.length = strlen(will_topic);
+	mqtt_buf_create(&proto_data->payload.connect.will_topic,
+	    (const uint8_t *) will_topic, strlen(will_topic) + 1);
 }
 
 void
 nni_mqtt_msg_set_connect_will_msg(nni_msg *msg, const char *will_msg)
 {
-	nni_mqtt_proto_data *proto_data          = nni_msg_get_proto_data(msg);
-	proto_data->payload.connect.will_msg.buf = (uint8_t *) will_msg;
-	proto_data->payload.connect.will_msg.length = strlen(will_msg);
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+	mqtt_buf_create(&proto_data->payload.connect.will_msg,
+	    (const uint8_t *) will_msg, strlen(will_msg) + 1);
 }
 
 void
 nni_mqtt_msg_set_connect_user_name(nni_msg *msg, const char *user_name)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
-	proto_data->payload.connect.user_name.buf    = (uint8_t *) user_name;
-	proto_data->payload.connect.user_name.length = strlen(user_name);
+	mqtt_buf_create(&proto_data->payload.connect.user_name,
+	    (const uint8_t *) user_name, strlen(user_name) + 1);
 }
 
 void
 nni_mqtt_msg_set_connect_password(nni_msg *msg, const char *password)
 {
-	nni_mqtt_proto_data *proto_data          = nni_msg_get_proto_data(msg);
-	proto_data->payload.connect.password.buf = (uint8_t *) password;
-	proto_data->payload.connect.password.length = strlen(password);
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+	mqtt_buf_create(&proto_data->payload.connect.password,
+	    (const uint8_t *) password, strlen(password) + 1);
 }
 
 const char *
@@ -531,28 +524,28 @@ nni_mqtt_msg_get_connect_password(nni_msg *msg)
 }
 
 void
-nni_mqtt_msg_set_conack_return_code(nni_msg *msg, uint8_t code)
+nni_mqtt_msg_set_connack_return_code(nni_msg *msg, uint8_t code)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	proto_data->var_header.connack.conn_return_code = code;
 }
 
 void
-nni_mqtt_msg_set_conack_flags(nni_msg *msg, uint8_t flags)
+nni_mqtt_msg_set_connack_flags(nni_msg *msg, uint8_t flags)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	proto_data->var_header.connack.connack_flags = flags;
 }
 
 uint8_t
-nni_mqtt_msg_get_conack_return_code(nni_msg *msg)
+nni_mqtt_msg_get_connack_return_code(nni_msg *msg)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	return proto_data->var_header.connack.conn_return_code;
 }
 
 uint8_t
-nni_mqtt_msg_get_conack_flags(nni_msg *msg)
+nni_mqtt_msg_get_connack_flags(nni_msg *msg)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	return proto_data->var_header.connack.connack_flags;
@@ -628,6 +621,7 @@ nni_mqtt_topic_qos_array_free(nni_mqtt_topic_qos *topic_qos, size_t n)
 {
 	for (size_t i = 0; i < n; i++) {
 		nni_strfree((char *) topic_qos[i].topic.buf);
+		topic_qos[i].topic.length = 0;
 	}
 	NNI_FREE_STRUCTS(topic_qos, n);
 }

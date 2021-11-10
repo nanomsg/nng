@@ -31,10 +31,10 @@ static nng_mqtt_topic_qos topic_qos[] = {
 	{ .qos     = 0,
 	    .topic = { .buf = (uint8_t *) SUB_TOPIC1,
 	        .length     = strlen(SUB_TOPIC1) } },
-	{ .qos     = 0,
+	{ .qos     = 1,
 	    .topic = { .buf = (uint8_t *) SUB_TOPIC2,
 	        .length     = strlen(SUB_TOPIC2) } },
-	{ .qos     = 0,
+	{ .qos     = 2,
 	    .topic = { .buf = (uint8_t *) SUB_TOPIC3,
 	        .length     = strlen(SUB_TOPIC3) } },
 	{ .qos     = 0,
@@ -159,7 +159,7 @@ connect_cb(void *arg, nng_msg *msg)
 {
 	(void) arg;
 	printf(
-	    "connack status: %d\n", nng_mqtt_msg_get_conack_return_code(msg));
+	    "connack status: %d\n", nng_mqtt_msg_get_connack_return_code(msg));
 	nng_msg_free(msg);
 }
 

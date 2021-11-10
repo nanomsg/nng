@@ -221,7 +221,7 @@ typedef struct mqtt_msg_t {
 	                         packetType and packetFlags)  may be used to
 	                         jump the point where the actual data starts */
 	bool is_decoded : 1; /* message is obtained from decoded or encoded */
-	bool attached_raw : 1; /* indicates if entire_raw_msg is to be owned */
+	bool is_copied : 1;  /* indicates string or array members are copied */
 	uint8_t _unused : 2;
 
 } mqtt_msg;
@@ -240,8 +240,9 @@ extern int read_utf8_str(struct pos_buf *, mqtt_buf *);
 extern int read_str_data(struct pos_buf *, mqtt_buf *);
 extern int read_packet_length(struct pos_buf *, uint32_t *);
 
-extern mqtt_buf mqtt_buf_dup(const mqtt_buf *);
-extern void     mqtt_buf_free(mqtt_buf *);
+extern int  mqtt_buf_create(mqtt_buf *, const uint8_t *, uint32_t);
+extern int  mqtt_buf_dup(mqtt_buf *, const mqtt_buf *);
+extern void mqtt_buf_free(mqtt_buf *);
 
 extern mqtt_msg *mqtt_msg_create(nni_mqtt_packet_type);
 
@@ -250,6 +251,8 @@ extern int mqtt_msg_dump(mqtt_msg *, mqtt_buf *, mqtt_buf *, bool);
 // nni_msg proto_data alloc/free
 extern int  nni_mqtt_msg_proto_data_alloc(nni_msg *);
 extern void nni_mqtt_msg_proto_data_free(nni_msg *);
+extern int  nni_mqtt_msg_free(void *self);
+extern int  nni_mqtt_msg_dup(void **dest, const void *src);
 
 // mqtt message alloc/encode/decode
 extern int nni_mqtt_msg_alloc(nni_msg **, size_t);
@@ -286,10 +289,10 @@ extern const char *nni_mqtt_msg_get_connect_user_name(nni_msg *);
 extern const char *nni_mqtt_msg_get_connect_password(nni_msg *);
 
 // mqtt conack
-extern void    nni_mqtt_msg_set_conack_return_code(nni_msg *, uint8_t);
-extern void    nni_mqtt_msg_set_conack_flags(nni_msg *, uint8_t);
-extern uint8_t nni_mqtt_msg_get_conack_return_code(nni_msg *);
-extern uint8_t nni_mqtt_msg_get_conack_flags(nni_msg *);
+extern void    nni_mqtt_msg_set_connack_return_code(nni_msg *, uint8_t);
+extern void    nni_mqtt_msg_set_connack_flags(nni_msg *, uint8_t);
+extern uint8_t nni_mqtt_msg_get_connack_return_code(nni_msg *);
+extern uint8_t nni_mqtt_msg_get_connack_flags(nni_msg *);
 
 // mqtt publish
 extern void        nni_mqtt_msg_set_publish_qos(nni_msg *, uint8_t);
