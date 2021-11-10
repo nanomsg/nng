@@ -567,6 +567,7 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	nni_mtx_unlock(&p->mtx);
 
 	nni_aio_set_msg(aio, msg);
+	nni_mtx_unlock(&p->mtx);	
 	nni_aio_finish_sync(aio, 0, n);
 	return;
 

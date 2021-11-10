@@ -9,9 +9,6 @@
 #include <nng/nng.h>
 #include <nng/supplemental/util/platform.h>
 
-// Can't be modified
-#define NNG_MQTT_CONNECT_MSG "connmsg"
-
 #ifndef PARALLEL
 #define PARALLEL 32
 #endif
@@ -198,7 +195,7 @@ client(const char *url)
 		fprintf(stderr, "nng_mqtt_msg_encode failed: %d\n", rv);
 	}
 
-	nng_dialer_set_ptr(dialer, NNG_MQTT_CONNECT_MSG, msg);
+	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
 	nng_dialer_set_cb(dialer, connect_cb, NULL);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
