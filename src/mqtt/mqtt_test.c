@@ -491,4 +491,5 @@ TEST_LIST = {
 	{ "decode publish", test_decode_publish },
 	{ "decode puback", test_decode_puback },
 	{ "decode suback", test_decode_suback },
+	{ NULL, NULL },
 };
