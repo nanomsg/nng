@@ -51,19 +51,22 @@ static void mqtt_ctx_fini(void *arg);
 static void mqtt_ctx_send(void *arg, nni_aio *aio);
 static void mqtt_ctx_recv(void *arg, nni_aio *aio);
 
+typedef nni_mqtt_packet_type packet_type_t;
+
 // Work state indicating what MQTT packet we *expect* to send/recv.
 //
 // bits:   7 6 5 4 3 2 1 0
-// error <_/ | |   |
-// final <___/ |   |
-// init  <_____/   |________> lower nib encoding packet type
-//
+// error <_/ | | | |
+// final <___/ | | \________> lower nib encoding packet type
+// init  <_____/ \__________> ack received
 typedef uint8_t work_state_t;
 
+#define WORK_STATE_ACKED 0x10 // state we had received expected ack packet
 #define WORK_STATE_INIT 0x20  // start state
 #define WORK_STATE_FINAL 0x40 // final state
 #define WORK_STATE_ERROR 0x80 // error state
 
+#define work_is_acked(work) ((work)->state & WORK_STATE_ACKED)
 #define work_is_error(work) ((work)->state & WORK_STATE_ERROR)
 #define work_is_final(work) ((work)->state & WORK_STATE_FINAL)
 #define work_packet_type(work) ((work)->state & 0xEF)
@@ -71,6 +74,7 @@ typedef uint8_t work_state_t;
 #define work_set_init(work) ((work)->state = WORK_STATE_INIT)
 #define work_set_send(work, packet) ((work)->state = (packet))
 #define work_set_recv(work, packet) ((work)->state = (packet))
+#define work_set_acked(work) ((work)->state |= WORK_STATE_ACKED)
 #define work_set_error(work) ((work)->state = WORK_STATE_ERROR)
 #define work_set_final(work) ((work)->state = WORK_STATE_FINAL)
 
@@ -556,7 +560,6 @@ mqtt_send_cb(void *arg)
 		return;
 
 	case NNG_MQTT_PUBLISH:
-		// TODO: handle retry
 		// we have sent a PUBLISH
 		if (0 == work->qos) {
 			// QoS 0, no further actions
@@ -564,17 +567,23 @@ mqtt_send_cb(void *arg)
 		} else {
 			if (1 == work->qos) {
 				// for QoS 1, expect receiving a PUBACK
-				work_set_recv(work, NNG_MQTT_PUBACK);
+				if (!work_is_acked(work)) {
+					work_set_recv(work, NNG_MQTT_PUBACK);
+					work_timer_schedule(work);
+				} else {
+					// scheduling disorder, PUBACK received
+					work_set_final(work);
+				}
 			} else {
 				// for QoS 2, expect receiving a PUBREC
-				work_set_recv(work, NNG_MQTT_PUBREC);
+				if (!work_is_acked(work)) {
+					work_set_recv(work, NNG_MQTT_PUBREC);
+					work_timer_schedule(work);
+				} else {
+					// scheduling disorder, PUBREC received
+					work_set_recv(work, NNG_MQTT_PUBCOMP);
+				}
 			}
-			if (0 !=
-			    nni_id_set(
-			        &p->send_unack, work->packet_id, work)) {
-				// FIXME
-			}
-			work_timer_schedule(work);
 		}
 		break;
 
@@ -590,16 +599,24 @@ mqtt_send_cb(void *arg)
 
 	case NNG_MQTT_SUBSCRIBE:
 		// we have sent a SUBSCRIBE, expect receiving a SUBACK
-		work_set_recv(work, NNG_MQTT_SUBACK);
-		nni_id_set(&p->send_unack, work->packet_id, work);
-		work_timer_schedule(work);
+		if (!work_is_acked(work)) {
+			work_set_recv(work, NNG_MQTT_SUBACK);
+			work_timer_schedule(work);
+		} else {
+			// scheduling disorder, SUBACK received
+			work_set_final(work);
+		}
 		break;
 
 	case NNG_MQTT_UNSUBSCRIBE:
 		// we have sent a UNSUBSCRIBE, expect receiving a UNSUBACK
-		work_set_recv(work, NNG_MQTT_UNSUBACK);
-		nni_id_set(&p->send_unack, work->packet_id, work);
-		work_timer_schedule(work);
+		if (!work_is_acked(work)) {
+			work_set_recv(work, NNG_MQTT_UNSUBACK);
+			work_timer_schedule(work);
+		} else {
+			// scheduling disorder, UNSUBACK received
+			work_set_final(work);
+		}
 		break;
 
 	default:
@@ -660,9 +677,9 @@ mqtt_recv_cb(void *arg)
 	nni_mqtt_msg_proto_data_alloc(msg);
 	nni_mqtt_msg_decode(msg);
 
-	nni_mqtt_packet_type packet_type = nni_mqtt_msg_get_packet_type(msg);
-	int32_t              packet_id;
-	uint8_t              qos;
+	packet_type_t packet_type = nni_mqtt_msg_get_packet_type(msg);
+	int32_t       packet_id;
+	uint8_t       qos;
 
 	// schedule another receive
 	nni_pipe_recv(p->pipe, &p->recv_aio);
@@ -686,28 +703,43 @@ mqtt_recv_cb(void *arg)
 		// fall through
 
 	case NNG_MQTT_SUBACK:
-		// we have received a SUBACK, successful subcription
+		// we have received a SUBACK, successful subscription
 
 		// fall through
 
 	case NNG_MQTT_UNSUBACK:
-		// we have received a UNSUBACK, successful unsubcription
+		// we have received a UNSUBACK, successful unsubscription
 		packet_id = nni_mqtt_msg_get_packet_id(msg);
 		nni_msg_free(msg);
 		work = nni_id_get(&p->send_unack, packet_id);
 		if (NULL == work) {
 			// ignore this message
 			nni_mtx_unlock(&s->mtx);
-			// nni_pipe_close(p->pipe);
 			return;
 		}
 		nni_id_remove(&p->send_unack, packet_id);
-		if (work_packet_type(work) == packet_type) {
+		packet_type_t expect_packet_type = work_packet_type(work);
+		if (expect_packet_type == packet_type) {
 			work_set_final(work);
+			work_timer_cancel(work);
+		} else if (
+		    // 1. we are sending QoS 1 and received PUBACK
+		    (NNG_MQTT_PUBLISH == expect_packet_type &&
+		        1 == work->qos && NNG_MQTT_PUBACK == packet_type) ||
+		    // 2. we are sending QoS 2 and received PUBCOMP
+		    (NNG_MQTT_PUBLISH == expect_packet_type &&
+		        2 == work->qos && NNG_MQTT_PUBCOMP == packet_type) ||
+		    // 3. we are sending SUBSCRIBE and received SUBACK
+		    (NNG_MQTT_SUBSCRIBE == expect_packet_type &&
+		        NNG_MQTT_SUBACK == packet_type) ||
+		    // 4. we are sending UNSUBSCRIBE and received UNSUBACK
+		    (NNG_MQTT_UNSUBSCRIBE == expect_packet_type &&
+		        NNG_MQTT_UNSUBACK == packet_type)) {
+			// scheduling disorder
+			work_set_acked(work);
 		} else {
 			work_set_error(work);
 		}
-		work_timer_cancel(work);
 		break;
 
 	case NNG_MQTT_PINGRESP:
@@ -730,10 +762,15 @@ mqtt_recv_cb(void *arg)
 		// expect to receive a PUBCOMP
 		if (work_packet_type(work) == packet_type) {
 			work_set_recv(work, NNG_MQTT_PUBCOMP);
+			work_timer_cancel(work);
+		} else if (work_packet_type(work) == NNG_MQTT_PUBLISH &&
+		    2 == work->qos) {
+			// scheduling disorder
+			work_set_acked(work);
 		} else {
 			work_set_error(work);
+			work_timer_cancel(work);
 		}
-		work_timer_cancel(work);
 		break;
 
 	case NNG_MQTT_PUBREL:
@@ -872,7 +909,6 @@ mqtt_send_start(mqtt_sock_t *s)
 		return;
 	}
 
-	// TODO: handle retry
 	if (NULL != (work = nni_list_first(&s->send_queue))) {
 		packet_type = nni_mqtt_msg_get_packet_type(work->msg);
 
@@ -901,6 +937,13 @@ mqtt_send_start(mqtt_sock_t *s)
 				nni_mqtt_msg_set_packet_id(
 				    work->msg, work->packet_id);
 				nni_mqtt_msg_encode(work->msg);
+				NNI_ASSERT(nni_id_get(&p->send_unack,
+				               work->packet_id) == NULL);
+				if (0 !=
+				    nni_id_set(&p->send_unack, work->packet_id,
+				        work)) {
+					// FIXME
+				}
 				break;
 
 			default:
