@@ -279,9 +279,6 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 	} else if (p->gotrxhead < p->wantrxhead) {
 		p->gotrxhead += nni_aio_count(aio);
 	}
-	printf("mqtt_tcptran_pipe_nego_cb gotrx %ld wantrx %ld gottx %ld "
-	       "wanttx %ld.\n",
-	    p->gotrxhead, p->wantrxhead, p->gottxhead, p->wanttxhead);
 
 	if (p->gottxhead < p->wanttxhead) {
 		nni_iov iov;
@@ -310,12 +307,10 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		nni_mtx_unlock(&ep->mtx);
 		return;
 	}
+
 	// finish recevied fixed header
-	// TODO only deal with CONNACK, so just use rxlen at all time
 	if (p->rxmsg == NULL) {
 		if ((p->rxlen[0] & 0x20) != 0x20) {
-			fprintf(
-			    stderr, "not recv connack [%x].\n", p->rxlen[0]);
 			rv = NNG_EPROTO;
 			goto error;
 		}
@@ -335,7 +330,6 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 
 		p->wantrxhead = var_int + 1 + pos;
 		if ((rv = (p->wantrxhead <= 4) ? 0 : NNG_EPROTO) != 0) {
-			fprintf(stderr, "wantrxhead error rv[%d].\n", rv);
 			// TODO BUG here
 			goto error;
 		}
@@ -352,7 +346,6 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 		return;
 	}
 	if (p->gotrxhead >= p->wantrxhead) {
-		fprintf(stderr, "finish recv connack. [%ld]\n", p->gotrxhead);
 		nni_mqtt_msg_decode(p->rxmsg);
 		p->rxmsg = NULL;
 	}
@@ -400,7 +393,6 @@ mqtt_tcptran_pipe_send_cb(void *arg)
 
 	nni_mtx_lock(&p->mtx);
 	aio = nni_list_first(&p->sendq);
-	// fprintf(stderr, "mqtt_tcptran_pipe_send_cb.\n");
 
 	if ((rv = nni_aio_result(txaio)) != 0) {
 		nni_pipe_bump_error(p->npipe, rv);
@@ -448,7 +440,6 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	mqtt_tcptran_pipe *p     = arg;
 	nni_aio *          rxaio = p->rxaio;
 
-	// printf("mqtt_tcptran_pipe_recv_cb %p\n", p);
 	nni_mtx_lock(&p->mtx);
 
 	aio = nni_list_first(&p->recvq);
@@ -792,9 +783,12 @@ mqtt_tcptran_pipe_start(
 	rv = nni_dialer_getopt(
 	    ep->ndialer, NNG_OPT_MQTT_CONNMSG, &connmsg, NULL, NNI_TYPE_POINTER);
 	if (!connmsg) {
-		fprintf(stderr, "Connmsg get error [%d] \n", rv);
 		nni_list_append(&ep->waitpipes, p);
 		mqtt_tcptran_ep_match(ep);
+		return;
+	}
+	if ((rv = nng_mqtt_msg_encode(connmsg)) != 0) {
+		nni_list_append(&ep->waitpipes, p);
 		mqtt_tcptran_ep_match(ep);
 		return;
 	}
@@ -1176,7 +1170,6 @@ mqtt_tcptran_ep_connect(void *arg, nni_aio *aio)
 {
 	mqtt_tcptran_ep *ep = arg;
 	int              rv;
-	// fprintf(stderr, "mqtt_tcptran_ep_connect\n");
 
 	if (nni_aio_begin(aio) != 0) {
 		return;

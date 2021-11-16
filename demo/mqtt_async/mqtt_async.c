@@ -158,8 +158,8 @@ static void
 connect_cb(void *arg, nng_msg *msg)
 {
 	(void) arg;
-	printf(
-	    "connack status: %d\n", nng_mqtt_msg_get_connack_return_code(msg));
+	printf("Connack status: %d\n",
+	    nng_mqtt_msg_get_connack_return_code(msg));
 	nng_msg_free(msg);
 }
 
@@ -190,10 +190,6 @@ client(const char *url)
 	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_CONNECT);
 	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
 	nng_mqtt_msg_set_connect_clean_session(msg, true);
-
-	if ((rv = nng_mqtt_msg_encode(msg)) != 0) {
-		fprintf(stderr, "nng_mqtt_msg_encode failed: %d\n", rv);
-	}
 
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
 	nng_dialer_set_cb(dialer, connect_cb, NULL);
