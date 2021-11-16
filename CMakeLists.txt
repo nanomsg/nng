@@ -75,6 +75,7 @@ add_definitions(-DNNG_PRIVATE)
 
 if (NOT (BUILD_SHARED_LIBS))
     set(NNG_STATIC_LIB ON)
+    add_compile_options(-fPIC)
     message(STATUS "Building static libs.")
 endif ()
 
