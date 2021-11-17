@@ -864,10 +864,6 @@ mqtt_recv_start(mqtt_sock_t *s, nni_aio *aio)
 	mqtt_pipe_t *p = s->mqtt_pipe;
 	work_t *     work;
 
-	if (NULL == p || nni_atomic_get_bool(&p->closed)) {
-		return;
-	}
-
 	work = mqtt_sock_get_work(s);
 
 	if (NULL == work) {
@@ -879,6 +875,12 @@ mqtt_recv_start(mqtt_sock_t *s, nni_aio *aio)
 	work->user_aio = aio;
 	work_set_recv(work, NNG_MQTT_PUBLISH);
 	nni_list_append(&s->recv_queue, work); // enqueue to recv
+
+	// no open pipe
+	if (NULL == p || nni_atomic_get_bool(&p->closed)) {
+		return;
+	}
+
 	mqtt_run_recv_queue(s);
 }
 
