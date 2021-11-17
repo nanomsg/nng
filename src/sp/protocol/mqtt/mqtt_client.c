@@ -164,46 +164,6 @@ work_reset(work_t *work)
 	nni_list_node_remove(&work->node);
 }
 
-// cancels any outstanding operation,
-// and waits for the work to complete, if still running.
-static inline void
-work_stop(work_t *work)
-{
-	nni_list_node_remove(&work->node);
-}
-
-// closes the aio for further activity.
-// It aborts any in-progress transaction (if it can).
-static inline void
-work_close(work_t *work)
-{
-	if (NULL != work->user_aio) {
-		nni_aio_finish_error(work->user_aio, NNG_ECONNRESET);
-		nni_msg_free(work->msg);
-		work->msg      = NULL;
-		work->user_aio = NULL;
-	}
-	nni_list_node_remove(&work->node);
-}
-
-static inline void
-work_stop_queue(nni_list *queue)
-{
-	work_t *work;
-	NNI_LIST_FOREACH (queue, work) {
-		work_stop(work);
-	}
-}
-
-static inline void
-work_close_queue(nni_list *queue)
-{
-	work_t *work;
-	NNI_LIST_FOREACH (queue, work) {
-		work_close(work);
-	}
-}
-
 static inline void
 work_timer_schedule(work_t *work)
 {
@@ -325,6 +285,26 @@ mqtt_sock_free_work(mqtt_sock_t *s, work_t *work)
 	nni_list_append(&s->free_list, work);
 }
 
+// Note: This routine should be called with the sock lock held.
+static inline void
+mqtt_sock_close_work(mqtt_sock_t *s, work_t *work)
+{
+	if (NULL != work->user_aio) {
+		nni_aio_finish_error(work->user_aio, NNG_ECONNRESET);
+	}
+	mqtt_sock_free_work(s, work);
+}
+
+// Note: This routine should be called with the sock lock held.
+static inline void
+mqtt_sock_close_work_queue(mqtt_sock_t *s, nni_list *queue)
+{
+	work_t *work;
+	while (NULL != (work = nni_list_first(queue))) {
+		mqtt_sock_close_work(s, work); // remove from the list
+	}
+}
+
 /******************************************************************************
  *                              Pipe Implementation                           *
  ******************************************************************************/
@@ -402,9 +382,14 @@ mqtt_pipe_stop(void *arg)
 	nni_mtx_lock(&s->mtx);
 	nni_aio_stop(&p->send_aio);
 	nni_aio_stop(&p->recv_aio);
-	work_stop_queue(&s->send_queue);
-	work_stop_queue(&s->recv_queue);
 	nni_mtx_unlock(&s->mtx);
+}
+
+void
+mqtt_close_unack_work_cb(void *arg)
+{
+	work_t *work = arg;
+	mqtt_sock_close_work(work->mqtt_sock, work);
 }
 
 static void
@@ -418,8 +403,10 @@ mqtt_pipe_close(void *arg)
 	s->mqtt_pipe = NULL;
 	nni_aio_close(&p->send_aio);
 	nni_aio_close(&p->recv_aio);
-	work_close_queue(&s->send_queue);
-	work_close_queue(&s->recv_queue);
+	mqtt_sock_close_work_queue(s, &s->send_queue);
+	mqtt_sock_close_work_queue(s, &s->recv_queue);
+	nni_id_map_foreach(&p->send_unack, mqtt_close_unack_work_cb);
+	nni_id_map_foreach(&p->recv_unack, mqtt_close_unack_work_cb);
 	nni_mtx_unlock(&s->mtx);
 
 	nni_atomic_set_bool(&p->closed, true);
