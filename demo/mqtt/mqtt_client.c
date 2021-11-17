@@ -72,7 +72,7 @@ static void
 connect_cb(void *arg, nng_msg *ackmsg)
 {
 	char *  userarg = (char *) arg;
-	uint8_t status  = nng_mqtt_msg_get_conack_return_code(ackmsg);
+	uint8_t status  = nng_mqtt_msg_get_connack_return_code(ackmsg);
 	printf("Connected cb. \n"
 	       "  -> Status  [%d]\n"
 	       "  -> Userarg [%s].\n",
@@ -104,18 +104,12 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 	nng_mqtt_msg_set_packet_type(connmsg, NNG_MQTT_CONNECT);
 	nng_mqtt_msg_set_connect_proto_version(connmsg, 4);
 	nng_mqtt_msg_set_connect_keep_alive(connmsg, 60);
-	nng_mqtt_msg_set_connect_user_name(connmsg, "nng_mqtt_client");
-	nng_mqtt_msg_set_connect_password(connmsg, "secrets");
-	nng_mqtt_msg_set_connect_will_msg(connmsg, "bye-bye");
-	nng_mqtt_msg_set_connect_will_topic(connmsg, "will_topic");
-	nng_mqtt_msg_set_connect_client_id(connmsg, "nng_mqtt_client");
+//	nng_mqtt_msg_set_connect_user_name(connmsg, "nng_mqtt_client");
+//	nng_mqtt_msg_set_connect_password(connmsg, "secrets");
+//	nng_mqtt_msg_set_connect_will_msg(connmsg, "bye-bye");
+//	nng_mqtt_msg_set_connect_will_topic(connmsg, "will_topic");
+//	nng_mqtt_msg_set_connect_client_id(connmsg, "nng_mqtt_client");
 	nng_mqtt_msg_set_connect_clean_session(connmsg, true);
-
-	rv = nng_mqtt_msg_encode(connmsg);
-
-	if (rv != 0) {
-		printf("Problem on building CONNECT message: %d\n", rv);
-	}
 
 	uint8_t buff[1024] = { 0 };
 
@@ -132,9 +126,6 @@ client_connect(nng_socket *sock, const char *url, bool verbose)
 	printf("connected\n");
 
 	// TODO Connmsg would be free when client disconnected
-	// nng_msg_free(connmsg);
-	nng_mqtt_msg_proto_data_free(connmsg);
-
 	return (0);
 }
 
