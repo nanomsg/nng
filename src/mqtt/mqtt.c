@@ -453,7 +453,7 @@ nni_mqtt_msg_set_connect_client_id(nni_msg *msg, const char *client_id)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.client_id,
-	    (const uint8_t *) client_id, strlen(client_id) + 1);
+	    (const uint8_t *) client_id, strlen(client_id));
 }
 
 void
@@ -461,7 +461,7 @@ nni_mqtt_msg_set_connect_will_topic(nni_msg *msg, const char *will_topic)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.will_topic,
-	    (const uint8_t *) will_topic, strlen(will_topic) + 1);
+	    (const uint8_t *) will_topic, strlen(will_topic));
 }
 
 void
@@ -469,7 +469,7 @@ nni_mqtt_msg_set_connect_will_msg(nni_msg *msg, const char *will_msg)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.will_msg,
-	    (const uint8_t *) will_msg, strlen(will_msg) + 1);
+	    (const uint8_t *) will_msg, strlen(will_msg));
 }
 
 void
@@ -477,7 +477,7 @@ nni_mqtt_msg_set_connect_user_name(nni_msg *msg, const char *user_name)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.user_name,
-	    (const uint8_t *) user_name, strlen(user_name) + 1);
+	    (const uint8_t *) user_name, strlen(user_name));
 }
 
 void
@@ -485,7 +485,7 @@ nni_mqtt_msg_set_connect_password(nni_msg *msg, const char *password)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.password,
-	    (const uint8_t *) password, strlen(password) + 1);
+	    (const uint8_t *) password, strlen(password));
 }
 
 const char *

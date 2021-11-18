@@ -76,16 +76,17 @@ void
 test_encode_connect(void)
 {
 	nng_msg *msg;
+	char client_id[] = "nanomq-mqtt";
 
 	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
 
 	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_CONNECT);
 	NUTS_ASSERT(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_CONNECT);
 
-	nng_mqtt_msg_set_connect_client_id(msg, "nanomq-mqtt");
+	nng_mqtt_msg_set_connect_client_id(msg, client_id);
 
 	NUTS_ASSERT(strncmp(nng_mqtt_msg_get_connect_client_id(msg),
-	                "nanomq-mqtt", 12) == 0);
+	                client_id, strlen(client_id)) == 0);
 
 	char will_topic[] = "/nanomq/will_msg";
 	nng_mqtt_msg_set_connect_will_topic(msg, will_topic);
