@@ -423,8 +423,8 @@ nni_mqtt_msg_encode_connect(nni_msg *msg)
 
 	if (mqtt->payload.connect.client_id.length == 0) {
 		snprintf(client_id, 20, "nanomq-%04x", nni_random());
-		mqtt->payload.connect.client_id.buf    = (uint8_t *) client_id;
-		mqtt->payload.connect.client_id.length = strlen(client_id);
+		mqtt_buf_create(&mqtt->payload.connect.client_id, client_id,
+		    strlen(client_id));
 	}
 
 	/* length of protocol-name (consider "MQTT" by default */
