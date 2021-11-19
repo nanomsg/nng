@@ -80,7 +80,6 @@ struct nano_pipe {
 	nni_aio          aio_recv;
 	nni_aio          aio_timer;
 	nni_list_node    rnode; // receivable list linkage
-	nni_list         sendq; // contexts waiting to send
 	bool             busy;
 	bool             closed;
 	bool             kicked;
@@ -479,7 +478,7 @@ nano_pipe_fini(void *arg)
 	nni_id_map * nano_qos_db = p->pipe->nano_qos_db;
 
 	//TODO safely free the msgs in qos_db
-//	nni_id_iterate(nano_qos_db, nni_id_msgfree_cb);
+	// nni_id_iterate(nano_qos_db, nni_id_msgfree_cb);
 	nni_id_map_fini(nano_qos_db);
 	nng_free(nano_qos_db, sizeof(struct nni_id_map));
 
@@ -596,18 +595,6 @@ close_pipe(nano_pipe *p)
 	}
 	nano_nni_lmq_flush(&p->rlmq);
 
-	// TODO delete
-	while ((ctx = nni_list_first(&p->sendq)) != NULL) {
-		nni_aio *aio;
-		nni_msg *msg;
-		nni_list_remove(&p->sendq, ctx);
-		aio       = ctx->saio;
-		ctx->saio = NULL;
-		msg       = nni_aio_get_msg(aio);
-		nni_aio_set_msg(aio, NULL);
-		nni_aio_finish(aio, 0, nni_msg_len(msg));
-		nni_msg_free(msg);
-	}
 	nni_id_remove(&s->pipes, nni_pipe_id(p->pipe));
 }
 

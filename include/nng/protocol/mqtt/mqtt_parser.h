@@ -9,11 +9,11 @@
 
 #define DISCONNECT_MSG          \
 	"{\"username\":\"%s\"," \
-	"\"ts\":%lu,\"reason_code\":\"%x\",\"client_id\":\"%s\"}"
+	"\"ts\":%llu,\"reason_code\":\"%x\",\"client_id\":\"%s\"}"
 
 #define CONNECT_MSG                                                          \
 	"{\"username\":\"%s\", "                                             \
-	"\"ts\":%lu,\"proto_name\":\"%s\",\"keepalive\":%d,\"return_code\":" \
+	"\"ts\":%llu,\"proto_name\":\"%s\",\"keepalive\":%d,\"return_code\":" \
 	"\"%x\",\"proto_ver\":%d,\"client_id\":\"%s\", \"clean_start\":%d}"
 
 #define DISCONNECT_TOPIC "$SYS/brokers/disconnected"
