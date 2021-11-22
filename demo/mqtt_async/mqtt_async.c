@@ -66,7 +66,7 @@ client_cb(void *arg)
 			nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_SUBSCRIBE);
 			nng_mqtt_msg_set_subscribe_topics(
 			    msg, topic_qos, topic_qos_count);
-			nng_mqtt_msg_encode(msg);
+
 			work->msg = msg;
 			nng_aio_set_msg(work->aio, work->msg);
 			work->msg   = NULL;
@@ -82,12 +82,7 @@ client_cb(void *arg)
 			fatal("nng_recv_aio", rv);
 		}
 		msg = nng_aio_get_msg(work->aio);
-		if (nng_mqtt_msg_decode(msg) != 0) {
-			printf("nng_mqtt_msg_decode failed");
-			nng_msg_free(msg);
-			nng_ctx_recv(work->ctx, work->aio);
-			return;
-		}
+
 		uint32_t payload_len;
 		uint8_t *payload =
 		    nng_mqtt_msg_get_publish_payload(msg, &payload_len);
@@ -112,7 +107,6 @@ client_cb(void *arg)
 		nng_mqtt_msg_set_publish_topic(work->msg, topic);
 		nng_mqtt_msg_set_publish_payload(
 		    work->msg, (uint8_t *) topic, strlen(topic));
-		nng_mqtt_msg_encode(work->msg);
 
 		nng_aio_set_msg(work->aio, work->msg);
 		work->msg   = NULL;
@@ -158,8 +152,8 @@ static void
 connect_cb(void *arg, nng_msg *msg)
 {
 	(void) arg;
-	printf("Connack status: %d\n",
-	    nng_mqtt_msg_get_connack_return_code(msg));
+	printf(
+	    "Connack status: %d\n", nng_mqtt_msg_get_connack_return_code(msg));
 	nng_msg_free(msg);
 }
 

@@ -143,12 +143,6 @@ client_subscribe(nng_socket sock, nng_mqtt_topic_qos *subscriptions, int count,
 
 	nng_mqtt_msg_set_subscribe_topics(submsg, subscriptions, count);
 
-	rv = nng_mqtt_msg_encode(submsg);
-
-	if (rv != 0) {
-		fatal("Problem on building SUBSCRIBE message: %d\n", rv);
-	}
-
 	uint8_t buff[1024] = { 0 };
 
 	if (verbose) {
@@ -182,7 +176,6 @@ client_subscribe(nng_socket sock, nng_mqtt_topic_qos *subscriptions, int count,
 		print80("Received: ", (char *) payload, payload_len, true);
 
 		if (verbose) {
-			nng_mqtt_msg_decode(msg);
 			memset(buff, 0, sizeof(buff));
 			nng_mqtt_msg_dump(msg, buff, sizeof(buff), true);
 			printf("%s\n", buff);
@@ -211,12 +204,6 @@ client_publish(nng_socket sock, const char *topic, const char *payload,
 	nng_mqtt_msg_set_publish_payload(
 	    pubmsg, (uint8_t *) payload, strlen(payload));
 	nng_mqtt_msg_set_publish_topic(pubmsg, topic);
-
-	rv = nng_mqtt_msg_encode(pubmsg);
-
-	if (rv != 0) {
-		fatal("Problem on building PUBLISH message: %d\n", rv);
-	}
 
 	uint8_t print[1024] = { 0 };
 
