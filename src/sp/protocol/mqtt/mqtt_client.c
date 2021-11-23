@@ -364,6 +364,7 @@ mqtt_pipe_start(void *arg)
 	nni_mtx_lock(&s->mtx);
 	s->mqtt_pipe = p;
 	mqtt_send_start(s);
+	work_timer_schedule(&p->ping_work);
 	nni_mtx_unlock(&s->mtx);
 
 	nni_pipe_recv(p->pipe, &p->recv_aio);
@@ -460,6 +461,8 @@ mqtt_keep_alive_cb(void *arg)
 		nni_list_append(&s->send_queue, &p->ping_work);
 		mqtt_send_start(s);
 	}
+
+	work_timer_schedule(&p->ping_work);
 
 	nni_mtx_unlock(&s->mtx);
 }
@@ -969,9 +972,6 @@ mqtt_send_start(mqtt_sock_t *s)
 		nni_msg_clone(work->msg);
 		nni_aio_set_msg(&p->send_aio, work->msg);
 		nni_pipe_send(p->pipe, &p->send_aio);
-	} else {
-		// no packet to send, start the ping request timer
-		work_timer_schedule(&p->ping_work);
 	}
 
 	return;
