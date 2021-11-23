@@ -315,10 +315,6 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	mqtt_pipe_t *p    = arg;
 	mqtt_sock_t *sock = s;
 
-	nni_mtx_lock(&sock->mtx);
-	sock->mqtt_pipe = p;
-	nni_mtx_unlock(&sock->mtx);
-
 	nni_atomic_init_bool(&p->closed);
 	nni_atomic_set_bool(&p->closed, false);
 	nni_atomic_set(&p->next_packet_id, 0);
@@ -338,6 +334,7 @@ mqtt_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	nni_id_map_init(&p->send_unack, 0x0000u, 0xffffu, true);
 	nni_id_map_init(&p->recv_unack, 0x0000u, 0xffffu, true);
 	nni_lmq_init(&p->recv_messages, 128); // FIXME: remove hard code value
+
 	return (0);
 }
 
@@ -365,6 +362,7 @@ mqtt_pipe_start(void *arg)
 	// }
 
 	nni_mtx_lock(&s->mtx);
+	s->mqtt_pipe = p;
 	mqtt_send_start(s);
 	nni_mtx_unlock(&s->mtx);
 
