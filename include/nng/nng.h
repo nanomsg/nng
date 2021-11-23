@@ -1283,15 +1283,8 @@ NNG_DECL int nng_pipe_getopt_string(nng_pipe, const char *, char **);
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void);
 
-
-#ifdef __MSC_VER
-#pragma pack(push, 1)
-#endif 
-typedef enum
-#if  defined(__MINGW32__) || defined(__MINGW64__)
-    __attribute__((__packed__))
-#endif
-{ NNG_MQTT_CONNECT           = 0x01,
+typedef enum {
+	NNG_MQTT_CONNECT     = 0x01,
 	NNG_MQTT_CONNACK     = 0x02,
 	NNG_MQTT_PUBLISH     = 0x03,
 	NNG_MQTT_PUBACK      = 0x04,
@@ -1305,11 +1298,8 @@ typedef enum
 	NNG_MQTT_PINGREQ     = 0x0C,
 	NNG_MQTT_PINGRESP    = 0x0D,
 	NNG_MQTT_DISCONNECT  = 0x0E,
-	NNG_MQTT_AUTH        = 0x0F } 
-	nng_mqtt_packet_type;
-#ifdef __MSC_VER
-#pragma pack(pop)
-#endif
+	NNG_MQTT_AUTH        = 0x0F
+} nng_mqtt_packet_type;
 
 struct mqtt_buf_t {
 	uint32_t length;

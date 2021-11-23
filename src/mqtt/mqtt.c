@@ -170,6 +170,7 @@ nni_mqtt_msg_set_publish_topic(nni_msg *msg, const char *topic)
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->var_header.publish.topic_name,
 	    (uint8_t *) topic, (uint32_t) strlen(topic));
+	proto_data->is_copied = true;
 }
 
 const char *
@@ -186,6 +187,7 @@ nni_mqtt_msg_set_publish_payload(nni_msg *msg, uint8_t *payload, uint32_t len)
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(
 	    &proto_data->payload.publish.payload, payload, (uint32_t) len);
+	proto_data->is_copied = true;
 }
 
 uint8_t *
@@ -295,6 +297,7 @@ nni_mqtt_msg_set_subscribe_topics(
 		    proto_data->payload.subscribe.topic_arr, i,
 		    (const char *) topics[i].topic.buf, topics[i].qos);
 	}
+	proto_data->is_copied = true;
 }
 
 nni_mqtt_topic_qos *
@@ -328,6 +331,7 @@ nni_mqtt_msg_set_suback_return_codes(
 	memcpy(proto_data->payload.suback.ret_code_arr, ret_codes,
 	    ret_codes_count);
 	proto_data->payload.suback.ret_code_count = ret_codes_count;
+	proto_data->is_copied                     = true;
 }
 
 uint8_t *
@@ -367,6 +371,7 @@ nni_mqtt_msg_set_unsubscribe_topics(
 		    proto_data->payload.unsubscribe.topic_arr, i,
 		    (const char *) topics[i].buf);
 	}
+	proto_data->is_copied = true;
 }
 
 nni_mqtt_topic *
@@ -454,6 +459,7 @@ nni_mqtt_msg_set_connect_client_id(nni_msg *msg, const char *client_id)
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.client_id,
 	    (const uint8_t *) client_id, (uint32_t) strlen(client_id));
+	proto_data->is_copied = true;
 }
 
 void
@@ -462,6 +468,7 @@ nni_mqtt_msg_set_connect_will_topic(nni_msg *msg, const char *will_topic)
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.will_topic,
 	    (const uint8_t *) will_topic, (uint32_t) strlen(will_topic));
+	proto_data->is_copied = true;
 }
 
 void
@@ -470,6 +477,7 @@ nni_mqtt_msg_set_connect_will_msg(nni_msg *msg, const char *will_msg)
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.will_msg,
 	    (const uint8_t *) will_msg, (uint32_t) strlen(will_msg));
+	proto_data->is_copied = true;
 }
 
 void
@@ -478,6 +486,7 @@ nni_mqtt_msg_set_connect_user_name(nni_msg *msg, const char *user_name)
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.user_name,
 	    (const uint8_t *) user_name, (uint32_t) strlen(user_name));
+	proto_data->is_copied = true;
 }
 
 void
@@ -486,6 +495,7 @@ nni_mqtt_msg_set_connect_password(nni_msg *msg, const char *password)
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.password,
 	    (const uint8_t *) password, (uint32_t) strlen(password));
+	proto_data->is_copied = true;
 }
 
 const char *

@@ -187,18 +187,18 @@ union mqtt_payload {
 };
 
 typedef struct {
-	uint8_t              bit_0 : 1;
-	uint8_t              bit_1 : 1;
-	uint8_t              bit_2 : 1;
-	uint8_t              bit_3 : 1;
-	nni_mqtt_packet_type packet_type : 4;
+	uint8_t bit_0 : 1;
+	uint8_t bit_1 : 1;
+	uint8_t bit_2 : 1;
+	uint8_t bit_3 : 1;
+	uint8_t packet_type : 4;
 } mqtt_common_hdr;
 
 typedef struct {
-	uint8_t              retain : 1;
-	uint8_t              qos : 2;
-	uint8_t              dup : 1;
-	nni_mqtt_packet_type packet_type : 4;
+	uint8_t retain : 1;
+	uint8_t qos : 2;
+	uint8_t dup : 1;
+	uint8_t packet_type : 4;
 } mqtt_pub_hdr;
 
 typedef struct mqtt_fixed_hdr_t {

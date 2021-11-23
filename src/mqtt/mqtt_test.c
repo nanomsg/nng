@@ -63,10 +63,42 @@ test_dup(void)
 	print_mqtt_msg(msg2);
 
 	NUTS_TRUE(memcmp(nng_msg_header(msg), nng_msg_header(msg2),
-	                nng_msg_header_len(msg)) == 0);
+	              nng_msg_header_len(msg)) == 0);
 
 	NUTS_TRUE(memcmp(nng_msg_body(msg), nng_msg_body(msg2),
-	                nng_msg_len(msg)) == 0);
+	              nng_msg_len(msg)) == 0);
+
+	nng_msg_free(msg2);
+	nng_msg_free(msg);
+}
+
+void
+test_dup_publish(void)
+{
+	nng_msg *msg;
+
+	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
+
+	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_PUBLISH);
+	NUTS_TRUE(nng_mqtt_msg_get_packet_type(msg) == NNG_MQTT_PUBLISH);
+
+	nng_mqtt_msg_set_publish_qos(msg, 0);
+	nng_mqtt_msg_set_publish_topic(msg, "/nanomq/msg");
+	nng_mqtt_msg_set_publish_payload(msg, (uint8_t *) "aaaaaaaa", 8);
+
+	// NUTS_PASS(nng_mqtt_msg_encode(msg));
+
+	nng_msg *msg2;
+	NUTS_PASS(nng_msg_dup(&msg2, msg));
+
+	print_mqtt_msg(msg);
+	print_mqtt_msg(msg2);
+
+	NUTS_TRUE(memcmp(nng_msg_header(msg), nng_msg_header(msg2),
+	              nng_msg_header_len(msg)) == 0);
+
+	NUTS_TRUE(memcmp(nng_msg_body(msg), nng_msg_body(msg2),
+	              nng_msg_len(msg)) == 0);
 
 	nng_msg_free(msg);
 	nng_msg_free(msg2);
@@ -76,7 +108,7 @@ void
 test_encode_connect(void)
 {
 	nng_msg *msg;
-	char client_id[] = "nanomq-mqtt";
+	char     client_id[] = "nanomq-mqtt";
 
 	NUTS_PASS(nng_mqtt_msg_alloc(&msg, 0));
 
@@ -85,8 +117,8 @@ test_encode_connect(void)
 
 	nng_mqtt_msg_set_connect_client_id(msg, client_id);
 
-	NUTS_TRUE(strncmp(nng_mqtt_msg_get_connect_client_id(msg),
-	                client_id, strlen(client_id)) == 0);
+	NUTS_TRUE(strncmp(nng_mqtt_msg_get_connect_client_id(msg), client_id,
+	              strlen(client_id)) == 0);
 
 	char will_topic[] = "/nanomq/will_msg";
 	nng_mqtt_msg_set_connect_will_topic(msg, will_topic);
@@ -477,6 +509,7 @@ test_decode_suback(void)
 TEST_LIST = {
 	{ "alloc message", test_alloc },
 	{ "dup message", test_dup },
+	{ "dup publish message", test_dup_publish },
 	{ "encode connect", test_encode_connect },
 	{ "encode conack", test_encode_connack },
 	{ "encode publish", test_encode_publish },
