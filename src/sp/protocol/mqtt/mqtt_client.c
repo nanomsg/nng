@@ -948,7 +948,6 @@ mqtt_send_start(mqtt_sock_t *s)
 				    mqtt_pipe_get_next_packet_id(p);
 				nni_mqtt_msg_set_packet_id(
 				    work->msg, work->packet_id);
-				nni_mqtt_msg_encode(work->msg);
 				NNI_ASSERT(nni_id_get(&p->send_unack,
 				               work->packet_id) == NULL);
 				if (0 !=
@@ -964,6 +963,8 @@ mqtt_send_start(mqtt_sock_t *s)
 				    work->user_aio, NNG_EPROTO);
 				return;
 			}
+
+			nni_mqtt_msg_encode(work->msg);
 		}
 
 		work_set_send(work, packet_type);
