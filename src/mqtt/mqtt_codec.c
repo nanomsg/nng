@@ -114,7 +114,7 @@ nni_mqtt_msg_decode(nni_msg *msg)
 {
 	int ret;
 	if ((ret = nni_mqtt_msg_decode_fixed_header(msg)) != MQTT_SUCCESS) {
-		nni_plat_printf("decode_fixed_header failed %d\n", ret);
+		// nni_plat_printf("decode_fixed_header failed %d\n", ret);
 		return ret;
 	}
 	nni_mqtt_proto_data *mqtt = nni_msg_get_proto_data(msg);
@@ -814,9 +814,7 @@ nni_mqtt_msg_decode_fixed_header(nni_msg *msg)
 		return MQTT_ERR_PROTOCOL;
 	}
 
-	uint8_t first = (uint8_t)(*header);
-
-	memcpy(&mqtt->fixed_header.common, &first, 1);
+	memcpy(&mqtt->fixed_header.common, header, 1);
 
 	uint8_t  used_bytes;
 	uint32_t remain_len = 0;
