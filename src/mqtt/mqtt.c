@@ -9,7 +9,6 @@ static nni_proto_msg_ops proto_msg_ops = {
 	.msg_dup = nni_mqtt_msg_dup
 };
 
-
 int
 nni_mqtt_msg_proto_data_alloc(nni_msg *msg)
 {
@@ -170,7 +169,7 @@ nni_mqtt_msg_set_publish_topic(nni_msg *msg, const char *topic)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->var_header.publish.topic_name,
-	    (uint8_t *) topic, strlen(topic));
+	    (uint8_t *) topic, (uint32_t) strlen(topic));
 }
 
 const char *
@@ -185,7 +184,8 @@ void
 nni_mqtt_msg_set_publish_payload(nni_msg *msg, uint8_t *payload, uint32_t len)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
-	mqtt_buf_create(&proto_data->payload.publish.payload, payload, len);
+	mqtt_buf_create(
+	    &proto_data->payload.publish.payload, payload, (uint32_t) len);
 }
 
 uint8_t *
@@ -453,7 +453,7 @@ nni_mqtt_msg_set_connect_client_id(nni_msg *msg, const char *client_id)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.client_id,
-	    (const uint8_t *) client_id, strlen(client_id));
+	    (const uint8_t *) client_id, (uint32_t) strlen(client_id));
 }
 
 void
@@ -461,7 +461,7 @@ nni_mqtt_msg_set_connect_will_topic(nni_msg *msg, const char *will_topic)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.will_topic,
-	    (const uint8_t *) will_topic, strlen(will_topic));
+	    (const uint8_t *) will_topic, (uint32_t) strlen(will_topic));
 }
 
 void
@@ -469,7 +469,7 @@ nni_mqtt_msg_set_connect_will_msg(nni_msg *msg, const char *will_msg)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.will_msg,
-	    (const uint8_t *) will_msg, strlen(will_msg));
+	    (const uint8_t *) will_msg, (uint32_t) strlen(will_msg));
 }
 
 void
@@ -477,7 +477,7 @@ nni_mqtt_msg_set_connect_user_name(nni_msg *msg, const char *user_name)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.user_name,
-	    (const uint8_t *) user_name, strlen(user_name));
+	    (const uint8_t *) user_name, (uint32_t) strlen(user_name));
 }
 
 void
@@ -485,7 +485,7 @@ nni_mqtt_msg_set_connect_password(nni_msg *msg, const char *password)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
 	mqtt_buf_create(&proto_data->payload.connect.password,
-	    (const uint8_t *) password, strlen(password));
+	    (const uint8_t *) password, (uint32_t) strlen(password));
 }
 
 const char *
@@ -586,7 +586,7 @@ nni_mqtt_topic_array_set(
     nni_mqtt_topic *topic, size_t index, const char *topic_name)
 {
 	topic[index].buf    = (uint8_t *) nni_strdup(topic_name);
-	topic[index].length = strlen(topic_name);
+	topic[index].length = (uint32_t) strlen(topic_name);
 }
 
 void
@@ -612,7 +612,7 @@ nni_mqtt_topic_qos_array_set(nni_mqtt_topic_qos *topic_qos, size_t index,
     const char *topic_name, uint8_t qos)
 {
 	topic_qos[index].topic.buf    = (uint8_t *) nni_strdup(topic_name);
-	topic_qos[index].topic.length = strlen(topic_name);
+	topic_qos[index].topic.length = (uint32_t) strlen(topic_name);
 	topic_qos[index].qos          = qos;
 }
 
