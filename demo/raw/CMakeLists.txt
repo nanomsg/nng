@@ -7,7 +7,7 @@
 # file was obtained (LICENSE.txt).  A copy of the license may also be
 # found online at https://opensource.org/licenses/MIT.
 
-cmake_minimum_required (VERSION 2.8.7)
+cmake_minimum_required (VERSION 2.8.12)
 
 project(raw)
 
@@ -15,6 +15,8 @@ set(PARALLEL 128 CACHE STRING "Parallelism (min 4, max 1000)")
 
 find_package(nng CONFIG REQUIRED)
 
+find_package(Threads)
+
 add_executable(raw raw.c)
 target_link_libraries(raw nng::nng)
-target_compile_definitions(raw PRIVATE -DPARALLEL=${PARALLEL})
+target_compile_definitions(raw PRIVATE NNG_ELIDE_DEPRECATED PARALLEL=${PARALLEL})

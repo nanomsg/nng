@@ -88,15 +88,15 @@ server(const char *url)
 	if (strncmp(url, "zt://", 5) == 0) {
 		printf("ZeroTier transport will store its keys in current working directory.\n");
 		printf("The server and client instances must run in separate directories.\n");
-		nng_listener_setopt_string(listener, NNG_OPT_ZT_HOME, ".");
-		nng_listener_setopt_ms(listener, NNG_OPT_RECONNMINT, 1);
-		nng_listener_setopt_ms(listener, NNG_OPT_RECONNMAXT, 1000);
-		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
-		nng_setopt_ms(sock, NNG_OPT_RECVMAXSZ, 0);
-		nng_listener_setopt_ms(listener, NNG_OPT_ZT_PING_TIME, 10000);
-		nng_listener_setopt_ms(listener, NNG_OPT_ZT_CONN_TIME, 1000);
+		nng_listener_set_string(listener, NNG_OPT_ZT_HOME, ".");
+		nng_listener_set_ms(listener, NNG_OPT_RECONNMINT, 1);
+		nng_listener_set_ms(listener, NNG_OPT_RECONNMAXT, 1000);
+		nng_socket_set_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
+		nng_socket_set_ms(sock, NNG_OPT_RECVMAXSZ, 0);
+		nng_listener_set_ms(listener, NNG_OPT_ZT_PING_TIME, 10000);
+		nng_listener_set_ms(listener, NNG_OPT_ZT_CONN_TIME, 1000);
 	} else {
-		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
+		nng_socket_set_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
 	}
 	nng_listener_start(listener, 0);
 
@@ -158,15 +158,15 @@ client(const char *url)
 	if (strncmp(url, "zt://", 5) == 0) {
 		printf("ZeroTier transport will store its keys in current working directory\n");
 		printf("The server and client instances must run in separate directories.\n");
-		nng_dialer_setopt_string(dialer, NNG_OPT_ZT_HOME, ".");
-		nng_dialer_setopt_ms(dialer, NNG_OPT_RECONNMINT, 1);
-		nng_dialer_setopt_ms(dialer, NNG_OPT_RECONNMAXT, 1000);
-		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
-		nng_setopt_ms(sock, NNG_OPT_RECVMAXSZ, 0);
-		nng_dialer_setopt_ms(dialer, NNG_OPT_ZT_PING_TIME, 10000);
-		nng_dialer_setopt_ms(dialer, NNG_OPT_ZT_CONN_TIME, 1000);
+		nng_dialer_set_string(dialer, NNG_OPT_ZT_HOME, ".");
+		nng_dialer_set_ms(dialer, NNG_OPT_RECONNMINT, 1);
+		nng_dialer_set_ms(dialer, NNG_OPT_RECONNMAXT, 1000);
+		nng_socket_set_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
+		nng_socket_set_ms(sock, NNG_OPT_RECVMAXSZ, 0);
+		nng_dialer_set_ms(dialer, NNG_OPT_ZT_PING_TIME, 10000);
+		nng_dialer_set_ms(dialer, NNG_OPT_ZT_CONN_TIME, 1000);
 	} else {
-		nng_setopt_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
+		nng_socket_set_ms(sock, NNG_OPT_REQ_RESENDTIME, 2000);
 	}
 
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
