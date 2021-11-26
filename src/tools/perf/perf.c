@@ -45,6 +45,10 @@ static open_func open_client = no_open;
 #define nng_pair0_open no_open
 #endif
 
+#if !defined(NNG_HAVE_PAIR0) && !defined(NNG_HAVE_PAIR1)
+#define nng_pair_open no_open
+#endif
+
 #if defined(NNG_HAVE_REQ0)
 #include <nng/protocol/reqrep0/req.h>
 #else

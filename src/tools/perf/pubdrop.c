@@ -27,6 +27,8 @@
 
 #else
 
+#define NNG_OPT_SUB_SUBSCRIBE "sub:subscribe"
+
 static void die(const char *, ...);
 
 static int
