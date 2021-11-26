@@ -27,12 +27,20 @@ static struct {
 	    .upper = "ws",
 	    .lower = "tcp",
 	},
+    	{
+	    .upper = "nmq+ws",
+	    .lower = "tcp",
+	},
 	{
 	    .upper = "https",
 	    .lower = "tls+tcp",
 	},
 	{
 	    .upper = "wss",
+	    .lower = "tls+tcp",
+	},
+	{
+	    .upper = "nmq+wss",
 	    .lower = "tls+tcp",
 	},
 	{
@@ -44,11 +52,19 @@ static struct {
 	    .lower = "tcp4",
 	},
 	{
+	    .upper = "nmq+ws4",
+	    .lower = "tcp4",
+	},
+	{
 	    .upper = "http6",
 	    .lower = "tcp6",
 	},
 	{
 	    .upper = "ws6",
+	    .lower = "tcp6",
+	},
+       {
+	    .upper = "nmq+ws6",
 	    .lower = "tcp6",
 	},
 	{

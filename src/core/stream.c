@@ -110,6 +110,26 @@ static struct {
 	    .listener_alloc = nni_ws_listener_alloc,
 	},
 	{
+	    .scheme         = "nmq+ws",
+	    .dialer_alloc   = nni_ws_dialer_alloc,
+	    .listener_alloc = nni_ws_listener_alloc,
+	},
+	{
+	    .scheme         = "nmq+ws4",
+	    .dialer_alloc   = nni_ws_dialer_alloc,
+	    .listener_alloc = nni_ws_listener_alloc,
+	},
+	{
+	    .scheme         = "nmq+ws6",
+	    .dialer_alloc   = nni_ws_dialer_alloc,
+	    .listener_alloc = nni_ws_listener_alloc,
+	},
+	{
+	    .scheme         = "nmq+wss",
+	    .dialer_alloc   = nni_ws_dialer_alloc,
+	    .listener_alloc = nni_ws_listener_alloc,
+	},
+	{
 	    .scheme = NULL,
 	},
 };
