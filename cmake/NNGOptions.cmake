@@ -76,6 +76,12 @@ mark_as_advanced(NNG_PROTO_RESPONDENT0)
 option (NNG_PROTO_SURVEYOR0 "Enable SURVEYORv0 protocol." ON)
 mark_as_advanced(NNG_PROTO_SURVEYOR0)
 
+option (NNG_PROTO_MQTT_CLIENT "Enable MQTT Client protocol." ON)
+mark_as_advanced(NNG_PROTO_MQTT_CLIENT)
+
+option (NNG_PROTO_MQTT_BROKER "Enable MQTT Broker protocol." ON)
+mark_as_advanced(NNG_PROTO_MQTT_BROKER)
+
 # TLS support.
 
 # Enabling TLS is required to enable support for the TLS transport
@@ -122,6 +128,16 @@ mark_as_advanced(NNG_TRANSPORT_TLS)
 # WebSocket
 option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
 mark_as_advanced(NNG_TRANSPORT_WS)
+
+# MQTT Client
+option (NNG_TRANSPORT_MQTT_TCP "Enable MQTT TCP transport." ON)
+mark_as_advanced(NNG_TRANSPORT_MQTT_TCP)
+
+#MQTT Broker
+option (NNG_TRANSPORT_MQTT_BROKER_TCP "Enable MQTT BROKER TCP transport." ON)
+mark_as_advanced(NNG_TRANSPORT_MQTT_BROKER_TCP)
+
+
 
 CMAKE_DEPENDENT_OPTION(NNG_TRANSPORT_WSS "Enable WSS transport." ON
         "NNG_ENABLE_TLS" OFF)

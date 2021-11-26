@@ -2,16 +2,13 @@
 # Jaylin EMQ
 # https://opensource.org/licenses/MIT.
 #
+nng_directory(mqtt)
 
-#   static mqtt parser
+nng_sources_if(NNG_PROTO_BROKER mqtt_parser.c nmq_mqtt.c)
+nng_headers_if(NNG_PROTO_BROKER nng/protocol/mqtt/mqtt_parser.h nng/protocol/mqtt/nmq_mqtt.h)
+nng_defines_if(NNG_PROTO_BROKER NNG_HAVE_MQTT_BROKER)
 
-option(NNG_PROTO_REQ0 "Enable REQv0 protocol." ON)
-mark_as_advanced(NNG_PROTO_REQ0)
 
-option(NNG_PROTO_REP0 "Enable REPv0 protocol." ON)
-mark_as_advanced(NNG_PROTO_REP0)
-
-nng_sources_if(NNG_PROTO_REQ0 mqtt_parser.c)
-nng_headers_if(NNG_PROTO_REQ0 nng/protocol/mqtt/mqtt_parser.h)
-nng_defines_if(NNG_PROTO_REQ0 NNG_HAVE_MQTT)
-
+#nng_sources_if(NNG_PROTO_MQTT_CLIENT mqtt_client.c)
+#nng_headers_if(NNG_PROTO_MQTT_CLIENT nng/protocol/mqtt/mqtt_parser.h nng/mqtt/mqtt_client.h)
+#nng_defines_if(NNG_PROTO_MQTT_CLIENT NNG_HAVE_MQTT_CLIENT)

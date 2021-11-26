@@ -7,6 +7,7 @@
 #include <packet.h>
 #include <stdlib.h>
 
+// Do not change to %lu! just supress the warning of compiler!
 #define DISCONNECT_MSG          \
 	"{\"username\":\"%s\"," \
 	"\"ts\":%llu,\"reason_code\":\"%x\",\"client_id\":\"%s\"}"
