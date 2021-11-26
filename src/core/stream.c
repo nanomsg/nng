@@ -59,6 +59,21 @@ static struct {
 	    .dialer_alloc   = nni_tcp_dialer_alloc,
 	    .listener_alloc = nni_tcp_listener_alloc,
 	},
+{
+	    .scheme         = "broker+tcp",
+	    .dialer_alloc   = nni_tcp_dialer_alloc,
+	    .listener_alloc = nni_tcp_listener_alloc,
+	},
+	{
+	    .scheme         = "broker+tcp4",
+	    .dialer_alloc   = nni_tcp_dialer_alloc,
+	    .listener_alloc = nni_tcp_listener_alloc,
+	},
+	{
+	    .scheme         = "broker+tcp6",
+	    .dialer_alloc   = nni_tcp_dialer_alloc,
+	    .listener_alloc = nni_tcp_listener_alloc,
+	},
 	{
 	    .scheme         = "tls+tcp",
 	    .dialer_alloc   = nni_tls_dialer_alloc,
