@@ -1,5 +1,5 @@
 //
-// Copyright 2019 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -20,11 +20,14 @@
 //	the system lacks clock_gettime, then it will choose this automatically.
 //	This value may be ignored on platforms that don't use POSIX clocks.
 //
-// #define NNG_USE_CLOCKID
+// #define NNG_USE_CLOCKID CLOCK_MONOTONIC
 //	This macro may be defined to a different clock id (see
-//	clock_gettime()).  By default we use CLOCK_MONOTONIC if it exists,
-//	or CLOCK_REALTIME otherwise.  This is ignored if NNG_USE_GETTIMEOFDAY
-//	is defined.  Platforms that don't use POSIX clocks will probably
+//	clock_gettime()).  By default, we use CLOCK_MONOTONIC if it exists,
+//	or CLOCK_REALTIME otherwise.  (Except for macOS, which does not have
+//	a functional pthread_condattr_setclock().)
+//
+//	This is ignored if NNG_USE_GETTIMEOFDAY is defined.
+//	Platforms that don't use POSIX clocks will probably
 //	ignore any setting here.
 //
 // #define NNG_HAVE_BACKTRACE
@@ -61,21 +64,18 @@
 #endif
 #endif
 
+#ifndef NNG_USE_CLOCKID
+#if defined(__APPLE__)
 #define NNG_USE_CLOCKID CLOCK_REALTIME
-#ifndef CLOCK_REALTIME
-#define NNG_USE_GETTIMEOFDAY
-#elif !defined(NNG_USE_CLOCKID)
+#elif defined(CLOCK_MONOTONIC)
 #define NNG_USE_CLOCKID CLOCK_MONOTONIC
-#else
+#elif defined(CLOCK_REALTIME)
 #define NNG_USE_CLOCKID CLOCK_REALTIME
-#endif // CLOCK_REALTIME
-
-#if defined(NNG_HAVE_KQUEUE)
-// pass
 #else
-// fallback to poll(2)
-#define NNG_USE_POSIX_POLLQ_POLL 1
+#define NNG_USE_GETTIMEOFDAY
 #endif
+#endif
+
 #define NNG_USE_POSIX_RESOLV_GAI 1
 
 #endif // NNG_PLATFORM_POSIX
