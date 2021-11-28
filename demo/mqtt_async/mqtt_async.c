@@ -7,6 +7,7 @@
 
 #include <nng/mqtt/mqtt_client.h>
 #include <nng/nng.h>
+#include <nng/supplemental/tls/tls.h>
 #include <nng/supplemental/util/platform.h>
 
 #ifndef PARALLEL
@@ -200,18 +201,120 @@ client(const char *url)
 	}
 }
 
+static int
+init_dialer_tls_ex(
+    nng_dialer d, const char *cert, const char *key, bool own_cert)
+{
+	nng_tls_config *cfg;
+	int             rv;
+
+	if ((rv = nng_tls_config_alloc(&cfg, NNG_TLS_MODE_CLIENT)) != 0) {
+		return (rv);
+	}
+
+	if ((rv = nng_tls_config_ca_chain(cfg, cert, NULL)) != 0) {
+		goto out;
+	}
+
+	if ((rv = nng_tls_config_server_name(cfg, "www.fabric.com")) != 0) {
+		goto out;
+	}
+	// nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_REQUIRED);
+	nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_NONE);
+
+	if (own_cert) {
+		if ((rv = nng_tls_config_own_cert(cfg, cert, key, NULL)) !=
+		    0) {
+			goto out;
+		}
+	}
+
+	rv = nng_dialer_setopt_ptr(d, NNG_OPT_TLS_CONFIG, cfg);
+
+out:
+	nng_tls_config_free(cfg);
+	return (rv);
+}
+
+static int
+init_dialer_tls(nng_dialer d, const char *cert, const char *key)
+{
+	return (init_dialer_tls_ex(d, cert, key, false));
+}
+
+int
+tls_client(const char *url, const char *cert, const char *key)
+{
+	nng_socket   sock;
+	nng_dialer   dialer;
+	struct work *works[PARALLEL];
+	int          i;
+	int          rv;
+
+	if ((rv = nng_mqtt_client_open(&sock)) != 0) {
+		fatal("nng_socket", rv);
+	}
+
+	for (i = 0; i < PARALLEL; i++) {
+		works[i] = alloc_work(sock, i);
+	}
+
+	if ((rv = nng_dialer_create(&dialer, sock, url)) != 0) {
+		fatal("nng_dialer_create", rv);
+	}
+
+	// Mqtt connect message
+	nng_msg *msg;
+	nng_mqtt_msg_alloc(&msg, 0);
+	nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_CONNECT);
+	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
+	nng_mqtt_msg_set_connect_clean_session(msg, true);
+
+	init_dialer_tls(dialer, cert, key);
+	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
+	nng_dialer_set_cb(dialer, connect_cb, NULL);
+	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
+
+	nng_msleep(1000);
+
+	for (i = 0; i < PARALLEL; i++) {
+		client_cb(works[i]);
+	}
+
+	for (;;) {
+		nng_msleep(3600000); // neither pause() nor sleep() portable
+	}
+}
+
 int
 main(int argc, const char **argv)
 {
-
-	int rc;
+	int   rc;
+	char *url;
+	char *cert;
+	char *key;
 
 	if (argc < 2) {
 		fprintf(stderr, "Usage: %s <url> \n", argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
-	client(argv[1]);
+	url = (char *) argv[1];
+
+	if (argc >= 3) {
+		cert = (char *)argv[2];
+		if (argc >= 4) {
+			key = (char *)argv[3];
+		}
+
+		tls_client(url, cert, key);
+
+		nng_strfree(cert);
+		nng_strfree(key);
+
+	} else {
+		client(url);
+	}
 
 	return 0;
 }

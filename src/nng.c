@@ -1909,7 +1909,7 @@ nng_version(void)
 	    NNG_PATCH_VERSION) NNG_RELEASE_SUFFIX);
 }
 
-#ifdef NNG_TRANSPORT_MQTT_TCP
+#if defined(NNG_TRANSPORT_MQTT_TCP) || defined(NNG_TRANSPORT_MQTT_TLS)
 
 int
 nng_mqtt_msg_proto_data_alloc(nng_msg *msg)
