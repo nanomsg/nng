@@ -49,8 +49,8 @@ extern "C" {
 // We use SemVer, and these versions are about the API, and
 // may not necessarily match the ABI versions.
 #define NNG_MAJOR_VERSION 1
-#define NNG_MINOR_VERSION 5
-#define NNG_PATCH_VERSION 2
+#define NNG_MINOR_VERSION 6
+#define NNG_PATCH_VERSION 0
 #define NNG_RELEASE_SUFFIX "" // if non-empty, this is a pre-release
 
 // Maximum length of a socket address. This includes the terminating NUL.
@@ -425,9 +425,19 @@ NNG_DECL int nng_ctx_id(nng_ctx);
 // uses a local context instead of the socket global context.
 NNG_DECL void nng_ctx_recv(nng_ctx, nng_aio *);
 
+// nng_ctx_recvmsg is allows for receiving a message synchronously using
+// a context.  It has the same semantics as nng_recvmsg, but operates
+// on a context instead of a socket.
+NNG_DECL int nng_ctx_recvmsg(nng_ctx, nng_msg **, int);
+
 // nng_ctx_send sends asynchronously. It works like nng_send_aio, but
 // uses a local context instead of the socket global context.
 NNG_DECL void nng_ctx_send(nng_ctx, nng_aio *);
+
+// nng_ctx_sendmsg is allows for sending a message synchronously using
+// a context.  It has the same semantics as nng_sendmsg, but operates
+// on a context instead of a socket.
+NNG_DECL int nng_ctx_sendmsg(nng_ctx, nng_msg *, int);
 
 NNG_DECL int nng_ctx_get(nng_ctx, const char *, void *, size_t *);
 NNG_DECL int nng_ctx_get_bool(nng_ctx, const char *, bool *);
