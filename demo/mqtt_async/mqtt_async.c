@@ -212,7 +212,11 @@ init_dialer_tls_ex(
 		return (rv);
 	}
 
-	if ((rv = nng_tls_config_ca_chain(cfg, cert, NULL)) != 0) {
+	// if ((rv = nng_tls_config_ca_chain(cfg, cert, NULL)) != 0) {
+	// 	goto out;
+	// }
+
+	if ((rv = nng_tls_config_ca_file(cfg, cert)) != 0) {
 		goto out;
 	}
 
@@ -270,7 +274,20 @@ tls_client(const char *url, const char *cert, const char *key)
 	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
 	nng_mqtt_msg_set_connect_clean_session(msg, true);
 
-	init_dialer_tls(dialer, cert, key);
+	if((rv = init_dialer_tls(dialer, cert, key)) != 0) {
+		fatal("init_dialer_tls", rv);
+	}
+
+	// rv = nng_dialer_setopt_string(dialer, NNG_OPT_TLS_CA_FILE, cert);
+	// if (rv != 0) {
+	// 	fatal("nng_dialer_setopt_string: NNG_OPT_TLS_CA_FILE", rv);
+	// }
+	// rv = nng_dialer_setopt_string(
+	//     dialer, NNG_OPT_TLS_SERVER_NAME, "www.fabric.com");
+	// if (rv != 0) {
+	// 	fatal("nng_dialer_setopt_string: NNG_OPT_TLS_SERVER_NAME", rv);
+	// }
+
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
 	nng_dialer_set_cb(dialer, connect_cb, NULL);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
@@ -299,18 +316,15 @@ main(int argc, const char **argv)
 		exit(EXIT_FAILURE);
 	}
 
-	url = (char *) argv[1];
+	url = (char *) (argv[1]);
 
 	if (argc >= 3) {
-		cert = (char *)argv[2];
+		cert = (char *) (argv[2]);
 		if (argc >= 4) {
-			key = (char *)argv[3];
+			key = (char *) (argv[3]);
 		}
 
 		tls_client(url, cert, key);
-
-		nng_strfree(cert);
-		nng_strfree(key);
 
 	} else {
 		client(url);
