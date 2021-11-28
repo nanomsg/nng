@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,7 +15,7 @@ test_surv_identity(void)
 {
 	nng_socket s;
 	int        p;
-	char *     n;
+	char      *n;
 
 	NUTS_PASS(nng_surveyor0_open(&s));
 	NUTS_PASS(nng_socket_get_int(s, NNG_OPT_PROTO, &p));
@@ -74,7 +74,7 @@ test_surv_survey_time_option(void)
 	nng_duration d;
 	bool         b;
 	size_t       sz  = sizeof(b);
-	const char * opt = NNG_OPT_SURVEYOR_SURVEYTIME;
+	const char  *opt = NNG_OPT_SURVEYOR_SURVEYTIME;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 
@@ -93,7 +93,7 @@ void
 test_surv_recv_bad_state(void)
 {
 	nng_socket surv;
-	nng_msg *  msg = NULL;
+	nng_msg   *msg = NULL;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_FAIL(nng_recvmsg(surv, &msg, 0), NNG_ESTATE);
@@ -106,7 +106,7 @@ test_surv_recv_garbage(void)
 {
 	nng_socket resp;
 	nng_socket surv;
-	nng_msg *  m;
+	nng_msg   *m;
 	uint32_t   surv_id;
 
 	NUTS_PASS(nng_respondent0_open_raw(&resp));
@@ -216,7 +216,7 @@ test_surv_cancel(void)
 void
 test_surv_cancel_abort_recv(void)
 {
-	nng_aio *    aio;
+	nng_aio     *aio;
 	nng_duration time = SECOND * 10; // 10s (kind of never)
 	nng_socket   surv;
 	nng_socket   resp;
@@ -334,7 +334,7 @@ test_surv_poll_readable(void)
 	int        fd;
 	nng_socket surv;
 	nng_socket resp;
-	nng_msg *  msg;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
@@ -392,8 +392,8 @@ test_surv_ctx_recv_nonblock(void)
 	nng_socket surv;
 	nng_socket resp;
 	nng_ctx    ctx;
-	nng_aio *  aio;
-	nng_msg *  msg;
+	nng_aio   *aio;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
@@ -418,12 +418,38 @@ test_surv_ctx_recv_nonblock(void)
 }
 
 static void
+test_surv_ctx_send_recv_msg(void)
+{
+	nng_socket surv;
+	nng_socket resp;
+	nng_ctx    ctx1;
+	nng_ctx    ctx2;
+	nng_msg   *msg;
+
+	NUTS_PASS(nng_surveyor0_open(&surv));
+	NUTS_PASS(nng_respondent0_open(&resp));
+	NUTS_PASS(nng_ctx_open(&ctx1, surv));
+	NUTS_PASS(nng_ctx_open(&ctx2, resp));
+	NUTS_PASS(nng_msg_alloc(&msg, 0));
+
+	NUTS_MARRY(surv, resp);
+
+	NUTS_PASS(nng_ctx_sendmsg(ctx1, msg, 0));
+	NUTS_PASS(nng_ctx_recvmsg(ctx2, &msg, 0));
+	nng_msg_free(msg);
+	NUTS_PASS(nng_ctx_close(ctx1));
+	NUTS_PASS(nng_ctx_close(ctx2));
+	NUTS_CLOSE(surv);
+	NUTS_CLOSE(resp);
+}
+
+static void
 test_surv_ctx_send_nonblock(void)
 {
 	nng_socket surv;
 	nng_ctx    ctx;
-	nng_aio *  aio;
-	nng_msg *  msg;
+	nng_aio   *aio;
+	nng_msg   *msg;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_ctx_open(&ctx, surv));
@@ -490,8 +516,8 @@ test_surv_ctx_recv_close_socket(void)
 	nng_socket surv;
 	nng_socket resp;
 	nng_ctx    ctx;
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
 	NUTS_PASS(nng_respondent0_open(&resp));
@@ -518,8 +544,8 @@ test_surv_context_multi(void)
 	nng_socket surv;
 	nng_socket resp;
 	nng_ctx    c[5];
-	nng_aio *  aio;
-	nng_msg *  m;
+	nng_aio   *aio;
+	nng_msg   *m;
 	int        cnt = sizeof(c) / sizeof(c[0]);
 
 	NUTS_PASS(nng_surveyor0_open(&surv));
@@ -575,9 +601,9 @@ static void
 test_surv_validate_peer(void)
 {
 	nng_socket s1, s2;
-	nng_stat * stats;
-	nng_stat * reject;
-	char *     addr;
+	nng_stat  *stats;
+	nng_stat  *reject;
+	char      *addr;
 
 	NUTS_ADDR(addr, "inproc");
 	NUTS_PASS(nng_surveyor0_open(&s1));
@@ -618,6 +644,7 @@ TEST_LIST = {
 	    test_surv_ctx_recv_close_socket },
 	{ "survey context recv nonblock", test_surv_ctx_recv_nonblock },
 	{ "survey context send nonblock", test_surv_ctx_send_nonblock },
+	{ "survey context send recv msg", test_surv_ctx_send_recv_msg },
 	{ "survey timeout", test_surv_survey_timeout },
 	{ "survey send best effort", test_surv_send_best_effort },
 	{ "survey context multi", test_surv_context_multi },
