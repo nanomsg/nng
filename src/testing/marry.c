@@ -281,6 +281,10 @@ nuts_marry_ex(
 		replace_port_zero(url, addr, port);
 		url = addr;
 	}
+	if (((rv = nng_setopt_ms(s2, NNG_OPT_RECONNMINT, 10)) != 0) ||
+	    ((rv = nng_setopt_ms(s2, NNG_OPT_RECONNMAXT, 10)) != 0)) {
+		goto done;
+	}
 	if ((rv = nng_dial(s2, url, NULL, 0)) != 0) {
 		goto done;
 	}
