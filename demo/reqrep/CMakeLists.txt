@@ -7,7 +7,7 @@
 # file was obtained (LICENSE.txt).  A copy of the license may also be
 # found online at https://opensource.org/licenses/MIT.
 
-cmake_minimum_required (VERSION 2.8.7)
+cmake_minimum_required (VERSION 2.8.12)
 
 project(reqrep)
 
@@ -20,3 +20,4 @@ find_package(Threads)
 
 add_executable(reqrep reqrep.c)
 target_link_libraries(reqrep nng::nng)
+target_compile_definitions(reqrep PRIVATE NNG_ELIDE_DEPRECATED)
