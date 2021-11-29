@@ -254,6 +254,8 @@ nni_mqtt_msg_dup(void **dest, const void *src)
 static void
 dup_connect(nni_mqtt_proto_data *dest, nni_mqtt_proto_data *src)
 {
+	mqtt_buf_dup(&dest->var_header.connect.protocol_name,
+	    &src->var_header.connect.protocol_name);
 	mqtt_buf_dup(
 	    &dest->payload.connect.client_id, &src->payload.connect.client_id);
 	mqtt_buf_dup(
@@ -415,8 +417,11 @@ nni_mqtt_msg_encode_connect(nni_msg *msg)
 
 	mqtt_connect_vhdr *var_header = &mqtt->var_header.connect;
 
-	mqtt_buf_create(&var_header->protocol_name,
-	    (const uint8_t *) MQTT_PROTOCOL_NAME, strlen(MQTT_PROTOCOL_NAME));
+	if (var_header->protocol_name.length == 0) {
+		mqtt_buf_create(&var_header->protocol_name,
+		    (const uint8_t *) MQTT_PROTOCOL_NAME,
+		    strlen(MQTT_PROTOCOL_NAME));
+	}
 
 	if (var_header->protocol_version == 0) {
 		var_header->protocol_version = 4;
@@ -428,11 +433,7 @@ nni_mqtt_msg_encode_connect(nni_msg *msg)
 		    (const uint8_t *) client_id, (uint32_t) strlen(client_id));
 	}
 
-	/* length of protocol-name (consider "MQTT" by default */
-	poslength += (var_header->protocol_name.length == 0)
-	    ? 4
-	    : var_header->protocol_name.length;
-
+	poslength += var_header->protocol_name.length;
 	/* add the length of payload part */
 	mqtt_connect_payload *payload = &mqtt->payload.connect;
 	/* Clientid length */
