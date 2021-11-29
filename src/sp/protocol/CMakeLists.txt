@@ -20,5 +20,4 @@ add_subdirectory(survey0)
 
 #NANOMQ MQTT library
 add_subdirectory(mqtt)
-#more industrial protols comming soon!
 
