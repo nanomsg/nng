@@ -1,18 +1,19 @@
 #include <assert.h>
+#include <errno.h>
+#include <getopt.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include <nng/mqtt/mqtt_client.h>
 #include <nng/nng.h>
 #include <nng/supplemental/tls/tls.h>
 #include <nng/supplemental/util/platform.h>
 
-#ifndef PARALLEL
-#define PARALLEL 32
-#endif
+static size_t nwork = 32;
 
 struct work {
 	enum { INIT, RECV, WAIT, SEND } state;
@@ -163,7 +164,7 @@ client(const char *url)
 {
 	nng_socket   sock;
 	nng_dialer   dialer;
-	struct work *works[PARALLEL];
+	struct work *works[nwork];
 	int          i;
 	int          rv;
 
@@ -171,7 +172,7 @@ client(const char *url)
 		fatal("nng_socket", rv);
 	}
 
-	for (i = 0; i < PARALLEL; i++) {
+	for (i = 0; i < nwork; i++) {
 		works[i] = alloc_work(sock, i);
 	}
 
@@ -190,9 +191,7 @@ client(const char *url)
 	nng_dialer_set_cb(dialer, connect_cb, NULL);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
-	nng_msleep(1000);
-
-	for (i = 0; i < PARALLEL; i++) {
+	for (i = 0; i < nwork; i++) {
 		client_cb(works[i]);
 	}
 
@@ -201,9 +200,71 @@ client(const char *url)
 	}
 }
 
+// This reads a file into memory.  Care is taken to ensure that
+// the buffer is one byte larger and contains a terminating
+// NUL. (Useful for key files and such.)
+static void
+loadfile(const char *path, void **datap, size_t *lenp)
+{
+	FILE * f;
+	size_t total_read      = 0;
+	size_t allocation_size = BUFSIZ;
+	char * fdata;
+	char * realloc_result;
+
+	if (strcmp(path, "-") == 0) {
+		f = stdin;
+	} else {
+		if ((f = fopen(path, "rb")) == NULL) {
+			fprintf(stderr, "Cannot open file %s: %s", path,
+			    strerror(errno));
+			exit(1);
+		}
+	}
+
+	if ((fdata = malloc(allocation_size + 1)) == NULL) {
+		fprintf(stderr, "Out of memory.");
+	}
+
+	while (1) {
+		total_read += fread(
+		    fdata + total_read, 1, allocation_size - total_read, f);
+		if (ferror(f)) {
+			if (errno == EINTR) {
+				continue;
+			}
+			fprintf(stderr, "Read from %s failed: %s", path,
+			    strerror(errno));
+			exit(1);
+		}
+		if (feof(f)) {
+			break;
+		}
+		if (total_read == allocation_size) {
+			if (allocation_size > SIZE_MAX / 2) {
+				fprintf(stderr, "Out of memory.");
+			}
+			allocation_size *= 2;
+			if ((realloc_result = realloc(
+			         fdata, allocation_size + 1)) == NULL) {
+				free(fdata);
+				fprintf(stderr, "Out of memory.");
+				exit(1);
+			}
+			fdata = realloc_result;
+		}
+	}
+	if (f != stdin) {
+		fclose(f);
+	}
+	fdata[total_read] = '\0';
+	*datap            = fdata;
+	*lenp             = total_read;
+}
+
 static int
-init_dialer_tls_ex(
-    nng_dialer d, const char *cert, const char *key, bool own_cert)
+init_dialer_tls(nng_dialer d, const char *cacert, const char *cert,
+    const char *key, const char *pass)
 {
 	nng_tls_config *cfg;
 	int             rv;
@@ -212,23 +273,18 @@ init_dialer_tls_ex(
 		return (rv);
 	}
 
-	// if ((rv = nng_tls_config_ca_chain(cfg, cert, NULL)) != 0) {
-	// 	goto out;
-	// }
-
-	if ((rv = nng_tls_config_ca_file(cfg, cert)) != 0) {
-		goto out;
-	}
-
-	if ((rv = nng_tls_config_server_name(cfg, "www.fabric.com")) != 0) {
-		goto out;
-	}
-	// nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_REQUIRED);
-	nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_NONE);
-
-	if (own_cert) {
-		if ((rv = nng_tls_config_own_cert(cfg, cert, key, NULL)) !=
+	if (cert != NULL && key != NULL) {
+		nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_REQUIRED);
+		if ((rv = nng_tls_config_own_cert(cfg, cert, key, pass)) !=
 		    0) {
+			goto out;
+		}
+	} else {
+		nng_tls_config_auth_mode(cfg, NNG_TLS_AUTH_MODE_NONE);
+	}
+
+	if (cacert != NULL) {
+		if ((rv = nng_tls_config_ca_chain(cfg, cacert, NULL)) != 0) {
 			goto out;
 		}
 	}
@@ -240,18 +296,13 @@ out:
 	return (rv);
 }
 
-static int
-init_dialer_tls(nng_dialer d, const char *cert, const char *key)
-{
-	return (init_dialer_tls_ex(d, cert, key, false));
-}
-
 int
-tls_client(const char *url, const char *cert, const char *key)
+tls_client(const char *url, const char *ca, const char *cert, const char *key,
+    const char *pass)
 {
 	nng_socket   sock;
 	nng_dialer   dialer;
-	struct work *works[PARALLEL];
+	struct work *works[nwork];
 	int          i;
 	int          rv;
 
@@ -259,7 +310,7 @@ tls_client(const char *url, const char *cert, const char *key)
 		fatal("nng_socket", rv);
 	}
 
-	for (i = 0; i < PARALLEL; i++) {
+	for (i = 0; i < nwork; i++) {
 		works[i] = alloc_work(sock, i);
 	}
 
@@ -274,27 +325,15 @@ tls_client(const char *url, const char *cert, const char *key)
 	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
 	nng_mqtt_msg_set_connect_clean_session(msg, true);
 
-	if((rv = init_dialer_tls(dialer, cert, key)) != 0) {
+	if ((rv = init_dialer_tls(dialer, ca, cert, key, pass)) != 0) {
 		fatal("init_dialer_tls", rv);
 	}
-
-	// rv = nng_dialer_setopt_string(dialer, NNG_OPT_TLS_CA_FILE, cert);
-	// if (rv != 0) {
-	// 	fatal("nng_dialer_setopt_string: NNG_OPT_TLS_CA_FILE", rv);
-	// }
-	// rv = nng_dialer_setopt_string(
-	//     dialer, NNG_OPT_TLS_SERVER_NAME, "www.fabric.com");
-	// if (rv != 0) {
-	// 	fatal("nng_dialer_setopt_string: NNG_OPT_TLS_SERVER_NAME", rv);
-	// }
 
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
 	nng_dialer_set_cb(dialer, connect_cb, NULL);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
-	nng_msleep(1000);
-
-	for (i = 0; i < PARALLEL; i++) {
+	for (i = 0; i < nwork; i++) {
 		client_cb(works[i]);
 	}
 
@@ -303,28 +342,97 @@ tls_client(const char *url, const char *cert, const char *key)
 	}
 }
 
-int
-main(int argc, const char **argv)
+void
+usage(void)
 {
-	int   rc;
-	char *url;
-	char *cert;
-	char *key;
+	printf("mqtt_async: \n");
+	printf("	-u <url> \n");
+	printf("	-s enable ssl/tls mode (default: disable)\n");
+	printf("	-a <cafile path>\n");
+	printf("	-c <cert file path>\n");
+	printf("	-k <keyfile path>\n");
+	printf("	-p <keyfile's password>\n");
+	printf("	-n number of works (default: 32)\n");
+}
 
-	if (argc < 2) {
-		fprintf(stderr, "Usage: %s <url> \n", argv[0]);
-		exit(EXIT_FAILURE);
+int
+main(int argc, char **argv)
+{
+	int    rc;
+	char * path;
+	size_t file_len;
+
+	bool  enable_ssl = false;
+	char *url        = NULL;
+	char *cafile     = NULL;
+	char *cert       = NULL;
+	char *key        = NULL;
+	char *key_psw    = NULL;
+
+	int   opt;
+	int   digit_optind  = 0;
+	int   option_index  = 0;
+	char *short_options = "u:sa:c:k:p:n:W;";
+
+	static struct option long_options[] = {
+		{ "url", required_argument, NULL, 0 },
+		{ "ssl", no_argument, NULL, false },
+		{ "cafile", required_argument, NULL, 0 },
+		{ "cert", required_argument, NULL, 0 },
+		{ "key", required_argument, NULL, 0 },
+		{ "psw", required_argument, NULL, 0 },
+		{ "help", no_argument, NULL, 'h' },
+		{ "nwork", no_argument, NULL, 'n' },
+		{ NULL, 0, NULL, 0 },
+	};
+
+	while ((opt = getopt_long(argc, argv, short_options, long_options,
+	            &option_index)) != -1) {
+		switch (opt) {
+		case 0:
+			// TODO
+			break;
+		case '?':
+		case 'h':
+			usage();
+			exit(0);
+		case 'u':
+			url = argv[optind - 1];
+			break;
+		case 's':
+			enable_ssl = true;
+			break;
+		case 'a':
+			path = argv[optind - 1];
+			loadfile(path, (void **) &cafile, &file_len);
+			printf("cafile:\n%s\n", cafile);
+			break;
+		case 'c':
+			path = argv[optind - 1];
+			loadfile(path, (void **) &cert, &file_len);
+			printf("cert:\n%s\n", cert);
+			break;
+		case 'k':
+			path = argv[optind - 1];
+			loadfile(path, (void **) &key, &file_len);
+			printf("key:\n%s\n", key);
+			break;
+		case 'p':
+			key_psw = argv[optind - 1];
+			break;
+		case 'n':
+			nwork = atoi(argv[optind - 1]);
+			break;
+
+		default:
+			fprintf(stderr, "invalid argument: '%c'\n", opt);
+			usage();
+			exit(1);
+		}
 	}
 
-	url = (char *) (argv[1]);
-
-	if (argc >= 3) {
-		cert = (char *) (argv[2]);
-		if (argc >= 4) {
-			key = (char *) (argv[3]);
-		}
-
-		tls_client(url, cert, key);
+	if (enable_ssl) {
+		tls_client(url, cafile, cert, key, key_psw);
 
 	} else {
 		client(url);

@@ -398,7 +398,6 @@ mqtts_tcptran_pipe_send_cb(void *arg)
 	aio = nni_list_first(&p->sendq);
 
 	if ((rv = nni_aio_result(txaio)) != 0) {
-		
 		// Intentionally we do not queue up another transfer.
 		// There's an excellent chance that the pipe is no longer
 		// usable, with a partial transfer.
@@ -577,14 +576,6 @@ recv_error:
 	nni_msg_free(msg);
 	nni_aio_finish_error(aio, rv);
 	printf("mqtts_tcptran_pipe_recv_cb: recv error rv: %d\n", rv);
-	return;
-// notify:
-// 	// nni_pipe_bump_rx(p->npipe, n);
-// 	nni_aio_list_remove(aio);
-// 	mqtts_tcptran_pipe_recv_start(p);
-// 	nni_mtx_unlock(&p->mtx);
-// 	nni_aio_set_msg(aio, NULL);
-// 	nni_aio_finish(aio, 0, 0);
 	return;
 }
 
@@ -786,12 +777,9 @@ mqtts_tcptran_pipe_start(
 	p->wanttxhead = nni_msg_header_len(connmsg) + nni_msg_len(connmsg);
 	p->rxmsg      = NULL;
 
-	if (nni_msg_header_len(connmsg) > 0) {
-		iov[niov].iov_buf = nni_msg_header(connmsg);
-		iov[niov].iov_len = nni_msg_header_len(connmsg);
-		niov++;
-	}
 	if (nni_msg_len(connmsg) > 0) {
+		nni_msg_insert(connmsg, nni_msg_header(connmsg),
+		    nni_msg_header_len(connmsg));
 		iov[niov].iov_buf = nni_msg_body(connmsg);
 		iov[niov].iov_len = nni_msg_len(connmsg);
 		niov++;
@@ -1079,7 +1067,7 @@ mqtts_tcptran_dialer_init(void **dp, nng_url *url, nni_dialer *ndialer)
 		return (rv);
 	}
 
-	if (((rv = mqtts_tcptran_ep_init(&ep, url, sock)) != 0) || 
+	if (((rv = mqtts_tcptran_ep_init(&ep, url, sock)) != 0) ||
 	    ((rv = nni_aio_alloc(&ep->connaio, mqtts_tcptran_dial_cb, ep)) !=
 	        0)) {
 		return (rv);

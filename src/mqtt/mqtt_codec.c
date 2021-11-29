@@ -322,6 +322,7 @@ dup_unsubscribe(nni_mqtt_proto_data *dest, nni_mqtt_proto_data *src)
 static void
 destory_connect(nni_mqtt_proto_data *mqtt)
 {
+	mqtt_buf_free(&mqtt->var_header.connect.protocol_name);
 	mqtt_buf_free(&mqtt->payload.connect.client_id);
 	mqtt_buf_free(&mqtt->payload.connect.user_name);
 	mqtt_buf_free(&mqtt->payload.connect.password);
@@ -406,16 +407,16 @@ static int
 nni_mqtt_msg_encode_connect(nni_msg *msg)
 {
 	nni_mqtt_proto_data *mqtt          = nni_msg_get_proto_data(msg);
-	char                 name[4]       = "MQTT";
 	char                 client_id[20] = { 0 };
 
 	nni_msg_clear(msg);
 
 	int poslength = 6;
 
-	mqtt_connect_vhdr *var_header    = &mqtt->var_header.connect;
-	var_header->protocol_name.buf    = (uint8_t *) name;
-	var_header->protocol_name.length = 4;
+	mqtt_connect_vhdr *var_header = &mqtt->var_header.connect;
+
+	mqtt_buf_create(&var_header->protocol_name,
+	    (const uint8_t *) MQTT_PROTOCOL_NAME, strlen(MQTT_PROTOCOL_NAME));
 
 	if (var_header->protocol_version == 0) {
 		var_header->protocol_version = 4;
