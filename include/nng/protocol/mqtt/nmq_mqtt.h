@@ -7,8 +7,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifndef NNG_PROTOCOL_REQREP0_REP_H
-#define NNG_PROTOCOL_REQREP0_REP_H
+#ifndef NNG_PROTOCOL_MQTT_BROKER_H
+#define NNG_PROTOCOL_MQTT_BROKER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -16,8 +16,8 @@ extern "C" {
 
 NNG_DECL int nng_nmq_tcp0_open(nng_socket *);
 
-#ifndef nng_nano_tcp_open
-#define nng_nano_tcp_open nng_nano_tcp0_open
+#ifndef nng_nmq_tcp_open
+#define nng_nmq_tcp_open nng_nmq_tcp0_open
 #endif
 
 #define NNG_NANO_TCP_SELF 0x31
@@ -29,4 +29,4 @@ NNG_DECL int nng_nmq_tcp0_open(nng_socket *);
 }
 #endif
 
-#endif // NNG_PROTOCOL_REQREP0_REP_H
+#endif // NNG_PROTOCOL_MQTT_BROKER_H
