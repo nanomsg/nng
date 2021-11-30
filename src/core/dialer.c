@@ -574,8 +574,8 @@ nni_dialer_add_stat(nni_dialer *d, nni_stat_item *item)
 // NNG-MQTT
 
 void
-nni_dialer_setcb(nni_dialer *d, void (*cb)(void *, nng_msg *), void *arg)
+nni_dialer_setcb(nni_dialer *d, void * cb)
 {
-	d->d_ops.d_connsetcb(d->d_data, cb, arg);
+	d->d_ops.d_connsetcb(d->d_data, cb);
 }
 
