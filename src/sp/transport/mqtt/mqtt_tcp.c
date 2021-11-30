@@ -185,7 +185,7 @@ mqtt_tcptran_pipe_fini(void *arg)
 	}
 
 	if (ep && ep->usercb) {
-		ep->usercb->on_disconnected(ep->usercb->arg, NULL);
+		ep->usercb->on_disconnected(ep->usercb->disconn_arg, NULL);
 	}
 
 	nni_aio_free(p->rxaio);
@@ -364,7 +364,7 @@ mqtt_tcptran_pipe_nego_cb(void *arg)
 
 	// Run user callback
 	if (ep->usercb != NULL) {
-		ep->usercb->on_connected(ep->usercb->arg, rmsg);
+		ep->usercb->on_connected(ep->usercb->connect_arg, rmsg);
 	}
 
 	return;
@@ -572,8 +572,10 @@ recv_error:
 	nni_pipe_bump_error(p->npipe, rv);
 	nni_mtx_unlock(&p->mtx);
 
-	if (p->ep->usercb)
-		p->ep->usercb->on_disconnected(p->ep->usercb->arg, NULL);
+	if (p->ep->usercb) {
+		p->ep->usercb->on_disconnected(
+		    p->ep->usercb->disconn_arg, NULL);
+	}
 
 	nni_msg_free(msg);
 	nni_aio_finish_error(aio, rv);
@@ -878,7 +880,7 @@ mqtt_tcptran_ep_close(void *arg)
 	}
 
 	if (ep->usercb) {
-		ep->usercb->on_disconnected(ep->usercb->arg, NULL);
+		ep->usercb->on_disconnected(ep->usercb->disconn_arg, NULL);
 	}
 
 	nni_mtx_unlock(&ep->mtx);

@@ -151,9 +151,9 @@ alloc_work(nng_socket sock, uint32_t index)
 
 // Connack message callback function
 static void
-connect_cb(void *arg, nng_msg *msg)
+connect_cb(void *connect_arg, nng_msg *msg)
 {
-	(void) arg;
+	(void) connect_arg;
 	printf(
 	    "Connack status: %d\n", nng_mqtt_msg_get_connack_return_code(msg));
 	nng_msg_free(msg);
@@ -161,9 +161,9 @@ connect_cb(void *arg, nng_msg *msg)
 
 // Disconnect message callback function
 static void
-disconnect_cb(void *arg, nng_msg *msg)
+disconnect_cb(void *disconn_arg, nng_msg *msg)
 {
-	(void) arg;
+	(void) disconn_arg;
 	printf("Disconnected\n");
 }
 
@@ -171,7 +171,8 @@ static nng_mqtt_cb usercb = {
 	.name = "usercb",
 	.on_connected = connect_cb,
 	.on_disconnected = disconnect_cb,
-	.arg = "Args", // void *
+	.connect_arg = "Args", // void *
+	.disconn_arg = "Args", // void *
 };
 
 int
