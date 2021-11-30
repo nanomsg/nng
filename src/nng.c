@@ -300,9 +300,9 @@ nng_ctx_id(nng_ctx c)
 int
 nng_ctx_recvmsg(nng_ctx cid, nng_msg **msgp, int flags)
 {
-	int       rv;
-	nni_aio   aio;
-	nni_ctx  *ctx;
+	int      rv;
+	nni_aio  aio;
+	nni_ctx *ctx;
 
 	if ((rv = nni_ctx_find(&ctx, cid.id, false)) != 0) {
 		return (rv);
@@ -373,8 +373,8 @@ nng_ctx_send(nng_ctx cid, nng_aio *aio)
 int
 nng_ctx_sendmsg(nng_ctx cid, nng_msg *msg, int flags)
 {
-	int       rv;
-	nni_aio   aio;
+	int      rv;
+	nni_aio  aio;
 	nni_ctx *ctx;
 
 	if (msg == NULL) {
