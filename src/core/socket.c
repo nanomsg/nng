@@ -24,9 +24,9 @@ static bool       inited;
 
 struct nni_ctx {
 	nni_list_node     c_node;
-	nni_sock *        c_sock;
+	nni_sock         *c_sock;
 	nni_proto_ctx_ops c_ops;
-	void *            c_data;
+	void	     *c_data;
 	size_t            c_size;
 	bool              c_closed;
 	unsigned          c_ref; // protected by global lock
@@ -37,15 +37,15 @@ struct nni_ctx {
 
 typedef struct nni_sockopt {
 	nni_list_node node;
-	char *        name;
+	char         *name;
 	nni_type      typ;
 	size_t        sz;
-	void *        data;
+	void         *data;
 } nni_sockopt;
 
 typedef struct nni_sock_pipe_cb {
 	nng_pipe_cb cb_fn;
-	void *      cb_arg;
+	void       *cb_arg;
 } nni_sock_pipe_cb;
 
 struct nni_socket {
@@ -57,7 +57,7 @@ struct nni_socket {
 	uint32_t s_id;
 	uint32_t s_flags;
 	unsigned s_ref;  // protected by global lock
-	void *   s_data; // Protocol private
+	void    *s_data; // Protocol private
 	size_t   s_size;
 
 	nni_msgq *s_uwq; // Upper write queue
@@ -675,11 +675,11 @@ nni_sock_open(nni_sock **sockp, const nni_proto *proto)
 int
 nni_sock_shutdown(nni_sock *sock)
 {
-	nni_pipe *    pipe;
-	nni_dialer *  d;
+	nni_pipe     *pipe;
+	nni_dialer   *d;
 	nni_listener *l;
-	nni_ctx *     ctx;
-	nni_ctx *     nctx;
+	nni_ctx      *ctx;
+	nni_ctx      *nctx;
 
 	nni_mtx_lock(&sock->s_mx);
 	if (sock->s_closing) {
@@ -1032,7 +1032,7 @@ nni_sock_setopt(
 		}
 #endif
 
-#if defined(NNG_PLATFORM_POSIX) && !defined(NNG_SUPPRESS_DEPRECATED)
+#if defined(NNG_PLATFORM_POSIX) && !defined(NNG_ELIDE_DEPRECATED)
 	} else if (strcmp(name, NNG_OPT_IPC_PERMISSIONS) == 0) {
 		// UNIX mode bits are 0777, but allow set id and sticky bits
 		if ((rv = nni_copyin_int(NULL, v, sz, 0, 07777, t)) != 0) {
@@ -1040,7 +1040,7 @@ nni_sock_setopt(
 		}
 #endif
 
-#if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_SUPPRESS_DEPRECATED)
+#if defined(NNG_PLATFORM_WINDOWS) && !defined(NNG_ELIDE_DEPRECATED)
 	} else if (strcmp(name, NNG_OPT_IPC_SECURITY_DESCRIPTOR) == 0) {
 		if ((rv = nni_copyin_ptr(NULL, v, sz, t)) == 0) {
 			return (rv);
@@ -1081,8 +1081,8 @@ nni_sock_setopt(
 		}
 	}
 
-#ifndef NNG_ELIDE_DEPRCATED
-	nni_dialer *  d;
+#ifndef NNG_ELIDE_DEPRECATED
+	nni_dialer   *d;
 	nni_listener *l;
 
 	// Apply the options.  Failure to set any option on any
@@ -1374,7 +1374,7 @@ nni_ctx_recv(nni_ctx *ctx, nni_aio *aio)
 int
 nni_ctx_getopt(nni_ctx *ctx, const char *opt, void *v, size_t *szp, nni_type t)
 {
-	nni_sock *  sock = ctx->c_sock;
+	nni_sock   *sock = ctx->c_sock;
 	nni_option *o;
 	int         rv = NNG_ENOTSUP;
 
@@ -1404,7 +1404,7 @@ int
 nni_ctx_setopt(
     nni_ctx *ctx, const char *opt, const void *v, size_t sz, nni_type t)
 {
-	nni_sock *  sock = ctx->c_sock;
+	nni_sock   *sock = ctx->c_sock;
 	nni_option *o;
 	int         rv = NNG_ENOTSUP;
 
@@ -1545,7 +1545,7 @@ static void
 dialer_reap(void *arg)
 {
 	nni_dialer *d = arg;
-	nni_sock *  s = d->d_sock;
+	nni_sock   *s = d->d_sock;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_unregister(&d->st_root);
@@ -1655,7 +1655,7 @@ static void
 listener_reap(void *arg)
 {
 	nni_listener *l = arg;
-	nni_sock *    s = l->l_sock;
+	nni_sock     *s = l->l_sock;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_unregister(&l->st_root);
@@ -1691,9 +1691,9 @@ nni_listener_reap(nni_listener *l)
 void
 nni_pipe_run_cb(nni_pipe *p, nng_pipe_ev ev)
 {
-	nni_sock *  s = p->p_sock;
+	nni_sock   *s = p->p_sock;
 	nng_pipe_cb cb;
-	void *      arg;
+	void       *arg;
 
 	nni_mtx_lock(&s->s_pipe_cbs_mtx);
 	if (!p->p_cbs) {
@@ -1719,7 +1719,7 @@ nni_pipe_run_cb(nni_pipe *p, nng_pipe_ev ev)
 void
 nni_pipe_remove(nni_pipe *p)
 {
-	nni_sock *  s = p->p_sock;
+	nni_sock   *s = p->p_sock;
 	nni_dialer *d = p->p_dialer;
 
 	nni_mtx_lock(&s->s_mx);
