@@ -15,6 +15,7 @@
 
 #include "core/nng_impl.h"
 #include "mqtt/mqtt.h"
+#include "nng/mqtt/mqtt_client.h"
 #include "nng/supplemental/tls/tls.h"
 
 // TLS Over TCP transport.   Platform specific TLS Over TCP operations must be
@@ -80,8 +81,7 @@ struct mqtts_tcptran_ep {
 	nng_stream_listener *listener;
 	nni_dialer *         ndialer;
 	void *               connmsg;
-	void (*conncb)(void *, nng_msg *);
-	void *arg;
+	nng_mqtt_cb *        usercb;
 
 #ifdef NNG_ENABLE_STATS
 	nni_stat_item st_rcv_max;
@@ -187,6 +187,9 @@ mqtts_tcptran_pipe_fini(void *arg)
 		nni_mtx_unlock(&ep->mtx);
 	}
 
+	if (ep && ep->usercb) {
+		ep->usercb->on_disconnected(ep->usercb->disconn_arg, NULL);
+	}
 	nni_aio_free(p->rxaio);
 	nni_aio_free(p->txaio);
 	nni_aio_free(p->rsaio);
@@ -362,8 +365,8 @@ mqtts_tcptran_pipe_nego_cb(void *arg)
 	nni_mtx_unlock(&ep->mtx);
 
 	// Run user callback
-	if (ep->conncb != NULL) {
-		ep->conncb(ep->arg, rmsg);
+	if (ep->usercb != NULL) {
+		ep->usercb->on_connected(ep->usercb->connect_arg, rmsg);
 	}
 
 	return;
@@ -572,6 +575,11 @@ recv_error:
 	p->rxmsg = NULL;
 	nni_pipe_bump_error(p->npipe, rv);
 	nni_mtx_unlock(&p->mtx);
+
+	if (p->ep->usercb) {
+		p->ep->usercb->on_disconnected(
+		    p->ep->usercb->disconn_arg, NULL);
+	}
 
 	nni_msg_free(msg);
 	nni_aio_finish_error(aio, rv);
@@ -844,6 +852,10 @@ mqtts_tcptran_ep_close(void *arg)
 		ep->useraio = NULL;
 	}
 
+	if (ep->usercb) {
+		ep->usercb->on_disconnected(ep->usercb->disconn_arg, NULL);
+	}
+
 	nni_mtx_unlock(&ep->mtx);
 }
 
@@ -1026,8 +1038,7 @@ mqtts_tcptran_ep_init(mqtts_tcptran_ep **epp, nng_url *url, nni_sock *sock)
 
 	ep->proto  = nni_sock_proto_id(sock);
 	ep->url    = url;
-	ep->conncb = NULL;
-	ep->arg    = NULL;
+	ep->usercb = NULL;
 
 #ifdef NNG_ENABLE_STATS
 	static const nni_stat_info rcv_max_info = {
@@ -1284,15 +1295,13 @@ mqtts_tcptran_ep_get_connmsg(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static int
-mqtts_tcptran_dialer_setcb(
-    void *arg, void (*cb)(void *, nng_msg *), void *args)
+mqtts_tcptran_dialer_setcb(void *arg, void * cb)
 {
 	mqtts_tcptran_ep *ep = arg;
 	int               rv;
 
 	nni_mtx_lock(&ep->mtx);
-	ep->conncb = cb;
-	ep->arg    = args;
+	ep->usercb = cb;
 	nni_mtx_unlock(&ep->mtx);
 
 	rv = 0;

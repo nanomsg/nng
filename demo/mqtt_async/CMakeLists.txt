@@ -10,9 +10,14 @@ project(mqtt_async)
 
 find_package(nng CONFIG REQUIRED)
 find_package(Threads)
-find_package(MbedTLS)
 
 add_executable(mqtt_async mqtt_async.c)
-target_link_libraries(mqtt_async nng )
-target_link_libraries(mqtt_async mbedtls mbedx509 mbedcrypto)
+target_link_libraries(mqtt_async nng)
 target_link_libraries(mqtt_async ${CMAKE_THREAD_LIBS_INIT})
+
+if(NNG_ENABLE_TLS)
+    find_package(MbedTLS)
+    target_link_libraries(mqtt_async mbedtls mbedx509 mbedcrypto)
+    add_definitions(-DNNG_SUPP_TLS)
+endif()
+

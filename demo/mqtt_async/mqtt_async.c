@@ -10,8 +10,11 @@
 
 #include <nng/mqtt/mqtt_client.h>
 #include <nng/nng.h>
-#include <nng/supplemental/tls/tls.h>
 #include <nng/supplemental/util/platform.h>
+
+#ifdef NNG_SUPP_TLS
+#include <nng/supplemental/tls/tls.h>
+#endif
 
 static size_t nwork = 32;
 
@@ -20,31 +23,11 @@ struct work {
 	nng_aio *aio;
 	nng_msg *msg;
 	nng_ctx  ctx;
-	uint32_t index;
 };
 
 #define SUB_TOPIC1 "/nanomq/msg/1"
 #define SUB_TOPIC2 "/nanomq/msg/2"
 #define SUB_TOPIC3 "/nanomq/msg/3"
-#define SUB_TOPIC4 "/nanomq/msg/4"
-
-// Mqtt subscribe array of topic with qos
-static nng_mqtt_topic_qos topic_qos[] = {
-	{ .qos     = 0,
-	    .topic = { .buf = (uint8_t *) SUB_TOPIC1,
-	        .length     = strlen(SUB_TOPIC1) } },
-	{ .qos     = 1,
-	    .topic = { .buf = (uint8_t *) SUB_TOPIC2,
-	        .length     = strlen(SUB_TOPIC2) } },
-	{ .qos     = 2,
-	    .topic = { .buf = (uint8_t *) SUB_TOPIC3,
-	        .length     = strlen(SUB_TOPIC3) } },
-	{ .qos     = 0,
-	    .topic = { .buf = (uint8_t *) SUB_TOPIC4,
-	        .length     = strlen(SUB_TOPIC4) } }
-};
-
-static size_t topic_qos_count = sizeof(topic_qos) / sizeof(nng_mqtt_topic_qos);
 
 void
 fatal(const char *msg, int rv)
@@ -62,22 +45,8 @@ client_cb(void *arg)
 
 	switch (work->state) {
 	case INIT:
-		if (work->index == 0) {
-			// Send subscribe message by work[0]
-			nng_mqtt_msg_alloc(&msg, 0);
-			nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_SUBSCRIBE);
-			nng_mqtt_msg_set_subscribe_topics(
-			    msg, topic_qos, topic_qos_count);
-
-			work->msg = msg;
-			nng_aio_set_msg(work->aio, work->msg);
-			work->msg   = NULL;
-			work->state = SEND;
-			nng_ctx_send(work->ctx, work->aio);
-		} else {
-			work->state = RECV;
-			nng_ctx_recv(work->ctx, work->aio);
-		}
+		work->state = RECV;
+		nng_ctx_recv(work->ctx, work->aio);
 		break;
 	case RECV:
 		if ((rv = nng_aio_result(work->aio)) != 0) {
@@ -92,7 +61,7 @@ client_cb(void *arg)
 		const char *recv_topic =
 		    nng_mqtt_msg_get_publish_topic(msg, &topic_len);
 
-		printf("Recv '%.*s' from topic '%.*s'\n", payload_len,
+		printf("RECV: '%.*s' FROM: '%.*s'\n", payload_len,
 		    (char *) payload, topic_len, recv_topic);
 
 		work->msg   = msg;
@@ -102,9 +71,9 @@ client_cb(void *arg)
 	case WAIT:
 		nng_msg_header_clear(work->msg);
 		nng_msg_clear(work->msg);
+
 		// Send message to another topic
-		char topic[50] = { 0 };
-		snprintf(topic, 50, "/nanomq/msg/%02d/rep", work->index);
+		char *topic = "/nanomq/msg/reply";
 		nng_mqtt_msg_set_packet_type(work->msg, NNG_MQTT_PUBLISH);
 		nng_mqtt_msg_set_publish_topic(work->msg, topic);
 		nng_mqtt_msg_set_publish_payload(
@@ -130,7 +99,7 @@ client_cb(void *arg)
 }
 
 struct work *
-alloc_work(nng_socket sock, uint32_t index)
+alloc_work(nng_socket sock)
 {
 	struct work *w;
 	int          rv;
@@ -145,7 +114,6 @@ alloc_work(nng_socket sock, uint32_t index)
 		fatal("nng_ctx_open", rv);
 	}
 	w->state = INIT;
-	w->index = index;
 	return (w);
 }
 
@@ -153,10 +121,40 @@ alloc_work(nng_socket sock, uint32_t index)
 static void
 connect_cb(void *connect_arg, nng_msg *msg)
 {
-	(void) connect_arg;
-	printf(
-	    "Connack status: %d\n", nng_mqtt_msg_get_connack_return_code(msg));
+	// Mqtt subscribe array of topic with qos
+	nng_mqtt_topic_qos topic_qos[] = {
+		{ .qos     = 0,
+		    .topic = { .buf = (uint8_t *) SUB_TOPIC1,
+		        .length     = strlen(SUB_TOPIC1) } },
+		{ .qos     = 1,
+		    .topic = { .buf = (uint8_t *) SUB_TOPIC2,
+		        .length     = strlen(SUB_TOPIC2) } },
+		{ .qos     = 2,
+		    .topic = { .buf = (uint8_t *) SUB_TOPIC3,
+		        .length     = strlen(SUB_TOPIC3) } }
+	};
+
+	size_t topic_qos_count =
+	    sizeof(topic_qos) / sizeof(nng_mqtt_topic_qos);
+
+	nng_socket sock     = *(nng_socket *) connect_arg;
+	uint8_t    ret_code = nng_mqtt_msg_get_connack_return_code(msg);
+	printf("%s\n", __FUNCTION__);
+	printf("connack status: %d\n", ret_code);
+
 	nng_msg_free(msg);
+	msg = NULL;
+
+	if (ret_code == 0) {
+		// Connected succeed
+		nng_mqtt_msg_alloc(&msg, 0);
+		nng_mqtt_msg_set_packet_type(msg, NNG_MQTT_SUBSCRIBE);
+		nng_mqtt_msg_set_subscribe_topics(
+		    msg, topic_qos, topic_qos_count);
+
+		// Send subscribe message
+		nng_sendmsg(sock, msg, NNG_FLAG_NONBLOCK);
+	}
 }
 
 // Disconnect message callback function
@@ -164,16 +162,8 @@ static void
 disconnect_cb(void *disconn_arg, nng_msg *msg)
 {
 	(void) disconn_arg;
-	printf("Disconnected\n");
+	printf("%s\n", __FUNCTION__);
 }
-
-static nng_mqtt_cb usercb = {
-	.name = "usercb",
-	.on_connected = connect_cb,
-	.on_disconnected = disconnect_cb,
-	.connect_arg = "Args", // void *
-	.disconn_arg = "Args", // void *
-};
 
 int
 client(const char *url)
@@ -189,11 +179,7 @@ client(const char *url)
 	}
 
 	for (i = 0; i < nwork; i++) {
-		works[i] = alloc_work(sock, i);
-	}
-
-	if ((rv = nng_dialer_create(&dialer, sock, url)) != 0) {
-		fatal("nng_dialer_create", rv);
+		works[i] = alloc_work(sock);
 	}
 
 	// Mqtt connect message
@@ -203,8 +189,20 @@ client(const char *url)
 	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
 	nng_mqtt_msg_set_connect_clean_session(msg, true);
 
+	nng_mqtt_cb user_cb = {
+		.name            = "user_cb",
+		.on_connected    = connect_cb,
+		.on_disconnected = disconnect_cb,
+		.connect_arg     = &sock,
+		.disconn_arg     = "Args",
+	};
+
+	if ((rv = nng_dialer_create(&dialer, sock, url)) != 0) {
+		fatal("nng_dialer_create", rv);
+	}
+
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
-	nng_dialer_set_cb(dialer, &usercb);
+	nng_dialer_set_cb(dialer, &user_cb);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
 	for (i = 0; i < nwork; i++) {
@@ -216,6 +214,7 @@ client(const char *url)
 	}
 }
 
+#ifdef NNG_SUPP_TLS
 // This reads a file into memory.  Care is taken to ensure that
 // the buffer is one byte larger and contains a terminating
 // NUL. (Useful for key files and such.)
@@ -327,13 +326,8 @@ tls_client(const char *url, const char *ca, const char *cert, const char *key,
 	}
 
 	for (i = 0; i < nwork; i++) {
-		works[i] = alloc_work(sock, i);
+		works[i] = alloc_work(sock);
 	}
-
-	if ((rv = nng_dialer_create(&dialer, sock, url)) != 0) {
-		fatal("nng_dialer_create", rv);
-	}
-
 	// Mqtt connect message
 	nng_msg *msg;
 	nng_mqtt_msg_alloc(&msg, 0);
@@ -341,12 +335,24 @@ tls_client(const char *url, const char *ca, const char *cert, const char *key,
 	nng_mqtt_msg_set_connect_keep_alive(msg, 60);
 	nng_mqtt_msg_set_connect_clean_session(msg, true);
 
+	nng_mqtt_cb user_cb = {
+		.name            = "user_cb",
+		.on_connected    = connect_cb,
+		.on_disconnected = disconnect_cb,
+		.connect_arg     = &sock,
+		.disconn_arg     = "Args",
+	};
+
+	if ((rv = nng_dialer_create(&dialer, sock, url)) != 0) {
+		fatal("nng_dialer_create", rv);
+	}
+
 	if ((rv = init_dialer_tls(dialer, ca, cert, key, pass)) != 0) {
 		fatal("init_dialer_tls", rv);
 	}
 
 	nng_dialer_set_ptr(dialer, NNG_OPT_MQTT_CONNMSG, msg);
-	nng_dialer_set_cb(dialer, connect_cb);
+	nng_dialer_set_cb(dialer, &user_cb);
 	nng_dialer_start(dialer, NNG_FLAG_NONBLOCK);
 
 	for (i = 0; i < nwork; i++) {
@@ -357,18 +363,21 @@ tls_client(const char *url, const char *ca, const char *cert, const char *key,
 		nng_msleep(3600000); // neither pause() nor sleep() portable
 	}
 }
+#endif
 
 void
 usage(void)
 {
 	printf("mqtt_async: \n");
 	printf("	-u <url> \n");
+	printf("	-n <number of works> (default: 32)\n");
+#ifdef NNG_SUPP_TLS
 	printf("	-s enable ssl/tls mode (default: disable)\n");
 	printf("	-a <cafile path>\n");
 	printf("	-c <cert file path>\n");
-	printf("	-k <keyfile path>\n");
-	printf("	-p <keyfile's password>\n");
-	printf("	-n number of works (default: 32)\n");
+	printf("	-k <key file path>\n");
+	printf("	-p <key password>\n");
+#endif
 }
 
 int
@@ -388,17 +397,17 @@ main(int argc, char **argv)
 	int   opt;
 	int   digit_optind  = 0;
 	int   option_index  = 0;
-	char *short_options = "u:sa:c:k:p:n:W;";
+	char *short_options = "u:n:sa:c:k:p:W;";
 
 	static struct option long_options[] = {
 		{ "url", required_argument, NULL, 0 },
+		{ "nwork", no_argument, NULL, 'n' },
 		{ "ssl", no_argument, NULL, false },
 		{ "cafile", required_argument, NULL, 0 },
 		{ "cert", required_argument, NULL, 0 },
 		{ "key", required_argument, NULL, 0 },
 		{ "psw", required_argument, NULL, 0 },
 		{ "help", no_argument, NULL, 'h' },
-		{ "nwork", no_argument, NULL, 'n' },
 		{ NULL, 0, NULL, 0 },
 	};
 
@@ -415,31 +424,29 @@ main(int argc, char **argv)
 		case 'u':
 			url = argv[optind - 1];
 			break;
+		case 'n':
+			nwork = atoi(argv[optind - 1]);
+			break;
 		case 's':
 			enable_ssl = true;
 			break;
+#ifdef NNG_SUPP_TLS
 		case 'a':
 			path = argv[optind - 1];
 			loadfile(path, (void **) &cafile, &file_len);
-			printf("cafile:\n%s\n", cafile);
 			break;
 		case 'c':
 			path = argv[optind - 1];
 			loadfile(path, (void **) &cert, &file_len);
-			printf("cert:\n%s\n", cert);
 			break;
 		case 'k':
 			path = argv[optind - 1];
 			loadfile(path, (void **) &key, &file_len);
-			printf("key:\n%s\n", key);
 			break;
 		case 'p':
 			key_psw = argv[optind - 1];
 			break;
-		case 'n':
-			nwork = atoi(argv[optind - 1]);
-			break;
-
+#endif
 		default:
 			fprintf(stderr, "invalid argument: '%c'\n", opt);
 			usage();
@@ -448,7 +455,11 @@ main(int argc, char **argv)
 	}
 
 	if (enable_ssl) {
+#ifdef NNG_SUPP_TLS
 		tls_client(url, cafile, cert, key, key_psw);
+#else
+		fprintf(stderr, "tls client: Not supported \n");
+#endif
 
 	} else {
 		client(url);
