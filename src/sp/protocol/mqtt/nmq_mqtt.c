@@ -18,7 +18,7 @@
 #include "nng/nng.h"
 #include "nng/protocol/mqtt/mqtt.h"
 #include "nng/protocol/mqtt/mqtt_parser.h"
-#include "nng/protocol/mqtt/nano_tcp.h"
+#include "nng/protocol/mqtt/nmq_mqtt.h"
 
 #include <sub_handler.h>
 
