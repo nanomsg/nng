@@ -7,8 +7,8 @@
 // found online at https://opensource.org/licenses/MIT.
 //
 
-#ifndef NNG_PROTOCOL_BROKER_NMQ_H
-#define NNG_PROTOCOL_BROKER_NMQ_H
+#ifndef NNG_PROTOCOL_MQTT_BROKER_H
+#define NNG_PROTOCOL_MQTT_BROKER_H
 
 #ifdef __cplusplus
 extern "C" {
@@ -29,4 +29,4 @@ NNG_DECL int nng_nmq_tcp0_open(nng_socket *);
 }
 #endif
 
-#endif // NNG_PROTOCOL_BROKER_NMQ_H
+#endif // NNG_PROTOCOL_MQTT_BROKER_H

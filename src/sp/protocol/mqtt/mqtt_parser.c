@@ -402,8 +402,7 @@ conn_handler(uint8_t *packet, conn_param *cparam)
 	uint8_t  property_id;
 
 	if (packet[pos] != CMD_CONNECT) {
-		rv = -1;
-		return rv;
+		return (-1);
 	} else {
 		pos++;
 	}
@@ -525,12 +524,23 @@ conn_handler(uint8_t *packet, conn_param *cparam)
 		}
 	}
 	debug_msg("pos after property: [%d]", pos);
+
 	// payload client_id
 	cparam->clientid.body =
 	    (char *) copy_utf8_str(packet, &pos, &len_of_str);
-	rv                   = len_of_str < 0 ? 1 : 0;
 	cparam->clientid.len = len_of_str;
+
+	if (len_of_str == 0) {
+		char * clientid_r = nng_alloc(20);
+		snprintf(clientid_r, 20, "clientid_random_%4d", nni_random());
+		clientid_r[19] = '\0';
+		cparam->clientid.body = clientid_r;
+		cparam->clientid.len = 20;
+	} else if (len_of_str < 0) {
+		return (1);
+	}
 	debug_msg("clientid: [%s] [%d]", cparam->clientid.body, len_of_str);
+
 	// will topic
 	if (cparam->will_flag != 0) {
 		if (cparam->pro_ver == PROTOCOL_VERSION_v5) {
