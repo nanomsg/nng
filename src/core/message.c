@@ -717,6 +717,12 @@ nni_msg_set_cmd_type(nni_msg *m, uint8_t cmd)
 	m->CMD_TYPE = cmd;
 }
 
+uint8_t
+nni_msg_cmd_type(nni_msg *m)
+{
+	return (m->CMD_TYPE);
+}
+
 void
 nni_msg_set_proto_data(nng_msg *m, nni_proto_msg_ops *ops, void *data)
 {
@@ -733,8 +739,14 @@ nni_msg_get_proto_data(nng_msg *m)
 	return (m->m_proto_data);
 }
 
+/**
+ * @brief get MQTT packet Type from msg header
+ * 
+ * @param m 
+ * @return uint8_t 
+ */
 uint8_t
-nni_msg_cmd_type(nni_msg *m)
+nni_msg_get_type(nni_msg *m)
 {
 	return ((uint8_t) m->m_header_buf[0] & 0xF0);
 }

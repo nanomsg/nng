@@ -68,6 +68,7 @@ extern nni_msg *nni_msg_pull_up(nni_msg *);
 extern nni_time      nni_msg_get_timestamp(nni_msg *m);
 extern void          nni_msg_set_timestamp(nni_msg *m, nni_time time);
 extern uint8_t       nni_msg_cmd_type(nni_msg *m);
+extern uint8_t       nni_msg_get_type(nni_msg *m);
 extern uint8_t *     nni_msg_header_ptr(const nni_msg *m);
 extern uint8_t *     nni_msg_payload_ptr(const nni_msg *m);
 extern uint8_t       nni_msg_get_pub_qos(nni_msg *m);

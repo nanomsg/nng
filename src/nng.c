@@ -1932,7 +1932,14 @@ nng_version(void)
 }
 
 // NANOMQ MQTT APIs
-int
+/**
+ * @brief CMD specifically for app layer acting
+ *
+ * 
+ * @param msg 
+ * @return int 
+ */
+uint8_t
 nng_msg_cmd_type(nng_msg *msg)
 {
 	return (nni_msg_cmd_type(msg));

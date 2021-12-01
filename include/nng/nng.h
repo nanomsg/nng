@@ -91,7 +91,7 @@ typedef struct nng_pipe_s {
 
 typedef struct nng_socket_s {
 	uint32_t id;
-	void    *data;
+	void *   data;
 } nng_socket;
 
 typedef int32_t         nng_duration; // in milliseconds
@@ -462,7 +462,7 @@ NNG_DECL void *nng_alloc(size_t);
 // is probably less convenient for general uses than the C library malloc and
 // calloc.
 NNG_DECL void *nng_zalloc(size_t sz);
-NNG_DECL void nng_free(void *, size_t);
+NNG_DECL void  nng_free(void *, size_t);
 
 // nng_strdup duplicates the source string, using nng_alloc. The result
 // should be freed with nng_strfree (or nng_free(strlen(s)+1)).
@@ -552,8 +552,8 @@ NNG_DECL int nng_aio_set_output(nng_aio *, unsigned, void *);
 // nng_aio_get_output retrieves the output result at the given index.
 NNG_DECL void *nng_aio_get_output(nng_aio *, unsigned);
 
-NNG_DECL void nng_aio_set_prov_extra(nng_aio *, unsigned , void *);
-NNG_DECL void *nng_aio_get_prov_extra(nng_aio *, unsigned );
+NNG_DECL void  nng_aio_set_prov_extra(nng_aio *, unsigned, void *);
+NNG_DECL void *nng_aio_get_prov_extra(nng_aio *, unsigned);
 
 // nng_aio_set_timeout sets a timeout on the AIO.  This should be called for
 // operations that should time out after a period.  The timeout should be
@@ -1381,11 +1381,11 @@ typedef struct conn_param        conn_param;
 typedef struct pub_packet_struct pub_packet_struct;
 typedef struct pipe_db           nano_pipe_db;
 
-NNG_DECL void   nng_aio_finish_error(nng_aio *aio, int rv);
-NNG_DECL void   nng_aio_finish_sync(nng_aio *aio, int rv);
-NNG_DECL int    nng_msg_cmd_type(nng_msg *msg);
-NNG_DECL void * nng_msg_get_conn_param(nng_msg *msg);
-NNG_DECL size_t nng_msg_remaining_len(nng_msg *msg);
+NNG_DECL void    nng_aio_finish_error(nng_aio *aio, int rv);
+NNG_DECL void    nng_aio_finish_sync(nng_aio *aio, int rv);
+NNG_DECL uint8_t nng_msg_cmd_type(nng_msg *msg);
+NNG_DECL void *  nng_msg_get_conn_param(nng_msg *msg);
+NNG_DECL size_t  nng_msg_remaining_len(nng_msg *msg);
 NNG_DECL uint8_t *nng_msg_header_ptr(nng_msg *msg);
 NNG_DECL uint8_t *nng_msg_payload_ptr(nng_msg *msg);
 NNG_DECL void     nng_msg_set_payload_ptr(nng_msg *msg, uint8_t *ptr);
@@ -1417,7 +1417,7 @@ NNG_DECL uint8_t        conn_param_get_protover(conn_param *cparam);
 NNG_DECL void *         conn_param_get_qos_db(conn_param *cparam);
 NNG_DECL void           conn_param_set_qos_db(conn_param *cparam, void *);
 
-NNG_DECL void     nng_taskq_setter (int num_taskq_threads, int max_taskq_threads);
+NNG_DECL void nng_taskq_setter(int num_taskq_threads, int max_taskq_threads);
 #ifdef __cplusplus
 }
 #endif
