@@ -531,7 +531,6 @@ mqtts_tcptran_pipe_recv_cb(void *arg)
 			iov.iov_len = 4;
 			iov.iov_buf = &p->txlen;
 			// send it down...
-			printf("PUBRECV\n");
 			nni_aio_set_iov(p->rsaio, 1, &iov);
 			nng_stream_send(p->conn, p->rsaio);
 		}
@@ -553,7 +552,6 @@ mqtts_tcptran_pipe_recv_cb(void *arg)
 		iov.iov_len = 4;
 		iov.iov_buf = &p->txlen;
 		// send it down...
-		printf("PUBCOMP\n");
 		nni_aio_set_iov(p->rpaio, 1, &iov);
 		nng_stream_send(p->conn, p->rpaio);
 	}
@@ -583,7 +581,6 @@ recv_error:
 
 	nni_msg_free(msg);
 	nni_aio_finish_error(aio, rv);
-	printf("mqtts_tcptran_pipe_recv_cb: recv error rv: %d\n", rv);
 	return;
 }
 
