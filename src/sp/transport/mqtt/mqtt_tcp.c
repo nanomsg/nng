@@ -15,6 +15,7 @@
 
 #include "core/nng_impl.h"
 #include "mqtt/mqtt.h"
+#include "nng/protocol/mqtt/mqtt_parser.h"
 
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
@@ -92,7 +93,6 @@ static void mqtt_tcptran_pipe_recv_cb(void *);
 static void mqtt_tcptran_pipe_nego_cb(void *);
 static void mqtt_tcptran_ep_fini(void *);
 static void mqtt_tcptran_pipe_fini(void *);
-uint16_t    nni_msg_get_pub_pid(nni_msg *m);
 
 static nni_reap_list tcptran_ep_reap_list = {
 	.rl_offset = offsetof(mqtt_tcptran_ep, reap),
@@ -112,18 +112,6 @@ mqtt_tcptran_init(void)
 static void
 mqtt_tcptran_fini(void)
 {
-}
-
-uint16_t
-nni_msg_get_pub_pid(nni_msg *m)
-{
-	uint16_t pid;
-	uint8_t *pos, len;
-
-	pos = nni_msg_body(m);
-	NNI_GET16(pos, len);
-	NNI_GET16(pos + len + 2, pid);
-	return pid;
 }
 
 static void

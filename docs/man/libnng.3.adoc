@@ -136,6 +136,26 @@ mode may need to access the header of messages.
 |xref:nng_msg_header_trim.3.adoc[nng_msg_header_trim()]|remove data from start of message header
 |===
 
+==== MQTT Message Handling
+
+TIP: 
+
+|===
+|xref:nng_mqtt_msg_alloc.3.adoc[nng_mqtt_msg_alloc()]|allocate a message with proto_data for  mqtt
+|xref:nng_mqtt_msg_decode.3.adoc[nng_mqtt_msg_decode()]|decode a mqtt bytes stream from nng_msg_body and nng_msg_header to proto_data
+|xref:nng_mqtt_msg_encode.3.adoc[nng_mqtt_msg_encode()]|encode a mqtt message from proto_data to nng_msg_body and nng_msg_header
+|xref:nng_mqtt_msg_get_connect.3.adoc[nng_mqtt_msg_get_connect()]|get mqtt connect message 
+|xref:nng_mqtt_msg_get_packet_type.3.adoc[nng_mqtt_msg_get_packet_type()]|get mqtt packet type
+|xref:nng_mqtt_msg_get_publish.3.adoc[nng_mqtt_msg_get_publish()]|get mqtt publish message 
+|xref:nng_mqtt_msg_get_subscribe.3.adoc[nng_mqtt_msg_get_subscribe()]|get mqtt subscribe message 
+|xref:nng_mqtt_msg_get_unsubscribe.3.adoc[nng_mqtt_msg_get_unsubscribe()]|get mqtt unsubscribe message 
+|xref:nng_mqtt_msg_set_connect.3.adoc[nng_mqtt_msg_set_connect()]|set mqtt connect message 
+|xref:nng_mqtt_msg_set_packet_type.3.adoc[nng_mqtt_msg_set_packet_type()]|set mqtt packet type
+|xref:nng_mqtt_msg_set_publish.3.adoc[nng_mqtt_msg_set_publish()]|set mqtt publish message 
+|xref:nng_mqtt_msg_set_subscribe.3.adoc[nng_mqtt_msg_set_subscribe()]|set mqtt subscribe message 
+|xref:nng_mqtt_msg_set_unsubscribe.3.adoc[nng_mqtt_msg_set_unsubscribe()]|set mqtt unsubscribe message 
+|===
+
 === Asynchronous Operations
 
 Most applications will interact with _NNG_ synchronously; that is that

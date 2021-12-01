@@ -280,6 +280,10 @@ NNG_DECL int nng_dialer_create(nng_dialer *, nng_socket, const char *);
 // nng_listener_create creates a new listener, that is not yet started.
 NNG_DECL int nng_listener_create(nng_listener *, nng_socket, const char *);
 
+// nng_dialer_set_cb set the cb to the dialer. Cb runs when dialer finished.
+NNG_DECL int nng_dialer_set_cb(
+    nng_dialer, void (*)(void *, nng_msg *), void *);
+
 // nng_dialer_start starts the endpoint dialing.  This is only possible if
 // the dialer is not already dialing.
 NNG_DECL int nng_dialer_start(nng_dialer, int);
@@ -664,7 +668,7 @@ NNG_DECL nng_dialer   nng_pipe_dialer(nng_pipe);
 NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 
 // Flags.
-#define NNG_FLAG_ALLOC 1u // Recv to allocate receive buffer
+#define NNG_FLAG_ALLOC 1u    // Recv to allocate receive buffer
 #define NNG_FLAG_NONBLOCK 2u // Non-blocking operations
 
 // Options.
@@ -687,6 +691,9 @@ NNG_DECL nng_listener nng_pipe_listener(nng_pipe);
 #define NNG_OPT_RECVMAXSZ "recv-size-max"
 #define NNG_OPT_RECONNMINT "reconnect-time-min"
 #define NNG_OPT_RECONNMAXT "reconnect-time-max"
+
+// NNG-MQTT
+#define NNG_OPT_MQTT_CONNMSG "mqtt-connect-msg"
 
 // TLS options are only used when the underlying transport supports TLS.
 
@@ -1280,6 +1287,92 @@ NNG_DECL int nng_pipe_getopt_string(nng_pipe, const char *, char **);
 // nng_closeall closes all open sockets. Do not call this from
 // a library; it will affect all sockets.
 NNG_DECL void nng_closeall(void);
+
+typedef enum {
+	NNG_MQTT_CONNECT     = 0x01,
+	NNG_MQTT_CONNACK     = 0x02,
+	NNG_MQTT_PUBLISH     = 0x03,
+	NNG_MQTT_PUBACK      = 0x04,
+	NNG_MQTT_PUBREC      = 0x05,
+	NNG_MQTT_PUBREL      = 0x06,
+	NNG_MQTT_PUBCOMP     = 0x07,
+	NNG_MQTT_SUBSCRIBE   = 0x08,
+	NNG_MQTT_SUBACK      = 0x09,
+	NNG_MQTT_UNSUBSCRIBE = 0x0A,
+	NNG_MQTT_UNSUBACK    = 0x0B,
+	NNG_MQTT_PINGREQ     = 0x0C,
+	NNG_MQTT_PINGRESP    = 0x0D,
+	NNG_MQTT_DISCONNECT  = 0x0E,
+	NNG_MQTT_AUTH        = 0x0F
+} nng_mqtt_packet_type;
+
+struct mqtt_buf_t {
+	uint32_t length;
+	uint8_t *buf;
+};
+
+typedef struct mqtt_buf_t mqtt_buf;
+typedef struct mqtt_buf_t nng_mqtt_buffer;
+typedef struct mqtt_buf_t nng_mqtt_topic;
+
+typedef struct mqtt_topic_qos_t {
+	nng_mqtt_topic topic;
+	uint8_t        qos;
+} mqtt_topic_qos;
+
+typedef struct mqtt_topic_qos_t nng_mqtt_topic_qos;
+
+NNG_DECL int  nng_mqtt_msg_alloc(nng_msg **, size_t);
+NNG_DECL int  nng_mqtt_msg_proto_data_alloc(nng_msg *);
+NNG_DECL void nng_mqtt_msg_proto_data_free(nng_msg *);
+NNG_DECL int  nng_mqtt_msg_encode(nng_msg *);
+NNG_DECL int  nng_mqtt_msg_decode(nng_msg *);
+NNG_DECL void nng_mqtt_msg_set_packet_type(nng_msg *, nng_mqtt_packet_type);
+NNG_DECL nng_mqtt_packet_type nng_mqtt_msg_get_packet_type(nng_msg *);
+NNG_DECL void     nng_mqtt_msg_set_connect_proto_version(nng_msg *, uint8_t);
+NNG_DECL void     nng_mqtt_msg_set_connect_keep_alive(nng_msg *, uint16_t);
+NNG_DECL void     nng_mqtt_msg_set_connect_client_id(nng_msg *, const char *);
+NNG_DECL void     nng_mqtt_msg_set_connect_will_topic(nng_msg *, const char *);
+NNG_DECL void     nng_mqtt_msg_set_connect_will_msg(nng_msg *, const char *);
+NNG_DECL void     nng_mqtt_msg_set_connect_user_name(nng_msg *, const char *);
+NNG_DECL void     nng_mqtt_msg_set_connect_password(nng_msg *, const char *);
+NNG_DECL void     nng_mqtt_msg_set_connect_clean_session(nng_msg *, bool);
+NNG_DECL void     nng_mqtt_msg_set_connect_will_retain(nng_msg *, bool);
+NNG_DECL bool     nng_mqtt_msg_get_connect_clean_session(nng_msg *);
+NNG_DECL bool     nng_mqtt_msg_get_connect_will_retain(nng_msg *);
+NNG_DECL uint8_t  nng_mqtt_msg_get_connect_proto_version(nng_msg *);
+NNG_DECL uint16_t nng_mqtt_msg_get_connect_keep_alive(nng_msg *);
+NNG_DECL const char *nng_mqtt_msg_get_connect_client_id(nng_msg *);
+NNG_DECL const char *nng_mqtt_msg_get_connect_will_topic(nng_msg *);
+NNG_DECL const char *nng_mqtt_msg_get_connect_will_msg(nng_msg *);
+NNG_DECL const char *nng_mqtt_msg_get_connect_user_name(nng_msg *);
+NNG_DECL const char *nng_mqtt_msg_get_connect_password(nng_msg *);
+NNG_DECL void        nng_mqtt_msg_set_connack_return_code(nng_msg *, uint8_t);
+NNG_DECL void        nng_mqtt_msg_set_connack_flags(nng_msg *, uint8_t);
+NNG_DECL uint8_t     nng_mqtt_msg_get_connack_return_code(nng_msg *);
+NNG_DECL uint8_t     nng_mqtt_msg_get_connack_flags(nng_msg *);
+NNG_DECL void        nng_mqtt_msg_set_publish_qos(nng_msg *, uint8_t);
+NNG_DECL uint8_t     nng_mqtt_msg_get_publish_qos(nng_msg *);
+NNG_DECL void        nng_mqtt_msg_set_publish_retain(nng_msg *, bool);
+NNG_DECL bool        nng_mqtt_msg_get_publish_retain(nng_msg *);
+NNG_DECL void        nng_mqtt_msg_set_publish_dup(nng_msg *, bool);
+NNG_DECL bool        nng_mqtt_msg_get_publish_dup(nng_msg *);
+NNG_DECL void        nng_mqtt_msg_set_publish_topic(nng_msg *, const char *);
+NNG_DECL const char *nng_mqtt_msg_get_publish_topic(nng_msg *, uint32_t *);
+NNG_DECL void nng_mqtt_msg_set_publish_payload(nng_msg *, uint8_t *, uint32_t);
+NNG_DECL uint8_t *nng_mqtt_msg_get_publish_payload(nng_msg *, uint32_t *);
+NNG_DECL nng_mqtt_topic_qos *nng_mqtt_msg_get_subscribe_topics(
+    nng_msg *, uint32_t *);
+NNG_DECL void nng_mqtt_msg_set_subscribe_topics(
+    nng_msg *, nng_mqtt_topic_qos *, uint32_t);
+NNG_DECL void nng_mqtt_msg_set_suback_return_codes(
+    nng_msg *, uint8_t *, uint32_t);
+NNG_DECL uint8_t *nng_mqtt_msg_get_suback_return_codes(nng_msg *, uint32_t *);
+NNG_DECL void     nng_mqtt_msg_set_unsubscribe_topics(
+        nng_msg *, nng_mqtt_topic *, uint32_t);
+NNG_DECL nng_mqtt_topic *nng_mqtt_msg_get_unsubscribe_topics(
+    nng_msg *, uint32_t *);
+NNG_DECL void nng_mqtt_msg_dump(nng_msg *, uint8_t *, uint32_t, bool);
 
 #endif
 

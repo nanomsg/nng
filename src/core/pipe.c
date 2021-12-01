@@ -307,7 +307,7 @@ nni_pipe_create_dialer(nni_pipe **pp, nni_dialer *d, void *tran_data)
 {
 	int          rv;
 	nni_sp_tran *tran = d->d_tran;
-	nni_pipe *   p;
+	nni_pipe    *p;
 
 	if ((rv = pipe_create(&p, d->d_sock, tran, tran_data)) != 0) {
 		return (rv);
@@ -331,7 +331,7 @@ nni_pipe_create_listener(nni_pipe **pp, nni_listener *l, void *tran_data)
 {
 	int       rv;
 	nni_sp_tran *tran = l->l_tran;
-	nni_pipe *   p;
+	nni_pipe    *p;
 
 	if ((rv = pipe_create(&p, l->l_sock, tran, tran_data)) != 0) {
 		return (rv);

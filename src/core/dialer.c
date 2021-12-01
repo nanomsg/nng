@@ -570,3 +570,12 @@ nni_dialer_add_stat(nni_dialer *d, nni_stat_item *item)
 	NNI_ARG_UNUSED(item);
 #endif
 }
+
+// NNG-MQTT
+
+void
+nni_dialer_setcb(nni_dialer *d, void (*cb)(void *, nng_msg *), void *arg)
+{
+	d->d_ops.d_connsetcb(d->d_data, cb, arg);
+}
+

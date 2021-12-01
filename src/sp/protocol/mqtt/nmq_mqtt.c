@@ -18,7 +18,7 @@
 #include "nng/nng.h"
 #include "nng/protocol/mqtt/mqtt.h"
 #include "nng/protocol/mqtt/mqtt_parser.h"
-#include "nng/protocol/mqtt/nano_tcp.h"
+#include "nng/protocol/mqtt/nmq_mqtt.h"
 
 #include <sub_handler.h>
 
@@ -1019,8 +1019,8 @@ static nni_proto_sock_ops nano_sock_ops = {
 
 static nni_proto nano_tcp_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_NANO_TCP_SELF, NNG_NANO_TCP_SELF_NAME },
-	.proto_peer     = { NNG_NANO_TCP_PEER, NNG_NANO_TCP_PEER_NAME },
+	.proto_self     = { NNG_NMQ_TCP_SELF, NNG_NMQ_TCP_SELF_NAME },
+	.proto_peer     = { NNG_NMQ_TCP_PEER, NNG_NMQ_TCP_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nano_sock_ops,
 	.proto_pipe_ops = &nano_pipe_ops,
