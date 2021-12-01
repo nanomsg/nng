@@ -398,7 +398,6 @@ mqtt_pipe_close(void *arg)
 	mqtt_sock_t *s = p->mqtt_sock;
 
 	nni_mtx_lock(&s->mtx);
-	mqtt_sock_close(s);
 	s->mqtt_pipe = NULL;
 	nni_aio_close(&p->send_aio);
 	nni_aio_close(&p->recv_aio);
