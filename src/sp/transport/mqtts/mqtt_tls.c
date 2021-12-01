@@ -17,6 +17,7 @@
 #include "mqtt/mqtt.h"
 #include "nng/mqtt/mqtt_client.h"
 #include "nng/supplemental/tls/tls.h"
+#include "nng/protocol/mqtt/mqtt_parser.h"
 
 // TLS Over TCP transport.   Platform specific TLS Over TCP operations must be
 // supplied as well.
@@ -95,7 +96,6 @@ static void     mqtts_tcptran_pipe_recv_cb(void *);
 static void     mqtts_tcptran_pipe_nego_cb(void *);
 static void     mqtts_tcptran_ep_fini(void *);
 static void     mqtts_tcptran_pipe_fini(void *);
-static uint16_t nni_msg_get_pub_pid(nni_msg *m);
 
 static nni_reap_list tcptran_ep_reap_list = {
 	.rl_offset = offsetof(mqtts_tcptran_ep, reap),
@@ -115,18 +115,6 @@ mqtts_tcptran_init(void)
 static void
 mqtts_tcptran_fini(void)
 {
-}
-
-static uint16_t
-nni_msg_get_pub_pid(nni_msg *m)
-{
-	uint16_t pid;
-	uint8_t *pos, len;
-
-	pos = nni_msg_body(m);
-	NNI_GET16(pos, len);
-	NNI_GET16(pos + len + 2, pid);
-	return pid;
 }
 
 static void
