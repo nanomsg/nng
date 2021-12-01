@@ -555,8 +555,9 @@ nano_pipe_start(void *arg)
 
 	// restore cached qos msg
 	clientid = (char *) conn_param_get_clientid(p->conn_param);
-	clientid_key = DJBHashn(clientid, strlen(clientid));
-	if (cached_check_id(clientid_key)) {
+	if (clientid)
+		clientid_key = DJBHashn(clientid, strlen(clientid));
+	if (clientid && cached_check_id(clientid_key)) {
 		msgq = (nni_msg **)dbtree_restore_session_msg(p->tree, clientid_key);
 		for(int i=0; i< (int) cvector_size(msgq); i++) {
 			pid = nni_pipe_inc_packetid(npipe);
