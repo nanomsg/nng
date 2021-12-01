@@ -555,8 +555,9 @@ nano_pipe_start(void *arg)
 
 	// restore cached qos msg
 	clientid = (char *) conn_param_get_clientid(p->conn_param);
-	clientid_key = DJBHashn(clientid, strlen(clientid));
-	if (cached_check_id(clientid_key)) {
+	if (clientid)
+		clientid_key = DJBHashn(clientid, strlen(clientid));
+	if (clientid && cached_check_id(clientid_key)) {
 		msgq = (nni_msg **)dbtree_restore_session_msg(p->tree, clientid_key);
 		for(int i=0; i< (int) cvector_size(msgq); i++) {
 			pid = nni_pipe_inc_packetid(npipe);
@@ -1019,8 +1020,8 @@ static nni_proto_sock_ops nano_sock_ops = {
 
 static nni_proto nano_tcp_proto = {
 	.proto_version  = NNI_PROTOCOL_VERSION,
-	.proto_self     = { NNG_NANO_TCP_SELF, NNG_NANO_TCP_SELF_NAME },
-	.proto_peer     = { NNG_NANO_TCP_PEER, NNG_NANO_TCP_PEER_NAME },
+	.proto_self     = { NNG_NMQ_TCP_SELF, NNG_NMQ_TCP_SELF_NAME },
+	.proto_peer     = { NNG_NMQ_TCP_PEER, NNG_NMQ_TCP_PEER_NAME },
 	.proto_flags    = NNI_PROTO_FLAG_SNDRCV,
 	.proto_sock_ops = &nano_sock_ops,
 	.proto_pipe_ops = &nano_pipe_ops,

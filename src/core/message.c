@@ -27,11 +27,13 @@ typedef struct {
 // Underlying message structure.
 // TODO independent nano_msg
 struct nng_msg {
-	uint8_t        m_header_buf[NNI_NANO_MAX_HEADER_SIZE + 1]; // only Fixed header
-	size_t         m_header_len;
-	nni_chunk      m_body; // equal to variable header + payload
-	uint32_t       m_pipe; // set on receive
-	nni_atomic_int m_refcnt;
+	uint32_t  m_header_buf[(NNI_MAX_MAX_TTL + 1)]; // only Fixed header
+	size_t    m_header_len;
+	nni_chunk m_body; // equal to variable header + payload
+	nni_proto_msg_ops *m_proto_ops;
+	void *             m_proto_data;
+	uint32_t           m_pipe; // set on receive
+	nni_atomic_int     m_refcnt;
 	// FOR NANOMQ
 	size_t           remaining_len;
 	uint8_t          CMD_TYPE;
@@ -417,8 +419,11 @@ nni_msg_alloc(nni_msg **mp, size_t sz)
 int
 nni_msg_dup(nni_msg **dup, const nni_msg *src)
 {
-	nni_msg *m;
-	int      rv;
+	nni_msg *            m;
+	struct nni_msg_opt * os;
+	struct nni_msg_opt * od;
+	struct nni_msg_opt **opp;
+	int                  rv;
 
 	if ((m = NNI_ALLOC_STRUCT(m)) == NULL) {
 		return (NNG_ENOMEM);
@@ -436,6 +441,17 @@ nni_msg_dup(nni_msg **dup, const nni_msg *src)
 	nni_atomic_init(&m->m_refcnt);
 	nni_atomic_set(&m->m_refcnt, 1);
 
+	// clone protocol data if a method was supplied.
+	if (src->m_proto_ops != NULL && src->m_proto_ops->msg_free != NULL) {
+		rv = src->m_proto_ops->msg_dup(
+		    &m->m_proto_data, src->m_proto_data);
+		if (rv != 0) {
+			nni_msg_free(m);
+			return (NNG_ENOMEM);
+		}
+		m->m_proto_ops = src->m_proto_ops;
+	}
+
 	*dup = m;
 	return (0);
 }
@@ -444,7 +460,13 @@ void
 nni_msg_free(nni_msg *m)
 {
 	if ((m != NULL) && (nni_atomic_dec_nv(&m->m_refcnt) == 0)) {
+		struct nni_msg_opt *mo;
 		nni_chunk_free(&m->m_body);
+
+		if (m->m_proto_ops != NULL &&
+		    m->m_proto_ops->msg_free != NULL) {
+			m->m_proto_ops->msg_free(m->m_proto_data);
+		}
 		NNI_FREE_STRUCT(m);
 	}
 }
@@ -474,7 +496,8 @@ nni_msg_reserve(nni_msg *m, size_t capacity)
 size_t
 nni_msg_capacity(nni_msg *m)
 {
-	return ((size_t) ((m->m_body.ch_buf + m->m_body.ch_cap) - m->m_body.ch_ptr));
+	return ((size_t)(
+	    (m->m_body.ch_buf + m->m_body.ch_cap) - m->m_body.ch_ptr));
 }
 
 void *
@@ -645,11 +668,6 @@ nni_msg_get_pipe(const nni_msg *m)
 }
 
 // NAOMQ APIs
-int
-nni_msg_cmd_type(nni_msg *m)
-{
-	return (m->CMD_TYPE);
-}
 
 uint8_t *
 nni_msg_header_ptr(const nni_msg *m)
@@ -697,6 +715,40 @@ void
 nni_msg_set_cmd_type(nni_msg *m, uint8_t cmd)
 {
 	m->CMD_TYPE = cmd;
+}
+
+uint8_t
+nni_msg_cmd_type(nni_msg *m)
+{
+	return (m->CMD_TYPE);
+}
+
+void
+nni_msg_set_proto_data(nng_msg *m, nni_proto_msg_ops *ops, void *data)
+{
+	if (m->m_proto_ops != NULL && m->m_proto_ops->msg_free != NULL) {
+		m->m_proto_ops->msg_free(m->m_proto_data);
+	}
+	m->m_proto_ops  = ops;
+	m->m_proto_data = data;
+}
+
+void *
+nni_msg_get_proto_data(nng_msg *m)
+{
+	return (m->m_proto_data);
+}
+
+/**
+ * @brief get MQTT packet Type from msg header
+ * 
+ * @param m 
+ * @return uint8_t 
+ */
+uint8_t
+nni_msg_get_type(nni_msg *m)
+{
+	return ((uint8_t) m->m_header_buf[0] & 0xF0);
 }
 
 uint8_t

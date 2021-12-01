@@ -9,6 +9,6 @@ nng_headers_if(NNG_PROTO_MQTT_BROKER nng/protocol/mqtt/mqtt_parser.h nng/protoco
 nng_defines_if(NNG_PROTO_MQTT_BROKER NNG_HAVE_MQTT_BROKER)
 
 
-#nng_sources_if(NNG_PROTO_MQTT_CLIENT mqtt_client.c)
-#nng_headers_if(NNG_PROTO_MQTT_CLIENT nng/protocol/mqtt/mqtt_parser.h nng/mqtt/mqtt_client.h)
-#nng_defines_if(NNG_PROTO_MQTT_CLIENT NNG_HAVE_MQTT_CLIENT)
+nng_sources_if(NNG_PROTO_MQTT_CLIENT mqtt_client.c)
+nng_headers_if(NNG_PROTO_MQTT_CLIENT nng/protocol/mqtt/mqtt_parser.h nng/mqtt/mqtt_client.h)
+nng_defines_if(NNG_PROTO_MQTT_CLIENT NNG_HAVE_MQTT_CLIENT)

@@ -20,10 +20,10 @@ NNG_DECL int nng_nmq_tcp0_open(nng_socket *);
 #define nng_nmq_tcp_open nng_nmq_tcp0_open
 #endif
 
-#define NNG_NANO_TCP_SELF 0x31
-#define NNG_NANO_TCP_PEER 0x30
-#define NNG_NANO_TCP_SELF_NAME "nmq_broker"
-#define NNG_NANO_TCP_PEER_NAME "nmq_client"
+#define NNG_NMQ_TCP_SELF 0x31
+#define NNG_NMQ_TCP_PEER 0x30
+#define NNG_NMQ_TCP_SELF_NAME "nmq_broker"
+#define NNG_NMQ_TCP_PEER_NAME "nmq_client"
 
 #ifdef __cplusplus
 }

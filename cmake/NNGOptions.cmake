@@ -121,9 +121,17 @@ mark_as_advanced(NNG_TRANSPORT_IPC)
 option (NNG_TRANSPORT_TCP "Enable TCP transport." ON)
 mark_as_advanced(NNG_TRANSPORT_TCP)
 
+# MQTT TCP transport
+option (NNG_TRANSPORT_MQTT_TCP "Enable MQTT TCP transport." ON)
+mark_as_advanced(NNG_TRANSPORT_MQTT_TCP)
+
 # TLS transport
 option (NNG_TRANSPORT_TLS "Enable TLS transport." ON)
 mark_as_advanced(NNG_TRANSPORT_TLS)
+
+# MQTT TLS transport
+option (NNG_TRANSPORT_MQTT_TLS "Enable MQTT TLS transport." ON )
+mark_as_advanced(NNG_TRANSPORT_MQTT_TLS)
 
 # WebSocket
 option (NNG_TRANSPORT_WS "Enable WebSocket transport." ON)
