@@ -586,7 +586,7 @@ nng_dialer_create(nng_dialer *dp, nng_socket sid, const char *addr)
 }
 
 int
-nng_dialer_set_cb(nng_dialer did, void (*cb)(void *, nng_msg *), void *arg)
+nng_dialer_set_cb(nng_dialer did, void * cb)
 {
 	nni_dialer *d;
 	int         rv;
@@ -595,7 +595,7 @@ nng_dialer_set_cb(nng_dialer did, void (*cb)(void *, nng_msg *), void *arg)
 		return (rv);
 	}
 
-	nni_dialer_setcb(d, cb, arg);
+	nni_dialer_setcb(d, cb);
 	return (0);
 }
 
@@ -2162,8 +2162,8 @@ nng_taskq_setter (int num_taskq_threads, int max_taskq_threads)
 {
 	nni_taskq_setter(num_taskq_threads, max_taskq_threads);
 }
-#ifdef NNG_TRANSPORT_MQTT_TCP
 
+#if defined(NNG_TRANSPORT_MQTT_TCP) || defined(NNG_TRANSPORT_MQTT_TLS)
 int
 nng_mqtt_msg_proto_data_alloc(nng_msg *msg)
 {

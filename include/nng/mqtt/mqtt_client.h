@@ -204,6 +204,14 @@ typedef struct {
 	nng_mqtt_user_prop_t *up_props;
 } nng_mqtt_user_props_t;
 
+typedef struct {
+	char *name;
+	void (*on_connected)(void *, nng_msg *);
+	void (*on_disconnected)(void *, nng_msg *);
+	void *connect_arg;
+	void *disconn_arg;
+} nng_mqtt_cb;
+
 extern int nng_mqtt_user_props_alloc(nng_mqtt_user_props_t **);
 extern int nng_mqtt_user_props_add(
     nng_mqtt_user_props_t *, const char *, const char *);
