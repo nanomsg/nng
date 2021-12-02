@@ -562,11 +562,6 @@ recv_error:
 	nni_pipe_bump_error(p->npipe, rv);
 	nni_mtx_unlock(&p->mtx);
 
-	if (p->ep->usercb) {
-		p->ep->usercb->on_disconnected(
-		    p->ep->usercb->disconn_arg, NULL);
-	}
-
 	nni_msg_free(msg);
 	nni_aio_finish_error(aio, rv);
 	return;
@@ -835,10 +830,6 @@ mqtts_tcptran_ep_close(void *arg)
 	if (ep->useraio != NULL) {
 		nni_aio_finish_error(ep->useraio, NNG_ECLOSED);
 		ep->useraio = NULL;
-	}
-
-	if (ep->usercb) {
-		ep->usercb->on_disconnected(ep->usercb->disconn_arg, NULL);
 	}
 
 	nni_mtx_unlock(&ep->mtx);
