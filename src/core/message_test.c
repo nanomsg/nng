@@ -62,8 +62,9 @@ test_msg_insert_body(void)
 	NUTS_PASS(nng_msg_alloc(&msg, 0));
 	NUTS_PASS(nng_msg_append(msg, "xyz", 4));
 	NUTS_PASS(nng_msg_insert(msg, "uvw", 3));
-	NUTS_ASSERT(nng_msg_len(msg) == 7);
-	NUTS_ASSERT(strcmp(nng_msg_body(msg), "uvwxyz") == 0);
+	NUTS_PASS(nng_msg_insert(msg, "st", 2));
+	NUTS_ASSERT(nng_msg_len(msg) == 9);
+	NUTS_ASSERT(strcmp(nng_msg_body(msg), "stuvwxyz") == 0);
 	nng_msg_free(msg);
 }
 
