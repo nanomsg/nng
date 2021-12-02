@@ -284,7 +284,7 @@ nni_chunk_insert(nni_chunk *ch, const void *data, size_t len)
 		ch->ch_ptr -= len;
 	} else if ((ch->ch_len + len) <= ch->ch_cap) {
 		// We had enough capacity, just shuffle data down.
-		memmove(ch->ch_ptr + len, ch->ch_ptr, ch->ch_len);
+		memmove(ch->ch_buf + len, ch->ch_ptr, ch->ch_len);
 	} else if ((rv = nni_chunk_grow(ch, 0, len)) == 0) {
 		// We grew the chunk, so adjust.
 		ch->ch_ptr -= len;
