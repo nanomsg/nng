@@ -1,5 +1,5 @@
 //
-// Copyright 2018 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -64,6 +64,10 @@ struct nni_atomic_int {
 };
 
 struct nni_atomic_u64 {
+	LONGLONG v;
+};
+
+struct nni_atomic_ptr {
 	LONGLONG v;
 };
 

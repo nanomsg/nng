@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -81,7 +81,19 @@ nni_atomic_get(nni_atomic_int *v)
 void
 nni_atomic_set(nni_atomic_int *v, int i)
 {
-	return (atomic_store(&v->v, i));
+	 atomic_store(&v->v, i);
+}
+
+void *
+nni_atomic_get_ptr(nni_atomic_ptr *v)
+{
+	return ((void *) atomic_load(&v->v));
+}
+
+void
+nni_atomic_set_ptr(nni_atomic_ptr *v, void *p)
+{
+	atomic_store(&v->v, (uintptr_t) p);
 }
 
 int
@@ -360,6 +372,24 @@ nni_atomic_set(nni_atomic_int *v, int i)
 {
 	pthread_mutex_lock(&plat_atomic_lock);
 	v->v = i;
+	pthread_mutex_unlock(&plat_atomic_lock);
+}
+
+void *
+nni_atomic_get_ptr(nni_atomic_atomic *v)
+{
+	void *p;
+	pthread_mutex_lock(&plat_atomic_lock);
+	p = v->v;
+	pthread_mutex_unlock(&plat_atomic_lock);
+	return (p);
+}
+
+void
+nni_atomic_set_ptr(nni_atomic_atomic *v, void *p)
+{
+	pthread_mutex_lock(&plat_atomic_lock);
+	v->v = p;
 	pthread_mutex_unlock(&plat_atomic_lock);
 }
 

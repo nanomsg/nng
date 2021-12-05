@@ -64,7 +64,7 @@ struct nni_rwlock {
 
 struct nni_plat_cv {
 	pthread_cond_t cv;
-	nni_plat_mtx * mtx;
+	nni_plat_mtx  *mtx;
 };
 
 struct nni_plat_thr {
@@ -99,6 +99,10 @@ struct nni_atomic_bool {
 	atomic_bool v;
 };
 
+struct nni_atomic_ptr {
+	atomic_uintptr_t v;
+};
+
 #else // NNG_HAVE_C11_ATOMIC
 struct nni_atomic_flag {
 	bool f;
@@ -114,6 +118,10 @@ struct nni_atomic_int {
 
 struct nni_atomic_u64 {
 	uint64_t v;
+};
+
+struct nni_atomic_ptr {
+	void *v;
 };
 
 #endif
