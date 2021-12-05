@@ -232,6 +232,11 @@ extern void nni_atomic_inc(nni_atomic_int *);
 // true if the value was set.
 extern bool nni_atomic_cas(nni_atomic_int *, int, int);
 
+// atomic pointers.  We only support a few operations.
+typedef struct nni_atomic_ptr nni_atomic_ptr;
+extern void nni_atomic_set_ptr(nni_atomic_ptr *, void *);
+extern void *nni_atomic_get_ptr(nni_atomic_ptr *);
+
 //
 // Clock Support
 //
