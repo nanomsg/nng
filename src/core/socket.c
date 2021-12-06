@@ -16,12 +16,6 @@
 
 // Socket implementation.
 
-static nni_list   sock_list;
-static nni_id_map sock_ids;
-static nni_mtx    sock_lk;
-static nni_id_map ctx_ids;
-static bool       inited;
-
 struct nni_ctx {
 	nni_list_node     c_node;
 	nni_sock         *c_sock;
@@ -106,6 +100,11 @@ struct nni_socket {
 	nni_stat_item st_rejects;   // pipes rejected
 #endif
 };
+
+static nni_list sock_list = NNI_LIST_INITIALIZER(sock_list, nni_sock, s_node);
+static nni_mtx    sock_lk = NNI_MTX_INITIALIZER;
+static nni_id_map sock_ids;
+static nni_id_map ctx_ids;
 
 static void nni_ctx_destroy(nni_ctx *);
 
@@ -611,12 +610,8 @@ nni_sock_create(nni_sock **sp, const nni_proto *proto)
 void
 nni_sock_sys_init(void)
 {
-	NNI_LIST_INIT(&sock_list, nni_sock, s_node);
-	nni_mtx_init(&sock_lk);
-
 	nni_id_map_init(&sock_ids, 1, 0x7fffffff, false);
 	nni_id_map_init(&ctx_ids, 1, 0x7fffffff, false);
-	inited = true;
 }
 
 void
@@ -624,8 +619,6 @@ nni_sock_sys_fini(void)
 {
 	nni_id_map_fini(&sock_ids);
 	nni_id_map_fini(&ctx_ids);
-	nni_mtx_fini(&sock_lk);
-	inited = false;
 }
 
 int
@@ -822,9 +815,6 @@ nni_sock_closeall(void)
 {
 	nni_sock *s;
 
-	if (!inited) {
-		return;
-	}
 	for (;;) {
 		nni_mtx_lock(&sock_lk);
 		if ((s = nni_list_first(&sock_list)) == NULL) {

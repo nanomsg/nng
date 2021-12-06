@@ -14,8 +14,9 @@
 #include <stdio.h>
 #include <string.h>
 
-static nni_list   sp_tran_list;
-static nni_rwlock sp_tran_lk;
+static nni_list sp_tran_list =
+    NNI_LIST_INITIALIZER(sp_tran_list, nni_sp_tran, tran_link);
+static nni_rwlock sp_tran_lk = NNI_RWLOCK_INITIALIZER;
 
 void
 nni_sp_tran_register(nni_sp_tran *tran)
@@ -73,9 +74,6 @@ extern void nni_sp_zt_register(void);
 void
 nni_sp_tran_sys_init(void)
 {
-	NNI_LIST_INIT(&sp_tran_list, nni_sp_tran, tran_link);
-	nni_rwlock_init(&sp_tran_lk);
-
 #ifdef NNG_TRANSPORT_INPROC
 	nni_sp_inproc_register();
 #endif
@@ -110,5 +108,4 @@ nni_sp_tran_sys_fini(void)
 		nni_list_remove(&sp_tran_list, t);
 		t->tran_fini();
 	}
-	nni_rwlock_fini(&sp_tran_lk);
 }

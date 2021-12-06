@@ -34,7 +34,7 @@
 #endif
 
 static pthread_mutex_t nni_plat_init_lock = PTHREAD_MUTEX_INITIALIZER;
-static int             nni_plat_inited    = 0;
+static volatile int    nni_plat_inited    = 0;
 static int             nni_plat_forked    = 0;
 
 pthread_condattr_t  nni_cvattr;

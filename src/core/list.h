@@ -29,6 +29,16 @@ extern void nni_list_init_offset(nni_list *list, size_t offset);
 #define NNI_LIST_INIT(list, type, field) \
 	nni_list_init_offset(list, offsetof(type, field))
 
+// NNI_LIST_INITIALIZER is used to initialize structures at declaration time.
+// The list argument is the structure being initialized and the type and
+// offset determine where the node lives within each item.
+#define NNI_LIST_INITIALIZER(list, type, field)          \
+	{                                                \
+		.ll_head.ln_next = &(list).ll_head,      \
+		.ll_head.ln_prev = &(list).ll_head,      \
+		.ll_offset       = offsetof(type, field) \
+	}
+
 #define NNI_LIST_NODE_INIT(node)                       \
 	do {                                           \
 		(node)->ln_prev = (node)->ln_next = 0; \

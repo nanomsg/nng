@@ -22,20 +22,18 @@ static void listener_accept_cb(void *);
 static void listener_timer_cb(void *);
 
 static nni_id_map listeners;
-static nni_mtx    listeners_lk;
+static nni_mtx    listeners_lk = NNI_MTX_INITIALIZER;
 
 void
 nni_listener_sys_init(void)
 {
 	nni_id_map_init(&listeners, 1, 0x7fffffff, false);
-	nni_mtx_init(&listeners_lk);
 }
 
 void
 nni_listener_sys_fini(void)
 {
 	nni_reap_drain();
-	nni_mtx_fini(&listeners_lk);
 	nni_id_map_fini(&listeners);
 }
 

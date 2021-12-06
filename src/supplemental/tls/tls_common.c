@@ -1495,7 +1495,6 @@ nni_tls_sys_init(void)
 void
 nni_tls_sys_fini(void)
 {
-	nni_reap_drain();
 	NNG_TLS_ENGINE_FINI();
 }
 

@@ -37,14 +37,16 @@ struct nni_plat_thr {
 
 struct nni_plat_mtx {
 	SRWLOCK srl;
-	DWORD   owner;
-	int     init;
 };
+
+#define NNI_MTX_INITIALIZER { SRWLOCK_INIT }
 
 struct nni_rwlock {
 	SRWLOCK rwl;
 	BOOLEAN exclusive;
 };
+
+#define NNI_RWLOCK_INITIALIZER { SRWLOCK_INIT }
 
 struct nni_plat_cv {
 	CONDITION_VARIABLE cv;

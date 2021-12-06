@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Devolutions <info@devolutions.net>
 //
@@ -19,7 +19,7 @@
 
 #include "http_api.h"
 
-static nni_mtx http_txn_lk;
+static nni_mtx http_txn_lk = NNI_MTX_INITIALIZER;
 
 struct nng_http_client {
 	nni_list           aios;
@@ -197,15 +197,6 @@ nni_http_client_connect(nni_http_client *c, nni_aio *aio)
 	}
 	nni_mtx_unlock(&c->mtx);
 }
-
-static int  http_client_sys_init(void);
-static void http_client_sys_fini(void);
-
-static nni_initializer http_client_initializer = {
-	.i_init = http_client_sys_init,
-	.i_fini = http_client_sys_fini,
-	.i_once = 0,
-};
 
 typedef enum http_txn_state {
 	HTTP_CONNECTING,
@@ -385,8 +376,6 @@ nni_http_transact_conn(
 	http_txn *txn;
 	int       rv;
 
-	nni_initialize(&http_client_initializer);
-
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
@@ -430,8 +419,6 @@ nni_http_transact(nni_http_client *client, nni_http_req *req,
 	http_txn *txn;
 	int       rv;
 
-	nni_initialize(&http_client_initializer);
-
 	if (nni_aio_begin(aio) != 0) {
 		return;
 	}
@@ -469,17 +456,4 @@ nni_http_transact(nni_http_client *client, nni_http_req *req,
 	nni_list_append(&txn->aios, aio);
 	nni_http_client_connect(client, txn->aio);
 	nni_mtx_unlock(&http_txn_lk);
-}
-
-static int
-http_client_sys_init(void)
-{
-	nni_mtx_init(&http_txn_lk);
-	return (0);
-}
-
-static void
-http_client_sys_fini(void)
-{
-	nni_mtx_fini(&http_txn_lk);
 }

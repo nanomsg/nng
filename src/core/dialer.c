@@ -21,20 +21,18 @@ static void dialer_connect_cb(void *);
 static void dialer_timer_cb(void *);
 
 static nni_id_map dialers;
-static nni_mtx    dialers_lk;
+static nni_mtx    dialers_lk = NNI_MTX_INITIALIZER;
 
 void
 nni_dialer_sys_init(void)
 {
 	nni_id_map_init(&dialers, 1, 0x7fffffff, false);
-	nni_mtx_init(&dialers_lk);
 }
 
 void
 nni_dialer_sys_fini(void)
 {
 	nni_reap_drain();
-	nni_mtx_fini(&dialers_lk);
 	nni_id_map_fini(&dialers);
 }
 

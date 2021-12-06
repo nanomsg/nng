@@ -55,13 +55,11 @@ void
 nni_plat_mtx_init(nni_plat_mtx *mtx)
 {
 	InitializeSRWLock(&mtx->srl);
-	mtx->init = 1;
 }
 
 void
 nni_plat_mtx_fini(nni_plat_mtx *mtx)
 {
-	mtx->init = 0;
 }
 
 void

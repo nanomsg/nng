@@ -22,15 +22,6 @@
 
 #include "http_api.h"
 
-static int  http_server_sys_init(void);
-static void http_server_sys_fini(void);
-
-static nni_initializer http_server_initializer = {
-	.i_init = http_server_sys_init,
-	.i_fini = http_server_sys_fini,
-	.i_once = 0,
-};
-
 struct nng_http_handler {
 	nni_list_node   node;
 	char *          uri;
@@ -279,8 +270,9 @@ nni_http_handler_set_method(nni_http_handler *h, const char *method)
 	return (0);
 }
 
-static nni_list http_servers;
-static nni_mtx  http_servers_lk;
+static nni_list http_servers =
+    NNI_LIST_INITIALIZER(http_servers, nni_http_server, node);
+static nni_mtx  http_servers_lk = NNI_MTX_INITIALIZER;
 
 static void
 http_sc_reap(void *arg)
@@ -1000,8 +992,6 @@ nni_http_server_init(nni_http_server **serverp, const nni_url *url)
 {
 	int              rv;
 	nni_http_server *s;
-
-	nni_initialize(&http_server_initializer);
 
 	nni_mtx_lock(&http_servers_lk);
 	NNI_LIST_FOREACH (&http_servers, s) {
@@ -1923,19 +1913,4 @@ nni_http_server_fini(nni_http_server *s)
 		nni_reap(&http_server_reap_list, s);
 	}
 	nni_mtx_unlock(&http_servers_lk);
-}
-
-static int
-http_server_sys_init(void)
-{
-	NNI_LIST_INIT(&http_servers, nni_http_server, node);
-	nni_mtx_init(&http_servers_lk);
-	return (0);
-}
-
-static void
-http_server_sys_fini(void)
-{
-	nni_reap_drain();
-	nni_mtx_fini(&http_servers_lk);
 }
