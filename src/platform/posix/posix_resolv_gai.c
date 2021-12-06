@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -33,9 +33,9 @@
 #define NNG_RESOLV_CONCURRENCY 4
 #endif
 
-static nni_mtx  resolv_mtx;
-static nni_cv   resolv_cv;
-static bool     resolv_fini;
+static nni_mtx  resolv_mtx  = NNI_MTX_INITIALIZER;
+static nni_cv   resolv_cv   = NNI_CV_INITIALIZER(&resolv_mtx);
+static bool     resolv_fini = false;
 static nni_list resolv_aios;
 static nni_thr  resolv_thrs[NNG_RESOLV_CONCURRENCY];
 
@@ -43,9 +43,9 @@ typedef struct resolv_item resolv_item;
 struct resolv_item {
 	int           family;
 	bool          passive;
-	char *        host;
-	char *        serv;
-	nni_aio *     aio;
+	char         *host;
+	char         *serv;
+	nni_aio      *aio;
 	nng_sockaddr *sa;
 };
 
@@ -189,9 +189,9 @@ resolv_task(resolv_item *item)
 
 	nni_mtx_lock(&resolv_mtx);
 	if ((probe != NULL) && (item->aio != NULL)) {
-		struct sockaddr_in * sin;
+		struct sockaddr_in  *sin;
 		struct sockaddr_in6 *sin6;
-		nng_sockaddr *       sa = item->sa;
+		nng_sockaddr        *sa = item->sa;
 
 		switch (probe->ai_addr->sa_family) {
 		case AF_INET:
@@ -301,7 +301,7 @@ resolv_worker(void *unused)
 
 	nni_mtx_lock(&resolv_mtx);
 	for (;;) {
-		nni_aio *    aio;
+		nni_aio     *aio;
 		resolv_item *item;
 		int          rv;
 
@@ -343,9 +343,9 @@ parse_ip(const char *addr, nng_sockaddr *sa, bool want_port)
 	int              rv;
 	bool             v6      = false;
 	bool             wrapped = false;
-	char *           port;
-	char *           host;
-	char *           buf;
+	char            *port;
+	char            *host;
+	char            *buf;
 	size_t           buf_len;
 
 	if (addr == NULL) {
@@ -443,11 +443,8 @@ nni_parse_ip_port(const char *addr, nni_sockaddr *sa)
 int
 nni_posix_resolv_sysinit(void)
 {
-	nni_mtx_init(&resolv_mtx);
-	nni_cv_init(&resolv_cv, &resolv_mtx);
-	nni_aio_list_init(&resolv_aios);
-
 	resolv_fini = false;
+	nni_aio_list_init(&resolv_aios);
 
 	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
 		int rv = nni_thr_init(&resolv_thrs[i], resolv_worker, NULL);
@@ -474,8 +471,6 @@ nni_posix_resolv_sysfini(void)
 	for (int i = 0; i < NNG_RESOLV_CONCURRENCY; i++) {
 		nni_thr_fini(&resolv_thrs[i]);
 	}
-	nni_cv_fini(&resolv_cv);
-	nni_mtx_fini(&resolv_mtx);
 }
 
 #endif // NNG_USE_POSIX_RESOLV_GAI

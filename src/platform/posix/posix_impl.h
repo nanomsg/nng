@@ -73,6 +73,11 @@ struct nni_plat_cv {
 	nni_plat_mtx  *mtx;
 };
 
+// NOTE: condition variables initialized with this should *NOT*
+// be used with nni_cv_until -- the clock attributes are not passed
+// and the wake-up times will not be correct.
+#define NNI_CV_INITIALIZER(mxp) { .mtx = mxp, .cv = PTHREAD_COND_INITIALIZER }
+
 struct nni_plat_thr {
 	pthread_t tid;
 	void (*func)(void *);

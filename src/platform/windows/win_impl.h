@@ -53,6 +53,8 @@ struct nni_plat_cv {
 	PSRWLOCK           srl;
 };
 
+#define NNI_CV_INITIALIZER(mxp) { .srl = mxp, .cv = CONDITION_VARIABLE_INIT }
+
 struct nni_atomic_flag {
 	unsigned f;
 };
