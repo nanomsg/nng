@@ -756,7 +756,7 @@ nni_msg_get_pub_qos(nni_msg *m)
 {
 	uint8_t qos;
 
-	if (nni_msg_cmd_type(m) != 0x30) {
+	if (nni_msg_get_type(m) != 0x30) {
 		return -1;
 	}
 	qos = (m->m_header_buf[0] & 0x06) >> 1;

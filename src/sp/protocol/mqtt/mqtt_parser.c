@@ -963,7 +963,7 @@ nano_msg_get_subtopic(nni_msg *msg, nano_pipe_db *root, conn_param *cparam)
 	size_t        bpos = 0, remain = 0;
 	bool          repeat = false;
 
-	if (nni_msg_cmd_type(msg) != CMD_SUBSCRIBE)
+	if (nni_msg_get_type(msg) != CMD_SUBSCRIBE)
 		return NULL;
 
 	if (root != NULL) {

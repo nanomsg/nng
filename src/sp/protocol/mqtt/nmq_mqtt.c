@@ -325,7 +325,7 @@ nano_ctx_send(void *arg, nni_aio *aio)
 	}
 
 	debug_msg("#### nano_ctx_send with ctx %p msg type %x ####",
-	    ctx, nni_msg_cmd_type(msg));
+	    ctx, nni_msg_get_type(msg));
 
 	if ((pipe = nni_msg_get_pipe(msg)) != 0) {
 		nni_msg_set_pipe(msg, 0);
