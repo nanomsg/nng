@@ -19,9 +19,6 @@
 #include "core/thread.h"
 #include "sp/transport.h"
 
-extern void  nni_pipe_sys_init(void);
-extern void nni_pipe_sys_fini(void);
-
 // AIO
 extern void nni_pipe_recv(nni_pipe *, nni_aio *);
 extern void nni_pipe_send(nni_pipe *, nni_aio *);

@@ -29,8 +29,8 @@ typedef struct {
 
 // inproc_pipe represents one half of a connection.
 struct inproc_pipe {
-	const char *  addr;
-	inproc_pair * pair;
+	const char   *addr;
+	inproc_pair  *pair;
 	inproc_queue *recv_queue;
 	inproc_queue *send_queue;
 	uint16_t      peer;
@@ -52,7 +52,7 @@ struct inproc_pair {
 };
 
 struct inproc_ep {
-	const char *  addr;
+	const char   *addr;
 	bool          listener;
 	nni_list_node node;
 	uint16_t      proto;
@@ -65,20 +65,19 @@ struct inproc_ep {
 
 // nni_inproc is our global state - this contains the list of active endpoints
 // which we use for coordinating rendezvous.
-static inproc_global nni_inproc;
+static inproc_global nni_inproc = {
+	.servers = NNI_LIST_INITIALIZER(nni_inproc.servers, inproc_ep, node),
+	.mx      = NNI_MTX_INITIALIZER,
+};
 
 static void
 inproc_init(void)
 {
-	NNI_LIST_INIT(&nni_inproc.servers, inproc_ep, node);
-
-	nni_mtx_init(&nni_inproc.mx);
 }
 
 static void
 inproc_fini(void)
 {
-	nni_mtx_fini(&nni_inproc.mx);
 }
 
 // inproc_pair destroy is called when both pipe-ends of the pipe
@@ -203,7 +202,7 @@ inproc_queue_cancel(nni_aio *aio, void *arg, int rv)
 static void
 inproc_pipe_send(void *arg, nni_aio *aio)
 {
-	inproc_pipe * pipe  = arg;
+	inproc_pipe  *pipe  = arg;
 	inproc_queue *queue = pipe->send_queue;
 	int           rv;
 
@@ -225,7 +224,7 @@ inproc_pipe_send(void *arg, nni_aio *aio)
 static void
 inproc_pipe_recv(void *arg, nni_aio *aio)
 {
-	inproc_pipe * pipe  = arg;
+	inproc_pipe  *pipe  = arg;
 	inproc_queue *queue = pipe->recv_queue;
 	int           rv;
 
@@ -283,7 +282,7 @@ static int
 inproc_dialer_init(void **epp, nni_url *url, nni_dialer *ndialer)
 {
 	inproc_ep *ep;
-	nni_sock * sock = nni_dialer_sock(ndialer);
+	nni_sock  *sock = nni_dialer_sock(ndialer);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
@@ -306,7 +305,7 @@ static int
 inproc_listener_init(void **epp, nni_url *url, nni_listener *nlistener)
 {
 	inproc_ep *ep;
-	nni_sock * sock = nni_listener_sock(nlistener);
+	nni_sock  *sock = nni_listener_sock(nlistener);
 
 	if ((ep = NNI_ALLOC_STRUCT(ep)) == NULL) {
 		return (NNG_ENOMEM);
@@ -356,7 +355,7 @@ inproc_ep_close(void *arg)
 {
 	inproc_ep *ep = arg;
 	inproc_ep *client;
-	nni_aio *  aio;
+	nni_aio   *aio;
 
 	nni_mtx_lock(&nni_inproc.mx);
 	if (nni_list_active(&nni_inproc.servers, ep)) {
@@ -389,7 +388,7 @@ inproc_accept_clients(inproc_ep *srv)
 			inproc_pipe *cpipe;
 			inproc_pipe *spipe;
 			inproc_pair *pair;
-			nni_aio *    saio;
+			nni_aio     *saio;
 			int          rv;
 
 			if ((saio = nni_list_first(&srv->aios)) == NULL) {
@@ -511,7 +510,7 @@ inproc_ep_bind(void *arg)
 {
 	inproc_ep *ep = arg;
 	inproc_ep *srch;
-	nni_list * list = &nni_inproc.servers;
+	nni_list  *list = &nni_inproc.servers;
 
 	nni_mtx_lock(&nni_inproc.mx);
 	NNI_LIST_FOREACH (list, srch) {
@@ -580,7 +579,7 @@ inproc_ep_set_recvmaxsz(void *arg, const void *v, size_t sz, nni_opt_type t)
 static int
 inproc_ep_get_addr(void *arg, void *v, size_t *szp, nni_opt_type t)
 {
-	inproc_ep *  ep = arg;
+	inproc_ep   *ep = arg;
 	nng_sockaddr sa;
 	sa.s_inproc.sa_family = NNG_AF_INPROC;
 	nni_strlcpy(

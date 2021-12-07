@@ -12,8 +12,6 @@
 #ifndef CORE_LISTENER_H
 #define CORE_LISTENER_H
 
-extern void     nni_listener_sys_init(void);
-extern void     nni_listener_sys_fini(void);
 extern int      nni_listener_find(nni_listener **, uint32_t);
 extern int      nni_listener_hold(nni_listener *);
 extern void     nni_listener_rele(nni_listener *);

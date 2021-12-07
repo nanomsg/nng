@@ -19,8 +19,9 @@
 // Operations on pipes (to the transport) are generally blocking operations,
 // performed in the context of the protocol.
 
-static nni_id_map pipes;
-static nni_mtx    pipes_lk;
+static nni_id_map pipes =
+    NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, NNI_ID_FLAG_RANDOM);
+static nni_mtx pipes_lk = NNI_MTX_INITIALIZER;
 
 static void pipe_destroy(void *);
 
@@ -28,24 +29,6 @@ static nni_reap_list pipe_reap_list = {
 	.rl_offset = offsetof(nni_pipe, p_reap),
 	.rl_func   = pipe_destroy,
 };
-
-void
-nni_pipe_sys_init(void)
-{
-	nni_mtx_init(&pipes_lk);
-
-	// Pipe IDs need their high bit clear, and we want
-	// them to start at a random value.
-	nni_id_map_init(&pipes, 1, 0x7fffffff, true);
-}
-
-void
-nni_pipe_sys_fini(void)
-{
-	nni_reap_drain();
-	nni_mtx_fini(&pipes_lk);
-	nni_id_map_fini(&pipes);
-}
 
 static void
 pipe_destroy(void *arg)
@@ -248,7 +231,7 @@ pipe_create(nni_pipe **pp, nni_sock *sock, nni_sp_tran *tran, void *tran_data)
 	nni_pipe           *p;
 	int                 rv;
 	void               *sock_data = nni_sock_proto_data(sock);
-	nni_proto_pipe_ops *pops  = nni_sock_proto_pipe_ops(sock);
+	nni_proto_pipe_ops *pops      = nni_sock_proto_pipe_ops(sock);
 	size_t              sz;
 
 	sz = NNI_ALIGN_UP(sizeof(*p)) + pops->pipe_size;

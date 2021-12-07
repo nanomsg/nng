@@ -76,7 +76,5 @@ void nni_stat_set_string(nni_stat_item *, const char *);
 void nni_stat_init(nni_stat_item *, const nni_stat_info *);
 void nni_stat_inc(nni_stat_item *, uint64_t);
 void nni_stat_dec(nni_stat_item *, uint64_t);
-int  nni_stat_sys_init(void);
-void nni_stat_sys_fini(void);
 
 #endif // CORE_STATS_H

@@ -31,9 +31,19 @@ struct nng_stat {
 };
 
 #ifdef NNG_ENABLE_STATS
-static nni_stat_item stats_root;
-static nni_mtx       stats_lock     = NNI_MTX_INITIALIZER;
-static nni_mtx       stats_val_lock = NNI_MTX_INITIALIZER;
+static nni_stat_info stats_root_info = {
+	.si_name = "",
+	.si_desc = "all statistics",
+	.si_type = NNG_STAT_SCOPE,
+};
+
+static nni_stat_item stats_root = {
+	.si_children = NNI_LIST_INITIALIZER(
+	    stats_root.si_children, nni_stat_item, si_node),
+	.si_info = &stats_root_info,
+};
+static nni_mtx stats_lock     = NNI_MTX_INITIALIZER;
+static nni_mtx stats_val_lock = NNI_MTX_INITIALIZER;
 #endif
 
 void
@@ -486,25 +496,6 @@ nng_stat *
 nng_stat_find_listener(nng_stat *stat, nng_listener l)
 {
 	return (nng_stat_find_scope(stat, "listener", nng_listener_id(l)));
-}
-
-int
-nni_stat_sys_init(void)
-{
-#ifdef NNG_ENABLE_STATS
-	static const nni_stat_info root = {
-		.si_name = "",
-		.si_desc = "all statistics",
-		.si_type = NNG_STAT_SCOPE,
-	};
-	nni_stat_init(&stats_root, &root);
-#endif
-	return (0);
-}
-
-void
-nni_stat_sys_fini(void)
-{
 }
 
 #ifdef NNG_ENABLE_STATS

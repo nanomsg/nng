@@ -32,8 +32,7 @@ nni_init_helper(void)
 	}
 #endif
 
-	if (((rv = nni_stat_sys_init()) != 0) ||
-	    ((rv = nni_taskq_sys_init()) != 0) ||
+	if (((rv = nni_taskq_sys_init()) != 0) ||
 	    ((rv = nni_reap_sys_init()) != 0) ||
 	    ((rv = nni_timer_sys_init()) != 0) ||
 	    ((rv = nni_aio_sys_init()) != 0) ||
@@ -43,10 +42,6 @@ nni_init_helper(void)
 	}
 
 	// following never fail
-	nni_sock_sys_init();
-	nni_listener_sys_init();
-	nni_dialer_sys_init();
-	nni_pipe_sys_init();
 	nni_sp_tran_sys_init();
 
 	nni_inited = true;
@@ -68,16 +63,12 @@ nni_fini(void)
 	}
 	nni_sp_tran_sys_fini();
 	nni_tls_sys_fini();
-	nni_pipe_sys_fini();
-	nni_dialer_sys_fini();
-	nni_listener_sys_fini();
-	nni_sock_sys_fini();
 	nni_reap_drain();
 	nni_aio_sys_fini();
 	nni_timer_sys_fini();
 	nni_taskq_sys_fini();
 	nni_reap_sys_fini(); // must be before timer and aio (expire)
-	nni_stat_sys_fini();
+	nni_id_map_sys_fini();
 
 	nni_plat_fini();
 	nni_inited = false;

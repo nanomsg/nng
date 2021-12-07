@@ -12,8 +12,6 @@
 #ifndef CORE_DIALER_H
 #define CORE_DIALER_H
 
-extern void       nni_dialer_sys_init(void);
-extern void      nni_dialer_sys_fini(void);
 extern int       nni_dialer_find(nni_dialer **, uint32_t);
 extern int       nni_dialer_hold(nni_dialer *);
 extern void      nni_dialer_rele(nni_dialer *);

@@ -15,26 +15,13 @@
 #include <stdio.h>
 #include <string.h>
 
-// Functionality related to dialers.
+// Functionality related to dialing.
 static void dialer_connect_start(nni_dialer *);
 static void dialer_connect_cb(void *);
 static void dialer_timer_cb(void *);
 
-static nni_id_map dialers;
+static nni_id_map dialers    = NNI_ID_MAP_INITIALIZER(1, 0x7fffffff, 0);
 static nni_mtx    dialers_lk = NNI_MTX_INITIALIZER;
-
-void
-nni_dialer_sys_init(void)
-{
-	nni_id_map_init(&dialers, 1, 0x7fffffff, false);
-}
-
-void
-nni_dialer_sys_fini(void)
-{
-	nni_reap_drain();
-	nni_id_map_fini(&dialers);
-}
 
 uint32_t
 nni_dialer_id(nni_dialer *d)

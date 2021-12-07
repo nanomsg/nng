@@ -37,8 +37,13 @@ struct nni_id_map {
 	uint32_t      id_min_val;
 	uint32_t      id_max_val;
 	uint32_t      id_dyn_val;
+	uint32_t      id_flags;
 	nni_id_entry *id_entries;
 };
+
+#define NNI_ID_FLAG_STATIC 1   // allocated statically
+#define NNI_ID_FLAG_RANDOM 2   // start at a random value
+#define NNI_ID_FLAG_REGISTER 4 // map is registered for finalization
 
 extern void  nni_id_map_init(nni_id_map *, uint32_t, uint32_t, bool);
 extern void  nni_id_map_fini(nni_id_map *);
@@ -46,5 +51,12 @@ extern void *nni_id_get(nni_id_map *, uint32_t);
 extern int   nni_id_set(nni_id_map *, uint32_t, void *);
 extern int   nni_id_alloc(nni_id_map *, uint32_t *, void *);
 extern int   nni_id_remove(nni_id_map *, uint32_t);
+extern void  nni_id_map_sys_fini(void);
+
+#define NNI_ID_MAP_INITIALIZER(min, max, flags)            \
+	{                                                  \
+		.id_min_val = (min), .id_max_val = (max),  \
+		.id_flags = ((flags) | NNI_ID_FLAG_STATIC) \
+	}
 
 #endif // CORE_IDHASH_H

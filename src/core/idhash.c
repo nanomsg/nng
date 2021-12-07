@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -15,8 +15,13 @@
 struct nni_id_entry {
 	uint32_t key;
 	uint32_t skips;
-	void *   val;
+	void    *val;
 };
+
+static int          id_reg_len = 0;
+static int          id_reg_num = 0;
+static nni_id_map **id_reg_map = NULL;
+static nni_mtx      id_reg_mtx = NNI_MTX_INITIALIZER;
 
 void
 nni_id_map_init(nni_id_map *m, uint32_t lo, uint32_t hi, bool randomize)
@@ -33,15 +38,15 @@ nni_id_map_init(nni_id_map *m, uint32_t lo, uint32_t hi, bool randomize)
 	m->id_count    = 0;
 	m->id_load     = 0;
 	m->id_cap      = 0;
+	m->id_dyn_val  = 0;
 	m->id_max_load = 0;
 	m->id_min_load = 0; // never shrink below this
 	m->id_min_val  = lo;
 	m->id_max_val  = hi;
 	if (randomize) {
-		// NB: The range is inclusive.
-		m->id_dyn_val = nni_random() % ((hi - lo) + 1) + lo;
+		m->id_flags = NNI_ID_FLAG_RANDOM;
 	} else {
-		m->id_dyn_val = lo;
+		m->id_flags = 0;
 	}
 }
 
@@ -103,6 +108,53 @@ nni_id_get(nni_id_map *m, uint32_t id)
 }
 
 static int
+id_map_register(nni_id_map *m)
+{
+	if ((m->id_flags & (NNI_ID_FLAG_STATIC | NNI_ID_FLAG_REGISTER)) !=
+	    NNI_ID_FLAG_STATIC) {
+		return (0);
+	}
+	nni_mtx_lock(&id_reg_mtx);
+	if (id_reg_len <= id_reg_num) {
+		nni_id_map **mr;
+		int          len = id_reg_len;
+		if (len < 10) {
+			len = 10;
+		} else {
+			len *= 2;
+		}
+		mr = nni_zalloc(sizeof(nni_id_map *) * len);
+		if (mr == NULL) {
+			nni_mtx_unlock(&id_reg_mtx);
+			return (NNG_ENOMEM);
+		}
+		id_reg_len = len;
+		memcpy(mr, id_reg_map, id_reg_num * sizeof(nni_id_map *));
+		id_reg_map = mr;
+	}
+	id_reg_map[id_reg_num++] = m;
+	m->id_flags |= NNI_ID_FLAG_REGISTER;
+	nni_mtx_unlock(&id_reg_mtx);
+	return (0);
+}
+
+void
+nni_id_map_sys_fini(void)
+{
+	nni_mtx_lock(&id_reg_mtx);
+	for (int i = 0; i < id_reg_num; i++) {
+		if (id_reg_map[i] != NULL) {
+			nni_id_map_fini(id_reg_map[i]);
+		}
+	}
+	nni_free(id_reg_map, sizeof(nni_id_map *) * id_reg_len);
+	id_reg_map = NULL;
+	id_reg_len = 0;
+	id_reg_num = 0;
+	nni_mtx_unlock(&id_reg_mtx);
+}
+
+static int
 id_resize(nni_id_map *m)
 {
 	size_t        new_cap;
@@ -110,10 +162,17 @@ id_resize(nni_id_map *m)
 	nni_id_entry *new_entries;
 	nni_id_entry *old_entries;
 	uint32_t      i;
+	int           rv;
 
 	if ((m->id_load < m->id_max_load) && (m->id_load >= m->id_min_load)) {
 		// No resize needed.
 		return (0);
+	}
+
+	// if it is a statically declared map, register it so that we
+	// will free it at finalization time
+	if ((rv = id_map_register(m)) != 0) {
+		return (rv);
 	}
 
 	old_cap = m->id_cap;
@@ -265,6 +324,16 @@ nni_id_alloc(nni_id_map *m, uint32_t *idp, void *val)
 	if (m->id_count > (m->id_max_val - m->id_min_val)) {
 		// Really more like ENOSPC.. the table is filled to max.
 		return (NNG_ENOMEM);
+	}
+	if (m->id_dyn_val == 0) {
+		if (m->id_flags & NNI_ID_FLAG_RANDOM) {
+			// NB: The range is inclusive.
+			m->id_dyn_val = nni_random() %
+			        (m->id_max_val - m->id_min_val + 1) +
+			    m->id_min_val;
+		} else {
+			m->id_dyn_val = m->id_min_val;
+		}
 	}
 
 	for (;;) {
