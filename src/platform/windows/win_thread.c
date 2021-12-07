@@ -182,7 +182,7 @@ nni_atomic_set_bool(nni_atomic_bool *v, bool b)
 bool
 nni_atomic_get_bool(nni_atomic_bool *v)
 {
-	return ((bool) InterlockedAdd(&v->v, 0));
+	return ((bool) InterlockedExchangeAdd(&v->v, 0));
 }
 
 bool
