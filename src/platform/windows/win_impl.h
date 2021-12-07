@@ -52,7 +52,7 @@ struct nni_plat_cv {
 };
 
 struct nni_atomic_flag {
-	unsigned f;
+	LONG f;
 };
 
 struct nni_atomic_bool {
