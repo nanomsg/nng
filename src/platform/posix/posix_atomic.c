@@ -376,7 +376,7 @@ nni_atomic_set(nni_atomic_int *v, int i)
 }
 
 void *
-nni_atomic_get_ptr(nni_atomic_atomic *v)
+nni_atomic_get_ptr(nni_atomic_ptr *v)
 {
 	void *p;
 	pthread_mutex_lock(&plat_atomic_lock);
@@ -386,7 +386,7 @@ nni_atomic_get_ptr(nni_atomic_atomic *v)
 }
 
 void
-nni_atomic_set_ptr(nni_atomic_atomic *v, void *p)
+nni_atomic_set_ptr(nni_atomic_ptr *v, void *p)
 {
 	pthread_mutex_lock(&plat_atomic_lock);
 	v->v = p;
