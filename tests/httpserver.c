@@ -25,7 +25,7 @@
 #include "convey.h"
 #include "core/nng_impl.h"
 
-const char *doc1 = "<html><body>Someone <b>is</b> home!</body</html>";
+const char *doc1 = "<html><body>Someone <b>is</b> home!</body></html>";
 const char *doc2 = "This is a text file.";
 const char *doc3 = "<html><body>This is doc number 3.</body></html>";
 const char *doc4 = "<html><body>Whoops, Errored!</body></html>";
