@@ -224,6 +224,8 @@ typedef struct mqtt_msg_t {
 	bool is_copied : 1;  /* indicates string or array members are copied */
 	uint8_t _unused : 2;
 
+	conn_param *conn_ctx;
+
 } mqtt_msg;
 
 extern int mqtt_get_remaining_length(
@@ -287,6 +289,8 @@ extern const char *nni_mqtt_msg_get_connect_will_topic(nni_msg *);
 extern const char *nni_mqtt_msg_get_connect_will_msg(nni_msg *);
 extern const char *nni_mqtt_msg_get_connect_user_name(nni_msg *);
 extern const char *nni_mqtt_msg_get_connect_password(nni_msg *);
+extern void        nni_mqtt_msg_set_conn_param(nni_msg *);
+extern conn_param *nni_mqtt_msg_get_conn_param(nni_msg *);
 
 // mqtt conack
 extern void    nni_mqtt_msg_set_connack_return_code(nni_msg *, uint8_t);

@@ -254,6 +254,10 @@ nni_mqtt_msg_dup(void **dest, const void *src)
 static void
 dup_connect(nni_mqtt_proto_data *dest, nni_mqtt_proto_data *src)
 {
+	if (src->conn_ctx != NULL) {
+		dest->conn_ctx = nni_zalloc(sizeof(conn_param));
+		memcpy(dest->conn_ctx, src->conn_ctx, sizeof(conn_param));
+	}
 	mqtt_buf_dup(&dest->var_header.connect.protocol_name,
 	    &src->var_header.connect.protocol_name);
 	mqtt_buf_dup(
@@ -324,6 +328,9 @@ dup_unsubscribe(nni_mqtt_proto_data *dest, nni_mqtt_proto_data *src)
 static void
 destory_connect(nni_mqtt_proto_data *mqtt)
 {
+	if (mqtt->conn_ctx) {
+		nng_free(mqtt->conn_ctx, sizeof(conn_param));
+	}
 	mqtt_buf_free(&mqtt->var_header.connect.protocol_name);
 	mqtt_buf_free(&mqtt->payload.connect.client_id);
 	mqtt_buf_free(&mqtt->payload.connect.user_name);

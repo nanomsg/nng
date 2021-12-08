@@ -24,8 +24,6 @@
 typedef struct mqtt_tcptran_pipe mqtt_tcptran_pipe;
 typedef struct mqtt_tcptran_ep   mqtt_tcptran_ep;
 
-#define NNI_NANO_MAX_HEADER_SIZE 5
-
 // tcp_pipe is one end of a TCP connection.
 struct mqtt_tcptran_pipe {
 	nng_stream *     conn;

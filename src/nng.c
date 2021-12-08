@@ -586,7 +586,7 @@ nng_dialer_create(nng_dialer *dp, nng_socket sid, const char *addr)
 }
 
 int
-nng_dialer_set_cb(nng_dialer did, void * cb)
+nng_dialer_set_cb(nng_dialer did, void *cb)
 {
 	nni_dialer *d;
 	int         rv;
@@ -1343,13 +1343,13 @@ nng_msg_free(nng_msg *msg)
 int
 nng_msg_reserve(nng_msg *msg, size_t capacity)
 {
-       return (nni_msg_reserve(msg, capacity));
+	return (nni_msg_reserve(msg, capacity));
 }
 
 size_t
 nng_msg_capacity(nng_msg *msg)
 {
-       return (nni_msg_capacity(msg));
+	return (nni_msg_capacity(msg));
 }
 
 void *
@@ -1866,18 +1866,21 @@ nng_aio_get_output(nng_aio *aio, unsigned index)
 	return (nni_aio_get_output(aio, index));
 }
 
-void *nng_aio_get_prov_extra(nng_aio *aio, unsigned index){
-	if(index < 2) {
+void *
+nng_aio_get_prov_extra(nng_aio *aio, unsigned index)
+{
+	if (index < 2) {
 		return nni_aio_get_prov_extra(aio, index);
-	}else {
+	} else {
 		return NULL;
 	}
 }
 
 void
-nng_aio_set_prov_extra(nng_aio *aio, unsigned index, void *data){
-	if(index < 2) {
-		 nni_aio_set_prov_extra(aio, index ,data);
+nng_aio_set_prov_extra(nng_aio *aio, unsigned index, void *data)
+{
+	if (index < 2) {
+		nni_aio_set_prov_extra(aio, index, data);
 	}
 }
 
@@ -1935,9 +1938,9 @@ nng_version(void)
 /**
  * @brief CMD specifically for app layer acting
  *
- * 
- * @param msg 
- * @return int 
+ *
+ * @param msg
+ * @return int
  */
 uint8_t
 nng_msg_cmd_type(nng_msg *msg)
@@ -2037,7 +2040,7 @@ const uint8_t *
 conn_param_get_username(conn_param *cparam)
 {
 	if (cparam->con_flag & 0x80) {
-		return (const uint8_t *)cparam->username.body;
+		return (const uint8_t *) cparam->username.body;
 	} else {
 		return NULL;
 	}
@@ -2098,11 +2101,11 @@ conn_param_get_protover(conn_param *cparam)
 void *
 conn_param_get_qos_db(conn_param *cparam)
 {
-	return (void *)(cparam->nano_qos_db);
+	return (void *) (cparam->nano_qos_db);
 }
 
 void
-conn_param_set_qos_db(conn_param *cparam, void * qos)
+conn_param_set_qos_db(conn_param *cparam, void *qos)
 {
 	cparam->nano_qos_db = qos;
 }
@@ -2110,7 +2113,7 @@ conn_param_set_qos_db(conn_param *cparam, void * qos)
 void
 nng_msg_set_timestamp(nni_msg *m, uint64_t time)
 {
-	nni_msg_set_timestamp(m, (nni_time)time);
+	nni_msg_set_timestamp(m, (nni_time) time);
 }
 
 /*
@@ -2158,7 +2161,7 @@ nng_file_delete(const char *name)
 }
 
 void
-nng_taskq_setter (int num_taskq_threads, int max_taskq_threads)
+nng_taskq_setter(int num_taskq_threads, int max_taskq_threads)
 {
 	nni_taskq_setter(num_taskq_threads, max_taskq_threads);
 }
@@ -2545,6 +2548,18 @@ uint16_t
 nng_mqtt_msg_get_unsuback_packet_id(nng_msg *msg)
 {
 	return nni_mqtt_msg_get_unsuback_packet_id(msg);
+}
+
+void
+nng_mqtt_msg_set_conn_param(nng_msg *msg)
+{
+	nni_mqtt_msg_set_conn_param(msg);
+}
+
+conn_param *
+nng_mqtt_msg_get_conn_param(nng_msg *msg)
+{
+	return nni_mqtt_msg_get_conn_param(msg);
 }
 
 nng_mqtt_topic *

@@ -1190,6 +1190,11 @@ NNG_DECL int nng_stream_listener_set_ptr(
 NNG_DECL int nng_stream_listener_set_addr(
     nng_stream_listener *, const char *, const nng_sockaddr *);
 
+// NANOMQ MQTT variables & APIs
+typedef struct conn_param        conn_param;
+typedef struct pub_packet_struct pub_packet_struct;
+typedef struct pipe_db           nano_pipe_db;
+
 #ifndef NNG_ELIDE_DEPRECATED
 // These are legacy APIs that have been deprecated.
 // Their use is strongly discouraged.
@@ -1346,6 +1351,8 @@ NNG_DECL const char *nng_mqtt_msg_get_connect_will_topic(nng_msg *);
 NNG_DECL const char *nng_mqtt_msg_get_connect_will_msg(nng_msg *);
 NNG_DECL const char *nng_mqtt_msg_get_connect_user_name(nng_msg *);
 NNG_DECL const char *nng_mqtt_msg_get_connect_password(nng_msg *);
+NNG_DECL void        nng_mqtt_msg_set_conn_param(nng_msg *);
+NNG_DECL conn_param *nng_mqtt_msg_get_conn_param(nng_msg *);
 NNG_DECL void        nng_mqtt_msg_set_connack_return_code(nng_msg *, uint8_t);
 NNG_DECL void        nng_mqtt_msg_set_connack_flags(nng_msg *, uint8_t);
 NNG_DECL uint8_t     nng_mqtt_msg_get_connack_return_code(nng_msg *);
@@ -1375,10 +1382,6 @@ NNG_DECL void nng_mqtt_msg_dump(nng_msg *, uint8_t *, uint32_t, bool);
 
 #endif
 
-// NANOMQ MQTT variables & APIs
-typedef struct conn_param        conn_param;
-typedef struct pub_packet_struct pub_packet_struct;
-typedef struct pipe_db           nano_pipe_db;
 
 NNG_DECL void    nng_aio_finish_error(nng_aio *aio, int rv);
 NNG_DECL void    nng_aio_finish_sync(nng_aio *aio, int rv);

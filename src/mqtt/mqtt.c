@@ -562,6 +562,66 @@ nni_mqtt_msg_get_connack_flags(nni_msg *msg)
 }
 
 void
+nni_mqtt_msg_set_conn_param(nni_msg *msg)
+{
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+
+	if (proto_data->conn_ctx == NULL) {
+		proto_data->conn_ctx = NNI_ALLOC_STRUCT(proto_data->conn_ctx);
+	}
+
+	conn_param *conn_ctx = proto_data->conn_ctx;
+	conn_ctx->pro_ver    = nni_mqtt_msg_get_connect_proto_version(msg);
+	memcpy(&conn_ctx->con_flag, &proto_data->var_header.connect.conn_flags,
+	    1);
+
+	conn_ctx->clean_start =
+	    proto_data->var_header.connect.conn_flags.clean_session;
+	conn_ctx->will_flag =
+	    proto_data->var_header.connect.conn_flags.will_flag;
+	conn_ctx->will_qos =
+	    proto_data->var_header.connect.conn_flags.will_qos;
+	conn_ctx->will_retain =
+	    proto_data->var_header.connect.conn_flags.will_retain;
+
+	conn_ctx->keepalive_mqtt = proto_data->var_header.connect.keep_alive;
+	conn_ctx->pro_name.body =
+	    (char *) proto_data->var_header.connect.protocol_name.buf;
+	conn_ctx->pro_name.len =
+	    proto_data->var_header.connect.protocol_name.length;
+
+	conn_ctx->clientid.body =
+	    (char *) proto_data->payload.connect.client_id.buf;
+	conn_ctx->clientid.len = proto_data->payload.connect.client_id.length;
+
+	conn_ctx->will_topic.body =
+	    (char *) proto_data->payload.connect.will_topic.buf;
+	conn_ctx->will_topic.len =
+	    proto_data->payload.connect.will_topic.length;
+
+	conn_ctx->will_msg.body =
+	    (char *) proto_data->payload.connect.will_msg.buf;
+	conn_ctx->will_msg.len = proto_data->payload.connect.will_msg.length;
+
+	conn_ctx->username.body =
+	    (char *) proto_data->payload.connect.user_name.buf;
+	conn_ctx->username.len = proto_data->payload.connect.user_name.length;
+
+	conn_ctx->password.body = proto_data->payload.connect.password.buf;
+	conn_ctx->password.len  = proto_data->payload.connect.password.length;
+
+	// TODO  compact with mqtt_v5
+}
+
+conn_param *
+nni_mqtt_msg_get_conn_param(nni_msg *msg)
+{
+	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
+
+	return proto_data->conn_ctx;
+}
+
+void
 nni_mqtt_msg_dump(
     nni_msg *msg, uint8_t *buffer, uint32_t len, bool print_bytes)
 {
