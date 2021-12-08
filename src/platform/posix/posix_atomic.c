@@ -81,7 +81,7 @@ nni_atomic_get(nni_atomic_int *v)
 void
 nni_atomic_set(nni_atomic_int *v, int i)
 {
-	 atomic_store(&v->v, i);
+	atomic_store(&v->v, i);
 }
 
 void *
@@ -188,6 +188,159 @@ nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
 	uint_fast64_t cv = (uint_fast64_t) comp;
 	uint_fast64_t nv = (uint_fast64_t) new;
 	return (atomic_compare_exchange_strong(&v->v, &cv, nv));
+}
+
+#elif NNI_GCC_VERSION >= 40700 || \
+    defined(__clang__) // we have "new" GCC __atomic builtins
+bool
+nni_atomic_flag_test_and_set(nni_atomic_flag *f)
+{
+	return (__atomic_test_and_set(&f->f, __ATOMIC_SEQ_CST));
+}
+
+void
+nni_atomic_flag_reset(nni_atomic_flag *f)
+{
+	__atomic_clear(&f->f, __ATOMIC_SEQ_CST);
+}
+
+void
+nni_atomic_set_bool(nni_atomic_bool *b, bool n)
+{
+	__atomic_store_n(&b->b, n, __ATOMIC_SEQ_CST);
+}
+
+bool
+nni_atomic_get_bool(nni_atomic_bool *b)
+{
+	return (__atomic_load_n(&b->b, __ATOMIC_SEQ_CST));
+}
+
+bool
+nni_atomic_swap_bool(nni_atomic_bool *b, bool n)
+{
+	return (__atomic_exchange_n(&b->b, n, __ATOMIC_SEQ_CST));
+}
+
+void
+nni_atomic_init_bool(nni_atomic_bool *b)
+{
+	__atomic_store_n(&b->b, false, __ATOMIC_SEQ_CST);
+}
+
+void
+nni_atomic_add64(nni_atomic_u64 *v, uint64_t bump)
+{
+	__atomic_add_fetch(&v->v, bump, __ATOMIC_RELAXED);
+}
+
+void
+nni_atomic_sub64(nni_atomic_u64 *v, uint64_t bump)
+{
+	__atomic_sub_fetch(&v->v, bump, __ATOMIC_RELAXED);
+}
+
+uint64_t
+nni_atomic_get64(nni_atomic_u64 *v)
+{
+	return (__atomic_load_n(&v->v, __ATOMIC_SEQ_CST));
+}
+
+void
+nni_atomic_set64(nni_atomic_u64 *v, uint64_t u)
+{
+	__atomic_store_n(&v->v, u, __ATOMIC_SEQ_CST);
+}
+
+uint64_t
+nni_atomic_swap64(nni_atomic_u64 *v, uint64_t u)
+{
+	return (__atomic_exchange_n(&v->v, u, __ATOMIC_SEQ_CST));
+}
+
+void
+nni_atomic_init64(nni_atomic_u64 *v)
+{
+	__atomic_store_n(&v->v, 0, __ATOMIC_SEQ_CST);
+}
+
+void
+nni_atomic_inc64(nni_atomic_u64 *v)
+{
+	__atomic_add_fetch(&v->v, 1, __ATOMIC_SEQ_CST);
+}
+
+uint64_t
+nni_atomic_dec64_nv(nni_atomic_u64 *v)
+{
+	return (__atomic_sub_fetch(&v->v, 1, __ATOMIC_SEQ_CST));
+}
+
+bool
+nni_atomic_cas64(nni_atomic_u64 *v, uint64_t comp, uint64_t new)
+{
+
+	return (__atomic_compare_exchange_n(
+	    &v->v, &comp, new, false, __ATOMIC_SEQ_CST, __ATOMIC_SEQ_CST));
+}
+
+void
+nni_atomic_init(nni_atomic_int *v)
+{
+	__atomic_store_n(&v->v, 0, __ATOMIC_SEQ_CST);
+}
+
+void
+nni_atomic_add(nni_atomic_int *v, int bump)
+{
+	__atomic_add_fetch(&v->v, bump, __ATOMIC_RELAXED);
+}
+
+void
+nni_atomic_sub(nni_atomic_int *v, int bump)
+{
+	__atomic_sub_fetch(&v->v, bump, __ATOMIC_RELAXED);
+}
+
+void
+nni_atomic_set(nni_atomic_int *v, int val)
+{
+	__atomic_store_n(&v->v, val, __ATOMIC_SEQ_CST);
+}
+
+int
+nni_atomic_get(nni_atomic_int *v)
+{
+	return (__atomic_load_n(&v->v, __ATOMIC_SEQ_CST));
+}
+void
+nni_atomic_inc(nni_atomic_int *v)
+{
+	__atomic_add_fetch(&v->v, 1, __ATOMIC_SEQ_CST);
+}
+
+void
+nni_atomic_dec(nni_atomic_int *v)
+{
+	__atomic_sub_fetch(&v->v, 1, __ATOMIC_SEQ_CST);
+}
+
+int
+nni_atomic_dec_nv(nni_atomic_int *v)
+{
+	return (__atomic_sub_fetch(&v->v, 1, __ATOMIC_SEQ_CST));
+}
+
+void *
+nni_atomic_get_ptr(nni_atomic_ptr *v)
+{
+	return (__atomic_load_n(&v->v, __ATOMIC_SEQ_CST));
+}
+
+void
+nni_atomic_set_ptr(nni_atomic_ptr *v, void *p)
+{
+	__atomic_store_n(&v->v, p, __ATOMIC_SEQ_CST);
 }
 
 #else

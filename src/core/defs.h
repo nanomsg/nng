@@ -31,11 +31,11 @@
 
 // These types are common but have names shared with user space.
 // Internal code should use these names when possible.
-typedef nng_msg           nni_msg;
-typedef nng_sockaddr      nni_sockaddr;
-typedef nng_url           nni_url;
-typedef nng_iov           nni_iov;
-typedef nng_aio           nni_aio;
+typedef nng_msg      nni_msg;
+typedef nng_sockaddr nni_sockaddr;
+typedef nng_url      nni_url;
+typedef nng_iov      nni_iov;
+typedef nng_aio      nni_aio;
 
 // These are our own names.
 typedef struct nni_socket   nni_sock;
@@ -44,10 +44,10 @@ typedef struct nni_dialer   nni_dialer;
 typedef struct nni_listener nni_listener;
 typedef struct nni_pipe     nni_pipe;
 
-typedef struct nni_sp_tran           nni_sp_tran;
-typedef struct nni_sp_dialer_ops     nni_sp_dialer_ops;
-typedef struct nni_sp_listener_ops   nni_sp_listener_ops;
-typedef struct nni_sp_pipe_ops       nni_sp_pipe_ops;
+typedef struct nni_sp_tran         nni_sp_tran;
+typedef struct nni_sp_dialer_ops   nni_sp_dialer_ops;
+typedef struct nni_sp_listener_ops nni_sp_listener_ops;
+typedef struct nni_sp_pipe_ops     nni_sp_pipe_ops;
 
 typedef struct nni_proto_ctx_ops  nni_proto_ctx_ops;
 typedef struct nni_proto_sock_ops nni_proto_sock_ops;
@@ -75,51 +75,51 @@ typedef void (*nni_cb)(void *);
 #define NNI_ALLOC_STRUCTS(s, n) nni_zalloc(sizeof(*s) * n)
 #define NNI_FREE_STRUCTS(s, n) nni_free(s, sizeof(*s) * n)
 
-#define NNI_PUT16(ptr, u)                                    \
-	do {                                                 \
-		(ptr)[0] = (uint8_t)(((uint16_t)(u)) >> 8u); \
-		(ptr)[1] = (uint8_t)((uint16_t)(u));         \
+#define NNI_PUT16(ptr, u)                                      \
+	do {                                                   \
+		(ptr)[0] = (uint8_t) (((uint16_t) (u)) >> 8u); \
+		(ptr)[1] = (uint8_t) ((uint16_t) (u));         \
 	} while (0)
 
-#define NNI_PUT32(ptr, u)                                     \
-	do {                                                  \
-		(ptr)[0] = (uint8_t)(((uint32_t)(u)) >> 24u); \
-		(ptr)[1] = (uint8_t)(((uint32_t)(u)) >> 16u); \
-		(ptr)[2] = (uint8_t)(((uint32_t)(u)) >> 8u);  \
-		(ptr)[3] = (uint8_t)((uint32_t)(u));          \
+#define NNI_PUT32(ptr, u)                                       \
+	do {                                                    \
+		(ptr)[0] = (uint8_t) (((uint32_t) (u)) >> 24u); \
+		(ptr)[1] = (uint8_t) (((uint32_t) (u)) >> 16u); \
+		(ptr)[2] = (uint8_t) (((uint32_t) (u)) >> 8u);  \
+		(ptr)[3] = (uint8_t) ((uint32_t) (u));          \
 	} while (0)
 
-#define NNI_PUT64(ptr, u)                                     \
-	do {                                                  \
-		(ptr)[0] = (uint8_t)(((uint64_t)(u)) >> 56u); \
-		(ptr)[1] = (uint8_t)(((uint64_t)(u)) >> 48u); \
-		(ptr)[2] = (uint8_t)(((uint64_t)(u)) >> 40u); \
-		(ptr)[3] = (uint8_t)(((uint64_t)(u)) >> 32u); \
-		(ptr)[4] = (uint8_t)(((uint64_t)(u)) >> 24u); \
-		(ptr)[5] = (uint8_t)(((uint64_t)(u)) >> 16u); \
-		(ptr)[6] = (uint8_t)(((uint64_t)(u)) >> 8u);  \
-		(ptr)[7] = (uint8_t)((uint64_t)(u));          \
+#define NNI_PUT64(ptr, u)                                       \
+	do {                                                    \
+		(ptr)[0] = (uint8_t) (((uint64_t) (u)) >> 56u); \
+		(ptr)[1] = (uint8_t) (((uint64_t) (u)) >> 48u); \
+		(ptr)[2] = (uint8_t) (((uint64_t) (u)) >> 40u); \
+		(ptr)[3] = (uint8_t) (((uint64_t) (u)) >> 32u); \
+		(ptr)[4] = (uint8_t) (((uint64_t) (u)) >> 24u); \
+		(ptr)[5] = (uint8_t) (((uint64_t) (u)) >> 16u); \
+		(ptr)[6] = (uint8_t) (((uint64_t) (u)) >> 8u);  \
+		(ptr)[7] = (uint8_t) ((uint64_t) (u));          \
 	} while (0)
 
-#define NNI_GET16(ptr, v)                             \
-	v = (((uint16_t)((uint8_t)(ptr)[0])) << 8u) + \
-	    (((uint16_t)(uint8_t)(ptr)[1]))
+#define NNI_GET16(ptr, v)                               \
+	v = (((uint16_t) ((uint8_t) (ptr)[0])) << 8u) + \
+	    (((uint16_t) (uint8_t) (ptr)[1]))
 
-#define NNI_GET32(ptr, v)                              \
-	v = (((uint32_t)((uint8_t)(ptr)[0])) << 24u) + \
-	    (((uint32_t)((uint8_t)(ptr)[1])) << 16u) + \
-	    (((uint32_t)((uint8_t)(ptr)[2])) << 8u) +  \
-	    (((uint32_t)(uint8_t)(ptr)[3]))
+#define NNI_GET32(ptr, v)                                \
+	v = (((uint32_t) ((uint8_t) (ptr)[0])) << 24u) + \
+	    (((uint32_t) ((uint8_t) (ptr)[1])) << 16u) + \
+	    (((uint32_t) ((uint8_t) (ptr)[2])) << 8u) +  \
+	    (((uint32_t) (uint8_t) (ptr)[3]))
 
-#define NNI_GET64(ptr, v)                              \
-	v = (((uint64_t)((uint8_t)(ptr)[0])) << 56u) + \
-	    (((uint64_t)((uint8_t)(ptr)[1])) << 48u) + \
-	    (((uint64_t)((uint8_t)(ptr)[2])) << 40u) + \
-	    (((uint64_t)((uint8_t)(ptr)[3])) << 32u) + \
-	    (((uint64_t)((uint8_t)(ptr)[4])) << 24u) + \
-	    (((uint64_t)((uint8_t)(ptr)[5])) << 16u) + \
-	    (((uint64_t)((uint8_t)(ptr)[6])) << 8u) +  \
-	    (((uint64_t)(uint8_t)(ptr)[7]))
+#define NNI_GET64(ptr, v)                                \
+	v = (((uint64_t) ((uint8_t) (ptr)[0])) << 56u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[1])) << 48u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[2])) << 40u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[3])) << 32u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[4])) << 24u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[5])) << 16u) + \
+	    (((uint64_t) ((uint8_t) (ptr)[6])) << 8u) +  \
+	    (((uint64_t) (uint8_t) (ptr)[7]))
 
 // This increments a pointer a fixed number of byte cells.
 #define NNI_INCPTR(ptr, n) ((ptr) = (void *) ((char *) (ptr) + (n)))
@@ -169,6 +169,13 @@ typedef nni_type nni_opt_type;
 // reducing the number of traverses of the expiration list we perform.
 #ifndef NNI_EXPIRE_BATCH
 #define NNI_EXPIRE_BATCH 100
+#endif
+
+#if __GNUC__ > 3
+// NNI_GCC_VERSION is used to indicate a GNU version.  It is used
+// to trigger certain cases like atomics that might be compiler specific.
+#define NNI_GCC_VERSION \
+	(__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__)
 #endif
 
 #endif // CORE_DEFS_H
