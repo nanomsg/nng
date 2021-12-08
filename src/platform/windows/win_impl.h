@@ -56,7 +56,7 @@ struct nni_plat_cv {
 #define NNI_CV_INITIALIZER(mxp) { .srl = mxp, .cv = CONDITION_VARIABLE_INIT }
 
 struct nni_atomic_flag {
-	unsigned f;
+	LONG f;
 };
 
 struct nni_atomic_bool {
