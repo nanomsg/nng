@@ -532,7 +532,7 @@ conn_handler(uint8_t *packet, conn_param *cparam)
 
 	if (len_of_str == 0) {
 		char * clientid_r = nng_alloc(20);
-		snprintf(clientid_r, 20, "nanomq_%04d", nni_random());
+		snprintf(clientid_r, 20, "nanomq-%08x", nni_random());
 		clientid_r[19] = '\0';
 		cparam->clientid.body = clientid_r;
 		cparam->clientid.len = 20;

@@ -435,7 +435,7 @@ nni_mqtt_msg_encode_connect(nni_msg *msg)
 	}
 
 	if (mqtt->payload.connect.client_id.length == 0) {
-		snprintf(client_id, 20, "nanomq-%04x", nni_random());
+		snprintf(client_id, 20, "nanomq-%08x", nni_random());
 		mqtt_buf_create(&mqtt->payload.connect.client_id,
 		    (const uint8_t *) client_id, (uint32_t) strlen(client_id));
 	}
