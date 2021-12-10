@@ -289,7 +289,7 @@ extern const char *nni_mqtt_msg_get_connect_will_topic(nni_msg *);
 extern const char *nni_mqtt_msg_get_connect_will_msg(nni_msg *);
 extern const char *nni_mqtt_msg_get_connect_user_name(nni_msg *);
 extern const char *nni_mqtt_msg_get_connect_password(nni_msg *);
-extern void        nni_mqtt_msg_set_conn_param(nni_msg *);
+extern conn_param *nni_mqtt_msg_set_conn_param(nni_msg *);
 extern conn_param *nni_mqtt_msg_get_conn_param(nni_msg *);
 
 // mqtt conack

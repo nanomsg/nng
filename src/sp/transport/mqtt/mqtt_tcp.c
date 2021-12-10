@@ -15,8 +15,8 @@
 
 #include "core/nng_impl.h"
 #include "mqtt/mqtt.h"
-#include "nng/protocol/mqtt/mqtt_parser.h"
 #include "nng/mqtt/mqtt_client.h"
+#include "nng/protocol/mqtt/mqtt_parser.h"
 
 // TCP transport.   Platform specific TCP operations must be
 // supplied as well.
@@ -53,6 +53,7 @@ struct mqtt_tcptran_pipe {
 	nni_msg *        rxmsg;
 	nni_msg *        smsg;
 	nni_mtx          mtx;
+	conn_param *     cparam;
 };
 
 struct mqtt_tcptran_ep {
@@ -148,7 +149,8 @@ static int
 mqtt_tcptran_pipe_init(void *arg, nni_pipe *npipe)
 {
 	mqtt_tcptran_pipe *p = arg;
-	p->npipe             = npipe;
+	nni_pipe_set_conn_param(npipe, p->cparam);
+	p->npipe = npipe;
 
 	return (0);
 }
@@ -543,7 +545,7 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 	// keep connection & Schedule next receive
 	// nni_pipe_bump_rx(p->npipe, n);
 	mqtt_tcptran_pipe_recv_start(p);
-
+	nni_msg_set_conn_param(msg, nni_pipe_get_conn_param(p->npipe));
 	nni_aio_set_msg(aio, msg);
 	nni_mtx_unlock(&p->mtx);
 	nni_aio_finish_sync(aio, 0, n);
@@ -791,7 +793,7 @@ mqtt_tcptran_pipe_start(
 	}
 	nni_aio_set_iov(p->negoaio, niov, iov);
 	nni_list_append(&ep->negopipes, p);
-
+	p->cparam = nni_mqtt_msg_set_conn_param(connmsg);
 	nni_aio_set_timeout(p->negoaio, 10000); // 10 sec timeout to negotiate
 	nng_stream_send(p->conn, p->negoaio);
 }
@@ -1250,7 +1252,7 @@ mqtt_tcptran_ep_get_connmsg(void *arg, void *v, size_t *szp, nni_opt_type t)
 }
 
 static int
-mqtt_tcptran_dialer_setcb(void *arg, void * cb)
+mqtt_tcptran_dialer_setcb(void *arg, void *cb)
 {
 	mqtt_tcptran_ep *ep = arg;
 	int              rv;

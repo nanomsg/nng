@@ -561,7 +561,7 @@ nni_mqtt_msg_get_connack_flags(nni_msg *msg)
 	return proto_data->var_header.connack.connack_flags;
 }
 
-void
+conn_param *
 nni_mqtt_msg_set_conn_param(nni_msg *msg)
 {
 	nni_mqtt_proto_data *proto_data = nni_msg_get_proto_data(msg);
@@ -610,6 +610,7 @@ nni_mqtt_msg_set_conn_param(nni_msg *msg)
 	conn_ctx->password.body = proto_data->payload.connect.password.buf;
 	conn_ctx->password.len  = proto_data->payload.connect.password.length;
 
+	return proto_data->conn_ctx;
 	// TODO  compact with mqtt_v5
 }
 
