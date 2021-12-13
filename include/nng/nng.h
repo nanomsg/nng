@@ -1380,8 +1380,12 @@ NNG_DECL nng_mqtt_topic *nng_mqtt_msg_get_unsubscribe_topics(
     nng_msg *, uint32_t *);
 NNG_DECL void nng_mqtt_msg_dump(nng_msg *, uint8_t *, uint32_t, bool);
 
-#endif
+NNG_DECL nng_mqtt_topic_qos *nng_mqtt_topic_qos_array_create(size_t);
+NNG_DECL void                nng_mqtt_topic_qos_array_set(
+                   nng_mqtt_topic_qos *, size_t, const char *, uint8_t);
+NNG_DECL void nng_mqtt_topic_qos_array_free(nng_mqtt_topic_qos *, size_t);
 
+#endif
 
 NNG_DECL void    nng_aio_finish_error(nng_aio *aio, int rv);
 NNG_DECL void    nng_aio_finish_sync(nng_aio *aio, int rv);
