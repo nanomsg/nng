@@ -1948,6 +1948,18 @@ nng_msg_cmd_type(nng_msg *msg)
 	return (nni_msg_cmd_type(msg));
 }
 
+/**
+ * @brief get MQTT packet Type from msg header
+ * 
+ * @param m 
+ * @return uint8_t 
+ */
+uint8_t
+nng_msg_get_type(nng_msg *msg)
+{
+	return nni_msg_get_type(msg);
+}
+
 size_t
 nng_msg_remaining_len(nng_msg *msg)
 {

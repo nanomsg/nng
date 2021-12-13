@@ -477,6 +477,7 @@ mqtt_tcptran_pipe_recv_cb(void *arg)
 		// Submit the rest of the data for a read -- seperate Fixed
 		// header with variable header and so on
 		//  we want to read the entire message now.
+		nni_msg_set_remaining_len(p->rxmsg, len);
 		if (len != 0) {
 			iov.iov_buf = nni_msg_body(p->rxmsg);
 			iov.iov_len = (size_t) len;

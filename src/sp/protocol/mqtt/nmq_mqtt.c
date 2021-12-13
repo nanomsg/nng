@@ -196,7 +196,7 @@ nano_pipe_timer_cb(void *arg)
 	if (!p->busy) {
 		msg = nni_id_get_any(npipe->nano_qos_db, &pid);
 		if (msg != NULL) {
-			uint8_t qos = NANO_NNI_LMQ_GET_QOS_BITS(msg);
+			// uint8_t qos = NANO_NNI_LMQ_GET_QOS_BITS(msg);
 			rmsg        = NANO_NNI_LMQ_GET_MSG_POINTER(msg);
 			time        = nni_msg_get_timestamp(msg);
 			if ((nni_clock() - time) >=
