@@ -462,21 +462,21 @@ nni_aio_finish_impl(
 void
 nni_aio_finish(nni_aio *aio, int result, size_t count)
 {
-	debug_msg("aio finish");
+	debug_msg("%s(%d)", nng_strerror(result),result);
 	nni_aio_finish_impl(aio, result, count, NULL, false);
 }
 
 void
 nni_aio_finish_sync(nni_aio *aio, int result, size_t count)
 {
-	debug_msg("nni_aio_finish_sync");
+	debug_msg("%s(%d)", nng_strerror(result),result);
 	nni_aio_finish_impl(aio, result, count, NULL, true);
 }
 
 void
 nni_aio_finish_error(nni_aio *aio, int result)
 {
-	debug_msg("nni_aio_finish_error");
+	debug_msg("%s(%d)", nng_strerror(result),result);
 	nni_aio_finish_impl(aio, result, 0, NULL, false);
 }
 
