@@ -1205,7 +1205,6 @@ NNG_DECL int nng_getopt_int(nng_socket, const char *, int *);
 NNG_DECL int nng_getopt_ms(nng_socket, const char *, nng_duration *);
 NNG_DECL int nng_getopt_size(nng_socket, const char *, size_t *);
 NNG_DECL int nng_getopt_uint64(nng_socket, const char *, uint64_t *);
-NNG_DECL int nng_getopt_ptr(nng_socket, const char *, void **);
 NNG_DECL int nng_getopt_string(nng_socket, const char *, char **);
 NNG_DECL int nng_setopt(nng_socket, const char *, const void *, size_t);
 NNG_DECL int nng_setopt_bool(nng_socket, const char *, bool);
