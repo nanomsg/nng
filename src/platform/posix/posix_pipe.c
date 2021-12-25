@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -98,16 +98,16 @@ nni_plat_pipe_open(int *wfd, int *rfd)
 	return (0);
 }
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-result"
 void
 nni_plat_pipe_raise(int wfd)
 {
 	char c = 1;
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wunused-result"
 	(void) write(wfd, &c, 1);
-#pragma GCC diagnostic pop
 }
+#pragma GCC diagnostic pop
 
 void
 nni_plat_pipe_clear(int rfd)
@@ -126,8 +126,8 @@ nni_plat_pipe_clear(int rfd)
 void
 nni_plat_pipe_close(int wfd, int rfd)
 {
-	close(wfd);
-	close(rfd);
+	(void) close(wfd);
+	(void) close(rfd);
 }
 
 #endif // NNG_USE_EVENTFD
