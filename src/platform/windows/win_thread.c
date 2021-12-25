@@ -228,9 +228,9 @@ nni_atomic_get_ptr(nni_atomic_ptr *v)
 }
 
 void
-nni_atomic_set_ptr(nni_atomic_ptr *v)
+nni_atomic_set_ptr(nni_atomic_ptr *v, void *p)
 {
-	(void) InterlockedExchange64(&v->v, (LONGLONG) (uintptr_t) v);
+	(void) InterlockedExchange64(&v->v, (LONGLONG) (uintptr_t) p);
 }
 
 uint64_t

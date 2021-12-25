@@ -157,10 +157,10 @@ nni_id_map_sys_fini(void)
 static int
 id_resize(nni_id_map *m)
 {
-	size_t        new_cap;
-	size_t        old_cap;
 	nni_id_entry *new_entries;
 	nni_id_entry *old_entries;
+	uint32_t      new_cap;
+	uint32_t      old_cap;
 	uint32_t      i;
 	int           rv;
 

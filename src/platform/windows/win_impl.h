@@ -30,7 +30,7 @@
 
 struct nni_plat_thr {
 	void (*func)(void *);
-	void * arg;
+	void  *arg;
 	HANDLE handle;
 	DWORD  id;
 };
@@ -39,21 +39,30 @@ struct nni_plat_mtx {
 	SRWLOCK srl;
 };
 
-#define NNI_MTX_INITIALIZER { SRWLOCK_INIT }
+#define NNI_MTX_INITIALIZER  \
+	{                    \
+		SRWLOCK_INIT \
+	}
 
 struct nni_rwlock {
 	SRWLOCK rwl;
 	BOOLEAN exclusive;
 };
 
-#define NNI_RWLOCK_INITIALIZER { SRWLOCK_INIT }
+#define NNI_RWLOCK_INITIALIZER \
+	{                      \
+		SRWLOCK_INIT   \
+	}
 
 struct nni_plat_cv {
 	CONDITION_VARIABLE cv;
 	PSRWLOCK           srl;
 };
 
-#define NNI_CV_INITIALIZER(mxp) { .srl = mxp, .cv = CONDITION_VARIABLE_INIT }
+#define NNI_CV_INITIALIZER(mxp)                                    \
+	{                                                          \
+		.srl = (void *) mxp, .cv = CONDITION_VARIABLE_INIT \
+	}
 
 struct nni_atomic_flag {
 	LONG f;
@@ -85,8 +94,8 @@ typedef void (*nni_win_io_cb)(nni_win_io *, int, size_t);
 struct nni_win_io {
 	OVERLAPPED    olpd;
 	HANDLE        f;
-	void *        ptr;
-	nni_aio *     aio;
+	void         *ptr;
+	nni_aio      *aio;
 	nni_win_io_cb cb;
 };
 
