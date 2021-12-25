@@ -10,7 +10,7 @@
 #include "nng_impl.h"
 
 // Light-weight message queue. These are derived from our heavy-weight
-// message queues, but are less "featureful", but more useful for
+// message queues, but are less "featured", but more useful for
 // performance sensitive contexts.  Locking must be done by the caller.
 
 int
