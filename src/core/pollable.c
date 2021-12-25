@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -38,34 +38,9 @@ nni_pollable_fini(nni_pollable *p)
 	}
 }
 
-int
-nni_pollable_alloc(nni_pollable **pp)
-{
-	nni_pollable *p;
-	if ((p = NNI_ALLOC_STRUCT(p)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	nni_pollable_init(p);
-	*pp = p;
-	return (0);
-}
-
-void
-nni_pollable_free(nni_pollable *p)
-{
-	if (p == NULL) {
-		return;
-	}
-	nni_pollable_fini(p);
-	NNI_FREE_STRUCT(p);
-}
-
 void
 nni_pollable_raise(nni_pollable *p)
 {
-	if (p == NULL) {
-		return;
-	}
 	if (!nni_atomic_swap_bool(&p->p_raised, true)) {
 		uint64_t fds;
 		if ((fds = nni_atomic_get64(&p->p_fds)) != (uint64_t) -1) {
@@ -77,9 +52,6 @@ nni_pollable_raise(nni_pollable *p)
 void
 nni_pollable_clear(nni_pollable *p)
 {
-	if (p == NULL) {
-		return;
-	}
 	if (nni_atomic_swap_bool(&p->p_raised, false)) {
 		uint64_t fds;
 		if ((fds = nni_atomic_get64(&p->p_fds)) != (uint64_t) -1) {

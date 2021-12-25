@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -40,7 +40,7 @@ struct pub0_sock {
 	nni_mtx       mtx;
 	bool          closed;
 	size_t        sendbuf;
-	nni_pollable *sendable;
+	nni_pollable  sendable;
 };
 
 // pub0_pipe is our per-pipe protocol private structure.
@@ -60,7 +60,7 @@ pub0_sock_fini(void *arg)
 {
 	pub0_sock *s = arg;
 
-	nni_pollable_free(s->sendable);
+	nni_pollable_fini(&s->sendable);
 	nni_mtx_fini(&s->mtx);
 }
 
@@ -68,12 +68,9 @@ static int
 pub0_sock_init(void *arg, nni_sock *nsock)
 {
 	pub0_sock *sock = arg;
-	int        rv;
 	NNI_ARG_UNUSED(nsock);
 
-	if ((rv = nni_pollable_alloc(&sock->sendable)) != 0) {
-		return (rv);
-	}
+	nni_pollable_init(&sock->sendable);
 	nni_mtx_init(&sock->mtx);
 	NNI_LIST_INIT(&sock->pipes, pub0_pipe, node);
 	sock->sendbuf = 16; // fairly arbitrary
@@ -267,8 +264,8 @@ pub0_sock_get_sendfd(void *arg, void *buf, size_t *szp, nni_type t)
 	int        rv;
 	nni_mtx_lock(&sock->mtx);
 	// PUB sockets are *always* writable.
-	nni_pollable_raise(sock->sendable);
-	rv = nni_pollable_getfd(sock->sendable, &fd);
+	nni_pollable_raise(&sock->sendable);
+	rv = nni_pollable_getfd(&sock->sendable, &fd);
 	nni_mtx_unlock(&sock->mtx);
 
 	if (rv == 0) {
