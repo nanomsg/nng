@@ -27,7 +27,6 @@ nni_lmq_init(nni_lmq *lmq, size_t cap)
 		alloc *= 2;
 	}
 	if ((lmq->lmq_msgs = nni_zalloc(sizeof(nng_msg *) * alloc)) == NULL) {
-		NNI_FREE_STRUCT(lmq);
 		return (NNG_ENOMEM);
 	}
 	lmq->lmq_cap   = cap;
