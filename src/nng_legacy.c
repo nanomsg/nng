@@ -63,6 +63,11 @@ nng_getopt_ms(nng_socket id, const char *n, nng_duration *v)
 	return (nng_socket_get_ms(id, n, v));
 }
 
+int nng_getopt_ptr(nng_socket id, const char *n, void **v)
+{
+	return (nng_socket_get_ptr(id, n, v));
+}
+
 int
 nng_getopt_string(nng_socket id, const char *n, char **v)
 {
