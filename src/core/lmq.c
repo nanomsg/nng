@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 //
 // This software is supplied under the terms of the MIT License, a
 // copy of which should be located in the distribution where this
@@ -13,30 +13,27 @@
 // message queues, but are less "featured", but more useful for
 // performance sensitive contexts.  Locking must be done by the caller.
 
-int
+
+// Note that initialization of a queue is guaranteed to succeed.
+// However, if the requested capacity is larger than 2, and memory
+// cannot be allocated, then the capacity will only be 2.
+void
 nni_lmq_init(nni_lmq *lmq, size_t cap)
 {
-	size_t alloc;
-
-	// We prefer alloc to a power of 2, this allows us to do modulo
-	// operations as a power of two, for efficiency.  It does possibly
-	// waste some space, but never more than 2x.  Consumers should try
-	// for powers of two if they are concerned about efficiency.
-	alloc = 2;
-	while (alloc < cap) {
-		alloc *= 2;
+	lmq->lmq_len = 0;
+	lmq->lmq_get = 0;
+	lmq->lmq_put = 0;
+	lmq->lmq_alloc = 0;
+	lmq->lmq_mask = 0;
+	lmq->lmq_msgs = NULL;
+	lmq->lmq_msgs = lmq->lmq_buf;
+	lmq->lmq_cap = 2;
+	lmq->lmq_mask = 0x1; // only index 0 and 1
+	if (cap > 2) {
+		(void) nni_lmq_resize(lmq, cap);
+	} else {
+		lmq->lmq_cap = cap;
 	}
-	if ((lmq->lmq_msgs = nni_zalloc(sizeof(nng_msg *) * alloc)) == NULL) {
-		return (NNG_ENOMEM);
-	}
-	lmq->lmq_cap   = cap;
-	lmq->lmq_alloc = alloc;
-	lmq->lmq_mask  = (alloc - 1);
-	lmq->lmq_len   = 0;
-	lmq->lmq_get   = 0;
-	lmq->lmq_put   = 0;
-
-	return (0);
 }
 
 void
@@ -53,8 +50,9 @@ nni_lmq_fini(nni_lmq *lmq)
 		lmq->lmq_len--;
 		nni_msg_free(msg);
 	}
-
-	nni_free(lmq->lmq_msgs, lmq->lmq_alloc * sizeof(nng_msg *));
+	if (lmq->lmq_alloc > 0) {
+		nni_free(lmq->lmq_msgs, lmq->lmq_alloc * sizeof(nng_msg *));
+	}
 }
 
 void
@@ -93,7 +91,7 @@ nni_lmq_empty(nni_lmq *lmq)
 }
 
 int
-nni_lmq_putq(nni_lmq *lmq, nng_msg *msg)
+nni_lmq_put(nni_lmq *lmq, nng_msg *msg)
 {
 	if (lmq->lmq_len >= lmq->lmq_cap) {
 		return (NNG_EAGAIN);
@@ -105,7 +103,7 @@ nni_lmq_putq(nni_lmq *lmq, nng_msg *msg)
 }
 
 int
-nni_lmq_getq(nni_lmq *lmq, nng_msg **msgp)
+nni_lmq_get(nni_lmq *lmq, nng_msg **mp)
 {
 	nng_msg *msg;
 	if (lmq->lmq_len == 0) {
@@ -114,15 +112,15 @@ nni_lmq_getq(nni_lmq *lmq, nng_msg **msgp)
 	msg = lmq->lmq_msgs[lmq->lmq_get++];
 	lmq->lmq_get &= lmq->lmq_mask;
 	lmq->lmq_len--;
-	*msgp = msg;
+	*mp = msg;
 	return (0);
 }
 
 int
 nni_lmq_resize(nni_lmq *lmq, size_t cap)
 {
-	nng_msg * msg;
-	nng_msg **newq;
+	nng_msg  *msg;
+	nng_msg **new_q;
 	size_t    alloc;
 	size_t    len;
 
@@ -131,21 +129,22 @@ nni_lmq_resize(nni_lmq *lmq, size_t cap)
 		alloc *= 2;
 	}
 
-	newq = nni_alloc(sizeof(nng_msg *) * alloc);
-	if (newq == NULL) {
+	if ((new_q = nni_alloc(sizeof(nng_msg *) * alloc)) == NULL) {
 		return (NNG_ENOMEM);
 	}
 
 	len = 0;
-	while ((len < cap) && (nni_lmq_getq(lmq, &msg) == 0)) {
-		newq[len++] = msg;
+	while ((len < cap) && (nni_lmq_get(lmq, &msg) == 0)) {
+		new_q[len++] = msg;
 	}
 
 	// Flush anything left over.
 	nni_lmq_flush(lmq);
 
-	nni_free(lmq->lmq_msgs, lmq->lmq_alloc * sizeof(nng_msg *));
-	lmq->lmq_msgs  = newq;
+	if (lmq->lmq_alloc > 0) {
+		nni_free(lmq->lmq_msgs, lmq->lmq_alloc * sizeof(nng_msg *));
+	}
+	lmq->lmq_msgs  = new_q;
 	lmq->lmq_cap   = cap;
 	lmq->lmq_alloc = alloc;
 	lmq->lmq_mask  = alloc - 1;

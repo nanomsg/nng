@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 //
 // This software is supplied under the terms of the MIT License, a
@@ -108,7 +108,6 @@ surv0_ctx_init(void *c, void *s)
 {
 	surv0_ctx *  ctx  = c;
 	surv0_sock * sock = s;
-	int          rv;
 	int          len;
 	nng_duration tmo;
 
@@ -129,10 +128,7 @@ surv0_ctx_init(void *c, void *s)
 
 	ctx->sock = sock;
 
-	if ((rv = nni_lmq_init(&ctx->recv_lmq, len)) != 0) {
-		surv0_ctx_fini(ctx);
-		return (rv);
-	}
+	nni_lmq_init(&ctx->recv_lmq, len);
 	nni_timer_init(&ctx->timer, surv0_ctx_timeout, ctx);
 	return (0);
 }
@@ -172,7 +168,7 @@ surv0_ctx_recv(void *arg, nni_aio *aio)
 		return;
 	}
 again:
-	if (nni_lmq_getq(&ctx->recv_lmq, &msg) != 0) {
+	if (nni_lmq_get(&ctx->recv_lmq, &msg) != 0) {
 		int rv;
 		if ((rv = nni_aio_schedule(aio, &surv0_ctx_cancel, ctx)) !=
 		    0) {
@@ -259,7 +255,7 @@ surv0_ctx_send(void *arg, nni_aio *aio)
 			nni_pipe_send(pipe->pipe, &pipe->aio_send);
 		} else if (!nni_lmq_full(&pipe->send_queue)) {
 			nni_msg_clone(msg);
-			nni_lmq_putq(&pipe->send_queue, msg);
+			nni_lmq_put(&pipe->send_queue, msg);
 		}
 	}
 
@@ -359,7 +355,6 @@ surv0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 {
 	surv0_pipe *p    = arg;
 	surv0_sock *sock = s;
-	int         rv;
 	int         len;
 
 	len = nni_atomic_get(&sock->send_buf);
@@ -369,10 +364,7 @@ surv0_pipe_init(void *arg, nni_pipe *pipe, void *s)
 	// This depth could be tunable.  The deeper the queue, the more
 	// concurrent surveys that can be delivered (multiple contexts).
 	// Note that surveys can be *outstanding*, but not yet put on the wire.
-	if ((rv = nni_lmq_init(&p->send_queue, len)) != 0) {
-		surv0_pipe_fini(p);
-		return (rv);
-	}
+	nni_lmq_init(&p->send_queue, len);
 
 	p->pipe = pipe;
 	p->sock = sock;
@@ -434,7 +426,7 @@ surv0_pipe_send_cb(void *arg)
 		nni_mtx_unlock(&sock->mtx);
 		return;
 	}
-	if (nni_lmq_getq(&p->send_queue, &msg) == 0) {
+	if (nni_lmq_get(&p->send_queue, &msg) == 0) {
 		nni_aio_set_msg(&p->aio_send, msg);
 		nni_pipe_send(p->pipe, &p->aio_send);
 	} else {
@@ -482,7 +474,7 @@ surv0_pipe_recv_cb(void *arg)
 		nni_list_remove(&ctx->recv_queue, aio);
 		nni_aio_finish_msg(aio, msg);
 	} else {
-		nni_lmq_putq(&ctx->recv_lmq, msg);
+		nni_lmq_put(&ctx->recv_lmq, msg);
 		if (ctx == &sock->ctx) {
 			nni_pollable_raise(&sock->readable);
 		}

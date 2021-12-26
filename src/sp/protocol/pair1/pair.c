@@ -358,7 +358,7 @@ pair1_pipe_recv_cb(void *arg)
 
 	// maybe we have room in the rmq?
 	if (!nni_lmq_full(&s->rmq)) {
-		nni_lmq_putq(&s->rmq, msg);
+		nni_lmq_put(&s->rmq, msg);
 		nni_aio_set_msg(&p->aio_recv, NULL);
 		nni_pipe_recv(pipe, &p->aio_recv);
 	} else {
@@ -386,14 +386,14 @@ pair1_send_sched(pair1_sock *s)
 	s->wr_ready = true;
 
 	// if message waiting in buffered queue, then we prefer that.
-	if (nni_lmq_getq(&s->wmq, &m) == 0) {
+	if (nni_lmq_get(&s->wmq, &m) == 0) {
 		pair1_pipe_send(p, m);
 
 		if ((a = nni_list_first(&s->waq)) != NULL) {
 			nni_aio_list_remove(a);
 			m = nni_aio_get_msg(a);
 			l = nni_msg_len(m);
-			nni_lmq_putq(&s->wmq, m);
+			nni_lmq_put(&s->wmq, m);
 		}
 
 	} else if ((a = nni_list_first(&s->waq)) != NULL) {
@@ -452,8 +452,8 @@ pair1_sock_close(void *arg)
 		nni_aio_list_remove(a);
 		nni_aio_finish_error(a, NNG_ECLOSED);
 	}
-	while ((nni_lmq_getq(&s->rmq, &m) == 0) ||
-	    (nni_lmq_getq(&s->wmq, &m) == 0)) {
+	while ((nni_lmq_get(&s->rmq, &m) == 0) ||
+	    (nni_lmq_get(&s->wmq, &m) == 0)) {
 		nni_msg_free(m);
 	}
 	nni_mtx_unlock(&s->mtx);
@@ -574,7 +574,7 @@ inject:
 	}
 
 	// Can we maybe queue it.
-	if (nni_lmq_putq(&s->wmq, m) == 0) {
+	if (nni_lmq_put(&s->wmq, m) == 0) {
 		// Yay, we can.  So we're done.
 		nni_aio_set_msg(aio, NULL);
 		nni_aio_finish(aio, 0, len);
@@ -611,14 +611,14 @@ pair1_sock_recv(void *arg, nni_aio *aio)
 
 	// Buffered read.  If there is a message waiting for us, pick
 	// it up.  We might need to post another read request as well.
-	if (nni_lmq_getq(&s->rmq, &m) == 0) {
+	if (nni_lmq_get(&s->rmq, &m) == 0) {
 		nni_aio_set_msg(aio, m);
 		nni_aio_finish(aio, 0, nni_msg_len(m));
 		if (s->rd_ready) {
 			s->rd_ready = false;
 			m           = nni_aio_get_msg(&p->aio_recv);
 			nni_aio_set_msg(&p->aio_recv, NULL);
-			nni_lmq_putq(&s->rmq, m);
+			nni_lmq_put(&s->rmq, m);
 			nni_pipe_recv(p->pipe, &p->aio_recv);
 		}
 		if (nni_lmq_empty(&s->rmq)) {

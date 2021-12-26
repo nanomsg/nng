@@ -1,5 +1,5 @@
 //
-// Copyright 2020 Staysail Systems, Inc. <info@staysail.tech>
+// Copyright 2021 Staysail Systems, Inc. <info@staysail.tech>
 // Copyright 2018 Capitar IT Group BV <info@capitar.com>
 // Copyright 2019 Nathan Kent <nate@nkent.net>
 //
@@ -115,7 +115,7 @@ again:
 		return;
 	}
 
-	(void) nni_lmq_getq(&ctx->lmq, &msg);
+	(void) nni_lmq_get(&ctx->lmq, &msg);
 
 	if (nni_lmq_empty(&ctx->lmq) && (ctx == &sock->master)) {
 		nni_pollable_clear(&sock->readable);
@@ -182,15 +182,12 @@ sub0_ctx_init(void *ctx_arg, void *sock_arg)
 	sub0_ctx * ctx  = ctx_arg;
 	size_t     len;
 	bool       prefer_new;
-	int        rv;
 
 	nni_mtx_lock(&sock->lk);
 	len        = sock->recv_buf_len;
 	prefer_new = sock->prefer_new;
 
-	if ((rv = nni_lmq_init(&ctx->lmq, len)) != 0) {
-		return (rv);
-	}
+	nni_lmq_init(&ctx->lmq, len);
 	ctx->prefer_new = prefer_new;
 
 	nni_aio_list_init(&ctx->recv_queue);
@@ -385,14 +382,14 @@ sub0_recv_cb(void *arg)
 		} else if (nni_lmq_full(&ctx->lmq)) {
 			// Make space for the new message.
 			nni_msg *old;
-			(void) nni_lmq_getq(&ctx->lmq, &old);
+			(void) nni_lmq_get(&ctx->lmq, &old);
 			nni_msg_free(old);
 
-			(void) nni_lmq_putq(&ctx->lmq, dup_msg);
+			(void) nni_lmq_put(&ctx->lmq, dup_msg);
 			queued = true;
 
 		} else {
-			(void) nni_lmq_putq(&ctx->lmq, dup_msg);
+			(void) nni_lmq_put(&ctx->lmq, dup_msg);
 			queued = true;
 		}
 		if (queued && ctx == &sock->master) {
@@ -534,9 +531,9 @@ sub0_ctx_unsubscribe(void *arg, const void *buf, size_t sz, nni_type t)
 	for (size_t i = 0; i < len; i++) {
 		nni_msg *msg;
 
-		(void) nni_lmq_getq(&ctx->lmq, &msg);
+		(void) nni_lmq_get(&ctx->lmq, &msg);
 		if (sub0_matches(ctx, nni_msg_body(msg), nni_msg_len(msg))) {
-			(void) nni_lmq_putq(&ctx->lmq, msg);
+			(void) nni_lmq_put(&ctx->lmq, msg);
 		} else {
 			nni_msg_free(msg);
 		}
